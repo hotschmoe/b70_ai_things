@@ -7,7 +7,7 @@
 #        PLMIN (prompt_lookup_min=2), KVDTYPE (fp8_e4m3), MAXLEN (8192), UTIL (0.90).
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
-IMG=vllm-xpu-env:int8
+IMG="${IMG:-vllm-xpu-env:int8}"
 MODEL="$ROOT/models/Qwen3-14B-W8A8-INT8"
 NAME=vllm_int8; PORT=18080
 SPEC="${SPEC:-1}"; NSPEC="${NSPEC:-4}"; PLMAX="${PLMAX:-3}"; PLMIN="${PLMIN:-2}"
@@ -25,22 +25,33 @@ else
   echo "=== SPEC OFF (baseline) ==="
 fi
 
-GRAPH_ENV=(); EAGER_ARG=(--enforce-eager)
+GRAPH_ENV=(); EAGER_ARG=(--enforce-eager); GRAPH_DOCKER=(); GRAPH_VLLM=()
 if [ "$GRAPH" = 1 ]; then
-  GRAPH_ENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1); EAGER_ARG=()
-  echo "=== XPU GRAPH CAPTURE ON (VLLM_XPU_ENABLE_XPU_GRAPH=1, no --enforce-eager) ==="
+  GRAPH_ENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS="${OMP:-8}")
+  EAGER_ARG=()
+  # Capture exhausted threads at ~graph 48/51 ("cannot allocate memory for thread-local data: ABORT").
+  # Raise pid/thread/fd limits and trim oneDNN thread fan-out + the captured-size set.
+  GRAPH_DOCKER=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
+  CAPSIZES="${CAPSIZES:-[1,2,4,8,16,24,32,48,64,96,128,256]}"
+  # CGMODE: FULL_AND_PIECEWISE (default) | PIECEWISE (splits attention out -> captures only linear/MLP) | FULL
+  CGMODE="${CGMODE:-}"
+  CGJSON="{\"cudagraph_capture_sizes\":${CAPSIZES}"
+  [ -n "$CGMODE" ] && CGJSON="${CGJSON},\"cudagraph_mode\":\"${CGMODE}\""
+  CGJSON="${CGJSON}}"
+  GRAPH_VLLM=(--compilation-config "$CGJSON")
+  echo "=== XPU GRAPH CAPTURE ON (VLLM_XPU_ENABLE_XPU_GRAPH=1, OMP=${OMP:-8}, cgmode=${CGMODE:-default}, capsizes=${CAPSIZES}) ==="
 fi
 
 docker rm -f "$NAME" vllm_qwen3 vllm_w4a8 vllm_w8a8 2>/dev/null || true
 echo "=== serve W8A8 + KV=$KVDTYPE from $IMG (spec=$SPEC graph=$GRAPH) ==="
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
-  --ipc=host --shm-size 16g -p ${PORT}:${PORT} -v "$ROOT:$ROOT" \
+  --ipc=host --shm-size 16g -p ${PORT}:${PORT} -v "$ROOT:$ROOT" "${GRAPH_DOCKER[@]}" \
   -e ZE_AFFINITY_MASK=0 -e VLLM_LOGGING_LEVEL=INFO "${GRAPH_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve "$MODEL" --served-model-name qwen3-14b-w8a8 --host 0.0.0.0 --port ${PORT} \
     --dtype float16 --tensor-parallel-size 1 "${EAGER_ARG[@]}" --max-model-len "$MAXLEN" \
     --kv-cache-dtype "$KVDTYPE" --gpu-memory-utilization "$UTIL" \
-    --no-enable-prefix-caching --trust-remote-code "${SPEC_ARGS[@]}"
+    --no-enable-prefix-caching --trust-remote-code "${SPEC_ARGS[@]}" "${GRAPH_VLLM[@]}"
 
 ok=0
 for i in $(seq 1 180); do

@@ -751,3 +751,31 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - Op contracts (for the fake impls):
   `dynamic_per_token_int8_quant(x[M,K], sym=True, bits=8) -> (x_q[M,K] int8, x_s[M,1] f32, x_zp[M,1])`;
   `int8_gemm_w8a8(A[M,K] i8, A_s[M,1] f32, A_zp, B[K,N] i8, B_s[1,N] f32, azp_adj, bias[N]|None, out_dtype) -> [M,N]`.
+
+### 2026-06-19 — [WIN] XPU PIECEWISE graph capture works on our int8 W8A8 path -> +16.7% decode (fakes unblocked it)
+- Followed up the "XPUGraph already wired" finding. Added `torch.library.register_fake` meta kernels for our
+  2 custom SYCL ops (in contrib_int8/xpu_int8.py: `_xpu_C.dynamic_per_token_int8_quant` ->
+  (int8[M,K], scale[M,1], zp int32[M,1]); `_xpu_C.int8_gemm_w8a8` -> out_dtype[M,N]). Baked
+  `vllm-xpu-env:int8g` (= :int8 + fakes; scripts/52). **Gotcha re-hit:** `import vllm` resolves to the
+  editable `/workspace/vllm/vllm` in the bake but the SERVE process loads from site-packages -> the bake now
+  writes the kernel to EVERY vllm copy (find under /workspace + /opt/venv).
+- With fakes registered, `VLLM_XPU_ENABLE_XPU_GRAPH=1` (no --enforce-eager): dynamo traced THROUGH both
+  custom ops, AOT-compiled (`saved AOT compiled function`), and proceeded to real SYCL Graph capture. So the
+  fake registration **fully unblocked the vLLM/dynamo layer** — the original blocker is SOLVED.
+- Two further blockers surfaced, both NON-fundamental:
+  1. `cannot allocate memory for thread-local data: ABORT` at graph ~48/51 = thread/PID ceiling during
+     capture. Fixed with `--pids-limit=-1 --ulimit nofile=1048576 --ulimit nproc=63556` + `OMP_NUM_THREADS=8`.
+  2. FULL capture then hit: **`RuntimeError: The sycl_ext_oneapi_work_group_scratch_memory feature is not yet
+     available for use with the SYCL Graph extension.`** = an Intel SYCL-Graph-extension maturity limit, hit by
+     the **FlashAttention-v2 XPU** kernel (uses work-group scratch / SLM). NOT our op, NOT vLLM config.
+- **PIECEWISE mode wins:** `cudagraph_mode=PIECEWISE` splits attention OUT (eager) and captures only the
+  linear/MLP pieces. Captured all 12 graphs in 4 s (4.21 GiB), HEALTHY, coherent output. => our **int8 oneDNN
+  GEMM IS SYCL-Graph-capture-safe**; only the flash-attn kernel isn't.
+- **BENCH (single-stream coherent decode, same harness):**
+    eager baseline = **23.33 t/s** ; PIECEWISE graph capture = **27.23 t/s** => **+16.7% decode**, TTFT ~55 ms.
+- **Verdict / config recommendation:** add **PIECEWISE XPU graph capture** to the settled serving config
+  (image `:int8g` + `VLLM_XPU_ENABLE_XPU_GRAPH=1` + `cudagraph_mode=PIECEWISE` + raised pid/thread ulimits).
+  Free ~17% decode, no accuracy change. FULL capture stays blocked until Intel's SYCL Graph ext supports
+  work_group_scratch_memory (or a non-scratch attention backend exists). This RESOLVES the handoff's
+  "highest strategic leverage" item: prereq was NOT wiring (done) and NOT our ops (fixed) — it's the flash-attn
+  kernel's scratch memory under SYCL Graph. Contribution: the 2 register_fake impls (upstream-worthy).
