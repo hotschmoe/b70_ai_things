@@ -39,6 +39,20 @@ CUDA-graph capture (log: "Skipping CUDA graph capture") so only **inductor torch
 negligible at C16-32 (saturated). Keep compile for latency; eager fine for max-batch. (Counter to the
 generic "use enforce-eager on XPU" advice — measured otherwise on this build.)
 
+### FP8 + draft-model spec-decode (Qwen3-0.6B, num_spec=4) — 2026-06-17  [NEGATIVE RESULT]
+Coherent single-stream (3 prompts, 200 tok). Same FP8+compile config + Qwen3-0.6B drafter.
+
+| Config | Coherent decode (tok/s) | TTFT | Acceptance |
+|---|---:|---:|---|
+| FP8+compile (baseline) | **35.28** | ~62 ms | — |
+| FP8+compile + draft (n=4) | **10.33** | ~105 ms | 45.8% (403/880), mean accept len ~1.83 |
+
+**Spec-decode is 3.4x SLOWER on B70 — do NOT use draft-model spec-decode here (for now).**
+Root cause: XPU has **no CUDA-graph capture**, so per-forward kernel-launch overhead is high; spec-decode
+runs **5 forwards/step** (4 draft + 1 verify) vs 1, and ~1.8x token acceptance can't pay for 5x the launches.
+Per-position accepts: pos0=164, pos1=110, pos2=78, pos3=51 (normal decay). This will only flip positive once
+XPU gets graph capture or a much cheaper drafter (EAGLE-style single-pass, not yet on XPU).
+
 <!-- new result blocks above this line, newest first within each model -->
 
 ## To fill in (night campaign)
