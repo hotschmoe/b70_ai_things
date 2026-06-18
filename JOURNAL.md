@@ -693,3 +693,61 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - No bench possible (nothing served). FP8 remains THE accurate 8-bit path on B70. Restored FP8 baseline.
 - NEXT: W4A8 (`XPUW4A8IntLinearKernel`, int4 weights + per-token int8 activations) = the ONLY upstream XPU
   path that lights the INT8 XMX datapath [task #5]. Plus experiment: XPU-accelerated quant calibration [#6].
+
+### 2026-06-19 — [OK] Linux dev machine pickup: SSH workflow + runremote.sh (HANDOFF first task)
+- Now driving the box from a Linux dev machine (not Windows). Passwordless SSH is via the DEFAULT key
+  `~/.ssh/id_ed25519` (NOT the handoff's `b70_unraid_ed25519` — that key isn't on this machine).
+- Added `~/.ssh/config` alias **`b70` -> `root@192.168.10.5`** (IdentityFile id_ed25519). All scripts/docs
+  that say `ssh b70` now work unchanged.
+- Wrote **`scripts/runremote.sh`** = bash port of `runremote.ps1` (strips CRLF/BOM, prepends `export KEY=VAL`
+  for KEY=VALUE args, base64-transports the .sh, runs under `bash -s` on the box). Verified: env-var passing
+  (incl. values with spaces), remote exec, GPU dri visible. This is the standard runner from now on.
+- Made `scripts/38_specdecode_bench.sh` env-aware (NAME/MODEL/LABEL env with positional fallback) so
+  runremote (env-only transport) can drive it.
+
+### 2026-06-19 — [KEY] Qwen3.6-27B is a Qwen3_5 **DeltaNet VLM**, not a dense text model (changes the quant plan)
+- 27B BF16 download COMPLETE (54 GB safetensors, 15 shards; `qwen27b_dl` exit 0). GPU free.
+- Inspected config + the safetensors weight map (1199 tensors). The model is
+  **`Qwen3_5ForConditionalGeneration`** (model_type `qwen3_5`): a **vision-language** model with
+  a `model.visual.*` tower + a **hybrid linear-attention/full-attention** text model + an MTP head. DENSE
+  (no MoE). 64 layers, hidden 5120, head_dim 256, vocab 248320.
+  - `text_config.layer_types`: 48 `linear_attention` (DeltaNet) + 16 `full_attention` (`full_attention_interval=4`).
+  - Module families: `model.language_model.layers.N.self_attn.{q,k,v,o}_proj` (16 full-attn layers, std Linear);
+    `...mlp.{gate,up,down}_proj` (all 64, std Linear); `...linear_attn.{in_proj_a,in_proj_b,in_proj_qkv,in_proj_z,out_proj}`
+    + conv1d/A_log/dt_bias/norm (48 DeltaNet layers); `model.visual.*` (vision tower); `mtp.*`; `lm_head`.
+- **vLLM 0.23.0 (our :int8 image) registers `Qwen3_5ForConditionalGeneration` AND `Qwen3_5MTP`** in the model
+  registry — arch is supported at the registry level. Open serveability risk = the DeltaNet (GDN/Triton)
+  kernels on XPU (Triton-XPU), a card-#2-day question anyway (W8A8 ~30-36 GB > one 32 GB card).
+- **CORRECTED the scripts/49 ignore-list.** Old default missed the vision tower -> text-only calibration
+  would wreck vision. New IGNORE = `lm_head re:.*linear_attn.* re:.*visual.* re:.*mtp.*`
+  (quantize only the std self_attn + MLP linears; keep DeltaNet + vision + MTP + head in BF16).
+
+### 2026-06-19 — [OK->NEG] ngram spec-decode PoC on 14B W8A8 = NET-NEGATIVE on XPU (HANDOFF step #2)
+- Served Qwen3-14B-W8A8-INT8 from `vllm-xpu-env:int8` (int8 linear + FP8 KV, eager) with and without
+  `--speculative-config '{"method":"ngram","num_speculative_tokens":4,"prompt_lookup_max":3,"prompt_lookup_min":2}'`.
+  Same harness (scripts/38, single-stream coherent decode). New script: `scripts/51_serve_int8_specdecode.sh`.
+- Both serve HEALTHY; `Selected XPUInt8ScaledMMLinearKernel`; FP8 KV gives 138,880 tokens (16.95x conc @ 8k).
+- **Baseline (no spec): 23.33 t/s** mean decode. **ngram spec: 21.51 t/s** mean decode -> **~8% SLOWER.**
+  Acceptance: 48 drafts x4 = 192 draft tokens, **40 accepted (20.8%)**; per-pos 20/8/6/6 (decays, expected).
+- VERDICT: spec-decode overhead (draft proposal + multi-token verify + rejection sampling) in **eager mode**
+  exceeds the benefit at ~21% acceptance. Confirms the HANDOFF hypothesis: spec-decode is launch-overhead-bound
+  on XPU; **graph capture is the prerequisite** before any drafter (ngram/DFlash/MTP) can win.
+
+### 2026-06-19 — [KEY] XPU graph capture is ALREADY WIRED in vLLM 0.23.0 — blocked only by a missing fake kernel
+- The serve log emits: `XPU Graph is disabled by environment variable, please set VLLM_XPU_ENABLE_XPU_GRAPH=1`.
+  => Contrary to the HANDOFF ("wire torch.xpu.XPUGraph into the vLLM XPU runner", M-L effort), the runner
+  support **already exists** in 0.23.0; it's just OFF by default.
+- Tried `VLLM_XPU_ENABLE_XPU_GRAPH=1` (and dropped `--enforce-eager`, required for capture). Engine init
+  **FAILED at graph capture** with a precise, fixable root cause:
+    `torch._subclasses.fake_tensor.UnsupportedOperatorException: _xpu_C.dynamic_per_token_int8_quant.default`
+    `torch._dynamo.exc.Unsupported: Operator does not support running with fake tensors`
+  vLLM's XPU graph path runs `aot_compile_fullgraph` (torch.compile/dynamo), which traces with **fake
+  tensors**. Our custom SYCL ops (`_xpu_C.dynamic_per_token_int8_quant`, and likely `_xpu_C.int8_gemm_w8a8`)
+  have **no FakeTensor/meta registration**, so dynamo can't infer output shapes -> capture aborts.
+- **This reframes the #1 strategic item from "wire XPUGraph (M-L)" to "register fake/meta kernels for 2
+  custom ops (S, Python-only via `torch.library.register_fake`, no .so rebuild)."** A clean upstream
+  contribution that should unblock graph capture -> potentially speeds plain decode AND could flip
+  spec-decode positive. NEXT: add the fake registrations to the vLLM int8 patch and retest GRAPH=1.
+- Op contracts (for the fake impls):
+  `dynamic_per_token_int8_quant(x[M,K], sym=True, bits=8) -> (x_q[M,K] int8, x_s[M,1] f32, x_zp[M,1])`;
+  `int8_gemm_w8a8(A[M,K] i8, A_s[M,1] f32, A_zp, B[K,N] i8, B_s[1,N] f32, azp_adj, bias[N]|None, out_dtype) -> [M,N]`.

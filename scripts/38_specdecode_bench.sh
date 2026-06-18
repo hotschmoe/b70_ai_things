@@ -4,7 +4,8 @@
 # acceptance counters. Args: [container] [served_model] [label]
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
-NAME="${1:-vllm_qwen3}"; MODEL="${2:-qwen3-14b}"; LABEL="${3:-qwen3-14b}"; PORT=18080
+# Accept env (NAME/MODEL/LABEL) with positional fallback, so runremote.sh (env-only transport) can drive it.
+NAME="${NAME:-${1:-vllm_qwen3}}"; MODEL="${MODEL:-${2:-qwen3-14b}}"; LABEL="${LABEL:-${3:-qwen3-14b}}"; PORT=18080
 STAMP="$(date +%Y%m%d_%H%M%S)"; OUT="$ROOT/results/specbench_${LABEL}_${STAMP}.txt"
 curl -sf "http://localhost:${PORT}/health" >/dev/null 2>&1 || { echo "not healthy"; exit 1; }
 
