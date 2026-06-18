@@ -53,6 +53,26 @@ runs **5 forwards/step** (4 draft + 1 verify) vs 1, and ~1.8x token acceptance c
 Per-position accepts: pos0=164, pos1=110, pos2=78, pos3=51 (normal decay). This will only flip positive once
 XPU gets graph capture or a much cheaper drafter (EAGLE-style single-pass, not yet on XPU).
 
+### F16 / BF16 raw (no quant) — 2026-06-17
+util 0.95, max-model-len 2048 (VRAM-tight: 28 GB weights leave little KV), eager. Coherent single-stream.
+
+| Metric | Value |
+|---|---|
+| Coherent single-stream decode | **18.67 t/s** |
+| TTFT (short prompt) | ~83 ms |
+| Footprint | ~28 GB (barely fits; tiny KV; no room for compile/concurrency) |
+
+Bandwidth ceiling 608/28 ~= 21.7 t/s -> 86% efficiency. **FP8 is ~1.9x faster (35.3 vs 18.7)** AND near-lossless,
+so F16 is dominated on a single B70 (more bytes/token + barely fits). Use FP8.
+
+#### Single-B70 Qwen3-14B summary so far (single-stream decode)
+| Quant | Footprint | Decode t/s | TTFT | Notes |
+|---|---|---:|---:|---|
+| F16/BF16 | ~28 GB | 18.7 | ~83 ms | tight, full quality, slowest |
+| FP8 (+compile) | ~15 GB | **35.3** | **~62 ms** | near-lossless, sweet spot |
+| FP8 + draft spec-decode | ~16 GB | 10.3 | ~105 ms | NEGATIVE (no XPU cudagraph) |
+| int4 / W4A8 | ~8 GB | TBD (~50-60?) | TBD | testing next (fast end) |
+
 <!-- new result blocks above this line, newest first within each model -->
 
 ## To fill in (night campaign)
