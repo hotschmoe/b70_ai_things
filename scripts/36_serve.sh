@@ -15,7 +15,9 @@ MAXLEN="${MAXLEN:-16384}"; MAXSEQS="${MAXSEQS:-16}"; UTIL="${UTIL:-0.90}"
 DRAFT="${DRAFT:-}"; DRAFTN="${DRAFTN:-3}"; EXTRA="${EXTRA:-}"
 NAME="${NAME:-vllm_qwen3}"; PORT=18080
 mkdir -p "$ROOT"/{vllm_cache,tmp_ssd}
-docker rm -f "$NAME" 2>/dev/null || true
+# free port 18080 + GPU: remove ANY known vllm serving container, not just $NAME (else a stale
+# vllm_w4a8/vllm_w8a8 keeps the port and the new server silently fails to bind -> false HEALTHY).
+docker rm -f "$NAME" vllm_qwen3 vllm_w4a8 vllm_w8a8 vllm_int8 2>/dev/null || true
 
 # serve target + quant flag
 SERVE_TARGET="$MODEL"; QARG=()

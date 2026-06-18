@@ -4,8 +4,9 @@
 # per-stream decode (=1000/TPOT). Args: [container] [served_model] [label]
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
-NAME="${1:-vllm_qwen3}"; MODEL="${2:-qwen3-14b}"; LABEL="${3:-qwen3-14b}"
-TOKPATH="${4:-/specula_models/Qwen3-14B}"
+# positional args OR env overrides (runremote.ps1 passes KEY=VALUE as env, not positional)
+NAME="${1:-${NAME:-vllm_qwen3}}"; MODEL="${2:-${MODEL:-qwen3-14b}}"; LABEL="${3:-${LABEL:-qwen3-14b}}"
+TOKPATH="${4:-${TOKPATH:-/specula_models/Qwen3-14B}}"
 PORT=18080; IN=512; OUT=128
 STAMP="$(date +%Y%m%d_%H%M%S)"; OUT_FILE="$ROOT/results/sweep_${LABEL}_${STAMP}.csv"
 

@@ -30,6 +30,99 @@ not VRAM). Optimization target: faster XPU GDN/linear-attention kernels. 2-card 
 
 ## Qwen3-14B (dense, GQA, native Qwen3ForCausalLM)
 
+### W8A8 (ours) vs FP8 — PREFILL head-to-head — 2026-06-18  [INT8 WINS PREFILL ~1.6x]
+Same model (Qwen3-14B), v0230, identical bench (random, varying in:out:conc). Prefill tok/s ~= in_len/TTFT.
+**The native-INT8 systolic advantage is real and measured:**
+
+| in:out:conc | Prefill tok/s ours / FP8 | speedup | TTFT ms ours / FP8 | decode t/s ours / FP8 |
+|---|---|---|---|---|
+| 4096:8:1  | **6353 / 3997** | **1.59x** | **645 / 1025** | 7.9 / 6.5 |
+| 2048:64:8 | **14648 / 9176** | **1.60x** | 1119 / 1786 | 84.8 / 82.9 |
+| 4096:8:8  | **10888 / 6802** | **1.60x** | 3010 / 4817 | 11.9 / 7.5 |
+| 512:128:1 | (JIT-cold) / 3235 | - | -/158 | 13.2* / **29.5** |
+| 8192:8:1  | (max-len fail) / 3684 | - | -/2224 | -/3.3 |
+
+- **Prefill / compute-bound: INT8 W8A8 ~1.6x FP8** (FP8 = conversion-based on Xe2; INT8 = native s8s8s32).
+  This is the value proposition for the kernel. TTFT ~1.6x lower too.
+- **Decode / batch-1: FP8 wins** (~29 vs ~13 t/s) -- dragged by the `dynamic_per_token_int8_quant_ref`
+  reference quant (eager, per-layer). FIX = fused SYCL per-token int8 quant op (make-it-fast #11).
+- **[FUSED-QUANT UPDATE 2026-06-18]** Wrote a fused SYCL `dynamic_per_token_int8_quant` op (one work-group/row,
+  sub-group absmax reduction; q-match 100% vs ref) -> **single-stream decode 13 -> 22.6 t/s (1.7x), now ~78%
+  of FP8 (29)**; TTFT 142 ms; prefill unchanged (6325, still 1.6x FP8); C32 decode agg 465. So INT8 W8A8 now
+  WINS prefill 1.6x AND nearly matches decode. Remaining decode gap = the M=1 int8 GEMM (oneDNN single-row) vs
+  FP8 -- diminishing returns. Net: INT8 W8A8 is the well-rounded throughput champion on B70.
+- CAVEATS: 512:128:1 W8A8 row is JIT-cold (first-req oneDNN compile, TTFT 2065ms) -- ignore. 8192 failed only
+  on --max-model-len 8192. C32 rows omitted (confounded: FP8 --max-num-seqs 16 vs W8A8 default).
+
+### W8A8 INT8 via OUR XPUInt8ScaledMMLinearKernel — 2026-06-18  [WORKS — we wrote the kernel]
+We implemented the missing XPU INT8 W8A8 path: a native `int8_gemm_w8a8` oneDNN op (s8 x s8 -> s32 ->
+dequant) in vllm-xpu-kernels + `XPUInt8ScaledMMLinearKernel` + `_POSSIBLE_INT8_KERNELS[XPU]` in vLLM (see
+docs/kernel/01 + contrib/vllm_int8_xpu/ + scripts/44,45). The self-quant `Qwen3-14B-W8A8-INT8` that
+**hard-crashed on stock vLLM** (`KeyError: PlatformEnum.XPU`) now SERVES:
+
+| Metric | Value |
+|---|---|
+| Kernel selected | **`Selected XPUInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8`** (was KeyError) |
+| Serves? | **YES** — `Application startup complete`, HEALTHY |
+| Numerical | op verified max_abs_err 2.4e-4 vs reference (fp16 rounding) |
+| Footprint | model 15.34 GiB + KV 10.85 GiB (71,040 tok, 8.67x conc @ 8k) |
+| Generation | coherent ("...is Paris...") via the int8 kernel at inference |
+| Status | MAKE IT WORK done; perf bench (prefill/large-batch vs FP8) + asym/AZP = make-it-fast/right TODO |
+
+First working INT8 W8A8 on Battlemage in vLLM (novel). The chooser `.get()` hardening also fixes the
+GDN-FP8 KeyError family. Upstream PR targets: vllm-xpu-kernels (the op) + vLLM (kernel class + registry).
+
+### W4A8-INT (self-quant) — 2026-06-18  [OK kernel engaged; decode kernel UNOPTIMIZED]
+Self-quantized `Qwen3-14B-W4A8-INT` (int4 sym group-128 weights + per-token dynamic int8 activations,
+data-free RTN). Served on vLLM 0.23.0, `--dtype float16`. **Confirmed kernel: `Using XPUW4A8IntLinearKernel
+for CompressedTensorsW4A8Int`** (oneDNN `int4_gemm_w4a8`) — the ONLY upstream path that lights the INT8 XMX
+datapath. Coherent output. Model load **9.3 GiB** (smallest of all; vs FP8 15.2), KV 15.0 GiB / 98,496 tok /
+**12.0x** concurrency @ 8k ctx.
+
+| Concurrency | Aggregate out tok/s | Per-stream decode | Mean TTFT |
+|---:|---:|---:|---:|
+| 1  | 16.4  | **16.6** | 155 ms |
+| 4  | 63.4  | 16.4 | 322 ms |
+| 8  | 121.1 | 16.0 | 500 ms |
+| 16 | 214.7 | 14.5 | 770 ms |
+| 32 | **374.4** | 12.9 | 1067 ms |
+
+**Head-to-head vs FP8** (both Qwen3-14B, v0230, identical bench harness, random 512/128):
+
+| C | FP8 agg / per-stream | W4A8 agg / per-stream |
+|--:|--:|--:|
+| 1  | **28.7 / 29.5** | 16.4 / 16.6 |
+| 4  | **104.9 / 28.3** | 63.4 / 16.4 |
+| 8  | **195.0 / 27.6** | 121.1 / 16.0 |
+| 16 | **329.2 / 24.4** | 214.7 / 14.5 |
+| 32 | 329.8 / 23.1 | 374.4 / 12.9 |
+
+**Verdict:** the INT8-XMX path WORKS and is the lightest-VRAM option, but **FP8 wins on speed at every
+matched concurrency** — per-stream ~1.7-1.8x faster (29.5 vs 16.6 at C1; 24.4 vs 14.5 at C16), and higher
+aggregate through C16. W4A8 single-stream (16.6) is only ~25% of its 9.3 GB bandwidth ceiling (~65) -> the
+`int4_gemm_w4a8` decode kernel is unoptimized (same story as GDN). **CAVEAT on the C32 row:** FP8 here ran
+with `--max-num-seqs 16` (script 36 default) and W4A8 with vLLM's higher default, so the C32 aggregate is
+NOT comparable -- the apparent W4A8 "edge" at C32 is a max-num-seqs artifact, not a real win. **Bottom line:
+use FP8 for everything; W4A8's only genuine advantage is footprint (9.3 vs 15.2 GB).** Optimization target:
+faster `int4_gemm_w4a8` decode kernel.
+
+### W8A8 INT8 (self-quant, compressed-tensors) — 2026-06-18  [HARD FAIL — no XPU kernel]
+Produced `Qwen3-14B-W8A8-INT8` (16 GB) from local BF16 via llm-compressor data-free RTN (int8 per-channel
+weights + per-token dynamic int8 activations). Served on vLLM 0.23.0 (XPU). vLLM picked scheme
+`CompressedTensorsW8A8Int8`, then **crashed at layer-0 `create_weights`**:
+`choose_scaled_mm_linear_kernel -> possible_kernels[XPU]` => **`KeyError: <PlatformEnum.XPU: 4>`**.
+
+| Metric | Value |
+|---|---|
+| Serves? | **NO** — engine core init fails at model load (no bench possible) |
+| Footprint | 16 GB checkpoint on disk (never reached VRAM alloc) |
+| Root cause | INT8 scaled-MM kernel registry has **no XPU entry** — same chooser/KeyError as the GDN-FP8 path |
+| Verdict | **W8A8 INT8 is unusable on Battlemage vLLM.** Use FP8. INT8-XMX only reachable via W4A8. |
+
+(Empirically confirms docs/literature/05_w8a8_recipe.md, which was source-read only. Closes the
+"verify kernel" TODO below.)
+
+
 ### FP8 PEAK throughput (max-num-seqs=64, v0.23.0 eager) — 2026-06-18
 **The earlier ~324 t/s "plateau" was an artifact of the default `--max-num-seqs 16` capping concurrency.**
 Raising it to 64 (+ `--max-num-batched-tokens 8192`) unlocks the real curve:
@@ -112,7 +205,7 @@ so F16 is dominated on a single B70 (more bytes/token + barely fits). Use FP8.
 | F16/BF16 | ~28 GB | 18.7 | ~83 ms | tight, full quality, slowest |
 | FP8 (+compile) | ~15 GB | **35.3** | **~62 ms** | near-lossless, sweet spot |
 | FP8 + draft spec-decode | ~16 GB | 10.3 | ~105 ms | NEGATIVE (no XPU cudagraph) |
-| int4 / W4A8 | ~8 GB | deferred | — | no official Qwen3-14B GPTQ-Int4; XPU int4 fragile (AWQ->CUDA torchao #269, GPTQ #39474). Revisit w/ self-quant |
+| W4A8-INT (self-quant) | ~9.3 GB | 16.6 | ~155 ms | INT8-XMX kernel ENGAGED (XPUW4A8IntLinearKernel) but decode kernel unoptimized (~half FP8). Lightest VRAM, best high-conc aggregate. See W4A8 block above |
 
 ### vLLM v0.23.0 vs 0.20.2 — Qwen3-14B FP8 (eager) — 2026-06-18
 Built v0.23.0 from source (torch 2.11.0+xpu). NOTE: **compilation BROKE on v0.23.0** (torch 2.11 + inductor;
@@ -132,7 +225,7 @@ that loads Qwen3.6 DeltaNet on XPU. Downside: inductor compile broke (torch 2.11
 
 ## To fill in (night campaign)
 - [ ] Qwen3-14B F16/BF16 (raw, ~28 GB — VRAM-tight) sweep
-- [ ] Qwen3-14B W8A8 INT8 (self-quant, INT8 XMX path) sweep + verify kernel
+- [x] Qwen3-14B W8A8 INT8 (self-quant, INT8 XMX path) sweep + verify kernel -> **HARD FAIL** (KeyError XPU at load; no XPU INT8 kernel). See W8A8 block above + JOURNAL 06-18.
 - [ ] Qwen3-14B sym_int4 (Intel native int4) sweep
 - [ ] Qwen3-14B FP8 WITH compilation (piecewise cudagraph, no enforce-eager) — TTFT/throughput
 - [ ] Qwen3-14B + draft-model speculative decode (Qwen3-0.6B) — single-stream speedup

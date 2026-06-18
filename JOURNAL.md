@@ -457,3 +457,196 @@ Contribution targets logged: XPU GDN/DeltaNet decode-kernel speed; llama.cpp Del
 vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 
 <!-- New entries below -->
+
+### 2026-06-18 — [MAKE-IT-FAST] fused per-token int8 quant kernel: decode 13 -> 22.6 t/s (1.7x)
+- Wrote a fused SYCL `dynamic_per_token_int8_quant` op (csrc/xpu/sycl/, one work-group/row, sub-group absmax
+  reduction, 2-pass quantize) to replace the eager `@torch.compile` `_ref` (the per-layer decode drag shared
+  by W4A8 too). Agent-coded, parent-built (minimal profile, ccache-fast) + verified: q-match 100% (f16) /
+  99.98% (bf16) vs ref, dequant maxerr ~0.04 (half a quant step), zp=0. [scripts/44 build + 45 serve]
+- Re-bench (warm): **single-stream decode 13 -> 22.6 t/s (1.7x) = ~78% of FP8 (29)**; TTFT 142 ms; C32 decode
+  agg 415 -> 465; **prefill unchanged at 6325 (still 1.6x FP8)**. So the ref quant WAS a major decode
+  bottleneck. INT8 W8A8 now WINS prefill 1.6x AND nearly matches decode -> well-rounded throughput champion.
+- Remaining decode gap (22.6 vs 29) = the M=1 int8 GEMM itself (oneDNN single-row) vs FP8 -- diminishing
+  returns; vectorizing the quant K-loop or an M=1 GEMM path is a further (optional) optimization.
+
+### 2026-06-18 — [VALIDATED] our INT8 W8A8 kernel beats FP8 ~1.6x in PREFILL (the native-systolic win is real)
+- Prefill/large-batch bench, our W8A8 kernel vs FP8, same model/harness [scripts/46]:
+  - 4096:8:1 prefill **6353 vs 3997 t/s = 1.59x**, TTFT 645 vs 1025 ms.
+  - 2048:64:8 **14648 vs 9176 = 1.60x**; 4096:8:8 **10888 vs 6802 = 1.60x**.
+  - Decode (batch-1): FP8 ~29 vs ours ~13 -> dragged by the eager `dynamic_per_token_int8_quant_ref`
+    (per-layer reference quant). Fused SYCL quant = the fix (#11).
+- CONFIRMS the literature/06 thesis: FP8 is conversion-based on Xe2 (FP16 datapath); INT8 is native
+  s8s8s32 -> ~1.6x in compute-bound prefill. THIS is why the kernel matters. Decode is bandwidth-bound and
+  quant-overhead-dragged. Caveats: 512:128:1 ours JIT-cold; 8192 hit --max-model-len; C32 confounded by
+  --max-num-seqs (FP8 16 vs ours default). Logged RESULTS.md.
+
+### 2026-06-18 — [MILESTONE] END-TO-END: Qwen3-14B W8A8 INT8 SERVES on the B70 via OUR kernel
+- The exact `Qwen3-14B-W8A8-INT8` checkpoint that KeyError-crashed at the start of this campaign now LOADS,
+  SELECTS our kernel, and GENERATES coherently on a single Arc Pro B70. "Make it work" = DONE end-to-end.
+- Proof (scripts/45_patch_serve_int8.sh): grafts our int8-enabled `_xpu_C.so` over the image package, drops in
+  `XPUInt8ScaledMMLinearKernel`, registers `_POSSIBLE_INT8_KERNELS[XPU]` + hardens the chooser (`.get()`), then
+  serves with VLLM_LOGGING_LEVEL=DEBUG:
+  - `INFO ... linear/__init__.py:620] Selected XPUInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8`
+  - `Using scheme: CompressedTensorsW8A8Int8` for every layer (NO KeyError).
+  - Model load 15.34 GiB + KV 10.85 GiB (71,040 tok, 8.67x conc @ 8k). `Application startup complete`, HEALTHY.
+  - Smoke gen: "The capital of France is" -> " Paris. ..." (coherent, via the int8 oneDNN kernel at inference).
+- INTEGRATION GOTCHAS (fixed): (1) patched `/workspace/vllm/vllm` not the runtime copy -> resolve via
+  `import vllm` dirname (it IS the editable path). (2) shell `VLLMDIR=$(python -c import vllm)` got polluted by
+  vllm's stdout INFO logs -> have the Python patcher copy the class file too (reliable BASE, no shell capture).
+  (3) wrong model path (W8A8-INT vs W8A8-INT8).
+- SIGNIFICANCE: first working INT8 W8A8 path on Intel Battlemage in vLLM (confirmed novel vs steveseguin +
+  upstream RFCs #33214/#37979). The `.get()` hardening also fixes the GDN-FP8 KeyError family. Phase done:
+  MAKE IT WORK. Next: make it RIGHT (asym/AZP, static schemes), make it FAST (fused per-token int8 quant;
+  prefill/large-batch bench vs FP8 to cash the native-systolic INT8 win); then upstream PRs (kernels + vLLM).
+
+### 2026-06-18 — [BIG WIN] int8_gemm_w8a8 XPU kernel: COMPILES, REGISTERS, and is NUMERICALLY CORRECT on B70
+- Implemented our own INT8 W8A8 oneDNN op in vllm-xpu-kernels (head 11f42aa): new
+  `csrc/xpu/onednn/int8_gemm_w8a8.h` + `joint_dtypes_t::s8_s8_{f16,bf16}` in onednn_ext.h + dispatch in
+  onednn_matmul.cpp + `torch_bindings.cpp` registration. (Agent-drafted, parent-verified.) Symmetric-only
+  phase 1 (per-token dynamic int8 acts x per-channel int8 weights -> f16/bf16).
+- BUILD: editable `pip install -e .` rebuilt EVERYTHING (flash-attn/MoE/cutlass) -> 1-2h, wasteful. Fixed by
+  building ONLY `_xpu_C` via the CMake toggles (`FA2/MOE/GDN/MQA/BASIC_KERNELS_ENABLED=OFF`,
+  `XPU_SPECIFIC_KERNELS_ENABLED=ON`) -> minutes. [scripts/44_build_int8_kernel.sh]. Gotchas: stale CMakeCache
+  (agent built at /src; mount repo at /src to match) and TWO concurrent build containers racing (kill all,
+  wipe build/). Build RC=0, `_xpu_C.abi3.so` produced.
+- VERIFY (GPU present, load .so directly; no-GPU load shows 0 gemm ops even for the stock .so -> invalid test):
+  `int8_gemm_w8a8 -> OK` alongside int4_gemm_w4a8 / fp8_gemm_w8a16. **REACHABLE.**
+- NUMERICAL: B=[K,N], M8/K64/N32, vs ref `(A.float()@B.float())*A_scale*B_scale`: **max_abs_err 2.4e-4**
+  (ref|max| 0.80) = fp16 rounding. **CORRECT.** (B=[N,K] errors on shape, confirming the [K,N] contract.)
+- STATUS: "make it work" DONE for the native op -- a working, correct INT8 W8A8 GEMM on Battlemage that
+  did NOT exist anywhere (confirmed vs steveseguin repo + upstream RFCs). Remaining: vLLM Python patch
+  (XPUInt8ScaledMMLinearKernel + _POSSIBLE_INT8_KERNELS[XPU] + .get() hardening) -> serve the W8A8 checkpoint
+  that currently KeyError-crashes and show our kernel SELECTED (the end-to-end fast-path-activation proof).
+  Patch ready in contrib/vllm_int8_xpu/. [task #10]
+
+### 2026-06-18 — [CORRECTION] The "Quark W8A8 INT8 99 t/s" dissolves: cloned steveseguin/b70-optimization-lab
+- User pointed us to `github.com/steveseguin/b70-optimization-lab` as "the quark int8 community user." Cloned +
+  grepped it (`/mnt/vm_8tb/b70/b70-optimization-lab`). **No Quark, no INT8 W8A8 kernel, no `_POSSIBLE_INT8_KERNELS
+  [XPU]` patch.** Their Qwen 35B paths are INT4-AutoRound (preferred) and FP8.
+- The mislabel decoded: (1) this community says "**W8A8**" to mean **FP8 W8A8** ("static compressed-tensors W8A8
+  FP8 safetensors"); their cited missing kernel is a native XPU **128x128 block-FP8 W8A8 GEMM** (FP8, not INT8).
+  (2) The ~99 number = MiniMax-M27 INT4 MoE **99.79 TOTAL tok/s but ~33 OUTPUT** (one "99.77" is a gemma4 compile
+  time). So "Quark W8A8 INT8 99.77 output t/s" conflated FP8-meaning-of-W8A8 + INT4-MoE-total-throughput + a wrong
+  Quark/INT8 tag. Corrected docs/COMMUNITY_CONFIGS.md row #2 + added a repo deep-dive section.
+- **NET: strengthens our finding -- nobody runs INT8 W8A8 on B70.** Our int8_gemm_w8a8 (docs/kernel/01) is first.
+- BONUS: the repo is a goldmine for OTHER threads -- capture-safe XCCL all-reduce + XPU-graph (lit/06 #3), Qwen3.6
+  FP8 fallback patches, a SECOND missing kernel (block-FP8 W8A8 GEMM = contribution #1b, same vllm-xpu-kernels repo),
+  and llama.cpp SYCL Q4 fusion/all-reduce. Cloned on the box for reference.
+
+### 2026-06-18 — [OK/WARN] YES the B70 accelerates quantization (SmoothQuant flies; GPTQ partial + a torch-xpu bug)
+- User question: can the B70 speed up quantization? Ran llmcompressor INSIDE the XPU image (vllm-xpu-env:
+  v0230, torch 2.11+xpu) with the model on `device_map=xpu`, GPTQ+SmoothQuant, 64 samples/seq512.
+  [scripts/42_quant_on_xpu.sh DEVICE=xpu]
+- [OK] `torch.xpu.is_available()=True`; device 0 = `Intel(R) Graphics [0xe223]` (the B70). llmcompressor
+  auto-used **"Accelerator 0" (B70, 32.5 GB)** with NO code change. (The earlier "No accelerator available"
+  was only the CPU-only python:3.11 image — NOT a real llmcompressor limitation.)
+- [OK] **SmoothQuant calibration on XPU is the big win:** 41 blocks in ~40 s at 130-330 it/s. The CPU
+  attempt of the same kind of pass was ~8-11 s/ITER per block (would be hours for the full model). This is
+  the phase that made CPU calibration painful -> the GPU fixes it.
+- [OK->WARN] **GPTQ ran on the B70** (Accelerator 0, ~6 s/module, real GPU matmuls) but with two issues:
+  1. `torch.linalg.cholesky` -> "Aten Op fallback from XPU to CPU" (op not on XPU; perf hit, not fatal).
+  2. CRASH in `_apply_activation_ordering` at `H[perm][:, perm]`:
+     **`RuntimeError: level_zero backend failed with error: 20 (UR_RESULT_ERROR_DEVICE_LOST)`**.
+- [CORRECTION 2026-06-18] **Cause of the DEVICE_LOST is CONFOUNDED, likely VRAM contention -- NOT confirmed
+  a torch-xpu indexing bug.** Discovered afterward that the W4A8 server (`vllm_w4a8`, ~25 GiB VRAM) was
+  STILL RUNNING during this experiment (scripts 41/42 only removed vllm_qwen3/vllm_w8a8, not vllm_w4a8). So
+  the GPTQ run put a 28 GiB fp16 model on the SAME 32 GiB card on top of a ~25 GiB server -> ~53 GiB demand
+  -> almost certainly OOM/device-lost, which happened to surface at a large-tensor gather. **Needs an
+  ISOLATED re-test (no other GPU user) to attribute** (real torch-xpu gather bug vs pure OOM). [follow-up]
+- VERDICT (still valid): **XPU-accelerated quant = YES for calibration/data-collection (SmoothQuant huge
+  speedup, GPTQ matmuls run on the B70).** Full end-to-end GPTQ-on-XPU not yet proven (crashed, cause
+  confounded). Re-run isolated with `actorder=False` for a clean time + a working checkpoint. [task #6]
+- LESSON: serve scripts must remove ALL vllm serving containers (vllm_w4a8/w8a8/qwen3), not just one --
+  a survivor holds port 18080 AND the GPU, giving false-HEALTHY and silent VRAM contention. Fixed in 36/41/42.
+
+### 2026-06-18 — [OK] W4A8-INT runs on B70: INT8-XMX kernel ENGAGED (first time), but decode kernel unoptimized
+- Self-quantized `Qwen3-14B-W4A8-INT` (int4 sym group-128 weights + per-token dynamic int8 acts, data-free
+  RTN, ~3 min CPU) [scripts/43]. config.json verified: weights num_bits=4/group128/int, input_activations
+  num_bits=8/int/dynamic/token -> matches `_is_dynamic_token_w4a8_int`.
+- Served on vLLM 0.23.0 (`--dtype float16`). **`Using XPUW4A8IntLinearKernel for CompressedTensorsW4A8Int`**
+  (oneDNN int4_gemm_w4a8) — the FIRST time we've lit the INT8 XMX datapath on the B70. Coherent output
+  ("...is Paris..."). Load **9.3 GiB** (smallest yet), KV 15.0 GiB / 98,496 tok / 12.0x conc @ 8k.
+- Bench (random 512/128): C1 16.6 t/s/stream (TTFT 155 ms), C8 16.0, C32 374 agg / 12.9 per-stream.
+  **Single-stream decode 16.6 t/s = ~half FP8 (~31)** and only ~25% of the 9.3 GB bandwidth ceiling (~65)
+  -> the int4_gemm_w4a8 DECODE kernel is unoptimized (same pattern as GDN). At C32 aggregate (374) slightly
+  beats FP8 v0230 (333): the compute-bound regime where native-INT systolic helps.
+- VERDICT: W4A8 is the lightest-VRAM, best-high-concurrency option AND the only int8-XMX path, but FP8 wins
+  single-stream/interactive. Optimization target: faster int4_gemm_w4a8 decode kernel [literature/06 #2-ish].
+- Quant matrix on B70 now empirically complete: F16 18.7 | FP8 35 (winner, interactive) | W8A8 HARD-FAIL |
+  W4A8 16.6 (int8-XMX, lightest, high-conc). [tasks #5 done]
+
+### 2026-06-18 — [KEY] Kernel-dev literature (agent) -> docs/literature/06_xpu_kernel_fastpaths.md + 3 CORRECTIONS
+- Dedicated research agent wrote `docs/literature/06_xpu_kernel_fastpaths.md` (DPAS tile shapes, SYCL
+  joint_matrix/ESIMD/oneDNN/Triton-XPU surfaces, vllm-xpu-kernels seams, ranked contribution targets).
+- DPAS on Xe2: N=16, SystolicDepth=8. INT8 8x32x16->s32 (native), INT4 8x64x16->s32 (native),
+  FP16/BF16 8x16x16->fp32. B must be VNNI-packed. INT8 = 2x FP16 throughput; INT4 = 2x INT8.
+- **BIG: FP8 is NOT native systolic on Xe2** (conversion-based, rides FP16 path); **INT8 IS native.** So a
+  true INT8 W8A8 kernel could beat FP8 in PREFILL / large-batch (up to ~2x systolic) — though batch-1 decode
+  ties (both ~1 byte/wt, bandwidth-bound). This reframes "FP8 always dominates": only true for decode.
+- **The W8A8 KeyError fix is small + double-duty:** oneDNN GPU matmul already does native s8xs8->s32 on
+  Battlemage, so the missing piece is just an `int8_gemm_w8a8` op in vllm-xpu-kernels + `_POSSIBLE_INT8_
+  KERNELS[XPU]=[XPUInt8ScaledMMLinearKernel]` (model on int4_gemm_w4a8.h). Also unblocks GDN-FP8 (same
+  selector). => This is almost certainly what the community "Quark W8A8 99 t/s" person did. CONTRIBUTION #1.
+- **THREE prior-assumption CORRECTIONS (agent [WELL-SOURCED], flagged to re-verify):**
+  1. The "Xe2 warptile bug" is mis-stated — real bug is reorder/DPAS-sync corruption (llama.cpp #21893,
+     workaround `GGML_SYCL_DISABLE_OPT=1`). (No warptile/mmq knob in the SYCL backend.)
+  2. **llama.cpp DOES have Gated-DeltaNet now** (PR #16095, ~Nov 2025; GATED_DELTA_NET marked SYCL-supported).
+     Our "build 9680 segfaults -> contribution target" is STALE -> retry Qwen3.6-27B on a NEWER llama.cpp
+     SYCL build (could unblock the GPU path we thought was missing). [new task]
+  3. **`torch.xpu.XPUGraph` exists** (PyTorch 2.11, PR #174046) — "no XPU graph capture" is now only true
+     INSIDE vLLM (not wired up). => our spec-decode-negative / launch-overhead findings could flip if vLLM
+     wires XPUGraph. CONTRIBUTION #3.
+  Plus: Battlemage has NO GPU P2P (confirmed our SKU) -> cross-card collectives must host-stage (an ESIMD
+  IPC-peer all-reduce is NOT viable); llama.cpp Vulkan DOES use coop-matrix on Xe2 ("matrix cores: none" was
+  misdetection/pre-Xe2). [task #8 done]
+- Top-3 kernels to write: (1) XPU INT8 W8A8 scaled-MM via oneDNN + registry fix [highest leverage, also
+  fixes GDN KeyError]; (2) faster XPU GDN decode kernel (ESIMD/sycl-tla); (3) wire vLLM to torch.xpu.XPUGraph
+  + host-staged capture-safe all-reduce.
+
+### 2026-06-18 — [KEY] Quark W8A8 99 t/s "mystery" SOLVED by source: stock c51df4300 CANNOT run it (same KeyError)
+- User asked to chase the community claim: Qwen3.6-35B-A3B **Quark W8A8 INT8 = 99.77 t/s** on 4x B70,
+  vLLM **0.20.2rc1.dev2+gc51df4300** (== our `vllm-xpu-env:tf` image, EXACT commit), TTFT 76.5 ms.
+- Inspected the quark dispatch in BOTH `:tf` (c51df4300) and `:v0230`: **`QuarkW8A8Int8.create_weights`
+  calls `init_int8_linear_kernel`** — the SAME function compressed-tensors W8A8 uses. It indexes
+  `_POSSIBLE_INT8_KERNELS[current_platform._enum]`.
+- Read `_POSSIBLE_INT8_KERNELS` in `:tf` (kernels/linear/__init__.py:151): keys = **CPU, CUDA, ROCM only —
+  NO XPU**. (Contrast: `_POSSIBLE_FP8_KERNELS[XPU]=[XPUFP8ScaledMMLinearKernel]` and `_POSSIBLE_KERNELS`
+  (mixed-precision) `[XPU]=[XPUW4A8IntLinearKernel, XPUwNa16LinearKernel]` DO exist.)
+- CONCLUSION (defensible): on **stock c51df4300**, BOTH Quark and compressed-tensors W8A8 INT8 hit
+  `KeyError: PlatformEnum.XPU` at model load -> cannot run. So the community 99.77 t/s "Quark W8A8 INT8" was
+  **NOT stock INT8 W8A8 on XPU**. It needed (a) a custom XPU int8 scaled-MM kernel + a registry patch
+  (`_POSSIBLE_INT8_KERNELS[XPU]=[...]`), or (b) the Quark config actually resolved to FP8 / W4A8, or
+  (c) misattribution. The image ships `vllm-xpu-kernels 0.1.7` (community used 0.1.9 for MTP) — no obvious
+  int8 symbol exposed. "What enabled it" is NOT in stock vLLM or the shipped wheel.
+- ACTIONABLE: writing that XPU INT8 scaled-MM kernel + the one-line registry entry is **contribution
+  target #1** (a dedicated agent is researching the Battlemage kernel toolchain -> docs/literature/06).
+  TODO: check vllm_xpu_kernels v0.1.9 for an int8 kernel; hunt the community patch. [task #7]
+- SILVER LINING: the same grep proved **W4A8 IS reachable on XPU** (`_POSSIBLE_KERNELS[XPU]` has
+  `XPUW4A8IntLinearKernel`) -> producing a W4A8-int checkpoint next. [task #5]
+
+### 2026-06-18 — [OK->FAIL] EMPIRICAL: W8A8 INT8 hard-fails at load on B70 (KeyError XPU) — confirms paper finding
+- Goal: stop guessing from source — actually RUN compressed-tensors W8A8 INT8 on the B70 and read the
+  kernel selection. No Qwen3-14B W8A8 on HF (only 8B/32B; `shawnw3i/Qwen3-14B-INT8` is a real W8A8 but we
+  made our own). Produced `Qwen3-14B-W8A8-INT8` (16 GB) from local BF16 via llm-compressor **data-free RTN**
+  (`QuantizationModifier scheme=W8A8`, int8 per-channel weights + per-token DYNAMIC int8 activations, no
+  SmoothQuant/no calibration -> `DataFreePipeline`, ~2 min CPU). [scripts/40_quantize_w8a8.sh DATAFREE=1]
+- Served on `vllm-xpu-env:v0230` (vLLM 0.23.0). vLLM auto-detected `quantization=compressed-tensors`,
+  picked scheme **`CompressedTensorsW8A8Int8`** for layer 0 qkv_proj, then **CRASHED at `create_weights`**:
+  `init_int8_linear_kernel -> choose_scaled_mm_linear_kernel -> platform_kernels =
+   possible_kernels[current_platform._enum]` => **`KeyError: <PlatformEnum.XPU: 4>`**
+  (`kernels/linear/__init__.py:495`). Engine core init failed; server never came up. [scripts/41]
+- VERDICT (now EMPIRICAL, not just source-read): **W8A8 INT8 does not even LOAD on Battlemage vLLM** —
+  the INT8 scaled-MM kernel registry (`_POSSIBLE_INT8_KERNELS`) has **no XPU key**, so the chooser KeyErrors.
+  Not a graceful "failed to find kernel", not a silent fp16 fallback — a hard crash at weight creation.
+  Confirms docs/literature/05_w8a8_recipe.md.
+- Cross-link: this is the **SAME `KeyError(XPU)` in the SAME `choose_scaled_mm_linear_kernel`** that killed
+  the Qwen3.6 DeltaNet-FP8 projection on 06-17. Shared root cause: the generic scaled-MM chooser has no XPU
+  entry for INT8 (or the GDN-FP8 path). Regular dense FP8 works because it routes to
+  `XPUFP8ScaledMMLinearKernel` via a different path. => single upstream contribution: add an XPU branch (or
+  a clear "unsupported on XPU" error) to `choose_scaled_mm_linear_kernel` / `possible_kernels`.
+- Debunks the community "Quark W8A8 INT8 = 99 t/s on 4x B70" as an INT8-XMX run: vanilla compressed-tensors
+  W8A8 KeyErrors at load on this exact chooser, so that number was NOT this path (vendor patch/fallback, or
+  misattribution). Updated docs/COMMUNITY_CONFIGS.md row #2 accordingly.
+- No bench possible (nothing served). FP8 remains THE accurate 8-bit path on B70. Restored FP8 baseline.
+- NEXT: W4A8 (`XPUW4A8IntLinearKernel`, int4 weights + per-token int8 activations) = the ONLY upstream XPU
+  path that lights the INT8 XMX datapath [task #5]. Plus experiment: XPU-accelerated quant calibration [#6].

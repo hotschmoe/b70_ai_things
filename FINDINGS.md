@@ -11,8 +11,10 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)
 - **Best backend: upstream vLLM-XPU built from source** (`Dockerfile.xpu`). It has the real XPU
   FP8 matmul kernel and native model support. (llama.cpp SYCL also works well for standard models.)
-- **FP8 is the 8-bit sweet spot.** There is **no INT8 W8A8 kernel on Battlemage** in vLLM — W8A8
-  silently dequant-falls-back to FP16. Don't bother; use FP8.
+- **FP8 is the 8-bit sweet spot.** There is **no INT8 W8A8 kernel on Battlemage** in vLLM. We tested it
+  (self-quant W8A8 on vLLM 0.23.0): it doesn't even load — **hard `KeyError: PlatformEnum.XPU` at model
+  load** in `choose_scaled_mm_linear_kernel` (the int8 kernel registry has no XPU entry). Don't bother;
+  use FP8.
 
 ## What works (single B70, 32 GB)
 | Thing | Result |
@@ -24,8 +26,18 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 | **torch.compile (inductor)** | cuts single-stream **TTFT ~6x** (1032->176 ms) + ~11% decode at low concurrency |
 
 ## What does NOT work (yet) — save yourself the time
-- **INT8 W8A8:** no XPU kernel (FP8-only `scaled_mm`). Use FP8. The only int8-activation path is **W4A8**
-  (`XPUW4A8IntLinearKernel`, int4 weights + int8 activations) — niche, fragile.
+- **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
+  **We FIXED it (2026-06-18):** wrote a native `int8_gemm_w8a8` oneDNN kernel (s8xs8->s32) + the vLLM
+  `XPUInt8ScaledMMLinearKernel` + registry entry. The W8A8 checkpoint now SERVES on the B70 and selects our
+  kernel (`Selected XPUInt8ScaledMMLinearKernel`), coherent output. First INT8 W8A8 path on Battlemage. See
+  docs/kernel/01 + contrib/vllm_int8_xpu/. (Perf vs FP8 in prefill/large-batch = TODO; FP8 still wins decode.)
+- **W4A8-INT** (`XPUW4A8IntLinearKernel`, int4 weights + per-token int8 activations, oneDNN `int4_gemm_w4a8`):
+  **Tested 2026-06-18 — it's the only path that lights the INT8-XMX datapath, and it serves (9.3 GB, smallest
+  footprint, 12x concurrency). BUT single-stream decode is ~16.6 t/s, half of FP8** (the int4_gemm_w4a8 decode
+  kernel is unoptimized). Head-to-head (identical harness): **FP8 wins per-stream at every matched concurrency
+  (~1.7-1.8x)**; W4A8's only real edge is VRAM (9.3 vs 15.2 GB). FP8 stays the pick. (Note from
+  literature/06: FP8 is conversion-based on Xe2; INT is native systolic — so a real INT8 W8A8 kernel could
+  beat FP8 in *prefill/large-batch*. That kernel doesn't exist upstream yet = our top contribution target.)
 - **Speculative decoding (draft model):** **net-negative on B70** (3.4x slower in our test) because XPU has
   **no CUDA-graph capture**, so the extra forward passes per step cost more than the token savings.
 - **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8
