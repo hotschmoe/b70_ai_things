@@ -42,9 +42,11 @@ Raising it to 64 (+ `--max-num-batched-tokens 8192`) unlocks the real curve:
 | 48 | 525 | 15.3 | 3.4 s |
 | 64 | **556** | 12.0 | 4.1 s |
 
-**Headline: a single B70 serves Qwen3-14B FP8 at ~556 tok/s aggregate @ C64** (still rising; ceiling ~600).
-Throughput-vs-latency knob: **~556 t/s @ C64** (max throughput, high TTFT) vs **~330 t/s @ C16**
-(29.5 t/s/stream, low latency). Tune `--max-num-seqs` to your workload — the default 16 leaves a lot on the table.
+**Headline: a single B70 serves Qwen3-14B FP8 at ~558 tok/s aggregate, saturating at C64.** Confirmed
+ceiling: C64=558, C96=558, C110=556 — beyond C64 throughput is flat and only TTFT grows (4.1->10.3->13.4 s),
+i.e. compute-bound saturation. Throughput-vs-latency knob: **~558 t/s @ C64** (max throughput) vs
+**~330 t/s @ C16** (29.5 t/s/stream, low latency). Tune `--max-num-seqs` to your workload — the default 16
+caps you at ~330.
 
 ### FP8 (online, XPUFP8ScaledMMLinearKernel) — 2026-06-17
 Model 15.2 GiB + KV 11.7 GiB (76,544 tok), max ctx 16k, util 0.90, FlashAttn v2.

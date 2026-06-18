@@ -440,4 +440,20 @@ Full roadmap, sweep matrix, and dual-card plan: see `STRATEGY.md`. Literature: `
   moonshot (needs int4 ckpt + XPU int4 is fragile). Otherwise card #2.
 - NOTE: pin **vllm-xpu-env:v0230** as the new primary for DeltaNet models; keep :tf (0.20.2) for dense.
 
+### 2026-06-18 — NIGHT CAMPAIGN SUMMARY (single B70, vLLM-XPU)
+Headlines:
+- **Qwen3-14B FP8 = the single-card sweet spot:** 35 t/s single-stream (62 ms TTFT w/ compile),
+  **~558 t/s aggregate ceiling @ C64** (saturates there). near-lossless. Default --max-num-seqs 16 caps
+  you at ~330 — raise it.
+- **Qwen3.6-27B (DeltaNet) RUNS on ONE B70** via int4 AutoRound on vLLM 0.23.0 (7.89 t/s, coherent).
+  Only known single-card path. FP8/8-bit needs card #2 (VRAM). Decode is GDN-kernel-limited (opt target).
+- **vLLM 0.23.0 > 0.20.2** for B70: same throughput, ~7x better eager TTFT, and the only version with
+  working GDN+FP8 XPU kernels. Pin v0230. (compile broke on it - torch 2.11; run eager.)
+- F16 18.7 t/s (tight, dominated by FP8). W8A8 INT8 has NO XPU kernel (use FP8). Draft spec-decode is
+  3.4x SLOWER (no XPU cudagraph). All documented in RESULTS.md / FINDINGS.md.
+Infra: public repo github.com/hotschmoe/b70_ai_things (committing per experiment); docker.img 200GB;
+images vllm-xpu-env:{tf=0.20.2, v0230=0.23.0}. Dual-card plan + scripts ready (DUALCARD.md, 43_serve_multi.sh).
+Contribution targets logged: XPU GDN/DeltaNet decode-kernel speed; llama.cpp DeltaNet SYCL; gemma4_unified
+vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
+
 <!-- New entries below -->
