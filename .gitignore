@@ -1,0 +1,24 @@
+# Secrets — never commit
+*.token
+.hf_token
+*_token*
+*secret*
+.env
+*.pem
+id_*
+*.key
+
+# OS / editor cruft
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+*~
+
+# Local scratch
+tmp/
+*.tmp
+
+# Large raw model/bench dumps stay on the box; curated results live in results/*.csv + RESULTS.md
+*.gguf
+*.safetensors
