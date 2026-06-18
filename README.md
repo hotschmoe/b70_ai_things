@@ -1,7 +1,10 @@
 # B70 AI Inference Optimization
 
-Optimizing **Qwen3.6-27B** inference on an **Intel Arc Pro B70** GPU hosted in an
-Unraid server (Threadripper) at `192.168.10.5`.
+Optimizing LLM inference on an **Intel Arc Pro B70** GPU (32 GB Battlemage) hosted in
+an Unraid server (Threadripper). A public research log for fellow Team Blue tinkerers.
+
+> **Start here:** [FINDINGS.md](FINDINGS.md) — what actually works on the B70 (and what doesn't).
+> [RESULTS.md](RESULTS.md) — raw benchmark tables. [JOURNAL.md](JOURNAL.md) — full experiment log.
 
 ## Goals
 

@@ -71,7 +71,7 @@ so F16 is dominated on a single B70 (more bytes/token + barely fits). Use FP8.
 | F16/BF16 | ~28 GB | 18.7 | ~83 ms | tight, full quality, slowest |
 | FP8 (+compile) | ~15 GB | **35.3** | **~62 ms** | near-lossless, sweet spot |
 | FP8 + draft spec-decode | ~16 GB | 10.3 | ~105 ms | NEGATIVE (no XPU cudagraph) |
-| int4 / W4A8 | ~8 GB | TBD (~50-60?) | TBD | testing next (fast end) |
+| int4 / W4A8 | ~8 GB | deferred | — | no official Qwen3-14B GPTQ-Int4; XPU int4 fragile (AWQ->CUDA torchao #269, GPTQ #39474). Revisit w/ self-quant |
 
 <!-- new result blocks above this line, newest first within each model -->
 
