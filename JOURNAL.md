@@ -428,4 +428,16 @@ Full roadmap, sweep matrix, and dual-card plan: see `STRATEGY.md`. Literature: `
 - CONCLUSION: single-card Qwen3.6-27B stays blocked (BF16 54GB won't fit; both 8-bit DeltaNet paths have XPU
   kernel gaps). Route = card #2 (BF16 across 2 cards) or fix the GDN FP8 XPU kernel selection. [task #6]
 
+### 2026-06-18 — [BIG] vLLM v0.23.0 SOFTWARE-unblocks Qwen3.6-27B DeltaNet on B70 (VRAM is the only wall)
+- Built vllm-xpu-env:v0230 (vllm 0.23.0, torch 2.11.0+xpu, 11m34s). Served Qwen3.6-27B-FP8:
+  - Resolved `Qwen3_5ForConditionalGeneration`; **`Selected XPUFp8BlockScaledMMKernel`** (NEW block-scaled
+    FP8 kernel — past the 0.20.2 `KeyError(XPU)`); **`Using Triton/FLA GDN prefill kernel`**. DeltaNet runs!
+  - Model footprint **28.51 GiB**; then `ValueError: No available memory for the cache blocks` (KV = -0.22 GiB).
+- CONCLUSION: **v0.23.0 fixes the Qwen3.6 DeltaNet+FP8 XPU kernel gaps.** Remaining block is PURELY VRAM
+  (28.5 GiB leaves no KV on one 32 GB card). => "newest vLLM best?" = YES for Qwen3.6 (only version that
+  loads it on XPU). Qwen3.6-27B is now a clean CARD #2 target (64 GB pooled) on a known-good stack [v0.23.0].
+- Single-card paths to still try: Qwen3.6-27B **int4** (~15 GB, would fit w/ KV) on v0.23.0 GDN kernels —
+  moonshot (needs int4 ckpt + XPU int4 is fragile). Otherwise card #2.
+- NOTE: pin **vllm-xpu-env:v0230** as the new primary for DeltaNet models; keep :tf (0.20.2) for dense.
+
 <!-- New entries below -->
