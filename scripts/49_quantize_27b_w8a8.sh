@@ -9,14 +9,16 @@
 # hurts accuracy / they are not group-divisible) -- only the standard attn/MLP linears go int8 (our kernel).
 #
 # Env: SRC (27B BF16 path), OUTNAME, DEVICE=xpu|cpu (default xpu), METHOD=gptq|rtn (default gptq),
-#      SAMPLES (default 512), SEQLEN (default 2048), SMOOTH (0.8), IGNORE (space-sep patterns), DATAFREE=0.
+#      SAMPLES (default 512), SEQLEN (default 2048), SMOOTH (0.8), SMOOTHQUANT=1|0 (default 1; set 0 to
+#      SKIP SmoothQuant -- REQUIRED for the hybrid Qwen3_5 27B, whose 16/64 full-attn layers break
+#      SmoothQuant's smooth-layer<->q/k/v pairing -> ValueError), IGNORE (space-sep patterns), DATAFREE=0.
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:v0230}"
 SRC="${SRC:-/mnt/vm_8tb/b70/models/Qwen_Qwen3.6-27B}"
 OUTNAME="${OUTNAME:-Qwen3.6-27B-W8A8-INT8}"
 DEVICE="${DEVICE:-xpu}"; METHOD="${METHOD:-gptq}"; SAMPLES="${SAMPLES:-512}"; SEQLEN="${SEQLEN:-2048}"; SMOOTH="${SMOOTH:-0.8}"
-DATAFREE="${DATAFREE:-0}"
+DATAFREE="${DATAFREE:-0}"; SMOOTHQUANT="${SMOOTHQUANT:-1}"
 # Qwen3.6-27B is a Qwen3_5 VLM (vision tower + DeltaNet/full-attn text + MTP). Quantize only the standard
 # self_attn + MLP linears; keep DeltaNet (linear_attn), the WHOLE vision tower, MTP, and lm_head in BF16.
 # (Confirmed against the safetensors weight map: model.language_model.layers.N.{self_attn,mlp,linear_attn},
@@ -35,6 +37,7 @@ docker run --rm --name quant27b "${GPUARGS[@]}" --ipc=host --shm-size 32g \
   -e OMP_NUM_THREADS=32 -e PIP_CACHE_DIR="$ROOT/pip_cache" \
   -e SRC="$SRC" -e OUT="$ROOT/models/$OUTNAME" -e DEVICE="$DEVICE" -e METHOD="$METHOD" \
   -e SAMPLES="$SAMPLES" -e SEQLEN="$SEQLEN" -e SMOOTH="$SMOOTH" -e IGNORE="$IGNORE" -e DATAFREE="$DATAFREE" \
+  -e SMOOTHQUANT="$SMOOTHQUANT" \
   --entrypoint bash "$IMG" -c '
     set -e
     source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true
@@ -49,7 +52,7 @@ except Exception: from llmcompressor.modifiers.smoothquant import SmoothQuantMod
 
 SRC=os.environ["SRC"]; OUT=os.environ["OUT"]; DEV=os.environ["DEVICE"]; METHOD=os.environ["METHOD"].lower()
 N=int(os.environ["SAMPLES"]); SEQ=int(os.environ["SEQLEN"]); SMOOTH=float(os.environ["SMOOTH"])
-DATAFREE=os.environ.get("DATAFREE","0")=="1"
+DATAFREE=os.environ.get("DATAFREE","0")=="1"; USE_SMOOTH=os.environ.get("SMOOTHQUANT","1")=="1"
 IGN=[p for p in os.environ["IGNORE"].split() if p]
 xpu_ok=hasattr(torch,"xpu") and torch.xpu.is_available()
 print(f"[probe] xpu={xpu_ok} device={DEV} datafree={DATAFREE}", flush=True)
@@ -92,8 +95,13 @@ else:
         q=GPTQModifier(targets="Linear", scheme="W8A8", ignore=IGN, actorder=None)  # actorder None: no act reorder (avoids XPU gather device-lost); =False was rejected by newer llmcompressor
     else:
         q=QuantizationModifier(targets="Linear", scheme="W8A8", ignore=IGN)
-    recipe=[SmoothQuantModifier(smoothing_strength=SMOOTH), q]
-    print(f"[quant] SmoothQuant+{METHOD} W8A8, ignore={IGN} ...", flush=True)
+    # SmoothQuant resolver needs exactly one smooth-layer per balance group; the hybrid Qwen3_5 (only
+    # 16/64 layers carry self_attn q/k/v) breaks that pairing, ValueError before any GPU work. SMOOTHQUANT=0
+    # runs GPTQ-only, still a strong W8A8 recipe (GPTQ weight calibration + dynamic per-token int8 acts).
+    # NOTE: keep this heredoc free of apostrophes/single-quotes -- it lives inside bash -c quoted.
+    pfx = "SmoothQuant+" if USE_SMOOTH else ""
+    recipe=[SmoothQuantModifier(smoothing_strength=SMOOTH), q] if USE_SMOOTH else [q]
+    print(f"[quant] {pfx}{METHOD} W8A8, ignore={IGN} ...", flush=True)
     t0=time.time()
     oneshot(model=model, dataset=ds, recipe=recipe, max_seq_length=SEQ, num_calibration_samples=N)
 print(f"[done] calib+quant {time.time()-t0:.0f}s; saving compressed -> {OUT}", flush=True)
