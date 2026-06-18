@@ -1,0 +1,7 @@
+== warmup ==
+[warm] gen=16 TTFT=92ms decode=36.97 tok/s total=0.50s
+[gen0] gen=200 TTFT=61ms decode=35.28 tok/s total=5.70s
+[gen1] gen=200 TTFT=63ms decode=35.28 tok/s total=5.70s
+[gen2] gen=200 TTFT=63ms decode=35.29 tok/s total=5.70s
+MEAN coherent decode: 35.28 tok/s over 3 runs
+=== spec-decode acceptance metrics (if any) ===
