@@ -5,6 +5,24 @@ built from source (`vllm 0.20.2rc1.dev2+gc51df4300`, image `vllm-xpu-env:tf`) un
 Bench = `vllm bench serve`, random dataset, 512 in / 128 out, `--ignore-eos`. `--enforce-eager`,
 no prefix cache, unless noted. Decode/TTFT are means. Newest at top.
 
+## Qwen3.6-27B (Gated-DeltaNet) — RUNS ON A SINGLE B70 (int4, v0.23.0)  [2026-06-18]
+
+After being blocked all session (llama.cpp SYCL has no DeltaNet; both vLLM FP8 paths had XPU kernel gaps),
+**Qwen3.6-27B generates on ONE Arc Pro B70** via `Lorbus/Qwen3.6-27B-int4-AutoRound` on `vllm-xpu-env:v0230`
+(vLLM 0.23.0). Kernels: `Triton/FLA GDN prefill kernel` + AutoRound int4. Output is coherent (emits
+Qwen3.6 `<think>` tokens correctly).
+
+| Metric | Value |
+|---|---|
+| Fits | **YES** — model 17.56 GiB + KV 7.54 GiB (75,776 tok, 18.5x conc @ 4k ctx) |
+| Coherent single-stream decode | **7.89 t/s** (slow — Triton/FLA DeltaNet kernel unoptimized on XPU) |
+| First-token (cold) | ~19 s (GDN kernel JIT on first request); steady after |
+| Quality | coherent, thinking-mode works |
+
+Significance: **the only known way to run Qwen3.6-27B on a single B70 today.** Decode is bandwidth+kernel
+limited (15 GB int4 -> ~40 t/s ceiling, only ~20% achieved -> XPU DeltaNet kernels are the bottleneck,
+not VRAM). Optimization target: faster XPU GDN/linear-attention kernels. 2-card BF16 will be much faster.
+
 ## Qwen3-14B (dense, GQA, native Qwen3ForCausalLM)
 
 ### FP8 (online, XPUFP8ScaledMMLinearKernel) — 2026-06-17

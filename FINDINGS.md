@@ -16,6 +16,7 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 ## What works (single B70, 32 GB)
 | Thing | Result |
 |---|---|
+| **Qwen3.6-27B (Gated-DeltaNet)** | **RUNS** via int4 AutoRound on vLLM **0.23.0** — 7.9 t/s, coherent. Only known single-card path. |
 | Qwen3-14B **FP8** (vLLM-XPU) | **35 t/s** single / **324 t/s** @ C32, TTFT ~62 ms (w/ compile), near-lossless |
 | Qwen3-14B **F16/BF16** | 18.7 t/s, but ~28 GB barely fits (tiny KV). FP8 is ~1.9x faster — just use FP8 |
 | Qwen2.5-7B **Q4_K_M** (llama.cpp SYCL) | ~90 t/s decode — llama.cpp SYCL is great for standard-attention models |
@@ -26,9 +27,11 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   (`XPUW4A8IntLinearKernel`, int4 weights + int8 activations) — niche, fragile.
 - **Speculative decoding (draft model):** **net-negative on B70** (3.4x slower in our test) because XPU has
   **no CUDA-graph capture**, so the extra forward passes per step cost more than the token savings.
-- **Qwen3.6 (Gated-DeltaNet):** not runnable on the B70 yet — llama.cpp SYCL has no DeltaNet kernels, and
-  vLLM-XPU's DeltaNet FP8 path has kernel gaps (ESIMD `.weight` bug on Intel's image; `scaled_mm` chooser
-  `KeyError(XPU)` upstream). Standard-attention models (Qwen3/Qwen2.5/Llama) are fine.
+- **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8
+  DeltaNet kernel only exists in vLLM **0.23.0** (older images: ESIMD `.weight` bug / `scaled_mm` `KeyError(XPU)`).
+  BUT int4 (AutoRound) on 0.23.0 **does run** (see above) — just slow. 8-bit Qwen3.6 needs a 2nd card.
+- **torch.compile on vLLM 0.23.0:** broke (torch 2.11 + inductor). Run `--enforce-eager` on 0.23.0
+  (its eager TTFT is already ~7x better than 0.20.2 eager anyway).
 - **Gemma 4 12B:** the `gemma4_unified` multimodal checkpoint routes through vLLM's generic Transformers
   fallback, which mis-reshapes its mixed head dims (256/512) and crashes. Needs a native-resolving checkpoint.
 
