@@ -799,3 +799,22 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   (work_group_scratch_memory, via flash-attn). So on B70 today: **ship PIECEWISE graph capture (no spec).**
   Spec-decode (ngram/MTP/DFlash) stays parked until either FULL XPU graph capture lands or a
   no-scratch XPU attention kernel exists.
+
+### 2026-06-19 — [OK] 27B W8A8 quant pipeline VALIDATED (data-free RTN) — text-only decoder, 33 GB, correct scheme
+- Ran the corrected scripts/49 with DATAFREE=1 DEVICE=cpu (after fixing two bugs: DATAFREE env wasn't
+  forwarded into the container; GPTQModifier `actorder=False` is rejected by current llmcompressor -> `None`).
+- The Qwen3_5 VLM **loads via `AutoModelForCausalLM`** with no fallback needed — and importantly it loads the
+  **TEXT-ONLY decoder** (`model.layers.*`): the vision tower and MTP head are NOT instantiated by the CausalLM
+  auto-class. So `re:.*visual.*` / `re:.*mtp.*` ignore patterns matched 0 modules (harmless no-ops); the real
+  ignores were the 48 DeltaNet `linear_attn` layers + `lm_head` (all kept BF16). Exactly **256 modules
+  quantized** = 192 MLP (64x3) + 64 full-attn (16x4) std linears. Clean.
+- Output `models/Qwen3.6-27B-W8A8-INT8-RTNtest` = **33 GB**, `quantization_config`: format=int-quantized,
+  group_0 targets=Linear, weights 8-bit int, input_activations 8-bit **dynamic** -> the EXACT W8A8 dynamic-sym
+  scheme our XPUInt8ScaledMMLinearKernel serves. ~40 s quant + ~3.5 min shard write.
+- **33 GB > one 32 GB card** (weights alone, before KV/activations) -> confirms 27B W8A8 needs **card #2**.
+  Implication: this is a text-only coding-server derivative (no vision, no MTP -> no MTP spec-decode path).
+- Pipeline now DE-RISKED. Remaining unknown is XPU serveability of the DeltaNet (Qwen3_5) text model — vLLM
+  registers the arch + ships `gdn_attention_core_xpu`, but it can't be tested until card #2 (33 GB won't fit
+  one card). The RTN checkpoint is a sufficient artifact to test serveability the moment card #2 lands.
+- DECISION PENDING (user): run the long GPTQ+SmoothQuant quality pass NOW (background, ready for card-#2 day)
+  vs. DEFER until card #2 confirms the model serves on XPU (avoid hours of compute on an unconfirmed path).
