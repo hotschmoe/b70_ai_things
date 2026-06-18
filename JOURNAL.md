@@ -458,6 +458,49 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 
 <!-- New entries below -->
 
+### 2026-06-18 — [TIER-1a WIN] FP8 KV cache works on our W8A8 path: 2x context budget, no graft/patch
+- Served Qwen3-14B-W8A8-INT8 from the committed `vllm-xpu-env:int8` image with `--kv-cache-dtype fp8_e4m3`
+  [scripts/48]. Log: `Using fp8_e4m3 data type to store kv cache` + `Selected XPUInt8ScaledMMLinearKernel`
+  -> **INT8 weights/acts + FP8 KV compose cleanly.**
+- **GPU KV cache 138,880 tokens (was 71,040 with auto/fp16 KV) = ~1.96x; max concurrency 8.7x -> 17x.** Same
+  10.6 GiB KV memory, double the tokens (FP8 KV = half the bytes/token). The long-context-coding win, free.
+- => The engine config is settled: **W8A8 INT8 linear (ours) + FP8 KV cache** (+ optional W8A16 ignore-list
+  for sensitive layers). Decode throughput ~NEUTRAL with FP8 KV: 512:128:1 = 20.4 t/s (vs 22.6 w/o; slight
+  short-ctx descale cost), 512:128:32 agg = 476 (vs 465; slight gain). So FP8 KV = 2x context for ~free. [Tier-1a]
+
+### 2026-06-18 — [RESEARCH] spec-decode for XPU: DFlash is the one that survives no-graph-capture; ngram PoC first
+- Agent identified pflash/dflash: **dflash = z-lab DFlash** (arXiv:2602.06036), a **block-diffusion drafter**
+  that emits a whole K-token block in ONE parallel forward pass (vs EAGLE's K sequential). **Already in vLLM**
+  (PR #38300, vllm>=0.20.0): `vllm/v1/spec_decode/dflash.py` + `models/qwen3_dflash.py`. pflash = Luce-Org
+  llama.cpp-fork prefill-compression -- NOT a vLLM spec-decode intrinsic; do not port.
+- KEY INSIGHT for our 3.4x-slower XPU spec-decode result: it's a kernel-LAUNCH-COUNT problem. Autoregressive
+  drafters (draft-model, EAGLE) do K sequential drafter forwards/step -> K launch-waves -> gated on XPU graph
+  capture. **Single-pass drafters (MTP, Medusa, DFlash) do 1 forward/step -> launch multiplier ~1 -> their
+  advantage SURVIVES the no-graph-capture penalty.** So DFlash is the spec-decode family worth targeting on XPU.
+- MTP reality (confirmed): needs trained MTP heads. **Qwen3.6-27B HAS them** (`method:"mtp"`, ~75-79% accept
+  @3) -> zero-effort single-pass spec-decode once it serves. **Qwen3-14B dense does NOT** -> a "14B MTP" PoC
+  is really draft/ngram.
+- PLAN: (1) cheapest diagnostic = **ngram spec-decode** (0 drafter forwards -> isolates whether verify-step
+  eager overhead ALONE sinks spec-decode on graph-less XPU). If ngram net-positive -> single-pass drafters
+  will likely win; if even ngram loses -> **wiring torch.xpu.XPUGraph is the true prerequisite** (lit/06 #3).
+  (2) For 27B: try native MTP. (3) DFlash-on-XPU = M-L effort (non-causal attn + Triton-XPU kernels are the
+  risk; the spec-decode plumbing already exists) -- the real target for dense models lacking MTP heads.
+
+### 2026-06-18 — [RESEARCH] TurboQuant KV cache: DEFER; use FP8 KV cache instead (already on the XPU kernel)
+- Agent researched TurboQuant (arXiv:2504.19874, ICLR 2026): a calibration-free KV-cache vector-quant
+  (random/Hadamard rotation -> Gaussianized coords -> per-coordinate Lloyd-Max scalar quant; Q also rotated
+  at attention time). KV-cache-ONLY -> orthogonal to our int8 LINEAR kernel; matmuls stay BF16.
+- VERDICT: **not worth it for B70.** (1) No XPU path -- upstream is CUDA/Triton only; would need new SYCL
+  kernels (rotation + sub-byte 3-bit pack/unpack + codebook dequant + paged flash-attn integration), ~L
+  effort 3-5 wk, no oneDNN crutch; our per-token int8 quant op does NOT reuse (different granularity).
+  (2) vLLM's OWN benchmark: TurboQuant **regresses throughput 10-68%** at accuracy-preserving bits, only wins
+  under memory saturation; 3-bit (real memory savings) degrades coding accuracy (20-pt LiveCodeBench drop).
+- **ANSWER to codex's KV rec + the KV-cache question: enable FP8 KV cache.** `--kv-cache-dtype fp8_e4m3` is
+  **already supported in the XPU flash-attn kernel** (vllm-xpu-kernels, e5m2/e4m3 online descale, paged +
+  chunked prefill) -> 2x KV capacity (~2x long-context budget on 32 GB), ~BF16 accuracy, no throughput
+  penalty. Composes cleanly with our INT8 W8A8 linear path (int8 weights/acts + FP8 KV). Sources in agent
+  report. [Tier-1 action: verify/bench FP8 KV on our W8A8 serve]
+
 ### 2026-06-18 — [MAKE-IT-FAST] fused per-token int8 quant kernel: decode 13 -> 22.6 t/s (1.7x)
 - Wrote a fused SYCL `dynamic_per_token_int8_quant` op (csrc/xpu/sycl/, one work-group/row, sub-group absmax
   reduction, 2-pass quantize) to replace the eager `@torch.compile` `_ref` (the per-layer decode drag shared

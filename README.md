@@ -1,5 +1,9 @@
 # B70 AI Inference Optimization
 
+> **PICKING UP THIS PROJECT? START AT [HANDOFF.md](HANDOFF.md)** — current state, what's running, box
+> access (incl. the Linux SSH note), immediate next steps, and the roadmap.
+
+
 Optimizing LLM inference on an **Intel Arc Pro B70** GPU (32 GB Battlemage) hosted in
 an Unraid server (Threadripper). A public research log for fellow Team Blue tinkerers.
 
