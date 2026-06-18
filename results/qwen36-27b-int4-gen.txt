@@ -1,0 +1,9 @@
+== warmup ==
+[warm] ERR HTTP Error 404: Not Found
+[gen0] ERR HTTP Error 404: Not Found
+[gen1] ERR HTTP Error 404: Not Found
+[gen2] ERR HTTP Error 404: Not Found
+Traceback (most recent call last):
+  File "<stdin>", line 33, in <module>
+TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
+=== spec-decode acceptance metrics (if any) ===

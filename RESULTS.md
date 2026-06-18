@@ -19,9 +19,14 @@ Qwen3.6 `<think>` tokens correctly).
 | First-token (cold) | ~19 s (GDN kernel JIT on first request); steady after |
 | Quality | coherent, thinking-mode works |
 
+Concurrency (warm; `vllm bench serve`, GDN cold-JIT ~19 s must warm first): C4 = **21.6 t/s output /
+108 t/s total**, TPOT 129 ms, TTFT ~3.7 s. Aggregate scales with concurrency but less efficiently than
+dense FP8 (GDN/linear-attn kernel batches poorly). (Full 1-32 sweep tool is flaky on GDN models - cold
+requests time out; warm single runs are clean.)
+
 Significance: **the only known way to run Qwen3.6-27B on a single B70 today.** Decode is bandwidth+kernel
 limited (15 GB int4 -> ~40 t/s ceiling, only ~20% achieved -> XPU DeltaNet kernels are the bottleneck,
-not VRAM). Optimization target: faster XPU GDN/linear-attention kernels. 2-card BF16 will be much faster.
+not VRAM). Optimization target: faster XPU GDN/linear-attention kernels. 2-card BF16/FP8 will be much faster.
 
 ## Qwen3-14B (dense, GQA, native Qwen3ForCausalLM)
 
