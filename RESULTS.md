@@ -73,6 +73,20 @@ so F16 is dominated on a single B70 (more bytes/token + barely fits). Use FP8.
 | FP8 + draft spec-decode | ~16 GB | 10.3 | ~105 ms | NEGATIVE (no XPU cudagraph) |
 | int4 / W4A8 | ~8 GB | deferred | — | no official Qwen3-14B GPTQ-Int4; XPU int4 fragile (AWQ->CUDA torchao #269, GPTQ #39474). Revisit w/ self-quant |
 
+### vLLM v0.23.0 vs 0.20.2 — Qwen3-14B FP8 (eager) — 2026-06-18
+Built v0.23.0 from source (torch 2.11.0+xpu). NOTE: **compilation BROKE on v0.23.0** (torch 2.11 + inductor;
+the flagged regression) — ran eager. Same bench (random 512/128).
+
+| C | 0.20.2 eager agg t/s | v0.23.0 eager agg t/s | 0.20.2 TTFT | **v0.23.0 TTFT** | decode (both ~) |
+|---:|---:|---:|---:|---:|---:|
+| 1  | 24.8  | 30.0  | 1032 ms | **147 ms** | ~30.8 |
+| 8  | 181.1 | 189.6 | 1003 ms | 878 ms | ~28 |
+| 32 | 324.1 | **333.7** | 6601 ms | 6501 ms | ~23.5 |
+
+**Verdict: newest (v0.23.0) is the better backend.** ~Same throughput, but **~7x better out-of-box TTFT**
+at C1 (147 vs 1032 ms — matches 0.20.2-*compiled* without needing compile), AND it's the **only** version
+that loads Qwen3.6 DeltaNet on XPU. Downside: inductor compile broke (torch 2.11). Pin **v0.23.0** as primary.
+
 <!-- new result blocks above this line, newest first within each model -->
 
 ## To fill in (night campaign)
