@@ -1,7 +1,7 @@
 # HANDOFF — for the next dev agent (Linux dev machine -> SSH to Threadripper/B70)
 
-**Date:** 2026-06-18. **Context:** main dev is moving to a Linux machine that SSHes into the Unraid host
-with the Arc Pro B70. This is the pickup note. Read [README.md](README.md) -> [FINDINGS.md](FINDINGS.md)
+**Date:** 2026-06-19 (updated; was 2026-06-18). **Context:** dev is on a Linux machine SSHing into the Unraid
+host with the Arc Pro B70. This is the pickup note. Read [README.md](README.md) -> [FINDINGS.md](FINDINGS.md)
 -> [docs/kernel/02_int8_w8a8_status.md](docs/kernel/02_int8_w8a8_status.md) -> [JOURNAL.md](JOURNAL.md)
 (newest entries at the bottom). A 2nd B70 is being added (week of 2026-06-22) -> dual-card work unblocks.
 
@@ -12,15 +12,21 @@ prefill**, nearly matches decode (22.6 vs 29 t/s), and composes with **FP8 KV ca
 The engine config for a long-context coding server is settled: **INT8 W8A8 linear + FP8 KV cache** (+
 optional W8A16 ignore-list). All committed/pushed to `github.com/hotschmoe/b70_ai_things` (main).
 
-## Box access (NOTE: you are on Linux now, not Windows)
-- Host: `ssh b70` = `root@192.168.10.5`, key `~/.ssh/b70_unraid_ed25519`. Unraid 7.3.1, TR 1950X (32T),
-  125 GiB RAM, Docker. GPU: 1x Arc Pro B70 (Battlemage, 32 GB), `--device /dev/dri`, `ZE_AFFINITY_MASK=0`.
+**Update 2026-06-19:** add **PIECEWISE XPU graph capture** to that config -> **+16.7% decode** (27.23 vs 23.33
+t/s) for free. Unblocked by adding `register_fake` meta kernels for our 2 custom int8 ops (image
+`vllm-xpu-env:int8g`). See "NEW serving config" below. ngram spec-decode is net-NEGATIVE on XPU (parked).
+
+## Box access (Linux dev machine -- SET UP 2026-06-19)
+- Host: `ssh b70` = `root@192.168.10.5`. **On THIS Linux machine the key is the default `~/.ssh/id_ed25519`**
+  (NOT the old `b70_unraid_ed25519`). The `b70` alias is in `~/.ssh/config` (added 2026-06-19). Unraid 7.3.1,
+  TR 1950X (32T), 125 GiB RAM, Docker. GPU: 1x Arc Pro B70 (Battlemage, 32 GB), `--device /dev/dri`, `ZE_AFFINITY_MASK=0`.
 - ALL heavy data on the 8TB SSD: `/mnt/vm_8tb/b70/` (models, hf_cache, results, the kernel repo, caches).
-- **Running scripts:** the repo's `scripts/runremote.ps1` is **Windows PowerShell** -- it base64-transports a
-  local `.sh` to the box and runs it. On Linux, replace it with the equivalent:
-  `ssh b70 'bash -s' < scripts/NN_foo.sh` (for env vars: `ssh b70 "FOO=bar bash -s" < scripts/NN_foo.sh`,
-  or prepend `export`s). **First task: write a `runremote.sh` bash equivalent.** All `scripts/*.sh` are plain
-  bash, already written for the box; they `docker run` the right images with `/mnt/vm_8tb/b70` mounted.
+- **Running scripts: use `scripts/runremote.sh`** (bash port of `runremote.ps1`, written 2026-06-19). It
+  base64-transports a local `.sh` to the box and runs it under `bash -s`, with optional env vars:
+  `scripts/runremote.sh scripts/NN_foo.sh KEY=VALUE [host=b70]`. All `scripts/*.sh` are plain bash that
+  `docker run` the right images with `/mnt/vm_8tb/b70` mounted. (`runremote.ps1` is the old Windows version.)
+- **No python on the Unraid host** -- for quick python (e.g. parsing a safetensors index), use the
+  `python:3.11` image: `docker run --rm -v /mnt/vm_8tb/b70:/mnt/vm_8tb/b70 python:3.11 python -c '...'`.
 
 ## Key artifacts (on the box unless noted)
 - **`vllm-xpu-env:int8`** docker image (committed) = base v0230 + our int8 kernel baked in. Serve ANY
@@ -34,42 +40,63 @@ optional W8A16 ignore-list). All committed/pushed to `github.com/hotschmoe/b70_a
   `scripts/45`/`47` via `apply_patches.py` (resolves the real vLLM dir via `import vllm`).
 - Other images: `vllm-xpu-env:v0230` (vLLM 0.23.0, the build/serve base), `:tf` (0.20.2), `intel/llm-scaler-vllm:0.14.0-b8.3.1`.
 - Checkpoints (`/mnt/vm_8tb/b70/models/`): `Qwen3-14B-W8A8-INT8` (ours, works), `Qwen3-14B-W4A8-INT`,
-  `Lorbus_Qwen3.6-27B-int4-AutoRound`, `Qwen_Qwen3.6-27B-FP8`. 14B BF16 at `/mnt/vm_8tb/specula-build/models/Qwen3-14B`.
+  `Lorbus_Qwen3.6-27B-int4-AutoRound`, `Qwen_Qwen3.6-27B-FP8`, `Qwen_Qwen3.6-27B` (BF16, 54 GB),
+  **`Qwen3.6-27B-W8A8-INT8-RTNtest`** (33 GB, data-free RTN validation checkpoint -- text-only decoder, our
+  W8A8 dynamic scheme; for card-#2 serveability testing). 14B BF16 at `/mnt/vm_8tb/specula-build/models/Qwen3-14B`.
+- **Qwen3.6-27B is a `Qwen3_5ForConditionalGeneration` VLM** (vision tower + hybrid DeltaNet/full-attn text +
+  MTP), NOT a dense text model. `AutoModelForCausalLM` loads only the **text decoder** (no vision/MTP) -- good
+  for a coding server. 64 layers (48 `linear_attention` DeltaNet + 16 `full_attention`), hidden 5120, vocab 248320.
 
-## RIGHT NOW (in flight as of handoff)
-- **`qwen27b_dl` container is downloading Qwen/Qwen3.6-27B BF16** (~54 GB; was ~21 GB when I left). Detached,
-  resumable. Check: `ssh b70 'docker logs --tail 5 qwen27b_dl; du -sh /mnt/vm_8tb/b70/models/Qwen_Qwen3.6-27B'`.
-  If it died, resume with `scripts/50_download_27b_detached.sh` (snapshot_download resumes from cache).
-- GPU is FREE (no server up).
+## RIGHT NOW (state as of 2026-06-19 EOD)
+- **27B BF16 download COMPLETE** (54 GB, `models/Qwen_Qwen3.6-27B`). GPU FREE (no server up).
+- **NEW recommended serve config = PIECEWISE XPU graph capture** (image `vllm-xpu-env:int8g`, see below) ->
+  **+16.7% decode** (27.23 vs 23.33 t/s) over the old eager config, no accuracy change.
+- **27B W8A8 quant pipeline VALIDATED** (data-free RTN test checkpoint `models/Qwen3.6-27B-W8A8-INT8-RTNtest`,
+  33 GB). The full GPTQ+SmoothQuant quality pass is **DEFERRED until card #2 confirms the model serves on XPU**
+  (33 GB > one card; no point optimizing accuracy of an unconfirmed-servable model). See JOURNAL 2026-06-19.
+
+## NEW serving config (use this) -- PIECEWISE XPU graph capture, +16.7% decode
+- Image `vllm-xpu-env:int8g` = `:int8` + `register_fake` meta kernels for our 2 custom int8 ops (built by
+  `scripts/52_bake_int8_graph.sh`; source `contrib/vllm_int8_xpu/xpu_int8.py`). The fakes let torch.compile/
+  dynamo trace through our ops so vLLM's XPU graph capture works.
+- Serve: `scripts/runremote.sh scripts/51_serve_int8_specdecode.sh IMG=vllm-xpu-env:int8g GRAPH=1 CGMODE=PIECEWISE SPEC=0`
+  (= `VLLM_XPU_ENABLE_XPU_GRAPH=1`, no `--enforce-eager`, `cudagraph_mode=PIECEWISE`, raised pid/thread ulimits).
+- **FULL graph capture is BLOCKED** by Intel's SYCL Graph extension: `sycl_ext_oneapi_work_group_scratch_memory
+  is not yet available for use with the SYCL Graph extension` -- hit by the **FlashAttention-v2 XPU** kernel.
+  PIECEWISE splits attention OUT (eager) and captures only linear/MLP -> our int8 oneDNN GEMM IS capture-safe.
+  FULL stays blocked until a newer oneAPI supports work_group_scratch under SYCL Graph (or a no-scratch XPU
+  attention kernel exists).
 
 ## IMMEDIATE PICKUP STEPS (prioritized)
-1. **Finish the 27B W8A8 quant** (Tier-1b). When the download completes:
-   - Inspect the model's module names to FINALIZE the DeltaNet/MTP ignore-list:
-     `ssh b70 'docker run --rm -v /mnt/vm_8tb/b70:/mnt/vm_8tb/b70 --entrypoint python vllm-xpu-env:v0230 -c "from transformers import AutoConfig; import json; print(json.dumps(AutoConfig.from_pretrained(\"/mnt/vm_8tb/b70/models/Qwen_Qwen3.6-27B\", trust_remote_code=True).to_dict(), indent=1)[:2000])"'`
-     then grep a loaded model's `named_modules()` for `linear_attn` / `mtp` to set `IGNORE` exactly.
-   - Run `scripts/49_quantize_27b_w8a8.sh` (SmoothQuant+GPTQ, **GPU-accel**, `actorder=False`, ignore-list).
-     GOAL: stay near W8A16/BF16 accuracy (the user's priority). The XPU-accel calibration is a research path
-     -- if GPTQ device-losts again (isolated GPU now, so contention should be gone), fall back METHOD=rtn or
-     DEVICE=cpu. 27B W8A8 ~27 GB -> needs **card #2** to serve (or W8A16 fallbacks to shrink). Validate it
-     serves via our kernel on 2 cards.
-2. **ngram spec-decode PoC on 14B W8A8** (cheap, diagnostic): serve with
-   `--speculative-config '{"method":"ngram","num_speculative_tokens":4,"prompt_lookup_max":3}'` and bench
-   vs no-spec. If net-POSITIVE -> single-pass drafters (DFlash/MTP) will likely win on XPU; if NEGATIVE ->
-   **wiring `torch.xpu.XPUGraph` into the vLLM XPU runner is the true prerequisite** for all spec-decode
-   (see JOURNAL spec-decode entry + literature/06).
-3. **Card #2 arrives:** validate our int8 kernel under TP2 (`-tp 2`; per-shard matmul unchanged, all-reduce
-   separate); serve 27B W8A8 across 2 cards (the user's actual goal); then the MoE/parity work below.
+1. **CARD #2 is the gate for the 27B (the user's actual goal).** When it arrives (~week of 2026-06-22):
+   - First de-risk serveability: try to serve `models/Qwen3.6-27B-W8A8-INT8-RTNtest` across 2 cards (`-tp 2`)
+     via `:int8g`. The arch (`Qwen3_5ForConditionalGeneration`, loads text-only via AutoModelForCausalLM) IS
+     registered in vLLM 0.23.0 and there's a `gdn_attention_core_xpu` op -- but DeltaNet-on-XPU is UNPROVEN.
+   - If it serves: run the **GPTQ+SmoothQuant quality pass** (`scripts/49_quantize_27b_w8a8.sh`, METHOD=gptq,
+     DEVICE=xpu; `actorder=None` now, NOT False) for near-BF16 accuracy, then serve that across 2 cards.
+   - Also validate the int8 kernel under TP2 (per-shard matmul unchanged; all-reduce is host-staged, no P2P).
+2. **DONE this session (see JOURNAL 2026-06-19):** Linux SSH workflow + `runremote.sh`; ngram spec-decode PoC
+   (**net-NEGATIVE**, 23.33->21.51 t/s); **XPU graph capture unblocked via register_fake -> PIECEWISE +16.7%**;
+   27B quant pipeline validated. Spec-decode is parked: it stays net-negative even WITH PIECEWISE graph
+   (27.23->25.28) because attention runs eager; it needs FULL capture (blocked) to win.
 
 ## OPEN THREADS / ROADMAP (see tasks + JOURNAL for detail)
 - **MoE int8 W8A8 kernel** -> unlocks Qwen3.6-35B-A3B W8A8 AND the "Quark 99 t/s" parity chase (our dense
   int8_gemm does NOT cover the fused-MoE expert path; `compressed_tensors_moe_w8a8_int8`). Needs card #2.
 - **"Quark 99 t/s" (Qwen3.6-35B-A3B, 4xB70): OPEN chase, NOT debunked** (docs/COMMUNITY_CONFIGS.md). Credible
   IF custom kernel (we proved possible); different regime (MoE/4-card). Parity = MoE int8 kernel + multi-card.
-- **XPU graph capture** (`torch.xpu.XPUGraph`, PyTorch 2.11) into vLLM XPU runner -> fixes decode launch
-  overhead AND unlocks spec-decode/MTP. Highest strategic leverage. literature/06 contribution #3.
-- **DFlash spec-decode on XPU** (single-pass drafter, already in vLLM PR #38300) -> the spec-decode method
-  whose advantage survives no-graph-capture. M-L effort (non-causal attn + Triton-XPU kernels are the risk).
-- **MTP on Qwen3.6-27B** (it ships MTP heads): `method:"mtp"` -- zero-effort single-pass spec-decode once 27B serves.
+- **XPU graph capture -- LARGELY RESOLVED (2026-06-19).** It's ALREADY wired in vLLM 0.23.0
+  (`VLLM_XPU_ENABLE_XPU_GRAPH=1`), not unwired. We unblocked it for our int8 path with `register_fake` meta
+  kernels (contrib/vllm_int8_xpu/xpu_int8.py) -> **PIECEWISE capture works, +16.7% decode**. FULL capture is
+  blocked by Intel's SYCL Graph ext (work_group_scratch_memory, via flash-attn) -- a vendor-maturity wall,
+  retest on newer oneAPI. Contribution: the 2 register_fake impls (upstream-worthy, small).
+- **Spec-decode on XPU -- PARKED (2026-06-19).** ngram is net-negative in eager (-7.8%) AND with PIECEWISE
+  graph (-7% vs graph-no-spec) because attention runs eager in PIECEWISE -> verify pays eager attn overhead
+  x(N+1) at ~16% accept. Spec-decode (ngram/DFlash/MTP) needs FULL graph capture (attention included) to win.
+- **DFlash spec-decode on XPU** (single-pass drafter, vLLM PR #38300): only worth revisiting once FULL XPU
+  graph capture is possible (see above). Until then it'll lose for the same reason ngram does.
+- **MTP on Qwen3.6-27B:** NOTE the W8A8 checkpoint loads **text-only via AutoModelForCausalLM (no MTP head)**,
+  so `method:"mtp"` is NOT available on that checkpoint. Would need a VLM/MTP-aware load path to keep the head.
 - **Decode gap (22.6 vs 29):** an M=1 int8 GEMV fast path / vectorized quant K-loop (diminishing returns).
 - **make-it-right (#12):** asym/AZP + static schemes in int8_gemm_w8a8 (needs an asym checkpoint; lower value).
 - **Upstream (#13):** PR vllm-xpu-kernels (int8_gemm + fused quant) + PR vLLM (kernel class + registry + the

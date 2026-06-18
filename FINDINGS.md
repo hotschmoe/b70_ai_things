@@ -11,10 +11,16 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)
 - **Best backend: upstream vLLM-XPU built from source** (`Dockerfile.xpu`). It has the real XPU
   FP8 matmul kernel and native model support. (llama.cpp SYCL also works well for standard models.)
-- **FP8 is the 8-bit sweet spot.** There is **no INT8 W8A8 kernel on Battlemage** in vLLM. We tested it
-  (self-quant W8A8 on vLLM 0.23.0): it doesn't even load — **hard `KeyError: PlatformEnum.XPU` at model
-  load** in `choose_scaled_mm_linear_kernel` (the int8 kernel registry has no XPU entry). Don't bother;
-  use FP8.
+- **INT8 W8A8 now WORKS on Battlemage — we wrote the kernel.** Stock vLLM had no XPU int8 kernel (hard
+  `KeyError: PlatformEnum.XPU` at load). We added a native oneDNN `int8_gemm_w8a8` (s8s8s32) + a fused
+  per-token int8 quant + `XPUInt8ScaledMMLinearKernel` + the registry entry. W8A8 serves, beats FP8 ~1.6x in
+  prefill, ~matches decode, and composes with FP8 KV cache (2x context). FP8 still wins pure single-stream
+  decode; W8A8 wins prefill/large-batch — the long-context coding-server pick. docs/kernel/02 + `contrib/vllm_int8_xpu/`.
+- **PIECEWISE XPU graph capture = free +16.7% decode (2026-06-19).** vLLM 0.23.0 already wires XPU graph
+  capture (`VLLM_XPU_ENABLE_XPU_GRAPH=1`); adding `register_fake` meta kernels for our 2 custom int8 ops lets
+  dynamo trace through them. PIECEWISE mode (attention eager, linear/MLP captured) lifts 14B W8A8 decode
+  23.33 -> **27.23 t/s**. FULL capture is blocked by Intel's SYCL Graph ext (`work_group_scratch_memory`, via
+  flash-attn). Use image `vllm-xpu-env:int8g` + `cudagraph_mode=PIECEWISE`.
 
 ## What works (single B70, 32 GB)
 | Thing | Result |
@@ -24,6 +30,7 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 | Qwen3-14B **F16/BF16** | 18.7 t/s, but ~28 GB barely fits (tiny KV). FP8 is ~1.9x faster — just use FP8 |
 | Qwen2.5-7B **Q4_K_M** (llama.cpp SYCL) | ~90 t/s decode — llama.cpp SYCL is great for standard-attention models |
 | **torch.compile (inductor)** | cuts single-stream **TTFT ~6x** (1032->176 ms) + ~11% decode at low concurrency |
+| **Qwen3-14B W8A8 + PIECEWISE XPU graph** | **27.23 t/s** decode (+16.7% over eager 23.33) — image `:int8g`, `cudagraph_mode=PIECEWISE` |
 
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
@@ -38,8 +45,12 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   (~1.7-1.8x)**; W4A8's only real edge is VRAM (9.3 vs 15.2 GB). FP8 stays the pick. (Note from
   literature/06: FP8 is conversion-based on Xe2; INT is native systolic — so a real INT8 W8A8 kernel could
   beat FP8 in *prefill/large-batch*. That kernel doesn't exist upstream yet = our top contribution target.)
-- **Speculative decoding (draft model):** **net-negative on B70** (3.4x slower in our test) because XPU has
-  **no CUDA-graph capture**, so the extra forward passes per step cost more than the token savings.
+- **Speculative decoding:** **net-negative on B70**, even with graph capture. ngram (prompt-lookup) on 14B
+  W8A8: eager 23.33->21.51 t/s (-7.8%); WITH PIECEWISE graph 27.23->25.28 (-7%). ~16% draft acceptance. Why:
+  in PIECEWISE mode **attention runs eager**, so the multi-token verify still pays full eager attention launch
+  overhead x(N+1). Spec-decode needs **FULL** graph capture (attention included) to win — and FULL capture is
+  blocked by the SYCL Graph `work_group_scratch_memory` limit. Parked until that's unblocked. (Earlier draft-
+  model test was 3.4x slower; the no-graph-capture premise is now refined — graph IS available, just PIECEWISE.)
 - **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8
   DeltaNet kernel only exists in vLLM **0.23.0** (older images: ESIMD `.weight` bug / `scaled_mm` `KeyError(XPU)`).
   BUT int4 (AutoRound) on 0.23.0 **does run** (see above) — just slow. 8-bit Qwen3.6 needs a 2nd card.
