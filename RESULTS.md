@@ -30,6 +30,22 @@ not VRAM). Optimization target: faster XPU GDN/linear-attention kernels. 2-card 
 
 ## Qwen3-14B (dense, GQA, native Qwen3ForCausalLM)
 
+### FP8 PEAK throughput (max-num-seqs=64, v0.23.0 eager) — 2026-06-18
+**The earlier ~324 t/s "plateau" was an artifact of the default `--max-num-seqs 16` capping concurrency.**
+Raising it to 64 (+ `--max-num-batched-tokens 8192`) unlocks the real curve:
+
+| Concurrency | Aggregate out tok/s | Per-stream decode | Mean TTFT |
+|---:|---:|---:|---:|
+| 8  | 202 | 30.8 | 0.9 s |
+| 16 | 330 | 29.5 | 1.9 s |
+| 32 | 459 | 21.0 | 2.9 s |
+| 48 | 525 | 15.3 | 3.4 s |
+| 64 | **556** | 12.0 | 4.1 s |
+
+**Headline: a single B70 serves Qwen3-14B FP8 at ~556 tok/s aggregate @ C64** (still rising; ceiling ~600).
+Throughput-vs-latency knob: **~556 t/s @ C64** (max throughput, high TTFT) vs **~330 t/s @ C16**
+(29.5 t/s/stream, low latency). Tune `--max-num-seqs` to your workload — the default 16 leaves a lot on the table.
+
 ### FP8 (online, XPUFP8ScaledMMLinearKernel) — 2026-06-17
 Model 15.2 GiB + KV 11.7 GiB (76,544 tok), max ctx 16k, util 0.90, FlashAttn v2.
 

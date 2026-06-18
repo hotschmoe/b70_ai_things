@@ -7,7 +7,8 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 
 ## TL;DR
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
-  does **~35 tok/s single-stream** and **~324 tok/s aggregate** at concurrency 32, near-lossless.
+  does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
+  (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)
 - **Best backend: upstream vLLM-XPU built from source** (`Dockerfile.xpu`). It has the real XPU
   FP8 matmul kernel and native model support. (llama.cpp SYCL also works well for standard models.)
 - **FP8 is the 8-bit sweet spot.** There is **no INT8 W8A8 kernel on Battlemage** in vLLM — W8A8
@@ -17,7 +18,7 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 | Thing | Result |
 |---|---|
 | **Qwen3.6-27B (Gated-DeltaNet)** | **RUNS** via int4 AutoRound on vLLM **0.23.0** — 7.9 t/s, coherent. Only known single-card path. |
-| Qwen3-14B **FP8** (vLLM-XPU) | **35 t/s** single / **324 t/s** @ C32, TTFT ~62 ms (w/ compile), near-lossless |
+| Qwen3-14B **FP8** (vLLM-XPU) | **35 t/s** single / **556 t/s** @ C64 (raise `--max-num-seqs`!), near-lossless |
 | Qwen3-14B **F16/BF16** | 18.7 t/s, but ~28 GB barely fits (tiny KV). FP8 is ~1.9x faster — just use FP8 |
 | Qwen2.5-7B **Q4_K_M** (llama.cpp SYCL) | ~90 t/s decode — llama.cpp SYCL is great for standard-attention models |
 | **torch.compile (inductor)** | cuts single-stream **TTFT ~6x** (1032->176 ms) + ~11% decode at low concurrency |

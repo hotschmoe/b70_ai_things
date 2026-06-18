@@ -12,7 +12,7 @@ STAMP="$(date +%Y%m%d_%H%M%S)"; OUT_FILE="$ROOT/results/sweep_${LABEL}_${STAMP}.
 curl -sf "http://localhost:${PORT}/health" >/dev/null 2>&1 || { echo "server not healthy"; exit 1; }
 echo "concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,per_stream_decode_tok_s" | tee "$OUT_FILE"
 
-for C in 1 4 8 16 32; do
+for C in ${CONC:-1 4 8 16 32}; do
   N=$((C*8)); [ "$C" = 1 ] && N=8
   raw=$(docker exec -i "$NAME" vllm bench serve \
     --backend vllm --model "$MODEL" --tokenizer "$TOKPATH" --base-url "http://localhost:${PORT}" \
