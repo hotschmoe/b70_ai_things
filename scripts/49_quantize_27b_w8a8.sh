@@ -16,8 +16,11 @@ IMG="${IMG:-vllm-xpu-env:v0230}"
 SRC="${SRC:-/mnt/vm_8tb/b70/models/Qwen_Qwen3.6-27B}"
 OUTNAME="${OUTNAME:-Qwen3.6-27B-W8A8-INT8}"
 DEVICE="${DEVICE:-xpu}"; METHOD="${METHOD:-gptq}"; SAMPLES="${SAMPLES:-512}"; SEQLEN="${SEQLEN:-2048}"; SMOOTH="${SMOOTH:-0.8}"
-# DeltaNet/MTP/head stay BF16. Refine after inspecting the model's module names.
-IGNORE="${IGNORE:-lm_head re:.*linear_attn.* re:.*\.mtp.* re:.*mtp\..*}"
+# Qwen3.6-27B is a Qwen3_5 VLM (vision tower + DeltaNet/full-attn text + MTP). Quantize only the standard
+# self_attn + MLP linears; keep DeltaNet (linear_attn), the WHOLE vision tower, MTP, and lm_head in BF16.
+# (Confirmed against the safetensors weight map: model.language_model.layers.N.{self_attn,mlp,linear_attn},
+#  model.visual.*, mtp.*, lm_head — see JOURNAL 2026-06-19.)
+IGNORE="${IGNORE:-lm_head re:.*linear_attn.* re:.*visual.* re:.*mtp.*}"
 LOG="$ROOT/results/quant27b_w8a8_$(date +%Y%m%d_%H%M%S).log"
 mkdir -p "$ROOT/results" "$ROOT/models" "$ROOT/pip_cache"
 [ -d "$SRC" ] || { echo "MISSING 27B weights at $SRC (download Qwen/Qwen3.6-27B first)"; exit 1; }
@@ -37,8 +40,7 @@ docker run --rm --name quant27b "${GPUARGS[@]}" --ipc=host --shm-size 32g \
     pip install -q "llmcompressor>=0.8.0" datasets accelerate 2>&1 | tail -2 || true
     python - <<PY
 import os, time, torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from datasets import load_dataset
+from transformers import AutoTokenizer
 from llmcompressor import oneshot
 from llmcompressor.modifiers.quantization import GPTQModifier, QuantizationModifier
 try: from llmcompressor.modifiers.transform import SmoothQuantModifier
@@ -46,25 +48,53 @@ except Exception: from llmcompressor.modifiers.smoothquant import SmoothQuantMod
 
 SRC=os.environ["SRC"]; OUT=os.environ["OUT"]; DEV=os.environ["DEVICE"]; METHOD=os.environ["METHOD"].lower()
 N=int(os.environ["SAMPLES"]); SEQ=int(os.environ["SEQLEN"]); SMOOTH=float(os.environ["SMOOTH"])
+DATAFREE=os.environ.get("DATAFREE","0")=="1"
 IGN=[p for p in os.environ["IGNORE"].split() if p]
 xpu_ok=hasattr(torch,"xpu") and torch.xpu.is_available()
-print(f"[probe] xpu={xpu_ok} device={DEV}", flush=True)
+print(f"[probe] xpu={xpu_ok} device={DEV} datafree={DATAFREE}", flush=True)
 print(f"[load] {SRC} bf16 on CPU (llmcompressor onloads layers to the GPU per-step)...", flush=True)
-model=AutoModelForCausalLM.from_pretrained(SRC, torch_dtype=torch.bfloat16, device_map="cpu",
-        low_cpu_mem_usage=True, trust_remote_code=True)
+# Qwen3_5 is a ForConditionalGeneration VLM -> AutoModelForCausalLM may not map it; fall back gracefully.
+def _load():
+    from transformers import AutoModelForCausalLM
+    try:
+        return AutoModelForCausalLM.from_pretrained(SRC, dtype=torch.bfloat16, device_map="cpu",
+                 low_cpu_mem_usage=True, trust_remote_code=True)
+    except (ValueError, KeyError, RuntimeError) as e:
+        print(f"[load] AutoModelForCausalLM failed ({type(e).__name__}: {e}); trying VLM loaders", flush=True)
+    for cls_name in ("AutoModelForImageTextToText","AutoModelForVision2Seq","AutoModel"):
+        try:
+            import transformers as T
+            cls=getattr(T, cls_name)
+            m=cls.from_pretrained(SRC, dtype=torch.bfloat16, device_map="cpu",
+                 low_cpu_mem_usage=True, trust_remote_code=True)
+            print(f"[load] loaded via {cls_name}", flush=True); return m
+        except Exception as e:
+            print(f"[load] {cls_name} failed ({type(e).__name__}: {e})", flush=True)
+    raise SystemExit("FAIL: no loader could instantiate the model")
+model=_load()
 tok=AutoTokenizer.from_pretrained(SRC, trust_remote_code=True)
-ds=load_dataset("HuggingFaceH4/ultrachat_200k", split=f"train_sft[:{N}]").shuffle(seed=42)
-ds=ds.map(lambda e: {"text": tok.apply_chat_template(e["messages"], tokenize=False)})
-ds=ds.map(lambda s: tok(s["text"], padding=False, max_length=SEQ, truncation=True, add_special_tokens=False),
-          remove_columns=ds.column_names)
-if METHOD=="gptq":
-    q=GPTQModifier(targets="Linear", scheme="W8A8", ignore=IGN, actorder=False)  # actorder off: avoids XPU gather device-lost
+
+if DATAFREE:
+    # Fast RTN data-free validation pass (no SmoothQuant, no dataset) -> DataFreePipeline (~minutes).
+    # Use this FIRST to confirm the pipeline + ignore-list work on this VLM and that vLLM can load the result.
+    recipe=[QuantizationModifier(targets="Linear", scheme="W8A8", ignore=IGN)]
+    print(f"[quant] DATA-FREE RTN W8A8, ignore={IGN} ...", flush=True)
+    t0=time.time()
+    oneshot(model=model, recipe=recipe)
 else:
-    q=QuantizationModifier(targets="Linear", scheme="W8A8", ignore=IGN)
-recipe=[SmoothQuantModifier(smoothing_strength=SMOOTH), q]
-print(f"[quant] SmoothQuant+{METHOD} W8A8, ignore={IGN} ...", flush=True)
-t0=time.time()
-oneshot(model=model, dataset=ds, recipe=recipe, max_seq_length=SEQ, num_calibration_samples=N)
+    from datasets import load_dataset
+    ds=load_dataset("HuggingFaceH4/ultrachat_200k", split=f"train_sft[:{N}]").shuffle(seed=42)
+    ds=ds.map(lambda e: {"text": tok.apply_chat_template(e["messages"], tokenize=False)})
+    ds=ds.map(lambda s: tok(s["text"], padding=False, max_length=SEQ, truncation=True, add_special_tokens=False),
+              remove_columns=ds.column_names)
+    if METHOD=="gptq":
+        q=GPTQModifier(targets="Linear", scheme="W8A8", ignore=IGN, actorder=False)  # actorder off: avoids XPU gather device-lost
+    else:
+        q=QuantizationModifier(targets="Linear", scheme="W8A8", ignore=IGN)
+    recipe=[SmoothQuantModifier(smoothing_strength=SMOOTH), q]
+    print(f"[quant] SmoothQuant+{METHOD} W8A8, ignore={IGN} ...", flush=True)
+    t0=time.time()
+    oneshot(model=model, dataset=ds, recipe=recipe, max_seq_length=SEQ, num_calibration_samples=N)
 print(f"[done] calib+quant {time.time()-t0:.0f}s; saving compressed -> {OUT}", flush=True)
 model.save_pretrained(OUT, save_compressed=True); tok.save_pretrained(OUT)
 print("DONE_27B_W8A8", OUT, flush=True)
