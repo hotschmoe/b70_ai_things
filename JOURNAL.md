@@ -779,3 +779,23 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   work_group_scratch_memory (or a non-scratch attention backend exists). This RESOLVES the handoff's
   "highest strategic leverage" item: prereq was NOT wiring (done) and NOT our ops (fixed) — it's the flash-attn
   kernel's scratch memory under SYCL Graph. Contribution: the 2 register_fake impls (upstream-worthy).
+
+### 2026-06-19 — [KEY] Full 2x2 matrix: spec-decode stays NEGATIVE even with graph capture (needs FULL capture)
+- Completed the grid on 14B W8A8 (single-stream coherent decode, same harness), image :int8g:
+  | config | decode t/s | vs eager baseline |
+  | eager, no spec                 | 23.33 | -      |
+  | eager + ngram spec             | 21.51 | -7.8%  |
+  | PIECEWISE graph, no spec       | 27.23 | +16.7% |  <- WINNER
+  | PIECEWISE graph + ngram spec   | 25.28 | +8.4%  |
+- ngram acceptance ~16% (39/244 draft tokens; per-pos 17/8/7/7). Spec-decode COSTS ~7% in BOTH eager
+  (23.33->21.51) AND graph (27.23->25.28).
+- WHY spec-decode is still negative WITH graph: in PIECEWISE mode **attention runs eager** (it's the
+  work_group_scratch_memory kernel that SYCL Graph can't capture). Spec-decode verifies N+1 tokens/step, each
+  needing an attention forward -> it still pays full eager attention launch overhead x(N+1), and the captured
+  linear/MLP speedup can't offset that at only ~16% acceptance.
+- **Refined verdict (updates HANDOFF):** "graph capture is the prerequisite for spec-decode" is only HALF
+  right. Graph capture is a big standalone decode win (+16.7%), but ngram spec-decode needs **FULL** graph
+  capture (attention included) to flip positive — and FULL capture is blocked by the Intel SYCL Graph ext
+  (work_group_scratch_memory, via flash-attn). So on B70 today: **ship PIECEWISE graph capture (no spec).**
+  Spec-decode (ngram/MTP/DFlash) stays parked until either FULL XPU graph capture lands or a
+  no-scratch XPU attention kernel exists.
