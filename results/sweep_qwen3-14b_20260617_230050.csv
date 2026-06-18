@@ -1,0 +1,6 @@
+concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,per_stream_decode_tok_s
+1,NA,NA,NA,NA,nan
+4,NA,NA,NA,NA,nan
+8,NA,NA,NA,NA,nan
+16,NA,NA,NA,NA,nan
+32,NA,NA,NA,NA,nan

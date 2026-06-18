@@ -22,6 +22,23 @@ Notes: single-stream ~31 t/s = ~77% of the ~40 t/s 15 GB-bandwidth ceiling. Aggr
 ~324 t/s at C16-32 (~10.5x batching). TTFT balloons at C32 (6.7 s) — enforce-eager + chunked-prefill
 contention; compilation (piecewise cudagraph) is the obvious next lever.
 
+### FP8 + inductor compilation (no enforce-eager) — 2026-06-17
+Same as above but `--compilation-config '{"cudagraph_mode":"PIECEWISE",...}'`. NOTE: XPU has no
+CUDA-graph capture (log: "Skipping CUDA graph capture") so only **inductor torch.compile** applies
+(graphs cached to SSD; first start +~3.5 min). KV dropped to 9.86 GiB (64,640 tok) — compile buffers.
+
+| Concurrency | req/s | Aggregate out tok/s | Mean TTFT (ms) | Mean TPOT (ms) | Per-stream decode (tok/s) |
+|---:|---:|---:|---:|---:|---:|
+| 1  | 0.26 | 33.0  | **176**  | 29.1 | **34.3** |
+| 4  | 0.95 | 121.9 | 399  | 29.9 | 33.4 |
+| 8  | 1.61 | 205.6 | 689  | 33.7 | 29.6 |
+| 16 | 2.57 | 329.4 | 1045 | 40.7 | 24.6 |
+| 32 | 2.57 | 329.5 | 6601 | 43.0 | 23.3 |
+
+**Verdict: compile WINS at low concurrency** — TTFT 1032->176 ms (5.9x), decode +11% (30.8->34.3) at C1;
+negligible at C16-32 (saturated). Keep compile for latency; eager fine for max-batch. (Counter to the
+generic "use enforce-eager on XPU" advice — measured otherwise on this build.)
+
 <!-- new result blocks above this line, newest first within each model -->
 
 ## To fill in (night campaign)
