@@ -1034,10 +1034,11 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - **Code is a sharper quant-delta than gsm8k.** Plus-test spread fp8→w4a8 = **0.890→0.817 (−7.3 pts)** vs
   gsm8k 0.960→0.927 (−3.3). Ordering **fp8 > w8a8 > w4a16 > w4a8** matches ppl/agreement exactly → the
   long-generation tier behaves as designed (per-token quant error compounds over a whole function).
-- **Speed finding: w4a8 decodes SLOWEST (16.5 t/s).** [CORRECTION 2026-06-20: the "9.3 GB" weights
-  claimed here was a MISLABEL -- that is the W4A16-gptq size. The W4A8-INT is **16 GB** on disk
-  (weights stored UNPACKED as I8, full shape -- verified in the safetensors header). See the w4a8/
-  workstream entry below.] int8-activation
+- **Speed finding: w4a8 decodes SLOWEST (16.5 t/s) despite 9.3 GiB VRAM.** [RE-CORRECTED 2026-06-20
+  per commit 0f4e7ee (serve-log verified): 9.3 GiB IS correct -- it is the VRAM-resident size; vLLM
+  repacks the int4 weights to 4-bit ON LOAD. The 16 GB is DISK ONLY (unpacked I8). So fit is fine;
+  decode is KERNEL-bound, not memory-bound. (My intermediate "9.3 was a mislabel" note was wrong --
+  disregard it.)] int8-activation
   dynamic per-token quant overhead outweighs the int4-weight bandwidth win; w4a16 (int4 w / fp16 a) decodes
   29.1. So **w4a8 = pure memory play, NOT speed**; w4a16 is the better small-footprint pick on both quality
   (0.829 vs 0.817 plus) AND decode (29 vs 16). w8a8 keeps its prefill crown (5780 t/s, 1.64× fp8).
@@ -1107,13 +1108,16 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 ### 2026-06-20 -- [WORKSTREAM] Opened w4a8/ -- single-card W4A8-INT8 (3 wins: packing, accuracy, kernel)
 - **Trigger:** chasing packed W4A8-INT8 of Qwen3.6-27B + Gemma-4-31B for single-B70 users.
   Investigated our existing `Qwen3-14B-W4A8-INT` (scripts/43, data-free RTN).
-- **[KEY] It is 16 GB, NOT a fit win.** safetensors header: quantized weights are `dtype I8` at
-  FULL shape (`gate_proj.weight [17408,5120]`, 1 byte/weight) -> compressed-tensors serialized it
-  `int-quantized` (int8), NOT `pack-quantized`. 4-bit in value, 8-bit on disk = same footprint as
-  W8A8. Packed W4A16-gptq is 9.3 GB by contrast. A 27B W4A8 this way = ~33 GB -> won't fit 1x.
+- **[KEY -- AMENDED] 16 GB on DISK, but 9.3 GiB in VRAM (fit is fine).** safetensors header: weights
+  are `dtype I8` at FULL shape (`gate_proj.weight [17408,5120]`) -> serialized `int-quantized`
+  (unpacked int8), NOT `pack-quantized` -> 16 GB on disk. BUT vLLM repacks to 4-bit on load ->
+  **9.3 GiB VRAM** (verified, commit 0f4e7ee). A 27B W4A8 = ~18 GiB VRAM -> FITS 1x (cf. 27B
+  int4-AutoRound 17.6 GiB). Packing only cuts disk + load time (39s->~23s), NOT VRAM.
 - **Decode is the SLOWEST of all quants** (16.5 t/s vs fp8 32.1, w4a16 29.1, w8a8 23.8): unoptimized
-  `int4_gemm_w4a8` decode kernel + per-token int8 act-quant overhead, and the 16 GB gives no
-  bandwidth offset. So today W4A8 = worst-of-both; packed W4A16 strictly dominates it for 1x.
+  `int4_gemm_w4a8` decode kernel + per-token int8 act-quant overhead -- it is KERNEL-bound, not
+  memory-bound (VRAM is only 9.3 GiB). So packed W4A16-gptq strictly dominates w4a8 today on decode
+  (29 vs 16.5), accuracy (0.848 vs 0.817), and disk (9.3 vs 16) at the SAME VRAM. w4a8's only
+  possible niche = int8-XMX throughput under concurrency -- UNMEASURED; gate the workstream on it.
 - **Plan (docs in `w4a8/README.md`): 3 wins, all required.** (1) PACKING [gate]: force pack-quantized
   export -> ~9 GB, verify XPUW4A8IntLinearKernel still loads it + measure resident GiB.
   (2) ACCURACY: replace RTN with **AutoRound** (chosen) -> int4 weights + int8 dyn act; target 14B
