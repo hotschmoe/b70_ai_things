@@ -937,6 +937,22 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - **On :v0230 it GENERATES coherently** ("The ocean is a vast and mysterious place... the octopus"). So
   **DeltaNet-on-XPU is PROVEN** (updates HANDOFF "UNPROVEN"). Also needed: copy the base 27B chat_template into
   the AutoRound tokenizer_config (it lacked one -> chat endpoint 400'd; raw /completions worked without it).
-- **27B eval (AutoRound int4, single B70):** Tier-0 ppl **6.60** (~half the 14B quants' ~13 — the 27B is a much
-  stronger LM). gsm8k running. NEXT: get our W4A16 servable (needs a 32-pad or ignore the 4304 layers, or a
-  kernel fix) for a same-scheme 27B-vs-14B comparison; rebuild a GDN-enabled int8 image to serve W8A8/our-kernels 27B.
+- **27B eval (AutoRound int4, single B70) — the real headline:** gsm8k **100% (50/50)** (vs 14B ~95% — much
+  stronger model), Tier-0 ppl **6.60** (~half the 14B's ~13). PERF (perf_probe): **decode 7.59 t/s, TTFT 305 ms,
+  prefill 1369 t/s** (matches the old ~7.9 t/s). Decode is slow (big dense + DeltaNet, unoptimized int4 decode).
+
+### 2026-06-19 — [NEG/GAP] Qwen3.6-35B-A3B int4 (MoE) does NOT serve on a single B70 — the MoE-on-XPU gap, confirmed
+- Goal: real-world eval + speed of 27B AND 35B-A3B quants (the 14B was just harness/quant-delta verification).
+- Surveyed HF: many Qwen3.6-35B-A3B int4 quants exist. Downloaded **Intel/Qwen3.6-35B-A3B-int4-mixed-AutoRound**
+  (21.5 GB, `quant_method=auto-round`, **256 experts**, arch Qwen3_5MoeForConditionalGeneration). 21.5 GB on
+  disk would naively fit one 32 GB card.
+- **It OOMs at WEIGHT LOAD** (`UR_RESULT_ERROR_OUT_OF_DEVICE_MEMORY` inside DeviceMemoryProfiler, before any KV;
+  retry at maxlen 2048/1 seq OOMs identically -> NOT a KV/activation spike). Root cause: **vLLM-XPU has no fused
+  int4 MoE kernel**, so the 256 experts dequantize toward bf16 (~70 GB) -> exceeds 32 GB. This CONFIRMS the
+  HANDOFF's "MoE int8 W8A8 kernel" gap, now for int4 AutoRound too.
+- **Implication:** 35B-A3B on a single B70 needs either (a) a **fused int4 MoE XPU kernel** (the real kernel-dev
+  target — also the "Quark 99 t/s" path, which was 4xB70), or (b) **multiple cards** (card #2+). int4 weights
+  alone don't fit one card if the runtime can't keep them packed through the MoE compute.
+- NET for the two REAL targets: **27B = works on 1 card (great quality, slow decode); 35B-A3B = blocked on 1 card
+  (MoE int4 kernel gap).** Perf/quality of more 27B quant formats (FP8 doesn't fit @ 54GB... actually 27B FP8 is
+  ~28GB, retest; our W4A16 needs the 32-pad fix) is the next axis. Another agent is reviewing the harness + a container.

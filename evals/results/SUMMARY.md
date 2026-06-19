@@ -1,4 +1,30 @@
-# Quant quality — Qwen3-14B on the Arc Pro B70 (first campaign, 2026-06-19)
+# Qwen3.6 quant eval on a single Arc Pro B70 (2026-06-19)
+
+> **The real targets are Qwen3.6-27B and Qwen3.6-35B-A3B** (quality + real-world speed). The Qwen3-14B
+> campaign below was harness verification + a quant-delta study (don't read it as the headline).
+
+## REAL TARGETS — Qwen3.6 on one B70 (vLLM 0.23.0, `:v0230` build, greedy/eager)
+
+| model (quant) | serves on 1×B70? | gsm8k | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
+|---|---|---|---|---|---|---|---|
+| **Qwen3.6-27B** (AutoRound int4) | ✅ **yes** | **100% (50/50)** | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
+| **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | ❌ **no** — OOMs at weight-load | — | — | — | — | — | 21.5 GB on disk |
+
+- **27B runs great on one card** (aces gsm8k, much stronger than the 14B) but **decode is slow (7.6 t/s)** —
+  big dense model + Gated-DeltaNet + unoptimized int4 decode. Prefill 1369 t/s, TTFT 305 ms.
+  - Requires the **`:v0230` full build** — our `:int8` image was built minimal (`GDN_ENABLED=OFF`) so it
+    **lacks `gdn_attention`** and crashes on the first token. Also: copy the base chat_template into the
+    AutoRound tokenizer_config (it ships without one).
+  - Our own **compressed-tensors W4A16 27B fits (25 GB) but won't serve**: `XPUwNa16` needs input dims ÷32,
+    and the 27B's gated attention has a 4304 dim (the 14B never hit this). Needs a 32-pad / ignore / kernel fix.
+- **35B-A3B int4 does NOT fit one card** despite 21.5 GB on disk: **vLLM-XPU has no fused int4 MoE kernel**, so
+  the 256 experts dequantize (~toward bf16 ≈ 70 GB) → `OUT_OF_DEVICE_MEMORY` at load (retry with minimal KV
+  OOMs identically). **The MoE-on-XPU gap.** Needs a fused int4 MoE XPU kernel (the "Quark 99 t/s" path,
+  which used 4×B70) or multiple cards.
+
+---
+
+# (Secondary) Quant-delta study — Qwen3-14B (harness verification, 2026-06-19)
 
 How much each quantization degrades the **same** Qwen3-14B vs its BF16 self. Served one-at-a-time on a
 single B70, vLLM 0.23.0-based images, greedy/eager, eval concurrency 1, thinking **off**.
