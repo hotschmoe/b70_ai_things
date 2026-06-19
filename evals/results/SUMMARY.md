@@ -31,23 +31,24 @@ single B70, vLLM 0.23.0-based images, greedy/eager, eval concurrency 1, thinking
 
 ## Results
 
-| quant | weights / acts | calib | ppl ↓ | top1-agree vs bf16 ↑ | nll-gap ↓ | gsm8k (n=150) ↑ | serves on B70 |
-|---|---|---|---|---|---|---|---|
-| **bf16** (reference) | 16 / 16 | — | 12.7010 | — | — | — | ❌ ~29.6 GB > one card |
-| **fp8** | 8fp / 8fp | online | 12.6966 | 0.968 | 0.062 | 0.960 (144/150) | ✅ XPU FP8 |
-| **w8a16** | int8 / 16 | RTN | 12.7596 | **0.981** | 0.037 | — *(can't serve)* | ❌ no XPU kernel |
-| **w8a8** | int8 / int8 | RTN | 13.0839 | 0.881 | 0.250 | 0.953 (143/150) | ✅ **our int8 kernel** |
-| **w4a16** | int4 / 16 | RTN | 13.5528 | 0.841 | 0.340 | 0.947 (142/150) | ✅ XPUwNa16 |
-| **w4a8** | int4 / int8 | RTN | 14.1943 | 0.822 | 0.420 | 0.927 (139/150) | ✅ XPUW4A8Int |
+| quant | weights / acts | calib | ppl ↓ | top1-agree vs bf16 ↑ | nll-gap ↓ | gsm8k (n=150) ↑ | HumanEval+ pass@1 base/+ ↑ | serves on B70 |
+|---|---|---|---|---|---|---|---|---|
+| **bf16** (reference) | 16 / 16 | — | 12.7010 | — | — | — | — *(can't serve)* | ❌ ~29.6 GB > one card |
+| **fp8** | 8fp / 8fp | online | 12.6966 | 0.968 | 0.062 | 0.960 (144/150) | **0.915 / 0.890** | ✅ XPU FP8 |
+| **w8a16** | int8 / 16 | RTN | 12.7596 | **0.981** | 0.037 | — *(can't serve)* | — *(can't serve)* | ❌ no XPU kernel |
+| **w8a8** | int8 / int8 | RTN | 13.0839 | 0.881 | 0.250 | 0.953 (143/150) | 0.902 / 0.860 | ✅ **our int8 kernel** |
+| **w4a16** | int4 / 16 | RTN | 13.5528 | 0.841 | 0.340 | 0.947 (142/150) | 0.866 / 0.829 | ✅ XPUwNa16 |
+| **w4a8** | int4 / int8 | RTN | 14.1943 | 0.822 | 0.420 | 0.927 (139/150) | 0.860 / 0.817 | ✅ XPUW4A8Int |
 
 - **top1-agree** = fraction of 1063 corpus tokens where the quant's greedy argmax == bf16's (1.0 = identical).
 - **ppl** on a fixed prose+code corpus. **gsm8k**: thinking-off, greedy, `#### <n>` exact-match, first 150 test items (paired).
 - bf16 + w8a16 scored **offline on CPU** (neither serves on one card); tokenization verified identical to vLLM /tokenize (0/10 misaligned).
-- **Tier 1 (execution-graded code) now wired + sandboxed** (2026-06-20). First datapoint: **fp8 HumanEval+
-  pass@1 = 0.915 base / 0.890 plus** (164 problems, thinking-off, greedy). Grading runs in a Docker jail
-  (`--network none`, non-root, throwaway cache) — see harness README §11. Per-quant code sweep (w8a8/w4a16/
-  w4a8) is queued; this is a single anchor, not yet a quant-delta. HumanEval is contamination-prone, so lean
-  on Tier 0 for the precise ranking and treat code pass@1 as directional.
+- **Tier 1 (execution-graded code): full 14B sweep done** (2026-06-20) — HumanEval+ column above, 164
+  problems, thinking-off, greedy, sandboxed Docker grading (`--network none`, non-root, throwaway cache;
+  harness README §11). **Code spreads ~7 pts (fp8 0.890+ → w4a8 0.817+) where gsm8k moved ~3** — the
+  long-generation signal the harness is built to surface. Ordering **fp8 > w8a8 > w4a16 > w4a8** agrees with
+  ppl/agreement. HumanEval is contamination-prone → treat as directional; Tier 0 is the precise rank.
+  *(Qwen3.6-27B int4 row pending — generating at ~7.6 t/s.)*
 
 ## Headline: the int8 **activation** quant is the quality cost, not the int8 **weights**
 
@@ -95,6 +96,12 @@ Decompose by holding weights fixed and changing only the activation precision:
 | fp8 | **29.96** | 82 | 3531 | ~15 GB |
 | w8a8 | 21.86 | 121 | **5787 (1.64× fp8)** | ~15 GB |
 | w4a16 | 26.40 | 89 | 2939 | **~9.3 GB** |
+| w4a8 | 16.47 | 139 | 4403 | **~9.3 GB** |
+
+> A fresh `perf_probe` pass during the 2026-06-20 Tier-1 sweep re-confirmed the ordering (fp8 32.1 ·
+> w4a16 29.1 · w8a8 23.8 · w4a8 16.5 t/s decode — same ranks, ~5-10% run-to-run higher). **w4a8 decodes
+> *slowest* despite the smallest weights:** int8-activation dynamic quant per token adds decode overhead
+> that int4-weight bandwidth savings don't recover — so w4a8 is a pure memory play (9.3 GB), not a speed one.
 
 - **Decode (bandwidth-bound):** fp8 > **w4a16 26.4** > w8a8 21.9. int4 weights (9.3 GB) stream less per
   token, so w4a16 *out-decodes* w8a8 despite lower quality. (W8A8 + PIECEWISE graph → ~27, closes the gap.)

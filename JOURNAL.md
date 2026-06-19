@@ -1021,3 +1021,27 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   now that the GPU is free. (3) thinking-off is the *sensitive* setting for quant damage but suppresses
   absolute pass@1 vs real coding-server use — revisit if we want a thinking-on "feel" pass. (4) roadmap still
   wants LiveCodeBench (contamination-resistant) for the headline code claim.
+
+### 2026-06-20 — [HARNESS] Tier-1 per-quant sweep — 14B {fp8,w8a8,w4a16,w4a8} HumanEval+ + fresh perf
+- Ran the full 14B code-quality sweep one model at a time on the single B70 (driver: serve → wait healthy →
+  chat-smoke → HumanEval+ 164 thinking-off greedy → `perf_probe`). **HumanEval+ pass@1 base / plus:**
+  | quant | pass@1 base | pass@1 plus | decode t/s | TTFT ms | prefill t/s |
+  |---|---|---|---|---|---|
+  | fp8 (anchor) | 0.915 | 0.890 | 32.1 | 85 | 3525 |
+  | w8a8 | 0.902 | 0.860 | 23.8 | 101 | 5780 |
+  | w4a16 | 0.866 | 0.829 | 29.1 | 79 | 2921 |
+  | w4a8 | 0.860 | 0.817 | 16.5 | 139 | 4403 |
+- **Code is a sharper quant-delta than gsm8k.** Plus-test spread fp8→w4a8 = **0.890→0.817 (−7.3 pts)** vs
+  gsm8k 0.960→0.927 (−3.3). Ordering **fp8 > w8a8 > w4a16 > w4a8** matches ppl/agreement exactly → the
+  long-generation tier behaves as designed (per-token quant error compounds over a whole function).
+- **Speed finding: w4a8 decodes SLOWEST (16.5 t/s) despite the smallest weights (9.3 GB).** int8-activation
+  dynamic per-token quant overhead outweighs the int4-weight bandwidth win; w4a16 (int4 w / fp16 a) decodes
+  29.1. So **w4a8 = pure memory play, NOT speed**; w4a16 is the better small-footprint pick on both quality
+  (0.829 vs 0.817 plus) AND decode (29 vs 16). w8a8 keeps its prefill crown (5780 t/s, 1.64× fp8).
+- **Mechanics validated at scale:** chat-smoke `OK` (thinking-off honored) on all 4 serves; sandbox Docker
+  grading clean each time; serve scripts cross-evict cleanly (`:int8`↔`:v0230` image swaps). Driver in
+  `/tmp/tier1_sweep.sh`, perf rows `/tmp/tier1_sweep_perf.jsonl`.
+- **27B Qwen3.6 int4-AutoRound: IN PROGRESS** (serves on v0230, 17.6 GB weights + 6.9 GB KV, chat-smoke OK,
+  generating at ~7.6 t/s → ~110 min for 164). Row to be appended. NOTE HumanEval near-saturates at 14B
+  (~0.89) so the 27B "jump" may be muted on this bench specifically — the real 27B story is gsm8k 100% +
+  whether decode speed is tolerable; that's the higher-density tradeoff we're measuring.
