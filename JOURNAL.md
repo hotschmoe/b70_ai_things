@@ -989,3 +989,35 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   ignore-list layers by measurement.
 - **Next experiments (queued):** selective SmoothQuant on full-attn layers; down_proj@W8A16 sweep; KL-sensitivity
   ranking for the ignore-list; add EAR/KL to the harness; verify in_proj_qkvz/in_proj_ba names.
+
+### 2026-06-20 — [HARNESS] Tier-1 (EvalPlus code-exec) WIRED + Docker-sandboxed; validated on 14B-fp8
+- **The last un-run tier is live.** Tier 1 = execution-graded code (HumanEval+/MBPP+ pass@1 via EvalPlus).
+  It's the only tier that *runs model-generated code* to grade it, so it needs isolation — built it as a
+  3-step split where only the dangerous step is jailed:
+  1. **GENERATE** (host, safe) — our own OpenAI-client loop (not `evalplus.codegen`), so Tier 1 inherits the
+     harness discipline: greedy/temp0, fixed seed, concurrency 1, and **`enable_thinking` off by default**
+     (flag `--tier1-think`). Replicates EvalPlus's exact chat prompt so samples drop into its grader.
+  2. **SANITIZE** (host, safe) — `evalplus.sanitize` (tree-sitter; no code runs).
+  3. **EVALUATE** (Docker jail) — `evalplus.evaluate` executes the code vs +tests. Sandbox: **`--network none`,
+     non-root `--user`, a per-run THROWAWAY cache copy, `--memory 8g --pids-limit 512`.**
+- **Why our own generator, not `evalplus.codegen`:** codegen's OpenAI backend can't pass
+  `chat_template_kwargs.enable_thinking` → would silently run **thinking-ON** and diverge from tiers 2/3.
+- **Why the throwaway cache:** `evalplus.evaluate` *writes* a ground-truth `.pkl` into its cache dir (and
+  can't re-download under `--network none`). So we copy `~/.cache/evalplus` into the run dir, mount THAT
+  writable, and leave the real cache untouched — verified: post-run, real cache had no stray/root-owned files;
+  the `.pkl` + trimmed dataset landed only in the staged copy. Files owned by us (non-root `--user` works).
+- **`--limit` smoke support:** EvalPlus asserts FULL dataset coverage (`len(completion_id)==len(problems)`).
+  For smokes we trim the *staged throwaway* dataset jsonl to the sampled task_ids so coverage matches; full
+  runs stay unfiltered so the assertion still catches a silently-dropped problem.
+- **VALIDATED on Qwen3-14B-fp8, HumanEval+ (all 164, thinking-off, greedy):
+  pass@1 = 0.915 base / 0.890 plus.** Generate 22.6 min (~8.3 s/problem @ fp8), sandbox eval 39 s. Smoke
+  (5 problems) was 1.0/1.0. Credible/leaderboard-plausible → pipeline produces real numbers.
+- **Files:** `evals/sandbox/{Dockerfile,build.sh}` (→ `evalplus-sandbox:0.3.1`, pinned to host evalplus);
+  rewrote `orchestrator/tier1_code.py`; `run_evals.py` gains `--tier1-dataset|--tier1-think|--tier1-image`;
+  `report.py` already surfaces the `tier1 pass@1(+)` column; README §11 documents the sandbox. `--allow-code-exec`
+  repurposed as the UNSANDBOXED host escape-hatch (Docker is the default, no longer a refuse-to-run gate).
+- **Caveats / next:** (1) HumanEval is contamination-prone — a single anchor, not yet a quant-delta; lean on
+  Tier 0 for the precise ranking. (2) Per-quant Tier-1 sweep (w8a8/w4a16/w4a8 vs fp8) is the obvious next run
+  now that the GPU is free. (3) thinking-off is the *sensitive* setting for quant damage but suppresses
+  absolute pass@1 vs real coding-server use — revisit if we want a thinking-on "feel" pass. (4) roadmap still
+  wants LiveCodeBench (contamination-resistant) for the headline code claim.

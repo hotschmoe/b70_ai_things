@@ -4,8 +4,9 @@ pyyaml>=6.0
 numpy>=1.26
 # Tier 2 (gsm8k etc.) — EleutherAI harness with the OpenAI-compatible API backend
 lm_eval[api]>=0.4.5
-# Tier 1 (HumanEval+/MBPP+) — runs/executes code; prefer EvalPlus's Docker path on shared machines
-evalplus>=0.3.1
+# Tier 1 (HumanEval+/MBPP+) — needed on the HOST for dataset prompts + sanitize (no code exec here).
+# Code EXECUTION/grading runs in the Docker sandbox instead: build with evals/sandbox/build.sh.
+evalplus==0.3.1   # pinned: host sanitize + the sandbox image must match
 # Tier 3 (headless render of creative builds)
 playwright>=1.44
 # after install:  playwright install chromium

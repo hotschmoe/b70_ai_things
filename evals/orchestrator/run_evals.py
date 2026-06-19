@@ -44,8 +44,14 @@ def main() -> int:
     ap.add_argument("--corpus", default=str(DEFAULT_CORPUS), help="Tier 0 corpus file")
     ap.add_argument("--suite", default=str(DEFAULT_SUITE), help="Tier 3 prompt suite yaml")
     ap.add_argument("--task", default="gsm8k", help="Tier 2 lm-eval task")
-    ap.add_argument("--limit", type=int, default=None, help="cap items (tier2/tier3) for quick runs")
-    ap.add_argument("--allow-code-exec", action="store_true", help="permit Tier 1 to EXECUTE generated code")
+    ap.add_argument("--limit", type=int, default=None, help="cap items (tier1/tier2/tier3) for quick runs")
+    ap.add_argument("--tier1-dataset", default="humaneval", help="Tier 1 EvalPlus dataset: humaneval|mbpp")
+    ap.add_argument("--tier1-think", action="store_true",
+                    help="Tier 1: generate with thinking ON (default off, matching tiers 2/3)")
+    ap.add_argument("--tier1-image", default="evalplus-sandbox:0.3.1",
+                    help="Tier 1 sandbox image (build via evals/sandbox/build.sh)")
+    ap.add_argument("--allow-code-exec", action="store_true",
+                    help="Tier 1: permit UNSANDBOXED host execution if the Docker sandbox is unavailable")
     ap.add_argument("--seed", type=int, default=1234)
     ap.add_argument("--max-tokens", type=int, default=2048)
     ap.add_argument("--check", action="store_true", help="just health-check the endpoint(s) and exit")
@@ -85,7 +91,9 @@ def main() -> int:
         summary["tiers"]["0"] = tier0_divergence.run(ctx, args.corpus)
     if "1" in tiers:
         import tier1_code
-        summary["tiers"]["1"] = tier1_code.run(ctx, require_docker=not args.allow_code_exec)
+        summary["tiers"]["1"] = tier1_code.run(
+            ctx, dataset=args.tier1_dataset, limit=args.limit, think=args.tier1_think,
+            image=args.tier1_image, allow_host_exec=args.allow_code_exec)
     if "2" in tiers:
         import tier2_reasoning
         summary["tiers"]["2"] = tier2_reasoning.run(ctx, task=args.task, limit=args.limit)

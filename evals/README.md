@@ -178,6 +178,9 @@ python3 -m venv evals/.venv && source evals/.venv/bin/activate
 pip install -r evals/requirements.txt          # openai, lm-eval, evalplus, playwright, pyyaml, numpy
 playwright install chromium                     # for Tier-3 headless render
 
+# 0b. one-time: build the Tier-1 code-execution sandbox image (Docker; see §11)
+bash evals/sandbox/build.sh                     # -> evalplus-sandbox:0.3.1
+
 # 1. (on the box) serve a quant — e.g. W8A8 + PIECEWISE graph:
 #    scripts/runremote.sh scripts/51_serve_int8_specdecode.sh IMG=vllm-xpu-env:int8g GRAPH=1 CGMODE=PIECEWISE SPEC=0
 
@@ -190,13 +193,55 @@ python3 evals/orchestrator/run_evals.py \
     --reference-endpoint http://192.168.10.5:18080/v1 --reference-model Qwen3-14B \
     --tiers 0,2
 
+# 3b. Tier 1 (execution-graded code, sandboxed). Smoke first with --limit, then drop it for all 164.
+python3 evals/orchestrator/run_evals.py \
+    --endpoint http://192.168.10.5:18080/v1 --model qwen3-14b-fp8 --quant fp8 \
+    --tiers 1 --tier1-dataset humaneval --limit 5      # smoke; full run = omit --limit
+
 # 4. roll up everything into a retention table
 python3 evals/orchestrator/report.py evals/results/ > evals/results/SUMMARY.md
 ```
 
 ---
 
-## 11. Roadmap / TODO
+## 11. Tier 1 — the code-execution sandbox (Docker)
+
+Tier 1 is the only tier that **executes model-generated code** (to grade HumanEval+/MBPP+ pass@1 with
+EvalPlus). That code is untrusted, so the pipeline splits into three steps and isolates the one that runs it:
+
+```
+1. GENERATE  (host, SAFE)   our own OpenAI-client loop → raw markdown responses
+                            • same discipline as tiers 2/3: greedy (temp 0), fixed seed, concurrency 1,
+                              enable_thinking OFF by default (flip with --tier1-think)
+                            • EvalPlus's exact chat prompt, so samples drop straight into its grader
+2. SANITIZE  (host, SAFE)   `evalplus.sanitize` — tree-sitter text extraction, no code is run
+3. EVALUATE  (DOCKER)       `evalplus.evaluate` RUNS the code vs the +tests → pass@1. Sandboxed:
+                              --network none · non-root --user · throwaway cache copy · mem/pids caps
+```
+
+Why our own generator instead of `evalplus.codegen`: codegen's OpenAI backend can't pass
+`chat_template_kwargs.enable_thinking`, so it would silently run **thinking-ON** and diverge from the
+rest of the harness. We replicate its prompt exactly and own the request.
+
+**The sandbox guarantees** (see `evals/sandbox/Dockerfile` + `orchestrator/tier1_code.py`):
+- **`--network none`** — generated code gets no network.
+- **non-root `--user $(id -u):$(id -g)`** — no root in-container; output files are owned by you.
+- **throwaway cache** — we copy `~/.cache/evalplus` into the run dir and mount *that* (read-write), so
+  the untrusted code (and the ground-truth `.pkl` EvalPlus writes) can't touch your real cache.
+- **`--memory 8g --pids-limit 512`** — blast-radius caps.
+
+```bash
+bash evals/sandbox/build.sh        # one-time: build evalplus-sandbox:0.3.1 (pinned to host evalplus)
+# then run Tier 1 (see Quickstart §10 step 3b). --limit N trims a throwaway dataset copy for fast smokes;
+# omit --limit for a real run (EvalPlus then asserts full 164-problem coverage — a useful drop-check).
+```
+
+Escape hatch: `--allow-code-exec` runs `evalplus.evaluate` **on the host, UNSANDBOXED** (only if Docker
+is unavailable and you trust the environment). Default is always the Docker sandbox.
+
+---
+
+## 12. Roadmap / TODO
 
 - [ ] Tier 0: full-vocab KLD via an offline forward-pass script (API gives only top-k → approximate now).
 - [ ] Tier 1: wire LiveCodeBench (contamination-resistant) + Aider-polyglot (edit-correctness, most
@@ -206,7 +251,8 @@ python3 evals/orchestrator/report.py evals/results/ > evals/results/SUMMARY.md
       before dispersion) → capture multiple frames or a later T; (b) `non_blank` heuristic false-negatives
       CSS-only pages (no canvas/svg/img) → count visible styled DOM nodes instead.
 - [ ] Tier 3: vision-LLM auto-judge on screenshots (pairwise, swapped) to cut manual viewing.
-- [ ] Tier 1 (code/EvalPlus) still un-run (heavy: code-exec sandbox) — scaffolded, gated behind --allow-code-exec.
+- [x] Tier 1 (code/EvalPlus) **WIRED + sandboxed** (2026-06-19): generate(host)→sanitize(host)→evaluate
+      (Docker, --network none, non-root, throwaway cache). Validated on Qwen3-14B-fp8 HumanEval+ (§11).
 - [ ] Auto-cycle serve configs from `models.yaml` (serve → wait healthy → eval → tear down → next).
 - [ ] CIs / bootstrap on all task scores; flag any delta below the noise floor.
 - [ ] Optional: containerize the orchestrator for one-command runs.

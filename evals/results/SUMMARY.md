@@ -43,6 +43,11 @@ single B70, vLLM 0.23.0-based images, greedy/eager, eval concurrency 1, thinking
 - **top1-agree** = fraction of 1063 corpus tokens where the quant's greedy argmax == bf16's (1.0 = identical).
 - **ppl** on a fixed prose+code corpus. **gsm8k**: thinking-off, greedy, `#### <n>` exact-match, first 150 test items (paired).
 - bf16 + w8a16 scored **offline on CPU** (neither serves on one card); tokenization verified identical to vLLM /tokenize (0/10 misaligned).
+- **Tier 1 (execution-graded code) now wired + sandboxed** (2026-06-20). First datapoint: **fp8 HumanEval+
+  pass@1 = 0.915 base / 0.890 plus** (164 problems, thinking-off, greedy). Grading runs in a Docker jail
+  (`--network none`, non-root, throwaway cache) — see harness README §11. Per-quant code sweep (w8a8/w4a16/
+  w4a8) is queued; this is a single anchor, not yet a quant-delta. HumanEval is contamination-prone, so lean
+  on Tier 0 for the precise ranking and treat code pass@1 as directional.
 
 ## Headline: the int8 **activation** quant is the quality cost, not the int8 **weights**
 
