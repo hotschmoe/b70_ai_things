@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# gpu-run -- serialize Arc Pro B70 GPU access across parallel agents/containers.
+#
+# Why: agents edit/compile in parallel (CPU-bound, no GPU contention), but the
+# actual GPU test/bench runs must NOT overlap. Overlap corrupts perf timings
+# (noisy neighbor) and lets one buggy WIP kernel wedge the device under another
+# agent's run. This wraps any command in an flock on a SHARED lockfile so exactly
+# one GPU run executes at a time. Editing/compiling stay fully parallel; only the
+# real GPU touch is gated. Since agents work most of the time and test runs are
+# short, contention is rare and the wait is usually zero.
+#
+# Usage:
+#   scripts/gpu-run <cmd> [args...]
+#   scripts/gpu-run python test_int4_moe.py
+#   scripts/gpu-run ./bench_fused_moe --iters 200
+#   scripts/gpu-run --status        # who holds the GPU right now (or "free")
+#
+# Cross-container: the lockfile is a host path bind-mounted into every container
+# (-v $B70_GPU_LOCK:$B70_GPU_LOCK), so all agents flock the SAME inode and the
+# lease is honored across containers on the same host.
+#
+# Env (override as needed):
+#   B70_GPU_LOCK          lockfile path     (default /mnt/vm_8tb/b70/gpu.lock)
+#   B70_GPU_LOCK_TIMEOUT  max wait seconds  (default 600; 0 = wait forever)
+#   B70_AGENT             label for logs    (default: $HOSTNAME)
+set -uo pipefail
+
+LOCK="${B70_GPU_LOCK:-/mnt/vm_8tb/b70/gpu.lock}"
+TIMEOUT="${B70_GPU_LOCK_TIMEOUT:-600}"
+AGENT="${B70_AGENT:-$(hostname)}"
+OWNER="${LOCK}.owner"
+
+case "${1:-}" in
+  --status|--who)
+    if [ -s "$OWNER" ]; then echo "GPU lock HELD: $(cat "$OWNER")"; else echo "GPU lock: free"; fi
+    exit 0 ;;
+  -h|--help|"")
+    # print the header comment block as help
+    awk 'NR>1 && /^#/ {sub(/^# ?/,""); print; next} NR>1 {exit}' "$0"
+    exit 0 ;;
+esac
+
+command -v flock >/dev/null 2>&1 || { echo "gpu-run: flock not found (install util-linux)" >&2; exit 127; }
+
+lockdir="$(dirname "$LOCK")"
+if [ ! -d "$lockdir" ]; then
+  echo "gpu-run: lock dir '$lockdir' does not exist." >&2
+  echo "         Set B70_GPU_LOCK to a path on the GPU host (default expects Unraid /mnt/vm_8tb/b70)." >&2
+  exit 1
+fi
+
+# Open the lock on fd 9 (advisory flock on the inode; file content is irrelevant).
+exec 9>"$LOCK" || { echo "gpu-run: cannot open lock $LOCK" >&2; exit 1; }
+
+# Probe first so we only print a "waiting" note when actually contended.
+if ! flock -n 9; then
+  echo "gpu-run: GPU busy (held by: $(cat "$OWNER" 2>/dev/null || echo unknown)); waiting up to ${TIMEOUT}s ..." >&2
+  if [ "$TIMEOUT" = "0" ]; then
+    flock 9
+  else
+    flock -w "$TIMEOUT" 9 || { echo "gpu-run: timed out after ${TIMEOUT}s waiting for GPU lock" >&2; exit 124; }
+  fi
+fi
+
+# We hold the lease. Record owner for --status; clear it on exit no matter what.
+printf '%s pid=%s since=%s cmd: %s\n' "$AGENT" "$$" "$(date '+%F %T')" "$*" > "$OWNER" 2>/dev/null || true
+cleanup() { : > "$OWNER" 2>/dev/null || true; }
+trap cleanup EXIT INT TERM
+
+echo "gpu-run: [$AGENT] GPU acquired -> $*" >&2
+start=$(date +%s)
+"$@"
+rc=$?
+echo "gpu-run: [$AGENT] done in $(( $(date +%s) - start ))s (exit $rc)" >&2
+exit $rc
