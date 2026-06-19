@@ -82,6 +82,7 @@ GPTQ** (weight-only → SmoothQuant is a no-op, skipped).
 |---|---|---|---|---|
 | W8A8 | RTN | 13.08 | 0.881 | 95.3% |
 | W8A8 | **SmoothQuant+GPTQ@128** | 13.05 | **0.908** (+2.7) | 94.7% |
+| W8A8 | SmoothQuant+GPTQ**@512** | 13.15 | 0.900 | 95.3% |
 | W4A16 | RTN | 13.55 | 0.841 | 94.7% |
 | W4A16 | **GPTQ@128** | **13.34** | **0.883** (+4.2) | **96.7%** (+2.0) |
 
@@ -92,9 +93,11 @@ GPTQ** (weight-only → SmoothQuant is a no-op, skipped).
   activation-bit of fidelity.
 - For **W8A8 it's SmoothQuant, not GPTQ**, doing the work — it sharpens the int8 *activation* quant (the W8A8
   bottleneck), so agreement tightens even though weights/ppl barely move. gsm8k stays within noise (saturated).
-- **Sample count (128 vs 512):** per-module GPTQ time is Hessian-inverse-bound (sample-independent, ~6 s/mod
-  for W8A8), so 512 costs only a few extra min. A W8A8 SmoothQuant+GPTQ@512 run is in progress to measure
-  whether >128 samples buys anything — *[results pending]*.
+- **Sample count: 128 ≈ 512, use 128.** W8A8 SmoothQuant+GPTQ@512 (ppl 13.15, agree 0.900, gsm8k 95.3%) is
+  **within noise of @128** (13.05 / 0.908 / 94.7%) — actually marginally worse, i.e. pure run variance. More
+  samples bought nothing. And it was NOT cheap: **@512 took ~99 min vs @128's ~30 min (~3×)** — the Cholesky
+  inverse is sample-independent, but the calibration forward passes AND the Hessian accumulation (Σxxᵀ) both
+  scale with samples. 128 seqs × 2048 tok ≈ 260k activation rows already conditions the Hessian. **Default 128.**
 
 ## Caveats (don't over-read)
 

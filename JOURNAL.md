@@ -895,3 +895,22 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - CAVEATS: all non-fp8 quants are RTN here (GPTQ would lift them); gsm8k n=150 (~±2.5%) so fine gsm8k gaps
   are noise — trust ppl/agreement; no formal bf16-vs-bf16 noise floor yet; 14B + thinking-off may not
   transfer to 27B. NEXT ideas: noise floor run, GPTQ-vs-RTN quality delta, Tier-1 code (EvalPlus) + Tier-3.
+
+### 2026-06-19 — [RESULT] Calibration study: RTN vs GPTQ, and 128 vs 512 samples (closes the campaign)
+- Created calibrated checkpoints with scripts/54 (GPU-GPTQ on the B70, ~6 s/module for the 14B — the 27B's
+  ~5 min/module was pathological, NOT typical): Qwen3-14B-W8A8-gptq (SmoothQuant+GPTQ@128, ~30 min),
+  Qwen3-14B-W4A16-gptq (GPTQ@128, weight-only -> no SmoothQuant), Qwen3-14B-W8A8-gptq512 (@512, ~99 min).
+- **Calibration lift scales with quantization error:**
+  | scheme | RTN agree | GPTQ@128 agree | RTN->GPTQ ppl | gsm8k |
+  | W8A8  | 0.881 | 0.908 (+2.7) | 13.08->13.05 | 95.3->94.7 (noise) |
+  | W4A16 | 0.841 | 0.883 (+4.2) | 13.55->13.34 | 94.7->96.7 (+2.0) |
+  int8 weights (W8A8) already near-lossless -> small lift, and it's **SmoothQuant** (not GPTQ) doing it
+  (sharpens the int8 ACTIVATION quant, the W8A8 bottleneck). int4 weights (W4A16) have real error -> bigger
+  lift; GPTQ-W4A16 (0.883) reaches RTN-W8A8 (0.881) fidelity (good int4 calib ~= an activation bit).
+- **128 vs 512 samples: NO difference, use 128.** W8A8 GPTQ@512 (ppl 13.15, agree 0.900, gsm8k 95.3%) is
+  within noise of @128 (13.05/0.908/94.7%) — marginally worse, pure variance. And @512 took **~99 min vs
+  ~30 min (~3x)**: I was wrong that more samples is ~free — the Cholesky inverse is sample-independent but
+  the calibration FORWARDS and Hessian accumulation (Sxx^T) scale with samples. 128 is the default.
+- Also benched single-stream PERF (perf_probe.py): fp8 decode 30 t/s / TTFT 82 ms / prefill 3531; w8a8 21.9 /
+  121 / **5787 (1.64x fp8 prefill, INT8 systolic)**; w4a16 26.4 / 89 / 2939 (out-decodes w8a8 — int4 weights
+  stream less — but worst prefill). Tier-3 creative run on all 3 (gallery.py side-by-side). All committed/pushed.
