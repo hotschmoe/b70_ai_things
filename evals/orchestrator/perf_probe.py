@@ -63,7 +63,7 @@ def measure_decode(client, model, n_out=128, reps=3):
 
 
 def measure_prefill(client, base_url, model, reps=3):
-    prompt = "The history of computing is long and full of surprising turns. " * 360
+    prompt = "The history of computing is long and full of surprising turns. " * 150  # ~1800 tok < 4096 ctx
     pt = tok_count(base_url, model, prompt)
     ttfts = []
     for _ in range(reps):

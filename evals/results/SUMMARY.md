@@ -57,6 +57,21 @@ Decompose by holding weights fixed and changing only the activation precision:
    appears; for the throughput coding-server, W8A8 wins.
 3. **W4A8 only when memory-bound** (9.3 GB) — it costs real quality (gsm8k 92.7%, 0.822 agreement).
 
+## Performance (single-stream, greedy, eager, max-len 4096) — `perf_probe.py`
+
+| quant | decode t/s ↑ | TTFT ms ↓ | prefill t/s ↑ | serve VRAM |
+|---|---|---|---|---|
+| fp8 | **29.96** | 82 | 3531 | ~15 GB |
+| w8a8 | 21.86 | 121 | **5787 (1.64× fp8)** | ~15 GB |
+| w4a16 | 26.40 | 89 | 2939 | **~9.3 GB** |
+
+- **Decode (bandwidth-bound):** fp8 > **w4a16 26.4** > w8a8 21.9. int4 weights (9.3 GB) stream less per
+  token, so w4a16 *out-decodes* w8a8 despite lower quality. (W8A8 + PIECEWISE graph → ~27, closes the gap.)
+- **Prefill (compute-bound):** **w8a8 wins 1.64× fp8** — the INT8 systolic datapath. w4a16 is *worst* at
+  prefill (int4 weight-only dequant → fp16 matmul, no systolic).
+- **Pick by workload:** decode/chat → fp8 (or w4a16 if VRAM-tight); long-context/prefill/batch → **w8a8**;
+  smallest footprint → w4a16. This is exactly why W8A8 (prefill + INT8 path) is the coding-server kernel target.
+
 ## Caveats (don't over-read)
 
 - **gsm8k n=150** → ~±2.5% per cell; the fp8↔w8a8↔w4a16 gsm8k gaps are within/near noise. The **tight
