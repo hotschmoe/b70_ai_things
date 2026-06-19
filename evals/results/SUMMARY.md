@@ -63,8 +63,9 @@ Decompose by holding weights fixed and changing only the activation precision:
   signal is ppl + agreement** (deterministic, 1063 paired tokens) — trust those for fine ordering.
 - All non-fp8 quants are **RTN (data-free)** here; GPTQ/SmoothQuant calibration would lift them somewhat
   (esp. w4a8/w4a16). This campaign compares *schemes at RTN*, not best-achievable per scheme.
-- **No formal noise floor run** (bf16-vs-bf16) yet; fp8≈bf16 ppl (and fp8's marginally lower ppl) suggests
-  sub-1% ppl moves are at noise level.
+- **Noise floor ≈ 0 for Tier 0** (greedy, concurrency-1): W8A8 ppl was **13.0839 identical across two
+  independent runs**, so the ppl/agreement deltas here are real signal, not run-to-run wobble. (A
+  bf16-vs-bf16 run isn't possible — bf16 won't serve — but quant-vs-itself reproduces exactly.)
 - 14B-class, thinking-off. **May not transfer to 27B / thinking-on** — re-run when card #2 lands.
 
 ## Repro
