@@ -33,6 +33,7 @@ DEFAULT_SUITE = REPO_ROOT / "evals" / "prompts" / "tier3_creative.yaml"
 
 
 def main() -> int:
+    sys.stdout.reconfigure(line_buffering=True)  # so tier prints show up live in redirected logs
     ap = argparse.ArgumentParser(description="Quant eval orchestrator")
     ap.add_argument("--endpoint", required=True, help="OpenAI-compatible base url, e.g. http://host:18080/v1")
     ap.add_argument("--model", help="served-model-id to test")
