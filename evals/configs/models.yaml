@@ -63,7 +63,18 @@ models:
     weights: int4
     activations: int8-dynamic-per-token
     serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=/models/Qwen3-14B-W4A8-INT SERVED=qwen3-14b-w4a8 IMG=vllm-xpu-env:int8 MAXLEN=4096 MAXSEQS=4"
-    notes: "XPUW4A8IntLinearKernel. Smallest footprint (~9.3 GB). compressed-tensors int4-w/int8-a."
+    notes: "RTN (data-free). XPUW4A8IntLinearKernel. Smallest footprint (~9.3 GB VRAM / 16 GB disk). HumanEval+ 0.860/0.817."
+
+  - label: w4a8-gptq
+    served_model_id: qwen3-14b-w4a8-gptq    # SmoothQuant+GPTQ@128 -> models/Qwen3-14B-W4A8-gptq (NOT the RTN w4a8)
+    family: qwen3-14b
+    weights: int4
+    activations: int8-dynamic-per-token
+    calibration: smoothquant+gptq@128       # apples-to-apples w/ w4a16-gptq (the 0.848 plus bar)
+    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=/models/Qwen3-14B-W4A8-gptq SERVED=qwen3-14b-w4a8-gptq IMG=vllm-xpu-env:int8 MAXLEN=4096 MAXSEQS=4"
+    notes: "GPTQ-recovered W4A8. Tests whether int8-act closes the accuracy gap to w4a16-gptq (0.848+). Eval:
+      run_evals.py --endpoint http://192.168.10.5:18080/v1 --model qwen3-14b-w4a8-gptq --quant w4a8-gptq
+      --tiers 1 --tier1-dataset humaneval --limit 164 --allow-code-exec  (thinking-off, greedy, sandboxed)."
 
   # --- created later this session with scripts/54 (the MISSING formats) ---
   # w4a16 / w8a16: quantize with scripts/54 SCHEME=W4A16|W8A16, THEN test XPU serveability (kernel
