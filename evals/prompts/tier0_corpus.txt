@@ -1,0 +1,113 @@
+Passages for Tier 0 perplexity / token-agreement scoring. Self-authored (no copyright, no benchmark
+contamination). Passages are separated by a line containing only three dashes. Expand this file for a
+tighter perplexity estimate — more tokens = narrower confidence on the quant ranking. Keep it FIXED
+once a campaign starts; changing the corpus invalidates cross-quant comparison.
+
+---
+Memory bandwidth, not raw compute, governs single-stream decode on most consumer accelerators. At a
+batch size of one, each generated token requires reading the entire set of model weights from device
+memory exactly once. The achievable token rate is therefore close to the memory bandwidth divided by
+the number of bytes per parameter. Lowering the weight precision shrinks the bytes that must be moved,
+which is why an eight-bit model decodes roughly twice as fast as a sixteen-bit model of the same shape.
+The arithmetic units stay mostly idle in this regime; they only become the bottleneck during prefill or
+when many sequences are batched together, where each weight read is amortized across many tokens.
+
+---
+Quantization trades numerical precision for memory and bandwidth. A weight-only scheme stores the
+parameters in a low-precision integer format but upcasts them before the matrix multiply, so the math
+still runs in floating point. An activation-quantized scheme additionally rounds the inputs to each
+layer, which lets the hardware use its integer matrix engines directly. The risk is that a few unusually
+large activations, often called outliers, stretch the quantization range and crush the precision of the
+ordinary values. Techniques such as smoothing the activation scale into the weights, or calibrating the
+rounding with a small reference dataset, exist mainly to keep those outliers from dominating the error.
+
+---
+def fibonacci(n):
+    """Return the first n Fibonacci numbers as a list."""
+    if n <= 0:
+        return []
+    seq = [0, 1]
+    while len(seq) < n:
+        seq.append(seq[-1] + seq[-2])
+    return seq[:n]
+
+
+def is_prime(x):
+    if x < 2:
+        return False
+    i = 2
+    while i * i <= x:
+        if x % i == 0:
+            return False
+        i += 1
+    return True
+
+---
+import asyncio
+
+
+async def fetch_all(urls, limit=8):
+    sem = asyncio.Semaphore(limit)
+
+    async def one(u):
+        async with sem:
+            await asyncio.sleep(0)  # placeholder for a real request
+            return u, len(u)
+
+    results = await asyncio.gather(*(one(u) for u in urls))
+    return dict(results)
+
+---
+function debounce(fn, waitMs) {
+  let timer = null;
+  return function (...args) {
+    const ctx = this;
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(ctx, args), waitMs);
+  };
+}
+
+const onResize = debounce(() => {
+  console.log("settled at", window.innerWidth, window.innerHeight);
+}, 150);
+
+window.addEventListener("resize", onResize);
+
+---
+The speculative decoding idea is simple to state and subtle to make profitable. A small, cheap drafter
+proposes several future tokens, and the full model verifies them in a single batched forward pass. When
+the draft agrees with what the large model would have produced, multiple tokens are accepted at once and
+the effective decode rate climbs. The catch is that the verification step is not free: it pays the cost
+of a wider forward pass and a rejection-sampling correction every step. If the acceptance rate is low,
+or if the per-step overhead is high because attention cannot be captured into a replayable graph, the
+scheme can end up slower than plain autoregressive decoding despite proposing many candidate tokens.
+
+---
+A tidy commit history is a form of documentation. Each commit should answer two questions: what changed,
+and why it was worth changing. The subject line names the change in the imperative mood, as if completing
+the sentence "if applied, this commit will ...". The body, when present, explains the motivation and any
+trade-offs that a future reader could not reconstruct from the diff alone. Mechanical refactors and
+behavioral changes belong in separate commits, because mixing them forces a reviewer to hunt for the one
+line that matters inside a wall of renames.
+
+---
+struct ring_buffer {
+    unsigned char *data;
+    size_t capacity;
+    size_t head;
+    size_t tail;
+};
+
+static size_t rb_count(const struct ring_buffer *rb) {
+    if (rb->head >= rb->tail)
+        return rb->head - rb->tail;
+    return rb->capacity - (rb->tail - rb->head);
+}
+
+---
+When a measurement is meant to detect a small difference, the first number you should compute is the
+size of the difference you can detect at all. Run the same condition twice and observe how much the
+result moves on its own. That run-to-run spread is the noise floor, and any effect smaller than it is
+indistinguishable from chance no matter how confident the single-run number looks. Reporting an effect
+without first establishing the noise floor is the most common way that careful-looking experiments
+arrive at conclusions that do not replicate.

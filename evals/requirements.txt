@@ -1,0 +1,11 @@
+# Dev-box (ms-r1) orchestrator deps. The GPU box needs none of this — it only serves vLLM.
+openai>=1.40
+pyyaml>=6.0
+numpy>=1.26
+# Tier 2 (gsm8k etc.) — EleutherAI harness with the OpenAI-compatible API backend
+lm_eval[api]>=0.4.5
+# Tier 1 (HumanEval+/MBPP+) — runs/executes code; prefer EvalPlus's Docker path on shared machines
+evalplus>=0.3.1
+# Tier 3 (headless render of creative builds)
+playwright>=1.44
+# after install:  playwright install chromium

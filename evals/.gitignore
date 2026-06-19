@@ -1,0 +1,10 @@
+# Raw eval outputs stay local (heavy: html, screenshots, generations, grader logs).
+# Only the rolled-up SUMMARY.md (the artifact for RESULTS.md) is tracked.
+results/*
+!results/.gitkeep
+!results/SUMMARY.md
+
+# local venv + python caches
+.venv/
+__pycache__/
+*.pyc

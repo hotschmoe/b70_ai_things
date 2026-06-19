@@ -1,0 +1,81 @@
+# Tier 3 — curated creative / visual coding suite.
+#
+# These are TASTE-leaning (you'll glance at the renders), but we make them SEMI-objective:
+#   - objective sub-signal: each output is rendered in a headless browser; we record whether it
+#     loads with ZERO console/JS errors and produces a non-blank canvas/DOM ("renders-clean").
+#   - subjective signal: pairwise A/B (this quant vs the bf16 reference), position-swapped, judged
+#     by you (a glance) or later a vision-LLM. Pairwise win-rate >> absolute 1-10 scoring.
+#
+# Conventions:
+#   - id: stable slug (used in output paths + the report). Never reuse/renumber.
+#   - prompt: sent verbatim. Ask for a SINGLE self-contained HTML file (no external CDNs) so the
+#     render is deterministic and offline. (External CDNs add network nondeterminism + can fail.)
+#   - tags: for grouping in the report.
+#   - render: how the harness should capture it (headless screenshot delay, viewport).
+#
+# Keep prompts FIXED once a campaign starts — changing a prompt invalidates cross-quant comparison.
+
+suite: tier3_creative_v1
+
+defaults:
+  system: "You are an expert front-end engineer. Output ONE complete, self-contained HTML file
+    (inline CSS + JS, no external scripts/CDNs, no network). It must run by opening the file directly."
+  render:
+    viewport: { width: 1024, height: 768 }
+    screenshot_delay_ms: 2500     # let animations settle before the screenshot
+    settle_frames: true
+
+prompts:
+  - id: ink-drop-dispersion
+    tags: [animation, canvas, physics-feel]
+    prompt: |
+      Create a pure HTML page (single file, inline CSS/JS, no external libraries) that visually
+      demonstrates a single drop of dark ink being dripped into a tank of clear water and dispersing.
+      The ink should fall, hit the water, then billow and diffuse outward with soft turbulent tendrils
+      that slow and fade as they spread, like real ink in water. Use canvas. Make it look organic and
+      mesmerizing, not like simple expanding circles.
+
+  - id: fluid-cursor-field
+    tags: [animation, canvas, interaction]
+    prompt: |
+      Single self-contained HTML file: a full-window fluid/smoke field on a canvas that swirls in
+      response to mouse movement, leaving dissipating trails of color that blend where they overlap.
+      Smooth 60fps feel, no external libraries.
+
+  - id: solar-system-svg
+    tags: [svg, animation, accuracy]
+    prompt: |
+      Single self-contained HTML file using SVG (no libraries): an animated top-down solar system with
+      the Sun and the 8 planets orbiting at visibly different speeds and radii, each correctly ordered
+      and roughly proportional in relative size. Include subtle orbit rings and labels.
+
+  - id: gravity-particles
+    tags: [animation, canvas, physics]
+    prompt: |
+      Single self-contained HTML file: a canvas particle simulation where ~300 particles are attracted
+      to the mouse pointer with gravity-like falloff, collide softly, and trail. Add a control to toggle
+      attraction/repulsion. No external libraries.
+
+  - id: css-only-loader
+    tags: [css, no-js, craft]
+    prompt: |
+      Single self-contained HTML file: an elegant, original loading animation using ONLY HTML and CSS
+      (no JavaScript). It should feel premium and smooth. Center it on a dark background.
+
+  - id: interactive-todo-darkmode
+    tags: [app, dom, ux]
+    prompt: |
+      Single self-contained HTML file: a polished to-do app (add/complete/delete/filter, with a count
+      and a dark/light toggle that persists via localStorage). Clean modern UI, inline CSS/JS only.
+
+  - id: mini-piano
+    tags: [audio, interaction, webaudio]
+    prompt: |
+      Single self-contained HTML file: a one-octave playable piano using the Web Audio API (click or
+      keyboard keys A-K). Visual key-press feedback. No external libraries or audio files.
+
+  - id: starfield-warp
+    tags: [animation, canvas, 3d-feel]
+    prompt: |
+      Single self-contained HTML file: a canvas "warp speed" starfield flying toward the viewer with
+      perspective, depth-based brightness, and a subtle speed-up on click. No external libraries.

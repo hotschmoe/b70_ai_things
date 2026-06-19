@@ -1,0 +1,62 @@
+# Quant matrix for the eval campaign. The orchestrator reads this to know:
+#   - what served-model-id to send in API requests (vLLM's --served-model-name / model path)
+#   - which serve script + env brings each one up on the box (for optional auto-cycling)
+#   - which entry is the REFERENCE (the FP16/BF16 ceiling everything is scored against)
+#
+# IMPORTANT: confirm the served_model_id + serve flags against the box before a real run.
+# vLLM answers /v1/models with the id it was served under — query it to be sure:
+#   curl -s http://192.168.10.5:18080/v1/models | python3 -m json.tool
+#
+# Fields marked TODO need a human/box confirmation (paths, served names, exact serve env).
+
+endpoint: http://192.168.10.5:18080/v1   # default; override per-run with --endpoint
+
+defaults:
+  # Determinism knobs applied to every graded request (see README §5/§7).
+  temperature: 0.0
+  top_p: 1.0
+  seed: 1234
+  max_tokens: 2048
+  concurrency: 1        # eval at 1 for reproducibility; raise only for throughput, never for graded runs
+
+# The first campaign: Qwen3-14B across quants. 'reference: true' marks the ceiling.
+models:
+  - label: bf16
+    reference: true
+    served_model_id: Qwen3-14B            # TODO confirm served name (path basename by default)
+    family: qwen3-14b
+    weights: bf16
+    activations: bf16
+    serve_script: scripts/34_serve_qwen3_14b.sh   # TODO confirm this serves BF16 (vs FP8)
+    serve_env: {}
+    notes: "~28 GB, tiny KV. Reference ceiling. BF16 src at /mnt/vm_8tb/specula-build/models/Qwen3-14B."
+
+  - label: fp8
+    served_model_id: Qwen3-14B            # TODO confirm (may share name or be a distinct fp8 ckpt)
+    family: qwen3-14b
+    weights: fp8
+    activations: fp8
+    serve_script: scripts/48_serve_fp8kv.sh
+    serve_env: {}
+    notes: "Upstream XPU FP8 kernel. ~35 t/s single-stream. Near-lossless per prior findings."
+
+  - label: w8a8
+    served_model_id: Qwen3-14B-W8A8-INT8
+    family: qwen3-14b
+    weights: int8
+    activations: int8-dynamic-per-token
+    serve_script: scripts/51_serve_int8_specdecode.sh
+    serve_env: { IMG: vllm-xpu-env:int8g, GRAPH: "1", CGMODE: PIECEWISE, SPEC: "0" }
+    notes: "Our int8 kernel + PIECEWISE graph. Image vllm-xpu-env:int8g."
+
+  - label: w4a8
+    served_model_id: Qwen3-14B-W4A8-INT
+    family: qwen3-14b
+    weights: int4
+    activations: int8-dynamic-per-token
+    serve_script: scripts/36_serve.sh     # TODO confirm the W4A8 serve path/flags
+    serve_env: {}
+    notes: "XPUW4A8IntLinearKernel. Smallest footprint (~9.3 GB). Decode ~half FP8 per prior findings."
+
+  # w4a16 intentionally absent: we have W4A8 + int4-AutoRound(27B), NOT a confirmed W4A16 14B ckpt.
+  # Add it here ONLY when we actually quantize one. Do not relabel w4a8 as w4a16.
