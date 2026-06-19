@@ -129,16 +129,25 @@ The orchestrator has a `--noise-floor` mode that runs a config twice and reports
 
 See `configs/models.yaml` for the live, authoritative list. As of writing, on the box:
 
-| Label | Checkpoint (on box) | Weights | Activations | Serve image / notes |
+| Label | Checkpoint (on box) | Weights | Acts | B70 serveable? (kernel) |
 |---|---|---|---|---|
-| `bf16` (REFERENCE) | `Qwen3-14B` (or HF) | 16-bit | 16-bit | reference ceiling; ~28 GB, tiny KV |
-| `fp8` | (FP8 dynamic) | ~8-bit fp | fp8 | upstream XPU FP8 kernel |
-| `w8a8` | `Qwen3-14B-W8A8-INT8` | int8 | int8 dyn per-token | our kernel, image `vllm-xpu-env:int8g` |
-| `w4a8` | `Qwen3-14B-W4A8-INT` | int4 | int8 dyn per-token | `XPUW4A8IntLinearKernel` |
+| `bf16` (REFERENCE) | `Qwen3-14B` (specula-build) | 16 | 16 | ❌ ~29.6 GB won't fit one card (v1 engine). Scored offline on CPU. |
+| `fp8` | online `--quantization fp8` | 8 fp | 8 fp | ✅ XPU FP8 kernel |
+| `w8a8` | `Qwen3-14B-W8A8-INT8` | int8 | int8 dyn | ✅ **our** `XPUInt8ScaledMMLinearKernel` |
+| `w4a8` | `Qwen3-14B-W4A8-INT` | int4 | int8 dyn | ✅ `XPUW4A8IntLinearKernel` |
+| `w4a16` | `Qwen3-14B-W4A16` (scripts/54 RTN) | int4 | 16 | ✅ `XPUwNa16LinearKernel` (int4 weight-only) |
+| `w8a16` | `Qwen3-14B-W8A16` (scripts/54 RTN) | int8 | 16 | ❌ **NO XPU kernel** — `XPUwNa16` is int4-only (uint4/uint4b8); our int8 GEMM needs int8 acts. Scored offline on CPU. |
 
-⚠️ **`w4a16` is NOT the same as `w4a8`.** We have W4A8 and an int4-AutoRound 27B, but no confirmed
-W4A16 (int4 weights + fp16 acts) 14B checkpoint yet. Don't mislabel them. Add W4A16 only if/when we
-quantize one.
+**Kernel-coverage finding (2026-06-19):** the B70 (vLLM 0.23.0 + our kernels) serves fp8, W8A8-int8,
+W4A8-int, and **W4A16 (int4 weight-only)** — but **NOT W8A16 (int8 weight-only)**: the `XPUwNa16` kernel
+only accepts int4 weights. **W8A16 is the one missing kernel, and the eval says it would be near-lossless**
+(ppl 12.76, 0.981 token-agreement vs bf16 — better fidelity than our W8A8's 0.881). The catch: W8A16 keeps
+fp16 activations, so it does **not** light the INT8 systolic path — it's a memory-savings play, not a
+compute-speed one, whereas W8A8 (int8 acts) does use the fastpath. So the kernel call is a genuine
+tradeoff: write a W8A16 int8-weight-only kernel for max fidelity, vs. keep optimizing W8A8 for speed
+(its task accuracy is already ≈ fp8). See [results/SUMMARY.md](results/SUMMARY.md) for the full analysis.
+
+⚠️ `w4a16` ≠ `w4a8` (different schemes — int4-w/fp16-a vs int4-w/int8-a). Both now exist + are evaluated.
 
 ---
 

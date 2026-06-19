@@ -21,12 +21,15 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   dynamo trace through them. PIECEWISE mode (attention eager, linear/MLP captured) lifts 14B W8A8 decode
   23.33 -> **27.23 t/s**. FULL capture is blocked by Intel's SYCL Graph ext (`work_group_scratch_memory`, via
   flash-attn). Use image `vllm-xpu-env:int8g` + `cudagraph_mode=PIECEWISE`.
-- **Quant quality measured (2026-06-19): W8A8 is the sweet spot.** First eval campaign over Qwen3-14B
-  {bf16, fp8, w8a8, w4a8} (see [evals/](evals/) + [evals/results/SUMMARY.md](evals/results/SUMMARY.md)).
-  Perplexity + top-1 token-agreement vs bf16 + gsm8k all order fp8 > w8a8 > w4a8. **FP8 ≈ lossless**
-  (ppl 12.70 vs bf16 12.70, 96.8% token agreement). **W8A8 (our int8 kernel): +3% ppl, 88% agreement,
-  gsm8k 95.3% (≈fp8)** — near-fp8 quality + lights the INT8 fastpath, so it's the best kernel-optimization
-  target. **W4A8: 82% agreement, gsm8k 92.7%** — real quality cost, only worth it for the 9.3 GB footprint.
+- **Quant quality measured (2026-06-19): the int8 ACTIVATION quant is the quality cost, not int8 weights.**
+  First eval campaign, Qwen3-14B × 6 quants (see [evals/](evals/) + [evals/results/SUMMARY.md](evals/results/SUMMARY.md)):
+  ppl + top-1 token-agreement vs a CPU-scored bf16 anchor + gsm8k. **W8A16 (int8 w / fp16 a) is near-lossless**
+  (ppl 12.76 vs bf16 12.70, **0.981** agreement) but **has NO XPU kernel** (`XPUwNa16` is int4-only). Quantizing
+  activations to int8 (W8A16→**W8A8**) drops agreement 0.981→**0.881** — yet gsm8k barely moves (95.3% vs fp8 96.0%),
+  because it flips low-confidence tokens, not answers. **Weight bits dominate:** W8A8 > W4A16 on every metric.
+  **Kernel takeaway:** keep optimizing **W8A8** (only path that lights the INT8 systolic datapath; ≈fp8 task
+  quality, 15 GB); a W8A16 int8-weight kernel is the one gap but it's a fidelity/memory play (fp16 acts, no INT8
+  matmul), not a speed one. **W4A8** (0.822 agree, gsm8k 92.7%) only when memory-bound (9.3 GB).
 
 ## What works (single B70, 32 GB)
 | Thing | Result |

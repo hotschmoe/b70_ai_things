@@ -865,3 +865,33 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   Implication: the bf16 reference needs `--cpu-offload-gb` (host RAM) or we anchor on FP8 (near-lossless,
   fits). Ironing out the orchestrator on W8A8 first (fits easily, our flagship). Added a one-card path to
   Tier 0: dump per-token argmax/logprob to tier0_tokens.json, compare offline (`tier0_divergence.py compare`).
+
+### 2026-06-19 — [RESULT] Quant-quality campaign: int8 ACTIVATION quant is the cost, not int8 weights (6-quant matrix)
+- Ran the full evals/ harness over Qwen3-14B × 6 quants on one B70 (served one-at-a-time, vLLM 0.23.0,
+  greedy/eager, concurrency 1, thinking-off). Tier 0 = ppl + top-1 token-agreement + nll-gap vs a
+  CPU-scored bf16 anchor (scripts/55; tokenization verified identical to vLLM /tokenize, 0/10 misaligned).
+  Tier 2 = self-contained gsm8k (n=150, paired). Full table + analysis in evals/results/SUMMARY.md.
+  | quant | w/a | ppl | top1-agree vs bf16 | gsm8k | serves |
+  | bf16  | 16/16   | 12.70 | (anchor) | —      | no (29.6GB) |
+  | fp8   | 8/8     | 12.70 | 0.968    | 96.0%  | yes |
+  | w8a16 | int8/16 | 12.76 | 0.981    | —      | NO KERNEL |
+  | w8a8  | int8/int8 | 13.08 | 0.881  | 95.3%  | yes (ours) |
+  | w4a16 | int4/16 | 13.55 | 0.841    | 94.7%  | yes (XPUwNa16) |
+  | w4a8  | int4/int8 | 14.19 | 0.822  | 92.7%  | yes |
+- **HEADLINE: the int8 ACTIVATION quant costs the fidelity, not the int8 weights.** W8A16 (int8 w, fp16 a)
+  is near-lossless (0.981 agree, even > fp8's 0.968). Going W8A16→W8A8 (quantize acts to int8) drops
+  agreement 0.981→0.881 (−10 pts) — but gsm8k barely moves (95.3 vs fp8 96.0): it flips low-confidence
+  tokens, not answers. So Tier-0 agreement is MORE sensitive than gsm8k (the point of the canary).
+- **Weight bits dominate:** W8A8 (int8 w) beats W4A16 (int4 w) on every metric despite W4A16's fp16 acts.
+- **KERNEL-COVERAGE FINDING:** B70/vLLM-XPU serves fp8, W8A8-int8 (ours), W4A8, **W4A16 (int4 weight-only,
+  XPUwNa16)** — but **NOT W8A16 (int8 weight-only)**: `XPUwNa16` only accepts uint4/uint4b8, and our int8
+  GEMM needs int8 acts. W8A16 is the one gap; the eval says it'd be near-lossless, but it keeps fp16 acts
+  so it does NOT light the INT8 systolic path (a fidelity/memory play, not speed). Priority stays: optimize
+  **W8A8** (only int8-systolic path, ≈fp8 task quality). W4A8 only when memory-bound.
+- Created the two missing formats with the pipeline (scripts/54 DATAFREE RTN, CPU, ~5 min each):
+  Qwen3-14B-W4A16 (9.3 GB), Qwen3-14B-W8A16 (16 GB). 14B is standard dense -> SmoothQuant-free RTN is clean.
+- Orchestrator de-warts: gsm8k thinking-off (bounded + more quant-sensitive), openai/gsm8k id (datasets>=5),
+  line-buffered stdout, one-card tier0 dump+offline-compare, tier0_matrix anchor table. All committed.
+- CAVEATS: all non-fp8 quants are RTN here (GPTQ would lift them); gsm8k n=150 (~±2.5%) so fine gsm8k gaps
+  are noise — trust ppl/agreement; no formal bf16-vs-bf16 noise floor yet; 14B + thinking-off may not
+  transfer to 27B. NEXT ideas: noise floor run, GPTQ-vs-RTN quality delta, Tier-1 code (EvalPlus) + Tier-3.
