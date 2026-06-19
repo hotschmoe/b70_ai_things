@@ -818,3 +818,50 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   one card). The RTN checkpoint is a sufficient artifact to test serveability the moment card #2 lands.
 - DECISION PENDING (user): run the long GPTQ+SmoothQuant quality pass NOW (background, ready for card-#2 day)
   vs. DEFER until card #2 confirms the model serves on XPU (avoid hours of compute on an unconfirmed path).
+
+### 2026-06-19 — [WIN] 27B W8A8 GPU-accelerated GPTQ VALIDATED on the B70 (then deferred); SmoothQuant breaks on hybrid Qwen3_5
+- User asked to actually run W8A8 quant ON the B70 GPU (not CPU). Ran scripts/49 DEVICE=xpu METHOD=gptq.
+- **SmoothQuant FAILS on the hybrid Qwen3_5 27B** (BEFORE any GPU work): its mapping resolver needs exactly
+  one smooth-layer per balance group, but only 16/64 layers carry self_attn q/k/v (the other 48 are DeltaNet
+  `linear_attn`) -> `ValueError: must match a single smooth layer ... got [all 64 input_layernorm]`. Fix:
+  added **`SMOOTHQUANT=0`** env to scripts/49 -> GPTQ-only (still strong: GPTQ weight calib + dynamic
+  per-token int8 acts; SmoothQuant matters most for static/per-tensor acts, which we don't use). Gotcha:
+  the python heredoc lives inside `bash -c '...'` -> an apostrophe in a comment ("SmoothQuant's") closed the
+  quote = bash syntax error. Keep that heredoc apostrophe/single-quote free.
+- **GPU-accelerated GPTQ calibration WORKS end-to-end on the B70** (a first — prior validated run was CPU +
+  data-free RTN). Measured live mid-run: compute engine (CCS) ~76->100% busy, copy engine (BCS) ~78% busy
+  (host<->device layer streaming), ~7.6 GiB VRAM resident; llmcompressor's own log: `Accelerator 0 | total
+  memory: 32.5 Gb` = the B70. Container CPU only ~8.6/32 cores (NOT the ~3200% a CPU forward would peg) ->
+  confirms the matmuls are on the GPU. PCIe 3.0 x16 (board-limited from the card's Gen5) makes the streaming
+  a real tax -> a 2nd card (resident model in 64 GB) would cut that, but GPTQ is sequential so not a 2x.
+- **Progressive slowdown:** per-module GPTQ time grew to ~5 min on the back-half layers (`GPTQ METRIC time
+  299s`), and container RAM crept 24 -> 42 GiB (calibration-cache accumulation). Full-attn layers (q/k/v/o +
+  MLP = 7 modules) are the slow ones; DeltaNet layers (MLP-only, 3 modules) are fast. ETA ballooned to ~5h.
+- **DECISION (user): killed at layer 47/65 to free the GPU for the 14B eval campaign.** Rationale: the 33 GB
+  27B W8A8 can't be SERVED on one card anyway (needs card #2 ~Jun 22), so finishing it tonight banks an
+  unusable-until-next-week artifact while the GPU is the bottleneck for tonight's evals. The risky part
+  (GPU-GPTQ on B70) is now PROVEN; re-run the full artifact later, lighter (SAMPLES=128 to dodge the slowdown).
+- Survived a dev-box restart mid-run: the `docker run` container kept going under dockerd (the SSH `tee` died);
+  monitor via `docker logs` (dockerd capture), not the frozen host logfile.
+
+### 2026-06-19 — [BUILD] evals/ quant-quality harness scaffolded (+ docs/storage.md)
+- New **`evals/`** dir to measure quant DEGRADATION of a fixed base model (small-delta vs a bf16 reference).
+  Tiers: 0 divergence (ppl + top-1 token agreement + nll-gap, the deterministic canary), 1 code (EvalPlus
+  HumanEval+/MBPP+), 2 reasoning (lm-eval gsm8k), 3 creative (headless-rendered HTML, "renders-clean" +
+  pairwise vs bf16). Orchestrator runs on the dev box, hits vLLM over the LAN; box only serves. README has
+  intent / DOs-DONOTs / pitfalls (noise floor, CIs, contamination, MC-insensitivity, chat-template drift,
+  determinism via VLLM_BATCH_INVARIANT=1 + concurrency 1). Tool choices validated via `codex exec`.
+- Added **docs/storage.md** (8TB SSD policy — README referenced it but it was missing).
+- First campaign target: Qwen3-14B across {bf16, fp8, w8a8, w4a8} + create the MISSING ones (w4a16, w8a16)
+  with our pipeline (14B is standard dense -> SmoothQuant should work, unlike the 27B). Goal: per-quant
+  quality to steer kernel-optimization focus (hypothesis: W8A8-INT8 is the path to lean on B70 INT fastpaths).
+
+### 2026-06-19 — [INFRA] eval session pickup: dev-box venv + the BF16-on-one-card wall
+- Dev box (ms-r1) had a broken venv: Debian lacks `ensurepip`/python3.11-venv -> `python3 -m venv` makes a
+  pip-less venv. Fix: `venv --without-pip` + get-pip.py bootstrap. Light deps (openai/pyyaml/numpy) for Tier 0.
+- **BF16 14B won't serve on one B70 under the v1 engine:** ~29.6 GB weights on a 32 GB card; at util 0.90 the
+  28.8 GB budget doesn't even cover weights -> `ValueError: No available memory for the cache blocks` (both
+  :v0230 and :tf hit it; both ship the v1 EngineCore). BF16 "barely fit" only on the older v0 engine.
+  Implication: the bf16 reference needs `--cpu-offload-gb` (host RAM) or we anchor on FP8 (near-lossless,
+  fits). Ironing out the orchestrator on W8A8 first (fits easily, our flagship). Added a one-card path to
+  Tier 0: dump per-token argmax/logprob to tier0_tokens.json, compare offline (`tier0_divergence.py compare`).

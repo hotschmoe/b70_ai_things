@@ -96,6 +96,7 @@ def run(ctx: RunContext, corpus_path: str, top_k: int = 5) -> dict:
     tot_lp, tot_n = 0.0, 0
     agree_hits, agree_n, nll_gap_sum, nll_gap_n = 0, 0, 0.0, 0
     per_passage = []
+    token_dump = []  # full per-position data so a quant can be compared vs the cached reference (one card)
     for j, text in enumerate(passages):
         s = score_passage(client, ctx.endpoint, ctx.model_id, text, top_k)
         if s is None:
@@ -104,6 +105,8 @@ def run(ctx: RunContext, corpus_path: str, top_k: int = 5) -> dict:
         vals = [lp for lp in s["actual_logprob"] if lp is not None]
         tot_lp += sum(vals); tot_n += len(vals)
         rec = {"passage": j, "n_tokens": len(vals)}
+        token_dump.append({"passage": j, "token_ids": s["token_ids"],
+                           "argmax_id": s["argmax_id"], "actual_logprob": s["actual_logprob"]})
 
         if ref_client is not None:
             r = score_passage(ref_client, ctx.reference_endpoint, ctx.reference_model_id, text, top_k)
@@ -131,7 +134,50 @@ def run(ctx: RunContext, corpus_path: str, top_k: int = 5) -> dict:
         "vs_reference": ctx.reference_model_id,
         "per_passage": per_passage,
     }
+    # Always persist the per-token dump (the reference cache for one-card campaigns).
+    dump_path = ctx.out_dir / "tier0_tokens.json"
+    write_json(dump_path, {"model": ctx.model_id, "quant": ctx.quant, "corpus": str(corpus_path),
+                           "top_k": top_k, "passages": token_dump})
+    result["token_dump"] = str(dump_path)
     write_json(ctx.out_dir / "tier0_divergence.json", result)
     print(f"[tier0] ppl={ppl:.4f}  top1_agreement={result['top1_agreement']}  "
-          f"nll_gap={result['nll_gap_mean']}")
+          f"nll_gap={result['nll_gap_mean']}  dump={dump_path}")
     return result
+
+
+def compare(ref_dump_path: str, quant_dump_path: str) -> dict:
+    """One-card path: compare a quant's cached token dump against the reference's.
+
+    Serve bf16, run tier0 (caches tier0_tokens.json); serve the quant, run tier0 (its own cache);
+    then `python tier0_divergence.py compare <bf16 dump> <quant dump>` -> top1_agreement + nll_gap.
+    Aligns passages by index and asserts identical token_ids (same tokenizer) before comparing.
+    """
+    ref = json.loads(Path(ref_dump_path).read_text())
+    qt = json.loads(Path(quant_dump_path).read_text())
+    rp = {p["passage"]: p for p in ref["passages"]}
+    agree_hits = agree_n = 0
+    gap_sum = 0.0; gap_n = 0
+    misaligned = 0
+    for p in qt["passages"]:
+        r = rp.get(p["passage"])
+        if r is None or r["token_ids"] != p["token_ids"]:
+            misaligned += 1
+            continue
+        for a, b in zip(p["argmax_id"], r["argmax_id"]):
+            if a is not None and b is not None:
+                agree_n += 1; agree_hits += int(a == b)
+        for qlp, rlp in zip(p["actual_logprob"], r["actual_logprob"]):
+            if qlp is not None and rlp is not None:
+                gap_sum += abs(qlp - rlp); gap_n += 1
+    return {"reference": ref.get("quant"), "quant": qt.get("quant"),
+            "top1_agreement": (agree_hits / agree_n) if agree_n else None,
+            "nll_gap_mean": (gap_sum / gap_n) if gap_n else None,
+            "n_positions": agree_n, "misaligned_passages": misaligned}
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) == 4 and sys.argv[1] == "compare":
+        print(json.dumps(compare(sys.argv[2], sys.argv[3]), indent=2))
+    else:
+        print("usage: tier0_divergence.py compare <ref tier0_tokens.json> <quant tier0_tokens.json>")
