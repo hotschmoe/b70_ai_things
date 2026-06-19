@@ -19,6 +19,10 @@ desktop.ini
 tmp/
 *.tmp
 
+# Soft-delete bin -- stale/superseded docs parked here for manual review, then purged.
+# Untracked on purpose; never committed.
+archive/
+
 # Large raw model/bench dumps stay on the box; curated results live in results/*.csv + RESULTS.md
 *.gguf
 *.safetensors
