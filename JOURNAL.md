@@ -1065,3 +1065,17 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   methods unless a custom OUTNAME was passed — that's how the dups + mix-up happened).
 - **Policy guard:** added "ALWAYS verify the served model (RTN vs GPTQ)" to evals/README.md, the
   models.yaml header, and a new top-level `CLAUDE.md`. Verify via `/v1/models` + cross-check models.yaml.
+
+### 2026-06-20 -- [RESULT] Qwen3.6-27B int4 HumanEval+ = 0.963/0.927 -- the higher-density jump (+ its speed cost)
+- **27B int4-AutoRound, HumanEval+ (164, thinking-off, greedy): pass@1 0.963 base / 0.927 plus.** Served on
+  `:v0230` (gdn_attention), chat-smoke OK, gen 90.4 min (the slow part), sandbox eval 39 s. Fresh perf:
+  **decode 7.94 t/s, TTFT 283 ms, prefill 1376 t/s** (confirms the prior 7.6).
+- **The tradeoff the campaign was built to show:** 27B int4 beats the best 14B (fp8 0.915/0.890) by
+  **+4.8 base / +3.7 plus** at **~4x slower decode** (7.9 vs 32 t/s). Going to the bigger model on one B70
+  buys ~+4 pts pass@1 for 4x the per-token latency -- fine for async/agentic, painful for interactive.
+- **HumanEval understates it.** The bench near-saturates (~0.89 at 14B), so 0.927 plus is a floor on the
+  27B's real edge -- its gsm8k is a clean 100% (50/50) vs the 14B's ~95%. Harder/contamination-resistant code
+  (LiveCodeBench, roadmap) would widen the gap. HumanEval = directional; Tier 0 = the precise rank.
+- Next (auto-queued, GPU now free): **w8a8-gptq + w4a16-gptq** code numbers -- GPTQ-vs-RTN calibration delta,
+  each served identically to its RTN twin (note: the served `w8a8` row in the 14B table is the **RTN**
+  checkpoint, correctly labeled; the GPTQ run uses served-id `qwen3-14b-w8a8-gptq`). Expect the int4 lift larger.

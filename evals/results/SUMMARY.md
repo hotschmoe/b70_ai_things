@@ -5,11 +5,16 @@
 
 ## REAL TARGETS — Qwen3.6 on one B70 (vLLM 0.23.0, `:v0230` build, greedy/eager)
 
-| model (quant) | serves on 1×B70? | gsm8k | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
-|---|---|---|---|---|---|---|---|
-| **Qwen3.6-27B** (AutoRound int4) | ✅ **yes** | **100% (50/50)** | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
-| **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | ❌ **no** — OOMs at weight-load | — | — | — | — | — | 21.5 GB on disk |
+| model (quant) | serves on 1xB70? | gsm8k | HumanEval+ b/+ | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
+|---|---|---|---|---|---|---|---|---|
+| **Qwen3.6-27B** (AutoRound int4) | **yes** | **100% (50/50)** | **0.963 / 0.927** | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
+| **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | **no** -- OOMs at weight-load | - | - | - | - | - | - | 21.5 GB on disk |
 
+- **The higher-density tradeoff, quantified (2026-06-20, HumanEval+ 164, thinking-off):** the 27B int4 hits
+  **0.963 / 0.927** vs the best 14B (fp8 **0.915 / 0.890**) -- **+4.8 base / +3.7 plus** -- but decodes at
+  **7.9 t/s vs 32** (fresh `perf_probe`: 7.94 t/s, TTFT 283 ms, prefill 1376 t/s; confirms the 7.6 below).
+  So **~4x slower decode buys ~+4 pts pass@1.** Note HumanEval near-saturates here, so this *understates*
+  the 27B's real edge (its gsm8k is a clean 100% vs the 14B's ~95%); on harder/agentic code the gap widens.
 - **27B runs great on one card** (aces gsm8k, much stronger than the 14B) but **decode is slow (7.6 t/s)** —
   big dense model + Gated-DeltaNet + unoptimized int4 decode. Prefill 1369 t/s, TTFT 305 ms.
   - Requires the **`:v0230` full build** — our `:int8` image was built minimal (`GDN_ENABLED=OFF`) so it
@@ -48,7 +53,7 @@ single B70, vLLM 0.23.0-based images, greedy/eager, eval concurrency 1, thinking
   harness README §11). **Code spreads ~7 pts (fp8 0.890+ → w4a8 0.817+) where gsm8k moved ~3** — the
   long-generation signal the harness is built to surface. Ordering **fp8 > w8a8 > w4a16 > w4a8** agrees with
   ppl/agreement. HumanEval is contamination-prone → treat as directional; Tier 0 is the precise rank.
-  *(Qwen3.6-27B int4 row pending — generating at ~7.6 t/s.)*
+  *(Qwen3.6-27B int4 = 0.963/0.927 -- see the REAL TARGETS table up top for the higher-density jump.)*
 
 ## Headline: the int8 **activation** quant is the quality cost, not the int8 **weights**
 
