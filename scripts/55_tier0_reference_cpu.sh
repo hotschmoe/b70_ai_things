@@ -21,7 +21,7 @@ mkdir -p "$ROOT/results" "$ROOT/pip_cache"
 docker run --rm --name tier0ref \
   -e CUDA_VISIBLE_DEVICES="" -e ZE_AFFINITY_MASK="" --ipc=host --shm-size 16g \
   -v "$ROOT:$ROOT" -v "$SPECULA:/specula_models:ro" \
-  -e HF_HOME=/hf_cache -e OMP_NUM_THREADS=32 -e PIP_CACHE_DIR="$ROOT/pip_cache" \
+  -e HF_HOME=/hf_cache -e OMP_NUM_THREADS="${OMP:-32}" -e PIP_CACHE_DIR="$ROOT/pip_cache" \
   -e SRC="$SRC" -e CORPUS="$CORPUS" -e OUT="$OUT" \
   python:3.11 bash -c '
     set -e
