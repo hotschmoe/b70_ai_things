@@ -1191,3 +1191,19 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   (crack int4_gemm_w4a8 decode -- our wheelhouse). Pursue w4a8 if prefill/TTFT/throughput-heavy OR we commit to the
   int4-decode kernel; else w4a16 for decode-heavy. Next: AutoRound (0.817 -> >=0.848) + profile int4 decode. GPU freed.
 
+### 2026-06-20 -- [PLAN] Added docs/quant_methods.md -- quant-method registry (algorithm x scheme x model)
+- **Why:** consolidate "which quant algorithm per precision scheme" + "what we've tried on what model" into one
+  place (was scattered across SUMMARY + journal + doc 07). 4 tables: (A) method->scheme plan, (B) glossary,
+  (C) coverage/evidence ledger (the "GPTQ beat RTN" table), (D) the XPU kernel gate.
+- **Folded in two strategy dumps:** rotation method picks by scheme -- **QServe/SpinQuant @ W4A8**,
+  **QuaRot/FlatQuant @ W4A4** -- vs SmoothQuant/AutoSmoothQuant/GPTQ/AutoRound. W4A4-INT4 section: FlatQuant first
+  (SOTA acc, has Qwen2.5 model_tools; fused Kronecker-affine -> kernel applies a pre-transform), QuaRot fallback
+  (parameter-free Hadamard -> cleaner int4xint4 target), PrefixQuant for static acts. QServe/SpinQuant ruled out
+  for the INT4 fastpath (they deploy A8).
+- **Kernel gate recorded (Table D):** W4A4 is DOUBLY gated -- needs a new `s4 x s4 -> s32` GEMM (we only have
+  int4xint8) AND a transform kernel (FWHT or fused Kronecker-affine); neither exists for SYCL/XMX. Offline rotations
+  fuse into weights = free to serve; online Hadamard = kernel-gated. Qwen3 QK-norm shifts rotation insertion points
+  vs Qwen2.5 -> diff FlatQuant model_tools first.
+- **Wiring:** RESEARCH_TODO.md points to the registry (siblings header, dedup ledger, Track 2, Track 8). Numbers stay
+  authoritative in SUMMARY.md. Planning only; no GPU; `w4a8/` untouched (other agent's branch).
+

@@ -6,6 +6,7 @@
 - [`MTP_TODO.md`](MTP_TODO.md) -- owns ALL MTP / speculative-decoding planning (the ~3-4x decode lever).
 - [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) -- owns the W8A8 accuracy-recovery survey (SmoothQuant, down_proj, rotation-skip, DeltaNet, citations).
 - [`docs/kernel/02_int8_w8a8_status.md`](docs/kernel/02_int8_w8a8_status.md) -- owns the kernel status + how-to.
+- [`docs/quant_methods.md`](docs/quant_methods.md) -- owns the quant-method **registry** (algorithm x scheme x model matrix; W4A8/W4A4 rotation method picks; the XPU kernel gate). The "which algorithm + what have we tried" tables live there, not here.
 - [`evals/results/SUMMARY.md`](evals/results/SUMMARY.md) -- owns the measured leaderboard.
 - [`w4a8/README.md`](w4a8/README.md) -- **another agent owns the W4A8-INT8 + AutoRound-W4A8 branch. Do not edit `w4a8/`.**
 
@@ -56,6 +57,8 @@ Rough effort split (info-dump's recommendation, **reconciled** below): 60% W8A8 
 | W8A8 kernel work (GEMM/GEMV/PIECEWISE/quant K-loop) | OPEN -- the sprint | Track 1 + kernel doc 02 "make-it-faster" |
 | Quark = checkpoint/loader ecosystem, importer test | **NEW** | Track 4 |
 | AutoRound / "autoint" (Intel's quantization) | **NEW (user add)** | Track 3 |
+| Rotation method picks per scheme (QServe/SpinQuant @ W4A8; QuaRot/FlatQuant @ W4A4) | **NEW (user add)** -> registry | docs/quant_methods.md + Track 8 |
+| "method x model" coverage table (show GPTQ beat RTN) | **NEW (user add)** | docs/quant_methods.md Table C |
 
 **The stale number to stop citing:** the info-dump repeats "W8A8 HumanEval+ = 0.860". That is the **RTN** checkpoint.
 The **GPTQ** W8A8 is **0.890 plus / 0.921 base** (06-20) -- ties FP8 on plus, beats it on base. Use the GPTQ number.
@@ -100,7 +103,8 @@ obvious 27B-on-2xB70 pick.
 
 The remaining gap is the int8 **activation** quant (W8A16 0.981 agree -> W8A8 0.881), not int8 weights. GPTQ already
 banked +2.7 agreement (0.881 -> 0.908). The full recipe + citations live in **doc 07 S3**; **MTP_TODO Playbook B**
-has the exact `scripts/49` knobs. Do NOT re-derive them here -- just execute, newest-result-to-JOURNAL:
+has the exact `scripts/49` knobs, and the method-coverage matrix is in [`docs/quant_methods.md`](docs/quant_methods.md)
+Table C. Do NOT re-derive them here -- just execute, newest-result-to-JOURNAL:
 
 - [ ] **2a. Selective SmoothQuant** on the 16 full-attn layers + MLPs, skip DeltaNet `linear_attn` (doc 07 S3.1).
       Measure agreement lift over the GPTQ-only 0.908. This is the activation-fidelity lever -- top accuracy item.
@@ -207,11 +211,21 @@ Keep as the "fits on one card" path for the 27B; it is NOT the throughput story 
 
 ---
 
-## Track 8 -- Rotation research  [DEFERRED]
+## Track 8 -- Rotation + sub-8-bit frontier (W4A8 / W4A4)  [DEFERRED]
 
-SpinQuant / QuaRot Hadamard rotations are **marginal at W8A8** (doc 07 S6: papers' own admission + no SYCL/XMX
-Hadamard kernel exists). Only relevant to rescue **4-bit activations** -- i.e. the `w4a8/` branch, if it stalls.
-Do not start here; revisit only if W4A8 (other agent) needs an outlier-rescue and asks for it.
+Method picks + kernel-gating are owned by **[`docs/quant_methods.md`](docs/quant_methods.md)** (Tables A/D + the
+W4A4 section). Summary so the order is clear:
+
+- **W8A8: skip rotation** -- marginal at 8-bit + no SYCL/XMX Hadamard kernel (doc 07 S6).
+- **W4A8: rotation enters** -- **QServe-QoQ or SpinQuant** to rescue int8 acts at int4 weights. This is the `w4a8/`
+  agent's branch; SpinQuant R1/R2 fuse offline (servable on our `int4_gemm_w4a8`), R3/R4 need an online Hadamard kernel.
+- **W4A4 (true int4 acts): the real frontier** -- **FlatQuant** (SOTA acc, has Qwen2.5 model_tools) first, **QuaRot**
+  (parameter-free Hadamard = cleaner int4xint4 kernel target) fallback; **PrefixQuant** for static acts. Doubly
+  kernel-gated: needs a new `s4 x s4 -> s32` GEMM **and** a transform kernel (FWHT or fused Kronecker-affine).
+
+Do not start the rotation kernels until dense W8A8 (Track 1) is robust. **First step when W4A4 opens:** diff Qwen3 vs
+Qwen2.5 in FlatQuant `model_tools` to size the port (Qwen3's QK-norm shifts the rotation insertion points). Validate
+in fake-quant (perplexity) before writing any XMX kernel.
 
 ---
 
