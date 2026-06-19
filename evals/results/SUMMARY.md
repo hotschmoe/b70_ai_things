@@ -29,6 +29,34 @@
 
 ---
 
+## Code-quality leaderboard (HumanEval+) + decode speed -- all single-B70 configs (2026-06-20)
+
+> Every config that serves on ONE Arc Pro B70, sorted by HumanEval+ plus pass@1 (164 problems, thinking-off,
+> greedy, sandboxed grading). Same base models under different quant+calibration; speed is fresh single-stream
+> `perf_probe` (greedy, eager). 14B base bf16 does not fit one card, so fp8 is the practical 14B ceiling.
+
+| rank | model | quant (calib) | HumanEval+ base / plus | decode t/s | TTFT ms | prefill t/s | VRAM |
+|---|---|---|---|---|---|---|---|
+| 1 | Qwen3.6-27B | int4 (AutoRound) | **0.963 / 0.927** | 7.9 | 283 | 1376 | 17.6 GB |
+| 2 | Qwen3-14B | w8a8 (GPTQ) | 0.921 / 0.890 | 23.5 | 101 | 5740 | ~15 GB |
+| 2 | Qwen3-14B | fp8 (online) | 0.915 / 0.890 | **32.1** | **85** | 3525 | ~15 GB |
+| 4 | Qwen3-14B | w8a8 (RTN) | 0.902 / 0.860 | 23.8 | 101 | **5780** | ~15 GB |
+| 5 | Qwen3-14B | w4a16 (GPTQ) | 0.872 / 0.848 | 29.0 | 84 | 2920 | ~9.3 GB |
+| 6 | Qwen3-14B | w4a16 (RTN) | 0.866 / 0.829 | 29.1 | 79 | 2921 | ~9.3 GB |
+| 7 | Qwen3-14B | w4a8 (RTN) | 0.860 / 0.817 | 16.5 | 139 | 4403 | ~9.3 GB |
+
+- **Quality:** the 27B int4 leads by ~+4 plus pts but decodes ~4x slower (7.9 vs 32 t/s) -- the higher-density
+  tradeoff. Among the 14B, **w8a8-gptq ties fp8 at the top (0.890 plus)**; **GPTQ beats RTN at both schemes**
+  (w8a8 +3.0 plus, w4a16 +1.9 plus -- the latter within HumanEval's CI). bf16 14B ceiling is unmeasured here
+  (does not fit one card); fp8 is the practical anchor.
+- **Speed:** fp8 fastest decode (32.1) + lowest TTFT; w8a8 best prefill (5780, the int8 systolic path);
+  w4a16 best quality-per-VRAM (9.3 GB at 29 t/s). **w4a8 is dominated** -- slowest decode AND lowest quality.
+- **Picks:** interactive/chat -> **fp8** (or **w8a8-gptq** for matching quality + 1.6x prefill); VRAM-tight ->
+  **w4a16-gptq** (best small-footprint quality, fast decode); max quality on one card -> **27B int4** if 7.9
+  t/s decode is tolerable; **skip w4a8** for coding. HumanEval near-saturates -- treat sub-2pt gaps as ties.
+
+---
+
 # (Secondary) Quant-delta study — Qwen3-14B (harness verification, 2026-06-19)
 
 How much each quantization degrades the **same** Qwen3-14B vs its BF16 self. Served one-at-a-time on a
@@ -127,13 +155,17 @@ GPTQ** (weight-only → SmoothQuant is a no-op, skipped).
 | W8A8 | **SmoothQuant+GPTQ@128** | 13.05 | **0.908** (+2.7) | 94.7% | **0.921 / 0.890** |
 | W8A8 | SmoothQuant+GPTQ**@512** | 13.15 | 0.900 | 95.3% | - |
 | W4A16 | RTN | 13.55 | 0.841 | 94.7% | 0.866 / 0.829 |
-| W4A16 | **GPTQ@128** | **13.34** | **0.883** (+4.2) | **96.7%** (+2.0) | _running_ |
+| W4A16 | **GPTQ@128** | **13.34** | **0.883** (+4.2) | **96.7%** (+2.0) | **0.872 / 0.848** |
 
 - **GPTQ shows up MORE on code than gsm8k.** W8A8 RTN->GPTQ: gsm8k moved ~0 (saturated) but HumanEval+ plus
   jumped **0.860 -> 0.890 (+3.0)** and base **0.902 -> 0.921 (+1.9)** -- GPTQ-W8A8 plus now *matches* fp8
   (0.890) and base *beats* it (0.921 vs 0.915). Calibration is free at inference (decode 23.5 t/s, = RTN).
   Confirms why we weight long-generation tiers: the calibration lift is nearly invisible on saturated gsm8k.
-  (W4A16 GPTQ code number landing shortly -- expect the larger lift, since int4 has more weight error to fix.)
+- **But on code, int8 GPTQ helped MORE than int4 GPTQ -- opposite of the agreement metric.** W4A16 RTN->GPTQ
+  on HumanEval+ = **0.829 -> 0.848 (+1.9 plus) / 0.866 -> 0.872 (+0.6 base)**, smaller than W8A8's +3.0,
+  even though int4's *agreement* lift (+4.2) was bigger than int8's (+2.7). Caveat: both code deltas are near
+  HumanEval's 164-item CI (a few problems), so read direction-not-magnitude; Tier 0 agreement stays the tight
+  rank. Net: GPTQ is worth it both places (free at inference, never hurts), most clearly for W8A8.
 
 - **Calibration's lift scales with quantization error.** W8A8 (int8 weights, already near-lossless) gains
   +2.7 agreement pts and ~0 ppl. W4A16 (int4 weights) gains +4.2 agreement, −0.21 ppl, +2 gsm8k — int4 has

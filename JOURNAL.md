@@ -1121,3 +1121,23 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - **Scripts written (NOT run -- queued):** `w4a8/10_quant_autoround_w4a8.sh` (B70-accelerated,
   DEVICE=xpu) + `w4a8/11_test_packed_export.sh` (CPU packing probe). Per user: **wait for GPU free,
   use the B70 to accelerate quant** (retest the old "XPU calibration unreliable" caveat for AutoRound).
+
+### 2026-06-20 -- [RESULT] GPTQ-vs-RTN on code (HumanEval+) + the full single-B70 leaderboard
+- Ran Tier-1 on the GPTQ-calibrated 14B checkpoints, each served IDENTICALLY to its RTN twin (w8a8-gptq:
+  int8 image + fp8 KV; w4a16-gptq: v0230 + default KV) so the only variable is calibration:
+  | scheme | RTN base/plus | GPTQ base/plus | code lift | decode (RTN/GPTQ) |
+  |---|---|---|---|---|
+  | w8a8  | 0.902 / 0.860 | **0.921 / 0.890** | +1.9 / **+3.0** | 23.8 / 23.5 |
+  | w4a16 | 0.866 / 0.829 | 0.872 / 0.848 | +0.6 / +1.9 | 29.1 / 29.0 |
+- **GPTQ-W8A8 fully recovers the int8 coding loss:** its plus (0.890) MATCHES fp8 and base (0.921) BEATS fp8
+  (0.915) -- at identical decode (calibration is free at inference). The lift is real on code where it was
+  invisible on saturated gsm8k (~0 move) -- validates weighting long-generation tiers.
+- **Surprise: int8 GPTQ helped code MORE than int4 GPTQ (+3.0 vs +1.9 plus) -- opposite of the agreement
+  metric** (int4 agreement lift +4.2 > int8 +2.7). Likely HumanEval-saturation + 164-item CI (both code
+  deltas are a few problems wide). Tier 0 remains the tight rank; treat code lift as direction-not-magnitude.
+- **Final single-B70 leaderboard (HumanEval+ plus, decode):** 27B-int4 0.927 @ 7.9 t/s > {w8a8-gptq, fp8}
+  0.890 @ 23.5 / 32.1 > w8a8-rtn 0.860 > w4a16-gptq 0.848 @ 29 > w4a16-rtn 0.829 > w4a8 0.817 @ 16.5.
+  Full table (quality + TTFT + prefill + VRAM) in results/SUMMARY.md. **Picks:** chat -> fp8 or w8a8-gptq;
+  VRAM-tight -> w4a16-gptq; max quality -> 27B if 7.9 t/s ok; w4a8 dominated (skip for coding).
+- Campaign DONE; GPU now free (w4a16-gptq left served -- tear down or repoint to the queued AutoRound W4A8
+  quant). 9 served configs x HumanEval+ 164, all via the sandboxed Tier-1 path, zero grading incidents.
