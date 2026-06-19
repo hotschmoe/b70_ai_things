@@ -1207,3 +1207,22 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - **Wiring:** RESEARCH_TODO.md points to the registry (siblings header, dedup ledger, Track 2, Track 8). Numbers stay
   authoritative in SUMMARY.md. Planning only; no GPU; `w4a8/` untouched (other agent's branch).
 
+### 2026-06-20 -- [POC] int4_gemm_w4a8 KERNEL microbench: the GEMM is fine; decode loss is act-quant/eager, not the GEMM
+- **Setup:** `w4a8/20_microbench_w4a8_decode.sh` -- times `torch.ops._xpu_C.int4_gemm_w4a8` in isolation (symmetric,
+  100 iters) at decode (m=1) + prefill (m=512) shapes on `vllm-xpu-env:int8`. (Bug fixed: `docker run` needs `-i`
+  or the python heredoc never reaches stdin -> silent exit 0.)
+- **[KEY] decode (m=1) is ~52-64% of peak BW at the kernel level:**
+  | shape (k,n) | ms/call | GB/s | % of 608 |
+  |---|---|---|---|
+  | 5120,17408 (MLP up/gate) | 0.142 | 314 | 52% |
+  | 17408,5120 (MLP down)    | 0.115 | 387 | 64% |
+  | 4096,11008               | 0.072 | 314 | 52% |
+  prefill m=512: 171-182 TFLOP/s (int8-XMX humming).
+- **Reframe:** the GEMM kernel is NOT the disaster (~1.6x headroom to ~85% peak). But full-model w4a8 decode is 16.5 t/s
+  (~25% effective) -> **~half the decode time is NON-GEMM**: the unfused per-token int8 **activation-quant** (which
+  w4a16 doesn't pay -> the 16.5-vs-29 gap) + eager-mode per-op launch overhead (graph capture OFF; compile broke on
+  v0230/torch2.11). So the biggest decode lever is **fusing act-quant / enabling graph capture**, THEN the GEMM
+  (52%->85%). [task #5 > task #3].
+- **Quant:** GPTQ-W4A8 on CPU projected ~5-7 h (subgraph 1/41 took 11 min) -> per user, MOVED to GPU (`scripts/54
+  SCHEME=W4A8 METHOD=gptq DEVICE=xpu`, container quant14b). Frees CPU for kernel builds; accuracy number in ~30 min.
+
