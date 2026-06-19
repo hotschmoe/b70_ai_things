@@ -8,7 +8,7 @@
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:int8}"
-MODEL="$ROOT/models/Qwen3-14B-W8A8-INT8"
+MODEL="$ROOT/models/Qwen3-14B-W8A8-gptq"
 NAME=vllm_int8; PORT=18080
 SPEC="${SPEC:-1}"; NSPEC="${NSPEC:-4}"; PLMAX="${PLMAX:-3}"; PLMIN="${PLMIN:-2}"
 KVDTYPE="${KVDTYPE:-fp8_e4m3}"; MAXLEN="${MAXLEN:-8192}"; UTIL="${UTIL:-0.90}"
@@ -48,7 +48,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size 16g -p ${PORT}:${PORT} -v "$ROOT:$ROOT" "${GRAPH_DOCKER[@]}" \
   -e ZE_AFFINITY_MASK=0 -e VLLM_LOGGING_LEVEL=INFO "${GRAPH_ENV[@]}" \
   --entrypoint vllm "$IMG" \
-  serve "$MODEL" --served-model-name qwen3-14b-w8a8 --host 0.0.0.0 --port ${PORT} \
+  serve "$MODEL" --served-model-name qwen3-14b-w8a8-gptq --host 0.0.0.0 --port ${PORT} \
     --dtype float16 --tensor-parallel-size 1 "${EAGER_ARG[@]}" --max-model-len "$MAXLEN" \
     --kv-cache-dtype "$KVDTYPE" --gpu-memory-utilization "$UTIL" \
     --no-enable-prefix-caching --trust-remote-code "${SPEC_ARGS[@]}" "${GRAPH_VLLM[@]}"

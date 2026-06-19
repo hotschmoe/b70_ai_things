@@ -21,7 +21,6 @@ SPECULA=/mnt/vm_8tb/specula-build/models
 IMG="${IMG:-vllm-xpu-env:v0230}"
 SRC="${SRC:-/specula_models/Qwen3-14B}"
 SCHEME="${SCHEME:-W4A16}"
-OUTNAME="${OUTNAME:-Qwen3-14B-${SCHEME}}"
 DEVICE="${DEVICE:-xpu}"; METHOD="${METHOD:-gptq}"
 SAMPLES="${SAMPLES:-256}"; SEQLEN="${SEQLEN:-2048}"; SMOOTH="${SMOOTH:-0.8}"
 IGNORE="${IGNORE:-lm_head}"
@@ -29,6 +28,9 @@ IGNORE="${IGNORE:-lm_head}"
 case "$SCHEME" in *A16) SQ_DEFAULT=0;; *) SQ_DEFAULT=1;; esac
 SMOOTHQUANT="${SMOOTHQUANT:-$SQ_DEFAULT}"
 DATAFREE="${DATAFREE:-0}"   # 1 = fast RTN (no calibration data/GPTQ) -> quick serveability test
+# Tag the output dir by method so RTN and GPTQ NEVER collide / get mixed up downstream (rtn vs gptq).
+QMETH="$METHOD"; [ "$DATAFREE" = 1 ] && QMETH="rtn"
+OUTNAME="${OUTNAME:-Qwen3-14B-${SCHEME}-${QMETH}}"
 LOG="$ROOT/results/quant14b_${SCHEME}_$(date +%Y%m%d_%H%M%S).log"
 mkdir -p "$ROOT/results" "$ROOT/models" "$ROOT/pip_cache"
 

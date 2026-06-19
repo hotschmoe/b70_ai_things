@@ -8,8 +8,8 @@
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:v0230}"
-CKPT="${CKPT:-/models/Qwen3-14B-W8A8-INT8}"      # path inside container (ROOT/models mounted at /models)
-SERVED="${SERVED:-qwen3-14b-w8a8}"
+CKPT="${CKPT:-/models/Qwen3-14B-W8A8-gptq}"      # path inside container (ROOT/models mounted at /models)
+SERVED="${SERVED:-qwen3-14b-w8a8-gptq}"
 NAME="${NAME:-vllm_w8a8}"; PORT=18080
 MAXLEN="${MAXLEN:-8192}"; UTIL="${UTIL:-0.90}"
 QFLAG="${QFLAG:-}"          # set to "--quantization compressed-tensors" to force-detect for debugging

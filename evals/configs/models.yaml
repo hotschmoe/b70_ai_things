@@ -7,6 +7,11 @@
 # vLLM answers /v1/models with the id it was served under — query it to be sure:
 #   curl -s http://192.168.10.5:18080/v1/models | python3 -m json.tool
 #
+# ⚠️ RTN vs GPTQ MIX-UP GUARD: served_model_id MUST encode the calibration method (…-gptq / …-rtn),
+#   never a bare 'qwen3-14b-w8a8' that could be either. Two checkpoints differing only by calibration
+#   are a silent foot-gun -- serving the wrong one mislabels the result. This already bit the Tier-1
+#   HumanEval+ 'w8a8' run (it served the RTN dup, not GPTQ). Less-performant dups live in models/archive/.
+#
 # Fields marked TODO need a human/box confirmation (paths, served names, exact serve env).
 
 endpoint: http://192.168.10.5:18080/v1   # default; override per-run with --endpoint
@@ -43,12 +48,14 @@ models:
     notes: "Online FP8 (upstream XPU FP8 kernel). ~15 GB, near-lossless. Practical high-precision anchor."
 
   - label: w8a8
-    served_model_id: qwen3-14b-w8a8
+    served_model_id: qwen3-14b-w8a8-gptq    # SmoothQuant+GPTQ@128 (calibrated winner). RTN dup is in models/archive/.
     family: qwen3-14b
     weights: int8
     activations: int8-dynamic-per-token
+    calibration: smoothquant+gptq@128       # NOT rtn -> served from models/Qwen3-14B-W8A8-gptq
     serve_cmd: "scripts/runremote.sh scripts/51_serve_int8_specdecode.sh IMG=vllm-xpu-env:int8 SPEC=0 GRAPH=0 MAXLEN=4096"
-    notes: "Our int8 kernel (Selected XPUInt8ScaledMMLinearKernel). FP8 KV. Plain eager for determinism."
+    notes: "Our int8 kernel (Selected XPUInt8ScaledMMLinearKernel). FP8 KV. Plain eager for determinism.
+      ⚠️ The earlier Tier-1 HumanEval+ 'w8a8' result (served_model_id qwen3-14b-w8a8) was the RTN dup -- RE-RUN on this gptq id."
 
   - label: w4a8
     served_model_id: qwen3-14b-w4a8

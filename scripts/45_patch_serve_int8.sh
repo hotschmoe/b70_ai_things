@@ -11,7 +11,7 @@ set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 D="$ROOT/contrib_int8"; mkdir -p "$D"
 SOPATH="$ROOT/vllm-xpu-kernels/vllm_xpu_kernels/_xpu_C.abi3.so"
-MODEL="$ROOT/models/Qwen3-14B-W8A8-INT8"
+MODEL="$ROOT/models/Qwen3-14B-W8A8-gptq"
 NAME=vllm_int8; PORT=18080
 IMG=vllm-xpu-env:v0230
 
@@ -136,7 +136,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
     python '"$D"'/apply_patches.py
     echo "[sanity] int8 op present?"; python -c "import torch,vllm._xpu_ops; print(\"int8_gemm_w8a8:\", hasattr(torch.ops._xpu_C,\"int8_gemm_w8a8\"))"
     echo "[serve]"
-    exec vllm serve '"$MODEL"' --served-model-name qwen3-14b-w8a8 --host 0.0.0.0 --port '"$PORT"' \
+    exec vllm serve '"$MODEL"' --served-model-name qwen3-14b-w8a8-gptq --host 0.0.0.0 --port '"$PORT"' \
       --dtype float16 --tensor-parallel-size 1 --enforce-eager --max-model-len 8192 \
       --gpu-memory-utilization 0.90 --no-enable-prefix-caching --trust-remote-code
   '

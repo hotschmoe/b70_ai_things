@@ -17,9 +17,11 @@ set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 SPECULA=/mnt/vm_8tb/specula-build/models
 SRC="${SRC:-/specula_models/Qwen3-14B}"
-OUTNAME="${OUTNAME:-Qwen3-14B-W8A8-INT8}"
 DATAFREE="${DATAFREE:-1}"
 METHOD="${METHOD:-rtn}"; SAMPLES="${SAMPLES:-256}"; SEQLEN="${SEQLEN:-2048}"; SMOOTH="${SMOOTH:-0.8}"
+# Tag the output dir by method so RTN and GPTQ NEVER collide / get mixed up downstream (rtn vs gptq).
+QMETH="$METHOD"; [ "$DATAFREE" = 1 ] && QMETH="rtn"
+OUTNAME="${OUTNAME:-Qwen3-14B-W8A8-${QMETH}}"
 LOG="$ROOT/results/quantize_w8a8_$(date +%Y%m%d_%H%M%S).log"
 mkdir -p "$ROOT/results" "$ROOT/models" "$ROOT/pip_cache"
 

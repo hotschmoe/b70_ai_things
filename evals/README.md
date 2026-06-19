@@ -6,6 +6,16 @@ right quant for the B70 coding/research server with eyes open.
 > Start here, then read `configs/models.yaml` (the quant matrix) and run the Quickstart.
 > This harness is **scaffolding under active development** — see the Roadmap at the bottom.
 
+> ### ⚠️ ALWAYS verify which checkpoint is actually served — RTN vs GPTQ
+> Quant dirs that differ only by calibration (e.g. `Qwen3-14B-W8A8-rtn` vs `…-gptq`) are a silent
+> foot-gun: serving the wrong one mislabels the result. **This already bit us** — the Tier-1 HumanEval+
+> `w8a8` number was served from the **RTN** checkpoint, not SmoothQuant+GPTQ (re-run pending). Before
+> trusting any result:
+> 1. `curl -s http://192.168.10.5:18080/v1/models | python3 -m json.tool` → confirm the **served id**.
+> 2. Cross-check that id against `configs/models.yaml` → the **exact model path** it maps to.
+> 3. The `served_model_id` must encode the calibration method (`…-gptq` / `…-rtn`), never a bare
+>    `qwen3-14b-w8a8`. Less-performant dups are parked in `models/archive/`.
+
 ---
 
 ## 1. INTENT (read this first — it changes every design choice)

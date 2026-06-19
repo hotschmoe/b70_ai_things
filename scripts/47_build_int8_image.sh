@@ -7,7 +7,7 @@ set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 SOPATH="$ROOT/vllm-xpu-kernels/vllm_xpu_kernels/_xpu_C.abi3.so"
 D="$ROOT/contrib_int8"
-MODEL="$ROOT/models/Qwen3-14B-W8A8-INT8"
+MODEL="$ROOT/models/Qwen3-14B-W8A8-gptq"
 BASE=vllm-xpu-env:v0230; IMG=vllm-xpu-env:int8
 NAME=vllm_int8; PORT=18080
 
@@ -36,7 +36,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e ZE_AFFINITY_MASK=0 -e VLLM_LOGGING_LEVEL=DEBUG \
   --entrypoint vllm "$IMG" \
-  serve "$MODEL" --served-model-name qwen3-14b-w8a8 --host 0.0.0.0 --port ${PORT} \
+  serve "$MODEL" --served-model-name qwen3-14b-w8a8-gptq --host 0.0.0.0 --port ${PORT} \
     --dtype float16 --tensor-parallel-size 1 --enforce-eager --max-model-len 8192 \
     --gpu-memory-utilization 0.90 --no-enable-prefix-caching --trust-remote-code
 

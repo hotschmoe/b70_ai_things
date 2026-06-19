@@ -17,9 +17,11 @@ ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:v0230}"
 SRC="${SRC:-/mnt/vm_8tb/b70/models/Qwen_Qwen3.6-27B}"
 SCHEME="${SCHEME:-W8A8}"   # W8A8 | W4A16 | W8A16 | W4A8 (compressed-tensors preset)
-OUTNAME="${OUTNAME:-Qwen3.6-27B-${SCHEME}}"
 DEVICE="${DEVICE:-xpu}"; METHOD="${METHOD:-gptq}"; SAMPLES="${SAMPLES:-512}"; SEQLEN="${SEQLEN:-2048}"; SMOOTH="${SMOOTH:-0.8}"
 DATAFREE="${DATAFREE:-0}"
+# Tag the output dir by method so RTN and GPTQ NEVER collide / get mixed up downstream (rtn vs gptq).
+QMETH="$METHOD"; [ "$DATAFREE" = 1 ] && QMETH="rtn"
+OUTNAME="${OUTNAME:-Qwen3.6-27B-${SCHEME}-${QMETH}}"
 # *A16 schemes are weight-only -> SmoothQuant is a no-op; default it off for those.
 case "$SCHEME" in *A16) SQD=0;; *) SQD=1;; esac
 SMOOTHQUANT="${SMOOTHQUANT:-$SQD}"

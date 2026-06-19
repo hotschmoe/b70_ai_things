@@ -1045,3 +1045,23 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   generating at ~7.6 t/s → ~110 min for 164). Row to be appended. NOTE HumanEval near-saturates at 14B
   (~0.89) so the 27B "jump" may be muted on this bench specifically — the real 27B story is gsm8k 100% +
   whether decode speed is tolerable; that's the higher-density tradeoff we're measuring.
+
+### 2026-06-20 — [HYGIENE/BUG] Archived redundant RTN quants; found the coding eval ran RTN not GPTQ
+- **Cleanup:** moved 2 redundant RTN 14B quants to `/mnt/vm_8tb/b70/models/archive/`:
+  `Qwen3-14B-W4A16` and `Qwen3-14B-W8A8-INT8` (both have winning SmoothQuant+GPTQ twins — W8A8
+  0.881→0.908, W4A16 0.841→0.883; comparison already logged in evals/SUMMARY.md). KEPT: 27B RTN
+  (`...-W8A8-INT8-RTNtest`, canonical since its GPTQ run was incomplete), 27B W4A16, 14B W8A16 / W4A8-INT
+  (RTN-only, no twin), all base/external models. `mv` within the same FS → reversible.
+- **BUG (sad days):** the Tier-1 HumanEval+ `w8a8` coding number was served from the **RTN** checkpoint,
+  NOT SmoothQuant+GPTQ. Chain: models.yaml `w8a8` → served_model_id `qwen3-14b-w8a8` → scripts/51
+  `MODEL=Qwen3-14B-W8A8-INT8` (RTN). Result `...__qwen3-14b-w8a8__w8a8/tier1_code.json` = RTN. The gptq
+  W8A8 only ever ran Tier-0. **TODO: re-run Tier-1 (HumanEval+) on `qwen3-14b-w8a8-gptq`** — the published
+  w8a8 code pass@1 is an underestimate (GPTQ is +2.7 agreement).
+- **Fix (repoint to GPTQ winner):** scripts/{41,45,46,47,48,51} now point at `Qwen3-14B-W8A8-gptq` AND
+  serve it under name `qwen3-14b-w8a8-gptq` (path AND served-name — repointing only the path would
+  re-mislabel results). models.yaml `w8a8` served_model_id → `qwen3-14b-w8a8-gptq` (+ calibration field).
+- **Root-cause fix:** scripts/{40,49,54} OUTNAME now method-tagged (`...-${SCHEME}-${rtn|gptq}`) so RTN and
+  GPTQ outputs can NEVER collide / silently overwrite again (old default `...-${SCHEME}` overwrote across
+  methods unless a custom OUTNAME was passed — that's how the dups + mix-up happened).
+- **Policy guard:** added "ALWAYS verify the served model (RTN vs GPTQ)" to evals/README.md, the
+  models.yaml header, and a new top-level `CLAUDE.md`. Verify via `/v1/models` + cross-check models.yaml.

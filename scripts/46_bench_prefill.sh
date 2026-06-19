@@ -6,8 +6,8 @@
 #   NAME (container), MODEL (served name), TOKPATH (tokenizer), LABEL, CONFIGS="in:out:conc ...".
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
-NAME="${1:-${NAME:-vllm_int8}}"; MODEL="${2:-${MODEL:-qwen3-14b-w8a8}}"; LABEL="${3:-${LABEL:-w8a8}}"
-TOKPATH="${4:-${TOKPATH:-/mnt/vm_8tb/b70/models/Qwen3-14B-W8A8-INT8}}"
+NAME="${1:-${NAME:-vllm_int8}}"; MODEL="${2:-${MODEL:-qwen3-14b-w8a8-gptq}}"; LABEL="${3:-${LABEL:-w8a8-gptq}}"
+TOKPATH="${4:-${TOKPATH:-/mnt/vm_8tb/b70/models/Qwen3-14B-W8A8-gptq}}"
 PORT=18080
 CONFIGS="${CONFIGS:-512:128:1 4096:8:1 8192:8:1 2048:64:8 4096:8:8 512:128:32}"
 STAMP="$(date +%Y%m%d_%H%M%S)"; OUT_FILE="$ROOT/results/prefill_${LABEL}_${STAMP}.csv"
