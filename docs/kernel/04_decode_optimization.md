@@ -4,6 +4,29 @@ Synthesis of a 4-agent literature+code sweep (2026-06-20) on speeding up int8-ac
 on the B70. **Every lever here lifts BOTH w8a8 and w4a8** (shared per-token-int8-act + GEMM path).
 All code pointers were fetched/verified by the agents (paths confirmed, not invented).
 
+## >>> EXECUTION LADDER (do in this order when the GPU is free) <<<
+
+Cheap diagnostics + wins first, big bets last; each step informs the next. **All lift w8a8 AND w4a8.**
+Full detail + verified code pointers for each step are in the LEVER sections below.
+
+- [ ] **0. (CPU, anytime) prep** so we can build the instant the GPU frees: write the `register_fake`
+      meta-kernel for `int4_gemm_w4a8` (mirror `contrib/vllm_int8_xpu/xpu_int8.py`) + stage the
+      symmetric-zp-drop edit to `int4_gemm_w4a8.h`.
+- [ ] **1. `ONEDNN_VERBOSE=2` diagnostic [FREE, do first].** Run on the m=1 `int4_gemm_w4a8` call.
+      Read the impl string: `grouped_micro_gemm` (good) vs `ref` (bad fallback)? Note the zp-correction
+      term + oneDNN version. Answers "is the kernel even optimized?" before touching code. (Lever B2.)
+- [ ] **2. Drop symmetric zero-point attrs (B1) -> rebuild -> re-microbench.** Edit `int4_gemm_w4a8.h`
+      to omit src-s32 + weight-u4 zp for the symmetric case (like `int8_gemm_w8a8.h`; IPEX `QMatmul.h`
+      omits it too). Rebuild `scripts/44_build_int8_kernel.sh`; validate `test_int4_gemm_onednn.py -k
+      w4a8` (SYM); re-run `w4a8/20_microbench_w4a8_decode.sh` -> did 52-64% of peak improve? Cheapest win.
+- [ ] **3. Extend PIECEWISE graph capture to w4a8 (A1) -> serve `:int8g` -> measure.** Add the w4a8
+      `register_fake`, serve on `vllm-xpu-env:int8g` with `cudagraph_mode=PIECEWISE`, confirm capture
+      engaged, measure decode lift (w8a8 already banked +16.7%).
+- [ ] **4. (parallel) bench llama.cpp `ggml-sycl/mmvq.cpp` int4 GEMV on the B70 (C1).** A bandwidth
+      ceiling reference -- how much BW does a real GEMV leave on the table vs our 52-64%?
+- [ ] **5. Decide the big bet:** FULL graph capture via `--attention-backend TRITON_ATTN` (A2; also
+      flips spec-decode/MTP positive) vs a custom SYCL int4 GEMV (C2; ~1-2 wk). Pick from steps 1-4.
+
 ## The problem, decomposed
 - Microbench (`w4a8/20_microbench_w4a8_decode.sh`): `int4_gemm_w4a8` at m=1 already hits **52-64% of
   peak BW** in isolation -> the GEMM is not the disaster.
@@ -122,9 +145,5 @@ sub-group-shuffle reductions can target near-peak BW.
 - Our kernels: `vllm-xpu-kernels/csrc/xpu/onednn/{int4_gemm_w4a8.h,int8_gemm_w8a8.h}`,
   `csrc/xpu/sycl/dynamic_per_token_int8_quant.cpp`; tests `tests/test_int4_gemm_onednn.py`.
 
-## Recommended order when the GPU frees
-1. `ONEDNN_VERBOSE=2` on the w4a8 m=1 call (B2) -- free, tells us impl + zp overhead + version.
-2. Drop symmetric zp (B1) -> rebuild (`scripts/44`) -> microbench: does 52-64% improve?
-3. Extend PIECEWISE graph capture to w4a8 (A1) -> serve `:int8g` -> measure decode lift.
-4. (parallel) benchmark llama.cpp ggml-sycl mmvq (C1) as the BW ceiling.
-5. Decide the big bet: FULL capture via TRITON_ATTN (A2) vs custom SYCL GEMV (C2).
+## Execution order
+See the **EXECUTION LADDER** checklist at the top of this doc (steps 0-5).
