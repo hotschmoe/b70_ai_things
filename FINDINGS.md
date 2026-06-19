@@ -21,6 +21,12 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   dynamo trace through them. PIECEWISE mode (attention eager, linear/MLP captured) lifts 14B W8A8 decode
   23.33 -> **27.23 t/s**. FULL capture is blocked by Intel's SYCL Graph ext (`work_group_scratch_memory`, via
   flash-attn). Use image `vllm-xpu-env:int8g` + `cudagraph_mode=PIECEWISE`.
+- **Quant quality measured (2026-06-19): W8A8 is the sweet spot.** First eval campaign over Qwen3-14B
+  {bf16, fp8, w8a8, w4a8} (see [evals/](evals/) + [evals/results/SUMMARY.md](evals/results/SUMMARY.md)).
+  Perplexity + top-1 token-agreement vs bf16 + gsm8k all order fp8 > w8a8 > w4a8. **FP8 ≈ lossless**
+  (ppl 12.70 vs bf16 12.70, 96.8% token agreement). **W8A8 (our int8 kernel): +3% ppl, 88% agreement,
+  gsm8k 95.3% (≈fp8)** — near-fp8 quality + lights the INT8 fastpath, so it's the best kernel-optimization
+  target. **W4A8: 82% agreement, gsm8k 92.7%** — real quality cost, only worth it for the 9.3 GB footprint.
 
 ## What works (single B70, 32 GB)
 | Thing | Result |
