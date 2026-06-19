@@ -13,8 +13,9 @@ set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 SPECULA=/mnt/vm_8tb/specula-build/models
 SRC="${SRC:-/specula_models/Qwen3-14B}"
+QLABEL="${QLABEL:-bf16}"   # label written into the dump (also used to score NON-servable quants offline)
 CORPUS="${CORPUS:-/mnt/vm_8tb/b70/tier0_corpus.txt}"
-OUT="${OUT:-/mnt/vm_8tb/b70/results/tier0_ref_bf16_tokens.json}"
+OUT="${OUT:-/mnt/vm_8tb/b70/results/tier0_ref_${QLABEL}_tokens.json}"
 [ -f "$CORPUS" ] || { echo "MISSING corpus at $CORPUS (scp evals/prompts/tier0_corpus.txt b70:$CORPUS)"; exit 1; }
 mkdir -p "$ROOT/results" "$ROOT/pip_cache"
 
@@ -22,11 +23,11 @@ docker run --rm --name tier0ref \
   -e CUDA_VISIBLE_DEVICES="" -e ZE_AFFINITY_MASK="" --ipc=host --shm-size 16g \
   -v "$ROOT:$ROOT" -v "$SPECULA:/specula_models:ro" \
   -e HF_HOME=/hf_cache -e OMP_NUM_THREADS="${OMP:-32}" -e PIP_CACHE_DIR="$ROOT/pip_cache" \
-  -e SRC="$SRC" -e CORPUS="$CORPUS" -e OUT="$OUT" \
+  -e SRC="$SRC" -e CORPUS="$CORPUS" -e OUT="$OUT" -e QLABEL="$QLABEL" \
   python:3.11 bash -c '
     set -e
     pip install -q torch --index-url https://download.pytorch.org/whl/cpu 2>&1 | tail -1
-    pip install -q "transformers>=4.52" accelerate 2>&1 | tail -1
+    pip install -q "transformers>=4.52" accelerate "compressed-tensors" 2>&1 | tail -1
     python - <<PY
 import os, json, torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -50,7 +51,7 @@ for j,text in enumerate(passages):
         actual.append(float(lp[i-1, ids[i]]))
     out.append({"passage": j, "token_ids": ids, "argmax_id": argmax, "actual_logprob": actual})
     print(f"[ref] passage {j} ntok={len(ids)}", flush=True)
-json.dump({"model": SRC, "quant": "bf16", "corpus": CORPUS, "passages": out}, open(OUT,"w"))
+json.dump({"model": SRC, "quant": os.environ.get("QLABEL","bf16"), "corpus": CORPUS, "passages": out}, open(OUT,"w"))
 print("DONE_TIER0_REF", OUT, flush=True)
 PY
   '
