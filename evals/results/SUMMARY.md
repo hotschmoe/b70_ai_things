@@ -72,6 +72,30 @@ Decompose by holding weights fixed and changing only the activation precision:
 - **Pick by workload:** decode/chat → fp8 (or w4a16 if VRAM-tight); long-context/prefill/batch → **w8a8**;
   smallest footprint → w4a16. This is exactly why W8A8 (prefill + INT8 path) is the coding-server kernel target.
 
+## Calibration: RTN vs GPTQ+SmoothQuant — does it matter? (2026-06-19)
+
+The matrix above is all **RTN** (data-free). We re-quantized two schemes with calibration (128 samples ×
+2048 tok ≈ 260k activation rows/Hessian — the GPTQ-paper default): **W8A8 = SmoothQuant+GPTQ**, **W4A16 =
+GPTQ** (weight-only → SmoothQuant is a no-op, skipped).
+
+| quant | recipe | ppl | agree vs bf16 | gsm8k |
+|---|---|---|---|---|
+| W8A8 | RTN | 13.08 | 0.881 | 95.3% |
+| W8A8 | **SmoothQuant+GPTQ@128** | 13.05 | **0.908** (+2.7) | 94.7% |
+| W4A16 | RTN | 13.55 | 0.841 | 94.7% |
+| W4A16 | **GPTQ@128** | **13.34** | **0.883** (+4.2) | **96.7%** (+2.0) |
+
+- **Calibration's lift scales with quantization error.** W8A8 (int8 weights, already near-lossless) gains
+  +2.7 agreement pts and ~0 ppl. W4A16 (int4 weights) gains +4.2 agreement, −0.21 ppl, +2 gsm8k — int4 has
+  real weight error for GPTQ to recover.
+- **GPTQ-W4A16 ≈ RTN-W8A8 in token fidelity** (0.883 vs 0.881): good int4 calibration buys back roughly an
+  activation-bit of fidelity.
+- For **W8A8 it's SmoothQuant, not GPTQ**, doing the work — it sharpens the int8 *activation* quant (the W8A8
+  bottleneck), so agreement tightens even though weights/ppl barely move. gsm8k stays within noise (saturated).
+- **Sample count (128 vs 512):** per-module GPTQ time is Hessian-inverse-bound (sample-independent, ~6 s/mod
+  for W8A8), so 512 costs only a few extra min. A W8A8 SmoothQuant+GPTQ@512 run is in progress to measure
+  whether >128 samples buys anything — *[results pending]*.
+
 ## Caveats (don't over-read)
 
 - **gsm8k n=150** → ~±2.5% per cell; the fp8↔w8a8↔w4a16 gsm8k gaps are within/near noise. The **tight
