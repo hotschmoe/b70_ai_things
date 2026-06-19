@@ -20,43 +20,44 @@ defaults:
   concurrency: 1        # eval at 1 for reproducibility; raise only for throughput, never for graded runs
 
 # The first campaign: Qwen3-14B across quants. 'reference: true' marks the ceiling.
+# Serve commands are what was ACTUALLY used (2026-06-19); all on vLLM 0.23.0-based images for parity.
+# One card -> one model at a time (each serve script evicts the others off port 18080).
 models:
   - label: bf16
     reference: true
-    served_model_id: Qwen3-14B            # TODO confirm served name (path basename by default)
+    served_model_id: qwen3-14b
     family: qwen3-14b
     weights: bf16
     activations: bf16
-    serve_script: scripts/34_serve_qwen3_14b.sh   # TODO confirm this serves BF16 (vs FP8)
-    serve_env: {}
-    notes: "~28 GB, tiny KV. Reference ceiling. BF16 src at /mnt/vm_8tb/specula-build/models/Qwen3-14B."
+    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=none SERVED=qwen3-14b IMG=vllm-xpu-env:v0230 EXTRA='--cpu-offload-gb 8' MAXLEN=4096"
+    notes: "REFERENCE ceiling, but ~29.6 GB BF16 does NOT fit one 32 GB card under the v1 engine
+      (No available memory for cache blocks). Needs --cpu-offload-gb (slow but ok for scoring) OR
+      compute the bf16 reference offline on CPU. Anchor on fp8 until then. src specula-build/models/Qwen3-14B."
 
   - label: fp8
-    served_model_id: Qwen3-14B            # TODO confirm (may share name or be a distinct fp8 ckpt)
+    served_model_id: qwen3-14b-fp8
     family: qwen3-14b
     weights: fp8
     activations: fp8
-    serve_script: scripts/48_serve_fp8kv.sh
-    serve_env: {}
-    notes: "Upstream XPU FP8 kernel. ~35 t/s single-stream. Near-lossless per prior findings."
+    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=fp8 SERVED=qwen3-14b-fp8 IMG=vllm-xpu-env:v0230 MAXLEN=4096 MAXSEQS=4"
+    notes: "Online FP8 (upstream XPU FP8 kernel). ~15 GB, near-lossless. Practical high-precision anchor."
 
   - label: w8a8
-    served_model_id: Qwen3-14B-W8A8-INT8
+    served_model_id: qwen3-14b-w8a8
     family: qwen3-14b
     weights: int8
     activations: int8-dynamic-per-token
-    serve_script: scripts/51_serve_int8_specdecode.sh
-    serve_env: { IMG: vllm-xpu-env:int8g, GRAPH: "1", CGMODE: PIECEWISE, SPEC: "0" }
-    notes: "Our int8 kernel + PIECEWISE graph. Image vllm-xpu-env:int8g."
+    serve_cmd: "scripts/runremote.sh scripts/51_serve_int8_specdecode.sh IMG=vllm-xpu-env:int8 SPEC=0 GRAPH=0 MAXLEN=4096"
+    notes: "Our int8 kernel (Selected XPUInt8ScaledMMLinearKernel). FP8 KV. Plain eager for determinism."
 
   - label: w4a8
-    served_model_id: Qwen3-14B-W4A8-INT
+    served_model_id: qwen3-14b-w4a8
     family: qwen3-14b
     weights: int4
     activations: int8-dynamic-per-token
-    serve_script: scripts/36_serve.sh     # TODO confirm the W4A8 serve path/flags
-    serve_env: {}
-    notes: "XPUW4A8IntLinearKernel. Smallest footprint (~9.3 GB). Decode ~half FP8 per prior findings."
+    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=/models/Qwen3-14B-W4A8-INT SERVED=qwen3-14b-w4a8 IMG=vllm-xpu-env:int8 MAXLEN=4096 MAXSEQS=4"
+    notes: "XPUW4A8IntLinearKernel. Smallest footprint (~9.3 GB). compressed-tensors int4-w/int8-a."
 
-  # w4a16 intentionally absent: we have W4A8 + int4-AutoRound(27B), NOT a confirmed W4A16 14B ckpt.
-  # Add it here ONLY when we actually quantize one. Do not relabel w4a8 as w4a16.
+  # --- created later this session with scripts/54 (the MISSING formats) ---
+  # w4a16 / w8a16: quantize with scripts/54 SCHEME=W4A16|W8A16, THEN test XPU serveability (kernel
+  # coverage unknown -> a finding either way). Do NOT relabel w4a8 as w4a16; they are different schemes.
