@@ -1141,3 +1141,10 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   VRAM-tight -> w4a16-gptq; max quality -> 27B if 7.9 t/s ok; w4a8 dominated (skip for coding).
 - Campaign DONE; GPU now free (w4a16-gptq left served -- tear down or repoint to the queued AutoRound W4A8
   quant). 9 served configs x HumanEval+ 164, all via the sandboxed Tier-1 path, zero grading incidents.
+- **VRAM verify (w4a8 flagged 16 GB):** confirmed from serve logs -- w4a8 served VRAM = **9.3 GiB** (vLLM
+  "Model loading took 9.3 GiB"; Available KV 15.6 GiB corroborates), but the checkpoint is **16 GB on disk**
+  because the int4 weights are stored UNPACKED (single 16 GB safetensors, ~1 byte/int4-weight; config =
+  w:num_bits4 / a:num_bits8). vLLM packs to 4-bit on load (hence the slowest load in the sweep, 39 s vs ~23).
+  So leaderboard VRAM (9.3) was right for GPU memory; added "9.3 VRAM / 16 disk*" + footnote so the unpacked
+  disk size (the repack target) is recorded. **Repack-to-4bit cuts disk + load time, NOT VRAM.** (W8A8-gptq is
+  also 16 GB on disk but that is int8 ~= 1 byte/weight, so disk ~= its 15.3 GiB VRAM -- nothing to repack.)

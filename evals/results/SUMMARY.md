@@ -43,7 +43,7 @@
 | 4 | Qwen3-14B | w8a8 (RTN) | 0.902 / 0.860 | 23.8 | 101 | **5780** | ~15 GB |
 | 5 | Qwen3-14B | w4a16 (GPTQ) | 0.872 / 0.848 | 29.0 | 84 | 2920 | ~9.3 GB |
 | 6 | Qwen3-14B | w4a16 (RTN) | 0.866 / 0.829 | 29.1 | 79 | 2921 | ~9.3 GB |
-| 7 | Qwen3-14B | w4a8 (RTN) | 0.860 / 0.817 | 16.5 | 139 | 4403 | ~9.3 GB |
+| 7 | Qwen3-14B | w4a8 (RTN) | 0.860 / 0.817 | 16.5 | 139 | 4403 | 9.3 VRAM / 16 disk* |
 
 - **Quality:** the 27B int4 leads by ~+4 plus pts but decodes ~4x slower (7.9 vs 32 t/s) -- the higher-density
   tradeoff. Among the 14B, **w8a8-gptq ties fp8 at the top (0.890 plus)**; **GPTQ beats RTN at both schemes**
@@ -54,6 +54,11 @@
 - **Picks:** interactive/chat -> **fp8** (or **w8a8-gptq** for matching quality + 1.6x prefill); VRAM-tight ->
   **w4a16-gptq** (best small-footprint quality, fast decode); max quality on one card -> **27B int4** if 7.9
   t/s decode is tolerable; **skip w4a8** for coding. HumanEval near-saturates -- treat sub-2pt gaps as ties.
+- *VRAM = vLLM "Model loading took" (weight memory on the GPU), not on-disk size. **w4a8 is the exception:**
+  its int4 weights are stored **UNPACKED** on disk (single 16 GB safetensors, ~1 byte/int4-weight), but vLLM
+  packs them to **9.3 GiB in VRAM** (verified 2026-06-20; also the slowest load at 39 s vs ~23 s). Repack-to-
+  4bit on disk is pending -- it cuts disk + load time, not VRAM. (W8A8-gptq is also 16 GB on disk, but that is
+  int8 = naturally ~1 byte/weight, so disk ~= its 15.3 GiB VRAM; no repack to gain there.)*
 
 ---
 
@@ -129,7 +134,7 @@ Decompose by holding weights fixed and changing only the activation precision:
 | fp8 | **29.96** | 82 | 3531 | ~15 GB |
 | w8a8 | 21.86 | 121 | **5787 (1.64× fp8)** | ~15 GB |
 | w4a16 | 26.40 | 89 | 2939 | **~9.3 GB** |
-| w4a8 | 16.47 | 139 | 4403 | **~9.3 GB** |
+| w4a8 | 16.47 | 139 | 4403 | **9.3 GB** (16 on disk, unpacked) |
 
 > A fresh `perf_probe` pass during the 2026-06-20 Tier-1 sweep re-confirmed the ordering (fp8 32.1 ·
 > w4a16 29.1 · w8a8 23.8 · w4a8 16.5 t/s decode — same ranks, ~5-10% run-to-run higher). **w4a8 decodes
