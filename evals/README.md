@@ -201,7 +201,12 @@ python3 evals/orchestrator/report.py evals/results/ > evals/results/SUMMARY.md
 - [ ] Tier 0: full-vocab KLD via an offline forward-pass script (API gives only top-k → approximate now).
 - [ ] Tier 1: wire LiveCodeBench (contamination-resistant) + Aider-polyglot (edit-correctness, most
       relevant to the coding-server use case).
+- [x] Tier 3 **validated** on W8A8 (2026-06-19): 8 builds generated + headless-rendered, 6/8 renders-clean.
+      Warts to fix: (a) screenshot at a fixed 2.5 s can catch an animation mid-intro (ink-drop snapped
+      before dispersion) → capture multiple frames or a later T; (b) `non_blank` heuristic false-negatives
+      CSS-only pages (no canvas/svg/img) → count visible styled DOM nodes instead.
 - [ ] Tier 3: vision-LLM auto-judge on screenshots (pairwise, swapped) to cut manual viewing.
+- [ ] Tier 1 (code/EvalPlus) still un-run (heavy: code-exec sandbox) — scaffolded, gated behind --allow-code-exec.
 - [ ] Auto-cycle serve configs from `models.yaml` (serve → wait healthy → eval → tear down → next).
 - [ ] CIs / bootstrap on all task scores; flag any delta below the noise floor.
 - [ ] Optional: containerize the orchestrator for one-command runs.

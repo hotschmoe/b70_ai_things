@@ -80,6 +80,7 @@ def run(ctx: RunContext, suite_path: str, limit: int | None = None) -> dict:
             temperature=ctx.sampling.get("temperature", 0.0),
             seed=ctx.sampling.get("seed", 1234),
             max_tokens=ctx.sampling.get("max_tokens", 4096),
+            extra_body={"chat_template_kwargs": {"enable_thinking": False}},  # bounded/fast; deterministic
         )
         text = resp.choices[0].message.content or ""
         html = extract_html(text)
