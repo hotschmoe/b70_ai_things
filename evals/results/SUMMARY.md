@@ -121,13 +121,19 @@ The matrix above is all **RTN** (data-free). We re-quantized two schemes with ca
 2048 tok ≈ 260k activation rows/Hessian — the GPTQ-paper default): **W8A8 = SmoothQuant+GPTQ**, **W4A16 =
 GPTQ** (weight-only → SmoothQuant is a no-op, skipped).
 
-| quant | recipe | ppl | agree vs bf16 | gsm8k |
-|---|---|---|---|---|
-| W8A8 | RTN | 13.08 | 0.881 | 95.3% |
-| W8A8 | **SmoothQuant+GPTQ@128** | 13.05 | **0.908** (+2.7) | 94.7% |
-| W8A8 | SmoothQuant+GPTQ**@512** | 13.15 | 0.900 | 95.3% |
-| W4A16 | RTN | 13.55 | 0.841 | 94.7% |
-| W4A16 | **GPTQ@128** | **13.34** | **0.883** (+4.2) | **96.7%** (+2.0) |
+| quant | recipe | ppl | agree vs bf16 | gsm8k | HumanEval+ b/+ |
+|---|---|---|---|---|---|
+| W8A8 | RTN | 13.08 | 0.881 | 95.3% | 0.902 / 0.860 |
+| W8A8 | **SmoothQuant+GPTQ@128** | 13.05 | **0.908** (+2.7) | 94.7% | **0.921 / 0.890** |
+| W8A8 | SmoothQuant+GPTQ**@512** | 13.15 | 0.900 | 95.3% | - |
+| W4A16 | RTN | 13.55 | 0.841 | 94.7% | 0.866 / 0.829 |
+| W4A16 | **GPTQ@128** | **13.34** | **0.883** (+4.2) | **96.7%** (+2.0) | _running_ |
+
+- **GPTQ shows up MORE on code than gsm8k.** W8A8 RTN->GPTQ: gsm8k moved ~0 (saturated) but HumanEval+ plus
+  jumped **0.860 -> 0.890 (+3.0)** and base **0.902 -> 0.921 (+1.9)** -- GPTQ-W8A8 plus now *matches* fp8
+  (0.890) and base *beats* it (0.921 vs 0.915). Calibration is free at inference (decode 23.5 t/s, = RTN).
+  Confirms why we weight long-generation tiers: the calibration lift is nearly invisible on saturated gsm8k.
+  (W4A16 GPTQ code number landing shortly -- expect the larger lift, since int4 has more weight error to fix.)
 
 - **Calibration's lift scales with quantization error.** W8A8 (int8 weights, already near-lossless) gains
   +2.7 agreement pts and ~0 ppl. W4A16 (int4 weights) gains +4.2 agreement, −0.21 ppl, +2 gsm8k — int4 has
