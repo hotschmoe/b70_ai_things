@@ -1079,3 +1079,24 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - Next (auto-queued, GPU now free): **w8a8-gptq + w4a16-gptq** code numbers -- GPTQ-vs-RTN calibration delta,
   each served identically to its RTN twin (note: the served `w8a8` row in the 14B table is the **RTN**
   checkpoint, correctly labeled; the GPTQ run uses served-id `qwen3-14b-w8a8-gptq`). Expect the int4 lift larger.
+
+### 2026-06-20 -- [OK] Cataloged community W8A8/W4A8 INT8 quants for newer models -> docs/COMMUNITY_QUANTS.md
+- **Goal:** which off-the-shelf HF checkpoints our INT8 paths could serve -- `XPUInt8ScaledMMLinearKernel`
+  (W8A8, our custom oneDNN kernel, image `vllm-xpu-env:int8`) and `XPUW4A8IntLinearKernel` (W4A8: int4 wt +
+  per-token int8 act, oneDNN) -- for newer families (~Oct 2025 -> mid 2026), bucketed by 1x/2x/4x B70 fit.
+  4-way HF sweep; every repo verified via HF API / `config.json` (activation dtype read directly: INT8 =
+  `I8`/`"type":"int"`, NOT FP8). Only INT8 activations are usable (Xe2 has no native FP8).
+- **Try-first (2x B70):** the three nameistoken Quark `ptpc_int8` models -- Qwen3.6-27B (30 GB),
+  Qwen3.6-35B-A3B (37 GB), Gemma-4-31B-it (33 GB). Recipe == our W8A8 kernel (W INT8 per-ch static + A INT8
+  per-token dynamic); GSM8K ~0.00pp vs BF16. All need 2x (none clears one card's 30.3 GiB + KV).
+- **1x picks today:** Qwen3.5-9B w8a8, gemma-4-E4B w8a8 (~8B), GLM-4.6V-Flash w8a8 (10B VL), phi-4 w8a8,
+  Granite-4.0-h-tiny, Olmo-3-7B. Giant MoEs exceed 4x (GLM-4.6 363 GB, MiniMax-M2.5/2.7 ~230, Step-3.5 ~191,
+  Qwen3-235B 236).
+- **Traps recorded:** `amd/Kimi-K2.5-W4A8` is W4-INT4/**A-FP8** (naming trap); cpatonn `*-INT8-INT4` AWQ +
+  ModelCloud + `*-Int8Mix` GPTQ are weight-only A16; `inference-optimization/Qwen3-Next-80B...w8a8` are EMPTY
+  stub repos. **W4A8 bloat:** Avesed/lokeshe09 "W4A8" 27-31B repos are ~33-36 GB (==W8A8 size), stored
+  unpacked -> NO fit win.
+- **Gaps (no INT8-act anywhere):** Llama 4, DeepSeek, Kimi, Hunyuan, Nemotron-3/Nano-2, Cohere Command-A, Phi-5.
+- **Verdict / next:** highest-value own-quant = real (packed) **W4A8-INT8 of Qwen3.6-27B + Gemma-4-31B** to
+  drop them onto 1x B70 via `XPUW4A8IntLinearKernel` (win is fit, not decode speed). Then Nemotron-Nano-9B-v2
+  w8a8 (1x, currently FP8/NVFP4-only). Reuse the scripts/{40,49,54} GPTQ pipeline.
