@@ -914,3 +914,29 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - Also benched single-stream PERF (perf_probe.py): fp8 decode 30 t/s / TTFT 82 ms / prefill 3531; w8a8 21.9 /
   121 / **5787 (1.64x fp8 prefill, INT8 systolic)**; w4a16 26.4 / 89 / 2939 (out-decodes w8a8 — int4 weights
   stream less — but worst prefill). Tier-3 creative run on all 3 (gallery.py side-by-side). All committed/pushed.
+
+### 2026-06-19 — [MILESTONE] Qwen3.6-27B (Gated-DeltaNet) RUNS + evaluated on a SINGLE B70 (the #1 goal, re-confirmed)
+- Question: does B70 have int4 fastpaths, and would W4A16 27B fit+run on one card? **int4: yes the XMX has
+  int4/int8 systolic, BUT W4A16 (fp16 acts) does NOT use it — it dequants int4->fp16 and does fp16 GEMM, so
+  W4A16 is a MEMORY play (fits + faster decode), not a compute-fastpath play.** The int systolic only fires
+  when BOTH operands are int (W4A8/W8A8).
+- **W4A16 27B FITS one card: 25 GB** (scripts/49 now SCHEME-parametrized; RTN/data-free, 69 s). vs W8A8 33 GB.
+  The memory wall that blocked the 27B is broken with int4 weights (DeltaNet/lm_head kept BF16).
+- **BUT our compressed-tensors W4A16 won't serve** — two layers of issues:
+  1. config: AutoModelForCausalLM saved a text-only `Qwen3_5TextConfig`; vLLM wants the full `Qwen3_5Config`.
+     Fixed by wrapping (model_type qwen3_5 + nested text_config + language_model_only) + copying the
+     vision preprocessor_config.json (vLLM loads the mm processor even for the text-only ForCausalLM).
+  2. **kernel: `XPUwNa16` requires input sizes that are multiples of 32, but the 27B has a 4304-dim** (from its
+     gated attention: 24 heads x 256, attn_output_gate, + hybrid DeltaNet 16/48 heads x 128). The 14B never
+     hit this (clean dims). Real kernel-coverage gap -> our W4A16 27B is blocked there.
+- **WORKING PATH: AutoRound int4 (`quantization=inc`, Intel's format) serves the 27B on ONE B70.** Different
+  kernel path (not XPUwNa16) so it dodges the 4304 issue. Model loads 17.6 GB, KV 7.5 GB.
+- **Critical gotcha: our `:int8` image lacks the GDN kernel.** First token crashed with
+  `AttributeError: _xpu_C object has no attribute 'gdn_attention'` — because :int8 was built minimal
+  (GDN_ENABLED=OFF, per the HANDOFF). **Serve the 27B on `:v0230` (full upstream build) — it has gdn_attention.**
+- **On :v0230 it GENERATES coherently** ("The ocean is a vast and mysterious place... the octopus"). So
+  **DeltaNet-on-XPU is PROVEN** (updates HANDOFF "UNPROVEN"). Also needed: copy the base 27B chat_template into
+  the AutoRound tokenizer_config (it lacked one -> chat endpoint 400'd; raw /completions worked without it).
+- **27B eval (AutoRound int4, single B70):** Tier-0 ppl **6.60** (~half the 14B quants' ~13 — the 27B is a much
+  stronger LM). gsm8k running. NEXT: get our W4A16 servable (needs a 32-pad or ignore the 4304 layers, or a
+  kernel fix) for a same-scheme 27B-vs-14B comparison; rebuild a GDN-enabled int8 image to serve W8A8/our-kernels 27B.
