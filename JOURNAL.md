@@ -1152,3 +1152,18 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   So leaderboard VRAM (9.3) was right for GPU memory; added "9.3 VRAM / 16 disk*" + footnote so the unpacked
   disk size (the repack target) is recorded. **Repack-to-4bit cuts disk + load time, NOT VRAM.** (W8A8-gptq is
   also 16 GB on disk but that is int8 ~= 1 byte/weight, so disk ~= its 15.3 GiB VRAM -- nothing to repack.)
+
+### 2026-06-20 -- [PLAN] Consolidated a strategy info-dump into RESEARCH_TODO.md (deduped + AutoRound + Quark)
+- **Input:** a two-part strategy dump (W8A8-primary / FP8-control / W4A16-capacity, plus accuracy + MoE + MTP
+  thoughts). Deduped against existing docs and laid out as `RESEARCH_TODO.md` (sibling to MTP_TODO.md).
+- **Dedup results recorded in the doc's ledger:** most accuracy levers already live in doc 07 + MTP_TODO Playbook B
+  (referenced, not repeated); MTP planning stays in MTP_TODO.md (pointer only). **Two dump items were already DONE
+  06-20:** the "rerun W8A8 GPTQ Tier-1" (GPTQ-W8A8 0.890+/0.921 base = ties/beats FP8 -- the dump's prediction
+  confirmed) and "GPTQ@128 W4A16 HumanEval+" (0.848+). Flagged the dump's stale "W8A8 = 0.860" as the RTN number.
+- **New tracks added:** (3) **AutoRound / "autoint"** as a cross-scheme weight lever -- already our int4 leader
+  (27B 0.963/0.927), so test AutoRound-W4A16 vs GPTQ-W4A16 first; expect ~tie at int8 weights. (4) **Quark loader
+  compatibility** -- a one-shot importer test (serve `--quantization quark`, grep whether it dispatches to our int8
+  kernel), NOT a runtime migration. (5) **fused packed-MoE expert kernel** for 35B-A3B, elevated from the SUMMARY gap.
+- **Boundary respected:** W4A8 + AutoRound is the other agent's branch (`w4a8/`); this doc cross-links and does not
+  touch it. No GPU touched (planning only).
+
