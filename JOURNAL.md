@@ -1167,3 +1167,27 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - **Boundary respected:** W4A8 + AutoRound is the other agent's branch (`w4a8/`); this doc cross-links and does not
   touch it. No GPU touched (planning only).
 
+### 2026-06-20 -- [POC] w4a8 int8-XMX fastpath is LIVE; w4a8 vs w4a16 head-to-head on one B70
+- **Q (user):** for 27B+ single-card it's w4a8 OR w4a16 (w8a8 ~15-33 GB too big) -- is there ANY advantage to
+  w4a8? Hypothesis: int8 fastpath -> better prefill/TTFT. Served on `vllm-xpu-env:int8` via 36_serve.sh,
+  MAXLEN=4096, MAXSEQS=32, eager. (gpu-run note: long detached servers self-serialize via 36_serve's container-kill.)
+- **[CONFIRMED] int8-XMX engaged on w4a8:** serve log `Using XPUW4A8IntLinearKernel for CompressedTensorsW4A8Int`;
+  `Model loading took 9.3 GiB` (VRAM 9.3, not 16) in 44 s (int4 repack tax; w4a16 loads 9.32 GiB in 22 s).
+  w8a8 cross-check: `Selected XPUInt8ScaledMMLinearKernel`, 15.34 GiB (confirms w8a8 OUT for 27B single-card).
+- **[DECISIVE] TTFT vs input length (out=1, C=1, same harness):**
+  | input | w4a16-gptq | w4a8 | w4a8 |
+  |---|---|---|---|
+  | 512  | 259.9 ms | 177.6 ms | -32% |
+  | 2048 | 664.7 ms | 448.6 ms | -33% |
+  | 3968 | 1325.8 ms | 908.3 ms | -31% |
+  => **w4a8 wins TTFT ~32% across realistic prompt lengths** (int8-XMX prefill; leaderboard prefill 4403 vs 2920,
+  +51%). The old "w4a8 TTFT worse (139 vs 84)" was perf_probe's ~128-tok prompt -- below the crossover (<512 tok).
+- **w4a8 concurrency (512/128):** agg 15.0 -> 357.5 tok/s (C1->C32), per-stream decode holds 12.4-15.4 (no collapse).
+- **Decode (single-stream, leaderboard):** w4a8 16.5 vs w4a16 29.0 -- **w4a16 wins**, BUT w4a8 is KERNEL-limited
+  (9.3 GiB => ~65 t/s ceiling => ~75% of the gap is `int4_gemm_w4a8` GEMV/unpack overhead, not physics). w4a16
+  (29 t/s, fp16 act) is near its ceiling; its prefill is structurally capped (no int8-XMX).
+- **VERDICT:** w4a8's advantage over w4a16 = **prefill/TTFT (~32%) + headroom** (wins long-context/agentic/
+  prefill-heavy 27B). w4a16 wins decode (interactive/long-gen). Only w4a8 has the optimization headroom to win BOTH
+  (crack int4_gemm_w4a8 decode -- our wheelhouse). Pursue w4a8 if prefill/TTFT/throughput-heavy OR we commit to the
+  int4-decode kernel; else w4a16 for decode-heavy. Next: AutoRound (0.817 -> >=0.848) + profile int4 decode. GPU freed.
+
