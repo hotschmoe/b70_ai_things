@@ -11,6 +11,10 @@ not ground truth (most public B70 numbers come from a handful of hobbyist tester
 - **[03_offload_mtp_sweep.md](03_offload_mtp_sweep.md)** — CPU/RAM offload (when it helps = rarely for
   dense 27B), MTP/speculative decoding on XPU (llama.cpp native MTP PR #22673; vLLM XPU can't on DeltaNet),
   and the rigorous benchmark sweep methodology + first sweep matrices.
+- **[07_w8a8_int8_recovery.md](07_w8a8_int8_recovery.md)** — W8A8 INT8 *accuracy recovery* survey (2026-06-19):
+  our fast path is INT8 W8A8 (Xe2 has no native FP8); the fidelity cost is activation quant, not weights;
+  ranked recovery (selective SmoothQuant, OS+, down_proj@W8A16, RTN); the DeltaNet/SSM frontier (Quamba2,
+  Q-Mamba) + the `in_proj_qkvz` silent-zeroing gotcha; skip rotation/QAT at W8A8.
 
 Plan synthesis lives in [`../../STRATEGY.md`](../../STRATEGY.md); experiment log in
 [`../../JOURNAL.md`](../../JOURNAL.md).

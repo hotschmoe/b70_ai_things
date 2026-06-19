@@ -956,3 +956,36 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - NET for the two REAL targets: **27B = works on 1 card (great quality, slow decode); 35B-A3B = blocked on 1 card
   (MoE int4 kernel gap).** Perf/quality of more 27B quant formats (FP8 doesn't fit @ 54GB... actually 27B FP8 is
   ~28GB, retest; our W4A16 needs the 32-pad fix) is the next axis. Another agent is reviewing the harness + a container.
+
+### 2026-06-19 — [RESEARCH] W8A8 INT8 accuracy-recovery literature survey → docs/literature/07
+- Spawned 5 parallel research agents (rotation methods, SmoothQuant family + weight-side, Intel B70 toolchain,
+  bleeding-edge 2025-26 papers, DeltaNet/SSM angle) + 1 codebase-grounding agent. Full writeup:
+  **`docs/literature/07_w8a8_int8_recovery.md`**. Key conclusions:
+- **Confirmed our fast path = INT8 W8A8** (sym per-channel w × per-token dynamic int8 a, oneDNN s8s8s32 on XMX).
+  **FP8 is a W8A8 scheme (8-bit w AND a), NOT a W8A16** — just float vs int. **Xe2/Battlemage has NO native FP8
+  matrix unit** (oneDNN data-types table: fp8 emulated `.`, int8 native `+`; SYCL joint_matrix spec has no fp8;
+  367 INT8 TOPS / no FP8 TOPS). So FP8 on B70 upconverts to bf16 for compute → memory-only, no speedup. **INT8
+  W8A8 is the ONLY low-precision compute fast path here** — matches our prefill 1.64x>FP8.
+- **Root cause confirmed by 4 papers AND our evals: it's int8 ACTIVATION quant that costs fidelity, not int8
+  weights.** W8A16 0.981 agree (near-lossless) → W8A8 0.881 (−10 pts), but answers barely move (flips
+  low-confidence tokens). Field considers W8A8 "solved" (~99% BF16) and moved to W4A4 — no new W8A8 algorithm to
+  chase; leverage is applying the known recipe well. (BF16-or-Death 2411.02355; Qwen3 reasoning 2504.04823;
+  char. 2508.16712; long-ctx 2505.20276.)
+- **Ranked recovery for our path:** (1) **fix SmoothQuant selectively** — apply to the 16 full-attn layers +
+  MLPs, skip DeltaNet linear_attn (we run SMOOTHQUANT=0 today because pairing breaks on the 16/64 split); NNCF
+  per-node alpha is the model. (2) **OS+ (2304.09145)** per-channel *shifting* as the SmoothQuant alt. (3)
+  **down_proj@W8A16** for early+late layers (GLU/SwiGLU spike site, "Super Weight"); automate via NNCF
+  accuracy-aware layer reversion. (4) **RTN is enough for weights at W8** (RTN≈GPTQ≈AWQ; matches our "lift scales
+  with quant error").
+- **DeltaNet frontier: NO DeltaNet/Gated-DeltaNet INT8 quant paper exists — we're at the edge.** Transfer recipe
+  = Mamba/SSM lit (**Quamba2 2503.22879**: offline sort+cluster recurrence input + per-state-group scales;
+  **Q-Mamba**: decoupled state-dim/channel-dim scales). Linear/delta attn is INHERENTLY easier to quantize than
+  softmax → **the interleaved full-attn layers, not DeltaNet, are where int8 bites hardest** (validates keeping
+  linear_attn BF16). ⚠️ **vLLM #40252 gotcha:** Gated-DeltaNet combined tensor names are `in_proj_qkvz`/
+  `in_proj_ba`; stale names → silent layer-zeroing → `!!!!!` garbage. Verify our 27B ignore-list (a4190ba).
+- **Skip rotation at W8A8** (QuaRot int8 5.47→5.50, RTN==GPTQ; papers call it marginal at 8-bit) — and no
+  Hadamard kernel exists for Intel SYCL/XMX anyway. **Skip QAT** (gap too small). **Eval upgrades:** EAR/dist-
+  lossless (SLQ 2605.02404) + forward-only KL layer-sensitivity for hybrids (KL-Lens 2604.13440) to pick
+  ignore-list layers by measurement.
+- **Next experiments (queued):** selective SmoothQuant on full-attn layers; down_proj@W8A16 sweep; KL-sensitivity
+  ranking for the ignore-list; add EAR/KL to the harness; verify in_proj_qkvz/in_proj_ba names.
