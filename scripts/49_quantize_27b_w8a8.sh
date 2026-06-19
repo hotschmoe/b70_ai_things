@@ -16,9 +16,13 @@ set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:v0230}"
 SRC="${SRC:-/mnt/vm_8tb/b70/models/Qwen_Qwen3.6-27B}"
-OUTNAME="${OUTNAME:-Qwen3.6-27B-W8A8-INT8}"
+SCHEME="${SCHEME:-W8A8}"   # W8A8 | W4A16 | W8A16 | W4A8 (compressed-tensors preset)
+OUTNAME="${OUTNAME:-Qwen3.6-27B-${SCHEME}}"
 DEVICE="${DEVICE:-xpu}"; METHOD="${METHOD:-gptq}"; SAMPLES="${SAMPLES:-512}"; SEQLEN="${SEQLEN:-2048}"; SMOOTH="${SMOOTH:-0.8}"
-DATAFREE="${DATAFREE:-0}"; SMOOTHQUANT="${SMOOTHQUANT:-1}"
+DATAFREE="${DATAFREE:-0}"
+# *A16 schemes are weight-only -> SmoothQuant is a no-op; default it off for those.
+case "$SCHEME" in *A16) SQD=0;; *) SQD=1;; esac
+SMOOTHQUANT="${SMOOTHQUANT:-$SQD}"
 # Qwen3.6-27B is a Qwen3_5 VLM (vision tower + DeltaNet/full-attn text + MTP). Quantize only the standard
 # self_attn + MLP linears; keep DeltaNet (linear_attn), the WHOLE vision tower, MTP, and lm_head in BF16.
 # (Confirmed against the safetensors weight map: model.language_model.layers.N.{self_attn,mlp,linear_attn},
@@ -37,7 +41,7 @@ docker run --rm --name quant27b "${GPUARGS[@]}" --ipc=host --shm-size 32g \
   -e OMP_NUM_THREADS=32 -e PIP_CACHE_DIR="$ROOT/pip_cache" \
   -e SRC="$SRC" -e OUT="$ROOT/models/$OUTNAME" -e DEVICE="$DEVICE" -e METHOD="$METHOD" \
   -e SAMPLES="$SAMPLES" -e SEQLEN="$SEQLEN" -e SMOOTH="$SMOOTH" -e IGNORE="$IGNORE" -e DATAFREE="$DATAFREE" \
-  -e SMOOTHQUANT="$SMOOTHQUANT" \
+  -e SMOOTHQUANT="$SMOOTHQUANT" -e SCHEME="$SCHEME" \
   --entrypoint bash "$IMG" -c '
     set -e
     source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true
@@ -53,6 +57,7 @@ except Exception: from llmcompressor.modifiers.smoothquant import SmoothQuantMod
 SRC=os.environ["SRC"]; OUT=os.environ["OUT"]; DEV=os.environ["DEVICE"]; METHOD=os.environ["METHOD"].lower()
 N=int(os.environ["SAMPLES"]); SEQ=int(os.environ["SEQLEN"]); SMOOTH=float(os.environ["SMOOTH"])
 DATAFREE=os.environ.get("DATAFREE","0")=="1"; USE_SMOOTH=os.environ.get("SMOOTHQUANT","1")=="1"
+SCHEME=os.environ.get("SCHEME","W8A8")
 IGN=[p for p in os.environ["IGNORE"].split() if p]
 xpu_ok=hasattr(torch,"xpu") and torch.xpu.is_available()
 print(f"[probe] xpu={xpu_ok} device={DEV} datafree={DATAFREE}", flush=True)
@@ -81,7 +86,7 @@ tok=AutoTokenizer.from_pretrained(SRC, trust_remote_code=True)
 if DATAFREE:
     # Fast RTN data-free validation pass (no SmoothQuant, no dataset) -> DataFreePipeline (~minutes).
     # Use this FIRST to confirm the pipeline + ignore-list work on this VLM and that vLLM can load the result.
-    recipe=[QuantizationModifier(targets="Linear", scheme="W8A8", ignore=IGN)]
+    recipe=[QuantizationModifier(targets="Linear", scheme=SCHEME, ignore=IGN)]
     print(f"[quant] DATA-FREE RTN W8A8, ignore={IGN} ...", flush=True)
     t0=time.time()
     oneshot(model=model, recipe=recipe)
@@ -92,9 +97,9 @@ else:
     ds=ds.map(lambda s: tok(s["text"], padding=False, max_length=SEQ, truncation=True, add_special_tokens=False),
               remove_columns=ds.column_names)
     if METHOD=="gptq":
-        q=GPTQModifier(targets="Linear", scheme="W8A8", ignore=IGN, actorder=None)  # actorder None: no act reorder (avoids XPU gather device-lost); =False was rejected by newer llmcompressor
+        q=GPTQModifier(targets="Linear", scheme=SCHEME, ignore=IGN, actorder=None)  # actorder None: no act reorder (avoids XPU gather device-lost); =False was rejected by newer llmcompressor
     else:
-        q=QuantizationModifier(targets="Linear", scheme="W8A8", ignore=IGN)
+        q=QuantizationModifier(targets="Linear", scheme=SCHEME, ignore=IGN)
     # SmoothQuant resolver needs exactly one smooth-layer per balance group; the hybrid Qwen3_5 (only
     # 16/64 layers carry self_attn q/k/v) breaks that pairing, ValueError before any GPU work. SMOOTHQUANT=0
     # runs GPTQ-only, still a strong W8A8 recipe (GPTQ weight calibration + dynamic per-token int8 acts).
