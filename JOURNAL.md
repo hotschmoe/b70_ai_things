@@ -1601,3 +1601,39 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   OR keep them BF16 via a correct VLM-aware quant+load. Filed for the dual-card phase. Pivoting FULLY to the
   deep w8a8-14B GEMM + fused-quant + MTP hand-tuning (3 codex agents mapping the space; GPU now free).
 
+
+---
+
+## 2026-06-20 -- INT8 W8A8 GEMM hand-tuning plan (docs/kernel/10) -- pp+tg roofline
+
+CONFIG: deep research pass (3 web-research agents + 2 codex SYCL drafts + 1 codex critique) to produce a
+ranked, executable hand-tuning plan to push the int8 W8A8 GEMM to the B70 roofline for BOTH prefill
+(compute-bound, 367 TOPS) and decode (BW-bound, 608 GB/s). Read ALL live kernel source via ssh.
+
+COMMAND: read int8_gemm_w8a8.h / onednn_ext.h / onednn_matmul.cpp / dynamic_per_token_int8_quant.cpp /
+xpu_int8.py on the box; codex exec drafted draft_int8_gemm_prefill (DPAS/joint_matrix) +
+draft_int8_gemv_decode (dp4a); agents fetched CUTLASS/Marlin/Machete, oneDNN-JIT/IPEX-XeTLA, ggml-sycl/
+sycl-tla sources. -> docs/kernel/10_int8_gemm_handtune_plan.md.
+
+RESULT (key VERIFIED findings):
+- **THE PREFILL GAP (VERIFIED from our source):** `onednn_ext.h:795` builds the weight md with EXPLICIT
+  STRIDES (`wei_strides={1,ldb}`), NEVER `format_tag::any`. This pins oneDNN to a plain s8 weight and
+  forbids its internal blocked/VNNI-crosspacked DPAS layout. oneDNN's inference guide + IPEX QMatmul.h
+  (L222-335) both do format_tag::any + a one-time cached weights_desc() reorder -- we don't. Top pp lever.
+- oneDNN bundled = **v3.9.1** (not the v3.8 docs assumed) -> lever B5 (bump oneDNN) is MOOT.
+- The fused act-quant uses sub_group_size=32; Xe2 native SG is 16 (minor note).
+- **THE DECODE GAP:** at m=1 oneDNN runs the general JIT GEMV (jit:gemm:any, ~1/16 systolic util) on the
+  plain row-major weight (`[k*N+n]` strides by N across cooperating lanes -> uncoalesced). ~67% of the
+  40 t/s ceiling. Fix = offline column-contiguous reorder + a hand dp4a GEMV.
+- **VERIFIED atom (2 sources):** int8 DPAS = `XE_8x16x32_S32S8S8S32_TT` (M<=8,N=16,K=32, s8s8->s32), B
+  must be `layout::ext_intel_packed` (VNNI). M=1 variant `XE_1x16x32_...` exists but ggml uses dp4a
+  (BW-bound -> joint_matrix buys nothing at m=1). codex critique pinned the packed-B SLM stride rule +
+  the robust store-then-dequant epilogue.
+
+VERDICT: plan delivered. Top-3 pp levers: (1) format_tag::any weights + cached reorder [~1day, highest EV];
+(2) hand DPAS GEMM if oneDNN underperforms; (3) fold scales at quant + fused int32 epilogue. Top-3 tg:
+(1) column-contiguous weight reorder; (2) hand dp4a GEMV (ggml mul_mat_vec_q idiom + SLM act reuse);
+(3) FULL graph capture. FIRST EXPERIMENT (lead, ~1 day): ONEDNN_VERBOSE=2 microbench to MEASURE XMX util
++ which impl fires, then prototype format_tag::any on the W8A8 prefill GEMM (IPEX QMatmul recipe) -- a
+near-zero-risk library win gated by the measurement that decides if a hand kernel is even needed. Both SYCL
+skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO ladder are in doc 10.
