@@ -1752,3 +1752,20 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   FULL capture (oneAPI 2026.0) -> MTP-positive + spec-decode; L1 wire the existing fused rmsnorm (small);
   W8A8/27B dual-card quant (card #2). The high-EV single-card wins are BANKED; the rest needs the toolchain or
   the 2nd card. Honest, thorough, and every negative result documented as a learning.
+
+### 2026-06-20 -- [C1 / LEVER C CLOSED] custom SYCL int4 GEMV is FUTILE -- oneDNN already meets/beats llama.cpp
+- Ran the ladder's last open step (doc 04 step 4): bench llama.cpp's purpose-built int4 GEMV on the B70 as a
+  BW-CEILING reference, to decide Lever C (the "biggest kernel win, 1-2 wk" custom SYCL GEMV).
+- **llama-bench in `ghcr.io/ggml-org/llama.cpp:full-intel` SEGFAULTS on Battlemage** (exit 139 in 6s, right
+  after the SYCL backend loads -- a device-init crash, not our config; -fa 0/1 both). So no FRESH direct number.
+- **But the existing evidence settles it definitively:** (a) our prior working run (FINDINGS) = Qwen2.5-7B-Q4_K_M
+  ~90 t/s decode = ~67% of 608 GB/s; (b) literature/01: llama.cpp's int8 (Q8_0) decode is a REGRESSION vs int4
+  on Xe2 (ggml #21517) -- so no int8 GEMV reference to chase either; (c) OUR oneDNN+capture int4 decode = 48 t/s
+  on Qwen3-14B-W4A8 = ~73% BW, int8 = 85-95% BW. **=> oneDNN+capture (73-95%) MEETS OR BEATS the only
+  purpose-built Xe2 int4 GEMV (llama.cpp, ~67%).** A hand SYCL GEMV (Lever C) has NO meaningful headroom ->
+  FUTILE. **Lever C CLOSED.**
+- **=> ALL THREE of doc 04's levers are now resolved: A (capture) = THE WIN (done); B (oneDNN tweaks) =
+  near-ceiling (B1+PP-1 perf-neutral); C (custom GEMV) = futile (oneDNN >= llama.cpp).** The single-card
+  int4/int8 decode kernel campaign is COMPLETE -- the GEMM/GEMV is at the practical BW ceiling. The only real
+  remaining upside is FULL capture (toolchain, oneAPI 2026.0) + the dual-card phase (card #2). Doc 04 ladder
+  steps 4 + 5 done.

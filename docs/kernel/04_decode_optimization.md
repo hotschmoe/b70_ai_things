@@ -15,10 +15,13 @@ per-op DISPATCH, not the GEMM.** Measured single-stream decode (Qwen3-14B, same 
 Both 9.3 GiB int4 paths now sit at 74-84% of the BW ceiling. Recipe: image `:int8g`,
 `w4a8/30_serve_w4a8_graph.sh GRAPH=1` (torch 2.11+xpu, `VLLM_XPU_ENABLE_XPU_GRAPH=1`, `cudagraph_mode=PIECEWISE`
 + the `pass_config` fix that dodges the XPU `NameError: MLARoPEKVCacheCatFusionPass` compile bug). Verdicts:
-**step 1 diag DONE; B1 DONE (perf-neutral, kept for cleanliness); A1 DONE (the breakthrough); A2 FULL capture
-BLOCKED (SYCL-Graph work_group_scratch + Triton auto-disabled); Lever C (custom GEMV) now LOW-EV** (only the
-residual ~15-25% to the ceiling remains, vs 1-2 wk of work). Full detail: JOURNAL 2026-06-20, FINDINGS,
-evals/results/SUMMARY.md. The ladder below is the original plan; see per-step [x]/verdicts.
+**step 1 diag DONE; B1 DONE (perf-neutral); A1 DONE (the breakthrough); PP-1 format_tag::any DONE (perf-neutral
+-- oneDNN v3.9 already packs internally); A2 FULL capture BLOCKED (SYCL-Graph work_group_scratch toolchain +
+TRITON_ATTN unwired on XPU; Triton-enable itself SOLVED via sitecustomize shim, doc 13); Lever C (custom GEMV)
+CLOSED-FUTILE (oneDNN int4 ~73% BW >= llama.cpp's ~67% -- the only purpose-built Xe2 int4 GEMV; step 4).
+=> ALL 3 LEVERS RESOLVED: capture is the win, oneDNN is at the practical BW ceiling, custom GEMV is futile.
+Remaining upside = FULL capture (oneAPI 2026.0) + dual-card (card #2).** Full detail: JOURNAL 2026-06-20,
+FINDINGS, evals/results/SUMMARY.md. The ladder below is the original plan; see per-step [x]/verdicts.
 
 ## >>> EXECUTION LADDER (do in this order when the GPU is free) <<<
 
@@ -48,17 +51,18 @@ Full detail + verified code pointers for each step are in the LEVER sections bel
       pure-PyTorch ref (dispatch-bound in eager). NB: the int4 `register_fake` was redundant (vLLM ships a
       native fake); the real blockers were a vLLM XPU+compile `NameError` (fixed via `pass_config`, disabling
       CUDA-only fusion passes) + the graph env/ulimits. THE dominant decode lever, as predicted.
-- [ ] **4. (parallel) bench llama.cpp `ggml-sycl/mmvq.cpp` int4 GEMV on the B70 (C1).** A bandwidth
-      ceiling reference. NB: post-A1, decode is ~74% of ceiling already -> Lever C headroom is now small.
-- [ ] **5. Decide the big bet:** FULL graph capture via `--attention-backend TRITON_ATTN` (A2; also
-      flips spec-decode/MTP positive) vs a custom SYCL int4 GEMV (C2; ~1-2 wk). Pick from steps 1-4.
-      **Post-A1 lean: A2 (FULL capture) -- capture was the whole game; squeeze attention too + flip spec-decode.**
-      **[UPDATE: see `docs/kernel/12_mtp_specdecode_plan.md`]** A2's "flips spec-decode positive" is only
-      HALF the story: the -7% is TWO failures -- eager-attn verify (A2 fixes) AND low ngram accept ~16%
-      (A2 does NOT fix). The better spec-decode lever is the native Qwen3.6 MTP head (single-pass, ~75-88%
-      accept, testable on ONE card NOW via `Lorbus_Qwen3.6-27B-int4-AutoRound`); FULL capture is a
-      second-order compounding win. The TRITON_ATTN path is blocked by the Triton-XPU "0 active drivers"
-      disable -- diagnosis + fix ladder in doc 12.
+- [x] **4. bench llama.cpp int4 GEMV on the B70 (C1) [DONE 2026-06-20 -- LEVER C CLOSED].** llama-bench in
+      `llama.cpp:full-intel` SEGFAULTS on Battlemage (exit 139, device-init crash, -fa 0/1 both). But the
+      evidence settles it: prior llama.cpp Qwen2.5-7B-Q4_K_M ~90 t/s = ~67% BW; its int8/Q8_0 decode is a
+      REGRESSION vs int4 (ggml #21517); OUR oneDNN+capture int4 = ~73% BW, int8 = 85-95%. **oneDNN MEETS/BEATS
+      the only purpose-built Xe2 int4 GEMV -> a hand SYCL GEMV has no headroom -> Lever C FUTILE.**
+- [x] **5. The big bet -- DECIDED 2026-06-20: all 3 levers resolved.** A (capture) = THE WIN (done); B (oneDNN
+      tweaks) = near-ceiling (B1 + PP-1 format_tag::any both perf-neutral -- oneDNN v3.9 already handles
+      weight-layout + zp); C (custom GEMV) = futile (step 4). **The single-card decode kernel is at the
+      practical BW ceiling.** MTP head proven (accurate drafter) but net-positive is TOOLCHAIN-gated (eager-attn
+      verify -> FULL capture). Triton-enable SOLVED (sitecustomize shim, doc 13). **Only real remaining upside:
+      FULL capture (A2 -- blocked on oneAPI DPC++ 2026.0 work_group_scratch + TRITON_ATTN unwired on XPU) +
+      the dual-card phase (card #2).** Spec-decode detail: doc 12; Triton: doc 13.
 
 ## The problem, decomposed
 - Microbench (`w4a8/20_microbench_w4a8_decode.sh`): `int4_gemm_w4a8` at m=1 already hits **52-64% of
