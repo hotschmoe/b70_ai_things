@@ -2017,6 +2017,25 @@ NO gain), prefill 901 (vs flash-attn 2377 = -62%).** => FULL is a CLEAR LOSS on 
   bug. Net remaining spec-decode upside is UPSTREAM-gated (vLLM GDN-spec-capture fix) or watch-list (DFlash
   block-drafter). Corrects docs 04(A2)/14 "FULL blocked" -> "FULL reachable but not worth it for plain serving".
 
+### 2026-06-21 -- [LEAD] Community got MTP working on B70 (4-card BF16); single-card port = real eng, uncertain payoff
+User surfaced a public B70 run: Qwen3.6-27B BF16, TP=4 on 4x B70, image intel/llm-scaler-vllm:0.14.0-b8.3,
+decode 54.2 / prefill 2100, MTP num_spec=5 mean-accept 4.04 (88.9% @ spec=3). "Unblocked from userspace:
+vllm_xpu_kernels v0.1.9 + qwen3_5.py spec-wiring (vLLM #43565) + Half-KV." Agent verified the recipe:
+- **PR #43565** ("[XPU] support MTP of gdn attention", MERGED 2026-05-29) -- patches _xpu_ops.py/qwen3_5.py to
+  FORWARD spec metadata (num_spec_decodes, spec_query_start_loc, spec_token_indx, spec_state_indices, num_accepted)
+  into gdn_attention. THIS IS THE FIX for our exact spec_query_start_loc bug.
+- **HARD BLOCKER:** needs vllm_xpu_kernels >= v0.1.9 (#368 Xe2-MTP-for-QWEN + #344 GDN padded-dim; v0.1.10 adds
+  #411 >=32K NaN fix). Our b8.3.1 image ships **0.1.8.dev0** -- its baked gdn_attention op has NO spec args
+  (ABI-verified), and Intel's qwen3_5.py still has `raise NotImplementedError(...spec_sequence_masks...)`. So
+  b8.3.1 CANNOT do MTP as-shipped. Half-KV = `--kv-cache-dtype fp8` (not a special flag).
+- **W4A8 custom kernel is NOT in llm-scaler** -> the single-card MTP vehicle is the Lorbus W4A16 (standard kernel,
+  native MTP head, 86.9% accept). Reproduce needs a DERIVED image: b8.3.1 + pip install v0.1.10 wheel + apply the
+  #43565-equiv patch to Intel's qwen3_5.py + debug the Intel-ESIMD-vs-upstream-wheel ABI coexistence (top risk).
+- **PAYOFF CAVEAT (key):** their 54.2 was a 4-CARD TP=4 aggregate (4x bandwidth); the recipe runs --enforce-eager
+  (no capture). On 1 card, eager+MTP would very likely decode SLOWER than our existing PIECEWISE-no-MTP (Lorbus
+  30.8, W4A8 21). And spec-decode is a single-user-latency feature (doc 17), not throughput. => single-card MTP
+  is real integration eng for an uncertain/likely-net-negative-vs-PIECEWISE result. DECISION PENDING (user):
+  attempt the MTP derived-image engineering, OR pivot to deeply focus on 35B-MoE W4A16 (user's stated fallback).
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
