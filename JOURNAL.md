@@ -1989,6 +1989,19 @@ PIECEWISE/flash-attn baseline): decode **52.3 t/s (+8.5% vs 48.2)**, prefill **~
   MTP accept) on :int8g FULL+TRITON_ATTN+MTP -> does capturing the verify flip the PIECEWISE -19% to net-positive?
   This is the definitive MTP-on-B70 test (our W4A8 RTN has 0% accept so it can't answer it; the Lorbus can).
 
+### 2026-06-21 -- [BLOCKER] FULL capture + MTP on GDN (Qwen3.6) hits a vLLM-XPU spec-capture bug
+Served Lorbus 27B (proven 86.9% MTP accept) on :int8g FULL_AND_PIECEWISE + TRITON_ATTN + MTP + GDN(.so).
+First error was trivial (compile_sizes=[1] padded to 2 under spec -> added COMPILESZ knob, set =2). Then the
+REAL blocker: **`RuntimeError: spec_query_start_loc must have size [num_spec_decodes + 1]`** at engine init
+(the cudagraph FULL-capture dummy-run). It's in vLLM's GDN backend spec metadata (vllm/v1/attention/backends/
+gdn_attn.py: spec_query_start_loc shape [num_spec_decodes+1]) -- the FULL-capture dummy run builds the GDN
+spec metadata with a mismatched size. So **FULL capture + spec-decode (MTP) on the GDN architecture is blocked
+by a vLLM-XPU bug** (the "GDN only supports decode-only full cudagraph" caveat manifesting as a hard error for
+the spec path). PIECEWISE+MTP works (the earlier 86.9%/-19% on :v0230); it's specifically FULL+spec+GDN that
+breaks. => MTP-net-positive-via-FULL on Qwen3.6 needs a vLLM GDN-spec-capture fix (deep, not a config). The
+FULL-capture MECHANISM itself is fine (14B proved it). PIVOT (per user "other single-card optims"): test FULL
+capture on 27B-W4A8 PLAIN decode (no MTP, no spec path -> avoids the bug) -> does it beat PIECEWISE's 21 t/s?
+
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard

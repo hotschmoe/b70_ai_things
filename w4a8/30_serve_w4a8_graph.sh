@@ -62,7 +62,10 @@ if [ "$GRAPH" = 1 ]; then
   # These fusions can't run on XPU regardless; the graph CAPTURE (the decode lever) is independent of them.
   PASSCFG='"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}'
   CAPCFG=""; [ -n "$CAPSIZES" ] && CAPCFG="\"cudagraph_capture_sizes\":[$CAPSIZES],"
-  CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,${CAPCFG}\"compile_sizes\":[1],$PASSCFG}")
+  # compile_sizes default [1]; with MTP/spec-decode the decode batch pads to 1+num_spec, so [1] is rejected
+  # ("would be padded to 2") -> set COMPILESZ=2 (or empty to omit) for spec-decode serves.
+  _CS="${COMPILESZ-1}"; COMPILECFG=""; [ -n "$_CS" ] && COMPILECFG="\"compile_sizes\":[$_CS],"
+  CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,${CAPCFG}${COMPILECFG}$PASSCFG}")
 fi
 
 ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
