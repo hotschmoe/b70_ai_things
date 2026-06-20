@@ -1226,3 +1226,23 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - **Quant:** GPTQ-W4A8 on CPU projected ~5-7 h (subgraph 1/41 took 11 min) -> per user, MOVED to GPU (`scripts/54
   SCHEME=W4A8 METHOD=gptq DEVICE=xpu`, container quant14b). Frees CPU for kernel builds; accuracy number in ~30 min.
 
+### 2026-06-20 -- [RESULT] GPTQ-W4A8 = 0.872/0.835 HumanEval+ -- GPTQ closes most of the int8-act gap to w4a16
+- **GPTQ-W4A8 quant done** (`scripts/54 SCHEME=W4A8 METHOD=gptq DEVICE=xpu`, 6724s / ~112 min on GPU; GPTQ is
+  Cholesky-bound so GPU ran ~15% util -- slow regardless of device). Saved `models/Qwen3-14B-W4A8-gptq` (16 GB
+  disk, unpacked I8). Verified: recipe = SmoothQuant+GPTQ (NOT RTN); served `qwen3-14b-w4a8-gptq` ->
+  `Using XPUW4A8IntLinearKernel for CompressedTensorsW4A8Int`, 9.3 GiB VRAM.
+- **HumanEval+ (164, thinking-off, greedy, sandboxed): base 0.872 / plus 0.835.** vs the bar:
+  | quant (calib) | base / plus |
+  |---|---|
+  | w4a16 (gptq) -- bar | 0.872 / 0.848 |
+  | **w4a8 (gptq) -- new** | **0.872 / 0.835** |
+  | w4a8 (rtn) -- archived | 0.860 / 0.817 |
+  - **GPTQ +1.8 plus over RTN** (0.817->0.835), consistent with the w8a8/w4a16 GPTQ lifts. **Base TIES w4a16-gptq
+    (0.872); plus within ~1 CI (0.835 vs 0.848).** So the int8-activation accuracy penalty is small and largely
+    recovered -- **w4a8 is accuracy-viable, NOT "dominated."**
+- **Verdict / strategy:** accuracy no longer blocks w4a8. Its case over w4a16 = prefill/TTFT (int8-XMX: +51%
+  prefill, ~-32% TTFT); its weak spot = decode (16.5 t/s, KERNEL-limited per the microbench, not physics).
+  **AutoRound is now LOW priority** (would chase the last ~1.3 plus, within noise; w4a8's edge isn't accuracy).
+  The decisive work is the **decode kernel** (docs/kernel/04 ladder: ONEDNN_VERBOSE -> drop symmetric zp ->
+  PIECEWISE capture for w4a8 -> ...). Leaderboard + models.yaml updated; RTN w4a8 archived; w4a8-gptq canonical.
+

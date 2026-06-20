@@ -42,18 +42,25 @@
 | 2 | Qwen3-14B | fp8 (online) | 0.915 / 0.890 | **32.1** | **85** | 3525 | ~15 GB |
 | 4 | Qwen3-14B | w8a8 (RTN) | 0.902 / 0.860 | 23.8 | 101 | **5780** | ~15 GB |
 | 5 | Qwen3-14B | w4a16 (GPTQ) | 0.872 / 0.848 | 29.0 | 84 | 2920 | ~9.3 GB |
-| 6 | Qwen3-14B | w4a16 (RTN) | 0.866 / 0.829 | 29.1 | 79 | 2921 | ~9.3 GB |
-| 7 | Qwen3-14B | w4a8 (RTN) | 0.860 / 0.817 | 16.5 | 139 | 4403 | 9.3 VRAM / 16 disk* |
+| 6 | Qwen3-14B | **w4a8 (GPTQ)** | **0.872 / 0.835** | ~16.5 | ~139 | ~4403 | 9.3 VRAM / 16 disk* |
+| 7 | Qwen3-14B | w4a16 (RTN) | 0.866 / 0.829 | 29.1 | 79 | 2921 | ~9.3 GB |
+| 8 | Qwen3-14B | w4a8 (RTN, archived) | 0.860 / 0.817 | 16.5 | 139 | 4403 | 9.3 VRAM / 16 disk* |
 
 - **Quality:** the 27B int4 leads by ~+4 plus pts but decodes ~4x slower (7.9 vs 32 t/s) -- the higher-density
   tradeoff. Among the 14B, **w8a8-gptq ties fp8 at the top (0.890 plus)**; **GPTQ beats RTN at both schemes**
-  (w8a8 +3.0 plus, w4a16 +1.9 plus -- the latter within HumanEval's CI). bf16 14B ceiling is unmeasured here
-  (does not fit one card); fp8 is the practical anchor.
+  (w8a8 +3.0 plus, w4a16 +1.9 plus -- the latter within HumanEval's CI; **w4a8 +1.8 plus, 0.817->0.835**). bf16
+  14B ceiling is unmeasured here (does not fit one card); fp8 is the practical anchor.
+- **[2026-06-20] w4a8-gptq closes most of the int8-act gap:** GPTQ-W4A8 = **0.872 / 0.835** -- base **TIES**
+  w4a16-gptq (0.872), plus within ~1 CI (0.835 vs 0.848). So w4a8 is now accuracy-viable, NOT "dominated"; its
+  weak spot is decode (16.5 t/s) while its EDGE is prefill/TTFT (int8-XMX: +51% prefill, ~-32% TTFT vs w4a16 --
+  see the w4a8-vs-w4a16 head-to-head). Accuracy no longer blocks w4a8; the decode kernel does (see docs/kernel/04).
 - **Speed:** fp8 fastest decode (32.1) + lowest TTFT; w8a8 best prefill (5780, the int8 systolic path);
-  w4a16 best quality-per-VRAM (9.3 GB at 29 t/s). **w4a8 is dominated** -- slowest decode AND lowest quality.
+  w4a16 best quality-per-VRAM (9.3 GB at 29 t/s). **w4a8-gptq: slowest single-stream decode (16.5) but the
+  int8-XMX prefill/TTFT edge at 9.3 GB** (kernel-limited decode, fixable -- see docs/kernel/04).
 - **Picks:** interactive/chat -> **fp8** (or **w8a8-gptq** for matching quality + 1.6x prefill); VRAM-tight ->
   **w4a16-gptq** (best small-footprint quality, fast decode); max quality on one card -> **27B int4** if 7.9
-  t/s decode is tolerable; **skip w4a8** for coding. HumanEval near-saturates -- treat sub-2pt gaps as ties.
+  t/s decode is tolerable; **w4a8-gptq** when prefill/TTFT/throughput-heavy (long-context/agentic, the int8-XMX
+edge), else w4a16-gptq for decode-heavy. HumanEval near-saturates -- treat sub-2pt gaps as ties.
 - *VRAM = vLLM "Model loading took" (weight memory on the GPU), not on-disk size. **w4a8 is the exception:**
   its int4 weights are stored **UNPACKED** on disk (single 16 GB safetensors, ~1 byte/int4-weight), but vLLM
   packs them to **9.3 GiB in VRAM** (verified 2026-06-20; also the slowest load at 39 s vs ~23 s). Repack-to-
