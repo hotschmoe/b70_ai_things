@@ -21,17 +21,22 @@ Full detail + verified code pointers for each step are in the LEVER sections bel
       decode) even though our acts are symmetric (zp=0); weight zp is only a cheap scalar (`wei:0:s8`). A
       per-token src-zp forces a `zp_src * reduce_k(weight)` compensation = an O(k*n) weight re-read at m=1 ->
       **B1 could be ~2x, not minor.** Steady exec ~0.11 ms (matches the 52-64% microbench). => do B1 next.
-- [ ] **2. Drop symmetric zero-point attrs (B1) -> rebuild -> re-microbench.** Edit `int4_gemm_w4a8.h`
-      to omit src-s32 + weight-u4 zp for the symmetric case (like `int8_gemm_w8a8.h`; IPEX `QMatmul.h`
-      omits it too). Rebuild `scripts/44_build_int8_kernel.sh`; validate `test_int4_gemm_onednn.py -k
-      w4a8` (SYM); re-run `w4a8/20_microbench_w4a8_decode.sh` -> did 52-64% of peak improve? Cheapest win.
-- [ ] **3. Extend PIECEWISE graph capture to w4a8 (A1) -> serve `:int8g` -> measure.** Add the w4a8
-      `register_fake`, serve on `vllm-xpu-env:int8g` with `cudagraph_mode=PIECEWISE`, confirm capture
-      engaged, measure decode lift (w8a8 already banked +16.7%).
+- [x] **2. Drop symmetric zero-point attrs (B1) [DONE 2026-06-20 -- PERF-NEUTRAL].** Applied (drop src-zp
+      + cache-key fix), rebuilt, validated (`w4a8/22,23_*.sh`): correctness PASS, src-zp attr gone, BUT NO
+      decode speedup (oneDNN v3.12 already caches the zp compensation at primitive-create). Meta-finding: the
+      microbench has +/-30% run-to-run noise -> validate kernel changes at decode-t/s, not microbench. Kept in
+      source-of-truth as a cleanliness win; prod not rebaked.
+- [x] **3. Extend PIECEWISE graph capture to w4a8 (A1) [DONE 2026-06-20 -- *** BREAKTHROUGH +187% ***].**
+      Served `:int8g` `GRAPH=1` (`w4a8/30_serve_w4a8_graph.sh`): **w4a8 decode 16.79 -> 48.18 t/s (2.87x)**,
+      coherent, ~74% of BW ceiling. Far bigger than w8a8's +16.7% because w4a8's act-quant is the unfused
+      pure-PyTorch ref (dispatch-bound in eager). NB: the int4 `register_fake` was redundant (vLLM ships a
+      native fake); the real blockers were a vLLM XPU+compile `NameError` (fixed via `pass_config`, disabling
+      CUDA-only fusion passes) + the graph env/ulimits. THE dominant decode lever, as predicted.
 - [ ] **4. (parallel) bench llama.cpp `ggml-sycl/mmvq.cpp` int4 GEMV on the B70 (C1).** A bandwidth
-      ceiling reference -- how much BW does a real GEMV leave on the table vs our 52-64%?
+      ceiling reference. NB: post-A1, decode is ~74% of ceiling already -> Lever C headroom is now small.
 - [ ] **5. Decide the big bet:** FULL graph capture via `--attention-backend TRITON_ATTN` (A2; also
       flips spec-decode/MTP positive) vs a custom SYCL int4 GEMV (C2; ~1-2 wk). Pick from steps 1-4.
+      **Post-A1 lean: A2 (FULL capture) -- capture was the whole game; squeeze attention too + flip spec-decode.**
 
 ## The problem, decomposed
 - Microbench (`w4a8/20_microbench_w4a8_decode.sh`): `int4_gemm_w4a8` at m=1 already hits **52-64% of

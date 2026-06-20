@@ -20,7 +20,21 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   capture (`VLLM_XPU_ENABLE_XPU_GRAPH=1`); adding `register_fake` meta kernels for our 2 custom int8 ops lets
   dynamo trace through them. PIECEWISE mode (attention eager, linear/MLP captured) lifts 14B W8A8 decode
   23.33 -> **27.23 t/s**. FULL capture is blocked by Intel's SYCL Graph ext (`work_group_scratch_memory`, via
-  flash-attn). Use image `vllm-xpu-env:int8g` + `cudagraph_mode=PIECEWISE`.
+  flash-attn). Use image `vllm-xpu-env:int8g` + `cudagraph_mode=PIECEWISE`. (This w8a8 number predates the
+  compile-pass fix below and is being re-confirmed on the current image.)
+- **[BREAKTHROUGH 2026-06-20] PIECEWISE graph capture lifts W4A8 decode 16.79 -> 48.18 t/s (+187%, 2.87x).**
+  The biggest decode win on the B70 so far. W4A8 eager is severely dispatch-bound because its per-token
+  activation quant is the UNFUSED pure-PyTorch `dynamic_per_token_int8_quant_ref` (hundreds of tiny ops/token);
+  graph capture fuses the whole decode step, taking decode from ~26% to ~74% of the BW ceiling (9.3 GiB @
+  608 GB/s ~= 65 t/s). That is why W4A8 gains 2.87x where W8A8 (which uses a fused quant op) gained only 1.17x.
+  **This flips the leaderboard: W4A8-PIECEWISE 48 t/s beats every config measured eager (fp8 ~32, w4a16 29).**
+  W4A8 already won prefill/TTFT (int8-XMX) + smallest VRAM; now it leads decode too -- no longer "dominated".
+  Two gotchas fixed (both in `w4a8/30_serve_w4a8_graph.sh`): (1) a vLLM XPU+compile crash
+  `NameError: MLARoPEKVCacheCatFusionPass` -- vLLM auto-enables CUDA-only inductor fusion passes under
+  torch.compile but XPU never imports them; disable the CUDA/ROCm-only fusion flags in the serve `pass_config`.
+  (2) the int4 `register_fake` is REDUNDANT -- vLLM already ships a native fake for `int4_gemm_w4a8`. Serve:
+  `w4a8/30_serve_w4a8_graph.sh GRAPH=1` (image `:int8g`, dtype float16); confirm via the
+  `Capturing CUDA graphs (PIECEWISE)` + `Graph capturing finished` log lines.
 - **Quant quality measured (2026-06-19): the int8 ACTIVATION quant is the quality cost, not int8 weights.**
   First eval campaign, Qwen3-14B × 6 quants (see [evals/](evals/) + [evals/results/SUMMARY.md](evals/results/SUMMARY.md)):
   ppl + top-1 token-agreement vs a CPU-scored bf16 anchor + gsm8k. **W8A16 (int8 w / fp16 a) is near-lossless**
@@ -40,6 +54,7 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 | Qwen2.5-7B **Q4_K_M** (llama.cpp SYCL) | ~90 t/s decode — llama.cpp SYCL is great for standard-attention models |
 | **torch.compile (inductor)** | cuts single-stream **TTFT ~6x** (1032->176 ms) + ~11% decode at low concurrency |
 | **Qwen3-14B W8A8 + PIECEWISE XPU graph** | **27.23 t/s** decode (+16.7% over eager 23.33) — image `:int8g`, `cudagraph_mode=PIECEWISE` |
+| **Qwen3-14B W4A8 + PIECEWISE XPU graph** | **48.18 t/s** decode (**+187% / 2.87x** over eager 16.79) — fastest decode measured; `:int8g` + `30_serve_w4a8_graph.sh GRAPH=1` |
 
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
@@ -48,12 +63,16 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   kernel (`Selected XPUInt8ScaledMMLinearKernel`), coherent output. First INT8 W8A8 path on Battlemage. See
   docs/kernel/01 + contrib/vllm_int8_xpu/. (Perf vs FP8 in prefill/large-batch = TODO; FP8 still wins decode.)
 - **W4A8-INT** (`XPUW4A8IntLinearKernel`, int4 weights + per-token int8 activations, oneDNN `int4_gemm_w4a8`):
-  **Tested 2026-06-18 — it's the only path that lights the INT8-XMX datapath, and it serves (9.3 GB, smallest
-  footprint, 12x concurrency). BUT single-stream decode is ~16.6 t/s, half of FP8** (the int4_gemm_w4a8 decode
-  kernel is unoptimized). Head-to-head (identical harness): **FP8 wins per-stream at every matched concurrency
-  (~1.7-1.8x)**; W4A8's only real edge is VRAM (9.3 vs 15.2 GB). FP8 stays the pick. (Note from
-  literature/06: FP8 is conversion-based on Xe2; INT is native systolic — so a real INT8 W8A8 kernel could
-  beat FP8 in *prefill/large-batch*. That kernel doesn't exist upstream yet = our top contribution target.)
+  **[SUPERSEDED 2026-06-20 -> now in "What works"]** the "decode ~16.6 t/s, half of FP8, FP8 stays the pick"
+  conclusion below was measured EAGER. With PIECEWISE graph capture W4A8 decode is **48.18 t/s** -- it now
+  BEATS fp8 single-stream and is the fastest decode config measured (see the breakthrough bullet in the TL;DR).
+  Original eager notes kept for the record: **Tested 2026-06-18 — it's the only path that lights the INT8-XMX
+  datapath, and it serves (9.3 GB, smallest footprint, 12x concurrency). BUT single-stream decode is ~16.6 t/s,
+  half of FP8** (the int4_gemm_w4a8 decode kernel is unoptimized). Head-to-head (identical harness): **FP8 wins
+  per-stream at every matched concurrency (~1.7-1.8x)**; W4A8's only real edge is VRAM (9.3 vs 15.2 GB). FP8
+  stays the pick. (Note from literature/06: FP8 is conversion-based on Xe2; INT is native systolic — so a real
+  INT8 W8A8 kernel could beat FP8 in *prefill/large-batch*. That kernel doesn't exist upstream yet = our top
+  contribution target.) [The eager-vs-capture gap was the real story: w4a8 was the most dispatch-bound config.]
 - **Speculative decoding:** **net-negative on B70**, even with graph capture. ngram (prompt-lookup) on 14B
   W8A8: eager 23.33->21.51 t/s (-7.8%); WITH PIECEWISE graph 27.23->25.28 (-7%). ~16% draft acceptance. Why:
   in PIECEWISE mode **attention runs eager**, so the multi-token verify still pays full eager attention launch
