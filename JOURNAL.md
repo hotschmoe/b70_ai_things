@@ -2072,6 +2072,29 @@ MAXLEN=8192. HEALTHY (19.6 GiB load, captured 57s). Coherent ("Mercury, Venus, E
   reasoning model (needs higher MAXLEN + chat endpoint). TODO: re-serve MAXLEN>=32K for the long-ctx curve.
 - NEXT: the sub-optimal Triton MoE-GEMM config (E=256,N=512,int4_w4a16) -- agent assessing whether tuning it
   helps (likely prefill, not the BW-bound A3B decode).
+
+### 2026-06-21 -- [ASSESS] 35B MoE Triton-config tuning = PREFILL-only, GPU-hours, capped -> low-ROI (like GPTQ)
+Agent verified (live image + GitHub): the missing config `E=256,N=512,device_name=Intel(R)_Graphics_[0xe223],
+dtype=int4_w4a16.json` is real (only NVIDIA/AMD configs exist) -> default fallback = the "sub-optimal" warning.
+- **DECODE (65 t/s) is BW-MAXED, tuning won't move it:** at bs=1 the Triton `fused_moe_kernel_gptq_awq` uses a
+  FIXED {BLOCK_SIZE_N:32,K:64} tile (get_moe_wna16_block_config, num_valid_tokens//top_k==1) + is weight-DRAM-
+  bound; block/warp/stage choices change launch overhead, not byte movement. Confirmed Triton is the hot path
+  on XPU (should_moe_wna16_use_cuda gates on is_cuda()=False -> always Triton).
+- **Tuning helps PREFILL/large-batch (M>=128):** the compute-bound regime where BLOCK_M/num_warps/GROUP_SIZE_M
+  matter -- could lift the 1623 prefill + the ~206 batch plateau.
+- **But low-ROI:** (1) benchmark_moe.py is CUDA-hardcoded (device="cuda", torch.cuda.CUDAGraph, Ray num_gpus)
+  -> needs an XPU patch before it runs; the image DOES carry an int4 patch (--dtype int4_w4a16 + a
+  Qwen3_5Moe branch). (2) the sweep is GPU-hours (18 buckets x 256 experts). (3) Intel Triton's int4-dequant-
+  in-tl.dot is a known ~2x-slow spot (intel-xpu-backend-for-triton #4327) -> even a tuned Triton config leaves
+  perf on the table vs a native SYCL grouped-GEMM. RECIPE (future GPU job): patch cuda->xpu + drop CUDAGraph,
+  then `benchmark_moe.py --model <35B> --dtype int4_w4a16 --tp-size 1 --tune --save-dir DIR` (tp=1 REQUIRED ->
+  N=512); pickup via `VLLM_TUNED_CONFIG_FOLDER=DIR` at serve (checked before built-in configs/).
+- **DEEPER lever (bigger potential):** the native SYCL grouped-GEMM MoE path (xpu_moe.py / vllm-xpu-kernels)
+  could beat Triton's slow int4-dequant -- but our INC-patched :v0230moe forces the Triton path. Switching MoE
+  paths is a bigger change; watch-list.
+- **VERDICT: 35B deep-focus largely DONE.** Decode-maxed (65, single-card champ), batch/prefill characterized;
+  the only optimization (config tune) is a prefill-only GPU-hours job capped by the Triton int4 slow path ->
+  same low-ROI profile as the deferred GPTQ. Remaining minor gap: long-ctx curve (re-serve MAXLEN>=32K).
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
   assertion `bits==8 and group_size==-1 and sym and act_bits==8` for any int8-dynamic-act scheme; W4 (bits=4)
