@@ -4,6 +4,22 @@ Synthesis of a 4-agent literature+code sweep (2026-06-20) on speeding up int8-ac
 on the B70. **Every lever here lifts BOTH w8a8 and w4a8** (shared per-token-int8-act + GEMM path).
 All code pointers were fetched/verified by the agents (paths confirmed, not invented).
 
+## >>> RESULTS (2026-06-20, executed) <<<
+**Headline: PIECEWISE XPU graph capture ~DOUBLES int4 decode on the B70 -- the decode bottleneck was eager
+per-op DISPATCH, not the GEMM.** Measured single-stream decode (Qwen3-14B, same probe), eager -> PIECEWISE:
+- **w4a16-gptq 28.0 -> 54.6 t/s (+95%)** -- decode leader (no act-quant tax)
+- **w4a8-gptq 16.8 -> 48.2 t/s (+187%)** -- biggest gain (its act-quant is an unfused pure-PyTorch ref =
+  most dispatch-bound in eager); also best prefill/TTFT (int8-XMX)
+- w8a8-gptq 23.6 -> 26.7 t/s (+13%) -- already lean (fused quant op)
+
+Both 9.3 GiB int4 paths now sit at 74-84% of the BW ceiling. Recipe: image `:int8g`,
+`w4a8/30_serve_w4a8_graph.sh GRAPH=1` (torch 2.11+xpu, `VLLM_XPU_ENABLE_XPU_GRAPH=1`, `cudagraph_mode=PIECEWISE`
++ the `pass_config` fix that dodges the XPU `NameError: MLARoPEKVCacheCatFusionPass` compile bug). Verdicts:
+**step 1 diag DONE; B1 DONE (perf-neutral, kept for cleanliness); A1 DONE (the breakthrough); A2 FULL capture
+BLOCKED (SYCL-Graph work_group_scratch + Triton auto-disabled); Lever C (custom GEMV) now LOW-EV** (only the
+residual ~15-25% to the ceiling remains, vs 1-2 wk of work). Full detail: JOURNAL 2026-06-20, FINDINGS,
+evals/results/SUMMARY.md. The ladder below is the original plan; see per-step [x]/verdicts.
+
 ## >>> EXECUTION LADDER (do in this order when the GPU is free) <<<
 
 Cheap diagnostics + wins first, big bets last; each step informs the next. **All lift w8a8 AND w4a8.**
