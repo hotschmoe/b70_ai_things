@@ -4,6 +4,20 @@
 
 *Caveat up front: Battlemage/B70 upstream support is young and moving weekly. Anything older than ~30 days is potentially stale. Re-check the [vLLM Releases](https://github.com/vllm-project/vllm/releases) and [XPU doc](https://docs.vllm.ai/en/stable/getting_started/installation/gpu.html#intel-xpu) before pinning. Items flagged ⚠️ are single-source or cross-architecture (CUDA-derived) and should be benchmarked on your actual B70 before you trust them.*
 
+> **[!] CORRECTION (2026-06-20) -- the "no XPU graph capture / keep --enforce-eager" verdict in this doc is WRONG.**
+> This 06-17 snapshot predates our own measurements. XPU graph capture DOES work on the B70 and is the single
+> biggest decode lever we have found:
+> - **PIECEWISE capture: W4A8 decode 16.79 -> 48.18 t/s (+187%, 2.87x); W8A8 23.62 -> 26.68 (+13%).** Measured
+>   on `vllm-xpu-env:int8g`, vLLM v0.23.0, torch 2.11+xpu (`VLLM_XPU_ENABLE_XPU_GRAPH=1`, `cudagraph_mode=PIECEWISE`).
+>   Logs show real `Capturing CUDA graphs (PIECEWISE): 4/4 ... Graph capturing finished`. NOT a no-op.
+> - The "XPU Graph is not supported in the current PyTorch version" log fires only on **torch < 2.11**; torch 2.11
+>   added `torch.xpu.XPUGraph` (see `06_xpu_kernel_fastpaths.md` D.4) and vLLM gates capture on `supports_xpu_graph()`.
+> - One real gotcha: under `torch.compile` vLLM auto-enables CUDA-only inductor fusion passes that XPU never
+>   imports -> `NameError: MLARoPEKVCacheCatFusionPass`. Workaround: disable them in the serve `pass_config`
+>   (see `w4a8/30_serve_w4a8_graph.sh`). After that, capture proceeds cleanly.
+> So: **do NOT keep `--enforce-eager` for decode-bound int8-activation workloads** -- capture them. The rows/bullets
+> below are kept as the historical (pre-measurement) reasoning; treat their compilation verdict as SUPERSEDED.
+
 ---
 
 ## 0. Executive answer
@@ -11,7 +25,7 @@
 | Question | Verdict |
 |---|---|
 | **Build newer upstream vs stay on c51df4300?** | **Conditional yes — target `v0.23.0` (tag), but stage it; do not blind-bump `main`.** c51df4300 (0.20.2rc1.dev2) is fine and proven for Qwen3-14B FP8. v0.23.0 is the first *tagged* release that lands the XPU GDN-MTP kernels (#43565) + fused GDN (#43534) **and** keeps dense Qwen3/Llama/Mistral on the new default Model-Runner-V2 path (#43458). For a **dense** Qwen3-14B you gain little from v0.23.0 itself (MTP/GDN is a Qwen3.5/3.6 feature, not dense); the reason to move is newer XPU FP8/quant kernels (vllm-xpu-kernel v0.1.7) and bug-fix accumulation. **Bump to the `v0.23.0` tag, not random `main`** — XPU has a documented history of per-release regressions (GPTQ broke in 0.19.0, #39474). |
-| **Compilation (`--compilation-config`)?** | **No real win on B70 today. Keep `--enforce-eager`.** XPU has *no* CUDA-graph-equivalent capture, so `cudagraph_mode=PIECEWISE` and `use_inductor_graph_partition=true` are silently **no-ops** (vLLM logs "XPU Graph is not supported … disabling cudagraph_mode"). Inductor-only `-O1` compile is still maturing and a known breakage source. |
+| **Compilation (`--compilation-config`)?** | **[SUPERSEDED 2026-06-20 -- see CORRECTION banner above.] PIECEWISE capture works on torch 2.11+xpu and gives +187% W4A8 / +13% W8A8 decode -- USE it for int8-activation decode.** ~~No real win on B70 today. Keep `--enforce-eager`. XPU has no CUDA-graph-equivalent capture, so cudagraph_mode=PIECEWISE is a no-op.~~ (The no-op log only fires on torch < 2.11.) |
 | **Spec-decode for dense Qwen3-14B?** | **Yes — draft-model with Qwen3-0.6B is the most-likely single-stream win.** Qwen3-0.6B is vocab-compatible (shared 151936-vocab `Qwen2Tokenizer`). ngram is a near-free second attempt for code/RAG. EAGLE3 is officially "supported on B-series" but needs a Qwen3-14B-specific trained head. |
 | **Top other levers?** | **(1)** keep the default **Flash-Attn** XPU backend; **(2)** `--block-size 64` + `--max-num-batched-tokens 8192` + `--gpu-memory-utilization 0.9`. **FP8-KV is conditional** (forces Triton backend — see §4). |
 
