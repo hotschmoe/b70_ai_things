@@ -2095,6 +2095,19 @@ dtype=int4_w4a16.json` is real (only NVIDIA/AMD configs exist) -> default fallba
 - **VERDICT: 35B deep-focus largely DONE.** Decode-maxed (65, single-card champ), batch/prefill characterized;
   the only optimization (config tune) is a prefill-only GPU-hours job capped by the Triton int4 slow path ->
   same low-ROI profile as the deferred GPTQ. Remaining minor gap: long-ctx curve (re-serve MAXLEN>=32K).
+
+### 2026-06-21 -- [CHARACTERIZE done] 35B-A3B MoE long-ctx decode is DEAD-FLAT (~64.5 t/s, 2K-7K) -- best long-ctx profile
+Chat-based long-ctx probe (evals/orchestrator/longctx_chat_probe.py -- the raw-completions longctx_probe returns
+0 tok on reasoning models, so wrote a chat-endpoint variant). On the current MAXLEN=8192 fp8-KV serve:
+- ctx~2000 decode 64.7 t/s (ttft 732 ms), ctx~4000 64.6 (1109 ms), ctx~7000 64.3 (1744 ms).
+- **Decode degrades only -0.6% over 2K->7K = essentially FLAT.** The A3B activates only ~3B/token (tiny weight
+  read) + fp8-KV halves the KV read -> decode stays WEIGHT-bound, not KV-bound, even at long ctx. This is the
+  best long-context decode of any single-card config. TTFT grows linearly with prefill (expected). Trend predicts
+  it stays ~flat well past 8K (the 256K-native model should sustain 60+ t/s decode at large ctx; >8K needs a
+  MAXLEN>=32K re-serve to confirm -- predicted-flat, deprioritized).
+- **35B-A3B MoE deep-focus COMPLETE.** Full profile: decode 65 (flat to 7K), batch ~206 plateau (MoE union),
+  prefill 1623, TTFT scales, coherent, fp8-KV is a +15% decode win. THE single-card latency champion. Only
+  optimization left = the prefill-only Triton config tune (low-ROI, GPU-hours) + the deferred dual-card W8A8/GPTQ.
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
   assertion `bits==8 and group_size==-1 and sym and act_bits==8` for any int8-dynamic-act scheme; W4 (bits=4)
