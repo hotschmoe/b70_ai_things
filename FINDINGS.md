@@ -27,8 +27,12 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
   activation quant is the UNFUSED pure-PyTorch `dynamic_per_token_int8_quant_ref` (hundreds of tiny ops/token);
   graph capture fuses the whole decode step, taking decode from ~26% to ~74% of the BW ceiling (9.3 GiB @
   608 GB/s ~= 65 t/s). That is why W4A8 gains 2.87x where W8A8 (which uses a fused quant op) gained only 1.17x.
-  **This flips the leaderboard: W4A8-PIECEWISE 48 t/s beats every config measured eager (fp8 ~32, w4a16 29).**
-  W4A8 already won prefill/TTFT (int8-XMX) + smallest VRAM; now it leads decode too -- no longer "dominated".
+  **The real headline (corrected after capturing the rivals too): graph capture roughly DOUBLES int4 decode on
+  the B70.** Apples-to-apples, PIECEWISE: **w4a16 28.04 -> 54.57 (+95%)**, w4a8 16.79 -> 48.18 (+187%), w8a8
+  23.62 -> 26.68 (+13%). So **w4a16 LEADS decode (54.57), w4a8 leads prefill/TTFT** (int8-XMX) -- both 9.3 GiB,
+  both ~2x'd by capture; w4a16's int4xfp16 GEMM is ~13% more BW-efficient at m=1 (no act-quant). w8a8 gains
+  little (already-fused quant). W4A8 is no longer "dominated" -- it co-leads with w4a16, split by decode-vs-
+  prefill. (Earlier note "w4a8 beats everything" was only true while the others were eager; corrected here.)
   Two gotchas fixed (both in `w4a8/30_serve_w4a8_graph.sh`): (1) a vLLM XPU+compile crash
   `NameError: MLARoPEKVCacheCatFusionPass` -- vLLM auto-enables CUDA-only inductor fusion passes under
   torch.compile but XPU never imports them; disable the CUDA/ROCm-only fusion flags in the serve `pass_config`.
@@ -54,7 +58,8 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 | Qwen2.5-7B **Q4_K_M** (llama.cpp SYCL) | ~90 t/s decode — llama.cpp SYCL is great for standard-attention models |
 | **torch.compile (inductor)** | cuts single-stream **TTFT ~6x** (1032->176 ms) + ~11% decode at low concurrency |
 | **Qwen3-14B W8A8 + PIECEWISE XPU graph** | **27.23 t/s** decode (+16.7% over eager 23.33) — image `:int8g`, `cudagraph_mode=PIECEWISE` |
-| **Qwen3-14B W4A8 + PIECEWISE XPU graph** | **48.18 t/s** decode (**+187% / 2.87x** over eager 16.79) — fastest decode measured; `:int8g` + `30_serve_w4a8_graph.sh GRAPH=1` |
+| **Qwen3-14B W4A8 + PIECEWISE XPU graph** | **48.18 t/s** decode (**+187% / 2.87x** over eager 16.79) — `:int8g` + `30_serve_w4a8_graph.sh GRAPH=1`. Best prefill/TTFT (int8-XMX). |
+| **Qwen3-14B W4A16 + PIECEWISE XPU graph** | **54.57 t/s** decode (**+95% / 1.95x** over eager 28.04) — **fastest decode measured**; same 9.3 GiB; no act-quant tax. `GRAPH=1`. |
 
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).

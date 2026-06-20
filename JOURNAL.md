@@ -1392,3 +1392,26 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   comparison under capture (same 9.3 GiB VRAM/ceiling; w4a16 has no act-quant tax so it is the real rival; fp8
   is capped at ~40 t/s by its 15.3 GiB and cannot beat 48).
 
+### 2026-06-20 -- [RESULT + CORRECTION] apples-to-apples under capture: w4a16 LEADS decode (54.57), not w4a8 (48.18)
+- Captured the real rival. w4a16 (int4 weight, fp16 act, XPUwNa16) eager vs PIECEWISE, same probe; output verified
+  coherent. Full decode-t/s table, eager -> PIECEWISE:
+  | config | VRAM | eager | PIECEWISE | capture gain | % of BW ceiling |
+  |---|---|---|---|---|---|
+  | **w4a16** | 9.3 GiB | 28.04 | **54.57** | +95% (1.95x) | ~84% of 65 |
+  | w4a8  | 9.3 GiB | 16.79 | 48.18 | +187% (2.87x) | ~74% of 65 |
+  | w8a8  | 15.3 GiB | 23.62 | 26.68 | +13% | -- |
+  | fp8   | 15.3 GiB | ~32 (eager) | not captured | -- | capped ~40 by 15.3 GiB |
+- **[CORRECTION of my earlier over-claim]** the prior entries said "w4a8 PIECEWISE 48 beats EVERYTHING" -- that
+  was only true while the others were EAGER. Apples-to-apples (both int4 configs captured), **w4a16 wins decode
+  54.57 > w4a8 48.18** (+13%). Same 9.3 GiB weight read, but w4a16 skips the int8 activation quant entirely
+  (fp16 acts straight into the GEMM), so its int4xfp16 GEMM is ~13% more BW-efficient at m=1 than w4a8's
+  int4xint8 path (84% vs 74% of ceiling). w4a8 still wins PREFILL/TTFT (int8-XMX: +51% prefill, ~-32% TTFT).
+- **THE real headline (corrected + bigger):** *graph capture roughly DOUBLES int4 decode on the B70* -- w4a16
+  1.95x, w4a8 2.87x. Both int4 paths were heavily eager-dispatch-bound (w4a8 most, due to the unfused
+  act-quant); w8a8 was already lean (fused quant, +13%). **Capture is the dominant decode lever for int4, full
+  stop.** This was the doc-04 top prediction; now quantified on real hardware.
+- **Picks (single B70, captured):** decode-heavy/interactive -> **w4a16 (54.57 t/s, near-lossless, 9.3 GiB)**;
+  prefill-heavy/long-context/agentic -> **w4a8** (decode 48 + best prefill/TTFT, same 9.3 GiB); chat-quality at
+  larger VRAM -> fp8/w8a8-gptq. w4a8 is NOT dominated (it was, pre-capture) -- it is now co-leader with w4a16,
+  split by the decode-vs-prefill axis. Next: final synthesis -> update results/SUMMARY.md leaderboard.
+
