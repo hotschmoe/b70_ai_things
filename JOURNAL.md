@@ -1975,6 +1975,20 @@ achievable TODAY, no toolchain wait.**
   $ATTN` (CLI). FULL capture is thus testable on :int8g with NO rebuild: GRAPH=1 CGMODE=FULL ATTN=TRITON_ATTN
   TRITONSHIM=1, single-rank. Fires when GPTQ frees the GPU.
 
+### 2026-06-21 -- [RESULT] FULL capture WORKS on :int8g (TRITON_ATTN) -- mechanism validated on 14B-W4A8
+GPTQ deferred to dual-card (user). Killed it, tested FULL capture on 14B-W4A8-gptq (clean, no GDN). The
+`--attention-backend TRITON_ATTN` CLI fix WORKED: log shows **"Capturing CUDA graphs (mixed prefill-decode,
+FULL): 4/4"** (FULL, not PIECEWISE) -> the dead-env-var really was the only blocker. Loaded 9.3 GiB, captured,
+healthy, COHERENT. **TRITON_ATTN interops with our oneDNN int4_gemm_w4a8 -- no errors.** Numbers (3 runs, vs
+PIECEWISE/flash-attn baseline): decode **52.3 t/s (+8.5% vs 48.2)**, prefill **~2480 (-50% vs 4953)**, ttft 52ms.
+- VERDICT: FULL capture's PLAIN-decode gain is modest (+8.5%) -- PIECEWISE already captured the GEMM (the +187%
+  win); FULL only adds the attention dispatch, which is small. AND TRITON_ATTN halves prefill (its attention is
+  slower than flash-attn's sycl-tla FMHA). So for plain serving FULL/TRITON_ATTN is ~a wash-to-loss. **The real
+  value is the MTP unlock: FULL captures the spec-decode VERIFY, which was the eager cost that made MTP net-neg.**
+- NEXT (testable NOW, no dual-card needed): serve the LORBUS 27B (AutoRound int4, the model with the PROVEN 86.9%
+  MTP accept) on :int8g FULL+TRITON_ATTN+MTP -> does capturing the verify flip the PIECEWISE -19% to net-positive?
+  This is the definitive MTP-on-B70 test (our W4A8 RTN has 0% accept so it can't answer it; the Lorbus can).
+
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
