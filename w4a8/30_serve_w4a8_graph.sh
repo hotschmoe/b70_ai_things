@@ -17,6 +17,9 @@ DTYPE="${DTYPE:-float16}"; OMP="${OMP:-8}"
 # capture, since flash-attn FULL is blocked by SYCL-Graph work_group_scratch_memory). Default PIECEWISE.
 CGMODE="${CGMODE:-PIECEWISE}"; ATTN="${ATTN:-}"
 SPEC="${SPEC:-}"   # optional --speculative-config JSON (e.g. MTP: {"method":"qwen3_5_mtp","num_speculative_tokens":3})
+# CAPSIZES: explicit cudagraph_capture_sizes (comma list, e.g. "1,2,4,8,16,32"). Default capture tops out at
+# 8 -> batches >8 fall back to eager (the N=16 serving-throughput cliff). Capturing 16/32 is a FREE capacity bump.
+CAPSIZES="${CAPSIZES:-}"
 NAME="${NAME:-vllm_w4a8}"; PORT=18080
 mkdir -p "$ROOT"/{vllm_cache,tmp_ssd}
 docker rm -f vllm_qwen3 vllm_w4a8 vllm_w8a8 vllm_int8 "$NAME" 2>/dev/null || true
@@ -38,7 +41,8 @@ if [ "$GRAPH" = 1 ]; then
   # undefined class -> `NameError: MLARoPEKVCacheCatFusionPass is not defined` and the engine aborts.
   # These fusions can't run on XPU regardless; the graph CAPTURE (the decode lever) is independent of them.
   PASSCFG='"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}'
-  CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,\"compile_sizes\":[1],$PASSCFG}")
+  CAPCFG=""; [ -n "$CAPSIZES" ] && CAPCFG="\"cudagraph_capture_sizes\":[$CAPSIZES],"
+  CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,${CAPCFG}\"compile_sizes\":[1],$PASSCFG}")
 fi
 
 ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"

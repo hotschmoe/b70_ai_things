@@ -19,11 +19,15 @@ checkpoints). The next real gains need a toolchain bump (oneAPI 2026.0 -> FULL c
 
 ## The serving-capacity headline (don't judge the card by single-stream)
 Single-stream decode (48 t/s w4a8) BADLY understates the B70. At decode the GEMM reads the weights ONCE per
-step for ALL batched sequences, so AGGREGATE throughput scales near-linearly with concurrency until
-compute-bound. Measured (Qwen3-14B-W4A8, capture + fp8-KV, `evals/orchestrator/concurrent_probe.py`):
-**N=1: 48 t/s -> N=8: 412 t/s (8.5x, each stream still 52 t/s) -> N=16: 658 t/s.** Per-stream latency even
-IMPROVES to N=8 (fixed per-token overhead amortizes). **One B70 = ~412 t/s at 8 concurrent users at excellent
-per-user speed.** (To capture N>8 cleanly, raise `cudagraph_capture_sizes` past 8 -- a free capacity bump.)
+step for ALL batched sequences, so AGGREGATE throughput scales near-linearly with concurrency. Measured
+(Qwen3-14B-W4A8, capture + fp8-KV, `evals/orchestrator/concurrent_probe.py`):
+**N=1: 48 -> N=8: 412 (52/stream) -> N=16: 658 (42/stream) -> N=32: 1286 t/s (42/stream, 26.6x).** Per-stream
+IMPROVES to N=8 (fixed overhead amortizes), then steps to a ~42 t/s plateau past N=8 -- that step is the
+ATTENTION KV read, which (unlike the amortized weight read) scales with batch; aggregate still grows linearly.
+**One B70 = ~412 t/s @ 8 users (52/stream, best UX) up to ~1286 t/s @ 32 users (42/stream).** N=32 is ~the
+KV-bound max (32 x 0.5 GiB fp8-KV + 9.3 weights ~ 25 GiB) -- **fp8-KV is what enables the high batch.**
+> Tested + DISPROVED: capturing batch>8 (`cudagraph_capture_sizes`) does NOT lift the N>8 per-stream (it's
+> attention-KV-bound, not capture-bound) and costs ~1 GiB VRAM -> keep capture at the default [1,2,4,8].
 
 ## The five load-bearing learnings
 

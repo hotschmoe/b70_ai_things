@@ -1820,3 +1820,20 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   getting 52 t/s (excellent UX), scaling to 658 t/s at 16.** A strong serving card, not a single-stream toy.
   (w8a8 would scale the same way from its 26 t/s base -> ~200 t/s @ 8, still BW-amortized on 14 GiB.) Doc 14
   updated. NB to capture N>8 cleanly, raise cudagraph_capture_sizes past 8 (a free serving-capacity bump).
+
+### 2026-06-20 -- [REFINED + HYPOTHESIS DISPROVED] B70 serving ceiling = ~1286 t/s @ 32 users; the N>8 dip is attention-KV, not capture
+- Tested the "capture batch>8 is a free bump" hypothesis: added a `CAPSIZES` knob, served w4a8 capturing
+  [1,2,4,8,16,32] (6 graphs, +1.0 GiB -> 1.96 GiB), re-swept. **HYPOTHESIS DISPROVED:** N=16 per-stream stayed
+  42.2 t/s (NOT recovered to 52) -> the N>8 dip is NOT eager-fallback; capturing 16/32 changed nothing.
+  | N | aggregate t/s | per-stream | note |
+  |---|---------------|------------|------|
+  | 8  | 411.5  | 51.7 | |
+  | 16 | 658.3  | 42.2 | per-stream plateaus here (unchanged by capturing 16) |
+  | 32 | **1286.2** | 42.6 | **26.6x single-stream**; aggregate still linear |
+- **The real cause of the 52->42 per-stream step: the attention KV read SCALES with batch** (each seq reads its
+  own KV; unlike the weight read which is amortized once). Past N~8 the KV read becomes a fixed per-stream tax
+  -> per-stream plateaus ~42, but AGGREGATE keeps scaling linearly (42 x N). **=> serving ceiling ~1286 t/s at
+  N=32**, which is also ~the KV-bound capacity max (32 x 0.5 GiB fp8-KV + 9.3 weights ~ 25 GiB of 32).
+- **USEFUL NEGATIVE: capturing batch>8 costs ~1 GiB VRAM for ZERO throughput gain -> keep capture at default
+  [1,2,4,8].** Corrected the doc-14 "free bump" note. The genuine serving headline: **one B70 = ~412 t/s @ 8
+  users (52/stream, best UX) up to ~1286 t/s @ 32 users (42/stream) -- KV-bound, fp8-KV is what enables N=32.**
