@@ -1662,3 +1662,20 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
 - Principle banked (the *learning*): **hand the library `any`, not a fixed stride, so it picks the operand
   layout the systolic array wants; fuse the quant into the producing op to kill the f16 round-trip; and a
   single-pass drafter (MTP) is the only spec-decode that survives a partially-captured graph.** MTP now, PP-1 next.
+
+### 2026-06-20 -- [RESULT] MTP head WORKS (accept 2.86) but net-NEGATIVE at N=3 under PIECEWISE (-37%); testing N=1
+- First real MTP run on the B70. Served Lorbus-27B-int4 `:v0230` GRAPH=1 `--speculative-config
+  {method:qwen3_5_mtp,num_speculative_tokens:3}`. **MTP head ENGAGED:** log shows `SpeculativeConfig(method=
+  'mtp', num_spec_tokens=3)`, `Detected MTP model. Sharing target embedding + lm_head with the draft`,
+  PIECEWISE captured 7 graphs (sizes incl the verify batch 1-32). Healthy.
+- **[GOOD] the drafter is ACCURATE -- the "legs" exist:** `Mean acceptance length: 2.86`, per-position accept
+  `0.837, 0.569, 0.455`, avg draft acceptance 62.1%. The Qwen3.6 MTP head produces high-quality drafts.
+- **[BAD] net decode = 19.65 t/s vs 31.36 MTP-off = -37%.** Confirms agent C's blocker: under PIECEWISE the
+  spec step pays (a) eager-attention verify over N+1 tokens, (b) **3 SEQUENTIAL MTP draft forwards** for N=3,
+  (c) the Triton-disabled rejection sampler fallback -- together >> the 2.86-token accept saves. The
+  acceptance DECAYS fast (0.84 -> 0.57 -> 0.46), so the 3rd spec token barely pays its draft+verify cost.
+- **Hypothesis -> N=1:** 1 draft forward (vs 3) + 84% first-token accept + smaller verify (2 tokens) should
+  have a far better cost/benefit. Testing num_speculative_tokens=1 now. If N=1 is also negative, MTP-positive
+  needs the deeper fix: the Triton "0 active drivers" import-order fix (agent C doc 12) -> TRITON_ATTN (FULL
+  capture, no eager-attn verify tax) + a fast Triton rejection sampler. **Net: MTP legs PROVEN (good accept);
+  net-positive is gated on N-tuning and/or the Triton/FULL-capture fix -- a clean, diagnosed path for card #2.**
