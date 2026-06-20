@@ -2002,6 +2002,21 @@ breaks. => MTP-net-positive-via-FULL on Qwen3.6 needs a vLLM GDN-spec-capture fi
 FULL-capture MECHANISM itself is fine (14B proved it). PIVOT (per user "other single-card optims"): test FULL
 capture on 27B-W4A8 PLAIN decode (no MTP, no spec path -> avoids the bug) -> does it beat PIECEWISE's 21 t/s?
 
+### 2026-06-21 -- [VERDICT] FULL capture characterized + CLOSED: not worth it for plain serving; MTP value bug-gated
+27B-W4A8-q-prepacked FULL (CGMODE=FULL, TRITON_ATTN, no MTP). First OOM'd KV at UTIL=0.90 MAXLEN=4096 (FULL
+graphs + 24 GiB model left 0.25 GiB KV < 0.41 needed) -> memory-tight. Retried UTIL=0.93 MAXLEN=2048: HEALTHY.
+Capture log: "(mixed prefill-decode, PIECEWISE): 4/4" + **"(decode, FULL): 3/3"** -> on GDN, FULL is DECODE-ONLY
+(confirms the GDN cudagraph constraint; prefill stays PIECEWISE). Result: **decode 20.2 t/s (vs PIECEWISE 21 =
+NO gain), prefill 901 (vs flash-attn 2377 = -62%).** => FULL is a CLEAR LOSS on the 27B.
+- **FULL-capture FINAL VERDICT (across 14B + 27B):** the mechanism works (TRITON_ATTN + cudagraph_mode=FULL,
+  the dead-env-var fix), but it is NOT worth it for plain serving: 14B standard-attn = +8.5% decode / -50%
+  prefill (wash); 27B GDN = ~0% decode (decode-only FULL doesn't help the recurrent GDN decode) / -62% prefill
+  / memory-tight. The killer is TRITON_ATTN's attention being much slower at PREFILL than flash-attn's sycl-tla
+  FMHA. **=> KEEP PIECEWISE + flash-attn + fp8-KV as the best single-card serving stack** (unchanged from doc 14).
+  FULL's only real prize was the MTP/spec verify-capture, and that is blocked by the GDN spec_query_start_loc
+  bug. Net remaining spec-decode upside is UPSTREAM-gated (vLLM GDN-spec-capture fix) or watch-list (DFlash
+  block-drafter). Corrects docs 04(A2)/14 "FULL blocked" -> "FULL reachable but not worth it for plain serving".
+
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
