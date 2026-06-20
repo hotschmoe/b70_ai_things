@@ -1936,6 +1936,15 @@ interactive decode now. Will still enable+measure per model (ready to flip when 
   likely the int8 act-quant + GDN decode overhead and/or the 2s capture being cache-reused; perf-tune later.)
   Full serve recipe: prepack (offline) -> graft -> regex-ignore -> processor -> 30_serve GRAPH=1 PIECEWISE
   KVDTYPE=fp8 PREPACK=1 NOMM=1 KERNEL_SO=<gdn .so>. NEXT: MTP test on this serve; GPTQ-W4A8 for best text.
+- **[MTP on 27B-W4A8] doubly-blocked.** Served +MTP (qwen3_5_mtp N=1; needed UTIL=0.95 MAXLEN=2048 -- at 0.90
+  it OOM'd: base 24.35 GiB + MTP head left no KV). Result: decode 17.99 t/s (-14% vs the 21 baseline),
+  **Mean acceptance 1.00 / per-position accept 0.0% (177 drafted, 0 accepted).** vs the earlier Lorbus 27B
+  (86.9% accept): the Lorbus uses an AutoRound CO-PACKAGED MTP head matched to its quant; OURS pairs the BASE
+  bf16 MTP head with an aggressively RTN-W4A8 main model -> the main model's hidden states diverged enough that
+  the head's drafts NEVER match the verify -> 0% accept. **=> two independent blocks: (1) 0% accept (head/quant
+  mismatch -- needs GPTQ-W4A8 (less lossy, preserves hidden states) OR a co-calibrated MTP head); (2) even with
+  high accept, net-negative on PIECEWISE (verify eager -- needs FULL capture, toolchain-gated).** So MTP value
+  on the B70 needs BOTH GPTQ-quant AND FULL capture. The 1-card W4A8 SERVE itself stands (21 t/s, coherent).
 
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
