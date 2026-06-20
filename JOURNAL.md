@@ -1851,3 +1851,18 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
 - **=> serving characterization COMPLETE for both headline models.** Best w8a8 serve = ~208 t/s @ 8 users
   (26/stream), 364 @ 16; best w4a8 serve = ~412 @ 8 (52/stream), 1286 @ 32. Pick w4a8 for throughput+decode,
   w8a8 for prefill+accuracy. Doc 14 updated with the dual-model table.
+
+### 2026-06-20 -- [LONG-CTX] w4a8 decode degrades GRACEFULLY: 46 t/s @ 200 ctx -> 41 @ 15K (-12%); fp8-KV holds it
+- Charted long-context decode (`evals/orchestrator/longctx_probe.py`, w4a8 GRAPH=1 PIECEWISE + fp8-KV,
+  maxlen=16384). Decode reads the weights (fixed) + the WHOLE KV each step, so it degrades with context:
+  | ctx | decode t/s | TTFT |
+  |-----|-----------|------|
+  | ~200   | 46.3 | 0.8s |
+  | ~4000  | 44.1 | 1.1s |
+  | ~8000  | 42.7 | 2.2s |
+  | ~15000 | 40.6 | 4.7s |
+- **Only -12% decode from 200 -> 15K tokens.** Why so graceful: the 9.3 GiB weight read dominates the
+  per-step BW (fixed), and fp8-KV keeps the growing KV small (~1 GiB even at 15K single-seq, ~10% of budget).
+  **=> B70 holds 40+ t/s decode at 15K context (w4a8)** -- strong long-context serving; fp8-KV is what keeps it
+  graceful. TTFT scales with prefill (0.8 -> 4.7s; ~3180 t/s prefill at 15K, down from 4953 @ 1800 = attention
+  O(n^2)). **Serving characterization now COMPLETE across all dimensions: latency, batch (both models), context.**

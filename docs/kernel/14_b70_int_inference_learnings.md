@@ -29,6 +29,8 @@ KV-bound max (32 x 0.5 GiB fp8-KV + 9.3 weights ~ 25 GiB) -- **fp8-KV is what en
 W8A8 (headline model) scales the same way from its 26 t/s base, even more linearly (per-stream flat at 26
 through N=8 -- already BW-bound at N=1): **N=8: 208 t/s (26/stream), N=16: 364 (23/stream)** (~N=22 KV-max on
 14 GiB weights). So w4a8 carries ~2x the aggregate at every batch -> for throughput use W4A8, for prefill W8A8.
+Long-context (single-stream, w4a8 fp8-KV): decode degrades only -12% over 200->15K ctx (46 -> 41 t/s) -- the
+weight read dominates and fp8-KV keeps the KV read small -> **40+ t/s at 15K context.** TTFT scales w/ prefill.
 > Tested + DISPROVED: capturing batch>8 (`cudagraph_capture_sizes`) does NOT lift the N>8 per-stream (it's
 > attention-KV-bound, not capture-bound) and costs ~1 GiB VRAM -> keep capture at the default [1,2,4,8].
 
