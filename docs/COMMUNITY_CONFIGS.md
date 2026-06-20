@@ -3,7 +3,8 @@
 External configs other people have reported for Intel Arc Pro B70 (Battlemage) LLM
 inference, collected in one place so we can chase, reproduce, and beat them. **These are
 OTHER people's numbers, not ours.** Our own measured results live in
-[RESULTS.md](../RESULTS.md); the blow-by-blow is in [JOURNAL.md](../JOURNAL.md); the
+[FINDINGS.md](../FINDINGS.md) (older raw tables in [archive/RESULTS.md](../archive/RESULTS.md)); the
+blow-by-blow is in [JOURNAL.md](../JOURNAL.md); the
 version/quant background is in [docs/literature/](literature/).
 
 Legend: [TARGET] chasing this | [OK] credible/detailed | [WARN] caveat — verify before trusting | [NEG] negative result (a dead end someone already found)
@@ -183,7 +184,7 @@ CORRECTS our row #2 above.
 
 1. Before starting a new experiment, check whether someone already has a number here to beat (or a
    dead end to skip — see the [NEG] rows).
-2. When we beat or match one of these on our hardware, record OUR number in RESULTS.md and link back
+2. When we beat or match one of these on our hardware, record OUR number in FINDINGS.md and link back
    to the row here we were chasing.
 3. Add new community data points as rows in the scoreboard; promote anything we decide to actively
    chase into its own [TARGET] section like the 27B run above.

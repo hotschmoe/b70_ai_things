@@ -2,8 +2,8 @@
 
 What we've actually measured running LLMs on a single **Intel Arc Pro B70** (32 GB GDDR6,
 Battlemage/Xe2, ~$949), in Docker on an Unraid host. Goal: help fellow Team Blue tinkerers
-skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw number tables and
-[JOURNAL.md](JOURNAL.md) for the blow-by-blow.
+skip the dead-ends. Living doc — see [archive/RESULTS.md](archive/RESULTS.md) for older raw number
+tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow.
 
 ## TL;DR
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**

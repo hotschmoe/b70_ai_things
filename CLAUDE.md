@@ -31,8 +31,15 @@ bench, perf_probe, on-GPU quant) behind the shared flock lease:
 - A long-lived serve holds the lease for its lifetime (correct -- only one model fits the card anyway);
   stop the server (`docker stop vllm_*`) to release. Don't bypass with a bare `docker run --device /dev/dri`.
 
+## [!] Serving a model? Use `docs/SERVING.md` -- the canonical recipe doc
+It has copy-paste, verified serve commands (27B / 35B-A3B MoE / 14B), the `30_serve_w4a8_graph.sh` env
+knobs, image picks, and the concurrency-sweep recipe. **Read it FIRST** -- do not reconstruct a serve
+command from JOURNAL/scripts. When you find a working or changed recipe (new model, image, flag, gotcha),
+**update `docs/SERVING.md`** (date it); don't leave the next agent to re-derive it.
+
 ## Where things live
 - Models + quants: GPU host **Unraid @ 192.168.10.5**, under `/mnt/vm_8tb/b70/models/`
-  (reachable via `ssh root@192.168.10.5`; NOT mounted on this dev box).
+  (reachable via `ssh root@192.168.10.5`; NOT mounted on this dev box). Repo is synced to the host at
+  `/mnt/vm_8tb/b70/` with a FLAT layout (serve/bench/gpu-run scripts at that root, not under `scripts/`).
 - Serving fast path: our custom **INT8 W8A8 oneDNN kernel** (`contrib/vllm_int8_xpu`) in image
   `vllm-xpu-env:int8`. INT8 W8A8 is the real low-precision compute path on the B70 (Xe2 has no native FP8).

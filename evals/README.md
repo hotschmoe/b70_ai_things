@@ -176,7 +176,7 @@ evals/results/<UTC-stamp>__<model>__<quant>/
 ```
 
 `orchestrator/report.py` rolls all summaries into a single **"% retention vs reference"** markdown table
-(the deliverable that slots into the repo's top-level `RESULTS.md`).
+(the deliverable that feeds the repo's `FINDINGS.md` scoreboard).
 
 ---
 

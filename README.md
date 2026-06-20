@@ -8,7 +8,7 @@ Optimizing LLM inference on an **Intel Arc Pro B70** GPU (32 GB Battlemage) host
 an Unraid server (Threadripper). A public research log for fellow Team Blue tinkerers.
 
 > **Start here:** [FINDINGS.md](FINDINGS.md) — what actually works on the B70 (and what doesn't).
-> [RESULTS.md](RESULTS.md) — raw benchmark tables. [JOURNAL.md](JOURNAL.md) — full experiment log.
+> [JOURNAL.md](JOURNAL.md) — full experiment log. [archive/RESULTS.md](archive/RESULTS.md) — older raw tables (Qwen3-14B), superseded by FINDINGS.
 > [docs/COMMUNITY_CONFIGS.md](docs/COMMUNITY_CONFIGS.md) — other people's B70 configs we're chasing.
 >
 > **Headline contribution:** [docs/kernel/02_int8_w8a8_status.md](docs/kernel/02_int8_w8a8_status.md) — we
