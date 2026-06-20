@@ -1580,3 +1580,24 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - Lesson banked: the speed hypothesis (W4A8 int8-XMX prefill) is testable with a CRUDE RTN checkpoint; only the
   ACCURACY question needs the good quantizer. Decouple them -> answer speed tonight regardless of quant method.
 
+### 2026-06-20 -- [DEFER] 27B-W4A8 serve blocked by VLM odd-dims (4304); the speed hypothesis is already proven on 14B
+- Got a CORRECT W4A8 27B checkpoint built (scripts/49 RTN, 42s; ignore linear_attn/visual/mtp/lm_head) +
+  solved the repo's standing "27B compressed-tensors won't serve" config issue: the 27B is a Qwen3_5 **VLM**
+  (vision + DeltaNet + MTP), and llmcompressor saves the collapsed text config (`qwen3_5_text`) that vLLM
+  rejects. Fix (`w4a8/fix_27b_vlm_config.py`): graft the original VLM wrapper config + copy the processor
+  files (preprocessor_config/video_preprocessor/merges/vocab/chat_template). That got past config + processor.
+- **But the serve then hit the REAL wall:** `compressed_tensors_w4a8_int.py: AssertionError: input_size_per_
+  partition 4304 not divisible by group_size 128` -- the **vision MLP** (Qwen3_VisionMLP.linear_fc2, dim 4304)
+  and the DeltaNet projections have dims not divisible by 128, so the W4A8 group-128 kernel cannot take them.
+  This is exactly the repo's known "27B /32-dim" blocker, now pinned: the 27B's VLM/DeltaNet odd dims are
+  fundamentally incompatible with our group-128 W4A8/W4A16 kernel. Serving needs those layers kept BF16 AND a
+  loader that builds them BF16 -- a non-trivial VLM-quant exercise (also: AutoModelForCausalLM vs the VLM
+  loader changes weight-name prefixes/ignore-matching). Multiple interacting issues = a real rabbit hole.
+- **DECISION: defer the 27B-W4A8** (the user redirected to deep w8a8 work). The W4A8 SPEED hypothesis (int8-XMX
+  prefill) is ALREADY proven on the dense 14B (w4a8 prefill +51% / TTFT -32% vs w4a16) -- the 27B was only a
+  confirmation. **Learning banked:** (1) Qwen3.6-27B is a VLM, not a plain text model -> quant needs the
+  27B-aware path + BF16 vision/DeltaNet/MTP + the wrapper-config graft; (2) group-128 int4 kernels reject the
+  27B's 4304-dim layers -> a per-channel (group=-1) or padded-group W4A8 kernel would be needed to serve them,
+  OR keep them BF16 via a correct VLM-aware quant+load. Filed for the dual-card phase. Pivoting FULLY to the
+  deep w8a8-14B GEMM + fused-quant + MTP hand-tuning (3 codex agents mapping the space; GPU now free).
+
