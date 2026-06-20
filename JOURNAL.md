@@ -1317,3 +1317,40 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   (full-model w4a8 = 16.5 t/s ~= 25% effective while the GEMM alone is 50-86% of peak) -> **next = A1 graph
   capture for w4a8** (attacks dispatch; measured at decode-t/s, the stable metric; w8a8 already banked +16.7%).
 
+### 2026-06-20 -- [BREAKTHROUGH] A1: PIECEWISE graph capture lifts w4a8 decode 16.79 -> 48.18 t/s (+187%, 2.87x)
+- **THE headline result of the kernel campaign.** Served Qwen3-14B-W4A8-gptq on `:int8g` via
+  `w4a8/30_serve_w4a8_graph.sh`, EAGER (GRAPH=0) vs PIECEWISE XPU graph capture (GRAPH=1), same decode-t/s
+  probe (`w4a8/31_decode_probe.sh`, 256 tok ignore_eos, temp 0, single-stream):
+  | mode | decode t/s | spread | % of ~65 t/s BW ceiling |
+  |---|---|---|---|
+  | eager     | 16.79 | 16.72-16.93 | ~26% |
+  | PIECEWISE | **48.18** | 48.16-48.19 | ~74% |
+  => **+187% (2.87x)**, and the PIECEWISE timing is dead-flat (5.312 s +/- 0.001 over 5 trials -- the
+  determinism signature of a captured graph). Output verified COHERENT (correct Rayleigh-scattering answer),
+  so the captured graph is fast AND correct.
+- **Why so much bigger than w8a8's +16.7%?** w4a8's activation quant is the UNFUSED pure-PyTorch
+  `dynamic_per_token_int8_quant_ref` (min/max/round/clamp = hundreds of tiny ops/token in eager), so eager
+  w4a8 is severely dispatch-bound. Graph capture fuses the whole decode step -> jumps from ~26% to ~74% of the
+  BW ceiling (9.3 GiB @ 608 GB/s ~= 65 t/s). w8a8 uses a FUSED custom quant op, so its eager was already lean
+  -> far less capture headroom. The int4 unpack adds even more eager ops. So **w4a8 benefits
+  disproportionately from capture** -- it was the most dispatch-bound config, now near BW-bound.
+- **Leaderboard upheaval:** old story was "w4a8 decode 16.5 t/s, DOMINATED by w4a16 @ 29." NEW: **w4a8
+  PIECEWISE = 48 t/s beats EVERYTHING measured eager** (fp8 ~32, w4a16 29, w8a8-piecewise 27, w8a8 23.5). w4a8
+  already won prefill/TTFT (int8-XMX, ~-32%) + smallest VRAM (9.3 GiB); now it leads decode too (pending the
+  apples-to-apples step: capture the OTHER configs too). w4a8 is no longer "dominated" -- it may be the pick.
+- **Two bugs found + fixed en route (both reusable):**
+  1. vLLM XPU+compile crash `NameError: MLARoPEKVCacheCatFusionPass` -- vLLM auto-enables CUDA-only inductor
+     fusion passes under torch.compile, but XPU never imports those classes (pass_manager gates on
+     is_cuda_alike()); the flags default None then resolve True unguarded. FIX: disable the CUDA/ROCm-only
+     fusion flags in the serve `pass_config` (committed in 30_serve_w4a8_graph.sh). These fusions can't run on
+     XPU anyway; capture is independent of them. **This likely means the banked w8a8 +16.7% needs re-confirming
+     on the current image -- next.**
+  2. The int4 register_fake (A1's original premise) was REDUNDANT: vLLM already ships a native fake at
+     `vllm/_xpu_ops.py:60` for int4_gemm_w4a8, so our fake is skipped (harmless). Capture engaged regardless.
+     -> the A1 "register_fake" work was belt-and-suspenders; the real blockers were the compile-pass bug + env.
+- **Capture confirmed engaged:** log shows `mode: VLLM_COMPILE`, `enforce_eager=False`, `saved AOT compiled
+  function`, `Capturing CUDA graphs (PIECEWISE): 4/4 ... Graph capturing finished in 40 secs, took 0.93 GiB`
+  (sizes [1,2,4,8]). First AOT compile ~7.5 min (cached to /vllm_cache for next serve). Served-id verified
+  `qwen3-14b-w4a8-gptq` (CLAUDE.md model-check). Next: (a) re-confirm w8a8 PIECEWISE on the current image,
+  (b) capture fp8/w4a16 for the apples-to-apples decode leaderboard, (c) try FULL capture (TRITON_ATTN).
+
