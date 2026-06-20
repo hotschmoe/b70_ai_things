@@ -2036,7 +2036,25 @@ vllm_xpu_kernels v0.1.9 + qwen3_5.py spec-wiring (vLLM #43565) + Half-KV." Agent
   30.8, W4A8 21). And spec-decode is a single-user-latency feature (doc 17), not throughput. => single-card MTP
   is real integration eng for an uncertain/likely-net-negative-vs-PIECEWISE result. DECISION PENDING (user):
   attempt the MTP derived-image engineering, OR pivot to deeply focus on 35B-MoE W4A16 (user's stated fallback).
-### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
+
+### 2026-06-21 -- [BAILED, precise blocker] single-card MTP on b8.3.1 = torch 2.10-vs-2.11 ABI split
+User chose the time-boxed MTP attempt. Built artifacts (agent): /mnt/vm_8tb/b70/mtp_patch/ (v0.1.10 wheel,
+patched qwen3_5.py forwarding #43565 spec args, Dockerfile). Build + empirical probes revealed a hard split
+(b8.3.1 runtime torch = **2.10.0+xpu**):
+- **vllm_xpu_kernels v0.1.10** HAS the gdn_attention spec args (num_spec_decodes, spec_query_start_loc,
+  spec_token_indx, spec_state_indices_tensor, num_accepted_tokens) BUT is built against torch 2.11 ->
+  `ImportError: _xpu_C.abi3.so undefined symbol _ZNR5torch7Library4_def...RegisterOrVerify` on torch 2.10.
+- **vllm_xpu_kernels v0.1.9** LOADS on torch 2.10 BUT its gdn_attention schema has **NO spec args** (HAS_SPEC
+  False, identical to the baked 0.1.8) -> the #43565 patch has nothing to forward into.
+- => NO wheel is both torch-2.10-compatible AND spec-capable. The community b8.3 + v0.1.9 run must have used a
+  torch-2.11 base (or a custom-built wheel). Intel's ESIMD/int4 ops are a separate package (NOT the blocker --
+  the agent's ABI-coexistence call was right; the blocker is torch core ABI, not Intel ops).
+- **CLEAN PATHS (future, not time-boxed):** (a) a torch-2.11 llm-scaler image (b8.4+/newer) + v0.1.10 baked
+  -- watch Intel releases; (b) build v0.1.10's spec gdn_attention from source against torch 2.10 (~1-2h, like
+  our earlier GDN rebuild; uncertain the spec code compiles on 2.10). Payoff still uncertain (single-card
+  eager+MTP likely < PIECEWISE 30.8; the community 54.2 was a 4-card aggregate; spec is a latency niche).
+- **DECISION: bail per user's condition -> pivot to deeply focus on 35B-MoE W4A16.** Artifacts kept in
+  mtp_patch/ for the future torch-2.11 path.
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
   assertion `bits==8 and group_size==-1 and sym and act_bits==8` for any int8-dynamic-act scheme; W4 (bits=4)
