@@ -408,3 +408,142 @@ being unwired on XPU -- exactly doc 13's blockers. So MTP-positive is a TOOLCHAI
 Upstream corroboration: vLLM issue #33341 ("Support Full CUDA Graph for the drafter") -- the drafter
 being PIECEWISE-only is a known, tracked limitation, not a B70 misconfig. Keep N=1 MTP filed for the
 oneAPI-2026.0 / FULL-capture phase; do NOT ship MTP-on for interactive decode on the current stack.
+
+================================================================================
+## Community Qwen3.6 MTP recipes + B70 applicability
+================================================================================
+Written AFTER a web survey of how the community actually gets NET-POSITIVE Qwen3.6 /
+Qwen3-Next MTP decode (sources cited inline). The short answer CONFIRMS our section-G FULL-capture
+conclusion: every community single-stream MTP win runs on CUDA with the DEFAULT cudagraph_mode
+FULL_AND_PIECEWISE, where the spec-decode VERIFY batch (a uniform-decode batch, query_len = 1+N)
+is captured into a FULL cuda graph -- the exact capture the B70 cannot do today. No community
+recipe nets positive WITHOUT that full verify capture; the published negative single-stream results
+fail for the SAME structural reasons we measured.
+
+--------------------------------------------------------------------------------
+H.1  THE COMMUNITY'S PROVEN CONFIGS + HARDWARE + NUMBERS (all CUDA / NVIDIA)
+--------------------------------------------------------------------------------
+  [POS] vLLM canonical recipe -- the ONE that nets positive, single GPU:
+        `--speculative-config '{"method":"mtp","num_speculative_tokens":1}'` (sweep up to 5),
+        cudagraph_mode = DEFAULT (FULL_AND_PIECEWISE), attention backend flashinfer / FA3.
+        HW: single H100/H200/L40S (40 GB), Qwen3.6-27B-FP8. "MTP supported out of the box for
+        low-latency decoding"; num_speculative_tokens=1 is the recommended latency default; disable
+        prefix caching for the latency path.
+        [recipes.vllm.ai/Qwen/Qwen3.6-27B ; docs.vllm.ai/.../recipes/.../Qwen/Qwen3.5.html ;
+         docs.vllm.ai/en/latest/features/speculative_decoding/mtp/]
+  [POS] zolotukhin.ai (2026-05-08), Qwen3.6-27B dense Q8, SINGLE device (DGX Spark / GB10):
+        method=qwen3_next_mtp gamma=3 -> 7.0 -> 16.8 t/s = 2.40x decode, accept 0.72; gamma=2 = 2.4x
+        @ 0.83 accept. A single-device CUDA win (default full capture available).
+        [zolotukhin.ai/blog/2026-05-08-why-mtp-heads-are-the-speculative-decode-draft-qwen3-a3b-deserves/]
+  [POS] dasroot.net (2026-05), Qwen3.6-35B-A3B (MoE), single 12 GB consumer GPU: MTP ~80 t/s vs
+        ~30-35 standard spec-decode (~2.3-2.6x), single-stream. [dasroot.net/posts/2026/05/...]
+  [POS] DFlash (LMSYS 2026-06-15), Qwen3.5-397B-A17B BF16, 8x B200 (Modal), SGLang, HumanEval c1:
+        DFlash >4.3x baseline and 1.5x NATIVE MTP. So even on the fastest HW, native MTP is the
+        BASELINE that DFlash beats -- MTP itself is solidly net-positive there.
+        [lmsys.org/blog/2026-06-15-next-generation-speculative-decoding-dflash-v2/]
+  [NEG] dredyson.com "I tested every solution", Qwen3.6-27B-FP8, 2x GPU TP2 + Ray, MULTI-NODE:
+        method=mtp N=2 -> decode 14.4 -> 7.2 t/s (-50%), accept 88-94%, mean-accept 1.7-1.9. Root
+        cause: each spec token = an extra cross-node allgather; "enable MTP only on single-node
+        NVLink GPUs." == our section-C TP2 verdict (#34482). [dredyson.com/i-tested-every-solution-...]
+  [NEG] vLLM #35387, Qwen3-Next-80B-A3B-FP8, 4x H100 TP4 single-node, N=2: 0.894 -> 1.578 s
+        (+76.5% latency). Reporter root-cause: a per-step CPU sync ("copying num_accepted_tokens back
+        to CPU before mamba_postprocess"). This is a HYBRID-MAMBA/GDN-specific fixed per-spec-step
+        overhead == our section-G.1 "heavy FIXED per-spec-step overhead" thesis, upstream-confirmed on
+        the SAME GDN-class arch. [github.com/vllm-project/vllm/issues/35387]
+  [NEG] thc1006 RTX 3090, Qwen3.6-35B-A3B, draft/ngram (NOT MTP): 135.7 -> 121.1 t/s best (-11%)
+        even at 100% accept; root cause = MoE expert-load union on verify. Single-GPU spec-decode
+        CAN go negative even on CUDA with a bad drafter/model -- but this is ngram/draft, not MTP.
+        [github.com/thc1006/qwen3.6-speculative-decoding-rtx3090]
+
+--------------------------------------------------------------------------------
+H.2  THE DECISIVE QUESTION: does net-positive need FULL capture? -- YES (confirmed)
+--------------------------------------------------------------------------------
+Mechanism, from the vLLM CUDA-graphs design doc (verbatim): the default cudagraph_mode is
+FULL_AND_PIECEWISE on CUDA; it "uses full CUDA Graph for uniform decode and piecewise CUDA Graphs for
+others." A spec-decode VERIFY batch IS a uniform-decode batch with "query length 1+num_spec_tokens"
+(max_query_len = 1+N), so on CUDA the verify's ATTENTION is captured into a FULL graph by default.
+Under PIECEWISE-only "attention or other CUDA-Graphs-incompatible operations stay eager" -- exactly
+the B70 state. So the community wins ride on the DEFAULT full verify capture; the B70 negative is the
+PIECEWISE case the community never ships into. [docs.vllm.ai/en/stable/design/cuda_graphs/]
+
+Backend support for the verify capture (why XPU is stuck): the FULL/uniform-decode verify needs an
+attention backend that supports full cuda graph for the 1+N batch -- per the design doc's table that
+is Triton Attention (ALWAYS) and FlashAttention v3 (ALWAYS); FlashInfer/FlashMLA only do narrower
+uniform-decode. On XPU our two FULL-capable options are both unavailable: flash-attn FULL dies on the
+work_group_scratch SYCL-Graph limit, and TRITON_ATTN is unwired (doc 13). [same doc + our JOURNAL]
+
+Decomposing the B70 -19% against the four candidate causes the task posed:
+  (a) MISSING FULL CAPTURE of the VERIFY -- THE dominant cause. Confirmed primary: the community's
+      net-positive recipes all have it by default; we don't. This is the single biggest delta.
+  (b) Missing fast (Triton) sampler -- RULED OUT as material (our JOURNAL: enabling it moved decode
+      ~0). Not the cause.
+  (c) Eager GDN/attention in the DRAFTER -- SECOND-ORDER, quantified by upstream. vLLM #33341
+      measured FULL cuda graph for the DRAFTER at only ~5% TPOT, and the drafter is PIECEWISE-only
+      even on CUDA (eagle.py). And PR #25847 (merged 2025-09-29) makes the EagleProposer EXPLICITLY
+      "avoid using cuda graph for xpu platform" -> on XPU the drafter is hard-eager by design. So the
+      drafter being eager hurts but is NOT the ~19%; the VERIFY capture is.
+  (d) A recipe we haven't tried -- NO net-positive PIECEWISE recipe exists in the community corpus.
+      Plus a GDN/Mamba-specific FIXED per-step CPU-sync overhead (#35387) that hits this exact arch
+      regardless of capture -- so even WITH full capture, Qwen3.6's hybrid-GDN MTP may net less than a
+      pure-attention model would. [#33341, #25847, #35387]
+
+External confirmation of the platform gap: the Intel Arc Pro B-series vLLM launch blog lists
+spec-decode methods "n-gram, EAGLE and EAGLE3" as supported on Arc but its own serve example runs
+`--enforce-eager`; and the Intel-GPU vLLM guidance states cuda graph "is not supported on XPU, with a
+fallback to eager mode." [vllm.ai/blog/2025-11-11-intel-arc-pro-b ; community.intel.com vLLM-on-Intel-GPUs]
+
+--------------------------------------------------------------------------------
+H.3  RANKED NEW serve configs worth testing on the B70 (NOT already tried)
+--------------------------------------------------------------------------------
+Filtered against section-G (already-tried: N=1/2/3 PIECEWISE, disable_padded_drafter_batch, Triton
+sampler, capture-size raises). These are genuinely NEW from the community survey. Honest prior: none
+flips PIECEWISE net-positive (H.2), but two are cheap and one is the real unlock.
+
+  RANK 1 (the only real unlock, but it is the TOOLCHAIN/Triton item, not a "new flag"):
+     Get the VERIFY into a FULL graph via cudagraph_mode=FULL_DECODE_ONLY -- the community default in
+     all but name. The community confirms this captures uniform_decode_query_len=1+N. On the B70 this
+     needs EITHER doc-13 RANK-4 (TRITON_ATTN engaged: it is the "ALWAYS" full-cudagraph verify backend
+     in the design-doc table -> the highest-value reason to finish the doc-13 Triton-enable) OR oneAPI
+     2026.0 (flash-attn FULL). Exact, once one is unblocked:
+       --speculative-config '{"method":"qwen3_5_mtp","num_speculative_tokens":1}'
+       -O '{"cudagraph_mode":"FULL_DECODE_ONLY"}'  + VLLM_ATTENTION_BACKEND=TRITON_ATTN  GRAPH=1
+     This is the community recipe transplanted; it is the config that, IF capture engages, should flip
+     the sign. (Still subject to the #35387 GDN CPU-sync tax -- see RANK 3.)
+
+  RANK 2 (NEW, cheap, single card): try standard EAGLE/EAGLE3 spec-decode, which the Intel blog
+     lists as SUPPORTED on Arc (unlike a fresh claim about MTP). A community Qwen3.6-27B EAGLE3 head
+     exists (Ex0bit/Qwen3.6-27B-PRISM-EAGLE3 on HF). EAGLE3 is the method Intel themselves validated
+     on B-series, so it is the most likely-to-be-wired spec path on our stack:
+       --speculative-config '{"method":"eagle3","model":"<EAGLE3-head>","num_speculative_tokens":2}'
+     Expected: still PIECEWISE-eager-attention-limited (same wall), but it EXERCISES the path Intel
+     claims works and may have less GDN-specific overhead than the qwen3_5_mtp head. Low EV on net
+     speedup, but it is the one spec method with a vendor "supported" claim we have not tried.
+
+  RANK 3 (NEW diagnostic, highest information value short of FULL capture): confirm the #35387
+     GDN/Mamba CPU-sync tax is present in OUR run. Profile one N=1 spec step (section-G.3 RANK-3
+     profiler) and look specifically for a device->host copy of num_accepted_tokens before the GDN/
+     mamba postprocess. If present, it is a per-step fixed cost that FULL capture alone will NOT
+     remove (it is a host sync, not an attention launch) -> tells us Qwen3.6-GDN MTP may stay short of
+     the pure-attention community 2.4x even after FULL, and that the real fix is an upstream spec-path
+     patch (track #35387), not just our toolchain. Decides whether to keep betting on MTP for THIS
+     model vs pivoting to EAGLE3 / a non-GDN target.
+
+  NOT WORTH IT (community corpus adds no new lever here): any PIECEWISE-only MTP flag (corpus has
+     zero PIECEWISE net-positive); qwen3_next_mtp method string variants (same EagleProposer path,
+     same XPU no-graph PR #25847); raising num_speculative_tokens (community latency default is N=1,
+     and our accept-decay already says N>1 loses) -- all already covered by section G.
+
+--------------------------------------------------------------------------------
+H.4  RECONCILE: can the B70 get Qwen3.6 MTP net-positive NOW? -- NO (toolchain-gated)
+--------------------------------------------------------------------------------
+On the CURRENT oneAPI/vLLM-XPU stack: NO net-positive serve config exists. It is genuinely
+CUDA-FULL-capture-only until we either (1) finish doc-13's Triton-enable so VLLM_ATTENTION_BACKEND=
+TRITON_ATTN engages and cudagraph_mode=FULL_DECODE_ONLY can capture the 1+N verify (TRITON_ATTN is the
+"ALWAYS" full-cudagraph verify backend), or (2) move to oneAPI DPC++ 2026.0 so flash-attn FULL works.
+Either unblocks the community's exact recipe. The community corpus CONFIRMS our section-G verdict and
+adds one caveat: even after FULL capture, Qwen3.6's hybrid-GDN arch carries a per-step CPU-sync tax
+(#35387) that a pure-attention model would not -- so the realistic post-FULL B70 number may land below
+the cross-arch 2.4x. THE single most promising untried serve config is RANK-1 above
+(TRITON_ATTN + FULL_DECODE_ONLY + qwen3_5_mtp N=1), but it is GATED on the doc-13 Triton-enable
+landing first -- it is not settable on today's stack. If a sign-flip is wanted with the LEAST new
+work, RANK-2 (EAGLE3, the one method Intel claims is supported on Arc) is the cheapest NEW thing to A/B.
