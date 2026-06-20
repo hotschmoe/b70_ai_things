@@ -1543,3 +1543,20 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   "~6 t/s load proof" to the **fastest single-card decode, period**, on a 35B-class model. Both flagships
   (27B 30.8, 35B-A3B 56.8) are transformed by capture. GPU freed for the other agent. Banked to FINDINGS/SUMMARY.
 
+### 2026-06-20 -- [BASELINE] pp/TTFT/decode of the captured W4A16 flagships at medium ctx (the W4A8 target to beat)
+- User plan: convert the 27B + 35B from W4A16 (int4 w, fp16 act) to W4A8 (int4 w + int8 act) via AutoRound, to
+  KEEP int4 decode + GAIN prefill via the int8-XMX systolic fastpath (the 14B w4a8 had +51% prefill / -32%
+  TTFT vs w4a16). First, the baseline -- `perf_probe.py` (streaming, single-stream, ~1800-tok medium prompt)
+  on the CAPTURED (GRAPH=1) servers:
+  | model (W4A16, captured) | pp (prefill t/s) | TTFT ms (short) | prefill-TTFT ms (1800 tok) | decode t/s |
+  |---|---|---|---|---|
+  | 27B dense GDN | **1521.7** | 92.3 | 1183.6 | 31.36 |
+  | 35B-A3B MoE   | **2142.5** | 108.6 | 840.6 | 73.43 |
+  (perf_probe decode excludes TTFT -> 31.36/73.43 are pure inter-token rates; my earlier round-trip probe gave
+  30.84/56.84 incl TTFT. The MoE prefill 2142 > dense 27B 1521 because A3B activates only ~3B for prefill too.)
+- Capture also nudged PREFILL up vs the eager leaderboard (27B 1376 -> 1521 captured, +10%) -- prefill is mostly
+  compute-bound so the gain is small, but the prefill graph does capture. **This pp is the W4A8 target:** if
+  W4A8 lights int8-XMX like the 14B (+51%), expect 27B prefill ~2300 t/s. Gating the quant on the feasibility
+  agent (AutoRound-W4A8 recipe + does an int8-ACT MoE path even exist on XPU + which image has W4A8-kernel AND
+  GDN). User pref: target Intel AutoRound W4A8-int8; SmoothQuant+GPTQ (scripts/54) is the proven fallback.
+
