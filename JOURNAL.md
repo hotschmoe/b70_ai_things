@@ -1916,6 +1916,18 @@ interactive decode now. Will still enable+measure per model (ready to flip when 
   fit) -> fix_27b_vlm_config.py graft -> regex-ignore patch -> copy preprocessor_config.json -> 30_serve
   GRAPH=1 PIECEWISE KVDTYPE=fp8. Single-card-loadable targets: 27B (W4A8 if GDN-quant coheres) + 35B-A3B MoE.
 
+### 2026-06-21 -- [WIN] PRE-PACK makes 27B-W4A8 a TRUE 1-card load (24.35 GiB, captured, healthy) -- + GDN-op gap
+- Prepacked QUALITY 27B-W4A8 (GDN+lm_head bf16, Qwen3.6-27B-W4A8-q -> -prepacked, 33G->25G, 256 wts packed
+  32.9->24.1 GiB). Served :int8g GRAPH=1 PIECEWISE KVDTYPE=fp8 PREPACK=1 NOMM=1 UTIL=0.90: **Model loading took
+  24.35 GiB + 13.7s, Graph capturing finished (67s), Application startup complete, HEALTHY.** => THE PRE-PACK
+  FIX WORKS -- no 28 GiB unpacked-I8 transient, no DEVICE_LOST/OOM/hang. The 1-card-load problem is SOLVED.
+  (PREPACK=1 mounts the patched loader+kernel; NOMM=1 skips the VLM vision-encoder dummy-profiling crash.)
+- **BUT crashes at DECODE: AttributeError _xpu_C has no attribute gdn_attention** -- the 27B gated-delta-net
+  decode op is MISSING from our :int8g _xpu_C. Root cause: scripts/44 builds GDN_KERNELS_ENABLED=OFF (fast
+  int8-only); the GDN source IS present (csrc/xpu/gdn_attn/, registered torch_bindings.cpp); CMake defaults
+  GDN=ON. 14B (std attn) never needed it; 27B (GDN) does. FIX: rebuild _xpu_C with GDN_KERNELS_ENABLED=ON +
+  XPU_SPECIFIC=ON, mount the .so, re-serve. In flight.
+
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard

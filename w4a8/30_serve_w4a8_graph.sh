@@ -58,6 +58,10 @@ ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
       --dtype "$DTYPE" --tensor-parallel-size 1 --max-model-len "$MAXLEN" --max-num-seqs "$MAXSEQS"
       --gpu-memory-utilization "$UTIL" --no-enable-prefix-caching --trust-remote-code "${EAGER[@]}" "${CC[@]}")
 [ -n "$SPEC" ] && ARGS+=(--speculative-config "$SPEC")
+# NOMM=1: text-only serve of a VLM (Qwen3_5) -- disallow image/video so vLLM skips the vision-encoder
+# dummy profiling (which crashes on XPU: qwen2_5_vl.py "not enough values to unpack"). The vision tower is
+# still loaded but unused; this is the right mode for text inference on the 27B.
+[ -n "${NOMM:-}" ] && ARGS+=(--limit-mm-per-prompt '{"image":0,"video":0}')
 # KVDTYPE: store the KV cache in fp8 (fp8_e5m2 = no scales, simplest) -> halves KV BW (long-ctx decode win)
 # + 2x context/batch capacity. B70 has no FP8 ALU, so this is fp8-STORAGE + dequant-on-read in attention.
 [ -n "${KVDTYPE:-}" ] && ARGS+=(--kv-cache-dtype "$KVDTYPE")
