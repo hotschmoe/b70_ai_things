@@ -1784,3 +1784,19 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   the durable wins are the 2x capacity + the long-ctx scaling.
 - **=> the capstone's fp8-KV claim is now VALIDATED (with the e4m3 caveat). 30_serve KVDTYPE=fp8 is the
   recommended long-ctx / high-batch serve knob.** Doc 14 + serve script updated.
+
+### 2026-06-20 -- [DIAGNOSIS] w8a8 decode 26 t/s is REAL (61% BW) -- the int8 m=1 GEMM, not under-tuning; w8a8 = PREFILL champ
+- Re-measured the HEADLINE model with the CURRENT best recipe (Qwen3-14B-W8A8 `:int8g` GRAPH=1 PIECEWISE +
+  KVDTYPE=fp8): **decode = 26.09 / 26.11 t/s (2 runs) -- CONSISTENT with the old 26.7.** So the w8a8 decode is
+  GENUINELY ~26 t/s; the old number was NOT under-tuned. Coherent (verified). prefill = 5508-5699 t/s.
+- **The w8a8-vs-w4a8 decode gap is REAL and DIAGNOSED:** w8a8 26 t/s = 374 GB/s effective = **61.5% of 608**
+  (14 GiB int8 weights); w4a8 48 t/s = 446 GB/s = **73%** (9.3 GiB int4). The int4 grouped weight-decompression
+  GEMV achieves HIGHER effective BW at m=1 than the general int8 jit:gemm:any -- whose decode BW% is
+  shape-sensitive (int8 microbench: wide-n MLP up/gate 5120->17408 = ~50%, tall down 17408->5120 = ~93%), so
+  the w8a8 decode is dragged to ~61% by the wide-n MLP GEMMs. **PP-1 (format_tag::any) tried exactly this fix
+  and was perf-neutral -> the wide-n int8 m=1 gap is a known oneDNN limit, not easily closed.** So w8a8 decode
+  trails w4a8 on BOTH axes: more weight bytes AND lower m=1 GEMM efficiency.
+- **But w8a8's STRENGTH is PREFILL: 5508 t/s > w4a8's 4953** (direct int8xint8 XMX, no int4 unpack). =>
+  **the clean quant Pareto (Qwen3-14B, B70, capture+fp8-KV): W8A8 = PREFILL champion (5.5k t/s) but decode floor
+  (26); W4A8 = balanced (4.9k pp / 48 tg); W4A16 = DECODE champion (55 tg) but no int8 prefill fast-path.**
+  Pick by workload: prefill/batch-heavy -> W8A8; decode-heavy -> W4A16/W4A8; balanced -> W4A8. Doc 14 updated.

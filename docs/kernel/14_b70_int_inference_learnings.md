@@ -36,11 +36,19 @@ checkpoints). The next real gains need a toolchain bump (oneAPI 2026.0 -> FULL c
    oneDNN is good. (Corollary: the int8-GEMM microbench has +/-30% run-to-run noise -> judge kernel changes at
    SERVE decode-t/s, never the microbench.)
 
-3. **No native FP8 -> int8 is the real low-precision compute path; W4A8 is the decode champion.** Xe2 has XMX
-   INT8 (367 TOPS, the s8s8s32 DPAS datapath via oneDNN) but no FP8 ALU. So: **W8A8** hits int8xint8 for both
-   prefill + decode; **W4A8** keeps int8 prefill (XMX) AND the smallest weights (9.3 GiB -> best decode BW); 
-   **W4A16** is the pure-decode leader (no act-quant tax) but loses the int8 prefill fast-path. Pick W4A8 for a
-   balanced serve, W8A8 when accuracy needs it, W4A16 for decode-only.
+3. **No native FP8 -> int8 is the real low-precision compute path; each quant has a distinct sweet spot
+   (MEASURED Pareto, Qwen3-14B, capture + fp8-KV).** Xe2 has XMX INT8 (367 TOPS, s8s8s32 DPAS via oneDNN) but
+   no FP8 ALU. The three quants are NOT a simple ladder -- they trade prefill vs decode:
+   | quant | weights | PREFILL t/s | DECODE t/s (%BW) | sweet spot |
+   |-------|---------|-------------|------------------|------------|
+   | **W8A8**  | 14 GiB  | **5508** (best, int8xint8 XMX) | 26 (61.5%) | prefill/batch-heavy, accuracy |
+   | **W4A8**  | 9.3 GiB | 4953 | 48 (73%) | balanced |
+   | **W4A16** | 9.3 GiB | (no int8 fast-path) | **55** (best) | decode-heavy |
+   The non-obvious finding: **W8A8 decode (26 t/s) trails W4A8 (48) on BOTH axes** -- more weight bytes AND a
+   lower m=1 GEMM efficiency (the int4 grouped weight-decompression GEMV hits 73% of BW; the general int8
+   jit:gemm:any is shape-sensitive -- wide-n MLP up/gate ~50%, tall down ~93% -> ~61% avg). PP-1 tried to lift
+   the wide-n int8 layout and was perf-neutral, so this is a known oneDNN limit. **=> W8A8 is the PREFILL
+   champion, not a decode upgrade; for decode pick W4A16/W4A8.**
 
 4. **MTP (native Qwen3.6 multi-token-predict head) drafts accurately but is net-NEGATIVE on one card -- and
    it's toolchain-gated, not sampler-gated.** The head accepts 86.9% @ N=1 / 2.86 mean @ N=3 (great drafter,
