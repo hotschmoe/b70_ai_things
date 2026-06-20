@@ -45,9 +45,24 @@ def _register_int8_fakes():
         dt = out_dtype if out_dtype is not None else A_scale.dtype
         return A.new_empty((A.shape[0], B.shape[1]), dtype=dt)
 
+    # int4_gemm_w4a8(A_ i8 [M,K], A_scale, A_zp, B int32 [K/8,N], B_scale, B_zp,
+    #                group_size, g_idx?, bias?) -> [M, N] float16
+    #   N = B.shape[1] (mat2 is packed [K/8, N]); M = A_.shape[0]. Out dtype is
+    #   HARD-CODED float16 in the C++ kernel (torch::kHalf), NOT derived from input.
+    #   The W4A8 activation quant uses the pure-PyTorch dynamic_per_token_int8_quant_ref
+    #   (no custom op -> dynamo traces it directly -> no fake needed there).
+    def _fake_int4_gemm_w4a8(A_, A_scale, A_zp, B, B_scale, B_zp,
+                             group_size, g_idx, bias):
+        return A_.new_empty((A_.shape[0], B.shape[1]), dtype=torch.float16)
+
+    _int4_present = hasattr(torch.ops._xpu_C, "int4_gemm_w4a8")
+
     import sys
-    for name, fn in (("_xpu_C::dynamic_per_token_int8_quant", _fake_quant),
-                     ("_xpu_C::int8_gemm_w8a8", _fake_int8_gemm)):
+    _fakes = [("_xpu_C::dynamic_per_token_int8_quant", _fake_quant),
+              ("_xpu_C::int8_gemm_w8a8", _fake_int8_gemm)]
+    if _int4_present:
+        _fakes.append(("_xpu_C::int4_gemm_w4a8", _fake_int4_gemm_w4a8))
+    for name, fn in _fakes:
         try:
             register_fake(name, fn)
             print(f"[xpu_int8] registered fake for {name}", file=sys.stderr, flush=True)
