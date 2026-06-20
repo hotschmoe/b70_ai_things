@@ -1415,3 +1415,23 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   larger VRAM -> fp8/w8a8-gptq. w4a8 is NOT dominated (it was, pre-capture) -- it is now co-leader with w4a16,
   split by the decode-vs-prefill axis. Next: final synthesis -> update results/SUMMARY.md leaderboard.
 
+### 2026-06-20 -- [WRAP] capture campaign conclusion + 27B deferred (shared GPU) + SUMMARY leaderboard updated
+- **27B flagship capture DEFERRED.** Qwen3.6-27B-int4-AutoRound LOADS fine on `:int8g` (17.56 GiB, 41 s, bf16,
+  quant=inc) but my decode probe hit a runtime `EngineCore ... InternalServerError` during generation (likely
+  the `ignore_eos` param or a GDN-int4 decode-path quirk on `:int8g` vs the `:v0230` it was first benched on).
+  Another agent now shares the B70 (Qwen3.6-35B MoE loading, intermittent) -> per the user I tore the 27B
+  server down immediately to free the card and did NOT re-occupy it to debug a CONFIRMATORY run. The 27B eager
+  baseline already exists (7.59 t/s, perf_probe); only its PIECEWISE number is open. Parked task #8 (attempt
+  opportunistically when the card is uncontended; a plain non-ignore_eos request likely sidesteps the error).
+- **Campaign scoreboard (docs/kernel/04 ladder):** step 1 ONEDNN_VERBOSE diag DONE; B1 drop-src-zp DONE
+  (perf-neutral, kept for cleanliness); **A1 PIECEWISE capture DONE = the breakthrough (int4 decode ~2x:
+  w4a16 28->55, w4a8 17->48, w8a8 +13%)**; A2 FULL capture BLOCKED (SYCL-Graph work_group_scratch + Triton
+  auto-disabled, both confirmed live); Lever C custom SYCL GEMV NOW LOW-EV (post-capture decode is already
+  74-84% of the BW ceiling -> a hand GEMV would chase only the residual ~15-25%, 1-2 wk for <=1.3x).
+- **Single biggest takeaway:** the decode bottleneck on the B70 for int4 was NEVER the GEMM -- it was eager
+  per-op DISPATCH (worst for w4a8 because its act-quant is an unfused pure-PyTorch ref). PIECEWISE XPU graph
+  capture (torch 2.11+xpu, `:int8g`, `30_serve_w4a8_graph.sh GRAPH=1` + the `pass_config` compile-fix) removes
+  it and ~doubles int4 decode. Use capture, not eager, for decode-bound int8-activation/int4 serving on B70.
+- Banked across JOURNAL + FINDINGS + evals/results/SUMMARY.md (authoritative leaderboard banner) + docs/kernel/04
+  ladder + docs/literature/06 (stale "no XPU capture" verdict corrected). GPU left FREE for the other agent.
+
