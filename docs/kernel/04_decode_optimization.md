@@ -53,6 +53,12 @@ Full detail + verified code pointers for each step are in the LEVER sections bel
 - [ ] **5. Decide the big bet:** FULL graph capture via `--attention-backend TRITON_ATTN` (A2; also
       flips spec-decode/MTP positive) vs a custom SYCL int4 GEMV (C2; ~1-2 wk). Pick from steps 1-4.
       **Post-A1 lean: A2 (FULL capture) -- capture was the whole game; squeeze attention too + flip spec-decode.**
+      **[UPDATE: see `docs/kernel/12_mtp_specdecode_plan.md`]** A2's "flips spec-decode positive" is only
+      HALF the story: the -7% is TWO failures -- eager-attn verify (A2 fixes) AND low ngram accept ~16%
+      (A2 does NOT fix). The better spec-decode lever is the native Qwen3.6 MTP head (single-pass, ~75-88%
+      accept, testable on ONE card NOW via `Lorbus_Qwen3.6-27B-int4-AutoRound`); FULL capture is a
+      second-order compounding win. The TRITON_ATTN path is blocked by the Triton-XPU "0 active drivers"
+      disable -- diagnosis + fix ladder in doc 12.
 
 ## The problem, decomposed
 - Microbench (`w4a8/20_microbench_w4a8_decode.sh`): `int4_gemm_w4a8` at m=1 already hits **52-64% of
