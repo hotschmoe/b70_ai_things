@@ -12,9 +12,15 @@ Full detail + verified code pointers for each step are in the LEVER sections bel
 - [ ] **0. (CPU, anytime) prep** so we can build the instant the GPU frees: write the `register_fake`
       meta-kernel for `int4_gemm_w4a8` (mirror `contrib/vllm_int8_xpu/xpu_int8.py`) + stage the
       symmetric-zp-drop edit to `int4_gemm_w4a8.h`.
-- [ ] **1. `ONEDNN_VERBOSE=2` diagnostic [FREE, do first].** Run on the m=1 `int4_gemm_w4a8` call.
-      Read the impl string: `grouped_micro_gemm` (good) vs `ref` (bad fallback)? Note the zp-correction
-      term + oneDNN version. Answers "is the kernel even optimized?" before touching code. (Lever B2.)
+- [x] **1. `ONEDNN_VERBOSE=2` diagnostic [DONE 2026-06-20].** Ran on m=1 `int4_gemm_w4a8`
+      (`w4a8/21_onednn_verbose_w4a8.sh`). RESULTS: (a) bundled **oneDNN v3.12.0** -- far newer than the
+      v3.8 we assumed, so **Lever B5 is moot (already ahead)**. (b) impl = **`jit:gemm:any`** (the JIT GEMM,
+      NOT `ref` fallback, NOT `grouped_micro_gemm` -- the doc's good/bad framing was wrong; reality is the
+      general JIT gemm doing GEMV, which confirms Lever C's "no dedicated GEMV" premise). (c) **src zero-point
+      CONFIRMED wasteful:** attrs show `attr-zero-points:src0:3:s32:1x5120` (per-token s32 src-zp applied every
+      decode) even though our acts are symmetric (zp=0); weight zp is only a cheap scalar (`wei:0:s8`). A
+      per-token src-zp forces a `zp_src * reduce_k(weight)` compensation = an O(k*n) weight re-read at m=1 ->
+      **B1 could be ~2x, not minor.** Steady exec ~0.11 ms (matches the 52-64% microbench). => do B1 next.
 - [ ] **2. Drop symmetric zero-point attrs (B1) -> rebuild -> re-microbench.** Edit `int4_gemm_w4a8.h`
       to omit src-s32 + weight-u4 zp for the symmetric case (like `int8_gemm_w8a8.h`; IPEX `QMatmul.h`
       omits it too). Rebuild `scripts/44_build_int8_kernel.sh`; validate `test_int4_gemm_onednn.py -k

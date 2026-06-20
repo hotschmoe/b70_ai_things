@@ -1246,3 +1246,25 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   The decisive work is the **decode kernel** (docs/kernel/04 ladder: ONEDNN_VERBOSE -> drop symmetric zp ->
   PIECEWISE capture for w4a8 -> ...). Leaderboard + models.yaml updated; RTN w4a8 archived; w4a8-gptq canonical.
 
+### 2026-06-20 -- [DIAGNOSTIC] ladder step 1: ONEDNN_VERBOSE=2 on int4_gemm_w4a8 m=1 (FREE) -> B1 is ~2x, not minor
+- Ran `w4a8/21_onednn_verbose_w4a8.sh` via the gpu-run flock lease (12 s, exit 0). Decode shapes m=1
+  (5120,17408) + (17408,5120) and a m=512 prefill, ONEDNN_VERBOSE=2. Three decisive reads:
+  1. **oneDNN bundled = v3.12.0** (commit 80afa71), Level Zero, device [0xe223] (B70). Far newer than the v3.8
+     in our notes -> **Lever B5 (upgrade oneDNN) is moot, we are already ahead.**
+  2. **impl = `jit:gemm:any`** for every matmul (decode AND prefill), NOT `ref` (good -- not the slow fallback)
+     and NOT `grouped_micro_gemm` (the doc's good-vs-bad mental model was wrong). It is the GENERAL JIT GEMM
+     emulating a GEMV at m=1 -> confirms Lever C's premise that there is no purpose-built m=1 GEMV path.
+  3. **[KEY] the symmetric src zero-point IS applied and IS pure overhead.** Verbose attrs:
+     `attr-scales:src0:3:f16:1x5120+wei:3:f16:128x1  attr-zero-points:src0:3:s32:1x5120+wei:0:s8`.
+     The `src0:3:s32:1x5120` is a per-token s32 activation zero-point -- but our per-token int8 acts are
+     SYMMETRIC (zp all-zero). A per-token src-zp forces oneDNN to carry a `zp_src * reduce_k(weight)`
+     compensation, an O(k*n) read of the int4 weights at m=1 -- i.e. it can DOUBLE the weight bytes moved,
+     which is exactly the dominant decode cost. So **dropping it (Lever B1) is plausibly a ~2x decode win,
+     not the "cheapest minor win" the ladder framed.** The weight zp is only a scalar `wei:0:s8` (cheap).
+- Steady-state verbose exec_time ~0.11 ms/call at decode (matches the 52-64%-of-peak microbench); first call
+  ~0.33 ms (JIT warm). **Verdict: B1 (drop symmetric src-zp) is now the highest-EV cheap kernel lever.** Next:
+  apply the B1 patch (agent drafting the exact diff + cache-key safety), rebuild (scripts/44), re-microbench.
+- Method note: gpu-run shipped to the Unraid host (`/mnt/vm_8tb/b70/gpu-run`); all GPU touches this campaign go
+  through its flock lease. Launched a 4-agent army (B1 patch, w4a8 register_fake for PIECEWISE, oneDNN/IPEX/vLLM
+  survey, custom SYCL int4 GEMV design) -- all CPU/web only; the lead serializes every GPU run.
+
