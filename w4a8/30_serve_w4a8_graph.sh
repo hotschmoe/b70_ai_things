@@ -23,6 +23,11 @@ docker rm -f vllm_qwen3 vllm_w4a8 vllm_w8a8 vllm_int8 "$NAME" 2>/dev/null || tru
 
 GRAPH_ENV=(); GRAPH_DOCKER=(); EAGER=(--enforce-eager); CC=(); ATTN_ENV=()
 [ -n "$ATTN" ] && ATTN_ENV=(-e VLLM_ATTENTION_BACKEND="$ATTN")
+# TRITONSHIM=1: inject a sitecustomize.py that warms torch.xpu.device_count() in EVERY spawned process,
+# so triton's is_active() (= torch.xpu.is_available()) returns True in the engine worker -> Triton enabled
+# -> TRITON_ATTN + the Triton rejection sampler work (unblocks FULL capture + MTP-positive).
+SHIM_ARGS=()
+[ -n "${TRITONSHIM:-}" ] && SHIM_ARGS=(-v "$ROOT/triton_shim:/opt/triton_shim:ro" -e PYTHONPATH=/opt/triton_shim)
 if [ "$GRAPH" = 1 ]; then
   GRAPH_ENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS="$OMP")
   GRAPH_DOCKER=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
@@ -48,7 +53,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" -v "$ROOT/tmp_ssd:/tmp_ssd" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e ZE_AFFINITY_MASK=0 -e VLLM_LOGGING_LEVEL=INFO \
-  "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
+  "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" "${SHIM_ARGS[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
 
 echo "=== waiting for readiness (up to ~14 min; first compile/capture slower) ==="
 ok=0
