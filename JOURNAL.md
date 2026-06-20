@@ -1295,3 +1295,25 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   `contrib/vllm_int8_xpu/xpu_int4*.{py,diff}`. Survey flagged doc fixes (literature/06 graph section stale;
   issue #3323 is a closed memory-leak not a perf item; B3 is net-new not an IPEX port; split B4 into int8/int4).
 
+### 2026-06-20 -- [CONFIRM] controlled B1 A/B: perf-NEUTRAL; microbench noise is +/-30% (-> measure at decode-t/s)
+- Removed the build confound: rebuilt the UNPATCHED control on the SAME scripts/44 toolchain, then A/B'd
+  `b1_unpatched.so` vs `b1_patched.so` (both mounted, identical sym inputs, 2 interleaved rounds) via
+  `w4a8/23_ab_b1.sh`. (Gotcha fixed: dropped `docker run -i` -- with the python mounted as a file, `-i` made
+  docker slurp the piped script's stdin and only the first round ran.)
+- **Result -- B1 is performance-NEUTRAL:** unpatched ~= patched within noise on all 4 shapes (per-shape ms,
+  unpatched vs patched avg): 4096x11008 .048/.058, 5120x17408 .108/.102, 17408x5120 .090/.088, 5120x5120
+  .040/.041. Correctness fingerprints identical every run. **The decode "regression" in the prior entry was the
+  baked-0.1.9-vs-rebuilt confound + noise, NOT the patch.**
+- **[META-FINDING] microbench run-to-run noise ~ +/-30%** (k=4096 patched swung 0.072 -> 0.045 ms between
+  rounds = 59% spread; % of peak ranged 50-86% for the same shape). This noise DWARFS small kernel deltas ->
+  (a) the "52-64%" (doc) vs "72-93%" (prior entry) discrepancy was just sampling; true decode BW is shape-
+  dependent ~50-86% and NOISY; (b) **kernel changes must be validated at the full-model decode-t/s level**
+  (which averages out the noise over hundreds of tokens), not by these microbenches. Square/small shapes
+  (5120x5120 ~52-56%) are consistently the worst -> the real GEMV headroom (Lever C) lives there, not on the
+  already-near-BW tall-skinny shapes.
+- **Verdict + decision:** B1 kept in the source-of-truth (`int4_gemm_w4a8.h`, matches IPEX QMatmul.h + our clean
+  w8a8 kernel) as a correctness/cleanliness improvement, but **prod `:int8` NOT rebaked** (no perf benefit, and a
+  flag-mismatched rebuild risks a noise-band regression). Pivot: the dominant decode cost is dispatch/non-GEMM
+  (full-model w4a8 = 16.5 t/s ~= 25% effective while the GEMM alone is 50-86% of peak) -> **next = A1 graph
+  capture for w4a8** (attacks dispatch; measured at decode-t/s, the stable metric; w8a8 already banked +16.7%).
+
