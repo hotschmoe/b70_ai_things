@@ -12,10 +12,14 @@ SRC = os.environ["SRC"]; OUT = os.environ["OUT"]
 ITERS = int(os.environ.get("ITERS", "200"))
 NSAMPLES = int(os.environ.get("NSAMPLES", "128"))
 SEQLEN = int(os.environ.get("SEQLEN", "2048"))
-print(f"[autoround-w4a8] src={SRC} out={OUT} iters={ITERS} nsamples={NSAMPLES} seqlen={SEQLEN}", flush=True)
+# AutoRound's llm_compressor exporter only supports W4A8 sym-dynamic with group_size=-1 (per-channel
+# int4 weights). 128-grouping is rejected at export. Per-channel still gives W4A8 (int8 dynamic acts
+# -> int8-XMX prefill, the goal); AutoRound's sign-SGD compensates for the coarser weight grouping.
+GROUP = int(os.environ.get("GROUP", "-1"))
+print(f"[autoround-w4a8] src={SRC} out={OUT} iters={ITERS} nsamples={NSAMPLES} seqlen={SEQLEN} group={GROUP}", flush=True)
 
-# int4 sym group-128 weights + per-token dynamic int8 activations (symmetric) -> W4A8-int8.
-W4A8 = QuantizationScheme(bits=4, group_size=128, sym=True, data_type="int",
+# int4 sym per-channel weights + per-token dynamic int8 activations (symmetric) -> W4A8-int8.
+W4A8 = QuantizationScheme(bits=4, group_size=GROUP, sym=True, data_type="int",
                           act_bits=8, act_dynamic=True, act_sym=True, act_data_type="int")
 
 tok = AutoTokenizer.from_pretrained(SRC, trust_remote_code=True)

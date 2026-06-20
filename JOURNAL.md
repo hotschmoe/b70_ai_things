@@ -1560,3 +1560,23 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   agent (AutoRound-W4A8 recipe + does an int8-ACT MoE path even exist on XPU + which image has W4A8-kernel AND
   GDN). User pref: target Intel AutoRound W4A8-int8; SmoothQuant+GPTQ (scripts/54) is the proven fallback.
 
+### 2026-06-20 -- [BLOCKED->PIVOT] AutoRound CANNOT export W4A8 (W8A8-only); fall back to GPTQ/RTN via llmcompressor
+- Built the corrected AutoRound-W4A8 recipe (auto_round 0.13.1, hand-built QuantizationScheme, device_map=xpu,
+  quantize_and_save format=llm_compressor) -> `w4a8/{_autoround_w4a8.py,12_*.sh}`. Pre-check passed; smoke run
+  loaded the 72 GB bf16 27B and **quantized fine on the 32 GB card (device_map=xpu block-streamed, no OOM)** --
+  but FAILED at export with `AssertionError: only support to export llm_compressor ... W4A8 ... group_size=-1`.
+- **Root cause (read auto_round/formats.py::check_and_reset_format):** the llm_compressor exporter, for ANY
+  int8-dynamic-act scheme, hard-asserts `bits==8 and group_size==-1 and sym and act_bits==8` -> it is **W8A8-
+  only**. The error message renders "W4A8" from the actual bits but the REQUIRED config is W8A8. Re-checked with
+  group_size=-1 (still fails: bits=4 != 8) and confirmed **0.13.1 is the LATEST auto_round** (no newer version
+  fixes it). The native `auto_round` format would serve as W4A16 on XPU (INC path ignores int8 acts). So
+  **Intel AutoRound cannot produce a W4A8-int8 checkpoint for the XPU int8-XMX kernel, full stop.**
+- **PIVOT (user pre-approved):** SmoothQuant+GPTQ via llmcompressor (`scripts/54`, the PROVEN 14B W4A8 path ->
+  CompressedTensorsW4A8Int -> XPUW4A8IntLinearKernel). 27B-specific risk: scripts/54's header warns SmoothQuant's
+  mapping resolver fails on the hybrid Qwen3_5 GDN arch (unlike the dense 14B) -> use RTN/GPTQ without SmoothQuant
+  if needed. **Now running RTN-W4A8 27B (DATAFREE=1, CPU, no calibration -> fast, lowest arch risk)** to get the
+  SPEED answer first (prefill is scheme-dependent, not quant-quality-dependent): serve -> perf_probe -> does the
+  27B W4A8 prefill beat the W4A16 baseline (1521.7 t/s)? Then the quality GPTQ-W4A8 run overnight.
+- Lesson banked: the speed hypothesis (W4A8 int8-XMX prefill) is testable with a CRUDE RTN checkpoint; only the
+  ACCURACY question needs the good quantizer. Decouple them -> answer speed tonight regardless of quant method.
+

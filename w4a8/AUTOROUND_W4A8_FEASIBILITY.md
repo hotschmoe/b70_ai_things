@@ -1,5 +1,19 @@
 # AutoRound W4A8 feasibility -- 27B dense (GDN) + 35B-A3B MoE on one B70
 
+> **[!] CORRECTION (2026-06-20, after a smoke run): AutoRound CANNOT export W4A8 at all.**
+> The 27B "GO via AutoRound" below is WRONG -- AutoRound's `llm_compressor` exporter is **W8A8-only**.
+> Verified in `auto_round/formats.py::check_and_reset_format` (auto_round **0.13.1 = latest**): for any
+> int8-dynamic-act scheme it hard-asserts `ar.bits == 8 and group_size == -1 and sym and act_bits == 8`.
+> A W4 (bits=4) scheme -> `AssertionError: ...only support to export llm_compressor ... but got bits=4...`
+> (the message renders "W4A8" from your actual bits, but the REQUIRED config is W8A8). No released AutoRound
+> version supports W4A8 -> compressed-tensors, and the native `auto_round` format serves as W4A16 on XPU
+> (INC path ignores the int8 acts). So **AutoRound W4A8-int8 is not achievable for the XPU int8-XMX kernel.**
+> => PIVOT to the user-approved fallback: **SmoothQuant+GPTQ via llmcompressor** (`scripts/54`, the proven
+> 14B W4A8 path -> CompressedTensorsW4A8Int -> XPUW4A8IntLinearKernel, group_size=128). 27B caveat: SmoothQuant's
+> mapping resolver may fail on the hybrid Qwen3_5 GDN arch (scripts/54 header) -> RTN/GPTQ-only fallback.
+> The rest of this doc's kernel/arch/image analysis still stands; only the AutoRound-as-the-quantizer part is dead.
+
+
 Date: 2026-06-20. Author: quant-eng (read-only investigation; NO GPU touched).
 Goal under test: convert the two flagship W4A16 int4-AutoRound models to **W4A8**
 (int4 sym group weights + per-token dynamic int8 activations) via AutoRound, to keep
