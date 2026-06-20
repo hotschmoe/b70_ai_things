@@ -1946,6 +1946,27 @@ interactive decode now. Will still enable+measure per model (ready to flip when 
   high accept, net-negative on PIECEWISE (verify eager -- needs FULL capture, toolchain-gated).** So MTP value
   on the B70 needs BOTH GPTQ-quant AND FULL capture. The 1-card W4A8 SERVE itself stands (21 t/s, coherent).
 
+### 2026-06-21 -- [*** MAJOR LEAD ***] FULL graph capture is UNBLOCKED on vLLM-XPU (docs 04/14 "blocked" is STALE)
+Two read-only research agents (web+GitHub, no GPU) while GPTQ grinds. Headline: **the #1 remaining lever is
+achievable TODAY, no toolchain wait.**
+- **FULL capture via TRITON_ATTN.** vLLM PR #34482 (merged 2026-02-25, validated torch 2.11+xpu): TRITON_ATTN
+  supports ALL cudagraph modes incl FULL; FLASH_ATTN is PIECEWISE-only AND is the silent default -> our serves
+  never got FULL because we never flipped the backend. FIX (single-rank): `--attention-backend TRITON_ATTN`
+  + `VLLM_XPU_ENABLE_XPU_GRAPH=1` + `-O.cudagraph_mode=FULL` (or FULL_AND_PIECEWISE), torch 2.11+ (PR #37947).
+  PR #38193 made xpu-graph opt-in (needs a recent Intel driver). The oneAPI-2026.0 / intel-llvm PR #21029
+  work_group_scratch lift (verified merged 2026-01-15) only matters for FULL-capturing the *flash-attn* SYCL
+  FMHA kernels -- which vLLM hard-blocks anyway; the Triton path sidesteps it. (vLLM #26970 CLOSED -> PyTorch
+  #162143 / PR #166285, torch 2.11 XPUGraph, DONE. IPEX archived 2026-03-30; graph capture now in torch core.)
+- **EAGLE3/MTP (2nd agent):** EAGLE3 does NOT sidestep the verify penalty (same single-forward verify over the
+  hybrid GDN target); the penalty is the eager verify, which FULL capture is exactly what fixes. `Ex0bit/
+  Qwen3.6-27B-PRISM-EAGLE3` is REAL (1-layer Llama drafter, fc fuses target layers [1,31,60], full/+compressed/,
+  validated on stock Qwen3.6-27B, chain accept tau~2.2; ships SGLang tooling, vLLM "compatible via full variant"
+  but XPU-unproven). No net-positive EAGLE3/MTP on Battlemage exists publicly yet.
+- **=> THE experiment when GPU frees:** serve W4A8 `--attention-backend TRITON_ATTN VLLM_XPU_ENABLE_XPU_GRAPH=1
+  cudagraph_mode=FULL` (Triton shim from doc 13), single-rank -> measure (a) plain decode vs PIECEWISE (21 / 48),
+  (b) MTP net (does captured verify flip it positive?). RISKS to validate on-GPU: (1) does TRITON_ATTN interop
+  with our custom oneDNN INT8 W8A8/W4A8 linear path, (2) the driver-version requirement. Corrects docs 04(A2)/14.
+
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
