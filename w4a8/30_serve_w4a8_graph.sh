@@ -16,6 +16,7 @@ DTYPE="${DTYPE:-float16}"; OMP="${OMP:-8}"
 # A2 knobs: CGMODE (PIECEWISE|FULL|FULL_AND_PIECEWISE), ATTN (attention backend, e.g. TRITON_ATTN -> FULL
 # capture, since flash-attn FULL is blocked by SYCL-Graph work_group_scratch_memory). Default PIECEWISE.
 CGMODE="${CGMODE:-PIECEWISE}"; ATTN="${ATTN:-}"
+SPEC="${SPEC:-}"   # optional --speculative-config JSON (e.g. MTP: {"method":"qwen3_5_mtp","num_speculative_tokens":3})
 NAME="${NAME:-vllm_w4a8}"; PORT=18080
 mkdir -p "$ROOT"/{vllm_cache,tmp_ssd}
 docker rm -f vllm_qwen3 vllm_w4a8 vllm_w8a8 vllm_int8 "$NAME" 2>/dev/null || true
@@ -38,6 +39,7 @@ fi
 ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
       --dtype "$DTYPE" --tensor-parallel-size 1 --max-model-len "$MAXLEN" --max-num-seqs "$MAXSEQS"
       --gpu-memory-utilization "$UTIL" --no-enable-prefix-caching --trust-remote-code "${EAGER[@]}" "${CC[@]}")
+[ -n "$SPEC" ] && ARGS+=(--speculative-config "$SPEC")
 
 echo "=== serve W4A8 GRAPH=$GRAPH cgmode=$([ "$GRAPH" = 1 ] && echo $CGMODE || echo eager) attn=${ATTN:-default} IMG=$IMG dtype=$DTYPE MAXLEN=$MAXLEN SEQS=$MAXSEQS ==="
 echo "vllm ${ARGS[*]}"

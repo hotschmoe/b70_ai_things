@@ -1637,3 +1637,28 @@ VERDICT: plan delivered. Top-3 pp levers: (1) format_tag::any weights + cached r
 + which impl fires, then prototype format_tag::any on the W8A8 prefill GEMM (IPEX QMatmul recipe) -- a
 near-zero-risk library win gated by the measurement that decides if a hand kernel is even needed. Both SYCL
 skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO ladder are in doc 10.
+
+### 2026-06-20 -- [SYNTHESIS+EXEC] w8a8 deep-work: baseline MEASURED + 3 agent plans -> prioritized execution
+- **Lead ran the int8_gemm_w8a8 baseline** (`w8a8/20_microbench_int8_gemm.sh`, w8a8/PROFILE_BASELINE.md):
+  PREFILL **66-81% of 367 TOPS**; DECODE **50-93% of 608 GB/s** (wide-n 4096x11008 worst @ 50.5%, tall
+  17408x5120 near-peak @ 92.9%). impl = `jit:gemm:any`, weight = plain row-major `s8::blocked:ab` (NOT
+  VNNI/XMX-packed) -- the smoking gun confirming agent A. The gap is REAL + measured, not assumed.
+- **3 deep agents (docs/kernel/10,11,12) delivered. Prioritized execution roadmap (by EV/effort):**
+  1. **MTP head [TESTING NOW]** -- agent C: the gdn_attention MTP blocker is GONE in vLLM 0.23.0 (PR #43565
+     `Qwen3_5MultiTokenPredictor`); the native head is a single-pass drafter that SURVIVES PIECEWISE (launch-
+     mult ~1, unlike ngram) and accepts 75-88% vs ngram 16%. Serving Lorbus-27B-int4 `:v0230` GRAPH=1
+     `--speculative-config {method:qwen3_5_mtp,num_speculative_tokens:3}` vs the 30.84 t/s MTP-off baseline.
+     Go/no-go: accept-len >=3 + decode +>=20%. Potentially the biggest single decode win.
+  2. **PP-1 format_tag::any [next deep kernel hand-tune]** -- onednn_ext.h:795 builds the weight md with
+     explicit strides, never `format_tag::any`. Codex gave the recipe (wei_md any -> create pd -> query
+     pd.weights_desc() -> reorder once if != plain, cache by weight ptr -> execute). Mirror IPEX QMatmul.h.
+     Expect ~1.1-1.5x prefill + decode coalescing. ~1 day C++.
+  3. **L1 wire the EXISTING fused rmsnorm+int8-quant [free-ish]** -- agent B: `layernorm_quant.cpp::
+     rms_norm_dynamic_per_token_quant` ALREADY exists + registered (torch.ops._C) + int8 path, just NOT WIRED.
+     Pure Python model-patch -> saves ~2.4 MiB + 80 launches/token. (Fix [-128,127]->[-127,127] sym clamp +
+     1e-5 scale floor.) Build gotcha: flip BASIC_KERNELS_ENABLED ON in scripts/44.
+  4. **L2 write `silu_and_mul_quant_int8`** (down_proj) + **PP-2 hand DPAS GEMM** (joint_matrix,
+     XE_8x16x32_S32S8S8S32_TT, VNNI-B) only IF format_tag::any leaves XMX <60%.
+- Principle banked (the *learning*): **hand the library `any`, not a fixed stride, so it picks the operand
+  layout the systolic array wants; fuse the quant into the producing op to kill the f16 round-trip; and a
+  single-pass drafter (MTP) is the only spec-decode that survives a partially-captured graph.** MTP now, PP-1 next.
