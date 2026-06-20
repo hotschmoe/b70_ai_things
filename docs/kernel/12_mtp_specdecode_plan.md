@@ -273,3 +273,138 @@ RANK-1 (highest EV): native MTP on the int4 27B (fits one card, capture ON).
                              "num_speculative_tokens":3}'
     vs the 26.68 t/s PIECEWISE no-spec baseline. Proves draft acceptance >> ngram's 16% and that the
     spec plumbing + reject path work on our stack -- low risk, fast, no GDN.
+
+================================================================================
+## Making MTP net-positive under PIECEWISE (no toolchain)
+================================================================================
+Written AFTER the measured MTP runs (JOURNAL 2026-06-20: N=1 = 25.5 t/s = -19% vs 31.4 MTP-off,
+N=3 = 19.65 = -37%; 86.9% first-token accept; Triton-sampler enable moved decode ~0). This section
+answers: WHAT actually costs the -19%, is the spec-verify shape capturable under PIECEWISE, and a
+RANKED list of serve configs the lead can test. All vLLM mechanics below were read live from the
+v0230 image (paths cited); the cost split is codex arithmetic over our measured numbers.
+
+--------------------------------------------------------------------------------
+G.1  CONFIRMED COST DECOMPOSITION (what runs each spec step, what is eager)
+--------------------------------------------------------------------------------
+Per decode step the spec path runs THREE things (vllm/v1/spec_decode/llm_base_proposer.py +
+gpu_model_runner.py execute_model):
+  (a) DRAFTER forward(s). For qwen3_5_mtp the drafter is normalized to method="mtp" and routed to
+      EagleProposer (speculative.py:1071 use_eagle includes "mtp"; gpu_model_runner.py:599). The MTP
+      head is ONE decoder layer (qwen3_5_mtp.py:73 mtp_num_hidden_layers default 1, layer_type=
+      "full_attention") + shared embed + a small fc + shared lm_head -- it is CHEAP, ~1/40 of a main
+      forward. For N>1 it is run AUTOREGRESSIVELY: 1 forward then a sequential loop of (N-1) more
+      (llm_base_proposer.py:588 `for token_index in range(num_speculative_tokens-1)`), each its OWN
+      set_forward_context + attn-metadata rebuild (build_per_group_and_layer_attn_metadata) + dispatch.
+      vLLM even WARNS for mtp+N>1: "run multiple times of forward on same MTP layer ... may result in
+      lower acceptance" (speculative.py:716). Matches our measured accept decay 0.84/0.57/0.46.
+  (b) VERIFY forward: the FULL ~40-layer main model over (1+N) query tokens, 1 seq.
+  (c) reject-sample + spec bookkeeping (rejection_sampler, _calc_spec_decode_metadata, prepare_inputs).
+
+WHAT IS EAGER UNDER PIECEWISE (the crux):
+  - PIECEWISE captures GEMM/MLP and SPLITS OUT every op in compilation.py `_attention_ops`
+    (lines 756-769). That list includes BOTH `vllm::unified_attention_with_output` (full flash-attn)
+    AND `vllm::gdn_attention_core_xpu` (the GDN linear-attn core). So ALL attention runs EAGER --
+    not just the ~1-in-4 full-attn layers; the ~30 GDN layers' core runs eager too.
+  - There is NO "capture attention but stay PIECEWISE" mode: setting splitting_ops=[] under PIECEWISE
+    falls back to cudagraph_mode=NONE (compilation.py:1151-1176). Only FULL captures attention.
+  - The verify GEMM IS captured/replayed. The dispatcher (cudagraph_dispatcher.py) stores PIECEWISE
+    keys with num_reqs=None,uniform=False and matches purely on num_tokens; the 2-/4-token verify
+    shape is in cudagraph_capture_sizes [1,2,4,8,..], so the verify's GEMM/MLP replays at the right
+    shape (our capture log "verify batch 1-32" confirms). The eager part is ONLY the attention split.
+  - The DRAFTER is hardcoded PIECEWISE-or-NONE, NEVER FULL (llm_base_proposer.py:386-401
+    initialize_cudagraph_keys: "Only supports PIECEWISE"). So the drafter's own full-attn layer is
+    also eager. (Upstream tracks this: vLLM issue #33341 "Support Full CUDA Graph for the drafter".)
+
+THE NUMBER (codex over measured t/s; T = plain step = 31.8 ms):
+  N=1: step = 72.5 ms = 2.28x T, mean accept 1.85  -> pay 2.28x for 1.85x tokens = -19%.
+  N=3: step = 145.6 ms = 4.58x T, mean accept 2.86 -> pay 4.58x for 2.86x tokens = -37%.
+  The decisive clue is the N=1->N=3 DELTA: +2.30x T (73 ms) for just TWO extra CHEAP 1-layer drafter
+  forwards + verify going 2->4 tokens. Two 1-layer math passes CANNOT cost 2.3x a 40-layer step. So
+  the dominant cost is a HEAVY PER-SPEC-STEP / PER-DRAFTER-FORWARD FIXED OVERHEAD that does NOT
+  amortize: each (drafter and verify) sub-pass pays its own prepare_inputs + per-layer attn-metadata
+  rebuild + set_forward_context/dispatch + (for verify) the rejection sampler + extra lm_head rows,
+  ON TOP of eager attention over N+1 tokens. This is consistent with N=1 already being 2.28x T even
+  though the drafter is one cheap layer: most of the 1.28x extra is FIXED spec machinery + the eager
+  m=2 verify attention, NOT drafter math.
+
+  RULED OUT as the bottleneck: (1) the Triton rejection SAMPLER -- enabling it moved decode ~0
+  (JOURNAL); (2) the verify GEMM "running eager" -- it replays at the captured 2-/4-token shape;
+  (3) num_speculative_tokens too low -- N=1 (1 draft, 85% accept) is the BEST case and is still -19%.
+
+--------------------------------------------------------------------------------
+G.2  IS THE VERIFY SHAPE CAPTURABLE? -- yes for GEMM, NO for attention; the exact knob
+--------------------------------------------------------------------------------
+  - The verify N+1 shape's GEMM/MLP is ALREADY captured under PIECEWISE (G.1). cudagraph_capture_sizes
+    already covers 1,2,4,8 so the 2-/4-token verify replays. Adding sizes does NOTHING for the -19%.
+  - The verify ATTENTION (the actual tax) is capturable ONLY under cudagraph_mode=FULL /
+    FULL_DECODE_ONLY, via the dispatcher's uniform-decode path: uniform_decode_query_len =
+    1 + num_speculative_tokens (cudagraph_dispatcher.py:37-40) and the FULL keys are populated for the
+    decode shape only when `cudagraph_mode.decode_mode()==FULL` (lines 207-231). The exact field is
+    CompilationConfig.cudagraph_mode = FULL_DECODE_ONLY (or FULL); the verify shape it would capture
+    is num_tokens = (1+N)*num_reqs.
+  - BUT on the B70 this is the SAME wall we already hit: FULL routes attention into the SYCL graph and
+    flash-attn dies on `sycl_ext_oneapi_work_group_scratch_memory ... not yet available with the SYCL
+    Graph extension` (toolchain, oneAPI DPC++ 2026.0), and TRITON_ATTN (the other FULL-capable backend)
+    is unwired on XPU (JOURNAL 2026-06-20). So the capturable verify shape EXISTS and the knob is
+    cudagraph_mode=FULL_DECODE_ONLY, but it is blocked by the exact toolchain limit doc 13 documents,
+    NOT by a config we are missing. There is no PIECEWISE knob that captures attention.
+
+--------------------------------------------------------------------------------
+G.3  RANKED CONFIGS TO TEST ON THE B70 NOW (no toolchain change)
+--------------------------------------------------------------------------------
+Honest expectation: NONE of these is likely to flip MTP net-positive on this hybrid-GDN model under
+PIECEWISE -- the -19% is structural (fixed spec machinery + eager-attn verify, neither removable
+without FULL). They are ranked as the cheap A/Bs worth burning a GPU slot on BEFORE conceding, plus
+the one diagnostic that would change the verdict. Each: exact flag + expected effect.
+
+  RANK 1  num_speculative_tokens=1 is the floor; CONFIRM the verdict, do not expect a flip.
+     --speculative-config '{"method":"qwen3_5_mtp","num_speculative_tokens":1}'  (GRAPH=1 PIECEWISE)
+     Expected: ~25.5 t/s (-19%), our measured best case. This is the CEILING of PIECEWISE MTP here.
+
+  RANK 2  disable_padded_drafter_batch -- cheapest knob that touches per-step waste.
+     --speculative-config '{"method":"qwen3_5_mtp","num_speculative_tokens":1,
+                            "disable_padded_drafter_batch":true}'
+     Expected: small/uncertain (a few %). Removes padded-batch waste in the drafter prepare path but
+     does NOT remove eager attention or the fixed metadata/dispatch overhead. Low cost to A/B; if it
+     does not move N=1 toward breakeven, the fixed overhead is confirmed and we stop here.
+
+  RANK 3  PROFILE the spec step to PROVE the split (the diagnostic, higher value than any knob).
+     Serve N=1 with profiling on and read where the 1.28x-extra goes: eager-attn wall vs prepare_inputs/
+     metadata/dispatch fixed cost. ONEDNN_VERBOSE=2 + the vLLM forward timers, or a torch profiler trace
+     of one spec step. This decides between "needs FULL capture" (eager-attn dominant) vs "needs upstream
+     spec-path overhead reduction" (fixed machinery dominant) -- both point off-PIECEWISE, but it tells
+     the lead which upstream lever (oneAPI 2026.0 FULL vs a vLLM spec-path patch / issue #33341) to back.
+
+  RANK 4  num_speculative_tokens=2 -- map the curve (do NOT expect positive).
+     --speculative-config '{"method":"qwen3_5_mtp","num_speculative_tokens":2}'
+     Expected: ~21-23 t/s, between N=1 and N=3, still negative. The accept-decay (0.84/0.57) means the
+     2nd token rarely pays its draft+verify; only completes the N=1/2/3 curve for the writeup.
+
+  NOT WORTH TESTING (reasoned out, no expected effect on the root cause):
+   - raising cudagraph_capture_sizes to include verify shapes: the verify GEMM already replays at
+     2/4/8; this captures GEMM not attention -> ~0 effect, +VRAM (matches the earlier "capture >8 =
+     0 gain" negative).
+   - parallel_drafting=true: collapses the SEQUENTIAL drafter loop (helps N>1) BUT (i) at N=1 there is
+     only one drafter forward so it is a no-op, and (ii) for mtp it is not auto-enabled (only dflash
+     sets it, speculative.py:756) and the qwen3_5_mtp head is single-layer autoregressive, not a
+     parallel multi-head predictor -- forcing it is unsupported/likely-incoherent. Skip on this model.
+   - draft_tensor_parallel: attacks compute, not the launch/fixed-overhead bottleneck; single card =
+     no TP anyway. Neutral-to-worse.
+   - VLLM_XPU_* envs: do not change launch count or the eager-attn split; at most shave constants.
+
+--------------------------------------------------------------------------------
+G.4  VERDICT: net-positive on PIECEWISE = NO for this model; it needs FULL capture
+--------------------------------------------------------------------------------
+The MTP head is an EXCELLENT drafter (legs proven: 85% @ N=1, 2.86 @ N=3). But net-positive decode on
+the hybrid-GDN Qwen3.6-27B is NOT achievable by any PIECEWISE serve config, because the -19% is
+structural: (1) ALL attention (incl. the majority GDN layers) runs EAGER under PIECEWISE and the
+verify pays it over N+1 tokens; (2) a heavy FIXED per-spec-step / per-drafter-forward overhead
+(prepare_inputs + per-layer attn-metadata rebuild + dispatch + reject bookkeeping) that does not
+amortize at our accept rate. Neither is removable without FULL capture (captures the verify+drafter
+attention into one graph, killing both the eager-attn tax AND most of the per-pass dispatch overhead).
+FULL is gated on the work_group_scratch SYCL-Graph toolchain limit (oneAPI DPC++ 2026.0) + TRITON_ATTN
+being unwired on XPU -- exactly doc 13's blockers. So MTP-positive is a TOOLCHAIN item (oneAPI 2026.0
+-> FULL_DECODE_ONLY, which captures uniform_decode_query_len = 1+N), not a config we can set today.
+Upstream corroboration: vLLM issue #33341 ("Support Full CUDA Graph for the drafter") -- the drafter
+being PIECEWISE-only is a known, tracked limitation, not a B70 misconfig. Keep N=1 MTP filed for the
+oneAPI-2026.0 / FULL-capture phase; do NOT ship MTP-on for interactive decode on the current stack.

@@ -1866,3 +1866,32 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   **=> B70 holds 40+ t/s decode at 15K context (w4a8)** -- strong long-context serving; fp8-KV is what keeps it
   graceful. TTFT scales with prefill (0.8 -> 4.7s; ~3180 t/s prefill at 15K, down from 4953 @ 1800 = attention
   O(n^2)). **Serving characterization now COMPLETE across all dimensions: latency, batch (both models), context.**
+
+### 2026-06-20 -- [NEW DIRECTIVE] get 27B/35B W4A8 single-card loaded + optimize + MTP (in progress)
+User: "fix 27B-W4A8 serve (4304 blocker)... apply 14b lessons" + "work on MTP, qwen3.6 takes to it better" +
+"do what you can to get w4a8 loaded, optimize and mtp all 27b and 35b we can single-card load."
+
+**MTP verdict (agent, doc 12 section G) -- DEFINITIVE, net-positive is FULL-capture-gated:** the 27B MTP -19%
+@ N=1 is TWO causes, neither fixable on PIECEWISE: (a) under PIECEWISE all attention runs eager AND
+`gdn_attention_core_xpu` is in the splitting-op list -> the ~30 majority GDN layers ALSO run eager in the
+verify (my "GDN is cheaper" hope was WRONG); (b) a fixed per-spec-step machinery tax (prepare_inputs +
+per-layer attn-metadata rebuild + dispatch + reject bookkeeping) that doesn't amortize -- proof: N=1->N=3 =
+2.3x T for two CHEAP 1-layer drafter forwards. Net-positive needs FULL capture (FULL_DECODE_ONLY,
+uniform_decode_query_len=1+N) -> same work_group_scratch/oneAPI-2026.0 + TRITON_ATTN-unwired wall (vLLM
+#33341). **=> MTP filed for the FULL-capture phase; the head is a proven drafter but NOT shippable for
+interactive decode now. Will still enable+measure per model (ready to flip when FULL capture lands).**
+
+**27B-W4A8 serve fix -- 4 blockers solved + size fight (in progress):**
+1. 4304 group-128: ONLY `model.visual.blocks.N.mlp.linear_fc2` (input 4304, /128=33.6) -> ignore it.
+2. Config collapse (TypeError Qwen3_5Config vs Qwen3_5TextConfig): `fix_27b_vlm_config.py` grafts the base VLM
+   wrapper config + the quantization_config -> arch Qwen3_5ForConditionalGeneration, model_type qwen3_5.
+3. Ignore prefix: llmcompressor saved `model.layers.N.linear_attn` but VLM modules are
+   `model.language_model.layers.N.linear_attn` -> patch ignore to regex (`re:.*linear_attn.*` etc.).
+4. Load-time DEVICE_LOST (memory): byte-map showed the bulk is text-quant 17.5 GiB I8 (packs to ~8.75 int4 on
+   load) + **GDN linear_attn 10.36 GiB BF16 (ignored = the killer)** + lm_head 2.37 + other 2.37 = 33G disk ->
+   ~24-33 GiB GPU (incl int8->int4 load transient) -> OOM. Visual was a RED HERRING (negligible bytes).
+   Fix: quantize the GDN too (re-quant3, ignore only lm_head+mtp+visual.fc2) -> ~14 GiB GPU. Coherence check
+   PENDING (RTN on the linear-attn is the quality risk; if degraded, the bf16-GDN W4A8 is a 2-card model).
+- Recipe so far (for any quantized Qwen3_5 VLM serve): scripts/49 (SCHEME=W4A8 DATAFREE=1, ignore tuned for
+  fit) -> fix_27b_vlm_config.py graft -> regex-ignore patch -> copy preprocessor_config.json -> 30_serve
+  GRAPH=1 PIECEWISE KVDTYPE=fp8. Single-card-loadable targets: 27B (W4A8 if GDN-quant coheres) + 35B-A3B MoE.
