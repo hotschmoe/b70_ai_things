@@ -1472,3 +1472,26 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   ~6 t/s eager is a load proof, not an optimized number), graph capture, accuracy eval, MTP/shared-expert checks.
   GPU lease released immediately after the test (other agent unblocked).
 
+### 2026-06-20 -- [ROOT-CAUSE + DEFER] 27B capture probe error = WRONG IMAGE (:int8g lacks GDN); run-ready on :v0230
+- My earlier 27B-on-`:int8g` probe error (`EngineCore ... InternalServerError` on first token) is now ROOT-CAUSED
+  by the other agent's note: **`:int8` / `:int8g` were built minimal (`GDN_ENABLED=OFF`) so they LACK
+  `gdn_attention` and the Gated-DeltaNet 27B crashes on the first token.** Not a capture problem -- wrong image.
+  The 27B must serve on the **full `:v0230` build** (which has GDN). (Confirmed the 27B uses GDN: vLLM splits
+  `vllm::qwen_gdn_attention_core` out as a piecewise op.)
+- **27B PIECEWISE is RUN-READY (deferred for GPU courtesy).** Exact command for a free-GPU window (the 27B is
+  AutoRound int4 = w4a16-like, which captured +95% on the 14B, so expect a big lift on the 7.59 t/s eager):
+  `IMG=vllm-xpu-env:v0230 MODEL=/models/Lorbus_Qwen3.6-27B-int4-AutoRound SERVED=qwen36-27b-int4 GRAPH=1
+  DTYPE=auto UTIL=0.92 bash /mnt/vm_8tb/b70/30_serve_w4a8_graph.sh` then `SERVED=qwen36-27b-int4 N=256 TRIALS=4
+  bash .../31_decode_probe.sh` (use a plain request, not ignore_eos). 30_serve's pass_config fix is
+  image-agnostic so it dodges the MLARoPE NameError on :v0230 too. **NOT run now:** it needs a ~10-12 min AOT
+  compile = too long a hold on the shared B70 while the other agent iterates on the 35B. Parked until the card
+  is free for a longer window (task #8).
+- **[POINTER for the MoE workstream, not my branch] graph capture is very likely the 35B-A3B's biggest decode
+  lever too.** The other agent flagged "graph capture: not yet done" at ~6 t/s eager. Given capture ~doubled
+  every DENSE int4 path here by killing eager dispatch overhead, the 256-expert MoE (even more per-token
+  Python/dispatch) is a prime candidate -- try `30_serve ... GRAPH=1` on the MoE image once it is stable
+  (watch: the Triton `fused_moe_kernel_gptq_awq` must be in `splitting_ops` / capturable; PIECEWISE keeps
+  uncaptured ops eager so it should at least not regress). Left to the MoE owner; flagged here so it is not lost.
+- No GPU touched this iteration (campaign core is complete; remaining items are GPU-courtesy-gated or the other
+  agent's domain). Kernel campaign verdict stands: PIECEWISE capture ~2x's int4 decode; w4a16 leads, w4a8 prefill.
+
