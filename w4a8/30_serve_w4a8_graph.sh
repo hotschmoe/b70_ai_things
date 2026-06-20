@@ -45,6 +45,9 @@ ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
       --dtype "$DTYPE" --tensor-parallel-size 1 --max-model-len "$MAXLEN" --max-num-seqs "$MAXSEQS"
       --gpu-memory-utilization "$UTIL" --no-enable-prefix-caching --trust-remote-code "${EAGER[@]}" "${CC[@]}")
 [ -n "$SPEC" ] && ARGS+=(--speculative-config "$SPEC")
+# KVDTYPE: store the KV cache in fp8 (fp8_e5m2 = no scales, simplest) -> halves KV BW (long-ctx decode win)
+# + 2x context/batch capacity. B70 has no FP8 ALU, so this is fp8-STORAGE + dequant-on-read in attention.
+[ -n "${KVDTYPE:-}" ] && ARGS+=(--kv-cache-dtype "$KVDTYPE")
 
 echo "=== serve W4A8 GRAPH=$GRAPH cgmode=$([ "$GRAPH" = 1 ] && echo $CGMODE || echo eager) attn=${ATTN:-default} IMG=$IMG dtype=$DTYPE MAXLEN=$MAXLEN SEQS=$MAXSEQS ==="
 echo "vllm ${ARGS[*]}"

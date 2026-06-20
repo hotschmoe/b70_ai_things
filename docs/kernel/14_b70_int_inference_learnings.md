@@ -9,7 +9,13 @@ On the B70, **graph capture -- not kernel hand-tuning -- is the decode win.** Th
 GEMM is *already* at the practical bandwidth ceiling, so the high-leverage move was killing eager per-op
 dispatch (PIECEWISE XPU graph capture), not rewriting the matmul. We proved this by *trying* the kernel
 rewrites and measuring them flat. The best single-card stack today = **oneDNN int8/int4 GEMM + PIECEWISE
-capture + fp8-KV**, and the next real gains need a toolchain bump (oneAPI 2026.0 -> FULL capture) or a 2nd card.
+capture + fp8-KV** (the fp8-KV piece is VALIDATED: `--kv-cache-dtype fp8` (e4m3) serves coherently, +3% decode
+at medium ctx growing with context, and 2x KV capacity; the unscaled `fp8_e5m2` is rejected for quantized
+checkpoints). The next real gains need a toolchain bump (oneAPI 2026.0 -> FULL capture) or a 2nd card.
+
+> NB on fp8-KV: B70 has no FP8 ALU, so this is fp8-STORAGE + dequant-on-read in attention -- it halves the KV
+> bandwidth + footprint (decode win grows with context length; doubles max context / batch), at no measured
+> quality loss. Use `e4m3` (alias `fp8`), NOT `e5m2`. Knob: `30_serve_w4a8_graph.sh KVDTYPE=fp8`.
 
 ## The five load-bearing learnings
 

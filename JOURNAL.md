@@ -1769,3 +1769,18 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   int4/int8 decode kernel campaign is COMPLETE -- the GEMM/GEMV is at the practical BW ceiling. The only real
   remaining upside is FULL capture (toolchain, oneAPI 2026.0) + the dual-card phase (card #2). Doc 04 ladder
   steps 4 + 5 done.
+
+### 2026-06-20 -- [VALIDATED] fp8 KV cache works on the B70 (e4m3) -- a real serve win (capacity + small decode)
+- The capstone (doc 14) CLAIMED "oneDNN + capture + fp8-KV" as the best stack -- but I had NOT actually tested
+  fp8-KV. Closed the gap (validate-your-own-claims). Added a `KVDTYPE` knob to 30_serve.
+- **`fp8_e5m2` is REJECTED** for quantized checkpoints: vLLM `attention.py:168` guards
+  `if should_load_quant_weights(...) and kv_cache_dtype=="fp8_e5m2": raise` (e5m2 is unscaled). Use the SCALED
+  **`fp8_e4m3` (alias `fp8`)** instead.
+- **`fp8` (e4m3) WORKS:** served Qwen3-14B-W4A8 `:int8g` GRAPH=1 KVDTYPE=fp8 maxlen=8192 -> HEALTHY, PIECEWISE
+  captured (0.93 GiB), `kv_cache_dtype=fp8` accepted. **Output COHERENT** (correct reasoning on a BW-decode
+  prompt -- quality preserved). **decode = 49.8 t/s vs 48.2 fp16-KV at ~1801 ctx (+3.3%)** -- a small win at
+  medium ctx (KV is ~10% of decode BW there), GROWS with context as the KV read becomes a larger BW fraction;
+  plus **2x KV capacity** (halved KV -> ~2x max context / batch). NB cross-run delta is near the noise floor;
+  the durable wins are the 2x capacity + the long-ctx scaling.
+- **=> the capstone's fp8-KV claim is now VALIDATED (with the e4m3 caveat). 30_serve KVDTYPE=fp8 is the
+  recommended long-ctx / high-batch serve knob.** Doc 14 + serve script updated.
