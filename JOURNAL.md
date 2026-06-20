@@ -1679,3 +1679,10 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   needs the deeper fix: the Triton "0 active drivers" import-order fix (agent C doc 12) -> TRITON_ATTN (FULL
   capture, no eager-attn verify tax) + a fast Triton rejection sampler. **Net: MTP legs PROVEN (good accept);
   net-positive is gated on N-tuning and/or the Triton/FULL-capture fix -- a clean, diagnosed path for card #2.**
+- **[N=1 result] 25.47 t/s (better than N=3's 19.65 but STILL -19% vs 31.36), accept 1.85 / 85% first-token.**
+  So even the BEST case (1 draft, 85% accept) is net-negative -> the bottleneck is the per-step MACHINERY
+  overhead (eager-attn verify + Triton-disabled reject-sampler fallback), NOT the draft count. MTP verdict
+  COMPLETE: **the head is an excellent drafter (legs PROVEN: 85% @ N=1, 2.86 @ N=3), but net-positive decode on
+  the B70 is gated on the Triton fix -> FULL capture (no eager-attn verify tax) + a fast Triton rejection
+  sampler.** That is the deep MTP work for the card-#2 phase (or a focused single-card Triton "0 active
+  drivers" import-order fix per agent C doc 12). GPU freed. Pivoting to the PP-1 int8-GEMM kernel hand-tune.
