@@ -443,6 +443,30 @@ class INCConfig(QuantizationConfig):
                 group_size=group_size,
                 sym=sym,
             )
+
+        # --- b70 patch: int4 MoE experts on XPU ---
+        # Upstream INC returned None here for RoutedExperts, so the FusedMoE layer
+        # fell back to UnquantizedFusedMoEMethod (bf16 experts) and OOM'd at load
+        # (256 experts dequantize toward ~70 GB > 32 GB card). Mirror the gptq path
+        # (apply_gptq_quant_layer): keep the experts int4 and run the pure-Triton
+        # wna16 MoE kernel. On XPU should_moe_wna16_use_cuda() is False (is_cuda
+        # gate), so fused_experts dispatches to invoke_fused_moe_wna16_triton_kernel
+        # -- no CUDA-only op required. packing_format is auto_round:auto_gptq + sym,
+        # so we present it to moe_wna16 as a gptq config.
+        if isinstance(layer, RoutedExperts):
+            from vllm.model_executor.layers.quantization.moe_wna16 import (
+                MoeWNA16Config,
+            )
+
+            config = {
+                "quant_method": "gptq",
+                "bits": weight_bits,
+                "group_size": group_size,
+                "sym": sym,
+                "lm_head": False,
+            }
+            return MoeWNA16Config.from_config(config).get_quant_method(layer, prefix)
+
         return None
 
     def apply_cpu_w4a16_quant_layer(self, layer, prefix: str):

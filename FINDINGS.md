@@ -53,6 +53,7 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 | Thing | Result |
 |---|---|
 | **Qwen3.6-27B (Gated-DeltaNet)** | **RUNS** via int4 AutoRound on vLLM **0.23.0** — 7.9 t/s, coherent. Only known single-card path. |
+| **Qwen3.6-35B-A3B (256-expert MoE)** | **RUNS** via int4 AutoRound (W4A16) on **0.23.0** + a 16-line INC-XPU MoE routing patch — loads 19.6 GiB, coherent, ~6 t/s eager. `contrib/vllm_moe_xpu/`. |
 | Qwen3-14B **FP8** (vLLM-XPU) | **35 t/s** single / **556 t/s** @ C64 (raise `--max-num-seqs`!), near-lossless |
 | Qwen3-14B **F16/BF16** | 18.7 t/s, but ~28 GB barely fits (tiny KV). FP8 is ~1.9x faster — just use FP8 |
 | Qwen2.5-7B **Q4_K_M** (llama.cpp SYCL) | ~90 t/s decode — llama.cpp SYCL is great for standard-attention models |

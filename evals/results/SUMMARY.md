@@ -28,7 +28,7 @@
 | model (quant) | serves on 1xB70? | gsm8k | HumanEval+ b/+ | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
 |---|---|---|---|---|---|---|---|---|
 | **Qwen3.6-27B** (AutoRound int4) | **yes** | **100% (50/50)** | **0.963 / 0.927** | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
-| **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | **no** -- OOMs at weight-load | - | - | - | - | - | - | 21.5 GB on disk |
+| **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | **yes** -- needs INC-XPU MoE patch | - | - | - | ~6 (eager, untuned) | - | - | 19.6 GiB load + 6.24 KV |
 
 - **The higher-density tradeoff, quantified (2026-06-20, HumanEval+ 164, thinking-off):** the 27B int4 hits
   **0.963 / 0.927** vs the best 14B (fp8 **0.915 / 0.890**) -- **+4.8 base / +3.7 plus** -- but decodes at
@@ -42,10 +42,14 @@
     AutoRound tokenizer_config (it ships without one).
   - Our own **compressed-tensors W4A16 27B fits (25 GB) but won't serve**: `XPUwNa16` needs input dims ÷32,
     and the 27B's gated attention has a 4304 dim (the 14B never hit this). Needs a 32-pad / ignore / kernel fix.
-- **35B-A3B int4 does NOT fit one card** despite 21.5 GB on disk: **vLLM-XPU has no fused int4 MoE kernel**, so
-  the 256 experts dequantize (~toward bf16 ≈ 70 GB) → `OUT_OF_DEVICE_MEMORY` at load (retry with minimal KV
-  OOMs identically). **The MoE-on-XPU gap.** Needs a fused int4 MoE XPU kernel (the "Quark 99 t/s" path,
-  which used 4×B70) or multiple cards.
+- **[2026-06-20] 35B-A3B int4 NOW LOADS + GENERATES on one card** -- the "MoE-on-XPU gap" was a routing bug, not a
+  missing kernel. vLLM 0.23.0+xpu's INC integration (`auto-round` -> `INCConfig`) returned `None` for `RoutedExperts`
+  on XPU -> FusedMoE fell back to bf16 (`UnquantizedFusedMoEMethod`) -> 256 experts dequantized toward ~70 GB ->
+  `OUT_OF_DEVICE_MEMORY` at load. A **16-line patch** routes the experts to `MoeWNA16Config` (the pure-Triton
+  `fused_moe_kernel_gptq_awq`, no CUDA-only op since `should_moe_wna16_use_cuda` is `is_cuda`-gated). Now:
+  **load 19.6 GiB** (int4 packed) + 6.24 GiB KV (122,880 tok, 60x@2048), coherent output, **~6 t/s eager
+  (untuned)**. Patch + load-test: `contrib/vllm_moe_xpu/` + `scripts/53_loadtest_35b_moe_xpu.sh`. NOT yet: perf
+  tuning (no `E=256,N=512,int4_w4a16` config -> "sub-optimal" warning), graph capture, accuracy eval.
 
 ---
 

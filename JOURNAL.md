@@ -1435,3 +1435,40 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - Banked across JOURNAL + FINDINGS + evals/results/SUMMARY.md (authoritative leaderboard banner) + docs/kernel/04
   ladder + docs/literature/06 (stale "no XPU capture" verdict corrected). GPU left FREE for the other agent.
 
+### 2026-06-20 — [BREAKTHROUGH] Qwen3.6-35B-A3B int4 (256-expert MoE) NOW LOADS + GENERATES on ONE B70
+- Reopened the 2026-06-19 "MoE-on-XPU gap" (35B-A3B OOM'd at load). The gap was NOT a missing kernel -- it was a
+  one-branch routing bug in vLLM's INC quant integration. **Root cause** (read from the live `:v0230` image,
+  vllm 0.23.0+xpu): `auto-round` maps to `INCConfig` (inc.py); `INCConfig.get_quant_method` sends ALL XPU layers
+  to `apply_xpu_w4a16_quant_layer`, which only handles `LinearBase`/`ParallelLMHead` and **returns `None` for
+  `RoutedExperts`**. A `None` MoE method -> vLLM falls back to `UnquantizedFusedMoEMethod` (bf16 experts) -> the
+  256 int4 experts dequantize toward ~70 GB -> `OUT_OF_DEVICE_MEMORY` at load. On CUDA/CPU the same INC routes
+  `RoutedExperts` -> `MoeWNA16Config` (int4-preserving); the XPU branch simply never implemented it. (llm-scaler
+  0.14.x is worse: its INC returns `UnquantizedFusedMoEMethod` for ANY MoE -> same OOM. So no stock Intel image
+  serves this model; community runs must patch, exactly as hinted.)
+- **Fix (the missing piece):** add the `RoutedExperts` branch to `apply_xpu_w4a16_quant_layer`, mirroring the
+  proven gptq path -- present the experts as a gptq config and return
+  `MoeWNA16Config.from_config({...}).get_quant_method(layer, prefix)`. ~16 lines.
+  `contrib/vllm_moe_xpu/inc.py` (full patched file) + `contrib/vllm_moe_xpu/README.md`. On XPU
+  `should_moe_wna16_use_cuda()` is False (it is `is_cuda`-gated), so `fused_experts` dispatches to the pure-Triton
+  `invoke_fused_moe_wna16_triton_kernel` -- NO CUDA-only op needed. Triton is live on XPU here (the GDN linear-attn
+  kernel already uses Triton/FLA).
+- **No image rebuild:** bind-mount the patched inc.py over the image file
+  (`-v .../inc_xpu_moe.py:/opt/venv/.../quantization/inc.py:ro`). Iterate in seconds, not a 1-2 h build.
+- Config -> command:
+  `scripts/runremote.sh scripts/53_loadtest_35b_moe_xpu.sh`  (offline LLM load + 24-tok greedy generate, eager,
+  maxlen 2048, util 0.95, dtype bf16 native; wrapped in host `gpu-run` so the lease is held only for the test).
+- **Result (exit 0, 162 s end-to-end):**
+  - `quantization=inc`, arch `Qwen3_5MoeForConditionalGeneration` resolved.
+  - **`Model loading took 19.6 GiB`** (int4 experts stay PACKED) -- vs the prior ~70 GB bf16 dequant that OOM'd.
+  - Memory profiling PASSED (the step that OOM'd before): `Available KV cache 6.24 GiB`, `GPU KV cache 122,880
+    tokens`, `Maximum concurrency 60.00x @ 2048`.
+  - MoE confirmed int4: `fused_moe.py: Using default MoE config ... E=256,N=512,device_name=Intel(R)_Graphics_
+    [0xe223],dtype=int4_w4a16` + Triton JIT of `fused_moe_kernel_gptq_awq` (the wna16 int4 MoE GEMM).
+  - **`GENERATION OK` -> "The capital of France is" -> " Paris, a city renowned for its rich history, culture, and
+    iconic landmarks. Situated in the north-central part of"** -- coherent. ~6 t/s decode (single-stream, eager).
+- **Verdict:** the MoE-on-XPU gap for int4 weight-only is CLOSED for load+inference via a 16-line INC routing fix;
+  the wna16 Triton MoE kernel runs fine on Battlemage. Updates FINDINGS / SUMMARY / quant_methods (was "OOM -- no
+  fused int4 MoE kernel"). NOT yet done: perf tuning (no `E=256,N=512,int4_w4a16` config -> "sub-optimal" warning;
+  ~6 t/s eager is a load proof, not an optimized number), graph capture, accuracy eval, MTP/shared-expert checks.
+  GPU lease released immediately after the test (other agent unblocked).
+

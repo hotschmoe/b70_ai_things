@@ -90,7 +90,7 @@ FUTURE (kernel-gated) / OTHER-AGENT.
 | Qwen3-14B | W4A4 | PrefixQuant (static-a) | -- | -- | FUTURE -- static-act avoids per-token overhead; fake-quant code only today |
 | Qwen3.6-27B | W4A16 | **AutoRound** | **0.927** | -- | DONE -- single-card quality LEADER |
 | Qwen3.6-27B | W8A8 | GPTQ + sel-SmoothQuant | -- | -- | PLANNED -- needs 2 cards to serve (RESEARCH_TODO via MTP_TODO Phase C) |
-| Qwen3.6-35B-A3B | W4A16 (MoE) | AutoRound | -- | -- | OOM -- no fused int4 MoE kernel (RESEARCH_TODO Track 5) |
+| Qwen3.6-35B-A3B | W4A16 (MoE) | AutoRound | -- | -- | LOADS+GENERATES (1 B70) via 16-line INC-XPU MoE routing patch -> MoeWNA16/Triton; was "OOM"; see contrib/vllm_moe_xpu/ |
 | Qwen3-14B / 27B | FP8 | online dynamic | 0.890 | 0.968 | DONE -- control (27B FP8 needs vLLM 0.23.0) |
 
 **The headline this table exists to show:** at every scheme we've calibrated both ways, **GPTQ/AutoRound beat RTN**,
