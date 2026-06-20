@@ -1730,3 +1730,25 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   now be fast, removing ONE of the two MTP overheads (the other -- eager-attn verify under PIECEWISE -- remains
   until FULL capture). Re-testing 27B MTP N=1 + TRITONSHIM=1 vs the earlier -19% (25.47 t/s). If the fast
   sampler moves it toward/over breakeven, that is MTP partly unblocked on ONE card NOW.
+- **[RESULT] MTP+shim = 25.53 t/s -- UNCHANGED from no-shim N=1 (25.47), still -19% vs MTP-off (31.36)**, same
+  86.9% accept. So the now-fast Triton SAMPLER is NOT the MTP bottleneck. **CONFIRMED: the MTP cost is the
+  EAGER-ATTENTION VERIFY** (N+1 tokens through eager attention under PIECEWISE) -- the head drafts accurately
+  but the verify costs more than the 0.87-token accept saves. MTP-positive needs FULL capture (captures
+  attention) -> blocked by the work_group_scratch SYCL-Graph toolchain limit (oneAPI 2026.0) + TRITON_ATTN
+  unwired on XPU. **MTP verdict FINAL: head proven (legs); net-positive is TOOLCHAIN-gated, not Triton-gated.**
+  The Triton shim is still a clean reusable fix (enables Triton for any future Triton op / sampler), just not
+  the MTP unblock. Filed for the oneAPI-2026.0 / card-#2 phase.
+
+### 2026-06-20 -- [SESSION WRAP] deep w8a8 + MTP night: what's the best single-card W8A8, honestly
+- **The headline of the whole night: graph capture, not kernel hand-tuning, is the B70 win.** PIECEWISE capture
+  ~2x'd int4 decode (w4a16 28->55, w4a8 17->48) and 4-7x'd the flagships (27B 7.8->30.8, 35B-MoE 7.9->56.8).
+  The int8 W8A8 GEMM is ALREADY near the practical ceiling via oneDNN (prefill 67-80% of 367 TOPS, decode
+  85-95% of 608 GB/s) -- two hands-on kernel tweaks (B1 drop-zp, PP-1 format_tag::any) were CORRECT but
+  perf-neutral, proving oneDNN v3.9 already handles weight-layout + zp internally. So "best single-card W8A8" =
+  oneDNN GEMM + PIECEWISE capture + fp8-KV; the kernel is not the bottleneck.
+- **MTP:** head is an accurate drafter (proven legs); net-positive is toolchain-gated (eager-attn verify ->
+  FULL capture -> oneAPI 2026.0). Triton-enable solved (shim).
+- **Remaining levers, all high-effort or toolchain/card-#2-gated:** PP-2 hand-DPAS GEMM (1-2 wk, ~1.2x);
+  FULL capture (oneAPI 2026.0) -> MTP-positive + spec-decode; L1 wire the existing fused rmsnorm (small);
+  W8A8/27B dual-card quant (card #2). The high-EV single-card wins are BANKED; the rest needs the toolchain or
+  the 2nd card. Honest, thorough, and every negative result documented as a learning.
