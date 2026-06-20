@@ -1837,3 +1837,17 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
 - **USEFUL NEGATIVE: capturing batch>8 costs ~1 GiB VRAM for ZERO throughput gain -> keep capture at default
   [1,2,4,8].** Corrected the doc-14 "free bump" note. The genuine serving headline: **one B70 = ~412 t/s @ 8
   users (52/stream, best UX) up to ~1286 t/s @ 32 users (42/stream) -- KV-bound, fp8-KV is what enables N=32.**
+
+### 2026-06-20 -- [HEADLINE MODEL] w8a8 batched serving capacity measured: ~208 t/s @ 8 users, 364 @ 16
+- Measured the W8A8 (the headline model) batched throughput (was only ESTIMATED before). Both models now done:
+  | model | single | @4 | @8 | @16 | @32 |
+  |-------|--------|----|----|-----|-----|
+  | w4a8  | 48 | 215 | **412** (52/s) | 658 (42/s) | **1286** (42/s) |
+  | w8a8  | 26 | 106 | **208** (26/s) | **364** (23/s) | KV-bound (~N=22 max) |
+- **w8a8 scales even MORE linearly than w4a8**: per-stream FLAT at 26 t/s through N=8 (4.0x/7.9x ~perfect),
+  only dipping to 23 at N=16. Why flatter than w4a8 (which improved 48->52)? At N=1 w8a8 is already more
+  BW-bound (14 GiB weights dominate -> little fixed overhead to amortize), so batching just adds streams at
+  the same rate. **w4a8 carries ~2x the aggregate at every batch** (smaller 9.3 GiB weights + higher base).
+- **=> serving characterization COMPLETE for both headline models.** Best w8a8 serve = ~208 t/s @ 8 users
+  (26/stream), 364 @ 16; best w4a8 serve = ~412 @ 8 (52/stream), 1286 @ 32. Pick w4a8 for throughput+decode,
+  w8a8 for prefill+accuracy. Doc 14 updated with the dual-model table.

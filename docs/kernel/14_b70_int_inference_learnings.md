@@ -26,6 +26,9 @@ IMPROVES to N=8 (fixed overhead amortizes), then steps to a ~42 t/s plateau past
 ATTENTION KV read, which (unlike the amortized weight read) scales with batch; aggregate still grows linearly.
 **One B70 = ~412 t/s @ 8 users (52/stream, best UX) up to ~1286 t/s @ 32 users (42/stream).** N=32 is ~the
 KV-bound max (32 x 0.5 GiB fp8-KV + 9.3 weights ~ 25 GiB) -- **fp8-KV is what enables the high batch.**
+W8A8 (headline model) scales the same way from its 26 t/s base, even more linearly (per-stream flat at 26
+through N=8 -- already BW-bound at N=1): **N=8: 208 t/s (26/stream), N=16: 364 (23/stream)** (~N=22 KV-max on
+14 GiB weights). So w4a8 carries ~2x the aggregate at every batch -> for throughput use W4A8, for prefill W8A8.
 > Tested + DISPROVED: capturing batch>8 (`cudagraph_capture_sizes`) does NOT lift the N>8 per-stream (it's
 > attention-KV-bound, not capture-bound) and costs ~1 GiB VRAM -> keep capture at the default [1,2,4,8].
 
