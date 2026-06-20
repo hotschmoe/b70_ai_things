@@ -1354,3 +1354,20 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   `qwen3-14b-w4a8-gptq` (CLAUDE.md model-check). Next: (a) re-confirm w8a8 PIECEWISE on the current image,
   (b) capture fp8/w4a16 for the apples-to-apples decode leaderboard, (c) try FULL capture (TRITON_ATTN).
 
+### 2026-06-20 -- [CONFIRM] w8a8 PIECEWISE reconciled (+13%) -> validates the "w4a8 unfused-quant" hypothesis
+- Re-measured w8a8 on the CURRENT `:int8g` (with the pass_config compile-fix), same probe, eager vs PIECEWISE:
+  | config | eager | PIECEWISE | capture gain |
+  |---|---|---|---|
+  | w8a8 | 23.62 | 26.68 | **+13%** (reproduces the banked +16.7% within noise) |
+  | w4a8 | 16.79 | 48.18 | **+187%** |
+  Both PIECEWISE timings dead-flat (w8a8 9.593 +/- 0.002 s, w4a8 5.312 +/- 0.001 s = captured-graph determinism).
+- **Hypothesis CONFIRMED:** the 14x difference in capture gain (+187% vs +13%) is the activation-quant fusion.
+  w4a8's per-token int8 act-quant is the UNFUSED pure-PyTorch `dynamic_per_token_int8_quant_ref` (hundreds of
+  eager ops/token) -> eager w4a8 is dispatch-bound -> capture wins huge. w8a8 uses the FUSED custom
+  `dynamic_per_token_int8_quant` op -> eager already lean -> small capture headroom. The banked w8a8 +16.7% is
+  reproducible (so the compile-pass bug must post-date it, or its run predated the regression -- either way the
+  number stands). **Decode leaderboard now (PIECEWISE where measured): w4a8 48.18 >> {fp8 ~32, w4a16 29 (both
+  still EAGER), w8a8-piecewise 26.68}.** To finish the ranking, capture fp8/w4a16 too (they use fp16 acts =
+  lean eager, so expect ~w8a8-like modest gains -> w4a8 should still lead). Next: A2 FULL capture (push higher
+  + flip spec-decode) and the fp8/w4a16 capture sweep.
+
