@@ -3,6 +3,26 @@
 > **The real targets are Qwen3.6-27B and Qwen3.6-35B-A3B** (quality + real-world speed). The Qwen3-14B
 > campaign below was harness verification + a quant-delta study (don't read it as the headline).
 
+> ## [!] DECODE LEADERBOARD UPDATE (2026-06-20): PIECEWISE graph capture ~DOUBLES int4 decode
+> **Every decode t/s in the tables below was measured EAGER (`--enforce-eager`). That is no longer the right
+> config.** PIECEWISE XPU graph capture (image `:int8g`, `w4a8/30_serve_w4a8_graph.sh GRAPH=1`, torch 2.11+xpu)
+> works on the B70 and is the single biggest decode lever found. Captured single-stream decode (Qwen3-14B, same
+> probe), eager -> PIECEWISE:
+>
+> | quant | VRAM | eager t/s | **PIECEWISE t/s** | gain |
+> |---|---|---|---|---|
+> | **w4a16-gptq** | 9.3 GB | 28.0 | **54.6** | **+95%** (decode leader) |
+> | **w4a8-gptq**  | 9.3 GB | 16.8 | **48.2** | **+187%** (also best prefill/TTFT, int8-XMX) |
+> | w8a8-gptq | 15.3 GB | 23.6 | 26.7 | +13% (fused quant already lean) |
+> | fp8 | 15.3 GB | ~32 | (capped ~40 by 15.3 GB) | -- |
+>
+> **Revised picks (single B70, captured):** decode-heavy/interactive -> **w4a16-gptq (54.6 t/s, near-lossless,
+> 9.3 GB)**; prefill-heavy/long-context/agentic -> **w4a8-gptq** (48 decode + best prefill/TTFT, 9.3 GB). w4a8 is
+> NO LONGER "dominated" -- it co-leads with w4a16, split by the decode-vs-prefill axis. Both int4 paths ~2x with
+> capture (they were eager-dispatch-bound; w4a8 most, due to its unfused act-quant). See JOURNAL 2026-06-20 +
+> FINDINGS + docs/kernel/04. (One gotcha: torch.compile on XPU needs the `pass_config` fix in 30_serve to dodge
+> a `NameError: MLARoPEKVCacheCatFusionPass` from CUDA-only fusion passes.)
+
 ## REAL TARGETS — Qwen3.6 on one B70 (vLLM 0.23.0, `:v0230` build, greedy/eager)
 
 | model (quant) | serves on 1xB70? | gsm8k | HumanEval+ b/+ | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
