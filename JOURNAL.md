@@ -1268,3 +1268,30 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   through its flock lease. Launched a 4-agent army (B1 patch, w4a8 register_fake for PIECEWISE, oneDNN/IPEX/vLLM
   survey, custom SYCL int4 GEMV design) -- all CPU/web only; the lead serializes every GPU run.
 
+### 2026-06-20 -- [RESULT] B1 (drop symmetric src-zp) is CORRECT + CLEAN but does NOT speed up decode (~2x hypothesis WRONG)
+- Applied the agent-A diff to `int4_gemm_w4a8.h` (drop both `set_zero_points(DNNL_ARG_SRC)` + the runtime
+  zp arg + pin `zp_group_size=m2_zp.numel()` so the primitive cache can't alias sym/asym), rebuilt via
+  scripts/44 (CPU, ccache -> ~1 min), validated with `w4a8/22_validate_b1.sh` (baseline baked .so vs rebuilt
+  patched .so mounted, identical deterministic SYMMETRIC inputs).
+- **Correctness PASS:** output fingerprints (sum/absmax/mean) match baseline to ~6 sig figs on all 4 decode
+  shapes -- dropping the all-zero src-zp is numerically a no-op (as designed).
+- **Verbose PASS:** patched attrs = `attr-scales:src0:3:f16+wei:3:f16  attr-zero-points:wei:0:s8` -- the
+  `zero-points:src0` term is GONE, impl still `jit:gemm:any` (NOT `ref`). Patch took effect, no slow fallback.
+- **[KEY] Timing: NO speedup.** Patched is a wash-to-slightly-slower vs baseline. **My "src-zp doubles the
+  weight read at m=1 -> ~2x" hypothesis was WRONG:** oneDNN v3.12 precomputes the `zp_src*reduce_k(weight)`
+  compensation at primitive-CREATE and caches it, so the per-decode cost of a zero src-zp was already ~nil.
+  Agent A's conservative "low-single-digit %, no regression" was the right call. B1 is a correctness/cleanliness
+  win (removes a logically-dead attr, matches IPEX QMatmul.h + our clean w8a8 kernel), not a perf win.
+- **[CONFOUND -> controlled rerun launched]** baseline used the baked `0.1.9` .so, patched the rebuilt
+  `0.1.11` -- so the small regression on 2 shapes conflates patch-effect with build-toolchain diff. Rebuilding
+  the UNPATCHED control (same scripts/44 pipeline) to A/B `rebuilt-unpatched vs rebuilt-patched` cleanly.
+- **[SURPRISE -> needs confirm] baseline decode measured 72-93% of peak BW, not the doc's 52-64%.** The new
+  harness uses 200 iters / 30 warmup + CPU-genned inputs; the original `20_microbench` used 100/20 + on-xpu
+  input gen. If the higher number is the true steady-state (likely a warmup/clock effect), then **Lever C (a
+  custom m=1 GEMV) has far less headroom than the design assumed** (the GEMM is already near BW-bound on the
+  best shapes). Re-measure `20_microbench` with matched warmup to settle it before investing in Lever C.
+- Banked agent deliverables: `docs/kernel/05_int8_int4_optimization_survey.md`, `docs/kernel/06_sycl_int4_gemv_
+  design.md`, `docs/kernel/patches/{B1_analysis.md,A1_graph_capture_w4a8.md,int4_gemm_w4a8_drop_src_zp.diff}`,
+  `contrib/vllm_int8_xpu/xpu_int4*.{py,diff}`. Survey flagged doc fixes (literature/06 graph section stale;
+  issue #3323 is a closed memory-leak not a perf item; B3 is net-new not an IPEX port; split B4 into int8/int4).
+

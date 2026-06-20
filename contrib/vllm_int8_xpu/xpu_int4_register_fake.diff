@@ -1,0 +1,53 @@
+Unified-diff variant (c): fold the int4_gemm_w4a8 fake into the existing
+xpu_int8.py::_register_int8_fakes() flow.
+
+This is the lowest-friction deploy on the :int8g image because xpu_int8.py is
+already imported (its kernel class XPUInt8ScaledMMLinearKernel is referenced by the
+int8 scaled_mm dispatch in kernels/linear/__init__.py), so its import-time
+_register_int8_fakes() call already runs in the engine-core worker that does graph
+capture. Adding the int4 fake here means a single existing import covers BOTH the
+W8A8 and W4A8 decode paths -- no new module or new hook wiring needed.
+
+The int4 fake is guarded by the same hasattr check style: it only registers if the
+op schema exists, so it is a no-op on builds without int4_gemm_w4a8.
+
+Apply against the installed copy in the container:
+  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu_int8.py
+(this repo's contrib/vllm_int8_xpu/xpu_int8.py is the source mirror of that file).
+
+--- a/contrib/vllm_int8_xpu/xpu_int8.py
++++ b/contrib/vllm_int8_xpu/xpu_int8.py
+@@ -42,6 +42,18 @@ def _register_int8_fakes():
+     # int8_gemm_w8a8(A[M,K] i8, A_scale, A_zp?, B[K,N] i8, B_scale, azp_adj?, bias?, out_dtype?)
+     #   -> [M, N] out_dtype (defaults to A_scale dtype if out_dtype is None)
+     def _fake_int8_gemm(A, A_scale, A_zp, B, B_scale, azp_adj, bias, out_dtype):
+         dt = out_dtype if out_dtype is not None else A_scale.dtype
+         return A.new_empty((A.shape[0], B.shape[1]), dtype=dt)
+
++    # int4_gemm_w4a8(A_ i8 [M,K], A_scale, A_zp, B int32 [K/8,N], B_scale, B_zp,
++    #                group_size, g_idx?, bias?) -> [M, N] float16
++    #   N = B.shape[1] (mat2 is packed [K/8, N]); M = A_.shape[0].
++    #   out dtype is HARD-CODED float16 in the C++ kernel (torch::kHalf), NOT
++    #   derived from any input. The W4A8 activation quant uses the pure-PyTorch
++    #   dynamic_per_token_int8_quant_ref (no custom op -> no fake needed there).
++    def _fake_int4_gemm_w4a8(A_, A_scale, A_zp, B, B_scale, B_zp,
++                             group_size, g_idx, bias):
++        return A_.new_empty((A_.shape[0], B.shape[1]), dtype=torch.float16)
++
++    _int4_present = hasattr(torch.ops._xpu_C, "int4_gemm_w4a8")
++
+     import sys
+-    for name, fn in (("_xpu_C::dynamic_per_token_int8_quant", _fake_quant),
+-                     ("_xpu_C::int8_gemm_w8a8", _fake_int8_gemm)):
++    _fakes = [("_xpu_C::dynamic_per_token_int8_quant", _fake_quant),
++              ("_xpu_C::int8_gemm_w8a8", _fake_int8_gemm)]
++    if _int4_present:
++        _fakes.append(("_xpu_C::int4_gemm_w4a8", _fake_int4_gemm_w4a8))
++    for name, fn in _fakes:
+         try:
+             register_fake(name, fn)
+             print(f"[xpu_int8] registered fake for {name}", file=sys.stderr, flush=True)
+         except (RuntimeError, ValueError) as e:
+             # already registered (e.g. native abstract impl present) -> fine
+             print(f"[xpu_int8] register_fake({name}) skipped: {e}", file=sys.stderr, flush=True)
+     _FAKES_REGISTERED = True

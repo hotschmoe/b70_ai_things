@@ -1,0 +1,67 @@
+diff --git a/csrc/xpu/onednn/int4_gemm_w4a8.h b/csrc/xpu/onednn/int4_gemm_w4a8.h
+index 726f665..bebf6c8 100644
+--- a/csrc/xpu/onednn/int4_gemm_w4a8.h
++++ b/csrc/xpu/onednn/int4_gemm_w4a8.h
+@@ -68,23 +68,21 @@ static inline void dnnl_matmul_w4a8_int4(
+           /* mask */ (1 << 0) + (1 << 1),
+           {1, k},
+           get_onednn_dtype(m1_sc));
+-      pattr.set_zero_points(
+-          DNNL_ARG_SRC,
+-          /* mask */ (1 << 0) + (1 << 1),
+-          {1, k},
+-          memory::data_type::s32);
+     } else {
+       pattr.set_scales(
+           DNNL_ARG_SRC,
+           /* mask */ 0,
+           {},
+           get_onednn_dtype(m1_sc));
+-      pattr.set_zero_points(
+-          DNNL_ARG_SRC,
+-          /* mask */ 0,
+-          {},
+-          memory::data_type::s32);
+     }
++    // Symmetric per-token int8 activations: src zero-point is all zeros
++    // (dynamic_per_token_int8_quant is symmetric-only). Omitting the
++    // DNNL_ARG_SRC zero_points drops the always-on s32 zp-correction pass at
++    // decode (m=1). Mirrors int8_gemm_w8a8.h (scales only) and IPEX
++    // QMatmul.h, which sets src zp only when m1.q_zero_point() != 0. If an
++    // asymmetric s8/u8 activation path is ever added, restore a guarded
++    // set_zero_points(DNNL_ARG_SRC, ...) here AND re-encode the src-zp numel
++    // into zp_group_size below so the cached primitive cannot be aliased.
+ 
+     pattr.set_scales(
+         DNNL_ARG_WEIGHTS,
+@@ -116,8 +114,11 @@ static inline void dnnl_matmul_w4a8_int4(
+   // upper 32 bits: m1_sc.numel(), lower 32 bits: m2_sc.numel()
+   int64_t sc_group_size = (static_cast<int64_t>(m1_sc.numel()) << 32) |
+                           static_cast<int64_t>(m2_sc.numel());
+-  int64_t zp_group_size = (static_cast<int64_t>(m1_zp.numel()) << 32) |
+-                          static_cast<int64_t>(m2_zp.numel());
++  // src zp is dropped (symmetric activations), so it no longer contributes to
++  // the primitive attributes. Pin the upper 32 bits to 0 so the cache key
++  // reflects "no src zp" and a symmetric-built primitive can never be reused
++  // for a future asymmetric (src-zp-present) call (or vice versa).
++  int64_t zp_group_size = static_cast<int64_t>(m2_zp.numel());
+   auto& matmul_ext = matmul_primitive_create_and_cache(
+       jd,
+       trans_type_t::nt,
+@@ -140,14 +141,8 @@ static inline void dnnl_matmul_w4a8_int4(
+         return make_onednn_memory(
+             get_onednn_md(m1_sc), engine, m1_sc.data_ptr());
+       });
+-  matmul_ext.set_attribute(
+-      arg_off++,
+-      DNNL_ARG_ATTR_ZERO_POINTS | DNNL_ARG_SRC,
+-      m1_zp.data_ptr(),
+-      [&]() {
+-        return make_onednn_memory(
+-            get_onednn_md(m1_zp), engine, m1_zp.data_ptr());
+-      });
++  // No DNNL_ARG_ATTR_ZERO_POINTS | DNNL_ARG_SRC argument: src zp omitted
++  // (symmetric). m1_zp is unused here, kept only for op-signature ABI compat.
+ 
+   matmul_ext.set_attribute(
+       arg_off++,
