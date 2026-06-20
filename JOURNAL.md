@@ -1712,3 +1712,21 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   (PP-2, joint_matrix, 1-2 wk) for maybe ~1.2x -- low ROI vs effort. Better next levers: L1 (wire the EXISTING
   fused rmsnorm+int8-quant -- a different axis, the dispatch/BW round-trip) and, for decode, the MTP/Triton path.
   And: measure library tweaks at SERVE decode-t/s, never the noisy microbench.
+
+### 2026-06-20 -- [FIX] Triton-XPU ENABLED via a 1-file sitecustomize shim (a documented blocker, now solved)
+- Agent (doc 13) root-caused the "Triton is installed but 0 active drivers -> Disabling Triton" to triton's
+  `is_active()` == `torch.xpu.is_available()`, gated per spawned process with an lru_cache. Fix: a
+  `sitecustomize.py` that warms `torch.xpu.device_count()` at interpreter start in EVERY process
+  (`/mnt/vm_8tb/b70/triton_shim`, injected via `PYTHONPATH`; `TRITONSHIM=1` knob in 30_serve).
+- **[WORKS] Triton is now ENABLED:** served w8a8-14b on `:int8g` with TRITONSHIM=1 -> the "Disabling Triton"
+  line is GONE (present in every prior run). So the shim resolves the S2 lru_cache timing-poison: Triton is
+  live in the engine worker. A clean, low-risk, reusable fix to a standing blocker.
+- **[STILL BLOCKED] FULL capture, for TWO independent reasons:** (1) `VLLM_ATTENTION_BACKEND=TRITON_ATTN` does
+  NOT engage -- vLLM-XPU used flash-attn anyway (the attn-backend selector ignores it / TRITON_ATTN unwired on
+  XPU); (2) even so, FULL capture dies on the same `sycl_ext_oneapi_work_group_scratch_memory ... not yet
+  available with the SYCL Graph extension` (the toolchain limit -> needs oneAPI DPC++ 2026.0). So A2 (FULL
+  capture) remains a TOOLCHAIN-gated future item, NOT a Triton-only fix.
+- **[VALUE -> testing] the shim's payoff is the MTP rejection SAMPLER** (Triton-jit): with Triton live it should
+  now be fast, removing ONE of the two MTP overheads (the other -- eager-attn verify under PIECEWISE -- remains
+  until FULL capture). Re-testing 27B MTP N=1 + TRITONSHIM=1 vs the earlier -19% (25.47 t/s). If the fast
+  sampler moves it toward/over breakeven, that is MTP partly unblocked on ONE card NOW.
