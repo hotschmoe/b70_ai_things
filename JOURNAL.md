@@ -1371,3 +1371,24 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   lean eager, so expect ~w8a8-like modest gains -> w4a8 should still lead). Next: A2 FULL capture (push higher
   + flip spec-decode) and the fp8/w4a16 capture sweep.
 
+### 2026-06-20 -- [RESULT] A2 FULL capture is BLOCKED on the current image (confirms the SYCL-Graph premise on B70)
+- Tried FULL capture (`30_serve_w4a8_graph.sh GRAPH=1 CGMODE=FULL_AND_PIECEWISE ATTN=TRITON_ATTN`). Two real
+  blockers, both now CONFIRMED on our actual B70 (not just literature):
+  1. **flash-attn FULL capture hits the SYCL-Graph restriction:** engine init died with
+     `RuntimeError: The sycl_ext_oneapi_work_group_scratch_memory feature is not yet available for use with the
+     SYCL Graph extension.` FULL_AND_PIECEWISE tries to put attention in a captured graph; flash-attn's
+     work-group scratch memory is incompatible with SYCL-Graph capture. Exactly the doc-04 / literature/06
+     premise -- now verified live, not predicted.
+  2. **TRITON_ATTN could not engage:** the `VLLM_ATTENTION_BACKEND=TRITON_ATTN` env was ignored -> log showed
+     `Using Flash Attention backend`. Root cause: the `:int8g` image logs `Triton is installed but 0 active
+     driver(s) found (expected 1). Disabling Triton` -> Triton-XPU is auto-disabled (driver detection), so the
+     Triton attention path is unavailable and vLLM falls back to flash-attn.
+- **Verdict:** A2 (FULL capture, which would also flip spec-decode positive) needs EITHER a working Triton-XPU
+  driver in the image OR the oneAPI 2026.0 toolchain (its release notes lift the work_group_scratch_memory
+  restriction). Both are larger efforts, and the **decode upside is now small** -- PIECEWISE already put w4a8 at
+  ~74% of the BW ceiling (48 t/s); FULL would only recover the residual attention-launch overhead, a few %.
+  So A2 is **parked** (documented, not worth the toolchain/Triton yak-shave for a few % decode). The PIECEWISE
+  win (+187%) is the headline; FULL is a future toolchain freebie. Pivot to the decisive w4a8-vs-w4a16 decode
+  comparison under capture (same 9.3 GiB VRAM/ceiling; w4a16 has no act-quant tax so it is the real rival; fp8
+  is capped at ~40 t/s by its 15.3 GiB and cannot beat 48).
+
