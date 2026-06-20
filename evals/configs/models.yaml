@@ -57,13 +57,15 @@ models:
     notes: "Our int8 kernel (Selected XPUInt8ScaledMMLinearKernel). FP8 KV. Plain eager for determinism.
       ⚠️ The earlier Tier-1 HumanEval+ 'w8a8' result (served_model_id qwen3-14b-w8a8) was the RTN dup -- RE-RUN on this gptq id."
 
+  # [ARCHIVED 2026-06-20] RTN W4A8 moved to models/archive/Qwen3-14B-W4A8-INT -- superseded by w4a8-gptq
+  # below (GPTQ beats RTN at every scheme). Kept here for the historical leaderboard row (0.860/0.817).
   - label: w4a8
     served_model_id: qwen3-14b-w4a8
     family: qwen3-14b
     weights: int4
     activations: int8-dynamic-per-token
-    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=/models/Qwen3-14B-W4A8-INT SERVED=qwen3-14b-w4a8 IMG=vllm-xpu-env:int8 MAXLEN=4096 MAXSEQS=4"
-    notes: "RTN (data-free). XPUW4A8IntLinearKernel. Smallest footprint (~9.3 GB VRAM / 16 GB disk). HumanEval+ 0.860/0.817."
+    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=/models/archive/Qwen3-14B-W4A8-INT SERVED=qwen3-14b-w4a8 IMG=vllm-xpu-env:int8 MAXLEN=4096 MAXSEQS=4"
+    notes: "RTN (data-free), ARCHIVED. XPUW4A8IntLinearKernel. ~9.3 GB VRAM / 16 GB disk. HumanEval+ 0.860/0.817. Use w4a8-gptq."
 
   - label: w4a8-gptq
     served_model_id: qwen3-14b-w4a8-gptq    # SmoothQuant+GPTQ@128 -> models/Qwen3-14B-W4A8-gptq (NOT the RTN w4a8)
