@@ -1927,6 +1927,15 @@ interactive decode now. Will still enable+measure per model (ready to flip when 
   int8-only); the GDN source IS present (csrc/xpu/gdn_attn/, registered torch_bindings.cpp); CMake defaults
   GDN=ON. 14B (std attn) never needed it; 27B (GDN) does. FIX: rebuild _xpu_C with GDN_KERNELS_ENABLED=ON +
   XPU_SPECIFIC=ON, mount the .so, re-serve. In flight.
+- **[DONE] GDN rebuild OK (gdn_attention registered True), .so mounted -> 27B-W4A8 FULLY SERVES 1-CARD:**
+  rebuilt `_xpu_C.abi3.so` (84 MB) + `libgdn_attn_kernels_xe_2.so` (6 MB, sibling dep -- MUST mount both, via
+  30_serve KERNEL_SO knob which mounts the .so + any sibling lib*.so). Served the prepacked quality model
+  (Qwen3.6-27B-W4A8-q-prepacked) GRAPH=1 PIECEWISE KVDTYPE=fp8 PREPACK=1 NOMM=1 KERNEL_SO=<rebuilt>:
+  **HEALTHY, 24.35 GiB 1-card, coherent, decode 20.9 t/s, TTFT 85.8 ms, prefill 2377 t/s @ 1801 ctx.**
+  => TRUE 1-card quality (GDN+lm_head bf16) prepacked 27B-W4A8 ACHIEVED. (Decode 20.9 < W4A16-27B's 30.8 --
+  likely the int8 act-quant + GDN decode overhead and/or the 2s capture being cache-reused; perf-tune later.)
+  Full serve recipe: prepack (offline) -> graft -> regex-ignore -> processor -> 30_serve GRAPH=1 PIECEWISE
+  KVDTYPE=fp8 PREPACK=1 NOMM=1 KERNEL_SO=<gdn .so>. NEXT: MTP test on this serve; GPTQ-W4A8 for best text.
 
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,

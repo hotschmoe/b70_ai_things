@@ -40,6 +40,17 @@ if [ -n "${PREPACK:-}" ]; then
   _SP=/opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/quantization/compressed_tensors/schemes/compressed_tensors_w4a8_int.py
   PREPACK_ARGS=(-e VLLM_W4A8_PREPACKED=1 -v "$ROOT/patches/xpu.py:$_KP:ro" -v "$ROOT/patches/compressed_tensors_w4a8_int.py:$_SP:ro")
 fi
+# KERNEL_SO: mount a rebuilt _xpu_C.abi3.so over the baked one (e.g. the GDN-enabled build for the 27B
+# gated-delta-net decode op, which the fast int8-only build omits).
+KERNEL_SO_ARGS=()
+if [ -n "${KERNEL_SO:-}" ]; then
+  _PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
+  KERNEL_SO_ARGS=(-v "$KERNEL_SO:$_PKGD/_xpu_C.abi3.so:ro")
+  # also mount any sibling lib*.so the extension dlopens (e.g. libgdn_attn_kernels_xe_2.so from GDN=ON build)
+  for _lib in "$(dirname "$KERNEL_SO")"/lib*.so; do
+    [ -f "$_lib" ] && KERNEL_SO_ARGS+=(-v "$_lib:$_PKGD/$(basename "$_lib"):ro")
+  done
+fi
 if [ "$GRAPH" = 1 ]; then
   GRAPH_ENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS="$OMP")
   GRAPH_DOCKER=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
@@ -73,7 +84,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" -v "$ROOT/tmp_ssd:/tmp_ssd" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e ZE_AFFINITY_MASK=0 -e VLLM_LOGGING_LEVEL=INFO \
-  "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" "${SHIM_ARGS[@]}" "${PREPACK_ARGS[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
+  "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" "${SHIM_ARGS[@]}" "${PREPACK_ARGS[@]}" "${KERNEL_SO_ARGS[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
 
 echo "=== waiting for readiness (up to ~14 min; first compile/capture slower) ==="
 ok=0
