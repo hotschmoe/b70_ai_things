@@ -2055,6 +2055,23 @@ patched qwen3_5.py forwarding #43565 spec args, Dockerfile). Build + empirical p
   eager+MTP likely < PIECEWISE 30.8; the community 54.2 was a 4-card aggregate; spec is a latency niche).
 - **DECISION: bail per user's condition -> pivot to deeply focus on 35B-MoE W4A16.** Artifacts kept in
   mtp_patch/ for the future torch-2.11 path.
+
+### 2026-06-21 -- [CHARACTERIZE] 35B-A3B MoE W4A16 full single-card profile (best stack + fp8-KV)
+Served Intel_Qwen3.6-35B-A3B-int4-AutoRound on :v0230moe GRAPH=1 PIECEWISE KVDTYPE=fp8 DTYPE=float16 UTIL=0.90
+MAXLEN=8192. HEALTHY (19.6 GiB load, captured 57s). Coherent ("Mercury, Venus, Earth, Mars"). Numbers:
+- **Decode 65.25 t/s single-stream** (vs the 56.8 PIECEWISE/fp16-KV baseline = **+15% from fp8-KV**). The MoE
+  gets a BIGGER fp8-KV decode win than dense models: A3B activates only ~3B/token so the active-weight read is
+  tiny -> the KV read is a relatively larger fraction -> halving it (fp8) helps more. 35B-A3B is now the fastest
+  single-card decode, period. Prefill 1623 t/s, TTFT 121 ms @ 1801 ctx.
+- **Batch throughput PLATEAUS ~206 t/s @ N>=8** (N=8: 206, N=16: 207, N=32: 203). The MoE does NOT scale linearly
+  like the dense 14B-W4A8 (1286 @ N=32): at batch N the UNION of routed experts grows -> per-step expert-weight
+  read rises -> aggregate saturates once the union ~= all 256 experts (doc-17 MoE behavior, confirmed). **=> the
+  35B-A3B is a SINGLE-USER-LATENCY champion (65 t/s), NOT a high-concurrency throughput one (use the dense 14B
+  W4A8 for aggregate: 1286 vs 206).** Clean serving-profile split.
+- Long-ctx not yet measured: MAXLEN=8192 too low, and the raw-completions longctx_probe returned 0 tok on this
+  reasoning model (needs higher MAXLEN + chat endpoint). TODO: re-serve MAXLEN>=32K for the long-ctx curve.
+- NEXT: the sub-optimal Triton MoE-GEMM config (E=256,N=512,int4_w4a16) -- agent assessing whether tuning it
+  helps (likely prefill, not the BW-bound A3B decode).
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
   unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
   assertion `bits==8 and group_size==-1 and sym and act_bits==8` for any int8-dynamic-act scheme; W4 (bits=4)
