@@ -1892,6 +1892,26 @@ interactive decode now. Will still enable+measure per model (ready to flip when 
    ~24-33 GiB GPU (incl int8->int4 load transient) -> OOM. Visual was a RED HERRING (negligible bytes).
    Fix: quantize the GDN too (re-quant3, ignore only lm_head+mtp+visual.fc2) -> ~14 GiB GPU. Coherence check
    PENDING (RTN on the linear-attn is the quality risk; if degraded, the bf16-GDN W4A8 is a 2-card model).
+
+### 2026-06-21 -- [ROOT CAUSE + FIX] W4A8 "int-quantized" stores weights UNPACKED (2x); OFFLINE PRE-PACK = true 1-card
+- **Why W4A8 disk >> W4A16 (user's question):** SAME 4-bit weights, different storage FORMAT. W4A16 =
+  `pack-quantized` (int4 packed in int32, weight_packed I32 [out,in/8], ~0.5 byte/wt). W4A8 = `int-quantized`
+  (4-bit stored UNPACKED as int8 [out,in], 1 byte/wt) -> ~2x disk. (compressed-tensors: activation-quantized
+  schemes use int-quantized; weight-only uses pack-quantized.) The 14B is the same format (loads fine, 14G I8).
+- **This unpacked storage is the WHOLE 27B single-card fit problem:** vLLM loads ALL the unpacked I8 to GPU
+  (27B: 28 GiB), then XPUW4A8IntLinearKernel._pack_int4_weight packs to int4 ON LOAD -> the 28 GiB TRANSIENT
+  hangs/OOMs the 32 GiB card. The RESIDENT packed size is only ~16 GiB (fits). So it is NOT inherently 2-card.
+- **Fix = OFFLINE PRE-PACK** (`w4a8/offline_prepack_w4a8.py`): pack the I8 weights -> int32 [out,in/8] offline
+  (byte-matching the kernel: +8, reshape [N,K/8,8], <<arange(0,32,4), sum), save a `-prepacked` model
+  (is_prepacked_w4a8=true). Measured: 497 weights, 26.6 -> 14.7 GiB, model 27G -> 15G. Two env-gated
+  (VLLM_W4A8_PREPACKED=1) patches mounted at serve (no rebuild): `w4a8/patches/compressed_tensors_w4a8_int.py`
+  (create_weights makes the param int32 [out,in/8]) + `w4a8/patches/xpu.py` (kernel skips _pack_int4_weight).
+  30_serve PREPACK=1 knob mounts them.
+- **GOTCHA found:** do NOT pack vocab layers (lm_head/embed) -- they use VocabParallelEmbedding's own loader
+  (expects unpacked) -> "size 5120 must match 640" crash. Script now skips them; and the QUALITY config keeps
+  lm_head + GDN bf16 anyway (re-quant Qwen3.6-27B-W4A8-q: ignore lm_head+linear_attn+mtp+visual.fc2). Prepacked
+  quality version targets ~24 GiB (text packed 8.75 + GDN bf16 10.36 + lm_head/other bf16) -> true 1-card.
+  Next: prepack the quality re-quant -> graft -> serve PREPACK=1 -> coherence. Then GPTQ-W4A8 for best text.
 - Recipe so far (for any quantized Qwen3_5 VLM serve): scripts/49 (SCHEME=W4A8 DATAFREE=1, ignore tuned for
   fit) -> fix_27b_vlm_config.py graft -> regex-ignore patch -> copy preprocessor_config.json -> 30_serve
   GRAPH=1 PIECEWISE KVDTYPE=fp8. Single-card-loadable targets: 27B (W4A8 if GDN-quant coheres) + 35B-A3B MoE.

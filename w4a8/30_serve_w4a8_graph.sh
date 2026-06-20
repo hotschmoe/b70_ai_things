@@ -31,6 +31,15 @@ GRAPH_ENV=(); GRAPH_DOCKER=(); EAGER=(--enforce-eager); CC=(); ATTN_ENV=()
 # -> TRITON_ATTN + the Triton rejection sampler work (unblocks FULL capture + MTP-positive).
 SHIM_ARGS=()
 [ -n "${TRITONSHIM:-}" ] && SHIM_ARGS=(-v "$ROOT/triton_shim:/opt/triton_shim:ro" -e PYTHONPATH=/opt/triton_shim)
+# PREPACK=1: serve an offline-prepacked W4A8 model (int32-packed weights on disk) -- mount the patched
+# loader+kernel (env-gated VLLM_W4A8_PREPACKED) so vLLM loads the small packed weights directly (no 28 GiB
+# unpacked-I8 GPU transient). Makes the quality (GDN-bf16) 27B-W4A8 a true 1-card model.
+PREPACK_ARGS=()
+if [ -n "${PREPACK:-}" ]; then
+  _KP=/opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/mixed_precision/xpu.py
+  _SP=/opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/quantization/compressed_tensors/schemes/compressed_tensors_w4a8_int.py
+  PREPACK_ARGS=(-e VLLM_W4A8_PREPACKED=1 -v "$ROOT/patches/xpu.py:$_KP:ro" -v "$ROOT/patches/compressed_tensors_w4a8_int.py:$_SP:ro")
+fi
 if [ "$GRAPH" = 1 ]; then
   GRAPH_ENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS="$OMP")
   GRAPH_DOCKER=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
@@ -60,7 +69,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" -v "$ROOT/tmp_ssd:/tmp_ssd" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e ZE_AFFINITY_MASK=0 -e VLLM_LOGGING_LEVEL=INFO \
-  "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" "${SHIM_ARGS[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
+  "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" "${SHIM_ARGS[@]}" "${PREPACK_ARGS[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
 
 echo "=== waiting for readiness (up to ~14 min; first compile/capture slower) ==="
 ok=0
