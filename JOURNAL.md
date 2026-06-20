@@ -1895,3 +1895,28 @@ interactive decode now. Will still enable+measure per model (ready to flip when 
 - Recipe so far (for any quantized Qwen3_5 VLM serve): scripts/49 (SCHEME=W4A8 DATAFREE=1, ignore tuned for
   fit) -> fix_27b_vlm_config.py graft -> regex-ignore patch -> copy preprocessor_config.json -> 30_serve
   GRAPH=1 PIECEWISE KVDTYPE=fp8. Single-card-loadable targets: 27B (W4A8 if GDN-quant coheres) + 35B-A3B MoE.
+
+### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
+- Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,
+  unreleased). STILL BLOCKED: `formats.py::LLMCompressorFormat.check_and_reset_format` keeps the same hard
+  assertion `bits==8 and group_size==-1 and sym and act_bits==8` for any int8-dynamic-act scheme; W4 (bits=4)
+  -> AssertionError. On main, `support_schemes` has no W4A8 entry and `is_wint8aint8` requires weight bits==8,
+  so the flexible `construct_ct_scheme()` (which COULD emit W4A8) is never reached. No pip release fixes it.
+- Graft option (b) is NOT viable: compressed-tensors W4A8 expects `weight_packed` = UNPACKED int8 [out,in]
+  (the XPU kernel re-packs to int32 itself); auto_round/gptq packs int32 `qweight` with different tensor
+  names -> vLLM weight-loader mismatch. => W4A8: STILL BLOCKED, ship GPTQ-W4A8 (14B already 0.872/0.835).
+- Confirmed our XPU path is NOT hit by upstream vLLM #38064 (W4A8-INT silently runs W4A16 -- Marlin/CUDA only):
+  XPUW4A8IntLinearKernel.apply_weights explicitly calls dynamic_per_token_int8_quant_ref + int4_gemm_w4a8 ->
+  real int8 acts (matches the 14B +51% prefill). So our compressed-tensors W4A8 GPTQ checkpoints are genuine.
+- AutoRound W8A8 export IS supported (the one int8-dyn-act scheme the exporter allows: INT8_W8A8 = per-channel
+  int8 w + dynamic per-token int8 act). Wrote the exact 27B command (hand-built QuantizationScheme bits=8
+  group_size=-1, layer_config forcing visual/mtp/linear_attn/lm_head to 16-bit, device_map=xpu,
+  quantize_and_save format=llm_compressor) -> serve on :int8g after fix_27b_vlm_config.py graft. GPTQ-W8A8
+  (scripts/49 default) is the proven low-risk fallback. NOTE: no image bakes auto-round/llmcompressor ->
+  recipe pip-installs at runtime; compressed-tensors 0.17.0 + vllm 0.23.0+xpu present on all images.
+- 35B-A3B int8-act MoE: NO-GO confirmed. W4A8-int8 MoE oracle raises NotImplementedError on XPU (CPU_INT4
+  only). NEW detail: W8A8-int8 MoE oracle -> ONLY `TritonExperts` (no platform gate but no XPU oneDNN int8
+  expert); `experts/xpu_moe.py` XPUExperts subclasses cover fp8/mxfp8/blockfp8/int4-WNA16/mxfp4 -- NO int8.
+  So W8A8 MoE on XPU would run on (flaky) Triton-XPU, not the XMX systolic path -> no speed win. Plus no bf16
+  35B source on host. Keep 35B as W4A16-int4 (56.8 t/s captured). A real fix needs a new XPUExpertsInt8 +
+  is_int8 SYCL fused-expert kernel (large, out of scope). DELIVERABLE: docs/kernel/15_autoround_w4a8_w8a8_recipes.md.
