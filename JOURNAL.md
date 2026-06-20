@@ -1800,3 +1800,23 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   **the clean quant Pareto (Qwen3-14B, B70, capture+fp8-KV): W8A8 = PREFILL champion (5.5k t/s) but decode floor
   (26); W4A8 = balanced (4.9k pp / 48 tg); W4A16 = DECODE champion (55 tg) but no int8 prefill fast-path.**
   Pick by workload: prefill/batch-heavy -> W8A8; decode-heavy -> W4A16/W4A8; balanced -> W4A8. Doc 14 updated.
+
+### 2026-06-20 -- [HEADLINE] one B70 serves Qwen3-14B-W4A8 at ~412 t/s @ 8 users (8.5x single-stream); 658 @ 16
+- The single-stream 48 t/s BADLY understates serving capacity. Measured AGGREGATE decode throughput
+  (`evals/orchestrator/concurrent_probe.py`, N parallel streams, w4a8 GRAPH=1 PIECEWISE + fp8-KV, maxseqs=16):
+  | N (concurrent) | aggregate t/s | per-stream t/s | scaling |
+  |----------------|---------------|----------------|---------|
+  | 1  | 48.4  | 48.4 | 1.0x |
+  | 2  | 109.8 | 54.9 | 2.3x |
+  | 4  | 215.0 | 54.0 | 4.4x |
+  | 8  | **411.8** | 52.0 | **8.5x** |
+  | 16 | **658.3** | 42.0 | 13.6x |
+- **WHY it scales: at decode (m=B) the GEMM reads the 9.3 GiB weights ONCE for all B sequences** -> the
+  BW-bound weight read amortizes -> aggregate ~= B x single-stream until compute-bound. Near-linear to N=8
+  (8.5x). **Per-stream latency even IMPROVES (48 -> 52-55 t/s) up to N=8** as the fixed per-token overhead
+  (sampling/scheduling) amortizes; only at N=16 does per-stream drop to 42 (GEMM compute + capture captured
+  only [1,2,4,8] so N=16 partially falls back).
+- **=> the real "best w4a8 serve" headline: ONE B70 = ~412 t/s aggregate at 8 concurrent users, each still
+  getting 52 t/s (excellent UX), scaling to 658 t/s at 16.** A strong serving card, not a single-stream toy.
+  (w8a8 would scale the same way from its 26 t/s base -> ~200 t/s @ 8, still BW-amortized on 14 GiB.) Doc 14
+  updated. NB to capture N>8 cleanly, raise cudagraph_capture_sizes past 8 (a free serving-capacity bump).

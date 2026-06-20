@@ -17,6 +17,14 @@ checkpoints). The next real gains need a toolchain bump (oneAPI 2026.0 -> FULL c
 > bandwidth + footprint (decode win grows with context length; doubles max context / batch), at no measured
 > quality loss. Use `e4m3` (alias `fp8`), NOT `e5m2`. Knob: `30_serve_w4a8_graph.sh KVDTYPE=fp8`.
 
+## The serving-capacity headline (don't judge the card by single-stream)
+Single-stream decode (48 t/s w4a8) BADLY understates the B70. At decode the GEMM reads the weights ONCE per
+step for ALL batched sequences, so AGGREGATE throughput scales near-linearly with concurrency until
+compute-bound. Measured (Qwen3-14B-W4A8, capture + fp8-KV, `evals/orchestrator/concurrent_probe.py`):
+**N=1: 48 t/s -> N=8: 412 t/s (8.5x, each stream still 52 t/s) -> N=16: 658 t/s.** Per-stream latency even
+IMPROVES to N=8 (fixed per-token overhead amortizes). **One B70 = ~412 t/s at 8 concurrent users at excellent
+per-user speed.** (To capture N>8 cleanly, raise `cudagraph_capture_sizes` past 8 -- a free capacity bump.)
+
 ## The five load-bearing learnings
 
 1. **PIECEWISE XPU graph capture is the dominant decode lever (THE breakthrough).** Eager vLLM-XPU pays
