@@ -1966,6 +1966,14 @@ achievable TODAY, no toolchain wait.**
   cudagraph_mode=FULL` (Triton shim from doc 13), single-rank -> measure (a) plain decode vs PIECEWISE (21 / 48),
   (b) MTP net (does captured verify flip it positive?). RISKS to validate on-GPU: (1) does TRITON_ATTN interop
   with our custom oneDNN INT8 W8A8/W4A8 linear path, (2) the driver-version requirement. Corrects docs 04(A2)/14.
+- **[VERIFIED on :int8g, no GPU] lead is actionable on our existing image -- AND found the old-attempt bug:**
+  vLLM 0.23.0 in :int8g HAS the TRITON_ATTN branch in platforms/xpu.py get_attn_backend_cls (lines 77-79, PR
+  #34482 present) AND the `--attention-backend` CLI flag (arg_utils.py:905). BUT **VLLM_ATTENTION_BACKEND is
+  ABSENT from envs.py** -> our 30_serve line 28 (`-e VLLM_ATTENTION_BACKEND=$ATTN`) was SILENTLY IGNORED, so the
+  serve always fell back to flash-attn = PIECEWISE-only. THAT is why TRITON_ATTN "never engaged" in the earlier
+  A2 attempt -- not a missing feature, a dead env var. FIX shipped: 30_serve now also emits `--attention-backend
+  $ATTN` (CLI). FULL capture is thus testable on :int8g with NO rebuild: GRAPH=1 CGMODE=FULL ATTN=TRITON_ATTN
+  TRITONSHIM=1, single-rank. Fires when GPTQ frees the GPU.
 
 ### 2026-06-20 -- [INVESTIGATION] AutoRound W4A8/W8A8 recipes + 35B MoE int8 -> docs/kernel/15 (read-only, no GPU)
 - Re-verified the AutoRound W4A8-export block on BOTH auto_round 0.13.1 (latest pip) AND `main` (0.14.0-dev,

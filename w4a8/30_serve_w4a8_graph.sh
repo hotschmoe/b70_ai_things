@@ -68,6 +68,10 @@ fi
 ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
       --dtype "$DTYPE" --tensor-parallel-size 1 --max-model-len "$MAXLEN" --max-num-seqs "$MAXSEQS"
       --gpu-memory-utilization "$UTIL" --no-enable-prefix-caching --trust-remote-code "${EAGER[@]}" "${CC[@]}")
+# ATTN as a CLI flag (the VLLM_ATTENTION_BACKEND env var is deprecated/ignored on current vLLM main, which
+# is likely why TRITON_ATTN never engaged before -> it silently fell back to flash-attn = PIECEWISE-only).
+# --attention-backend TRITON_ATTN is the verified path to FULL cudagraph capture on XPU (vLLM PR #34482).
+[ -n "$ATTN" ] && ARGS+=(--attention-backend "$ATTN")
 [ -n "$SPEC" ] && ARGS+=(--speculative-config "$SPEC")
 # NOMM=1: text-only serve of a VLM (Qwen3_5) -- disallow image/video so vLLM skips the vision-encoder
 # dummy profiling (which crashes on XPU: qwen2_5_vl.py "not enough values to unpack"). The vision tower is
