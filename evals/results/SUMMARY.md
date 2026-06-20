@@ -9,12 +9,20 @@
 > works on the B70 and is the single biggest decode lever found. Captured single-stream decode (Qwen3-14B, same
 > probe), eager -> PIECEWISE:
 >
-> | quant | VRAM | eager t/s | **PIECEWISE t/s** | gain |
+> | model / quant | VRAM | eager t/s | **PIECEWISE t/s** | gain |
 > |---|---|---|---|---|
-> | **w4a16-gptq** | 9.3 GB | 28.0 | **54.6** | **+95%** (decode leader) |
-> | **w4a8-gptq**  | 9.3 GB | 16.8 | **48.2** | **+187%** (also best prefill/TTFT, int8-XMX) |
-> | w8a8-gptq | 15.3 GB | 23.6 | 26.7 | +13% (fused quant already lean) |
-> | fp8 | 15.3 GB | ~32 | (capped ~40 by 15.3 GB) | -- |
+> | **27B int4 (AutoRound)** | 17.6 GB | 7.84 | **30.84** | **+293% (3.93x!)** -- erases the density tax |
+> | **14B w4a16-gptq** | 9.3 GB | 28.0 | **54.6** | **+95%** (14B decode leader) |
+> | **14B w4a8-gptq**  | 9.3 GB | 16.8 | **48.2** | **+187%** (also best prefill/TTFT, int8-XMX) |
+> | 14B w8a8-gptq | 15.3 GB | 23.6 | 26.7 | +13% (fused quant already lean) |
+> | 14B fp8 | 15.3 GB | ~32 | (capped ~40 by 15.3 GB) | -- |
+> | 35B-A3B MoE int4 | 19.6 GB | ~6 | (measuring) | TBD |
+>
+> **[!] BIGGEST consequence: the 27B "higher-density tax" is largely ERASED.** Old story: the 27B int4 wins
+> quality by ~+4 pts but decodes ~4x slower (7.9 vs 32 fp8). With PIECEWISE capture the **27B decodes 30.84 t/s
+> ~= the 14B fp8's 32** while keeping +4.8 base / +3.7 plus HumanEval -> on one B70 the 27B is now best-quality
+> AND ~competitive-decode = arguably the new default single-card pick (image `:v0230`, needs GDN). The flagship
+> went from "great but slow" to "great and fast" on a single card -- the campaign's highest-impact outcome.
 >
 > **Revised picks (single B70, captured):** decode-heavy/interactive -> **w4a16-gptq (54.6 t/s, near-lossless,
 > 9.3 GB)**; prefill-heavy/long-context/agentic -> **w4a8-gptq** (48 decode + best prefill/TTFT, 9.3 GB). w4a8 is

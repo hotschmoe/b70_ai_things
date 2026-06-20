@@ -1495,3 +1495,25 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
 - No GPU touched this iteration (campaign core is complete; remaining items are GPU-courtesy-gated or the other
   agent's domain). Kernel campaign verdict stands: PIECEWISE capture ~2x's int4 decode; w4a16 leads, w4a8 prefill.
 
+### 2026-06-20 -- [BREAKTHROUGH] 27B flagship PIECEWISE capture: 7.84 -> 30.84 t/s (+293%, 3.93x!) -- erases the density tax
+- User: "work on 27b and 35b MoE decode speedups." The other agent freed the B70. First the 27B (the flagship
+  the leaderboard calls the real target). Served Qwen3.6-27B-int4-AutoRound on the GDN-capable **`:v0230`**
+  (NOT `:int8g` -- that lacks GDN, the cause of the earlier crash), eager vs PIECEWISE, same probe (192 tok):
+  | mode | decode t/s | spread | % of ~34.6 t/s BW ceiling |
+  |---|---|---|---|
+  | eager     | 7.84  | 7.82-7.88 | ~23% |
+  | PIECEWISE | **30.84** | 30.82-30.90 | **~89%** |
+  => **+293% (3.93x)** -- the BIGGEST capture gain yet, even past w4a8's 2.87x. Dead-flat timing (6.229 s +/-
+  0.001 = captured-graph determinism). Output verified coherent (Qwen3 `<think>` reasoning). Capture engaged:
+  `Capturing CUDA graphs (PIECEWISE) 4/4 ... finished in 56 s, took 1.03 GiB`; GDN attention stays piecewise
+  (split op) and the rest is captured.
+- **Why 3.93x (even bigger than the 14B):** the 27B's Gated-DeltaNet linear attention runs a long chain of tiny
+  Triton/FLA ops per token -> eager was EXTREMELY dispatch-bound (only ~23% of BW). Capture fuses the step ->
+  ~89% of ceiling. Same mechanism as the 14B int4 (kill eager dispatch), just more headroom because GDN is even
+  more op-heavy in eager.
+- **[STRATEGIC] the "higher-density tax" is largely ERASED.** Old SUMMARY framing: "27B int4 = +4 quality pts but
+  ~4x slower decode (7.9 vs 32 fp8)." With capture the 27B decodes at **30.84 t/s ~= the 14B fp8's 32 t/s** while
+  keeping +4.8 base / +3.7 plus HumanEval. So on ONE B70 the 27B is now the **best quality AND ~competitive
+  decode** -> arguably the new default single-card pick (if 17.6 GiB fits the KV need). Capture changed the
+  whole single-card calculus. Next: the 35B-A3B MoE (eager serve loading on `:v0230moe` now).
+
