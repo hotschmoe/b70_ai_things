@@ -16,13 +16,15 @@
 > | **14B w4a8-gptq**  | 9.3 GB | 16.8 | **48.2** | **+187%** (also best prefill/TTFT, int8-XMX) |
 > | 14B w8a8-gptq | 15.3 GB | 23.6 | 26.7 | +13% (fused quant already lean) |
 > | 14B fp8 | 15.3 GB | ~32 | (capped ~40 by 15.3 GB) | -- |
-> | 35B-A3B MoE int4 | 19.6 GB | ~6 | (measuring) | TBD |
+> | **35B-A3B MoE int4** | 19.6 GB | 7.93 | **56.84** | **+617% (7.17x!!)** -- now the FASTEST config on the board |
 >
-> **[!] BIGGEST consequence: the 27B "higher-density tax" is largely ERASED.** Old story: the 27B int4 wins
-> quality by ~+4 pts but decodes ~4x slower (7.9 vs 32 fp8). With PIECEWISE capture the **27B decodes 30.84 t/s
-> ~= the 14B fp8's 32** while keeping +4.8 base / +3.7 plus HumanEval -> on one B70 the 27B is now best-quality
-> AND ~competitive-decode = arguably the new default single-card pick (image `:v0230`, needs GDN). The flagship
-> went from "great but slow" to "great and fast" on a single card -- the campaign's highest-impact outcome.
+> **[!] BOTH flagships transformed; the "higher-density tax" is ERASED.** Old story: the big models win quality
+> but decode ~4x slower than the 14B fp8 (27B 7.9, 35B ~6 vs fp8 32). With PIECEWISE capture: **27B -> 30.84 t/s
+> (~= 14B fp8) keeping +4 quality pts; 35B-A3B MoE -> 56.84 t/s = the FASTEST single-card decode measured.** The
+> capture gain scales with how dispatch-bound the eager path is: **MoE 7.17x > 27B-GDN 3.93x > w4a8 2.87x >
+> w4a16 1.95x > w8a8 1.13x** (monotonic in eager-op-count). On one B70 the big models went from "great but slow"
+> to "great AND fast" -- the campaign's highest-impact outcome. (35B serves on `:v0230moe` = `:v0230` + the INC
+> MoE routing patch; the masked `fused_moe` kernel is routing-agnostic so it captures correctly.)
 >
 > **Revised picks (single B70, captured):** decode-heavy/interactive -> **w4a16-gptq (54.6 t/s, near-lossless,
 > 9.3 GB)**; prefill-heavy/long-context/agentic -> **w4a8-gptq** (48 decode + best prefill/TTFT, 9.3 GB). w4a8 is

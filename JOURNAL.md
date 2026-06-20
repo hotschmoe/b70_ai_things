@@ -1517,3 +1517,29 @@ vLLM fallback attention bug; W8A8 INT8 XPU kernel gap.
   decode** -> arguably the new default single-card pick (if 17.6 GiB fits the KV need). Capture changed the
   whole single-card calculus. Next: the 35B-A3B MoE (eager serve loading on `:v0230moe` now).
 
+### 2026-06-20 -- [BREAKTHROUGH] 35B-A3B MoE PIECEWISE capture: 7.93 -> 56.84 t/s (+617%, 7.17x!!) -- now the FASTEST config
+- The second half of the user's ask. Baked **`:v0230moe`** = `:v0230` + the other agent's INC MoE routing patch
+  (`inc.py`, RoutedExperts -> MoeWNA16Config), then served Qwen3.6-35B-A3B-int4-AutoRound (256-expert MoE) via
+  `vllm serve` (NEW -- the MoE was only ever offline-`LLM()`-tested before; the served API path works), eager
+  vs PIECEWISE, same probe (160 tok):
+  | mode | decode t/s | spread |
+  |---|---|---|
+  | eager     | 7.93  | 7.91-7.95 |
+  | PIECEWISE | **56.84** | 56.82-56.87 |
+  => **+617% (7.17x)** -- the BIGGEST capture gain measured, and at 56.84 t/s the 35B MoE is now the **fastest-
+  decoding config on the whole single-B70 leaderboard** (past the 14B w4a16's 54.6). Dead-flat (2.815 s +/-
+  0.001). Capture engaged: `Capturing CUDA graphs (PIECEWISE) 4/4 ... finished in 72 s, took 0.08 GiB`.
+- **[CORRECTNESS verified -- the MoE+cudagraph trap did NOT bite]** data-dependent expert routing could in
+  principle be frozen by a captured graph (all tokens -> the captured experts = garbage). It is NOT: vLLM's
+  masked `fused_moe_kernel_gptq_awq` processes a routing-agnostic gather/mask, so the captured graph is correct
+  for any routing. Output coherent across 3 prompts ("...is Paris", proper `<think>`, "2+2 equals 4"). The MoE
+  `fused_experts` op is NOT in `splitting_ops` (only the attention ops are) -> the expert GEMM IS captured.
+- **Why 7.17x (the biggest):** an A3B MoE activates only ~3B params/token, so the per-token weight read is tiny
+  (high BW ceiling) while eager pays ENORMOUS dispatch overhead (256-expert routing + gather/scatter + GDN
+  attention = the most small-ops-per-token of any config). Capture collapses all that -> 7x. **The more
+  dispatch-bound the eager path, the bigger the capture win:** MoE(7.17x) > 27B-GDN(3.93x) > w4a8(2.87x) >
+  w4a16(1.95x) > w8a8(1.13x). A clean monotonic trend in eager-op-count.
+- **STRATEGIC:** the 35B-A3B (the highest-capacity single-card model) now decodes at 56.84 t/s -- it went from a
+  "~6 t/s load proof" to the **fastest single-card decode, period**, on a 35B-class model. Both flagships
+  (27B 30.8, 35B-A3B 56.8) are transformed by capture. GPU freed for the other agent. Banked to FINDINGS/SUMMARY.
+

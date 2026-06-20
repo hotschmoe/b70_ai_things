@@ -76,7 +76,13 @@ GENERATION OK -> "The capital of France is" -> " Paris, a city renowned for its 
 ## Not done yet (load proof, not optimized)
 
 - **Perf:** no tuned `E=256,N=512,...,dtype=int4_w4a16.json` -> "default MoE config ... sub-optimal" warning;
-  ~6 t/s eager is a correctness/load proof. Tuning + PIECEWISE graph capture are open.
+  ~6 t/s eager is a correctness/load proof. Expert-config tuning is still open.
+  - **[RESOLVED 2026-06-20] PIECEWISE graph capture = +617% (7.17x): 7.93 -> 56.84 t/s** (served, same probe;
+    the biggest capture win on the B70). Bake `:v0230moe` (= `:v0230` + this `inc.py`) and serve with
+    `w4a8/30_serve_w4a8_graph.sh GRAPH=1` (its `pass_config` fix dodges the XPU compile `NameError`). The masked
+    `fused_moe_kernel_gptq_awq` is routing-agnostic, so the captured graph is correct (verified coherent). The
+    MoE was the MOST eager-dispatch-bound config (256-expert routing + GDN), so it gains the most. See JOURNAL
+    2026-06-20 / FINDINGS / SUMMARY.
 - **Accuracy eval** (gsm8k / HumanEval+): not run.
 - **MTP / shared-expert** paths: the checkpoint ships an `mtp.*` Multi-Token-Prediction module (ignored here)
   and bf16 shared experts (the 240 `extra_config` bits:16 exceptions, loaded unquantized -- correct).

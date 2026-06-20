@@ -60,7 +60,9 @@ skip the dead-ends. Living doc — see [RESULTS.md](RESULTS.md) for the raw numb
 | **torch.compile (inductor)** | cuts single-stream **TTFT ~6x** (1032->176 ms) + ~11% decode at low concurrency |
 | **Qwen3-14B W8A8 + PIECEWISE XPU graph** | **27.23 t/s** decode (+16.7% over eager 23.33) — image `:int8g`, `cudagraph_mode=PIECEWISE` |
 | **Qwen3-14B W4A8 + PIECEWISE XPU graph** | **48.18 t/s** decode (**+187% / 2.87x** over eager 16.79) — `:int8g` + `30_serve_w4a8_graph.sh GRAPH=1`. Best prefill/TTFT (int8-XMX). |
-| **Qwen3-14B W4A16 + PIECEWISE XPU graph** | **54.57 t/s** decode (**+95% / 1.95x** over eager 28.04) — **fastest decode measured**; same 9.3 GiB; no act-quant tax. `GRAPH=1`. |
+| **Qwen3-14B W4A16 + PIECEWISE XPU graph** | **54.57 t/s** decode (**+95% / 1.95x** over eager 28.04) — fastest 14B decode; same 9.3 GiB; no act-quant tax. `GRAPH=1`. |
+| **Qwen3.6-27B int4 + PIECEWISE XPU graph** | **30.84 t/s** decode (**+293% / 3.93x** over eager 7.84) — flagship; ~89% of BW ceiling; erases the density tax. Image `:v0230` (needs GDN). |
+| **Qwen3.6-35B-A3B MoE int4 + PIECEWISE XPU graph** | **56.84 t/s** decode (**+617% / 7.17x** over eager 7.93) — **fastest config on the board**; A3B = ~3B active/tok; `:v0230moe`. |
 
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
