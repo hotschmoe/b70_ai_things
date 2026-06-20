@@ -22,7 +22,13 @@ if [ "$GRAPH" = 1 ]; then
   GRAPH_ENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS="$OMP")
   GRAPH_DOCKER=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
   EAGER=()
-  CC=(--compilation-config '{"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"compile_sizes":[1]}')
+  # pass_config: force-disable the CUDA/ROCm-only inductor fusion passes. On XPU these classes are
+  # NOT imported (vllm/compilation/passes/pass_manager.py gates the imports on is_cuda_alike()), but
+  # under torch.compile their flags resolve None->True unguarded, so configure() references an
+  # undefined class -> `NameError: MLARoPEKVCacheCatFusionPass is not defined` and the engine aborts.
+  # These fusions can't run on XPU regardless; the PIECEWISE graph CAPTURE (the +16.7% w8a8 lever) is
+  # independent of them. Disabling them lets capture proceed.
+  CC=(--compilation-config '{"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"compile_sizes":[1],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}')
 fi
 
 ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
