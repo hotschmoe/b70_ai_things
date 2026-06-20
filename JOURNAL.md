@@ -1686,3 +1686,29 @@ skeletons are DRAFTS (not compiled); CAVEATS + a host-reorder/numpy-ref TODO lad
   the B70 is gated on the Triton fix -> FULL capture (no eager-attn verify tax) + a fast Triton rejection
   sampler.** That is the deep MTP work for the card-#2 phase (or a focused single-card Triton "0 active
   drivers" import-order fix per agent C doc 12). GPU freed. Pivoting to the PP-1 int8-GEMM kernel hand-tune.
+
+### 2026-06-20 -- [RESULT] PP-1 (format_tag::any weight reorder) IMPLEMENTED -> CORRECT but NO prefill win + a crash -> REVERTED
+- Hand-implemented the headline int8-GEMM lever: `onednn_ext.h` wei_md -> `format_tag::any` (gated on the
+  s8s8 dtypes) + `int8_gemm_w8a8.h` reorders the user weight ONCE into the pd-chosen blocked layout, cached by
+  ptr (IPEX QMatmul.h pattern; codex-recipe). **Compiled clean, rebuilt (scripts/44), A/B-validated**
+  (`w8a8/22_validate_pp1.sh`).
+- **[CORRECT] the change works + is numerically exact:** ONEDNN_VERBOSE confirms the weight md is now
+  `s8:a:blocked:ab:17472x1` (padded/blocked, NOT plain `ab`) with a ONE-TIME `reorder`; output fingerprints
+  are BIT-IDENTICAL to baseline (k=4096 sum +1.665340e+04 both; k=5120 -7.676465e+02 both). The reorder is
+  layout-only as designed.
+- **[NEGATIVE] but it does NOT improve PREFILL** (the headline target): baseline 67.3/75.0% vs PP-1 68.5/74.9%
+  of 367 TOPS = flat (within noise). The verbose shows oneDNN picked a blocked weight BUT kept the SAME
+  `jit:gemm:any` impl -> format_tag::any did not unlock a faster kernel. **The decode "gain" in the first run
+  (60->70%) was MICROBENCH NOISE** -- the +/-30% run-to-run noise (our own B1 meta-finding) reappeared: the
+  "baseline" decode swung 60% -> 91% between runs. So no measurable win at either regime.
+- **[BLOCKER] PP-1 also DEVICE_LOSTs on the k=17408 (MLP-down) shape** (the baseline handles it fine) -> a
+  blocked-path bug for wide-k -> UNSERVABLE (a real model hits 17408x5120 every layer). REVERTED to pristine
+  (prod `:int8` baked .so was never changed; only the host /src dev copy).
+- **[LEARNING -- now 2 data points: B1 + PP-1] the "obvious" oneDNN library tweaks do NOT help int8 on the B70,
+  because oneDNN v3.9.1's jit GEMM already handles the weight layout + zp internally.** B1 (drop src-zp) was
+  perf-neutral (v3.12 caches the zp comp); PP-1 (format_tag::any) is perf-neutral + crashes. The REAL int8 win
+  was graph capture (A1). **Verdict on the int8 GEMM: oneDNN is already near the practical ceiling (prefill
+  67-80% of TOPS, decode 85-95%+ of BW in the good runs).** The only remaining KERNEL lever is a hand DPAS GEMM
+  (PP-2, joint_matrix, 1-2 wk) for maybe ~1.2x -- low ROI vs effort. Better next levers: L1 (wire the EXISTING
+  fused rmsnorm+int8-quant -- a different axis, the dispatch/BW round-trip) and, for decode, the MTP/Triton path.
+  And: measure library tweaks at SERVE decode-t/s, never the noisy microbench.
