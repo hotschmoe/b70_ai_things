@@ -2391,3 +2391,39 @@ collectives** (GPU->host RAM->GPU) + collective overhead, NOT a crippled PCIe ge
   one card (already shown to beat TP=2 here), (4) MTP/spec-decode as a per-replica single-stream multiplier.
 - To read the TRUE link on Arc, always read the on-card switch UPSTREAM bridge (`08/42:00.0`), never the GPU
   endpoint. Helper: `for b in 08:00.0 42:00.0; do lspci -vvv -s $b | grep LnkSta; done`.
+
+### 2026-06-21 -- [RESULT] Interconnect TRUTH probe -- Gen1x1 DISPROVEN by measurement; no P2P confirmed
+scripts/63_interconnect_probe.sh + bw_p2p_probe.py (torch 2.11+xpu, single proc, gpu-run, 17s). The positive
+numbers that close out the misdiagnosis AND scope the P2P question:
+- **H2D = 12.82 GB/s** (256 MiB payload). A real Gen1 x1 link would be ~0.20-0.25 GB/s. This IS Gen3 x16
+  (~10-12 GB/s expected). **The "Gen1 x1" is conclusively a reporting artifact.** D2H = 3.51 GB/s (the read-from-
+  GPU direction is asymmetrically slower -- no pinned host mem; known XPU behavior).
+- **`torch.xpu.can_device_access_peer(0,1) = False`** -> Level-Zero `zeDeviceCanAccessPeer` is False on these
+  Battlemage cards. So oneCCL's direct-P2P "topo" path will NOT auto-engage; forcing `CCL_TOPO_P2P_ACCESS=1`
+  overrides the probe but is exactly what GP-faulted + BCS-reset in vLLM #41663. Matches that report's `p2p_access:0`.
+- **D2D xpu0->xpu1 = 1.68 GB/s** = host-staged (GPU->host->GPU), bounded by the slow D2H leg. This is the real
+  TP all-reduce ceiling, and it is a no-P2P/host-staging limit -- NOT the PCIe gen (H2D alone is 12.82).
+- **ReBAR ON:** BAR2 = 32G full-VRAM aperture on both cards (P2P prerequisite already met). **IOMMU ON:** 57 groups,
+  AMD-Vi active (Unraid VFIO passthrough uses it -- `vfio-pci.ids=10ec:8168`). **Kernel 6.18.33-Unraid** (no
+  Linux-7.0 xe multi-device-SVM P2P path).
+
+### 2026-06-21 -- [ASSESSMENT] The P2P moonshot is LOW ROI (~15% ceiling); data-parallel + MTP are the real wins
+Two deep research passes (kernel/driver + frameworks/forks), cross-corroborated. Verdict on "create our own P2P
+lever":
+- **B-series has NO Xe-Link** -- multi-GPU is PCIe-only by product design (Xe-Link is Data-Center-Max-only). Intel
+  markets "PCIe P2P" (Project Battlematrix) but **IPEX docs explicitly state oneCCL allreduce "does not support
+  PCIe for cross-cards communication"** (`TORCH_LLM_ALLREDUCE=1` requires Xe-Link). The optimized path is fabric-only.
+- **No geohot-style unlock exists for Intel.** NVIDIA's P2P hack works because NVIDIA *software-locks* a silicon
+  capability; Intel's P2P is not locked -- it is just unstable (PCIe RxErr -> BCS reset) and, when it works, only
+  **~15% faster at large batch** (Puget). There is nothing to "unlock" for a 10x.
+- **Paths that COULD enable it, ranked by cost:** (a) cheap/risky: force `CCL_TOPO_P2P_ACCESS=1` on the current
+  stack + run the allreduce microbench watching dmesg -- but `can_device_access_peer=False` means this likely
+  crashes (#41663). (b) expensive: Linux 7.0+ xe multi-device SVM P2P (Hellstrom series) -- needs an Unraid kernel
+  rebuild AND `iommu=pt`/`amd_iommu=off` (which would BREAK the existing VFIO NIC passthrough), and BMG peer access
+  is still unproven even on 7.0. Upside remains ~15%, and it does NOT help batch-1 decode (the headline metric).
+- **CONCLUSION: deprioritize P2P.** The high-ROI dual-GPU levers, in order: (1) **data-parallel = 2 independent
+  single-card replicas** (zero comms, ~2x aggregate throughput, no infra risk) whenever the model fits one card;
+  (2) **MTP/spec-decode** (~3-4x single-stream decode, per replica); (3) **PP=2** for models too big for one card.
+  Keep `CCL_TOPO_P2P_ACCESS=0` (host USM) as the stable TP/PP default. [P2P remains an optional novel-data
+  experiment -- our clean direct-slot rig is a good test case and no public PCIe-B70 P2P number exists -- but it is
+  not the path to a faster dual setup.]
