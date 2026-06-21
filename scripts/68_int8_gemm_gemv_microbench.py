@@ -449,7 +449,9 @@ for r in rows:
 
 stamp = sys.argv[1] if len(sys.argv) > 1 else datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
+# results/ sits NEXT TO this script (host is FLAT layout: script at /mnt/vm_8tb/b70/, results at .../results).
+# Honor B70_RESULTS_DIR override; else <script_dir>/results (mounted), NOT dirname(dirname) which escaped the mount.
+results_dir = os.environ.get("B70_RESULTS_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 os.makedirs(results_dir, exist_ok=True)
 csv_path = os.path.join(results_dir, f"microbench_gemm_gemv_{stamp}.csv")
 
