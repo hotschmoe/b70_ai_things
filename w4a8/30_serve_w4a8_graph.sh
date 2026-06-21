@@ -5,7 +5,8 @@
 # into xpu_int8.py), so dynamo can trace through it. GRAPH=1 mirrors the env that banked the w8a8 win:
 # VLLM_XPU_ENABLE_XPU_GRAPH=1 + OMP + the pids/ulimit ceiling fix (capture spawns many threads).
 # GPU run -- invoke via the gpu-run flock lease (long-lived server holds the lease for its lifetime).
-#   Env: GRAPH (0|1), IMG (:int8g), MAXLEN (4096), MAXSEQS (4), UTIL (0.90), DTYPE (float16), OMP (8).
+#   Env: GRAPH (0|1), IMG (:int8g), MAXLEN (4096), MAXSEQS (4), UTIL (0.90), DTYPE (float16), OMP (8),
+#        TOOLCALL (0|1 -> --enable-auto-tool-choice + --tool-call-parser, default hermes; for tool-calling agents).
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:int8g}"
@@ -83,6 +84,10 @@ ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
 # KVDTYPE: store the KV cache in fp8 (fp8_e5m2 = no scales, simplest) -> halves KV BW (long-ctx decode win)
 # + 2x context/batch capacity. B70 has no FP8 ALU, so this is fp8-STORAGE + dequant-on-read in attention.
 [ -n "${KVDTYPE:-}" ] && ARGS+=(--kv-cache-dtype "$KVDTYPE")
+# TOOLCALL=1: enable OpenAI tool/function calling. vLLM emits tool calls as model-specific TEXT (Qwen3 =
+# Hermes <tool_call>{...}</tool_call>); the parser lifts them into the API `tool_calls` field. REQUIRED for
+# coding agents (pi etc.) that send tool_choice:"auto" (else vLLM 400s). Parser via TOOLPARSER (default hermes).
+[ -n "${TOOLCALL:-}" ] && ARGS+=(--enable-auto-tool-choice --tool-call-parser "${TOOLPARSER:-hermes}")
 
 echo "=== serve W4A8 GRAPH=$GRAPH cgmode=$([ "$GRAPH" = 1 ] && echo $CGMODE || echo eager) attn=${ATTN:-default} IMG=$IMG dtype=$DTYPE MAXLEN=$MAXLEN SEQS=$MAXSEQS ==="
 echo "vllm ${ARGS[*]}"

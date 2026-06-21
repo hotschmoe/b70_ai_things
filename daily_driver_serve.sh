@@ -29,6 +29,7 @@ SERVE_ENV=(
   MAXSEQS=64
   CAPSIZES=1,2,4,8,16,32,64                          # capture batch sizes (else batches >8 fall back to eager)
   NOMM=1                                             # 27B is a VLM -> text-only (skip vision profiling crash)
+  TOOLCALL=1                                         # OpenAI tool/function calling (Hermes parser) -- for pi & coding agents
 )
 # --- PRESETS (uncomment one block, comment the one above) ------------------------------------
 # 35B-A3B MoE (FASTEST decode ~65 t/s, fp8 KV):  image :v0230moe
