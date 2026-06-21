@@ -2560,3 +2560,10 @@ FINDINGS (answers "where does int8-act beat w4a16"):
 - AutoRound-W8A8 == GPTQ-W8A8 on SPEED (identical kernel path); the AutoRound edge is ACCURACY (eval TBD).
 - IMPLICATION for the 27B target: expect W4A8 to be the winner (prefill + concurrency over the W4A16 daily driver),
   W8A8 a prefill-latency/quality option. Decode t/s ceiling is set by weight bit-width (BW-bound), not act bits.
+
+### 2026-06-21 -- [Q2] 27B VLM W8A8 AutoRound path VALIDATED (smoke), full launched
+27B (qwen3_5 VLM+GDN+MTP) W8A8 AutoRound smoke (iters=0, DEVMAP=0,1) DONE clean: VLM loaded via the fallback
+chain, quantized 64 blocks across BOTH B70s, exported valid compressed-tensors W8A8 (13 shards). The previously
+UNVERIFIED "AutoRound-on-XPU for the VLM" production path (kernel/15 FIND/COMMUNITY) is now PROVEN -- no need for
+the GPTQ-W8A8 fallback. Q2 full launched: iters=200 nsamples=128 seqlen=1024 BATCHSIZE=2 GRADACC=2 (effective
+batch 4 at ~half per-block memory -- 27B blocks bigger than 14B; safety-first vs the Q1 OOM). DEVMAP=0,1, ~2-3h ETA.
