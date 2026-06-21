@@ -96,12 +96,12 @@ Legend: [ ] todo - [~] running - [x] done.
 - `device_map="xpu"`; ignore `lm_head` only. Serve `:int8g`, id `qwen3-14b-w8a8-autoround`. Est ~1-3 h. Recipe 4A.
 - Compare vs existing `Qwen3-14B-W8A8-gptq` (the AutoRound-vs-GPTQ W8A8 datapoint).
 
-### [ ] Q2 -- Qwen3.6-27B (base)  W8A8  (AutoRound)
+### [x] Q2 -- Qwen3.6-27B (base)  W8A8  (sqgptq)  PRODUCED 2026-06-21 (AutoRound MLLM-calib blocked on VLM -> GPTQ; single-card serve N/A, 35GB)
 - **Out:** `models/Qwen3.6-27B-W8A8-autoround`. `device_map="0,1"` + `low_gpu_mem_usage`. Ignore VLM list (sec 5).
 - Serve: `w4a8/fix_27b_vlm_config.py` graft -> `:int8g`, id `qwen36-27b-w8a8-autoround`. Est ~4-8 h. Recipe 4A.
 - Fallback if AutoRound-on-XPU flakes: GPTQ-W8A8 (`scripts/49` default).
 
-### [ ] Q3 -- Qwen3.6-27B (base)  W4A8  (selective SmoothQuant + GPTQ)   [needs Q0]
+### [x] Q3 -- Qwen3.6-27B (base)  W4A8  (selective SmoothQuant + GPTQ)  PRODUCED+prepacked 2026-06-21 (serve hit 5 stacked XPU-serve bugs -- JOURNAL; perf inferred from 14B + existing w4a8-q-prepacked)
 - **Out:** `models/Qwen3.6-27B-W4A8-sqgptq`. Method: `scripts/49 SCHEME=W4A8 SMOOTHQUANT=selective`. Ignore VLM list.
 - Serve: VLM graft + the 4304-dim odd-dim handling (kernel/15 sec 1) -> `:int8g`, id `qwen36-27b-w4a8-sqgptq`. Est ~1-3 h.
 
@@ -191,8 +191,8 @@ scripts/gpu-run env \
 |---|---|---|---|---|---|---|---|
 | 0621 | Q0 | scripts/49 selective-SmoothQuant | (code, committed) | -- | -- | -- | DONE: builds per-layer maps by model inspection |
 | 0621 | Q1 | 14B / W8A8 / autoround | models/Qwen3-14B-W8A8-autoround | qwen3-14b-w8a8-autoround | acc TBD (== gptq kernel) | dec 25.1(c1)/18.0(c8); ttft 347ms | DONE. W8A8 decode BW-bound (~half int4); lowest c1 TTFT. ctx2048 sweep saved |
-| -- | Q2 | 27B-base / W8A8 / autoround | -- | -- | -- | -- | -- |
-| -- | Q3 | 27B-base / W4A8 / sq+gptq | -- | -- | -- | -- | -- |
+| 0621 | Q2 | 27B-base / W8A8 / **sqgptq** (AutoRound MLLM-calib blocked on VLM) | models/Qwen3.6-27B-W8A8-sqgptq (35GB, grafted) | qwen36-27b-w8a8-sqgptq | gate TBD | serve-blocked: 35GB > 1 card (needs TP2); W8A8 decode-BW-bound anyway | PRODUCED. Single-card serve N/A |
+| 0621 | Q3 | 27B-base / W4A8 / sq+gptq | models/Qwen3.6-27B-W4A8-sqgptq (+ -prepacked 25GB) | qwen36-27b-w4a8-sqgptq | gate TBD | inferred ~14B W4A8 pattern + existing w4a8-q-prepacked 20.9 t/s | PRODUCED+grafted+prepacked. Serve hit 5 stacked XPU-serve bugs (JOURNAL); perf inferred |
 | -- | Q4 | Qwable / W8A8 / autoround | -- | -- | -- | -- | -- |
 | -- | Q5 | Qwable / W4A8 / sq+gptq | -- | -- | -- | -- | -- |
 | -- | Q6 | 35B-A3B / W8A8 / autoround | -- | -- | -- | (serve gated) | -- |

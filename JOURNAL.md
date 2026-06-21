@@ -2596,3 +2596,19 @@ First 27B ladder bench FAILED to serve all 3 -- root causes:
 - **W4A16 (Lorbus daily driver):** failed differently (AttributeError NoneType.size in the capture path) under the
   generic bench flags -- it is proven via daily_driver_serve.sh; use its known numbers (30.8 t/s captured C1) for the
   W4A16 baseline rather than rabbit-holing its serve here.
+
+### 2026-06-21 -- [Q2/Q3 27B] checkpoints PRODUCED; single-card int8 SERVE blocked by stacked XPU-serve bugs
+Both 27B int8 checkpoints exist + grafted (Q2 W8A8-sqgptq 35GB, Q3 W4A8-sqgptq 33GB + prepacked 25GB). Tried hard
+to serve+bench on one card; hit FIVE distinct XPU-serve issues in sequence (each fixed, next appeared):
+  1. fp8_e5m2 KV -> "not supported with fp8 checkpoints" (this vLLM build rejects fp8 KV even for int ckpts). Fix: fp16 KV.
+  2. W4A8 int4-g128 on the 4304 vision fc2 -> assert. Fix: graft appends re:.*visual./re:.*mtp. to ignore (committed).
+  3. W4A8 raw load -> "No available memory for cache blocks" (28GB unpacked-int8 GPU transient). Fix: offline prepack -> 25GB.
+  4. prepacked W4A8 + fp8 KV -> same fp8 reject. Fix: fp16 KV.
+  5. prepacked W4A8 fp16 KV -> AssertionError param_data.shape==loaded_weight.shape in load_merged_column_weight
+     (prepacked int32 [N,K//8] shape vs vLLM merged qkv/gate_up loader expectation). <- the current blocker.
+Also W8A8 27B (35GB) does NOT fit one card regardless (needs TP=2/offload); W8A8 is decode-BW-bound anyway (14B data).
+DECISION: stop chasing the single-card 27B int8 serve (documented-fragile path; 5 stacked bugs). The thesis is ALREADY
+proven on the 14B ladder (W4A8 beats W4A16: -29% TTFT, +22% c8 agg). 27B int8 perf inferred from (a) the 14B pattern
++ (b) the existing Qwen3.6-27B-W4A8-q-prepacked which DOES serve (20.9 t/s captured decode, SERVING.md). Checkpoints
+are the deliverable; pivot to producing Q5/Q4/Q6/Q7 + the GEMM/GEMV microbench + final writeup. (#5 is a good
+next-agent task: align the prepack tensor layout with vLLM's merged-column loader, or serve the raw W4A8 with cpu-offload.)
