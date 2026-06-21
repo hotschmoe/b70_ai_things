@@ -180,6 +180,9 @@ fabric** (his P2P-on result may flip on the older bus -- worth one run); leave d
 
 ## E. Speculative architectures -- composable fabric / SR-IOV relocation
 
+Expanded, with the bifurcation-vs-switch distinction and a full cheap->deluxe ladder, in
+[MOONSHOT_RESEARCH.md](../MOONSHOT_RESEARCH.md). Summary below.
+
 Idea on the table (Isaac): relocate the GPUs off the bad cross-die topology onto a clean PCIe Gen5
 switch, and reach them from the host over a fast fabric, made transparent via SR-IOV:
 
