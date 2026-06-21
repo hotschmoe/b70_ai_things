@@ -6,7 +6,8 @@
 # VLLM_XPU_ENABLE_XPU_GRAPH=1 + OMP + the pids/ulimit ceiling fix (capture spawns many threads).
 # GPU run -- invoke via the gpu-run flock lease (long-lived server holds the lease for its lifetime).
 #   Env: GRAPH (0|1), IMG (:int8g), MAXLEN (4096), MAXSEQS (4), UTIL (0.90), DTYPE (float16), OMP (8),
-#        TOOLCALL (0|1 -> --enable-auto-tool-choice + --tool-call-parser, default hermes; for tool-calling agents).
+#        TOOLCALL (0|1 -> --enable-auto-tool-choice + --tool-call-parser, default qwen3_coder), TOOLPARSER,
+#        REASONPARSER (e.g. qwen3 -> --reasoning-parser). For tool-calling agents (pi); Qwen3.6 needs qwen3_coder.
 set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:int8g}"
@@ -84,10 +85,13 @@ ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
 # KVDTYPE: store the KV cache in fp8 (fp8_e5m2 = no scales, simplest) -> halves KV BW (long-ctx decode win)
 # + 2x context/batch capacity. B70 has no FP8 ALU, so this is fp8-STORAGE + dequant-on-read in attention.
 [ -n "${KVDTYPE:-}" ] && ARGS+=(--kv-cache-dtype "$KVDTYPE")
-# TOOLCALL=1: enable OpenAI tool/function calling. vLLM emits tool calls as model-specific TEXT (Qwen3 =
-# Hermes <tool_call>{...}</tool_call>); the parser lifts them into the API `tool_calls` field. REQUIRED for
-# coding agents (pi etc.) that send tool_choice:"auto" (else vLLM 400s). Parser via TOOLPARSER (default hermes).
-[ -n "${TOOLCALL:-}" ] && ARGS+=(--enable-auto-tool-choice --tool-call-parser "${TOOLPARSER:-hermes}")
+# TOOLCALL=1: enable OpenAI tool/function calling. vLLM emits tool calls as model-specific TEXT; the parser
+# lifts them into the API `tool_calls` field. REQUIRED for coding agents (pi etc.) that send tool_choice:"auto"
+# (else vLLM 400s). [!] Qwen3.6 emits Qwen3-Coder XML (<function=..><parameter=..>), NOT Hermes JSON -> the
+# parser MUST be qwen3_coder; hermes json.loads()-chokes on the XML and returns EMPTY tool_calls (silent break).
+# Override via TOOLPARSER (default qwen3_coder; qwen3_xml also in this build). REASONPARSER=qwen3 splits <think>.
+[ -n "${TOOLCALL:-}" ] && ARGS+=(--enable-auto-tool-choice --tool-call-parser "${TOOLPARSER:-qwen3_coder}")
+[ -n "${REASONPARSER:-}" ] && ARGS+=(--reasoning-parser "$REASONPARSER")
 
 echo "=== serve W4A8 GRAPH=$GRAPH cgmode=$([ "$GRAPH" = 1 ] && echo $CGMODE || echo eager) attn=${ATTN:-default} IMG=$IMG dtype=$DTYPE MAXLEN=$MAXLEN SEQS=$MAXSEQS ==="
 echo "vllm ${ARGS[*]}"

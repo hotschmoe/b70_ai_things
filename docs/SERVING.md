@@ -137,6 +137,17 @@ NAME=vllm_w4a8 MODEL=qwen36-27b-int4 \
 Bench is `vllm bench serve` random 512-in/128-out `--ignore-eos`; `out_tok_s` = aggregate, per-stream
 decode = 1000/TPOT. For a CAPTURED sweep, serve with `CAPSIZES` covering the `CONC` levels.
 
+## Tool calling + reasoning (coding agents: pi, etc.)
+Agents send `tool_choice:"auto"`; vLLM **400s** unless a tool parser is configured, and it emits tool calls
+as model-specific TEXT that the parser lifts into the API `tool_calls` field. Enable via the serve knob
+`TOOLCALL=1` (-> `--enable-auto-tool-choice --tool-call-parser ${TOOLPARSER:-qwen3_coder}`), plus
+`REASONPARSER=qwen3` (-> `--reasoning-parser qwen3`, splits `<think>` into `reasoning_content`).
+- **[!] Qwen3.6 uses Qwen3-Coder XML** (`<function=name><parameter=..>`), NOT Hermes JSON. `hermes` returns
+  HTTP 200 but **EMPTY `tool_calls`** -- its `json.loads()` chokes on the XML (`JSONDecodeError`) -- so the
+  agent silently gets nothing to run. **Use `qwen3_coder`** (this build also has `qwen3_xml`). Check the build's
+  parsers: `docker exec <ctr> bash -lc 'grep -niE qwen /opt/venv/lib/python3.12/site-packages/vllm/tool_parsers/__init__.py'`.
+- The daily driver (`daily_driver_serve.sh`) sets `TOOLCALL=1 TOOLPARSER=qwen3_coder REASONPARSER=qwen3`.
+
 ## [!] Always verify the served model (CLAUDE.md rule)
 `curl -s http://192.168.10.5:18080/v1/models | python3 -m json.tool` -- the `id` must match `SERVED`
 and encode the quant. Cross-check against `evals/configs/models.yaml`.
