@@ -2524,3 +2524,17 @@ Smoke-gated the 14B W8A8 AutoRound path. Two cheap fast-fails caught real bugs b
 - **Quirk:** AutoRound nests output under OUT/<modelname>-w8a8/ -> flatten post-run before serving.
 - **Q1 FULL launched:** iters=200 nsamples=128 seqlen=2048, DEVMAP=xpu, ETA ~90min. Then flatten -> serve :int8g
   GRAPH=1 -> eval (accuracy vs bf16 + perf sweep) vs the existing Qwen3-14B-W8A8-gptq.
+
+### 2026-06-21 -- [Q1] full-run OOM fixed (batch_size cap) + optimization-frontier research landed
+- **Q1 full OOM:** iters=200 nsamples=128 seqlen=2048 died at layer 0 in 80s -- UR_RESULT_ERROR_OUT_OF_RESOURCES.
+  Per-block AutoRound tuning activation ~ batch_size x seqlen; the default batch at seqlen=2048 overflows one 32GB
+  card (the smoke survived only because it was 16x512). Fix: added BATCHSIZE + GRADACC knobs to the driver/65
+  (gradient_accumulate_steps keeps effective batch up at low peak mem). Relaunched DEVMAP=xpu BATCHSIZE=2 GRADACC=4.
+- **Research (2 parallel agents while the GPU quantized):**
+  - docs/literature/09_mtp_receptivity_vs_quant.md: literature (arXiv:2505.22179) says with a BF16 draft head,
+    body W8A8 vs W4A16 cause only SECOND-ORDER acceptance differences -> ordering BF16 >= W8A8 >= W4A16 >= W4A8.
+    Our -19% MTP is a graph-capture problem, NOT acceptance. Reframes the MTP question: int8 is not a big MTP unlock.
+  - docs/literature/08_int8_gemm_gemv_xe2_frontier.md: top decode lever = column-reorder + dp4a int8 GEMV
+    (W8A8 decode ~26 -> 35-40 t/s; fixes uncoalesced int8 loads, 61% vs W4A16 73% BW). int8 MoE grouped GEMM is a
+    PREFILL-only win (1.43-2.01x bf16, needs fused act-quant); 35B decode stays W4A16. 100-GEMM + 100-GEMV shape
+    lists specified (17 (K,N) shapes x M sweep) -> the microbench plan for task #11.

@@ -98,6 +98,16 @@ if n_quant == 0:
 
 kw = dict(scheme=W8A8, layer_config=layer_config, iters=ITERS, nsamples=NSAMPLES,
           seqlen=SEQLEN, device_map=DEVMAP, low_gpu_mem_usage=LOWMEM, format="llm_compressor")
+# Per-block tuning activation memory ~ batch_size x seqlen. At nsamples=128, seqlen=2048 the default
+# batch_size OOMs one 32GB card (UR_RESULT_ERROR_OUT_OF_RESOURCES at layer 0). Cap batch_size and use
+# gradient_accumulate_steps to keep the effective batch (and gradient quality) up at low peak memory.
+BATCHSIZE = int(os.environ.get("BATCHSIZE", "0"))
+GRADACC = int(os.environ.get("GRADACC", "0"))
+if BATCHSIZE > 0:
+    kw["batch_size"] = BATCHSIZE
+if GRADACC > 0:
+    kw["gradient_accumulate_steps"] = GRADACC
+print(f"[cfg] batch_size={BATCHSIZE or 'default'} grad_accum={GRADACC or 'default'}", flush=True)
 print(f"[quant] AutoRound(iters={ITERS}, nsamples={NSAMPLES}, device_map={DEVMAP}) ...", flush=True)
 t0 = time.time()
 try:

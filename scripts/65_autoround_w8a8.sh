@@ -25,6 +25,7 @@ OUT="${OUT:?set OUT=<output dir, method-tagged>}"
 DEVMAP="${DEVMAP:-xpu}"
 ITERS="${ITERS:-200}"; NSAMPLES="${NSAMPLES:-128}"; SEQLEN="${SEQLEN:-2048}"
 GROUP="${GROUP:--1}"; LOWMEM="${LOWMEM:-1}"
+BATCHSIZE="${BATCHSIZE:-0}"; GRADACC="${GRADACC:-0}"   # 0 = AutoRound default; lower BATCHSIZE if XPU OOMs
 IGN_REGEX="${IGN_REGEX:-(visual|\.mtp|mtp\.|linear_attn)}"
 IGN_MOE="${IGN_MOE:-0}"
 TAG="$(basename "$OUT")"
@@ -56,6 +57,7 @@ docker run --rm --name arw8a8 --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-
   -e XDG_CACHE_HOME="$ROOT/vllm_cache" -e PIP_CACHE_DIR="$ROOT/pip_cache" -e OMP_NUM_THREADS=32 \
   -e SRC="$SRC" -e OUT="$OUT" -e DEVMAP="$DEVMAP" -e ITERS="$ITERS" -e NSAMPLES="$NSAMPLES" \
   -e SEQLEN="$SEQLEN" -e GROUP="$GROUP" -e LOWMEM="$LOWMEM" -e IGN_REGEX="$IGN_REGEX" -e IGN_MOE="$IGN_MOE" \
+  -e BATCHSIZE="$BATCHSIZE" -e GRADACC="$GRADACC" \
   -v "$ROOT/_autoround_w8a8.py:/_autoround_w8a8.py:ro" \
   --entrypoint bash "$IMG" -lc '
     source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1 || true

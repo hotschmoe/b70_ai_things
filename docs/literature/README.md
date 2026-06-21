@@ -15,6 +15,9 @@ not ground truth (most public B70 numbers come from a handful of hobbyist tester
   our fast path is INT8 W8A8 (Xe2 has no native FP8); the fidelity cost is activation quant, not weights;
   ranked recovery (selective SmoothQuant, OS+, down_proj@W8A16, RTN); the DeltaNet/SSM frontier (Quamba2,
   Q-Mamba) + the `in_proj_qkvz` silent-zeroing gotcha; skip rotation/QAT at W8A8.
+- **[09_mtp_receptivity_vs_quant.md](09_mtp_receptivity_vs_quant.md)** — MTP acceptance vs body quantization
+  (2026-06-21): hypothesis, literature synthesis (arXiv:2505.22179 / QSpec / Quasar / community Qwen3.6 data),
+  predicted ordering BF16 >= W8A8 >= W4A16 >= W4A8 with reasoning, concrete experiment design for our harness.
 
 Plan synthesis lives in [`../../STRATEGY.md`](../../STRATEGY.md); experiment log in
 [`../../JOURNAL.md`](../../JOURNAL.md).

@@ -26,3 +26,4 @@ archive/
 # Large raw model/bench dumps stay on the box; curated results live in results/*.csv + RESULTS.md
 *.gguf
 *.safetensors
+__pycache__/
