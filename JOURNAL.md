@@ -2493,3 +2493,18 @@ config): hidden=2048, L=40, 256 experts, top_k=8 + a shared (always-on) expert -
 - **Corrected stale community numbers:** the banked "dual-B70 TP=2 27B FP8 13.25/97.84" was actually Puget's
   4xB70 TP=4 27B-DENSE (13.1/95.9); "30B-A3B MoE FP8 912 t/s" is UNVERIFIED (no public source). Real: Puget
   4xB70 TP=4 35B-A3B MoE = 16.3(C1)/63.7(C4)/122(C8). FINDINGS.md corrected.
+
+### 2026-06-21 -- [QUANT QUEUE] 48h INT8 fast-path campaign kicked off (QUANTS_TODO Q0-Q7)
+Autonomous /loop run: drive every qwen3.6-family model into W8A8 (AutoRound) + W4A8 (selective-SQ+GPTQ),
+eval + perf-bench (pp/ttft/tg @ ctx2048, c=1/2/4/8) vs the w4a16 analogues, test MTP receptivity, optimize.
+State at start: both B70s free, lock free, all bf16 sources present incl. the 35B-A3B (67 GB/26 shards, download
+now COMPLETE -- resolves the "no bf16 35B source" blocker kernel/15 flagged). v0230/int8/int8g/v0230moe images all present.
+- **Q0 DONE (code):** added `SMOOTHQUANT=selective` to scripts/49 -- Playbook-B explicit per-layer SmoothQuant
+  mappings built by INSPECTING the loaded model (full-attn q/k/v<-input_layernorm + o<-v, MLP gate/up<-post_attn_ln,
+  MoE experts.* router-aware), skipping DeltaNet linear_attn/vision/MTP. Fixes the auto-resolver ValueError on the
+  hybrid. Embedded-python compiles clean (113 lines), apostrophe-free (bash -c heredoc safe). Gates Q3/Q5/Q7.
+- **New reusable tooling:** `scripts/65_autoround_w8a8.sh` + `scripts/_autoround_w8a8.py` (generalizes kernel/15
+  sec-2 inline recipe: loader fallback chain, layer_config ignore, DEVMAP xpu|0,1, LOWMEM streaming, IGN_MOE for 35B).
+  `scripts/qrun.sh` = detached gpu-run launcher (survives ssh close via setsid; writes results/NAME.log + QRUN_EXIT sentinel).
+- **Q1 SMOKE launched:** 14B W8A8 AutoRound, iters=50 nsamples=16 seqlen=512, DEVMAP=xpu, detached, holding the lock.
+  Toolchain validation before the full run. Poll results/Q1_smoke.log for QRUN_EXIT + DONE_AUTOROUND_W8A8.

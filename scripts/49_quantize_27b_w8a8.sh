@@ -58,7 +58,10 @@ except Exception: from llmcompressor.modifiers.smoothquant import SmoothQuantMod
 
 SRC=os.environ["SRC"]; OUT=os.environ["OUT"]; DEV=os.environ["DEVICE"]; METHOD=os.environ["METHOD"].lower()
 N=int(os.environ["SAMPLES"]); SEQ=int(os.environ["SEQLEN"]); SMOOTH=float(os.environ["SMOOTH"])
-DATAFREE=os.environ.get("DATAFREE","0")=="1"; USE_SMOOTH=os.environ.get("SMOOTHQUANT","1")=="1"
+DATAFREE=os.environ.get("DATAFREE","0")=="1"
+SQMODE=os.environ.get("SMOOTHQUANT","1").strip().lower()
+USE_SMOOTH = SQMODE not in ("0","false","no","off","")
+SELECTIVE = SQMODE in ("selective","sel","hybrid")
 SCHEME=os.environ.get("SCHEME","W8A8")
 IGN=[p for p in os.environ["IGNORE"].split() if p]
 xpu_ok=hasattr(torch,"xpu") and torch.xpu.is_available()
@@ -103,12 +106,57 @@ else:
     else:
         q=QuantizationModifier(targets="Linear", scheme=SCHEME, ignore=IGN)
     # SmoothQuant resolver needs exactly one smooth-layer per balance group; the hybrid Qwen3_5 (only
-    # 16/64 layers carry self_attn q/k/v) breaks that pairing, ValueError before any GPU work. SMOOTHQUANT=0
-    # runs GPTQ-only, still a strong W8A8 recipe (GPTQ weight calibration + dynamic per-token int8 acts).
+    # 16/64 layers carry self_attn q/k/v) breaks the auto/all-layers pairing -> ValueError before any GPU
+    # work. SMOOTHQUANT=0 = GPTQ-only (strong W8A8). SMOOTHQUANT=selective = Q0 Playbook-B mappings below:
+    # explicit per-layer maps ONLY where pairing is clean (full-attn q/k/v + o<-v, MLP gate/up, MoE experts),
+    # skipping DeltaNet linear_attn / vision / MTP -- which is what made the auto resolver throw.
     # NOTE: keep this heredoc free of apostrophes/single-quotes -- it lives inside bash -c quoted.
-    pfx = "SmoothQuant+" if USE_SMOOTH else ""
-    recipe=[SmoothQuantModifier(smoothing_strength=SMOOTH), q] if USE_SMOOTH else [q]
-    print(f"[quant] {pfx}{METHOD} W8A8, ignore={IGN} ...", flush=True)
+    def _selective_sq_mappings(m):
+        import torch as _t
+        names = dict(m.named_modules())
+        maps = []
+        n_attn = n_mlp = n_moe = 0
+        for name, mod in names.items():
+            if isinstance(mod, _t.nn.Linear) and name.endswith(".self_attn.q_proj"):
+                pre = name[:-len(".self_attn.q_proj")]
+                ln = pre + ".input_layernorm"
+                q_ = pre + ".self_attn.q_proj"; k_ = pre + ".self_attn.k_proj"
+                v_ = pre + ".self_attn.v_proj"; o_ = pre + ".self_attn.o_proj"
+                if ln in names and k_ in names and v_ in names:
+                    maps.append([[q_, k_, v_], ln]); n_attn += 1
+                if o_ in names and v_ in names:
+                    maps.append([[o_], v_])
+        for name, mod in names.items():
+            if isinstance(mod, _t.nn.Linear) and name.endswith(".mlp.gate_proj"):
+                pre = name[:-len(".mlp.gate_proj")]
+                ln = pre + ".post_attention_layernorm"; u_ = pre + ".mlp.up_proj"
+                if ln in names and u_ in names:
+                    maps.append([[pre + ".mlp.gate_proj", u_], ln]); n_mlp += 1
+        seen = set()
+        for name, mod in names.items():
+            if isinstance(mod, _t.nn.Linear) and ".mlp.experts." in name and name.endswith(".gate_proj"):
+                head = name.split(".mlp.experts.")[0]
+                if head in seen:
+                    continue
+                seen.add(head)
+                ln = head + ".post_attention_layernorm"
+                bal = [nm for nm in names if nm.startswith(head + ".mlp.experts.")
+                       and (nm.endswith(".gate_proj") or nm.endswith(".up_proj"))]
+                if ln in names and bal:
+                    maps.append([bal, ln]); n_moe += 1
+        print("[selective-sq] attn_layers=%d mlp_layers=%d moe_layers=%d mappings=%d"
+              % (n_attn, n_mlp, n_moe, len(maps)), flush=True)
+        if not maps:
+            raise SystemExit("FAIL: selective SmoothQuant produced 0 mappings -- arch module names changed?")
+        return maps
+    if SELECTIVE:
+        sq = SmoothQuantModifier(smoothing_strength=SMOOTH, mappings=_selective_sq_mappings(model))
+        recipe = [sq, q]; pfx = "selective-SmoothQuant+"
+    elif USE_SMOOTH:
+        recipe = [SmoothQuantModifier(smoothing_strength=SMOOTH), q]; pfx = "SmoothQuant+"
+    else:
+        recipe = [q]; pfx = ""
+    print(f"[quant] {pfx}{METHOD} {SCHEME}, ignore={IGN} ...", flush=True)
     t0=time.time()
     oneshot(model=model, dataset=ds, recipe=recipe, max_seq_length=SEQ, num_calibration_samples=N)
 print(f"[done] calib+quant {time.time()-t0:.0f}s; saving compressed -> {OUT}", flush=True)
