@@ -35,9 +35,16 @@ for entry in "${ENTRIES[@]}"; do
     docker rm -f "$NAME" 2>/dev/null || true; continue
   fi
   echo "--- served id ---"; curl -s "http://localhost:18080/v1/models" 2>/dev/null | grep -oE '"id":"[^"]*"' | head -2
-  # sweep
+  # sweep (perf: pp/ttft/tg)
   NAME="$NAME" MODEL="$SERVED" LABEL="$SERVED" TOKPATH="/models/$TOKDIR" IN="$IN" OUT="$OUT" CONC="$CONC" \
       bash "$ROOT/35_sweep_bench.sh" || echo "sweep failed for $SERVED"
+  # accuracy VALIDATE gate: gsm8k probe INSIDE the served container (has python3; hits localhost:18080)
+  if [ "${GSM8K:-1}" = 1 ] && [ -f "$ROOT/gsm8k_probe.py" ]; then
+    docker cp "$ROOT/gsm8k_probe.py" "$NAME":/tmp/gsm8k_probe.py 2>/dev/null \
+      && docker exec "$NAME" python3 /tmp/gsm8k_probe.py "$SERVED" http://localhost:18080/v1 12 2>&1 \
+         | tee "$ROOT/results/gsm8k_${SERVED}.txt" \
+      || echo "gsm8k probe failed for $SERVED"
+  fi
   docker stop "$NAME" 2>/dev/null || true; docker rm -f "$NAME" 2>/dev/null || true
 done
 echo; echo "===== BENCH LADDER DONE ====="
