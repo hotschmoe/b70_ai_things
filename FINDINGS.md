@@ -216,3 +216,43 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);
 real 2-card AutoRound of a >32GB source (now proven viable); int8 MoE kernel for 35B-A3B (docs/kernel/18).*
+
+================================================================================
+INT8 FAST-PATH QUANT CAMPAIGN -- BOTTOM LINE (2026-06-21/22)
+================================================================================
+Goal: quantize the qwen3.6 family to W8A8 (int8 wt + int8 act) and W4A8 (int4 wt + int8 act) and measure how far
+the B70's int8-XMX systolic path carries vs the int4-weight/fp16-act (W4A16) baselines. Full log: JOURNAL.md;
+queue+results: QUANTS_TODO.md sec 6; method bible: docs/kernel/15; microbench: docs/kernel/19.
+
+THE HEADLINE (answers "where can int8-act beat w4a16"):
+- **W4A8 (int4 wt + int8 act) is the all-rounder and BEATS W4A16.** 14B ctx-2048 ladder (our int8 kernel, captured):
+    scheme           dec t/s (c1/c8)   TTFT(c1)   c8 aggregate
+    W4A16-gptq       52.5 / 22.2       571 ms     132.9 t/s
+    W4A8-gptq        49.3 / 25.5       405 ms     161.7 t/s   <- -29% TTFT, +22% c8 throughput vs W4A16
+    W8A8 (AR/gptq)   25.1 / 18.0       347 ms     125.0 t/s
+  W4A8 ties W4A16 decode (same int4-weight BW) AND wins prefill (int8-XMX) -> lower TTFT + higher concurrent tput.
+- **W8A8 is a prefill-latency / accuracy play, NOT a decode play.** Its decode is ~half the int4 schemes because
+  decode is weight-bandwidth-bound and int8 weights are 2x the bytes of int4. Best single-stream TTFT though.
+- **Decode ordering (bytes-bound):  W4A16 ~= W4A8  >  W8A8  >  bf16.   Prefill (compute-bound): int8-XMX ~1.6-2x bf16.**
+
+MICROBENCH (docs/kernel/19, real int8_gemm_w8a8 op, 341 rows): int8-vs-bf16 GEMM median 1.68x (peak 250.9 INT8
+TFLOP/s, grows with M); GEMV ~2x on large-N dense shapes (up to 433 GB/s) but only ~1.1x on small-N (35B MoE
+experts, KV-proj) which are overhead-bound -> reinforces W4A16-int4 for the 35B MoE decode.
+
+MTP RECEPTIVITY (docs/literature/09): with a BF16 draft head, body W8A8 vs W4A16 cause only SECOND-ORDER spec-
+decode acceptance differences (arXiv:2505.22179). So W8A8 is NOT a meaningful MTP unlock over W4A16 on our stack;
+our -19% MTP result is a graph-capture problem, not an acceptance problem. Ordering: BF16 >= W8A8 >= W4A16 >= W4A8.
+
+CHECKPOINTS PRODUCED: 14B W8A8-autoround; 27B W8A8-sqgptq + W4A8-sqgptq(+prepacked); Qwable W4A8 (in progress).
+(W8A8-on-VLM uses GPTQ-selective-SQ: AutoRound's data-driven calib auto-routes VLMs to an MLLM path that needs an
+image processor -- breaks for text-only. Same int8 kernel/perf as AutoRound per the 14B.)
+
+KNOWN SERVE LIMITS (B70, current vLLM-XPU build): single-card 27B int8 serve is fragile -- W8A8 27B (35GB) exceeds
+one card; W4A8 27B serve hit a chain of 5 fixable-but-stacked bugs (fp8-KV reject, 4304 vision-fc2 odd-dim ->
+graft-ignore fix, 28GB unpacked-int8 load transient -> prepack fix, prepack merged-column shape mismatch). 27B int8
+perf inferred from the 14B ladder + the existing 27B-W4A8-q-prepacked (20.9 t/s captured). 35B int8 MoE: produce-only
+(no XPU int8 fused-expert kernel; docs/kernel/18).
+
+TOP NEXT LEVERS: (1) col-reorder + dp4a int8 GEMV (docs/08/19) to lift the small-N decode GEMVs toward BW
+(W8A8 decode ~26->35-40 t/s); (2) align prepack tensor layout w/ vLLM merged-column loader to unblock 27B W4A8 serve;
+(3) int8 MoE fused-expert kernel for the 35B (docs/kernel/18 Track A) -- prefill/throughput win only.
