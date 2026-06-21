@@ -155,10 +155,14 @@ OOMs on the >32 GB load -- the 2-card map is the fix, proven `scripts/59`); `lay
 scripts/gpu-run env \
   SCHEME=W4A8 METHOD=gptq SMOOTHQUANT=selective DEVICE=xpu \
   SRC=/mnt/vm_8tb/b70/models/<SOURCE_DIR> \
-  OUTNAME=<OUTPUT>-W4A8-sqgptq SAMPLES=512 SEQLEN=2048 \
+  OUTNAME=<OUTPUT>-W4A8-sqgptq SAMPLES=128 SEQLEN=1024 \
   IGNORE="lm_head re:.*linear_attn.* re:.*visual.* re:.*mtp.*" \
   bash scripts/49_quantize_27b_w8a8.sh
 ```
+- **[!] USE SAMPLES=128 SEQLEN=1024 on the 27B+ VLM (NOT 512/2048).** llmcompressor's pipeline on the qwen3_5
+  VLM does NOT cache per-layer inputs -- it re-runs the full layer prefix each step, so per-layer calib cost is
+  O(depth): late layers run ~45x slower than early ones (measured: 0.045 s/it at layer 0 -> 2.0 s/it at layer 52).
+  At 512/2048 the 64-layer 27B GPTQ is ~6 h; 128/1024 is ~8x faster (~45-60 min) at standard GPTQ quality. (2026-06-21)
 - `SMOOTHQUANT=selective` is the Q0 enhancement (explicit Playbook-B mappings; the auto/all-layers mode still throws on hybrids).
 - `actorder=None` inside `scripts/49` (avoids the XPU gather device-lost). `down_proj` early+late at W4A16 is an optional rescue.
 - 27B/35B load may OOM one card -> `device_map="auto"` (CPU offload) or both XPUs.

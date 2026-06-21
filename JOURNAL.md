@@ -2567,3 +2567,17 @@ chain, quantized 64 blocks across BOTH B70s, exported valid compressed-tensors W
 UNVERIFIED "AutoRound-on-XPU for the VLM" production path (kernel/15 FIND/COMMUNITY) is now PROVEN -- no need for
 the GPTQ-W8A8 fallback. Q2 full launched: iters=200 nsamples=128 seqlen=1024 BATCHSIZE=2 GRADACC=2 (effective
 batch 4 at ~half per-block memory -- 27B blocks bigger than 14B; safety-first vs the Q1 OOM). DEVMAP=0,1, ~2-3h ETA.
+
+### 2026-06-21 -- [Q2] GPTQ-on-VLM is O(depth^2); fixed via SAMPLES=128 SEQLEN=1024
+Pivoted Q2 (27B W8A8) AutoRound->GPTQ (AutoRound's data-driven calib auto-routes VLMs to its MLLM path -> needs
+a processor, breaks for text-only). GPTQ selective-SQ ran: Q0 mapping VALIDATED on the real 27B hybrid
+([selective-sq] attn=16 mlp=64 mappings=80, SmoothQuant applied clean after the GQA o<-v fix). BUT the run crawled:
+- **llmcompressor's sequential pipeline does NOT cache per-layer inputs on the qwen3_5 VLM** -- it re-runs the full
+  layer prefix every calibration step. Per-layer cost is O(depth): measured 0.045 s/it at layer 0 -> 2.0 s/it at
+  layer 52 (~45x). Host RAM fine (83G free, no swap), load ~1 -> not thrashing; it is genuine prefix re-compute.
+  At SAMPLES=512 SEQLEN=2048 the 64-layer 27B GPTQ projects to ~6 h. (Likely the pip-pulled compressed-tensors
+  0.17.1 / newer llmcompressor changed pipeline tracing for the VLM.)
+- **Fix: SAMPLES=128 SEQLEN=1024** (~8x faster, ~45-60 min, standard GPTQ quality). Killed the 512/2048 run at 52/65
+  and relaunched. Applies to ALL 27B+ GPTQ (Q2/Q3/Q5/Q7) -- QUANTS_TODO recipe 4B updated.
+- Also confirmed: AutoRound W8A8 works for the DENSE 14B but its calib breaks on qwen3_5 VLMs (MLLM-processor
+  assert) -> VLM W8A8 uses GPTQ-selective-SQ (same int8 kernel/perf; the 14B showed AR==GPTQ on speed).
