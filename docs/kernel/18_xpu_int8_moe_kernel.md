@@ -26,12 +26,12 @@ TL;DR
   `vllm-xpu-kernels/csrc/xpu/grouped_gemm/` wraps them with the token-routing pipeline DONE. Their interface
   exposes only `is_B_int4`/`is_B_mxfp4` -- **W8A8 is the single missing flag.** Our job = add the `s8 x s8 -> s32`
   MMA atom + per-token/per-channel scale epilogue to that existing grouped collective.
-- **[!] The ROI is NARROW -- this is a payoff question, not a feasibility one.** Our microbench shows int8 is
-  SLOWER than bf16 at the A3B's tiny N=512 expert shape (memory-bound, not compute-bound -> no XMX win + quant
-  overhead). int8-act only pays off COMPUTE-bound (dense W8A8 won prefill +50-60%, but A3B experts are too small).
-  => int8 won't help the 35B DECODE path (W4A16's 56.8 t/s is already the ceiling); the win is prefill/large-batch
-  only. **Recommendation: build the cheap Track-A bootstrap to MEASURE end-to-end int8-vs-W4A16 before committing
-  to the weeks-long fused kernel.** W4A16 stays the serving recipe until the data justifies more.
+- **[!] The win is PREFILL/THROUGHPUT, and it's REAL (1.4-2.0x) -- not a decode win.** Once the per-token quant
+  is FUSED (amortized over top-8 experts), our microbench shows int8 GEMM beats bf16 **1.43x at the N=512 expert
+  shape, 1.78-2.01x at bigger shapes** (sec 3) -- matching the dense W8A8 +50-60% prefill win. It does NOT help
+  DECODE (memory-bound -> W4A16's int4 weights win the bandwidth game; the current 56.8 t/s is the floor). =>
+  **worth building for prefill/batched/high-concurrency serving; W4A16 stays the decode recipe.** Stage it:
+  Track-A bootstrap (days) to confirm end-to-end, then the fused Track-B kernel for the real throughput win.
 
 ================================================================================
 1. State of the ecosystem (who has int8 XPU MoE -- nobody)
@@ -85,22 +85,24 @@ experts), on the real 35B-A3B shapes (K=2048, N=512, E=256, top-8), image `:int8
   dispatch (the same eager-dispatch tax we measured serving). The int8 XMX advantage is invisible behind launch
   overhead. (Note our dense op takes a SINGLE weight [K,N] -> it cannot do per-expert weights in one call, which
   is exactly why a grouped/fused kernel is required.)
-- **Raw single-GEMM at the MoE-expert shape (N=512), int8(incl. quant) vs bf16:** M=2048 bf16 0.064 ms (66.8
-  GFLOP/s) / int8 0.098 ms (43.9) = **int8 0.66x**; M=8192 bf16 0.125 ms (137 GFLOP/s) / int8 0.232 ms (74) =
-  **int8 0.54x**. **int8 is SLOWER here.** Both run at ~70-137 GFLOP/s = <0.1% of the 233 INT8 TOPS peak ->
-  these GEMMs are NOT compute-bound; they are memory/latency-bound (N=512 is tiny), where int8's XMX TOPS
-  advantage does not appear and the per-token activation quant is pure overhead.
-- **The boundary (important):** int8 DOES win when COMPUTE-bound -- the dense 14B/27B W8A8 measured **+50-60%
-  prefill vs fp8/bf16** (big GEMMs, hidden 5120 / intermediate ~17k). The 35B-A3B's expert intermediate is only
-  N=512 -> per-expert GEMMs are too small to be compute-bound, so int8 ACTIVATIONS don't help and add quant cost.
-  (A GEMM-only-at-large-N confirmation is queued; the dense +60% prefill precedent already establishes the win
-  exists only in the compute-bound regime.)
-- **Conclusion:** the foundation works (correct), but **int8-act helps PREFILL/large-batch (compute-bound), NOT
-  DECODE (memory-bound, where the A3B small experts live)**. Decode is already best served by **W4A16** (int4
-  weight = least DRAM read; the current 56.8 t/s captured path). The path to ANY int8 MoE perf is (a) a FUSED
-  grouped kernel (one launch over all experts, activations pre-quantized in the permute so the quant cost is
-  amortized) -- the only way to reach aggregate compute-bound at prefill; and/or (b) PIECEWISE graph capture to
-  amortize launches (the int4 MoE got 7.17x from capture). The naive per-expert loop is hopeless (dispatch-bound).
+- **WITH the per-token quant op counted per call (N=512):** int8 LOSES -- M=2048 0.70x, M=8192 0.54x. The tiny
+  per-call GEMMs are swamped by the activation-quant op + dispatch. This was the misleading first read.
+- **[KEY] int8 GEMM-ONLY, activations PRE-quantized (as a fused MoE pipeline delivers them -- quantize once per
+  token in the permute, reuse across all top-8 experts):**
+  | shape | bf16 | int8 | int8 speedup |
+  |---|---|---|---|
+  | M=4096 K=2048 **N=512** (expert, big M) | 143 GFLOP/s | 204 | **1.43x** |
+  | M=4096 K=4096 N=4096 | 147 | 295 | **2.01x** |
+  | M=8192 K=4096 N=11008 (FFN-shaped) | 138 | 245 | **1.78x** |
+  **int8 GEMM is 1.4-2.0x FASTER than bf16** -- even at the N=512 expert shape once M is large enough (an expert
+  with enough routed tokens, i.e. PREFILL/batched). The earlier "int8 slower" was ENTIRELY the per-token quant op
+  charged to int8; a fused pipeline amortizes it (once/token over top-8 experts) -> the int8 COMPUTE win is real.
+- **Conclusion (revised after isolating the quant op):** the int8 expert GEMM genuinely wins **1.4-2.0x when
+  COMPUTE-bound** (prefill / batched serving) -- matching the dense W8A8 +50-60% prefill win. It does NOT help
+  DECODE: at M=1/expert the GEMM is memory-bound and W4A16's int4 weights (half the DRAM of int8) win the
+  bandwidth game (current 56.8 t/s). **So the int8 MoE kernel is a PREFILL/THROUGHPUT win (1.4-2x), not a decode
+  win.** Realizing it needs a FUSED grouped kernel (one launch, activations pre-quantized in the permute) -- the
+  naive per-expert loop is hopeless (dispatch-bound) and W4A16 is the decode floor.
 
 ================================================================================
 4. The build plan -- the canonical int8-MoE pipeline, ported to Xe2
@@ -179,12 +181,14 @@ MoE port reference.
 ================================================================================
 6. Verdict
 ================================================================================
-35B-A3B int8 MoE is **BUILDABLE but the ROI is NARROW** -- and that nuance is the most important output of this
-investigation. It is NOT an adopt (nobody upstream has it); Xe2 supports it; the grouped-GEMM scaffolding exists
-(sycl-tla + vllm-xpu-kernels) with W8A8 the one missing flag; our compute is proven correct. **BUT** our measured
-perf says int8-activations only pay off when COMPUTE-bound, and the A3B's tiny N=512 experts are memory-bound at
-decode -> **int8 won't speed up the common decode path; W4A16 (56.8 t/s captured) is already the decode ceiling.**
-The int8 win is a PREFILL/large-batch play only, and even there it is bounded by the small expert N.
+35B-A3B int8 MoE is **BUILDABLE and WORTH IT for prefill/throughput** -- with a clear ROI boundary. It is NOT an
+adopt (nobody upstream has it); Xe2 supports it; the grouped-GEMM scaffolding exists (sycl-tla + vllm-xpu-kernels)
+with W8A8 the one missing flag; our compute is proven correct. **And the payoff is real:** with the activation
+quant FUSED (amortized over top-8 experts), the int8 expert GEMM beats bf16 **1.43-2.01x** (sec 3) -- matching the
+dense W8A8 +50-60% prefill win. The boundary: this is a **PREFILL/batched/high-concurrency** win, NOT a decode win
+(decode is memory-bound -> W4A16's int4 weights win bandwidth; 56.8 t/s is the floor). So a serving stack would use
+**W4A16 for low-latency decode and int8 W8A8/W4A8 for prefill/throughput** -- the same decode-vs-prefill split we
+already see on the dense 14B/27B.
 
 **Recommendation (honest):**
 1. **Do NOT start with the weeks-long Track B kernel.** First de-risk the premise: build **Track A** (bootstrap --
