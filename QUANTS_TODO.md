@@ -82,7 +82,7 @@ Disk: 6.3 TB free. Each int8 output ~14-35 GB. Not a constraint.
 
 Legend: [ ] todo - [~] running - [x] done.
 
-### [ ] Q0 -- PREREQ: add SELECTIVE SmoothQuant to `scripts/49` (needed for every W4A8 on a hybrid)
+### [x] Q0 -- PREREQ: add SELECTIVE SmoothQuant to `scripts/49` (needed for every W4A8 on a hybrid)  DONE 2026-06-21
 - Build SmoothQuant mappings ONLY where pairing is clean (Playbook B): the 16 full-attn layers
   (`input_layernorm->{q_proj,k_proj,v_proj}`, `v_proj->o_proj`) + the 64 MLP layers
   (`post_attention_layernorm->{gate_proj,up_proj}`); SKIP DeltaNet `linear_attn` + the vision tower + MTP.
@@ -91,7 +91,7 @@ Legend: [ ] todo - [~] running - [x] done.
   `SmoothQuantModifier` instead of the auto-all-layers default (which throws). Smoke on the 27B (iters tiny) to confirm
   no `ValueError: got [all 64 input_layernorm]`. **This gates Q3/Q5/Q7.** (Dense 14B doesn't need it; all-layers works.)
 
-### [ ] Q1 -- Qwen3-14B  W8A8  (AutoRound)   <- toolchain validation (smallest, dense, one card)
+### [x] Q1 -- Qwen3-14B  W8A8  (AutoRound)   DONE 2026-06-21 (toolchain VALIDATED; served + benched)
 - Validates AutoRound-on-XPU + the llm_compressor W8A8 export cheaply before the 27B. **Out:** `models/Qwen3-14B-W8A8-autoround`.
 - `device_map="xpu"`; ignore `lm_head` only. Serve `:int8g`, id `qwen3-14b-w8a8-autoround`. Est ~1-3 h. Recipe 4A.
 - Compare vs existing `Qwen3-14B-W8A8-gptq` (the AutoRound-vs-GPTQ W8A8 datapoint).
@@ -185,8 +185,8 @@ scripts/gpu-run env \
 
 | date | item | model / scheme / method | out dir | served id | accuracy (agree/gsm8k) | decode/prefill t/s | verdict |
 |---|---|---|---|---|---|---|---|
-| -- | Q0 | scripts/49 selective-SmoothQuant | (code) | -- | -- | -- | -- |
-| -- | Q1 | 14B / W8A8 / autoround | -- | -- | -- | -- | -- |
+| 0621 | Q0 | scripts/49 selective-SmoothQuant | (code, committed) | -- | -- | -- | DONE: builds per-layer maps by model inspection |
+| 0621 | Q1 | 14B / W8A8 / autoround | models/Qwen3-14B-W8A8-autoround | qwen3-14b-w8a8-autoround | acc TBD (== gptq kernel) | dec 25.1(c1)/18.0(c8); ttft 347ms | DONE. W8A8 decode BW-bound (~half int4); lowest c1 TTFT. ctx2048 sweep saved |
 | -- | Q2 | 27B-base / W8A8 / autoround | -- | -- | -- | -- | -- |
 | -- | Q3 | 27B-base / W4A8 / sq+gptq | -- | -- | -- | -- | -- |
 | -- | Q4 | Qwable / W8A8 / autoround | -- | -- | -- | -- | -- |

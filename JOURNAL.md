@@ -2538,3 +2538,25 @@ Smoke-gated the 14B W8A8 AutoRound path. Two cheap fast-fails caught real bugs b
     (W8A8 decode ~26 -> 35-40 t/s; fixes uncoalesced int8 loads, 61% vs W4A16 73% BW). int8 MoE grouped GEMM is a
     PREFILL-only win (1.43-2.01x bf16, needs fused act-quant); 35B decode stays W4A16. 100-GEMM + 100-GEMV shape
     lists specified (17 (K,N) shapes x M sweep) -> the microbench plan for task #11.
+
+### 2026-06-21 -- [Q1 DONE + 14B ladder] W4A8 BEATS W4A16; W8A8 is decode-BW-bound (the headline result)
+Q1 (14B W8A8 AutoRound) full run DONE (3146s, iters=200 nsamples=128 seqlen=1024 batch=4, DEVMAP=xpu). Flattened
+nested OUT/Qwen3-14B-w8a8 -> OUT. Served :int8g GRAPH=1 (id qwen3-14b-w8a8-autoround) + 3 existing 14B quants;
+ctx-2048 sweep at c=1/2/4/8 (NEW config -- prior CSVs were ctx-512). CSVs in evals/results/ctx2048_14b/.
+
+14B ctx-2048 (per_stream_decode t/s | mean_ttft ms | c8 aggregate out_tok/s):
+  scheme            c1dec  c2    c4    c8     c1_TTFT  c8_agg
+  W8A8-autoround    25.1   24.5  22.8  18.0    347ms    125.0
+  W8A8-gptq         24.8   24.6  23.0  18.1    351ms    125.6
+  W4A16-gptq        52.5   45.1  37.9  22.2    571ms    132.9
+  W4A8-gptq         49.3   45.1  39.3  25.5    405ms    161.7   <- best all-rounder
+
+FINDINGS (answers "where does int8-act beat w4a16"):
+- **W4A8 (int4 w + int8 a) BEATS W4A16**: ties int4-weight decode BW (~49 vs 52 t/s c1) but the int8-act prefill
+  cuts TTFT -29% (405 vs 571ms) and lifts c8 aggregate +21.7% (161.7 vs 132.9). THIS is the int8-XMX prefill win.
+- **W8A8 (int8 w) is decode-BW-bound** -- ~25 t/s decode = HALF the int4-weight schemes (8-bit weights = 2x the
+  per-token weight read). BUT lowest single-stream prefill TTFT (347ms). So W8A8 = prefill-latency/accuracy play,
+  NOT a decode play. Matches docs/literature/08 (W8A8 decode BW-starved; int4-weight wins decode bandwidth).
+- AutoRound-W8A8 == GPTQ-W8A8 on SPEED (identical kernel path); the AutoRound edge is ACCURACY (eval TBD).
+- IMPLICATION for the 27B target: expect W4A8 to be the winner (prefill + concurrency over the W4A16 daily driver),
+  W8A8 a prefill-latency/quality option. Decode t/s ceiling is set by weight bit-width (BW-bound), not act bits.
