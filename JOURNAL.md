@@ -2645,3 +2645,21 @@ shipping server is single-GPU only today. VERDICT: don't migrate solely for P2P 
 discrete-Battlemage cross-die P2P); highest leverage is SOFTWARE (steal Seguin's 3 env vars, A/B P2P on/off on
 our Gen3 fabric) + the pioneering bet of compiler-fused XPU collectives. Also explored composable PCIe-Gen5-switch
 / SR-IOV-fabric relocation to fix the cross-die topology. All written up with refs in docs/P2P_GPU.md.
+
+### 2026-06-22 -- [27B W4A8 serve] ROOT CAUSE of the merged-column assert FOUND + fixed
+The W4A8-sqgptq-prepacked serve assert (load_merged_column_weight: param_data.shape != loaded_weight.shape) was
+NOT a weight problem -- the q/k/v/o/gate/up tensors are byte-identical to the working `27B-W4A8-q-prepacked`. The ONLY
+config diff: ignore list had 339 entries (336 EXPLICIT linear_attn module names + lm_head + visual + mtp) vs the
+working 4-regex form. An explicit list MISSES the DeltaNet FUSED projections (in_proj_qkvz/in_proj_ba) which vLLM
+loads via load_merged_column_weight; for W4A8 those are bf16 [N,K] on disk but vLLM allocates packed-int4 [N,K/8]
+=> shape assert. (W8A8 doesn't hit this: int8 [N,K] matches bf16's shape.) FIX: rewrite ignore ->
+["lm_head","re:.*linear_attn.*","re:.*visual.*","re:.*mtp.*"] (the regex catches ALL linear_attn submodules incl the
+fused ones). Re-serving the prepacked W4A8 to capture the real 27B int8 ctx-2048 ladder. TODO: make scripts/49 emit
+the regex ignore (not explicit names), or have fix_27b_vlm_config collapse explicit linear_attn -> regex.
+
+### 2026-06-22 -- [35B MoE] DEFERRED behind a small-MoE kernel bring-up (QUANTS_TODO sec 7)
+35B MoE GPTQ path PROVEN (smoke quantized real MoE layers) but ~25-30 min/LAYER x 41 = multi-day produce, and it is
+serve-gated (no int8 MoE kernel). Diagnosed it is NOT RAM spill: host 72/125 GB used, 53 GB free, swap=0; device_map=cpu
++ llmcompressor onloads one layer at a time. The cost is inherent MoE-GPTQ (256 experts/layer x Cholesky + O(depth)
+prefix replay). Decision (user): defer 35B; bring up the int8 MoE kernel on a SMALL MoE first (OLMoE-1B-7B W8A8 ->
+then Qwen3-30B-A3B -> then 35B). Pivoted the GPU to the 27B W4A8 serve fix (real int8 perf data) instead. QUANTS_TODO sec 7.
