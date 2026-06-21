@@ -14,7 +14,7 @@ set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 IMG="${IMG:-vllm-xpu-env:int8}"
 STAMP="${STAMP:-$(date +%Y%m%d_%H%M%S)}"
-SCRIPT="$ROOT/scripts/68_int8_gemm_gemv_microbench.py"
+SCRIPT="$ROOT/68_int8_gemm_gemv_microbench.py"
 LOG="$ROOT/results/microbench_gemm_gemv_${STAMP}.log"
 
 mkdir -p "$ROOT/results"
