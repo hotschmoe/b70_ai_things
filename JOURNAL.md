@@ -2663,3 +2663,11 @@ serve-gated (no int8 MoE kernel). Diagnosed it is NOT RAM spill: host 72/125 GB 
 + llmcompressor onloads one layer at a time. The cost is inherent MoE-GPTQ (256 experts/layer x Cholesky + O(depth)
 prefix replay). Decision (user): defer 35B; bring up the int8 MoE kernel on a SMALL MoE first (OLMoE-1B-7B W8A8 ->
 then Qwen3-30B-A3B -> then 35B). Pivoted the GPU to the 27B W4A8 serve fix (real int8 perf data) instead. QUANTS_TODO sec 7.
+
+### 2026-06-22 -- [27B W4A8 serve] ignore-fix WORKED; now KV-memory bound on one card (-> TP=2 motivation)
+After rewriting ignore to the 4-regex form, the merged-column shape assert is GONE -- the prepacked W4A8 loads + captures
+the PIECEWISE graph. Next error was benign: KV cache too small (0.34 GiB free vs 0.41 needed @ max_len 4096). The 25GB
+prepacked W4A8 on a 32GB card leaves little KV room. Refit: MAXLEN=2560 (covers our 2048+128 bench) UTIL=0.97. NOTE: this
+is the single-card concurrency wall -- ~2-2.5GB KV left => c=8 @ ctx-2048 (~4GB KV) likely won't fit; c=1/2/4 will. This is
+exactly the case for TP=2 (task #12): split the 27B across both B70s (~12.5GB/card) -> abundant KV -> real concurrency.
+So: capture TP=1 c=1/2/4 ctx-2048 now (first real servable 27B int8 datapoint), then the Seguin TP=2 A/B for concurrency.
