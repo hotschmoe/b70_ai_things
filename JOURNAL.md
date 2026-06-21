@@ -2427,3 +2427,28 @@ lever":
   Keep `CCL_TOPO_P2P_ACCESS=0` (host USM) as the stable TP/PP default. [P2P remains an optional novel-data
   experiment -- our clean direct-slot rig is a good test case and no public PCIe-B70 P2P number exists -- but it is
   not the path to a faster dual setup.]
+
+### 2026-06-21 -- [RESULT][KEY WIN] Data-parallel 2 replicas = ~2.1x aggregate, ZERO contention (the dual-GPU answer)
+scripts/64_dataparallel_2rep.sh: one captured 27B-int4 (=w4a16) replica per B70 (card0 ZE_AFFINITY_MASK=0 :18080,
+card1 :18081), independent, no inter-GPU traffic. Added backward-compat `PORT`/`DEVICE` knobs to 30_serve so two
+replicas coexist on one host. Phase 1 = dp0 solo (fresh single-card baseline); Phase 2 = dp0+dp1 swept CONCURRENTLY.
+
+| C  | dp0 solo agg t/s | dp0 conc | dp1 conc | **DP sum** | **scaling vs solo** |
+|---:|---:|---:|---:|---:|---:|
+| 1  | 26.93 | 28.85 | 27.44 | **56.3**  | **2.09x** |
+| 8  | 132.10 | 145.12 | 133.58 | **278.7** | **2.11x** |
+| 32 | 213.84 | 240.78 | 216.08 | **456.9** | **2.14x** |
+| 64 | 258.81 | 262.21 | 262.62 | **524.8** | **2.03x** |
+
+- **~Linear (2.03-2.14x). NO contention:** each replica under concurrent load matched (or slightly beat, run-to-run
+  variance) its solo number -- host CPU/PCIe/mem is NOT a bottleneck for two independent 27B-int4 serves. Solo
+  baseline reproduced the banked single-card curve (C32 213.8 ~ banked 217; C64 258.8 ~ banked 235, +variance).
+- **DP dominates model-parallel on BOTH axes** for a model that fits one card: throughput ~525 t/s @C64 (2x) AND
+  single-stream latency stays full single-card 30.8 t/s/replica -- vs TP=2 4.18 (0.53x) / PP=2 6.11 (0.78x).
+  The all-reduce/handoff tax of TP/PP simply doesn't exist when there are no collectives.
+- **=> Serving doctrine:** model fits one card -> **2x DP replicas behind a round-robin proxy** (+ MTP per replica).
+  Model too big for one card -> PP=2 (beats TP=2 here). TP=2 only if a single layer can't fit one card (never, for us).
+- Both replicas served clean (PIECEWISE capture, 16.69 GiB load + 2.35 GiB graphs each, served-id verified
+  qwen36-27b-int4-dp0/dp1). CSVs: results/sweep_dp-solo|dp-conc0|dp-conc1_*.csv. (Note: another agent's grouped-int8
+  MoE test held the lease first; gpu-run queued us correctly. Minor: it also numbered a script "64" -- filename
+  differs, no clash.)

@@ -96,7 +96,18 @@ Second B70 landed. Both cards are **compute-usable**, not just PCI-visible: insi
 122x (2x single-card), coherent output. `system_fingerprint: vllm-0.23.0-tp2`. Serve via `30_serve_w4a8_graph.sh
 TP=2` (captured) or `43_serve_multi.sh TP=2` (eager).
 
-**The interconnect is the bottleneck. There is NO usable GPU P2P on B70** -- every TP all-reduce round-trips
+**[KEY WIN] For models that fit one card, DATA-PARALLEL (2 independent replicas) is the dual-GPU answer -- not
+TP/PP.** Measured 2026-06-21 (`scripts/64_dataparallel_2rep.sh`): one captured 27B-int4 replica per card (card0
+:18080, card1 :18081, zero inter-GPU traffic). Aggregate out tok/s = sum of both, vs a fresh single-card solo
+baseline: **C1 56.3 (2.09x), C8 278.7 (2.11x), C32 456.9 (2.14x), C64 524.8 (2.03x)** -- ~linear, NO contention
+(each replica under concurrent load ran at full solo speed; host CPU/PCIe is not a bottleneck). Single-stream
+decode stays full single-card (~30.8 t/s/replica). So DP beats both model-parallel options on BOTH axes:
+throughput (~2x vs TP/PP's sublinear) AND latency (30.8 vs TP=2 4.18 / PP=2 6.11). DP's only limit: it cannot
+serve a model bigger than one card -- that's the ONLY case for PP=2 (or TP=2). Serve two replicas via the new
+`PORT`/`DEVICE` knobs on `30_serve_w4a8_graph.sh` (`DEVICE=0 PORT=18080` / `DEVICE=1 PORT=18081`) behind a
+round-robin proxy. Stack MTP per replica for the decode multiplier.
+
+**The interconnect is the bottleneck FOR MODEL-PARALLEL (TP/PP). There is NO usable GPU P2P on B70** -- every TP all-reduce round-trips
 `GPU -> host RAM -> GPU over PCIe` (Unified Shared Memory; set `CCL_TOPO_P2P_ACCESS=0`). No XeLink/NVLink.
 PCIe topology: each card behind its own ON-CARD Intel switch (`08/42:00.0` upstream -> GPU `0a/44:00.0`);
 switch-to-CPU trained at **Gen3 x16 -- the real, healthy link (1950X platform max).** The "Gen1 x1" that lspci
