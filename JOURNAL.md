@@ -2619,3 +2619,10 @@ docs/kernel/19. GEMM(prefill): int8 1.06-2.13x bf16 (median 1.68x), grows with M
 but only ~1.1x on small-N (35B MoE experts N<=2048, KV-proj) which are overhead-bound. Reconciles the served bench:
 decode is bytes-bound so int4-wt > int8-wt > bf16; prefill is compute-bound so int8-XMX ~1.6-2x. Confirms W4A8 = best
 all-rounder + 35B MoE stays W4A16-int4 for decode. Next lever (doc 08 P4/P5): col-reorder dp4a GEMV for the small-N shapes.
+
+### 2026-06-21 -- [Q4/Q5 Qwable] both int8 checkpoints PRODUCED + grafted (all four 27B-class quants done)
+Qwable-5-27B-Coder W8A8-sqgptq (33G) + W4A8-sqgptq (33G), both vision-grafted. Completes the 27B-class matrix:
+{27B-base, Qwable} x {W8A8, W4A8} = 4 int8 checkpoints (+ 14B W8A8). Serve same as the 27B-base equivalents
+(single-card fragile/too-big; checkpoints are the deliverable, perf inferred from the 14B ctx-2048 ladder).
+Launched the 35B-A3B MoE W8A8 GPTQ SMOKE (samples=8 seqlen=512) to gauge the 256-expert MoE GPTQ path feasibility
++ per-layer cost before committing the full produce-only run (serve gated on the int8 MoE kernel regardless, docs/kernel/18).

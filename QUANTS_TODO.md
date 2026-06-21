@@ -105,11 +105,11 @@ Legend: [ ] todo - [~] running - [x] done.
 - **Out:** `models/Qwen3.6-27B-W4A8-sqgptq`. Method: `scripts/49 SCHEME=W4A8 SMOOTHQUANT=selective`. Ignore VLM list.
 - Serve: VLM graft + the 4304-dim odd-dim handling (kernel/15 sec 1) -> `:int8g`, id `qwen36-27b-w4a8-sqgptq`. Est ~1-3 h.
 
-### [ ] Q4 -- Qwable-5-27B-Coder  W8A8  (AutoRound)
+### [x] Q4 -- Qwable-5-27B-Coder  W8A8  (sqgptq)  PRODUCED+grafted 2026-06-21 (AutoRound MLLM-calib blocked on VLM -> GPTQ; 33G, single-card serve N/A like 27B W8A8)
 - Identical handling to Q2 (same qwen3_5 VLM). **Out:** `models/Qwable-5-27B-Coder-W8A8-autoround`. `device_map="0,1"`.
 - Serve: graft -> `:int8g`, id `qwable-27b-w8a8-autoround`. Est ~4-8 h.
 
-### [ ] Q5 -- Qwable-5-27B-Coder  W4A8  (selective SmoothQuant + GPTQ)   [needs Q0]
+### [x] Q5 -- Qwable-5-27B-Coder  W4A8  (selective SmoothQuant + GPTQ)  PRODUCED+grafted 2026-06-21 (33G; same serve blockers as 27B W4A8 -- perf inferred from 14B W4A8 ladder)
 - **Out:** `models/Qwable-5-27B-Coder-W4A8-sqgptq`. Method as Q3. Serve graft + odd-dim -> id `qwable-27b-w4a8-sqgptq`. Est ~1-3 h.
 
 ### [ ] Q6 -- Qwen3.6-35B-A3B MoE  W8A8  (AutoRound)   <- PRODUCE now; SERVE gated on docs/kernel/18
@@ -193,7 +193,7 @@ scripts/gpu-run env \
 | 0621 | Q1 | 14B / W8A8 / autoround | models/Qwen3-14B-W8A8-autoround | qwen3-14b-w8a8-autoround | acc TBD (== gptq kernel) | dec 25.1(c1)/18.0(c8); ttft 347ms | DONE. W8A8 decode BW-bound (~half int4); lowest c1 TTFT. ctx2048 sweep saved |
 | 0621 | Q2 | 27B-base / W8A8 / **sqgptq** (AutoRound MLLM-calib blocked on VLM) | models/Qwen3.6-27B-W8A8-sqgptq (35GB, grafted) | qwen36-27b-w8a8-sqgptq | gate TBD | serve-blocked: 35GB > 1 card (needs TP2); W8A8 decode-BW-bound anyway | PRODUCED. Single-card serve N/A |
 | 0621 | Q3 | 27B-base / W4A8 / sq+gptq | models/Qwen3.6-27B-W4A8-sqgptq (+ -prepacked 25GB) | qwen36-27b-w4a8-sqgptq | gate TBD | inferred ~14B W4A8 pattern + existing w4a8-q-prepacked 20.9 t/s | PRODUCED+grafted+prepacked. Serve hit 5 stacked XPU-serve bugs (JOURNAL); perf inferred |
-| -- | Q4 | Qwable / W8A8 / autoround | -- | -- | -- | -- | -- |
-| -- | Q5 | Qwable / W4A8 / sq+gptq | -- | -- | -- | -- | -- |
+| 0621 | Q4 | Qwable / W8A8 / sqgptq | models/Qwable-5-27B-Coder-W8A8-sqgptq (33G, grafted) | qwable-27b-w8a8-sqgptq | gate TBD | serve N/A single-card (33G); W8A8 decode-BW-bound | PRODUCED+grafted |
+| 0621 | Q5 | Qwable / W4A8 / sqgptq | models/Qwable-5-27B-Coder-W4A8-sqgptq (33G, grafted) | qwable-27b-w4a8-sqgptq | gate TBD | inferred ~14B W4A8 (best all-rounder) | PRODUCED+grafted (serve = same 27B W4A8 blockers) |
 | -- | Q6 | 35B-A3B / W8A8 / autoround | -- | -- | -- | (serve gated) | -- |
 | -- | Q7 | 35B-A3B / W4A8 / sq+gptq | -- | -- | -- | (serve gated) | -- |
