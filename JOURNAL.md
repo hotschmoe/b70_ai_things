@@ -2612,3 +2612,10 @@ proven on the 14B ladder (W4A8 beats W4A16: -29% TTFT, +22% c8 agg). 27B int8 pe
 + (b) the existing Qwen3.6-27B-W4A8-q-prepacked which DOES serve (20.9 t/s captured decode, SERVING.md). Checkpoints
 are the deliverable; pivot to producing Q5/Q4/Q6/Q7 + the GEMM/GEMV microbench + final writeup. (#5 is a good
 next-agent task: align the prepack tensor layout with vLLM's merged-column loader, or serve the raw W4A8 with cpu-offload.)
+
+### 2026-06-21 -- [#11 microbench] int8 vs bf16 GEMM/GEMV measured (341-row sweep, real int8_gemm_w8a8 op)
+docs/kernel/19. GEMM(prefill): int8 1.06-2.13x bf16 (median 1.68x), grows with M (1.59x@64 -> 1.97x@4096), peak
+250.9 INT8 TFLOP/s. GEMV(decode): 1.12-2.12x, BW-bound -- ~2x on large-N dense (14B/27B attn+mlp, up to 433 GB/s)
+but only ~1.1x on small-N (35B MoE experts N<=2048, KV-proj) which are overhead-bound. Reconciles the served bench:
+decode is bytes-bound so int4-wt > int8-wt > bf16; prefill is compute-bound so int8-XMX ~1.6-2x. Confirms W4A8 = best
+all-rounder + 35B MoE stays W4A16-int4 for decode. Next lever (doc 08 P4/P5): col-reorder dp4a GEMV for the small-N shapes.
