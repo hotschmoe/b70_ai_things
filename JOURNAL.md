@@ -2150,3 +2150,17 @@ graphs captured; model load 16.69 GiB. Two configs:
   needs KVDTYPE=fp8_e5m2. Banked: FINDINGS concurrency section + docs/SERVING.md. CSVs: results/sweep_27b-w4a16-cap-*.csv.
 - Scope note: swept w4a16 only (user priority). 27B w4a8 (prepacked, 20.9 t/s captured, needs PREPACK +
   rebuilt GDN .so + fp8 KV) left un-swept; its serve recipe is now documented in docs/SERVING.md (secondary).
+
+### 2026-06-21 -- [DOWNLOAD] DJLougen/Qwable-5-27B-Coder BF16 source -> 8TB SSD (quant target for 2-card)
+Fetching the Qwable-5-27B-Coder finetune as a future quant source (w4a16 / w4a8 / w8a8 once the 2nd B70 lands).
+- Config -> public Apache-2.0 repo, 28B, BF16, ~55.6GB / 15 safetensors shards. `config.json` verified:
+  `model_type: qwen3_5` (qwen3_5_text: hidden 5120, 64 layers, max_pos 262144) -- SAME arch family as our
+  existing Qwen3.6-27B quants, so the 27B W4A16/W4A8/W8A8 recipes carry over. `chat_template.jinja` shipped
+  (grabbed via `*.jinja` pattern -- matters for the coder/tool-calling path).
+- Command -> `scripts/57_download_qwable27b.sh`: DETACHED named container `qwable27b_dl` (python:3.11 +
+  huggingface_hub), `snapshot_download` to `/mnt/vm_8tb/b70/models/DJLougen_Qwable-5-27B-Coder`, resumes from
+  `hf_cache` on relaunch. Pure disk I/O -> NO gpu-run lease (no GPU touch). Disk: 6.4T free, ample.
+- Result -> launched, config + 15 shard locks present, Xet chunked pull in progress. Check:
+  `ssh root@192.168.10.5 'docker logs -f qwable27b_dl; du -sh /mnt/vm_8tb/b70/models/DJLougen_Qwable-5-27B-Coder'`
+- Verdict -> download underway; quant deferred until 2nd card. Next: quant to W4A16 (priority), then W4A8 / W8A8
+  reusing scripts 40/43/49/54 recipes against this source dir.
