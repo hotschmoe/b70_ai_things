@@ -4,6 +4,11 @@ The single source of truth for "how do I serve model X on the B70 right now."
 If you reconstruct a serve command from JOURNAL/scripts again, you did it wrong --
 fix THIS doc instead. Keep recipes verified-and-current; date each change.
 
+**Daily driver:** `./daily_driver_serve.sh` (repo root) brings up the current daily-driver model and
+keeps the API at `http://192.168.10.5:18080/v1` live for our apps. `start|stop|status|restart|logs`.
+Edit its CONFIG block to change which model/recipe we serve (presets inside). It holds the GPU lease
+while up, so `stop` it before running GPU experiments. Current daily driver: **Qwen3.6-27B W4A16**.
+
 ## Where everything runs
 - GPU host: Unraid @ `192.168.10.5` (`ssh root@192.168.10.5`). NOT mounted on the dev box.
 - Repo is synced to the host at `/mnt/vm_8tb/b70/` (FLAT layout: `30_serve_w4a8_graph.sh`,
