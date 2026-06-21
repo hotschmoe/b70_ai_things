@@ -2131,3 +2131,22 @@ Chat-based long-ctx probe (evals/orchestrator/longctx_chat_probe.py -- the raw-c
   So W8A8 MoE on XPU would run on (flaky) Triton-XPU, not the XMX systolic path -> no speed win. Plus no bf16
   35B source on host. Keep 35B as W4A16-int4 (56.8 t/s captured). A real fix needs a new XPUExpertsInt8 +
   is_int8 SYCL fused-expert kernel (large, out of scope). DELIVERABLE: docs/kernel/15_autoround_w4a8_w8a8_recipes.md.
+
+### 2026-06-21 -- [RESULT] 27B w4a16 CAPTURED concurrency sweep (the missing concurrent curve) + 256k-ctx fit limit
+The 30.84 t/s 27B figure was single-stream only; no captured concurrency data existed (RESULTS.md only had an
+old EAGER C4 datapoint). Filled it via `scripts/56_27b_conc_campaign.sh` (one gpu-run lease, ~47 min):
+Qwen3.6-27B int4 AutoRound (= w4a16), `:v0230` GRAPH=1 PIECEWISE CAPSIZES=1,2,4,8,16,32,64 NOMM=1 UTIL=0.92
+MAXSEQS=64, fp16 KV; `vllm bench serve` random 512/128 --ignore-eos. Served id verified qwen36-27b-int4; 7/7
+graphs captured; model load 16.69 GiB. Two configs:
+- Normal ctx (8k): C1 28.1 agg / 30.9 per-stream, C2 52.0/29.3, C4 87.8/26.7, C8 134.3/21.7, C16 178.3/14.5,
+  C32 216.7/8.4, C64 234.7/6.7 (TTFT 0.44s -> 15.1s). Aggregate max ~235 @ C64; practical knee ~217 @ C32.
+  C1 bench (30.9) == perf_probe 30.84 -> capture validated end-to-end.
+- Big ctx: 262144 (256k) REJECTED at engine init -- "16.2 GiB KV needed for one max-len seq > 8.31 GiB
+  available; estimated max model length 133120". Auto-fell-back to 131072 (128k), served fine; sweep
+  near-IDENTICAL to 8k (C2 51.3, C4 87.6, C32 215.6, C64 232.9).
+- VERDICT: (1) 27B w4a16 concurrent aggregate tops ~235 t/s but GDN/linear-attn batches sublinearly --
+  per-stream drops below single-stream past C8; for latency-sensitive serving stay <=C4. (2) Context window is
+  throughput-NEUTRAL (KV pool = f(util), not max-len). (3) Max single-card context at fp16 KV is ~133k; >128k
+  needs KVDTYPE=fp8_e5m2. Banked: FINDINGS concurrency section + docs/SERVING.md. CSVs: results/sweep_27b-w4a16-cap-*.csv.
+- Scope note: swept w4a16 only (user priority). 27B w4a8 (prepacked, 20.9 t/s captured, needs PREPACK +
+  rebuilt GDN .so + fp8 KV) left un-swept; its serve recipe is now documented in docs/SERVING.md (secondary).

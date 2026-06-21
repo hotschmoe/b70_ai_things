@@ -64,6 +64,31 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
 | **Qwen3.6-27B int4 + PIECEWISE XPU graph** | **30.84 t/s** decode (**+293% / 3.93x** over eager 7.84) — flagship; ~89% of BW ceiling; erases the density tax. Image `:v0230` (needs GDN). |
 | **Qwen3.6-35B-A3B MoE int4 + PIECEWISE XPU graph** | **56.84 t/s** decode (**+617% / 7.17x** over eager 7.93) — **fastest config on the board**; A3B = ~3B active/tok; `:v0230moe`. |
 
+## Single-card concurrency (captured) — Qwen3.6-27B int4 (w4a16 AutoRound) [2026-06-21]
+Served `:v0230` GRAPH=1 PIECEWISE (capture sizes 1..64), NOMM=1, UTIL=0.92, MAXSEQS=64, **fp16 KV**;
+`vllm bench serve` random 512/128 `--ignore-eos`. C1 bench (30.9) == perf_probe 30.84 -> capture validated.
+Repro: `scripts/56_27b_conc_campaign.sh`. CSVs: `results/sweep_27b-w4a16-cap-*.csv`.
+
+| C | aggregate out t/s | per-stream decode t/s | mean TTFT |
+|--:|--:|--:|--:|
+| 1  | 28.1  | 30.9 | 0.44 s |
+| 2  | 52.0  | 29.3 | 0.60 s |
+| 4  | 87.8  | 26.7 | 1.07 s |
+| 8  | 134.3 | 21.7 | 1.77 s |
+| 16 | 178.3 | 14.5 | 2.68 s |
+| 32 | 216.7 | 8.4  | 3.67 s |
+| 64 | **234.7** | 6.7  | 15.1 s |
+
+- **Aggregate max ~235 t/s @ C64**, but TTFT balloons to 15 s and per-stream collapses to 6.7 -> the
+  practical knee is **~217 t/s @ C32** (TTFT 3.7 s); for low latency stay at **C2-C4** (per-stream ~27-29,
+  near single-stream). GDN/linear-attn batches sublinearly (C1->C8 = 4.8x for 8x conc; C8->C32 only +1.6x).
+- **Context window is throughput-neutral.** Re-running the whole sweep at **128k ctx** (fp16 KV) gave
+  near-identical numbers (C2 51.3, C4 87.6, C32 215.6, C64 232.9) — the KV pool is sized by gpu-util, not
+  max-model-len; only a single very-long sequence would differ.
+- **256k ctx does NOT fit at fp16 KV on one card:** a 262144-tok seq needs 16.2 GiB KV vs 8.31 GiB available
+  (model 16.69 GiB @ UTIL 0.92) -> vLLM caps "estimated max model length 133120". **Max fp16-KV context ~133k;**
+  use `MAXLEN<=131072`, or `KVDTYPE=fp8_e5m2` to roughly double it. (Campaign auto-fell-back 256k -> 128k.)
+
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
   **We FIXED it (2026-06-18):** wrote a native `int8_gemm_w8a8` oneDNN kernel (s8xs8->s32) + the vLLM

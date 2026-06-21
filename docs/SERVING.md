@@ -61,11 +61,33 @@ cd /mnt/vm_8tb/b70
   bash ./30_serve_w4a8_graph.sh
 # (gpu-run releases after startup; to bench, wrap serve+bench+stop in ONE gpu-run -- see campaign script.)
 ```
-- Long context: the GDN linear-attention layers keep an O(1) state, so big `MAXLEN` (e.g. 131072 /
-  262144) is cheap on KV vs a dense model. If a context won't fit at fp16 KV, drop `MAXLEN` or add
-  `KVDTYPE=fp8_e5m2`. (Capacity verified empirically per run -- see JOURNAL.)
+- Long context (MEASURED 2026-06-21, UTIL=0.92, fp16 KV): **256k does NOT fit** -- a 262144-tok seq needs
+  16.2 GiB KV vs ~8.3 GiB free (model 16.69 GiB) -> vLLM caps max len at ~133k. So **MAXLEN<=131072 at fp16
+  KV**, or add `KVDTYPE=fp8_e5m2` to roughly double it. Context window is throughput-NEUTRAL: an 8k vs 128k
+  serve sweep at 512/128 was near-identical (KV pool = f(util), not max-len).
+- Concurrency (captured, fp16 KV, 512/128): aggregate ~28 t/s @C1 -> ~217 @C32 -> ~235 @C64; per-stream
+  decode drops below single-stream past C8 (GDN batches poorly). Low-latency serving: stay C2-C4. See FINDINGS.
 - Other 27B dirs on the host are NOT this recipe: `Qwen3.6-27B-W4A16` (our compressed-tensors w4a16)
   won't serve (XPUwNa16 needs dims /32; the gated-attn 4304 dim fails). Use the Lorbus AutoRound int4.
+
+## RECIPE: Qwen3.6-27B W4A8 (prepacked, quality GDN+lm_head bf16)  [SECONDARY -- slower than w4a16]
+Only if you specifically want the int8-activation/int8-XMX path on the 27B. Decode **20.9 t/s** captured
+(< w4a16's 30.8), VRAM-tight (24.35 GiB, OOM-prone), and needs MORE setup, so w4a16 above is the default.
+Requires: the offline-prepacked model (`Qwen3.6-27B-W4A8-q-prepacked`, int4-packed on disk), `PREPACK=1`
+(mounts the patched loader+kernel from `patches/`), and a **rebuilt GDN `_xpu_C.abi3.so`** (the `:int8g`
+build ships `GDN_KERNELS_ENABLED=OFF` -> `_xpu_C has no attribute gdn_attention` at decode) mounted via
+`KERNEL_SO` (which also auto-mounts the sibling `libgdn_attn_kernels_xe_2.so`). Served with **fp8 KV**.
+
+```bash
+./gpu-run env \
+  IMG=vllm-xpu-env:int8g \
+  MODEL=/models/Qwen3.6-27B-W4A8-q-prepacked \
+  SERVED=qwen36-27b-w4a8 \
+  GRAPH=1 PREPACK=1 NOMM=1 KVDTYPE=fp8_e5m2 UTIL=0.90 \
+  KERNEL_SO=/mnt/vm_8tb/b70/vllm-xpu-kernels/vllm_xpu_kernels/_xpu_C.abi3.so \
+  NAME=vllm_w4a8 \
+  bash ./30_serve_w4a8_graph.sh
+```
 
 ## RECIPE: Qwen3.6-35B-A3B MoE (int4 AutoRound), captured  [FASTEST single-card decode]
 Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s with fp8 KV. Needs the MoE-routing image `:v0230moe`
