@@ -9,7 +9,9 @@
 
 ## Why this is the priority (the reframe)
 
-A public 4×B70 benchmark proved **MTP works on Battlemage**: Qwen3.6-27B **BF16**, TP=4, single-stream, **decode 54.2 tok/s, prefill 2100 tok/s, mean accept length 4.04, 88.9% accept @ spec=3** (num_speculative_tokens=5) → ~**2.9× decode speedup**, 2.9× faster than llama.cpp Q8 (15.6 b1). This refutes our earlier "~16% accept, MTP net-negative" result — that was a broken wiring, not a hardware limit.
+**[CORRECTED 2026-06-21] The "4xB70 TP=4 MTP -> decode 54.2 t/s, accept 4.04" figure this plan was built on is UNVERIFIED -- it is not in any public source and appears to be a conflation of three unrelated real numbers.** Triangulated (3 web-research passes + our own runs): "54.2" = a SINGLE-B70 llama.cpp Q4 **35B-A3B MoE** number (PMZFX bench, no MTP, not 27B, not 4-card); "~2.9x via MTP" = an **NVIDIA RTX 5090** llama.cpp result (not a B70); "TP=4 most performant" = Puget's real **4xB70 TP=4 27B-DENSE = 13.1 t/s** single-user (no MTP). The infra names (llm-scaler, vllm_xpu_kernels v0.1.9, PR #43565, Half-KV) are real but from a **B60 / Qwen3-Next-80B / spec=2** context. The only real vLLM-XPU MTP benchmark is PR #43565 on a B60. (If you have the original source thread, share it -- this can be re-verified.)
+
+**Our own single-card B70 MTP is the ONLY B70 MTP ground truth, and it is currently NET-NEGATIVE: 25.5 t/s = -19% vs 31.4 MTP-off** (PIECEWISE verify pays eager attention x(K+1); 86.9% first-token accept). MTP is still worth pursuing, but as a **FULL-graph-capture + image-integration** problem (blocked today by: FULL capture needs TRITON_ATTN + single-GPU + non-GDN attn, OR the #43565 fix in a torch-2.11 image -- an ABI split currently prevents one wheel being both torch-2.10-compatible and spec-capable), NOT a solved 2.9x win. And MTP does NOT need TP -- TP>1 HURTS it on our no-P2P rig (TP=2 = 0.53x before MTP even adds collectives). The dual-card payoff is **MTP per data-parallel replica**, not TP. Earlier "~16% accept, net-negative" was indeed partly broken wiring, but the corrected wiring is still -19% under PIECEWISE -- the structural fix is FULL capture.
 
 The strategic consequence:
 
@@ -160,7 +162,7 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | — | Qwen3.6-27B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B2 |
 | — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) |
 
-**Reference (external, for comparison):** Qwen3.6-27B BF16, TP=4, 256K ctx, Half-KV, spec=5 → accept 4.04, 88.9%@3, dec **54.2**, prefill **2100**.
+**Reference (external):** ~~Qwen3.6-27B BF16 TP=4 spec=5 -> accept 4.04, dec 54.2, prefill 2100~~ **UNVERIFIED / struck 2026-06-21 (see top -- not in any public source; a conflation).** Real closest: Puget 4xB70 TP=4 27B-dense **13.1 t/s/1u** (no MTP); vLLM PR #43565 MTP on **B60 / Qwen3-Next-80B / spec=2**. Our single-card B70 MTP: **25.5 t/s (-19%)** vs 31.4 off.
 
 ---
 

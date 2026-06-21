@@ -2452,3 +2452,23 @@ replicas coexist on one host. Phase 1 = dp0 solo (fresh single-card baseline); P
   qwen36-27b-int4-dp0/dp1). CSVs: results/sweep_dp-solo|dp-conc0|dp-conc1_*.csv. (Note: another agent's grouped-int8
   MoE test held the lease first; gpu-run queued us correctly. Minor: it also numbered a script "64" -- filename
   differs, no clash.)
+
+### 2026-06-21 -- [RESEARCH][!] The "4xB70 TP=4 MTP 54.2 t/s" premise is UNVERIFIED (a conflation) -- MTP_TODO corrected
+Deep MTP pass (3 web sub-agents + cross-check vs our own runs). Reconciles the user's repeated belief in a 4xB70
+TP=4 MTP result with the evidence:
+- **The "54.2 t/s / accept 4.04 / 88.9%@3" figure is not in any public source.** Triangulated conflation:
+  "54.2" = PMZFX single-B70 llama.cpp Q4 35B-A3B MoE (no MTP); "~2.9x MTP" = an NVIDIA RTX 5090 llama.cpp number;
+  "TP=4 most performant" = Puget 4xB70 TP=4 27B-DENSE 13.1 t/s/1u (no MTP). Infra names real but from a
+  B60/Qwen3-Next-80B/spec=2 context (vLLM PR #43565). Second independent flag (first was 2026-06-21 line ~2231).
+- **Why "TP=4 enabled MTP" = capacity confound.** BF16 27B ~= 54 GB -> needs ~4 cards just to FIT. TP=4 was the
+  entry ticket to run BF16 at all; MTP's benefit is independent of TP. MTP does NOT need TP; TP>1 HURTS it here.
+- **MTP on B70 is currently NET-NEGATIVE (our only real B70 MTP data): 25.5 t/s = -19%** vs 31.4 off (single-card
+  Lorbus int4, PIECEWISE, 86.9% accept). Cause is structural: PIECEWISE verify runs attention EAGER x(K+1). The
+  fix is FULL graph capture, blocked on XPU (needs TRITON_ATTN+single-GPU+non-GDN, or #43565 + vllm_xpu_kernels
+  v0.1.10 in a torch-2.11 image -- an ABI split blocks one wheel being both torch-2.10-safe AND spec-capable).
+- **Actionable repro ladder (cheapest first):** (1) [done] single-card MTP int4 = -19% baseline; (2) draft-model
+  spec on the DENSE 14B-W4A8 with FULL+TRITON_ATTN (14B has no GDN -> dodges the GDN-spec-capture bug; the only
+  arch where FULL+spec is unblocked on B70 today) -> first real net-positive spec number; (3) FULL+MTP on int4 27B
+  once a torch-2.11 image with #43565 + kernels v0.1.10 exists; (4) then MTP per data-parallel replica (NOT TP=2).
+- MTP_TODO.md premise corrected (lines 12, 163 marked UNVERIFIED with the triangulation). Plan mechanics (Phase
+  A/B quant-recovery) still valid; only the "proven 2.9x" premise was false.
