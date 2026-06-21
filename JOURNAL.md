@@ -2322,9 +2322,9 @@ should beat tensor-parallel (~128 all-reduces/token). scripts/62_pp2_27b.sh: 27B
   thing TP buys that PP doesn't is splitting a single layer's weights (irrelevant -- our layers fit one card). So:
   **use PP=2, not TP=2, for the dual-card capacity play**. When the PCIe link is fixed to Gen3+ x8/x16, re-evaluate
   -- TP may become competitive (its all-reduce stops being the bottleneck) and could win at high concurrency.
-- Correctness across multi-GPU: TP=2 bf16 27B solved gsm8k #1 correct (got=72) before teardown; PP=2 int4 gsm8k
-  probe queued. Plus coherent multi-card generations throughout (0.6B primes, 27B parallelism explainer). No
-  TP/PP output corruption observed.
+- Correctness across multi-GPU: BOTH TP=2 (bf16 27B) AND PP=2 (int4 27B) solved gsm8k #1 correct (got=72) before
+  teardown (later problems only errored on serve teardown / x1-link timeout, not wrong answers). Plus coherent
+  multi-card generations throughout (0.6B primes, 27B parallelism explainer). No TP/PP output corruption observed.
 
 ### 2026-06-21 -- [DIAGNOSIS] The x1 link is PHYSICAL (switch/riser), not ASPM -- and BCS engine resets seen
 `lspci -vv` + dmesg settle the cause of the Gen1-x1 bottleneck:
