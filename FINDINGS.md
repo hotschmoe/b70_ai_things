@@ -116,14 +116,15 @@ aggregate throughput at concurrency / models too big for one card. Public dual-B
 13.25 single / 97.84 @ C8; Qwen3-30B-A3B MoE FP8 ~912 tok/s aggregate. No public clean TP=1-vs-TP=2 same-model
 decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
 
-**Our measured numbers (2026-06-21, dual B70, this rig's x1 link):**
+**Our measured numbers (2026-06-21, dual B70):**
 - **Captured (PIECEWISE) TP=2 is BLOCKED:** oneCCL errors `sched algorithms do not support sycl_graph recording`
   -- stable init needs `CCL_ENABLE_SYCL_KERNELS=0` but graph-recording an all-reduce needs `=1`. Eager-only at TP=2.
 - **Eager TP=2 27B int4 decode: C1 4.18 t/s, C2 4.02 t/s/stream** -- vs **eager TP=1 single-card 7.84 -> 0.53x**.
   TP=2 HALVES single-stream decode (collective-latency tax). Weights shard 8.42 GiB/card (half of 16.7 single).
 - **Cross-card all-reduce microbench** (`scripts/60_allreduce_bench.sh`, xccl): **latency floor ~0.29 ms** (small
   msgs), **bandwidth ceiling ~0.70 GB/s busbw** (>=2 MB). That's ~17-70x below a healthy PCIe link (Gen3 x16
-  ~12 GB/s, Gen5 x16 ~50 GB/s), ~850x below NVLink. **This is the whole multi-GPU story: the x1 link caps comms.**
+  ~12 GB/s, Gen5 x16 ~50 GB/s), ~850x below NVLink. **The multi-GPU bottleneck is NO GPU P2P -> host-staged
+  all-reduce + oneCCL overhead (NOT the link, which is healthy Gen3 x16 -- see CORRECTED note just below).**
 - **[CORRECTED 2026-06-21] The "Gen1 x1 link" was a MISDIAGNOSIS -- it is an Intel Arc lspci reporting artifact.**
   The real link is **Gen3 x16** (read at the on-card switch UPSTREAM bridge `08/42:00.0`; the GPU endpoint always
   fakes 2.5 GT/s x1 per Intel KB 000094587). The earlier "200/200 samples x1 under load" polled the artifact node;
@@ -197,5 +198,6 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   PCIe gen -- a clean H2D copy should show ~10-12 GB/s. Two cards sit on SEPARATE CPU root complexes (`00:03.1`
   die0, `40:03.1` die1) of the 2-die 1950X; single NUMA node (UMA mode), but cross-die for any P2P attempt.
 
-*Next up: FIX the x1 PCIe link (direct slots) then re-measure TP=2; 27B W8A8 INT8 at TP=2 (Phase C headline,
-needs the custom int8 kernel in a GDN-enabled image); real 2-card AutoRound of a >32GB source (now proven viable).*
+*Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
+to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);
+real 2-card AutoRound of a >32GB source (now proven viable); int8 MoE kernel for 35B-A3B (docs/kernel/18).*
