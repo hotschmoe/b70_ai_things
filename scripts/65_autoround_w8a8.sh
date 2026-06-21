@@ -38,11 +38,20 @@ if [ "$DEVMAP" = xpu ]; then AFF=0; else AFF="${DEVMAP/auto/0,1}"; fi
 echo "=== AutoRound W8A8 :: SRC=$SRC OUT=$OUT DEVMAP=$DEVMAP AFF=$AFF iters=$ITERS nsamples=$NSAMPLES seqlen=$SEQLEN ==="
 echo "=== log=$LOG ==="
 
+# SRC may live OUTSIDE $ROOT (e.g. the 14B under /mnt/vm_8tb/specula-build) -- mount it read-only so
+# the container can see it; HF otherwise treats an invisible local path as a repo id and HFValidationErrors.
+SRCMOUNT=()
+case "$SRC" in
+  "$ROOT"/*) : ;;                          # already covered by the $ROOT bind mount
+  *) SRCMOUNT+=(-v "$SRC:$SRC:ro") ;;
+esac
+
 docker rm -f arw8a8 2>/dev/null || true
 docker run --rm --name arw8a8 --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
   --ipc=host --shm-size 32g \
   -e ZE_AFFINITY_MASK="$AFF" \
   -e CCL_ENABLE_SYCL_KERNELS=0 -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi \
+  ${SRCMOUNT[@]+"${SRCMOUNT[@]}"} \
   -v "$ROOT:$ROOT" -e HF_HOME="$ROOT/hf_cache" -e TMPDIR="$ROOT/tmp_ssd" \
   -e XDG_CACHE_HOME="$ROOT/vllm_cache" -e PIP_CACHE_DIR="$ROOT/pip_cache" -e OMP_NUM_THREADS=32 \
   -e SRC="$SRC" -e OUT="$OUT" -e DEVMAP="$DEVMAP" -e ITERS="$ITERS" -e NSAMPLES="$NSAMPLES" \

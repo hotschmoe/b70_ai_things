@@ -2508,3 +2508,19 @@ now COMPLETE -- resolves the "no bf16 35B source" blocker kernel/15 flagged). v0
   `scripts/qrun.sh` = detached gpu-run launcher (survives ssh close via setsid; writes results/NAME.log + QRUN_EXIT sentinel).
 - **Q1 SMOKE launched:** 14B W8A8 AutoRound, iters=50 nsamples=16 seqlen=512, DEVMAP=xpu, detached, holding the lock.
   Toolchain validation before the full run. Poll results/Q1_smoke.log for QRUN_EXIT + DONE_AUTOROUND_W8A8.
+
+### 2026-06-21 -- [Q1] AutoRound-W8A8 toolchain VALIDATED end-to-end on XPU (2 bugs found+fixed)
+Smoke-gated the 14B W8A8 AutoRound path. Two cheap fast-fails caught real bugs before the full run burned hours:
+- **Bug 1 (mount):** 14B bf16 lives at /mnt/vm_8tb/specula-build (OUTSIDE $ROOT) -> 65_autoround_w8a8.sh never
+  bind-mounted it -> HF treated the invisible path as a repo id (HFValidationError, 37s). Fix: conditional
+  `-v $SRC:$SRC:ro` when SRC is not under $ROOT.
+- **Bug 2 (export):** AutoRound tuning RAN FINE on XPU (40/40 layers, loss decreasing, peak_vram 1.7GB streaming)
+  but the llm_compressor exporter crashed at export.py:152 `layer.scale.to()` (NoneType). ROOT CAUSE (read from
+  installed auto_round 0.13.1): `check_to_quantized()` gate = `bits<=8 OR act_bits<=8`. Excluding a layer with only
+  `{"bits":16}` left act_bits=8 -> gate True -> exporter tries to pack a never-quantized weight -> scale is None.
+  **Fix: ignored layers MUST be `{"bits":16,"act_bits":16}`** (both). Applies to lm_head + all VLM/MoE ignores.
+- **Validated:** iters=0 RTN export produced a valid 9-shard compressed-tensors W8A8 checkpoint (QRUN_EXIT 0).
+  AutoRound-on-XPU + W8A8 llm_compressor export both WORK -> de-risks Q2/Q4/Q6 (the 27B/Qwable/35B W8A8 items).
+- **Quirk:** AutoRound nests output under OUT/<modelname>-w8a8/ -> flatten post-run before serving.
+- **Q1 FULL launched:** iters=200 nsamples=128 seqlen=2048, DEVMAP=xpu, ETA ~90min. Then flatten -> serve :int8g
+  GRAPH=1 -> eval (accuracy vs bf16 + perf sweep) vs the existing Qwen3-14B-W8A8-gptq.

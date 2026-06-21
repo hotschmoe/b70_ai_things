@@ -85,7 +85,10 @@ n_ign = 0
 for name, mod in model.named_modules():
     if isinstance(mod, torch.nn.Linear):
         if name.endswith("lm_head") or ign_re.search(name):
-            layer_config[name] = {"bits": 16}
+            # MUST set act_bits=16 too: the llm_compressor exporter's check_to_quantized() gate is
+            # `bits<=8 OR act_bits<=8` -- leaving act_bits at the scheme default (8) makes it try to
+            # pack a never-quantized weight -> layer.scale is None -> AttributeError at export.py:152.
+            layer_config[name] = {"bits": 16, "act_bits": 16}
             n_ign += 1
         else:
             n_quant += 1
