@@ -2626,3 +2626,22 @@ Qwable-5-27B-Coder W8A8-sqgptq (33G) + W4A8-sqgptq (33G), both vision-grafted. C
 (single-card fragile/too-big; checkpoints are the deliverable, perf inferred from the 14B ctx-2048 ladder).
 Launched the 35B-A3B MoE W8A8 GPTQ SMOKE (samples=8 seqlen=512) to gauge the 256-expert MoE GPTQ path feasibility
 + per-layer cost before committing the full produce-only run (serve gated on the int8 MoE kernel regardless, docs/kernel/18).
+
+### 2026-06-22 -- [P2P research] kernel 7.0 xe P2P + Seguin lab + ZML; new doc P2P_GPU.md
+Question: should we leave Unraid (kernel 6.18) for Ubuntu 26.04 (kernel 7.0/7.1) to get B70 GPU-to-GPU P2P?
+Recon of the box: two B70s are on SEPARATE 1950X dies (cross-die = worst case for PCIe P2P); real per-card link
+is Gen3 x16 (~15.8 GB/s) -- the Gen1 x1 sysfs reading is an SR-IOV VF artifact, not a downtrain. ReBAR 32GB,
+ACS override, iommu=pt all set. Deep-research (98 agents, 16 sources, 25 claims 3-vote-verified): the new xe P2P
+in Linux 7.0 is REAL but is SVM device-private page migration (xe_svm.c, dma_map_resource, XE_INTERCONNECT_P2P,
+Project Battlematrix 15-patch series) gated on pci_p2pdma_distance()>=0 -- NOT the oneCCL TP collective path.
+AMD Zen (family 0x17 = our 1950X) IS whitelisted for cross-RC P2P (kernel 5.9 dea286bb71ba) EXCEPT the whitelist
+is disabled "when an IOMMU is present" (6dbbd053e6) and whether iommu=pt counts is the load-bearing unknown.
+Puget (4x B70) saw P2P fault (RxErr/engine reset) and ships P2P off; host-staged TP still scales ~2x.
+KEY CONTRADICTION: Steve Seguin's b70-optimization-lab runs CCL_TOPO_P2P_ACCESS=1 (P2P ON) and faster -- his
+win is allreduce/graph-fusion surgery (clone-safe compiled allreduce custom-op = biggest jump), NOT transport;
+he proved the B70 bottleneck is graph breaks around collectives (raw allreduce 15-17us), not the wire. ZML's
+answer is collectives-as-compiler-IR (StableHLO/XLA), which makes Seguin's hand-fusion the default -- but ZML's
+shipping server is single-GPU only today. VERDICT: don't migrate solely for P2P (payoff small, record empty on
+discrete-Battlemage cross-die P2P); highest leverage is SOFTWARE (steal Seguin's 3 env vars, A/B P2P on/off on
+our Gen3 fabric) + the pioneering bet of compiler-fused XPU collectives. Also explored composable PCIe-Gen5-switch
+/ SR-IOV-fabric relocation to fix the cross-die topology. All written up with refs in docs/P2P_GPU.md.
