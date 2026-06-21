@@ -2164,3 +2164,75 @@ Fetching the Qwable-5-27B-Coder finetune as a future quant source (w4a16 / w4a8 
   `ssh root@192.168.10.5 'docker logs -f qwable27b_dl; du -sh /mnt/vm_8tb/b70/models/DJLougen_Qwable-5-27B-Coder'`
 - Verdict -> download underway; quant deferred until 2nd card. Next: quant to W4A16 (priority), then W4A8 / W8A8
   reusing scripts 40/43/49/54 recipes against this source dir.
+
+### 2026-06-21 -- [OK] SECOND B70 INSTALLED -- dual-card bring-up: both cards compute-usable, TP=2 serves
+THE 2ND CARD LANDED. Host rebooted (uptime ~7 min when checked; the three Unraid app containers were "Up 5 min").
+Bring-up checks, in order:
+- **PCI enumeration:** both Battlemage G31 [Arc Pro B70] present -- `0a:00.0` and `44:00.0`. /dev/dri has card0+card1,
+  renderD128+renderD129 (4 nodes). Qwable download container died on the reboot (Exited 137, 38G of ~56G on disk)
+  -> `docker start qwable27b_dl` resumed it (pure disk, no GPU lease).
+- **Compute-usable (the real test, NOT just PCI):** inside `vllm-xpu-env:v0230`, `sycl-ls` shows TWO Level-Zero
+  GPUs `[level_zero:0]` + `[level_zero:1]` (both Intel Graphics [0xe223]) AND two OpenCL GPUs. So the oneAPI runtime
+  vLLM actually uses sees both cards. (`xpu-smi` not in the image.) => TP=2 viable. [Phase C of MTP_TODO unblocked.]
+- **Single-card smoke post-reboot:** Qwen3-0.6B TP=1 via 43_serve_multi.sh -> HEALTHY, model load 1.12 GiB/9s,
+  KV 26.66 GiB, coherent. Stack survived the reboot + card add.
+- **TP=2 plumbing (first dual-card serve on this machine):** Qwen3-0.6B TP=2 -> world_size=2, rank0+rank1 BOTH
+  assigned (TP rank 0/1), backend=xccl, oneCCL came up with the Battlemage stability env. Model SHARDED:
+  each card loaded **0.57 GiB** (= half the 1.12 single-card) -> real tensor split, not a replica. KV pool
+  **26.77 GiB**, max concurrency **122x** (2x the single-card 60x -> both cards' KV pooled). Generated correct
+  primes "2,3,5,7,11" -> coherent across cards. `system_fingerprint: vllm-0.23.0-tp2`.
+- 43_serve_multi.sh was staged locally for "when card #2 arrives" but never synced to the host -> copied it to
+  the host root. It carries the #41663 Battlemage env (CCL_ENABLE_SYCL_KERNELS=0, CCL_TOPO_FABRIC_VERTEX_
+  CONNECTION_CHECK=0, SYCL_UR_USE_LEVEL_ZERO_V2=0, CCL_ATL_TRANSPORT=ofi, spawn workers, --distributed-executor mp).
+- **Added a TP knob to 30_serve_w4a8_graph.sh** (the captured-serve path): `TP=` (default 1, backward-compatible).
+  TP>1 -> `--tensor-parallel-size $TP --distributed-executor-backend mp`, the multi-GPU CCL env, both cards
+  exposed (no ZE_AFFINITY_MASK pin), shm 32g; +CCL_TOPO_P2P_ACCESS=0 +CCL_ZE_IPC_EXCHANGE=pidfd. Original backed
+  up to `.bak`. So we can now do CAPTURED TP=2 (the #41663 stable stack keeps XPU graph ON, so capture should work).
+
+### 2026-06-21 -- [WIP] Dual-B70 PCIe/NUMA topology -- the multi-GPU comms bottleneck (idle reads x1, confirming under load)
+For TP=2 the all-reduce path is what matters. B70 has NO usable GPU P2P (confirmed via research, below) -> every
+TP all-reduce round-trips **GPU -> host RAM -> GPU over PCIe**. So PCIe link state + NUMA placement IS the bottleneck.
+- **NUMA:** both cards `numa_node=-1`; host is Threadripper 1950X reporting a SINGLE NUMA node (node0 CPU 0-31,
+  UMA/Distributed BIOS mode). So host-staging does NOT cross a NUMA boundary -- one less penalty. (The 1950X is a
+  2-die MCM; its inter-die Infinity Fabric still bounds host-mem BW, but no explicit NUMA hop.)
+- **PCIe tree:** each card sits behind its own switch: CPU root `00:03.1` (Gen3 x16) -> switch upstream
+  `08:00.0`/`42:00.0` (cap 32GT/s=Gen5 x16, but TRAINED to 8GT/s=Gen3 x16 to the CPU) -> downstream port
+  `09:01.0`/`43:01.0` -> card `0a`/`44`.
+- **[!] IDLE link reads 2.5 GT/s x1 (Gen1 x1) at BOTH the card AND its downstream switch port** -- max_link_speed
+  shows 2.5 x1 too. That is either (a) aggressive Arc ASPM idle downscaling that the driver also reports as the
+  cap, or (b) a genuine link-training problem. At Gen1 x1 (~250 MB/s) TP would be crippled. The 0.6B TP=2 served
+  fine, but its all-reduce payload is tiny. **Measuring current_link_speed UNDER LOAD during the TP=2 sweep**
+  (campaign 58 logs link state before/under-load/after) to settle whether it ramps to Gen3/4 x8/x16. KEY datapoint.
+
+### 2026-06-21 -- [REF] Community research synthesis: multi-B70 is a CAPACITY play, not a SPEED play
+Two web-research passes (P2P/oneCCL + community multi-B70 runs). Findings that shape the campaign:
+- **No usable GPU P2P on B70.** vLLM #41663's host check shows `p2p_access:0`; direct peer copies trigger PCIe
+  RxErr -> engine reset -> deadlock. TP all-reduce goes via Unified Shared Memory through HOST RAM (set
+  `CCL_TOPO_P2P_ACCESS=0` for the USM path). No XeLink/NVLink equivalent. Comms are PCIe-bound.
+- **vLLM #41663 is EXACTLY our hardware** (2x B70, 8086:e223, PCIe-switch, x8 each, no XeLink): TP=2 GP-fault +
+  Xe BCS engine reset during ProcessGroupXCCL init. The ONE load-bearing fix is **`CCL_ENABLE_SYCL_KERNELS=0`**
+  (default 1 -> crash). The stable stack also keeps `VLLM_XPU_ENABLE_XPU_GRAPH=1` (graph ON) -> ~362 tok/s @ C50.
+  Rejected non-fixes: `CCL_ALLREDUCE=ring` (~0.5 tok/s!), eager+graph-off (~0.5 tok/s). We already set the fix.
+- **TP on Arc HURTS single-stream decode, helps aggregate/prefill.** Measured comms-bound evidence: StorageReview
+  8x B60 GPT-OSS-20B batch=1 TP=1 49.2 -> TP=8 22.8 tok/s (2.2x SLOWER going wide); TP=4 626 > TP=8 512 aggregate.
+  Puget 4x B70: Qwen3.6-27B 13.1(1u)->50.4(4u)->95.9(8u); 35B-A3B 16.3->63.7->122. Level1Techs dual-B70 TP=2 FP8:
+  Qwen3.5-27B 13.25 single / 97.84 @ C8; Qwen3-30B-A3B MoE FP8 TP=2 = 912 tok/s aggregate. => expect our TP=2
+  single-stream 27B to be <= the TP=1 30.84, with aggregate competing only at concurrency (where pooled KV helps).
+- **NO public clean TP=1-vs-TP=2 same-model decode comparison on 2-card Arc exists** -> our campaign 58 generates a
+  novel datapoint.
+- **[!] The "4xB70 Qwen3 MTP, accept 4.04, decode 54.2" benchmark that MTP_TODO is premised on was NOT found in any
+  public source.** The agent flags the loose "54 tok/s" as likely a single-card 35B-A3B llama.cpp number, conflated.
+  -> Treat the MTP external reference as UNVERIFIED; if we pursue MTP, our own numbers are the only ground truth.
+- **Multi-XPU quantization (AutoRound/GPTQ) has ZERO public precedent** -- every multi-card example is CUDA
+  (`CUDA_VISIBLE_DEVICES`, no ZE_AFFINITY_MASK/xpu:N equivalent). AutoRound uses its OWN device_map ("0,1,..");
+  an `xpu:0`/`xpu:1` per-layer dict is plausible-but-unverified. So the "try 2x-XPU AutoRound" task is genuinely
+  experimental. Standard practice = quantize on CUDA/CPU, serve on Arc (output is HW-independent).
+- llm-scaler (`intel/llm-scaler-vllm:0.14.0-b8.x`) is the de-facto multi-GPU path and recommends `mp` executor for
+  Battlemage (we use it). Extra env worth trying: `CCL_ZE_IPC_EXCHANGE=pidfd`, `ZE_FLAT_DEVICE_HIERARCHY=COMPOSITE`,
+  `ZE_AFFINITY_MASK=0,1`. Sources banked in FINDINGS.
+
+### 2026-06-21 -- [WIP] TP=2 27B captured concurrency campaign LAUNCHED (vs banked TP=1 curve)
+scripts/58_tp2_campaign.sh under one gpu-run lease: Qwen3.6-27B int4 AutoRound (=w4a16), :v0230, GRAPH=1 PIECEWISE
+TP=2 CAPSIZES=1,2,4,8,16,32,64 NOMM=1 UTIL=0.92, fp16 KV; sweep CONC 1..64; logs PCIe link state before/under/after.
+Comparing against the BANKED single-card TP=1 captured curve (C1 30.9 per-stream / 28.1 agg ... C64 234.7 agg, 6.7
+per-stream). RESULTS: pending (campaign in flight). [fill on completion]

@@ -6,6 +6,7 @@
 # VLLM_XPU_ENABLE_XPU_GRAPH=1 + OMP + the pids/ulimit ceiling fix (capture spawns many threads).
 # GPU run -- invoke via the gpu-run flock lease (long-lived server holds the lease for its lifetime).
 #   Env: GRAPH (0|1), IMG (:int8g), MAXLEN (4096), MAXSEQS (4), UTIL (0.90), DTYPE (float16), OMP (8),
+#        TP (tensor-parallel, default 1; >1 adds mp executor + Battlemage multi-GPU CCL env, both cards),
 #        TOOLCALL (0|1 -> --enable-auto-tool-choice + --tool-call-parser, default qwen3_coder), TOOLPARSER,
 #        REASONPARSER (e.g. qwen3 -> --reasoning-parser). For tool-calling agents (pi); Qwen3.6 needs qwen3_coder.
 set -uo pipefail
@@ -15,6 +16,7 @@ MODEL="${MODEL:-/models/Qwen3-14B-W4A8-gptq}"
 SERVED="${SERVED:-qwen3-14b-w4a8-gptq}"
 GRAPH="${GRAPH:-0}"; MAXLEN="${MAXLEN:-4096}"; MAXSEQS="${MAXSEQS:-4}"; UTIL="${UTIL:-0.90}"
 DTYPE="${DTYPE:-float16}"; OMP="${OMP:-8}"
+TP="${TP:-1}"   # tensor-parallel size; TP>1 shards across both B70s (mp executor + CCL stability env)
 # A2 knobs: CGMODE (PIECEWISE|FULL|FULL_AND_PIECEWISE), ATTN (attention backend, e.g. TRITON_ATTN -> FULL
 # capture, since flash-attn FULL is blocked by SYCL-Graph work_group_scratch_memory). Default PIECEWISE.
 CGMODE="${CGMODE:-PIECEWISE}"; ATTN="${ATTN:-}"
@@ -71,8 +73,10 @@ if [ "$GRAPH" = 1 ]; then
 fi
 
 ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
-      --dtype "$DTYPE" --tensor-parallel-size 1 --max-model-len "$MAXLEN" --max-num-seqs "$MAXSEQS"
+      --dtype "$DTYPE" --tensor-parallel-size "$TP" --max-model-len "$MAXLEN" --max-num-seqs "$MAXSEQS"
       --gpu-memory-utilization "$UTIL" --no-enable-prefix-caching --trust-remote-code "${EAGER[@]}" "${CC[@]}")
+# TP>1: multiproc executor across both cards.
+[ "$TP" -gt 1 ] && ARGS+=(--distributed-executor-backend mp)
 # ATTN as a CLI flag (the VLLM_ATTENTION_BACKEND env var is deprecated/ignored on current vLLM main, which
 # is likely why TRITON_ATTN never engaged before -> it silently fell back to flash-attn = PIECEWISE-only).
 # --attention-backend TRITON_ATTN is the verified path to FULL cudagraph capture on XPU (vLLM PR #34482).
@@ -93,16 +97,29 @@ ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
 [ -n "${TOOLCALL:-}" ] && ARGS+=(--enable-auto-tool-choice --tool-call-parser "${TOOLPARSER:-qwen3_coder}")
 [ -n "${REASONPARSER:-}" ] && ARGS+=(--reasoning-parser "$REASONPARSER")
 
-echo "=== serve W4A8 GRAPH=$GRAPH cgmode=$([ "$GRAPH" = 1 ] && echo $CGMODE || echo eager) attn=${ATTN:-default} IMG=$IMG dtype=$DTYPE MAXLEN=$MAXLEN SEQS=$MAXSEQS ==="
+# Card affinity / multi-GPU env. TP=1: pin to card 0 (single-card behavior, unchanged). TP>1: expose BOTH
+# cards (no ZE_AFFINITY_MASK pin) + the Battlemage multi-GPU stability env (vLLM #41663): no Arc P2P,
+# CPU-driven oneCCL over OFI, spawn workers, V1 Level-Zero (V2 flaky for multi-device collectives).
+if [ "$TP" -gt 1 ]; then
+  MGPU_ENV=(-e CCL_ENABLE_SYCL_KERNELS=0 -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 \
+            -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi -e VLLM_WORKER_MULTIPROC_METHOD=spawn \
+            -e CCL_TOPO_P2P_ACCESS=0 -e CCL_ZE_IPC_EXCHANGE=pidfd)
+  SHM="32g"
+else
+  MGPU_ENV=(-e ZE_AFFINITY_MASK=0)
+  SHM="16g"
+fi
+
+echo "=== serve W4A8 GRAPH=$GRAPH cgmode=$([ "$GRAPH" = 1 ] && echo $CGMODE || echo eager) attn=${ATTN:-default} IMG=$IMG dtype=$DTYPE TP=$TP MAXLEN=$MAXLEN SEQS=$MAXSEQS ==="
 echo "vllm ${ARGS[*]}"
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
-  --ipc=host --shm-size 16g -p ${PORT}:${PORT} "${GRAPH_DOCKER[@]}" \
+  --ipc=host --shm-size "$SHM" -p ${PORT}:${PORT} "${GRAPH_DOCKER[@]}" \
   -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" -v "$ROOT/tmp_ssd:/tmp_ssd" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
-  -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e ZE_AFFINITY_MASK=0 -e VLLM_LOGGING_LEVEL=INFO \
-  "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" "${SHIM_ARGS[@]}" "${PREPACK_ARGS[@]}" "${KERNEL_SO_ARGS[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
+  -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
+  "${MGPU_ENV[@]}" "${GRAPH_ENV[@]}" "${ATTN_ENV[@]}" "${SHIM_ARGS[@]}" "${PREPACK_ARGS[@]}" "${KERNEL_SO_ARGS[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}"
 
-echo "=== waiting for readiness (up to ~14 min; first compile/capture slower) ==="
+echo "=== waiting for readiness (up to ~14 min; first compile/capture slower; TP>1 init slower) ==="
 ok=0
 for i in $(seq 1 168); do
   curl -sf "http://localhost:${PORT}/health" >/dev/null 2>&1 && { ok=1; break; }
@@ -112,5 +129,5 @@ done
 echo "=== model-id check (CLAUDE.md: verify served model) ==="
 curl -s "http://localhost:${PORT}/v1/models" 2>/dev/null | grep -oE '"id":"[^"]*"' | head -2
 echo "=== capture + kernel confirmation ==="
-docker logs "$NAME" 2>&1 | grep -iE 'registered fake.*int4|XPUW4A8|CompressedTensorsW4A8|Model loading took|saved AOT compiled|captur|cudagraph|Application startup complete|UnsupportedOperator|fake impl|cannot allocate memory|work_group_scratch|error|Traceback|out of memory' | grep -viE 'OperatorEntry|dispatch' | tail -28
-[ "$ok" = 1 ] && echo "HEALTHY :$PORT '$SERVED' GRAPH=$GRAPH" || { echo "NOT HEALTHY"; docker logs "$NAME" 2>&1 | tail -30; }
+docker logs "$NAME" 2>&1 | grep -iE 'world_size|tensor.parallel|TP rank|registered fake.*int4|XPUW4A8|CompressedTensorsW4A8|Model loading took|saved AOT compiled|captur|cudagraph|Application startup complete|UnsupportedOperator|fake impl|cannot allocate memory|work_group_scratch|CCL|oneccl|error|Traceback|out of memory' | grep -viE 'OperatorEntry|dispatch' | tail -30
+[ "$ok" = 1 ] && echo "HEALTHY :$PORT '$SERVED' GRAPH=$GRAPH TP=$TP" || { echo "NOT HEALTHY"; docker logs "$NAME" 2>&1 | tail -30; }

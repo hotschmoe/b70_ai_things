@@ -89,6 +89,33 @@ Repro: `scripts/56_27b_conc_campaign.sh`. CSVs: `results/sweep_27b-w4a16-cap-*.c
   (model 16.69 GiB @ UTIL 0.92) -> vLLM caps "estimated max model length 133120". **Max fp16-KV context ~133k;**
   use `MAXLEN<=131072`, or `KVDTYPE=fp8_e5m2` to roughly double it. (Campaign auto-fell-back 256k -> 128k.)
 
+## Multi-GPU (dual B70, TP=2) [2026-06-21 -- 2nd card just installed]
+Second B70 landed. Both cards are **compute-usable**, not just PCI-visible: inside `vllm-xpu-env:v0230`,
+`sycl-ls` enumerates `[level_zero:0]` + `[level_zero:1]` (both [0xe223]) and two OpenCL GPUs. TP=2 serves:
+0.6B sharded 0.57 GiB/card (half the single-card weight = real split), KV pool ~26.8 GiB, max concurrency
+122x (2x single-card), coherent output. `system_fingerprint: vllm-0.23.0-tp2`. Serve via `30_serve_w4a8_graph.sh
+TP=2` (captured) or `43_serve_multi.sh TP=2` (eager).
+
+**The interconnect is the bottleneck. There is NO usable GPU P2P on B70** -- every TP all-reduce round-trips
+`GPU -> host RAM -> GPU over PCIe` (Unified Shared Memory; set `CCL_TOPO_P2P_ACCESS=0`). No XeLink/NVLink.
+Our PCIe topology: each card behind its own switch, switch-to-CPU trained at Gen3 x16; **idle link at the card
+reads Gen1 x1** (measuring under load to confirm it ramps). Both cards `numa_node=-1` (single-NUMA Threadripper
+1950X) so host-staging does not cross a NUMA hop.
+
+**Stability (vLLM #41663 is our exact hardware):** dual-B70 TP=2 GP-faults + Xe BCS engine resets at
+ProcessGroupXCCL init unless **`CCL_ENABLE_SYCL_KERNELS=0`** (the load-bearing fix; we set it). Full stable env:
+`CCL_ENABLE_SYCL_KERNELS=0 CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 SYCL_UR_USE_LEVEL_ZERO_V2=0
+CCL_ATL_TRANSPORT=ofi CCL_ZE_IPC_EXCHANGE=pidfd VLLM_WORKER_MULTIPROC_METHOD=spawn` + `--distributed-executor-backend mp`.
+NEVER `CCL_ALLREDUCE=ring` (collapses to ~0.5 tok/s).
+
+**Expectation (from community data -- TP on Arc is a CAPACITY play, not a SPEED play):** TP=2 *hurts* single-stream
+decode (comms-bound: StorageReview B60 GPT-OSS-20B batch=1 went TP=1 49 -> TP=8 23 tok/s) and helps only
+aggregate throughput at concurrency / models too big for one card. Public dual-B70 TP=2 points: Qwen3.5-27B FP8
+13.25 single / 97.84 @ C8; Qwen3-30B-A3B MoE FP8 ~912 tok/s aggregate. No public clean TP=1-vs-TP=2 same-model
+decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
+
+**Our measured TP=2 27B int4 (captured) vs banked TP=1:** [PENDING campaign 58 -- fill in]
+
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
   **We FIXED it (2026-06-18):** wrote a native `int8_gemm_w8a8` oneDNN kernel (s8xs8->s32) + the vLLM

@@ -121,6 +121,29 @@ Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s with fp8 KV. Needs the MoE-routing
 
 ---
 
+## RECIPE: dual-B70 tensor-parallel (TP=2)  [2nd card installed 2026-06-21]
+Two B70s on the host -> can shard a model across both cards. TP is a CAPACITY play, not a single-stream speed
+play (no GPU P2P; every all-reduce round-trips GPU->host RAM->GPU over PCIe). Use TP=2 to (a) serve a model that
+does NOT fit one 32 GB card, or (b) get more aggregate throughput at concurrency. Expect single-stream decode to
+be <= the single-card number.
+
+Two serve paths, both carry the **Battlemage multi-GPU stability env** (vLLM #41663): `CCL_ENABLE_SYCL_KERNELS=0`
+(the load-bearing GP-fault fix), `CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0`, `SYCL_UR_USE_LEVEL_ZERO_V2=0`,
+`CCL_ATL_TRANSPORT=ofi`, `CCL_ZE_IPC_EXCHANGE=pidfd`, `CCL_TOPO_P2P_ACCESS=0`, `VLLM_WORKER_MULTIPROC_METHOD=spawn`,
+`--distributed-executor-backend mp`. NEVER set `CCL_ALLREDUCE=ring` (drops to ~0.5 tok/s).
+
+- **Captured (preferred):** `30_serve_w4a8_graph.sh` now has a `TP=` knob (default 1, backward-compatible). TP>1
+  exposes both cards (no ZE_AFFINITY pin) + the env above. Example (27B int4 across both cards):
+  ```bash
+  ./gpu-run env IMG=vllm-xpu-env:v0230 MODEL=/models/Lorbus_Qwen3.6-27B-int4-AutoRound \
+    SERVED=qwen36-27b-int4-tp2 GRAPH=1 DTYPE=auto UTIL=0.92 MAXLEN=8192 MAXSEQS=64 \
+    CAPSIZES=1,2,4,8,16,32,64 NOMM=1 TP=2 NAME=vllm_w4a8 bash ./30_serve_w4a8_graph.sh
+  ```
+- **Eager (simplest, for big models / bring-up):** `43_serve_multi.sh` (env: `TP` default 2, `PP`, `MODEL`,
+  `SERVED`, `QUANT` none|fp8|<ckpt>, `KVDTYPE`, `MAXLEN`, `MAXSEQS`, `UTIL`, `EXTRA`). Serves the full BF16 27B
+  (too big for one card) at TP=2 with `EXTRA='--limit-mm-per-prompt {"image":0,"video":0}'`.
+- Campaign harness: `58_tp2_campaign.sh` (serve TP=2 + concurrency sweep + PCIe link-state probes).
+
 ## Concurrency sweep against a running server: `35_sweep_bench.sh`
 Needs a server already up (it `docker exec`s into it). Env: `NAME` (container), `MODEL` (the SERVED id),
 `LABEL` (csv name), `TOKPATH` (**container** `/models/...` path), `CONC` (levels).
