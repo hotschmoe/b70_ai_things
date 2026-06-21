@@ -2671,3 +2671,15 @@ prepacked W4A8 on a 32GB card leaves little KV room. Refit: MAXLEN=2560 (covers 
 is the single-card concurrency wall -- ~2-2.5GB KV left => c=8 @ ctx-2048 (~4GB KV) likely won't fit; c=1/2/4 will. This is
 exactly the case for TP=2 (task #12): split the 27B across both B70s (~12.5GB/card) -> abundant KV -> real concurrency.
 So: capture TP=1 c=1/2/4 ctx-2048 now (first real servable 27B int8 datapoint), then the Seguin TP=2 A/B for concurrency.
+
+### 2026-06-22 -- [27B W4A8] FIRST real servable 27B int8 ladder (supersedes the inferred Q3 row)
+After 6 stacked serve bugs all fixed (fp8-KV, 4304 vision, OOM->prepack, fp8-KV-again, ignore-339->4-regex, KV-too-small),
+the 27B W4A8-sqgptq-prepacked SERVES on one B70 @ ctx2048 (MAXLEN=2560 UTIL=0.97):
+  c=1: 18.3 agg out t/s, TTFT 876ms, per-stream decode 20.73 t/s, tpot 48.2ms
+  c=2: 32.1 agg, TTFT 1039ms, 18.30 decode
+  c=4: 51.6 agg, TTFT 2209ms, 16.51 decode
+  c=8: 67.8 agg, TTFT 4039ms, 12.24 decode
+c1 decode 20.7 confirms the existing w4a8-q-prepacked ~20.9. Decode SAGS 20.7->12.2 across concurrency = single-card
+KV pressure (25GB model leaves ~2GB KV on a 32GB card). This is the TP=2 case: split across both B70s -> ~12.5GB/card
+-> abundant KV + ~2x weight BW/card (decode could approach the 14B rate). Next: Seguin TP=2 A/B (task #12) -- also the
+only way to serve the 27B W8A8 (35GB).
