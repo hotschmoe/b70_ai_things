@@ -2453,13 +2453,14 @@ replicas coexist on one host. Phase 1 = dp0 solo (fresh single-card baseline); P
   MoE test held the lease first; gpu-run queued us correctly. Minor: it also numbered a script "64" -- filename
   differs, no clash.)
 
-### 2026-06-21 -- [RESEARCH][!] The "4xB70 TP=4 MTP 54.2 t/s" premise is UNVERIFIED (a conflation) -- MTP_TODO corrected
-Deep MTP pass (3 web sub-agents + cross-check vs our own runs). Reconciles the user's repeated belief in a 4xB70
-TP=4 MTP result with the evidence:
-- **The "54.2 t/s / accept 4.04 / 88.9%@3" figure is not in any public source.** Triangulated conflation:
-  "54.2" = PMZFX single-B70 llama.cpp Q4 35B-A3B MoE (no MTP); "~2.9x MTP" = an NVIDIA RTX 5090 llama.cpp number;
-  "TP=4 most performant" = Puget 4xB70 TP=4 27B-DENSE 13.1 t/s/1u (no MTP). Infra names real but from a
-  B60/Qwen3-Next-80B/spec=2 context (vLLM PR #43565). Second independent flag (first was 2026-06-21 line ~2231).
+### 2026-06-21 -- [RESEARCH] 4xB70 TP=4 MTP is REAL (owner's primary source); our single-card MTP is -19% -- get the recipe
+Deep MTP pass (3 web sub-agents + cross-check vs our own runs), then RECONCILED with the user's attestation.
+- **The 4xB70 TP=4 MTP result (Qwen3.6-27B BF16, dec ~54.2 t/s, accept ~4.04 @ spec=5) is REAL** -- the project
+  owner knows the author personally (primary source). It is simply NOT publicly documented, which is why the web
+  pass couldn't find it (do NOT read "not public" as "not real"). The public numbers that superficially resemble
+  fragments of it (PMZFX single-B70 llama.cpp 35B-A3B 54.7; an NVIDIA 5090 MTP ~2.9x; Puget 4xB70 TP=4 27B-dense
+  13.1 no-MTP) are coincidence, not the source. **ACTION: get the exact repro (image/kernels/speculative-config/
+  whether FULL graph capture/the 4-card interconnect) -- it's the unlock, because it beats our single-card result.**
 - **Why "TP=4 enabled MTP" = capacity confound.** BF16 27B ~= 54 GB -> needs ~4 cards just to FIT. TP=4 was the
   entry ticket to run BF16 at all; MTP's benefit is independent of TP. MTP does NOT need TP; TP>1 HURTS it here.
 - **MTP on B70 is currently NET-NEGATIVE (our only real B70 MTP data): 25.5 t/s = -19%** vs 31.4 off (single-card
@@ -2470,5 +2471,25 @@ TP=4 MTP result with the evidence:
   spec on the DENSE 14B-W4A8 with FULL+TRITON_ATTN (14B has no GDN -> dodges the GDN-spec-capture bug; the only
   arch where FULL+spec is unblocked on B70 today) -> first real net-positive spec number; (3) FULL+MTP on int4 27B
   once a torch-2.11 image with #43565 + kernels v0.1.10 exists; (4) then MTP per data-parallel replica (NOT TP=2).
-- MTP_TODO.md premise corrected (lines 12, 163 marked UNVERIFIED with the triangulation). Plan mechanics (Phase
-  A/B quant-recovery) still valid; only the "proven 2.9x" premise was false.
+- MTP_TODO.md updated: the 4xB70 figure is REAL (owner's primary source), reframed from "unverified" to
+  "get the exact repro". Plan mechanics (Phase A/B quant-recovery) still valid.
+
+### 2026-06-21 -- [RESEARCH] 35B-A3B MoE on dual B70: int4 + 2x DATA-PARALLEL wins; EP is crippled on XPU
+Deep MoE pass (comms arithmetic + vLLM-XPU EP/PP support state + corrected external numbers). Arch (served
+config): hidden=2048, L=40, 256 experts, top_k=8 + a shared (always-on) expert -> tiny per-token cross-card payloads.
+- **Per-token comms (this rig, ~0.29 ms/collective latency floor, latency-bound not byte-bound):** TP=2 ~80
+  all-reduce/token (~23 ms -> ~25 t/s ceiling); EP=2 ~80 all-to-all/token (>= TP latency; the shared expert can't
+  be localized); **PP=2 = 1 handoff/token (~0.3 ms, negligible).** Matches our measured TP=2 0.53x / PP=2 0.78x.
+- **vLLM-XPU EP is present but CRIPPLED + crashing:** `--enable-expert-parallel` exists only via the slow
+  allgather+reduce-scatter path (no DeepEP/nvshmem on XPU); open llm-scaler bugs on B70 MoE: #477 (TP+EP
+  `moe_topk_softmax unsupported E=512`), #479 (MoE int4 expert-GEMM OOM), #382 (35B-A3B FP8 TP=2 warmup OOM),
+  #489 (PP=2 device-lost after 1 req). So EP is NOT a perf contender on our stack today.
+- **Capacity:** 35B-A3B int4 (W4A16) = 19.6 GiB -> **FITS ONE CARD** -> data-parallel applies. FP8 (~35 GB) /
+  INT8 need 2 cards (and INT8 has no working XPU fused-MoE kernel yet).
+- **VERDICT: int4 + 2x DATA-PARALLEL is the answer** -- same as the dense 27B. Zero comms, project ~2x aggregate
+  (toward ~400 t/s vs single-card ~206 plateau) AND full single-stream ~56.8 t/s/replica preserved (MoE decode is
+  BW-bound on ~3B active params). Bench it via `scripts/64_dataparallel_2rep.sh` (swap MODEL + image :v0230moe).
+  Reserve PP=2 for the FP8/capacity case (bigger KV / 8-bit quality); TP=2 only at high concurrency; EP last (probe-only).
+- **Corrected stale community numbers:** the banked "dual-B70 TP=2 27B FP8 13.25/97.84" was actually Puget's
+  4xB70 TP=4 27B-DENSE (13.1/95.9); "30B-A3B MoE FP8 912 t/s" is UNVERIFIED (no public source). Real: Puget
+  4xB70 TP=4 35B-A3B MoE = 16.3(C1)/63.7(C4)/122(C8). FINDINGS.md corrected.

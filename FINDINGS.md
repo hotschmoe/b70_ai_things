@@ -123,9 +123,13 @@ NEVER `CCL_ALLREDUCE=ring` (collapses to ~0.5 tok/s).
 
 **Expectation (from community data -- TP on Arc is a CAPACITY play, not a SPEED play):** TP=2 *hurts* single-stream
 decode (comms-bound: StorageReview B60 GPT-OSS-20B batch=1 went TP=1 49 -> TP=8 23 tok/s) and helps only
-aggregate throughput at concurrency / models too big for one card. Public dual-B70 TP=2 points: Qwen3.5-27B FP8
-13.25 single / 97.84 @ C8; Qwen3-30B-A3B MoE FP8 ~912 tok/s aggregate. No public clean TP=1-vs-TP=2 same-model
-decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
+aggregate throughput at concurrency / models too big for one card. [CORRECTED 2026-06-21: the previously-cited
+"dual-B70 TP=2 Qwen3.5-27B FP8 13.25/97.84" and "30B-A3B MoE FP8 912 t/s" are UNVERIFIED -- not in any public
+source. The "13.25/97.84" is actually Puget's 4xB70 TP=4 27B-DENSE FP16 (13.1/95.9); no source has "912".]
+**Verified public multi-Arc numbers:** Puget 4xB70 TP=4 FP16 35B-A3B MoE = 16.3 (C1) / 63.7 (C4) / 122 (C8);
+Puget 4xB70 TP=4 27B-dense = 13.1 (1u) / 95.9 (8u); StorageReview B60 GPT-OSS-20B TP=1 49 -> TP=8 23 single-stream
+(TP hurts single-stream, confirmed). No public clean TP=1-vs-TP=2 same-model decode comparison exists -> our
+own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate the real numbers.
 
 **Our measured numbers (2026-06-21, dual B70):**
 - **Captured (PIECEWISE) TP=2 is BLOCKED:** oneCCL errors `sched algorithms do not support sycl_graph recording`

@@ -6,8 +6,11 @@ fix THIS doc instead. Keep recipes verified-and-current; date each change.
 
 **Daily driver:** `./daily_driver_serve.sh` (repo root) brings up the current daily-driver model and
 keeps the API at `http://192.168.10.5:18080/v1` live for our apps. `start|stop|status|restart|logs`.
-Edit its CONFIG block to change which model/recipe we serve (presets inside). It holds the GPU lease
-while up, so `stop` it before running GPU experiments. Current daily driver: **Qwen3.6-27B W4A16**.
+Edit its CONFIG block to change which model/recipe we serve. It holds the GPU lease (BOTH cards)
+while up, so `stop` it before running GPU experiments/quant. Current daily driver: **Qwen3.6-27B W4A16,
+served as 2x DATA-PARALLEL replicas** (one captured replica per B70 -> :18091/:18092) behind an nginx
+round-robin proxy on :18080. ~2.1x aggregate throughput, full single-stream latency/replica, zero inter-GPU
+comms (measured; see the data-parallel recipe below + `scripts/64_dataparallel_2rep.sh`).
 
 ## Where everything runs
 - GPU host: Unraid @ `192.168.10.5` (`ssh root@192.168.10.5`). NOT mounted on the dev box.
@@ -121,14 +124,32 @@ Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s with fp8 KV. Needs the MoE-routing
 
 ---
 
-## RECIPE: dual-B70 tensor-parallel (TP=2)  [2nd card installed 2026-06-21]
-Two B70s on the host -> can shard a model across both cards. Multi-GPU is a CAPACITY play, not a single-stream
-speed play (no GPU P2P; collectives round-trip GPU->host RAM->GPU over PCIe, and on this rig that PCIe is Gen1 x1).
-Use it to serve a model that does NOT fit one 32 GB card, or for a bigger KV pool.
+## RECIPE: dual-B70 DATA-PARALLEL (PREFERRED for any model that fits one card)  [2026-06-21]
+**This is the dual-GPU win.** Run one independent replica PER CARD (zero inter-GPU comms) behind a round-robin
+proxy. Measured 27B int4: **~2.1x aggregate (C64 ~525 t/s)** AND full single-stream ~30.8 t/s/replica, no
+contention -- beats TP=2 (0.53x) and PP=2 (0.78x) on BOTH axes. The ONLY thing DP can't do is serve a model
+bigger than one card (then use PP=2 below).
+```bash
+# Persistent daily driver (2 replicas + nginx proxy on :18080, Open WebUI tied in):
+./daily_driver_serve.sh start      # from the dev box; holds the lease for both cards
+# Ad-hoc bench (solo baseline + concurrent aggregate):
+ssh root@192.168.10.5 'cd /mnt/vm_8tb/b70 && ./gpu-run bash 64_dataparallel_2rep.sh'
+# Manual (per replica): the 30_serve script now takes DEVICE (card 0|1) + PORT:
+#   DEVICE=0 PORT=18091 NAME=vllm_dp0 ... bash 30_serve_w4a8_graph.sh
+#   DEVICE=1 PORT=18092 NAME=vllm_dp1 ... bash 30_serve_w4a8_graph.sh
+# then an nginx least_conn proxy (dp_nginx.conf) on :18080 across 127.0.0.1:18091/18092.
+```
 
-**[!] Prefer PP=2 over TP=2 on this rig (until the x1 PCIe link is fixed).** Measured eager 27B int4 single-stream:
+## RECIPE: dual-B70 tensor-parallel (TP=2) / pipeline (PP=2)  [for models too big for one card]
+Two B70s can shard a model across both cards. Multi-GPU model-parallel is a CAPACITY play, not a single-stream
+speed play (no GPU P2P; collectives round-trip GPU->host RAM->GPU over PCIe). NOTE: the PCIe link is healthy
+**Gen3 x16** (H2D 12.82 GB/s measured) -- the "Gen1 x1" lspci reading is an Intel Arc artifact (KB 000094587),
+NOT a real bottleneck. The multi-GPU cap is no-P2P host-staged collectives. Use model-parallel ONLY to serve a
+model that does NOT fit one 32 GB card (else use DATA-PARALLEL above). For fit-one-card models, DP wins outright.
+
+**[!] Prefer PP=2 over TP=2 when you must go model-parallel.** Measured eager 27B int4 single-stream:
 PP=2 = 6.11 t/s (0.78x single-card) vs TP=2 = 4.18 (0.53x) -- PP is +46% because it does ONE hidden-state handoff
-per token instead of TP's ~128 all-reduces, so it barely touches the crippled link. PP=2 also gives a much larger
+per token instead of TP's ~128 host-staged all-reduces, so it barely touches the interconnect. PP=2 also gives a much larger
 KV pool (~19 GiB/stage vs TP's tight per-layer split). Set PP via `43_serve_multi.sh TP=1 PP=2` (see
 `62_pp2_27b.sh`). Use TP only if a single layer can't fit one card (not the case for our 27B/35B). Captured (graph)
 TP=2 is BLOCKED (oneCCL can't sycl_graph-record an all-reduce on the stable config) -> multi-GPU is eager-only.
@@ -182,4 +203,5 @@ as model-specific TEXT that the parser lifts into the API `tool_calls` field. En
 and encode the quant. Cross-check against `evals/configs/models.yaml`.
 
 ---
-Last verified: 2026-06-21 (dual-B70 bring-up: TP=2 + PP=2 measured; PP=2 preferred; x1-link bottleneck found).
+Last verified: 2026-06-21 (dual-B70: DATA-PARALLEL preferred -- ~2.1x, zero comms; PP=2 for oversized models;
+the "Gen1 x1" was an Intel Arc lspci artifact -- real link is healthy Gen3 x16, H2D 12.82 GB/s).
