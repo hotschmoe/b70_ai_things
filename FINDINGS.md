@@ -131,6 +131,11 @@ decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
 - **[NOVEL] AutoRound quantization runs across BOTH XPUs.** `device_map="0,1"` -> `xpu:0`+`xpu:1`; a full 0.6B
   quant ran in 22 s with `peak_vram {'0':0.62GB,'1':0.51GB}` (both cards active), 196/197 layers quantized.
   No public multi-XPU AutoRound precedent existed -- this rig does it. (`scripts/59_autoround_2xpu.sh`.)
+- **[KEY] Use PP=2, NOT TP=2, for dual-card serving on this rig.** Pipeline-parallel does ONE hidden-state
+  handoff/token (vs TP's ~128 all-reduces), so it dodges the x1-link tax. Eager 27B int4 single-stream:
+  **PP=2 6.11 t/s (0.78x single-card) vs TP=2 4.18 (0.53x)** = PP +46%. PP=2 also gives a far bigger KV pool
+  (19.44 GiB/stage vs TP's tight split). TP only wins if a single layer can't fit one card (not our case).
+  Re-evaluate TP after the PCIe link is fixed. (`scripts/62_pp2_27b.sh`.)
 
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).

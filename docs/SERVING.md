@@ -122,10 +122,16 @@ Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s with fp8 KV. Needs the MoE-routing
 ---
 
 ## RECIPE: dual-B70 tensor-parallel (TP=2)  [2nd card installed 2026-06-21]
-Two B70s on the host -> can shard a model across both cards. TP is a CAPACITY play, not a single-stream speed
-play (no GPU P2P; every all-reduce round-trips GPU->host RAM->GPU over PCIe). Use TP=2 to (a) serve a model that
-does NOT fit one 32 GB card, or (b) get more aggregate throughput at concurrency. Expect single-stream decode to
-be <= the single-card number.
+Two B70s on the host -> can shard a model across both cards. Multi-GPU is a CAPACITY play, not a single-stream
+speed play (no GPU P2P; collectives round-trip GPU->host RAM->GPU over PCIe, and on this rig that PCIe is Gen1 x1).
+Use it to serve a model that does NOT fit one 32 GB card, or for a bigger KV pool.
+
+**[!] Prefer PP=2 over TP=2 on this rig (until the x1 PCIe link is fixed).** Measured eager 27B int4 single-stream:
+PP=2 = 6.11 t/s (0.78x single-card) vs TP=2 = 4.18 (0.53x) -- PP is +46% because it does ONE hidden-state handoff
+per token instead of TP's ~128 all-reduces, so it barely touches the crippled link. PP=2 also gives a much larger
+KV pool (~19 GiB/stage vs TP's tight per-layer split). Set PP via `43_serve_multi.sh TP=1 PP=2` (see
+`62_pp2_27b.sh`). Use TP only if a single layer can't fit one card (not the case for our 27B/35B). Captured (graph)
+TP=2 is BLOCKED (oneCCL can't sycl_graph-record an all-reduce on the stable config) -> multi-GPU is eager-only.
 
 Two serve paths, both carry the **Battlemage multi-GPU stability env** (vLLM #41663): `CCL_ENABLE_SYCL_KERNELS=0`
 (the load-bearing GP-fault fix), `CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0`, `SYCL_UR_USE_LEVEL_ZERO_V2=0`,
@@ -176,4 +182,4 @@ as model-specific TEXT that the parser lifts into the API `tool_calls` field. En
 and encode the quant. Cross-check against `evals/configs/models.yaml`.
 
 ---
-Last verified: 2026-06-21 (27B captured concurrency campaign).
+Last verified: 2026-06-21 (dual-B70 bring-up: TP=2 + PP=2 measured; PP=2 preferred; x1-link bottleneck found).

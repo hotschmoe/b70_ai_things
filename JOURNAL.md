@@ -2298,3 +2298,30 @@ after). Test B (AutoRound on Qwen3-0.6B, bits=4 g128, iters=1 nsamples=8):
   is viable HERE, not only on CUDA. (Quant tuning is compute/host-bound, NOT all-reduce-bound, so the x1 link does
   NOT hurt it -- unlike TP serving.) Note Test-A transcript (transformers device_map placement) was clipped by a
   `tail -55` on capture; Test B is the conclusive proof. NEXT (optional): real 2-card AutoRound of a >32GB source.
+
+### 2026-06-21 -- [RESULT][KEY] PP=2 BEATS TP=2 on the x1-link rig (pipeline dodges the all-reduce tax)
+Hypothesis: on a comms-crippled rig, pipeline-parallel (ONE hidden-state handoff/token at the stage boundary)
+should beat tensor-parallel (~128 all-reduces/token). scripts/62_pp2_27b.sh: 27B int4 AutoRound, TP=1 PP=2, eager,
+:v0230, single-stream decode probe. CONFIRMED:
+
+| config (eager, 27B int4, single-stream) | C1 decode t/s | TPOT | KV pool | vs TP=2 | vs 1-card |
+|---|---|---|---|---|---|
+| single-card TP=1 (eager)                | 7.84 | ~128 ms | (1 card) | --     | 1.00x |
+| **PP=2**                                | **6.11** | 163 ms | 19.44 GiB/stage | **+46%** | 0.78x |
+| TP=2                                    | 4.18 | 239 ms | tight    | --     | 0.53x |
+
+- **PP=2 (6.11) is +46% over TP=2 (4.18)** and reaches 78% of single-card, because PP's per-token comms is a single
+  ~10 KB hidden-state send (TTFT 641 ms, TPOT 163 ms) vs TP's 128 all-reduces (TPOT 239 ms). The x1 link punishes
+  TP's per-layer collective; PP barely touches the link.
+- **PP=2 also wins on KV capacity** (19.44 GiB/stage pool, max-conc 50.7x) -- each card holds half the LAYERS so
+  per-card KV is generous; TP=2 splits each layer (tight KV). Weights still 8.41 GiB/card (= half, like TP).
+- Residual PP penalty vs single-card (0.78x): at batch-1 PP can't overlap stages (card1 waits on card0 each token)
+  so the handoff is pure added latency, no compute-parallel win. At concurrency PP CAN pipeline microbatches
+  (overlap stages) -- not swept here (deprioritized; single-stream is the headline).
+- **VERDICT: on THIS x1-link rig, PP=2 strictly dominates TP=2 for serving** (better decode AND bigger KV). The only
+  thing TP buys that PP doesn't is splitting a single layer's weights (irrelevant -- our layers fit one card). So:
+  **use PP=2, not TP=2, for the dual-card capacity play**. When the PCIe link is fixed to Gen3+ x8/x16, re-evaluate
+  -- TP may become competitive (its all-reduce stops being the bottleneck) and could win at high concurrency.
+- Correctness across multi-GPU: TP=2 bf16 27B solved gsm8k #1 correct (got=72) before teardown; PP=2 int4 gsm8k
+  probe queued. Plus coherent multi-card generations throughout (0.6B primes, 27B parallelism explainer). No
+  TP/PP output corruption observed.
