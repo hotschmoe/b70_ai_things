@@ -2345,3 +2345,49 @@ should beat tensor-parallel (~128 all-reduces/token). scripts/62_pp2_27b.sh: 27B
   time out. They SELF-RECOVERED (reset done -> serves kept running) thanks to CCL_ENABLE_SYCL_KERNELS=0; without
   the stable env these are the fatal GP-faults of #41663. So multi-GPU works here but is NOT bulletproof -- expect
   occasional copy-engine resets under sustained TP load until the PCIe link is fixed.
+
+### 2026-06-21 -- [CORRECTION][!!] The "Gen1 x1 link" is an Intel Arc lspci ARTIFACT -- real link is Gen3 x16
+SUPERSEDES the two entries above ("x1 link is PHYSICAL (switch/riser)" and the WIP topology entry) and the
+FINDINGS "move to direct slots" recommendation. User flagged the cards are in real Gen3 x16 slots; re-investigated
+read-only (no gpu-run lease; another agent was serving on both cards -- a free under-load datapoint).
+
+**Root cause of the misdiagnosis: we read the WRONG PCIe node.** Arc/Battlemage cards interpose an ON-CARD Intel
+PCIe switch between the slot and the GPU die. Per **Intel KB 000094587**, the GPU-adjacent nodes (the GPU endpoint
+and the switch's downstream port) *always* report a bogus **2.5 GT/s x1** -- in BOTH LnkSta (current) AND LnkCap
+(capability). The prior [DIAGNOSIS] entry saw `LnkCap = 2.5GT/s x1` on `0a/44:00.0` + `09/43:01.0` and concluded
+"the capability is x1 => physical x1 wiring." That conclusion is wrong: that low LnkCap is the documented artifact,
+not the silicon limit.
+
+**The card's on-card switch (decoded):**
+```
+  CPU root 00:03.1 === 08:00.0 (switch UP, e2ff) ==+== 09:01.0 (DOWN, e2f0) === 0a:00.0  GPU  e223
+  (Gen3 x16, AMD)      Gen5-cap, trained 8GT/s x16 |   2.5GT/s x1 (ARTIFACT)     2.5GT/s x1 (ARTIFACT)
+                       << REAL host link, healthy  +== 09:02.0 (DOWN, e2f1) === 0b:00.0  DP-audio e2f7
+```
+The switch is Intel silicon `8086:e2ff` with two Intel downstream devices (GPU `e223` + DP/HDMI-audio `e2f7`) --
+i.e. on the card, NOT a third-party riser/mining board (those use ASMedia/PLX). Both B70s show identical structure.
+
+**Evidence the real link is Gen3 x16 (the 1950X platform max), not Gen1 x1:**
+- Read at the switch UPSTREAM bridge (`08:00.0` / `42:00.0`) per Intel KB: `LnkSta: 8GT/s x16` on BOTH cards.
+  `LnkCap: 32GT/s x16` (silicon is Gen5-capable; "downgraded" to 8GT/s only because the 1950X host is Gen3).
+- Power state ruled out: both GPUs `power_state=D0`, `runtime_status=active` (the other agent's `vllm_multi` was
+  serving on them) and STILL read 2.5 x1 at the endpoint -> that's the artifact, not idle ASPM/D3.
+- The earlier "corroborations" were misattributed: "200/200 samples x1 under load" polled the artifact node
+  (`0a`/`44`); "~220-234 MB/s weight-load = Gen1 rate" is a SATA-SSD/loader bottleneck -- models live on
+  `/dev/sdd1` (SATA SSD, btrfs) + safetensors deserialization, comfortably SATA-class, NOT PCIe.
+- Community confirmation on this exact card: a B70 clpeak run measured ~55 GB/s H2D (Gen5 host) while lspci showed
+  the same fake 2.5 x1 -- "purely cosmetic reporting." (Intel KB 000094587; gist mploschiavo/9968c883...)
+
+**What is STILL true (the real bottleneck, just re-attributed):** TP=2 all-reduce ~0.7 GB/s busbw, TP=2 decode
+0.53x single-card, PP=2 0.78x -- all REAL and stand. But the cause is **no GPU P2P -> host-staged oneCCL/xccl
+collectives** (GPU->host RAM->GPU) + collective overhead, NOT a crippled PCIe gen. A clean H2D copy should show
+~10-12 GB/s (Gen3 x16); queued `scripts/63` will put a positive number on the record to nail it.
+
+**Actionable changes:**
+- DELETE "move cards to direct Gen3+ slots" from the plan -- they are ALREADY at full Gen3 x16; reseating gains 0.
+- The real levers to "optimize the dual GPUs": (1) GPU P2P if achievable (research in flight -- but cross-die on
+  the 2-die 1950X + no Xe-Link makes this unlikely), (2) **data-parallel = 2 independent single-card replicas**
+  (zero inter-GPU comms, ~2x aggregate throughput) when the model fits one card, (3) PP=2 for models too big for
+  one card (already shown to beat TP=2 here), (4) MTP/spec-decode as a per-replica single-stream multiplier.
+- To read the TRUE link on Arc, always read the on-card switch UPSTREAM bridge (`08/42:00.0`), never the GPU
+  endpoint. Helper: `for b in 08:00.0 42:00.0; do lspci -vvv -s $b | grep LnkSta; done`.

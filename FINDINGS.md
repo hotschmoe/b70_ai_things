@@ -98,9 +98,11 @@ TP=2` (captured) or `43_serve_multi.sh TP=2` (eager).
 
 **The interconnect is the bottleneck. There is NO usable GPU P2P on B70** -- every TP all-reduce round-trips
 `GPU -> host RAM -> GPU over PCIe` (Unified Shared Memory; set `CCL_TOPO_P2P_ACCESS=0`). No XeLink/NVLink.
-Our PCIe topology: each card behind its own switch, switch-to-CPU trained at Gen3 x16; **idle link at the card
-reads Gen1 x1** (measuring under load to confirm it ramps). Both cards `numa_node=-1` (single-NUMA Threadripper
-1950X) so host-staging does not cross a NUMA hop.
+PCIe topology: each card behind its own ON-CARD Intel switch (`08/42:00.0` upstream -> GPU `0a/44:00.0`);
+switch-to-CPU trained at **Gen3 x16 -- the real, healthy link (1950X platform max).** The "Gen1 x1" that lspci
+shows at the GPU endpoint is the documented Intel Arc reporting ARTIFACT (KB 000094587), NOT the real link --
+read the upstream bridge. Both cards `numa_node=-1` (single-NUMA 1950X) so host-staging does not cross a NUMA hop.
+So the comms cap is host-staging + no-P2P, **not** the PCIe gen.
 
 **Stability (vLLM #41663 is our exact hardware):** dual-B70 TP=2 GP-faults + Xe BCS engine resets at
 ProcessGroupXCCL init unless **`CCL_ENABLE_SYCL_KERNELS=0`** (the load-bearing fix; we set it). Full stable env:
@@ -122,20 +124,23 @@ decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
 - **Cross-card all-reduce microbench** (`scripts/60_allreduce_bench.sh`, xccl): **latency floor ~0.29 ms** (small
   msgs), **bandwidth ceiling ~0.70 GB/s busbw** (>=2 MB). That's ~17-70x below a healthy PCIe link (Gen3 x16
   ~12 GB/s, Gen5 x16 ~50 GB/s), ~850x below NVLink. **This is the whole multi-GPU story: the x1 link caps comms.**
-- **The bottleneck is the PCIe link, and it's likely FIXABLE.** Both cards train to **Gen1 x1 (2.5 GT/s x1,
-  ~250 MB/s)** -- confirmed under sustained load (200/200 samples) and during bulk weight-load (~220 MB/s/card).
-  The switch downstream port to each card is x1 while switch->CPU is Gen3 x16 = **x1-riser / mining-switch-board
-  signature**. Move the cards to direct Gen3+ x8/x16 slots (or non-x1 risers) and TP=2 decode + all-reduce BW
-  should jump together. Until then: **use TP=2 for CAPACITY (models too big for one card / bigger KV), never for
-  single-stream speed.**
+- **[CORRECTED 2026-06-21] The "Gen1 x1 link" was a MISDIAGNOSIS -- it is an Intel Arc lspci reporting artifact.**
+  The real link is **Gen3 x16** (read at the on-card switch UPSTREAM bridge `08/42:00.0`; the GPU endpoint always
+  fakes 2.5 GT/s x1 per Intel KB 000094587). The earlier "200/200 samples x1 under load" polled the artifact node;
+  the "~220 MB/s weight-load" is a SATA-SSD/loader bottleneck (models on `/dev/sdd1`), not PCIe. Reseating/moving
+  the cards to other slots gains NOTHING -- they are already at full Gen3 x16 (the 1950X is a Gen3 host). The
+  ~0.7 GB/s all-reduce is REAL but caused by host-staged collectives (no GPU P2P) + oneCCL overhead, not the PCIe
+  gen. **TP=2 stays a CAPACITY tool** (bigger models/KV), not a single-stream speed tool -- but because of no-P2P,
+  not a fixable link. (Confirm with a clean H2D bw test: expect ~10-12 GB/s, not ~0.25 GB/s.)
 - **[NOVEL] AutoRound quantization runs across BOTH XPUs.** `device_map="0,1"` -> `xpu:0`+`xpu:1`; a full 0.6B
   quant ran in 22 s with `peak_vram {'0':0.62GB,'1':0.51GB}` (both cards active), 196/197 layers quantized.
   No public multi-XPU AutoRound precedent existed -- this rig does it. (`scripts/59_autoround_2xpu.sh`.)
 - **[KEY] Use PP=2, NOT TP=2, for dual-card serving on this rig.** Pipeline-parallel does ONE hidden-state
-  handoff/token (vs TP's ~128 all-reduces), so it dodges the x1-link tax. Eager 27B int4 single-stream:
+  handoff/token (vs TP's ~128 all-reduces), so it dodges the host-staged all-reduce tax. Eager 27B int4 single-stream:
   **PP=2 6.11 t/s (0.78x single-card) vs TP=2 4.18 (0.53x)** = PP +46%. PP=2 also gives a far bigger KV pool
   (19.44 GiB/stage vs TP's tight split). TP only wins if a single layer can't fit one card (not our case).
-  Re-evaluate TP after the PCIe link is fixed. (`scripts/62_pp2_27b.sh`.)
+  Re-evaluate TP only if GPU P2P becomes achievable (the PCIe link is already full Gen3 x16 -- nothing to fix there).
+  (`scripts/62_pp2_27b.sh`.)
 
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
@@ -180,11 +185,17 @@ decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
 ## Hardware
 Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.0 x16 (card spec).
 `xe` kernel driver. Pass into containers with `--device /dev/dri`.
-- **[!] On THIS host both B70s train to Gen1 x1 (2.5 GT/s x1, ~250 MB/s)** -- each card behind a PCIe switch
-  whose downstream port negotiates x1 (switch->CPU is Gen3 x16). Single-card perf is unaffected (weights resident),
-  but ALL multi-GPU comms (TP all-reduce, ~0.7 GB/s measured) are crippled by it. Likely x1 risers / a mining-style
-  switch board -> **moving to direct Gen3+ x8/x16 slots is the single highest-leverage multi-GPU fix.** Two cards
-  are on a single NUMA node (Threadripper 1950X, UMA mode).
+- **[!] The "Gen1 x1" reading is an Intel Arc lspci ARTIFACT, NOT a real link (corrected 2026-06-21).** Arc/
+  Battlemage cards put an on-card PCIe switch between the slot and the GPU die; the GPU-adjacent nodes (GPU
+  endpoint `0a/44:00.0` + switch downstream `09/43:01.0`) ALWAYS falsely report 2.5 GT/s x1 by design (Intel
+  KB 000094587). Read the REAL link at the card switch's UPSTREAM bridge (`08/42:00.0`): it shows **8 GT/s x16
+  = Gen3 x16**, the platform max (1950X is a Gen3 host; card silicon is Gen5-capable, LnkCap 32 GT/s x16). Both
+  cards confirmed D0/active under live load still read x1 at the endpoint = artifact, not power state. So the
+  PCIe link is FINE; there is nothing to fix by reseating/moving slots.
+- **The real multi-GPU bottleneck is NO GPU P2P** -> TP all-reduce round-trips GPU->host RAM->GPU (host-staged
+  oneCCL/xccl, ~0.7 GB/s measured). That is a software/architecture limit (no P2P + collective overhead), NOT the
+  PCIe gen -- a clean H2D copy should show ~10-12 GB/s. Two cards sit on SEPARATE CPU root complexes (`00:03.1`
+  die0, `40:03.1` die1) of the 2-die 1950X; single NUMA node (UMA mode), but cross-die for any P2P attempt.
 
 *Next up: FIX the x1 PCIe link (direct slots) then re-measure TP=2; 27B W8A8 INT8 at TP=2 (Phase C headline,
 needs the custom int8 kernel in a GDN-enabled image); real 2-card AutoRound of a >32GB source (now proven viable).*
