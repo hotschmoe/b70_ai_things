@@ -124,8 +124,10 @@ else:
                 v_ = pre + ".self_attn.v_proj"; o_ = pre + ".self_attn.o_proj"
                 if ln in names and k_ in names and v_ in names:
                     maps.append([[q_, k_, v_], ln]); n_attn += 1
-                if o_ in names and v_ in names:
-                    maps.append([[o_], v_])
+                # NOTE: NO o_proj<-v_proj mapping. qwen3 is GQA (kv_heads << q_heads) so v_proj out-dim
+                # (kv_heads*head_dim) != o_proj in-dim (q_heads*head_dim) -> SmoothQuant scale dim mismatch
+                # (RuntimeError tensor a(1024) vs b(6144)). Standard SmoothQuant omits o<-v for GQA. o_proj
+                # is still GPTQ-quantized, just not smoothed (a minor refinement, safe to drop).
         for name, mod in names.items():
             if isinstance(mod, _t.nn.Linear) and name.endswith(".mlp.gate_proj"):
                 pre = name[:-len(".mlp.gate_proj")]
