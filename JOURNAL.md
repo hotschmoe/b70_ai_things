@@ -2581,3 +2581,18 @@ a processor, breaks for text-only). GPTQ selective-SQ ran: Q0 mapping VALIDATED 
   and relaunched. Applies to ALL 27B+ GPTQ (Q2/Q3/Q5/Q7) -- QUANTS_TODO recipe 4B updated.
 - Also confirmed: AutoRound W8A8 works for the DENSE 14B but its calib breaks on qwen3_5 VLMs (MLLM-processor
   assert) -> VLM W8A8 uses GPTQ-selective-SQ (same int8 kernel/perf; the 14B showed AR==GPTQ on speed).
+
+### 2026-06-21 -- [Q2/Q3 serve] 4304 vision-fc2 fix: graft must add visual/mtp to the ignore list
+Both 27B int8 quants PRODUCED (Q2 W8A8-sqgptq 35GB, Q3 W4A8-sqgptq 33GB; W4A8 config confirms W4 g128 + A8).
+First 27B ladder bench FAILED to serve all 3 -- root causes:
+- **W8A8:** my bench passed KVDTYPE=fp8_e5m2 -> vLLM "fp8_e5m2 kv-cache not supported with fp8 checkpoints"
+  (spurious for an int8 ckpt, but it rejects). Fix: serve W8A8 with default fp16 KV (per-channel int8, no 4304 issue).
+- **W4A8:** `input_size_per_partition 4304 not divisible by group_size 128` -- the documented vision-fc2 odd-dim.
+  ROOT CAUSE: llmcompressor loads the qwen3_5 VLM via AutoModelForCausalLM (text-only fallback) so it NEVER sees
+  model.visual.* -> the saved quantization_config.ignore (337 entries: linear_attn + lm_head) has NO visual entries.
+  After grafting the VLM wrapper back, vLLM matches the vision Linears to config_group targets=["Linear"] and tries
+  int4-g128 on the 4304 vision fc2 -> assert. **FIX: fix_27b_vlm_config.py now appends re:.*visual.* + re:.*mtp.* to
+  the grafted ignore** (W4A8 ignore 337 -> 339). Re-grafted Q2+Q3; re-benching.
+- **W4A16 (Lorbus daily driver):** failed differently (AttributeError NoneType.size in the capture path) under the
+  generic bench flags -- it is proven via daily_driver_serve.sh; use its known numbers (30.8 t/s captured C1) for the
+  W4A16 baseline rather than rabbit-holing its serve here.
