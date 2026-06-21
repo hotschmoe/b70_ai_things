@@ -114,7 +114,23 @@ aggregate throughput at concurrency / models too big for one card. Public dual-B
 13.25 single / 97.84 @ C8; Qwen3-30B-A3B MoE FP8 ~912 tok/s aggregate. No public clean TP=1-vs-TP=2 same-model
 decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
 
-**Our measured TP=2 27B int4 (captured) vs banked TP=1:** [PENDING campaign 58 -- fill in]
+**Our measured numbers (2026-06-21, dual B70, this rig's x1 link):**
+- **Captured (PIECEWISE) TP=2 is BLOCKED:** oneCCL errors `sched algorithms do not support sycl_graph recording`
+  -- stable init needs `CCL_ENABLE_SYCL_KERNELS=0` but graph-recording an all-reduce needs `=1`. Eager-only at TP=2.
+- **Eager TP=2 27B int4 decode: C1 4.18 t/s, C2 4.02 t/s/stream** -- vs **eager TP=1 single-card 7.84 -> 0.53x**.
+  TP=2 HALVES single-stream decode (collective-latency tax). Weights shard 8.42 GiB/card (half of 16.7 single).
+- **Cross-card all-reduce microbench** (`scripts/60_allreduce_bench.sh`, xccl): **latency floor ~0.29 ms** (small
+  msgs), **bandwidth ceiling ~0.70 GB/s busbw** (>=2 MB). That's ~17-70x below a healthy PCIe link (Gen3 x16
+  ~12 GB/s, Gen5 x16 ~50 GB/s), ~850x below NVLink. **This is the whole multi-GPU story: the x1 link caps comms.**
+- **The bottleneck is the PCIe link, and it's likely FIXABLE.** Both cards train to **Gen1 x1 (2.5 GT/s x1,
+  ~250 MB/s)** -- confirmed under sustained load (200/200 samples) and during bulk weight-load (~220 MB/s/card).
+  The switch downstream port to each card is x1 while switch->CPU is Gen3 x16 = **x1-riser / mining-switch-board
+  signature**. Move the cards to direct Gen3+ x8/x16 slots (or non-x1 risers) and TP=2 decode + all-reduce BW
+  should jump together. Until then: **use TP=2 for CAPACITY (models too big for one card / bigger KV), never for
+  single-stream speed.**
+- **[NOVEL] AutoRound quantization runs across BOTH XPUs.** `device_map="0,1"` -> `xpu:0`+`xpu:1`; a full 0.6B
+  quant ran in 22 s with `peak_vram {'0':0.62GB,'1':0.51GB}` (both cards active), 196/197 layers quantized.
+  No public multi-XPU AutoRound precedent existed -- this rig does it. (`scripts/59_autoround_2xpu.sh`.)
 
 ## What does NOT work (yet) — save yourself the time
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
@@ -157,7 +173,13 @@ decode comparison exists -> `scripts/58_tp2_campaign.sh` generates ours.
   decode; FP8 (~1 byte/wt) ≈ 2x BF16. Compute (XMX TOPS) only matters for prefill + big batches.
 
 ## Hardware
-Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.0 x16 (Gen3 on our
-Threadripper host). `xe` kernel driver. Pass into containers with `--device /dev/dri`.
+Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.0 x16 (card spec).
+`xe` kernel driver. Pass into containers with `--device /dev/dri`.
+- **[!] On THIS host both B70s train to Gen1 x1 (2.5 GT/s x1, ~250 MB/s)** -- each card behind a PCIe switch
+  whose downstream port negotiates x1 (switch->CPU is Gen3 x16). Single-card perf is unaffected (weights resident),
+  but ALL multi-GPU comms (TP all-reduce, ~0.7 GB/s measured) are crippled by it. Likely x1 risers / a mining-style
+  switch board -> **moving to direct Gen3+ x8/x16 slots is the single highest-leverage multi-GPU fix.** Two cards
+  are on a single NUMA node (Threadripper 1950X, UMA mode).
 
-*Next up: dual-B70 (tensor/pipeline parallel), v0.23.0 vLLM comparison, and int4/W4A8.*
+*Next up: FIX the x1 PCIe link (direct slots) then re-measure TP=2; 27B W8A8 INT8 at TP=2 (Phase C headline,
+needs the custom int8 kernel in a GDN-enabled image); real 2-card AutoRound of a >32GB source (now proven viable).*

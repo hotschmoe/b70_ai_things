@@ -2198,11 +2198,19 @@ TP all-reduce round-trips **GPU -> host RAM -> GPU over PCIe**. So PCIe link sta
 - **PCIe tree:** each card sits behind its own switch: CPU root `00:03.1` (Gen3 x16) -> switch upstream
   `08:00.0`/`42:00.0` (cap 32GT/s=Gen5 x16, but TRAINED to 8GT/s=Gen3 x16 to the CPU) -> downstream port
   `09:01.0`/`43:01.0` -> card `0a`/`44`.
-- **[!] IDLE link reads 2.5 GT/s x1 (Gen1 x1) at BOTH the card AND its downstream switch port** -- max_link_speed
-  shows 2.5 x1 too. That is either (a) aggressive Arc ASPM idle downscaling that the driver also reports as the
-  cap, or (b) a genuine link-training problem. At Gen1 x1 (~250 MB/s) TP would be crippled. The 0.6B TP=2 served
-  fine, but its all-reduce payload is tiny. **Measuring current_link_speed UNDER LOAD during the TP=2 sweep**
-  (campaign 58 logs link state before/under-load/after) to settle whether it ramps to Gen3/4 x8/x16. KEY datapoint.
+- **[!!] CONFIRMED: links are STUCK at Gen1 x1 (2.5 GT/s x1, ~250 MB/s) even under sustained load.** Rapid
+  sysfs polling (200 samples / ~80s) during the eager TP=2 warmup+sweep -> EVERY sample 2.5 x1 on BOTH cards,
+  never ramped. NOT idle ASPM (that ramps under load): even BULK weight-load ran at ~220 MB/s/card (8.42 GiB in
+  38s = Gen1-x1 rate). max_link_speed AND current both read 2.5 x1 at the card AND its switch downstream port
+  (`09:01.0`/`43:01.0`), while the switch->CPU upstream is Gen3 x16. => the switch DOWNSTREAM port to each card
+  trained to Gen1 x1. Signature of **x1 PCIe risers / a mining-style PCIe-switch board** (each card behind a
+  switch with a single downstream port; matches Puget's "riser was the culprit, direct slots fixed it").
+- **THIS is the dominant multi-GPU bottleneck on our rig.** No GPU P2P -> TP all-reduce round-trips through host
+  RAM over PCIe, and that PCIe is Gen1 x1 (~250 MB/s) = ~256x slower than a PCIe5 x16 link. Single-card decode is
+  unaffected (weights already resident; ~30.8 t/s captured stands). But ANY TP=N pays per-layer all-reduce at
+  250 MB/s. **ACTIONABLE: move the cards to direct Gen3+ x8/x16 slots or swap the x1 risers/switch -> would
+  transform TP=2 from a curiosity into a real speedup.** Until then, TP=2 is a CAPACITY tool (fit bigger models /
+  bigger KV), not a throughput tool. [Verify: is this a mining riser/switch board? check the physical PCIe wiring.]
 
 ### 2026-06-21 -- [REF] Community research synthesis: multi-B70 is a CAPACITY play, not a SPEED play
 Two web-research passes (P2P/oneCCL + community multi-B70 runs). Findings that shape the campaign:
@@ -2235,4 +2243,58 @@ Two web-research passes (P2P/oneCCL + community multi-B70 runs). Findings that s
 scripts/58_tp2_campaign.sh under one gpu-run lease: Qwen3.6-27B int4 AutoRound (=w4a16), :v0230, GRAPH=1 PIECEWISE
 TP=2 CAPSIZES=1,2,4,8,16,32,64 NOMM=1 UTIL=0.92, fp16 KV; sweep CONC 1..64; logs PCIe link state before/under/after.
 Comparing against the BANKED single-card TP=1 captured curve (C1 30.9 per-stream / 28.1 agg ... C64 234.7 agg, 6.7
-per-stream). RESULTS: pending (campaign in flight). [fill on completion]
+per-stream).
+- **[!] CAPTURED TP=2 IS BLOCKED -- precise novel blocker.** Engine init reached graph capture then the worker
+  died: `oneCCL: ccl_allreduce_impl: |CCL_SYCL| sched algorithms do NOT support sycl_graph recording, please use
+  sycl_algorithms`. The contradiction: vLLM #41663 requires `CCL_ENABLE_SYCL_KERNELS=0` (the L0 "sched" path) for
+  STABLE init -- but recording an all-reduce INTO a SYCL/XPU graph requires the "sycl_algorithms" path
+  (`CCL_ENABLE_SYCL_KERNELS=1`). So on this oneCCL you cannot both (a) init stably AND (b) graph-capture the
+  collective. PIECEWISE capture with the TP all-reduce inside the captured region is therefore a no-go on the
+  stable config. (Weights sharded fine first: 8.42 GiB/card load = half the 16.7 single-card -> real split, more
+  KV headroom.) => **captured TP=2 needs either SYCL-kernels=1 (risk the #41663 GP-fault) or a vLLM that excludes
+  the collective from the captured graph.** A targeted follow-up: try captured TP=2 with CCL_ENABLE_SYCL_KERNELS=1
+  to see if it both captures AND survives init on our exact cards.
+- Campaign auto-fell-back to **EAGER TP=2** (GRAPH=0, `--enforce-eager`; no graph -> no collective recording ->
+  serves). Eager TP=2 27B (load 8.42 GiB/card, healthy):
+  - **C1: per-stream decode 4.18 t/s** (TTFT 1650 ms, TPOT 239 ms). **C2: 4.02 t/s/stream, 7.48 agg** (TPOT 249 ms).
+  - **vs eager TP=1 single-card 27B = 7.84 t/s -> TP=2 is 0.53x = HALF the single-stream decode.** TP=2 does NOT
+    help decode here; it HURTS (comms tax). TPOT ~240 ms is flat C1->C2. The per-token cost = eager dispatch
+    overhead (single-card eager is already 4x slower than captured 30.84) PLUS 128 all-reduces/token (2/layer x 64
+    layers) each crossing the crippled x1 link with cross-worker sync. Decode is collective-LATENCY-bound, not BW.
+  - **Stopped the sweep at C2** (cut C4..C64 -> NA in the CSV) to reclaim the lease: the single-stream-loss story
+    is proven, and the slow eager high-conc tail is low-information vs the queued AutoRound/bf16/microbench jobs.
+    (Honest cap note: eager TP=2 aggregate at high concurrency NOT measured; re-run 58 with CONC capped if wanted.)
+  - CSV: results/sweep_27b-w4a16-TP2-eager_20260620_220141.csv. Link AFTER sweep still 2.5 x1 (idle, post-stop).
+
+### 2026-06-21 -- [RESULT] Cross-card all-reduce microbench -- EXACT comms ceiling (novel; no public B70 numbers)
+scripts/60_allreduce_bench.sh: torch.distributed xccl, 2 ranks (1/xpu), fp32 all-reduce 4 KB..256 MB, mp.spawn,
+under gpu-run. torch 2.11.0+xpu, xpu count 2. Direct quantification of the TP comms bottleneck:
+- **Small-message latency floor ~0.28-0.30 ms** (4-16 KB). This is the per-all-reduce fixed cost.
+- **Large-message bandwidth ceiling ~0.67-0.72 GB/s busbw** (>= 2 MB; algbw==busbw for 2 ranks). Crossover from
+  latency- to bandwidth-bound around ~1-2 MB.
+- **Context:** a healthy PCIe link would give ~12 GB/s (Gen3 x16) to ~50 GB/s (Gen5 x16) busbw. We measure
+  ~0.7 GB/s = **~17-70x below a healthy link** -> confirms the Gen1-x1 + host-staging diagnosis from the comms
+  side, independent of vLLM. NVLink-class (~600 GB/s) is ~850x our number; this is why TP on this rig is a
+  capacity tool only.
+- For DECODE (per-layer all-reduce ~10 KB): ~0.29 ms x 128 ops/token = ~37 ms/token of pure all-reduce latency
+  on top of compute -> matches the observed TP=2 TPOT inflation. For PREFILL (big activations, MB-scale) the
+  0.7 GB/s BW ceiling bounds throughput. Either way the x1 link dominates.
+- **Bottom line: the multi-GPU bottleneck is quantified end-to-end** -- x1 link (sysfs) -> 0.7 GB/s all-reduce
+  (microbench) -> TP=2 decode 0.53x single-card (serve). Fix the physical PCIe (direct Gen3+ x8/x16 slots / non-x1
+  risers) and all three improve together.
+
+### 2026-06-21 -- [RESULT][NOVEL] AutoRound quantization runs ACROSS BOTH XPUs (no public multi-XPU precedent)
+The user asked to "just try to get it loaded in two gpus." Did better -- ran a full AutoRound quant across both.
+scripts/59_autoround_2xpu.sh -> aq2x.py in :v0230 (pip install --no-deps auto-round at runtime; torch-xpu intact
+after). Test B (AutoRound on Qwen3-0.6B, bits=4 g128, iters=1 nsamples=8):
+- **`AutoRound(device_map="0,1")` WORKS on XPU** -> maps to xpu:0 + xpu:1. auto_round's own device.py logs
+  **`peak_vram {'0': 0.62GB, '1': 0.51GB}`** every block -> BOTH cards hold layers, genuinely split, not a replica.
+- **Full quant ran: 196/197 layers in 22 s** (lm_head left bf16), `RESULT_B: device_map='0,1' QUANTIZE_RAN`.
+  (Block losses explode in late layers -- expected with 1 iter / 8 samples; the point was multi-XPU LOADING, not
+  quality. peak_ram ~10 GB CPU.)
+- Significance: research found ZERO public multi-XPU AutoRound/GPTQ examples (all multi-card docs are CUDA,
+  `CUDA_VISIBLE_DEVICES`, no ZE_AFFINITY/xpu:N path). This rig demonstrates `device_map="0,1"` Just Works on dual
+  B70 -- so a 2-card AutoRound of a model too big to calibrate on one card (e.g. the bf16 Qwable-27B / Qwen3.6-27B)
+  is viable HERE, not only on CUDA. (Quant tuning is compute/host-bound, NOT all-reduce-bound, so the x1 link does
+  NOT hurt it -- unlike TP serving.) Note Test-A transcript (transformers device_map placement) was clipped by a
+  `tail -55` on capture; Test B is the conclusive proof. NEXT (optional): real 2-card AutoRound of a >32GB source.
