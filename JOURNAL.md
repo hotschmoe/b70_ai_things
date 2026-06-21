@@ -2325,3 +2325,23 @@ should beat tensor-parallel (~128 all-reduces/token). scripts/62_pp2_27b.sh: 27B
 - Correctness across multi-GPU: TP=2 bf16 27B solved gsm8k #1 correct (got=72) before teardown; PP=2 int4 gsm8k
   probe queued. Plus coherent multi-card generations throughout (0.6B primes, 27B parallelism explainer). No
   TP/PP output corruption observed.
+
+### 2026-06-21 -- [DIAGNOSIS] The x1 link is PHYSICAL (switch/riser), not ASPM -- and BCS engine resets seen
+`lspci -vv` + dmesg settle the cause of the Gen1-x1 bottleneck:
+- **LnkCap (CAPABILITY, not just LnkSta) = `Speed 2.5GT/s, Width x1`** on BOTH B70s (0a:00.0, 44:00.0) AND on the
+  switch DOWNSTREAM ports feeding them (09:01.0, 43:01.0). The link *capability* -- not merely the negotiated
+  state -- is x1. A PCIe5 x16 card advertising x1 cap = the card trained down to the lowest common denominator
+  with a link partner that is itself x1. The switch downstream ports being x1-capable => **the cards hang off a
+  PCIe switch that provides only x1 per port = a mining-style PCIe expander / x1 risers.** This is PHYSICAL wiring.
+- **NOT an ASPM artifact:** `/sys/module/pcie_aspm/parameters/policy = [default]` (not powersave). The x1 is the
+  trained link capability, independent of power policy.
+- **=> THE fix is physical:** move both B70s to real CPU/chipset x8/x16 slots (off the x1 switch/risers). That
+  single change lifts the ~0.7 GB/s all-reduce ceiling and should make TP=2 viable and PP=2 faster. Nothing in
+  software (vLLM/CCL/driver) can work around a x1-capable physical link.
+- **[!] Stability caveat -- Xe BCS engine resets during multi-GPU runs:** dmesg shows
+  `xe 0000:0a:00.0: Engine reset: engine_class=bcs ... Check job timeout ... Kernel-submitted job timed out ...
+  reset done` (+ a device coredump) at timestamps coinciding with the TP=2/bf16 runs, on BOTH cards. BCS = the
+  blitter/copy engine doing the host-staged all-reduce copies; the slow x1 link + #41663 makes those copy jobs
+  time out. They SELF-RECOVERED (reset done -> serves kept running) thanks to CCL_ENABLE_SYCL_KERNELS=0; without
+  the stable env these are the fatal GP-faults of #41663. So multi-GPU works here but is NOT bulletproof -- expect
+  occasional copy-engine resets under sustained TP load until the PCIe link is fixed.
