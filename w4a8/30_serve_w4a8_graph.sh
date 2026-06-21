@@ -24,7 +24,7 @@ SPEC="${SPEC:-}"   # optional --speculative-config JSON (e.g. MTP: {"method":"qw
 # CAPSIZES: explicit cudagraph_capture_sizes (comma list, e.g. "1,2,4,8,16,32"). Default capture tops out at
 # 8 -> batches >8 fall back to eager (the N=16 serving-throughput cliff). Capturing 16/32 is a FREE capacity bump.
 CAPSIZES="${CAPSIZES:-}"
-NAME="${NAME:-vllm_w4a8}"; PORT=18080
+NAME="${NAME:-vllm_w4a8}"; PORT="${PORT:-18080}"   # PORT override -> 2 replicas (data-parallel) on one host
 mkdir -p "$ROOT"/{vllm_cache,tmp_ssd}
 docker rm -f vllm_qwen3 vllm_w4a8 vllm_w8a8 vllm_int8 "$NAME" 2>/dev/null || true
 
@@ -106,7 +106,7 @@ if [ "$TP" -gt 1 ]; then
             -e CCL_TOPO_P2P_ACCESS=0 -e CCL_ZE_IPC_EXCHANGE=pidfd)
   SHM="32g"
 else
-  MGPU_ENV=(-e ZE_AFFINITY_MASK=0)
+  MGPU_ENV=(-e ZE_AFFINITY_MASK="${DEVICE:-0}")   # DEVICE pins the replica to a card (0|1) for data-parallel
   SHM="16g"
 fi
 
