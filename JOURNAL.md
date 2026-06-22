@@ -2732,3 +2732,12 @@ failed (spec-decode+batch/KV issue, TODO); (2) ~1.8x is workload-inflated (the 3
 repetition -> high draft acceptance; Seguin saw only +1.5 t/s on diverse Qwen FP8); (3) aggregate out_tok_s at 128-tok
 gens is TTFT-dominated (2541ms) so the decode win shows on LONG generations. NET: n-gram is a real free decode lever for
 decode-bound/long-output workloads on the int8 path; concurrency path needs a fix. The first lever that doubled a number.
+
+### 2026-06-22 -- [CORRECTION] n-gram speculative is NOT a reliable win -- earlier 1.8x was a short-output artifact
+The 37.8 t/s (k=3, OUT=128) does NOT generalize. Retry at k=2, OUT=256: c1 decode 17.87 t/s -- SLOWER than no-spec
+20.73. And c2/c4 still NA (spec-decode + concurrency broken on our XPU build, both runs). So the OUT=128 number was an
+artifact of short output + high draft acceptance on the synthetic 35_sweep prompt; at realistic generation length the
+draft acceptance falls and the failed-draft forward passes make n-gram NET NEGATIVE on diverse output. CORRECTED VERDICT:
+n-gram speculative is a NICHE lever (helps ONLY highly-repetitive output like code/structured), NOT a general decode win
+on the int8 path, and its concurrency path is unusable (NA at c>=2). De-prioritized. Robust wins stand (served ladders,
+SYCLKERNELS TP=2 unlock, microbench, P2P verdict); n-gram is a logged NEGATIVE result. Retracting the FINDINGS 1.8x claim.

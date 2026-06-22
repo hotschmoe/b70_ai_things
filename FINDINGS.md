@@ -282,7 +282,9 @@ TP=2 / multi-card (docs/P2P_GPU.md):
   (drm/xe P2P patch). Plan: P2P_GPU sec I. Host-staged (P2P off) is the only working TP=2 path today.
 
 OPTIMIZATION LEVERS proven (no reboot):
-- n-gram speculative decode: ~1.8x c1 decode on repetitive output (concurrency path needs a fix). docs/literature/10.
+- n-gram speculative decode: TESTED, NOT a general win (logged negative). c1=37.8 t/s at OUT=128/k=3 was a short-output
+  artifact; at OUT=256/k=2 it is 17.9 < no-spec 20.7, and c>=2 fails (spec+concurrency broken on XPU). Niche-only
+  (highly-repetitive output). See JOURNAL 2026-06-22 correction.
 - (orthogonal, not yet done) Seguin's clone-safe + oproj-delay allreduce fusion patches to cut the host-staged
   allreduce tax further.
 
