@@ -1,8 +1,18 @@
 # 11 - Fused quant hand-tune plan: the ops AROUND the int8 W8A8 GEMM
 
-> **[!] DEPRIORITIZED (2026-06-22) -- PIECEWISE graph capture already absorbs the per-op dispatch overhead** these
-> fused-quant micro-optimizations targeted (FINDINGS/kernel/04). The activation-quant K-loop / scale-fusion levers
-> (RESEARCH_TODO Track 1b/1c) are low-priority dense-W8A8 polish, not the headline. Kept as a reference plan.
+> **[!] RE-PRIORITIZED + MEASURED 2026-06-23 (card 0, :int8g).** The earlier "deprioritized -- capture absorbs the
+> dispatch" call was INCOMPLETE: the standalone `dynamic_per_token_int8_quant` is "1 sub-group (32) per row" so at
+> M=1 it SERIALIZES the per-row absmax over K -- ~101us for K=17408 (a `[1,17408]` quant!), and that is REDUCTION
+> WORK that survives graph capture (kernel/23). The fusions fix BOTH the launch AND the serial reduction (the
+> producer already does a parallel K-reduction). MEASURED, both CORRECT (max int8 diff 1):
+> - **RMSNorm + int8 quant (qkv, gate_up, K=5120): the native op `_C.rms_norm_dynamic_per_token_quant` EXISTS and
+>   RUNS on XPU (via `vllm._custom_ops`) -> 2.06x @M=1 (32.7 vs 67.4us separate).** Just needs WIRING.
+> - **silu_and_mul + int8 quant (down_proj, K=17408): NO native op (gap confirmed). Wrote a Triton draft
+>   (`contrib/vllm_int8_xpu/silu_mul_quant_triton.py`) -> 1.51x @M=1 (70 vs 105us), 1.73x @M=64.** Triton has a
+>   ~60-70us XPU dispatch floor -> a NATIVE SYCL version would beat it (and the win survives capture).
+> PRODUCTION: (1) wire `rms_norm_dynamic_per_token_quant` into the int8 linear's RMSNorm-fed inputs (~80 linears,
+> 2x); (2) build the native silu+quant for down_proj (~64 linears, >=1.5x). This is real W8A8 decode headroom that
+> graph capture does NOT cover. (Below: the original plan -- still accurate; the RMSNorm op is now confirmed XPU-live.)
 
 Owner: the "...and others" agent (everything on the w8a8 forward path EXCEPT the GEMM itself).
 Mission (doc 04 lever B3): make the int8 activation quant DISAPPEAR into the op that produces the
