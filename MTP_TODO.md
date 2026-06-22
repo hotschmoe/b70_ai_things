@@ -1,21 +1,21 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20
+**Created:** 2026-06-20 · **Updated:** 2026-06-22 (localmaxxing community evidence folded in)
 **Owner:** b70 team
-**Status:** PLAN — not started
-**Related:** [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) · [`JOURNAL.md`](JOURNAL.md) (MTP entries) · [`scripts/49_quantize_27b_w8a8.sh`](scripts/49_quantize_27b_w8a8.sh) · `contrib/vllm_int8_xpu/`
+**Status:** PLAN — not started (now backed by 3rd-party single-card MTP + FULL-capture datapoints)
+**Related:** [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) · [`JOURNAL.md`](JOURNAL.md) (MTP entries) · [`docs/COMMUNITY_CONFIGS.md`](docs/COMMUNITY_CONFIGS.md) · [`data/localmaxxing/`](data/localmaxxing/) + [`scripts/75_localmaxxing.py`](scripts/75_localmaxxing.py) · `contrib/vllm_int8_xpu/`
 
 ---
 
 ## Why this is the priority (the reframe)
 
-**[UPDATED 2026-06-21] The 4xB70 TP=4 MTP result IS real -- the project owner knows the author personally** (primary source; it is simply not publicly documented, which is why a web search cannot find it -- do not treat "not public" as "not real"). Take the headline as a real 4-CARD datapoint: Qwen3.6-27B **BF16**, TP=4, **decode ~54.2 t/s, prefill ~2100, accept ~4.04 @ spec=5** -> ~2.9x. **HIGH-VALUE ACTION: get the exact repro from the source** -- image tag (llm-scaler-vllm version), `vllm_xpu_kernels` version, the `--speculative-config` JSON + `num_speculative_tokens`, vLLM commit/PR, **whether FULL graph capture was used**, the checkpoint (MTP-head precision), KV dtype, single-stream-vs-aggregate framing, and the **4-card interconnect** (PCIe gen / switch / platform / any P2P).
+**[UPDATED 2026-06-22] The 4xB70 TP=4 MTP headline is REAL and PUBLIC -- it is a community submission on localmaxxing.com** (user `ytnszmy`, 2026-06-10; cached in [`data/localmaxxing/`](data/localmaxxing/), pulled by [`scripts/75_localmaxxing.py`](scripts/75_localmaxxing.py)). The earlier "private source / not publicly documented" framing was WRONG: a web search misses it only because localmaxxing is not crawled, not because the data is secret. The row: Qwen3.6-27B **BF16** (fp16 runtime), TP=4 on 4x B70, **decode 54.2 t/s, prefill ~2100, accept 4.04 @ spec=5** (88.9% accept @ spec=3), 256K native ctx -> ~3x vs its raw column. **Most of the old "HIGH-VALUE ACTION: get the exact repro" is now ANSWERED by that row's own notes:** image `intel/llm-scaler-vllm:0.14.0-b8.3`, `vllm_xpu_kernels v0.1.9` wheel, `qwen3_5.py` spec-wiring (**vLLM #43565**), Half-KV, `num_speculative_tokens=5`. **The ONE ingredient the row does NOT state is `cudagraph_mode` (PIECEWISE vs FULL)** -- that single unknown is now the highest-value question (see the localmaxxing-evidence section below, which has a working FULL recipe from another submitter).
 
-**The tension to resolve (this is why the recipe matters):** their 4xB70 result CONTRADICTS our own single-card B70 MTP, which is currently NET-NEGATIVE -- **25.5 t/s = -19% vs 31.4 MTP-off** (PIECEWISE, 86.9% first-token accept; the verify runs attention EAGER x(K+1)). So their config achieves what ours does not -- the exact recipe is the unlock. Most likely differences to probe: **FULL graph capture** (vs our PIECEWISE), a **torch-2.11 image with PR #43565 + vllm_xpu_kernels v0.1.10** (an ABI split currently blocks one wheel being both torch-2.10-safe AND spec-capable on the stock image), and/or a faster 4-card interconnect. **For OUR 2-card rig specifically:** MTP does NOT need TP, and TP>1 HURTS it on a no-P2P link (TP=2 = 0.53x), so our payoff path is **MTP per data-parallel replica** once FULL capture makes MTP net-positive on a single card.
+**The tension to resolve (this is why the recipe matters):** the 4xB70 result CONTRADICTS our own single-card B70 MTP, which is currently NET-NEGATIVE -- **25.5 t/s = -19% vs 31.4 MTP-off** (PIECEWISE, 86.9% first-token accept; the verify runs attention EAGER x(K+1)). So that config achieves what ours does not -- the exact recipe is the unlock. Most likely difference to probe: **FULL graph capture** (vs our PIECEWISE) -- and we now have a concrete FULL recipe from localmaxxing (RagingNoper's `cudagraph_mode=FULL_DECODE_ONLY`, see below) that hits ~102 t/s single-stream with NO spec at all, proving FULL capture is the dominant single-stream lever. Note the headline ran the DEPRECATED `intel/llm-scaler-vllm:0.14.0-b8.3` + manual #43565 patch + `vllm_xpu_kernels v0.1.9`; **per CLAUDE.md we do NOT reproduce on 0.14.x -- on our `vllm-xpu-env:v0230` image the GDN-MTP fix (#43565) is NATIVE (no patch, no 0.14.x kernels wheel)**, which is our cleanest path. **For OUR 2-card rig specifically:** MTP does NOT need TP, and TP>1 HURTS it on a no-P2P link (our TP=2 = 0.53x; **independently confirmed** by the Lorbus TP=2 MTP row below at 0.79x -- slower than both TP2-no-MTP AND single-card MTP, cause named by the submitter: "vLLM disables XPU graph capture for TP2 communication ops"), so our payoff path is **MTP per data-parallel replica** once FULL capture makes MTP net-positive on a single card.
 
 The strategic consequence:
 
-- **MTP is a ~3–4× multiplier.** Weight-format choice (W4A8 vs W8A8) is only ~1.2–1.5×.
+- **MTP is a ~3-4x multiplier on 4 cards -- but graph capture is the BIGGER single-stream lever AND a prerequisite for MTP.** localmaxxing shows FULL XPU graph capture alone takes single-stream 11 -> 102 t/s (~9.5x, no spec); MTP then stacks on top. On ONE card the only public true-MTP datapoint (Lorbus 27B-int4, below) is just ~41-45 t/s -- NOT yet a clean 3-4x, because nobody has measured MTP-on/off on one identical config WITH FULL capture. That gap is exactly what Phase A/B exists to close. Weight-format choice (W4A8 vs W8A8) is only ~1.2-1.5x.
 - **MTP stacks orthogonally with format.** At spec=5 single-stream the verify pass is still *bandwidth-bound* (M≈6, intensity ~6 ops/byte ≪ B70's ~800 ops/byte int8 ridge), so MTP just cuts the number of bandwidth-bound passes by ~L×. It does NOT make decode compute-bound, so the weight-byte advantage of smaller formats *persists* under MTP.
 
 **Therefore: get MTP working first, on the simplest format, then layer quant on top.** The format question is second-order and can be measured *after* the MTP pipeline is proven. Do not let the W4A8-vs-W8A8 decision block the MTP prize.
@@ -24,18 +24,54 @@ The strategic consequence:
 
 ---
 
-## Reference "known-good" config to reproduce (from the 4×B70 bench)
+## Reference "known-good" config to reproduce (localmaxxing `ytnszmy` 4xB70 row)
 
-| Ingredient | Value | Notes |
+Source: localmaxxing.com community submission, user `ytnszmy`, 2026-06-10 (cached `data/localmaxxing/b70_benchmarks_raw.json`). Ingredients are from that row's own notes.
+
+| Ingredient | Value (as-submitted) | Notes |
 |---|---|---|
-| Image | `intel/llm-scaler-vllm:0.14.0-b8.3` | Intel's container; has gdn_attention for DeltaNet |
-| XPU kernels | `vllm_xpu_kernels v0.1.9` wheel | spec-decode enablement |
-| Spec wiring | `qwen3_5.py` patch — **vLLM #43565** | the spec-decode wiring patch |
+| Image (as-submitted) | `intel/llm-scaler-vllm:0.14.0-b8.3` | DEPRECATED for us -- do NOT reproduce here; see "image (OURS)" |
+| **Image (OURS -- use this)** | **`vllm-xpu-env:v0230`** | vLLM 0.23.0; **#43565 GDN-MTP + `gdn_attention` are NATIVE, no patch, no 0.14.x** (CLAUDE.md rule) |
+| XPU kernels | `vllm_xpu_kernels v0.1.9` wheel | spec-decode enablement; subsumed by v0230 |
+| Spec wiring | `qwen3_5.py` patch -- **vLLM #43565** | landed upstream in v0.23.0 -> native on v0230 |
 | KV | **Half-KV** | needed to fit 256K context |
 | Spec config | `num_speculative_tokens=5` | got accept length 4.04, 88.9% @ spec=3 |
+| Graph capture | **UNSTATED in the row** | the missing ingredient -- PIECEWISE or FULL? assume WE must add FULL (RagingNoper recipe below) |
 | Engine | vLLM-XPU, TP=4 (their setup) | ours: TP=1 for 14B, TP=1 for 27B-int4, TP=2 for 27B-W8A8 |
 
-**Integration note (our hard part):** our W8A8 fastpath is the *custom* `contrib/vllm_int8_xpu` oneDNN s8s8s32 kernel, NOT stock. And our `:int8` image historically **lacked `gdn_attention`** (27B first-token crash). So the real engineering is **one image carrying all of: (a) our W8A8 int8 GEMM registration, (b) `gdn_attention` GDN kernel, (c) the #43565 spec-wiring + Half-KV, (d) a compatible `vllm_xpu_kernels`.** That integration — not the GEMM-format choice — is where the time goes.
+**Integration note (our hard part):** our W8A8 fastpath is the *custom* `contrib/vllm_int8_xpu` oneDNN s8s8s32 kernel, NOT stock. With v0230 the `gdn_attention` GDN kernel and #43565 spec-wiring are now NATIVE, so the real engineering shrinks to **one image carrying: (a) our W8A8 int8 GEMM registration, (b) FULL graph capture (`cudagraph_mode=FULL_DECODE_ONLY`, RagingNoper recipe), (c) Half-KV, and -- for TP -- (d) capture-safe collectives.** That integration -- not the GEMM-format choice -- is where the time goes.
+
+---
+
+## localmaxxing community evidence -- single-card MTP + the FULL-capture recipe
+
+Pulled via `scripts/75_localmaxxing.py` (cache in `data/localmaxxing/`). After stripping schema-noise (the `mtpEnabled`/`specDecoding` fields are present-but-null on every row), **9 rows actually enable MTP/spec**. The three that matter for us:
+
+### [STAR] Single-card true-MTP 27B (Lorbus) -- our Phase B target, already demonstrated by a 3rd party
+- **Model:** `Lorbus/Qwen3.6-27B-int4-AutoRound` (INT4 AutoRound **W4A16**), vLLM `0.20.1` XPU, **1x B70, TP=1**, flash_attn, ctx 4096, `mtpEnabled=true` `specDecoding=true`. By `steveseguin`, 2026-05-03.
+- **Result:** **45.2 t/s** out (latency 5.67s, **MTP accept 86.0%**) on the short run; a longer `OUTPUT_LEN=512` run dropped to **41.3 t/s, accept 65.4%** (accept decays with generated content).
+- **Mechanism note (important):** "Local vLLM XPU patches route Qwen3.6 MTP speculative **Gated DeltaNet through a generic fallback when speculative masks are present**." => MTP+DeltaNet is a *workaround path*, not native -- expect this fragility when we wire MTP on our stack.
+- **No graph capture, no MTP-off baseline submitted.** So 45.2 t/s is MTP-on, eager-ish, no capture -- meaning there is real headroom we can claim.
+- **Read for our plan:** this is the closest public analog to **Phase B1/B2 (W4A16/W4A8 27B + MTP, single-card)** -- same single-card, int4-weight, MTP-on regime. It proves single-card 27B MTP *runs*. **Our value-add: reproduce it on v0230 WITH FULL capture AND the MTP-off baseline, to get the real multiplier (theirs cannot give one).**
+
+### [NEG] TP=2 MTP (Lorbus, dual-B70) -- the TP>1-hurts-MTP confirmation, directly relevant to Phase C
+- Same model, **2x B70 TP=2**, `--speculative-config '{"method":"mtp","num_speculative_tokens":1}'`: **35.6 t/s** (latency 7.20s, warmup accept 62.6%).
+- Submitter's own verdict: **"negative result: slower than TP2 non-MTP AND single-B70 MTP. vLLM disables XPU graph capture for TP2 communication ops."**
+- **Read for our Phase C (TP=2 W8A8 + MTP):** this is the headwind, spelled out. On a no-P2P 2-card link, TP collectives run UNCAPTURED, eating the draft savings. Two consequences: (1) Phase C will NOT see MTP gains unless we solve **capture-safe TP collectives** -- exactly the problem RagingNoper solved below; (2) for our 2-card rig, **DP replicas (MTP per card) beat TP=2** until capture-safe all-reduce exists. Also note their TP2 used `num_speculative_tokens=1` (a weak MTP setting); a fairer Phase C retry uses **spec=5 AND capture-safe collectives**.
+
+### [KEY] The FULL-capture recipe that makes any of this fast (RagingNoper, no spec at all)
+- `Qwen3.6-35B-A3B` BF16, 4x TP4: **102.5 t/s single-stream**; `Qwen3-Coder-Next` 71.7 t/s. **No MTP, no spec** -- pure graph capture. By `RagingNoper`, 2026-06-19.
+- "Stock vLLM disables graph capture on XPU -> eager ~11 t/s. Un-gating XPUGraph -> ~102 t/s (**9.5x**). torch.compile/Inductor alone adds ~nothing." Ceiling ~104-108, PCIe-bound (all-reduce latency).
+- **The recipe (this is what Playbook A item 1 wants, now concrete):**
+  ```
+  --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY",
+    "splitting_ops":["vllm::unified_attention_with_output","vllm::unified_kv_cache_update",
+      "vllm::gdn_attention_core_xpu","vllm::all_reduce","vllm::reduce_scatter","vllm::all_gather"],
+    "cudagraph_capture_sizes":[1,2,4,8,16,32,48,100]}'
+  ```
+  plus env `VLLM_XPU_ENABLE_XPU_GRAPH=1 VLLM_XPU_CUSTOM_AR=1 CCL_ENABLE_SYCL_KERNELS=1` and `DISABLE_ESIMD_*=1`.
+- **Capture-safe TP collective (the Phase-C unlock):** "stock oneCCL all-reduce **corrupts inside a captured graph**, and PCIe device-to-device atomics are unreliable on Battlemage -> local-write/remote-read + uncached loads + system_acquire fences." This is a *custom* `xpu_communicator.py`, NOT stock vLLM. **This is precisely the capability our TP=2 MTP (Phase C) needs**, and it is why the Lorbus TP2 MTP row above was negative.
+- Note `vllm::gdn_attention_core_xpu` is in `splitting_ops` -> the DeltaNet op is graph-compatible in this recipe; a good sign for capturing the MTP verify on Qwen3.6.
 
 ---
 
@@ -45,7 +81,7 @@ The goal is **max end-to-end tok/s**, which is `base_decode × (mean_accept_leng
 
 1. **Kill eager-attention verify overhead — this is what murdered our earlier MTP.** Our prior run was net-negative because attention ran eager during verify (the −7% even with PIECEWISE). MTP's verify is a fixed-shape repeated forward → it *loves* graph capture.
    - Get **PIECEWISE graph capture** working with MTP first (`VLLM_XPU_ENABLE_XPU_GRAPH=1`, `cudagraph_mode=PIECEWISE`, the `:int8g`-style image with fake-kernel registrations). PIECEWISE alone gave us +16.7% decode (23.3→27.2).
-   - Pursue **FULL** capture if the Intel SYCL-Graph `work_group_scratch_memory` limitation is liftable — note `torch.xpu.XPUGraph` now exists upstream (PyTorch 2.11, per doc 06); vLLM-XPU just hasn't wired it. FULL is likely what flips spec-decode from −7% to strongly positive.
+   - **FULL capture is no longer hypothetical** -- localmaxxing RagingNoper shipped a working `cudagraph_mode=FULL_DECODE_ONLY` recipe (see the localmaxxing-evidence section: capture ladder `[1,2,4,8,16,32,48,100]`, `gdn_attention_core_xpu` in `splitting_ops`, a custom capture-safe all-reduce) hitting ~102 t/s single-stream with NO spec. FULL is the dominant single-stream lever and is what should flip spec-decode from -7% to strongly positive. **Reproduce that FULL recipe on our v0230 image FIRST, then layer MTP on top.** (`torch.xpu.XPUGraph` exists upstream in PyTorch 2.11, per doc 06.)
 2. **Sweep `num_speculative_tokens`.** The bench used 5 (→ accept 4.04). Higher spec = more drafted tokens/pass but lower per-position acceptance and higher verify cost. Sweep spec ∈ {2,3,4,5,6,8}; **pick the value that maximizes tok/s, not accept length** (they peak at different points). Log both per spec value.
 3. **Measure at greedy (temp=0) for the headline, then map the temperature→acceptance curve.** Acceptance is maximal when distributions are peaked; higher temperature lowers accept length. Report max speedup at greedy; note the production-temp number separately.
 4. **Keep the MTP head in BF16** (required — doc 04). It must be in the ignore-list (`re:.*mtp.*`) for every quant scheme; quantizing it kills drafting.
@@ -110,7 +146,7 @@ Produced via `scripts/49` (SCHEME-parametrized) in the Intel llmcompressor conta
   - (a) 14B checkpoint *does* have `mtp.*` → proceed with Phase A as written.
   - (b) 14B lacks MTP → qualify the *pipeline plumbing* on 14B via **ngram / draft-model spec-decode** (proves the spec loop, image, kernels), and accept that true MTP-acceptance numbers only come from the 27B (Phase B).
   - (c) substitute a 14B-class model that *does* ship MTP as the test vehicle.
-- [ ] Stand up the reference image + `vllm_xpu_kernels v0.1.9` + #43565 patch + Half-KV; confirm it boots and serves *something* on one B70.
+- [ ] Stand up **`vllm-xpu-env:v0230`** (NOT the 0.14.x reference image -- #43565 + `gdn_attention` are native on v0230) + Half-KV + the RagingNoper FULL-capture `--compilation-config`; confirm it boots and serves *something* on one B70 with graph capture active.
 - [ ] Pin the logging template (below) and a repeatable bench harness (reuse `perf_probe` / existing eval harness; fixed prompt set, fixed context, batch-1).
 
 ---
@@ -132,10 +168,12 @@ Rationale: the 14B is the clean, fast test vehicle (dense, fits one card, no 2-c
 
 Rationale: W4A16 (~25 GB) and W4A8 (~17 GB) both **fit one B70** → we can do this *now*, before a second card arrives. "Good quant" = go hard on recovery first (per doc 07): GPTQ weights + **selective SmoothQuant on the 16 full-attn layers**, DeltaNet `linear_attn` kept BF16, lm_head/vision/mtp ignored.
 
+**Head start (localmaxxing):** a single-card W4A16 27B MTP run already exists -- `Lorbus/Qwen3.6-27B-int4-AutoRound`, 1x B70, **45.2 t/s -> 41.3 t/s, accept 86% -> 65%** (see the localmaxxing-evidence section). That is a direct precedent for **B1**, but it had NO graph capture and NO MTP-off baseline, so it cannot report a multiplier. **Start B1 by reproducing the Lorbus row on v0230, then add (i) FULL graph capture, (ii) the MTP-OFF baseline on the same config, (iii) GPTQ+SmoothQuant recovery vs their plain AutoRound.** That turns a bare 45 t/s into a real, multiplier-bearing single-card datapoint.
+
 - [ ] **B0 — Produce the good quants** (no MTP yet): `scripts/49` SCHEME=W4A16 and SCHEME=W4A8, with GPTQ + selective-SmoothQuant. Eval accuracy vs the BF16 and W8A8 27B baselines (top-1 agreement, ppl, gsm8k).
   - **Accuracy gate:** W4A16 and W4A8 must land "close to W8A8/BF16" (within our noise band on gsm8k; agreement gap acceptable). If a scheme misses the gate, it's out for the 27B headline regardless of speed.
 - [ ] **B1 — W4A16 27B + MTP.** Fits one card; simplest accuracy story. Caveat: fp16 verify (no int8 systolic), so it's the *weakest* MTP-compute fit — but the cheapest to stand up. Log MTP metrics + accuracy.
-- [ ] **B2 — W4A8 27B + MTP.** Fits one card; int8 systolic verify. The interesting one — does accept length hold at int4 weights on the *27B* (which is more quant-robust than the 14B)? Log MTP metrics + accuracy.
+- [ ] **B2 — W4A8 27B + MTP.** Fits one card; int8 systolic verify. The interesting one — does accept length hold at int4 weights on the *27B* (which is more quant-robust than the 14B)? **Datapoint to beat:** the Lorbus W4A16 single-card row decayed accept 86% -> 65% over a longer decode -- watch for the same decay at W4A8 and **log accept vs token position, not just a single number**. Log MTP metrics + accuracy.
 
 **Phase B exit:** a *serving-ready, MTP-accelerated 27B that runs on a single B70*, with W4A16 vs W4A8 decided on measured accuracy + accept length + decode rate.
 
@@ -145,7 +183,7 @@ Rationale: W4A16 (~25 GB) and W4A8 (~17 GB) both **fit one B70** → we can do t
 
 Rationale: 27B W8A8 ≈ 33 GB weights → **does not fit one 32 GB card**; needs TP=2 for VRAM headroom (and leaves ~37 GB KV across two cards — generous for long context). This is the production headline target, but it's blocked on hardware.
 
-- [ ] **C1 — (when 2nd card lands) W8A8 27B + MTP, TP=2.** Best accuracy of the int-fastpath schemes + best expected accept length + native int8 prefill. Expected to be the production default. Log MTP metrics + accuracy + TP=2 PCIe overhead.
+- [ ] **C1 — (when 2nd card lands) W8A8 27B + MTP, TP=2.** Best accuracy of the int-fastpath schemes + best expected accept length + native int8 prefill. Expected to be the production default. **HARD DEPENDENCY (from localmaxxing):** TP=2 MTP is net-NEGATIVE unless TP collectives are graph-capture-safe -- stock oneCCL all-reduce corrupts inside a captured graph, and the Lorbus TP=2 MTP row (35.6 t/s) was slower than single-card. **Port RagingNoper's capture-safe all-reduce** (local-write/remote-read + uncached loads + system_acquire fences; custom `xpu_communicator.py`) BEFORE expecting MTP gains at TP=2; otherwise prefer **DP replicas (MTP per card)**. Use **spec=5** (not the spec=1 the negative Lorbus row used). Log MTP metrics + accuracy + TP=2 PCIe overhead.
 
 ---
 
@@ -155,6 +193,10 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 
 | Date | Model | Scheme | Image / kernels / patch | TP | Ctx / KV | spec_toks | **accept len** | accept% @3 | **dec MTP-on** | dec MTP-off | **MTP ×** | prefill | TTFT | VRAM | acc (agree/gsm8k) | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-06-10 | Qwen3.6-27B | BF16 | llm-scaler 0.14.0-b8.3 / v0.1.9 / #43565 | 4 | 256K/Half | 5 | 4.04 | 88.9% | 54.2 | ~17 | ~3x | ~2100 | — | — | — | localmaxxing ytnszmy [REF]; cudagraph_mode unstated |
+| 2026-05-03 | Qwen3.6-27B | W4A16 | vLLM 0.20.1 AutoRound, NO capture | 1 | 4096 | mtp | — | 86.0% acc | 45.2 | — | — | — | — | — | — | localmaxxing Lorbus single-card [REF] |
+| 2026-05-03 | Qwen3.6-27B | W4A16 | vLLM 0.20.1 AutoRound, NO capture | 1 | 4096 | mtp | — | 65.4% acc | 41.3 | — | — | — | — | — | — | Lorbus long run, accept decay [REF] |
+| 2026-05-03 | Qwen3.6-27B | W4A16 | vLLM 0.20.1 AutoRound, TP2 | 2 | 4096 | 1 | — | 62.6% acc | 35.6 | — | — | — | — | — | — | Lorbus TP2 MTP [NEG][REF]; no capture under TP comm |
 | — | Qwen3-14B | BF16 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A1 |
 | — | Qwen3-14B | W8A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A2 |
 | — | Qwen3-14B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A3 |
@@ -162,7 +204,7 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | — | Qwen3.6-27B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B2 |
 | — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) |
 
-**Reference (REAL -- private source; project owner knows the author; not publicly documented):** Qwen3.6-27B BF16, **4x B70 TP=4**, spec=5 -> accept 4.04, dec 54.2, prefill 2100. **GET THE EXACT REPRO** (image/kernels/`--speculative-config`/FULL-capture?/4-card interconnect) -- their 4-card config beats our single-card MTP (currently **-19%: 25.5 vs 31.4, PIECEWISE**), so the recipe is the unlock. (Public datapoints for sanity only: Puget 4xB70 TP=4 27B-dense 13.1 t/s/1u no-MTP; vLLM PR #43565 MTP on B60/Qwen3-Next-80B/spec=2.)
+**Reference (REAL + PUBLIC -- localmaxxing.com, user `ytnszmy`, 2026-06-10; cached `data/localmaxxing/`):** Qwen3.6-27B BF16, **4x B70 TP=4**, spec=5 -> accept 4.04, dec 54.2, prefill 2100. Repro from the row's notes: `intel/llm-scaler-vllm:0.14.0-b8.3` + `vllm_xpu_kernels v0.1.9` + `qwen3_5.py` (#43565) + Half-KV; **on our v0230 image #43565 is native -- reproduce THERE, not on 0.14.x**. The ONE missing ingredient is `cudagraph_mode` (PIECEWISE vs FULL) -- add FULL ourselves (RagingNoper recipe). It beats our single-card MTP (currently **-19%: 25.5 vs 31.4, PIECEWISE**), so FULL capture is the unlock. (Other localmaxxing datapoints: RagingNoper 35B-A3B FULL-capture **102.5 t/s no-spec**; Lorbus 27B-int4 single-card MTP **45.2/41.3 t/s**, accept 86/65%; Lorbus TP2 MTP **35.6 t/s [NEG]**. Public sanity: Puget 4xB70 TP=4 27B-dense 13.1 t/s/1u no-MTP; vLLM PR #43565 MTP on B60/Qwen3-Next-80B/spec=2.)
 
 ---
 
@@ -170,7 +212,9 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 
 - **14B MTP-head existence** (Phase 0) — the whole 14B plan assumes it; resolve first.
 - **Acceptance decay with quant** — the W4A8 thesis lives or dies on whether accept length holds; A3 + B2 are the deciding measurements.
-- **Image integration** — our custom W8A8 kernel + `gdn_attention` + #43565 spec-wiring + compatible `vllm_xpu_kernels` in one image is the real engineering; budget for it.
+- **Image integration** — our custom W8A8 kernel + FULL graph capture in one **v0230** image is the real engineering (`gdn_attention` + #43565 spec-wiring are now NATIVE on v0230, so the lift is mainly our int8 GEMM registration + the FULL-capture `--compilation-config` + capture-safe collectives); budget for it.
+- **TP=2 MTP needs capture-safe collectives** — confirmed [NEG] on localmaxxing (Lorbus TP2): stock oneCCL all-reduce corrupts inside a captured graph, so TP comm runs UNCAPTURED and eats the draft savings. Phase C must port RagingNoper's capture-safe all-reduce, or prefer DP replicas (MTP per card).
+- **The headline's `cudagraph_mode` is unknown** — the `ytnszmy` 54.2 row does not state PIECEWISE vs FULL. Treat FULL capture (RagingNoper recipe) as something WE must add; do not assume the headline already had it.
 - **27B int4 kernel-coverage gaps** — W4A16 already hit the 4304-dim `XPUwNa16` (multiple-of-32) wall; W4A8 may hit similar. Verify dims before assuming the quant serves.
 - **Half-KV / KV-quant interaction with MTP** — confirm Half-KV doesn't depress accept length.
 - **DeltaNet ignore-list correctness** — keep `re:.*linear_attn.*` (parent-module regex, name-robust); don't regress to enumerating leaf names (`in_proj_qkvz`/`in_proj_ba`) or you risk silent layer-zeroing (vLLM #40252).
