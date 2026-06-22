@@ -1,8 +1,21 @@
-# SERVING.md -- canonical copy-paste recipes to serve our models on the B70
+# SERVING.md -- B70 serving: golden-path index + cross-cutting recipes
 
-The single source of truth for "how do I serve model X on the B70 right now."
-If you reconstruct a serve command from JOURNAL/scripts again, you did it wrong --
-fix THIS doc instead. Keep recipes verified-and-current; date each change.
+> [!] GOLDEN PATH FIRST: for the v0230-family models, the AUTHORITATIVE, self-contained, reproducible
+> serve is now `rdy_to_serve/<model>/serve.sh` -- `cd` there and run it (see `rdy_to_serve/README.md`).
+> Do NOT reconstruct those serve commands here. This doc keeps (a) one-line pointers to each golden dir,
+> (b) the recipes NOT yet on the shelf (the int8-kernel family, blocked on a `:int8g` rebuild), and
+> (c) the cross-cutting knowledge: the generic `bin/30_serve_w4a8_graph.sh` engine knobs, gpu-run,
+> data-parallel / TP / PP, tool-calling, and the verify-served-model rule.
+>
+> | model | golden dir | image |
+> |---|---|---|
+> | Qwen3.6-27B int4 (PRIMARY) | `rdy_to_serve/qwen36-27b-int4/` | `:v0230` |
+> | Qwen3.6-35B-A3B int4 MoE (FASTEST) | `rdy_to_serve/qwen36-35b-a3b-int4/` | `:v0230moe` |
+> | Qwen3.6-35B-A3B Quark W8A8 int8 (TP=2) | `rdy_to_serve/qwen36-35b-a3b-quark-w8a8-int8/` | `:v0230` |
+
+The single source of truth for serving model X: its `rdy_to_serve/` dir if shelved, else the recipe here.
+If you reconstruct a serve command from JOURNAL/scripts, you did it wrong -- fix the golden dir / THIS doc.
+Keep recipes verified-and-current; date each change. (Tools moved to `bin/`; the host runs them flat.)
 
 **Daily driver:** `./daily_driver_serve.sh` (repo root) brings up the current daily-driver model and
 keeps the API at `http://192.168.10.5:18080/v1` live for our apps. `start|stop|status|restart|logs`.
@@ -52,6 +65,9 @@ The script: `docker rm -f` old containers -> `docker run -d` -> waits up to ~14 
 ---
 
 ## RECIPE: Qwen3.6-27B (int4 AutoRound = w4a16), captured  [PRIMARY single-card quality pick]
+> AUTHORITATIVE: `rdy_to_serve/qwen36-27b-int4/serve.sh`. The block below is kept as reference for the
+> generic `bin/30_serve_w4a8_graph.sh` engine (still used by `daily_driver_serve.sh`).
+
 Decode ~30.8 t/s captured (eager is only ~7.8). Model 17.6 GiB + ~7.5 GiB KV. Image MUST be `:v0230`
 (the full build with the GDN/`gdn_attention` kernel; `:int8g` lacks it and crashes on the first token).
 
@@ -98,6 +114,8 @@ build ships `GDN_KERNELS_ENABLED=OFF` -> `_xpu_C has no attribute gdn_attention`
 ```
 
 ## RECIPE: Qwen3.6-35B-A3B MoE (int4 AutoRound), captured  [FASTEST single-card decode]
+> AUTHORITATIVE: `rdy_to_serve/qwen36-35b-a3b-int4/serve.sh`. Block below kept as engine reference.
+
 Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s with fp8 KV. Needs the MoE-routing image `:v0230moe`
 (`:v0230` + the INC-XPU RoutedExperts -> MoeWNA16 patch; see `contrib/vllm_moe_xpu/`).
 
@@ -116,6 +134,9 @@ Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s with fp8 KV. Needs the MoE-routing
 - Aggregate throughput plateaus ~206 t/s at N>=8 (the routed-expert union approaches all 256 experts).
 
 ## RECIPE: Qwen3.6-35B-A3B Quark **W8A8 INT8** MoE, 2x B70 TP=2 on `:v0230`  [WORKING 2026-06-22]
+> AUTHORITATIVE: `rdy_to_serve/qwen36-35b-a3b-quark-w8a8-int8/serve.sh` (self-contained: serve.sh +
+> patches/quark.py). Block below kept for the diagnosis + the reusable B70 TP=2 gotchas.
+
 int8 W8A8 MoE 35B (ckpt `nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8`) **serves + generates coherently**
 on **2x B70 TP=2**. Use `scripts/76_quark35b_v0230.sh`. Key: serve on **`vllm-xpu-env:v0230` (vLLM
 0.23.0)** -- NOT the llm-scaler `0.14.x` image. 0.23 already ships `QuarkW8A8Int8MoEMethod` + the

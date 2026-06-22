@@ -21,6 +21,9 @@ TP="${TP:-1}"   # tensor-parallel size; TP>1 shards across both B70s (mp executo
 # capture, since flash-attn FULL is blocked by SYCL-Graph work_group_scratch_memory). Default PIECEWISE.
 CGMODE="${CGMODE:-PIECEWISE}"; ATTN="${ATTN:-}"
 SPEC="${SPEC:-}"   # optional --speculative-config JSON (e.g. MTP: {"method":"qwen3_5_mtp","num_speculative_tokens":3})
+# MTPTOK=<int>: convenience knob -> build the MTP speculative-config JSON here (callers like daily_driver_serve.sh
+# cannot pass the JSON through nested ssh/bash -c without the quotes being stripped). Integer is quote-safe.
+[ -n "${MTPTOK:-}" ] && [ -z "$SPEC" ] && SPEC="{\"method\":\"mtp\",\"num_speculative_tokens\":${MTPTOK}}"
 # CAPSIZES: explicit cudagraph_capture_sizes (comma list, e.g. "1,2,4,8,16,32"). Default capture tops out at
 # 8 -> batches >8 fall back to eager (the N=16 serving-throughput cliff). Capturing 16/32 is a FREE capacity bump.
 CAPSIZES="${CAPSIZES:-}"
@@ -103,7 +106,7 @@ ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
 if [ "$TP" -gt 1 ]; then
   MGPU_ENV=(-e CCL_ENABLE_SYCL_KERNELS=${SYCLKERNELS:-0} -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 \
             -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi -e VLLM_WORKER_MULTIPROC_METHOD=spawn \
-            -e CCL_TOPO_P2P_ACCESS=${P2PACCESS:-0} -e CCL_ZE_IPC_EXCHANGE=pidfd)
+            -e CCL_TOPO_P2P_ACCESS=${P2PACCESS:-0} -e CCL_ZE_IPC_EXCHANGE=${IPCX:-pidfd})
   SHM="32g"
 else
   MGPU_ENV=(-e ZE_AFFINITY_MASK="${DEVICE:-0}")   # DEVICE pins the replica to a card (0|1) for data-parallel

@@ -32,7 +32,8 @@ PATCH="$SCRIPT_DIR/patches/quark.py"
 [ -f "$PATCH" ] || { echo "[!] missing patch: $PATCH"; exit 2; }
 Q1=/workspace/vllm/vllm/model_executor/layers/quantization/quark/quark.py
 Q2=/opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/quantization/quark/quark.py
-export MOUNTS=( -v "$PATCH:$Q1:ro" -v "$PATCH:$Q2:ro" )
+# NOTE: arrays cannot be `export`ed in bash; serve.sh sources lib.sh (same shell) so a plain array is visible.
+MOUNTS=( -v "$PATCH:$Q1:ro" -v "$PATCH:$Q2:ro" )
 
 source "$SCRIPT_DIR/../_common/lib.sh"
 b70_dispatch "$@"

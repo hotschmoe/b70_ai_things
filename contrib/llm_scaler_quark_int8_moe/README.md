@@ -1,5 +1,11 @@
 # Quark W8A8 INT8 MoE (Qwen3.6-35B-A3B) on 2x B70 -- WORKING on vLLM 0.23
 
+> [!] BLESSED COPY: the production patch is `rdy_to_serve/qwen36-35b-a3b-quark-w8a8-int8/patches/quark.py`
+> (byte-identical to `v0230/quark.py` here). That model dir is the self-contained source of truth you
+> actually serve. This `contrib/` tree is the DEV/working home: develop the patch here, then copy the
+> graduated version into the model dir and re-run the serve smoke (rdy_to_serve SWEEP GATE). `quark.py`
+> (root) + `quark_moe.py` are the OLD llm-scaler 0.14.x patches (the dead-end path below) -- reference only.
+
 Goal: run the Quark **W8A8 INT8** MoE serve (Qwen3.6-35B-A3B, ckpt
 `nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8`) on **our 2x B70** at **TP=2**.
 

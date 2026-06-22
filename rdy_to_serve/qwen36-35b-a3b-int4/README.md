@@ -27,4 +27,5 @@ Plain `:v0230` leaves MoE routing unbaked; `intel/llm-scaler-vllm:0.14.x` has no
 - Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s (fp8 KV) single-stream -- fastest single-card we have.
 - Aggregate throughput plateaus ~206 t/s at N>=8 (the routed-expert union approaches all 256 experts).
 
-verified: smoke=PENDING (this pass) -- update via `bin/serve-sweep --smoke`
+verified: _common smoke=GREEN (eager, card1, dual-card run, 2026-06-23): HEALTHY, id ok, gen "Paris".
+Re-verify via `bin/serve-sweep --smoke`. (GRAPH=1 capture path: historically ~56.8/~65 t/s; re-bench with `run`.)
