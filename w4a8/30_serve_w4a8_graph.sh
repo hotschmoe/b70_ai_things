@@ -103,7 +103,7 @@ ARGS=(serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
 if [ "$TP" -gt 1 ]; then
   MGPU_ENV=(-e CCL_ENABLE_SYCL_KERNELS=0 -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 \
             -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi -e VLLM_WORKER_MULTIPROC_METHOD=spawn \
-            -e CCL_TOPO_P2P_ACCESS=0 -e CCL_ZE_IPC_EXCHANGE=pidfd)
+            -e CCL_TOPO_P2P_ACCESS=${P2PACCESS:-0} -e CCL_ZE_IPC_EXCHANGE=pidfd)
   SHM="32g"
 else
   MGPU_ENV=(-e ZE_AFFINITY_MASK="${DEVICE:-0}")   # DEVICE pins the replica to a card (0|1) for data-parallel
