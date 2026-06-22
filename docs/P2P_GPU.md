@@ -357,3 +357,22 @@ does not use oneCCL). CAVEAT: this is the TORCH path, NOT oneCCL's allreduce (vL
 TP=2 (H.5/H.6). So: (a) generic cross-device torch ops on B70 are very slow -> avoid hand-rolled torch P2P; (b) the
 meaningful P2P-on question is the oneCCL serve A/B (H.9). No ze_peer means the authoritative Level-Zero peer matrix
 (F.3/F.4) still needs level-zero-tests installed -- a clean follow-up. dmesg clean = no Puget-style fault at the torch layer.
+
+### H.9 [VERDICT] P2P-on FAILS at every level on kernel 6.18 -- no userspace spoof; kernel 7.0+ is the gate
+oneCCL serve A/B: P2PACCESS=1 dies at WorkerProc init in ~65-70s with BOTH IPC exchanges (pidfd AND drmfd); P2P-off
+(host-staged) works. dmesg CLEAN (NOT the Puget hardware RxErr -- a software peer-access failure).
+RAW Level-Zero ctypes probe (71_ze_p2p_ctypes.py) across **12 env variations** (debug keys EnableCrossDeviceAccess/
+EnableP2P, ZE_FLAT_DEVICE_HIERARCHY FLAT/COMPOSITE/COMBINED, L0 v2, CCL_TOPO_P2P_ACCESS=1) -- ALL identical:
+    zeDeviceCanAccessPeer dev0<->dev1 = **False** (call returns 0x0 success, value False -> driver says NO peer)
+    zeDeviceGetP2PProperties flags = 0x0  (ACCESS=N, ATOMICS=N)
+    zeMemOpenIpcHandle on peer = 0x78000004 (peer map FAILED)
+=> The intel-compute-runtime / Level-Zero driver on **kernel 6.18 exposes ZERO peer access** between the two B70s, and
+NO userspace setting changes it. This is the missing F.3/F.4 matrix, now measured: **B70<->B70 P2P is not available on 6.x.**
+TWO remaining levers, BOTH require a host reboot (out of agent scope):
+  (1) [cheap] boot `iommu=off`/`amd_iommu=off` -> tests A.2: does iommu=pt void the AMD-Zen pci_p2pdma whitelist? If so,
+      canAccessPeer may flip True on 6.18 (no kernel upgrade). Re-run 71_run_ze_matrix.sh to confirm.
+  (2) [the fix] **kernel 7.0+** (drm/xe pcie-p2p fast-interconnect patch, A.1). The 6.18 xe driver lacks the peer path
+      -> that is why canAccessPeer=False regardless of env. Safe validation: LIVE-USB boot a 7.x distro (MOONSHOT sec 6 #2),
+      re-run the probe + a TP=2 P2P serve, BEFORE upgrading the Unraid kernel.
+NET for TP=2 today: host-staged (P2P off) is our only path; SYCLKERNELS=1 graph capture makes it usable. P2P upside
+(shrinking the Gen3 allreduce tax) is GATED on the kernel-7.x reboot -- queued as the next hardware-window experiment.
