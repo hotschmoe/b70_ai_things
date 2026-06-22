@@ -2698,3 +2698,17 @@ graph-captured TP=2 on B70 (Seguin used a vLLM patch). 27B W4A8 @ctx2048 TP=2-gr
 from 2x weight-BW), but TTFT 2858ms (vs 876, 3.3x worse) and c8 agg 34.3 (vs 67.8, 2x worse) -- the Gen3 cross-die
 allreduce tax outweighs the BW edge for a model that fits one card. VERDICT: TP=1 wins for fit-one-card models; TP=2 is
 the ENABLER for the >32GB W8A8 (launching that now). P2P-on A/B next to shrink the allreduce tax. Doc: P2P_GPU.md H.5/H.6.
+
+### 2026-06-22 -- [research] Mined steveseguin/b70-optimization-lab (patches + MTP + qwen3.6-int8) -> docs/literature/10
+Cloned repo, reviewed main + 5 codex/* branches. KEY finds for us:
+(1) MTP (asked): his qwen3_5 MTP loader patch (VLLM_QWEN35_MTP_FORCE_FP8_BLOCK -> block-FP8 mtp head) + serve flag
+    --speculative-config '{"method":"mtp","num_speculative_tokens":3}'. BUT MTP perf catastrophic (2.36 t/s) and the
+    int8 branch names the ROOT CAUSE: a spec-decode VERIFIER / KV / input-position BOUNDARY bug ("target rejects the
+    suppressed-bonus draft"), NOT draft quality -> gated on "oracle k=1 parity". Deepens our doc-09 MTP finding.
+(2) branch codex/qwen36-quark-int8-tracking: he HAS the 35B-A3B int8 MoE SERVING via AMD **Quark** W8A8 (not GPTQ),
+    ~99 t/s on TP4 + a persistent-W8A8-MoE-layerlet kernel -> proof docs/kernel/18 is real; Quark may be the cheap
+    production path for our deferred Q6/Q7 (our GPTQ was multi-day). Also: W8A8 offsets regress (use symmetric, we do);
+    TP2<TP4 (matches our TP=capacity finding).
+(3) Applicable knobs: n-gram speculative (helped his Qwen FP8 +1.5 t/s -> try on our 27B W4A8), async+static-compile
+    (1.7x), unset CUDAGRAPH_PARTITION_COLLECTIVES. Skip all VLLM_MINIMAX_*/GGML_* (not our arch). Corroborates our
+    fp8-KV-broken + MTP-broken + TP2-capacity findings. Full catalog + try-list: docs/literature/10.
