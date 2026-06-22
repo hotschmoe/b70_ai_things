@@ -306,8 +306,13 @@ The one-time captured-startup compile is ~6 min cold (267 s decode + 105 s prefi
 extension for the decode capture and dies at KV-cache init with `RuntimeError: The sycl_ext_oneapi_work_group_scratch_memory
 feature is not yet available for use with the SYCL Graph extension` (confirms SERVING.md "FULL blocked by SYCL-Graph
 scratch"). The community 102 t/s run used FULL_DECODE_ONLY via a PATCHED/custom image -> that is the route (build our own
-image). So on stock v0230: PIECEWISE single-stream is the captured win; the PIECEWISE c>1 recompile-stall (new prefill/chunk
-shape -> torch.compile mid-serve) remains -- mitigate with shape warmup / fixed compile ranges, or a patched image.
+image). **[FIXED 2026-06-22 -- warmup spoof] the PIECEWISE c>1 break was just the cold one-time torch.compile per batch
+shape that the bench did not wait for** (the server finishes the compile even after the client times out). A warmup
+sweep before the measured one (serve.sh WARMUP=1, default with GRAPH=1) warms /vllm_cache/torch_compile_cache -> the
+measured sweep works at ALL concurrencies on STOCK v0230, no patched image: PIECEWISE+warmup agg/per-stream-decode
+t/s = c1 20.04/25.85, c2 33.02/21.27, c4 45.73/17.46 -> **3.2-4.5x aggregate, ~4-5x decode vs eager**, ~46 agg @ c4
+(single-stream decode varies ~25-41 run-to-run). So FULL_DECODE_ONLY (patched image) is NOT needed for usable captured
+concurrency -- PIECEWISE+warmup suffices.
 **[2026-06-22] Tuned MoE config = IMPRACTICAL via benchmark_moe.py on XPU.** Two blockers: (1) `--tune` does
 `ray.init()` -> `available_resources()["GPU"]` KeyError on XPU (bypassed with a sitecustomize `ray.init(num_gpus=1)`);
 (2) the benchmark worker is CUDA-centric -- `device="cuda"` + CUDA-graph timing (`torch.cuda.CUDAGraph()`,

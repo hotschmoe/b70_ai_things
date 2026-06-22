@@ -38,8 +38,9 @@ rich history, culture, and iconic landmarks."
 
 Perf (random 2048-in/128-out, TP=2):
 - **eager** (default): c1 4.80 per-stream decode (e2e 4.46), c2 8.16 agg, c4 14.08 agg. Works at all conc.
-- **GRAPH=1** (PIECEWISE capture): c1 **41.02 per-stream decode** (TPOT 24.4 ms, e2e 27.85) = **8.5x** the
-  eager decode. BUT c>=2 currently breaks (a new prefill shape recompiles mid-serve -> shm_broadcast hang).
-  Cold start adds a ~6 min one-time compile (cached afterward in /vllm_cache).
-- Open levers (../../FINDINGS.md, docs/kernel/20): `cudagraph_mode: FULL_DECODE_ONLY` to make capture usable
-  at c>1; a tuned `E=256,N=256` MoE config; and true-int8 linear (drop the dequant; contrib/vllm_int8_xpu).
+- **GRAPH=1** (PIECEWISE capture; default `WARMUP=1` warms the compile cache so c>1 does not stall):
+  agg / per-stream-decode t/s = c1 20.0/25.9, c2 33.0/21.3, c4 **45.7**/17.5 -> **3.2-4.5x aggregate, ~4-5x
+  decode** vs eager (single-stream decode varies ~25-41 t/s run-to-run). Cold start adds a ~6 min one-time
+  compile (cached in /vllm_cache). `CGMODE=FULL_DECODE_ONLY` is BLOCKED on stock v0230 (SYCL-Graph scratch).
+- Open levers (../../FINDINGS.md, docs/kernel/20, RESEARCH_TODO Track 9): a tuned `E=256,N=256` MoE config
+  (XPU tuner needs porting); and true-int8 linear via the XMX/DPAS Triton kernel (B70_INT8_LINEAR=triton).
