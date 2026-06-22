@@ -19,13 +19,16 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --no-enable-prefix-caching --compilation-config '{"cudagraph_mode":"PIECEWISE"}' >/dev/null 2>&1
 ok=0
 for i in $(seq 1 144); do
-  curl -sf "http://localhost:18080/v1/models" >/dev/null 2>&1 && { ok=1; break; }
+  curl -sf "http://localhost:8000/v1/models" >/dev/null 2>&1 && { ok=1; break; }
   docker ps --format '{{.Names}}' | grep -qx "$NAME" || { echo "container died early"; break; }
   sleep 5
 done
 if [ "$ok" = 1 ]; then
-  echo "=== HEALTHY -- int8 MoE serves! -> sweep ==="
-  env NAME="$NAME" MODEL=olmoe-int8 LABEL="olmoe-${QUANT}" TOKPATH="/models/$MDIR" \
+  echo "=== HEALTHY -- int8 MoE serves! probe generation ==="
+  curl -s --max-time 20 http://localhost:8000/v1/completions -H "Content-Type: application/json" \
+    -d '{"model":"olmoe-int8","prompt":"The capital of France is","max_tokens":12,"temperature":0}' | head -c 600; echo
+  echo "=== sweep (port 8000) ==="
+  env NAME="$NAME" MODEL=olmoe-int8 LABEL="olmoe-${QUANT}" TOKPATH="/models/$MDIR" PORT=8000 \
     IN="${IN:-2048}" OUT="${OUT:-128}" CONC="${CONC:-1 2 4 8}" bash "$ROOT/35_sweep_bench.sh" || true
 else
   echo "=== NOT HEALTHY -- the int8 MoE serve gap. logs: ==="
