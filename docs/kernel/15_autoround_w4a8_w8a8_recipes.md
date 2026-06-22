@@ -23,6 +23,12 @@
 > served config.json = the BASE model's multimodal config (`Qwen3_5ForConditionalGeneration` + vision_config + text_config)
 > + the quant's `quantization_config` with extra_config keys renamed `model.layers.`->`model.language_model.layers.` --
 > matches the PROVEN Lorbus 27B int4-AutoRound config structure. Tool: `scripts/87_fix_autoround_vlm_config.py`.
+> **[!!] 4th gotcha, the worst (2026-06-22): do NOT run AutoRound CALIBRATION on the B70/XPU.** Q8 quantized with
+> `device_map=auto` over both B70s (gradient rounding on XPU + low_gpu_mem_usage offloading) produced **broken weights ->
+> pure `!` garbage** (HumanEval+ 0.0/0.0), despite loading + serving cleanly with a config that matches the working Lorbus
+> EXACTLY. CONFIRMS the "AutoRound XPU-calibration unreliable" caveat (RESEARCH_TODO Track 3e). **RULE: quantize AutoRound
+> on CPU/CUDA (RunPod-NVIDIA), then serve on B70** (same as Quark). AND **validate with a REAL eval (HumanEval+ / read the
+> generated text), NEVER a token-throughput bench** -- an ignore_eos token-count happily "passes" on `!` garbage.
 
 Date: 2026-06-20. Author: quant-eng (read-only investigation; NO GPU touched -- only
 non-GPU `docker run` package inspection + upstream WebSearch/WebFetch).

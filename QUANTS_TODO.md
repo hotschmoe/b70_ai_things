@@ -126,12 +126,19 @@ Legend: [ ] todo - [~] running - [x] done.
 - **Out:** `models/Qwen3.6-35B-A3B-W4A8-sqgptq`. llmcompressor MoE GPTQ + the router-aware selective-SQ mapping (Q0).
 - Serving gated on the int8 MoE kernel. Est ~3-6 h.
 
-### [x] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   VALIDATED 2026-06-22 (serves 29.13 t/s GRAPH=1, == Lorbus ref)
-> **[PRODUCED 2026-06-22]** Full run COMPLETE after 3 fixes (MLLM-dodge -> pile-10k calib -> low_gpu_mem_usage for the
-> layer-3 UR_OUT_OF_RESOURCES). `save_quantized(format=auto_round)` SAVED ok; out = 25G, 6 safetensors shards +
-> quantization_config.json + model_extra_tensors.safetensors. The 348 copied-verbatim tensors include **`mtp.fc`,
-> `mtp.layers.0.*`, `mtp.norm`** + the full `model.visual.*` tower -> the MTP head is BF16-preserved (mtp.fc gotcha
-> satisfied) so this int4 checkpoint is **MTP-capable**. Serve-validation (q8_validate.sh) running; perf logged in sec 6.
+### [!] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   **BROKEN WEIGHTS 2026-06-22 (XPU-calib corruption; NOT usable)**
+> **[!] CORRECTION 2026-06-22: Q8 produces GARBAGE (`!!!!!`) -- the quant is INVALID. Earlier "VALIDATED 29.13 t/s" was a
+> FALSE POSITIVE.** The serve loads + benches fine, but HumanEval+ scored **0.0/0.0** and a direct greedy prompt returns
+> pure `!` repetition (immediate forward-pass degeneration). Root cause (bisected): the served config/structure MATCHES
+> the working Lorbus 27B int4 EXACTLY (same quant_method/bits/group_size/packing_format, tie/lm_head, scripts/87 repair),
+> so it's the WEIGHTS -- corrupted by running AutoRound's gradient calibration on the XPU (both B70s) + low_gpu_mem_usage
+> offloading. **This CONFIRMS the "AutoRound XPU-calibration unreliable" caveat (RESEARCH_TODO Track 3e).** FIX = re-quant
+> on CPU/CUDA (RunPod-NVIDIA), then serve on B70 (same pattern as Quark, Track 4). **LESSON: a token-throughput bench
+> (ignore_eos + token-count) does NOT verify coherence -- ALWAYS read generated text / run a real eval (the eval caught
+> what the bench missed).** Until re-quanted, the working 27B int4 is the community Lorbus (the daily driver).
+> The original run (now-INVALID): full AutoRound completed after 3 fixes (MLLM-dodge -> pile-10k calib -> low_gpu_mem_usage),
+> 25G out, mtp.fc+visual+mtp bf16-preserved. Loadability + the scripts/87 config-repair finding are still valid; the
+> weights are not.
 > **[!] THE MLLM-CALIB BLOCK IS BEATEN (2026-06-22).** The Q2/Q4 "AutoRound MLLM-calib blocked on VLM" was a missing-API
 > problem, NOT a real blocker. AutoRound 0.13.1 auto-detects the qwen3_5 VLM, forces MLLM mode, and `quantize()` asserts
 > `processor should not be None` (`quant_nontext_module=False` alone does NOT dodge it). **FIX (scripts/84, smoke-proven):**
@@ -235,7 +242,7 @@ scripts/gpu-run env \
 | 0621 | Q5 | Qwable / W4A8 / sqgptq | models/Qwable-5-27B-Coder-W4A8-sqgptq (33G, grafted) | qwable-27b-w4a8-sqgptq | gate TBD | inferred ~14B W4A8 (best all-rounder) | PRODUCED+grafted (serve = same 27B W4A8 blockers) |
 | -- | Q6 | 35B-A3B / W8A8 / sqgptq | (DEFERRED -- see sec 7) | -- | -- | (serve gated) | PATH PROVEN (smoke ran MoE GPTQ ok) but ~25-30 min/LAYER x 41 = multi-day produce + serve-gated -> deferred behind small-MoE kernel bring-up |
 | -- | Q7 | 35B-A3B / W4A8 / sq+gptq | (DEFERRED -- see sec 7) | -- | -- | (serve gated) | same: path proven, full produce deferred until int8 MoE kernel exists + validated on a small MoE first |
-| 0622 | Q8 | Qwable / W4A16 / int4-AutoRound | models/Qwable-5-27B-Coder-int4-AutoRound (25G) | qwable-27b-int4 | coherent (gen OK; HumanEval+ TBD) | **dec 29.13 t/s** GRAPH=1 single-card (== Lorbus 27B int4 ~30.8 ref) | **[x] VALIDATED 0622.** Serves v0230 GRAPH=1 NOMM=1, quantization=inc auto. Required: 3 quant fixes (MLLM-dodge/pile-10k/low_gpu_mem_usage) + a SERVE-side config repair (scripts/87: AutoRound saved a flat qwen3_5_text config -> rebuilt as base multimodal wrapper + renamed extra_config keys). mtp.fc bf16 -> MTP-capable. 1-time inductor compile ~303s (cached) |
+| 0622 | Q8 | Qwable / W4A16 / int4-AutoRound | models/Qwable-5-27B-Coder-int4-AutoRound (25G) | qwable-27b-int4 | **HumanEval+ 0.0/0.0 (GARBAGE)** | dec 29.13 t/s (but tokens are `!` garbage) | **[!] BROKEN -- XPU-calib corruption, NOT usable.** Earlier "[x] VALIDATED 29.13" was a FALSE POSITIVE (ignore_eos token-count masked garbage). Config/serve path matches working Lorbus EXACTLY -> the WEIGHTS are bad (AutoRound gradient calib on XPU + low_gpu_mem_usage). Confirms Track 3e XPU-calib caveat. FIX = re-quant on CPU/CUDA. scripts/87 config-repair finding still valid |
 
 ---
 

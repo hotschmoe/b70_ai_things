@@ -157,8 +157,12 @@ Experiments (weight-lever comparison; all CPU/XPU quant, then serve behind `scri
       -> orthogonal, should compose. Test AutoRound weights + SmoothQuant acts for W8A8/W4A8.
 - [ ] **3d. Export-format check:** confirm AutoRound's compressed-tensors W8A8/W4A8 export loads into OUR
       `XPUInt8ScaledMMLinearKernel` / `XPUW4A8IntLinearKernel` (same check as Quark, Track 4). If it dispatches, AutoRound is a drop-in producer.
-- [ ] **3e. Retest the "XPU calibration unreliable" caveat for AutoRound** specifically (the w4a8/ agent is testing
-      this for W4A8 -- coordinate, don't duplicate; reuse their finding for the W8A8/W4A16 cases).
+- [x] **3e. "XPU calibration unreliable" for AutoRound -- CONFIRMED 2026-06-22 (Q8 repro).** Quantizing Qwable-5-27B int4
+      via AutoRound with `device_map=auto` on the two B70s (gradient rounding on XPU + low_gpu_mem_usage offloading)
+      produced **broken weights -> pure `!` garbage** (HumanEval+ 0.0/0.0), even though the checkpoint LOADS + serves
+      cleanly and its config matches the working Lorbus EXACTLY. So the corruption is in the XPU CALIBRATION, not packaging.
+      **RULE: quantize AutoRound on CPU/CUDA (RunPod-NVIDIA), serve on B70** -- same as Quark (Track 4). This also
+      retro-flags any other XPU-calibrated AutoRound quant. (See QUANTS_TODO Q8 correction + JOURNAL 2026-06-22.)
 
 > Boundary with the other agent: **W4A8 + AutoRound is owned by `w4a8/`** (their README: AutoRound chosen for the
 > accuracy win, target plus 0.817 -> >=0.84). This track covers AutoRound for **W4A16 and W8A8** only. Cross-link, don't fork.
@@ -308,10 +312,11 @@ The explicit queue is complete: MTP M0-M5 (1.79x shipped), QUANTS Q0-Q5+Q8 (queu
 CLOSED -- ported #7148, bisected the crash to `_xpu_C.gdn_attention`; PIECEWISE 1.79x is the ceiling; issue draft
 docs/kernel/21). Remaining open frontier items, **honestly ranked** (all are lower-value than what's done):
 
-1. **[MED] Accuracy evals (Track 2 + 3 + the Q8 close).** The genuinely-open *measurements*: (a) Q8 Qwable int4
-   HumanEval+ (it's a CODER model -> the right eval; closes the Q8 validation's "accuracy TBD"); (b) Track 2 -- does
-   selective-SmoothQuant (Q3/Q5) actually beat GPTQ-only 0.908 on gsm8k/agreement? (c) Track 3 -- AutoRound-W4A16 vs
-   GPTQ confirm. These need the evals/ harness + a GPU serve (~30-60 min each). **Highest-value remaining work.**
+1. **[MED] Accuracy evals (Track 2 + 3).** (a) ~~Q8 Qwable int4 HumanEval+~~ -- **DONE 2026-06-22: scored 0.0/0.0
+   (GARBAGE) -> the XPU-calibrated quant is BROKEN (Track 3e CONFIRMED); needs a CPU/CUDA re-quant. The eval harness +
+   sandbox WORK (they caught the garbage the perf-bench missed).** (b) Track 2 -- does selective-SmoothQuant (Q3/Q5)
+   beat GPTQ-only 0.908 on gsm8k/agreement? (c) Track 3 -- AutoRound-W4A16 vs GPTQ confirm (NOTE: any XPU-calibrated
+   AutoRound is suspect now -> use CPU/CUDA-quantized checkpoints or the community Lorbus). Need evals/ harness + serve.
 2. **[LOW-MED] Mount vllm_xpu_kernels 0.1.10 (v0230 = 0.1.9, confirmed).** Will NOT fix FULL (0.1.10 has no spec-path
    changes -- research + the kernel bisection above). Only a MoE-prefill speedup (#378/#379) + a >=32K NaN-race fix
    (#411). Requires a FULL-dir `.so` overlay (matched set incl. a ~1.5GB libattn_kernels), with ABI risk (0.1.10 may

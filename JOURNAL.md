@@ -3009,3 +3009,22 @@ verdict -> DEFINITIVE BISECTION: FULL-capture MTP on B70 is **kernel-gated** (th
   single-card ceiling on stock v0230.** The fix requires Intel (vllm_xpu_kernels). Filed-ready issue: docs/kernel/21.
   This closes the long-standing FULL/TRITON_ATTN open lever (RESEARCH_TODO Track 1d) with a concrete, evidenced answer.
   Cleanup: restored triton_shim/sitecustomize.py from .bak (patch preserved in scripts/88); lease freed.
+
+== 2026-06-22 :: CORRECTION -- Q8 Qwable int4 is BROKEN (XPU-calib corruption); "VALIDATED 29.13 t/s" was a FALSE POSITIVE ==
+config -> ran the Q8 HumanEval+ accuracy eval (evals/ harness, sandboxed via evalplus-sandbox:0.3.1) against the served
+  qwable-27b-int4 (served-id verified). SMOKE (5 problems) -> pass@1 = {base:0.0, plus:0.0}, gen 361s (~72s/problem).
+result -> the generated "solutions" are 2048 chars of pure `!!!!!`. A direct greedy completion ("def add(a,b):") ALSO
+  returns pure `!` -> immediate forward-pass degeneration -> the MODEL IS BROKEN, not a harness/format issue.
+bisection -> the served checkpoint's config + structure MATCH the working Lorbus 27B int4 EXACTLY: quant_method=auto-round,
+  bits=4, group_size=128, sym, data_type=int, packing_format=auto_round:auto_gptq, tie_word_embeddings=False, lm_head.weight
+  present, scripts/87 config-repair applied. Same inc/AutoRound serve path that serves Lorbus coherently (daily driver).
+  So it's NOT the config/repair/serve -> it's the WEIGHTS. The only thing unique to Q8 vs Lorbus: I ran AutoRound's
+  gradient calibration ON THE XPU (device_map=auto over both B70s) + low_gpu_mem_usage offloading. Lorbus was quantized
+  on CUDA/CPU (community).
+verdict -> **Q8 is INVALID (broken weights). My earlier "VALIDATED 29.13 t/s" was WRONG** -- the decode bench used
+  ignore_eos + token-COUNT, which masks garbage tokens; the coherence text-print had failed and I wrongly waved it off.
+  Root cause = AutoRound XPU-calibration corruption (CONFIRMS RESEARCH_TODO Track 3e). FIX = re-quant on CPU/CUDA, serve
+  on B70. Working 27B int4 remains the community Lorbus. **LESSONS: (1) token-throughput != coherence -- always read text /
+  run a real eval (the eval CAUGHT what the bench missed); (2) do NOT run AutoRound calibration on the B70 -- quantize on
+  CPU/CUDA.** Corrected: QUANTS_TODO Q8 ([!] BROKEN), RESEARCH_TODO Track 3e ([x] confirmed). Serve stopped, lease freed.
+  UNAFFECTED: the MTP campaign (1.79x) + FULL-capture verdict used the WORKING Lorbus int4 -> those results STAND.
