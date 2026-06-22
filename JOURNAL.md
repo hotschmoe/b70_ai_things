@@ -2723,3 +2723,12 @@ Built 70_xpu_p2p_probe.py (direct d2d bandwidth + ping-pong). Result: torch .cop
 peer-direct, ~7-8 host-bounce) + 452us/copy latency -> unpipelined host bounce, NOT peer DMA. P2PACCESS=1+drmfd didn't
 help torch (torch.copy_ != oneCCL). dmesg clean (no fault). No ze_peer in image (need level-zero-tests for the
 authoritative matrix). The REAL P2P-on test is the oneCCL serve A/B (W4A8 TP=2 P2PACCESS=1 vs off c1 22.1) -- launched. P2P_GPU H.8.
+
+### 2026-06-22 -- [optimize] n-gram speculative decode VALIDATED on 27B W4A8: ~1.8x c1 decode (20.7->37.8 t/s)
+Served 27B W4A8 (TP=1, graph) + --speculative-config '{"method":"ngram","num_speculative_tokens":3,"prompt_lookup_max":4,
+"prompt_lookup_min":2}' (scripts/72_ngram_bench.sh). c1 per-stream decode 37.81 t/s vs no-spec 20.73 (~1.8x); tpot
+26.45ms vs 48.2. HUGE decode win on repetitive output. CAVEATS: (1) c2/c4/c8 returned NA -- concurrent spec requests
+failed (spec-decode+batch/KV issue, TODO); (2) ~1.8x is workload-inflated (the 35_sweep prompt has high n-gram
+repetition -> high draft acceptance; Seguin saw only +1.5 t/s on diverse Qwen FP8); (3) aggregate out_tok_s at 128-tok
+gens is TTFT-dominated (2541ms) so the decode win shows on LONG generations. NET: n-gram is a real free decode lever for
+decode-bound/long-output workloads on the int8 path; concurrency path needs a fix. The first lever that doubled a number.
