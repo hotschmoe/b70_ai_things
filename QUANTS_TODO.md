@@ -1,6 +1,6 @@
 # QUANTS_TODO.md -- INT8 fast-path quant queue for the Qwen3.6 family (point a future agent here)
 
-**Created:** 2026-06-21 - **Updated:** 2026-06-21 (expanded to ALL qwen3.6 family x {W8A8, W4A8}) - **Status:** QUEUED
+**Created:** 2026-06-21 - **Updated:** 2026-06-22 (added Q8: Qwable W4A16 int4-AutoRound -- the one-card quality serve) - **Status:** QUEUED
 **Goal:** W8A8 (AutoRound) + W4A8 (selective SmoothQuant + GPTQ) of EVERY qwen3.6-family model, to measure how far the
 B70's INT8 fast paths (int8-XMX systolic GEMM) carry on real models. W8A8 = int8 w x int8 a (full int8 XMX);
 W4A8 = int4 w x int8 a (int8-XMX via `int4_gemm_w4a8`). Both light the int8 systolic path; this queue produces the
@@ -72,7 +72,8 @@ The 27B / Qwable / 35B bf16 SOURCES (~54-70 GB params) do NOT fit one 32 GB card
 
 **Quants that ALREADY exist (do NOT redo):** 14B `W4A8-gptq` (SmoothQuant+GPTQ, 0.872/0.835), `W8A8-gptq`, `W8A16`,
 `W4A16-gptq` - 27B `W4A8-q-prepacked` (GPTQ, no SmoothQuant -> supersede with Q3), `Lorbus int4-AutoRound` (W4A16
-daily driver), `W8A8-INT8-RTNtest` (RTN, bad). - Qwable: none. - 35B: `Intel int4-AutoRound` (W4A16, serves 56.8 t/s).
+daily driver), `W8A8-INT8-RTNtest` (RTN, bad). - Qwable: `W8A8-sqgptq`+`W4A8-sqgptq` (Q4/Q5, 33G ea);
+**NO W4A16/int4-AutoRound -> Q8** (no servable Qwable int4 on HF either: only bf16/NVFP4/GGUF). - 35B: `Intel int4-AutoRound` (W4A16, serves 56.8 t/s).
 
 Disk: 6.3 TB free. Each int8 output ~14-35 GB. Not a constraint.
 
@@ -111,6 +112,10 @@ Legend: [ ] todo - [~] running - [x] done.
 
 ### [x] Q5 -- Qwable-5-27B-Coder  W4A8  (selective SmoothQuant + GPTQ)  PRODUCED+grafted 2026-06-21 (33G; same serve blockers as 27B W4A8 -- perf inferred from 14B W4A8 ladder)
 - **Out:** `models/Qwable-5-27B-Coder-W4A8-sqgptq`. Method as Q3. Serve graft + odd-dim -> id `qwable-27b-w4a8-sqgptq`. Est ~1-3 h.
+- [ ] **PREPACK follow-up:** the 33G is compressed-tensors `int-quantized` = 4-bit stored 1-per-int8 (SAME on-disk size as W8A8).
+  Pack it to int4 with `w4a8/offline_prepack_w4a8.py` (CPU, NO lease) -> ~25G AND removes the ~28 GiB unpacked-I8 GPU load
+  transient that OOMs/hangs the B70: `SRC=/models/Qwable-5-27B-Coder-W4A8-sqgptq DST=/models/Qwable-5-27B-Coder-W4A8-sqgptq-prepacked
+  python w4a8/offline_prepack_w4a8.py` (mirrors `Qwen3.6-27B-W4A8-sqgptq-prepacked` 33->25G).
 
 ### [~] Q6 -- Qwen3.6-35B-A3B MoE  W8A8   DEFERRED 2026-06-22 (path PROVEN via smoke; ~25-30min/layer multi-day + serve-gated -> see sec 7: bring up int8 MoE kernel on a SMALL MoE first)
 - Wait for the bf16 download to finish (`scripts/63`). **Out:** `models/Qwen3.6-35B-A3B-W8A8-autoround`. `device_map="0,1"`.
@@ -121,6 +126,26 @@ Legend: [ ] todo - [~] running - [x] done.
 ### [~] Q7 -- Qwen3.6-35B-A3B MoE  W4A8   DEFERRED 2026-06-22 (path proven; full produce deferred behind small-MoE kernel bring-up -- sec 7)
 - **Out:** `models/Qwen3.6-35B-A3B-W4A8-sqgptq`. llmcompressor MoE GPTQ + the router-aware selective-SQ mapping (Q0).
 - Serving gated on the int8 MoE kernel. Est ~3-6 h.
+
+### [ ] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   [!] DO FIRST of the remaining -- the ONLY one-card quality serve for Qwable
+- **Why:** Q4 (W8A8, 33G) + Q5 (W4A8, 33G) both need TP=2 / hit the W4A8 serve blockers -> there is NO single-card quality serve for
+  Qwable. The base 27B (`Lorbus int4-AutoRound`) and 35B (`Intel int4-AutoRound`) each have a W4A16 int4-AutoRound that serves great on
+  ONE card (27B ~30.8 t/s captured + GDN); Qwable has none. HF has only Qwable bf16 / NVFP4 / GGUF -- **none B70-servable** (no native
+  FP4 HW; llama.cpp SYCL lacks the GDN/DeltaNet arch) -> produce our own.
+- **Scope note:** this deliberately extends the doc past the INT8 fast-path (W8A8/W4A8) to the **W4A16 quality-serve** path -- it is the
+  daily-driver recipe and the highest-value + lowest-risk Qwable item (a PROVEN path on both axes, see below).
+- **Method:** AutoRound **int4 W4A16** (`bits=4, group_size=128, sym=True`, **activations stay fp16** -- the `bits==8` W4A8 export assert
+  from kernel/15 does NOT apply here). Run on the bf16 base we already hold (`DJLougen_Qwable-5-27B-Coder`, 60G) via the PROVEN multi-XPU
+  AutoRound path `scripts/59_autoround_2xpu.sh` (`device_map="0,1"`, `ZE_AFFINITY_MASK=0,1`, `low_gpu_mem_usage`).
+  **[!] Use AutoRound (auto-round/`inc` export), NOT compressed-tensors W4A16** -- the existing `Qwen3.6-27B-W4A16` compressed-tensors quant
+  does NOT serve (XPUwNa16 needs dims /32; the 4304 gated-attn dim fails), whereas AutoRound int4 serves via `quantization=inc` (proven by
+  the Lorbus daily driver). Mirror the Lorbus int4-AutoRound layer_config (vision + MTP bf16; GDN/`linear_attn` per that recipe).
+- **Out:** `models/Qwable-5-27B-Coder-int4-AutoRound` (~18G on disk, already int4-PACKED `pack-quantized` -> **NO offline prepack needed**,
+  unlike the I8-stored sqgptq W4A8). Model load ~16.7 GiB (= Lorbus).
+- **Serve:** identical to the daily driver -- `IMG=vllm-xpu-env:v0230` (full GDN kernel), `GRAPH=1 DTYPE=auto UTIL=0.92 NOMM=1 MAXLEN=131072
+  MAXSEQS=64 CAPSIZES=1,2,4,8,16,32,64`, id `qwable-27b-int4`. Target ~30 t/s captured single-card.
+- **Validate:** gsm8k + top-1 agree vs the bf16 base; it is a Coder model -> also a quick HumanEval+ subset vs base. Est AutoRound ~4-8 h
+  (like Q2) + ~15 min serve smoke.
 
 **Already done / not needed:** 14B W4A8 (SmoothQuant+GPTQ exists) - 14B W4A16/W8A16 (exist) - 35B/27B W4A16 (exist).
 
@@ -135,6 +160,7 @@ Legend: [ ] todo - [~] running - [x] done.
 | Q5 Qwable W4A8 SQ+GPTQ | **BUILD** (Q0) then GPTQ-W4A8 | **FIND** (odd-dim serve) |
 | Q6 35B W8A8 AR | **FIND/COMMUNITY/BUILD** -- AutoRound MoE export is "limited"; verify, else borrow llm-compressor MoE path, else build the exporter graft | **BUILD** int8 MoE kernel (docs/kernel/18) |
 | Q7 35B W4A8 SQ+GPTQ | **FIND/COMMUNITY/BUILD** -- llmcompressor MoE GPTQ + router-aware selective-SQ; verify the MoE GPTQ path first | **BUILD** int8 MoE kernel (docs/kernel/18) |
+| Q8 Qwable W4A16 int4-AR | **PROVEN** -- AutoRound int4 W4A16 = the daily-driver path (Lorbus 27B + Intel 35B both exist); just run `scripts/59` on the Qwable base | **PROVEN** (`:v0230` GDN + captured = daily-driver recipe; serves via `inc`) |
 
 Most boxes are NOT "PROVEN" -- this queue is as much about finding/building the right PATHS as running them. Timebox
 FIND+COMMUNITY before BUILD; log which path each quant actually used.
@@ -197,6 +223,7 @@ scripts/gpu-run env \
 | 0621 | Q5 | Qwable / W4A8 / sqgptq | models/Qwable-5-27B-Coder-W4A8-sqgptq (33G, grafted) | qwable-27b-w4a8-sqgptq | gate TBD | inferred ~14B W4A8 (best all-rounder) | PRODUCED+grafted (serve = same 27B W4A8 blockers) |
 | -- | Q6 | 35B-A3B / W8A8 / sqgptq | (DEFERRED -- see sec 7) | -- | -- | (serve gated) | PATH PROVEN (smoke ran MoE GPTQ ok) but ~25-30 min/LAYER x 41 = multi-day produce + serve-gated -> deferred behind small-MoE kernel bring-up |
 | -- | Q7 | 35B-A3B / W4A8 / sq+gptq | (DEFERRED -- see sec 7) | -- | -- | (serve gated) | same: path proven, full produce deferred until int8 MoE kernel exists + validated on a small MoE first |
+| -- | Q8 | Qwable / W4A16 / int4-AutoRound | (todo) models/Qwable-5-27B-Coder-int4-AutoRound | qwable-27b-int4 | gate TBD | target ~30.8 t/s captured (= Lorbus 27B) | QUEUED 0622 -- ONLY one-card quality serve for Qwable; no HF int4-AR exists; ~18G, native int4-packed (no prepack) |
 
 ---
 
