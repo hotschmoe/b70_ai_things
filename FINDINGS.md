@@ -175,6 +175,15 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   stays the pick. (Note from literature/06: FP8 is conversion-based on Xe2; INT is native systolic — so a real
   INT8 W8A8 kernel could beat FP8 in *prefill/large-batch*. That kernel doesn't exist upstream yet = our top
   contribution target.) [The eager-vs-capture gap was the real story: w4a8 was the most dispatch-bound config.]
+- **Dense W8A8 TRUE int8 on v0230 (2026-06-23): WORKS but is a PERF DEAD-END; keep `:int8`.** We made a dense
+  compressed-tensors W8A8 (14B) run true-int8 on `vllm-xpu-env:v0230` -- triton_scaled_mm (tl.dot int8->int32 -> Intel
+  DPAS/XMX), int8 weights stay int8 (15.3 GiB), via a sitecustomize hook that registers the kernel for the
+  `CompressedTensorsW8A8Int8` path + wraps it as an OPAQUE torch custom op so PIECEWISE graph capture succeeds
+  (contrib/vllm_int8_xpu/v0230/dense_test). Coherent. BUT decode = **~1.7 t/s vs `:int8` oneDNN ~23.5 (~13x slower)**:
+  the act-quant is un-fused plain torch on every one of ~280 dense linears (XPU has no `_C.scaled_int8_quant`) and the
+  opaque op is capturable-but-not-fusable. **`:int8` (our oneDNN s8s8s32 + fused per-token quant) stays the W8A8 perf
+  path; v0230-int8 is a correctness/portability fallback only.** Closing the gap needs a fused XPU int8 act-quant op +
+  an inductor-fusable GEMM (Track 1).
 - **Speculative decoding -- method/format-dependent (UPDATED 2026-06-22):** ngram (prompt-lookup) on 14B W8A8 is
   net-NEGATIVE (eager 23.33->21.51 -7.8%; PIECEWISE 27.23->25.28 -7%; ~16% accept -- low acceptance on diverse text).
   **BUT native MTP on the qwen3_5 27B is strongly POSITIVE on PIECEWISE: W4A16 + MTP spec=4 = 55.28 t/s vs 30.84
