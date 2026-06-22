@@ -160,3 +160,27 @@ W8A8 as supported, so even then it may fall back); (B) pivot to the Intel-SUPPOR
 35B-A3B (`Intel/Qwen3.6-35B-A3B-int4-AutoRound`, already a working SERVING.md recipe, 56.8 t/s single-card)
 or FP8. The 2 dispatch patches + scripts/74 remain valid and ready IF a build/image ever ships the XPU MoE
 kernels. Corrects sec 7's "OOM/collective" guess.
+
+================================================================================
+9. [2026-06-22] SOLVED -- int8 W8A8 Quark MoE 35B SERVES + GENERATES on 2x B70 (TP=2) via vLLM 0.23
+================================================================================
+The "source build steve's stack" plan resolved better: we DON'T need to build anything. Probing our
+EXISTING images found **`vllm-xpu-env:v0230` = vLLM 0.23.0** (NEWER than steve's 0.20.2rc1) and it already:
+- ships `QuarkW8A8Int8MoEMethod` AND a `_is_dynamic_per_token_w8a8` int8 LINEAR dispatch (no patch needed
+  for either -- both are upstream in 0.23), and
+- routes the 256 int8 experts through the **Triton `fused_moe_kernel`** on XPU -- the same Triton MoE path
+  our int4 35B uses (contrib/vllm_moe_xpu). `_moe_C` being unbuilt is IRRELEVANT here: 0.23's MoE forward
+  JIT-compiles a Triton kernel, whereas llm-scaler 0.14.1's `vllm_topk_softmax` called `_moe_C` with no
+  fallback (sec 8 #6). THAT vLLM-version difference is the whole unlock.
+
+The ONLY gap on v0230 is the int8 scaled-mm LINEAR kernel (no XPU entry in `_POSSIBLE_KERNELS` -> KeyError).
+Fixed with ONE bind-mounted file `contrib/llm_scaler_quark_int8_moe/v0230/quark.py`: reroute the
+dynamic-int8 linear branch (XPU only) to `QuarkW8A8Int8DequantXPU` (weight-only int8->bf16 dequant GEMM;
+linear_attn.* + mlp.shared_expert.* only). Experts stay TRUE int8.
+
+`scripts/76_quark35b_v0230.sh` (TP=2, #41663 env, enforce-eager). VERIFIED: served id
+qwen36-35b-a3b-quark-w8a8-int8 (system_fingerprint vllm-0.23.0-tp2); Model loading 17.54 GiB/card; KV
+10.2 GiB; concurrency 89x@8192; backend=xccl world_size=2; Triton fused_moe_kernel (E=256,N=256, int8);
+gen "The capital of France is" -> " Paris, a city renowned for its rich history, culture, and iconic
+landmarks." Served EAGER -- graph capture (PIECEWISE, +617% on the int4 MoE) + a tuned
+E=256,N=256,int8 MoE config are the open perf levers. This is the Q6/Q7 int8-MoE SERVE datapoint, finally.

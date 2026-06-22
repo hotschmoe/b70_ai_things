@@ -115,19 +115,31 @@ Decode ~56.8 t/s captured (fp16 KV) / ~65 t/s with fp8 KV. Needs the MoE-routing
 ```
 - Aggregate throughput plateaus ~206 t/s at N>=8 (the routed-expert union approaches all 256 experts).
 
-## RECIPE: Qwen3.6-35B-A3B Quark **W8A8 INT8** (steve's recipe, 2x B70 TP=2)  [BLOCKED on image]
-Target: steveseguin's int8-MoE serve (ckpt `nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8`) on llm-scaler.
-`scripts/74_quark35b_bench.sh` + `contrib/llm_scaler_quark_int8_moe/` (two bind-mounted vLLM patches:
-int8 MoE method + int8 dequant-linear scheme). **Status 2026-06-22: BLOCKED** -- the on-host
-`intel/llm-scaler-vllm:0.14.0-b8.3.1` image has **no XPU MoE compute/routing kernels** (`vllm._moe_C` is
-not built -> `_moe_C.topk_softmax` missing at first MoE forward). Five other blockers ARE solved (device
-exposure, the TP=2 oneCCL collective, the MoE+linear int8 dispatch, the compile version-counter) -- the
-model fully loads + the TP=2 collective comes up. **Finish path:** a newer llm-scaler image (steve used
-vLLM 0.20.2rc1.dev2) that ships the XPU fused-MoE kernels; then re-run scripts/74 with `IMG=<newer>`.
-Full chain: `docs/kernel/20` sec 8 + `contrib/llm_scaler_quark_int8_moe/README.md`. Two reusable B70
-gotchas confirmed here: (a) for llm-scaler TP=2 use OUR #41663 env (`CCL_TOPO_P2P_ACCESS=0`,
-`CCL_ZE_IPC_EXCHANGE=pidfd`, `CCL_ENABLE_SYCL_KERNELS=0`), NOT a 4-card box's CCL env; (b) do NOT set
-`ONEAPI_DEVICE_SELECTOR`+`ZE_AFFINITY_MASK` pins (they abort the model-inspect subprocess on our 2-card box).
+## RECIPE: Qwen3.6-35B-A3B Quark **W8A8 INT8** MoE, 2x B70 TP=2 on `:v0230`  [WORKING 2026-06-22]
+int8 W8A8 MoE 35B (ckpt `nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8`) **serves + generates coherently**
+on **2x B70 TP=2**. Use `scripts/76_quark35b_v0230.sh`. Key: serve on **`vllm-xpu-env:v0230` (vLLM
+0.23.0)** -- NOT the llm-scaler `0.14.x` image. 0.23 already ships `QuarkW8A8Int8MoEMethod` + the
+dynamic-per-token int8 linear dispatch AND routes the 256 int8 experts through the **Triton
+`fused_moe_kernel`** on XPU (the int4 MoE path that works here -- `contrib/vllm_moe_xpu`). The llm-scaler
+0.14.1 image had **no XPU MoE op suite** (`vllm._moe_C` unbuilt -> `topk_softmax` missing) -- a dead end
+(see kernel/20 sec 8). The ONLY patch needed on v0230 is **one bind-mounted `quark.py`**
+(`contrib/llm_scaler_quark_int8_moe/v0230/quark.py`) that reroutes the int8 **linear** layers
+(linear_attn.*, mlp.shared_expert.*) to a weight-only int8->bf16 **dequant** GEMM, because XPU has no int8
+scaled-mm kernel (`_POSSIBLE_KERNELS` KeyErrors). Experts stay TRUE int8.
+
+```bash
+ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70
+# patch already at patches/quark_v0230.py; serve+probe+sweep, then auto-stops:
+./gpu-run bash 76_quark35b_v0230.sh           # IMG=vllm-xpu-env:v0230 TP=2 MAXLEN=8192 UTIL=0.92
+```
+Verified: `Model loading took 17.54 GiB`/card, KV 10.2 GiB, concurrency 89x@8192, `backend=xccl world_size=2`,
+Triton `fused_moe_kernel` JIT (E=256,N=256, int8), gen: "The capital of France is" -> " Paris, a city
+renowned for its rich history, culture, and iconic landmarks." Served **enforce-eager** (graph capture is
+the open perf lever; PIECEWISE capture gave +617% on the int4 MoE, so the same is the next step here).
+Reusable B70 gotchas (also apply to any llm-scaler TP=2): (a) #41663 env `CCL_TOPO_P2P_ACCESS=0`,
+`CCL_ZE_IPC_EXCHANGE=pidfd`, `CCL_ENABLE_SYCL_KERNELS=0` (script 76 sets these for TP>1); (b) do NOT pin
+`ONEAPI_DEVICE_SELECTOR`+`ZE_AFFINITY_MASK` (aborts the model-inspect subprocess on a 2-card box);
+(c) the Unraid host has no `python3` -- serve scripts must not parse JSON with it (use `--served-model-name`).
 
 ## RECIPE: Qwen3-14B (FP8 / w8a8-int8 / w4a16-gptq)  [14B-class workhorse]
 - FP8 (fastest decode ~32 t/s, lowest TTFT): `IMG=vllm-xpu-env:v0230 MODEL=/models/Qwen_Qwen3.6-...` no

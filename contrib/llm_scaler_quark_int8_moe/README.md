@@ -1,9 +1,30 @@
-# llm-scaler Quark W8A8 INT8 patches (Qwen3.6-35B-A3B on 2x B70)
+# Quark W8A8 INT8 MoE (Qwen3.6-35B-A3B) on 2x B70 -- WORKING on vLLM 0.23
 
-Goal: run steveseguin's accepted Quark **W8A8 INT8** MoE serve (Qwen3.6-35B-A3B,
-ckpt `nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8`, his 4x B70 = 99.77 tok/s) on
-**our 2x B70** at **TP=2**, using the on-host `intel/llm-scaler-vllm:0.14.0-b8.3.1`
-image. Driven by `scripts/74_quark35b_bench.sh`.
+Goal: run the Quark **W8A8 INT8** MoE serve (Qwen3.6-35B-A3B, ckpt
+`nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8`) on **our 2x B70** at **TP=2**.
+
+## [SOLVED 2026-06-22] It serves + generates on `vllm-xpu-env:v0230` (vLLM 0.23.0)
+Use **`scripts/76_quark35b_v0230.sh`** + **`v0230/quark.py`** (one bind-mounted file).
+NOT the llm-scaler 0.14.x image (dead end -- see below). Why v0230 wins:
+- vLLM **0.23 already ships** `QuarkW8A8Int8MoEMethod` AND a dynamic-per-token int8 LINEAR
+  dispatch (`_is_dynamic_per_token_w8a8`). So **no MoE patch and no linear-dispatch patch**.
+- v0230 routes the 256 int8 experts through the **Triton `fused_moe_kernel`** on XPU (the same
+  path our int4 MoE uses -- `contrib/vllm_moe_xpu`), so `_moe_C` being unbuilt does NOT matter.
+- The ONE gap left: XPU has no int8 scaled-mm LINEAR kernel (`_POSSIBLE_KERNELS` KeyErrors), so
+  `v0230/quark.py` reroutes ONLY the int8 linear layers (linear_attn.*, mlp.shared_expert.*) to a
+  weight-only int8->bf16 **dequant** GEMM (`QuarkW8A8Int8DequantXPU`). Experts stay TRUE int8.
+
+Verified (TP=2, enforce-eager): model load 17.54 GiB/card, KV 10.2 GiB, concurrency 89x@8192,
+`backend=xccl world_size=2`, Triton `fused_moe_kernel` (E=256,N=256, int8),
+gen "The capital of France is" -> " Paris, a city renowned for its rich history, culture, and iconic
+landmarks." Next perf lever: graph capture (eager only so far; PIECEWISE gave +617% on the int4 MoE).
+
+---
+
+## Background: the llm-scaler 0.14.1 attempt (DEAD END -- kept for the diagnosis)
+
+Original target: steveseguin's accepted Quark W8A8 INT8 run (his 4x B70 = 99.77 tok/s) on the
+on-host `intel/llm-scaler-vllm:0.14.0-b8.3.1` image, via `scripts/74_quark35b_bench.sh`.
 
 These two files are PATCHED copies of the image's vendored vLLM modules
 (`vllm 0.14.1.dev0+gb17039bcc.d20260605`), bind-mounted over the originals at serve

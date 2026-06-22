@@ -2817,3 +2817,21 @@ vllm_topk_softmax has no fallback, VLLM_XPU_USE_LLM_SCALER_MOE not honored. stev
 0.20.2rc1.dev2 (newer build WITH XPU MoE kernels). FINISH PATH: pull a newer intel/llm-scaler-vllm tag (~0.20.x)
 with _moe_C, then re-run scripts/74 (IMG=). Patches + recipe captured for that. Lease released; 0.14.1 verdict: int8
 MoE EXECUTE is unsupported on this image (only the dispatch gaps were ours to fix).
+
+### 2026-06-22 -- [SOLVED] int8 W8A8 Quark MoE 35B SERVES + GENERATES on 2x B70 (TP=2) -- via vLLM 0.23, no source build
+Followup to the llm-scaler 0.14.1 dead-end (that image has no XPU MoE op suite: vllm._moe_C unbuilt ->
+topk_softmax missing). User asked to source-build steve's 0.20.2rc1 stack; probing our EXISTING images found
+we don't need to: **vllm-xpu-env:v0230 = vLLM 0.23.0** (NEWER than steve's 0.20.2) already ships
+QuarkW8A8Int8MoEMethod + a _is_dynamic_per_token_w8a8 int8 LINEAR dispatch, AND routes the 256 int8 experts
+through the Triton fused_moe_kernel on XPU (same path our int4 MoE uses -- contrib/vllm_moe_xpu). The
+vLLM-version jump (0.14.1 _moe_C-only -> 0.23 Triton MoE) IS the unlock. Only gap on v0230: no XPU int8
+scaled-mm LINEAR kernel (_POSSIBLE_KERNELS KeyError) -> ONE bind-mounted quark.py
+(contrib/llm_scaler_quark_int8_moe/v0230/quark.py) reroutes the int8 linear layers (linear_attn.*,
+mlp.shared_expert.*) to a weight-only int8->bf16 dequant GEMM (QuarkW8A8Int8DequantXPU); experts stay TRUE int8.
+scripts/76_quark35b_v0230.sh (TP=2 #41663 env, enforce-eager). RESULT (served id qwen36-35b-a3b-quark-w8a8-int8,
+fingerprint vllm-0.23.0-tp2): Model loading 17.54 GiB/card, KV 10.2 GiB, concurrency 89x@8192, backend=xccl
+world_size=2, Triton fused_moe_kernel (E=256,N=256, int8), gen "The capital of France is" ->
+" Paris, a city renowned for its rich history, culture, and iconic landmarks." Served EAGER; graph capture
+(+617% on int4 MoE) + tuned E=256,N=256-int8 MoE config are the open perf levers. The Q6/Q7 int8-MoE SERVE
+datapoint is finally REAL. (Also: Unraid host has no python3 -> serve scripts must not parse JSON with it;
+use --served-model-name. Pruned ~22GB docker build cache earlier; 122G free.)
