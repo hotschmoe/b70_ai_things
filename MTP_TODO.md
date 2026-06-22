@@ -25,6 +25,8 @@ per-experiment log in JOURNAL.
 > is insufficient for compressed-tensors W4A16 because vLLM otherwise instantiates the drafter as quantized/fused and
 > skips the BF16 MTP linears. VALIDATED on W4A16: ctx2048 C1 no-MTP `tg` 21.73 -> MTP spec=4 `tg` 42.97,
 > accept_len 3.49; C4 improves `tg` 16.67 -> 28.98 but aggregate output regresses 46.29 -> 38.58 and TTFT jumps.
+> Host graft dirs also created for `W8A8-sqgptq` and `W4A8-sqgptq-prepacked` (15 `mtp.*` keys each); those still
+> need serve/acceptance benches.
 > Parity stack at ctx2048 C1:
 > **W4A16 no-MTP 20.97 -> AutoRound no-MTP 29.85 (kernel gap 1.42x) -> AutoRound+MTP ~46.7 (MTP ~1.57x).**
 > So to make W4A16 the headline: (1) graft MTP (the bigger lever, currently MISSING), then (2) the int4

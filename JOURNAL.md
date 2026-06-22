@@ -3245,3 +3245,18 @@ verdict -> grafting is viable and gives real acceptance. C1 is a strong W4A16 CT
   is tight: real BF16 MTP + PIECEWISE capture left only 6,283 KV tokens at MAXLEN=3072, so production needs either
   Half-KV, lower max concurrency, less capture memory, or a quantized/co-packed MTP head. Next step: turn the temporary
   BF16-MTP shim into a proper shelf-local patch before repeating on W8A8-sqgptq and W4A8-sqgptq-prepacked.
+
+== 2026-06-23 :: W8A8/W4A8 BF16-MTP graft dirs created (not yet perf-tested) ==
+motivation -> extend the validated W4A16 graft method to the other two Qwen3.6-27B compressed-tensors quants:
+  `W8A8-sqgptq` and `W4A8-sqgptq-prepacked`.
+config -> created host sibling dirs only; originals untouched. Used `cp -al` hardlink copies, then added the same
+  15 BF16 `mtp.*` tensors from `Qwen_Qwen3.6-27B` as `model-mtp-graft.safetensors` (849,400,464 bytes / 811 MiB).
+  Also wrote `mtp_bf16_patch/sitecustomize.py` in each dir. That patch forces only `Qwen3_5MultiTokenPredictor` to
+  instantiate unquantized/BF16 so vLLM does not treat the grafted MTP drafter as compressed-tensors quantized/fused
+  and skip the BF16 linears.
+result -> created and verified by safetensors key count:
+  `Qwen3.6-27B-W8A8-sqgptq-mtp-graft`: 2 safetensors files, 1122 total keys, 15 `mtp.*` keys.
+  `Qwen3.6-27B-W4A8-sqgptq-prepacked-mtp-graft`: 2 safetensors files, 1122 total keys, 15 `mtp.*` keys.
+verdict -> graft artifacts exist and are structurally ready for serve tests. No GPU perf/acceptance run yet. When
+  serving, mount the model dir's `mtp_bf16_patch` on `PYTHONPATH` (plus any model-specific text/VLM shim already
+  required by that quant) before enabling `--speculative-config '{"method":"mtp","num_speculative_tokens":4}'`.
