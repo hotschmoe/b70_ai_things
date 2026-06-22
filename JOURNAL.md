@@ -2916,3 +2916,28 @@ savings. So spec-decode ROI is architecture-dependent: BIG on dense (bandwidth-b
 sparse-MoE (compute-light, 3B params/token). **Production implication: the 35B MoE headline is graph CAPTURE (66.8 t/s),
 not MTP; the dense 27B headline is MTP (1.79x). Don't waste MTP plumbing on the MoE.** MTP campaign M0-M3+M5 COMPLETE
 (M4 TP=2 = quick confirm remaining). Lease 740s, clean.
+
+### 2026-06-22 -- [MTP M4 DONE -> MTP CAMPAIGN COMPLETE] TP=2 MTP is dead (spec-allgather not graph-capturable)
+`m4_tp2_mtp.sh`: 27B int4 W4A16 TP=2 on v0230 + CCL_ENABLE_SYCL_KERNELS=1 + PIECEWISE.
+- **A TP=2 MTP-OFF PIECEWISE: 26.96 t/s** (512 tok 18.74s) -- 0.87x of single-card 30.84 (the allreduce tax; TP=2 is a
+  CAPACITY play, not speed, for a model that fits one card -- confirmed).
+- **B TP=2 MTP-ON spec=4: CRASH** -> `oneCCL ccl_allgather_impl: |CCL_SYCL| sched algorithms do not support sycl_graph
+  recording, please use sycl_algorithms`. So CCL_ENABLE_SYCL_KERNELS=1 makes ALL-REDUCE graph-safe (MTP-off captures), but
+  the spec-decode path adds an ALLGATHER collective that is NOT graph-capturable under our CCL config. This REFRESHES the
+  old Lorbus TP2-MTP [NEG] with a precise root cause (theirs was "slower"; ours CRASHES on the spec-allgather under capture).
+  Unblocking needs RagingNoper's capture-safe collectives (custom xpu_communicator) OR TP=2 MTP eager (slow). Not worth it.
+VERDICT: **single-card DP-replica MTP is decisively the path; TP=2 MTP is dead on stock v0230.**
+
+### 2026-06-22 -- [MTP CAMPAIGN SUMMARY] M0-M5 COMPLETE. Headline: single-card dense 27B MTP = 1.79x (55 t/s)
+The whole MTP_TODO queue is closed. Net production guidance:
+| dimension | result | takeaway |
+|---|---|---|
+| single-card dense 27B W4A16 + MTP spec=4 PIECEWISE | **55.28 t/s vs 30.84 = 1.79x** | THE WIN; beats Lorbus 45.2; serving-ready |
+| spec-token | spec=4 best (3-4 plateau); accept rises 2.48->3.74 but tok/s peaks at 3-4 | use spec=4 |
+| Half-KV (fp8 KV) | accept 3.29 vs 3.25 full = FREE | keep Half-KV for 2x context |
+| FULL capture | BLOCKED (gdn_attention spec op can't run in ANY captured graph, v0230 0.1.9) | PIECEWISE is the ceiling |
+| TP=2 MTP | DEAD (spec-allgather not graph-capturable; MTP-off TP2 already 0.87x) | single-card DP per replica |
+| 35B-A3B MoE + MTP | +3% FLAT (sparse 3B-active) | MoE headline is CAPTURE not MTP |
+The old "single-card MTP = -19%" was STALE (pre warmup-spoof-PIECEWISE-fix 910182c). The campaign refuted it and delivered
+the first real single-card MTP multiplier on this stack. PRODUCTION ACTION: enable MTP spec=4 on the daily driver (the
+27B int4 W4A16 DP replicas) for +79% interactive single-stream. Scripts: 77-83. Logging table: MTP_TODO.

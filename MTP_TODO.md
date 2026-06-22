@@ -2,12 +2,12 @@
 
 **Created:** 2026-06-20 · **Updated:** 2026-06-22 (M0 PASS logged)
 **Owner:** b70 team
-**Status:** IN PROGRESS — **M0 PASS + M1 HEADLINE WIN (2026-06-22)**. Single-card 27B W4A16 MTP spec=5 on v0230 +
-PIECEWISE = **52.95 t/s vs 30.84 MTP-off = 1.72x (+72%), NET-POSITIVE** — this REFUTES the old -19% (stale; the
-warmup-spoof PIECEWISE fix 910182c flipped it) and BEATS the Lorbus 45.2 t/s precedent. FULL/TRITON_ATTN crashes on a
-gdn_attention spec-op shape bug (`spec_query_start_loc must have size [num_spec_decodes+1]`) but PIECEWISE already wins.
-**M2 DONE: spec sweep WINNER = spec=4 -> 55.28 t/s = 1.79x** (beats spec=5's 1.71x; accept_len rises 2.48->3.74 but tok/s
-peaks at spec 3-4). Production single-card MTP pick = **spec=4, ~55 t/s, 1.79x**. Now: FULL_DECODE_ONLY retry + M3 Half-KV.
+**Status:** ✅ **CAMPAIGN COMPLETE 2026-06-22 (M0-M5 all done).** HEADLINE: **single-card dense 27B W4A16 + MTP spec=4
+PIECEWISE = 55.28 t/s vs 30.84 = 1.79x** (beats Lorbus 45.2; refutes the stale -19%). Half-KV FREE (accept 3.29 vs 3.25).
+FULL capture BLOCKED (gdn_attention spec op can't run in any captured graph on v0230 0.1.9). TP=2 MTP DEAD (spec-allgather
+not graph-capturable; even MTP-off TP2 is 0.87x single-card) -> single-card DP-replica is the path. 35B-A3B MoE + MTP =
++3% FLAT (MTP is a DENSE lever, not a sparse-MoE lever; MoE headline is CAPTURE 66.8 t/s). **PRODUCTION ACTION: enable
+MTP spec=4 on the daily-driver 27B int4 DP replicas (+79% interactive single-stream).** Full per-experiment log in JOURNAL.
 
 > ### [M0 RESULT 2026-06-22 -- PASS] (JOURNAL has the full log)
 > Serve 27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE + `--speculative-config '{"method":"mtp",
@@ -265,7 +265,8 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | **4** | 3.25 | — | **55.28** | 30.84 | **1.79x** | — | — | ~17GiB | — | **B1 WINNER** single-card MTP, beats Lorbus 45.2; FULL crashes spec_query_start_loc |
 | — | Qwen3.6-27B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B2 |
 | 2026-06-22 | Qwen3.6-35B-A3B | int4-AR MoE | v0230moe PIECEWISE+fp8KV | 1 | 8192/fp8 | 4 | 2.68 | — | **68.83** | 66.82 | **1.03x** | — | — | — | — | **M5** MoE+MTP NOVEL; MTP FLAT on MoE (sparse 3B-active); capture is the MoE headline |
-| — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) |
+| 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 TP=2 PIECEWISE +SYCLKERNELS | 2 | 8192/fp16 | off/4 | — | — | CRASH | 26.96 | — | — | — | — | — | **M4** TP2 MTP-off 0.87x single-card; MTP-on CRASHES (spec-allgather not graph-capturable) -> TP=2 MTP DEAD |
+| — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) -- needs RagingNoper capture-safe collectives (see M4) |
 
 **Reference (REAL + PUBLIC -- localmaxxing.com, user `ytnszmy`, 2026-06-10; cached `data/localmaxxing/`):** Qwen3.6-27B BF16, **4x B70 TP=4**, spec=5 -> accept 4.04, dec 54.2, prefill 2100. Repro from the row's notes: `intel/llm-scaler-vllm:0.14.0-b8.3` + `vllm_xpu_kernels v0.1.9` + `qwen3_5.py` (#43565) + Half-KV; **on our v0230 image #43565 is native -- reproduce THERE, not on 0.14.x**. The ONE missing ingredient is `cudagraph_mode` (PIECEWISE vs FULL) -- add FULL ourselves (RagingNoper recipe). It beats our single-card MTP (currently **-19%: 25.5 vs 31.4, PIECEWISE**), so FULL capture is the unlock. (Other localmaxxing datapoints: RagingNoper 35B-A3B FULL-capture **102.5 t/s no-spec**; Lorbus 27B-int4 single-card MTP **45.2/41.3 t/s**, accept 86/65%; Lorbus TP2 MTP **35.6 t/s [NEG]**. Public sanity: Puget 4xB70 TP=4 27B-dense 13.1 t/s/1u no-MTP; vLLM PR #43565 MTP on B60/Qwen3-Next-80B/spec=2.)
 
