@@ -148,3 +148,25 @@ PRIORITY for making W4A16 the headline:
 2. THEN the int4 decode-GEMV kernel (the 1.42x). MTP likely SHRINKS this: the verify step runs a small
    batch (K+1 ~= 5), closer to a GEMM, where `int4_gemm_w4a16` already WINS -> measure the kernel gap at the
    SPEC batch size, not just batch=1.
+
+## DECODE-GEMV MICROBENCH: the spec batch is ~FREE for int4_gemm_w4a16 (2026-06-23, card 0)
+Timed `torch.ops._xpu_C.int4_gemm_w4a16` (NT-format weight) at M=1..8 for the 27B MLP shapes (random packed
+weights, 300 iters, warmed). M=1 = pure decode GEMV; M=5 = MTP spec=4 verify batch.
+```
+  shape                         M=1            M=2     M=4     M=5            M=8     throughput(M5 vs M1)
+  gate_up (N=34816,K=5120)      208us 428GB/s  162us   164us   165us          168us  6.29x
+  down_proj (N=5120,K=17408)    83.8us 532GB/s 84.0us  84.1us  84.5us         85.1us 4.96x
+```
+FINDINGS:
+- **Pure weight-bandwidth-bound at M=1**: latency barely moves M=1->M=8 (down_proj 83.8->85.1us); down_proj
+  M=1 already hits ~532 GB/s (near memory roofline). The MACs are nearly free; the int4 weight-read dominates.
+- **The MTP verify batch (M=5) is ~FREE**: 4.96-6.29x throughput vs M=1 (down_proj +0.8% time for 5x work).
+  So each verify step costs ~= one decode token's weight-read -> MTP amortizes the GEMV almost perfectly.
+- gate_up shows a **M=1-specific penalty** (208us vs 162us at M=2) that M>1 avoids -- the GEMV weakness the
+  spec batch removes. (down_proj is clean/monotonic.)
+INTERPRETATION: the ~1.42x AutoRound-vs-CT decode gap is an M=1 GEMV-efficiency gap; the MTP verify runs at
+M~5 where int4_gemm_w4a16 is near-roofline (and already beats AutoRound on prefill/GEMM). So restoring MTP on
+W4A16 should both add the ~1.57x MTP lever AND largely neutralize the kernel gap -> **MTP-first is the right
+order**; a standalone int4 GEMV M=1 tune is the smaller, second lever. (auto_round_kernel's XPU GEMM is not
+exposed as a simple torch op -- only `auto_round_kernel_cpu` -- so the head-to-head at M=5 is left for the
+MTP re-bench, where the end-to-end W4A16+MTP vs AutoRound+MTP number captures it directly.)
