@@ -256,3 +256,40 @@ perf inferred from the 14B ladder + the existing 27B-W4A8-q-prepacked (20.9 t/s 
 TOP NEXT LEVERS: (1) col-reorder + dp4a int8 GEMV (docs/08/19) to lift the small-N decode GEMVs toward BW
 (W8A8 decode ~26->35-40 t/s); (2) align prepack tensor layout w/ vLLM merged-column loader to unblock 27B W4A8 serve;
 (3) int8 MoE fused-expert kernel for the 35B (docs/kernel/18 Track A) -- prefill/throughput win only.
+
+================================================================================
+INT8 CAMPAIGN -- UPDATE 2 (2026-06-22): serving cracked, TP=2, P2P verdict, n-gram
+================================================================================
+Extends the bottom-line above. The "serve limits" caveat is now largely RESOLVED -- the 27B int8 models SERVE.
+
+SERVED LADDERS (27B, ctx2048, our int8 kernel) -- the real numbers, not inferred:
+  scheme/TP            c1 dec   c1 TTFT   c8 dec   c8 agg
+  W4A8 TP=1 (1 card)   20.7     876ms     12.2     67.8     <- best for a fit-one-card model
+  W4A8 TP=2 (graph)    22.1     2858ms    6.3      34.3     <- +6.5% c1 dec, worse TTFT/conc (allreduce tax)
+  W8A8 TP=2 (graph)    17.5     2728ms    6.1      34.0     <- 35GB, TP=2-only; now servable
+  + n-gram spec (c1)   37.8 t/s decode (~1.8x the 20.7, workload-dependent; concurrency path WIP)
+The full 27B-W4A8 serve took fixing 6 stacked XPU-serve bugs (JOURNAL); the keystone was ignore-list 339->4-regex
+(explicit linear_attn names missed the DeltaNet FUSED projections -> packed-int4-vs-bf16 shape assert).
+
+TP=2 / multi-card (docs/P2P_GPU.md):
+- [unlock] **CCL_ENABLE_SYCL_KERNELS=1** makes the oneCCL allreduce GRAPH-CAPTURABLE -> TP=2 + PIECEWISE graph works
+  with NO vLLM source patch (Seguin needed a code patch). This is what made the 35GB W8A8 servable. Novel B70 result.
+- TP=2 LOSES for fit-one-card models on our Gen3 cross-die box (allreduce tax: 3.3x TTFT, 2x worse concurrency, vs a
+  +6.5% c1-decode edge). TP=2's job is fitting >32GB models, not speed.
+- [P2P verdict] B70<->B70 P2P is UNAVAILABLE on kernel 6.18: a raw 12-variation Level-Zero ctypes probe
+  (zeDeviceCanAccessPeer) returns False for EVERY env (debug keys, FLAT/COMPOSITE hierarchy, IPC drmfd/pidfd, ...);
+  vLLM P2PACCESS=1 fails worker-init. NO userspace spoof. Gated on a host reboot: iommu=off pre-test, then kernel 7.0+
+  (drm/xe P2P patch). Plan: P2P_GPU sec I. Host-staged (P2P off) is the only working TP=2 path today.
+
+OPTIMIZATION LEVERS proven (no reboot):
+- n-gram speculative decode: ~1.8x c1 decode on repetitive output (concurrency path needs a fix). docs/literature/10.
+- (orthogonal, not yet done) Seguin's clone-safe + oproj-delay allreduce fusion patches to cut the host-staged
+  allreduce tax further.
+
+35B int8 MoE (Q6/Q7, deferred): Steve Seguin's codex/qwen36-quark-int8-tracking branch SERVES the 35B-A3B as
+**Quark W8A8 INT8** at ~99 t/s on TP4 (persistent-MoE-layerlet kernel). => Quark is likely the cheap production path for
+our 35B int8 (vs our multi-day llmcompressor-GPTQ). docs/literature/10 + QUANTS_TODO sec 7.
+
+MTP: not viable on B70 -- Seguin pins the root cause as a spec-decode VERIFIER / KV / input-position boundary bug
+("target rejects correct drafts"), not draft quality or precision. So W8A8-vs-W4A16 MTP-receptivity is moot until that
+vLLM-XPU bug is fixed. Confirms + deepens our doc-09 finding.
