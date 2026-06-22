@@ -68,28 +68,54 @@ model = AutoModelForCausalLM.from_pretrained(
     SRC, torch_dtype=torch.bfloat16, device_map="auto", max_memory=mm, trust_remote_code=True)
 layer_config = build_layer_config(model)
 
-# ---- construct AutoRound with API-version-robust retries (codex flagged kwarg drift) ----
-common = dict(model=model, tokenizer=tok, iters=ITERS, nsamples=NSAMPLES, seqlen=SEQLEN,
-              dataset=calib, layer_config=layer_config)
-attempts = [
-    ("bits/group_size/sym + quant_nontext_module", dict(bits=4, group_size=128, sym=True, quant_nontext_module=False)),
-    ("scheme=W4A16 + quant_nontext_module",        dict(scheme="W4A16", quant_nontext_module=False)),
-    ("bits/group_size/sym (no nontext kw)",        dict(bits=4, group_size=128, sym=True)),
-    ("scheme=W4A16 (no nontext kw)",               dict(scheme="W4A16")),
+# ---- AutoRound 0.13.x auto-detects MLLM mode for this VLM ("Using MLLM mode") and REQUIRES a processor
+# (quantize() else asserts "processor should not be None"). Provide it; quant_nontext_module=False -> quantize
+# ONLY the language-model text modules (vision stays bf16 anyway via layer_config). ----
+proc = None
+for loader in ("AutoProcessor", "AutoImageProcessor"):
+    try:
+        import transformers
+        proc = getattr(transformers, loader).from_pretrained(SRC, trust_remote_code=True)
+        print(f"loaded {loader}: {type(proc).__name__}"); break
+    except Exception as e:
+        print(f"{loader} load failed:", str(e)[:200])
+
+have_mllm = False
+try:
+    from auto_round import AutoRoundMLLM
+    have_mllm = True
+    try: print("AutoRoundMLLM signature:", inspect.signature(AutoRoundMLLM))
+    except Exception as e: print("mllm sig err", e)
+except Exception as e:
+    print("AutoRoundMLLM import failed:", str(e)[:200])
+
+common = dict(model=model, tokenizer=tok, iters=ITERS, nsamples=NSAMPLES, seqlen=SEQLEN, layer_config=layer_config)
+# attempts: (label, class, extra_kwargs). MLLM class + processor + quant_nontext_module=False is the primary path;
+# text-only calib via dataset=calib (list[str]); fall back across kwarg spellings AutoRound's version may want.
+attempts = []
+if have_mllm:
+    attempts += [
+        ("MLLM W4A16 proc nontext=False txt",   "mllm", dict(scheme="W4A16", processor=proc, quant_nontext_module=False, dataset=calib)),
+        ("MLLM W4A16 proc nontext=False",       "mllm", dict(scheme="W4A16", processor=proc, quant_nontext_module=False)),
+        ("MLLM b4/gs128/sym proc nontext=False","mllm", dict(bits=4, group_size=128, sym=True, processor=proc, quant_nontext_module=False, dataset=calib)),
+    ]
+attempts += [
+    ("base W4A16 proc nontext=False txt",   "base", dict(scheme="W4A16", processor=proc, quant_nontext_module=False, dataset=calib)),
+    ("base W4A16 nontext=False txt",        "base", dict(scheme="W4A16", quant_nontext_module=False, dataset=calib)),
 ]
 ar = None
-for label, kw in attempts:
+for label, cls, kw in attempts:
     try:
-        print(f"-- AutoRound construct: {label}")
-        ar = AutoRound(**common, **kw)
-        print("   constructed OK")
+        print(f"-- construct: {label}")
+        ar = (AutoRoundMLLM if cls == "mllm" else AutoRound)(**common, **kw)
+        print("   constructed OK via", cls)
         break
     except TypeError as e:
         print("   TypeError:", str(e)[:300])
     except Exception as e:
         print("   ERR:", type(e).__name__, str(e)[:300])
 if ar is None:
-    print("FATAL: could not construct AutoRound with any kwarg form"); sys.exit(3)
+    print("FATAL: could not construct AutoRound(MLLM) with any form"); sys.exit(3)
 
 print("=== quantize() ===")
 ar.quantize()
