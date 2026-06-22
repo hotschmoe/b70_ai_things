@@ -2993,3 +2993,19 @@ verdict -> Q8 DONE/VALIDATED. The QUANTS_TODO queue is CLOSED (Q0-Q5,Q8 done; Q6
   a one-card quality serve (the only int4-AR for this coder model; none on HF). NEW REUSABLE FINDING = the serve-side
   counterpart to the MLLM-calib dodge: any AutoRound-on-qwen3_5-VLM checkpoint needs the scripts/87 config repair to serve.
   This also de-risks the now-unblocked Q2/Q4 W8A8-AutoRound re-runs + RESEARCH_TODO Track 3.
+
+== 2026-06-22 :: POST-Q8 FRONTIER -- FULL-capture MTP chased to ground: it is KERNEL-gated (RESEARCH_TODO Track 1d CLOSED) ==
+config -> Lorbus 27B int4, cudagraph_mode=FULL_DECODE_ONLY + --attention-backend TRITON_ATTN + MTP spec=5 + caps
+  [1,2,4,6,8,16,32] (incl 1+spec=6), WITH a port of vllm-ascend PR #7148 (scripts/88) appended to triton_shim/sitecustomize.py
+  -- gates the dispatcher assert `num_tokens_padded % uniform_decode_query_len == 0` instead of crashing on it.
+command -> mtp_full_retry.sh under gpu-run.
+result -> the #7148 dispatcher patch LOADED in all procs and WORKED: capture got PAST the dispatcher and reached
+  `Capturing CUDA graphs (decode, FULL): 0/3`, THEN crashed in the BAKED KERNEL:
+  torch.ops.vllm.gdn_attention_core_xpu -> vllm/_xpu_ops.py:151 -> torch.ops._xpu_C.gdn_attention ->
+  RuntimeError: spec_query_start_loc must have size [num_spec_decodes + 1].
+verdict -> DEFINITIVE BISECTION: FULL-capture MTP on B70 is **kernel-gated** (the _xpu_C.gdn_attention op in
+  vllm_xpu_kernels 0.1.9), NOT dispatcher-gated and NOT fixable from the vLLM Python layer. TRITON_ATTN does not help --
+  the GDN decode core always routes through the baked gdn_attention_core_xpu op. So **PIECEWISE 1.79x is the CONFIRMED
+  single-card ceiling on stock v0230.** The fix requires Intel (vllm_xpu_kernels). Filed-ready issue: docs/kernel/21.
+  This closes the long-standing FULL/TRITON_ATTN open lever (RESEARCH_TODO Track 1d) with a concrete, evidenced answer.
+  Cleanup: restored triton_shim/sitecustomize.py from .bak (patch preserved in scripts/88); lease freed.

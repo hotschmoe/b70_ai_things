@@ -96,12 +96,15 @@ not accuracy-bound. All of this is GPU-touch -> **gate behind `scripts/gpu-run`*
       and overhead-bound at small-N; and commit 15918cc showed int8 LINEAR gives no MoE speedup. Only a dense-W8A8 lever.
 - [ ] **1b. Vectorize the quant K-loop** in `dynamic_per_token_int8_quant` -- cut per-token activation-quant overhead.
 - [ ] **1c. Fuse scale application** where possible (per-token act scale x per-channel weight scale into the epilogue).
-- [~] **1d. PIECEWISE -> FULL graph capture.** PIECEWISE DONE (+16.7%, ~23 -> 27.2 t/s, commit 910182c; warmup-spoof
-      fixes PIECEWISE c>1 on stock v0230). **FULL still BLOCKED** by Intel SYCL-Graph `work_group_scratch_memory` (via
-      flash-attn; commit a5645b2). Open path: `--attention-backend TRITON_ATTN` (vLLM PR #34482) routes attention off
-      flash-attn -> may unblock FULL capture; `torch.xpu.XPUGraph` exists upstream (PyTorch 2.11) but vLLM-XPU hasn't
-      wired it. **FULL/TRITON_ATTN is the single open lever for MTP-positive (codex+repo: PIECEWISE+MTP = -19% because
-      attn + `gdn_attention_core_xpu` stay eager during verify). This is the MTP M1 frontier.**
+- [~] **1d. PIECEWISE -> FULL graph capture. RESOLVED 2026-06-22: PIECEWISE is the ceiling; FULL is KERNEL-gated.**
+      PIECEWISE DONE -- and the warmup-spoof fix made PIECEWISE+MTP **+1.79x** (NOT -19%; MTP_TODO M0-M5). The FULL-capture
+      lever was chased to ground: ported vllm-ascend #7148's dispatcher fix (scripts/88) AND tried `--attention-backend
+      TRITON_ATTN` + `FULL_DECODE_ONLY` + spec-aligned caps. Result: the dispatcher patch works (capture proceeds), but it
+      then crashes in the BAKED XPU KERNEL -- `torch.ops._xpu_C.gdn_attention -> RuntimeError: spec_query_start_loc must
+      have size [num_spec_decodes + 1]`. TRITON_ATTN does NOT dodge it (the GDN *decode* core always routes through the
+      baked `gdn_attention_core_xpu` op). So FULL-capture MTP needs an Intel `vllm_xpu_kernels` fix -- not a vLLM-Python
+      fix. Issue draft: docs/kernel/21. The old "work_group_scratch_memory / flash-attn" framing is superseded -- the
+      real wall is the kernel's spec-metadata shape check. **Lever CLOSED on stock v0230; PIECEWISE 1.79x stands.**
 - [ ] **1e. Layer-timing traces** -- identify any op NOT landing on the int8 fast path (dequant-to-bf16 leaks).
 - [ ] **1f. Upstream (parked):** PR1 -> vllm-xpu-kernels (int8_gemm_w8a8 + s8_s8 joint dtype + fused quant);
       PR2 -> vllm (`XPUInt8ScaledMMLinearKernel` + registry + `.get()` hardening). RFC #37979 omits INT8 W8A8 for XPU.

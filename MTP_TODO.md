@@ -73,6 +73,19 @@ MTP spec=4 on the daily-driver 27B int4 DP replicas (+79% interactive single-str
 > (past 1.79x); (b) crash persists but moves -> dispatcher fixed, the residual is the XPU gdn_attention kernel op ->
 > file a vllm-xpu-kernels issue with the repro (the `spec_query_start_loc must have size` assert is UNTRACKED upstream).
 > Either way the bug is localized. This is the #1 post-Q8 GPU lever (RESEARCH_TODO Track 1d frontier).
+>
+> **[RESULT 2026-06-22 -- FULL is KERNEL-GATED, definitively. Experiment DONE, outcome (b).]** Ran it: Lorbus 27B int4,
+> FULL_DECODE_ONLY + TRITON_ATTN + MTP spec=5 + caps [1,2,4,6,8,16,32], with the scripts/88 #7148 dispatcher patch
+> appended to triton_shim/sitecustomize.py. The patch LOADED in all procs (`[b70 sitecustomize] patched cudagraph
+> _create_padded_batch_descriptor`) and WORKED -- capture got PAST the dispatcher assert and reached
+> `Capturing CUDA graphs (decode, FULL): 0/3`. It then crashed in the **baked XPU KERNEL**, not the dispatcher:
+> `torch.ops.vllm.gdn_attention_core_xpu -> vllm/_xpu_ops.py:151 -> torch.ops._xpu_C.gdn_attention -> RuntimeError:
+> spec_query_start_loc must have size [num_spec_decodes + 1]`. So the #7148 port correctly fixes the Python/dispatcher
+> side, but **FULL-capture MTP on B70 is blocked by the `_xpu_C.gdn_attention` op (vllm_xpu_kernels 0.1.9) itself** --
+> NOT fixable from the vLLM Python layer. NOTE: TRITON_ATTN did NOT dodge it -- the GDN *decode* core always routes
+> through the baked `gdn_attention_core_xpu` op regardless of attention-backend. **VERDICT: PIECEWISE 1.79x is the
+> CONFIRMED single-card ceiling on stock v0230; FULL needs an Intel vllm_xpu_kernels fix (the assert is untracked
+> upstream -> issue draft: docs/kernel/21_gdn_spec_capture_issue.md). Shim restored; lease freed.**
 
 > ### [M4 / M5 recipe -- community-research 2026-06-22]
 > - **M4 (TP=2 MTP):** the capture-safe path is ALREADY ours -- `CCL_ENABLE_SYCL_KERNELS=1` makes TP=2 PIECEWISE capture
