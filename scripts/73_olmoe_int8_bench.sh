@@ -12,7 +12,7 @@ TP="${TP:-1}"
 docker rm -f "$NAME" 2>/dev/null || true
 echo "=== serve $MDIR quant=$QUANT TP=$TP on $IMG ==="
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
-  --ipc=host --shm-size 16g -v "$ROOT:$ROOT" -e ZE_AFFINITY_MASK="${MASK:-0}" \
+  --network host --ipc=host --shm-size 16g -v "$ROOT:$ROOT" -e ZE_AFFINITY_MASK="${MASK:-0}" \
   "$IMG" vllm serve "$ROOT/models/$MDIR" --host 0.0.0.0 --port 18080 --trust-remote-code \
   --served-model-name olmoe-int8 --dtype auto --quantization "$QUANT" --tensor-parallel-size "$TP" \
   --max-model-len "${MAXLEN:-4096}" --max-num-seqs "${MAXSEQS:-8}" --gpu-memory-utilization "${UTIL:-0.90}" \
