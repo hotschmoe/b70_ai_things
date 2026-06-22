@@ -2,7 +2,16 @@
 
 Investigation log for fixing `Qwen3.6-27B-W4A16` (compressed-tensors `pack-quantized`, int4 weight / 16-bit
 act) so it serves on the B70. Goal: keep ALL models in compressed-tensors format for parity (and as the
-substrate for future W4A4 research -- W4A4 = compressed-tensors int4-weight + int4-act). Status: IN PROGRESS.
+substrate for future W4A4 research -- W4A4 = compressed-tensors int4-weight + int4-act).
+
+## STATUS: RESOLVED 2026-06-23 -- serves COHERENTLY on :v0230, one card.
+Root cause was a weight-name prefix mismatch (all weights silently skipped -> random init -> "!!!!"
+garbage), NOT the int4 kernel. Fix = a `load_weights` remap (`model.language_model.` -> `model.`) on the
+registered text subclass, on top of the four structural fixes below. After the remap: skipped-weight
+warnings 0; gen "The capital of France is Paris... most populous city of France"; "The ocean is a vast,
+mysterious expanse of saltwater that covers more than 70% of the Earth's surface". The full fix lives in
+`rdy_to_serve/qwen36-27b-w4a16/patches/` (sitecustomize.py + qwen35_text_hybrid.py). The XPUwNa16 int4
+kernel was EXONERATED (see below). Below: the full debugging chain (kept for the research record).
 
 Image: `vllm-xpu-env:v0230` (has the GDN/gated-delta-net kernel the Qwen3.5 hybrid LM needs). All work on
 ONE card (`gpu-run --card 0`), leaving the other free. Recipe dir: `rdy_to_serve/qwen36-27b-w4a16/`.
@@ -76,3 +85,29 @@ would need TP=2 (both cards, ~27 GiB/card). Keep int4-in-place (XPUwNa16 fix) as
 
 [!] MULTI-AGENT NOTE: this box may have another agent on card 1. ALWAYS `gpu-run --card 0` for this work
 (never the default, which locks BOTH cards). Do not touch card 1 / gpu.lock.1.
+
+## ROOT CAUSE FOUND + the linear kernel EXONERATED (2026-06-23)
+Two numerical unit tests of `torch.ops._xpu_C.int4_gemm_w4a16` on `--card 0` (vs a reference int4 dequant
+matmul) PROVED the op + the XPUwNa16 layout are CORRECT:
+- the op requires the weight in **NT format** -- pass `weight_packed.t()` as a NON-contiguous VIEW (a
+  `.contiguous()` there raises `RuntimeError: Int4 weight must be in NT format!`), with `scale.t().contiguous()`
+  -> `[n_groups, N]`. This is exactly what `XPUwNa16.apply` does.
+- synthetic (N=K=256, g128, uint4b8): maxerr 0.0156 [MATCH]. REAL layer (down_proj N=5120 K=17408 g128):
+  maxerr 0.0156 [MATCH]. So compressed-tensors int4 W4A16 computes correctly on XPU. NOT the bug.
+
+THE ACTUAL BUG = **weight-name prefix mismatch -> ALL weights silently skipped -> model runs on RANDOM
+init -> garbage**. Serve log (`qwen3_5.py:420`):
+```
+WARNING Parameter language_model.embed_tokens.weight not found in params_dict, skip loading
+WARNING Parameter language_model.layers.0.mlp.down_proj.weight_packed not found in params_dict, skip loading
+... (every layer/param)
+```
+The checkpoint was quantized as the VL model's `.language_model`, so its keys are `model.language_model.*`
+(+ `lm_head.weight`). The VL class loads fine (it HAS `self.language_model`); the standalone text class's
+params are `model.*`, so the `language_model.` segment never matches and every weight is skipped (vLLM only
+WARNS, does not error -> it serves HEALTHY on random weights). FIX: a weights remap on the registered text
+subclass that strips the `language_model.` segment (`model.language_model.` -> `model.`). [implementing]
+
+LESSON (for research): "serves HEALTHY + coherent-looking infra logs" != "weights loaded". Always grep the
+load for `not found in params_dict` / `skip loading` when bringing up a re-homed checkpoint. The
+all-same-token ("!!!!") degenerate output is the classic random-weights signature (cf. the Q8 false positive).

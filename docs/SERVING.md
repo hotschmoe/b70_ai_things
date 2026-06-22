@@ -95,8 +95,9 @@ cd /mnt/vm_8tb/b70
   serve sweep at 512/128 was near-identical (KV pool = f(util), not max-len).
 - Concurrency (captured, fp16 KV, 512/128): aggregate ~28 t/s @C1 -> ~217 @C32 -> ~235 @C64; per-stream
   decode drops below single-stream past C8 (GDN batches poorly). Low-latency serving: stay C2-C4. See FINDINGS.
-- Other 27B dirs on the host are NOT this recipe: `Qwen3.6-27B-W4A16` (our compressed-tensors w4a16)
-  won't serve (XPUwNa16 needs dims /32; the gated-attn 4304 dim fails). Use the Lorbus AutoRound int4.
+- Other 27B dirs on the host are NOT this recipe: `Qwen3.6-27B-W4A16` (our compressed-tensors w4a16) is a
+  separate golden dir now -- `rdy_to_serve/qwen36-27b-w4a16/` (FIXED 2026-06-23; it is a text-only quant that
+  needs a load shim -- see docs/kernel/22). The Lorbus AutoRound int4 here is the faster daily-driver pick.
 
 ## RECIPE: Qwen3.6-27B W4A8 (prepacked, quality GDN+lm_head bf16)  [SECONDARY -- slower than w4a16]
 Only if you specifically want the int8-activation/int8-XMX path on the 27B. Decode **20.9 t/s** captured

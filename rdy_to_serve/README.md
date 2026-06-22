@@ -53,6 +53,7 @@ Two single-card models can run AT ONCE (one per card) under one lease:
 | `qwen3-14b-w8a8/` | Qwen3-14B | **W8A8 INT8** (compressed-tensors) | 1 | `:int8g` | the int8-kernel BASELINE (XPUInt8ScaledMM) |
 | `qwen3-14b-w4a8/` | Qwen3-14B | **W4A8** int4w/int8a, GPTQ, prepacked | 1 | `:int8g` | int8-activation 14B (~9.3 GiB packed) |
 | `qwen36-27b-w4a8/` | Qwen3.6-27B | **W4A8** int4w/int8a, SQ+GPTQ, prepacked | 1 | `:int8g` | int8-activation 27B (prepack + GDN; SECONDARY to w4a16) |
+| `qwen36-27b-w4a16/` | Qwen3.6-27B | **W4A16** compressed-tensors int4 | 1 | `:v0230` | the COMPRESSED-TENSORS 27B (parity / W4A16 research); text-only-hybrid load shim |
 
 ## NOT ON THE SHELF (every other host model, with the reason)
 | host model dir | status | reason / next step |
@@ -61,7 +62,7 @@ Two single-card models can run AT ONCE (one per card) under one lease:
 | `Qwen3-14B-W4A16-gptq` | UNTESTED | 14B int4-gptq; recipe not re-verified this pass. Likely `:v0230`. Promote after a smoke. |
 | `Qwen_Qwen3.6-27B-FP8` | UNTESTED | B70/Xe2 has NO FP8 ALU -> needs dequant path; serve-correctness unverified. Smoke before shelving. |
 | `Qwen3.6-27B-W8A8-sqgptq` | DEAD-END | dense true-int8 W8A8 serves but ~1.7 t/s (~13x slower than the `:int8` path). Kept for reference; not a serve target. |
-| `Qwen3.6-27B-W4A16` | BROKEN | compressed-tensors W4A16 will NOT serve on XPU (XPUwNa16 needs dims /32; the gated-attn 4304 dim fails). |
+| (`Qwen3.6-27B-W4A16`) | SHELVED | FIXED 2026-06-23 -> `qwen36-27b-w4a16/` above. (Old note "won't serve, 4304 dim" was a red herring -- the real bug was a text-only-checkpoint name-prefix mismatch; see kernel/22.) |
 | `Qwen_Qwen3.6-27B` | RESEARCH | full BF16 27B (72G) -- too big for one card; TP=2/PP=2 capacity studies only. |
 | `Qwen_Qwen3.6-35B-A3B` | RESEARCH | full BF16 35B MoE (67G) -- TP=2 only; reference/baseline. |
 | `Qwen_Qwen3-0.6B` | DRAFT | tiny; speculative-decode draft / smoke target, not a standalone serve. |

@@ -35,23 +35,21 @@ class Qwen3_5ForCausalLM(_Base):
         positions = torch.arange(n, dtype=torch.long).unsqueeze(0).expand(3, n).contiguous()
         return positions, 0
 
+    def load_weights(self, weights):
+        # THE fix for garbage output: this checkpoint was quantized as the VL model's `.language_model`,
+        # so every key is `model.language_model.<...>` (+ `lm_head.weight`). The standalone text class's
+        # params are `model.<...>`, so without a remap AutoWeightsLoader routes `language_model.<...>` into
+        # self.model and finds nothing -> ALL weights skip ("not found in params_dict") -> random init ->
+        # "!!!!" garbage. Strip the infix so the keys match.
+        remapped = (
+            (name.replace("model.language_model.", "model."), w) for name, w in weights
+        )
+        return super().load_weights(remapped)
 
-# W4A16 LINEAR KERNEL: the stock XPUwNa16 int4_gemm_w4a16 path produces garbage ("!!!!") on this
-# compressed-tensors checkpoint (likely a weight/scale layout mismatch in its shared gptq-marlin transpose
-# dance). Force our explicit dequant kernel (int4 -> bf16 at load, dense GEMM) ahead of it for XPU WNA16.
-try:
-    from vllm.model_executor.kernels.linear import _POSSIBLE_KERNELS
-    from vllm.platforms import PlatformEnum
-    from xpu_wna16_dequant import XPUDequantWNA16LinearKernel
 
-    _xpu_list = _POSSIBLE_KERNELS[PlatformEnum.XPU]
-    if XPUDequantWNA16LinearKernel not in _xpu_list:
-        _xpu_list.insert(0, XPUDequantWNA16LinearKernel)  # highest priority -> wins over XPUwNa16
-    import sys
-    print("[qwen35-text-shim] forced XPUDequantWNA16 ahead of XPUwNa16", file=sys.stderr)
-except Exception as e:  # pragma: no cover
-    import sys
-    print(f"[qwen35-text-shim] dequant wiring skipped: {e}", file=sys.stderr)
+# NOTE: the stock XPUwNa16 int4_gemm_w4a16 kernel was VERIFIED CORRECT in isolation (op output matches a
+# reference dequant on both synthetic and real checkpoint layers, maxerr ~0.016). So the linear kernel is
+# NOT the garbage-output cause -- do not force the dequant fallback (it also OOMs at ~4x weight memory).
 
 # Best-effort: also run the Qwen3.5 ssm-dtype config hook for this arch. Not load-bearing.
 try:
