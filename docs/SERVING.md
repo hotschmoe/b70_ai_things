@@ -35,12 +35,14 @@ full single-stream latency/replica, zero inter-GPU comms (measured; `bin/64_data
   -> `MODEL=` and `TOKPATH=` always use the **container** path `/models/...`, never the host path.
 - Serve port is always `18080`. Served container name defaults to `vllm_w4a8`.
 
-## [!] Every GPU touch goes through the flock lease
-`/mnt/vm_8tb/b70/gpu-run <cmd>` -- runs `<cmd>` only while holding `/mnt/vm_8tb/b70/gpu.lock`.
-`/mnt/vm_8tb/b70/gpu-run --status` -- who holds it (or `free`). A `docker run -d` serve returns
-immediately, so wrapping JUST the serve in gpu-run releases the lease right after startup. To hold the
-lease for a serve+bench session, wrap the WHOLE session (serve -> wait -> bench -> `docker stop`) in one
-`gpu-run` call. Release by `docker stop <name>` when done.
+## [!] Every GPU touch goes through the per-card flock lease
+`/mnt/vm_8tb/b70/gpu-run <cmd>` -- locks BOTH cards (whole box: TP=2 / data-parallel / PP).
+`/mnt/vm_8tb/b70/gpu-run --card N <cmd>` -- locks ONLY card N (run on one card, leave the other free for a
+`--card <other>` run). `/mnt/vm_8tb/b70/gpu-run --status` -- per-card holder (or `free`). A `docker run -d`
+serve returns immediately, so wrapping JUST the serve in gpu-run releases the lease right after startup. To
+hold the lease for a serve+bench session, wrap the WHOLE session (serve -> wait -> bench -> `docker stop`)
+in one `gpu-run` call. Release by `docker stop <name>` when done. Pair `--card N` with the workload's own
+card pin (serve.sh `DEVICE=N`); the daily driver's `DD_CARD=N` mode does exactly this.
 
 ## The serve script: `30_serve_w4a8_graph.sh` (env-driven, all models)
 One script serves every quant; knobs are env vars (despite the "w4a8" name it serves w4a16/MoE too):

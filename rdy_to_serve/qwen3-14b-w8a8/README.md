@@ -25,5 +25,8 @@ checkpoint config -> log line `Selected XPUInt8ScaledMMLinearKernel for Compress
 - AutoRound vs GPTQ at W8A8 (Track 3b, evals/results/SUMMARY.md): GPTQ marginally wins (0.921/0.890 vs
   0.909/0.872 HumanEval+); the gap is ~CI-noise. int8 weights survive even XPU calibration (unlike int4).
 
-verified: _common smoke=GREEN (eager, :int8g rebuilt 2026-06-23, 62s): HEALTHY, id ok, gen
-"Paris... Washington, D.C.". Re-verify: `bin/serve-sweep --smoke`. (GRAPH=1 capture: w8a8 +16.7% historically.)
+verified: _common smoke=GREEN + GRAPH=1 capture bench (2026-06-23, :int8g): HEALTHY, id ok, coherent gen.
+PIECEWISE-captured INT8 W8A8 BASELINE (512-in/128-out, fp16 KV, card0):
+  c1  per-stream decode 25.54 t/s (agg 25.13, ttft 121ms) ; c2 26.22 (agg 51.12) ; c4 25.52 (agg 97.83).
+Clean linear aggregate scaling, no recompile stall. This is the number to beat with int8 GEMM/GEMV tuning.
+Re-verify: `bin/serve-sweep --bench`.

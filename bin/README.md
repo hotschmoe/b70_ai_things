@@ -5,7 +5,7 @@ from the golden path (`rdy_to_serve/`). See `../ORGANIZATION.md` for the full la
 
 | tool | what it is |
 |---|---|
-| `gpu-run` | the flock GPU lease -- serialize every B70 touch (one card-set, several agents). |
+| `gpu-run` | per-card flock GPU lease. Default locks BOTH cards (TP=2/DP/PP); `--card N` locks ONLY card N (run on one card, leave the other free for `--card <other>`). `--status` shows per-card holders. |
 | `30_serve_w4a8_graph.sh` | the generic env-driven serve engine (all quants; eager / PIECEWISE capture / TP). |
 | `35_sweep_bench.sh` | concurrency sweep vs a running server (`docker exec`s `vllm bench serve`). |
 | `64_dataparallel_2rep.sh` | dual-B70 data-parallel bench (2 replicas + proxy). |

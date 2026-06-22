@@ -3102,3 +3102,19 @@ verdict -> int8 baseline WORKS and the family is shelved (rdy_to_serve now has 6
   (full int8 family + images/int8g), this (daily_driver picker + SERVING + journal). NOTE: 27B-W4A8 is
   SECONDARY (w4a16 int4 decodes faster, ~30.8 vs ~20.9); smokes were EAGER (the GRAPH=1 capture default is
   per-model-proven on 27b-int4 but not re-bench'd for the int8 family this pass). Lease freed, host clean.
+
+== 2026-06-23 :: per-card gpu-run lease + daily_driver 3 modes + captured int8 baseline ==
+config -> (1) gpu-run rewritten for PER-CARD leasing: default locks BOTH cards (backward compatible: TP=2/
+  DP/PP), `--card N` locks ONLY card N. Two flocks gpu.lock.0/.1 (fd 8/9); --status is per-card. Synced to
+  BOTH the flat host path AND bin/ (kept identical -- else two lock schemes would not see each other).
+  (2) daily_driver three modes: DP=2 (default, replicate a fits-one-card model, ~2.1x), TP=2
+  (DD_REPLICAS=1 + a TP=2 model, both cards), and ONE-CARD (DD_CARD=N -> pin + lease only that card, leaving
+  the other free for `gpu-run --card <other>` experiments). (3) GRAPH=1 capture bench on qwen3-14b-w8a8.
+result -> per-card lease VERIFIED on host: --card 0 + --card 1 ran CONCURRENTLY (3s), two --card 0
+  SERIALIZED (6s), default WAITS for a held card. Owner record fixed to show the real cmd.
+  CAPTURED INT8 W8A8 BASELINE (qwen3-14b-w8a8, :int8g, PIECEWISE, 512/128, fp16 KV, card0):
+    c1 per-stream decode 25.54 t/s (agg 25.13, ttft 121ms) ; c2 26.22 (agg 51.12) ; c4 25.52 (agg 97.83).
+  Clean linear aggregate scaling, NO recompile stall (capture sizes covered the conc levels). This is the
+  number to beat for the int8 GEMM/GEMV optimization research.
+verdict -> all 3 daily-driver use cases supported with one-line invocations (see daily_driver_serve.sh
+  header + docs/SERVING.md). The captured int8 baseline is confirmed. Lease freed, host clean.

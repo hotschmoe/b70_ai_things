@@ -40,8 +40,11 @@ Tier-1 HumanEval+ `w8a8` run served the **RTN** dup, not SmoothQuant+GPTQ. Befor
 One B70, possibly several agents. Two overlapping GPU runs corrupt perf timings (noisy neighbor) and
 a buggy WIP kernel can wedge the device under another run. So **gate every real GPU touch** (serve,
 bench, perf_probe, on-GPU quant) behind the shared flock lease:
-- `gpu-run <cmd>` -- runs `<cmd>` only while holding `/mnt/vm_8tb/b70/gpu.lock` (waits if held).
-- `gpu-run --status` -- who holds it now (or `free`). Check before launching anything on the GPU.
+- `gpu-run <cmd>` -- locks BOTH cards (whole box: TP=2 / data-parallel / PP). Default; backward compatible.
+- `gpu-run --card N <cmd>` -- locks ONLY card N (run on one card, leave the other FREE for `--card <other>`).
+- `gpu-run --status` -- per-card holder (or `free`). Check before launching anything on the GPU.
+  (Per-card flocks: `gpu.lock.0` / `gpu.lock.1`. Pair `--card N` with the workload's own card pin, e.g.
+   serve.sh `DEVICE=N`. The daily driver's `DD_CARD=N` mode does this to keep the other card free.)
 - Editing/compiling stay fully parallel; only the GPU run is serialized. Zero cost when uncontended.
 - A long-lived serve holds the lease for its lifetime (correct -- only one model fits the card anyway);
   stop the server (`docker stop vllm_*`) to release. Don't bypass with a bare `docker run --device /dev/dri`.
