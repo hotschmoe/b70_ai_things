@@ -62,6 +62,17 @@ MTP spec=4 on the daily-driver 27B int4 DP replicas (+79% interactive single-str
 > - **mtp.fc gotcha (Lorbus HF card, CONFIRMED):** plain AutoRound packs `mtp.fc` as int4 -> vLLM SKIPS the MTP head ->
 >   0% accept. Keep `mtp.fc` BF16 (our `re:.*mtp.*` ignore + Q8 layer_config already do this -> safe). Check this on ANY
 >   self-rolled MTP quant. Also: FP8 native is NOT coming to Xe2 (Xe3 cancelled) -- INT8 W8A8 stays the low-precision path.
+>
+> **[FULL-CAPTURE EXPERIMENT -- READY TO RUN 2026-06-22]:** inspected v0230's `vllm/v1/cudagraph_dispatcher.py`.
+> `_create_padded_batch_descriptor` HARD-ASSERTS `num_tokens_padded % uniform_decode_query_len == 0` -- with MTP spec=4,
+> `uniform_decode_query_len = 1+spec = 5`, and the capture sizes (1,2,4,8,...) aren't multiples of 5 -> mis-built batch
+> descriptor feeds gdn_attention a wrong-sized `spec_query_start_loc`. **The #7148 port = `scripts/88_patch_cudagraph_xpu.py`**
+> (gate the divisibility instead of asserting it; fall back to uniform_decode=False when not divisible). TEST recipe:
+> mount scripts/88 as sitecustomize into v0230, serve 27B int4 with `cudagraph_mode=FULL_DECODE_ONLY` + `MTPTOK=4` +
+> capture sizes INCLUDING `1+spec` (e.g. `1,2,4,5,8,16,32,64`). OUTCOME: (a) crash clears -> FULL_DECODE_ONLY MTP works
+> (past 1.79x); (b) crash persists but moves -> dispatcher fixed, the residual is the XPU gdn_attention kernel op ->
+> file a vllm-xpu-kernels issue with the repro (the `spec_query_start_loc must have size` assert is UNTRACKED upstream).
+> Either way the bug is localized. This is the #1 post-Q8 GPU lever (RESEARCH_TODO Track 1d frontier).
 
 > ### [M4 / M5 recipe -- community-research 2026-06-22]
 > - **M4 (TP=2 MTP):** the capture-safe path is ALREADY ours -- `CCL_ENABLE_SYCL_KERNELS=1` makes TP=2 PIECEWISE capture
