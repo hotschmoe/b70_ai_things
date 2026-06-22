@@ -20,6 +20,35 @@ checkpoints to benchmark it.
 
 ---
 
+## [!!!] MTP PRESERVATION -- ALL our 27B quants are MTP-DEAD (NEXT OVERNIGHT SESSION: fix) [added 2026-06-23]
+Confirmed by checkpoint inspection: Qwen3.6-27B **{W4A16, W4A8-sqgptq, W8A8-sqgptq} ALL have 0 mtp
+tensors** -- every quant run dropped the MTP module. The bf16 base `Qwen_Qwen3.6-27B` HAS it (15 bf16
+tensors: `mtp.fc` [5120x10240] + `mtp.layers.0.{self_attn.{q,k,v,o}_proj, mlp.{gate,up,down}_proj,
+*layernorm}`), and the quant configs STILL DECLARE it (`mtp_num_hidden_layers: 1`). So NONE of our 27B
+quants can do MTP / spec-decode today -- and MTP is the DOMINANT decode lever (~1.57-1.79x single-card, see
+MTP_TODO + docs/kernel/22). The Lorbus AutoRound int4 (daily driver) DOES have it (29 mtp tensors) -> our
+quants are at a structural decode disadvantage to Lorbus until fixed.
+
+> **DO NOT re-quant the bodies for this.** The MTP head MUST stay BF16 regardless (quantizing `mtp.fc` ->
+> vLLM SKIPS the head -> 0% accept; MTP_TODO mtp.fc gotcha). So the fix is a **GRAFT**: copy the 15 bf16
+> `mtp.*` tensors from `Qwen_Qwen3.6-27B` into each existing quant checkpoint (CPU safetensors op, minutes,
+> NO GPU / NO calibration) and keep `mtp_num_hidden_layers` in the config. A clean re-quant that simply
+> does not strip mtp also works, but the graft is far cheaper and the result is identical (bf16 mtp either way).
+
+### [ ] QM -- MTP-preserving graft for the 27B quants  (NEXT OVERNIGHT; do NOT run now)
+1. Graft bf16 `mtp.*` (base -> {W4A16, W4A8-sqgptq, W8A8-sqgptq}) -- watch key-prefix naming (the W4A16 is
+   text-only `model.language_model.*`; the base mtp is top-level `mtp.*`).
+2. Serve each with `MTPTOK=4` and CONFIRM the MTP draft (`Qwen3_5MTP`) LOADS + `accept_len > 0` (grep
+   `spec_decode_num_accepted` / no "skip loading mtp"). For the text-only W4A16, also confirm the load-shim
+   wires the MTP draft ARCH (the draft is a separate model class -- the text-class registration may need to
+   cover `Qwen3_5MTP` too). For W4A8/W8A8 the spec-verify must run through the int8/int4 kernel.
+3. Re-bench **W4A16+MTP vs AutoRound+MTP** at ctx=2048 (the parity target -- docs/kernel/22 has the no-MTP
+   baseline: W4A16 tg 20.97 vs AutoRound 29.85; AutoRound+MTP ~46.7).
+Open risk: a quantized BODY may lower MTP accept length (BF16 head drafting for an int4 body drifts -- the
+MTP_TODO Phase-B question). Measure accept per format.
+
+---
+
 ## 0. The method decision (per your spec: W8A8 = AutoRound, W4A8 = SmoothQuant+GPTQ)
 
 | scheme | method | why / how on the qwen3_5 hybrids |
@@ -156,9 +185,13 @@ Legend: [ ] todo - [~] running - [x] done.
 - **Method:** AutoRound **int4 W4A16** (`bits=4, group_size=128, sym=True`, **activations stay fp16** -- the `bits==8` W4A8 export assert
   from kernel/15 does NOT apply here). Run on the bf16 base we already hold (`DJLougen_Qwable-5-27B-Coder`, 60G) via the PROVEN multi-XPU
   AutoRound path `scripts/59_autoround_2xpu.sh` (`device_map="0,1"`, `ZE_AFFINITY_MASK=0,1`, `low_gpu_mem_usage`).
-  **[!] Use AutoRound (auto-round/`inc` export), NOT compressed-tensors W4A16** -- the existing `Qwen3.6-27B-W4A16` compressed-tensors quant
-  does NOT serve (XPUwNa16 needs dims /32; the 4304 gated-attn dim fails), whereas AutoRound int4 serves via `quantization=inc` (proven by
-  the Lorbus daily driver). Mirror the Lorbus int4-AutoRound layer_config (vision + MTP bf16; GDN/`linear_attn` per that recipe).
+  **[!] For Qwable, prefer AutoRound (auto-round/`inc` export).** AutoRound int4 serves via `quantization=inc`
+  (proven by the Lorbus daily driver) and decodes FASTER (INC `auto_round_kernel`: 29.85 vs 20.97 t/s tg, see
+  docs/kernel/22). NOTE (CORRECTED 2026-06-23): the old "compressed-tensors W4A16 does NOT serve (4304 dim)"
+  claim was a RED HERRING -- `Qwen3.6-27B-W4A16` compressed-tensors NOW SERVES (`rdy_to_serve/qwen36-27b-w4a16`,
+  kernel/22): the real bug was a text-only-checkpoint name mismatch (all weights skipped), and the int4
+  kernel (`int4_gemm_w4a16`) is CORRECT (NT-format weight). So compressed-tensors W4A16 is viable; AutoRound
+  is still the faster-decode pick. Mirror the Lorbus int4-AutoRound layer_config (vision + MTP bf16; GDN/`linear_attn`).
 - **Out:** `models/Qwable-5-27B-Coder-int4-AutoRound` (~18G on disk, already int4-PACKED `pack-quantized` -> **NO offline prepack needed**,
   unlike the I8-stored sqgptq W4A8). Model load ~16.7 GiB (= Lorbus).
 - **Serve:** identical to the daily driver -- `IMG=vllm-xpu-env:v0230` (full GDN kernel), `GRAPH=1 DTYPE=auto UTIL=0.92 NOMM=1 MAXLEN=131072

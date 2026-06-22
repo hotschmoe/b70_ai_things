@@ -14,6 +14,20 @@ showed C1 `tg` improves 29.78 -> 46.69 tok/s, while C4 regresses: agg out 51.69 
 spec=3 fp16 KV best for aggregate output (35.70 tok/s), and Half-KV slower at 2K ctx for every spec.** Full
 per-experiment log in JOURNAL.
 
+> ### [2026-06-23] compressed-tensors W4A16 NOW SERVES -- but it (and ALL our 27B quants) are MTP-DEAD
+> `Qwen3.6-27B-W4A16` (compressed-tensors) is FIXED + on the shelf (`rdy_to_serve/qwen36-27b-w4a16`,
+> docs/kernel/22). The old "won't serve / 4304-dim XPUwNa16 wall" was a RED HERRING -- the real bug was a
+> text-only-checkpoint weight-name mismatch (all weights silently skipped -> random init). The
+> `int4_gemm_w4a16` kernel itself is CORRECT (NT-format weight; matches a reference dequant, maxerr 0.016).
+> **MTP gap (the parity blocker):** Lorbus int4 (AutoRound) ships the MTP module (29 tensors); our
+> `{W4A16, W4A8-sqgptq, W8A8-sqgptq}` 27B quants ALL have **0 mtp tensors** -> they CANNOT do MTP today.
+> FIX = GRAFT the 15 bf16 `mtp.*` from the bf16 base (NOT a re-quant -- mtp stays bf16 regardless; see
+> QUANTS_TODO item QM, scheduled for the next overnight session). Parity stack at ctx2048 C1:
+> **W4A16 no-MTP 20.97 -> AutoRound no-MTP 29.85 (kernel gap 1.42x) -> AutoRound+MTP ~46.7 (MTP ~1.57x).**
+> So to make W4A16 the headline: (1) graft MTP (the bigger lever, currently MISSING), then (2) the int4
+> decode-GEMV (1.42x) measured at the SPEC batch size (K+1~5, near-GEMM where int4_gemm_w4a16 already wins
+> prefill -> MTP likely shrinks the kernel gap).
+
 > ### [M0 RESULT 2026-06-22 -- PASS] (JOURNAL has the full log)
 > Serve 27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE + `--speculative-config '{"method":"mtp",
 > "num_speculative_tokens":3}'` -> healthy, MTP head + drafter loaded (embedding+lm_head shared), PIECEWISE capture OK,
@@ -323,6 +337,11 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 - **Image integration** — our custom W8A8 kernel + FULL graph capture in one **v0230** image is the real engineering (`gdn_attention` + #43565 spec-wiring are now NATIVE on v0230, so the lift is mainly our int8 GEMM registration + the FULL-capture `--compilation-config` + capture-safe collectives); budget for it.
 - **TP=2 MTP needs capture-safe collectives** — confirmed [NEG] on localmaxxing (Lorbus TP2): stock oneCCL all-reduce corrupts inside a captured graph, so TP comm runs UNCAPTURED and eats the draft savings. Phase C must port RagingNoper's capture-safe all-reduce, or prefer DP replicas (MTP per card).
 - **The headline's `cudagraph_mode` is unknown** — the `ytnszmy` 54.2 row does not state PIECEWISE vs FULL. Treat FULL capture (RagingNoper recipe) as something WE must add; do not assume the headline already had it.
-- **27B int4 kernel-coverage gaps** — W4A16 already hit the 4304-dim `XPUwNa16` (multiple-of-32) wall; W4A8 may hit similar. Verify dims before assuming the quant serves.
+- **27B int4 kernel-coverage gaps** — CORRECTED 2026-06-23: the W4A16 "4304-dim `XPUwNa16` wall" was a RED
+  HERRING (it was the weightless vision tower of a text-only checkpoint, not a serve-blocking kernel limit).
+  W4A16 compressed-tensors serves (kernel/22); `int4_gemm_w4a16` is correct (NT-format weight). Still verify
+  dims/load (`not found in params_dict` greps) when bringing up a re-homed checkpoint.
+- **ALL our 27B quants are MTP-DEAD** (0 mtp tensors): W4A16, W4A8-sqgptq, W8A8-sqgptq. To get MTP, graft the
+  bf16 `mtp.*` from the base (QUANTS_TODO QM, overnight) -- NOT a re-quant (mtp must stay bf16). Lorbus has it.
 - **Half-KV / KV-quant interaction with MTP** — confirm Half-KV doesn't depress accept length.
 - **DeltaNet ignore-list correctness** — keep `re:.*linear_attn.*` (parent-module regex, name-robust); don't regress to enumerating leaf names (`in_proj_qkvz`/`in_proj_ba`) or you risk silent layer-zeroing (vLLM #40252).
