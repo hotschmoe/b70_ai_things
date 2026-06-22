@@ -85,3 +85,24 @@ is moot until MTP runs; once it runs, measure acceptance, not just t/s.
   `experiments/minimax-m27-reap-autoround-vllm/notes/2026-06-02-moe-micro-and-logitsws-retest.md`,
   `repro/.../configs/promoted-env.sh` -- his MoE/MTP bench harness + promoted env (reference).
 - nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8 (HF) -- a ready Quark 35B ckpt (could pull instead of quantizing).
+
+================================================================================
+7. [!] CRITICAL llm-scaler GOTCHA + CORRECTION (2026-06-22)
+================================================================================
+**The image ENTRYPOINT is `["bash","-c","vllm serve"]` -- a FIXED string with NO model arg.** A normal
+`docker run IMG vllm serve <ckpt> --host ... --port ...` does NOT work: docker passes your args as positional
+params ($0,$1,...) to `bash -c "vllm serve"`, which ignores them -> vLLM runs bare `vllm serve` -> serves its
+**DEFAULT model `Qwen/Qwen3-0.6B`** (loads ~1.12 GiB), silently. It even reports HEALTHY on :8000. This also makes
+`--port` and `--served-model-name` appear "ignored" (they were positional-swallowed too).
+=> **MUST override: `docker run ... --entrypoint vllm IMG serve <ckpt> --host 0.0.0.0 --port 8000 ...`** (note: CMD
+starts with `serve`, not `vllm serve`). scripts/74 fixed accordingly.
+
+**CORRECTION to sec 1/earlier JOURNAL:** the "OLMoE int8 MoE serves on B70 (200 OK)" milestone was the **0.6B default**,
+NOT a real int8 MoE. The int8 MoE serve on our cards is NOT YET CONFIRMED. The tell was "Model loading took 1.12 GiB"
+for a supposed 7B/35B. All those serves (OLMoE experts_int8, 35B Quark) were the 0.6B default until the entrypoint fix.
+
+**Current status (entrypoint fixed):** 35B Quark-W8A8 now loads the REAL model at TP=2 (no longer 0.6B), but hits a
+**WorkerProc initialization failure** at TP=2 (multiproc_executor.wait_for_ready) in ~90s. Root cause TBD (TP=2
+collective init or 17.5GB/card+KV OOM at util 0.95). NEXT: re-run capturing the full worker traceback; try
+SYCLKERNELS=1 (set) + lower util/MAXLEN; if collective-init, compare to our :int8g TP=2 (which worked host-staged).
+The 35B int8 MoE serve verdict is PENDING this debug.
