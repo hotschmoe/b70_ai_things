@@ -19,6 +19,16 @@ Verified (TP=2, enforce-eager): model load 17.54 GiB/card, KV 10.2 GiB, concurre
 gen "The capital of France is" -> " Paris, a city renowned for its rich history, culture, and iconic
 landmarks." Next perf lever: graph capture (eager only so far; PIECEWISE gave +617% on the int4 MoE).
 
+### Open follow-up: replace the dequant LINEAR path with TRUE int8 W8A8 (our own kernel)
+The dequant scheme above is correctness-first (W8A16-equivalent on the linear layers). The proper upgrade
+is to register **our `contrib/vllm_int8_xpu` oneDNN INT8 W8A8 GEMM** (built for the 27B dense, in the
+`:int8` image) as the **XPU entry in vLLM 0.23's scaled-mm `_POSSIBLE_KERNELS`** -- then the stock
+`QuarkW8A8Int8` linear scheme runs true W8A8-int8 on XPU and we drop the dequant reroute entirely
+(smaller: int8 weights stay int8; faster: int8 XMX on linear). This is COMMUNITY_CONFIGS "contribution
+target #1" (`_POSSIBLE_INT8_KERNELS[XPU]=[...]`). Scope: port the contrib kernel to 0.23's
+`vllm.model_executor.kernels.linear` ScaledMMLinearKernel ABC + confirm the oneDNN XPU GEMM links in
+`:v0230`. The MoE experts need nothing (already true int8 via Triton).
+
 ---
 
 ## Background: the llm-scaler 0.14.1 attempt (DEAD END -- kept for the diagnosis)
