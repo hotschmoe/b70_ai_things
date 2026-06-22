@@ -2,8 +2,11 @@
 
 **Created:** 2026-06-20 · **Updated:** 2026-06-22 (M0 PASS logged)
 **Owner:** b70 team
-**Status:** IN PROGRESS — **M0 wiring gate PASSED 2026-06-22** on stock v0230 (no mtp_patch, no 0.14.x). MTP head loads,
-drafts, and does NOT crash on the GDN+spec path; `method='mtp'` resolves `Qwen3_5MTP`. Now on M1 (the FULL-capture frontier).
+**Status:** IN PROGRESS — **M0 PASS + M1 HEADLINE WIN (2026-06-22)**. Single-card 27B W4A16 MTP spec=5 on v0230 +
+PIECEWISE = **52.95 t/s vs 30.84 MTP-off = 1.72x (+72%), NET-POSITIVE** — this REFUTES the old -19% (stale; the
+warmup-spoof PIECEWISE fix 910182c flipped it) and BEATS the Lorbus 45.2 t/s precedent. FULL/TRITON_ATTN crashes on a
+gdn_attention spec-op shape bug (`spec_query_start_loc must have size [num_spec_decodes+1]`) but PIECEWISE already wins.
+Now on M2 (spec sweep + accept-vs-position + /metrics accept length).
 
 > ### [M0 RESULT 2026-06-22 -- PASS] (JOURNAL has the full log)
 > Serve 27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE + `--speculative-config '{"method":"mtp",
@@ -223,7 +226,8 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | — | Qwen3-14B | BF16 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A1 |
 | — | Qwen3-14B | W8A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A2 |
 | — | Qwen3-14B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A3 |
-| — | Qwen3.6-27B | W4A16 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B1 |
+| 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | 5 | TBD(/metrics) | — | **52.95** | 30.84 | **1.72x** | — | — | ~17GiB | — | **B1 WIN** single-card MTP +72%, beats Lorbus 45.2; FULL crashes spec_query_start_loc |
+| — | Qwen3.6-27B | W4A16 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B1 (orig placeholder) |
 | — | Qwen3.6-27B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B2 |
 | — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) |
 

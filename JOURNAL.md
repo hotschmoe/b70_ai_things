@@ -2855,3 +2855,21 @@ is net-negative (-19%): the verify pass runs attention + GDN eager x(K+1). So M0
 NOT "re-measure PIECEWISE" (known -19%) but "get attention+GDN INTO the captured graph" via `--attention-backend
 TRITON_ATTN` -> FULL capture (host serve script's ATTN knob; vLLM PR #34482). Warnings seen (for M2): spec>1 "runs MTP
 layer multiple times -> lower acceptance"; `max_num_scheduled_tokens=2048` suboptimal (raise max_num_batched_tokens).
+
+### 2026-06-22 -- [MTP M1 HEADLINE WIN] single-card MTP is +72% (1.72x) on PIECEWISE -- REFUTES the old -19%
+Ran MTP_TODO M1 (`m1_mtp_bench.sh`, one gpu-run lease, 3 configs, TTFT-cancelled decode = 256/(t_long-t_short),
+greedy + ignore_eos so A/B emit identical token streams). 27B Lorbus W4A16 int4-AutoRound on `vllm-xpu-env:v0230`:
+- **A MTP-OFF PIECEWISE:        30.84 t/s** (320 tok 10.57s)
+- **B MTP-ON PIECEWISE spec=5:  52.95 t/s** (320 tok  6.00s)  -> **MTP x = 1.72 (+72%), NET-POSITIVE**
+- C MTP-ON FULL via TRITON_ATTN: **CRASHED** at cudagraph capture -- `RuntimeError: spec_query_start_loc must have
+  size [num_spec_decodes + 1]` in `_xpu_ops.py::_gdn_attention_core_xpu_impl` -> the v0230 baked gdn_attention spec op
+  is NOT shape-compatible with FULL/FULL-decode cudagraph capture (a real op bug, not our config). Fallback ladder
+  noted; **but PIECEWISE already wins, so FULL is upside, not a blocker.**
+THE BIG REVERSAL: the long-standing "single-card MTP = -19% (25.5 vs 31.4 PIECEWISE)" is STALE. Our MTP-OFF (30.84)
+matches their 31.4 baseline, but MTP-ON is 52.95, NOT 25.5. What changed: the **warmup-spoof PIECEWISE fix (commit
+910182c)** -- the spec-decode decode batch (1+num_spec tokens) now CAPTURES under PIECEWISE instead of falling back to
+eager, so the verify pass is no longer eager-attention-bound. So on the CURRENT stack, single-card MTP is already
+strongly positive WITHOUT needing FULL capture. 52.95 t/s also BEATS the Lorbus 45.2 t/s single-card precedent (the
+"number to beat"). Caveats: single measurement (M2 will take the median over the spec sweep + pull accept length from
+/metrics -- my docker-logs accept grep returned empty, accept lives in /metrics per codex). Lease 739s, released clean.
+Next: M2 spec sweep {2,3,4,5,6} (confirm spec=5, find max tok/s, log accept-vs-position) then M3 Half-KV.
