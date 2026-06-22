@@ -1,5 +1,10 @@
 # CPU/RAM Offload, MTP/Speculative Decoding, and Benchmark Sweep Methodology
 
+> **[!] STALE on the MTP claims (2026-06-22):** this doc says "Gated-DeltaNet is the code path that breaks MTP on
+> vLLM-XPU / MTP currently crashes on Intel XPU." That was true on pre-0.23 images. On `vllm-xpu-env:v0230` (vLLM 0.23.0)
+> MTP on the qwen3_5 27B WORKS and is **+79% (1.79x, PIECEWISE spec=4)** -- see [`MTP_TODO.md`](../../MTP_TODO.md) M0-M5.
+> The offload/sweep methodology below is still valid; ignore the "MTP broken on XPU" framing.
+
 **Target system:** Intel Arc Pro B70 (Battlemage / Xe2, 32 GB GDDR6 ECC, 256-bit, ~608 GB/s, 367 INT8 TOPS, **PCIe 5.0 x16**), 128 GB slow DDR4 system RAM, running **Qwen3.6-27B in Docker on Unraid**.
 **Date:** June 2026. **Author:** literature review (research-agent synthesis + direct source verification).
 
