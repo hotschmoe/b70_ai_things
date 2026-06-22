@@ -1,6 +1,6 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 · **Updated:** 2026-06-22 (M0 PASS logged)
+**Created:** 2026-06-20 · **Updated:** 2026-06-23 (ctx2048 spec sweep logged)
 **Owner:** b70 team
 **Status:** ✅ **CAMPAIGN COMPLETE 2026-06-22 (M0-M5 all done).** HEADLINE: **single-card dense 27B W4A16 + MTP spec=4
 PIECEWISE = 55.28 t/s vs 30.84 = 1.79x** (beats Lorbus 45.2; refutes the stale -19%). Half-KV FREE (accept 3.29 vs 3.25).
@@ -10,7 +10,9 @@ not graph-capturable; even MTP-off TP2 is 0.87x single-card) -> single-card DP-r
 MTP spec=4 on the daily-driver 27B int4 DP replicas for single interactive streams (+79% in the TTFT-cancelled probe),
 but leave it OFF for C4+ batch/fan-out unless re-benchmarked. A ctx=2048 `vllm bench serve` follow-up (random 2048/128)
 showed C1 `tg` improves 29.78 -> 46.69 tok/s, while C4 regresses: agg out 51.69 -> 40.56, `tg` 19.54 -> 16.09, TTFT
-3.398s -> 4.444s.** Full per-experiment log in JOURNAL.
+3.398s -> 4.444s. A later C1 spec sweep at the same ctx found spec=4 fp16 KV best for pure `tg` (57.64 tok/s),
+spec=3 fp16 KV best for aggregate output (35.70 tok/s), and Half-KV slower at 2K ctx for every spec.** Full
+per-experiment log in JOURNAL.
 
 > ### [M0 RESULT 2026-06-22 -- PASS] (JOURNAL has the full log)
 > Serve 27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE + `--speculative-config '{"method":"mtp",
@@ -151,7 +153,10 @@ Pulled via `scripts/75_localmaxxing.py` (cache in `data/localmaxxing/`). After s
 - **Model:** `Lorbus/Qwen3.6-27B-int4-AutoRound` (INT4 AutoRound **W4A16**), vLLM `0.20.1` XPU, **1x B70, TP=1**, flash_attn, ctx 4096, `mtpEnabled=true` `specDecoding=true`. By `steveseguin`, 2026-05-03.
 - **Result:** **45.2 t/s** out (latency 5.67s, **MTP accept 86.0%**) on the short run; a longer `OUTPUT_LEN=512` run dropped to **41.3 t/s, accept 65.4%** (accept decays with generated content).
 - **Mechanism note (important):** "Local vLLM XPU patches route Qwen3.6 MTP speculative **Gated DeltaNet through a generic fallback when speculative masks are present**." => MTP+DeltaNet is a *workaround path*, not native -- expect this fragility when we wire MTP on our stack.
-- **No graph capture, no MTP-off baseline submitted.** So 45.2 t/s is MTP-on, eager-ish, no capture -- meaning there is real headroom we can claim.
+- **No graph capture, no MTP-off baseline submitted.** So 45.2 t/s is MTP-on, eager-ish, no capture; it is NOT a
+  hidden no-MTP speed lever. Our v0230 PIECEWISE ctx2048 C1 sweep already exceeds it on computed `tg`
+  (57.64 tok/s fp16 KV) and roughly matches it on realistic aggregate output only after paying 2048-token TTFT
+  (35-36 tok/s).
 - **Read for our plan:** this is the closest public analog to **Phase B1/B2 (W4A16/W4A8 27B + MTP, single-card)** -- same single-card, int4-weight, MTP-on regime. It proves single-card 27B MTP *runs*. **Our value-add: reproduce it on v0230 WITH FULL capture AND the MTP-off baseline, to get the real multiplier (theirs cannot give one).**
 
 ### [NEG] TP=2 MTP (Lorbus, dual-B70) -- the TP>1-hurts-MTP confirmation, directly relevant to Phase C

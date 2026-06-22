@@ -184,7 +184,7 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   opaque op is capturable-but-not-fusable. **`:int8` (our oneDNN s8s8s32 + fused per-token quant) stays the W8A8 perf
   path; v0230-int8 is a correctness/portability fallback only.** Closing the gap needs a fused XPU int8 act-quant op +
   an inductor-fusable GEMM (Track 1).
-- **Speculative decoding -- method/format-dependent (UPDATED 2026-06-22):** ngram (prompt-lookup) on 14B W8A8 is
+- **Speculative decoding -- method/format-dependent (UPDATED 2026-06-23):** ngram (prompt-lookup) on 14B W8A8 is
   net-NEGATIVE (eager 23.33->21.51 -7.8%; PIECEWISE 27.23->25.28 -7%; ~16% accept -- low acceptance on diverse text).
   **BUT native MTP on the qwen3_5 27B is strongly POSITIVE on PIECEWISE: W4A16 + MTP spec=4 = 55.28 t/s vs 30.84
   MTP-off = 1.79x (+79%), accept_len 3.25, Half-KV FREE.** The warmup-spoof PIECEWISE fix (910182c) captures the
@@ -196,9 +196,11 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   doesn't dodge it (GDN decode core always uses the baked op). **PIECEWISE 1.79x is the single-card ceiling on stock
   v0230** (issue draft docs/kernel/21). TP=2 MTP is DEAD (spec-allgather not graph-capturable); MoE MTP is FLAT (+3%,
   sparse 3B-active). **MTP is a DENSE-model lever.** Full campaign: MTP_TODO.md (M0-M5).
-  **Ctx=2048 follow-up (2026-06-23, `vllm bench serve`, random 2048/128, card1, golden
-  `rdy_to_serve/qwen36-27b-int4`, fp16 KV):** MTP is a C1 latency lever, not a C4 throughput lever on this workload.
-  `tg` = 1000/mean TPOT; `pp` ~= input_len * concurrency / TTFT.
+  **Ctx=2048 follow-ups (2026-06-23, `vllm bench serve`, random 2048/128, card1, golden
+  `rdy_to_serve/qwen36-27b-int4`):** MTP is a C1 latency/decode lever, not a C4 throughput lever on this workload.
+  `tg` = 1000/mean TPOT; `pp` ~= input_len * concurrency / TTFT. Full CSVs:
+  `results/mtp_table_qwen36-27b-int4_ctx2048_20260623.csv` and
+  `results/mtp_spec_sweep_qwen36-27b-int4_ctx2048_20260623.csv`.
 
   | config | C | pp tok/s | TTFT | tg tok/s | agg out tok/s | accept_len |
   |---|---:|---:|---:|---:|---:|---:|
@@ -207,7 +209,21 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   | no-MTP PIECEWISE | 4 | **2410.9** | **3.398 s** | **19.54** | **51.69** | - |
   | MTP spec=4 PIECEWISE | 4 | 1843.5 | 4.444 s | 16.09 | 40.56 | 2.41 |
 
-  Verdict: keep `DD_MTP=1` for single interactive coding-agent streams; leave it OFF for C4+ batch/fan-out at
+  Single-stream spec sweep, C1 only, ctx=2048:
+
+  | config | KV | pp tok/s | TTFT | tg tok/s | agg out tok/s | accept_len |
+  |---|---|---:|---:|---:|---:|---:|
+  | no-MTP PIECEWISE | fp16 | **1608.2** | **1.273 s** | 30.48 | 23.53 | - |
+  | MTP spec=3 PIECEWISE | fp16 | 1499.0 | 1.366 s | 57.24 | **35.70** | 3.15 |
+  | MTP spec=4 PIECEWISE | fp16 | 1472.4 | 1.391 s | **57.64** | 35.60 | 3.53 |
+  | MTP spec=5 PIECEWISE | fp16 | 1392.4 | 1.471 s | **57.64** | 34.83 | 3.86 |
+  | MTP spec=3 PIECEWISE | fp8_e4m3 | 1483.6 | 1.380 s | 52.99 | 33.89 | 3.12 |
+  | MTP spec=4 PIECEWISE | fp8_e4m3 | 1470.3 | 1.393 s | 55.74 | 34.87 | 3.60 |
+  | MTP spec=5 PIECEWISE | fp8_e4m3 | 1456.6 | 1.406 s | 55.31 | 34.57 | 3.88 |
+
+  Verdict: for C1 ctx=2048, spec=4 fp16 KV is the best pure `tg` row, while spec=3 fp16 KV is the best
+  user-visible aggregate row and has lower TTFT. Half-KV is capacity/context headroom here, not a speed win:
+  it loses 1.9-4.3 tok/s of `tg` at ctx=2048. Keep `DD_MTP=1` for single interactive coding-agent streams; leave it OFF for C4+ batch/fan-out at
   ctx=2048 unless a workload-specific bench proves otherwise. The older 55.28 t/s number remains the TTFT-cancelled
   single-stream decode probe, not a concurrent `vllm bench serve` row.
 - **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8

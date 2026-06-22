@@ -3170,3 +3170,32 @@ verdict -> 27B W4A16 compressed-tensors SHELVED + verified (rdy_to_serve/qwen36-
   (int4_gemm_w4a16) is CORRECT -- usable for W4A16 research; weight is NT-format (transposed view).
   (c) Lorbus int4 (works) uses INC auto_round_kernel + Triton/FLA GDN, a DIFFERENT path from XPUwNa16.
   Commits: e53f6f8 (fix+findings) + this (GRAPH=1 default UTIL=0.95 + journal). Card 0 freed; card 1 untouched.
+
+== 2026-06-23 :: Qwen3.6-27B int4 MTP spec sweep at ctx=2048 (full KV vs Half-KV) ==
+motivation -> fill the requested table for PIECEWISE + MTP spec=3/4/5 and PIECEWISE + MTP spec=3/4/5 + Half-KV,
+  compared against the best no-MTP baseline at real ctx=2048. Question: does MTP only help decode, or is there a
+  prefill/TTFT tax that changes actual usability? Also reconcile the external Lorbus single-card "45.2 tok/s" row.
+config -> used only the free GPU1 via `gpu-run --card 1`; did NOT edit `rdy_to_serve/`. Served the golden
+  `rdy_to_serve/qwen36-27b-int4/serve.sh` recipe on card1, port 18081, image `vllm-xpu-env:v0230`, `GRAPH=1`,
+  `MAXLEN=8192`, `MAXSEQS=8`, `CAPSIZES=1,2,4,8`, NOMM=1, tool/reason parsers on. Bench was `vllm bench serve`
+  random 2048 input / 128 output, `--ignore-eos`, C=1, N=8. MTP rows used `MTPTOK=3/4/5 COMPILESZ=`. Half-KV rows
+  additionally used `KVDTYPE=fp8_e4m3`. Host CSV:
+  `/mnt/vm_8tb/b70/results/mtp_spec_sweep_qwen36-27b-int4_ctx2048_20260622_150846.csv`; repo copy:
+  `results/mtp_spec_sweep_qwen36-27b-int4_ctx2048_20260623.csv`.
+result ->
+  config              KV        pp tok/s  TTFT ms  TPOT ms  tg tok/s  agg out tok/s  total tok/s  accept%  accept_len
+  no-MTP              fp16      1608.2    1273.49  32.81    30.48     23.53          399.93       -        -
+  MTP spec=3          fp16      1499.0    1366.26  17.47    57.24     35.70          606.95       71.59    3.15
+  MTP spec=4          fp16      1472.4    1390.96  17.35    57.64     35.60          605.28       63.36    3.53
+  MTP spec=5          fp16      1392.4    1470.86  17.35    57.64     34.83          592.19       57.16    3.86
+  MTP spec=3 Half-KV  fp8_e4m3  1483.6    1380.42  18.87    52.99     33.89          576.15       70.52    3.12
+  MTP spec=4 Half-KV  fp8_e4m3  1470.3    1392.88  17.94    55.74     34.87          592.71       65.03    3.60
+  MTP spec=5 Half-KV  fp8_e4m3  1456.6    1406.04  18.08    55.31     34.57          587.69       57.67    3.88
+verdict -> C1 ctx=2048 winner depends on the metric. Spec=4 fp16 KV is best for pure `tg` (57.64 tok/s, tied with
+  spec=5 but with lower TTFT), while spec=3 fp16 KV is best for aggregate output throughput (35.70 tok/s) and has
+  lower TTFT. MTP adds a real prefill/TTFT tax: no-MTP pp 1608 tok/s -> spec=3/4/5 pp 1499/1472/1392, and TTFT
+  1.273s -> 1.366/1.391/1.471s. Half-KV is NOT a 2K-context speed lever on this stack: every Half-KV row is slower
+  than the matching fp16-KV row on `tg` and aggregate output; keep it for capacity/context headroom. The external
+  Lorbus 45.2 tok/s row is MTP-on (not no-MTP), no graph capture, no off-baseline, short-run accept 86%; our v0230
+  PIECEWISE C1 `tg` now exceeds it, so there is no hidden no-MTP lever implied by that row. Container stopped; card1
+  lease freed.

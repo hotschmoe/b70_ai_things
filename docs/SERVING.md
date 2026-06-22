@@ -197,7 +197,9 @@ spec=4 per replica -> single-stream decode **~30.8 -> ~55 t/s (1.79x)**, accept_
 JOURNAL 2026-06-22). **TRADEOFF (decide by workload):** MTP is a LOW-CONCURRENCY lever -- the spec-verify runs the
 model x(1+spec), so it goes compute-bound as concurrency rises. A ctx=2048 random 2048/128 bench on the golden
 `qwen36-27b-int4` serve showed C1 `tg` **29.78 -> 46.69 tok/s**, but C4 regressed: aggregate out **51.69 -> 40.56**
-and `tg` **19.54 -> 16.09**. Enable for INTERACTIVE use (one coding agent / Open WebUI single stream); leave OFF
+and `tg` **19.54 -> 16.09**. A later C1 spec sweep at the same ctx found spec=4 fp16 KV best for pure `tg`
+(57.64 tok/s), spec=3 fp16 KV best for aggregate output (35.70 tok/s), and Half-KV slower at 2K ctx for every
+spec. Enable for INTERACTIVE use (one coding agent / Open WebUI single stream); leave OFF
 (default) for C4+ batch/agent fan-out unless the target workload is re-benchmarked. Mechanism: `DD_MTP=1` appends
 `MTPTOK=4 COMPILESZ=` to the serve env; the host `30_serve` builds
 the spec-config JSON from the integer (passing the JSON directly through the nested ssh/bash -c strips its quotes).
