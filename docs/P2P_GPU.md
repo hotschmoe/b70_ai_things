@@ -344,3 +344,16 @@ is the remaining lever to shrink that allreduce tax.
 Reads: (a) int4-wt (W4A8) decode > int8-wt (W8A8) at matched TP (bytes-bound). (b) TP=2 helps c1 decode a hair
 (2x weight BW) but its allreduce tax dominates TTFT + concurrency on our Gen3 cross-die box. (c) TP=2's real job =
 fit the >32GB W8A8. NEXT: P2P-on A/B (P2PACCESS=1) -- does enabling card-to-card P2P shrink the allreduce tax vs host-staged?
+
+### H.8 Direct P2P probe (70_xpu_p2p_probe.py) -- torch d2d copy is NOT peer-direct on our box
+Ran the direct xpu0<->xpu1 probe (P2PACCESS=1, IPCX=drmfd, both cards, dmesg CLEAN, exit 0):
+  d2d copy 16MB: 2.05 GB/s | 64MB: 1.35 GB/s | 256MB: 1.39 GB/s | reverse 64MB: 1.35 GB/s
+  8-elem ping-pong latency: **452 us/copy**
+  no `ze_peer` binary in the :int8 image; GPU0 (0a:00.0) in iommu_group 28.
+READ: torch `.copy_()` cross-device is ~1.35 GB/s -- FAR below peer-direct Gen3 (~13-15) AND below a clean host
+bounce (~7-8). So torch is doing an unpipelined host bounce with high fixed overhead (452us for 16 bytes = pure
+launch/sync latency), NOT peer DMA. CCL_TOPO_P2P_ACCESS=1 + drmfd did NOT speed up torch (expected -- torch.copy_
+does not use oneCCL). CAVEAT: this is the TORCH path, NOT oneCCL's allreduce (vLLM's real TP path), which DID work at
+TP=2 (H.5/H.6). So: (a) generic cross-device torch ops on B70 are very slow -> avoid hand-rolled torch P2P; (b) the
+meaningful P2P-on question is the oneCCL serve A/B (H.9). No ze_peer means the authoritative Level-Zero peer matrix
+(F.3/F.4) still needs level-zero-tests installed -- a clean follow-up. dmesg clean = no Puget-style fault at the torch layer.
