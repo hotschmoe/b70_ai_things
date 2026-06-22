@@ -1,5 +1,12 @@
 # 12 - MTP / Speculative-Decoding Plan for the B70 (path to NET-POSITIVE decode)
 
+> **[!] HISTORICAL (2026-06-20). GOAL ACHIEVED 2026-06-22 -- this doc's "-19% / net-negative" premise is OBSOLETE.**
+> Native MTP on the qwen3_5 27B is now NET-POSITIVE: `vllm-xpu-env:v0230` + PIECEWISE + spec=4 = **55.28 t/s vs 30.84
+> MTP-off = 1.79x**. The warmup-spoof PIECEWISE fix (910182c) captures the spec-decode batch, so the verify is no longer
+> eager-attention-bound. FULL capture is still blocked on stock v0230 (a gdn_attention spec-op bug) -- that only blocks
+> the FULL upside; PIECEWISE MTP is the production path. **Authoritative result + full M0-M5 campaign: [`MTP_TODO.md`](../../MTP_TODO.md).**
+> The blocker-chain + playbook analysis below remains a useful reference for the FULL-capture frontier.
+
 Goal: make speculative decoding / Multi-Token-Prediction NET-POSITIVE on the Arc Pro B70 so our
 w8a8 Qwen3-14B (and the headline Qwen3.6-27B when card #2 lands) decodes faster. Today spec-decode is
 net-NEGATIVE (FINDINGS.md): ngram on 14B w8a8 = eager 23.33->21.51 (-7.8%), PIECEWISE 27.23->25.28

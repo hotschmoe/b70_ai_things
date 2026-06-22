@@ -7,6 +7,14 @@
 Optimizing LLM inference on an **Intel Arc Pro B70** GPU (32 GB Battlemage) hosted in
 an Unraid server (Threadripper). A public research log for fellow Team Blue tinkerers.
 
+> ### Latest wins (2026-06-22)
+> - **MTP proved POSITIVE on a single card:** Qwen3.6-27B W4A16 + native MTP (spec=4, PIECEWISE) = **1.79x**
+>   (55.28 t/s vs 30.84) -- refutes the prior "-19% / not viable". Dense lever (MoE MTP is flat). [MTP_TODO.md](MTP_TODO.md)
+> - **PIECEWISE XPU graph capture ~doubles int4 decode** (27B 7.9 -> 30.8 t/s); FULL still blocked on stock v0230.
+> - **Int8 MoE now SERVES:** 35B-A3B Quark-W8A8 on 2x B70 TP=2 (v0230 Triton fused_moe); int4-AutoRound 56.8 t/s captured.
+> - **AutoRound int4 on the qwen3_5 VLMs unblocked** (the MLLM-calib wall is beaten): Qwable W4A16 int4 producing. [QUANTS_TODO.md](QUANTS_TODO.md)
+> - **Default image is `vllm-xpu-env:v0230` (vLLM 0.23.0)** -- NOT the deprecated 0.14.x llm-scaler.
+
 > **Start here:** [FINDINGS.md](FINDINGS.md) — what actually works on the B70 (and what doesn't).
 > [JOURNAL.md](JOURNAL.md) — full experiment log. [archive/RESULTS.md](archive/RESULTS.md) — older raw tables (Qwen3-14B), superseded by FINDINGS.
 > [docs/COMMUNITY_CONFIGS.md](docs/COMMUNITY_CONFIGS.md) — other people's B70 configs we're chasing.

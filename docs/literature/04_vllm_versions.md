@@ -1,5 +1,11 @@
 # vLLM-XPU / Intel LLM-Scaler Version Landscape for Qwen3.6 on Arc Pro B70 (Battlemage)
 
+> **[!] SUPERSEDED PIN (2026-06-22): use `vllm-xpu-env:v0230` (vLLM 0.23.0), NOT the 0.14.x llm-scaler image below.**
+> Per CLAUDE.md + the 2026-06-22 results, v0230 is our newest/most-capable stack: native GDN-MTP (#43565, +79% MTP),
+> Triton fused-MoE (int8 + int4 35B-A3B serve), Quark int8 dispatch, graph capture. The 0.14.x llm-scaler image has NO
+> `_moe_C` op suite (int8 MoE hard-fails) and burned multiple agent-days (docs/kernel/20). Newest-first: v0230 > :tf (0.20.2rc1) > 0.14.x.
+> The version-landscape analysis below is kept for history; treat the "pin 0.14.0-b8.3.1" recommendation as OBSOLETE.
+
 *Research snapshot: 2026-06-17. Author: literature review. Battlemage/B70 inference support is young and moving fast — treat anything older than ~30 days as potentially stale, and re-check the [llm-scaler Releases](https://github.com/intel/llm-scaler/blob/main/Releases.md) page before pinning.*
 
 ---

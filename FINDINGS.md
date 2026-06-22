@@ -175,12 +175,14 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   stays the pick. (Note from literature/06: FP8 is conversion-based on Xe2; INT is native systolic — so a real
   INT8 W8A8 kernel could beat FP8 in *prefill/large-batch*. That kernel doesn't exist upstream yet = our top
   contribution target.) [The eager-vs-capture gap was the real story: w4a8 was the most dispatch-bound config.]
-- **Speculative decoding:** **net-negative on B70**, even with graph capture. ngram (prompt-lookup) on 14B
-  W8A8: eager 23.33->21.51 t/s (-7.8%); WITH PIECEWISE graph 27.23->25.28 (-7%). ~16% draft acceptance. Why:
-  in PIECEWISE mode **attention runs eager**, so the multi-token verify still pays full eager attention launch
-  overhead x(N+1). Spec-decode needs **FULL** graph capture (attention included) to win — and FULL capture is
-  blocked by the SYCL Graph `work_group_scratch_memory` limit. Parked until that's unblocked. (Earlier draft-
-  model test was 3.4x slower; the no-graph-capture premise is now refined — graph IS available, just PIECEWISE.)
+- **Speculative decoding -- method/format-dependent (UPDATED 2026-06-22):** ngram (prompt-lookup) on 14B W8A8 is
+  net-NEGATIVE (eager 23.33->21.51 -7.8%; PIECEWISE 27.23->25.28 -7%; ~16% accept -- low acceptance on diverse text).
+  **BUT native MTP on the qwen3_5 27B is strongly POSITIVE on PIECEWISE: W4A16 + MTP spec=4 = 55.28 t/s vs 30.84
+  MTP-off = 1.79x (+79%), accept_len 3.25, Half-KV FREE.** The warmup-spoof PIECEWISE fix (910182c) captures the
+  spec-decode decode batch (1+spec), so the verify is no longer eager-attention-bound -- this REFUTES the old
+  "net-negative even with capture / -19%" (a stale pre-fix measurement). FULL capture would lift it further but is
+  BLOCKED on stock v0230 (gdn_attention spec op can't run in a captured graph); TP=2 MTP is DEAD (spec-allgather not
+  graph-capturable); MoE MTP is FLAT (+3%, sparse 3B-active). **MTP is a DENSE-model lever.** Full campaign: MTP_TODO.md (M0-M5).
 - **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8
   DeltaNet kernel only exists in vLLM **0.23.0** (older images: ESIMD `.weight` bug / `scaled_mm` `KeyError(XPU)`).
   BUT int4 (AutoRound) on 0.23.0 **does run** (see above) — just slow. 8-bit Qwen3.6 needs a 2nd card.
@@ -343,6 +345,7 @@ synchronize loop (Ray bypass already proven via patches/sitecustomize.py), or ha
 Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe), contrib/llm_scaler_quark_int8_moe, rdy_to_serve/.
 (Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
 
-MTP: not viable on B70 -- Seguin pins the root cause as a spec-decode VERIFIER / KV / input-position boundary bug
-("target rejects correct drafts"), not draft quality or precision. So W8A8-vs-W4A16 MTP-receptivity is moot until that
-vLLM-XPU bug is fixed. Confirms + deepens our doc-09 finding.
+MTP: ~~not viable on B70~~ **VIABLE + POSITIVE as of 2026-06-22 (this note STALE)** -- the earlier "not viable / Seguin
+spec-decode VERIFIER bug" was a stack gap on the old image. On `vllm-xpu-env:v0230` (vLLM 0.23.0, #43565 native) MTP on
+the qwen3_5 27B is +79% (1.79x, PIECEWISE spec=4); see the "Speculative decoding" bullet above + MTP_TODO.md M0-M5. The
+remaining bug (the spec-op can't run in a FULL captured graph) only blocks the FULL-capture upside, not PIECEWISE MTP.

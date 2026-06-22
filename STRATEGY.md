@@ -15,8 +15,10 @@ From the literature sweep (`docs/literature/`) + first hands-on runs:
    partial offload. Offload's real use is the **35B-A3B MoE** (`--n-cpu-moe`) or 70B-class on dual-card.
 4. **XMX INT8 (367 TOPS) only pays off in PREFILL**, not decode (decode is memory-bound). So PP/TTFT are
    where the card's compute shines; TG is bandwidth-bound -> MTP/spec-decode is the only lever there.
-5. **MTP:** llama.cpp added native MTP (PR #22673, ~2x), but unverified on SYCL; vLLM-XPU can't do MTP on
-   DeltaNet. Plan: try llama.cpp SYCL native MTP; fallback = vocab-matched small draft model.
+5. **MTP [UPDATED 2026-06-22 -- PROVEN on vLLM-XPU]:** vLLM-XPU 0.23.0 (`vllm-xpu-env:v0230`, #43565 native) DOES MTP
+   on Gated-DeltaNet -- single-card 27B W4A16 + MTP spec=4 PIECEWISE = **1.79x (55.28 t/s vs 30.84)**, the primary
+   decode lever (DENSE only; MoE MTP is flat). No llama.cpp / draft-model fallback needed. Full campaign: MTP_TODO.md.
+   (The old "vLLM-XPU can't do MTP on DeltaNet" was true on pre-0.23 images.)
 6. **Dual-card:** no P2P on Arc; prefer **pipeline/layer-split over tensor-parallel** on PCIe3; expect
    ~1.0-1.3x single-stream, real wins in **capacity + concurrency (esp. MoE)**. Two independent
    single-card instances may give the best homelab throughput.
