@@ -132,8 +132,11 @@ baseline and is competitive on prefill.
 
 ## PARITY ROADMAP -- MTP is the missing dominant lever (2026-06-23)
 Checkpoint inspection: **Lorbus int4 has 29 MTP tensors** (`mtp.fc.weight`, `mtp.layers.0.*`), **our
-Qwen3.6-27B-W4A16 has 0** -- the W4A16 quant DROPPED the MTP module. So W4A16 cannot run `method:"mtp"`
-spec-decode today (the serve knob `MTPTOK` exists, but it needs the trained MTP head in the checkpoint).
+Qwen3.6-27B-W4A16 has 0** -- the W4A16 quant DROPPED the MTP module. Follow-up GPU probe: vLLM will still
+instantiate the `Qwen3_5MTP` drafter and serve coherently with `MTPTOK=4`, but the missing trained MTP weights
+make it useless: random 1024/64 C1 produced **0.00% acceptance**, accept_len **1.00**, accepted_tokens **0/1008**,
+and only **14.12 tg tok/s**. So compressed-tensors W4A16 can load the spec path, but it does NOT have a usable
+MTP head today. The serve knob is not enough; the checkpoint needs trained `mtp.*` tensors.
 Per the MTP findings (JOURNAL / MTP_TODO), MTP is the DOMINANT decode lever (bandwidth-bound decode ->
 effective tg ~= bandwidth x accept_len, ~75-79% accept). AutoRound ctx2048 C1: no-MTP 29.78 -> MTP spec=4
 46.69 t/s (~1.57x). Gap stack at ctx2048 C1: W4A16 20.97 (here) -> AutoRound no-MTP 29.85 (kernel gap 1.42x)

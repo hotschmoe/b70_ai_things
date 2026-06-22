@@ -1,0 +1,2 @@
+model,config,input_len,output_len,concurrency,num_prompts,req_s,out_tok_s,total_tok_s,mean_ttft_ms,mean_tpot_ms,tg_tok_s,accept_rate_pct,accept_len,drafts,draft_tokens,accepted_tokens
+qwen36-27b-w4a16,PIECEWISE_MTP_spec4,1024,64,1,4,0.19,12.08,205.38,835.69,70.82,14.12,0.00,1.00,252,1008,0

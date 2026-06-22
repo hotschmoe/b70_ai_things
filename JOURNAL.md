@@ -3199,3 +3199,23 @@ verdict -> C1 ctx=2048 winner depends on the metric. Spec=4 fp16 KV is best for 
   Lorbus 45.2 tok/s row is MTP-on (not no-MTP), no graph capture, no off-baseline, short-run accept 86%; our v0230
   PIECEWISE C1 `tg` now exceeds it, so there is no hidden no-MTP lever implied by that row. Container stopped; card1
   lease freed.
+
+== 2026-06-23 :: compressed-tensors W4A16 MTP probe -- loads, but 0% accept ==
+motivation -> answer whether MTP can work on our own `Qwen3.6-27B-W4A16` compressed-tensors artifact, rather than
+  the Lorbus AutoRound int4 checkpoint used for the successful MTP campaign.
+config -> first inspected checkpoint indexes on the host: Lorbus AutoRound has 29 `mtp` key hits and 333 `visual`
+  key hits; our compressed-tensors W4A16 has 0 `mtp` and 0 `visual` key hits. Then used GPU1 only via
+  `gpu-run --card 1`; did NOT edit `rdy_to_serve/`. Served `rdy_to_serve/qwen36-27b-w4a16/serve.sh` with env-only
+  overrides: `NAME=w4a16_mtp_probe PORT=18081 DEVICE=1 SERVED=qwen36-27b-w4a16-mtp GRAPH=1 MAXLEN=2048
+  MAXSEQS=8 CAPSIZES=1,2,4,8 UTIL=0.95 MTPTOK=4 COMPILESZ=`. Bench was `vllm bench serve` random 1024 input /
+  64 output, C=1, N=4, `--ignore-eos`.
+result -> the server reached health and generated coherent text. Logs confirmed the spec path was active:
+  `Resolved architecture: Qwen3_5ForCausalLM`, then `Resolved architecture: Qwen3_5MTP`,
+  `SpeculativeConfig(method='mtp', num_spec_tokens=4)`, `Loading drafter model`, and
+  `Detected MTP model`. But the bench showed the missing trained MTP tensors are fatal for acceptance:
+  output 12.08 tok/s, total 205.38 tok/s, TTFT 835.69 ms, TPOT 70.82 ms (`tg` 14.12 tok/s),
+  acceptance rate 0.00%, accept_len 1.00, drafts 252, draft_tokens 1008, accepted_tokens 0.
+verdict -> our compressed-tensors W4A16 can load the MTP code path, but it does NOT have a usable MTP head. This is
+  not a serve-flag problem and not an XPU spec-decode crash; the checkpoint was exported without trained `mtp.*`.
+  Re-quantize/export a full Qwen3.6 artifact that preserves `mtp.*` in BF16 (like Lorbus AutoRound did) before
+  expecting W4A16+MTP to work. Container stopped; card1 lease freed.
