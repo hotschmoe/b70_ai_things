@@ -15,6 +15,14 @@
 > lengths throws `Sizes of tensors must match ... Expected 23 got 24`. (2) **`low_gpu_mem_usage=True` is REQUIRED** on
 > the 27B/Qwable: without it the iters=200 gradient loop exhausts Level-Zero resources (`UR_RESULT_ERROR_OUT_OF_RESOURCES`
 > error 40) at ~layer 3 even though peak_vram is only ~23GB (it's L0 resource HANDLES, not VRAM). Smoke (iters=2) hides both.
+> **SERVE-SIDE gotcha (3rd, the checkpoint won't serve as-saved):** AutoRound MLLM-mode saves a checkpoint whose WEIGHTS use
+> the multimodal naming (`model.language_model.layers.*`/`model.visual.*`/`mtp.*`) but whose **config.json is a FLAT
+> `qwen3_5_text` wrapper** (architectures=`Qwen3_5ForCausalLM`, NO vision_config) -> vLLM's VLM loader does
+> `config.vision_config` -> `AttributeError: 'Qwen3_5TextConfig' has no attribute 'vision_config'`. AND `extra_config`
+> (the bf16 linear_attn overrides) is mis-named `model.layers.*` not `model.language_model.layers.*`. **FIX (no re-quant):**
+> served config.json = the BASE model's multimodal config (`Qwen3_5ForConditionalGeneration` + vision_config + text_config)
+> + the quant's `quantization_config` with extra_config keys renamed `model.layers.`->`model.language_model.layers.` --
+> matches the PROVEN Lorbus 27B int4-AutoRound config structure. Tool: `scripts/87_fix_autoround_vlm_config.py`.
 
 Date: 2026-06-20. Author: quant-eng (read-only investigation; NO GPU touched -- only
 non-GPU `docker run` package inspection + upstream WebSearch/WebFetch).
