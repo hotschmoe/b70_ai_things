@@ -49,8 +49,10 @@ from vllm.model_executor.layers.quantization.utils import replace_parameter
 # has no XPU entry, so QuarkW8A8Int8 KeyErrors on XPU. We subclass the existing TritonInt8 kernel
 # (cutlass weight-transpose + triton_scaled_mm, whose tl.dot int8->int32 lowers to Intel DPAS/XMX
 # int8) and only swap the activation quant: XPU lacks _C.scaled_int8_quant, so do a dynamic
-# per-token SYMMETRIC int8 quant in plain torch. Registered lazily (avoids import-time cycles);
-# on any failure the caller falls back to the bf16-dequant scheme. B70_INT8_LINEAR=dequant forces it.
+# per-token SYMMETRIC int8 quant in plain torch. Registered lazily (avoids import-time cycles).
+# DEFAULT is dequant (faster decode, more accurate W8A16; the experts are already int8 either way).
+# B70_INT8_LINEAR=triton opts INTO true-W8A8 int8 linear (memory win, ~0.66 GiB/card) -- see FINDINGS:
+# it is NOT a speed win on this MoE (linear is a minority; pp TTFT was identical, decode slower).
 _B70_XPU_INT8_REGISTERED = False
 
 
@@ -751,7 +753,7 @@ class QuarkConfig(QuantizationConfig):
             # (or any registration failure) falls back to the bf16-dequant scheme.
             if current_platform.is_xpu():
                 import os
-                if os.environ.get("B70_INT8_LINEAR", "triton") != "dequant":
+                if os.environ.get("B70_INT8_LINEAR", "dequant") != "dequant":
                     try:
                         _b70_register_xpu_int8_kernel()
                         return QuarkW8A8Int8(

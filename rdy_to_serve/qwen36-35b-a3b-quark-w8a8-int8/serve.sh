@@ -105,7 +105,14 @@ curl -s --max-time 60 "http://localhost:$PORT/v1/completions" -H 'Content-Type: 
   -d "{\"model\":\"$SERVED\",\"prompt\":\"The capital of France is\",\"max_tokens\":24,\"temperature\":0}" | head -c 600; echo
 
 if [ "${1:-start}" = run ]; then
-  echo "=== bench ==="; bash "${BASH_SOURCE[0]}" bench
+  # WARMUP (graph capture only): a throwaway sweep so the one-time lazy torch.compile per batch
+  # shape happens here (server finishes the compile even if the warmup's client requests time out),
+  # so the MEASURED sweep below doesn't stall at c>1. Spoof for the PIECEWISE c>1 recompile break.
+  if [ "$GRAPH" = 1 ] && [ "${WARMUP:-1}" = 1 ]; then
+    echo "=== warmup sweep (absorb per-batch-shape recompiles) ==="
+    bash "${BASH_SOURCE[0]}" bench >/dev/null 2>&1 || true
+  fi
+  echo "=== bench (measured) ==="; bash "${BASH_SOURCE[0]}" bench
   docker stop "$NAME" 2>/dev/null; echo "stopped (GPU released)"
 else
   echo "Serving. Stop with: bash serve.sh stop  (holds the GPU until then)."

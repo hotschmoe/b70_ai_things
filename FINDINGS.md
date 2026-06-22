@@ -322,8 +322,16 @@ Result: serves + **generates coherently** (true W8A8 on the linear layers, exper
 17.54 -> 16.88 GiB/card** (int8 weights stay int8, no bf16 blow-up). BUT EAGER perf is ~25% SLOWER than dequant
 (c1 3.36 vs 4.46 out t/s): the per-forward torch act-quant overhead on the MINORITY linear layers outweighs the int8
 GEMM win, while dequant's pre-dequantized bf16 F.linear is cheap. Captured int8-triton (act-quant fuses into the graph)
-is the meaningful comparison -- pending. So: c is a correctness+memory win; whether it's a SPEED win needs the captured
-number (and a real accuracy eval, since true W8A8 act-quant is lossier than the dequant's W8A16). Next: bake an image.
+measured: captured int8-triton DECODE c1 = 6.37 t/s (TPOT 157 ms) -- capture does NOT amortize the per-forward act-quant,
+so it stays ~eager and LOSES badly to dequant+capture (25.85). PREFILL (8192-in, eager, c1): int8-triton TTFT 9627 ms
+vs dequant 9626 ms -- **IDENTICAL** (~851 prefill tok/s both). **VERDICT: c = correctness + memory win (16.88 vs 17.54
+GiB/card), NOT a speed win.** Why no pp gain despite the int8 XMX/DPAS fastpath being a compute lever: the 256 MoE
+experts (the bulk of prefill compute) ALREADY run int8 via the Triton fused_moe_kernel in BOTH configs; c only swaps the
+MINORITY linear layers (linear_attn.*, shared_expert), so it can't move total prefill, and on decode the per-token
+act-quant overhead makes it slower. **Recommendation: keep the dequant linear path as the default** (simpler, faster
+decode, more accurate W8A16); B70_INT8_LINEAR=triton stays available for the memory win / true-W8A8 faithfulness. Open:
+verify whether triton_scaled_mm tl.dot actually emits DPAS (the identical pp suggests the linear fraction is just too
+small to tell); a real accuracy eval; bake an image if true-W8A8 is wanted standing.
 **[2026-06-22] Tuned MoE config = IMPRACTICAL via benchmark_moe.py on XPU.** Two blockers: (1) `--tune` does
 `ray.init()` -> `available_resources()["GPU"]` KeyError on XPU (bypassed with a sitecustomize `ray.init(num_gpus=1)`);
 (2) the benchmark worker is CUDA-centric -- `device="cuda"` + CUDA-graph timing (`torch.cuda.CUDAGraph()`,
