@@ -2690,3 +2690,11 @@ The PIECEWISE graph capture can't record the allreduce on our vLLM 0.23 (lacks S
 This is EXACTLY his first-order "graph break around the collective" finding -- not an xe P2P fault (dmesg clean). Workaround:
 TP=2 eager (GRAPH=0) -> no capture -> no conflict. Relaunched TP=2 eager to get the W4A8 TP=2 ladder + unlock the W8A8.
 Documented P2P_GPU.md sec H. Real fix (later): cherry-pick Seguin's allreduce patch (F.5). P2P on/off A/B pending eager-works.
+
+### 2026-06-22 -- [TP=2 / task #12] BIG: SYCLKERNELS=1 unlocks graph-captured TP=2 allreduce (no vLLM patch) + TP1-vs-TP2
+CCL_ENABLE_SYCL_KERNELS=1 + GRAPH=1 + TP=2 -> PIECEWISE capture SUCCEEDS, HEALTHY, dmesg clean. The sycl-kernel oneCCL
+allreduce IS graph-recordable (the default sched algo is not -- that was the H.1 failure). A no-source-patch route to
+graph-captured TP=2 on B70 (Seguin used a vLLM patch). 27B W4A8 @ctx2048 TP=2-graph: c1 dec 22.08 (vs TP=1 20.73, +6.5%
+from 2x weight-BW), but TTFT 2858ms (vs 876, 3.3x worse) and c8 agg 34.3 (vs 67.8, 2x worse) -- the Gen3 cross-die
+allreduce tax outweighs the BW edge for a model that fits one card. VERDICT: TP=1 wins for fit-one-card models; TP=2 is
+the ENABLER for the >32GB W8A8 (launching that now). P2P-on A/B next to shrink the allreduce tax. Doc: P2P_GPU.md H.5/H.6.

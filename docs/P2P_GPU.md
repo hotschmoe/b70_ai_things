@@ -313,3 +313,24 @@ Hypothesis: `CCL_ENABLE_SYCL_KERNELS=1` switches oneCCL to the SYCL-kernel allre
 recording -> would unblock GRAPH=1 + TP=2 with NO code change. Made it overridable via `SYCLKERNELS` env (30_serve).
 Test next: GRAPH=1 TP=2 SYCLKERNELS=1. Risk: Seguin found some CCL sycl knobs flaky (B.3) + #41663 disabled it for
 stability -> watch for hang/RxErr. If it works, that is the real TP=2 win without cherry-picking Seguin's patch (F.5).
+
+### H.5 [WIN] CCL_ENABLE_SYCL_KERNELS=1 unlocks GRAPH-CAPTURED TP=2 allreduce on B70 -- no vLLM patch
+Set `SYCLKERNELS=1` (-> `CCL_ENABLE_SYCL_KERNELS=1`) + GRAPH=1 + TP=2 and the PIECEWISE capture SUCCEEDS:
+`Capturing CUDA graphs PIECEWISE 4/4 [done]` -> `HEALTHY GRAPH=1 TP=2`, dmesg CLEAN (no #41663 RxErr/BCS reset).
+=> the sycl-kernel oneCCL allreduce IS sycl_graph-recordable, where the default `sched` algo (SYCL_KERNELS=0) is not.
+**This is a no-source-patch route to graph-captured TP=2 on B70** -- Seguin got there via a vLLM clone-safe-allreduce
+patch (B.2); we get it via one oneCCL env flag. (The script had hardcoded =0 for #41663 stability; on OUR box =1 is
+stable. Re-validate per-host.) Novel datapoint -- not in the public B70 record.
+
+### H.6 TP=1 vs TP=2 (graph) on the 27B W4A8 @ ctx2048 -- TP=2 LOSES for a model that fits one card
+                 TP=1 (1 card, graph)     TP=2 (2 cards, graph + sycl-allreduce, P2P off)
+  c1 decode t/s     20.73                    22.08    (+6.5%  <- the 2x weight-BW edge, real but small)
+  c1 TTFT ms        876                      2858     (3.3x WORSE <- per-layer allreduce in prefill on Gen3 cross-die)
+  c1 tpot ms        48.2                     45.3     (slightly better)
+  c8 decode t/s     12.24                    6.29     (WORSE)
+  c8 agg out t/s    67.84                    34.28    (2x WORSE <- allreduce overhead dominates at concurrency)
+=> On our PCIe-3.0 cross-die box, the allreduce overhead OUTWEIGHS the 2x-BW benefit for any model that fits one card:
+TP=1 wins on TTFT and on concurrent throughput; TP=2 only nudges single-stream decode. **So transport DOES matter for
+us (answers F.1): the Gen3 cross-die allreduce is a real tax.** TP=2's justified use is ONLY when the model does NOT
+fit one card (the 27B/Qwable W8A8 at 33-35GB) -- there TP=2 is the enabler, not an optimization. The P2P-on A/B (H.7)
+is the remaining lever to shrink that allreduce tax.
