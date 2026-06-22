@@ -11,6 +11,38 @@ Legend: [TARGET] chasing this | [OK] credible/detailed | [WARN] caveat — verif
 
 ---
 
+## Live feed: localmaxxing.com API puller (`scripts/75_localmaxxing.py`)
+
+Most of the hand-curated rows below also appear in the crowd-sourced
+[localmaxxing.com](https://www.localmaxxing.com/en/api-docs) local-inference benchmark
+leaderboard. Its GET endpoints are **public (no key)**, so `scripts/75_localmaxxing.py`
+pulls every `Intel Arc Pro B70` record on demand — including each run's full reproducible
+serve command (`engineFlags.commandSnippet`) and notes. Stdlib only (urllib); ASCII only.
+
+```
+python3 scripts/75_localmaxxing.py                 # summary: best output tok/s per model/engine/quant/gpus
+python3 scripts/75_localmaxxing.py configs          # ranked rows WITH the full vllm/llama-server command
+python3 scripts/75_localmaxxing.py configs --engine vllm --top 5
+python3 scripts/75_localmaxxing.py leaderboard      # ranked leaderboard rows
+python3 scripts/75_localmaxxing.py save             # data/localmaxxing/{*_raw.json, b70_summary.md}
+python3 scripts/75_localmaxxing.py raw              # all raw benchmark JSON (for grep/jq)
+```
+
+Notes:
+- As of 2026-06-22 the API holds **105** B70 records. A snapshot lives at
+  [../data/localmaxxing/b70_summary.md](../data/localmaxxing/b70_summary.md); the large raw
+  JSON dumps are gitignored (regenerable via `save`).
+- The `configs` view surfaces the **exact** commands behind rows #2/#4 below — e.g.
+  steveseguin's `--quantization quark` 35B-A3B W8A8-INT8 run and RagingNoper's
+  `VLLM_XPU_ENABLE_XPU_GRAPH=1 / VLLM_XPU_CUSTOM_AR=1` 102 t/s graph-mode run. Always
+  follow the [!] CLAUDE.md rule and verify served-model-id vs checkpoint before trusting a
+  number (these are other people's self-reported results).
+- Cloudflare bans the default `Python-urllib` UA (error 1010); the script sends a browser
+  UA. Writes (submitting OUR numbers) need `LOCALMAXXING_API_KEY=bhk_...` from the site
+  dashboard — not required for the read-only pulls above.
+
+---
+
 ## [TARGET] PRIMARY CHASE TARGET — Qwen3.6-27B BF16, 4x B70 TP=4, vLLM-XPU + MTP
 
 The number we most want to reproduce and then beat. Single-stream, real model, MTP doing the work.

@@ -2772,3 +2772,21 @@ Per request, cleaned up (good hygiene):
 - Bannered SUPERSEDED: docs/kernel/18 (int8 MoE kernel "build it" -> llm-scaler has it, doc 20; now a port goal) +
   docs/literature/09 (MTP "not viable" -> works via doc-20 recipe). Kept both (cross-linked + reference value).
 - Removed host scratch (tmp_cmp*.py, tmp_ign/cfgdiff.py, dl_olmoe.sh). Kept dl_q35.* (35B Quark download in flight, 25GB).
+
+### 2026-06-22 -- [tooling] localmaxxing.com API puller for B70 community benchmarks -> scripts/75
+Set up a read-only puller for the crowd-sourced localmaxxing.com inference leaderboard
+(https://www.localmaxxing.com/en/api-docs). GET endpoints are public (no key); Cloudflare 1010-bans the
+default Python-urllib UA so the script sends a browser UA. `scripts/75_localmaxxing.py` pages through
+`GET /api/benchmarks?gpuName=Intel Arc Pro B70` (105 records as of today) and exposes:
+summary (best out-tok/s per model/engine/quant/gpus) | leaderboard | configs (rows WITH the full
+engineFlags.commandSnippet) | raw | save (data/localmaxxing/{*_raw.json gitignored, b70_summary.md tracked}).
+Payoff: the `configs` view dumps the EXACT reproducible serve commands behind COMMUNITY_CONFIGS rows --
+- steveseguin 35B-A3B Quark-W8A8-INT8 99.77 t/s: `vllm serve .../nameistoken--Qwen3.6-35B-A3B-Quark-W8A8-INT8...
+  --quantization quark --tensor-parallel-size 4 --language-model-only --compilation-config '{cudagraph_mode:PIECEWISE}'`
+  (served-name was `qwen36-35b-a3b-fp8` despite int8 ckpt -- exactly the [!] verify-the-checkpoint trap; this is the
+  same ckpt our 74/doc20 work serves).
+- RagingNoper 35B-A3B BF16 102.5 t/s graph-mode: docker run with `VLLM_XPU_ENABLE_XPU_GRAPH=1 VLLM_XPU_CUSTOM_AR=1
+  CCL_ENABLE_SYCL_KERNELS=1` + DISABLE_ESIMD_* knobs + cudagraph FULL_DECODE_ONLY w/ explicit splitting_ops -- the
+  un-gated XPU-graph + capture-safe all-reduce frontier (COMMUNITY_CONFIGS section B).
+Documented in docs/COMMUNITY_CONFIGS.md (new "Live feed" section). Writes (submitting OUR numbers) would need
+LOCALMAXXING_API_KEY=bhk_... from the dashboard; not needed for these read-only pulls.
