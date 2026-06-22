@@ -5,6 +5,15 @@ space, BUT log every deletion here with date + reason, and never delete a fallba
 its replacement is validated. Never touch the user's production images/containers
 (nextcloud, mariadb, syncthing, clamav, specula-*).
 
+## 2026-06-23 -- PURGED archive/ entirely (user-requested; PERMANENT, ~473G freed)
+`rm -rf models/archive && mkdir models/archive` (empty). btrfs, no snapshots -> space reclaimed:
+`/mnt/vm_8tb` 1.4T->877G used (12%, 6.5T free); models/ = 378G. Deleted all 21 parked dirs incl. RTN
+dups (W8A8-INT8-RTNtest, W4A8-rtn/q variants), the Qwable set (incl. the broken int4 + the 60G bf16 base),
+the non-prepacked W4A8 twins, 2 GGUFs, old OLMoE, and the 14B W8A8-gptq/gptq512/W8A16. **PERMANENT** (no
+longer reversible by `mv`). Notable: `Qwen3-14B-W8A8-gptq` was the MEASURED W8A8 winner (0.890/0.921) --
+its numbers persist in evals/results/SUMMARY.md; the checkpoint is gone (re-quantizable if ever needed).
+Live serves untouched (Lorbus 27B int4 daily driver, 35B int8/int4 MoE, the prepacked W4A8 twins).
+
 ## 2026-06-22 -- archival batch (user-requested; `mv` to models/archive/, reversible, ~243G)
 Moved out of the live `models/` top level (archive/ 184G -> 427G):
 - **All Qwable** (user doesn't need it): `DJLougen_Qwable-5-27B-Coder` (60G, bf16 base), `...-W8A8-sqgptq` (33G),
