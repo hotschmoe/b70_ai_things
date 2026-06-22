@@ -5,6 +5,17 @@ space, BUT log every deletion here with date + reason, and never delete a fallba
 its replacement is validated. Never touch the user's production images/containers
 (nextcloud, mariadb, syncthing, clamav, specula-*).
 
+## 2026-06-22 -- archival batch (user-requested; `mv` to models/archive/, reversible, ~243G)
+Moved out of the live `models/` top level (archive/ 184G -> 427G):
+- **All Qwable** (user doesn't need it): `DJLougen_Qwable-5-27B-Coder` (60G, bf16 base), `...-W8A8-sqgptq` (33G),
+  `...-W4A8-sqgptq` (33G), `...-W4A8-sqgptq-prepacked` (25G), `...-int4-AutoRound` (25G, the BROKEN XPU-calib quant).
+- **Non-prepacked twins** (kept the prepacked, which is the serve target): `Qwen3.6-27B-W4A8-sqgptq` (33G; kept
+  `...-prepacked` 25G), `Qwen3-14B-W4A8-gptq` (16G; kept `...-prepacked` 9.3G).
+- **GGUFs**: `unsloth_Qwen3.6-27B-GGUF` (16G), `bartowski_Qwen2.5-7B-Instruct-GGUF` (4.4G).
+KEPT (no prepacked twin): the 14B W8A8-gptq / W8A8-gptq512 / W8A8-autoround / W8A16 / W4A16-gptq. Daily driver
+(Lorbus 27B int4) + the 35B int8/int4 MoE serves untouched. NOTE: the older "KEEP" rows below for the 2 GGUFs are
+now superseded by this archival.
+
 ## Keep / remove decisions (live inventory)
 
 ### Docker images
