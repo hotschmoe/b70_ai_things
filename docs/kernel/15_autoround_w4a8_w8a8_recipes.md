@@ -10,6 +10,11 @@
 > `ar.quantize(); ar.save_quantized(output_dir=OUT, format="auto_round")` (inc-servable; NOT llm_compressor). Build
 > `layer_config` by enumerating nn.Linear names matching `lm_head|visual|vision_tower|mtp|linear_attn`. This unblocks
 > Q8 (W4A16) AND retroactively Q2/Q4 (W8A8-AutoRound) + RESEARCH_TODO Track 3. (auto_round 0.13.1 on vllm-xpu-env:v0230.)
+> **Two more XPU gotchas (smoke-then-full proved both):** (1) **`dataset="NeelNanda/pile-10k"`, NOT a variable-length
+> in-script `list[str]`** -- AutoRound batch-stacks calib samples at nsamples>=batch_size and a list of uneven token
+> lengths throws `Sizes of tensors must match ... Expected 23 got 24`. (2) **`low_gpu_mem_usage=True` is REQUIRED** on
+> the 27B/Qwable: without it the iters=200 gradient loop exhausts Level-Zero resources (`UR_RESULT_ERROR_OUT_OF_RESOURCES`
+> error 40) at ~layer 3 even though peak_vram is only ~23GB (it's L0 resource HANDLES, not VRAM). Smoke (iters=2) hides both.
 
 Date: 2026-06-20. Author: quant-eng (read-only investigation; NO GPU touched -- only
 non-GPU `docker run` package inspection + upstream WebSearch/WebFetch).
