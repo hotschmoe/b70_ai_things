@@ -1,5 +1,10 @@
 # 06 - Purpose-built SYCL int4 GEMV for B70 decode (Lever C, design + bench plan)
 
+> **[!] SUPERSEDED (2026-06-22) -- DO NOT BUILD this custom SYCL GEMV; it is futile.** kernel/04 step 4 + microbench
+> kernel/19 measured oneDNN's int4 GEMV already at/above llama.cpp's BW efficiency, so a hand-written GEMV has no
+> headroom. The decode speedup came from PIECEWISE graph capture (dispatch overhead was the bottleneck, not the GEMV).
+> Kept as a design reference only.
+
 Concrete, implementable design for a custom int4 W4A8 GEMV at decode (m=1) on the Intel Arc Pro B70
 (Battlemage / Xe2, sub-group size **16**, 608 GB/s peak BW). This is the "Lever C / C2" follow-on to
 `docs/kernel/04_decode_optimization.md`: replace the oneDNN `grouped_micro_gemm` GEMV-emulation

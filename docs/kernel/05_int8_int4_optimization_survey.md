@@ -1,5 +1,10 @@
 # 05 - int8/int4 GPU matmul optimization survey (decode m=1 focus)
 
+> **[!] DEPRIORITIZED (2026-06-22) -- the m=1 GEMV lever this survey chases is largely FUTILE on the B70.** The real
+> decode win turned out to be PIECEWISE graph capture (~doubles int4 decode; FINDINGS/kernel/04), NOT a faster GEMV:
+> oneDNN's int4/int8 GEMV already meets/beats llama.cpp (kernel/04 step 4 + microbench kernel/19), so there's little
+> headroom for a custom kernel. Kept as a reference survey; do not treat the GEMV-tuning levers as open work.
+
 Current (2025-2026) literature/web sweep on int8/int4 matmul optimizations relevant to our **decode
 (m=1)** bottleneck on the B70 (Xe2/Battlemage). Companion to `04_decode_optimization.md` (the execution
 ladder + levers A/B/C). This doc only adds VERIFIED deltas + status updates; it does not restate 04.

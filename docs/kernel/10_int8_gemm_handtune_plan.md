@@ -1,5 +1,10 @@
 # 10 - INT8 W8A8 GEMM hand-tuning plan: make it the best in the world on the B70
 
+> **[!] DEPRIORITIZED (2026-06-22) -- graph capture, not GEMM hand-tuning, owns the decode speedup.** PIECEWISE XPU
+> graph capture ~doubled int4 decode (the bottleneck was per-op DISPATCH overhead, not the GEMM); and commit 15918cc
+> showed a true int8 LINEAR kernel gives NO MoE speedup. So hand-tuning the int8 GEMM is a low-priority dense-W8A8
+> polish item (RESEARCH_TODO Track 1a, re-prioritized DOWN), not the headline lever. Kept as a reference plan.
+
 Deep, ranked, executable plan to push our int8 W8A8 GEMM to the roofline on the Intel Arc Pro B70
 (Xe2/Battlemage, 32 GB, **608 GB/s**, **367 INT8 TOPS** via XMX/DPAS, sub-group **16**, no native FP8).
 Two regimes, separate levers:

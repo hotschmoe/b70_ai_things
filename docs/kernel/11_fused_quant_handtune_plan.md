@@ -1,5 +1,9 @@
 # 11 - Fused quant hand-tune plan: the ops AROUND the int8 W8A8 GEMM
 
+> **[!] DEPRIORITIZED (2026-06-22) -- PIECEWISE graph capture already absorbs the per-op dispatch overhead** these
+> fused-quant micro-optimizations targeted (FINDINGS/kernel/04). The activation-quant K-loop / scale-fusion levers
+> (RESEARCH_TODO Track 1b/1c) are low-priority dense-W8A8 polish, not the headline. Kept as a reference plan.
+
 Owner: the "...and others" agent (everything on the w8a8 forward path EXCEPT the GEMM itself).
 Mission (doc 04 lever B3): make the int8 activation quant DISAPPEAR into the op that produces the
 activation -- fuse RMSNorm+quant and SiLU-and-mul+quant so the GEMM's int8 src is emitted in one pass,
