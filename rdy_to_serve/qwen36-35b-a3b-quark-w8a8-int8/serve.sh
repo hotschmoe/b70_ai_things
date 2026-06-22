@@ -96,7 +96,7 @@ curl -s --max-time 60 "http://localhost:$PORT/v1/completions" -H 'Content-Type: 
   -d "{\"model\":\"$SERVED\",\"prompt\":\"The capital of France is\",\"max_tokens\":24,\"temperature\":0}" | head -c 600; echo
 
 if [ "${1:-start}" = run ]; then
-  echo "=== bench ==="; "$0" bench
+  echo "=== bench ==="; bash "${BASH_SOURCE[0]}" bench
   docker stop "$NAME" 2>/dev/null; echo "stopped (GPU released)"
 else
   echo "Serving. Stop with: bash serve.sh stop  (holds the GPU until then)."

@@ -36,6 +36,10 @@ Load 17.54 GiB/card, KV 10.2 GiB, concurrency 89x@8192, `backend=xccl world_size
 `fused_moe_kernel` (E=256,N=256,int8). Gen: "The capital of France is" -> " Paris, a city renowned for its
 rich history, culture, and iconic landmarks."
 
-Eager sweep (random 2048-in/128-out): c1 4.46 agg t/s (per-stream 4.80), c2 8.16, c4 14.08 (~3.15x).
-Perf levers (see ../../FINDINGS.md, docs/kernel/20): `GRAPH=1` (PIECEWISE capture) + a tuned
-`E=256,N=256,int8` MoE config. <!-- PERF-CHASE-RESULTS: updated after the capture/tuning campaign. -->
+Perf (random 2048-in/128-out, TP=2):
+- **eager** (default): c1 4.80 per-stream decode (e2e 4.46), c2 8.16 agg, c4 14.08 agg. Works at all conc.
+- **GRAPH=1** (PIECEWISE capture): c1 **41.02 per-stream decode** (TPOT 24.4 ms, e2e 27.85) = **8.5x** the
+  eager decode. BUT c>=2 currently breaks (a new prefill shape recompiles mid-serve -> shm_broadcast hang).
+  Cold start adds a ~6 min one-time compile (cached afterward in /vllm_cache).
+- Open levers (../../FINDINGS.md, docs/kernel/20): `cudagraph_mode: FULL_DECODE_ONLY` to make capture usable
+  at c>1; a tuned `E=256,N=256` MoE config; and true-int8 linear (drop the dequant; contrib/vllm_int8_xpu).

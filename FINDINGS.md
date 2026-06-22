@@ -296,10 +296,17 @@ rerouting the int8 LINEAR layers to a weight-only int8->bf16 dequant GEMM (XPU h
 true int8). `scripts/76_quark35b_v0230.sh` (TP=2, #41663 env, enforce-eager). Verified: load 17.54 GiB/card, KV 10.2 GiB,
 conc 89x@8192, backend=xccl, gen "...Paris, a city renowned for its rich history...". **EAGER perf** (random 2048/128
 sweep): c1 agg 4.46 t/s (per-stream 4.80, TTFT 2233 ms), c2 agg 8.16 (per-stream 4.46), c4 agg 14.08 (per-stream 4.17,
-TTFT 5878 ms) -- aggregate scales ~3.15x at c4, per-stream holds ~4.2-4.8. Modest -- the int4 MoE was ~6 t/s
-eager before PIECEWISE capture took it to 56.8 (+617%); graph capture (flip SYCLKERNELS=1) + a tuned E=256,N=256,int8 MoE
-config are the open levers to chase steve's TP4 ~99. Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe),
-contrib/llm_scaler_quark_int8_moe. (Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
+TTFT 5878 ms) -- aggregate scales ~3.15x at c4, per-stream holds ~4.2-4.8.
+**GRAPH CAPTURE perf** [2026-06-22] (PIECEWISE, SYCLKERNELS=1, CAPSIZES=1,2,4,8; rdy_to_serve serve.sh GRAPH=1):
+c1 = **41.02 t/s per-stream decode** (TPOT 208->24.4 ms, e2e out 27.85 t/s, TTFT 2233->1499 ms) = **8.5x the eager
+decode** -- same class of win as the int4 MoE's +617%. BUT c>=2 currently BREAKS: a new prefill batch shape at higher
+concurrency triggers a mid-serve torch.compile and the engine hangs on shm_broadcast (c2/c4 rows timed out to 0/NaN).
+The one-time captured-startup compile is ~6 min cold (267 s decode + 105 s prefill range), fast on a warm
+/vllm_cache/torch_compile_cache. **Open:** fix concurrency via `cudagraph_mode: FULL_DECODE_ONLY` (capture decode only,
+run prefill eager -- what the community 102 t/s run used) so capture is usable at c>1; + the tuned MoE config (in flight,
+benchmark_moe.py --dtype auto = int8-readable filename) + the true-int8 linear kernel (drop the dequant; contrib/vllm_int8_xpu).
+Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe), contrib/llm_scaler_quark_int8_moe, rdy_to_serve/.
+(Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
 
 MTP: not viable on B70 -- Seguin pins the root cause as a spec-decode VERIFIER / KV / input-position boundary bug
 ("target rejects correct drafts"), not draft quality or precision. So W8A8-vs-W4A16 MTP-receptivity is moot until that
