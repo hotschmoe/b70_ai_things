@@ -376,3 +376,60 @@ TWO remaining levers, BOTH require a host reboot (out of agent scope):
       re-run the probe + a TP=2 P2P serve, BEFORE upgrading the Unraid kernel.
 NET for TP=2 today: host-staged (P2P off) is our only path; SYCLKERNELS=1 graph capture makes it usable. P2P upside
 (shrinking the Gen3 allreduce tax) is GATED on the kernel-7.x reboot -- queued as the next hardware-window experiment.
+
+---
+
+## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]
+
+Userspace is EXHAUSTED (H.9: 12-variant L0 probe, all canAccessPeer=False). Every remaining lever needs a host
+reboot, so BATCH each hypothesis into one maintenance window. Everything below is staged/turnkey. Success metric
+throughout: `71_run_ze_matrix.sh` shows `canAccessPeer=True` (today it is False on all 12 variants).
+
+### I.0 Prep that needs NO reboot (do anytime)
+- [ ] Install `ze_peer` (intel level-zero-tests) into a probe image so the authoritative peer bandwidth/latency
+      matrix is ready: `git clone https://github.com/oneapi-src/level-zero-tests` + build, or `apt-get install
+      level-zero-tests` if packaged. Then `ze_peer` reports the real peer BW (our torch d2d host-bounce was 1.35 GB/s).
+- [ ] Capture the current PCIe ACS/IOMMU-group state for the pair: are 0a:00.0 (GPU0) and 44:00.0 (GPU1) in the
+      SAME iommu group? (cross-die -> different groups today). `ls /sys/kernel/iommu_groups/*/devices/`.
+
+### I.1 WINDOW 1 -- `iommu=off` (cheap; tests the AMD-Zen whitelist hypothesis A.2; NO kernel change)  ~10 min
+Hypothesis: kernel 5.9 whitelists AMD Zen (1950X = family 0x17) for cross-die pci_p2pdma, but commit 6dbbd053e6
+VOIDS the whitelist "when an IOMMU is present" -- and we boot `iommu=pt`. If `pt` counts as present, disabling
+IOMMU restores the whitelist -> peer access may work ON 6.18.
+- [ ] Add `iommu=off` (or `amd_iommu=off`) to the Unraid syslinux append line; reboot. SAFE only if the B70s are
+      bare-metal/Docker (they are -- NOT VM-passthrough). If any VM passthrough exists, SKIP (needs IOMMU).
+- [ ] Post-boot: `cd /mnt/vm_8tb/b70 && ./gpu-run bash 71_run_ze_matrix.sh`
+      -> if ANY variant flips `canAccessPeer=True`: WIN on 6.18. Then run the TP=2 P2P-on serve:
+         `MODELS="...|...PREPACK=1 TP=2 GRAPH=1 SYCLKERNELS=1 P2PACCESS=1 IPCX=drmfd..." ... bash 66_bench_ladder.sh`
+         and compare decode/TTFT vs the P2P-off baseline (W4A8 TP=2 c1 22.1 / H.6).
+      -> if still all False: IOMMU is not the gate -> it is the xe-driver peer path -> go to I.2.
+- [ ] Restore `iommu=pt` afterward if you don't keep iommu=off.
+
+### I.2 WINDOW 2 -- kernel 7.0+ via LIVE USB (zero risk to the Unraid install)  ~30 min
+The real fix: the drm/xe "pcie p2p as fast interconnect" patch shipped Linux 7.0 (A.1); the 6.18 xe driver lacks
+the peer path (why canAccessPeer=False regardless of env). Validate on a live distro BEFORE upgrading Unraid's kernel.
+- [ ] Boot a live USB of a 7.0+/7.1 distro (e.g. a recent Arch/Fedora rawhide ISO) on the GPU host. No disk write.
+- [ ] Verify the xe interconnect: `dmesg | grep -iE "xe.*p2p|interconnect|pci_p2pdma"`; check
+      `pci_p2pdma_distance` permits the pair (watch for host-memory-fallback vs interconnect in dmesg).
+- [ ] Install the XPU runtime (intel-compute-runtime + level-zero) on the live env (or use a container with --device
+      /dev/dri); run `71_run_ze_matrix.sh` + `ze_peer`. Success = `canAccessPeer=True` + ze_peer reports real peer BW.
+- [ ] If True: run a TP=2 P2P-on serve A/B (as I.1) -> measure whether P2P shrinks the Gen3 allreduce tax (H.6:
+      TTFT 2858ms / c8 agg 34 today). THEN decide whether upgrading Unraid's kernel to 7.x is worth it for production.
+- [ ] ALSO test `iommu=off` in this same window if I.1 was skipped.
+
+### I.3 If BOTH windows fail -> it is the cross-die PHYSICAL topology, not software
+Then no kernel/driver setting helps (the two cards are on separate 1950X dies over Infinity Fabric). Escalate to
+hardware: MOONSHOT_RESEARCH T2 = one Gen5 PCIe switch board (both B70s downstream of ONE switch -> "behind the same
+switch" clean P2P + Gen5 peer behind a Gen3 host). That is the DGX-class fix and also moots the iommu-whitelist
+question. Price out PEX89000/Switchtec per MOONSHOT sec 7.
+
+### I.4 What NOT to retry (already disproven, H.9)
+- Any userspace env (NEOReadDebugKeys/EnableCrossDeviceAccess/EnableP2P, ZE_FLAT_DEVICE_HIERARCHY, L0 v2,
+  CCL_TOPO_P2P_ACCESS, drmfd-vs-pidfd IPC) -- all 12 give canAccessPeer=False. Do not burn cycles here again.
+- vLLM P2PACCESS=1 on 6.18 -- fails WorkerProc init in ~65s (both IPC exchanges). Host-staged (P2P off) is the only
+  working TP=2 path until I.1/I.2 flips peer access.
+
+### I.5 Independent of P2P: the allreduce-tax software levers still open (no reboot)
+Even with host-staging, the Gen3 allreduce tax can be cut by reducing/repositioning collectives (Seguin B.2):
+cherry-pick his clone-safe-allreduce + oproj-delay-allreduce patches into our vLLM-XPU (we got graph capture free
+via SYCLKERNELS=1, but not the fusion). That is the orthogonal, no-hardware path to better TP=2 -- docs/literature/10.
