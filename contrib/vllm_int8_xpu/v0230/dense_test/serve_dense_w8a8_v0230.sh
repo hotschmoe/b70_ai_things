@@ -18,7 +18,9 @@ GENV=(); CC=(--enforce-eager)
 if [ "$GRAPH" = 1 ]; then
   GENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS="${OMP:-8}")
   PASS='"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}'
-  CC=(--compilation-config "{\"cudagraph_mode\":\"PIECEWISE\",\"use_inductor_graph_partition\":true,\"compile_sizes\":[1],\"cudagraph_capture_sizes\":[$CAPS],$PASS}")
+  PART="${PART:-1}"; IGP=""; [ "$PART" = 1 ] && IGP="\"use_inductor_graph_partition\":true,"   # triton int8 kernel fails IGP wrapping -> PART=0 drops it
+  CS=""; [ "$PART" = 1 ] && CS="\"compile_sizes\":[1],"
+  CC=(--compilation-config "{\"cudagraph_mode\":\"PIECEWISE\",${IGP}${CS}\"cudagraph_capture_sizes\":[$CAPS],$PASS}")
 fi
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 16g \
   --pids-limit=-1 --ulimit nofile=1048576:1048576 -p ${PORT}:${PORT} \
