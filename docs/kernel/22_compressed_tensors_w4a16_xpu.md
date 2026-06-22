@@ -129,3 +129,19 @@ TAKEAWAY: the two int4 paths trade off OPPOSITELY. DECODE (tg): AutoRound wins b
 (decode, batch=1 memory-bound) -- a clear int8/int4 GEMV optimization target. Net: AutoRound is the better
 GENERATION pick (decode-bound) -> stays the daily driver; compressed-tensors W4A16 is the parity/research
 baseline and is competitive on prefill.
+
+## PARITY ROADMAP -- MTP is the missing dominant lever (2026-06-23)
+Checkpoint inspection: **Lorbus int4 has 29 MTP tensors** (`mtp.fc.weight`, `mtp.layers.0.*`), **our
+Qwen3.6-27B-W4A16 has 0** -- the W4A16 quant DROPPED the MTP module. So W4A16 cannot run `method:"mtp"`
+spec-decode today (the serve knob `MTPTOK` exists, but it needs the trained MTP head in the checkpoint).
+Per the MTP findings (JOURNAL / MTP_TODO), MTP is the DOMINANT decode lever (bandwidth-bound decode ->
+effective tg ~= bandwidth x accept_len, ~75-79% accept). AutoRound ctx2048 C1: no-MTP 29.78 -> MTP spec=4
+46.69 t/s (~1.57x). Gap stack at ctx2048 C1: W4A16 20.97 (here) -> AutoRound no-MTP 29.85 (kernel gap 1.42x)
+-> AutoRound+MTP ~46.7 (MTP lever ~1.57x).
+PRIORITY for making W4A16 the headline:
+1. RE-QUANTIZE Qwen3.6-27B to compressed-tensors W4A16 PRESERVING `mtp.*` (as the AutoRound ckpt did --
+   "mtp.fc bf16-preserved"). Bonus: keep it the FULL model (not text-only) -> MTP works natively + drops the
+   load shim. Quantize on CPU/CUDA, NOT B70-calibrated (Q8 corruption lesson). This is the bigger lever.
+2. THEN the int4 decode-GEMV kernel (the 1.42x). MTP likely SHRINKS this: the verify step runs a small
+   batch (K+1 ~= 5), closer to a GEMM, where `int4_gemm_w4a16` already WINS -> measure the kernel gap at the
+   SPEC batch size, not just batch=1.
