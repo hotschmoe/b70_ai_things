@@ -295,7 +295,8 @@ through the **Triton `fused_moe_kernel`** on XPU (same path as our int4 MoE). On
 rerouting the int8 LINEAR layers to a weight-only int8->bf16 dequant GEMM (XPU has no int8 scaled-mm kernel; experts stay
 true int8). `scripts/76_quark35b_v0230.sh` (TP=2, #41663 env, enforce-eager). Verified: load 17.54 GiB/card, KV 10.2 GiB,
 conc 89x@8192, backend=xccl, gen "...Paris, a city renowned for its rich history...". **EAGER perf** (random 2048/128
-sweep): c1 agg 4.46 t/s (per-stream 4.80, TTFT 2233 ms), c2 agg 8.16 (per-stream 4.46). Modest -- the int4 MoE was ~6 t/s
+sweep): c1 agg 4.46 t/s (per-stream 4.80, TTFT 2233 ms), c2 agg 8.16 (per-stream 4.46), c4 agg 14.08 (per-stream 4.17,
+TTFT 5878 ms) -- aggregate scales ~3.15x at c4, per-stream holds ~4.2-4.8. Modest -- the int4 MoE was ~6 t/s
 eager before PIECEWISE capture took it to 56.8 (+617%); graph capture (flip SYCLKERNELS=1) + a tuned E=256,N=256,int8 MoE
 config are the open levers to chase steve's TP4 ~99. Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe),
 contrib/llm_scaler_quark_int8_moe. (Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
