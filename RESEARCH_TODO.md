@@ -298,3 +298,24 @@ W4A8 runs on the other agent's plan (`w4a8/`). Rotation stays parked.
 
 **GPU discipline:** every serve/bench/perf_probe/on-GPU-quant in these tracks goes through `scripts/gpu-run`
 (one B70, the W4A8 agent is currently on it). Editing/compiling stay parallel; only the GPU touch is serialized.
+
+---
+
+## POST-Q8 FRONTIER STATUS (2026-06-22) -- the explicit mandate is DONE; remaining items ranked by value
+
+The explicit queue is complete: MTP M0-M5 (1.79x shipped), QUANTS Q0-Q5+Q8 (queue closed; Q8 Qwable int4 validated
+29.13 t/s), docs hygiene, frontier research. Headline post-Q8 result: **FULL-capture MTP is KERNEL-gated** (Track 1d
+CLOSED -- ported #7148, bisected the crash to `_xpu_C.gdn_attention`; PIECEWISE 1.79x is the ceiling; issue draft
+docs/kernel/21). Remaining open frontier items, **honestly ranked** (all are lower-value than what's done):
+
+1. **[MED] Accuracy evals (Track 2 + 3 + the Q8 close).** The genuinely-open *measurements*: (a) Q8 Qwable int4
+   HumanEval+ (it's a CODER model -> the right eval; closes the Q8 validation's "accuracy TBD"); (b) Track 2 -- does
+   selective-SmoothQuant (Q3/Q5) actually beat GPTQ-only 0.908 on gsm8k/agreement? (c) Track 3 -- AutoRound-W4A16 vs
+   GPTQ confirm. These need the evals/ harness + a GPU serve (~30-60 min each). **Highest-value remaining work.**
+2. **[LOW-MED] Mount vllm_xpu_kernels 0.1.10 (v0230 = 0.1.9, confirmed).** Will NOT fix FULL (0.1.10 has no spec-path
+   changes -- research + the kernel bisection above). Only a MoE-prefill speedup (#378/#379) + a >=32K NaN-race fix
+   (#411). Requires a FULL-dir `.so` overlay (matched set incl. a ~1.5GB libattn_kernels), with ABI risk (0.1.10 may
+   want compute-runtime 26.18). Reversible overlay. Narrow win; do only if long-context NaN or MoE prefill bites.
+3. **[LOW] Q2/Q4 W8A8-AutoRound re-run** (now unblocked by the MLLM-dodge + scripts/87 config repair, scheme=W8A8).
+   Expected ~TIE with GPTQ-W8A8 0.890 (int8 weights -> weight-rounding method barely matters; Track 3). One run to confirm.
+4. **[LOW] Track 9** MoE-config tuner XPU port (deferred; Ray bypass proven, CUDA-graph timing still needs porting).
