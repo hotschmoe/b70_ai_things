@@ -126,7 +126,12 @@ Legend: [ ] todo - [~] running - [x] done.
 - **Out:** `models/Qwen3.6-35B-A3B-W4A8-sqgptq`. llmcompressor MoE GPTQ + the router-aware selective-SQ mapping (Q0).
 - Serving gated on the int8 MoE kernel. Est ~3-6 h.
 
-### [~] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   RUNNING 2026-06-22 (MLLM-dodge SOLVED; smoke validated; full run + Q5 prepack launched)
+### [x] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   PRODUCED 2026-06-22 (RESULT_Q8 DONE; serve-validation running)
+> **[PRODUCED 2026-06-22]** Full run COMPLETE after 3 fixes (MLLM-dodge -> pile-10k calib -> low_gpu_mem_usage for the
+> layer-3 UR_OUT_OF_RESOURCES). `save_quantized(format=auto_round)` SAVED ok; out = 25G, 6 safetensors shards +
+> quantization_config.json + model_extra_tensors.safetensors. The 348 copied-verbatim tensors include **`mtp.fc`,
+> `mtp.layers.0.*`, `mtp.norm`** + the full `model.visual.*` tower -> the MTP head is BF16-preserved (mtp.fc gotcha
+> satisfied) so this int4 checkpoint is **MTP-capable**. Serve-validation (q8_validate.sh) running; perf logged in sec 6.
 > **[!] THE MLLM-CALIB BLOCK IS BEATEN (2026-06-22).** The Q2/Q4 "AutoRound MLLM-calib blocked on VLM" was a missing-API
 > problem, NOT a real blocker. AutoRound 0.13.1 auto-detects the qwen3_5 VLM, forces MLLM mode, and `quantize()` asserts
 > `processor should not be None` (`quant_nontext_module=False` alone does NOT dodge it). **FIX (scripts/84, smoke-proven):**
