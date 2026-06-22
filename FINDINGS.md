@@ -288,9 +288,17 @@ OPTIMIZATION LEVERS proven (no reboot):
 - (orthogonal, not yet done) Seguin's clone-safe + oproj-delay allreduce fusion patches to cut the host-staged
   allreduce tax further.
 
-35B int8 MoE (Q6/Q7, deferred): Steve Seguin's codex/qwen36-quark-int8-tracking branch SERVES the 35B-A3B as
-**Quark W8A8 INT8** at ~99 t/s on TP4 (persistent-MoE-layerlet kernel). => Quark is likely the cheap production path for
-our 35B int8 (vs our multi-day llmcompressor-GPTQ). docs/literature/10 + QUANTS_TODO sec 7.
+35B int8 MoE (Q6/Q7): [SOLVED 2026-06-22] **Quark W8A8 INT8 35B-A3B SERVES + GENERATES on 2x B70 TP=2.** Not on the
+llm-scaler 0.14.1 image (no XPU MoE op suite -- `vllm._moe_C` unbuilt), but on **`vllm-xpu-env:v0230` (vLLM 0.23.0)**,
+which already ships `QuarkW8A8Int8MoEMethod` + the dynamic-per-token int8 linear dispatch AND routes the 256 int8 experts
+through the **Triton `fused_moe_kernel`** on XPU (same path as our int4 MoE). Only patch: one bind-mounted `quark.py`
+rerouting the int8 LINEAR layers to a weight-only int8->bf16 dequant GEMM (XPU has no int8 scaled-mm kernel; experts stay
+true int8). `scripts/76_quark35b_v0230.sh` (TP=2, #41663 env, enforce-eager). Verified: load 17.54 GiB/card, KV 10.2 GiB,
+conc 89x@8192, backend=xccl, gen "...Paris, a city renowned for its rich history...". **EAGER perf** (random 2048/128
+sweep): c1 agg 4.46 t/s (per-stream 4.80, TTFT 2233 ms), c2 agg 8.16 (per-stream 4.46). Modest -- the int4 MoE was ~6 t/s
+eager before PIECEWISE capture took it to 56.8 (+617%); graph capture (flip SYCLKERNELS=1) + a tuned E=256,N=256,int8 MoE
+config are the open levers to chase steve's TP4 ~99. Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe),
+contrib/llm_scaler_quark_int8_moe. (Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
 
 MTP: not viable on B70 -- Seguin pins the root cause as a spec-decode VERIFIER / KV / input-position boundary bug
 ("target rejects correct drafts"), not draft quality or precision. So W8A8-vs-W4A16 MTP-receptivity is moot until that

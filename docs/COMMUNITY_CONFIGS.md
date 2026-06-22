@@ -106,6 +106,16 @@ Newest model-of-interest first. "Source" = where we got it (user-supplied data p
   W8A8 INT8 too. The 99.77 t/s therefore was **not** stock INT8 W8A8 on XPU — it required a custom XPU int8
   kernel + a registry patch (`_POSSIBLE_INT8_KERNELS[XPU]=[...]`), or the Quark config resolved to FP8/W4A8,
   or it's misattributed. Writing that kernel is **our contribution target #1** (see literature/06).
+- **#2 UPDATE [2026-06-22 -- the int8 MoE checkpoint DOES serve on 2x B70]:** We served the EXACT ckpt
+  `nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8` on **2x B70 TP=2, vLLM 0.23 (`:v0230`)** + a 1-file
+  linear-dequant patch (`scripts/76`, `contrib/llm_scaler_quark_int8_moe/v0230/quark.py`) -> it loads
+  (17.54 GiB/card) and **generates coherently** ("...Paris, a city renowned for its rich history..."),
+  with the **256 experts running TRUE int8 via the Triton `fused_moe_kernel`** (E=256,N=256,int8). So the
+  int8-**MoE** serve is REAL, not FP8/INT4. The int8-**LINEAR** scaled-mm XPU gap above STILL holds (no XPU
+  entry -> KeyError) -- that's exactly why the linear layers need the dequant workaround; steve's 99.77 would
+  have needed his own linear int8 path (ESIMD). Our number so far: **~4.5 t/s/stream EAGER** (c1 agg 4.46,
+  c2 agg 8.16) vs his 99.77 at TP4 graph-captured -- the gap is graph-capture (+617% on our int4 MoE) + TP4
+  + a tuned MoE config, NOT authenticity. Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe).
 - **#6 (TP2+MTP):** [NEG] Corroborated by our own reading: vLLM **disables XPU graph capture for TP2
   comm ops**, so verify+collective overhead eats the draft savings. **MTP is a single-card win, not
   dual.** Don't waste time re-deriving this.
