@@ -46,5 +46,30 @@ is ~1000x off memory-bound and **persists under graph capture** (it is compute, 
    with real, capture-persistent headroom (down_proj: fixing 101->~5us takes the layer 287->~160us = 1.8x int8 decode).
 3. int8 GEMM prefill ~250 TOPS is near XMX peak -> little prefill headroom there.
 
-NEXT TEST (proposed): a Triton split-K per-token int8 quant vs `dynamic_per_token_int8_quant` at M=1, large K.
+## SPLIT-K QUANT TEST (2026-06-23, card 0, Triton on `:int8g`) -- algorithm WORKS, Triton dispatch caps it
+Wrote a Triton per-token int8 quant, grid `(M,)` with `num_warps` so each row's K-reduction parallelizes
+across the work-group (vs the stock op's serial 1-work-item reduction). CORRECT (max |xq diff| = 1 rounding,
+scale rel-err 0). Result (M=1):
+```
+  K       stock     triton(best)   speedup
+  5120    39.7us    60.4us         0.66x  (LOSES -- Triton floor > stock)
+  17408   101.1us   60.4us         1.68x  (WINS)
+```
+- **The serial-reduction problem IS fixed**: Triton time is FLAT ~60us regardless of K (5120 & 17408) and M
+  (1, 5, 64) -- the parallel reduction works. Stock scales 40->101us with K (serial). So at the large-K
+  down_proj, Triton is **1.68x** even in eager.
+- BUT there is a **~60us fixed Triton-XPU dispatch floor** (NOT tunable: swept num_warps 1..32 x BLOCK_K
+  1024/4096, all 60-67us). The stock NATIVE op's launch is lower (~15-40us), so Triton loses at small K and
+  its big-K win is floor-capped.
+CONCLUSION: the split-K *algorithm* is the right fix, but Triton is the wrong vehicle on XPU (dispatch floor).
+Production path, in order of cleanliness:
+  1. **FUSE the per-token quant into the int8 GEMM prologue** -- the fused kernel reads bf16 `x` once,
+     computes the per-token scale + quantizes inline, then does the s8s8 GEMM. ZERO extra dispatch, and the
+     reduction is parallel within the GEMM's tiling. This is the real win (removes the whole quant launch).
+  2. The same split-K reduction in the NATIVE contrib int8 kernel (`contrib/vllm_int8_xpu`) -- lower dispatch
+     than Triton, beats stock at all K.
+  3. Graph capture removes the dispatch for BOTH the stock and a parallel-reduction quant -> then the parallel
+     reduction wins; but fusion (1) is better because it also kills the GEMM's separate launch.
+Net for B70 int8 decode: don't tune the GEMMs (near-roofline); FUSE quant+GEMM (one launch, parallel reduce).
+
 All work card-0 only (another agent on card 1; never the default `gpu-run` which locks both).
