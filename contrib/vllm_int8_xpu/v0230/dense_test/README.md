@@ -25,3 +25,15 @@ Generation = COHERENT (correct iterative fib + main()). **v0230 CAN serve dense 
 v0.23-vs-:int8 tension.** PRODUCTIONIZE: bake the hook into the image (or a clean mounted patch, like the quark serve),
 register for compressed-tensors + quark. PERF (TODO): eager triton is ~25% slower than dequant (per-forward act-quant);
 the meaningful test is WITH graph capture (act-quant fuses into the graph) vs the :int8 oneDNN kernel.
+
+## PERF VERDICT 2026-06-23 -- works, but TOO SLOW; keep :int8 for W8A8 perf
+With the opaque-custom-op fix, PIECEWISE graph capture SUCCEEDS (triton-wrap errors 142->0; "Graph capturing
+finished 2.47 GiB"; coherent gen). BUT decode = **~1.7 t/s** (TTFT-cancelled, warm) vs **:int8 oneDNN W8A8 ~23.5**
+captured -- ~13x SLOWER. Not a JIT-churn artifact (only 1 inference-time JIT, a vLLM internal) and capture is real.
+Root cause = the path does **un-fused plain-torch per-token int8 act-quant on EVERY dense linear** (~280 of them;
+amax+div+round+clamp+to-int8, XPU lacks `_C.scaled_int8_quant`), AND the kernel is an OPAQUE custom op so inductor
+can CAPTURE but cannot FUSE it. The :int8 image has a FUSED int8 act-quant kernel + oneDNN s8s8s32 GEMM -> ~13x faster.
+**Conclusion:** the v0230 dense-W8A8 int8 patch is a CORRECTNESS / portability / memory proof (dense W8A8 runs true-int8
+on the modern v0.23 stack, weights stay int8, capture-safe) -- a valid FALLBACK if :int8 ever breaks -- but it is NOT a
+perf path. We CANNOT drop :int8 for W8A8. To make v0.23 competitive: need (a) a FUSED XPU int8 act-quant op (not torch),
+and (b) the int8 GEMM inductor-fusable (not opaque) -- that is real kernel work (RESEARCH_TODO Track 1), a separate project.
