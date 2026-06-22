@@ -2890,3 +2890,16 @@ acceptance decays steeply within each verify step (pos0 ~80% -> last pos ~37%) -
 different axis -- would need short-vs-long-gen accept comparison; deferred, the per-draft decay already explains the knee.)
 So the production single-card MTP pick is **spec=4 (or 3), ~55 t/s, 1.79x** -- NOT the spec=5 the localmaxxing rows used.
 Next: FULL_DECODE_ONLY frontier retry at spec=4 (caps incl 5) + M3 Half-KV (fp8 KV accept vs full-KV 3.25).
+
+### 2026-06-22 -- [MTP FULL retry FAIL + M3 DONE] FULL blocked (kernel bug); Half-KV is FREE for acceptance
+Combined lease (`m3_and_full.sh`).
+- **FULL_DECODE_ONLY retry (spec=4, caps incl 5): CRASHED, same `spec_query_start_loc must have size [num_spec_decodes+1]`**
+  as plain FULL -- now inside the inductor-compiled `gdn_attention_core_xpu` for `layers.0.linear_attn`. Mode-independent
+  (FULL == FULL_DECODE_ONLY) and capture-size-independent. The v0230 baked gdn_attention (xpu_kernels 0.1.9) spec op cannot
+  run inside ANY captured graph. **CONCLUSION: FULL capture is BLOCKED on stock v0230; single-card MTP ceiling = PIECEWISE
+  1.79x.** (Stretch to unblock: mount xpu_kernels 0.1.10 _xpu_C.so via KERNEL_SO -- deferred, PIECEWISE already wins.)
+- **M3 Half-KV: PIECEWISE spec=4 + fp8_e4m3 KV -> decode 53.73 t/s, accept_len 3.29 vs full-KV 3.25 (delta +0.04) ->
+  Half-KV OK, KEEP IT.** Half-KV does NOT depress MTP acceptance (Playbook A #5 confirmed), so the 2x-context trick is free.
+SINGLE-CARD MTP CAMPAIGN COMPLETE: 27B W4A16 + MTP spec=4 + PIECEWISE + Half-KV = ~54-55 t/s, 1.79x, accept ~3.25-3.29,
+beats Lorbus 45.2. Serving-ready. Next: M5 35B-A3B int4 MoE + MTP captured (single-card on :v0230moe; the int4 MoE already
+captures at 56.8 t/s, avoiding the int8-MoE dequant-linear capture blocker; checkpoint HAS the mtp head -- verified config).
