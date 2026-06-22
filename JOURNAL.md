@@ -2712,3 +2712,8 @@ Cloned repo, reviewed main + 5 codex/* branches. KEY finds for us:
 (3) Applicable knobs: n-gram speculative (helped his Qwen FP8 +1.5 t/s -> try on our 27B W4A8), async+static-compile
     (1.7x), unset CUDAGRAPH_PARTITION_COLLECTIVES. Skip all VLLM_MINIMAX_*/GGML_* (not our arch). Corroborates our
     fp8-KV-broken + MTP-broken + TP2-capacity findings. Full catalog + try-list: docs/literature/10.
+
+### 2026-06-22 -- [TP=2] 27B W8A8 now SERVED via TP=2 (graph+SYCLKERNELS); full 27B int8 served-ladder logged
+W8A8 27B @ctx2048 TP=2: c1 dec 17.5 / c8 dec 6.1, TTFT 2728ms, agg 12.8->34.0. The 35GB W8A8 (single-card N/A) is now
+servable thanks to the SYCLKERNELS=1 graph-capture unlock. Full picture (P2P_GPU H.7): W4A8-TP1 best for fit-1-card;
+W4A8-TP2 +6.5% c1 dec but worse TTFT/conc; W8A8-TP2 17.5 (int8-wt < int4-wt decode, bytes-bound). Next: P2P-on A/B.

@@ -334,3 +334,13 @@ TP=1 wins on TTFT and on concurrent throughput; TP=2 only nudges single-stream d
 us (answers F.1): the Gen3 cross-die allreduce is a real tax.** TP=2's justified use is ONLY when the model does NOT
 fit one card (the 27B/Qwable W8A8 at 33-35GB) -- there TP=2 is the enabler, not an optimization. The P2P-on A/B (H.7)
 is the remaining lever to shrink that allreduce tax.
+
+### H.7 27B int8 served-ladder summary (ctx2048) -- the full TP/scheme picture
+                       c1 dec   c1 TTFT   c8 dec   c8 agg    notes
+  W4A8 TP=1 (1 card)   20.7     876ms     12.2     67.8      best for a model that fits one card
+  W4A8 TP=2 (graph)    22.1     2858ms    6.3      34.3      +6.5% c1 dec, but TTFT/conc much worse
+  W8A8 TP=2 (graph)    17.5     2728ms    6.1      34.0      35GB -> TP=2 ONLY; now SERVABLE (was N/A)
+  [W8A8 TP=1: impossible, 35GB > 32GB card]
+Reads: (a) int4-wt (W4A8) decode > int8-wt (W8A8) at matched TP (bytes-bound). (b) TP=2 helps c1 decode a hair
+(2x weight BW) but its allreduce tax dominates TTFT + concurrency on our Gen3 cross-die box. (c) TP=2's real job =
+fit the >32GB W8A8. NEXT: P2P-on A/B (P2PACCESS=1) -- does enabling card-to-card P2P shrink the allreduce tax vs host-staged?
