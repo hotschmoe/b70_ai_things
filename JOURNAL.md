@@ -3143,3 +3143,30 @@ verdict -> MTP spec=4 is a C1 interactive decode win at ctx=2048 (`tg` +57%, agg
   `results/mtp_table_qwen36-27b-int4_ctx2048_20260622_144303.csv`,
   `results/mtp_table_qwen36-27b-int4_ctx2048_continue_20260622_144611.csv`,
   `results/mtp_table_qwen36-27b-int4_ctx2048_mtp_20260622_144813.csv`. Container stopped; card1 lease freed.
+
+== 2026-06-23 :: 27B W4A16 compressed-tensors FIXED (text-only-checkpoint load bug; int4 kernel exonerated) ==
+goal -> serve `Qwen3.6-27B-W4A16` (compressed-tensors pack-quantized) on the B70 for format parity (and as
+  the W4A4-research substrate). It had been written off as "won't serve (4304 dim)". Card 0 only (another
+  agent on card 1 -- per-card gpu-run `--card 0`). Full log: docs/kernel/22_compressed_tensors_w4a16_xpu.md.
+config -> the checkpoint is a LANGUAGE-MODEL-ONLY quant (architectures Qwen3_5ForCausalLM, all 1363 tensors
+  model.language_model.* + lm_head, ZERO vision). vLLM resolved it to the VL class and built a weightless
+  vision tower. Fix = a sitecustomize+module shim (rdy_to_serve/qwen36-27b-w4a16/patches/) doing 5 things:
+  (1) register the real text arch -> no vision tower; (2) is_hybrid=True marker -> GDN/mamba KV-cache setup;
+  (3) graft get_mamba_state_{shape,dtype,copy}_from_config from the VL class; (4) supports_mrope + a
+  text-only get_mrope_input_positions (== the VL text path); (5) load_weights remap model.language_model. ->
+  model. . Image :v0230 (GDN). UTIL 0.95 (24.35 GiB model is tight; GRAPH=1 OOMs at 0.90).
+result -> after (1)-(4) it SERVED HEALTHY but generated "!!!!" garbage. Two numerical unit tests of
+  torch.ops._xpu_C.int4_gemm_w4a16 on card 0 EXONERATED the int4 kernel: it needs the weight in NT format
+  (weight_packed.t() as a NON-contiguous view -- `.contiguous()` raises "Int4 weight must be in NT format!"
+  -- + scale.t().contiguous()), and then matches a reference dequant matmul on synthetic AND a real layer
+  (maxerr 0.0156). The REAL bug: every weight skipped ("language_model.<x> not found in params_dict") ->
+  random init -> garbage. The (5) name remap fixed it: skipped-weight warnings 0, coherent gens (Paris /
+  the ocean / RGB), EAGER and GRAPH=1 PIECEWISE captured.
+verdict -> 27B W4A16 compressed-tensors SHELVED + verified (rdy_to_serve/qwen36-27b-w4a16). The "4304 dim"
+  story was a red herring (that assert was the weightless vision tower, also fixed by loading text-only).
+  LESSONS (research): (a) "serves HEALTHY + coherent infra logs" != "weights loaded" -- always grep the load
+  for `not found in params_dict`/`skip loading` when re-homing a checkpoint; all-same-token output is the
+  random-weights signature (cf. the Q8 false positive). (b) the XPU compressed-tensors int4 W4A16 GEMM
+  (int4_gemm_w4a16) is CORRECT -- usable for W4A16 research; weight is NT-format (transposed view).
+  (c) Lorbus int4 (works) uses INC auto_round_kernel + Triton/FLA GDN, a DIFFERENT path from XPUwNa16.
+  Commits: e53f6f8 (fix+findings) + this (GRAPH=1 default UTIL=0.95 + journal). Card 0 freed; card 1 untouched.

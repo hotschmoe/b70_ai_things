@@ -29,6 +29,11 @@ things so it loads + computes correctly (pinned to vLLM 0.23):
 5. **`load_weights` remap `model.language_model.` -> `model.`** -- THE fix for the garbage output
    (without it all weights skip -> random init -> "!!!!").
 
-verified: GREEN on :v0230, one card, 2026-06-23: skipped-weight warnings = 0; coherent gens ("...Paris is
-the capital and most populous city of France"; "The ocean is a vast... covers more than 70% of the Earth's
-surface"). Re-verify: `gpu-run --card 0 bash serve.sh`. (A full HumanEval+ pass is the natural next check.)
+## Memory note
+The model is ~24.35 GiB (VRAM-tight on a 32 GiB card). `GRAPH=1` PIECEWISE capture OOMs at `UTIL=0.90`
+(only ~2 GiB KV headroom) -> serve.sh defaults `UTIL=0.95` (~4 GiB KV, captures fine).
+
+verified: GREEN on :v0230, ONE card, 2026-06-23: skipped-weight warnings = 0, both EAGER and GRAPH=1
+PIECEWISE captured (UTIL=0.95). Coherent gens: "...Paris is the capital and most populous city of France";
+"The ocean is a vast... covers more than 70% of the Earth's surface"; "three colors: 1. Red 2. Blue 3.
+Green". Re-verify: `gpu-run --card 0 bash serve.sh`. (A full HumanEval+ pass is the natural next check.)

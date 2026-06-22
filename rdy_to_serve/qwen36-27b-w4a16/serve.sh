@@ -22,7 +22,8 @@ export CKPT="${CKPT:-/models/Qwen3.6-27B-W4A16}"
 export SERVED="${SERVED:-qwen36-27b-w4a16}"
 export DTYPE="${DTYPE:-auto}"
 export GRAPH="${GRAPH:-1}"
-export UTIL="${UTIL:-0.90}"
+export UTIL="${UTIL:-0.95}"                  # 24.35 GiB model is VRAM-tight; GRAPH=1 capture OOMs at 0.90 (only
+                                            # ~2 GiB KV headroom) -> 0.95 leaves ~4 GiB and captures fine.
 export MAXLEN="${MAXLEN:-8192}"
 export MAXSEQS="${MAXSEQS:-32}"
 export CAPSIZES="${CAPSIZES:-1,2,4,8,16,32}"
