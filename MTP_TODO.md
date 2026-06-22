@@ -29,6 +29,17 @@ Now on M2 (spec sweep + accept-vs-position + /metrics accept length).
 >   accept). Bucket accept% by gen-token position (0-128 / 129-256 / 257-512) to catch the Lorbus 86->65% decay.
 > - **M3 (Half-KV):** same winner; A = full KV (omit KVDTYPE/fp16), B = Half-KV (`KVDTYPE=fp8_e4m3`), same MAXLEN. Decider:
 >   `delta_accept = acc(Half-KV) - acc(full-KV)`; drop > 0.2 tok or > 5% rel = Half-KV costs acceptance, else keep it.
+
+> ### [FULL-capture frontier -- crash root cause + retry recipe, codex 2026-06-22]
+> M1-C (plain `FULL` + `TRITON_ATTN`, spec=5, CAPSIZES=1,2,4,8) CRASHED at capture: `RuntimeError: spec_query_start_loc
+> must have size [num_spec_decodes + 1]` in `_xpu_ops.py::_gdn_attention_core_xpu_impl`. **Root cause = capture
+> dummy-metadata mismatch** (not bad MTP wiring): FULL warmup runs synthetic batches whose `num_spec_decodes` !=
+> `spec_query_start_loc.shape[0]` -- a known vLLM-XPU GDN-spec-capture bug. PIECEWISE/eager build consistent metadata so
+> they run fine (hence M1's 1.72x). **Retry recipe (NOT YET RUN):** `CGMODE=FULL_DECODE_ONLY` (decode-only uniform shapes,
+> skips FULL's mixed prefill-decode capture) + `ATTN=TRITON_ATTN TRITONSHIM=1` + **`CAPSIZES` MUST include the spec-verify
+> len `1+num_spec`** (spec=5 -> include 6: `CAPSIZES=1,2,4,6,8,16,32`) -- my M1-C's `1,2,4,8` omitted 6. Keep
+> `gdn_attention_core_xpu` IN splitting_ops (vLLM default already does -> not force-captured -> dodges the bug). If it still
+> crashes, escalate splitting_ops variants. **FULL is UPSIDE -- PIECEWISE already gives 1.72x, so this is not a blocker.**
 **Related:** [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) · [`JOURNAL.md`](JOURNAL.md) (MTP entries) · [`docs/COMMUNITY_CONFIGS.md`](docs/COMMUNITY_CONFIGS.md) · [`data/localmaxxing/`](data/localmaxxing/) + [`scripts/75_localmaxxing.py`](scripts/75_localmaxxing.py) · `contrib/vllm_int8_xpu/`
 
 ---
