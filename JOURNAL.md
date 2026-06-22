@@ -3042,3 +3042,34 @@ verdict -> GPTQ >= AutoRound at W8A8; AutoRound does NOT supersede GPTQ here. Ma
   (keeping autoround on the "supersedes" hypothesis); this eval shows gptq was marginally BETTER -- but the difference is
   ~CI-noise, the measured gptq numbers persist in SUMMARY.md, and gptq is re-quantizable. Eval harness + sandbox: WORK.
   GPU0 freed, lease released. (The v0230 dense-int8 capture test ran in parallel on GPU1.)
+
+== 2026-06-23 :: REORG -- rdy_to_serve golden shelf + _common engine + bin/ tools (anti-clobbering contract) ==
+motivation -> we kept clobbering working serve recipes/patches/images while testing new stuff. Established a 4-tier
+  layout by MUTABILITY CONTRACT (ORGANIZATION.md): scripts/ = append-only lab notebook; bin/ = stable shared tools;
+  images/ = immutable digest-pinned recipes (future); rdy_to_serve/<m>/ = VERIFIED self-contained golden serves.
+config -> rdy_to_serve/_common/lib.sh = shared model-agnostic serve engine (docker-run builder + graph-capture flags +
+  #41663 multi-GPU env + health wait + gen probe + bench), ported from the proven host 30_serve_w4a8_graph.sh. Each
+  model serve.sh = thin (env + local patches/ + `source ../_common/lib.sh; b70_dispatch`). Built 3 shelf dirs:
+  qwen36-27b-int4 (:v0230, 1 card, PRIMARY), qwen36-35b-a3b-int4 (:v0230moe, 1 card, FASTEST), and refactored
+  qwen36-35b-a3b-quark-w8a8-int8 (:v0230, TP=2) onto _common. bin/: moved gpu-run/35_sweep/64_dp/dp_nginx + pulled the
+  CANONICAL host 30_serve (the repo w4a8/ copy had DRIFTED) + serve-sweep gate harness. SERVING.md -> golden-path index;
+  CLAUDE.md -> the contract; contrib quark README -> blessed-copy banner. Host is NOT a git repo (hand-synced via tar-pipe).
+result -> tested on the 2 free B70s (gpu-run lease): (1) eager single-card 27b-int4 (card0:8001) + 35b-a3b-int4
+  (card1:8002) SIMULTANEOUSLY -> both HEALTHY, ids ok, coherent "Paris" gens. (2) eager TP=2 quark W8A8 -> HEALTHY,
+  quark.py per-container mount ok, gen "Paris, a city renowned for its rich history...", 233s. (3) 27b GRAPH=1 PIECEWISE
+  capture (full capsizes) -> HEALTHY, coherent gen.
+  BUG CAUGHT BY THE SMOKE GATE: b70_serve built the EAGER/CC arrays but never appended them to the vllm args, so
+  GRAPH=1 served WITHOUT --compilation-config (capture was a silent no-op -> the default `bash serve.sh` would ship
+  ~7.8 t/s eager, not ~30.8 captured) and GRAPH=0 lacked --enforce-eager. Fixed: ARGS+=(EAGER CC). Also fixed an empty
+  MOUNTS element that docker read as the image ("invalid reference format"). Both re-verified GREEN.
+gotchas -> (a) bash CANNOT export arrays -> serve.sh sets MOUNTS as a plain array (sourced, so visible). (b) release a
+  STUCK serve by killing its `gpu-run` PID, NOT `docker rm -f` the container (removing it makes serve.sh's wait loop
+  poll a missing container and keep holding the flock). (c) gpu-run --status can show a STALE owner if a gpu-run dies
+  without its EXIT trap (ssh drop) -- flock is actually free; `: > gpu.lock.owner` to clear. (d) NEVER `pkill -f <str>`
+  where <str> is in your own ssh command line (kills your session).
+verdict -> the golden shelf works; the _common engine is validated across eager-single / eager-TP2-patched /
+  graph-capture. :int8g is GONE from the host -> the int8-kernel family (27B/14B W4A8/W8A8) is BLOCKED pending an
+  image rebuild (documented in rdy_to_serve/README status table, not enshrined as fake-verified). Commits: a8671be
+  (ORGANIZATION.md), b113350 (_common+dirs), 0620757 (bin/+contract), 8e81bfa (capture-flags fix). Lease freed, host clean.
+  DEFERRED: images/ Dockerfiles + :int8g rebuild; full SERVING trim + daily_driver calling the golden path (it still
+  uses the host flat 30_serve engine); dropping the NN_ numbers off bin/ tools + scripting the host sync.
