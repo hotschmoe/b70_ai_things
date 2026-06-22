@@ -196,6 +196,20 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   doesn't dodge it (GDN decode core always uses the baked op). **PIECEWISE 1.79x is the single-card ceiling on stock
   v0230** (issue draft docs/kernel/21). TP=2 MTP is DEAD (spec-allgather not graph-capturable); MoE MTP is FLAT (+3%,
   sparse 3B-active). **MTP is a DENSE-model lever.** Full campaign: MTP_TODO.md (M0-M5).
+  **Ctx=2048 follow-up (2026-06-23, `vllm bench serve`, random 2048/128, card1, golden
+  `rdy_to_serve/qwen36-27b-int4`, fp16 KV):** MTP is a C1 latency lever, not a C4 throughput lever on this workload.
+  `tg` = 1000/mean TPOT; `pp` ~= input_len * concurrency / TTFT.
+
+  | config | C | pp tok/s | TTFT | tg tok/s | agg out tok/s | accept_len |
+  |---|---:|---:|---:|---:|---:|---:|
+  | no-MTP PIECEWISE | 1 | 1605.8 | 1.275 s | 29.78 | 23.10 | - |
+  | MTP spec=4 PIECEWISE | 1 | 1453.0 | 1.410 s | **46.69** | **30.99** | 2.92 |
+  | no-MTP PIECEWISE | 4 | **2410.9** | **3.398 s** | **19.54** | **51.69** | - |
+  | MTP spec=4 PIECEWISE | 4 | 1843.5 | 4.444 s | 16.09 | 40.56 | 2.41 |
+
+  Verdict: keep `DD_MTP=1` for single interactive coding-agent streams; leave it OFF for C4+ batch/fan-out at
+  ctx=2048 unless a workload-specific bench proves otherwise. The older 55.28 t/s number remains the TTFT-cancelled
+  single-stream decode probe, not a concurrent `vllm bench serve` row.
 - **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8
   DeltaNet kernel only exists in vLLM **0.23.0** (older images: ESIMD `.weight` bug / `scaled_mm` `KeyError(XPU)`).
   BUT int4 (AutoRound) on 0.23.0 **does run** (see above) — just slow. 8-bit Qwen3.6 needs a 2nd card.

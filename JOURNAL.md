@@ -2933,6 +2933,8 @@ The whole MTP_TODO queue is closed. Net production guidance:
 | dimension | result | takeaway |
 |---|---|---|
 | single-card dense 27B W4A16 + MTP spec=4 PIECEWISE | **55.28 t/s vs 30.84 = 1.79x** | THE WIN; beats Lorbus 45.2; serving-ready |
+| ctx=2048 random 2048/128, C1 | `tg` **46.69 vs 29.78**; agg out 30.99 vs 23.10; TTFT 1.410s vs 1.275s | MTP wins single-stream decode, costs a little TTFT |
+| ctx=2048 random 2048/128, C4 | `tg` **16.09 vs 19.54**; agg out 40.56 vs 51.69; TTFT 4.444s vs 3.398s | MTP loses under concurrent ctx=2048 fan-out |
 | spec-token | spec=4 best (3-4 plateau); accept rises 2.48->3.74 but tok/s peaks at 3-4 | use spec=4 |
 | Half-KV (fp8 KV) | accept 3.29 vs 3.25 full = FREE | keep Half-KV for 2x context |
 | FULL capture | BLOCKED (gdn_attention spec op can't run in ANY captured graph, v0230 0.1.9) | PIECEWISE is the ceiling |
@@ -3118,3 +3120,26 @@ result -> per-card lease VERIFIED on host: --card 0 + --card 1 ran CONCURRENTLY 
   number to beat for the int8 GEMM/GEMV optimization research.
 verdict -> all 3 daily-driver use cases supported with one-line invocations (see daily_driver_serve.sh
   header + docs/SERVING.md). The captured int8 baseline is confirmed. Lease freed, host clean.
+
+== 2026-06-23 :: Qwen3.6-27B int4 MTP ctx=2048 C1/C4 follow-up ==
+motivation -> the MTP campaign proved a strong TTFT-cancelled single-stream decode win (55.28 vs 30.84 t/s), but
+  docs did not have the requested visual table for ctx=2048 with pp, TTFT, tg, and C4 concurrency.
+config -> used the free B70 only via `gpu-run --card 1`; did NOT edit `rdy_to_serve/`. Served the golden
+  `rdy_to_serve/qwen36-27b-int4/serve.sh` recipe on card1, port 18081, `GRAPH=1`, `MAXLEN=8192`, `MAXSEQS=8`,
+  `CAPSIZES=1,2,4,8`, fp16 KV. Bench was `vllm bench serve` random 2048 input / 128 output, `--ignore-eos`,
+  C=1 and C=4. MTP row used `MTPTOK=4 COMPILESZ=`. Note: the first wrapper used `docker exec -i`, which consumed
+  the SSH heredoc after one row; reran the remaining rows with plain `docker exec`. Another agent may also have
+  killed an earlier card1 container; final rows below are from healthy serves.
+result ->
+  config       C  pp tok/s  TTFT ms  TPOT ms  tg tok/s  agg out tok/s  total tok/s  accept_len
+  no-MTP       1  1605.8    1275.36  33.58    29.78     23.10          392.71       -
+  MTP spec=4   1  1453.0    1409.52  21.42    46.69     30.99          526.84       2.92
+  no-MTP       4  2410.9    3397.89  51.17    19.54     51.69          878.79       -
+  MTP spec=4   4  1843.5    4443.65  62.15    16.09     40.56          689.56       2.41
+verdict -> MTP spec=4 is a C1 interactive decode win at ctx=2048 (`tg` +57%, aggregate out +34%), despite a small
+  TTFT/pp cost. It is NOT a C4 throughput win for random ctx=2048 prompts: aggregate out -22%, `tg` -18%, TTFT +31%,
+  and accept_len falls to 2.41. Keep `DD_MTP=1` for one/few interactive coding streams; leave it OFF for C4+ batch
+  or fan-out unless the exact workload re-benches positive. Host result CSVs:
+  `results/mtp_table_qwen36-27b-int4_ctx2048_20260622_144303.csv`,
+  `results/mtp_table_qwen36-27b-int4_ctx2048_continue_20260622_144611.csv`,
+  `results/mtp_table_qwen36-27b-int4_ctx2048_mtp_20260622_144813.csv`. Container stopped; card1 lease freed.

@@ -7,7 +7,10 @@ PIECEWISE = 55.28 t/s vs 30.84 = 1.79x** (beats Lorbus 45.2; refutes the stale -
 FULL capture BLOCKED (gdn_attention spec op can't run in any captured graph on v0230 0.1.9). TP=2 MTP DEAD (spec-allgather
 not graph-capturable; even MTP-off TP2 is 0.87x single-card) -> single-card DP-replica is the path. 35B-A3B MoE + MTP =
 +3% FLAT (MTP is a DENSE lever, not a sparse-MoE lever; MoE headline is CAPTURE 66.8 t/s). **PRODUCTION ACTION: enable
-MTP spec=4 on the daily-driver 27B int4 DP replicas (+79% interactive single-stream).** Full per-experiment log in JOURNAL.
+MTP spec=4 on the daily-driver 27B int4 DP replicas for single interactive streams (+79% in the TTFT-cancelled probe),
+but leave it OFF for C4+ batch/fan-out unless re-benchmarked. A ctx=2048 `vllm bench serve` follow-up (random 2048/128)
+showed C1 `tg` improves 29.78 -> 46.69 tok/s, while C4 regresses: agg out 51.69 -> 40.56, `tg` 19.54 -> 16.09, TTFT
+3.398s -> 4.444s.** Full per-experiment log in JOURNAL.
 
 > ### [M0 RESULT 2026-06-22 -- PASS] (JOURNAL has the full log)
 > Serve 27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE + `--speculative-config '{"method":"mtp",
