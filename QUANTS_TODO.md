@@ -126,7 +126,7 @@ Legend: [ ] todo - [~] running - [x] done.
 - **Out:** `models/Qwen3.6-35B-A3B-W4A8-sqgptq`. llmcompressor MoE GPTQ + the router-aware selective-SQ mapping (Q0).
 - Serving gated on the int8 MoE kernel. Est ~3-6 h.
 
-### [x] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   PRODUCED 2026-06-22 (RESULT_Q8 DONE; serve-validation running)
+### [x] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   VALIDATED 2026-06-22 (serves 29.13 t/s GRAPH=1, == Lorbus ref)
 > **[PRODUCED 2026-06-22]** Full run COMPLETE after 3 fixes (MLLM-dodge -> pile-10k calib -> low_gpu_mem_usage for the
 > layer-3 UR_OUT_OF_RESOURCES). `save_quantized(format=auto_round)` SAVED ok; out = 25G, 6 safetensors shards +
 > quantization_config.json + model_extra_tensors.safetensors. The 348 copied-verbatim tensors include **`mtp.fc`,
@@ -235,7 +235,7 @@ scripts/gpu-run env \
 | 0621 | Q5 | Qwable / W4A8 / sqgptq | models/Qwable-5-27B-Coder-W4A8-sqgptq (33G, grafted) | qwable-27b-w4a8-sqgptq | gate TBD | inferred ~14B W4A8 (best all-rounder) | PRODUCED+grafted (serve = same 27B W4A8 blockers) |
 | -- | Q6 | 35B-A3B / W8A8 / sqgptq | (DEFERRED -- see sec 7) | -- | -- | (serve gated) | PATH PROVEN (smoke ran MoE GPTQ ok) but ~25-30 min/LAYER x 41 = multi-day produce + serve-gated -> deferred behind small-MoE kernel bring-up |
 | -- | Q7 | 35B-A3B / W4A8 / sq+gptq | (DEFERRED -- see sec 7) | -- | -- | (serve gated) | same: path proven, full produce deferred until int8 MoE kernel exists + validated on a small MoE first |
-| -- | Q8 | Qwable / W4A16 / int4-AutoRound | (todo) models/Qwable-5-27B-Coder-int4-AutoRound | qwable-27b-int4 | gate TBD | target ~30.8 t/s captured (= Lorbus 27B) | QUEUED 0622 -- ONLY one-card quality serve for Qwable; no HF int4-AR exists; ~18G, native int4-packed (no prepack) |
+| 0622 | Q8 | Qwable / W4A16 / int4-AutoRound | models/Qwable-5-27B-Coder-int4-AutoRound (25G) | qwable-27b-int4 | coherent (gen OK; HumanEval+ TBD) | **dec 29.13 t/s** GRAPH=1 single-card (== Lorbus 27B int4 ~30.8 ref) | **[x] VALIDATED 0622.** Serves v0230 GRAPH=1 NOMM=1, quantization=inc auto. Required: 3 quant fixes (MLLM-dodge/pile-10k/low_gpu_mem_usage) + a SERVE-side config repair (scripts/87: AutoRound saved a flat qwen3_5_text config -> rebuilt as base multimodal wrapper + renamed extra_config keys). mtp.fc bf16 -> MTP-capable. 1-time inductor compile ~303s (cached) |
 
 ---
 

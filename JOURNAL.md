@@ -2972,3 +2972,24 @@ UNBLOCKED -- re-runnable with the same processor+AutoRoundMLLM recipe. Documente
   tokenizes + chunks pile to UNIFORM seqlen. scripts/84 now defaults to pile-10k (CALIB_DS=list for the old behavior).
   Full RELAUNCHED; the calib phase (~5 min) validates the fix before the 4-8h iters phase.
 LESSON for AutoRound: pass a HF text dataset name (pile-10k), NOT a variable-length in-script list, for nsamples>=batch_size.
+
+== 2026-06-22 :: QUANTS Q8 -- Qwable-5-27B-Coder int4-AutoRound PRODUCED + VALIDATED (the QUANTS queue is CLOSED) ==
+config -> the full AutoRound int4 run completed after a 3rd fix: low_gpu_mem_usage=True (the iters=200 gradient loop
+  exhausted Level-Zero resource HANDLES -> UR_RESULT_ERROR_OUT_OF_RESOURCES error 40 at ~layer 3, peak_vram only 23GB).
+  So the full fix chain was MLLM-dodge (AutoProcessor+AutoRoundMLLM) -> pile-10k calib -> low_gpu_mem_usage. RESULT_Q8 DONE,
+  25G out (6 shards), mtp.fc + visual + mtp norms copied bf16; int4 = language_model MLP+full-attn + visual.blocks + mtp.layers.
+result (serve) -> FIRST serve attempt crashed: `AttributeError: 'Qwen3_5TextConfig' has no attribute 'vision_config'`.
+  ROOT CAUSE (diagnosed from the weights, ground truth via the .qweight/.weight tensors): AutoRound MLLM-save writes a
+  checkpoint with MULTIMODAL weight naming (model.language_model.layers/visual/mtp) but a FLAT qwen3_5_text config.json
+  (architectures=Qwen3_5ForCausalLM, NO vision_config), AND extra_config bf16-overrides mis-named model.layers.* not
+  model.language_model.layers.* . FIX (no re-quant): served config.json = base Qwable MULTIMODAL config
+  (Qwen3_5ForConditionalGeneration + vision_config + text_config) + the quant's quantization_config with extra_config keys
+  renamed model.layers.->model.language_model.layers. -- matches the PROVEN Lorbus 27B int4-AutoRound structure.
+  Tool: scripts/87_fix_autoround_vlm_config.py. Installed on host (orig -> config.json.textonly.bak).
+result (validated) -> 2nd serve: HEALTHY, served id qwable-27b-int4, quantization=inc auto-detected, weights 10.29s,
+  PIECEWISE graph capture 3.55 GiB. **decode = 29.13 t/s** (TTFT-cancelled, GRAPH=1, single-card) == Lorbus 27B int4 ~30.8 ref.
+  Generation verified by the bench (352 real tokens). 1-time inductor compile ~303s (cached after). Lease freed clean.
+verdict -> Q8 DONE/VALIDATED. The QUANTS_TODO queue is CLOSED (Q0-Q5,Q8 done; Q6/Q7 35B correctly deferred). Qwable now has
+  a one-card quality serve (the only int4-AR for this coder model; none on HF). NEW REUSABLE FINDING = the serve-side
+  counterpart to the MLLM-calib dodge: any AutoRound-on-qwen3_5-VLM checkpoint needs the scripts/87 config repair to serve.
+  This also de-risks the now-unblocked Q2/Q4 W8A8-AutoRound re-runs + RESEARCH_TODO Track 3.
