@@ -2683,3 +2683,10 @@ c1 decode 20.7 confirms the existing w4a8-q-prepacked ~20.9. Decode SAGS 20.7->1
 KV pressure (25GB model leaves ~2GB KV on a 32GB card). This is the TP=2 case: split across both B70s -> ~12.5GB/card
 -> abundant KV + ~2x weight BW/card (decode could approach the 14B rate). Next: Seguin TP=2 A/B (task #12) -- also the
 only way to serve the 27B W8A8 (35GB).
+
+### 2026-06-22 -- [TP=2 / task #12] TP=2+graph-capture FAILS with the oneCCL sycl_graph error (= Seguin's collective wall)
+First TP=2 serve (P2P off, GRAPH=1) died: "oneCCL |CCL_SYCL| sched algorithms do not support sycl_graph recording".
+The PIECEWISE graph capture can't record the allreduce on our vLLM 0.23 (lacks Seguin's clone-safe allreduce custom-op).
+This is EXACTLY his first-order "graph break around the collective" finding -- not an xe P2P fault (dmesg clean). Workaround:
+TP=2 eager (GRAPH=0) -> no capture -> no conflict. Relaunched TP=2 eager to get the W4A8 TP=2 ladder + unlock the W8A8.
+Documented P2P_GPU.md sec H. Real fix (later): cherry-pick Seguin's allreduce patch (F.5). P2P on/off A/B pending eager-works.

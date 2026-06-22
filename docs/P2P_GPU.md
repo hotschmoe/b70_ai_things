@@ -272,3 +272,29 @@ Software stacks:
 - steveseguin/b70-optimization-lab: https://github.com/steveseguin/b70-optimization-lab
 - 110 t/s repro README: https://github.com/steveseguin/b70-optimization-lab/blob/main/repro/minimax-m27-b70-110tps-ubuntu24-20260523/README.md
 - ZML: https://github.com/zml/zml
+
+---
+
+## H. OUR-FABRIC measured results (2026-06-22, the A/B begins)
+
+Box: the sec-0 rig (2x B70, cross-die, PCIe Gen3, 1950X). vLLM 0.23 (`:int8g`), 27B-W4A8-sqgptq-prepacked.
+
+### H.1 [!] TP=2 + PIECEWISE graph capture FAILS on our build -- and it is EXACTLY Seguin's collective/graph problem
+First TP=2 serve (P2P off, the script default; GRAPH=1 PIECEWISE) died at engine init:
+```
+oneCCL: coll.cpp:1421 ccl_allreduce_impl: EXCEPTION: |CCL_SYCL| sched algorithms
+do not support sycl_graph recording, please use sycl_algorithms
+```
+=> The graph capture tries to RECORD the allreduce and oneCCL's default `sched` algo can't be captured. This is
+**the first-order "graph break around the collective" wall Seguin describes (sec B.1)** -- our vLLM 0.23 lacks his
+clone-safe compiled-allreduce custom-op (confirmed: `grep VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP` -> absent), so the
+collective is not capturable. NOT an xe P2P fault, NOT RxErr -- dmesg clean. So on our build the choice is:
+  (a) **eager (GRAPH=0)** -- no capture -> no allreduce-recording conflict -> TP=2 runs (testing now);
+  (b) the oneCCL `sycl_algorithms` knob the error suggests (Seguin found oneCCL knobs flaky -- B.3);
+  (c) cherry-pick Seguin's clone-safe allreduce patch into our vLLM-XPU (the "real" fix -- F.5, biggest lever).
+This is concrete confirmation that for us, too, the bottleneck is the framework/graph boundary around the collective,
+not the Gen3 wire. The P2P-on-vs-off A/B (H.2) only becomes meaningful once TP=2 serves (eager unblocks it).
+
+### H.2 TP=1 baseline (for the TP=2 comparison), 27B W4A8 @ ctx2048
+TP=1 GRAPH=1: c1 dec 20.7 / c8 12.2 t/s; TTFT 876ms(c1)->4039(c8); agg 18.3->67.8. Single-card KV-bound (25GB model
+on 32GB -> ~2GB KV). TP=2 should split to ~12.5GB/card -> more KV (raise MAXLEN to 4096) + ~2x weight BW/card. Pending eager run.
