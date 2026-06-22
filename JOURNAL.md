@@ -2741,3 +2741,18 @@ draft acceptance falls and the failed-draft forward passes make n-gram NET NEGAT
 n-gram speculative is a NICHE lever (helps ONLY highly-repetitive output like code/structured), NOT a general decode win
 on the int8 path, and its concurrency path is unusable (NA at c>=2). De-prioritized. Robust wins stand (served ladders,
 SYCLKERNELS TP=2 unlock, microbench, P2P verdict); n-gram is a logged NEGATIVE result. Retracting the FINDINGS 1.8x claim.
+
+### 2026-06-22 -- [BREAKTHROUGH intel from user] int8 MoE serving + MTP BOTH already solved via intel/llm-scaler-vllm
+Two community results that SUPERSEDE our "no int8 MoE kernel" + "MTP not viable" conclusions:
+(1) int8 MoE SERVES: steveseguin runs Qwen3.6-35B-A3B **Quark W8A8 INT8** at 99.77 tok/s on 4xB70 via
+    `intel/llm-scaler-vllm` + `--quantization quark --tensor-parallel-size 4 --language-model-only
+    --compilation-config '{"cudagraph_mode":"PIECEWISE"}'`. The HF ckpt: nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8.
+    => the int8 MoE kernel EXISTS in llm-scaler-vllm (Intel's XPU vLLM). Our docs/kernel/18 "build it" is mostly moot;
+    the path is Quark-quantize + serve on llm-scaler. Image **intel/llm-scaler-vllm:0.14.0-b8.3.1 is ALREADY on host.**
+(2) MTP WORKS on 4xB70 (user ytnszmy): Qwen3.6-27B BF16 TP=4, MTP unblocked from USERSPACE via:
+    vllm_xpu_kernels v0.1.9 wheel + qwen3_5.py spec-wiring patch (vLLM #43565) + Half-KV; num_speculative_tokens=5,
+    mean accept length 4.04 (88.9% accept @ spec=3); prefill ~2100 tok/s; image intel/llm-scaler-vllm:0.14.0-b8.3.
+    => our doc-09 "MTP not viable" was a STACK gap (missing #43565 spec-wiring + the kernel wheel), NOT a B70 limit.
+PLAN UPDATE: (a) OLMoE-1B-7B -> W8A8 -> serve on llm-scaler (validate small int8 MoE) -> bench; (b) then 35B via Quark
+W8A8 + llm-scaler TP=2/4 -> unblocks Q6/Q7 SERVING; (c) study llm-scaler's int8 MoE kernel for our contrib port; (d)
+MTP: re-test on llm-scaler:0.14.0-b8.3.1 + the #43565 patch (Half-KV, spec=5). docs/kernel/18 + docs/literature/09 to update.
