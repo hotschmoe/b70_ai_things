@@ -112,10 +112,9 @@ Legend: [ ] todo - [~] running - [x] done.
 
 ### [x] Q5 -- Qwable-5-27B-Coder  W4A8  (selective SmoothQuant + GPTQ)  PRODUCED+grafted 2026-06-21 (33G; same serve blockers as 27B W4A8 -- perf inferred from 14B W4A8 ladder)
 - **Out:** `models/Qwable-5-27B-Coder-W4A8-sqgptq`. Method as Q3. Serve graft + odd-dim -> id `qwable-27b-w4a8-sqgptq`. Est ~1-3 h.
-- [ ] **PREPACK follow-up:** the 33G is compressed-tensors `int-quantized` = 4-bit stored 1-per-int8 (SAME on-disk size as W8A8).
-  Pack it to int4 with `w4a8/offline_prepack_w4a8.py` (CPU, NO lease) -> ~25G AND removes the ~28 GiB unpacked-I8 GPU load
-  transient that OOMs/hangs the B70: `SRC=/models/Qwable-5-27B-Coder-W4A8-sqgptq DST=/models/Qwable-5-27B-Coder-W4A8-sqgptq-prepacked
-  python w4a8/offline_prepack_w4a8.py` (mirrors `Qwen3.6-27B-W4A8-sqgptq-prepacked` 33->25G).
+- [x] **PREPACK follow-up -- DONE 2026-06-22.** Packed via `q5_prepack.sh` (CPU container, NO lease, scripts/85): 1107
+  tensors, 256 quantized weights packed, **32.9 -> 24.1 GiB** -> `models/Qwable-5-27B-Coder-W4A8-sqgptq-prepacked` (25G,
+  `is_prepacked_w4a8=True`). Removes the ~28 GiB unpacked-I8 GPU load transient. Serve-ready (same recipe as the 27B W4A8 prepacked).
 
 ### [~] Q6 -- Qwen3.6-35B-A3B MoE  W8A8   DEFERRED 2026-06-22 (path PROVEN via smoke; ~25-30min/layer multi-day + serve-gated -> see sec 7: bring up int8 MoE kernel on a SMALL MoE first)
 - Wait for the bf16 download to finish (`scripts/63`). **Out:** `models/Qwen3.6-35B-A3B-W8A8-autoround`. `device_map="0,1"`.

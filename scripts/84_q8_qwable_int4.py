@@ -44,7 +44,16 @@ _BASE = [
     "Implement binary search over a sorted array and prove its loop invariant holds.",
     "Summarize the SOLID principles of object-oriented design with a short example for each.",
 ]
-calib = [(_BASE[i % len(_BASE)] + f"\n\n(sample {i})") for i in range(max(NSAMPLES, 8))]
+# CALIB_DS: default "NeelNanda/pile-10k" (a HF text dataset AutoRound tokenizes + chunks to UNIFORM seqlen).
+# The in-script text list (CALIB_DS=list) has VARIABLE tokenized lengths -> AutoRound's batched calib cat throws
+# "Sizes of tensors must match ... Expected 23 but got 24" at nsamples>=batch_size (crashed the full run). Use pile-10k.
+_DS = os.environ.get("CALIB_DS", "NeelNanda/pile-10k")
+if _DS.lower() == "list":
+    calib = [(_BASE[i % len(_BASE)] + f"\n\n(sample {i})") for i in range(max(NSAMPLES, 8))]
+    print("calib: in-script text list, n=", len(calib))
+else:
+    calib = _DS
+    print("calib: HF dataset =", calib)
 
 # ---- layer_config: keep vision tower, MTP head, DeltaNet linear_attn, lm_head at bf16 (bits=16) ----
 # AutoRound keys layer_config by exact module name -> enumerate the loaded model's nn.Linear modules.

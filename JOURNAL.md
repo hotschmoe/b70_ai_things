@@ -2960,3 +2960,15 @@ problem. SOLVED (scripts/84_q8_qwable_int4.py, smoke fully validated, full run +
 **Bigger implication:** this MLLM-dodge means AutoRound CAN quantize the qwen3_5 VLMs (27B base + Qwable), so RESEARCH_TODO
 Track 3 (AutoRound vs GPTQ on the 27B/Qwable) and the QUANTS Q2/Q4 W8A8-AutoRound (which fell back to GPTQ) are now
 UNBLOCKED -- re-runnable with the same processor+AutoRoundMLLM recipe. Documented in QUANTS_TODO + docs/kernel/15.
+
+### 2026-06-22 -- [QUANTS Q5 prepack DONE + Q8 full calib-batching fix]
+- **Q5 prepack DONE:** `q5_prepack.sh` (CPU, no lease, scripts/85) packed the Qwable W4A8 sqgptq -> int4-packed:
+  1107 tensors, 256 weights packed, **32.9 -> 24.1 GiB** -> `Qwable-5-27B-Coder-W4A8-sqgptq-prepacked` (25G,
+  is_prepacked_w4a8=True). The "repack" item is closed; serve-ready.
+- **Q8 full crashed (then fixed):** the iters=200/nsamples=128 full run died at layer 0 calib with
+  `RuntimeError: Sizes of tensors must match ... Expected 23 but got 24` -- my in-script text-list calib has VARIABLE
+  tokenized lengths, and AutoRound's batched calib cat (nsamples>=batch_size=8) can't stack 23-tok vs 24-tok samples.
+  The smoke (nsamples=8) dodged it by luck. FIX (codex's documented path): `CALIB_DS=NeelNanda/pile-10k` -- AutoRound
+  tokenizes + chunks pile to UNIFORM seqlen. scripts/84 now defaults to pile-10k (CALIB_DS=list for the old behavior).
+  Full RELAUNCHED; the calib phase (~5 min) validates the fix before the 4-8h iters phase.
+LESSON for AutoRound: pass a HF text dataset name (pile-10k), NOT a variable-length in-script list, for nsamples>=batch_size.
