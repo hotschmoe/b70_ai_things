@@ -25,10 +25,12 @@ for i in $(seq 1 144); do
 done
 if [ "$ok" = 1 ]; then
   echo "=== HEALTHY -- int8 MoE serves! probe generation ==="
+  SID=$(curl -s --max-time 8 http://localhost:8000/v1/models | python3 -c "import sys,json; print(json.load(sys.stdin)[\"data\"][0][\"id\"])" 2>/dev/null)
+  echo "served model id = $SID"
   curl -s --max-time 20 http://localhost:8000/v1/completions -H "Content-Type: application/json" \
-    -d '{"model":"olmoe-int8","prompt":"The capital of France is","max_tokens":12,"temperature":0}' | head -c 600; echo
+    -d "{\"model\":\"$SID\",\"prompt\":\"The capital of France is\",\"max_tokens\":12,\"temperature\":0}" | head -c 600; echo
   echo "=== sweep (port 8000) ==="
-  env NAME="$NAME" MODEL=olmoe-int8 LABEL="olmoe-${QUANT}" TOKPATH="/models/$MDIR" PORT=8000 \
+  env NAME="$NAME" MODEL="$SID" LABEL="olmoe-${QUANT}" TOKPATH="/models/$MDIR" PORT=8000 \
     IN="${IN:-2048}" OUT="${OUT:-128}" CONC="${CONC:-1 2 4 8}" bash "$ROOT/35_sweep_bench.sh" || true
 else
   echo "=== NOT HEALTHY -- the int8 MoE serve gap. logs: ==="
