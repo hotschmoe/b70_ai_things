@@ -47,9 +47,21 @@ MTP spec=4 on the daily-driver 27B int4 DP replicas (+79% interactive single-str
 > `spec_query_start_loc must have size [num_spec_decodes+1]`, now inside the inductor-compiled `gdn_attention_core_xpu`
 > call for `layers.0.linear_attn`. So the bug is mode-independent (FULL == FULL_DECODE_ONLY) and capture-size-independent --
 > the v0230 baked `gdn_attention` (vllm_xpu_kernels 0.1.9) spec op simply cannot run inside ANY captured graph. **VERDICT:
-> single-card MTP ceiling on stock v0230 = PIECEWISE 1.79x (spec=4). FULL needs a KERNEL fix.** Candidate (untested, stretch):
-> mount the `vllm_xpu_kernels 0.1.10` `_xpu_C.abi3.so` (in host `mtp_patch/`) over v0230's 0.1.9 via the `KERNEL_SO` knob and
-> retry FULL -- 0.1.10 may fix the spec-capture path (ABI-mismatch risk: it was built for 0.14.x). Low priority; PIECEWISE wins.
+> single-card MTP ceiling on stock v0230 = PIECEWISE 1.79x (spec=4). FULL needs a KERNEL/DISPATCHER fix.**
+>
+> **[FRONTIER UPDATE 2026-06-22 -- web research]:** vLLM 0.23.0 is the NEWEST vLLM (no v0.24.x); v0230 is the frontier.
+> - **The 0.1.10-kernel candidate is DOWNGRADED:** vllm_xpu_kernels v0.1.10 (06-18) changes are ALL GDN *prefill*
+>   (#378/#379) + a >=32K NaN-race fix (#411) -- **NOTHING touches the spec/cudagraph metadata path**, so it will NOT fix
+>   FULL spec-capture. (Still worth a cheap KERNEL_SO mount for the MoE/long-context PREFILL win + the NaN fix; wants
+>   compute-runtime 26.18, check ABI.) The `spec_query_start_loc must have size` assert is UNTRACKED upstream -> filing a
+>   vllm-xpu-kernels issue with our repro is high-value.
+> - **The real FULL-capture path = port vllm-ascend PR #7148** (merged 2026-03-12): same bug class -- FULL-mode spec
+>   capture mis-treated as uniform-decode when `1+num_spec` is in capture sizes. Fix = a Python monkeypatch overriding
+>   `CudagraphDispatcher._create_padded_batch_descriptor` (`patch_cudagraph.py` pattern), GPU-cheap to test. If the patch
+>   alone doesn't clear it, the assert is KERNEL-side -> file the issue. (Upstream's clean refactor #23679 was CLOSED unmerged.)
+> - **mtp.fc gotcha (Lorbus HF card, CONFIRMED):** plain AutoRound packs `mtp.fc` as int4 -> vLLM SKIPS the MTP head ->
+>   0% accept. Keep `mtp.fc` BF16 (our `re:.*mtp.*` ignore + Q8 layer_config already do this -> safe). Check this on ANY
+>   self-rolled MTP quant. Also: FP8 native is NOT coming to Xe2 (Xe3 cancelled) -- INT8 W8A8 stays the low-precision path.
 
 > ### [M4 / M5 recipe -- community-research 2026-06-22]
 > - **M4 (TP=2 MTP):** the capture-safe path is ALREADY ours -- `CCL_ENABLE_SYCL_KERNELS=1` makes TP=2 PIECEWISE capture
