@@ -229,6 +229,31 @@ in fake-quant (perplexity) before writing any XMX kernel.
 
 ---
 
+## Track 9 -- Port `benchmark_moe.py` MoE-config tuner to XPU  [TODO, deferred from 2026-06-22 perf chase]
+
+**Why:** the int8 MoE 35B serve (`rdy_to_serve/qwen36-35b-a3b-quark-w8a8-int8/`) logs "Using default MoE config.
+Performance might be sub-optimal!" (no `E=256,N=256,device_name=Intel(R)_Graphics_[0xe223].json`). A tuned Triton
+fused-MoE config is a real lever -- in CAPTURED mode the MoE GEMM is a meaningful slice, so a good config could add
+~10-30% on top of the 41 t/s single-stream capture. (See FINDINGS "GRAPH CAPTURE perf" + JOURNAL/commits 1cc7900.)
+
+**The blocker (why it's deferred, not done):** `vllm/benchmarks/kernels/benchmark_moe.py --tune` does not run on XPU:
+1. `ray.init()` -> `ray.available_resources()["GPU"]` KeyError (Ray doesn't see XPU as a "GPU"). **Bypass already
+   found + proven:** a `sitecustomize.py` that forces `ray.init(num_gpus=1)` (synced to host `patches/sitecustomize.py`).
+   That gets past Ray (worker spawns, enumerates ~1920 configs).
+2. Then the benchmark worker is CUDA-centric and dies with `AssertionError: Torch not compiled with CUDA enabled`:
+   `device="cuda"` (line ~260) + CUDA-graph timing `torch.cuda.CUDAGraph()` / `torch.cuda.graph()` (lines ~307-308).
+   `torch.accelerator.synchronize()` is already device-agnostic (fine); only the device string + the graph-timer need porting.
+
+**The port (a later session):** bind-mount a patched `benchmark_moe.py` that (a) `device="cuda"` -> `"xpu"`, (b) replaces
+the CUDA-graph capture/replay timing block with a plain timed loop: warmup N iters, `torch.accelerator.synchronize()`,
+time `for _ in range(iters): run_kernel()`, `synchronize()`, divide -- less precise than graph-replay but correct on XPU.
+Then run `--dtype auto --tp-size 2 --batch-size 1 2 4 8` (auto -> the no-dtype-suffix filename int8 reads; ~1.5 h/batch,
+so consider `--batch-size 1` first). Note it tunes the **fp16 shape as a proxy** for int8 (tuner has no `int8_w8a8` dtype);
+the tiling mostly transfers. Alternative if the port is painful: hand-write the config from a known-good XPU MoE tiling.
+Deploy: drop the resulting JSON into the image's `model_executor/layers/fused_moe/configs/` (bind-mount) and re-serve.
+
+---
+
 ## Execution order (the 3-5 items to actually run, deduped)
 
 1. **W8A8 kernel sprint** (Track 1) -- M=1 decode GEMV, quant K-loop, PIECEWISE->FULL. Behind `scripts/gpu-run`.
@@ -236,6 +261,7 @@ in fake-quant (perplexity) before writing any XMX kernel.
 3. **AutoRound compare** (Track 3) -- AutoRound-W4A16 vs GPTQ-W4A16 (3a) first; the int8 confirm (3b) is one run.
 4. **Quark + AutoRound importer test** (Track 4) -- one serve + grep; decides if they're drop-in producers.
 5. **MoE fused-expert kernel** (Track 5) -- only after dense W8A8 (Track 1) is robust.
+6. **Port the MoE-config tuner to XPU** (Track 9) -- deferred; Ray bypass proven, CUDA-graph timing still needs porting.
 
 MTP runs on its own plan (MTP_TODO.md). W4A8 runs on the other agent's plan (`w4a8/`). Rotation stays parked.
 

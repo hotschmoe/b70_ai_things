@@ -313,7 +313,8 @@ shape -> torch.compile mid-serve) remains -- mitigate with shape warmup / fixed 
 (2) the benchmark worker is CUDA-centric -- `device="cuda"` + CUDA-graph timing (`torch.cuda.CUDAGraph()`,
 `torch.cuda.graph`) -> `AssertionError: Torch not compiled with CUDA enabled`. And it estimated ~1.5 h PER batch
 size (~6 h for 1,2,4,8). Not worth it for an fp16-PROXY config (`--dtype auto` -> the no-dtype filename int8 reads).
-Future option: patch device->xpu + replace the CUDA-graph timing with a synchronize loop, or hand-write a config.
+Future option (TODO **RESEARCH_TODO.md Track 9**): patch device->xpu + replace the CUDA-graph timing with a
+synchronize loop (Ray bypass already proven via patches/sitecustomize.py), or hand-write a config.
 **Open (the real lever):** true-int8 linear kernel that hits the Intel XMX/DPAS int8 fastpath (drop the dequant;
 Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe), contrib/llm_scaler_quark_int8_moe, rdy_to_serve/.
 (Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
