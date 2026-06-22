@@ -298,3 +298,18 @@ not the Gen3 wire. The P2P-on-vs-off A/B (H.2) only becomes meaningful once TP=2
 ### H.2 TP=1 baseline (for the TP=2 comparison), 27B W4A8 @ ctx2048
 TP=1 GRAPH=1: c1 dec 20.7 / c8 12.2 t/s; TTFT 876ms(c1)->4039(c8); agg 18.3->67.8. Single-card KV-bound (25GB model
 on 32GB -> ~2GB KV). TP=2 should split to ~12.5GB/card -> more KV (raise MAXLEN to 4096) + ~2x weight BW/card. Pending eager run.
+
+### H.3 TP=2 EAGER (GRAPH=0) works but is a 6x perf REGRESSION -- confirms you need the captured allreduce
+TP=2 eager serves cleanly (`HEALTHY GRAPH=0 TP=2 world_size=2 backend=xccl`, dmesg clean) but:
+  27B W4A8 TP=2 eager c1: decode **3.50 t/s** (vs TP=1-graph **20.7**), TTFT **5374ms** (vs 876), tpot 286ms (vs 48).
+=> ~6x SLOWER. Two compounding penalties: (a) eager (no graph capture) is already much slower on XPU, (b) a per-layer
+allreduce on the cross-die Gen3 fabric. So TP=2 only pays off WITH graph capture, which needs a capturable allreduce.
+TP=2 IS functional though -- so it remains the only way to serve the 27B W8A8 (35GB), just slowly.
+
+### H.4 NEXT cheap lever: CCL_ENABLE_SYCL_KERNELS=1 to make the allreduce graph-capturable (no vLLM patch)
+The script hardcoded `CCL_ENABLE_SYCL_KERNELS=0` (Battlemage #41663 stability advice) -- but that is exactly what forces
+the non-capturable "sched" allreduce the H.1 error rejected. The error literally says "please use sycl_algorithms".
+Hypothesis: `CCL_ENABLE_SYCL_KERNELS=1` switches oneCCL to the SYCL-kernel allreduce that DOES support sycl_graph
+recording -> would unblock GRAPH=1 + TP=2 with NO code change. Made it overridable via `SYCLKERNELS` env (30_serve).
+Test next: GRAPH=1 TP=2 SYCLKERNELS=1. Risk: Seguin found some CCL sycl knobs flaky (B.3) + #41663 disabled it for
+stability -> watch for hang/RxErr. If it works, that is the real TP=2 win without cherry-picking Seguin's patch (F.5).
