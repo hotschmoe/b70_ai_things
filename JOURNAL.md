@@ -2903,3 +2903,16 @@ Combined lease (`m3_and_full.sh`).
 SINGLE-CARD MTP CAMPAIGN COMPLETE: 27B W4A16 + MTP spec=4 + PIECEWISE + Half-KV = ~54-55 t/s, 1.79x, accept ~3.25-3.29,
 beats Lorbus 45.2. Serving-ready. Next: M5 35B-A3B int4 MoE + MTP captured (single-card on :v0230moe; the int4 MoE already
 captures at 56.8 t/s, avoiding the int8-MoE dequant-linear capture blocker; checkpoint HAS the mtp head -- verified config).
+
+### 2026-06-22 -- [MTP M5 DONE] KEY FINDING: MTP is a DENSE lever (+79%), NOT a sparse-MoE lever (+3%)
+`m5_moe_mtp.sh`: 35B-A3B int4-AutoRound MoE on :v0230moe, single-card, PIECEWISE capture + fp8 KV. NOVEL combo (no
+community row has MoE + capture + MTP). Works, no crash, MTP head drafts.
+- **A MoE MTP-OFF PIECEWISE: 66.82 t/s** (512 tok 7.76s)  [the MoE capture headline; > the 56.8 in SERVING.md]
+- **B MoE MTP-ON spec=4:    68.83 t/s, accept_len 2.68** (512 tok 7.37s)  -> **MTP x = 1.03 (+3%), essentially FLAT**
+THE FINDING: MTP gives +79% on the DENSE 27B but only +3% on the 35B-A3B MoE. Mechanism: the MoE activates only ~3B of
+35B params per token, so per-token decode is already cheap (little weight-bandwidth to amortize), AND the spec-verify pass
+runs the MoE forward x(1+spec) with a WIDER union of activated experts -> the verify overhead nearly cancels the draft
+savings. So spec-decode ROI is architecture-dependent: BIG on dense (bandwidth-bound, 27B params/token), SMALL on
+sparse-MoE (compute-light, 3B params/token). **Production implication: the 35B MoE headline is graph CAPTURE (66.8 t/s),
+not MTP; the dense 27B headline is MTP (1.79x). Don't waste MTP plumbing on the MoE.** MTP campaign M0-M3+M5 COMPLETE
+(M4 TP=2 = quick confirm remaining). Lease 740s, clean.

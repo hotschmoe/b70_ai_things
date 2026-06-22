@@ -57,10 +57,13 @@ peaks at spec 3-4). Production single-card MTP pick = **spec=4, ~55 t/s, 1.79x**
 >   `CCL_ENABLE_SYCL_KERNELS=1` + #41663 env + `SPEC spec=4` + PIECEWISE. BUT TP=2 is a CAPACITY play, not speed (allreduce
 >   tax: TTFT 3.3x, c8 agg 2x worse -- P2P_GPU H.6); single-card DP-replica MTP beats it for models that fit one card. So M4
 >   is mainly to CONFIRM the [NEG] is stale and to serve the 27B W8A8 (35GB, needs 2 cards) with MTP.
-> - **M5 (35B-A3B MoE + MTP captured):** NOVEL -- no community row has MoE + capture + MTP together. Use **PIECEWISE** (FULL
->   breaks the fused_moe expert dispatch). Our `scripts/76` int8 MoE serves EAGER today; add `GRAPH=1 CGMODE=PIECEWISE` +
->   `SPEC spec=4/5` on v0230 (it has Qwen3_5MoeMTP + Triton fused_moe). MoE has few active params so spec-decode ROI may be
->   lower than dense, but it's the production headline (chase the RagingNoper 102.5 t/s no-MTP class + MTP on top).
+> - **M5 (35B-A3B MoE + MTP captured) -- DONE 2026-06-22. KEY FINDING: MTP is a DENSE lever, NOT a MoE lever.** Ran the
+>   35B int4-AutoRound MoE on :v0230moe single-card, PIECEWISE + fp8 KV (NOVEL combo, works, no crash): MTP-OFF **66.82 t/s**
+>   -> MTP-ON spec=4 **68.83 t/s, accept 2.68 = +3% (1.03x), FLAT**. Vs +79% on the dense 27B. Mechanism: the MoE activates
+>   only ~3B of 35B params/token -> per-token decode is already compute-light (little weight-BW to amortize), and the verify
+>   pass runs the MoE x(1+spec) with a WIDER expert union -> verify overhead ~cancels the draft savings. **Production: the
+>   35B MoE headline is graph CAPTURE (66.8 t/s single-card), NOT MTP. Don't plumb MTP onto the MoE.** (The int8 35B MoE
+>   capture is separately blocked by the dequant-linear inference-tensor issue forcing enforce-eager -- scripts/76.)
 **Related:** [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) · [`JOURNAL.md`](JOURNAL.md) (MTP entries) · [`docs/COMMUNITY_CONFIGS.md`](docs/COMMUNITY_CONFIGS.md) · [`data/localmaxxing/`](data/localmaxxing/) + [`scripts/75_localmaxxing.py`](scripts/75_localmaxxing.py) · `contrib/vllm_int8_xpu/`
 
 ---
@@ -261,6 +264,7 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | 5 | 3.46 | — | 52.60 | 30.84 | 1.71x | — | — | ~17GiB | — | B1 spec=5 (M2 sweep) |
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | **4** | 3.25 | — | **55.28** | 30.84 | **1.79x** | — | — | ~17GiB | — | **B1 WINNER** single-card MTP, beats Lorbus 45.2; FULL crashes spec_query_start_loc |
 | — | Qwen3.6-27B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B2 |
+| 2026-06-22 | Qwen3.6-35B-A3B | int4-AR MoE | v0230moe PIECEWISE+fp8KV | 1 | 8192/fp8 | 4 | 2.68 | — | **68.83** | 66.82 | **1.03x** | — | — | — | — | **M5** MoE+MTP NOVEL; MTP FLAT on MoE (sparse 3B-active); capture is the MoE headline |
 | — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) |
 
 **Reference (REAL + PUBLIC -- localmaxxing.com, user `ytnszmy`, 2026-06-10; cached `data/localmaxxing/`):** Qwen3.6-27B BF16, **4x B70 TP=4**, spec=5 -> accept 4.04, dec 54.2, prefill 2100. Repro from the row's notes: `intel/llm-scaler-vllm:0.14.0-b8.3` + `vllm_xpu_kernels v0.1.9` + `qwen3_5.py` (#43565) + Half-KV; **on our v0230 image #43565 is native -- reproduce THERE, not on 0.14.x**. The ONE missing ingredient is `cudagraph_mode` (PIECEWISE vs FULL) -- add FULL ourselves (RagingNoper recipe). It beats our single-card MTP (currently **-19%: 25.5 vs 31.4, PIECEWISE**), so FULL capture is the unlock. (Other localmaxxing datapoints: RagingNoper 35B-A3B FULL-capture **102.5 t/s no-spec**; Lorbus 27B-int4 single-card MTP **45.2/41.3 t/s**, accept 86/65%; Lorbus TP2 MTP **35.6 t/s [NEG]**. Public sanity: Puget 4xB70 TP=4 27B-dense 13.1 t/s/1u no-MTP; vLLM PR #43565 MTP on B60/Qwen3-Next-80B/spec=2.)
