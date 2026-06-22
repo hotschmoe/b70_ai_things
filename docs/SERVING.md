@@ -17,13 +17,15 @@ The single source of truth for serving model X: its `rdy_to_serve/` dir if shelv
 If you reconstruct a serve command from JOURNAL/scripts, you did it wrong -- fix the golden dir / THIS doc.
 Keep recipes verified-and-current; date each change. (Tools moved to `bin/`; the host runs them flat.)
 
-**Daily driver:** `./daily_driver_serve.sh` (repo root) brings up the current daily-driver model and
-keeps the API at `http://192.168.10.5:18080/v1` live for our apps. `start|stop|status|restart|logs`.
-Edit its CONFIG block to change which model/recipe we serve. It holds the GPU lease (BOTH cards)
-while up, so `stop` it before running GPU experiments/quant. Current daily driver: **Qwen3.6-27B W4A16,
-served as 2x DATA-PARALLEL replicas** (one captured replica per B70 -> :18091/:18092) behind an nginx
-round-robin proxy on :18080. ~2.1x aggregate throughput, full single-stream latency/replica, zero inter-GPU
-comms (measured; see the data-parallel recipe below + `scripts/64_dataparallel_2rep.sh`).
+**Daily driver:** `./daily_driver_serve.sh` (repo root) keeps the API at `http://192.168.10.5:18080/v1`
+live for our apps. `start|stop|status|restart|logs`. It is a THIN orchestrator over the golden path: it
+PICKS an `rdy_to_serve/<model>` and serves it via that model's own `serve.sh` (zero recipe duplication).
+**To change what we serve, set `DD_MODEL`** (the one knob), e.g. `DD_MODEL=qwen36-35b-a3b-int4
+./daily_driver_serve.sh start`. Default: `qwen36-27b-int4`, served as **2x DATA-PARALLEL replicas** (one
+captured replica per B70 -> :18091/:18092) behind an nginx round-robin proxy on :18080 -- ~2.1x aggregate,
+full single-stream latency/replica, zero inter-GPU comms (measured; `bin/64_dataparallel_2rep.sh`). Knobs:
+`DD_REPLICAS=1` (a TP=2 / too-big-for-one-card model), `DD_MTP=1` (MTP spec decode, dense only), `DD_MAXLEN`,
+`DD_ENV` (extra serve.sh env). Holds the GPU lease (BOTH cards) while up -> `stop` before GPU experiments.
 
 ## Where everything runs
 - GPU host: Unraid @ `192.168.10.5` (`ssh root@192.168.10.5`). NOT mounted on the dev box.

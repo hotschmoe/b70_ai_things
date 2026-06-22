@@ -3073,3 +3073,32 @@ verdict -> the golden shelf works; the _common engine is validated across eager-
   (ORGANIZATION.md), b113350 (_common+dirs), 0620757 (bin/+contract), 8e81bfa (capture-flags fix). Lease freed, host clean.
   DEFERRED: images/ Dockerfiles + :int8g rebuild; full SERVING trim + daily_driver calling the golden path (it still
   uses the host flat 30_serve engine); dropping the NN_ numbers off bin/ tools + scripting the host sync.
+
+== 2026-06-23 :: int8 family UNBLOCKED (:int8g rebuilt) + daily_driver picker refactor ==
+motivation -> :int8g (our INT8 W8A8 kernel image) had been clobbered off the host -> the int8 quant family
+  (27B/14B W4A8/W8A8) was unservable. Rebuild it as the working int8 baseline (for the planned int8
+  GEMM/GEMV optimization research), shelve the family, and make the daily driver model-pickable.
+config -> (1) rebuilt :int8g via the bake recipe (FROM :int8 [v0230+oneDNN INT8 W8A8 GEMM .so +
+  XPUInt8ScaledMMLinearKernel] + swap in the register_fake-enabled xpu_int8.py so XPU graph capture can
+  trace the custom int8 ops). Op check int8_gemm=True fused_quant=True. New image 8e25c758...; codified in
+  images/int8g/{build.sh,README} (dated-immutable-tag + digests; supersedes scripts/52). (2) Built 3 golden
+  dirs on :int8g: qwen3-14b-w8a8 (compressed-tensors W8A8, no prepack), qwen3-14b-w4a8 (prepack: mounted
+  loader+scheme patches + VLLM_W4A8_PREPACKED=1 via new _common DOCKER_ENV passthrough), qwen36-27b-w4a8
+  (prepack + GDN: mount the GDN-enabled _xpu_C.abi3.so + libgdn over the baked GDN-OFF build). (3) Refactored
+  daily_driver_serve.sh into a thin picker: DD_MODEL=<rdy_to_serve dir> served via the model's own serve.sh
+  (zero recipe duplication), 2x data-parallel (or DD_REPLICAS=1 for TP=2), DD_MTP/DD_MAXLEN/DD_ENV knobs.
+result -> all 3 int8 models smoked GREEN on :int8g (eager, single card): 14b-w8a8 62s, 14b-w4a8 83s,
+  27b-w4a8 120s -- HEALTHY, correct ids, coherent "Paris" gens. The 27B exercised prepack AND the GDN .so
+  mount (loaded past the gated-delta-net decode op). daily_driver picker validated end-to-end: brought up
+  qwen36-27b-int4 as 2x DP + nginx proxy on :18080 (eager test), proxy HEALTHY, served id correct, both
+  replicas 200-OK on /health,/v1/models,/v1/completions.
+gotchas -> (a) vLLM 0.23 REJECTS fp8 KV on the 27B-W4A8 ckpt ("fp8_e5m2 kv-cache is not supported with
+  fp8 checkpoints") -> 27B-w4a8 serves fp16 KV (SERVING's old fp8-KV recipe was a different image/vLLM).
+  (b) "Unknown vLLM env var VLLM_W4A8_PREPACKED" is COSMETIC -- the prepack patch reads os.environ directly;
+  the 14B W4A8 served fine with it. (c) the daily_driver poller exit-1 was a teardown RACE (I ran stop while
+  it polled), not a bug -- logs show clean 200-OK serving until SIGTERM.
+verdict -> int8 baseline WORKS and the family is shelved (rdy_to_serve now has 6 verified models). Solid
+  foundation for the int8 GEMM/GEMV optimization research. Commits: 304ac3c (:int8g + 14b-w8a8), 77f2cac
+  (full int8 family + images/int8g), this (daily_driver picker + SERVING + journal). NOTE: 27B-W4A8 is
+  SECONDARY (w4a16 int4 decodes faster, ~30.8 vs ~20.9); smokes were EAGER (the GRAPH=1 capture default is
+  per-model-proven on 27b-int4 but not re-bench'd for the int8 family this pass). Lease freed, host clean.
