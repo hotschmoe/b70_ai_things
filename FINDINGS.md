@@ -181,8 +181,12 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   MTP-off = 1.79x (+79%), accept_len 3.25, Half-KV FREE.** The warmup-spoof PIECEWISE fix (910182c) captures the
   spec-decode decode batch (1+spec), so the verify is no longer eager-attention-bound -- this REFUTES the old
   "net-negative even with capture / -19%" (a stale pre-fix measurement). FULL capture would lift it further but is
-  BLOCKED on stock v0230 (gdn_attention spec op can't run in a captured graph); TP=2 MTP is DEAD (spec-allgather not
-  graph-capturable); MoE MTP is FLAT (+3%, sparse 3B-active). **MTP is a DENSE-model lever.** Full campaign: MTP_TODO.md (M0-M5).
+  **CONFIRMED KERNEL-GATED (2026-06-22):** porting vllm-ascend #7148's dispatcher fix (scripts/88) let capture proceed
+  past the Python dispatcher, then it crashed in the BAKED kernel -- `_xpu_C.gdn_attention -> spec_query_start_loc must
+  have size [num_spec_decodes + 1]`. So FULL needs an Intel vllm_xpu_kernels fix, not a vLLM-Python fix; TRITON_ATTN
+  doesn't dodge it (GDN decode core always uses the baked op). **PIECEWISE 1.79x is the single-card ceiling on stock
+  v0230** (issue draft docs/kernel/21). TP=2 MTP is DEAD (spec-allgather not graph-capturable); MoE MTP is FLAT (+3%,
+  sparse 3B-active). **MTP is a DENSE-model lever.** Full campaign: MTP_TODO.md (M0-M5).
 - **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8
   DeltaNet kernel only exists in vLLM **0.23.0** (older images: ESIMD `.weight` bug / `scaled_mm` `KeyError(XPU)`).
   BUT int4 (AutoRound) on 0.23.0 **does run** (see above) — just slow. 8-bit Qwen3.6 needs a 2nd card.
