@@ -2756,3 +2756,10 @@ Two community results that SUPERSEDE our "no int8 MoE kernel" + "MTP not viable"
 PLAN UPDATE: (a) OLMoE-1B-7B -> W8A8 -> serve on llm-scaler (validate small int8 MoE) -> bench; (b) then 35B via Quark
 W8A8 + llm-scaler TP=2/4 -> unblocks Q6/Q7 SERVING; (c) study llm-scaler's int8 MoE kernel for our contrib port; (d)
 MTP: re-test on llm-scaler:0.14.0-b8.3.1 + the #43565 patch (Half-KV, spec=5). docs/kernel/18 + docs/literature/09 to update.
+
+### 2026-06-22 -- [doc] Captured the llm-scaler int8-MoE + MTP unlock -> docs/kernel/20 (supersedes kernel/18 + lit/09)
+On-host probe of intel/llm-scaler-vllm:0.14.0-b8.3.1 (vLLM 0.14.1.dev): supports OlmoeForCausalLM +
+Qwen3_5MoeForConditionalGeneration + Qwen3_5MoeMTP; quant methods incl quark, compressed-tensors, experts_int8, rtn,
+moe_wna16. Quark QUANTIZER not in image (serves only). Documented Steve's 35B Quark-W8A8 99.77 t/s recipe + ytnszmy's
+MTP recipe (vllm_xpu_kernels 0.1.9 + #43565 + Half-KV, 88.9% accept@3) + our ordered plan (OLMoE experts_int8 validate
+-> 35B TP=2 serve -> MTP re-test -> port kernel to contrib). QUANTS_TODO sec 7 updated to point at doc 20.

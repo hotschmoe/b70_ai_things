@@ -202,6 +202,12 @@ scripts/gpu-run env \
 
 ## 7. int8 MoE KERNEL bring-up -- test on a SMALL MoE FIRST (then scale to 35B)  [added 2026-06-22]
 
+> **[!] UPDATE 2026-06-22: the int8 MoE kernel ALREADY EXISTS in `intel/llm-scaler-vllm` (on host, 0.14.0-b8.3.1).**
+> See **[docs/kernel/20](docs/kernel/20_llm_scaler_int8_moe_and_mtp.md)**. The 35B int8 SERVE path is unblocked: Quark
+> W8A8 (`--quantization quark`, steveseguin proved 99.77 t/s TP=4) OR runtime `experts_int8`/`rtn`/compressed-tensors,
+> on llm-scaler TP=2. MTP also works there (vllm_xpu_kernels 0.1.9 + vLLM #43565 + Half-KV). So "build our own kernel"
+> below is now a RESEARCH/port goal, NOT a blocker. New plan: OLMoE small-MoE validate -> 35B serve -> port to contrib.
+
 **Why:** building the XPU int8 MoE kernel (docs/kernel/18) is the SERVE dependency for the 35B (Q6/Q7). The 35B
 itself is a terrible iteration target: 256 experts x 41 layers, GPTQ measured at **~25-30 min/LAYER** (multi-day full
 produce), and you can't even serve it until the kernel exists. So **de-risk the kernel on a small MoE**: quantize a
