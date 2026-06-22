@@ -81,3 +81,16 @@ models:
   # --- created later this session with scripts/54 (the MISSING formats) ---
   # w4a16 / w8a16: quantize with scripts/54 SCHEME=W4A16|W8A16, THEN test XPU serveability (kernel
   # coverage unknown -> a finding either way). Do NOT relabel w4a8 as w4a16; they are different schemes.
+
+  # --- 2026-06-22: Q8 Qwable-5-27B-Coder int4-AutoRound (the QUANTS_TODO Q8 quant; VALIDATED serves 29.13 t/s) ---
+  - label: qwable-27b-int4
+    served_model_id: qwable-27b-int4         # -> models/Qwable-5-27B-Coder-int4-AutoRound (scripts/87-repaired config)
+    family: qwable-27b                        # NOTE: DIFFERENT base from qwen3-14b -- no apples-to-apples 14B reference
+    weights: int4
+    activations: bf16                         # W4A16 (int4 weights, bf16 acts) -- AutoRound, inc-servable
+    calibration: autoround@pile-10k           # iters=200, low_gpu_mem_usage, mtp.fc+visual+linear_attn kept bf16
+    serve_cmd: "gpu-run bash q8_eval_serve.sh  (on host /mnt/vm_8tb/b70; v0230 GRAPH=1 NOMM=1, persistent + docker wait)"
+    notes: "QUANTS Q8. CODER model -> HumanEval+ is the right eval. AutoRound int4 expectation ~0.927/0.963 (the leaderboard
+      #1 27B-int4). NO 14B-family bf16 reference -> report ABSOLUTE HumanEval+, not retention. Eval:
+      run_evals.py --endpoint http://192.168.10.5:18080/v1 --model qwable-27b-int4 --quant qwable-27b-int4
+      --tiers 1 --tier1-dataset humaneval --limit 164 --allow-code-exec  (greedy, sandboxed)."
