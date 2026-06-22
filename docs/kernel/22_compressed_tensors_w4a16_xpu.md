@@ -132,19 +132,36 @@ baseline and is competitive on prefill.
 
 ## PARITY ROADMAP -- MTP is the missing dominant lever (2026-06-23)
 Checkpoint inspection: **Lorbus int4 has 29 MTP tensors** (`mtp.fc.weight`, `mtp.layers.0.*`), **our
-Qwen3.6-27B-W4A16 has 0** -- the W4A16 quant DROPPED the MTP module. Follow-up GPU probe: vLLM will still
-instantiate the `Qwen3_5MTP` drafter and serve coherently with `MTPTOK=4`, but the missing trained MTP weights
-make it useless: random 1024/64 C1 produced **0.00% acceptance**, accept_len **1.00**, accepted_tokens **0/1008**,
-and only **14.12 tg tok/s**. So compressed-tensors W4A16 can load the spec path, but it does NOT have a usable
-MTP head today. The serve knob is not enough; the checkpoint needs trained `mtp.*` tensors.
+Qwen3.6-27B-W4A16 has 0** -- the W4A16 quant DROPPED the MTP module. First follow-up GPU probe: vLLM will still
+instantiate the `Qwen3_5MTP` drafter and serve coherently with `MTPTOK=4`, but missing trained MTP weights make it
+useless: random 1024/64 C1 produced **0.00% acceptance**, accept_len **1.00**, accepted_tokens **0/1008**, and only
+**14.12 tg tok/s**.
+
+Graft result (same day): **BF16 base `mtp.*` graft works, but not as a raw tensor copy alone.** Created
+`/mnt/vm_8tb/b70/models/Qwen3.6-27B-W4A16-mtp-graft` as a hardlinked copy plus `model-mtp-graft.safetensors`
+(15 BF16 tensors, 811 MiB) from `Qwen_Qwen3.6-27B`. Raw graft loaded the shard but skipped the MTP linears because
+the compressed-tensors quant config instantiated the MTP drafter as quantized/fused (`fc.weight`, `qkv_proj`,
+`gate_up_proj` missing). A temporary loader shim forcing **only** `Qwen3_5MultiTokenPredictor` to instantiate
+unquantized made the BF16 graft load cleanly. Quick 1024/64 C1 validation: **68.75% acceptance**, accept_len **3.75**.
+Captured ctx2048 table:
+
+```
+  config       C  pp(t/s)  TTFT(ms)  TPOT(ms)  tg(t/s)  agg_out(t/s)  accept%  accept_len
+  no-MTP       1  1713.0   1195.56   46.01     21.73    18.18         -        -
+  MTP spec=4   1  1465.9   1397.06   23.27     42.97    29.41         62.24    3.49
+  no-MTP       4  2409.4   3400.06   59.99     16.67    46.29         -        -
+  MTP spec=4   4  1108.9   7387.70   34.51     28.98    38.58         51.88    3.08
+```
+
+So the MTP concept is valid for W4A16 CT, but a production shelf needs a real local patch/recipe: graft BF16
+`mtp.*`, then force the MTP drafter unquantized while leaving the target W4A16.
 Per the MTP findings (JOURNAL / MTP_TODO), MTP is the DOMINANT decode lever (bandwidth-bound decode ->
 effective tg ~= bandwidth x accept_len, ~75-79% accept). AutoRound ctx2048 C1: no-MTP 29.78 -> MTP spec=4
 46.69 t/s (~1.57x). Gap stack at ctx2048 C1: W4A16 20.97 (here) -> AutoRound no-MTP 29.85 (kernel gap 1.42x)
 -> AutoRound+MTP ~46.7 (MTP lever ~1.57x).
 PRIORITY for making W4A16 the headline:
-1. RE-QUANTIZE Qwen3.6-27B to compressed-tensors W4A16 PRESERVING `mtp.*` (as the AutoRound ckpt did --
-   "mtp.fc bf16-preserved"). Bonus: keep it the FULL model (not text-only) -> MTP works natively + drops the
-   load shim. Quantize on CPU/CUDA, NOT B70-calibrated (Q8 corruption lesson). This is the bigger lever.
+1. Promote the graft into a reproducible shelf recipe: model copy + BF16 `mtp.*` shard + local shim that keeps the MTP
+   drafter BF16/unquantized. This is faster than a full re-quant and already produced nonzero/good acceptance.
 2. THEN the int4 decode-GEMV kernel (the 1.42x). MTP likely SHRINKS this: the verify step runs a small
    batch (K+1 ~= 5), closer to a GEMM, where `int4_gemm_w4a16` already WINS -> measure the kernel gap at the
    SPEC batch size, not just batch=1.

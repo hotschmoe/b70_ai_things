@@ -1,0 +1,5 @@
+config,spec,concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,tg_tok_s,pp_tok_s,total_tok_s,accept_rate_pct,accept_len
+no_mtp,off,1,0.14,18.18,1195.56,46.01,21.73,1713.0,309.10,,
+no_mtp,off,4,0.36,46.29,3400.06,59.99,16.67,2409.4,786.97,,
+mtp_spec4,4,1,0.23,29.41,1397.06,23.27,42.97,1465.9,499.91,62.24,3.49
+mtp_spec4,4,4,0.30,38.58,7387.70,34.51,28.98,1108.9,655.88,51.88,3.08

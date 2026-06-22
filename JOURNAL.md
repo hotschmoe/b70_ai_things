@@ -3219,3 +3219,29 @@ verdict -> our compressed-tensors W4A16 can load the MTP code path, but it does 
   not a serve-flag problem and not an XPU spec-decode crash; the checkpoint was exported without trained `mtp.*`.
   Re-quantize/export a full Qwen3.6 artifact that preserves `mtp.*` in BF16 (like Lorbus AutoRound did) before
   expecting W4A16+MTP to work. Container stopped; card1 lease freed.
+
+== 2026-06-23 :: W4A16 compressed-tensors BF16-MTP graft works (with unquantized drafter shim) ==
+motivation -> try the requested graft path now, starting with `Qwen3.6-27B-W4A16`, and run a ctx2048 perf table.
+config -> created host model dir `/mnt/vm_8tb/b70/models/Qwen3.6-27B-W4A16-mtp-graft` as `cp -al` hardlink copy of
+  `Qwen3.6-27B-W4A16`, then added `model-mtp-graft.safetensors` containing the 15 BF16 `mtp.*` tensors from
+  `Qwen_Qwen3.6-27B` (811 MiB). Original W4A16 dir untouched; no `rdy_to_serve/` edits. First raw graft attempt
+  loaded both shards but skipped MTP linears: the compressed-tensors quant config made vLLM instantiate the MTP
+  drafter as quantized/fused (`fc.weight`, `qkv_proj`, `gate_up_proj` missing). Then used a temporary combined
+  sitecustomize: existing text-only W4A16 shim + monkeypatch that sets `vllm_config.quant_config=None` only during
+  `Qwen3_5MultiTokenPredictor.__init__`, leaving the target model W4A16 while making the MTP drafter BF16.
+  Validation was GPU1 via `gpu-run --card 1`, image `vllm-xpu-env:v0230`.
+result -> quick eager 1024/64 C1 validation with the BF16-MTP shim: acceptance 68.75%, accept_len 3.75, accepted
+  tokens 187/272. Captured PIECEWISE ctx2048 table used `MAXLEN=3072`, `MAXSEQS=4`, `UTIL=0.97`, caps 1,2,4.
+  Host CSV `/mnt/vm_8tb/b70/results/w4a16_mtp_graft_ctx2048_20260622_155426.csv`; repo copy
+  `results/w4a16_mtp_graft_ctx2048_20260623.csv`.
+  config       C  pp tok/s  TTFT ms  TPOT ms  tg tok/s  agg out tok/s  total tok/s  accept%  accept_len
+  no-MTP       1  1713.0    1195.56  46.01    21.73     18.18          309.10       -        -
+  MTP spec=4   1  1465.9    1397.06  23.27    42.97     29.41          499.91       62.24    3.49
+  no-MTP       4  2409.4    3400.06  59.99    16.67     46.29          786.97       -        -
+  MTP spec=4   4  1108.9    7387.70  34.51    28.98     38.58          655.88       51.88    3.08
+verdict -> grafting is viable and gives real acceptance. C1 is a strong W4A16 CT win (`tg` 21.73 -> 42.97,
+  aggregate output 18.18 -> 29.41) despite TTFT/pp tax. C4 is the same MTP story as Lorbus but harsher: per-stream
+  decode improves, but aggregate output and TTFT regress because the spec verify gets compute/KV constrained. Memory
+  is tight: real BF16 MTP + PIECEWISE capture left only 6,283 KV tokens at MAXLEN=3072, so production needs either
+  Half-KV, lower max concurrency, less capture memory, or a quantized/co-packed MTP head. Next step: turn the temporary
+  BF16-MTP shim into a proper shelf-local patch before repeating on W8A8-sqgptq and W4A8-sqgptq-prepacked.

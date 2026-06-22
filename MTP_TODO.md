@@ -20,9 +20,12 @@ per-experiment log in JOURNAL.
 > text-only-checkpoint weight-name mismatch (all weights silently skipped -> random init). The
 > `int4_gemm_w4a16` kernel itself is CORRECT (NT-format weight; matches a reference dequant, maxerr 0.016).
 > **MTP gap (the parity blocker):** Lorbus int4 (AutoRound) ships the MTP module (29 tensors); our
-> `{W4A16, W4A8-sqgptq, W8A8-sqgptq}` 27B quants ALL have **0 mtp tensors** -> they CANNOT do MTP today.
-> FIX = GRAFT the 15 bf16 `mtp.*` from the bf16 base (NOT a re-quant -- mtp stays bf16 regardless; see
-> QUANTS_TODO item QM, scheduled for the next overnight session). Parity stack at ctx2048 C1:
+> `{W4A16, W4A8-sqgptq, W8A8-sqgptq}` 27B quants ALL have **0 mtp tensors** -> they cannot do useful MTP as-is.
+> FIX = GRAFT the 15 bf16 `mtp.*` from the bf16 base **and force the MTP drafter unquantized**. Raw tensor graft alone
+> is insufficient for compressed-tensors W4A16 because vLLM otherwise instantiates the drafter as quantized/fused and
+> skips the BF16 MTP linears. VALIDATED on W4A16: ctx2048 C1 no-MTP `tg` 21.73 -> MTP spec=4 `tg` 42.97,
+> accept_len 3.49; C4 improves `tg` 16.67 -> 28.98 but aggregate output regresses 46.29 -> 38.58 and TTFT jumps.
+> Parity stack at ctx2048 C1:
 > **W4A16 no-MTP 20.97 -> AutoRound no-MTP 29.85 (kernel gap 1.42x) -> AutoRound+MTP ~46.7 (MTP ~1.57x).**
 > So to make W4A16 the headline: (1) graft MTP (the bigger lever, currently MISSING), then (2) the int4
 > decode-GEMV (1.42x) measured at the SPEC batch size (K+1~5, near-GEMM where int4_gemm_w4a16 already wins
