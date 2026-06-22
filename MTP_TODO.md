@@ -11,6 +11,21 @@ drafts, and does NOT crash on the GDN+spec path; `method='mtp'` resolves `Qwen3_
 > coherent gen, rejection-sampler ran. NO crash. **Crucial M1 finding:** `splitting_ops` includes `gdn_attention_core_xpu`,
 > so under PIECEWISE the GDN/attention verify runs EAGER -> this is the known -19% regime. **M1 is therefore NOT "re-measure
 > PIECEWISE"; it is "capture attention+GDN" via `--attention-backend TRITON_ATTN` -> FULL (host script `ATTN` knob; PR #34482).**
+
+> ### [M1-M3 EXECUTION RECIPE -- codex-validated 2026-06-22]
+> - **M1-C (the frontier) must use `CGMODE=FULL_DECODE_ONLY`, NOT `FULL`.** The spec verify is a uniform decode of query
+>   len `1+N`; only FULL/FULL_DECODE_ONLY captures that (no PIECEWISE knob captures attention/GDN -- doc 12). `FULL` also
+>   tries to capture prefill -> more likely to hit the SYCL-Graph `work_group_scratch_memory` wall. So:
+>   `TRITONSHIM=1 ATTN=TRITON_ATTN GRAPH=1 CGMODE=FULL_DECODE_ONLY` (RagingNoper recipe AS-IS, KEEP `gdn_attention_core_xpu`
+>   in splitting_ops; removing it is a last-resort force-capture experiment). Confirm Triton: grep `Using Triton`, no
+>   `Disabling Triton`, `(decode, FULL)`. Fallback ladder: FULL -> FULL_DECODE_ONLY -> PIECEWISE (the -19% floor).
+>   [The currently-running M1 launched config C as plain `FULL`; if it fails, retry FULL_DECODE_ONLY -- already the plan.]
+> - **Accept length from `/metrics`** (`vllm:spec_decode_num_{accepted,draft,emitted}_tokens_total`), not docker stdout
+>   (`scripts/38_specdecode_bench.sh` pattern).
+> - **M2 (spec {2,3,4,5,6}):** fix everything, sweep only `SPECTOK`; median >=3 warmed runs; WINNER = max tok/s (not max
+>   accept). Bucket accept% by gen-token position (0-128 / 129-256 / 257-512) to catch the Lorbus 86->65% decay.
+> - **M3 (Half-KV):** same winner; A = full KV (omit KVDTYPE/fp16), B = Half-KV (`KVDTYPE=fp8_e4m3`), same MAXLEN. Decider:
+>   `delta_accept = acc(Half-KV) - acc(full-KV)`; drop > 0.2 tok or > 5% rel = Half-KV costs acceptance, else keep it.
 **Related:** [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) · [`JOURNAL.md`](JOURNAL.md) (MTP entries) · [`docs/COMMUNITY_CONFIGS.md`](docs/COMMUNITY_CONFIGS.md) · [`data/localmaxxing/`](data/localmaxxing/) + [`scripts/75_localmaxxing.py`](scripts/75_localmaxxing.py) · `contrib/vllm_int8_xpu/`
 
 ---
