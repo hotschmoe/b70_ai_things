@@ -111,3 +111,21 @@ subclass that strips the `language_model.` segment (`model.language_model.` -> `
 LESSON (for research): "serves HEALTHY + coherent-looking infra logs" != "weights loaded". Always grep the
 load for `not found in params_dict` / `skip loading` when bringing up a re-homed checkpoint. The
 all-same-token ("!!!!") degenerate output is the classic random-weights signature (cf. the Q8 false positive).
+
+## PERF: compressed-tensors W4A16 vs AutoRound int4 (2026-06-23, ctx=2048, GRAPH=1, card 0)
+Both 27B int4-weight, DIFFERENT kernels: w4a16 = compressed-tensors -> `int4_gemm_w4a16` (oneDNN/XMX);
+int4 = Lorbus AutoRound -> INC `auto_round_kernel` + Triton/FLA GDN. `vllm bench serve` random in2048/out128,
+warmup then measured. pp = C*2048/(TTFT/1000); tg = per-stream decode = 1000/TPOT.
+```
+  model                          C   pp(t/s)  TTFT(ms)  TPOT(ms)  tg(t/s)  agg_out(t/s)
+  w4a16 (CT, int4_gemm_w4a16)    1   1676     1221.7    47.69     20.97    17.59
+  int4  (AutoRound, INC)         1   1573     1302.0    33.50     29.85    23.04
+  w4a16 (CT)                     4   2510     3263.5    63.57     15.73    45.12
+  int4  (AutoRound)              4   2364     3464.8    51.73     19.33    50.99
+```
+TAKEAWAY: the two int4 paths trade off OPPOSITELY. DECODE (tg): AutoRound wins big -- +42% at C1
+(29.85 vs 20.97), +23% at C4. PREFILL (pp/TTFT): compressed-tensors wins slightly (1676 vs 1573, TTFT
+1222 vs 1302 at C1). So `int4_gemm_w4a16` is the better GEMM (prefill, compute-bound) but the slower GEMV
+(decode, batch=1 memory-bound) -- a clear int8/int4 GEMV optimization target. Net: AutoRound is the better
+GENERATION pick (decode-bound) -> stays the daily driver; compressed-tensors W4A16 is the parity/research
+baseline and is competitive on prefill.
