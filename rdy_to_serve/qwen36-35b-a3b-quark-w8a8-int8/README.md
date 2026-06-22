@@ -44,3 +44,6 @@ Perf (random 2048-in/128-out, TP=2):
   compile (cached in /vllm_cache). `CGMODE=FULL_DECODE_ONLY` is BLOCKED on stock v0230 (SYCL-Graph scratch).
 - Open levers (../../FINDINGS.md, docs/kernel/20, RESEARCH_TODO Track 9): a tuned `E=256,N=256` MoE config
   (XPU tuner needs porting); and true-int8 linear via the XMX/DPAS Triton kernel (B70_INT8_LINEAR=triton).
+
+verified: _common smoke=GREEN (eager, TP=2, 2026-06-23, 233s): HEALTHY, id ok, quark.py mount ok,
+gen "Paris, a city renowned for its rich history, culture, and iconic landmarks." Re-verify: `bin/serve-sweep --smoke`.

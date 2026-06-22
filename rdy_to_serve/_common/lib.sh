@@ -78,6 +78,7 @@ b70_build() {
     local CSZ=""; [ -n "$COMPILESZ" ] && CSZ="\"compile_sizes\":[$COMPILESZ],"
     CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,${CAP}${CSZ}$PASS}")
   fi
+  ARGS+=("${EAGER[@]}" "${CC[@]}")    # GRAPH=0 -> --enforce-eager ; GRAPH=1 -> the --compilation-config capture flags
 
   if [ "$TP" -gt 1 ]; then
     # Battlemage multi-GPU stability env (vLLM #41663): no Arc P2P, CPU oneCCL over OFI, spawn, LZ v1.

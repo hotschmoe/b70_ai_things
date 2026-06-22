@@ -29,5 +29,5 @@ first token for this checkpoint.
 - Per-stream decode drops below single-stream past C8 (GDN batches poorly) -> stay C2-C4 for low latency.
 - Other 27B dirs are NOT this recipe: `Qwen3.6-27B-W4A16` (compressed-tensors) will NOT serve.
 
-verified: _common smoke=GREEN (eager, card0, dual-card run, 2026-06-23): HEALTHY, id ok, gen "Paris".
-Re-verify via `bin/serve-sweep --smoke`. (GRAPH=1 capture path: historically ~30.8 t/s; re-bench with `run`.)
+verified: _common smoke=GREEN 2026-06-23: eager (card0, dual-card run) AND GRAPH=1 PIECEWISE capture
+(--compilation-config, full capsizes) both HEALTHY, id ok, coherent gen "Paris...". Re-verify: `bin/serve-sweep`.
