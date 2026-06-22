@@ -12,7 +12,7 @@ TP="${TP:-1}"
 docker rm -f "$NAME" 2>/dev/null || true
 echo "=== serve $MDIR quant=$QUANT TP=$TP on $IMG ==="
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
-  --network host --ipc=host --shm-size 16g -v "$ROOT:$ROOT" -e ZE_AFFINITY_MASK="${MASK:-0}" \
+  -p 8000:8000 --ipc=host --shm-size 16g -v "$ROOT:$ROOT" -e ZE_AFFINITY_MASK="${MASK:-0}" \
   "$IMG" vllm serve "$ROOT/models/$MDIR" --host 0.0.0.0 --port 18080 --trust-remote-code \
   --served-model-name olmoe-int8 --dtype auto --quantization "$QUANT" --tensor-parallel-size "$TP" \
   --max-model-len "${MAXLEN:-4096}" --max-num-seqs "${MAXSEQS:-8}" --gpu-memory-utilization "${UTIL:-0.90}" \
@@ -26,7 +26,7 @@ done
 if [ "$ok" = 1 ]; then
   echo "=== HEALTHY -- int8 MoE serves! probe generation ==="
   SID=$(curl -s --max-time 8 http://localhost:8000/v1/models | python3 -c "import sys,json; print(json.load(sys.stdin)[\"data\"][0][\"id\"])" 2>/dev/null)
-  echo "served model id = $SID"
+  [ -z "$SID" ] && SID="$ROOT/models/$MDIR"; echo "served model id = $SID"
   curl -s --max-time 20 http://localhost:8000/v1/completions -H "Content-Type: application/json" \
     -d "{\"model\":\"$SID\",\"prompt\":\"The capital of France is\",\"max_tokens\":12,\"temperature\":0}" | head -c 600; echo
   echo "=== sweep (port 8000) ==="
