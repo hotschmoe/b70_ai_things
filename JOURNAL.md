@@ -2873,3 +2873,20 @@ strongly positive WITHOUT needing FULL capture. 52.95 t/s also BEATS the Lorbus 
 "number to beat"). Caveats: single measurement (M2 will take the median over the spec sweep + pull accept length from
 /metrics -- my docker-logs accept grep returned empty, accept lives in /metrics per codex). Lease 739s, released clean.
 Next: M2 spec sweep {2,3,4,5,6} (confirm spec=5, find max tok/s, log accept-vs-position) then M3 Half-KV.
+
+### 2026-06-22 -- [MTP M2 DONE] spec sweep -> WINNER spec=4 (1.79x); accept_len rises but tok/s peaks at 3-4
+`m2_spec_sweep.sh` (one lease, 5 serves, TTFT-cancelled decode + /metrics accept). 27B Lorbus W4A16 v0230 PIECEWISE:
+| spec | decode_tps | MTPx | accept_len | accept_rate | per-DRAFT-position accept |
+|------|-----------|------|-----------|-------------|---------------------------|
+| 2    | 53.16     | 1.72 | 2.48      | 0.740       | 194/154 |
+| 3    | 55.15     | 1.79 | 2.91      | 0.635       | 163/125/99 |
+| 4    | **55.28** | **1.79** | 3.25  | 0.561       | 143/108/84/67 |
+| 5    | 52.60     | 1.71 | 3.46      | 0.491       | 132/103/74/63/43 |
+| 6    | 50.71     | 1.64 | 3.74      | 0.456       | 123/91/73/61/44/38 |
+WINNER = **spec=4: 55.28 t/s (1.79x)** -- beats spec=5 (1.71x). Classic spec tradeoff: accept_len rises monotonically
+(2.48->3.74) but decode_tps peaks at spec=3-4 then declines (verify cost grows faster than acceptance). Per-DRAFT-position
+acceptance decays steeply within each verify step (pos0 ~80% -> last pos ~37%) -- that decay is WHY higher spec saturates.
+(Note: this is per-DRAFT-position decay from /metrics; the Lorbus 86->65% "accept-vs-generation-position" decay is a
+different axis -- would need short-vs-long-gen accept comparison; deferred, the per-draft decay already explains the knee.)
+So the production single-card MTP pick is **spec=4 (or 3), ~55 t/s, 1.79x** -- NOT the spec=5 the localmaxxing rows used.
+Next: FULL_DECODE_ONLY frontier retry at spec=4 (caps incl 5) + M3 Half-KV (fp8 KV accept vs full-KV 3.25).

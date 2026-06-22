@@ -6,7 +6,8 @@
 PIECEWISE = **52.95 t/s vs 30.84 MTP-off = 1.72x (+72%), NET-POSITIVE** — this REFUTES the old -19% (stale; the
 warmup-spoof PIECEWISE fix 910182c flipped it) and BEATS the Lorbus 45.2 t/s precedent. FULL/TRITON_ATTN crashes on a
 gdn_attention spec-op shape bug (`spec_query_start_loc must have size [num_spec_decodes+1]`) but PIECEWISE already wins.
-Now on M2 (spec sweep + accept-vs-position + /metrics accept length).
+**M2 DONE: spec sweep WINNER = spec=4 -> 55.28 t/s = 1.79x** (beats spec=5's 1.71x; accept_len rises 2.48->3.74 but tok/s
+peaks at spec 3-4). Production single-card MTP pick = **spec=4, ~55 t/s, 1.79x**. Now: FULL_DECODE_ONLY retry + M3 Half-KV.
 
 > ### [M0 RESULT 2026-06-22 -- PASS] (JOURNAL has the full log)
 > Serve 27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE + `--speculative-config '{"method":"mtp",
@@ -237,8 +238,8 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | — | Qwen3-14B | BF16 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A1 |
 | — | Qwen3-14B | W8A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A2 |
 | — | Qwen3-14B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A3 |
-| 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | 5 | TBD(/metrics) | — | **52.95** | 30.84 | **1.72x** | — | — | ~17GiB | — | **B1 WIN** single-card MTP +72%, beats Lorbus 45.2; FULL crashes spec_query_start_loc |
-| — | Qwen3.6-27B | W4A16 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B1 (orig placeholder) |
+| 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | 5 | 3.46 | — | 52.60 | 30.84 | 1.71x | — | — | ~17GiB | — | B1 spec=5 (M2 sweep) |
+| 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | **4** | 3.25 | — | **55.28** | 30.84 | **1.79x** | — | — | ~17GiB | — | **B1 WINNER** single-card MTP, beats Lorbus 45.2; FULL crashes spec_query_start_loc |
 | — | Qwen3.6-27B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B2 |
 | — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) |
 
