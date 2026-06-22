@@ -269,6 +269,44 @@ compressed-tensors parity eventually so research artifacts stay comparable acros
       W4A16 works on the 27B too.
 - [ ] **7b. Same-format W4A16 eval.** Once 7a is fixed, compare GPTQ vs AutoRound-exported compressed-tensors W4A16
       on the same model and kernel. Include harder evals, not just gsm8k/HumanEval+.
+- [ ] **7c. SLIM COMPRESSED-TENSORS MODELS -- chase AutoRound-size CT artifacts.** The current 27B CT W4A16 is
+      much larger than the Lorbus AutoRound int4 daily driver for a concrete, measured reason: the CT quant kept
+      almost the whole Gated-DeltaNet `linear_attn` stack BF16. Host tensor-byte audit, 2026-06-23:
+      ```
+      Lorbus_Qwen3.6-27B-int4-AutoRound: 17.7 GiB tensor bytes
+        int32 packed 11.591 GiB, bf16/fp16 6.100 GiB
+        linear_attn total 2.726 GiB
+
+      Qwen3.6-27B-W4A16 compressed-tensors: 24.1 GiB tensor bytes
+        int32 packed 8.750 GiB, bf16 15.371 GiB
+        linear_attn total 10.360 GiB
+      ```
+      The delta is almost entirely GDN projection storage. Lorbus packs
+      `linear_attn.in_proj_qkv`, `linear_attn.in_proj_z`, and `linear_attn.out_proj` as int4
+      (`qweight` + scales), while keeping only the small recurrent/projection-support pieces BF16
+      (`in_proj_a`, `in_proj_b`, norm/state tensors). Our CT W4A16 left the large projections BF16:
+      `in_proj_qkv` 4.688 GiB, `in_proj_z` 2.812 GiB, `out_proj` 2.812 GiB.
+
+      **What we are chasing:** a "CT W4A16 slim" artifact whose ignore list matches the Lorbus shape:
+      keep BF16 only for the small or fragile GDN pieces, MTP head, lm_head/embeddings if needed, and vision
+      if the artifact is VL; quantize the large GDN projections plus normal MLP/self-attn linears. Target loaded
+      footprint is **~17-18 GiB instead of 24.35 GiB**, restoring AutoRound-like KV room while keeping the
+      compressed-tensors packaging path. Expected practical impact: fp16-KV context headroom should move from the
+      current cramped CT W4A16 regime (~4 GiB KV at UTIL=0.95, graph capture OOM at UTIL=0.90) back toward the
+      AutoRound regime (8.31 GiB KV at UTIL=0.92, ~133k max context). This may also improve performance by avoiding
+      BF16 GDN projection GEMMs and by reducing memory pressure / graph-capture pressure, though the first target is
+      capacity and parity.
+
+      **Why it matters beyond W4A16:** the same "over-broad BF16 ignore list" can silently poison future CT W4A8 and
+      W8A8 artifacts. W4A8/W8A8 are supposed to exercise int8-activation / int8-XMX paths; leaving the large GDN
+      projections BF16 both bloats VRAM and hides the kernels we are trying to evaluate. For every future 27B CT
+      quant, add a tensor-byte audit by category (`linear_attn`, MLP, self_attn, lm_head, MTP, visual) and compare to
+      the Lorbus AutoRound int4 layout before trusting VRAM, KV, or perf conclusions.
+
+      **Concrete next experiment:** produce a new CT W4A16 slim checkpoint with narrow GDN ignores, then serve it
+      through the existing `rdy_to_serve/qwen36-27b-w4a16` text shim. Verify: no skipped weights, coherent gen,
+      model load near 17-18 GiB, available KV near AutoRound, ctx2048 perf vs current CT W4A16 and Lorbus AutoRound,
+      then repeat MTP graft acceptance/perf only after the non-MTP slim artifact is stable.
 
 ---
 
@@ -324,8 +362,9 @@ Deploy: drop the resulting JSON into the image's `model_executor/layers/fused_mo
    Q3/Q5 vs GPTQ-only). down_proj carve-out + KL ranking are lower-pri follow-ons. HumanEval+ every run.
 3. **Harder producer evals** (Track 3) -- GPTQ is the default because it currently edges AutoRound on W8A8, but verify
    harder code/reasoning/long-context before locking the choice, especially for W4A8.
-4. **27B compressed-tensors W4A16 fix** (Track 7) -- separate session: padding-aware kernel/loader or precise BF16
-   ignores. Keep AutoRound/INC serving in the meantime.
+4. **27B compressed-tensors W4A16 slim fix** (Track 7c first, then 7a/7b) -- narrow the over-broad GDN BF16 ignore
+   list so CT W4A16 loads near AutoRound size (~17-18 GiB instead of 24.35 GiB), restores KV/context headroom, and
+   prevents the same bloat from corrupting future W4A8/W8A8 conclusions. Keep AutoRound/INC serving in the meantime.
 5. **MoE: tuned Triton `E=256,N=256` config + graph capture** (Track 9 + capture), NOT a from-scratch kernel (Track 5 serving is solved).
 6. **MTP work** stays in `MTP_TODO.md` and should use whichever compressed-tensors research artifact is under test.
 
