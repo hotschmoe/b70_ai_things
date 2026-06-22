@@ -11,8 +11,8 @@ docker rm -f "$NAME" 2>/dev/null || true
 echo "=== serve Quark-W8A8 35B TP=$TP on $IMG ==="
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
   -p 8000:8000 --ipc=host --shm-size 32g -v "$ROOT:$ROOT" \
-  -e CCL_ENABLE_SYCL_KERNELS="${SYCLKERNELS:-1}" -e SYCL_UR_USE_LEVEL_ZERO_V2=0 \
-  "$IMG" vllm serve "$CKPT" --host 0.0.0.0 --port 8000 --trust-remote-code \
+  -e CCL_ENABLE_SYCL_KERNELS="${SYCLKERNELS:-1}" -e SYCL_UR_USE_LEVEL_ZERO_V2=0 --entrypoint vllm \
+  "$IMG" serve "$CKPT" --host 0.0.0.0 --port 8000 --trust-remote-code \
   --served-model-name qwen36-35b-quark --dtype auto --quantization quark \
   --tensor-parallel-size "$TP" --pipeline-parallel-size 1 --distributed-executor-backend mp \
   --max-model-len "${MAXLEN:-8192}" --max-num-batched-tokens 8192 --max-num-seqs "${MAXSEQS:-8}" \
