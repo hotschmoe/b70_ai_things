@@ -27,6 +27,11 @@ per-experiment log in JOURNAL.
 > accept_len 3.49; C4 improves `tg` 16.67 -> 28.98 but aggregate output regresses 46.29 -> 38.58 and TTFT jumps.
 > Host graft dirs also created for `W8A8-sqgptq` and `W4A8-sqgptq-prepacked` (15 `mtp.*` keys each); those still
 > need serve/acceptance benches.
+> **NEXT SWEEP HARD REQUIREMENT:** include the graft dir's BF16 MTP drafter shim on `PYTHONPATH` for every compressed-
+> tensors graft serve. Without that shim, vLLM sees the target model's compressed-tensors quant config and tries to build
+> the `Qwen3_5MultiTokenPredictor` drafter through the quantized/fused path; the raw BF16 `mtp.*` shard then loads only
+> partially or gets skipped (`fc.weight`, `qkv_proj`, `gate_up_proj` mismatches), giving bogus acceptance/perf numbers.
+> The shim must force only the MTP drafter unquantized/BF16 while leaving the target body on its W4A16/W4A8/W8A8 quant path.
 > Parity stack at ctx2048 C1:
 > **W4A16 no-MTP 20.97 -> AutoRound no-MTP 29.85 (kernel gap 1.42x) -> AutoRound+MTP ~46.7 (MTP ~1.57x).**
 > So to make W4A16 the headline: (1) graft MTP (the bigger lever, currently MISSING), then (2) the int4
