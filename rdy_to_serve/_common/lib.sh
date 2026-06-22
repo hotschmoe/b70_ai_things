@@ -44,9 +44,10 @@ b70_setdefaults() {
   TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
   REASONPARSER="${REASONPARSER:-}"          # e.g. qwen3 -> split <think> into reasoning_content
   SYCLKERNELS="${SYCLKERNELS:-}"            # TP>1 oneCCL: default 0 (eager) / 1 (graph capture)
-  # MOUNTS (model-local patch mounts: -v host:container:ro ...) is set by serve.sh as a plain array.
-  # Do NOT default it here with ${MOUNTS[@]:-} -- that injects an empty-string element that docker
-  # reads as the image name. It is expanded nounset-safe at the docker run via ${MOUNTS[@]+...}.
+  # MOUNTS (model-local patch mounts: -v host:container:ro ...) and DOCKER_ENV (model-local docker
+  # env: -e NAME=val ...) are set by serve.sh as plain arrays. Do NOT default them here with
+  # ${ARR[@]:-} -- that injects an empty-string element that docker reads as the image name. They
+  # are expanded nounset-safe at the docker run via ${ARR[@]+...}.
   # bench knobs
   IN="${IN:-512}"; OUT="${OUT:-128}"; CONC="${CONC:-1 2 4 8}"
   mkdir -p "$ROOT"/{hf_cache,vllm_cache,tmp_ssd,results} 2>/dev/null || true
@@ -104,6 +105,7 @@ b70_serve() {
     -v "$ROOT/tmp_ssd:/tmp_ssd" "${MOUNTS[@]+"${MOUNTS[@]}"}" \
     -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
     -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
+    "${DOCKER_ENV[@]+"${DOCKER_ENV[@]}"}" \
     "${MGPU[@]}" "${GENV[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}" >/dev/null
 }
 
