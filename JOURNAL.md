@@ -2763,3 +2763,12 @@ Qwen3_5MoeForConditionalGeneration + Qwen3_5MoeMTP; quant methods incl quark, co
 moe_wna16. Quark QUANTIZER not in image (serves only). Documented Steve's 35B Quark-W8A8 99.77 t/s recipe + ytnszmy's
 MTP recipe (vllm_xpu_kernels 0.1.9 + #43565 + Half-KV, 88.9% accept@3) + our ordered plan (OLMoE experts_int8 validate
 -> 35B TP=2 serve -> MTP re-test -> port kernel to contrib). QUANTS_TODO sec 7 updated to point at doc 20.
+
+### 2026-06-22 -- [hygiene] Archived deprecated models + bannered superseded docs
+Per request, cleaned up (good hygiene):
+- models/archive/ <- Qwen3.6-27B-W8A8-INT8-RTNtest (bad RTN, superseded by Q2 sqgptq), Qwen3.6-27B-W4A8-q-prepacked
+  (no-SmoothQuant, superseded by Q3 sqgptq-prepacked which now serves), OLMoE-1B-7B-0924-Instruct (canned test vehicle).
+  (Left other non-campaign models untouched: gemma-4-12B, Qwen2.5-GGUF, Qwen3-0.6B, 27B-FP8, etc. -- not mine.)
+- Bannered SUPERSEDED: docs/kernel/18 (int8 MoE kernel "build it" -> llm-scaler has it, doc 20; now a port goal) +
+  docs/literature/09 (MTP "not viable" -> works via doc-20 recipe). Kept both (cross-linked + reference value).
+- Removed host scratch (tmp_cmp*.py, tmp_ign/cfgdiff.py, dl_olmoe.sh). Kept dl_q35.* (35B Quark download in flight, 25GB).

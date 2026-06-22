@@ -1,5 +1,11 @@
 # 09 - MTP Receptivity vs. Quantization Precision (W8A8 vs W4A16)
 
+> **[UPDATED 2026-06-22 -> see [docs/kernel/20](../kernel/20_llm_scaler_int8_moe_and_mtp.md) sec 3].** MTP DOES work on
+> 4x B70 (user ytnszmy): `vllm_xpu_kernels` v0.1.9 + the qwen3_5.py spec-wiring patch (vLLM #43565) + Half-KV ->
+> num_speculative_tokens=5, mean accept 4.04 (88.9% @ spec=3). So our "MTP not viable / -19%" was a STACK gap (missing
+> #43565 + the kernel wheel), NOT a B70 limit and NOT a quant-precision question. The receptivity analysis below stands
+> as theory; the practical path is the doc-20 recipe (re-test on llm-scaler:0.14.0-b8.3.1).
+
 **Created:** 2026-06-21
 **Owner:** b70 research
 **Status:** RESEARCH SYNTHESIS -- no B70 measurements yet

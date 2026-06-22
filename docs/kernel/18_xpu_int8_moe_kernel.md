@@ -1,5 +1,11 @@
 # 18 -- XPU INT8 MoE kernel: state of the art + our build plan (Qwen3.6-35B-A3B)
 
+> **[SUPERSEDED 2026-06-22 for the SERVE path -> see [docs/kernel/20](20_llm_scaler_int8_moe_and_mtp.md)].**
+> The int8 MoE kernel ALREADY EXISTS in `intel/llm-scaler-vllm` (Quark/experts_int8; steveseguin served the 35B
+> Quark-W8A8 at 99.77 t/s TP=4). So "build our own" is no longer the serve blocker -- it is a RESEARCH/PORT goal
+> (port the fused-int8-MoE GEMM into our contrib/vllm_int8_xpu :int8g). The design/analysis below remains the port
+> reference. To serve the 35B int8 TODAY: doc 20 (llm-scaler + Quark, TP=2).
+
 Date: 2026-06-21. Scope: the user wants the **35B-A3B MoE served with int8-activation experts** (W8A8 or
 W4A8) to hit the B70's XMX int8 systolic datapath -- "we'll build our own if we have to." This doc is the
 research synthesis + the concrete build plan. Supersedes the 35B "NO-GO" verdict in
