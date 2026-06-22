@@ -41,6 +41,26 @@ peaks at spec 3-4). Production single-card MTP pick = **spec=4, ~55 t/s, 1.79x**
 > len `1+num_spec`** (spec=5 -> include 6: `CAPSIZES=1,2,4,6,8,16,32`) -- my M1-C's `1,2,4,8` omitted 6. Keep
 > `gdn_attention_core_xpu` IN splitting_ops (vLLM default already does -> not force-captured -> dodges the bug). If it still
 > crashes, escalate splitting_ops variants. **FULL is UPSIDE -- PIECEWISE already gives 1.72x, so this is not a blocker.**
+>
+> **[RESULT 2026-06-22] FULL_DECODE_ONLY ALSO CRASHES (same bug) -> FULL is BLOCKED on stock v0230.** Retried with
+> `CGMODE=FULL_DECODE_ONLY spec=4 CAPS=1,2,4,5,8,16,32` (capture size 5 = 1+spec included): SAME crash
+> `spec_query_start_loc must have size [num_spec_decodes+1]`, now inside the inductor-compiled `gdn_attention_core_xpu`
+> call for `layers.0.linear_attn`. So the bug is mode-independent (FULL == FULL_DECODE_ONLY) and capture-size-independent --
+> the v0230 baked `gdn_attention` (vllm_xpu_kernels 0.1.9) spec op simply cannot run inside ANY captured graph. **VERDICT:
+> single-card MTP ceiling on stock v0230 = PIECEWISE 1.79x (spec=4). FULL needs a KERNEL fix.** Candidate (untested, stretch):
+> mount the `vllm_xpu_kernels 0.1.10` `_xpu_C.abi3.so` (in host `mtp_patch/`) over v0230's 0.1.9 via the `KERNEL_SO` knob and
+> retry FULL -- 0.1.10 may fix the spec-capture path (ABI-mismatch risk: it was built for 0.14.x). Low priority; PIECEWISE wins.
+
+> ### [M4 / M5 recipe -- community-research 2026-06-22]
+> - **M4 (TP=2 MTP):** the capture-safe path is ALREADY ours -- `CCL_ENABLE_SYCL_KERNELS=1` makes TP=2 PIECEWISE capture
+>   SUCCEED on our box (P2P_GPU H.5; the old Lorbus TP=2-MTP [NEG] was vLLM 0.20.1 WITHOUT that knob). Recipe: v0230 TP=2 +
+>   `CCL_ENABLE_SYCL_KERNELS=1` + #41663 env + `SPEC spec=4` + PIECEWISE. BUT TP=2 is a CAPACITY play, not speed (allreduce
+>   tax: TTFT 3.3x, c8 agg 2x worse -- P2P_GPU H.6); single-card DP-replica MTP beats it for models that fit one card. So M4
+>   is mainly to CONFIRM the [NEG] is stale and to serve the 27B W8A8 (35GB, needs 2 cards) with MTP.
+> - **M5 (35B-A3B MoE + MTP captured):** NOVEL -- no community row has MoE + capture + MTP together. Use **PIECEWISE** (FULL
+>   breaks the fused_moe expert dispatch). Our `scripts/76` int8 MoE serves EAGER today; add `GRAPH=1 CGMODE=PIECEWISE` +
+>   `SPEC spec=4/5` on v0230 (it has Qwen3_5MoeMTP + Triton fused_moe). MoE has few active params so spec-decode ROI may be
+>   lower than dense, but it's the production headline (chase the RagingNoper 102.5 t/s no-MTP class + MTP on top).
 **Related:** [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) · [`JOURNAL.md`](JOURNAL.md) (MTP entries) · [`docs/COMMUNITY_CONFIGS.md`](docs/COMMUNITY_CONFIGS.md) · [`data/localmaxxing/`](data/localmaxxing/) + [`scripts/75_localmaxxing.py`](scripts/75_localmaxxing.py) · `contrib/vllm_int8_xpu/`
 
 ---
