@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# bin/serve-sweep -- the SWEEP GATE harness (ORGANIZATION.md / CLAUDE.md).
+#
+# Any change to shared serve infra (rdy_to_serve/_common/ OR bin/) is not "done" until this is GREEN
+# across ALL rdy_to_serve models. Two tiers:
+#   --smoke  (default, MANDATORY)  per model: start -> /health -> 1 gen token -> stop. Catches
+#                                  "no longer boots / no longer generates" fast (run eager for speed).
+#   --bench  (REQUIRED if a change could move perf)  per model: full serve + concurrency sweep + stop.
+#
+# Runs ON THE GPU HOST. Serialized through gpu-run (one B70 lease at a time). Iterates every
+# rdy_to_serve/<model>/serve.sh (skips dirs starting with _, e.g. _common).
+#
+#   ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70
+#   bin/serve-sweep --smoke              # or --bench ; or a specific model: bin/serve-sweep --smoke qwen36-27b-int4
+set -uo pipefail
+ROOT="${ROOT:-/mnt/vm_8tb/b70}"
+RTS="${RTS:-$ROOT/rdy_to_serve}"
+GPURUN="${GPURUN:-$ROOT/gpu-run}"
+
+MODE=smoke; ONLY=""
+for a in "$@"; do
+  case "$a" in
+    --smoke) MODE=smoke ;;
+    --bench) MODE=bench ;;
+    --*) echo "unknown flag: $a"; exit 2 ;;
+    *) ONLY="$a" ;;
+  esac
+done
+ACTION=smoke; [ "$MODE" = bench ] && ACTION=run    # smoke -> serve.sh smoke ; bench -> serve.sh run
+
+declare -a NAMES RESULTS
+for d in "$RTS"/*/; do
+  m="$(basename "$d")"
+  case "$m" in _*) continue ;; esac                # skip _common and other _-prefixed dirs
+  [ -f "$d/serve.sh" ] || continue
+  [ -n "$ONLY" ] && [ "$m" != "$ONLY" ] && continue
+  echo
+  echo "########## serve-sweep [$MODE] $m ##########"
+  if GRAPH="${GRAPH:-0}" "$GPURUN" bash "$d/serve.sh" "$ACTION"; then
+    NAMES+=("$m"); RESULTS+=("PASS")
+  else
+    NAMES+=("$m"); RESULTS+=("FAIL")
+    bash "$d/serve.sh" stop >/dev/null 2>&1 || true   # ensure released on failure
+  fi
+done
+
+echo
+echo "================ serve-sweep summary ($MODE) ================"
+fail=0
+for i in "${!NAMES[@]}"; do
+  printf "  %-8s %s\n" "${RESULTS[$i]}" "${NAMES[$i]}"
+  [ "${RESULTS[$i]}" = FAIL ] && fail=1
+done
+[ "$fail" = 0 ] && echo "ALL GREEN" || echo "RED -- gate NOT satisfied"
+exit $fail

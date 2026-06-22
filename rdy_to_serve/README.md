@@ -1,33 +1,72 @@
-# rdy_to_serve -- self-contained, ready-to-serve B70 models
+# rdy_to_serve -- self-contained, ready-to-serve B70 models (the GOLDEN PATH)
 
-One directory per model. Each is **self-contained**: a `serve.sh` plus any `patches/` it needs to bring
-the model up on the Intel Arc Pro B70 box. No hunting through JOURNAL/scripts -- `cd` into a model dir and
-run `serve.sh`.
+One directory per **verified, current-best** serve config. `cd` into a model dir and run `serve.sh` --
+no hunting through JOURNAL/scripts. The golden shelf is CURATED: a model lands here only when it is the
+current best AND has been verified to serve. Everything else on the host is accounted for in the status
+table below with a reason -- we do NOT put broken / dead-end / image-blocked recipes on the shelf.
 
-## [!!!] ALWAYS START WITH vLLM 0.23 -- image `vllm-xpu-env:v0230`. NEVER llm-scaler 0.14.x.
-`vllm-xpu-env:v0230` = **vLLM 0.23.0+xpu** is our newest, most-capable B70 stack (Triton fused-MoE on XPU,
-current Qwen3.6 / `Qwen3_5Moe` + Quark int8/int4 dispatch, graph capture). The old
-`intel/llm-scaler-vllm:0.14.x` image is an **ANCIENT 0.14 vLLM fork** with no `_moe_C` MoE op suite --
-int8 MoE hard-fails on it, and it has burned multiple agent-days as a dead end (docs/kernel/20 sec 6-9).
-**Newest-first preference: v0230 (0.23.0) > `:tf` (0.20.2rc1) > 0.14.x.** If a vLLM-XPU image NEWER than
-0.23.0 exists, prefer it and update this line (and CLAUDE.md). Every `serve.sh` here defaults to v0230.
+See `../ORGANIZATION.md` for the layout + mutability contract.
 
-## How to use
-These run ON THE GPU HOST (Unraid @ 192.168.10.5), where the models, the `vllm-xpu-env:*` images, `gpu-run`
-and `35_sweep_bench.sh` live (under `/mnt/vm_8tb/b70`). Sync this dir to the host, then:
+## How each model dir is built
+```
+  <model>/
+    serve.sh    model-specific knobs + local patch mounts; sources ../_common/lib.sh ; b70_dispatch
+    patches/    pure-Python patches THIS model bind-mounts at runtime (copied in, LOCAL)
+    README.md   recipe + verified perf + the verified: manifest line
+  _common/
+    lib.sh      SHARED model-agnostic engine (docker-run builder, graph flags, health wait, probes)
+```
+`serve.sh` keeps everything model-specific LOCAL (image, TP, graph flags, patches); only the boring
+model-agnostic plumbing is shared in `_common/`. See the SWEEP GATE below.
 
+## [!!!] ALWAYS START WITH vLLM 0.23 -- images `vllm-xpu-env:v0230*`. NEVER llm-scaler 0.14.x.
+`vllm-xpu-env:v0230` = vLLM 0.23.0+xpu, our newest/most-capable B70 stack (Triton fused-MoE on XPU,
+Qwen3.6 / `Qwen3_5Moe` + Quark int8/int4 dispatch, graph capture). `:v0230moe` = `:v0230` + the baked
+MoE-routing patch (own leaf tag so it cannot affect dense models). The old `intel/llm-scaler-vllm:0.14.x`
+is an ANCIENT 0.14 fork with no `_moe_C` -- int8 MoE hard-fails; a multi-agent-day dead end. If a
+vLLM-XPU image NEWER than 0.23.0 exists, prefer it and update this line + CLAUDE.md.
+
+## How to use (on the GPU host: Unraid @ 192.168.10.5)
 ```bash
 ssh root@192.168.10.5
-cd /mnt/vm_8tb/b70/rdy_to_serve/<model>          # (or wherever you synced it)
+cd /mnt/vm_8tb/b70/rdy_to_serve/<model>
 /mnt/vm_8tb/b70/gpu-run bash serve.sh            # acquire GPU lease, start, wait healthy, gen-probe
 bash serve.sh stop                                # release the GPU
 ```
-Common knobs (env): `TP`, `PORT`, `MAXLEN`, `MAXSEQS`, `UTIL`, `GRAPH=1` (graph-capture decode lever).
-Every GPU touch must go through `gpu-run` (one B70, possibly several agents) -- see CLAUDE.md.
+Sub-commands: `start` (default) | `stop` | `logs` | `bench` | `run` (serve+bench+stop) | `smoke`.
+Common env knobs: `GRAPH` (1=capture), `TP`, `PORT`, `DEVICE` (card 0|1 for single-card), `MAXLEN`,
+`MAXSEQS`, `UTIL`, `KVDTYPE`. Every GPU touch goes through `gpu-run` (one B70, several agents -- CLAUDE.md).
 
-## Models
-| dir | model | quant | cards | image | status |
+Two single-card models can run AT ONCE (one per card) under one lease:
+```bash
+/mnt/vm_8tb/b70/gpu-run bash -c '
+  DEVICE=0 PORT=8001 NAME=t0 bash qwen36-27b-int4/serve.sh start
+  DEVICE=1 PORT=8002 NAME=t1 bash qwen36-35b-a3b-int4/serve.sh start'
+```
+
+## THE SHELF (verified, current-best)
+| dir | model | quant | cards | image | decode (captured) |
 |---|---|---|---|---|---|
-| `qwen36-35b-a3b-quark-w8a8-int8/` | Qwen3.6-35B-A3B (MoE) | Quark **W8A8 INT8** | 2x B70 TP=2 | v0230 | WORKING |
+| `qwen36-27b-int4/` | Qwen3.6-27B | int4 AutoRound (W4A16) | 1 | `:v0230` | ~30.8 t/s -- PRIMARY quality, daily driver |
+| `qwen36-35b-a3b-int4/` | Qwen3.6-35B-A3B MoE | int4 AutoRound | 1 | `:v0230moe` | ~56.8 / ~65 (fp8KV) t/s -- FASTEST |
+| `qwen36-35b-a3b-quark-w8a8-int8/` | Qwen3.6-35B-A3B MoE | Quark **W8A8 INT8** | 2 (TP=2) | `:v0230` | eager 4.8; GRAPH agg ~45.7 -- true-int8 |
 
-(Add new models as sibling dirs. Keep each self-contained: serve.sh + patches/ + a short README.)
+## NOT ON THE SHELF (every other host model, with the reason)
+| host model dir | status | reason / next step |
+|---|---|---|
+| `Qwen3.6-27B-W4A8-sqgptq-prepacked` | BLOCKED | secondary int8-activation 27B (~20.9 t/s). Needs `:int8g` (NOT on host now) + the rebuilt GDN `_xpu_C.abi3.so` + PREPACK patches. -> rebuild `:int8g` (ORGANIZATION.md step 4), then promote. |
+| `Qwen3-14B-W4A8-gptq-prepacked` | BLOCKED | 14B int8 workhorse. Needs `:int8g`. Same rebuild blocker. |
+| `Qwen3-14B-W8A8-autoround` | BLOCKED | Track-3b W8A8 (eval-registered). Needs the int8-kernel image. Same blocker. |
+| `Qwen3-14B-W4A16-gptq` | UNTESTED | 14B int4-gptq; recipe not re-verified this pass. Likely `:v0230`. Promote after a smoke. |
+| `Qwen_Qwen3.6-27B-FP8` | UNTESTED | B70/Xe2 has NO FP8 ALU -> needs dequant path; serve-correctness unverified. Smoke before shelving. |
+| `Qwen3.6-27B-W8A8-sqgptq` | DEAD-END | dense true-int8 W8A8 serves but ~1.7 t/s (~13x slower than the `:int8` path). Kept for reference; not a serve target. |
+| `Qwen3.6-27B-W4A16` | BROKEN | compressed-tensors W4A16 will NOT serve on XPU (XPUwNa16 needs dims /32; the gated-attn 4304 dim fails). |
+| `Qwen_Qwen3.6-27B` | RESEARCH | full BF16 27B (72G) -- too big for one card; TP=2/PP=2 capacity studies only. |
+| `Qwen_Qwen3.6-35B-A3B` | RESEARCH | full BF16 35B MoE (67G) -- TP=2 only; reference/baseline. |
+| `Qwen_Qwen3-0.6B` | DRAFT | tiny; speculative-decode draft / smoke target, not a standalone serve. |
+| `google_gemma-4-12B-it` | OLD | early-bringup experiment (scripts 24-33); superseded, not a current pick. |
+
+## [!!!] SWEEP GATE
+Any change to `_common/` or `bin/` (shared infra) requires `bin/serve-sweep --smoke` GREEN across all
+shelf models before commit (and `--bench` if it could move perf). Each model README carries a `verified:`
+line recording the last green sweep. A break in `_common/` breaks every model -- hence the gate.
