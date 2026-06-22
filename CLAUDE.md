@@ -31,6 +31,15 @@ bench, perf_probe, on-GPU quant) behind the shared flock lease:
 - A long-lived serve holds the lease for its lifetime (correct -- only one model fits the card anyway);
   stop the server (`docker stop vllm_*`) to release. Don't bypass with a bare `docker run --device /dev/dri`.
 
+## [!!!] DEFAULT TO vLLM 0.23 -- image `vllm-xpu-env:v0230`. DO NOT use llm-scaler 0.14.x.
+**START HERE for any XPU serve/quant/bench.** `vllm-xpu-env:v0230` = **vLLM 0.23.0+xpu** is our newest,
+most-capable B70 stack: Triton fused-MoE on XPU, current Qwen3.6 / `Qwen3_5Moe` + Quark int8/int4 dispatch,
+graph capture. **Never default to `intel/llm-scaler-vllm:0.14.x`** -- its vLLM is an ANCIENT 0.14 fork with
+NO `_moe_C` MoE op suite (int8 MoE hard-fails on `topk_softmax`), and it has burned multiple agent-days as a
+dead end (docs/kernel/20 sec 6-9). Newest-first preference: **v0230 (0.23.0) > :tf (0.20.2rc1) > 0.14.x**.
+If a vLLM-XPU image NEWER than 0.23.0 exists, prefer it AND update this line + `rdy_to_serve/README.md`.
+Copy-paste serves: `rdy_to_serve/` (self-contained per model) and `docs/SERVING.md`.
+
 ## [!] Serving a model? Use `docs/SERVING.md` -- the canonical recipe doc
 It has copy-paste, verified serve commands (27B / 35B-A3B MoE / 14B), the `30_serve_w4a8_graph.sh` env
 knobs, image picks, and the concurrency-sweep recipe. **Read it FIRST** -- do not reconstruct a serve
