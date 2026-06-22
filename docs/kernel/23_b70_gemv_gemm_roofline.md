@@ -72,4 +72,25 @@ Production path, in order of cleanliness:
      reduction wins; but fusion (1) is better because it also kills the GEMM's separate launch.
 Net for B70 int8 decode: don't tune the GEMMs (near-roofline); FUSE quant+GEMM (one launch, parallel reduce).
 
+## PER-SCHEME IMPACT of the activation-quant fusion + a 14B W8A8 sim (2026-06-23)
+Which quants the fused activation-quant helps (verified by reading each kernel's `apply_weights`):
+- **W8A8** (`XPUInt8ScaledMMLinearKernel`): int8 per-token act-quant (`dynamic_per_token_int8_quant`) -> BENEFITS.
+- **W4A8** (`XPUW4A8IntLinearKernel`): int8 per-token act-quant too -- AND it uses the SLOW
+  `dynamic_per_token_int8_quant_ref` (pure-torch ~210us, ~5 launches) -> benefits EVEN MORE (or just switch
+  it to the kernel quant for a free win). Weight GEMM differs (`int4_gemm_w4a8`) but the act-quant is shared.
+- **W4A16** (`XPUwNa16LinearKernel`): `int4_gemm_w4a16(x,...)` on BF16 x, NO activation quant -> ZERO benefit.
+
+14B W8A8 linear-path per-token sim (real ops/dims H=5120 I=17408 qkvN=7168 x40 layers, EAGER M=1):
+```
+  per-layer int8 GEMMs   610.8us  (constant)
+  quant-path  unfused    286.8us  ->  fused 174.2us  (-39%; rms-fusion 2x + silu-fusion 1.5x)
+  per token   unfused    35.90ms (27.9 t/s) -> fused 31.40ms (31.8 t/s) = 1.14x
+```
+The quant path is 32% of the linear path; fusing it cuts ~12% -> ~1.14x EAGER on the linear path.
+CAVEATS: (1) the serve runs GRAPH=1 PIECEWISE -> capture already removes the LAUNCH part of the win, so the
+captured end-to-end gain is SMALLER than 1.14x; (2) attention/GDN add constant time -> further dilution.
+=> modest win for W8A8; the live captured number needs the wiring (rms_norm_dynamic_per_token_quant into the
+int8 linear's RMSNorm-fed inputs). Bigger decode levers remain MTP + FULL capture. W4A8's slow-ref quant is
+the cheapest standalone win here.
+
 All work card-0 only (another agent on card 1; never the default `gpu-run` which locks both).
