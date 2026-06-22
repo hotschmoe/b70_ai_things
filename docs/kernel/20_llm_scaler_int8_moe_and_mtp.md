@@ -143,7 +143,20 @@ vllm_topk_softmax has no native fallback. VLLM_XPU_USE_LLM_SCALER_MOE is also NO
 So generic int8 fused-MoE cannot EXECUTE on XPU here. steve's 99.77 t/s ran on vLLM **0.20.2rc1.dev2**
 -- a newer llm-scaler build WITH the XPU MoE kernels.
 
-**FINISH PATH:** pull a newer `intel/llm-scaler-vllm` tag (steve's ~0.20.x) that ships _moe_C / the XPU
-fused-MoE kernels, then re-run scripts/74 (set IMG=). The 2 patches stay relevant only if that newer
-image still lacks the int8 Quark MoE/linear dispatch -- check first (upstream vLLM >=0.20 likely already
-has QuarkW8A8Int8MoEMethod, in which case drop the mounts). Corrects sec 7's "OOM/collective" guess.
+**FINISH PATH (researched 2026-06-22 -- NO newer image exists):**
+- `intel/llm-scaler-vllm` newest tag = **0.14.0-b8.3.1 (Jun 5)** -- the one WE ALREADY HAVE. Docker Hub
+  has nothing newer (b8.4/0.15/etc do not exist). Its README lists supported MoE quant as MXFP4 / FP8 /
+  symmetric **INT4** / AWQ / GPTQ -- **int8 W8A8 / quark is NOT a supported MoE path.** That is the root
+  reason `_moe_C` int8 fused-MoE isn't built.
+- `intel/vllm` newest = **0.17.0-xpu (Mar 2026)** -- older upstream vLLM than steve's, not B70-purpose-built
+  (no llm-scaler ESIMD kernels), and predates Qwen3.6 (`Qwen3_5Moe`) arch support -> would not even load.
+- steve's **0.20.2rc1.dev2** is UPSTREAM vLLM versioning = a **SOURCE BUILD** (upstream vLLM 0.20.2rc1 +
+  llm-scaler `custom-esimd-kernels-vllm` on PYTHONPATH; see his runtime-env.sh), **not a pullable image**,
+  and newer than anything on Docker Hub.
+
+=> There is NO image to pull that unlocks int8-W8A8 MoE on B70. Real options: (A) reproduce steve's source
+build (upstream vLLM 0.20.x XPU + llm-scaler ESIMD kernels -- large/uncertain; and Intel doesn't list int8
+W8A8 as supported, so even then it may fall back); (B) pivot to the Intel-SUPPORTED **INT4 AutoRound**
+35B-A3B (`Intel/Qwen3.6-35B-A3B-int4-AutoRound`, already a working SERVING.md recipe, 56.8 t/s single-card)
+or FP8. The 2 dispatch patches + scripts/74 remain valid and ready IF a build/image ever ships the XPU MoE
+kernels. Corrects sec 7's "OOM/collective" guess.
