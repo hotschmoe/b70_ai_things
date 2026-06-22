@@ -1,14 +1,28 @@
-# RESEARCH_TODO.md -- W8A8-INT8 is the main path; next research tracks
+# RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-06-22 (two-agent codebase+git audit; see banner)
+**Created:** 2026-06-20 - **Status-synced:** 2026-06-23 (compressed-tensors-first focus update; see banner)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
+
+> ### [FOCUS UPDATE 2026-06-23] -- research format policy
+> - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,
+>   and custom B70 kernels should share one comparable packaging/metadata path wherever possible.
+> - **Keep AutoRound/INC int4 as the proven W4A16 serve baseline**, not the default research format. The 27B
+>   compressed-tensors W4A16 `/32` shape wall is deferred to a focused padding/ignore-list/kernel session.
+> - **GPTQ is the current default producer for compressed-tensors quants.** It slightly beat AutoRound on 14B W8A8
+>   HumanEval+; treat that as a working prior, not a final claim. Re-check on harder evals, especially before
+>   drawing W4A8 conclusions.
+> - **W4A4 remains later frontier research.** Keep method notes alive, but do not start W4A4 kernels until W8A8/W4A8
+>   are robust.
 
 > ### [STATUS SYNC 2026-06-22] -- audited every track vs code/git/JOURNAL. Net picture:
 > - **Track 4a DONE** -- Quark W8A8-INT8 35B-A3B SERVES on v0230 TP=2 (commit dc740cc). Quark is a valid producer; dispatches fine.
 > - **Track 5 REFRAMED (serving SOLVED, not a build blocker)** -- the int8 MoE serves TODAY via vLLM 0.23 Triton `fused_moe` (256 int8 experts) on v0230; building our own fused-expert kernel is now a *research/port* goal, low priority. AND commit 15918cc proved a TRUE int8 LINEAR kernel is **NO speed win on the MoE** (experts already int8; linear is the minority path) -- correctness+memory only. So Track 1's "int8 GEMM = decode speedup" premise is NEGATIVE for MoE.
 > - **Track 2a DONE** -- selective SmoothQuant shipped in `scripts/49` (QUANTS Q0); accuracy delta still pending (Q3/Q5 gsm8k TBD).
 > - **Track 1d PARTIAL** -- PIECEWISE capture DONE (+16.7%, commit 910182c); **FULL blocked** on stock v0230 (SYCL-Graph `work_group_scratch_memory`, commit a5645b2). FULL/`TRITON_ATTN` is the open MTP-positive lever.
-> - **Track 1a/1b/1c/1e/1f, 2b-2e, 3c/3e NOT-STARTED**; **3a/3b/3d, 4b, 7b PARTIAL** (14B W8A8-AutoRound validated, accuracy numbers pending); **7a SIDESTEPPED** (27B int4-AutoRound serves, dodges the 4304-dim XPUwNa16 wall); **Track 8 correctly DEFERRED**; **Track 9 DEFERRED** (Ray bypass proven, CUDA-graph timing port pending).
+> - **Track 1a/1b/1c/1e/1f, 2b-2e, 3c/3d/3f NOT-STARTED**; **3a, 4b, 7b PARTIAL**; **3b DONE**
+>   (GPTQ slightly beat AutoRound on 14B W8A8); **3e DONE** (XPU AutoRound int4 calib is unsafe); **7a SIDESTEPPED**
+>   (AutoRound/INC serves while compressed-tensors W4A16 waits on the 4304-dim XPUwNa16 wall); **Track 8 W4A8 NEXT /
+>   W4A4 DEFERRED**; **Track 9 DEFERRED** (Ray bypass proven, CUDA-graph timing port pending).
 > - **Section 1.1 numbers VERIFIED** vs SUMMARY.md (w8a8-gptq 0.921/0.890, w4a16-gptq 0.872/0.848) -- no change.
 **Authoritative siblings (do NOT duplicate their content here):**
 - [`MTP_TODO.md`](MTP_TODO.md) -- owns ALL MTP / speculative-decoding planning (the ~3-4x decode lever).
@@ -25,21 +39,23 @@ This doc owns: the **W8A8 kernel sprint**, **W8A8 accuracy beyond what's done**,
 
 ## 0. The settled strategy (one screen)
 
-Format roles -- decided, not re-litigated here:
+Format roles -- current working policy:
 
 ```
-W8A8  INT8  -> PRIMARY. Only 14B-class path that lights the B70 INT8 systolic (XMX DPAS) datapath.
-                Prefill champion (1.6x FP8); decode ~matches FP8 after PIECEWISE; code quality = FP8 (GPTQ).
+W8A8  INT8  -> PRIMARY compressed-tensors path. Lights the B70 INT8 systolic (XMX DPAS) datapath.
+                14B single-card baseline works; 27B W8A8 serves via TP=2. Default producer: GPTQ.
 FP8         -> CONTROL / interactive fallback. The "does it still feel pristine?" baseline + best single-stream decode.
                 Note: FP8 on Xe2 is EMULATED (upconverts to bf16) -- memory play, NOT a compute fast path.
-W4A16 INT4  -> CAPACITY fallback. "Run the bigger model today" / VRAM-tight. No int systolic.
+W4A16 INT4  -> CAPACITY fallback. AutoRound/INC is the proven serve baseline; compressed-tensors W4A16 is the
+                research parity target after we fix the 27B `/32` shape wall.
 W8A16 INT8  -> QUALITY REFERENCE only (near-lossless) -- but NO XPU kernel (XPUwNa16 is int4-only). Not a speed path.
-W4A8  INT4  -> OTHER AGENT'S BRANCH (w4a8/). Memory-emergency format; dominated on decode+accuracy today. Don't touch.
-35B-A3B MoE -> needs a fused packed-expert kernel before it fits (Track 5). Separate frontier.
+W4A8  INT4  -> NEXT compressed-tensors research path. Needs int4-weight x int8-act kernels/GEMV work and harder evals.
+35B-A3B MoE -> serving works; tuned MoE config / packed-expert ownership is separate frontier work.
+W4A4  INT4  -> LATER frontier. Interesting, but after W8A8/W4A8 are stable.
 ```
 
-Rough effort split (info-dump's recommendation, **reconciled** below): 60% W8A8 kernels / 25% W8A8 accuracy /
-10% MTP-plumbing / 5% W4A16+rotation side-quests.
+Effort priority: W8A8 kernels first, W8A8 accuracy next, then W4A8/W4A16 compressed-tensors parity and TP/PP
+plumbing. W4A4 stays note-taking only for now. MTP remains owned by `MTP_TODO.md`.
 
 > [!] **Reconciliation with MTP_TODO.md.** The info-dump pre-dates the MTP reframe. `MTP_TODO.md` (06-20) shows
 > MTP is a ~3-4x multiplier vs ~1.2-1.5x for format choice, so MTP is NOT a 10% side-task -- it is the top decode
@@ -134,32 +150,40 @@ Out of scope (decided): rotation at W8A8 (doc 07 S6), QAT (overkill at 8-bit), r
 
 ---
 
-## Track 3 -- AutoRound ("autoint", Intel's quantization)  [NEW]
+## Track 3 -- GPTQ vs AutoRound producer checks  [COMPRESSED-TENSORS OUTPUT]
 
 **What it is.** AutoRound (`github.com/intel/auto-round`, ex-"SignRound", arXiv 2309.05516) is Intel's PTQ method:
 it *learns* the optimal rounding (up/down) per weight via signed-gradient descent over a few hundred calibration
 steps. Same **role** as GPTQ -- a weight-error recovery method -- but optimization-based rather than
 Hessian/OBQ-based. Exports to compressed-tensors / AutoGPTQ / AWQ / GGUF; runs on CPU / CUDA / **XPU**.
 
-**Where it already won in this repo.** AutoRound int4 produced our **best single-card quality**: Qwen3.6-27B
-**0.963 / 0.927** (the leaderboard #1) and the 35B-A3B int4. So at **int4 weights it already beats our GPTQ**
-(GPTQ-W4A16 14B is 0.848). AutoRound's edge is largest where weight error is largest = low-bit weights.
+**Current policy.** Research outputs should be compressed-tensors when the exporter supports it. AutoRound/INC int4
+remains the proven W4A16 serving baseline, but it is a different loader/kernel lineage from the compressed-tensors
+artifacts we want for cross-model kernel work.
+
+**Where AutoRound already won operationally.** AutoRound int4 produced our **best single-card serving baseline**:
+Qwen3.6-27B **0.963 / 0.927** (the leaderboard #1) and the 35B-A3B int4. That result is important, but it is
+confounded by model/format/kernel differences and should not be read as "AutoRound always beats GPTQ."
 
 **Where it likely does NOT help.** At **int8 weights** the field (and doc 07 S3.4) finds RTN ~= GPTQ ~= AWQ -- the
 gap there is activations, not weight rounding. So expect AutoRound-W8A8 ~= GPTQ-W8A8 (0.890); confirm cheaply, don't over-invest.
 
 Experiments (weight-lever comparison; all CPU/XPU quant, then serve behind `scripts/gpu-run`):
 
-- [ ] **3a. AutoRound-W4A16 vs GPTQ-W4A16 (14B + 27B).** Does the int4-leader recipe beat our GPTQ fallback
-      (0.848)? Highest-value AutoRound test -- W4A16 is exactly the capacity fallback (Track 7) and int4 is AutoRound's home turf.
+- [ ] **3a. Same-format W4A16 producer check (compressed-tensors).** Compare GPTQ vs AutoRound-exported
+      compressed-tensors W4A16 where export and serving are clean. Do not compare AutoRound/INC against
+      compressed-tensors and call it a pure quantizer result.
 - [x] **3b. AutoRound-W8A8 (14B) vs GPTQ-W8A8 -- DONE 2026-06-23. GPTQ slightly WINS; AutoRound does NOT supersede.**
       HumanEval+ (164, sandboxed, true W8A8 via :int8): **w8a8-autoround 0.909/0.872 vs w8a8-gptq 0.921/0.890** -> GPTQ
       +1.2 base / +1.8 plus (near CI, but consistent direction; matches the field: weight-rounding barely matters at int8,
       Hessian-OBQ GPTQ edges optimization-AutoRound). AutoRound W8A8 is SOUND + coherent (int8 weights survive even XPU
       calib, unlike the int4 Q8). So "autoround supersedes gptq at W8A8" is REFUTED -- they ~tie, GPTQ marginally ahead.
-- [ ] **3c. AutoRound + selective-SmoothQuant interplay.** AutoRound is weight-side; SmoothQuant is activation-side
-      -> orthogonal, should compose. Test AutoRound weights + SmoothQuant acts for W8A8/W4A8.
-- [ ] **3d. Export-format check:** confirm AutoRound's compressed-tensors W8A8/W4A8 export loads into OUR
+- [ ] **3c. Harder eval confirmation.** HumanEval+ says GPTQ slightly wins at 14B W8A8, but that is not enough
+      to settle the producer choice. Re-check on harder/agentic code, long-context, and reasoning evals before
+      making a broad GPTQ-vs-AutoRound claim.
+- [ ] **3d. AutoRound + selective-SmoothQuant interplay.** AutoRound is weight-side; SmoothQuant is activation-side
+      -> orthogonal, should compose. Test only when the output is compressed-tensors and dispatches to the same kernel.
+- [ ] **3f. Export-format check:** confirm AutoRound's compressed-tensors W8A8/W4A8 export loads into OUR
       `XPUInt8ScaledMMLinearKernel` / `XPUW4A8IntLinearKernel` (same check as Quark, Track 4). If it dispatches, AutoRound is a drop-in producer.
 - [x] **3e. "XPU calibration unreliable" for AutoRound -- CONFIRMED 2026-06-22 (Q8 repro).** Quantizing Qwable-5-27B int4
       via AutoRound with `device_map=auto` on the two B70s (gradient rounding on XPU + low_gpu_mem_usage offloading)
@@ -168,8 +192,8 @@ Experiments (weight-lever comparison; all CPU/XPU quant, then serve behind `scri
       **RULE: quantize AutoRound on CPU/CUDA (RunPod-NVIDIA), serve on B70** -- same as Quark (Track 4). This also
       retro-flags any other XPU-calibrated AutoRound quant. (See QUANTS_TODO Q8 correction + JOURNAL 2026-06-22.)
 
-> Boundary with the other agent: **W4A8 + AutoRound is owned by `w4a8/`** (their README: AutoRound chosen for the
-> accuracy win, target plus 0.817 -> >=0.84). This track covers AutoRound for **W4A16 and W8A8** only. Cross-link, don't fork.
+> W4A8 producer policy: default to compressed-tensors GPTQ/SQ first. Re-open AutoRound for W4A8 only after exporter
+> and same-kernel dispatch are verified, then judge on harder evals rather than producer reputation.
 
 ---
 
@@ -196,7 +220,7 @@ decided we do NOT migrate runtimes; this is a one-shot importer test, not a pipe
         35B-A3B community result more faithfully; standardize exchange).
       - Falls back to bf16 -> we need a small **loader/metadata adapter** (map Quark's config to the compressed-tensors
         fields our kernel reads). Scope it then; don't pre-build.
-- [ ] **4b.** Do the same dispatch check for **AutoRound's** compressed-tensors export (folds into Track 3d).
+- [ ] **4b.** Do the same dispatch check for **AutoRound's** compressed-tensors export (folds into Track 3f).
 
 **Do NOT make Quark a dependency:** Quark *quantization* (producing checkpoints) is documented for CUDA/ROCm, not
 Intel XPU. If we ever need a Quark checkpoint, quantize on RunPod-NVIDIA/CPU and **serve** on B70. B70 time is for
@@ -232,34 +256,38 @@ Owned entirely by **[`MTP_TODO.md`](MTP_TODO.md)**. Do not plan MTP here. One-li
 
 ---
 
-## Track 7 -- W4A16 capacity fallback  [LOW, ~5%]
+## Track 7 -- W4A16 compressed-tensors parity  [DEFERRED FIX]
 
-Keep as the "fits on one card" path for the 27B; it is NOT the throughput story (no int systolic).
+Keep W4A16 as the "fits on one card" capacity path. It is not the int8 throughput story, but we still want
+compressed-tensors parity eventually so research artifacts stay comparable across W8A8/W4A8/W4A16.
 
 - [x] GPTQ@128 W4A16 14B HumanEval+ -- DONE (0.872/0.848, 06-20).
 - [~] **7a. 27B W4A16 serving wall -- SIDESTEPPED, not fixed.** `XPUwNa16` needs input dims /32; the 27B gated-attn 4304
       dim breaks the *compressed-tensors* W4A16. **Operationally dodged:** the Lorbus int4-AutoRound 27B serves via
-      `quantization=inc` (30.8 t/s captured, the daily driver), avoiding the broken path. The compressed-tensors-W4A16
-      kernel fix (32-pad / ignore-list / kernel) is still open but **low value** since AutoRound int4 is the better serve anyway.
-- [ ] **7b. AutoRound-W4A16 vs GPTQ-W4A16 on the 27B** (folds into Track 3a) -- pick the capacity fallback on measured code, not gsm8k.
+      `quantization=inc` (30.8 t/s captured, the daily driver), avoiding the broken path. Keep using that for serving.
+      **Research fix later:** add padding-aware loader/kernel support or precise BF16 ignores so compressed-tensors
+      W4A16 works on the 27B too.
+- [ ] **7b. Same-format W4A16 eval.** Once 7a is fixed, compare GPTQ vs AutoRound-exported compressed-tensors W4A16
+      on the same model and kernel. Include harder evals, not just gsm8k/HumanEval+.
 
 ---
 
-## Track 8 -- Rotation + sub-8-bit frontier (W4A8 / W4A4)  [DEFERRED]
+## Track 8 -- W4A8 then W4A4 frontier  [W4A8 NEXT, W4A4 LATER]
 
 Method picks + kernel-gating are owned by **[`docs/quant_methods.md`](docs/quant_methods.md)** (Tables A/D + the
 W4A4 section). Summary so the order is clear:
 
 - **W8A8: skip rotation** -- marginal at 8-bit + no SYCL/XMX Hadamard kernel (doc 07 S6).
-- **W4A8: rotation enters** -- **QServe-QoQ or SpinQuant** to rescue int8 acts at int4 weights. This is the `w4a8/`
-  agent's branch; SpinQuant R1/R2 fuse offline (servable on our `int4_gemm_w4a8`), R3/R4 need an online Hadamard kernel.
+- **W4A8: next compressed-tensors research target** -- start with GPTQ/SmoothQuant and same-kernel evals. Then test
+  whether AutoRound or rotation methods actually help on harder evals. SpinQuant R1/R2 can fuse offline; R3/R4 need
+  an online Hadamard kernel.
 - **W4A4 (true int4 acts): the real frontier** -- **FlatQuant** (SOTA acc, has Qwen2.5 model_tools) first, **QuaRot**
   (parameter-free Hadamard = cleaner int4xint4 kernel target) fallback; **PrefixQuant** for static acts. Doubly
   kernel-gated: needs a new `s4 x s4 -> s32` GEMM **and** a transform kernel (FWHT or fused Kronecker-affine).
 
-Do not start the rotation kernels until dense W8A8 (Track 1) is robust. **First step when W4A4 opens:** diff Qwen3 vs
-Qwen2.5 in FlatQuant `model_tools` to size the port (Qwen3's QK-norm shifts the rotation insertion points). Validate
-in fake-quant (perplexity) before writing any XMX kernel.
+Do not start W4A4 kernels until dense W8A8 and W4A8 are robust. **First step when W4A4 opens:** diff Qwen3 vs Qwen2.5
+in FlatQuant `model_tools` to size the port (Qwen3's QK-norm shifts the rotation insertion points). Validate in
+fake-quant/perplexity before writing any XMX kernel.
 
 ---
 
@@ -290,22 +318,23 @@ Deploy: drop the resulting JSON into the image's `model_executor/layers/fused_mo
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-1. **MTP FULL-capture frontier** (Track 1d / MTP_TODO) -- the highest decode lever now. PIECEWISE+MTP = -19% (attn+GDN
-   stay eager during verify); the unlock is `--attention-backend TRITON_ATTN` -> FULL capture so the verify pass is captured.
-   This is MTP_TODO M1; everything else is second-order until it lands.
+1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
+   format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for
    Q3/Q5 vs GPTQ-only). down_proj carve-out + KL ranking are lower-pri follow-ons. HumanEval+ every run.
-3. **AutoRound accuracy confirms** (Track 3) -- 14B W8A8-AutoRound is validated/serving; run its HumanEval+ vs GPTQ (3b, one run);
-   AutoRound-W4A16-vs-GPTQ on 27B (3a/7b) only if the AutoRound 0.927 isn't already decisive.
-4. ~~Quark + AutoRound importer test (Track 4)~~ -- **DONE** (4a Quark serves; 4b AutoRound dispatch validated on 14B).
+3. **Harder producer evals** (Track 3) -- GPTQ is the default because it currently edges AutoRound on W8A8, but verify
+   harder code/reasoning/long-context before locking the choice, especially for W4A8.
+4. **27B compressed-tensors W4A16 fix** (Track 7) -- separate session: padding-aware kernel/loader or precise BF16
+   ignores. Keep AutoRound/INC serving in the meantime.
 5. **MoE: tuned Triton `E=256,N=256` config + graph capture** (Track 9 + capture), NOT a from-scratch kernel (Track 5 serving is solved).
-6. **Port the MoE-config tuner to XPU** (Track 9) -- deferred; Ray bypass proven, CUDA-graph timing still needs porting.
+6. **MTP work** stays in `MTP_TODO.md` and should use whichever compressed-tensors research artifact is under test.
 
-MTP runs on its own plan (MTP_TODO.md) -- but item 1 above IS the current MTP bottleneck, so it leads here too.
-W4A8 runs on the other agent's plan (`w4a8/`). Rotation stays parked.
+MTP runs on its own plan (`MTP_TODO.md`). W4A8 implementation details may live under `w4a8/`, but the research
+policy here is compressed-tensors first. Rotation stays parked until W4A8 needs it.
 
 **GPU discipline:** every serve/bench/perf_probe/on-GPU-quant in these tracks goes through `scripts/gpu-run`
-(one B70, the W4A8 agent is currently on it). Editing/compiling stay parallel; only the GPU touch is serialized.
+(dual B70 host; use `--card N` for true one-card work and the default both-card lock for TP=2/PP=2). Editing/compiling
+stay parallel; only the GPU touch is serialized.
 
 ---
 
@@ -319,8 +348,8 @@ docs/kernel/21). Remaining open frontier items, **honestly ranked** (all are low
 1. **[MED] Accuracy evals (Track 2 + 3).** (a) ~~Q8 Qwable int4 HumanEval+~~ -- **DONE 2026-06-22: scored 0.0/0.0
    (GARBAGE) -> the XPU-calibrated quant is BROKEN (Track 3e CONFIRMED); needs a CPU/CUDA re-quant. The eval harness +
    sandbox WORK (they caught the garbage the perf-bench missed).** (b) Track 2 -- does selective-SmoothQuant (Q3/Q5)
-   beat GPTQ-only 0.908 on gsm8k/agreement? (c) Track 3 -- AutoRound-W4A16 vs GPTQ confirm (NOTE: any XPU-calibrated
-   AutoRound is suspect now -> use CPU/CUDA-quantized checkpoints or the community Lorbus). Need evals/ harness + serve.
+   beat GPTQ-only 0.908 on gsm8k/agreement? (c) Track 3 -- harder GPTQ-vs-AutoRound producer evals, same output
+   format and same kernel only. Need evals/harness/serve.
 2. **[LOW-MED] Mount vllm_xpu_kernels 0.1.10 (v0230 = 0.1.9, confirmed).** Will NOT fix FULL (0.1.10 has no spec-path
    changes -- research + the kernel bisection above). Only a MoE-prefill speedup (#378/#379) + a >=32K NaN-race fix
    (#411). Requires a FULL-dir `.so` overlay (matched set incl. a ~1.5GB libattn_kernels), with ABI risk (0.1.10 may
