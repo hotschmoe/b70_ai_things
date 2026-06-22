@@ -12,9 +12,15 @@ Moved out of the live `models/` top level (archive/ 184G -> 427G):
 - **Non-prepacked twins** (kept the prepacked, which is the serve target): `Qwen3.6-27B-W4A8-sqgptq` (33G; kept
   `...-prepacked` 25G), `Qwen3-14B-W4A8-gptq` (16G; kept `...-prepacked` 9.3G).
 - **GGUFs**: `unsloth_Qwen3.6-27B-GGUF` (16G), `bartowski_Qwen2.5-7B-Instruct-GGUF` (4.4G).
-KEPT (no prepacked twin): the 14B W8A8-gptq / W8A8-gptq512 / W8A8-autoround / W8A16 / W4A16-gptq. Daily driver
-(Lorbus 27B int4) + the 35B int8/int4 MoE serves untouched. NOTE: the older "KEEP" rows below for the 2 GGUFs are
-now superseded by this archival.
+Daily driver (Lorbus 27B int4) + the 35B int8/int4 MoE serves untouched. NOTE: the older "KEEP" rows below for the
+2 GGUFs are now superseded by this archival.
+
+### 2026-06-22 (follow-up) -- archive 14B W8A8-gptq / W8A8-gptq512 / W8A16 (user call: done chasing W8A8)
+User: autoround supersedes the gptq W8A8 variants; not chasing W8A16 optimizations. Archived (+46G -> archive/ 473G):
+`Qwen3-14B-W8A8-gptq` (16G), `Qwen3-14B-W8A8-gptq512` (16G), `Qwen3-14B-W8A16` (16G). KEPT in 14B: `W8A8-autoround`,
+`W4A8-gptq-prepacked`, `W4A16-gptq`. **HONESTY NOTE:** by the repo's MEASURED leaderboard, `W8A8-gptq` is the validated
+W8A8 winner (HumanEval+ 0.890/0.921), while `W8A8-autoround` accuracy is unmeasured ("TBD == gptq kernel"). The measured
+numbers persist in evals/results/SUMMARY.md; the gptq files are archived (reversible) if the W8A8 chase reopens.
 
 ## Keep / remove decisions (live inventory)
 
