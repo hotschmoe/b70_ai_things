@@ -1,8 +1,16 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 · **Updated:** 2026-06-22 (localmaxxing community evidence folded in)
+**Created:** 2026-06-20 · **Updated:** 2026-06-22 (M0 PASS logged)
 **Owner:** b70 team
-**Status:** PLAN — not started (now backed by 3rd-party single-card MTP + FULL-capture datapoints)
+**Status:** IN PROGRESS — **M0 wiring gate PASSED 2026-06-22** on stock v0230 (no mtp_patch, no 0.14.x). MTP head loads,
+drafts, and does NOT crash on the GDN+spec path; `method='mtp'` resolves `Qwen3_5MTP`. Now on M1 (the FULL-capture frontier).
+
+> ### [M0 RESULT 2026-06-22 -- PASS] (JOURNAL has the full log)
+> Serve 27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE + `--speculative-config '{"method":"mtp",
+> "num_speculative_tokens":3}'` -> healthy, MTP head + drafter loaded (embedding+lm_head shared), PIECEWISE capture OK,
+> coherent gen, rejection-sampler ran. NO crash. **Crucial M1 finding:** `splitting_ops` includes `gdn_attention_core_xpu`,
+> so under PIECEWISE the GDN/attention verify runs EAGER -> this is the known -19% regime. **M1 is therefore NOT "re-measure
+> PIECEWISE"; it is "capture attention+GDN" via `--attention-backend TRITON_ATTN` -> FULL (host script `ATTN` knob; PR #34482).**
 **Related:** [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) · [`JOURNAL.md`](JOURNAL.md) (MTP entries) · [`docs/COMMUNITY_CONFIGS.md`](docs/COMMUNITY_CONFIGS.md) · [`data/localmaxxing/`](data/localmaxxing/) + [`scripts/75_localmaxxing.py`](scripts/75_localmaxxing.py) · `contrib/vllm_int8_xpu/`
 
 ---

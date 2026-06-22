@@ -2835,3 +2835,23 @@ world_size=2, Triton fused_moe_kernel (E=256,N=256, int8), gen "The capital of F
 (+617% on int4 MoE) + tuned E=256,N=256-int8 MoE config are the open perf levers. The Q6/Q7 int8-MoE SERVE
 datapoint is finally REAL. (Also: Unraid host has no python3 -> serve scripts must not parse JSON with it;
 use --served-model-name. Pruned ~22GB docker build cache earlier; 122G free.)
+
+### 2026-06-22 -- [MTP M0 PASS] MTP wiring sanity gate GREEN on v0230 (no patch, no 0.14.x)
+Ran MTP_TODO M0: serve Qwen3.6-27B (Lorbus W4A16 int4-AutoRound) on `vllm-xpu-env:v0230` + PIECEWISE graph +
+`--speculative-config '{"method":"mtp","num_speculative_tokens":3}'` (script `m0_mtp_gate.sh`, wrapped in ONE gpu-run
+lease serve+probe+stop). Chose W4A16-Lorbus as the gate vehicle (the most-proven v0230+GDN serve AND the exact Lorbus
+45.2 t/s precedent) to isolate MTP-wiring from the W4A8 :int8g/KERNEL_SO/prepack confounders.
+RESULT = **PASS**. The central question ("does v0230 load the MTP head, draft, and NOT crash on the GDN + spec-mask
+path?") is YES, on STOCK v0230 with NO mtp_patch and NO 0.14.x kernels wheel:
+- `Resolved architecture: Qwen3_5MTP`; `SpeculativeConfig(method='mtp', num_spec_tokens=3)` (plain `mtp` resolves fine --
+  no need for `qwen3_5_mtp`). `quantization=inc`.
+- `Loading drafter model...` -> `Detected MTP model. Sharing target model embedding + lm_head weights with the draft model.`
+- PIECEWISE capture (sizes [1,2,4,8]) finished in 5s (2.37 GiB); `Application startup complete`; HEALTHY :18080.
+- Coherent greedy gen (Fibonacci w/ docstring). `rejection_greedy_sample_kernel` Triton-JIT'd => the spec verify path ran.
+- Model load 16.97 GiB / 58s. Lease held 293s total (~5 min real GPU), released clean.
+KEY confirmation for M1: `splitting_ops` INCLUDES `vllm::gdn_attention_core_xpu` -> under PIECEWISE the GDN op is SPLIT
+OUT of the captured graph (runs EAGER in the verify pass). This is exactly the codex/repo diagnosis of why PIECEWISE+MTP
+is net-negative (-19%): the verify pass runs attention + GDN eager x(K+1). So M0 unblocks M1-M5, and the M1 frontier is
+NOT "re-measure PIECEWISE" (known -19%) but "get attention+GDN INTO the captured graph" via `--attention-backend
+TRITON_ATTN` -> FULL capture (host serve script's ATTN knob; vLLM PR #34482). Warnings seen (for M2): spec>1 "runs MTP
+layer multiple times -> lower acceptance"; `max_num_scheduled_tokens=2048` suboptimal (raise max_num_batched_tokens).

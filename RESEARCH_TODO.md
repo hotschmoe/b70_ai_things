@@ -1,7 +1,15 @@
 # RESEARCH_TODO.md -- W8A8-INT8 is the main path; next research tracks
 
-**Created:** 2026-06-20
+**Created:** 2026-06-20 - **Status-synced:** 2026-06-22 (two-agent codebase+git audit; see banner)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
+
+> ### [STATUS SYNC 2026-06-22] -- audited every track vs code/git/JOURNAL. Net picture:
+> - **Track 4a DONE** -- Quark W8A8-INT8 35B-A3B SERVES on v0230 TP=2 (commit dc740cc). Quark is a valid producer; dispatches fine.
+> - **Track 5 REFRAMED (serving SOLVED, not a build blocker)** -- the int8 MoE serves TODAY via vLLM 0.23 Triton `fused_moe` (256 int8 experts) on v0230; building our own fused-expert kernel is now a *research/port* goal, low priority. AND commit 15918cc proved a TRUE int8 LINEAR kernel is **NO speed win on the MoE** (experts already int8; linear is the minority path) -- correctness+memory only. So Track 1's "int8 GEMM = decode speedup" premise is NEGATIVE for MoE.
+> - **Track 2a DONE** -- selective SmoothQuant shipped in `scripts/49` (QUANTS Q0); accuracy delta still pending (Q3/Q5 gsm8k TBD).
+> - **Track 1d PARTIAL** -- PIECEWISE capture DONE (+16.7%, commit 910182c); **FULL blocked** on stock v0230 (SYCL-Graph `work_group_scratch_memory`, commit a5645b2). FULL/`TRITON_ATTN` is the open MTP-positive lever.
+> - **Track 1a/1b/1c/1e/1f, 2b-2e, 3c/3e NOT-STARTED**; **3a/3b/3d, 4b, 7b PARTIAL** (14B W8A8-AutoRound validated, accuracy numbers pending); **7a SIDESTEPPED** (27B int4-AutoRound serves, dodges the 4304-dim XPUwNa16 wall); **Track 8 correctly DEFERRED**; **Track 9 DEFERRED** (Ray bypass proven, CUDA-graph timing port pending).
+> - **Section 1.1 numbers VERIFIED** vs SUMMARY.md (w8a8-gptq 0.921/0.890, w4a16-gptq 0.872/0.848) -- no change.
 **Authoritative siblings (do NOT duplicate their content here):**
 - [`MTP_TODO.md`](MTP_TODO.md) -- owns ALL MTP / speculative-decoding planning (the ~3-4x decode lever).
 - [`docs/literature/07_w8a8_int8_recovery.md`](docs/literature/07_w8a8_int8_recovery.md) -- owns the W8A8 accuracy-recovery survey (SmoothQuant, down_proj, rotation-skip, DeltaNet, citations).
@@ -84,12 +92,16 @@ The decode gap to FP8 is the only weak spot and it is **kernel-bound** (M=1 oneD
 not accuracy-bound. All of this is GPU-touch -> **gate behind `scripts/gpu-run`** (other agent is on the card now).
 
 - [ ] **1a. M=1 / decode GEMV fast path** for `int8_gemm_w8a8` -- the single-row path is the remaining 22.6-vs-29
-      gap (kernel doc 02 "make-it-faster"). Highest single item.
+      gap (kernel doc 02 "make-it-faster"). NOT-STARTED. **Re-prioritized DOWN:** W8A8 decode is BW-bound at large-N
+      and overhead-bound at small-N; and commit 15918cc showed int8 LINEAR gives no MoE speedup. Only a dense-W8A8 lever.
 - [ ] **1b. Vectorize the quant K-loop** in `dynamic_per_token_int8_quant` -- cut per-token activation-quant overhead.
 - [ ] **1c. Fuse scale application** where possible (per-token act scale x per-channel weight scale into the epilogue).
-- [ ] **1d. PIECEWISE -> FULL graph capture.** PIECEWISE already gave +16.7% (~23 -> 27.2 t/s, image `:int8g`).
-      FULL is blocked by Intel SYCL-Graph `work_group_scratch_memory` (via flash-attn); `torch.xpu.XPUGraph` now
-      exists upstream (PyTorch 2.11) but vLLM-XPU hasn't wired it. FULL is also the unblock for spec-decode/MTP.
+- [~] **1d. PIECEWISE -> FULL graph capture.** PIECEWISE DONE (+16.7%, ~23 -> 27.2 t/s, commit 910182c; warmup-spoof
+      fixes PIECEWISE c>1 on stock v0230). **FULL still BLOCKED** by Intel SYCL-Graph `work_group_scratch_memory` (via
+      flash-attn; commit a5645b2). Open path: `--attention-backend TRITON_ATTN` (vLLM PR #34482) routes attention off
+      flash-attn -> may unblock FULL capture; `torch.xpu.XPUGraph` exists upstream (PyTorch 2.11) but vLLM-XPU hasn't
+      wired it. **FULL/TRITON_ATTN is the single open lever for MTP-positive (codex+repo: PIECEWISE+MTP = -19% because
+      attn + `gdn_attention_core_xpu` stay eager during verify). This is the MTP M1 frontier.**
 - [ ] **1e. Layer-timing traces** -- identify any op NOT landing on the int8 fast path (dequant-to-bf16 leaks).
 - [ ] **1f. Upstream (parked):** PR1 -> vllm-xpu-kernels (int8_gemm_w8a8 + s8_s8 joint dtype + fused quant);
       PR2 -> vllm (`XPUInt8ScaledMMLinearKernel` + registry + `.get()` hardening). RFC #37979 omits INT8 W8A8 for XPU.
@@ -106,8 +118,9 @@ banked +2.7 agreement (0.881 -> 0.908). The full recipe + citations live in **do
 has the exact `scripts/49` knobs, and the method-coverage matrix is in [`docs/quant_methods.md`](docs/quant_methods.md)
 Table C. Do NOT re-derive them here -- just execute, newest-result-to-JOURNAL:
 
-- [ ] **2a. Selective SmoothQuant** on the 16 full-attn layers + MLPs, skip DeltaNet `linear_attn` (doc 07 S3.1).
-      Measure agreement lift over the GPTQ-only 0.908. This is the activation-fidelity lever -- top accuracy item.
+- [x] **2a. Selective SmoothQuant** -- SHIPPED in `scripts/49` (`SMOOTHQUANT=selective`, QUANTS Q0; builds per-layer
+      Playbook-B maps: 16 full-attn + 64 MLP, skip DeltaNet `linear_attn`). Used in Q3/Q5 27B/Qwable W4A8. **Open: the
+      accuracy lift measurement** -- run agreement/gsm8k for the selective-SQ quants vs GPTQ-only 0.908 (Q3/Q5 gsm8k TBD).
 - [ ] **2b. `down_proj`-at-W8A16 carve-out** (early+late layers) via an ignore-list knob (doc 07 S3.3, the GLU/Super-Weight site).
 - [ ] **2c. KL-sensitivity layer ranking** (arXiv 2604.13440, forward-only) to replace the hand-curated ignore-list (doc 07 S5).
 - [ ] **2d. Add EAR / KL-divergence to the eval harness** (doc 07 S5) -- catches what top-1 agreement misses.
@@ -157,7 +170,11 @@ Quark checkpoints via `--quantization quark`. For us the only open question is *
 Quark-exported W8A8-INT8 checkpoint dispatch into OUR oneDNN int8 kernel, or fall back to bf16? Doc 07 S6 already
 decided we do NOT migrate runtimes; this is a one-shot importer test, not a pipeline change.
 
-- [ ] **4a. Importer test.** Serve a community Quark W8A8-INT8 checkpoint and grep the dispatch:
+- [x] **4a. Importer test -- DONE 2026-06-22 (commit dc740cc/76).** Qwen3.6-35B-A3B Quark W8A8-INT8 SERVES on v0230
+      TP=2 (load 17.54 GiB/card, coherent gen). Dispatch: 256 experts -> Triton `fused_moe` (TRUE int8); int8 LINEAR
+      layers (`linear_attn.*`, `mlp.shared_expert.*`) -> a one-file `quark.py` dequant-to-bf16 graft (XPU has no int8
+      scaled-mm linear kernel). **Verdict: Quark is a valid drop-in PRODUCER for serving on B70.** Original recipe below.
+- [ ] **(orig 4a importer recipe, kept for reference):** Serve a community Quark W8A8-INT8 checkpoint and grep the dispatch:
       ```
       scripts/gpu-run vllm serve /path/to/quark-w8a8-int8 \
         --quantization quark --dtype auto --trust-remote-code --max-model-len 32768
@@ -176,19 +193,23 @@ serving-kernel + evals, not fighting Quark's quant environment.
 
 ---
 
-## Track 5 -- Fused packed-MoE expert kernel (35B-A3B frontier)  [ELEVATED]
+## Track 5 -- Fused packed-MoE expert kernel (35B-A3B frontier)  [REFRAMED 2026-06-22: SERVING SOLVED]
 
-The 35B-A3B int4 OOMs at weight-load (21.5 GB on disk) because **vLLM-XPU has no fused int4 MoE kernel** -> the 256
-experts dequantize toward bf16 (~70 GB) -> `OUT_OF_DEVICE_MEMORY`. Dense W8A8 robustness (Tracks 1-2) does not fix
-this; the MoE path needs its own kernel. This is the real unlock for Qwen3.6-35B-A3B on 2-4 B70s.
+> **The "MoE-on-XPU gap" is CLOSED for SERVING.** As of 2026-06-22 the 35B-A3B int8 MoE SERVES on `vllm-xpu-env:v0230`
+> (vLLM 0.23.0): the 256 int8 experts route through the native Triton `fused_moe_kernel` on XPU (same path our int4 35B
+> MoE uses), via `QuarkW8A8Int8MoEMethod`. Both Quark W8A8 (commit dc740cc) and int4-AutoRound (56.8 t/s captured) work.
+> So a hand-written packed-expert kernel is **no longer a serving blocker** -- it's a *research/port* goal (study/port the
+> int8-MoE GEMM into `contrib/vllm_int8_xpu` for ownership + perf tuning). **AND** commit 15918cc measured that swapping
+> the minority int8 LINEAR layers to a true XMX int8 kernel gave NO MoE speedup (experts already int8) -- so the only real
+> MoE perf levers are (a) FULL/PIECEWISE graph capture and (b) a tuned `E=256,N=256` Triton MoE config (RESEARCH_TODO Track 9).
 
-- [ ] **5a. Fused packed-expert GEMM, W8A8 experts first** -- keep experts packed through the MoE path (no per-expert dequant).
-- [ ] **5b. int4 experts second** (the harder, smaller-footprint case).
-- [ ] **5c. Keep router/gate high-precision** if needed for routing stability.
-- [ ] **5d. Optimize top-k expert dispatch layout** (gather/scatter is the XPU pain point).
+The original (now-stale) framing: the 35B-A3B int4 OOMs at weight-load because vLLM-XPU lacked a fused int4 MoE kernel ->
+256 experts dequantize toward bf16 -> OOM. **That premise is obsolete** -- the Triton fused-MoE path handles both int4 and int8.
 
-This is a Phase-after-dense item -- do not start until Track 1's dense W8A8 GEMM/GEMV is robust. Captured here so the
-"MoE-on-XPU gap" from SUMMARY.md has an owner.
+- [ ] **5a. (RESEARCH, low pri) Port the int8 fused-expert GEMM to `contrib/vllm_int8_xpu`** -- ownership + a tuning surface; NOT needed to serve.
+- [ ] **5b. int4 experts** -- already served via Triton fused_moe (int4-AutoRound 56.8 t/s); port only for ownership.
+- [x] **5c. Router/gate high-precision** -- already done (router/gate kept bf16 in the ignore-list; quants serve coherently).
+- [ ] **5d. Optimize top-k expert dispatch layout** -- fold into Track 9 (tuned Triton MoE config), not a from-scratch kernel.
 
 ---
 
@@ -205,8 +226,10 @@ Owned entirely by **[`MTP_TODO.md`](MTP_TODO.md)**. Do not plan MTP here. One-li
 Keep as the "fits on one card" path for the 27B; it is NOT the throughput story (no int systolic).
 
 - [x] GPTQ@128 W4A16 14B HumanEval+ -- DONE (0.872/0.848, 06-20).
-- [ ] **7a. Fix the 27B W4A16 serving wall:** `XPUwNa16` needs input dims divisible by 32; the 27B gated-attention
-      4304 dim breaks it. Options: 32-pad / ignore-list the layer / kernel fix. Verify dims serve before counting on this scheme.
+- [~] **7a. 27B W4A16 serving wall -- SIDESTEPPED, not fixed.** `XPUwNa16` needs input dims /32; the 27B gated-attn 4304
+      dim breaks the *compressed-tensors* W4A16. **Operationally dodged:** the Lorbus int4-AutoRound 27B serves via
+      `quantization=inc` (30.8 t/s captured, the daily driver), avoiding the broken path. The compressed-tensors-W4A16
+      kernel fix (32-pad / ignore-list / kernel) is still open but **low value** since AutoRound int4 is the better serve anyway.
 - [ ] **7b. AutoRound-W4A16 vs GPTQ-W4A16 on the 27B** (folds into Track 3a) -- pick the capacity fallback on measured code, not gsm8k.
 
 ---
@@ -256,14 +279,19 @@ Deploy: drop the resulting JSON into the image's `model_executor/layers/fused_mo
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-1. **W8A8 kernel sprint** (Track 1) -- M=1 decode GEMV, quant K-loop, PIECEWISE->FULL. Behind `scripts/gpu-run`.
-2. **W8A8 accuracy sprint** (Track 2) -- selective SmoothQuant + down_proj carve-out + KL ranking; HumanEval+ every run.
-3. **AutoRound compare** (Track 3) -- AutoRound-W4A16 vs GPTQ-W4A16 (3a) first; the int8 confirm (3b) is one run.
-4. **Quark + AutoRound importer test** (Track 4) -- one serve + grep; decides if they're drop-in producers.
-5. **MoE fused-expert kernel** (Track 5) -- only after dense W8A8 (Track 1) is robust.
+1. **MTP FULL-capture frontier** (Track 1d / MTP_TODO) -- the highest decode lever now. PIECEWISE+MTP = -19% (attn+GDN
+   stay eager during verify); the unlock is `--attention-backend TRITON_ATTN` -> FULL capture so the verify pass is captured.
+   This is MTP_TODO M1; everything else is second-order until it lands.
+2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for
+   Q3/Q5 vs GPTQ-only). down_proj carve-out + KL ranking are lower-pri follow-ons. HumanEval+ every run.
+3. **AutoRound accuracy confirms** (Track 3) -- 14B W8A8-AutoRound is validated/serving; run its HumanEval+ vs GPTQ (3b, one run);
+   AutoRound-W4A16-vs-GPTQ on 27B (3a/7b) only if the AutoRound 0.927 isn't already decisive.
+4. ~~Quark + AutoRound importer test (Track 4)~~ -- **DONE** (4a Quark serves; 4b AutoRound dispatch validated on 14B).
+5. **MoE: tuned Triton `E=256,N=256` config + graph capture** (Track 9 + capture), NOT a from-scratch kernel (Track 5 serving is solved).
 6. **Port the MoE-config tuner to XPU** (Track 9) -- deferred; Ray bypass proven, CUDA-graph timing still needs porting.
 
-MTP runs on its own plan (MTP_TODO.md). W4A8 runs on the other agent's plan (`w4a8/`). Rotation stays parked.
+MTP runs on its own plan (MTP_TODO.md) -- but item 1 above IS the current MTP bottleneck, so it leads here too.
+W4A8 runs on the other agent's plan (`w4a8/`). Rotation stays parked.
 
 **GPU discipline:** every serve/bench/perf_probe/on-GPU-quant in these tracks goes through `scripts/gpu-run`
 (one B70, the W4A8 agent is currently on it). Editing/compiling stay parallel; only the GPU touch is serialized.
