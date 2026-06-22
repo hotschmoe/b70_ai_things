@@ -308,8 +308,13 @@ feature is not yet available for use with the SYCL Graph extension` (confirms SE
 scratch"). The community 102 t/s run used FULL_DECODE_ONLY via a PATCHED/custom image -> that is the route (build our own
 image). So on stock v0230: PIECEWISE single-stream is the captured win; the PIECEWISE c>1 recompile-stall (new prefill/chunk
 shape -> torch.compile mid-serve) remains -- mitigate with shape warmup / fixed compile ranges, or a patched image.
-**Open:** the tuned MoE config (Ray-bypass needed: benchmark_moe.py --tune does ray.init();
-benchmark_moe.py --dtype auto = int8-readable filename) + the true-int8 linear kernel (drop the dequant; contrib/vllm_int8_xpu).
+**[2026-06-22] Tuned MoE config = IMPRACTICAL via benchmark_moe.py on XPU.** Two blockers: (1) `--tune` does
+`ray.init()` -> `available_resources()["GPU"]` KeyError on XPU (bypassed with a sitecustomize `ray.init(num_gpus=1)`);
+(2) the benchmark worker is CUDA-centric -- `device="cuda"` + CUDA-graph timing (`torch.cuda.CUDAGraph()`,
+`torch.cuda.graph`) -> `AssertionError: Torch not compiled with CUDA enabled`. And it estimated ~1.5 h PER batch
+size (~6 h for 1,2,4,8). Not worth it for an fp16-PROXY config (`--dtype auto` -> the no-dtype filename int8 reads).
+Future option: patch device->xpu + replace the CUDA-graph timing with a synchronize loop, or hand-write a config.
+**Open (the real lever):** true-int8 linear kernel that hits the Intel XMX/DPAS int8 fastpath (drop the dequant;
 Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe), contrib/llm_scaler_quark_int8_moe, rdy_to_serve/.
 (Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
 
