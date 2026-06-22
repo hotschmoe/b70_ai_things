@@ -39,6 +39,19 @@ SERVE_ENV=(
   TOOLPARSER=qwen3_coder                             # Qwen3.6 emits XML <function=..> (NOT hermes JSON)
   REASONPARSER=qwen3                                 # split <think> reasoning into reasoning_content
 )
+# OPT-IN MTP (multi-token prediction / speculative decode). DD_MTP=1 ./daily_driver_serve.sh start
+# -> spec=4 -> ~1.79x single-stream interactive decode (27B int4: ~30.8 -> ~55 t/s; MEASURED 2026-06-22 MTP
+# campaign, beats the 45.2 Lorbus precedent; Half-KV-free). TRADEOFF: MTP is a LOW-CONCURRENCY lever -- the
+# spec-verify runs the model x(1+spec) so it goes compute-bound as concurrency rises and can REDUCE aggregate
+# throughput past ~C8 (FINDINGS: 27B int4 per-stream decode drops past C8). Enable for INTERACTIVE use (1-few
+# users / Open WebUI / single coding agent); leave OFF for high-concurrency batch/agent fan-out. Default OFF.
+# (Passes MTPTOK=4 -- a quote-safe integer -- to 30_serve, which builds the spec-config JSON; passing the JSON
+# directly through the nested ssh/bash -c strips its quotes. COMPILESZ= omits compile_sizes (spec-decode rejects [1]).)
+DD_MTP="${DD_MTP:-0}"
+if [ "$DD_MTP" = 1 ]; then
+  SERVE_ENV+=( MTPTOK=4 COMPILESZ= )
+  DD_NAME="$DD_NAME + MTP spec=4 (~1.79x single-stream)"
+fi
 # =============================================================================================
 
 HOST_IP=192.168.10.5

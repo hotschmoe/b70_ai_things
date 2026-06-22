@@ -165,6 +165,16 @@ ssh root@192.168.10.5 'cd /mnt/vm_8tb/b70 && ./gpu-run bash 64_dataparallel_2rep
 #   DEVICE=1 PORT=18092 NAME=vllm_dp1 ... bash 30_serve_w4a8_graph.sh
 # then an nginx least_conn proxy (dp_nginx.conf) on :18080 across 127.0.0.1:18091/18092.
 ```
+**[2026-06-22] OPT-IN MTP on the daily driver (~1.79x single-stream):** the daily driver serves the exact 27B int4
+W4A16 config the MTP campaign measured. Start it with **`DD_MTP=1 ./daily_driver_serve.sh start`** to enable MTP
+spec=4 per replica -> single-stream decode **~30.8 -> ~55 t/s (1.79x)**, accept_len ~3.25, Half-KV-free (MTP_TODO /
+JOURNAL 2026-06-22). **TRADEOFF (decide by workload):** MTP is a LOW-CONCURRENCY lever -- the spec-verify runs the
+model x(1+spec), so it goes compute-bound as concurrency rises and can REDUCE aggregate throughput past ~C8. Enable
+for INTERACTIVE use (1-few users / Open WebUI / a single coding agent); leave OFF (default) for high-concurrency
+batch/agent fan-out. Mechanism: `DD_MTP=1` appends `MTPTOK=4 COMPILESZ=` to the serve env; the host `30_serve` builds
+the spec-config JSON from the integer (passing the JSON directly through the nested ssh/bash -c strips its quotes).
+FULL graph capture would lift this further but is blocked on v0230 (gdn_attention spec op can't run in a captured graph
+-- MTP_TODO). MTP is a DENSE-model lever: do NOT enable it for the 35B-A3B MoE daily driver (+3% flat, MoE headline is capture).
 
 ## RECIPE: dual-B70 tensor-parallel (TP=2) / pipeline (PP=2)  [for models too big for one card]
 Two B70s can shard a model across both cards. Multi-GPU model-parallel is a CAPACITY play, not a single-stream
