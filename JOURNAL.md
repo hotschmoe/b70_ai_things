@@ -2790,3 +2790,30 @@ Payoff: the `configs` view dumps the EXACT reproducible serve commands behind CO
   un-gated XPU-graph + capture-safe all-reduce frontier (COMMUNITY_CONFIGS section B).
 Documented in docs/COMMUNITY_CONFIGS.md (new "Live feed" section). Writes (submitting OUR numbers) would need
 LOCALMAXXING_API_KEY=bhk_... from the dashboard; not needed for these read-only pulls.
+
+### 2026-06-22 -- [progress+BLOCKED] Quark-W8A8-INT8 35B on 2x B70 TP=2: 5 blockers cleared, 1 real kernel gap
+Ran steveseguin's exact Quark W8A8 INT8 recipe (ckpt nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8) at TP=2 on
+intel/llm-scaler-vllm:0.14.0-b8.3.1 (scripts/74 rewritten + contrib/llm_scaler_quark_int8_moe). The earlier
+JOURNAL "TP=2 collective init or OOM" guess was WRONG. The ckpt is GLOBAL int8 (W int8 per-channel symmetric,
+IN int8 per-channel DYNAMIC; only vision excluded). Fixed FIVE blockers in sequence (full chain: kernel/20 sec 8
++ contrib README):
+1. SYCL "No device of requested type available" in the model-inspect subprocess <- steve's env double-pins
+   ONEAPI_DEVICE_SELECTOR + ZE_AFFINITY_MASK (his 4-card vals). Fix: expose both cards, no pin.
+2. oneCCL zeMemOpenIpcHandle ZE_RESULT_ERROR_INVALID_ARGUMENT (TP=2 collective) <- steve's box CCL env wrong for
+   our cards. Fix: our #41663 Battlemage env (CCL_TOPO_P2P_ACCESS=0, CCL_ZE_IPC_EXCHANGE=pidfd,
+   CCL_ENABLE_SYCL_KERNELS=0, SYCL_UR_USE_LEVEL_ZERO_V2=0).
+3. "Unsupported FusedMoe scheme" <- image quark_moe.py only wires fp8 MoE. Fix: contrib quark_moe.py adds
+   QuarkW8A8Int8MoEMethod (mirrors the image's CompressedTensorsW8A8Int8MoEMethod) + int8 dispatch branch.
+4. "No quark compatible scheme was found" (LINEAR) <- image has NO XPU int8 scaled-mm kernel (_POSSIBLE_KERNELS
+   = CPU/CUDA/ROCM only). Fix: contrib quark.py adds QuarkW8A8Int8DequantXPU (int8->bf16 dequant GEMM; W8A16-eq)
+   for the minority linear layers (linear_attn.*, mlp.shared_expert.*); experts stay true int8.
+5. "Inference tensors do not track version counter" (torch.compile) <- dequant weight was an inference tensor.
+   Fix: dequant under inference_mode(False) + --enforce-eager (B70 TP=2 capture blocked anyway).
+=> Model now FULLY CONSTRUCTS, TP=2 collective up (backend=xccl world_size=2), all 7 shards load. Both patches valid.
+BLOCKED at #6 (real image gap, NOT patchable on 0.14.1): first eager MoE forward ->
+"AttributeError: '_OpNamespace' '_moe_C' object has no attribute 'topk_softmax'". vllm._moe_C DOES NOT EXIST in
+this image (the compiled MoE op suite -- routing topk_softmax AND int8 fused-expert GEMMs -- was not built),
+vllm_topk_softmax has no fallback, VLLM_XPU_USE_LLM_SCALER_MOE not honored. steve's 99.77 t/s used vLLM
+0.20.2rc1.dev2 (newer build WITH XPU MoE kernels). FINISH PATH: pull a newer intel/llm-scaler-vllm tag (~0.20.x)
+with _moe_C, then re-run scripts/74 (IMG=). Patches + recipe captured for that. Lease released; 0.14.1 verdict: int8
+MoE EXECUTE is unsupported on this image (only the dispatch gaps were ours to fix).
