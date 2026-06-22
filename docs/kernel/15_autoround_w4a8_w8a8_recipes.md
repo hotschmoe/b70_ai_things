@@ -1,5 +1,16 @@
 # 15 -- AutoRound W4A8 / W8A8 recipes for Qwen3.6-27B + the 35B-A3B MoE verdict
 
+> **[!] UPDATE 2026-06-22 -- AutoRound DOES quantize the qwen3_5 VLMs (the "MLLM-calib blocked" wall is BEATEN).**
+> Q2/Q4 thought AutoRound was blocked on the VLM and fell back to GPTQ. Real cause: AutoRound 0.13.1 auto-detects the
+> qwen3_5 VLM, forces MLLM mode, and `quantize()` asserts `processor should not be None` (`quant_nontext_module=False`
+> alone is insufficient). **Working recipe (scripts/84_q8_qwable_int4.py, smoke-validated end-to-end):**
+> `proc = AutoProcessor.from_pretrained(SRC, trust_remote_code=True)`;
+> `AutoRoundMLLM(model, tokenizer, processor=proc, quant_nontext_module=False, dataset=<list[str] text>, scheme="W4A16"
+> (or "W8A8"), layer_config={<vision/mtp/linear_attn/lm_head> -> {"bits":16}}, device_map="auto"/max_memory)`;
+> `ar.quantize(); ar.save_quantized(output_dir=OUT, format="auto_round")` (inc-servable; NOT llm_compressor). Build
+> `layer_config` by enumerating nn.Linear names matching `lm_head|visual|vision_tower|mtp|linear_attn`. This unblocks
+> Q8 (W4A16) AND retroactively Q2/Q4 (W8A8-AutoRound) + RESEARCH_TODO Track 3. (auto_round 0.13.1 on vllm-xpu-env:v0230.)
+
 Date: 2026-06-20. Author: quant-eng (read-only investigation; NO GPU touched -- only
 non-GPU `docker run` package inspection + upstream WebSearch/WebFetch).
 Scope: the user wants AutoRound (better accuracy than RTN) for the 27B in BOTH W4A8 and

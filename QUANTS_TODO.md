@@ -127,7 +127,15 @@ Legend: [ ] todo - [~] running - [x] done.
 - **Out:** `models/Qwen3.6-35B-A3B-W4A8-sqgptq`. llmcompressor MoE GPTQ + the router-aware selective-SQ mapping (Q0).
 - Serving gated on the int8 MoE kernel. Est ~3-6 h.
 
-### [ ] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   [!] DO FIRST of the remaining -- the ONLY one-card quality serve for Qwable
+### [~] Q8 -- Qwable-5-27B-Coder  W4A16  (int4 AutoRound)   RUNNING 2026-06-22 (MLLM-dodge SOLVED; smoke validated; full run + Q5 prepack launched)
+> **[!] THE MLLM-CALIB BLOCK IS BEATEN (2026-06-22).** The Q2/Q4 "AutoRound MLLM-calib blocked on VLM" was a missing-API
+> problem, NOT a real blocker. AutoRound 0.13.1 auto-detects the qwen3_5 VLM, forces MLLM mode, and `quantize()` asserts
+> `processor should not be None` (`quant_nontext_module=False` alone does NOT dodge it). **FIX (scripts/84, smoke-proven):**
+> load `AutoProcessor.from_pretrained(SRC)` + construct `AutoRoundMLLM(model, tokenizer, processor=proc,
+> quant_nontext_module=False, dataset=<text list>, scheme="W4A16", layer_config={vision/mtp/linear_attn/lm_head -> bits:16})`
+> + `quantize()` + `save_quantized(format="auto_round")` (the inc-servable path). Smoke quantized all 64 layers (linear_attn
+> skipped, save OK, vision+mtp copied bf16). **This UNBLOCKS Q2/Q4 W8A8-AutoRound (which fell back to GPTQ) + RESEARCH_TODO
+> Track 3** -- same recipe with scheme=W8A8. Method bible: docs/kernel/15.
 - **Why:** Q4 (W8A8, 33G) + Q5 (W4A8, 33G) both need TP=2 / hit the W4A8 serve blockers -> there is NO single-card quality serve for
   Qwable. The base 27B (`Lorbus int4-AutoRound`) and 35B (`Intel int4-AutoRound`) each have a W4A16 int4-AutoRound that serves great on
   ONE card (27B ~30.8 t/s captured + GDN); Qwable has none. HF has only Qwable bf16 / NVFP4 / GGUF -- **none B70-servable** (no native

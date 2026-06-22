@@ -2941,3 +2941,22 @@ The whole MTP_TODO queue is closed. Net production guidance:
 The old "single-card MTP = -19%" was STALE (pre warmup-spoof-PIECEWISE-fix 910182c). The campaign refuted it and delivered
 the first real single-card MTP multiplier on this stack. PRODUCTION ACTION: enable MTP spec=4 on the daily driver (the
 27B int4 W4A16 DP replicas) for +79% interactive single-stream. Scripts: 77-83. Logging table: MTP_TODO.
+
+### 2026-06-22 -- [QUANTS Q8 BREAKTHROUGH] AutoRound int4 on the qwen3_5 VLM -- the MLLM-calib block is BEATEN
+The Q2/Q4 "AutoRound MLLM-calib blocked on VLM -> fell back to GPTQ" wall is NOT a real blocker -- it was a missing-API
+problem. SOLVED (scripts/84_q8_qwable_int4.py, smoke fully validated, full run + Q5 prepack now launched):
+- **Root cause:** AutoRound 0.13.1 auto-detects the qwen3_5 VLM and forces MLLM mode (`entry.py L587: Using MLLM mode`),
+  then `quantize()` asserts `processor should not be None`. `quant_nontext_module=False` ALONE does NOT dodge it.
+- **The dodge (works):** load `AutoProcessor.from_pretrained(SRC)`, construct via `AutoRoundMLLM(model, tokenizer,
+  processor=proc, quant_nontext_module=False, dataset=<text list>, scheme="W4A16", layer_config={241 modules -> bits:16})`,
+  then `quantize()` + `save_quantized(format="auto_round")` (the inc-servable path, NOT llm_compressor). `AutoRoundMLLM`
+  is a deprecated alias forwarding to AutoRound; MLLM kwargs (processor, quant_nontext_module) pass via **kwargs (codex).
+- **Smoke (iters=2) PROVED end-to-end:** quantizes all 64 layers (DeltaNet linear_attn correctly SKIPPED -> bf16; small
+  int4 losses 0.0003->0.007), `save_quantized format=auto_round` -> `RESULT_Q8: DONE`, 6 int4 shards + quantization_config
+  + the 348 vision/mtp tensors copied verbatim (bf16). Minor warning: Qwable tokenizer wants `fix_mistral_regex=True`
+  (calib-tokenization nicety, non-fatal).
+- **LAUNCHED:** full Q8 run (iters=200 nsamples=128, ~4-8h, GPU lease) + Q5 prepack (Qwable W4A8 sqgptq 33G->~25G int4-pack,
+  CPU container NO lease, parallel) -- scripts/84,84b + q5_prepack.sh.
+**Bigger implication:** this MLLM-dodge means AutoRound CAN quantize the qwen3_5 VLMs (27B base + Qwable), so RESEARCH_TODO
+Track 3 (AutoRound vs GPTQ on the 27B/Qwable) and the QUANTS Q2/Q4 W8A8-AutoRound (which fell back to GPTQ) are now
+UNBLOCKED -- re-runnable with the same processor+AutoRoundMLLM recipe. Documented in QUANTS_TODO + docs/kernel/15.
