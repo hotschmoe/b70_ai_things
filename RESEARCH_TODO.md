@@ -152,7 +152,11 @@ Experiments (weight-lever comparison; all CPU/XPU quant, then serve behind `scri
 
 - [ ] **3a. AutoRound-W4A16 vs GPTQ-W4A16 (14B + 27B).** Does the int4-leader recipe beat our GPTQ fallback
       (0.848)? Highest-value AutoRound test -- W4A16 is exactly the capacity fallback (Track 7) and int4 is AutoRound's home turf.
-- [ ] **3b. AutoRound-W8A8 (14B) vs GPTQ-W8A8 0.890.** Low priority -- expected ~tie (int8 weights). One run to confirm, then move on.
+- [x] **3b. AutoRound-W8A8 (14B) vs GPTQ-W8A8 -- DONE 2026-06-23. GPTQ slightly WINS; AutoRound does NOT supersede.**
+      HumanEval+ (164, sandboxed, true W8A8 via :int8): **w8a8-autoround 0.909/0.872 vs w8a8-gptq 0.921/0.890** -> GPTQ
+      +1.2 base / +1.8 plus (near CI, but consistent direction; matches the field: weight-rounding barely matters at int8,
+      Hessian-OBQ GPTQ edges optimization-AutoRound). AutoRound W8A8 is SOUND + coherent (int8 weights survive even XPU
+      calib, unlike the int4 Q8). So "autoround supersedes gptq at W8A8" is REFUTED -- they ~tie, GPTQ marginally ahead.
 - [ ] **3c. AutoRound + selective-SmoothQuant interplay.** AutoRound is weight-side; SmoothQuant is activation-side
       -> orthogonal, should compose. Test AutoRound weights + SmoothQuant acts for W8A8/W4A8.
 - [ ] **3d. Export-format check:** confirm AutoRound's compressed-tensors W8A8/W4A8 export loads into OUR

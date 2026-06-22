@@ -3028,3 +3028,17 @@ verdict -> **Q8 is INVALID (broken weights). My earlier "VALIDATED 29.13 t/s" wa
   run a real eval (the eval CAUGHT what the bench missed); (2) do NOT run AutoRound calibration on the B70 -- quantize on
   CPU/CUDA.** Corrected: QUANTS_TODO Q8 ([!] BROKEN), RESEARCH_TODO Track 3e ([x] confirmed). Serve stopped, lease freed.
   UNAFFECTED: the MTP campaign (1.79x) + FULL-capture verdict used the WORKING Lorbus int4 -> those results STAND.
+
+== 2026-06-23 :: W8A8 AutoRound vs GPTQ (Track 3b) -- GPTQ slightly WINS; "autoround supersedes" REFUTED ==
+config -> served Qwen3-14B-W8A8-autoround (compressed-tensors int-quantized) on vllm-xpu-env:int8 (TRUE W8A8:
+  "Selected XPUInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8"), enforce-eager, served-id verified, coherence
+  pre-checked (clean code). run_evals.py Tier-1 HumanEval+ 164, sandboxed (evalplus-sandbox:0.3.1).
+result -> **w8a8-autoround pass@1 = 0.909 base / 0.872 plus** vs **w8a8-gptq 0.921 / 0.890** (SUMMARY.md, the 06-20
+  measured winner). GPTQ ahead by +1.2 base / +1.8 plus (near HumanEval CI for n=164, but consistent direction).
+verdict -> GPTQ >= AutoRound at W8A8; AutoRound does NOT supersede GPTQ here. Matches the field (Track 3 / doc07 S3.4:
+  weight-rounding barely matters at int8; the gap is activations, not rounding -- so Hessian-OBQ GPTQ marginally edges
+  optimization-based AutoRound). AutoRound W8A8 is SOUND + coherent (int8 weights survive even XPU calib, unlike the int4
+  Q8 which broke -> int4 is the fragile case, int8 is forgiving). NOTE: we'd archived+deleted the gptq W8A8 checkpoint
+  (keeping autoround on the "supersedes" hypothesis); this eval shows gptq was marginally BETTER -- but the difference is
+  ~CI-noise, the measured gptq numbers persist in SUMMARY.md, and gptq is re-quantizable. Eval harness + sandbox: WORK.
+  GPU0 freed, lease released. (The v0230 dense-int8 capture test ran in parallel on GPU1.)
