@@ -313,6 +313,17 @@ measured sweep works at ALL concurrencies on STOCK v0230, no patched image: PIEC
 t/s = c1 20.04/25.85, c2 33.02/21.27, c4 45.73/17.46 -> **3.2-4.5x aggregate, ~4-5x decode vs eager**, ~46 agg @ c4
 (single-stream decode varies ~25-41 run-to-run). So FULL_DECODE_ONLY (patched image) is NOT needed for usable captured
 concurrency -- PIECEWISE+warmup suffices.
+**[2026-06-22] TRUE int8 linear kernel BUILT + works (task c).** `contrib/llm_scaler_quark_int8_moe/v0230/quark.py`
+registers `XPUInt8TritonScaledMMLinearKernel` into `_POSSIBLE_INT8_KERNELS[XPU]` (subclass of TritonInt8: cutlass
+weight-transpose + `triton_scaled_mm` whose `tl.dot` int8->int32 lowers to Intel **DPAS/XMX int8**); activations are
+quantized per-token in plain torch (XPU lacks `_C.scaled_int8_quant`). `B70_INT8_LINEAR=triton` (default) -> stock
+QuarkW8A8Int8 picks it ("Selected XPUInt8TritonScaledMMLinearKernel for QuarkW8A8Int8"); `=dequant` falls back.
+Result: serves + **generates coherently** (true W8A8 on the linear layers, experts already int8), and **load drops
+17.54 -> 16.88 GiB/card** (int8 weights stay int8, no bf16 blow-up). BUT EAGER perf is ~25% SLOWER than dequant
+(c1 3.36 vs 4.46 out t/s): the per-forward torch act-quant overhead on the MINORITY linear layers outweighs the int8
+GEMM win, while dequant's pre-dequantized bf16 F.linear is cheap. Captured int8-triton (act-quant fuses into the graph)
+is the meaningful comparison -- pending. So: c is a correctness+memory win; whether it's a SPEED win needs the captured
+number (and a real accuracy eval, since true W8A8 act-quant is lossier than the dequant's W8A16). Next: bake an image.
 **[2026-06-22] Tuned MoE config = IMPRACTICAL via benchmark_moe.py on XPU.** Two blockers: (1) `--tune` does
 `ray.init()` -> `available_resources()["GPU"]` KeyError on XPU (bypassed with a sitecustomize `ray.init(num_gpus=1)`);
 (2) the benchmark worker is CUDA-centric -- `device="cuda"` + CUDA-graph timing (`torch.cuda.CUDAGraph()`,

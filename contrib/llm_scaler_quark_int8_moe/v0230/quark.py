@@ -45,6 +45,57 @@ from vllm.model_executor.parameter import (
 )
 from vllm.model_executor.layers.quantization.utils import replace_parameter
 
+# b70 task c: register a TRUE int8 W8A8 linear kernel for XPU. v0230's _POSSIBLE_INT8_KERNELS
+# has no XPU entry, so QuarkW8A8Int8 KeyErrors on XPU. We subclass the existing TritonInt8 kernel
+# (cutlass weight-transpose + triton_scaled_mm, whose tl.dot int8->int32 lowers to Intel DPAS/XMX
+# int8) and only swap the activation quant: XPU lacks _C.scaled_int8_quant, so do a dynamic
+# per-token SYMMETRIC int8 quant in plain torch. Registered lazily (avoids import-time cycles);
+# on any failure the caller falls back to the bf16-dequant scheme. B70_INT8_LINEAR=dequant forces it.
+_B70_XPU_INT8_REGISTERED = False
+
+
+def _b70_register_xpu_int8_kernel():
+    global _B70_XPU_INT8_REGISTERED
+    if _B70_XPU_INT8_REGISTERED:
+        return
+    from vllm.model_executor.kernels.linear import _POSSIBLE_INT8_KERNELS
+    from vllm.model_executor.kernels.linear.scaled_mm.triton import (
+        TritonInt8ScaledMMLinearKernel,
+    )
+    from vllm.model_executor.layers.quantization.compressed_tensors.triton_scaled_mm import (
+        triton_scaled_mm,
+    )
+    from vllm.platforms import PlatformEnum
+
+    class XPUInt8TritonScaledMMLinearKernel(TritonInt8ScaledMMLinearKernel):
+        @classmethod
+        def is_supported(cls, compute_capability=None):
+            if not current_platform.is_xpu():
+                return False, "requires XPU."
+            return True, None
+
+        @classmethod
+        def can_implement(cls, c):
+            return True, None
+
+        def apply_weights(self, layer, x, bias=None):
+            w_q, w_s, i_s, i_zp, azp_adj = self._get_layer_params(layer)
+            # XPU has no _C.scaled_int8_quant -> dynamic per-token symmetric int8 quant in torch.
+            xc = x.contiguous()
+            amax = xc.abs().amax(dim=-1, keepdim=True).to(torch.float32).clamp(min=1e-12)
+            x_s = amax / 127.0
+            x_q = (xc.to(torch.float32) / x_s).round().clamp_(-128, 127).to(torch.int8)
+            return triton_scaled_mm(
+                x_q, w_q, scale_a=x_s, scale_b=w_s, out_dtype=x.dtype, bias=bias
+            )
+
+    lst = _POSSIBLE_INT8_KERNELS.setdefault(PlatformEnum.XPU, [])
+    if not any(k.__name__ == "XPUInt8TritonScaledMMLinearKernel" for k in lst):
+        lst.insert(0, XPUInt8TritonScaledMMLinearKernel)
+    _B70_XPU_INT8_REGISTERED = True
+    logger.info("b70: registered XPU int8 Triton scaled-mm kernel (DPAS int8 fastpath)")
+
+
 if TYPE_CHECKING:
     from vllm.model_executor.models.utils import WeightsMapper
 
@@ -695,10 +746,23 @@ class QuarkConfig(QuantizationConfig):
                 return QuarkW4A8_MXFP4_FP8(weight_config, input_config)
         elif self._is_dynamic_per_token_w8a8(weight_config, input_config):
             weight_qscheme = cast(str, weight_config.get("qscheme"))
-            # b70 patch: on XPU the int8 scaled-mm kernel registry has no entry, so
-            # QuarkW8A8Int8 KeyErrors. Use a weight-only int8->bf16 dequant GEMM instead
-            # (linear layers only; the MoE experts run true int8 via Triton fused_experts).
+            # b70: on XPU, default to TRUE int8 W8A8 (register our XPU Triton int8 kernel ->
+            # stock QuarkW8A8Int8 picks it via init_int8_linear_kernel). B70_INT8_LINEAR=dequant
+            # (or any registration failure) falls back to the bf16-dequant scheme.
             if current_platform.is_xpu():
+                import os
+                if os.environ.get("B70_INT8_LINEAR", "triton") != "dequant":
+                    try:
+                        _b70_register_xpu_int8_kernel()
+                        return QuarkW8A8Int8(
+                            qscheme=weight_qscheme,
+                            is_static_input_scheme=False,
+                            input_symmetric=input_config.get("symmetric"),
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        logger.warning(
+                            "b70: XPU int8 kernel unavailable (%s); using dequant", e
+                        )
                 return QuarkW8A8Int8DequantXPU(
                     qscheme=weight_qscheme,
                     input_symmetric=input_config.get("symmetric"),
