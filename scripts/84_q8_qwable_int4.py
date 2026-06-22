@@ -98,7 +98,11 @@ try:
 except Exception as e:
     print("AutoRoundMLLM import failed:", str(e)[:200])
 
-common = dict(model=model, tokenizer=tok, iters=ITERS, nsamples=NSAMPLES, seqlen=SEQLEN, layer_config=layer_config)
+# low_gpu_mem_usage=True is REQUIRED on the 27B/Qwable (recipe 4A): without it, AutoRound's iters=200 gradient loop
+# exhausts Level-Zero resources after a few layers -> `UR_RESULT_ERROR_OUT_OF_RESOURCES` (error 40) at ~layer 3
+# (peak_vram only 23GB < cap, so it's resource HANDLES, not VRAM). It offloads between layers to cap GPU pressure.
+common = dict(model=model, tokenizer=tok, iters=ITERS, nsamples=NSAMPLES, seqlen=SEQLEN, layer_config=layer_config,
+              low_gpu_mem_usage=True)
 # attempts: (label, class, extra_kwargs). MLLM class + processor + quant_nontext_module=False is the primary path;
 # text-only calib via dataset=calib (list[str]); fall back across kwarg spellings AutoRound's version may want.
 attempts = []
