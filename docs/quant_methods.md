@@ -79,7 +79,7 @@ FUTURE (kernel-gated) / OTHER-AGENT.
 | Qwen3-14B | W8A8 | **GPTQ** | **0.890** | 0.908 | **DONE -- beats RTN +3.0 plus; ties FP8 (0.890), beats FP8 base (0.921 vs 0.915)** |
 | Qwen3-14B | W8A8 | SmoothQuant | -- | -- | BLOCKED -- `SMOOTHQUANT=0` (Qwen3.6 16/64 hybrid pairing bug); selective fix queued (RESEARCH_TODO 2a) |
 | Qwen3-14B | W8A8 | AutoSmoothQuant | -- | -- | PLANNED -- per-node alpha sweep (RESEARCH_TODO 2e) |
-| Qwen3-14B | W8A8 | AutoRound | -- | -- | PLANNED -- expect ~tie GPTQ at int8 weights (RESEARCH_TODO 3b) |
+| Qwen3-14B | W8A8 | AutoRound | **0.872** | -- | **DONE 06-23 -- GPTQ slightly WINS (gptq 0.890 vs AR 0.872); ~tie at int8 weights, as predicted (Track 3b)** |
 | Qwen3-14B | W4A16 | **RTN** | 0.829 | 0.841 | DONE |
 | Qwen3-14B | W4A16 | **GPTQ** | **0.848** | ~0.883 | DONE -- beats RTN +1.9 plus (within HumanEval CI) |
 | Qwen3-14B | W4A16 | AutoRound | -- | -- | PLANNED -- int4 is AutoRound's home turf (RESEARCH_TODO 3a) |
@@ -96,6 +96,29 @@ FUTURE (kernel-gated) / OTHER-AGENT.
 **The headline this table exists to show:** at every scheme we've calibrated both ways, **GPTQ/AutoRound beat RTN**,
 and GPTQ-W8A8 fully closed the int8 coding gap to FP8. Rotation methods (rows marked FUTURE) are the *next*
 unexplored column -- but they are blocked on kernels, not on quant-time effort (Table D).
+
+---
+
+## GPTQ vs AutoRound -- the decision (2026-06-23, measured + literature-grounded)
+
+**Neither is "always better"; the gap tracks weight-quant error (tiny at high bits, large at low bits) -- and it is
+ACCURACY-only, never speed.** Literature crossover (same-model, published): int8 = WASH; int4 = marginal/often-wash
+(GPTQ *wins* on Llama-2-13B W4G128); int3 = AutoRound ahead ~+8 but model-dependent (GPTQ *wins* on OPT-6.7B W3G128);
+int2 = AutoRound dominates (+11..+33, GPTQ can collapse). **Skeptic flag:** every "AutoRound wins" number is Intel-sourced;
+no independent leaderboard ranks the two, and Intel's own table has GPTQ winning ~7/39. Refs: arXiv 2309.05516, 2411.02355, 2502.13178; jarvislabs kernel-swap bench.
+
+| Question | Answer |
+|---|---|
+| Is GPTQ always better? | **No** (and AutoRound isn't either). Our `w8a8 gptq 0.890 > AR 0.872` is a pure **int8 artifact**, not 14B-specific. |
+| Move all quants to GPTQ? | **No** -- method is **perf-neutral** (below), so no speed reason; W8A8 is a wash, int4 is wash-to-marginal. Don't churn. |
+| **W8A8 / int8** pick | **GPTQ** -- ~tie, but 1-shot/cheaper/validated + no XPU-calib risk. |
+| **int4 (W4A16/W4A8)** pick | **AutoRound** (slight edge + auto-mixed-precision + we have working int4-AR serves) -- but the repo's 0.927-vs-0.848 is CONFOUNDED (27B-AR vs 14B-gptq, different models); same-model int4 is ~a wash. **Calibrate on CPU/CUDA, never the B70** (XPU-calib corrupts int4 -> Q8 garbage; lit confirms XPU-calib unreliable). |
+| Does calibration change pp/TTFT/tg? | **No.** Same export FORMAT -> same kernel -> identical speed (calibration sets weight *values* only; kernel-swap bench: 10.9x from kernel alone). Only indirect lever = format knobs (act-order/sym/group) gating kernel eligibility. |
+| More extensible (spec-decode/MTP)? | **Neither** -- that's an ENGINE concern. Both reach **compressed-tensors** (GPTQ via llm-compressor), which is the format the engine's MTP/EAGLE path loads. Quantizer = spec-decode-agnostic. (Our Lorbus int4-AR captures fine GRAPH=1 via `quantization=inc`, despite the lit's generic "AutoRound-XPU needs enforce-eager" caveat -- different path.) |
+| Production cost | GPTQ 1-shot (cheapest at small scale; can OOM >70B). AutoRound gradient (iters=200; `light`=2-3x faster). |
+
+**Policy:** W8A8 -> GPTQ (don't redo); int4 -> AutoRound (home turf, marginal) ON CPU/CUDA; export everything to
+compressed-tensors for MTP composability. The bf16 vs quant and the *kernel/format* matter far more than gptq-vs-autoround.
 
 ---
 
