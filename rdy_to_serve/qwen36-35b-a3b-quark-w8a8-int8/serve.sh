@@ -25,7 +25,9 @@ CKPT="${CKPT:-/models/Qwen3.6-35B-A3B-Quark-W8A8-INT8}" # container path (models
 SERVED="${SERVED:-qwen36-35b-a3b-quark-w8a8-int8}"
 NAME="${NAME:-vllm_quark35b_v0230}"
 TP="${TP:-2}"; PORT="${PORT:-8000}"
-GRAPH="${GRAPH:-0}"                                     # 1 = PIECEWISE graph capture (decode perf lever)
+GRAPH="${GRAPH:-0}"                                     # 1 = graph capture (decode perf lever)
+CGMODE="${CGMODE:-PIECEWISE}"                           # PIECEWISE works on v0230. FULL_DECODE_ONLY is BLOCKED on
+                                                        # stock v0230: SYCL-Graph scratch-memory limit (needs a patched image).
 PATCH="$SCRIPT_DIR/patches/quark.py"
 Q1=/workspace/vllm/vllm/model_executor/layers/quantization/quark/quark.py
 Q2=/opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/quantization/quark/quark.py
@@ -58,11 +60,18 @@ fi
 
 GDOCK=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
 if [ "$GRAPH" = 1 ]; then
-  # PIECEWISE capture; pass_config disables CUDA-only fusion passes that NameError on XPU.
+  # Graph capture. pass_config disables CUDA-only fusion passes that NameError on XPU.
+  # FULL_DECODE_ONLY: capture ONLY the decode step; prefill runs eager -> no mid-serve prefill
+  # recompile stall at concurrency>1 (PIECEWISE breaks at c>1). PIECEWISE: capture whole step.
   GENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS="${OMP:-8}")
   PASS='"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}'
   CAP=""; [ -n "${CAPSIZES:-}" ] && CAP="\"cudagraph_capture_sizes\":[$CAPSIZES],"
-  EAGER=(); CC=(--compilation-config "{\"cudagraph_mode\":\"PIECEWISE\",\"use_inductor_graph_partition\":true,${CAP}\"compile_sizes\":[1],$PASS}")
+  if [ "$CGMODE" = PIECEWISE ]; then
+    EXTRA="\"use_inductor_graph_partition\":true,\"compile_sizes\":[1],"
+  else
+    EXTRA=""   # FULL_DECODE_ONLY: let vLLM auto-split (gdn_attention_core etc.); no inductor partition
+  fi
+  EAGER=(); CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",${EXTRA}${CAP}$PASS}")
 else
   GENV=(); EAGER=(--enforce-eager); CC=()
 fi

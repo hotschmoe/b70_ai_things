@@ -302,8 +302,13 @@ c1 = **41.02 t/s per-stream decode** (TPOT 208->24.4 ms, e2e out 27.85 t/s, TTFT
 decode** -- same class of win as the int4 MoE's +617%. BUT c>=2 currently BREAKS: a new prefill batch shape at higher
 concurrency triggers a mid-serve torch.compile and the engine hangs on shm_broadcast (c2/c4 rows timed out to 0/NaN).
 The one-time captured-startup compile is ~6 min cold (267 s decode + 105 s prefill range), fast on a warm
-/vllm_cache/torch_compile_cache. **Open:** fix concurrency via `cudagraph_mode: FULL_DECODE_ONLY` (capture decode only,
-run prefill eager -- what the community 102 t/s run used) so capture is usable at c>1; + the tuned MoE config (in flight,
+/vllm_cache/torch_compile_cache. **[2026-06-22] FULL_DECODE_ONLY is BLOCKED on stock v0230**: it uses the SYCL Graph
+extension for the decode capture and dies at KV-cache init with `RuntimeError: The sycl_ext_oneapi_work_group_scratch_memory
+feature is not yet available for use with the SYCL Graph extension` (confirms SERVING.md "FULL blocked by SYCL-Graph
+scratch"). The community 102 t/s run used FULL_DECODE_ONLY via a PATCHED/custom image -> that is the route (build our own
+image). So on stock v0230: PIECEWISE single-stream is the captured win; the PIECEWISE c>1 recompile-stall (new prefill/chunk
+shape -> torch.compile mid-serve) remains -- mitigate with shape warmup / fixed compile ranges, or a patched image.
+**Open:** the tuned MoE config (Ray-bypass needed: benchmark_moe.py --tune does ray.init();
 benchmark_moe.py --dtype auto = int8-readable filename) + the true-int8 linear kernel (drop the dequant; contrib/vllm_int8_xpu).
 Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe), contrib/llm_scaler_quark_int8_moe, rdy_to_serve/.
 (Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
