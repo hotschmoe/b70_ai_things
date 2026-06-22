@@ -55,7 +55,19 @@ models:
     calibration: smoothquant+gptq@128       # NOT rtn -> served from models/Qwen3-14B-W8A8-gptq
     serve_cmd: "scripts/runremote.sh scripts/51_serve_int8_specdecode.sh IMG=vllm-xpu-env:int8 SPEC=0 GRAPH=0 MAXLEN=4096"
     notes: "Our int8 kernel (Selected XPUInt8ScaledMMLinearKernel). FP8 KV. Plain eager for determinism.
-      ⚠️ The earlier Tier-1 HumanEval+ 'w8a8' result (served_model_id qwen3-14b-w8a8) was the RTN dup -- RE-RUN on this gptq id."
+      ⚠️ The earlier Tier-1 HumanEval+ 'w8a8' result (served_model_id qwen3-14b-w8a8) was the RTN dup -- RE-RUN on this gptq id.
+      [2026-06-23] gptq CHECKPOINT purged from disk (archive cleared); the MEASURED 0.890/0.921 stays here + SUMMARY.md."
+
+  - label: w8a8-autoround
+    served_model_id: qwen3-14b-w8a8-autoround   # AutoRound-calibrated W8A8 -> models/Qwen3-14B-W8A8-autoround (compressed-tensors int-quantized)
+    family: qwen3-14b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: autoround                       # vs the gptq W8A8 0.890/0.921 bar (Track 3b: expected ~tie at int8)
+    serve_cmd: "gpu-run bash w8a8_eval_serve.sh  (host; 36_serve.sh QUANT=Qwen3-14B-W8A8-autoround IMG=vllm-xpu-env:int8 eager; held via docker wait)"
+    notes: "Track 3b / does AutoRound supersede GPTQ at W8A8? True W8A8 needs :int8 (v0.23 has no XPU int8 W8A8 linear kernel
+      -> would be W8A16). COHERENCE-CHECK the generated text first (Q8 lesson: a token-count bench masks `!` garbage). Eval:
+      run_evals.py --endpoint .../v1 --model qwen3-14b-w8a8-autoround --quant w8a8-autoround --tiers 1 --tier1-dataset humaneval."
 
   # [ARCHIVED 2026-06-20] RTN W4A8 moved to models/archive/Qwen3-14B-W4A8-INT -- superseded by w4a8-gptq
   # below (GPTQ beats RTN at every scheme). Kept here for the historical leaderboard row (0.860/0.817).
