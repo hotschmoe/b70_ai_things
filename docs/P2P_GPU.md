@@ -377,6 +377,31 @@ TWO remaining levers, BOTH require a host reboot (out of agent scope):
 NET for TP=2 today: host-staged (P2P off) is our only path; SYCLKERNELS=1 graph capture makes it usable. P2P upside
 (shrinking the Gen3 allreduce tax) is GATED on the kernel-7.x reboot -- queued as the next hardware-window experiment.
 
+### H.10 [MEASURED 2026-06-24] the allreduce BW number that sizes the entire P2P prize -- 1.16 GB/s host-staged
+`scripts/allreduce_bench.py`, both cards, xccl, int8g image. THE number for the P2P decision (full per-step
+disassembly in [`27b_w8a8_research.md`](../27b_w8a8_research.md)):
+```
+  msg          SYCL_KERNELS=1 (captured serve)   eager (SYCL=0)
+               lat        algbw=busbw            lat       algbw       use
+  10 KB        0.088 ms   0.10 GB/s (lat-bound)  0.25 ms   0.03 GB/s   DECODE allreduce ([1,5120] bf16)
+  16 MB        14.1 ms    1.19 GB/s              24.9 ms   0.67 GB/s
+  21 MB        ~18 ms     1.16 GB/s              ~32 ms    0.68 GB/s   PREFILL allreduce ([2048,5120] bf16)
+  256 MB       231.8 ms   1.16 GB/s              396 ms    0.68 GB/s
+```
+- **Effective host-staged allreduce BW plateaus at 1.16 GB/s (SYCL_KERNELS=1) / 0.68 (eager)** -- ~13x below the
+  Gen3 x16 wire (~15.8 GB/s), matching the H.8 torch-d2d 1.35 GB/s. Cause: GPU0->host RAM->CPU reduce->host
+  RAM->GPU1, un-pipelined, across two 1950X dies over Infinity Fabric. SYCLKERNELS=1 is ~1.7x BW + ~3x lower
+  small-msg latency than eager (a free win we already take in the captured serve).
+- **Sizing the P2P prize (the headline of 27b_w8a8_research.md):** a 64-layer forward fires **128 allreduces**.
+  - PREFILL @2048: 128 x 21 MB / 1.16 GB/s = **~2.3 s of allreduce out of a 2.748 s TTFT -> prefill is ~84%
+    collective-bound.** If P2P lifts the allreduce toward the Gen3 wire (~10-13 GB/s), collectives -> ~210-270 ms,
+    **TTFT 2.75 s -> ~0.65-0.75 s = ~4x faster prefill.** THIS is the kernel-7.0 motivation, now quantified.
+  - DECODE: 128 x 10 KB is latency-bound (~88 us each, ~11 ms eager-equiv = ~13-20% of a 55 ms token). Decode is
+    weight-BW-bound (GEMM+quant ~40 ms = 73%), so P2P is only a **~1.1-1.2x** single-stream decode lever. The
+    decode levers are int4 weights + activation-quant fusion + MTP, NOT P2P.
+- So: **P2P is a PREFILL/TTFT + concurrency win (~4x prefill), not a single-stream decode win.** Re-running THIS
+  bench on 7.0 (does 1.16 GB/s climb toward the wire?) is the single measurement that confirms the 4x is real.
+
 ---
 
 ## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]

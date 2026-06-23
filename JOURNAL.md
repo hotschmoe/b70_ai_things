@@ -3733,3 +3733,35 @@ verdict -> captured MTP decode MONOTONICALLY DECREASES with spec (accept 51 -> 3
   trend and the eager(36%)-vs-captured(spec5 26%) gap are NOT shim numerics (sum-with-zeros is exact) but the
   captured int8 verify batch / drafter horizon / bench noise. FINAL HEADLINE for the W8A8 27B TP=2 MTP recipe:
   **~35 t/s coherent (spec=3)**, captured, real 51% accept. Bug B fully resolved end-to-end. Host clean; leases freed.
+
+== 2026-06-24 :: PER-STEP DISASSEMBLY of TP=2 W8A8 27B (PP + TG) -> new doc 27b_w8a8_research.md ==
+motivation -> Isaac wants every prefill/decode step disassembled into time/cycles/latency/bandwidth/compute ahead
+of the Linux-7.0 (drm/xe pcie-p2p) migration, to know exactly what TP P2P buys. Method: component microbench at the
+EXACT per-card TP=2 shapes (scripts/113, torch.xpu.Event back-to-back = in-graph per-op time) + allreduce bench
+(both cards) + E2E [ref]. (vLLM torch-profiler endpoint is ABSENT on :int8g -- VLLM_TORCH_PROFILER_DIR is an unknown
+env, /start_profile=404 -- so scripts/112's in-situ Kineto trace was a dead end; pivoted to the microbench.)
+hardware [measured] -> B70 = Battlemage G31, 256 EU (32 Xe-cores), gt0 clock **2.8 GHz**, ~581 GB/s read, int8 GEMM
+  ~290-305 TOPS, bf16 ~139-145 TFLOPs. Model: 64 layers = 48 GDN (BF16 in/out proj, in ignore-list!) + 16 full-attn
+  (int8) + 64 MLP (int8). Per layer = 2 allreduces -> **128 allreduce / forward**.
+per-op device times (scripts/113, card 0, per-card TP=2) -> DECODE M=1: MLP gate_up int8 157us @567GB/s(90%roof),
+  down 77us @577(99%), GDN in_qkvz bf16 144us @581(roofline), out_proj 57us, qkvg 62us, act_quant K5120=41us /
+  K8704=51us (serial reduce, persists under capture), lm_head 2149us (1.27GB bf16 read). PREFILL M=2048: gate_up
+  1236us @295 TOPS, down 599 @304, GDN qkvz 1239 @139 TFLOPs.
+allreduce [measured, scripts/allreduce_bench.py] -> **1.16 GB/s** host-staged (SYCL_KERNELS=1) / 0.68 eager; decode
+  10KB = 88us (latency-bound); prefill 21MB = ~18ms each.
+RESULT (apportionment) ->
+  * DECODE 55ms/token (captured no-MTP 18.1 t/s): GEMM+quant ~40ms (73%, weight-BW-bound; bf16 GDN proj alone ~10ms
+    /18% since GDN is unquantized), act-quant ~6.5ms (12%), 128 allreduce ~7-11ms (13-20%, latency-bound). Weight-
+    read floor = 28ms (50.9 t/s). -> DECODE IS WEIGHT-BANDWIDTH-BOUND.
+  * PREFILL 2748ms TTFT @2048 (745 tok/s): **128 allreduce x 21MB / 1.16 GB/s = ~2304ms = 84%**; int8 GEMM compute
+    only 298ms (11%); other ~150ms. -> PREFILL IS COLLECTIVE-BOUND. The "~10x below compute ceiling" gap is the wire.
+KERNEL-7.0 P2P (quantified) -> if allreduce 1.16 -> ~10-13 GB/s (Gen3 wire): PREFILL TTFT 2.75s -> ~0.7s = **~4x**;
+  DECODE single-stream 18.1 -> ~21.7 t/s = **~1.2x**; big c>1 concurrency gain. So P2P is a PREFILL/TTFT + multi-user
+  win, NOT a single-stream decode win (decode needs int4 + quant-fusion + MTP, orthogonal & stacks with P2P).
+cross-check -> codex (gpt-5.5, analytical, no measurement) independently derived the 128-allreduce count and matched
+  the per-op roofline within a few % (gate_up 153us vs 157, GDN qkvz 144 match, lm_head 2.19 vs 2.15). It differed
+  ONLY on the interconnect (assumed 8-16 GB/s prefill allreduce / Seguin's 15-17us decode) -- exactly where our
+  MEASURED 1.16 GB/s / 88us flips prefill to 84% collective-bound. Measurement was the decisive contribution.
+verdict -> full per-step diagnosis in 27b_w8a8_research.md (ASCII data-flow diagrams for one decode token + one
+  prefill pass, per-op roofline tables, optimization board). docs/P2P_GPU.md H.10 = the allreduce datapoint. Both
+  cards used (microbench card 0; allreduce + the earlier eager serve both cards). Host clean; leases freed.
