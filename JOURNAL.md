@@ -3343,3 +3343,36 @@ verdict -> W4A8 27B single-card MTP is FEASIBLE and ~2.0x. WINNER spec=5 (42.03 
   recommend --dtype float16" perf warning (both off and MTP share it, so the multiplier is fair; a float16 re-run
   could lift absolute t/s); (c) VRAM tight (UTIL 0.97, MAXLEN capped 2048) -- production wants Half-KV or a
   co-packed/quantized MTP head. Container stopped; card0 lease freed (gpu-run done in 1251s).
+
+== 2026-06-23 :: W8A8 27B BF16-MTP graft TP=2 retry -- MTP head FINE, but TP=2 MTP not viable (exact oneCCL cause) ==
+motivation -> user asked to "try tp=2 again for w8a8". The W8A8-sqgptq graft is 34GB -> does NOT fit one 32GB card,
+  so TP=2 is the ONLY option; M4 already found TP=2 MTP DEAD (spec-allgather not graph-capturable) but on the W4A16
+  int4 model, not a real grafted W8A8 head. This re-tests with the actual graft + captures the precise root cause.
+config -> scripts/90 MODE=w8a8tp2 under the full `gpu-run` lease (both cards). IMG=vllm-xpu-env:int8g, model
+  /models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft (CT W8A8-int8 -> XPUInt8ScaledMMLinearKernel auto-selected), GDN .so
+  mounted, NOMM, the corrected mtp_bf16 shim on PYTHONPATH, TP=2 + CCL_ENABLE_SYCL_KERNELS=1 + the #41663 Battlemage
+  CCL env, GRAPH=1 PIECEWISE, UTIL=0.90 MAXLEN=4096 MAXSEQS=8 CAPS=1,2,4,8. Three configs: off (PIECEWISE baseline),
+  spec=4 (PIECEWISE), spec=4e (EAGER fallback = same MTP, --enforce-eager, no capture). Same TTFT-cancelled bench.
+result -> host CSV /mnt/vm_8tb/b70/results/mtp90_w8a8tp2_20260622_185750.csv; repo results/mtp90_w8a8tp2_27b_20260623.csv.
+  spec  decode_tps  MTPx   accept_len  accept_rate   outcome
+  off   18.74       -      -           -             PIECEWISE TP=2 healthy (matches QUANTS_TODO Q2 ~17.5 c1)
+  4     CRASH       -      -           -             PIECEWISE: serve-fail at engine init
+  4e    14.27       0.76   3.63        0.658         EAGER: runs, accept great, but 0.76x = NET LOSS vs off
+  - spec=4 PIECEWISE crash root cause (now EXACT, sharper than M4's "spec-allgather not graph-capturable"):
+    `oneCCL: coll.cpp:1204 ccl_allgather_impl: EXCEPTION: |CCL_SYCL| sched algorithms do not support sycl_graph
+    recording, please use sycl_algorithms`. So allreduce records under CCL_ENABLE_SYCL_KERNELS=1 (off baseline +
+    the Q2 W8A8 TP=2 serve both work), but the MTP spec-verify introduces an ALLGATHER that oneCCL routes to its
+    scheduler ("sched") algorithm, which has NO sycl_graph-recordable implementation -> capture aborts.
+  - The MTP HEAD itself is correct at TP=2: the eager run got accept_len 3.63 / 65.8% accept (better than W4A8's
+    3.32 @spec4 -- consistent with W8A8 being near-lossless so the BF16 head drafts it better), and the shim
+    printed `[mtp-bf16-shim] Qwen3_5MultiTokenPredictor forced unquantized for grafted BF16 mtp.*` on all 4 worker
+    procs + "Detected MTP model. Sharing target embedding/lm_head". So this is NOT a head/graft problem.
+verdict -> W8A8 27B TP=2 MTP is NOT VIABLE on stock int8g/v0230, CONFIRMING + sharpening M4. Two dead ends: MTP-on
+  PIECEWISE crashes (oneCCL allgather can't record in a SYCL graph), and MTP-on eager runs but is 0.76x (uncaptured
+  TP collectives + 5x verify body cost outweigh the accept-3.63 draft savings). The acceptance is great -- the
+  blocker is purely the TP collective capture, exactly the gap RagingNoper's custom capture-safe collectives
+  (local-write/remote-read xpu_communicator.py) close. The oneCCL error names the cure ("use sycl_algorithms") ->
+  next probe is whether a oneCCL env knob can force the allgather onto a graph-recordable sycl/topo algorithm
+  (codex research underway). Even if it could, the eager 0.76x + M4's "TP=2 is 0.87x single-card even MTP-off" mean
+  the single-card W4A8 MTP (2.03x, 42 t/s) decisively beats any TP=2 W8A8 path for single interactive streams;
+  TP=2 W8A8 stays a CAPACITY/VRAM play. Both cards' leases freed (gpu-run done in 1047s); host clean.
