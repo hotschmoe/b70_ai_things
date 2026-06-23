@@ -89,6 +89,25 @@ zero risk of the installer wiping the array. Recommended: pre-install elsewhere.
 - Note free M.2 slot on the X399 board for the new NVMe (the 2x B70 occupy PCIe x16 slots; M.2 is
   separate, should be free). The cache SPCC NVMe is in one M.2 slot already.
 
+Capture from the LIVE Unraid box (read-only) into vm_8tb so it carries over by UUID:
+```
+D=/mnt/vm_8tb/migration_capture/2026-06-24; mkdir -p "$D"
+lsblk -f > "$D/lsblk-f.txt"; blkid > "$D/blkid.txt"
+ls -la /dev/disk/by-id > "$D/by-id.txt"; ls -la /dev/disk/by-uuid > "$D/by-uuid.txt"
+for d in /dev/sd?; do smartctl -a "$d" > "$D/smart-$(basename "$d").txt" 2>&1; done   # drive health baseline
+ip a > "$D/ip-a.txt"; ip r > "$D/ip-route.txt"; cp /boot/config/network.cfg "$D/" 2>/dev/null
+cp /etc/samba/smb.conf "$D/" 2>/dev/null; cp /boot/config/smb-extra.conf "$D/" 2>/dev/null
+cp -r /boot/config/shares "$D/unraid-shares" 2>/dev/null; cat /etc/exports > "$D/exports.txt" 2>/dev/null
+docker ps -a > "$D/docker-ps.txt"
+for c in $(docker ps -a --format '{{.Names}}'); do docker inspect "$c" > "$D/inspect-$c.json"; done
+cp -r /boot/config/plugins/dockerMan/templates-user "$D/docker-templates" 2>/dev/null
+crontab -l > "$D/crontab.txt" 2>/dev/null; cp /boot/config/go "$D/go" 2>/dev/null
+lspci -tv > "$D/lspci-tv.txt"; lspci -nnk > "$D/lspci-nnk.txt"   # P2P topology baseline (which die/root port each B70 sits behind)
+```
+Optional (only if you want mother's Nextcloud accounts/share-links, not just her files):
+`docker exec <db-container> mysqldump ... > "$D/nextcloud.sql"`. Her actual files live on the array
+and carry over regardless; the Unraid USB (kept) also still holds every config above as rollback.
+
 
 ## 4. Phase 1 -- prepare the boot NVMe (on a separate machine)
 
@@ -215,3 +234,38 @@ NVMe. Back on Unraid. If Ubuntu had written to the array RW, let Unraid rebuild 
 - [ ] Generate Ubuntu `smb.conf` + `/etc/exports` from the captured Unraid share config.
 - [ ] Pick Secure Boot on (keep shim) vs off (simpler) on the B70 box.
 - [ ] Maintenance window: this is the box running quant27b + the NAS for mother -- schedule downtime.
+- [x] P2P/IOMMU boot profile decided 2026-06-24 -- see section 12 (IOMMU off, NOT iommu=pt; ReBAR + Above 4G on).
+- [ ] Run the Phase 0 capture block (section 3) on the live Unraid box BEFORE powerdown.
+
+
+## 12. P2P probe boot profile (BIOS + kernel) -- decided 2026-06-24
+
+We no longer care about VM/VFIO passthrough, so bias the box toward GPU P2P. On this 1950X (X399, a
+2-die MCM), the two B70 x16 slots are cross-root-complex / cross-die. Linux blocks P2P across host
+bridges unless the platform is allow-listed; AMD Zen IS allow-listed, but the kernel ignores that
+allow-list when an IOMMU is present. So the move is to remove the IOMMU from the path entirely.
+
+BIOS:
+- KEEP ON:  Above 4G Decoding; Resizable BAR / Smart Access Memory; UEFI (no CSM). (Large BAR is what
+  makes P2P actually useful -- the full VRAM aperture becomes visible to the peer.)
+- TURN OFF: IOMMU / AMD-Vi; ACS (if the board exposes it); CSM / legacy boot.
+- SVM (CPU virtualization) can stay ON -- it is NOT the I/O MMU. Disable specifically the AMD-Vi path.
+- Secure Boot: OFF if you will test mainline 7.1 (unsigned). For Ubuntu's signed 7.0 kernel, it can
+  stay ON.
+
+Kernel cmdline (only if BIOS lacks a clean IOMMU toggle):
+- Add:    amd_iommu=off iommu=off
+- Do NOT use iommu=pt -- it may still count as "IOMMU present" for the kernel's P2PDMA policy gate.
+
+Kernel sequence:
+1. Boot Ubuntu's supported 7.0 kernel FIRST -- the B70 xe P2P foothold is already in the 7.0-era xe
+   work; 7.1 looks incremental (driver fixes, SR-IOV, Xe3/Nova Lake, TLB/context), not a known B70
+   P2P unlock.
+2. Probes: zeDeviceCanAccessPeer, ze_peer, torch.xpu.can_device_access_peer, and a P2P on/off
+   vLLM/oneCCL A/B (see docs/P2P_GPU.md F.2/F.3).
+3. If 7.0 says no P2P or misbehaves, install mainline 7.1.x as an A/B kernel and rerun the EXACT same
+   probes. Keep 7.0 in GRUB as rollback.
+
+Caveat: pcie_acs_override=downstream,multifunction is NOT in stock mainline (it needs the out-of-tree
+VFIO ACS-override patch). On stock Ubuntu the real lever is the BIOS ACS toggle, not a kernel param --
+so confirm the BIOS exposes ACS, or accept whatever the root ports advertise.
