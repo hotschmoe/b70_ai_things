@@ -22,8 +22,13 @@ CSV="$ROOT/results/mtp111_${TS}.csv"; echo "spec,decode_tps,mtp_x,accept_len,acc
 SPECS="${*:-off 5}"
 ATTN='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
 # THE FIX: eject ONLY all_gather. all_reduce + reduce_scatter stay CAPTURED (they record fine, and ejecting them
-# is what corrupted decode).
-SPLIT="$ATTN,\"vllm::all_gather\""
+# is what corrupted decode). EJECT=none -> capture ALL collectives incl all_gather (needs the csag plan-B shim).
+EJECT="${EJECT:-ag}"
+case "$EJECT" in
+  ag)   SPLIT="$ATTN,\"vllm::all_gather\"" ;;
+  none) SPLIT="$ATTN" ;;
+  *) echo "bad EJECT=$EJECT"; exit 2 ;;
+esac
 PROMPT="Discuss the major causes of the decline of the Roman Empire, weighing economic, military, political, and social factors against each other, and explain which you find most persuasive and why, with specific historical examples."
 COH_PROMPT="The capital of France is"
 
@@ -35,12 +40,16 @@ coh_text() { curl -s --max-time 60 "http://localhost:$PORT/v1/completions" -H 'C
     -d "{\"model\":\"$SERVED\",\"prompt\":\"$COH_PROMPT\",\"max_tokens\":32,\"temperature\":0}" \
     | grep -oE '"text":"[^"]*"' | head -1 | sed 's/^"text":"//; s/"$//'; }
 
+GRAPH="${GRAPH:-1}"          # 1=PIECEWISE capture (the fix), 0=eager (accept baseline)
+SHIM_OVERRIDE="${SHIM_OVERRIDE:-}"   # point PYTHONPATH at a different shim dir (e.g. the csag plan-B shim)
+[ -n "$SHIM_OVERRIDE" ] && SHIM="$SHIM_OVERRIDE"
 serve() {  # $1 spec
-  local spec="$1" SPECARG=() CAP="1,2,4,8"
+  local spec="$1" SPECARG=() CAP="1,2,4,8" CCARG=()
   docker rm -f "$NAME" 2>/dev/null || true
   if [ "$spec" != off ]; then SPECARG=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":$spec}"); CAP="1,2,4,$((spec+1)),8"; fi
   local PASS='"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}'
   local CC="{\"cudagraph_mode\":\"PIECEWISE\",\"use_inductor_graph_partition\":false,\"cudagraph_capture_sizes\":[$CAP],\"splitting_ops\":[$SPLIT],$PASS}"
+  if [ "$GRAPH" = 1 ]; then CCARG=(--compilation-config "$CC"); else CCARG=(--enforce-eager); fi
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size 32g -p ${PORT}:${PORT} \
     --pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556 \
@@ -55,7 +64,7 @@ serve() {  # $1 spec
     --entrypoint vllm "$IMG" serve "$MODEL" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT" --dtype auto \
     --tensor-parallel-size 2 --max-model-len 4096 --max-num-seqs 8 --gpu-memory-utilization 0.90 \
     --no-enable-prefix-caching --trust-remote-code --limit-mm-per-prompt '{"image":0,"video":0}' \
-    --distributed-executor-backend mp --compilation-config "$CC" "${SPECARG[@]}" >/dev/null
+    --distributed-executor-backend mp "${CCARG[@]}" "${SPECARG[@]}" >/dev/null
 }
 wait_healthy() { local i; for i in $(seq 1 180); do
   curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1 && return 0

@@ -3685,3 +3685,30 @@ verdict -> **MTP IS FIXED on captured W8A8 27B TP=2.** The minimal, correct conf
   but now COHERENT. scripts/111 benches off vs spec=5 in this fixed config WITH a coherence read-out (running now).
   Plan B (scripts/110_csag_shim: capture-safe all_gather via all-reduce-of-padded so even all_gather stays captured,
   EJECT=none) is staged as a more-robust alternative if the eager all_gather proves a bottleneck.
+
+== 2026-06-24 :: [!!! MTP REALLY WORKS] plan-B capture-safe all_gather -> 26.10 t/s COHERENT w/ REAL 26% accept ==
+motivation -> eject-ONLY-all_gather (cell F) gave COHERENT output but the spec bench revealed a SECOND facet of
+  Bug B: accept_rate ~0.001 (zero) -> MTP was pure overhead (9.63 t/s, SLOWER than no-MTP captured 18.10). The
+  body stayed coherent only because rejected drafts fall back to the target's own token. So ejecting all_gather
+  ALSO corrupts the multi-token spec-VERIFY path (where the all_gather lives), killing acceptance.
+discriminator (scripts/111 + coherence read-out, hard Roman-Empire prompt, temp=0) ->
+  config                                          decode_tps  accept_rate  accept_len  coherence
+  EAGER, no-MTP                                   ~4.1        -            -           OK    (prior floor)
+  CAPTURED, no-MTP (collectives captured)         18.10       -            -           OK    (cell C fix)
+  EAGER, MTP spec5                                10.43       0.361        2.80        OK    (accept WORKS eager)
+  CAPTURED, MTP spec5, eject-only-all_gather (F)   9.63       0.001        1.00        OK    (verify DEAD: 0% accept)
+  CAPTURED, MTP spec5, PLAN-B all_gather (G)      26.10       0.258        2.29        OK    <- WIN
+  - Eager MTP accepts 36% -> the BF16 drafter graft is GOOD; the 0% on F is capture+all_gather-eject, not the head.
+  - PLAN B = scripts/110_csag_shim: monkeypatch XpuCommunicator.all_gather to an ALL-REDUCE-OF-PADDED
+    (buf=zeros[world,*x]; buf[rank]=x; dist.all_reduce(buf); concat along dim) -- semantically identical to the
+    base concat all_gather but built from all_reduce, which DOES SYCL-graph-record. So all_gather stays CAPTURED
+    (EJECT=none, splitting_ops = attn/GDN only, NO collectives ejected) -> no ejected boundary anywhere -> verify
+    is numerically correct -> drafts accepted (26%) AND the whole decode is captured (fast).
+verdict -> **MTP IS NOW A REAL WIN ON CAPTURED W8A8 27B TP=2: 26.10 t/s, 26% accept, COHERENT.** Multipliers (all
+  coherent): 26.10/18.10 = 1.44x vs captured-no-MTP; 26.10/10.43 = 2.50x vs eager-MTP; 26.10/4.1 = 6.4x vs
+  eager-no-MTP. The config: PIECEWISE capture, IGP=false, splitting_ops = attn/GDN ONLY (eject NOTHING), + the
+  capture-safe all_gather shim + the BF16-MTP graft shim (combined in scripts/110_csag_shim). The old "63 t/s"
+  was garbage; the honest captured MTP headline is ~26 t/s (accept-limited by the 1-layer drafter on hard prompts;
+  easier/code prompts accept higher -> faster). Captured-verify accept (26%) is a touch below eager (36%) -- a
+  minor residual (captured int8 verify batch and/or all-reduce-of-padded numerics, or single-bench noise), net
+  still +44%. NEXT: ship this as the recipe (csag shim, GRAPH=1, IGP=false, no-eject), smoke-gate, commit.
