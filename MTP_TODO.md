@@ -1,7 +1,28 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 · **Updated:** 2026-06-23 (CT MTP-graft sweep: W4A8/W8A8 logged)
+**Created:** 2026-06-20 · **Updated:** 2026-06-24 (Bug B ROOT-CAUSED + FIXED; captured TP=2 MTP shipped)
 **Owner:** b70 team
+
+> ### [!!! 2026-06-24 RESOLVED -- Bug B was COLLECTIVE EJECTION, not "captured numerics"; captured TP=2 MTP NOW WORKS]
+> (JOURNAL 2026-06-23/24, scripts/106-111, FINDINGS "BUG B" entry.)
+> Root cause: vLLM's piecewise `CUDAGraphWrapper` does a pure `replay()` with NO input copy -> each captured piece's
+> inputs must be at the SAME device address on replay as at capture. The XPU TP collectives are OUT-OF-PLACE
+> (all_reduce=input_.clone(); all_gather/reduce_scatter=fresh empty+contiguous). The old recipe put the 3 collectives
+> in `splitting_ops`, EJECTING them to eager at piecewise boundaries; their fresh output didn't reproduce the
+> capture-time address on XPU -> stale read -> garbage. The fix overturns "M4 TP=2 MTP DEAD" AND its overturn (the
+> "splitting_ops eject = the fix" claim was itself the bug).
+> **FIX (shipped in rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp): eject NOTHING** (`splitting_ops`=attn/GDN ops only),
+> `IGP=false`, and a **capture-safe all_gather** (all-reduce-of-padded, `scripts/110_csag_shim` = recipe
+> `patches/sitecustomize.py`) so the spec-verify all_gather records into the SYCL graph instead of crashing.
+> **Two facets:** (a) ejecting collectives -> garbage body; (b) ejecting only all_gather -> coherent body but captured
+> spec-VERIFY gives ~0% accept (MTP = pure overhead). Capturing everything correctly fixes both.
+> **HONEST NUMBERS (coherence-gated, scripts/111, hard prompt, temp=0):**
+> eager no-MTP ~4.1 · captured no-MTP **18.10** · eager MTP spec5 **10.43 @36%** · captured MTP eject-all_gather
+> 9.63 @~0% · **captured MTP spec5 plan-B = 26.10 t/s @26% accept** (COHERENT). = 1.44x vs captured-no-MTP,
+> 2.5x vs eager-MTP, 6.4x vs eager-no-MTP. The earlier "~9 t/s eager is the only coherent path" is SUPERSEDED.
+> FOLLOW-UPS: (1) accept 26% captured vs 36% eager -- close the gap (captured int8 verify-batch numerics? bench
+> noise?); (2) spec sweep {3,4,5} on the FIXED captured config (the old sweep was on garbage); (3) apply the
+> eject-nothing capture insight to other TP=2 captured recipes (no-MTP 18.10 is itself a coherent ~4.5x-over-eager win).
 
 > ### [!!! 2026-06-23 RETRACTION -- the W8A8 TP=2 MTP "63-64 t/s / 3.4x" headline was GARBAGE] (JOURNAL 2026-06-23, scripts/101-106)
 > The "W8A8-sqgptq 27B TP=2 MTP spec=5 = ~63-64 t/s = 3.4x, FASTEST 27B" result (scripts/91,93,94; the rows tagged
