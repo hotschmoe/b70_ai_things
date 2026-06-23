@@ -3376,3 +3376,39 @@ verdict -> W8A8 27B TP=2 MTP is NOT VIABLE on stock int8g/v0230, CONFIRMING + sh
   (codex research underway). Even if it could, the eager 0.76x + M4's "TP=2 is 0.87x single-card even MTP-off" mean
   the single-card W4A8 MTP (2.03x, 42 t/s) decisively beats any TP=2 W8A8 path for single interactive streams;
   TP=2 W8A8 stays a CAPACITY/VRAM play. Both cards' leases freed (gpu-run done in 1047s); host clean.
+
+== 2026-06-23 :: BREAKTHROUGH -- splitting_ops REVIVES TP=2 MTP (overturns M4 "TP=2 MTP DEAD") ==
+motivation -> user: "while codex works, do deep research + lots of small proof/spoof experiments to fix PIECEWISE
+  or other levers". The W8A8 TP=2 MTP crash (90) was `oneCCL ccl_allgather_impl: CCL_SYCL sched algorithms do not
+  support sycl_graph recording`. Source dig (int8g vLLM): the spec verify adds a model-forward `vllm::all_gather`
+  (a REAL registered custom op, parallel_state.py:160 + fake:170) that gets recorded into the SYCL graph; oneCCL
+  (2021.17 in the image) routes allgather to its scheduler algorithm which has no graph-recordable impl. allreduce
+  DOES record (the MTP-off TP=2 baseline captures fine). Two orthogonal fix families tested + a spoof staged.
+config -> scripts/91_tp2_mtp_capture_fix.sh, W8A8 graft TP=2 MTP spec=4 PIECEWISE, 4 named variants under one
+  `gpu-run` (both cards). A=splitting_ops adds the 3 collectives (`vllm::all_gather/all_reduce/reduce_scatter`) so
+  inductor graph-partition runs them EAGER as partition boundaries (never recorded), decode GEMMs/attn stay CAPTURED
+  (the RagingNoper recipe insight). B=codex oneCCL env `CCL_SYCL_ALLGATHERV_SCALEOUT=ring`+thresh+TMP_BUF+COMM_SIZE.
+  C=codex env `CCL_ALLGATHER(V)=topo`+monolithic. D=A+B. WIN = reaches /health + bench vs the 90 off=18.74.
+result -> repo results/mtp91_tp2fix_20260622_192450.txt.
+  variant  fix                                   outcome        decode_tps  vs-off-x  accept_len
+  A        splitting_ops eject collectives       CRASH CLEARED  55.32       2.95      5.00
+  B        CCL allgatherv ring env               STILL CRASHES  -           -         -
+  C        CCL allgather/allgatherv topo env     STILL CRASHES  -           -         -
+  D        A + B                                 CRASH CLEARED  56.02       2.99      5.00
+  - The oneCCL env knobs (B,C) do NOTHING on this 2021.17 build -- same exact `sched algorithms do not support
+    sycl_graph recording` crash. The fix is entirely splitting_ops; D == A within noise (CCL env adds nothing).
+  - accept_len 5.00 = 100% on this prompt (acc 472 = drafts 118 x spec 4 exactly): near-lossless W8A8 body -> the
+    BF16 MTP head drafts it almost perfectly. Prompt is repetitive code (easy) -> real-workload accept will be lower;
+    the SPEEDUP MECHANISM is what's proven here.
+verdict -> **M4 "TP=2 MTP DEAD" is OVERTURNED.** Ejecting the TP collectives from the captured graph via
+  splitting_ops clears the oneCCL-allgather-can't-record crash, and TP=2 W8A8 27B MTP spec=4 runs at **55-56 t/s =
+  ~2.95-2.99x vs the 18.74 MTP-off TP=2 baseline** -- FASTER than single-card W4A8 (42) or W4A16-graft (~43) MTP,
+  because (a) near-lossless W8A8 -> high accept and (b) MTP amortizes the TP collective tax (which is exactly why
+  MTP-off TP=2 was only 0.87x single-card -- the collective overhead that hurt off-baseline is what MTP hides).
+  So the heavy near-lossless W8A8 (needs 2 cards) is now the FASTEST single-stream 27B MTP config we have, not a
+  dead end. The earlier M4 result was an artifact of NOT having the collectives in splitting_ops (default
+  splitting_ops has only attn/GDN ops). No custom capture-safe communicator (RagingNoper's xpu_communicator.py)
+  is needed for the SPEC allgather -- splitting_ops alone suffices because allreduce already records under
+  CCL_ENABLE_SYCL_KERNELS=1. Codex's oneCCL-env lead was a dead end but cheap to rule out. (Spoof shim
+  all_gather->allreduce-of-padded staged as a fallback, NOT NEEDED.) Next: spec sweep + harder prompt for honest
+  accept. Both leases freed; host clean.

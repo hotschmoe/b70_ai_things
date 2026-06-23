@@ -1,0 +1,36 @@
+=== 91 TP=2 MTP capture-fix probe  model=/models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft  oneCCL=2021.17  variants={A B C D} ===
+    (90 baseline: off PIECEWISE 18.74 t/s healthy; MTP spec4 PIECEWISE CRASH; MTP spec4 eager 14.27=0.76x)
+>>> VARIANT A
+    CC={"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8],"splitting_ops":["vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention","vllm::all_reduce","vllm::reduce_scatter","vllm::all_gather"],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+    VARIANT A: CRASH CLEARED -- HEALTHY. benching...
+    VARIANT A RESULT: decode_tps= 55.32  vs-off-x=2.95  accept_len=5.00  (acc=472 drafts=118, gen512 9.44s)
+>>> VARIANT B
+    CC={"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+    extra-env: -e CCL_SYCL_ALLGATHERV_SCALEOUT=ring -e CCL_SYCL_ALLGATHERV_SCALEOUT_THRESHOLD=4294967296 -e CCL_SYCL_ALLGATHERV_TMP_BUF=1 -e CCL_SYCL_ALLGATHERV_SCALEOUT_COMM_SIZE=1024
+    VARIANT B: STILL FAILS -- crash signature:
+      (EngineCore pid=43) ERROR 06-23 02:31:52 [core.py:1195]     raise RuntimeError(
+      (EngineCore pid=43) ERROR 06-23 02:31:52 [core.py:1195] RuntimeError: Worker failed with error 'oneCCL: coll.cpp:1204 ccl_allgather_impl: EXCEPTION: |CCL_SYCL| sched algorithms do not support sycl_graph recording, please use sycl_algorithms', please check the stack trace above for the root cause
+      (EngineCore pid=43) Traceback (most recent call last):
+      (EngineCore pid=43)     raise RuntimeError(
+      (EngineCore pid=43) RuntimeError: Worker failed with error 'oneCCL: coll.cpp:1204 ccl_allgather_impl: EXCEPTION: |CCL_SYCL| sched algorithms do not support sycl_graph recording, please use sycl_algorithms', please check the stack trace above for the root cause
+      (APIServer pid=1) Traceback (most recent call last):
+      (APIServer pid=1)     raise RuntimeError(
+      (APIServer pid=1) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {'EngineCore': 1}
+>>> VARIANT C
+    CC={"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+    extra-env: -e CCL_ALLGATHER=topo -e CCL_ALLGATHERV=topo -e CCL_ALLGATHERV_MONOLITHIC_PIPELINE_KERNEL=1
+    VARIANT C: STILL FAILS -- crash signature:
+      (EngineCore pid=43) ERROR 06-23 02:33:44 [core.py:1195]     raise RuntimeError(
+      (EngineCore pid=43) ERROR 06-23 02:33:44 [core.py:1195] RuntimeError: Worker failed with error 'oneCCL: coll.cpp:1204 ccl_allgather_impl: EXCEPTION: |CCL_SYCL| sched algorithms do not support sycl_graph recording, please use sycl_algorithms', please check the stack trace above for the root cause
+      (EngineCore pid=43) Traceback (most recent call last):
+      (EngineCore pid=43)     raise RuntimeError(
+      (EngineCore pid=43) RuntimeError: Worker failed with error 'oneCCL: coll.cpp:1204 ccl_allgather_impl: EXCEPTION: |CCL_SYCL| sched algorithms do not support sycl_graph recording, please use sycl_algorithms', please check the stack trace above for the root cause
+      (APIServer pid=1) Traceback (most recent call last):
+      (APIServer pid=1)     raise RuntimeError(
+      (APIServer pid=1) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+>>> VARIANT D
+    CC={"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8],"splitting_ops":["vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention","vllm::all_reduce","vllm::reduce_scatter","vllm::all_gather"],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+    extra-env: -e CCL_SYCL_ALLGATHERV_SCALEOUT=ring -e CCL_SYCL_ALLGATHERV_SCALEOUT_THRESHOLD=4294967296 -e CCL_SYCL_ALLGATHERV_TMP_BUF=1 -e CCL_SYCL_ALLGATHERV_SCALEOUT_COMM_SIZE=1024
+    VARIANT D: CRASH CLEARED -- HEALTHY. benching...
+    VARIANT D RESULT: decode_tps= 56.02  vs-off-x=2.99  accept_len=5.00  (acc=472 drafts=118, gen512 9.36s)
+=== 91 SUMMARY ===

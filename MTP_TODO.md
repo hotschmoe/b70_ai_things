@@ -2,14 +2,20 @@
 
 **Created:** 2026-06-20 · **Updated:** 2026-06-23 (CT MTP-graft sweep: W4A8/W8A8 logged)
 **Owner:** b70 team
-**[2026-06-23 CT-GRAFT SWEEP -- scripts/90]:** benched the compressed-tensors BF16-MTP grafts (Phase B2 + the
+**[2026-06-23 CT-GRAFT SWEEP -- scripts/90,91]:** benched the compressed-tensors BF16-MTP grafts (Phase B2 + the
 W8A8 TP=2 retry). **W4A8-sqgptq single-card MTP = FEASIBLE 2.03x** (off 20.74 -> spec5 42.03 t/s, accept_len
 **3.79** -- accept HOLDS on int4, refuting the int4-drift worry; ~= the W4A16 graft's ~42 t/s but buys the
-int8-activation systolic path free). **W8A8-sqgptq TP=2 MTP = DEAD** (34GB needs 2 cards): MTP-on PIECEWISE
-crashes with the now-EXACT cause `oneCCL ccl_allgather_impl: CCL_SYCL sched algorithms do not support sycl_graph
-recording`, eager fallback runs (accept 3.63, head FINE) but 0.76x. So the single-card W4A8/W4A16 DP-replica MTP
-remains the path; TP=2 W8A8 stays a capacity play needing capture-safe collectives. Caught+fixed a broken
-(quote-stripped) `mtp_bf16_patch/sitecustomize.py` in both graft dirs first. Details below + in JOURNAL.
+int8-activation systolic path free).
+**[BREAKTHROUGH -- scripts/91] M4 "TP=2 MTP DEAD" is OVERTURNED.** The TP=2 MTP capture crash (`oneCCL
+ccl_allgather_impl: CCL_SYCL sched algorithms do not support sycl_graph recording`) is fixed by adding the TP
+collectives (`vllm::all_gather/all_reduce/reduce_scatter`) to `splitting_ops` so inductor partitions at them and
+they run EAGER (never recorded), decode stays CAPTURED (the RagingNoper insight). Result: **W8A8-sqgptq 27B TP=2
+MTP spec=4 = 55.32 t/s = 2.95x** vs the 18.74 MTP-off TP=2 baseline -- the FASTEST single-stream 27B MTP config we
+have (beats single-card W4A8 42 / W4A16-graft 43), because near-lossless W8A8 drafts near-perfectly AND MTP
+amortizes the very TP collective tax that made MTP-off TP=2 only 0.87x single-card. Codex's oneCCL env knobs
+(`CCL_SYCL_ALLGATHERV_SCALEOUT`, `CCL_ALLGATHER=topo`) did NOTHING on the image's oneCCL 2021.17 -- splitting_ops
+alone is the fix (no custom capture-safe communicator needed). Caught+fixed a broken (quote-stripped)
+`mtp_bf16_patch/sitecustomize.py` in both graft dirs first. Details below + in JOURNAL.
 **Status:** ✅ **CAMPAIGN COMPLETE 2026-06-22 (M0-M5 all done).** HEADLINE: **single-card dense 27B W4A16 + MTP spec=4
 PIECEWISE = 55.28 t/s vs 30.84 = 1.79x** (beats Lorbus 45.2; refutes the stale -19%). Half-KV FREE (accept 3.29 vs 3.25).
 FULL capture BLOCKED (gdn_attention spec op can't run in any captured graph on v0230 0.1.9). TP=2 MTP DEAD (spec-allgather
@@ -353,7 +359,8 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | 2026-06-23 | Qwen3.6-27B | W4A8-sqgptq | int8g PIECEWISE +mtp-graft (CT) | 1 | 2048/bf16 | 3/4 | 2.98/3.32 | — | 41.99/40.44 | 20.74 | 2.02/1.95x | — | — | ~27GiB | — | B2 spec3/4 (sweep); decode flat ~41-42 across spec, accept_len climbs 2.98->3.79 |
 | 2026-06-22 | Qwen3.6-35B-A3B | int4-AR MoE | v0230moe PIECEWISE+fp8KV | 1 | 8192/fp8 | 4 | 2.68 | — | **68.83** | 66.82 | **1.03x** | — | — | — | — | **M5** MoE+MTP NOVEL; MTP FLAT on MoE (sparse 3B-active); capture is the MoE headline |
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 TP=2 PIECEWISE +SYCLKERNELS | 2 | 8192/fp16 | off/4 | — | — | CRASH | 26.96 | — | — | — | — | — | **M4** TP2 MTP-off 0.87x single-card; MTP-on CRASHES (spec-allgather not graph-capturable) -> TP=2 MTP DEAD |
-| 2026-06-23 | Qwen3.6-27B | W8A8-sqgptq | int8g TP2 +mtp-graft (CT) | 2 | 4096/bf16 | off/4/4e | 3.63(eager) | — | CRASH / 14.27(eager) | 18.74 | DEAD / 0.76x | — | — | 17GiB/card | — | **C1 retry** TP2 MTP DEAD: PIECEWISE crashes (oneCCL allgather sched algos cant sycl_graph-record), eager runs but 0.76x; head FINE (al 3.63). Needs capture-safe collectives |
+| 2026-06-23 | Qwen3.6-27B | W8A8-sqgptq | int8g TP2 +mtp-graft (CT) | 2 | 4096/bf16 | off/4/4e | 3.63(eager) | — | CRASH / 14.27(eager) | 18.74 | DEAD / 0.76x | — | — | 17GiB/card | — | C1 retry (default splitting_ops): PIECEWISE crashes (oneCCL allgather sched cant sycl_graph-record), eager 0.76x; head FINE -- SUPERSEDED by the splitting_ops fix below |
+| 2026-06-23 | Qwen3.6-27B | W8A8-sqgptq | **int8g TP2 +mtp-graft +splitting_ops** (CT) | 2 | 4096/bf16 | **4** | 5.00* | — | **55.32** | 18.74 | **2.95x** | — | — | 17GiB/card | — | **C1 FIXED** -- splitting_ops ejects collectives from capture -> oneCCL allgather crash CLEARED. **OVERTURNS M4 "TP2 MTP DEAD".** FASTEST 27B MTP (>single-card). *accept 100% on easy code prompt; CCL env knobs B/C did NOTHING |
 
 **Reference (REAL + PUBLIC -- localmaxxing.com, user `ytnszmy`, 2026-06-10; cached `data/localmaxxing/`):** Qwen3.6-27B BF16, **4x B70 TP=4**, spec=5 -> accept 4.04, dec 54.2, prefill 2100. Repro from the row's notes: `intel/llm-scaler-vllm:0.14.0-b8.3` + `vllm_xpu_kernels v0.1.9` + `qwen3_5.py` (#43565) + Half-KV; **on our v0230 image #43565 is native -- reproduce THERE, not on 0.14.x**. The ONE missing ingredient is `cudagraph_mode` (PIECEWISE vs FULL) -- add FULL ourselves (RagingNoper recipe). It beats our single-card MTP (currently **-19%: 25.5 vs 31.4, PIECEWISE**), so FULL capture is the unlock. (Other localmaxxing datapoints: RagingNoper 35B-A3B FULL-capture **102.5 t/s no-spec**; Lorbus 27B-int4 single-card MTP **45.2/41.3 t/s**, accept 86/65%; Lorbus TP2 MTP **35.6 t/s [NEG]**. Public sanity: Puget 4xB70 TP=4 27B-dense 13.1 t/s/1u no-MTP; vLLM PR #43565 MTP on B60/Qwen3-Next-80B/spec=2.)
 
