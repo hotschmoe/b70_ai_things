@@ -3474,3 +3474,23 @@ verdict -> (1) capspec does NOT stack on TP=2: spec5 63.11 (93, no batch-6 cap) 
   horizon is ~5 tokens; spec=6 drafts past it -> most drafts rejected -> net slowdown. **spec=5 is the ceiling.**
   FINAL W8A8 TP=2 MTP headline: ~63-64 t/s, 3.4x vs best MTP-off (18.74) -- MEETS the MTP_TODO primary success
   criterion (>=3x). Both leases freed; host clean. Campaign of scripts/90-94 complete.
+
+== 2026-06-23 :: W8A8 TP=2 prefill/TTFT @ 2048 + a long-context MTP HANG (recipe blocker) ==
+motivation -> user wants prefill+TTFT at 2048 ctx (the int8-prefill optimization baseline), and a rdy_to_serve
+  recipe for the TP=2 MTP win.
+result (prefill, MTP-OFF, scripts/96 section A -- VALID, vllm bench serve random 2048/128) ->
+  conc  req/s  out_tok/s  TTFT_ms   TPOT_ms  per-stream_decode
+  1     0.10   12.85      2747.84   56.79    17.61      -> prefill ~= 2048/2.748s ~= 745 tok/s
+  4     0.21   27.18      7085.86   92.44    10.82
+  So int8 W8A8 TP=2 prefill @2048 ~745 tok/s / TTFT 2.75s -- ~10x below the int8 XMX compute ceiling -> big
+  prefill headroom (the user's int8-prefill optimization target). Decode 17.6 matches the ~18.74 off baseline.
+LONG-CONTEXT MTP HANG (the real find) -> scripts/95 (MTP-on, splitting_ops, spec5) @ 2048 ctx PREFILLED
+  (204.8 prompt tok/s) then DECODE STALLED at ~0 t/s for 30 min: 1 req "Running", engine threads asleep
+  (epoll/nanosleep, NOT D-state) -> a TP-collective / spec-decode long-context deadlock. Short prompts (80 tok,
+  scripts 93/94) never hit it. Container was hard to remove (needed explicit docker kill -SIGKILL). scripts/96
+  section B FALSELY showed instant 0-tok "hangs" -- that was a SCRIPT BUG (host has NO python3 -> empty request
+  bodies); ignore it. scripts/97 (pure-bash JSON) is characterizing the real break point by ctx length + testing
+  --no-enable-chunked-prefill as the candidate fix (chunked-prefill x spec-decode x TP is the prime suspect).
+verdict (so far) -> the TP=2 MTP recipe is a DECODE win but has a LONG-CONTEXT serving HAZARD; do NOT shelf it
+  as production-ready until 97 pins the break point + a fix. The MTP-off prefill number stands. Host cleaned,
+  leases freed after each run.
