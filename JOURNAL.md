@@ -3623,3 +3623,40 @@ verdict -> Bug B is conclusively a **captured-TP=2 numerics** bug, NOT a crash/p
   inside captured pieces interleaved with the custom int8 op under TP=2. Repro is single-command (scripts/106
   IGP=false, or scripts/108 IGP=true). Until fixed: W8A8 27B serves coherent EAGER (~9 t/s MTP), and the fast
   coherent int8-activation 27B path is single-card W4A8 (captured, 2.03x, verified). Capture-recovery night CLOSED.
+
+== 2026-06-24 :: [!!! BUG B ROOT-CAUSED + DISPROVEN] it is NOT "captured TP=2 numerics" -- it is COLLECTIVE EJECTION ==
+motivation -> user: dig to the tiniest detail, fix the W8A8 27B TP=2 captured/MTP bug. The prior verdict ("captured
+  TP=2 numerics are wrong, both partition modes garbage") had a HOLE: every garbage repro (scripts/106,108) ejects
+  the TP collectives to eager via splitting_ops. Nobody had run 27B W8A8 TP=2 CAPTURED with the collectives LEFT
+  INSIDE the captured graph after the ignore-list fix (the old 18.74 "baseline" was measured pre-fix, never read).
+source dig (int8g vLLM, extracted to host:/mnt/vm_8tb/b70/bugb_src) ->
+  - compilation/cuda_graph.py CUDAGraphWrapper (L161-167, L346-360): the wrapper does PURE .replay() and does NOT
+    copy any runtime input into a static buffer. Contract: every captured-piece input MUST be at the SAME device
+    address on replay as at capture (debug build asserts new_input_addresses == entry.input_addresses).
+  - distributed/parallel_state.py + device_communicators/xpu_communicator.py: the TP collectives are ALL
+    OUT-OF-PLACE. all_reduce = `output = input_.clone(); dist.all_reduce(output); return output` (fresh tensor).
+    reduce_scatter / all_gather = `torch.empty(...)` + `.movedim().contiguous()` (fresh tensor(s)). Fakes return
+    torch.empty_like / torch.empty (fresh).
+  => MECHANISM: when a collective is EJECTED to eager (added to splitting_ops -> runs as a piecewise boundary), its
+     FRESH output tensor must land at the exact capture-time address for the next captured piece's replay to read
+     it. On XPU/oneCCL that address is not reproducible across forwards -> the next piece reads STALE capture-time
+     data -> garbage. Captured single-card = no collectives -> no ejected boundary. Eager = no graph -> no address
+     contract. That is the entire matrix.
+config -> scripts/109_bugb_matrix.sh (parameterized launcher + COHERENCE READ-OUT via the container's python, since
+  the host has no python3 -- the scripts/96 gotcha). Cell C: CKPT=27B-W8A8-graft, TP=2, GRAPH=1 PIECEWISE,
+  EJECT=0 (collectives LEFT IN the captured graph -- splitting_ops = attn/GDN only, NO all_reduce/all_gather/
+  reduce_scatter), no speculative-config. gpu-run both cards.
+command -> SERVED=bugb_c TP=2 GRAPH=1 EJECT=0 KEEP=1 ./gpu-run bash scripts/109_bugb_matrix.sh
+result -> HEALTHY, captured, COHERENT. temp=0 reads:
+  Q1 "capital of France" -> "...The capital of France is Paris." (correct, with a clean think trace)
+  Q2 "nth Fibonacci"     -> correct reasoning + standard F(0)=0,F(1)=1 definition.
+  Load 112s (warm). NO crash, NO garbage.
+verdict -> **PRIOR "captured-TP=2 numerics are broken" IS WRONG.** The captured W8A8 27B TP=2 compute is NUMERICALLY
+  FINE. Bug B = COLLECTIVE EJECTION ONLY. scripts/106,108 produced garbage purely because they ejected the
+  collectives (splitting_ops includes all_reduce/all_gather/reduce_scatter), which breaks the captured-piece input-
+  address contract on XPU. Consequence: for NO-MTP, the W8A8 27B TP=2 captured serve just needs splitting_ops WITHOUT
+  the collectives -> coherent AND captured (fast). The reason collectives were ejected at all was the MTP spec-verify
+  all_gather (oneCCL can't SYCL-graph-record allgather). all_reduce/reduce_scatter DO record. So the MTP fix narrows
+  to: handle the ONE all_gather (make it capturable, or eject only it with a stable-buffer landing). codex consult
+  (gpt-5.5, read-only) independently ranked the collective boundary as #1. NEXT: (E) MTP spec=5 collectives-captured
+  -> confirm it crashes only on all_gather; (F) eject ONLY all_gather; (G) capture-safe all_gather if F corrupts.
