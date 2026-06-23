@@ -3412,3 +3412,26 @@ verdict -> **M4 "TP=2 MTP DEAD" is OVERTURNED.** Ejecting the TP collectives fro
   CCL_ENABLE_SYCL_KERNELS=1. Codex's oneCCL-env lead was a dead end but cheap to rule out. (Spoof shim
   all_gather->allreduce-of-padded staged as a fallback, NOT NEEDED.) Next: spec sweep + harder prompt for honest
   accept. Both leases freed; host clean.
+
+== 2026-06-23 :: W8A8 TP=2 MTP spec sweep (splitting_ops fix) -- spec=5 = 63.11 t/s, ~3.4x production ==
+motivation -> nail down the overturned TP=2 verdict: full off+spec{3,4,5} curve with the splitting_ops fix, and a
+  HARDER natural-language prompt (Roman-Empire reasoning, not the trivially-predictable LRU code) for honest accept.
+config -> scripts/93, W8A8 graft TP=2 PIECEWISE, splitting_ops includes the 3 collectives (the 91-A fix), CCL
+  sycl-kernels on, harder prompt, gpu-run both cards.
+result -> repo results/mtp93_w8a8tp2_20260622_193943.csv.
+  spec  decode_tps  MTPx(same-cfg)  accept_len  accept_rate  gen512_s
+  off   14.46       -               -           -            34.14
+  3     50.37       3.48            3.96         0.986        10.47
+  4     57.24       3.96            4.93         0.983         9.39
+  5     63.11       4.37            5.90         0.980         8.41
+verdict -> WINNER spec=5 = 63.11 t/s, monotonically climbing (50->57->63) -- accept ~98% greedy hasn't saturated,
+  so spec=6+ may go higher (untested). TWO baselines matter:
+  - This config's off = 14.46 (splitting_ops ejects ALL collectives to EAGER, slowing even no-MTP) -> 4.37x.
+  - Best MTP-off TP=2 = 18.74 (default splitting_ops, collectives CAPTURED, scripts/91) -> **honest production
+    multiplier 63.11/18.74 = 3.37x**. Lead with 3.37x; the 4.37x is vs the same eager-collective config.
+  ACCEPT CAVEAT: ~98% is a temp=0 greedy single-prompt best case (near-lossless W8A8 body -> the BF16 MTP head
+  predicts almost perfectly, even on reasoning text); real serving (temp>0, varied/short prompts) will be lower --
+  report greedy headline, expect production accept to fall (Playbook A item 3). Net: **W8A8 27B TP=2 MTP = ~63 t/s
+  is the FASTEST single-stream 27B config on the rig** (single-card W4A8 42, W4A16-graft 43), now that splitting_ops
+  unblocks TP=2 capture. The 2-card W8A8 quality scheme went from "MTP-dead capacity play" to "MTP speed king".
+  Leases freed; host clean.
