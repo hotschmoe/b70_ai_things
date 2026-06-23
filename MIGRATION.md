@@ -251,10 +251,11 @@ NVMe. Back on Unraid. If Ubuntu had written to the array RW, let Unraid rebuild 
       DONE -- running 26.04 LTS, kernel 7.0.0-22-generic (section 13).
 - [x] Confirm a free M.2 slot for the 500G NVMe (else use a PCIe M.2 adapter).
       DONE -- 500G NVMe installed and booting (nvme0n1, Samsung 970 EVO).
-- [~] Decide SnapRAID coverage: disk1+disk2 only, or include vm_8tb. DEFERRED (Phase 4 deferred by Isaac).
+- [x] Decide SnapRAID coverage: disk1+disk2 only, or include vm_8tb. DONE -- disk1+disk2 (vm_8tb/cache outside parity).
 - [x] Capture OpenWebUI + Nextcloud current configs/volumes before powerdown (Phase 0) -- DONE
       2026-06-24, see "Phase 0 capture -- RESULTS" in section 3.
-- [ ] Generate Ubuntu `smb.conf` + `/etc/exports` from the captured Unraid share config.
+- [x] Generate Ubuntu `smb.conf` + `/etc/exports` from the captured Unraid share config. DONE -- guest/no-password,
+      StrongSync+isos, LAN-only (section 13). VM/app shares (domains, proxmox-vms, appdata, flash) dropped.
 - [ ] Pick Secure Boot on (keep shim) vs off (simpler) on the B70 box.
 - [ ] Maintenance window: this is the box running quant27b + the NAS for mother -- schedule downtime.
 - [x] P2P/IOMMU boot profile decided 2026-06-24 -- see section 12 (IOMMU off, NOT iommu=pt; ReBAR + Above 4G on).
@@ -319,15 +320,24 @@ DONE:
 - Phase 6 P2P HEADLINE: `71_ze_p2p_ctypes.py` -> zeDeviceCanAccessPeer = True (both dirs), P2PProperties ACCESS=Y,
   IPC zeMemOpenIpcHandle(peer) = PEER MAP OK. **B70<->B70 P2P UNLOCKED on kernel 7.0** (was False on all 12 variants
   on 6.18). The migration's central thesis, confirmed. See JOURNAL 2026-06-23 + docs/P2P_GPU.md H.11.
+- Phase 4 RAID (un-deferred by Isaac): mergerfs pool /mnt/disk1:/mnt/disk2 -> /mnt/storage (category.create=mfs).
+  Parity = /dev/sda (serial JEH9VZHN, the freed Unraid parity), formatted xfs -> /mnt/parity1 (UUID
+  37062348-7e10-40ff-8763-774f69a1f149). /etc/snapraid.conf: data d1=/mnt/disk1 d2=/mnt/disk2, 1 parity, content x3.
+  First `snapraid sync` running detached as systemd unit snapraid-initsync (long; watch `journalctl -u
+  snapraid-initsync -f`). vm_8tb + cache intentionally OUTSIDE parity. Serial-guarded format script: phase4_raid.sh.
+- Phase 5 sharing (Samba + NFS, LAN-only, NO username/password per Isaac): SMB share name "StrongSync" + "isos"
+  preserved (//192.168.10.5/StrongSync unchanged); guest ok via map-to-guest=Bad User; bound to enp3s0 + hosts
+  allow 192.168.10.0/24. NFS exports /mnt/storage/{StrongSync,isos} to the LAN, reusing old fsid 103/100 +
+  all_squash anonuid=99 anongid=100. wsdd installed for Windows Explorer discovery (nmbd skipped by Ubuntu
+  is-configured, disabled -- not needed). Media for Plex @ .50 = /mnt/storage/StrongSync/StrongMedia. Scripts:
+  phase5_shares.sh + phase5b_winshare.sh. NOTE: Windows 10/11 blocks unauthenticated guest SMB by default ->
+  one-time client fix AllowInsecureGuestAuth=1 (LanmanWorkstation) needed per Windows box.
 
 NOT DONE YET:
 - Phase 6 BW measurement (the actual prize, H.10): allreduce_bench.py / oneCCL TP=2 P2P-on serve A/B -- BLOCKED on
   Docker + the int8g image (not installed). ze_peer peer-BW matrix -- needs level-zero-tests BUILT (not in 26.04 apt).
-- Phase 5 Docker: NOT installed. OpenWebUI restore (open-webui_data.tgz on vm_8tb migration_capture) pending.
-- Phase 5 file sharing: samba + nfs-kernel-server NOT installed. StrongSync share + Nextcloud rebuild pending ->
-  mother's NAS access NOT yet restored (the #1 "do not break" item -- prioritize when ready).
-- Phase 4 redundancy (mergerfs + SnapRAID): DEFERRED by Isaac. Unraid USB rollback still valid until parity (sda)
-  is reformatted.
+- App containers (OpenWebUI, Nextcloud, mariadb): DROPPED by Isaac (2026-06-23, "don't care about them"). Docker not
+  installed. open-webui_data.tgz still on vm_8tb if ever wanted; all-databases.sql is Nextcloud insurance only.
 - Memory-interleave-off did NOT change the kernel NUMA view (still 1 node). Revisit only if NUMA-local host staging
   is wanted; irrelevant to P2P.
 - Repo split: git repo at ~/github/b70_ai_things (canonical -- has GitHub remote + all docs) vs runtime scripts at
