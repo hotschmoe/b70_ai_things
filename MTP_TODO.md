@@ -6,16 +6,21 @@
 W8A8 TP=2 retry). **W4A8-sqgptq single-card MTP = FEASIBLE 2.03x** (off 20.74 -> spec5 42.03 t/s, accept_len
 **3.79** -- accept HOLDS on int4, refuting the int4-drift worry; ~= the W4A16 graft's ~42 t/s but buys the
 int8-activation systolic path free).
-**[BREAKTHROUGH -- scripts/91] M4 "TP=2 MTP DEAD" is OVERTURNED.** The TP=2 MTP capture crash (`oneCCL
+**[BREAKTHROUGH -- scripts/91,93,94] M4 "TP=2 MTP DEAD" is OVERTURNED.** The TP=2 MTP capture crash (`oneCCL
 ccl_allgather_impl: CCL_SYCL sched algorithms do not support sycl_graph recording`) is fixed by adding the TP
 collectives (`vllm::all_gather/all_reduce/reduce_scatter`) to `splitting_ops` so inductor partitions at them and
 they run EAGER (never recorded), decode stays CAPTURED (the RagingNoper insight). Result: **W8A8-sqgptq 27B TP=2
-MTP spec=4 = 55.32 t/s = 2.95x** vs the 18.74 MTP-off TP=2 baseline -- the FASTEST single-stream 27B MTP config we
-have (beats single-card W4A8 42 / W4A16-graft 43), because near-lossless W8A8 drafts near-perfectly AND MTP
-amortizes the very TP collective tax that made MTP-off TP=2 only 0.87x single-card. Codex's oneCCL env knobs
+MTP spec=5 = ~63-64 t/s = 3.4x** vs the best MTP-off TP=2 baseline (18.74) -- MEETS the >=3x primary success
+criterion and is the FASTEST single-stream 27B MTP config we have (beats single-card W4A8 45.7 / W4A16-graft 43),
+because near-lossless W8A8 drafts near-perfectly (accept ~98% temp=0 greedy) AND MTP amortizes the very TP
+collective tax that made MTP-off TP=2 only 0.87x single-card. spec=5 is the CEILING (spec=6 collapses: accept
+0.98->0.33, the MTP head is 1-layer -> ~5-token horizon). Capturing the verify batch (the +14% single-card lever)
+is marginal here (+1.5%) -- TP=2 is collective-bound, not GEMM-batch-bound. Codex's oneCCL env knobs
 (`CCL_SYCL_ALLGATHERV_SCALEOUT`, `CCL_ALLGATHER=topo`) did NOTHING on the image's oneCCL 2021.17 -- splitting_ops
 alone is the fix (no custom capture-safe communicator needed). Caught+fixed a broken (quote-stripped)
-`mtp_bf16_patch/sitecustomize.py` in both graft dirs first. Details below + in JOURNAL.
+`mtp_bf16_patch/sitecustomize.py` in both graft dirs first. **Single-card path also improved: W4A8 27B MTP =
+45.7 t/s (2.16x) once caps include the 1+spec verify batch (+14% vs naive caps); fp16 dtype neutral.** Details
+below + in JOURNAL.
 **Status:** ✅ **CAMPAIGN COMPLETE 2026-06-22 (M0-M5 all done).** HEADLINE: **single-card dense 27B W4A16 + MTP spec=4
 PIECEWISE = 55.28 t/s vs 30.84 = 1.79x** (beats Lorbus 45.2; refutes the stale -19%). Half-KV FREE (accept 3.29 vs 3.25).
 FULL capture BLOCKED (gdn_attention spec op can't run in any captured graph on v0230 0.1.9). TP=2 MTP DEAD (spec-allgather
@@ -371,7 +376,12 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 - **14B MTP-head existence** (Phase 0) — the whole 14B plan assumes it; resolve first.
 - **Acceptance decay with quant** — the W4A8 thesis lives or dies on whether accept length holds; A3 + B2 are the deciding measurements.
 - **Image integration** — our custom W8A8 kernel + FULL graph capture in one **v0230** image is the real engineering (`gdn_attention` + #43565 spec-wiring are now NATIVE on v0230, so the lift is mainly our int8 GEMM registration + the FULL-capture `--compilation-config` + capture-safe collectives); budget for it.
-- **TP=2 MTP needs capture-safe collectives** — confirmed [NEG] on localmaxxing (Lorbus TP2): stock oneCCL all-reduce corrupts inside a captured graph, so TP comm runs UNCAPTURED and eats the draft savings. Phase C must port RagingNoper's capture-safe all-reduce, or prefer DP replicas (MTP per card).
+- **TP=2 MTP needs capture-safe collectives** — RESOLVED 2026-06-23 (scripts/91,93,94). The crash was the spec
+  `vllm::all_gather` being recorded into the SYCL graph (oneCCL 2021.17 `sched` allgather has no recordable impl;
+  allreduce DOES record). FIX = add the collectives to `splitting_ops` so they run EAGER as graph-partition
+  boundaries while decode stays captured. No custom communicator needed. W8A8 27B TP=2 MTP spec=5 = ~64 t/s, 3.4x.
+  Note: ejecting collectives to eager slows the no-MTP baseline (18.74 captured -> 14.46 eager), but MTP more than
+  pays for it. DP replicas (MTP per card) remain the alternative for models that fit one card (W4A8/W4A16).
 - **The headline's `cudagraph_mode` is unknown** — the `ytnszmy` 54.2 row does not state PIECEWISE vs FULL. Treat FULL capture (RagingNoper recipe) as something WE must add; do not assume the headline already had it.
 - **27B int4 kernel-coverage gaps** — CORRECTED 2026-06-23: the W4A16 "4304-dim `XPUwNa16` wall" was a RED
   HERRING (it was the weightless vision tower of a text-only checkpoint, not a serve-blocking kernel limit).
