@@ -3507,3 +3507,23 @@ recipe -> shelved rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp (serve.sh + README + c
   TP=2 eager; no regression). Commit e2c8c76. README documents the --random benchmark hazard.
 verdict -> the TP=2 MTP win is now a self-contained, smoke-gated shelf recipe. Next: 262K KV-capacity + long-prompt
   prefill (scripts/99), and an honest real-dataset bench before any localmaxxing submission.
+
+== 2026-06-23 :: W8A8 TP=2 262K KV capacity + prefill-vs-length (the int8-prefill baseline) ==
+config -> scripts/99: W8A8 graft TP=2, MTP-OFF, --enforce-eager, MAXLEN=262144, UTIL=0.95, fp16 KV, both cards.
+result -> repo results/mtp99_262k_*.txt.
+  KV FIT: "Available KV cache memory: 14.81 GiB" (per card), "GPU KV cache size: 479,090 tokens",
+          "Maximum concurrency for 262,144 tokens per request: 1.83x" -> a SINGLE 262K session FITS at fp16 with
+          83% headroom. Confirms the hybrid math (16 full-attn + 48 GDN layers, kv_heads=4, head_dim=256 ->
+          64 KB/token fp16 -> 262K ~= 16 GiB total KV; pool 479K tok >> 262K).
+  PREFILL scaling (vllm bench serve --random, MTP-off so no hang, OUT=8, C=1):
+    ctx      TTFT_ms     prefill_tok/s
+    2048     5394.93     380
+    8192     20689.56    396
+    32768    83566.13    392
+    131072   352346.91   372
+verdict -> prefill throughput is FLAT ~380-396 tok/s from 2K to 131K -> NOT attention-bound (the hybrid keeps the
+  16 full-attn layers' O(n^2) cheap); the limiter is a CONSTANT per-token cost = eager kernel launches + per-layer
+  TP all-reduce over PCIe + un-fused int8 GEMM. So (a) long context fits AND scales linearly (131K TTFT ~6 min --
+  usable but slow), (b) the int8-prefill optimization target is the per-token rate, not the algorithm. Cross-check:
+  captured prefill (scripts/96, MAXLEN=4096) = 745 tok/s @2048 vs eager 380 here -> capture alone ~2x on prefill.
+  Next (scripts/100): MTP-ON KV capacity @ 262K (does the recipe's drafter+capture still leave room for 262K?).
