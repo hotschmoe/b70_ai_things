@@ -108,6 +108,26 @@ Optional (only if you want mother's Nextcloud accounts/share-links, not just her
 `docker exec <db-container> mysqldump ... > "$D/nextcloud.sql"`. Her actual files live on the array
 and carry over regardless; the Unraid USB (kept) also still holds every config above as rollback.
 
+Phase 0 capture -- RESULTS (run 2026-06-24, saved to /mnt/vm_8tb/migration_capture/2026-06-24/, small
+configs mirrored to the laptop at ~/b70_migration_capture/2026-06-24/). Findings that shape the rebuild:
+- NETWORK IS DHCP, NOT static. Host got 192.168.10.5 via DHCP from the router (192.168.10.1).
+  DECISION: keep DHCP on Ubuntu, pin 192.168.10.5 via a DHCP RESERVATION on the router keyed to
+  eth0 MAC = 70:85:c2:5d:b3:db. (Unraid bridged eth0->br0 sharing that same MAC; Ubuntu requests
+  from eth0 directly with the same MAC, so the reservation carries over.) #1 "do not break mother's
+  access" item -- serve recipes + docs hardcode .10.5.
+- Disk serials + UUIDs re-verified -- ALL MATCH section 0. The section 6 fstab is correct as written.
+  Parity = sdb / serial JEH9VZHN, confirmed NO filesystem -> the SnapRAID reformat target.
+- open-webui data lived on the Unraid docker.img loopback (/dev/loop2), NOT on any carried-over
+  drive -- it would have been lost. Snapshotted to open-webui_data.tgz (1.1G). Restore on Ubuntu:
+  `docker volume create open-webui` then extract the tgz into /var/lib/docker/volumes/open-webui/_data.
+- Containers: KEEP open-webui, nextcloud (linuxserver:25.0.2) + mariadb. DROP Syncthing.
+- Nextcloud: mother's FILES are at /mnt/user/StrongSync/nextcloud (on the array -> carries over).
+  DB lives in mariadb appdata, dumped to all-databases.sql (insurance only). 25.0.2 is old; on a
+  fresh rebuild prefer pointing new Nextcloud at her files + `occ files:scan` over restoring the old
+  DB across many major versions.
+- Samba: only user share to recreate is StrongSync (appdata/system are Unraid-internal; domains +
+  proxmox-vms are VM shares -> drop). virbr0 is libvirt's net -> irrelevant on Ubuntu.
+
 
 ## 4. Phase 1 -- prepare the boot NVMe (on a separate machine)
 
@@ -230,12 +250,14 @@ NVMe. Back on Unraid. If Ubuntu had written to the array RW, let Unraid rebuild 
 - [ ] Confirm Ubuntu 26.04 LTS (kernel 7.0) is the target (vs 25.10 / a 7.1 HWE stack).
 - [ ] Confirm a free M.2 slot for the 500G NVMe (else use a PCIe M.2 adapter).
 - [ ] Decide SnapRAID coverage: disk1+disk2 only, or include vm_8tb.
-- [ ] Capture OpenWebUI + Nextcloud current configs/volumes before powerdown (Phase 0).
+- [x] Capture OpenWebUI + Nextcloud current configs/volumes before powerdown (Phase 0) -- DONE
+      2026-06-24, see "Phase 0 capture -- RESULTS" in section 3.
 - [ ] Generate Ubuntu `smb.conf` + `/etc/exports` from the captured Unraid share config.
 - [ ] Pick Secure Boot on (keep shim) vs off (simpler) on the B70 box.
 - [ ] Maintenance window: this is the box running quant27b + the NAS for mother -- schedule downtime.
 - [x] P2P/IOMMU boot profile decided 2026-06-24 -- see section 12 (IOMMU off, NOT iommu=pt; ReBAR + Above 4G on).
-- [ ] Run the Phase 0 capture block (section 3) on the live Unraid box BEFORE powerdown.
+- [x] Run the Phase 0 capture block (section 3) on the live Unraid box BEFORE powerdown -- DONE 2026-06-24.
+- [ ] On the router (192.168.10.1): set a DHCP reservation for MAC 70:85:c2:5d:b3:db -> 192.168.10.5.
 
 
 ## 12. P2P probe boot profile (BIOS + kernel) -- decided 2026-06-24
