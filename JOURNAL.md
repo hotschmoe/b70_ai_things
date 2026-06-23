@@ -3435,3 +3435,25 @@ verdict -> WINNER spec=5 = 63.11 t/s, monotonically climbing (50->57->63) -- acc
   is the FASTEST single-stream 27B config on the rig** (single-card W4A8 42, W4A16-graft 43), now that splitting_ops
   unblocks TP=2 capture. The 2-card W8A8 quality scheme went from "MTP-dead capacity play" to "MTP speed king".
   Leases freed; host clean.
+
+== 2026-06-23 :: W4A8 single-card MTP levers -- capture-the-verify-batch = +14% (45.70 t/s); fp16 neutral ==
+motivation -> push the proven single-card W4A8 MTP (90 winner spec5 = 42.03, caps 1,2,4) higher. Two hypotheses:
+  (a) --dtype float16 (the int4_gemm_w4a8 fp16-output warning), (b) capture the spec-verify batch 1+spec=6 (the
+  winner's caps 1,2,4 miss it -> verify falls back to eager).
+config -> scripts/92, single card (card 0), MTP spec=5 PIECEWISE, per-dtype off baseline. variants base(bf16,
+  caps1,2,4) / fp16(float16,1,2,4) / capspec(bf16,1,2,4,6,8) / combo(float16,1,2,4,6,8).
+result -> repo results/mtp92_w4a8levers_*.csv.
+  variant  dtype    caps        decode_tps  MTPx  accept_len
+  off      auto     1,2,4       21.13       -     -
+  base     auto     1,2,4       40.13       1.90  3.60
+  fp16     float16  1,2,4       41.29       2.02  3.64
+  capspec  auto     1,2,4,6,8   45.70       2.16  3.79   <- WINNER
+  combo    float16  1,2,4,6,8   41.83       2.05  3.55
+verdict -> CAPTURING THE SPEC-VERIFY BATCH (caps include 1+spec) is a real +14% (base 40.13 -> capspec 45.70 t/s):
+  the winner's caps 1,2,4 left the verify decode at batch 6 running EAGER; adding 6,8 captures it. New single-card
+  W4A8 MTP best = 45.70 t/s (2.16x). --dtype float16 is NEUTRAL (41.29 vs 40.13, noise) -- the fp16-output warning
+  did not translate to a real win; combo(fp16+capspec)=41.83 is actually below capspec(bf16)=45.70, so fp16 slightly
+  HURTS the captured path. KEEP bf16/auto. CROSS-CUTTING: the W8A8 TP=2 headline (93, spec=5, caps 1,2,4,8 -- MISSES
+  6) likely left the same ~14% on the table -> worth re-running W8A8 TP=2 spec5/6 with caps including the verify
+  batch. accept_len varies 3.55-3.79 across identical temp=0 runs -> the bench's accept metric has ~+-0.2 noise
+  (warmup+64+512 accumulation); treat accept_len as approximate, decode_tps as solid. Card0 lease freed.
