@@ -31,3 +31,7 @@ __pycache__/
 # localmaxxing API puller (scripts/75) -- large regenerable raw dumps stay local;
 # the curated data/localmaxxing/b70_summary.md snapshot IS tracked.
 data/localmaxxing/*_raw.json
+
+# local secrets (API keys) -- never commit
+.secrets/
+*.secret
