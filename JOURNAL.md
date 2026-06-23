@@ -3527,3 +3527,14 @@ verdict -> prefill throughput is FLAT ~380-396 tok/s from 2K to 131K -> NOT atte
   usable but slow), (b) the int8-prefill optimization target is the per-token rate, not the algorithm. Cross-check:
   captured prefill (scripts/96, MAXLEN=4096) = 745 tok/s @2048 vs eager 380 here -> capture alone ~2x on prefill.
   Next (scripts/100): MTP-ON KV capacity @ 262K (does the recipe's drafter+capture still leave room for 262K?).
+
+== 2026-06-23 :: MTP-ON 262K KV capacity -- full model max FITS at fp16 (1.42x) ==
+config -> scripts/100: the RECIPE config (W8A8 TP=2, MTP spec=5, splitting_ops, GRAPH=1 PIECEWISE), MAXLEN=262144,
+  UTIL=0.95, fp16 KV.
+result -> HEALTHY. "Available KV cache memory: 12.84 GiB" (per card), "GPU KV cache size: 372,809 tokens",
+  "Maximum concurrency for 262,144 tokens per request: 1.42x". (Shim + Detected-MTP confirmed on both workers.)
+verdict -> With MTP ON, maxlen = the FULL 262,144 model max, fp16 KV, 42% headroom -- NOT VRAM-limited at TP=2.
+  The drafter + PIECEWISE capture cost ~2 GiB/card vs MTP-off (KV pool 479,090 -> 372,809 tokens; 1.83x -> 1.42x),
+  but 373K >> 262K. Half-KV (fp8) would ~2x the pool (~745K tok) for multi-session long-context. The constraint
+  on long context is SPEED (flat ~390 t/s eager prefill -> 262K TTFT ~12 min), not memory. Recipe defaults
+  MAXLEN=4096 for interactive; raise to 262144 per-session for long docs. Host clean; leases freed.
