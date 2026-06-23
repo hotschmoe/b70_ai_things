@@ -330,8 +330,11 @@ DONE:
   allow 192.168.10.0/24. NFS exports /mnt/storage/{StrongSync,isos} to the LAN, reusing old fsid 103/100 +
   all_squash anonuid=99 anongid=100. wsdd installed for Windows Explorer discovery (nmbd skipped by Ubuntu
   is-configured, disabled -- not needed). Media for Plex @ .50 = /mnt/storage/StrongSync/StrongMedia. Scripts:
-  phase5_shares.sh + phase5b_winshare.sh. NOTE: Windows 10/11 blocks unauthenticated guest SMB by default ->
-  one-time client fix AllowInsecureGuestAuth=1 (LanmanWorkstation) needed per Windows box.
+  phase5_shares.sh + phase5c_wsdd.sh. GOTCHA: Ubuntu's wsdd pkg ships ONLY the binary (no systemd unit) -- unit
+  hand-created at /etc/systemd/system/wsdd.service (`wsdd --shortlog -i enp3s0 -w WORKGROUP`, User=nobody).
+  VERIFIED: `smbclient -N -L 192.168.10.5` lists StrongSync+isos; guest read of StrongSync/StrongMedia works
+  with no password. NOTE: Windows 10/11 blocks unauthenticated guest SMB by default -> one-time client fix
+  AllowInsecureGuestAuth=1 (LanmanWorkstation) needed per Windows box.
 
 NOT DONE YET:
 - Phase 6 BW measurement (the actual prize, H.10): allreduce_bench.py / oneCCL TP=2 P2P-on serve A/B -- BLOCKED on
