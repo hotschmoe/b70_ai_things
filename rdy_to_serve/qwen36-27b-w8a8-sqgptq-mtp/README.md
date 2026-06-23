@@ -1,63 +1,63 @@
 # qwen36-27b-w8a8-sqgptq-mtp
 
 Qwen3.6-27B **W8A8** (compressed-tensors INT8 weights x INT8 activations, SmoothQuant+GPTQ) + a **BF16 MTP
-graft**, served **TP=2 + MTP spec=5** on 2x B70. This is the **fastest single-stream 27B config on the rig.**
+graft**, served **TP=2 + MTP spec=5** on 2x B70.
 
-## Result (config -> command -> result -> verdict)
+## [!!!] 2026-06-23 CORRECTION -- the old "63 t/s / 3.4x captured" headline was GARBAGE
 
-- **Config:** `vllm-xpu-env:int8g`, TP=2, PIECEWISE graph capture, MTP spec=5, the `splitting_ops` fix, GDN kernel
-  mounted, text-only (NOMM). Both cards via `gpu-run`.
-- **Command:** `/mnt/vm_8tb/b70/gpu-run bash serve.sh`
-- **Result (scripts/93,94 benches, temp=0 greedy, 512-tok gen):**
-  | spec | decode tok/s | accept_len | accept% |
-  |---|---|---|---|
-  | off | 18.74 | - | - |
-  | 3 | 50.37 | 3.96 | 98.6 |
-  | 4 | 57.24 | 4.93 | 98.3 |
-  | **5** | **63-64** | 5.90 | 98.0 |
-  | 6 | 28.67 (collapse) | 3.00 | 33.3 |
-- **Verdict:** **~3.4x decode vs MTP-off** (63.11 vs the best MTP-off 18.74). spec=5 is the ceiling -- spec=6
-  collapses because the MTP module is 1-layer (`mtp_num_hidden_layers=1`), useful horizon ~5 tokens. Accept ~98%
-  is a **temp=0 greedy best case** (near-lossless W8A8 body -> the BF16 head drafts almost perfectly); expect
-  lower at production temperature.
+This recipe previously claimed "the fastest single-stream 27B config, ~63-64 tok/s, 3.4x". **That was a false
+positive measured on degenerate output.** Two stacked bugs (full diagnosis: JOURNAL 2026-06-23, scripts/101-106):
 
-## Why TP=2 MTP works here (no Battlemage P2P, PCIe-staged oneCCL)
+### Bug A -- the garbage (FIXED, config-only, NO requant)
+The checkpoint `config.json` `ignore` list had **336 enumerated leaf names with the wrong flat prefix**
+`model.layers.N.linear_attn.*`. The actual checkpoint keys are VLM-**nested** `model.language_model.layers.N.*`,
+so those ignore entries **matched nothing** -> the 48 GDN `linear_attn` layers (correctly stored BF16) were **not
+exempted** -> vLLM built them as W8A8 int8 linears. A BF16 `[out,in]` weight silently shape-matches the int8 param
+buffer and the `weight_scale` is absent -> 48 recurrent GDN layers of garbage -> the model emitted `!!!!` / `is is is`.
+A degenerate body makes the BF16 MTP draft head (drafting the same garbage) and the target **agree on `!`** -> trivial
+~98% accept, accept_len saturates at spec+1=5.9. The throughput bench used `ignore_eos` + token-count and **never read
+the text** (the exact QUANTS_TODO Q8 trap).
+- **Fix:** replace the ignore list with the regex form `["lm_head","re:.*linear_attn.*","re:.*visual.*","re:.*mtp.*"]`
+  (the same form the W4A8 already uses). Tool: `scripts/104_fix_w8a8_ignore.py` (backs up to `config.json.ignore339.bak`).
+- **Weights were always good** (dequant int8*scale vs bf16 base: per-channel cosine 0.97-0.9999). llmcompressor
+  quantized correctly; only the SAVED config.json ignore serialization had the wrong prefix. So this is config-only.
 
-TP=2 batch-1 decode pays ~2 all-reduces/layer (~128/token) of tiny, **latency-bound** messages over CPU-staged
-oneCCL (no P2P). That latency is why MTP-OFF TP=2 is only ~0.87x single-card. **MTP fires one collective round per
-~6 verified tokens instead of per token**, so it amortizes the interconnect latency ~accept_len x -- which is
-exactly why MTP is a *bigger* win at TP=2 than single-card (single-card 2.0x vs TP=2 ~3.4x).
+### Bug B -- the captured path is numerically BROKEN on this TP=2 hybrid (NOT fixed; recipe defaults EAGER)
+With the GDN now correctly BF16, PIECEWISE graph capture is broken here:
+- `use_inductor_graph_partition=true` -> `KeyError: weight_scale` at profile/capture (the partitioner packs a
+  weight_scale placeholder for a region that MIXES W8A8 (has scale) + BF16 GDN (no scale) linears).
+- `use_inductor_graph_partition=false` (legacy piecewise, lib.sh `IGP=false`) -> capture succeeds but the decode is
+  **numerically garbage even WITHOUT MTP** (clean-cache confirmed). 14B W8A8 captures coherently single-card, so this
+  is a **TP=2 + BF16-GDN-in-captured-pieces + custom-int8** capture-numerics bug, to be chased separately.
+- **=> recipe DEFAULTS TO EAGER (`GRAPH=0`), the only coherent path.** `GRAPH=1` reproduces the broken captured path.
 
-## The three non-obvious ingredients (all wired in serve.sh)
+## Honest result (coherent, EAGER, temp=0 greedy)
+
+| config | decode tok/s | accept | note |
+|---|---|---|---|
+| eager, MTP-off (pure body) | ~4.1 | - | TP=2 fully-eager int8 is launch/collective-bound |
+| eager, MTP spec=5 | ~9.0-9.6 | ~48% (accept_len ~3.9) | **2.3x vs MTP-off**, coherent |
+| captured (GRAPH=1) | (was "63") | - | **BROKEN -- garbage; do not use** |
+
+So the coherent W8A8 27B TP=2 serve is **correct but slow (~9 t/s)**. The fast number requires the captured path,
+which is currently broken. If you need a fast *coherent* 27B int8-activation serve today, the single-card
+**W4A8** (`../qwen36-27b-w4a8`, captures coherently) is the better pick until Bug B is fixed.
+
+## The non-obvious ingredients (still wired in serve.sh)
 
 1. **GDN kernel mount** -- :int8g bakes GDN OFF; mount the GDN-enabled `_xpu_C.abi3.so` (+ sibling lib).
 2. **MTP-BF16 shim** (`patches/sitecustomize.py` on PYTHONPATH) -- forces ONLY the `Qwen3_5MultiTokenPredictor`
-   drafter unquantized/BF16, else it loads through the W8A8 path -> 0% accept.
-3. **`splitting_ops` THE FIX** (`SPLITOPS` knob in ../_common/lib.sh) -- TP+MTP records the spec `vllm::all_gather`
-   into the SYCL graph, but oneCCL 2021.17's `sched` allgather has no graph-recordable impl -> capture crash. Listing
-   the 3 collectives (`all_gather`/`all_reduce`/`reduce_scatter`) makes inductor partition at them so they run EAGER
-   while decode stays captured. This is what overturned the old "TP=2 MTP DEAD" (M4). No custom communicator needed.
+   drafter unquantized/BF16. (Eager MTP works; the shim is correct.)
+3. **`splitting_ops` / `IGP` knobs in ../_common/lib.sh** -- relevant only to the (currently broken) captured path.
 
 ## Host dependency (not in repo)
 
-- **Model:** `/mnt/vm_8tb/b70/models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft` -- the W8A8-sqgptq quant (35 GiB) with 15
-  BF16 `mtp.*` tensors grafted from the bf16 base as `model-mtp-graft.safetensors` (loaded via the no-index glob).
+- **Model:** `/mnt/vm_8tb/b70/models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft` (35 GiB W8A8 + 15 BF16 `mtp.*` grafted;
+  config.json ignore is now the regex form, original at `config.json.ignore339.bak`).
 - **GDN kernel:** `/mnt/vm_8tb/b70/vllm-xpu-kernels/vllm_xpu_kernels/{_xpu_C.abi3.so,libgdn_attn_kernels_xe_2.so}`.
 
-## Known issue (benchmark-only)
+## Open work (Bug B -- recover a fast coherent path)
 
-`vllm bench serve --dataset-name random` (random token IDs) **deadlocks** this config -- the request prefills then
-decode stalls at ~0 t/s (out-of-distribution gibberish hits a degenerate MTP/rejection-sampler path). **Real
-prompts are unaffected** -- verified OK at 2048-ctx with 128/256-token outputs and back-to-back requests
-(scripts/97,98). So: benchmark with a real dataset (sharegpt) or real prompts, NOT `--random`. This does not
-affect production serving.
-
-## Knobs
-
-- `MTPTOK=5` (default; the winner). `MTPTOK=0` is NOT MTP-off here -- to serve **MTP-off**, also drop SPLITOPS
-  (set `SPLITOPS=` and `CAPSIZES=1,2,4,8`) so the collectives capture (18.74 t/s, faster no-MTP baseline).
-- `CAPSIZES=1,2,4,6,8` includes the spec-verify batch (1+spec). `COMPILESZ=` MUST stay empty for spec-decode.
-- `MAXLEN` defaults to 4096 (snappy interactive). **The full 262144 model max fits with MTP on** (scripts/100:
-  fp16 KV pool 372,809 tokens at `UTIL=0.95`, 1.42x concurrency at 262K -- NOT VRAM-limited). Raise `MAXLEN` per
-  long-doc session; the limit is SPEED, not memory (eager prefill ~390 tok/s flat with length -> 262K TTFT ~12 min;
-  decode also slows on the 16 full-attn layers). `KVDTYPE=fp8_e4m3` ~2x the KV pool for multi-session long context.
+Fix the captured-int8 + BF16-GDN + TP=2 numerics so capture is coherent (would restore the ~5x capture speedup on
+top of eager). Leads: per-token dynamic int8 quant buffer aliasing across piecewise-split-at-collective boundaries;
+or the BF16 GDN linears inside captured pieces. 14B single-card captures fine -> isolate the TP=2 delta.

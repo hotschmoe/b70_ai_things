@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
 # Qwen3.6-27B W8A8 (compressed-tensors INT8 w x INT8 a, SmoothQuant+GPTQ) + BF16 MTP graft, TP=2 + MTP spec=5.
-# THE FASTEST single-stream 27B config on the 2x B70 rig: ~63-64 tok/s decode, ~3.4x vs MTP-off (scripts/93,94).
+# Coherent single-stream 27B int8-activation serve. EAGER ~9 t/s MTP-on (2.3x vs ~4 t/s MTP-off), 48% accept.
 # Self-contained recipe; shared plumbing in ../_common/lib.sh.
 #
-#   /mnt/vm_8tb/b70/gpu-run bash serve.sh          # start (both cards), wait healthy, gen-probe
+# [!!! 2026-06-23 CORRECTION -- scripts/101-106]: the OLD "63-64 t/s / 3.4x captured" headline was a FALSE POSITIVE
+#   benched on GARBAGE. Two stacked bugs were found+fixed/characterized:
+#   (A) ROOT CAUSE of the garbage (FIXED, config-only, no requant): the checkpoint config.json `ignore` list had 336
+#       ENUMERATED leaf names with the wrong flat prefix `model.layers.N.linear_attn.*` -- they do NOT match the
+#       VLM-nested keys `model.language_model.layers.N.*`, so the 48 GDN linear_attn layers (correctly stored BF16)
+#       were NOT exempted -> built as W8A8, BF16 silently shape-matched int8, scale missing -> 48 recurrent garbage
+#       layers -> degenerate output. The degenerate body made draft==target -> trivial ~98% accept / accept_len 5.9
+#       (the bench counted tokens, never read text). FIX = regex ignore (scripts/104); weights were always good
+#       (dequant cos 0.97-0.9999 vs base). Eager now COHERENT.
+#   (B) CAPTURED PATH STILL BROKEN: with correct BF16 GDN, PIECEWISE capture is numerically broken on this TP=2 hybrid
+#       (IGP=true -> KeyError weight_scale crash; IGP=false -> serves but garbage even WITHOUT MTP; clean-cache
+#       confirmed). 14B W8A8 captures fine single-card, so it's a TP=2 + BF16-GDN-in-captured-pieces + int8 capture
+#       bug. -> recipe DEFAULTS TO EAGER (GRAPH=0) for correctness. `GRAPH=1` reproduces the broken captured path.
+#
+#   /mnt/vm_8tb/b70/gpu-run bash serve.sh          # start (both cards), wait healthy, COHERENCE-GATED gen-probe
 #   bash serve.sh stop                              # stop + release both GPUs
-#   MTPTOK=0 ... (see below) to serve MTP-OFF
 #
 # [!] IMAGE: vllm-xpu-env:int8g  (custom oneDNN s8s8s32 INT8 W8A8 GEMM = XPUInt8ScaledMMLinearKernel, auto-selected
 #     from the compressed-tensors W8A8-int8 config; plus register_fake so XPU graph capture can trace the int8 ops).
@@ -30,7 +43,9 @@ export CKPT="${CKPT:-/models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft}"
 export SERVED="${SERVED:-qwen36-27b-w8a8-sqgptq-mtp}"
 export DTYPE="${DTYPE:-auto}"
 export TP="${TP:-2}"
-export GRAPH="${GRAPH:-1}"                  # PIECEWISE capture (int8g traces the custom int8 ops)
+export GRAPH="${GRAPH:-0}"                  # EAGER default = the only COHERENT path. GRAPH=1 capture is numerically
+                                            # broken on this TP=2 hybrid (see CORRECTION (B) above). Do not flip to 1
+                                            # until the captured-int8+BF16-GDN+TP=2 numerics are fixed.
 export NOMM="${NOMM:-1}"                    # 27B is a qwen3_5 VLM -> text-only
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"

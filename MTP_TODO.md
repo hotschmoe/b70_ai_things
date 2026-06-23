@@ -2,6 +2,22 @@
 
 **Created:** 2026-06-20 · **Updated:** 2026-06-23 (CT MTP-graft sweep: W4A8/W8A8 logged)
 **Owner:** b70 team
+
+> ### [!!! 2026-06-23 RETRACTION -- the W8A8 TP=2 MTP "63-64 t/s / 3.4x" headline was GARBAGE] (JOURNAL 2026-06-23, scripts/101-106)
+> The "W8A8-sqgptq 27B TP=2 MTP spec=5 = ~63-64 t/s = 3.4x, FASTEST 27B" result (scripts/91,93,94; the rows tagged
+> C1/M4 below) was a **FALSE POSITIVE benched on degenerate output**. Root cause: the W8A8 checkpoint's config.json
+> `ignore` list used 336 ENUMERATED flat-prefix names `model.layers.N.linear_attn.*` that did NOT match the
+> VLM-nested keys `model.language_model.layers.N.*` -> the 48 GDN linear_attn layers were quantized to W8A8 instead
+> of kept BF16 -> garbage. A degenerate body makes draft==target -> trivial ~98% accept / accept_len saturating at
+> spec+1 -- which is exactly the "still climbing 50/57/63, accept 0.98" signature in the rows below. **FIX = regex
+> ignore (scripts/104), config-only, NO requant; weights were good (dequant cos 0.97-0.9999).** AFTER the fix:
+> (a) EAGER W8A8 MTP is COHERENT at ~9 t/s (2.3x vs ~4 t/s off) -- the honest number; (b) the CAPTURED path is still
+> numerically broken on this TP=2 hybrid (IGP=true -> KeyError weight_scale; IGP=false -> garbage even no-MTP;
+> 14B single-card captures fine). So **the ~63 t/s and the >=3x "primary success criterion MET" claim are RETRACTED**
+> -- the coherent W8A8 27B TP=2 serve is correct-but-slow (~9 t/s eager), and the fast captured path is unrecovered.
+> **Lesson (again): a token-count bench with ignore_eos does NOT verify coherence -- READ THE TEXT.** All MTP rows
+> below produced via that bench are SUSPECT until coherence-reconfirmed; the W4A8 single-card 2.03x (single-card int4,
+> separate kernel) is the most likely to survive but was NOT yet coherence-rechecked.
 **[2026-06-23 CT-GRAFT SWEEP -- scripts/90,91]:** benched the compressed-tensors BF16-MTP grafts (Phase B2 + the
 W8A8 TP=2 retry). **W4A8-sqgptq single-card MTP = FEASIBLE 2.03x** (off 20.74 -> spec5 42.03 t/s, accept_len
 **3.79** -- accept HOLDS on int4, refuting the int4-drift worry; ~= the W4A16 graft's ~42 t/s but buys the

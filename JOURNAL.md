@@ -3538,3 +3538,51 @@ verdict -> With MTP ON, maxlen = the FULL 262,144 model max, fp16 KV, 42% headro
   but 373K >> 262K. Half-KV (fp8) would ~2x the pool (~745K tok) for multi-session long-context. The constraint
   on long context is SPEED (flat ~390 t/s eager prefill -> 262K TTFT ~12 min), not memory. Recipe defaults
   MAXLEN=4096 for interactive; raise to 262144 per-session for long docs. Host clean; leases freed.
+
+== 2026-06-23 :: [!!! MAJOR CORRECTION] W8A8 27B TP=2 MTP "63 t/s / 3.4x headline" was GARBAGE -- root-caused + fixed (eager) ==
+motivation -> user: "our headline w8a8 MTP is broken when we serve." Served the shelved recipe
+  (rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp) AS THE HEADLINE config (TP=2, MTP spec=5, PIECEWISE capture,
+  splitting_ops) and READ THE TEXT (the shelf "smoke GREEN" only served TP=2 EAGER + never coherence-checked).
+repro -> serves HEALTHY, MTP loads ("Detected MTP model"), shim applies, capture finishes -> generation is
+  PURE GARBAGE ("!!!!", "is is is"). The "63 t/s, accept 98%, accept_len 5.90" was a FALSE POSITIVE: a degenerate
+  body makes the BF16 draft head (drafting the same garbage) and the target AGREE on "!" -> trivial ~98% accept,
+  accept_len saturates at spec+1. The bench used ignore_eos + token-count and NEVER read the text -- the exact
+  QUANTS_TODO Q8 trap, repeated.
+bisection (config->command->result->verdict, scripts/101-106) ->
+  14B W8A8 single-card eager   COHERENT  -> int8 W8A8 kernel + image OK
+  14B W8A8 TP=2 eager          COHERENT  -> TP=2 int8 path OK
+  27B W4A8 single-card eager   COHERENT  -> GDN mount + VLM text-only config + 27B family OK
+  27B W8A8 TP=2 eager (body)   GARBAGE   -> isolated to the 27B W8A8 CHECKPOINT (not kernel/GDN/image/TP)
+  weight audit (scripts/101): dequant int8*scale vs bf16 base = per-channel cosine 0.97-0.9999, 0% int8
+    saturation, no NaN scales -> WEIGHTS ARE GOOD. Not corrupt, not a requant problem.
+ROOT CAUSE (scripts/102,103) -> the checkpoint config.json `ignore` list had 336 ENUMERATED leaf names with the
+  WRONG FLAT PREFIX `model.layers.N.linear_attn.*`. The actual keys are VLM-NESTED `model.language_model.layers.N.*`
+  -> the ignore entries matched NOTHING (verified: ignore-match for 'model.language_model.layers.0.linear_attn...'
+  = []). So the 48 GDN linear_attn layers (stored BF16, no scale) were NOT exempted -> vLLM built them as W8A8 int8
+  -> a BF16 [out,in] weight SILENTLY shape-matches the int8 param buffer, weight_scale missing -> 48 recurrent GDN
+  layers of garbage -> degenerate output. (codex insight: W4A8 would ASSERT on the int4-packed shape mismatch --
+  which is exactly why the W4A8 hit this same bug earlier, was caught, and fixed to a 4-regex ignore [its
+  config.json.ignore339.bak]; W8A8 silently misloads because int8 == bf16 shape.) llmcompressor quantized
+  CORRECTLY (scripts/49 passes re:.*linear_attn.*; GDN stored BF16) -- the bug is ONLY the SAVED config.json ignore
+  serialization (wrong prefix), surviving the VLM config graft. -> CONFIG-ONLY fix, NO requant.
+FIX (scripts/104) -> replace ignore with the regex form ["lm_head","re:.*linear_attn.*","re:.*visual.*","re:.*mtp.*"]
+  (backs up to config.json.ignore339.bak; the W8A8 base + graft configs are hardlinked so one edit fixes both).
+  Verified: W8A8 pure body (TP=2 eager) now COHERENT ("Paris... Seine... art, fashion", correct Fibonacci, correct
+  hash-table). Applied the same fix to the 27B W4A16 + W4A16-graft (config.json.ignore337.bak) -- same flat-prefix
+  bug there, but HARMLESS on int4 (the packed-int4 loader falls back to unquantized on a BF16 weight, doesn't
+  silently corrupt -> W4A16 already served coherently; fixed for cleanliness).
+CAPTURED PATH STILL BROKEN (Bug B) -> with the GDN now correctly BF16, PIECEWISE capture is numerically broken on
+  this TP=2 hybrid: use_inductor_graph_partition=true -> KeyError weight_scale at capture (partitioner packs a
+  weight_scale placeholder for a region MIXING W8A8(has scale)+BF16 GDN(no scale)); IGP=false (legacy piecewise,
+  new lib.sh knob) -> capture succeeds but decode is GARBAGE even WITHOUT MTP (clean-cache confirmed). 14B W8A8
+  captures coherently single-card -> it's a TP=2 + BF16-GDN-in-captured-pieces + custom-int8 capture-numerics bug.
+honest numbers (eager, the only coherent path; temp=0 greedy 256-tok) ->
+  eager MTP-off (pure body) ~4.1 t/s ; eager MTP spec=5 ~9.0-9.6 t/s, accept ~48% (accept_len ~3.9) = 2.3x, COHERENT.
+  So the coherent W8A8 27B TP=2 serve is CORRECT-BUT-SLOW (~9 t/s). The "fast" captured number was always garbage.
+verdict -> Bug A (the user's "broken when we serve") is FIXED: ignore-list regex, no requant, eager coherent 2.3x
+  MTP. Recipe now DEFAULTS GRAPH=0 (eager). README rewritten honestly. Added a COHERENCE GATE to b70_gen_probe
+  (lib.sh): a degenerate repeated-token reply now FAILS smoke instead of passing on /health alone -- this class of
+  bug would have been caught. Bug B (captured numerics) is characterized + documented as open. The repo's
+  "fastest 27B = W8A8 TP=2 MTP 63 t/s" claim is RETRACTED (it was garbage on two counts: degenerate output, and the
+  coherent version is ~9 t/s). For a fast COHERENT 27B int8-act serve today, single-card W4A8 (captures coherently)
+  is the pick. scripts/101-106 + 104 fixer committed; host configs fixed in place with backups; leases freed.

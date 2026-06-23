@@ -84,7 +84,12 @@ b70_build() {
     local CAP=""; [ -n "$CAPSIZES" ] && CAP="\"cudagraph_capture_sizes\":[$CAPSIZES],"
     local CSZ=""; [ -n "$COMPILESZ" ] && CSZ="\"compile_sizes\":[$COMPILESZ],"
     local SPL=""; [ -n "$SPLITOPS" ] && SPL="\"splitting_ops\":[$SPLITOPS],"
-    CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,${CAP}${CSZ}${SPL}$PASS}")
+    # IGP: use_inductor_graph_partition. Default true (the newer partitioner). Set IGP=false to fall back to
+    # the LEGACY piecewise splitter -- needed when a model MIXES quantized (weight_scale) + unquantized linears
+    # in one captured region: the inductor partitioner raises `KeyError: weight_scale` collecting subgraph
+    # inputs, while the legacy splitter handles the custom int8 op cleanly. splitting_ops still eject collectives.
+    local IGP="${IGP:-true}"
+    CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":${IGP},${CAP}${CSZ}${SPL}$PASS}")
   fi
   ARGS+=("${EAGER[@]}" "${CC[@]}")    # GRAPH=0 -> --enforce-eager ; GRAPH=1 -> the --compilation-config capture flags
 
@@ -132,10 +137,25 @@ b70_wait_healthy() {
 }
 
 b70_gen_probe() {
-  echo "--- gen probe ---"
-  curl -s --max-time 60 "http://localhost:$PORT/v1/completions" -H 'Content-Type: application/json' \
-    -d "{\"model\":\"$SERVED\",\"prompt\":\"The capital of France is\",\"max_tokens\":24,\"temperature\":0}" \
-    | grep -oE '"text":"[^"]*"' | head -1; echo
+  echo "--- gen probe (coherence-gated) ---"
+  local resp txt verdict
+  resp=$(curl -s --max-time 60 "http://localhost:$PORT/v1/completions" -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$SERVED\",\"prompt\":\"The capital of France is\",\"max_tokens\":24,\"temperature\":0}")
+  txt=$(printf '%s' "$resp" | grep -oE '"text":"[^"]*"' | head -1 | sed 's/^"text":"//; s/"$//')
+  echo "gen: $txt"
+  # COHERENCE GATE: a broken quant/capture/load serve emits a single repeated token ("!!!!" or "is is is")
+  # while LOADING + /health stay green -- that masqueraded as a 3.4x MTP win (degenerate body -> draft==target
+  # -> trivial ~98% accept). Flag if one non-space char is >55% of a >=12-char reply (catches the garbage).
+  verdict=$(printf '%s' "$txt" | awk '{
+    s=$0; gsub(/ /,"",s); n=length(s); if(n<12){print "SHORT"; exit}
+    for(i=1;i<=n;i++){ch=substr(s,i,1); c[ch]++}
+    max=0; for(k in c) if(c[k]>max) max=c[k];
+    if(max/n>0.55) print "GARBAGE"; else print "OK" }')
+  if [ "$verdict" = "GARBAGE" ]; then
+    echo "[!] INCOHERENT GENERATION (degenerate repeated-token output) -- serve is BROKEN (quant ignore-list / capture / load bug)."
+    return 1
+  fi
+  echo "[probe coherence: ${verdict:-OK}]"
 }
 
 b70_bench() {

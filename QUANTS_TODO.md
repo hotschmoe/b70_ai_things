@@ -251,6 +251,15 @@ scripts/gpu-run env \
 ## 5. Universal gotchas (apply to EVERY item)
 1. **Ignore list (regex):** `lm_head re:.*linear_attn.* re:.*visual.* re:.*mtp.*` for the qwen3_5 27B/Qwable; for the 35B
    MoE add the router/gate (keep bf16). 14B = `lm_head` only. Keep the PARENT regex `re:.*linear_attn.*` (avoid #40252 zeroing).
+   **[!!! 2026-06-23] THE SAVED config.json `ignore` MUST stay REGEX, not enumerated leaf names.** llmcompressor
+   quantizes correctly with the regex (GDN stays BF16) BUT serializes the RESOLVED ignore into config.json as ~336
+   ENUMERATED leaf names with a FLAT prefix `model.layers.N.linear_attn.*`. The served VLM checkpoint has NESTED keys
+   `model.language_model.layers.N.*` -> the enumerated names match NOTHING -> GDN layers get quantized at SERVE time.
+   For **W8A8 this is SILENT garbage** (BF16 weight shape-matches the int8 buffer; no scale -> degenerate output that
+   still loads + passes /health + fakes ~98% MTP accept -- it bricked the W8A8 27B "63 t/s" headline for days). For
+   W4A8/W4A16 it asserts/falls-back (int4-packed shape mismatch) so it was caught earlier. **EVERY 27B/Qwable CT quant:
+   after produce+graft, run `scripts/104_fix_w8a8_ignore.py <dir>` to normalize ignore -> regex (backs up the original),
+   then SERVE + READ THE TEXT (not just token-count).** The W8A8-sqgptq, W4A16, W4A16-graft were all fixed 2026-06-23.
 2. **27B/Qwable/35B are VLMs:** apply `w4a8/fix_27b_vlm_config.py` to the output before serving. The 4304-dim vision fc2
    trips the group-128 int4 kernel -> keeping vision bf16 (ignore list) sidesteps it.
 3. **MTP head + router stay BF16.** 4. **Calibration:** chat/instruction data, 512 samples (128 to iterate), SEQLEN=2048.
