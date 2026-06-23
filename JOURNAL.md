@@ -3586,3 +3586,40 @@ verdict -> Bug A (the user's "broken when we serve") is FIXED: ignore-list regex
   "fastest 27B = W8A8 TP=2 MTP 63 t/s" claim is RETRACTED (it was garbage on two counts: degenerate output, and the
   coherent version is ~9 t/s). For a fast COHERENT 27B int8-act serve today, single-card W4A8 (captures coherently)
   is the pick. scripts/101-106 + 104 fixer committed; host configs fixed in place with backups; leases freed.
+
+== 2026-06-23 :: W4A8 single-card MTP graft VERIFIED COHERENT (2.03x is real) -> Bug B is TP=2-specific ==
+check -> the user also asked "check the w4a8 if it has problems too." Served the W4A8-sqgptq MTP graft single-card,
+  PIECEWISE captured, MTP spec=5 + BF16-MTP shim (scripts/107, mirrors scripts/90 w4a8) and READ THE TEXT.
+result -> COHERENT ("Paris... thinking process", correct Fibonacci code), capture finished (2.88 GiB), accept
+  63/80 = 79% on a single prompt (accept_len ~4.9, REAL not saturated). So the "W4A8 single-card MTP 2.03x"
+  headline (scripts/90) is GENUINE, unlike the W8A8 TP=2 one. The W4A8 body was already proven coherent + its
+  ignore list is already the regex form, so no garbage there.
+refined Bug B -> captured corruption is TP=2-SPECIFIC, not int8/GDN/capture per se:
+  14B W8A8 captured single-card = COHERENT ; W4A8 27B captured single-card = COHERENT ; W8A8 27B captured TP=2 =
+  GARBAGE (even no-MTP, clean-cache). So the W8A8 capture break is a TP=2 + piecewise-split-at-collectives +
+  custom-int8/BF16-GDN numerics bug. Practical consequence: the WORKING fast coherent int8-activation 27B MTP path
+  TODAY is single-card W4A8 (~42 t/s captured, accept holds at int4) -- NOT the 2-card W8A8 (eager-only ~9 t/s, or
+  captured garbage). W8A8's only edge is near-lossless accuracy; if its speed matters, the captured-TP=2 numerics
+  must be fixed first (separate focused session -- leads: per-token int8 dynamic-quant buffer aliasing across the
+  collective split boundaries; or BF16 GDN linears inside captured pieces under TP). Recipe README already points
+  users to W4A8 for a fast coherent serve.
+verdict -> task done: W4A8 is HEALTHY (no garbage bug). W8A8 fix shipped (eager). Bug B scoped to captured-TP=2.
+
+== 2026-06-23 :: Bug B capture-recovery RULED OUT (both partition modes garbage) -- it's the TP=2 captured numerics ==
+attempt -> tried to recover the fast captured W8A8 TP=2 path (the user's "build whatever's needed"). codex #3:
+  the IGP=true crash is `KeyError weight_scale` (partitioner packs a weight_scale placeholder for a region MIXING
+  W8A8(has scale)+BF16 GDN(none)). Wrote scripts/108 dummy-wscale shim: patch UnquantizedLinearMethod.
+  process_weights_after_loading to register a dummy weight_scale(ones) on every unquantized linear -- the BF16
+  forward ignores it, so numerics unchanged; it only satisfies the partition input-collection.
+result -> the shim CLEARED the KeyError (capture finished, 2.93 GiB) -- but IGP=true captured no-MTP TP=2 output is
+  STILL pure "!!!!" garbage, identical to IGP=false. So **both inductor-graph-partition modes produce garbage** ->
+  the partition MECHANISM is not the corruptor; the actual CAPTURED COMPUTATION at TP=2 is numerically wrong.
+verdict -> Bug B is conclusively a **captured-TP=2 numerics** bug, NOT a crash/partition-packing bug. The
+  dummy-scale shim is a valid crash-unblock but does not fix numerics, so it is NOT shipped (would just let the
+  broken captured path serve garbage without the KeyError). Capture recovery for W8A8 27B TP=2 needs real
+  kernel/capture-level debugging (leading hypotheses, for a focused session): (1) the per-token dynamic int8
+  activation quant (dynamic_per_token_int8_quant -> int8_gemm_w8a8) intermediate buffers (x_q/x_s) being clobbered
+  or frozen across the piecewise-split-at-collective boundaries during graph replay; (2) BF16 GDN linears executing
+  inside captured pieces interleaved with the custom int8 op under TP=2. Repro is single-command (scripts/106
+  IGP=false, or scripts/108 IGP=true). Until fixed: W8A8 27B serves coherent EAGER (~9 t/s MTP), and the fast
+  coherent int8-activation 27B path is single-card W4A8 (captured, 2.03x, verified). Capture-recovery night CLOSED.
