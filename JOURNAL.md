@@ -3660,3 +3660,28 @@ verdict -> **PRIOR "captured-TP=2 numerics are broken" IS WRONG.** The captured 
   to: handle the ONE all_gather (make it capturable, or eject only it with a stable-buffer landing). codex consult
   (gpt-5.5, read-only) independently ranked the collective boundary as #1. NEXT: (E) MTP spec=5 collectives-captured
   -> confirm it crashes only on all_gather; (F) eject ONLY all_gather; (G) capture-safe all_gather if F corrupts.
+
+== 2026-06-24 :: [!!! MTP FIXED] eject ONLY all_gather (not all 3 collectives) -> captured TP=2 MTP COHERENT ==
+motivation -> Bug B root cause = collective ejection breaks the captured-piece input-address contract. The old
+  broken recipe ejected ALL THREE collectives (all_reduce + reduce_scatter + all_gather). Hypothesis: only the
+  all_gather genuinely MUST be ejected (oneCCL 2021.17 cannot SYCL-graph-record allgather; the scripts/90 crash).
+  all_reduce + reduce_scatter DO record -> they should stay CAPTURED. Ejecting the per-layer all_reduce (on every
+  captured boundary) is what corrupted decode. So: eject ONLY all_gather, keep the other two captured.
+config -> scripts/109 cell F: CKPT=27B-W8A8-graft, TP=2, GRAPH=1 PIECEWISE, IGP=false, MTP spec=5 + BF16-MTP shim,
+  EJECT=ag (splitting_ops = attn/GDN ops + ONLY "vllm::all_gather"; all_reduce/reduce_scatter NOT listed -> captured).
+  caps=[1,2,4,6,8] (incl. the 1+spec verify batch). gpu-run both cards.
+command -> SERVED=bugb_f TP=2 GRAPH=1 EJECT=ag MTP=5 ./gpu-run bash scripts/109_bugb_matrix.sh
+result -> capture SUCCEEDED (no oneCCL allgather crash -- all_gather is the ejected partition boundary, never
+  recorded), HEALTHY, and COHERENT. temp=0 reads:
+  Q1 "capital of France" -> "...The capital of France is Paris." (clean think trace)
+  Q2 "nth Fibonacci"     -> correct reasoning + F(0)=0,F(1)=1.
+  MTP shim confirmed ("[mtp-bf16-shim] Qwen3_5MultiTokenPredictor forced unquantized for grafted BF16 mtp.*").
+verdict -> **MTP IS FIXED on captured W8A8 27B TP=2.** The minimal, correct config: PIECEWISE capture, IGP=false,
+  eject ONLY all_gather, keep all_reduce + reduce_scatter CAPTURED. The old "all 3 ejected" recipe corrupted decode
+  via the ejected all_reduce boundary; the new config ejects only the one collective that cannot be recorded, whose
+  boundary turns out to be benign (its output is consumed in/next-to an eager region, not read by a captured piece
+  across a graph boundary). NOTE: scripts/90-94 "63 t/s" headline numbers were benched on the all-3-ejected GARBAGE
+  (token-count bench, never read text); the captured DECODE is identical here, so the real speed should be similar
+  but now COHERENT. scripts/111 benches off vs spec=5 in this fixed config WITH a coherence read-out (running now).
+  Plan B (scripts/110_csag_shim: capture-safe all_gather via all-reduce-of-padded so even all_gather stays captured,
+  EJECT=none) is staged as a more-robust alternative if the eager all_gather proves a bottleneck.
