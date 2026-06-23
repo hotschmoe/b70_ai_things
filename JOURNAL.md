@@ -3765,3 +3765,24 @@ cross-check -> codex (gpt-5.5, analytical, no measurement) independently derived
 verdict -> full per-step diagnosis in 27b_w8a8_research.md (ASCII data-flow diagrams for one decode token + one
   prefill pass, per-op roofline tables, optimization board). docs/P2P_GPU.md H.10 = the allreduce datapoint. Both
   cards used (microbench card 0; allreduce + the earlier eager serve both cards). Host clean; leases freed.
+
+## 2026-06-23 -- MIGRATION to Ubuntu 26.04 / kernel 7.0 + B70<->B70 P2P UNLOCKED [HEADLINE]
+host -> b70s4dayz, Ubuntu 26.04 LTS, kernel 7.0.0-22-generic, booted off the 500G NVMe (Samsung 970 EVO,
+  nvme0n1). Both B70s under xe (0b:00.0, 44:00.0; renderD128/129). Data drives carried over by UUID (Phase 3,
+  all serials/UUIDs match MIGRATION.md sec 0; PARITY JEH9VZHN reshuffled sdb->sda as warned). BIOS: IOMMU OFF
+  (iommu_groups=0), ACS off, mem-interleave off (kernel still shows 1 NUMA node). No iommu= kernel param.
+config -> kernel 7.0 + IOMMU off (BIOS) + DEFAULT L0 env (stock 26.04 archive: intel-opencl-icd / libze1 /
+  libze-intel-gpu1, all 26.05.37020.3 NEO).
+command -> cd /mnt/vm_8tb/b70 && ./gpu-run python3 71_ze_p2p_ctypes.py
+result ->
+  zeDeviceCanAccessPeer dev0<->dev1 = True (BOTH directions)      [6.18: False on all 12 variants, H.9]
+  zeDeviceGetP2PProperties flags = 0x1  ACCESS=Y ATOMICS=N        [6.18: 0x0]
+  IPC path: zeContextCreate / zeMemAllocDevice / zeMemGetIpcHandle = 0x0; zeMemOpenIpcHandle(peer) = 0x0 PEER MAP OK
+    [6.18: zeMemOpenIpcHandle = 0x78000004 FAILED -- the exact call that blocked oneCCL drmfd TP]
+  True with DEFAULT env -- no EnableCrossDeviceAccess / EnableP2P / affinity-mask hacking needed.
+verdict -> B70<->B70 P2P is AVAILABLE on kernel 7.0 with IOMMU disabled. Both H.9 levers necessary, both now hold:
+  (A.1) drm/xe pcie-p2p interconnect path shipped in 7.0, AND (A.2) IOMMU-off restores the AMD-Zen (fam 0x17)
+  pci_p2pdma allow-list. The unpublished F.3/F.4 datapoint, now measured. Closes I.1/I.2 reboot-gated TODOs.
+  NEXT (the BW prize, H.10): re-run scripts/allreduce_bench.py on 7.0 -- does 1.16 GB/s climb toward the ~15 GB/s
+  Gen3 wire (=> ~4x prefill TTFT)? Needs Docker + int8g image (not yet installed); also build ze_peer
+  (level-zero-tests, not in 26.04 apt) for the authoritative peer BW/latency matrix. See P2P_GPU.md H.11.

@@ -402,9 +402,26 @@ disassembly in [`27b_w8a8_research.md`](../27b_w8a8_research.md)):
 - So: **P2P is a PREFILL/TTFT + concurrency win (~4x prefill), not a single-stream decode win.** Re-running THIS
   bench on 7.0 (does 1.16 GB/s climb toward the wire?) is the single measurement that confirms the 4x is real.
 
+### H.11 [RESOLVED 2026-06-23] kernel 7.0 + IOMMU off -> B70<->B70 P2P canAccessPeer=True (the 6.18 gate, opened)
+New host: b70s4dayz, Ubuntu 26.04 LTS, **kernel 7.0.0-22-generic**, both B70s on xe (0b:00.0 / 44:00.0). BIOS:
+IOMMU/AMD-Vi OFF (`iommu_groups`=0), ACS off, memory-interleave off; NO `iommu=` kernel param. Userspace = stock
+26.04 archive (intel-opencl-icd / libze1 / libze-intel-gpu1, all 26.05.37020.3 NEO -- no external Intel repo). Re-ran
+the EXACT H.9 probe with DEFAULT env (no debug keys): `./gpu-run python3 71_ze_p2p_ctypes.py`
+    zeDeviceCanAccessPeer dev0<->dev1 = **True** (both directions)     [6.18: False on all 12 variants]
+    zeDeviceGetP2PProperties flags = **0x1  ACCESS=Y** ATOMICS=N       [6.18: 0x0]
+    IPC: zeContextCreate / zeMemAllocDevice / zeMemGetIpcHandle = 0x0; **zeMemOpenIpcHandle(peer) = 0x0 PEER MAP OK**
+      [6.18: zeMemOpenIpcHandle = 0x78000004 FAILED -- the exact call that blocked the oneCCL drmfd TP path]
+VERDICT: P2P available with DEFAULT env -- no EnableCrossDeviceAccess / EnableP2P / ZE_FLAT_DEVICE_HIERARCHY tuning.
+Both H.9 levers were necessary and both now hold: (A.1) the drm/xe pcie-p2p interconnect path shipped in 7.0, AND
+(A.2) IOMMU-off lets the AMD-Zen (family 0x17) pci_p2pdma allow-list apply. This is the unpublished F.3/F.4 datapoint,
+now measured: **B70<->B70 P2P IS available on kernel 7.0 with IOMMU disabled** (it is NOT on 6.x). Closes the I.1/I.2
+reboot-gated TODOs below. STILL OPEN (the BW prize, H.10): does the allreduce climb 1.16 -> ~10-15 GB/s? Needs
+Docker + int8g for `scripts/allreduce_bench.py` / the oneCCL TP=2 P2P-on serve A/B, and `ze_peer` (build
+level-zero-tests; not in 26.04 apt) for the authoritative peer BW/latency matrix.
+
 ---
 
-## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]
+## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]  [SUPERSEDED -- see H.11: probe done on 7.0]
 
 Userspace is EXHAUSTED (H.9: 12-variant L0 probe, all canAccessPeer=False). Every remaining lever needs a host
 reboot, so BATCH each hypothesis into one maintenance window. Everything below is staged/turnkey. Success metric

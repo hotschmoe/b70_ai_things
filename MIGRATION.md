@@ -247,9 +247,11 @@ NVMe. Back on Unraid. If Ubuntu had written to the array RW, let Unraid rebuild 
 
 
 ## 11. Open decisions / checklist
-- [ ] Confirm Ubuntu 26.04 LTS (kernel 7.0) is the target (vs 25.10 / a 7.1 HWE stack).
-- [ ] Confirm a free M.2 slot for the 500G NVMe (else use a PCIe M.2 adapter).
-- [ ] Decide SnapRAID coverage: disk1+disk2 only, or include vm_8tb.
+- [x] Confirm Ubuntu 26.04 LTS (kernel 7.0) is the target (vs 25.10 / a 7.1 HWE stack).
+      DONE -- running 26.04 LTS, kernel 7.0.0-22-generic (section 13).
+- [x] Confirm a free M.2 slot for the 500G NVMe (else use a PCIe M.2 adapter).
+      DONE -- 500G NVMe installed and booting (nvme0n1, Samsung 970 EVO).
+- [~] Decide SnapRAID coverage: disk1+disk2 only, or include vm_8tb. DEFERRED (Phase 4 deferred by Isaac).
 - [x] Capture OpenWebUI + Nextcloud current configs/volumes before powerdown (Phase 0) -- DONE
       2026-06-24, see "Phase 0 capture -- RESULTS" in section 3.
 - [ ] Generate Ubuntu `smb.conf` + `/etc/exports` from the captured Unraid share config.
@@ -257,7 +259,8 @@ NVMe. Back on Unraid. If Ubuntu had written to the array RW, let Unraid rebuild 
 - [ ] Maintenance window: this is the box running quant27b + the NAS for mother -- schedule downtime.
 - [x] P2P/IOMMU boot profile decided 2026-06-24 -- see section 12 (IOMMU off, NOT iommu=pt; ReBAR + Above 4G on).
 - [x] Run the Phase 0 capture block (section 3) on the live Unraid box BEFORE powerdown -- DONE 2026-06-24.
-- [ ] On the router (192.168.10.1): set a DHCP reservation for MAC 70:85:c2:5d:b3:db -> 192.168.10.5.
+- [x] On the router (192.168.10.1): set a DHCP reservation for MAC 70:85:c2:5d:b3:db -> 192.168.10.5.
+      DONE -- host came up at 192.168.10.5 on enp3s0 (section 13).
 
 
 ## 12. P2P probe boot profile (BIOS + kernel) -- decided 2026-06-24
@@ -291,3 +294,44 @@ Kernel sequence:
 Caveat: pcie_acs_override=downstream,multifunction is NOT in stock mainline (it needs the out-of-tree
 VFIO ACS-override patch). On stock Ubuntu the real lever is the BIOS ACS toggle, not a kernel param --
 so confirm the BIOS exposes ACS, or accept whatever the root ports advertise.
+
+
+## 13. First boot on Ubuntu -- progress log (2026-06-23, run on the box itself, not over SSH)
+
+Host = b70s4dayz. Acting user = hotschmoe (uid 1000), NOT root (Unraid ran everything as root -- expect
+ownership friction on carried-over files; see NOT DONE).
+
+DONE:
+- Phases 1-2: Ubuntu 26.04 LTS / kernel 7.0.0-22-generic booted off the 500G NVMe (Samsung 970 EVO = nvme0n1).
+  Network up at 192.168.10.5 on enp3s0 -- the DHCP reservation (MAC 70:85:c2:5d:b3:db) carried over. UEFI fallback
+  boot path worked (box boots the NVMe with no manual menu pick).
+- Disk identity RE-VERIFIED by SERIAL -- letters reshuffled exactly as warned: PARITY JEH9VZHN is now /dev/sda
+  (was sdb); disk1 JEHA1MZN -> sdb1; disk2 JEHA1LNN -> sdd1; vm_8tb (S5SSNF...) -> sdc1; cache (A0D6...) -> nvme1n1p1.
+  ALL UUIDs match section 0. ** Phase 4 wipefs target is /dev/sda (NOT the doc's literal /dev/sdb). **
+- Phase 3: disk1/disk2/vm_8tb/cache mounted RW by UUID, persisted in /etc/fstab (nofail). RO-verified first; data all
+  present (StrongSync + isos on both array disks, b70 repo at /mnt/vm_8tb/b70, cache appdata). fstab backup at
+  /etc/fstab.pre-b70. Script: /home/hotschmoe/phase3_mount_data.sh.
+- Phase 5 (GPU userspace): both B70s under xe (0b:00.0 / 44:00.0). Installed stock-archive intel-opencl-icd + libze1
+  + libze-intel-gpu1 (all 26.05.37020.3) + clinfo + intel-gpu-tools -- NO external Intel apt repo needed on 26.04.
+  `clinfo -l` = 2 Intel Graphics [0xe223] devices. hotschmoe added to render+video. Script: phase5_gpu.sh.
+- BIOS P2P profile (section 12) APPLIED by Isaac: IOMMU/AMD-Vi OFF (iommu_groups=0), ACS off, memory-interleave off.
+  No iommu= kernel param (BIOS toggle was enough).
+- Phase 6 P2P HEADLINE: `71_ze_p2p_ctypes.py` -> zeDeviceCanAccessPeer = True (both dirs), P2PProperties ACCESS=Y,
+  IPC zeMemOpenIpcHandle(peer) = PEER MAP OK. **B70<->B70 P2P UNLOCKED on kernel 7.0** (was False on all 12 variants
+  on 6.18). The migration's central thesis, confirmed. See JOURNAL 2026-06-23 + docs/P2P_GPU.md H.11.
+
+NOT DONE YET:
+- Phase 6 BW measurement (the actual prize, H.10): allreduce_bench.py / oneCCL TP=2 P2P-on serve A/B -- BLOCKED on
+  Docker + the int8g image (not installed). ze_peer peer-BW matrix -- needs level-zero-tests BUILT (not in 26.04 apt).
+- Phase 5 Docker: NOT installed. OpenWebUI restore (open-webui_data.tgz on vm_8tb migration_capture) pending.
+- Phase 5 file sharing: samba + nfs-kernel-server NOT installed. StrongSync share + Nextcloud rebuild pending ->
+  mother's NAS access NOT yet restored (the #1 "do not break" item -- prioritize when ready).
+- Phase 4 redundancy (mergerfs + SnapRAID): DEFERRED by Isaac. Unraid USB rollback still valid until parity (sda)
+  is reformatted.
+- Memory-interleave-off did NOT change the kernel NUMA view (still 1 node). Revisit only if NUMA-local host staging
+  is wanted; irrelevant to P2P.
+- Repo split: git repo at ~/github/b70_ai_things (canonical -- has GitHub remote + all docs) vs runtime scripts at
+  /mnt/vm_8tb/b70 (scripts only, NO .git, NO docs/). Reconcile (make the host copy a clone) so "commit/push often
+  when working on the host" actually works end to end.
+- Ownership friction: vm_8tb files are root-owned from the Unraid era; gpu.lock* had to be removed so uid 1000 could
+  recreate them. Sweep ownership (chown -R to hotschmoe where appropriate) when convenient.
