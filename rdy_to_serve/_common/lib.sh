@@ -44,6 +44,12 @@ b70_setdefaults() {
   TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
   REASONPARSER="${REASONPARSER:-}"          # e.g. qwen3 -> split <think> into reasoning_content
   SYCLKERNELS="${SYCLKERNELS:-}"            # TP>1 oneCCL: default 0 (eager) / 1 (graph capture)
+  SPLITOPS="${SPLITOPS:-}"                   # extra compilation splitting_ops (comma-quoted vllm:: op list).
+                                            # TP>1 + MTP REQUIRES the collectives here: vLLM records the spec
+                                            # all_gather into the SYCL graph but oneCCL's sched allgather has no
+                                            # graph-recordable impl -> capture crash. Listing the collectives makes
+                                            # inductor partition at them so they run EAGER (decode stays captured).
+                                            # Empty = vLLM's default attention-only splitting_ops (unchanged).
   # MOUNTS (model-local patch mounts: -v host:container:ro ...) and DOCKER_ENV (model-local docker
   # env: -e NAME=val ...) are set by serve.sh as plain arrays. Do NOT default them here with
   # ${ARR[@]:-} -- that injects an empty-string element that docker reads as the image name. They
@@ -77,7 +83,8 @@ b70_build() {
     local PASS='"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}'
     local CAP=""; [ -n "$CAPSIZES" ] && CAP="\"cudagraph_capture_sizes\":[$CAPSIZES],"
     local CSZ=""; [ -n "$COMPILESZ" ] && CSZ="\"compile_sizes\":[$COMPILESZ],"
-    CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,${CAP}${CSZ}$PASS}")
+    local SPL=""; [ -n "$SPLITOPS" ] && SPL="\"splitting_ops\":[$SPLITOPS],"
+    CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":true,${CAP}${CSZ}${SPL}$PASS}")
   fi
   ARGS+=("${EAGER[@]}" "${CC[@]}")    # GRAPH=0 -> --enforce-eager ; GRAPH=1 -> the --compilation-config capture flags
 
