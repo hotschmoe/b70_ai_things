@@ -3457,3 +3457,20 @@ verdict -> CAPTURING THE SPEC-VERIFY BATCH (caps include 1+spec) is a real +14% 
   6) likely left the same ~14% on the table -> worth re-running W8A8 TP=2 spec5/6 with caps including the verify
   batch. accept_len varies 3.55-3.79 across identical temp=0 runs -> the bench's accept metric has ~+-0.2 noise
   (warmup+64+512 accumulation); treat accept_len as approximate, decode_tps as solid. Card0 lease freed.
+
+== 2026-06-23 :: W8A8 TP=2 capspec stacking + spec=6 ceiling -- spec=5 ~64 t/s is the peak ==
+motivation -> two questions on the revived TP=2 MTP: (1) does the 92 "capture the verify batch" lever stack on the
+  91 splitting_ops fix? (2) is spec=5 still climbing -> try spec=6?
+config -> scripts/94, W8A8 graft TP=2 PIECEWISE + splitting_ops fix, caps INCLUDE the 1+spec verify batch
+  (spec5->caps 1,2,4,6,8; spec6->1,2,4,7,8), harder prompt. gpu-run both cards.
+result -> repo results/mtp94_w8a8tp2caps_*.csv.
+  spec  caps         decode_tps  x-vs-bestoff(18.74)  accept_len  accept_rate
+  5     1,2,4,6,8    64.05       3.42                 5.90        0.980
+  6     1,2,4,7,8    28.67       1.53                 3.00        0.333
+verdict -> (1) capspec does NOT stack on TP=2: spec5 63.11 (93, no batch-6 cap) -> 64.05 (batch-6 capped) = +1.5%,
+  noise. Unlike single-card W4A8 (+14%), the W8A8 TP=2 verify is COLLECTIVE-bound (the eager allgather dominates),
+  not GEMM-batch-bound, so capturing the verify GEMM batch is marginal. (2) spec=6 COLLAPSES: accept_rate 0.98 ->
+  0.333, accept_len 5.90 -> 3.00, decode 64 -> 28.67. The MTP module has mtp_num_hidden_layers=1 -> its useful draft
+  horizon is ~5 tokens; spec=6 drafts past it -> most drafts rejected -> net slowdown. **spec=5 is the ceiling.**
+  FINAL W8A8 TP=2 MTP headline: ~63-64 t/s, 3.4x vs best MTP-off (18.74) -- MEETS the MTP_TODO primary success
+  criterion (>=3x). Both leases freed; host clean. Campaign of scripts/90-94 complete.
