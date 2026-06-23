@@ -5,7 +5,7 @@ Serves `Intel_Qwen3.6-35B-A3B-int4-AutoRound` (host `/mnt/vm_8tb/b70/models/...`
 
 ## Run (on the GPU host)
 ```bash
-ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70/rdy_to_serve/qwen36-35b-a3b-int4
+cd /mnt/vm_8tb/b70/rdy_to_serve/qwen36-35b-a3b-int4
 /mnt/vm_8tb/b70/gpu-run bash serve.sh          # start (PIECEWISE capture), wait healthy, gen-probe
 bash serve.sh stop                              # stop + release the GPU
 GRAPH=1 /mnt/vm_8tb/b70/gpu-run bash serve.sh run   # serve + concurrency sweep + stop, one lease

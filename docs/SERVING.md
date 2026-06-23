@@ -28,7 +28,8 @@ full single-stream latency/replica, zero inter-GPU comms (measured; `bin/64_data
 `DD_ENV` (extra serve.sh env). Holds the GPU lease (BOTH cards) while up -> `stop` before GPU experiments.
 
 ## Where everything runs
-- GPU host: Unraid @ `192.168.10.5` (`ssh root@192.168.10.5`). NOT mounted on the dev box.
+- GPU host: local Ubuntu box `b70s4dayz` @ `192.168.10.5` (we run LOCALLY on it since the 2026-06-23
+  migration; the old `ssh root@192.168.10.5` workflow is retired -- see MIGRATION.md). Work on the box itself.
 - Repo is synced to the host at `/mnt/vm_8tb/b70/` (FLAT layout: `30_serve_w4a8_graph.sh`,
   `31_decode_probe.sh`, `35_sweep_bench.sh`, `gpu-run` all live at that root -- NOT under `scripts/`).
 - Models: `/mnt/vm_8tb/b70/models/<dir>` on the host, bind-mounted into the container at `/models/<dir>`.
@@ -76,7 +77,6 @@ Decode ~30.8 t/s captured (eager is only ~7.8). Model 17.6 GiB + ~7.5 GiB KV. Im
 (the full build with the GDN/`gdn_attention` kernel; `:int8g` lacks it and crashes on the first token).
 
 ```bash
-ssh root@192.168.10.5
 cd /mnt/vm_8tb/b70
 ./gpu-run env \
   IMG=vllm-xpu-env:v0230 \
@@ -154,7 +154,7 @@ dynamic-per-token int8 linear dispatch AND routes the 256 int8 experts through t
 scaled-mm kernel (`_POSSIBLE_KERNELS` KeyErrors). Experts stay TRUE int8.
 
 ```bash
-ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70
+cd /mnt/vm_8tb/b70
 # patch already at patches/quark_v0230.py; serve+probe+sweep, then auto-stops:
 ./gpu-run bash 76_quark35b_v0230.sh           # IMG=vllm-xpu-env:v0230 TP=2 MAXLEN=8192 UTIL=0.92
 ```
@@ -183,9 +183,9 @@ contention -- beats TP=2 (0.53x) and PP=2 (0.78x) on BOTH axes. The ONLY thing D
 bigger than one card (then use PP=2 below).
 ```bash
 # Persistent daily driver (2 replicas + nginx proxy on :18080, Open WebUI tied in):
-./daily_driver_serve.sh start      # from the dev box; holds the lease for both cards
+./daily_driver_serve.sh start      # run locally on the box; holds the lease for both cards
 # Ad-hoc bench (solo baseline + concurrent aggregate):
-ssh root@192.168.10.5 'cd /mnt/vm_8tb/b70 && ./gpu-run bash 64_dataparallel_2rep.sh'
+cd /mnt/vm_8tb/b70 && ./gpu-run bash 64_dataparallel_2rep.sh
 # Manual (per replica): the 30_serve script now takes DEVICE (card 0|1) + PORT:
 #   DEVICE=0 PORT=18091 NAME=vllm_dp0 ... bash 30_serve_w4a8_graph.sh
 #   DEVICE=1 PORT=18092 NAME=vllm_dp1 ... bash 30_serve_w4a8_graph.sh

@@ -10,7 +10,7 @@
 # Runs ON THE GPU HOST. Serialized through gpu-run (one B70 lease at a time). Iterates every
 # rdy_to_serve/<model>/serve.sh (skips dirs starting with _, e.g. _common).
 #
-#   ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70
+#   cd /mnt/vm_8tb/b70
 #   bin/serve-sweep --smoke              # or --bench ; or a specific model: bin/serve-sweep --smoke qwen36-27b-int4
 set -uo pipefail
 ROOT="${ROOT:-/mnt/vm_8tb/b70}"

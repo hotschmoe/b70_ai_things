@@ -17,7 +17,7 @@ Op check at bake: `int8_gemm: True  fused_quant: True`.
 
 ## (Re)build
 ```bash
-ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70
+cd /mnt/vm_8tb/b70
 DATE=20260623 bash /mnt/vm_8tb/b70/images/int8g/build.sh    # or sync this dir + run build.sh
 ```
 `build.sh` bakes a DATED immutable tag (`:int8g-YYYYMMDD`) and moves the convenience tag `:int8g` to it

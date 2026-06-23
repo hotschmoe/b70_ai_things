@@ -35,7 +35,7 @@ activation -- fuse RMSNorm+quant and SiLU-and-mul+quant so the GEMM's int8 src i
 with NO extra global round-trip of the f16 activation. ASCII only. Date: 2026-06-20.
 
 VERIFIED vs PROPOSED is marked per item. Code was read on the host
-(`ssh root@192.168.10.5:/mnt/vm_8tb/b70/vllm-xpu-kernels`); SYCL skeletons are DRAFT (codex-assisted,
+(`/mnt/vm_8tb/b70/vllm-xpu-kernels`); SYCL skeletons are DRAFT (codex-assisted,
 not compiled). Model dims used throughout: Qwen3-14B = hidden H=5120, intermediate I=17408, L=40 layers.
 
 ---

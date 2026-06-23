@@ -5,7 +5,7 @@ activations on our INT8 systolic path. ~9.3 GiB packed on disk.
 
 ## Run (on the GPU host)
 ```bash
-ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70/rdy_to_serve/qwen3-14b-w4a8
+cd /mnt/vm_8tb/b70/rdy_to_serve/qwen3-14b-w4a8
 /mnt/vm_8tb/b70/gpu-run bash serve.sh          # start (PIECEWISE capture), wait healthy, gen-probe
 bash serve.sh stop
 ```

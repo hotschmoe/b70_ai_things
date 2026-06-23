@@ -26,9 +26,8 @@ MoE-routing patch (own leaf tag so it cannot affect dense models). The old `inte
 is an ANCIENT 0.14 fork with no `_moe_C` -- int8 MoE hard-fails; a multi-agent-day dead end. If a
 vLLM-XPU image NEWER than 0.23.0 exists, prefer it and update this line + CLAUDE.md.
 
-## How to use (on the GPU host: Unraid @ 192.168.10.5)
+## How to use (on the GPU host: local Ubuntu box b70s4dayz, since the 2026-06-23 migration)
 ```bash
-ssh root@192.168.10.5
 cd /mnt/vm_8tb/b70/rdy_to_serve/<model>
 /mnt/vm_8tb/b70/gpu-run bash serve.sh            # acquire GPU lease, start, wait healthy, gen-probe
 bash serve.sh stop                                # release the GPU

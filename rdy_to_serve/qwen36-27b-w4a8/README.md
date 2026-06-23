@@ -9,7 +9,7 @@ on the 27B (GDN + lm_head kept bf16 for quality). ~24 GiB, VRAM-tight, **fp16 KV
 
 ## Run (on the GPU host)
 ```bash
-ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70/rdy_to_serve/qwen36-27b-w4a8
+cd /mnt/vm_8tb/b70/rdy_to_serve/qwen36-27b-w4a8
 /mnt/vm_8tb/b70/gpu-run bash serve.sh          # start (PIECEWISE capture), wait healthy, gen-probe
 bash serve.sh stop
 ```

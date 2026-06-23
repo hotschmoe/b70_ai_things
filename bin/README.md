@@ -21,9 +21,9 @@ before commit (and `--bench` if it could move perf) -- same gate as `rdy_to_serv
 The GPU host (`/mnt/vm_8tb/b70/`) runs these tools FLAT at its root, NOT under `bin/`
 (e.g. `/mnt/vm_8tb/b70/gpu-run`, `/mnt/vm_8tb/b70/35_sweep_bench.sh`). This repo is the tracked
 source of truth; the host is hand-synced (the host is not a git repo). Filenames here intentionally
-MATCH the host flat names so the mapping is `bin/<f>` -> `/mnt/vm_8tb/b70/<f>`. After editing a tool:
+MATCH the host flat names so the mapping is `bin/<f>` -> `/mnt/vm_8tb/b70/<f>`. Since the 2026-06-23
+migration we work locally ON the box (b70s4dayz), so after editing a tool just copy it into place:
 ```bash
-tar czf - -C bin <file> | ssh root@192.168.10.5 'tar xzf - -C /mnt/vm_8tb/b70'
-```
+tar czf - -C bin <file> | tar xzf - -C /mnt/vm_8tb/b70
 Open follow-up (ORGANIZATION.md): drop the leading `NN_` numbers (these are tools, not lab entries) and
 script the host sync. Both need the host flat layout reconciled, so they are deferred.

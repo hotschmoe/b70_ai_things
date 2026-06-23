@@ -6,7 +6,7 @@ the foundation for the int8 GEMM/GEMV optimization research (RESEARCH_TODO / doc
 
 ## Run (on the GPU host)
 ```bash
-ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70/rdy_to_serve/qwen3-14b-w8a8
+cd /mnt/vm_8tb/b70/rdy_to_serve/qwen3-14b-w8a8
 /mnt/vm_8tb/b70/gpu-run bash serve.sh          # start (PIECEWISE capture), wait healthy, gen-probe
 bash serve.sh stop                              # stop + release the GPU
 GRAPH=1 /mnt/vm_8tb/b70/gpu-run bash serve.sh run   # serve + concurrency sweep + stop, one lease

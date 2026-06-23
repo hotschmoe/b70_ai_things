@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # daily_driver_serve.sh -- bring up THE daily-driver model on the dual B70 behind one public endpoint
-# at http://192.168.10.5:18080/v1 (Open WebUI + every app keep working unchanged). Run from the dev box.
+# at http://192.168.10.5:18080/v1 (Open WebUI + every app keep working unchanged). Run LOCALLY on the box
+# (b70s4dayz) since the 2026-06-23 migration.
 #
 # This is now a THIN orchestrator over the golden path: it PICKS an rdy_to_serve model and serves it via
 # that model's own self-contained serve.sh -- ZERO recipe duplication (the recipe lives in one place,
@@ -21,7 +22,7 @@
 #   [1 CARD] serve a small model on ONE card, leave the OTHER card FREE for experiments
 #     DD_CARD=0 DD_MODEL=qwen3-14b-w8a8 ./daily_driver_serve.sh start   # daily driver pinned to card 0
 #     # then experiment on the free card via the per-card lease, e.g.:
-#     ssh root@192.168.10.5 'cd /mnt/vm_8tb/b70 && ./bin/gpu-run --card 1 bash <your-experiment>'
+#     cd /mnt/vm_8tb/b70 && ./bin/gpu-run --card 1 bash <your-experiment>
 #
 #   DD_MTP=1 ... start   # opt-in MTP spec decode (dense models, interactive -- see SERVING.md)
 #

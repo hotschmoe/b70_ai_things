@@ -201,7 +201,7 @@ First checks:
 
 ```bash
 gpu-run --status
-ssh root@192.168.10.5 'ls -l /dev/dri/renderD*'
+ls -l /dev/dri/renderD*
 ```
 
 Build/runtime prerequisites:

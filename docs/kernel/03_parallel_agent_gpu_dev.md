@@ -11,7 +11,7 @@ doing kernel work (e.g. the fused INT4 MoE XPU kernel). Wires `scripts/gpu-run`.
   lease (`scripts/gpu-run`). Do NOT statically partition with SR-IOV for this.
 - SR-IOV is available (4 VFs) but is the wrong tradeoff here -- see "When to flip".
 
-## What the host actually reports (verified 2026-06-20, ssh root@192.168.10.5)
+## What the host actually reports (verified 2026-06-20 on the host; pre-migration kernel 6.18-Unraid)
 
 ```
 Card     : Intel Battlemage G31 [Arc Pro B70]  (PCI 0000:44:00.0, 8086:e223)

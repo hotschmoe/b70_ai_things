@@ -4,6 +4,28 @@ Research and engineering notes for local LLM inference on Intel Arc Pro B70
 GPUs, with a focus on vLLM-XPU, compressed-tensors quantization, and custom
 INT8 kernels for Battlemage/Xe2.
 
+The stack: 2x Intel Arc Pro B70 (Battlemage / Xe2, 32 GB each), vLLM-XPU
+(0.23.0), compressed-tensors W8A8 / W4A8 INT8 research, on a local Ubuntu 26.04
+box (kernel 7.0). Since the 2026-06-23 migration we run LOCALLY on the box
+(`b70s4dayz`), not over SSH -- see [MIGRATION.md](MIGRATION.md).
+
+## Headline results
+
+- **[BREAKTHROUGH] B70<->B70 GPU P2P is UNLOCKED on kernel 7.0 + IOMMU off.**
+  `zeDeviceCanAccessPeer` = True both directions (it was False on all 12 probe
+  variants on kernel 6.18). The quantified prize: a 64-layer TP=2 forward fires
+  128 allreduces; today they go host-staged at ~1.16 GB/s, making 27B prefill
+  **~84% collective-bound** (~2.3 s of a 2.75 s TTFT). Lifting the allreduce
+  toward the ~15 GB/s Gen3 wire via P2P points to **~4x faster prefill TTFT**
+  (~2.75 s -> ~0.65-0.75 s). P2P is a prefill/TTFT + concurrency win, ~1.2x on
+  single-stream decode. See [docs/P2P_GPU.md](docs/P2P_GPU.md) H.10 / H.11 and
+  [27b_w8a8_research.md](27b_w8a8_research.md).
+- **27B serve throughput (dual B70, captured PIECEWISE):** W4A8 TP=2 single-stream
+  decode **~22 t/s** (TP=1 single-card ~20.7); W8A8 27B TP=2 + captured MTP
+  (spec=3) reaches **~34.82 t/s @ ~51% draft accept**, coherent -- 1.92x over
+  captured-no-MTP (18.10). Single-card daily driver (27B int4-AutoRound, captured)
+  decodes ~30.8 t/s. See [FINDINGS.md](FINDINGS.md) and [JOURNAL.md](JOURNAL.md).
+
 Start with:
 
 - [FINDINGS.md](FINDINGS.md): current working results and dead ends.
@@ -53,10 +75,12 @@ Selected XPUInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8
 
 ## Environment
 
-- Host: `root@192.168.10.5`
+- Host: local Ubuntu 26.04 box `b70s4dayz` (kernel 7.0) at `192.168.10.5`. We
+  run LOCALLY on the box as user `hotschmoe`, not over SSH (retired in the
+  2026-06-23 migration; see [MIGRATION.md](MIGRATION.md)).
 - GPU root: `/mnt/vm_8tb/b70/`
 - Models/quants: `/mnt/vm_8tb/b70/models/`
-- GPUs: dual Intel Arc Pro B70 cards, 32 GB each.
+- GPUs: dual Intel Arc Pro B70 cards (Battlemage / Xe2), 32 GB each.
 - Runtime: Docker with `/dev/dri` passed through.
 - Default vLLM image: `vllm-xpu-env:v0230`, unless a serve recipe specifies
   `:int8g` or another image.

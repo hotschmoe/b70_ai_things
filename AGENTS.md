@@ -81,7 +81,11 @@ and on-GPU quantization must not bypass the lease.
 
 ## Host Paths
 
-- GPU host: `root@192.168.10.5`.
+- **We run LOCALLY on the box now (since the 2026-06-23 migration), NOT over SSH.** The GPU host is a
+  local Ubuntu 26.04 machine (hostname `b70s4dayz`, kernel 7.0) and we act as user `hotschmoe` (uid 1000),
+  not root. The old `ssh root@192.168.10.5` remote-driver workflow is RETIRED -- run commands on the box
+  itself. Rollback/migration context lives in `MIGRATION.md` (section 13).
+- GPU host LAN address: `192.168.10.5` (still its IP; just no longer SSH'd into from a laptop).
 - Host project/model root: `/mnt/vm_8tb/b70/`.
 - Models and quants: `/mnt/vm_8tb/b70/models/`.
 - Repo tools live under `bin/` locally but are mirrored flat at the host root.

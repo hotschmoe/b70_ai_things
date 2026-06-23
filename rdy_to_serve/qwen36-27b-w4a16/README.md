@@ -11,7 +11,7 @@ checkpoint is a LANGUAGE-MODEL-ONLY quant of the Qwen3.5 VL model (no vision ten
 
 ## Run (on the GPU host, ONE card)
 ```bash
-ssh root@192.168.10.5 && cd /mnt/vm_8tb/b70/rdy_to_serve/qwen36-27b-w4a16
+cd /mnt/vm_8tb/b70/rdy_to_serve/qwen36-27b-w4a16
 /mnt/vm_8tb/b70/gpu-run --card 0 bash serve.sh     # one card; leaves the other free for experiments
 bash serve.sh stop
 ```
