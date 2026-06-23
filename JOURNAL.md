@@ -3494,3 +3494,16 @@ LONG-CONTEXT MTP HANG (the real find) -> scripts/95 (MTP-on, splitting_ops, spec
 verdict (so far) -> the TP=2 MTP recipe is a DECODE win but has a LONG-CONTEXT serving HAZARD; do NOT shelf it
   as production-ready until 97 pins the break point + a fix. The MTP-off prefill number stands. Host cleaned,
   leases freed after each run.
+
+== 2026-06-23 :: hang isolated (--random only) + W8A8 TP=2 MTP recipe SHELVED (smoke GREEN) ==
+hang isolation (scripts/98) -> the scripts/95 MTP-on stall is ONLY the `vllm bench serve --random` gibberish-token
+  path. Real prompts are FINE: 2048-ctx/128-out OK (8.85s), 2048-ctx/256-out OK (7.84s), 1024-ctx back-to-back x3
+  OK; only --random 2048/128 HUNG (>200s, same 0-gen signature). So it is a benchmark artifact (OOD random token
+  IDs x MTP rejection sampler), NOT a production hazard. scripts/97 separately proved ctx length alone is not the
+  trigger (64..2048 all OK) and --no-enable-chunked-prefill was not needed.
+recipe -> shelved rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp (serve.sh + README + corrected MTP-BF16 shim). Added an
+  additive SPLITOPS knob to _common/lib.sh (empty-default = byte-identical CC; offline dry-run reproduces the
+  scripts/93 config exactly). `bin/serve-sweep --smoke` = ALL GREEN across all 8 shelf models (new recipe HEALTHY
+  TP=2 eager; no regression). Commit e2c8c76. README documents the --random benchmark hazard.
+verdict -> the TP=2 MTP win is now a self-contained, smoke-gated shelf recipe. Next: 262K KV-capacity + long-prompt
+  prefill (scripts/99), and an honest real-dataset bench before any localmaxxing submission.
