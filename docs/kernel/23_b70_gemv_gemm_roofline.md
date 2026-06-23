@@ -93,4 +93,30 @@ captured end-to-end gain is SMALLER than 1.14x; (2) attention/GDN add constant t
 int8 linear's RMSNorm-fed inputs). Bigger decode levers remain MTP + FULL capture. W4A8's slow-ref quant is
 the cheapest standalone win here.
 
-All work card-0 only (another agent on card 1; never the default `gpu-run` which locks both).
+## LIVE CAPTURED A/B (2026-06-23) -- BOTH projections above FAIL under capture; do NOT ship either lever
+Measured both activation-quant levers in the REAL GRAPH=1 PIECEWISE serve (14B, ctx in=2048/out=128, C=1,
+`:int8g`, 2 repeats each, both cards in parallel via the per-card lease). Decode per-stream t/s (TPOT ms):
+```
+  scheme  variant                         decode t/s     TPOT ms
+  W4A8    baseline (pure-torch _ref quant) 45.07 / 45.05   22.19   <- KEEP THIS
+  W4A8    swap (native _xpu_C quant op)    36.63 / 36.60   27.30   <- 19% REGRESSION
+  W8A8    baseline (fuse_norm_quant=false) 25.13 / 25.13   39.79
+  W8A8    fused    (fuse_norm_quant=true)  25.61 / 25.60   39.04   <- +1.9% (no attributed fusion)
+```
+1. **W4A8 native-quant swap REGRESSES 19% under capture** (the eager "free win" inverts). Under PIECEWISE +
+   inductor graph-partition the pure-torch `_ref` DECOMPOSES and inductor FUSES it into the captured graph -- its
+   eager weakness (~5 launches) disappears once captured -- while the native custom op is an OPAQUE captured node
+   whose serial per-row K-reduction persists (~101us on the K=17408 down_proj). So "fewer launches" stops mattering
+   under capture and fusibility wins. Lesson: never project a custom-op-vs-decomposable-op swap from an EAGER
+   microbench when the serve is captured. The committed `patches/xpu.py` stays on `_ref` (swap patch reverted).
+2. **W8A8 `fuse_norm_quant=true` does NOT NameError on `:int8g`** (the lib.sh fear did not materialize here):
+   served healthy + coherent, +1.9% decode. But no INFO-level "fused N patterns" log, so the +1.9% is unattributed
+   (~run variance), and it is far below the eager 1.14x sim and far below MTP/capture. Not worth shipping.
+3. Cross-check: W8A8 ~25 t/s vs W4A8 ~45 t/s at M=1 matches the roofline (int8 reads 2x the weight bytes/token).
+NET: neither standalone-quant lever helps the captured 14B path. The only int8-decode headroom left is FUSING the
+quant INTO the int8 GEMM prologue (one opaque node that ALSO does the GEMM, parallel reduce) -- option (1) in the
+split-K section above -- not swapping the standalone op nor toggling the inductor norm-quant pass.
+Repo CSV: `results/actquant_fusion_ab_14b_ctx2048_20260623.csv`.
+
+Earlier roofline/sim work was card-0 only; the 2026-06-23 live A/B used both cards in parallel via the per-card
+lease (card 0 W4A8, card 1 W8A8), never the default `gpu-run` which locks both.

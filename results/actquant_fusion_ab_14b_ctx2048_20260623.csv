@@ -1,0 +1,14 @@
+# 14B activation-quant fusion LIVE A/B -- captured serve (GRAPH=1 PIECEWISE), image vllm-xpu-env:int8g, 2026-06-23.
+# Bench: ctx in=2048 out=128, concurrency=1, dtype float16, 2 measured repeats per variant. Both cards via per-card lease.
+# W4A8 = Qwen3-14B-W4A8-gptq-prepacked (card 0); W8A8 = Qwen3-14B-W8A8-autoround (card 1). All variants coherent.
+# Finding: BOTH eager-microbench projections (kernel/23) fail under capture -- W4A8 native-quant swap REGRESSES 19%;
+#          W8A8 fuse_norm_quant=true does not crash but only +1.9% (no attributed fusion). See JOURNAL 2026-06-23.
+scheme,variant,concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,per_stream_decode_tok_s
+W4A8,baseline_ref_quant,1,0.31,40.20,364.84,22.19,45.07
+W4A8,baseline_ref_quant,1,0.31,40.19,365.86,22.20,45.05
+W4A8,swap_native_quant,1,0.26,33.10,398.88,27.30,36.63
+W4A8,swap_native_quant,1,0.26,33.08,399.54,27.32,36.60
+W8A8,baseline_fuse_norm_false,1,0.19,23.88,305.74,39.79,25.13
+W8A8,baseline_fuse_norm_false,1,0.19,23.89,304.99,39.79,25.13
+W8A8,fused_fuse_norm_true,1,0.19,24.31,306.70,39.04,25.61
+W8A8,fused_fuse_norm_true,1,0.19,24.30,306.29,39.06,25.60

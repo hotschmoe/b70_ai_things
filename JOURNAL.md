@@ -3260,3 +3260,46 @@ result -> created and verified by safetensors key count:
 verdict -> graft artifacts exist and are structurally ready for serve tests. No GPU perf/acceptance run yet. When
   serving, mount the model dir's `mtp_bf16_patch` on `PYTHONPATH` (plus any model-specific text/VLM shim already
   required by that quant) before enabling `--speculative-config '{"method":"mtp","num_speculative_tokens":4}'`.
+
+== 2026-06-23 :: act-quant fusion LIVE A/B -- both eager-microbench projections fail under capture ==
+motivation -> the kernel/23 eager microbench said two things would be cheap wins: (a) W4A8's slow pure-torch
+  `dynamic_per_token_int8_quant_ref` (~210us, ~5 launches) should be replaceable by the native
+  `_xpu_C.dynamic_per_token_int8_quant` kernel for a "free win"; (b) the RMSNorm+quant fusion would add ~1.14x
+  (eager linear-path sim). Both were projected EAGER. This session measured both LIVE in the real GRAPH=1
+  PIECEWISE captured serve. Two cards in parallel via the per-card lease: card 0 = W4A8 swap A/B, card 1 = W8A8
+  fusion A/B. Each: reuse the already-booted baseline container, then serve the variant from an ISOLATED recipe
+  copy (so the shared `_common/lib.sh` and the host `patches/xpu.py` are never mutated -> safe alongside the
+  other card). 14B, ctx in=2048/out=128, C=1, GRAPH=1, dtype float16, 2 measured repeats each, coherence probe
+  both sides.
+config -> W4A8: `Qwen3-14B-W4A8-gptq-prepacked` on `vllm-xpu-env:int8g`, served `qwen3-14b-w4a8-gptq`, card 0:8101.
+  baseline = committed `patches/xpu.py` (ref quant); swap = the one-spot change in `XPUW4A8IntLinearKernel.apply_weights`
+  guarded by `hasattr(torch.ops._xpu_C,"dynamic_per_token_int8_quant")` (op confirmed built: registered-fake count=2,
+  so the native path was taken). W8A8: `Qwen3-14B-W8A8-autoround` on `:int8g`, served `qwen3-14b-w8a8-autoround`,
+  card 1:8112. baseline = shipped serve (`pass_config.fuse_norm_quant=false`); fused = same recipe with
+  `sed s/"fuse_norm_quant":false/:true/` in the isolated lib.sh copy (pass_config confirmed `True` in the engine log).
+command -> per-card driver scripts `/tmp/drive_w4a8.sh` (card 0) and `/tmp/drive_w8a8.sh` (card 1), each launched
+  `setsid gpu-run --card N bash drive_*.sh`; both leases held independently; host-side waiter for completion.
+result -> columns = concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,per_stream_decode_tok_s
+  W4A8 baseline (ref quant)        1,0.31,40.20,364.84,22.19,45.07  /  1,0.31,40.19,365.86,22.20,45.05
+  W4A8 swap   (native quant op)    1,0.26,33.10,398.88,27.30,36.63  /  1,0.26,33.08,399.54,27.32,36.60
+  W8A8 baseline (fuse_norm=false)  1,0.19,23.88,305.74,39.79,25.13  /  1,0.19,23.89,304.99,39.79,25.13
+  W8A8 fused   (fuse_norm=true)    1,0.19,24.31,306.70,39.04,25.61  /  1,0.19,24.30,306.29,39.06,25.60
+  All four coherent ("The capital of France is Paris ..."). Repo CSV: `results/actquant_fusion_ab_14b_ctx2048_20260623.csv`.
+verdict -> BOTH eager projections FAIL in the captured serve.
+  (1) W4A8 native-quant swap is a 19% REGRESSION (45.07 -> 36.63 decode t/s; TPOT 22.19 -> 27.30 ms), reproducible
+      across both repeats and both ran captured (swap booted ~4.5 min: load+dynamo+PIECEWISE capture, GRAPH=1).
+      Mechanism (consistent with kernel/23): under GRAPH=1 PIECEWISE + inductor graph-partition, the pure-torch
+      `_ref` DECOMPOSES into elementwise+reduction ops that inductor FUSES into the surrounding captured graph
+      (its eager weakness -- ~5 launches -- vanishes once captured), whereas the native custom op is an OPAQUE
+      captured node whose serial per-row K-reduction "persists under capture" (~101us for the K=17408 down_proj).
+      So the eager microbench (where launches dominate and `_ref` looks 0.17-0.50x) inverts under capture. KEEP
+      THE REF; the working-tree swap patch was reverted (shelf unchanged, still committed `_ref`).
+  (2) W8A8 `fuse_norm_quant=true` does NOT crash on `:int8g` (the lib.sh "NameError under torch.compile on XPU"
+      fear did not materialize for this image/model): served healthy + coherent, +1.9% decode (25.13 -> 25.61 t/s,
+      TPOT 39.79 -> 39.04 ms). BUT no INFO-level "fused N patterns" evidence was emitted, so the +1.9% is "flag on,
+      clean, tiny gain" -- not an attributed fusion win, and it sits far below the eager 1.14x sim and far below
+      the real decode levers (MTP ~1.79x PIECEWISE, graph capture). Cross-check: W8A8 14B decode ~25 t/s vs W4A8
+      ~45 t/s at M=1 matches the roofline (int8 reads 2x the weight bytes/token of int4). Net: neither activation-
+      quant lever is worth shipping on the captured 14B path; the int8-decode headroom is in FUSING quant INTO the
+      GEMM prologue (one opaque node that also does the GEMM), not swapping the standalone quant op or toggling the
+      inductor norm-quant pass. Host clean: both containers removed, both leases freed.

@@ -13,6 +13,21 @@
 > PRODUCTION: (1) wire `rms_norm_dynamic_per_token_quant` into the int8 linear's RMSNorm-fed inputs (~80 linears,
 > 2x); (2) build the native silu+quant for down_proj (~64 linears, >=1.5x). This is real W8A8 decode headroom that
 > graph capture does NOT cover. (Below: the original plan -- still accurate; the RMSNorm op is now confirmed XPU-live.)
+>
+> **[!!] LIVE-CAPTURE CAUTION (2026-06-23, both cards) -- the eager microbenches over-state the captured win.**
+> Two live A/B runs in the real GRAPH=1 PIECEWISE serve (JOURNAL 2026-06-23; results/actquant_fusion_ab_14b_*.csv):
+> (1) The W4A8 cheapest variant -- just SWAP the standalone pure-torch `_ref` quant for the native
+>     `_C.dynamic_per_token_int8_quant` op -- REGRESSED 19% (45.1 -> 36.6 decode t/s). Reason: under PIECEWISE +
+>     inductor graph-partition the decomposable `_ref` gets FUSED into the captured graph, while the native custom op
+>     is an OPAQUE captured node whose serial K-reduction persists. So the EAGER baseline these microbenches beat
+>     (separate, launch-bound ops) is NOT the captured baseline -- the captured baseline is the inductor-FUSED
+>     decomposable path, which is much stronger. (2) The easy inductor route, `fuse_norm_quant=true`, served clean
+>     (no XPU NameError) but gave only +1.9% with no "fused N patterns" log -> unattributed.
+> IMPLICATION for the wiring plan below: the 2.06x / 1.51x are EAGER-vs-eager. Before investing in the fragile
+> ~80-linear `rms_norm_dynamic_per_token_quant` wiring, MEASURE whether the native fused op lands as an opaque
+> captured node and whether that still beats the current inductor-fused (RMSNorm + decomposed `_ref` quant) captured
+> baseline -- the W4A8 result says an opaque op can LOSE to inductor fusion under capture. The genuinely safe win is
+> still option (1) in kernel/23: fuse quant INTO the GEMM prologue (one opaque node that ALSO does the GEMM).
 
 Owner: the "...and others" agent (everything on the w8a8 forward path EXCEPT the GEMM itself).
 Mission (doc 04 lever B3): make the int8 activation quant DISAPPEAR into the op that produces the
