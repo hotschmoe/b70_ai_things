@@ -57,3 +57,7 @@ affect production serving.
 - `MTPTOK=5` (default; the winner). `MTPTOK=0` is NOT MTP-off here -- to serve **MTP-off**, also drop SPLITOPS
   (set `SPLITOPS=` and `CAPSIZES=1,2,4,8`) so the collectives capture (18.74 t/s, faster no-MTP baseline).
 - `CAPSIZES=1,2,4,6,8` includes the spec-verify batch (1+spec). `COMPILESZ=` MUST stay empty for spec-decode.
+- `MAXLEN` defaults to 4096 (snappy interactive). **The full 262144 model max fits with MTP on** (scripts/100:
+  fp16 KV pool 372,809 tokens at `UTIL=0.95`, 1.42x concurrency at 262K -- NOT VRAM-limited). Raise `MAXLEN` per
+  long-doc session; the limit is SPEED, not memory (eager prefill ~390 tok/s flat with length -> 262K TTFT ~12 min;
+  decode also slows on the 16 full-attn layers). `KVDTYPE=fp8_e4m3` ~2x the KV pool for multi-session long context.
