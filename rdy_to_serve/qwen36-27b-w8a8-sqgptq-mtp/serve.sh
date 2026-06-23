@@ -43,9 +43,14 @@ export CKPT="${CKPT:-/models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft}"
 export SERVED="${SERVED:-qwen36-27b-w8a8-sqgptq-mtp}"
 export DTYPE="${DTYPE:-auto}"
 export TP="${TP:-2}"
-export GRAPH="${GRAPH:-0}"                  # EAGER default = the only COHERENT path. GRAPH=1 capture is numerically
-                                            # broken on this TP=2 hybrid (see CORRECTION (B) above). Do not flip to 1
-                                            # until the captured-int8+BF16-GDN+TP=2 numerics are fixed.
+export GRAPH="${GRAPH:-1}"                  # PIECEWISE capture (2026-06-24: Bug B FIXED). The old garbage was caused
+                                            # by EJECTING the TP collectives to eager (they are out-of-place; the
+                                            # ejected output does not land at the captured-piece's capture-time
+                                            # address -> stale read -> garbage). Fix = eject NOTHING (see SPLITOPS)
+                                            # + a capture-safe all_gather (patches/, all-reduce-of-padded) so the
+                                            # spec-verify all_gather records into the SYCL graph instead of crashing.
+export IGP="${IGP:-false}"                  # legacy piecewise splitter: REQUIRED on this hybrid (the inductor
+                                            # partitioner KeyErrors on the mixed W8A8(scale)+BF16-GDN(no-scale) region).
 export NOMM="${NOMM:-1}"                    # 27B is a qwen3_5 VLM -> text-only
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"
@@ -53,11 +58,14 @@ export MAXSEQS="${MAXSEQS:-8}"
 export MTPTOK="${MTPTOK:-5}"                # MTP spec tokens; spec=5 is the winner (spec=6 collapses: 1-layer head)
 export CAPSIZES="${CAPSIZES:-1,2,4,6,8}"    # include the spec-verify batch 1+spec=6
 export COMPILESZ="${COMPILESZ-}"           # MUST be empty for spec-decode (compile_sizes [1] is rejected; pads to 1+spec)
-# THE FIX (3): collectives in splitting_ops -> eager partition boundary -> spec all_gather not recorded into the graph.
-# Comma-separated quoted vllm:: op list (the model's attention ops + the 3 TP collectives); _common wraps it in [...].
+# THE FIX (3) [2026-06-24, REVISED]: eject NOTHING. splitting_ops = the model's attention + GDN custom ops ONLY
+# (the genuine non-capturable ops). Do NOT add the TP collectives: ejecting them breaks the captured-piece input-
+# address contract -> garbage (the old config ejected all 3 -> the ejected per-layer all_reduce corrupted decode).
+# all_reduce + reduce_scatter record fine inside the graph. all_gather (which oneCCL CANNOT record) is handled by
+# the capture-safe all-reduce-of-padded shim in patches/sitecustomize.py, so it too stays captured. Net: every
+# collective is captured + correct -> coherent body AND a numerically-correct spec-verify (real accept), all fast.
 _ATTN_OPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
-_COLLECTIVES='"vllm::all_reduce","vllm::reduce_scatter","vllm::all_gather"'
-export SPLITOPS="${SPLITOPS:-${_ATTN_OPS},${_COLLECTIVES}}"
+export SPLITOPS="${SPLITOPS:-${_ATTN_OPS}}"
 
 PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
 GDN_SO="${GDN_SO:-$ROOT/vllm-xpu-kernels/vllm_xpu_kernels/_xpu_C.abi3.so}"

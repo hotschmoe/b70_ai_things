@@ -22,33 +22,47 @@ the text** (the exact QUANTS_TODO Q8 trap).
 - **Weights were always good** (dequant int8*scale vs bf16 base: per-channel cosine 0.97-0.9999). llmcompressor
   quantized correctly; only the SAVED config.json ignore serialization had the wrong prefix. So this is config-only.
 
-### Bug B -- the captured path is numerically BROKEN on this TP=2 hybrid (NOT fixed; recipe defaults EAGER)
-With the GDN now correctly BF16, PIECEWISE graph capture is broken here:
-- `use_inductor_graph_partition=true` -> `KeyError: weight_scale` at profile/capture (the partitioner packs a
-  weight_scale placeholder for a region that MIXES W8A8 (has scale) + BF16 GDN (no scale) linears).
-- `use_inductor_graph_partition=false` (legacy piecewise, lib.sh `IGP=false`) -> capture succeeds but the decode is
-  **numerically garbage even WITHOUT MTP** (clean-cache confirmed). 14B W8A8 captures coherently single-card, so this
-  is a **TP=2 + BF16-GDN-in-captured-pieces + custom-int8** capture-numerics bug, to be chased separately.
-- **=> recipe DEFAULTS TO EAGER (`GRAPH=0`), the only coherent path.** `GRAPH=1` reproduces the broken captured path.
+### Bug B -- captured path garbage: ROOT-CAUSED + FIXED 2026-06-24 (recipe now defaults CAPTURED)
+It was **never** a "captured int8 numerics" bug. Root cause: vLLM's piecewise `CUDAGraphWrapper` does a pure
+`replay()` with **no input copy** -> every captured piece's inputs must sit at the **same device address** on replay
+as at capture. The XPU TP collectives are all **out-of-place** (`all_reduce` returns `input_.clone()`;
+all_gather/reduce_scatter return fresh `torch.empty()+.contiguous()`). The old recipe listed the 3 collectives in
+`splitting_ops`, which **ejects** them to eager at a piecewise boundary; on XPU their fresh output does not reproduce
+the capture-time address -> the next captured piece reads **stale** data -> garbage. (`use_inductor_graph_partition=true`
+separately KeyErrors on the mixed W8A8+BF16-GDN region, so we use `IGP=false`.)
+- **FIX = eject NOTHING.** `splitting_ops` = the attention/GDN custom ops only; all collectives stay CAPTURED.
+  all_reduce + reduce_scatter record fine. The spec-verify `all_gather` (which oneCCL 2021.17 cannot graph-record)
+  is replaced by an **all-reduce-of-padded all_gather** shim (`patches/sitecustomize.py`) so it too records and stays
+  captured -- nothing is ejected, so no boundary is ever stale.
+- Two facets: (a) ejecting collectives -> garbage body; (b) ejecting only all_gather -> coherent body but the
+  captured spec-VERIFY gives **0% accept** (MTP becomes pure overhead). Plan (a)+(b) together = capture everything
+  correctly -> coherent AND real accept.
+- **=> recipe DEFAULTS TO CAPTURED (`GRAPH=1`, `IGP=false`, eject nothing, capture-safe all_gather shim).**
+  `GRAPH=0` is still available (eager, ~10 t/s) as a fallback.
 
-## Honest result (coherent, EAGER, temp=0 greedy)
+## Honest result (coherence-gated, temp=0 greedy, hard prompt; scripts/111)
 
 | config | decode tok/s | accept | note |
 |---|---|---|---|
 | eager, MTP-off (pure body) | ~4.1 | - | TP=2 fully-eager int8 is launch/collective-bound |
-| eager, MTP spec=5 | ~9.0-9.6 | ~48% (accept_len ~3.9) | **2.3x vs MTP-off**, coherent |
-| captured (GRAPH=1) | (was "63") | - | **BROKEN -- garbage; do not use** |
+| eager, MTP spec=5 | 10.43 | 36% (accept_len 2.80) | coherent; the old "only coherent" path |
+| captured, MTP-off | 18.10 | - | coherent; capture alone ~4.5x over eager |
+| captured, MTP spec=5, eject only all_gather | 9.63 | ~0% | coherent but verify dead -> no speedup |
+| **captured, MTP spec=5, capture-safe all_gather (DEFAULT)** | **26.10** | **26%** | **the win -- coherent + real accept** |
 
-So the coherent W8A8 27B TP=2 serve is **correct but slow (~9 t/s)**. The fast number requires the captured path,
-which is currently broken. If you need a fast *coherent* 27B int8-activation serve today, the single-card
-**W4A8** (`../qwen36-27b-w4a8`, captures coherently) is the better pick until Bug B is fixed.
+So the shipped config (captured + MTP spec=5 + capture-safe all_gather) is **26.10 t/s coherent** = 1.44x vs
+captured-no-MTP, 2.5x vs eager-MTP, 6.4x vs eager-no-MTP. Accept is drafter-limited (1-layer MTP head) on hard
+prompts; code/easy prompts accept higher -> faster. The old "63 t/s/3.4x" was benched on degenerate garbage.
 
 ## The non-obvious ingredients (still wired in serve.sh)
 
 1. **GDN kernel mount** -- :int8g bakes GDN OFF; mount the GDN-enabled `_xpu_C.abi3.so` (+ sibling lib).
-2. **MTP-BF16 shim** (`patches/sitecustomize.py` on PYTHONPATH) -- forces ONLY the `Qwen3_5MultiTokenPredictor`
-   drafter unquantized/BF16. (Eager MTP works; the shim is correct.)
-3. **`splitting_ops` / `IGP` knobs in ../_common/lib.sh** -- relevant only to the (currently broken) captured path.
+2. **Combined shim** (`patches/sitecustomize.py` on PYTHONPATH, = `scripts/110_csag_shim`) does TWO things:
+   (a) forces ONLY the `Qwen3_5MultiTokenPredictor` drafter unquantized/BF16 (else 0% accept); and
+   (b) replaces `XpuCommunicator.all_gather` with an all-reduce-of-padded equivalent so the spec-verify all_gather
+   records into the SYCL graph (oneCCL's native allgather can't) -- this is THE Bug B fix that lets MTP capture.
+3. **`splitting_ops` = attention/GDN ops ONLY (eject nothing) + `IGP=false`** -- set in serve.sh. Do NOT add the TP
+   collectives to splitting_ops: ejecting them is exactly what corrupted the captured path (Bug B).
 
 ## Host dependency (not in repo)
 

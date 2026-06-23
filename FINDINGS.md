@@ -132,8 +132,32 @@ Puget 4xB70 TP=4 27B-dense = 13.1 (1u) / 95.9 (8u); StorageReview B60 GPT-OSS-20
 own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate the real numbers.
 
 **Our measured numbers (2026-06-21, dual B70):**
-- **Captured (PIECEWISE) TP=2 is BLOCKED:** oneCCL errors `sched algorithms do not support sycl_graph recording`
-  -- stable init needs `CCL_ENABLE_SYCL_KERNELS=0` but graph-recording an all-reduce needs `=1`. Eager-only at TP=2.
+- **[SUPERSEDED 2026-06-24] "Captured PIECEWISE TP=2 is BLOCKED"** -- the original claim below was wrong/incomplete.
+  Captured PIECEWISE TP=2 WORKS (W8A8 27B no-MTP captured = 18.10 t/s COHERENT; MTP spec5 captured = 26.10 t/s
+  COHERENT, 26% accept). See the "[BUG B] captured TP=2 garbage" entry just below for the full root cause + fix.
+  Original (kept for history): *oneCCL errors `sched algorithms do not support sycl_graph recording` -- stable init
+  needs `CCL_ENABLE_SYCL_KERNELS=0` but graph-recording an all-reduce needs `=1`. Eager-only at TP=2.* (The real
+  story: all_reduce/reduce_scatter DO record under `=1`; only oneCCL ALLGATHER can't, and that is now worked around
+  by an all-reduce-of-padded all_gather shim so even all_gather records -- nothing needs ejecting.)
+- **[BUG B -- captured TP=2 W8A8 garbage: ROOT CAUSE + FIX, 2026-06-24] (full log: JOURNAL 2026-06-23/24,
+  scripts/106-111).** Symptom: 27B W8A8 (16 full-attn int8 + 48 BF16 GDN) at TP=2 with PIECEWISE capture emitted
+  garbage (`!!!!`); eager was fine; single-card 14B/W4A8 captured fine. It was NOT a captured-int8-numerics bug.
+  - ROOT CAUSE: vLLM's piecewise `CUDAGraphWrapper` does a pure `replay()` with NO input copy -- every captured
+    piece's inputs MUST sit at the SAME device address on replay as at capture (it even asserts this in DEBUG). The
+    XPU TP collectives are all OUT-OF-PLACE (`all_reduce` returns `input_.clone()`; all_gather/reduce_scatter return
+    fresh `torch.empty()+.contiguous()`). Listing a collective in `splitting_ops` EJECTS it to eager at a piecewise
+    boundary; its fresh output does not reproduce the capture-time address on XPU -> the next captured piece reads
+    STALE data -> garbage. Eager has no graph (no contract); single-card has no collectives.
+  - FIX: eject NOTHING. Keep all collectives CAPTURED (`splitting_ops` = attention/GDN ops only), use `IGP=false`
+    (the inductor partitioner KeyErrors on the mixed W8A8+BF16-GDN region). all_reduce/reduce_scatter record fine.
+    For MTP, the spec-verify `all_gather` (which oneCCL 2021.17 cannot graph-record) is replaced by an
+    ALL-REDUCE-OF-PADDED all_gather (`rdy_to_serve/.../patches/sitecustomize.py`, = `scripts/110_csag_shim`) so it
+    too records and stays captured. SECOND FACET: merely ejecting only all_gather left the body coherent but the
+    captured spec-VERIFY gave ~0% accept (drafts rejected, MTP became pure overhead 9.63 t/s); capturing all_gather
+    correctly (plan B) restored accept to 26% -> 26.10 t/s.
+  - NUMBERS (coherence-gated, hard prompt, temp=0): eager-no-MTP ~4.1; captured-no-MTP 18.10; eager-MTP 10.43 @36%;
+    captured-MTP-eject-all_gather 9.63 @~0%; **captured-MTP plan-B 26.10 t/s @26% accept** = 1.44x vs captured-no-MTP,
+    2.5x vs eager-MTP, 6.4x vs eager-no-MTP. The old "63 t/s/3.4x" headline was benched on degenerate garbage.
 - **Eager TP=2 27B int4 decode: C1 4.18 t/s, C2 4.02 t/s/stream** -- vs **eager TP=1 single-card 7.84 -> 0.53x**.
   TP=2 HALVES single-stream decode (collective-latency tax). Weights shard 8.42 GiB/card (half of 16.7 single).
 - **Cross-card all-reduce microbench** (`scripts/60_allreduce_bench.sh`, xccl): **latency floor ~0.29 ms** (small
