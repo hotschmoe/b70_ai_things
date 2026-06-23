@@ -25,8 +25,18 @@ per-experiment log in JOURNAL.
 > is insufficient for compressed-tensors W4A16 because vLLM otherwise instantiates the drafter as quantized/fused and
 > skips the BF16 MTP linears. VALIDATED on W4A16: ctx2048 C1 no-MTP `tg` 21.73 -> MTP spec=4 `tg` 42.97,
 > accept_len 3.49; C4 improves `tg` 16.67 -> 28.98 but aggregate output regresses 46.29 -> 38.58 and TTFT jumps.
-> Host graft dirs also created for `W8A8-sqgptq` and `W4A8-sqgptq-prepacked` (15 `mtp.*` keys each); those still
-> need serve/acceptance benches.
+> Host graft dirs also created for `W8A8-sqgptq` and `W4A8-sqgptq-prepacked` (15 `mtp.*` keys each).
+> **[2026-06-23 SWEEP DONE -- scripts/90]** W4A8-sqgptq-prepacked graft BENCHED single-card (int8g PIECEWISE,
+> PREPACK + GDN .so + the mtp shim on PYTHONPATH): no-MTP 20.74 -> MTP spec=5 **42.03 t/s = 2.03x, accept_len
+> 3.79** (spec3 ties at 41.99/al2.98). **Accept HOLDS on int4 weights (3.79, vs BF16 ref 4.04) -- the int4-drift
+> worry is REFUTED.** W4A8 ~= W4A16-graft (~42-43 t/s @2x) but with the int8-activation systolic path at no
+> acceptance cost -> W4A8 is now a real single-card MTP headline candidate. **W8A8-sqgptq graft is 34GB -> does
+> NOT fit one card; only TP=2 is possible, and TP=2 MTP is M4-DEAD (spec-allgather not graph-capturable) ->
+> retrying anyway with the real grafted head (off + spec4 PIECEWISE + an eager fallback).**
+> **[SHIM BUG, fixed]** the committed `mtp_bf16_patch/sitecustomize.py` in BOTH graft dirs shipped with string
+> quotes stripped (`prefix=)`, bare `quant_config`, unquoted print) -> "Error in sitecustomize", never applied,
+> would give a QUANTIZED drafter = 0% accept. Rewrote correct ASCII + pushed byte-exact to both host dirs
+> (originals -> *.broken.bak). ANY future CT-graft serve must use the corrected shim.
 > **NEXT SWEEP HARD REQUIREMENT:** include the graft dir's BF16 MTP drafter shim on `PYTHONPATH` for every compressed-
 > tensors graft serve. Without that shim, vLLM sees the target model's compressed-tensors quant config and tries to build
 > the `Qwen3_5MultiTokenPredictor` drafter through the quantized/fused path; the raw BF16 `mtp.*` shard then loads only
@@ -331,7 +341,8 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | — | Qwen3-14B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | A3 |
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | 5 | 3.46 | — | 52.60 | 30.84 | 1.71x | — | — | ~17GiB | — | B1 spec=5 (M2 sweep) |
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 PIECEWISE (Lorbus int4-AR) | 1 | 8192/fp16 | **4** | 3.25 | — | **55.28** | 30.84 | **1.79x** | — | — | ~17GiB | — | **B1 WINNER** single-card MTP, beats Lorbus 45.2; FULL crashes spec_query_start_loc |
-| — | Qwen3.6-27B | W4A8 | — | 1 | — | 5 | — | — | — | — | — | — | — | — | — | B2 |
+| 2026-06-23 | Qwen3.6-27B | W4A8-sqgptq | int8g PIECEWISE +mtp-graft (CT) | 1 | 2048/bf16 | **5** | 3.79 | — | **42.03** | 20.74 | **2.03x** | — | — | ~27GiB | — | **B2 WINNER** single-card MTP FEASIBLE; accept HOLDS at int4 (3.79); spec3 ties (41.99) |
+| 2026-06-23 | Qwen3.6-27B | W4A8-sqgptq | int8g PIECEWISE +mtp-graft (CT) | 1 | 2048/bf16 | 3/4 | 2.98/3.32 | — | 41.99/40.44 | 20.74 | 2.02/1.95x | — | — | ~27GiB | — | B2 spec3/4 (sweep); decode flat ~41-42 across spec, accept_len climbs 2.98->3.79 |
 | 2026-06-22 | Qwen3.6-35B-A3B | int4-AR MoE | v0230moe PIECEWISE+fp8KV | 1 | 8192/fp8 | 4 | 2.68 | — | **68.83** | 66.82 | **1.03x** | — | — | — | — | **M5** MoE+MTP NOVEL; MTP FLAT on MoE (sparse 3B-active); capture is the MoE headline |
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 TP=2 PIECEWISE +SYCLKERNELS | 2 | 8192/fp16 | off/4 | — | — | CRASH | 26.96 | — | — | — | — | — | **M4** TP2 MTP-off 0.87x single-card; MTP-on CRASHES (spec-allgather not graph-capturable) -> TP=2 MTP DEAD |
 | — | Qwen3.6-27B | W8A8 | — | 2 | — | 5 | — | — | — | — | — | — | — | — | — | C1 (2-card) -- needs RagingNoper capture-safe collectives (see M4) |

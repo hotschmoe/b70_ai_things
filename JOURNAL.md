@@ -3303,3 +3303,43 @@ verdict -> BOTH eager projections FAIL in the captured serve.
       quant lever is worth shipping on the captured 14B path; the int8-decode headroom is in FUSING quant INTO the
       GEMM prologue (one opaque node that also does the GEMM), not swapping the standalone quant op or toggling the
       inductor norm-quant pass. Host clean: both containers removed, both leases freed.
+
+== 2026-06-23 :: W4A8 27B compressed-tensors BF16-MTP graft -- single-card sweep, ~2.0x FEASIBLE ==
+motivation -> run the deferred serve/acceptance bench on the W4A8 BF16-MTP graft dir (created 06-23 but never
+  perf-tested), i.e. MTP_TODO Phase B2 + the user "MTP sweep, what's feasible" ask. Single-card is the path:
+  TP=2 MTP is dead (M4), so the W4A8 graft (fits one card) is the only int8-activation 27B that can do MTP today.
+config -> new self-contained host script `scripts/90_mtp_graft_sweep.sh` (append-only; does NOT touch bin/ or
+  _common). Reuses the proven 30_serve engine wiring (PREPACK loader xpu.py+compressed_tensors_w4a8_int.py,
+  GDN-enabled _xpu_C.abi3.so + libgdn_attn_kernels_xe_2.so, NOMM, VLLM_W4A8_PREPACKED=1) and adds the ONE missing
+  piece the engine lacks: the graft dir's `mtp_bf16_patch` on PYTHONPATH (forces only Qwen3_5MultiTokenPredictor
+  to instantiate unquantized/BF16). IMG=vllm-xpu-env:int8g, model
+  /models/Qwen3.6-27B-W4A8-sqgptq-prepacked-mtp-graft, served qwen36-27b-w4a8-sqgptq-mtp, GRAPH=1 PIECEWISE,
+  dtype auto(bf16), UTIL=0.97 MAXLEN=2048 MAXSEQS=4 CAPS=1,2,4. Bench = the M2/M4 TTFT-cancelled decode (gen 64
+  vs 512, subtract) + /metrics spec_decode counters (accept_len = accepted/drafts + 1). spec in {off,3,4,5}.
+  Ran on card 0 via `gpu-run --card 0`.
+BUG CAUGHT + FIXED -> the committed `mtp_bf16_patch/sitecustomize.py` in BOTH the W4A8 and W8A8 graft dirs was
+  syntactically BROKEN (string quotes stripped: `prefix=)`, bare `quant_config`, unquoted print) -> Python logged
+  "Error in sitecustomize" and never applied the patch. Harmless for the off baseline (no MTP) but it would have
+  given every CT-graft MTP run a QUANTIZED drafter -> 0% accept (the exact failure the shim exists to prevent,
+  same signature as the 06-23 W4A16 compressed-tensors 0%-accept probe). Rewrote a correct ASCII sitecustomize.py
+  and pushed it byte-exact (scp) to both host graft dirs; backed up the broken originals as *.broken.bak; cleared
+  stale __pycache__. Fixed in time (caught during the off-baseline load, before any spec run started).
+result -> host CSV /mnt/vm_8tb/b70/results/mtp90_w4a8_20260622_183543.csv; repo copy
+  results/mtp90_w4a8_27b_single_20260623.csv. Logs confirmed the path: speculative_config=SpeculativeConfig(
+  method='mtp', num_spec_tokens=N), "Detected MTP model. Sharing target model embedding/lm_head weights with the
+  draft model", and NONZERO acceptance (the corrected shim is live).
+  spec  decode_tps  MTPx   accept_len  accept_rate  (accepted/drafts/draft_tok, gen512 s)
+  off   20.74       -      -           -            (gen512 24.74s)
+  3     41.99       2.02   2.98        0.660        (388/196/588, 12.11s)
+  4     40.44       1.95   3.32        0.580        (408/176/704, 12.69s)
+  5     42.03       2.03   3.79        0.559        (433/155/775, 12.10s)
+verdict -> W4A8 27B single-card MTP is FEASIBLE and ~2.0x. WINNER spec=5 (42.03 t/s, 2.03x) -- spec=3 ties it
+  (41.99) at lower accept_len; spec=4 dips to 40.44. The decisive Phase-B2 finding: accept_len HOLDS on int4
+  weights -- 3.79 at spec=5 (vs the BF16 4.04 reference and the W4A16 graft's 3.49 at spec=4). The plan's
+  "int4 drift may drop accept to 3.0-3.5" worry is REFUTED for the 27B. So both single-card int4-weight schemes
+  land the same MTP'd decode: W4A8 ~42 t/s @2.0x vs W4A16 graft ~43 t/s @~2.0x -- W4A8 buys the int8-activation
+  (systolic) path at no acceptance cost. Caveats: (a) accept measured over a 512-token gen only -- watch for the
+  Lorbus 86->65% long-decode decay; (b) bf16 model dtype triggers a "int4_gemm_w4a8 produces float16 output,
+  recommend --dtype float16" perf warning (both off and MTP share it, so the multiplier is fair; a float16 re-run
+  could lift absolute t/s); (c) VRAM tight (UTIL 0.97, MAXLEN capped 2048) -- production wants Half-KV or a
+  co-packed/quantized MTP head. Container stopped; card0 lease freed (gpu-run done in 1251s).
