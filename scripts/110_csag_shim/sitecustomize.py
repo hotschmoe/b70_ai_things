@@ -57,6 +57,11 @@ if os.environ.get("CSAG_DISABLE", "0") != "1":
             return out
 
         XpuCommunicator.all_gather = _all_gather_via_allreduce
+        # COVERAGE (codex-reviewed 2026-06-24): this patches the all_gather path used by the dense-hybrid MTP serve
+        # (vllm::all_gather -> _all_gather_out_place -> device_communicator.all_gather, incl. the seq-parallel custom
+        # op). NOT patched: all_gatherv (raw dist.all_gather, used by MoE all2all) and gather() (all_gather_into_tensor).
+        # If a future MoE/gather model captures those on XPU they can still hit the oneCCL allgather record crash --
+        # extend this shim then. For Qwen3.6-27B dense hybrid they are not on the captured path (verified: capture OK).
         print("[csag-shim] (2) XpuCommunicator.all_gather -> capture-safe all-reduce-of-padded", file=sys.stderr, flush=True)
     except Exception as e:
         print("[csag-shim] (2) all_gather patch failed:", repr(e), file=sys.stderr, flush=True)

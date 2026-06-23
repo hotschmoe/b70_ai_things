@@ -3712,3 +3712,24 @@ verdict -> **MTP IS NOW A REAL WIN ON CAPTURED W8A8 27B TP=2: 26.10 t/s, 26% acc
   easier/code prompts accept higher -> faster). Captured-verify accept (26%) is a touch below eager (36%) -- a
   minor residual (captured int8 verify batch and/or all-reduce-of-padded numerics, or single-bench noise), net
   still +44%. NEXT: ship this as the recipe (csag shim, GRAPH=1, IGP=false, no-eject), smoke-gate, commit.
+
+== 2026-06-24 :: captured-MTP spec sweep on the FIXED path -- spec=3 is the WINNER (34.82 t/s, 51% accept) ==
+motivation -> the old "spec=5 winner, climbing 50/57/63" was on garbage. Re-sweep spec {3,4,5} on the FIXED captured
+  config (plan-B capture-safe all_gather, eject nothing) with a coherence read-out + REAL accept (scripts/111).
+result -> repo results/mtp111_*.csv (hard Roman-Empire prompt, temp=0, coherence-gated COHERENT all rows):
+  spec  decode_tps  accept_rate  accept_len  vs captured-no-MTP(18.10)
+  3     34.82       0.512        2.53        1.92x   <- WINNER
+  4     30.56       0.368        2.47        1.69x
+  5     26.10       0.258        2.29        1.44x
+verdict -> captured MTP decode MONOTONICALLY DECREASES with spec (accept 51 -> 37 -> 26%): the 1-layer MTP head's
+  useful draft horizon is ~3 tokens; drafting further just wastes verify compute. **spec=3 = 34.82 t/s @51% accept
+  is the winner** = 1.92x vs captured-no-MTP (18.10), 3.3x vs eager-MTP (10.43), 8.5x vs eager-no-MTP (~4.1) -- ALL
+  COHERENT. This is the EXACT OPPOSITE of the old garbage sweep (which "climbed" because degenerate draft==target
+  gave fake ~98% accept at any spec). Recipe default flipped MTPTOK 5 -> 3. (spec=2 untested -- possible further
+  small gain.) codex (gpt-5.5, read-only) REVIEWED the capture-safe all_gather shim: semantically identical to base
+  vLLM concat all_gather for dim=0 and dim=-1, capture-safe, covers the real path (vllm::all_gather ->
+  _all_gather_out_place -> device_communicator.all_gather + seq-parallel); NOT covering all_gatherv/gather (MoE/gather
+  paths, not on this dense-hybrid's captured path -- noted in the shim). codex agrees the 51->26% accept-vs-spec
+  trend and the eager(36%)-vs-captured(spec5 26%) gap are NOT shim numerics (sum-with-zeros is exact) but the
+  captured int8 verify batch / drafter horizon / bench noise. FINAL HEADLINE for the W8A8 27B TP=2 MTP recipe:
+  **~35 t/s coherent (spec=3)**, captured, real 51% accept. Bug B fully resolved end-to-end. Host clean; leases freed.

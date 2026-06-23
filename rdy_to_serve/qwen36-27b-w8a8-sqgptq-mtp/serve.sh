@@ -55,8 +55,11 @@ export NOMM="${NOMM:-1}"                    # 27B is a qwen3_5 VLM -> text-only
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"
 export MAXSEQS="${MAXSEQS:-8}"
-export MTPTOK="${MTPTOK:-5}"                # MTP spec tokens; spec=5 is the winner (spec=6 collapses: 1-layer head)
-export CAPSIZES="${CAPSIZES:-1,2,4,6,8}"    # include the spec-verify batch 1+spec=6
+export MTPTOK="${MTPTOK:-3}"                # MTP spec tokens. spec=3 = WINNER on the fixed captured path (scripts/111
+                                            # coherence-gated: spec3 34.82 t/s @51% > spec4 30.56 @37% > spec5 26.10
+                                            # @26% -- MONOTONIC DECREASING; the 1-layer MTP head over-drafts past ~3.
+                                            # (The old "spec=5 winner / climbing 50/57/63" was on degenerate garbage.)
+export CAPSIZES="${CAPSIZES:-1,2,4,6,8}"    # covers the spec-verify batch 1+spec for spec 3/4/5 (=4/5/6)
 export COMPILESZ="${COMPILESZ-}"           # MUST be empty for spec-decode (compile_sizes [1] is rejected; pads to 1+spec)
 # THE FIX (3) [2026-06-24, REVISED]: eject NOTHING. splitting_ops = the model's attention + GDN custom ops ONLY
 # (the genuine non-capturable ops). Do NOT add the TP collectives: ejecting them breaks the captured-piece input-

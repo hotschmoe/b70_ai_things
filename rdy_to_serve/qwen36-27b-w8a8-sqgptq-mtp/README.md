@@ -45,14 +45,17 @@ separately KeyErrors on the mixed W8A8+BF16-GDN region, so we use `IGP=false`.)
 | config | decode tok/s | accept | note |
 |---|---|---|---|
 | eager, MTP-off (pure body) | ~4.1 | - | TP=2 fully-eager int8 is launch/collective-bound |
-| eager, MTP spec=5 | 10.43 | 36% (accept_len 2.80) | coherent; the old "only coherent" path |
+| eager, MTP spec=5 | 10.43 | 36% | the old "only coherent" path |
 | captured, MTP-off | 18.10 | - | coherent; capture alone ~4.5x over eager |
 | captured, MTP spec=5, eject only all_gather | 9.63 | ~0% | coherent but verify dead -> no speedup |
-| **captured, MTP spec=5, capture-safe all_gather (DEFAULT)** | **26.10** | **26%** | **the win -- coherent + real accept** |
+| captured, MTP spec=5, capture-safe all_gather | 26.10 | 26% | coherent |
+| captured, MTP spec=4, capture-safe all_gather | 30.56 | 37% | coherent |
+| **captured, MTP spec=3, capture-safe all_gather (DEFAULT)** | **34.82** | **51%** | **WINNER -- coherent** |
 
-So the shipped config (captured + MTP spec=5 + capture-safe all_gather) is **26.10 t/s coherent** = 1.44x vs
-captured-no-MTP, 2.5x vs eager-MTP, 6.4x vs eager-no-MTP. Accept is drafter-limited (1-layer MTP head) on hard
-prompts; code/easy prompts accept higher -> faster. The old "63 t/s/3.4x" was benched on degenerate garbage.
+Captured-MTP decode DECREASES with spec (51%->37%->26% accept): the 1-layer MTP head over-drafts past ~3 tokens,
+so spec=3 wins. (The old "spec=5 / climbing 50/57/63" was an artifact of degenerate garbage where draft==target gave
+fake ~98% accept at any spec.) Shipped default = **spec=3 = 34.82 t/s coherent** = 1.92x vs captured-no-MTP,
+3.3x vs eager-MTP, 8.5x vs eager-no-MTP. Accept is drafter-limited on hard prompts; code/easy prompts accept higher.
 
 ## The non-obvious ingredients (still wired in serve.sh)
 

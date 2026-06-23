@@ -92,7 +92,7 @@ for SP in $SPECS; do
   serve "$SP"
   if wait_healthy; then bench "$SP" "$BASE"; [ "$SP" = off ] && BASE=$(cat /tmp/mtp111_tps 2>/dev/null || echo 0)
   else echo "spec=$SP FAIL" | tee -a "$SUMM"; docker logs "$NAME" 2>&1 | grep -iE "allgather|sycl_graph|RuntimeError|out of memory|weight_scale" | tail -8 | sed 's/^/   /' | tee -a "$SUMM"; echo "$SP,FAIL,,,,," >> "$CSV"; fi
-  docker rm -f "$NAME" >/dev/null 2>&1; sleep 5
+  docker rm -f "$NAME" >/dev/null 2>&1; sleep 30   # let the XPU driver release ~30 GiB before the next serve (else OOM)
 done
 echo "=== 111 SUMMARY ===" | tee -a "$SUMM"; cat "$CSV"
 echo "=== 111 done ==="
