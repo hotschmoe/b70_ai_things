@@ -1197,3 +1197,31 @@ EventReset(S_peer). Replayed 200x with per-iter sentinel + poison.
   building blocks for a CAPTURABLE DECODE push all-reduce are proven -- K.3 (cross-device event wait), K.4
   (records into SYCL command_graph + replays), K.5 (cross-process IPC events). NEXT: combine into the
   deployable cross-process GRAPH all-reduce, then wire into the push-ar .so + torch XPUGraph + serve A/B.
+
+### K.6 [WIN] the capturable push all-reduce records into TORCH's XPUGraph + replays correctly (2 procs) -- decode unlocked
+`scripts/118_xpu_push_ar_graph.cpp` (the deployable .so, extends 106) + `118_graph_harness.py` + `118_run_graph_
+harness.sh`. The .so keeps the proven EAGER host-barrier path (ar_allreduce_ptr_dt, for prefill) and adds:
+ar_exchange now also shares an IPC event pool (both devices, K.5); `ar_allreduce_graph(qaddr, ptr, nbytes, dtype)`
+= push kernel -> ext_codeplay_enqueue_native_command[signal mine; wait peer; reset peer] -> reduce kernel, all on
+the passed queue, no host barrier. The harness drives 2 torch procs (gloo, 1 card each), and CAPTURES a call to
+ar_allreduce_graph inside `torch.xpu.graph(g)`, then replays.
+```
+  [eager] verify OK(4.0)                                      (new .so's host-barrier path still correct)
+  [capture] capturing=True setupq=735017824 capq=734934992 same=False
+  [graph] replay verify 50/50 OK -> PASS
+  [graph] replay latency 35.44 us/allreduce (10240B bf16 decode)
+```
+- **The push all-reduce records into torch's OWN XPUGraph capture and replays correctly 50/50, 2 processes.**
+  This closes the handoff's central question end-to-end at the harness level: the DECODE all-reduce is
+  graph-capturable on B70 and integrates with torch's capture path. 35.4us/allreduce vs oneCCL decode ~85us =
+  ~2.4x, squarely in the handoff's 34-45us target band.
+- **THE KEY INTEGRATION BUG (cost the first capture attempt, UR_RESULT_ERROR_UNSUPPORTED_FEATURE err 44):
+  torch captures on a DEDICATED capture stream, NOT the default stream cached at setup** (`same=False` proves
+  setupq != capq). The .so must submit on the CURRENT stream (torch.xpu.current_stream().sycl_queue) PER CALL,
+  not the queue grabbed in ar_setup_torch -- else ext_codeplay_get_native_graph has no graph to record into and
+  the enqueue is rejected. ar_allreduce_graph now takes the queue addr as its first arg.
+- ar_allreduce_graph is CAPTURE-ONLY (uses ext_codeplay_get_native_graph, valid only while recording). The
+  monkeypatch routes by torch.xpu.is_current_stream_capturing(): capturing -> ar_allreduce_graph (decode), else
+  -> ar_allreduce_ptr_dt (eager prefill). NEXT: (a) harness test of MANY sequential allreduces in one captured
+  graph sharing one scratch+event pair (the serve has ~64/token); (b) wire into _push_ar_patch.py +
+  PUSH_AR_MIN_NUMEL=0 + GRAPH=1 serve A/B vs oneCCL decode (careful, wedge-risk; guard + one run at a time).

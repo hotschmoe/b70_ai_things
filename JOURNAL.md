@@ -4069,3 +4069,14 @@ verdict -> the cross-PROCESS cross-device event sync works + replays. GOTCHA: th
   devices (zeEventPoolCreate ...,2,{dev0,dev1}); a 1-device pool segfaults the peer's AppendWaitOnEvents (silent).
   All blocks proven: K.3 wait, K.4 graph-record, K.5 cross-proc IPC. No wedge. docs/P2P_GPU.md K.5. NEXT: deployable
   cross-proc GRAPH allreduce -> push-ar .so + torch XPUGraph harness -> serve A/B.
+
+P2P K.6 [WIN] capturable push all-reduce records into torch's XPUGraph + replays correctly (2 procs) -- decode unlocked
+config -> scripts/118_xpu_push_ar_graph.cpp (deployable .so: eager host-barrier path + ar_allreduce_graph w/ IPC
+  event pool sync) + 118_graph_harness.py (2 torch procs, capture ar_allreduce_graph in torch.xpu.graph, replay).
+command -> ./bin/gpu-run bash scripts/118_run_graph_harness.sh
+result -> eager OK(4.0); capture: capturing=True, setupq!=capq; graph replay 50/50 PASS; 35.4us/allreduce decode.
+verdict -> DECODE all-reduce is graph-capturable AND integrates with torch's capture, 2-proc topology. 35.4us vs
+  oneCCL ~85us = ~2.4x. KEY BUG: torch captures on a DEDICATED stream (setupq!=capq) -> .so must submit on the
+  CURRENT stream per call (ar_allreduce_graph takes qaddr), not the cached setup queue, else err 44. Patch routes
+  by torch.xpu.is_current_stream_capturing(). docs/P2P_GPU.md K.6. NEXT: multi-allreduce-per-graph harness test,
+  then wire _push_ar_patch.py + GRAPH=1 PUSH_AR_MIN_NUMEL=0 serve A/B (wedge-careful).
