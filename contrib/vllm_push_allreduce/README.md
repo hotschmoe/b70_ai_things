@@ -32,11 +32,25 @@ Env: `PUSH_AR_DISABLE=1` (kill switch), `PUSH_AR_MAXB` (scratch bytes, default 1
 
 Driver script: `scripts/108_serve_push_ar_ab.sh` (27B-W8A8 TP=2 A/B vs oneCCL).
 
+## Capturable DECODE path (NEW -- P2P_GPU.md K.1-K.6)
+
+The host-barrier op above is prefill-only (not graph-capturable). The capturable variant
+`scripts/118_xpu_push_ar_graph.cpp` -> `prebuilt/libxpu_push_ar_graph.so` replaces the host barrier with a
+cross-device Level-Zero EVENT sync (command-streamer wait, NOT the J.9-C EU spin that hangs) injected via
+`ext_codeplay_enqueue_native_command` so it RECORDS INTO torch's XPUGraph capture (XPUGraph IS sycl
+command_graph). Cross-process via an IPC event pool that MUST span both devices (K.5). Proven correct + replayable
+in `scripts/118_graph_harness.py` (2 torch procs, torch.xpu.graph capture+replay, 35us/allreduce vs oneCCL ~85us).
+
+Activate: build the graph .so, set `PUSH_AR_GRAPH=1 PUSH_AR_MIN_NUMEL=0 PUSH_AR_SO=.../libxpu_push_ar_graph.so`.
+The patch routes by `torch.xpu.is_current_stream_capturing()`: captured decode -> `ar_allreduce_graph` (records
+into the graph; pass the CURRENT capture stream's queue, not the setup queue), eager prefill -> the host-barrier
+`ar_allreduce_ptr_dt`. Shelf opt-in: `PUSH_AR=1 PUSH_AR_GRAPH=1` on the 27B serve.sh; driver `scripts/119`.
+
 ## CAVEATS
 
-- **Graph capture**: the op uses a host barrier + ctypes call -> NOT SYCL-graph-capturable. Run the serve
-  EAGER (`GRAPH=0`), or mark the TP all_reduce as a graph splitting op. With `GRAPH=1` the capture will
-  break exactly like the original oneCCL `sched` allreduce did.
+- **Graph capture (host-barrier .so only)**: `libxpu_push_ar_torch.so` uses a host barrier -> NOT
+  SYCL-graph-capturable. Run EAGER (`GRAPH=0`) or capture-gate it (`PUSH_AR_MIN_NUMEL>0`, prefill-only push,
+  decode on oneCCL). For captured DECODE push, use the graph .so above (`PUSH_AR_GRAPH=1`).
 - **Only all_reduce** is accelerated. reduce_scatter / all_gather (used by MoE / MTP-spec) fall back to
   oneCCL. Dense models (e.g. 27B-W8A8) are pure-allreduce in TP and benefit fully.
 - 2-rank pairwise algorithm only (world_size==2). world>2 falls back.

@@ -4080,3 +4080,14 @@ verdict -> DECODE all-reduce is graph-capturable AND integrates with torch's cap
   CURRENT stream per call (ar_allreduce_graph takes qaddr), not the cached setup queue, else err 44. Patch routes
   by torch.xpu.is_current_stream_capturing(). docs/P2P_GPU.md K.6. NEXT: multi-allreduce-per-graph harness test,
   then wire _push_ar_patch.py + GRAPH=1 PUSH_AR_MIN_NUMEL=0 serve A/B (wedge-careful).
+
+P2P K.7 [WIN] live 27B-W8A8 TP=2 GRAPH=1 serve with CAPTURABLE DECODE push -- coherent, engaged, no wedge
+config -> scripts/119_serve_push_ar_graph.sh smoke: 27B-W8A8 TP=2 GRAPH=1 MTP, PUSH_AR_GRAPH=1 MIN_NUMEL=0
+  (decode all-reduces use the K.6 captured push path, not oneCCL). guard-wrapped, B70_AUTO_RESET=1.
+command -> B70_AUTO_RESET=1 HEALTH_TIMEOUT=2400 ./bin/gpu-run bash scripts/119_serve_push_ar_graph.sh smoke
+result -> HEALTHY 131s; gen probe COHERENT ("Paris..."); post-probe both cards HEALTHY; NO wedge (exit 0).
+  Container log: both workers setup_torch OK (new "argraph" .so) + [push_ar] ENGAGED + exchange OK (incl IPC
+  event pool) -> capturable decode path active in the live 2-worker serve, no fallback.
+verdict -> handoff primary success criterion MET: GRAPH=1 PUSH_AR_MIN_NUMEL=0 serves coherently (captured
+  cross-device-event-synced decode all-reduce is numerically correct on real activations) + box healthy. decode
+  no longer oneCCL-gated. docs/P2P_GPU.md K.7. NEXT: decode t/s A/B vs oneCCL baseline (running).

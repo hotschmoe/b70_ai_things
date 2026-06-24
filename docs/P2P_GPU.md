@@ -1225,3 +1225,18 @@ ar_allreduce_graph inside `torch.xpu.graph(g)`, then replays.
   -> ar_allreduce_ptr_dt (eager prefill). NEXT: (a) harness test of MANY sequential allreduces in one captured
   graph sharing one scratch+event pair (the serve has ~64/token); (b) wire into _push_ar_patch.py +
   PUSH_AR_MIN_NUMEL=0 + GRAPH=1 serve A/B vs oneCCL decode (careful, wedge-risk; guard + one run at a time).
+
+### K.7 [WIN] LIVE 27B-W8A8 TP=2 GRAPH=1 serve with CAPTURABLE DECODE push -- coherent, engaged, no wedge
+`scripts/119_serve_push_ar_graph.sh smoke` (guard-wrapped, B70_AUTO_RESET=1). The capturable .so + PUSH_AR_GRAPH=1
++ PUSH_AR_MIN_NUMEL=0 wired into the real 27B-W8A8 TP=2 GRAPH=1 MTP serve (the J.21 production config, but with
+decode all-reduces ALSO on the push transport via the K.6 graph path instead of falling back to oneCCL):
+- L1 pre-flight xpu-health OK -> HEALTHY in 131s -> gen probe COHERENT ("Paris...<think>...") [coherence: OK]
+  -> graceful teardown -> post-probe both cards HEALTHY. gpu-run exit 0, 180s. **NO WEDGE.**
+- Engagement CONFIRMED in the container log (/tmp/b70_vllm_...-pushar-graph.log): both workers
+  `[argraph r0/r1] setup_torch OK` (the NEW graph .so, "argraph" tag) + `[push_ar] ENGAGED` +
+  `[argraph] exchange OK (scratch + shm barrier + IPC event pool)` -- the cross-process IPC event pool is set
+  up live in the 2-worker TP serve and the capturable path is active. No fallback, no L0 errors.
+- This is the handoff's primary success criterion MET: 27B-W8A8 TP=2 GRAPH=1 PUSH_AR_MIN_NUMEL=0 serves
+  COHERENTLY (not empty -> the captured cross-device-event-synced decode all-reduce is numerically correct on
+  real activations) and the box stays healthy. The decode all-reduce is no longer oneCCL-gated.
+- Decode t/s A/B (push-graph vs oneCCL-decode baseline) measuring next (scripts/119 run, IN=2048/OUT=128).
