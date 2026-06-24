@@ -3971,3 +3971,16 @@ verdict -> guard validated end-to-end on the real wedge-prone path. The J.16 ">1
   serve got force-killed into the full wedge; L1 catches that class, L2 removes the force-kill. BONUS: the
   capture-gated GRAPH=1 prefill-only push-ar PRODUCTION variant is now MEASURED healthy+coherent (was the
   J.14/J.16 blocked item); full A/B bench (push vs oneCCL, GRAPH=1) still TODO. P2P_GPU.md J.17.
+
+P2P J.17 FULL A/B BENCH [WIN] -- capture-gated push-ar beats oneCCL, GRAPH=1 TP=2 27B-W8A8 ----------
+config -> both GRAPH=1 TP=2, IN=512/OUT=128, CONC 1/2/4/8. A=push-ar prefill-gated, B=oneCCL baseline.
+  Ran A then B chained (two TP=2 GRAPH=1 starts) -- guard carried both, graceful teardown + post-probe
+  between, NO wedge, box ended healthy.
+result -> out_tok/s A vs B: c1 29.70/25.44 (+16.7%), c2 45.40/39.64 (+14.5%), c4 59.86/47.52 (+26.0%),
+  c8 107.74/69.52 (+55.0%). mean TTFT A vs B (ms): c1 321/811, c2 455/1101, c4 561/1296, c8 724/1659
+  = 2.3-2.5x faster. CSVs in $ROOT/results (sweep_*-pushar-tp2-graph_170832, *-oneccl-tp2-graph_171516).
+verdict -> production GRAPH=1 capture-gated push-ar is a clear win (+15-55% thruput, 2.3-2.5x TTFT);
+  J.14/J.16 blocked variant now MEASURED. Decode-side capturable push is the next lever. Also wrote
+  docs/literature/p2p_access_devicelost.md (why CCL_TOPO_P2P_ACCESS=1 wedges: oneCCL peer copy across
+  cross-die boundary -> xe copy-engine reset -> L0 DEVICE_LOST; xe-level corruption, not recoverable).
+  P2P_GPU.md J.17.

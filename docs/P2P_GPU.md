@@ -958,3 +958,27 @@ capture-gated A/B that wedged the box in J.16, this time through the guard:
   (push-ON vs `PUSH_AR_DISABLE=1` oneCCL baseline, GRAPH=1) are the remaining TODO.
 - PENDING: run `bin/serve-sweep --smoke` before committing the lib.sh change (shared-infra gate).
   bin/xe-reset.sudoers installed + `visudo -c` parsed OK.
+
+**FULL A/B BENCH [WIN] -- capture-gated push-ar vs oneCCL, both GRAPH=1 TP=2 27B-W8A8** (2026-06-24,
+IN=512/OUT=128). Ran A then B back-to-back -- two chained TP=2 GRAPH=1 starts, which the AGENTS.md
+warning says NOT to chain; the guard carried both with graceful teardown + post-probe between and
+NO wedge (box ended both-cards-healthy, lease free). A = `sweep_*-pushar-tp2-graph_170832.csv`,
+B = `sweep_*-oneccl-tp2-graph_171516.csv` (in $ROOT/results).
+
+    conc  out_tok/s A(push) B(oneccl)  thruput   mean_ttft_ms A vs B    TTFT speedup
+    1        29.70      25.44          +16.7%    321  vs  811          2.52x
+    2        45.40      39.64          +14.5%    455  vs 1101          2.42x
+    4        59.86      47.52          +26.0%    561  vs 1296          2.31x
+    8       107.74      69.52          +55.0%    724  vs 1659          2.29x
+
+- Capture-gated push-ar (prefill-only push inside the captured graph; decode stays on oneCCL) WINS at
+  every concurrency: +15-55% output throughput (gap widens with load) and 2.3-2.5x lower TTFT (TTFT is
+  prefill-dominated, exactly where push-ar replaces the oneCCL all-reduce). per-stream decode tok/s also
+  higher (e.g. conc8 14.82 vs 10.18). Slightly below the J.14 EAGER 3.35x TTFT because this is the
+  production GRAPH=1 capture-gated mode, not full-eager push. NET: the J.14/J.16 blocked production
+  variant is now MEASURED and is a clear win. Decode-side push (capturable) is the next lever.
+- Root cause of the H.13 P2P wedge this guard works around: see docs/literature/p2p_access_devicelost.md
+  (oneCCL direct PCIe peer copy across our cross-die/cross-root-complex boundary -> xe BCS copy-engine
+  reset + GP fault -> L0 queue DEVICE_LOST; persists because it is xe driver/engine + shared multi-GPU
+  L0 context corruption, not user-space-recoverable). Our push-ar dodges it entirely via L0-IPC at
+  P2PACCESS=0; host-staged oneCCL is the only stable stock path on this topology.
