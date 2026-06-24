@@ -677,3 +677,34 @@ peer's handle to get a cross-process peer pointer, and PUSHES (posted write, exe
 - Decode 10KB single-leg latency 7.94 us is the raw cross-process push floor; a full 2-rank allreduce
   adds the return leg + local reduce + one barrier (cf. J.7's 59.5 us full path). The decode latency
   lever is fusing push+signal into ONE kernel with a device-side flag (no per-step host barrier) -- next.
+
+### J.9 [MIXED] decode-latency surgery: cross-queue events = 1.36x (44us); device-flag fusion HANGS on Xe
+`scripts/104_fused_allreduce.cpp` (+ `104_run_fused_allreduce.sh`): three all-reduce schedules for the
+decode-sized (10KB) message, head-to-head. J.7's full path was 4 kernel launches + **2 HOST syncs** (it
+blocks the host after step1's push before it can even submit step2's reduce). Trying to cut that:
+```
+  mode                         lat us @10KB   vs baseline   verify   what changed
+  A baseline (= J.7)           60.40          --            OK       step1; HOST WAIT; step2; HOST WAIT
+  B cross-queue events         44.42          1.36x faster  OK       submit all 4 async; reduce depends
+                                                                     (L0 event) on peer's push; 1 host wait
+  C fused device-flag kernel   HANG           --            --       1 kernel/rank: push, fence, peer-write
+                                                                     a seq flag, spin on own flag, reduce
+```
+- **B (cross-queue events) is the deployable decode win: 44.4 us vs 60.4 = 1.36x, fully correct.** The
+  reduce kernel on each device takes an L0-event dependency on the PEER device's push kernel, so the
+  whole all-reduce is submitted async and the host blocks exactly ONCE at the end instead of mid-collective.
+- **C (single-kernel device-flag signalling) HANGS -- a real Battlemage/Xe limitation, now pinned down.**
+  Each rank peer-writes a sequence flag into the other card mid-kernel then spins on its own flag. It
+  never converges (even with a 5e8-iter spin bound it ran >120s): **a peer write issued from WITHIN a
+  running kernel does not become visible to a kernel spinning on the other device.** A
+  `atomic_fence(release, system)` does not force the posted write across PCIe mid-kernel, and peer
+  ATOMICS=N (H.11) means there is no system-scope atomic to lean on. Visibility is only guaranteed at
+  kernel-completion (engine write-buffer/L3 flush at the boundary). => On B70 you CANNOT build a
+  spin-wait device-side cross-card barrier; cross-card ordering must be host-driven or split across
+  separate kernels (which is what B's event dependency does -- the push kernel COMPLETES before the
+  dependent reduce kernel starts).
+- **Implication for the 2-process vLLM op (J.10):** SYCL cross-queue events live inside ONE process, so
+  the B trick is not directly available to two separate TP workers. Two processes must synchronise the
+  push->reduce boundary over the HOST (a cpu_group barrier or a polled host-shared flag) -- exactly the
+  socket barrier J.8 used. For decode that host barrier is the floor; for prefill it is amortised by the
+  11 GB/s transport. GPU verified healthy after the hung-kernel kill (both cards enumerate, dmesg clean).
