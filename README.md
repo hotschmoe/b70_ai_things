@@ -33,8 +33,9 @@ model served coherently with the images recovered from the old Unraid `docker.im
 `vllm bench serve`, random dataset, IN=2048 / OUT=128, captured (GRAPH=1). **PP** =
 prefill throughput (2048 / TTFT); **TG** = decode tok/s. TP=1 models were swept
 two-up (one per card; decode verified identical to solo). NB: the TP=2 rows ran
-**host-staged** (the serve recipes default `CCL_TOPO_P2P_ACCESS=0`); enabling the
-kernel-7.0 P2P path (`P2PACCESS=1`) is the unrealized TTFT lever, see below.
+**host-staged oneCCL** (the serve recipes default `CCL_TOPO_P2P_ACCESS=0`). That TTFT
+lever is now REALIZED end-to-end -- NOT via `P2PACCESS=1` (still wedges the box), but via
+the custom push-allreduce transport: +15-55% throughput / 2.3-2.5x TTFT (J.17), see below.
 
 | model | img | TP | TTFT c1 | PP c1 (tok/s) | TG c1 (t/s) | TTFT c4 | agg c4 (tok/s) |
 |---|---|---|---|---|---|---|---|
@@ -46,10 +47,14 @@ kernel-7.0 P2P path (`P2PACCESS=1`) is the unrealized TTFT lever, see below.
 | qwen36-35b-a3b-quark-w8a8 (GRAPH=1) | v0230 | 2 | 1512 ms | 1354 | 43.1 | 3866 ms | 53.2 |
 
 The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the TP=2 rows are
-**host-staged**. P2P would cut their prefill-bound TTFT ~3-4x (allreduce A/B, P2P_GPU
-H.12, 8.4x) -- but `P2PACCESS=1` currently **crashes the vLLM TP=2 serve** at worker
-init (`UR_RESULT_ERROR_DEVICE_LOST`), so P2P is microbench-only for now: real at the
-allreduce layer, not yet reachable end-to-end (P2P_GPU H.13). (2) the bench
+**host-staged oneCCL**. The prefill-bound TTFT lever is now REALIZED end-to-end via the
+custom push-allreduce transport -- NOT via `P2PACCESS=1`, which still **crashes the vLLM
+TP=2 serve** at worker init (`UR_RESULT_ERROR_DEVICE_LOST`) and wedges both cards (P2P_GPU
+H.13/J.17; root cause in docs/literature/p2p_access_devicelost.md). On the 27B-W8A8 TP=2
+serve, capture-gated push-ar (GRAPH=1, prefill-only push, P2PACCESS=0) beats oneCCL by
+**+15-55% throughput and 2.3-2.5x TTFT** across concurrency 1-8 (P2P_GPU J.17 full A/B;
+eager push-ar was 3.35x TTFT, J.14). Push-ar is not yet wired into the shelf serve
+recipes -- it lives in `scripts/108_serve_push_ar_ab.sh`. (2) the bench
 uses `--dataset-name random`, which depresses MTP acceptance (random tokens are
 undraftable) -- so the W8A8 27B `25.2 (MTP)` understates it; on coherent NL the
 captured-MTP spec=3 ceiling is ~35 t/s @51% accept (JOURNAL 2026-06-24). (3) the
@@ -61,12 +66,17 @@ TP=2 solo); the 35B-quark captured numbers are from `69_lever_tests.sh` arm B.
 
 #### Optimization levers tested (2026-06-24, `69_lever_tests.sh`)
 
-- **P2P in serve (A):** unlocked at the allreduce layer (8.4x, H.12) but
-  `P2PACCESS=1` **crashes the vLLM TP=2 serve** at worker-init and **wedges the
-  multi-GPU state** (even P2P-off TP=2 then fails until an `xe` reload/reboot;
-  reboot CONFIRMED to clear it 2026-06-24). Never chain two `P2PACCESS=1` serve
-  attempts without a GPU reset between them. Not reachable end-to-end yet -- see
-  P2P_GPU H.13 and the AGENTS.md GPU Discipline danger note.
+- **P2P in serve (A):** the oneCCL `P2PACCESS=1` path is a dead end on this cross-die
+  box -- it **crashes the vLLM TP=2 serve** at worker-init and **wedges the multi-GPU
+  state** (even P2P-off TP=2 then fails until an `xe` reload/reboot; reboot CONFIRMED to
+  clear it 2026-06-24). Root cause: oneCCL issues a direct PCIe peer copy across our
+  cross-root-complex boundary -> `xe` copy-engine reset -> Level-Zero `DEVICE_LOST`
+  (docs/literature/p2p_access_devicelost.md). BUT the lever IS realized another way: the
+  custom **push-allreduce** transport (L0-IPC, `P2PACCESS=0`) beats oneCCL end-to-end in a
+  live TP=2 serve (+15-55% throughput / 2.3-2.5x TTFT, J.14 eager + J.17 GRAPH=1 A/B). A
+  wedge guard (`bin/xpu-health`, `bin/xe-reset`, lib.sh layers) now pre-flights, tears down
+  gracefully, and can auto-reset, so the TP=2 research loop is safe (P2P_GPU J.17). Never
+  chain two `P2PACCESS=1` attempts without a GPU reset between them.
 - **MoE int4 MTP (C):** works no-graft (mtp head intact), ~**1.11x** single-stream
   decode (66 -> 74 t/s, random-data floor) but **net-negative at c>1** -- the MoE's
   ~3B active params make decode already fast, so MTP's verify overhead doesn't pay
