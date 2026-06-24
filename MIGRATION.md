@@ -311,7 +311,8 @@ DONE:
   ALL UUIDs match section 0. ** Phase 4 wipefs target is /dev/sda (NOT the doc's literal /dev/sdb). **
 - Phase 3: disk1/disk2/vm_8tb/cache mounted RW by UUID, persisted in /etc/fstab (nofail). RO-verified first; data all
   present (StrongSync + isos on both array disks, b70 repo at /mnt/vm_8tb/b70, cache appdata). fstab backup at
-  /etc/fstab.pre-b70. Script: /home/hotschmoe/phase3_mount_data.sh.
+  /etc/fstab.pre-b70. Script: migration/phase3_mount_data.sh (all phaseN_*.sh and image-recovery scripts
+  referenced below now live in migration/ -- see migration/README.md; they ran once from /home/hotschmoe/).
 - Phase 5 (GPU userspace): both B70s under xe (0b:00.0 / 44:00.0). Installed stock-archive intel-opencl-icd + libze1
   + libze-intel-gpu1 (all 26.05.37020.3) + clinfo + intel-gpu-tools -- NO external Intel apt repo needed on 26.04.
   `clinfo -l` = 2 Intel Graphics [0xe223] devices. hotschmoe added to render+video. Script: phase5_gpu.sh.
