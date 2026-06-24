@@ -3827,3 +3827,22 @@ verdict -> NEW INSTALL VALIDATED: every shelf model serves + passes the coherenc
   One transient: w4a8 OOM'd engine-init in parallel wave-2 (card VRAM not fully released from wave-1 teardown before
   realloc @UTIL=0.90) -> re-benched solo OK; 68 now settles 15s between waves to prevent it. Table -> README.
   CSVs in results/sweep_*.csv. Both cards used; host clean; leases freed.
+
+## 2026-06-24 -- [LEVER A] P2P in vLLM serve is BLOCKED (DEVICE_LOST at worker init) -- microbench-only for now
+motivation -> H.12 showed P2P allreduce = 8.4x; test the END-TO-END serve win on 27B W8A8 TP=2 (P2PACCESS 0 vs 1).
+config -> qwen36-27b-w8a8-sqgptq-mtp serve.sh run, GRAPH=1 (->SYCLKERNELS=1), IN=2048 OUT=128 c=1/4, int8g.
+command -> ./gpu-run bash 69_lever_tests.sh A   (+ IPCX=sockets isolation re-run)
+result ->
+  P2P OFF (P2PACCESS=0, host-staged): HEALTHY + coherent. c1 TTFT 2901ms decode 26.2 t/s; c4 TTFT 4576 agg 20.5.
+  P2P ON  (P2PACCESS=1, pidfd):  CRASH at worker init_device warmup `all_reduce(torch.zeros(1).xpu())`
+    (xpu_worker.py:105) -> RuntimeError: level_zero backend failed with error 20 (UR_RESULT_ERROR_DEVICE_LOST).
+    CCL logs confirm CCL_TOPO_P2P_ACCESS=1 took effect; engine core init fails -> container exits.
+  P2P ON  (P2PACCESS=1, sockets): SAME crash -> NOT an IPC-exchange-mechanism issue.
+verdict -> the crash is in init_device BEFORE any graph capture -> CAPTURE RULED OUT; it is oneCCL's P2P all_reduce
+  inside vLLM's multiproc-executor worker topology that loses the device. The RAW 2-rank mp.spawn allreduce
+  microbench (61 / H.12) hits 9.7 GB/s with the SAME CCL_TOPO_P2P_ACCESS=1 -> the P2P FABRIC WORKS; the gap is the
+  oneCCL <-> vLLM-multiproc-worker P2P path (separately spawned workers + IPC handle exchange), NOT hardware.
+  => the ~3.8x P2P prefill prize (H.12) is REAL at the collective layer but NOT YET accessible through vLLM serve.
+  Both GPUs recovered (xpu count 2) after the loss. FOLLOW-UPS (dedicated session): VLLM_WORKER_MULTIPROC_METHOD=fork,
+  a newer oneCCL, NEO EnableP2P/EnableCrossDeviceAccess debug keys, or a custom P2P all-reduce bypassing the warmup.
+  P2P_GPU.md H.13. P2P-OFF remains the only working serve path today (TTFT 2901ms is host-staged, as expected).

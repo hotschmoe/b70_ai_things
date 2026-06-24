@@ -46,8 +46,10 @@ kernel-7.0 P2P path (`P2PACCESS=1`) is the unrealized TTFT lever, see below.
 | qwen36-35b-a3b-quark-w8a8 | v0230 | 2 | 2241 ms | 914 | 4.6 | 5899 ms | 13.8 |
 
 The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the TP=2 rows are
-**host-staged** -- per the allreduce A/B (P2P_GPU H.12, 8.4x) turning on P2P should
-cut their prefill-bound TTFT ~3-4x (the next serve-recipe change). (2) the bench
+**host-staged**. P2P would cut their prefill-bound TTFT ~3-4x (allreduce A/B, P2P_GPU
+H.12, 8.4x) -- but `P2PACCESS=1` currently **crashes the vLLM TP=2 serve** at worker
+init (`UR_RESULT_ERROR_DEVICE_LOST`), so P2P is microbench-only for now: real at the
+allreduce layer, not yet reachable end-to-end (P2P_GPU H.13). (2) the bench
 uses `--dataset-name random`, which depresses MTP acceptance (random tokens are
 undraftable) -- so the W8A8 27B `25.2 (MTP)` understates it; on coherent NL the
 captured-MTP spec=3 ceiling is ~35 t/s @51% accept (JOURNAL 2026-06-24). Sweep

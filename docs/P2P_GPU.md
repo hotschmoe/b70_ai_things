@@ -439,9 +439,22 @@ eager host-staged) shows P2P helps even without SYCL kernels; SYCL kernels + P2P
 (the captured serve runs SYCL_KERNELS=1). NEXT: end-to-end TP=2 P2P-on serve A/B (int8g, also recovered from
 docker.img) to confirm the real-world TTFT drop, and ze_peer for the raw peer-copy ceiling.
 
+### H.13 [2026-06-24] P2P unlocked at the allreduce layer (H.12) but BLOCKED in vLLM serve -- DEVICE_LOST at worker init
+End-to-end test on the 27B W8A8 TP=2 captured-MTP serve (qwen36-27b-w8a8-sqgptq-mtp, 69_lever_tests.sh A):
+- P2PACCESS=0 serves fine: c1 TTFT 2901 ms, decode 26.2 t/s (host-staged, as expected).
+- P2PACCESS=1 CRASHES at vLLM's `xpu_worker.py:105` warmup `all_reduce(torch.zeros(1).xpu())` ->
+  `level_zero backend failed with error: 20 (UR_RESULT_ERROR_DEVICE_LOST)`, with BOTH `CCL_ZE_IPC_EXCHANGE=pidfd`
+  AND `sockets`. The crash is in `init_device`, BEFORE graph capture (capture ruled out).
+Since the raw 2-rank `mp.spawn` allreduce microbench (H.12) reaches 9.7 GB/s with the SAME `CCL_TOPO_P2P_ACCESS=1`,
+the P2P fabric is fine -- the failing path is oneCCL P2P inside vLLM's multiproc-executor worker topology
+(separately spawned workers + IPC handle exchange). NET: the ~3.8x prefill prize is REAL at the collective layer
+but NOT accessible through the current vLLM serve. GPUs recover cleanly after the loss. Follow-ups (dedicated
+session): `VLLM_WORKER_MULTIPROC_METHOD=fork`, a newer oneCCL, NEO `EnableP2P`/`EnableCrossDeviceAccess` keys, or a
+custom P2P all-reduce that bypasses the failing warmup. Until then, TP=2 serves stay host-staged (P2PACCESS=0).
+
 ---
 
-## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]  [SUPERSEDED -- H.11 probe + H.12 BW done on 7.0]
+## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]  [SUPERSEDED -- H.11 probe + H.12 BW done; H.13 = serve-integration gap]
 
 Userspace is EXHAUSTED (H.9: 12-variant L0 probe, all canAccessPeer=False). Every remaining lever needs a host
 reboot, so BATCH each hypothesis into one maintenance window. Everything below is staged/turnkey. Success metric
