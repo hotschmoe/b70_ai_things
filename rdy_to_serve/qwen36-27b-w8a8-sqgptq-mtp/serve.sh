@@ -87,7 +87,14 @@ DOCKER_ENV=( -e PYTHONPATH=/opt/mtp_shim )
 # 27B-W8A8 TP=2 serve. Default OFF -> the proven oneCCL baseline above is byte-for-byte unchanged.
 if [ "${PUSH_AR:-0}" = 1 ]; then
   PUSH_AR_DIR="$SCRIPT_DIR/../../contrib/vllm_push_allreduce"
-  SO_HOST="${SO_HOST:-$PUSH_AR_DIR/prebuilt/libxpu_push_ar_torch.so}"  # self-contained; rebuild via scripts/108 REBUILD_SO=1
+  # PUSH_AR_GRAPH=1 -> CAPTURABLE decode path (P2P_GPU K.6): default to the graph .so + MIN_NUMEL=0 (push ALL
+  # all-reduces, decode included, via the device-side L0-event sync that records into torch's XPUGraph).
+  if [ "${PUSH_AR_GRAPH:-0}" = 1 ]; then
+    _DEF_SO="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_graph.so"; _DEF_MIN=0
+  else
+    _DEF_SO="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_torch.so"; _DEF_MIN=65536
+  fi
+  SO_HOST="${SO_HOST:-$_DEF_SO}"  # self-contained; rebuild via scripts/108 REBUILD_SO=1 or scripts/118
   [ -f "$SO_HOST" ] || { echo "[!] PUSH_AR=1 but push-ar .so missing at $SO_HOST" >&2; exit 1; }
   MOUNTS+=( -v "$PUSH_AR_DIR:/opt/push_ar:ro"
             -v "$SO_HOST:/opt/push_ar_so/libxpu_push_ar_torch.so:ro" )
@@ -95,9 +102,10 @@ if [ "${PUSH_AR:-0}" = 1 ]; then
                -e PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/mtp_shim/sitecustomize.py
                -e PUSH_AR_SO=/opt/push_ar_so/libxpu_push_ar_torch.so
                -e PUSH_AR_DISABLE=0
-               -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}" )
+               -e PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-0}"
+               -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}" )
   export P2PACCESS="${P2PACCESS:-0}"
-  echo "=== PUSH_AR overlay ON (capture-gated MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-65536}, P2PACCESS=0, .so=$SO_HOST) ==="
+  echo "=== PUSH_AR overlay ON (GRAPH=${PUSH_AR_GRAPH:-0} MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}, P2PACCESS=0, .so=$SO_HOST) ==="
 fi
 
 source "$SCRIPT_DIR/../_common/lib.sh"

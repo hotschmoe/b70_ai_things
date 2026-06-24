@@ -33,6 +33,11 @@ def _load_lib(so):
             lib.ar_exchange.restype = ctypes.c_int
             lib.ar_exchange.argtypes = [ctypes.c_int, ctypes.c_char_p]
             lib.ar_allreduce_ptr_dt.argtypes = [ctypes.c_ulonglong, ctypes.c_long, ctypes.c_int]
+            # capturable decode path (libxpu_push_ar_graph.so, P2P_GPU K.6). Guarded: the older
+            # libxpu_push_ar_torch.so has no graph symbol -> capture routing simply stays off.
+            if hasattr(lib, "ar_allreduce_graph"):
+                lib.ar_allreduce_graph.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
+                                                   ctypes.c_long, ctypes.c_int]
             _lib = lib
     return _lib
 
@@ -57,6 +62,12 @@ def _install():
     # to oneCCL (graph-recordable) while large EAGER prefill allreduces use push-ar. 0 = engage all
     # (the J.14 eager A/B). This is the capture-gated production mode (J.15).
     MIN_NUMEL = int(os.environ.get("PUSH_AR_MIN_NUMEL", "0"))
+    # PUSH_AR_GRAPH=1 enables the CAPTURABLE decode path (K.6): during torch XPUGraph capture, route the
+    # all-reduce through ar_allreduce_graph (device-side L0-event sync -> records into the graph), so DECODE
+    # all-reduces use the 11 GB/s push transport instead of falling back to oneCCL. Eager (prefill) still uses
+    # the host-barrier ar_allreduce_ptr_dt. Default off -> byte-for-byte the proven J.21 prefill-only behavior.
+    GRAPH = os.environ.get("PUSH_AR_GRAPH") == "1"
+    _is_capturing = getattr(torch.xpu, "is_current_stream_capturing", lambda: False)
     DT = {torch.float32: 0, torch.bfloat16: 1, torch.float16: 2}
 
     _orig_all_reduce = XpuCommunicator.all_reduce
@@ -94,13 +105,24 @@ def _install():
 
     def all_reduce(self, input_):
         if (self.world_size == 2 and input_.is_contiguous()
-                and input_.dtype in DT and input_.numel() >= MIN_NUMEL
+                and input_.dtype in DT
                 and input_.numel() * input_.element_size() <= MAXB
                 and _lazy_init(self)):
-            out = input_.clone()
-            _load_lib(so).ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
-                                    out.numel() * out.element_size(), DT[input_.dtype])
-            return out
+            lib = _load_lib(so)
+            # CAPTURED decode: device-side event sync -> records into torch's XPUGraph (K.6). Capture happens
+            # on a dedicated stream, so pass THAT stream's queue (NOT the setup queue) per call.
+            if GRAPH and hasattr(lib, "ar_allreduce_graph") and _is_capturing():
+                out = input_.clone()
+                q = torch.xpu.current_stream().sycl_queue
+                lib.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
+                                       out.numel() * out.element_size(), DT[input_.dtype])
+                return out
+            # EAGER (prefill / warmup): host-barrier push, gated by MIN_NUMEL (small -> oneCCL fallback).
+            if input_.numel() >= MIN_NUMEL:
+                out = input_.clone()
+                lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
+                                        out.numel() * out.element_size(), DT[input_.dtype])
+                return out
         return _orig_all_reduce(self, input_)
 
     XpuCommunicator.all_reduce = all_reduce
