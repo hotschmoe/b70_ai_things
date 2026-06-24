@@ -26,6 +26,29 @@ box (kernel 7.0). Since the 2026-06-23 migration we run LOCALLY on the box
   captured-no-MTP (18.10). Single-card daily driver (27B int4-AutoRound, captured)
   decodes ~30.8 t/s. See [FINDINGS.md](FINDINGS.md) and [JOURNAL.md](JOURNAL.md).
 
+### Serve shelf benchmarks (2026-06-24, new Ubuntu / kernel-7.0 install)
+
+Validation sweep of the `rdy_to_serve/` Qwen3.6 shelf on the migrated box -- every
+model served coherently with the images recovered from the old Unraid `docker.img`.
+`vllm bench serve`, random dataset, IN=2048 / OUT=128, captured (GRAPH=1). **PP** =
+prefill throughput (2048 / TTFT); **TG** = decode tok/s. TP=1 models were swept
+two-up (one per card; decode verified identical to solo). The two TP=2 models use
+the kernel-7.0 P2P path.
+
+| model | img | TP | TTFT c1 | PP c1 (tok/s) | TG c1 (t/s) | TTFT c4 | agg c4 (tok/s) |
+|---|---|---|---|---|---|---|---|
+| qwen36-35b-a3b-int4 (MoE) | v0230moe | 1 | 441 ms | 4641 | 68.5 | 1239 ms | 123.7 |
+| qwen36-27b-w4a8 | int8g | 1 | 853 ms | 2400 | 20.7 | 2201 ms | 51.2 |
+| qwen36-27b-w4a16 | v0230 | 1 | 1224 ms | 1673 | 21.2 | 3213 ms | 45.5 |
+| qwen36-27b-int4 | v0230 | 1 | 1326 ms | 1545 | 30.5 | 3438 ms | 51.3 |
+| qwen36-27b-w8a8-sqgptq-mtp | int8g | 2 (P2P) | 2961 ms | 692 | 25.2 (MTP) | 6837 ms | 19.0 |
+| qwen36-35b-a3b-quark-w8a8 | v0230 | 2 (P2P) | 2241 ms | 914 | 4.6 | 5899 ms | 13.8 |
+
+The 35B-A3B MoE (~3B active) is fastest end to end. The W8A8 27B TP=2 + captured
+MTP (spec=3) decodes ~25 t/s single-stream (vs ~9 t/s eager). The 35B dense
+Quark-W8A8 over TP=2 is the slowest (decode-heavy int8 across two cards). Sweep
+harness: `68_shelf_bench_par.sh` (TP=1 two-up, TP=2 solo).
+
 Start with:
 
 - [FINDINGS.md](FINDINGS.md): current working results and dead ends.

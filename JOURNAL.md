@@ -3806,3 +3806,22 @@ verdict -> P2P-on + SYCL kernels (D) = ~9.7 GB/s plateau vs 1.16 host-staged (B)
   ~2304 ms @1.16) -> TTFT 2748 ms -> ~727 ms = **~3.8x faster prefill**. H.10's estimate is now MEASURED. The
   kernel-7.0 migration delivered its headline payoff. P2P_GPU.md H.12. NEXT (end-to-end confirm): TP=2 P2P-on serve
   A/B with int8g (recovered) -> real-world TTFT. Both cards (lease held whole run). Host clean; lease freed.
+
+## 2026-06-24 -- shelf bench on the new install: all 6 Qwen3.6 models serve COHERENTLY (install validated)
+config -> new Ubuntu/kernel-7.0 box, images recovered from old Unraid docker.img (v0230/int8g/v0230moe). Each model
+  via its own rdy_to_serve serve.sh (real GRAPH/TP/MTP defaults). vllm bench serve, random, IN=2048 OUT=128, captured.
+  TP=1 models swept TWO-UP (one per card, ZE_AFFINITY_MASK) via new 68_shelf_bench_par.sh; TP=2 solo.
+command -> ./gpu-run/sg-docker: bash 68_shelf_bench_par.sh qwen36  (+ solo re-bench of w4a8 and moe)
+result -> PP = 2048/TTFT (prefill tok/s); TG = decode tok/s:
+  model                          TP  TTFT_c1  PP_c1  TG_c1   TTFT_c4  agg_c4
+  qwen36-35b-a3b-int4 (MoE)      1   441ms    4641   68.5    1239ms   123.7   <- fastest (A3B ~3B active)
+  qwen36-27b-w4a8                1   853ms    2400   20.7    2201ms   51.2    <- fastest 27B prefill
+  qwen36-27b-w4a16               1   1224ms   1673   21.2    3213ms   45.5
+  qwen36-27b-int4                1   1326ms   1545   30.5    3438ms   51.3
+  qwen36-27b-w8a8-sqgptq-mtp     2   2961ms   692    25.2*   6837ms   19.0    *MTP spec=3 (vs ~9 t/s eager); P2P
+  qwen36-35b-a3b-quark-w8a8      2   2241ms   914    4.6     5899ms   13.8    <- slowest (35B dense int8 TP=2); P2P
+verdict -> NEW INSTALL VALIDATED: every shelf model serves + passes the coherence-gated gen probe with the recovered
+  images on kernel 7.0 + xe. Parallel TP=1 benching is clean (27b-int4 co-resident decode 30.48 == solo 30.32 t/s).
+  One transient: w4a8 OOM'd engine-init in parallel wave-2 (card VRAM not fully released from wave-1 teardown before
+  realloc @UTIL=0.90) -> re-benched solo OK; 68 now settles 15s between waves to prevent it. Table -> README.
+  CSVs in results/sweep_*.csv. Both cards used; host clean; leases freed.
