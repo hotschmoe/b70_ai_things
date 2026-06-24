@@ -797,3 +797,31 @@ in one context -> no cross-context use. Push + reduce kernels submit on TORCH's 
   -> original oneCCL path), lazy one-time setup+exchange on first all_reduce, `PUSH_AR_DISABLE=1` kill
   switch. Serve plumbing in `scripts/108_serve_push_ar_ab.sh`. Graph-capture caveat stands: the op has a
   host barrier -> run EAGER (GRAPH=0) or make the TP allreduce a graph splitting op.
+
+### J.13 [ANALYSIS] PP=2 vs TP=2 on a push-fast/read-slow fabric -- why pipeline parallel may WIN here
+The J.2 discovery (posted peer WRITE 11.3 GB/s, peer READ 3.24, allreduce = many collectives) reframes the
+TP-vs-PP choice for our cross-die B70 box. Comm volume per 27B (dense, 64 layers, hidden 5120) forward:
+```
+  topology   cross-card transfers / forward     shape (prefill 2048 / decode 1)     primitive
+  TP=2       ~64-128 all_reduces                 each [2048,5120] / [1,5120]          all_reduce (push+reduce)
+  PP=2       1 point-to-point activation handoff [2048,5120] / [1,5120] ONCE          send/recv (pure push)
+```
+- **PP=2 moves ~1/64-1/128 the cross-card bytes of TP=2 per forward, and the handoff is a SINGLE posted
+  push -- exactly the primitive our fabric is fastest at (11.3 GB/s) and has NO reduce step.** TP's tax
+  (H.10: prefill ~84% collective-bound) largely vanishes: prefill 2048 handoff = 20MB / 10.6 GB/s ~= 2 ms
+  ONCE, vs TP's 128 x 21MB. Decode handoff = 10KB ~= 8 us once per token, vs TP's 128 allreduces.
+- **Why TP is the usual default, and why those reasons are WEAK for us:** (a) pipeline bubbles hurt
+  single-stream latency -- but TP=2 also fails to truly parallelise a single token here (allreduce
+  serialises every layer), so for batch=1 PP's "sum of two halves + 1 push" is competitive AND comm-light;
+  (b) PP needs microbatching to fill the pipe -- vLLM continuous batching supplies that, and at concurrency
+  PP keeps both stages busy with near-zero comm while TP's allreduce tax grows (H.6: TP=2 c8 agg HALVED);
+  (c) memory -- PP splits 32 layers/card ~= TP's per-matrix split, both fit the 35GB W8A8 across 2x32GB.
+- **The bet:** on this allreduce-hostile fabric, PP=2 converts the entire collective tax into one push per
+  microbatch. Prototype `--pipeline-parallel-size 2 --tensor-parallel-size 1` on 27B-W8A8 and compare
+  TTFT / decode / c8-agg vs TP=2 (H.7). If vLLM-XPU's PP send/recv works host-staged, additionally swap it
+  for a pure-push point-to-point (a trivial subset of our op: `ar_push` only, no reduce, no barrier-then-
+  reduce) -- the handoff is one-directional so it needs only the J.2 posted write.
+- Open: (1) does vLLM-XPU support PP send/recv on the XpuCommunicator path at all (it exposes all_reduce/
+  reduce_scatter/all_gather/gather/broadcast -- P2P send/recv may route through raw torch.distributed); (2)
+  MTP head sits on the last layers -> stage1; spec-verify logits are local to stage1, so MTP+PP should
+  compose; (3) bubble cost at low concurrency. This is queued as the next campaign experiment (J.6#3).
