@@ -78,34 +78,38 @@ MOUNTS=( -v "$GDN_SO:$PKGD/_xpu_C.abi3.so:ro"
          -v "$SCRIPT_DIR/patches:/opt/mtp_shim:ro" )
 DOCKER_ENV=( -e PYTHONPATH=/opt/mtp_shim )
 
-# OPTIONAL push-allreduce overlay -- set PUSH_AR=1 to replace oneCCL's TP all-reduce with the custom
-# L0-IPC push transport (contrib/vllm_push_allreduce). CAPTURE-GATED by default (PUSH_AR_MIN_NUMEL=65536:
-# prefill-only push; the small decode all-reduces stay on oneCCL inside the SYCL graph), so it composes
-# with this recipe's GRAPH=1. Push-ar's sitecustomize CHAINS the MTP shim (PUSH_AR_CHAIN_SITECUSTOMIZE)
-# so both patches run. P2PACCESS stays 0 (push-ar uses its own L0-IPC peer write, NOT oneCCL's wedge-prone
-# CCL_TOPO_P2P_ACCESS). Measured J.17 (P2P_GPU.md): +15-55% throughput / 2.3-2.5x TTFT vs oneCCL on this
-# 27B-W8A8 TP=2 serve. Default OFF -> the proven oneCCL baseline above is byte-for-byte unchanged.
-if [ "${PUSH_AR:-0}" = 1 ]; then
+# push-allreduce overlay -- DEFAULT ON (PUSH_AR=1, PUSH_AR_GRAPH=1): replaces oneCCL's TP all-reduce with the
+# custom L0-IPC push transport (contrib/vllm_push_allreduce). With PUSH_AR_GRAPH=1 the DECODE all-reduce is also
+# graph-captured (device-side L0-event sync recorded into torch's XPUGraph, P2P_GPU.md K.6/K.8), so EVERY
+# all-reduce (prefill AND decode) uses the 11 GB/s posted-write fabric -- no oneCCL fallback. Push-ar's
+# sitecustomize CHAINS the MTP shim (PUSH_AR_CHAIN_SITECUSTOMIZE) so both patches run. P2PACCESS stays 0
+# (push-ar uses its own L0-IPC peer write, NOT oneCCL's wedge-prone CCL_TOPO_P2P_ACCESS). Measured vs oneCCL on
+# this 27B-W8A8 TP=2 serve: 3.8x prefill TTFT, +80-126% agg throughput (J.21), +8-10% per-stream decode (K.8).
+# OPT-OUT to the plain oneCCL baseline with PUSH_AR=0. Set PUSH_AR_GRAPH=0 for the prefill-only push (decode on
+# oneCCL, J.17/J.21). The .so is prebuilt + committed; rebuild via scripts/118 (graph) or scripts/108 (eager).
+if [ "${PUSH_AR:-1}" = 1 ]; then
   PUSH_AR_DIR="$SCRIPT_DIR/../../contrib/vllm_push_allreduce"
-  # PUSH_AR_GRAPH=1 -> CAPTURABLE decode path (P2P_GPU K.6): default to the graph .so + MIN_NUMEL=0 (push ALL
-  # all-reduces, decode included, via the device-side L0-event sync that records into torch's XPUGraph).
-  if [ "${PUSH_AR_GRAPH:-0}" = 1 ]; then
+  # PUSH_AR_GRAPH=1 (default) -> CAPTURABLE decode path: graph .so + MIN_NUMEL=0 (push ALL all-reduces incl.
+  # decode). PUSH_AR_GRAPH=0 -> prefill-only push (host-barrier .so, decode-sized -> oneCCL fallback).
+  if [ "${PUSH_AR_GRAPH:-1}" = 1 ]; then
     _DEF_SO="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_graph.so"; _DEF_MIN=0
   else
     _DEF_SO="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_torch.so"; _DEF_MIN=65536
   fi
   SO_HOST="${SO_HOST:-$_DEF_SO}"  # self-contained; rebuild via scripts/108 REBUILD_SO=1 or scripts/118
-  [ -f "$SO_HOST" ] || { echo "[!] PUSH_AR=1 but push-ar .so missing at $SO_HOST" >&2; exit 1; }
+  [ -f "$SO_HOST" ] || { echo "[!] PUSH_AR=1 but push-ar .so missing at $SO_HOST (set PUSH_AR=0 for oneCCL)" >&2; exit 1; }
   MOUNTS+=( -v "$PUSH_AR_DIR:/opt/push_ar:ro"
             -v "$SO_HOST:/opt/push_ar_so/libxpu_push_ar_torch.so:ro" )
   DOCKER_ENV=( -e PYTHONPATH=/opt/push_ar:/opt/mtp_shim
                -e PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/mtp_shim/sitecustomize.py
                -e PUSH_AR_SO=/opt/push_ar_so/libxpu_push_ar_torch.so
                -e PUSH_AR_DISABLE=0
-               -e PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-0}"
+               -e PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}"
                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}" )
   export P2PACCESS="${P2PACCESS:-0}"
-  echo "=== PUSH_AR overlay ON (GRAPH=${PUSH_AR_GRAPH:-0} MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}, P2PACCESS=0, .so=$SO_HOST) ==="
+  echo "=== PUSH_AR overlay ON [default] (GRAPH=${PUSH_AR_GRAPH:-1} MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}, P2PACCESS=0, .so=$SO_HOST) ==="
+else
+  echo "=== PUSH_AR overlay OFF (PUSH_AR=0 -> plain oneCCL TP all-reduce baseline) ==="
 fi
 
 source "$SCRIPT_DIR/../_common/lib.sh"

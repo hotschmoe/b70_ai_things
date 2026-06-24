@@ -1266,3 +1266,13 @@ isolation is push-GRAPH vs push-ar-prefill-only (both push the prefill; only the
   push transport -- the oneCCL decode fallback is gone, (c) the scientific result: a graph-capturable
   cross-device collective on B70, which the J.9-C EU-spin dead-end said was impossible. Box healthy after, no
   wedge (guard pre/post probe + graceful teardown). NET: push-GRAPH dominates push-ar-prefill on every metric.
+
+### K.9 [SHIP] push-ar+graph promoted to the 27B-W8A8 shelf DEFAULT (validated coherent)
+The shelf serve.sh (rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/serve.sh) now DEFAULTS to PUSH_AR=1 +
+PUSH_AR_GRAPH=1 (graph .so, MIN_NUMEL=0 -> every all-reduce incl. decode on the push fabric). Opt out to plain
+oneCCL with PUSH_AR=0; PUSH_AR_GRAPH=0 gives the older prefill-only push. Validated: `bash serve.sh smoke` with
+NO flags -> "PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, graph .so)", HEALTHY 132s, gen probe COHERENT
+("Paris..."), container log shows both workers [argraph] setup_torch OK + [push_ar] ENGAGED + exchange OK (IPC
+event pool), post-probe both cards HEALTHY, no wedge (exit 0). README serve-shelf row + caveat (1) updated to
+default-on (opt-out PUSH_AR=0). Net default for the 27B-W8A8 serve: 3.8x prefill TTFT + +80-126% agg + +8-10%
+decode vs oneCCL, all all-reduces on the 11 GB/s posted-write transport.

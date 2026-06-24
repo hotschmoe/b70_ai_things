@@ -32,10 +32,10 @@ Validation sweep of the `rdy_to_serve/` Qwen3.6 shelf on the migrated box -- eve
 model served coherently with the images recovered from the old Unraid `docker.img`.
 `vllm bench serve`, random dataset, IN=2048 / OUT=128, captured (GRAPH=1). **PP** =
 prefill throughput (2048 / TTFT); **TG** = decode tok/s. TP=1 models were swept
-two-up (one per card; decode verified identical to solo). NB: the 27B-W8A8 TP=2 row shows the
-custom **push-allreduce** best (`PUSH_AR=1 PUSH_AR_GRAPH=1` opt-in; **3.8x prefill TTFT / +80-109% agg**
-vs the oneCCL default at this config, **plus +8-10% decode** now that the decode all-reduce is also
-graph-captured on the push transport -- see caveat (1)). That P2P/TTFT lever is realized via push-ar at
+two-up (one per card; decode verified identical to solo). NB: the 27B-W8A8 TP=2 row is the
+custom **push-allreduce** path, now the **shelf default** (`PUSH_AR=1 PUSH_AR_GRAPH=1`; opt out with
+`PUSH_AR=0`): **3.8x prefill TTFT / +80-126% agg / +8-10% decode** vs oneCCL, decode all-reduce also
+graph-captured on the push transport (see caveat (1)). That P2P/TTFT lever is realized via push-ar at
 `P2PACCESS=0` -- NOT via `P2PACCESS=1`, which wedges the box (reboot-only recovery). See caveat (1).
 
 | model | img | TP | TTFT c1 | PP c1 (tok/s) | TG c1 (t/s) | TTFT c4 | agg c4 (tok/s) |
@@ -47,15 +47,15 @@ graph-captured on the push transport -- see caveat (1)). That P2P/TTFT lever is 
 | qwen36-27b-w8a8-sqgptq-mtp (push-ar+graph) | int8g | 2 | 767 ms | 2670 | 27.9 (MTP) | 1462 ms | 48.6 |
 | qwen36-35b-a3b-quark-w8a8 (GRAPH=1) | v0230 | 2 | 1512 ms | 1354 | 43.1 | 3866 ms | 53.2 |
 
-The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the **27B-W8A8 row shows the
-push-ar BEST** -- the `PUSH_AR=1 PUSH_AR_GRAPH=1` opt-in overlay on the shelf recipe (custom L0-IPC
-push transport, P2PACCESS=0). At this IN=2048 config it beats the oneCCL DEFAULT by **3.8x prefill
-TTFT (767 vs 2916 ms c1) and +80-109% aggregate throughput** (c4 agg 48.6 vs 26.9, c8 73.9 vs 32.7).
-Two push modes: `PUSH_AR=1` alone is capture-gated **prefill-only** (decode stays on oneCCL, ~25 t/s,
-J.17/J.21); adding `PUSH_AR_GRAPH=1` makes the **DECODE** all-reduce graph-capturable too (cross-device
-L0-event sync recorded into torch's XPUGraph, P2P_GPU K.6/K.8) -> decode **+8-10%** (c1 TG 27.9 vs 25.3)
-and removes the oneCCL decode fallback. The oneCCL default (no flag) is the verified-safe baseline. The 35B-quark TP=2 row stays host-staged oneCCL (push-ar is
-dense-only; MoE reduce_scatter/all_gather are unaffected). The other lever, `P2PACCESS=1`, is a
+The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the **27B-W8A8 row is now the
+push-ar+graph DEFAULT** -- the shelf serve.sh defaults to `PUSH_AR=1 PUSH_AR_GRAPH=1` (custom L0-IPC
+push transport, P2PACCESS=0; **opt out to plain oneCCL with `PUSH_AR=0`**). It beats the oneCCL baseline
+by **3.8x prefill TTFT (767 vs 2916 ms c1) and +80-126% aggregate throughput** (c4 agg 48.6 vs 26.9,
+c8 73.9 vs 32.7) **plus +8-10% per-stream decode** (c1 TG 27.9 vs 25.3). With `PUSH_AR_GRAPH=1` (default)
+the **DECODE** all-reduce is graph-captured too (cross-device L0-event sync recorded into torch's XPUGraph,
+P2P_GPU K.6/K.8) -> every all-reduce uses the push fabric, no oneCCL fallback; `PUSH_AR_GRAPH=0` is the
+older capture-gated prefill-only push (decode on oneCCL, J.17/J.21). The 35B-quark TP=2 row stays
+host-staged oneCCL (push-ar is dense-only; MoE reduce_scatter/all_gather are unaffected). The other lever, `P2PACCESS=1`, is a
 DEAD END -- it crashes the vLLM TP=2 serve at worker init (`UR_RESULT_ERROR_DEVICE_LOST`) and wedges
 both cards, recoverable only by reboot on this display-attached box (P2P_GPU H.13/J.19/J.20; root
 cause in docs/literature/p2p_access_devicelost.md). (2) the bench

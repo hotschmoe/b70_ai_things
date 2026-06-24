@@ -4103,3 +4103,11 @@ verdict -> capturable decode push is a REAL +8-10% per-stream decode win over th
   (push-ar-prefill-only), modest as physics dictates (decode weight-BW-bound, H.10 ~1.1x band) but consistent +
   additive, and removes the oneCCL decode fallback entirely. push-GRAPH dominates push-ar-prefill on every
   metric. Mission complete: decode all-reduce is graph-capturable + coherent + faster on B70. docs/P2P_GPU.md K.8.
+
+P2P K.9 [SHIP] push-ar+graph promoted to 27B-W8A8 shelf DEFAULT -- validated coherent
+config -> rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/serve.sh now defaults PUSH_AR=1 PUSH_AR_GRAPH=1 (opt out
+  PUSH_AR=0). command -> bash rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/serve.sh smoke (NO flags) via gpu-run+guard.
+result -> "PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, graph .so)"; HEALTHY 132s; gen COHERENT ("Paris");
+  [push_ar] ENGAGED + [argraph] exchange OK (IPC event pool) both workers; post-probe HEALTHY; no wedge (exit 0).
+verdict -> default flip validated live. 27B-W8A8 shelf default is now push-ar+graph (3.8x prefill TTFT, +80-126%
+  agg, +8-10% decode vs oneCCL; all all-reduces on the 11 GB/s push fabric). README updated. docs/P2P_GPU.md K.9.
