@@ -3853,3 +3853,18 @@ SEVERITY ESCALATION -> the P2PACCESS=1 DEVICE_LOST does NOT clean up: it WEDGES 
   unaffected (xpu count 2; all TP=1 serves fine). Recovery = reload xe (`modprobe -r xe; modprobe xe`, needs no
   /dev/dri in use) or reboot. LESSON: do NOT retry P2PACCESS=1 in serve without a GPU reset between attempts --
   it corrupts the multi-GPU collective state for all subsequent TP>1 runs.
+
+## 2026-06-24 -- [LEVER C] MTP on the 35B-A3B int4 MoE: works no-graft, ~1.1x single-stream, HURTS at concurrency
+config -> qwen36-35b-a3b-int4 (Intel AutoRound, 2335 mtp tensors PRESENT), TP=1 single-card, GRAPH=1, fp8_e5m2 KV,
+  IN=2048 OUT=128 c=1/4, RANDOM data (underrates MTP accept), v0230moe. 69_lever_tests.sh C.
+result ->
+  arm        c1_TTFT   c1_decode   c4_TTFT   c4_agg   c4_perstream
+  MTP off    440.7ms   66.05 t/s   1235ms    123.40   43.65
+  MTP spec3  506.8ms   73.58 t/s   1361ms    59.93    18.29
+verdict -> MTP is COHERENT on the MoE with NO graft (the int4 ckpt's mtp head works as-is, unlike the quark W8A8
+  which dropped its mtp tensors). c=1 decode 66 -> 74 t/s = ~1.11x (a FLOOR; random data suppresses accept, NL
+  higher), at a small TTFT cost (440 -> 507ms). But c=4 MTP HURTS HARD: agg 123 -> 60, per-stream 43.6 -> 18.3 --
+  spec verify competes with concurrent decode. ROOT: the MoE activates only ~3B params/token -> decode already
+  fast (NOT weight-BW-bound like the 27B dense), so MTP's verify overhead nearly cancels the draft gain. NET: MTP
+  is a marginal single-stream lever for this MoE, net-negative under load -- UNLIKE the 27B dense (1.9x). Also
+  CONFIRMS single-card serves are UNAFFECTED by the Lever-A multi-GPU wedge. Host clean; lease freed.

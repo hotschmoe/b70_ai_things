@@ -55,6 +55,19 @@ undraftable) -- so the W8A8 27B `25.2 (MTP)` understates it; on coherent NL the
 captured-MTP spec=3 ceiling is ~35 t/s @51% accept (JOURNAL 2026-06-24). Sweep
 harness: `68_shelf_bench_par.sh` (TP=1 two-up, TP=2 solo).
 
+#### Optimization levers tested (2026-06-24, `69_lever_tests.sh`)
+
+- **P2P in serve (A):** unlocked at the allreduce layer (8.4x, H.12) but
+  `P2PACCESS=1` **crashes the vLLM TP=2 serve** at worker-init and **wedges the
+  multi-GPU state** (even P2P-off TP=2 then fails until an `xe` reload/reboot).
+  Not reachable end-to-end yet -- see P2P_GPU H.13.
+- **MoE int4 MTP (C):** works no-graft (mtp head intact), ~**1.11x** single-stream
+  decode (66 -> 74 t/s, random-data floor) but **net-negative at c>1** -- the MoE's
+  ~3B active params make decode already fast, so MTP's verify overhead doesn't pay
+  off like it does on the 27B dense (1.9x).
+- **35B quark-W8A8 eager vs captured (B):** pending (blocked by the Lever-A GPU
+  wedge; re-run after reset).
+
 Start with:
 
 - [FINDINGS.md](FINDINGS.md): current working results and dead ends.
