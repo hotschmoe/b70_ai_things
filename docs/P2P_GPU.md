@@ -589,3 +589,36 @@ peer WRITE. Design rules for our microkernel / vLLM patch:
 - PULL-shaped peer copies (exec-on-destination) -- proven 3.5x slower than push; never use for bulk TP.
 - codex CLI here runs sandboxed (bwrap loopback denied) so it cannot read repo files for review; run it
   with sandbox bypass if file-aware help is needed, else it gives only general API guidance.
+
+### J.5 [MICROKERNEL] SYCL EU peer-write kernel = 11.26 GB/s; the allreduce shape proven
+`scripts/101_peer_write_kernel.cpp` (+ `101_run_peer_write.sh`): a SYCL kernel running on dev0 whose
+work-items STORE into a USM pointer in dev1's VRAM (peer access enabled via
+`device::ext_oneapi_enable_peer_access`). Built with `icpx -fsycl` in :v0230, run under gpu-run. 64MB:
+```
+  kernel (executed on dev0)            BW        what it does
+  copy:    dstPeer = src              11.23 GB/s pure EU push (matches L0 copy/compute push 11.3)
+  addpush: accPeer = accPeer + src     2.36 GB/s reduce INTO peer = peer READ + peer WRITE = WORST
+  local-reduce then push: dst = a+b   11.26 GB/s reduce LOCAL, single peer write = FULL SPEED
+  verify peer[0..3] = 7.0 (push landed in dev1 VRAM -> direct transfer confirmed)
+```
+- The EU-kernel push equals the copy/compute-engine push (~11.3) -> 11.3 GB/s is the fabric write
+  ceiling, reachable from any engine. We are free to use a fused EU kernel.
+- **`addpush` 2.36 GB/s is the trap**: an allreduce that accumulates into a remote buffer pays BOTH the
+  peer-read AND peer-write tax. **`local-reduce then push` (11.26) is the correct shape**: every rank
+  reduces with LOCAL data only, then does ONE posted peer write of the result. Confirms J.3's design.
+- The "assembly that transfers gpu0->gpu1" (Xe2 ISA, IGC dump): the peer store lowers to
+  `store.ugm.d32.a64 (32|M0) [addr] data` -- a SIMD32 untyped-global LSC store on a 64-bit STATELESS
+  address (a64). Stateless 64-bit addressing is exactly how a peer USM pointer is reached; the EU fires
+  one LSC send per SIMD32 group across PCIe into peer VRAM. (Full dumps: IGC_ShaderDumpEnable, /tmp/igc.)
+
+### J.6 NEXT (queued for this campaign)
+1. **2-rank push-allreduce prototype**: ring/pairwise, each rank local-reduces then peer-writes its
+   chunk to the neighbor (the 11.26 shape). Compare vs oneCCL allreduce_bench (H.12: 9.7 GB/s). Target:
+   beat 9.7 with a hand-rolled push collective. Decode-sized (10KB) + prefill-sized (16-21MB) messages.
+2. **vLLM integration**: register the push-allreduce as the XPU custom all-reduce op, bypassing oneCCL's
+   P2P path that triggers H.13 DEVICE_LOST at worker init. Two-process (TP workers) needs L0 IPC handle
+   exchange (zeMemGetIpcHandle/OpenIpcHandle -- already proven OK on 7.0, H.11) instead of single-context.
+3. **PP=2 alternative**: pipeline parallel needs only point-to-point activation pushes between stages
+   (no allreduce). On our push-fast / read-slow fabric this may beat TP=2. Prototype a 2-stage handoff
+   of the 27B-W8A8 and compare TTFT/decode vs TP=2 host-staged (the current rdy_to_serve path).
+4. Re-run `scripts/100`+`101` after any same-die slot move to see if push climbs 11.3 -> ~15 GB/s.
