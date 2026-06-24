@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# xe-reset -- recover a wedged B70 / xe-driver state WITHOUT a reboot.
+#
+# The wedge (P2P_GPU.md H.13/J.15/J.16): a TP>1 worker torn down mid-collective corrupts the
+# oneCCL / Level-Zero device context; later GPU ops DEVICE_LOST / OUT_OF_RESOURCES / hang on both
+# cards. CONFIRMED recovery (2026-06-24): reload the xe driver. That needs no `/dev/dri` in use, so
+# this stops every container first, then `modprobe -r xe && modprobe xe`, then re-probes the cards.
+#
+# Requires the SCOPED passwordless sudoers (see bin/xe-reset.sudoers):
+#   hotschmoe ALL=(root) NOPASSWD: /usr/sbin/modprobe -r xe, /usr/sbin/modprobe xe
+# If that is absent, this exits 3 and prints the exact reboot fallback -- it does NOT prompt.
+#
+# Usage:
+#   xe-reset            # stop all containers, reload xe, re-probe
+#   xe-reset --dry-run  # show what it would do, change nothing
+#   xe-reset --no-probe # skip the post-reload xpu-health re-probe
+#
+# Exit: 0 recovered (re-probe healthy or skipped) ; 1 reload ran but still wedged (-> reboot) ;
+#       2 nothing to do / arg error ; 3 cannot reload (no sudoers, or -r refused -> reboot).
+set -uo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+MODPROBE=/usr/sbin/modprobe
+DRY=0; PROBE=1
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) DRY=1; shift ;;
+    --no-probe) PROBE=0; shift ;;
+    -h|--help) awk 'NR>1 && /^#/ {sub(/^# ?/,""); print; next} NR>1 {exit}' "$0"; exit 0 ;;
+    *) echo "xe-reset: unknown arg '$1'" >&2; exit 2 ;;
+  esac
+done
+
+run() { if [ "$DRY" = 1 ]; then echo "  [dry-run] $*"; else echo "  + $*"; "$@"; fi; }
+
+echo "=== xe-reset: recover wedged B70 driver state ==="
+
+# 1. Free /dev/dri -- modprobe -r xe refuses while any container holds the cards.
+running=$(docker ps -q 2>/dev/null || true)
+if [ -n "$running" ]; then
+  echo "[1/3] stopping $(echo "$running" | wc -l | tr -d ' ') running container(s) (they hold /dev/dri):"
+  docker ps --format '  - {{.Names}} ({{.Image}})' 2>/dev/null
+  run bash -c "docker stop -t 10 $running >/dev/null && docker rm -f $running >/dev/null 2>&1; true"
+else
+  echo "[1/3] no running containers (good -- /dev/dri should be free)"
+fi
+
+# 2. Reload the driver via the SCOPED sudoers. Fail loudly (not a prompt) if it is missing.
+echo "[2/3] reloading xe driver"
+if [ "$DRY" = 1 ]; then
+  echo "  [dry-run] sudo -n $MODPROBE -r xe && sudo -n $MODPROBE xe"
+else
+  if ! sudo -n "$MODPROBE" -r xe 2>/tmp/xe-reset.err; then
+    echo "  [!] 'sudo -n modprobe -r xe' FAILED:" >&2; sed 's/^/      /' /tmp/xe-reset.err >&2
+    echo "  Either the scoped sudoers is not installed (see bin/xe-reset.sudoers) or a module" >&2
+    echo "  still depends on xe (a container may still hold it). FALLBACK: sudo reboot" >&2
+    exit 3
+  fi
+  run sudo -n "$MODPROBE" xe
+fi
+
+# 3. Confirm recovery.
+echo "[3/3] re-probe"
+if [ "$DRY" = 1 ] || [ "$PROBE" = 0 ]; then
+  echo "  (skipped)"; echo "xe-reset: done."; exit 0
+fi
+if "$HERE/xpu-health"; then
+  echo "xe-reset: RECOVERED (cards healthy)."; exit 0
+else
+  echo "xe-reset: reload ran but cards STILL wedged -- escalate to: sudo reboot" >&2; exit 1
+fi

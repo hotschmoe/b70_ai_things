@@ -16,6 +16,10 @@
 # Engine ported from the proven host 30_serve_w4a8_graph.sh (the recipe that actually serves on the B70).
 set -uo pipefail
 
+# Locate the repo's bin/ (xpu-health, xe-reset) relative to THIS file (rdy_to_serve/_common/lib.sh).
+B70_LIBDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+B70_BIN="${B70_BIN:-$(cd "$B70_LIBDIR/../../bin" 2>/dev/null && pwd)}"
+
 # ---- knobs (env, with defaults) -------------------------------------------------------------------
 b70_setdefaults() {
   ROOT="${ROOT:-/mnt/vm_8tb/b70}"            # GPU host: models, caches, gpu-run, 35_sweep_bench
@@ -121,19 +125,39 @@ b70_serve() {
     "${MGPU[@]}" "${GENV[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}" >/dev/null
 }
 
+# Progress-aware health wait (wedge-guard Layer 3). A flat 15-min wall-clock kill is what
+# SIGKILLed a slow-but-fine GRAPH=1 TP=2 capture mid-flight and wedged both cards (P2P_GPU.md J.16).
+# Instead: (a) a higher ceiling for the genuinely slow TP>1 GRAPH=1 capture, and (b) a STALL abort
+# keyed on container-log forward progress -- a capture still emitting log lines is NOT killed, only a
+# truly hung one (no new log line for HEALTH_STALL seconds) or an exited container is.
+#   HEALTH_TIMEOUT  hard ceiling secs (default 1800 for TP>1+GRAPH=1, else 900)
+#   HEALTH_STALL    abort if no log progress for this many secs (default 300)
 b70_wait_healthy() {
-  echo "=== waiting for /health (up to ~15 min; first run JIT-compiles / captures) ==="
-  local i
-  for i in $(seq 1 180); do
+  local ceiling="${HEALTH_TIMEOUT:-}"
+  [ -n "$ceiling" ] || { if [ "${TP:-1}" -gt 1 ] && [ "${GRAPH:-0}" = 1 ]; then ceiling=1800; else ceiling=900; fi; }
+  local stall="${HEALTH_STALL:-300}"
+  echo "=== waiting for /health (ceiling ${ceiling}s, stall-abort ${stall}s; first run JIT-compiles/captures) ==="
+  local start now lines last_lines last_progress
+  start=$(date +%s); last_lines=0; last_progress=$start
+  while :; do
     curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1 && {
-      echo "=== HEALTHY :$PORT  $SERVED  (TP=$TP GRAPH=$GRAPH) ==="
+      echo "=== HEALTHY :$PORT  $SERVED  (TP=$TP GRAPH=$GRAPH) in $(( $(date +%s) - start ))s ==="
       curl -s "http://localhost:$PORT/v1/models" 2>/dev/null | grep -oE '"id":"[^"]*"' | head -1
       return 0; }
     docker inspect -f '{{.State.Status}}' "$NAME" 2>/dev/null | grep -q exited && {
       echo "[!] $NAME EXITED EARLY"; docker logs "$NAME" 2>&1 | tail -30; return 1; }
+    now=$(date +%s)
+    lines=$(docker logs "$NAME" 2>&1 | wc -l)
+    [ "$lines" -gt "$last_lines" ] && { last_lines=$lines; last_progress=$now; }
+    if [ $(( now - last_progress )) -ge "$stall" ]; then
+      echo "[!] STALLED: no log progress for ${stall}s -- treating as hung init/capture (NOT force-killing a live one)."
+      docker logs "$NAME" 2>&1 | tail -30; return 2
+    fi
+    if [ $(( now - start )) -ge "$ceiling" ]; then
+      echo "[!] NOT HEALTHY after ${ceiling}s ceiling"; docker logs "$NAME" 2>&1 | tail -30; return 1
+    fi
     sleep 5
   done
-  echo "[!] NOT HEALTHY after wait"; docker logs "$NAME" 2>&1 | tail -30; return 1
 }
 
 b70_gen_probe() {
@@ -164,20 +188,84 @@ b70_bench() {
     bash "$ROOT/35_sweep_bench.sh"
 }
 
-b70_stop() { docker rm -f "$NAME" 2>/dev/null; echo "stopped $NAME (GPU released if last holder)"; }
+# Graceful teardown (wedge-guard Layer 2). `docker rm -f` SIGKILLs the container; killing a TP>1
+# worker mid-collective is THE wedge trigger (P2P_GPU.md H.13/J.15/J.16). `docker stop -t` sends
+# SIGTERM + a grace window so vLLM finishes its shutdown synchronize() cleanly before removal.
+b70_stop() {
+  local g="${STOP_GRACE:-30}"
+  docker stop -t "$g" "$NAME" >/dev/null 2>&1 || true
+  docker rm -f "$NAME" 2>/dev/null
+  echo "stopped $NAME (graceful -t${g}; GPU released if last holder)"
+}
 b70_logs() { exec docker logs -f "$NAME"; }
+
+# --- wedge guard (Layers 1/4/5); all NO-OP for TP=1 so the single-card sweep path is unchanged -----
+
+# Layer 5 (the one hard guard) + Layer 1 (pre-flight health), run BEFORE a TP>1 serve.
+b70_preflight() {
+  [ "${TP:-1}" -gt 1 ] || return 0     # single-card serves do not wedge -- skip entirely
+  # Layer 5: refuse the ONE deterministic wedge trigger. Override (with an xe-reset between attempts)
+  # via I_KNOW_P2P_WEDGES=1 so pioneering P2P-in-serve work is still possible, just not by accident.
+  if [ "${P2PACCESS:-0}" = 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
+    echo "[GUARD] BLOCKED: CCL_TOPO_P2P_ACCESS=1 in a TP>1 serve is the one deterministic wedge trigger (P2P_GPU.md H.13)."
+    echo "        To experiment anyway: set I_KNOW_P2P_WEDGES=1 and run bin/xe-reset between every attempt."
+    return 1
+  fi
+  # Layer 1: never stack a TP>1 launch onto an already-wedged box (it only deepens the corruption).
+  if [ -x "$B70_BIN/xpu-health" ]; then
+    echo "=== pre-flight xpu-health (TP=$TP) ==="
+    IMG="$IMG" "$B70_BIN/xpu-health"; local h=$?
+    if [ "$h" = 1 ]; then
+      echo "[GUARD] box is WEDGED before serve."
+      if [ "${B70_AUTO_RESET:-0}" = 1 ] && [ -x "$B70_BIN/xe-reset" ]; then
+        echo "[GUARD] B70_AUTO_RESET=1 -> xe-reset"; "$B70_BIN/xe-reset" || return 1
+      else
+        echo "[GUARD] recover with: $B70_BIN/xe-reset   (or set B70_AUTO_RESET=1 to auto-recover)"; return 1
+      fi
+    fi
+  else
+    echo "[GUARD] xpu-health not found at $B70_BIN -- skipping pre-flight probe (not blocking)."
+  fi
+  return 0
+}
+
+# Layer 4 (post-teardown verdict + optional auto-reset). Graceful-stops, then for TP>1 checks the
+# serve log for wedge markers AND re-probes the cards; auto-resets if B70_AUTO_RESET=1.
+b70_teardown() {
+  local logf="${B70_LOGDIR:-/tmp}/b70_${NAME}.log"
+  docker logs "$NAME" >"$logf" 2>&1 || true     # capture BEFORE removal (b70_stop deletes the container)
+  b70_stop
+  [ "${TP:-1}" -gt 1 ] || return 0
+  local wedge=0
+  if grep -qE 'DEVICE_LOST|OUT_OF_RESOURCES|UR_RESULT_ERROR' "$logf" 2>/dev/null; then
+    echo "[GUARD] wedge markers in serve log ($logf):"
+    grep -oE 'UR_RESULT_ERROR_[A-Z_]+|DEVICE_LOST|OUT_OF_RESOURCES' "$logf" 2>/dev/null | sort -u | sed 's/^/    /'
+    wedge=1
+  fi
+  if [ -x "$B70_BIN/xpu-health" ]; then          # probe is ground truth (markers can be benign-shutdown noise)
+    IMG="$IMG" "$B70_BIN/xpu-health" || wedge=1
+  fi
+  if [ "$wedge" = 1 ]; then
+    if [ "${B70_AUTO_RESET:-0}" = 1 ] && [ -x "$B70_BIN/xe-reset" ]; then
+      echo "[GUARD] B70_AUTO_RESET=1 -> auto-recovering with xe-reset"
+      "$B70_BIN/xe-reset" || echo "[GUARD] xe-reset did NOT clear it -- escalate: sudo reboot"
+    else
+      echo "[GUARD] BOX MAY BE WEDGED. Recover before next TP>1 start: $B70_BIN/xe-reset  (or set B70_AUTO_RESET=1)"
+    fi
+  fi
+}
 
 # ---- the CLI every serve.sh shares ---------------------------------------------------------------
 b70_dispatch() {
   b70_setdefaults
   case "${1:-start}" in
-    stop)  b70_stop ;;
+    stop)  b70_teardown ;;
     logs)  b70_logs ;;
     bench) b70_bench ;;
-    start) b70_serve && b70_wait_healthy && b70_gen_probe &&
+    start) b70_preflight && b70_serve && b70_wait_healthy && b70_gen_probe &&
            echo "Serving. Stop with: bash serve.sh stop  (holds the GPU until then)." ;;
-    run)   b70_serve && b70_wait_healthy && b70_gen_probe && b70_bench; b70_stop ;;
-    smoke) b70_serve && b70_wait_healthy && b70_gen_probe; local rc=$?; b70_stop; return $rc ;;
+    run)   b70_preflight && b70_serve && b70_wait_healthy && b70_gen_probe && b70_bench; b70_teardown ;;
+    smoke) b70_preflight && b70_serve && b70_wait_healthy && b70_gen_probe; local rc=$?; b70_teardown; return $rc ;;
     *) echo "usage: serve.sh [start|stop|logs|bench|run|smoke]"; return 2 ;;
   esac
 }

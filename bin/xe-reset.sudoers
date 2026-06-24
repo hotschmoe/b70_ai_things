@@ -1,0 +1,9 @@
+# bin/xe-reset.sudoers -- scoped passwordless sudo for the xe-driver wedge recovery.
+#
+# Install (validates before activating; never edit /etc/sudoers.d/* with a plain editor):
+#   sudo install -m 0440 -o root -g root bin/xe-reset.sudoers /etc/sudoers.d/xe-reset
+#   sudo visudo -cf /etc/sudoers.d/xe-reset     # must print: parsed OK
+#
+# Deliberately scoped to ONLY the two modprobe calls bin/xe-reset needs -- NOT blanket NOPASSWD,
+# NOT `reboot`. This is the minimum that lets the wedge guard self-recover without a human.
+hotschmoe ALL=(root) NOPASSWD: /usr/sbin/modprobe -r xe, /usr/sbin/modprobe xe

@@ -81,9 +81,15 @@ also fails with the same `DEVICE_LOST` until the GPU state is reset. Single-GPU
 with P2P=1 (it is the oneCCL<->vLLM-multiproc-worker path that breaks, not the
 hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
 
+- GUARD (2026-06-24, P2P_GPU.md J.17): a layered wedge guard now wraps the TP>1 serve path
+  (TP=1 unchanged). `bin/xpu-health` detects a wedged box (per-card matmul, timeout-wrapped);
+  `bin/xe-reset` recovers it (stop containers -> reload xe -> re-probe). lib.sh runs a pre-flight
+  probe, graceful `docker stop` teardown, a stall-aware health wait, and a post-teardown verdict.
+  Set `B70_AUTO_RESET=1` to auto-recover. `CCL_TOPO_P2P_ACCESS=1` in a TP>1 serve is now refused
+  unless `I_KNOW_P2P_WEDGES=1`. xe-reset needs the scoped sudoers in `bin/xe-reset.sudoers`.
 - Recovery (CONFIRMED 2026-06-24): a reboot clears the wedge. Lighter option is
   reloading the driver `sudo modprobe -r xe && sudo modprobe xe` (needs no
-  `/dev/dri` in use -- stop all containers first).
+  `/dev/dri` in use -- stop all containers first) -- this is what `bin/xe-reset` automates.
 - If you must experiment with P2P-in-serve, do a GPU reset BETWEEN every attempt;
   never chain two `P2PACCESS=1` serve tries without a reset in between.
 - ALSO (CONFIRMED 2026-06-24, P2P_GPU.md J.15): it is NOT only `P2PACCESS=1` that wedges

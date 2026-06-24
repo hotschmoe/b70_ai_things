@@ -3944,3 +3944,30 @@ verdict -> BLOCKED on a GPU reset (root; not available this session). Trigger mo
   decisions (scoped passwordless sudo for modprobe xe; pre-flight env guard + auto-reset-on-DEVICE_LOST;
   kernel-7.1 purgeable-BO assessment) in docs/20260624_devicelost_thoughts.md; factual log in P2P_GPU.md J.16.
   The J.14 EAGER win is UNAFFECTED -- only the capture-gated production variant is still unmeasured.
+
+P2P J.17 [GUARD] -- wedge guard shipped (detect+recover, not prohibit) ---------------------------------
+config -> clean box (rebooted, both cards free). Principle: heal aggressively, prohibit almost nothing,
+  so TP>1 / P2P pioneering is NOT hampered. Root cause = TP>1 worker SIGKILLed mid-collective; our own
+  flat-900s health timeout -> docker rm -f supplied the SIGKILL.
+command -> new bin/xpu-health (per-card matmul probe, timeout-wrapped, exit 0/1/2) + bin/xe-reset
+  (stop containers -> modprobe -r/xe reload -> re-probe, scoped sudoers) + lib.sh guard (TP>1 only):
+  L1 pre-flight probe, L2 graceful docker stop -t teardown, L3 stall-aware health wait (raised 1800s
+  ceiling for TP>1+GRAPH=1), L4 post-teardown verdict + B70_AUTO_RESET, L5 refuse P2PACCESS=1 in TP>1
+  serve unless I_KNOW_P2P_WEDGES=1. TP=1 path byte-for-byte unchanged (sweep gate unaffected).
+result -> xpu-health VALIDATED live: both cards OK, exit 0, 16s. lib.sh + tools syntax-clean; xe-reset
+  --dry-run clean. PENDING: install bin/xe-reset.sudoers (1 root cmd); run bin/serve-sweep --smoke before
+  committing the lib.sh change (shared-infra gate).
+verdict -> guard live; NEXT = re-attempt the capture-gated A/B with B70_AUTO_RESET=1 + the longer capture
+  budget, and confirm whether GRAPH=1 TP=2 capture genuinely needs >15min. Detail in P2P_GPU.md J.17.
+
+P2P J.17 RE-ATTEMPT [WIN] -- guard passes the exact J.16 wedge command, no wedge ---------------------
+config -> clean box, guard live. command ->
+  B70_AUTO_RESET=1 HEALTH_TIMEOUT=2400 HEALTH_STALL=600 GRAPH=1 PUSH_AR_MIN_NUMEL=65536 \
+    ./bin/gpu-run bash scripts/108_serve_push_ar_ab.sh smoke
+result -> L1 pre-flight both cards OK -> GRAPH=1 TP=2 push-ar HEALTHY in 147s -> coherent gen ("Paris.")
+  -> L2 graceful docker stop -t30 -> L4 post-probe both cards OK. exit 0, 188s. BOX DID NOT WEDGE.
+verdict -> guard validated end-to-end on the real wedge-prone path. The J.16 ">15min capture" suspicion
+  is FALSE (capture = 147s) -> J.16 was a PRE-EXISTING degraded box (no pre-flight then) whose 900s-stuck
+  serve got force-killed into the full wedge; L1 catches that class, L2 removes the force-kill. BONUS: the
+  capture-gated GRAPH=1 prefill-only push-ar PRODUCTION variant is now MEASURED healthy+coherent (was the
+  J.14/J.16 blocked item); full A/B bench (push vs oneCCL, GRAPH=1) still TODO. P2P_GPU.md J.17.

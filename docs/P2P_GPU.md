@@ -913,3 +913,48 @@ stopped it and worker shutdown threw `_cleanup_profiling_kv_cache -> torch.accel
 - Full reasoning + decisions (scoped passwordless sudo for `modprobe xe`, a pre-flight env guard +
   auto-reset-on-DEVICE_LOST hook, and a kernel-7.1 purgeable-BO assessment) live in
   docs/20260624_devicelost_thoughts.md. BLOCKED on a reset (root, not available this session).
+
+### J.17 [GUARD] wedge guard shipped -- detect+recover, do not prohibit (2026-06-24)
+Box was reboot-cleared (uptime confirmed both cards free). Built a layered guard whose design
+principle is "heal aggressively, prohibit almost nothing" so it does NOT hamper TP>1 / P2P
+pioneering. Root cause (from the 3 datapoints above) = a TP>1 worker torn down BY SIGKILL while its
+L0/oneCCL collective context is mid-op (capture or warmup allreduce). Our own tooling supplied the
+SIGKILL: `b70_wait_healthy`'s flat 900s ceiling -> `b70_stop`'s `docker rm -f`. New pieces:
+- **bin/xpu-health** -- per-card 2048x2048 matmul + a tiny op, run in the serve IMG, `timeout`-wrapped
+  (J.16's own probe HUNG 13 min, so the detector must itself be killable). Exit 0 healthy / 1 wedged
+  (DEVICE_LOST / OUT_OF_RESOURCES / hang) / 2 inconclusive (no docker/image -> warn, do not block).
+  VALIDATED on the clean box: both cards OK, exit 0, 16s.
+- **bin/xe-reset** -- stop all containers (free /dev/dri) -> `sudo -n modprobe -r xe && modprobe xe`
+  -> re-probe. Needs the SCOPED sudoers (bin/xe-reset.sudoers); exits 3 with the reboot fallback if
+  absent. `--dry-run` validated.
+- **lib.sh guard, TP>1 ONLY (TP=1 path byte-for-byte unchanged -> sweep gate unaffected):**
+  L1 pre-flight `xpu-health` (never stack a TP>1 launch onto an already-wedged box);
+  L2 graceful teardown (`docker stop -t30` SIGTERM+grace, not `rm -f` SIGKILL -- the root-cause fix);
+  L3 progress-aware `b70_wait_healthy` (stall-abort on log silence, raised 1800s ceiling for
+  TP>1+GRAPH=1, so a slow-but-live capture is NOT force-killed -- directly fixes the J.16 trigger);
+  L4 post-teardown verdict + optional `B70_AUTO_RESET=1` xe-reset;
+  L5 the one hard block -- refuse `CCL_TOPO_P2P_ACCESS=1` in a TP>1 serve unless `I_KNOW_P2P_WEDGES=1`.
+- Knobs: `B70_AUTO_RESET` (auto xe-reset on detected wedge), `HEALTH_TIMEOUT`/`HEALTH_STALL`,
+  `STOP_GRACE`, `I_KNOW_P2P_WEDGES`.
+
+**RE-ATTEMPT RESULT [WIN] -- the same J.16 command now passes clean, no wedge.** Ran the exact
+capture-gated A/B that wedged the box in J.16, this time through the guard:
+
+    B70_AUTO_RESET=1 HEALTH_TIMEOUT=2400 HEALTH_STALL=600 GRAPH=1 PUSH_AR_MIN_NUMEL=65536 \
+      ./bin/gpu-run bash scripts/108_serve_push_ar_ab.sh smoke
+
+- L1 pre-flight: both cards OK before launch.
+- serve GRAPH=1 TP=2 push-ar (prefill-gated, MIN_NUMEL=65536) -> **HEALTHY in 147s** -> gen probe
+  coherent ("Paris.", coherence OK) -> L2 graceful `docker stop -t30` -> L4 post-probe both cards OK.
+  gpu-run exit 0, 188s total. **The box did NOT wedge.**
+- **The J.16 "capture needs >15min" suspicion is FALSE: capture here was 147s.** So J.16 did not
+  force-kill a merely-slow capture -- its serve was genuinely stuck for 900s when a healthy one takes
+  ~2.5min, which means the box was ALREADY degraded at J.16 start (it had no pre-flight probe then).
+  The force-kill then converted that degraded state into the full both-cards wedge. L1 (pre-flight
+  probe) is exactly the layer that catches that pre-existing-degradation class BEFORE launch+kill, and
+  L2 (graceful teardown) removes the force-kill that deepens it. Both fired correctly here.
+- BONUS: this also UNBLOCKS the research -- the capture-gated GRAPH=1 prefill-only push-ar PRODUCTION
+  variant (the J.14/J.16 open item) is now MEASURED healthy + coherent. Full A/B bench numbers
+  (push-ON vs `PUSH_AR_DISABLE=1` oneCCL baseline, GRAPH=1) are the remaining TODO.
+- PENDING: run `bin/serve-sweep --smoke` before committing the lib.sh change (shared-infra gate).
+  bin/xe-reset.sudoers installed + `visudo -c` parsed OK.
