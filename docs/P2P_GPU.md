@@ -622,3 +622,27 @@ work-items STORE into a USM pointer in dev1's VRAM (peer access enabled via
    (no allreduce). On our push-fast / read-slow fabric this may beat TP=2. Prototype a 2-stage handoff
    of the 27B-W8A8 and compare TTFT/decode vs TP=2 host-staged (the current rdy_to_serve path).
 4. Re-run `scripts/100`+`101` after any same-die slot move to see if push climbs 11.3 -> ~15 GB/s.
+
+### J.7 [WIN] hand-rolled PUSH all-reduce BEATS oneCCL -- 10.64 GB/s prefill, 59.5us decode
+`scripts/102_push_allreduce.cpp` (+ `102_run_push_allreduce.sh`): 2-rank pairwise push exchange in ONE
+context (transport identical to a 2-proc oneCCL run -> algbw directly comparable to H.12). Algorithm:
+step1 both ranks PUSH their buffer to the peer's scratch (concurrent, opposite directions, posted
+writes); step2 both local-reduce. End state verified bufA==bufB==A+B (result 4.0 OK at every size).
+```
+  size           push-allreduce   oneCCL (H.12)   vs oneCCL   vs host-staged(H.10)
+  10KB(decode)   59.5 us          ~85-88 us       1.4x faster latency
+  1MB             8.09 GB/s        --
+  16MB(prefill)  10.64 GB/s       9.43 GB/s       1.13x       9.2x (was 1.16)
+  256MB          10.44 GB/s       9.70 GB/s       1.08x
+```
+- **A hand-rolled posted-write collective beats the vendor library (oneCCL) at BOTH prefill BW and
+  decode latency** -- the publishable B70-TP result this doc set out to find (Section F goal). 10.64 =
+  94% of the 11.3 single-direction write ceiling; both directions run concurrently on dual-simplex Gen3.
+- Decode 59.5us is 4 kernel launches + 2 cross-card syncs; fusing the push+signal into one kernel with a
+  device-side flag (no host sync between steps) is the obvious next latency cut.
+- Prefill recompute with 10.64 GB/s: 128 allreduce x 21MB / 10.64 = ~252 ms (was ~2304 @1.16 host-staged)
+  -> TTFT 2748 -> ~700 ms = ~3.9x faster prefill, matching the H.10/H.12 estimate -- now with OUR collective
+  that needs no oneCCL P2P (so it should dodge the H.13 DEVICE_LOST that blocks oneCCL inside vLLM).
+- CAVEAT (honest): this is single-process/single-context. The real vLLM path is 2 processes -> needs L0
+  IPC handle exchange (zeMemGetIpcHandle/OpenIpcHandle, proven OK on 7.0 in H.11) so each worker can map
+  the peer scratch. That is the J.6#2 integration step; the BW ceiling (fabric write) is unchanged by it.
