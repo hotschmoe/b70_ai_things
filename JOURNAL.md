@@ -4111,3 +4111,16 @@ result -> "PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, graph .so)"; HEALT
   [push_ar] ENGAGED + [argraph] exchange OK (IPC event pool) both workers; post-probe HEALTHY; no wedge (exit 0).
 verdict -> default flip validated live. 27B-W8A8 shelf default is now push-ar+graph (3.8x prefill TTFT, +80-126%
   agg, +8-10% decode vs oneCCL; all all-reduces on the 11 GB/s push fabric). README updated. docs/P2P_GPU.md K.9.
+
+[TODO] W4A8/W4A4 roadmap + INT4/FP4 landscape survey (no code run, research only)
+config -> docs/literature/11_int4_fp4_landscape_w4a8_roadmap.md (new). Fan-out research: our int8/push-ar
+  contributions, MoE+W4A8 repo state, online INT4/FP4 literature (NVFP4/MXFP4/ROCmFP4/Intel/W4A4/W4A8).
+result -> verdict: B70 XMX = INT8/INT4 only (no native FP4/FP8 until Xe3P "Crescent Island" 2H-2026), so FP4
+  formats are storage-only off-box; integer W4A8 is the correct lane and the SOTA (QServe/QoQ W4A8KV4, QQQ
+  2.51x>W8A8) endorses our native int4_gemm_w4a8 shape. W4A4 stays deferred (model-fragile, needs s4xs4 GEMM +
+  rotation kernel). Adjacent: quark-W8A8 MoE shared-expert/attn linears run bf16 (W8A16) -- registering the
+  existing XPUInt8ScaledMMLinearKernel is a contained upgrade.
+verdict -> TODO actions (Track 8): (1) re-quant the too-big 27B W4A8 (~16GB -> ~9GB int4-on-disk, smaller load
+  transient); (2) nail a good GPTQ/SmoothQuant W4A8 recipe + scan newer methods (AutoRound is a dead end, asserts
+  bits==8); (3) optimize int4_gemm_w4a8 M=1 GEMV + fuse per-token act-quant; (4) read W4A8KV4/QServe closely
+  (KV4 unexplored); (5) honor the W4A8-vs-W4A16-vs-W8A8 concurrency-niche measurement gate first. NOT YET STARTED.

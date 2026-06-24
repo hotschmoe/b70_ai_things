@@ -30,7 +30,10 @@
 - [`docs/kernel/02_int8_w8a8_status.md`](docs/kernel/02_int8_w8a8_status.md) -- owns the kernel status + how-to.
 - [`docs/quant_methods.md`](docs/quant_methods.md) -- owns the quant-method **registry** (algorithm x scheme x model matrix; W4A8/W4A4 rotation method picks; the XPU kernel gate). The "which algorithm + what have we tried" tables live there, not here.
 - [`evals/results/SUMMARY.md`](evals/results/SUMMARY.md) -- owns the measured leaderboard.
-- [`w4a8/README.md`](w4a8/README.md) -- **another agent owns the W4A8-INT8 + AutoRound-W4A8 branch. Do not edit `w4a8/`.**
+- [`w4a8/README.md`](w4a8/README.md) -- the W4A8-INT8 + AutoRound-W4A8 branch. **W4A8 is our next targeted research path.**
+- [`docs/literature/11_int4_fp4_landscape_w4a8_roadmap.md`](docs/literature/11_int4_fp4_landscape_w4a8_roadmap.md)
+  -- INT4/FP4 format landscape (NVFP4/MXFP4/ROCmFP4/Intel ceiling) + W4A8 SOTA (QServe/QoQ W4A8KV4, QQQ) +
+  W4A4 SOTA + the recommended W4A8/W4A4 next steps (re-quant the too-big 27B W4A8; nail a GPTQ/SmoothQuant recipe).
 - [`research_moe_optimizations.md`](research_moe_optimizations.md) -- MoE multi-GPU optimization IDEAS (PP-for-MoE
   hypothesis: PP keeps each layer's experts whole on one card -> removes the cross-card routing all-to-all; plus
   push-based reduce_scatter/all_gather as a fallback). Scratch/idea doc, nothing measured yet (P2P_GPU.md J.18-J.21).

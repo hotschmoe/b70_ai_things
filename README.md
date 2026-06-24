@@ -96,6 +96,8 @@ Start with:
 
 - [FINDINGS.md](FINDINGS.md): current working results and dead ends.
 - [RESEARCH_TODO.md](RESEARCH_TODO.md): active research order.
+- [docs/literature/11_int4_fp4_landscape_w4a8_roadmap.md](docs/literature/11_int4_fp4_landscape_w4a8_roadmap.md):
+  INT4/FP4 landscape (why FP4 is silicon-locked off B70) + the W4A8 (next target) / W4A4 roadmap.
 - [rdy_to_serve/README.md](rdy_to_serve/README.md): verified serve shelf.
 - [JOURNAL.md](JOURNAL.md): full experiment log.
 - [AGENTS.md](AGENTS.md): standing rules for agents working in this repo.
