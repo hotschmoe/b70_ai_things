@@ -3818,8 +3818,10 @@ result -> PP = 2048/TTFT (prefill tok/s); TG = decode tok/s:
   qwen36-27b-w4a8                1   853ms    2400   20.7    2201ms   51.2    <- fastest 27B prefill
   qwen36-27b-w4a16               1   1224ms   1673   21.2    3213ms   45.5
   qwen36-27b-int4                1   1326ms   1545   30.5    3438ms   51.3
-  qwen36-27b-w8a8-sqgptq-mtp     2   2961ms   692    25.2*   6837ms   19.0    *MTP spec=3 (vs ~9 t/s eager); P2P
-  qwen36-35b-a3b-quark-w8a8      2   2241ms   914    4.6     5899ms   13.8    <- slowest (35B dense int8 TP=2); P2P
+  qwen36-27b-w8a8-sqgptq-mtp     2   2961ms   692    25.2*   6837ms   19.0    *MTP spec=3, RANDOM data (NL ceiling ~35)
+  qwen36-35b-a3b-quark-w8a8      2   2241ms   914    4.6     5899ms   13.8    <- slowest (35B dense int8 TP=2, EAGER)
+  NB: both TP=2 rows ran HOST-STAGED (serve recipes default CCL_TOPO_P2P_ACCESS=0) -- P2P NOT exercised here.
+  Random-data bench depresses MTP accept (undraftable tokens); the 25.2 understates the ~35 t/s NL ceiling.
 verdict -> NEW INSTALL VALIDATED: every shelf model serves + passes the coherence-gated gen probe with the recovered
   images on kernel 7.0 + xe. Parallel TP=1 benching is clean (27b-int4 co-resident decode 30.48 == solo 30.32 t/s).
   One transient: w4a8 OOM'd engine-init in parallel wave-2 (card VRAM not fully released from wave-1 teardown before

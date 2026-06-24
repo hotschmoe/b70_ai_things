@@ -32,8 +32,9 @@ Validation sweep of the `rdy_to_serve/` Qwen3.6 shelf on the migrated box -- eve
 model served coherently with the images recovered from the old Unraid `docker.img`.
 `vllm bench serve`, random dataset, IN=2048 / OUT=128, captured (GRAPH=1). **PP** =
 prefill throughput (2048 / TTFT); **TG** = decode tok/s. TP=1 models were swept
-two-up (one per card; decode verified identical to solo). The two TP=2 models use
-the kernel-7.0 P2P path.
+two-up (one per card; decode verified identical to solo). NB: the TP=2 rows ran
+**host-staged** (the serve recipes default `CCL_TOPO_P2P_ACCESS=0`); enabling the
+kernel-7.0 P2P path (`P2PACCESS=1`) is the unrealized TTFT lever, see below.
 
 | model | img | TP | TTFT c1 | PP c1 (tok/s) | TG c1 (t/s) | TTFT c4 | agg c4 (tok/s) |
 |---|---|---|---|---|---|---|---|
@@ -41,12 +42,15 @@ the kernel-7.0 P2P path.
 | qwen36-27b-w4a8 | int8g | 1 | 853 ms | 2400 | 20.7 | 2201 ms | 51.2 |
 | qwen36-27b-w4a16 | v0230 | 1 | 1224 ms | 1673 | 21.2 | 3213 ms | 45.5 |
 | qwen36-27b-int4 | v0230 | 1 | 1326 ms | 1545 | 30.5 | 3438 ms | 51.3 |
-| qwen36-27b-w8a8-sqgptq-mtp | int8g | 2 (P2P) | 2961 ms | 692 | 25.2 (MTP) | 6837 ms | 19.0 |
-| qwen36-35b-a3b-quark-w8a8 | v0230 | 2 (P2P) | 2241 ms | 914 | 4.6 | 5899 ms | 13.8 |
+| qwen36-27b-w8a8-sqgptq-mtp | int8g | 2 | 2961 ms | 692 | 25.2 (MTP) | 6837 ms | 19.0 |
+| qwen36-35b-a3b-quark-w8a8 | v0230 | 2 | 2241 ms | 914 | 4.6 | 5899 ms | 13.8 |
 
-The 35B-A3B MoE (~3B active) is fastest end to end. The W8A8 27B TP=2 + captured
-MTP (spec=3) decodes ~25 t/s single-stream (vs ~9 t/s eager). The 35B dense
-Quark-W8A8 over TP=2 is the slowest (decode-heavy int8 across two cards). Sweep
+The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the TP=2 rows are
+**host-staged** -- per the allreduce A/B (P2P_GPU H.12, 8.4x) turning on P2P should
+cut their prefill-bound TTFT ~3-4x (the next serve-recipe change). (2) the bench
+uses `--dataset-name random`, which depresses MTP acceptance (random tokens are
+undraftable) -- so the W8A8 27B `25.2 (MTP)` understates it; on coherent NL the
+captured-MTP spec=3 ceiling is ~35 t/s @51% accept (JOURNAL 2026-06-24). Sweep
 harness: `68_shelf_bench_par.sh` (TP=1 two-up, TP=2 solo).
 
 Start with:
