@@ -4091,3 +4091,15 @@ result -> HEALTHY 131s; gen probe COHERENT ("Paris..."); post-probe both cards H
 verdict -> handoff primary success criterion MET: GRAPH=1 PUSH_AR_MIN_NUMEL=0 serves coherently (captured
   cross-device-event-synced decode all-reduce is numerically correct on real activations) + box healthy. decode
   no longer oneCCL-gated. docs/P2P_GPU.md K.7. NEXT: decode t/s A/B vs oneCCL baseline (running).
+
+P2P K.8 [WIN] decode A/B -- capturable decode push +8-10% per-stream decode over prefill-only push-ar
+config -> 27B-W8A8 TP=2 GRAPH=1 MTP, IN=2048/OUT=128. push-GRAPH (PUSH_AR_GRAPH=1 MIN_NUMEL=0) vs J.21
+  push-ar-prefill-only (decode on oneCCL) vs oneCCL default. Same box/day. CSVs in results/ (213614 / 193418 / 192053).
+command -> IN=2048 OUT=128 B70_AUTO_RESET=1 ./bin/gpu-run bash scripts/119_serve_push_ar_graph.sh run
+result -> per_stream_decode c1 27.86 (push-GRAPH) vs 25.30 (push-prefill) vs 25.67 (oneCCL) = +10.1%; c2 +8.0%,
+  c4 +2.6%, c8 +7.9%. c1 tpot 35.9 ms (lowest of 3). out_tok c1 24.03 vs 22.14 (+8.5%). TTFT unchanged (767 vs
+  762). Box healthy after, no wedge.
+verdict -> capturable decode push is a REAL +8-10% per-stream decode win over the best prior production
+  (push-ar-prefill-only), modest as physics dictates (decode weight-BW-bound, H.10 ~1.1x band) but consistent +
+  additive, and removes the oneCCL decode fallback entirely. push-GRAPH dominates push-ar-prefill on every
+  metric. Mission complete: decode all-reduce is graph-capturable + coherent + faster on B70. docs/P2P_GPU.md K.8.

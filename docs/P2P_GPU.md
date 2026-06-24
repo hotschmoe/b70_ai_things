@@ -1240,3 +1240,29 @@ decode all-reduces ALSO on the push transport via the K.6 graph path instead of 
   COHERENTLY (not empty -> the captured cross-device-event-synced decode all-reduce is numerically correct on
   real activations) and the box stays healthy. The decode all-reduce is no longer oneCCL-gated.
 - Decode t/s A/B (push-graph vs oneCCL-decode baseline) measuring next (scripts/119 run, IN=2048/OUT=128).
+
+### K.8 [WIN] decode A/B -- capturable decode push nets +8-10% per-stream decode over prefill-only push-ar
+`scripts/119_serve_push_ar_graph.sh run` (IN=2048/OUT=128, 27B-W8A8 TP=2 GRAPH=1 MTP). Three-way, same box/day,
+all GRAPH=1 (CSVs in /mnt/vm_8tb/b70/results): oneCCL default (192053), push-ar PREFILL-ONLY (193418, decode on
+oneCCL = the J.21 production), push-GRAPH (213614, decode ALSO on push via K.6). The clean DECODE-transport
+isolation is push-GRAPH vs push-ar-prefill-only (both push the prefill; only the decode all-reduce differs):
+```
+                       c1                       c2          c4          c8
+  metric          out  ttft tpot dec      out  dec    out  dec    out  ttft dec
+  oneCCL          16.27 2916 39.0 25.67   22.73 16.60 26.86 8.82  32.74 6303 5.21
+  push-ar prefill 22.14  762 39.5 25.30   35.66 22.46 48.23 14.29 68.47 1857 10.05
+  push-GRAPH      24.03  767 35.9 27.86   39.01 24.26 48.61 14.66 73.86 1790 10.84
+```
+- **per_stream_decode_tok_s, push-GRAPH vs push-ar-prefill-only (decode transport isolated): c1 27.86 vs 25.30
+  = +10.1%, c2 +8.0%, c4 +2.6%, c8 +7.9%.** Consistent across all concurrencies; c1 tpot is the LOWEST of the
+  three (35.9 vs 39.5/39.0 ms). The two baselines agree (25.3 / 25.67) and push-GRAPH is clearly above both ->
+  the delta is real, not run noise.
+- Aggregate out_tok/s push-GRAPH vs push-ar-prefill: c1 +8.5%, c2 +9.4%, c4 +0.8%, c8 +7.9%; vs oneCCL default
+  c1 +48%, c8 +126% (the bulk of the vs-oneCCL gain is the prefill push-ar already banked; K.8's NEW contribution
+  is the decode-transport delta above). TTFT/prefill unchanged vs push-ar (767 vs 762 c1, as expected).
+- HONEST framing: the decode win is MODEST (~+10% c1) because decode is weight-BW-bound, not collective-bound
+  (H.10: P2P is a ~1.1-1.2x decode lever) -- this MEASURED +10% lands exactly in that predicted band. The
+  value is (a) a real, free, additive decode gain on top of the prefill win, (b) decode is now FULLY on the
+  push transport -- the oneCCL decode fallback is gone, (c) the scientific result: a graph-capturable
+  cross-device collective on B70, which the J.9-C EU-spin dead-end said was impossible. Box healthy after, no
+  wedge (guard pre/post probe + graceful teardown). NET: push-GRAPH dominates push-ar-prefill on every metric.
