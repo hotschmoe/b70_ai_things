@@ -1137,3 +1137,35 @@ card) re-executed 200x with a fresh per-iteration sentinel + poisoned scratch so
   `zeEventHostReset` (a host op, fine for proving the mechanism; a real captured graph resets its events in
   the graph runtime). NEXT (K.4): build the FULL allreduce (push + this event sync + a real reduce kernel),
   measure decode latency vs oneCCL; then the SYCL-graph/external-semaphore form torch capture can record (K.5).
+
+### K.4 [WIN] full push all-reduce records into a SYCL command_graph + replays correctly (the capturable decode op)
+`scripts/116_graph_native_ar.cpp` (+ `116_run_graph_native_ar.sh`). Decisive prerequisite: torch-xpu's XPUGraph
+IS `sycl::ext::oneapi::experimental::command_graph` (ATen/xpu/XPUGraph.h: `xpuGraph_t = command_graph<modifiable>`,
+`xpuGraphExec_t = command_graph<executable>`). So vLLM GRAPH=1 capture = SYCL command-graph queue-recording on the
+capture stream -> anything we submit on torch's stream during capture becomes a graph node. This bench builds the
+WHOLE all-reduce as a per-rank command_graph and replays it:
+  per rank: [push SYCL kernel] -> [native cmd: AppendSignalEvent(mine); AppendWaitOnEvents(peer); AppendEventReset
+            (peer)] -> [reduce SYCL kernel]
+The cross-device sync is injected with `handler::ext_codeplay_enqueue_native_command` + `interop_handle::
+ext_codeplay_get_native_graph<level_zero>()` (returns the graph's recording `ze_command_list_handle_t`; NOTE
+`get_native_queue<level_zero>` is BROKEN in DPC++ 2025.3 -- ill-formed reinterpret_cast to its variant return --
+use `ext_codeplay_get_native_graph` when recording). Consumer-reset: the rank that WAITS on an event RESETS it
+right after, so the next token's signal starts clean (replay-safe).
+```
+  size           perLaunch us   amort us   algbw GB/s   verifyA    verifyB   (200 replays each)
+  10KB(decode)   64.52          50.97      0.20         OK(sum)    OK(sum)
+  64KB           64.54          55.29      1.19         OK(sum)    OK(sum)
+  1MB           158.38         143.00      7.33         OK(sum)    OK(sum)
+```
+- **The full push all-reduce RECORDS into a SYCL command_graph and REPLAYS correctly 200x at every size, both
+  ranks (sum verified).** This is the exact graph type torch captures, with the exact native-command injection a
+  monkeypatched all_reduce would emit during capture. => the DECODE all-reduce is graph-capturable on B70; the
+  J.14/J.17 prefill-only limitation is removable. Headline answer to the handoff's central question: YES.
+- Latency 64.5us perLaunch @decode is a STANDALONE graph launched from the host every iter (2 graph submits +
+  per-iter buffer reset). In the real serve this all-reduce is ONE node inside the big per-token decode graph
+  (launched once per token), so its MARGINAL cost is just the device push+sync+reduce -- no per-op host launch.
+  Even the standalone 64.5us already beats oneCCL decode (~85us); in-graph marginal will be well below.
+- The consumer-reset is race-free in the serve because the ~64 per-token all-reduces couple the two ranks to
+  <1-allreduce drift; the standalone bench keeps the same lockstep via a per-iter sync (so the reset is safe).
+  A free-running stress mode is included. NEXT (K.5): cross-PROCESS IPC event pools (the 2 TP workers are
+  separate processes -> zeEventPoolGetIpcHandle/OpenIpcHandle), then wire into the push-ar .so + serve A/B.

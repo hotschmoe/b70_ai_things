@@ -4048,3 +4048,14 @@ verdict -> the J.9-C EU-spin dead end is BYPASSED: a command-streamer/HW-semapho
   all-reduce rank-sync can be made graph-recordable -> the decode-capture path is open. ~17-21us already beats
   J.9-B (44us) and oneCCL (~85us). No wedge (single-ctx). docs/P2P_GPU.md K.3. NEXT: full allreduce w/ real
   reduce kernel + this sync (K.4), then the SYCL-graph/external-semaphore form (K.5).
+
+P2P K.4 [WIN] full push all-reduce records into a SYCL command_graph + replays correctly -> decode IS capturable
+config -> scripts/116_graph_native_ar.cpp: per-rank command_graph [push kernel]->[native cmd: signal/wait/reset
+  L0 events via ext_codeplay_enqueue_native_command + ext_codeplay_get_native_graph]->[reduce kernel]. torch-xpu
+  XPUGraph == sycl command_graph (ATen/xpu/XPUGraph.h), so this is the exact capture mechanism vLLM uses.
+command -> ./bin/gpu-run bash scripts/116_run_graph_native_ar.sh
+result -> verifyA/verifyB OK(sum) across 200 replays at 10KB/64KB/1MB; perLaunch 64.5us @decode standalone.
+verdict -> the DECODE all-reduce IS graph-capturable on B70 (handoff central question = YES). push+cross-device
+  L0-event sync+reduce all record into a SYCL command_graph and replay correctly. get_native_queue<level_zero>
+  is broken in DPC++ 2025.3 -> use ext_codeplay_get_native_graph. No wedge (single-ctx). docs/P2P_GPU.md K.4.
+  NEXT: cross-process IPC event pools (K.5), then wire into push-ar .so + GRAPH=1 PUSH_AR_MIN_NUMEL=0 serve A/B.
