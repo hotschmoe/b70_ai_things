@@ -12,7 +12,29 @@
 #
 # CAVEAT (graph capture): the op uses host .wait() + a CPU spin barrier + a ctypes call, so it is NOT
 # SYCL-graph-capturable. Run the serve EAGER (GRAPH=0), or mark the TP allreduce as a graph splitting op.
+#
+# IMPORTANT (J.15): the SYCL/L0 .so is loaded LAZILY (first all_reduce), NOT at sitecustomize/startup time.
+# Loading it at interpreter startup initializes Level-Zero before vLLM's own XPU init and breaks GRAPH=1
+# (VLLM_COMPILE) model construction (rotary-emb cos/sin crash). Deferring the dlopen fixes that.
 import os, ctypes, threading
+
+_lib = None          # ctypes handle, loaded on first use
+_lib_lock = threading.Lock()
+
+def _load_lib(so):
+    global _lib
+    if _lib is not None:
+        return _lib
+    with _lib_lock:
+        if _lib is None:
+            lib = ctypes.CDLL(so)  # dlopen here pulls in libsycl/libze_loader -> L0 init (deferred on purpose)
+            lib.ar_setup_torch.restype = ctypes.c_int
+            lib.ar_setup_torch.argtypes = [ctypes.c_int, ctypes.c_ulonglong, ctypes.c_long]
+            lib.ar_exchange.restype = ctypes.c_int
+            lib.ar_exchange.argtypes = [ctypes.c_int, ctypes.c_char_p]
+            lib.ar_allreduce_ptr_dt.argtypes = [ctypes.c_ulonglong, ctypes.c_long, ctypes.c_int]
+            _lib = lib
+    return _lib
 
 def _install():
     if os.environ.get("PUSH_AR_DISABLE") == "1":
@@ -37,13 +59,6 @@ def _install():
     MIN_NUMEL = int(os.environ.get("PUSH_AR_MIN_NUMEL", "0"))
     DT = {torch.float32: 0, torch.bfloat16: 1, torch.float16: 2}
 
-    lib = ctypes.CDLL(so)
-    lib.ar_setup_torch.restype = ctypes.c_int
-    lib.ar_setup_torch.argtypes = [ctypes.c_int, ctypes.c_ulonglong, ctypes.c_long]
-    lib.ar_exchange.restype = ctypes.c_int
-    lib.ar_exchange.argtypes = [ctypes.c_int, ctypes.c_char_p]
-    lib.ar_allreduce_ptr_dt.argtypes = [ctypes.c_ulonglong, ctypes.c_long, ctypes.c_int]
-
     _orig_all_reduce = XpuCommunicator.all_reduce
     _lock = threading.Lock()
 
@@ -56,6 +71,7 @@ def _install():
                 return self._push_ar_ready
             ok = False
             try:
+                lib = _load_lib(so)  # dlopen the SYCL/L0 .so now (NOT at startup -- see header note)
                 if self.world_size == 2:
                     qaddr = torch.xpu.current_stream().sycl_queue
                     rc = lib.ar_setup_torch(self.rank, ctypes.c_ulonglong(qaddr), MAXB)
@@ -82,7 +98,7 @@ def _install():
                 and input_.numel() * input_.element_size() <= MAXB
                 and _lazy_init(self)):
             out = input_.clone()
-            lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
+            _load_lib(so).ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
                                     out.numel() * out.element_size(), DT[input_.dtype])
             return out
         return _orig_all_reduce(self, input_)
