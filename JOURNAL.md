@@ -3877,3 +3877,26 @@ result -> wedge CLEARED; TP=2 serve path restored. xe driver reload (modprobe -r
   use) is the lighter alternative but the reboot is the confirmed-working recovery.
 verdict -> Lever B (35B quark-W8A8 eager vs captured) is now UNBLOCKED. Recorded the do-not-chain-P2PACCESS=1 rule
   in AGENTS.md (GPU Discipline danger note) and README levers so this is not re-discovered the hard way.
+
+## 2026-06-24 -- [LEVER B] 35B quark-W8A8 TP=2: PIECEWISE graph capture = 8.7x decode over eager
+context -> Lever-A wedge cleared by reboot (prev entry) -> the pending eager-vs-captured comparison is unblocked.
+  Ran arms 1+2 ONLY (eager P2P0, captured P2P0); arm 3 (P2PACCESS=1) DELIBERATELY SKIPPED -- it re-wedges the box
+  (see AGENTS.md GPU Discipline). Driver = scratchpad one-off replicating arm() from 69; numbered script untouched.
+config -> qwen36-35b-a3b-quark-w8a8-int8 (TRUE int8 MoE, 256 routed experts via Triton fused_moe), TP=2, v0230,
+  P2PACCESS=0 (host-staged), IN=2048 OUT=128, c=1/4, RANDOM data. GRAPH=0 (eager) vs GRAPH=1 (PIECEWISE capture).
+command -> ./gpu-run bash <scratchpad>/lever_b_12.sh  (gpu-run held both cards 1249s; lease freed clean)
+result ->
+  arm                  c1_TTFT  c1_TPOT   c1_decode   c4_TTFT  c4_agg   c4_perstream
+  eager   (GRAPH=0)    2172ms   201.7ms   4.96 t/s    5763ms   14.37    4.26
+  captured(GRAPH=1)    1512ms    23.2ms   43.05 t/s   3866ms   53.20    22.08
+  speedup              1.44x    8.7x      8.7x        1.49x    3.7x     5.2x
+  CSVs: results/sweep_quark-eager-p2p0-tp2_*.csv , results/sweep_quark-graph-p2p0-tp2-graph_*.csv
+verdict -> HUGE win. Eager's 201ms TPOT is pathological: this MoE activates only ~3B params/token, so per-token
+  Python op-launch overhead (256-expert Triton fused_moe dispatched eagerly) DOMINATES the tiny compute. PIECEWISE
+  capture removes the launch overhead -> TPOT 201 -> 23ms -> decode 5.0 -> 43.0 t/s (8.7x). Both arms coherent
+  (gen-probe OK). This means the shelf table's 4.6 t/s for this model (served EAGER, serve.sh GRAPH default 0)
+  drastically understated it: CAPTURED it is the FASTEST single-stream 35B we serve (43 t/s, beating the 27B dense
+  at 20-30 t/s). RECOMMENDATION: flip the quark-w8a8 serve.sh default to GRAPH=1 (pending a coherence smoke at all
+  conc; capture worked clean here at c=1 and c=4). NOTE: the c4 agg gain (3.7x) < c1 (8.7x) because at c>1 the
+  per-op overhead amortizes across the batch even eager, so capture's marginal benefit shrinks -- but it is still
+  strongly net-positive at concurrency (UNLIKE Lever C's MTP-on-MoE, which went net-negative at c>1). Host clean.

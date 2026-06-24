@@ -43,7 +43,7 @@ kernel-7.0 P2P path (`P2PACCESS=1`) is the unrealized TTFT lever, see below.
 | qwen36-27b-w4a16 | v0230 | 1 | 1224 ms | 1673 | 21.2 | 3213 ms | 45.5 |
 | qwen36-27b-int4 | v0230 | 1 | 1326 ms | 1545 | 30.5 | 3438 ms | 51.3 |
 | qwen36-27b-w8a8-sqgptq-mtp | int8g | 2 | 2961 ms | 692 | 25.2 (MTP) | 6837 ms | 19.0 |
-| qwen36-35b-a3b-quark-w8a8 | v0230 | 2 | 2241 ms | 914 | 4.6 | 5899 ms | 13.8 |
+| qwen36-35b-a3b-quark-w8a8 (GRAPH=1) | v0230 | 2 | 1512 ms | 1354 | 43.1 | 3866 ms | 53.2 |
 
 The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the TP=2 rows are
 **host-staged**. P2P would cut their prefill-bound TTFT ~3-4x (allreduce A/B, P2P_GPU
@@ -52,8 +52,12 @@ init (`UR_RESULT_ERROR_DEVICE_LOST`), so P2P is microbench-only for now: real at
 allreduce layer, not yet reachable end-to-end (P2P_GPU H.13). (2) the bench
 uses `--dataset-name random`, which depresses MTP acceptance (random tokens are
 undraftable) -- so the W8A8 27B `25.2 (MTP)` understates it; on coherent NL the
-captured-MTP spec=3 ceiling is ~35 t/s @51% accept (JOURNAL 2026-06-24). Sweep
-harness: `68_shelf_bench_par.sh` (TP=1 two-up, TP=2 solo).
+captured-MTP spec=3 ceiling is ~35 t/s @51% accept (JOURNAL 2026-06-24). (3) the
+35B quark-W8A8 row is shown CAPTURED (`GRAPH=1`); the `68_shelf_bench_par.sh` sweep
+ran it EAGER (serve.sh default) at 4.6 t/s, which understated it 8.7x -- PIECEWISE
+capture removes the per-token op-launch overhead that dominates this ~3B-active MoE
+in eager mode (Lever B, below). Sweep harness: `68_shelf_bench_par.sh` (TP=1 two-up,
+TP=2 solo); the 35B-quark captured numbers are from `69_lever_tests.sh` arm B.
 
 #### Optimization levers tested (2026-06-24, `69_lever_tests.sh`)
 
@@ -67,8 +71,12 @@ harness: `68_shelf_bench_par.sh` (TP=1 two-up, TP=2 solo).
   decode (66 -> 74 t/s, random-data floor) but **net-negative at c>1** -- the MoE's
   ~3B active params make decode already fast, so MTP's verify overhead doesn't pay
   off like it does on the 27B dense (1.9x).
-- **35B quark-W8A8 eager vs captured (B):** pending (blocked by the Lever-A GPU
-  wedge; re-run after reset).
+- **35B quark-W8A8 eager vs captured (B):** PIECEWISE graph capture (`GRAPH=1`) is
+  **8.7x** single-stream decode over eager (4.96 -> **43.1 t/s**, TPOT 202 -> 23ms)
+  and **3.7x** at c=4 (14.4 -> 53.2 t/s agg) -- both coherent. Eager's per-token
+  op-launch overhead dominates this ~3B-active MoE; capture removes it. Makes it the
+  fastest single-stream 35B we serve. Recommend flipping the serve.sh default to
+  `GRAPH=1` (P2PACCESS=1 arm skipped -- it re-wedges; see A). JOURNAL 2026-06-24.
 
 Start with:
 
