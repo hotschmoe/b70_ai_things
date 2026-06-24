@@ -4025,3 +4025,15 @@ result -> both coherent, chained cleanly (guard graceful teardown + post-probe h
   (+109%). decode unchanged ~25 t/s (prefill-only push). CSVs: *-tp2-graph_192053, *-pushar-tp2-graph_193418.
 verdict -> README 27B-W8A8 TP=2 row updated to push-ar best (762/2688/25.3/1354/48.2, labelled push-ar);
   other 5 rows audited (agents) vs all CSVs/JOURNAL = already best, unchanged. P2P_GPU.md J.21.
+
+P2P K.1-K.2 [RECON+FINDING] decode-capturable push all-reduce -- toolchain has primitives; SYCL graph is 1-device
+config -> new session (handoff_decode_push_ar.md): make push-ar graph-recordable so DECODE all-reduces use the
+  11 GB/s posted-write path instead of falling back to oneCCL inside the captured graph.
+command -> header/version recon in :int8g; scripts/114_graph_allreduce.cpp (SYCL command_graph, 2-device record).
+result -> (K.1) toolchain HAS it all: SYCL_EXT_ONEAPI_GRAPH=1, L0 IPC events (zeEventPool{Get,Open}IpcHandle,
+  AppendWaitOnEvents/SignalEvent), SYCL external_semaphore (opaque_fd/timeline_fd). (K.2) a SYCL command_graph
+  is SINGLE-DEVICE: begin_recording rejects a 2nd device -> cannot put a cross-device edge in one graph.
+verdict -> the decode sync must be an EXTERNAL primitive recorded into each rank's OWN single-device graph
+  (L0 IPC event command-streamer wait, or SYCL external_semaphore) -- which matches vLLM (one captured graph
+  per TP worker). NEXT: prove the raw-L0 cross-device command-streamer event wait is replayable (the oneCCL
+  mechanism, the keystone). No GPU wedge (single-ctx test). docs/P2P_GPU.md K.1-K.2.

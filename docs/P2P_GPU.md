@@ -1072,3 +1072,38 @@ TP=2 path (TP=2 renders `PP=1`, build unchanged).
   / 48.2), labelled (push-ar); caveat (1) gives the oneCCL default baseline + the PUSH_AR=1 opt-in. Audited the
   other 5 rows (4 TP=1 + 35B-quark TP=2) vs all results CSVs/JOURNAL -- they already show best achieved; only
   the 27B-W8A8 row moved. CSVs: sweep_*-tp2-graph_192053 (oneCCL), sweep_*-pushar-tp2-graph_193418 (push-ar).
+
+---
+
+## K. DECODE-side capturable push all-reduce (2026-06-24 session) -- making the push graph-recordable
+
+New campaign (handoff docs/handoff_decode_push_ar.md): push-ar is PREFILL-ONLY because its rank-sync is a
+HOST barrier (CPU spin barrier + host .wait() + ctypes), which SYCL/torch graph capture cannot record, so
+decode-sized all-reduces fall back to oneCCL inside the captured graph (`PUSH_AR_MIN_NUMEL` gate). Goal: a
+DEVICE-SIDE / graph-recordable cross-rank sync so decode all-reduces also use the 11 GB/s posted-write path.
+J.9 left two leads: (B) cross-queue SYCL events = 44us, correct, never put in a graph; (C) EU-spin device
+flag HANGS (mid-kernel peer write invisible on Xe; peer ATOMICS=N -- a hard dead end, do not repeat).
+
+### K.1 [RECON] the int8g/v0230 toolchain HAS every capturable-sync primitive
+`vllm-xpu-env:int8g` (and :v0230): icpx 2025.3.3 (DPC++), Level-Zero loader 1.26.0 / ze_api v1.12, libsycl.so.8.
+Confirmed present + compiling: `SYCL_EXT_ONEAPI_GRAPH=1` (SYCL command_graph: add/make_edge/begin_recording/
+finalize/queue.ext_oneapi_graph); L0 IPC-event API (`zeEventPoolGetIpcHandle`/`OpenIpcHandle`,
+`ZE_EVENT_POOL_FLAG_IPC`), `zeCommandListAppendSignalEvent`/`AppendWaitOnEvents`; SYCL
+`ext_oneapi_signal/wait_external_semaphore` (queue+handler) with handle types opaque_fd + timeline_fd. So the
+mechanism oneCCL uses for its capturable sycl_algorithms allreduce (H.5: L0 events + command-streamer waits)
+is fully available to a hand-rolled op. Recon is compile/header-only -> zero GPU risk.
+
+### K.2 [FINDING] SYCL command_graph is SINGLE-DEVICE -> per-rank graphs + EXTERNAL sync is the only structure
+`scripts/114_graph_allreduce.cpp` (+ `114_run_graph_allreduce.sh`): tried to record a 2-device push allreduce
+into ONE command_graph (multi-queue recording mode, cross-device dependency edge reduceA<-pushB). Result:
+`begin_recording` throws `begin_recording called for a queue whose device differs from the graph device`.
+A command_graph is bound to ONE device; you cannot put both cards' nodes (or a cross-device edge) in a single
+graph. (Build OK, no hang, no wedge -- single-ctx test, both cards via gpu-run.)
+- IMPLICATION: the decode sync canNOT be an intra-graph edge. Each rank must capture its OWN single-device
+  graph (push kernel -> [external cross-rank wait] -> reduce kernel), and the cross-rank sync must be an
+  EXTERNAL primitive recorded as a node in each rank's graph: an L0 IPC event (`zeCommandListAppendWaitOnEvents`,
+  the command-streamer/HW-semaphore wait -- a DIFFERENT path from J.9-C's failed EU spin) or a SYCL
+  external_semaphore. This actually MATCHES vLLM reality: each TP worker is a separate process/device and
+  torch captures one graph per worker. So "per-rank graph + external semaphore/event sync" is both the only
+  SYCL-supported structure AND the correct vLLM model. NEXT (K.3): prove the raw-L0 command-streamer
+  cross-device event wait is replayable (the keystone -- it is the exact primitive oneCCL relies on).
