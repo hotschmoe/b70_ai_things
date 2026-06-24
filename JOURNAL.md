@@ -4059,3 +4059,13 @@ verdict -> the DECODE all-reduce IS graph-capturable on B70 (handoff central que
   L0-event sync+reduce all record into a SYCL command_graph and replay correctly. get_native_queue<level_zero>
   is broken in DPC++ 2025.3 -> use ext_codeplay_get_native_graph. No wedge (single-ctx). docs/P2P_GPU.md K.4.
   NEXT: cross-process IPC event pools (K.5), then wire into push-ar .so + GRAPH=1 PUSH_AR_MIN_NUMEL=0 serve A/B.
+
+P2P K.5 [WIN] cross-process IPC event pool + command-streamer wait correct + replayable (TP-worker topology)
+config -> scripts/117_ipc_event_sync.c: 2-proc fork (1 card each, own ctx), shared IPC event pool
+  (zeEventPoolGetIpcHandle/OpenIpcHandle) + IPC scratch; closed command list push+signal/wait/reset, 200 replays.
+command -> ./bin/gpu-run bash scripts/117_run_ipc_event_sync.sh
+result -> verify OK across 200 replays at 10KB/64KB/1MB; decode sync ~22us (== single-ctx K.3, IPC costs nothing).
+verdict -> the cross-PROCESS cross-device event sync works + replays. GOTCHA: the IPC event pool MUST span both
+  devices (zeEventPoolCreate ...,2,{dev0,dev1}); a 1-device pool segfaults the peer's AppendWaitOnEvents (silent).
+  All blocks proven: K.3 wait, K.4 graph-record, K.5 cross-proc IPC. No wedge. docs/P2P_GPU.md K.5. NEXT: deployable
+  cross-proc GRAPH allreduce -> push-ar .so + torch XPUGraph harness -> serve A/B.

@@ -1169,3 +1169,31 @@ right after, so the next token's signal starts clean (replay-safe).
   <1-allreduce drift; the standalone bench keeps the same lockstep via a per-iter sync (so the reset is safe).
   A free-running stress mode is included. NEXT (K.5): cross-PROCESS IPC event pools (the 2 TP workers are
   separate processes -> zeEventPoolGetIpcHandle/OpenIpcHandle), then wire into the push-ar .so + serve A/B.
+
+### K.5 [WIN] cross-PROCESS IPC event pool + command-streamer wait is correct + replayable (TP-worker topology)
+`scripts/117_ipc_event_sync.c` (+ `117_run_ipc_event_sync.sh`): K.3/K.4 were single-process/single-context. The
+2 TP workers are separate PROCESSES, so the event pool must be shared via L0 IPC (`zeEventPoolGetIpcHandle` /
+`zeEventPoolOpenIpcHandle`). This is the 103 2-process fork scaffold (scratch IPC via SCM_RIGHTS) + a shared IPC
+event pool. Per rank a CLOSED command list: push(myBuf->peerScratch) signal S_mine; WaitOnEvents(S_peer); read;
+EventReset(S_peer). Replayed 200x with per-iter sentinel + poison.
+```
+  [r0] IPC event pool created + exported     [r1] IPC event pool opened OK
+  [r1] host-sync S_A via IPC -> SEEN (0x0)   (probe: rank0's signal visible to rank1 cross-process)
+  size           iters   sync_us   verify(peer landed after wait)
+  10KB(decode)   200      22.61    OK
+  64KB           200      16.02    OK
+  1MB            200     109.75    OK
+```
+- **Cross-process IPC events + cross-device command-streamer wait = CORRECT across 200 replays, ~22us decode**
+  (matches the single-context K.3 21.5us -> the process boundary costs nothing, same as J.8 found for scratch).
+  This is the exact 2-worker topology vLLM uses.
+- **CRITICAL GOTCHA (cost ~5 debug iters): the IPC event pool must be created spanning BOTH devices**
+  (`zeEventPoolCreate(ctx, desc, 2, {dev0,dev1}, &pool)`). With a 1-device pool, `zeCommandListAppendWaitOnEvents`
+  from the OTHER card's command streamer SEGFAULTS in the driver (silent, no error code). The owner signals/waits
+  fine on its own device; only the peer's command-streamer wait crashes. 116 (single-proc) already used a
+  2-device pool, which is why it worked; 117 first used 1-device and crashed rank1 at the wait append.
+- Pool/event IPC handle passed over the same SCM_RIGHTS socket as the scratch dma-buf fd (xe embeds the fd at
+  handle.data[0]). The opened pool's events alias the owner's slots (host-sync probe confirms). NET: all
+  building blocks for a CAPTURABLE DECODE push all-reduce are proven -- K.3 (cross-device event wait), K.4
+  (records into SYCL command_graph + replays), K.5 (cross-process IPC events). NEXT: combine into the
+  deployable cross-process GRAPH all-reduce, then wire into the push-ar .so + torch XPUGraph + serve A/B.
