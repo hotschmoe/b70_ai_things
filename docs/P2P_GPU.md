@@ -12,6 +12,12 @@ Cross-refs: [DUALCARD.md](../DUALCARD.md), [FINDINGS.md](../FINDINGS.md),
 
 ## 0. Our box (measured 2026-06-22)
 
+> NOTE (2026-06-24): the box below (1950X / X399) is UNCHANGED hardware, but it was reinstalled
+> Unraid+6.18 -> **Ubuntu 26.04 + kernel 7.0 + new BIOS (IOMMU off)**. The PCIe topology is STILL
+> cross-die (GPU0 under RC 0000:00 / GPU1 under RC 0000:40). Re-measured link/P2P facts and the
+> PUSH/PULL peer-write discovery are in **Section J** (the current ground truth). The 6.18-era
+> "Gen1 x1 artifact" and host-staged numbers in this section are kept for history.
+
 ```
 AMD Threadripper 1950X (Zen1, dual-die, 2x Zeppelin over Infinity Fabric), PCIe Gen3 root.
 Unraid 7.3.1, kernel 6.18.33-Unraid. 125 GiB RAM.
@@ -514,3 +520,72 @@ question. Price out PEX89000/Switchtec per MOONSHOT sec 7.
 Even with host-staging, the Gen3 allreduce tax can be cut by reducing/repositioning collectives (Seguin B.2):
 cherry-pick his clone-safe-allreduce + oproj-delay-allreduce patches into our vLLM-XPU (we got graph capture free
 via SYCLKERNELS=1, but not the fusion). That is the orthogonal, no-hardware path to better TP=2 -- docs/literature/10.
+
+---
+
+## J. REPROFILE on kernel 7.0 + new BIOS (2026-06-24) -- and the PUSH/PULL peer-write discovery
+
+New campaign goal (Isaac): now that we are on kernel 7.0 + new BIOS (IOMMU off), re-measure every P2P
+datum from scratch, go BELOW oneCCL with hand-written Level Zero, and use the results to plan vLLM
+TP=2/PP=2 patches. Target model: qwen36-27b-w8a8 (served via rdy_to_serve, unedited).
+
+### J.0 Hardware reprofile -- topology UNCHANGED, still cross-die
+Same physical box as Section 0 (AMD Threadripper 1950X, ASRock X399 Professional Gaming, 125 GiB),
+reinstalled to Ubuntu 26.04 / kernel 7.0.0-22-generic. `lspci -t`:
+```
+  [0000:00] (die0 RC) -> 03.1 -> [09-0c] switch -> 0b:00.0  GPU0   (Battlemage G31 8086:e223)
+  [0000:40] (die1 RC) -> 03.1 -> [42-45] switch -> 44:00.0  GPU1
+```
+- **Still cross-die** (the two B70s hang off separate 1950X dies = the documented worst case for P2P).
+  The new BIOS did NOT relocate slots. A same-die slot move remains an OPEN bandwidth lever (Isaac
+  offered to move a card); deferred -- P2P already functions cross-die (below), so topology is a BW
+  knob, not the current blocker.
+- ReBAR fully open: BAR2 = 32G on both cards (`lspci -vv` Region 2). IOMMU OFF (`ls
+  /sys/kernel/iommu_groups` = 0 groups; no `iommu=` on cmdline -> disabled in BIOS). xe driver loaded.
+- L0 sees both: `sycl-ls` -> 2x "Level-Zero V2, Intel Graphics [0xe223]". Link-speed config-space read
+  needs root (sudo password-gated); rely on the measured peer-write 11.3 GB/s below = 72% of Gen3 x16
+  (~15.8 GB/s) as proof the real wire is still Gen3 x16.
+
+### J.1 [METHOD] hand-written Level Zero peer-copy benchmark (below torch/oneCCL)
+`scripts/100_ze_peer_copy.c` (+ `100_run_peer_copy.sh`): raw `libze_loader`, ONE context spanning both
+devices, `zeMemAllocDevice` on dev0 and dev1, then `zeCommandListAppendMemoryCopy` peer copy. This is
+our hand-rolled `ze_peer`. Built with gcc in `vllm-xpu-env:v0230`, run under `gpu-run` (both cards).
+Command: `./bin/gpu-run bash scripts/100_run_peer_copy.sh`. canAccessPeer=True both dirs (confirms H.11
+on the current kernel+BIOS). Same-context dev0<->dev1 device-alloc copy is the correct L0 peer model;
+no IPC/explicit-enable needed in one process (IPC is only for cross-process, e.g. vLLM workers).
+
+### J.2 [DISCOVERY] PCIe PUSH (peer write) = 11.3 GB/s, PULL (peer read) = 3.24 GB/s -- 3.5x asymmetry
+The copy direction relative to WHICH device executes the copy dominates everything. Data moving d0->d1:
+```
+  engine    PULL (exec on dst=d1, reads peer d0)   PUSH (exec on src=d0, writes peer d1)
+  copy(BCS)        3.24 GB/s plateau                      11.12 GB/s plateau
+  compute(EU)      3.23 GB/s                              11.31 GB/s plateau  <- best
+  (host-staged d0->host->d1 baseline: 3.5 GB/s effective; 8B peer latency: 9.3 us raw L0)
+```
+- **PUSH 11.3 GB/s = 72% of the Gen3 x16 wire**, and BEATS oneCCL's 9.7 GB/s P2P allreduce (H.12).
+- **PULL 3.24 GB/s is BELOW even a host bounce (3.5).** A copy executed on the destination is a peer
+  READ: PCIe reads are NON-POSTED (each cache line is a round-trip request+completion, throttled by
+  outstanding-read credits + cross-die Infinity Fabric latency). PUSH is a peer WRITE: POSTED
+  (fire-and-forget), so it streams at near-wire. This is THE architectural fact for B70 TP comms.
+- Engine choice barely matters (compute 11.31 vs copy 11.12); DIRECTION is the 3.5x lever.
+- Reconciles H.8/H.10 (torch d2d 1.35, host-staged allreduce 1.16) and H.12 (oneCCL P2P 9.7): the slow
+  paths were either host-bounced or read-shaped; the fast path is a posted peer write.
+
+### J.3 [IMPLICATION] vLLM TP=2 collective patches must be PUSH-shaped (the plan)
+The allreduce tax (H.10: prefill ~84% collective-bound) shrinks most if every cross-card transfer is a
+peer WRITE. Design rules for our microkernel / vLLM patch:
+- Ring/pairwise allreduce where each rank WRITES its partial into the neighbor's buffer (push), never
+  reads the neighbor's. Reduce locally after the inbound write lands (signal via a flag write).
+- Prefer a compute-engine (EU) push kernel: 11.31 GB/s and it can fuse the reduce (add) with the
+  transfer, unlike the blind BCS copy engine.
+- This is independent of (and better than) oneCCL: a hand-rolled push-allreduce could hit ~11 GB/s vs
+  oneCCL's 9.7, AND sidestep the H.13 DEVICE_LOST that blocks oneCCL P2P inside the vLLM worker.
+- Still OPEN / next: (a) a SYCL peer-WRITE microkernel + Xe ISA dump (the "assembly" step); (b) a
+  2-rank push-allreduce prototype vs oneCCL allreduce_bench; (c) wire it into vLLM's custom all-reduce
+  op (the H.13 worker-init crash is a oneCCL-P2P path; a custom push collective may avoid it); (d) PP=2
+  as an alternative that needs only point-to-point pushes (no allreduce) -- may suit our push-fast wire.
+
+### J.4 do-not-repeat
+- PULL-shaped peer copies (exec-on-destination) -- proven 3.5x slower than push; never use for bulk TP.
+- codex CLI here runs sandboxed (bwrap loopback denied) so it cannot read repo files for review; run it
+  with sandbox bypass if file-aware help is needed, else it gives only general API guidance.
