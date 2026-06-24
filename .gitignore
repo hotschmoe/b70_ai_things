@@ -35,3 +35,13 @@ data/localmaxxing/*_raw.json
 # local secrets (API keys) -- never commit
 .secrets/
 *.secret
+
+# agentic-eval: per-harness uv venvs, datasets, native harness outputs, and raw run data are
+# regenerable/large -> stay local. The curated results/{scores.json,SUMMARY.md} ARE tracked.
+agentic-eval/harnesses/*/.venv/
+agentic-eval/harnesses/*/data/
+agentic-eval/harnesses/*/runs/
+agentic-eval/harnesses/*/.cache/
+agentic-eval/results/*/.*.parsed.json
+agentic-eval/results/*/raw/
+agentic-eval/tasks/
