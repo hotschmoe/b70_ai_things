@@ -86,6 +86,12 @@ hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
   `/dev/dri` in use -- stop all containers first).
 - If you must experiment with P2P-in-serve, do a GPU reset BETWEEN every attempt;
   never chain two `P2PACCESS=1` serve tries without a reset in between.
+- ALSO (CONFIRMED 2026-06-24, P2P_GPU.md J.15): it is NOT only `P2PACCESS=1` that wedges
+  this state. A string of TP>1 WORKER-INIT CRASHES (e.g. repeated GRAPH=1 model-load
+  failures, or serves killed mid-init) corrupts the same cross-GPU oneCCL/L0 state, so
+  every later TP=2 serve then `UR_RESULT_ERROR_DEVICE_LOST`s at oneCCL warmup EVEN at
+  `P2PACCESS=0` (single-GPU stays fine). Do not chain crash-prone TP=2 starts; reset xe
+  (modprobe -r/-add or reboot) after a TP=2 worker-init crash before retrying.
 
 ## Images And Serving
 

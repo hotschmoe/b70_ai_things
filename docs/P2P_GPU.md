@@ -860,3 +860,29 @@ activations. My sitecustomize cleanly CHAINED the MTP-graft shim (both patches c
   a size- or capture-context-gated `all_reduce` patch. That would bank the prefill win without the eager
   decode penalty. Failing that: make the op graph-capturable (hard -- the cross-process host barrier is
   the blocker; would need a capturable device-side signal, which J.9 showed Xe does not support mid-kernel).
+
+### J.15 [PARTIAL+BLOCKED] capture-gated mode: a real fix (deferred dlopen) + a self-inflicted H.13 wedge
+Goal: engage push-ar only for EAGER prefill (large allreduce) and leave CAPTURED decode on oneCCL, to
+bank the J.14 3.35x TTFT win inside the GRAPH=1 production serve. Added `PUSH_AR_MIN_NUMEL` size gate
+(engage iff numel >= threshold; set above the captured decode sizes). Two findings:
+- **[FIX, confirmed] push-ar's SYCL/L0 `.so` must be dlopen'd LAZILY, not at sitecustomize/startup.** First
+  GRAPH=1 attempt crashed at MODEL LOAD (rotary-emb `_compute_cos_sin_cache`), NOT at any collective ->
+  not the push op itself. Decisive test: GRAPH=1 with `PUSH_AR_DISABLE=1` did NOT crash (compiling fine at
+  110s), so push-ar's presence broke it. Root cause: `ctypes.CDLL(libxpu_push_ar_torch.so)` at interpreter
+  startup pulls in libsycl/libze_loader and inits Level-Zero BEFORE vLLM's own XPU init, which corrupts
+  GRAPH=1 (`VLLM_COMPILE`) model construction. (EAGER is unaffected -> J.14 was fine.) Fixed: defer the
+  dlopen to the first all_reduce (`_load_lib`); committed. The unmodified shelf GRAPH=1 loads (ran >400s
+  still compiling, no fast crash), confirming GRAPH=1 itself is sound.
+- **[BLOCKED] the box wedged into H.13 DEVICE_LOST before the capture-gated A/B could be measured.** After
+  the fix, the GRAPH=1 serve failed at oneCCL warmup with `UR_RESULT_ERROR_DEVICE_LOST` -- EVEN at
+  `P2PACCESS=0`. Both GPUs still enumerate (sycl-ls=2), so it is the H.13 multi-GPU collective-state wedge,
+  not hardware loss. **NEW datapoint extending the CLAUDE.md/H.13 warning: it is NOT only `P2PACCESS=1`
+  that wedges TP>1 -- a string of TP=2 WORKER-INIT CRASHES (here, the GRAPH=1 model-load failures above,
+  plus killed-mid-load attempts) corrupts the same cross-GPU oneCCL/L0 state, so every subsequent TP=2
+  serve (even a known-good P2P-off one) then DEVICE_LOSTs.** Recovery = `sudo modprobe -r xe && modprobe
+  xe` (no /dev/dri in use) or reboot -- both need root, not available this session. So the capture-gated
+  A/B (push-ar prefill-only vs oneCCL-captured) is QUEUED for after a GPU reset.
+- NET: the J.14 EAGER win (push-ar +48-64% / 3.35x TTFT) stands as the validated result. The capture-gated
+  production variant is implemented + the startup-dlopen blocker is fixed; it needs one clean GRAPH=1 run
+  on a freshly-reset box to measure. DO-NOT-REPEAT: do not retry TP=2 serves while wedged (they all fail and
+  may deepen the corruption); reset xe first. Avoid chaining many crash-prone TP=2 worker-init attempts.
