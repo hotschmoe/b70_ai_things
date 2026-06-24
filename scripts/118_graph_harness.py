@@ -86,6 +86,33 @@ def worker(rank, world):
     dt_us=(time.perf_counter()-t0)/300*1e6
     if rank==0: print(f"[graph] replay latency {dt_us:.2f} us/allreduce ({nbytes}B bf16 decode)",flush=True)
 
+    # ---- (3) MULTI allreduce in ONE captured graph (the serve does ~64/token, all sharing 1 scratch+event pair)
+    K=8
+    bufs=[torch.full((n,), float(rank+1+j*0), device=f"xpu:{rank}", dtype=dtype) for j in range(K)]
+    # rank0 fills 1.0, rank1 fills 3.0 for every buf -> each should all-reduce to 4.0
+    for b in bufs: b.fill_(fillv)
+    torch.xpu.synchronize(); dist.barrier()
+    gm=torch.xpu.XPUGraph()
+    multi_ok=True
+    try:
+        with torch.xpu.graph(gm):
+            capq=torch.xpu.current_stream().sycl_queue
+            for b in bufs:
+                lib.ar_allreduce_graph(ctypes.c_ulonglong(capq), ctypes.c_ulonglong(b.data_ptr()), nbytes, dt)
+    except Exception as e:
+        multi_ok=False; print(f"[r{rank}] MULTI CAPTURE EXC: {e}",flush=True)
+    if multi_ok:
+        bad=0
+        for it in range(30):
+            for b in bufs: b.fill_(fillv)
+            torch.xpu.synchronize(); dist.barrier()
+            gm.replay(); torch.xpu.synchronize()
+            for b in bufs:
+                if not (abs(b[0].item()-4.0)<1e-2 and abs(b[-1].item()-4.0)<1e-2): bad+=1
+            dist.barrier()
+        if rank==0:
+            print(f"[multi] {K} allreduces/graph x30 replays: {'PASS' if bad==0 else 'FAIL bad='+str(bad)}",flush=True)
+
     lib.ar_teardown()
     if rank==0: print("DONE_GRAPH_HARNESS",flush=True)
     dist.destroy_process_group()
