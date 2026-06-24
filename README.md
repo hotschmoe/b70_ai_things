@@ -59,8 +59,10 @@ harness: `68_shelf_bench_par.sh` (TP=1 two-up, TP=2 solo).
 
 - **P2P in serve (A):** unlocked at the allreduce layer (8.4x, H.12) but
   `P2PACCESS=1` **crashes the vLLM TP=2 serve** at worker-init and **wedges the
-  multi-GPU state** (even P2P-off TP=2 then fails until an `xe` reload/reboot).
-  Not reachable end-to-end yet -- see P2P_GPU H.13.
+  multi-GPU state** (even P2P-off TP=2 then fails until an `xe` reload/reboot;
+  reboot CONFIRMED to clear it 2026-06-24). Never chain two `P2PACCESS=1` serve
+  attempts without a GPU reset between them. Not reachable end-to-end yet -- see
+  P2P_GPU H.13 and the AGENTS.md GPU Discipline danger note.
 - **MoE int4 MTP (C):** works no-graft (mtp head intact), ~**1.11x** single-stream
   decode (66 -> 74 t/s, random-data floor) but **net-negative at c>1** -- the MoE's
   ~3B active params make decode already fast, so MTP's verify overhead doesn't pay

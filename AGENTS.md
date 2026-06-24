@@ -70,6 +70,23 @@ Use the shared lease for every real GPU touch:
 Editing and compiling can run in parallel. Serving, benchmarking, perf probes,
 and on-GPU quantization must not bypass the lease.
 
+### DANGER: P2P in vLLM serve wedges the multi-GPU state
+
+Do NOT run `CCL_TOPO_P2P_ACCESS=1` inside a vLLM TP>1 serve. It crashes at
+worker init (`UR_RESULT_ERROR_DEVICE_LOST` in `xpu_worker.py` warmup all_reduce)
+AND does not clean up: it corrupts the cross-GPU oneCCL / Level-Zero collective
+state so that EVERY subsequent TP>1 serve -- even a known-good P2P-OFF one --
+also fails with the same `DEVICE_LOST` until the GPU state is reset. Single-GPU
+(TP=1) serves are unaffected. The raw mp.spawn allreduce microbench works fine
+with P2P=1 (it is the oneCCL<->vLLM-multiproc-worker path that breaks, not the
+hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
+
+- Recovery (CONFIRMED 2026-06-24): a reboot clears the wedge. Lighter option is
+  reloading the driver `sudo modprobe -r xe && sudo modprobe xe` (needs no
+  `/dev/dri` in use -- stop all containers first).
+- If you must experiment with P2P-in-serve, do a GPU reset BETWEEN every attempt;
+  never chain two `P2PACCESS=1` serve tries without a reset in between.
+
 ## Images And Serving
 
 - Default vLLM image: `vllm-xpu-env:v0230` unless a specific recipe says

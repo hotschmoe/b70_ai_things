@@ -3868,3 +3868,12 @@ verdict -> MTP is COHERENT on the MoE with NO graft (the int4 ckpt's mtp head wo
   fast (NOT weight-BW-bound like the 27B dense), so MTP's verify overhead nearly cancels the draft gain. NET: MTP
   is a marginal single-stream lever for this MoE, net-negative under load -- UNLIKE the 27B dense (1.9x). Also
   CONFIRMS single-card serves are UNAFFECTED by the Lever-A multi-GPU wedge. Host clean; lease freed.
+
+## 2026-06-24 -- [LEVER A RECOVERY] reboot clears the P2PACCESS=1 DEVICE_LOST wedge
+context -> after the two P2PACCESS=1 serve attempts wedged the cross-GPU oneCCL/Level-Zero state (every TP=2
+  serve, even known-good P2P-off, failing at xpu_worker init_device all_reduce with UR_RESULT_ERROR_DEVICE_LOST).
+action -> rebooted the box.
+result -> wedge CLEARED; TP=2 serve path restored. xe driver reload (modprobe -r xe; modprobe xe, no /dev/dri in
+  use) is the lighter alternative but the reboot is the confirmed-working recovery.
+verdict -> Lever B (35B quark-W8A8 eager vs captured) is now UNBLOCKED. Recorded the do-not-chain-P2PACCESS=1 rule
+  in AGENTS.md (GPU Discipline danger note) and README levers so this is not re-discovered the hard way.
