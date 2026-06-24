@@ -708,3 +708,40 @@ blocks the host after step1's push before it can even submit step2's reduce). Tr
   push->reduce boundary over the HOST (a cpu_group barrier or a polled host-shared flag) -- exactly the
   socket barrier J.8 used. For decode that host barrier is the floor; for prefill it is amortised by the
   11 GB/s transport. GPU verified healthy after the hung-kernel kill (both cards enumerate, dmesg clean).
+
+### J.10 [WIN] deployable 2-PROCESS custom all-reduce BEATS oneCCL on BOTH latency AND bandwidth
+`scripts/105_xpu_push_ar.cpp` (C-ABI .so) + `105_ar_harness.py` (torch.distributed gloo driver) +
+`105_run_xpu_push_ar.sh`. This is the deployable core of the vLLM custom op: TWO INDEPENDENT processes
+(spawn'd, not fork'd -- exactly vLLM's TP-worker topology, no shared fds), each its own L0 context. Built
+with `icpx -fsycl` so SYCL kernels (push + local reduce) and raw Level-Zero (IPC handles) coexist,
+bridged by `get_native<level_zero>(context)`. IPC handle's dma-buf fd is passed over a NAMED Unix socket
+via SCM_RIGHTS (oneCCL's "sockets" family; robust vs `pidfd_getfd`, which Ubuntu ptrace_scope=1 blocks
+between sibling workers). Synchronisation respects J.9: push kernel COMPLETES (flush at boundary), then a
+host barrier, then reduce.
+```
+  size           gloo-barrier   SHM-barrier (final)   verify   vs oneCCL(H.12)   vs J.7 1-ctx
+  10KB(decode)   241.91 us       34.55 us             OK       ~85 us (2.5x)     59.5 us (1.7x)
+  64KB            267 us         56.09 us             OK
+  1MB             382 us        129.95 us = 8.07 GB/s OK
+  16MB(prefill)  1979 us       1577 us = 10.64 GB/s   OK       9.43 GB/s (1.13x) 10.64 (=)
+  256MB         26423 us      25693 us = 10.45 GB/s   OK       9.70 GB/s (1.08x)
+```
+- **The custom op BEATS the vendor library (oneCCL) at BOTH ends across independent processes:** decode
+  latency 34.55 us (2.5x better than oneCCL, 1.7x better than our own single-context J.7) and prefill BW
+  10.64 GB/s (1.13x oneCCL). Correct (sum==4.0) at every size.
+- **The barrier primitive was the small-message wall, not the transport.** A gloo TCP `dist.barrier()` per
+  call cost ~150 us (241 us @decode). Replacing it with a 2-process sense-reversing SPIN barrier in
+  `shm_open`'d shared memory (`__atomic` ops, ~1-2 us) cut decode 7x to 34.55 us and lifted prefill from
+  8.48 -> 10.64 GB/s. The vLLM op must therefore NOT synchronise over gloo per-collective -- use the shm flag.
+- **Runs with `CCL_TOPO_P2P_ACCESS=0`.** Our P2P is L0-IPC, INDEPENDENT of oneCCL's P2P setting, so the
+  serve keeps oneCCL host-staged (its warmup all_reduce succeeds -> NO H.13 DEVICE_LOST) while the big
+  model collectives go through our op at 11 GB/s. This is the architectural escape from the H.13 blocker.
+- C-ABI surface (ready for the vLLM bind): `ar_setup(rank,max) / ar_exchange(rank,sockpath) /
+  ar_allreduce(nbytes) / ar_fill / ar_peek / ar_teardown`, plus an internal shm `ar_barrier()`.
+- REMAINING for the live serve (J.11): bind the op to TORCH's L0 context instead of our own. A USM
+  pointer is only valid in its allocating context, so the op must run on torch's sycl queue
+  (`c10::xpu::getCurrentXPUStream().queue()`) and IPC-export a scratch tensor allocated by torch -- i.e.
+  a small torch C++ extension (pybind), not a standalone ctypes .so. The transport/IPC/barrier are now
+  all proven; this is the mechanical binding step. Then monkeypatch `XpuCommunicator.all_reduce`
+  (`vllm/distributed/device_communicators/xpu_communicator.py`, the one-line `dist.all_reduce` today) via
+  a `sitecustomize.py` (same mechanism as `contrib/vllm_int8_xpu/.../dense_test`) and A/B the 27B-W8A8 TP=2 serve.
