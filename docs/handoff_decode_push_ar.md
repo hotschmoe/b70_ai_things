@@ -1,5 +1,14 @@
 # Handoff: decode-side PUSH all-reduce -- research + implementation session
 
+> RESOLVED 2026-06-24 (docs/P2P_GPU.md Section K). The decode all-reduce IS now graph-capturable on B70 and
+> the live 27B-W8A8 TP=2 GRAPH=1 PUSH_AR_MIN_NUMEL=0 serve runs COHERENTLY with the captured push decode path
+> ENGAGED (no oneCCL fallback, no wedge). Mechanism: replace the host barrier with a cross-device Level-Zero
+> EVENT sync (command-streamer wait, NOT the J.9-C EU spin) injected via ext_codeplay_enqueue_native_command so
+> it records into torch's XPUGraph (which IS sycl command_graph); cross-process via an IPC event pool that MUST
+> span both devices. Artifacts: scripts/114-119, contrib/vllm_push_allreduce/{_push_ar_patch.py,
+> prebuilt/libxpu_push_ar_graph.so}, scripts/119_serve_push_ar_graph.sh. Decode t/s A/B = the remaining
+> quantification. The original briefing follows for context.
+
 This is a self-contained briefing for a FRESH session (assumes zero context). Goal: extend our custom
 PUSH all-reduce from prefill-only to DECODE by making it SYCL-graph-capturable. Created 2026-06-24.
 
