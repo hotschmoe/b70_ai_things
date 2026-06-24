@@ -90,8 +90,16 @@ hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
   this state. A string of TP>1 WORKER-INIT CRASHES (e.g. repeated GRAPH=1 model-load
   failures, or serves killed mid-init) corrupts the same cross-GPU oneCCL/L0 state, so
   every later TP=2 serve then `UR_RESULT_ERROR_DEVICE_LOST`s at oneCCL warmup EVEN at
-  `P2PACCESS=0` (single-GPU stays fine). Do not chain crash-prone TP=2 starts; reset xe
+  `P2PACCESS=0`. Do not chain crash-prone TP=2 starts; reset xe
   (modprobe -r/-add or reboot) after a TP=2 worker-init crash before retrying.
+- CORRECTION (CONFIRMED 2026-06-24, P2P_GPU.md J.16): the wedge is NOT always spared on
+  single-GPU. A TP>1 serve whose workers are killed MID-GRAPH-CAPTURE (e.g. by the
+  `b70_wait_healthy` 15-min timeout) can degrade BOTH cards at the xe/driver level so that
+  even a TP=1 single-card op fails -- presenting as `UR_RESULT_ERROR_OUT_OF_RESOURCES`
+  (err 40, OOM-class) or a multi-minute hang, NOT only `DEVICE_LOST` (err 20). So "single-GPU
+  stays fine" from H.13/J.15 does NOT always hold. After ANY TP>1 teardown that threw
+  DEVICE_LOST in shutdown, verify health with a single-card matmul probe BEFORE the next
+  TP>1 start; if it hangs or OOMs, reset xe first.
 
 ## Images And Serving
 

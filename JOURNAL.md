@@ -3922,3 +3922,25 @@ verdict -> WIN. A hand-rolled posted-write collective beats the vendor lib (oneC
   recordable); prefill is NOT captured so the 3.35x TTFT win should survive in production. NEXT: size/capture-gated
   engagement (push-ar for prefill only, oneCCL-captured decode); PP=2 prototype (1 push/microbatch vs 128 allreduces).
   All committed+pushed. Host clean, GPU lease freed.
+
+---
+
+## 2026-06-24 [BLOCKED] P2P J.16 -- capture-gated A/B re-wedged the box (worse than H.13)
+config -> post-reboot resumption; box rebooted ~1h40m prior, both cards free, clean tree. Goal: bank the
+  J.14 3.35x TTFT win inside a GRAPH=1 production serve via the capture-gated path (push-ar prefill-only,
+  oneCCL-captured decode). Image int8g, TP=2, GRAPH=1, P2PACCESS=0, PUSH_AR_MIN_NUMEL=65536.
+command -> GRAPH=1 PUSH_AR_MIN_NUMEL=65536 ./bin/gpu-run bash scripts/108_serve_push_ar_ab.sh smoke
+result ->
+  J.15 deferred-dlopen FIX HELD: load got PAST the rotary-emb crash point, XPUInt8 kernel selected, both
+       TP0/TP1 workers alive, safetensors 50% loaded. But never reached /health in the 15-min wait window.
+  On script-stop, worker shutdown threw _cleanup_profiling_kv_cache -> synchronize() -> DEVICE_LOST (err 20).
+  WORSE THAN H.13: post-teardown a TP=1 SINGLE-CARD probe also failed -- 2048x2048 matmul OOM'd after 87s
+       (UR_RESULT_ERROR_OUT_OF_RESOURCES, err 40); a 16x16 retry HUNG >13 min. No userspace cause (no stray
+       procs / containers; lease free) -> xe/driver-level degradation on BOTH cards.
+verdict -> BLOCKED on a GPU reset (root; not available this session). Trigger model now 3 datapoints (H.13
+  P2PACCESS=1 / J.15 chained worker-init crashes / J.16 workers killed mid-GRAPH-capture by the health
+  timeout); common factor = TP>1 teardown while the L0/oneCCL collective ctx is mid-op. Suspicion: the
+  15-min timeout may have SIGKILLed a merely-SLOW capture (partly self-inflicted). Full reasoning + the open
+  decisions (scoped passwordless sudo for modprobe xe; pre-flight env guard + auto-reset-on-DEVICE_LOST;
+  kernel-7.1 purgeable-BO assessment) in docs/20260624_devicelost_thoughts.md; factual log in P2P_GPU.md J.16.
+  The J.14 EAGER win is UNAFFECTED -- only the capture-gated production variant is still unmeasured.

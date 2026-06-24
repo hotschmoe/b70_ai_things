@@ -886,3 +886,30 @@ bank the J.14 3.35x TTFT win inside the GRAPH=1 production serve. Added `PUSH_AR
   production variant is implemented + the startup-dlopen blocker is fixed; it needs one clean GRAPH=1 run
   on a freshly-reset box to measure. DO-NOT-REPEAT: do not retry TP=2 serves while wedged (they all fail and
   may deepen the corruption); reset xe first. Avoid chaining many crash-prone TP=2 worker-init attempts.
+
+### J.16 [BLOCKED+DIAGNOSIS] post-reboot capture-gated A/B re-wedged the box -- worse than H.13 (single-GPU NOT spared)
+Re-ran the queued capture-gated A/B on a freshly-rebooted box (both cards free, clean tree):
+
+    GRAPH=1 PUSH_AR_MIN_NUMEL=65536 ./bin/gpu-run bash scripts/108_serve_push_ar_ab.sh smoke
+
+The J.15 deferred-dlopen FIX HELD -- this got further than any J.15 attempt: push_ar patched
+all_reduce + chained the MTP shim, GRAPH=1 model load progressed PAST the rotary-emb crash point,
+`XPUInt8ScaledMMLinearKernel` selected, both TP0/TP1 workers alive, safetensors shards loading
+(saw 50%). But it never reached `/health` in the 15-min `b70_wait_healthy` window; the script then
+stopped it and worker shutdown threw `_cleanup_profiling_kv_cache -> torch.accelerator.synchronize()
+-> UR_RESULT_ERROR_DEVICE_LOST` (err 20). gpu-run exit 1 after 916s.
+- **NEW + WORSE finding: this wedge is NOT spared on single-GPU.** Post-teardown a TP=1 single-card
+  probe (explicitly "wedge-immune" under H.13) FAILED: a 2048x2048 fp32 matmul (~16MB) failed after
+  87s with `UR_RESULT_ERROR_OUT_OF_RESOURCES` (err **40**, OOM-class, not DEVICE_LOST); a retry with a
+  tiny 16x16 op HUNG >13 min before being killed. `torch.xpu.is_available()` still True, count 2. No
+  userspace cause (no stray procs, no docker remnants, lease free) -> kernel/xe-level degradation on
+  BOTH cards. Update the H.13 "single-GPU unaffected" claim: a TP>1 teardown-mid-capture can take out
+  single-card work too, and can present as `OUT_OF_RESOURCES` (40), not only `DEVICE_LOST` (20).
+- **Trigger model (3 datapoints):** H.13 = `P2PACCESS=1` in TP>1 serve; J.15 = chained TP>1
+  worker-init crashes; J.16 = TP>1 workers killed MID-GRAPH-CAPTURE by the health-wait timeout. Common
+  factor = TP>1 workers torn down while the L0/oneCCL collective context is mid-operation. The shutdown
+  `synchronize()->DEVICE_LOST` is the smoking gun. SUSPICION: the 15-min health timeout may have
+  SIGKILLed a serve that was merely SLOW to capture, not failed -- i.e. partly self-inflicted.
+- Full reasoning + decisions (scoped passwordless sudo for `modprobe xe`, a pre-flight env guard +
+  auto-reset-on-DEVICE_LOST hook, and a kernel-7.1 purgeable-BO assessment) live in
+  docs/20260624_devicelost_thoughts.md. BLOCKED on a reset (root, not available this session).
