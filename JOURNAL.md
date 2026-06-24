@@ -3786,3 +3786,23 @@ verdict -> B70<->B70 P2P is AVAILABLE on kernel 7.0 with IOMMU disabled. Both H.
   NEXT (the BW prize, H.10): re-run scripts/allreduce_bench.py on 7.0 -- does 1.16 GB/s climb toward the ~15 GB/s
   Gen3 wire (=> ~4x prefill TTFT)? Needs Docker + int8g image (not yet installed); also build ze_peer
   (level-zero-tests, not in 26.04 apt) for the authoritative peer BW/latency matrix. See P2P_GPU.md H.11.
+
+## 2026-06-23 -- [HEADLINE, MEASURED] P2P-ON allreduce = 9.7 GB/s = 8.4x over host-staged (the H.10 prize, CONFIRMED)
+Same-day follow-up to canAccessPeer=True (H.11): MEASURED the bandwidth the entire P2P case rests on. Recovered the
+exact bench image vllm-xpu-env:v0230 from the old Unraid docker.img (200G btrfs loopback on cache -- images were NOT
+lost) via a throwaway dockerd save/load; int8g recovered too. Docker installed with data-root on /mnt/vm_8tb/docker.
+config -> kernel 7.0, IOMMU off, vllm-xpu-env:v0230 (torch 2.11.0+xpu, native xccl; no ipex/oneccl_bindings), 2x B70
+  cross-die. A/B = CCL_TOPO_P2P_ACCESS 0 vs 1  x  CCL_ENABLE_SYCL_KERNELS 0 vs 1, IPC=pidfd.
+  GOTCHA: this oneCCL accepts CCL_ZE_IPC_EXCHANGE=sockets|pidfd ONLY (the old 6.18 drmfd is rejected -> ValueError).
+command -> cd /mnt/vm_8tb/b70 && ./gpu-run bash 61_allreduce_p2p_ab.sh   (script also in repo scripts/)
+result -> allreduce algbw=busbw (GB/s), 2 GPUs:
+  msg      A p2pOFF eager   B p2pOFF sycl(=H.10)   C p2pON eager   D p2pON sycl
+  1 MB     0.67             1.22                   1.16            9.77
+  16 MB    0.66             1.18                   3.35            9.43
+  256 MB   0.67             1.14                   3.43            9.70    (D peak 10.22 @ 8MB)
+  small-msg (decode ~10KB) latency ~0.085-0.09 ms in BOTH B and D (latency-bound -> P2P ~1.2x decode, as predicted).
+verdict -> P2P-on + SYCL kernels (D) = ~9.7 GB/s plateau vs 1.16 host-staged (B) = **8.4x**, ~61% of the 15.8 GB/s
+  Gen3 x16 wire. PREFILL recompute with the measured 9.43 GB/s @16-21MB: 128 allreduce x 21MB / 9.43 = ~283 ms (was
+  ~2304 ms @1.16) -> TTFT 2748 ms -> ~727 ms = **~3.8x faster prefill**. H.10's estimate is now MEASURED. The
+  kernel-7.0 migration delivered its headline payoff. P2P_GPU.md H.12. NEXT (end-to-end confirm): TP=2 P2P-on serve
+  A/B with int8g (recovered) -> real-world TTFT. Both cards (lease held whole run). Host clean; lease freed.

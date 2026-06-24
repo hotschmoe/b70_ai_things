@@ -419,9 +419,29 @@ reboot-gated TODOs below. STILL OPEN (the BW prize, H.10): does the allreduce cl
 Docker + int8g for `scripts/allreduce_bench.py` / the oneCCL TP=2 P2P-on serve A/B, and `ze_peer` (build
 level-zero-tests; not in 26.04 apt) for the authoritative peer BW/latency matrix.
 
+### H.12 [MEASURED 2026-06-23] P2P-ON allreduce = 9.7 GB/s = 8.4x over host-staged -> the ~4x prefill prize CONFIRMED
+With canAccessPeer=True (H.11), re-ran the allreduce A/B on kernel 7.0 (vllm-xpu-env:v0230 recovered from the old
+docker.img; torch 2.11.0+xpu, native xccl, 2x B70 cross-die). A/B = CCL_TOPO_P2P_ACCESS 0 vs 1  x
+CCL_ENABLE_SYCL_KERNELS 0 vs 1 (IPC=pidfd; this oneCCL rejects the old 6.18 `drmfd`). Script: 61_allreduce_p2p_ab.sh.
+algbw=busbw (GB/s):
+```
+  msg      p2pOFF eager   p2pOFF sycl(=H.10)   p2pON eager   p2pON sycl
+  1 MB     0.67           1.22                 1.16          9.77
+  16 MB    0.66           1.18                 3.35          9.43
+  256 MB   0.67           1.14                 3.43          9.70    (p2pON sycl peak 10.22 GB/s @ 8MB)
+```
+HEADLINE: P2P-on + SYCL kernels = ~9.7 GB/s plateau vs 1.16 host-staged = **8.4x**, ~61% of the 15.8 GB/s Gen3 x16
+wire. Small-message (decode-sized ~10KB) latency ~unchanged (0.085-0.09 ms in both) -> P2P is ~1.2x for decode, as
+predicted. PREFILL recompute with the measured 9.43 GB/s @16-21MB: 128 allreduce x 21MB / 9.43 = ~283 ms (was
+~2304 ms @1.16) -> TTFT 2748 ms -> ~727 ms = **~3.8x faster prefill** -- H.10's estimate, now MEASURED. P2P is a
+prefill/TTFT + concurrency win, not a single-stream decode win. The eager P2P-on result (C, 3.43 GB/s = 5.1x over
+eager host-staged) shows P2P helps even without SYCL kernels; SYCL kernels + P2P together is the production path
+(the captured serve runs SYCL_KERNELS=1). NEXT: end-to-end TP=2 P2P-on serve A/B (int8g, also recovered from
+docker.img) to confirm the real-world TTFT drop, and ze_peer for the raw peer-copy ceiling.
+
 ---
 
-## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]  [SUPERSEDED -- see H.11: probe done on 7.0]
+## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]  [SUPERSEDED -- H.11 probe + H.12 BW done on 7.0]
 
 Userspace is EXHAUSTED (H.9: 12-variant L0 probe, all canAccessPeer=False). Every remaining lever needs a host
 reboot, so BATCH each hypothesis into one maintenance window. Everything below is staged/turnkey. Success metric
