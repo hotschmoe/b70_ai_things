@@ -133,6 +133,27 @@ extern "C" void ar_allreduce_ptr(unsigned long long inout, long nbytes) {
     g_q->parallel_for(range<1>(n),[=](id<1> i){ src[i]+=scr[i]; }).wait();// local reduce
 }
 
+// dtype-dispatched all-reduce (vLLM activations are bf16). push is a typed copy; reduce accumulates in
+// float so bf16/fp16 don't lose a half-step. dtype: 0=fp32, 1=bf16, 2=fp16.
+template<typename T>
+static void do_ar(unsigned long long inout, size_t nbytes) {
+    // PUSH: dtype-agnostic 4-byte-word copy. A bf16 (2-byte) elementwise peer write does not coalesce
+    // into wide PCIe bursts -> ~13x slower (measured). 4-byte words restore the ~10.6 GB/s push ceiling.
+    size_t nw = nbytes/4;
+    uint32_t *ws=reinterpret_cast<uint32_t*>(inout), *wd=(uint32_t*)g_peerScratch;
+    g_q->parallel_for(range<1>(nw),[=](id<1> i){ wd[i]=ws[i]; }).wait();
+    ar_barrier();
+    // REDUCE: dtype-aware, accumulate in float; this is LOCAL VRAM (fast even at 2-byte granularity).
+    size_t n=nbytes/sizeof(T);
+    T *src=reinterpret_cast<T*>(inout), *scr=(T*)g_scratch;
+    g_q->parallel_for(range<1>(n),[=](id<1> i){ src[i]=(T)(float(src[i])+float(scr[i])); }).wait();
+}
+extern "C" void ar_allreduce_ptr_dt(unsigned long long inout, long nbytes, int dtype) {
+    if (dtype==1)      do_ar<sycl::ext::oneapi::bfloat16>(inout,(size_t)nbytes);
+    else if (dtype==2) do_ar<sycl::half>(inout,(size_t)nbytes);
+    else               do_ar<float>(inout,(size_t)nbytes);
+}
+
 extern "C" void ar_teardown(void){
     if(g_bar){ munmap(g_bar,sizeof(ShmBar)); if(g_rank==0) shm_unlink("/ar_shmbar_torch"); }
     if(g_peerScratch) zeMemCloseIpcHandle(g_zectx,g_peerScratch);

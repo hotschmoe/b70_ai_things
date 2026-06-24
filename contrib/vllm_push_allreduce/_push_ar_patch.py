@@ -1,0 +1,90 @@
+# contrib/vllm_push_allreduce/sitecustomize.py
+# Monkeypatch vLLM-XPU's XpuCommunicator.all_reduce to use the hand-rolled PUSH all-reduce
+# (libxpu_push_ar_torch.so, see scripts/106). On dual B70 this beats oneCCL on BOTH decode latency
+# and prefill bandwidth (P2P_GPU.md J.10/J.11), and -- crucially -- it does its OWN L0-IPC P2P,
+# INDEPENDENT of CCL_TOPO_P2P_ACCESS, so the serve runs P2PACCESS=0 (oneCCL host-staged warmup
+# succeeds, no H.13 DEVICE_LOST wedge) while the model's allreduces go over the 11 GB/s posted-write path.
+#
+# Activation: put this dir on PYTHONPATH AND set PUSH_AR_SO=/path/to/libxpu_push_ar_torch.so.
+# Only engages for world_size==2 contiguous bf16/fp16/fp32 tensors <= PUSH_AR_MAXB; everything else
+# (world>2, non-contig, odd dtype, oversize) falls back to the original dist.all_reduce. Disable with
+# PUSH_AR_DISABLE=1.
+#
+# CAVEAT (graph capture): the op uses host .wait() + a CPU spin barrier + a ctypes call, so it is NOT
+# SYCL-graph-capturable. Run the serve EAGER (GRAPH=0), or mark the TP allreduce as a graph splitting op.
+import os, ctypes, threading
+
+def _install():
+    if os.environ.get("PUSH_AR_DISABLE") == "1":
+        return
+    so = os.environ.get("PUSH_AR_SO", "/tmp/libxpu_push_ar_torch.so")
+    if not os.path.exists(so):
+        print(f"[push_ar] SO not found at {so}; leaving oneCCL all_reduce in place", flush=True)
+        return
+    try:
+        import torch
+        from vllm.distributed.device_communicators.xpu_communicator import XpuCommunicator
+    except Exception as e:
+        print(f"[push_ar] import failed ({e}); not patching", flush=True)
+        return
+
+    MAXB = int(os.environ.get("PUSH_AR_MAXB", str(128 << 20)))  # 128 MiB scratch
+    SOCK_DIR = os.environ.get("PUSH_AR_SOCKDIR", "/tmp")
+    DT = {torch.float32: 0, torch.bfloat16: 1, torch.float16: 2}
+
+    lib = ctypes.CDLL(so)
+    lib.ar_setup_torch.restype = ctypes.c_int
+    lib.ar_setup_torch.argtypes = [ctypes.c_int, ctypes.c_ulonglong, ctypes.c_long]
+    lib.ar_exchange.restype = ctypes.c_int
+    lib.ar_exchange.argtypes = [ctypes.c_int, ctypes.c_char_p]
+    lib.ar_allreduce_ptr_dt.argtypes = [ctypes.c_ulonglong, ctypes.c_long, ctypes.c_int]
+
+    _orig_all_reduce = XpuCommunicator.all_reduce
+    _lock = threading.Lock()
+
+    def _lazy_init(self):
+        # one-time setup on first TP all_reduce; keyed off the 2-rank pairwise algorithm.
+        if getattr(self, "_push_ar_ready", None) is not None:
+            return self._push_ar_ready
+        with _lock:
+            if getattr(self, "_push_ar_ready", None) is not None:
+                return self._push_ar_ready
+            ok = False
+            try:
+                if self.world_size == 2:
+                    qaddr = torch.xpu.current_stream().sycl_queue
+                    rc = lib.ar_setup_torch(self.rank, ctypes.c_ulonglong(qaddr), MAXB)
+                    if rc == 0:
+                        # sockpath shared by the 2 workers of THIS group (unique per master port)
+                        port = os.environ.get("MASTER_PORT", "0")
+                        sock = os.path.join(SOCK_DIR, f"vllm_push_ar_{port}.sock").encode()
+                        rc = lib.ar_exchange(self.rank, sock)
+                        ok = (rc == 0)
+                    if not ok:
+                        print(f"[push_ar] setup/exchange rc={rc}; falling back to oneCCL", flush=True)
+            except Exception as e:
+                print(f"[push_ar] lazy init exception {e}; falling back", flush=True)
+                ok = False
+            self._push_ar_ready = ok
+            if ok and self.rank == 0:
+                print("[push_ar] ENGAGED: XpuCommunicator.all_reduce -> push collective (P2PACCESS-independent)",
+                      flush=True)
+            return ok
+
+    def all_reduce(self, input_):
+        if (self.world_size == 2 and input_.is_contiguous()
+                and input_.dtype in DT and input_.numel() * input_.element_size() <= MAXB
+                and _lazy_init(self)):
+            out = input_.clone()
+            lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
+                                    out.numel() * out.element_size(), DT[input_.dtype])
+            return out
+        return _orig_all_reduce(self, input_)
+
+    XpuCommunicator.all_reduce = all_reduce
+    print(f"[push_ar] patched XpuCommunicator.all_reduce (so={so}, maxB={MAXB})", flush=True)
+
+try:
+    _install()
+except Exception as e:
+    print(f"[push_ar] install failed: {e}", flush=True)

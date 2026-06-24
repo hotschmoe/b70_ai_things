@@ -774,3 +774,26 @@ in one context -> no cross-context use. Push + reduce kernels submit on TORCH's 
   live serve. Then monkeypatch `XpuCommunicator.all_reduce` to `out=input.clone(); ar_allreduce_ptr(
   out.data_ptr(), out.nbytes); return out`, with `ar_setup_torch`+`ar_exchange` done once in `__init__`
   (sockpath from the TP group's rendezvous). Serve with `P2PACCESS=0` (oneCCL host-staged warmup -> no H.13).
+
+### J.12 [WIN] bf16 (vLLM's dtype) drop-in: 9.9 GB/s prefill, correct -- and the 4-byte-push lesson
+`scripts/106` (+`ar_allreduce_ptr_dt`) + `107_ar_vllm_pattern.py`: exercise the EXACT vLLM call pattern
+(`out=input.clone(); allreduce(out)`) on bf16 hidden=5120 prefill/decode shapes.
+```
+  shape (bf16)     lat us     GB/s     verify     [2-byte push first try]
+  decode b1         69.22     0.15     OK
+  decode b8         74.35     1.10     OK
+  prefill 128      189.69     6.91     OK
+  prefill 2048    2115.45     9.91     OK          (was 0.83 GB/s -- 12x slower)
+  prefill 4096    4201.42     9.98     OK          (was 0.83)
+```
+- **bf16 prefill = 9.9-10.0 GB/s, correct everywhere -> beats oneCCL (9.43) on the real dtype.** Clone
+  semantics verified (input untouched, output holds the sum).
+- **LESSON: the PUSH must be a 4-byte-word copy, NOT a per-element bf16 (2-byte) copy.** Element-wise
+  2-byte peer writes do not coalesce into wide PCIe bursts -> 0.83 GB/s (12x slower). Copying the buffer
+  as uint32 words (dtype-agnostic; the push just moves bytes) restores the ~10 GB/s ceiling. Only the
+  REDUCE is dtype-aware (accumulate in float, store bf16) and it touches LOCAL VRAM so 2-byte is fine.
+- **Deployable artifact: `contrib/vllm_push_allreduce/sitecustomize.py`** monkeypatches
+  `XpuCommunicator.all_reduce` -> our op, with full fallback (world!=2 / non-contig / odd dtype / oversize
+  -> original oneCCL path), lazy one-time setup+exchange on first all_reduce, `PUSH_AR_DISABLE=1` kill
+  switch. Serve plumbing in `scripts/108_serve_push_ar_ab.sh`. Graph-capture caveat stands: the op has a
+  host barrier -> run EAGER (GRAPH=0) or make the TP allreduce a graph splitting op.
