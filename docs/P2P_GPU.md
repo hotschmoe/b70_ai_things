@@ -745,3 +745,32 @@ host barrier, then reduce.
   all proven; this is the mechanical binding step. Then monkeypatch `XpuCommunicator.all_reduce`
   (`vllm/distributed/device_communicators/xpu_communicator.py`, the one-line `dist.all_reduce` today) via
   a `sitecustomize.py` (same mechanism as `contrib/vllm_int8_xpu/.../dense_test`) and A/B the 27B-W8A8 TP=2 serve.
+
+### J.11 [WIN] custom all-reduce runs IN TORCH'S CONTEXT on real torch.xpu tensors -- live-serve bridge proven
+`scripts/106_xpu_push_ar_torch.cpp` + `106_ar_torch_harness.py` + `106_run_ar_torch.sh`. The J.10 op ran
+in our OWN context; a torch tensor's USM pointer is only valid in TORCH's context, so to all-reduce a real
+vLLM activation we must run on torch's queue/context. **torch-xpu exposes the address of its `sycl::queue`
+as a plain int: `torch.xpu.current_stream().sycl_queue`.** We pass that int into the .so, `reinterpret_cast`
+it to `sycl::queue*`, and take `.get_context()` -> torch's L0 context. Scratch is a raw `zeMemAllocDevice`
+in THAT context (base-aligned -> clean IPC); the input is the torch tensor's `data_ptr()`; everything lives
+in one context -> no cross-context use. Push + reduce kernels submit on TORCH's queue.
+```
+  size           lat us    algbw GB/s   verify   (torch tensor itself == sum after our op)
+  10KB(decode)   45.79      0.22        OK(4.0)
+  1MB           128.88      8.14        OK(4.0)
+  16MB(prefill) 1583.03    10.60        OK(4.0)   beats oneCCL 9.43 (1.12x)
+  64MB          6448.62    10.41        OK(4.0)
+```
+- **The ABI reinterpret of torch's `sycl::queue` WORKS** -- the .so is `icpx`-built in the same image as
+  torch-xpu 2.11.0+xpu, so the DPC++ runtime/queue ABI matches. `verify OK(4.0)` = a real `torch.full(.,1)`
+  on rank0 and `torch.full(.,3)` on rank1 became `4.0` in-place via our op. **No pybind/torch C++ extension
+  needed** -- a ctypes `.so` driven from Python drives vLLM's own tensors. This is the entire bridge.
+- Decode 45.8 us (vs oneCCL ~85, J.7 59.5); prefill 10.6 GB/s (vs oneCCL 9.43). Same win as J.10, now on
+  the actual data path. Submitting our kernels on torch's in-order queue also gives free ordering vs torch's
+  other work on that stream.
+- C-ABI for the vLLM monkeypatch: `ar_setup_torch(rank, torch_queue_addr, max) / ar_exchange(rank,
+  sockpath) / ar_allreduce_ptr(data_ptr, nbytes) / ar_teardown`. NOTE: current kernels are fp32; vLLM
+  activations are bf16 -> add a dtype-dispatched reduce (push is a byte copy, dtype-agnostic) before the
+  live serve. Then monkeypatch `XpuCommunicator.all_reduce` to `out=input.clone(); ar_allreduce_ptr(
+  out.data_ptr(), out.nbytes); return out`, with `ar_setup_torch`+`ar_exchange` done once in `__init__`
+  (sockpath from the TP group's rendezvous). Serve with `P2PACCESS=0` (oneCCL host-staged warmup -> no H.13).
