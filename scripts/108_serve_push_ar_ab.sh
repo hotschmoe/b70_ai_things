@@ -67,7 +67,8 @@ MOUNTS=( -v "$GDN_SO:$PKGD/_xpu_C.abi3.so:ro"
 DOCKER_ENV=( -e PYTHONPATH=/opt/push_ar:/opt/mtp_shim
              -e PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/mtp_shim/sitecustomize.py
              -e PUSH_AR_SO=/opt/push_ar_so/libxpu_push_ar_torch.so
-             -e PUSH_AR_DISABLE="${PUSH_AR_DISABLE:-0}" )
+             -e PUSH_AR_DISABLE="${PUSH_AR_DISABLE:-0}"
+             -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-0}" )  # >0 = capture-gated (prefill-only) mode
 
 echo "=== push-ar A/B :: PUSH_AR_DISABLE=${PUSH_AR_DISABLE:-0} GRAPH=$GRAPH P2PACCESS=$P2PACCESS IMG=$IMG ==="
 source "$SHELF/../_common/lib.sh"

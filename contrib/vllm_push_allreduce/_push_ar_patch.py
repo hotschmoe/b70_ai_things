@@ -30,6 +30,11 @@ def _install():
 
     MAXB = int(os.environ.get("PUSH_AR_MAXB", str(128 << 20)))  # 128 MiB scratch
     SOCK_DIR = os.environ.get("PUSH_AR_SOCKDIR", "/tmp")
+    # MIN_NUMEL gate: engage push-ar only for tensors with >= this many elements. Set it ABOVE the
+    # captured decode sizes (e.g. max_num_seqs*(1+spec)*hidden) so captured decode allreduces fall back
+    # to oneCCL (graph-recordable) while large EAGER prefill allreduces use push-ar. 0 = engage all
+    # (the J.14 eager A/B). This is the capture-gated production mode (J.15).
+    MIN_NUMEL = int(os.environ.get("PUSH_AR_MIN_NUMEL", "0"))
     DT = {torch.float32: 0, torch.bfloat16: 1, torch.float16: 2}
 
     lib = ctypes.CDLL(so)
@@ -73,7 +78,8 @@ def _install():
 
     def all_reduce(self, input_):
         if (self.world_size == 2 and input_.is_contiguous()
-                and input_.dtype in DT and input_.numel() * input_.element_size() <= MAXB
+                and input_.dtype in DT and input_.numel() >= MIN_NUMEL
+                and input_.numel() * input_.element_size() <= MAXB
                 and _lazy_init(self)):
             out = input_.clone()
             lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
