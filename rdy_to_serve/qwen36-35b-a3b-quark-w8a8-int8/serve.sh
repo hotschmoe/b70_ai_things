@@ -20,7 +20,7 @@ export CKPT="${CKPT:-/models/Qwen3.6-35B-A3B-Quark-W8A8-INT8}"
 export SERVED="${SERVED:-qwen36-35b-a3b-quark-w8a8-int8}"
 export QUANT="${QUANT:-quark}"
 export TP="${TP:-2}"                        # int8 weights ~35 GB -> 17.5 GiB/card; does NOT fit one card
-export GRAPH="${GRAPH:-0}"                  # eager works at all conc; GRAPH=1 = PIECEWISE capture lever
+export GRAPH="${GRAPH:-1}"                  # DEFAULT=1: PIECEWISE capture is 8.7x decode over eager on this MoE (Lever B)
 export DTYPE="${DTYPE:-auto}"
 export UTIL="${UTIL:-0.92}"
 export MAXLEN="${MAXLEN:-8192}"

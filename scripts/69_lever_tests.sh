@@ -26,10 +26,10 @@ case "$PHASE" in
     arm w8a8tp2-p2p0 qwen36-27b-w8a8-sqgptq-mtp P2PACCESS=0
     arm w8a8tp2-p2p1 qwen36-27b-w8a8-sqgptq-mtp P2PACCESS=1
     ;;
-  B)  # 35B quark W8A8 TP=2: eager baseline -> captured -> captured+P2P
+  B)  # 35B quark W8A8 TP=2: eager baseline -> captured. (P2P arm dropped: Lever A proved P2PACCESS=1
+      # crashes the vLLM TP=2 worker init regardless of model -- H.13.)
     arm quark-eager-p2p0 qwen36-35b-a3b-quark-w8a8-int8 GRAPH=0 P2PACCESS=0
     arm quark-graph-p2p0 qwen36-35b-a3b-quark-w8a8-int8 GRAPH=1 P2PACCESS=0
-    arm quark-graph-p2p1 qwen36-35b-a3b-quark-w8a8-int8 GRAPH=1 P2PACCESS=1
     ;;
   C)  # 35B-A3B int4 MoE: MTP off vs on (2335 mtp tensors present in the int4 ckpt)
     arm moe-mtp0 qwen36-35b-a3b-int4 MTPTOK=

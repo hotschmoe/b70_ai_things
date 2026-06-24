@@ -103,6 +103,13 @@ hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
   not root. The old `ssh root@192.168.10.5` remote-driver workflow is RETIRED -- run commands on the box
   itself. Rollback/migration context lives in `MIGRATION.md` (section 13).
 - GPU host LAN address: `192.168.10.5` (still its IP; just no longer SSH'd into from a laptop).
-- Host project/model root: `/mnt/vm_8tb/b70/`.
+- **The git repo is now a SINGLE clone on the 8TB SSD: `/mnt/vm_8tb/github/b70_ai_things`**
+  (consolidated 2026-06-24; the old two-repo split -- `~/github` checkout vs a non-git flat
+  copy at `/mnt/vm_8tb/b70` -- is RETIRED). Work, commit, and push from there. `~/github/b70_ai_things`
+  no longer exists.
+- **Runtime data root: `/mnt/vm_8tb/b70/`** -- models, caches, build artifacts, `gpu.lock*`. NOT a repo.
+  Recipes default `ROOT=/mnt/vm_8tb/b70` (lib.sh) to find `models/`, caches, and `35_sweep_bench.sh`.
+  `gpu-run` and `35_sweep_bench.sh` are kept at this root as symlinks into the clone's `bin/`.
 - Models and quants: `/mnt/vm_8tb/b70/models/`.
-- Repo tools live under `bin/` locally but are mirrored flat at the host root.
+- Run pattern from the clone: `cd /mnt/vm_8tb/github/b70_ai_things && ./bin/gpu-run bash scripts/NN_*.sh`
+  (or `/mnt/vm_8tb/b70/gpu-run`, the symlink). Tools live under `bin/`, experiments under `scripts/`.
