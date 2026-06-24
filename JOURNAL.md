@@ -3900,3 +3900,25 @@ verdict -> HUGE win. Eager's 201ms TPOT is pathological: this MoE activates only
   conc; capture worked clean here at c=1 and c=4). NOTE: the c4 agg gain (3.7x) < c1 (8.7x) because at c>1 the
   per-op overhead amortizes across the batch even eager, so capture's marginal benefit shrinks -- but it is still
   strongly net-positive at concurrency (UNLIKE Lever C's MTP-on-MoE, which went net-negative at c>1). Host clean.
+
+== 2026-06-24 P2P campaign J.8-J.14: hand-rolled PUSH all-reduce beats oneCCL, LIVE in 27B-W8A8 TP=2 serve ==
+config -> kernel 7.0 + new BIOS (IOMMU off), 2x B70 cross-die. Built a custom posted-write all-reduce below
+  oneCCL and wired it into vLLM. Full detail in docs/P2P_GPU.md section J (J.8-J.14). Scripts 103-108 + contrib/
+  vllm_push_allreduce/. Target model: qwen36-27b-w8a8-sqgptq-mtp (rdy_to_serve UNEDITED; 108 is a standalone wrapper).
+command -> ./bin/gpu-run bash scripts/{103,104,105,106,107}_run_*.sh ; ./bin/gpu-run bash scripts/108_serve_push_ar_ab.sh {smoke,start,bench,stop}
+result ->
+  J.8  2-proc IPC peer-write          11.08 GB/s (= single-dir ceiling; IPC boundary free)
+  J.9  decode latency: events 1.36x (44us); device-flag fusion HANGS (Xe: mid-kernel peer write invisible)
+  J.10 2-proc custom allreduce        34.5us decode (2.5x oneCCL), 10.64 GB/s prefill (1.13x); shm spin barrier; P2PACCESS=0
+  J.11 bind to TORCH's L0 ctx         runs on real torch.xpu tensors via sycl_queue addr (no pybind); 10.6 GB/s, verify OK
+  J.12 bf16 drop-in                   9.9 GB/s prefill (4-byte-word push; 2-byte bf16 push was 12x slower)
+  J.14 LIVE 27B-W8A8 TP=2 serve A/B (eager, MTP spec=3, push-ar vs oneCCL):
+       c1 TTFT 1613->481ms (3.35x), c1 decode 8.40->12.41 t/s (+48%), c1 out 7.65->11.95 (+56%), c4 out 19.5->31.9 (+64%)
+       [push_ar] ENGAGED confirmed in logs; gen probe COHERENT; sitecustomize chained the MTP shim cleanly.
+verdict -> WIN. A hand-rolled posted-write collective beats the vendor lib (oneCCL) at the allreduce layer AND
+  end-to-end in a coherent production-shaped serve, using its own L0-IPC P2P (independent of CCL_TOPO_P2P_ACCESS, so
+  P2PACCESS=0 -> oneCCL warmup stays host-staged -> dodges the H.13 DEVICE_LOST wedge). CAVEAT: this is EAGER-vs-EAGER
+  (isolates the collective). Production runs CAPTURED (GRAPH=1) which push-ar can't enter (host barrier not graph-
+  recordable); prefill is NOT captured so the 3.35x TTFT win should survive in production. NEXT: size/capture-gated
+  engagement (push-ar for prefill only, oneCCL-captured decode); PP=2 prototype (1 push/microbatch vs 128 allreduces).
+  All committed+pushed. Host clean, GPU lease freed.

@@ -825,3 +825,38 @@ TP-vs-PP choice for our cross-die B70 box. Comm volume per 27B (dense, 64 layers
   reduce_scatter/all_gather/gather/broadcast -- P2P send/recv may route through raw torch.distributed); (2)
   MTP head sits on the last layers -> stage1; spec-verify logits are local to stage1, so MTP+PP should
   compose; (3) bubble cost at low concurrency. This is queued as the next campaign experiment (J.6#3).
+
+### J.14 [WIN] LIVE 27B-W8A8 TP=2 serve: push-ar BEATS oneCCL +48-64% throughput, 3.35x TTFT (engaged + coherent)
+`scripts/108_serve_push_ar_ab.sh` + `contrib/vllm_push_allreduce/`. The custom op is wired into a REAL
+vLLM serve via the `XpuCommunicator.all_reduce` monkeypatch and A/B'd against stock oneCCL. Both sides:
+27B-W8A8-sqgptq + BF16-MTP-graft (spec=3), TP=2, **EAGER (GRAPH=0)**, `P2PACCESS=0`, image `:int8g`,
+35 GiB across 2x B70. ENGAGEMENT CONFIRMED in container logs: `[push_ar] ENGAGED ...`, both workers
+`setup_torch OK` + `exchange OK (peer scratch mapped in torch ctx)`, no L0 errors, no fallback. Gen probe
+COHERENT ("...Paris is the capital...of France") -> our hand-rolled reduce is numerically correct on real
+activations. My sitecustomize cleanly CHAINED the MTP-graft shim (both patches coexist).
+```
+  conc   metric            oneCCL(host-staged)   push-ar      delta
+  c1     TTFT ms           1613                  481          3.35x FASTER
+  c1     per-stream dec    8.40 t/s              12.41 t/s    +48%
+  c1     out tok/s         7.65                  11.95        +56%
+  c1     tpot ms           119                   80.6         1.48x
+  c2     out tok/s         12.5                  18.85        +51%
+  c4     out tok/s         19.5                  31.90        +64%
+  c4     TTFT ms           2720                  900          3.0x
+  c8     out tok/s         (baseline killed)     57.49
+```
+- **End-to-end proof, not just microbench: a hand-rolled posted-write all-reduce replaces oneCCL in a
+  coherent production-shaped 27B TP=2 serve and wins +48-64% throughput and ~3.35x TTFT.** The TTFT win is
+  exactly the H.10 prediction (prefill ~84% collective-bound -> a faster collective hits TTFT hardest).
+  Baseline reproduced across two runs (c1 TTFT 1603/1624, dec 8.38/8.42 -> stable).
+- **HONEST CAVEAT -- this is EAGER vs EAGER (isolates the collective).** The shelf's PRODUCTION path is
+  CAPTURED (GRAPH=1), whose kernel-launch-overhead removal gives higher DECODE (~34 t/s per the shelf
+  README) using oneCCL. push-ar has a host barrier -> NOT graph-capturable -> forces eager, and eager's
+  per-token launch overhead likely outweighs push-ar's decode-collective win for CAPTURED decode. So the
+  production comparison "captured-oneCCL decode vs eager-push-ar decode" is separate and NOT settled here.
+- **BUT prefill is NOT captured (PIECEWISE captures decode-sized graphs only)** -> the 3.35x TTFT win
+  should survive even in the captured production serve. The highest-value refinement (next): engage
+  push-ar ONLY for the non-captured (prefill / large) allreduces and leave captured decode on oneCCL --
+  a size- or capture-context-gated `all_reduce` patch. That would bank the prefill win without the eager
+  decode penalty. Failing that: make the op graph-capturable (hard -- the cross-process host barrier is
+  the blocker; would need a capturable device-side signal, which J.9 showed Xe does not support mid-kernel).
