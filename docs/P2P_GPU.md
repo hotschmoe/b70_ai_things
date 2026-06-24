@@ -646,3 +646,34 @@ writes); step2 both local-reduce. End state verified bufA==bufB==A+B (result 4.0
 - CAVEAT (honest): this is single-process/single-context. The real vLLM path is 2 processes -> needs L0
   IPC handle exchange (zeMemGetIpcHandle/OpenIpcHandle, proven OK on 7.0 in H.11) so each worker can map
   the peer scratch. That is the J.6#2 integration step; the BW ceiling (fabric write) is unchanged by it.
+  [RESOLVED in J.8 -- the IPC boundary costs nothing; cross-process peer-write = full 11 GB/s.]
+
+### J.8 [WIN] 2-PROCESS IPC peer-write = 11.08 GB/s -- the vLLM-worker transport, proven (no oneCCL)
+`scripts/103_ipc_push_allreduce.c` (+ `103_run_ipc_push_allreduce.sh`): closes the J.7 caveat. TWO
+fork()'d processes, one per card, each with its OWN Level-Zero context (exactly the vLLM TP-worker
+topology). Each rank exports its scratch buffer via `zeMemGetIpcHandle`, exchanges the handle over a
+Unix socketpair passing the embedded dma-buf fd through `SCM_RIGHTS`, then `zeMemOpenIpcHandle`s the
+peer's handle to get a cross-process peer pointer, and PUSHES (posted write, exec-on-source) into it.
+```
+  size           push GB/s   lat us     verify(peer)   vs single-ctx J.7   vs oneCCL H.12
+  10KB(decode)    1.29        7.94 us    OK             (1 push leg)
+  1MB            10.46      100 us       OK
+  16MB(prefill)  11.05     1518 us       OK             10.64 (FASTER)     9.43 (1.17x)
+  64MB           11.01                   OK
+  256MB          11.08    24224 us       OK             10.44              9.70 (1.14x)
+```
+- **The 2-process IPC boundary costs ZERO bandwidth: 11.08 GB/s = the same single-direction posted-write
+  ceiling (J.2 11.3), and actually edges out the single-context J.7 (10.64) and beats oneCCL (9.7).**
+  `verify(peer)=OK` at every size confirms each rank's data physically landed in the peer's VRAM across
+  the process boundary -- a real cross-process peer DMA, not a host bounce.
+- **This is the precondition for the vLLM custom all-reduce op (J.6#2), now MET.** It proves the exact
+  mechanism a vLLM TP worker pair needs -- separate processes, separate contexts, IPC-mapped peer
+  scratch, posted peer write -- works at full fabric speed AND entirely bypasses oneCCL's P2P path (the
+  one that DEVICE_LOSTs at vLLM worker init, H.13). The fd-over-SCM_RIGHTS exchange is the same family
+  as oneCCL's `CCL_ZE_IPC_EXCHANGE=sockets`; doing it ourselves sidesteps oneCCL's broken warmup all_reduce.
+- Method note: SYNCHRONOUS immediate command list per push (each `AppendMemoryCopy` blocks to completion),
+  socket 1-byte barriers only at step boundaries (= the real collective's sync points), compute-engine
+  ordinal 0. First run printed nothing -- `_exit()` skips stdio flush; fixed with `setvbuf(_IONBF)`.
+- Decode 10KB single-leg latency 7.94 us is the raw cross-process push floor; a full 2-rank allreduce
+  adds the return leg + local reduce + one barrier (cf. J.7's 59.5 us full path). The decode latency
+  lever is fusing push+signal into ONE kernel with a device-side flag (no per-step host barrier) -- next.
