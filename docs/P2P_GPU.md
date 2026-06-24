@@ -1107,3 +1107,33 @@ graph. (Build OK, no hang, no wedge -- single-ctx test, both cards via gpu-run.)
   torch captures one graph per worker. So "per-rank graph + external semaphore/event sync" is both the only
   SYCL-supported structure AND the correct vLLM model. NEXT (K.3): prove the raw-L0 command-streamer
   cross-device event wait is replayable (the keystone -- it is the exact primitive oneCCL relies on).
+
+### K.3 [KEYSTONE WIN] cross-device command-streamer L0-event wait is CORRECT + REPLAYABLE on B70 (J.9-C bypassed)
+`scripts/115_ze_event_sync.c` (+ `115_run_event_sync.sh`): the decode-capture blocker was J.9-C (an EU-spin
+device flag HANGS: a peer write from inside a running kernel is invisible to a kernel spinning on the other
+card; peer ATOMICS=N). But that is only ONE cross-device sync mechanism. This tests the OTHER one -- the one
+oneCCL's capturable sycl_algorithms allreduce relies on: a Level-Zero EVENT signaled by one card's command
+and waited on by the OTHER card's COMMAND STREAMER via `zeCommandListAppendWaitOnEvents` (a hardware-semaphore
+wait, NOT an EU spin). Pure L0, no SPIR-V: push = peer `zeCommandListAppendMemoryCopy` (signals the event),
+then `AppendWaitOnEvents(peer)`, then a proxy read of what the peer pushed. Two CLOSED command lists (one per
+card) re-executed 200x with a fresh per-iteration sentinel + poisoned scratch so a MISSED sync is caught.
+```
+  size           iters   sync_us   verifyA   verifyB
+  10KB(decode)   200      21.50     OK        OK
+  64KB           200      16.84     OK        OK
+  1MB            200     110.27     OK        OK    (transfer-bound: 1MB/~11GB/s)
+```
+- **CORRECT at every size across 200 replays both directions** -> the cross-device command-streamer event wait
+  works on B70 where J.9-C's EU spin hung. The difference is the WAITER: a command-streamer/HW-semaphore wait
+  polls the (HOST_VISIBLE) event state through a path designed for cross-engine/cross-device signalling;
+  J.9-C's EU spin reads through L1/L2 with no system-scope atomic to force visibility. Same hardware, right
+  primitive.
+- **REPLAYABLE: closed L0 command lists re-executed 200x = exactly graph "replay".** So the push all-reduce's
+  rank sync CAN be made graph-recordable -- the host barrier is replaceable by an in-command-list cross-device
+  event wait. The J.14/J.17 decode gap (push-ar is prefill-only because the host barrier is not capturable) is
+  addressable. Decode-sized sync ~17-21us (push+signal+wait+read incl. host launch + event reset) already
+  beats J.9-B's 44us SYCL-event path and oneCCL's ~85us.
+- Event pool created HOST_VISIBLE (event state where both cards' streamers can poll over PCIe); per-iteration
+  `zeEventHostReset` (a host op, fine for proving the mechanism; a real captured graph resets its events in
+  the graph runtime). NEXT (K.4): build the FULL allreduce (push + this event sync + a real reduce kernel),
+  measure decode latency vs oneCCL; then the SYCL-graph/external-semaphore form torch capture can record (K.5).

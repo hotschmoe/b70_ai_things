@@ -4037,3 +4037,14 @@ verdict -> the decode sync must be an EXTERNAL primitive recorded into each rank
   (L0 IPC event command-streamer wait, or SYCL external_semaphore) -- which matches vLLM (one captured graph
   per TP worker). NEXT: prove the raw-L0 cross-device command-streamer event wait is replayable (the oneCCL
   mechanism, the keystone). No GPU wedge (single-ctx test). docs/P2P_GPU.md K.1-K.2.
+
+P2P K.3 [KEYSTONE WIN] cross-device command-streamer L0-event wait is correct + replayable on B70
+config -> scripts/115_ze_event_sync.c: 2 closed L0 command lists (1/card), push(peer memcpy)+signal-event,
+  AppendWaitOnEvents(peer), proxy read; re-executed 200x with per-iter sentinel + poisoned scratch.
+command -> ./bin/gpu-run bash scripts/115_run_event_sync.sh
+result -> verifyA/verifyB OK at 10KB/64KB/1MB across all 200 replays; decode-sized sync ~17-21us.
+verdict -> the J.9-C EU-spin dead end is BYPASSED: a command-streamer/HW-semaphore wait (zeCommandListAppend
+  WaitOnEvents) signaled by the peer card IS correct AND replayable (closed lists = graph replay). The push
+  all-reduce rank-sync can be made graph-recordable -> the decode-capture path is open. ~17-21us already beats
+  J.9-B (44us) and oneCCL (~85us). No wedge (single-ctx). docs/P2P_GPU.md K.3. NEXT: full allreduce w/ real
+  reduce kernel + this sync (K.4), then the SYCL-graph/external-semaphore form (K.5).
