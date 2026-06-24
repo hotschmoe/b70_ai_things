@@ -78,5 +78,27 @@ MOUNTS=( -v "$GDN_SO:$PKGD/_xpu_C.abi3.so:ro"
          -v "$SCRIPT_DIR/patches:/opt/mtp_shim:ro" )
 DOCKER_ENV=( -e PYTHONPATH=/opt/mtp_shim )
 
+# OPTIONAL push-allreduce overlay -- set PUSH_AR=1 to replace oneCCL's TP all-reduce with the custom
+# L0-IPC push transport (contrib/vllm_push_allreduce). CAPTURE-GATED by default (PUSH_AR_MIN_NUMEL=65536:
+# prefill-only push; the small decode all-reduces stay on oneCCL inside the SYCL graph), so it composes
+# with this recipe's GRAPH=1. Push-ar's sitecustomize CHAINS the MTP shim (PUSH_AR_CHAIN_SITECUSTOMIZE)
+# so both patches run. P2PACCESS stays 0 (push-ar uses its own L0-IPC peer write, NOT oneCCL's wedge-prone
+# CCL_TOPO_P2P_ACCESS). Measured J.17 (P2P_GPU.md): +15-55% throughput / 2.3-2.5x TTFT vs oneCCL on this
+# 27B-W8A8 TP=2 serve. Default OFF -> the proven oneCCL baseline above is byte-for-byte unchanged.
+if [ "${PUSH_AR:-0}" = 1 ]; then
+  PUSH_AR_DIR="$SCRIPT_DIR/../../contrib/vllm_push_allreduce"
+  SO_HOST="${SO_HOST:-$PUSH_AR_DIR/prebuilt/libxpu_push_ar_torch.so}"  # self-contained; rebuild via scripts/108 REBUILD_SO=1
+  [ -f "$SO_HOST" ] || { echo "[!] PUSH_AR=1 but push-ar .so missing at $SO_HOST" >&2; exit 1; }
+  MOUNTS+=( -v "$PUSH_AR_DIR:/opt/push_ar:ro"
+            -v "$SO_HOST:/opt/push_ar_so/libxpu_push_ar_torch.so:ro" )
+  DOCKER_ENV=( -e PYTHONPATH=/opt/push_ar:/opt/mtp_shim
+               -e PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/mtp_shim/sitecustomize.py
+               -e PUSH_AR_SO=/opt/push_ar_so/libxpu_push_ar_torch.so
+               -e PUSH_AR_DISABLE=0
+               -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}" )
+  export P2PACCESS="${P2PACCESS:-0}"
+  echo "=== PUSH_AR overlay ON (capture-gated MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-65536}, P2PACCESS=0, .so=$SO_HOST) ==="
+fi
+
 source "$SCRIPT_DIR/../_common/lib.sh"
 b70_dispatch "$@"

@@ -25,7 +25,9 @@ PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
 GDN_SO="${GDN_SO:-$ROOT/vllm-xpu-kernels/vllm_xpu_kernels/_xpu_C.abi3.so}"
 GDN_LIB="${GDN_LIB:-$ROOT/vllm-xpu-kernels/vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so}"
 
-stop() { docker rm -f "$NAME" 2>/dev/null && echo "stopped $NAME"; }
+# graceful teardown (wedge-guard L2): docker stop -t (SIGTERM+grace) before rm -f (SIGKILL), so a
+# PP=2 worker is not force-killed mid-collective/init (the wedge trigger; P2P_GPU.md J.17).
+stop() { docker stop -t "${STOP_GRACE:-30}" "$NAME" >/dev/null 2>&1 || true; docker rm -f "$NAME" 2>/dev/null && echo "stopped $NAME (graceful -t${STOP_GRACE:-30})"; }
 case "${1:-start}" in stop) stop; exit 0 ;; esac
 
 stop

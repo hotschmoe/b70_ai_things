@@ -982,3 +982,33 @@ B = `sweep_*-oneccl-tp2-graph_171516.csv` (in $ROOT/results).
   reset + GP fault -> L0 queue DEVICE_LOST; persists because it is xe driver/engine + shared multi-GPU
   L0 context corruption, not user-space-recoverable). Our push-ar dodges it entirely via L0-IPC at
   P2PACCESS=0; host-staged oneCCL is the only stable stock path on this topology.
+
+### J.18 [MEASURED] PP=2 first run on the current Gen3 box -- prefill/TTFT + scaling win, decode gated by eager+no-MTP
+First PP=2 serve on the current box (the J.13 bet; scripts/109_serve_pp2.sh was UNTESTED). Run guard-wrapped
+(pre-flight probe + graceful teardown + post-probe, B70_AUTO_RESET=1): 27B-W8A8, PP=2/TP=1, EAGER, no MTP,
+IN=512/OUT=128. Came up coherent ("Paris."), benched, post-probe both cards healthy, NO wedge. The guard
+let us safely chain it right after the J.17 TP=2 runs.
+
+    PP=2 (eager, no MTP)            vs   eager push-ar TP=2 WITH MTP (J.14, ...pushar-tp2_083017)
+    conc out_tok/s ttft_ms ps_dec        conc out_tok/s ttft_ms ps_dec
+    1     6.03     345    6.08            1     7.64    1603    8.38
+    2    11.82     637    6.05            2    13.11    2117    7.41
+    4    23.05     938    5.98            4    18.44    2538    5.55
+    8    44.21    1394    5.84            (no c8)
+
+- **TTFT: PP=2 wins ~4.7x** (345 ms vs 1603 ms at c1; the eager oneCCL TP=2 is higher still). This is the
+  J.13 hypothesis CONFIRMED in a live serve: PP's single posted activation handoff per microbatch beats
+  TP's ~128 per-layer all-reduces on our push-fast/read-slow fabric. Prefill is exactly where TP's
+  collective tax lives.
+- **Concurrency scaling: PP=2 holds.** per-stream decode is FLAT ~6 t/s from c1->c8 and aggregate scales
+  cleanly to 44 t/s @c8; the eager TP=2 per-stream DEGRADES under load (8.38->5.55 by c4) as the all-reduce
+  tax grows. PP overlaps stages via continuous batching; TP cannot hide the per-step collective.
+- **BUT decode absolute is gated by eager+no-MTP.** PP=2's 6 t/s per-stream is ~5x below the PRODUCTION
+  GRAPH=1+MTP TP=2 push-ar (30 t/s @c1, J.17) -- that gap is capture + MTP, not topology. The matched eager
+  TP=2 here even carries MTP (~2x) and still loses on TTFT/scaling; eager no-MTP TP=2 is ~4 t/s (serve.sh
+  header), which PP=2's 6 would beat. So PP=2 is PROMISING but NOT yet a production contender.
+- VERDICT: PP=2 is real, coherent, and wins decisively on prefill/TTFT and concurrency scaling at matched
+  (eager) config -- the core bet holds. To compete with the production TP=2+push-ar path it needs GRAPH=1
+  capture + MTP, all three unproven together (does vLLM-XPU capture PP send/recv? does MTP's last-stage head
+  compose with PP?). NEXT for PP: (1) PP=2 GRAPH=1 capture, (2) +MTP. For now TP=2+push-ar remains the
+  production path; PP=2 is the candidate for prefill-heavy / long-context / high-concurrency regimes.

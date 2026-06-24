@@ -3984,3 +3984,15 @@ verdict -> production GRAPH=1 capture-gated push-ar is a clear win (+15-55% thru
   docs/literature/p2p_access_devicelost.md (why CCL_TOPO_P2P_ACCESS=1 wedges: oneCCL peer copy across
   cross-die boundary -> xe copy-engine reset -> L0 DEVICE_LOST; xe-level corruption, not recoverable).
   P2P_GPU.md J.17.
+
+P2P J.18 [MEASURED] PP=2 first run on current Gen3 box -- prefill/TTFT + scaling win, decode eager-gated --
+config -> 27B-W8A8 PP=2/TP=1 EAGER no-MTP, IN=512/OUT=128, guard-wrapped (scripts/109_serve_pp2.sh, run
+  via scratchpad pp2_inner: pre-flight probe -> serve -> 35_sweep_bench -> graceful stop -> post-probe).
+result -> coherent ("Paris."), NO wedge. PP=2 out_tok/s|ttft|ps_decode: c1 6.03|345|6.08, c2 11.82|637|6.05,
+  c4 23.05|938|5.98, c8 44.21|1394|5.84. vs eager push-ar TP=2 WITH MTP (J.14): c1 7.64|1603|8.38 ...
+  c4 18.44|2538|5.55. PP=2 TTFT ~4.7x lower; per-stream decode FLAT ~6 across c1-c8 while eager TP=2 decode
+  degrades under load; PP aggregate scales to 44 t/s @c8.
+verdict -> J.13 PP bet CONFIRMED on prefill/TTFT + concurrency scaling at matched eager config (1 handoff vs
+  ~128 allreduces). BUT PP=2 decode 6 t/s is ~5x below production GRAPH=1+MTP TP=2 push-ar (30 t/s, J.17) --
+  that gap is capture+MTP, not topology. PP=2 PROMISING, not yet production. NEXT for PP: GRAPH=1 capture
+  then +MTP (both unproven w/ PP send/recv). TP=2+push-ar stays the production path. P2P_GPU.md J.18.
