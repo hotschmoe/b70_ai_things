@@ -31,6 +31,9 @@
 - [`docs/quant_methods.md`](docs/quant_methods.md) -- owns the quant-method **registry** (algorithm x scheme x model matrix; W4A8/W4A4 rotation method picks; the XPU kernel gate). The "which algorithm + what have we tried" tables live there, not here.
 - [`evals/results/SUMMARY.md`](evals/results/SUMMARY.md) -- owns the measured leaderboard.
 - [`w4a8/README.md`](w4a8/README.md) -- **another agent owns the W4A8-INT8 + AutoRound-W4A8 branch. Do not edit `w4a8/`.**
+- [`research_moe_optimizations.md`](research_moe_optimizations.md) -- MoE multi-GPU optimization IDEAS (PP-for-MoE
+  hypothesis: PP keeps each layer's experts whole on one card -> removes the cross-card routing all-to-all; plus
+  push-based reduce_scatter/all_gather as a fallback). Scratch/idea doc, nothing measured yet (P2P_GPU.md J.18-J.21).
 
 This doc owns: the **W8A8 kernel sprint**, **W8A8 accuracy beyond what's done**, **AutoRound (autoint)**,
 **Quark loader compatibility**, and the **fused-MoE kernel** track. Everything else is a pointer.
@@ -245,6 +248,10 @@ The original (now-stale) framing: the 35B-A3B int4 OOMs at weight-load because v
 - [ ] **5b. int4 experts** -- already served via Triton fused_moe (int4-AutoRound 56.8 t/s); port only for ownership.
 - [x] **5c. Router/gate high-precision** -- already done (router/gate kept bf16 in the ignore-list; quants serve coherently).
 - [ ] **5d. Optimize top-k expert dispatch layout** -- fold into Track 9 (tuned Triton MoE config), not a from-scratch kernel.
+- [ ] **5e. PP=2 for the MoE (multi-GPU parallelism, not a kernel)** -- hypothesis: PP keeps each layer's experts whole
+      on one card, removing the cross-card routing all-to-all that TP-MoE pays; only a single activation push/microbatch
+      crosses. MoE also dodges the dense-PP blockers (does not want MTP; captured-PP bug was a GDN-hybrid artifact).
+      Full reasoning + test order + cautions in [`research_moe_optimizations.md`](research_moe_optimizations.md). UNTESTED.
 
 ---
 
