@@ -3846,3 +3846,10 @@ verdict -> the crash is in init_device BEFORE any graph capture -> CAPTURE RULED
   Both GPUs recovered (xpu count 2) after the loss. FOLLOW-UPS (dedicated session): VLLM_WORKER_MULTIPROC_METHOD=fork,
   a newer oneCCL, NEO EnableP2P/EnableCrossDeviceAccess debug keys, or a custom P2P all-reduce bypassing the warmup.
   P2P_GPU.md H.13. P2P-OFF remains the only working serve path today (TTFT 2901ms is host-staged, as expected).
+SEVERITY ESCALATION -> the P2PACCESS=1 DEVICE_LOST does NOT clean up: it WEDGES the cross-GPU oneCCL/Level-Zero
+  state. After the two P2P-on attempts, a fresh container running the KNOWN-GOOD P2P-OFF 27B W8A8 TP=2 (the exact
+  config that served minutes earlier in Phase A) ALSO failed with the identical UR_RESULT_ERROR_DEVICE_LOST at
+  xpu_worker init_device all_reduce -- so EVERY TP=2 serve is broken until the GPU state is reset. Single-GPU is
+  unaffected (xpu count 2; all TP=1 serves fine). Recovery = reload xe (`modprobe -r xe; modprobe xe`, needs no
+  /dev/dri in use) or reboot. LESSON: do NOT retry P2PACCESS=1 in serve without a GPU reset between attempts --
+  it corrupts the multi-GPU collective state for all subsequent TP>1 runs.

@@ -452,6 +452,12 @@ but NOT accessible through the current vLLM serve. GPUs recover cleanly after th
 session): `VLLM_WORKER_MULTIPROC_METHOD=fork`, a newer oneCCL, NEO `EnableP2P`/`EnableCrossDeviceAccess` keys, or a
 custom P2P all-reduce that bypasses the failing warmup. Until then, TP=2 serves stay host-staged (P2PACCESS=0).
 
+**WARNING -- the DEVICE_LOST wedges the multi-GPU state (does not self-clean).** After two `P2PACCESS=1` attempts,
+a fresh container running the KNOWN-GOOD `P2PACCESS=0` 27B W8A8 TP=2 serve ALSO failed with the identical
+`UR_RESULT_ERROR_DEVICE_LOST` at `xpu_worker` `init_device` `all_reduce` -- i.e. every TP=2 serve is broken until
+the GPU state is reset (single-GPU/TP=1 is unaffected, `xpu count`=2). Recovery: `modprobe -r xe; modprobe xe`
+(needs no `/dev/dri` in use) or reboot. So do NOT retry `P2PACCESS=1` in serve without a GPU reset between tries.
+
 ---
 
 ## I. NEXT STEPS for P2P testing (ordered, reboot-gated)  [2026-06-22]  [SUPERSEDED -- H.11 probe + H.12 BW done; H.13 = serve-integration gap]
