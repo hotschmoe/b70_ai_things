@@ -1012,3 +1012,63 @@ let us safely chain it right after the J.17 TP=2 runs.
   capture + MTP, all three unproven together (does vLLM-XPU capture PP send/recv? does MTP's last-stage head
   compose with PP?). NEXT for PP: (1) PP=2 GRAPH=1 capture, (2) +MTP. For now TP=2+push-ar remains the
   production path; PP=2 is the candidate for prefill-heavy / long-context / high-concurrency regimes.
+
+### J.19 [BLOCKED] PP=2 production config (GRAPH=1 + MTP) -- two hard upstream blockers, no viable path today
+Tried to put PP=2 in the production config for a direct TP=2-vs-PP=2 compare. Built lib.sh `PP` support
+(b70_multicard: PP>1 gets the #41663 multi-GPU env + mp executor + the wedge guard) and scripts/110_serve_
+pp2_graph_mtp.sh (replicates the 27B shelf GRAPH=1+MTP+GDN+shim env, flips TP=2 -> PP=2/TP=1). Two blockers:
+- **MTP + PP = UNSUPPORTED (config-time NotImplementedError).** `draft_model_config.verify_with_parallel_
+  config -> NotImplementedError: Pipeline parallelism is not supported for this model. Supported models
+  implement the SupportsPP interface.` The base 27B supports PP (it served eager, J.18) but the MTP DRAFTER
+  does not implement SupportsPP -> spec-decode + PP is rejected outright by this vLLM build. Not "unstable" --
+  flatly unimplemented. (No GPU touched; graceful exit, no wedge.)
+- **PP=2 + GRAPH=1 (no MTP) = CAPTURES but EMPTY OUTPUT.** Drops MTP, GRAPH=1 PIECEWISE: serve comes HEALTHY
+  in ~71-147s (so capture records the PP handoff) but /v1/completions returns an EMPTY body on every prompt
+  (3 manual probes all empty; the smoke coherence gate only passed on its SHORT-not-GARBAGE gap). Eager PP=2
+  gave coherent "Paris." (J.18), so captured PP=2 is NUMERICALLY BROKEN on this W8A8+GDN hybrid -- the SAME
+  captured-hybrid class as the documented captured-TP=2 garbage (rdy_to_serve/qwen36-27b serve.sh bug B), not
+  fixed for the PP path.
+- NET VERDICT (PP=2 vs TP=2): the ONLY coherent PP=2 is EAGER no-MTP (~6 t/s decode, J.18). MTP+PP is
+  upstream-unsupported and captured PP is broken, so PP=2 has NO working production path on this model today.
+  TP=2 + push-ar + MTP (GRAPH=1) stays the production path (30 t/s decode, coherent). PP=2 is PARKED pending
+  upstream: (1) SupportsPP on the MTP drafter, (2) a captured-PP-hybrid numerics fix. Its proven edge
+  (prefill/TTFT 4.7x, flat-per-stream scaling, J.18) makes it worth revisiting if/when those land.
+  Tooling kept: lib.sh PP support + scripts/110 are committed so the retry is a one-liner.
+
+### J.20 [INFRA] captured-PP corrupts collective state; xe-reset CANNOT recover this box (reboot-only)
+- **The captured-PP serves CORRUPTED the multi-GPU collective state.** After the string of 110 GRAPH=1 PP
+  runs, the next production TP=2 GRAPH=1 serve (README bench A-side, oneCCL) ALSO produced empty output + an
+  all-zero bench, threw `DEVICE_LOST` on teardown, and its post-probe found card 1 HUNG (wedged). The
+  single-card PRE-flight probe had passed -- it does not exercise the collective, so it cannot catch
+  collective-state degradation. GUARD GAP: pre-flight should add a 2-proc allreduce probe to catch this.
+  The earlier clean chain (J.17 two TP=2 + 8-model sweep + push-ar smoke, all coherent) shows it is the
+  abnormal captured-PP path, NOT normal TP=2 teardown, that corrupts state -> do NOT run captured PP=2.
+- **xe-reset CANNOT recover this box -- REBOOT ONLY (CONFIRMED 2026-06-24).** Auto-reset fired
+  (B70_AUTO_RESET=1) but `modprobe -r xe` failed `FATAL: Module xe is in use` EVEN with zero containers:
+  `xe` also drives the console/display (Arc cards expose DP/HDMI + a framebuffer; lsmod baseline refcount ~5
+  even freshly booted), so it is never removable while the system is up. The old "lighter modprobe reload"
+  recovery note is WRONG for this display-attached box. AGENTS.md + bin/xe-reset corrected to escalate
+  straight to `sudo reboot`. The guard still did its job: it DETECTED the wedge (post-probe card 1 hung) and
+  stopped -- it just cannot self-heal here without reboot rights. Box is wedged pending a reboot.
+
+### J.21 [WIN] post-reboot clean production A/B (IN=2048) -> README updated to the push-ar best
+After the reboot, re-ran the production 27B-W8A8 TP=2 GRAPH=1 MTP A/B at the README config (IN=2048/OUT=128,
+random) on a clean box. Both serves coherent, chained cleanly through the guard (graceful teardown +
+post-probe healthy between A and B), NO wedge -- confirming normal TP=2 teardown is safe (only the captured-PP
+path of J.19/J.20 corrupted state). This also validated the lib.sh `PP`/`b70_multicard` refactor on the live
+TP=2 path (TP=2 renders `PP=1`, build unchanged).
+
+    conc   oneCCL default            push-ar (PUSH_AR=1)        push-ar gain
+           ttft_ms ppTok/s outTok/s  ttft_ms ppTok/s outTok/s
+    1       2916    702    16.27      762    2688    22.14      TTFT 3.83x, prefill 3.83x
+    2       3325    616    22.73     1090    1879    35.66      TTFT 3.05x
+    4       4224    485    26.86     1354    1513    48.23      TTFT 3.12x, agg +80%
+    8       6303    325    32.74     1857    1103    68.47      TTFT 3.40x, agg +109%
+
+- At IN=2048 (heavy prefill) push-ar's prefill win is bigger than the IN=512 J.17 run (3.8x TTFT vs 2.5x):
+  more prefill tokens -> the oneCCL all-reduce tax it removes is a larger share of TTFT. Single-stream decode
+  (TG c1) is UNCHANGED ~25 t/s (MTP) -- push-ar is capture-gated prefill-only, so it does not touch decode.
+- README "Serve shelf benchmarks" 27B-W8A8 TP=2 row updated to the push-ar best (762ms / 2688 / 25.3 / 1354ms
+  / 48.2), labelled (push-ar); caveat (1) gives the oneCCL default baseline + the PUSH_AR=1 opt-in. Audited the
+  other 5 rows (4 TP=1 + 35B-quark TP=2) vs all results CSVs/JOURNAL -- they already show best achieved; only
+  the 27B-W8A8 row moved. CSVs: sweep_*-tp2-graph_192053 (oneCCL), sweep_*-pushar-tp2-graph_193418 (push-ar).

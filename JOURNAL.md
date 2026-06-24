@@ -3996,3 +3996,32 @@ verdict -> J.13 PP bet CONFIRMED on prefill/TTFT + concurrency scaling at matche
   ~128 allreduces). BUT PP=2 decode 6 t/s is ~5x below production GRAPH=1+MTP TP=2 push-ar (30 t/s, J.17) --
   that gap is capture+MTP, not topology. PP=2 PROMISING, not yet production. NEXT for PP: GRAPH=1 capture
   then +MTP (both unproven w/ PP send/recv). TP=2+push-ar stays the production path. P2P_GPU.md J.18.
+
+P2P J.19 [BLOCKED] PP=2 production config (GRAPH=1+MTP) -- two upstream blockers ---------------------
+config -> built lib.sh PP support (b70_multicard) + scripts/110_serve_pp2_graph_mtp.sh (27B shelf
+  GRAPH=1+MTP env, TP=2 -> PP=2/TP=1). command -> 110 smoke (MTP), then MTPTOK= (no-MTP).
+result -> (1) MTP+PP UNSUPPORTED: config-time NotImplementedError, MTP drafter lacks SupportsPP interface.
+  (2) PP=2+GRAPH=1 no-MTP: HEALTHY (capture records the PP handoff) but /v1/completions EMPTY on all 3
+  probes -- captured PP numerically broken on the W8A8+GDN hybrid (same class as captured-TP=2 bug B).
+  Eager PP=2 was coherent (J.18). Box stayed clean (guard handled all; no wedge).
+verdict -> PP=2 has NO working production path today: only coherent form is eager no-MTP ~6 t/s, 5x below
+  production TP=2+push-ar+MTP (30 t/s). TP=2+push-ar stays production; PP=2 PARKED pending upstream
+  (SupportsPP on MTP drafter + captured-PP-hybrid numerics fix). Tooling (lib.sh PP, scripts/110) committed
+  for a one-line retry. P2P_GPU.md J.19.
+
+P2P J.20 [INFRA] captured-PP corrupts collective state; xe-reset CANNOT recover this box ------------
+result -> the string of captured-PP serves corrupted the multi-GPU collective state: the next production
+  TP=2 serve produced empty output + DEVICE_LOST, post-probe found card 1 HUNG. Single-card pre-flight
+  passed (doesn't exercise the collective -> guard gap; add a 2-proc allreduce probe). xe-reset FAILED:
+  `modprobe -r xe` -> FATAL "Module xe is in use" even with 0 containers -- xe drives the console/display
+  (baseline refcount ~5), so it is NEVER removable while up. REBOOT is the only recovery on this box.
+verdict -> do NOT run captured PP=2. Corrected AGENTS.md + bin/xe-reset (escalate to reboot). P2P_GPU.md J.20.
+
+P2P J.21 [WIN] post-reboot clean production A/B (IN=2048) -> README updated to push-ar best ----------
+config -> 27B-W8A8 TP=2 GRAPH=1 MTP, IN=2048/OUT=128, clean box. A=oneCCL default, B=PUSH_AR=1 overlay.
+result -> both coherent, chained cleanly (guard graceful teardown + post-probe healthy between, NO wedge;
+  also validated the lib.sh PP/b70_multicard refactor on the live TP=2 path). push-ar vs oneCCL: c1 TTFT
+  762 vs 2916 ms (3.83x), prefill 2688 vs 702 tok/s (3.83x); c4 agg 48.2 vs 26.9 (+80%); c8 68.5 vs 32.7
+  (+109%). decode unchanged ~25 t/s (prefill-only push). CSVs: *-tp2-graph_192053, *-pushar-tp2-graph_193418.
+verdict -> README 27B-W8A8 TP=2 row updated to push-ar best (762/2688/25.3/1354/48.2, labelled push-ar);
+  other 5 rows audited (agents) vs all CSVs/JOURNAL = already best, unchanged. P2P_GPU.md J.21.

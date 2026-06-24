@@ -20,6 +20,10 @@ set -uo pipefail
 B70_LIBDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 B70_BIN="${B70_BIN:-$(cd "$B70_LIBDIR/../../bin" 2>/dev/null && pwd)}"
 
+# True for any run that lights both cards (TP>1 OR PP>1): drives the #41663 multi-GPU stability env,
+# the mp executor, and the wedge-guard pre-flight/teardown. A PP=2/TP=1 serve is multi-card too.
+b70_multicard() { [ "${TP:-1}" -gt 1 ] || [ "${PP:-1}" -gt 1 ]; }
+
 # ---- knobs (env, with defaults) -------------------------------------------------------------------
 b70_setdefaults() {
   ROOT="${ROOT:-/mnt/vm_8tb/b70}"            # GPU host: models, caches, gpu-run, 35_sweep_bench
@@ -29,6 +33,7 @@ b70_setdefaults() {
   NAME="${NAME:-vllm_$SERVED}"               # container name (override for multi-replica)
   PORT="${PORT:-8000}"
   TP="${TP:-1}"                              # tensor-parallel size; >1 -> both cards + #41663 env
+  PP="${PP:-1}"                              # pipeline-parallel size; >1 -> both cards + #41663 env (TP=1/stage)
   DEVICE="${DEVICE:-0}"                      # single-card (TP=1) card pin 0|1 (for data-parallel)
   GRAPH="${GRAPH:-0}"                        # 1 = PIECEWISE XPU graph capture (the decode lever)
   CGMODE="${CGMODE:-PIECEWISE}"             # PIECEWISE works on v0230; FULL is SYCL-Graph-blocked
@@ -70,7 +75,8 @@ b70_build() {
         --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL"
         --no-enable-prefix-caching --trust-remote-code)
   [ -n "$QUANT" ]   && ARGS+=(--quantization "$QUANT")
-  [ "$TP" -gt 1 ]   && ARGS+=(--distributed-executor-backend mp)
+  [ "${PP:-1}" -gt 1 ] && ARGS+=(--pipeline-parallel-size "$PP")
+  b70_multicard     && ARGS+=(--distributed-executor-backend mp)
   [ -n "$NOMM" ]    && ARGS+=(--limit-mm-per-prompt '{"image":0,"video":0}')
   [ -n "$KVDTYPE" ] && ARGS+=(--kv-cache-dtype "$KVDTYPE")
   [ -n "$MTPTOK" ] && [ -z "$SPEC" ] && SPEC="{\"method\":\"mtp\",\"num_speculative_tokens\":${MTPTOK}}"
@@ -97,8 +103,9 @@ b70_build() {
   fi
   ARGS+=("${EAGER[@]}" "${CC[@]}")    # GRAPH=0 -> --enforce-eager ; GRAPH=1 -> the --compilation-config capture flags
 
-  if [ "$TP" -gt 1 ]; then
+  if b70_multicard; then
     # Battlemage multi-GPU stability env (vLLM #41663): no Arc P2P, CPU oneCCL over OFI, spawn, LZ v1.
+    # Applies to TP>1 AND PP>1 (PP=2/TP=1 still drives both cards through oneCCL send/recv).
     local SK="$SYCLKERNELS"; [ -z "$SK" ] && SK=$([ "$GRAPH" = 1 ] && echo 1 || echo 0)
     MGPU=(-e CCL_ENABLE_SYCL_KERNELS="$SK" -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0
           -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi -e VLLM_WORKER_MULTIPROC_METHOD=spawn
@@ -113,7 +120,7 @@ b70_build() {
 b70_serve() {
   b70_build
   docker rm -f "$NAME" 2>/dev/null || true
-  echo "=== serve $SERVED  IMG=$IMG  TP=$TP  GRAPH=$GRAPH  port=$PORT $([ "$TP" -le 1 ] && echo "card=$DEVICE") ==="
+  echo "=== serve $SERVED  IMG=$IMG  TP=$TP PP=$PP  GRAPH=$GRAPH  port=$PORT $(b70_multicard || echo "card=$DEVICE") ==="
   echo "vllm ${ARGS[*]}"
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
@@ -134,7 +141,7 @@ b70_serve() {
 #   HEALTH_STALL    abort if no log progress for this many secs (default 300)
 b70_wait_healthy() {
   local ceiling="${HEALTH_TIMEOUT:-}"
-  [ -n "$ceiling" ] || { if [ "${TP:-1}" -gt 1 ] && [ "${GRAPH:-0}" = 1 ]; then ceiling=1800; else ceiling=900; fi; }
+  [ -n "$ceiling" ] || { if b70_multicard && [ "${GRAPH:-0}" = 1 ]; then ceiling=1800; else ceiling=900; fi; }
   local stall="${HEALTH_STALL:-300}"
   echo "=== waiting for /health (ceiling ${ceiling}s, stall-abort ${stall}s; first run JIT-compiles/captures) ==="
   local start now lines last_lines last_progress
@@ -183,7 +190,8 @@ b70_gen_probe() {
 }
 
 b70_bench() {
-  env NAME="$NAME" MODEL="$SERVED" LABEL="${SERVED}-tp${TP}$([ "$GRAPH" = 1 ] && echo -graph)" \
+  local par="tp${TP}"; [ "${PP:-1}" -gt 1 ] && par="pp${PP}"   # label encodes the parallelism mode
+  env NAME="$NAME" MODEL="$SERVED" LABEL="${SERVED}-${par}$([ "$GRAPH" = 1 ] && echo -graph)" \
     TOKPATH="$CKPT" PORT="$PORT" IN="$IN" OUT="$OUT" CONC="$CONC" \
     bash "$ROOT/35_sweep_bench.sh"
 }
@@ -203,7 +211,7 @@ b70_logs() { exec docker logs -f "$NAME"; }
 
 # Layer 5 (the one hard guard) + Layer 1 (pre-flight health), run BEFORE a TP>1 serve.
 b70_preflight() {
-  [ "${TP:-1}" -gt 1 ] || return 0     # single-card serves do not wedge -- skip entirely
+  b70_multicard || return 0            # single-card serves do not wedge -- skip entirely (TP>1 or PP>1 only)
   # Layer 5: refuse the ONE deterministic wedge trigger. Override (with an xe-reset between attempts)
   # via I_KNOW_P2P_WEDGES=1 so pioneering P2P-in-serve work is still possible, just not by accident.
   if [ "${P2PACCESS:-0}" = 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
@@ -229,13 +237,13 @@ b70_preflight() {
   return 0
 }
 
-# Layer 4 (post-teardown verdict + optional auto-reset). Graceful-stops, then for TP>1 checks the
-# serve log for wedge markers AND re-probes the cards; auto-resets if B70_AUTO_RESET=1.
+# Layer 4 (post-teardown verdict + optional auto-reset). Graceful-stops, then for any multi-card run
+# (TP>1 or PP>1) checks the serve log for wedge markers AND re-probes the cards; auto-resets if B70_AUTO_RESET=1.
 b70_teardown() {
   local logf="${B70_LOGDIR:-/tmp}/b70_${NAME}.log"
   docker logs "$NAME" >"$logf" 2>&1 || true     # capture BEFORE removal (b70_stop deletes the container)
   b70_stop
-  [ "${TP:-1}" -gt 1 ] || return 0
+  b70_multicard || return 0
   local wedge=0
   if grep -qE 'DEVICE_LOST|OUT_OF_RESOURCES|UR_RESULT_ERROR' "$logf" 2>/dev/null; then
     echo "[GUARD] wedge markers in serve log ($logf):"

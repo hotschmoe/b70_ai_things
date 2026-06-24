@@ -87,9 +87,12 @@ hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
   probe, graceful `docker stop` teardown, a stall-aware health wait, and a post-teardown verdict.
   Set `B70_AUTO_RESET=1` to auto-recover. `CCL_TOPO_P2P_ACCESS=1` in a TP>1 serve is now refused
   unless `I_KNOW_P2P_WEDGES=1`. xe-reset needs the scoped sudoers in `bin/xe-reset.sudoers`.
-- Recovery (CONFIRMED 2026-06-24): a reboot clears the wedge. Lighter option is
-  reloading the driver `sudo modprobe -r xe && sudo modprobe xe` (needs no
-  `/dev/dri` in use -- stop all containers first) -- this is what `bin/xe-reset` automates.
+- Recovery (CORRECTED 2026-06-24, P2P_GPU.md J.19): **REBOOT is the only reliable recovery on THIS box.**
+  The lighter `modprobe -r xe` does NOT work here -- `xe` also drives the console/display (the Arc cards
+  expose the framebuffer; `lsmod` shows baseline refcount ~5 even with zero containers), so `modprobe -r xe`
+  always fails `FATAL: Module xe is in use` regardless of stopping containers. `bin/xe-reset` will try the
+  reload, detect the in-use failure, and escalate to: `sudo reboot`. (The earlier "modprobe reload CONFIRMED"
+  note was wrong for this display-attached box.)
 - If you must experiment with P2P-in-serve, do a GPU reset BETWEEN every attempt;
   never chain two `P2PACCESS=1` serve tries without a reset in between.
 - ALSO (CONFIRMED 2026-06-24, P2P_GPU.md J.15): it is NOT only `P2PACCESS=1` that wedges

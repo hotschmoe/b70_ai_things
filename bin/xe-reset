@@ -52,8 +52,13 @@ if [ "$DRY" = 1 ]; then
 else
   if ! sudo -n "$MODPROBE" -r xe 2>/tmp/xe-reset.err; then
     echo "  [!] 'sudo -n modprobe -r xe' FAILED:" >&2; sed 's/^/      /' /tmp/xe-reset.err >&2
-    echo "  Either the scoped sudoers is not installed (see bin/xe-reset.sudoers) or a module" >&2
-    echo "  still depends on xe (a container may still hold it). FALLBACK: sudo reboot" >&2
+    if grep -qi 'in use' /tmp/xe-reset.err; then
+      echo "  'Module xe is in use' with NO containers running means xe is DISPLAY-HELD on this box:" >&2
+      echo "  the Arc cards drive the console/framebuffer (lsmod baseline refcount ~5, un-removable while up)." >&2
+      echo "  The driver-reload recovery CANNOT work here. ONLY a reboot clears the wedge:  sudo reboot" >&2
+    else
+      echo "  Scoped sudoers missing (see bin/xe-reset.sudoers) or a container still holds xe. FALLBACK: sudo reboot" >&2
+    fi
     exit 3
   fi
   run sudo -n "$MODPROBE" xe
