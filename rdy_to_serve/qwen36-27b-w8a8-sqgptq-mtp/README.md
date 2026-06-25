@@ -1,7 +1,29 @@
 # qwen36-27b-w8a8-sqgptq-mtp
 
 Qwen3.6-27B **W8A8** (compressed-tensors INT8 weights x INT8 activations, SmoothQuant+GPTQ) + a **BF16 MTP
-graft**, served **TP=2 + MTP spec=5** on 2x B70.
+graft**, served **TP=2 + MTP spec=3** on 2x B70.
+
+## [!!!] 2026-06-25 UPDATE -- DEFAULT IS NOW `CGMODE=NONE` (the captured PIECEWISE default CRASHED)
+
+The "captured PIECEWISE" default below **CRASHES under sustained MTP load** on TP=2 (~16-20 min / ~20-28k tokens):
+the MTP path's XPU graph REPLAY overflows the Level-Zero (NEO) command stream. Root-caused + reproduced in
+campaign 120 (`docs/20260625_w8a8_27b_mtp_graph_campaign.md`, JOURNAL 2026-06-25). It is a software EngineDeadError
+(GPUs stay healthy), distinct from the cumulative-TP2 DEVICE_LOST wedge.
+
+**New default: `CGMODE=NONE`** (GRAPH=1, cudagraph_mode=NONE) -- keeps torch.compile/inductor but skips graph
+replay, so there is no command-stream accumulation. Verified STABLE (soaked clean to 57,344 tokens, ~2.9x the
+crash zone) and **~2x the enforce-eager fallback**:
+
+| config (TP=2 + MTP3) | decode tok/s (c1) | stable? |
+|---|---:|---|
+| enforce-eager (`GRAPH=0`) | 12.78 | yes (slow fallback) |
+| **`CGMODE=NONE` (new default)** | **25.39** | **yes -- soaked 57k** |
+| `CGMODE=PIECEWISE` (old default) | 34.89 | NO -- crashes ~20-28k |
+| PIECEWISE + drafter-eager | 36.08 | NO -- degrades/hangs (target replay still accumulates) |
+
+So the recipe now defaults `CGMODE=NONE`; `CGMODE=PIECEWISE` (fast but crashes) and `GRAPH=0` (enforce-eager,
+slow but stable) remain selectable. spec=3 is the MTP winner. The 2026-06-23 correction below still applies to
+the PIECEWISE path's numerics.
 
 ## [!!!] 2026-06-23 CORRECTION -- the old "63 t/s / 3.4x captured" headline was GARBAGE
 

@@ -377,8 +377,10 @@ Decode scoreboard (single-stream c1 / c4, vllm bench serve random IN=512/OUT=256
 ### Run 2 verdict + recommendation
 
 - **WINNER (stable + fast): `cudagraph_mode=NONE` + MTP3** = 25.39 t/s single-stream (~2x the shipped
-  enforce-eager fix), stable through 57k tokens. Recommend promoting it over `--enforce-eager` for 27b-w8a8
-  (eval `EVAL_SERVE_ENV` and the shelf recipe). It keeps torch.compile/inductor but skips graph replay.
+  enforce-eager fix), stable through 57k tokens. PROMOTED 2026-06-25 (Item 1): `agentic-eval/configs.sh`
+  27b-w8a8 now `EVAL_SERVE_ENV="GRAPH=1 CGMODE=NONE"`, and the shelf recipe serve.sh now defaults
+  `CGMODE=NONE` (README updated). It keeps torch.compile/inductor but skips graph replay; `CGMODE=PIECEWISE`
+  (fast, crashes) and `GRAPH=0` (eager, slow) remain selectable.
 - **FASTEST (unstable): drafter-eager (PIECEWISE target)** = 36.08 t/s but the target graph replay still
   accumulates (degrades 26->10) -> will hang. Only viable with a target-graph periodic reset (Tier F, future).
 - Open follow-ups: (a) re-soak E with the fixed harness to pin its exact hang point/token count; (b) cross-check

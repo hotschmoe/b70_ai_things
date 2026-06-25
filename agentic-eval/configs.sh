@@ -25,11 +25,13 @@ eval_config() {
                EVAL_SERVED=qwen36-27b-int4;                  EVAL_SERVE_DIR=qwen36-27b-int4 ;;
     27b-w8a8)  EVAL_LABEL=27b-w8a8;  EVAL_ARCH=dense; EVAL_SCHEME=w8a8; EVAL_CARDS=2
                EVAL_SERVED=qwen36-27b-w8a8-sqgptq-mtp;       EVAL_SERVE_DIR=qwen36-27b-w8a8-sqgptq-mtp
-               # GRAPH=0 (enforce-eager): MTP + XPU graph-capture on TP=2 CRASHES under sustained load (~16-20min,
-               # NEO command-stream overflow in the MTP-drafter graph replay -- JOURNAL/FINDINGS 2026-06-25).
-               # enforce-eager keeps MTP and is stable (survived 40m/37k tokens). Drop when an upstream
-               # torch-xpu/vLLM capture fix lands. Scores are greedy-identical; this only changes speed.
-               EVAL_SERVE_ENV="GRAPH=0" ;;
+               # GRAPH=1 CGMODE=NONE (cudagraph_mode=NONE): keeps torch.compile/inductor but SKIPS graph replay.
+               # The crash is graph-REPLAY command-stream accumulation in the MTP path (PIECEWISE capture crashes
+               # ~16-20min); NONE has no replay -> no accumulation -> STABLE (campaign 120: soaked clean to 57k
+               # tokens, ~2.9x the ~20-28k crash zone) AND ~2x the old enforce-eager fix (decode 25.39 vs 12.78
+               # t/s). Greedy-identical scores; just faster+stable. (enforce-eager = GRAPH=0 is the slower fallback;
+               # PIECEWISE ~35 t/s is faster still but crashes. See docs/20260625_w8a8_27b_mtp_graph_campaign.md.)
+               EVAL_SERVE_ENV="GRAPH=1 CGMODE=NONE" ;;
     35b-int4)  EVAL_LABEL=35b-int4;  EVAL_ARCH=moe;   EVAL_SCHEME=int4; EVAL_CARDS=1
                EVAL_SERVED=qwen36-35b-a3b-int4;              EVAL_SERVE_DIR=qwen36-35b-a3b-int4 ;;
     35b-w8a8)  EVAL_LABEL=35b-w8a8;  EVAL_ARCH=moe;   EVAL_SCHEME=w8a8; EVAL_CARDS=2

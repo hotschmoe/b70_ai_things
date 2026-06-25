@@ -49,6 +49,12 @@ export GRAPH="${GRAPH:-1}"                  # PIECEWISE capture (2026-06-24: Bug
                                             # address -> stale read -> garbage). Fix = eject NOTHING (see SPLITOPS)
                                             # + a capture-safe all_gather (patches/, all-reduce-of-padded) so the
                                             # spec-verify all_gather records into the SYCL graph instead of crashing.
+export CGMODE="${CGMODE:-NONE}"             # DEFAULT NONE (2026-06-25, campaign 120): cudagraph_mode=NONE keeps
+                                            # torch.compile/inductor but SKIPS graph REPLAY -> no command-stream
+                                            # accumulation -> STABLE (soaked 57k tokens, ~2.9x the crash zone) and
+                                            # ~2x enforce-eager (decode 25.39 vs 12.78 t/s). CGMODE=PIECEWISE is
+                                            # faster (~35 t/s) but CRASHES under sustained MTP (graph-replay
+                                            # accumulation in the MTP path). docs/20260625_w8a8_27b_mtp_graph_campaign.md
 export IGP="${IGP:-false}"                  # legacy piecewise splitter: REQUIRED on this hybrid (the inductor
                                             # partitioner KeyErrors on the mixed W8A8(scale)+BF16-GDN(no-scale) region).
 export NOMM="${NOMM:-1}"                    # 27B is a qwen3_5 VLM -> text-only
