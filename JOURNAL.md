@@ -4563,3 +4563,19 @@ PLAN (post-reboot, one batch within the ~3-serve budget, priority order):
   serve 1 = Item 2 NONE coherent (perf, quick) ; serve 2 = Item 3 E re-soak (fixed harness, pin hang point) ;
   serve 3 = Item 4 Tier-F probe (PIECEWISE + best L0 env OR the recapture shim, soak). Then reboot for more
   Tier-F env sweeping if needed.
+
+## 2026-06-25 -- the TP2 wedge is STOCHASTIC: hit serve 1 of a fresh boot, on NONE, step 0 [incident]
+
+Post-reboot (uptime 4m, xpu-health HEALTHY both cards), the very FIRST serve -- Item 2, cudagraph_mode=NONE
+  perf -- came up healthy (148s init) then a WORKER DIED ~1 min in and left card 1 HUNG -> WEDGED. The engine
+  dump (b70_vllm_...log:273-274) shows it died on a TRIVIAL first step: cudagraph_mode=<NONE:0>, step_counter=0,
+  one request max_tokens=24 / 5-token prompt / num_running_reqs=1 / scheduled_spec_decode_tokens={}, native
+  faulthandler C-stack (no Python error) -> hardware/L0 fault. So this is NOT the software MTP+graph crash
+  (NONE has no replay) and NOT the "~3 serves cumulative" model: it is the device_lost/TP2 hardware wedge and
+  it is STOCHASTIC -- it can hit the first TP=2 decode of a fresh boot, independent of graph mode / workload /
+  concurrency / our code changes (the gated Tier F shim is inert when B70_XPU_CG_RECYCLE_STEPS is unset). Prior
+  E/B soaks ran 57k clean, so it does NOT always fire immediately; it is a probability per serve. This is the
+  issue the operator is root-causing in a separate session, and it now gates Items 2-4: every serve attempt
+  risks an immediate wedge + reboot. RECOMMENDATION: pause the Items 2-4 GPU grind until the wedge is understood
+  (all tooling/shims are staged -- one command away once the box is reliable). Item 1 (the 2x-stable NONE win)
+  is already shipped and unaffected. Box WEDGED (card 1); needs a reboot.
