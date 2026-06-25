@@ -1,0 +1,9 @@
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: HUNG (>60s, killed) -> WEDGED
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: WEDGED -- recover with: bin/xe-reset
+[GUARD] box is WEDGED before serve.
+[GUARD] recover with: /mnt/vm_8tb/github/b70_ai_things/bin/xe-reset   (or set B70_AUTO_RESET=1 to auto-recover)

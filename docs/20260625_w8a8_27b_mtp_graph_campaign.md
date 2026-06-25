@@ -270,8 +270,9 @@ Verify in the startup log that the TARGET shows `cudagraph_mode=PIECEWISE` AND a
 "Capturing CUDA graphs" pass, while the drafter (`eagle_head`) does NOT capture
 (no drafter capture pass / drafter dispatch mode NONE).
 
-Tier E fallback (if the config field does not plumb through on XPU 0.23): chain the
-drafter-eager monkeypatch shim (see `contrib/` shim added alongside this doc),
+Tier E fallback (only if the config field is shown to FAIL on a HEALTHY card -- NOT exercised
+in Run 1; the field parsed fine and the cell died on a pre-wedged card): chain the
+drafter-eager monkeypatch shim (codex sketch in the campaign codex consult; shim file created then),
 activated by `B70_EXTRA_ENV="B70_FORCE_MTP_DRAFTER_EAGER=1"`. It patches
 `SpecDecodeBaseProposer.initialize_cudagraph_keys` to force `CUDAGraphMode.NONE` for
 the drafter only. Source basis: codex read of vLLM 0.23
@@ -310,12 +311,34 @@ Execution protocol:
 
 ## 9. Results (to fill in as runs complete)
 
-| Date | Tier | config | tokens soaked | decode t/s | accept | outcome | verdict |
+| Date | Tier | config | decode c1 | decode c4 | accept_len | outcome | verdict |
 |---|---|---|---:|---:|---:|---|---|
-| | A | GRAPH=0 (baseline) | | | | | |
-| | repro | GRAPH=1 PIECEWISE+MTP3 | | | | | |
-| | E | drafter-eager + target PIECEWISE | | | | | |
-| | B | CGMODE=NONE + MTP3 | | | | | |
+| 06-25 | A | GRAPH=0 enforce-eager MTP3 | 12.78 | 9.47 | 1.18 | STABLE | baseline (shipped fix) |
+| 06-25 | repro | GRAPH=1 PIECEWISE MTP3 | 34.89 | 19.09 | 1.13 | runs (perf only) | 2.73x A single-stream; crashes only on long soak |
+| 06-25 | E | drafter-eager (spec enforce_eager=true) | -- | -- | -- | INCONCLUSIVE | died at model-load rotary .cos() on an ALREADY-degraded card 0 (err40->err20); the config parsed fine and was NOT exercised. RETRY on a fresh card. |
+| 06-25 | B | GRAPH=1 CGMODE=NONE MTP3 | -- | -- | -- | BLOCKED | pre-flight found card 0 WEDGED; never started |
+
+### Run 1 findings (2026-06-25, campaign_120_perf)
+
+1. CONFIRMED PRIZE: captured PIECEWISE+MTP3 single-stream decode = 34.89 t/s vs enforce-eager
+   12.78 t/s = **2.73x**. Cross-validates the prior 34.82 (scripts/111) under a different
+   (vllm bench serve, random IN=512/OUT=256) methodology. c4 per-stream: 19.09 vs 9.47 = 2.02x.
+2. accept_len in the bench (~1.1-1.2) is ARTIFICIALLY LOW because `--dataset-name random` feeds
+   gibberish tokens -> MTP draft rarely matches. So most of repro's 2.73x is the TARGET-BODY graph
+   capture, not MTP acceptance. Implication: keeping the target captured (Tier E/B) should retain
+   most of the win even before MTP acceptance recovers on coherent text. (Re-measure the winner with
+   the coherent scripts/111 probe for the true MTP-inclusive number.)
+3. NEW BINDING CONSTRAINT (supersedes the "low wedge risk" note in section 8): the cumulative-TP2
+   wedge tripped after only ~3 TP=2 serves this session (A ok, repro ok, E-init wedged card 0). Cell E's
+   death was a pre-existing card-0 degradation surfacing at the FIRST model-load GPU op
+   (`mrope.py:_compute_cos_sin_cache -> freqs.cos()`), err40 OUT_OF_RESOURCES -> err20 DEVICE_LOST --
+   NOT the enforce_eager config. So: rapid back-to-back TP=2 serve/teardown is NOT viable here; the
+   campaign needs an xe-reset (reboot) between serves OR the cumulative-TP2 wedge root-caused first.
+   This wedge now gates ALL TP=2 experimentation and is arguably higher priority than the MTP crash.
+   (Note: the MTP+graph crash itself still leaves GPUs HEALTHY; this wedge is the SEPARATE init-time
+   failure mode. Two distinct failures, do not conflate.)
+4. The lib.sh guard worked: pre-flight xpu-health caught the wedge before cell B and HALTED the sweep
+   (no blind chaining onto a wedged box).
 
 ---
 

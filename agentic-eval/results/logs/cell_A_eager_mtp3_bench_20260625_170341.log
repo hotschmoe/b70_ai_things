@@ -1,0 +1,4 @@
+concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,per_stream_decode_tok_s
+1,0.05,12.54,460.60,78.23,12.78
+4,0.13,33.19,1011.20,105.59,9.47
+=== saved /mnt/vm_8tb/b70/results/sweep_A_eager_mtp3_20260625_170616.csv ===

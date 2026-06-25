@@ -4440,3 +4440,36 @@ NIGHT SUMMARY -> PRIMARY GOAL ACHIEVED before the wedge: the w8a8 TP=2 MTP crash
   stream overflow in MTP-drafter graph replay, via faulthandler), bisected (PUSH_AR exonerated, MTP+capture is
   the cause), FIXED (enforce-eager keeps MTP, stable), and VALIDATED end-to-end (27b-w8a8 completed a real
   aider+swe run, 0 crashes). All committed/pushed. The wedge happened on the last config, after the deliverable.
+
+---
+
+## 2026-06-25 -- MTP x graph perf+stability campaign; Run 1 perf (campaign_120) + cumulative-TP2 wedge [result+incident]
+
+new artifacts: docs/20260625_w8a8_27b_mtp_graph_campaign.md (tracker), scripts/120_w8a8_mtp_graph_sweep.sh
+  (perf+soak harness driving the shelf recipe per cell). Goal: close the gap between enforce-eager
+  (~13 t/s, stable) and captured PIECEWISE+MTP3 (~35 t/s, crashes). Root cause RE-CONFIRMED by 2 independent
+  agent passes + faulthandler stack: crash iff MTP-on AND graph-on; the MTP-drafter forward under graph replay;
+  GPUs stay HEALTHY (software EngineDeadError, NOT the DEVICE_LOST wedge). W8A8 kernel + PUSH_AR exonerated.
+  Decisive untried lever (codex): vLLM 0.23 speculative_config.enforce_eager=true -> drafter eager while the
+  target stays graphed (one-line via SPEC env).
+
+Run 1 (perf, single-stream c1 + c4; vllm bench serve random IN=512 OUT=256; MAXLEN=16384), under gpu-run:
+    A_eager_mtp3   GRAPH=0 MTP3                       -> decode c1 12.78  c4 9.47   accept_len 1.18  STABLE
+    repro_pw_mtp3  GRAPH=1 PIECEWISE MTP3             -> decode c1 34.89  c4 19.09  accept_len 1.13  (perf only)
+    E drafter-eager GRAPH=1 spec enforce_eager=true   -> SERVE_FAIL (inconclusive -- see incident)
+    B cudagraph=NONE GRAPH=1 CGMODE=NONE MTP3         -> BLOCKED (card 0 wedged before start)
+result -> captured single-stream decode = 2.73x the enforce-eager fix (34.89 vs 12.78), cross-validating the
+  prior 34.82 under a different harness. c4 per-stream 19.09 vs 9.47 = 2.02x. accept_len ~1.1 is a random-token
+  -bench artifact (gibberish prompts -> MTP rarely matches), so most of the 2.73x is TARGET-BODY graph capture,
+  NOT MTP acceptance -> argues the drafter-eager / cudagraph=NONE levers keep most of the win.
+INCIDENT -> the cumulative-TP2 wedge tripped after only ~3 TP=2 serves (A ok, repro ok, E-init). Cell E died at
+  the FIRST model-load GPU op (mrope.py _compute_cos_sin_cache -> freqs.cos()) with err40 OUT_OF_RESOURCES ->
+  err20 DEVICE_LOST: card 0 was already degrading; the enforce_eager spec config (log line 42 shows it parsed)
+  was NOT exercised. Pre-flight xpu-health then found card 0 HUNG before cell B; the lib.sh guard HALTED the
+  sweep cleanly (no blind chaining). Box WEDGED (card 0); recovery = reboot (bin/xe-reset). NOT auto-rebooting
+  (B70_AUTO_RESET=0) -- left for the user to authorize.
+verdict -> [PARTIAL] perf prize CONFIRMED (2.73x). drafter-eager lever UNTESTED (retry on a fresh card; run E
+  FIRST so it gets a clean card 0). KEY LEARNING: rapid back-to-back TP=2 serve/teardown wedges this box after
+  ~3 serves; the cumulative-TP2 wedge now gates the WHOLE TP=2 campaign and is a candidate to root-cause before
+  more matrix sweeping. Next: reboot, then either (a) E+B with an xe-reset between EACH serve, or (b) prioritize
+  the cumulative-TP2-wedge root cause. All docs/scripts committed + pushed.

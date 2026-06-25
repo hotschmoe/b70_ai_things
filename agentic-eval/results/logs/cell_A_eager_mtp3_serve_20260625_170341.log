@@ -1,0 +1,16 @@
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== serve qwen36-27b-w8a8-sqgptq-mtp  IMG=vllm-xpu-env:int8g  TP=2 PP=1  GRAPH=0  port=18080  ===
+vllm serve /models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft --served-model-name qwen36-27b-w8a8-sqgptq-mtp --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 2 --max-model-len 16384 --max-num-seqs 8 --gpu-memory-utilization 0.90 --trust-remote-code --no-enable-prefix-caching --distributed-executor-backend mp --limit-mm-per-prompt {"image":0,"video":0} --speculative-config {"method":"mtp","num_speculative_tokens":3} --enforce-eager
+=== waiting for /health (ceiling 900s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18080  qwen36-27b-w8a8-sqgptq-mtp  (TP=2 GRAPH=0) in 132s ===
+"id":"qwen36-27b-w8a8-sqgptq-mtp"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. **Paris** is the capital and most populous city of France.
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).
