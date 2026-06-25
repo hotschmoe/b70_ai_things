@@ -18,11 +18,18 @@ EVAL_CONFIG_LIST=(27b-int4 27b-w8a8 35b-int4 35b-w8a8)
 
 # eval_config <label> -> sets EVAL_LABEL/ARCH/SCHEME/SERVED/SERVE_DIR/CARDS for that config.
 eval_config() {
+  # Per-config extra serve env (NAME=VAL ...), exported to the recipe by serve_config.sh. Default none.
+  EVAL_SERVE_ENV=""
   case "$1" in
     27b-int4)  EVAL_LABEL=27b-int4;  EVAL_ARCH=dense; EVAL_SCHEME=int4; EVAL_CARDS=1
                EVAL_SERVED=qwen36-27b-int4;                  EVAL_SERVE_DIR=qwen36-27b-int4 ;;
     27b-w8a8)  EVAL_LABEL=27b-w8a8;  EVAL_ARCH=dense; EVAL_SCHEME=w8a8; EVAL_CARDS=2
-               EVAL_SERVED=qwen36-27b-w8a8-sqgptq-mtp;       EVAL_SERVE_DIR=qwen36-27b-w8a8-sqgptq-mtp ;;
+               EVAL_SERVED=qwen36-27b-w8a8-sqgptq-mtp;       EVAL_SERVE_DIR=qwen36-27b-w8a8-sqgptq-mtp
+               # GRAPH=0 (enforce-eager): MTP + XPU graph-capture on TP=2 CRASHES under sustained load (~16-20min,
+               # NEO command-stream overflow in the MTP-drafter graph replay -- JOURNAL/FINDINGS 2026-06-25).
+               # enforce-eager keeps MTP and is stable (survived 40m/37k tokens). Drop when an upstream
+               # torch-xpu/vLLM capture fix lands. Scores are greedy-identical; this only changes speed.
+               EVAL_SERVE_ENV="GRAPH=0" ;;
     35b-int4)  EVAL_LABEL=35b-int4;  EVAL_ARCH=moe;   EVAL_SCHEME=int4; EVAL_CARDS=1
                EVAL_SERVED=qwen36-35b-a3b-int4;              EVAL_SERVE_DIR=qwen36-35b-a3b-int4 ;;
     35b-w8a8)  EVAL_LABEL=35b-w8a8;  EVAL_ARCH=moe;   EVAL_SCHEME=w8a8; EVAL_CARDS=2

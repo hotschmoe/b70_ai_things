@@ -25,6 +25,9 @@ SERVE="$REPO_ROOT/rdy_to_serve/$EVAL_SERVE_DIR/serve.sh"
 export PORT="$EVAL_PORT" MAXLEN="$EVAL_MAXLEN" MAXSEQS="$EVAL_MAXSEQS"
 export TOOLCALL="$EVAL_TOOLCALL" TOOLPARSER="$EVAL_TOOLPARSER" REASONPARSER="$EVAL_REASONPARSER"
 export PREFIXCACHE="$EVAL_PREFIX_CACHE"
+# Per-config serve-env overrides from configs.sh (e.g. 27b-w8a8 -> GRAPH=0 enforce-eager, the MTP+capture
+# crash workaround; JOURNAL 2026-06-25). Applied for all actions so start/stop see the same recipe knobs.
+[ -n "${EVAL_SERVE_ENV:-}" ] && { export ${EVAL_SERVE_ENV}; ae_log "per-config serve env: $EVAL_SERVE_ENV"; }
 
 ae_log "serve $LABEL ($EVAL_ARCH/$EVAL_SCHEME, ${EVAL_CARDS} card(s), id=$EVAL_SERVED) action=$ACTION port=$EVAL_PORT maxlen=$EVAL_MAXLEN"
 bash "$SERVE" "$ACTION"
