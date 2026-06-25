@@ -4299,3 +4299,41 @@ verdict -> [ROOT CAUSE LOCALIZED] NEO command-stream overflow during MTP-drafter
   MTP-on + PUSH_AR-OFF (plain oneCCL all-reduce, no native-command recording into the graph). If it SURVIVES ->
   PUSH_AR's graph recording is the cause (fix our kernel). If it still crashes -> upstream vLLM/torch MTP-graph
   command accumulation (fix = serve MTP-off, or a vLLM-side fix). faulthandler (B70_DEBUG) paid off immediately.
+
+---
+
+## 2026-06-25 -- literature corroborates root cause + fix roadmap for the MTP TP=2 crash [research]
+
+Web research (sourced) strongly corroborates the faulthandler finding and reframes the fix:
+
+- vLLM #25368 (Qwen3-Next MTP on TP): worker dies with NO traceback -> shm_broadcast "cancelled" ->
+  EngineDeadError; STABLE with MTP off. "Essentially our stack trace." Known, UNFIXED upstream; workaround =
+  disable MTP. (#41530: MTP TP runs hours then a worker silently dies -- cumulative-timing match. #41190:
+  qwen3_next_mtp TP=2 illegal-addr at num_accepted_tokens_event.synchronize(); suspected multi-rank
+  torch.Event lifetime bug; unmerged PR #37750. #40756: MTP illegal-access on long seqs ~26k tokens.)
+- vLLM XPU spec-decode is documented EXPERIMENTAL and n-gram/EAGLE/EAGLE3 ONLY -- MTP is NOT listed for XPU,
+  and every official Intel XPU spec-decode example uses --enforce-eager (graph capture OFF). MTP + XPU graph
+  capture is an UNTESTED combination upstream. Our crash is exactly that combination.
+- EXACT-HW: vLLM #41663 dual Arc Pro B70 (Battlemage) TP=2 worker fault in ProcessGroupXCCL; workaround
+  CCL_ENABLE_SYCL_KERNELS=0.
+- L0/SYCL per-step event/handle accumulation: SYCL_PI_LEVEL_ZERO_IMMEDIATE_COMMANDLISTS_EVENT_CLEANUP_THRESHOLD
+  (default 1000; negative => never clean up) etc. Our image has NONE of these set (all defaults), and torch is
+  2.11.0+xpu => Unified Runtime (UR_L0_* names), so the old PI knobs may be ignored. A command-list/event that
+  is not cleaned up -> the NEO command-stream (LinearStream) grows -> overflow -> abort at linear_stream.h:84.
+  That matches our traceback exactly.
+
+converged root cause -> MTP-drafter captured-graph command-stream grows during repeated replay (per-step L0
+  event/command not reclaimed) until NEO LinearStream overflows -> abort -> silent worker death. It is the
+  MTP + graph-capture combination on XPU TP=2 (an upstream-unsupported config), not (necessarily) our code.
+
+FIX ROADMAP (ranked by fast-AND-stable):
+  (C) MTP-on + PUSH_AR_GRAPH=0 -- decode all-reduce off the captured graph -> is our push kernel the cause?
+      [RUNNING NOW]. If it survives, fix is in PUSH_AR's native-command recording.
+  (B) UR/L0 event-cleanup env knob (UR_L0_* immediate-commandlist event cleanup) -- keeps capture (fast) IF
+      the accumulation is reclaimable L0 events. Cheap to test.
+  (D) CCL_ENABLE_SYCL_KERNELS=0 (exact-HW #41663 workaround) -- cheap to test.
+  (A) enforce-eager / GRAPH=0 for the MTP path -- Intel's VALIDATED XPU spec config. Most likely GUARANTEED
+      stable, but slower (eager MTP ~9 t/s vs captured ~25). The reliable fallback.
+  (fallback) serve 27b-w8a8 MTP-OFF (proven stable 40min) -- unblocks the campaign regardless.
+  Diagnostic available: ZE_ENABLE_VALIDATION_LAYER=1 ZEL_ENABLE_BASIC_LEAK_CHECKER=1 prints per-handle leak
+  counts at exit (add to B70_DEBUG=2) to confirm WHICH handle accumulates.
