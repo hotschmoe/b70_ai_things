@@ -19,7 +19,9 @@ CKPT_CT=/models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft     # container path (vllm ben
 export PORT="${PORT:-18080}"   # recipe default is 8000; export so serve.sh binds where we probe
 MODE="${1:-perf}"                                      # perf | soak
 SOAK_TOKENS="${SOAK_TOKENS:-50000}"
-SOAK_MAXTOK="${SOAK_MAXTOK:-8192}"
+SOAK_MAXTOK="${SOAK_MAXTOK:-2048}"           # per-request gen; small enough to finish well within the timeout
+SOAK_REQ_TIMEOUT="${SOAK_REQ_TIMEOUT:-1200}" # client timeout per request (generous; the engine, not curl, decides)
+SOAK_MAX_TRANSIENT="${SOAK_MAX_TRANSIENT:-6}" # consecutive alive-but-empty responses tolerated before giving up
 BENCH_IN="${BENCH_IN:-512}"; BENCH_OUT="${BENCH_OUT:-256}"; BENCH_CONC="${BENCH_CONC:-1 4}"
 TS="$(date +%Y%m%d_%H%M%S)"
 LOGDIR="$REPO/agentic-eval/results/logs"
@@ -55,23 +57,40 @@ record() { printf '%s\t%s\t%s\t%s\n' "$(date +%H:%M:%S)" "$1" "$2" "$3" | tee -a
 
 container() { docker ps --format '{{.Names}}' 2>/dev/null | grep -iE 'vllm|qwen' | head -1; }
 
-soak_until_crash() {  # $1=cname ; echoes PASS:<tok> or CRASH:<tok>:<sig>
+crash_sig() {  # echo a real engine-death signature from the container log, or empty
+  docker logs "$1" 2>&1 | grep -oE 'EngineDeadError|RPC call to sample_tokens timed out|Fatal Python error: Aborted|cancelled|DEVICE_LOST|OUT_OF_RESOURCES' | tail -1
+}
+recent_gen_tput() {  # avg "generation throughput" over the last 3 logger lines; "NA" if none yet
+  docker logs "$1" 2>&1 | grep -oE 'generation throughput: [0-9.]+ tokens' | tail -3 | grep -oE '[0-9.]+' \
+    | awk 'BEGIN{s=0;n=0}{s+=$1;n++}END{if(n>0)printf "%.2f",s/n; else print "NA"}'
+}
+
+# Drive long gens to SOAK_TOKENS. A crash is declared ONLY on a real engine-death signature, a /health
+# failure, or a confirmed hang (engine generating ~0 t/s) -- NEVER a bare client timeout while the engine
+# is alive (that earlier false-positived a slow long request as a crash). echoes PASS:<tok> or CRASH:<tok>:<sig>.
+soak_until_crash() {  # $1=cname
   local cname="$1" total=0 t0; t0=$(date +%s)
-  local sig="" prompt
+  local sig="" prompt fails=0
   prompt='You are an expert systems engineer. Write an exhaustive, deeply technical reference on distributed consensus, Raft and Paxos, fault tolerance, vector clocks, CRDTs, and quorum systems. Include detailed pseudocode and edge cases.'
   while [ "$total" -lt "$SOAK_TOKENS" ] && [ "$STOP_SWEEP" = 0 ]; do
     curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1 || { sig="health_fail"; break; }
     local resp ct
-    resp=$(curl -s --max-time 600 "http://localhost:$PORT/v1/completions" -H 'Content-Type: application/json' \
+    resp=$(curl -s --max-time "$SOAK_REQ_TIMEOUT" "http://localhost:$PORT/v1/completions" -H 'Content-Type: application/json' \
       -d "{\"model\":\"$SERVED\",\"prompt\":\"$prompt\",\"max_tokens\":$SOAK_MAXTOK,\"temperature\":0,\"ignore_eos\":true}" 2>&1)
     ct=$(printf '%s' "$resp" | grep -oE '"completion_tokens":[0-9]+' | grep -oE '[0-9]+' | head -1)
-    if [ -z "$ct" ] || [ "$ct" = 0 ]; then
-      sig=$(docker logs "$cname" 2>&1 | grep -oE 'EngineDeadError|RPC call to sample_tokens timed out|Fatal Python error: Aborted|cancelled|DEVICE_LOST|OUT_OF_RESOURCES' | tail -1)
-      [ -z "$sig" ] && sig="req_fail_nosig"
-      break
+    if [ -n "$ct" ] && [ "$ct" -gt 0 ]; then
+      fails=0; total=$((total + ct))
+      echo "    [soak] +${ct} -> ${total}/${SOAK_TOKENS} tok  ($(( $(date +%s) - t0 ))s)" >&2
+      continue
     fi
-    total=$((total + ct))
-    echo "    [soak] +${ct} -> ${total}/${SOAK_TOKENS} tok  ($(( $(date +%s) - t0 ))s)" >&2
+    # empty/failed response -- decide REAL crash vs slow-but-alive (client timeout)
+    sig=$(crash_sig "$cname"); [ -n "$sig" ] && break                                   # 1) engine-death signature
+    curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1 || { sig="health_fail_after_req"; break; }  # 2) health gone
+    local gt; gt=$(recent_gen_tput "$cname")                                            # 3) hung? (generating ~0)
+    if [ "$gt" != NA ] && awk -v t="$gt" 'BEGIN{exit !(t+0<0.5)}'; then sig="hang_gen_tput_${gt}"; break; fi
+    fails=$((fails+1))                                                                  # 4) alive but slow -> transient
+    echo "    [soak] empty resp, /health OK, gen_tput=${gt} t/s -> slow/client-timeout (transient #${fails}); continuing" >&2
+    [ "$fails" -ge "$SOAK_MAX_TRANSIENT" ] && { sig="repeated_transient_health_ok"; break; }
   done
   if [ "$total" -ge "$SOAK_TOKENS" ]; then echo "PASS:${total}"; else echo "CRASH:${total}:${sig:-unknown}"; fi
 }
