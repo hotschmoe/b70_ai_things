@@ -374,10 +374,21 @@ Execution protocol:
 
 ## 12. Next session (post-reboot) resume -- decided 2026-06-25
 
-Operator decisions after Run 1: (1) recover via bin/xe-reset = REBOOT now; (2) test the E + B decode
-levers first; (3) B70_AUTO_RESET=1 going forward (sweeps may auto-xe-reset/reboot on a wedge).
+Operator decisions after Run 1: (1) recover now; (2) test the E + B decode levers first;
+(3) B70_AUTO_RESET=1 going forward.
 
-The box was rebooted to clear the cumulative-TP2 wedge. When it is back and xpu-health is green, run
+CORRECTION to the recovery runbook (verified 2026-06-25): `bin/xe-reset` does NOT reboot on this box.
+Its header is literally "recover ... WITHOUT a reboot"; when `modprobe -r xe` fails (xe is display-held,
+the expected case here) it exits 3 and only PRINTS "ONLY a reboot clears the wedge: sudo reboot". And the
+scoped sudoers (bin/xe-reset.sudoers) is DELIBERATELY limited to `modprobe -r xe` / `modprobe xe` -- it does
+NOT include `reboot`. So `sudo -n reboot` is not passwordless and an agent CANNOT issue the reboot; the human
+must run `sudo reboot` interactively. (CLAUDE.md's "xe-reset ... escalates to sudo reboot" overstates it.)
+Caveat for B70_AUTO_RESET=1: it can self-heal the modprobe-reload case, but on THIS display-attached box the
+only fix is a reboot, which (a) is not passwordless by design and (b) would kill any in-flight session anyway
+-- so auto-reset cannot truly self-heal a wedge here without adding `reboot` to the sudoers (a security choice
+for the operator).
+
+RECOVERY STEP PENDING: human runs `sudo reboot`. Then, when the box is back and xpu-health is green, run
 E (drafter-eager) FIRST so it lands on a pristine card 0, then B (cudagraph=NONE). Both get a perf bench
 (decode c1/c4) AND a soak to 50k tokens (crash-vs-survive):
 
