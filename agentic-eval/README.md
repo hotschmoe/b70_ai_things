@@ -51,6 +51,9 @@ SUBSET=standard ./bin/gpu-run bash agentic-eval/run/run_all.sh
 # narrower runs
 CONFIGS="35b-int4 35b-w8a8" HARNESSES="bfcl" SUBSET=standard ./bin/gpu-run bash agentic-eval/run/run_all.sh
 
+# thinking mode (default on = the real agentic workload; off is an experimental second axis)
+EVAL_THINKING=off SUBSET=standard ./bin/gpu-run bash agentic-eval/run/run_all.sh
+
 # 3) is a specific delta significant?
 python3 agentic-eval/lib/stats.py --results agentic-eval/results --harness bfcl --a 35b-int4 --b 35b-w8a8
 ```

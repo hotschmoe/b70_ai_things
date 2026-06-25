@@ -19,7 +19,7 @@ The 'parsed.json' a harness produces must contain at least:
   {"score": <float 0..1>, "score_name": "<str>", "n_tasks": <int>,
    "per_task": [{"task_id": "<str>", "passed": <bool>}, ...], "extra": {<any>}}
 """
-import argparse, json, sys, urllib.request
+import argparse, json, os, sys, urllib.request
 
 
 def _fetch(url, timeout=5):
@@ -85,6 +85,11 @@ def cmd_emit(args):
         if "=" in kv:
             k, v = kv.split("=", 1)
             meta[k] = v
+    # auto-stamp the run conditions from the environment (no per-harness wiring needed)
+    for k, env in (("thinking", "EVAL_THINKING"), ("max_len", "EVAL_MAXLEN"),
+                   ("max_tokens", "AE_MAX_TOKENS"), ("concurrency", "AE_CONCURRENCY")):
+        if env in os.environ and k not in meta:
+            meta[k] = os.environ[env]
     out = {
         "config": args.config,
         "harness": args.harness,

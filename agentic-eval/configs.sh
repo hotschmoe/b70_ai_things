@@ -32,26 +32,50 @@ eval_config() {
 }
 
 # ---- shared serve overrides applied to ALL four configs (held constant for comparability) --------
-# Rationale (validate in smoke; see docs/DESIGN.md):
+# Rationale (see docs/DESIGN.md):
 #  - PORT 18080 matches the project endpoint convention (models.yaml / daily driver).
-#  - MAXLEN 16384 + MAXSEQS 4 is the largest context that fits ALL four with their default KV dtype
-#    (27B dense int4 single-card fp16-KV is the tightest: ~2 GB/seq at 16k -> 8 GB <= ~14 GiB free).
-#    Longer SWE trajectories may truncate, but the setting is identical across configs so the A/B is fair.
 #  - TOOLCALL on for all four so BFCL/tau2 native tool-calls work (the int4 recipes set it; the W8A8
 #    recipes do not -> we force it). qwen3_coder is the Qwen3.6 XML tool parser.
 #  - We deliberately do NOT override KVDTYPE/GRAPH/MTP/PUSH_AR: each recipe keeps its shipped, verified
 #    defaults (the realistic "what you would actually serve" config), so speed numbers are honest.
 EVAL_PORT="${EVAL_PORT:-18080}"
-EVAL_MAXLEN="${EVAL_MAXLEN:-16384}"
-EVAL_MAXSEQS="${EVAL_MAXSEQS:-4}"
 EVAL_TOOLCALL="${EVAL_TOOLCALL:-1}"
 EVAL_TOOLPARSER="${EVAL_TOOLPARSER:-qwen3_coder}"
-EVAL_REASONPARSER="${EVAL_REASONPARSER:-qwen3}"
+
+# ---- THINKING mode (the primary axis) ------------------------------------------------------------
+# Qwen3.6 is a hybrid reasoner. DEFAULT = on, because thinking-on is the real agentic-coding workload
+# (the model emits <think> traces before tool calls / edits). THINKING=off measures no-think behavior
+# (faster, far fewer tokens; some models hold up well without it) -- a deliberate second axis, not the
+# default. The mode drives BOTH the serve (reasoning parser) AND the context/token budget: thinking
+# needs a much bigger window. The 2026-06-25 smoke proved it -- aider at MAXLEN 16384 / max_tokens 2048
+# hit exhausted_context_windows mid-think and scored an artifactual 0.0. So thinking-on sizes up.
+#
+# KV note: MAXSEQS 2 is chosen so MAXLEN 32768 fits the TIGHTEST config (27B-int4 single-card, fp16 KV
+# ~4 GB/seq at 32k -> ~8 GB <= ~12 GiB free at UTIL 0.92). All other configs (TP=2 dense, tiny-KV MoE)
+# have ample headroom. We keep each recipe's default KV dtype (no fp8-KV override on the custom W8A8
+# kernels). AE_CONCURRENCY tracks MAXSEQS; greedy => scores are concurrency-invariant, so this only
+# sets the wall-clock/throughput operating point (held constant across configs).
+EVAL_THINKING="${EVAL_THINKING:-on}"
+if [ "$EVAL_THINKING" = on ]; then
+  EVAL_REASONPARSER="${EVAL_REASONPARSER:-qwen3}"   # split <think> into reasoning_content
+  EVAL_NO_THINK=0
+  EVAL_MAXLEN="${EVAL_MAXLEN:-32768}"
+  EVAL_MAXSEQS="${EVAL_MAXSEQS:-2}"
+  AE_MAX_TOKENS="${AE_MAX_TOKENS:-8192}"            # room for a full think + answer per turn
+  AE_CONCURRENCY="${AE_CONCURRENCY:-2}"
+else
+  # no-think: drop the reasoning parser and signal suppression to harnesses (EVAL_NO_THINK=1). NOTE:
+  # full thinking suppression on Qwen3.6 needs the no-think switch (enable_thinking=false / "/no_think");
+  # this off-path is EXPERIMENTAL until a live no-think run is validated (docs/DESIGN.md "thinking off").
+  EVAL_REASONPARSER="${EVAL_REASONPARSER:-}"
+  EVAL_NO_THINK=1
+  EVAL_MAXLEN="${EVAL_MAXLEN:-16384}"
+  EVAL_MAXSEQS="${EVAL_MAXSEQS:-4}"
+  AE_MAX_TOKENS="${AE_MAX_TOKENS:-2048}"
+  AE_CONCURRENCY="${AE_CONCURRENCY:-4}"
+fi
 
 # ---- determinism knobs handed to every harness (mirror evals/configs/models.yaml defaults) -------
 AE_TEMPERATURE="${AE_TEMPERATURE:-0.0}"
 AE_TOP_P="${AE_TOP_P:-1.0}"
 AE_SEED="${AE_SEED:-1234}"
-AE_MAX_TOKENS="${AE_MAX_TOKENS:-2048}"
-AE_CONCURRENCY="${AE_CONCURRENCY:-4}"   # greedy -> per-request output is concurrency-invariant; this only
-                                        # affects wall-clock/throughput, held constant across configs.

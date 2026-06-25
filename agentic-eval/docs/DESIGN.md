@@ -61,11 +61,31 @@ Lead conclusions with `bfcl`; treat `swe`/`tau2` single-seed deltas as direction
   discordant pairs + a paired bootstrap CI on the accuracy difference. Report the CI, not just the point.
 - Also worth reporting (future): output flip-rate vs the W8A8 baseline ("Accuracy is Not All You Need").
 
+## Thinking mode (the primary axis)
+
+Qwen3.6 is a hybrid reasoner. `EVAL_THINKING` (configs.sh) selects the regime; default `on`.
+
+- **thinking-on (default)** -- the real agentic-coding workload: the model emits `<think>` traces before
+  tool calls / edits. Serve runs the `qwen3` reasoning parser. Sizing: MAXLEN 32768, max_tokens 8192,
+  MAXSEQS 2, concurrency 2. The bigger budget is mandatory -- the 2026-06-25 smoke showed aider at MAXLEN
+  16384 / max_tokens 2048 hitting `exhausted_context_windows` mid-think and scoring an artifactual 0.0
+  (a sizing artifact, not a capability or plumbing result).
+- **thinking-off (`EVAL_THINKING=off`)** -- a deliberate SECOND axis (faster, far fewer tokens; some
+  models hold up well without thinking). Serve drops the reasoning parser; sizing reverts to MAXLEN 16384
+  / max_tokens 2048 / MAXSEQS 4. STATUS: EXPERIMENTAL -- fully suppressing Qwen3.6 thinking needs the
+  no-think switch (`enable_thinking=false` / `/no_think`), which is not yet threaded through all four
+  harnesses, so off-mode numbers are not trustworthy until a live no-think run is validated. `EVAL_NO_THINK`
+  is exported for harnesses to honor once wired.
+
+Compare within a single thinking regime; do not mix thinking-on and thinking-off scores in one delta.
+Every emitted result records `meta.thinking` / `meta.max_len` / `meta.max_tokens` so runs are auditable.
+
 ## Serving choices that affect comparability
 
 - One config served at a time on port 18080 (serial) so wall-clock/token numbers are uncontended.
-- MAXLEN=16384, MAXSEQS=4 held constant across all four (largest context that fits the tightest config,
-  the single-card fp16-KV 27B int4). Long SWE trajectories may truncate, but identically across configs.
+- MAXLEN/MAXSEQS/max_tokens are set by the thinking regime (above) and held constant across all four
+  configs. The thinking-on MAXSEQS 2 is bounded by the tightest config (single-card fp16-KV 27B int4 at
+  32k). Long SWE trajectories may still truncate, but identically across configs, so the A/B stays fair.
 - Each recipe keeps its shipped, verified defaults (GRAPH/MTP/PUSH_AR/KV dtype) -- the realistic "what
   you would actually serve" config -- so the speed numbers are honest rather than handicapped to match.
 - MTP on `27b-w8a8` is lossless at temp=0 (speculative tokens are accepted only if they equal the target
