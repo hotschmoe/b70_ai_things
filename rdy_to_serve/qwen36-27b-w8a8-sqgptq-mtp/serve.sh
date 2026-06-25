@@ -122,9 +122,18 @@ fi
 if [ "${B70_NOMTP:-0}" = 1 ]; then export MTPTOK=""; export SPEC=""; echo "=== B70_NOMTP=1 -> MTP OFF (no --speculative-config) ===" >&2; fi
 if [ "${B70_DEBUG:-0}" != 0 ]; then
   DOCKER_ENV+=( -e PYTHONFAULTHANDLER=1 -e PYTHONUNBUFFERED=1 )
+  # B70_DEBUG=2 adds the Level-Zero validation layer + basic LEAK CHECKER (prints per-handle create-vs-
+  # destroy counts at exit -> confirms WHICH handle type accumulates) + UR/oneCCL/vLLM debug logging.
   [ "${B70_DEBUG}" = 2 ] && DOCKER_ENV+=( -e VLLM_LOGGING_LEVEL=DEBUG -e ZE_ENABLE_VALIDATION_LAYER=1 \
-        -e ZE_ENABLE_PARAMETER_VALIDATION=1 -e UR_LOG_LEVEL=info -e CCL_LOG_LEVEL=info )
-  echo "=== B70_DEBUG=${B70_DEBUG} -> diagnostic env injected (faulthandler$([ "${B70_DEBUG}" = 2 ] && echo ' + L0/UR/CCL/vLLM debug')) ===" >&2
+        -e ZE_ENABLE_PARAMETER_VALIDATION=1 -e ZEL_ENABLE_BASIC_LEAK_CHECKER=1 -e UR_L0_LEAKS_DEBUG=1 \
+        -e UR_LOG_LEVEL=info -e CCL_LOG_LEVEL=info )
+  echo "=== B70_DEBUG=${B70_DEBUG} -> diagnostic env injected (faulthandler$([ "${B70_DEBUG}" = 2 ] && echo ' + L0 validation/leak-checker + UR/CCL/vLLM debug')) ===" >&2
+fi
+# B70_EXTRA_ENV: space-separated NAME=VAL list injected as -e flags (test any env -- UR_L0_* event knobs,
+# CCL_ENABLE_SYCL_KERNELS, etc. -- without further recipe edits). e.g. B70_EXTRA_ENV="UR_L0_REUSE_DISCARDED_EVENTS=1".
+if [ -n "${B70_EXTRA_ENV:-}" ]; then
+  for kv in ${B70_EXTRA_ENV}; do DOCKER_ENV+=( -e "$kv" ); done
+  echo "=== B70_EXTRA_ENV -> injected: ${B70_EXTRA_ENV} ===" >&2
 fi
 
 source "$SCRIPT_DIR/../_common/lib.sh"
