@@ -38,7 +38,8 @@ ORDER=(A_eager_mtp3 repro_pw_mtp3 E_pw_drafteager_mtp3 B_none_mtp3 nomtp_pw_cap)
 [ "$#" -gt 1 ] && ORDER=("${@:2}")
 
 # Which cells get a soak in `soak` mode (the candidate fixes + a repro control).
-soak_cell() { case "$1" in E_pw_drafteager_mtp3|B_none_mtp3|repro_pw_mtp3|F2_recycle|F1_imm0|F1_cleanup) return 0;; *) return 1;; esac; }
+# B_none already has its 57k PASS verdict -> in a soak batch it does perf-only (quick coherent number, Item 2).
+soak_cell() { case "$1" in E_pw_drafteager_mtp3|repro_pw_mtp3|F2_recycle|F1_imm0|F1_cleanup) return 0;; *) return 1;; esac; }
 
 # Per-cell env. Reset all knobs, then set. Recipe defaults: GRAPH=1 CGMODE=PIECEWISE MTPTOK=3 PUSH_AR=1.
 cell_env() {
