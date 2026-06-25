@@ -183,14 +183,22 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   (`scripts/62_pp2_27b.sh`.)
 
 ## What does NOT work (yet) — save yourself the time
-- **Qwen3.6-27B W8A8 TP=2 (sqgptq + MTP + PUSH_AR + PIECEWISE) dies under sustained long-gen load (2026-06-25).**
-  Serves HEALTHY and coherent, runs fine for ~16-20 min, then a TP worker hard-dies (native fault, no python
-  traceback) and the engine reports `shm_broadcast ... RuntimeError("cancelled")` -> `EngineDeadError` ->
-  graceful shutdown (exit 0, NO GPU wedge). Reproduced with purely-local load (no aider/internet): crashes at
-  ~16 min / ~5-6 long requests / ~20k+ cumulative generation tokens, twice, identically. So it is a real engine
-  bug on this TP=2 path, not a network or harness artifact. Single-stream/short use is fine; it is the
-  sustained long-generation agentic workload that kills it. Root-cause bisect (MTP off first) pending. Until
-  fixed, this config can't complete a long agentic eval. (TP=1 int4 is unaffected.)
+- **Qwen3.6-27B W8A8 TP=2 + MTP + XPU graph-capture dies under sustained load -- ROOT-CAUSED + FIXED (2026-06-25).**
+  Symptom: serves HEALTHY/coherent, runs ~16-20 min (~20k cumulative gen tokens / ~5k spec-decode steps), then a
+  TP worker hard-dies and the engine reports `shm_broadcast RuntimeError("cancelled")` -> `EngineDeadError`
+  (graceful exit 0, NO GPU wedge; reproduced with purely-local load, so not network/harness).
+  ROOT CAUSE (caught via faulthandler / `PYTHONFAULTHANDLER=1`): SIGABRT from Intel NEO Level-Zero
+  `command_stream/linear_stream.h:84` during `torch.xpu` GRAPH REPLAY of the MTP drafter (`qwen3_5_mtp.py`
+  forward, spec-decode propose path). The MTP-drafter captured graph's command buffer accumulates across
+  replays until the NEO LinearStream overflows -> abort. It is the **MTP + XPU graph-capture combination**, an
+  upstream-untested config (vLLM #25368; Intel validates XPU spec-decode only with `--enforce-eager`,
+  EAGLE/ngram not MTP) -- NOT our PUSH_AR kernel (bisect: PUSH_AR_GRAPH=0 still crashes) and NOT MTP alone
+  (MTP-off survives 40min).
+  FIX: serve with **`--enforce-eager` (GRAPH=0)** -- removes the graph capture/replay, keeps MTP (~16 t/s,
+  ~90% accept). Survived 40min/37k tokens synthetic + completed a full aider+swe eval run with zero crashes.
+  Slower than the (crashing) captured ~25-34 t/s but stable; greedy scores identical. A true capture fix needs
+  an upstream torch-xpu/vLLM patch (bound/reset the drafter graph's command stream across replays). MTP-off
+  (captured) is the alternate stable config. (TP=1 int4, and TP=2 NO-MTP w8a8, are unaffected.)
 - **Prefix caching (`--enable-prefix-caching`) on Qwen3.6 HYBRID models -> CRASHES the engine (2026-06-25).**
   Qwen3.6 (27B dense and 35B-A3B MoE) is a hybrid mamba/linear-attention model. With APC on, the FIRST real
   multi-turn request triggers a mamba block-state copy in vLLM, and the source-pointer scratch buffer
