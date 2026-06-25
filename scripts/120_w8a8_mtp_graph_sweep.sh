@@ -30,7 +30,10 @@ export MAXLEN="${MAXLEN:-16384}"                       # fits SOAK_MAXTOK gen + 
 STOP_SWEEP=0
 
 # Execution order. Safe eager cell first (canary: validates serve/bench/teardown plumbing).
+# Override by passing cell names after MODE, e.g.:
+#   scripts/120 soak E_pw_drafteager_mtp3 B_none_mtp3   (E first -> gets a pristine card after a reboot)
 ORDER=(A_eager_mtp3 repro_pw_mtp3 E_pw_drafteager_mtp3 B_none_mtp3 nomtp_pw_cap)
+[ "$#" -gt 1 ] && ORDER=("${@:2}")
 
 # Which cells get a soak in `soak` mode (the candidate fixes + a repro control).
 soak_cell() { case "$1" in E_pw_drafteager_mtp3|B_none_mtp3|repro_pw_mtp3) return 0;; *) return 1;; esac; }

@@ -371,3 +371,25 @@ Execution protocol:
   `cudagraph_dispatcher`), `vllm/v1/worker/gpu_model_runner.py`
   (`_check_and_update_cudagraph_mode`, `postprocess_mamba_align_gpu`).
 - Upstream: vLLM #25368, #41530, #41190, #40756, #40880; pytorch #187277.
+
+## 12. Next session (post-reboot) resume -- decided 2026-06-25
+
+Operator decisions after Run 1: (1) recover via bin/xe-reset = REBOOT now; (2) test the E + B decode
+levers first; (3) B70_AUTO_RESET=1 going forward (sweeps may auto-xe-reset/reboot on a wedge).
+
+The box was rebooted to clear the cumulative-TP2 wedge. When it is back and xpu-health is green, run
+E (drafter-eager) FIRST so it lands on a pristine card 0, then B (cudagraph=NONE). Both get a perf bench
+(decode c1/c4) AND a soak to 50k tokens (crash-vs-survive):
+
+    cd /mnt/vm_8tb/github/b70_ai_things
+    B70_AUTO_RESET=1 ./bin/gpu-run bash scripts/120_w8a8_mtp_graph_sweep.sh soak E_pw_drafteager_mtp3 B_none_mtp3
+
+Decisive reads:
+- E perf decode c1: ~34 -> drafter-eager KEEPS the capture win (target stays graphed); ~13 -> it does not.
+- E soak: PASS 50k -> drafter graph replay WAS the crash locus; we have a stable ~35 t/s production fix.
+  CRASH -> the locus is the TARGET hybrid spec-state path (codex: postprocess_mamba_align_gpu / GDN
+  UNIFORM_BATCH metadata under graph); pivot there, and B (cudagraph=NONE) becomes the stable fallback.
+- B perf+soak: if NONE is stable AND faster than enforce-eager (>12.78), it is a free eval win regardless.
+
+Keep TP=2 serves per session few (<=~3) until the cumulative-TP2 wedge is root-caused; with AUTO_RESET=1
+a wedge will reboot the box (which also ends any in-flight orchestrator/session on this local box).
