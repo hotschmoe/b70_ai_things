@@ -4383,3 +4383,29 @@ verdict -> [FIX/WORKAROUND] enforce-eager (no XPU graph capture) makes w8a8 TP=2
   env change; tracked as future work. The MTP-off captured path is the alternate stable config (also fine).
   NEXT: wire GRAPH=0 into the agentic-eval for 27b-w8a8 and verify with a real campaign run (35b-w8a8 has no MTP
   so it needs no change).
+
+---
+
+## 2026-06-25 -- FIX VALIDATED end-to-end: 27b-w8a8 (enforce-eager) completes the real eval, no crash [VERIFIED]
+
+config -> verification campaign with the wired fix (EVAL_SERVE_ENV GRAPH=0 for 27b-w8a8), real harnesses:
+    CONFIGS="27b-w8a8 35b-int4 35b-w8a8" SUBSET=smoke HARNESSES="aider swe" ./bin/gpu-run bash run/run_all.sh
+result (27b-w8a8, enforce-eager) -> COMPLETED BOTH HARNESSES, ZERO crashes (the config that died at ~16min
+  under MTP+capture). Serve HEALTHY in 71s (TP=2 GRAPH=0), coherent.
+  - aider: pass_rate_2 = 0.40 (n=5), wall 5587s (~93m), well-formed 100%, n_passed_1try=2 n_passed_2tries=2.
+  - swe:   resolved = 0.333 (1/3), wall 2781s, n_empty_patch=0, n_errored=0, tok 934806.
+  Then advanced cleanly to 35b-int4. 0 Connection-error/EngineDeadError signals all run.
+
+findings ->
+  - FIX CONFIRMED end-to-end on the real workload, not just the synthetic hammer. enforce-eager makes
+    27b-w8a8 TP=2 + MTP usable for the full agentic eval.
+  - 27b dense quant delta now available: aider int4 0.40 == w8a8 0.40 (int4 does NOT hurt single-shot
+    codegen -- matches H1). swe int4 0.0 vs w8a8 0.333, BUT int4's 0.0 was n_empty_patch=3 (thinking-
+    truncation artifact) while w8a8 was n_empty_patch=0 -> the swe delta is CONFOUNDED by the truncation
+    bug, not a clean quant signal. (Note w8a8 swe generated 934k tokens vs int4 132k -- w8a8 did NOT hit the
+    8k-budget truncation here; cause TBD: enforce-eager vs quant vs run variance.) Treat swe smoke deltas as
+    not-yet-trustworthy until the per-turn max_tokens / no-empty-patch issue is fixed and re-run.
+  - Speed cost of the fix: w8a8 aider 5587s vs int4 3725s (~1.5x slower) -- consistent with eager MTP ~16 t/s
+    vs int4 ~29 t/s. Stable > fast; acceptable for the eval (scores are greedy-identical to captured).
+verdict -> [VERIFIED] crash fix works on the real eval. Campaign continuing: 35b-int4 (TP=1), then 35b-w8a8
+  (TP=2, NO MTP -> expected crash-safe). Scoreboard will regenerate at campaign end.

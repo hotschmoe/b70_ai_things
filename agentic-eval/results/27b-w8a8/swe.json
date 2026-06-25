@@ -1,0 +1,47 @@
+{
+  "config": "27b-w8a8",
+  "harness": "swe",
+  "subset": "smoke",
+  "served_model_id": "qwen36-27b-w8a8-sqgptq-mtp",
+  "score": 0.333333,
+  "score_name": "resolved",
+  "n_tasks": 3,
+  "n_passed": 1,
+  "per_task": [
+    {
+      "task_id": "astropy__astropy-12907",
+      "passed": true
+    },
+    {
+      "task_id": "astropy__astropy-13033",
+      "passed": false
+    },
+    {
+      "task_id": "astropy__astropy-13236",
+      "passed": false
+    }
+  ],
+  "extra_scores": {
+    "n_submitted": 3,
+    "n_resolved": 1,
+    "n_errored": 0,
+    "n_empty_patch": 0,
+    "report_file": "report/hosted_vllm__qwen36-27b-w8a8-sqgptq-mtp.ae-27b-w8a8-smoke-20260625-094212.json",
+    "dataset_total_instances": 500
+  },
+  "wall_s": 2781.32,
+  "tokens_prompt": 905451,
+  "tokens_gen": 29355,
+  "tokens_total": 934806,
+  "throughput_tok_s": 10.6,
+  "temperature": 0.0,
+  "meta": {
+    "subset_dataset": "verified",
+    "slice": "0:3",
+    "run_id": "ae-27b-w8a8-smoke-20260625-094212",
+    "thinking": "on",
+    "max_len": "65536",
+    "max_tokens": "8192",
+    "concurrency": "1"
+  }
+}
