@@ -4337,3 +4337,25 @@ FIX ROADMAP (ranked by fast-AND-stable):
   (fallback) serve 27b-w8a8 MTP-OFF (proven stable 40min) -- unblocks the campaign regardless.
   Diagnostic available: ZE_ENABLE_VALIDATION_LAYER=1 ZEL_ENABLE_BASIC_LEAK_CHECKER=1 prints per-handle leak
   counts at exit (add to B70_DEBUG=2) to confirm WHICH handle accumulates.
+
+---
+
+## 2026-06-25 -- bisect: PUSH_AR EXONERATED; bug is MTP + graph-capture itself (dual death modes) [data]
+
+config -> MTP-on + PUSH_AR_GRAPH=0 (decode all-reduce OFF the captured graph, oneCCL fallback) + faulthandler:
+    PUSH_AR_GRAPH=0 B70_DEBUG=1 ./bin/gpu-run bash <w8a8_stress.sh> 30
+result -> still CRASHED, at req 7 t=1408s (~23min, ~20k tokens). So removing PUSH_AR's per-decode graph
+  recording does NOT fix it -> PUSH_AR is NOT the root cause (it lasted ~23min vs ~19min full-PUSH_AR, so its
+  recording only CONTRIBUTES to the accumulation RATE). 
+  NEW: the death MODE differed -- with PUSH_AR_GRAPH=0 the worker did NOT abort (no faulthandler dump);
+  instead it HUNG: "TimeoutError: RPC call to sample_tokens timed out" (the spec-decode propose path) ->
+  EngineDeadError. vs full-PUSH_AR which ABORTED (NEO linear_stream command-stream overflow). Same MTP propose
+  path, same ~20min/~20k-token threshold, two manifestations (abort when PUSH_AR records into the graph and
+  overflows the command buffer; hang when the decode all-reduce falls back to oneCCL).
+
+verdict -> [data] ROOT CAUSE is MTP + XPU graph-capture on TP=2 (the qwen3_5_mtp drafter captured graph),
+  NOT our PUSH_AR kernel and NOT the all_gather shim alone. Matches the literature (vLLM #25368 MTP-on-TP; XPU
+  spec-decode is validated only with enforce-eager). UR event-pool knobs won't fix a torch/SYCL command_graph
+  problem. NEXT: enforce-eager (GRAPH=0) + MTP -- removes graph capture/replay entirely (the crash locus);
+  Intel's validated XPU spec config. If it survives -> stable MTP config (slower) + confirms graph-capture is
+  the cause. crashlogs: w8a8_crashlog_30m.txt (abort, full PUSH_AR), w8a8_crashlog_pushar_graph0.txt (hang).
