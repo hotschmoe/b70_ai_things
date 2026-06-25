@@ -4579,3 +4579,30 @@ Post-reboot (uptime 4m, xpu-health HEALTHY both cards), the very FIRST serve -- 
   risks an immediate wedge + reboot. RECOMMENDATION: pause the Items 2-4 GPU grind until the wedge is understood
   (all tooling/shims are staged -- one command away once the box is reliable). Item 1 (the 2x-stable NONE win)
   is already shipped and unaffected. Box WEDGED (card 1); needs a reboot.
+
+## 2026-06-25 -- TP=2 WEDGE ROOT-CAUSED: BCS (copy engine) kernel-job timeout on xe/GuC [BREAKTHROUGH]
+
+Caught it via the xe DEVCOREDUMP (captured live before reboot with a sudo grab script;
+docs/20260625_bcs_wedge_rootcause.md; forensics /mnt/vm_8tb/b70/wedge-capture/20260625_214449_grab/).
+
+SMOKING GUN -- devcoredump: "Reason: Timedout job ... guc_id=0 ... Contexts: GuC ID 0 Name bcs0 ;
+  HW Engines: bcs8 (physical) RING_HEAD!=TAIL (stuck) ; GuC version 70.58.0 (wanted 70.54.0)".
+dmesg: "xe 0000:0b:00.0: Tile0: GT0: Timedout job seqno=5784/5854/5924/6790 guc_id=0 in no process [-1] ;
+  Kernel-submitted job timed out ; WARNING xe_guc_submit.c:1594 guc_exec_queue_timedout_job ; trying reset ...
+  reset done ; exec queue reset detected (LOOPS -> reset never recovers -> card hung)".
+
+ROOT CAUSE -> a KERNEL-submitted BCS (blitter/COPY engine, bcs0/bcs8) job times out on GT0. These are xe's OWN
+  VRAM clear-on-alloc / migration / eviction copies (in_process=-1), fired during the VRAM-heavy model-load/warmup
+  phase of a TP=2 serve (33 GiB checkpoint into VRAM at UTIL=0.90), which is why the wedge hits at the first GPU
+  op (mrope _compute_cos_sin_cache->cos()) or first decode. The GuC reset loop does not recover -> reboot only.
+  So it is an Intel xe + GuC FIRMWARE bug, NOT vLLM / oneCCL / our code. STOCHASTIC per serve (hit serve 1 of a
+  fresh boot AND serve 3 of a session). Same class as vLLM #41663 (dual-B70 BCS reset). This SUPERSEDES the
+  earlier "cumulative oneCCL/L0 degradation" framing -- the real mechanism is the BCS copy-engine timeout.
+LEADING FIX -> GuC firmware<->KMD skew: coredump GuC 70.58.0 but KMD (kernel 7.0.0-22) wanted 70.54.0;
+  linux-firmware (Apr 15) ships 70.58.0. Align them: pin GuC 70.54.0 via xe.guc_firmware_path (param exists,
+  empty), or update the kernel/xe to one wanting 70.58.0. Cheap mitigation to test: lower gpu_memory_utilization
+  (UTIL 0.80/0.70 -> less BCS migration/clear pressure). xe.wedged_mode=2 / drm.debug for cleaner evidence.
+verdict -> [BREAKTHROUGH] the "device_lost" hardware wedge is root-caused to the xe/GuC BCS path (firmware skew
+  prime suspect) -- an operator/driver-level fix, not vLLM. Items 2-4 stay GATED until TP=2 is stable; Item 1
+  (NONE 2x win) shipped. Next (operator's device_lost workstream): firmware/kernel alignment; then resume Items
+  2-4. A non-vLLM VRAM-pressure repro + L0 shim is the path to a filable Intel bug (codex plan archived).
