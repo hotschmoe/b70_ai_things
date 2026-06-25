@@ -1,1 +1,62 @@
-{}
+{
+  "27b-int4": {
+    "aider": {
+      "score": 0.4,
+      "score_name": "pass_rate_2",
+      "n_tasks": 5,
+      "n_passed": 2,
+      "wall_s": 3725.51,
+      "tokens_total": 172610,
+      "tokens_gen": 107304
+    },
+    "swe": {
+      "score": 0.0,
+      "score_name": "resolved",
+      "n_tasks": 3,
+      "n_passed": 0,
+      "wall_s": 2857.99,
+      "tokens_total": 132472,
+      "tokens_gen": 82773
+    }
+  },
+  "27b-w8a8": {
+    "aider": {
+      "score": 0.4,
+      "score_name": "pass_rate_2",
+      "n_tasks": 5,
+      "n_passed": 2,
+      "wall_s": 5587.23,
+      "tokens_total": 134043,
+      "tokens_gen": 81547
+    },
+    "swe": {
+      "score": 0.333333,
+      "score_name": "resolved",
+      "n_tasks": 3,
+      "n_passed": 1,
+      "wall_s": 2781.32,
+      "tokens_total": 934806,
+      "tokens_gen": 29355
+    }
+  },
+  "35b-int4": {
+    "aider": {
+      "score": 0.0,
+      "score_name": "pass_rate_2",
+      "n_tasks": 5,
+      "n_passed": 0,
+      "wall_s": 1115.96,
+      "tokens_total": 106634,
+      "tokens_gen": 73728
+    },
+    "swe": {
+      "score": 0.0,
+      "score_name": "resolved",
+      "n_tasks": 3,
+      "n_passed": 0,
+      "wall_s": 552.83,
+      "tokens_total": 704776,
+      "tokens_gen": 24470
+    }
+  }
+}

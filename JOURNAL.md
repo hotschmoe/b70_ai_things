@@ -4409,3 +4409,34 @@ findings ->
     vs int4 ~29 t/s. Stable > fast; acceptable for the eval (scores are greedy-identical to captured).
 verdict -> [VERIFIED] crash fix works on the real eval. Campaign continuing: 35b-int4 (TP=1), then 35b-w8a8
   (TP=2, NO MTP -> expected crash-safe). Scoreboard will regenerate at campaign end.
+
+---
+
+## 2026-06-25 -- verification campaign DONE (3/4 configs); 35b-w8a8 DEVICE_LOST -> box WEDGED (card 0) [result+incident]
+
+Campaign (CONFIGS="27b-w8a8 35b-int4 35b-w8a8", aider+swe, smoke) completed in 11121s. Final scoreboard:
+    27b-int4  dense  aider 40.0%  swe 0.0%    wall 109m  305k tok  28.9 t/s
+    27b-w8a8  dense  aider 40.0%  swe 33.3%   wall 139m  1.07M tok 13.3 t/s   (enforce-eager FIX, no crash)
+    35b-int4  moe    aider 0.0%   swe 0.0%    wall 28m   811k tok  58.8 t/s
+    35b-w8a8  moe    -- SERVE FAILED (DEVICE_LOST at TP=2 worker init) --
+within-arch dense deltas: aider int4 40.0 - w8a8 40.0 = +0.0pp (int4 does NOT hurt single-shot codegen, H1
+  holds). swe int4 0.0 - w8a8 33.3 = -33.3pp BUT CONFOUNDED: int4 swe 0.0 was n_empty_patch=3 (thinking-
+  truncation), w8a8 swe was n_empty_patch=0. NOT a clean quant signal -- needs the swe per-turn-max_tokens fix
+  + re-run. 35b-int4 aider 0.0 is genuine (well_formed=1.0, valid diffs that fail tests).
+
+INCIDENT -> 35b-w8a8 (TP=2 Quark W8A8, NO MTP) FAILED at worker init: WorkerProc init exception; the serve
+  wedge-guard found UR_RESULT_ERROR_DEVICE_LOST in the serve log. Pre-flight xpu-health PASSED at 11:02:59
+  (both cards OK) -> the 35b-w8a8 TP=2 init itself tripped DEVICE_LOST (oneCCL warmup all_reduce). Post-
+  teardown xpu-health: card 0 HUNG(>60s)=WEDGED, card 1 OK. This is the CLAUDE.md-documented failure: a string
+  of TP>1 serves (tonight: ~8 TP=2 w8a8 serves across the crash repro/bisect/fix work) accumulates oneCCL/L0
+  degradation until a fresh TP=2 init DEVICE_LOSTs and wedges the box. The campaign released the lease cleanly
+  (gpu-run exit 0) and summarized the 3 good configs; the wedge is at the driver/L0 level, not a stuck process.
+recovery -> bin/xe-reset = REBOOT on this display-attached box (modprobe -r xe fails). Per the run directive
+  (no B70_AUTO_RESET), NOT auto-rebooting -- left for the user to authorize. To finish 35b-w8a8: reboot, then
+  re-run just that config (CONFIGS="35b-w8a8"); it has no MTP so it needs no enforce-eager workaround, it was
+  just the cumulative-TP2-stress wedge. Consider spacing TP=2 serves / an xe-reset between heavy TP=2 batches.
+
+NIGHT SUMMARY -> PRIMARY GOAL ACHIEVED before the wedge: the w8a8 TP=2 MTP crash is root-caused (NEO command-
+  stream overflow in MTP-drafter graph replay, via faulthandler), bisected (PUSH_AR exonerated, MTP+capture is
+  the cause), FIXED (enforce-eager keeps MTP, stable), and VALIDATED end-to-end (27b-w8a8 completed a real
+  aider+swe run, 0 crashes). All committed/pushed. The wedge happened on the last config, after the deliverable.
