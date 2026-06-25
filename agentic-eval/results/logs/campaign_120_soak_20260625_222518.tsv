@@ -1,0 +1,6 @@
+# campaign 120  mode=soak  Thu Jun 25 10:25:18 PM UTC 2026
+# columns: time  cell  soak_result  notes(decode1/decode4 + coherent decode t/s, accept_len)
+# MAXLEN=16384 BENCH_IN=512 BENCH_OUT=256 CONC='1 4' SOAK_TOKENS=50000
+22:32:35	B_none_mtp3	-	decode1=26.18 decode4=19.49 coherent=25.68 accept_len=2.52
+23:32:45	E_pw_drafteager_mtp3	CRASH:32768:EngineDeadError	decode1=37.04 decode4=21.39 coherent=31.78 accept_len=2.35
+23:38:32	F2_recycle	CRASH:0:EngineDeadError	decode1=35.82 decode4=20.40 coherent=30.38 accept_len=2.67

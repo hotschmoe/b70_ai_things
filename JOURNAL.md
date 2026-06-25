@@ -4606,3 +4606,24 @@ verdict -> [BREAKTHROUGH] the "device_lost" hardware wedge is root-caused to the
   prime suspect) -- an operator/driver-level fix, not vLLM. Items 2-4 stay GATED until TP=2 is stable; Item 1
   (NONE 2x win) shipped. Next (operator's device_lost workstream): firmware/kernel alignment; then resume Items
   2-4. A non-vLLM VRAM-pressure repro + L0 shim is the path to a filable Intel bug (codex plan archived).
+
+## 2026-06-25 -- GuC 70.54.0 FIXES the BCS wedge; Items 2/3/4 results (campaign 120 run 3) [WIN + results]
+
+Operator downgraded GuC firmware to 70.54.0 (placed xe/bmg_guc_70.54.0.bin, reboot). dmesg: both cards GT0/GT1
+  "Using GuC firmware from xe/bmg_guc_70.54.0.bin version 70.54.0". Then one batch ran 5 TP=2 serve cycles back-
+  to-back over ~1 HOUR with **ZERO BCS Timedout-job / device_lost / card hang**. Before (GuC 70.58.0) the box
+  wedged within ~3 serves and even serve 1. => FIRMWARE SKEW CONFIRMED AS THE BCS-WEDGE CAUSE; pin GuC 70.54.0.
+
+Items (with the box finally stable):
+  ITEM 2 -> cudagraph=NONE coherent decode = 25.68 t/s (= random 26.18). Confirms the shipped winner ~2x the
+    enforce-eager fix. DONE.
+  ITEM 3 -> E (PIECEWISE target + drafter eager): fresh decode FAST (coherent 31.78 / random 37.04) but degrades
+    26->5 t/s and CRASH:32768:EngineDeadError. So drafter-eager DELAYS the hard crash (orig ~20k -> 32k) but does
+    NOT fix it (target PIECEWISE replay still accumulates). Not viable. DONE -- NONE remains the winner.
+  ITEM 4 (Tier F):
+    - F2_recycle (recapture clear_all_graphs every N steps): CRASH:0:EngineDeadError -- mid-serve recapture on
+      torch-xpu corrupts the engine (codex warned). DEAD.
+    - F1_imm0 (UR_L0_USE_IMMEDIATE_COMMANDLISTS=0): in progress, holding ~18 t/s at 6k (early). F1_cleanup next.
+verdict -> [WIN] hardware BCS wedge FIXED (GuC 70.54.0); the W8A8-27B campaign is unblocked. Item 2 done (NONE
+  25.68), Item 3 done (drafter-eager not viable), Item 4: recapture dead, L0 env probe (F1) running. Decode
+  scoreboard c1: A 12.78 | NONE 25.68 (STABLE, shipped) | PIECEWISE ~35-37 (crashes ~32k). Committed/pushed.

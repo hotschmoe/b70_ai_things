@@ -487,3 +487,25 @@ F2. RECAPTURE monkeypatch: `CUDAGraphWrapper` already exposes `clear_all_graphs(
     cap-then-eager (return self.runnable after budget), request-scoped NONE, or worker recycle every ~15k tokens.
 
 Recommended Tier F order: F1 (a couple of env probes, free if they work) -> F2 (recapture shim) -> fallbacks.
+
+## 14. Run 3 results (2026-06-25, GuC 70.54.0 firmware fix -- Items 2/3/4)
+
+After the GuC 70.54.0 downgrade fixed the BCS hardware wedge (docs/20260625_bcs_wedge_rootcause.md), one batch
+ran 5 TP=2 serve cycles over ~1 hour with ZERO hardware wedge. Results:
+
+| cell | config | decode c1 | c4 | coherent | accept | soak | verdict |
+|---|---|---:|---:|---:|---:|---|---|
+| B_none | cudagraph=NONE | 26.18 | 19.49 | **25.68** | 2.52 | (PASS 57k prior) | WINNER: stable + 2x eager |
+| E | PIECEWISE + drafter-eager | 37.04 | 21.39 | 31.78 | 2.35 | **CRASH:32768** | fast fresh, degrades 26->5, crashes ~32k |
+| F2_recycle | PIECEWISE + recapture-every-N shim | 35.82 | 20.40 | 30.38 | 2.67 | **CRASH:0** | recapture mid-serve UNSAFE -> dead |
+| F1_imm0 | PIECEWISE + UR_L0_USE_IMMEDIATE_COMMANDLISTS=0 | (pending) | | | | (running) | early: holding ~18 t/s at 6k |
+
+- ITEM 2 DONE: cudagraph=NONE coherent single-stream decode = **25.68 t/s** (= random 26.18; NONE is compute-
+  bound so MTP benefit is steady not dramatic). Confirms the shipped winner at ~2x the enforce-eager fix.
+- ITEM 3 DONE: drafter-eager (E) DELAYS the hard crash (orig ~20k -> ~32k) but does NOT eliminate it (still
+  EngineDeadError at 32768), and degrades 26->5 t/s en route (target PIECEWISE replay still accumulates). Fresh
+  decode is fast (~32 coherent) but it is not stable -> NOT viable; NONE remains the winner.
+- ITEM 4 (Tier F):
+  - F2 recapture shim FAILED (CRASH:0 -- mid-serve clear_all_graphs corrupts the engine, as codex warned). Dead.
+  - F1_imm0 (immediate-commandlists OFF) in progress -- the live hope for keeping PIECEWISE flat. (F1_cleanup next.)
+- HARDWARE WEDGE: gone. ~1 hour / 5 TP=2 serve cycles, zero BCS Timedout-job. GuC 70.54.0 confirmed the fix.

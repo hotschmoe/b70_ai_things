@@ -1,7 +1,17 @@
 # TP=2 hardware wedge ROOT CAUSE: BCS (copy engine) kernel-job timeout on xe/GuC (2026-06-25)
 
-Status: ROOT-CAUSED at the kernel/firmware level (was the "device_lost / cumulative-TP2 wedge").
+Status: ROOT-CAUSED **and FIX CONFIRMED** (2026-06-25). The wedge was the "device_lost / cumulative-TP2 wedge".
 This is a DRIVER/FIRMWARE bug in the Intel xe + GuC stack on Battlemage B70 -- NOT a vLLM bug.
+
+## FIX CONFIRMED: downgrade GuC firmware to 70.54.0 (match the KMD)
+
+Operator placed `xe/bmg_guc_70.54.0.bin` and rebooted; dmesg now: `GT0/GT1 (both cards): Using GuC firmware
+from xe/bmg_guc_70.54.0.bin version 70.54.0`. Result: a single TP=2 batch then ran **5 serve cycles back to back
+over ~1 hour with ZERO BCS Timedout-job / device_lost / card hang** (campaign 120 run 3: B_none, E, F2_recycle,
+F1_imm0, F1_cleanup). Before the downgrade (GuC 70.58.0) the box wedged within ~3 serves and even on serve 1.
+=> The GuC firmware<->KMD skew (70.58.0 running vs 70.54.0 wanted) WAS the BCS-timeout cause. **Recommended box
+config: pin GuC 70.54.0** until a kernel/xe that wants 70.58.0 is validated. (The remaining MTP+PIECEWISE-graph
+slowdown/crash is the SEPARATE software issue; cudagraph=NONE avoids it.)
 
 Forensics captured live (before reboot): `/mnt/vm_8tb/b70/wedge-capture/20260625_214449_grab/`
 (devcoredump.*, dmesg.full.txt, dmesg.important.txt, journal-kernel.txt, debugfs-snapshot.txt, lspci-b70.txt,
