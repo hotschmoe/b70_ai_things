@@ -41,11 +41,17 @@ eval_config() {
 EVAL_PORT="${EVAL_PORT:-18080}"
 EVAL_TOOLCALL="${EVAL_TOOLCALL:-1}"
 EVAL_TOOLPARSER="${EVAL_TOOLPARSER:-qwen3_coder}"
-# Prefix caching ON for the agentic eval (multi-turn agents re-send a growing shared prefix every turn;
-# APC skips re-prefill -> big speedup, and greedy output is identical so scores are unchanged). The repo
-# default is OFF (clean perf baselines); this is the correct agentic setting. Drives lib.sh PREFIXCACHE.
-# Per-config validation: int4 is low-risk; the W8A8 MTP+capture path is the one to confirm in smoke.
-EVAL_PREFIX_CACHE="${EVAL_PREFIX_CACHE:-1}"
+# Prefix caching for the agentic eval. APC would be the correct agentic setting in principle (multi-turn
+# agents re-send a growing shared prefix every turn; APC skips re-prefill -> big speedup, greedy output
+# identical so scores unchanged). BUT on this vLLM-XPU build it CRASHES the Qwen3.6 hybrid (mamba/linear-
+# attention) models: with APC on, the FIRST real multi-turn request triggers a mamba block-state copy whose
+# source-pointer scratch buffer (vllm mamba_utils.collect_mamba_copy_meta, src_ptrs.np) is signed int64,
+# and an XPU device pointer (copy_spec.start_addr) with bit 63 set overflows C long -> OverflowError ->
+# EngineDeadError (clean exit, no GPU wedge). Health/coherence probes pass (single-block, no copy); the
+# first long request dies. Isolated 2026-06-25: APC=0 survives the identical 3x36KB workload; APC=1 dies.
+# So DEFAULT 0. Re-enable only after the vLLM uint64-buffer patch lands (JOURNAL 2026-06-25). Drives lib.sh
+# PREFIXCACHE. (Both 27b dense and 35b-A3b MoE are hybrid -> all four configs are affected.)
+EVAL_PREFIX_CACHE="${EVAL_PREFIX_CACHE:-0}"
 
 # ---- THINKING mode (the primary axis) ------------------------------------------------------------
 # Qwen3.6 is a hybrid reasoner. DEFAULT = on, because thinking-on is the real agentic-coding workload

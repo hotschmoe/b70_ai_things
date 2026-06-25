@@ -1,0 +1,31 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 -> bash /tmp/claude-1000/-mnt-vm-8tb-github-b70-ai-things/7686d17b-c592-4500-868d-0f88594eaa2e/scratchpad/apc_isolate.sh 0
+############ APC ISOLATION: EVAL_PREFIX_CACHE=0 (maxlen 64k, thinking-on) ############
+[ae 02:28:15] serve 27b-int4 (dense/int4, 1 card(s), id=qwen36-27b-int4) action=start port=18080 maxlen=65536
+=== serve qwen36-27b-int4  IMG=vllm-xpu-env:v0230  TP=1 PP=1  GRAPH=1  port=18080 card=0 ===
+vllm serve /models/Lorbus_Qwen3.6-27B-int4-AutoRound --served-model-name qwen36-27b-int4 --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 1 --max-model-len 65536 --max-num-seqs 1 --gpu-memory-utilization 0.92 --trust-remote-code --no-enable-prefix-caching --limit-mm-per-prompt {"image":0,"video":0} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --compilation-config {"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8,16,32,64],"compile_sizes":[1],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 900s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18080  qwen36-27b-int4  (TP=1 GRAPH=1) in 340s ===
+"id":"qwen36-27b-int4"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. **Paris** is the capital and most populous city of France.
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).
+[ae 02:34:00] identity OK: qwen36-27b-int4
+--- request: turn1-long-edit (content ~35960 bytes) ---
+http_status=200
+resp head: {"id":"chatcmpl-a534d6001a8e4228","object":"chat.completion","created":1782354840,"model":"qwen36-27b-int4","choices":[{"index":0,"message":{"role":"assistant","content":null,"refusal":null,"annotations":null,"audio":null,"function_call":null,"tool_calls":[],"reasoning":"The user wants to add a func
+--- request: turn2-followup (content ~35929 bytes) ---
+http_status=200
+resp head: {"id":"chatcmpl-98583643584c6005","object":"chat.completion","created":1782354991,"model":"qwen36-27b-int4","choices":[{"index":0,"message":{"role":"assistant","content":"\n\nHere is the complete file with the `product()` function appended at the end:\n\n```python\ndef feature_0(x, y):\n    # comput
+--- request: turn3-repeat-prefix (content ~35902 bytes) ---
+http_status=200
+resp head: {"id":"chatcmpl-b99c1aa8b7579072","object":"chat.completion","created":1782355143,"model":"qwen36-27b-int4","choices":[{"index":0,"message":{"role":"assistant","content":"\n\nHere is the complete file with every `feature_N` function reformatted into a single line using a generator expression with `s
+=== container status: Up 13 minutes ===
+=== mamba/overflow signature in container log? ===
+(none found)
+VERDICT(APC=0): SURVIVED all 3 requests
+[ae 02:41:34] serve 27b-int4 (dense/int4, 1 card(s), id=qwen36-27b-int4) action=stop port=18080 maxlen=65536
+vllm_qwen36-27b-int4
+stopped vllm_qwen36-27b-int4 (graceful -t30; GPU released if last holder)
+############ APC ISOLATION done (APC=0) ############
+gpu-run: [b70s4dayz] done in 802s (exit 0)

@@ -4124,3 +4124,44 @@ verdict -> TODO actions (Track 8): (1) re-quant the too-big 27B W4A8 (~16GB -> ~
   transient); (2) nail a good GPTQ/SmoothQuant W4A8 recipe + scan newer methods (AutoRound is a dead end, asserts
   bits==8); (3) optimize int4_gemm_w4a8 M=1 GEMV + fuse per-token act-quant; (4) read W4A8KV4/QServe closely
   (KV4 unexplored); (5) honor the W4A8-vs-W4A16-vs-W8A8 concurrency-niche measurement gate first. NOT YET STARTED.
+
+---
+
+## 2026-06-25 -- agentic-eval initial bench: APC-on wedges the Qwen3.6 hybrid mamba path [FAIL->fixed]
+
+config -> launched the first real 4-config scoreboard (the just-committed serve change: prefix caching
+ON + 64k/fp16 ctx, thinking-on, MAXSEQS 1, temp 0):
+    SUBSET=smoke HARNESSES="aider swe" ./bin/gpu-run bash agentic-eval/run/run_all.sh
+
+result -> config 1 (27b-int4, TP=1) served HEALTHY in 305s, coherence probe + identity OK. Then aider's
+  FIRST real request crashed the vLLM EngineCore:
+    vllm/v1/worker/mamba_utils.py:603 collect_mamba_copy_meta
+      src_ptrs_np[offset] = copy_spec.start_addr
+    OverflowError: Python int too large to convert to C long  -> EngineDeadError
+  Engine shut down gracefully (exit 0, NO GPU wedge); aider then hammered the dead endpoint in exponential
+  backoff (0.2 -> 1024s). The short health/coherence probes pass because they never trigger a mamba
+  block-state copy; the first long/multi-turn request does. The campaign is resilient (its cleanup trap
+  stops the current serve but the for-loop CONTINUES to the next config), so it marched on and would have
+  crashed every config identically (all four are the same hybrid arch). Stopped it, cleaned up, lease freed,
+  box verified HEALTHY (the mid-capture TP=1 kill left no wedge -- single-GPU rule held).
+
+root cause -> Qwen3.6 (27B dense AND 35B-A3B) is a HYBRID (mamba/linear-attention) model. vLLM physically
+  COPIES mamba block-state when blocks are shared/reset/preempted (mamba state can't be shared like attention
+  KV). The source-pointer scratch buffer (copy_bufs.src_ptrs.np) is signed int64, but an XPU/L0 device pointer
+  (copy_spec.start_addr) can have bit 63 set -> overflow. (dst side uses tensor.data_ptr(), which stays in
+  range -- only src computes a raw start_addr.) The copy list is only non-empty when block-state copies occur,
+  which is driven by PREFIX CACHING. So APC=1 is the trigger; the repo default was APC=0 and the earlier smoke
+  (16k, APC off) never hit it.
+
+isolation -> re-served 27b-int4 with EVAL_PREFIX_CACHE=0 (64k retained, thinking-on), fired 3x 36KB multi-turn
+  code-edit requests (the exact shape that crashed APC-on):
+    ./bin/gpu-run --card 0 bash <apc_isolate.sh> 0
+  RESULT: all 3 -> HTTP 200, real responses, NO overflow signature in the container log, engine Up 13 min,
+  clean teardown. VERDICT(APC=0): SURVIVED. -> APC is confirmed as the sole trigger.
+
+verdict -> [FAIL for APC=1 on hybrid models, FIXED by default flip]. Flipped EVAL_PREFIX_CACHE default 1->0 in
+  agentic-eval/configs.sh (commented: APC-on overflows the mamba src_ptrs int64 buffer on XPU; re-enable only
+  after a vLLM uint64 buffer patch). Cost: lose APC's multi-turn re-prefill savings at concurrency 1 (slower
+  wall-clock, scores unchanged -- greedy). Re-running the 4-config smoke with APC off for the real scoreboard.
+  Proper fix (later, contrib patch): make src_ptrs/dst_ptrs buffers uint64 (or store as object/np.uintp) in
+  vllm mamba_utils so device pointers with bit 63 set don't overflow C long on XPU.

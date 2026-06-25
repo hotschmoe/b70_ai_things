@@ -1,0 +1,131 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> bash agentic-eval/run/run_all.sh
+[ae 01:56:43] ############ CAMPAIGN subset=smoke configs=(27b-int4 27b-w8a8 35b-int4 35b-w8a8) ############
+[ae 01:56:43] ########## [27b-int4] serve ##########
+[ae 01:56:43] serve 27b-int4 (dense/int4, 1 card(s), id=qwen36-27b-int4) action=start port=18080 maxlen=65536
+=== serve qwen36-27b-int4  IMG=vllm-xpu-env:v0230  TP=1 PP=1  GRAPH=1  port=18080 card=0 ===
+vllm serve /models/Lorbus_Qwen3.6-27B-int4-AutoRound --served-model-name qwen36-27b-int4 --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 1 --max-model-len 65536 --max-num-seqs 1 --gpu-memory-utilization 0.92 --trust-remote-code --enable-prefix-caching --limit-mm-per-prompt {"image":0,"video":0} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --compilation-config {"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8,16,32,64],"compile_sizes":[1],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 900s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18080  qwen36-27b-int4  (TP=1 GRAPH=1) in 305s ===
+"id":"qwen36-27b-int4"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. **Paris** is the capital and most populous city of France.
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).
+[ae 02:01:51] identity OK: qwen36-27b-int4
+[ae 02:01:51] endpoint serving 'qwen36-27b-int4'
+[ae 02:01:51] === config 27b-int4 :: subset=smoke :: harnesses: aider swe ===
+[ae 02:01:51] --- harness aider (27b-int4) start ---
+[ae 02:01:52] aider: subset=smoke -> 5 exercises (seed=1234)
+[ae 02:01:52] aider: config=27b-int4 served=qwen36-27b-int4 endpoint=http://localhost:18080/v1 temp=0.0
+Warning: Input is not a terminal (fd=0).
+Copying /benchmarks/polyglot-benchmark -> /benchmarks/2026-06-25-02-01-58--20260625-020151-27b-int4-smoke ...
+...done
+model_metadata_files_loaded: [PosixPath('/aider/aider/resources/model-metadata.json')]
+main_model.max_chat_history_tokens: 1024
+main_model: openai/qwen36-27b-int4
+edit_format: diff
+fnames: /benchmarks/2026-06-25-02-01-58--20260625-020151-27b-int4-smoke/rust/exercises/practice/xorcism/src/lib.rs
+coder.ignore_mentions: {'.meta/config.json', '.docs/instructions.append.md', '.meta/test_template.tera', 'CMakeLists.txt', 'tests/xorcism.rs', '.meta/example.rs', '.docs/instructions.md', 'Cargo.toml', '.meta/additional-tests.json'}
+Aider v0.86.2
+Model: openai/qwen36-27b-int4 with diff edit format
+Git repo: none
+Repo-map: disabled
+Added lib.rs to the chat.
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 0.2 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 0.5 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 1.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 2.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 4.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 8.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 16.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 32.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 64.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 128.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 256.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 512.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 1024.0 seconds...
+Terminated                 bash "$AE_ROOT/run/run_config.sh" "$label" "$SUBSET" "${HARNESSES_ARGS[@]}"
+[ae 02:22:06] trap: tearing down 27b-int4
+[ae 02:22:06] serve 27b-int4 (dense/int4, 1 card(s), id=qwen36-27b-int4) action=stop port=18080 maxlen=65536
+vllm_qwen36-27b-int4
+stopped vllm_qwen36-27b-int4 (graceful -t30; GPU released if last holder)
+[ae 02:22:07] [27b-int4] run_config returned nonzero
+[ae 02:22:07] serve 27b-int4 (dense/int4, 1 card(s), id=qwen36-27b-int4) action=stop port=18080 maxlen=65536
+stopped vllm_qwen36-27b-int4 (graceful -t30; GPU released if last holder)
+[ae 02:22:07] ########## [27b-w8a8] serve ##########
+[ae 02:22:07] serve 27b-w8a8 (dense/w8a8, 2 card(s), id=qwen36-27b-w8a8-sqgptq-mtp) action=start port=18080 maxlen=65536
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== serve qwen36-27b-w8a8-sqgptq-mtp  IMG=vllm-xpu-env:int8g  TP=2 PP=1  GRAPH=1  port=18080  ===
+vllm serve /models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft --served-model-name qwen36-27b-w8a8-sqgptq-mtp --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 2 --max-model-len 65536 --max-num-seqs 1 --gpu-memory-utilization 0.90 --trust-remote-code --enable-prefix-caching --distributed-executor-backend mp --limit-mm-per-prompt {"image":0,"video":0} --speculative-config {"method":"mtp","num_speculative_tokens":3} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --compilation-config {"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":false,"cudagraph_capture_sizes":[1,2,4,6,8],"splitting_ops":["vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 1800s, stall-abort 300s; first run JIT-compiles/captures) ===
+Terminated                 bash "$AE_ROOT/serve/serve_config.sh" "$label" start
+[ae 02:22:52] trap: tearing down 27b-w8a8
+[ae 02:22:52] serve 27b-w8a8 (dense/w8a8, 2 card(s), id=qwen36-27b-w8a8-sqgptq-mtp) action=stop port=18080 maxlen=65536
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+stopped vllm_qwen36-27b-w8a8-sqgptq-mtp (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[ae 02:23:07] !!! [27b-w8a8] serve FAILED -- skipping its harnesses
+[ae 02:23:07] serve 27b-w8a8 (dense/w8a8, 2 card(s), id=qwen36-27b-w8a8-sqgptq-mtp) action=stop port=18080 maxlen=65536
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+stopped vllm_qwen36-27b-w8a8-sqgptq-mtp (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[ae 02:23:22] ########## [35b-int4] serve ##########
+[ae 02:23:22] serve 35b-int4 (moe/int4, 1 card(s), id=qwen36-35b-a3b-int4) action=start port=18080 maxlen=65536
+=== serve qwen36-35b-a3b-int4  IMG=vllm-xpu-env:v0230moe  TP=1 PP=1  GRAPH=1  port=18080 card=0 ===
+vllm serve /models/Intel_Qwen3.6-35B-A3B-int4-AutoRound --served-model-name qwen36-35b-a3b-int4 --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 1 --max-model-len 65536 --max-num-seqs 1 --gpu-memory-utilization 0.90 --trust-remote-code --enable-prefix-caching --kv-cache-dtype fp8_e5m2 --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --compilation-config {"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8,16,32,64],"compile_sizes":[1],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 900s, stall-abort 300s; first run JIT-compiles/captures) ===
+./bin/gpu-run: line 78: 206242 Killed                     "$@"
+gpu-run: [b70s4dayz] done in 1742s (exit 137)

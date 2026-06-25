@@ -183,6 +183,15 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   (`scripts/62_pp2_27b.sh`.)
 
 ## What does NOT work (yet) — save yourself the time
+- **Prefix caching (`--enable-prefix-caching`) on Qwen3.6 HYBRID models -> CRASHES the engine (2026-06-25).**
+  Qwen3.6 (27B dense and 35B-A3B MoE) is a hybrid mamba/linear-attention model. With APC on, the FIRST real
+  multi-turn request triggers a mamba block-state copy in vLLM, and the source-pointer scratch buffer
+  (`mamba_utils.collect_mamba_copy_meta`, `src_ptrs.np`) is signed int64 -- an XPU device pointer with bit 63
+  set overflows C long: `OverflowError: Python int too large to convert to C long` -> `EngineDeadError`
+  (graceful exit, NO GPU wedge). Short health/coherence probes pass (single block, no copy); the first long
+  request dies. Isolated: with APC OFF the identical 3x36KB multi-turn workload runs clean (HTTP 200, no
+  overflow). **Serve these hybrids with APC OFF** until a vLLM fix makes the `src_ptrs`/`dst_ptrs` buffers
+  uint64. (agentic-eval defaults `EVAL_PREFIX_CACHE=0` for this reason; JOURNAL 2026-06-25.)
 - **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
   **We FIXED it (2026-06-18):** wrote a native `int8_gemm_w8a8` oneDNN kernel (s8xs8->s32) + the vLLM
   `XPUInt8ScaledMMLinearKernel` + registry entry. The W8A8 checkpoint now SERVES on the B70 and selects our
