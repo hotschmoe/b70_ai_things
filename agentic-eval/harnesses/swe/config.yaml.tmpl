@@ -1,0 +1,26 @@
+# agentic-eval/harnesses/swe/config.yaml.tmpl
+# mini-swe-agent model config for a LOCAL vLLM OpenAI-compatible endpoint.
+# run.sh substitutes @@...@@ placeholders at run time (do NOT hardcode a quant).
+#
+# This file is MERGED on top of the builtin `swebench_backticks.yaml` (text/bash
+# mode, NOT native tool-calls) -- see run.sh. The backticks config supplies the
+# system/instance templates; we only override the model wiring here.
+#
+# Why backticks/textbased and not the default tool-call swebench.yaml:
+#   The model emits ```mswea_bash_command ... ``` fenced shell, parsed from plain
+#   text. That avoids the vLLM tool-parser as a confound: a quant's score reflects
+#   coding ability, not whether the XML/JSON tool parser fired. (User requirement.)
+model:
+  # litellm_textbased => parse a fenced bash block from text, no native tool-calls.
+  model_class: litellm_textbased
+  # hosted_vllm/<served-id> routes litellm to the local OpenAI-compatible server.
+  model_name: "hosted_vllm/@@SERVED@@"
+  # local model has no price sheet -> never error/abort on cost lookup.
+  cost_tracking: "ignore_errors"
+  model_kwargs:
+    api_base: "@@BASE_URL@@/v1"
+    api_key: "dummy"          # local vLLM ignores it; litellm/openai client wants something.
+    temperature: @@TEMPERATURE@@
+    top_p: @@TOP_P@@
+    max_tokens: @@MAX_TOKENS@@
+    drop_params: true         # let litellm drop kwargs the backend doesn't accept.

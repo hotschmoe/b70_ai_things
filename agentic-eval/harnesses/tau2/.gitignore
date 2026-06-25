@@ -1,0 +1,5 @@
+# tau2 harness local artifacts -- all regenerable via setup.sh / run.sh; never commit.
+.venv/
+src/            # cloned tau2-bench checkout (pinned in setup.sh)
+runs/           # native results.json copies + run logs
+*.log

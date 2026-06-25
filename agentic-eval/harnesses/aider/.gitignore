@@ -1,0 +1,7 @@
+# aider harness local ignores (the repo-root .gitignore already covers .venv/, data/, runs/
+# for all harnesses; this adds the aider-specific vendored upstream checkout).
+.venv/
+data/
+runs/
+vendor/
+__pycache__/
