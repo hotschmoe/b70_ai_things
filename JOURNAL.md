@@ -4200,3 +4200,37 @@ result (config 2, 27b-w8a8-sqgptq-mtp, TP=2) -> [OK] FIRST runtime test of the d
 verdict -> APC-off fix validated end-to-end on both TP=1 int4 and TP=2 w8a8+MTP. swe scoring is currently
   gated by thinking-truncation, not capability -- needs a per-turn token-budget bump before swe deltas mean
   anything. aider control behaves (int4 0.40). Run continuing: config 2 harnesses, then 35b-int4, then 35b-w8a8.
+
+---
+
+## 2026-06-25 -- 27b-w8a8 TP=2 crashes under sustained long-gen load (REPRODUCIBLE, net-independent) [FAIL]
+
+config -> during the APC-off campaign, config 2 (27b-w8a8-sqgptq-mtp, TP=2, MTP spec=3, PUSH_AR
+P2P=0, PIECEWISE capture, APC OFF) served HEALTHY in 168s and ran aider for ~20min, then the engine
+DIED at 04:55:47 mid-request:
+    EngineCore: multiproc_executor shm_broadcast.dequeue -> acquire_read -> RuntimeError("cancelled")
+    -> EngineDeadError -> graceful shutdown (exit 0). A TP worker vanished with NO python traceback
+    (the only worker-side exception is the benign startup _report_usage_worker JSONDecodeError daemon
+    thread). "force killing remaining processes count=1". => native worker fault, not a python error.
+
+context -> the office internet dropped around the same time; tested whether that mattered.
+
+isolation (net-independent) -> re-served 27b-w8a8 ALONE and hammered it with LONG multi-turn code-edit
+requests purely over localhost (NO aider, NO litellm, NO internet), 8192 max_tokens, thinking-on,
+varied shapes, for up to 32min:
+    ./bin/gpu-run bash <w8a8_stress.sh> 32
+  RESULT: identical crash. req0..req4 OK (http 200, finish=stop), engine DIED at req 5, t=973s (~16.2min),
+  gen_tok_total~21917, same RuntimeError("cancelled")/EngineDeadError. (req2/req4 http=000 were just the
+  300s curl timeout on >5min generations; engine survived those.) VERDICT: w8a8 CRASHED under local-only
+  load -> REPRODUCIBLE engine bug, INDEPENDENT of the network. Both deaths ~16-20min / ~5-6 long requests
+  / ~20k+ cumulative gen tokens in. Box recovered cleanly both times (graceful teardown, xpu-health
+  HEALTHY, lease free -- NO wedge; the EngineDeadError path tears down without corrupting oneCCL/L0).
+
+verdict -> [FAIL] 27b-w8a8 (TP=2 + MTP + PUSH_AR + PIECEWISE) cannot sustain a long agentic run -- it dies
+  ~16-20min in under heavy long-generation load, before aider's ~62min workload completes. This BLOCKS the
+  27b dense int4-vs-w8a8 quant delta until fixed. The office-internet blip was a red herring. Signature =
+  a TP worker hard-dying (native fault, no py traceback) under sustained load -> suspects, in order: MTP
+  speculative-decode state accumulation; PUSH_AR custom allreduce kernel; a sustained-load resource leak;
+  a graph-capture shape miss. NEXT: bisect by re-running w8a8 with MTP off (single-variable) -- if it then
+  survives 32min, MTP is the cause AND we have a workable w8a8 serve config (MTP-off) to unblock the delta.
+  Note 35b-w8a8 (Quark, TP=2, NO MTP) is a different path and may or may not share this.

@@ -1,0 +1,49 @@
+gpu-run: card 0 busy (held by: ); waiting up to 600s ...
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> bash /tmp/claude-1000/-mnt-vm-8tb-github-b70-ai-things/7686d17b-c592-4500-868d-0f88594eaa2e/scratchpad/w8a8_stress.sh 32
+############ W8A8 STRESS ISOLATION (max 32m, APC off, local-only load) ############
+[ae 05:06:43] serve 27b-w8a8 (dense/w8a8, 2 card(s), id=qwen36-27b-w8a8-sqgptq-mtp) action=start port=18080 maxlen=65536
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== serve qwen36-27b-w8a8-sqgptq-mtp  IMG=vllm-xpu-env:int8g  TP=2 PP=1  GRAPH=1  port=18080  ===
+vllm serve /models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft --served-model-name qwen36-27b-w8a8-sqgptq-mtp --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 2 --max-model-len 65536 --max-num-seqs 1 --gpu-memory-utilization 0.90 --trust-remote-code --no-enable-prefix-caching --distributed-executor-backend mp --limit-mm-per-prompt {"image":0,"video":0} --speculative-config {"method":"mtp","num_speculative_tokens":3} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --compilation-config {"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":false,"cudagraph_capture_sizes":[1,2,4,6,8],"splitting_ops":["vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 1800s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18080  qwen36-27b-w8a8-sqgptq-mtp  (TP=2 GRAPH=1) in 82s ===
+"id":"qwen36-27b-w8a8-sqgptq-mtp"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. Paris is the capital and most populous city of France. It is
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).
+[ae 05:08:25] identity OK: qwen36-27b-w8a8-sqgptq-mtp
+>>> serve healthy; starting local hammer at 05:08:25
+req  0  t=   0s  http=200  finish=stop  gen_tok_total=2141.0
+req  1  t=  65s  http=200  finish=stop  gen_tok_total=5613.0
+req  2  t= 192s  http=000  finish=stop  gen_tok_total=12614.0
+req  3  t= 492s  http=200  finish=stop  gen_tok_total=16019.0
+req  4  t= 673s  http=000  finish=stop  gen_tok_total=20199.0
+req  5  t= 973s  http=500  finish=None  gen_tok_total=21917.0
+>>> ENGINE DOWN after req 5 (t=973s)
+=== container status: Up 20 minutes ===
+=== worker/native death signature (if any) ===
+(Worker_TP0 pid=136) Traceback (most recent call last):
+(Worker_TP0 pid=136)     raise JSONDecodeError("Expecting value", s, err.value) from None
+(Worker_TP0 pid=136) json.decoder.JSONDecodeError: Expecting value: line 1 column 2 (char 1)
+(EngineCore pid=75) ERROR 06-25 05:27:11 [core.py:1197]     raise RuntimeError("cancelled")
+(EngineCore pid=75) ERROR 06-25 05:27:11 [core.py:1197] RuntimeError: cancelled
+(APIServer pid=1) ERROR 06-25 05:27:11 [async_llm.py:704] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.
+VERDICT: w8a8 CRASHED under local-only load at req 5 (reproducible engine bug, net-independent)
+[ae 05:27:11] serve 27b-w8a8 (dense/w8a8, 2 card(s), id=qwen36-27b-w8a8-sqgptq-mtp) action=stop port=18080 maxlen=65536
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+vllm_qwen36-27b-w8a8-sqgptq-mtp
+stopped vllm_qwen36-27b-w8a8-sqgptq-mtp (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+############ W8A8 STRESS done ############
+gpu-run: [b70s4dayz] done in 1247s (exit 0)
