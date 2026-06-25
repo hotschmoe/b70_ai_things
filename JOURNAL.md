@@ -4234,3 +4234,31 @@ verdict -> [FAIL] 27b-w8a8 (TP=2 + MTP + PUSH_AR + PIECEWISE) cannot sustain a l
   a graph-capture shape miss. NEXT: bisect by re-running w8a8 with MTP off (single-variable) -- if it then
   survives 32min, MTP is the cause AND we have a workable w8a8 serve config (MTP-off) to unblock the delta.
   Note 35b-w8a8 (Quark, TP=2, NO MTP) is a different path and may or may not share this.
+
+---
+
+## 2026-06-25 -- w8a8 TP=2 crash BISECT: MTP-off SURVIVES (localizes the bug to the MTP path) [data]
+
+config -> re-ran the local-only stress reproducer with MTP DISABLED (single variable), everything else
+identical (TP=2, PUSH_AR P2P=0, PIECEWISE capture, APC off), + faulthandler. Added opt-in recipe toggles
+B70_NOMTP=1 (drops --speculative-config) and B70_DEBUG=1 (PYTHONFAULTHANDLER=1) -- default-off, serve path
+byte-identical (commit b3d5482).
+    B70_NOMTP=1 B70_DEBUG=1 ./bin/gpu-run bash <w8a8_stress.sh> 40
+
+result -> SURVIVED 40m. 9 long local requests, t=0..2289s, gen_tok_total 2654 -> 12073, NO crash, NO
+  faulthandler dump, clean teardown, xpu-health HEALTHY. (MTP-off is ~7x slower: ~3-4 t/s vs MTP-on ~25,
+  so each 8k-tok request hit the 300s curl timeout -> http=000, but the engine kept generating fine.)
+
+interpretation -> with MTP ON, w8a8 died TWICE at ~16-20min / ~20k cumulative gen tokens. With MTP OFF it
+  ran 40min / 28min-hammer clean. It cleared the TIME threshold decisively (past both crash times) but only
+  reached ~12k tokens (< the ~20k crash threshold) because MTP-off is so much slower -- so the token-count
+  axis is not fully covered. Still, combined with the mechanism (MTP adds per-step draft+verify + an extra
+  capture-safe all_gather collective via patches/sitecustomize.py -- exactly the kind of repeated work that
+  can leak/fault over many steps), this localizes the bug to the MTP / spec-decode path with high confidence.
+
+verdict -> [data] BUG IS IN THE MTP PATH. A surviving bisect gives an OPERATIONAL fix (serve 27b-w8a8 with
+  MTP OFF -> stable -> unblocks the 27b int4-vs-w8a8 delta) and narrows the search, but NOT a code-level root
+  cause (nothing crashed -> faulthandler never fired). To get the fixable "faulting line", reproducing MTP-ON
+  WITH faulthandler is required -> launched next (B70_DEBUG=1, default MTP). NOTE: MTP-off ~3-4 t/s single-
+  stream is far slower than MTP-on captured ~25 t/s -- if we end up serving w8a8 MTP-off for the eval, expect
+  a big wall-clock hit on that one config (scores unaffected -- greedy).
