@@ -52,6 +52,11 @@ b70_setdefaults() {
   TOOLCALL="${TOOLCALL:-}"                   # 1 = OpenAI tool calling (qwen3_coder parser)
   TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
   REASONPARSER="${REASONPARSER:-}"          # e.g. qwen3 -> split <think> into reasoning_content
+  PREFIXCACHE="${PREFIXCACHE:-0}"            # 0 = --no-enable-prefix-caching (DEFAULT; clean perf baselines,
+                                            # repeated prompts re-prefill). 1 = --enable-prefix-caching, the
+                                            # right choice for AGENTIC multi-turn serving (shared/growing
+                                            # prefix skips re-prefill; greedy output is identical -> big
+                                            # speedup, no quality change). Default unchanged for all benches.
   SYCLKERNELS="${SYCLKERNELS:-}"            # TP>1 oneCCL: default 0 (eager) / 1 (graph capture)
   SPLITOPS="${SPLITOPS:-}"                   # extra compilation splitting_ops (comma-quoted vllm:: op list).
                                             # TP>1 + MTP REQUIRES the collectives here: vLLM records the spec
@@ -72,8 +77,8 @@ b70_setdefaults() {
 b70_build() {
   ARGS=(serve "$CKPT" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
         --dtype "$DTYPE" --tensor-parallel-size "$TP" --max-model-len "$MAXLEN"
-        --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL"
-        --no-enable-prefix-caching --trust-remote-code)
+        --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" --trust-remote-code)
+  if [ "$PREFIXCACHE" = 1 ]; then ARGS+=(--enable-prefix-caching); else ARGS+=(--no-enable-prefix-caching); fi
   [ -n "$QUANT" ]   && ARGS+=(--quantization "$QUANT")
   [ "${PP:-1}" -gt 1 ] && ARGS+=(--pipeline-parallel-size "$PP")
   b70_multicard     && ARGS+=(--distributed-executor-backend mp)

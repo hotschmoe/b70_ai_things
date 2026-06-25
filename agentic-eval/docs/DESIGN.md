@@ -66,10 +66,13 @@ Lead conclusions with `bfcl`; treat `swe`/`tau2` single-seed deltas as direction
 Qwen3.6 is a hybrid reasoner. `EVAL_THINKING` (configs.sh) selects the regime; default `on`.
 
 - **thinking-on (default)** -- the real agentic-coding workload: the model emits `<think>` traces before
-  tool calls / edits. Serve runs the `qwen3` reasoning parser. Sizing: MAXLEN 32768, max_tokens 8192,
-  MAXSEQS 2, concurrency 2. The bigger budget is mandatory -- the 2026-06-25 smoke showed aider at MAXLEN
-  16384 / max_tokens 2048 hitting `exhausted_context_windows` mid-think and scoring an artifactual 0.0
-  (a sizing artifact, not a capability or plumbing result).
+  tool calls / edits. Serve runs the `qwen3` reasoning parser + prefix caching (PREFIXCACHE=1). Sizing:
+  MAXLEN 65536 (64k, fp16 KV -- no fp8 hack), max_tokens 8192, MAXSEQS 1, concurrency 1. The bigger budget
+  is mandatory -- the 2026-06-25 smoke showed aider at MAXLEN 16384 / max_tokens 2048 hitting
+  `exhausted_context_windows` mid-think and scoring an artifactual 0.0 (a sizing artifact, not a capability
+  or plumbing result); 32k still exhausted a few hard cases, so 64k. 64k x 1 seq fits the tight single-card
+  27B-int4 (identical KV footprint to the 32k x 2 seq config the smoke already fit). Prefix caching recovers
+  most of the concurrency-1 wall-clock on multi-turn harnesses (shared growing prefix skips re-prefill).
 - **thinking-off (`EVAL_THINKING=off`)** -- a deliberate SECOND axis (faster, far fewer tokens; some
   models hold up well without thinking). Serve drops the reasoning parser; sizing reverts to MAXLEN 16384
   / max_tokens 2048 / MAXSEQS 4. STATUS: EXPERIMENTAL -- fully suppressing Qwen3.6 thinking needs the
