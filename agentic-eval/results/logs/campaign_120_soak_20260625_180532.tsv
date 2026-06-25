@@ -2,3 +2,4 @@
 # columns: time  cell  soak_result  notes(decode1/decode4 t/s, accept_len)
 # MAXLEN=16384 BENCH_IN=512 BENCH_OUT=256 CONC='1 4' SOAK_TOKENS=50000
 18:35:34	E_pw_drafteager_mtp3	CRASH:16384:req_fail_nosig	decode1=36.08 decode4=20.61 accept_len=3.25
+19:20:11	B_none_mtp3	PASS:57344	decode1=25.39 decode4=18.07 accept_len=2.91

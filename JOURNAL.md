@@ -4507,3 +4507,27 @@ HARNESS BUG (to fix before the next soak): soak_until_crash treats an empty curl
 verdict -> [PROMISING] drafter-eager is a GREAT candidate: full decode speed (36 t/s, 2.8x), real MTP accept,
   no crash observed through 16k. Stability past ~28k UNPROVEN (harness cut it short). Next: fix the harness,
   re-soak E (and B) properly to a real 50k+ verdict; watch whether the 26->10 drift is a pre-hang precursor.
+
+## 2026-06-25 -- Run 2 RESULT: cudagraph_mode=NONE is STABLE (soaked 57k) + 2x eager; drafter-eager degrades [WIN]
+
+Same E+B soak run completed (gpu-run 4479s, exit 0, clean teardown, no wedge -- 2 TP=2 serves this session):
+    E_pw_drafteager_mtp3  CRASH:16384  (HARNESS FALSE POSITIVE -- old harness, see prior entry)  decode 36.08
+    B_none_mtp3           PASS:57344   (genuine -- B's high steady rate never hit the timeout bug)  decode 25.39
+
+KEY RESULT -> **B (cudagraph_mode=NONE + MTP3) SOAKED CLEAN TO 57,344 tokens** -- ~2.9x the ~20-28k crash
+  threshold -- with FLAT throughput (~23-26 t/s, no drift) and MTP intact (accept_len 2.91). decode 25.39 c1 /
+  18.07 c4 = ~2x the shipped enforce-eager fix (12.78), and STABLE. cudagraph_mode=NONE keeps inductor compile
+  but skips graph replay -> no command-stream accumulation -> no crash.
+
+MECHANISM (now pinned) -> the slowdown/crash tracks GRAPH REPLAY. E (PIECEWISE, replays the target graph)
+  drifted 26->16->10 t/s = the real command-stream-accumulation precursor; B (NONE, no replay) stayed FLAT over
+  the same range. So drafter-eager alone does NOT fix it: the TARGET's graph replay still accumulates (codex's
+  contingency -- target hybrid spec-state under graph). E is fastest (36) but will hang eventually.
+
+decode scoreboard (single-stream c1): A enforce-eager 12.78 | **B none 25.39 (STABLE)** | repro PIECEWISE 34.89
+  (crashes) | E drafter-eager 36.08 (degrades->hangs).
+verdict -> [WIN] cudagraph_mode=NONE is a stable, ~2x-faster-than-enforce-eager production candidate for
+  27b-w8a8. Recommend promoting it over --enforce-eager (eval EVAL_SERVE_ENV + shelf recipe). Follow-ups:
+  (a) re-soak E with the fixed harness to pin its hang point; (b) cross-check NONE with the coherent scripts/111
+  decode probe for the true MTP number; (c) Tier F (periodic target-graph reset) to get NONE-stability at
+  capture speed. Harness false-positive fixed in commit 21fbe95.

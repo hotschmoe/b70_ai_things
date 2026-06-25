@@ -360,13 +360,30 @@ Decode scoreboard (single-stream c1 / c4, vllm bench serve random IN=512/OUT=256
    and generating (~10 t/s, Running:1 req, NO EngineDead/sample_tokens/Aborted signature) when the soak's
    `curl --max-time 600` timed out on a slow 8192-token request (8192 / ~10 t/s = ~820s > 600s). So E did NOT
    crash; it was healthy through ~16k tokens. STABILITY PAST THE ~20-28k ZONE IS STILL UNPROVEN (cut short).
-3. REAL signal (inconclusive): E throughput drifted 26 -> 16 -> 10 t/s across the 3 soak requests. Could be the
-   early pre-hang slowdown (same shape as the original collapse), or just longer-output variance. Needs a
-   proper soak to tell. B (no graph replay) staying flat vs also drifting will help pin the cause.
-4. B (cudagraph=NONE) decodes 25.39 t/s = ~2x eager -- a candidate "free win" if stable. Soak in progress.
-5. HARNESS BUG to fix before re-soak: `soak_until_crash` must NOT call a client curl timeout a crash. Declare
-   CRASH only on a real log signature, `/health` failure, or confirmed ~0 generation throughput (true hang);
-   use shorter per-request max_tokens + a longer/retryable timeout. (Fixing this is the immediate next step.)
+3. The drift IS graph-replay-linked (now confirmed by B): E (PIECEWISE -> replays the target graph) drifted
+   26 -> 16 -> 10 t/s, while B (cudagraph=NONE -> NO replay) held FLAT at ~23-26 t/s through the same token
+   range. So E's slowdown was the real command-stream-accumulation precursor, not output variance -- meaning
+   drafter-eager alone does NOT fully fix the crash: the TARGET's graph replay still accumulates (codex's
+   contingency -- the target hybrid spec-state path under graph). E is fast (36) but will likely hang eventually.
+4. **B (cudagraph_mode=NONE) PASSED: soaked clean to 57,344 tokens** (~2.9x the ~20-28k crash threshold), flat
+   throughput, no crash, MTP intact (accept_len 2.91). decode 25.39 c1 / 18.07 c4 = **~2x the enforce-eager
+   fix (12.78), and STABLE.** This is the new fast+stable production candidate: keeps inductor compile, drops
+   the crash-prone graph replay. Box torn down clean (no wedge; 2 TP=2 serves this session).
+5. HARNESS BUG fixed (commit 21fbe95): `soak_until_crash` now declares CRASH only on a real engine-death
+   signature, `/health` failure, or confirmed ~0 generation throughput (true hang) -- never a bare client
+   timeout while the engine is alive. (E's run used the old harness; B's high steady rate meant the bug never
+   bit it, so B's PASS:57344 is a genuine verdict.)
+
+### Run 2 verdict + recommendation
+
+- **WINNER (stable + fast): `cudagraph_mode=NONE` + MTP3** = 25.39 t/s single-stream (~2x the shipped
+  enforce-eager fix), stable through 57k tokens. Recommend promoting it over `--enforce-eager` for 27b-w8a8
+  (eval `EVAL_SERVE_ENV` and the shelf recipe). It keeps torch.compile/inductor but skips graph replay.
+- **FASTEST (unstable): drafter-eager (PIECEWISE target)** = 36.08 t/s but the target graph replay still
+  accumulates (degrades 26->10) -> will hang. Only viable with a target-graph periodic reset (Tier F, future).
+- Open follow-ups: (a) re-soak E with the fixed harness to pin its exact hang point/token count; (b) cross-check
+  the NONE winner with the coherent decode probe (scripts/111) for the true MTP-inclusive number; (c) Tier F
+  (bound/reset the target graph command stream) if we want NONE-stability AT capture speed.
 
 ---
 
