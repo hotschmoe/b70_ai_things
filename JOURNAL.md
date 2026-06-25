@@ -4165,3 +4165,38 @@ verdict -> [FAIL for APC=1 on hybrid models, FIXED by default flip]. Flipped EVA
   wall-clock, scores unchanged -- greedy). Re-running the 4-config smoke with APC off for the real scoreboard.
   Proper fix (later, contrib patch): make src_ptrs/dst_ptrs buffers uint64 (or store as object/np.uintp) in
   vllm mamba_utils so device pointers with bit 63 set don't overflow C long on XPU.
+
+---
+
+## 2026-06-25 -- agentic-eval APC-off run: configs 1-2 results + swe truncation root cause [OK/partial]
+
+config -> re-launched the 4-config smoke (aider+swe) with the APC fix (EVAL_PREFIX_CACHE=0 default),
+thinking-on, 64k, MAXSEQS 1, temp 0:
+    SUBSET=smoke HARNESSES="aider swe" ./bin/gpu-run bash agentic-eval/run/run_all.sh
+
+result (config 1, 27b-int4, TP=1) ->
+  - aider: pass_rate_2 = 0.40 (n=5), wall 3725s (~62m), tok 172610. (Matches the pre-APC stale run's 0.40
+    -> APC off does not change greedy scores, only speed, as predicted.)
+  - swe:   resolved = 0.0 (0/3), wall 2858s, tok 132472. n_submitted=3 n_errored=0 n_empty_patch=3.
+  - NO crashes anywhere; engine healthy; Prefix cache hit rate 0.0% (APC off confirmed).
+
+swe 0/3 ROOT CAUSE (inspected astropy-12907 trajectory) -> exit_status=RepeatedFormatError, submission=''.
+  The model emitted VALID ```mswea_bash_command actions for the first ~5 turns (find/cat/pip), then on harder
+  turns the <think> trace consumed the entire AE_MAX_TOKENS=8192 per-turn budget and the action was TRUNCATED
+  (finish_reason=length). The agent re-prompted "you were cut off, be concise" 3x; the model kept overthinking
+  and truncating; after 3 repeated truncations mini-swe-agent aborts -> empty patch. So it is NOT step-count and
+  NOT the submit/format parser -- it is PER-TURN OUTPUT TRUNCATION from runaway thinking. Raising the agent step
+  budget would NOT help. Fix options: raise swe per-turn max_tokens well above 8192 (e.g. 16-24k) and/or cap the
+  think budget for swe. Almost certainly systematic across configs under thinking-on -> swe-smoke currently
+  measures "can the model finish one action within 8k tokens", not coding ability. (Revisit before trusting any
+  swe delta.)
+
+result (config 2, 27b-w8a8-sqgptq-mtp, TP=2) -> [OK] FIRST runtime test of the delicate path under the eval:
+  HEALTHY :18080 in 168s, identity OK, coherence probe OK, aider started. APC off + 64k + MTP(spec=3) + PIECEWISE
+  graph-capture + TP=2 + PUSH_AR(P2PACCESS=0) ALL serve coherently together with ZERO wedge signatures (no
+  DEVICE_LOST / UR_RESULT_ERROR / OOM). MTP live + working: SpecDecoding mean accept_len 3.0-3.2, draft accept
+  ~68-74%, accepted ~22-27 tok/s. -> the just-committed serve settings hold on w8a8 once APC is disabled.
+
+verdict -> APC-off fix validated end-to-end on both TP=1 int4 and TP=2 w8a8+MTP. swe scoring is currently
+  gated by thinking-truncation, not capability -- needs a per-turn token-budget bump before swe deltas mean
+  anything. aider control behaves (int4 0.40). Run continuing: config 2 harnesses, then 35b-int4, then 35b-w8a8.

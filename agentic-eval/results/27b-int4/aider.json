@@ -1,0 +1,54 @@
+{
+  "config": "27b-int4",
+  "harness": "aider",
+  "subset": "smoke",
+  "served_model_id": "qwen36-27b-int4",
+  "score": 0.4,
+  "score_name": "pass_rate_2",
+  "n_tasks": 5,
+  "n_passed": 2,
+  "per_task": [
+    {
+      "task_id": "javascript/wordy",
+      "passed": false
+    },
+    {
+      "task_id": "rust/xorcism",
+      "passed": false
+    },
+    {
+      "task_id": "cpp/linked-list",
+      "passed": true
+    },
+    {
+      "task_id": "java/go-counting",
+      "passed": false
+    },
+    {
+      "task_id": "go/variable-length-quantity",
+      "passed": true
+    }
+  ],
+  "extra_scores": {
+    "pass_rate_1": 0.2,
+    "percent_cases_well_formed": 1.0,
+    "syntax_errors": 0,
+    "timeouts": 0,
+    "n_completed": 5,
+    "n_missing": 0,
+    "n_passed_2tries": 2,
+    "n_passed_1try": 1
+  },
+  "wall_s": 3725.51,
+  "tokens_prompt": 65306,
+  "tokens_gen": 107304,
+  "tokens_total": 172610,
+  "throughput_tok_s": 28.8,
+  "temperature": 0.0,
+  "meta": {
+    "thinking": "on",
+    "max_len": "65536",
+    "max_tokens": "8192",
+    "concurrency": "1"
+  }
+}
