@@ -37,6 +37,9 @@
 - [`research_moe_optimizations.md`](research_moe_optimizations.md) -- MoE multi-GPU optimization IDEAS (PP-for-MoE
   hypothesis: PP keeps each layer's experts whole on one card -> removes the cross-card routing all-to-all; plus
   push-based reduce_scatter/all_gather as a fallback). Scratch/idea doc, nothing measured yet (P2P_GPU.md J.18-J.21).
+- [`docs/ornith_1.0_35b.md`](docs/ornith_1.0_35b.md) -- **NEW 2026-06-25:** Ornith-1.0-35B (qwen3_5_moe coder,
+  claims it beats Qwen3.5-35B on SWE-bench/Terminal-Bench). Arch notes + maker's suggested serve params (+ our
+  TP=2 adaptation) to test later. Downloading via `scripts/121`; quant plan = QUANTS_TODO "Ornith" block (O1-O3).
 
 This doc owns: the **W8A8 kernel sprint**, **W8A8 accuracy beyond what's done**, **AutoRound (autoint)**,
 **Quark loader compatibility**, and the **fused-MoE kernel** track. Everything else is a pointer.

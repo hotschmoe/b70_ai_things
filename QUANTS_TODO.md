@@ -49,6 +49,76 @@ MTP_TODO Phase-B question). Measure accept per format.
 
 ---
 
+## [NEW TARGET 2026-06-25] Ornith-1.0-35B -- W4A16 + W8A8 + W4A8 (PRIORITY: beats Qwen3.5-35B MoE on coding evals)
+
+`deepreinforce-ai/Ornith-1.0-35B`: a **Qwen3.5-based 35B MoE coder** (public, ungated, BF16, 16 safetensors
+shards, ~70 GB params; it is a VLM -- ships processor/preprocessor/video_preprocessor configs like the
+Qwen3.5 family, so it needs `trust-remote-code` + our VLM-config graft to serve). Maker claims it BEATS
+Qwen3.5-35B on exactly the evals we care about: **SWE-bench Verified 75.6 vs 70, Terminal-Bench 2.1 (Terminus-2)
+64.2 vs 41.4, NL2Repo 34.6 vs 20.5.** We historically liked the Qwen 35B MoE's *speed* but its accuracy/eval
+was poor -- Ornith is the candidate replacement. Maker's suggested serve params + our 2-card adaptation live in
+**[`docs/ornith_1.0_35b.md`](docs/ornith_1.0_35b.md)** (download: `scripts/121_download_ornith_35b.sh`, detached;
+lands at `models/deepreinforce-ai_Ornith-1.0-35B`).
+
+> **Same arch family as Q6/Q7 (qwen3.5 MoE) -- reuse that playbook.** These three items mirror the 35B-A3B MoE
+> recipe (sec 4 + sec 5 + sec 7) with the Ornith source. **MoE int8 SERVE is now UNBLOCKED** (was the Q6/Q7
+> blocker): `intel/llm-scaler-vllm` ships the int8 fused-MoE kernel (docs/kernel/20), and vLLM 0.23 Triton
+> `fused_moe` already runs int8 experts on `:v0230` (RESEARCH_TODO Track 5). So unlike Q6/Q7 these are
+> produce-AND-serve, not produce-only.
+
+### Arch (CONFIRMED from config.json 2026-06-25; full notes in docs/ornith_1.0_35b.md)
+`Qwen3_5MoeForConditionalGeneration` / `qwen3_5_moe`: **40 layers, 256 experts / top-8, hidden 2048,
+moe_intermediate 512, tie_word_embeddings=false, max_position 262144.** Hybrid GDN: `linear_attention` x30 +
+`full_attention` x10 (every 4th). **HAS MTP** (`mtp_num_hidden_layers: 1`) -> keep BF16. **HAS a SHARED expert**
+(`shared_expert_intermediate_size: 512`) -- a DIFFERENCE from our Qwen 35B MoE (none); the fused-MoE serve path
+with shared experts differs slightly (verify). VLM: vision **`intermediate_size: 4304`** (the known odd-dim that
+trips group-128 int4 -> keep vision BF16) + video. Still TODO once the download finishes: grep
+`model.safetensors.index.json` for the exact `mtp.*` / vision / expert / `gate`/`router` LEAF NAMES the IGNORE
+list needs (config gives shapes, the index gives names).
+
+### Universal handling for ALL three Ornith quants (per your "keep MTP in BF16" + prepack ask)
+- **MTP stays BF16** (your explicit ask + sec-5 gotcha #3). Ornith HAS MTP (`mtp_num_hidden_layers: 1`), so this
+  is REQUIRED: preserve the bf16 `mtp.*` tensors via the graft pattern (copy bf16 `mtp.*` from the source into the
+  quant; never quantize `mtp.fc` -> vLLM skips the head -> 0% accept).
+- **Router/gate stays BF16**, **vision+video tower stays BF16**, **lm_head stays BF16.** MoE+VLM `IGNORE` (regex,
+  router-aware): `lm_head re:.*linear_attn.* re:.*visual.* re:.*vision.* re:.*mtp.* re:.*(gate|router)\.` plus keep
+  only the expert + attn linears quantized. Confirm the exact module names against the index first.
+- **"Prepacked + smaller certain weights":** for **W4A8**, run the offline prepack (scripts/85-style, CPU, NO
+  lease) so int4 weights are stored PACKED (Q5 saw 32.9 -> 24.1 GiB and it removes the ~28 GiB unpacked-I8 GPU
+  load transient). W4A16-AutoRound is already `pack-quantized` (NO offline prepack needed, per Q8). W8A8 stores
+  int8 directly (no prepack).
+- **CALIBRATE ON CPU/CUDA, NOT XPU, for AutoRound int4** (Q8 lesson, RESEARCH_TODO Track 3e): XPU AutoRound
+  gradient calib + `low_gpu_mem_usage` offload CORRUPTS int4 weights (produced `!!!!` garbage that faked a passing
+  token-count bench). GPTQ/llmcompressor calib on XPU is fine; AutoRound int4 should run CPU or RunPod-NVIDIA.
+- **It is a CODER model -> calibrate on CODE-heavy data**, and **VALIDATE WITH A REAL CODING EVAL** (HumanEval+ at
+  minimum; ideally a SWE-style subset vs the BF16 base) -- and READ the generated text. A token-count bench does
+  NOT verify coherence (the Q8 false-positive lesson).
+- **Produce cost is large** (Q6 measured ~25-30 min/LAYER for the 256-expert 35B GPTQ -> multi-day full runs) and
+  is **GPU-gated** -- queue these behind the agent currently holding the cards; route every run via `gpu-run`.
+
+### [ ] O1 -- Ornith-1.0-35B  W4A16  (the quality serve; HIGHEST first value)
+- **Method:** int4 W4A16. Two viable producers: (a) compressed-tensors **GPTQ** W4A16 (research-format-consistent,
+  current default producer) or (b) **AutoRound int4** (`inc`, the proven faster-decode serve baseline -- the
+  35B-A3B Intel int4-AutoRound serves 56.8 t/s). For a MoE the AutoRound/INC path is the proven quality serve;
+  produce it on CPU/CUDA (calib caveat above).
+- **Out:** `models/Ornith-1.0-35B-W4A16-gptq` (or `...-int4-AutoRound`). **Serve:** VLM-config graft -> id
+  `ornith-35b-w4a16` (or `-int4`). Mirror the 35B int4-AutoRound serve recipe.
+
+### [ ] O2 -- Ornith-1.0-35B  W8A8  (int8 experts; lights the B70 INT8 systolic path)
+- **Method:** GPTQ-W8A8 (sec 4A default) or AutoRound-W8A8 (smoke-gate first; MoE AutoRound export is "limited").
+- **Out:** `models/Ornith-1.0-35B-W8A8-sqgptq` (or `-autoround`). `device_map="0,1"` + `low_gpu_mem_usage`.
+- **Serve:** NOW POSSIBLE -- llm-scaler int8 fused-MoE (docs/kernel/20) or v0230 Triton `fused_moe`, TP=2.
+  id `ornith-35b-w8a8-sqgptq`. After produce+graft, run `scripts/104_fix_w8a8_ignore.py <dir>` (regex-ignore fix,
+  sec-5 gotcha #1 -- W8A8 ignore-mismatch is SILENT garbage) then SERVE + READ THE TEXT.
+
+### [ ] O3 -- Ornith-1.0-35B  W4A8  (int4 experts x int8 act; prepacked)
+- **Method:** selective-SmoothQuant + GPTQ (sec 4B / Q0), router-aware MLP mapping
+  (`post_attention_layernorm -> {experts.*.gate_proj, up_proj}`). Then **PREPACK** (above).
+- **Out:** `models/Ornith-1.0-35B-W4A8-sqgptq` -> `...-W4A8-sqgptq-prepacked`. **Serve:** int8 MoE kernel, TP=2,
+  odd-dim VLM handling. id `ornith-35b-w4a8-sqgptq`.
+
+---
+
 ## 0. The method decision (per your spec: W8A8 = AutoRound, W4A8 = SmoothQuant+GPTQ)
 
 | scheme | method | why / how on the qwen3_5 hybrids |
@@ -98,6 +168,7 @@ The 27B / Qwable / 35B bf16 SOURCES (~54-70 GB params) do NOT fit one 32 GB card
 | Qwen3.6-27B (base) | `/mnt/vm_8tb/b70/models/Qwen_Qwen3.6-27B` | qwen3_5 (VLM+GDN+MTP) | 15 shards ~72 GB. VLM graft to serve. |
 | Qwen3.6-27B-Coder (Qwable) | `/mnt/vm_8tb/b70/models/DJLougen_Qwable-5-27B-Coder` | qwen3_5 | 15 shards ~60 GB. Same VLM handling. |
 | Qwen3.6-35B-A3B MoE | `/mnt/vm_8tb/b70/models/Qwen_Qwen3.6-35B-A3B` | qwen3_5_moe (256-exp/top-8 +vision +MTP) | DOWNLOADING (`scripts/63`, ~67/70 GB). **Produce quants now; SERVING gated on the int8 MoE kernel (docs/kernel/18).** |
+| **Ornith-1.0-35B** (coder) | `/mnt/vm_8tb/b70/models/deepreinforce-ai_Ornith-1.0-35B` | qwen3_5_moe (40L, 256-exp/top-8 +SHARED-exp +vision/video +MTP) | DOWNLOADING 2026-06-25 (`scripts/121`, 16 shards ~70 GB). **W4A16/W8A8/W4A8 queue = the "Ornith" block above (O1-O3); serve UNBLOCKED via llm-scaler int8 MoE.** Beats Qwen3.5-35B on SWE-bench/Terminal-Bench. |
 
 **Quants that ALREADY exist (do NOT redo):** 14B `W4A8-gptq` (SmoothQuant+GPTQ, 0.872/0.835), `W8A8-gptq`, `W8A16`,
 `W4A16-gptq` - 27B `W4A8-q-prepacked` (GPTQ, no SmoothQuant -> supersede with Q3), `Lorbus int4-AutoRound` (W4A16
