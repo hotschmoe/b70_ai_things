@@ -340,6 +340,34 @@ Execution protocol:
 4. The lib.sh guard worked: pre-flight xpu-health caught the wedge before cell B and HALTED the sweep
    (no blind chaining onto a wedged box).
 
+### Run 2 findings (2026-06-25, campaign_120_soak, post-reboot: E then B)
+
+Decode scoreboard (single-stream c1 / c4, vllm bench serve random IN=512/OUT=256):
+
+| cell | config | decode c1 | decode c4 | vs eager |
+|---|---|---:|---:|---:|
+| A | enforce-eager MTP3 | 12.78 | 9.47 | 1.00x |
+| B | cudagraph_mode=NONE MTP3 | 25.39 | 18.07 | 1.99x |
+| repro | PIECEWISE capture MTP3 | 34.89 | 19.09 | 2.73x |
+| E | PIECEWISE target + DRAFTER EAGER | 36.08 | 20.61 | 2.82x |
+
+1. DRAFTER-EAGER WORKS and is FREE: E (target PIECEWISE captured, drafter eager via
+   `speculative_config.enforce_eager=true`) served fine on a healthy card (the Run-1 E failure was the
+   pre-existing wedge, NOT the config) and decodes at 36.08 t/s -- equal-to-slightly-faster than full
+   capture (34.89), i.e. running the 1-layer drafter eager costs ~nothing. On the COHERENT soak prompt MTP
+   acceptance was real (accept_len ~3.0-3.4, draft accept ~55-79%), unlike the random-token bench (~1.1).
+2. E's "CRASH:16384" is a HARNESS FALSE POSITIVE, not a real crash. E's captured log shows the engine ALIVE
+   and generating (~10 t/s, Running:1 req, NO EngineDead/sample_tokens/Aborted signature) when the soak's
+   `curl --max-time 600` timed out on a slow 8192-token request (8192 / ~10 t/s = ~820s > 600s). So E did NOT
+   crash; it was healthy through ~16k tokens. STABILITY PAST THE ~20-28k ZONE IS STILL UNPROVEN (cut short).
+3. REAL signal (inconclusive): E throughput drifted 26 -> 16 -> 10 t/s across the 3 soak requests. Could be the
+   early pre-hang slowdown (same shape as the original collapse), or just longer-output variance. Needs a
+   proper soak to tell. B (no graph replay) staying flat vs also drifting will help pin the cause.
+4. B (cudagraph=NONE) decodes 25.39 t/s = ~2x eager -- a candidate "free win" if stable. Soak in progress.
+5. HARNESS BUG to fix before re-soak: `soak_until_crash` must NOT call a client curl timeout a crash. Declare
+   CRASH only on a real log signature, `/health` failure, or confirmed ~0 generation throughput (true hang);
+   use shorter per-request max_tokens + a longer/retryable timeout. (Fixing this is the immediate next step.)
+
 ---
 
 ## 10. Open questions / upstream

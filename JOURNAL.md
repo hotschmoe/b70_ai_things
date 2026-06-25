@@ -4473,3 +4473,37 @@ verdict -> [PARTIAL] perf prize CONFIRMED (2.73x). drafter-eager lever UNTESTED 
   ~3 serves; the cumulative-TP2 wedge now gates the WHOLE TP=2 campaign and is a candidate to root-cause before
   more matrix sweeping. Next: reboot, then either (a) E+B with an xe-reset between EACH serve, or (b) prioritize
   the cumulative-TP2-wedge root cause. All docs/scripts committed + pushed.
+
+---
+
+## 2026-06-25 -- Run 2 (post-reboot): E drafter-eager serves + is FAST; E "crash" was a harness false-positive [result]
+
+Box rebooted (cleared the wedge; xpu-health both cards OK). Ran campaign 120 soak, E first then B:
+  B70_AUTO_RESET=1 ./bin/gpu-run bash scripts/120_w8a8_mtp_graph_sweep.sh soak E_pw_drafteager_mtp3 B_none_mtp3
+
+E_pw_drafteager_mtp3 (GRAPH=1 PIECEWISE target + drafter eager via spec enforce_eager=true):
+  - SERVED FINE on a healthy card -> the Run-1 E failure was the pre-existing wedge, NOT the config. The vLLM
+    0.23 speculative_config.enforce_eager=true field plumbs through on XPU.
+  - decode bench: c1 36.08 t/s, c4 20.61 -> drafter-eager keeps the FULL capture win (>= repro 34.89/19.09) at
+    ~zero cost (drafter is a 1-layer head). 2.82x the enforce-eager fix (12.78). On the COHERENT soak prompt,
+    MTP acceptance was real: accept_len ~3.0-3.4, draft accept ~55-79%.
+  - soak recorded CRASH:16384 -- but that is a HARNESS FALSE POSITIVE. E's captured log shows the engine ALIVE
+    and generating (~10 t/s, Running:1 req, NO EngineDead/sample_tokens/Aborted) when curl --max-time 600 timed
+    out on a slow 8192-tok request (8192 / ~10 t/s = ~820s > 600s). E did NOT crash. Stability past the
+    ~20-28k zone is still UNKNOWN (soak cut short at 16k). REAL signal worth tracking: E throughput drifted
+    26 -> 16 -> 10 t/s across the 3 requests (possible early pre-hang slowdown, or long-output variance).
+
+B_none_mtp3 (GRAPH=1 cudagraph_mode=NONE, no replay, keep inductor compile):
+  - decode bench: c1 25.39 t/s, c4 18.07 -> ~2x the enforce-eager fix, between eager and full-capture. Candidate
+    "free win" if stable. Soak in progress; B has NO graph replay so its degradation profile disambiguates
+    graph-replay vs other causes (push_ar/oneCCL).
+
+decode scoreboard (single-stream c1): A eager 12.78 | B none 25.39 | repro PIECEWISE 34.89 | E drafter-eager 36.08.
+
+HARNESS BUG (to fix before the next soak): soak_until_crash treats an empty curl response as a crash; a slow
+  long request that exceeds --max-time looks identical to a hang. Fix: declare CRASH only on a real log
+  signature, /health failure, or confirmed ~0 generation throughput (true hang) -- never a client timeout while
+  the engine is alive; plus shorter per-request max_tokens + longer/retryable timeout.
+verdict -> [PROMISING] drafter-eager is a GREAT candidate: full decode speed (36 t/s, 2.8x), real MTP accept,
+  no crash observed through 16k. Stability past ~28k UNPROVEN (harness cut it short). Next: fix the harness,
+  re-soak E (and B) properly to a real 50k+ verdict; watch whether the 26->10 drift is a pre-hang precursor.
