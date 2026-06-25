@@ -4262,3 +4262,40 @@ verdict -> [data] BUG IS IN THE MTP PATH. A surviving bisect gives an OPERATIONA
   WITH faulthandler is required -> launched next (B70_DEBUG=1, default MTP). NOTE: MTP-off ~3-4 t/s single-
   stream is far slower than MTP-on captured ~25 t/s -- if we end up serving w8a8 MTP-off for the eval, expect
   a big wall-clock hit on that one config (scores unaffected -- greedy).
+
+---
+
+## 2026-06-25 -- w8a8 TP=2 crash CAUGHT by faulthandler: NEO command-stream overflow in MTP-drafter graph replay [ROOT CAUSE]
+
+config -> reproduced the crash with MTP ON + faulthandler (B70_DEBUG=1, default recipe), local-only hammer:
+    B70_DEBUG=1 ./bin/gpu-run bash <w8a8_stress.sh> 30
+result -> CRASHED at req 6, t=1127s (~18.8min), ~21k cumulative gen tokens (same threshold as both prior
+  deaths). faulthandler FIRED and gave the ground truth (results/logs/w8a8_crashlog_30m.txt):
+
+    Abort was called at 84 line in file: ../../neo/shared/source/command_stream/linear_stream.h
+    Fatal Python error: Aborted
+    Current thread (most recent call first):
+      torch/xpu/graphs.py:108 in replay
+      vllm/compilation/cuda_graph.py:360 in __call__
+      vllm/model_executor/models/qwen3_5_mtp.py:418 in forward        <- MTP DRAFTER forward
+      vllm/v1/spec_decode/llm_base_proposer.py:642 in propose         <- spec-decode propose
+      gpu_model_runner.py:5055 propose_draft_token_ids -> 4445 -> sample_tokens
+
+root cause -> SIGABRT from Intel NEO (Level-Zero compute-runtime) `linear_stream.h:84` -- the GPU COMMAND-
+  STREAM buffer (LinearStream::getSpace UNRECOVERABLE_IF overflow). It aborts during torch.xpu graph REPLAY
+  of the MTP drafter's captured forward (qwen3_5_mtp.py:418) in the spec-decode propose path. So the bug is a
+  command-buffer overflow tied to the MTP-drafter captured graph, accumulating over ~5000 spec steps until the
+  NEO linear stream can't fit the next command -> abort. NOT a python error (hence the silent worker death),
+  NOT memory/OOM (KV cache was 8.7%), NOT a kernel GPU reset. The engine then sees the worker gone:
+  shm_broadcast RuntimeError("cancelled") -> EngineDeadError. Explains why MTP-off survives (no drafter graph)
+  and why it is load/step-dependent (accumulation).
+
+suspects (the MTP drafter graph is replayed every step; what gets recorded INTO it that could grow the command
+  stream): (1) PUSH_AR records native L0 commands into the captured graph via ext_codeplay_enqueue_native_command
+  (contrib/vllm_push_allreduce 118_xpu_push_ar_graph.cpp) -- if it re-records per replay or accumulates, the
+  command stream grows; (2) the vLLM/torch XPU MTP command-graph itself accumulating nodes across recaptures.
+
+verdict -> [ROOT CAUSE LOCALIZED] NEO command-stream overflow during MTP-drafter graph replay. NEXT EXPERIMENT:
+  MTP-on + PUSH_AR-OFF (plain oneCCL all-reduce, no native-command recording into the graph). If it SURVIVES ->
+  PUSH_AR's graph recording is the cause (fix our kernel). If it still crashes -> upstream vLLM/torch MTP-graph
+  command accumulation (fix = serve MTP-off, or a vLLM-side fix). faulthandler (B70_DEBUG) paid off immediately.
