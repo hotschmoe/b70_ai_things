@@ -100,6 +100,27 @@ spec_accept() {  # pull latest SpecDecoding acceptance length from /metrics-driv
   docker logs "$cname" 2>&1 | grep -oE 'Mean acceptance length: [0-9.]+' | tail -1 | grep -oE '[0-9.]+' | head -1
 }
 
+# Coherent single-stream decode probe (comparable to scripts/111): a REAL prompt (not random tokens, so MTP
+# acceptance is realistic), temp=0. 2-point method cancels prefill/TTFT: decode_tps = (n1-n0)/(t1-t0), where
+# t0/t1 are wall times for the SAME prompt at max_tokens 64 vs 576. echoes decode t/s (or NA).
+_coh_prompt='Explain in precise technical detail how a modern out-of-order superscalar CPU executes an instruction stream: fetch, branch prediction, decode, register renaming, dispatch, out-of-order issue, execution ports, the load/store queue, writeback, and in-order retire, including data/control/structural hazards, speculation, and recovery on misprediction.'
+_post_timed() {  # $1 maxtok ; echoes "secs tokens"
+  local out
+  out=$(curl -s --max-time 300 -w '\n%{time_total}' "http://localhost:$PORT/v1/completions" -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$SERVED\",\"prompt\":\"${_coh_prompt}\",\"max_tokens\":$1,\"temperature\":0,\"ignore_eos\":true}" 2>/dev/null)
+  local secs toks
+  secs=$(printf '%s' "$out" | tail -1)
+  toks=$(printf '%s' "$out" | grep -oE '"completion_tokens":[0-9]+' | grep -oE '[0-9]+' | head -1)
+  echo "${secs:-0} ${toks:-0}"
+}
+coherent_decode() {  # echoes decode t/s on coherent text (NA on failure)
+  local s0 n0 s1 n1
+  read -r s0 n0 < <(_post_timed 64)
+  read -r s1 n1 < <(_post_timed 576)
+  awk -v s0="$s0" -v s1="$s1" -v n0="$n0" -v n1="$n1" \
+    'BEGIN{d=s1-s0; dn=n1-n0; if(d>0 && dn>0) printf "%.2f", dn/d; else print "NA"}'
+}
+
 run_cell() {
   local label="$1"
   [ "$STOP_SWEEP" = 1 ] && return 0
@@ -118,14 +139,15 @@ run_cell() {
   local cname; cname="$(container)"
   echo "   serving as container: ${cname:-<none>}"
 
-  local dec1=NA dec4=NA accept=NA soak_res="-"
-  # perf
+  local dec1=NA dec4=NA cohd=NA accept=NA soak_res="-"
+  # perf: random-token bench (decode c1/c4) + coherent decode probe (real MTP acceptance)
   local blog="$LOGDIR/cell_${label}_bench_${TS}.log"
   local csv; csv=$(NAME="$cname" MODEL="$SERVED" LABEL="$label" TOKPATH="$CKPT_CT" PORT="$PORT" \
                    IN="$BENCH_IN" OUT="$BENCH_OUT" CONC="$BENCH_CONC" bash "$REPO/bin/35_sweep_bench.sh" 2>&1)
   echo "$csv" >"$blog"
   dec1=$(echo "$csv" | awk -F, '$1=="1"{print $6}' | head -1); dec1=${dec1:-NA}
   dec4=$(echo "$csv" | awk -F, '$1=="4"{print $6}' | head -1); dec4=${dec4:-NA}
+  cohd=$(coherent_decode); cohd=${cohd:-NA}
   accept=$(spec_accept "$cname"); accept=${accept:-NA}
 
   # soak (soak mode + tagged cell only)
@@ -139,11 +161,11 @@ run_cell() {
   bash "$RECIPE" stop >"$stoplog" 2>&1 || true
   local wedge=""
   if grep -qiE 'BOX MAY BE WEDGED|WEDGED' "$stoplog" 2>/dev/null; then wedge=" [WEDGE -- HALTING SWEEP]"; STOP_SWEEP=1; fi
-  record "$label" "${soak_res}" "decode1=${dec1} decode4=${dec4} accept_len=${accept}${wedge}"
+  record "$label" "${soak_res}" "decode1=${dec1} decode4=${dec4} coherent=${cohd} accept_len=${accept}${wedge}"
 }
 
 echo "# campaign 120  mode=$MODE  $(date)" | tee "$RESULTS"
-echo "# columns: time  cell  soak_result  notes(decode1/decode4 t/s, accept_len)" | tee -a "$RESULTS"
+echo "# columns: time  cell  soak_result  notes(decode1/decode4 + coherent decode t/s, accept_len)" | tee -a "$RESULTS"
 echo "# MAXLEN=$MAXLEN BENCH_IN=$BENCH_IN BENCH_OUT=$BENCH_OUT CONC='$BENCH_CONC' SOAK_TOKENS=$SOAK_TOKENS" | tee -a "$RESULTS"
 for cell in "${ORDER[@]}"; do run_cell "$cell"; done
 echo "=== campaign 120 ($MODE) done. results: $RESULTS ==="
