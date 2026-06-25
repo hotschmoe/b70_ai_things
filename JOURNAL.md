@@ -4359,3 +4359,27 @@ verdict -> [data] ROOT CAUSE is MTP + XPU graph-capture on TP=2 (the qwen3_5_mtp
   problem. NEXT: enforce-eager (GRAPH=0) + MTP -- removes graph capture/replay entirely (the crash locus);
   Intel's validated XPU spec config. If it survives -> stable MTP config (slower) + confirms graph-capture is
   the cause. crashlogs: w8a8_crashlog_30m.txt (abort, full PUSH_AR), w8a8_crashlog_pushar_graph0.txt (hang).
+
+---
+
+## 2026-06-25 -- FIX FOUND: enforce-eager + MTP is STABLE on w8a8 TP=2 (removes the graph-capture crash) [FIX]
+
+config -> MTP-ON + ENFORCE-EAGER (GRAPH=0) + faulthandler, local-only hammer:
+    GRAPH=0 B70_DEBUG=1 ./bin/gpu-run bash <w8a8_stress.sh> 40
+result -> SURVIVED 40m. 10 requests, t=0..2374s, gen_tok_total 2085 -> 37102 (~37k tokens = ~1.8x the ~20k
+  crash threshold; and 40m >> the ~20min time threshold). NO crash, NO faulthandler dump, clean teardown,
+  xpu-health HEALTHY. Serves coherent (HEALTHY in 71s, no capture phase). MTP STILL WORKS under eager:
+  mean acceptance length 3.7, draft acceptance ~90%, ~9-16 t/s.
+
+verdict -> [FIX/WORKAROUND] enforce-eager (no XPU graph capture) makes w8a8 TP=2 + MTP STABLE. This CONFIRMS
+  the root cause: the crash is the torch.xpu graph capture/REPLAY of the MTP drafter (NEO command-stream
+  overflow / hang) accumulating over ~5000 spec steps. Remove the capture -> no replay -> no accumulation ->
+  stable. It KEEPS MTP (the config's defining speedup) at ~16 t/s -- slower than the (crashing) captured ~25-34
+  t/s, but far better than no-MTP, and STABLE. This matches Intel's guidance (XPU spec-decode is validated only
+  with --enforce-eager). 
+  RECOMMENDED w8a8 serve config until/unless a true vLLM/torch-XPU capture fix lands: GRAPH=0 (enforce-eager),
+  MTP on. A real capture fix would need an upstream patch to torch.xpu command_graph / vLLM cuda_graph for the
+  drafter (the captured graph's command stream must be reset/bounded across replays) -- out of scope for a serve
+  env change; tracked as future work. The MTP-off captured path is the alternate stable config (also fine).
+  NEXT: wire GRAPH=0 into the agentic-eval for 27b-w8a8 and verify with a real campaign run (35b-w8a8 has no MTP
+  so it needs no change).

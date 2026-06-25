@@ -1,0 +1,52 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> bash /tmp/claude-1000/-mnt-vm-8tb-github-b70-ai-things/7686d17b-c592-4500-868d-0f88594eaa2e/scratchpad/w8a8_stress.sh 40
+############ W8A8 STRESS ISOLATION (max 40m, APC off, local-only load) ############
+[ae 07:17:59] serve 27b-w8a8 (dense/w8a8, 2 card(s), id=qwen36-27b-w8a8-sqgptq-mtp) action=start port=18080 maxlen=65536
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== B70_DEBUG=1 -> diagnostic env injected (faulthandler) ===
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== serve qwen36-27b-w8a8-sqgptq-mtp  IMG=vllm-xpu-env:int8g  TP=2 PP=1  GRAPH=0  port=18080  ===
+vllm serve /models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft --served-model-name qwen36-27b-w8a8-sqgptq-mtp --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 2 --max-model-len 65536 --max-num-seqs 1 --gpu-memory-utilization 0.90 --trust-remote-code --no-enable-prefix-caching --distributed-executor-backend mp --limit-mm-per-prompt {"image":0,"video":0} --speculative-config {"method":"mtp","num_speculative_tokens":3} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --enforce-eager
+=== waiting for /health (ceiling 900s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18080  qwen36-27b-w8a8-sqgptq-mtp  (TP=2 GRAPH=0) in 71s ===
+"id":"qwen36-27b-w8a8-sqgptq-mtp"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. **Paris** is the capital and most populous city of France.
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).
+[ae 07:19:31] identity OK: qwen36-27b-w8a8-sqgptq-mtp
+>>> serve healthy; starting local hammer at 07:19:31
+req  0  t=   0s  http=200  finish=stop  gen_tok_total=2085.0
+req  1  t= 146s  http=200  finish=stop  gen_tok_total=6119.0
+req  2  t= 443s  http=000  finish=stop  gen_tok_total=10456.0
+req  3  t= 743s  http=200  finish=stop  gen_tok_total=14591.0
+req  4  t=1032s  http=000  finish=stop  gen_tok_total=18274.0
+req  5  t=1332s  http=000  finish=stop  gen_tok_total=22531.0
+req  6  t=1632s  http=200  finish=stop  gen_tok_total=24592.0
+req  7  t=1778s  http=200  finish=stop  gen_tok_total=28626.0
+req  8  t=2074s  http=000  finish=stop  gen_tok_total=32967.0
+req  9  t=2374s  http=200  finish=stop  gen_tok_total=37102.0
+>>> reached 40m, stopping (engine survived)
+=== container status: Up 45 minutes ===
+>>> full container log saved to /mnt/vm_8tb/github/b70_ai_things/agentic-eval/results/logs/w8a8_crashlog_40m.txt (786 lines)
+=== faulthandler / worker / native death signature (if any) ===
+128:(Worker_TP0 pid=352) Traceback (most recent call last):
+151:(Worker_TP0 pid=352)     raise JSONDecodeError("Expecting value", s, err.value) from None
+152:(Worker_TP0 pid=352) json.decoder.JSONDecodeError: Expecting value: line 1 column 2 (char 1)
+VERDICT: w8a8 SURVIVED 40m of local long-gen load (crash NOT reproduced locally)
+[ae 08:03:54] serve 27b-w8a8 (dense/w8a8, 2 card(s), id=qwen36-27b-w8a8-sqgptq-mtp) action=stop port=18080 maxlen=65536
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== B70_DEBUG=1 -> diagnostic env injected (faulthandler) ===
+vllm_qwen36-27b-w8a8-sqgptq-mtp
+stopped vllm_qwen36-27b-w8a8-sqgptq-mtp (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+############ W8A8 STRESS done ############
+gpu-run: [b70s4dayz] done in 2774s (exit 0)
