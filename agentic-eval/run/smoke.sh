@@ -17,7 +17,13 @@ CUR="$LABEL"
 trap '[ -n "$CUR" ] && bash "$AE_ROOT/serve/serve_config.sh" "$CUR" stop || true' EXIT INT TERM
 ae_log "SMOKE: serve $LABEL"
 bash "$AE_ROOT/serve/serve_config.sh" "$LABEL" start || { ae_log "serve failed"; exit 1; }
-bash "$AE_ROOT/run/run_config.sh" "$LABEL" smoke "$@" || true
+ae_set_config "$LABEL"
+ae_log "SMOKE: endpoint self-test (identity / metrics / completion / tool-call)"
+if ae_endpoint_selftest; then
+  bash "$AE_ROOT/run/run_config.sh" "$LABEL" smoke "$@" || true
+else
+  ae_log "SMOKE: endpoint self-test FAILED (no generation) -- skipping harnesses, tearing down"
+fi
 bash "$AE_ROOT/serve/serve_config.sh" "$LABEL" stop || true
 CUR=""; trap - EXIT INT TERM
 "$AE_PY" "$AE_LIB/summarize.py" --results "$AE_ROOT/results" || true

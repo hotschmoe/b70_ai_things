@@ -49,3 +49,29 @@ ae_verify_identity() {
   fi
   ae_log "identity OK: $got"
 }
+
+# Live endpoint self-test, run after a serve and BEFORE the heavy harnesses. Validates the parts only
+# a live serve can: identity, vLLM /metrics token counters (the basis of our token accounting),
+# a real greedy completion, and a native tool-call. Returns 0 unless the model fails to generate text
+# (the must-have); missing /metrics or tool_calls are WARN-only (token cols just become NA; BFCL uses
+# prompt-FC so it does not need native tool_calls -- but tau2 does).
+ae_endpoint_selftest() {
+  local rc=0 snap txt tc
+  ae_verify_identity || rc=1
+  snap=$(ae_snap)
+  if [ "$snap" = "NA NA" ]; then
+    ae_log "WARN: vLLM /metrics token counters absent -> token accounting will report NA (not fatal)"
+  else
+    ae_log "metrics OK: vllm token counters present (prompt gen = $snap)"
+  fi
+  txt=$(curl -s --max-time 90 "${EVAL_BASE_URL}/v1/completions" -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$EVAL_SERVED\",\"prompt\":\"def add(a, b):\\n    return\",\"max_tokens\":16,\"temperature\":0}" \
+    2>/dev/null | grep -oE '"text":"[^"]*"' | head -1)
+  if [ -z "$txt" ]; then ae_log "FAIL: endpoint produced no completion text"; rc=1
+  else ae_log "completion OK: ${txt:0:70}"; fi
+  tc=$(curl -s --max-time 90 "${EVAL_BASE_URL}/v1/chat/completions" -H 'Content-Type: application/json' \
+    -d "{\"model\":\"$EVAL_SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"What is the weather in Paris? Call the tool.\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"description\":\"current weather for a city\",\"parameters\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}}}],\"tool_choice\":\"auto\",\"max_tokens\":128,\"temperature\":0}" 2>/dev/null)
+  if printf '%s' "$tc" | grep -q '"tool_calls"'; then ae_log "tool-call OK: native tool_calls emitted"
+  else ae_log "WARN: no native tool_calls emitted (BFCL prompt-FC is unaffected; tau2/native-FC would need TOOLCALL on)"; fi
+  return $rc
+}
