@@ -38,17 +38,22 @@ ORDER=(A_eager_mtp3 repro_pw_mtp3 E_pw_drafteager_mtp3 B_none_mtp3 nomtp_pw_cap)
 [ "$#" -gt 1 ] && ORDER=("${@:2}")
 
 # Which cells get a soak in `soak` mode (the candidate fixes + a repro control).
-soak_cell() { case "$1" in E_pw_drafteager_mtp3|B_none_mtp3|repro_pw_mtp3) return 0;; *) return 1;; esac; }
+soak_cell() { case "$1" in E_pw_drafteager_mtp3|B_none_mtp3|repro_pw_mtp3|F2_recycle|F1_imm0|F1_cleanup) return 0;; *) return 1;; esac; }
 
 # Per-cell env. Reset all knobs, then set. Recipe defaults: GRAPH=1 CGMODE=PIECEWISE MTPTOK=3 PUSH_AR=1.
 cell_env() {
-  unset GRAPH CGMODE MTPTOK SPEC B70_NOMTP CAPSIZES PUSH_AR PUSH_AR_GRAPH
+  # NOTE: the recipe default is now CGMODE=NONE (Item 1), so PIECEWISE cells set CGMODE=PIECEWISE EXPLICITLY.
+  unset GRAPH CGMODE MTPTOK SPEC B70_NOMTP CAPSIZES PUSH_AR PUSH_AR_GRAPH B70_EXTRA_ENV
   case "$1" in
-    A_eager_mtp3)         export GRAPH=0 MTPTOK=3 ;;                                   # shipped fix (baseline)
-    repro_pw_mtp3)        export GRAPH=1 MTPTOK=3 ;;                                   # crashing winner (the bug)
-    E_pw_drafteager_mtp3) export GRAPH=1 SPEC='{"method":"mtp","num_speculative_tokens":3,"enforce_eager":true}' ;; # THE lever
-    B_none_mtp3)          export GRAPH=1 CGMODE=NONE MTPTOK=3 ;;                       # no replay, keep compile
-    nomtp_pw_cap)         export GRAPH=1 B70_NOMTP=1 ;;                                # captured, MTP off (control)
+    A_eager_mtp3)         export GRAPH=0 MTPTOK=3 ;;                                              # shipped fix (baseline)
+    repro_pw_mtp3)        export GRAPH=1 CGMODE=PIECEWISE MTPTOK=3 ;;                             # crashing path (the bug)
+    E_pw_drafteager_mtp3) export GRAPH=1 CGMODE=PIECEWISE SPEC='{"method":"mtp","num_speculative_tokens":3,"enforce_eager":true}' ;; # drafter-eager
+    B_none_mtp3)          export GRAPH=1 CGMODE=NONE MTPTOK=3 ;;                                  # WINNER: no replay, keep compile
+    nomtp_pw_cap)         export GRAPH=1 CGMODE=PIECEWISE B70_NOMTP=1 ;;                          # captured, MTP off (control)
+    # --- Tier F: bound PIECEWISE command-stream accumulation, keep ~36 t/s (docs sec 13) ---
+    F2_recycle)           export GRAPH=1 CGMODE=PIECEWISE MTPTOK=3 B70_EXTRA_ENV="B70_XPU_CG_RECYCLE_STEPS=${RECYCLE_N:-2000}" ;; # recapture shim
+    F1_imm0)              export GRAPH=1 CGMODE=PIECEWISE MTPTOK=3 B70_EXTRA_ENV="UR_L0_USE_IMMEDIATE_COMMANDLISTS=0" ;;          # L0 env probe
+    F1_cleanup)           export GRAPH=1 CGMODE=PIECEWISE MTPTOK=3 B70_EXTRA_ENV="UR_L0_COMMANDLISTS_CLEANUP_THRESHOLD=1" ;;     # L0 env probe
     *) echo "unknown cell $1" >&2; return 2 ;;
   esac
 }

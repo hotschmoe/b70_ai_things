@@ -60,3 +60,48 @@ if os.environ.get("CSAG_DISABLE", "0") != "1":
         print("[csag-shim] (2) XpuCommunicator.all_gather -> capture-safe all-reduce-of-padded", file=sys.stderr, flush=True)
     except Exception as e:
         print("[csag-shim] (2) all_gather patch failed:", repr(e), file=sys.stderr, flush=True)
+
+# ---- (3) Tier F (EXPERIMENTAL, default OFF): bound the PIECEWISE graph command-stream accumulation -----------
+# The XPU graph REPLAY appends to a Level-Zero command list that is never reset, overflowing NEO after ~5000
+# replays (the W8A8-27B MTP crash; cudagraph_mode=NONE avoids it but loses capture speed). This recaptures the
+# WHOLE captured-graph set every N decode steps so the command buffer stays bounded -> keep PIECEWISE speed,
+# no crash. OFF unless B70_XPU_CG_RECYCLE_STEPS>0 (so the shelf/production default is byte-identical). N counts
+# calls on the first-seen PIECEWISE wrapper (~one per decode step). See docs/20260625_..._campaign.md sec 13.
+_RECYCLE_N = int(os.environ.get("B70_XPU_CG_RECYCLE_STEPS", "0") or "0")
+if _RECYCLE_N > 0:
+    try:
+        import torch
+        from vllm.compilation.cuda_graph import CUDAGraphWrapper
+        _orig_cgw_call = CUDAGraphWrapper.__call__
+        _cg = {"n": 0, "root": None, "recaptures": 0}
+
+        def _recycling_call(self, *args, **kwargs):
+            try:
+                mode = getattr(getattr(self, "runtime_mode", None), "name", None)
+                if mode == "PIECEWISE":
+                    if _cg["root"] is None:
+                        _cg["root"] = id(self)
+                    if id(self) == _cg["root"]:          # ~once per decode step
+                        _cg["n"] += 1
+                        if _cg["n"] >= _RECYCLE_N:
+                            _cg["n"] = 0
+                            if hasattr(torch, "xpu"):
+                                torch.xpu.synchronize()
+                            # coherent: clear ALL captured graphs (target + drafter + every piecewise layer)
+                            cleared = False
+                            if hasattr(CUDAGraphWrapper, "clear_all_graphs"):
+                                CUDAGraphWrapper.clear_all_graphs(); cleared = True
+                            elif hasattr(self, "clear_graphs"):
+                                self.clear_graphs(); cleared = True
+                            _cg["recaptures"] += 1
+                            print(f"[cg-recycle] recapture #{_cg['recaptures']} after {_RECYCLE_N} steps "
+                                  f"(clear_all={cleared})", file=sys.stderr, flush=True)
+            except Exception as e:
+                print("[cg-recycle] step error:", repr(e), file=sys.stderr, flush=True)
+            return _orig_cgw_call(self, *args, **kwargs)
+
+        CUDAGraphWrapper.__call__ = _recycling_call
+        print(f"[cg-recycle] (3) Tier F ENABLED: recapture PIECEWISE graphs every {_RECYCLE_N} decode steps "
+              f"(EXPERIMENTAL)", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[cg-recycle] (3) setup failed:", repr(e), file=sys.stderr, flush=True)
