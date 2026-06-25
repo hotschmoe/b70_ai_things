@@ -112,5 +112,20 @@ else
   echo "=== PUSH_AR overlay OFF (PUSH_AR=0 -> plain oneCCL TP all-reduce baseline) ==="
 fi
 
+# --- DIAGNOSTIC / BISECT TOGGLES (opt-in; default-off => the serve command is byte-identical) -------
+# Added 2026-06-25 to root-cause the TP=2 long-load engine crash (JOURNAL/FINDINGS 2026-06-25).
+#   B70_NOMTP=1  drop --speculative-config (run with MTP OFF) -- the bisect variable.
+#   B70_DEBUG=1  faulthandler only: near-zero overhead, dumps a worker py+C traceback on a FATAL signal
+#                (SIGSEGV/SIGABRT/SIGBUS/SIGFPE) -- the worker dies with no traceback today, this catches it.
+#   B70_DEBUG=2  + Level-Zero validation layer + UR/oneCCL/vLLM debug logging (HEAVIER, perturbs timing;
+#                use to characterize a crash, NOT for a clean timing bisect).
+if [ "${B70_NOMTP:-0}" = 1 ]; then export MTPTOK=""; export SPEC=""; echo "=== B70_NOMTP=1 -> MTP OFF (no --speculative-config) ===" >&2; fi
+if [ "${B70_DEBUG:-0}" != 0 ]; then
+  DOCKER_ENV+=( -e PYTHONFAULTHANDLER=1 -e PYTHONUNBUFFERED=1 )
+  [ "${B70_DEBUG}" = 2 ] && DOCKER_ENV+=( -e VLLM_LOGGING_LEVEL=DEBUG -e ZE_ENABLE_VALIDATION_LAYER=1 \
+        -e ZE_ENABLE_PARAMETER_VALIDATION=1 -e UR_LOG_LEVEL=info -e CCL_LOG_LEVEL=info )
+  echo "=== B70_DEBUG=${B70_DEBUG} -> diagnostic env injected (faulthandler$([ "${B70_DEBUG}" = 2 ] && echo ' + L0/UR/CCL/vLLM debug')) ===" >&2
+fi
+
 source "$SCRIPT_DIR/../_common/lib.sh"
 b70_dispatch "$@"
