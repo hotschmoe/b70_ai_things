@@ -4531,3 +4531,35 @@ verdict -> [WIN] cudagraph_mode=NONE is a stable, ~2x-faster-than-enforce-eager 
   (a) re-soak E with the fixed harness to pin its hang point; (b) cross-check NONE with the coherent scripts/111
   decode probe for the true MTP number; (c) Tier F (periodic target-graph reset) to get NONE-stability at
   capture speed. Harness false-positive fixed in commit 21fbe95.
+
+## 2026-06-25 -- Item 1 DONE (NONE promoted); Items 2-4 gated by the ~3-serve cumulative-TP2 wedge [progress+plan]
+
+Item 1 (PROMOTE cudagraph=NONE) DONE + pushed (c920b5f): agentic-eval/configs.sh 27b-w8a8 EVAL_SERVE_ENV=
+  "GRAPH=1 CGMODE=NONE"; shelf recipe serve.sh default CGMODE=NONE; README corrected. The 2x-stable win is locked.
+
+Item 2 (coherent NONE number) attempt WEDGED the box -- the 3RD TP=2 serve this session (after E, B). Pre-flight
+  xpu-health passed (both cards OK), the NONE serve came up, but the bench got no tokens and teardown's
+  xpu-health found **card 1 HUNG -> WEDGED** (note: card 1 this time; card 0 in Run 1 -- not always the same
+  card). B70_AUTO_RESET=1 ran xe-reset but it cannot reboot here (display-held xe), so it printed the recommend.
+  Box WEDGED; needs a manual reboot. So the coherent number is still unmeasured (best estimate from B's soak:
+  ~24 t/s realized on coherent long gens, accept 2.9).
+
+CONFIRMED PATTERN -> the cumulative-TP2 wedge trips at ~3 TP=2 serves per session, reproducibly (Run 1: A,repro,
+  E-init; this session: E,B,NONE-init). It now gates ALL of Items 2-4 (each needs a serve) at ~3 serves/reboot,
+  and only the human can reboot. This is the dominant devloop bottleneck; root-cause deferred (user) to a separate
+  session.
+
+Item 4 (Tier F) DESIGN via codex (codex_tierf): the NEO command-stream accumulation is below vLLM (torch-xpu/UR/
+  L0 graph replay appends to a command list never reset). Two attack paths:
+  (1) L0 ENV KNOBS (cheap, no code -- try FIRST): UR_L0_USE_IMMEDIATE_COMMANDLISTS=0/1/2,
+      UR_L0_COMMANDLISTS_CLEANUP_THRESHOLD=1, UR_L0_BATCH_SIZE=1, SYCL_GRAPH_FORCE_NATIVE_RECORDING=0/1. If one
+      caps/recycles the command list, PIECEWISE goes stable at ~36 t/s for free.
+  (2) RECAPTURE monkeypatch: vllm/compilation/cuda_graph.py CUDAGraphWrapper already has clear_all_graphs();
+      patch __call__ to count PIECEWISE replays and clear_all_graphs() (after torch.xpu.synchronize()) every N
+      replays at a decode-step boundary -> bounded command buffer. Risk: mid-serve recapture on torch-xpu may be
+      unsafe (static addresses). Fallbacks: cap-then-eager; request-scoped NONE; worker recycle.
+
+PLAN (post-reboot, one batch within the ~3-serve budget, priority order):
+  serve 1 = Item 2 NONE coherent (perf, quick) ; serve 2 = Item 3 E re-soak (fixed harness, pin hang point) ;
+  serve 3 = Item 4 Tier-F probe (PIECEWISE + best L0 env OR the recapture shim, soak). Then reboot for more
+  Tier-F env sweeping if needed.

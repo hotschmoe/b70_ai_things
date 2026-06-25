@@ -451,3 +451,39 @@ Decisive reads:
 
 Keep TP=2 serves per session few (<=~3) until the cumulative-TP2 wedge is root-caused; with AUTO_RESET=1
 a wedge will reboot the box (which also ends any in-flight orchestrator/session on this local box).
+
+## 13. Item 1-4 progress + Tier F design (2026-06-25)
+
+Status:
+- Item 1 (promote NONE): DONE (commit c920b5f) -- configs.sh + recipe + README.
+- Item 2 (coherent NONE number): attempt WEDGED the box on the 3rd serve (card 1 HUNG; preflight had passed).
+  Unmeasured; best estimate ~24 t/s from B's coherent soak. RETRY post-reboot (1 quick serve).
+- Item 3 (re-soak E, fixed harness): pending (1 serve). Decisive: does E (drafter-eager) actually hang, and at
+  what token count? Expect a hang (E's 26->10 drift + B's flatness pin it on target graph replay).
+- Item 4 (Tier F): design below; pending GPU test.
+
+THE WEDGE GATES ITEMS 2-4. Reproducible: the cumulative-TP2 wedge trips at ~3 TP=2 serves/session (Run 1:
+A,repro,E-init; this session: E,B,NONE-init), and only the human can reboot. So Items 2-4 cost ~1 reboot per
+~3 serves. Batch them: post-reboot run serve1=Item2(NONE coherent), serve2=Item3(E re-soak), serve3=Item4(one
+Tier-F probe).
+
+### Tier F -- keep PIECEWISE speed (~36 t/s), bound the command-stream accumulation (codex design)
+
+The NEO command-stream growth is BELOW vLLM (torch-xpu / UR / Level-Zero: graph replay appends to a command
+list that is never reset; cudagraph_mode=NONE is flat because it never replays). vLLM's hot path is just
+`entry.cudagraph.replay()` in `vllm/compilation/cuda_graph.py::CUDAGraphWrapper.__call__`. Two attacks:
+
+F1. L0 ENV KNOBS (cheap, NO code -- try FIRST via B70_EXTRA_ENV on a PIECEWISE serve, soak each):
+    UR_L0_USE_IMMEDIATE_COMMANDLISTS=0|1|2 ; UR_L0_COMMANDLISTS_CLEANUP_THRESHOLD=1 ; UR_L0_BATCH_SIZE=1 ;
+    UR_L0_USE_DRIVER_INORDER_LISTS=1 ; SYCL_GRAPH_FORCE_NATIVE_RECORDING=0|1. If one caps/recycles the command
+    list, PIECEWISE goes stable at ~36 t/s for free. (Each probe = a ~20-min soak = reboot-bottlenecked.)
+
+F2. RECAPTURE monkeypatch: `CUDAGraphWrapper` already exposes `clear_all_graphs()` and entries carry
+    `entry.cudagraph` (an `XPUGraph` with `.reset()`). Patch `__call__` to count PIECEWISE replays and, every N,
+    `torch.xpu.synchronize()` then `clear_all_graphs()` at a decode-step boundary so the next forward recaptures
+    -> bounded buffer. Gated by env B70_XPU_CG_RECYCLE_STEPS (default off -> production/shelf unaffected). Risk
+    (codex): mid-serve recapture on torch-xpu may corrupt static addresses; clear ALL piecewise+drafter graphs
+    coherently (not one mid-chain entry), sync first, recapture between forwards. Fallbacks if unsafe:
+    cap-then-eager (return self.runnable after budget), request-scoped NONE, or worker recycle every ~15k tokens.
+
+Recommended Tier F order: F1 (a couple of env probes, free if they work) -> F2 (recapture shim) -> fallbacks.

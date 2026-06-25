@@ -1,0 +1,20 @@
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+vllm_qwen36-27b-w8a8-sqgptq-mtp
+stopped vllm_qwen36-27b-w8a8-sqgptq-mtp (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: HUNG (>60s, killed) -> WEDGED
+xpu-health: WEDGED -- recover with: bin/xe-reset
+[GUARD] B70_AUTO_RESET=1 -> auto-recovering with xe-reset
+=== xe-reset: recover wedged B70 driver state ===
+[1/3] stopping 1 running container(s) (they hold /dev/dri):
+- jovial_hopper (vllm-xpu-env:int8g)
+  + bash -c docker stop -t 10 a64735274ac3 >/dev/null && docker rm -f a64735274ac3 >/dev/null 2>&1; true
+[2/3] reloading xe driver
+  [!] 'sudo -n modprobe -r xe' FAILED:
+      modprobe: FATAL: Module xe is in use.
+  'Module xe is in use' with NO containers running means xe is DISPLAY-HELD on this box:
+  the Arc cards drive the console/framebuffer (lsmod baseline refcount ~5, un-removable while up).
+  The driver-reload recovery CANNOT work here. ONLY a reboot clears the wedge:  sudo reboot
+[GUARD] xe-reset did NOT clear it -- escalate: sudo reboot
