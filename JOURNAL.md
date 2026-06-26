@@ -4627,3 +4627,16 @@ Items (with the box finally stable):
 verdict -> [WIN] hardware BCS wedge FIXED (GuC 70.54.0); the W8A8-27B campaign is unblocked. Item 2 done (NONE
   25.68), Item 3 done (drafter-eager not viable), Item 4: recapture dead, L0 env probe (F1) running. Decode
   scoreboard c1: A 12.78 | NONE 25.68 (STABLE, shipped) | PIECEWISE ~35-37 (crashes ~32k). Committed/pushed.
+
+## 2026-06-26 -- campaign CLOSED; Tier F dead-end; cleanup [closeout]
+
+F1_imm0 was stopped mid-soak (~22k, still degrading 26->7 t/s like E) -> UR_L0_USE_IMMEDIATE_COMMANDLISTS=0 does
+  NOT stop the accumulation; F1_cleanup not run (verdict clear). So BOTH Tier F approaches FAIL: F2 recapture
+  CRASH:0 (mid-serve recapture unsafe), F1 env knobs don't help. Tier F is a DEAD END -- the PIECEWISE command-
+  stream accumulation is intrinsic to torch-xpu graph replay; a stable ~36 t/s would need an UPSTREAM
+  torch-xpu/L0 fix, not a config/env/monkeypatch. Batch stopped (TaskStop), container torn down gracefully,
+  lease free, xpu-health HEALTHY. The entire ~2h run had ZERO hardware wedge (GuC 70.54.0 fix solid).
+verdict -> CAMPAIGN COMPLETE. Item 1 cudagraph=NONE shipped (2x stable, the answer); Items 2-4 done; BCS
+  hardware wedge root-caused + fixed (GuC 70.54.0). Next: weekend 4-bit daily-driver serve (27b-int4 DP=2)
+  behind Traefik with an API key -- update daily_driver_serve.sh (de-SSH to local + add API key), then deploy
+  AFTER operator OK. See docs/20260625_bcs_wedge_rootcause.md and docs/20260625_w8a8_27b_mtp_graph_campaign.md.

@@ -509,3 +509,23 @@ ran 5 TP=2 serve cycles over ~1 hour with ZERO hardware wedge. Results:
   - F2 recapture shim FAILED (CRASH:0 -- mid-serve clear_all_graphs corrupts the engine, as codex warned). Dead.
   - F1_imm0 (immediate-commandlists OFF) in progress -- the live hope for keeping PIECEWISE flat. (F1_cleanup next.)
 - HARDWARE WEDGE: gone. ~1 hour / 5 TP=2 serve cycles, zero BCS Timedout-job. GuC 70.54.0 confirmed the fix.
+
+### Campaign CONCLUSION (2026-06-25/26)
+
+F1_imm0 was stopped mid-soak (~22k) while still DEGRADING (26->7 t/s, same curve as E) -> the
+`UR_L0_USE_IMMEDIATE_COMMANDLISTS=0` knob does NOT stop the accumulation either. F1_cleanup not run (verdict
+already clear). So BOTH Tier F approaches fail: F2 recapture crashes (CRASH:0, mid-serve recapture unsafe),
+F1 env knobs only slow nothing. **Tier F is a DEAD END** -- the PIECEWISE command-stream accumulation is
+intrinsic to torch-xpu graph replay on this stack; keeping PIECEWISE's ~36 t/s stable would need an UPSTREAM
+torch-xpu/L0 fix (bound/reset the replay command list), not a config/env/monkeypatch.
+
+FINAL ANSWERS:
+- Item 1: `cudagraph_mode=NONE` promoted -- the stable production config (~25.7 t/s single-stream, 2x the
+  enforce-eager fix, soaked 57k clean). SHIPPED.
+- Item 2: NONE coherent decode = 25.68 t/s (confirmed).
+- Item 3: drafter-eager delays the crash (~20k->32k) but does not fix it (degrades 26->5, still crashes); not
+  viable -> NONE wins.
+- Item 4 (Tier F): dead end (above). NONE remains the practical ceiling for STABLE serving.
+- Hardware wedge (BCS): root-caused + FIXED by GuC 70.54.0 (see docs/20260625_bcs_wedge_rootcause.md).
+Campaign complete. The shipped recommendation stands: serve 27b-w8a8 with `GRAPH=1 CGMODE=NONE` (2x, stable);
+PIECEWISE ~36 t/s is unreachable stably here pending an upstream graph-replay fix.

@@ -1,0 +1,66 @@
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== B70_DEBUG=1 -> diagnostic env injected (faulthandler) ===
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== serve qwen36-27b-w8a8-sqgptq-mtp  IMG=vllm-xpu-env:int8g  TP=2 PP=1  GRAPH=1  port=18080  ===
+vllm serve /models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft --served-model-name qwen36-27b-w8a8-sqgptq-mtp --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 2 --max-model-len 16384 --max-num-seqs 8 --gpu-memory-utilization 0.90 --trust-remote-code --no-enable-prefix-caching --distributed-executor-backend mp --limit-mm-per-prompt {"image":0,"video":0} --speculative-config {"method":"mtp","num_speculative_tokens":3} --compilation-config {"cudagraph_mode":"NONE","use_inductor_graph_partition":false,"cudagraph_capture_sizes":[1,2,4,6,8],"splitting_ops":["vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 1800s, stall-abort 300s; first run JIT-compiles/captures) ===
+[!] vllm_qwen36-27b-w8a8-sqgptq-mtp EXITED EARLY
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 135, in build_async_engine_client_from_engine_args
+(APIServer pid=1)     async_llm = AsyncLLM.from_vllm_config(
+(APIServer pid=1)                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 217, in from_vllm_config
+(APIServer pid=1)     return cls(
+(APIServer pid=1)            ^^^^
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/engine/async_llm.py", line 146, in __init__
+(APIServer pid=1)     self.engine_core = EngineCoreClient.make_async_mp_client(
+(APIServer pid=1)                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=1)     return func(*args, **kwargs)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 131, in make_async_mp_client
+(APIServer pid=1)     return AsyncMPClient(*client_args)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(APIServer pid=1)     return func(*args, **kwargs)
+(APIServer pid=1)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 948, in __init__
+(APIServer pid=1)     super().__init__(
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 570, in __init__
+(APIServer pid=1)     with launch_core_engines(
+(APIServer pid=1)   File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+(APIServer pid=1)     next(self.gen)
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1190, in launch_core_engines
+(APIServer pid=1)     wait_for_engine_startup(
+(APIServer pid=1)   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/engine/utils.py", line 1249, in wait_for_engine_startup
+(APIServer pid=1)     raise RuntimeError(
+(APIServer pid=1) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w8a8-sqgptq-mtp/../../contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== B70_DEBUG=1 -> diagnostic env injected (faulthandler) ===
+vllm_qwen36-27b-w8a8-sqgptq-mtp
+stopped vllm_qwen36-27b-w8a8-sqgptq-mtp (graceful -t30; GPU released if last holder)
+[GUARD] wedge markers in serve log (/mnt/vm_8tb/github/b70_ai_things/agentic-eval/results/logs/b70_vllm_qwen36-27b-w8a8-sqgptq-mtp.log):
+    UR_RESULT_ERROR_DEVICE_LOST
+    UR_RESULT_ERROR_OUT_OF_RESOURCES
+=== probe card 0 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 0: HUNG (>60s, killed) -> WEDGED
+=== probe card 1 (img=vllm-xpu-env:int8g timeout=60s) ===
+  card 1: OK
+xpu-health: WEDGED -- recover with: bin/xe-reset
+[GUARD] B70_AUTO_RESET=1 -> auto-recovering with xe-reset
+=== xe-reset: recover wedged B70 driver state ===
+[1/3] stopping 1 running container(s) (they hold /dev/dri):
+- peaceful_gates (vllm-xpu-env:int8g)
+  + bash -c docker stop -t 10 76a26bb594ce >/dev/null && docker rm -f 76a26bb594ce >/dev/null 2>&1; true
+[2/3] reloading xe driver
+  [!] 'sudo -n modprobe -r xe' FAILED:
+      modprobe: FATAL: Module xe is in use.
+  'Module xe is in use' with NO containers running means xe is DISPLAY-HELD on this box:
+  the Arc cards drive the console/framebuffer (lsmod baseline refcount ~5, un-removable while up).
+  The driver-reload recovery CANNOT work here. ONLY a reboot clears the wedge:  sudo reboot
+[GUARD] xe-reset did NOT clear it -- escalate: sudo reboot

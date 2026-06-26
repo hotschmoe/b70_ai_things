@@ -1,0 +1,4 @@
+concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,per_stream_decode_tok_s
+1,0.14,35.63,299.21,27.00,37.04
+4,0.31,78.47,551.29,46.74,21.39
+=== saved /mnt/vm_8tb/b70/results/sweep_E_pw_drafteager_mtp3_20260625_223416.csv ===
