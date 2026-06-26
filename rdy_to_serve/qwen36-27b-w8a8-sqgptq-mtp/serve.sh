@@ -95,9 +95,15 @@ DOCKER_ENV=( -e PYTHONPATH=/opt/mtp_shim )
 # oneCCL, J.17/J.21). The .so is prebuilt + committed; rebuild via scripts/118 (graph) or scripts/108 (eager).
 if [ "${PUSH_AR:-1}" = 1 ]; then
   PUSH_AR_DIR="$SCRIPT_DIR/../../contrib/vllm_push_allreduce"
-  # PUSH_AR_GRAPH=1 (default) -> CAPTURABLE decode path: graph .so + MIN_NUMEL=0 (push ALL all-reduces incl.
-  # decode). PUSH_AR_GRAPH=0 -> prefill-only push (host-barrier .so, decode-sized -> oneCCL fallback).
-  if [ "${PUSH_AR_GRAPH:-1}" = 1 ]; then
+  # [!] CRITICAL (2026-06-26): PUSH_AR_GRAPH=1 records the DECODE all-reduce INTO the XPU graph. CGMODE=NONE has
+  # NO graph -> the captured-decode push reads a stale/uninit buffer -> INPUT-DEPENDENT GARBAGE ("!!!!" on some
+  # prompts; coherent on others -> a single gen-probe misses it). So on NONE the decode all-reduce MUST stay on
+  # the host-barrier/oneCCL path: default PUSH_AR_GRAPH=0 here. (verified: NONE+PUSH_AR_GRAPH=0 -> 0/8 garbage.)
+  _PAG_DEF=$([ "${CGMODE:-PIECEWISE}" = NONE ] && echo 0 || echo 1)
+  PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-$_PAG_DEF}"
+  # PUSH_AR_GRAPH=1 -> CAPTURABLE decode path: graph .so + MIN_NUMEL=0 (push ALL all-reduces incl. decode; needs
+  # a captured graph). PUSH_AR_GRAPH=0 -> prefill-only push (host-barrier .so, decode-sized -> oneCCL fallback).
+  if [ "$PUSH_AR_GRAPH" = 1 ]; then
     _DEF_SO="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_graph.so"; _DEF_MIN=0
   else
     _DEF_SO="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_torch.so"; _DEF_MIN=65536
@@ -110,7 +116,7 @@ if [ "${PUSH_AR:-1}" = 1 ]; then
                -e PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/mtp_shim/sitecustomize.py
                -e PUSH_AR_SO=/opt/push_ar_so/libxpu_push_ar_torch.so
                -e PUSH_AR_DISABLE=0
-               -e PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}"
+               -e PUSH_AR_GRAPH="$PUSH_AR_GRAPH"
                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}" )
   export P2PACCESS="${P2PACCESS:-0}"
   echo "=== PUSH_AR overlay ON [default] (GRAPH=${PUSH_AR_GRAPH:-1} MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}, P2PACCESS=0, .so=$SO_HOST) ==="
