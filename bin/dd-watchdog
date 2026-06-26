@@ -52,7 +52,7 @@ import time
 import urllib.error
 import urllib.request
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ---- config ------------------------------------------------------------------------------------------------
 INTERVAL = int(os.environ.get("DD_WATCH_INTERVAL", "60"))            # seconds between passes
@@ -260,8 +260,8 @@ def container_state(name):
     uptime = None
     try:
         s = started.strip().split(".")[0].replace("Z", "")        # 2026-06-26T17:39:19 (drop nanos + Z)
-        dt = datetime.strptime(s, "%Y-%m-%dT%H:%M:%S")            # docker StartedAt is UTC
-        uptime = (datetime.utcnow() - dt).total_seconds()
+        dt = datetime.strptime(s, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)  # docker StartedAt is UTC
+        uptime = (datetime.now(timezone.utc) - dt).total_seconds()
     except Exception:
         uptime = None
     return (running, status.strip(), uptime)

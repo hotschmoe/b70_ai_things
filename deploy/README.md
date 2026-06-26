@@ -7,13 +7,14 @@ serve.sh> && docker wait'` in a NEW session, and the vLLM itself is a `docker ru
 daemon. So it **survives this shell / SSH / Claude session closing** -- it keeps running until you `stop` it.
 
 ```
-# start (int4 DP=2 NONE -- the SHIPPED wedge-proof weekend serve, API-key enforced, 64k context):
-DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=65536 DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88" \
+# start (int4 DP=2 NONE -- the SHIPPED wedge-proof weekend serve, API-key enforced, 96k context):
+DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=98304 DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88" \
   DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
   ./daily_driver_serve.sh start
-# (UTIL 0.88 / MAXLEN 65536 -- dialed back from 0.95/131072 after the 2026-06-26 ~7h "!!!!" incident: 0.95 left
-#  ~1-2 GiB headroom and the fp16 KV cache poisoned a persistent buffer after hours. 0.88/64k = ~80-90k tok
-#  KV/replica, still well past any real request, with comfortable headroom. Run the watchdog alongside, below.)
+# (UTIL 0.88 is THE safety lever -- dialed back from 0.95 after the 2026-06-26 ~7h "!!!!" incident (0.95 left
+#  ~1-2 GiB headroom; the fp16 KV cache poisoned a persistent buffer after hours). max-model-len does NOT change
+#  VRAM: vLLM sizes the KV pool from UTIL (~280k tok/replica at 0.88 single-card), so 98304 (96K) only caps a
+#  single request's length and fits with room to spare. Run the watchdog alongside, below.)
 
 ./daily_driver_serve.sh status     # model, GPU lease, replicas/proxy, served id, web ui
 ./daily_driver_serve.sh logs       # follow the serve container log
@@ -41,7 +42,7 @@ sudo systemctl stop b70-daily-driver              # stop
 ```
 
 The unit defaults to the **wedge-proof int4 DP=2** serve (`DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2`,
-`DD_MAXLEN=65536`, `DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88"`). To switch to the faster-but-attended-only **w8a8 +MTP TP=2**
+`DD_MAXLEN=98304`, `DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88"`). To switch to the faster-but-attended-only **w8a8 +MTP TP=2**
 (`DD_MODEL=qwen36-27b-w8a8-sqgptq-mtp DD_REPLICAS=1`, drop the `DD_ENV` line), edit the `Environment=DD_*` lines,
 then `daemon-reload` + `restart`. w8a8 TP=2 can DEVICE_LOST-wedge under load (reboot-only) even with the GuC
 70.54.0 fix, so do NOT use it for an unattended/traveling window. If the manual launch is already running, `stop`

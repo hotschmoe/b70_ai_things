@@ -20,12 +20,12 @@ Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
 Environment=DD_MODEL=qwen36-27b-int4
 Environment=DD_REPLICAS=2
-# MAXLEN 65536 + UTIL 0.88 (dialed back from 131072/0.95 after the 2026-06-26 ~7h "!!!!" incident: the
-# untested 0.95/128k bump was the leading NaN suspect -- it left ~1-2 GiB headroom on a 32 GB card and the
-# fp16 KV cache filled/evicted under pressure for hours before poisoning a persistent buffer). 0.88/64k still
-# gives ~80-90k tok KV/replica (far past any real request) with comfortable headroom. The dd-watchdog
-# (b70-dd-watchdog.service) backstops any residual garbage with a per-replica self-heal.
-Environment=DD_MAXLEN=65536
+# UTIL 0.88 is THE safety lever -- dialed back from 0.95 after the 2026-06-26 ~7h "!!!!" incident (the untested
+# 0.95 bump left only ~1-2 GiB headroom on a 32 GB card and the fp16 KV cache poisoned a persistent buffer under
+# pressure over hours). 0.88 leaves ~3+ GiB headroom. NOTE: max-model-len does NOT change VRAM -- vLLM sizes the
+# KV pool from UTIL (~280k tok/replica at 0.88 single-card), so MAXLEN only caps a single request's length;
+# 98304 (96K) fits with room to spare. The dd-watchdog (b70-dd-watchdog.service) backstops residual garbage.
+Environment=DD_MAXLEN=98304
 Environment="DD_ENV=GRAPH=1 CGMODE=NONE UTIL=0.88"
 # API key is read from the off-repo secret file at start time (NOT baked into the unit).
 ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh start'
