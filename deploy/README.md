@@ -7,10 +7,11 @@ serve.sh> && docker wait'` in a NEW session, and the vLLM itself is a `docker ru
 daemon. So it **survives this shell / SSH / Claude session closing** -- it keeps running until you `stop` it.
 
 ```
-# start (int4 DP=2 NONE -- the SHIPPED wedge-proof weekend serve, API-key enforced, MAXLEN 65536):
-DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=65536 DD_ENV="GRAPH=1 CGMODE=NONE" \
+# start (int4 DP=2 NONE -- the SHIPPED wedge-proof weekend serve, API-key enforced, 128k context):
+DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=131072 DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.95" \
   DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
   ./daily_driver_serve.sh start
+# (UTIL=0.95 so a full 128k request fits the single-card KV cache: ~147-184k tokens/replica = 1.1-1.4x at 128k.)
 
 ./daily_driver_serve.sh status     # model, GPU lease, replicas/proxy, served id, web ui
 ./daily_driver_serve.sh logs       # follow the serve container log

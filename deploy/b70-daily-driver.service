@@ -20,8 +20,8 @@ Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
 Environment=DD_MODEL=qwen36-27b-int4
 Environment=DD_REPLICAS=2
-Environment=DD_MAXLEN=65536
-Environment="DD_ENV=GRAPH=1 CGMODE=NONE"
+Environment=DD_MAXLEN=131072
+Environment="DD_ENV=GRAPH=1 CGMODE=NONE UTIL=0.95"
 # API key is read from the off-repo secret file at start time (NOT baked into the unit).
 ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh start'
 ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh stop'
