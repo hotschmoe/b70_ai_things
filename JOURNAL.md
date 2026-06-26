@@ -4771,3 +4771,22 @@ verdict -> [BUGFIX] heal-on-health-down was wrong (races cold start); heal-on-ga
 watchdog safe to run continuously, even during a serve launch. NEXT: operator `sudo systemctl restart
 b70-dd-watchdog` (load the fixed code), then a clean `daily_driver_serve.sh stop` + relaunch (both replicas on
 64k/0.88, lease held) + verify coherent. Committed/pushed.
+
+## 2026-06-26 -- closeout: int4 DP=2 relaunched green on 96K (MAXLEN=98304); UTIL is the VRAM lever [verified]
+
+Operator wanted more context than the 64k dial-back. Correction applied: max-model-len does NOT change VRAM --
+vLLM sizes the KV pool from gpu_memory_utilization (fills the budget); MAXLEN only caps a single request. So
+UTIL 0.95->0.88 was the real "!!!!" headroom fix; MAXLEN is ~free. At UTIL 0.88 single-card the KV pool is
+~280k tok, so 98304 (96K) fits with room to spare (same VRAM as 64k).
+
+config -> DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=98304 DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88".
+command -> daily_driver_serve.sh restart (backgrounded). NOTE: the foreground poller printed "A REPLICA EXITED
+EARLY" and exited 1 -- a FALSE ALARM: restart's own `docker stop` of the old 64k containers raced the poller,
+which saw the just-stopped old dp1 as exited. The nohup-setsid DETACHED chain kept going and came up fine. (Latent
+cosmetic bug in daily_driver_serve.sh's restart wait; serve always comes up. Left unfixed for now.)
+result -> both replicas healthy + coherent on 98304/0.88: :18091 :18092 :18080(proxy) all -> "Paris". Single
+gpu-run chain (pid 23956) holds both cards. dd-watchdog (fixed code) correctly probed dp0 OK and SKIPPED dp1 under
+boot-grace -- ZERO false restarts this round, confirming the heal-on-garbage-only + BOOT_GRACE fix in the real
+cold-start path. Also: dd-watchdog datetime.utcnow()->tz-aware (killed the journald DeprecationWarning spam).
+verdict -> [VERIFIED] daily driver = int4 DP=2 NONE @ 96K context, UTIL 0.88, API-key enforced, wedge-proof, with
+a working content-aware self-heal watchdog. Commits 078028b (watchdog+dial-back) + 41d1625 (96K) pushed.
