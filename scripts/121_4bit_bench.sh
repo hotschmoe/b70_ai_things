@@ -19,6 +19,11 @@ CELLS=(
   "int4_eager|qwen36-27b-int4|qwen36-27b-int4|/models/Lorbus_Qwen3.6-27B-int4-AutoRound|GRAPH=0"
   "w4a16_graph|qwen36-27b-w4a16|qwen36-27b-w4a16|/models/Qwen3.6-27B-W4A16|GRAPH=1"
   "w4a16_none|qwen36-27b-w4a16|qwen36-27b-w4a16|/models/Qwen3.6-27B-W4A16|GRAPH=1 CGMODE=NONE"
+  "int4_tp2_graph|qwen36-27b-int4|qwen36-27b-int4|/models/Lorbus_Qwen3.6-27B-int4-AutoRound|TP=2 GRAPH=1"
+  "int4_tp2_none|qwen36-27b-int4|qwen36-27b-int4|/models/Lorbus_Qwen3.6-27B-int4-AutoRound|TP=2 GRAPH=1 CGMODE=NONE"
+  "w4a8_tp2_graph|qwen36-27b-w4a8|qwen36-27b-w4a8-sqgptq|/models/Qwen3.6-27B-W4A8-sqgptq-prepacked|TP=2 GRAPH=1"
+  "w4a8_tp2_none|qwen36-27b-w4a8|qwen36-27b-w4a8-sqgptq|/models/Qwen3.6-27B-W4A8-sqgptq-prepacked|TP=2 GRAPH=1 CGMODE=NONE"
+  "w4a8_graph|qwen36-27b-w4a8|qwen36-27b-w4a8-sqgptq|/models/Qwen3.6-27B-W4A8-sqgptq-prepacked|GRAPH=1"
 )
 # optional cell-list args -> run only those labels (lets card0/card1 run disjoint subsets in parallel)
 if [ "$#" -gt 0 ]; then
@@ -42,6 +47,11 @@ for row in "${CELLS[@]}"; do
   fi
   cname="vllm_${served}"            # recipe NAME default; explicit so parallel card0/card1 serves don't collide
   echo "  serving as $cname on :$PORT; benching IN=$IN OUT=$OUT CONC='$CONC' ..."
+  # KV-cache budget (vLLM logs it at startup): model GiB + graph GiB + available-KV GiB + KV tokens (per worker)
+  { echo "==== $label ($env) ===="
+    docker logs "$cname" 2>&1 | grep -iE 'Model loading took|Graph capturing finished in|Available KV cache memory|GPU KV cache size|Maximum concurrency for' | sed 's/^/  /'
+    echo
+  } | tee -a "$LOGDIR/bench4_kv_${TS}.txt"
   csv="$(NAME="$cname" MODEL="$served" TOKPATH="$ckpt" PORT="$PORT" IN="$IN" OUT="$OUT" CONC="$CONC" \
          bash "$REPO/bin/35_sweep_bench.sh" 2>&1)"
   echo "$csv" >"$LOGDIR/bench4_${label}_bench_${TS}.log"
