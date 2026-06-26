@@ -1,0 +1,2 @@
+vllm_qwen36-27b-int4
+stopped vllm_qwen36-27b-int4 (graceful -t30; GPU released if last holder)

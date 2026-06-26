@@ -1,0 +1,4 @@
+concurrency,req_s,out_tok_s,mean_ttft_ms,mean_tpot_ms,per_stream_decode_tok_s
+1,0.08,10.21,2833.84,76.43,13.08
+4,0.18,23.01,7350.79,117.21,8.53
+=== saved /mnt/vm_8tb/b70/results/sweep_qwen3-14b_20260626_033202.csv ===

@@ -71,6 +71,27 @@ int4 ~23% decode (30.5->23.3) but is **free for w4a16** (compute-bound). (c) For
 **int4 single-card DP=2 is wedge-proof** (no TP=2), while **w8a8 NONE TP=2 is faster + higher quality** but its
 longevity rides on the GuC fix holding. eager floors: int4 8.2, w8a8 12.7.
 
+#### TP=2 sweep + KV-cache budget (2026-06-26)
+
+Curiosity check: int4/w4a8 on **TP=2** (they fit one card, so normally single-card / DP=2). Result: TP=2 **doubles
+prefill** (2-card compute) but **regresses decode** (per-token cross-card all-reduce tax) -- badly on NONE. So a
+fits-one-card 4-bit model should serve **single-card DP=2**, not TP=2. The one TP=2 upside is a much bigger **KV
+budget** (the model shards across cards, freeing VRAM for KV).
+
+| config | TP | decode c1 | prefill c1 | model GiB/card | KV GiB/card | KV tokens | conc @8k |
+|---|---|---:|---:|---:|---:|---:|---:|
+| int4 NONE | 1 | 23.3 | 1593 | ~14 (whole) | -- | -- | -- |
+| int4 NONE | 2 | 14.5 | 3033 | 8.42 | 17.98 | 444,888 | 54x |
+| int4 captured | 2 | 27.5 | 3028 | 8.42 | 17.98 | 444,888 | 54x |
+| w4a8 NONE | 2 | 13.1 | 2834 | 12.25 | 13.67 | 338,392 | 41x |
+| w4a8 captured | 2 | 23.0 | 2841 | 12.25 | 13.67 | 338,392 | 41x |
+| w8a8 NONE+MTP | 2 | 25.6 coh | 2604 | 16.92 | 10.0 | 266,465* | 4.1x* |
+
+KV budget ~= VRAM(~30.5 GiB/card usable at UTIL) - (model shard + ~1.7 graph). int4 shards smallest (8.4/card)
+-> biggest KV (444k tokens / 54x). *w8a8 KV row was measured at MAXLEN=65536 (hence the lower concurrency-per-
+request number); the rest at MAXLEN=8192. Takeaway: none of the harness-test serves need 444k ctx, so KV capacity
+is not the deciding factor -- decode + quality + stability are.
+
 The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the **27B-W8A8 row is now the
 push-ar+graph DEFAULT** -- the shelf serve.sh defaults to `PUSH_AR=1 PUSH_AR_GRAPH=1` (custom L0-IPC
 push transport, P2PACCESS=0; **opt out to plain oneCCL with `PUSH_AR=0`**). It beats the oneCCL baseline

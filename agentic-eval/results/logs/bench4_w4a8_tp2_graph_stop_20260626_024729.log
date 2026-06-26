@@ -1,0 +1,2 @@
+vllm_qwen36-27b-w4a8-sqgptq
+stopped vllm_qwen36-27b-w4a8-sqgptq (graceful -t30; GPU released if last holder)

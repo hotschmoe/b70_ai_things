@@ -1,0 +1,26 @@
+==== int4_tp2_graph (TP=2 GRAPH=1) ====
+  (Worker_TP0 pid=109) INFO 06-26 02:48:46 [gpu_model_runner.py:5187] Model loading took 8.42 GiB memory and 6.782036 seconds
+  (Worker_TP0 pid=109) INFO 06-26 02:53:52 [gpu_worker.py:480] Available KV cache memory: 17.98 GiB
+  (EngineCore pid=75) INFO 06-26 02:53:52 [kv_cache_utils.py:1744] GPU KV cache size: 444,888 tokens
+  (EngineCore pid=75) INFO 06-26 02:53:52 [kv_cache_utils.py:1745] Maximum concurrency for 8,192 tokens per request: 54.31x
+  (Worker_TP0 pid=109) INFO 06-26 02:54:04 [gpu_model_runner.py:6585] Graph capturing finished in 11 secs, took 1.69 GiB
+
+==== int4_tp2_none (TP=2 GRAPH=1 CGMODE=NONE) ====
+  (Worker_TP0 pid=109) INFO 06-26 02:59:22 [gpu_model_runner.py:5187] Model loading took 8.42 GiB memory and 7.001390 seconds
+  (Worker_TP0 pid=109) INFO 06-26 03:03:01 [gpu_worker.py:480] Available KV cache memory: 17.98 GiB
+  (EngineCore pid=75) INFO 06-26 03:03:01 [kv_cache_utils.py:1744] GPU KV cache size: 444,888 tokens
+  (EngineCore pid=75) INFO 06-26 03:03:01 [kv_cache_utils.py:1745] Maximum concurrency for 8,192 tokens per request: 54.31x
+
+==== w4a8_tp2_graph (TP=2 GRAPH=1) ====
+  (Worker_TP0 pid=77) INFO 06-26 03:10:17 [gpu_model_runner.py:5187] Model loading took 12.25 GiB memory and 51.058296 seconds
+  (Worker_TP0 pid=77) INFO 06-26 03:19:44 [gpu_worker.py:480] Available KV cache memory: 13.67 GiB
+  (EngineCore pid=43) INFO 06-26 03:19:44 [kv_cache_utils.py:1744] GPU KV cache size: 338,392 tokens
+  (EngineCore pid=43) INFO 06-26 03:19:44 [kv_cache_utils.py:1745] Maximum concurrency for 8,192 tokens per request: 41.31x
+  (Worker_TP0 pid=77) INFO 06-26 03:20:02 [gpu_model_runner.py:6585] Graph capturing finished in 18 secs, took 1.46 GiB
+
+==== w4a8_tp2_none (TP=2 GRAPH=1 CGMODE=NONE) ====
+  (Worker_TP0 pid=77) INFO 06-26 03:25:22 [gpu_model_runner.py:5187] Model loading took 12.25 GiB memory and 6.487151 seconds
+  (Worker_TP0 pid=77) INFO 06-26 03:31:38 [gpu_worker.py:480] Available KV cache memory: 13.67 GiB
+  (EngineCore pid=43) INFO 06-26 03:31:38 [kv_cache_utils.py:1744] GPU KV cache size: 338,392 tokens
+  (EngineCore pid=43) INFO 06-26 03:31:38 [kv_cache_utils.py:1745] Maximum concurrency for 8,192 tokens per request: 41.31x
+

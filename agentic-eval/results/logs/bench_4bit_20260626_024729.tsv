@@ -1,0 +1,10 @@
+# 4-bit single-card bench  IN=2048 OUT=128 CONC="1 4"  Fri Jun 26 02:47:29 AM UTC 2026
+# label	c	req_s	out_tok_s	ttft_ms	tpot_ms	decode_tps	prefill_tps
+int4_tp2_graph	1	0.13	16.72	3028.44	36.41	27.46	676
+int4_tp2_graph	4	0.23	29.61	6285.21	86.55	11.55	326
+int4_tp2_none	1	0.08	10.86	3033.02	68.90	14.51	675
+int4_tp2_none	4	0.18	23.56	7189.81	114.34	8.75	285
+w4a8_tp2_graph	1	0.12	15.31	2840.79	43.45	23.01	721
+w4a8_tp2_graph	4	0.23	29.09	7299.92	81.02	12.34	281
+w4a8_tp2_none	1	0.08	10.21	2833.84	76.43	13.08	723
+w4a8_tp2_none	4	0.18	23.01	7350.79	117.21	8.53	279
