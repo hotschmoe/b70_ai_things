@@ -4640,3 +4640,33 @@ verdict -> CAMPAIGN COMPLETE. Item 1 cudagraph=NONE shipped (2x stable, the answ
   hardware wedge root-caused + fixed (GuC 70.54.0). Next: weekend 4-bit daily-driver serve (27b-int4 DP=2)
   behind Traefik with an API key -- update daily_driver_serve.sh (de-SSH to local + add API key), then deploy
   AFTER operator OK. See docs/20260625_bcs_wedge_rootcause.md and docs/20260625_w8a8_27b_mtp_graph_campaign.md.
+
+## 2026-06-26 -- weekend-serve bench: 4-bit/w8a8 @ 2048, TP=2 sweep + KV, w4a16+MTP BUILT [result+build]
+
+Benched the daily-driver candidates @ 2048 ctx c1/c4 to pick a weekend harness-test serve (scripts/121 single-
+card parallel on both cards; scripts/120 perf for w8a8 TP=2; all NONE = the stable route). decode/TTFT/prefill c1:
+    int4 NONE      TP1   23.3  / 1285ms / 1593      (single-card; captured 30.5/1325/1545)
+    w4a16 NONE     TP1   21.5  / 1199ms / 1709      (NONE ~= captured: free; compute-bound)
+    int4 NONE      TP2   14.5  / 3033ms /  675      (KV 444k tok, model shards 8.42/card)
+    w4a8 NONE      TP2   13.1  / 2834ms /  723      (KV 338k tok)
+    w4a16 +MTP NONE TP2  22.5  / 3150ms /  650      (~26 coherent; accept_len up to 3.15)
+    w8a8 +MTP NONE TP2   25.6c /  787ms / 2604      (8-bit; push-ar + native-TP2 + MTP)
+
+CORRECTION -> an earlier note mislabeled the TP=2 TTFT(ms) column as "prefill". Real story: forcing a fits-one-
+card 4-bit model onto TP=2 HURTS prefill (~675 vs single-card 1593) and triples TTFT -- oneCCL all-reduce tax,
+NO push-ar (push-ar is a w8a8-only L0-IPC overlay). w8a8 TP=2 keeps 2604 prefill only because it natively needs
+sharding AND has push-ar. README table fixed (commit e7ad965).
+
+w4a16+MTP TP=2 NONE -> BUILT a new recipe rdy_to_serve/qwen36-27b-w4a16-mtp/ (agent-designed): MERGED shim
+  (Python loads one sitecustomize/interp) = text-only arch-reg + MTP-drafter-unquant + csag (gated OFF on NONE),
+  CKPT=W4A16-mtp-graft, MTPTOK=3, GRAPH=1 CGMODE=NONE TP=2, IMG=v0230 (GDN baked). VALIDATED: serves coherent
+  ("Paris is the capital..."), all 3 shim patches fire on every worker, MTP genuinely accepts (accept_len 3.15,
+  71% draft accept). MTP nearly DOUBLED the no-push-ar TP=2 NONE decode (w4a8 13.1 -> w4a16+MTP 22.5) = confirms
+  MTP amortizes the TP=2 all-reduce. BUT prefill 650 (no push-ar) -> a science win, not a serving win.
+
+KV per model (TP=2, per card; VRAM ~30.5 GiB/card usable): int4 model 8.42 + KV 17.98 = 444,888 tok (54x);
+  w4a8 12.25 + 13.67 = 338,392 (41x); w8a8 16.92 + 10.0 = 266,465 (at MAXLEN 65536). None of the harness serves
+  need 444k ctx -> KV is not the deciding factor.
+verdict -> WEEKEND SERVE = w8a8 +MTP TP=2 NONE (fastest: 25.6 dec / 787 TTFT / 2604 PP, 8-bit; trust GuC fix) OR
+  int4 NONE DP=2 (wedge-proof single-card, 23.3/1285/1593, 4-bit). w4a16+MTP ruled out (prefill 650). Operator to
+  pick + supply DD_API_KEY; daily_driver_serve.sh is staged (de-SSH + API key + paths fixed). All committed/pushed.
