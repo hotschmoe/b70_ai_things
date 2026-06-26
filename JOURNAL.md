@@ -4670,3 +4670,37 @@ KV per model (TP=2, per card; VRAM ~30.5 GiB/card usable): int4 model 8.42 + KV 
 verdict -> WEEKEND SERVE = w8a8 +MTP TP=2 NONE (fastest: 25.6 dec / 787 TTFT / 2604 PP, 8-bit; trust GuC fix) OR
   int4 NONE DP=2 (wedge-proof single-card, 23.3/1285/1593, 4-bit). w4a16+MTP ruled out (prefill 650). Operator to
   pick + supply DD_API_KEY; daily_driver_serve.sh is staged (de-SSH + API key + paths fixed). All committed/pushed.
+
+## 2026-06-26 -- w8a8 NONE garbage fix, w8a8 TP=2 WEDGED under load -> SHIPPED int4 NONE DP=2 weekend serve
+
+Two things broke the "w8a8 +MTP TP=2" weekend pick during final verification, and we shipped the wedge-proof
+alternative instead.
+
+1) w8a8 NONE GARBAGE (fixed). Bringing up w8a8 on cudagraph=NONE produced prompt-dependent "!!!!" garbage on
+   some prompts. Root cause: the recipe still defaulted PUSH_AR_GRAPH=1, which records the DECODE all-reduce into
+   a torch XPUGraph -- but on CGMODE=NONE there IS no captured graph, so decode read a stale push-ar buffer.
+   Fix (commit 17718f4): the w8a8 recipe now auto-sets PUSH_AR_GRAPH=0 when CGMODE=NONE (prefill-push + oneCCL
+   decode). Verified 0/8 garbage after. Lesson logged: NONE was promoted on stability/speed without first
+   validating coherence on varied prompts -- the fix is to ALWAYS run a varied-prompt battery before shipping.
+
+2) w8a8 TP=2 WEDGED card 1 UNDER LOAD (the disqualifier). With the garbage fixed, the w8a8 +MTP TP=2 serve came
+   up healthy + API-key-correct, but a concurrent coherence battery crashed a worker at
+   `gdn_attn.py:266 spec_state_indices_tensor -> RuntimeError level_zero error 20 (UR_RESULT_ERROR_DEVICE_LOST)`;
+   xpu-health then reported `card 1: HUNG (>60s) -> WEDGED`, reboot-only recovery -- EVEN WITH GuC 70.54.0. So the
+   firmware fix made the BCS/DEVICE_LOST TP=2 wedge RARE, not impossible: sustained MTP + concurrent decode can
+   still trip it. (The double-battery over-stressed it, but the eval harness has concurrency too, and a wedge that
+   needs a reboot while TRAVELING is unacceptable.) -> w8a8 TP=2 is REJECTED for unattended weekend use.
+
+3) SHIPPED: int4 NONE DP=2 (wedge-proof). int4 fits one card, so it serves as TWO single-card TP=1 replicas
+   (DP=2, nginx round-robin :18080) -- NO cross-card collective, so it CANNOT DEVICE_LOST/BCS-wedge. NONE = no
+   graph-replay command-stream accumulation over a multi-day serve. Pre-req fix: the int4 recipe had no
+   DOCKER_ENV/B70_EXTRA_ENV handler, so the daily-driver could not inject VLLM_API_KEY -> added it (mirrors w8a8).
+   Launch: `DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=65536 DD_ENV="GRAPH=1 CGMODE=NONE"
+   DD_API_KEY=$(cat .../dd_api_key) ./daily_driver_serve.sh start`. Both replicas HEALTHY (dp0 335s, dp1 66s),
+   both NONE-confirmed in the launched cmdline (`"cudagraph_mode":"NONE"`).
+   VERIFIED: API-key enforcement no-key/wrong->401, correct->200, /health open->200. Coherence battery (proxy+key):
+   capital->"Paris", 17*23->"391", translate->"Il fait beau aujourd'hui.", square(n)->`def square(n): return n**2`,
+   60km/45min->"80" km/h (last two with enable_thinking=false; with thinking on, simple Qs hit max_tokens inside an
+   unclosed <think> block -- verbosity, not garbage). ZERO wedge across the whole bring-up + battery.
+verdict -> WEEKEND SERVE SHIPPED = int4 NONE DP=2, API-key enforced, wedge-proof. w8a8 TP=2 documented as
+  attended-only (wedges under load even post-GuC-fix). systemd unit + daily-driver default updated to int4 DP=2.

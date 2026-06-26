@@ -529,3 +529,19 @@ FINAL ANSWERS:
 - Hardware wedge (BCS): root-caused + FIXED by GuC 70.54.0 (see docs/20260625_bcs_wedge_rootcause.md).
 Campaign complete. The shipped recommendation stands: serve 27b-w8a8 with `GRAPH=1 CGMODE=NONE` (2x, stable);
 PIECEWISE ~36 t/s is unreachable stably here pending an upstream graph-replay fix.
+
+## 15. Post-campaign (2026-06-26): w8a8 NONE garbage fix + w8a8 TP=2 wedges under load -> weekend serve = int4 DP=2
+
+Two findings while standing up the weekend WAN serve (full detail JOURNAL 2026-06-26):
+
+- **w8a8 cudagraph=NONE produced prompt-dependent garbage** ("!!!!") because the recipe still defaulted
+  `PUSH_AR_GRAPH=1` -- the DECODE all-reduce was recorded into a torch XPUGraph that does not exist on NONE, so
+  decode read a stale push-ar buffer. FIX (commit 17718f4): w8a8 recipe auto-sets `PUSH_AR_GRAPH=0` when
+  `CGMODE=NONE`. 0/8 garbage after. Lesson: validate coherence on VARIED prompts before shipping a config.
+
+- **w8a8 +MTP TP=2 NONE WEDGED card 1 under concurrent load even WITH GuC 70.54.0** (`gdn_attn.py:266
+  spec_state_indices_tensor -> err20 DEVICE_LOST` -> `xpu-health: card 1 HUNG -> WEDGED`, reboot-only). The
+  firmware fix made the BCS/GuC wedge RARE, not impossible -- sustained MTP + concurrency can still trip it. So
+  **w8a8 TP=2 is attended-only.** For the unattended/traveling weekend we SHIPPED **int4 NONE DP=2** instead:
+  two single-card TP=1 replicas (no cross-card collective -> cannot DEVICE_LOST/BCS-wedge), nginx round-robin
+  :18080, API-key enforced, coherent on a varied battery. Recipe + systemd unit default to it.

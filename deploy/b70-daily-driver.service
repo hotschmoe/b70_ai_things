@@ -1,6 +1,8 @@
 [Unit]
-# B70 daily-driver vLLM serve (default: qwen36-27b-w8a8-sqgptq-mtp, TP=2 cudagraph=NONE + MTP3 + push-ar,
-# API-key enforced). Managed lifecycle + auto-start on boot. See deploy/README.md.
+# B70 daily-driver vLLM serve (default: qwen36-27b-int4, DP=2 = two single-card TP=1 replicas, cudagraph=NONE,
+# API-key enforced). WEDGE-PROOF: single-card replicas cannot DEVICE_LOST/BCS-wedge, so this survives an
+# unattended/traveling weekend (w8a8 TP=2 is faster but wedged under load even post-GuC-fix -- attended-only).
+# Managed lifecycle + auto-start on boot. See deploy/README.md and JOURNAL 2026-06-26.
 Description=B70 daily-driver vLLM serve
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
@@ -16,13 +18,14 @@ RemainAfterExit=yes
 User=hotschmoe
 Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
-Environment=DD_MODEL=qwen36-27b-w8a8-sqgptq-mtp
-Environment=DD_REPLICAS=1
+Environment=DD_MODEL=qwen36-27b-int4
+Environment=DD_REPLICAS=2
 Environment=DD_MAXLEN=65536
+Environment="DD_ENV=GRAPH=1 CGMODE=NONE"
 # API key is read from the off-repo secret file at start time (NOT baked into the unit).
 ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh start'
 ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh stop'
-# w8a8 TP=2 init + JIT compile can take a few minutes; allow generous startup.
+# Two int4 replicas load + JIT-compile (NONE: no capture); allow generous startup.
 TimeoutStartSec=1200
 TimeoutStopSec=120
 

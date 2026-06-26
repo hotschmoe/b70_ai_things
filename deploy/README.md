@@ -7,8 +7,8 @@ serve.sh> && docker wait'` in a NEW session, and the vLLM itself is a `docker ru
 daemon. So it **survives this shell / SSH / Claude session closing** -- it keeps running until you `stop` it.
 
 ```
-# start (w8a8 +MTP TP=2 NONE, API-key enforced, MAXLEN 65536):
-DD_MODEL=qwen36-27b-w8a8-sqgptq-mtp DD_REPLICAS=1 DD_MAXLEN=65536 \
+# start (int4 DP=2 NONE -- the SHIPPED wedge-proof weekend serve, API-key enforced, MAXLEN 65536):
+DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=65536 DD_ENV="GRAPH=1 CGMODE=NONE" \
   DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
   ./daily_driver_serve.sh start
 
@@ -37,8 +37,11 @@ journalctl -u b70-daily-driver -f                 # follow
 sudo systemctl stop b70-daily-driver              # stop
 ```
 
-Change the model/config by editing the `Environment=DD_*` lines (e.g. `DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2`
-for the wedge-proof int4 DP=2), then `daemon-reload` + `restart`. If the manual launch is already running, `stop`
+The unit defaults to the **wedge-proof int4 DP=2** serve (`DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2`,
+`DD_ENV="GRAPH=1 CGMODE=NONE"`). To switch to the faster-but-attended-only **w8a8 +MTP TP=2**
+(`DD_MODEL=qwen36-27b-w8a8-sqgptq-mtp DD_REPLICAS=1`, drop the `DD_ENV` line), edit the `Environment=DD_*` lines,
+then `daemon-reload` + `restart`. w8a8 TP=2 can DEVICE_LOST-wedge under load (reboot-only) even with the GuC
+70.54.0 fix, so do NOT use it for an unattended/traveling window. If the manual launch is already running, `stop`
 it first so the unit owns the lease.
 
 ### Caveats / levels of resilience

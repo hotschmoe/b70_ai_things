@@ -102,11 +102,16 @@ shim (text-only arch-reg + MTP-drafter-unquant + csag-off-on-NONE) serves cohere
 amortizing the all-reduce ~accept_len-fold -- the TP=2 MTP hypothesis. BUT MTP can't fix prefill: w4a16+MTP TP=2
 prefill is 650 (no push-ar), the worst of the lot. So w4a16+MTP TP=2 is a scientific win, not a serving win.
 
-**Weekend serve decision (all NONE, 2048 ctx):**
-- **w8a8 +MTP TP=2** -- FASTEST + best quality: decode 25.6, TTFT 787, prefill 2604, 8-bit. Wins because it
-  natively needs TP=2 (sharding is "free") + push-ar + MTP. Stability rides on the GuC 70.54.0 fix (TP=2).
-- **int4 NONE DP=2** -- the wedge-proof pick: decode 23.3, TTFT 1285, prefill 1593, 4-bit, single-card replicas
-  (cannot BCS-wedge), 2x replica aggregate.
+**Weekend serve decision (all NONE, 2048 ctx) -- SHIPPED: `int4 NONE DP=2`:**
+- **int4 NONE DP=2 (SHIPPED 2026-06-26)** -- the WEDGE-PROOF pick: decode 23.3, TTFT 1285, prefill 1593, 4-bit,
+  two single-card TP=1 replicas (cannot BCS/DEVICE_LOST-wedge -- no cross-card collective), 2x replica aggregate,
+  API-key enforced behind Traefik. Chosen for an **unattended traveling weekend**: the box cannot be rebooted
+  remotely, so wedge-immunity outranks raw speed.
+- **w8a8 +MTP TP=2 -- REJECTED for unattended use.** It is faster (decode 25.6, TTFT 787, prefill 2604, 8-bit)
+  but it **WEDGED card 1 under load during final verification** (`gdn_attn.py spec_state_indices_tensor ->
+  UR_RESULT_ERROR_DEVICE_LOST`, reboot-only recovery) EVEN WITH the GuC 70.54.0 fix. The firmware fix made the
+  TP=2 wedge rare, not impossible; sustained MTP + concurrent decode can still trip it. Fine for attended use,
+  NOT for a weekend you can't babysit. (JOURNAL 2026-06-26.)
 - **w4a16 +MTP TP=2** -- ruled out for serving (prefill 650 / TTFT 3150 -- the fits-one-card-without-push-ar penalty).
 
 The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the **27B-W8A8 row is now the
