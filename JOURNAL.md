@@ -4704,3 +4704,70 @@ alternative instead.
    unclosed <think> block -- verbosity, not garbage). ZERO wedge across the whole bring-up + battery.
 verdict -> WEEKEND SERVE SHIPPED = int4 NONE DP=2, API-key enforced, wedge-proof. w8a8 TP=2 documented as
   attended-only (wedges under load even post-GuC-fix). systemd unit + daily-driver default updated to int4 DP=2.
+
+## 2026-06-26 -- int4 DP=2 ran ~7h then "!!!!" on all prompts -> root-cause + config dial-back + watchdog
+
+INCIDENT. The shipped int4 NONE DP=2 daily driver (UTIL=0.95 MAXLEN=131072, the most recent bump) served
+fine for ~6h then returned "!!!!" on every prompt. Forensics from dd-logs/daily_driver.log + docker ps -a:
+both replicas came up HEALTHY (dp0 279s, dp1 66s, coherence probe OK), the lease ran 25888s (~7.2h) then took
+a SIGTERM (exit 143) and both vllm_daily_dp0/dp1 did a GRACEFUL docker stop -> Exited(0). So the containers
+did NOT crash and the card did NOT DEVICE_LOST -- the model kept answering, just with garbage.
+
+DIAGNOSIS. "!" is token id 0 for Qwen; NaN/Inf or all-equal logits -> argmax falls to token 0 -> "!!!!"
+forever. "Worked 6h then ALL prompts" = a NaN poisoned PERSISTENT/shared state (a recycled KV block or a
+cached buffer); per-request compute faults would be intermittent. This is SOFT in-process corruption ->
+recoverable by a CONTAINER RESTART (weights re-read from disk), NOT the BCS/reboot wedge. Leading suspect:
+the UTIL=0.95 + MAXLEN=131072 bump (commit 1136b6e) -- it postdates the 0/8 coherence battery (run at 65536),
+left ~1-2 GiB headroom on a 32 GB card, and the fp16 KV cache filled/evicted under pressure for hours. Both DP
+replicas run the identical aggressive config, which is why BOTH (hence "all prompts" via round-robin) turned
+together. Secondary suspect (Arc SDC under sustained load) is UNCONFIRMED -- nothing captured logs/dmesg/VRAM
+at the moment it turned, which is the gap the watchdog now closes.
+
+OPERATOR DECISION (rejected the "switch to w8a8" idea, with two corrections): (1) the resets are NOT
+equivalent -- int4 garbage = a container bounce (seconds, scriptable, no reboot); w8a8 TP=2's failure mode is
+the BCS device_lost wedge = REBOOT-only (the thing we rejected it for on 2026-06-26). (2) w8a8 has LESS KV
+room, not more (16.9 vs 8.4 GiB/card weights -> ~266k vs ~444k tok). w8a8's only real win is TTFT/prefill
+(~1.6x); decode is +10%. So: STAY int4 DP=2, dial back the risky config, add a watchdog.
+
+CHANGES (config -> command -> result -> verdict):
+  - config: deploy/b70-daily-driver.service + deploy/README.md DD_MAXLEN 131072->65536, UTIL 0.95->0.88
+    (~80-90k tok KV/replica, far past any real request, comfortable headroom).
+  - tool: bin/dd-watchdog (python3, stdlib) -- content-aware probe + self-heal. Probes each replica's OUTPUT
+    (not just /health, which stayed 200 through the garbage); classify OK / GARBAGE (empty/single-char
+    flood/>=70% one char) / WARN (wrong-but-coherent -> NOT healed, no false restart). On DEBOUNCE=2 GARBAGE
+    or hard health-down: writes dd-logs/incidents/dd-incident-<ts>-<replica>.log (docker-logs error grep +
+    dmesg xe/GuC + stats + xpu-smi) then `docker restart`s ONLY that replica (no reboot, no lease re-acquire,
+    single-card cannot BCS-wedge). Rails: max 1 heal/pass (staggers both-bad), 420s post-restart cooldown,
+    cap 4 restarts/replica/hr then ESCALATE-and-log (persistent fault = likely hardware).
+  - unit: deploy/b70-dd-watchdog.service (Type=simple, Restart=on-failure) -- runs ALONGSIDE the serve.
+  - result: classifier unit-tested (Paris->OK, !!!!/empty/single-char->GARBAGE, London/verbose->WARN);
+    `dd-watchdog --once --no-heal` runs end-to-end (loads key, probes, sees the serve currently DOWN, no
+    action). Syntax-clean, executable. NOT yet committed; serve NOT yet relaunched (operator to OK both).
+verdict -> int4 DP=2 "!!!!" root-caused to soft NaN-poisoning (prime suspect the untested 0.95/128k bump),
+  restart-recoverable (no reboot). w8a8-swap rejected (worse recovery + smaller KV). Config dialed back +
+  content-aware self-heal watchdog added. NEXT: operator installs both units (sudo), relaunches int4 DP=2 at
+  0.88/64k, enables b70-dd-watchdog; if "!!!!" recurs the incident file will finally show logs/dmesg/VRAM.
+
+## 2026-06-26 -- dd-watchdog v1 self-inflicted a cold-start bounce; fixed to heal-on-garbage-only [bugfix]
+
+First live bring-up of the int4 DP=2 serve + dd-watchdog FAILED, and the watchdog was the cause. Sequence
+(journalctl -u b70-dd-watchdog): watchdog enabled 17:37:58 while the serve was still cold-starting; dp0 /health
+DOWN strike 1/2 @17:37:59, strike 2/2 @17:38:59 -> HEAL docker restart dp0 @17:39:00; dp1 likewise @17:40:22.
+The model load + JIT is ~120-280s of legitimate health-down -- v1 healed on health-down, so it mistook a loading
+replica for a dead one and bounced BOTH mid-load. Worse, the `docker restart` flashed dp0 to a non-running state
+exactly while the serve launcher's b70_wait_healthy was polling `docker inspect ... exited` -> "[!] vllm_daily_dp0
+EXITED EARLY" -> serve.sh start returned 1 -> the `&&` chain died -> dp1 never launched, gpu-run exited 125, lease
+released. End state: dp0 on the new 64k/0.88 config, dp1 brought back by the watchdog as the OLD 128k/0.95
+container, both leaseless, two FALSE incident files written.
+
+FIX (bin/dd-watchdog): the watchdog now restarts ONLY on confirmed GARBAGE (health 200 + degenerate output -- the
+one failure nothing else catches). New gates, in order: container not-running -> observe only; up < BOOT_GRACE
+(default 360s) -> skip (never touch a cold start); /health!=200 on a long-up container -> observe only (nginx
+max_fails ejects it; serve/systemd own restart); /v1/models-down or gen-fail -> observe only. Only sustained
+degenerate OUTPUT writes an incident + `docker restart`s the replica. Added container_state() (running/status/
+uptime via docker inspect). Removed the 2 false incident files. README + header updated; classifier + new
+container_state() retested.
+verdict -> [BUGFIX] heal-on-health-down was wrong (races cold start); heal-on-garbage-only + boot-grace makes the
+watchdog safe to run continuously, even during a serve launch. NEXT: operator `sudo systemctl restart
+b70-dd-watchdog` (load the fixed code), then a clean `daily_driver_serve.sh stop` + relaunch (both replicas on
+64k/0.88, lease held) + verify coherent. Committed/pushed.

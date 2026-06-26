@@ -20,8 +20,13 @@ Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
 Environment=DD_MODEL=qwen36-27b-int4
 Environment=DD_REPLICAS=2
-Environment=DD_MAXLEN=131072
-Environment="DD_ENV=GRAPH=1 CGMODE=NONE UTIL=0.95"
+# MAXLEN 65536 + UTIL 0.88 (dialed back from 131072/0.95 after the 2026-06-26 ~7h "!!!!" incident: the
+# untested 0.95/128k bump was the leading NaN suspect -- it left ~1-2 GiB headroom on a 32 GB card and the
+# fp16 KV cache filled/evicted under pressure for hours before poisoning a persistent buffer). 0.88/64k still
+# gives ~80-90k tok KV/replica (far past any real request) with comfortable headroom. The dd-watchdog
+# (b70-dd-watchdog.service) backstops any residual garbage with a per-replica self-heal.
+Environment=DD_MAXLEN=65536
+Environment="DD_ENV=GRAPH=1 CGMODE=NONE UTIL=0.88"
 # API key is read from the off-repo secret file at start time (NOT baked into the unit).
 ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh start'
 ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh stop'

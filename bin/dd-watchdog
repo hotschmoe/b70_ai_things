@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+# dd-watchdog -- content-aware health + garbage watchdog with self-heal for the int4 DP=2 daily driver.
+#
+# WHY THIS EXISTS (JOURNAL 2026-06-26 incident): the int4 DP=2 serve ran ~7h then returned "!!!!" on every
+# prompt. The containers did NOT crash and /health stayed 200 the whole time -- it was SOFT in-process
+# corruption (a NaN poisoning a persistent KV/buffer -> argmax falls to token 0 = "!"). A liveness probe and
+# nginx max_fails BOTH miss this (the upstream answers 200 with garbage), so a plain systemd Restart=on-failure
+# would never have caught it. This watchdog probes each replica's OUTPUT, not just /health, and on confirmed
+# garbage captures diagnostics then bounces ONLY that replica's container (docker restart = same card pin, same
+# API-key env, no GPU-lease re-acquire, NO reboot -- single-card ops cannot BCS-wedge).
+#
+# WHAT IT DOES, per probe interval, per replica (dp0:18091/card0, dp1:18092/card1):
+#   0. Container not running, or up < BOOT_GRACE (cold start = model load + JIT ~120-280s) -> SKIP. Never
+#      mistake a still-loading replica for a dead one. (This is THE fix for the 2026-06-26 self-inflicted
+#      cold-start bounce: healing on health-down restarted both replicas mid-load and broke the launcher.)
+#   1. GET /health         -> not 200 on a long-up container? -> OBSERVE ONLY (nginx ejects it; serve/systemd
+#                             own restarting a dead replica). The watchdog NEVER restarts on health alone.
+#   2. GET /v1/models      -> discover the served id (avoids model-name drift) (auth: Bearer <key>).
+#   3. POST /v1/chat/completions with a known-answer prompt (temp 0, thinking off) -> classify the reply:
+#        OK       reply contains the expected answer            -> reset garbage counter.
+#        GARBAGE  reply is degenerate (empty / single-char flood / >=70% one char) -> count toward debounce.
+#        WARN     wrong-but-coherent (not degenerate)           -> log, do NOT heal (avoids false restarts).
+#   4. ONLY after DEBOUNCE consecutive GARBAGE (health 200 + degenerate output -- the failure nothing else
+#      catches): write a dated incident file (docker-logs error-grep + dmesg xe/GuC + stats + xpu-smi), then
+#      `docker restart` ONLY that replica.
+#
+# SAFETY RAILS:
+#   - At most ONE heal action per pass (staggers a both-replicas-bad event; one card reboots at a time).
+#   - Per-replica COOLDOWN after a restart (the replica JIT-compiles ~5min on boot; do not probe/loop on it).
+#   - Per-replica restart-rate cap (MAX_RESTARTS_HR): exceed it -> stop auto-bouncing, keep logging
+#     ("ESCALATE" -- a persistent fault is likely hardware; do not infinite-loop a reboot).
+#
+# USAGE:
+#   bin/dd-watchdog                 # loop forever (the systemd service mode): probe -> heal -> sleep
+#   bin/dd-watchdog --once          # single pass, print verdicts, exit (manual check / smoke test)
+#   bin/dd-watchdog --no-heal       # detect + log + write incidents, but NEVER restart (forensics-only)
+#
+# ENV KNOBS (all optional; defaults in caps below):
+#   DD_WATCH_INTERVAL=60  DD_WATCH_DEBOUNCE=2  DD_WATCH_COOLDOWN=420  DD_WATCH_MAX_RESTARTS_HR=4
+#   DD_WATCH_HTTP_TIMEOUT=20  DD_WATCH_GEN_TIMEOUT=45
+#   DD_API_KEY_FILE=/mnt/vm_8tb/b70/secrets/dd_api_key  (or DD_API_KEY=<literal>)
+#   DD_WATCH_LOGDIR=/mnt/vm_8tb/b70/dd-logs
+#   DD_WATCH_REPLICAS="vllm_daily_dp0:18091:0,vllm_daily_dp1:18092:1"   (name:port:card, comma-separated)
+#
+# ASCII only. stdlib only. Long-running process -> safe to use time/datetime (not a Workflow sandbox).
+
+import json
+import os
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from collections import Counter
+from datetime import datetime
+
+# ---- config ------------------------------------------------------------------------------------------------
+INTERVAL = int(os.environ.get("DD_WATCH_INTERVAL", "60"))            # seconds between passes
+DEBOUNCE = int(os.environ.get("DD_WATCH_DEBOUNCE", "2"))            # consecutive GARBAGE before healing
+COOLDOWN = int(os.environ.get("DD_WATCH_COOLDOWN", "420"))          # seconds to leave a just-restarted replica alone
+BOOT_GRACE = int(os.environ.get("DD_WATCH_BOOT_GRACE", "360"))     # ignore a replica for this long after it (re)starts
+                                                                   # (cold start = model load + JIT ~120-280s; never
+                                                                   #  mistake a still-loading replica for a dead one)
+MAX_RESTARTS_HR = int(os.environ.get("DD_WATCH_MAX_RESTARTS_HR", "4"))
+HTTP_TIMEOUT = int(os.environ.get("DD_WATCH_HTTP_TIMEOUT", "20"))   # /health and /v1/models
+GEN_TIMEOUT = int(os.environ.get("DD_WATCH_GEN_TIMEOUT", "45"))     # the content probe (a generation)
+LOGDIR = os.environ.get("DD_WATCH_LOGDIR", "/mnt/vm_8tb/b70/dd-logs")
+INCIDENT_DIR = os.path.join(LOGDIR, "incidents")
+LOGFILE = os.path.join(LOGDIR, "dd-watchdog.log")
+
+# Known-answer probe. enable_thinking=false so a simple Q returns a direct answer (not an open <think> block).
+PROBE_PROMPT = "What is the capital of France? Reply with only the city name."
+PROBE_EXPECT = "paris"            # lowercase substring that marks a healthy, coherent reply
+
+KEY_FILE = os.environ.get("DD_API_KEY_FILE", "/mnt/vm_8tb/b70/secrets/dd_api_key")
+
+
+def load_replicas():
+    spec = os.environ.get("DD_WATCH_REPLICAS", "vllm_daily_dp0:18091:0,vllm_daily_dp1:18092:1")
+    out = []
+    for chunk in spec.split(","):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        name, port, card = chunk.split(":")
+        out.append({"name": name, "port": int(port), "card": card})
+    return out
+
+
+def load_key():
+    k = os.environ.get("DD_API_KEY", "").strip()
+    if k:
+        return k
+    try:
+        with open(KEY_FILE) as f:
+            return f.read().strip()
+    except OSError:
+        return ""
+
+
+# ---- logging -----------------------------------------------------------------------------------------------
+def now_str():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def log(msg):
+    line = "[%s] %s" % (now_str(), msg)
+    print(line, flush=True)              # -> journald when run under systemd
+    try:
+        os.makedirs(LOGDIR, exist_ok=True)
+        with open(LOGFILE, "a") as f:
+            f.write(line + "\n")
+    except OSError:
+        pass
+
+
+# ---- http --------------------------------------------------------------------------------------------------
+def _req(url, key, data=None, timeout=HTTP_TIMEOUT):
+    headers = {"Content-Type": "application/json"}
+    if key:
+        headers["Authorization"] = "Bearer " + key
+    body = json.dumps(data).encode() if data is not None else None
+    req = urllib.request.Request(url, data=body, headers=headers, method="POST" if data is not None else "GET")
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.status, r.read().decode("utf-8", "replace")
+
+
+def health_ok(port):
+    try:
+        status, _ = _req("http://127.0.0.1:%d/health" % port, key=None, timeout=HTTP_TIMEOUT)
+        return status == 200
+    except Exception:
+        return False
+
+
+def served_id(port, key):
+    try:
+        status, txt = _req("http://127.0.0.1:%d/v1/models" % port, key=key, timeout=HTTP_TIMEOUT)
+        if status != 200:
+            return None
+        ids = [m.get("id") for m in json.loads(txt).get("data", []) if m.get("id")]
+        return ids[0] if ids else None
+    except Exception:
+        return None
+
+
+def generate(port, key, model):
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": PROBE_PROMPT}],
+        "max_tokens": 16,
+        "temperature": 0,
+        "chat_template_kwargs": {"enable_thinking": False},
+    }
+    status, txt = _req("http://127.0.0.1:%d/v1/chat/completions" % port, key=key, data=payload, timeout=GEN_TIMEOUT)
+    if status != 200:
+        raise RuntimeError("HTTP %d: %s" % (status, txt[:200]))
+    return json.loads(txt)["choices"][0]["message"]["content"]
+
+
+# ---- the garbage classifier --------------------------------------------------------------------------------
+def classify(text):
+    """Return ('OK'|'GARBAGE'|'WARN', detail). GARBAGE = degenerate output (the '!!!!' failure signature)."""
+    s = (text or "").strip()
+    if PROBE_EXPECT in s.lower():
+        return "OK", "contains '%s'" % PROBE_EXPECT
+    if not s:
+        return "GARBAGE", "empty reply"
+    compact = "".join(s.split())                     # ignore whitespace for the frequency test
+    if len(compact) >= 6:
+        ch, n = Counter(compact).most_common(1)[0]
+        frac = n / len(compact)
+        if frac >= 0.70:                             # one char dominates -> token-0 / single-token flood
+            return "GARBAGE", "char %r = %.0f%% of %d chars" % (ch, frac * 100, len(compact))
+    # not degenerate, just not the expected answer (verbose / off-topic) -> do NOT heal on this alone
+    return "WARN", "no '%s' and not degenerate: %r" % (PROBE_EXPECT, s[:80])
+
+
+# ---- diagnostics capture (best-effort; each piece guarded) -------------------------------------------------
+def _run(cmd, timeout=20):
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return (p.stdout + p.stderr).strip()
+    except Exception as e:
+        return "(failed: %s)" % e
+
+
+def write_incident(rep, kind, detail, probe_reply):
+    os.makedirs(INCIDENT_DIR, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    path = os.path.join(INCIDENT_DIR, "dd-incident-%s-%s.log" % (stamp, rep["name"]))
+    name = rep["name"]
+
+    raw_logs = _run(["docker", "logs", "--tail", "200", name])
+    kw = ("nan", "inf", "error", "level_zero", "device_lost", "out_of_resources",
+          "runtimeerror", "traceback", "assert", "oom", "cuda", "xpu", "warn")
+    hits = [ln for ln in raw_logs.splitlines() if any(k in ln.lower() for k in kw)]
+
+    dmesg = _run(["dmesg"], timeout=15)
+    if dmesg.startswith("(failed") or "Operation not permitted" in dmesg or "Permission denied" in dmesg:
+        dmesg_xe = "(dmesg unreadable without privilege; set kernel.dmesg_restrict=0 or grant CAP_SYSLOG to capture)"
+    else:
+        dmesg_xe = "\n".join(ln for ln in dmesg.splitlines()
+                             if any(k in ln.lower() for k in ("xe ", "guc", "timedout", "reset", "gpu hang", "hung")))[-4000:]
+
+    xpu_smi = _run(["xpu-smi", "stats", "-d", rep["card"]]) if _which("xpu-smi") else "(xpu-smi not on PATH)"
+
+    parts = [
+        "== dd-watchdog incident ==",
+        "time:     %s" % now_str(),
+        "replica:  %s  (port %d, card %s)" % (name, rep["port"], rep["card"]),
+        "kind:     %s" % kind,
+        "detail:   %s" % detail,
+        "probe Q:  %s" % PROBE_PROMPT,
+        "probe A:  %r" % (probe_reply if probe_reply is not None else "(no reply / health-down)"),
+        "",
+        "--- docker inspect (status) ---",
+        _run(["docker", "inspect", "-f",
+              "status={{.State.Status}} exit={{.State.ExitCode}} started={{.State.StartedAt}} restarts={{.RestartCount}}",
+              name]),
+        "",
+        "--- docker logs: error/nan/xpu grep (tail 200) ---",
+        "\n".join(hits[-60:]) if hits else "(no matching lines)",
+        "",
+        "--- docker logs: raw tail 30 ---",
+        "\n".join(raw_logs.splitlines()[-30:]),
+        "",
+        "--- dmesg: xe/guc/timedout/reset ---",
+        dmesg_xe or "(none)",
+        "",
+        "--- docker stats (mem) ---",
+        _run(["docker", "stats", "--no-stream", "--format",
+              "{{.Name}} cpu={{.CPUPerc}} mem={{.MemUsage}} ({{.MemPerc}})", name]),
+        "",
+        "--- xpu-smi (card %s) ---" % rep["card"],
+        xpu_smi,
+        "",
+    ]
+    try:
+        with open(path, "w") as f:
+            f.write("\n".join(parts) + "\n")
+        log("INCIDENT written: %s" % path)
+    except OSError as e:
+        log("INCIDENT write FAILED (%s); dumping grep inline: %s" % (e, " | ".join(hits[-8:])))
+    return path
+
+
+def _which(prog):
+    return _run(["bash", "-lc", "command -v %s || true" % prog]).strip() != ""
+
+
+def container_state(name):
+    """Return (running: bool, status: str, uptime_s: float|None) for a container (best-effort)."""
+    out = _run(["docker", "inspect", "-f", "{{.State.Running}}|{{.State.Status}}|{{.State.StartedAt}}", name],
+               timeout=10)
+    if "|" not in out:
+        return (False, "absent", None)
+    running_s, status, started = out.split("|", 2)
+    running = running_s.strip().lower() == "true"
+    uptime = None
+    try:
+        s = started.strip().split(".")[0].replace("Z", "")        # 2026-06-26T17:39:19 (drop nanos + Z)
+        dt = datetime.strptime(s, "%Y-%m-%dT%H:%M:%S")            # docker StartedAt is UTC
+        uptime = (datetime.utcnow() - dt).total_seconds()
+    except Exception:
+        uptime = None
+    return (running, status.strip(), uptime)
+
+
+# ---- heal --------------------------------------------------------------------------------------------------
+def heal(rep, state):
+    """docker restart this one replica. Returns True if a restart was issued."""
+    name = rep["name"]
+    st = state[name]
+    nowt = time.time()
+    # restart-rate cap: do not infinite-loop a likely-hardware fault
+    st["restarts"] = [t for t in st["restarts"] if nowt - t < 3600]
+    if len(st["restarts"]) >= MAX_RESTARTS_HR:
+        log("ESCALATE %s: %d restarts in the last hour >= cap %d -- NOT restarting (likely persistent/hardware). "
+            "Leaving for manual inspection; still probing." % (name, len(st["restarts"]), MAX_RESTARTS_HR))
+        st["cooldown_until"] = nowt + COOLDOWN
+        st["garbage"] = 0
+        return False
+    log("HEAL %s: docker restart (self-heal, no reboot)" % name)
+    out = _run(["docker", "restart", "-t", "15", name], timeout=120)
+    st["restarts"].append(nowt)
+    st["cooldown_until"] = nowt + COOLDOWN
+    st["garbage"] = 0
+    log("HEAL %s: restart issued (%s); cooldown %ds while it reloads/JIT-compiles" % (name, out[:80], COOLDOWN))
+    return True
+
+
+# ---- one probe pass ----------------------------------------------------------------------------------------
+def pass_once(replicas, key, state, allow_heal):
+    # SINGLE heal trigger: confirmed degenerate OUTPUT (health 200 + garbage). Everything else -- booting,
+    # not-running, health-down, /v1/models-down, gen-fail -- is OBSERVE-ONLY. A restart on health-down races
+    # the cold start (vLLM is health-down for ~120-280s while it JIT-compiles): on 2026-06-26 that bounced both
+    # replicas mid-load AND tripped the launcher's EXITED-EARLY check. nginx max_fails already ejects a hard-down
+    # upstream; the serve launcher / systemd own (re)starting a dead replica. The watchdog's UNIQUE job is the
+    # "200 but garbage" case nothing else catches.
+    healed_this_pass = False
+    for rep in replicas:
+        name, port = rep["name"], rep["port"]
+        st = state[name]
+        nowt = time.time()
+        if nowt < st["cooldown_until"]:
+            log("%s: cooldown (%ds left, recently healed) -- skip" % (name, int(st["cooldown_until"] - nowt)))
+            continue
+
+        running, status, uptime = container_state(name)
+        if not running:
+            log("%s: container not running (status=%s) -- observe only (serve/systemd own lifecycle)" % (name, status))
+            st["garbage"] = 0
+            continue
+        if uptime is not None and uptime < BOOT_GRACE:
+            log("%s: booting (%ds up < grace %ds) -- skip" % (name, int(uptime), BOOT_GRACE))
+            st["garbage"] = 0
+            continue
+
+        if not health_ok(port):
+            up = int(uptime) if uptime is not None else "?"
+            log("%s: /health not 200 (up %ss) -- observe only (nginx ejects; only degenerate OUTPUT heals)" % (name, up))
+            st["garbage"] = 0
+            continue
+
+        model = served_id(port, key)
+        if model is None:
+            log("%s: /v1/models unreachable -- observe only (transient/auth)" % name)
+            st["garbage"] = 0
+            continue
+
+        try:
+            reply = generate(port, key, model)
+        except Exception as e:
+            log("%s: generation failed: %s -- observe only (transient)" % (name, str(e)[:120]))
+            st["garbage"] = 0
+            continue
+
+        verdict, detail = classify(reply)
+        if verdict == "OK":
+            log("%s: OK%s -- %s" % (name, " (recovered)" if st["garbage"] else "", detail))
+            st["garbage"] = 0
+        elif verdict == "WARN":
+            log("%s: WARN (coherent but unexpected, NOT healing) -- %s" % (name, detail))
+            st["garbage"] = 0           # not degenerate -> never accumulates toward a restart
+        else:  # GARBAGE -- the one failure only this watchdog catches (health stays 200)
+            st["garbage"] += 1
+            log("%s: GARBAGE (strike %d/%d) -- %s" % (name, st["garbage"], DEBOUNCE, detail))
+            if st["garbage"] >= DEBOUNCE:
+                write_incident(rep, "GARBAGE", detail, reply)
+                if allow_heal and not healed_this_pass:
+                    healed_this_pass = heal(rep, state)
+                else:
+                    log("%s: --no-heal set -> incident written, NOT restarting" % name)
+                    st["garbage"] = 0
+    return healed_this_pass
+
+
+def main():
+    once = "--once" in sys.argv
+    allow_heal = "--no-heal" not in sys.argv
+
+    replicas = load_replicas()
+    key = load_key()
+    state = {r["name"]: {"garbage": 0, "cooldown_until": 0.0, "restarts": []} for r in replicas}
+
+    log("dd-watchdog start: replicas=%s interval=%ds debounce=%d boot_grace=%ds cooldown=%ds cap=%d/hr "
+        "heal-on=GARBAGE-only heal=%s key=%s"
+        % (",".join(r["name"] for r in replicas), INTERVAL, DEBOUNCE, BOOT_GRACE, COOLDOWN, MAX_RESTARTS_HR,
+           allow_heal, "yes" if key else "NONE(open)"))
+
+    if once:
+        pass_once(replicas, key, state, allow_heal)
+        return
+
+    while True:
+        try:
+            pass_once(replicas, key, state, allow_heal)
+        except Exception as e:
+            log("pass error (continuing): %s" % e)
+        time.sleep(INTERVAL)
+
+
+if __name__ == "__main__":
+    main()
