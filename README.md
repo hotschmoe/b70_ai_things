@@ -71,26 +71,43 @@ int4 ~23% decode (30.5->23.3) but is **free for w4a16** (compute-bound). (c) For
 **int4 single-card DP=2 is wedge-proof** (no TP=2), while **w8a8 NONE TP=2 is faster + higher quality** but its
 longevity rides on the GuC fix holding. eager floors: int4 8.2, w8a8 12.7.
 
-#### TP=2 sweep + KV-cache budget (2026-06-26)
+#### TP=2 sweep + KV-cache budget + 4-bit MTP (2026-06-26)
 
-Curiosity check: int4/w4a8 on **TP=2** (they fit one card, so normally single-card / DP=2). Result: TP=2 **doubles
-prefill** (2-card compute) but **regresses decode** (per-token cross-card all-reduce tax) -- badly on NONE. So a
-fits-one-card 4-bit model should serve **single-card DP=2**, not TP=2. The one TP=2 upside is a much bigger **KV
-budget** (the model shards across cards, freeing VRAM for KV).
+Curiosity check: int4/w4a8/w4a16 on **TP=2** (they fit one card, so normally single-card / DP=2). Result: forcing
+a fits-one-card model onto TP=2 **HURTS prefill** (oneCCL all-reduce tax, ~675 vs 1593 single-card) and **triples
+TTFT**, and decode regresses on NONE -- because these 4-bit recipes have **no push-ar** (the fast L0-IPC all-reduce
+is a w8a8-only overlay). w8a8 TP=2 keeps high prefill (2604) only because it natively needs sharding AND has push-ar.
+So a fits-one-card 4-bit model should serve **single-card DP=2**, not TP=2. The one TP=2 upside is a much bigger
+**KV budget** (the model shards across cards, freeing VRAM for KV) -- but harness tests don't need 444k ctx.
 
-| config | TP | decode c1 | prefill c1 | model GiB/card | KV GiB/card | KV tokens | conc @8k |
-|---|---|---:|---:|---:|---:|---:|---:|
-| int4 NONE | 1 | 23.3 | 1593 | ~14 (whole) | -- | -- | -- |
-| int4 NONE | 2 | 14.5 | 3033 | 8.42 | 17.98 | 444,888 | 54x |
-| int4 captured | 2 | 27.5 | 3028 | 8.42 | 17.98 | 444,888 | 54x |
-| w4a8 NONE | 2 | 13.1 | 2834 | 12.25 | 13.67 | 338,392 | 41x |
-| w4a8 captured | 2 | 23.0 | 2841 | 12.25 | 13.67 | 338,392 | 41x |
-| w8a8 NONE+MTP | 2 | 25.6 coh | 2604 | 16.92 | 10.0 | 266,465* | 4.1x* |
+decode/TTFT/prefill @ c1, 2048 ctx (decode=1000/TPOT, prefill=2048000/TTFT):
+
+| config | TP | decode | TTFT (ms) | prefill | model GiB/card | KV GiB | KV tok | conc@8k |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| int4 NONE | 1 | 23.3 | 1285 | 1593 | ~14 (whole) | -- | -- | -- |
+| int4 captured | 1 | 30.5 | 1325 | 1545 | ~14 | -- | -- | -- |
+| int4 NONE | 2 | 14.5 | 3033 | 675 | 8.42 | 17.98 | 444,888 | 54x |
+| int4 captured | 2 | 27.5 | 3028 | 676 | 8.42 | 17.98 | 444,888 | 54x |
+| w4a8 NONE | 2 | 13.1 | 2834 | 723 | 12.25 | 13.67 | 338,392 | 41x |
+| w4a8 captured | 2 | 23.0 | 2841 | 721 | 12.25 | 13.67 | 338,392 | 41x |
+| **w4a16 +MTP NONE** | 2 | **22.5 (~26 coh)** | 3150 | 650 | ~12 | (KV ample) | -- | -- |
+| **w8a8 +MTP NONE** | 2 | **25.6 coh** | **787** | **2604** | 16.92 | 10.0 | 266,465* | 4.1x* |
 
 KV budget ~= VRAM(~30.5 GiB/card usable at UTIL) - (model shard + ~1.7 graph). int4 shards smallest (8.4/card)
--> biggest KV (444k tokens / 54x). *w8a8 KV row was measured at MAXLEN=65536 (hence the lower concurrency-per-
-request number); the rest at MAXLEN=8192. Takeaway: none of the harness-test serves need 444k ctx, so KV capacity
-is not the deciding factor -- decode + quality + stability are.
+-> biggest KV (444k / 54x). *w8a8 KV measured at MAXLEN=65536; the rest at 8192.
+
+**MTP on 4-bit + TP=2 confirmed (w4a16+MTP serve path built: `rdy_to_serve/qwen36-27b-w4a16-mtp/`):** the merged
+shim (text-only arch-reg + MTP-drafter-unquant + csag-off-on-NONE) serves coherently with real acceptance
+(accept_len up to 3.15). MTP nearly DOUBLED the no-push-ar TP=2 NONE decode (w4a8 NONE 13.1 -> w4a16+MTP 22.5) by
+amortizing the all-reduce ~accept_len-fold -- the TP=2 MTP hypothesis. BUT MTP can't fix prefill: w4a16+MTP TP=2
+prefill is 650 (no push-ar), the worst of the lot. So w4a16+MTP TP=2 is a scientific win, not a serving win.
+
+**Weekend serve decision (all NONE, 2048 ctx):**
+- **w8a8 +MTP TP=2** -- FASTEST + best quality: decode 25.6, TTFT 787, prefill 2604, 8-bit. Wins because it
+  natively needs TP=2 (sharding is "free") + push-ar + MTP. Stability rides on the GuC 70.54.0 fix (TP=2).
+- **int4 NONE DP=2** -- the wedge-proof pick: decode 23.3, TTFT 1285, prefill 1593, 4-bit, single-card replicas
+  (cannot BCS-wedge), 2x replica aggregate.
+- **w4a16 +MTP TP=2** -- ruled out for serving (prefill 650 / TTFT 3150 -- the fits-one-card-without-push-ar penalty).
 
 The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the **27B-W8A8 row is now the
 push-ar+graph DEFAULT** -- the shelf serve.sh defaults to `PUSH_AR=1 PUSH_AR_GRAPH=1` (custom L0-IPC
