@@ -27,5 +27,13 @@ export TOOLCALL="${TOOLCALL:-1}"          # agents (pi etc.): Qwen3.6 emits XML 
 export TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
 export REASONPARSER="${REASONPARSER:-qwen3}"
 
+# B70_EXTRA_ENV: space-separated NAME=VAL injected as -e docker flags (e.g. the daily-driver's
+# VLLM_API_KEY for WAN/Traefik exposure). lib.sh b70_serve passes "${DOCKER_ENV[@]}" through.
+DOCKER_ENV=()
+if [ -n "${B70_EXTRA_ENV:-}" ]; then
+  for kv in ${B70_EXTRA_ENV}; do DOCKER_ENV+=( -e "$kv" ); done
+  echo "=== B70_EXTRA_ENV -> injected: ${B70_EXTRA_ENV%%=*}=... ===" >&2
+fi
+
 source "$SCRIPT_DIR/../_common/lib.sh"
 b70_dispatch "$@"
