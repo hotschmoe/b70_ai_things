@@ -1,0 +1,30 @@
+[Unit]
+# B70 daily-driver vLLM serve (default: qwen36-27b-w8a8-sqgptq-mtp, TP=2 cudagraph=NONE + MTP3 + push-ar,
+# API-key enforced). Managed lifecycle + auto-start on boot. See deploy/README.md.
+Description=B70 daily-driver vLLM serve
+After=docker.service network-online.target mnt-vm_8tb.mount
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+# oneshot + RemainAfterExit: the daily-driver launches the serve DETACHED (nohup setsid gpu-run + docker run -d)
+# and waits for /health, then ExecStart returns 0 and systemd marks the unit active. `systemctl stop` tears it
+# down. `systemctl enable` -> starts on boot. (This gives boot-start + clean start/stop; for full crash-restart
+# of the container, see the Restart note in deploy/README.md.)
+Type=oneshot
+RemainAfterExit=yes
+User=hotschmoe
+Group=hotschmoe
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+Environment=DD_MODEL=qwen36-27b-w8a8-sqgptq-mtp
+Environment=DD_REPLICAS=1
+Environment=DD_MAXLEN=65536
+# API key is read from the off-repo secret file at start time (NOT baked into the unit).
+ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh start'
+ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh stop'
+# w8a8 TP=2 init + JIT compile can take a few minutes; allow generous startup.
+TimeoutStartSec=1200
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target
