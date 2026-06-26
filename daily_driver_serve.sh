@@ -56,7 +56,7 @@ P0=18091; P1=18092                  # per-replica backend ports (data-parallel)
 DP0=vllm_daily_dp0                  # replica 0 -> card 0  (also THE container for DD_REPLICAS=1)
 DP1=vllm_daily_dp1                  # replica 1 -> card 1
 PROXY=vllm_daily_proxy             # nginx round-robin proxy on :$PORT (DD_REPLICAS=2 only)
-LOG="$ROOT/logs/daily_driver.log"
+LOG="${DD_LOG:-$ROOT/dd-logs/daily_driver.log}"   # hotschmoe-writable ($ROOT/logs is root-owned from the old SSH workflow)
 ENDPOINT="http://$HOST_IP:${PORT}/v1"
 
 # ----- web UI (Open WebUI) -- tied to the daily-driver lifecycle -----------------------------
@@ -129,7 +129,7 @@ start() {
     echo "  single replica -> :$PORT (the model's serve.sh decides card/TP; both cards leased)"
   fi
   # gpu-run holds the lease; 'docker wait' pins it for the whole serving lifetime (released on stop -> docker stop).
-  ssh_h "cd $REPO && mkdir -p $ROOT/logs && nohup setsid $gpurun bash -c \"$bringup\" > $LOG 2>&1 < /dev/null & echo '  launched (pid '\$!')'"
+  ssh_h "cd $REPO && mkdir -p \"$(dirname "$LOG")\" && nohup setsid $gpurun bash -c \"$bringup\" > $LOG 2>&1 < /dev/null & echo '  launched (pid '\$!')'"
 
   echo -n "  waiting for healthy (model load + capture x$DD_REPLICAS, up to ~18 min) "
   local ok=0 _
