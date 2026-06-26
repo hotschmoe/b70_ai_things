@@ -38,13 +38,18 @@ DD_CARD="${DD_CARD:-}"                     # set to 0 or 1 -> ONE-CARD mode: pin
 DD_MAXLEN="${DD_MAXLEN:-131072}"          # daily-driver context (the model serve.sh default is a modest 8192).
 DD_MTP="${DD_MTP:-0}"                      # 1 = MTP spec=4 (~1.79x single-stream interactive; DENSE models only).
 DD_ENV="${DD_ENV:-}"                       # advanced: extra env passed verbatim to serve.sh (e.g. "GRAPH=0").
+DD_API_KEY="${DD_API_KEY:-}"               # if set, vLLM ENFORCES this key (via VLLM_API_KEY env -> --api-key).
+                                          # REQUIRED before any WAN exposure (Traefik in front). Clients send
+                                          # `Authorization: Bearer $DD_API_KEY`. Empty = OPEN (LAN-only, do NOT
+                                          # expose to WAN). /health stays unauthenticated; /v1/* require the key.
 # =============================================================================================
 [ -n "$DD_CARD" ] && DD_REPLICAS=1        # one-card mode is inherently a single replica
 
 HOST_IP=192.168.10.5
 HOST=root@$HOST_IP
-ROOT=/mnt/vm_8tb/b70
-RTS="$ROOT/rdy_to_serve"
+ROOT=/mnt/vm_8tb/b70                        # runtime data root (models, caches, gpu.lock*, logs) -- NOT a repo
+REPO=/mnt/vm_8tb/github/b70_ai_things       # the single git clone (consolidated 2026-06-24): bin/, rdy_to_serve/
+RTS="$REPO/rdy_to_serve"
 SERVE="$RTS/$DD_MODEL/serve.sh"
 PORT=18080                          # PUBLIC endpoint
 P0=18091; P1=18092                  # per-replica backend ports (data-parallel)
@@ -61,13 +66,19 @@ WEBUI_PORT=3000
 WEBUI_IMAGE=ghcr.io/open-webui/open-webui:main
 # ---------------------------------------------------------------------------------------------
 
-ssh_h() { ssh -o ConnectTimeout=8 -o ServerAliveInterval=60 "$HOST" "$@"; }
-served_id() { ssh_h "curl -s http://localhost:$PORT/v1/models 2>/dev/null | grep -oE '\"id\":\"[^\"]*\"' | head -1"; }
+# LOCAL execution. Post-2026-06-23 migration we run ON the box (b70s4dayz) as user hotschmoe; the old
+# `ssh root@192.168.10.5` indirection is RETIRED. ssh_h now just runs the command string locally so every
+# existing call site keeps working unchanged.
+ssh_h() { bash -c "$*"; }
+served_id() { local h=""; [ -n "$DD_API_KEY" ] && h="-H \"Authorization: Bearer $DD_API_KEY\""; ssh_h "curl -s $h http://localhost:$PORT/v1/models 2>/dev/null | grep -oE '\"id\":\"[^\"]*\"' | head -1"; }
 
 # env passed to EVERY replica's serve.sh (on top of the model's own defaults).
 replica_env() {
   local e="MAXLEN=$DD_MAXLEN"
-  [ "$DD_MTP" = 1 ] && e="$e MTPTOK=4 COMPILESZ="    # MTP: integer is quote-safe through nested ssh; COMPILESZ= omits compile_sizes
+  [ "$DD_MTP" = 1 ] && e="$e MTPTOK=4 COMPILESZ="    # MTP: integer is quote-safe; COMPILESZ= omits compile_sizes
+  # API key -> vLLM enforces it. Injected as a docker env via B70_EXTRA_ENV (no lib.sh change needed; vLLM's
+  # --api-key defaults to $VLLM_API_KEY). Assumes the key is one token (alphanumeric/dashes, no spaces).
+  [ -n "$DD_API_KEY" ] && e="$e B70_EXTRA_ENV=VLLM_API_KEY=$DD_API_KEY"
   [ -n "$DD_ENV" ] && e="$e $DD_ENV"
   printf '%s' "$e"
 }
@@ -78,7 +89,7 @@ webui_up() {
     ssh_h "docker start $WEBUI_NAME >/dev/null 2>&1 && echo '  web ui: up   -> http://$HOST_IP:$WEBUI_PORT'"
   else
     ssh_h "docker run -d --name $WEBUI_NAME -p $WEBUI_PORT:8080 \
-      -e OPENAI_API_BASE_URL=http://$HOST_IP:$PORT/v1 -e OPENAI_API_KEY=dummy \
+      -e OPENAI_API_BASE_URL=http://$HOST_IP:$PORT/v1 -e OPENAI_API_KEY=${DD_API_KEY:-dummy} \
       -e ENABLE_OLLAMA_API=False -e WEBUI_AUTH=False \
       -v open-webui:/app/backend/data --restart unless-stopped $WEBUI_IMAGE >/dev/null 2>&1 \
       && echo '  web ui: created -> http://$HOST_IP:$WEBUI_PORT (first open pulls the image, ~1 min)'"
@@ -96,18 +107,18 @@ start() {
   local renv; renv="$(replica_env)"
   echo "starting daily driver: model=$DD_MODEL replicas=$DD_REPLICAS$([ "$DD_MTP" = 1 ] && echo ' +MTP') (holds GPU lease until 'stop')"
 
-  local bringup wait_targets gpurun="./bin/gpu-run"
+  local bringup wait_targets gpurun="$REPO/bin/gpu-run"
   if [ "$DD_REPLICAS" = 2 ]; then
     # [DP=2] one captured replica per card (same served-model-name -> proxy transparent), nginx round-robin. Both cards.
     local serve0="$renv DEVICE=0 PORT=$P0 NAME=$DP0 bash $SERVE start"
     local serve1="$renv DEVICE=1 PORT=$P1 NAME=$DP1 bash $SERVE start"
-    local proxy_run="docker rm -f $PROXY >/dev/null 2>&1; docker run -d --name $PROXY --network host -v $ROOT/bin/dp_nginx.conf:/etc/nginx/nginx.conf:ro --restart unless-stopped nginx:alpine >/dev/null 2>&1"
+    local proxy_run="docker rm -f $PROXY >/dev/null 2>&1; docker run -d --name $PROXY --network host -v $REPO/bin/dp_nginx.conf:/etc/nginx/nginx.conf:ro --restart unless-stopped nginx:alpine >/dev/null 2>&1"
     bringup="$serve0 && $serve1 && $proxy_run && docker wait $DP0 $DP1"
     wait_targets="$DP0 $DP1"
     echo "  replica 0 -> card 0 :$P0 ; replica 1 -> card 1 :$P1 ; proxy -> :$PORT"
   elif [ -n "$DD_CARD" ]; then
     # [1 CARD] pin to card $DD_CARD, lease ONLY that card (other card stays free for `gpu-run --card <other>`).
-    gpurun="./bin/gpu-run --card $DD_CARD"
+    gpurun="$REPO/bin/gpu-run --card $DD_CARD"
     bringup="$renv DEVICE=$DD_CARD PORT=$PORT NAME=$DP0 bash $SERVE start && docker wait $DP0"
     wait_targets="$DP0"
     echo "  single replica -> card $DD_CARD :$PORT  (leasing ONLY card $DD_CARD; the other card is FREE)"
@@ -118,7 +129,7 @@ start() {
     echo "  single replica -> :$PORT (the model's serve.sh decides card/TP; both cards leased)"
   fi
   # gpu-run holds the lease; 'docker wait' pins it for the whole serving lifetime (released on stop -> docker stop).
-  ssh_h "cd $ROOT && mkdir -p logs && nohup setsid $gpurun bash -c \"$bringup\" > $LOG 2>&1 < /dev/null & echo '  launched (pid '\$!')'"
+  ssh_h "cd $REPO && mkdir -p $ROOT/logs && nohup setsid $gpurun bash -c \"$bringup\" > $LOG 2>&1 < /dev/null & echo '  launched (pid '\$!')'"
 
   echo -n "  waiting for healthy (model load + capture x$DD_REPLICAS, up to ~18 min) "
   local ok=0 _
@@ -149,7 +160,7 @@ case "${1:-start}" in
   restart) echo "restarting..."; ssh_h "docker stop $PROXY $DP0 $DP1 >/dev/null 2>&1 || true"; start ;;
   status)
     echo "=== model ===";        echo "  DD_MODEL=$DD_MODEL  replicas=$DD_REPLICAS  card=${DD_CARD:-both}  mtp=$DD_MTP"
-    echo "=== GPU lock ===";      ssh_h "$ROOT/bin/gpu-run --status"
+    echo "=== GPU lock ===";      ssh_h "$REPO/bin/gpu-run --status"
     echo "=== replicas+proxy ==="; ssh_h "docker ps --filter name=vllm_daily --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
     echo "=== served model ===";  echo "$(served_id || true)" | grep . || echo "(not serving)"
     echo "=== web ui ===";        ssh_h "docker ps --filter name=$WEBUI_NAME --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
