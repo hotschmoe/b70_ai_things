@@ -4790,3 +4790,53 @@ boot-grace -- ZERO false restarts this round, confirming the heal-on-garbage-onl
 cold-start path. Also: dd-watchdog datetime.utcnow()->tz-aware (killed the journald DeprecationWarning spam).
 verdict -> [VERIFIED] daily driver = int4 DP=2 NONE @ 96K context, UTIL 0.88, API-key enforced, wedge-proof, with
 a working content-aware self-heal watchdog. Commits 078028b (watchdog+dial-back) + 41d1625 (96K) pushed.
+
+## 2026-06-26 -- int4 "!!!!" ROOT CAUSE: NaN under MIXED prefill+decode batching (qwen3_5 GDN) [investigation]
+
+CONTEXT: after the 96K closeout the "!!!!" RECURRED in real agent use -- omp AND pi AND Open WebUI (three
+different clients) each hit it; pi hit it on a FRESH first prompt. So NOT a client, NOT context-length, NOT a
+per-session feedback loop. Quant-independent (user reports the same on w8a8). Stood up a request-body capture at
+the nginx proxy (bin/dp_nginx.conf, TEMP) and froze the exact pi request that went "!!!!".
+
+REPRO (built scratch harnesses, all hit ONE single-card replica directly):
+  - replay pi's exact request in ISOLATION -> COHERENT on both cards (HTML write / bash tool calls). NOT content.
+  - homogeneous concurrent prefill burst (12 reqs, no decodes in flight) -> CLEAN.
+  - MIXED load (8 long streaming "anchor" decodes + 12 concurrent new prefills) -> 12/12 DEGENERATE
+    (finish=length, 500 tokens, content/reasoning/tool_calls ALL empty). Deterministic.
+  - PROOF it is NaN: request logprobs under that load -> HTTP 400 "Out of range float values are not JSON
+    compliant: nan". The logits are literally NaN -> argmax collapse -> token-0 flood ("!" / empty).
+  => trigger is specifically PREFILL chunks batched WITH in-flight DECODES (chunked-prefill interleaving).
+
+MODEL: /models/Lorbus_Qwen3.6-27B-int4-AutoRound is model_type qwen3_5 -- HYBRID: 64 layers,
+full_attention_interval=4 -> 16 full-attention + 48 LINEAR-ATTENTION / Gated-DeltaNet (GDN, mamba_ssm) layers.
+The GDN recurrent state is handled differently for prefill vs decode -> mixed-batch state handling is the suspect.
+
+A/B (each = single card-0 replica via daily_driver_serve.sh DD_CARD=0, repro = 8 anchors + 12 probes):
+  config                                   -> result
+  GRAPH=1 CGMODE=NONE (baseline/prod)      -> 12/12 NaN-degenerate
+  GRAPH=0 --enforce-eager                  -> 12/12 NaN-degenerate (RULED OUT: not the compile/inductor path;
+                                              also ~2x slower). Refutes vLLM #38994's enforce-eager fix for US.
+  + vllm-xpu-kernels v0.1.10 GDN overlay   -> 12/12 NaN-degenerate (RULED OUT: PR #411 SLM WAR-race fix is NOT
+    (libgdn 5988952B confirmed mounted)       our bug; that fix targets >=32K GDN chunk race). AND under GRAPH=1
+                                              the overlaid _xpu_C OOM-crashes inductor autotuning -> overlay is
+                                              now OFF by default (GDN_FIX=0) in the int4 recipe.
+  --no-enable-chunked-prefill (CHUNKED=0)  -> ENGINE WON'T LOAD. GRAPH=1: OUT_OF_RESOURCES at inductor autotune
+                                              (unchunked => max_num_batched_tokens>=max_model_len=98304 => huge
+                                              compile). GRAPH=0: DEVICE_LOST (err 20) at memory profiling. vLLM
+                                              warns "this model does not officially support disabling chunked
+                                              prefill". RULED OUT.
+  After the crash chain: xpu-health -> BOTH CARDS OK (no wedge, no reboot; DEVICE_LOST was transient to init).
+
+INFRA ADDED THIS SESSION (uncommitted until serve-sweep --smoke):
+  - rdy_to_serve/_common/lib.sh: CHUNKED (0 -> --no-enable-chunked-prefill) + MAXBATCHED
+    (--max-num-batched-tokens N) knobs.
+  - rdy_to_serve/qwen36-27b-int4/serve.sh: GDN_FIX knob (overlay v0.1.10 GDN .so pair; default 0 -- the overlay
+    does NOT fix the mixed-batch NaN and breaks GRAPH=1 load).
+  - vllm-xpu-kernels v0.1.10 already built on host at /mnt/vm_8tb/b70/vllm-xpu-kernels (libgdn 5988952B); the
+    int4 daily driver runs the BAKED v0.1.9 (6211872B). Overlay mechanism = the W4A8 recipe's MOUNTS pattern.
+
+verdict -> [ROOT-CAUSED, NOT YET FIXED] "!!!!" = NaN logits from MIXED prefill+decode batching in the qwen3_5
+GDN/linear-attention layers on vLLM 0.23.0 XPU. No accessible config/kernel lever fixes it (enforce-eager, GDN
+v0.1.10, chunked-off all ruled out). Next: research the prefill/decode-mixing problem class (P/D disaggregation,
+scheduler knobs, newer vLLM/dev-branch hybrid-mixed-batch fixes) -> test the most promising. Daily-driver
+mitigation meanwhile: the dd-watchdog restarts a replica that floods garbage (does not prevent the transient).
