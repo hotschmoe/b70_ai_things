@@ -1,0 +1,6 @@
+# campaign 120  mode=perf  Fri Jun 26 02:22:26 AM UTC 2026
+# columns: time  cell  soak_result  notes(decode1/decode4 + coherent decode t/s, accept_len)
+# MAXLEN=16384 BENCH_IN=2048 BENCH_OUT=128 CONC='1 4' SOAK_TOKENS=50000
+02:27:29	B_none_mtp3	-	decode1=23.44 decode4=15.80 coherent=25.56 accept_len=2.91
+02:32:15	repro_pw_mtp3	-	decode1=33.88 decode4=15.41 coherent=34.06 accept_len=2.48
+02:39:05	A_eager_mtp3	-	decode1=12.72 decode4=9.10 coherent=12.29 accept_len=2.33

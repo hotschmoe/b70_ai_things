@@ -44,8 +44,32 @@ graph-captured on the push transport (see caveat (1)). That P2P/TTFT lever is re
 | qwen36-27b-w4a8 | int8g | 1 | 853 ms | 2400 | 20.7 | 2201 ms | 51.2 |
 | qwen36-27b-w4a16 | v0230 | 1 | 1224 ms | 1673 | 21.2 | 3213 ms | 45.5 |
 | qwen36-27b-int4 | v0230 | 1 | 1326 ms | 1545 | 30.5 | 3438 ms | 51.3 |
-| qwen36-27b-w8a8-sqgptq-mtp (push-ar+graph) | int8g | 2 | 767 ms | 2670 | 27.9 (MTP) | 1462 ms | 48.6 |
+| qwen36-27b-w8a8-sqgptq-mtp (push-ar, **cudagraph=NONE**) | int8g | 2 | 787 ms | 2604 | 23.4 MTP (25.6 coherent) | 1493 ms | 51.5 |
 | qwen36-35b-a3b-quark-w8a8 (GRAPH=1) | v0230 | 2 | 1512 ms | 1354 | 43.1 | 3866 ms | 53.2 |
+
+#### 2026-06-26 update -- `cudagraph=NONE` (the STABLE config) + GuC 70.54.0 firmware fix
+
+The MTP+graph-capture campaign (`docs/20260625_w8a8_27b_mtp_graph_campaign.md`) found PIECEWISE capture
+**crashes under sustained load** (torch-xpu graph-replay command-stream accumulation; ~20-32k tokens). The fix is
+`cudagraph_mode=NONE` (keep torch.compile, drop graph replay) -- stable, no accumulation. SEPARATELY, the TP=2
+"device_lost" hardware wedge was root-caused to a kernel **BCS copy-engine job timeout on xe/GuC** and FIXED by
+pinning **GuC firmware 70.54.0** (matching the KMD; `docs/20260625_bcs_wedge_rootcause.md`). The w8a8 row above is
+now the SHIPPED `cudagraph=NONE` config (re-benched 2026-06-26). Captured/PIECEWISE numbers (faster, but they
+crash) are kept only for reference.
+
+Decode @ 2048 ctx, c1 (single-stream): `cudagraph=NONE` (stable) vs captured (fast-but-crashes):
+
+| config | TTFT | PP (tok/s) | **TG NONE (stable)** | TG captured (crashes) |
+|---|---:|---:|---:|---:|
+| qwen36-27b-w8a8 (TP=2, MTP) | 787 ms | 2604 | **23.4 / 25.6 coherent** | 33.9 (PIECEWISE) |
+| qwen36-27b-int4 (TP=1) | 1285 ms | 1593 | **23.3** | 30.5 (PIECEWISE) |
+| qwen36-27b-w4a16 (TP=1) | 1199 ms | 1709 | **21.5** | 21.6 (NONE ~= captured: free) |
+
+Takeaways: (a) on the **stable NONE route, w8a8 TP=2 is FASTER than int4** -- 1.6x prefill (2604 vs 1593, TTFT 787
+vs 1285 ms) and a slight decode edge on coherent text (25.6 vs 23.3, via MTP), plus 8-bit quality. (b) NONE costs
+int4 ~23% decode (30.5->23.3) but is **free for w4a16** (compute-bound). (c) For an unattended multi-day serve:
+**int4 single-card DP=2 is wedge-proof** (no TP=2), while **w8a8 NONE TP=2 is faster + higher quality** but its
+longevity rides on the GuC fix holding. eager floors: int4 8.2, w8a8 12.7.
 
 The 35B-A3B MoE (~3B active) is fastest end to end. Caveats: (1) the **27B-W8A8 row is now the
 push-ar+graph DEFAULT** -- the shelf serve.sh defaults to `PUSH_AR=1 PUSH_AR_GRAPH=1` (custom L0-IPC

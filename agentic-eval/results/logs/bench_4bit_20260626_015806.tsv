@@ -1,0 +1,2 @@
+# 4-bit single-card bench  IN=2048 OUT=128 CONC="1 4"  Fri Jun 26 01:58:06 AM UTC 2026
+# label	c	req_s	out_tok_s	ttft_ms	tpot_ms	decode_tps	prefill_tps

@@ -1,0 +1,9 @@
+=== serve qwen36-27b-int4  IMG=vllm-xpu-env:v0230  TP=1 PP=1  GRAPH=0  port=18080 card=0 ===
+vllm serve /models/Lorbus_Qwen3.6-27B-int4-AutoRound --served-model-name qwen36-27b-int4 --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 1 --max-model-len 8192 --max-num-seqs 64 --gpu-memory-utilization 0.92 --trust-remote-code --no-enable-prefix-caching --limit-mm-per-prompt {"image":0,"video":0} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --enforce-eager
+=== waiting for /health (ceiling 900s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18080  qwen36-27b-int4  (TP=1 GRAPH=0) in 61s ===
+"id":"qwen36-27b-int4"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. **Paris** is the capital and most populous city of France.
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).

@@ -1,0 +1,6 @@
+# 4-bit single-card bench  IN=2048 OUT=128 CONC="1 4"  Fri Jun 26 02:02:46 AM UTC 2026
+# label	c	req_s	out_tok_s	ttft_ms	tpot_ms	decode_tps	prefill_tps
+w4a16_graph	1	0.14	17.95	1254.05	46.26	21.62	1633
+w4a16_graph	4	0.36	45.47	3213.91	63.26	15.81	637
+w4a16_none	1	0.14	18.03	1198.69	46.46	21.52	1709
+w4a16_none	4	0.34	43.94	3196.34	66.53	15.03	641

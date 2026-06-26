@@ -1,0 +1,9 @@
+=== serve qwen36-27b-w4a16  IMG=vllm-xpu-env:v0230  TP=1 PP=1  GRAPH=1  port=18081 card=1 ===
+vllm serve /models/Qwen3.6-27B-W4A16 --served-model-name qwen36-27b-w4a16 --host 0.0.0.0 --port 18081 --dtype auto --tensor-parallel-size 1 --max-model-len 8192 --max-num-seqs 32 --gpu-memory-utilization 0.95 --trust-remote-code --no-enable-prefix-caching --compilation-config {"cudagraph_mode":"NONE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,8,16,32],"compile_sizes":[1],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 900s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18081  qwen36-27b-w4a16  (TP=1 GRAPH=1) in 371s ===
+"id":"qwen36-27b-w4a16"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. Paris is the capital and most populous city of France. It is
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).

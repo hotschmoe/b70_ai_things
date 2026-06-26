@@ -1,0 +1,2 @@
+vllm_qwen36-27b-w4a16
+stopped vllm_qwen36-27b-w4a16 (graceful -t30; GPU released if last holder)
