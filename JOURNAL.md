@@ -5226,3 +5226,46 @@ SERVE: scripts/128 SPEC_STEPS=7 SPEC_DRAFT=8 (mounts the 3 patch files + memory_
   (sampling fallback). The eager path is otherwise near its limit (fusion already done, torch.compile 1.10x,
   graphs L0-blocked-but-de-risked); the next frontier levers are a fast GDN SYCL kernel or SYCL-Graph/L0-mutable
   command lists. Box HEALTHY + idle after.
+
+## 2026-06-27 -- MTP driver PRODUCTIONIZED: sglang-xpu:mtp image + rdy_to_serve recipe, reproduced from baked image [milestone]
+
+Converted the just-completed int4+NEXTN-MTP win (the prior entry: 15.31 t/s, 1.62x, greedy, vision, correct
+under load) from a research artifact (scripts/128 RUNTIME-MOUNTING 3 patch files over sglang-xpu:woq) into a
+SELF-CONTAINED, shelf-landed daily driver, and REPRODUCED the headline from the baked image to de-risk the
+inherited "COMPLETE" claim (per the standing "don't trust an inherited number, warm-bench it, read the text" rule).
+
+WHY a rebuild was needed: sglang-xpu:woq bakes an EARLIER mtp_tree_xpu.py (built 17:52, BEFORE the gate-3
+top_p_renorm + gate-4 eagle_sample greedy-branch fixes landed at 23:10) and does NOT bake the memory_pool.py
+spec-mamba device fix -- which is exactly why scripts/128 mounted the fresh files. The baked image folds them in.
+
+CONFIG -> COMMAND:
+  - images/sglang-xpu-mtp/Dockerfile: FROM sglang-xpu:woq + COPY fresh mtp_tree_xpu.py (all 4 XPU gates) +
+    memory_pool.py (3-line device="cuda"->device=device, spec-decode mamba state cache). woqgemm int4 +
+    woq_shim.py inherited unchanged; woq_shim installs MTP under B70_XPU_MTP=1. `docker build -t sglang-xpu:mtp .`
+    Verified self-contained: baked mtp_tree_xpu.py + memory_pool.py md5 == canonical sglang/patches/ copies.
+  - rdy_to_serve/qwen36-27b-int4-mtp/{serve.sh,README.md}: self-contained sglang recipe (start|run|stop|logs|
+    gen|bench|accept), NO patch mounts, exact scripts/128 flags (NEXTN steps=7 topk=1 draft=8, intel_xpu attn,
+    triton GDN, fp32 ssm, skip-warmup, max-running-requests=4, ctx 4096, memfrac 0.92, eager/--disable-cuda-graph).
+  - scripts/131_verify_mtp_image.sh: acceptance test driving the SHIPPED recipe against the baked image.
+    ./bin/gpu-run --card 0 bash scripts/131_verify_mtp_image.sh
+
+RESULT (scripts/131, baked sglang-xpu:mtp, ZERO mounts; sglang/verify_mtp_image.log):
+  - start: /health 200 ~130s, coherence gate OK ("Thinking Process... Why is the sky blue").
+  - WARM c1 decode 15.31 t/s (EXACT reproduction of the 1.62x headline), TTFT 911ms @ ctx2048.
+  - WARM c4 decode 4.62/stream, agg_out 17.72, TTFT 2741ms.
+  - mean accept_len 4.48 over 29 batches (vLLM range 3.8-5.9; matches the prior 4.1-4.4).
+  - SUSTAINED MIXED LOAD (3 anchors + 3x6 bursts/2s = 21 reqs): 21/21 OK, 0 GARBAGE, 0 DEGEN_EMPTY, 0 HTTP_ERR,
+    container survived, POST-LOAD coherent. Survives the agentic pattern that makes vLLM "!!!!".
+  - clean teardown: container stopped, both cards free.
+  - CAVEAT (honest): the perf_regime soak probe reported 3.64 t/s -- a KNOWN spec-streaming token UNDER-COUNT
+    artifact (already flagged in the MTP entries), NOT a regression; the soak's "stable 1.02x first/last ratio +
+    coherence OK over a 400+ tok stream" parts ARE valid. The bench_serving WARM c1 (15.31) is the authoritative
+    decode number. (Fixing the soak probe for spec output remains a minor tooling follow-up.)
+
+VERDICT -> [SHIPPED] rdy_to_serve/qwen36-27b-int4-mtp is the LATENCY daily driver: single-card, GREEDY,
+  vision-retaining, 15.3 t/s (1.62x), correct under load, self-contained (baked image, no mounts). Driver matrix
+  unchanged otherwise: int4 woq DP=2 = high-concurrency/sampling/wedge-proof; bf16 TP=2 = best c4 aggregate.
+  REMAINING levers (next): #14 torch chain rejection-sampler (restore sampling under MTP -- the one trade-off;
+  scoped: reimplement tree_speculative_sampling_target_only chain-case in torch, replace the gate-4 forced-greedy
+  verify); reduce spec-path launches toward vLLM's ~2x (decode_launch_inventory.md applies to draft+verify fwds);
+  W4A8+MTP (vLLM-best combo, needs an int8-act kernel on sglang). Box HEALTHY + idle after.
