@@ -83,6 +83,23 @@ process_weights_after_loading: ark.repack_quantized_weight; apply: ark.woqgemm).
 "auto-round" in sglang/srt/layers/quantization/__init__.py. Exclude GDN/visual/lm_head (ckpt ignore list).
 Bake auto-round-lib into a derived image OR pip-install at serve start. Serve Lorbus int4 TP=1 -> bench + coherence.
 
+## WOQ INTEGRATION WORKS (sglang serves int4 via woqgemm, COHERENT) [2026-06-27]
+Built sglang-xpu:woq (= sglang-xpu:bmg + auto-round-lib + sglang/patches/woq_shim.py auto-imported via .pth).
+The shim patches GPTQLinearScheme._init_kernel -> XPU WOQ kernel (auto_round_kernel.QuantLinearGPTQ/woqgemm),
+and guards AutoRound's check_marlin_supported(device_capability=None) crash on XPU. Served Lorbus int4 TP=1:
+  - 304 WOQ layers built (incl. fused qkv/gate_up), model loaded int4 (quant=auto-round bits=4), mem 17.34 GiB
+    on ONE card (14.5 GiB free -> DP=2 viable), KV 99200 tok.
+  - COHERENT: "why is the sky blue" -> correct Rayleigh-scattering answer (NOT garbage/!!!!). sglang GDN fix holds.
+  | config            | conc | decode_tps | TTFT ms | prefill_tps |
+  | woq int4 TP=1     | 1    | 4.68       | 1223    | 1674        | <- SLOWER than bf16 TP=2 (9.03)!
+WHY SLOWER: TP=1 puts ALL the unquantized bf16 GDN (10.4 GiB, 43% of model) + lm_head on ONE card; that
+weight bandwidth dominates and outweighs the faster int4 GEMVs. bf16 TP=2 splits GDN across 2 cards (13 GiB/card
+parallel) vs woq TP=1's 15 GiB on one card. The woqgemm kernel IS faster per-GEMV (2.2x microbench) -- the loss
+is the TP=1 topology, not the kernel.
+NEXT: woq + TP=2 -- fast int4 GEMVs AND GDN split across both cards (~7.5 GiB/card) -> should beat bf16 TP=2.
+Then: (a) if TP=2 wins -> ship; (b) quantize GDN too (note-1 "pack further") for fast single-card + DP=2 (correctness
+risk -> validate); (c) graph capture is unavailable on XPU (eager overhead is a fixed tax on both bf16 and woq).
+
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
