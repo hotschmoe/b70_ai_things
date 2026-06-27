@@ -35,12 +35,24 @@ The spec-decode VERIFY forward then crashes in the KV-cache write, identically f
     RuntimeError: expanded size (75904) must match existing size (2) at dim 1.
     Target [1, 75904, 4, 256], tensor [2, 4, 256]
 
-i.e. the verify batch's `out_cache_loc` (`indices`) arrives as a 2D FULL-POOL index `[1, num_kv_slots]`
-instead of the `num_draft_tokens` (=2) newly-allocated slots, so writing the 2 tree-token K/V broadcasts
-against the whole pool and throws. Normal (non-spec) decode writes are fine (`cache_k=(1,4,256) loc=(1,)`).
-=> The XPU spec-decode verify forward-batch metadata (out_cache_loc construction for the draft tree) is wrong;
-this is upstream sglang-XPU spec-decode plumbing, independent of the tree kernels (which are solved here).
-Fixing it would unlock EAGLE/NEXTN spec-decode (est. ~15 t/s stable for chain num-steps=1) on B70.
+ROOT-CAUSED + FIXED (2026-06-27): the `out_cache_loc` is not a wrong 2D index -- it is **`None`**. The verify
+KV-write does `k_cache[None] = k`, and `None` inserts a leading newaxis (`[1, pool, 4, 256]`) which broadcasts
+against the `[num_draft_tokens, 4, 256]` K/V and throws; the `75904` is literally `k_cache.shape[0]` (the whole
+pool). The cause is `triton_ops/cache_locs.py:assign_extend_cache_locs_func` (~line 337): it has branches only
+for `_is_cuda / _is_hip / _is_musa / _is_npu` and NO `_is_xpu` branch, so on a `torch+xpu` build (where
+`is_cuda()` = `torch.cuda.is_available() and torch.version.cuda is not None` is False) it falls through and
+returns `None` -> `batch.out_cache_loc = None`. The underlying triton kernel `assign_extend_cache_locs` ALREADY
+runs on XPU (it is called ungated by `spec_utils.move_accept_tokens_to_target_kvcache`); only the WRAPPER's
+hardware gate is spurious.
+
+UPSTREAM ONE-LINER (file this): in `triton_ops/cache_locs.py`, add `_is_xpu = is_xpu()` and include it in the
+branch -> `if _is_cuda or _is_hip or _is_musa or _is_xpu:` (or make the triton path the unconditional default).
+Provably safe: identical to how `move_accept_tokens_to_target_kvcache` already calls the same kernel ungated.
+OUR LOCAL FIX: a pure-torch override of `assign_extend_cache_locs_func` in `mtp_tree_xpu.install()` (function-
+local import in `eagle_prepare_for_verify` -> module-attr patch picked up at call time). This unblocks BOTH
+NEXTN and the n-gram worker (both call this fn). Next dominoes to smoke-check (per codex): the post-verify
+`move_accept_tokens_to_target_kvcache` (`@torch.compile get_src_tgt_cache_loc`, dynamic accept counts) and
+`reject_sampling` (force a rejection, not just greedy full-accept).
 
 ## Repro (single B70 card)
 

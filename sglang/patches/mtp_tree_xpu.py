@@ -142,6 +142,29 @@ def install():
     eu.build_tree_kernel_efficient = _build_tree
     eu.verify_tree_greedy_func = _verify
 
+    # --- THE MTP UNBLOCK (2026-06-27): the spec-decode VERIFY out_cache_loc is None on XPU, not a bad index.
+    # triton_ops/cache_locs.py:assign_extend_cache_locs_func gates on _is_cuda/_is_hip/_is_musa/_is_npu with
+    # NO _is_xpu branch -> on a torch+xpu build it falls through and returns None -> batch.out_cache_loc=None
+    # -> the verify KV write does k_cache[None]=k -> "[1,75904,4,256] vs [2,4,256]" crash. The underlying
+    # triton kernel ALREADY runs on XPU (move_accept_tokens_to_target_kvcache calls it ungated); only the
+    # wrapper's hardware gate is spurious. eagle_prepare_for_verify does a function-LOCAL import of this symbol,
+    # so patching the module attribute here is picked up at verify time. Pure-torch gather of the new draft
+    # slots (decode-prep already wrote them into req_to_token[req, seq_lens : seq_lens+draft_token_num]).
+    try:
+        from sglang.srt.speculative.triton_ops import cache_locs
+
+        def _xpu_assign_extend(req_pool_indices, req_to_token, start_offset, end_offset,
+                               batch_size, draft_token_num, device):
+            rows = req_to_token[req_pool_indices.long()]                                  # [bs, pool_len]
+            ar = torch.arange(draft_token_num, device=device, dtype=torch.long).view(1, -1)
+            idx = start_offset.to(torch.long).view(-1, 1) + ar                            # [bs, draft_token_num]
+            return torch.gather(rows.to(torch.long), 1, idx).reshape(-1).contiguous()  # int64 [bs*draft_token_num]
+
+        cache_locs.assign_extend_cache_locs_func = _xpu_assign_extend
+        print("[mtp-tree-xpu] patched assign_extend_cache_locs_func (XPU None-index -> draft-slot gather)", flush=True)
+    except Exception as e:
+        print(f"[mtp-tree-xpu] assign_extend patch FAILED: {e}", flush=True)
+
     # DEBUG (B70_MTP_DEBUG=1): trace the MHA KV-write shapes to locate the spec-decode 2-vs-75840 mismatch.
     if os.environ.get("B70_MTP_DEBUG") == "1":
         try:
