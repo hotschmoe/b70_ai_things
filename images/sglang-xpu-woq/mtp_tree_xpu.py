@@ -224,6 +224,37 @@ def install():
     except Exception as e:
         print(f"[mtp-tree-xpu] top_p_renorm patch FAILED: {e}", flush=True)
 
+    # --- DOMINO 4: put XPU in the greedy-verify branch (with NPU/HIP). eagle_sample's NON-greedy path calls
+    # tree_speculative_sampling_target_only, which is UNREGISTERED on XPU (and signature-skewed). The greedy
+    # branch (verify_tree_greedy, our working fallback) is gated `if is_all_greedy or _is_npu or _is_hip:` --
+    # XPU is missing. Real API requests get the model-default top_k>1 (is_all_greedy=False) -> crash. Re-exec
+    # eagle_sample with XPU added to that branch -> ALL verify uses verify_tree_greedy. COST (documented):
+    # sampling (temperature/top_p/top_k) is verified GREEDILY on XPU+MTP, exactly like NPU/HIP. The correct
+    # long-term fix is a torch chain rejection-sampler (task #14); this unblocks concurrent MTP today.
+    try:
+        import inspect
+        _cond = "if sampling_info.is_all_greedy or _is_npu or _is_hip:"
+        _src = inspect.getsource(eu.eagle_sample)
+        if _cond in _src:
+            _ns = dict(eu.__dict__)
+            # eagle_utils uses `from __future__ import annotations` (string annotations); replicate it so the
+            # re-exec does not eval signature annotations (EagleVerifyInput etc.) -> NameError.
+            _patched = "from __future__ import annotations\n" + _src.replace(
+                _cond, _cond[:-1] + " or True:  # XPU greedy-verify (tree_speculative unregistered)")
+            exec(_patched, _ns)
+            eu.eagle_sample = _ns["eagle_sample"]
+            try:
+                from sglang.srt.speculative import eagle_worker_v2 as _ewv2
+                if hasattr(_ewv2, "eagle_sample"):
+                    _ewv2.eagle_sample = _ns["eagle_sample"]
+            except Exception:
+                pass
+            print("[mtp-tree-xpu] forced greedy-verify branch in eagle_sample (XPU, with NPU/HIP)", flush=True)
+        else:
+            print("[mtp-tree-xpu] eagle_sample greedy-force SKIPPED (condition not found -- upstream changed)", flush=True)
+    except Exception as e:
+        print(f"[mtp-tree-xpu] eagle_sample greedy-force FAILED: {e}", flush=True)
+
     # DEBUG (B70_MTP_DEBUG=1): trace the MHA KV-write shapes to locate the spec-decode 2-vs-75840 mismatch.
     if os.environ.get("B70_MTP_DEBUG") == "1":
         try:

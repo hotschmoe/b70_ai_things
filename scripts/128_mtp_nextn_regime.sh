@@ -72,7 +72,7 @@ if [ "${MIXLOAD:-0}" = 1 ]; then
   say "=== SUSTAINED MIXED LOAD (correctness under the agentic prefill+decode pattern that breaks vLLM) ==="
   PD="${SCRATCH:-/tmp/claude-1000/-mnt-vm-8tb-github-b70-ai-things/dac41d4b-4204-4d31-bd5d-f4f587c287f6/scratchpad}/gdn_mtp"
   mkdir -p "$PD"; cp "$REPO"/contrib/gdn_nan_repro/dd_mixload.py "$PD"/
-  python3 -c "import json;d=json.load(open('$REPO/contrib/gdn_nan_repro/backhoe_req.json'));d['model']='$SERVED';d['temperature']=0;d.pop('top_p',None);json.dump(d,open('$PD/backhoe_req.json','w'))"
+  python3 -c "import json;d=json.load(open('$REPO/contrib/gdn_nan_repro/backhoe_req.json'));d['model']='$SERVED';json.dump(d,open('$PD/backhoe_req.json','w'))"
   python3 "$PD/dd_mixload.py" "$PORT" ${ML_ANCH:-3} ${ML_BURST:-3} ${ML_WAVES:-6} 2.0 ${ML_BMAX:-300} ${ML_AMAX:-600} 2>&1 | tee -a "$LOG"
   upnow=$(docker ps --filter "name=$NAME" --format '{{.Names}}' | grep -c "$NAME" || true)
   say "post-mixload: container running=$upnow (0 = the serve CRASHED under load)"

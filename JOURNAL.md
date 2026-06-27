@@ -5183,3 +5183,46 @@ SAMPLING PATH (the under-load mixload uses top-p sampling): the spec VERIFY samp
      (temperature>0/top_p) MTP needs the tree_speculative_sampling fix. Validating greedy under sustained mixed
      load now (the GDN-correctness bar). 3 gates fixed in mtp_tree_xpu.py (out_cache_loc, mamba-scatter is_cuda,
      top_p_renorm); 4th (tree-sampling skew) documented for follow-up.
+
+## 2026-06-27 -- *** MTP COMPLETE: fully functional + correct under concurrent mixed load (4 gates fixed) *** [CLOSEOUT]
+
+NEXTN chain-MTP (topk=1, num-steps=7) on int4 woq is now a WORKING, CORRECT-UNDER-LOAD, VISION-retaining
+single-card daily-driver candidate -- the first config to STABLY beat the ~9.4 eager ceiling on this box.
+
+FINAL RESULT (scripts/128 SPEC_STEPS=7, eager/no-graph, ckpt Lorbus_Qwen3.6-27B-int4-mtp):
+  - single-stream: c1 15.31 t/s = 1.62x baseline (9.46); mean accept_len 4.1-4.4 (vLLM's range was 3.8-5.9).
+  - concurrent MIXED LOAD (dd_mixload, 2 streaming anchors + concurrent prefill bursts, the agentic pattern
+    that makes vLLM "!!!!"): 10/10 OK, 0 GARBAGE, 0 DEGEN, container stayed up, coherent PRE and POST load.
+  - vision retained (int4 ckpt), eager (cuda graph False -> NO L0 graph-replay degradation), single card.
+
+THE 4 XPU GATES (all fixed in sglang/patches/mtp_tree_xpu.py, opt-in B70_XPU_MTP=1):
+  1. assign_extend_cache_locs_func returned None on XPU (no _is_xpu branch) -> verify out_cache_loc=None ->
+     k_cache[None]=k crash. Fix: pure-torch draft-slot gather override.
+  2. fused_mamba_state_scatter_with_mask / fused_conv_window_scatter_with_mask: spurious "only supports CUDA
+     tensors" is_cuda guard on generic triton kernels. Fix: generic is_cuda-guard stripper (re-exec minus guard).
+  3. top_p_renorm_probs UNREGISTERED on XPU (top_k_renorm IS) -> crash on any non-greedy verify. Fix: torch
+     nucleus-renorm fallback, patched in the sgl_kernel SOURCE (eagle_sample does a function-local import).
+  4. eagle_sample's greedy-verify branch `if is_all_greedy or _is_npu or _is_hip:` omits XPU; the non-greedy
+     branch calls tree_speculative_sampling_target_only, UNREGISTERED on XPU. Real API requests get model-default
+     top_k>1 (is_all_greedy=False) -> crash. Fix: re-exec eagle_sample with XPU added to that branch (force the
+     greedy-verify path, like NPU/HIP). (re-exec needs `from __future__ import annotations` prepended -- eagle_utils
+     uses string annotations.)
+
+DOCUMENTED TRADE-OFF: gate 4 makes MTP verify GREEDILY on XPU -> output is the target model's argmax (correct
+  greedy decoding) but IGNORES temperature/top_p/top_k (exactly like NPU/HIP). So MTP-XPU = a DETERMINISTIC 1.62x
+  driver. For sampling diversity, use the non-MTP int4 woq DP=2 driver, OR implement task #14 (a pure-torch chain
+  rejection-sampler -- the verify_tree_greedy analog -- to restore sampling under MTP).
+
+CONCURRENCY: --max-running-requests=4 fits a single card (the spec mamba intermediate cache scales with it;
+  MAXREQ=8 OOMs the KV at ctx=4096). Requests beyond 4 QUEUE and complete fine (10/10 OK). So ~4 in-flight is a
+  throughput dial, not a correctness limit.
+
+DRIVER MATRIX (all CORRECT + VISION on sglang-XPU):
+  - int4 + NEXTN MTP steps=7 (NEW): 15.3 t/s single-stream (1.62x), GREEDY, single card -> the LATENCY driver.
+  - int4 woq DP=2 (existing): ~9.4/replica, SAMPLING ok, wedge-proof -> the high-concurrency/unattended driver.
+  - bf16 TP=2 (existing): ~9.2 c1 / 23 c4 agg, both cards.
+SERVE: scripts/128 SPEC_STEPS=7 SPEC_DRAFT=8 (mounts the 3 patch files + memory_pool + woq_shim; the daily-driver
+  productionization = bake them into a sglang-xpu:mtp image + a rdy_to_serve recipe). REMAINING: task #14
+  (sampling fallback). The eager path is otherwise near its limit (fusion already done, torch.compile 1.10x,
+  graphs L0-blocked-but-de-risked); the next frontier levers are a fast GDN SYCL kernel or SYCL-Graph/L0-mutable
+  command lists. Box HEALTHY + idle after.

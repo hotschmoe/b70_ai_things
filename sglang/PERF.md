@@ -8,11 +8,17 @@ ALL numbers warm (discard the 1st bench after idle -- the B70 idle-downclocks; c
 | woq int4 TP=1 (sglang-xpu:woq) | ~9.44         | (single-card)   | ~920    | 1     | YES    | YES (single-card)  | int4 woqgemm |
 | **int4 + NEXTN MTP (steps=7)** | **15.31 (1.62x)** | **~17 agg (c4)** | ~920 | 1   | YES    | YES (single-card)  | int4 woqgemm + NEXTN |
 *** MTP/spec-decode WORKS on sglang-XPU (2026-06-27, scripts/128) -- the FIRST stable break of the ~9.4 eager
-  ceiling. Fixed 2 spurious CUDA gates (assign_extend_cache_locs None-on-XPU + the mamba-scatter is_cuda guard,
-  both in mtp_tree_xpu.py). NEXTN chain (topk=1) num-steps sweep, warm c1: 1->7.88, 3->12.30, 5->14.18,
-  7->15.31, 9->15.44 (plateau). EAGER (cuda graph False -> no L0 degradation), coherent, vision. num-steps=7
-  recommended (~1.62x, 15.31 t/s single-card). Multi-step draft RUNS on XPU (the old num-steps=1 dodge is
-  obsolete). NEXT: validate steps=7 under sustained mixed load + W4A8+MTP (A3) + cut spec-path launches (fusion).
+  ceiling, and CORRECT under concurrent mixed load. Fixed 4 XPU gates (all in mtp_tree_xpu.py, B70_XPU_MTP=1):
+  (1) assign_extend_cache_locs None-on-XPU; (2) mamba-scatter is_cuda guard; (3) top_p_renorm unregistered ->
+  torch nucleus-renorm; (4) eagle_sample greedy-verify branch omits XPU (tree_speculative_sampling unregistered)
+  -> re-exec to force greedy-verify like NPU/HIP. NEXTN chain (topk=1) num-steps sweep, warm c1: 1->7.88, 3->12.30,
+  5->14.18, 7->15.31, 9->15.44 (plateau). num-steps=7 recommended = 1.62x (15.31 t/s single-card), accept_len ~4.1-4.4.
+  EAGER (no L0 degradation), VISION. Concurrent mixed load (dd_mixload, the agentic pattern that breaks vLLM):
+  10/10 OK, 0 garbage, no crash, coherent pre+post. TRADE-OFF (gate 4): MTP verifies GREEDILY on XPU -> correct
+  greedy output but IGNORES temperature/top_p/top_k (like NPU/HIP); for sampling use non-MTP, or task #14 (torch
+  chain rejection-sampler). max-running-requests=4 fits one card (spec mamba cache); beyond that requests queue.
+  => MTP steps=7 = the single-card LATENCY driver (1.62x, deterministic, vision); int4 woq DP=2 stays the
+  high-concurrency/sampling driver.
 | woq int4 + XPU CUDAGRAPH       | ~7.6 e2e (DEGRADES) | -         | regresses | 1   | YES    | -           | int4 woqgemm |
 | W8A8 TP=2 (skip-warmup)        | 5.45 (coherent) | 4.08/str (15.2)| ~580   | 2     | graft  | no          | w8a8 int8 torch._int_mm |
 *** W8A8 TP=2 end-to-end (scripts/122+126, 2026-06-27): the ONLY live lever from the vLLM "fake 63 t/s" headline
