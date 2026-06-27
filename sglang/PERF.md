@@ -274,8 +274,15 @@ WIRED UP via woq_shim (opt-in B70_XPU_CUDAGRAPH=1) + a mounted model_runner.py p
   backend triton (graph-capable; intel_xpu backend lacks graph methods).
 RESULT: capture SUCCEEDS (all 7 bs=1..24 graphs), COHERENT, decode logs `cuda graph: True` at **23.6 t/s** (eager
   ~9.4 = 2.5x!). torch.xpu graph capture of this hybrid GDN model WORKS (GDN init_cuda_graph_state carries mamba state).
-CATCH: decode log alternates 23.6 / 2.67 / 23.6 -- a PERIODIC STALL drags the EFFECTIVE bench rate to ~7-8 t/s.
-  Likely a GDN/mamba state copy or per-interval non-graph op. CHASING -> if fixed, ~23 sustained = the campaign win.
+REFINED (OUT=512, warm): decode-batch log STEADY at ~23 t/s (cuda graph: True), only ONE 12.66 dip -> the stall is
+  essentially ONE-TIME (capture/first-interval), not periodic. End-to-end bench: OUT=128 -> 8.45, OUT=512 -> 12.57
+  (the one-time stall amortizes). So: MODEL decode (server-side) = ~23 t/s (2.5x eager 9.4); END-TO-END (client) =
+  ~12.57 t/s at OUT=512 (+34% over eager 9.4). The 23-vs-12.57 gap = per-token SERVING overhead (detok/stream/
+  scheduler, NOT graphed). TRADEOFF: TTFT REGRESSES ~920 -> ~1938 ms because cudagraph requires --attention-backend
+  triton (the intel_xpu backend lacks graph capture/replay methods) + prefill isn't graphed. So cudagraph = a DECODE
+  win with a PREFILL/TTFT cost. NEXT: (a) reduce the serving overhead (--num-continuous-decode-steps stacks with
+  graph?), (b) recover TTFT (implement intel_xpu backend graph methods, OR keep intel_xpu for prefill + triton for
+  decode). Honest verdict: first REAL decode speedup of the campaign (+34% end-to-end, 2.5x model), opt-in + correct.
 
 ## (superseded -- DONE above) XPU cudagraph FEASIBLE-IN-PRINCIPLE [2026-06-27]
 The ~9.4 t/s warm ceiling is EAGER LAUNCH OVERHEAD (190+ triton/kernel launches per token, no graph replay).
