@@ -245,3 +245,12 @@ not just `dir(sgl_kernel)` Python wrappers, which exist for unregistered ops):
 4. Prefix cache recovery for agentic TTFT: `--mamba-radix-cache-strategy no_buffer --page-size 1` +
    `--attention-backend triton` (drops intel_xpu XMX attn) + `--schedule-policy lpm`. Bigger change; later.
 5. Custom dense int8/int4 GEMV SYCL kernel (frontier; the user-offered lever if AWQ underperforms).
+
+## woq int4 driver VERIFIED CORRECT under mixed load (2026-06-27)
+Ran contrib/gdn_nan_repro on the woq int4 serve (the agentic mixed prefill+decode load that makes vLLM emit "!!!!"):
+  dd_loadprobe 8 anchors + 12 concurrent probes -> all OK, coherent (the exact backhoe/grading request that broke
+  vLLM); dd_rawtokens logprobs under load -> real logprobs, NO 'nan'. So the int4 woqgemm path inherits sglang's
+  GDN fix (no NaN). => woq int4 (sglang-xpu:woq) is a VERIFIED-CORRECT daily driver: int4 single-card, vision, ~9.44
+  t/s warm, correct under the load that breaks vLLM. Serve:
+    IMG=sglang-xpu:woq CKPT=/models/Lorbus_Qwen3.6-27B-int4-AutoRound SERVED=qwen36-27b-int4-woq TP=1 DEVICE=N \
+      bash sglang/serve_sglang.sh start   # one per card for DP=2
