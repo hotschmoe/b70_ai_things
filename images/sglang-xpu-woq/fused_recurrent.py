@@ -361,7 +361,7 @@ def fused_recurrent_gated_delta_rule_packed_decode(
     BV = min(triton.next_power_of_2(V), 32)
     num_stages = 3
     import os as _os
-    num_warps = int(_os.environ.get("B70_GDN_DECODE_WARPS", "4"))  # b70: default 4 = 1.69x decode (was 1)
+    num_warps = int(_os.environ.get("B70_GDN_DECODE_WARPS", "1"))  # b70: tunable; NO-OP warm (default 1 = upstream)
 
     stride_mixed_qkv_tok = mixed_qkv.stride(0)
     stride_a_tok = a.stride(0)
@@ -621,7 +621,7 @@ def fused_recurrent_kda_packed_decode(
     BV = min(triton.next_power_of_2(V), 32)
     num_stages = 3
     import os as _os
-    num_warps = int(_os.environ.get("B70_GDN_DECODE_WARPS", "4"))  # b70: default 4 = 1.69x decode (was 1)
+    num_warps = int(_os.environ.get("B70_GDN_DECODE_WARPS", "1"))  # b70: tunable; NO-OP warm (default 1 = upstream)
 
     stride_mixed_qkv_tok = mixed_qkv.stride(0)
     stride_a_tok = a.stride(0)

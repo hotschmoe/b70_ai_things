@@ -166,7 +166,21 @@ drafts only 1 tok/forward; more needs the gated multi-step graph runner). MTP is
 bf16's 9 t/s AND every other config). The GDN compute (48 linear-attn layers' recurrent scan, triton FLA) is what
 makes single-card decode slow; vLLM is faster because it has a compiled SYCL GDN kernel.
 
-## GDN KERNEL OPTIMIZATION (the decode bottleneck) -- WIN: num_warps 1->4 = 1.69x decode [2026-06-27]
+## [CORRECTION 2026-06-27] The "GDN num_warps win" was a COLD-BENCH ARTIFACT -- it does NOTHING warm.
+MEASUREMENT BUG: the B70 GPU downclocks when idle, so the FIRST bench after idle runs ~2x slow (clock ramp + cold
+triton JIT); the warm steady-state is reached by the 2nd bench. My single-bench numbers conflated cold and warm.
+PROOF (6x c1 back-to-back, same serve, warm steady-state = runs 2-6):
+  warps=1 (baseline): 9.47, 9.47, 9.44, 9.47, 9.40, 9.41  -> ~9.44 t/s
+  warps=4 ("win")   : 9.44, 9.42, 9.48, 9.49, 9.47        -> ~9.45 t/s   == IDENTICAL.
+So num_warps 1->4 gives NO warm decode improvement (the GDN recurrent kernel was NOT the warm bottleneck; 192
+programs already saturate the GPU at num_warps=1). The earlier 4.68->7.92->9.60 deltas were ALL cold-vs-warm noise.
+The B70_GDN_DECODE_WARPS knob is kept (env-tunable, harmless) but is a NO-OP warm; do NOT claim it as a speedup.
+LESSON: ALWAYS warm the serve (discard the 1st bench) before recording a decode number. Re-measuring all configs warm.
+REAL (good) finding hidden under the artifact: woq int4 TP=1 WARM decode = ~9.44 t/s -- single-card, already
+competitive with bf16 TP=2, with NO kernel change. -> woq int4 DP=2 (wedge-proof + vision) ~9.4 single / ~18 aggregate
+is a strong daily driver. The campaign's true levers remain: correct serving (achieved) + int4 single-card (fast warm).
+
+## (superseded) GDN num_warps experiment log:
 The GDN decode kernel `fused_recurrent_gated_delta_rule_packed_decode` hardcoded `num_warps=1` (grid=(NV=4,
 B*HV=48)=192 programs, each 1 sub-group) -> OCCUPANCY-STARVED on Battlemage. The recurrence has no within-step
 time dependency at decode (1 token), so num_warps only parallelizes the spatial head/V work -> safe to raise.
