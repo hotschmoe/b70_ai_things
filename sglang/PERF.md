@@ -100,6 +100,27 @@ NEXT: woq + TP=2 -- fast int4 GEMVs AND GDN split across both cards (~7.5 GiB/ca
 Then: (a) if TP=2 wins -> ship; (b) quantize GDN too (note-1 "pack further") for fast single-card + DP=2 (correctness
 risk -> validate); (c) graph capture is unavailable on XPU (eager overhead is a fixed tax on both bf16 and woq).
 
+## woq TP=2 HANGS + the real bottleneck is EAGER OVERHEAD, not bandwidth [2026-06-27]
+woq int4 TP=2 LOADS (8.7 GiB/card, KV 345408 tok = 4.8x bf16's!) but generation HANGS: a TP worker dies in
+the first forward (gloo "Connection closed by peer") -> the recurring TP>1 forward fragility, but woq-specific
+(bf16 TP=2 works). woqgemm x oneCCL-all-reduce interaction (RowParallel down_proj/o_proj) is the suspect.
+KEY REFRAME (from the woq numbers): sglang-XPU decode is EAGER-OVERHEAD / TOPOLOGY bound, NOT weight-bandwidth:
+  - woq TP=1 4.68 t/s (213ms/tok) but only ~33ms is weight bandwidth -> ~180ms is eager Python dispatch + slow
+    GDN triton + per-op overhead over ~256 layers. Quantization (fewer bytes) can't fix an overhead-bound decode.
+  - bf16 TP=2 9 t/s is ALSO eager-bound; ~9 t/s looks near sglang-XPU's eager ceiling for this 27B GDN model.
+  - vLLM hit 30 t/s via CUDAGRAPH (captured 30.5 vs NONE 23.3) -- sglang-XPU has NO graph capture (dead end) and
+    torch.compile is a no-op on XPU. So we CANNOT close the gap to vLLM via quant alone.
+woq's real value = fits one card -> DP=2 (wedge-proof, +vision, big KV) but single-stream stays ~4.7 t/s. Not a
+single-stream win over bf16 TP=2.
+
+## THE lever that beats overhead-bound decode: MTP / speculative decode
+MTP generates K tokens per forward -> amortizes the per-forward eager overhead (the actual bottleneck). vLLM's
+w8a8+MTP hit 25.6 t/s (MTP ~doubled decode). Risk: sglang MTP is XPU-gated (EAGLE has no intel_xpu draft-attn +
+no xpu graph-runner). Agent's possible escape: --speculative-algorithm NEXTN --speculative-draft-attention-backend
+triton --speculative-num-steps 1. Qwen3.6 ships an MTP head (qwen3_5_mtp); mtp-graft ckpts exist. NEXT: try MTP on
+the bf16 serve (most likely to amortize the eager overhead -> real single-stream win, keeps vision).
+Secondary: debug the woq TP=2 hang (-> int4 TP=2 huge-KV) and woq DP=2 (wedge-proof daily driver).
+
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
