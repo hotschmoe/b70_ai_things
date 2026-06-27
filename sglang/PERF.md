@@ -15,6 +15,15 @@ Columns: decode_tps = 1000/TPOT (single-stream TG); prefill_tps (PP) = IN*1000/T
 |---|-------------------------------------|------|-----------|---------|-------------|-------|
 | 0 | bf16 TP=2 (baseline, CTX8192 MF.93) | 1    | 9.03      | 661     | 3098        | out_tok 8.51; the documented baseline |
 | 0 | bf16 TP=2 (baseline)                | 4    | 8.18      | 974     | 2103        | aggregate out 24.92 tok/s (4 streams) |
+| A | bf16 TP=2 +FLA_FAST +numdecode2     | 1    | 9.34      | 599     | 3419        | coherent OK; TTFT -9% prefill +10% (FLA_FAST helps) |
+| A | bf16 TP=2 +FLA_FAST +numdecode2     | 4    | 5.12      | 983     | 2084        | c4 REGRESSED (numdecode2 hurts concurrency) |
+| B | bf16 PP=2 (--tp 1 --pp-size 2)      | -    | BROKEN    | -       | -           | /health 200 but ALL gen requests time out -> 500 (scheduler deadlock on GDN); NO-GO |
+
+## Next: AWQ track (the decode win). See sglang/AWQ_RECIPE.md.
+- De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
+  Isolates the fp16 question from quant before producing any checkpoint.
+- De-risk #2 (AWQ XPU speed): repack text-only W4A16 -> AWQ (CPU), serve, bench vs bf16.
+- Then production: AutoRound auto_awq full-VLM (vision-retaining).
 
 ## Image capability map (VERIFIED 2026-06-27, image sglang-xpu:bmg)
 Verified by listing sgl_kernel `.so` files + `torch.ops.sgl_kernel` registration (decisive: registration,

@@ -23,6 +23,7 @@ SERVED="${SERVED:-qwen36-27b-bf16-sglang}"
 PORT="${PORT:-30000}"
 DEVICE="${DEVICE:-0}"          # card pin for TP=1 (ZE_AFFINITY_MASK); ignored when TP=2
 TP="${TP:-2}"
+PP="${PP:-1}"                 # pipeline-parallel size; PP>1 exposes both cards (no affinity pin)
 CTX="${CTX:-32768}"           # --context-length
 MEMFRAC="${MEMFRAC:-0.85}"    # --mem-fraction-static (weights+KV pool fraction)
 PAGE="${PAGE:-64}"            # intel_xpu supports 32/64/128
@@ -31,6 +32,7 @@ LINATTN="${LINATTN:-triton}" # GDN/linear-attn kernel backend; triton is the onl
 SSMDTYPE="${SSMDTYPE:-float32}" # SSM recurrent state dtype (fp32 = GDN-safe; this is the default too)
 QUANT="${QUANT:-}"           # e.g. auto-round / compressed-tensors / fp8; empty = auto-detect
 EXTRA="${EXTRA:-}"           # extra launch_server flags
+DENV="${DENV:-}"             # extra docker -e env, space-separated KEY=VAL (e.g. DENV="FLA_USE_FAST_OPS=1")
 
 cmd="${1:-start}"
 
@@ -38,20 +40,22 @@ start() {
   mkdir -p "$ROOT"/{hf_cache,sgl_cache} 2>/dev/null || true
   # GPU passthrough mirrors rdy_to_serve/_common/lib.sh; pin card via ZE_AFFINITY_MASK for TP=1.
   GDOCK=()
-  if [ "$TP" = 1 ]; then GDOCK=(-e ZE_AFFINITY_MASK="$DEVICE"); fi
+  if [ "$TP" = 1 ] && [ "$PP" = 1 ]; then GDOCK=(-e ZE_AFFINITY_MASK="$DEVICE"); fi
   local q=(); [ -n "$QUANT" ] && q=(--quantization "$QUANT")
+  local denv=(); for kv in $DENV; do denv+=(-e "$kv"); done
   echo "=== sglang serve: $SERVED  IMG=$IMG  TP=$TP card=${DEVICE} ctx=$CTX memfrac=$MEMFRAC attn=$ATTN port=$PORT ==="
   docker rm -f "$NAME" >/dev/null 2>&1
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "${SHM:-16g}" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
     -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
+    "${denv[@]}" \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; exec python -m sglang.launch_server \
       --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
       --device xpu --attention-backend '$ATTN' --linear-attn-backend '$LINATTN' \
       --mamba-ssm-dtype '$SSMDTYPE' --disable-overlap-schedule --page-size $PAGE \
       --disable-radix-cache \
-      --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC \
+      --tp $TP --pp-size $PP --context-length $CTX --mem-fraction-static $MEMFRAC \
       --host 0.0.0.0 --port $PORT ${q[*]} $EXTRA"
   echo "container started; tail logs with: bash $0 logs"
 }
