@@ -6,6 +6,8 @@
 # Gated opt-in via B70_XPU_W8A8=1 (installed from woq_shim). Validated: torch._int_mm 1.91x (M=1) / 1.81x (M=512).
 import os
 
+_DBG = {"on": os.environ.get("B70_W8A8_DEBUG") == "1", "n": 0}  # per-layer NaN/range trace (first forward)
+
 
 def install():
     import torch
@@ -13,9 +15,29 @@ def install():
         CompressedTensorsW8A8Int8,
     )
 
-    # CompressedTensorsConfig._check_scheme_supported does DeviceCapability(*torch.cuda.get_device_capability())
-    # which asserts "Torch not compiled with CUDA" on XPU. Return a high capability so the int8 scheme passes.
-    torch.cuda.get_device_capability = lambda *a, **k: (9, 0)
+    # The W8A8 scheme's CompressedTensorsConfig._check_scheme_supported does
+    # DeviceCapability(*torch.cuda.get_device_capability()), which throws "Torch not compiled with CUDA" on XPU.
+    # The OLD fix faked torch.cuda.get_device_capability -> (9,0) GLOBALLY -- but that makes sglang believe it is
+    # an sm90 CUDA GPU and take CUDA-only code paths (e.g. custom all-reduce setup). Scope the patch to ONLY the
+    # scheme-support check (emulate capability 90 there) so no global sm90 side-effects leak into the TP path.
+    try:
+        from sglang.srt.layers.quantization.compressed_tensors.compressed_tensors import (
+            CompressedTensorsConfig,
+        )
+
+        def _xpu_check_scheme_supported(self, min_capability, error=True):
+            supported = 90 >= int(min_capability)
+            if error and not supported:
+                raise RuntimeError(
+                    f"[w8a8-shim] scheme min_capability {min_capability} > emulated XPU cap 90"
+                )
+            return supported
+
+        CompressedTensorsConfig._check_scheme_supported = _xpu_check_scheme_supported
+        print("[w8a8-shim] scoped _check_scheme_supported (no global sm90 fake)", flush=True)
+    except Exception as e:
+        print(f"[w8a8-shim] scoped scheme patch failed, falling back to global cap fake: {e}", flush=True)
+        torch.cuda.get_device_capability = lambda *a, **k: (9, 0)
 
     _orig_pw = CompressedTensorsW8A8Int8.process_weights_after_loading
 
@@ -46,6 +68,14 @@ def install():
         out = out.to(x.dtype)
         if bias is not None:
             out = out + bias
+        if _DBG["on"] and _DBG["n"] < 80:
+            n = _DBG["n"]; _DBG["n"] += 1
+            in_nan = bool(torch.isnan(x2).any() or torch.isinf(x2).any())
+            o_nan = bool(torch.isnan(out).any() or torch.isinf(out).any())
+            print(f"[w8a8-dbg] call={n:>3} M={x2.shape[0]} K={layer.weight_t.shape[0]} "
+                  f"N={layer.weight_t.shape[1]} in_absmax={x2.abs().max().item():.4g} in_bad={in_nan} "
+                  f"out_absmax={out.abs().max().item():.4g} out_bad={o_nan} "
+                  f"wscale_absmax={layer.wscale_row.abs().max().item():.4g}", flush=True)
         return out.reshape(*orig[:-1], -1)
 
     CompressedTensorsW8A8Int8.process_weights_after_loading = _pw

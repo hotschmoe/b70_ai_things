@@ -7,15 +7,17 @@ ALL numbers warm (discard the 1st bench after idle -- the B70 idle-downclocks; c
 | bf16 TP=2 (serve_sglang.sh)    | ~9.2          | 6.06/str (23.4) | ~660    | 2     | YES    | no (TP wedge risk) | bf16 |
 | woq int4 TP=1 (sglang-xpu:woq) | ~9.44         | (single-card)   | ~920    | 1     | YES    | YES (single-card)  | int4 woqgemm |
 | woq int4 + XPU CUDAGRAPH       | ~7.6 e2e (DEGRADES) | -         | regresses | 1   | YES    | -           | int4 woqgemm |
-| W8A8 TP=2 (B70_XPU_W8A8=1)     | 5.25 **GARBAGE**| 4.07/str (15.2)| ~580   | 2     | graft  | no          | w8a8 int8 torch._int_mm |
-*** W8A8 TP=2 end-to-end (scripts/122, 2026-06-27): the ONLY live lever from the vLLM "fake 63 t/s" headline
-  (MTP + PIECEWISE cudagraph are both XPU-blocked). RESULT: decode 5.25 t/s c1 -- LOSES to int4 (9.4) & bf16 (9.0);
-  only a marginal prefill win (~3500 vs 3098). AND coherence FAILED ("!!!!"). scripts/123 proved the shim math
-  (rel-err 0.0097), the ckpt (0.0202 vs source bf16), and the act-scheme (dynamic/token/sym) are ALL correct, so
-  the garbage is a fused-qkv/gate_up + TP=2 structural integration bug, NOT the kernel/ckpt. Decode is launch-bound
-  (+2 launches/layer vs int4's 1 fused) so even coherent it is not a driver win. NO-GO; int4 woq stays the driver.
-  Vision: the W8A8 ckpt had 0 visual tensors -> grafted 333 bf16 visual from source (graft_vision.py) ->
-  Qwen3.6-27B-W8A8-sqgptq-vision (parked: inherits the coherence bug).
+| W8A8 TP=2 (skip-warmup)        | 5.45 (coherent) | 4.08/str (15.2)| ~580   | 2     | graft  | no          | w8a8 int8 torch._int_mm |
+*** W8A8 TP=2 end-to-end (scripts/122+126, 2026-06-27): the ONLY live lever from the vLLM "fake 63 t/s" headline
+  (MTP + PIECEWISE cudagraph stay XPU-blocked). decode 5.45 t/s c1 -- LOSES to int4 (9.4) & bf16 (9.0); prefill
+  marginally better (~3500 vs 3098). COHERENCE ROOT-CAUSED: the first "!!!!" was the sglang STARTUP WARMUP forward
+  poisoning the GDN/mamba state -- **--skip-server-warmup REQUIRED** (bf16 warmup is fine). With it: coherent +
+  survives sustained mixed load (dd_mixload 78/78 OK, no progressive poisoning). Ruled out by experiment: _int_mm
+  (scripts/124 exact all shapes incl fused/sharded), shim math/ckpt/act-scheme (scripts/123), custom-AR, the sm90
+  cap fake (scoped patch), and the woq image/TP itself (bf16-on-woq-TP2 coherent). Decode is launch-bound (+2
+  launches/layer vs int4's 1 fused) so W8A8 is an ACCURACY/PREFILL serve, not the decode daily driver; int4 woq
+  stays decode-optimal. Vision: W8A8 ckpt had 0 visual tensors -> grafted 333 bf16 visual (graft_vision.py) ->
+  Qwen3.6-27B-W8A8-sqgptq-vision (now a real coherent vision option, just decode-slow).
 *** CORRECTION (do NOT trust the earlier "2.5x breakthrough" -- I over-claimed it from sglang's INTERNAL decode-log).
   XPU cudagraph (B70_XPU_CUDAGRAPH=1 + triton attn + model_runner xpu patch) genuinely RUNS -- graph capture works on
   this hybrid GDN model (a real engineering first; torch.xpu.XPUGraph + the GDN init_cuda_graph_state carry it). BUT

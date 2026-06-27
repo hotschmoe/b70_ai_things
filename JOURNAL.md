@@ -5068,3 +5068,45 @@ VISION ("we want vision in models, requant when needed"): the W8A8-sqgptq ckpt h
   Structurally validated (keys match source arch). NOTE: it inherits the W8A8 coherence bug above, so it is a
   PARKED artifact -- the SHIPPING vision drivers remain int4-woq DP=2 + bf16 TP=2 (both coherent + vision).
   Tools: sglang/graft_vision.py. Box left HEALTHY + idle (lease released, container stopped).
+
+## 2026-06-27 -- W8A8 TP=2 COHERENCE ROOT-CAUSED: the WARMUP forward poisons GDN state; --skip-server-warmup fixes it [CORRECTION + root-cause]
+
+CORRECTS the prior entry's "coherence FAILED -> fused/TP integration bug" -- that was the SYMPTOM, not the
+cause. The W8A8 TP=2 "!!!!" is the sglang STARTUP WARMUP forward poisoning the GDN/mamba recurrent state.
+--skip-server-warmup makes W8A8 TP=2 serve COHERENT, including under SUSTAINED MIXED LOAD.
+
+ELIMINATION (each ruled out by EXPERIMENT, not theory):
+  - torch._int_mm kernel: scripts/124 swept ALL real shapes incl. fused qkv N=14336, gate_up N=34816, odd N,
+    and TP=2 half-shards -> max|diff|=0 (EXACT) at M=1/4/512/2048. Kernel is not the bug.
+  - per-layer math + ckpt + act-scheme: scripts/123 (down_proj) rel-err 0.0097 (shim) / 0.0202 (ckpt vs source
+    bf16); config_groups = input dynamic/token/symmetric + weights channel/symmetric = exactly what the shim does.
+  - custom all-reduce: --disable-custom-all-reduce -> STILL garbage. Not it.
+  - global torch.cuda.get_device_capability->(9,0) sm90 fake: replaced with a SCOPED _check_scheme_supported
+    patch (sglang/patches/w8a8_shim.py; no global sm90 side-effects) -> STILL garbage. Not it. (Kept the scoped
+    patch anyway -- it is the cleaner/correct fix and removes the spurious sm90 custom-AR attempt.)
+  - woq image / global torch.cuda->xpu redirects / TP=2 itself: bf16 Qwen_Qwen3.6-27B on the SAME woq image at
+    TP=2 (W8A8 off) -> COHERENT. So none of those; the bug is W8A8-specific.
+  - THE SPLIT: two runs identical except --skip-server-warmup -> WITH warmup = "!!!!", WITHOUT = coherent
+    ("Rayleigh scattering"). The per-layer trace (B70_W8A8_DEBUG, 160 calls) shows every int8 layer producing
+    healthy FINITE output (out_absmax 1-16, zero NaN/Inf), so the int8 apply is stateless+correct; the only
+    cross-request persistent state the warmup can corrupt is the GDN/mamba recurrent state cache (the
+    shared-state NaN-poison class, here W8A8-triggered -- bf16 warmup does not trip it).
+
+CONFIRM (skip-warmup, scripts/122 + 126):
+  - coherence: correct single-request answers (pre AND post load).
+  - perf (warm): c1 decode 5.45 t/s, prefill 3310-3693, TTFT 555-619; c4 decode 4.08, 15.18 t/s aggregate.
+    IDENTICAL decode to the garbage run (5.25) -> decode is launch-bound regardless of coherence.
+  - SUSTAINED MIXED LOAD (dd_mixload 6 anchors + 6x12 bursts/2s = 78 reqs): 78/78 OK, 0 GARBAGE, 0 DEGEN_EMPTY,
+    0 HTTP_ERR; POST-load coherence still clean (NO progressive/global GDN poisoning). Survives the exact
+    agentic pattern that makes vLLM emit "!!!!".
+
+REVISED VERDICT: W8A8 TP=2 is a CORRECT driver after all (with --skip-server-warmup) -- coherent, survives mixed
+  load, better accuracy than int4, prefill-competitive (~3500 vs bf16 3098). It is NOT decode-competitive
+  (5.45 t/s c1 vs int4 woq 9.4 / bf16 9.0) -- launch-bound: W8A8 carries +2 launches/layer (quant+dequant) vs
+  int4 woqgemm's 1 fused kernel; MTP + cudagraph (the headline's other two multipliers) stay XPU-blocked. So:
+  W8A8 TP=2 = a viable ACCURACY/PREFILL-oriented serve (now with the vision graft), NOT the decode daily driver.
+  int4 woq stays decode-optimal. The "fake 63 t/s" is still not reproducible as real stacked numbers, but W8A8
+  itself is now a real, correct option. REQUIRED FLAG: --skip-server-warmup (baked into scripts/122 for W8A8).
+  Tools: scripts/122 (serve+bench, skip-warmup default for W8A8), 123 (layer validate), 124 (_int_mm sweep),
+  125 (fused-scale validate), 126 (sustained mixed-load). sglang/patches/w8a8_shim.py (transpose fix + scoped
+  cap patch + B70_W8A8_DEBUG trace). Box HEALTHY + idle after.

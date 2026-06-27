@@ -14,14 +14,21 @@
 set -uo pipefail
 ROOT="${ROOT:-/mnt/vm_8tb/b70}"
 REPO="/mnt/vm_8tb/github/b70_ai_things"
-IMG="sglang-xpu:woq"
-NAME="sglang_w8a8"
-CKPT="/models/Qwen3.6-27B-W8A8-sqgptq"
-SERVED="qwen36-27b-w8a8-sqgptq"
+IMG="${IMG:-sglang-xpu:woq}"
+NAME="${NAME:-sglang_w8a8}"
+CKPT="${CKPT:-/models/Qwen3.6-27B-W8A8-sqgptq}"
+SERVED="${SERVED:-qwen36-27b-w8a8-sqgptq}"
+W8A8="${W8A8:-1}"          # 1 = enable the W8A8 int8 shim (B70_XPU_W8A8=1); 0 = plain serve (bf16 control)
 PORT=30000
 TP=2
 CTX="${CTX:-8192}"
 MEMFRAC="${MEMFRAC:-0.90}"
+EXTRA_FLAGS="${EXTRA_FLAGS:-}"          # extra launch_server flags (e.g. --disable-custom-all-reduce)
+COHERENCE_ONLY="${COHERENCE_ONLY:-0}"   # 1 = skip the bench, stop after the coherence check (fast iteration)
+# ROOT CAUSE (2026-06-27): for W8A8 on this GDN model the sglang startup WARMUP forward POISONS the
+# GDN/mamba recurrent state -> "!!!!" garbage on every request. --skip-server-warmup is REQUIRED for W8A8
+# coherence (bf16 warmup is fine). Confirmed: skip-warmup serves coherent + survives sustained mixed load.
+[ "$W8A8" = 1 ] && EXTRA_FLAGS="--skip-server-warmup $EXTRA_FLAGS"
 TOK="/models/Qwen_Qwen3.6-27B"
 LOG="$REPO/sglang/w8a8_tp2_bench.log"
 
@@ -35,13 +42,13 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
   -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
-  -e B70_XPU_W8A8=1 \
+  $( [ "$W8A8" = 1 ] && echo "-e B70_XPU_W8A8=1" ) ${DENV:+$(for kv in $DENV; do echo -n "-e $kv "; done)} \
   "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; exec python -m sglang.launch_server \
     --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
     --device xpu --attention-backend intel_xpu --linear-attn-backend triton \
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
     --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC \
-    --host 0.0.0.0 --port $PORT" >>"$LOG" 2>&1
+    $EXTRA_FLAGS --host 0.0.0.0 --port $PORT" >>"$LOG" 2>&1
 
 # --- wait for health (watch for crash) ---
 say "waiting for /health (model load ~3-5min)..."
@@ -67,6 +74,13 @@ say "=== coherence check ==="
 gen=$(curl -s "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
   -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue? Answer in two sentences.\"}],\"max_tokens\":80,\"temperature\":0}")
 echo "$gen" | python3 -c "import sys,json; d=json.load(sys.stdin); print('COHERENCE:', repr(d['choices'][0]['message']['content'][:240]))" | tee -a "$LOG" || { say "coherence parse failed: $gen"; }
+
+if [ "$COHERENCE_ONLY" = 1 ]; then
+  docker logs "$NAME" 2>&1 | grep "w8a8-dbg" > "$REPO/sglang/w8a8_dbg.log" 2>/dev/null || true
+  say "saved $(wc -l < "$REPO/sglang/w8a8_dbg.log" 2>/dev/null || echo 0) w8a8-dbg lines -> sglang/w8a8_dbg.log"
+  say "=== COHERENCE_ONLY: stopping container to release lease. ==="
+  docker rm -f "$NAME" >/dev/null 2>&1; say "stopped $NAME"; exit 0
+fi
 
 # --- warm bench: discard run 1, record runs 2-3 (B70 idle-downclock lesson) ---
 bench(){ # conc num
