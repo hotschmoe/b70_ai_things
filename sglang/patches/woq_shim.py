@@ -130,6 +130,17 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] xpu cudagraph enable FAILED: {e}", flush=True)
 
+    # --- MTP/NEXTN tree kernels (the stable-speedup lever; OPT-IN via B70_XPU_MTP=1) ---
+    # sgl_kernel's build_tree_kernel_efficient + verify_tree_greedy are CUDA-only (unregistered on XPU).
+    # Install pure-torch chain (topk=1) fallbacks so NEXTN spec-decode runs. Must patch eagle_utils BEFORE
+    # eagle_worker_v2 imports build_tree_kernel_efficient (the shim runs at startup -> before server init).
+    if os.environ.get("B70_XPU_MTP") == "1":
+        try:
+            import mtp_tree_xpu
+            mtp_tree_xpu.install()
+        except Exception as e:
+            print(f"[woq-shim] MTP tree fallback install FAILED: {e}", flush=True)
+
     print("[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)", flush=True)
 
 
