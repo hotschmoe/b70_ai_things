@@ -4979,3 +4979,33 @@ VERDICT -> [PATH CHOSEN] The decode bottleneck is bf16 weight bandwidth + TP=2 a
   (retaining vision: qwen3_5 IS a VLM via Qwen3VL base, so quantize LM linears only, skip vision tower + GDN
   in_proj + lm_head). Parallel cheap wins: the pure-flag decode levers. NEXT: (1) design+run the AWQ quant;
   (2) A/B the flag levers on bf16. Tooling: sglang/bench2048.sh, sglang/PERF.md (results table + capability map).
+
+## 2026-06-27 -- SGLang Qwen3.6-27B perf-optimization campaign: closeout (honest) [campaign]
+
+GOAL: make the CORRECT sglang serve (no GDN NaN, unlike vLLM) faster -> a performant+correct+vision daily driver.
+Full details + bench tables in sglang/PERF.md. Tooling: sglang/bench2048.sh, images/sglang-xpu-woq/, sglang/patches/.
+
+LEVERS TRIED (config -> result):
+  - quantization for SPEED: sglang-XPU's only registered quant GEMM is awq_dequantize (int8/fp8/marlin all
+    CUDA-gated). Microbench: 4-bit (AWQ-triton fused) is SLOWER than bf16 XMX at decode -> quant doesn't speed
+    single-stream. EXCEPTION: auto_round_kernel.woqgemm (auto-round-lib, the kernel behind vLLM's 30 t/s) IS a real
+    fast XPU int4 GEMM -> WIRED INTO SGLANG (sglang-xpu:woq + sglang/patches/woq_shim.py patches GPTQLinearScheme).
+    Serves Lorbus int4 single-card, COHERENT, VISION retained.
+  - TP=2 / PP=2: PP=2 HANGS (scheduler deadlock on GDN); woq-int4 TP=2 HANGS (woqgemm x all-reduce). bf16 TP=2 works.
+  - MTP / spec-decode: grafted the BF16 MTP head onto int4+vision (graft_mtp.py), patched 6 hardcoded-CUDA gates
+    (mamba device=cuda, torch.cuda->xpu redirect, escape flags) -> the spec-decode FORWARD RUNS on XPU (13s, NOT
+    the predicted GDN wall). Blocked only on 2 unregistered-on-XPU tree kernels (build_tree/verify_greedy) needing
+    a pure-torch reimpl; payoff would be ~7.5 t/s < bf16's 9, so operator deprioritized. Left working-up-to-tree-kernels.
+  - GDN kernel: the decode "num_warps 1->4 = 1.69x win" was a COLD-BENCH ARTIFACT (the B70 idle-downclocks; the 1st
+    bench after idle is ~2x slow). Warm steady-state is IDENTICAL at warps 1 or 4. Corrected + reverted. The GDN
+    recurrent kernel is NOT the warm bottleneck.
+
+HONEST RESULT (warm steady-state, IN=2048): bf16 TP=2 ~9.2 t/s c1 (23.4 c4 agg); woq int4 TP=1 ~9.44 t/s c1
+  SINGLE-CARD. Both ~9.2-9.4 = the sglang-XPU EAGER CEILING for this 27B GDN model (launch-bound, no cudagraph on
+  XPU). The campaign did NOT raise single-stream past the starting ~9, but it: proved correctness, proved int4
+  single-card == bf16-TP2 warm (-> woq int4 DP=2 wedge-proof + vision daily driver), wired woqgemm into sglang, and
+  fully characterized MTP-on-XPU. Key methodology lesson: ALWAYS warm the serve (discard the 1st bench) before
+  recording a decode number -- early single-bench numbers were cold-confounded.
+VERDICT -> [CLOSEOUT, honest] Daily driver = CORRECT sglang at ~9.4 t/s warm, two options: woq int4 DP=2 (wedge-
+  proof+vision, unattended) or bf16 TP=2 (best c4 aggregate, attended). To beat ~9.4 would need cudagraph on XPU
+  (upstream) or a hand-tuned SYCL GDN/GEMV kernel (big project) -- both out of scope for this campaign.
