@@ -141,4 +141,32 @@ def install():
 
     eu.build_tree_kernel_efficient = _build_tree
     eu.verify_tree_greedy_func = _verify
+
+    # DEBUG (B70_MTP_DEBUG=1): trace the MHA KV-write shapes to locate the spec-decode 2-vs-75840 mismatch.
+    if os.environ.get("B70_MTP_DEBUG") == "1":
+        try:
+            from sglang.srt.mem_cache.memory_pool import MHATokenToKVPool, unwrap_write_loc
+            _orig_skb = MHATokenToKVPool.set_kv_buffer
+            _n = [0]
+
+            def _traced_skb(self, layer, loc_info, cache_k, cache_v, *a, **k):
+                if _n[0] < 10:
+                    try:
+                        loc, _ = unwrap_write_loc(loc_info)
+                        lshape = tuple(loc.shape)
+                    except Exception:
+                        lshape = "?"
+                    try:
+                        bshape = tuple(self.k_buffer[0].shape)
+                    except Exception:
+                        bshape = "?"
+                    print(f"[mtp-dbg] KVwrite layer={getattr(layer,'layer_id','?')} cache_k={tuple(cache_k.shape)} loc={lshape} buf={bshape}", flush=True)
+                    _n[0] += 1
+                return _orig_skb(self, layer, loc_info, cache_k, cache_v, *a, **k)
+
+            MHATokenToKVPool.set_kv_buffer = _traced_skb
+            print("[mtp-dbg] KV-write shape trace installed", flush=True)
+        except Exception as e:
+            print(f"[mtp-dbg] KV trace install failed: {e}", flush=True)
+
     print("[mtp-tree-xpu] installed chain (topk=1) build_tree + verify_tree_greedy torch fallbacks", flush=True)
