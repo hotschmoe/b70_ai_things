@@ -317,3 +317,21 @@ patched); the only blocker is reimplementing 2 tree kernels (build_tree_kernel_e
 torch for the chain (topk=1,steps=1) case -- both unregistered on XPU. NEXT: implement them, inject via woq_shim, serve
 the grafted int4+vision+MTP ckpt (Lorbus_Qwen3.6-27B-int4-mtp), bench. This is the campaign's best shot at a STABLE
 fast+correct+vision daily driver. (cudagraph remains wired but awaits an upstream torch-xpu fix.)
+
+## MTP ATTEMPT RESULT: tree kernels SOLVED + validated, but the spec-decode FORWARD HANGS on XPU [2026-06-27]
+Implemented the 2 missing CUDA tree kernels as pure-torch XPU fallbacks (sglang/patches/mtp_tree_xpu.py, chain/
+topk=1), ported from the authoritative sgl-kernel CUDA source (eagle_utils.cu). BOTH validated CORRECT:
+  - verify_tree_greedy: hand-traced (bs=2,D=2) -> exact expected accept_index/predicts/accept_token_num (drafts-only).
+  - build_tree FULL_MASK layout: matches the cu spec offset-for-offset (per-batch start D*D*bid + D*sum(seq_len<bid),
+    row stride seq_len+D, tree cols at row+seq_len, total seq_lens_sum*D + D*D*bs). Worker uses FULL_MASK.
+They INSTALL cleanly (all workers log "[mtp-tree-xpu] installed") and the serve loads + is healthy (skip-warmup).
+BLOCKER (new, deeper): the spec-decode FORWARD HANGS on the FIRST generation -- a device-side hang (TimeoutError,
+no decode logs, even with --skip-server-warmup). NOT the tree kernels (validated). Most likely the draft-target
+overlap stream/event path (woq_shim redirects torch.cuda.{Stream,Event,...}->torch.xpu; XPU event/stream wait
+semantics may deadlock) OR the triton draft-attention reading the tree. Config: NEXTN, num-steps 1, eagle-topk 1,
+draft-attn triton, max-running-requests 4, grafted Lorbus_Qwen3.6-27B-int4-mtp (int4+vision+1 nextn layer).
+So MTP is now characterized PAST the tree kernels: the next blocker is the spec-forward device-hang (a hard,
+no-stack-trace debug across the stream-redirect / draft-attention surface). Tree-kernel port is a real reusable
+artifact (mtp_tree_xpu.py). NOTE: card 0 got WEDGED (DEVICE_LOST) during this session's cudagraph capture/kill
+experiments -> needs a REBOOT to recover (xe-reset); we run LOCALLY on the box so the agent cannot reboot without
+killing its own session -- this requires a human `sudo reboot` (or bin/xe-reset). card 1 stayed healthy.
