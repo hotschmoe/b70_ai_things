@@ -199,6 +199,31 @@ def install():
     except Exception as e:
         print(f"[mtp-tree-xpu] mamba-scatter guard strip FAILED: {e}", flush=True)
 
+    # --- DOMINO 3: top_p_renorm_probs is UNREGISTERED on XPU (top_k_renorm IS). eagle_sample's verify calls
+    # top_p_renorm_prob for any top-p (non-greedy) request -> torch.ops.sgl_kernel.top_p_renorm_probs
+    # AttributeError -> scheduler crash. (Greedy/temperature=0 skips it -- why single-stream coherence passed
+    # but sampling load crashed.) Standard nucleus renorm is trivial in torch; patch eagle_utils' bound ref.
+    try:
+        def _xpu_top_p_renorm(probs, top_p):
+            probs = probs.float()
+            p = top_p.float().view(-1, 1) if isinstance(top_p, torch.Tensor) else float(top_p)
+            sp, si = torch.sort(probs, dim=-1, descending=True)
+            keep = (sp.cumsum(dim=-1) - sp) < p          # nucleus: include the token that crosses top_p
+            sp = sp * keep
+            sp = sp / sp.sum(dim=-1, keepdim=True).clamp(min=1e-12)
+            return torch.zeros_like(probs).scatter_(-1, si, sp)
+        # eagle_sample does a FUNCTION-LOCAL `from sgl_kernel import top_p_renorm_prob`, so patch the SOURCE
+        # package (not just eagle_utils) -- the local import re-binds the name from sgl_kernel each call.
+        import sgl_kernel as _sk
+        from sgl_kernel import sampling as _sks
+        for _m in (_sk, _sks, eu):
+            for _nm in ("top_p_renorm_prob", "top_p_renorm_probs"):
+                if hasattr(_m, _nm):
+                    setattr(_m, _nm, _xpu_top_p_renorm)
+        print("[mtp-tree-xpu] patched top_p_renorm_prob in sgl_kernel + eagle_utils (XPU nucleus-renorm)", flush=True)
+    except Exception as e:
+        print(f"[mtp-tree-xpu] top_p_renorm patch FAILED: {e}", flush=True)
+
     # DEBUG (B70_MTP_DEBUG=1): trace the MHA KV-write shapes to locate the spec-decode 2-vs-75840 mismatch.
     if os.environ.get("B70_MTP_DEBUG") == "1":
         try:

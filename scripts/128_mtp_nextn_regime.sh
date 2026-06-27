@@ -28,7 +28,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
     --speculative-algorithm NEXTN --speculative-num-steps ${SPEC_STEPS:-1} --speculative-eagle-topk 1 \
     --speculative-num-draft-tokens ${SPEC_DRAFT:-2} --speculative-draft-attention-backend triton --disable-cuda-graph \
-    --max-running-requests 4 --skip-server-warmup \
+    --max-running-requests ${MAXREQ:-4} --skip-server-warmup \
     --tp 1 --context-length 4096 --mem-fraction-static 0.92 \
     --host 0.0.0.0 --port $PORT" >>"$LOG" 2>&1
 
@@ -67,5 +67,21 @@ say "=== accept length (from server decode log, full) ==="
 docker logs "$NAME" 2>&1 | grep -oE "accept len: [0-9.]+|accept rate: [0-9.]+|gen throughput \(token/s\): [0-9.]+" > "$REPO/sglang/mtp_accept.log" 2>/dev/null || true
 docker logs "$NAME" 2>&1 | grep -oE "accept len: [0-9.]+" | tail -12 | tee -a "$LOG"
 awk -F': ' '/accept len/{s+=$2;n++} END{if(n)printf "[mean accept len over %d batches] %.2f\n",n,s/n}' "$REPO/sglang/mtp_accept.log" | tee -a "$LOG"
+
+if [ "${MIXLOAD:-0}" = 1 ]; then
+  say "=== SUSTAINED MIXED LOAD (correctness under the agentic prefill+decode pattern that breaks vLLM) ==="
+  PD="${SCRATCH:-/tmp/claude-1000/-mnt-vm-8tb-github-b70-ai-things/dac41d4b-4204-4d31-bd5d-f4f587c287f6/scratchpad}/gdn_mtp"
+  mkdir -p "$PD"; cp "$REPO"/contrib/gdn_nan_repro/dd_mixload.py "$PD"/
+  python3 -c "import json;d=json.load(open('$REPO/contrib/gdn_nan_repro/backhoe_req.json'));d['model']='$SERVED';d['temperature']=0;d.pop('top_p',None);json.dump(d,open('$PD/backhoe_req.json','w'))"
+  python3 "$PD/dd_mixload.py" "$PORT" ${ML_ANCH:-3} ${ML_BURST:-3} ${ML_WAVES:-6} 2.0 ${ML_BMAX:-300} ${ML_AMAX:-600} 2>&1 | tee -a "$LOG"
+  upnow=$(docker ps --filter "name=$NAME" --format '{{.Names}}' | grep -c "$NAME" || true)
+  say "post-mixload: container running=$upnow (0 = the serve CRASHED under load)"
+  docker logs "$NAME" > "$REPO/sglang/mtp_mixload_crash.log" 2>&1 || true
+  say "full post-mixload server log -> sglang/mtp_mixload_crash.log"
+  grep -iE "scheduler hit an exception" -A 30 "$REPO/sglang/mtp_mixload_crash.log" | grep -iE "File \"|line [0-9]|Error|Exception|assert|mamba|spec|cache|index|shape|size|None|broadcast" | head -25 | tee -a "$LOG"
+  pg=$(curl -s "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
+    -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Capital of France in one word.\"}],\"max_tokens\":24,\"temperature\":0}")
+  echo "$pg" | python3 -c "import sys,json;d=json.load(sys.stdin);print('POST-LOAD COHERENCE:',repr(d['choices'][0]['message']['content'][:80]))" | tee -a "$LOG" || say "post-load parse fail"
+fi
 
 say "=== stop ==="; docker rm -f "$NAME" >/dev/null 2>&1; say "stopped"

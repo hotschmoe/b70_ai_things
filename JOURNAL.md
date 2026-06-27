@@ -5158,3 +5158,28 @@ NEXT: (1) confirm the depth-7 config under SUSTAINED MIXED LOAD (gdn_nan_repro) 
   soak-stable + correct-under-load -> a real fast+correct+vision daily-driver candidate; (2) A3: W4A8+MTP (the
   vLLM-best combo) for more; (3) reduce spec-path launches (the GDN/quant fusion in decode_launch_inventory.md
   applies to the verify+draft forwards too). Tools: scripts/128 (SPEC_STEPS=7 SPEC_DRAFT=8).
+
+## 2026-06-27 -- MTP under load: GREEDY path fully works; SAMPLING (top-p) verify needs more XPU fixes [progress]
+
+Validated the steps=7 MTP win further + characterized the concurrency/sampling story (the daily-driver bar).
+RECONFIRMED across runs: c1 15.31 t/s (1.62x), mean accept len 4.38-4.40 (matches vLLM's 3.8-5.9 range).
+
+CONCURRENCY: the spec mamba intermediate-state cache scales with --max-running-requests; MAXREQ=8 OOMs the KV
+  at ctx=4096/memfrac=0.92 ("Loaded weights leave no GPU memory for the KV cache"). So single-card MTP is
+  concurrency-capped at ~4. MTP is a SINGLE-STREAM / low-concurrency latency lever; for high concurrency the
+  non-MTP int4 woq DP=2 driver stays the choice.
+
+SAMPLING PATH (the under-load mixload uses top-p sampling): the spec VERIFY sampler hits more XPU gaps. Fixed
+  the 3rd gate -- top_p_renorm_probs is UNREGISTERED on XPU (top_k_renorm IS) -> eagle_sample crash on any
+  non-greedy request. Added a torch nucleus-renorm fallback; eagle_sample does a FUNCTION-LOCAL
+  `from sgl_kernel import top_p_renorm_prob`, so the patch must target the sgl_kernel SOURCE package (not just
+  eagle_utils). That cleared top_p_renorm -> exposed a 4th, DEEPER issue: eagle_utils.py:523 calls
+  `tree_speculative_sampling_target_only(... uniform_samples_for_final_sampling=...)` but the XPU-built
+  sgl_kernel's function has an OLDER signature (no such kwarg) -> TypeError. This is a sglang<->sgl_kernel
+  VERSION SKEW on the tree-rejection-sampling kernel, not a simple gate -- a deeper follow-up (provide a
+  chain-case torch rejection-sampling fallback, or rebuild sgl_kernel to match).
+  => GREEDY (temperature=0) MTP is fully functional (uses our verify_tree_greedy fallback, no top_p/tree-sampling)
+     -- this IS the shippable path (1.62x, deterministic; fits agentic/coding which often run greedy). SAMPLING
+     (temperature>0/top_p) MTP needs the tree_speculative_sampling fix. Validating greedy under sustained mixed
+     load now (the GDN-correctness bar). 3 gates fixed in mtp_tree_xpu.py (out_cache_loc, mamba-scatter is_cuda,
+     top_p_renorm); 4th (tree-sampling skew) documented for follow-up.
