@@ -264,3 +264,16 @@ nginx round-robin proxy :18080 (sglang/dp_nginx.conf). VERIFIED: both replicas h
 TWO DAILY DRIVERS, both CORRECT + VISION:
   1. woq int4 DP=2 (serve_dp2.sh) -- UNATTENDED: wedge-proof, ~9.44/replica, int4 = big KV, :18080.
   2. bf16 TP=2 (serve_sglang.sh)  -- ATTENDED: ~9.2 c1 / 23.4 c4 aggregate, both cards.
+
+## THE CEILING-BREAKER: XPU cudagraph is FEASIBLE-IN-PRINCIPLE [2026-06-27]
+The ~9.4 t/s warm ceiling is EAGER LAUNCH OVERHEAD (190+ triton/kernel launches per token, no graph replay).
+vLLM beat it (captured graph 30.5 vs eager 23.3) via cudagraph. KEY DISCOVERY: torch.xpu 2.12 SUPPORTS graph
+capture -- torch.xpu.{XPUGraph, graph, graph_pool_handle, make_graphed_callables} all exist. And sglang's
+XPUAttentionBackend already has PARTIAL graph scaffolding (decode_cuda_graph_metadata, get_cuda_graph_seq_len_
+fill_value). The blockers: (1) current_platform.support_cuda_graph() returns False on XPU (model_runner gates
+decode-graph to cuda/musa/cpu/npu); (2) the graph runner uses torch.cuda.CUDAGraph (needs torch.xpu.XPUGraph);
+(3) XPUAttentionBackend lacks init_forward_metadata_capture/replay_cuda_graph (static buffers for replay);
+(4) the GDN/mamba recurrent state cache must be made graph-replay-safe (the hard part for this hybrid model).
+=> A real but BOUNDED integration. If it works, decode ~9.4 -> ~25-30 t/s (like vLLM captured). This is THE next
+big lever. NEXT: bounded probe -- patch support_cuda_graph(xpu)=True + torch.cuda.CUDAGraph->torch.xpu.XPUGraph in
+the graph runner, see how far capture gets + what breaks (scope the effort, like the MTP probe).
