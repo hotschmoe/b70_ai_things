@@ -5009,3 +5009,62 @@ HONEST RESULT (warm steady-state, IN=2048): bf16 TP=2 ~9.2 t/s c1 (23.4 c4 agg);
 VERDICT -> [CLOSEOUT, honest] Daily driver = CORRECT sglang at ~9.4 t/s warm, two options: woq int4 DP=2 (wedge-
   proof+vision, unattended) or bf16 TP=2 (best c4 aggregate, attended). To beat ~9.4 would need cudagraph on XPU
   (upstream) or a hand-tuned SYCL GDN/GEMV kernel (big project) -- both out of scope for this campaign.
+
+## 2026-06-27 -- W8A8 TP=2 on sglang: the ONE live "fake 63 t/s" lever, run end-to-end [result+verdict]
+
+CONTEXT: the vLLM "27B W8A8 TP=2 MTP PIECEWISE = ~63 t/s / 3.4x" headline was FAKE (GDN-NaN garbage measured
+with --ignore-eos, never reading the text; scripts/91,93,94, MTP_TODO C1/M4). On sglang correctness is fixed,
+so the question: do those levers give REAL numbers now? Reconciled vs the campaign: of the headline's three
+multipliers, TWO are XPU-platform-blocked on sglang -- MTP/NEXTN (verify out_cache_loc passes a full-pool index;
+contrib/sglang_xpu_upstream.md Blocker 2) and PIECEWISE cudagraph (torch-xpu command-stream accumulation degrade;
+Blocker 1). So W8A8 TP=2 ALONE is the only live lever, and it had NEVER been run end-to-end on sglang (only the
+single-layer microbench). This run closes it.
+
+CONFIG -> COMMAND: Qwen3.6-27B-W8A8-sqgptq (compressed-tensors int-quantized: per-channel sym W8 + DYNAMIC
+per-token sym A8; ignore=lm_head/linear_attn/visual/mtp -> GDN+vision+lm_head stay bf16), image sglang-xpu:woq
++ B70_XPU_W8A8=1 (w8a8_shim -> torch._int_mm oneDNN INT8 XMX), TP=2, --attention-backend intel_xpu, triton GDN,
+fp32 ssm, --disable-radix-cache, ctx 8192, mem-fraction 0.90.
+  ./bin/gpu-run bash scripts/122_w8a8_tp2_sglang_bench.sh   (weights 16.87 GB/card, KV 204288 tok, eager)
+
+BUG FOUND + FIXED (sglang/patches/w8a8_shim.py): first serve CRASHED in the full forward -- the shim
+DOUBLE-TRANSPOSED the weight. The stock compressed-tensors W8A8 CHANNEL process_weights_after_loading ALREADY
+does layer.weight = weight.t() ([N,K]->[K,N]); the shim then did w.t() again -> [N,K] -> torch._int_mm dim
+mismatch ("5120 vs 17408" at gate_up). Fix: use layer.weight directly as weight_t (it is already [K,N]). The
+microbench never hit this (it transposed a raw [N,K] by hand, bypassing _orig_pw).
+
+RESULT (warm, IN=2048 OUT=128; discard-1st-bench warmup applied):
+  c1: decode 5.25-5.26 t/s | prefill ~3380-3690 tok/s | TTFT 555-606 ms | TPOT ~190 ms
+  c4: decode 4.07 | out_tps 15.19 aggregate | TTFT 1197 ms
+  COHERENCE: *** FAILED *** -- "!!!!" degenerate token-0 flood (temperature=0). NOT coherent.
+
+DISAMBIGUATION (scripts/123_w8a8_layer_validate.py, 1 card) -- the garbage is NOT the kernel and NOT the ckpt:
+  - ckpt int8 down_proj dequant vs source bf16:        rel-err 0.0202 (normal int8 quant error).
+  - shim quant->_int_mm->dequant vs int8-dequant ref:  rel-err 0.0097 (= activation int8 quant error). CORRECT.
+  - shim full path vs source bf16:                     rel-err 0.0218.
+  - activation scheme (config_groups): input_activations dynamic/strategy=token/symmetric, weights channel/
+    symmetric -- the shim implements EXACTLY this. Assumption verified, not the bug.
+  => per-layer math + ckpt + act-scheme are all correct (~2%/layer CANNOT cause "!!!!"). The garbage is a
+     STRUCTURAL integration bug in the assembled model: the ckpt stores q/k/v + gate/up UNFUSED (sglang fuses
+     them at load into qkv_proj/gate_up_proj) and runs at TP=2. Unfused RowParallel down_proj validated correct;
+     the FUSED ColumnParallel qkv/gate_up under TP sharding (per-channel scale row placement during the sharded
+     weight load, or the TP collective path) is the remaining suspect. NOT root-caused -- time-boxed (see verdict).
+
+VERDICT -> [NO-GO as a driver; "fake 63 t/s" is NOT reproducible as real numbers on sglang]. Even if coherence
+  were fixed, W8A8 TP=2 decode 5.25 t/s LOSES decisively to int4 woq (9.4) and bf16 TP=2 (9.0): decode is
+  launch-overhead-bound and W8A8 carries +2 launches/layer (per-token quant + dequant) vs int4 woqgemm's 1 fused
+  kernel -- exactly the kernel-verdict prediction (torch._int_mm can't fuse its epilogue; triton-xpu int8 dot is
+  10x slower). Its only edge is prefill (~3500 vs bf16 3098 = +13%) + theoretical accuracy; c4 aggregate (15.2)
+  also loses to int4 DP=2 (~18). With MTP + cudagraph both XPU-blocked, there is no way to STACK W8A8 toward the
+  headline. int4 woq stays the decode-optimal + vision daily driver. W8A8 parked as a prefill/accuracy research
+  artifact; the coherence bug is documented for a future TP-path debug if the operator wants it. Decode-bound
+  conclusion is robust regardless of the coherence fix.
+
+VISION ("we want vision in models, requant when needed"): the W8A8-sqgptq ckpt had 0 visual tensors despite a
+  vision_config + image_token_id (the quantizer DROPPED the visual tower even though it is ignore-listed; the
+  earlier "copied preprocessor_config.json" was cosmetic -- no weights). Since visual.* is ignore-listed (meant
+  to stay bf16), grafted the 333 bf16 visual tensors straight from source Qwen_Qwen3.6-27B (NO GPU requant,
+  same pattern as the MTP graft) -> /models/Qwen3.6-27B-W8A8-sqgptq-vision: symlinked int8 base (model.safetensors)
+  + new bf16 model-visual.safetensors (921 MB, 333 tensors) + a 1440-tensor sharded model.safetensors.index.json.
+  Structurally validated (keys match source arch). NOTE: it inherits the W8A8 coherence bug above, so it is a
+  PARKED artifact -- the SHIPPING vision drivers remain int4-woq DP=2 + bf16 TP=2 (both coherent + vision).
+  Tools: sglang/graft_vision.py. Box left HEALTHY + idle (lease released, container stopped).

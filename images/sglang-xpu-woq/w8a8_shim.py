@@ -20,10 +20,11 @@ def install():
     _orig_pw = CompressedTensorsW8A8Int8.process_weights_after_loading
 
     def _pw(self, layer):
-        _orig_pw(self, layer)  # keeps azp_adj etc.
-        w = layer.weight.data  # [N, K] int8
-        # pre-transpose to [K, N] contiguous int8 for torch._int_mm(x[M,K], wt[K,N]) -> [M,N]
-        layer.weight_t = w.t().contiguous()
+        _orig_pw(self, layer)  # CHANNEL strategy ALREADY transposes layer.weight [N,K] -> [K,N] (a view)
+        # _orig_pw left layer.weight as [K, N]; use it directly for torch._int_mm(x[M,K], wt[K,N]) -> [M,N].
+        # (Do NOT transpose again -- the earlier w.t() double-transposed -> [N,K] and crashed the GEMM.)
+        w = layer.weight.data  # [K, N] int8 (transposed view of the original [N,K])
+        layer.weight_t = w.contiguous()
         ws = layer.weight_scale.data.reshape(1, -1).to(torch.float32)  # [1, N] per-channel
         layer.wscale_row = ws
         # free the original [N,K] weight (we only need weight_t) to fit one card
