@@ -41,11 +41,22 @@ extremely optimized and the generic Triton 4-bit kernel can't realize the 4x ban
    A true decode speedup would need a hand-tuned XMX/DPAS 4-bit GEMV (SYCL) -- frontier, uncertain payoff. Parked.
 Tools: sglang/awq_kernel_probe.py, sglang/awq_fused_probe.py, sglang/patches/{awq.py,awq_kernels.py} (bf16-AWQ, works).
 
-## PIVOT: optimize bf16 serving topology (keeps vision natively, no quant, validated coherence)
-bf16 27B = 25.6 GiB -> FITS ONE CARD (TP=1). TP=1 removes the TP=2 per-layer oneCCL all-reduce tax (suspected
-the real decode killer: TP=2 is 9 t/s = 111ms/tok, only ~28ms is weight-bandwidth). If TP=1 single-stream beats
-TP=2 -> bf16 DP=2 (two single-card replicas) = 2x aggregate AND faster single-stream AND VISION RETAINED.
-Testing: bf16 TP=1 single-card decode vs the TP=2 baseline (9 t/s).
+CORRECTION: full bf16 27B VLM is ~55GB -> needs TP=2 (does NOT fit one card; mem usage 25.6 GiB was PER-CARD at
+TP=2). So bf16 DP=2 is impossible. Only a <=~28GB (4-bit) model fits one card for DP=2/single-card.
+
+## THE REAL PATH: auto_round_kernel.woqgemm -- the proven-fast XPU int4 GEMM [2026-06-27]
+vLLM on THIS box hit ~30 t/s single-card int4 (journal scripts/121: "int4 NONE TP1 23.3 / captured 30.5") = 3x
+the sglang bf16 TP=2 (9 t/s). vLLM's speed came from a REAL XPU int4 GEMM: `auto_round_kernel` (auto-round-lib
+0.13.3, in vllm-xpu-env:v0230) exposes `woqgemm` / `woq_linear` / `woqgemm_s8` with an `xpu_lib` backend. The
+Triton/AWQ kernels lose to bf16 XMX; woqgemm (the auto-round serving kernel) does NOT (proven 30 t/s).
+CAMPAIGN REFRAME:
+  vLLM int4  = FAST (30 t/s, woqgemm) but BROKEN (GDN NaN "!!!!")
+  sglang bf16= CORRECT (no NaN) but SLOW (9 t/s, no fast 4-bit GEMM)
+  TARGET     = sglang + woqgemm int4 = CORRECT *and* FAST (+ vision via requant)
+PLAN: (1) microbench woqgemm vs bf16 in isolation (confirm 4x-ish decode win on the AutoRound int4 ckpt);
+  (2) wire auto_round_kernel into sglang as a quant method (install auto-round-lib into sglang image; patch a
+  WoqLinearMethod that calls woq_linear on the AutoRound int4 layers); (3) single-card -> DP=2; (4) vision via
+  AutoRound requant. Input ckpt: Lorbus_Qwen3.6-27B-int4-AutoRound (arch Qwen3_5ForConditionalGeneration).
 
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
