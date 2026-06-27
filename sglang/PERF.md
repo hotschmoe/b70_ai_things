@@ -121,6 +121,20 @@ triton --speculative-num-steps 1. Qwen3.6 ships an MTP head (qwen3_5_mtp); mtp-g
 the bf16 serve (most likely to amortize the eager overhead -> real single-stream win, keeps vision).
 Secondary: debug the woq TP=2 hang (-> int4 TP=2 huge-KV) and woq DP=2 (wedge-proof daily driver).
 
+## MTP / NEXTN spec-decode WORKS ON XPU (gates defeated) [2026-06-27]
+Goal (user-chosen): MTP is the one lever that beats the eager/GDN-bound decode (runs the slow forward once per
+K tokens). Built sglang/graft_mtp.py -> grafted the 15 BF16 mtp.* head weights from W4A16-mtp-graft onto Lorbus
+int4 (which already has int4-LM + VISION) -> /models/Lorbus_Qwen3.6-27B-int4-mtp (symlink LM shards + 1 mtp shard
++ num_nextn_predict_layers=1). Served via woqgemm (sglang-xpu:woq) with the agent's escape flags:
+  --speculative-algorithm NEXTN --speculative-num-steps 1 --speculative-eagle-topk 1
+  --speculative-num-draft-tokens 2 --speculative-draft-attention-backend triton
+RESULT: BOTH models loaded on XPU -- main (Qwen3_5ForConditionalGeneration int4 17.3 GiB) AND the draft
+(Qwen3_5ForCausalLMMTP int4 5.0 GiB). The XPU spec-decode gates (intel_xpu draft-attn, xpu graph-runner) were
+DEFEATED by num-steps=1 + draft-attn=triton -- no "EAGLE not supported" crash. So MTP on sglang-XPU is VIABLE.
+First attempt OOM'd (draft+main=22.3 GiB leaves too little KV at mem-fraction 0.9) -> retrying MEMFRAC=0.95 CTX=4096.
+Pending: coherence + accept rate + does MTP actually speed decode past the 4.68 woq-no-MTP baseline.
+NEXT: if MTP accepts + speeds decode -> the fast+correct+vision daily driver. Then kernel optimization (GDN triton).
+
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
