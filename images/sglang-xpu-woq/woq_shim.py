@@ -141,6 +141,14 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] MTP tree fallback install FAILED: {e}", flush=True)
 
+    # --- W8A8 INT8 (torch._int_mm = oneDNN INT8 XMX, ~1.8x bf16; OPT-IN via B70_XPU_W8A8=1) ---
+    if os.environ.get("B70_XPU_W8A8") == "1":
+        try:
+            import w8a8_shim
+            w8a8_shim.install()
+        except Exception as e:
+            print(f"[woq-shim] W8A8 shim install FAILED: {e}", flush=True)
+
     print("[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)", flush=True)
 
 
