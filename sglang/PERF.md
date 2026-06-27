@@ -254,3 +254,13 @@ Ran contrib/gdn_nan_repro on the woq int4 serve (the agentic mixed prefill+decod
   t/s warm, correct under the load that breaks vLLM. Serve:
     IMG=sglang-xpu:woq CKPT=/models/Lorbus_Qwen3.6-27B-int4-AutoRound SERVED=qwen36-27b-int4-woq TP=1 DEVICE=N \
       bash sglang/serve_sglang.sh start   # one per card for DP=2
+
+## woq int4 DP=2 daily driver: PACKAGED + VERIFIED (2026-06-27)
+sglang/serve_dp2.sh launches the wedge-proof driver: 2 single-card woq replicas (card0:30000, card1:30001) +
+nginx round-robin proxy :18080 (sglang/dp_nginx.conf). VERIFIED: both replicas healthy + coherent simultaneously
+(one per card), proxy /health 200, round-robin requests coherent ("capital of France"). No cross-card collective
+-> cannot BCS-wedge. CORRECT (gdn_nan_repro clean under load) + VISION + ~9.44 t/s/replica warm.
+  Launch: ./sglang/serve_dp2.sh start | status | stop
+TWO DAILY DRIVERS, both CORRECT + VISION:
+  1. woq int4 DP=2 (serve_dp2.sh) -- UNATTENDED: wedge-proof, ~9.44/replica, int4 = big KV, :18080.
+  2. bf16 TP=2 (serve_sglang.sh)  -- ATTENDED: ~9.2 c1 / 23.4 c4 aggregate, both cards.
