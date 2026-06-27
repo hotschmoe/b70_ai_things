@@ -58,6 +58,22 @@ PLAN: (1) microbench woqgemm vs bf16 in isolation (confirm 4x-ish decode win on 
   WoqLinearMethod that calls woq_linear on the AutoRound int4 layers); (3) single-card -> DP=2; (4) vision via
   AutoRound requant. Input ckpt: Lorbus_Qwen3.6-27B-int4-AutoRound (arch Qwen3_5ForConditionalGeneration).
 
+## CONFIRMED: auto_round_kernel WOQ int4 = 2.17x decode vs bf16 (sglang/woq_probe.py) [2026-06-27]
+Microbenched auto_round_kernel.QuantLinearGPTQ on a real Lorbus int4 down_proj layer (in=17408 out=5120):
+  per-GEMV (M=1, DECODE): woq(int4 wt)=0.141 ms   bf16=0.305 ms   => 2.17x FASTER, output finite.
+  per-GEMM (M=512, prefill-ish): woq=1.362  bf16=0.767  => 0.56x (woq SLOWER -- compute-bound; decode-only win).
+The kernel: QuantLinear.forward -> ark.woqgemm (int4 weight, fp16 compute -- "XMX int8 not supported on B70 with
+oneAPI < 2026, fell back to fp16"; an oneAPI>=2026 upgrade would enable int8 XMX -> likely even faster). UNLIKE the
+Triton AWQ kernel, woqgemm REALIZES the 4-bit bandwidth saving at M=1. This is vLLM's proven-30-t/s kernel.
+=> THE PLAN: wire auto_round_kernel into sglang as an XPU quant method for the AutoRound int4 ckpt:
+   (1) install auto-round-lib into sglang-xpu:bmg (verify .so loads vs sglang's torch 2.12+xpu);
+   (2) custom WoqLinearMethod (create_weights qweight/qzeros/scales -> post_init repack -> apply woqgemm),
+       routing only the quantized Linears (GDN/vision stay bf16 via the ckpt ignore list);
+   (3) serve single-card (no all-reduce) -> bench decode (target ~20-30 t/s, correct via sglang GDN fix) -> DP=2;
+   (4) vision via AutoRound requant of the full VLM.
+Tradeoff noted: prefill slower; decode (the daily-driver bottleneck) much faster. Hybrid prefill=bf16/decode=woq
+is a later refinement if TTFT matters.
+
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
