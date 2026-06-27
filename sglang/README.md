@@ -1,9 +1,25 @@
-# sglang on B70 XPU -- GDN NaN campaign (2026-06-27)
+# sglang on B70 XPU -- Qwen3.6-27B daily driver (2026-06-27)
 
 **Result: GO (correctness proven).** SGLang serves Qwen3.6-27B (`qwen3_5` Gated-DeltaNet) on the
 dual Arc B70 (Battlemage/Xe2) **without** the vLLM-0.23 mixed prefill+decode NaN ("!!!!"). Full
-config -> command -> result -> verdict in JOURNAL.md (2026-06-27 entry). Repro pass/fail defined in
-`../contrib/gdn_nan_repro/README.md`.
+config -> command -> result -> verdict in JOURNAL.md + the perf campaign in `sglang/PERF.md`.
+
+## DAILY DRIVER GUIDE (perf-campaign outcome) -- see sglang/PERF.md for the full scoreboard
+The campaign goal was a more performant AND correct daily driver. Outcome: CORRECTNESS achieved; STABLE
+single-stream decode sits at ~9.2-9.4 t/s warm (the sglang-XPU eager ceiling). Two verified-correct,
+vision-retaining drivers (pick by use):
+  1. **woq int4 DP=2 (UNATTENDED / wedge-proof):**  `./sglang/serve_dp2.sh start`  -> :18080
+     Two single-card int4 replicas (sglang-xpu:woq, auto_round_kernel.woqgemm) + nginx round-robin.
+     ~9.4 t/s/replica, vision, int4 = big KV, NO cross-card collective (cannot BCS-wedge). VERIFIED clean
+     under the agentic mixed-load that makes vLLM emit "!!!!".
+  2. **bf16 TP=2 (ATTENDED / best aggregate):**  the serve command below.  ~9.2 c1 / 23.4 c4-aggregate.
+LEVERS EXPLORED (sglang/PERF.md has the data): quant-for-speed (woqgemm wired in, but 4-bit doesn't beat
+bf16 XMX warm without a graph), TP=2/PP=2 (PP & woq-TP=2 hang), GDN num_warps (cold-bench artifact),
+cudagraph (WIRED + runs -- a first -- but the torch-xpu graph-replay accumulation degrades it; not stable),
+MTP (works up to 2 unimplemented XPU tree kernels -> the documented NEXT lever, est. ~15 t/s STABLE if finished).
+
+## GDN-NaN correctness campaign (the foundation)
+Repro pass/fail defined in `../contrib/gdn_nan_repro/README.md`.
 
 ## Why it works (vLLM didn't)
 vLLM-0.23 XPU NaNs in the GDN kernels under mixed prefill+decode batching (open upstream #38994 /
@@ -50,6 +66,10 @@ Measured 2026-06-27: all clean (incl. post-sustained re-confirm). TTFT ~0.19 s, 
 ## Key gotchas
 - `--disable-radix-cache` is REQUIRED on XPU: the "auto" mamba radix cache picks an `extra_buffer`
   strategy that asserts CUDA/MUSA/NPU and refuses to start (`extra_buffer needs CUDA/MUSA/NPU (FLA)`).
-- int4 AutoRound does NOT load: `packing_format auto_round:auto_gptq` -> Marlin GEMM is CUDA-gated on
-  XPU. FP8 is open-bugged for this model (sglang #23687 / #19603). bf16 is the proven precision today.
-- bf16 27B = 25.6 GiB/card -> needs TP=2 (both cards). No DP=2 alongside on this box.
+- int4 AutoRound: Marlin GEMM is CUDA-gated on XPU, BUT we wired `auto_round_kernel.woqgemm` (auto-round-lib)
+  into sglang via `sglang/patches/woq_shim.py` (image `sglang-xpu:woq`) -> int4 serves single-card, coherent,
+  vision-retaining (see serve_dp2.sh + PERF.md). FP8 is open-bugged for this model (sglang #23687 / #19603).
+- bf16 27B = ~55 GiB -> needs TP=2 (both cards). int4 (~18 GiB) fits one card -> enables DP=2 (serve_dp2.sh).
+- XPU cudagraph: torch.xpu.XPUGraph capture WORKS on this hybrid GDN model (wired via woq_shim B70_XPU_CUDAGRAPH=1
+  + a model_runner xpu patch -- an engineering first), but the torch-xpu graph-replay command-stream accumulation
+  degrades it (same dead-end as vLLM PIECEWISE); OFF by default until an upstream torch-xpu fix lands.
