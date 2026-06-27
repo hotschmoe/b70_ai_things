@@ -5138,3 +5138,23 @@ RESULT (int4 woq + NEXTN, num-steps=1 num-draft-tokens=2 topk=1 chain, eager, ck
   NOTE: the regime soak_probe reported 0.00 t/s on the MTP serve (streaming-parse issue with the spec output);
   warm benches are the valid numbers; fix the soak probe for spec. Tools: scripts/128 (SPEC_STEPS/SPEC_DRAFT
   parametrized), sglang/patches/mtp_tree_xpu.py.
+
+## 2026-06-27 -- MTP depth sweep: the SINGLE-STREAM WIN -- ~1.62x stable, first break of the 9.4 ceiling [WIN]
+
+The multi-step draft RUNS on XPU (num-steps>1 did NOT hit the graph-runner gate -- the journal's old "dodge with
+num-steps=1" is obsolete now that the verify path works). Swept NEXTN num-steps (chain topk=1, num-draft-tokens =
+steps+1) on int4 woq, warm c1 decode vs baseline 9.46:
+  steps=1: 7.88 (0.83x, accept~1.85)   steps=3: 12.30 (1.30x)   steps=5: 14.18 (1.50x)
+  steps=7: 15.31 (1.62x)               steps=9: 15.44 (1.63x = PLATEAU)
+  c4 aggregate climbs too: ~17 at steps=7 (vs baseline c4 agg ~7.6 = ~2.2x concurrency). TTFT c1 stays ~920ms
+  (single-stream draft cost is hidden); c4 TTFT ~3s (draft prefill under load).
+RECOMMENDED: num-steps=7 (near-peak 15.31 t/s, less draft overhead than 9). This is the FIRST config to STABLY
+  beat the ~9.4 eager ceiling on this box (eager, cuda graph False -> NO L0 graph-replay degradation), CORRECT
+  (coherent every depth), and VISION-retaining (int4 woq ckpt). Mechanism: deeper draft raises accept_len until
+  the amortization beats the spec machinery's per-step launches (at steps=1 they cancel; by steps=7 accept_len is
+  high enough to net +62%). vLLM's headline was ~2x (W4A8, accept 3.8-5.9); we are at 1.62x on int4 -- the gap is
+  (a) W4A8 vs int4 weight bandwidth (A3), (b) the still-eager spec-path launch overhead (fusion, C).
+NEXT: (1) confirm the depth-7 config under SUSTAINED MIXED LOAD (gdn_nan_repro) + fix soak_probe for spec, prove
+  soak-stable + correct-under-load -> a real fast+correct+vision daily-driver candidate; (2) A3: W4A8+MTP (the
+  vLLM-best combo) for more; (3) reduce spec-path launches (the GDN/quant fusion in decode_launch_inventory.md
+  applies to the verify+draft forwards too). Tools: scripts/128 (SPEC_STEPS=7 SPEC_DRAFT=8).

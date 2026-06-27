@@ -6,6 +6,13 @@ ALL numbers warm (discard the 1st bench after idle -- the B70 idle-downclocks; c
 |--------------------------------|---------------|-----------------|---------|-------|--------|-------------|-------|
 | bf16 TP=2 (serve_sglang.sh)    | ~9.2          | 6.06/str (23.4) | ~660    | 2     | YES    | no (TP wedge risk) | bf16 |
 | woq int4 TP=1 (sglang-xpu:woq) | ~9.44         | (single-card)   | ~920    | 1     | YES    | YES (single-card)  | int4 woqgemm |
+| **int4 + NEXTN MTP (steps=7)** | **15.31 (1.62x)** | **~17 agg (c4)** | ~920 | 1   | YES    | YES (single-card)  | int4 woqgemm + NEXTN |
+*** MTP/spec-decode WORKS on sglang-XPU (2026-06-27, scripts/128) -- the FIRST stable break of the ~9.4 eager
+  ceiling. Fixed 2 spurious CUDA gates (assign_extend_cache_locs None-on-XPU + the mamba-scatter is_cuda guard,
+  both in mtp_tree_xpu.py). NEXTN chain (topk=1) num-steps sweep, warm c1: 1->7.88, 3->12.30, 5->14.18,
+  7->15.31, 9->15.44 (plateau). EAGER (cuda graph False -> no L0 degradation), coherent, vision. num-steps=7
+  recommended (~1.62x, 15.31 t/s single-card). Multi-step draft RUNS on XPU (the old num-steps=1 dodge is
+  obsolete). NEXT: validate steps=7 under sustained mixed load + W4A8+MTP (A3) + cut spec-path launches (fusion).
 | woq int4 + XPU CUDAGRAPH       | ~7.6 e2e (DEGRADES) | -         | regresses | 1   | YES    | -           | int4 woqgemm |
 | W8A8 TP=2 (skip-warmup)        | 5.45 (coherent) | 4.08/str (15.2)| ~580   | 2     | graft  | no          | w8a8 int8 torch._int_mm |
 *** W8A8 TP=2 end-to-end (scripts/122+126, 2026-06-27): the ONLY live lever from the vLLM "fake 63 t/s" headline

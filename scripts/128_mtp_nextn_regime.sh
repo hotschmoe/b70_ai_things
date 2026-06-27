@@ -63,7 +63,9 @@ fi
 
 say "=== regime (warm + soak + coherence) ==="
 bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "int4-NEXTN-mtp" 2>&1 | tee -a "$LOG"
-say "=== accept length (from server decode log) ==="
-docker logs "$NAME" 2>&1 | grep -iE "accept|spec" | tail -8 | tee -a "$LOG"
+say "=== accept length (from server decode log, full) ==="
+docker logs "$NAME" 2>&1 | grep -oE "accept len: [0-9.]+|accept rate: [0-9.]+|gen throughput \(token/s\): [0-9.]+" > "$REPO/sglang/mtp_accept.log" 2>/dev/null || true
+docker logs "$NAME" 2>&1 | grep -oE "accept len: [0-9.]+" | tail -12 | tee -a "$LOG"
+awk -F': ' '/accept len/{s+=$2;n++} END{if(n)printf "[mean accept len over %d batches] %.2f\n",n,s/n}' "$REPO/sglang/mtp_accept.log" | tee -a "$LOG"
 
 say "=== stop ==="; docker rm -f "$NAME" >/dev/null 2>&1; say "stopped"
