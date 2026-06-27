@@ -73,6 +73,15 @@ Triton AWQ kernel, woqgemm REALIZES the 4-bit bandwidth saving at M=1. This is v
    (4) vision via AutoRound requant of the full VLM.
 Tradeoff noted: prefill slower; decode (the daily-driver bottleneck) much faster. Hybrid prefill=bf16/decode=woq
 is a later refinement if TTFT matters.
+INTEGRATION FEASIBLE (verified 2026-06-27): `pip install auto-round-lib` works in sglang-xpu:bmg (torch 2.12+xpu),
+the XPU .so loads + runs on the B70 -> woq_probe in the sglang image = 0.136ms vs bf16 0.314ms = 2.31x decode,
+finite. So fast(woqgemm) + correct(sglang GDN fix) + installable all hold. Remaining = the sglang quant-method
+plumbing only.
+NEXT (integration steps): study sglang/patches/awq.py (model quant method) -> write AutoRoundWoqConfig +
+WoqLinearMethod (create_weights: qweight[in//8,out]/qzeros[in//g,out//8]/scales[in//g,out] buffers;
+process_weights_after_loading: ark.repack_quantized_weight; apply: ark.woqgemm). Register quant_method
+"auto-round" in sglang/srt/layers/quantization/__init__.py. Exclude GDN/visual/lm_head (ckpt ignore list).
+Bake auto-round-lib into a derived image OR pip-install at serve start. Serve Lorbus int4 TP=1 -> bench + coherence.
 
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
