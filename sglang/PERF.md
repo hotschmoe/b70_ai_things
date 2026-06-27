@@ -30,7 +30,24 @@ GDN regime and patch AWQ to run bf16 (sglang/patches/): (1) awq.py get_supported
 (decode-bandwidth win preserved); GDN/conv never see fp16 -> no crash, inherits proven bf16 coherence.
 Serve via serve_sglang.sh MOUNTS=(overlay both patched files) QUANT=awq EXTRA="--dtype bfloat16".
 
-## Next: AWQ track (the decode win). See sglang/AWQ_RECIPE.md.
+## CRITICAL FINDING: 4-bit does NOT speed up decode on Battlemage (bf16 XMX wins) [2026-06-27]
+Measured on card 0 (down_proj GEMV, in=17408 out=5120, M=1 decode), repacked AWQ vs bf16:
+  per-GEMV ms:  nonfused(awq_dequantize+matmul)=1.29   fused(awq_gemm_triton sk8)=0.67   bf16 matmul=0.30
+The bf16-AWQ patch WORKS (awq_dequantize finite+correct on XPU, bf16 cast/matmul fine), BUT every 4-bit path
+is SLOWER than bf16: non-fused materializes the full fp16 weight (extra VRAM write+read); the FUSED Triton
+awq_gemm kernel (tl.dot, no materialization) is still 2.2x slower than bf16 -- Intel's oneDNN bf16 XMX GEMM is
+extremely optimized and the generic Triton 4-bit kernel can't realize the 4x bandwidth saving at M=1.
+=> On these B70s, QUANT IS A MEMORY LEVER, NOT A SPEED LEVER. AWQ only helps by fitting one card (DP=2 aggregate).
+   A true decode speedup would need a hand-tuned XMX/DPAS 4-bit GEMV (SYCL) -- frontier, uncertain payoff. Parked.
+Tools: sglang/awq_kernel_probe.py, sglang/awq_fused_probe.py, sglang/patches/{awq.py,awq_kernels.py} (bf16-AWQ, works).
+
+## PIVOT: optimize bf16 serving topology (keeps vision natively, no quant, validated coherence)
+bf16 27B = 25.6 GiB -> FITS ONE CARD (TP=1). TP=1 removes the TP=2 per-layer oneCCL all-reduce tax (suspected
+the real decode killer: TP=2 is 9 t/s = 111ms/tok, only ~28ms is weight-bandwidth). If TP=1 single-stream beats
+TP=2 -> bf16 DP=2 (two single-card replicas) = 2x aggregate AND faster single-stream AND VISION RETAINED.
+Testing: bf16 TP=1 single-card decode vs the TP=2 baseline (9 t/s).
+
+## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
 - De-risk #2 (AWQ XPU speed): repack text-only W4A16 -> AWQ (CPU), serve, bench vs bf16.
