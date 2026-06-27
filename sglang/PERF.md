@@ -6,18 +6,23 @@ ALL numbers warm (discard the 1st bench after idle -- the B70 idle-downclocks; c
 |--------------------------------|---------------|-----------------|---------|-------|--------|-------------|-------|
 | bf16 TP=2 (serve_sglang.sh)    | ~9.2          | 6.06/str (23.4) | ~660    | 2     | YES    | no (TP wedge risk) | bf16 |
 | woq int4 TP=1 (sglang-xpu:woq) | ~9.44         | (single-card)   | ~920    | 1     | YES    | YES (single-card)  | int4 woqgemm |
-| woq int4 + XPU CUDAGRAPH ***   | ~12.5 e2e (23 model) | -        | ~1938   | 1     | YES    | YES         | int4 woqgemm |
-*** THE WIN: XPU cudagraph (B70_XPU_CUDAGRAPH=1 + triton attn + model_runner xpu patch) -- MODEL decode 9.4->23.6
-  t/s (2.5x, the eager ceiling BROKEN), end-to-end ~12.5 (+33%, capped by a periodic ~15s in-graph stall, likely the
-  mamba state track at mamba_track_interval=256 -- eliminating it -> ~23 sustained). TRADEOFF: TTFT 920->1938 (cudagraph
-  needs triton attn; intel_xpu backend lacks graph methods). num-continuous-decode-steps + --stream-interval did NOT
-  help the e2e gap (it's the periodic stall, not streaming/scheduler). OPT-IN + CORRECT (coherent, no NaN).
-TAKEAWAY: the campaign BROKE the sglang-XPU eager ceiling via cudagraph (decode 2.5x model / +33% e2e), AND proved
-correctness (no GDN NaN; vLLM has it), wired auto_round_kernel.woqgemm into sglang, showed int4 single-card == bf16-TP2
-warm (-> woq int4 DP=2 wedge-proof+vision driver), and characterized MTP (works to the tree kernels).
-DAILY DRIVER PICK: woq int4 + CUDAGRAPH for best decode (long generations; eat the TTFT cost) | woq int4 DP=2 for
-UNATTENDED (wedge-proof) | bf16 TP=2 for best c4 aggregate. ALL CORRECT. Did NOT help: 4-bit-for-speed-without-graph,
-GDN num_warps (cold artifact), PP=2 (hangs), TP=2-woq (hangs), MTP (needs tree-kernel reimpl), num-decode/stream-interval.
+| woq int4 + XPU CUDAGRAPH       | ~7.6 e2e (DEGRADES) | -         | regresses | 1   | YES    | -           | int4 woqgemm |
+*** CORRECTION (do NOT trust the earlier "2.5x breakthrough" -- I over-claimed it from sglang's INTERNAL decode-log).
+  XPU cudagraph (B70_XPU_CUDAGRAPH=1 + triton attn + model_runner xpu patch) genuinely RUNS -- graph capture works on
+  this hybrid GDN model (a real engineering first; torch.xpu.XPUGraph + the GDN init_cuda_graph_state carry it). BUT
+  the actual END-TO-END (bench2048) is ~7.6 t/s -- WORSE than eager 9.4 -- because it has the SAME torch-xpu graph-
+  replay COMMAND-STREAM ACCUMULATION the journal already root-caused as a DEAD END (vLLM PIECEWISE: 26->7 over a soak;
+  needs an upstream torch-xpu/L0 fix; recapture crashes; env knobs don't help). Observed: decode starts ~23.6 then
+  DEGRADES to ~9.4 + severe stalls (1.3-2.7 t/s intervals), and the (ungraphed, triton-attn) PREFILL ALSO degrades
+  (3098 -> 25-309 t/s = catastrophic TTFT). So it's CORRECT but NOT a usable/stable speedup. Kept opt-in + OFF by default.
+TAKEAWAY: the practical STABLE ceiling for sglang-XPU serving is ~9.2-9.4 t/s (eager). cudagraph does NOT beat it stably
+(torch-xpu graph dead-end, same as vLLM). The campaign's DURABLE wins: (a) CORRECTNESS (no GDN NaN; vLLM has it), (b)
+auto_round_kernel.woqgemm wired into sglang, (c) int4 single-card == bf16-TP2 warm -> woq int4 DP=2 (wedge-proof+vision)
+driver, (d) MTP characterized (works to the tree kernels), (e) XPU cudagraph WIRED (works, but hits the known torch-xpu
+degradation -> awaits an upstream fix).
+DAILY DRIVER PICK: woq int4 DP=2 (serve_dp2.sh) for UNATTENDED (wedge-proof+vision, ~9.4/replica) OR bf16 TP=2 for best
+c4 aggregate (23.4). ALL CORRECT. Did NOT beat the eager ceiling stably: 4-bit-without-graph, GDN num_warps (cold
+artifact), PP=2 (hangs), TP=2-woq (hangs), MTP (needs tree-kernel reimpl), cudagraph (torch-xpu accumulation dead-end).
 ## ====================================================================================================
 
 
