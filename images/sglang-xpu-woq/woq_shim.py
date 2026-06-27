@@ -101,6 +101,35 @@ def _install():
     except Exception as e:
         print(f"[woq-shim] cuda->xpu redirect failed: {e}", flush=True)
 
+    # --- XPU CUDAGRAPH (the eager-ceiling breaker; OPT-IN via B70_XPU_CUDAGRAPH=1) ---
+    # torch.xpu supports graph capture (XPUGraph/graph); the GDN + triton attn backends have graph state.
+    # We flip support_cuda_graph->True and redirect torch.cuda.{CUDAGraph,graph,graph_pool_handle}->torch.xpu.
+    if os.environ.get("B70_XPU_CUDAGRAPH") == "1":
+        try:
+            torch.cuda.CUDAGraph = torch.xpu.XPUGraph
+            torch.cuda.graph_pool_handle = torch.xpu.graph_pool_handle
+
+            # sglang's full_cuda_graph_backend does `self._device_module.graph(cuda_graph=graph, ...)` where
+            # device_module is torch.xpu -> torch.xpu.graph(cuda_graph=) but its sig is graph(xpu_graph, pool, stream).
+            # Patch torch.xpu.graph (and torch.cuda.graph) to an adapter that maps cuda_graph->positional + drops
+            # the cuda-only kwargs. Save the original to avoid recursion.
+            _orig_xpu_graph = torch.xpu.graph
+
+            def _xpu_graph_ctx(*a, cuda_graph=None, pool=None, stream=None, **kw):
+                g = a[0] if a else cuda_graph
+                return _orig_xpu_graph(g, pool=pool, stream=stream)
+
+            torch.xpu.graph = _xpu_graph_ctx
+            torch.cuda.graph = _xpu_graph_ctx
+            import sglang.srt.platforms as _p
+            _p.current_platform.__class__.support_cuda_graph = lambda self: True
+            # NOTE: do NOT set is_out_of_tree=True -- that route needs 8 [Planned] platform methods the
+            # sglang CORE hasn't migrated to ("future PR"). Instead we add "xpu" to the IN-TREE device list
+            # (model_runner.py, mounted patch), which uses the hardcoded torch.cuda.* (redirected to xpu here).
+            print("[woq-shim] XPU CUDAGRAPH ENABLED (support_cuda_graph->True; torch.cuda.graph->xpu; in-tree path)", flush=True)
+        except Exception as e:
+            print(f"[woq-shim] xpu cudagraph enable FAILED: {e}", flush=True)
+
     print("[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)", flush=True)
 
 

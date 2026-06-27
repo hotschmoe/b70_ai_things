@@ -265,7 +265,19 @@ TWO DAILY DRIVERS, both CORRECT + VISION:
   1. woq int4 DP=2 (serve_dp2.sh) -- UNATTENDED: wedge-proof, ~9.44/replica, int4 = big KV, :18080.
   2. bf16 TP=2 (serve_sglang.sh)  -- ATTENDED: ~9.2 c1 / 23.4 c4 aggregate, both cards.
 
-## THE CEILING-BREAKER: XPU cudagraph is FEASIBLE-IN-PRINCIPLE [2026-06-27]
+## *** BREAKTHROUGH: XPU CUDAGRAPH WORKS -- decode 9.4 -> 23.6 t/s (graph steps) *** [2026-06-27]
+WIRED UP via woq_shim (opt-in B70_XPU_CUDAGRAPH=1) + a mounted model_runner.py patch:
+  1. support_cuda_graph()->True on XPU. 2. add "xpu" to model_runner's IN-TREE decode-graph device list
+  (model_runner.py:924) -- the OUT-OF-TREE path is a dead end (core still hardcodes torch.cuda.*; "future PR").
+  3. torch.cuda.CUDAGraph->torch.xpu.XPUGraph + graph_pool_handle. 4. ADAPTER on torch.xpu.graph (backend calls
+  self._device_module.graph(cuda_graph=...) but torch.xpu.graph wants graph(xpu_graph,pool,stream)). 5. --attention-
+  backend triton (graph-capable; intel_xpu backend lacks graph methods).
+RESULT: capture SUCCEEDS (all 7 bs=1..24 graphs), COHERENT, decode logs `cuda graph: True` at **23.6 t/s** (eager
+  ~9.4 = 2.5x!). torch.xpu graph capture of this hybrid GDN model WORKS (GDN init_cuda_graph_state carries mamba state).
+CATCH: decode log alternates 23.6 / 2.67 / 23.6 -- a PERIODIC STALL drags the EFFECTIVE bench rate to ~7-8 t/s.
+  Likely a GDN/mamba state copy or per-interval non-graph op. CHASING -> if fixed, ~23 sustained = the campaign win.
+
+## (superseded -- DONE above) XPU cudagraph FEASIBLE-IN-PRINCIPLE [2026-06-27]
 The ~9.4 t/s warm ceiling is EAGER LAUNCH OVERHEAD (190+ triton/kernel launches per token, no graph replay).
 vLLM beat it (captured graph 30.5 vs eager 23.3) via cudagraph. KEY DISCOVERY: torch.xpu 2.12 SUPPORTS graph
 capture -- torch.xpu.{XPUGraph, graph, graph_pool_handle, make_graphed_callables} all exist. And sglang's
