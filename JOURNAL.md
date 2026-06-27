@@ -5110,3 +5110,31 @@ REVISED VERDICT: W8A8 TP=2 is a CORRECT driver after all (with --skip-server-war
   Tools: scripts/122 (serve+bench, skip-warmup default for W8A8), 123 (layer validate), 124 (_int_mm sweep),
   125 (fused-scale validate), 126 (sustained mixed-load). sglang/patches/w8a8_shim.py (transpose fix + scoped
   cap patch + B70_W8A8_DEBUG trace). Box HEALTHY + idle after.
+
+## 2026-06-27 -- *** MTP/spec-decode WORKS on sglang-XPU (first time) -- 2 spurious CUDA gates fixed *** [BREAKTHROUGH]
+
+The decode-optimization program (graphs = L0 dead end; decode launch-bound, floor ~65 t/s; spec-decode = the
+proven stable lever) hit its first real result: NEXTN chain-MTP now RUNS COHERENTLY on sglang-XPU. Two
+spurious CUDA gates, both fixed in mtp_tree_xpu.install():
+  1. assign_extend_cache_locs_func (triton_ops/cache_locs.py) had no _is_xpu branch -> returned None ->
+     verify out_cache_loc=None -> k_cache[None]=k crash. Fix: 6-line pure-torch draft-slot gather override.
+  2. fused_mamba_state_scatter_with_mask / fused_conv_window_scatter_with_mask (mamba_state_scatter_triton.py)
+     raised "only supports CUDA tensors" via a spurious `if not dst.is_cuda` guard wrapping generic triton
+     kernels. Fix: a generic guard-stripper re-exec's each fn minus the is_cuda block, patches the source module
+     + hybrid_linear_attn_backend (imported by value). (Both confirmed by the research agent + codex; the tree
+     kernels were already solved in mtp_tree_xpu.py.)
+PROGRESSION (debug trace): assign_extend fired -> KV-writes loc=(1,) correct -> build_tree ENTER/EXIT ->
+  verify EXIT n_acc=[1] (a draft ACCEPTED) -> mamba commit (was the CUDA-gate crash) -> now clears -> GEN OK.
+
+RESULT (int4 woq + NEXTN, num-steps=1 num-draft-tokens=2 topk=1 chain, eager, ckpt Lorbus_Qwen3.6-27B-int4-mtp):
+  COHERENT (correct sky-blue answer). accept len ~1.85, accept rate ~0.85, cuda graph False.
+  c1 decode 7.88 t/s (vs int4 baseline 9.46 -> a ~17% LOSS single-stream); c4 agg ~15-20 t/s (vs baseline c4
+  ~7.6 -> ~2x CONCURRENCY win). So at depth-1 the spec machinery's own launches (~draft fwd + tree + verify +
+  mamba commit) roughly CANCEL the 1.85x token amortization on this launch-bound decode -> single-stream wash/loss,
+  but a real concurrency win. This matches the SOTA note: at batch~1, speedup tracks accept_len tau, and tau=1.85
+  is too low to beat the overhead. vLLM's 2x used spec=5 (tau ~3.8-5.9). NEXT: raise tau via deeper draft
+  (num-steps>1; testing num-steps=3 = chain depth 4) -- if the multi-step draft works on XPU (was gated) and tau
+  rises to ~3, single-stream should flip to a win. Then reduce spec-path launches (fusion applies here too).
+  NOTE: the regime soak_probe reported 0.00 t/s on the MTP serve (streaming-parse issue with the spec output);
+  warm benches are the valid numbers; fix the soak probe for spec. Tools: scripts/128 (SPEC_STEPS/SPEC_DRAFT
+  parametrized), sglang/patches/mtp_tree_xpu.py.

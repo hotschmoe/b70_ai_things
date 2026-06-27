@@ -26,8 +26,8 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
     --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
     --device xpu --attention-backend intel_xpu --linear-attn-backend triton \
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
-    --speculative-algorithm NEXTN --speculative-num-steps 1 --speculative-eagle-topk 1 \
-    --speculative-num-draft-tokens 2 --speculative-draft-attention-backend triton --disable-cuda-graph \
+    --speculative-algorithm NEXTN --speculative-num-steps ${SPEC_STEPS:-1} --speculative-eagle-topk 1 \
+    --speculative-num-draft-tokens ${SPEC_DRAFT:-2} --speculative-draft-attention-backend triton --disable-cuda-graph \
     --max-running-requests 4 --skip-server-warmup \
     --tp 1 --context-length 4096 --mem-fraction-static 0.92 \
     --host 0.0.0.0 --port $PORT" >>"$LOG" 2>&1

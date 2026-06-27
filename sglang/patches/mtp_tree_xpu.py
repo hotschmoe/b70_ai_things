@@ -165,6 +165,40 @@ def install():
     except Exception as e:
         print(f"[mtp-tree-xpu] assign_extend patch FAILED: {e}", flush=True)
 
+    # --- THE NEXT DOMINO: the post-verify GDN-state-commit triton fns (mamba_state_scatter_triton.py)
+    # raise "only supports CUDA tensors" via a spurious `if not dst.is_cuda...` guard -- but the inner
+    # @triton.jit kernels run fine on XPU (like every other GDN triton kernel). Strip the is_cuda guard by
+    # re-exec'ing each function's source minus the guard block, and patch BOTH the source module AND
+    # hybrid_linear_attn_backend (which imported the names by value at module level). Generic stripper also
+    # future-proofs against further identical gates.
+    try:
+        import inspect
+        from sglang.srt.layers.attention.mamba import mamba_state_scatter_triton as _mss
+        from sglang.srt.layers.attention import hybrid_linear_attn_backend as _hlab
+
+        def _strip_is_cuda_guard(src):
+            lines = src.split("\n"); out = []; i = 0
+            while i < len(lines):
+                ln = lines[i]
+                if "is_cuda" in ln and ln.lstrip().startswith("if "):
+                    indent = len(ln) - len(ln.lstrip()); i += 1
+                    while i < len(lines) and (not lines[i].strip()
+                                              or (len(lines[i]) - len(lines[i].lstrip())) > indent):
+                        i += 1
+                    continue
+                out.append(ln); i += 1
+            return "\n".join(out)
+
+        for _fn in ("fused_mamba_state_scatter_with_mask", "fused_conv_window_scatter_with_mask"):
+            _ns = dict(_mss.__dict__)  # module globals: triton, tl, torch, the inner @triton.jit kernels
+            exec(_strip_is_cuda_guard(inspect.getsource(getattr(_mss, _fn))), _ns)
+            setattr(_mss, _fn, _ns[_fn])
+            if hasattr(_hlab, _fn):
+                setattr(_hlab, _fn, _ns[_fn])
+        print("[mtp-tree-xpu] stripped is_cuda guards on fused mamba/conv state-scatter (XPU)", flush=True)
+    except Exception as e:
+        print(f"[mtp-tree-xpu] mamba-scatter guard strip FAILED: {e}", flush=True)
+
     # DEBUG (B70_MTP_DEBUG=1): trace the MHA KV-write shapes to locate the spec-decode 2-vs-75840 mismatch.
     if os.environ.get("B70_MTP_DEBUG") == "1":
         try:
