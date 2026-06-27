@@ -366,3 +366,12 @@ MEMORY: 27B int8 = ~27GB, does NOT fit one 32GB card (OOM: total_rest=-4.24GB) -
 NEXT: (1) hand-tuned fused int8 GEMV (triton tl.dot int8 -> verify DPAS on triton-xpu); (2) TP=2 serve (needs card 0
 reboot) + the allreduce-push patch; (3) end-to-end bench (prefill win + accuracy vs int4). Tools: sglang/patches/
 w8a8_shim.py, scratchpad int8_xmx_probe / w8a8_validate / w8a8_fused.
+
+## W8A8 kernel verdict: torch._int_mm (oneDNN) IS optimal; triton-xpu int8 dot is 10x SLOWER [2026-06-27]
+Hand-wrote a triton int8 GEMM (tl.dot int8->int32): CORRECT but 0.10x torch._int_mm (10x slower) at M=512 and
+M=2048 -- triton-xpu int8 dot does not realize DPAS like oneDNN. So the "hand-tune int8 GEMM" lever is a DEAD END
+on triton-xpu; torch._int_mm is already the best int8 kernel. Implication: W8A8 is inherently quant+_int_mm+dequant
+(>=3 kernels/layer; oneDNN _int_mm can't fuse its epilogue), vs int4 woqgemm's 1 fused kernel -> W8A8 carries a
+fixed +2-launch/layer DECODE penalty (launch-bound ceiling) that can't be removed. NET: W8A8 = prefill 1.24-1.61x +
+better accuracy, but decode likely SLOWER than int4. int4 woqgemm stays the decode-optimal daily driver; W8A8 wins
+for prefill-heavy / accuracy / high-concurrency. REAL end-to-end tradeoff needs a TP=2 W8A8 serve (card 0 reboot).
