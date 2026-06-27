@@ -4942,3 +4942,40 @@ VERDICT -> [GO -- CORRECTNESS PROVEN]. SGLang on B70 XPU serves the qwen3_5 GDN 
   free a card; (b) decode cuda-graph / torch.compile tuning on XPU; (c) a rdy_to_serve recipe + DP
   story once a quant path is proven. Daily driver was stopped for this run (cards freed by user);
   bf16-TP2 uses BOTH cards so it cannot run DP=2 alongside. Artifacts: images/sglang-xpu/, sglang/.
+
+## 2026-06-27 -- SGLang perf campaign: baseline @2048 + image-capability map (AWQ is the only XPU quant) [research+bench]
+
+GOAL: make the *correct* SGLang bf16 serve (no GDN NaN) fast enough to daily-drive. Established a clean 2048-ctx
+baseline and mapped which acceleration levers actually exist in image sglang-xpu:bmg (verified, not assumed).
+
+BASELINE (bf16 TP=2, CTX8192 MEMFRAC0.93; sglang/bench2048.sh = random IN=2048 OUT=128, ignore-eos):
+  conc  decode_tps  TTFT_ms  prefill_tps   notes
+  c1    9.03        661      3098          out_tok 8.51 t/s
+  c4    8.18        974      2103          aggregate out 24.92 t/s (4 streams)
+  Coherence: serve confirmed healthy; prior gdn_nan_repro already proved clean under mixed load (1e69a20).
+
+IMAGE-CAPABILITY MAP (verified via sgl_kernel .so list + torch.ops.sgl_kernel registration; an op present in
+dir(sgl_kernel) is just a Python wrapper -- only torch.ops registration + a matching .so means a real XPU kernel):
+  - WORKING XPU dense quant GEMM = **AWQ ONLY**. `awq_dequantize` is the lone registered quant op (libsgl-ops-
+    sycl-awq_dequantize.so x2): dequant 4-bit -> fp16, then native torch.matmul. Serve = `--quantization awq
+    --dtype float16`, needs an AutoAWQ-format checkpoint.
+  - DEAD on XPU (NOT registered, 0 matching .so): int8_scaled_mm, fp8_scaled_mm, qserve_w4a8_per_chn/group_gemm.
+    So compressed-tensors W4A16 (WNA16->Marlin, CUDA-gated), W8A8-int8, W8A8-fp8, W4A8, GPTQ/Marlin, AND the
+    AutoRound int4 (auto_round:auto_gptq) all CANNOT serve on this XPU build. This kills the "just serve our
+    existing W4A16/W8A8 quants on sglang" idea -- their formats route to CUDA-only kernels.
+  - MXFP4 W4A16 group-gemm kernels (GroupGemmMxfp4W4A16Xe20) exist but are MoE-group-gemm only -> N/A to the dense
+    27B (qwen3_5 is dense hybrid, Qwen2MoeMLP-not-MoE).
+  - MTP/spec-decode: NEXTN draft head IS wired (qwen3_5_mtp Qwen3_5ForCausalLMMTP) but EAGLE is XPU-gated (no
+    intel_xpu draft-attn entry -> "EAGLE not supported in attention backend intel_xpu"; no 'xpu' key in the EAGLE
+    graph runner). CUDA-graph decode capture: XPUAttentionBackend implements no graph capture/replay methods ->
+    off and unusable. --enable-torch-compile: no-op on XPU (decode runs EagerRunner). All three need new XPU code.
+  - PURE-FLAG decode levers that DO work on XPU: --enable-linear-replayssm (GDN decode-bandwidth opt, ~1.2-1.5x
+    @batch>=64), --num-continuous-decode-steps N, env FLA_USE_FAST_OPS=1; --pp-size 2 as a TP alternative;
+    no_buffer mamba-radix + triton-attn to recover prefix caching (agentic TTFT). All A/B-able now.
+
+VERDICT -> [PATH CHOSEN] The decode bottleneck is bf16 weight bandwidth + TP=2 all-reduce. The ONE lever that
+  attacks it on this image is **AWQ W4A16** (only registered XPU quant GEMM), which also frees a card (TP=1/DP=2).
+  Our existing 4-/8-bit checkpoints are all CUDA-format -> useless here; we must PRODUCE an AutoAWQ checkpoint
+  (retaining vision: qwen3_5 IS a VLM via Qwen3VL base, so quantize LM linears only, skip vision tower + GDN
+  in_proj + lm_head). Parallel cheap wins: the pure-flag decode levers. NEXT: (1) design+run the AWQ quant;
+  (2) A/B the flag levers on bf16. Tooling: sglang/bench2048.sh, sglang/PERF.md (results table + capability map).
