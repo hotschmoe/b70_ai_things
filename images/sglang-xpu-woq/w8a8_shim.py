@@ -13,6 +13,10 @@ def install():
         CompressedTensorsW8A8Int8,
     )
 
+    # CompressedTensorsConfig._check_scheme_supported does DeviceCapability(*torch.cuda.get_device_capability())
+    # which asserts "Torch not compiled with CUDA" on XPU. Return a high capability so the int8 scheme passes.
+    torch.cuda.get_device_capability = lambda *a, **k: (9, 0)
+
     _orig_pw = CompressedTensorsW8A8Int8.process_weights_after_loading
 
     def _pw(self, layer):

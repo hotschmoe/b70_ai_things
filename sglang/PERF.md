@@ -348,3 +348,21 @@ bug, NOT the tree kernels (solved) and NOT a config knob. CONCLUSION: spec-decod
 today without an upstream fix to the verify forward-batch out_cache_loc. Tree-kernel port (mtp_tree_xpu.py) is a
 reusable artifact for when that lands. BOTH ceiling-breakers (cudagraph + MTP) are now XPU-platform-blocked; the
 stable serving ceiling stays ~9.4 t/s. See contrib/sglang_xpu_upstream.md for the two actionable upstream items.
+
+## W8A8 INT8 on B70 -- validated, wired, characterized (the user's "best bet") [2026-06-27]
+FOUNDATION: torch._int_mm (oneDNN INT8 XMX) = 1.8-1.9x bf16 at ALL M (decode 1.91x, prefill 1.81x). The old
+"int8 XMX unsupported <2026" was auto_round's path, not oneDNN's -- DPAS int8 IS accessible via torch._int_mm.
+WIRED: w8a8_shim.py patches sglang's compressed_tensors_w8a8_int8 scheme to torch._int_mm on XPU (per-token sym
+int8 act quant -> _int_mm -> dequant; weight pre-transposed [N,K]->[K,N], orig freed). + patched torch.cuda.
+get_device_capability->(9,0) (the scheme's _check_scheme_supported is CUDA-hardcoded). Ckpt Qwen3.6-27B-W8A8-sqgptq
+HAS VISION (copied the missing preprocessor_config.json from the int4 ckpt via a root container).
+CORRECTNESS: w8a8_shim dequant math validated, rel-err 0.0103 (= int8-act quant error, math is right).
+SPEED (microbench, down_proj K=17408 N=5120): naive torch path is 0.73x bf16 (SLOWER!) -- the per-token quant
+(~6 kernels) + dequant (~4) overhead dwarfs the 0.16ms _int_mm. torch.compile-FUSED: prefill 1.24x (M=512) / 1.61x
+(M=2048) bf16; decode (M=1) 0.79x bf16 (extra launches dominate at M=1; the eager ceiling is launch-bound).
+=> W8A8 = a PREFILL/TTFT win (1.24-1.61x) + better accuracy than int4; DECODE needs a FULLY-FUSED triton GEMV
+(quant+int8-dot+dequant in 1 kernel = 1 launch/layer like int4) to stay at the launch-bound decode ceiling.
+MEMORY: 27B int8 = ~27GB, does NOT fit one 32GB card (OOM: total_rest=-4.24GB) -> W8A8 REQUIRES TP=2 (~13.5GB/card).
+NEXT: (1) hand-tuned fused int8 GEMV (triton tl.dot int8 -> verify DPAS on triton-xpu); (2) TP=2 serve (needs card 0
+reboot) + the allreduce-push patch; (3) end-to-end bench (prefill win + accuracy vs int4). Tools: sglang/patches/
+w8a8_shim.py, scratchpad int8_xmx_probe / w8a8_validate / w8a8_fused.
