@@ -7,6 +7,7 @@
 #
 # Key off-by-one (from eagle_utils.cu + the python wrapper): the kernel's accept_token_num counts
 # DRAFTS ONLY (excludes the always-accepted root) = accept_len-1; eagle_sample adds the +1 downstream.
+import os
 
 
 def install():
@@ -29,6 +30,8 @@ def install():
         position_buf=None,
     ):
         assert topk == 1, f"XPU MTP tree fallback supports only topk==1 (chain); got topk={topk}"
+        if os.environ.get("B70_MTP_DEBUG") == "1":
+            print(f"[mtp-dbg] build_tree ENTER bs={seq_lens.numel()} nv={num_verify_tokens} mode={int(tree_mask_mode)}", flush=True)
         draft_tokens = torch.cat((bonus_tokens.unsqueeze(1), draft_tokens), dim=1).flatten()
         bs = seq_lens.numel()
         device = seq_lens.device
@@ -82,6 +85,8 @@ def install():
         else:
             raise NotImplementedError(f"XPU MTP: unsupported tree_mask_mode {tree_mask_mode}")
 
+        if os.environ.get("B70_MTP_DEBUG") == "1":
+            print(f"[mtp-dbg] build_tree EXIT mask_numel={tree_mask.numel()}", flush=True)
         return (
             tree_mask,
             positions,
@@ -107,6 +112,8 @@ def install():
         bs, D = candidates.shape
         device = candidates.device
         S = accept_index.shape[1]
+        if os.environ.get("B70_MTP_DEBUG") == "1":
+            print(f"[mtp-dbg] verify ENTER bs={bs} D={D} S={S}", flush=True)
         # draft j (1..D-1) accepted iff candidates[:,j]==target_predict[:,j-1] AND the chain prefix accepted.
         match = candidates[:, 1:] == target_predict[:, :-1]  # [bs, D-1]
         if match.numel() == 0:
@@ -128,6 +135,8 @@ def install():
         tp_flat = target_predict.reshape(-1)
         sel_flat = node_flat[valid]  # accepted flat node indices
         predicts[sel_flat] = tp_flat[sel_flat].to(predicts.dtype)
+        if os.environ.get("B70_MTP_DEBUG") == "1":
+            print(f"[mtp-dbg] verify EXIT n_acc={n_acc.tolist()}", flush=True)
         return predicts, accept_index, accept_token_num
 
     eu.build_tree_kernel_efficient = _build_tree
