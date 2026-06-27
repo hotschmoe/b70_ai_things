@@ -306,3 +306,14 @@ decode-graph to cuda/musa/cpu/npu); (2) the graph runner uses torch.cuda.CUDAGra
 => A real but BOUNDED integration. If it works, decode ~9.4 -> ~25-30 t/s (like vLLM captured). This is THE next
 big lever. NEXT: bounded probe -- patch support_cuda_graph(xpu)=True + torch.cuda.CUDAGraph->torch.xpu.XPUGraph in
 the graph runner, see how far capture gets + what breaks (scope the effort, like the MTP probe).
+
+## RE-PRIORITIZED: MTP is now the best remaining STABLE-speedup lever (~15 t/s) [2026-06-27]
+CONTEXT: cudagraph turned out to be the torch-xpu graph dead-end (degrades). So the only remaining path to beat the
+~9.4 eager ceiling STABLY is MTP/spec-decode (amortizes the eager forward; NO graph -> NO graph-replay degradation).
+CORRECTION to the earlier MTP deprioritization: I'd estimated "~7.5 t/s < bf16's 9" but that used the COLD-confounded
+4.68 baseline. With the corrected WARM baseline (~9.4) and num-steps=1 (~1.6x the forward at accept~0.6): MTP -> ~15
+t/s STABLE + correct + vision. That BEATS the eager ceiling. MTP already loads + its forward RUNS on XPU (6 gates
+patched); the only blocker is reimplementing 2 tree kernels (build_tree_kernel_efficient + verify_tree_greedy) in pure
+torch for the chain (topk=1,steps=1) case -- both unregistered on XPU. NEXT: implement them, inject via woq_shim, serve
+the grafted int4+vision+MTP ckpt (Lorbus_Qwen3.6-27B-int4-mtp), bench. This is the campaign's best shot at a STABLE
+fast+correct+vision daily driver. (cudagraph remains wired but awaits an upstream torch-xpu fix.)
