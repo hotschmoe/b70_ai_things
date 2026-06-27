@@ -4840,3 +4840,34 @@ GDN/linear-attention layers on vLLM 0.23.0 XPU. No accessible config/kernel leve
 v0.1.10, chunked-off all ruled out). Next: research the prefill/decode-mixing problem class (P/D disaggregation,
 scheduler knobs, newer vLLM/dev-branch hybrid-mixed-batch fixes) -> test the most promising. Daily-driver
 mitigation meanwhile: the dd-watchdog restarts a replica that floods garbage (does not prevent the transient).
+
+RESEARCH + EXTENDED A/B (2026-06-27):
+  Literature agent: this is a KNOWN OPEN upstream bug. vLLM #38994 ("Qwen-3.5 garbled output, Intel backend",
+  2x Arc B70 Battlemage, endless "!!!!", open since 2026-04, undiagnosed) is OUR EXACT box+symptom. vLLM 0.23.0
+  already carries the CUDA-path hybrid fixes (#35219 zero-freed-SSM-blocks, #43961 MLA+linear corruption,
+  #44700 route-decodes-to-recurrent-kernel); the remaining defect is XPU SYCL-kernel-side -- vllm-xpu-kernels
+  #172 lists "support fp32 ssm_state in chunk_fwd_o" as NOT DONE.
+  MECHANISM (verified upstream): GDN/Mamba carry a per-sequence recurrent SSM state; a NaN in the GDN forward
+  poisons a SHARED KV/state block and -- because attention masks via multiply-by-zero and 0*NaN=NaN (#35219) --
+  the stale NaN propagates to EVERY request reusing that block -> global "!!!!" until a restart clears it.
+
+  Additional A/B (each a FRESH single card-0 serve; repro = mixed load; NaN proven via logprobs 400 "nan"):
+    VLLM_ENABLE_FLA_PACKED_RECURRENT_DECODE=0 (FLA_DECODE=0; unpacked recurrent decode) -> NaN PERSISTS.
+    concurrency floor: even 1 long-decode + 1 concurrent prefill -> NaN. So NO max_num_seqs cap helps short
+      of =1 (full serialization). mamba_ssm_dtype is already float32 in the model config.
+    PROGRESSIVE/GLOBAL POISONING CONFIRMED: after sustained load a serve goes GLOBALLY bad -- even a SHORT
+      SINGLE request then returns NaN logprobs (the #35219 shared-buffer poison). docker restart clears it.
+      Reproduces the original 2026-06-26 "6h then ALL prompts !!!!" incident as the steady-state.
+
+VERDICT -> [ROOT-CAUSED; NO LOCAL FIX on 0.23.0] int4 AND w8a8 "!!!!" = an OPEN upstream vLLM-XPU GDN kernel
+NaN on Qwen3.6/qwen3_5 gated-delta-net (mixed prefill+decode and/or long decodes), tracked at vLLM #38994 /
+vllm-xpu-kernels #172. RULED OUT locally: enforce-eager, GDN kernels v0.1.10 (#411), --no-enable-chunked-prefill
+(crashes: OOM at autotune / DEVICE_LOST at profiling), FLA packed-recurrent-decode toggle, concurrency cap.
+REAL FIXES are heavy: (a) build a post-v0.1.10 / dev vllm-xpu-kernels carrying the fp32-ssm_state +
+recurrent-decode fixes once upstream lands them; (b) P/D disaggregation (no native XPU transport -- risky);
+(c) SGLang on B70 (non-mixed-batch default + fp32 ssm; XPU viability UNVERIFIED). MITIGATION today: the
+dd-watchdog content-probe restarts a replica once it floods garbage (its short probe DOES catch the
+global-poisoned steady-state). TODO: file our minimal repro (logprobs-under-load -> 400 nan) on vLLM #38994.
+Recipe gained GDN_FIX (v0.1.10 overlay, default off) + FLA_DECODE knobs for future re-test. (CHUNKED/MAXBATCHED
+lib.sh knobs were prototyped then REVERTED -- CHUNKED=0 crashes this model; not worth the _common smoke gate.)
+Box verified HEALTHY after the crash chain (xpu-health OK both cards, no reboot).
