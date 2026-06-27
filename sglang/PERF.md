@@ -166,7 +166,16 @@ drafts only 1 tok/forward; more needs the gated multi-step graph runner). MTP is
 bf16's 9 t/s AND every other config). The GDN compute (48 linear-attn layers' recurrent scan, triton FLA) is what
 makes single-card decode slow; vLLM is faster because it has a compiled SYCL GDN kernel.
 
-## GDN KERNEL OPTIMIZATION (the decode bottleneck) -- IN PROGRESS
+## GDN KERNEL OPTIMIZATION (the decode bottleneck) -- WIN: num_warps 1->4 = 1.69x decode [2026-06-27]
+The GDN decode kernel `fused_recurrent_gated_delta_rule_packed_decode` hardcoded `num_warps=1` (grid=(NV=4,
+B*HV=48)=192 programs, each 1 sub-group) -> OCCUPANCY-STARVED on Battlemage. The recurrence has no within-step
+time dependency at decode (1 token), so num_warps only parallelizes the spatial head/V work -> safe to raise.
+Made it tunable (B70_GDN_DECODE_WARPS env; sglang/patches/fused_recurrent.py).
+MEASURED (woq int4 TP=1, IN=2048):
+  warps=1 (baseline): decode 4.68 t/s  (TPOT 213.65 ms)
+  warps=4           : decode 7.92 t/s  (TPOT 126.34 ms)  = 1.69x, COHERENT (Rayleigh answer)
+This is the FIRST real decode speedup of the campaign, and it applies to EVERY config (bf16 too -- same kernel).
+NEXT: sweep warps (8/16) for the peak; apply to bf16 TP=2 (the daily driver, baseline 9 t/s -> ?); bake the winner.
 
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
