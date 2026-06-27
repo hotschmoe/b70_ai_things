@@ -6,14 +6,18 @@ ALL numbers warm (discard the 1st bench after idle -- the B70 idle-downclocks; c
 |--------------------------------|---------------|-----------------|---------|-------|--------|-------------|-------|
 | bf16 TP=2 (serve_sglang.sh)    | ~9.2          | 6.06/str (23.4) | ~660    | 2     | YES    | no (TP wedge risk) | bf16 |
 | woq int4 TP=1 (sglang-xpu:woq) | ~9.44         | (single-card)   | ~920    | 1     | YES    | YES (single-card)  | int4 woqgemm |
-TAKEAWAY: both ~9.2-9.4 t/s single-stream = sglang-XPU EAGER CEILING for this 27B GDN model (launch-overhead bound;
-no cudagraph on XPU; the GDN recurrent kernel is NOT the warm bottleneck). The campaign did NOT raise single-stream
-speed past the starting ~9 -- BUT it (a) PROVED correctness (sglang has no GDN NaN; vLLM does), (b) showed int4
-SINGLE-CARD is as fast as bf16-TP2 warm -> enables woq int4 DP=2 (wedge-proof + vision + ~19 aggregate), (c) wired
-auto_round_kernel.woqgemm into sglang (sglang-xpu:woq), (d) characterized MTP (works to the tree kernels).
-DAILY DRIVER PICK: woq int4 DP=2 for UNATTENDED (wedge-proof, vision, int4 = big KV) OR bf16 TP=2 for best c4
-aggregate (23.4) when attended. Both CORRECT (the whole point). Levers that did NOT help warm: 4-bit-for-speed,
-GDN num_warps, PP=2 (hangs), TP=2-woq (hangs), MTP (needs tree-kernel reimpl). See the dated entries below.
+| woq int4 + XPU CUDAGRAPH ***   | ~12.5 e2e (23 model) | -        | ~1938   | 1     | YES    | YES         | int4 woqgemm |
+*** THE WIN: XPU cudagraph (B70_XPU_CUDAGRAPH=1 + triton attn + model_runner xpu patch) -- MODEL decode 9.4->23.6
+  t/s (2.5x, the eager ceiling BROKEN), end-to-end ~12.5 (+33%, capped by a periodic ~15s in-graph stall, likely the
+  mamba state track at mamba_track_interval=256 -- eliminating it -> ~23 sustained). TRADEOFF: TTFT 920->1938 (cudagraph
+  needs triton attn; intel_xpu backend lacks graph methods). num-continuous-decode-steps + --stream-interval did NOT
+  help the e2e gap (it's the periodic stall, not streaming/scheduler). OPT-IN + CORRECT (coherent, no NaN).
+TAKEAWAY: the campaign BROKE the sglang-XPU eager ceiling via cudagraph (decode 2.5x model / +33% e2e), AND proved
+correctness (no GDN NaN; vLLM has it), wired auto_round_kernel.woqgemm into sglang, showed int4 single-card == bf16-TP2
+warm (-> woq int4 DP=2 wedge-proof+vision driver), and characterized MTP (works to the tree kernels).
+DAILY DRIVER PICK: woq int4 + CUDAGRAPH for best decode (long generations; eat the TTFT cost) | woq int4 DP=2 for
+UNATTENDED (wedge-proof) | bf16 TP=2 for best c4 aggregate. ALL CORRECT. Did NOT help: 4-bit-for-speed-without-graph,
+GDN num_warps (cold artifact), PP=2 (hangs), TP=2-woq (hangs), MTP (needs tree-kernel reimpl), num-decode/stream-interval.
 ## ====================================================================================================
 
 
