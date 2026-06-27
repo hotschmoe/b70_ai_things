@@ -87,6 +87,20 @@ def _install():
     except Exception as e:
         print(f"[woq-shim] marlin guard failed: {e}", flush=True)
 
+    # sglang's spec-decode (EAGLE/NEXTN) path hardcodes torch.cuda.{synchronize,Stream,Event,...} which
+    # assert "Torch not compiled with CUDA". On XPU, redirect them to the torch.xpu equivalents so MTP runs.
+    try:
+        if hasattr(torch, "xpu"):
+            torch.cuda.synchronize = lambda *a, **k: torch.xpu.synchronize()
+            torch.cuda.current_stream = lambda *a, **k: torch.xpu.current_stream(*a, **k)
+            torch.cuda.stream = torch.xpu.stream
+            torch.cuda.Stream = torch.xpu.Stream
+            torch.cuda.Event = torch.xpu.Event
+            torch.cuda.empty_cache = torch.xpu.empty_cache
+            print("[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)", flush=True)
+    except Exception as e:
+        print(f"[woq-shim] cuda->xpu redirect failed: {e}", flush=True)
+
     print("[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)", flush=True)
 
 

@@ -135,6 +135,17 @@ First attempt OOM'd (draft+main=22.3 GiB leaves too little KV at mem-fraction 0.
 Pending: coherence + accept rate + does MTP actually speed decode past the 4.68 woq-no-MTP baseline.
 NEXT: if MTP accepts + speeds decode -> the fast+correct+vision daily driver. Then kernel optimization (GDN triton).
 
+MTP XPU-gate whack-a-mole (each patched, in order encountered):
+  1. draft-attn intel_xpu gate -> --speculative-draft-attention-backend triton (DODGED).
+  2. multi-step graph-runner gate -> --speculative-num-steps 1 (DODGED).
+  3. OOM (draft+main 22.3GiB single-card) -> --max-running-requests 4 (shrinks mamba ssm cache; FIXED).
+  4. spec mamba state cache device="cuda" HARDCODED (memory_pool.py:472/514/549) -> patched device=device
+     (sglang/patches/memory_pool.py, mounted). Got "intermediate_ssm_state_cache 1.41GB" allocated on XPU.
+  5. torch.cuda.synchronize() in qwen3_5_mtp.py:136 set_embed_and_head + torch.cuda.{Stream,Event} in spec path
+     -> woq_shim redirects torch.cuda.{synchronize,Stream,Event,current_stream,empty_cache} -> torch.xpu. Also
+     pass --disable-cuda-graph (skip the draft cuda-graph capture, unavailable on XPU).
+  Status: each gate is individually patchable; testing whether the chain now serves + the grafted draft accepts.
+
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
