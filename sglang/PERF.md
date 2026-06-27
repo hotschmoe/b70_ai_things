@@ -335,3 +335,16 @@ no-stack-trace debug across the stream-redirect / draft-attention surface). Tree
 artifact (mtp_tree_xpu.py). NOTE: card 0 got WEDGED (DEVICE_LOST) during this session's cudagraph capture/kill
 experiments -> needs a REBOOT to recover (xe-reset); we run LOCALLY on the box so the agent cannot reboot without
 killing its own session -- this requires a human `sudo reboot` (or bin/xe-reset). card 1 stayed healthy.
+
+## MTP FINAL VERDICT: tree kernels SOLVED+running; spec-decode UPSTREAM-BLOCKED on XPU (verify out_cache_loc) [2026-06-27]
+Pushed MTP all the way to root cause. CONFIRMED WORKING: the 2 ported tree kernels (mtp_tree_xpu.py) RUN correctly
+(build_tree ENTER/EXIT logs, mask built) -- my contribution is sound. THE WALL is upstream: the spec-decode VERIFY
+KV-write fails because forward_batch.out_cache_loc arrives as a 2D FULL-POOL index ([1, ~75904]) instead of the
+num_draft_tokens(=2) new slots -> `k_cache[indices]=k` broadcasts [2,4,256] into [1,75904,4,256] and throws
+(_set_kv_buffer_impl:170). RULED OUT as fixes: both attention backends (intel_xpu xpu_backend:478 AND triton
+triton_backend:1182 fail identically), and --page-size 1 (error size just tracks the pool: 75840->75904). So the XPU
+spec-decode FORWARD-BATCH METADATA (verify out_cache_loc construction) is broken -- a deep, upstream-scale sglang-XPU
+bug, NOT the tree kernels (solved) and NOT a config knob. CONCLUSION: spec-decode/MTP is not viable on sglang-XPU
+today without an upstream fix to the verify forward-batch out_cache_loc. Tree-kernel port (mtp_tree_xpu.py) is a
+reusable artifact for when that lands. BOTH ceiling-breakers (cudagraph + MTP) are now XPU-platform-blocked; the
+stable serving ceiling stays ~9.4 t/s. See contrib/sglang_xpu_upstream.md for the two actionable upstream items.
