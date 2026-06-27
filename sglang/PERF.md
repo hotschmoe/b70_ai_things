@@ -157,6 +157,17 @@ STATUS: MTP/spec-decode on sglang-XPU is ~90% there -- loads + forward runs (13s
   t/s single-stream (below bf16 TP2's 9) BUT single-card -> wedge-proof DP=2 ~15 aggregate. Worth completing.
 NEXT: implement build_tree_kernel_efficient + verify_tree_greedy (chain/topk=1) in pure torch, inject via woq_shim.
 
+MTP CLOSEOUT (2026-06-27, operator chose to pivot): the 2 tree ops are UNREGISTERED XPU wrappers (no .so,
+torch.ops.sgl_kernel.{build_tree_kernel_efficient,verify_tree_greedy}=registered False) -> need a full pure-torch
+reimpl. Operator decision: NOT worth it -- realistic payoff ~7.5 t/s single-stream is BELOW bf16 TP2's 9 (num-steps=1
+drafts only 1 tok/forward; more needs the gated multi-step graph runner). MTP is LEFT WORKING-UP-TO-TREE-KERNELS
+(graft + 6 gate patches all committed; reproducible via graft_mtp.py + the woq_shim cuda-redirect + memory_pool patch
++ the NEXTN escape flags). PIVOT -> optimize the GDN/linear-attn Triton kernel (the real decode bottleneck capping
+bf16's 9 t/s AND every other config). The GDN compute (48 linear-attn layers' recurrent scan, triton FLA) is what
+makes single-card decode slow; vLLM is faster because it has a compiled SYCL GDN kernel.
+
+## GDN KERNEL OPTIMIZATION (the decode bottleneck) -- IN PROGRESS
+
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
