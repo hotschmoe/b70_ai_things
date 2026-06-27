@@ -280,7 +280,8 @@ REFINED (OUT=512, warm): decode-batch log STEADY at ~23 t/s (cuda graph: True), 
   ~12.57 t/s at OUT=512 (+34% over eager 9.4). The 23-vs-12.57 gap = per-token SERVING overhead (detok/stream/
   scheduler, NOT graphed). TRADEOFF: TTFT REGRESSES ~920 -> ~1938 ms because cudagraph requires --attention-backend
   triton (the intel_xpu backend lacks graph capture/replay methods) + prefill isn't graphed. So cudagraph = a DECODE
-  win with a PREFILL/TTFT cost. NEXT: (a) reduce the serving overhead (--num-continuous-decode-steps stacks with
+  win with a PREFILL/TTFT cost. num-continuous-decode-steps=2 did NOT help (end-to-end ~11.5, same). The gap is per-token detok/stream overhead
+  at stream_interval=1, not scheduler steps. NEXT: --stream-interval N (fewer streaming round-trips). Old NEXT: (a) (--num-continuous-decode-steps stacks with
   graph?), (b) recover TTFT (implement intel_xpu backend graph methods, OR keep intel_xpu for prefill + triton for
   decode). Honest verdict: first REAL decode speedup of the campaign (+34% end-to-end, 2.5x model), opt-in + correct.
 
