@@ -177,6 +177,14 @@ MEASURED (woq int4 TP=1, IN=2048):
 This is the FIRST real decode speedup of the campaign, and it applies to EVERY config (bf16 too -- same kernel).
 NEXT: sweep warps (8/16) for the peak; apply to bf16 TP=2 (the daily driver, baseline 9 t/s -> ?); bake the winner.
 
+APPLIED to bf16 TP=2 (warps=4): decode 9.03 -> 9.44 (+4.5%), TTFT 661 -> 603, prefill 3098 -> 3394. COHERENT.
+INSIGHT: the GDN-warps win is MUCH bigger single-card (woq TP=1 1.69x) than TP=2 (+4.5%) -- at TP=2 the GDN heads
+are SPLIT across cards (grid (4,24) vs (4,48)) AND decode is also all-reduce+weight-bandwidth bound, so the GDN
+recurrent kernel is a smaller fraction. => the GDN-warps optimization most benefits the SINGLE-CARD int4 path,
+making woq int4 TP=1 (7.92, wedge-proof, vision) a strong DP=2 daily driver (~15.8 aggregate). A second occupancy-
+starved kernel fused_gdn_gating (num_warps=1) is now also tunable -- testing combined + warps=8 on woq next.
+Scoreboard (decode t/s, IN=2048 c1): bf16 TP2 w1=9.03 w4=9.44 | woq int4 TP1 w1=4.68 w4=7.92.
+
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
