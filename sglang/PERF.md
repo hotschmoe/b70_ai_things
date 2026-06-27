@@ -144,7 +144,18 @@ MTP XPU-gate whack-a-mole (each patched, in order encountered):
   5. torch.cuda.synchronize() in qwen3_5_mtp.py:136 set_embed_and_head + torch.cuda.{Stream,Event} in spec path
      -> woq_shim redirects torch.cuda.{synchronize,Stream,Event,current_stream,empty_cache} -> torch.xpu. Also
      pass --disable-cuda-graph (skip the draft cuda-graph capture, unavailable on XPU).
-  Status: each gate is individually patchable; testing whether the chain now serves + the grafted draft accepts.
+  6. spec-decode warmup forward HUNG (600s) at first -- but --skip-server-warmup + long first request showed the
+     forward actually RUNS in 13s (cold JIT, NOT a hang). So the GDN draft/verify path is NOT a wall (refutes the
+     research agent's prediction). The 600s "hang" was just the cold triton JIT exceeding the warmup timeout.
+  7. THE REMAINING BLOCKER = 2 MISSING C++ kernels with no XPU build: `sgl_build_tree_kernel_efficient`
+     (eagle_utils.py:217, NameError) + `verify_tree_greedy` (sgl_kernel, _is_cuda-gated). NPU has torch.ops.npu
+     equivalents; XPU has neither. For our degenerate config (topk=1 steps=1 -> a 2-token CHAIN, not a tree) both
+     reduce to simple tensor ops -> implementable in pure PyTorch and injectable via the shim.
+STATUS: MTP/spec-decode on sglang-XPU is ~90% there -- loads + forward runs (13s) + 6 gates patched; blocked only
+  on 2 tree kernels (build_tree + verify_greedy) that need a Python/XPU reimpl for the chain case. This IS the
+  "kernel work" the user wants next. Expected payoff: num-steps=1 -> ~1.5-1.6x (accept~0.6) -> int4 ~4.68 -> ~7.5
+  t/s single-stream (below bf16 TP2's 9) BUT single-card -> wedge-proof DP=2 ~15 aggregate. Worth completing.
+NEXT: implement build_tree_kernel_efficient + verify_tree_greedy (chain/topk=1) in pure torch, inject via woq_shim.
 
 ## (parked) AWQ track. See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
