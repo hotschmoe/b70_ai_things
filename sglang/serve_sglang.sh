@@ -33,6 +33,7 @@ SSMDTYPE="${SSMDTYPE:-float32}" # SSM recurrent state dtype (fp32 = GDN-safe; th
 QUANT="${QUANT:-}"           # e.g. auto-round / compressed-tensors / fp8; empty = auto-detect
 EXTRA="${EXTRA:-}"           # extra launch_server flags
 DENV="${DENV:-}"             # extra docker -e env, space-separated KEY=VAL (e.g. DENV="FLA_USE_FAST_OPS=1")
+MOUNTS="${MOUNTS:-}"         # extra docker -v specs, space-separated host:container[:ro] (patch overlays)
 
 cmd="${1:-start}"
 
@@ -43,13 +44,14 @@ start() {
   if [ "$TP" = 1 ] && [ "$PP" = 1 ]; then GDOCK=(-e ZE_AFFINITY_MASK="$DEVICE"); fi
   local q=(); [ -n "$QUANT" ] && q=(--quantization "$QUANT")
   local denv=(); for kv in $DENV; do denv+=(-e "$kv"); done
+  local mounts=(); for mv in $MOUNTS; do mounts+=(-v "$mv"); done
   echo "=== sglang serve: $SERVED  IMG=$IMG  TP=$TP card=${DEVICE} ctx=$CTX memfrac=$MEMFRAC attn=$ATTN port=$PORT ==="
   docker rm -f "$NAME" >/dev/null 2>&1
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "${SHM:-16g}" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
     -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
-    "${denv[@]}" \
+    "${denv[@]}" "${mounts[@]}" \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; exec python -m sglang.launch_server \
       --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
       --device xpu --attention-backend '$ATTN' --linear-attn-backend '$LINATTN' \

@@ -19,6 +19,17 @@ Columns: decode_tps = 1000/TPOT (single-stream TG); prefill_tps (PP) = IN*1000/T
 | A | bf16 TP=2 +FLA_FAST +numdecode2     | 4    | 5.12      | 983     | 2084        | c4 REGRESSED (numdecode2 hurts concurrency) |
 | B | bf16 PP=2 (--tp 1 --pp-size 2)      | -    | BROKEN    | -       | -           | /health 200 but ALL gen requests time out -> 500 (scheduler deadlock on GDN); NO-GO |
 
+## fp16 is BROKEN on XPU for this model -> use bf16-AWQ patch instead (2026-06-27)
+Serving the unquantized bf16 model as `--dtype float16` LOADS fine but CRASHES on the first forward:
+  causal_conv1d Triton kernel CompilationError: "Mismatched type for col0 between then block (bf16) and
+  else block (fp16)" (gdn_backend -> causal_conv1d_triton.py:~105). The GDN conv_state cache is bf16 while
+  fp16 acts make x fp16 -> the kernel's branch dtypes diverge -> Triton compile fails. (PP=2 hung similarly.)
+SINCE AWQ pins act dtype fp16 (awq.py:104), this would block AWQ. FIX = keep the model in the VALIDATED bf16
+GDN regime and patch AWQ to run bf16 (sglang/patches/): (1) awq.py get_supported_act_dtypes += bfloat16;
+(2) awq_kernels.py apply casts awq_dequantize output (fp16) -> x.dtype before matmul. Weight stays 4-bit
+(decode-bandwidth win preserved); GDN/conv never see fp16 -> no crash, inherits proven bf16 coherence.
+Serve via serve_sglang.sh MOUNTS=(overlay both patched files) QUANT=awq EXTRA="--dtype bfloat16".
+
 ## Next: AWQ track (the decode win). See sglang/AWQ_RECIPE.md.
 - De-risk #1 (fp16-through-GDN, the AWQ act dtype): re-serve UNQUANTIZED bf16 with `--dtype float16` + gdn_nan_repro.
   Isolates the fp16 question from quant before producing any checkpoint.
