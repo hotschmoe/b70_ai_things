@@ -4871,3 +4871,74 @@ global-poisoned steady-state). TODO: file our minimal repro (logprobs-under-load
 Recipe gained GDN_FIX (v0.1.10 overlay, default off) + FLA_DECODE knobs for future re-test. (CHUNKED/MAXBATCHED
 lib.sh knobs were prototyped then REVERTED -- CHUNKED=0 crashes this model; not worth the _common smoke gate.)
 Box verified HEALTHY after the crash chain (xpu-health OK both cards, no reboot).
+
+## 2026-06-27 -- SGLang on B70 XPU FIXES the GDN NaN: bf16 Qwen3.6-27B serves CLEAN under mixed load [WIN]
+
+GOAL: can SGLang serve Qwen3.6-27B (qwen3_5 GDN) on our 2x Arc B70 WITHOUT the vLLM-0.23 mixed
+prefill+decode NaN ("!!!!")? Hypothesis: SGLang's scheduler does NOT mix prefill+decode by default,
+keeps SSM state fp32, and uses Triton FLA kernels -> sidesteps the bug class architecturally.
+
+PHASE 0 FEASIBILITY -> PARTIAL/PROCEED (primary-source verified, not re-derived):
+  - SGLang has an OFFICIAL Intel-led `--device xpu` backend (merged in main, NOT a fork). CI runs on
+    `intel-bmg` (Battlemage) runners == our exact silicon class. (sglang #10656, roadmaps #8309/#24922.)
+  - sgl-kernel-xpu CMake sets DPCPP_SYCL_TARGET="bmg" -> kernels AOT-compiled FOR Battlemage.
+  - Our model class is first-class: python/sglang/srt/models/qwen3_5.py (EntryClass includes
+    Qwen3_5ForConditionalGeneration), + qwen3_5_mtp.py + qwen3_next.py. PR #21668 "Enable qwen3.5 on
+    XPU" merged 2026-05-18.
+  - Architectural thesis CONFIRMED in source: enable_mixed_chunk defaults False (scheduler runs
+    prefill-OR-decode per forward pass; HybridLinearAttnBackend has separate forward_decode/
+    forward_extend dispatched by forward_mode); mamba_ssm_dtype defaults float32 on the XPU/Triton
+    path; linear_attn_backend defaults "triton" (pure @triton.jit FLA, with an Intel-XPU port under
+    hardware_backend/xpu/kernels/fla/). intel-xpu-backend-for-triton #6910 confirms these GDN triton
+    kernels COMPUTE CORRECTLY on Intel B60 (only slower). No SGLang NaN/garbage report for GDN-on-XPU.
+
+IMAGE: built the official docker/xpu.Dockerfile -> sglang-xpu:bmg (images/sglang-xpu/, build.sh).
+  Base intel/deep-learning-essentials:2025.3.2 (matches our oneAPI 2025.3), kobuk Battlemage UMD PPA,
+  torch 2.12.0+xpu, triton-xpu 3.7.1, sgl-kernel built from sgl-kernel-xpu (SYCL AOT bmg, ~40min).
+  Pinned upstream: sglang 09ca4fc96b3c, sgl-kernel-xpu 6cd2a07bef5b (main @ 2026-06-27). Verified:
+  torch.xpu.device_count()==2 (both "Intel(R) Arc(TM) Pro B70 Graphics"), finite on-device matmul.
+
+MODEL: bf16 /models/Qwen_Qwen3.6-27B, NOT int4. WHY: int4 AutoRound is packing_format
+  auto_round:auto_gptq -> GPTQ/Marlin GEMM, and Marlin is CUDA-gated in sglang (NO XPU int4 kernel);
+  ALSO the int4 ckpt excludes GDN in_proj at the UNFUSED names (in_proj_a/b) while sglang builds a
+  FUSED in_proj_ba -> exclusion-propagation gap risk. FP8 ruled out (open sglang #23687 dense-FP8
+  scale corruption + #19603 FP8-KV DeltaNet corruption). The GDN NaN is quant-INDEPENDENT (we saw it
+  on int4 AND w8a8), so bf16 is a valid -- and confound-free -- test of the GDN path.
+
+CONFIG -> COMMAND (sglang/serve_sglang.sh; held the lease via gpu-run + docker wait):
+  bf16 TP=2 (both cards) --device xpu --attention-backend intel_xpu --linear-attn-backend triton
+  --mamba-ssm-dtype float32 --disable-overlap-schedule --disable-radix-cache --page-size 64
+  (NO --enable-mixed-chunk). --disable-radix-cache is REQUIRED on XPU: with page_size>1 + triton
+  linear-attn, sglang's "auto" mamba radix cache picks the extra_buffer strategy which asserts
+  is_cuda()/is_musa()/is_npu() ("extra_buffer needs CUDA/MUSA/NPU (FLA)") and refuses to start.
+  Load: weights 25.6 GiB/card, KV 72256 tokens (hybrid GDN KV is light: 16/64 full-attn + GQA kv=4),
+  max_running_requests=26, context_len 8192, /health 200, warmup forward OK on the real XPU triton
+  GDN kernels (tl.make_block_ptr JIT, NOT a CPU rollback).
+
+RESULT -- the gdn_nan_repro pass/fail (the exact tests that FAIL on vLLM-0.23) ALL CLEAN:
+  - single coherent gen: correct Rayleigh-scattering answer (not "!!!!").
+  - dd_rawtokens.py 30000 8 800 (logprobs under 8-anchor mixed load): 800 VALID tokens, sane logprobs,
+    coherent content. NO "HTTP 400 ...nan". (vLLM: 400 nan.)
+  - dd_loadprobe.py 30000 8 12 500 (12 concurrent probes under load): 12/12 OK, 0 DEGEN.
+    (vLLM: 12/12 DEGENERATE.)
+  - dd_mixload.py 30000 6 6 20 3 350 1200 (SUSTAINED mixed load, 126 reqs): 126/126 OK, 0 GARBAGE,
+    0 DEGEN_EMPTY, 0 HTTP_ERR. Server stayed /health 200 throughout.
+  - dd_rawtokens RE-CONFIRM after the sustained run: STILL clean (no progressive/global poisoning --
+    the #35219-class shared-state poison that gave vLLM the "6h then all-!!!!" steady state does NOT
+    occur here).
+
+BENCH (single card-pair, quiet server): TTFT ~0.19 s; single-stream decode ~9.5 tok/s (bf16 TP=2);
+  under 12-concurrent ~7 tok/s/stream (~84 tok/s aggregate), all coherent. vs vLLM int4 daily driver
+  ~30.8 tok/s (graph) / ~7.8 (eager), single-card int4. SGLang bf16-TP2 sits between vLLM eager and
+  graph: slower than int4-graph (bf16 = 4x bytes/token of int4; XPU GDN triton kernels are known-slow
+  per #6910; partly offset by TP=2 weight-bandwidth split). Trade = correctness for throughput.
+
+VERDICT -> [GO -- CORRECTNESS PROVEN]. SGLang on B70 XPU serves the qwen3_5 GDN model WITHOUT the vLLM
+  GDN NaN, including after sustained mixed load. This is the first known-good serve of Qwen3.6-27B on
+  this box that survives the agentic mixed-prefill+decode pattern. COST: ~3x lower single-stream decode
+  than the int4 daily driver (bf16 + 2 cards + slow XPU GDN triton). NEXT (not done this session):
+  (a) faster path -- retest int4 once an XPU int4 GEMM lands, or compressed-tensors W4A16 (its loader
+  honors ignore+packed_modules_mapping so the GDN exclusion maps correctly), to recover throughput AND
+  free a card; (b) decode cuda-graph / torch.compile tuning on XPU; (c) a rdy_to_serve recipe + DP
+  story once a quant path is proven. Daily driver was stopped for this run (cards freed by user);
+  bf16-TP2 uses BOTH cards so it cannot run DP=2 alongside. Artifacts: images/sglang-xpu/, sglang/.
