@@ -5269,3 +5269,31 @@ VERDICT -> [SHIPPED] rdy_to_serve/qwen36-27b-int4-mtp is the LATENCY daily drive
   scoped: reimplement tree_speculative_sampling_target_only chain-case in torch, replace the gate-4 forced-greedy
   verify); reduce spec-path launches toward vLLM's ~2x (decode_launch_inventory.md applies to draft+verify fwds);
   W4A8+MTP (vLLM-best combo, needs an int8-act kernel on sglang). Box HEALTHY + idle after.
+
+## 2026-06-28 -- PERF PUSH on int4+MTP, lever 1: torch.compile launch-collapse = NO-GO (no-op without cuda-graph) [result]
+
+GOAL (user redirect): push qwen36-27b-int4-mtp as hard as possible -- "SO MUCH headroom on the hardware."
+DIAGNOSIS: single-stream decode is LAUNCH-BOUND (~1045 kernel submissions/token, decode_launch_inventory.md);
+the GPU idles waiting on python dispatch. MTP already amortizes those ~1000 launches across accept_len (~4.38).
+The inventory named the OTHER systemic cure as torch.compile/Inductor (collapse launches WITHOUT L0 graph replay,
+which is the XPU cudagraph dead-end). This sglang exposes a standalone --enable-torch-compile -> test if it stacks.
+
+CONFIG -> COMMAND: scripts/132_mtp_torch_compile.sh (baked sglang-xpu:mtp, NEXTN steps=7, --disable-cuda-graph,
+  + --enable-torch-compile --torch-compile-max-bs 4). ./bin/gpu-run --card 0 bash scripts/132_mtp_torch_compile.sh
+
+RESULT (warm, sglang/mtp_torch_compile.log): c1 decode **15.30 t/s = IDENTICAL to the 15.31 no-compile baseline**
+  (accept_len 4.38, coherent). server_args CONFIRM enable_torch_compile=True, torch_compile_max_bs=4 -- the flag
+  was accepted, but the warmup gens stayed fast (no minutes-long inductor pass) and decode did not move.
+
+ROOT CAUSE: in this sglang, torch.compile's launch-collapse is COUPLED to the cuda-graph machinery -- the
+  cuda_graph_config shows decode backend can be 'tc_piecewise' with tc_compiler {eager,inductor}, i.e. inductor
+  fusion happens on CAPTURED piecewise graphs. With --disable-cuda-graph (set because XPU cuda-graph REPLAY
+  degrades over a long stream -- the documented L0/NEO command-stream accumulation dead-end), --enable-torch-compile
+  is effectively a no-op on the decode + spec forwards. The standalone flag does NOT give graph-free launch collapse.
+
+VERDICT -> [NO-GO] torch.compile is NOT an accessible single-stream lever on sglang-XPU without the degrading
+  cuda-graph path. Single-stream stays at the ~15.3 t/s MTP-amortized eager ceiling. The launch-bound headroom is
+  NOT recoverable via compile here. Remaining perf levers do NOT need cuda-graph: DP=2 across both cards (the 2nd
+  B70 is idle -> ~2x aggregate; lever 2, sglang/serve_dp2_mtp.sh), per-card concurrency ceiling (lever 3), and the
+  hard frontier (a hand-written SYCL GDN/GEMV kernel, or reducing the non-amortized spec-path launches). Pivoting
+  to DP=2 (the clearest "use all the hardware" win). Tools: scripts/132.
