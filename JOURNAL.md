@@ -5406,3 +5406,43 @@ VERDICT -> [graph win requires a custom INTEGRATION] To get the XPUGraph launch-
   unblocking check_cuda_graph_backend for XPU might make sglang's DecodeCudaGraphRunner capture via XPUGraph with a
   SMALL patch. KEY RISK = GDN/mamba recurrent state must update in-place into capture-resident (static) buffers
   (scoping in progress). Tools: scripts/138.
+
+## 2026-06-28 -- *** BREAKTHROUGH: sglang CAPTURES a decode XPUGraph on B70 -- int4 NO-MTP = 23.5 t/s (2.5x eager, +53% over MTP), coherent + STABLE + SAMPLING-capable *** [HEADLINE]
+
+The single-stream launch-bound ceiling is BROKEN. Wired torch.xpu.XPUGraph (proven stable, scripts/137) into
+sglang's decode path: stock sglang stays eager on XPU ("cuda graph: False") for two reasons, both now fixed in
+sglang/patches/xpu_cudagraph.py (opt-in B70_XPU_CUDAGRAPH=1, installed from woq_shim):
+  1. model_runner.init_cuda_graphs gated init_decode_cuda_graph() behind a hardcoded device allow-list
+     ("cuda","musa","cpu","npu") that omits "xpu" -> patch adds "xpu".
+  2. XPUAttentionBackend (full-attn) had NO cuda-graph hooks (init_cuda_graph_state -> base NotImplementedError;
+     its eager init_forward_metadata builds page_table from FRESH advanced-indexed tensors) -> patch adds the
+     decode graph hooks: a fixed-width TOKEN-LEVEL static page_table [max_bs, max_context_len] + static
+     cache_seqlens/cu_seqlens, refilled IN-PLACE each replay (cache_seqlens bounds the kernel read so the
+     zero-padded tail is ignored). GDN/mamba sub-backend was already capture-safe (static MambaPool + in-place).
+  KEY: ATTN=intel_xpu (XPU FlashAttn) hits the SYCL-Graph work_group_scratch_memory wall at capture; ATTN=triton
+  (pure-triton, no SYCL scratch feature) CLEARS it -- same workaround as vLLM's TRITON_ATTN. The torch.cuda.
+  {CUDAGraph,graph,graph_pool_handle}->torch.xpu redirects were already in woq_shim's B70_XPU_CUDAGRAPH block.
+
+CONFIG -> COMMAND: int4 NO-MTP (Lorbus_Qwen3.6-27B-int4-AutoRound), --attention-backend triton, --linear-attn-
+  backend triton, fp32 ssm, --disable-overlap-schedule, cuda-graph bs=1 bucket (--cuda-graph-bs-decode 1
+  --cuda-graph-max-bs-decode 1), --max-running-requests 1, ctx 4096, memfrac 0.90, B70_XPU_CUDAGRAPH=1.
+  ./bin/gpu-run --card 0 bash scripts/139_xpu_cudagraph.sh
+
+RESULT (scripts/139, warm, sglang/xpu_cudagraph.log):
+  - GATE 1 CAPTURE: "cuda graph: True" on 93 decode batches (the install msgs confirm: device gate +xpu, hooks
+    installed). FIRST EVER sglang-XPU decode graph capture.
+  - GATE 2 COHERENCE: OK -- coherent "Thinking Process... why is the sky blue" (read the text, NOT "!!!!").
+  - GATE 3 SPEEDUP: WARM c1 decode = **23.47 t/s** = 2.5x the 9.4 eager ceiling, and +53% over the int4+MTP
+    driver (15.3). TTFT 1206ms @ ctx2048 (prefill not captured).
+  - GATE 4 STABILITY: soak 2000-tok OVERALL 22.96 t/s, first/last window ratio 1.12x (STABLE, <1.15), coherence
+    OK -- NO degradation (the torch.xpu.XPUGraph stability holds in the real serve, unlike the old dead-end).
+  Box left HEALTHY + idle (both cards free).
+
+VERDICT -> [*** WIN -- a NEW single-stream record AND a sampling-capable driver ***] int4 NO-MTP + XPUGraph =
+  23.5 t/s, beating the MTP latency driver (15.3) by 53% AND -- being non-MTP -- it RESTORES sampling
+  (temperature/top_p, which MTP-greedy ignores) and is NOT capped at MAXREQ=4. This is the launch-bound cure the
+  whole campaign pointed at. NEXT: (1) capture MORE bs buckets (1,2,4) -> concurrency + higher aggregate, and
+  retest soak stability per-bucket; (2) full pp/ttft/tg bench @2048 + sustained mixed-load correctness (the GDN
+  bar); (3) productionize (bake into the image + a rdy_to_serve recipe + DP=2); (4) FRONTIER++ stack graph + MTP
+  (capture the spec verify) -> potentially >30 t/s. CAVEAT: single warm run; reproduce when productionizing.
+  Tools: sglang/patches/xpu_cudagraph.py, scripts/139, woq_shim.py B70_XPU_CUDAGRAPH block.
