@@ -8,6 +8,12 @@ TP=2 / PP=2 are ON the table (we have a custom push all-reduce, see below). Even
 
 Style: config -> result -> verdict. Newest section at the BOTTOM. Detailed logs in JOURNAL.md.
 
+> *** STATUS 2026-06-28: TASK GOAL MET. *** W8A8 fused (built int8_gemm_w8a16 + int8_gemm_w8a8) + NEXTN MTP,
+> vision retained, TP=2, handily beats bf16/fp8 on ALL THREE: decode 23.8 t/s (bf16 9.0, 2.6x; also beats
+> int4+MTP 15.3), prefill ~4050 (+31%), TTFT ~508 (-23%). Ship: scripts/124 (fused+MTP, latency) + scripts/123
+> (fused eager, max prefill 4570 / TTFT 448). Remaining = HARDENING: accuracy gate (HumanEval+), verify MTP
+> M>1 hits int8_gemm_w8a8, real image request, DP=2 concurrency, MTP step tuning, productionize to rdy_to_serve.
+
 ---
 
 ## 0. Why W8A8 (the honest framing)
