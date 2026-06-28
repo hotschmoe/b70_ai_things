@@ -211,3 +211,26 @@ Open follow-ups: (1) DP=2 for concurrency at 24.8 t/s/stream (mirror serve_dp2_g
 prefill int4_gemm_w4a8 is eager under GRAPH (prefill graph auto-disabled) -- a captured/compiled
 act-quant could push TTFT lower; (3) HumanEval+ accuracy vs the int4 champion (numerics gated to
 relerr 1e-3, so expected == int4, but confirm).
+
+## ACCURACY GATE 2026-06-28d: PASS -- W4A8 == int4 same-stack, the int8-act prefill does NOT degrade code
+HumanEval+ (164 problems, thinking-OFF, greedy, EvalPlus sandboxed grading), run through the repo harness
+(evals/orchestrator/run_evals.py --tiers 1) against the LIVE sglang serves. To isolate the int8-act-prefill
+effect from the vLLM-vs-sglang stack difference, BOTH the W4A8 hybrid AND the int4-woqgemm champion were
+served on the SAME sglang stack (GRAPH=1, card 0) from the SAME Lorbus int4 weights and scored identically:
+
+  config (sglang GRAPH=1, same Lorbus int4 weights)         pass@1 base   pass@1 plus   base-fails (n=164)
+  W4A8 hybrid (int4_gemm: int8-act prefill, fp16-act decode)   0.921          0.896          13
+  int4-graph champion (auto_round woqgemm, fp16-act)           0.921          0.896          13
+  => DELTA 0.000 / 0.000. Failed sets overlap 9/13; the 4 that differ (W4A8: 91,118,140,148 vs
+     int4: 67,109,126,130) are marginal problems flipped by greedy-decode non-determinism ACROSS kernels
+     (different numerics -> a different token at one branch), netting to zero. The int8-act prefill
+     (relerr ~9e-3 on prompt encoding only; decode is fp16-act) is statistically indistinguishable.
+
+Note on the absolute number: 0.921 is DEPRESSED by output verbosity, not quant damage. 9 of the 13 base
+failures are TRUNCATION (the model writes verbose, comment-heavy solutions that hit max_tokens=2048 with the
+code fence never closed); only 4 are genuine wrong answers. The recorded vLLM int4 number (0.963/0.927,
+evals/results/SUMMARY.md) is the SAME weights on a different stack whose chat template yields terser output ->
+less truncation -> a higher absolute pass@1. That gap is a stack/methodology artifact, NOT the kernel: on the
+APPLES-TO-APPLES same-stack comparison, W4A8 ties int4 exactly. GATE PASS -> W4A8 is a real daily driver.
+Result dirs: evals/results/20260628T090922Z__qwen36-27b-w4a8woq__w4a8-graph (W4A8) and
+.../20260628T095310Z__qwen36-27b-int4-graph__int4-graph-sglang (int4 baseline).

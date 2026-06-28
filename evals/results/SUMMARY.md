@@ -40,6 +40,25 @@
 | **Qwen3.6-27B** (AutoRound int4) | **yes** | **100% (50/50)** | **0.963 / 0.927** | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
 | **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | **yes** -- needs INC-XPU MoE patch | - | - | - | ~6 (eager, untuned) | - | - | 19.6 GiB load + 6.24 KV |
 
+> ## [!] W4A8 ACCURACY GATE -- PASS (2026-06-28, sglang-XPU, HumanEval+ 164, thinking-off, greedy, sandboxed)
+> The vision-retaining **W4A8/W4A16 hybrid** daily driver (`rdy_to_serve/qwen36-27b-w4a8-graph`, int4_gemm ops:
+> int8-act prefill + fp16-act decode) was eval'd vs the int4-woqgemm champion on the **SAME sglang stack +
+> SAME Lorbus int4 weights** (the apples-to-apples test that isolates the int8-act prefill from the stack):
+>
+> | config (sglang GRAPH=1, card 0, same int4 weights) | pass@1 base | pass@1 plus | base-fails |
+> |---|---|---|---|
+> | **W4A8 hybrid** (int8-act prefill) | **0.921** | **0.896** | 13 |
+> | int4-graph champion (woqgemm, fp16-act) | **0.921** | **0.896** | 13 |
+>
+> **DELTA 0.000 / 0.000 -- the int8-act prefill causes ZERO coding-accuracy loss.** Failed sets overlap 9/13;
+> the 4 that differ are marginal problems flipped by greedy non-determinism across kernels (nets to zero).
+> So W4A8 = int4 on accuracy AND faster (decode 25.15 vs 23.5 t/s, lower TTFT, vision retained) -> a real
+> daily-driver upgrade. The absolute 0.921 (vs the vLLM 0.963 row below, SAME weights) is depressed by output
+> verbosity: **9 of 13 base failures are truncation at max_tokens=2048** (verbose comment-heavy solutions, fence
+> never closed), not quant damage; sglang's chat template is more verbose than vLLM's -> more truncation. The
+> gap is a stack/methodology artifact, not the kernel. Result dirs under `evals/results/...__w4a8-graph` and
+> `...__int4-graph-sglang`; full analysis in `sglang/W4A8_PLAN.md` (ACCURACY GATE 2026-06-28d).
+
 - **The higher-density tradeoff, quantified (2026-06-20, HumanEval+ 164, thinking-off):** the 27B int4 hits
   **0.963 / 0.927** vs the best 14B (fp8 **0.915 / 0.890**) -- **+4.8 base / +3.7 plus** -- but decodes at
   **7.9 t/s vs 32** (fresh `perf_probe`: 7.94 t/s, TTFT 283 ms, prefill 1376 t/s; confirms the 7.6 below).

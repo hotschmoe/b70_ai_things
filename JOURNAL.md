@@ -5753,3 +5753,23 @@ GPU clean after (docker ps empty, both cards free, xpu-health HEALTHY -- no wedg
 VERDICT: TASK GOAL MET -- a vision-retaining W4A8 that beats int4/W4A16 on TG (25.15 vs 23.5) and TTFT, same
 memory/weights. Open: DP=2 concurrency, compiled/captured act-quant for lower prefill TTFT, HumanEval+ accuracy
 (numerics gate to 1e-3 -> expect == int4). Files: sglang/{w4a8_from_woq_probe.py, serve_w4a8_woq.sh, patches/woq_shim.py, W4A8_PLAN.md}.
+
+## 2026-06-28 -- *** W4A8 ACCURACY GATE: PASS -- int8-act prefill does NOT degrade code (W4A8 == int4 same-stack) *** [result]
+CONFIG: HumanEval+ (164, thinking-OFF, greedy, EvalPlus sandboxed grading) via the repo harness
+  (evals/orchestrator/run_evals.py --tiers 1) against LIVE sglang serves on card 0 (GRAPH=1). To isolate the
+  int8-act-prefill effect from the vLLM-vs-sglang stack delta, BOTH configs served from the SAME Lorbus int4
+  weights on the SAME sglang stack: (a) W4A8 hybrid (serve_w4a8_woq.sh GRAPH=1, int4_gemm int8-act prefill +
+  fp16-act decode); (b) int4-graph champion (rdy_to_serve/qwen36-27b-int4-graph, auto_round woqgemm fp16-act).
+COMMAND: eval venv (uv, py3.12, evalplus==0.3.1) + evalplus-sandbox:0.3.1 docker grader; each serve held under
+  ./bin/gpu-run --card 0 for the whole generate+grade window, then stopped (docker empty + lease free verified).
+RESULT:
+  W4A8 hybrid       : pass@1 base 0.921  plus 0.896   (13 base-fails)   gen 2279s, grade 44s
+  int4-graph champ  : pass@1 base 0.921  plus 0.896   (13 base-fails)   gen 2355s, grade 44s
+  => DELTA 0.000 / 0.000. Failed sets overlap 9/13; the 4 that differ (W4A8 91,118,140,148 vs int4 67,109,126,130)
+     are marginal problems flipped by greedy non-determinism ACROSS kernels (nets to zero). int8-act = no loss.
+  Absolute 0.921 is DEPRESSED by truncation: 9 of 13 base-fails are verbose solutions hitting max_tokens=2048
+  (fence never closed), not quant damage. The vLLM 0.963/0.927 (SAME weights, SUMMARY.md) is a terser-template
+  stack artifact, NOT the kernel. Coherence + vision OK; GPU clean after both runs (no wedge, no DEVICE_LOST).
+VERDICT: GATE PASS. W4A8 hybrid = int4 on accuracy AND faster (25.15 vs 23.5 decode, lower TTFT, vision) -> a
+  real daily-driver upgrade. Results: evals/results/{...__w4a8-graph, ...__int4-graph-sglang}; SUMMARY.md callout;
+  W4A8_PLAN.md ACCURACY GATE 2026-06-28d. Next: productionize (rdy_to_serve/qwen36-27b-w4a8-graph + DP=2 + docs).
