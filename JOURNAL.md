@@ -5386,3 +5386,23 @@ IMPLICATION (the high-value lead): sglang's XPU cuda_graph once hit 9.4->23.6 t/
   (woqgemm GEMVs) for the real speedup estimate; (2) re-test sglang cuda_graph ENABLED on this image over a LONG
   soak -- does it still degrade, or is it now stable? This is the single most promising remaining lever. Tools:
   scripts/137.
+
+## 2026-06-28 -- FRONTIER follow-up: enabling sglang cuda_graph on XPU is a NO-OP (stays eager) -> the graph win needs a custom XPUGraph integration [result]
+
+Tested whether sglang's own cuda_graph path captures on this torch-2.12 image (scripts/138, int4 NO-MTP):
+  - graph_off (--disable-cuda-graph):      c1 9.59, soak stable, "cuda graph: False"
+  - graph_on (flag removed):               c1 9.54, soak stable, "cuda graph: False"  <- SAME as off
+  - graph_on + --stream-interval 8:        c1 9.36 (server 9.46), "cuda graph: False" (si8 just batches client
+                                           tokens -> breaks the soak windowed measurement; server decode unchanged)
+ALL THREE log "cuda graph: False" in every decode batch -> sglang does NOT capture a graph on XPU even with
+cuda_graph enabled. Its CudaGraphRunner is CUDA-specific (torch.cuda.graph/CUDAGraph); on device=xpu it silently
+stays eager. So the old journal "9.4->23.6 cudagraph" was NOT stock sglang on this image (different mechanism /
+vLLM). Confirms: enabling the flag is a dead lever; both cards healthy after, no wedge.
+
+VERDICT -> [graph win requires a custom INTEGRATION] To get the XPUGraph launch-collapse (proven stable, prior
+  entry) into sglang, wire torch.xpu.XPUGraph into the decode runner. Promising approach: the torch.xpu graph API
+  MIRRORS torch.cuda (graph/CUDAGraph/graph_pool_handle/make_graphed_callables all present), and woq_shim already
+  redirects torch.cuda.{Stream,Event,synchronize}->torch.xpu -- so a shim redirect of torch.cuda.graph/CUDAGraph +
+  unblocking check_cuda_graph_backend for XPU might make sglang's DecodeCudaGraphRunner capture via XPUGraph with a
+  SMALL patch. KEY RISK = GDN/mamba recurrent state must update in-place into capture-resident (static) buffers
+  (scoping in progress). Tools: scripts/138.
