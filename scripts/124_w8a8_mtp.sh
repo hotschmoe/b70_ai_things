@@ -15,8 +15,8 @@ CKPT="${CKPT:-/models_w8a8/Qwen3.6-27B-W8A8-sqgptq-vision-mtp}"  # grafted: visi
 SERVED="${SERVED:-qwen36-27b-w8a8-vision-mtp}"
 FUSED="${FUSED:-1}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
-SPEC_STEPS="${SPEC_STEPS:-7}"
-SPEC_DRAFT="${SPEC_DRAFT:-8}"
+SPEC_STEPS="${SPEC_STEPS:-10}"   # W8A8 decode peak = 10 (int8-XMX verify is cheap -> deeper drafts win;
+SPEC_DRAFT="${SPEC_DRAFT:-11}"   #   7->23.8, 10->25.25 (+6%), 12->24.35 drops. int4 peaked at 7.)
 MAXREQ="${MAXREQ:-4}"                  # spec mamba cache cap
 PORT=30000; TP=2
 CTX="${CTX:-8192}"

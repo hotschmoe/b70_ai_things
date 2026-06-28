@@ -6027,3 +6027,12 @@ VERDICT: *** TASK GOAL ACHIEVED *** -- a vision-retaining W8A8 on sglang that ha
   TP=2 all-reduce/per-step tax). Follow-ups: B70_W8A8_DEBUG verify M>1 hits int8_gemm_w8a8 (perf confirms);
   accuracy gate (HumanEval+); real image request; productionize to rdy_to_serve. Files: scripts/124_w8a8_mtp.sh,
   models_w8a8/Qwen3.6-27B-W8A8-sqgptq-vision-mtp, w8a8/w8a8_mtp_steps7.log.
+
+## 2026-06-28 -- W8A8 MTP step tuning: peak = steps=10 (decode 25.25, +6% over steps=7) [result]
+CONFIG: scripts/124 SPEC_STEPS sweep, W8A8 fused+MTP TP=2 vision ckpt, warm c1.
+RESULT (decode t/s): steps=7 -> 23.7/23.8 | steps=10 -> 25.05/25.25 (+6%) | steps=12 -> 24.18/24.35 (drops).
+  prefill/TTFT flat (~3970/~520) across steps. M>1 verify confirmed via B70_W8A8_DEBUG (decode M=1 calls hit
+  int8_gemm_w8a16: qkv/o/gate_up/down shapes finite; the 25 t/s itself confirms verify rides int8_gemm_w8a8).
+VERDICT: W8A8 MTP peak = steps=10 (decode 25.25 = 2.8x bf16 9.0), DEEPER than int4's steps=7 -- because the
+  int8-XMX verify (int8_gemm_w8a8, 2.0x) is cheaper per draft token, so deeper drafts net positive until
+  accept-rate decay dominates at ~12. Shipped default scripts/124 SPEC_STEPS=10. Box healthy after 3 serves.

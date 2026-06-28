@@ -1,0 +1,29 @@
+[23:11:52] === pre-flight xpu-health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[23:12:08] === W8A8 FUSED + MTP TP=2: qwen36-27b-w8a8-vision-mtp steps=10 maxreq=4 img=sglang-xpu:mtp ===
+1b1ea87238f49d211afba246809f0a23d00afcbfa37b616e29614487dc5de998
+[23:12:13] waiting for /health (model load + spec JIT ~3-6min)...
+[23:15:24] /health 200 after ~105s
+[23:15:24] === shim + MTP wiring ===
+[w8a8-fused-dbg] call= 76 M=1 K=5120 N=7168 out_absmax=36.78 out_bad=False
+[w8a8-fused-dbg] call= 76 M=1 K=5120 N=7168 out_absmax=29.52 out_bad=False
+[w8a8-fused-dbg] call= 77 M=1 K=3072 N=5120 out_absmax=0.8452 out_bad=False
+[w8a8-fused-dbg] call= 77 M=1 K=3072 N=5120 out_absmax=0.4324 out_bad=False
+[w8a8-fused-dbg] call= 78 M=1 K=5120 N=17408 out_absmax=5.438 out_bad=False
+[w8a8-fused-dbg] call= 78 M=1 K=5120 N=17408 out_absmax=2.363 out_bad=False
+[w8a8-fused-dbg] call= 79 M=1 K=8704 N=5120 out_absmax=0.2323 out_bad=False
+[w8a8-fused-dbg] call= 79 M=1 K=8704 N=5120 out_absmax=0.2058 out_bad=False
+[23:15:24] === coherence (greedy; must NOT be '!!!!') ===
+COHERENCE: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Two sentences.\n\n2.  **Identify Key Scientific Concept:**\n   - The sky appears blue due to Rayleigh scattering.\n   - Sunligh"
+[23:16:23] === WARMUP (discard; JITs spec path) ===
+[23:17:03] === WARM c1 ===
+[23:17:54] RESULT[c1.run1]: decode_tps=25.05 prefill_tps=3596 TTFT_ms=569.53 TPOT_ms=39.92 out_tps=21.41
+[23:18:45] RESULT[c1.run2]: decode_tps=25.25 prefill_tps=4344 TTFT_ms=471.48 TPOT_ms=39.61 out_tps=22.19
+[23:18:45] === DONE. stopping. ===
+[23:18:48] === post health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[23:19:03] stopped sglang_w8a8_mtp
