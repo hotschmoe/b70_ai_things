@@ -24,7 +24,13 @@ CTX="${CTX:-8192}"
 MEMFRAC="${MEMFRAC:-0.90}"
 COHERENCE_ONLY="${COHERENCE_ONLY:-0}"
 EXTRA_FLAGS="--skip-server-warmup"   # REQUIRED for W8A8 GDN coherence (scripts/122 root cause)
-[ "$GRAPH" = 1 ] && EXTRA_FLAGS="$EXTRA_FLAGS"   # graph flags handled via env (woq_shim)
+# XPUGraph decode capture needs the triton attn backend (matches the W4A8 graph champion);
+# eager uses intel_xpu (the scripts/122 baseline). GRAPH capture is the decode lever.
+if [ "$GRAPH" = 1 ]; then
+  ATTN="--attention-backend triton --linear-attn-backend triton"
+else
+  ATTN="--attention-backend intel_xpu --linear-attn-backend triton"
+fi
 TOK="/models/Qwen_Qwen3.6-27B"
 LABEL="$([ "$FUSED" = 1 ] && echo fused || echo legacy)$([ "$GRAPH" = 1 ] && echo +graph)"
 LOG="$REPO/w8a8/w8a8_fused_ab_${LABEL}.log"
@@ -52,7 +58,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
     exec python -m sglang.launch_server \
     --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
-    --device xpu --attention-backend intel_xpu --linear-attn-backend triton \
+    --device xpu $ATTN \
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
     --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC \
     $EXTRA_FLAGS --host 0.0.0.0 --port $PORT" >>"$LOG" 2>&1
