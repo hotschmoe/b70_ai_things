@@ -5605,3 +5605,26 @@ All TRACTABLE levers are exhausted. The daily-driver goal (more performant AND c
 (9.4 -> 23.5 = 2.5x, sampling, vision, correct under load). Remaining frontiers are deep-debug (graph+MTP hang)
 or quality-risky (W3) -- each documented + resumable, awaiting an explicit go-ahead given the trade-offs.
 Box HEALTHY + idle. *** Campaign COMPLETE. ***
+
+## 2026-06-28 -- re-engaged loop: graph+MTP isolation (deeply walled) + W3 kernel scoping (custom-GEMV project) -> decision point [result]
+
+Pushed the two deep frontiers further on a 3rd loop re-engagement.
+GRAPH+MTP ISOLATION (bl04dedjv): num_steps=1 (skips the draft cuda-graph) -> gen returns EMPTY in 12s, "cuda graph:
+  False". Since plain MTP num_steps=1 WORKS without B70_XPU_CUDAGRAPH (scripts/128), the B70_XPU_CUDAGRAPH=1 install
+  itself (device-gate + XPUAttentionBackend out_graph override) BREAKS the spec-decode path (empty output) --
+  SEPARATELY from the num_steps>1 draft-cuda-graph HANG. So graph+MTP has MULTIPLE independent failure modes; it is
+  deeply walled, not a bounded fix. (Confirms the parked verdict.)
+W3 KERNEL SCOPING: auto_round_kernel.matmul(A,B,bias) takes a pre-packed weight; QuantLinearGPTQ(bits,...) packs it.
+  The lib is "the int4 GEMM" -- no docs/source evidence of a 3-bit SYCL kernel path (Python introspection shows no
+  bit-width branches; the bit logic is in the compiled kernel, almost certainly 4/8-bit only). auto_round (the
+  quantizer) is NOT installed in the image. => W3 = a MAJOR project: make a W3 AutoRound quant (install auto_round)
+  + ALMOST CERTAINLY a from-scratch custom 3-bit SYCL GEMV (write + AOT-compile ~50min/build + debug numerics +
+  integrate) + validate 3-bit-27B QUALITY (a real risk to the "AND correct" goal), for ~25% over 23.5 (3-bit = 25%
+  less weight bandwidth, IF the kernel realizes it).
+
+VERDICT -> [CEILING; W3 is a DECISION POINT, not autonomous work] The tractable optimization space is EXHAUSTED:
+  single-stream bandwidth-bound (23.5, shipped), per-card concurrency walled, graph+MTP deeply walled. The ONLY
+  remaining performance lever is W3, which is a multi-week custom-kernel build WITH a correctness trade-off -- this
+  crosses from "autonomous loop optimization" into "a project needing the user's explicit scoping decision". Not
+  starting it autonomously. Loop wrapped (2nd time) pending an explicit W3 go-ahead (or a different direction).
+  Box HEALTHY + idle. Tools: bl04dedjv, gmtp_crash_full.log.
