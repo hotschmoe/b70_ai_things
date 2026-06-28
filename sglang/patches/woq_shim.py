@@ -155,6 +155,17 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] W8A8 shim install FAILED: {e}", flush=True)
 
+    # --- W4A8/W4A16 HYBRID (oneDNN int4w x {int8a prefill, fp16a decode}; OPT-IN via B70_XPU_W4A8=1) ---
+    # Wraps compressed-tensors _get_scheme_from_parts to route dense W4A8 int-quantized linears to
+    # CompressedTensorsW4A8Int8XPU -> torch.ops._xpu_C.int4_gemm_w4a{8,16}. Needs the built _xpu_C.abi3.so
+    # (B70_XPU_C_SO) + the oneAPI compiler lib on LD_LIBRARY_PATH. See sglang/W4A8_BUILD.md.
+    if os.environ.get("B70_XPU_W4A8") == "1":
+        try:
+            import w4a8_shim
+            w4a8_shim.install()
+        except Exception as e:
+            print(f"[woq-shim] W4A8 shim install FAILED: {e}", flush=True)
+
     print("[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)", flush=True)
 
 
