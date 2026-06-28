@@ -6,15 +6,23 @@ config -> command -> result -> verdict in JOURNAL.md + the perf campaign in `sgl
 
 ## DAILY DRIVER GUIDE (perf-campaign outcome, UPDATED 2026-06-28) -- see sglang/PERF.md + JOURNAL
 The campaign goal was a more performant AND correct daily driver. **ACHIEVED + EXCEEDED:** the ~9.4 t/s eager
-ceiling is BROKEN. Headline = **23.5 t/s single-stream** via the FIRST sglang-XPU decode cuda-graph
-(torch.xpu.XPUGraph / SYCL-Graph over Level-Zero). All drivers correct + vision-retaining; pick by use:
-  1. **int4 + XPUGraph (FASTEST single-stream, SAMPLING) -- the recommended single-user driver:**
-     `rdy_to_serve/qwen36-27b-int4-graph/serve.sh` -> **23.5 t/s** = 2.5x eager, sampling-capable, vision.
-     Pin card 0 (card 1 is display-attached/downclocked -> 15.3). 2 users: `./sglang/serve_dp2_graph.sh` (~23.5+15.3).
-  2. **int4 + NEXTN MTP (greedy latency):**  `rdy_to_serve/qwen36-27b-int4-mtp/serve.sh` -> 15.3 t/s (1.62x),
-     greedy-only, vision. Superseded by the graph driver for single-user (graph is faster AND samples).
-  3. **woq int4 DP=2 (>2 users / unattended, wedge-proof):**  `./sglang/serve_dp2.sh` -> ~9.4/replica, sampling.
-  4. **bf16 TP=2 (best c4 aggregate, attended):**  the serve command below. ~9.2 c1 / 23.4 c4-aggregate.
+ceiling is BROKEN. Headline = **25.15 t/s single-stream** (W4A8/W4A16 hybrid + XPUGraph), via the FIRST
+sglang-XPU decode cuda-graph (torch.xpu.XPUGraph / SYCL-Graph over Level-Zero) stacked on the oneDNN int4_gemm
+ops. All drivers correct + vision-retaining; pick by use:
+  1. **W4A8/W4A16 hybrid + XPUGraph (FASTEST single-stream, SAMPLING) -- the recommended single-user driver:**
+     `rdy_to_serve/qwen36-27b-w4a8-graph/serve.sh` -> **25.15 t/s** warm / 24.8 soak (> the int4-woqgemm 23.5),
+     **lower TTFT (~970-1110 ms)**, sampling-capable, vision, SAME int4 weights. Decode = int4_gemm_w4a16 (fp16
+     act, captured); prefill = int4_gemm_w4a8 (int8 act). **ACCURACY-GATED: HumanEval+ == int4 (0.921/0.896,
+     delta 0.000 -- int8-act prefill = zero code loss; see evals/results/SUMMARY.md + W4A8_PLAN.md).** Runtime
+     mounts (NOT baked): the built `_xpu_C.abi3.so` + woq_shim.py + oneAPI LD_LIBRARY_PATH (see W4A8_BUILD.md).
+     Pin card 0 (card 1 downclocked -> ~15). 2 users: `./sglang/serve_dp2_w4a8.sh` (~25+15, wedge-proof).
+  2. **int4 + XPUGraph (prior champion, baked image, SAMPLING):**
+     `rdy_to_serve/qwen36-27b-int4-graph/serve.sh` -> **23.5 t/s** = 2.5x eager, vision, ZERO mounts (simplest).
+     2 users: `./sglang/serve_dp2_graph.sh` (~23.5+15.3). Use this if you want a no-mounts baked image.
+  3. **int4 + NEXTN MTP (greedy latency):**  `rdy_to_serve/qwen36-27b-int4-mtp/serve.sh` -> 15.3 t/s (1.62x),
+     greedy-only, vision. Superseded by the graph drivers for single-user (graph is faster AND samples).
+  4. **woq int4 DP=2 (>2 users / unattended, wedge-proof):**  `./sglang/serve_dp2.sh` -> ~9.4/replica, sampling.
+  5. **bf16 TP=2 (best c4 aggregate, attended):**  the serve command below. ~9.2 c1 / 23.4 c4-aggregate.
 LEVERS (sglang/PERF.md + JOURNAL have the data): **XPUGraph decode capture = the WIN** -- torch.xpu.XPUGraph is
 STABLE on B70 (the old "torch-xpu graph degrades" was a different/older mechanism); wired into sglang via
 `patches/xpu_cudagraph.py` (B70_XPU_CUDAGRAPH=1, needs ATTN=triton to clear the SYCL-Graph work_group_scratch

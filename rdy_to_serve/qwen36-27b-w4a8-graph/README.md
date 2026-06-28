@@ -1,0 +1,73 @@
+# qwen36-27b-w4a8-graph -- FASTEST single-stream daily driver (W4A8/W4A16 hybrid + XPUGraph)
+
+Qwen3.6-27B served from the **proven Lorbus int4-AutoRound** checkpoint (multimodal
+`Qwen3_5ForConditionalGeneration` -- **VISION retained**, full GDN+MLP int4), but with its int4 linears
+dispatched to the **oneDNN `int4_gemm` ops** instead of auto_round `woqgemm`, stacked under
+**`torch.xpu.XPUGraph` decode capture**:
+
+- **decode** (M==1) -> `int4_gemm_w4a16` (fp16 act) -- numerically == woqgemm (relerr ~1e-3), but a faster oneDNN kernel
+- **prefill** (M>1) -> `int4_gemm_w4a8` (per-token symmetric int8 act) -- ~1.9x faster prefill than woqgemm, lower TTFT
+
+Same int4 weights as `qwen36-27b-int4-graph`, faster kernel. **SAMPLING-capable** (honors temperature/top_p),
+soak-stable, coherent, GDN-correct under mixed load, no wedge.
+
+## Headline (card 0, warm, ctx 2048-in/128-out; verified 2026-06-28)
+| metric | W4A8-graph (this) | int4-woqgemm graph champion |
+|---|---|---|
+| decode c1 (warm) | **25.15 t/s** | 23.5 t/s |
+| decode soak (2000-tok) | 24.8 t/s (stable) | 23.0 t/s |
+| TTFT | ~970-1110 ms | ~1244 ms |
+| eager fallback (GRAPH=0) | 9.7 t/s decode + faster TTFT | 9.4 t/s |
+| VRAM | ~17.4 GB weights | 17.4 GB |
+
+**Accuracy GATE -- PASS (HumanEval+ 164, thinking-off, greedy, sandboxed):** on the SAME sglang stack +
+SAME int4 weights, W4A8 hybrid scores **0.921 base / 0.896 plus** == the int4-woqgemm champion's
+**0.921 / 0.896** (delta 0.000 / 0.000). The int8-act prefill (relerr ~9e-3, prompt-encoding only; decode is
+fp16-act) causes ZERO coding-accuracy loss. (The absolute 0.921 is depressed by max_tokens=2048 truncation of
+verbose solutions, not quant damage.) Full analysis: `../../sglang/W4A8_PLAN.md` (ACCURACY GATE 2026-06-28d),
+`../../evals/results/SUMMARY.md`.
+
+## How it works (the frontier win)
+The int4 weights live on disk in auto_gptq packing; `woq_shim.py` (`_XpuW4A8WoqKernel`, opt-in
+`B70_XPU_W4A8_WOQ=1`) converts them ONCE to the `int4_gemm` op layout (a pure relayout -- numerically gated
+by `../../sglang/w4a8_from_woq_probe.py`) and routes the `GPTQLinearScheme` kernel hook to the hybrid. The
+`int4_gemm_w4a16` decode op is **XPUGraph-capturable** (bs=1 decode = a single op, no data-dependent act-quant),
+so the 25 t/s capture win stacks on top. The prefill `int4_gemm_w4a8` act-quant is EAGER (compile of it HANGS
+serve startup). `B70_XPU_CUDAGRAPH=1` + `--attention-backend triton` enable capture (same as int4-graph).
+
+## REQUIREMENTS (this is NOT a baked image -- it has runtime mounts)
+- **Image:** `sglang-xpu:mtp` (the champion int4-graph image; the multimodal Qwen3_5 path is baked).
+- **Kernel:** the built `_xpu_C.abi3.so` at `/mnt/vm_8tb/b70/w4a8_kernel/` (50 MB, **NOT in git**;
+  build per `../../sglang/W4A8_BUILD.md`; sha256 `63c8be3d26c8...`). `B70_XPU_C_SO` points the shim at it.
+- **Shim:** `../../sglang/patches/woq_shim.py` (mounted over the baked copy; carries `_XpuW4A8WoqKernel`).
+- **oneAPI LD_LIBRARY_PATH:** the container PREPENDS `/opt/intel/oneapi/compiler/2025.3/lib` (required, or the
+  ctypes-loaded .so resolves but torch loses the XPU device). serve.sh does this automatically.
+`serve.sh start` preflights all of the above and refuses if any are missing.
+
+## Run (on the GPU host)
+```bash
+cd /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/qwen36-27b-w4a8-graph
+/mnt/vm_8tb/b70/gpu-run --card 0 bash serve.sh start   # serve, capture at startup, coherence-gated probe
+bash serve.sh bench                                     # warm c1 (pp/ttft/tg @ ctx2048) + soak
+bash serve.sh stop
+/mnt/vm_8tb/b70/gpu-run --card 0 bash serve.sh run      # start + bench + stop in one lease
+```
+Endpoint: `http://<host>:30000/v1`. Served id: `qwen36-27b-w4a8-graph`. Capture takes ~50s at startup; sglang
+`/health` first returns 200 ~150s after launch.
+
+## [!] Pin card 0 -- the cards are asymmetric
+`xe` drives the console/display off one Arc card; `ZE_AFFINITY_MASK=1` (card 1) is downclocked
+(card 0 ~25 t/s vs card 1 ~15 t/s). serve.sh defaults `DEVICE=0` (the fast compute card).
+
+## [!] Single-stream driver -- use DP=2 for concurrency
+`--max-running-requests 1` + a single captured `bs=1` graph. For >1 user run **DP=2**
+(`../../sglang/serve_dp2_w4a8.sh` -> 2 single-card replicas, card0 ~25 + card1 ~15, wedge-proof: no
+cross-card collective), NOT a higher `max-running-requests` here.
+
+## Driver matrix
+| driver | c1 t/s | sampling | cards | use |
+|---|---|---|---|---|
+| **W4A8 + XPUGraph (this)** | **~25.15** | yes | 1 | FASTEST single-stream + lower TTFT; vision |
+| W4A8 + XPUGraph DP=2 (`../../sglang/serve_dp2_w4a8.sh`) | ~25 + ~15 | yes | 2 | 2 users, wedge-proof |
+| int4 + XPUGraph (`../qwen36-27b-int4-graph`) | ~23.5 | yes | 1 | prior champion (woqgemm kernel) |
+| int4 + NEXTN MTP steps=7 (`../qwen36-27b-int4-mtp`) | ~15.3 | greedy only | 1 | superseded by graph |
