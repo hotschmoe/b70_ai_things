@@ -276,6 +276,31 @@ PP = prompt prefill tok/s = IN(2048)*1000 / TTFT_ms (warm c1, the table above):
 The PP win is the int8-XMX int4_gemm_w4a8 prefill op (oneDNN, 1.9x woqgemm's int4->fp16 prefill) MINUS the
 act-quant overhead; Triton recovers most of that overhead (eager act-quant was eating ~12% of TTFT).
 
+## act-quant autotune (2026-06-28f, DECISION: SHIPPED CONFIG IS AT THE CEILING -- NO CHANGE)
+Tried to shave the single-launch Triton per-token int8 act-quant (patches/w4a8_actquant_triton.py, gate
+B70_W4A8_TRITON_AQ; shipped config = two-pass, BLOCK_K=2048, num_warps=8). Probe: sglang/w4a8_actquant_autotune.py
+(card 0, sglang-xpu:woq, microbench, NO serve). Swept BLOCK_K {512,1024,2048,4096}, num_warps {4,8,16,32},
+num_stages {1,2,3}, AND a SINGLE-PASS full-row strategy (load the whole row once = read x ONCE instead of
+twice) at the real Lorbus linear K's {5120 (gate/up/qkv), 17408 (down)}, M in {1,512,2048}. Gate: q within
+<=1 LSB of eager on >99% of elements + scale bit-exact (all surviving configs pass; max|dq|=1, ~0.9% mismatch).
+
+Results (warm, ms/call, two reproducing runs):
+  K= 5120 M=2048: shipped 0.0494-0.0496 ms; best 0.0490-0.0493 ms = +0.6..0.8% (NOISE). Every config (incl
+    M=1/512/2048) lands ~0.049-0.054 ms -> K=5120 act-quant is LAUNCH/FIXED-OVERHEAD bound, not BW bound;
+    no config helps (the compute is negligible vs the kernel-launch floor).
+  K=17408 M=2048: shipped 0.2122 ms; best two-pass (BLOCK_K=4096, num_warps=16) 0.2076 ms = +2.2% (reproducible).
+    SINGLE-PASS full-row (BLOCK_K=32768) = only +1.3%: the read-once BW saving is eaten by register/SLM spill
+    from the 32768-wide block, so it does NOT beat the streaming two-pass. The kernel is not cleanly BW-bound.
+  The +2.2% config (4096/16) is NEUTRAL-to-SLOWER at K=5120, so a SINGLE global config can't even capture the
+    2.2% -- the best config valid+fastest across BOTH K just TIES the shipped (2048/8) at geomean 1.000x.
+  Numerics held: int4_gemm_w4a8 output relerr(eager vs best) = 3.0e-3 (< the accepted 9e-3), finite.
+
+VERDICT: the act-quant is ~11% of the 1.69 ms W4A8 prefill GEMM, so the max realizable act-quant win (+2.2%,
+and only on the K=17408 down layers) is ~0.2% of prefill time -- below the run-to-run noise of TTFT/PP
+(the shipped table shows TTFT 936.4/934.9 ms, PP 2187/2191 -- ~0.1% jitter). No config clears the >=5%
+e2e bar; the shipped (two-pass BLOCK_K=2048 num_warps=8) Triton kernel is at the ceiling. NO CHANGE SHIPPED.
+Committed: this note + the autotune probe (sglang/w4a8_actquant_autotune.py). w4a8_actquant_triton.py unchanged.
+
 ## W4A4 MXFP4 speed gate (2026-06-28, DECISION: DO NOT PURSUE on B70)
 Cheap single-card microbench (card 0, synthetic, no serve, no accuracy concern) to answer one question
 BEFORE committing to an MXFP4 requant + accuracy validation: does the built-but-unused MXFP4 w4a4 op
