@@ -5628,3 +5628,38 @@ VERDICT -> [CEILING; W3 is a DECISION POINT, not autonomous work] The tractable 
   crosses from "autonomous loop optimization" into "a project needing the user's explicit scoping decision". Not
   starting it autonomously. Loop wrapped (2nd time) pending an explicit W3 go-ahead (or a different direction).
   Box HEALTHY + idle. Tools: bl04dedjv, gmtp_crash_full.log.
+
+================================================================================
+2026-06-28 -- W4A8-on-sglang campaign OPENED: kernel decision-gate microbenches
+================================================================================
+GOAL (user /loop): a W4A8 Qwen3.6-27B for sglang-XPU that HANDILY beats int4/W4A16
+on prefill(PP), TTFT, and decode(TG); retain vision; pack int4; build our own
+GEMV/GEMM to light the Intel int4/int8 fastpaths. sglang is target backend.
+
+ORIENTATION: the w4a8/ docs are all vLLM-era (06-20). sglang has NO W4A8 path wired
+(only woq int4 + w8a8 _int_mm shims). Existing W4A8-sqgptq ckpt is a BAD artifact:
+0 vision tensors, only 256 MLP linears int4 (GDN left bf16), 25.9GB, compressed-
+tensors format sglang-XPU cannot load. The clean source = Lorbus int4 weights
+(vision, GDN quantized, packed, group-128, already serves via woq_shim) -- W4A8 vs
+W4A16 differ only in ACTIVATION precision (runtime), not stored weights.
+
+MICROBENCHES (card 0, sglang-xpu:woq, real Lorbus down_proj 17408x5120; ms/call warm):
+  cmd: ./bin/gpu-run --card 0 docker run ... sglang-xpu:woq python3 sglang/w4a8_probe{,2,3,4}.py
+  - woqgemm int4: decode M=1 0.145ms (2.26x bf16), prefill M=2048 3.76ms (0.77x) -- int4 prefill weak.
+  - w8a8 _int_mm NAIVE: 0.76x (un-fused act-quant+dequant epilogue dominates).
+  - w8a8 torch.compile FUSED: M=512 1.67x, M=2048 1.84x bf16 (M=1 1.07x) -- int8-XMX helps PREFILL only.
+  - w4a8 grouped-128 _int_mm eager loop (136 groups): 0.03x -- DEAD.
+  - int4->int8 unpack microcost 4.26ms (> whole bf16 matmul) -- per-forward materialize DEAD.
+  - auto_round_kernel woqgemm(weight_type=int4, compute_type=int8) = the fused W4A8 kernel, BUT
+    M=2048 FAILS "no matrix hardware ... joint_matrix is not supported" (oneAPI<2026 SYCL int8-XMX gate).
+  - woqgemm_s8 (fused int8w x int8a, single launch): 1.44x bf16 @M=2048 -- but int8 WEIGHT (W8A8), not int4.
+
+VERDICT: W4A8 fast-prefill is KERNEL-WALLED on B70 + oneAPI<2026. int4-stored-weight +
+int8-XMX-prefill has no cheap path: (a) auto_round woqgemm int8 -> joint_matrix unsupported;
+(b) oneDNN _int_mm int8-XMX works (1.84x) but needs a materialized int8 weight (prohibitive /
+40GB); (c) grouped eager dead. So a W4A8 served from int4 today == W4A16 on prefill (no win).
+
+UNLOCKS (ranked, next): (1) PORT vLLM torch.ops._xpu_C.int4_gemm_w4a8 (oneDNN int4w x int8a, powered
+the vLLM-era W4A8, NOT joint_matrix-gated since oneDNN int8-XMX works here) into sglang -- HIGHEST
+leverage. (2) oneAPI>=2026 upgrade -> woqgemm(compute_type=int8) joint_matrix. (3) custom SYCL kernel.
+Full detail: sglang/W4A8_PLAN.md. Artifacts: sglang/w4a8_probe{,2,3,4}.py.
