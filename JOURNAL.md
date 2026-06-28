@@ -5323,3 +5323,24 @@ VERDICT -> [WIN, shipped tool] DP=2 MTP is the "use all the hardware" driver: ~1
   NEXT: lever 3 cheap launch-overhead flags (num-continuous-decode-steps / overlap-schedule, scripts/134) to try
   to lift the per-card single-stream/MC ceiling, then the max-running-requests memory ceiling, then the SYCL
   kernel frontier. Tools: sglang/serve_dp2_mtp.sh, sglang/dp2_mtp_bench2.log.
+
+## 2026-06-28 -- PERF PUSH lever 3a: cheap scheduler/launch-overhead flags = NO single-stream win [result]
+
+Single-stream decode is launch-bound; tested the scheduler/CPU-overhead flags that DON'T need cuda-graph
+(the only path left after torch.compile NO-GO). scripts/134, baked sglang-xpu:mtp, warm c1 @ ctx2048:
+  - baseline (--disable-overlap-schedule):                 15.30 t/s  (accept 4.25)
+  - + --num-continuous-decode-steps 2:                     15.32 t/s  (no change)
+  - + --num-continuous-decode-steps 4:                     15.30 t/s  (no change)
+  - overlap schedule ON (omit --disable-overlap-schedule): 15.37 t/s  (noise; TTFT WORSE 1200 vs 925ms, agg lower)
+ALL within noise of 15.3. num-continuous-decode-steps does nothing (the spec verify already emits multiple
+tokens/step; the overhead is NOT scheduler polling). SIDE-FINDING: overlap-schedule + spec-decode stays
+COHERENT (so --disable-overlap-schedule is NOT a correctness requirement for MTP single-stream, contra the
+assumption) -- but it gives no speedup and hurts TTFT, so keep it OFF.
+
+VERDICT -> [NO-GO] no accessible scheduler/launch flag lifts the ~15.3 single-stream ceiling. Combined with the
+  torch.compile NO-GO, EVERY launch-reduction lever that does not require a custom kernel or the (degrading) XPU
+  cuda-graph is now exhausted for single-stream. The launch-bound ceiling is real. Remaining single-stream
+  headroom needs the FRONTIER: a hand-written fused SYCL GDN/decode kernel (cut the ~816 GDN-layer launches in
+  C++), or L0/SYCL-Graph capture (#13, avoids the torch.xpu-graph degradation). The TRACTABLE remaining "use the
+  hardware" win is AGGREGATE: the per-card max-running-requests ceiling (lever 3b, scripts/135) -> then x2 via
+  DP=2. Tools: scripts/134.
