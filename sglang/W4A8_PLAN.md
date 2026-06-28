@@ -275,3 +275,31 @@ PP = prompt prefill tok/s = IN(2048)*1000 / TTFT_ms (warm c1, the table above):
   W4A8 hybrid, TRITON int8 act-quant prefill:   2189 tok/s   (+23.9% vs int4, +12.6% vs the eager W4A8)
 The PP win is the int8-XMX int4_gemm_w4a8 prefill op (oneDNN, 1.9x woqgemm's int4->fp16 prefill) MINUS the
 act-quant overhead; Triton recovers most of that overhead (eager act-quant was eating ~12% of TTFT).
+
+## W4A4 MXFP4 speed gate (2026-06-28, DECISION: DO NOT PURSUE on B70)
+Cheap single-card microbench (card 0, synthetic, no serve, no accuracy concern) to answer one question
+BEFORE committing to an MXFP4 requant + accuracy validation: does the built-but-unused MXFP4 w4a4 op
+`torch.ops._xpu_C.fp4_gemm` (mxfp4 weight x mxfp4 act, e8m0 block-32 scales) have a FAST compute path on
+B70, or is it emulated/slow like FP8?
+
+  - Op: registered name is `fp4_gemm` (NOT `fp4_gemm_w4a4`). Schema:
+    `_xpu_C::fp4_gemm(Tensor A, Tensor B, Tensor A_scale, Tensor B_scale, ScalarType? out_dtype, Tensor? bias_) -> Tensor`
+    A = act fp4 [M,K/2] (float4_e2m1fn_x2), B = weight.T [K/2,N] NT (stride[0]==1), A_scale/B_scale = e8m0
+    [M,K/32]/[N,K/32] (float8_e8m0fnu), block-32. Layout mirrors tests/test_fp4_gemm_onednn.py + fp4_gemm_w4a4.h.
+  - Probe: sglang/w4a4_probe.py. Image sglang-xpu:woq, _xpu_C.abi3.so via CDLL RTLD_GLOBAL, LD_LIBRARY_PATH
+    prepend oneapi 2025.3/lib. MXFP4 quant via the vetted to_mxfp helper (tests/ops/mx_utils.py, mounted).
+    Real down_proj shape K=17408 N=5120, warm (20 warmup + discard 1st), M=1 (decode) and M=2048 (prefill).
+
+  RESULT (ms/call, x-vs-bf16; all paths produce FINITE output -- the op RUNS, no "joint_matrix not supported"):
+    M=1    bf16 0.305 | fp4 w4a4 op 0.432 (0.71x) | int4 w4a8 0.082 (3.72x) | int4 w4a16 0.082 (3.73x)
+    M=2048 bf16 2.402 | fp4 w4a4 op 11.06 (0.22x) | int4 w4a8 1.828 (1.31x) | int4 w4a16 2.710 (0.89x)
+  (fp4 op+eager-mxfp4-act-quant is worse still: 1.24 ms @M=1, 21.8 ms @M=2048 -- the to_mxfp act path is
+  unfused, but the OP ITSELF is already the killer.)
+
+  VERDICT: W4A4 MXFP4 is NOT worth pursuing on B70. fp4_gemm is FUNCTIONAL but EMULATED -- there is no
+  XMX/joint_matrix fast path for e2m1xe2m1 + e8m0 here. It is SLOWER THAN BF16 at both M (0.71x decode,
+  0.22x prefill) and, decisively, ~6.0x SLOWER than the shipped int4_gemm_w4a8 at prefill (11.06 vs 1.83 ms)
+  and ~5.3x slower than int4_gemm_w4a16 at decode (0.432 vs 0.082 ms). An MXFP4 requant + accuracy validation
+  would buy a large perf REGRESSION, not a gain. DO NOT requant to MXFP4. The W4A8 hybrid (int8-act XMX
+  int4_gemm_w4a8 prefill + int4_gemm_w4a16 fp16-act decode) remains the frontier on this box; this matches
+  the earlier FP8-is-emulated finding (B70's only fast low-precision matmul path is INT8 XMX, used by w4a8).
