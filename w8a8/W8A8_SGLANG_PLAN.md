@@ -136,10 +136,32 @@ NEXT = wire both ops into w8a8_shim.py + serve A/B.
 
 ---
 
+## 3.5 SERVE STATUS (2026-06-28) -- live TP=2 numbers
+
+```
+  config (27B-W8A8 TP=2)   decode   prefill   TTFT    vs bf16 TP=2 (9.03 / 3098 / 661)
+  legacy _int_mm (eager)   5.45     ~3500     ~580
+  FUSED hybrid (eager)     8.08     4570      448     prefill +48%, TTFT -32%, decode -10%  <- SHIP for TP=2
+  FUSED hybrid (GRAPH)     8.58     ~3100     ~660    CEILING: decode all-reduce-bound, prefill regresses
+```
+- TP=2 EAGER fused HANDILY beats bf16/fp8 on PP (+48%) and TTFT (-32%); decode ~ties bf16. (fp8 ~= bf16
+  on prefill per microbench -- no XMX -- so W8A8 beats fp8 too.) 2 of 3 metrics met at TP=2.
+- TP=2 GRAPH is a CEILING: the 1.9x decode op win does NOT realize because decode is all-reduce-bound at
+  TP=2 (128 collectives/token, not captured), and triton-attn (graph req) regresses prefill. Box safe (no wedge).
+- THE DECODE WIN (beat bf16 tg) needs SINGLE-CARD TP=1 GRAPH (no all-reduce; the op's 1.9x realizes) ->
+  requires shrinking 27B-W8A8 (35GB) to fit one card (~28GB): int8 GDN proj (RTN at load -> int8_gemm_w8a16,
+  bf16 recurrence kept) + int4 lm_head. Also the user's "minimize size" goal. = task #3, the next thrust.
+
 ## 4. Next steps (ordered)
 
-1. [DONE 2026-06-28] Built + validated `int8_gemm_w8a16` (decode) + `int8_gemm_w8a8` (prefill) ->
-   W8A8 beats FP8/BF16 at the kernel level (sec 3). Artifact /mnt/vm_8tb/b70/w8a8_kernel/.
+1. [DONE] Built + validated int8 ops (sec 3) + wired fused hybrid into w8a8_shim + TP=2 eager serve win (sec 3.5).
+2. [NEXT-A, low risk] Serve the VISION ckpt (sqgptq-vision) TP=2 eager fused -> confirm vision loads +
+   coherent + same perf (the user's hard requirement). + same-session bf16 baseline for a clean head-to-head.
+3. [NEXT-B, the decode win] Single-card shrink: RTN int8 the GDN in/out projections at load (route via
+   int8_gemm_w8a16, keep bf16 recurrence) + int4 lm_head -> fit one card -> TP=1 GRAPH (+DP=2 for conc).
+   Validate coherence + accuracy (GDN recurrence is sensitive). Target decode ~12-14 t/s (beats bf16 9).
+4. Accuracy gate (HumanEval+) on the shipped config; productionize to rdy_to_serve/qwen36-27b-w8a8-fused.
+5. [stretch] Port the push-AR to sglang's TP communicator -> faster TP=2 decode all-reduce (the other decode lever).
 2. Wire the two ops into `w8a8_shim.py` (decode->w8a16 fp16-act, prefill->w8a8 int8-act), behind a new
    env (e.g. `B70_XPU_W8A8_FUSED=1`). Reuse W4A8's Triton act-quant for prefill if op-internal quant
    is not done.
