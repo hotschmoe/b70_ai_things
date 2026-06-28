@@ -5575,3 +5575,33 @@ VERDICT -> [WALLED; maxreq=1 is OPTIMAL] the shipped graph driver's --max-runnin
   higher maxreq tanks single-stream via the stall batches). Per-card multi-stream-at-speed is BLOCKED by this
   sglang maxreq>1+graph interaction -- NOT a hook fix. Concurrency stays DP=2 (2 replicas, shipped). This positively
   CONFIRMS the rdy_to_serve/qwen36-27b-int4-graph config. Tools: scripts/144.
+
+## 2026-06-28 -- graph+MTP wall CHARACTERIZED: it HANGS (not crashes) in the captured spec-decode forward [result]
+
+Crash-capture (sglang/gmtp_crash_full.log, int4-mtp + B70_XPU_MTP=1 + B70_XPU_CUDAGRAPH=1, ATTN=triton, NEXTN
+steps=7, cuda-graph bs=1, maxreq=1): the serve REACHES /health (startup capture of the draft + decode graphs
+SUCCEEDS), but the FIRST spec-decode gen HANGS -- no Python exception; the only trace is the request TimeoutError
+in tokenizer_manager._wait_one_response (120s) -> the running_phase_sigquit_handler / kill_process_tree watchdog
+killing the wedged scheduler. So the EAGLE draft-gate patch lets the spec graphs CAPTURE, but REPLAYING the
+captured spec forward (draft cuda-graph replay, or the unbound spec-verify attention metadata which my no-spec
+hook does NOT handle) DEADLOCKS on XPU. Box stayed HEALTHY (watchdog killed only the scheduler; both cards free).
+
+VERDICT -> [DEEP WALL, not a quick fix] graph+MTP is a HANG in the captured spec path -- no traceback to point at a
+  line; root-causing needs interactive hang-localization (which forward/kernel deadlocks) + spec-verify graph
+  metadata hooks, a multi-session effort, for a NICHE payoff (>30 t/s GREEDY+capped, which is WORSE than the
+  shipped 23.5 t/s SAMPLING graph driver for a daily driver). Parked. The draft-gate patch (xpu_cudagraph.py
+  section 3, gated on B70_XPU_MTP=1) is preserved for a future resume. Tools: gmtp_crash_full.log.
+
+## 2026-06-28 -- *** FRONTIER MAP COMPLETE: all single-stream/concurrency levers characterized; campaign at its ceiling *** [closeout-2]
+
+After the re-engaged loop pushed the two remaining frontiers, the full picture for Qwen3.6-27B sglang-XPU:
+  - SINGLE-STREAM: 23.5 t/s (shipped, rdy_to_serve/qwen36-27b-int4-graph) = BANDWIDTH-bound (int4 weight read
+    ~30ms) -- the practical ceiling. Faster needs lower-bit quant (quality cost) or graph+MTP (hangs).
+  - PER-CARD CONCURRENCY: WALLED -- maxreq>1+graph = intermittent ~2.3 t/s stall batches; maxreq=1 is optimal;
+    concurrency = DP=2 (shipped).
+  - GRAPH+MTP (>30 greedy): WALLED -- captured spec-decode forward HANGS (deep, niche payoff).
+  - LOWER-BIT QUANT (W3): trades against the "correct" half of the goal; not attempted.
+All TRACTABLE levers are exhausted. The daily-driver goal (more performant AND correct) is MET + EXCEEDED
+(9.4 -> 23.5 = 2.5x, sampling, vision, correct under load). Remaining frontiers are deep-debug (graph+MTP hang)
+or quality-risky (W3) -- each documented + resumable, awaiting an explicit go-ahead given the trade-offs.
+Box HEALTHY + idle. *** Campaign COMPLETE. ***
