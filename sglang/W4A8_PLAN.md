@@ -91,16 +91,37 @@ There is NO cheap path to int4-stored-weight + int8-XMX-prefill on this stack:
   (c) grouped-128 _int_mm accumulation in eager Python = dead (0.03x).
 So on this box today, a W4A8 served from int4 weights performs == W4A16 (woqgemm fp16) on prefill; no win.
 
-## THE UNLOCKS (ranked, next iterations)
-1. **Port vLLM's `torch.ops._xpu_C.int4_gemm_w4a8` (oneDNN int4w x int8a) into sglang.** This op powered the
-   vLLM-era W4A8 (14B prefill 4403 t/s) and is oneDNN-based (does NOT hit the auto_round joint_matrix gate, the
-   same way torch._int_mm works here). It dequants int4->int8 INSIDE the GEMM mainloop (no materialization,
-   keeps int4 memory, group-128 aware). Present in vllm-xpu-env images (vllm_xpu_kernels .so). VERIFY it is fast
-   on B70 (decode + prefill) then port the .so into sglang + write w4a8_shim around it. HIGHEST leverage.
-2. **oneAPI >= 2026 upgrade** in the sglang image -> unlocks woqgemm(compute_type=int8) joint_matrix -> fused
-   W4A8 (decode 1 launch + prefill int8-XMX) with zero materialization. Clean but image/ABI-rebuild risk.
-3. **Custom SYCL int4w x int8a GEMM** via the oneDNN DPAS path (not joint_matrix) -- re-implements (1) from
-   scratch. Only if porting the existing op fails.
+## UPDATE 2026-06-28b: int4_gemm_w4a8 VERIFIED FAST, but the drop-in port is ABI-BLOCKED
+Agent verified vLLM `torch.ops._xpu_C.int4_gemm_w4a8` (oneDNN int4w x int8a) on B70 (real sqgptq layer):
+  - decode M=1: 0.083 ms op-only = 3.75x bf16 (FASTER than int4-woqgemm 0.145ms); e2e 0.21ms (act-quant un-fused).
+  - prefill M=2048: 1.73 ms = 1.86x bf16 AND 2.17x faster than int4-woqgemm prefill (3.76ms). relerr 2e-04.
+  - It is oneDNN-based (NOT joint_matrix-gated) -> runs clean on this box. Existing sqgptq ckpt layout already
+    matches the op ([N,K/8] i32 weight + [N,K/g] scale; pass weight.t()). Call:
+      int4_gemm_w4a8(actInt8[M,K], actScale[M,1] fp16, actZero[M,1] i32, qweight[K/8,N] i32,
+                     wscale[K/g,N], wzp=tensor([8]) i8, group_size, g_idx=None, bias=None) -> [M,N] fp16
+    Activation quant is OUTSIDE the op (per-token sym int8). Output always fp16 (serve --dtype float16).
+ABI GATE (w4a8_abi_test.py): the v0230 `_xpu_C.abi3.so` is built against torch 2.11; sglang has torch 2.12.
+  torch.ops.load_library -> "undefined symbol: _ZNR5torch7Library4_def..." = a torch C++ ABI break (2.11 vs 2.12).
+  Also DT_NEEDED libsycl.so.8/libimf/libintlc (oneAPI 2025.3 runtime) absent. So the .so CANNOT drop into sglang.
+=> Need int4_gemm_w4a8 BUILT AGAINST torch 2.12 (sglang's). Net-new build step. Probe set: sglang/int4_gemm_w4a8_probe.py
+   (vllm img), sglang/w4a8_abi_test.py (sglang img), extracted glue sglang/_v0230_kernels/*.py.
+
+## THE UNLOCKS (ranked, post-ABI-gate)
+GOAL: get int4_gemm_w4a8 (proven fast, oneDNN) callable in the sglang torch-2.12 image, then write
+w4a8_shim (decode + prefill via the op; reuse woq_shim layer selection; fuse the act-quant to recover decode).
+1. **Obtain int4_gemm_w4a8 built against torch 2.12**, by the cheapest working route:
+   (a) `pip install vllm-xpu-kernels` (or equiv) INTO sglang-xpu:woq -- if it ships/builds a cp312+torch2.12 XPU
+       wheel, the op registers ABI-matched. CHECK FIRST (lowest effort).
+   (b) extract `_xpu_C.abi3.so` + sibling libs from a NEWER vllm-xpu image built on torch 2.12 (if one exists).
+   (c) build ONLY the int4_gemm_w4a8 op from the vllm-xpu-kernels SOURCE (github) as a standalone torch-2.12
+       C++/SYCL+oneDNN extension. Largest, but reliable (oneDNN int8 proven here). Source path in the .so strings:
+       /workspace/vllm_xpu_kernel/csrc/xpu/onednn/...
+   Then bake into sglang-xpu:w4a8; write w4a8_shim.py around torch.ops._xpu_C.int4_gemm_w4a8 + the
+   dynamic_per_token_int8_quant (port from _v0230_kernels/_xpu_ops.py; torch.compile-fuse it for decode).
+2. **oneAPI/compute-runtime upgrade** in sglang image -> maybe unlocks the ALREADY-PRESENT auto_round
+   woqgemm(compute_type=int8) joint_matrix path (the "no matrix hardware" runtime gate). Possibly a runtime lib
+   swap (no torch rebuild) -- uncertain it suffices since oneDNN int8 already works but the SYCL kernel path is gated.
+3. **Custom SYCL int4w x int8a GEMM** (oneDNN DPAS) -- == rebuilding (1c) from scratch. Last resort.
 
 ## Reference artifacts on disk
 - Lorbus_Qwen3.6-27B-int4-AutoRound: WORKING woq base (vision, GDN quantized, 17.7GB,

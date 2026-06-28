@@ -5663,3 +5663,24 @@ UNLOCKS (ranked, next): (1) PORT vLLM torch.ops._xpu_C.int4_gemm_w4a8 (oneDNN in
 the vLLM-era W4A8, NOT joint_matrix-gated since oneDNN int8-XMX works here) into sglang -- HIGHEST
 leverage. (2) oneAPI>=2026 upgrade -> woqgemm(compute_type=int8) joint_matrix. (3) custom SYCL kernel.
 Full detail: sglang/W4A8_PLAN.md. Artifacts: sglang/w4a8_probe{,2,3,4}.py.
+
+================================================================================
+2026-06-28b -- W4A8 BREAKTHROUGH kernel found (int4_gemm_w4a8) but drop-in ABI-blocked
+================================================================================
+Verified vLLM torch.ops._xpu_C.int4_gemm_w4a8 (oneDNN int4w x int8a) on B70 (vllm-xpu-env:v0230,
+real sqgptq down_proj 17408x5120, warm):
+  - decode M=1: 0.083ms op-only = 3.75x bf16 (FASTER than int4-woqgemm 0.145ms!); e2e 0.21ms (un-fused act-quant).
+  - prefill M=2048: 1.73ms = 1.86x bf16 AND 2.17x faster than int4-woqgemm prefill (3.76ms). relerr 2e-04.
+  - oneDNN-based -> NOT joint_matrix-gated (runs clean, unlike auto_round woqgemm int8). The existing sqgptq ckpt
+    layout already matches the op. This kernel can beat int4 on PP, TTFT, AND TG -> exactly the task target.
+  Signature: int4_gemm_w4a8(actI8[M,K], actScale[M,1]fp16, actZero[M,1]i32, qweight[K/8,N]i32,
+    wscale[K/g,N], wzp=tensor([8])i8, group_size, g_idx=None, bias=None) -> [M,N] fp16. Act-quant is external.
+
+ABI GATE (sglang/w4a8_abi_test.py, sglang-xpu:woq): torch.ops.load_library on the v0230 _xpu_C.abi3.so FAILS:
+  "undefined symbol: _ZNR5torch7Library4_def..." = torch C++ ABI break (so built vs torch 2.11, sglang has 2.12).
+  Also DT_NEEDED libsycl.so.8/libimf/libintlc absent. => CANNOT drop-in. Need int4_gemm_w4a8 built vs torch 2.12.
+
+VERDICT: the W4A8 kernel EXISTS and is fast; the only barrier is a torch-2.12 ABI build. Next: (1a) pip install
+vllm-xpu-kernels into sglang image (if cp312/torch2.12 wheel); else (1b) extract from a torch-2.12 vllm image;
+else (1c) build the single op from vllm-xpu-kernels source vs torch 2.12. Then w4a8_shim around the op +
+torch.compile-fused dynamic_per_token_int8_quant. Full plan: sglang/W4A8_PLAN.md (UPDATE 2026-06-28b).

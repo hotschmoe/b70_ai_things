@@ -1,1 +1,4 @@
 *.log
+# extracted vLLM kernel .so blobs (reproducible from vllm-xpu-env:v0230; keep only .py glue)
+_v0230_kernels/**/*.so
+_v0230_kernels/**/*.abi3.so
