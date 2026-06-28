@@ -369,3 +369,52 @@ ACCURACY GATE -- PASS (HumanEval+ 164, thinking-off, greedy, sandbox evalplus-sa
 VERDICT: SHIPPED. int4 lm_head is the new W4A8-graph default (LMHEAD=1): decode 27.3 t/s (+7.9%), TTFT/prefill
   and accuracy unchanged, vision retained. Decode is now ~16% over the int4-woqgemm champion (23.5 -> 27.3).
   Revert with LMHEAD=0 (bf16 lm_head). Probe: sglang/lmhead_int4_probe.py.
+
+## serve-config knob sweep (2026-06-28h, DECISION: CEILING -- NO CHANGE; the 27.3->34 gap is GRAPHED COMPUTE, not serving overhead)
+Hypothesis under test (from PERF.md "NEXT: --stream-interval N"): the shipped 27.3 t/s decode sits ~20% below the
+int4-weight bandwidth floor (~34 t/s); some of that gap might be per-token serving/streaming/scheduler overhead
+that is NOT inside the captured graph, recoverable by CHEAP serve-config flags (no kernel/requant changes).
+Swept one flag at a time from the shipped baseline (rdy_to_serve/qwen36-27b-w4a8-graph/serve.sh: GRAPH=1,
+LMHEAD=1, card 0, --attention-backend triton, --disable-overlap-schedule, --skip-server-warmup, --page-size 64,
+--disable-radix-cache, --max-running-requests 1). Bench = sglang/bench2048.sh methodology (random IN=2048, c1,
+WARM = 1st run discarded, 2 recorded runs back-to-back per config; each config a FRESH serve start+stop under its
+own gpu-run --card 0 lease). Harness recorded out_tps (Output token throughput = total tokens / wall-clock) as the
+DRIFT-IMMUNE and stream-interval-IMMUNE combined client metric, alongside TPOT-derived decode + TTFT + ITL.
+
+  config (vs shipped baseline)            decode t/s   TTFT ms   out_tps   ITL ms   delta (decode / out_tps)   verdict
+  baseline (shipped)                      27.37        935.8     20.93     36.5     --                         --
+  --stream-interval 4                     27.36        938.2     20.91     143      -0.0% / -0.1%              FLAT, ITL 4x worse
+  --stream-interval 8                     27.52        935.7     21.01     275      +0.5% / +0.4% (noise)      FLAT, ITL 8x worse
+  --num-continuous-decode-steps 2         27.20        938.0     20.82     36.5     -0.6% / -0.5%              flat-to-NEGATIVE
+  --triton-attention-num-kv-splits 16     27.00        935.3     20.71     37.0     -1.4% / -1.1%             NEGATIVE
+  --triton-attention-num-kv-splits 4      25.27        935.5     19.74     39.5     -7.7% / -5.7%             NEGATIVE (default 8 best)
+  env FLA_USE_FAST_OPS=1                   27.32        935.4     20.90     36.5     -0.2% / -0.1%             FLAT (no-op here)
+  --chunked-prefill-size 4096             27.36        936.0     20.92     36.5      0.0% /  0.0%             FLAT (2048 prompt = 1 chunk already)
+  baseline OUT=512                        27.29        967.2     21.80     36.4     --                         --
+  --stream-interval 4 OUT=512             27.32        967.5     21.82     144      +0.1% / +0.1% (noise)      FLAT, ITL 4x worse
+
+THE SMOKING GUN -- stream-interval does NOT change server-side per-token cost: TPOT is byte-for-byte identical
+across stream-interval 1/4/8 (36.52 / 36.54 / 36.33 ms at OUT=128). stream-interval only batches more tokens per
+SSE chunk -> ITL scales linearly (36.5 -> 143 -> 275 ms = 1x/4x/8x) with ZERO throughput or e2e-latency gain
+(out_tps 20.93 -> 20.91 -> 21.01; OUT=512 e2e 4458 vs 4454 ms). The PERF.md hypothesis (that stream_interval=1
+detok/HTTP overhead sits on the decode critical path and a bigger interval would recover it) is REFUTED for this
+graphed W4A8 driver: with --disable-overlap-schedule + a captured bs=1 graph, the streaming/detok work is NOT on
+the per-token critical path. The client-measured 27.3 t/s ALREADY EQUALS the server-side "cuda graph: True" rate
+(TPOT 36.5 ms = the real per-token kernel cost: int4_gemm_w4a16 GEMVs + triton attention + GDN recurrent step +
+int4 lm_head GEMV). So the 27.3->34 gap lives in the GRAPHED COMPUTE (kernel/bandwidth-realization), not in
+ungraphed serving/streaming/scheduler overhead -- it is NOT reachable by serve-config flags.
+
+Not separately benched (with rationale, to avoid wasted GPU time): --stream-interval 2 (monotonically between the
+flat si1 and flat si4 on throughput, only ITL changes -> no point); --num-continuous-decode-steps 4 (ncds2 already
+-0.6%, and JOURNAL 5332-5335 showed ncds4==ncds2==no change on the MTP driver); --schedule-conservativeness (a
+multi-request ADMISSION-control knob; with --max-running-requests 1 there is exactly one in-flight request at c1,
+so it cannot affect single-stream TTFT or decode).
+
+VERDICT: CEILING -- NO CHANGE SHIPPED. No flag or env (nor any combination, since every individual lever is
+flat-to-negative) clears the >=5% client-e2e decode bar or yields a TTFT win without a decode loss; the only
+non-noise movers are NEGATIVE (kv-splits!=8, num-continuous-decode-steps>1) or pure-smoothness-LOSSES (stream-
+interval, which trades 4-8x worse ITL for no throughput). The shipped defaults (stream-interval 1, kv-splits 8,
+continuous-decode-steps 1, chunked-prefill default, no FLA env) are already at the serve-config optimum. Further
+W4A8 decode gains require KERNEL work (faster int4 GEMV / lower-overhead attention to close the 27.3->34 floor),
+not flags. serve.sh / serve_w4a8_woq.sh / serve_dp2_w4a8.sh UNCHANGED. Sweep harness: scratchpad sweep_one.sh
+(start+warm-bench+stop per config); raw bench captures retained under the scratchpad.
