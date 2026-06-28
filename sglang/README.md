@@ -6,15 +6,16 @@ config -> command -> result -> verdict in JOURNAL.md + the perf campaign in `sgl
 
 ## DAILY DRIVER GUIDE (perf-campaign outcome, UPDATED 2026-06-28) -- see sglang/PERF.md + JOURNAL
 The campaign goal was a more performant AND correct daily driver. **ACHIEVED + EXCEEDED:** the ~9.4 t/s eager
-ceiling is BROKEN. Headline = **25.3 t/s single-stream** (W4A8/W4A16 hybrid + XPUGraph), via the FIRST
-sglang-XPU decode cuda-graph (torch.xpu.XPUGraph / SYCL-Graph over Level-Zero) stacked on the oneDNN int4_gemm
-ops. All drivers correct + vision-retaining; pick by use:
+ceiling is BROKEN. Headline = **27.3 t/s single-stream** (W4A8/W4A16 hybrid + XPUGraph + int4 lm_head), via the
+FIRST sglang-XPU decode cuda-graph (torch.xpu.XPUGraph / SYCL-Graph over Level-Zero) stacked on the oneDNN
+int4_gemm ops. All drivers correct + vision-retaining; pick by use:
   1. **W4A8/W4A16 hybrid + XPUGraph (FASTEST single-stream, SAMPLING) -- the recommended single-user driver:**
-     `rdy_to_serve/qwen36-27b-w4a8-graph/serve.sh` -> **25.3 t/s** warm / 24.7 soak (> the int4-woqgemm 23.5,
-     clean same-session +7.8%), **lower TTFT (~935 ms, -19%) + PP 2189 tok/s (+24%)**, sampling-capable, vision,
-     SAME int4 weights. Decode = int4_gemm_w4a16 (fp16 act, captured); prefill = int4_gemm_w4a8 (int8 act,
-     single-launch Triton act-quant). **ACCURACY-GATED: HumanEval+ == int4 (0.921/0.896,
-     delta 0.000 -- int8-act prefill = zero code loss; see evals/results/SUMMARY.md + W4A8_PLAN.md).** Runtime
+     `rdy_to_serve/qwen36-27b-w4a8-graph/serve.sh` -> **27.3 t/s** warm (int4 lm_head, `LMHEAD=1` default; +7.9%
+     over the 25.3 bf16-lm_head build; > the int4-woqgemm 23.5, +16%), **lower TTFT (~935 ms, -19%) + PP 2189
+     tok/s (+24%)**, sampling-capable, vision, SAME int4 weights. Decode = int4_gemm_w4a16 (fp16 act, captured,
+     incl. int4 lm_head); prefill = int4_gemm_w4a8 (int8 act, single-launch Triton act-quant). **ACCURACY-GATED:
+     HumanEval+ 0.933/0.896 (int4 lm_head) vs 0.921/0.896 (bf16 lm_head) -- no regression; int8-act prefill +
+     int4 lm_head = zero code loss; see evals/results/SUMMARY.md + W4A8_PLAN.md).** Runtime
      mounts (NOT baked): the built `_xpu_C.abi3.so` + woq_shim.py + oneAPI LD_LIBRARY_PATH (see W4A8_BUILD.md).
      Pin card 0 (card 1 downclocked -> ~15). 2 users: `./sglang/serve_dp2_w4a8.sh` (~25+15, wedge-proof).
   2. **int4 + XPUGraph (prior champion, baked image, SAMPLING):**

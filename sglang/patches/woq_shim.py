@@ -201,6 +201,100 @@ def _install():
 
     GPTQLinearScheme._init_kernel = _patched_init_kernel
 
+    # --- int4 lm_head (OPT-IN via B70_W4A8_QUANT_LMHEAD=1) -------------------------------------
+    # The Lorbus int4 ckpt EXCLUDES lm_head from quant -> it stays BF16 [vocab, hidden] (2.54 GB),
+    # read in FULL every decode step (~10% of per-token decode weight bandwidth; the lm_head GEMV is
+    # ~4.3 ms bf16 vs the whole step ~40 ms @25 t/s). RTN-quantize it to int4 group-g sym ONCE at
+    # load time and route the logits GEMV through int4_gemm_w4a16 (the same captured decode op as the
+    # body) -> ~3.3-3.8x faster lm_head -> est +~8% decode. lm_head is OUTPUT-SENSITIVE so this MUST
+    # gate on accuracy (HumanEval+). Naive RTN int4 weight relerr is ~10-13% (g32 best); keep bf16 if
+    # it regresses. We KEEP the bf16 weight resident (cheap, ~0.6 GB extra for int4) for revertibility
+    # and so get_embed_and_head()/PP/spec paths still see lm_head.weight; only the matmul is rerouted.
+    if os.environ.get("B70_W4A8_QUANT_LMHEAD") == "1":
+        if not _load_int4_gemm_op():
+            print("[lmhead-int4] int4_gemm op NOT available -> lm_head stays bf16", flush=True)
+        else:
+            _lmh_g = int(os.environ.get("B70_W4A8_LMHEAD_GROUP", "32"))
+
+            def _quant_lmhead_w(weight, g):
+                # weight [N,K] float -> (qw_contig [N,K/8] int32, scales_fp16 [N,K/g]); sym zp=8, q in [-7,7].
+                # Chunked over N to bound the fp32 scratch (the full fp32 view of a 248k-row lm_head is ~5 GB).
+                N, K = weight.shape
+                assert K % g == 0, f"lm_head K={K} not divisible by group {g}"
+                dev = weight.device
+                qw = torch.empty(N, K // 8, dtype=torch.int32, device=dev)
+                sc = torch.empty(N, K // g, dtype=torch.float16, device=dev)
+                step = 16384
+                for r0 in range(0, N, step):
+                    r1 = min(r0 + step, N)
+                    Wg = weight[r0:r1].reshape(r1 - r0, K // g, g).to(torch.float32)
+                    amax = Wg.abs().amax(dim=-1, keepdim=True).clamp_(min=1e-8)
+                    scale = amax / 7.0
+                    q = torch.round(Wg / scale).clamp_(-7, 7).to(torch.int32)  # [-7,7]
+                    sc[r0:r1] = scale.squeeze(-1).to(torch.float16)
+                    nib = (q + 8).reshape(r1 - r0, K // 8, 8)                  # nibble in [1,15]
+                    acc = torch.zeros(r1 - r0, K // 8, dtype=torch.int32, device=dev)
+                    for i in range(8):
+                        acc |= (nib[:, :, i] & 0xF) << (4 * i)
+                    qw[r0:r1] = acc
+                return qw, sc
+
+            def _attach_int4_lmhead(model):
+                lm = getattr(model, "lm_head", None)
+                if lm is None or not hasattr(lm, "weight") or getattr(lm, "_b70_int4", None) is not None:
+                    return
+                w = lm.weight.data
+                if w is None or w.dim() != 2 or w.dtype not in (torch.bfloat16, torch.float16):
+                    print(f"[lmhead-int4] skip: weight dtype/shape unsupported ({getattr(w,'dtype',None)})", flush=True)
+                    return
+                N, K = w.shape
+                qw, sc = _quant_lmhead_w(w, _lmh_g)          # qw [N,K/8] contig, sc [N,K/g] fp16
+                qweight_t = qw.t()                            # [K/8, N] NT view (stride0==1)
+                assert qweight_t.stride()[0] == 1
+                lm._b70_int4 = {
+                    "qw": qw,                                 # keep contiguous base alive (qweight_t is its view)
+                    "qweight_t": qweight_t,
+                    "wscale_t": sc.t().contiguous(),          # [K/g, N] fp16
+                    "wzp": torch.tensor([8], dtype=torch.int8, device=w.device),
+                    "g": _lmh_g,
+                }
+                if hasattr(torch, "xpu"):
+                    torch.xpu.empty_cache()
+                print(f"[lmhead-int4] lm_head int4 ready N={N} K={K} g={_lmh_g} "
+                      f"(int4 {qw.numel()*4/1e9:.2f}GB, bf16 kept {w.numel()*2/1e9:.2f}GB)", flush=True)
+
+            try:
+                import sglang.srt.model_executor.model_runner as _mr
+                _orig_load_model = _mr.ModelRunner.load_model
+
+                def _load_model_q(self):
+                    _orig_load_model(self)
+                    try:
+                        _attach_int4_lmhead(self.model)
+                    except Exception as _e:
+                        print(f"[lmhead-int4] quant FAILED (lm_head stays bf16): {_e}", flush=True)
+
+                _mr.ModelRunner.load_model = _load_model_q
+
+                from sglang.srt.layers.logits_processor import LogitsProcessor as _LP
+                _orig_compute_lm_head = _LP._compute_lm_head
+
+                def _compute_lm_head_int4(self, hidden_states, lm_head, embedding_bias=None):
+                    q = getattr(lm_head, "_b70_int4", None)
+                    if q is not None and embedding_bias is None and not self.use_fp32_lm_head:
+                        xf = hidden_states.to(torch.float16).contiguous()
+                        out = torch.ops._xpu_C.int4_gemm_w4a16(
+                            xf, q["qweight_t"], None, q["wscale_t"], q["wzp"], q["g"], None
+                        )
+                        return out.to(hidden_states.dtype)
+                    return _orig_compute_lm_head(self, hidden_states, lm_head, embedding_bias)
+
+                _LP._compute_lm_head = _compute_lm_head_int4
+                print(f"[lmhead-int4] ENABLED: lm_head -> int4_gemm_w4a16 (g={_lmh_g}); "
+                      "load-time RTN quant + LogitsProcessor reroute", flush=True)
+            except Exception as _e:
+                print(f"[lmhead-int4] install FAILED (lm_head stays bf16): {_e}", flush=True)
+
     # AutoRound's gptq/awq dispatch calls check_marlin_supported(..., device_capability=None) on XPU,
     # which does `None * int` -> TypeError before reaching the scheme. Guard it: no marlin on XPU.
     try:

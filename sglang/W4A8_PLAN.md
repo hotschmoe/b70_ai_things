@@ -328,3 +328,44 @@ B70, or is it emulated/slow like FP8?
   would buy a large perf REGRESSION, not a gain. DO NOT requant to MXFP4. The W4A8 hybrid (int8-act XMX
   int4_gemm_w4a8 prefill + int4_gemm_w4a16 fp16-act decode) remains the frontier on this box; this matches
   the earlier FP8-is-emulated finding (B70's only fast low-precision matmul path is INT8 XMX, used by w4a8).
+
+## int4 lm_head (2026-06-28g, SHIPPED: +7.9% decode, accuracy HELD) -- the new decode lever
+The Lorbus int4 ckpt EXCLUDES lm_head from quant (block_name_to_quantize = language_model.layers + mtp only),
+so lm_head.weight stays BF16 [vocab=248320, hidden=5120] = 2.54 GB, read in FULL every decode step. At 25 t/s
+(~40 ms/step) the bf16 lm_head GEMV is ~4.27 ms = ~11% of the step (bandwidth-bound: 2.54 GB / ~600 GB/s).
+Lever: RTN-quantize lm_head to int4 group-32 sym ONCE at load time and route the logits GEMV through the SAME
+captured decode op the body uses (int4_gemm_w4a16). lm_head is output-sensitive -> HARD-gated on HumanEval+.
+
+MICROBENCH (sglang/lmhead_int4_probe.py, card 0, REAL lm_head weight, warm):
+  - int4_gemm_w4a16 M=1: 1.29 ms (g32) / 1.11 ms (g128) vs 4.27 ms fp16 = 3.3x / 3.8x, FINITE, op relerr 3e-4.
+  - naive-RTN weight quant relerr is HIGH (lm_head is outlier-heavy): g128 12.6%, g64 11.3%, g32 10.0%
+    (vs the body's calibrated-AutoRound ~few %). g32 is best accuracy at ~negligible speed cost -> use g32.
+    The op supports g=32 (160 groups along K=5120); int4 size 0.64 GB (g32) vs 2.54 GB bf16.
+
+IMPLEMENTATION (sglang/patches/woq_shim.py, OPT-IN B70_W4A8_QUANT_LMHEAD=1, group B70_W4A8_LMHEAD_GROUP=32):
+  monkeypatches ModelRunner.load_model (quantize lm_head AFTER weights load, chunked over N to bound the fp32
+  scratch, BEFORE graph capture) + LogitsProcessor._compute_lm_head (reroute the logits matmul to
+  int4_gemm_w4a16 when lm_head._b70_int4 is set). The bf16 weight is KEPT resident (revertible; get_embed_and_head
+  /PP/spec paths still see lm_head.weight; net +0.64 GB) -- only the matmul is rerouted. The lm_head op is
+  XPUGraph-CAPTURABLE: the logits GEMV is inside the captured decode forward (model.forward returns
+  LogitsProcessorOutput) and captured cleanly at bs=1 (M=1). serve.sh: LMHEAD=1 default (LMHEAD=0 reverts).
+
+CLEAN SAME-SESSION HEAD-TO-HEAD (card 0, GRAPH=1, warm c1, bench2048 IN2048/OUT128, 1st run discarded, 2 runs):
+  config (GRAPH=1, card 0, same Lorbus int4 weights)   decode t/s     TTFT ms        prefill PP
+  W4A8 hybrid, bf16 lm_head (prior shipped)            25.32 / 25.35  940.4 / 941.1  2178 / 2176
+  W4A8 hybrid, int4 lm_head g32 (THIS)                 27.37 / 27.31  935.1 / 937.2  2190 / 2185
+  => decode +7.9% (25.34 -> 27.34); TTFT and prefill UNCHANGED (lm_head is M=1 even in prefill -- sglang
+     prunes to last-token logits -- so only DECODE benefits; the win is pure lm_head-GEMV bandwidth).
+
+ACCURACY GATE -- PASS (HumanEval+ 164, thinking-off, greedy, sandbox evalplus-sandbox:0.3.1, same harness):
+  config                            pass@1 base   pass@1 plus
+  W4A8 bf16 lm_head (baseline)         0.921         0.896
+  W4A8 int4 lm_head g32 (THIS)         0.933         0.896
+  => base +0.012 (NOT a regression; +2 problems via greedy cross-kernel non-determinism, same effect as the
+     int4-vs-W4A8 4-problem flips above), plus IDENTICAL. The 10% naive-RTN weight relerr does NOT translate
+     to coding-accuracy loss: code logits have large argmax margins, so greedy is robust to the perturbation.
+  Result dir: evals/results/20260628T144209Z__qwen36-27b-w4a8-graph__w4a8-lmhead-int4-g32.
+
+VERDICT: SHIPPED. int4 lm_head is the new W4A8-graph default (LMHEAD=1): decode 27.3 t/s (+7.9%), TTFT/prefill
+  and accuracy unchanged, vision retained. Decode is now ~16% over the int4-woqgemm champion (23.5 -> 27.3).
+  Revert with LMHEAD=0 (bf16 lm_head). Probe: sglang/lmhead_int4_probe.py.

@@ -5,7 +5,8 @@
 # HAS vision, FULL GDN+MLP int4), but dispatches its int4 linears to the oneDNN int4_gemm ops instead of
 # auto_round woqgemm:  decode (M==1) -> int4_gemm_w4a16 (fp16 act),  prefill (M>1) -> int4_gemm_w4a8
 # (per-token sym int8 act).  Same int4 weights as the int4-graph champion, faster kernel:
-#   c1 DECODE ~25.3 t/s warm / 24.7 soak  (> the int4-woqgemm graph champion's 23.5, clean same-session)  +
+#   c1 DECODE ~27.3 t/s warm  (int4 lm_head, LMHEAD=1; +8% over the 25.3 bf16-lm_head W4A8, accuracy held:
+#   HumanEval+ 0.933/0.896)  (> the int4-woqgemm graph champion's 23.5, clean same-session)  +
 #   lower TTFT (~935 ms, Triton act-quant) / +24% prefill PP. Full head-to-head: ../../sglang/W4A8_PLAN.md.
 # SAMPLING-capable, VISION retained, soak-stable, coherent, no wedge. Accuracy gated by HumanEval+ (see README).
 #
@@ -43,6 +44,8 @@ KERNEL_DIR="${KERNEL_DIR:-/mnt/vm_8tb/b70/w4a8_kernel}"     # holds _xpu_C.abi3.
 SHIMS="${SHIMS:-$REPO/sglang/patches}"
 SITE=/opt/venv/lib/python3.12/site-packages
 GRAPH="${GRAPH:-1}"          # 1 -> XPUGraph decode capture (the WIN: 25.15 t/s). 0 -> eager fallback (9.7 t/s).
+LMHEAD="${LMHEAD:-1}"        # 1 -> int4 lm_head (RTN g32) -> +8% decode (27.3 vs 25.3), accuracy held. 0 -> bf16 lm_head.
+LMHEAD_GROUP="${LMHEAD_GROUP:-32}"   # int4 lm_head group size (32 best accuracy/relerr; see ../../sglang/W4A8_PLAN.md)
 DENV="${DENV:-}"
 LOG="${LOG:-$ROOT/w4a8_graph_serve_card${DEVICE}.log}"   # per-card so DP=2 replicas don't clobber the same file
 
@@ -65,6 +68,10 @@ start() {
     genv=(-e B70_XPU_CUDAGRAPH=1)
     gflags=(--cuda-graph-bs-decode 1 --cuda-graph-max-bs-decode 1 --max-running-requests 1)
     say "GRAPH=1 -> stacking XPUGraph decode capture (bs=1)"
+  fi
+  if [ "$LMHEAD" = 1 ]; then
+    genv+=(-e B70_W4A8_QUANT_LMHEAD=1 -e "B70_W4A8_LMHEAD_GROUP=$LMHEAD_GROUP")
+    say "LMHEAD=1 -> int4 lm_head (RTN g$LMHEAD_GROUP) via int4_gemm_w4a16 (+8% decode)"
   fi
   say "=== sglang W4A8+XPUGraph serve: $SERVED  IMG=$IMG  card=$DEVICE  ctx=$CTX  memfrac=$MEMFRAC  port=$PORT ==="
   docker rm -f "$NAME" >/dev/null 2>&1

@@ -5800,3 +5800,30 @@ TASK GOAL MET: a vision-retaining W4A8 that HANDILY outperforms int4/W4A16 on pp
 same memory (int4-packed ~17.4GB), same accuracy. Remaining frontier (DECISION POINTS, not started): W4A4 via
 the .so's fp4_gemm_w4a4 op (later-frontier accuracy risk per repo policy); 3-bit/W3 (multi-week kernel); MTP
 on W4A8 (graph+MTP walled). int4_gemm act-quant + graph tuning are marginal follow-ups.
+
+## 2026-06-28 -- W4A8-graph int4 lm_head: +7.9% decode, accuracy HELD -> SHIPPED
+CONFIG: serve Lorbus int4 via rdy_to_serve/qwen36-27b-w4a8-graph (GRAPH=1, card 0). The Lorbus ckpt EXCLUDES
+lm_head from quant -> lm_head.weight stays BF16 [248320,5120]=2.54GB, read every decode step (~11% of the
+~40ms/step at 25 t/s; the bf16 lm_head GEMV is ~4.27ms, bandwidth-bound). LEVER: RTN-quantize lm_head to int4
+group-32 sym ONCE at load time, route the logits GEMV through the SAME captured decode op the body uses
+(int4_gemm_w4a16). New env B70_W4A8_QUANT_LMHEAD=1 (+ B70_W4A8_LMHEAD_GROUP=32); serve.sh LMHEAD=1 default.
+COMMAND: microbench sglang/lmhead_int4_probe.py (card 0); then serve.sh start with DENV=B70_W4A8_QUANT_LMHEAD=1
++ bench2048.sh c1 warm (1st discarded, 2 runs) + HumanEval+ tier1 (evals/.venv run_evals.py --tiers 1); plus a
+same-session bf16-lm_head (LMHEAD=0) baseline back-to-back.
+RESULT:
+  - microbench: int4_gemm_w4a16 M=1 = 1.29ms (g32) / 1.11ms (g128) vs 4.27ms fp16 = 3.3x / 3.8x, finite, op
+    relerr 3e-4. Naive-RTN weight relerr is HIGH (lm_head outlier-heavy): g128 12.6%, g64 11.3%, g32 10.0% ->
+    use g32 (best accuracy, negligible speed cost; int4 0.64GB vs bf16 2.54GB).
+  - clean same-session head-to-head (GRAPH=1, card0, warm c1): bf16 lm_head decode 25.32/25.35 TTFT 940/941
+    PP 2178/2176; int4 lm_head g32 decode 27.37/27.31 TTFT 935/937 PP 2190/2185. => decode +7.9%, TTFT+PP
+    UNCHANGED (lm_head is M=1 even in prefill -- sglang prunes to last-token logits -- so only DECODE benefits).
+  - accuracy gate HumanEval+ (164, thinking-off, greedy, sandbox): int4 lm_head 0.933/0.896 vs bf16 0.921/0.896
+    -> base +0.012 (greedy cross-kernel non-determinism, +2 problems), plus IDENTICAL. NO regression. The 10%
+    weight relerr does not translate to code loss (large argmax margins). Result dir
+    evals/results/20260628T144209Z__qwen36-27b-w4a8-graph__w4a8-lmhead-int4-g32.
+  - coherent under capture (Rayleigh), 304 body layers + int4 lm_head wired, no wedge, clean teardown.
+VERDICT: VALIDATED WIN -> SHIPPED. int4 lm_head is the new W4A8-graph default (LMHEAD=1): 27.3 t/s decode
+(+7.9% over bf16 lm_head, +16% over the int4-woqgemm champion 23.5), TTFT/prefill/accuracy unchanged, vision
+kept. Revert with LMHEAD=0. Impl in sglang/patches/woq_shim.py (load_model + LogitsProcessor._compute_lm_head
+monkeypatches, bf16 weight kept resident for revertibility). Probe sglang/lmhead_int4_probe.py. Doc
+sglang/W4A8_PLAN.md (int4 lm_head 2026-06-28g).
