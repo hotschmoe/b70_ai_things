@@ -5990,3 +5990,14 @@ VERDICT: the vision-retaining W8A8 fused serve WORKS at the same perf -> the cor
   (the fused shim only hooks the LM int8 linears -> vision tower stays bf16, retained by construction).
   Follow-up: a real image request for end-to-end vision inference proof. NEXT: single-card shrink (int8
   GDN proj + int4 lm_head) -> TP=1 GRAPH for the decode-beats-bf16 win. Log: w8a8/w8a8_fused_ab_fused.log.
+
+## 2026-06-28 -- decode-lever DECISION: MTP (codex-validated) -- next thrust to beat bf16 on tg
+The W8A8 fused TP=2 eager serve wins prefill(+48%)/TTFT(-32%) vs bf16 but decode TIES (8.3 vs 9.0). To
+HANDILY beat bf16 on decode: codex ranked MTP/NEXTN spec-decode #1 (biggest win, least risk -- amortizes
+the TP=2 all-reduce + per-step tax that caps decode; int4 got 1.6x -> W8A8 ~12-13 t/s, keeps the
+prefill/TTFT win, no single-card fit problem). #2 push-AR-to-sglang (only ~5-7% alone). #3 single-card
+TP=1 shrink (best ceiling, worst fit risk: 35GB+5.6GB mamba vs 30GB). Ckpt audit: sqgptq-vision has 333
+visual + 0 mtp; sqgptq-mtp-graft has 15 mtp.* (BF16) + 0 visual -> graft the MTP head onto the vision
+ckpt (file-level, no GPU). NEXT = MTP+vision graft -> serve fused+MTP (sglang-xpu:mtp image, B70_XPU_MTP=1,
+--speculative-config method:mtp steps~7, bf16 drafter patch, cudagraph_mode=NONE, skip-warmup) -> bench
+decode; verify M>1 verify-path hits int8_gemm_w8a8. Plan: w8a8/W8A8_SGLANG_PLAN.md sec 4 item 3.

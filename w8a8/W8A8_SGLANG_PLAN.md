@@ -157,9 +157,19 @@ NEXT = wire both ops into w8a8_shim.py + serve A/B.
 1. [DONE] Built + validated int8 ops (sec 3) + wired fused hybrid into w8a8_shim + TP=2 eager serve win (sec 3.5).
 2. [NEXT-A, low risk] Serve the VISION ckpt (sqgptq-vision) TP=2 eager fused -> confirm vision loads +
    coherent + same perf (the user's hard requirement). + same-session bf16 baseline for a clean head-to-head.
-3. [NEXT-B, the decode win] Single-card shrink: RTN int8 the GDN in/out projections at load (route via
-   int8_gemm_w8a16, keep bf16 recurrence) + int4 lm_head -> fit one card -> TP=1 GRAPH (+DP=2 for conc).
-   Validate coherence + accuracy (GDN recurrence is sensitive). Target decode ~12-14 t/s (beats bf16 9).
+3. [NEXT-B, the decode win = MTP, codex-validated 2026-06-28] MTP/NEXTN spec-decode is the BEST decode
+   lever (biggest win, least risk): it amortizes the TP=2 all-reduce + per-step tax across accepted tokens.
+   int4 got 1.6x -> W8A8 TP=2 should move decode 8.3 -> ~12-13 t/s (handily beats bf16 9.0), KEEPING the
+   prefill/TTFT win (TP=2, no fit problem). Plan:
+     a. Graft the 15 BF16 mtp.* tensors (from sqgptq-mtp-graft/model-mtp-graft.safetensors) onto the
+        sqgptq-VISION ckpt -> a W8A8 ckpt with BOTH vision (333) AND the MTP head. File-level, no GPU requant.
+     b. Serve: image sglang-xpu:mtp (baked XPU MTP gates) + the fused w8a8_shim + B70_XPU_MTP=1 +
+        --speculative-config {method:mtp} steps~7 + the mtp_bf16 drafter patch (MTP_GRAFT_NOTES: drafter must
+        be BF16, not quantized) + cudagraph_mode=NONE (memory: W8A8 TP=2+MTP stable that way) + skip-warmup.
+     c. GOTCHA (codex): verify MTP verify-path (M>1) hits int8_gemm_w8a8 (not a bf16/unfused fallback);
+        acceptance is workload-sensitive; greedy-only on XPU (sampling ignored, like the int4 MTP path).
+   Single-card shrink (int8 GDN proj + int4 lm_head -> TP=1 GRAPH) is the MOONSHOT (best ceiling, worst fit
+   risk: 35GB + 5.6GB mamba into 30GB) -- deferred behind MTP.
 4. Accuracy gate (HumanEval+) on the shipped config; productionize to rdy_to_serve/qwen36-27b-w8a8-fused.
 5. [stretch] Port the push-AR to sglang's TP communicator -> faster TP=2 decode all-reduce (the other decode lever).
 2. Wire the two ops into `w8a8_shim.py` (decode->w8a16 fp16-act, prefill->w8a8 int8-act), behind a new
