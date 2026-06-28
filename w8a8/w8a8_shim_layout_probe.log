@@ -1,0 +1,24 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 -> docker run --rm --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 16g -e ZE_AFFINITY_MASK=0 -v /mnt/vm_8tb/b70/models:/models:ro -v /mnt/vm_8tb/b70/w8a8_kernel:/work/kernel:ro -v /mnt/vm_8tb/github/b70_ai_things/w8a8:/work -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so sglang-xpu:woq bash -c source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1;     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH;     python3 /work/w8a8_shim_layout_probe.py
+W0628 21:52:34.147000 1 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0628 21:52:34.179000 1 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+torch 2.12.0+xpu xpu True
+CDLL OK
+  op int8_gemm_w8a16 OK
+  op int8_gemm_w8a8 OK
+  op dynamic_per_token_int8_quant OK
+
+===== layers.3.mlp.down_proj W(5120, 17408) torch.int8  scale(5120, 1) torch.bfloat16 =====
+  DECODE int8_gemm_w8a16  0.1708ms  finite=True  relerr=2.05e-04
+         GRAPH replay  finite=True  relerr=2.05e-04
+  PREFILL int8_gemm_w8a8   1.2602ms  finite=True  relerr=9.45e-03  (act-quant relerr 9.45e-03)
+
+[layers.3.mlp.gate_up_proj] not found, skip
+
+[layers.3.self_attn.qkv_proj] not found, skip
+
+GATE: finite + decode relerr<5e-3 + prefill relerr<3e-2 on real weights -> shim layout CORRECT.
+gpu-run: [b70s4dayz] done in 41s (exit 0)

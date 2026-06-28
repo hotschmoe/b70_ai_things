@@ -5925,3 +5925,19 @@ VERDICT: *** W8A8 BEATS FP8/BF16 AT THE KERNEL LEVEL *** (decode ~tie ~1.9x vs f
   vs fp8 1x + 2x bf16). Task target met at kernel level. Doc w8a8/W8A8_SGLANG_PLAN.md sec 3. Box clean
   (card-0 microbench, both cards free after). NEXT = wire the hybrid into w8a8_shim.py (decode->w8a16
   fp16-act, prefill->w8a8 int8-act + fused act-quant), serve 27B-W8A8 vision TP=2 GRAPH=1, A/B vs eager.
+
+## 2026-06-28 -- W8A8 fused hybrid WIRED into sglang shim + validated on real weights [result]
+CONFIG: rewrote sglang/patches/w8a8_shim.py -- FUSED hybrid path (B70_XPU_W8A8_FUSED=1): decode (M==1)
+-> int8_gemm_w8a16(x_f16, B_nt[K,N], wscale[N]); prefill (M>1) -> dynamic_per_token_int8_quant ->
+int8_gemm_w8a8. NT weight via [N,K] contiguous backing + .t() view (mirrors W4A8 _XpuW4A8WoqKernel).
+Legacy torch._int_mm chain preserved as fallback (flag off). Loads the new .so (B70_XPU_C_SO).
+COMMAND: w8a8/w8a8_shim_layout_probe.py (card 0) -- loads REAL sqgptq-vision down_proj [5120,17408]
+int8 + scale [5120,1] bf16, replicates the shim layout, runs both ops + fused act-quant + graph capture,
+relerr vs the same-int8-weights dequant reference.
+RESULT:
+  DECODE  int8_gemm_w8a16  relerr 2.05e-04  finite  (graph replay identical 2.05e-04)  -- op error only, perfect
+  PREFILL int8_gemm_w8a8   relerr 9.45e-03  finite  (fused act-quant relerr 9.45e-03)  -- act-quant error, fine
+  Real scale is [N,1] bf16 -> shim reshape(-1).to(f16) -> [N] works. Vision tensors present in ckpt.
+VERDICT: shim layout CORRECT on real weights -> ready to serve. Next = TP=2 serve A/B (eager first
+  [known-survivable, was the 5.45 baseline], then GRAPH=1 with wedge guards). Files: sglang/patches/w8a8_shim.py
+  (fused hybrid), w8a8/w8a8_shim_layout_probe.py. Box clean (card-0 probe; both cards free after).
