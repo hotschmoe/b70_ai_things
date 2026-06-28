@@ -5694,3 +5694,32 @@ torch.compile-fused dynamic_per_token_int8_quant. Full plan: sglang/W4A8_PLAN.md
   sglang image vs ITS torch 2.12.0+xpu. The image has the DPC++/SYCL toolchain (it AOT-compiles bmg). Minimize
   the build (skip the 1.68GB libattn_kernels if possible; we only need the onednn int4 op). Alt: write a focused
   oneDNN int4-weight-decompression x int8 matmul extension (torch-xpu bundles oneDNN) = the user's "own GEMM".
+
+================================================================================
+2026-06-28d -- *** W4A8 KERNEL LIVE IN SGLANG: built from source, beats int4 on BOTH decode + prefill ***
+================================================================================
+Built vllm-xpu-kernels _xpu_C from SOURCE against sglang's torch 2.12.0+xpu (scoped to ONLY the onednn
+int4 ops; skipped the 1.68GB attn AOT). Recipe: sglang/W4A8_BUILD.md. .so persisted at
+/mnt/vm_8tb/b70/w4a8_kernel/_xpu_C.abi3.so (50.96MB, sha 63c8be3d26c8).
+
+LOAD: the fresh .so loads in sglang-xpu:woq (torch 2.12) -- NO undefined-symbol (ABI MATCH, unlike every
+prebuilt .so). Gotchas: load via import vllm_xpu_kernels._xpu_C OR ctypes.CDLL(RTLD_GLOBAL) after import torch
+(torch.ops.load_library FAILS); PREPEND /opt/intel/oneapi/compiler/2025.3/lib to LD_LIBRARY_PATH (replacing
+it -> "No XPU devices"). Both int4_gemm_w4a8 AND int4_gemm_w4a16 registered + run finite.
+
+PERF (card 0, real sqgptq down_proj 17408x5120, warm; fp16 baseline):
+  DECODE  M=1   : int4_gemm_w4a16 (fp16 act)   = 0.079 ms (2.13x fp16) = 1.83x FASTER than woqgemm 0.145ms
+  PREFILL M=2048: int4_gemm_w4a8 (int8 act,    = 1.96 ms (1.13x fp16) = 1.9x FASTER than woqgemm 3.76ms
+                  torch.compile-fused act-quant)  [op-only 1.69ms; eager act-quant 1.91ms is the bottleneck -> MUST fuse]
+  (W4A8-with-act-quant at M=1 = 0.24ms LOSES decode -> use W4A16 op for decode, W4A8 op for prefill. THE HYBRID.)
+=> int4-weight HYBRID (both ops, same compressed-tensors int4 weights) HANDILY beats the int4-woqgemm champion on
+   BOTH decode (1.83x) AND prefill (1.9x). This is the task target, achieved at the kernel level.
+
+NT-format calling convention VERIFIED (B=weight.t() VIEW stride[0]==1; B_scale=weight_scale.t(); B_zp 1-D=symmetric;
+group_size=128; act-quant external+fused). Full detail: sglang/W4A8_BUILD.md.
+
+SHIM: agent drafted sglang/patches/w4a8_shim.py -- registers a NEW scheme CompressedTensorsW4A8Int8XPU (sglang has
+NO dense W4A8 scheme; _is_dynamic_token_w4a8 detector exists but only wired for NPU MoE), routes via
+_get_scheme_from_parts, spoofs the capability check. NEXT: extend shim to the HYBRID (decode=int4_gemm_w4a16,
+prefill=int4_gemm_w4a8), bake sglang-xpu:w4a8 image, serve + bench vs the 23.5 t/s int4 champion. Then proper
+vision-retaining requant (sqgptq ckpt has 0 vision + GDN left bf16).
