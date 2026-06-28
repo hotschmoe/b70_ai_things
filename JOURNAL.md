@@ -5446,3 +5446,25 @@ VERDICT -> [*** WIN -- a NEW single-stream record AND a sampling-capable driver 
   bar); (3) productionize (bake into the image + a rdy_to_serve recipe + DP=2); (4) FRONTIER++ stack graph + MTP
   (capture the spec verify) -> potentially >30 t/s. CAVEAT: single warm run; reproduce when productionizing.
   Tools: sglang/patches/xpu_cudagraph.py, scripts/139, woq_shim.py B70_XPU_CUDAGRAPH block.
+
+## 2026-06-28 -- XPUGraph driver validation: single-stream 23 CONFIRMED + sampling + GDN-correct under load; BUT multi-bucket/maxreq=4 HALVES single-stream (bs-pad) [validation]
+
+scripts/140 validated the graph driver with bs buckets [1 2 4] + max-running-requests 4:
+  - CAPTURE: multi-bucket works ("cuda graph: True" x98; hooks + device gate installed).
+  - COHERENCE: OK (greedy). SAMPLING: temp=0.8 produces VARIED outputs across seeds -> this driver RESTORES
+    sampling (MTP is greedy-locked). A real advantage.
+  - GDN-UNDER-GRAPH CORRECTNESS (the gating bar): sustained mixed load (3 anchors + 3x6 bursts) = 0 GARBAGE,
+    0 DEGEN, container SURVIVED, POST-LOAD coherent. The GDN/mamba recurrent state stays correct under graph
+    replay + concurrent prefill (no NaN poisoning) -- the agentic pattern that breaks vLLM is survived. (8/21
+    HTTP_ERR = capacity/timeout under the burst at maxreq=4, NOT garbage.)
+  - SOAK (single long stream): 22.88 t/s, first/last 1.11x STABLE -> REPRODUCES the 23 single-stream win.
+  - PROBLEM: WARM c1 bench (6 prompts) = 11.88 t/s (NOT 23), c4 = 0.82/stream, TTFT 2004/6651ms. But scripts/139's
+    SAME perf_regime c1 was 23.47 -- the ONLY difference is 139 = bs=1/maxreq=1 vs 140 = bs[1 2 4]/maxreq=4. So
+    enabling concurrency HALVES single-stream: a single decode is almost certainly PADDED UP to the bs=4 graph
+    (~4x attention work/token), and eager-prefill stalls captured-decode under concurrency (c4 0.82 = broken).
+
+VERDICT -> [single-stream WIN is real + clean at bs=1/maxreq=1 = 23 t/s; concurrency path needs the pad fix]
+  The productionizable driver TODAY = bs=1/maxreq=1 graph (23 t/s, sampling, single-user latency; DP=2 -> 2 users
+  @ 23 each, beating MTP DP=2's 2x15). NEXT: test --disable-cuda-graph-padding on the multi-bucket config (does a
+  single request stop padding to bs=4 -> recover 23 AND keep concurrency?). Then productionize the winning config.
+  Tools: scripts/140.
