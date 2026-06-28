@@ -14,3 +14,8 @@
 FROM sglang-xpu:woq
 COPY mtp_tree_xpu.py /opt/venv/lib/python3.12/site-packages/mtp_tree_xpu.py
 COPY memory_pool.py  /opt/venv/lib/python3.12/site-packages/sglang/srt/mem_cache/memory_pool.py
+# XPUGraph decode capture (the 23 t/s single-stream driver): updated woq_shim (its B70_XPU_CUDAGRAPH=1 block
+# installs xpu_cudagraph) + xpu_cudagraph.py (device-gate + XPUAttentionBackend decode graph hooks). Both are
+# ENV-GATED (B70_XPU_CUDAGRAPH=1) -> INERT for the MTP/woq drivers (which don't set it). See JOURNAL 2026-06-28.
+COPY woq_shim.py      /opt/venv/lib/python3.12/site-packages/woq_shim.py
+COPY xpu_cudagraph.py /opt/venv/lib/python3.12/site-packages/xpu_cudagraph.py

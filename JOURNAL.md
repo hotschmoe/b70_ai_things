@@ -5468,3 +5468,32 @@ VERDICT -> [single-stream WIN is real + clean at bs=1/maxreq=1 = 23 t/s; concurr
   @ 23 each, beating MTP DP=2's 2x15). NEXT: test --disable-cuda-graph-padding on the multi-bucket config (does a
   single request stop padding to bs=4 -> recover 23 AND keep concurrency?). Then productionize the winning config.
   Tools: scripts/140.
+
+## 2026-06-28 -- XPUGraph driver PRODUCTIONIZED: rdy_to_serve/qwen36-27b-int4-graph (23.5 t/s, sampling, vision) + the CARD ASYMMETRY finding [milestone]
+
+PADFIX (scripts/141) conclusive: bs=1/maxreq=1 = 23.55 t/s is THE config. A (multi-bucket + --disable-cuda-graph-
+padding) = 4.67 t/s AND breaks capture (0 "cuda graph: True"); C (multi-bucket + pad) = 7.36 c1 / 0.75 c4. So
+per-card multi-stream-at-speed is NOT solved; concurrency = DP=2 of single-stream replicas.
+
+PRODUCTIONIZED (committed): baked the graph patches into sglang-xpu:mtp (images/sglang-xpu-mtp/Dockerfile now
+COPYs the updated woq_shim.py + xpu_cudagraph.py; md5-verified; ENV-GATED via B70_XPU_CUDAGRAPH=1 so the MTP/woq
+drivers are INERT/unaffected -- same image, two driver modes). Recipe rdy_to_serve/qwen36-27b-int4-graph/
+{serve.sh,README.md} (ATTN=triton, bs=1, no mounts) + sglang/serve_dp2_graph.sh (DP=2) + scripts/142 acceptance.
+
+REPRODUCE from the BAKED image (no mounts), TWO cards -> the CARD ASYMMETRY:
+  - CARD 0 (graph_reproduce_card0.log): WARM c1 23.51 t/s (TTFT 1208ms @ctx2048), soak 23.03 stable, server
+    gen-throughput ~21.8-22.4, coherent + sampling-varies + 95 "cuda graph: True". == scripts/139/141B.
+  - CARD 1 (scripts/142, verify_graph_image.log): c1 15.28 (soak still 23.18, same capture/coherence/sampling).
+  ROOT CAUSE of the 23 vs 15 split: on this box the xe driver drives the console/DISPLAY off one Arc card;
+  ZE_AFFINITY_MASK=1 (card 1) is the display-attached card and runs DOWNCLOCKED. So card 0 = the fast compute
+  card (23.5), card 1 = display (15.3). serve.sh defaults DEVICE=0. DP=2 is therefore ASYMMETRIC (~23.5 + ~15.3).
+  Capture takes ~51s at startup (one-time). The "in_proj_ba.weight not found" load warnings are benign (MTP/GDN
+  params absent from the plain int4 ckpt).
+
+VERDICT -> [SHIPPED] rdy_to_serve/qwen36-27b-int4-graph is the FASTEST single-stream driver: 23.5 t/s on card 0
+  = 2.5x eager / +53% over int4+MTP, SAMPLING-capable (supersedes the greedy MTP driver for single-user), vision,
+  coherent + soak-stable + GDN-correct under load. Driver matrix now: graph (23.5, sampling, 1 card) > MTP (15.3,
+  greedy) for single-user; graph DP=2 (2 users @ 23.5/15.3) for 2 users; int4-woq DP=2 / MTP DP=2 for >2.
+  NEXT (frontier++): GRAPH + MTP STACK -- capture the spec-verify forward (the int4-mtp ckpt) so MTP's token
+  amortization rides on the graph's launch collapse -> target >30 t/s. Also open: the per-request eager prefix
+  (cuda graph: False count) and per-card multi-stream-at-speed. Tools: scripts/141, 142, sglang/serve_dp2_graph.sh.
