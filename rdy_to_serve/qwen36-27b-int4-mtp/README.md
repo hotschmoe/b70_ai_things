@@ -49,11 +49,16 @@ The `woqgemm` int4 path + `woq_shim.py` are inherited unchanged from `:woq`. To 
   is the better aggregate-throughput choice.
 
 ## Driver matrix (all CORRECT + VISION on sglang-XPU)
-| driver | c1 t/s | sampling | cards | use |
-|---|---|---|---|---|
-| **int4 + NEXTN MTP steps=7 (this)** | **~15.3 (1.62x)** | greedy only | 1 | LATENCY / interactive single stream |
-| int4 woq DP=2 (`../../sglang/serve_dp2.sh`) | ~9.4/replica | yes | 2 | high-concurrency / unattended (wedge-proof) |
-| bf16 TP=2 (`../../sglang/serve_sglang.sh`) | ~9.2 (c4 agg ~23) | yes | 2 | best c4 aggregate, attended |
+| driver | c1 t/s | aggregate | sampling | cards | use |
+|---|---|---|---|---|---|
+| **int4 + NEXTN MTP steps=7 (this)** | **~15.3 (1.62x)** | ~26 MC4/card | greedy only | 1 | LATENCY / interactive single stream |
+| **int4 + MTP DP=2 (`../../sglang/serve_dp2_mtp.sh`)** | ~15 x2 slots | **~50.7 MC8** | greedy only | 2 | latency AND multi-user (2x full-speed slots, wedge-proof) |
+| int4 woq DP=2 (`../../sglang/serve_dp2.sh`) | ~9.4/replica | — | yes | 2 | high-concurrency / unattended (sampling, wedge-proof) |
+| bf16 TP=2 (`../../sglang/serve_sglang.sh`) | ~9.2 (c4 agg ~23) | — | yes | 2 | best c4 aggregate, attended |
+
+DP=2 MTP (2026-06-28): two single-card replicas behind nginx :18080. proxy MC2 = 2 users each at full ~15 t/s;
+proxy MC8 = ~50.7 tok/s aggregate (~1.9x one card), accept_len holds 4.31 under load. No cross-card collective
+-> wedge-proof. This is the throughput/multi-user companion to the single-card latency driver above.
 
 verified: 2026-06-27 (scripts/131, baked sglang-xpu:mtp image, ZERO mounts): healthy + coherent; WARM c1
 decode 15.31 t/s (TTFT 911ms @ ctx2048), c4 4.62/stream (agg 17.72); mean accept_len 4.48 (29 batches);

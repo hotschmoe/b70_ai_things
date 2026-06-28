@@ -5297,3 +5297,29 @@ VERDICT -> [NO-GO] torch.compile is NOT an accessible single-stream lever on sgl
   B70 is idle -> ~2x aggregate; lever 2, sglang/serve_dp2_mtp.sh), per-card concurrency ceiling (lever 3), and the
   hard frontier (a hand-written SYCL GDN/GEMV kernel, or reducing the non-amortized spec-path launches). Pivoting
   to DP=2 (the clearest "use all the hardware" win). Tools: scripts/132.
+
+## 2026-06-28 -- PERF PUSH lever 2: DP=2 MTP across BOTH cards = ~1.9x aggregate + 2x full-speed slots [WIN]
+
+The 2nd B70 was fully idle. Two single-card int4+MTP replicas (the shipped recipe, baked sglang-xpu:mtp, no
+mounts) on card 0 :30000 + card 1 :30001 behind an nginx round-robin proxy :18080. No cross-card collective
+-> wedge-proof (unlike bf16 TP=2). Tool: sglang/serve_dp2_mtp.sh (mirrors the non-MTP serve_dp2.sh).
+
+CONFIG -> COMMAND: bash sglang/serve_dp2_mtp.sh start (each replica acquires its own --card lease + coherence
+  gate); bench via sglang/serve_dp2_mtp.sh bench or direct bench_serving against :18080.
+
+RESULT (warm, IN=2048 OUT=128; sglang/dp2_mtp_bench2.log):
+  - 1-CARD reference: MC1 15.28 t/s single-stream (agg 12.45); MC4 agg 26.58 tok/s.
+  - DP=2 proxy :18080 MC2: agg 23.29, **per-stream 14.95 t/s** -- TWO concurrent users EACH get full
+    single-stream speed (each request round-robins to a different idle card), TTFT 914ms.
+  - DP=2 proxy :18080 MC8 (4 streams/replica): **agg 50.73 tok/s** = ~1.9x the 1-card MC4 (26.58) -- near
+    linear scaling; accept_len holds 4.31 under load, TTFT 2184ms, coherent. nginx scales fine under MC8.
+  (The ad-hoc parallel-direct sum logged NA = a bash background-subshell var-capture bug in the measure
+   script, NOT a serve issue; the proxy MC8 number is the true 2-card aggregate.)
+
+VERDICT -> [WIN, shipped tool] DP=2 MTP is the "use all the hardware" driver: ~1.9x aggregate (50.7 tok/s) AND
+  doubles full-15-t/s interactive slots, while staying CORRECT (coherent, accept holds) + VISION + wedge-proof.
+  This is the throughput/multi-user companion to the single-card latency driver. Single-stream LATENCY is still
+  capped at ~15.3 (launch-bound; torch.compile NO-GO) -- DP=2 does not raise single-stream, it multiplies slots.
+  NEXT: lever 3 cheap launch-overhead flags (num-continuous-decode-steps / overlap-schedule, scripts/134) to try
+  to lift the per-card single-stream/MC ceiling, then the max-running-requests memory ceiling, then the SYCL
+  kernel frontier. Tools: sglang/serve_dp2_mtp.sh, sglang/dp2_mtp_bench2.log.
