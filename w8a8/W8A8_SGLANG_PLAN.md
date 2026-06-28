@@ -110,13 +110,36 @@ VERDICT: the W8A8 win path is now precise and mirrors the W4A8 success:
 Both are buildable by mirroring int4_gemm_w4a16 / int4_gemm_w4a8 in vllm-xpu-kernels (add f16_int8 /
 s8_int8 joint_dtypes mappers; oneDNN supports s8 weight-decompress). NEXT ITERATION = build them.
 
+### 2026-06-28 -- *** FUSED int8 OPS BUILT + VALIDATED: W8A8 beats FP8/BF16 at the kernel level ***
+CONFIG: built `int8_gemm_w8a16` (NEW: s8 weight x f16 act, fused dequant -- mirrors fp8_gemm_w8a16)
++ `int8_gemm_w8a8` (s8xs8 fused per-token x per-channel scale; was staged-but-unbuilt in the tree)
++ `dynamic_per_token_int8_quant` (fused act-quant) into vllm-xpu-kernels vs sglang torch 2.12. Recipe:
+w8a8/W8A8_BUILD.md. .so at /mnt/vm_8tb/b70/w8a8_kernel/_xpu_C.abi3.so (sha bc643c3f8a61, 51MB).
+Microbench card 0, real 27B shapes, fp16 baseline (w8a8/w8a8_fused_probe.py).
+
+RESULT (x bf16; DECODE M=1 / PREFILL M=2048):
+```
+                     DECODE M=1          PREFILL M=2048
+  int8_gemm_w8a16    1.86-1.91x (DECODE) 0.98-1.06x   (graph-captured decode 1.73-1.89x)
+  int8_gemm_w8a8     1.83-1.88x          1.95-2.07x (PREFILL)
+  fp8_gemm_w8a16 bar 1.88-1.95x          0.98-1.00x
+  (old _int_mm chain 0.64-0.80x eager / 1.3-1.5x captured decode; 0.7-0.8x prefill)
+```
+- DECODE: int8_gemm_w8a16 = ONE fused launch ~1.9x bf16 = matches the fp8 bar but INT8-accurate
+  (relerr ~9e-3). XPUGraph-capturable. Replaces the old 3-kernel chain (was 1.3-1.5x captured).
+- PREFILL: int8_gemm_w8a8 = ~2.0x bf16 (fused output-scale) vs fp8 1.0x (no XMX) vs old chain 0.7-0.8x.
+- The fused act-quant op = 0.04ms (M=1) / 0.14-0.70ms (M=2048), single launch (capturable).
+VERDICT: *** TASK TARGET MET AT KERNEL LEVEL *** -- the W8A8 HYBRID (decode=int8_gemm_w8a16 fp16-act,
+prefill=int8_gemm_w8a8 int8-act) HANDILY beats FP8 (decode ~tie ~1.9x, prefill 2.0x vs 1.0x) AND
+BF16 (~2x both). int8_gemm_w8a16 for prefill = no win (use w8a8 there) -> THE HYBRID, like W4A8.
+NEXT = wire both ops into w8a8_shim.py + serve A/B.
+
 ---
 
 ## 4. Next steps (ordered)
 
-1. [NEXT] Build `int8_gemm_w8a16` (decode) + `int8_gemm_w8a8` (prefill, fused scale) in
-   vllm-xpu-kernels src; add f16_int8/bf16_int8 + s8_int8 joint_dtypes mappers + dispatch + op wrappers;
-   rebuild the scoped .so vs sglang torch 2.12. Microbench at the same shapes; gate vs fp8 w8a16 + bf16.
+1. [DONE 2026-06-28] Built + validated `int8_gemm_w8a16` (decode) + `int8_gemm_w8a8` (prefill) ->
+   W8A8 beats FP8/BF16 at the kernel level (sec 3). Artifact /mnt/vm_8tb/b70/w8a8_kernel/.
 2. Wire the two ops into `w8a8_shim.py` (decode->w8a16 fp16-act, prefill->w8a8 int8-act), behind a new
    env (e.g. `B70_XPU_W8A8_FUSED=1`). Reuse W4A8's Triton act-quant for prefill if op-internal quant
    is not done.

@@ -1,0 +1,36 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 -> docker run --rm --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 16g -e ZE_AFFINITY_MASK=0 -v /mnt/vm_8tb/b70/models:/models:ro -v /mnt/vm_8tb/b70/w4a8_kernel:/work/w4a8_kernel:ro -v /mnt/vm_8tb/github/b70_ai_things/w8a8:/work -e B70_XPU_C_SO=/work/w4a8_kernel/_xpu_C.abi3.so sglang-xpu:woq bash -c source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1;     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH;     python3 /work/w8a16_decode_probe.py
+W0628 21:18:28.480000 1 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0628 21:18:28.511000 1 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+torch 2.12.0+xpu xpu True
+CDLL OK
+
+== op availability ==
+  torch._weight_int8pack_mm: True
+  aten._weight_int8pack_mm : True
+  torch._int_mm            : True
+  ipex: not importable No module named 'intel_extension_for_pytorch'
+
+===== gate_up [N=34816 K=5120] DECODE M=1 =====
+  bf16 matmul           0.6009 ms  1.00x (baseline)
+  _weight_int8pack_mm (scales[N] fp16,B[N,K])  4.2095 ms  0.14x  finite=True relerr=8.80e-03  <== WIN
+  aten._weight_int8pack_mm (scales[N] fp16,B[N,K])  4.2089 ms  0.14x  finite=True relerr=8.80e-03  <== WIN
+  fp8_gemm_w8a16        0.3090 ms  1.94x  (the bar to match w/ int8)
+
+===== down_proj [N=5120 K=17408] DECODE M=1 =====
+  bf16 matmul           0.3097 ms  1.00x (baseline)
+  _weight_int8pack_mm (scales[N] fp16,B[N,K])  10.6917 ms  0.03x  finite=True relerr=9.30e-03  <== WIN
+  aten._weight_int8pack_mm (scales[N] fp16,B[N,K])  10.6481 ms  0.03x  finite=True relerr=9.30e-03  <== WIN
+  fp8_gemm_w8a16        0.1636 ms  1.89x  (the bar to match w/ int8)
+
+===== qkv [N=14336 K=5120] DECODE M=1 =====
+  bf16 matmul           0.2495 ms  1.00x (baseline)
+  _weight_int8pack_mm (scales[N] fp16,B[N,K])  3.0169 ms  0.08x  finite=True relerr=8.77e-03  <== WIN
+  aten._weight_int8pack_mm (scales[N] fp16,B[N,K])  3.0195 ms  0.08x  finite=True relerr=8.77e-03  <== WIN
+  fp8_gemm_w8a16        0.1325 ms  1.88x  (the bar to match w/ int8)
+
+GATE: if _weight_int8pack_mm runs FINITE + FAST on XPU -> instant int8 W8A16 decode op (no build).
+gpu-run: [b70s4dayz] done in 41s (exit 0)

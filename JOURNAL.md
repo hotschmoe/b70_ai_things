@@ -5891,3 +5891,37 @@ VERDICT: win path is precise + mirrors W4A8 -- BUILD int8_gemm_w8a16 (decode) + 
   (prefill, fused per-token x per-channel scale) by analogy to the int4 ops, then capture + serve A/B.
   Doc: w8a8/W8A8_SGLANG_PLAN.md. Artifacts: w8a8/w8a8_kernel_probe.py + run_kernel_probe.sh. Box clean
   (both cards free, no wedge -- card-0 microbench only). NEXT = build the two int8 oneDNN ops.
+
+================================================================================
+2026-06-28 -- *** W8A8 FUSED int8 KERNELS BUILT: beats FP8/BF16 at the kernel level ***
+================================================================================
+Built two fused int8 oneDNN ops into vllm-xpu-kernels vs sglang torch 2.12 (recipe w8a8/W8A8_BUILD.md;
+.so /mnt/vm_8tb/b70/w8a8_kernel/_xpu_C.abi3.so sha bc643c3f8a61, 51MB):
+  - int8_gemm_w8a16 (NEW): s8 weight x f16 act, per-channel scale dequant in epilogue = 1 fused launch.
+    The DECODE op (int8 analog of int4_gemm_w4a16). Added f16_int8/bf16_int8 joint_dtypes mappers +
+    dispatch + op wrapper + binding (w8a8/int8_gemm_kernel.patch; header w8a8/kernel_src/int8_gemm_w8a16.h).
+  - int8_gemm_w8a8: s8xs8 fused per-token x per-channel output scale (s8s8s32 XMX). The PREFILL op.
+    Was STAGED in the tree (old PP1 work) but never compiled into the deployed w4a8 .so; this build adds it.
+  - dynamic_per_token_int8_quant: fused per-token sym int8 act-quant, single launch.
+First build RC=1: stale build/ cmake cache pinned to old /src mount path. Fixed by rm -rf build .deps ->
+clean configure (~14 min, RC=0).
+
+PRE-BUILD CHECK (w8a8/w8a16_decode_probe.py): torch._weight_int8pack_mm EXISTS on XPU + numerically
+correct (relerr 9e-3) but is an UNTUNED ref impl = 0.03-0.14x bf16 (3-11ms). No torch-native shortcut ->
+the custom oneDNN op was required.
+
+MICROBENCH (card 0, real 27B shapes, fp16 baseline; w8a8/w8a8_fused_probe.py; x bf16):
+  shape      int8_gemm_w8a16    int8_gemm_w8a8    fp8 bar     (DECODE M=1 / PREFILL M=2048)
+  gate_up    1.91 / 1.06        1.88 / 2.07       1.95 / 1.00
+  down_proj  1.90 / 0.99        1.83 / 2.02       1.90 / 1.00
+  qkv        1.86 / 0.98        1.85 / 1.95       1.88 / 0.98
+  int8_gemm_w8a16 GRAPH-captured decode: 1.89 / 1.79 / 1.73x (vs old 3-kernel chain captured 1.3-1.5x).
+RESULT:
+  - DECODE: int8_gemm_w8a16 = ~1.9x bf16 in ONE launch = matches the fp8 bar but INT8-accurate
+    (relerr ~9e-3). Captured. DESTROYS the old eager 3-kernel chain (0.64-0.80x) and the captured chain (1.3-1.5x).
+  - PREFILL: int8_gemm_w8a8 = ~2.0x bf16 (fused scale) vs fp8 1.0x (no XMX) vs old un-fused chain 0.7-0.8x.
+  - int8_gemm_w8a16 at M=2048 = ~1.0x (no prefill benefit -> use w8a8 there). THE HYBRID, mirroring W4A8.
+VERDICT: *** W8A8 BEATS FP8/BF16 AT THE KERNEL LEVEL *** (decode ~tie ~1.9x vs fp8 + 2x bf16; prefill 2x
+  vs fp8 1x + 2x bf16). Task target met at kernel level. Doc w8a8/W8A8_SGLANG_PLAN.md sec 3. Box clean
+  (card-0 microbench, both cards free after). NEXT = wire the hybrid into w8a8_shim.py (decode->w8a16
+  fp16-act, prefill->w8a8 int8-act + fused act-quant), serve 27B-W8A8 vision TP=2 GRAPH=1, A/B vs eager.

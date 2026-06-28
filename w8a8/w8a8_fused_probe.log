@@ -1,0 +1,61 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 -> docker run --rm --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 16g -e ZE_AFFINITY_MASK=0 -v /mnt/vm_8tb/b70/models:/models:ro -v /mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8/vllm_xpu_kernels:/work/kernel:ro -v /mnt/vm_8tb/github/b70_ai_things/w8a8:/work -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so sglang-xpu:woq bash -c source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1;     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH;     python3 /work/w8a8_fused_probe.py
+W0628 21:42:46.840000 1 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0628 21:42:46.871000 1 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+torch 2.12.0+xpu xpu True
+CDLL OK: /work/kernel/_xpu_C.abi3.so
+  op int8_gemm_w8a16: True
+  op int8_gemm_w8a8: True
+  op fp8_gemm_w8a16: True
+  op dynamic_per_token_int8_quant: True
+
+===== gate_up [N=34816 K=5120] =====
+  --- DECODE ---
+    bf16 matmul                  0.6009 ms  1.00x
+    int8_gemm_w8a16 (Bsc[N] f16 )  0.3142 ms   1.91x  finite=True relerr=8.81e-03  <== DECODE op
+    int8_gemm_w8a16 GRAPH        0.3182 ms   1.89x  relerr=8.81e-03  <== DECODE captured
+    int8_gemm_w8a8 (A[M,1]f16,B[N]f16 )  0.3193 ms   1.88x  relerr=1.34e-02  (op-only, ext act-q)  <== PREFILL op
+    dyn_per_token_int8_quant     0.0373 ms  (fused act-quant launch)
+    fp8_gemm_w8a16 (the bar)     0.3080 ms   1.95x
+  --- PREFILL M=2048 ---
+    bf16 matmul                  6.0710 ms  1.00x
+    int8_gemm_w8a16 (Bsc[N] f16 )  5.7382 ms   1.06x  finite=True relerr=8.80e-03  <== DECODE op
+    int8_gemm_w8a8 (A[M,1]f16,B[N]f16 )  2.9337 ms   2.07x  relerr=1.24e-02  (op-only, ext act-q)  <== PREFILL op
+    dyn_per_token_int8_quant     0.1401 ms  (fused act-quant launch)
+    fp8_gemm_w8a16 (the bar)     6.0785 ms   1.00x
+
+===== down_proj [N=5120 K=17408] =====
+  --- DECODE ---
+    bf16 matmul                  0.3184 ms  1.00x
+    int8_gemm_w8a16 (Bsc[N] f16 )  0.1672 ms   1.90x  finite=True relerr=9.22e-03  <== DECODE op
+    int8_gemm_w8a16 GRAPH        0.1779 ms   1.79x  relerr=9.22e-03  <== DECODE captured
+    int8_gemm_w8a8 (A[M,1]f16,B[N]f16 )  0.1742 ms   1.83x  relerr=1.37e-02  (op-only, ext act-q)  <== PREFILL op
+    dyn_per_token_int8_quant     0.1268 ms  (fused act-quant launch)
+    fp8_gemm_w8a16 (the bar)     0.1673 ms   1.90x
+  --- PREFILL M=2048 ---
+    bf16 matmul                  2.9407 ms  1.00x
+    int8_gemm_w8a16 (Bsc[N] f16 )  2.9795 ms   0.99x  finite=True relerr=9.45e-03  <== DECODE op
+    int8_gemm_w8a8 (A[M,1]f16,B[N]f16 )  1.4565 ms   2.02x  relerr=1.34e-02  (op-only, ext act-q)  <== PREFILL op
+    dyn_per_token_int8_quant     0.6957 ms  (fused act-quant launch)
+    fp8_gemm_w8a16 (the bar)     2.9453 ms   1.00x
+
+===== qkv [N=14336 K=5120] =====
+  --- DECODE ---
+    bf16 matmul                  0.2543 ms  1.00x
+    int8_gemm_w8a16 (Bsc[N] f16 )  0.1365 ms   1.86x  finite=True relerr=8.63e-03  <== DECODE op
+    int8_gemm_w8a16 GRAPH        0.1467 ms   1.73x  relerr=8.63e-03  <== DECODE captured
+    int8_gemm_w8a8 (A[M,1]f16,B[N]f16 )  0.1371 ms   1.85x  relerr=1.28e-02  (op-only, ext act-q)  <== PREFILL op
+    dyn_per_token_int8_quant     0.0427 ms  (fused act-quant launch)
+    fp8_gemm_w8a16 (the bar)     0.1352 ms   1.88x
+  --- PREFILL M=2048 ---
+    bf16 matmul                  2.4096 ms  1.00x
+    int8_gemm_w8a16 (Bsc[N] f16 )  2.4595 ms   0.98x  finite=True relerr=8.80e-03  <== DECODE op
+    int8_gemm_w8a8 (A[M,1]f16,B[N]f16 )  1.2364 ms   1.95x  relerr=1.24e-02  (op-only, ext act-q)  <== PREFILL op
+    dyn_per_token_int8_quant     0.1411 ms  (fused act-quant launch)
+    fp8_gemm_w8a16 (the bar)     2.4499 ms   0.98x
+
+GATE: int8_gemm_w8a16 (decode, captured) ~ fp8 bar (~1.9x); int8_gemm_w8a8 (prefill) realizes 1.7-1.9x XMX.
+gpu-run: [b70s4dayz] done in 45s (exit 0)

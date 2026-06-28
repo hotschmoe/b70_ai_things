@@ -1,0 +1,142 @@
+--- /mnt/vm_8tb/b70/vllm-xpu-kernels/csrc/xpu/onednn/onednn_ext.h	2026-06-20 07:37:29.614907913 +0000
++++ /mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8/csrc/xpu/onednn/onednn_ext.h	2026-06-28 21:23:22.120065814 +0000
+@@ -55,6 +55,8 @@
+   mxfp4_f16,
+   s8_s8_f16,
+   s8_s8_bf16,
++  f16_int8,
++  bf16_int8,
+ };
+ 
+ template <joint_dtypes_t Ts>
+@@ -242,6 +244,26 @@
+   }
+ };
+ 
++template <>
++struct onednn_types_mapper<joint_dtypes_t::f16_int8> {
++  static inline std::
++      tuple<memory::data_type, memory::data_type, memory::data_type>
++      get() {
++    return std::make_tuple(
++        memory::data_type::f16, memory::data_type::s8, memory::data_type::f16);
++  }
++};
++
++template <>
++struct onednn_types_mapper<joint_dtypes_t::bf16_int8> {
++  static inline std::
++      tuple<memory::data_type, memory::data_type, memory::data_type>
++      get() {
++    return std::make_tuple(
++        memory::data_type::bf16, memory::data_type::s8, memory::data_type::bf16);
++  }
++};
++
+ static inline memory::data_type
+ get_onednn_dtype(const at::Tensor& tensor, bool allow_undef = false) {
+   switch (tensor.scalar_type()) {
+@@ -1113,6 +1135,34 @@
+           Tt,
+           b_type,
+           m,
++          n,
++          k,
++          lda,
++          ldb,
++          ldc,
++          device_id,
++          attr,
++          scale_group_size,
++          zp_group_size);
++    case joint_dtypes_t::f16_int8:
++      return matmul_primitive_create_and_cache<joint_dtypes_t::f16_int8, F>(
++          Tt,
++          b_type,
++          m,
++          n,
++          k,
++          lda,
++          ldb,
++          ldc,
++          device_id,
++          attr,
++          scale_group_size,
++          zp_group_size);
++    case joint_dtypes_t::bf16_int8:
++      return matmul_primitive_create_and_cache<joint_dtypes_t::bf16_int8, F>(
++          Tt,
++          b_type,
++          m,
+           n,
+           k,
+           lda,
+--- /mnt/vm_8tb/b70/vllm-xpu-kernels/csrc/xpu/onednn/onednn_matmul.cpp	2026-06-18 17:25:44.451418859 +0000
++++ /mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8/csrc/xpu/onednn/onednn_matmul.cpp	2026-06-28 21:23:56.616157845 +0000
+@@ -4,6 +4,7 @@
+ #include "fp8_gemm_w8a16.h"
+ #include "int4_gemm_w4a16.h"
+ #include "int4_gemm_w4a8.h"
++#include "int8_gemm_w8a16.h"
+ #include "int8_gemm_w8a8.h"
+ 
+ inline bool is_supported_fp8(at::ScalarType t) {
+@@ -215,3 +216,29 @@
+ 
+   return result;
+ }
++
++torch::Tensor int8_gemm_w8a16(
++    const torch::Tensor& A,  // src, [b, m, k] f16/bf16
++    const torch::Tensor& B,  // quantized weight, [k, n] s8 (NT)
++    const std::optional<torch::Tensor>&
++        B_scale_,  // per-channel [n] / per-tensor [1] / block [k/g, n]
++    const std::optional<torch::Tensor>& bias_) {
++  const at::DeviceGuard device_guard(A.device());
++  torch::Tensor result = check_and_create_output_tensor(A, B, A.scalar_type());
++  TORCH_CHECK(
++      B.scalar_type() == at::ScalarType::Char,
++      "int8_gemm_w8a16 expects s8 (torch.int8) weight.");
++  TORCH_CHECK(
++      result.scalar_type() == torch::kFloat16 ||
++          result.scalar_type() == torch::kBFloat16,
++      "output must be float16 or bfloat16 for int8 w8a16 matmul");
++
++  // check if nt format (weight stored transposed [k, n] with stride k-major)
++  bool is_nt = B.strides()[B.dim() - 2] == 1;
++
++  torch::Tensor B_scale = B_scale_.has_value()
++                              ? B_scale_.value()
++                              : at::ones({1}, B.options().dtype(A.dtype()));
++  oneDNN::dnnl_matmul_w8a16_int8(result, A, B, is_nt, bias_, B_scale);
++  return result;
++}
+--- /mnt/vm_8tb/b70/vllm-xpu-kernels/csrc/xpu/torch_bindings.cpp	2026-06-18 19:16:28.381612429 +0000
++++ /mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8/csrc/xpu/torch_bindings.cpp	2026-06-28 21:24:12.456659303 +0000
+@@ -43,6 +43,11 @@
+       "-> Tensor");
+   xpu_ops.impl("int8_gemm_w8a8", torch::kXPU, &int8_gemm_w8a8);
+ 
++  xpu_ops.def(
++      "int8_gemm_w8a16(Tensor A, Tensor B, Tensor? B_scale_, "
++      "Tensor? bias_) -> Tensor");
++  xpu_ops.impl("int8_gemm_w8a16", torch::kXPU, &int8_gemm_w8a16);
++
+   // Fused dynamic per-token symmetric int8 activation quantization.
+   // Returns (q int8 [..., K], scale [..., 1] (input dtype), zp int32 [..., 1]).
+   xpu_ops.def(
+--- /mnt/vm_8tb/b70/vllm-xpu-kernels/csrc/xpu/ops.h	2026-06-18 19:16:28.379612370 +0000
++++ /mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8/csrc/xpu/ops.h	2026-06-28 21:24:09.552567370 +0000
+@@ -62,6 +62,12 @@
+     const std::optional<torch::Tensor>& bias,
+     std::optional<c10::ScalarType> out_dtype);
+ 
++torch::Tensor int8_gemm_w8a16(
++    const torch::Tensor& A,
++    const torch::Tensor& B,
++    const std::optional<torch::Tensor>& B_scale_,
++    const std::optional<torch::Tensor>& bias_);
++
+ // Fused dynamic per-token (per-row) symmetric int8 quantization.
+ // input: [..., K] f16/bf16/f32. Returns (q [..., K] int8, scale [..., 1]
+ // (input dtype), zero_point [..., 1] int32 == 0). use_sym_quant must be true,
