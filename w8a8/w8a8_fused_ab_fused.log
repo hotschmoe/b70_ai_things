@@ -1,0 +1,27 @@
+[22:34:01] === pre-flight xpu-health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[22:34:16] === W8A8 TP=2 serve [fused]: qwen36-27b-w8a8-vision-fused  img=sglang-xpu:woq ctx=8192 memfrac=0.90 ===
+426221fef6fab83faf0785ce2a0f6befc4758ec4ac64e7dd6b09606fb88b528f
+[22:34:20] waiting for /health (model load ~3-5min)...
+[22:37:18] /health 200 after ~100s
+[22:37:18] === shim wiring (count of fused layers / install line) ===
+[w8a8-shim] installed: FUSED hybrid (decode=int8_gemm_w8a16, prefill=int8_gemm_w8a8)
+[w8a8-shim] scoped _check_scheme_supported (no global sm90 fake)
+[w8a8-fused] dlopen'd /work/kernel/_xpu_C.abi3.so
+[w8a8-fused] prefill act-quant: oneDNN dynamic_per_token_int8_quant (1 launch)
+[w8a8-shim] installed: FUSED hybrid (decode=int8_gemm_w8a16, prefill=int8_gemm_w8a8)
+[22:37:18] === coherence check (must NOT be '!!!!') ===
+COHERENCE: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Answer in exactly two sentences.\n\n2.  **Identify Key Scientific Concept:**\n   - The sky appears blue due to Rayleigh scatte"
+[22:37:45] === WARMUP bench (discarded) ===
+[22:38:49] === WARM benches ===
+[22:40:19] RESULT[c1.run1]: decode_tps=8.30  prefill_tps=3967  TTFT_ms=516.26  TPOT_ms=120.52  out_tps=7.97  req_s=0.10
+[22:41:47] RESULT[c1.run2]: decode_tps=8.32  prefill_tps=4565  TTFT_ms=448.63  TPOT_ms=120.14  out_tps=8.04  req_s=0.10
+[22:42:54] RESULT[c4.run1]: decode_tps=5.20  prefill_tps=2033  TTFT_ms=1007.58  TPOT_ms=192.39  out_tps=19.71  req_s=0.42
+[22:42:54] === DONE. Stopping container. ===
+[22:42:58] === post-run health check ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[22:43:13] stopped sglang_w8a8 [fused]

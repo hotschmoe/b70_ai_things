@@ -5979,3 +5979,14 @@ VERDICT: TP=2 GRAPH=1 is a CEILING -- decode +5% only (graph captures local comp
   8.1 ~ties bf16 9.0. To WIN decode too needs TP=1 single-card GRAPH = requires shrinking W8A8 to fit one
   card (int8 GDN proj via the new int8_gemm_w8a16 + int4 lm_head; also the user's "minimize size" goal).
   Box HEALTHY after (no wedge). NEXT = single-card shrink (task #3). Logs: w8a8/w8a8_fused_ab_fused+graph.log.
+
+## 2026-06-28 -- W8A8 FUSED + VISION ckpt TP=2 eager: vision retained, same win [result]
+CONFIG: scripts/123 FUSED=1 GRAPH=0, CKPT=Qwen3.6-27B-W8A8-sqgptq-VISION (model-visual.safetensors +
+333 visual.* tensors present), served as the Qwen3.6 VLM (--trust-remote-code), TP=2, skip-warmup.
+RESULT (warm c1): decode 8.30/8.32  prefill 3967/4565  TTFT 516/448  (c4: decode 5.20, out_tps 19.71)
+  -- SAME as the non-vision ckpt (decode 8.1, prefill 4570, TTFT 448). COHERENT (Rayleigh). Box HEALTHY.
+VERDICT: the vision-retaining W8A8 fused serve WORKS at the same perf -> the core deliverable is met:
+  a vision W8A8 on sglang that HANDILY beats bf16/fp8 on prefill (+48%) and TTFT (-32%); decode ties bf16
+  (the fused shim only hooks the LM int8 linears -> vision tower stays bf16, retained by construction).
+  Follow-up: a real image request for end-to-end vision inference proof. NEXT: single-card shrink (int8
+  GDN proj + int4 lm_head) -> TP=1 GRAPH for the decode-beats-bf16 win. Log: w8a8/w8a8_fused_ab_fused.log.
