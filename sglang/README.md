@@ -4,19 +4,23 @@
 dual Arc B70 (Battlemage/Xe2) **without** the vLLM-0.23 mixed prefill+decode NaN ("!!!!"). Full
 config -> command -> result -> verdict in JOURNAL.md + the perf campaign in `sglang/PERF.md`.
 
-## DAILY DRIVER GUIDE (perf-campaign outcome) -- see sglang/PERF.md for the full scoreboard
-The campaign goal was a more performant AND correct daily driver. Outcome: CORRECTNESS achieved; STABLE
-single-stream decode sits at ~9.2-9.4 t/s warm (the sglang-XPU eager ceiling). Two verified-correct,
-vision-retaining drivers (pick by use):
-  1. **woq int4 DP=2 (UNATTENDED / wedge-proof):**  `./sglang/serve_dp2.sh start`  -> :18080
-     Two single-card int4 replicas (sglang-xpu:woq, auto_round_kernel.woqgemm) + nginx round-robin.
-     ~9.4 t/s/replica, vision, int4 = big KV, NO cross-card collective (cannot BCS-wedge). VERIFIED clean
-     under the agentic mixed-load that makes vLLM emit "!!!!".
-  2. **bf16 TP=2 (ATTENDED / best aggregate):**  the serve command below.  ~9.2 c1 / 23.4 c4-aggregate.
-LEVERS EXPLORED (sglang/PERF.md has the data): quant-for-speed (woqgemm wired in, but 4-bit doesn't beat
-bf16 XMX warm without a graph), TP=2/PP=2 (PP & woq-TP=2 hang), GDN num_warps (cold-bench artifact),
-cudagraph (WIRED + runs -- a first -- but the torch-xpu graph-replay accumulation degrades it; not stable),
-MTP (works up to 2 unimplemented XPU tree kernels -> the documented NEXT lever, est. ~15 t/s STABLE if finished).
+## DAILY DRIVER GUIDE (perf-campaign outcome, UPDATED 2026-06-28) -- see sglang/PERF.md + JOURNAL
+The campaign goal was a more performant AND correct daily driver. **ACHIEVED + EXCEEDED:** the ~9.4 t/s eager
+ceiling is BROKEN. Headline = **23.5 t/s single-stream** via the FIRST sglang-XPU decode cuda-graph
+(torch.xpu.XPUGraph / SYCL-Graph over Level-Zero). All drivers correct + vision-retaining; pick by use:
+  1. **int4 + XPUGraph (FASTEST single-stream, SAMPLING) -- the recommended single-user driver:**
+     `rdy_to_serve/qwen36-27b-int4-graph/serve.sh` -> **23.5 t/s** = 2.5x eager, sampling-capable, vision.
+     Pin card 0 (card 1 is display-attached/downclocked -> 15.3). 2 users: `./sglang/serve_dp2_graph.sh` (~23.5+15.3).
+  2. **int4 + NEXTN MTP (greedy latency):**  `rdy_to_serve/qwen36-27b-int4-mtp/serve.sh` -> 15.3 t/s (1.62x),
+     greedy-only, vision. Superseded by the graph driver for single-user (graph is faster AND samples).
+  3. **woq int4 DP=2 (>2 users / unattended, wedge-proof):**  `./sglang/serve_dp2.sh` -> ~9.4/replica, sampling.
+  4. **bf16 TP=2 (best c4 aggregate, attended):**  the serve command below. ~9.2 c1 / 23.4 c4-aggregate.
+LEVERS (sglang/PERF.md + JOURNAL have the data): **XPUGraph decode capture = the WIN** -- torch.xpu.XPUGraph is
+STABLE on B70 (the old "torch-xpu graph degrades" was a different/older mechanism); wired into sglang via
+`patches/xpu_cudagraph.py` (B70_XPU_CUDAGRAPH=1, needs ATTN=triton to clear the SYCL-Graph work_group_scratch
+wall). MTP/NEXTN done (15.3, greedy). DEAD-ENDS (don't re-try): torch.compile (no-op w/o cuda-graph), cheap
+scheduler flags, per-card MAXREQ>4 (spec mamba cache), multi-bucket graph (halves single-stream), graph+MTP
+stack (spec-decode crashes under capture -- walled, scripts/143). TP=2/PP=2 hang; GDN num_warps = cold-bench artifact.
 
 ## GDN-NaN correctness campaign (the foundation)
 Repro pass/fail defined in `../contrib/gdn_nan_repro/README.md`.
