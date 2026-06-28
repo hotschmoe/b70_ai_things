@@ -5521,3 +5521,39 @@ VERDICT -> [WALLED, documented] graph+MTP does not compose out of the box: openi
   i.e. a latency-max NICHE that is WORSE than the shipped 23.5 t/s SAMPLING graph driver for a daily driver. The
   attempt (xpu_cudagraph.py draft gate + scripts/143) is committed for a future resume. CAMPAIGN CONSOLIDATES on
   rdy_to_serve/qwen36-27b-int4-graph (23.5 t/s sampling) as the single-stream headline. Tools: scripts/143.
+
+## 2026-06-28 -- *** CAMPAIGN CLOSEOUT: qwen3.6-27B sglang-XPU single-stream 9.4 -> 23.5 t/s (2.5x); ceiling moved launch-bound -> bandwidth-bound *** [SUMMARY]
+
+GOAL (user): a more performant AND correct daily driver for Qwen3.6-27B on sglang-XPU (dual Arc B70), using ALL
+the hardware. OUTCOME: ACHIEVED + EXCEEDED. The starting "stable single-stream sits at ~9.4 t/s eager ceiling"
+is BROKEN; the shipped headline driver does 23.5 t/s, sampling-capable, vision-retaining, correct under load.
+
+SHIPPED DRIVERS (all rdy_to_serve, correct + vision, baked sglang-xpu:mtp image, no runtime mounts):
+  - **qwen36-27b-int4-graph = 23.5 t/s single-stream (2.5x eager, +53% over MTP), SAMPLING** -- the recommended
+    single-user driver. First sglang-XPU decode cuda-graph (torch.xpu.XPUGraph). Pin card 0. DP=2 = 2 users @ ~23.6
+    (serve_dp2_graph.sh; verified, clean cleanup). [67732f7, 78d1af3, 0f1196b]
+  - qwen36-27b-int4-mtp = 15.3 t/s (1.62x), GREEDY -- NEXTN chain-MTP. [90ff04b]  superseded by graph for 1 user.
+  - int4 woq DP=2 (serve_dp2.sh) ~9.4/replica + MTP DP=2 50.7 agg (serve_dp2_mtp.sh) -- for >2 users. [36e00d1]
+
+THE WIN MECHANISM: single-stream decode was LAUNCH-BOUND (~1045 kernel submissions/token; the GPU idled on python
+dispatch). MTP cut that via token amortization (15.3). The real cure was GRAPH CAPTURE -- thought dead ("torch-xpu
+graph degrades") but that was an OLD mechanism; torch.xpu.XPUGraph (torch 2.12, SYCL-Graph/L0) is STABLE on B70
+(scripts/137, 4000 replays no drift). Wired into sglang (xpu_cudagraph.py: device-gate + XPUAttentionBackend decode
+hooks; ATTN=triton clears the SYCL-Graph work_group_scratch wall). At 23.5 t/s (~42ms/tok) the int4 27B driver is
+now near the MEMORY-BANDWIDTH floor (~13.5GB weights / ~450 GB/s ~= 30ms to read weights once) -> the bottleneck
+moved launch-bound -> BANDWIDTH-bound, so 23.5 is the practical single-stream ceiling for int4.
+
+DEAD-ENDS / WALLS documented (do NOT re-try without new info): torch.compile (no-op w/o cuda-graph, 4722b1e);
+cheap scheduler flags num-continuous-decode-steps/overlap (b3d322c); per-card MAXREQ>4 (spec mamba cache wall,
+1cd52c4); multi-bucket graph capture (HALVES single-stream via bs-pad; --disable-cuda-graph-padding breaks capture;
+a829a12); graph+MTP STACK (draft gate added but spec-decode forward crashes under capture -- WALLED, 8a34426);
+W8A8 TP=2 (decode 5.45 < int4, launch-bound); TP=2/PP=2 hang.
+
+HARDWARE FINDING: CARD ASYMMETRY -- the xe driver drives the console/display off one Arc card; ZE_AFFINITY_MASK=1
+(card 1) is downclocked (card0 23.5 vs card1 15.3 same config). Pin DEVICE=0; DP=2 is asymmetric. [[xpugraph-stable-on-b70]]
+
+OPEN FRONTIERS (for a future push, each documented): (1) graph+MTP stack -> >30 t/s greedy (resume scripts/143 +
+xpu_cudagraph.py spec hooks; debug the spec-verify capture crash); (2) lower-bit quant (W3) for more bandwidth
+headroom -- but quality cost (the "correct" half of the goal); (3) per-card multi-stream-at-speed (multi-bucket
+capture without the bs-pad penalty); (4) adopt the graph driver into the live daily-driver deployment (currently
+vLLM int4 DP=2). Box HEALTHY + idle. *** Daily-driver goal MET; loop wrapped. ***
