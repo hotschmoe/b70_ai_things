@@ -101,10 +101,13 @@ def _install():
     # --- W4A8/W4A16 HYBRID kernel for auto_round (auto_gptq-packed) int4 linears (OPT-IN) ---
     # Same int4 weights as the woqgemm path, but dispatched to the oneDNN int4_gemm ops:
     #   decode  M==1 -> int4_gemm_w4a16 (fp16 act)  -- numerically == woqgemm (relerr 1e-3)
-    #   prefill M>1  -> int4_gemm_w4a8  (per-token sym int8 act, EAGER quant)  -- ~1.9x faster prefill
+    #   prefill M>1  -> int4_gemm_w4a8  (per-token sym int8 act, Triton-fused quant)  -- ~1.9x faster prefill
     # Conversion (auto_gptq qweight [K/8,N] -> op B [K/8,N] NT, B_zp=[8] sym, B_scale=scales) is
     # numerically GATED by sglang/w4a8_from_woq_probe.py (relerr<1e-2 vs woqgemm on MLP + GDN layers).
-    # Act-quant is EAGER on purpose: torch.compile of it HANGS the serve startup (W4A8_BUILD.md).
+    # Act-quant: the prefill per-token int8 quant uses a SINGLE-LAUNCH Triton kernel
+    # (w4a8_actquant_triton, 8.3x faster than the eager ~8-launch chain @M=2048 -> lower TTFT). torch.compile
+    # of the quant HANGS serve startup (inductor async-worker deadlock); Triton compiles in-process, no hang.
+    # Gated by B70_W4A8_TRITON_AQ (default on); falls back to the eager chain if Triton import/JIT fails or =0.
     class _XpuW4A8WoqKernel:
         def __init__(self, quant_config):
             self.qc = quant_config
@@ -155,10 +158,13 @@ def _install():
                     xf, layer.qweight_t, b, layer.wscale_t, layer.wzp, gs, None
                 )                                        # decode: fp16 act, no act-quant
             else:
-                amax = xf.abs().amax(-1, keepdim=True).clamp_(min=1e-5)
-                xs = (amax / 127.0).to(torch.float16)
-                xq = (xf / xs).round().clamp_(-127, 127).to(torch.int8).contiguous()
-                xz = torch.zeros_like(amax, dtype=torch.int32).contiguous()
+                if _w4a8_aq is not None:
+                    xq, xs, xz = _w4a8_aq(xf)            # Triton single-launch per-token sym int8
+                else:
+                    amax = xf.abs().amax(-1, keepdim=True).clamp_(min=1e-5)
+                    xs = (amax / 127.0).to(torch.float16)
+                    xq = (xf / xs).round().clamp_(-127, 127).to(torch.int8).contiguous()
+                    xz = torch.zeros_like(amax, dtype=torch.int32).contiguous()
                 out = torch.ops._xpu_C.int4_gemm_w4a8(
                     xq, xs.contiguous(), xz, layer.qweight_t, layer.wscale_t,
                     layer.wzp, gs, None, b,
@@ -172,6 +178,21 @@ def _install():
         else:
             print("[w4a8-woq] int4_gemm op NOT available -> FALLING BACK to woqgemm", flush=True)
             _w4a8_woq = False
+
+    # Prefill act-quant kernel: prefer the single-launch Triton path (lower TTFT); eager fallback.
+    _w4a8_aq = None
+    if _w4a8_woq and os.environ.get("B70_W4A8_TRITON_AQ", "1") != "0":
+        try:
+            import w4a8_actquant_triton as _aqt
+            if _aqt.available():
+                _w4a8_aq = _aqt.per_token_int8
+                print("[w4a8-woq] prefill act-quant: TRITON single-launch per-token int8", flush=True)
+            else:
+                print(f"[w4a8-woq] triton act-quant unavailable ({getattr(_aqt, '_TRITON_ERR', '?')}) -> EAGER", flush=True)
+        except Exception as _e:
+            print(f"[w4a8-woq] triton act-quant import failed ({_e}) -> EAGER", flush=True)
+    if _w4a8_woq and _w4a8_aq is None:
+        print("[w4a8-woq] prefill act-quant: EAGER (~8-launch chain)", flush=True)
 
     def _patched_init_kernel(self, quant_config):
         if _w4a8_woq:

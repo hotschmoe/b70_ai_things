@@ -5,7 +5,8 @@
 # HAS vision, FULL GDN+MLP int4), but dispatches its int4 linears to the oneDNN int4_gemm ops instead of
 # auto_round woqgemm:  decode (M==1) -> int4_gemm_w4a16 (fp16 act),  prefill (M>1) -> int4_gemm_w4a8
 # (per-token sym int8 act).  Same int4 weights as the int4-graph champion, faster kernel:
-#   c1 DECODE ~25.15 t/s warm / 24.8 soak  (> the int4-woqgemm graph champion's 23.5)  +  lower TTFT (~970-1110 ms).
+#   c1 DECODE ~25.3 t/s warm / 24.7 soak  (> the int4-woqgemm graph champion's 23.5, clean same-session)  +
+#   lower TTFT (~935 ms, Triton act-quant) / +24% prefill PP. Full head-to-head: ../../sglang/W4A8_PLAN.md.
 # SAMPLING-capable, VISION retained, soak-stable, coherent, no wedge. Accuracy gated by HumanEval+ (see README).
 #
 # NOT a baked image (unlike int4-graph): the int4_gemm kernel + W4A8 shim are RUNTIME MOUNTS:
@@ -14,7 +15,9 @@
 #   - mount the built _xpu_C.abi3.so dir; B70_XPU_C_SO points the shim at it; B70_XPU_W4A8_WOQ=1 routes int4 linears
 #   - in-container: source oneAPI setvars + PREPEND the oneAPI compiler lib to LD_LIBRARY_PATH
 #     (required, or the ctypes-loaded .so resolves but torch loses the XPU device -- see ../../sglang/W4A8_BUILD.md)
-#   - act-quant is EAGER (compile of it HANGS serve startup)
+#   - prefill act-quant uses a single-launch Triton kernel (w4a8_actquant_triton.py, mounted) -> lower TTFT;
+#     torch.compile of the quant HANGS serve startup so Triton (in-process JIT) is used instead. Set
+#     B70_W4A8_TRITON_AQ=0 to force the eager fallback.
 #
 #   /mnt/vm_8tb/b70/gpu-run --card 0 bash serve.sh start   # serve, capture at startup, coherence-gated probe, stay up
 #   bash serve.sh stop                                      # stop + release the card
@@ -49,6 +52,7 @@ say(){ echo "[$(date +%H:%M:%S)] $*"; }
 preflight() {
   [ -f "$KERNEL_DIR/_xpu_C.abi3.so" ] || { say "MISSING kernel: $KERNEL_DIR/_xpu_C.abi3.so (build per ../../sglang/W4A8_BUILD.md)"; return 1; }
   [ -f "$SHIMS/woq_shim.py" ] || { say "MISSING shim: $SHIMS/woq_shim.py"; return 1; }
+  [ -f "$SHIMS/w4a8_actquant_triton.py" ] || { say "MISSING shim: $SHIMS/w4a8_actquant_triton.py"; return 1; }
   docker image inspect "$IMG" >/dev/null 2>&1 || { say "MISSING image: $IMG"; return 1; }
 }
 
@@ -69,6 +73,7 @@ start() {
     -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
     -v "$KERNEL_DIR:/work/w4a8_kernel:ro" \
     -v "$SHIMS/woq_shim.py:$SITE/woq_shim.py:ro" \
+    -v "$SHIMS/w4a8_actquant_triton.py:$SITE/w4a8_actquant_triton.py:ro" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_W4A8_WOQ=1 -e B70_XPU_C_SO=/work/w4a8_kernel/_xpu_C.abi3.so \
     "${genv[@]}" "${denv[@]}" \

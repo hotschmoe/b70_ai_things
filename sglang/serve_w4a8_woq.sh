@@ -55,6 +55,7 @@ start() {
     -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
     -v "$KERNEL_DIR:/work/w4a8_kernel:ro" \
     -v "$SHIMS/woq_shim.py:$SITE/woq_shim.py:ro" \
+    -v "$SHIMS/w4a8_actquant_triton.py:$SITE/w4a8_actquant_triton.py:ro" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_W4A8_WOQ=1 -e B70_XPU_C_SO=/work/w4a8_kernel/_xpu_C.abi3.so \
     "${genv[@]}" "${denv[@]}" \

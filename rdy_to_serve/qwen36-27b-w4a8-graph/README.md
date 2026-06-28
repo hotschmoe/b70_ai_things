@@ -6,19 +6,25 @@ dispatched to the **oneDNN `int4_gemm` ops** instead of auto_round `woqgemm`, st
 **`torch.xpu.XPUGraph` decode capture**:
 
 - **decode** (M==1) -> `int4_gemm_w4a16` (fp16 act) -- numerically == woqgemm (relerr ~1e-3), but a faster oneDNN kernel
-- **prefill** (M>1) -> `int4_gemm_w4a8` (per-token symmetric int8 act) -- ~1.9x faster prefill than woqgemm, lower TTFT
+- **prefill** (M>1) -> `int4_gemm_w4a8` (per-token symmetric int8 act) -- ~1.9x faster prefill than woqgemm, lower TTFT.
+  The act-quant runs as a single-launch **Triton** kernel (`w4a8_actquant_triton.py`), 8.3x faster than the
+  eager chain -> cuts another ~12% off TTFT (`B70_W4A8_TRITON_AQ=0` forces the eager fallback).
 
 Same int4 weights as `qwen36-27b-int4-graph`, faster kernel. **SAMPLING-capable** (honors temperature/top_p),
 soak-stable, coherent, GDN-correct under mixed load, no wedge.
 
-## Headline (card 0, warm, ctx 2048-in/128-out; verified 2026-06-28)
-| metric | W4A8-graph (this) | int4-woqgemm graph champion |
+## Headline -- CLEAN same-session head-to-head (card 0, GRAPH=1, warm c1, bench2048 IN2048/OUT128; 2026-06-28)
+Both serves benched back-to-back, same machine state, 1st run discarded, 2 recorded runs (see `../../sglang/W4A8_PLAN.md`).
+| metric | W4A8-graph (this, Triton act-quant) | int4-woqgemm graph champion |
 |---|---|---|
-| decode c1 (warm) | **25.15 t/s** | 23.5 t/s |
-| decode soak (2000-tok) | 24.8 t/s (stable) | 23.0 t/s |
-| TTFT | ~970-1110 ms | ~1244 ms |
+| decode c1 (warm) | **25.3 t/s** | 23.5 t/s  (+7.8%) |
+| decode soak (2000-tok) | 24.7 t/s (stable, 1.14x) | 23.0 t/s |
+| TTFT | **~935 ms** | ~1159 ms  (-19%) |
+| prefill PP (tok/s) | **2189** | 1766  (+24%) |
 | eager fallback (GRAPH=0) | 9.7 t/s decode + faster TTFT | 9.4 t/s |
 | VRAM | ~17.4 GB weights | 17.4 GB |
+
+(Earlier eager-act-quant build: decode 25.2, TTFT 1054, PP 1944. The Triton act-quant cut TTFT another ~11% / +13% PP.)
 
 **Accuracy GATE -- PASS (HumanEval+ 164, thinking-off, greedy, sandboxed):** on the SAME sglang stack +
 SAME int4 weights, W4A8 hybrid scores **0.921 base / 0.896 plus** == the int4-woqgemm champion's
@@ -32,14 +38,16 @@ The int4 weights live on disk in auto_gptq packing; `woq_shim.py` (`_XpuW4A8WoqK
 `B70_XPU_W4A8_WOQ=1`) converts them ONCE to the `int4_gemm` op layout (a pure relayout -- numerically gated
 by `../../sglang/w4a8_from_woq_probe.py`) and routes the `GPTQLinearScheme` kernel hook to the hybrid. The
 `int4_gemm_w4a16` decode op is **XPUGraph-capturable** (bs=1 decode = a single op, no data-dependent act-quant),
-so the 25 t/s capture win stacks on top. The prefill `int4_gemm_w4a8` act-quant is EAGER (compile of it HANGS
-serve startup). `B70_XPU_CUDAGRAPH=1` + `--attention-backend triton` enable capture (same as int4-graph).
+so the 25 t/s capture win stacks on top. The prefill `int4_gemm_w4a8` act-quant is a single-launch **Triton**
+kernel (torch.compile of it HANGS serve startup -- inductor async-worker deadlock; Triton JITs in-process, no
+hang). `B70_XPU_CUDAGRAPH=1` + `--attention-backend triton` enable capture (same as int4-graph).
 
 ## REQUIREMENTS (this is NOT a baked image -- it has runtime mounts)
 - **Image:** `sglang-xpu:mtp` (the champion int4-graph image; the multimodal Qwen3_5 path is baked).
 - **Kernel:** the built `_xpu_C.abi3.so` at `/mnt/vm_8tb/b70/w4a8_kernel/` (50 MB, **NOT in git**;
   build per `../../sglang/W4A8_BUILD.md`; sha256 `63c8be3d26c8...`). `B70_XPU_C_SO` points the shim at it.
-- **Shim:** `../../sglang/patches/woq_shim.py` (mounted over the baked copy; carries `_XpuW4A8WoqKernel`).
+- **Shim:** `../../sglang/patches/woq_shim.py` (mounted over the baked copy; carries `_XpuW4A8WoqKernel`)
+  + `../../sglang/patches/w4a8_actquant_triton.py` (mounted; the Triton prefill act-quant kernel).
 - **oneAPI LD_LIBRARY_PATH:** the container PREPENDS `/opt/intel/oneapi/compiler/2025.3/lib` (required, or the
   ctypes-loaded .so resolves but torch loses the XPU device). serve.sh does this automatically.
 `serve.sh start` preflights all of the above and refuses if any are missing.
@@ -67,7 +75,7 @@ cross-card collective), NOT a higher `max-running-requests` here.
 ## Driver matrix
 | driver | c1 t/s | sampling | cards | use |
 |---|---|---|---|---|
-| **W4A8 + XPUGraph (this)** | **~25.15** | yes | 1 | FASTEST single-stream + lower TTFT; vision |
+| **W4A8 + XPUGraph (this)** | **~25.3** | yes | 1 | FASTEST single-stream + lowest TTFT (~935 ms); vision |
 | W4A8 + XPUGraph DP=2 (`../../sglang/serve_dp2_w4a8.sh`) | ~25 + ~15 | yes | 2 | 2 users, wedge-proof |
 | int4 + XPUGraph (`../qwen36-27b-int4-graph`) | ~23.5 | yes | 1 | prior champion (woqgemm kernel) |
 | int4 + NEXTN MTP steps=7 (`../qwen36-27b-int4-mtp`) | ~15.3 | greedy only | 1 | superseded by graph |

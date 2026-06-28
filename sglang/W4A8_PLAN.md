@@ -234,3 +234,44 @@ less truncation -> a higher absolute pass@1. That gap is a stack/methodology art
 APPLES-TO-APPLES same-stack comparison, W4A8 ties int4 exactly. GATE PASS -> W4A8 is a real daily driver.
 Result dirs: evals/results/20260628T090922Z__qwen36-27b-w4a8woq__w4a8-graph (W4A8) and
 .../20260628T095310Z__qwen36-27b-int4-graph__int4-graph-sglang (int4 baseline).
+
+## CLEAN SAME-SESSION HEAD-TO-HEAD 2026-06-28e: W4A8 beats int4-graph on decode AND TTFT AND PP
+Replaces the earlier "vs documented 23.5" comparison with a back-to-back one: BOTH serves on card 0, GRAPH=1,
+SAME machine state, SAME bench (sglang/bench2048.sh, random IN=2048/OUT=128, c1, WARM = 1st run discarded,
+2 recorded runs). Each serve started fresh, benched, stopped (single gpu-run --card 0 lease per serve).
+
+  config (GRAPH=1, card 0, warm c1)   decode t/s        TTFT ms          prefill t/s (PP = IN*1000/TTFT)
+  int4-graph (auto_round woqgemm)      23.50 / 23.49     1158.9 / 1159.5  1767 / 1766
+  W4A8 hybrid (EAGER act-quant)        25.14 / 25.21     1053.1 / 1054.3  1945 / 1943
+  W4A8 hybrid (TRITON act-quant)       25.32 / 25.35      936.4 /  934.9  2187 / 2191
+  c4 (per-stream decode / agg / TTFT): int4 23.60/15.08/9538  W4A8eager 25.56/16.25/8856  W4A8triton 25.58/16.89/8459
+
+=> The decode win is REAL on identical same-session conditions (NOT a stack artifact): W4A8 ~25.3 vs int4 ~23.5
+   = +7.8% decode. The win is ALSO TTFT (-19.3%, 1159 -> 936 ms) and PP (+24%, 1766 -> 2189) -- it is NOT
+   decode-only. (Decode = int4_gemm_w4a16 oneDNN, faster than woqgemm even captured; TTFT/PP = int8-act
+   int4_gemm_w4a8 prefill.)
+
+## TTFT/PP UNLOCK 2026-06-28e: prefill act-quant fused to ONE Triton launch (no startup hang)
+The prefill per-token sym int8 act-quant was the eager ~8-launch chain (1.78 ms/call @M=2048 on a real
+down_proj K=17408 -- x304 linears => the bulk of TTFT). torch.compile of it HANGS serve startup (inductor
+async-compile-worker deadlock inside the sglang scheduler proc). FIX: a single-launch Triton kernel
+(sglang/patches/w4a8_actquant_triton.py, per_token_int8: amax-reduce + quantize, 2 streaming passes over K,
+1 launch). triton.jit compiles IN-PROCESS (no worker pool) -> NO hang; triton-xpu is already the attn backend.
+  - Standalone gate (sglang/w4a8_triton_aq_probe.py, card 0, real down_proj): act-quant eager 1.78 ms ->
+    triton 0.214 ms @M=2048 = 8.3x; full w4a8 layer 3.75 -> 1.93 ms = 1.94x. Numerics: q differs <=1 LSB on
+    <1.03% of elements, scale identical; int4_gemm_w4a8 OUTPUT relerr(eager vs triton) = 3e-3 (BELOW the
+    accepted ~9e-3 int8-act-vs-fp16 error). round-half-away-from-zero vs torch's round-half-even = the only diff.
+  - End-to-end (table above): W4A8 TRITON vs W4A8 EAGER = TTFT -11.2% (1054 -> 936 ms), PP +12.6%
+    (1944 -> 2189), decode UNCHANGED (25.18 -> 25.34; decode is the w4a16 fp16-act path, no act-quant).
+  - Coherence + soak (perf_regime, GRAPH=1, triton): coherence GATE OK (Rayleigh); WARM c1 25.32 t/s TTFT 997 ms;
+    SOAK 2000-tok OVERALL 24.70 t/s, first/last ratio 1.14x (stable, the usual idle-downclock), coherence OK.
+  Wired in woq_shim.py _XpuW4A8WoqKernel (prefill branch), gated B70_W4A8_TRITON_AQ (default on; eager fallback
+  if triton import/JIT fails or =0). serve.sh / serve_w4a8_woq.sh mount w4a8_actquant_triton.py into site-packages.
+
+## PP AXIS (task 3) -- W4A8 prefill throughput vs int4, fully documented
+PP = prompt prefill tok/s = IN(2048)*1000 / TTFT_ms (warm c1, the table above):
+  int4-graph (woqgemm fp16-act prefill):        1766 tok/s
+  W4A8 hybrid, EAGER int8 act-quant prefill:    1944 tok/s   (+10.1% vs int4)
+  W4A8 hybrid, TRITON int8 act-quant prefill:   2189 tok/s   (+23.9% vs int4, +12.6% vs the eager W4A8)
+The PP win is the int8-XMX int4_gemm_w4a8 prefill op (oneDNN, 1.9x woqgemm's int4->fp16 prefill) MINUS the
+act-quant overhead; Triton recovers most of that overhead (eager act-quant was eating ~12% of TTFT).
