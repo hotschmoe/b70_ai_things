@@ -5960,3 +5960,22 @@ VERDICT: the fused hybrid EAGER already beats legacy W8A8 on all three AND beats
   eager -- XPUGraph capture is the next lever, microbench showed the decode op at 1.9x bf16). Box HEALTHY
   after (no wedge, clean teardown). NEXT: GRAPH=1 capture run (decode lever) + the vision ckpt + a same-
   session bf16/fp8 baseline for the clean head-to-head. Log: w8a8/w8a8_fused_eager_bench.log.
+
+## 2026-06-28 -- W8A8 TP=2 GRAPH=1 = CEILING (decode all-reduce-bound, not launch-bound); EAGER is the TP=2 config [result]
+CONFIG: scripts/123 GRAPH=1 (triton attn, B70_XPU_CUDAGRAPH=1) vs GRAPH=0 (intel_xpu), 27B-W8A8-sqgptq
+fused TP=2. COHERENCE_ONLY graph run FIRST (safety gate): loaded COHERENT, no wedge, clean teardown
+(258s) -> TP=2 + XPUGraph + fused W8A8 + skip-warmup is SAFE (the GDN-poison-during-capture risk did
+NOT materialize). Then full bench.
+RESULT (warm c1; eager numbers from the prior run):
+  config             decode   prefill   TTFT
+  TP=2 eager (fused) 8.08-8.16  4570    447-449   <- BEST W8A8 config
+  TP=2 GRAPH (fused) 8.43-8.58  2927-3240  632-699
+  c4 GRAPH collapsed to decode 2.62 (bs=1 graph serializes concurrency -> capture DID engage)
+VERDICT: TP=2 GRAPH=1 is a CEILING -- decode +5% only (graph captures local compute but the 128
+  all-reduces/token are NOT captured and DOMINATE decode at TP=2: ~7-11ms latency-bound, exactly the
+  27b_w8a8_research prediction), and prefill/TTFT REGRESS (triton attn backend slower than intel_xpu for
+  prefill). The single-op 1.9x decode win (microbench) only realizes SINGLE-CARD (TP=1, no all-reduce).
+  -> For TP=2, ship EAGER (intel_xpu): prefill +48% / TTFT -32% vs bf16 (handily wins 2 of 3); decode
+  8.1 ~ties bf16 9.0. To WIN decode too needs TP=1 single-card GRAPH = requires shrinking W8A8 to fit one
+  card (int8 GDN proj via the new int8_gemm_w8a16 + int4 lm_head; also the user's "minimize size" goal).
+  Box HEALTHY after (no wedge). NEXT = single-card shrink (task #3). Logs: w8a8/w8a8_fused_ab_fused+graph.log.
