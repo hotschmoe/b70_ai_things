@@ -5941,3 +5941,22 @@ RESULT:
 VERDICT: shim layout CORRECT on real weights -> ready to serve. Next = TP=2 serve A/B (eager first
   [known-survivable, was the 5.45 baseline], then GRAPH=1 with wedge guards). Files: sglang/patches/w8a8_shim.py
   (fused hybrid), w8a8/w8a8_shim_layout_probe.py. Box clean (card-0 probe; both cards free after).
+
+## 2026-06-28 -- W8A8 FUSED hybrid TP=2 EAGER serve: +48% decode, +48% prefill vs legacy/bf16 [result]
+CONFIG: scripts/123_w8a8_fused_ab.sh, FUSED=1 GRAPH=0, Qwen3.6-27B-W8A8-sqgptq TP=2, sglang-xpu:woq,
+the built int8 .so (B70_XPU_C_SO=/mnt/vm_8tb/b70/w8a8_kernel), --skip-server-warmup, ctx 8192. The
+fused shim wired (log: "FUSED hybrid (decode=int8_gemm_w8a16, prefill=int8_gemm_w8a8)", dlopen'd .so,
+prefill act-quant=oneDNN dynamic_per_token_int8_quant 1 launch). COHERENT (Rayleigh, no "!!!!").
+HARNESS NOTE: the run-in-background bash got reaped at ~132s (before bench), but docker run -d kept the
+container healthy; salvaged by benching the live container. Foreground serves need the Bash tool
+timeout param (ms) raised -- the 2min default killed a foreground bench (shell `timeout` is seconds).
+RESULT (warm c1, IN2048/OUT128):
+  metric        legacy _int_mm   FUSED hybrid    vs legacy   bf16 TP=2 (scoreboard)
+  decode t/s    5.45             8.08 / 8.16     +48%        9.03  (eager still -10%, GRAPH is the lever)
+  prefill t/s   3310-3693        4580 / 4560     +24-38%     3098  (+48%)
+  TTFT ms       555-619          447 / 449       -25%        661   (-32%)
+VERDICT: the fused hybrid EAGER already beats legacy W8A8 on all three AND beats bf16 decisively on
+  prefill (+48%) and TTFT (-32%); decode eager 8.1 is just under bf16 9.0 (launch overhead remains in
+  eager -- XPUGraph capture is the next lever, microbench showed the decode op at 1.9x bf16). Box HEALTHY
+  after (no wedge, clean teardown). NEXT: GRAPH=1 capture run (decode lever) + the vision ckpt + a same-
+  session bf16/fp8 baseline for the clean head-to-head. Log: w8a8/w8a8_fused_eager_bench.log.

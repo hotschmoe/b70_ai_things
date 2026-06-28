@@ -1,0 +1,16 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> bash -c 
+bench(){ docker exec sglang_w8a8 bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; python -m sglang.bench_serving --backend sglang-oai --host 127.0.0.1 --port 30000 --served-model-name qwen36-27b-w8a8-sqgptq-fused --tokenizer /models/Qwen_Qwen3.6-27B --dataset-name random --random-input-len ${3:-2048} --random-output-len ${4:-128} --num-prompts $2 --max-concurrency $1 2>&1"; }
+rep(){ local raw="$2"; local ttft tpot otps dec pp;
+ ttft=$(echo "$raw"|grep -i "Mean TTFT"|grep -oE "[0-9.]+"|head -1);
+ tpot=$(echo "$raw"|grep -i "Mean TPOT"|grep -oE "[0-9.]+"|head -1);
+ otps=$(echo "$raw"|grep -i "Output token throughput"|grep -oE "[0-9.]+"|head -1);
+ dec=$(awk -v t="$tpot" "BEGIN{if(t>0)printf\"%.2f\",1000.0/t;else print\"NA\"}");
+ pp=$(awk -v t="$ttft" "BEGIN{if(t>0)printf\"%.0f\",2048*1000.0/t;else print\"NA\"}");
+ echo "RESULT[$1]: decode_tps=$dec prefill_tps=$pp TTFT_ms=${ttft:-NA} TPOT_ms=${tpot:-NA} out_tps=${otps:-NA}"; }
+echo "=== warm c1 (discard1) ==="; bench 1 3 2048 128 >/dev/null 2>&1 || true
+rep c1.run1 "$(bench 1 6 2048 128)"; rep c1.run2 "$(bench 1 6 2048 128)"
+
+=== warm c1 (discard1) ===
+RESULT[c1.run1]: decode_tps=8.00 prefill_tps=4580 TTFT_ms=447.13 TPOT_ms=125.04 out_tps=7.74
+RESULT[c1.run2]: decode_tps=8.16 prefill_tps=4560 TTFT_ms=449.15 TPOT_ms=122.62 out_tps=7.88
+gpu-run: [b70s4dayz] done in 233s (exit 0)
