@@ -129,3 +129,85 @@ w4a8_shim (decode + prefill via the op; reuse woq_shim layer selection; fuse the
 - Qwen3.6-27B-W4A8-sqgptq-prepacked: compressed-tensors int-quantized (int4 W + int8
   dyn act). BAD artifact: 0 vision tensors, only 256 MLP linears int4 (GDN left bf16),
   25.9GB, format sglang-XPU cannot load. Do NOT use as-is.
+
+## UPDATE 2026-06-28c: W4A8/W4A16 hybrid SERVED on the PROVEN Lorbus multimodal path (vision kept)
+The sqgptq/text-only path is ABANDONED (Qwen3_5ForCausalLM is the decoder body -> no lm_head ->
+sample() crashes; no vision; MLP-only quant). New approach: serve the PROVEN Lorbus int4-AutoRound
+ckpt (multimodal Qwen3_5ForConditionalGeneration, vision + full GDN+MLP int4) through sglang's
+proven multimodal model path, but dispatch its int4 linears to the oneDNN int4_gemm ops instead of
+auto_round woqgemm. Reuses ALL the working vision+arch+logits plumbing.
+
+### THE GATE (sglang/w4a8_from_woq_probe.py) -- PASSED
+Crux: convert auto_gptq packing (qweight [K/8,N] i32 contiguous, qzeros [K/g,N/8], scales [K/g,N])
+-> the int4_gemm op's expected B (verified on COMPRESSED-TENSORS: [K/8,N] NT view, B_zp=[8] sym,
+B_scale [K/g,N]). Found by reading auto_round_kernel.qlinear.unpack_to_8bit_signed + post_init:
+  - ARK sym (asym=False) dequant = (nibble - 8) * scale; nibble i at bit 4i = K-index k8*8+i;
+    qzeros are IGNORED for sym (the ckpt packs nibble 7 = the GPTQ -1 offset, i.e. effective zero 8).
+  - This is BYTE-IDENTICAL to the op's compressed-tensors convention. Conversion is a PURE relayout:
+    auto_gptq qweight is already [K/8,N] with the same nibble semantics but contiguous (stride0==N);
+    the op needs stride0==1 (NT) -> B = qw.t().contiguous().t() (keep the [N,K/8] buffer alive).
+    B_scale = scales.to(fp16) (already [K/g,N]); B_zp = tensor([8]) (sym).
+Reference = auto_round_kernel woqgemm (QuantLinearGPTQ) built EXACTLY as woq_shim does, SAME layer.
+Result (card 0, sglang-xpu:woq, real Lorbus layer-20 weights):
+  layer                    M=1 w4a16 relerr   M=2048 w4a16   w4a8 (int8 act) relerr
+  down_proj (MLP)          1.40e-03           5.7e-06        ~1.0e-02
+  gate_proj (MLP)          9.62e-04           0.0            ~8.8e-03
+  in_proj_qkv (GDN fused)  9.69e-04           0.0            ~8.6e-03
+  out_proj (GDN)           1.02e-03           0.0            ~8.0e-03
+=> w4a16 (decode) MATCHES woqgemm to 1e-3 on MLP AND GDN; w4a8 (prefill) ~9e-3 (int8-act-quant
+   error, expected, finite). GATE PASS -> serve is numerically justified.
+
+### Integration (left for user to commit)
+- sglang/patches/woq_shim.py: added `_XpuW4A8WoqKernel` + `_load_int4_gemm_op()`; gated by
+  env B70_XPU_W4A8_WOQ=1. process_weights_after_loading converts the auto_gptq buffers ONCE
+  (relayout above); apply: M==1 -> int4_gemm_w4a16 (fp16 act, no quant), M>1 -> EAGER per-token
+  sym int8 act-quant + int4_gemm_w4a8. Routes the SAME GPTQLinearScheme._init_kernel hook as woqgemm
+  (so it only swaps the kernel; auto_round layer-selection, vision/GDN-bf16 ignore list, lm_head all
+  unchanged). Act-quant is EAGER on purpose (torch.compile of it HANGS serve startup).
+- sglang/serve_w4a8_woq.sh: serves Lorbus int4 via the multimodal class on card 0 (TP=1),
+  --dtype bfloat16 --attention-backend triton --linear-attn-backend triton --skip-server-warmup
+  --disable-radix-cache --mem-fraction-static 0.85; image sglang-xpu:mtp; mounts the updated
+  woq_shim.py + the built _xpu_C.abi3.so; B70_XPU_C_SO + oneAPI LD_LIBRARY_PATH set in-container.
+  GRAPH=1 stacks XPUGraph decode capture (bs=1) -- only AFTER a clean eager bench.
+
+### Serve validation (card 0, eager, ctx=4096)
+- LOADS as Qwen3_5ForConditionalGeneration (multimodal, VISION RETAINED), quant=auto-round bits=4,
+  17.44 GB weights; 304 int4 linears routed to the W4A8/W4A16 hybrid (grep "w4a8-woq] layer ready").
+- COHERENT: "Why is the sky blue" -> correct Rayleigh-scattering answer (not garbage). No NaN/"!!!!".
+- WARM bench (sglang.bench_serving, 2048-in/128-out, discard 1st):
+    c1: decode 9.88 t/s   TTFT 1105 ms   agg 8.79 t/s
+    c4: decode 4.39 t/s   TTFT 1954 ms   agg 14.09 t/s
+  vs int4-woqgemm EAGER champion (~9.4 t/s decode, ~1244 ms TTFT): decode ON PAR/slightly ahead
+  (same int4 weights, bandwidth-bound M=1), TTFT ~11% FASTER (the int8-act w4a8 prefill helps).
+  NOTE: this is EAGER. The 23.5 t/s headline is the XPUGraph-captured woqgemm driver; matching it
+  needs the int4_gemm ops captured under XPUGraph (GRAPH=1) -- separate attempt.
+  SOAK (2000-tok single stream, 400-tok windows): 9.98 -> 9.78 -> 9.77 -> 9.62 -> 9.44 t/s,
+  OVERALL 9.72 t/s, first/last ratio 1.06x (STABLE, no degradation), coherence OK, TTFT 1085 ms.
+  => eager W4A8/W4A16 hybrid = on-par decode + faster TTFT vs woqgemm eager, STABLE, vision kept.
+
+### XPUGraph stack (GRAPH=1) -- THE WIN: BEATS the int4-woqgemm graph champion
+The int4_gemm_w4a16 decode op is XPUGraph-CAPTURABLE (the bs=1 decode graph captured cleanly in
+49 s; under bs=1 decode the apply() takes the M==1 w4a16 branch = a single op, no data-dependent
+act-quant, so capture is clean). Served Lorbus int4 via the multimodal class + GRAPH=1 (B70_XPU_
+CUDAGRAPH=1, --cuda-graph-bs-decode 1 --max-running-requests 1, ATTN=triton), card 0, vision kept.
+- COHERENT under capture (Rayleigh). 304 layers routed. No NaN.
+- WARM c1: decode 25.15 t/s   TTFT 1110 ms
+- WARM c4: per-stream 25.52 t/s (agg 16.25; TTFT 8866 ms -- c4 SERIALIZES under maxreq=1, the
+  known single-stream-graph limit; for concurrency use DP=2, not a higher maxreq, same as champion).
+- SOAK (2000-tok): 26.52 -> 25.63 -> 24.79 -> 23.99 -> 23.32 t/s, OVERALL 24.80 t/s, ratio 1.14x
+  (stable; the mild decline is the B70 idle/thermal downclock, same as the champion), coherence OK,
+  TTFT 968 ms.
+=> vs the int4-woqgemm XPUGraph champion (~23.5 t/s decode, ~1244 ms TTFT): the W4A8/W4A16 hybrid
+   DECODES FASTER (25.15 warm / 24.8 soak vs 23.5, +5-7%) AND has lower TTFT (~970-1110 ms), while
+   retaining vision and the full GDN+MLP int4 quant. The int4_gemm_w4a16 op (oneDNN) beats woqgemm
+   on the captured decode; the int8-act int4_gemm_w4a8 op carries the (eager) prefill/TTFT win.
+
+## VERDICT 2026-06-28c: GOAL MET. Vision-retaining W4A8/W4A16-hybrid sglang serve BEATS the int4 champion.
+Daily-driver upgrade path: serve Lorbus int4 (the SAME proven ckpt, vision + GDN) via
+sglang/serve_w4a8_woq.sh with GRAPH=1. Decode 24.8-25.2 t/s (> 23.5 woqgemm-graph), TTFT ~1 s,
+stable + coherent, vision retained. Eager fallback (GRAPH=0): 9.7 t/s decode (== woqgemm eager) +
+faster TTFT. Conversion + kernel routing numerically gated (sglang/w4a8_from_woq_probe.py).
+Open follow-ups: (1) DP=2 for concurrency at 24.8 t/s/stream (mirror serve_dp2_graph.sh); (2) the
+prefill int4_gemm_w4a8 is eager under GRAPH (prefill graph auto-disabled) -- a captured/compiled
+act-quant could push TTFT lower; (3) HumanEval+ accuracy vs the int4 champion (numerics gated to
+relerr 1e-3, so expected == int4, but confirm).

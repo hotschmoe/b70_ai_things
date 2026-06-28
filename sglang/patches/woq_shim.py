@@ -7,6 +7,38 @@
 import os
 
 
+def _load_int4_gemm_op():
+    """Make torch.ops._xpu_C.int4_gemm_w4a16 / int4_gemm_w4a8 callable (the oneDNN int4w GEMMs).
+    Prefer the packaged extension; else ctypes-dlopen the built _xpu_C*.so (B70_XPU_C_SO) with
+    RTLD_GLOBAL so its sibling oneAPI libs resolve. Needs the oneAPI compiler lib on
+    LD_LIBRARY_PATH (see sglang/W4A8_BUILD.md). Returns True iff both ops are registered."""
+    import torch
+
+    if hasattr(torch.ops._xpu_C, "int4_gemm_w4a16") and hasattr(
+        torch.ops._xpu_C, "int4_gemm_w4a8"
+    ):
+        return True
+    try:
+        import vllm_xpu_kernels._xpu_C  # noqa: F401  (registers torch.ops._xpu_C on import)
+    except Exception:
+        so = os.environ.get("B70_XPU_C_SO")
+        if so and os.path.exists(so):
+            import ctypes
+
+            try:
+                ctypes.CDLL(so, mode=ctypes.RTLD_GLOBAL)
+                print(f"[w4a8-woq] dlopen'd {so}", flush=True)
+            except Exception as e:
+                print(f"[w4a8-woq] ctypes.CDLL({so}) failed: {e}", flush=True)
+        elif so:
+            print(f"[w4a8-woq] B70_XPU_C_SO={so} does not exist", flush=True)
+        else:
+            print("[w4a8-woq] B70_XPU_C_SO unset and vllm_xpu_kernels import failed", flush=True)
+    return hasattr(torch.ops._xpu_C, "int4_gemm_w4a16") and hasattr(
+        torch.ops._xpu_C, "int4_gemm_w4a8"
+    )
+
+
 def _install():
     try:
         from sglang.srt.utils import is_xpu
@@ -66,7 +98,84 @@ def _install():
                 out = out + bias
             return out
 
+    # --- W4A8/W4A16 HYBRID kernel for auto_round (auto_gptq-packed) int4 linears (OPT-IN) ---
+    # Same int4 weights as the woqgemm path, but dispatched to the oneDNN int4_gemm ops:
+    #   decode  M==1 -> int4_gemm_w4a16 (fp16 act)  -- numerically == woqgemm (relerr 1e-3)
+    #   prefill M>1  -> int4_gemm_w4a8  (per-token sym int8 act, EAGER quant)  -- ~1.9x faster prefill
+    # Conversion (auto_gptq qweight [K/8,N] -> op B [K/8,N] NT, B_zp=[8] sym, B_scale=scales) is
+    # numerically GATED by sglang/w4a8_from_woq_probe.py (relerr<1e-2 vs woqgemm on MLP + GDN layers).
+    # Act-quant is EAGER on purpose: torch.compile of it HANGS the serve startup (W4A8_BUILD.md).
+    class _XpuW4A8WoqKernel:
+        def __init__(self, quant_config):
+            self.qc = quant_config
+            gs = int(getattr(quant_config, "group_size", 128))
+            self.gs = gs  # -1 (per-tensor) handled per-layer in process_weights_after_loading
+
+        def process_weights_after_loading(self, layer):
+            qw = layer.qweight.data          # [K/8, N] int32 (auto_gptq pack, contiguous stride0==N)
+            sc = layer.scales.data           # [K/g, N]
+            dev = qw.device
+            in_f = qw.shape[0] * 8
+            out_f = qw.shape[1]
+            gs = self.gs if self.gs != -1 else in_f
+            # auto_gptq qweight is [K/8,N] contiguous (stride[0]==N); the op needs [K/8,N] with
+            # stride[0]==1 (NT). PURE relayout (no value change): keep the [N,K/8] contiguous
+            # backing buffer alive and view its transpose -> [K/8,N] stride[0]==1.
+            B_contig = qw.t().contiguous()           # [N, K/8] contiguous backing storage
+            layer.qweight_t = B_contig.t()           # [K/8, N] VIEW, stride[0]==1
+            layer._w4a8_B_contig = B_contig          # keep storage alive (qweight_t is a view of it)
+            layer.wscale_t = sc.to(torch.float16).contiguous()      # [K/g, N] fp16
+            layer.wzp = torch.tensor([8], dtype=torch.int8, device=dev)  # 1-D -> symmetric int4 zp
+            layer._w4a8_gs = gs
+            assert layer.qweight_t.stride()[0] == 1, (
+                f"[w4a8-woq] qweight_t NOT NT (stride0={layer.qweight_t.stride()[0]})"
+            )
+            # free the now-redundant gptq buffers (B_contig holds the packed weight)
+            empty = torch.nn.Parameter(torch.empty(0, device=dev), requires_grad=False)
+            for n in ("qweight", "qzeros", "scales", "g_idx"):
+                if hasattr(layer, n):
+                    setattr(layer, n, empty)
+            if hasattr(torch, "xpu"):
+                torch.xpu.empty_cache()
+            print(
+                f"[w4a8-woq] layer ready in={in_f} out={out_f} g={gs} "
+                f"qw_stride={tuple(layer.qweight_t.stride())}",
+                flush=True,
+            )
+
+        def apply(self, layer, x, bias=None):
+            orig = x.shape
+            x2 = x.reshape(-1, orig[-1])                 # [M, K]
+            M = x2.shape[0]
+            gs = layer._w4a8_gs
+            b = bias.to(torch.float16) if bias is not None else None
+            xf = x2.to(torch.float16).contiguous()       # ops are fp16-only (emit fp16)
+            if M == 1:
+                out = torch.ops._xpu_C.int4_gemm_w4a16(
+                    xf, layer.qweight_t, b, layer.wscale_t, layer.wzp, gs, None
+                )                                        # decode: fp16 act, no act-quant
+            else:
+                amax = xf.abs().amax(-1, keepdim=True).clamp_(min=1e-5)
+                xs = (amax / 127.0).to(torch.float16)
+                xq = (xf / xs).round().clamp_(-127, 127).to(torch.int8).contiguous()
+                xz = torch.zeros_like(amax, dtype=torch.int32).contiguous()
+                out = torch.ops._xpu_C.int4_gemm_w4a8(
+                    xq, xs.contiguous(), xz, layer.qweight_t, layer.wscale_t,
+                    layer.wzp, gs, None, b,
+                )                                        # prefill: per-token sym int8 act
+            return out.to(x.dtype).reshape(*orig[:-1], -1)
+
+    _w4a8_woq = os.environ.get("B70_XPU_W4A8_WOQ") == "1"
+    if _w4a8_woq:
+        if _load_int4_gemm_op():
+            print("[w4a8-woq] int4_gemm ops loaded; routing GPTQ int4 linears -> W4A8/W4A16 hybrid", flush=True)
+        else:
+            print("[w4a8-woq] int4_gemm op NOT available -> FALLING BACK to woqgemm", flush=True)
+            _w4a8_woq = False
+
     def _patched_init_kernel(self, quant_config):
+        if _w4a8_woq:
+            return _XpuW4A8WoqKernel(quant_config)
         return _XpuWoqGptqKernel(quant_config)
 
     GPTQLinearScheme._init_kernel = _patched_init_kernel

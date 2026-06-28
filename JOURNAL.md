@@ -5723,3 +5723,33 @@ NO dense W4A8 scheme; _is_dynamic_token_w4a8 detector exists but only wired for 
 _get_scheme_from_parts, spoofs the capability check. NEXT: extend shim to the HYBRID (decode=int4_gemm_w4a16,
 prefill=int4_gemm_w4a8), bake sglang-xpu:w4a8 image, serve + bench vs the 23.5 t/s int4 champion. Then proper
 vision-retaining requant (sqgptq ckpt has 0 vision + GDN left bf16).
+
+================================================================================
+2026-06-28e -- *** W4A8 HYBRID SERVE BEATS THE int4 CHAMPION (vision retained) ***
+================================================================================
+Served the PROVEN Lorbus int4-AutoRound via the multimodal Qwen3_5ForConditionalGeneration (vision +
+full GDN+MLP int4) but dispatching int4 linears to the built int4_gemm ops instead of woqgemm:
+decode -> int4_gemm_w4a16 (fp16 act), prefill -> int4_gemm_w4a8 (eager per-token int8 act-quant).
+NO new checkpoint, NO requant -- the auto_gptq->op packing is a PURE relayout (B=qweight.t().contiguous().t()
+NT, B_scale=scales [K/g,N], B_zp=tensor([8]) sym; ARK sym dequant (nibble-8)*scale is byte-identical to the
+op's compressed-tensors convention; qzeros packs 7 = GPTQ -1 offset, irrelevant for sym).
+
+GATE (sglang/w4a8_from_woq_probe.py, vs woqgemm reference, real Lorbus layers down/gate/in_proj_qkv/out_proj):
+  w4a16 decode relerr 0..1e-3 (matches woqgemm); w4a8 prefill relerr ~8-10e-3 (int8-act error, finite). PASS.
+
+INTEGRATION: woq_shim.py _XpuW4A8WoqKernel + _load_int4_gemm_op(), gated B70_XPU_W4A8_WOQ=1, hooks the same
+GPTQLinearScheme._init_kernel as woqgemm (reuses vision/GDN-bf16 ignore list, lm_head, arch). serve_w4a8_woq.sh
+(image sglang-xpu:mtp, card0 TP=1, --skip-server-warmup --disable-radix-cache, mounts updated woq_shim +
+/mnt/vm_8tb/b70/w4a8_kernel/_xpu_C.abi3.so + B70_XPU_C_SO + oneAPI LD path). GRAPH=1 = the winning path.
+
+BENCH (warm, card0, IN2048/OUT128, vs woqgemm champion):
+  EAGER (GRAPH=0): decode 9.88 t/s (soak 9.72, stable 1.06x), TTFT 1085ms -> == woqgemm eager ~9.4, TTFT ~13% faster.
+  XPUGRAPH (GRAPH=1): decode 25.15 t/s (soak 24.80, stable 1.14x), TTFT 968-1110ms
+    -> BEATS woqgemm-graph champion (23.5 t/s, ~1244ms) on decode (+5-7%) AND TTFT. Vision retained, coherent, no NaN.
+KEY: int4_gemm_w4a16 IS XPUGraph-capturable (bs=1 decode graph, 49s capture, single-op no data-dep control flow)
+  AND faster than woqgemm under capture. c4 serializes at maxreq=1 (graph single-stream limit; concurrency = DP=2).
+GPU clean after (docker ps empty, both cards free, xpu-health HEALTHY -- no wedge).
+
+VERDICT: TASK GOAL MET -- a vision-retaining W4A8 that beats int4/W4A16 on TG (25.15 vs 23.5) and TTFT, same
+memory/weights. Open: DP=2 concurrency, compiled/captured act-quant for lower prefill TTFT, HumanEval+ accuracy
+(numerics gate to 1e-3 -> expect == int4). Files: sglang/{w4a8_from_woq_probe.py, serve_w4a8_woq.sh, patches/woq_shim.py, W4A8_PLAN.md}.
