@@ -5344,3 +5344,45 @@ VERDICT -> [NO-GO] no accessible scheduler/launch flag lifts the ~15.3 single-st
   C++), or L0/SYCL-Graph capture (#13, avoids the torch.xpu-graph degradation). The TRACTABLE remaining "use the
   hardware" win is AGGREGATE: the per-card max-running-requests ceiling (lever 3b, scripts/135) -> then x2 via
   DP=2. Tools: scripts/134.
+
+## 2026-06-28 -- PERF PUSH lever 3b: per-card MAXREQ ceiling = 4 (spec mamba cache wall, memfrac can't unlock) [result]
+
+The MTP spec mamba INTERMEDIATE-STATE cache scales with --max-running-requests and is reserved such that >4
+OOMs. Swept MAXREQ {6,8,12,16} x memfrac {0.65,0.70,0.80,0.85,0.92} x ctx {2048,4096} (scripts/135 + 136):
+EVERY MAXREQ>4 config EXITED at load with "Loaded weights leave no GPU memory for the KV cache ... minimum
+viable = 1 - available/pre = 0.7010" -- and that 0.701 "already-used" fraction is CONSTANT across memfrac/ctx,
+i.e. ~70% of the 32GB card is consumed by weights + draft + the per-request spec cache before the KV pool, and
+lowering memfrac only SHRINKS the KV pool (does not free the out-of-pool spec reservation). ctx 2048 vs 4096
+made no difference -> the wall is the spec cache, not KV.
+
+VERDICT -> [CEILING = 4] per-card MTP concurrency is hard-capped at max-running-requests=4. Raising it would
+  require shrinking the spec cache (fewer num-steps/draft-tokens -> lower accept_len -> slower) -- not worth it.
+  The MTP aggregate ceiling is therefore DP=2 (4/card x 2 = 8 in-flight = 50.7 tok/s, already banked). Tools:
+  scripts/135, 136.
+
+## 2026-06-28 -- *** FRONTIER: torch.xpu.XPUGraph WORKS + STABLE on B70 -- the "torch-xpu graph dead-end" is REFUTED *** [BREAKTHROUGH]
+
+The single-stream ceiling is launch-bound (~1045 launches/token) and every NON-kernel lever is exhausted
+(torch.compile NO-GO, cheap flags NO-GO). The remaining cure is collapsing launches via graph capture -- which
+the journal had recorded as a DEAD-END ("torch-xpu graph CAPTURE degrades, L0/NEO command-stream accumulation").
+That verdict is now REFUTED for the PROPER API: torch 2.12.0+xpu ships **torch.xpu.XPUGraph** (PR #174046,
+SYCL-Graph over Level-Zero command lists; API confirmed present: XPUGraph/graph/graph_pool_handle/
+make_graphed_callables), and it captures + replays a decode-like workload CORRECTLY and STABLY on the B70.
+
+MICROBENCH (scripts/137_xpugraph_microbench.py, card 1, 64-layer x 6 GEMV M=1 decode proxy):
+  - eager 45.878 ms/step -> XPUGraph replay 36.826 ms/step = **1.25x**, capture OK (replay-vs-eager err 0.156 bf16).
+  - **DEGRADATION TEST (the key): 4000 replays, 8 windows = 36.827 / 36.824 / ... / 36.824 ms -> first==last,
+    STABLE (1.00x). NO L0/NEO accumulation.** The old "dead-end" was a DIFFERENT mechanism (sglang's cuda_graph
+    adaptation or pre-2.11 torch), NOT this XPUGraph API.
+  - CAVEAT on the modest 1.25x: the synthetic used bf16 [5120x5120] GEMVs that are BANDWIDTH-bound (52MB weight
+    read = 0.12ms/op = the measured per-op time), so launch overhead was a small fraction. The REAL int4 decode
+    uses woqgemm (4x less weight bandwidth) -> launch overhead is a MUCH bigger fraction -> XPUGraph should help
+    substantially MORE on the real model.
+
+IMPLICATION (the high-value lead): sglang's XPU cuda_graph once hit 9.4->23.6 t/s (2.5x) before being abandoned
+  for DEGRADATION. If that degradation was the old capture mechanism and this torch-2.12 image's graph path is
+  XPUGraph-stable, the abandoned graph path could become a STABLE 20+ t/s single-stream driver (and -- being
+  non-MTP -- would also restore SAMPLING and lift the MAXREQ=4 spec-cache cap). NEXT: (1) int4-faithful microbench
+  (woqgemm GEMVs) for the real speedup estimate; (2) re-test sglang cuda_graph ENABLED on this image over a LONG
+  soak -- does it still degrade, or is it now stable? This is the single most promising remaining lever. Tools:
+  scripts/137.
