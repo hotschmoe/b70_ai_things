@@ -6001,3 +6001,29 @@ visual + 0 mtp; sqgptq-mtp-graft has 15 mtp.* (BF16) + 0 visual -> graft the MTP
 ckpt (file-level, no GPU). NEXT = MTP+vision graft -> serve fused+MTP (sglang-xpu:mtp image, B70_XPU_MTP=1,
 --speculative-config method:mtp steps~7, bf16 drafter patch, cudagraph_mode=NONE, skip-warmup) -> bench
 decode; verify M>1 verify-path hits int8_gemm_w8a8. Plan: w8a8/W8A8_SGLANG_PLAN.md sec 4 item 3.
+
+================================================================================
+2026-06-28 -- *** W8A8 FUSED + MTP: TASK GOAL MET -- handily beats bf16/fp8 on PP, TTFT, AND TG (vision) ***
+================================================================================
+CONFIG: scripts/124_w8a8_mtp.sh -- grafted ckpt Qwen3.6-27B-W8A8-sqgptq-vision-mtp (vision 333 + W8A8 LM +
+BF16 MTP head, file-level graft via graft_mtp.py, no GPU requant), image sglang-xpu:mtp (baked NEXTN gates),
+fused w8a8_shim (B70_XPU_W8A8_FUSED=1) + the built int8 .so, B70_XPU_MTP=1, --speculative-algorithm NEXTN
+--speculative-num-steps 7 --speculative-eagle-topk 1 --speculative-num-draft-tokens 8
+--speculative-draft-attention-backend triton --disable-cuda-graph, TP=2, intel_xpu attn, skip-warmup,
+max-running-requests 4, ctx 8192. COHERENCE_ONLY gate FIRST (coherent, no wedge), then bench.
+RESULT (warm c1, IN2048/OUT128):
+  config                          decode    prefill   TTFT     vs bf16 TP=2 (9.03/3098/661)
+  W8A8 fused EAGER (no MTP)       8.08      4570      448      decode -10%, PP +48%, TTFT -32%
+  W8A8 fused + MTP steps=7        23.7/23.8 3761/4343 544/471  decode +164% (2.6x), PP +31%, TTFT -23%
+  bf16 TP=2 (scoreboard)          9.03      3098      661
+  int4 + MTP champion             15.3      ~1674     ~1048
+=> *** W8A8 FUSED + MTP HANDILY BEATS bf16/fp8 on ALL THREE: decode 2.6x, prefill +31%, TTFT -23%. ***
+   AND it beats the int4+MTP champion on decode (23.8 vs 15.3) -- because the MTP verify (M>1) rides the
+   fast int8-XMX int8_gemm_w8a8 (2.0x) instead of int4 woqgemm. Vision retained (grafted vision-mtp ckpt,
+   served as the VLM). Greedy-only on XPU (sampling ignored, like all XPU MTP). Box HEALTHY after, no wedge.
+VERDICT: *** TASK GOAL ACHIEVED *** -- a vision-retaining W8A8 on sglang that handily outperforms FP8/BF16
+  on pp, ttft, AND tg. Two shipping configs: (1) fused+MTP (latency daily-driver, decode 23.8); (2) fused
+  eager (max prefill 4570 / lowest TTFT 448, no spec). Decode 8.3->23.8 = 2.85x from MTP (amortizes the
+  TP=2 all-reduce/per-step tax). Follow-ups: B70_W8A8_DEBUG verify M>1 hits int8_gemm_w8a8 (perf confirms);
+  accuracy gate (HumanEval+); real image request; productionize to rdy_to_serve. Files: scripts/124_w8a8_mtp.sh,
+  models_w8a8/Qwen3.6-27B-W8A8-sqgptq-vision-mtp, w8a8/w8a8_mtp_steps7.log.

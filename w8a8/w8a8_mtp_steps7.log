@@ -1,0 +1,29 @@
+[22:58:50] === pre-flight xpu-health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[22:59:05] === W8A8 FUSED + MTP TP=2: qwen36-27b-w8a8-vision-mtp steps=7 maxreq=4 img=sglang-xpu:mtp ===
+9bf82d75a3f75ff0c1af5fc790b278fbdb1a1e81a840aa794d5328a59e1f318e
+[22:59:07] waiting for /health (model load + spec JIT ~3-6min)...
+[23:02:23] /health 200 after ~110s
+[23:02:23] === shim + MTP wiring ===
+[2026-06-28 22:59:55 TP1] Setup Custom allreduce failed with . To silence this warning, specify --disable-custom-all-reduce explicitly.
+[2026-06-28 22:59:55 TP0] Setup Custom allreduce failed with . To silence this warning, specify --disable-custom-all-reduce explicitly.
+[2026-06-28 22:59:55 TP1] Ignore import error when loading sglang.srt.models.bailing_moe_nextn: No module named 'vllm'
+[2026-06-28 22:59:55 TP0] Ignore import error when loading sglang.srt.models.bailing_moe_nextn: No module named 'vllm'
+Multi-thread loading shards:   0% Completed | 0/3 [00:00<?, ?it/s]Multi-thread loading shards:  33% Completed | 1/3 [00:01<00:03,  1.53s/it][2026-06-28 23:00:17 TP1] Load weight end. elapsed=1.98 s, type=Qwen3_5ForCausalLMMTP, quant=compressed-tensors, avail mem=12.20 GB, mem usage=2.81 GB.
+[2026-06-28 23:00:17 TP0] Load weight end. elapsed=1.99 s, type=Qwen3_5ForCausalLMMTP, quant=compressed-tensors, avail mem=12.20 GB, mem usage=2.81 GB.
+2026:06:28-23:00:49:  512 |CCL_WARN| did not find MPI-launcher specific variables, switch to ATL/OFI, to force enable ATL/MPI set CCL_ATL_TRANSPORT=mpi
+2026:06:28-23:00:49:  511 |CCL_WARN| did not find MPI-launcher specific variables, switch to ATL/OFI, to force enable ATL/MPI set CCL_ATL_TRANSPORT=mpi
+[23:02:23] === coherence (greedy; must NOT be '!!!!') ===
+COHERENCE: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Two sentences.\n\n2.  **Identify Key Scientific Concept:**\n   - The sky appears blue due to Rayleigh scattering.\n   - Sunligh"
+[23:03:22] === WARMUP (discard; JITs spec path) ===
+[23:04:02] === WARM c1 ===
+[23:04:53] RESULT[c1.run1]: decode_tps=23.72 prefill_tps=3761 TTFT_ms=544.52 TPOT_ms=42.15 out_tps=21.00
+[23:05:44] RESULT[c1.run2]: decode_tps=23.82 prefill_tps=4343 TTFT_ms=471.53 TPOT_ms=41.98 out_tps=21.49
+[23:05:44] === DONE. stopping. ===
+[23:05:49] === post health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[23:06:05] stopped sglang_w8a8_mtp
