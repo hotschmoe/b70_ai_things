@@ -5497,3 +5497,27 @@ VERDICT -> [SHIPPED] rdy_to_serve/qwen36-27b-int4-graph is the FASTEST single-st
   NEXT (frontier++): GRAPH + MTP STACK -- capture the spec-verify forward (the int4-mtp ckpt) so MTP's token
   amortization rides on the graph's launch collapse -> target >30 t/s. Also open: the per-request eager prefix
   (cuda graph: False count) and per-card multi-stream-at-speed. Tools: scripts/141, 142, sglang/serve_dp2_graph.sh.
+
+## 2026-06-28 -- FRONTIER++ graph+MTP STACK: WALLED (spec-decode forward crashes under capture) -- documented for resume [result]
+
+Attempted to stack XPUGraph capture + NEXTN MTP on the int4-mtp ckpt (B70_XPU_MTP=1 + B70_XPU_CUDAGRAPH=1 +
+ATTN=triton, NEXTN steps=7, cuda-graph bs=1, card 0). xpu_cudagraph.py section 3 (GATED on B70_XPU_MTP=1 so the
+shipped no-spec graph driver is UNAFFECTED) opens the EAGLE draft cuda-graph device gate: EagleDraftWorker.
+_capture_cuda_graphs keys its Device2Draft/Device2Extend CudaGraphRunner dicts {npu,cuda,musa} -> KeyError on xpu
+for num_steps>1; the patch re-execs it adding "xpu" (the runner classes are device-agnostic via get_device_module).
+
+RESULT (scripts/143, sglang/graph_mtp_stack.log): the serve STARTED (gates installed: "EAGLE draft cuda-graph
+gate: added xpu", "init_cuda_graphs gate: added xpu", XPUAttentionBackend hooks) and reached /health, but the
+FIRST spec-decode gen CRASHED -- "cuda graph: False" (capture never engaged for the spec path) + curl "Connection
+reset by peer" (scheduler died on the spec-decode forward). No clean traceback captured. Box left HEALTHY (both
+cards free, no wedge).
+
+VERDICT -> [WALLED, documented] graph+MTP does not compose out of the box: opening the draft gate is necessary but
+  NOT sufficient -- the spec-decode forward (draft + tree-build/verify + target-verify under capture) crashes, and
+  capture never engages. Likely culprits (per the scoping): the pure-torch tree kernels (mtp_tree_xpu) doing
+  data-dependent control flow / fresh allocations inside the captured region, or the target-verify attention
+  metadata (1+num_draft_tokens=8 query tokens) not matching the bs=1 no-spec static page_table, or the spec mamba
+  cache write-cursor not in-place under replay. DEPRIORITIZED: graph+MTP would be GREEDY + MAXREQ-capped anyway,
+  i.e. a latency-max NICHE that is WORSE than the shipped 23.5 t/s SAMPLING graph driver for a daily driver. The
+  attempt (xpu_cudagraph.py draft gate + scripts/143) is committed for a future resume. CAMPAIGN CONSOLIDATES on
+  rdy_to_serve/qwen36-27b-int4-graph (23.5 t/s sampling) as the single-stream headline. Tools: scripts/143.

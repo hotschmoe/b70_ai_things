@@ -118,3 +118,28 @@ def install():
        XPUAttentionBackend.on_after_cuda_graph_warmup.__qualname__.startswith("AttentionBackend"):
         XPUAttentionBackend.on_after_cuda_graph_warmup = on_after_cuda_graph_warmup
     print("[xpu-cudagraph] XPUAttentionBackend decode graph hooks installed (no-spec, token-level static page_table)", flush=True)
+
+    # ---- 3. (graph+MTP STACK) open the EAGLE/NEXTN spec-decode DRAFT cuda-graph device gate to xpu ----
+    # When B70_XPU_MTP=1 too, NEXTN runs via EagleDraftWorker._capture_cuda_graphs, whose Device2Draft/
+    # Device2Extend CudaGraphRunner dicts are keyed {npu,cuda,musa} -> KeyError on xpu (num_steps>1). The runner
+    # classes themselves are device-agnostic (use get_device_module = torch.xpu) and the triton draft backend has
+    # init_cuda_graph_state, so adding "xpu" lets the DRAFT forward capture. The TARGET-VERIFY forward is captured
+    # by the main DecodeCudaGraphRunner (gate already opened above; triton handles target_verify metadata).
+    if os.environ.get("B70_XPU_MTP") == "1":
+        try:
+            import inspect as _insp, textwrap as _tw
+            import sglang.srt.speculative.eagle_worker_v2 as _ew
+            _src = _tw.dedent(_insp.getsource(_ew.EagleDraftWorker._capture_cuda_graphs))
+            _d = '"cuda": EAGLEDraftCudaGraphRunner,'
+            _e = '"cuda": EAGLEDraftExtendCudaGraphRunner,'
+            if _d in _src and _e in _src:
+                _src = _src.replace(_d, _d + '\n            "xpu": EAGLEDraftCudaGraphRunner,')
+                _src = _src.replace(_e, _e + '\n            "xpu": EAGLEDraftExtendCudaGraphRunner,')
+                _ns = dict(_ew.__dict__)
+                exec(_src, _ns)
+                _ew.EagleDraftWorker._capture_cuda_graphs = _ns["_capture_cuda_graphs"]
+                print("[xpu-cudagraph] EAGLE draft cuda-graph gate: added 'xpu' (graph+MTP stack)", flush=True)
+            else:
+                print("[xpu-cudagraph] WARN: EAGLE draft gate needles not found (upstream changed) -- draft stays eager", flush=True)
+        except Exception as e:
+            print(f"[xpu-cudagraph] EAGLE draft gate patch FAILED: {e}", flush=True)
