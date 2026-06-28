@@ -418,3 +418,41 @@ continuous-decode-steps 1, chunked-prefill default, no FLA env) are already at t
 W4A8 decode gains require KERNEL work (faster int4 GEMV / lower-overhead attention to close the 27.3->34 floor),
 not flags. serve.sh / serve_w4a8_woq.sh / serve_dp2_w4a8.sh UNCHANGED. Sweep harness: scratchpad sweep_one.sh
 (start+warm-bench+stop per config); raw bench captures retained under the scratchpad.
+
+## GDN decode kernel autotune (2026-06-28i, DECISION: CEILING -- the kernel is LAUNCH-BOUND; NO meta-param helps; NO CHANGE)
+After the serve-config sweep proved decode is graphed-COMPUTE-bound, the last cheap decode lever left was the GDN
+(gated-delta-net) decode kernel itself -- now ~9% of the decode step. Per token the body runs the M=1 packed-decode
+recurrence ONCE PER linear-attn layer (48 of 64 layers): fused_recurrent_gated_delta_rule_packed_decode_kernel in
+sglang/patches/fused_recurrent.py (== the baked fla/fused_recurrent.py; gdn_backend -> TritonGDNKernel.packed_decode
+-> this kernel, use_qk_l2norm_in_kernel=True, no ReplaySSM). NOTE: the gating (softplus/sigmoid -> g,beta) is FUSED
+INSIDE this decode kernel, so fused_gdn_gating.py is NOT on the decode critical path (it serves the prefill path only).
+The campaign had previously made ONLY num_warps tunable (B70_GDN_DECODE_WARPS, found cold-artifact/no warm win); the
+kernel's OTHER meta-params (BV grid split, num_stages) were never B70-tuned.
+
+Real Qwen3.6-27B GDN shapes (config.json): HV=48 v-heads, H=16 k-heads, K=V=128, conv=4; qkv_dim = 2*H*K + HV*V =
+10240. Shipped launch: BK = npo2(K) = 128 (NK=1 forced), BV = min(npo2(V),32) = 32, NV = cdiv(V,BV) = 4,
+grid = (NV, B*HV) = (4,48) = 192 programs at decode bs=1; num_stages=3, num_warps=1.
+
+MICROBENCH (sglang/gdn_decode_autotune.py; card 0, sglang-xpu:woq, NO serve; warm, discard-1st). Swept the full
+meta-param space at the captured bs=1 decode shape: BV cap {8,16,32,64,128} -> BV {8,16,32,64,128}, NV {16,8,4,2,1},
+grid {768,384,192,96,48} programs; num_warps {1,2,4,8}; num_stages {1,2,3} = 60 configs. Numerics gate (decisive --
+GDN is the NaN-sensitive fp32 SSM path): BV tiling is BITWISE-IDENTICAL to the shipped kernel (V-rows are independent;
+the K-reduction stays full at BK=128) -- measured relerr(out)=0.0 and relerr(state)=0.0 for every BV. num_warps>1
+perturbs only the state reduction order by relerr 4.3e-08 (<< the 1e-5 gate); num_stages is a no-op (the decode kernel
+has no loop). So the entire space is numerically clean.
+
+RESULT: the kernel is LAUNCH-BOUND, not grid/occupancy/compute bound. All 60 configs land in a tight 67.8-71.5 us/call
+band (~5% spread = pure run-to-run jitter); the per-call BW floor for the B=1 state traffic (HV*V*K*4 = 3.1 MB read +
+3.1 MB write ~= 13 us at ~500 GB/s) is a small fraction of the ~69 us/call, the rest being kernel-launch/dispatch
+overhead. The first-pass "best" (BV=32,w2,s1 = 1.047x) was jitter: an interleaved median A/B (12 trials, ITERS=500,
+B=1) put baseline (32,w1,s3) at 68.68 us, that same config A at 69.21 us = 0.992x (SLOWER on median), B (8,w2,s2) at
+1.001x, C (128,w4,s2) at 1.005x -- the whole field within +/-0.8% of baseline. No config is reproducibly faster.
+
+IMPACT CEILING: GDN packed-decode = 68.7 us x 48 layers = 3.30 ms of the 36.63 ms/token decode step (9.0%). Even the
+noise-level "best" (+0.5%) saves ~16 us/token = 0.045% of the step -- three orders below the >=5% e2e bar (and below
+the microbench noise floor). VERDICT: CEILING -- NO CHANGE SHIPPED. The shipped launch (BV=32 num_warps=1 num_stages=3,
+grid (4,48)) is already at the meta-param optimum; this generalizes the earlier num_warps finding to BV and num_stages.
+The GDN recurrence cannot be sped on B70 by retuning the per-launch meta-params -- the only lever would be ELIMINATING
+launches (fuse causal_conv1d_update into the recurrence = -48/token, or amortize via spec-decode), i.e. kernel-merge
+work, not autotune. gdn_nan_repro/coherence were NOT run (no kernel change to validate -- nothing shipped). Kernels
+(fused_recurrent.py, fused_gdn_gating.py) and all serve scripts UNCHANGED. Probe: sglang/gdn_decode_autotune.py.
