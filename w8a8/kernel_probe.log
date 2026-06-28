@@ -1,0 +1,56 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 -> docker run --rm --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 16g -e ZE_AFFINITY_MASK=0 -v /mnt/vm_8tb/b70/models:/models:ro -v /mnt/vm_8tb/b70/w4a8_kernel:/work/w4a8_kernel:ro -v /mnt/vm_8tb/github/b70_ai_things/w8a8:/work -e B70_XPU_C_SO=/work/w4a8_kernel/_xpu_C.abi3.so sglang-xpu:woq bash -c source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1;     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH;     python3 /work/w8a8_kernel_probe.py
+W0628 21:09:37.263000 1 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0628 21:09:37.294000 1 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+torch 2.12.0+xpu xpu_avail True
+CDLL RTLD_GLOBAL OK: /work/w4a8_kernel/_xpu_C.abi3.so
+ops: fp8_gemm_w8a16=True fp8_gemm_w8a8=False _int_mm=builtin
+
+=================  gate_up_proj  [N=34816 K=5120]  weight=178M params  (0.18GB int8)  =================
+  --- DECODE ---
+    bf16 matmul              0.6009 ms   1.00x  (baseline)
+    int8 _int_mm GEMM-only   0.3505 ms   1.71x  (DPAS, no quant/dequant)
+    int8 chain EAGER         0.4260 ms   1.41x  finite=True relerr=1.22e-02
+    int8 chain GRAPH         0.4028 ms   1.49x  finite=True relerr=1.22e-02   [vs eager-chain 1.06x]  <== Q1
+    fp8 w8a16 (scale[N] )    0.3076 ms   1.95x  <== FP8 baseline
+  --- PREFILL M=2048 ---
+    bf16 matmul              6.0056 ms   1.00x  (baseline)
+    int8 _int_mm GEMM-only   3.1327 ms   1.92x  (DPAS, no quant/dequant)
+    int8 chain EAGER         7.3875 ms   0.81x  finite=True relerr=1.24e-02
+    int8 chain GRAPH         7.4973 ms   0.80x  finite=True relerr=1.24e-02   [vs eager-chain 0.99x]  <== Q1
+    fp8 w8a16 (scale[N] )    5.9902 ms   1.00x  <== FP8 baseline
+
+=================  down_proj  [N=5120 K=17408]  weight=89M params  (0.09GB int8)  =================
+  --- DECODE ---
+    bf16 matmul              0.3211 ms   1.00x  (baseline)
+    int8 _int_mm GEMM-only   0.1594 ms   2.01x  (DPAS, no quant/dequant)
+    int8 chain EAGER         0.4037 ms   0.80x  finite=True relerr=1.36e-02
+    int8 chain GRAPH         0.2108 ms   1.52x  finite=True relerr=1.36e-02   [vs eager-chain 1.92x]  <== Q1
+    fp8 w8a16 (scale[N] )    0.1648 ms   1.95x  <== FP8 baseline
+  --- PREFILL M=2048 ---
+    bf16 matmul              2.7650 ms   1.00x  (baseline)
+    int8 _int_mm GEMM-only   1.4974 ms   1.85x  (DPAS, no quant/dequant)
+    int8 chain EAGER         3.8201 ms   0.72x  finite=True relerr=1.34e-02
+    int8 chain GRAPH         3.7984 ms   0.73x  finite=True relerr=1.34e-02   [vs eager-chain 1.01x]  <== Q1
+    fp8 w8a16 (scale[N] )    2.9134 ms   0.95x  <== FP8 baseline
+
+=================  qkv_full_attn  [N=14336 K=5120]  weight=73M params  (0.07GB int8)  =================
+  --- DECODE ---
+    bf16 matmul              0.2539 ms   1.00x  (baseline)
+    int8 _int_mm GEMM-only   0.1376 ms   1.85x  (DPAS, no quant/dequant)
+    int8 chain EAGER         0.3941 ms   0.64x  finite=True relerr=1.26e-02
+    int8 chain GRAPH         0.1930 ms   1.32x  finite=True relerr=1.26e-02   [vs eager-chain 2.04x]  <== Q1
+    fp8 w8a16 (scale[N] )    0.1343 ms   1.89x  <== FP8 baseline
+  --- PREFILL M=2048 ---
+    bf16 matmul              2.3466 ms   1.00x  (baseline)
+    int8 _int_mm GEMM-only   1.3189 ms   1.78x  (DPAS, no quant/dequant)
+    int8 chain EAGER         3.3954 ms   0.69x  finite=True relerr=1.24e-02
+    int8 chain GRAPH         3.3631 ms   0.70x  finite=True relerr=1.24e-02   [vs eager-chain 1.01x]  <== Q1
+    fp8 w8a16 (scale[N] )    2.3529 ms   1.00x  <== FP8 baseline
+
+GATES: Q1 int8 chain GRAPH should beat int8 chain EAGER at M=1 (launch penalty recovered).
+       Q2 int8 chain GRAPH (M=1) and int8 _int_mm (M=2048) should beat fp8 ops (W8A8 > FP8).
+gpu-run: [b70s4dayz] done in 44s (exit 0)

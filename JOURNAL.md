@@ -5852,3 +5852,42 @@ VERDICT: CEILING -- NOT SHIPPED (hard-stop: e2e <5%). REVERTED serve wiring (ser
 daily driver UNCHANGED at 27.3 t/s). KEPT as artifacts: sglang/patches/gdn_fused_conv.py (env-gated default-OFF) +
 sglang/gdn_fused_conv_probe.py. Only remaining GDN decode lever = amortize via spec-decode (MTP), not kernel-merge.
 Doc: sglang/W4A8_PLAN.md "GDN conv-fusion (2026-06-28j)".
+
+================================================================================
+2026-06-28 -- W8A8-on-sglang campaign OPENED: kernel-envelope microbench + strategy
+================================================================================
+GOAL (user /loop): a vision-retaining W8A8 Qwen3.6-27B on sglang that HANDILY beats FP8/BF16 on
+prefill(PP), TTFT, decode(TG). Minimize size (pack) for KV/long-ctx headroom. Build/tune our own
+int8 GEMV/GEMM for the Intel int8 fastpaths. TP=2/PP=2 OK (we have a custom push all-reduce). Bar =
+FP8/BF16 (NOT int4 -- int8 is 1 byte/wt vs int4 0.5, can't beat int4 decode; but CAN beat fp8/bf16).
+
+ORIENTATION: sglang W8A8 path is wired EAGER only (w8a8_shim.py: per-token int8 act-quant ->
+torch._int_mm -> dequant; B70_XPU_W8A8=1) = 27B TP=2 5.45 t/s decode, ~3500 t/s prefill, TTFT 580ms.
+Built .so (/mnt/vm_8tb/b70/w4a8_kernel) registers int4_gemm_{w4a16,w4a8}, fp8_gemm_w8a16, fp4 -- but
+NO int8_gemm op and NO fp8_gemm_w8a8. oneDNN dispatch (onednn_ext.h) has f16/bf16_int4 + s8/u8_int4 +
+fp8 + mxfp4 mappers but NO f16_int8/s8_int8 -> the int8 fused ops must be ADDED (mirror s8_int4,
+weight=s8 no nibble-unpack; oneDNN does s8 weight-decompress natively). Custom push-AR exists
+(contrib/vllm_push_allreduce, graph-capturable .so, 35us vs oneCCL 85us) but is wired to vLLM's
+communicator, not sglang's. Codex-validated plan: capture decode first, fuse the chain into single
+int8 ops second, custom DPAS GEMV last, don't block TP=2 graph on single-card fit.
+
+MICROBENCH (card 0, sglang-xpu:woq + .so, real 27B shapes, fp16 baseline; w8a8/w8a8_kernel_probe.py):
+  cmd: bash w8a8/run_kernel_probe.sh   (log: w8a8/kernel_probe.log)
+  speedup vs bf16 (M=1 decode / M=2048 prefill):
+    shape      int8 GEMM-only   chain EAGER   chain GRAPH      fp8 w8a16
+    gate_up    1.71x / 1.92x    1.41 / 0.81   1.49 / 0.80      1.95 / 1.00
+    down_proj  2.01x / 1.85x    0.80 / 0.72   1.52 / 0.73 **   1.95 / 0.95
+    qkv        1.85x / 1.78x    0.64 / 0.69   1.32 / 0.70 **   1.89 / 1.00
+RESULT:
+  - Q1 CONFIRMED: XPUGraph capture flips the decode chain from 0.64-0.80x (losing vs bf16) to
+    1.32-1.52x (winning) = 1.9-2.0x graph-over-eager on the launch-bound shapes. The EAGER serve
+    (5.45 t/s) leaves this on the table.
+  - GAP: fp8 w8a16 single-op (1.95x) BEATS our captured 3-kernel int8 chain (1.3-1.5x) at M=1.
+    Decode needs a FUSED int8 W8A16 op (1 launch, fp16 act, dequant epilogue), not just capture.
+  - PREFILL: int8 GEMM-only is 1.78-1.92x bf16 (the XMX win) but the un-fused chain collapses to
+    0.7-0.8x (act-quant+dequant epilogue dominate; graph does NOT help -- real BW not launch).
+    Needs int8 act + output-scale FUSED into the GEMM (torch.compile proven 1.84x, or build the op).
+VERDICT: win path is precise + mirrors W4A8 -- BUILD int8_gemm_w8a16 (decode) + int8_gemm_w8a8
+  (prefill, fused per-token x per-channel scale) by analogy to the int4 ops, then capture + serve A/B.
+  Doc: w8a8/W8A8_SGLANG_PLAN.md. Artifacts: w8a8/w8a8_kernel_probe.py + run_kernel_probe.sh. Box clean
+  (both cards free, no wedge -- card-0 microbench only). NEXT = build the two int8 oneDNN ops.
