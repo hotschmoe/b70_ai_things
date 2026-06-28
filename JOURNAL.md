@@ -5773,3 +5773,30 @@ RESULT:
 VERDICT: GATE PASS. W4A8 hybrid = int4 on accuracy AND faster (25.15 vs 23.5 decode, lower TTFT, vision) -> a
   real daily-driver upgrade. Results: evals/results/{...__w4a8-graph, ...__int4-graph-sglang}; SUMMARY.md callout;
   W4A8_PLAN.md ACCURACY GATE 2026-06-28d. Next: productionize (rdy_to_serve/qwen36-27b-w4a8-graph + DP=2 + docs).
+
+================================================================================
+2026-06-28f -- W4A8 CAMPAIGN COMPLETE: vision W4A8 hybrid beats int4 on TG+TTFT+PP, shipped
+================================================================================
+FINAL clean same-session head-to-head (warm c1, card0, GRAPH=1, same Lorbus int4 weights; commit 05cc6c6):
+  metric        int4-graph    W4A8 (Triton act-quant)
+  decode t/s    23.50         25.34   (+7.8%)
+  TTFT ms       1159          936     (-19%)
+  prefill PP    1766          2189    (+24%)
+Accuracy (HumanEval+, sandboxed, vs same-stack int4): 0.921/0.896 == 0.921/0.896 (ZERO code loss; the
+int8-act prefill is statistically indistinguishable). Vision retained. Soak 24.7 t/s stable.
+
+HOW: built vLLM oneDNN int4_gemm_w4a8 + int4_gemm_w4a16 from SOURCE against sglang torch 2.12 (every
+prebuilt .so ABI-failed on torch::Library::_def); serve the proven Lorbus int4 via the multimodal model
+with int4 linears dispatched to those ops (decode=w4a16 fp16-act, prefill=w4a8 int8-act), packing converted
+at load (pure relayout, validated relerr 0-1e-3 vs woqgemm); XPUGraph-captured decode; single-launch Triton
+per-token int8 act-quant (8.3x vs eager; torch.compile of it hangs startup). NO requant, NO new ckpt.
+
+SHIPPED: rdy_to_serve/qwen36-27b-w4a8-graph (serve.sh+README), sglang/serve_dp2_w4a8.sh (DP=2 wedge-proof,
+validated), sglang/patches/{woq_shim.py _XpuW4A8WoqKernel (B70_XPU_W4A8_WOQ=1), w4a8_actquant_triton.py
+(B70_W4A8_TRITON_AQ)}, README headline, images/sglang-xpu-woq bake, built kernel /mnt/vm_8tb/b70/w4a8_kernel/.
+Commits e14915a (kernel) -> 98fb2e5 (serve) -> 0152c2a (accuracy) -> bd87568 (productionize) -> 05cc6c6 (Triton).
+
+TASK GOAL MET: a vision-retaining W4A8 that HANDILY outperforms int4/W4A16 on pp(+24%), ttft(-19%), tg(+7.8%),
+same memory (int4-packed ~17.4GB), same accuracy. Remaining frontier (DECISION POINTS, not started): W4A4 via
+the .so's fp4_gemm_w4a4 op (later-frontier accuracy risk per repo policy); 3-bit/W3 (multi-week kernel); MTP
+on W4A8 (graph+MTP walled). int4_gemm act-quant + graph tuning are marginal follow-ups.
