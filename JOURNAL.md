@@ -5557,3 +5557,21 @@ xpu_cudagraph.py spec hooks; debug the spec-verify capture crash); (2) lower-bit
 headroom -- but quality cost (the "correct" half of the goal); (3) per-card multi-stream-at-speed (multi-bucket
 capture without the bs-pad penalty); (4) adopt the graph driver into the live daily-driver deployment (currently
 vLLM int4 DP=2). Box HEALTHY + idle. *** Daily-driver goal MET; loop wrapped. ***
+
+## 2026-06-28 -- per-card multi-stream WALLED: maxreq>1 + graph injects intermittent ~2.3 t/s STALL batches (maxreq=1 confirmed optimal) [result]
+
+Re-engaged the loop on the per-card concurrency frontier (multi-bucket graph HALVES single-stream: bs=1/mr1=23.5
+vs bs[1 2 4]/mr4=7.36). Isolation (scripts/144, card 0, all bs buckets capture fine, ~48s each):
+  - A bs[1]/maxreq=4:    c1 12.17 t/s   - B bs[1 2]/maxreq=4: c1 3.55   - C bs[1 2 4]/maxreq=4: c1 3.55
+The SMOKING GUN is the server's per-batch gen-throughput: in EVERY maxreq=4 config it ALTERNATES ~23 (captured) /
+~2.3 (stalled): e.g. A = 23.18, 23.14, 2.60, 23.63, 9.43, 23.59. So the tank is NOT bucket-selection / page_table
+over-compute (the hook correctly slices to bs) and NOT padding -- it is **maxreq>1 itself injecting intermittent
+~2.3 t/s stall batches** even with a SINGLE bs=1 bucket and a SINGLE in-flight stream. Extra buckets amplify it
+(A 12 -> B/C 3.5). A ~2.3 t/s batch = ~10x slower than the 23 captured batch and slower than the 9.4 eager floor,
+so it is not "eager fallback" -- it is a real graph+scheduler stall under maxreq>1 (graph re-acquire / pool churn /
+per-step scheduler overhead -- not root-caused, time-boxed).
+
+VERDICT -> [WALLED; maxreq=1 is OPTIMAL] the shipped graph driver's --max-running-requests 1 is exactly right (any
+  higher maxreq tanks single-stream via the stall batches). Per-card multi-stream-at-speed is BLOCKED by this
+  sglang maxreq>1+graph interaction -- NOT a hook fix. Concurrency stays DP=2 (2 replicas, shipped). This positively
+  CONFIRMS the rdy_to_serve/qwen36-27b-int4-graph config. Tools: scripts/144.
