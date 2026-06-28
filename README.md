@@ -47,6 +47,20 @@ graph-captured on the push transport (see caveat (1)). That P2P/TTFT lever is re
 | qwen36-27b-w8a8-sqgptq-mtp (push-ar, **cudagraph=NONE**) | int8g | 2 | 787 ms | 2604 | 23.4 MTP (25.6 coherent) | 1493 ms | 51.5 |
 | qwen36-35b-a3b-quark-w8a8 (GRAPH=1) | v0230 | 2 | 1512 ms | 1354 | 43.1 | 3866 ms | 53.2 |
 
+**sglang W8A8 -- the target backend (NEW 2026-06-28):** built fused int8 oneDNN ops (`int8_gemm_w8a16` decode /
+`int8_gemm_w8a8` prefill) -> the int8 path now HANDILY beats bf16/fp8 on PP, TTFT, AND TG with vision retained.
+`sglang.bench_serving`, IN=2048/OUT=128, warm c1, TP=2:
+
+| sglang driver | TP | TTFT c1 | PP c1 (tok/s) | TG c1 (t/s) | notes |
+|---|---|---|---|---|---|
+| qwen36-27b-w8a8 fused + NEXTN MTP (steps=10) | 2 | **471 ms** | **4344** | **25.2** | int8 kernels + MTP; vision; greedy; PP/TTFT champ |
+| qwen36-27b-w8a8 fused eager | 2 | **448 ms** | **4570** | 8.1 | int8 kernels; vision; max PP / lowest TTFT |
+| bf16 TP=2 (reference) | 2 | 661 ms | 3098 | 9.03 | the W8A8 target |
+
+vs bf16: W8A8 fused+MTP = **PP +40%, TTFT -29%, TG +180% (2.8x)**; beats int4+MTP on decode (25.2 vs 15.3).
+FP8 emulated on B70 (~1.0x bf16 prefill) -> W8A8 wins PP vs fp8 too. Recipe: sglang/README.md, scripts/123-125,
+w8a8/ (kernels: w8a8/W8A8_BUILD.md; campaign: w8a8/W8A8_SGLANG_PLAN.md).
+
 #### 2026-06-26 update -- `cudagraph=NONE` (the STABLE config) + GuC 70.54.0 firmware fix
 
 The MTP+graph-capture campaign (`docs/20260625_w8a8_27b_mtp_graph_campaign.md`) found PIECEWISE capture

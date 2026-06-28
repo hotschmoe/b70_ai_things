@@ -25,6 +25,33 @@ int4_gemm ops. All drivers correct + vision-retaining; pick by use:
      greedy-only, vision. Superseded by the graph drivers for single-user (graph is faster AND samples).
   4. **woq int4 DP=2 (>2 users / unattended, wedge-proof):**  `./sglang/serve_dp2.sh` -> ~9.4/replica, sampling.
   5. **bf16 TP=2 (best c4 aggregate, attended):**  the serve command below. ~9.2 c1 / 23.4 c4-aggregate.
+
+### W8A8 (int8) drivers -- the PREFILL/TTFT champion (+ MTP = all-rounder), NEW 2026-06-28
+Built fused int8 oneDNN ops (`int8_gemm_w8a16` decode fp16-act / `int8_gemm_w8a8` prefill s8-act, both from
+source vs sglang torch 2.12; see `w8a8/W8A8_BUILD.md`). int8-XMX makes W8A8 the PREFILL/TTFT champion; +NEXTN
+MTP makes decode beat bf16 too. **Handily beats bf16/fp8 on PP, TTFT, AND TG.** Vision retained (grafted ckpt).
+  - **W8A8 fused + NEXTN MTP (steps=10), TP=2:** `scripts/124_w8a8_mtp.sh` -> TG **25.2 t/s**, PP **4344**, TTFT
+    **471 ms** (vision, greedy). Highest PP + lowest TTFT of ANY driver; decode ~ties the int4 graph champion
+    (27.3) and BEATS int4+MTP (15.3) because the MTP verify (M>1) rides int8-XMX `int8_gemm_w8a8`. The W8A8 all-rounder.
+  - **W8A8 fused eager, TP=2:** `scripts/123_w8a8_fused_ab.sh` -> PP **4570**, TTFT **448 ms**, TG 8.1 (no spec).
+    Max prefill / lowest TTFT; for prefill-heavy or sampling-needed loads (MTP is greedy-only on XPU).
+
+Perf @ IN2048 / OUT128, warm c1 (TG = decode t/s, PP = prefill tok/s = 2048000/TTFT):
+
+| driver                          | TP | TTFT ms | PP tok/s | TG t/s | notes |
+|---------------------------------|----|---------|----------|--------|-------|
+| **W8A8 fused + MTP (steps=10)** | 2  | **471** | **4344** | 25.2   | int8 kernels + NEXTN; vision; greedy; PP/TTFT champ |
+| **W8A8 fused eager**            | 2  | **448** | **4570** | 8.1    | int8 kernels; vision; max PP / lowest TTFT |
+| W4A8/W4A16 graph (int4 lmhead)  | 1  | 935     | 2189     | **27.3** | int4; sampling; fastest single-stream decode |
+| int4 + XPUGraph                 | 1  | 1244    | 1766     | 23.5   | int4; sampling; no mounts |
+| int4 + NEXTN MTP                | 1  | 1048    | ~1674    | 15.3   | int4; greedy |
+| bf16 TP=2 (reference / target)  | 2  | 661     | 3098     | 9.03   | the W8A8 comparison bar |
+| W8A8 legacy _int_mm (old)       | 2  | 580     | ~3500    | 5.45   | superseded by fused |
+
+vs bf16 TP=2: **W8A8 fused+MTP = PP +40%, TTFT -29%, TG +180% (2.8x)**; fused eager = PP +48%, TTFT -32%.
+FP8 has no native B70 path (oneDNN emulates fp8_gemm_w8a16 at ~1.0x bf16 prefill), so W8A8 beats fp8 on PP too.
+(Numbers: JOURNAL 2026-06-28 + w8a8/W8A8_SGLANG_PLAN.md. .so at /mnt/vm_8tb/b70/w8a8_kernel.)
+
 LEVERS (sglang/PERF.md + JOURNAL have the data): **XPUGraph decode capture = the WIN** -- torch.xpu.XPUGraph is
 STABLE on B70 (the old "torch-xpu graph degrades" was a different/older mechanism); wired into sglang via
 `patches/xpu_cudagraph.py` (B70_XPU_CUDAGRAPH=1, needs ATTN=triton to clear the SYCL-Graph work_group_scratch
