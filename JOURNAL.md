@@ -5684,3 +5684,13 @@ VERDICT: the W4A8 kernel EXISTS and is fast; the only barrier is a torch-2.12 AB
 vllm-xpu-kernels into sglang image (if cp312/torch2.12 wheel); else (1b) extract from a torch-2.12 vllm image;
 else (1c) build the single op from vllm-xpu-kernels source vs torch 2.12. Then w4a8_shim around the op +
 torch.compile-fused dynamic_per_token_int8_quant. Full plan: sglang/W4A8_PLAN.md (UPDATE 2026-06-28b).
+
+2026-06-28c -- W4A8 port: prebuilt .so all ABI-mismatched -> must build from source vs sglang torch.
+  Tested pip wheel vllm-xpu-kernels==0.1.3.1 (latest) in sglang-xpu:woq: _xpu_C.abi3.so STILL
+  "undefined symbol: _ZNR5torch7Library4_def..." (torch::Library::_def(FunctionSchema&&, OperatorName*,
+  vector<at::Tag>, _RegisterOrVerify) -- the NEWER torch sig). So the wheel was built vs a different torch
+  than the sglang image's 2.12.0+xpu build. v0230 .so = torch 2.11 (same symbol). No prebuilt .so matches.
+  => Reliable path = BUILD vllm-xpu-kernels (or just the _xpu_C onednn int4_gemm_w4a8 op) FROM SOURCE in the
+  sglang image vs ITS torch 2.12.0+xpu. The image has the DPC++/SYCL toolchain (it AOT-compiles bmg). Minimize
+  the build (skip the 1.68GB libattn_kernels if possible; we only need the onednn int4 op). Alt: write a focused
+  oneDNN int4-weight-decompression x int8 matmul extension (torch-xpu bundles oneDNN) = the user's "own GEMM".
