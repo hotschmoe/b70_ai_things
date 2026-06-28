@@ -5827,3 +5827,28 @@ VERDICT: VALIDATED WIN -> SHIPPED. int4 lm_head is the new W4A8-graph default (L
 kept. Revert with LMHEAD=0. Impl in sglang/patches/woq_shim.py (load_model + LogitsProcessor._compute_lm_head
 monkeypatches, bf16 weight kept resident for revertibility). Probe sglang/lmhead_int4_probe.py. Doc
 sglang/W4A8_PLAN.md (int4 lm_head 2026-06-28g).
+
+## 2026-06-28j -- GDN conv-fusion decode lever: bitwise-correct + NaN-clean, but ~0% graphed e2e win -> CEILING, NOT SHIPPED
+CONFIG: the last GDN decode lever from 2026-06-28i -- FUSE causal_conv1d_update INTO the gated-delta recurrence
+decode kernel (one triton launch/layer instead of two; 48 GDN layers/token). Real shapes HV=48,H=16,K=V=128,
+width=4, qkv_dim=10240. New env-gated kernel sglang/patches/gdn_fused_conv.py (B70_GDN_FUSED_CONV=1, default OFF;
+monkeypatches GDNAttnBackend.forward_decode, falls back to the unfused path for replayssm/non-silu/width!=4/no-bias/
+B>1-pad). Conv math mirrors _causal_conv1d_update_kernel bitwise (bf16 mul, fp32 bias acc, silu, bf16 round-trip).
+COMMAND: microbench + bitwise/determinism + per-layer bench (sglang/gdn_fused_conv_probe.py, card0, sglang-xpu:mtp);
+then same-session serve A/B GRAPH=1 LMHEAD=1 card0 (rdy_to_serve/qwen36-27b-w4a8-graph serve.sh, GDN_FUSED=1 vs 0):
+coherence gate + contrib/gdn_nan_repro (dd_rawtokens 8/800, dd_loadprobe 8/12/500, dd_mixload 4/6/12) + warm c1.
+RESULT:
+  - conv cost: causal_conv1d_update decode = 94-122 us/call = ~12.3% of the 36.6 ms eager-attributed step (> the 2%
+    gate). Eager 2-launch GDN core 203 us vs fused 1-launch 88 us = ~115 us/layer = 5.5 ms = ~15% EAGER e2e est.
+  - correctness (B=1, the prod shape): relerr(out)=relerr(conv_state)=relerr(ssm_state)=0.0 vs the unfused 2-kernel
+    reference; 0/30 nondeterministic (the 12-program-per-k-head in-place conv_state shift is bitwise-safe at B=1 --
+    register-cached reads + identical writes). gdn_nan_repro CLEAN: rawtokens valid logprobs (no 400 nan), loadprobe
+    all OK / 0 DEGEN, mixload GARBAGE=0 DEGEN_EMPTY=0 (57 HTTP_ERR = benign single-stream queue timeouts). Coherence
+    held before+after load.
+  - e2e same-session warm c1: FUSED 27.41 t/s vs BASELINE 27.38 t/s = +0.1% (jitter); c4 27.62 vs 27.59; soak 26.71
+    vs 26.69. The eager ~15% launch-elimination win does NOT realize under XPUGraph capture (graph already removes the
+    host launch overhead that made the conv "expensive"; in-graph the conv is just a few us of BW).
+VERDICT: CEILING -- NOT SHIPPED (hard-stop: e2e <5%). REVERTED serve wiring (serve.sh + woq_shim.py byte-restored,
+daily driver UNCHANGED at 27.3 t/s). KEPT as artifacts: sglang/patches/gdn_fused_conv.py (env-gated default-OFF) +
+sglang/gdn_fused_conv_probe.py. Only remaining GDN decode lever = amortize via spec-decode (MTP), not kernel-merge.
+Doc: sglang/W4A8_PLAN.md "GDN conv-fusion (2026-06-28j)".

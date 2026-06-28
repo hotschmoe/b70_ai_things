@@ -456,3 +456,55 @@ The GDN recurrence cannot be sped on B70 by retuning the per-launch meta-params 
 launches (fuse causal_conv1d_update into the recurrence = -48/token, or amortize via spec-decode), i.e. kernel-merge
 work, not autotune. gdn_nan_repro/coherence were NOT run (no kernel change to validate -- nothing shipped). Kernels
 (fused_recurrent.py, fused_gdn_gating.py) and all serve scripts UNCHANGED. Probe: sglang/gdn_decode_autotune.py.
+
+## GDN conv-fusion (2026-06-28j, DECISION: CEILING -- bitwise-correct + NaN-clean BUT ~0% graphed e2e win; NOT SHIPPED)
+Executed the ONE remaining decode lever the 2026-06-28i autotune named: ELIMINATE the per-layer causal_conv1d_update
+launch by fusing it INTO the recurrence (the meta-param space was already at-optimum). Built the fused kernel, proved it
+bitwise-correct + NaN-clean on the live serve, then measured a same-session graphed A/B. The launch-elimination win does
+NOT survive XPUGraph capture.
+
+CONV COST (eager, the >2% gate -- PASSED): causal_conv1d_update at the real decode shape (B=1, dim=qkv_dim=10240,
+width=4, silu; grid (1, cdiv(10240,256))=(1,40)) is a SEPARATE single triton launch on the decode critical path that
+returns post-conv mixed_qkv + does an in-place conv_state shift. Microbench (card 0, sglang-xpu:mtp, warm/discard-1st):
+94-122 us/call = 4.5-5.8 ms over 48 layers = ~12.3% of the 36.6 ms eager-attributed step -- ABOVE the recurrence
+(86-120 us) and well over the 2% bar. Eager 2-launch GDN core = 203 us/call; fused 1-launch = 88 us -> eager savings
+~115 us/layer = 5.5 ms = ~15% eager e2e estimate. (sglang/gdn_fused_conv_probe.py.)
+
+FUSED KERNEL (sglang/patches/gdn_fused_conv.py; gate B70_GDN_FUSED_CONV=1, default OFF; monkeypatches
+GDNAttnBackend.forward_decode, HARD-falls-back to the unfused path for replayssm-on / non-silu / width!=4 / no-bias /
+non-2D|non-contiguous mixed_qkv / packed-decode-unsupported): each recurrence program (grid (NV=4, B*HV=48)=192) folds
+the depthwise conv (silu) for ONLY its own q/k/v channels into the recurrence, then runs the gated-delta math -- one
+launch/layer instead of two. The conv math mirrors _causal_conv1d_update_kernel EXACTLY (bf16 loads, bf16 multiply,
+fp32 bias accumulate, silu, bf16 mixed_qkv round-trip); the recurrence mirrors
+fused_recurrent_gated_delta_rule_packed_decode_kernel exactly.
+
+CORRECTNESS (the feared conv_state race did NOT bite at B=1): the q/k conv channels are shared by HV//H * NV = 12
+programs per k-head (16 k-heads vs 48 v-heads vs per-v-head grid), so all 12 do an in-place [old1,old2,x] conv-state
+shift on the SAME locations -- a potential read-write race. At the PRODUCTION decode shape (B=1; the serve is
+--max-running-requests 1 + captured graph bs=1) it is bitwise-correct AND deterministic: relerr(out) = relerr(conv_state)
+= relerr(ssm_state) = 0.0 vs the unfused 2-kernel reference, and 0/30 run-to-run variation on identical inputs (each
+program loads its conv-state into registers before the identical in-place writes; v channels are uniquely owned). On the
+live serve (GRAPH=1 LMHEAD=1 card0) gdn_nan_repro was CLEAN: dd_rawtokens (valid logprobs, no "400 nan"), dd_loadprobe
+8/12/500 (all probes OK, 0 DEGEN), dd_mixload (GARBAGE=0 DEGEN_EMPTY=0; the 57 HTTP_ERR were benign 300 s single-stream
+queue timeouts, 19 OK). Coherence (Rayleigh) held BEFORE and AFTER sustained mixed load. NOTE: B=1 only -- the kernel
+does not handle conv pad-slots / B>1 padding (it falls back; the daily driver is strictly bs=1).
+
+E2E (the decider -- the eager win does NOT realize under the captured graph): same-session warm c1 A/B, GRAPH=1 LMHEAD=1
+card0, discard-1st, random 2048/128:
+  GDN_FUSED=1  WARM[c1] = 27.41 t/s   (c4 27.62, soak 26.71 stable, coherent)
+  GDN_FUSED=0  WARM[c1] = 27.38 t/s   (c4 27.59, soak 26.69; == the shipped 27.3 t/s driver)
+  -> +0.1% e2e == run-to-run jitter, three orders below the >=5% ship bar.
+WHY: the eager conv "launch" (~12.3%) is almost entirely HOST launch/dispatch overhead, which XPUGraph capture has
+ALREADY eliminated (it is the 9.7->25 t/s graph win itself). In the graphed decode the conv's true cost is just its tiny
+device BW (10240 channels x width-4 bf16 = a few us), so deleting the launch from the captured replay saves ~nothing.
+The 2026-06-28i autotune (and this probe's eager numbers) over-attribute the conv/recurrence to the GRAPHED step for the
+same reason: eager per-call us != graphed per-call us once host launch overhead is gone.
+
+VERDICT: CEILING -- NOT SHIPPED (hard-stop: e2e win <5%). The fused kernel is a real, reusable, bitwise-correct +
+NaN-clean artifact, but graph capture has already harvested the launch-elimination win it targets; there is no decode
+lever left here. REVERTED the serve wiring: rdy_to_serve/qwen36-27b-w4a8-graph/serve.sh and patches/woq_shim.py are
+byte-restored (daily driver UNCHANGED -- still the unfused 27.3 t/s path). KEPT (committed): patches/gdn_fused_conv.py
+(env-gated default-OFF kernel + install()) and sglang/gdn_fused_conv_probe.py (repro: conv cost + bitwise/determinism +
+per-layer bench). To re-test: mount gdn_fused_conv.py into site-packages, add `import gdn_fused_conv;
+gdn_fused_conv.install()` to woq_shim _install(), and serve with B70_GDN_FUSED_CONV=1. The only remaining GDN decode
+lever is amortizing the recurrence across tokens via spec-decode (MTP), not single-token kernel-merge.
