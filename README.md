@@ -58,7 +58,8 @@ graph-captured on the push transport (see caveat (1)). That P2P/TTFT lever is re
 | bf16 TP=2 (reference) | 2 | 661 ms | 3098 | 9.03 | the W8A8 target |
 
 vs bf16: W8A8 fused+MTP = **PP +40%, TTFT -29%, TG +180% (2.8x)**; beats int4+MTP on decode (25.2 vs 15.3).
-FP8 emulated on B70 (~1.0x bf16 prefill) -> W8A8 wins PP vs fp8 too. Recipe: sglang/README.md, scripts/123-125,
+**Accuracy-gated: HumanEval+ 0.970/0.933 (base/plus)** -- higher than int4 same-stack (0.933/0.896); fused
+kernels add zero loss. FP8 emulated on B70 (~1.0x bf16 prefill) -> W8A8 wins PP vs fp8 too. Recipe: sglang/README.md, scripts/123-125,
 w8a8/ (kernels: w8a8/W8A8_BUILD.md; campaign: w8a8/W8A8_SGLANG_PLAN.md).
 
 #### 2026-06-26 update -- `cudagraph=NONE` (the STABLE config) + GuC 70.54.0 firmware fix

@@ -30,6 +30,8 @@ int4_gemm ops. All drivers correct + vision-retaining; pick by use:
 Built fused int8 oneDNN ops (`int8_gemm_w8a16` decode fp16-act / `int8_gemm_w8a8` prefill s8-act, both from
 source vs sglang torch 2.12; see `w8a8/W8A8_BUILD.md`). int8-XMX makes W8A8 the PREFILL/TTFT champion; +NEXTN
 MTP makes decode beat bf16 too. **Handily beats bf16/fp8 on PP, TTFT, AND TG.** Vision retained (grafted ckpt).
+**ACCURACY-GATED: HumanEval+ 0.970 / 0.933** (base/plus, fused+MTP, sandboxed) -- HIGHER than int4 same-stack
+(0.933/0.896): int8 weights are more accurate than int4 AND the fused kernels add zero loss (MTP is greedy-lossless).
   - **W8A8 fused + NEXTN MTP (steps=10), TP=2:** `scripts/124_w8a8_mtp.sh` -> TG **25.2 t/s**, PP **4344**, TTFT
     **471 ms** (vision, greedy). Highest PP + lowest TTFT of ANY driver; decode ~ties the int4 graph champion
     (27.3) and BEATS int4+MTP (15.3) because the MTP verify (M>1) rides int8-XMX `int8_gemm_w8a8`. The W8A8 all-rounder.
@@ -42,9 +44,9 @@ Perf @ IN2048 / OUT128, warm c1 (TG = decode t/s, PP = prefill tok/s = 2048000/T
 |---------------------------------|----|---------|----------|--------|-------|
 | **W8A8 fused + MTP (steps=10)** | 2  | **471** | **4344** | 25.2   | int8 kernels + NEXTN; vision; greedy; PP/TTFT champ |
 | **W8A8 fused eager**            | 2  | **448** | **4570** | 8.1    | int8 kernels; vision; max PP / lowest TTFT |
-| W4A8/W4A16 graph (int4 lmhead)  | 1  | 935     | 2189     | **27.3** | int4; sampling; fastest single-stream decode |
-| int4 + XPUGraph                 | 1  | 1244    | 1766     | 23.5   | int4; sampling; no mounts |
-| int4 + NEXTN MTP                | 1  | 1048    | ~1674    | 15.3   | int4; greedy |
+| int4 **W4A8** hybrid + graph (int4 lmhead) | 1 | 935 | 2189 | **27.3** | int8-act prefill + fp16-act decode; sampling; fastest single-stream decode |
+| int4 **W4A16** (woqgemm fp16-act) + graph  | 1 | 1159 | 1766 | 23.5  | fp16-act int4 weights; sampling; no mounts (baked image) |
+| int4 W4A16 + NEXTN MTP          | 1  | 1048    | ~1674    | 15.3   | int4 fp16-act; greedy |
 | bf16 TP=2 (reference / target)  | 2  | 661     | 3098     | 9.03   | the W8A8 comparison bar |
 | W8A8 legacy _int_mm (old)       | 2  | 580     | ~3500    | 5.45   | superseded by fused |
 

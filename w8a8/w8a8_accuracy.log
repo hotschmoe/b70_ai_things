@@ -1,0 +1,44 @@
+[23:32:51] === pre-flight xpu-health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[23:33:05] === serve W8A8 fused+MTP (steps=10) for accuracy gate ===
+7ee131fd7d3b84a2e8a4ebb7c47aef09c2189ab532427cd1f9131b01ee021900
+[23:33:07] waiting for /health (heartbeat to survive background)...
+[23:33:32]   ...loading (6x5s, http=000000)
+[23:34:02]   ...loading (12x5s, http=000000)
+[23:35:13]   ...loading (18x5s, http=503)
+[23:36:16] /health 200 after ~105s
+[23:36:16] === coherence ===
+COHERENCE: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Two sentences.\n\n2.  **Identify Key Scientif"
+[23:37:13] === run_evals tier1 HumanEval+ (sandboxed)  ===
+== run w8a8-fused-vision -> /mnt/vm_8tb/github/b70_ai_things/evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision
+[tier1] generating 164 humaneval solutions (thinking=off, greedy, seed=1234)
+[tier1]   generated 10/164
+[tier1]   generated 20/164
+[tier1]   generated 30/164
+[tier1]   generated 40/164
+[tier1]   generated 50/164
+[tier1]   generated 60/164
+[tier1]   generated 70/164
+[tier1]   generated 80/164
+[tier1]   generated 90/164
+[tier1]   generated 100/164
+[tier1]   generated 110/164
+[tier1]   generated 120/164
+[tier1]   generated 130/164
+[tier1]   generated 140/164
+[tier1]   generated 150/164
+[tier1]   generated 160/164
+[tier1]   generated 164/164
+[tier1] $ /mnt/vm_8tb/github/b70_ai_things/evals/.venv/bin/python -m evalplus.sanitize /mnt/vm_8tb/github/b70_ai_things/evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision/tier1_evalplus/humaneval_raw.jsonl
+[tier1] $ docker run --rm --network none --user 1000:1000 -e HOME=/tmp -e XDG_CACHE_HOME=/xdgcache --memory 8g --pids-limit 512 -v /mnt/vm_8tb/github/b70_ai_things/evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision/tier1_evalplus:/work -v /mnt/vm_8tb/github/b70_ai_things/evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision/tier1_evalplus/_sandbox_cache:/xdgcache evalplus-sandbox:0.3.1 evalplus.evaluate humaneval --samples /work/humaneval_raw-sanitized.jsonl --i_just_wanna_run
+[tier1] humaneval pass@1={'base': 0.97, 'plus': 0.933} (gen 1273s, eval 44s, sandbox-docker)
+== done. summary -> /mnt/vm_8tb/github/b70_ai_things/evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision/summary.json
+[23:59:13] === stopping serve ===
+[23:59:16] === post health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[23:59:32] === latest result dir ===
+/mnt/vm_8tb/github/b70_ai_things/evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision

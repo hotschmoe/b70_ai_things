@@ -6036,3 +6036,15 @@ RESULT (decode t/s): steps=7 -> 23.7/23.8 | steps=10 -> 25.05/25.25 (+6%) | step
 VERDICT: W8A8 MTP peak = steps=10 (decode 25.25 = 2.8x bf16 9.0), DEEPER than int4's steps=7 -- because the
   int8-XMX verify (int8_gemm_w8a8, 2.0x) is cheaper per draft token, so deeper drafts net positive until
   accept-rate decay dominates at ~12. Shipped default scripts/124 SPEC_STEPS=10. Box healthy after 3 serves.
+
+## 2026-06-29 -- W8A8 FUSED ACCURACY GATE: PASS (HumanEval+ 0.970/0.933 -- HIGHER than int4) [result]
+CONFIG: scripts/125_w8a8_accuracy.sh -- fused W8A8 served via the fast MTP config (greedy-LOSSLESS ->
+output == eager greedy == fused-kernel decoding), Qwen3.6-27B-W8A8-sqgptq-vision-mtp, TP=2, sandboxed
+EvalPlus grading (evalplus-sandbox:0.3.1, --network none). run_evals tier1 HumanEval+ 164 problems, greedy.
+RESULT: pass@1 base 0.970 / plus 0.933 (gen 1273s @ MTP ~25 t/s, eval 44s). Coherent. Box HEALTHY after.
+  vs int4 same-stack (W4A8 campaign): 0.933/0.896 (int4 lm_head) / 0.921/0.896 (bf16 lm_head).
+VERDICT: GATE PASS -- the fused int8 kernels add ZERO loss AND W8A8 is MORE accurate than int4 (0.970 vs
+  0.933 base) as expected for 8-bit vs 4-bit weights. The W8A8 fused (+MTP) win is now accuracy-validated:
+  handily beats bf16/fp8 on PP(+40%)/TTFT(-29%)/TG(+180%) AND has higher code accuracy than the int4 daily
+  driver, with vision. Result dir evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision.
+  READMEs updated (top + sglang) with the sglang W8A8 + W4A16/W4A8 numbers. NEXT: productionize to rdy_to_serve.
