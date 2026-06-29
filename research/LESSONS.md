@@ -41,11 +41,14 @@ Audited the w8a8 sprint wins against every shelf entry before the bench:
      `kernels/` source would propagate the int8 win to vLLM w8a8. Image rebuild + vLLM is paused.
   3. sglang w4a8 (row 6) -> graph/maxreq=1 will likely tank the concurrent (c4) sweep probe;
      evaluate an MTP-based w4a8 (the w4a8 ckpt now has a grafted MTP head).
-- **sglang W8A8 MoE (35b-a3b): BLOCKED, not a serve-script edit.** Only a Quark-format W8A8 35b
-  exists (sglang has no Quark loader) AND sglang/XPU has no int8 fused-MoE kernel (256 experts have
-  no int8 path; `_get_recipe` lacks an int8 branch). The benchable int8 MoE is the EXISTING vLLM
-  Quark entry (`rdy_to_serve/vllm/qwen36-35b-a3b-w8a8`, true int8 experts via Triton fused-MoE).
-  Unblocking sglang = porting the vLLM QuarkMoEMethod + building the fused grouped-int8 kernel
-  (the "single missing W8A8 flag" in sycl-tla grouped_gemm). Real kernel/loader project.
+- **sglang W8A8 MoE (35b-a3b): a LOADER port, likely NO custom kernel** (re-characterized 2026-06-29,
+  see `research/w8a8/MOE_UNBLOCK.md`). The working vLLM int8 MoE is the pure-Triton `fused_moe_kernel`
+  `use_int8_w8a8` path -- and sglang ships the same `fused_moe_triton`. So the sglang port = an
+  `Int8MoEMethod` (hooks like `AWQMoEMethod`) + a Quark/compressed-tensors int8 loader + dense-linear
+  dequant fallback; route experts to sglang's Triton int8 `fused_experts`. Go/no-go = does triton-xpu
+  compile `use_int8_w8a8` on B70. (Fallbacks: per-expert dense-`int8_gemm_w8a8` loop = correctness
+  oracle, cosine 0.99992; fused SYCL `is_w8a8` grouped-gemm = the prefill-perf endgame.) The
+  llm-scaler image is a DEAD END (no `_moe_C` int8 op built). W8A8 MoE already serves on vLLM v0230
+  Quark today (43.1 t/s, the shelf entry) -- the open item is whether it survives sustained GDN load.
 
 <!-- Add rows as lessons land. Keep origin probes under research/<theme>/; winners -> rdy_to_serve/<backend>/. -->
