@@ -31,8 +31,11 @@
 set -uo pipefail
 
 # ===== daily-driver CONFIG (knobs; defaults below) ===========================================
-DD_MODEL="${DD_MODEL:-vllm/qwen36-27b-int4}"   # any rdy_to_serve/<backend>/<dir> -- THE model knob. Default: vLLM 27B int4 (PRIMARY).
-DD_REPLICAS="${DD_REPLICAS:-2}"           # 2 = data-parallel (model fits ONE card). 1 = single serve (TP=2 / big).
+DD_MODEL="${DD_MODEL:-sglang/qwen36-27b-w8a8}"   # any rdy_to_serve/<backend>/<dir> -- THE model knob. Default:
+                                          # sglang 27B W8A8 fused+MTP (the best W8A8 27b: decode 25.6, HumanEval+
+                                          # 0.970/0.933, vision). TP=2 (both cards) -> needs DD_REPLICAS=1.
+DD_REPLICAS="${DD_REPLICAS:-1}"           # 1 = single serve (TP=2 / big; the W8A8 default). 2 = data-parallel
+                                          # (only for a model that FITS ONE card, e.g. DD_MODEL=vllm/qwen36-27b-int4).
 DD_CARD="${DD_CARD:-}"                     # set to 0 or 1 -> ONE-CARD mode: pin to that card + lease ONLY that card
                                           #     (leaves the other free for `gpu-run --card <other>` experiments).
 DD_MAXLEN="${DD_MAXLEN:-131072}"          # daily-driver context (the model serve.sh default is a modest 8192).
@@ -76,9 +79,10 @@ served_id() { local h=""; [ -n "$DD_API_KEY" ] && h="-H \"Authorization: Bearer 
 replica_env() {
   local e="MAXLEN=$DD_MAXLEN"
   [ "$DD_MTP" = 1 ] && e="$e MTPTOK=4 COMPILESZ="    # MTP: integer is quote-safe; COMPILESZ= omits compile_sizes
-  # API key -> vLLM enforces it. Injected as a docker env via B70_EXTRA_ENV (no lib.sh change needed; vLLM's
-  # --api-key defaults to $VLLM_API_KEY). Assumes the key is one token (alphanumeric/dashes, no spaces).
-  [ -n "$DD_API_KEY" ] && e="$e B70_EXTRA_ENV=VLLM_API_KEY=$DD_API_KEY"
+  # API key enforcement (both backends; assumes one token, no spaces):
+  #   vLLM   -- B70_EXTRA_ENV=VLLM_API_KEY=... (lib.sh injects the docker env; vLLM --api-key defaults to it).
+  #   sglang -- API_KEY=... (the sglang serve.sh passes --api-key when set; e.g. qwen36-27b-w8a8).
+  [ -n "$DD_API_KEY" ] && e="$e B70_EXTRA_ENV=VLLM_API_KEY=$DD_API_KEY API_KEY=$DD_API_KEY"
   [ -n "$DD_ENV" ] && e="$e $DD_ENV"
   printf '%s' "$e"
 }

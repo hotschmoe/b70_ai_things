@@ -37,8 +37,11 @@ SERVED="${SERVED:-qwen36-27b-w8a8-mtp}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
 SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ:-4}"
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-8192}"; MEMFRAC="${MEMFRAC:-0.90}"
+API_KEY="${API_KEY:-}"   # if set, sglang ENFORCES it on /v1/* (--api-key); /health stays open. Used by the
+                         # daily driver (DD_API_KEY) for WAN exposure. Empty = OPEN (LAN-only). Inert if unset.
 LOG="${LOG:-$SCRIPT_DIR/serve.log}"
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
+APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"; AUTH_H=(-H "Authorization: Bearer $API_KEY"); }
 
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
@@ -58,7 +61,7 @@ start(){
       --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
       --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --disable-cuda-graph \
       --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache --skip-server-warmup \
-      --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC --max-running-requests $MAXREQ \
+      --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC --max-running-requests $MAXREQ $APIKEY_ARG \
       --host 0.0.0.0 --port $PORT" >/dev/null
   say "waiting for /health (load + spec JIT ~3-6min)..."
   for i in $(seq 1 140); do
@@ -66,7 +69,7 @@ start(){
     [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:$PORT/health 2>/dev/null||echo 000)" = 200 ] && { say "/health 200 (~$((i*5))s)"; break; }
     sleep 5
   done
-  local g; g=$(curl -s --max-time 180 "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
+  local g; g=$(curl -s --max-time 180 "http://localhost:$PORT/v1/chat/completions" "${AUTH_H[@]}" -H 'content-type: application/json' \
     -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue? Two sentences.\"}],\"max_tokens\":64,\"temperature\":0}")
   echo "$g" | python3 -c "import sys,json;c=json.load(sys.stdin)['choices'][0]['message']['content'] or ''
 print('COHERENCE OK:',repr(c[:160])) if c.strip() and (len(c)<16 or max(c.count(x) for x in set(c))/len(c)<0.6) else (print('GATE FAIL:',repr(c[:120])) or sys.exit(1))" \
@@ -81,7 +84,7 @@ case "${1:-start}" in
   start) start ;;
   stop)  stop ;;
   bench) bench ;;
-  gen)   curl -s "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
+  gen)   curl -s "http://localhost:$PORT/v1/chat/completions" "${AUTH_H[@]}" -H 'content-type: application/json' \
            -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"${2:-Why is the sky blue?}\"}],\"max_tokens\":128,\"temperature\":0}" ;;
   run)   start && bench; rc=$?; stop; exit $rc ;;
   smoke) start; rc=$?; stop; exit $rc ;;

@@ -1,9 +1,12 @@
 [Unit]
-# B70 daily-driver vLLM serve (default: qwen36-27b-int4, DP=2 = two single-card TP=1 replicas, cudagraph=NONE,
-# API-key enforced). WEDGE-PROOF: single-card replicas cannot DEVICE_LOST/BCS-wedge, so this survives an
-# unattended/traveling weekend (w8a8 TP=2 is faster but wedged under load even post-GuC-fix -- attended-only).
-# Managed lifecycle + auto-start on boot. See deploy/README.md and JOURNAL 2026-06-26.
-Description=B70 daily-driver vLLM serve
+# B70 daily-driver serve. DEFAULT (2026-06-29, user choice): sglang qwen36-27b-w8a8 fused+MTP, TP=2 (both
+# cards) -- the best W8A8 27b (decode 25.6, HumanEval+ 0.970/0.933, vision), API-key enforced.
+# [!] WEDGE CAVEAT: W8A8 TP=2 is the FAST config but can BCS/oneCCL-wedge under sustained load (reboot-only
+# recovery) -- it is NOT wedge-proof like the old int4 DP=2 default. Accepted for auto-start per the
+# 2026-06-29 decision; dd-watchdog backstops SOFT garbage but NOT a hard wedge. To revert to the wedge-proof
+# unattended config: DD_MODEL=vllm/qwen36-27b-int4 + DD_REPLICAS=2 + DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88"
+# + DD_MAXLEN=98304. Managed lifecycle + auto-start on boot. See deploy/README.md + JOURNAL 2026-06-29.
+Description=B70 daily-driver serve (sglang W8A8 27b)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
 Wants=network-online.target
@@ -18,19 +21,16 @@ RemainAfterExit=yes
 User=hotschmoe
 Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
-Environment=DD_MODEL=qwen36-27b-int4
-Environment=DD_REPLICAS=2
-# UTIL 0.88 is THE safety lever -- dialed back from 0.95 after the 2026-06-26 ~7h "!!!!" incident (the untested
-# 0.95 bump left only ~1-2 GiB headroom on a 32 GB card and the fp16 KV cache poisoned a persistent buffer under
-# pressure over hours). 0.88 leaves ~3+ GiB headroom. NOTE: max-model-len does NOT change VRAM -- vLLM sizes the
-# KV pool from UTIL (~280k tok/replica at 0.88 single-card), so MAXLEN only caps a single request's length;
-# 98304 (96K) fits with room to spare. The dd-watchdog (b70-dd-watchdog.service) backstops residual garbage.
-Environment=DD_MAXLEN=98304
-Environment="DD_ENV=GRAPH=1 CGMODE=NONE UTIL=0.88"
-# API key is read from the off-repo secret file at start time (NOT baked into the unit).
+Environment=DD_MODEL=sglang/qwen36-27b-w8a8
+Environment=DD_REPLICAS=1
+# sglang W8A8 27b runs at its own tuned serve.sh config (TP=2, NEXTN MTP steps=10, --disable-cuda-graph,
+# CTX=8192, mem-fraction-static=0.90, max-running-requests=4). The vLLM-specific knobs (DD_ENV GRAPH/CGMODE/
+# UTIL, DD_MAXLEN) do NOT apply to sglang and are intentionally omitted; the sglang serve.sh ignores them.
+# API key is read from the off-repo secret file at start time (NOT baked into the unit); for sglang the
+# daily_driver passes it as API_KEY -> the serve.sh adds --api-key (enforced on /v1/*, /health stays open).
 ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/vllm/daily_driver_serve.sh start'
 ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/vllm/daily_driver_serve.sh stop'
-# Two int4 replicas load + JIT-compile (NONE: no capture); allow generous startup.
+# sglang W8A8 loads (~32s/rank) + NEXTN spec JIT-compiles (~3-6 min); allow generous startup.
 TimeoutStartSec=1200
 TimeoutStopSec=120
 
