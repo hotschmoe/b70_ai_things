@@ -86,5 +86,6 @@ case "${1:-start}" in
   gen)   curl -s "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
            -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"${2:-Why is the sky blue?}\"}],\"max_tokens\":128,\"temperature\":0}" ;;
   run)   start && bench; rc=$?; stop; exit $rc ;;
-  *) echo "usage: serve.sh {start|stop|bench|gen|run}"; exit 2 ;;
+  smoke) start; rc=$?; stop; exit $rc ;;
+  *) echo "usage: serve.sh {start|stop|bench|gen|run|smoke}"; exit 2 ;;
 esac

@@ -103,5 +103,6 @@ case "$cmd" in
   bench) bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "int4-NEXTN-mtp" ;;
   accept) docker logs "$NAME" 2>&1 | grep -oE "accept len: [0-9.]+" | tail -12
           docker logs "$NAME" 2>&1 | grep -oE "accept len: [0-9.]+" | awk -F': ' '{s+=$2;n++} END{if(n)printf "[mean accept len over %d batches] %.2f\n",n,s/n}' ;;
-  *) echo "usage: $0 {start|run|stop|logs|status|gen|bench|accept}"; exit 2 ;;
+  smoke) start; rc=$?; bash "$SCRIPT_DIR/serve.sh" stop; exit $rc ;;
+  *) echo "usage: $0 {start|run|smoke|stop|logs|status|gen|bench|accept}"; exit 2 ;;
 esac

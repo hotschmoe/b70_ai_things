@@ -131,5 +131,6 @@ case "$cmd" in
   gen)   curl -s "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
            -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue? Two sentences.\"}],\"max_tokens\":96,\"temperature\":0}" | python3 -m json.tool ;;
   bench) bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "w4a8-graph" ;;
-  *) echo "usage: $0 {start|run|stop|logs|status|gen|bench}"; exit 2 ;;
+  smoke) start; rc=$?; bash "$SCRIPT_DIR/serve.sh" stop; exit $rc ;;
+  *) echo "usage: $0 {start|run|smoke|stop|logs|status|gen|bench}"; exit 2 ;;
 esac
