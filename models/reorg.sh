@@ -53,9 +53,10 @@ SUBSUMED=(
   models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft
   models/Qwen3.6-27B-W8A8-sqgptq-vision
   models/Lorbus_Qwen3.6-27B-int4-AutoRound
-  models/Qwen3.6-27B-W4A16-mtp-graft
-  models/Qwen3.6-27B-W4A8-sqgptq-prepacked-mtp-graft
 )
+# NOTE: the W4A16/W4A8 *-mtp-graft dirs are intentionally NOT dropped here --
+# graft_w4_complete.sh consumes them (LM + MTP delta) to build the complete w4a16/w4a8,
+# then drops them itself.
 
 materialize_py() {
   # $1 = abs source dir, $2 = abs dest dir
@@ -154,7 +155,7 @@ else
   say "   SKIPPED subsumed-drop (dest verification failed)"
 fi
 hr
-say "NOTE: W4A16 + W4A8 bases kept in place for graft_w4_complete.sh:"
-say "      $SRCROOT/models/Qwen3.6-27B-W4A16"
-say "      $SRCROOT/models/Qwen3.6-27B-W4A8-sqgptq-prepacked"
+say "NOTE: kept in place for graft_w4_complete.sh (it consumes + drops them):"
+say "      $SRCROOT/models/Qwen3.6-27B-W4A16{,-mtp-graft}"
+say "      $SRCROOT/models/Qwen3.6-27B-W4A8-sqgptq-prepacked{,-mtp-graft}"
 say "DONE ($([ "$APPLY" = 1 ] && echo APPLIED || echo dry-run -- re-run with APPLY=1 to execute))."
