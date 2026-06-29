@@ -66,7 +66,9 @@ The daily driver runs this entry at its agentic config. Knobs (env, defaults in 
   and two concurrent sessions share the pool (combined < 182k; rare both-maxed -> graceful preempt).
 - **`TOOLCALL=1` / `TOOLPARSER=qwen3_coder`** -- Qwen3.6 emits XML `<tool_call>` (NOT hermes JSON); returns
   structured OpenAI `tool_calls`. **`REASONPARSER=qwen3`** splits `<think>` into `reasoning_content`.
-- **`THINKCAP=8192`** -> `SGLANG_MAX_THINK_TOKENS` (graceful `</think>` cap). `THINKCAP=` for unlimited.
+- **`THINKCAP=4096`** -> `SGLANG_MAX_THINK_TOKENS` (graceful `</think>` cap). `THINKCAP=` for unlimited.
+  Lowered from 8192 on 2026-06-29: caps the worst-case thinking dead-air (~3min at 25t/s) before the first
+  tool-call token, which a fronting reverse-proxy idle timeout can cut on long agentic tool calls.
 - **`RADIX=0` (prefix caching OFF, and it MUST stay off here).** sglang's mamba/hybrid radix needs the
   `extra_buffer` path (CUDA/MUSA/NPU-only -> `AssertionError` on XPU at arg-parse) or `no_buffer` (forces
   `page_size=1`, untested with NEXTN+fused). `RADIX=1` CRASHES the serve. Prefix caching on XPU hybrid is an

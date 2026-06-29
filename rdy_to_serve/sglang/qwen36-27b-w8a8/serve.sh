@@ -47,7 +47,10 @@ RADIX="${RADIX:-0}"   # prefix/radix cache. MUST stay 0 on XPU for this HYBRID-m
                       # no_buffer (forces page_size=1, untested with NEXTN+fused kernels). RADIX=1 here
                       # CRASHES at arg-parse (server_args._handle_mamba_radix_cache). Prefix caching on
                       # XPU hybrid is a RESEARCH item, not a prod flag. See JOURNAL 2026-06-29.
-THINKCAP="${THINKCAP:-8192}"                                        # int -> SGLANG_MAX_THINK_TOKENS (graceful </think> cap); empty = unlimited
+THINKCAP="${THINKCAP:-4096}"                                        # int -> SGLANG_MAX_THINK_TOKENS (graceful </think> cap); empty = unlimited
+                                                                   # 4096 (was 8192): caps worst-case "thinking" dead-air before the
+                                                                   # first tool-call token (~3min at 25t/s) that fronting-proxy idle
+                                                                   # timeouts cut on long agentic tool calls. See JOURNAL 2026-06-29.
 API_KEY="${API_KEY:-}"   # if set, sglang ENFORCES it on /v1/* (--api-key); /health stays open. Used by the
                          # daily driver (DD_API_KEY) for WAN exposure. Empty = OPEN (LAN-only). Inert if unset.
 LOG="${LOG:-$SCRIPT_DIR/serve.log}"
