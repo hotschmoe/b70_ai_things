@@ -28,8 +28,8 @@ Environment=DD_REPLICAS=2
 Environment=DD_MAXLEN=98304
 Environment="DD_ENV=GRAPH=1 CGMODE=NONE UTIL=0.88"
 # API key is read from the off-repo secret file at start time (NOT baked into the unit).
-ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh start'
-ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/daily_driver_serve.sh stop'
+ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/vllm/daily_driver_serve.sh start'
+ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/vllm/daily_driver_serve.sh stop'
 # Two int4 replicas load + JIT-compile (NONE: no capture); allow generous startup.
 TimeoutStartSec=1200
 TimeoutStopSec=120

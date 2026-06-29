@@ -1,0 +1,9 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> bash scripts/123_w8a8_fused_ab.sh
+[21:56:43] === pre-flight xpu-health ===
+=== probe card 1 (img=vllm-xpu-env:v0230 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[21:56:57] === W8A8 TP=2 serve [fused]: qwen36-27b-w8a8-sqgptq-fused  img=sglang-xpu:woq ctx=8192 memfrac=0.90 ===
+[21:57:01] waiting for /health (model load ~3-5min)...
+Terminated                 "$@"
+gpu-run: [b70s4dayz] done in 132s (exit 143)

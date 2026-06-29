@@ -29,7 +29,7 @@ higher code accuracy than int4. Built on our fused int8 oneDNN kernels + NEXTN c
   with `dynamic_per_token_int8_quant` (fused single-launch act-quant).
 - **MTP:** NEXTN chain spec-decode, steps=10 (W8A8 peak -- the cheap int8-XMX verify rewards deeper drafts
   than int4's steps=7: 7->23.8, 10->25.25, 12->24.35). Greedy-only on XPU.
-- Both ops built from vllm-xpu-kernels source vs sglang torch 2.12 (`../../w8a8/W8A8_BUILD.md`).
+- Both ops built from vllm-xpu-kernels source vs sglang torch 2.12 (`../../../research/w8a8/W8A8_BUILD.md`).
 
 ## Dependencies (runtime mounts, NOT a baked image)
 
@@ -55,4 +55,4 @@ bash serve.sh stop                             # stop + release + health check
   `../../scripts/123_w8a8_fused_ab.sh` (FUSED=1 GRAPH=0) -> PP 4570 / TTFT 448 / decode 8.1.
 - Greedy-only: MTP verify runs greedily on XPU (temperature/top_p/top_k ignored), like all XPU NEXTN.
 
-Campaign: `../../w8a8/W8A8_SGLANG_PLAN.md`. JOURNAL 2026-06-28/29.
+Campaign: `../../../research/w8a8/W8A8_SGLANG_PLAN.md`. JOURNAL 2026-06-28/29.

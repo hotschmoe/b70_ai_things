@@ -1,0 +1,15 @@
+[01:27:56] [graph_off] coherence: OK :: 'Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topic: Why is '
+[regime 01:30:54] WARM[c1] decode=9.59 t/s  agg_out=8.68  TTFT=970.70ms
+[regime 01:33:13] WARM[c4] decode=1.41 t/s  agg_out=7.62  TTFT=2792.68ms
+[regime] SOAK port=30000 served=qwen36-27b-int4-graph tokens=2000 ttft=1048ms
+[regime] OVERALL decode 9.54 t/s | first/last window ratio 1.00x (stable) | coherence OK | first 100 chars: "Here's a thinking process:\n\n1.  **Analyze User Request:**\n   - **Topic:** How a CPU executes an inst"
+[01:40:23] [graph_on] coherence: OK :: 'Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topic: Why is '
+[regime 01:43:22] WARM[c1] decode=9.54 t/s  agg_out=8.66  TTFT=973.32ms
+[regime 01:45:41] WARM[c4] decode=1.41 t/s  agg_out=7.62  TTFT=2800.11ms
+[regime] SOAK port=30000 served=qwen36-27b-int4-graph tokens=2000 ttft=994ms
+[regime] OVERALL decode 9.46 t/s | first/last window ratio 1.00x (stable) | coherence OK | first 100 chars: "Here's a thinking process:\n\n1.  **Analyze User Request:**\n   - **Topic:** How a CPU executes an inst"
+[01:52:52] [graph_on_si8] coherence: OK :: 'Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topic: Why is '
+[regime 01:55:53] WARM[c1] decode=9.36 t/s  agg_out=8.51  TTFT=975.34ms
+[regime 01:58:12] WARM[c4] decode=1.40 t/s  agg_out=7.60  TTFT=2808.23ms
+[regime] SOAK port=30000 served=qwen36-27b-int4-graph tokens=251 ttft=1097ms
+[regime] OVERALL decode 1.18 t/s | first/last window ratio 1.00x (stable) | coherence OK | first 100 chars: "Here's a thinking process:\n\n1.  **Analyze User Request:**\n   - **Topic:** How a CPU executes an inst"

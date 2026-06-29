@@ -18,7 +18,7 @@ bash serve.sh stop                                      # stop + release the car
 Endpoint: `http://<host>:30000/v1`. Served id: `qwen36-27b-int4-mtp-nextn`.
 
 ## Image: `sglang-xpu:mtp` (self-contained -- NO runtime patch mounts)
-Build context: `../../images/sglang-xpu-mtp/` (`FROM sglang-xpu:woq` + two baked files):
+Build context: `../../sglang/images/sglang-xpu-mtp/` (`FROM sglang-xpu:woq` + two baked files):
 - `mtp_tree_xpu.py` -- the pure-torch XPU fallback for sglang's NEXTN/EAGLE tree kernels (chain, topk=1),
   with all **4 XPU gates** fixed: (1) `assign_extend_cache_locs` draft-slot gather; (2) mamba-scatter
   `is_cuda`-guard stripper; (3) `top_p_renorm_probs` torch nucleus fallback; (4) `eagle_sample` greedy-verify
@@ -26,7 +26,7 @@ Build context: `../../images/sglang-xpu-mtp/` (`FROM sglang-xpu:woq` + two baked
 - `memory_pool.py` -- 3-line `device="cuda"` -> `device=device` fix for the spec-decode mamba state cache.
 
 The `woqgemm` int4 path + `woq_shim.py` are inherited unchanged from `:woq`. To rebuild:
-`docker build -t sglang-xpu:mtp images/sglang-xpu-mtp/`.
+`docker build -t sglang-xpu:mtp sglang/images/sglang-xpu-mtp/`.
 
 ## Recipe (baked into serve.sh)
 - `--speculative-algorithm NEXTN --speculative-num-steps 7 --speculative-eagle-topk 1

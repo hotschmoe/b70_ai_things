@@ -16,7 +16,7 @@ bash serve.sh stop
 Endpoint: `http://<host>:8000/v1`. Served id: `qwen36-27b-w4a8-sqgptq`.
 
 ## Image + the three extra pieces beyond the 14B W4A8
-- Image `vllm-xpu-env:int8g` (build: `../../images/int8g/`).
+- Image `vllm-xpu-env:int8g` (build: `../../vllm/images/int8g/`).
 - PREPACK: `patches/xpu.py` + `patches/compressed_tensors_w4a8_int.py` + `VLLM_W4A8_PREPACKED=1` (local).
 - GDN: Qwen3.6-27B uses gated-delta-net; the `:int8g` baked kernel ships `GDN_KERNELS_ENABLED=OFF`. The
   serve mounts the GDN-enabled `_xpu_C.abi3.so` (+ sibling `libgdn_attn_kernels_xe_2.so`) from

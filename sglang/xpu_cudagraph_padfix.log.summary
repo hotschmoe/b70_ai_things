@@ -1,0 +1,8 @@
+[02:57:15] [A_multibucket_nopad] coherence: OK
+[03:00:36] [A_multibucket_nopad] c1 decode=4.67 t/s agg=5.03 TTFT=2888.70ms
+[03:08:52] [A_multibucket_nopad] c4 decode=NA t/s agg=NA TTFT=NAms
+[03:13:18] [B_bs1_ref] coherence: OK
+[03:14:50] [B_bs1_ref] c1 decode=23.55 t/s agg=17.38 TTFT=1244.24ms
+[03:19:22] [C_multibucket_pad] coherence: OK
+[03:22:19] [C_multibucket_pad] c1 decode=7.36 t/s agg=5.59 TTFT=2278.53ms
+[03:25:44] [C_multibucket_pad] c4 decode=0.75 t/s agg=4.63 TTFT=5393.00ms

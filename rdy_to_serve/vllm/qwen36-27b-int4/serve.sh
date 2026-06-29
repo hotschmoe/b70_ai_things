@@ -9,7 +9,7 @@
 #
 # IMAGE: vllm-xpu-env:v0230 (vLLM 0.23.0). Plain v0230 serves int4 AutoRound -- no runtime patch.
 # Decode ~30.8 t/s captured (eager ~7.8). Model ~16.7 GiB + KV. Fits ONE 32 GB B70.
-# This is the current DAILY DRIVER model (served 2x data-parallel via ../../daily_driver_serve.sh).
+# This is the current DAILY DRIVER model (served 2x data-parallel via ../../../vllm/daily_driver_serve.sh).
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

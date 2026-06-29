@@ -1,7 +1,7 @@
 # Qwen3.6-27B int4-AutoRound (W4A16) -- PRIMARY single-card quality pick
 
 Serves `Lorbus_Qwen3.6-27B-int4-AutoRound` (host `/mnt/vm_8tb/b70/models/...`) on ONE Intel Arc Pro B70.
-This is the current **daily-driver** model (run 2x data-parallel via `../../daily_driver_serve.sh`).
+This is the current **daily-driver** model (run 2x data-parallel via `../../../vllm/daily_driver_serve.sh`).
 
 ## Run (on the GPU host)
 ```bash

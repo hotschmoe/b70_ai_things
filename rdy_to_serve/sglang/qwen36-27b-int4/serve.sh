@@ -14,7 +14,7 @@
 #   bash serve.sh bench                                     # warm c1/c4 (pp/ttft/tg @ ctx2048) + soak vs running server
 #   /mnt/vm_8tb/b70/gpu-run --card 0 bash serve.sh run      # start + bench + stop in one lease
 #
-# IMAGE: sglang-xpu:mtp (build: ../../images/sglang-xpu-mtp/). CKPT: Lorbus int4 + grafted BF16 MTP head.
+# IMAGE: sglang-xpu:mtp (build: ../../sglang/images/sglang-xpu-mtp/). CKPT: Lorbus int4 + grafted BF16 MTP head.
 #
 # [!] GREEDY-ONLY: MTP verify runs greedily on XPU (gate 4) -> output is the target model's argmax (correct
 #     greedy decoding) but temperature/top_p/top_k are IGNORED (exactly like the NPU/HIP spec path). For

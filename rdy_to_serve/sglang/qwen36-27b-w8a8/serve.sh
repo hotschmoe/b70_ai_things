@@ -7,7 +7,7 @@
 #   vs bf16 TP=2 (9.03 / 3098 / 661): TG +180% (2.8x), PP +40%, TTFT -29%.  > int4+MTP decode (15.3).
 #   ACCURACY: HumanEval+ 0.970 / 0.933 (base/plus) -- HIGHER than int4 same-stack (0.933/0.896).
 #   VISION retained (grafted vision+MTP ckpt). GREEDY-only (XPU MTP ignores sampling, like all XPU NEXTN).
-#   Full head-to-head + build: ../../w8a8/W8A8_SGLANG_PLAN.md + ../../w8a8/W8A8_BUILD.md.
+#   Full head-to-head + build: ../../../research/w8a8/W8A8_SGLANG_PLAN.md + ../../../research/w8a8/W8A8_BUILD.md.
 #
 # RUNTIME MOUNTS (not a baked image):
 #   - IMG = sglang-xpu:mtp  (baked XPU NEXTN gates + compressed_tensors W8A8 scheme + woqgemm)
@@ -16,7 +16,7 @@
 #   - the complete (materialized) ckpt at $REPO/models/files/qwen3.6-27b/w8a8-sqgptq
 #     (vision+MTP grafted, real files -- mounted -> /models/qwen3.6-27b/w8a8-sqgptq)
 #   - in-container: source oneAPI setvars + PREPEND the oneAPI compiler lib to LD_LIBRARY_PATH (or the
-#     ctypes-loaded .so resolves but torch loses the XPU device -- see ../../w8a8/W8A8_BUILD.md)
+#     ctypes-loaded .so resolves but torch loses the XPU device -- see ../../../research/w8a8/W8A8_BUILD.md)
 #
 #   /mnt/vm_8tb/b70/gpu-run bash serve.sh start   # serve TP=2 (both cards), coherence-gated, stay up
 #   bash serve.sh stop                            # stop + release

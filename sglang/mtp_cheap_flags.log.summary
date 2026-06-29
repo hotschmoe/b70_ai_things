@@ -1,0 +1,8 @@
+[00:40:09] [baseline] coherence: OK :: 'Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topic: Why is '
+[00:42:04] [baseline] WARM c1: decode=15.30 t/s  agg=12.35  TTFT=925.44ms  accept=4.25
+[00:46:44] [contsteps2] coherence: OK :: 'Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topic: Why is '
+[00:48:39] [contsteps2] WARM c1: decode=15.32 t/s  agg=12.38  TTFT=916.18ms  accept=4.25
+[00:53:24] [contsteps4] coherence: OK :: 'Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topic: Why is '
+[00:55:19] [contsteps4] WARM c1: decode=15.30 t/s  agg=12.35  TTFT=923.09ms  accept=4.25
+[01:00:04] [overlap_on] coherence: OK :: 'Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Topic: Why is '
+[01:02:02] [overlap_on] WARM c1: decode=15.37 t/s  agg=11.88  TTFT=1199.80ms  accept=4.30

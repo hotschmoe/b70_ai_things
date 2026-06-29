@@ -6,7 +6,7 @@
 #   /mnt/vm_8tb/b70/gpu-run bash serve.sh        # start (PIECEWISE capture), wait healthy, gen-probe
 #   bash serve.sh stop                            # stop + release the GPU
 #
-# [!] IMAGE: vllm-xpu-env:int8g (build images/int8g/). Two extra needs beyond the 14B W4A8:
+# [!] IMAGE: vllm-xpu-env:int8g (build vllm/images/int8g/). Two extra needs beyond the 14B W4A8:
 #  (1) PREPACK loader + W4A8 scheme (int4-packed weights) + VLLM_W4A8_PREPACKED=1.
 #  (2) GDN: Qwen3.6-27B uses gated-delta-net; the :int8g baked kernel ships GDN_KERNELS_ENABLED=OFF
 #      (-> "_xpu_C has no attribute gdn_attention" at decode). Mount the GDN-enabled _xpu_C.abi3.so (+
