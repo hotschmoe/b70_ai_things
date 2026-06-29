@@ -148,5 +148,5 @@ if [ -n "${B70_EXTRA_ENV:-}" ]; then
   echo "=== B70_EXTRA_ENV -> injected: ${B70_EXTRA_ENV} ===" >&2
 fi
 
-source "$SCRIPT_DIR/../_common/lib.sh"
+source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"

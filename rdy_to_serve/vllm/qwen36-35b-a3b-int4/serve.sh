@@ -28,5 +28,5 @@ export TOOLCALL="${TOOLCALL:-1}"
 export TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
 export REASONPARSER="${REASONPARSER:-qwen3}"
 
-source "$SCRIPT_DIR/../_common/lib.sh"
+source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"

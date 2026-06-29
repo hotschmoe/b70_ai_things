@@ -12,15 +12,15 @@
 #
 #   [DP=2] replicate a fits-one-card model across BOTH cards for ~2.1x aggregate capacity  (DEFAULT)
 #     ./daily_driver_serve.sh start                              # default model, 2x data-parallel + proxy
-#     DD_MODEL=qwen36-35b-a3b-int4 ./daily_driver_serve.sh start # switch model (the one knob)
+#     DD_MODEL=vllm/qwen36-35b-a3b-int4 ./daily_driver_serve.sh start # switch model (DD_MODEL=<backend>/<dir>)
 #
 #   [TP=2] one model too big for one card, sharded (tensor-parallel) across both cards
-#     DD_REPLICAS=1 DD_MODEL=qwen36-35b-a3b-quark-w8a8-int8 ./daily_driver_serve.sh start
+#     DD_REPLICAS=1 DD_MODEL=vllm/qwen36-35b-a3b-w8a8 ./daily_driver_serve.sh start
 #     (the model's own serve.sh sets TP=2; uses both cards. For PP=2 instead, add DD_ENV="TP=1 PP=2"
 #      once the model serve.sh/_common supports PP -- TP=2 is the supported path today.)
 #
 #   [1 CARD] serve a small model on ONE card, leave the OTHER card FREE for experiments
-#     DD_CARD=0 DD_MODEL=qwen3-14b-w8a8 ./daily_driver_serve.sh start   # daily driver pinned to card 0
+#     DD_CARD=0 DD_MODEL=sglang/qwen36-27b-w8a8 ./daily_driver_serve.sh start   # daily driver pinned to card 0
 #     # then experiment on the free card via the per-card lease, e.g.:
 #     cd /mnt/vm_8tb/b70 && ./bin/gpu-run --card 1 bash <your-experiment>
 #
@@ -31,7 +31,7 @@
 set -uo pipefail
 
 # ===== daily-driver CONFIG (knobs; defaults below) ===========================================
-DD_MODEL="${DD_MODEL:-qwen36-27b-int4}"   # any rdy_to_serve/<dir> -- THE model knob. Default: 27B int4 (PRIMARY).
+DD_MODEL="${DD_MODEL:-vllm/qwen36-27b-int4}"   # any rdy_to_serve/<backend>/<dir> -- THE model knob. Default: vLLM 27B int4 (PRIMARY).
 DD_REPLICAS="${DD_REPLICAS:-2}"           # 2 = data-parallel (model fits ONE card). 1 = single serve (TP=2 / big).
 DD_CARD="${DD_CARD:-}"                     # set to 0 or 1 -> ONE-CARD mode: pin to that card + lease ONLY that card
                                           #     (leaves the other free for `gpu-run --card <other>` experiments).
@@ -102,7 +102,7 @@ start() {
     echo "daily driver already UP (:$PORT): $(served_id)"; echo "endpoint: $ENDPOINT"; webui_up; return 0
   fi
   if ! ssh_h "test -f $SERVE"; then
-    echo "[!] no such model: $SERVE"; echo "    pick a dir under rdy_to_serve/:"; ssh_h "ls -1 $RTS | grep -v '^_'"; return 1
+    echo "[!] no such model: $SERVE"; echo "    pick a <backend>/<dir> under rdy_to_serve/:"; ssh_h "cd $RTS && ls -d */*/ | sed 's#/\$##' | grep -v '^_'"; return 1
   fi
   local renv; renv="$(replica_env)"
   echo "starting daily driver: model=$DD_MODEL replicas=$DD_REPLICAS$([ "$DD_MTP" = 1 ] && echo ' +MTP') (holds GPU lease until 'stop')"

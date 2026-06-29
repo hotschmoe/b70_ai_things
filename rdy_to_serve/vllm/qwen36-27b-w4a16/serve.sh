@@ -48,5 +48,5 @@ if [ -n "${B70_EXTRA_ENV:-}" ]; then
   for kv in ${B70_EXTRA_ENV}; do DOCKER_ENV+=( -e "$kv" ); done
 fi
 
-source "$SCRIPT_DIR/../_common/lib.sh"
+source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"

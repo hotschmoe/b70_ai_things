@@ -42,5 +42,5 @@ MOUNTS=( -v "$SCRIPT_DIR/patches/xpu.py:$KP:ro"
          -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
 DOCKER_ENV=( -e VLLM_W4A8_PREPACKED=1 )
 
-source "$SCRIPT_DIR/../_common/lib.sh"
+source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"

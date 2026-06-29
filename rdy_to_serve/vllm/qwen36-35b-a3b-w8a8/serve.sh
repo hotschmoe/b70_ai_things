@@ -35,5 +35,5 @@ Q2=/opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/quantizatio
 # NOTE: arrays cannot be `export`ed in bash; serve.sh sources lib.sh (same shell) so a plain array is visible.
 MOUNTS=( -v "$PATCH:$Q1:ro" -v "$PATCH:$Q2:ro" )
 
-source "$SCRIPT_DIR/../_common/lib.sh"
+source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"

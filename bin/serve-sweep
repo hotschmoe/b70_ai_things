@@ -29,11 +29,13 @@ done
 ACTION=smoke; [ "$MODE" = bench ] && ACTION=run    # smoke -> serve.sh smoke ; bench -> serve.sh run
 
 declare -a NAMES RESULTS
-for d in "$RTS"/*/; do
-  m="$(basename "$d")"
-  case "$m" in _*) continue ;; esac                # skip _common and other _-prefixed dirs
+# shelf is split by backend: rdy_to_serve/<backend>/<model-quant>/serve.sh (_common is one level, skipped).
+for d in "$RTS"/*/*/; do
+  rel="${d#"$RTS"/}"; rel="${rel%/}"               # e.g. sglang/qwen36-27b-w8a8
+  m="$rel"
+  case "$rel" in _*) continue ;; esac              # defensive; _common won't match */*/ anyway
   [ -f "$d/serve.sh" ] || continue
-  [ -n "$ONLY" ] && [ "$m" != "$ONLY" ] && continue
+  [ -n "$ONLY" ] && [ "$m" != "$ONLY" ] && [ "${rel##*/}" != "$ONLY" ] && continue
   echo
   echo "########## serve-sweep [$MODE] $m ##########"
   if GRAPH="${GRAPH:-0}" "$GPURUN" bash "$d/serve.sh" "$ACTION"; then

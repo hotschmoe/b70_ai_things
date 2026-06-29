@@ -57,5 +57,5 @@ fi
 [ "${FLA_DECODE:-1}" = 0 ] && { DOCKER_ENV+=( -e VLLM_ENABLE_FLA_PACKED_RECURRENT_DECODE=0 ); \
   echo "=== FLA_DECODE=0 -> VLLM_ENABLE_FLA_PACKED_RECURRENT_DECODE=0 (unpacked recurrent decode) ===" >&2; }
 
-source "$SCRIPT_DIR/../_common/lib.sh"
+source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"
