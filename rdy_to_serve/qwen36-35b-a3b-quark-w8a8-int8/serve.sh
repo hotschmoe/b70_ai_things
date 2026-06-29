@@ -16,7 +16,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 export IMG="${IMG:-vllm-xpu-env:v0230}"
-export CKPT="${CKPT:-/models/Qwen3.6-35B-A3B-Quark-W8A8-INT8}"
+export CKPT="${CKPT:-/models/qwen3.6-35b-a3b/quark-w8a8-int8}"
 export SERVED="${SERVED:-qwen36-35b-a3b-quark-w8a8-int8}"
 export QUANT="${QUANT:-quark}"
 export TP="${TP:-2}"                        # int8 weights ~35 GB -> 17.5 GiB/card; does NOT fit one card

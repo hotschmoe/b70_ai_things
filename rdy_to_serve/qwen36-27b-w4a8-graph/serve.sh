@@ -35,8 +35,8 @@ ROOT="${ROOT:-/mnt/vm_8tb/b70}"; REPO="${REPO:-/mnt/vm_8tb/github/b70_ai_things}
 
 IMG="${IMG:-sglang-xpu:mtp}"
 NAME="${NAME:-sglang_w4a8_graph}"
-CKPT="${CKPT:-/models/Lorbus_Qwen3.6-27B-int4-AutoRound}"   # multimodal int4 AutoRound, vision retained
-TOK="${TOK:-/models/Qwen_Qwen3.6-27B}"
+CKPT="${CKPT:-/models/qwen3.6-27b/int4-autoround}"   # multimodal int4 AutoRound, vision retained
+TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 SERVED="${SERVED:-qwen36-27b-w4a8-graph}"
 PORT="${PORT:-30000}"; DEVICE="${DEVICE:-0}"
 CTX="${CTX:-4096}"; MEMFRAC="${MEMFRAC:-0.85}"
@@ -77,7 +77,7 @@ start() {
   docker rm -f "$NAME" >/dev/null 2>&1
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "${SHM:-16g}" -p "${PORT}:${PORT}" -e ZE_AFFINITY_MASK="$DEVICE" \
-    -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
+    -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
     -v "$KERNEL_DIR:/work/w4a8_kernel:ro" \
     -v "$SHIMS/woq_shim.py:$SITE/woq_shim.py:ro" \
     -v "$SHIMS/w4a8_actquant_triton.py:$SITE/w4a8_actquant_triton.py:ro" \

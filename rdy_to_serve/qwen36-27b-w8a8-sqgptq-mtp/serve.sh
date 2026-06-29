@@ -39,7 +39,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export ROOT="${ROOT:-/mnt/vm_8tb/b70}"     # needed to reference the host GDN .so before sourcing lib.sh
 
 export IMG="${IMG:-vllm-xpu-env:int8g}"
-export CKPT="${CKPT:-/models/Qwen3.6-27B-W8A8-sqgptq-mtp-graft}"
+export CKPT="${CKPT:-/models/qwen3.6-27b/w8a8-sqgptq}"
 export SERVED="${SERVED:-qwen36-27b-w8a8-sqgptq-mtp}"
 export DTYPE="${DTYPE:-auto}"
 export TP="${TP:-2}"

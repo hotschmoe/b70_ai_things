@@ -25,8 +25,8 @@ ROOT="${ROOT:-/mnt/vm_8tb/b70}"; REPO="${REPO:-/mnt/vm_8tb/github/b70_ai_things}
 
 IMG="${IMG:-sglang-xpu:mtp}"
 NAME="${NAME:-sglang_int4_graph}"
-CKPT="${CKPT:-/models/Lorbus_Qwen3.6-27B-int4-AutoRound}"   # int4 AutoRound, vision retained (no MTP head needed)
-TOK="${TOK:-/models/Qwen_Qwen3.6-27B}"
+CKPT="${CKPT:-/models/qwen3.6-27b/int4-autoround}"   # int4 AutoRound, vision retained (no MTP head needed)
+TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 SERVED="${SERVED:-qwen36-27b-int4-graph}"
 PORT="${PORT:-30000}"; DEVICE="${DEVICE:-0}"
 CTX="${CTX:-4096}"; MEMFRAC="${MEMFRAC:-0.90}"
@@ -42,7 +42,7 @@ start() {
   docker rm -f "$NAME" >/dev/null 2>&1
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "${SHM:-16g}" -p "${PORT}:${PORT}" -e ZE_AFFINITY_MASK="$DEVICE" \
-    -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
+    -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_CUDAGRAPH=1 "${denv[@]}" \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; exec python -m sglang.launch_server \

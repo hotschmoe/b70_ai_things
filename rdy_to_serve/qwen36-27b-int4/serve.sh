@@ -14,7 +14,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 export IMG="${IMG:-vllm-xpu-env:v0230}"
-export CKPT="${CKPT:-/models/Lorbus_Qwen3.6-27B-int4-AutoRound}"
+export CKPT="${CKPT:-/models/qwen3.6-27b/int4-autoround}"
 export SERVED="${SERVED:-qwen36-27b-int4}"
 export GRAPH="${GRAPH:-1}"                 # PIECEWISE capture = the ~4x decode lever
 export DTYPE="${DTYPE:-auto}"

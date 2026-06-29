@@ -19,7 +19,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 export IMG="${IMG:-vllm-xpu-env:v0230}"                     # v0230 bakes the GDN kernel in (NO .so mount, unlike :int8g)
-export CKPT="${CKPT:-/models/Qwen3.6-27B-W4A16-mtp-graft}"
+export CKPT="${CKPT:-/models/qwen3.6-27b/w4a16}"
 export SERVED="${SERVED:-qwen36-27b-w4a16-mtp}"
 export DTYPE="${DTYPE:-auto}"
 export TP="${TP:-2}"

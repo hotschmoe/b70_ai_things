@@ -18,7 +18,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 export IMG="${IMG:-vllm-xpu-env:v0230}"
-export CKPT="${CKPT:-/models/Qwen3.6-27B-W4A16}"
+export CKPT="${CKPT:-/models/qwen3.6-27b/w4a16}"
 export SERVED="${SERVED:-qwen36-27b-w4a16}"
 export DTYPE="${DTYPE:-auto}"
 export GRAPH="${GRAPH:-1}"

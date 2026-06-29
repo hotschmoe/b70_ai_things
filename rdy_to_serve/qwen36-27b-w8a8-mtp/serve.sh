@@ -13,8 +13,8 @@
 #   - IMG = sglang-xpu:mtp  (baked XPU NEXTN gates + compressed_tensors W8A8 scheme + woqgemm)
 #   - the built _xpu_C.abi3.so (B70_XPU_C_SO); B70_XPU_W8A8_FUSED=1 routes int8 linears to the fused ops
 #   - the updated w8a8_shim.py (FUSED hybrid) over the baked copy
-#   - the grafted ckpt at $ROOT/models_w8a8/Qwen3.6-27B-W8A8-sqgptq-vision-mtp (graft_mtp.py: vision+MTP head;
-#     symlinks into /models, so BOTH /models and /models_w8a8 are mounted)
+#   - the complete (materialized) ckpt at $REPO/models/files/qwen3.6-27b/w8a8-sqgptq
+#     (vision+MTP grafted, real files -- mounted -> /models/qwen3.6-27b/w8a8-sqgptq)
 #   - in-container: source oneAPI setvars + PREPEND the oneAPI compiler lib to LD_LIBRARY_PATH (or the
 #     ctypes-loaded .so resolves but torch loses the XPU device -- see ../../w8a8/W8A8_BUILD.md)
 #
@@ -31,8 +31,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${ROOT:-/mnt/vm_8tb/b70}"; REPO="${REPO:-/mnt/vm_8tb/github/b70_ai_things}"
 IMG="${IMG:-sglang-xpu:mtp}"
 NAME="${NAME:-sglang_w8a8_mtp}"
-CKPT="${CKPT:-/models_w8a8/Qwen3.6-27B-W8A8-sqgptq-vision-mtp}"
-TOK="${TOK:-/models/Qwen_Qwen3.6-27B}"
+CKPT="${CKPT:-/models/qwen3.6-27b/w8a8-sqgptq}"
+TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 SERVED="${SERVED:-qwen36-27b-w8a8-mtp}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
 SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ:-4}"
@@ -46,7 +46,7 @@ start(){
   say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (img=$IMG)"
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
-    -v "$ROOT/models:/models:ro" -v "$ROOT/models_w8a8:/models_w8a8:ro" \
+    -v "$REPO/models/files:/models:ro" \
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" -v "$KDIR:/work/kernel:ro" \
     -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \

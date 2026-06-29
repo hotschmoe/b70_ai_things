@@ -26,7 +26,8 @@ b70_multicard() { [ "${TP:-1}" -gt 1 ] || [ "${PP:-1}" -gt 1 ]; }
 
 # ---- knobs (env, with defaults) -------------------------------------------------------------------
 b70_setdefaults() {
-  ROOT="${ROOT:-/mnt/vm_8tb/b70}"            # GPU host: models, caches, gpu-run, 35_sweep_bench
+  ROOT="${ROOT:-/mnt/vm_8tb/b70}"            # GPU host: caches, gpu-run, 35_sweep_bench
+  MODELS_FILES="${MODELS_FILES:-/mnt/vm_8tb/github/b70_ai_things/models/files}"  # weights now in the repo (git-ignored), mounted -> /models
   IMG="${IMG:?serve.sh must set IMG}"        # docker image tag (prefer a digest pin: name@sha256:..)
   CKPT="${CKPT:?serve.sh must set CKPT}"     # CONTAINER path to the model dir (/models/...)
   SERVED="${SERVED:?serve.sh must set SERVED}"
@@ -129,7 +130,7 @@ b70_serve() {
   echo "vllm ${ARGS[*]}"
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
-    -v "$ROOT/models:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
+    -v "$MODELS_FILES:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
     -v "$ROOT/tmp_ssd:/tmp_ssd" "${MOUNTS[@]+"${MOUNTS[@]}"}" \
     -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
     -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
