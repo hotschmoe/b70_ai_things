@@ -1,0 +1,130 @@
+# models/manifest.yaml -- registry of every model weight we keep.
+# fetch.sh reprovisions a fresh box from this file.
+#
+# source.type:
+#   hf      -> downloadable: `huggingface-cli download <repo>` into files/<path>
+#   custom  -> quantized ON THIS BOX. NOT downloadable yet (see TODO). Kept on disk only.
+#
+# Every entry under files/<path> is fully materialized: real files (no symlinks/hardlinks),
+# vision tower + MTP head intact where the flags say so. Headline targets: qwen3.6-27b and
+# qwen3.6-35b-a3b, across bf16 / fp8 / int4-autoround / w4a16 / w4a8 / w8a8.
+#
+# ---------------------------------------------------------------------------------------
+# TODO (reprovisioning the source:custom quants on a fresh machine -- pick one before migrating):
+#   (a) push them to HF under our namespace, then set source.type: hf + repo: <ours>, OR
+#   (b) add a `rebuild:` recipe (derived_from base + quant script) so fetch.sh regenerates
+#       them on-GPU.
+# For now they are flagged `custom` / quantized-on-device with no URL, and only live on disk.
+# ---------------------------------------------------------------------------------------
+
+version: 1
+root: files                      # path is relative to this manifest; git-ignored
+
+models:
+  # ===================== qwen3.6-27b (dense VLM) =====================
+  - id: qwen3.6-27b/bf16
+    family: qwen3.6-27b
+    scheme: bf16
+    vision: true
+    mtp: true
+    size_gb: 72
+    served_as: qwen36-27b (base/draft/graft source)
+    source: { type: hf, repo: Qwen/Qwen3.6-27B }
+    notes: dense 27B VLM reference. Tokenizer + bf16 visual source for every graft.
+
+  - id: qwen3.6-27b/fp8
+    family: qwen3.6-27b
+    scheme: fp8
+    vision: true
+    mtp: true
+    size_gb: 29
+    source: { type: hf, repo: Qwen/Qwen3.6-27B-FP8 }
+    notes: stock FP8.
+
+  - id: qwen3.6-27b/int4-autoround
+    family: qwen3.6-27b
+    scheme: int4-autoround
+    vision: true
+    mtp: true
+    size_gb: 19
+    served_as: qwen36-27b-int4 / -int4-mtp / -int4-graph
+    source: { type: hf, repo: Lorbus/Qwen3.6-27B-int4-AutoRound }
+    graft: { mtp: on-device }       # full NEXTN draft module grafted on top of the Lorbus base
+    notes: W4A16 AutoRound, mtp.fc kept BF16 by the creator; on-device MTP graft adds the
+           full NEXTN module so spec-decode drafts. Launches easily, vision retained.
+
+  - id: qwen3.6-27b/w4a16
+    family: qwen3.6-27b
+    scheme: w4a16
+    vision: true                    # restored by graft_w4_complete.sh
+    mtp: true                       # restored by graft_w4_complete.sh
+    size_gb: 27
+    source: { type: custom, origin: quantized-on-device }
+    derived_from: Qwen/Qwen3.6-27B
+    build: compressed-tensors W4A16 (gptq); vision+MTP grafted GPU-free (graft_w4_complete.sh)
+    notes: base quant dropped the 333 visual.* tensors; graft restores them + the MTP head.
+
+  - id: qwen3.6-27b/w4a8-sqgptq
+    family: qwen3.6-27b
+    scheme: w4a8-sqgptq
+    vision: true                    # restored by graft_w4_complete.sh
+    mtp: true                       # restored by graft_w4_complete.sh
+    size_gb: 27
+    source: { type: custom, origin: quantized-on-device }
+    derived_from: Qwen/Qwen3.6-27B
+    build: compressed-tensors W4A8 (sqgptq, prepacked); vision+MTP grafted GPU-free
+    notes: int8-activation W4A8 kernel path. Base quant was text-only; graft restores vision+MTP.
+
+  - id: qwen3.6-27b/w8a8-sqgptq
+    family: qwen3.6-27b
+    scheme: w8a8-sqgptq
+    vision: true
+    mtp: true
+    size_gb: 35
+    served_as: qwen36-27b-w8a8-mtp
+    source: { type: custom, origin: quantized-on-device }
+    derived_from: Qwen/Qwen3.6-27B
+    build: compressed-tensors W8A8 (sqgptq); vision+MTP already grafted (complete on disk)
+    notes: the int8 all-rounder. HumanEval+ 0.970/0.933, decode ~25 t/s TP=2. Complete build.
+
+  # ===================== qwen3.6-35b-a3b (MoE VLM) =====================
+  - id: qwen3.6-35b-a3b/bf16
+    family: qwen3.6-35b-a3b
+    scheme: bf16
+    vision: true
+    mtp: true
+    size_gb: 67
+    source: { type: hf, repo: Qwen/Qwen3.6-35B-A3B }
+    notes: MoE 35B-A3B reference. bf16 visual source for 35b grafts.
+
+  - id: qwen3.6-35b-a3b/int4-autoround
+    family: qwen3.6-35b-a3b
+    scheme: int4-autoround
+    vision: true
+    mtp: true
+    size_gb: 21
+    served_as: qwen36-35b-a3b-int4
+    source: { type: hf, repo: Intel/Qwen3.6-35B-A3B-int4-AutoRound }
+    notes: Intel AutoRound int4 MoE. Launches easily, vision + MTP retained.
+
+  - id: qwen3.6-35b-a3b/quark-w8a8-int8
+    family: qwen3.6-35b-a3b
+    scheme: quark-w8a8-int8
+    vision: true
+    mtp: false                      # creator build has no MTP head
+    size_gb: 35
+    served_as: qwen36-35b-a3b-quark-w8a8-int8
+    source: { type: hf, repo: nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8 }
+    notes: AMD Quark W8A8 INT8. Vision retained; no MTP head from the creator.
+
+# ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
+# Removed from disk by reorg.sh per the 2026-06-29 review (off-target or prior-gen scaffolding):
+#   google/gemma-4-12B-it            (hf) -- off-target, not Qwen3.6
+#   Qwen/Qwen3-0.6B                  (hf) -- tiny prior-gen, off-target
+#   deepreinforce-ai/Ornith-1.0-35B  (hf) -- 35B finetune, off-target
+#   Qwen3-14B-W4A16-gptq             (custom) -- prior-gen Qwen3 14B scaffold, NOT on HF
+#   Qwen3-14B-W4A8-gptq-prepacked    (custom) -- prior-gen Qwen3 14B scaffold, NOT on HF
+#   Qwen3-14B-W8A8-autoround         (custom) -- prior-gen Qwen3 14B scaffold, NOT on HF
+#   Qwen3.6-27B-W4A16-awq-repack     (custom) -- AWQ-probe experiment, superseded
+# The three Qwen3-14B quants and the awq-repack were quantized on-device and are NOT
+# recoverable once deleted. Listed here intentionally so that fact is on the record.

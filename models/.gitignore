@@ -1,0 +1,4 @@
+# The actual model weights are huge and live here git-ignored.
+# Everything that IS tracked (manifest.yaml, fetch.sh, reorg.sh, graft_w4_complete.sh,
+# README.md, REFACTOR.md) sits one level up, in models/ itself.
+files/
