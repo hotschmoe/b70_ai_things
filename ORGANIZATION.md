@@ -1,9 +1,18 @@
-# ORGANIZATION.md -- repo layout + the anti-clobbering contract (PLAN, not yet executed)
+# ORGANIZATION.md -- repo layout + the anti-clobbering contract
+
+> UPDATE 2026-06-29: the repo is now SPLIT BY BACKEND. The authoritative layout + shelf
+> rules live in `AGENTS.md` (Repo Layout Contract + Shelf rules). Key deltas from the
+> tiers below: backend-specific code lives under `sglang/` and `vllm/` roots; shared custom
+> kernel SOURCE lives in `kernels/` (built per-backend); the shelf is
+> `rdy_to_serve/<backend>/<model-quant>/` with EXACTLY ONE best config per (backend, model,
+> quant) -- no variations; model weights live in `models/files/` (git-ignored). Read every
+> `rdy_to_serve/<m>/` reference below as `rdy_to_serve/<backend>/<m>/`. The mutability-tier
+> reasoning here still holds; this doc is pending a full rewrite in the docs pass.
 
 Why this exists: we keep clobbering working serve configs, patches, and docker images while
 testing new stuff. `rdy_to_serve/` was the first fix (a "release shelf" separate from the
 lab notebook). This doc generalizes that into a layout + a set of mutability contracts so a
-known-good serve never silently breaks. STATUS: agreed plan, files NOT yet moved.
+known-good serve never silently breaks.
 
 ASCII only (CLAUDE.md style rule). Use `->` not arrows, `...` not ellipsis.
 

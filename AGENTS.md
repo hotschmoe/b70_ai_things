@@ -11,6 +11,12 @@ Working notes for any agent on this repo. Keep this file short; details live in
 
 ## Current Research Focus
 
+- **W8A8 INT8 of ANY model is a standing target.** 8-bit weights are preferred over
+  4-bit (clearly better quality) and B70 has INT8 XMX fast paths to leverage. Every
+  headline model should get a W8A8 int8 serve path; prioritize building/keeping it.
+- **sglang is the primary serving backend; vLLM is paused.** vLLM batches concurrent
+  prefill+decode together and emits "!!!!" garbage under load; sglang does not. Keep the
+  vLLM shelf as a maintained paused baseline, but new serve work targets sglang.
 - **Use compressed-tensors as the research artifact format across models and schemes.**
   This keeps W8A8, W4A8, W4A16, TP=2, PP=2, and custom kernel work comparable.
 - **W8A8 and W4A8 are the main kernel research paths.** They exercise int8
@@ -36,16 +42,35 @@ Working notes for any agent on this repo. Keep this file short; details live in
 
 ## Repo Layout Contract
 
-- `scripts/NN_*.sh`: lab notebook, append-only. New experiment -> new number.
-- `bin/`: stable shared tools used by serve/eval paths.
-- `rdy_to_serve/<model>/`: verified shelf only. A model lands here only after
-  serving is known-good and the recipe is self-contained.
-- `contrib/`: patches and prototype kernels.
-- `docs/`: stable explanations, kernel notes, and literature synthesis.
-- `w4a8/`: W4A8 branch area. Coordinate before editing broadly.
+The repo is split by serving backend. Backend-specific code lives under its backend
+root; shared, backend-agnostic tooling stays at the repo root.
 
-Any change to `bin/` or `rdy_to_serve/_common/` needs `bin/serve-sweep --smoke`
-green across shelf models before commit.
+- `sglang/`, `vllm/`: backend roots. Each holds that backend's serve/bench/probe
+  scripts, patches/shims, build recipes, images, and scheme research (e.g.
+  `sglang/w8a8/`, `vllm/w4a8/`).
+- `kernels/`: SHARED custom-kernel SOURCE -- the oneDNN int8/int4 gemm ops, the
+  `int8_gemm_kernel.patch`, and the op headers. ONE source of truth, applied to
+  `vllm-xpu-kernels` and compiled PER BACKEND (ABI-incompatible: vLLM-torch ->
+  `:int8g` image; sglang torch 2.12 -> runtime `_xpu_C.abi3.so` + shim). The built
+  `.so` binaries are git-ignored runtime artifacts under `/mnt/vm_8tb/b70`, not repo content.
+- `rdy_to_serve/<backend>/<model-quant>/`: the verified shelf. `_common/lib.sh` is shared.
+- `bin/`: stable shared, backend-agnostic tools (gpu-run, serve-sweep, xpu-health, xe-reset).
+- `models/`: model registry (manifest + fetch + reorg); weights in `models/files/` (git-ignored).
+- `docs/`, `evals/`, `agentic-eval/`, `migration/`: shared.
+- `scripts/NN_*.sh`: append-only lab notebook (historical; do NOT rewrite -- copy to a
+  new number). NEW experiment scripts go under the relevant backend root.
+
+### Shelf rules (`rdy_to_serve/<backend>/<model-quant>/`)
+
+- EXACTLY ONE self-contained best config per (backend, model, quant). NO variations --
+  no `-mtp`/`-graph`/`-sqgptq` sibling dirs. The most performant + coherent options
+  (MTP, fused kernels, graph capture) are baked in as settings, not separate entries.
+- "Best" = best behavior under CONCURRENT/serving load: coherent first, then fast. The
+  failure mode that matters is concurrent prefill+decode (vLLM's "!!!!").
+- NEVER update a shelf entry until the new settings are MEASURED both faster-or-equal
+  AND coherent (sweep-gated). An untested "improvement" does not land.
+- Any change to `bin/` or `rdy_to_serve/_common/` needs `bin/serve-sweep --smoke` green
+  across shelf models before commit.
 
 ## Model Identity
 
@@ -116,7 +141,7 @@ hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
   otherwise.
 - INT8 W8A8 research image: `vllm-xpu-env:int8g`, which includes the custom
   `XPUInt8ScaledMMLinearKernel` path and graph-capture fake registrations.
-- For shelved models, start from `rdy_to_serve/<model>/serve.sh`. Do not
+- For shelved models, start from `rdy_to_serve/<backend>/<model>/serve.sh`. Do not
   reconstruct a serve command from old journal entries.
 
 ## Host Paths
@@ -130,9 +155,12 @@ hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
   (consolidated 2026-06-24; the old two-repo split -- `~/github` checkout vs a non-git flat
   copy at `/mnt/vm_8tb/b70` -- is RETIRED). Work, commit, and push from there. `~/github/b70_ai_things`
   no longer exists.
-- **Runtime data root: `/mnt/vm_8tb/b70/`** -- models, caches, build artifacts, `gpu.lock*`. NOT a repo.
-  Recipes default `ROOT=/mnt/vm_8tb/b70` (lib.sh) to find `models/`, caches, and `35_sweep_bench.sh`.
+- **Runtime data root: `/mnt/vm_8tb/b70/`** -- caches, kernel build artifacts, `gpu.lock*`. NOT a repo.
+  Recipes default `ROOT=/mnt/vm_8tb/b70` (lib.sh) to find caches and `35_sweep_bench.sh`.
   `gpu-run` and `35_sweep_bench.sh` are kept at this root as symlinks into the clone's `bin/`.
-- Models and quants: `/mnt/vm_8tb/b70/models/`.
+- **Model weights live in the repo (since the 2026-06-29 reorg): `models/files/<family>/<scheme>/`**
+  (git-ignored, de-rooted, no symlinks, complete with vision+MTP). lib.sh mounts
+  `models/files` -> `/models` in the container. The old `/mnt/vm_8tb/b70/models/` is RETIRED.
+  Reprovision a fresh box via `bash models/fetch.sh` (see `models/manifest.yaml`).
 - Run pattern from the clone: `cd /mnt/vm_8tb/github/b70_ai_things && ./bin/gpu-run bash scripts/NN_*.sh`
   (or `/mnt/vm_8tb/b70/gpu-run`, the symlink). Tools live under `bin/`, experiments under `scripts/`.
