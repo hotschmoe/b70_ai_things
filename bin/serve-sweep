@@ -14,7 +14,8 @@
 #   bin/serve-sweep --smoke              # or --bench ; or a specific model: bin/serve-sweep --smoke qwen36-27b-int4
 set -uo pipefail
 ROOT="${ROOT:-/mnt/vm_8tb/b70}"
-RTS="${RTS:-$ROOT/rdy_to_serve}"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # serve-sweep lives in <repo>/bin/
+RTS="${RTS:-$REPO_DIR/rdy_to_serve}"                          # the shelf is in the repo, not under $ROOT
 GPURUN="${GPURUN:-$ROOT/gpu-run}"
 
 MODE=smoke; ONLY=""

@@ -94,7 +94,7 @@ DOCKER_ENV=( -e PYTHONPATH=/opt/mtp_shim )
 # OPT-OUT to the plain oneCCL baseline with PUSH_AR=0. Set PUSH_AR_GRAPH=0 for the prefill-only push (decode on
 # oneCCL, J.17/J.21). The .so is prebuilt + committed; rebuild via scripts/118 (graph) or scripts/108 (eager).
 if [ "${PUSH_AR:-1}" = 1 ]; then
-  PUSH_AR_DIR="$SCRIPT_DIR/../../contrib/vllm_push_allreduce"
+  PUSH_AR_DIR="$SCRIPT_DIR/../../../vllm/contrib/vllm_push_allreduce"
   # [!] CRITICAL (2026-06-26): PUSH_AR_GRAPH=1 records the DECODE all-reduce INTO the XPU graph. CGMODE=NONE has
   # NO graph -> the captured-decode push reads a stale/uninit buffer -> INPUT-DEPENDENT GARBAGE ("!!!!" on some
   # prompts; coherent on others -> a single gen-probe misses it). So on NONE the decode all-reduce MUST stay on
