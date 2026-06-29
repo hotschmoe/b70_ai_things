@@ -134,6 +134,12 @@ start() {
     wait_targets="$DP0"
     echo "  single replica -> :$PORT (the model's serve.sh decides card/TP; both cards leased)"
   fi
+  # Remove any stale same-named containers from a prior run/reboot BEFORE the health-wait. Otherwise a
+  # leftover Exited replica (a plain `stop` stops but does NOT remove it) false-positives the wait loop's
+  # "is a replica exited?" check and aborts the bringup -- which on a oneshot systemd unit then kills the
+  # serve that was just starting (observed after `sudo reboot` 2026-06-29: serve.sh's own docker-rm runs
+  # only AFTER its xpu-health pre-flight, too late to beat this loop).
+  ssh_h "docker rm -f $wait_targets $PROXY >/dev/null 2>&1 || true"
   # gpu-run holds the lease; 'docker wait' pins it for the whole serving lifetime (released on stop -> docker stop).
   ssh_h "cd $REPO && mkdir -p \"$(dirname "$LOG")\" && nohup setsid $gpurun bash -c \"$bringup\" > $LOG 2>&1 < /dev/null & echo '  launched (pid '\$!')'"
 
