@@ -22,15 +22,16 @@ accuracy loss. **sglang is the production backend; vLLM is paused** (see the vLL
 
 ## Serve shelf -- sglang (production)
 
-Warm bench, IN=2048 / OUT=128. TG = per-stream decode t/s; c1 = 1 stream, c4 = 4 concurrent. KV =
-engine-allocated KV cache. Each row is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
+Warm bench, IN=2048 / OUT=128. PP = prefill (prompt-processing) throughput = IN*1000/TTFT (tok/s);
+TG = per-stream decode t/s; c1 = 1 stream, c4 = 4 concurrent. KV = engine-allocated KV cache. Each row
+is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
 
-| Model | Quant (kernel) | Wt GB | TP | PP | TTFT | TG c1 | TG c4 | KV avail |
+| Model | Quant (kernel) | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
-| qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 1 | 921 ms | 15.3 | 4.5 | 29.8k tok |
-| qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 1 | 993 ms | 27.3 | 27.7\* | 145k tok |
-| qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | 1 | **541 ms** | **25.6** | 5.8 | 182k tok |
-| qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | 1 | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
+| qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 2224 | 921 ms | 15.3 | 4.5 | 29.8k tok |
+| qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 2062 | 993 ms | 27.3 | 27.7\* | 145k tok |
+| qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | **3786** | **541 ms** | **25.6** | 5.8 | 182k tok |
+| qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | **7529** | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,
 so per-stream decode holds ~27.7 t/s but TTFT balloons to ~8.1 s. Best for single-stream throughput.
@@ -50,14 +51,14 @@ degradation), and unlike vLLM it stays coherent under sustained concurrent load.
 
 Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- the ~4x decode lever).
 
-| Model | Quant | Wt GB | TP | PP | TTFT | TG c1 | TG c4 | KV avail |
+| Model | Quant | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
-| qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1 | 1289 ms | 28.6 | 19.5 | 103k tok |
-| qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 1 | 3145 ms | 22.1 | 8.9 | 172k tok |
-| qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | W8A8-sqgptq (int8) + MTP | 35 | 2 | 1 | 795 ms | 22.4 | 15.7 | 76k tok |
-| qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | 1 | **441 ms** | **67.7** | 43.8 | 270k tok |
-| qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1 | 1502 ms | 43.1 | 22.2 | 684k tok |
+| qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
+| qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
+| qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
+| qwen3.6-27b | W8A8-sqgptq (int8) + MTP | 35 | 2 | 2576 | 795 ms | 22.4 | 15.7 | 76k tok |
+| qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
+| qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
 2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
