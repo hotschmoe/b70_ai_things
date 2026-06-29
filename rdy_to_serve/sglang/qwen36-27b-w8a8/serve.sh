@@ -13,6 +13,11 @@
 #   - IMG = sglang-xpu:mtp  (baked XPU NEXTN gates + compressed_tensors W8A8 scheme + woqgemm)
 #   - the built _xpu_C.abi3.so (B70_XPU_C_SO); B70_XPU_W8A8_FUSED=1 routes int8 linears to the fused ops
 #   - the updated w8a8_shim.py (FUSED hybrid) over the baked copy
+#   - the patched qwen3_coder_detector.py over the baked copy: streams STRING tool-call args
+#     incrementally (the baked parser buffers the whole <parameter> body until </parameter> --
+#     minutes of zero bytes on a large file write -> client idle-timeout/"terminated"; see vLLM
+#     issue #30439). Faithful copy + localized change, offline-validated byte-exact vs baked +
+#     non-streaming. See ../../../sglang/patches/qwen3_coder_detector.py + JOURNAL 2026-06-29.
 #   - the complete (materialized) ckpt at $REPO/models/files/qwen3.6-27b/w8a8-sqgptq
 #     (vision+MTP grafted, real files -- mounted -> /models/qwen3.6-27b/w8a8-sqgptq)
 #   - in-container: source oneAPI setvars + PREPEND the oneAPI compiler lib to LD_LIBRARY_PATH (or the
@@ -71,6 +76,7 @@ start(){
     -v "$REPO/models/files:/models:ro" \
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" -v "$KDIR:/work/kernel:ro" \
     -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
+    -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
     "${THINK_ENV[@]}" \

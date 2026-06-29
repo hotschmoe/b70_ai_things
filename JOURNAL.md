@@ -6142,3 +6142,44 @@ VERDICT: the DD is now a proper agentic endpoint -- 128K + structured tool calls
   8192->131072 + tool-parser were DROPPED ENV VARS, not choices. Open: XPU hybrid prefix caching (no_buffer+page_size=1)
   unsolved; thinking-cap exact cutoff not force-tested (>8192 trace). Watchdog needs `sudo systemctl restart b70-dd-watchdog`
   to pick up the corrected spec.
+
+================================================================================
+2026-06-29  DD agentic: qwen3_coder streaming tool-args + THINKCAP 8192->4096
+================================================================================
+SYMPTOM: Pi `write` of a large file (artillery game / landing page) "terminated" with
+  EMPTY tool args + zero output tokens, after sitting ~5 min. Happened on BOTH WAN
+  (llm.hotschmoe.com) and LAN-direct (192.168.10.161 -> 192.168.10.5:18080), so NOT the
+  reverse proxy and NOT NAT. Server logs: healthy generation to ~12k tokens, HTTP 200 at
+  stream-open, client disconnected mid-gen. SGLang has NO per-request timeout
+  (watchdog_timeout=300 is per-forward-STEP, never trips on a long multi-step gen).
+
+ROOT CAUSE: sglang qwen3_coder STREAMING parser buffers each <parameter=name>VALUE
+  </parameter> body and emits ZERO arg deltas until </parameter> arrives
+  (qwen3_coder_detector.py parse_streaming_increment: candidates=find(end_token); if none ->
+  break, emit nothing). For a big string param that is minutes of zero bytes -> the client's
+  idle/read timeout fires (Pi exposes NO timeout knob; earendil-works/pi #3627,#2498). Known
+  upstream, UNFIXED: vLLM #30439 (closed-stale), sglang main identical, opencode #22803
+  (same ECONNRESET on sglang+Qwen3). NOT the xgrammar "structure constraint" line (non-fatal).
+  qwen3_xml does NOT exist in sglang (only qwen25/qwen3_coder) and would buffer the same way.
+
+FIX (correct, server-side): mounted patch sglang/patches/qwen3_coder_detector.py -- a FAITHFUL
+  copy of the baked detector (sglang 0.5.6.post3.dev6841) with ONE change: STRING-typed param
+  values STREAM incrementally as JSON-string-content deltas with end-token lookahead (hold back
+  the last 12 = max-terminator-len chars so a terminator / trailing-\n is never split). Non-string
+  params + the null-literal special case fall back to the original one-shot path, so concatenated
+  `arguments` is byte-identical to baked + non-streaming. Wired into serve.sh as a :ro file mount
+  over the baked module (Python recompiles past the stale .pyc -- verified). Per-char JSON escaping
+  (ensure_ascii=False) is associative, which is what makes incremental streaming byte-exact.
+  THINKCAP 8192->4096 (serve.sh default): unrelated UX win (less think dead-air before 1st token).
+
+COMMAND (offline de-risk, no GPU): docker cp patched detector + scratchpad/test_stream_patch.py into
+  b70_daily_0; python3 /tmp/test_stream_patch.py  (14 cases x 11 chunk sizes, asserts patched==baked
+  ==detect_and_parse byte-exact + json.loads-valid). Plus e2e via FunctionCallParser.parse_stream_chunk.
+
+RESULT: 154/154 chunk-configs PASS (quotes, backslash, tab, unicode/emoji, <html>, embedded
+  </parameter> & <parameter=, mixed int/bool/object, untyped, multi tool-call, normal-text-before,
+  null + null-prefix). Silent-gap (single large string, chunk=7): baked 1458 consecutive zero-arg
+  feeds -> patched 9. E2E through public parser: max_silent_feeds=9, json_ok, escaping correct.
+VERDICT: correct fix landed in the shelf entry (serve.sh + sglang/patches/). NOT YET RESTARTED --
+  applies on next container recreate (stop + gpu-run serve.sh start; the mount bakes at docker run,
+  not docker restart). Should upstream to sglang (resolves vLLM #30439). Live server unchanged until restart.
