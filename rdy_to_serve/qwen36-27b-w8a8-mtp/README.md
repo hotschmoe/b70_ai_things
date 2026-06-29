@@ -11,6 +11,9 @@ higher code accuracy than int4. Built on our fused int8 oneDNN kernels + NEXTN c
 | prefill (PP) | **4344 tok/s** | 3098 | **+40%** |
 | TTFT | **471 ms** | 661 | **-29%** |
 
+- DECODE (25.2) is rock-solid run-to-run. PREFILL/TTFT vary more under MTP (the spec draft adds prefill-side
+  work): warm c1 seen ~471-691 ms TTFT / ~2960-4344 PP. The table shows the warm-best (run2); for a CONSISTENT
+  prefill/TTFT champion (and sampling) use the eager sibling (PP 4570 / TTFT 448, `scripts/123`).
 - Also beats the int4+MTP driver on decode (25.2 vs 15.3) -- the MTP verify (M>1) rides the int8-XMX
   `int8_gemm_w8a8` (2.0x bf16) instead of int4 woqgemm.
 - FP8 has no native B70 path (oneDNN emulates `fp8_gemm_w8a16` at ~1.0x bf16 prefill) -> W8A8 wins PP vs fp8 too.

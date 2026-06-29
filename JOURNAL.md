@@ -6048,3 +6048,15 @@ VERDICT: GATE PASS -- the fused int8 kernels add ZERO loss AND W8A8 is MORE accu
   handily beats bf16/fp8 on PP(+40%)/TTFT(-29%)/TG(+180%) AND has higher code accuracy than the int4 daily
   driver, with vision. Result dir evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision.
   READMEs updated (top + sglang) with the sglang W8A8 + W4A16/W4A8 numbers. NEXT: productionize to rdy_to_serve.
+
+## 2026-06-29 -- W8A8 productionized -> rdy_to_serve/qwen36-27b-w8a8-mtp (shelf smoke PASS) [result]
+Created the verified-shelf entry (serve.sh start/stop/bench/gen/run + README) for the W8A8 fused+MTP
+all-rounder. Self-contained: mounts the built .so (B70_XPU_C_SO) + fused w8a8_shim (B70_XPU_W8A8_FUSED=1) +
+the grafted vision-mtp ckpt (models_w8a8), image sglang-xpu:mtp, TP=2, NEXTN steps=10, --disable-cuda-graph.
+SMOKE (gpu-run bash serve.sh run): /health 200, coherence OK (Rayleigh), decode 25.1 t/s (TPOT 39.8ms,
+matches the 25.2 headline), clean stop, box HEALTHY after. HONESTY: this fresh bench's TTFT was 691ms (vs
+warm-run2 471 in the table) -- MTP prefill/TTFT vary run-to-run (~471-691 / ~2960-4344 PP); decode is the
+rock-solid headline; the EAGER config (scripts/123) is the CONSISTENT PP/TTFT champ (4570/448) + samples.
+VERDICT: SHELF entry verified + shipped. The W8A8 campaign deliverable is COMPLETE: a vision-retaining,
+accuracy-gated (HumanEval+ 0.970/0.933) W8A8 on sglang that handily beats bf16/fp8 on PP/TTFT/TG, with
+two ship configs (MTP all-rounder + eager PP/TTFT champ). Box clean.
