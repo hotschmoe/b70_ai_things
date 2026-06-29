@@ -30,9 +30,16 @@ engine-allocated KV cache. Each row is `rdy_to_serve/sglang/<dir>/serve.sh` at *
 | qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 1 | 921 ms | 15.3 | 4.5 | 29.8k tok |
 | qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 1 | 993 ms | 27.3 | 27.7\* | 145k tok |
 | qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | 1 | **541 ms** | **25.6** | 5.8 | 182k tok |
+| qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | 1 | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,
 so per-stream decode holds ~27.7 t/s but TTFT balloons to ~8.1 s. Best for single-stream throughput.
+
+\*\* qwen3.6-35b-a3b W8A8 is the FIRST sglang serve of the int8 *MoE* (256 experts via the in-tree Triton
+`use_int8_w8a8` -- no custom kernel; see `research/w8a8/SGLANG_MOE_PLAN.md`). Its **TTFT 272 ms is the
+best of any 35B entry** (int8-XMX prefill). Decode is eager-slow (~8 t/s single / agg 23.9 t/s at c4) --
+graph capture / NEXTN MTP / fused int8 dense are the open decode levers. Soak: clean + stable (no
+degradation), and unlike vLLM it stays coherent under sustained concurrent load.
 
 ## Serve shelf -- vLLM (PAUSED)
 

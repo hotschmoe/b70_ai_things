@@ -46,6 +46,9 @@ b70_setdefaults() {
   CAPSIZES="${CAPSIZES:-}"                  # cudagraph capture sizes, e.g. 1,2,4,8,16,32,64
   COMPILESZ="${COMPILESZ-1}"                # compile_sizes; empty for spec-decode (1 -> padded-to-2 reject)
   QUANT="${QUANT:-}"                         # --quantization (e.g. quark); empty = let vLLM infer
+  EXTRA_ARGS="${EXTRA_ARGS:-}"               # passthrough of arbitrary extra vllm CLI args (space-split,
+                                            # unquoted). Inert unless set -> no change to any shelf entry.
+                                            # For one-off experiments (e.g. EXTRA_ARGS=--no-async-scheduling).
   NOMM="${NOMM:-}"                           # 1 = text-only serve of a VLM (skip vision profiling crash)
   KVDTYPE="${KVDTYPE:-}"                     # e.g. fp8_e5m2 (fp8-storage KV; ~2x ctx/batch)
   SPEC="${SPEC:-}"                           # raw --speculative-config JSON
@@ -89,6 +92,8 @@ b70_build() {
   [ -n "$SPEC" ]    && ARGS+=(--speculative-config "$SPEC")
   [ -n "$TOOLCALL" ] && ARGS+=(--enable-auto-tool-choice --tool-call-parser "$TOOLPARSER")
   [ -n "$REASONPARSER" ] && ARGS+=(--reasoning-parser "$REASONPARSER")
+  # shellcheck disable=SC2206
+  [ -n "$EXTRA_ARGS" ] && ARGS+=($EXTRA_ARGS)   # one-off experiment passthrough (inert unless set)
 
   GENV=(); GDOCK=(); EAGER=(--enforce-eager); CC=()
   if [ "$GRAPH" = 1 ]; then

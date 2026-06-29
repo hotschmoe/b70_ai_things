@@ -18,12 +18,20 @@ README clean. Positive optimization lessons live in `research/LESSONS.md`; raw m
   Intel backend, 2x Arc B70, open since 2026-04). No local fix on 0.23.0 -> we serve on sglang,
   which does not co-batch prefill+decode this way. Resume vLLM when #172 lands.
   (Evidence: JOURNAL 2026-06-27 research+A/B; mechanism verified upstream.)
-- **sglang W8A8 MoE (35b-a3b) is blocked.** Two missing pieces, both real projects: (a) sglang
-  has no Quark loader (the only on-disk 35b W8A8 is Quark format), and (b) sglang/XPU has no
-  int8 fused-MoE kernel -- the 256 experts have no int8 path (`_get_recipe` lacks an int8
-  branch; our oneDNN ops are dense-only). The benchable int8 MoE today is the **vLLM Quark**
-  entry (true int8 experts via Triton fused-MoE). Unblocking = port vLLM's QuarkMoEMethod +
-  build a fused grouped-int8 kernel. See `research/LESSONS.md`.
+  NUANCE (2026-06-29, the 35B W8A8 *MoE*): the int8 MoE entry is MUCH more robust than the dense GDN
+  models -- a mixed-prompt soak was perfectly CLEAN at c4/720s (228 req) and showed only ONE rare,
+  non-spreading, self-healing transient at c8 (1/416 = 0.24%; the server stayed coherent, no restart).
+  vLLM 0.23's zero-freed-SSM-block fix holds on XPU for this MoE. So the MoE entry is closer to usable
+  (with output validation) than the paused dense path; still gated behind the general pause + slow.
+- **sglang W8A8 MoE (35b-a3b) -- UNBLOCKED 2026-06-29 (was wrong: it is a loader port, not a kernel
+  build).** The old claim "sglang/XPU has no int8 fused-MoE kernel" was FALSE: sglang ships the
+  pure-Triton `fused_moe` `use_int8_w8a8` path AND a `W8A8Int8MoEMethod` in-tree. It now SERVES
+  coherently (`rdy_to_serve/sglang/qwen36-35b-a3b-w8a8`): the 256 experts run true int8, dense
+  linears dequant->bf16. The only real fix was a 1-line shim (the stock per-token int8 act-quant uses
+  `tl.extra.cuda.libdevice.round`, which does NOT link on triton-xpu) plus loader plumbing for Quark's
+  1-D weight scales. REMAINING LIMITATION (not a blocker): decode is eager-slow (~8 t/s) -- graph
+  capture / NEXTN MTP / fused int8 dense linears are the open decode levers (same follow-ups the 27B
+  W8A8 path took). See `research/w8a8/SGLANG_MOE_PLAN.md` + JOURNAL 2026-06-29.
 - **TP=2 BCS/oneCCL hardware wedge (reboot-only).** A TP>1 worker-init crash (or `P2P_ACCESS=1`)
   can corrupt the cross-GPU oneCCL/Level-Zero state so every later TP=2 serve `DEVICE_LOST`s at
   warmup -- and sometimes degrades even single-card ops. Recovery on THIS display-attached box
@@ -51,6 +59,13 @@ README clean. Positive optimization lessons live in `research/LESSONS.md`; raw m
   (+5% only, prefill/TTFT regress). Eager + MTP is the TP=2 config. (JOURNAL 2026-06-27.)
 - **P2P (`CCL_TOPO_P2P_ACCESS=1`) inside a vLLM TP>1 serve.** DANGER -- wedges the multi-GPU
   state box-wide (see Open blockers). Refused unless `I_KNOW_P2P_WEDGES=1`. (`docs/P2P_GPU.md`.)
+- **vLLM PP=2 (pipeline parallel) for the 35B MoE.** PP=2 + vLLM's default async scheduling CRASHES on
+  the first request (`KeyError req_id_to_index` in `scheduler.update_from_output`, the V1 PP
+  `step_with_batch_queue` path). `--no-async-scheduling` does NOT fix it at `GRAPH=1` (same KeyError +
+  capture). PP=2 ONLY serves at EAGER + `--no-async-scheduling` (c1 6.92 decode -- +44% over TP=2 eager
+  4.80, confirming the all-reduce is a real eager tax) but eager is ~6x slower than TP=2 GRAPH=1 (41.8),
+  which PP forfeits the capture lever to. Net: TP=2 GRAPH=1 is the only competitive multi-card vLLM
+  config for this MoE. (JOURNAL 2026-06-29; `EXTRA_ARGS` knob in `_common/lib.sh` for the repro.)
 - **vLLM W4A8 (27B, int8g) at `GRAPH=1`.** Engine init OOMs: the PIECEWISE capture buffers leave
   only 0.32 GiB for KV (needs 0.66 GiB for max-len 8192; est. usable max len 2496). So the W4A8
   vLLM entry has no working captured config -- EAGER (~6 t/s) is its only path. Raise

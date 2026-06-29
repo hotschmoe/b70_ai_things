@@ -155,6 +155,18 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] W8A8 shim install FAILED: {e}", flush=True)
 
+    # --- W8A8 INT8 MoE loader (Quark int8 35B-A3B MoE; OPT-IN via B70_QUARK_MOE_INT8=1) ---
+    # Teaches sglang's QuarkConfig to dispatch int8 routed-experts -> the in-tree Triton fused_moe
+    # use_int8_w8a8 path, and dense int8 linears -> bf16 dequant. Must run in EVERY process (the model
+    # builds in the TP workers), which is why it hooks here (woq_shim is auto-imported via the .pth).
+    # See research/w8a8/SGLANG_MOE_PLAN.md. Inert unless B70_QUARK_MOE_INT8=1.
+    if os.environ.get("B70_QUARK_MOE_INT8") == "1":
+        try:
+            import quark_moe_int8
+            quark_moe_int8.install()
+        except Exception as e:
+            print(f"[woq-shim] quark_moe_int8 install FAILED: {e}", flush=True)
+
     print("[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)", flush=True)
 
 

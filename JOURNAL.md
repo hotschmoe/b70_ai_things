@@ -6060,3 +6060,55 @@ rock-solid headline; the EAGER config (scripts/123) is the CONSISTENT PP/TTFT ch
 VERDICT: SHELF entry verified + shipped. The W8A8 campaign deliverable is COMPLETE: a vision-retaining,
 accuracy-gated (HumanEval+ 0.970/0.933) W8A8 on sglang that handily beats bf16/fp8 on PP/TTFT/TG, with
 two ship configs (MTP all-rounder + eager PP/TTFT champ). Box clean.
+
+## 2026-06-29 -- 35B-A3B W8A8 MoE on BOTH backends: vLLM re-verify+soak+PP/TP, sglang Route A UNBLOCKED [result]
+Campaign: get the int8 W8A8 MoE (Qwen3.6-35B-A3B, 256 experts top-8, GDN hybrid + shared expert) working,
+benched, and soaked on vLLM AND sglang. Standing target "W8A8 int8 of ANY model".
+
+### A. vLLM Quark W8A8 MoE -- re-verify + bench + SOAK + TP-vs-PP (image vllm-xpu-env:v0230, patches/quark.py)
+CONFIG: rdy_to_serve/vllm/qwen36-35b-a3b-w8a8 (TP=2, GRAPH=1 PIECEWISE). 256 experts TRUE int8 via stock
+v0230 quark_moe.py Triton fused_moe; dense linear_attn/shared_expert int8->bf16 dequant (the one patch).
+COMMAND: serve.sh start/bench; bin/serve-soak.py (mixed short/medium/long prompts, greedy, degeneracy gate).
+RESULT:
+  - bench (IN2048/OUT128): c1 41.8 TG / 1499ms TTFT, c2 28.8, c4 22.3 / agg 53.6. Matches the README row.
+  - SOAK c4 720s (228 req): CLEAN -- 0 degenerate, 0 err. Coherent throughout.
+  - SOAK c8 600s (416 req): 1 transient degenerate ("1 1 1 1...") at 68s, did NOT spread (count flat 1
+    -> 600s, other 415 clean, server stayed coherent). 0.24% transient, self-healing.
+  - TP vs PP: PP=2 + vLLM default (async scheduling) CRASHES on 1st req (KeyError req_id_to_index in
+    scheduler.update_from_output, the PP step_with_batch_queue path). PP=2 + GRAPH=1 + --no-async-scheduling
+    STILL crashes (same KeyError, capture+batch-queue). PP=2 + EAGER + --no-async-scheduling = the ONLY
+    viable PP config: c1 6.92 decode (vs TP=2 eager 4.80 = +44%, the all-reduce IS a real eager tax),
+    c4 agg 21.3. But TP=2 GRAPH=1 (41.8) dominates ~6x -- PP forfeits the PIECEWISE capture lever.
+VERDICT: vLLM W8A8 MoE is benched + soaked. KEY FINDING: unlike the dense GDN models (persistent spreading
+  "!!!!" that paused vLLM), the int8 MoE shows only a RARE, non-spreading, self-healing transient at max
+  batch (c8) and is perfectly clean at c4 -- vLLM 0.23's zero-freed-SSM-block fix holds on XPU for this MoE.
+  Tolerable for production with output validation. TP=2 GRAPH=1 is the decisive config; PP=2 is eager-only
+  (V1 PP batch-queue is graph/async-incompatible on this build) and dominated. Added EXTRA_ARGS passthrough
+  to _common/lib.sh (inert unless set) for the PP repro.
+
+### B. sglang W8A8 MoE -- Route A UNBLOCKED: int8 fused_moe Triton runs on B70 + full coherent serve
+CONFIG: Route A (research/w8a8/SGLANG_MOE_PLAN.md) -- sglang ships the int8 fused_moe Triton kernel + a
+W8A8Int8MoEMethod in-tree; the port is a LOADER, not a kernel build. image sglang-xpu:mtp, TP=2, eager.
+COMMAND: research/w8a8/sglang_moe_int8_probe.py (offline go/no-go) -> sglang/serve_35b_w8a8_moe.sh ->
+  rdy_to_serve/sglang/qwen36-35b-a3b-w8a8 (productionized). All patches mount-not-bake.
+RESULT -- the unblock chain (5 fixes, each found by serving + reading the exact crash):
+  1. PROBE GO: int8 fused_experts on real 35B shapes (E=256/I=512/H=2048) -- cosine(int8,bf16) 0.9998
+     decode + prefill, no nan/inf. int8 PREFILL 1.43x bf16 (2.06 vs 2.94 ms); decode ~tie (memory-bound).
+  2. int8_actquant_xpu.py: stock per_token_quant_int8 uses tl.extra.cuda.libdevice.round -> does NOT link
+     on triton-xpu (ZE_RESULT_ERROR_INVALID_MODULE_UNLINKED). Replaced w/ floor/ceil round-half-away.
+  3. quark_moe_int8.py loader + woq_shim B70_QUARK_MOE_INT8 hook (installs in EVERY process).
+  4. GDN linear_attn in_proj_qkvz/ba + ALL dense int8 linears: Quark stores 1-D [N] weight scales;
+     register the dense scale 1-D (the merged GDN loaders strip ChannelQuantScaleParameter's reshape).
+  5. FusedMoE._load_per_channel_weight_scale unsqueeze [N]->[N,1] (Quark MoE expert scales are 1-D too).
+  -> SERVE: loads 17.88 GB/card (32s), KV 1.04M tokens, /health 200 (after ~3-4min first-forward JIT;
+     sglang's 20s health-ping races the JIT), COHERENT (Rayleigh scattering). Bench (eager, IN2048/OUT128):
+     TTFT 272ms (c1) / 637 (c4); decode c1 7.94, c4 5.55/stream (agg 23.87); single-stream soak 8.26 t/s
+     STABLE (1.00x first/last, no degradation), coherent. Box healthy after every serve (no TP=2 wedge).
+VERDICT: *** sglang W8A8 MoE WORKS -- the standing "W8A8 int8 of ANY model" target is met on the PRODUCTION
+  backend for the 35B MoE. *** It is the FIRST sglang 35B entry. TTFT is best-in-class (int8-XMX prefill);
+  decode is eager-slow (~8 t/s) -- the decode levers (XPUGraph capture, NEXTN MTP, fused int8 dense) are
+  open follow-ups exactly as the 27B W8A8 path had. Corrects SHORTCOMINGS "sglang W8A8 MoE blocked (no int8
+  kernel)" -- it was a loader port + a 1-line cuda.libdevice round shim, never a kernel build. Shelf:
+  rdy_to_serve/sglang/qwen36-35b-a3b-w8a8. Concurrent mixed-load soak c4/360s (92 req): PERFECTLY CLEAN
+  (0 degenerate, 0 err, agg 32.5 t/s) -- cleaner than the vLLM entry (which had 1 transient at c8),
+  confirming sglang's scheduler does not co-batch prefill+decode the GDN-poisoning way.
