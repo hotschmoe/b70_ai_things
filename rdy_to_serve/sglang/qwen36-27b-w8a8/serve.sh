@@ -36,7 +36,18 @@ TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 SERVED="${SERVED:-qwen36-27b-w8a8-mtp}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
 SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ:-4}"
-PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-8192}"; MEMFRAC="${MEMFRAC:-0.90}"
+PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
+# Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
+# daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
+# bare shelf use still defaults to 8192. Tool/reason parsers match the vLLM shelf entries.
+TOOLCALL="${TOOLCALL:-1}"; TOOLPARSER="${TOOLPARSER:-qwen3_coder}"  # Qwen3.6 emits XML <tool_call> (NOT hermes JSON)
+REASONPARSER="${REASONPARSER:-qwen3}"                               # split <think> -> reasoning_content
+RADIX="${RADIX:-0}"   # prefix/radix cache. MUST stay 0 on XPU for this HYBRID-mamba model: sglang's mamba
+                      # radix needs either extra_buffer (CUDA/MUSA/NPU-only -> AssertionError on XPU) or
+                      # no_buffer (forces page_size=1, untested with NEXTN+fused kernels). RADIX=1 here
+                      # CRASHES at arg-parse (server_args._handle_mamba_radix_cache). Prefix caching on
+                      # XPU hybrid is a RESEARCH item, not a prod flag. See JOURNAL 2026-06-29.
+THINKCAP="${THINKCAP:-8192}"                                        # int -> SGLANG_MAX_THINK_TOKENS (graceful </think> cap); empty = unlimited
 API_KEY="${API_KEY:-}"   # if set, sglang ENFORCES it on /v1/* (--api-key); /health stays open. Used by the
                          # daily driver (DD_API_KEY) for WAN exposure. Empty = OPEN (LAN-only). Inert if unset.
 LOG="${LOG:-$SCRIPT_DIR/serve.log}"
@@ -46,7 +57,12 @@ APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
   docker rm -f "$NAME" >/dev/null 2>&1
-  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (img=$IMG)"
+  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX tool=$TOOLCALL think=${THINKCAP:-inf} img=$IMG)"
+  # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
+  local RADIX_ARG="--disable-radix-cache"; [ "$RADIX" = 1 ] && RADIX_ARG=""
+  local TOOL_ARG="";   [ "$TOOLCALL" = 1 ]    && TOOL_ARG="--tool-call-parser $TOOLPARSER"
+  local REASON_ARG=""; [ -n "$REASONPARSER" ] && REASON_ARG="--reasoning-parser $REASONPARSER"
+  local THINK_ENV=();  [ -n "$THINKCAP" ]     && THINK_ENV=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
     -v "$REPO/models/files:/models:ro" \
@@ -54,13 +70,15 @@ start(){
     -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
+    "${THINK_ENV[@]}" \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
       export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
       exec python -m sglang.launch_server --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
       --device xpu --attention-backend intel_xpu --linear-attn-backend triton \
       --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
       --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --disable-cuda-graph \
-      --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache --skip-server-warmup \
+      --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 $RADIX_ARG --skip-server-warmup \
+      $TOOL_ARG $REASON_ARG \
       --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC --max-running-requests $MAXREQ $APIKEY_ARG \
       --host 0.0.0.0 --port $PORT" >/dev/null
   say "waiting for /health (load + spec JIT ~3-6min)..."
@@ -70,8 +88,10 @@ start(){
     sleep 5
   done
   local g; g=$(curl -s --max-time 180 "http://localhost:$PORT/v1/chat/completions" "${AUTH_H[@]}" -H 'content-type: application/json' \
-    -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue? Two sentences.\"}],\"max_tokens\":64,\"temperature\":0}")
-  echo "$g" | python3 -c "import sys,json;c=json.load(sys.stdin)['choices'][0]['message']['content'] or ''
+    -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue? Two sentences.\"}],\"max_tokens\":256,\"temperature\":0}")
+  echo "$g" | python3 -c "import sys,json
+m=json.load(sys.stdin)['choices'][0]['message']            # --reasoning-parser puts <think> in reasoning_content
+c=(m.get('content') or '') or (m.get('reasoning_content') or '')
 print('COHERENCE OK:',repr(c[:160])) if c.strip() and (len(c)<16 or max(c.count(x) for x in set(c))/len(c)<0.6) else (print('GATE FAIL:',repr(c[:120])) or sys.exit(1))" \
     || { say "coherence gate FAILED -- see: docker logs $NAME"; return 1; }
   say "healthy + coherent; serving $SERVED on :$PORT"

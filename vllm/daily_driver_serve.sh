@@ -56,9 +56,11 @@ RTS="$REPO/rdy_to_serve"
 SERVE="$RTS/$DD_MODEL/serve.sh"
 PORT=18080                          # PUBLIC endpoint
 P0=18091; P1=18092                  # per-replica backend ports (data-parallel)
-DP0=vllm_daily_dp0                  # replica 0 -> card 0  (also THE container for DD_REPLICAS=1)
-DP1=vllm_daily_dp1                  # replica 1 -> card 1
-PROXY=vllm_daily_proxy             # nginx round-robin proxy on :$PORT (DD_REPLICAS=2 only)
+# Container names are BACKEND-AGNOSTIC (the daily driver serves vLLM OR sglang via DD_MODEL; the old
+# vllm_daily_* names were misleading once the default became sglang W8A8). Renamed 2026-06-29.
+DP0=b70_daily_0                     # replica 0 -> card 0  (also THE container for DD_REPLICAS=1, TP=2)
+DP1=b70_daily_1                     # replica 1 -> card 1  (DD_REPLICAS=2 data-parallel only)
+PROXY=b70_daily_proxy              # nginx round-robin proxy on :$PORT (DD_REPLICAS=2 only)
 LOG="${DD_LOG:-$ROOT/dd-logs/daily_driver.log}"   # hotschmoe-writable ($ROOT/logs is root-owned from the old SSH workflow)
 ENDPOINT="http://$HOST_IP:${PORT}/v1"
 
@@ -165,7 +167,7 @@ case "${1:-start}" in
   status)
     echo "=== model ===";        echo "  DD_MODEL=$DD_MODEL  replicas=$DD_REPLICAS  card=${DD_CARD:-both}  mtp=$DD_MTP"
     echo "=== GPU lock ===";      ssh_h "$REPO/bin/gpu-run --status"
-    echo "=== replicas+proxy ==="; ssh_h "docker ps --filter name=vllm_daily --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
+    echo "=== replicas+proxy ==="; ssh_h "docker ps --filter name=b70_daily --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
     echo "=== served model ===";  echo "$(served_id || true)" | grep . || echo "(not serving)"
     echo "=== web ui ===";        ssh_h "docker ps --filter name=$WEBUI_NAME --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
     echo "endpoint: $ENDPOINT    web ui: http://$HOST_IP:$WEBUI_PORT" ;;

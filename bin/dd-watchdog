@@ -40,7 +40,7 @@
 #   DD_WATCH_HTTP_TIMEOUT=20  DD_WATCH_GEN_TIMEOUT=45
 #   DD_API_KEY_FILE=/mnt/vm_8tb/b70/secrets/dd_api_key  (or DD_API_KEY=<literal>)
 #   DD_WATCH_LOGDIR=/mnt/vm_8tb/b70/dd-logs
-#   DD_WATCH_REPLICAS="vllm_daily_dp0:18091:0,vllm_daily_dp1:18092:1"   (name:port:card, comma-separated)
+#   DD_WATCH_REPLICAS="b70_daily_0:18080:0"   (name:port:card, comma-separated; default = TP=2 single replica)
 #
 # ASCII only. stdlib only. Long-running process -> safe to use time/datetime (not a Workflow sandbox).
 
@@ -76,7 +76,9 @@ KEY_FILE = os.environ.get("DD_API_KEY_FILE", "/mnt/vm_8tb/b70/secrets/dd_api_key
 
 
 def load_replicas():
-    spec = os.environ.get("DD_WATCH_REPLICAS", "vllm_daily_dp0:18091:0,vllm_daily_dp1:18092:1")
+    # Default = the TP=2 SINGLE-replica daily driver on the public port (sglang W8A8 both cards, since
+    # 2026-06-29). For the older int4 DP=2 config: DD_WATCH_REPLICAS="b70_daily_0:18091:0,b70_daily_1:18092:1".
+    spec = os.environ.get("DD_WATCH_REPLICAS", "b70_daily_0:18080:0")
     out = []
     for chunk in spec.split(","):
         chunk = chunk.strip()

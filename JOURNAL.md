@@ -6112,3 +6112,33 @@ VERDICT: *** sglang W8A8 MoE WORKS -- the standing "W8A8 int8 of ANY model" targ
   rdy_to_serve/sglang/qwen36-35b-a3b-w8a8. Concurrent mixed-load soak c4/360s (92 req): PERFECTLY CLEAN
   (0 degenerate, 0 err, agg 32.5 t/s) -- cleaner than the vLLM entry (which had 1 transient at c8),
   confirming sglang's scheduler does not co-batch prefill+decode the GDN-poisoning way.
+
+## 2026-06-29 -- daily-driver agentic serve: 128K ctx + tool/reason parsers + backend-agnostic rename (sglang W8A8 27b)
+
+CONFIG: the DD (sglang qwen36-27b-w8a8 fused+MTP, TP=2) was serving at ctx=8192 with NO tool-call parser --
+both UNINTENDED. Root cause: daily_driver_serve.sh passes MAXLEN=131072 (DD_MAXLEN) + the vLLM TOOLCALL knobs,
+but the sglang serve.sh read CTX (not MAXLEN) and never read TOOLCALL -> both silently dropped at the sglang
+boundary. Goal: good serve settings for the pi.dev / omp.sh / hermes agentic harnesses.
+
+CHANGE (rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh):
+  - CTX="${CTX:-${MAXLEN:-8192}}" -- honors the backend-agnostic MAXLEN knob; DD now serves 128K (bare shelf still 8192).
+  - --tool-call-parser qwen3_coder (Qwen3.6 emits XML <tool_call>, NOT hermes JSON; matches the vLLM shelf) + --reasoning-parser qwen3.
+  - SGLANG_MAX_THINK_TOKENS=8192 (THINKCAP knob) -- graceful </think> cap via the reasoner grammar backend.
+  - coherence gate reads reasoning_content fallback + max_tokens 64->256, so the reasoning parser cannot false-fail it.
+  - RADIX knob: tried RADIX=1 -> CRASH at arg-parse: server_args._handle_mamba_radix_cache asserts
+    "extra_buffer needs CUDA/MUSA/NPU (FLA)". XPU hybrid-mamba radix has only the no_buffer path, which forces
+    page_size=1 (we run 64) and is untested with NEXTN + fused kernels. -> RADIX kept 0; prefix caching on XPU
+    hybrid is a RESEARCH item, not a prod flag. (fp8 KV also NOT an option: xpu_backend.py:505 "currently no FP8 KV cache supported".)
+RENAME (backend-agnostic, the DD serves vLLM OR sglang): containers vllm_daily_dp0/dp1/proxy -> b70_daily_0/1/proxy
+  (vllm/daily_driver_serve.sh); bin/dd-watchdog default watch spec was vllm_daily_dp0:18091 -- wrong name AND wrong
+  port (live is :18080) -> it false-alarmed every 60s and could NOT self-heal the live driver -> b70_daily_0:18080:0.
+
+COMMAND: docker stop vllm_daily_dp0; DD_API_KEY=... vllm/daily_driver_serve.sh start  (gpu-run leased, TP=2 both cards).
+
+RESULT (live :18080, validated): context_len=131072, max_total_num_tokens=182208 (bf16 KV; a full 128K session
+  fits, c=2 share the pool). Coherence OK (17*23 -> 391). reasoning -> reasoning_content (content clean). TOOL CALLS
+  structured: get_weather({"city":"Tokyo"}). No decode change (steps=10 unchanged from the 25.2 t/s baseline).
+VERDICT: the DD is now a proper agentic endpoint -- 128K + structured tool calls + reasoning split, coherent. The
+  8192->131072 + tool-parser were DROPPED ENV VARS, not choices. Open: XPU hybrid prefix caching (no_buffer+page_size=1)
+  unsolved; thinking-cap exact cutoff not force-tested (>8192 trace). Watchdog needs `sudo systemctl restart b70-dd-watchdog`
+  to pick up the corrected spec.

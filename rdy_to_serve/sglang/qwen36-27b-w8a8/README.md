@@ -55,4 +55,22 @@ bash serve.sh stop                             # stop + release + health check
   `../../scripts/123_w8a8_fused_ab.sh` (FUSED=1 GRAPH=0) -> PP 4570 / TTFT 448 / decode 8.1.
 - Greedy-only: MTP verify runs greedily on XPU (temperature/top_p/top_k ignored), like all XPU NEXTN.
 
+## Agentic / daily-driver settings (pi.dev / omp.sh / hermes)
+
+The daily driver runs this entry at its agentic config. Knobs (env, defaults in serve.sh):
+
+- **`CTX`/`MAXLEN` -> 128K.** `CTX="${CTX:-${MAXLEN:-8192}}"`: the backend-agnostic `MAXLEN` knob is honored, so
+  `daily_driver_serve.sh` (DD_MAXLEN=131072) serves the full 128K. Bare shelf use still defaults to 8192.
+  KV is bf16 (fp8 KV is NOT supported on the XPU attention backend) and CHEAP -- this is a hybrid model, only
+  16/64 layers are full-attention -> ~64 KB/token. The KV pool holds ~182k tokens: a full 128K session fits,
+  and two concurrent sessions share the pool (combined < 182k; rare both-maxed -> graceful preempt).
+- **`TOOLCALL=1` / `TOOLPARSER=qwen3_coder`** -- Qwen3.6 emits XML `<tool_call>` (NOT hermes JSON); returns
+  structured OpenAI `tool_calls`. **`REASONPARSER=qwen3`** splits `<think>` into `reasoning_content`.
+- **`THINKCAP=8192`** -> `SGLANG_MAX_THINK_TOKENS` (graceful `</think>` cap). `THINKCAP=` for unlimited.
+- **`RADIX=0` (prefix caching OFF, and it MUST stay off here).** sglang's mamba/hybrid radix needs the
+  `extra_buffer` path (CUDA/MUSA/NPU-only -> `AssertionError` on XPU at arg-parse) or `no_buffer` (forces
+  `page_size=1`, untested with NEXTN+fused). `RADIX=1` CRASHES the serve. Prefix caching on XPU hybrid is an
+  open research item, not a prod flag.
+- Concurrency stays `--max-running-requests 4` (mamba/spec cache bound; covers the c<=4 daily-driver load).
+
 Campaign: `../../../research/w8a8/W8A8_SGLANG_PLAN.md`. JOURNAL 2026-06-28/29.

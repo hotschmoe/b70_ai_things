@@ -1,5 +1,6 @@
 [Unit]
-# B70 daily-driver WATCHDOG -- content-aware health/garbage detector + self-heal for the int4 DP=2 serve.
+# B70 daily-driver WATCHDOG -- content-aware health/garbage detector + self-heal for the daily-driver serve
+# (backend-agnostic: TP=2 single-replica W8A8 default, or the older int4 DP=2 -- set DD_WATCH_REPLICAS to match).
 # Probes each replica's OUTPUT (not just /health), and on confirmed "!!!!"/degenerate garbage writes a dated
 # incident file (docker-logs grep + dmesg xe/GuC + stats) then `docker restart`s ONLY that replica (no reboot).
 # Runs ALONGSIDE the serve (manual launch OR b70-daily-driver.service) -- it does not own the serve lifecycle.
