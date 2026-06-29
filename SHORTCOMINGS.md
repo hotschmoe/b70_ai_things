@@ -51,3 +51,14 @@ README clean. Positive optimization lessons live in `research/LESSONS.md`; raw m
   (+5% only, prefill/TTFT regress). Eager + MTP is the TP=2 config. (JOURNAL 2026-06-27.)
 - **P2P (`CCL_TOPO_P2P_ACCESS=1`) inside a vLLM TP>1 serve.** DANGER -- wedges the multi-GPU
   state box-wide (see Open blockers). Refused unless `I_KNOW_P2P_WEDGES=1`. (`docs/P2P_GPU.md`.)
+- **vLLM W4A8 (27B, int8g) at `GRAPH=1`.** Engine init OOMs: the PIECEWISE capture buffers leave
+  only 0.32 GiB for KV (needs 0.66 GiB for max-len 8192; est. usable max len 2496). So the W4A8
+  vLLM entry has no working captured config -- EAGER (~6 t/s) is its only path. Raise
+  `gpu-memory-utilization` or drop `max-model-len` to unblock. (2026-06-29 best-to-best bench.)
+
+## Bench methodology note
+
+`bin/serve-sweep --bench` must run each shelf entry at ITS OWN config -- it now honors each
+entry's `GRAPH` default instead of forcing `GRAPH=0`. The old eager-forcing default undercounted
+every graph-capture config ~4x (e.g. vLLM 27b-int4 8.4 -> 28.6 t/s, sglang W4A8 10.3 -> 27.3 t/s).
+`--smoke` still forces eager (it only checks boot+coherence, where speed does not matter).

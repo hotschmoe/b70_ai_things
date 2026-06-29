@@ -29,6 +29,10 @@ for a in "$@"; do
 done
 ACTION=smoke; [ "$MODE" = bench ] && ACTION=run    # smoke -> serve.sh smoke ; bench -> serve.sh run
 
+# smoke forces eager (GRAPH=0) for a fast boot check; bench honors each entry's OWN GRAPH
+# default (a per-model best setting) unless the caller explicitly set GRAPH (e.g. GRAPH=1 bin/serve-sweep).
+if [ "$MODE" = smoke ]; then GRAPH_ENV="GRAPH=${GRAPH:-0}"; else GRAPH_ENV="${GRAPH:+GRAPH=$GRAPH}"; fi
+
 declare -a NAMES RESULTS
 # shelf is split by backend: rdy_to_serve/<backend>/<model-quant>/serve.sh (_common is one level, skipped).
 for d in "$RTS"/*/*/; do
@@ -36,10 +40,11 @@ for d in "$RTS"/*/*/; do
   m="$rel"
   case "$rel" in _*) continue ;; esac              # defensive; _common won't match */*/ anyway
   [ -f "$d/serve.sh" ] || continue
-  [ -n "$ONLY" ] && [ "$m" != "$ONLY" ] && [ "${rel##*/}" != "$ONLY" ] && continue
+  # ONLY matches: full rel (sglang/qwen36-27b-w8a8), basename (qwen36-27b-w8a8), or backend prefix (vllm).
+  [ -n "$ONLY" ] && [ "$m" != "$ONLY" ] && [ "${rel##*/}" != "$ONLY" ] && [ "${rel%%/*}" != "$ONLY" ] && continue
   echo
   echo "########## serve-sweep [$MODE] $m ##########"
-  if GRAPH="${GRAPH:-0}" "$GPURUN" bash "$d/serve.sh" "$ACTION"; then
+  if env $GRAPH_ENV "$GPURUN" bash "$d/serve.sh" "$ACTION"; then
     NAMES+=("$m"); RESULTS+=("PASS")
   else
     NAMES+=("$m"); RESULTS+=("FAIL")

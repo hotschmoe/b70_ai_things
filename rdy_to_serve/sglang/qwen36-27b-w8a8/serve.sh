@@ -74,10 +74,8 @@ print('COHERENCE OK:',repr(c[:160])) if c.strip() and (len(c)<16 or max(c.count(
   say "healthy + coherent; serving $SERVED on :$PORT"
 }
 stop(){ docker rm -f "$NAME" >/dev/null 2>&1; say "stopped $NAME"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
-bench(){ docker exec "$NAME" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
-  python -m sglang.bench_serving --backend sglang-oai --host 127.0.0.1 --port $PORT --served-model-name '$SERVED' \
-  --tokenizer '$TOK' --dataset-name random --random-input-len 2048 --random-output-len 128 --num-prompts 6 --max-concurrency 1 2>&1" \
-  | grep -iE 'Mean TTFT|Mean TPOT|Output token throughput'; }
+# c1 + c4 regime bench (same harness as the int4/w4a8 sglang entries -> comparable table rows).
+bench(){ bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "w8a8-fused-mtp"; }
 
 case "${1:-start}" in
   start) start ;;
