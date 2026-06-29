@@ -155,6 +155,10 @@ else
   say "   SKIPPED subsumed-drop (dest verification failed)"
 fi
 hr
+# final de-root sweep: the intermediate files/ and files/<family>/ dirs were created by root
+# (os.makedirs); chown the whole tree so NOTHING under files/ is root-owned.
+if [ "$APPLY" = 1 ] && [ -d "$DST" ]; then chown -R "$UID_KEEP:$GID_KEEP" "$DST"; say "de-rooted: chown -R $UID_KEEP:$GID_KEEP $DST"; fi
+hr
 say "NOTE: kept in place for graft_w4_complete.sh (it consumes + drops them):"
 say "      $SRCROOT/models/Qwen3.6-27B-W4A16{,-mtp-graft}"
 say "      $SRCROOT/models/Qwen3.6-27B-W4A8-sqgptq-prepacked{,-mtp-graft}"
