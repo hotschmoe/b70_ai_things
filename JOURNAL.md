@@ -6574,8 +6574,14 @@ RESULT:
     is SLOWER than i8 (i32 store) -- the i32 accumulate-output is NOT a tax; the down-convert costs. w8a8 caps
     ~1.3x (act-quant); woq dead end (0.87-1.22x). Harness adds median/min/max, --warmup, --mset, --layout=both,
     i8b variant, %pk-of-peak columns.
-  - AGENT A (act-quant fusion) -- pending integration (next).
-VERDICT: Round 1 lands a proven new zml capability (shard-local int8 via manualComputation) + a full int8-GEMM
-  characterization. Net serve t/s unchanged (weightOnly still optimal for decode); the actionable wins are
-  "keep nk layout + i32 store" and "int8 is a 2x+ prefill lever, ~1.3x decode (act-quant bound)". Committed on
-  zml-w8a8-optimize. Next: agent A act-quant dedup test, then MTP is the real decode lever to close 13->25 t/s.
+  - AGENT A (act-quant dedup) -- WIN: decode 13.0 -> 13.7 tok/s (+5.4%), bit-identical. The column-parallel
+    W8A8 act-quant prologue (abs/max/div/round/clamp/convert) was being emitted PER projection -- 3x on the
+    shared input_layernorm output (q/k/v) and 2x on the post_attention_layernorm output (gate/up). Factored
+    QuantizedLinear into quantizeActivations()+forwardQuant() and a model-side Act/quantAct/projLinear so the
+    activation is quantized ONCE and SHARED. XLA/oneAPI was NOT fully CSE-ing the duplicates (else this would
+    be flat), so the dedup is a real, zero-downside decode win. CPU parity unchanged (rel_l2 0.00701). The
+    fused-into-RMSNorm single-pass form is impossible bit-identically (RAW on rsqrt(mean)); dedup is the free win.
+VERDICT: Round 1 lands a proven new zml capability (shard-local int8 via manualComputation), a full int8-GEMM
+  characterization, AND a +5.4% decode win (act-quant dedup -> 13.7 t/s). Actionable: keep nk layout + i32
+  store; int8 is a 2x+ prefill lever, ~1.3x decode (act-quant bound); act-quant dedup is a free +5%. Committed
+  on zml-w8a8-optimize. The remaining big decode lever to close 13.7->25 t/s is MTP/spec-decode (sglang's 1.6x).

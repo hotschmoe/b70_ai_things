@@ -28,6 +28,30 @@ const std = @import("std");
 
 const zml = @import("zml");
 
+/// A per-token int8-quantized activation + its scale, produced ONCE and shared by every
+/// column-parallel QuantizedLinear that contracts the same axis (q/k/v share the input_layernorm
+/// output; gate/up share the post_attention_layernorm output). Sharing avoids re-emitting the
+/// abs/max/div/round/clamp/convert prologue per projection (the act-quant-dedup decode lever).
+pub const QuantAct = struct {
+    x_i8: zml.Tensor, // {..., d} .i8        -- the int8 activation
+    act_scale: zml.Tensor, // {..., 1} float  -- per-token scale, contracting axis kept as size 1
+    tag: zml.Shape.Tag, // the contracting axis the scale was reduced over (must match the linear's)
+};
+
+/// Dynamic per-token symmetric int8 activation quant over `tag` (the contracting axis). `tag` must
+/// be REPLICATED under TP (q/k/v/gate/up contract the replicated hidden axis) so the reduce-max is
+/// shard-local. Identical math to forward's inline column-parallel prologue.
+pub fn quantizeActivations(x: zml.Tensor, tag: anytype) QuantAct {
+    const t = zml.Shape.toTag(tag);
+    const amax = x.abs().max(t); // x.shape, contracting axis -> 1
+    const act_scale = amax.scale(1.0 / 127.0);
+    const x_i8 = x.div(act_scale)
+        .round()
+        .clamp(zml.Tensor.scalar(-127, x.dtype()), zml.Tensor.scalar(127, x.dtype()))
+        .convert(.i8);
+    return .{ .x_i8 = x_i8, .act_scale = act_scale, .tag = t };
+}
+
 pub const QuantizedLinear = struct {
     weight: zml.Tensor, // {dout, d} .i8 (W8A8) or {dout, d} .bf16 (plain) -- per-channel weight
     weight_scale: ?zml.Tensor = null, // {dout} or {dout, 1} .f32/.bf16 -- present iff W8A8
@@ -154,35 +178,39 @@ pub const QuantizedLinear = struct {
             return if (self.bias) |bias| y_full.add(bias.broad(y_full.shape())) else y_full;
         }
 
-        // --- full W8A8 int8 path (int8 weight + dynamic per-token int8 activation) ---
-        // 1) per-token (per contracting-axis row) symmetric dynamic int8 activation quant.
-        //    zml's reduce keeps the reduced axis as size 1, so act_scale broadcasts against x.
-        const amax = x.abs().max(self.tag); // x.shape, contracting axis -> 1
-        const act_scale = amax.scale(1.0 / 127.0);
-        // clamp bounds must share x's dtype (x is bf16 in the real model, f32 in microbenches).
-        const x_i8 = x.div(act_scale)
-            .round()
-            .clamp(zml.Tensor.scalar(-127, x.dtype()), zml.Tensor.scalar(127, x.dtype()))
-            .convert(.i8);
+        // --- COLUMN-PARALLEL full W8A8 (act_quant=true, manual_act_quant=false) ---
+        // Contracting axis is REPLICATED (q/k/v/gate/up contract .d=.replicated), so the per-token
+        // reduce-max is shard-local and the dot needs no cross-shard sum. Factored into
+        // quantizeActivations + forwardQuant so the model can quantize ONCE and SHARE the int8
+        // activation across linears that contract the same axis (q/k/v share input_layernorm; gate/up
+        // share post_attention_layernorm) -- the act-quant-dedup lever. Bit-identical to the inline form.
+        return self.forwardQuant(quantizeActivations(x, self.tag));
+    }
 
-        // 2) i8 x i8 -> i32 accumulate via true s8 operands (GPU INT8-XMX-ready; bit-identical
-        //    to the convert-to-i32 path on CPU). See zml/tensor.zig Tensor.dotAcc.
-        const acc = x_i8.dotAcc(.i32, self.weight, self.tag);
+    /// True iff this layer dynamically int8-quantizes its activations via the SHARED-act path
+    /// (column-parallel full W8A8). Excludes weight-only (act_quant=false) and the manual
+    /// row-parallel path (manual_act_quant=true, which must keep its own in-block quant), so the
+    /// shared-act dedup in the model only fires where forwardQuant is the right consumer.
+    pub fn usesActQuant(self: QuantizedLinear) bool {
+        return self.act_quant and !self.manual_act_quant and self.weight_scale != null;
+    }
 
-        // 3) dequant: y = acc(f32) * weight_scale[channel] * act_scale[row].
+    /// The int8 dot + dequant, consuming a pre-built (possibly SHARED) QuantAct instead of
+    /// re-running the act-quant prologue. `qa` must have been quantized over THIS layer's
+    /// contracting axis. Bit-identical to forward's inline column-parallel path.
+    pub fn forwardQuant(self: QuantizedLinear, qa: QuantAct) zml.Tensor {
+        std.debug.assert(self.weight_scale != null); // caller guarantees a W8A8 checkpoint
+        std.debug.assert(qa.tag == self.tag); // shared scale was reduced over our contracting axis
+        const wscale_opt = self.weight_scale.?;
+        const acc = qa.x_i8.dotAcc(.i32, self.weight, self.tag); // s8 x s8 -> i32 (INT8-XMX)
         const out_dtype = if (self.bias) |b| b.dtype() else wscale_opt.dtype();
         var y = acc.convert(.f32);
-        // The compressed-tensors checkpoint stores weight_scale as [out, 1]; squeeze the
-        // trailing singleton to a per-channel {dout} vector (a no-op if already rank-1).
         var wscale = wscale_opt.convert(.f32);
         if (wscale.rank() > 1) wscale = wscale.squeeze(wscale.rank() - 1);
         y = y.mul(wscale.broad(y.shape()));
-        // drop the size-1 contracting axis; convert to f32 to match the f32 accumulator dtype
-        // (act_scale carries x's dtype, which is bf16 in the real model).
-        const act_scale_row = act_scale.squeeze(self.tag).convert(.f32);
+        const act_scale_row = qa.act_scale.squeeze(self.tag).convert(.f32);
         y = y.mul(act_scale_row.broad(y.shape()));
         y = y.convert(out_dtype);
-
         return if (self.bias) |bias| y.add(bias.broad(y.shape())) else y;
     }
 

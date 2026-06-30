@@ -35,10 +35,10 @@ index 6a501aea..779ad279 100644
      targets = [":llm"],
 diff --git a/examples/llm/models/common_quant.zig b/examples/llm/models/common_quant.zig
 new file mode 100644
-index 00000000..ab82115e
+index 00000000..678dffd2
 --- /dev/null
 +++ b/examples/llm/models/common_quant.zig
-@@ -0,0 +1,199 @@
+@@ -0,0 +1,227 @@
 +//! W8A8 int8 quantized linear, a drop-in for `zml.nn.Linear`.
 +//!
 +//! Implements the qwen3.6-27b w8a8-sqgptq scheme (see zml/ZML_W8A8.md section 1):
@@ -68,6 +68,30 @@ index 00000000..ab82115e
 +const std = @import("std");
 +
 +const zml = @import("zml");
++
++/// A per-token int8-quantized activation + its scale, produced ONCE and shared by every
++/// column-parallel QuantizedLinear that contracts the same axis (q/k/v share the input_layernorm
++/// output; gate/up share the post_attention_layernorm output). Sharing avoids re-emitting the
++/// abs/max/div/round/clamp/convert prologue per projection (the act-quant-dedup decode lever).
++pub const QuantAct = struct {
++    x_i8: zml.Tensor, // {..., d} .i8        -- the int8 activation
++    act_scale: zml.Tensor, // {..., 1} float  -- per-token scale, contracting axis kept as size 1
++    tag: zml.Shape.Tag, // the contracting axis the scale was reduced over (must match the linear's)
++};
++
++/// Dynamic per-token symmetric int8 activation quant over `tag` (the contracting axis). `tag` must
++/// be REPLICATED under TP (q/k/v/gate/up contract the replicated hidden axis) so the reduce-max is
++/// shard-local. Identical math to forward's inline column-parallel prologue.
++pub fn quantizeActivations(x: zml.Tensor, tag: anytype) QuantAct {
++    const t = zml.Shape.toTag(tag);
++    const amax = x.abs().max(t); // x.shape, contracting axis -> 1
++    const act_scale = amax.scale(1.0 / 127.0);
++    const x_i8 = x.div(act_scale)
++        .round()
++        .clamp(zml.Tensor.scalar(-127, x.dtype()), zml.Tensor.scalar(127, x.dtype()))
++        .convert(.i8);
++    return .{ .x_i8 = x_i8, .act_scale = act_scale, .tag = t };
++}
 +
 +pub const QuantizedLinear = struct {
 +    weight: zml.Tensor, // {dout, d} .i8 (W8A8) or {dout, d} .bf16 (plain) -- per-channel weight
@@ -195,35 +219,39 @@ index 00000000..ab82115e
 +            return if (self.bias) |bias| y_full.add(bias.broad(y_full.shape())) else y_full;
 +        }
 +
-+        // --- full W8A8 int8 path (int8 weight + dynamic per-token int8 activation) ---
-+        // 1) per-token (per contracting-axis row) symmetric dynamic int8 activation quant.
-+        //    zml's reduce keeps the reduced axis as size 1, so act_scale broadcasts against x.
-+        const amax = x.abs().max(self.tag); // x.shape, contracting axis -> 1
-+        const act_scale = amax.scale(1.0 / 127.0);
-+        // clamp bounds must share x's dtype (x is bf16 in the real model, f32 in microbenches).
-+        const x_i8 = x.div(act_scale)
-+            .round()
-+            .clamp(zml.Tensor.scalar(-127, x.dtype()), zml.Tensor.scalar(127, x.dtype()))
-+            .convert(.i8);
++        // --- COLUMN-PARALLEL full W8A8 (act_quant=true, manual_act_quant=false) ---
++        // Contracting axis is REPLICATED (q/k/v/gate/up contract .d=.replicated), so the per-token
++        // reduce-max is shard-local and the dot needs no cross-shard sum. Factored into
++        // quantizeActivations + forwardQuant so the model can quantize ONCE and SHARE the int8
++        // activation across linears that contract the same axis (q/k/v share input_layernorm; gate/up
++        // share post_attention_layernorm) -- the act-quant-dedup lever. Bit-identical to the inline form.
++        return self.forwardQuant(quantizeActivations(x, self.tag));
++    }
 +
-+        // 2) i8 x i8 -> i32 accumulate via true s8 operands (GPU INT8-XMX-ready; bit-identical
-+        //    to the convert-to-i32 path on CPU). See zml/tensor.zig Tensor.dotAcc.
-+        const acc = x_i8.dotAcc(.i32, self.weight, self.tag);
++    /// True iff this layer dynamically int8-quantizes its activations via the SHARED-act path
++    /// (column-parallel full W8A8). Excludes weight-only (act_quant=false) and the manual
++    /// row-parallel path (manual_act_quant=true, which must keep its own in-block quant), so the
++    /// shared-act dedup in the model only fires where forwardQuant is the right consumer.
++    pub fn usesActQuant(self: QuantizedLinear) bool {
++        return self.act_quant and !self.manual_act_quant and self.weight_scale != null;
++    }
 +
-+        // 3) dequant: y = acc(f32) * weight_scale[channel] * act_scale[row].
++    /// The int8 dot + dequant, consuming a pre-built (possibly SHARED) QuantAct instead of
++    /// re-running the act-quant prologue. `qa` must have been quantized over THIS layer's
++    /// contracting axis. Bit-identical to forward's inline column-parallel path.
++    pub fn forwardQuant(self: QuantizedLinear, qa: QuantAct) zml.Tensor {
++        std.debug.assert(self.weight_scale != null); // caller guarantees a W8A8 checkpoint
++        std.debug.assert(qa.tag == self.tag); // shared scale was reduced over our contracting axis
++        const wscale_opt = self.weight_scale.?;
++        const acc = qa.x_i8.dotAcc(.i32, self.weight, self.tag); // s8 x s8 -> i32 (INT8-XMX)
 +        const out_dtype = if (self.bias) |b| b.dtype() else wscale_opt.dtype();
 +        var y = acc.convert(.f32);
-+        // The compressed-tensors checkpoint stores weight_scale as [out, 1]; squeeze the
-+        // trailing singleton to a per-channel {dout} vector (a no-op if already rank-1).
 +        var wscale = wscale_opt.convert(.f32);
 +        if (wscale.rank() > 1) wscale = wscale.squeeze(wscale.rank() - 1);
 +        y = y.mul(wscale.broad(y.shape()));
-+        // drop the size-1 contracting axis; convert to f32 to match the f32 accumulator dtype
-+        // (act_scale carries x's dtype, which is bf16 in the real model).
-+        const act_scale_row = act_scale.squeeze(self.tag).convert(.f32);
++        const act_scale_row = qa.act_scale.squeeze(self.tag).convert(.f32);
 +        y = y.mul(act_scale_row.broad(y.shape()));
 +        y = y.convert(out_dtype);
-+
 +        return if (self.bias) |bias| y.add(bias.broad(y.shape())) else y;
 +    }
 +
@@ -820,7 +848,7 @@ index 00000000..6f6318ec
 +    }
 +}
 diff --git a/examples/llm/models/qwen3_5/model.zig b/examples/llm/models/qwen3_5/model.zig
-index bc14ab72..706f6988 100644
+index bc14ab72..1bf3f7e5 100644
 --- a/examples/llm/models/qwen3_5/model.zig
 +++ b/examples/llm/models/qwen3_5/model.zig
 @@ -4,8 +4,15 @@ const zml = @import("zml");
@@ -839,9 +867,37 @@ index bc14ab72..706f6988 100644
  const log = std.log.scoped(.qwen3_5);
  
  pub const Config = struct {
-@@ -422,36 +429,48 @@ pub const TransformerLayer = struct {
+@@ -421,43 +428,87 @@ pub const TransformerLayer = struct {
+     }
  };
  
++// The activation feeding a column-parallel projection: either a plain float tensor (bf16
++// checkpoint, or a weight-only/row-parallel layer) or a per-token int8 activation quantized ONCE
++// and shared by every projection contracting the same axis (q/k/v share input_layernorm; gate/up
++// share post_attention_layernorm) -- the act-quant-dedup lever (emit the prologue 1x, not 3x/2x).
++const Act = union(enum) {
++    bf16: zml.Tensor,
++    quant: common_quant.QuantAct,
++};
++
++// Dispatch a QuantizedLinear over an `Act`: the pre-quantized W8A8 fast path when the shared int8
++// activation is present, else the ordinary bf16 forward (bf16 ckpt / weight-only / row-parallel).
++fn projLinear(linear: QuantizedLinear, act: Act) zml.Tensor {
++    return switch (act) {
++        .bf16 => |x| linear.forward(x),
++        .quant => |qa| linear.forwardQuant(qa),
++    };
++}
++
++// Build the shared activation for the column-parallel linears that consume `x` (a norm output):
++// quantize ONCE over .d (their contracting axis, REPLICATED under TP -> shard-local reduce-max)
++// when `linear` runs the shared-act W8A8 path; else pass `x` through as bf16. Row-parallel
++// (manual) and weight-only layers have usesActQuant()=false and keep their own forward path.
++fn quantAct(linear: QuantizedLinear, x: zml.Tensor) Act {
++    if (linear.usesActQuant()) return .{ .quant = common_quant.quantizeActivations(x, .d) };
++    return .{ .bf16 = x };
++}
++
  pub const Mlp = struct {
 -    up_proj: zml.nn.Linear,
 -    gate_proj: zml.nn.Linear,
@@ -893,7 +949,20 @@ index bc14ab72..706f6988 100644
          if (self.down_proj.bias) |*bias| bias.deinit();
      }
  
-@@ -466,9 +485,10 @@ pub const Mlp = struct {
+     pub fn forward(self: Mlp, x: zml.Tensor) zml.Tensor {
+-        const up_projed = self.up_proj.forward(x);
+-        const gate = self.gate_proj.forward(x);
++        // gate_proj + up_proj are column-parallel and share this input (the post_attention_layernorm
++        // output): quantize the activation ONCE and feed the shared int8 form to both, instead of
++        // re-emitting the act-quant prologue per projection. For bf16/weight-only checkpoints quantAct
++        // returns the passthrough bf16, so this is a no-op. down_proj consumes `hidden`, not x.
++        const act = quantAct(self.gate_proj, x);
++        const up_projed = projLinear(self.up_proj, act);
++        const gate = projLinear(self.gate_proj, act);
+         const hidden = gate.silu().mul(up_projed);
+ 
+         const output = self.down_proj.forward(hidden);
+@@ -466,9 +517,10 @@ pub const Mlp = struct {
  };
  
  pub const SelfAttn = struct {
@@ -907,7 +976,7 @@ index bc14ab72..706f6988 100644
  
      q_norm: RmsNorm,
      k_norm: RmsNorm,
-@@ -478,11 +498,15 @@ pub const SelfAttn = struct {
+@@ -478,11 +530,15 @@ pub const SelfAttn = struct {
      head_dim: i64,
      rotary_dim: i64,
      rotary_embed: TextRotaryEmbedding,
@@ -925,7 +994,7 @@ index bc14ab72..706f6988 100644
              store.maybeCreateTensor("bias", .{.dout}, bias_partitions),
              .d,
          );
-@@ -492,10 +516,16 @@ pub const SelfAttn = struct {
+@@ -492,10 +548,16 @@ pub const SelfAttn = struct {
          const rotary_dim: i64 = @intFromFloat(@as(f32, @floatFromInt(config.text_config.head_dim)) *
              config.text_config.rope_parameters.partial_rotary_factor);
          return .{
@@ -946,7 +1015,7 @@ index bc14ab72..706f6988 100644
              .q_norm = RmsNorm.init(store.withPrefix("q_norm"), config.text_config.rms_norm_eps),
              .k_norm = RmsNorm.init(store.withPrefix("k_norm"), config.text_config.rms_norm_eps),
              .num_heads = config.text_config.num_attention_heads,
-@@ -508,12 +538,16 @@ pub const SelfAttn = struct {
+@@ -508,31 +570,35 @@ pub const SelfAttn = struct {
  
      pub fn unloadBuffers(self: *zml.Bufferized(SelfAttn)) void {
          self.q_proj.weight.deinit();
@@ -963,7 +1032,46 @@ index bc14ab72..706f6988 100644
          if (self.o_proj.bias) |*bias| bias.deinit();
          RmsNorm.unloadBuffers(&self.q_norm);
          RmsNorm.unloadBuffers(&self.k_norm);
-@@ -947,7 +981,9 @@ pub const RmsNormGated = struct {
+     }
+ 
+-    fn projectQAndGate(self: SelfAttn, x: zml.Tensor) struct { zml.Tensor, zml.Tensor } {
+-        const q_proj = self.q_proj.forward(x).splitAxis(.dout, .{ .h = self.num_heads, .hd = 2 * self.head_dim });
++    fn projectQAndGate(self: SelfAttn, act: Act) struct { zml.Tensor, zml.Tensor } {
++        const q_proj = projLinear(self.q_proj, act).splitAxis(.dout, .{ .h = self.num_heads, .hd = 2 * self.head_dim });
+         const q, var gate = q_proj.chunkExact(.hd, 2);
+         gate = gate.merge(.{ .d_out_proj = .{ .h, .hd } });
+         return .{ q, gate };
+     }
+ 
+-    fn projectKV(self: SelfAttn, x: zml.Tensor) struct { zml.Tensor, zml.Tensor } {
++    fn projectKV(self: SelfAttn, act: Act) struct { zml.Tensor, zml.Tensor } {
+         const num_kv_heads = b: {
+             if (self.num_kv_heads > 0) break :b self.num_kv_heads;
+             break :b self.num_heads;
+         };
+-        const k = self.k_proj.forward(x).splitAxis(.dout, .{ .h = num_kv_heads, .hd = self.head_dim });
+-        const v = self.v_proj.forward(x).splitAxis(.dout, .{ .h = num_kv_heads, .hd = self.head_dim });
++        const k = projLinear(self.k_proj, act).splitAxis(.dout, .{ .h = num_kv_heads, .hd = self.head_dim });
++        const v = projLinear(self.v_proj, act).splitAxis(.dout, .{ .h = num_kv_heads, .hd = self.head_dim });
+         return .{ k, v };
+     }
+ 
+@@ -567,8 +633,12 @@ pub const SelfAttn = struct {
+     ) struct { zml.Tensor, KvCache.SelfAttnCache } {
+         const x_qkv = x.withPartitioning(.{ .d = .replicated });
+ 
+-        var q, var gate = self.projectQAndGate(x_qkv);
+-        var k, var v = self.projectKV(x_qkv);
++        // q/k/v are column-parallel and share this input (the input_layernorm output): quantize the
++        // activation ONCE here and feed the shared int8 form to all three (act-quant dedup), instead
++        // of re-emitting the act-quant prologue inside each projection.
++        const act = quantAct(self.q_proj, x_qkv);
++        var q, var gate = self.projectQAndGate(act);
++        var k, var v = self.projectKV(act);
+         const kv_head_sharding = zml.module.CompilationContext.current().partitioning.shardableDim(
+             k.shape().withPartitioning(.{ .h = .model }),
+             .h,
+@@ -947,7 +1017,9 @@ pub const RmsNormGated = struct {
          const gate_f32 = gate.convert(.f32);
  
          const normalized = zml.nn.rmsNorm(x_f32, .d, self.eps);
