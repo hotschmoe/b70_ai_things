@@ -6547,3 +6547,35 @@ VERDICT: **M5 DONE -- end-to-end W8A8 qwen3.6-27b serving on dual B70 via zml: c
   RMSNorm (the ~25-30% W8A8 cap from the sweep); (2) recover true int8 acts on o_proj/down_proj via a
   shard-LOCAL max (avoid the broken all_reduce) instead of weight-only; (3) MTP. Patch zml/patches/zml_w8a8.patch
   (1808 lines) has all of M0-M5. The whole TP=2 W8A8 path proven wedge-free on zml's single-process PJRT.
+
+## 2026-06-30 -- zml W8A8 optimization round 1 (parallel agents): row-parallel int8 capability + sweep characterization [result]
+
+CONFIG: 3 parallel agents (each w/ codex consult; codex hit an OpenAI usage cap mid-session so they reasoned
+  first-principles w/ file:line evidence). Orchestrator serialized GPU validation. Branch zml-w8a8-optimize.
+COMMAND: integrate + CPU-build + GPU-test (TP=2 serve / single-card sweep) each agent's change.
+RESULT:
+  - AGENT B (row-parallel int8 via shard-local max) -- EXPRESSIBLE + COHERENT, but slower at decode.
+    Recovered FULL int8 acts on the two row-parallel layers (o_proj, down_proj) using zml.ops.manualComputation
+    (sdy.manual_computation / shard_map; the MoE-path primitive): inside the manual block the .model axis is
+    LOCAL so the per-token reduce-max is shard-local (no all_reduce(MAX)), int8 partials dequant locally, then
+    ONE bf16 allReduce(SUM). First GPU run panicked (dotAcc contracting mismatch: activation entered the manual
+    block UN-sharded on the contracting axis because merge/rename reset partitioning to .unknown); FIXED by
+    annotating the activation .withPartitioning(.{ <contracting> = .model }) at the o_proj/down_proj call sites.
+    v2 = COHERENT "Paris", rc=0, no wedge -- but decode **12.2 tok/s vs the 13.0 weight-only baseline**: at M=1
+    the act-quant + manual-block/collective overhead exceeds the int8-XMX benefit (bandwidth-bound GEMV). So
+    `.weightOnly()` stays the DECODE-optimal default; `QuantizedLinear.rowParallelW8A8()` is kept as a proven,
+    documented capability (helps only prefill-heavy/large-M). NEW zml capability unlocked either way.
+  - AGENT C (extended GEMM sweep) -- characterization done; the M=2048 "cliff" was a ONE-TIME STALL.
+    Median-of-iters timing (vs the old mean-of-N) shows q_proj M=2048 bf16 = **2.56 ms median** (max 2.89) --
+    the old 2502 ms/call was a single ~250s GPU stall the mean averaged in (NOT a kernel cliff). int8 findings:
+    raw i8 = **2.44x bf16 at M=2048** (245 TFLOP/s, 66.8% of the 367-TOPS peak); int8 SATURATES ~245 TFLOP/s
+    (~67% peak) across shapes at large M; vs-bf16 2.1-2.6x at M=512-4096. LAYOUT: the model's nk weight {n,k}
+    is OPTIMAL -- kn {k,n} is 1.7x SLOWER (2.23x -> 0.92x), so do NOT transpose. STORE: i8b (i8 dot, bf16 store)
+    is SLOWER than i8 (i32 store) -- the i32 accumulate-output is NOT a tax; the down-convert costs. w8a8 caps
+    ~1.3x (act-quant); woq dead end (0.87-1.22x). Harness adds median/min/max, --warmup, --mset, --layout=both,
+    i8b variant, %pk-of-peak columns.
+  - AGENT A (act-quant fusion) -- pending integration (next).
+VERDICT: Round 1 lands a proven new zml capability (shard-local int8 via manualComputation) + a full int8-GEMM
+  characterization. Net serve t/s unchanged (weightOnly still optimal for decode); the actionable wins are
+  "keep nk layout + i32 store" and "int8 is a 2x+ prefill lever, ~1.3x decode (act-quant bound)". Committed on
+  zml-w8a8-optimize. Next: agent A act-quant dedup test, then MTP is the real decode lever to close 13->25 t/s.

@@ -43,6 +43,13 @@ pub const QuantizedLinear = struct {
     // there. Weight stays int8 either way (memory/fit preserved). (bf16 metadata field, not
     // bufferized -- like `tag`.)
     act_quant: bool = true,
+    // ROW-PARALLEL shard-local full W8A8: when true (with act_quant true) the contracting axis is
+    // TP-sharded (.model), so forward runs the int8 compute inside a `zml.ops.manualComputation`
+    // block where that axis is LOCAL -- the per-token reduce-max is shard-local (no all_reduce(MAX)),
+    // and the partials are summed with ONE explicit bf16 allReduce(SUM) (Megatron/vLLM row-parallel
+    // int8). This recovers int8 acts on o_proj/down_proj (vs the weight-only TP fallback) while only
+    // using the bf16 SUM collective the TP=2 path is proven coherent with. (bf16 metadata, not bufferized.)
+    manual_act_quant: bool = false,
 
     pub fn init(weight: zml.Tensor, weight_scale: ?zml.Tensor, bias: ?zml.Tensor, tag: anytype) QuantizedLinear {
         return .{
@@ -63,6 +70,30 @@ pub const QuantizedLinear = struct {
         return s;
     }
 
+    /// Full W8A8 (int8 activations) for a ROW-PARALLEL layer whose contracting axis is TP-sharded
+    /// (o_proj, down_proj): forward runs the int8 compute in a manual-sharding block so the
+    /// per-token reduce-max is shard-local and the partials are summed with one bf16 allReduce(SUM)
+    /// -- recovering int8 acts on those layers without the broken sharded-int8 collective. On a
+    /// SINGLE device the allReduce no-ops, so it reduces to the plain column-parallel W8A8 (CPU
+    /// parity holds). PROVEN COHERENT on TP=2.
+    ///
+    /// CALL-SITE REQUIREMENT: the activation entering forward MUST carry the .model sharding on the
+    /// contracting axis (manualComputation localizes inputs by their declared sharding; merge/rename
+    /// reset it to .unknown). Annotate at the model call site, e.g.
+    ///   down_proj.forward(hidden.withPartitioning(.{ .dout = .model }))
+    ///   o_proj.forward(x.rename(.{ .d_out_proj = .d }).withPartitioning(.{ .d = .model }))
+    ///
+    /// PERF FINDING (2026-06-30, qwen3.6-27b TP=2 decode): MEASURED SLOWER than `.weightOnly()` at
+    /// M=1 -- 12.2 vs 13.0 tok/s -- because the act-quant prologue + manual-block/collective overhead
+    /// exceeds the int8-XMX benefit when the GEMM is bandwidth-bound. So `.weightOnly()` is the
+    /// DECODE-optimal default; prefer `.rowParallelW8A8()` only for prefill-heavy/batched (large-M) use.
+    pub fn rowParallelW8A8(self: QuantizedLinear) QuantizedLinear {
+        var s = self;
+        s.act_quant = true;
+        s.manual_act_quant = true;
+        return s;
+    }
+
     pub fn forward(self: QuantizedLinear, x: zml.Tensor) zml.Tensor {
         // bf16/plain fallback: no weight_scale on disk -> ordinary full-precision linear. Lets
         // the SAME field type serve a bf16 checkpoint (q/k/v/o + gate/up/down behave exactly
@@ -79,6 +110,48 @@ pub const QuantizedLinear = struct {
             const wf = self.dequantWeight(x.dtype());
             const y_woq = x.dot(wf, self.tag);
             return if (self.bias) |bias| y_woq.add(bias.broad(y_woq.shape())) else y_woq;
+        }
+
+        // --- ROW-PARALLEL shard-local full W8A8 (act_quant=true, manual_act_quant=true) ---
+        // self.tag is TP-sharded (.model). Run the int8 compute inside a manual-sharding block so
+        // the sharded axis is LOCAL: each shard quantizes its LOCAL slice with its OWN per-token
+        // scale, does the local i8xi8->i32 dot, dequantizes the i32 partial to bf16 locally, then
+        // ONE explicit bf16 allReduce(SUM) sums the partials (the collective the bf16 TP=2 path
+        // proves coherent). No all_reduce(MAX), no i32 collective. On 1 device allReduce no-ops ->
+        // identical to the column-parallel path below (CPU parity).
+        if (self.manual_act_quant) {
+            const wsh = self.weight.shape();
+            const c_ax: u3 = wsh.hasTag(self.tag).?;
+            const out_ax: u3 = if (c_ax == 0) 1 else 0;
+            const global_out = x.shape().remove(self.tag).appendDim(wsh.dim(out_ax), wsh.tag(out_ax));
+            const y_full = zml.ops.manualComputation(
+                .{ x, self.weight, wscale_opt },
+                global_out,
+                .{ .tag = self.tag },
+                (struct {
+                    fn body(c: anytype, _: std.mem.Allocator, ins: []const zml.Tensor, _: zml.Shape) zml.Tensor {
+                        const xl = ins[0];
+                        const wl = ins[1];
+                        const wsl = ins[2];
+                        const amax_l = xl.abs().max(c.tag); // shard-LOCAL per-token max
+                        const act_scale = amax_l.scale(1.0 / 127.0);
+                        const x_i8 = xl.div(act_scale)
+                            .round()
+                            .clamp(zml.Tensor.scalar(-127, xl.dtype()), zml.Tensor.scalar(127, xl.dtype()))
+                            .convert(.i8);
+                        const acc = x_i8.dotAcc(.i32, wl, c.tag); // local i8 x i8 -> i32 (INT8-XMX)
+                        var yl = acc.convert(.f32);
+                        var wscale_l = wsl.convert(.f32);
+                        if (wscale_l.rank() > 1) wscale_l = wscale_l.squeeze(wscale_l.rank() - 1);
+                        yl = yl.mul(wscale_l.broad(yl.shape()));
+                        const act_scale_row = act_scale.squeeze(c.tag).convert(.f32);
+                        yl = yl.mul(act_scale_row.broad(yl.shape()));
+                        const y_local = yl.convert(xl.dtype()); // dequant to bf16 BEFORE the sum
+                        return zml.ops.allReduce(y_local, zml.Tensor.add);
+                    }
+                }).body,
+            );
+            return if (self.bias) |bias| y_full.add(bias.broad(y_full.shape())) else y_full;
         }
 
         // --- full W8A8 int8 path (int8 weight + dynamic per-token int8 activation) ---
