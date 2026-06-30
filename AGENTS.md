@@ -45,9 +45,12 @@ Working notes for any agent on this repo. Keep this file short; details live in
 The repo is split by serving backend. Backend-specific code lives under its backend
 root; shared, backend-agnostic tooling stays at the repo root.
 
-- `sglang/`, `vllm/`: backend roots. Each holds that backend's serve/bench/probe
-  scripts, patches/shims, build recipes, images, and scheme research (e.g.
-  `sglang/w8a8/`, `vllm/w4a8/`).
+- `sglang/`, `vllm/`, `llamacpp/`, `zml/`: backend roots. Each holds that backend's
+  serve/bench/probe scripts, patches/shims, build recipes, images, and scheme research
+  (e.g. `sglang/w8a8/`, `vllm/w4a8/`). sglang = primary; vllm = paused baseline;
+  llamacpp (SYCL/GGML, weight-only GGUF) + zml (oneAPI PJRT, bf16/f16) added 2026-06-30 --
+  upstream sources cloned git-ignored under `/mnt/vm_8tb/b70/{llama.cpp,zml}`. See
+  `docs/intel_support_per_backend.md` for the per-backend Intel-Arc support comparison.
 - `kernels/`: SHARED custom-kernel SOURCE -- the oneDNN int8/int4 gemm ops, the
   `int8_gemm_kernel.patch`, and the op headers. ONE source of truth, applied to
   `vllm-xpu-kernels` and compiled PER BACKEND (ABI-incompatible: vLLM-torch ->

@@ -6183,3 +6183,59 @@ RESULT: 154/154 chunk-configs PASS (quotes, backslash, tab, unicode/emoji, <html
 VERDICT: correct fix landed in the shelf entry (serve.sh + sglang/patches/). NOT YET RESTARTED --
   applies on next container recreate (stop + gpu-run serve.sh start; the mount bakes at docker run,
   not docker restart). Should upstream to sglang (resolves vLLM #30439). Live server unchanged until restart.
+
+================================================================================
+2026-06-30  NEW BACKENDS: llama.cpp (SYCL) + zml (oneAPI) brought up to "ready to test"
+================================================================================
+GOAL (overnight): clone + wire two new serving backends alongside vllm/sglang -- llama.cpp
+  and zml (github.com/zml/zml) -- ready to test-serve qwen3.6-27b in W8A8 (tp=2,dp=1) and
+  W4A16 (tp=1,dp=2). GPUs were busy serving the daily driver (oh-my-pi client) the whole
+  session, so ALL work below is GPU-free prep; the GPU serve tests are deferred to when idle.
+
+CONFIG: upstream cloned git-ignored under /mnt/vm_8tb/b70 (llama.cpp 86b94708, zml 89b0908c).
+  No native oneAPI on host -> build INSIDE sglang-xpu:mtp (oneAPI 2025.3 + icx/icpx + oneMKL +
+  oneDNN + cmake + ninja, all verified present). bazelisk installed (~/.local/bin; zml pins 9.1.1).
+
+--- llama.cpp (SYCL/GGML) -------------------------------------------------------
+COMMAND: llamacpp/build_sycl.sh (JIT SPIR-V: -DGGML_SYCL=ON, icx/icpx, -DLLAMA_CURL=OFF).
+RESULT: built rc=0 -> llama-{server,quantize,cli,bench,mtmd-cli} at /mnt/vm_8tb/b70/llama.cpp/build/bin.
+COMMAND: llamacpp/convert_gguf.sh -- convert_hf_to_gguf.py qwen3.6-27b/bf16.
+RESULT: f16 GGUF 51GiB (866 tensors, MTP bundled) + mmproj-f16 889MiB (vision) exported OK.
+  Quantize FAILED first run (exit 134): the SYCL-built llama-quantize aborts at llama_backend_init
+  -> ggml_backend_sycl_reg -> dpct::dev_mgr "can not find preferred GPU platform" because the convert
+  container had no /dev/dri. CPU OpenCL device does NOT satisfy dpct (tested opencl:cpu + *:cpu, both
+  abort 134). FIX: llamacpp/build_cpu_tools.sh = a GGML_SYCL=OFF llama-quantize -> quantizes on CPU,
+  needs no GPU. convert_gguf.sh now builds+uses it. Q8_0/Q4_K_M quantize re-running GPU-free.
+VERDICT: llama.cpp is the strong new backend. Fresh HEAD has FULL stock qwen3.6 support (qwen35/qwen35moe
+  arch + real SYCL gated_delta_net kernel + qwen3vl mmproj vision + bundled MTP) -- no source patch for
+  arch/serve. Full server parity (OpenAI /v1, --api-key, --metrics, --jinja, --mmproj, --mtp).
+  MAPPING (honest): "W8A8" -> Q8_0 = weight-only ~W8A16 (no int8 activations; B70 INT8-XMX only for weight
+  dequant). "W4A16" -> Q4_K_M (B70-validated default; Q8_0 historically ~4x slower #21517). TP=2 =
+  --split-mode tensor (NOT row); GDN-recurrent + tensor-split is UNVERIFIED (every other recurrent arch is
+  arch-gate-excluded) -> the make-or-break to coherence-sweep on GPU. DP=2 (Q4_K_M, 2x single-card server +
+  nginx) is the low-risk prod path. Scripts: llamacpp/{build_sycl,build_cpu_tools,convert_gguf,
+  serve_dp2_q4km,serve_tp2_q8}.sh + REVIEW_intel_arch.md + README.md.
+
+--- zml (Zig + MLIR/XLA/PJRT-oneAPI) --------------------------------------------
+RESULT (review-only, no GPU): PR #592 (oneAPI PjRT create options + collective-fix plugin
+  manual-2026-06-23T00-20-00Z) MERGED -> oneAPI multi-device is plain master; no branch needed. SPMD/Shardy
+  TP=2 plumbing intact but UNPROVEN on B70 (same DEVICE_LOST/firmware-BCS-wedge class). BUG to watch:
+  oneapi.zig:33 defaults CCL_TOPO_P2P_ACCESS from the wrong env var (= "ofi" garbage) -> export
+  CCL_TOPO_P2P_ACCESS=0 explicitly (also matches our wedge discipline). Box is now x86_64 -> oneAPI PJRT
+  artifact (amd64-only) finally matches (was unbuildable on the old aarch64 laptop).
+VERDICT: zml runs bf16/f16 only (no compressed-tensors, no int8 XPU kernel) -> "W8A8/W4A16" maps only to
+  bf16 dense sharded/replicated. qwen3.6-27b is NOT a drop-in: the GDN backbone exists (qwen3_5 dense) but
+  vision + MTP + model_type detection are a multi-week Zig port. Realistic milestone: //examples/sharding
+  TP=2 -> Llama-3.2-1B TP=2. Value = architecture to steal (compiler-visible collectives, verified TP linear
+  layout, direct per-shard loading). Scripts: zml/{build,test_sharding,serve_llama_tp2}.sh + REVIEW + README.
+
+DOCS: docs/intel_support_per_backend.md (4-backend Intel-Arc support + quant/TP/DP + qwen3.6 arch matrix,
+  the requested deliverable) + docs/patch_applicability_matrix.md (almost all our int8/oneCCL CODE is N/A for
+  both new backends; the LESSONS transfer -- no-Arc-P2P, graph-break-around-collective, coherence-gating,
+  vision retention). AGENTS.md layout contract updated to register llamacpp/ + zml/ as backend roots.
+  Commit 6973f8c (pushed).
+
+PENDING (needs GPUs idle): bring down daily driver (vllm/daily_driver_serve.sh stop) -> under gpu-run,
+  smoke llamacpp DP=2 Q4_K_M + TP=2 Q8_0 (coherence-gated) + zml sharding/Llama TP=2 -> restore daily driver
+  (DD_API_KEY=$(cat /mnt/vm_8tb/b70/secrets/dd_api_key) vllm/daily_driver_serve.sh start; brings WebUI +
+  Prometheus/Grafana). zml bazel build (GPU-free, heavy) still to run.
