@@ -19,6 +19,11 @@ desktop.ini
 tmp/
 *.tmp
 
+# new-backend runtime artifacts: DP=2 nginx conf is generated at serve time; serve logs are runtime
+llamacpp/.dp_nginx.conf
+llamacpp/*.log
+zml/*.log
+
 # Soft-delete bin -- stale/superseded docs parked here for manual review, then purged.
 # Untracked on purpose; never committed.
 archive/
