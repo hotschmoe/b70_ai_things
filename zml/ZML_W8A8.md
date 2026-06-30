@@ -31,7 +31,13 @@ verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_pe
   artifact details: full-attn layers 3,7,11,...,63; weight_scale is `[out,1]` (handled by a
   trailing-singleton squeeze in QuantizedLinear). See JOURNAL 2026-06-30.
 - M3 -- pending (wire into qwen3_5 full-attention layers; block-level parity).
-- M4 -- pending, the go/no-go GPU perf gate (add `Tensor.dotGeneralAcc(.i32)`; measure INT8-XMX lowering).
+- **M4-prep -- DONE (2026-06-30).** `Tensor.dotGeneralAcc(out_dtype)` + tag-based `Tensor.dotAcc`
+  added to `zml/tensor.zig` (mirror `dotGeneral`/`dot` but with a caller-chosen result dtype, so
+  TRUE `s8 x s8 -> s32` reaches `dot_general`). Validated on CPU bit-for-bit vs the convert-to-i32
+  path (0/2048 mismatches) -- which also confirms CPU PJRT accepts genuine s8 `dot_general`.
+  QuantizedLinear now uses `dotAcc` (GPU-INT8-XMX-ready); M1/M2 re-validated identical. The
+  remaining M4 work is purely the on-GPU measurement (does oneAPI lower it to INT8-XMX?).
+- M4 -- pending, the go/no-go GPU perf gate (build oneAPI; MEASURE INT8-XMX lowering vs bf16).
 - M5 -- pending (TP=2).
 
 ## 0. Why this is worth doing / why it's hard

@@ -27,7 +27,7 @@ index 6a501aea..845cbf9b 100644
      targets = [":llm"],
 diff --git a/examples/llm/models/common_quant.zig b/examples/llm/models/common_quant.zig
 new file mode 100644
-index 00000000..33f296bb
+index 00000000..208affa7
 --- /dev/null
 +++ b/examples/llm/models/common_quant.zig
 @@ -0,0 +1,66 @@
@@ -42,12 +42,12 @@ index 00000000..33f296bb
 +//! `weight` is `{dout, d}` (now `.i8`), `tag` is the contracting axis (`.d`). It adds a
 +//! `weight_scale` `{dout}` tensor; `io.load` reflection loads both automatically.
 +//!
-+//! NOTE (CPU vs GPU): the dot promotes both operands to i32 before contracting, because
-+//! zml's public `Tensor.dot` hardcodes the result dtype to the operand dtype. That gives
-+//! genuine int32 accumulation and is correct everywhere, but the inserted `convert(s8->s32)`
-+//! ops may hide the int8 operands from the oneAPI/oneDNN matcher and forfeit INT8-XMX. For
-+//! the GPU payoff (M4) switch the marked line to a real s8-operand dot via the
-+//! `Tensor.dotGeneralAcc(.i32)` helper.
++//! NOTE (CPU vs GPU): the dot uses `Tensor.dotAcc(.i32, ...)` -- genuine s8 operands with an
++//! i32 result -- NOT `x.convert(.i32).dot(w.convert(.i32))`. Both are numerically identical
++//! (validated bit-for-bit on CPU, //examples/llm:quant_tests), but feeding TRUE s8 operands is
++//! what lets the oneAPI/oneDNN backend recognize an int8 GEMM and dispatch the B70 INT8-XMX
++//! (DPAS/DP4A) path; the convert-to-i32 form widens before the dot and hides the int8 operands
++//! from that matcher. `dotAcc` lives in zml/tensor.zig (the only library change this needs).
 +
 +const std = @import("std");
 +
@@ -78,9 +78,9 @@ index 00000000..33f296bb
 +            .clamp(zml.Tensor.scalar(-127, .f32), zml.Tensor.scalar(127, .f32))
 +            .convert(.i8);
 +
-+        // 2) i8 x i8 -> i32 accumulate. CPU/correct-everywhere variant (promote to i32).
-+        //    GPU INT8-XMX (M4): replace with `x_i8.dotGeneralAcc(self.weight, ..., .i32)`.
-+        const acc = x_i8.convert(.i32).dot(self.weight.convert(.i32), self.tag);
++        // 2) i8 x i8 -> i32 accumulate via true s8 operands (GPU INT8-XMX-ready; bit-identical
++        //    to the convert-to-i32 path on CPU). See zml/tensor.zig Tensor.dotAcc.
++        const acc = x_i8.dotAcc(.i32, self.weight, self.tag);
 +
 +        // 3) dequant: y = acc(f32) * weight_scale[channel] * act_scale[row].
 +        const out_dtype = if (self.bias) |b| b.dtype() else self.weight_scale.dtype();
@@ -272,10 +272,10 @@ index 00000000..87d1b309
 +}
 diff --git a/examples/llm/models/quant_tests.zig b/examples/llm/models/quant_tests.zig
 new file mode 100644
-index 00000000..ebbc2a04
+index 00000000..6f6318ec
 --- /dev/null
 +++ b/examples/llm/models/quant_tests.zig
-@@ -0,0 +1,155 @@
+@@ -0,0 +1,222 @@
 +// M1 parity test for QuantizedLinear (zml/ZML_W8A8.md).
 +//
 +// Proves the reusable QuantizedLinear (examples/llm/models/common_quant.zig) is a drop-in
@@ -410,6 +410,69 @@ index 00000000..ebbc2a04
 +    return rel_l2;
 +}
 +
++// Probe for the dotGeneralAcc/dotAcc helper: true s8 operands -> i32 result vs the
++// convert-to-i32 (widen-then-dot) path. They must be bit-identical.
++const DotAccProbe = struct {
++    w: zml.Tensor, // {dout, d} .i8
++
++    const Out = struct {
++        acc_true: zml.Tensor, // s8 x s8 -> i32 via dotAcc (GPU INT8-XMX path)
++        acc_widen: zml.Tensor, // i32 x i32 -> i32 via convert+dot (M0 CPU path)
++    };
++
++    pub fn forward(self: DotAccProbe, x: zml.Tensor) Out {
++        return .{
++            .acc_true = x.dotAcc(.i32, self.w, .d),
++            .acc_widen = x.convert(.i32).dot(self.w.convert(.i32), .d),
++        };
++    }
++};
++
++/// Returns the number of mismatching elements between the true-s8 dotAcc and the
++/// convert-to-i32 dot (0 == bit-exact).
++fn dotAccParity(allocator: std.mem.Allocator, io: std.Io, platform: *zml.Platform) !usize {
++    const x_shape = zml.Shape.init(.{ .token = TOKENS, .d = D }, .i8);
++    const w_shape = zml.Shape.init(.{ .dout = DOUT, .d = D }, .i8);
++
++    var prng: std.Random.DefaultPrng = .init(0xacc);
++    const rand = prng.random();
++    const x_host = try allocator.alloc(i8, TOKENS * D);
++    defer allocator.free(x_host);
++    fillRand(i8, rand, x_host, .weight);
++    const w_host = try allocator.alloc(i8, DOUT * D);
++    defer allocator.free(w_host);
++    fillRand(i8, rand, w_host, .weight);
++
++    var x_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(x_shape, std.mem.sliceAsBytes(x_host)), .replicated);
++    defer x_buf.deinit();
++    var w_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(w_shape, std.mem.sliceAsBytes(w_host)), .replicated);
++    defer w_buf.deinit();
++
++    const model: DotAccProbe = .{ .w = .fromShape(w_shape) };
++    var exe = try platform.compile(allocator, io, model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{});
++    defer exe.deinit();
++    const model_bufs: zml.Bufferized(DotAccProbe) = .{ .w = w_buf };
++    var out = try zml.testing.autoCall(allocator, io, &exe, DotAccProbe.forward, .{ model_bufs, x_buf });
++    defer {
++        out.acc_true.deinit();
++        out.acc_widen.deinit();
++    }
++
++    const t_slice = try out.acc_true.toSliceAlloc(allocator, io);
++    defer t_slice.free(allocator);
++    const w_slice = try out.acc_widen.toSliceAlloc(allocator, io);
++    defer w_slice.free(allocator);
++    const t = t_slice.items(i32);
++    const wd = w_slice.items(i32);
++
++    var mism: usize = 0;
++    for (t, wd) |a, b| {
++        if (a != b) mism += 1;
++    }
++    log.info("dotAcc(.i32) vs convert-to-i32 dot: {d}/{d} mismatches", .{ mism, t.len });
++    return mism;
++}
++
 +pub fn main(init: std.process.Init) !void {
 +    const allocator = init.gpa;
 +    const io = init.io;
@@ -423,6 +486,10 @@ index 00000000..ebbc2a04
 +        const rel = try parity(allocator, io, platform, with_bias);
 +        if (!(rel < TOL)) ok = false;
 +    }
++
++    // dotGeneralAcc helper: true s8 operands must match the widen-then-dot path bit-for-bit.
++    const mism = try dotAccParity(allocator, io, platform);
++    if (mism != 0) ok = false;
 +
 +    if (ok) {
 +        log.info("RESULT: PASS -- QuantizedLinear matches nn.Linear(dequant) within activation-quant tol ({d}).", .{TOL});
@@ -670,3 +737,105 @@ index 00000000..0b601897
 +        std.process.exit(1);
 +    }
 +}
+diff --git a/zml/tensor.zig b/zml/tensor.zig
+index e75208d8..35ea43df 100644
+--- a/zml/tensor.zig
++++ b/zml/tensor.zig
+@@ -1342,6 +1342,97 @@ pub const Tensor = struct {
+         return _result(res_shape, op.result(0));
+     }
+ 
++    /// Like `dotGeneral`, but the accumulation/result element type is `out_dtype` rather than
++    /// the operand dtype. This is the key to a true integer matmul: with `s8` operands and
++    /// `out_dtype = .i32` the emitted `stablehlo.dot_general` keeps genuine `s8` operands and
++    /// an `s32` result, which a backend (e.g. oneAPI/oneDNN on Intel Arc) can lower to an INT8
++    /// GEMM (DPAS / DP4A). `dot`/`dotGeneral` instead force result dtype = operand dtype, so an
++    /// `i8` dot overflows; the usual CPU workaround `x.convert(.i32).dot(w.convert(.i32))` widens
++    /// the operands to i32 BEFORE the dot, which is numerically identical but hides the int8
++    /// operands from the backend's int8-GEMM matcher.
++    pub fn dotGeneralAcc(
++        lhs: Tensor,
++        rhs: Tensor,
++        out_dtype: DataType,
++        contracting_axes: []const [2]i8,
++        batching_axes: []const [2]i8,
++    ) Tensor {
++        stdx.debug.assert(lhs.dtype() == rhs.dtype(), "dotGeneralAcc expects tensors to be of the same type, got {} and {}", .{ lhs.dtype(), rhs.dtype() });
++
++        const Axes = stdx.BoundedArray(i64, constants.MAX_RANK);
++
++        // Same result-shape construction as dotGeneral, but the result element type is the
++        // caller-chosen accumulation type instead of lhs.dtype().
++        var res_shape: Shape = .{ ._dtype = out_dtype };
++        var lhs_batching_axes: Axes = .empty;
++        var rhs_batching_axes: Axes = .empty;
++        for (batching_axes) |b_axes| {
++            const l, const r = b_axes;
++            stdx.debug.assert(lhs._shape.dim(l) == rhs._shape.dim(r), "dotGeneralAcc expects batching dimensions to be equal, got {} and {} in {f} and {f}", .{ l, r, lhs, rhs });
++            var t = lhs._shape.tag(l);
++            if (t == Shape.TagUnknown) t = rhs._shape.tag(r);
++            res_shape = res_shape.appendDim(lhs._shape.dim(l), t);
++            lhs_batching_axes.appendAssumeCapacity(lhs._shape.axis(l));
++            rhs_batching_axes.appendAssumeCapacity(rhs._shape.axis(r));
++        }
++
++        var lhs_contracting_axes: Axes = .empty;
++        var rhs_contracting_axes: Axes = .empty;
++        for (contracting_axes) |c_axes| {
++            const l, const r = c_axes;
++            stdx.debug.assert(lhs._shape.dim(l) == rhs._shape.dim(r), "dotGeneralAcc expects contracting dimensions to be equal, got {} and {} in {f} and {f}", .{ l, r, lhs, rhs });
++            lhs_contracting_axes.appendAssumeCapacity(lhs._shape.axis(l));
++            rhs_contracting_axes.appendAssumeCapacity(rhs._shape.axis(r));
++        }
++
++        for (0..lhs.rank()) |l| {
++            if (std.mem.indexOfScalar(i64, lhs_contracting_axes.constSlice(), @intCast(l))) |_| continue;
++            if (std.mem.indexOfScalar(i64, lhs_batching_axes.constSlice(), @intCast(l))) |_| continue;
++            res_shape = res_shape.appendDim(lhs._shape.dim(l), lhs._shape.tag(l));
++        }
++        for (0..rhs.rank()) |r| {
++            if (std.mem.indexOfScalar(i64, rhs_contracting_axes.constSlice(), @intCast(r))) |_| continue;
++            if (std.mem.indexOfScalar(i64, rhs_batching_axes.constSlice(), @intCast(r))) |_| continue;
++            res_shape = res_shape.appendDim(rhs._shape.dim(r), rhs._shape.tag(r));
++        }
++
++        const op = dialects.stablehlo.dot_general(
++            mlirCtx(),
++            lhs.value(),
++            rhs.value(),
++            mlirx.Type.rankedTensor(mlirCtx(), res_shape),
++            .{
++                .lhs_batching_dimensions = lhs_batching_axes.constSlice(),
++                .rhs_batching_dimensions = rhs_batching_axes.constSlice(),
++                .lhs_contracting_dimensions = lhs_contracting_axes.constSlice(),
++                .rhs_contracting_dimensions = rhs_contracting_axes.constSlice(),
++                .dot_precision = .fast,
++            },
++            .unknown(mlirCtx()),
++        ).appendTo(currentBlock());
++        return _result(res_shape, op.result(0));
++    }
++
++    /// Tag-based `dotGeneralAcc`: like `dot`, resolves contracting/batching axes from the shared
++    /// tag `args`, but accumulates into `out_dtype`. e.g. `x_i8.dotAcc(.i32, w_i8, .d)`.
++    pub fn dotAcc(lhs: Tensor, out_dtype: DataType, rhs: Tensor, args: anytype) Tensor {
++        stdx.debug.assert(lhs.shape().hasTag(args) != null, "Expected lhs to have {any} tag, got {f}", .{ args, lhs.shape() });
++        stdx.debug.assert(rhs.shape().hasTag(args) != null, "Expected rhs to have {any} tag, got {f}", .{ args, rhs.shape() });
++
++        const lhs_contracting_dim: i8 = @intCast(lhs.shape().hasTag(args).?);
++        const rhs_contracting_dim: i8 = @intCast(rhs.shape().hasTag(args).?);
++
++        var batching_axes: stdx.BoundedArray([2]i8, constants.MAX_RANK) = .empty;
++        for (0..lhs.rank()) |lhs_tag_index| {
++            const lhs_tag = lhs.shape().tag(lhs_tag_index);
++            if (lhs_tag == Shape.toTag(args)) continue;
++            if (rhs.shape().hasTag(lhs_tag)) |rhs_tag_index| {
++                batching_axes.appendAssumeCapacity(.{ @intCast(lhs_tag_index), @intCast(rhs_tag_index) });
++            }
++        }
++        return lhs.dotGeneralAcc(rhs, out_dtype, &.{.{ lhs_contracting_dim, rhs_contracting_dim }}, batching_axes.slice());
++    }
++
+     /// Returns a Tensor containing the sigmoid function applied to each element of the input Tensor.
+     pub fn sigmoid(self: Tensor) Tensor {
+         const op = dialects.stablehlo.logistic(mlirCtx(), self.value(), .unknown(mlirCtx())).appendTo(currentBlock());

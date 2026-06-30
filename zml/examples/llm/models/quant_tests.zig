@@ -132,6 +132,69 @@ fn parity(allocator: std.mem.Allocator, io: std.Io, platform: *zml.Platform, wit
     return rel_l2;
 }
 
+// Probe for the dotGeneralAcc/dotAcc helper: true s8 operands -> i32 result vs the
+// convert-to-i32 (widen-then-dot) path. They must be bit-identical.
+const DotAccProbe = struct {
+    w: zml.Tensor, // {dout, d} .i8
+
+    const Out = struct {
+        acc_true: zml.Tensor, // s8 x s8 -> i32 via dotAcc (GPU INT8-XMX path)
+        acc_widen: zml.Tensor, // i32 x i32 -> i32 via convert+dot (M0 CPU path)
+    };
+
+    pub fn forward(self: DotAccProbe, x: zml.Tensor) Out {
+        return .{
+            .acc_true = x.dotAcc(.i32, self.w, .d),
+            .acc_widen = x.convert(.i32).dot(self.w.convert(.i32), .d),
+        };
+    }
+};
+
+/// Returns the number of mismatching elements between the true-s8 dotAcc and the
+/// convert-to-i32 dot (0 == bit-exact).
+fn dotAccParity(allocator: std.mem.Allocator, io: std.Io, platform: *zml.Platform) !usize {
+    const x_shape = zml.Shape.init(.{ .token = TOKENS, .d = D }, .i8);
+    const w_shape = zml.Shape.init(.{ .dout = DOUT, .d = D }, .i8);
+
+    var prng: std.Random.DefaultPrng = .init(0xacc);
+    const rand = prng.random();
+    const x_host = try allocator.alloc(i8, TOKENS * D);
+    defer allocator.free(x_host);
+    fillRand(i8, rand, x_host, .weight);
+    const w_host = try allocator.alloc(i8, DOUT * D);
+    defer allocator.free(w_host);
+    fillRand(i8, rand, w_host, .weight);
+
+    var x_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(x_shape, std.mem.sliceAsBytes(x_host)), .replicated);
+    defer x_buf.deinit();
+    var w_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(w_shape, std.mem.sliceAsBytes(w_host)), .replicated);
+    defer w_buf.deinit();
+
+    const model: DotAccProbe = .{ .w = .fromShape(w_shape) };
+    var exe = try platform.compile(allocator, io, model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{});
+    defer exe.deinit();
+    const model_bufs: zml.Bufferized(DotAccProbe) = .{ .w = w_buf };
+    var out = try zml.testing.autoCall(allocator, io, &exe, DotAccProbe.forward, .{ model_bufs, x_buf });
+    defer {
+        out.acc_true.deinit();
+        out.acc_widen.deinit();
+    }
+
+    const t_slice = try out.acc_true.toSliceAlloc(allocator, io);
+    defer t_slice.free(allocator);
+    const w_slice = try out.acc_widen.toSliceAlloc(allocator, io);
+    defer w_slice.free(allocator);
+    const t = t_slice.items(i32);
+    const wd = w_slice.items(i32);
+
+    var mism: usize = 0;
+    for (t, wd) |a, b| {
+        if (a != b) mism += 1;
+    }
+    log.info("dotAcc(.i32) vs convert-to-i32 dot: {d}/{d} mismatches", .{ mism, t.len });
+    return mism;
+}
+
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
     const io = init.io;
@@ -145,6 +208,10 @@ pub fn main(init: std.process.Init) !void {
         const rel = try parity(allocator, io, platform, with_bias);
         if (!(rel < TOL)) ok = false;
     }
+
+    // dotGeneralAcc helper: true s8 operands must match the widen-then-dot path bit-for-bit.
+    const mism = try dotAccParity(allocator, io, platform);
+    if (mism != 0) ok = false;
 
     if (ok) {
         log.info("RESULT: PASS -- QuantizedLinear matches nn.Linear(dequant) within activation-quant tol ({d}).", .{TOL});

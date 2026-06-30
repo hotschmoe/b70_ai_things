@@ -6381,3 +6381,24 @@ VERDICT: PASS. Feasibility doc's "ZML reads int8 safetensors natively + two-tens
   before comparing to an f32 ref (else items(f32) reinterprets the bytes). 
   NEXT: M3 (wire QuantizedLinear into qwen3_5 full-attention q/k/v/o + mlp; block-level parity), then the
   M4-prep dotGeneralAcc helper for the GPU INT8-XMX gate.
+
+## 2026-06-30 -- zml W8A8 M4-prep: Tensor.dotGeneralAcc/dotAcc helper + CPU s8-dot CONFIRMED [result]
+
+CONFIG: added Tensor.dotGeneralAcc(out_dtype) + tag-based Tensor.dotAcc to zml/tensor.zig -- mirror
+  dotGeneral/dot but with a CALLER-chosen result/accumulation element type, so a true s8 x s8 -> s32
+  dot_general is expressible (the public dot/dotGeneral hardcode result dtype = operand dtype, so an i8
+  dot overflows). This is the only library change; it is what lets the oneAPI/oneDNN backend SEE int8
+  operands and pick the B70 INT8-XMX (DPAS/DP4A) path, vs the convert-to-i32 form which widens before the
+  dot and hides the operands from the matcher. CPU, no GPU.
+COMMAND: ~/.local/bin/bazelisk run //examples/llm:quant_tests --config=release
+RESULT: dotAcc(.i32) vs x.convert(.i32).dot(w.convert(.i32)) = 0/2048 mismatches (BIT-EXACT). Open question
+  "does XLA CPU lower s8 dot_general?" RESOLVED YES -- CPU PJRT accepts genuine s8 operands + s32 result.
+  Switched QuantizedLinear.forward to dotAcc (now GPU-INT8-XMX-ready); re-ran M1 (rel_l2 0.00701, both bias
+  paths) and M2 (real q_proj, rel_l2 0.00822) -- IDENTICAL to the convert path, both still PASS.
+VERDICT: PASS. M4-prep done; the model path is now the s8-operand path validated end-to-end on CPU, so the
+  remaining M4 work is purely the on-GPU measurement (does oneAPI actually emit an INT8 kernel?). Staged the
+  whole zml contribution as a PR-ready patch zml/patches/zml_w8a8.patch (now includes the tensor.zig helper)
+  + zml/patches/README.md (PR description / suggested split). The dotGeneralAcc helper is the clean
+  standalone upstream candidate; examples are the research vehicle. NOT submitted (awaiting user go-ahead).
+  NEXT: M3 (wire QuantizedLinear into the qwen3_5 model: full-attn q/k/v/o + mlp gate/up/down; bf16 GDN /
+  vision / mtp / lm_head; block-level logit parity on CPU), then M4 on the B70 (daily driver down, attended).

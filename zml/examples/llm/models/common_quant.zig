@@ -9,12 +9,12 @@
 //! `weight` is `{dout, d}` (now `.i8`), `tag` is the contracting axis (`.d`). It adds a
 //! `weight_scale` `{dout}` tensor; `io.load` reflection loads both automatically.
 //!
-//! NOTE (CPU vs GPU): the dot promotes both operands to i32 before contracting, because
-//! zml's public `Tensor.dot` hardcodes the result dtype to the operand dtype. That gives
-//! genuine int32 accumulation and is correct everywhere, but the inserted `convert(s8->s32)`
-//! ops may hide the int8 operands from the oneAPI/oneDNN matcher and forfeit INT8-XMX. For
-//! the GPU payoff (M4) switch the marked line to a real s8-operand dot via the
-//! `Tensor.dotGeneralAcc(.i32)` helper.
+//! NOTE (CPU vs GPU): the dot uses `Tensor.dotAcc(.i32, ...)` -- genuine s8 operands with an
+//! i32 result -- NOT `x.convert(.i32).dot(w.convert(.i32))`. Both are numerically identical
+//! (validated bit-for-bit on CPU, //examples/llm:quant_tests), but feeding TRUE s8 operands is
+//! what lets the oneAPI/oneDNN backend recognize an int8 GEMM and dispatch the B70 INT8-XMX
+//! (DPAS/DP4A) path; the convert-to-i32 form widens before the dot and hides the int8 operands
+//! from that matcher. `dotAcc` lives in zml/tensor.zig (the only library change this needs).
 
 const std = @import("std");
 
@@ -45,9 +45,9 @@ pub const QuantizedLinear = struct {
             .clamp(zml.Tensor.scalar(-127, .f32), zml.Tensor.scalar(127, .f32))
             .convert(.i8);
 
-        // 2) i8 x i8 -> i32 accumulate. CPU/correct-everywhere variant (promote to i32).
-        //    GPU INT8-XMX (M4): replace with `x_i8.dotGeneralAcc(self.weight, ..., .i32)`.
-        const acc = x_i8.convert(.i32).dot(self.weight.convert(.i32), self.tag);
+        // 2) i8 x i8 -> i32 accumulate via true s8 operands (GPU INT8-XMX-ready; bit-identical
+        //    to the convert-to-i32 path on CPU). See zml/tensor.zig Tensor.dotAcc.
+        const acc = x_i8.dotAcc(.i32, self.weight, self.tag);
 
         // 3) dequant: y = acc(f32) * weight_scale[channel] * act_scale[row].
         const out_dtype = if (self.bias) |b| b.dtype() else self.weight_scale.dtype();
