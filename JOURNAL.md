@@ -6239,3 +6239,32 @@ PENDING (needs GPUs idle): bring down daily driver (vllm/daily_driver_serve.sh s
   smoke llamacpp DP=2 Q4_K_M + TP=2 Q8_0 (coherence-gated) + zml sharding/Llama TP=2 -> restore daily driver
   (DD_API_KEY=$(cat /mnt/vm_8tb/b70/secrets/dd_api_key) vllm/daily_driver_serve.sh start; brings WebUI +
   Prometheus/Grafana). zml bazel build (GPU-free, heavy) still to run.
+
+--- 2026-06-30 (cont.) GPU-FREE PREP VERIFIED ----------------------------------
+zml: bazelisk build //examples/{sharding,llm} --@zml//platforms:oneapi=true ->
+  "Build completed successfully, 5335 actions". Binaries: bazel-bin/examples/sharding/sharding
+  (25MB) + .../llm/llm (48MB); hermetic libpjrt_oneapi.so fetched into ~/.cache/bazel. zml is
+  ready for the (attended) oneAPI sharding TP=2 test.
+
+llama.cpp GGUF verified (GGUFReader, GPU-free): Q4_K_M 16G + Q8_0 28G + f16 51G + mmproj-f16 889M,
+  all valid GGUF. Text GGUF arch=qwen35, 866 tensors, block_count=65 (64 layers + 1 MTP head bundled),
+  embedding 5120, GDN state tensors present (blk.0.ssm_a/ssm_alpha/ssm_beta). mmproj arch=clip,
+  clip.vision.block_count=27 (matches vision_config depth), v.blk.* tensors. So text+GDN+MTP+vision
+  all intact -- conversion is real, not silently degraded.
+
+CPU COHERENCE PROBE (GPU-free, validates conversion + the hybrid GDN op path on CPU before GPU):
+  build a GGML_SYCL=OFF tools build (tests OFF -- a test target otherwise breaks the default build;
+  and the SYCL-linked binaries abort without a GPU at llama_backend_init->dpct dev_mgr). NOTE: this HEAD
+  RENAMED the cli llama-cli -> llama-completion (impl lib libllama-completion-impl.so); the SERVER is
+  still llama-server (serve scripts unaffected). Command:
+    llama-completion -m qwen3.6-27b-Q4_K_M.gguf -p "The capital of France is" -n 32 --temp 0 -no-cnv
+  RESULT: "The capital of France is Paris." -- COHERENT. The qwen35 GDN (gated_delta_net/ssm_scan) CPU
+  path works; Q4_K_M loads + generates correctly. VERDICT: llama.cpp qwen3.6-27b conversion fully
+  de-risked GPU-free; coherence on the GPU SYCL path remains the thing the GPU serve smoke confirms.
+
+STILL PENDING (GPUs busy serving oh-my-pi all session): the GPU serve tests. Plan when idle:
+  daily_driver_serve.sh stop -> gpu-run llamacpp/serve_dp2_q4km.sh (SAFE, no cross-card collectives:
+  the headline "serves qwen3.6-27b on B70" validation) -> restore daily driver (also recreates the
+  container -> picks up the pending qwen3_coder streaming fix). DEFER to ATTENDED: llamacpp TP=2
+  (--split-mode tensor) + zml oneAPI sharding/Llama TP=2 -- both cross-card, carry the TP=2 reboot-wedge
+  risk, and the daily driver has no boot auto-start, so a wedge would leave prod down till morning.
