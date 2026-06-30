@@ -11,6 +11,19 @@ source analysis -- READ FIRST for the exact `dot`/`convert`/scale API and the ca
 verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_per_backend.md`,
 `docs/patch_applicability_matrix.md`.
 
+## Progress log (update as milestones land)
+
+- **M0 -- DONE (2026-06-30).** `//examples/w8a8` (repo: `zml/examples/w8a8/`, synced to the build clone
+  via `zml/apply_examples.sh`). CPU, zero library change. Two gates PASS: i32-accumulation bit-exact
+  (2048/2048; acc values >> i16 range so an i8/i16 result dtype would have wrapped) + dequant rel_l2
+  0.00717 vs an independent f32 reference. Proves zml expresses the W8A8 graph + i32 accumulation on CPU.
+  See `zml/examples/w8a8/README.md` and JOURNAL 2026-06-30.
+- M1 -- pending (reusable QuantizedLinear + parity vs nn.Linear on dequant weights).
+- M2 -- pending (load the real `w8a8-sqgptq` I8 weight + BF16 weight_scale).
+- M3 -- pending (wire into qwen3_5 full-attention layers; block-level parity).
+- M4 -- pending, the go/no-go GPU perf gate (add `Tensor.dotGeneralAcc(.i32)`; measure INT8-XMX lowering).
+- M5 -- pending (TP=2).
+
 ## 0. Why this is worth doing / why it's hard
 
 - Standing project target: "W8A8 INT8 of ANY model" -- 8-bit weights preferred, B70 has INT8 XMX fast

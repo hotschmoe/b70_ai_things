@@ -6316,3 +6316,23 @@ RESTORE: DD_API_KEY=$(cat secrets/dd_api_key) daily_driver_serve.sh start -> b70
 NET: both new backends VALIDATED ON GPU for qwen3.6-27b. llama.cpp = a real serving backend (DP=2 Q4_K_M +
   TP=2 Q8_0, both coherent, vision retained). zml = oneAPI TP=2 SPMD proven; full LLM serve is bf16-only +
   needs the multi-week qwen3.6 port (vision/MTP) and a longer first-run compile budget.
+
+## 2026-06-30 -- zml W8A8 M0: CPU int8-dot microbench PASS (i32 accum proven, zero lib change) [result]
+
+CONFIG: new //examples/w8a8 (repo-canonical zml/examples/w8a8/, synced into the build clone via
+  zml/apply_examples.sh). QuantLinear.forward = per-token symmetric dynamic int8 act quant +
+  per-channel symmetric int8 weight + i8->i32 dot (CPU variant: x_i8.convert(.i32).dot(w_i8.convert(.i32)))
+  + dequant. Random TOKENS=16 D=256 DOUT=128 (D big enough that acc >> i16 range). XLA CPU backend, no GPU,
+  no zml library change, daily driver untouched.
+COMMAND: bash zml/apply_examples.sh && cd /mnt/vm_8tb/b70/zml &&
+  ~/.local/bin/bazelisk run //examples/w8a8 --config=release
+RESULT: GATE 1 (i32 accumulation, bit-exact): PASS (2048/2048 elements -- host re-derives the integer
+  accumulator from the DEVICE's own int8 activations + our i8 weights; acc values e.g. -96611 are far
+  outside i16 +/-32767, so an i8/i16 result dtype would wrap and fail). GATE 2 (dequant vs INDEPENDENT
+  full-precision host x@dequant(W)): rel_l2 = 0.00717, max_abs = 1.69096 -> PASS (<2% activation-quant tol).
+VERDICT: PASS. W8A8_FEASIBILITY.md's "true i8 x i8 -> i32 is expressible in zml, CPU needs zero library
+  change" is CONFIRMED on hardware-free CPU. Cheap wins vs the feasibility sketch: zml's reduce keeps the
+  reduced axis as size 1 and binary ops auto-broadcast on matching tags, so the per-token scale broadcasts
+  without the rank-1 gymnastics. Gotcha hit: Zig 0.16 std.fmt rejects {d:.4} on a slice -> use {any}.
+  NEXT: M1 (reusable QuantizedLinear + parity vs nn.Linear), M2 (load the real w8a8-sqgptq I8 weights),
+  M4-prep (Tensor.dotGeneralAcc for the GPU INT8-XMX path -- staged for a zml PR).
