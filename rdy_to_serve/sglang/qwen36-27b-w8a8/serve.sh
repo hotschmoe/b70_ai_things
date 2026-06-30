@@ -47,6 +47,11 @@ PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-
 # bare shelf use still defaults to 8192. Tool/reason parsers match the vLLM shelf entries.
 TOOLCALL="${TOOLCALL:-1}"; TOOLPARSER="${TOOLPARSER:-qwen3_coder}"  # Qwen3.6 emits XML <tool_call> (NOT hermes JSON)
 REASONPARSER="${REASONPARSER:-qwen3}"                               # split <think> -> reasoning_content
+METRICS="${METRICS:-1}"   # --enable-metrics: expose Prometheus /metrics on the serve PORT (same :$PORT, NOT
+                          # api-key-gated). Off-the-shelf dashboard = Prometheus scrape + Grafana (sglang ships
+                          # examples/monitoring/ compose + dashboard JSON). Time-series for input/output token
+                          # counters, TTFT (prefill), gen throughput (decode), cache_hit_rate, queue depth.
+                          # Observability-only -- no effect on model outputs. METRICS=0 to disable.
 RADIX="${RADIX:-0}"   # prefix/radix cache. MUST stay 0 on XPU for this HYBRID-mamba model: sglang's mamba
                       # radix needs either extra_buffer (CUDA/MUSA/NPU-only -> AssertionError on XPU) or
                       # no_buffer (forces page_size=1, untested with NEXTN+fused kernels). RADIX=1 here
@@ -65,11 +70,12 @@ APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
   docker rm -f "$NAME" >/dev/null 2>&1
-  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX tool=$TOOLCALL think=${THINKCAP:-inf} img=$IMG)"
+  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
   local RADIX_ARG="--disable-radix-cache"; [ "$RADIX" = 1 ] && RADIX_ARG=""
   local TOOL_ARG="";   [ "$TOOLCALL" = 1 ]    && TOOL_ARG="--tool-call-parser $TOOLPARSER"
   local REASON_ARG=""; [ -n "$REASONPARSER" ] && REASON_ARG="--reasoning-parser $REASONPARSER"
+  local METRICS_ARG=""; [ "$METRICS" = 1 ]    && METRICS_ARG="--enable-metrics"
   local THINK_ENV=();  [ -n "$THINKCAP" ]     && THINK_ENV=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
@@ -87,7 +93,7 @@ start(){
       --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
       --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --disable-cuda-graph \
       --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 $RADIX_ARG --skip-server-warmup \
-      $TOOL_ARG $REASON_ARG \
+      $TOOL_ARG $REASON_ARG $METRICS_ARG \
       --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC --max-running-requests $MAXREQ $APIKEY_ARG \
       --host 0.0.0.0 --port $PORT" >/dev/null
   say "waiting for /health (load + spec JIT ~3-6min)..."

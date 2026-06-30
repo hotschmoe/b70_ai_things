@@ -367,6 +367,45 @@ Deploy: drop the resulting JSON into the image's `model_executor/layers/fused_mo
 
 ---
 
+## Track 10 -- XPU serving-feature ports (prefix/radix cache, fp8 KV, HiCache)  [NEW 2026-06-30]
+
+**Why this is here:** these are not quant/kernel *scheme* work -- they are sglang serving-infra features that are
+CUDA-only upstream and need an XPU port. The daily driver (`rdy_to_serve/sglang/qwen36-27b-w8a8/`) serves the HYBRID
+Qwen3.6 (attention + GDN/mamba) and currently runs `--disable-radix-cache`, so EVERY turn re-prefills the full prompt
+(observed 2026-06-30: a ~88K-token conversation re-prefilled ~85 s, 2400 -> 675 tok/s as KV filled). For a long
+multi-turn agentic/coding daily driver this repeated prefill is the single biggest avoidable TTFT cost. Prefix caching
+-- NOT NVMe offload -- is the win.
+
+**10a -- Prefix / radix cache for the hybrid model on XPU.  [HIGHEST VALUE in this track]**
+- Blocker (CONFIRMED): `--enable-radix-cache` (RADIX=1) CRASHES at arg-parse in `server_args._handle_mamba_radix_cache`.
+  sglang's mamba radix path needs to checkpoint/restore the SSM recurrent state at arbitrary prefix boundaries via
+  either `extra_buffer` (CUDA/MUSA/NPU-only -> AssertionError on XPU) or `no_buffer` (forces `page_size=1`, untested
+  with NEXTN + our fused int8 kernels).
+- Two candidate paths: (1) port the `extra_buffer` mamba state-copy to XPU (keeps page_size=64); (2) validate the
+  `no_buffer` + `page_size=1` path with MTP + fused W8A8 kernels (simpler, but page_size=1 may cost throughput and
+  collide with the spec mamba cache cap `--max-running-requests 4`). Path (1) preferred if the state-copy is small.
+- Gate: must stay coherent under concurrent prefill+decode AND keep MTP accept-len; prove a cache HIT skips re-prefill
+  on a repeated long prefix (watch `cache_hit_rate` once Track 10d metrics are live). Pure-attention models could use
+  radix on XPU already; the blocker is specifically the mamba state.
+
+**10b -- fp8 KV cache on XPU.  [MED]** Unsupported today (`xpu_backend.py:505`). Would ~halve KV memory -> bigger
+context / batch / `--max-running-requests`. Compose with (not before) 10a. Research item, not a prod flag.
+
+**10c -- Hierarchical cache / HiCache (KV -> CPU RAM -> NVMe/SSD).  [LOW, BLOCKED on 10a]** This is the "cache to
+NVMe/SSD" ask. It is a layer ON TOP of radix, so it is unreachable until 10a works. Also scope expectations: HiCache
+helps cross-request reuse / effective KV capacity -- it is NOT a single-stream speedup and NOT a free context extender.
+Do not pursue before 10a lands.
+
+**10d -- Observability: Prometheus metrics + Grafana.  [DONE in script 2026-06-30, dashboard pending]** Added the
+`METRICS` knob (default on -> `--enable-metrics`) to the w8a8 shelf `serve.sh`; lands on next daily-driver restart.
+Exposes `/metrics` on the serve port (input/output token counters, TTFT, gen throughput, cache_hit_rate, queue depth).
+Remaining: stand up sglang's `examples/monitoring/` Prometheus+Grafana compose (Grafana on a port other than :3000 --
+the WebUI owns :3000) and import the shipped dashboard JSON. `cache_hit_rate` will read ~0 until 10a lands.
+
+See also: memory `xpu-serve-limits-fp8kv-and-radix`, JOURNAL 2026-06-29 (RADIX knob), and the serve.sh `RADIX=` comment.
+
+---
+
 ## Execution order (the 3-5 items to actually run, deduped)
 
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
@@ -397,6 +436,11 @@ The explicit queue is complete: MTP M0-M5 (1.79x shipped), QUANTS Q0-Q5+Q8 (queu
 CLOSED -- ported #7148, bisected the crash to `_xpu_C.gdn_attention`; PIECEWISE 1.79x is the ceiling; issue draft
 docs/kernel/21). Remaining open frontier items, **honestly ranked** (all are lower-value than what's done):
 
+0. **[HIGH for the daily driver] Prefix/radix cache on XPU hybrid (Track 10a).** The daily driver re-prefills the
+   FULL prompt every turn (`--disable-radix-cache`; ~85 s for an ~88K-token conversation, observed 2026-06-30). Porting
+   the mamba radix state-copy to XPU (or validating `no_buffer`+`page_size=1` with MTP) would skip that re-prefill on
+   repeated long prefixes -- the biggest avoidable TTFT cost for long agentic sessions. Higher day-to-day value than the
+   accuracy/MoE items below; ranked 0 because it's a serving-infra port, not part of the original quant mandate.
 1. **[MED] Accuracy evals (Track 2 + 3).** (a) ~~Q8 Qwable int4 HumanEval+~~ -- **DONE 2026-06-22: scored 0.0/0.0
    (GARBAGE) -> the XPU-calibrated quant is BROKEN (Track 3e CONFIRMED); needs a CPU/CUDA re-quant. The eval harness +
    sandbox WORK (they caught the garbage the perf-bench missed).** (b) Track 2 -- does selective-SmoothQuant (Q3/Q5)

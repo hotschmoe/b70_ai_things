@@ -72,7 +72,12 @@ The daily driver runs this entry at its agentic config. Knobs (env, defaults in 
 - **`RADIX=0` (prefix caching OFF, and it MUST stay off here).** sglang's mamba/hybrid radix needs the
   `extra_buffer` path (CUDA/MUSA/NPU-only -> `AssertionError` on XPU at arg-parse) or `no_buffer` (forces
   `page_size=1`, untested with NEXTN+fused). `RADIX=1` CRASHES the serve. Prefix caching on XPU hybrid is an
-  open research item, not a prod flag.
+  open research item, not a prod flag (`RESEARCH_TODO.md` Track 10a -- the top day-to-day TTFT lever, since
+  RADIX=0 re-prefills the full prompt every turn).
+- **`METRICS=1` (Prometheus `/metrics` ON).** Adds `--enable-metrics`; exposes input/output token counters,
+  TTFT (prefill), gen throughput (decode), `cache_hit_rate`, and queue depth on the serve port (same `:$PORT`,
+  NOT api-key-gated). Dashboard = sglang `examples/monitoring/` Prometheus+Grafana (Grafana on a port other
+  than :3000; the WebUI owns :3000). `cache_hit_rate` reads ~0 while `RADIX=0`. `METRICS=0` to disable.
 - Concurrency stays `--max-running-requests 4` (mamba/spec cache bound; covers the c<=4 daily-driver load).
 
 Campaign: `../../../research/w8a8/W8A8_SGLANG_PLAN.md`. JOURNAL 2026-06-28/29.
