@@ -13,10 +13,15 @@ direct per-shard loading. The deep re-validation (vs the 2026-06-23 `../zml_for_
 - **oneAPI multi-device is mainline.** PR #592 ("set defaults for oneAPI PjRT create options" +
   collective-fix PJRT plugin `manual-2026-06-23T00-20-00Z`) MERGED into master -- no branch checkout
   needed to attempt TP=2. MoE on oneAPI is now valid too (Triton backend, #603/#600).
-- **TP=2 on two B70s: plausible but UNPROVEN.** SPMD plumbing is intact (Shardy default, 2-device
-  assignment, in-graph collectives, direct per-shard load). Unknowns: oneAPI PJRT+oneCCL executing the
-  collectives correctly on this hardware, and the documented B70 TP=2 firmware/BCS reboot-wedge. Must be
-  measured with the sharding example first.
+- **TP=2 on two B70s: PROVEN 2026-06-30 (GPU).** `test_sharding.sh` ran `//examples/sharding` on oneAPI:
+  PJRT enumerated both B70s (oneapi:0/1), Partitioner=shardy, `mhlo.num_partitions=2`, the sharded matmul
+  produced correct output (oneCCL collectives ran with `CCL_TOPO_P2P_ACCESS=0`), rc=0, box HEALTHY, no
+  DEVICE_LOST/wedge. First on-hardware confirmation. The Llama-LLM TP=2 (`serve_llama_tp2.sh`) enumerated
+  both cards + downloaded a non-gated mirror but timed out the 600s smoke during first-run XLA cold-compile
+  (no error/wedge) -- re-run with `timeout ~1800` to complete (XLA caches after the first compile).
+- **gpu-run + bazel gotcha (fixed):** `bazelisk run` under the gpu-run flock spawns a persistent bazel
+  daemon that inherits the lock fds and holds the GPU lease ~3h. Both scripts now `bazelisk shutdown` at the
+  end (and `set +e` so it runs even on failure). A `timeout`-kill still leaks it -> `bazelisk shutdown` by hand.
 - **Qwen3.6-27B is NOT a config drop-in.** zml ships `qwen3_5` -- the hybrid GatedDeltaNet (GDN) +
   full-attention DENSE text backbone of the Qwen3.5/Next family -- so the hard recurrent backbone EXISTS.
   Missing for our checkpoint: (1) `model_type` detection (exact-string match -> UnknownModelType today),

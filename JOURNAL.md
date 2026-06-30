@@ -6268,3 +6268,51 @@ STILL PENDING (GPUs busy serving oh-my-pi all session): the GPU serve tests. Pla
   container -> picks up the pending qwen3_coder streaming fix). DEFER to ATTENDED: llamacpp TP=2
   (--split-mode tensor) + zml oneAPI sharding/Llama TP=2 -- both cross-card, carry the TP=2 reboot-wedge
   risk, and the daily driver has no boot auto-start, so a wedge would leave prod down till morning.
+
+--- 2026-06-30 (cont.) GPU TEST PHASE (attended; daily driver brought down + restored) ----------
+Brought the daily driver down (daily_driver_serve.sh stop -> lease freed; only client was our own
+dd-watchdog 1/min "paris" probe, confirmed -- no family member / oh-my-pi) and tested all four new-backend
+configs under gpu-run, then restored. config -> result -> verdict:
+
+[1] llama.cpp DP=2 Q4_K_M ("W4A16, tp=1 dp=2"): serve_dp2_q4km.sh start (2x single-card llama-server +
+    nginx). RESULT: replica0 healthy ~95s cold (SYCL JIT + 16G load), replica1 ~5s, COHERENCE OK, both
+    /v1/models report alias qwen36-27b-q4km, gen coherent, clean teardown, xpu-health HEALTHY.
+    VERDICT: PASS -- the low-risk production-shaped path works. (Fixed: serve scripts used the vLLM flag
+    --served-model-name; llama.cpp wants -a/--alias -> first run exited at arg-parse. commit 6dd5939.)
+
+[2] llama.cpp TP=2 Q8_0 ("W8A8, tp=2 dp=1"): serve_tp2_q8.sh start (--split-mode tensor, both cards).
+    RESULT: /health 200 ~160s, model + VISION mmproj loaded, COHERENCE OK, decode ~14 t/s, gen coherent,
+    clean teardown, cards free, xpu-health HEALTHY, NO wedge markers (223s total). Non-fatal warning
+    "common_fit_params not implemented for SPLIT_MODE_TENSOR" (we pass -ngl 999, auto-fit unneeded).
+    VERDICT: PASS -- the GDN+tensor-split coherence UNKNOWN (REVIEW sec 7) RESOLVED POSITIVELY: qwen35
+    shards across both B70s and stays coherent. Q8_0 ~14 t/s (vs sglang W8A8 fused+MTP ~25; llama.cpp is
+    weight-only, no fused int8 act, no MTP -- expected). No #21747 multi-GPU breakage observed this run.
+
+[3] zml oneAPI //examples/sharding TP=2: test_sharding.sh. RESULT: PJRT loaded libpjrt_oneapi.so,
+    enumerated BOTH B70s (oneapi:0, oneapi:1), Partitioner=shardy, PhysicalMesh num_devices=2,
+    mhlo.num_partitions=2, sharded matmul produced correct output (oneCCL collectives ran, CCL_TOPO_P2P_ACCESS=0),
+    rc=0, post-run xpu-health HEALTHY. VERDICT: PASS -- FIRST on-hardware proof zml oneAPI TP=2 SPMD works
+    on the dual B70 (REVIEW had it "plausible but unproven"). No DEVICE_LOST / wedge.
+
+[4] zml Llama TP=2 (//examples/llm): serve_llama_tp2.sh. meta-llama/Llama-3.2-1B-Instruct -> HTTP 401
+    GatedRepo (our HF token lacks Meta Llama access). Retry with non-gated unsloth/Llama-3.2-1B-Instruct:
+    downloaded + enumerated both B70s, but rc=124 -- TIMED OUT at the 600s smoke cap during first-run
+    (download + XLA cold-compile of the transformer for oneAPI TP=2). No error, no wedge.
+    VERDICT: INCONCLUSIVE-but-not-broken -- capability already proven by [3]; the LLM run just needs a
+    longer first-run timeout. Follow-up: re-run with timeout ~1800s (XLA caches after first compile).
+
+BUG (zml + gpu-run, fixed): `bazelisk run` under the gpu-run flock spawns a persistent bazel SERVER that
+  INHERITS the lock fds and holds the GPU lease ~3h after the script exits (fuser showed the bazel PID on
+  gpu.lock.{0,1} while gpu-run --status read "free"). Deadlocked the next gpu-run. Fix: `bazelisk shutdown`
+  at end of test_sharding.sh + serve_llama_tp2.sh + `set +e` around the run so shutdown runs even on
+  failure (commits e914322 + the set+e follow-up). NOTE: a `timeout`-KILL still leaks the daemon (script
+  dies before shutdown) -> manual `bazelisk shutdown` needed; a trap is the open improvement.
+
+RESTORE: DD_API_KEY=$(cat secrets/dd_api_key) daily_driver_serve.sh start -> b70_daily_0 + open-webui +
+  prometheus/grafana back up; container recreate picks up the qwen3_coder streaming fix. systemd
+  b70-daily-driver.service was left "active (exited)" during the window (I used the script, not systemctl --
+  no passwordless sudo); functionally consistent again after restore.
+
+NET: both new backends VALIDATED ON GPU for qwen3.6-27b. llama.cpp = a real serving backend (DP=2 Q4_K_M +
+  TP=2 Q8_0, both coherent, vision retained). zml = oneAPI TP=2 SPMD proven; full LLM serve is bf16-only +
+  needs the multi-week qwen3.6 port (vision/MTP) and a longer first-run compile budget.

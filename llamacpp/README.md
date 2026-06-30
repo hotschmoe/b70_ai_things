@@ -55,10 +55,15 @@ prepends the compiler libs + `build/bin`). Build is JIT/SPIR-V (portable, no AOT
 
 ## Bring-up order (from REVIEW sec 7) and status
 
-1. SYCL build (JIT). -- DONE 2026-06-30 (build_sycl.sh, rc=0; llama-{server,quantize,cli,mtmd-cli} built).
-2. Convert text+MTP+mmproj, quantize Q4_K_M + Q8_0. -- DONE/in-progress (convert_gguf.sh).
-3. Single-/DP serve Q4_K_M, validate coherence (text, then vision, then MTP). -- PENDING GPU idle.
-4. TP=2 `--split-mode tensor` Q8_0, concurrent-load coherence sweep. -- PENDING GPU idle (high risk).
+1. SYCL build (JIT). -- DONE 2026-06-30 (build_sycl.sh, rc=0; llama-{server,quantize,mtmd-cli} built).
+   NOTE: the cli was renamed `llama-cli` -> `llama-completion` in this HEAD; the server is `llama-server`.
+2. Convert text+MTP+mmproj, quantize Q4_K_M + Q8_0. -- DONE (convert_gguf.sh). GGUF verified: arch=qwen35,
+   65 blocks (64 + MTP head), GDN ssm tensors, 27-layer clip vision; CPU coherence probe = "...is Paris."
+3. DP=2 serve Q4_K_M, validate coherence. -- DONE + PASS 2026-06-30 (GPU): replica0 ~95s cold, COHERENCE
+   OK, both replicas serve the alias, clean teardown, box HEALTHY. (Needed the --served-model-name->--alias fix.)
+4. TP=2 `--split-mode tensor` Q8_0. -- DONE + PASS 2026-06-30 (GPU): /health ~160s, vision mmproj loaded,
+   COHERENCE OK, decode ~14 t/s, clean teardown, NO wedge. The GDN+tensor-split coherence unknown resolved
+   POSITIVELY. (Q8_0 ~14 t/s < sglang W8A8 fused+MTP ~25 -- llama.cpp is weight-only, no fused int8 act/MTP.)
 
 Server parity with the daily driver is complete: OpenAI `/v1/*`, `--api-key`, Prometheus `--metrics`,
 `--parallel`/`--cont-batching`, `--jinja` tool-calling, `--mmproj` vision, `--mtp` speculative.
