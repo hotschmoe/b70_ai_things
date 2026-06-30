@@ -6356,3 +6356,28 @@ VERDICT: PASS. M1 done. Gotcha: zml.Bufferized(Struct) keeps ONLY Tensor fields 
   (PR-ready git apply; M0+M1: examples/w8a8/, common_quant.zig, quant_tests.zig, BUILD target). apply via
   zml/apply_examples.sh (idempotent git apply into the build clone).
   NEXT: M2 (read the real w8a8-sqgptq I8 weight + BF16 weight_scale headers into QuantizedLinear).
+
+## 2026-06-30 -- zml W8A8 M2: real compressed-tensors q_proj loads into QuantizedLinear on CPU [result]
+
+CONFIG: //examples/llm:quant_load_probe -- loads ONE real full-attention q_proj from
+  models/files/qwen3.6-27b/w8a8-sqgptq (compressed-tensors, format int-quantized, v0.17.1) into
+  QuantizedLinear via zml's stock safetensors.TensorRegistry.fromRepo + io.TensorStore reflection,
+  then validates against an in-graph dequant reference (loaded int8 weight -> f32 -> full-precision
+  matmul). CPU, no GPU. The load is LAZY: only the two bound tensors stream; the 35GB checkpoint is
+  NOT materialized (TensorStore binds keys, io.load reflects over the model struct's Tensor fields).
+ARTIFACT CONFIRMED (header inspection): weights int8 sym per-channel static; input_activations int8 sym
+  per-token dynamic; ignore=[lm_head, re:.*linear_attn.*, re:.*visual.*, re:.*mtp.*]. Full-attention
+  layers = 3,7,11,...,63 (16 of 64; the 3/4 GDN layers keep bf16 projections). W8A8 tensors are I8
+  weight [out,in] + BF16 weight_scale [out,1] (rank-2 trailing-1, NOT rank-1) -> QuantizedLinear now
+  squeezes the trailing singleton. q/k/v/o + gate/up/down only; GDN/vision/mtp/lm_head stay bf16.
+COMMAND: ~/.local/bin/bazelisk run //examples/llm:quant_load_probe --config=release -- --layer=3
+RESULT: layer 3 & layer 7 PASS -- real q_proj {12288,5120,i8} + {12288,1,bf16} load lazily, output all
+  finite, rel_l2 vs in-graph dequant ref = 0.0082 (the ~0.1% over M1's 0.0070 is the bf16 output
+  rounding; QuantizedLinear returns the activation dtype = weight_scale dtype = bf16). Layer 0 (GDN)
+  errors cleanly "no q_proj.weight". 
+VERDICT: PASS. Feasibility doc's "ZML reads int8 safetensors natively + two-tensor weight registration
+  via createTensor + io.load reflection, no loader rewrite" CONFIRMED on the real artifact. Gotcha:
+  QuantizedLinear returns bf16 (model activation dtype) -- read it back as bf16 or convert to f32 in-graph
+  before comparing to an f32 ref (else items(f32) reinterprets the bytes). 
+  NEXT: M3 (wire QuantizedLinear into qwen3_5 full-attention q/k/v/o + mlp; block-level parity), then the
+  M4-prep dotGeneralAcc helper for the GPU INT8-XMX gate.

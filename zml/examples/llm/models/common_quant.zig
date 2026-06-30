@@ -22,7 +22,7 @@ const zml = @import("zml");
 
 pub const QuantizedLinear = struct {
     weight: zml.Tensor, // {dout, d} .i8    -- per-channel symmetric int8 weight
-    weight_scale: zml.Tensor, // {dout} .f32 (or .bf16) -- per output channel
+    weight_scale: zml.Tensor, // {dout} or {dout, 1} .f32/.bf16 -- per output channel
     bias: ?zml.Tensor = null, // {dout}   -- added in the accumulation dtype (f32/bf16)
     tag: zml.Shape.Tag, // contracting axis tag (e.g. .d)
 
@@ -52,7 +52,11 @@ pub const QuantizedLinear = struct {
         // 3) dequant: y = acc(f32) * weight_scale[channel] * act_scale[row].
         const out_dtype = if (self.bias) |b| b.dtype() else self.weight_scale.dtype();
         var y = acc.convert(.f32);
-        y = y.mul(self.weight_scale.convert(.f32).broad(y.shape()));
+        // The compressed-tensors checkpoint stores weight_scale as [out, 1]; squeeze the
+        // trailing singleton to a per-channel {dout} vector (a no-op if already rank-1).
+        var wscale = self.weight_scale.convert(.f32);
+        if (wscale.rank() > 1) wscale = wscale.squeeze(wscale.rank() - 1);
+        y = y.mul(wscale.broad(y.shape()));
         const act_scale_row = act_scale.squeeze(self.tag); // drop the size-1 contracting axis
         y = y.mul(act_scale_row.broad(y.shape()));
         y = y.convert(out_dtype);

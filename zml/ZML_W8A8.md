@@ -23,7 +23,13 @@ verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_pe
   `weight_scale` tensor + optional bias, generic over the contracting-axis tag). Parity test
   `//examples/llm:quant_tests` vs the real `nn.Linear` fed dequantized weights: rel_l2 0.00701
   for both the bias and no-bias paths (< 0.02 tol). See JOURNAL 2026-06-30.
-- M2 -- pending (load the real `w8a8-sqgptq` I8 weight + BF16 weight_scale).
+- **M2 -- DONE (2026-06-30).** `//examples/llm:quant_load_probe` loads a real full-attention
+  q_proj (I8 `[12288,5120]` + BF16 weight_scale `[12288,1]`) from `w8a8-sqgptq` into
+  QuantizedLinear via zml's stock safetensors + TensorStore reflection -- NO loader rewrite,
+  and LAZY (only the bound projection streams, not the 35GB). Validated layers 3 & 7 (rel_l2
+  ~0.0082 vs in-graph dequant ref, all finite); a GDN layer errors cleanly. Confirmed the
+  artifact details: full-attn layers 3,7,11,...,63; weight_scale is `[out,1]` (handled by a
+  trailing-singleton squeeze in QuantizedLinear). See JOURNAL 2026-06-30.
 - M3 -- pending (wire into qwen3_5 full-attention layers; block-level parity).
 - M4 -- pending, the go/no-go GPU perf gate (add `Tensor.dotGeneralAcc(.i32)`; measure INT8-XMX lowering).
 - M5 -- pending (TP=2).
