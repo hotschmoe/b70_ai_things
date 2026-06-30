@@ -56,7 +56,7 @@ const Probe = struct {
         // convert to f32 for an apples-to-apples compare with the f32 reference below.
         const yq = self.q.forward(x).convert(.f32);
 
-        var ws = self.q.weight_scale.convert(.f32);
+        var ws = self.q.weight_scale.?.convert(.f32); // probe always binds a real scale
         if (ws.rank() > 1) ws = ws.squeeze(ws.rank() - 1);
         const wf = self.q.weight.convert(.f32).mul(ws.broad(self.q.weight.shape()));
         const yref = x.dot(wf, self.q.tag);

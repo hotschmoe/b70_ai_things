@@ -53,9 +53,43 @@ verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_pe
   slower). W8A8 is a real win on zml. Clean teardown (bazel shutdown, no flock leak, xpu-health
   HEALTHY), daily driver restored. ONEDNN_VERBOSE emitted nothing (prebuilt plugin doesn't surface it)
   -- the 1.66x ratio is the decisive evidence. See JOURNAL 2026-06-30.
-- M5 -- pending (TP=2 W8A8 across both B70s; attended only -- the TP=2 wedge is reboot-only).
-- Follow-ups: push int8 efficiency toward the ~2x peak (larger shapes / tiling), profile decode-shape
-  (M=1) GEMV where XMX may help less, and the full-model M3 wiring for an end-to-end zml W8A8 serve.
+- **M3 full-model wiring -- DONE (2026-06-30).** `examples/llm/models/qwen3_5/model.zig` SelfAttn
+  (q/k/v/o) and Mlp (gate/up/down) now use `QuantizedLinear` instead of `nn.Linear`. Made
+  `QuantizedLinear.weight_scale` OPTIONAL (`?Tensor`) with a bf16-fallback forward, so the SAME field
+  type serves a W8A8 checkpoint (weight i8 + weight_scale present -> int8 path) and a bf16 checkpoint
+  (weight_scale absent via `maybeCreateTensor` -> plain dot) -- the presence of `weight_scale` on disk
+  is the discriminator, no model-type swap, no loader special-case. GDN/vision/MTP/lm_head stay bf16.
+  Full `//examples/llm:llm` builds on oneAPI; M1 synthetic rel_l2 0.00701 and M3 real-block rel_l2
+  0.01537 UNCHANGED after the optional-scale refactor (CPU re-validated). See JOURNAL 2026-06-30.
+- **Sweep / optimization -- DONE (2026-06-30).** `//examples/w8a8_sweep` (bf16 vs raw-i8 vs full-w8a8
+  vs weight-only-int8, over the real proj shapes x M=1..4096). q_proj (K5120 N12288) on one B70:
+  raw i8 = 1.42x at M=1 (decode GEMV, 309 GB/s, bandwidth-bound), rising to **1.86x at M=1024** (223
+  TFLOP/s, 61% of the 367-TOPS dense ceiling) -- larger M pushes toward the 2x peak as predicted. Full
+  W8A8 (dynamic per-token act-quant) caps at ~1.30x: the quantize PROLOGUE is the bottleneck (i8 1.86x
+  -> w8a8 1.32x at M=1024; 1.42x -> 1.09x at M=1) -> the optimization is to fuse act-quant into the
+  preceding RMSNorm. Weight-only int8 (woq) is a DEAD END: 0.5-0.8x (slower than bf16) -- dequant-to-
+  bf16 in-graph materializes the weight, no bandwidth win. See `b70-int8-xmx-roofline` memory + JOURNAL.
+  (Caveat: q_proj M=2048 bf16 hit a 2502 ms/call pathology -- a oneDNN kernel-selection cliff at that
+  one shape, recoverable (cards stayed HEALTHY); short prompts avoid it. Worth a focused re-measure.)
+- **M5 -- DONE (2026-06-30): W8A8 27B TP=2 serves COHERENTLY on dual B70, 13.0 tok/s, no wedge.**
+  First, the prereq fix: the zml qwen3_5 GDN `RmsNormGated.forward` had an f32/bf16 `mul` crash (the
+  norm weight wasn't upcast) -- fixed (model.zig), after which the whole model compiles end-to-end.
+  Single-card W8A8 is IMPOSSIBLE (32.6 GiB weights > 30.3 GiB usable) so this is inherently a 2-card
+  model. bf16 27B TP=2 generates correctly ("...Paris.", 10.5 tok/s) -- proving the port+sharding+
+  collectives+GDN are correct -- which ISOLATED the W8A8 "!!!!" to the sharded ACTIVATION quant in the
+  two ROW-PARALLEL layers (o_proj contracts .d=.model, down_proj contracts .dout=.model): their
+  per-token reduce-max over the SHARDED contracting axis adds a cross-shard collective (all_reduce(MAX)
+  and/or i32 all_reduce(SUM)) the oneCCL plugin mishandles. FIX: `QuantizedLinear.act_quant` flag +
+  `.weightOnly()`; o_proj/down_proj use weight-only int8 (bf16 act x dequant int8 weight -> only a bf16
+  all_reduce(SUM), like the working bf16 path); q/k/v/gate/up keep full W8A8 (replicated contracting =
+  shard-local, no collective). Result: coherent + 13.0 tok/s (+24% over bf16 TP=2), exit rc=0, cards
+  HEALTHY, no reboot. (HLO dump was empty -- prebuilt oneAPI plugin ignores XLA_FLAGS -- isolation via
+  bf16 A/B.) Serve: zml/run_w8a8_serve_tp2_gpu.sh.
+- Follow-ups (perf headroom; correctness DONE): (1) recover TRUE int8 acts on o_proj/down_proj via a
+  shard-LOCAL max (avoid the broken all_reduce) instead of weight-only; (2) fuse the per-token act-quant
+  into RMSNorm (the ~25-30% W8A8 cap from the sweep); (3) MTP/spec-decode (sglang's 1.6x) to close the
+  13.0 vs ~25 t/s gap to the daily driver; (4) improve the M=1 int8 GEMV (oneDNN 309 vs bf16 434 GB/s,
+  the llama.cpp #21517 trap); (5) re-measure the M=2048 bf16 kernel pathology.
 
 ## 0. Why this is worth doing / why it's hard
 

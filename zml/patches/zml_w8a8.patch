@@ -35,10 +35,10 @@ index 6a501aea..779ad279 100644
      targets = [":llm"],
 diff --git a/examples/llm/models/common_quant.zig b/examples/llm/models/common_quant.zig
 new file mode 100644
-index 00000000..1123e098
+index 00000000..8ac469d8
 --- /dev/null
 +++ b/examples/llm/models/common_quant.zig
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,126 @@
 +//! W8A8 int8 quantized linear, a drop-in for `zml.nn.Linear`.
 +//!
 +//! Implements the qwen3.6-27b w8a8-sqgptq scheme (see zml/ZML_W8A8.md section 1):
@@ -47,8 +47,16 @@ index 00000000..1123e098
 +//!   - i8 x i8 -> i32 accumulate, then dequant by act_scale[row] * weight_scale[channel]
 +//!
 +//! Same field/forward shape as `zml.nn.Linear` so it wires into the model unchanged:
-+//! `weight` is `{dout, d}` (now `.i8`), `tag` is the contracting axis (`.d`). It adds a
-+//! `weight_scale` `{dout}` tensor; `io.load` reflection loads both automatically.
++//! `weight` is `{dout, d}` (now `.i8`), `tag` is the contracting axis (`.d`). It adds an
++//! OPTIONAL `weight_scale` `{dout}` (or `{dout,1}`) tensor; `io.load` reflection loads both
++//! automatically. This makes QuantizedLinear a UNIVERSAL drop-in: bind it everywhere a model
++//! uses `nn.Linear`, and it auto-selects per checkpoint --
++//!   - W8A8 checkpoint: `weight` is `i8` AND `weight_scale` is present  -> int8 W8A8 path.
++//!   - bf16 checkpoint: `weight` is bf16 AND `weight_scale` is absent   -> plain bf16 dot
++//!     (`maybeCreateTensor("weight_scale")` returns null, so the field stays `null`).
++//! The presence of `weight_scale` on disk is the checkpoint discriminator -- no separate model
++//! type, no comptime flag, no loader special-case (the static field names stay stable for the
++//! `io.load` reflection that binds Tensor fields by name).
 +//!
 +//! NOTE (CPU vs GPU): the dot uses `Tensor.dotAcc(.i32, ...)` -- genuine s8 operands with an
 +//! i32 result -- NOT `x.convert(.i32).dot(w.convert(.i32))`. Both are numerically identical
@@ -62,12 +70,22 @@ index 00000000..1123e098
 +const zml = @import("zml");
 +
 +pub const QuantizedLinear = struct {
-+    weight: zml.Tensor, // {dout, d} .i8    -- per-channel symmetric int8 weight
-+    weight_scale: zml.Tensor, // {dout} or {dout, 1} .f32/.bf16 -- per output channel
++    weight: zml.Tensor, // {dout, d} .i8 (W8A8) or {dout, d} .bf16 (plain) -- per-channel weight
++    weight_scale: ?zml.Tensor = null, // {dout} or {dout, 1} .f32/.bf16 -- present iff W8A8
 +    bias: ?zml.Tensor = null, // {dout}   -- added in the accumulation dtype (f32/bf16)
 +    tag: zml.Shape.Tag, // contracting axis tag (e.g. .d)
++    // Whether to dynamically int8-quantize the ACTIVATIONS (true = full W8A8) or keep them in
++    // their float dtype against a dequantized int8 weight (false = weight-only int8). Set false
++    // for ROW-PARALLEL layers (o_proj, down_proj) whose contracting axis is TP-SHARDED: the
++    // per-token act-quant reduce-max over a sharded axis adds a cross-shard collective (an
++    // all_reduce(MAX) for the scale and/or an i32 all_reduce(SUM) of the dot) that the oneAPI
++    // oneCCL/Level-Zero plugin mishandles -> "!!!!" garbage under TP=2. The 5 COLUMN-PARALLEL
++    // layers (q/k/v/gate/up) contract over the REPLICATED hidden axis, so int8 acts are safe
++    // there. Weight stays int8 either way (memory/fit preserved). (bf16 metadata field, not
++    // bufferized -- like `tag`.)
++    act_quant: bool = true,
 +
-+    pub fn init(weight: zml.Tensor, weight_scale: zml.Tensor, bias: ?zml.Tensor, tag: anytype) QuantizedLinear {
++    pub fn init(weight: zml.Tensor, weight_scale: ?zml.Tensor, bias: ?zml.Tensor, tag: anytype) QuantizedLinear {
 +        return .{
 +            .weight = weight,
 +            .weight_scale = weight_scale,
@@ -76,7 +94,35 @@ index 00000000..1123e098
 +        };
 +    }
 +
++    /// Same projection but with the dynamic int8 ACTIVATION quant disabled (weight-only int8:
++    /// bf16 activation x dequantized int8 weight). Use for TP-row-parallel layers (sharded
++    /// contracting axis) where the sharded act-quant reduce breaks the collective. Weight stays
++    /// int8 in VRAM; only the matmul sees a dequantized weight.
++    pub fn weightOnly(self: QuantizedLinear) QuantizedLinear {
++        var s = self;
++        s.act_quant = false;
++        return s;
++    }
++
 +    pub fn forward(self: QuantizedLinear, x: zml.Tensor) zml.Tensor {
++        // bf16/plain fallback: no weight_scale on disk -> ordinary full-precision linear. Lets
++        // the SAME field type serve a bf16 checkpoint (q/k/v/o + gate/up/down behave exactly
++        // like nn.Linear) so the model needs no per-checkpoint type swap.
++        const wscale_opt = self.weight_scale orelse {
++            const y_plain = x.dot(self.weight, self.tag);
++            return if (self.bias) |bias| y_plain.add(bias.broad(y_plain.shape())) else y_plain;
++        };
++
++        // --- weight-only int8 path (act_quant=false): bf16 activation x dequant(int8 weight).
++        //     No activation reduce-max, so no cross-shard act-quant collective -- the row-parallel
++        //     all_reduce is a plain bf16 SUM (exactly what the bf16 path does, which works on TP=2).
++        if (!self.act_quant) {
++            const wf = self.dequantWeight(x.dtype());
++            const y_woq = x.dot(wf, self.tag);
++            return if (self.bias) |bias| y_woq.add(bias.broad(y_woq.shape())) else y_woq;
++        }
++
++        // --- full W8A8 int8 path (int8 weight + dynamic per-token int8 activation) ---
 +        // 1) per-token (per contracting-axis row) symmetric dynamic int8 activation quant.
 +        //    zml's reduce keeps the reduced axis as size 1, so act_scale broadcasts against x.
 +        const amax = x.abs().max(self.tag); // x.shape, contracting axis -> 1
@@ -92,11 +138,11 @@ index 00000000..1123e098
 +        const acc = x_i8.dotAcc(.i32, self.weight, self.tag);
 +
 +        // 3) dequant: y = acc(f32) * weight_scale[channel] * act_scale[row].
-+        const out_dtype = if (self.bias) |b| b.dtype() else self.weight_scale.dtype();
++        const out_dtype = if (self.bias) |b| b.dtype() else wscale_opt.dtype();
 +        var y = acc.convert(.f32);
 +        // The compressed-tensors checkpoint stores weight_scale as [out, 1]; squeeze the
 +        // trailing singleton to a per-channel {dout} vector (a no-op if already rank-1).
-+        var wscale = self.weight_scale.convert(.f32);
++        var wscale = wscale_opt.convert(.f32);
 +        if (wscale.rank() > 1) wscale = wscale.squeeze(wscale.rank() - 1);
 +        y = y.mul(wscale.broad(y.shape()));
 +        // drop the size-1 contracting axis; convert to f32 to match the f32 accumulator dtype
@@ -112,8 +158,9 @@ index 00000000..1123e098
 +    /// weight the int8 weight represents. The per-channel scale aligns by tag to the output
 +    /// (non-contracting) axis, so this works for both `{dout, d}` and the transposed
 +    /// `{d, dout}` (down_proj) layouts. Handy for parity references and bf16 fallbacks.
++    /// With no weight_scale (a plain bf16 weight), returns the weight converted to `dtype`.
 +    pub fn dequantWeight(self: QuantizedLinear, dtype: zml.DataType) zml.Tensor {
-+        var ws = self.weight_scale.convert(.f32);
++        var ws = (self.weight_scale orelse return self.weight.convert(dtype)).convert(.f32);
 +        if (ws.rank() > 1) ws = ws.squeeze(ws.rank() - 1);
 +        return self.weight.convert(.f32).mul(ws.broad(self.weight.shape())).convert(dtype);
 +    }
@@ -300,7 +347,7 @@ index 00000000..956802c6
 +}
 diff --git a/examples/llm/models/quant_load_probe.zig b/examples/llm/models/quant_load_probe.zig
 new file mode 100644
-index 00000000..87d1b309
+index 00000000..f6cfda90
 --- /dev/null
 +++ b/examples/llm/models/quant_load_probe.zig
 @@ -0,0 +1,167 @@
@@ -362,7 +409,7 @@ index 00000000..87d1b309
 +        // convert to f32 for an apples-to-apples compare with the f32 reference below.
 +        const yq = self.q.forward(x).convert(.f32);
 +
-+        var ws = self.q.weight_scale.convert(.f32);
++        var ws = self.q.weight_scale.?.convert(.f32); // probe always binds a real scale
 +        if (ws.rank() > 1) ws = ws.squeeze(ws.rank() - 1);
 +        const wf = self.q.weight.convert(.f32).mul(ws.broad(self.q.weight.shape()));
 +        const yref = x.dot(wf, self.q.tag);
@@ -699,6 +746,157 @@ index 00000000..6f6318ec
 +        std.process.exit(1);
 +    }
 +}
+diff --git a/examples/llm/models/qwen3_5/model.zig b/examples/llm/models/qwen3_5/model.zig
+index bc14ab72..1573d4e6 100644
+--- a/examples/llm/models/qwen3_5/model.zig
++++ b/examples/llm/models/qwen3_5/model.zig
+@@ -4,8 +4,15 @@ const zml = @import("zml");
+ const stdx = zml.stdx;
+ 
+ const common = @import("../common.zig");
++const common_quant = @import("../common_quant.zig");
+ const inference = @import("inference.zig");
+ 
++// W8A8 drop-in for the full-attention q/k/v/o and MLP gate/up/down projections. It is the
++// SAME field type for bf16 and W8A8 checkpoints: `weight_scale` is bound via maybeCreateTensor,
++// so it is non-null (int8 W8A8 path) only when the checkpoint carries per-channel scales, and
++// null (plain bf16 dot, identical to nn.Linear) otherwise. See examples/llm/models/common_quant.zig.
++const QuantizedLinear = common_quant.QuantizedLinear;
++
+ const log = std.log.scoped(.qwen3_5);
+ 
+ pub const Config = struct {
+@@ -422,36 +429,48 @@ pub const TransformerLayer = struct {
+ };
+ 
+ pub const Mlp = struct {
+-    up_proj: zml.nn.Linear,
+-    gate_proj: zml.nn.Linear,
+-    down_proj: zml.nn.Linear,
++    // QuantizedLinear (int8 W8A8 when the checkpoint carries weight_scale, else plain bf16).
++    up_proj: QuantizedLinear,
++    gate_proj: QuantizedLinear,
++    down_proj: QuantizedLinear,
+ 
+     pub fn init(store: zml.io.TensorStore.View) Mlp {
+         return .{
+             .up_proj = .init(
+                 store.withPrefix("up_proj").createTensor("weight", .{ .dout, .d }, .{ .dout = .model, .d = .replicated }),
++                store.withPrefix("up_proj").maybeCreateTensor("weight_scale", .{ .dout, .one }, .{ .dout = .model, .one = .replicated }),
+                 store.withPrefix("up_proj").maybeCreateTensor("bias", .{.dout}, .{ .dout = .model }),
+                 .d,
+             ),
+             .gate_proj = .init(
+                 store.withPrefix("gate_proj").createTensor("weight", .{ .dout, .d }, .{ .dout = .model, .d = .replicated }),
++                store.withPrefix("gate_proj").maybeCreateTensor("weight_scale", .{ .dout, .one }, .{ .dout = .model, .one = .replicated }),
+                 store.withPrefix("gate_proj").maybeCreateTensor("bias", .{.dout}, .{ .dout = .model }),
+                 .d,
+             ),
+-            .down_proj = .init(
++            // down_proj weight is the transposed {d, dout} layout contracting .dout; its
++            // per-output-channel scale is {d, 1} (output axis = d, replicated under TP). down_proj
++            // is ROW-PARALLEL (contracts .dout=.model, sharded) -> weight-only int8 (.weightOnly())
++            // so the act-quant reduce-max doesn't run over the sharded axis (TP-safe). gate/up stay
++            // full W8A8 (contract .d=.replicated).
++            .down_proj = QuantizedLinear.init(
+                 store.withPrefix("down_proj").createTensor("weight", .{ .d, .dout }, .{ .d = .replicated, .dout = .model }),
++                store.withPrefix("down_proj").maybeCreateTensor("weight_scale", .{ .d, .one }, .{ .d = .replicated, .one = .replicated }),
+                 store.withPrefix("down_proj").maybeCreateTensor("bias", .{.d}, .{ .d = .replicated }),
+                 .dout,
+-            ),
++            ).weightOnly(),
+         };
+     }
+ 
+     pub fn unloadBuffers(self: *zml.Bufferized(Mlp)) void {
+         self.up_proj.weight.deinit();
++        if (self.up_proj.weight_scale) |*ws| ws.deinit();
+         if (self.up_proj.bias) |*bias| bias.deinit();
+         self.gate_proj.weight.deinit();
++        if (self.gate_proj.weight_scale) |*ws| ws.deinit();
+         if (self.gate_proj.bias) |*bias| bias.deinit();
+         self.down_proj.weight.deinit();
++        if (self.down_proj.weight_scale) |*ws| ws.deinit();
+         if (self.down_proj.bias) |*bias| bias.deinit();
+     }
+ 
+@@ -466,9 +485,10 @@ pub const Mlp = struct {
+ };
+ 
+ pub const SelfAttn = struct {
+-    q_proj: zml.nn.Linear,
+-    k_proj: zml.nn.Linear,
+-    v_proj: zml.nn.Linear,
++    // QuantizedLinear (int8 W8A8 when the checkpoint carries weight_scale, else plain bf16).
++    q_proj: QuantizedLinear,
++    k_proj: QuantizedLinear,
++    v_proj: QuantizedLinear,
+ 
+     q_norm: RmsNorm,
+     k_norm: RmsNorm,
+@@ -478,11 +498,15 @@ pub const SelfAttn = struct {
+     head_dim: i64,
+     rotary_dim: i64,
+     rotary_embed: TextRotaryEmbedding,
+-    o_proj: zml.nn.Linear,
++    o_proj: QuantizedLinear,
+ 
+-    fn initProj(store: zml.io.TensorStore.View, partitions: anytype, bias_partitions: anytype) zml.nn.Linear {
++    // weight {dout, d} contract .d; per-output-channel scale {dout, 1} shards .dout like the
++    // weight (so `scale_partitions` mirrors `partitions` on .dout). maybeCreateTensor leaves the
++    // scale null for a bf16 checkpoint -> plain bf16 dot.
++    fn initProj(store: zml.io.TensorStore.View, partitions: anytype, scale_partitions: anytype, bias_partitions: anytype) QuantizedLinear {
+         return .init(
+             store.createTensor("weight", .{ .dout, .d }, partitions),
++            store.maybeCreateTensor("weight_scale", .{ .dout, .one }, scale_partitions),
+             store.maybeCreateTensor("bias", .{.dout}, bias_partitions),
+             .d,
+         );
+@@ -492,10 +516,12 @@ pub const SelfAttn = struct {
+         const rotary_dim: i64 = @intFromFloat(@as(f32, @floatFromInt(config.text_config.head_dim)) *
+             config.text_config.rope_parameters.partial_rotary_factor);
+         return .{
+-            .q_proj = initProj(store.withPrefix("q_proj"), .{ .dout = .model, .d = .replicated }, .{ .dout = .model }),
+-            .k_proj = initProj(store.withPrefix("k_proj"), .{ .dout = .model, .d = .replicated }, .{ .dout = .model }),
+-            .v_proj = initProj(store.withPrefix("v_proj"), .{ .dout = .model, .d = .replicated }, .{ .dout = .model }),
+-            .o_proj = initProj(store.withPrefix("o_proj"), .{ .dout = .replicated, .d = .model }, .{ .dout = .replicated }),
++            .q_proj = initProj(store.withPrefix("q_proj"), .{ .dout = .model, .d = .replicated }, .{ .dout = .model, .one = .replicated }, .{ .dout = .model }),
++            .k_proj = initProj(store.withPrefix("k_proj"), .{ .dout = .model, .d = .replicated }, .{ .dout = .model, .one = .replicated }, .{ .dout = .model }),
++            .v_proj = initProj(store.withPrefix("v_proj"), .{ .dout = .model, .d = .replicated }, .{ .dout = .model, .one = .replicated }, .{ .dout = .model }),
++            // o_proj is ROW-PARALLEL (contracts .d=.model, sharded) -> weight-only int8 (no sharded
++            // act-quant collective). q/k/v stay full W8A8 (contract .d=.replicated).
++            .o_proj = initProj(store.withPrefix("o_proj"), .{ .dout = .replicated, .d = .model }, .{ .dout = .replicated, .one = .replicated }, .{ .dout = .replicated }).weightOnly(),
+             .q_norm = RmsNorm.init(store.withPrefix("q_norm"), config.text_config.rms_norm_eps),
+             .k_norm = RmsNorm.init(store.withPrefix("k_norm"), config.text_config.rms_norm_eps),
+             .num_heads = config.text_config.num_attention_heads,
+@@ -508,12 +534,16 @@ pub const SelfAttn = struct {
+ 
+     pub fn unloadBuffers(self: *zml.Bufferized(SelfAttn)) void {
+         self.q_proj.weight.deinit();
++        if (self.q_proj.weight_scale) |*ws| ws.deinit();
+         if (self.q_proj.bias) |*bias| bias.deinit();
+         self.k_proj.weight.deinit();
++        if (self.k_proj.weight_scale) |*ws| ws.deinit();
+         if (self.k_proj.bias) |*bias| bias.deinit();
+         self.v_proj.weight.deinit();
++        if (self.v_proj.weight_scale) |*ws| ws.deinit();
+         if (self.v_proj.bias) |*bias| bias.deinit();
+         self.o_proj.weight.deinit();
++        if (self.o_proj.weight_scale) |*ws| ws.deinit();
+         if (self.o_proj.bias) |*bias| bias.deinit();
+         RmsNorm.unloadBuffers(&self.q_norm);
+         RmsNorm.unloadBuffers(&self.k_norm);
+@@ -947,7 +977,9 @@ pub const RmsNormGated = struct {
+         const gate_f32 = gate.convert(.f32);
+ 
+         const normalized = zml.nn.rmsNorm(x_f32, .d, self.eps);
+-        const output = normalized.mul(self.weight.broad(x.shape()));
++        // weight is bf16 but the norm computes in f32 -> convert it (mirrors RmsNorm.forward),
++        // else `mul` panics "expects tensor to be of same type, got f32 and bf16".
++        const output = normalized.mul(self.weight.convert(.f32).broad(x.shape()));
+ 
+         const gated_output = output.mul(gate_f32.silu());
+         return gated_output.convert(x.dtype());
 diff --git a/examples/w8a8/BUILD.bazel b/examples/w8a8/BUILD.bazel
 new file mode 100644
 index 00000000..07e81e24
@@ -1121,6 +1319,390 @@ index 00000000..f80a9e47
 +    log.info("bf16: {d:.3} ms/call, {d:.1} GFLOP/s  (out[0]={d:.4})", .{ bf.ns_per_call / 1e6, bf_gflops, bf_first });
 +    log.info("int8: {d:.3} ms/call, {d:.1} GFLOP/s  (out[0]={d})", .{ iq.ns_per_call / 1e6, i8_gflops, i8_first });
 +    log.info("int8/bf16 speedup = {d:.2}x  (>~1.5x => INT8-XMX engaged; <~1x => widened, no win)", .{ bf.ns_per_call / iq.ns_per_call });
++}
+diff --git a/examples/w8a8_sweep/BUILD.bazel b/examples/w8a8_sweep/BUILD.bazel
+new file mode 100644
+index 00000000..c5527ada
+--- /dev/null
++++ b/examples/w8a8_sweep/BUILD.bazel
+@@ -0,0 +1,16 @@
++load("@bazel_skylib//rules:build_test.bzl", "build_test")
++load("@rules_zig//zig:defs.bzl", "zig_binary")
++
++zig_binary(
++    name = "w8a8_sweep",
++    args = [],
++    data = [],
++    main = "main.zig",
++    deps = ["//zml"],
++    visibility = ["//visibility:public"],
++)
++
++build_test(
++    name = "test",
++    targets = [":w8a8_sweep"],
++)
+diff --git a/examples/w8a8_sweep/main.zig b/examples/w8a8_sweep/main.zig
+new file mode 100644
+index 00000000..44fe5aee
+--- /dev/null
++++ b/examples/w8a8_sweep/main.zig
+@@ -0,0 +1,356 @@
++// W8A8 GEMM/GEMV sweep (zml/ZML_W8A8.md follow-ups): push int8 toward the ~2x peak and
++// profile the decode-shape (M=1) GEMV.
++//
++// Extends the M4 perf gate (//examples/w8a8_bench) from a single shape/dtype to a sweep over:
++//   - the REAL qwen3.6-27b W8A8 projection shapes (q/k/v/o, gate/up/down at K=5120),
++//   - an M (token-count) sweep from 1 (decode GEMV) to 4096 (prefill GEMM),
++//   - four variants per (shape, M):
++//       bf16  : pure bf16 GEMM                         (baseline)
++//       i8    : raw s8 x s8 -> s32 dotAcc              (the proven INT8-XMX fast path, M4)
++//       w8a8  : full QuantizedLinear (dynamic per-token act-quant + s8 dot + dequant), bf16 in/out
++//               (the REAL serve path; isolates the quant epilogue overhead vs raw i8)
++//       woq   : weight-only int8 (i8 weight dequant->bf16 in-graph, bf16 activation, bf16 dot)
++//               (the GEMV alternative; tests whether XLA reads i8 from VRAM and expands in-reg
++//                -- a bandwidth win at M=1 -- or materializes a bf16 weight first -- no win)
++//
++// Reports per config: ms/call, effective TFLOP/s (compute roofline), effective GB/s (memory
++// roofline; weight bytes dominate at M=1), and the int8/bf16 speedup. GB/s near the B70 peak
++// at M=1 => bandwidth-bound (int8 halves weight bytes => ~2x is the ceiling). TFLOP/s near the
++// INT8-XMX peak at large M => compute-bound.
++//
++// CPU build just compiles (the timings are meaningless without the GPU). GPU run (ONE card,
++// daily driver down, under the gpu-run lease):
++//   cd /mnt/vm_8tb/b70/zml
++//   ONEAPI_DEVICE_SELECTOR=level_zero:0 CCL_TOPO_P2P_ACCESS=0 ZE_FLAT_DEVICE_HIERARCHY=FLAT \
++//   ~/.local/bin/bazelisk run //examples/w8a8_sweep --config=release \
++//     --@zml//platforms:cpu=false --@zml//platforms:oneapi=true -- --shape=all --m=0 --iters=100
++//
++// Flags:
++//   --shape= all | q | k | v | o | gate | up | down | sq4096 | sq8192   (default all)
++//   --m=     0 (sweep 1..4096) | <single M>                              (default 0)
++//   --variant= all | bf16 | i8 | w8a8 | woq                             (default all)
++//   --iters= timed calls per config (default 50)
++//   --layout= nk (weight {n,k}, contract k -- model layout) | kn (weight {k,n}, contract k)
++//             -- probe whether the XMX kernel prefers a transposed weight (default nk)
++
++const std = @import("std");
++
++const zml = @import("zml");
++
++const log = std.log.scoped(.w8a8_sweep);
++
++pub const std_options: std.Options = .{
++    .log_level = .info,
++};
++
++const Args = struct {
++    shape: []const u8 = "all",
++    m: usize = 0,
++    variant: []const u8 = "all",
++    iters: usize = 50,
++    layout: []const u8 = "nk",
++
++    pub const help =
++        \\w8a8_sweep [--shape=all|q|k|v|o|gate|up|down|sq4096|sq8192] [--m=0|N]
++        \\           [--variant=all|bf16|i8|w8a8|woq] [--iters=N] [--layout=nk|kn]
++        \\  Sweep bf16 vs int8 GEMM/GEMV over the real qwen3.6-27b W8A8 projection shapes.
++    ;
++};
++
++const ShapeDef = struct { name: []const u8, k: i64, n: i64 };
++
++// Real qwen3.6-27b W8A8 projections (N = out channels, K = contracting in-dim). hidden=5120,
++// intermediate=17408, gated attn (q out = 24*2*256 = 12288), GQA kv (4*256 = 1024), o in =
++// 24*256 = 6144. Plus two square shapes to see clean compute-bound peak behavior.
++const SHAPES = [_]ShapeDef{
++    .{ .name = "q_proj", .k = 5120, .n = 12288 },
++    .{ .name = "k_proj", .k = 5120, .n = 1024 },
++    .{ .name = "v_proj", .k = 5120, .n = 1024 },
++    .{ .name = "o_proj", .k = 6144, .n = 5120 },
++    .{ .name = "gate_proj", .k = 5120, .n = 17408 },
++    .{ .name = "up_proj", .k = 5120, .n = 17408 },
++    .{ .name = "down_proj", .k = 17408, .n = 5120 },
++    .{ .name = "sq4096", .k = 4096, .n = 4096 },
++    .{ .name = "sq8192", .k = 8192, .n = 8192 },
++};
++
++const M_SWEEP = [_]usize{ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
++
++const Variant = enum { bf16, i8, w8a8, woq };
++
++const Layout = enum { nk, kn };
++
++fn bf16Bits(f: f32) u16 {
++    return @truncate(@as(u32, @bitCast(f)) >> 16);
++}
++fn bf16ToF32(bits: u16) f32 {
++    return @bitCast(@as(u32, bits) << 16);
++}
++
++// ---- models (one forward per variant; weight layout chosen by `lt`) -------------------------
++
++fn weightShape(lt: Layout, n: i64, k: i64, dtype: zml.DataType) zml.Shape {
++    return switch (lt) {
++        .nk => zml.Shape.init(.{ .n = n, .k = k }, dtype),
++        .kn => zml.Shape.init(.{ .k = k, .n = n }, dtype),
++    };
++}
++
++const Bf16Gemm = struct {
++    w: zml.Tensor, // {n,k} or {k,n} bf16
++    pub fn forward(self: Bf16Gemm, x: zml.Tensor) zml.Tensor {
++        return x.dot(self.w, .k); // {m,n} bf16
++    }
++};
++
++const Int8Gemm = struct {
++    w: zml.Tensor, // {n,k} or {k,n} i8
++    pub fn forward(self: Int8Gemm, x: zml.Tensor) zml.Tensor {
++        return x.dotAcc(.i32, self.w, .k); // {m,n} i32 -- true s8 operands -> INT8-XMX
++    }
++};
++
++// Full W8A8 linear: dynamic per-token int8 activation quant + s8 dot + per-channel/per-token
++// dequant. Mirrors examples/llm/models/common_quant.zig QuantizedLinear.forward exactly, so the
++// extra cost over Int8Gemm is purely the act-quant prologue + dequant epilogue.
++const W8A8Linear = struct {
++    w: zml.Tensor, // {n,k} i8
++    wscale: zml.Tensor, // {n} f32 (per output channel)
++    pub fn forward(self: W8A8Linear, x: zml.Tensor) zml.Tensor {
++        const amax = x.abs().max(.k); // {m, k=1}
++        const act_scale = amax.scale(1.0 / 127.0);
++        const x_i8 = x.div(act_scale)
++            .round()
++            .clamp(zml.Tensor.scalar(-127, x.dtype()), zml.Tensor.scalar(127, x.dtype()))
++            .convert(.i8);
++        const acc = x_i8.dotAcc(.i32, self.w, .k); // {m,n} i32
++        var y = acc.convert(.f32);
++        y = y.mul(self.wscale.broad(y.shape()));
++        const act_scale_row = act_scale.squeeze(.k).convert(.f32);
++        y = y.mul(act_scale_row.broad(y.shape()));
++        return y.convert(.bf16);
++    }
++};
++
++// Weight-only int8: dequant the i8 weight to bf16 in-graph, bf16 activation, bf16 dot. The
++// question is whether XLA reads the i8 weight from VRAM and widens in registers (bandwidth win
++// at M=1) or materializes a bf16 weight first (no win). bf16 in/out.
++const WoqLinear = struct {
++    w: zml.Tensor, // {n,k} i8
++    wscale: zml.Tensor, // {n} f32
++    pub fn forward(self: WoqLinear, x: zml.Tensor) zml.Tensor {
++        const wf = self.w.convert(.bf16).mul(self.wscale.convert(.bf16).broad(self.w.shape()));
++        return x.dot(wf, .k); // {m,n} bf16
++    }
++};
++
++// ---- timing ---------------------------------------------------------------------------------
++
++const Timing = struct { ns_per_call: f64 };
++
++fn timeExe(io: std.Io, allocator: std.mem.Allocator, exe: *zml.Exe, bufs: anytype, iters: usize) !Timing {
++    var args = try exe.args(allocator);
++    defer args.deinit(allocator);
++    var results = try exe.results(allocator);
++    defer results.deinit(allocator);
++    args.set(bufs);
++
++    // warmup (jit/compile caches), then time.
++    exe.callOpts(io, args, &results, .{ .wait = true });
++    const n = @max(iters, 1);
++    const t0 = std.Io.Timestamp.now(io, .awake);
++    for (0..n) |_| exe.callOpts(io, args, &results, .{ .wait = true });
++    const dur = t0.untilNow(io, .awake);
++    const ns: f64 = @floatFromInt(dur.toNanoseconds());
++
++    var out = results.get(zml.Buffer);
++    out.deinit();
++    return .{ .ns_per_call = ns / @as(f64, @floatFromInt(n)) };
++}
++
++// Bytes moved (read weights + read activations + write output), per variant. At M=1 the weight
++// term dominates and is the GEMV roofline; int8 weight is half the bf16 weight.
++fn bytesMoved(v: Variant, m: i64, k: i64, n: i64) f64 {
++    const mf: f64 = @floatFromInt(m);
++    const kf: f64 = @floatFromInt(k);
++    const nf: f64 = @floatFromInt(n);
++    return switch (v) {
++        .bf16 => 2.0 * nf * kf + 2.0 * mf * kf + 2.0 * mf * nf,
++        .i8 => 1.0 * nf * kf + 1.0 * mf * kf + 4.0 * mf * nf, // i32 out
++        .w8a8 => 1.0 * nf * kf + 2.0 * mf * kf + 2.0 * mf * nf, // bf16 in/out, i8 weight
++        .woq => 1.0 * nf * kf + 2.0 * mf * kf + 2.0 * mf * nf, // bf16 in/out, i8 weight read
++    };
++}
++
++const RunResult = struct { ns: f64, gflops: f64, gbs: f64 };
++
++fn runOne(
++    allocator: std.mem.Allocator,
++    io: std.Io,
++    platform: *zml.Platform,
++    comptime v: Variant,
++    lt: Layout,
++    m: i64,
++    k: i64,
++    n: i64,
++    iters: usize,
++    rand: std.Random,
++) !RunResult {
++    const x_dtype: zml.DataType = if (v == .i8) .i8 else .bf16;
++    const x_shape = zml.Shape.init(.{ .m = m, .k = k }, x_dtype);
++    const w_dtype: zml.DataType = if (v == .bf16) .bf16 else .i8;
++    const w_shape = weightShape(lt, n, k, w_dtype);
++    const ws_shape = zml.Shape.init(.{ .n = n }, .f32);
++
++    // ---- host data + device buffers ----
++    var x_buf = blk: {
++        if (x_dtype == .i8) {
++            const h = try allocator.alloc(i8, @intCast(m * k));
++            defer allocator.free(h);
++            for (h) |*e| e.* = rand.intRangeAtMost(i8, -127, 127);
++            break :blk try zml.Buffer.fromSlice(io, platform, zml.Slice.init(x_shape, std.mem.sliceAsBytes(h)), .replicated);
++        } else {
++            const h = try allocator.alloc(u16, @intCast(m * k));
++            defer allocator.free(h);
++            for (h) |*e| e.* = bf16Bits(rand.floatNorm(f32) * 0.05);
++            break :blk try zml.Buffer.fromSlice(io, platform, zml.Slice.init(x_shape, std.mem.sliceAsBytes(h)), .replicated);
++        }
++    };
++    defer x_buf.deinit();
++
++    var w_buf = blk: {
++        if (w_dtype == .i8) {
++            const h = try allocator.alloc(i8, @intCast(n * k));
++            defer allocator.free(h);
++            for (h) |*e| e.* = rand.intRangeAtMost(i8, -127, 127);
++            break :blk try zml.Buffer.fromSlice(io, platform, zml.Slice.init(w_shape, std.mem.sliceAsBytes(h)), .replicated);
++        } else {
++            const h = try allocator.alloc(u16, @intCast(n * k));
++            defer allocator.free(h);
++            for (h) |*e| e.* = bf16Bits(rand.floatNorm(f32) * 0.05);
++            break :blk try zml.Buffer.fromSlice(io, platform, zml.Slice.init(w_shape, std.mem.sliceAsBytes(h)), .replicated);
++        }
++    };
++    defer w_buf.deinit();
++
++    var ws_buf = blk: {
++        const h = try allocator.alloc(f32, @intCast(n));
++        defer allocator.free(h);
++        for (h) |*e| e.* = 0.01 + rand.float(f32) * 0.04;
++        break :blk try zml.Buffer.fromSlice(io, platform, zml.Slice.init(ws_shape, std.mem.sliceAsBytes(h)), .replicated);
++    };
++    defer ws_buf.deinit();
++
++    // ---- compile + time the chosen variant ----
++    const Model = switch (v) {
++        .bf16 => Bf16Gemm,
++        .i8 => Int8Gemm,
++        .w8a8 => W8A8Linear,
++        .woq => WoqLinear,
++    };
++    const model: Model = switch (v) {
++        .bf16 => .{ .w = .fromShape(w_shape) },
++        .i8 => .{ .w = .fromShape(w_shape) },
++        .w8a8 => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
++        .woq => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
++    };
++    var exe = try platform.compile(allocator, io, model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{});
++    defer exe.deinit();
++
++    const t = switch (v) {
++        .bf16, .i8 => try timeExe(io, allocator, &exe, .{ w_buf, x_buf }, iters),
++        .w8a8, .woq => try timeExe(io, allocator, &exe, .{ w_buf, ws_buf, x_buf }, iters),
++    };
++
++    const flops: f64 = 2.0 * @as(f64, @floatFromInt(m)) * @as(f64, @floatFromInt(k)) * @as(f64, @floatFromInt(n));
++    return .{
++        .ns = t.ns_per_call,
++        .gflops = flops / t.ns_per_call,
++        .gbs = bytesMoved(v, m, k, n) / t.ns_per_call,
++    };
++}
++
++// Run + log one int8 variant for a (shape, M). Factored out of the inline-for in main so the
++// runtime error handling (catch/return) is not "comptime control flow inside a runtime block".
++fn logVariant(
++    allocator: std.mem.Allocator,
++    io: std.Io,
++    platform: *zml.Platform,
++    comptime v: Variant,
++    want_variant: []const u8,
++    lt: Layout,
++    mu: usize,
++    m: i64,
++    sd: ShapeDef,
++    iters: usize,
++    rand: std.Random,
++    bf16_ns: f64,
++) void {
++    if (!variantSelected(want_variant, v)) return;
++    const r = runOne(allocator, io, platform, v, lt, m, sd.k, sd.n, iters, rand) catch |e| {
++        log.err("{s} M={d} {s}: {s}", .{ sd.name, mu, @tagName(v), @errorName(e) });
++        return;
++    };
++    const ratio = if (bf16_ns > 0) bf16_ns / r.ns else 0;
++    log.info("{s:>10} {d:>6} {d:>6} {d:>6} | {s:>6} {d:>9.4} {d:>8.1} {d:>8.1} | {d:>6.2}x", .{
++        sd.name, mu, sd.k, sd.n, @tagName(v), r.ns / 1e6, r.gflops / 1e3, r.gbs, ratio,
++    });
++}
++
++fn variantSelected(want: []const u8, v: Variant) bool {
++    if (std.mem.eql(u8, want, "all")) return true;
++    return std.mem.eql(u8, want, @tagName(v));
++}
++
++fn shapeSelected(want: []const u8, name: []const u8) bool {
++    if (std.mem.eql(u8, want, "all")) return true;
++    return std.mem.eql(u8, want, name);
++}
++
++pub fn main(init: std.process.Init) !void {
++    const allocator = init.gpa;
++    const io = init.io;
++    const args = zml.stdx.flags.parse(init.minimal.args, Args);
++
++    var platform: *zml.Platform = try .auto(allocator, io, .{});
++    defer platform.deinit(allocator, io);
++    log.info("platform: {f}", .{platform.fmtVerbose()});
++
++    const lt: Layout = if (std.mem.eql(u8, args.layout, "kn")) .kn else .nk;
++    log.info("sweep: shape={s} m={d} variant={s} iters={d} layout={s}", .{ args.shape, args.m, args.variant, args.iters, @tagName(lt) });
++    log.info("{s:>10} {s:>6} {s:>6} {s:>6} | {s:>6} {s:>9} {s:>8} {s:>8} | {s}", .{
++        "shape", "M", "K", "N", "var", "ms/call", "TFLOP/s", "GB/s", "vs-bf16",
++    });
++
++    var prng: std.Random.DefaultPrng = .init(0xb70b3c);
++    const rand = prng.random();
++
++    for (SHAPES) |sd| {
++        if (!shapeSelected(args.shape, sd.name)) continue;
++
++        const m_list: []const usize = if (args.m == 0) &M_SWEEP else &[_]usize{args.m};
++        for (m_list) |mu| {
++            const m: i64 = @intCast(mu);
++
++            // bf16 baseline (always run if any variant needs the ratio, and if selected).
++            var bf16_ns: f64 = 0;
++            const want_ratio = !std.mem.eql(u8, args.variant, "bf16");
++            if (variantSelected(args.variant, .bf16) or want_ratio) {
++                const r = runOne(allocator, io, platform, .bf16, lt, m, sd.k, sd.n, args.iters, rand) catch |e| {
++                    log.err("{s} M={d} bf16: {s}", .{ sd.name, mu, @errorName(e) });
++                    continue;
++                };
++                bf16_ns = r.ns;
++                if (variantSelected(args.variant, .bf16))
++                    log.info("{s:>10} {d:>6} {d:>6} {d:>6} | {s:>6} {d:>9.4} {d:>8.1} {d:>8.1} | {s:>7}", .{
++                        sd.name, mu, sd.k, sd.n, "bf16", r.ns / 1e6, r.gflops / 1e3, r.gbs, "1.00x",
++                    });
++            }
++
++            inline for (.{ Variant.i8, Variant.w8a8, Variant.woq }) |v| {
++                logVariant(allocator, io, platform, v, args.variant, lt, mu, m, sd, args.iters, rand, bf16_ns);
++            }
++        }
++    }
++    log.info("done.", .{});
 +}
 diff --git a/zml/tensor.zig b/zml/tensor.zig
 index e75208d8..35ea43df 100644

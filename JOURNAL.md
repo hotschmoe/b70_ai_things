@@ -6447,3 +6447,103 @@ VERDICT: **GO.** s8 dot_general LOWERS TO INT8-XMX/DP4A on the prebuilt oneAPI P
   validates the M4-prep design choice. Bench staged in the patch (examples/w8a8_bench).
   NEXT: push int8 toward the ~2x peak (larger shapes/tiling), decode-shape M=1 GEMV, M5 TP=2 (attended;
   reboot-only wedge), and the full-model M3 wiring for an end-to-end zml W8A8 serve to compare vs sglang ~25 t/s.
+
+## 2026-06-30 -- zml W8A8: M3 full-model wiring + GEMM/GEMV optimization sweep + TP=2 push-AR review [result]
+
+CONFIG: the M4 follow-ups. (1) M3 full-model wiring; (2) push int8 toward 2x + profile the M=1 decode GEMV;
+  (3) review whether our vLLM/sglang push-all-reduce ports to zml TP=2. Daily driver brought DOWN; GPU work
+  on ONE B70 (card 0, ONEAPI_DEVICE_SELECTOR=level_zero:0, CCL_TOPO_P2P_ACCESS=0, ZE_FLAT_DEVICE_HIERARCHY=FLAT).
+COMMAND:
+  - M3: made QuantizedLinear.weight_scale OPTIONAL (?Tensor) + bf16-fallback forward; swapped nn.Linear ->
+    QuantizedLinear for SelfAttn q/k/v/o + Mlp gate/up/down in qwen3_5/model.zig. CPU re-validate
+    //examples/llm:quant_tests + :quant_block_probe; build //examples/llm:llm (oneAPI).
+  - Sweep: //examples/w8a8_sweep (new) bf16 vs i8 vs w8a8 vs woq, q_proj M=1..1024, iters=100.
+  - Review: 2 research agents (B70 INT8 XMX roofline; P2P/push-all-reduce-in-zml) -> zml/ZML_TP_ALLREDUCE.md.
+RESULT:
+  - M3: QuantizedLinear now a UNIVERSAL drop-in -- weight_scale present (on disk) = int8 W8A8 path, absent =
+    plain bf16 dot. GDN/vision/MTP/lm_head stay bf16 (ignore list). //examples/llm:llm builds clean on oneAPI.
+    Numerics UNCHANGED by the optional-scale refactor: M1 synthetic rel_l2 0.00701 (dotAcc 0/2048 mismatches),
+    M3 real W8A8 mlp block rel_l2 0.01537. Patch regenerated (zml/patches/zml_w8a8.patch, 1760 lines).
+  - Sweep (q_proj K5120 N12288, card 0): raw i8 1.42x at M=1 (309 GB/s, bandwidth-bound GEMV) -> 1.57x M=512
+    (181 TFLOP/s) -> 1.86x M=1024 (223 TFLOP/s = 61% of the 367-TOPS dense ceiling). LARGER M -> toward 2x as
+    predicted. Full W8A8 (dynamic per-token act-quant) caps ~1.30x across M (1.09x at M=1) -- the quantize
+    PROLOGUE is the bottleneck, not the GEMM. Weight-only int8 (woq) 0.5-0.8x = SLOWER than bf16 (dequant-to-
+    bf16 in-graph materializes the weight, no bandwidth win). bf16 M=1 GEMV = 434 GB/s (71% of 608 peak) vs
+    i8 309 GB/s (51%) -> oneDNN's int8 GEMV leaves ~30% BW on the table (llama.cpp #21517 weak-int8-GEMV trap).
+    ANOMALY: q_proj M=2048 bf16 = 2502 ms/call (a oneDNN kernel cliff at that one shape); killed the sweep
+    there, cards stayed HEALTHY, lease released clean. M=1..1024 data is the headline.
+  - Roofline facts (research, saved to memory b70-int8-xmx-roofline): B70 INT8 = 2x bf16, ~367 TOPS / 608 GB/s;
+    preferred_element_type=s32 is MANDATORY for the int8 dispatch (our dotAcc(.i32) already does it, =.fast=DEFAULT
+    precision); real qwen shapes already DPAS-aligned (M8/N16/K32); int8 -> oneDNN, never XeTLA.
+  - TP=2 review (zml/ZML_TP_ALLREDUCE.md): zml emits the all-reduce IN-GRAPH (Shardy/SPMD), so the graph-break
+    that justified our push-AR does NOT exist in zml -- do NOT port the kernel. But it still lowers to the
+    BUNDLED oneCCL 2022.0 -> same wedge risk; export CCL_TOPO_P2P_ACCESS=0 (oneapi.zig:33 garbage-defaults it).
+    P2P=1 is the one in-zml BW A/B (zml single-process = the H.12 topology that worked). W8A8 down_proj
+    sharded-reduce: per-shard act-quant + dequant-before-allreduce is correct + 1 sum-collective (verify no
+    maximum-reducer all_reduce in the StableHLO).
+VERDICT: M3 wiring DONE + CPU-validated; int8 confirmed scaling toward 2x (1.86x @ M=1024); the act-quant
+  prologue is the clear next optimization (fuse into RMSNorm); woq ruled out; push-AR ruled out for zml.
+  End-to-end W8A8 27B single-card serve attempt + decode-t/s-vs-sglang IN PROGRESS (next entry).
+
+## 2026-06-30 -- zml W8A8 end-to-end: model COMPILES + GDN fix; single-card OOM (32.6>30.3GiB); TP=2 RUNS but "!!!!" [result]
+
+CONFIG: end-to-end qwen3.6-27b W8A8 text generation on the B70 via //examples/llm (the real serve path,
+  QuantizedLinear auto-selecting int8). Daily driver DOWN. First-ever GPU run of the zml qwen3_5 model.
+COMMAND: zml/run_w8a8_serve_gpu.sh (single card) then zml/run_w8a8_serve_tp2_gpu.sh (both cards, TP=2).
+  Prompt "capital of France?", topk=1 (greedy), seqlen 1024-2048.
+RESULT:
+  - MODEL COMPILES END-TO-END. First run panicked in GatedDeltaNet (NOT my W8A8 code): RmsNormGated.forward
+    did `normalized(f32).mul(self.weight(bf16))` -> "mul expects same type, got f32 and bf16". FIXED: convert
+    the norm weight to f32 (model.zig:975, mirrors the working RmsNorm.forward). After the fix ALL graphs
+    compile -- prefill+decode for embed, FULL-ATTENTION (my W8A8 q/k/v/o), LINEAR-ATTENTION (GDN), sampler.
+    The W8A8 full-attn path compiled clean BOTH times (the panic was the bf16 GDN norm). This is the first
+    time the zml qwen3_5 port has compiled a full forward on GPU.
+  - SINGLE-CARD = IMPOSSIBLE. Loaded text-model weights = 32.60 GiB (17.5 i8 + 15.1 bf16; the bf16 embed +
+    untied lm_head [248K vocab] + 48 GDN layers' bf16 projections dominate) > 30.3 GiB usable VRAM. OOM on a
+    10 KiB alloc near the end of load. (This is why sglang runs this model TP=2.) Clean teardown, cards HEALTHY.
+  - TP=2 (both cards) LOADS + RUNS but decode = "!!!!". 32.60 GiB loaded across 2 cards in 11.2s (no OOM),
+    all sharded graphs compiled, oneCCL collectives active (CCL_WARN), prefill ran -- and NO DEVICE_LOST WEDGE
+    (cards HEALTHY post-run, locks freed clean, NO reboot needed). But greedy decode emits "<think>" then
+    "!!!!!!..." -- the soft NaN/broken-quant signature (same family as sglang-W8A8-needs-skip-warmup and the
+    int4-DP2-soft-garbage; both soft, not the BCS reboot-wedge).
+VERDICT: HUGE structural progress -- the zml qwen3_5 W8A8 model now COMPILES + LOADS + RUNS TP=2 across both
+  B70s without wedging (M5 plumbing PROVEN). Remaining: a SOFT numerical bug makes TP=2 decode degenerate.
+  Leads, by likelihood: (1) verify Shardy orders the row-parallel all_reduce(SUM) AFTER the per-shard act_scale
+  multiply for o_proj + down_proj (their contracting axis is .model-sharded so act-quant reduces over a sharded
+  axis; per-shard-quant-then-dequant-then-sum is correct ONLY in that order -- dump StableHLO, look for an
+  add-reducer all_reduce positioned after the act_scale mul, and NO maximum-reducer); (2) GDN recurrent-state
+  sharding under TP=2; (3) a W8A8 generation bug single-card would also show (couldn't isolate -- single-card
+  OOMs; the CPU block-probe only covered one MLP block, not full generation+KV+rotary+GDN). KEY NEXT DIAGNOSTIC:
+  a bf16 TP=2 run (54 GiB fits 2x30) -- if bf16 TP=2 is coherent and W8A8 TP=2 is "!!!!", the bug is the W8A8
+  sharded path; if bf16 TP=2 is ALSO "!!!!", it's a general TP=2/model-port bug. GDN bf16 RmsNormGated f32 fix
+  is in the patch. Scripts: zml/run_w8a8_serve_gpu.sh, zml/run_w8a8_serve_tp2_gpu.sh.
+
+## 2026-06-30 -- zml M5 DONE: bf16 TP=2 coherent (10.5 t/s), W8A8 TP=2 FIXED + coherent (13.0 t/s) [result]
+
+CONFIG: isolate + fix the W8A8 TP=2 "!!!!". Daily driver DOWN (kept down across all tests this session per
+  user). Both cards via ONEAPI_DEVICE_SELECTOR=level_zero:gpu, CCL_TOPO_P2P_ACCESS=0, GuC 70.54.0.
+COMMAND: bf16 TP=2 (MODEL=bf16 dir) then W8A8 TP=2 with the fix, via zml/run_w8a8_serve_tp2_gpu.sh.
+RESULT:
+  - ISOLATION: bf16 27B TP=2 generates CORRECTLY -- "The capital of France is Paris." + full reasoning trace,
+    decode 18.4s 10.5 tok/s, exit rc=0, cards HEALTHY. So the model port + sharding + collectives + decode +
+    KV + GDN are ALL CORRECT in bf16 TP=2 (a milestone in itself: qwen3.6-27b runs coherently on zml). The
+    "!!!!" is therefore EXCLUSIVELY the W8A8 sharded ACTIVATION quant. (HLO dump was empty -- the prebuilt
+    oneAPI PJRT plugin ignores XLA_FLAGS, same as ONEDNN_VERBOSE at M4 -- so isolation was by bf16 A/B.)
+  - ROOT CAUSE: only o_proj (contracts .d=.model) and down_proj (contracts .dout=.model) are ROW-PARALLEL.
+    Their per-token act-quant reduce-max runs over the TP-SHARDED contracting axis, adding a cross-shard
+    collective bf16 never needs (an all_reduce(MAX) for the scale and/or an i32 all_reduce(SUM) of the dot)
+    that the oneCCL/Level-Zero plugin mishandles -> NaN/"!!!!". The 5 COLUMN-PARALLEL layers (q/k/v/gate/up)
+    contract the REPLICATED hidden axis -> shard-local act-quant + no collective -> safe.
+  - FIX (common_quant.zig + model.zig): added QuantizedLinear.act_quant flag + .weightOnly(); o_proj and
+    down_proj now use weight-only int8 (bf16 activation x dequant(int8 weight)) so their only collective is a
+    plain bf16 all_reduce(SUM) -- identical to the working bf16 path. Weight stays int8 in VRAM (fit/memory
+    preserved); those 2 layers are actually MORE accurate (no act-quant error). q/k/v/gate/up keep full W8A8.
+  - W8A8 TP=2 (FIXED): "The capital of France is Paris." + coherent reasoning, decode 12.3s **13.0 tok/s**,
+    exit rc=0, NO WEDGE (cards HEALTHY, lease freed clean, no reboot). 13.0 vs bf16's 10.5 = int8 is +24%
+    faster (less weight bandwidth), as the roofline predicts.
+VERDICT: **M5 DONE -- end-to-end W8A8 qwen3.6-27b serving on dual B70 via zml: coherent + 13.0 tok/s, no wedge.**
+  zml W8A8 TP=2 (13.0) is ~half sglang's daily driver (~25 t/s) -- the gap is MTP/spec-decode (1.6x), fused
+  kernels, and the naive in-graph collectives, NOT correctness. Headroom: (1) fuse the act-quant prologue into
+  RMSNorm (the ~25-30% W8A8 cap from the sweep); (2) recover true int8 acts on o_proj/down_proj via a
+  shard-LOCAL max (avoid the broken all_reduce) instead of weight-only; (3) MTP. Patch zml/patches/zml_w8a8.patch
+  (1808 lines) has all of M0-M5. The whole TP=2 W8A8 path proven wedge-free on zml's single-process PJRT.
