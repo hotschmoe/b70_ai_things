@@ -6585,3 +6585,18 @@ VERDICT: Round 1 lands a proven new zml capability (shard-local int8 via manualC
   characterization, AND a +5.4% decode win (act-quant dedup -> 13.7 t/s). Actionable: keep nk layout + i32
   store; int8 is a 2x+ prefill lever, ~1.3x decode (act-quant bound); act-quant dedup is a free +5%. Committed
   on zml-w8a8-optimize. The remaining big decode lever to close 13.7->25 t/s is MTP/spec-decode (sglang's 1.6x).
+## 2026-06-30 -- zml MTP/spec-decode SCOPED (the 13.7 -> ~22 t/s lever) [plan]
+
+CONFIG: scope NEXTN MTP for the zml qwen3.6-27b W8A8 serve (research agent + checkpoint/source dig).
+RESULT: FAVORABLE. The checkpoint MTP head (1 NEXTN layer, bf16) is byte-for-byte a zml full-attention
+  TransformerLayer + 3 RMSNorms + an fc(2H->H) + shared embed/lm_head -> the head is mostly WIRING
+  existing zml modules, not new math. zml's compiled-exe design is an ADVANTAGE: the spec VERIFY forward
+  at s=Kv is just the existing per-layer exes recompiled at small fixed s (the same path prefill uses at
+  s=seqlen), and the MTP input hidden is already the host-visible hidden_buf. HARD PART: GDN recurrent-
+  state rollback across draft/verify (even K=1 needs it; recurrent_state can't be cheaply inverted) ->
+  fix = a GDN-only REPLAY over the accepted prefix from the saved pre-verify state. Greedy-only (sglang
+  XPU is topk==1 chain; greedy spec-decode is EXACT -> the validation oracle = MTP-on output byte-
+  identical to MTP-off greedy). Full design + 6-step plan in zml/ZML_MTP_PLAN.md.
+VERDICT: tractable, multi-step. Step 0 (MtpHead module + load mtp.*) is the concrete foundation; the
+  spec loop (verify s=Kv + GDN replay-rollback in inference/session) is the bulk. Target ~1.6x -> ~22 t/s,
+  TP=2 (zml single-process PJRT sidesteps vLLM's distributed-no-graph-capture wall). NEXT: implement Step 0.
