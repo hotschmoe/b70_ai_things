@@ -26,6 +26,8 @@ export ONEAPI_DEVICE_SELECTOR="${ONEAPI_DEVICE_SELECTOR:-level_zero:gpu}"
 export ZE_FLAT_DEVICE_HIERARCHY="${ZE_FLAT_DEVICE_HIERARCHY:-FLAT}"
 export CCL_TOPO_P2P_ACCESS="${CCL_TOPO_P2P_ACCESS:-0}"
 echo "=== zml oneAPI sharding smoke (CCL_TOPO_P2P_ACCESS=$CCL_TOPO_P2P_ACCESS) $(date) ==="
+set +e   # capture rc even on failure so the bazel-shutdown below ALWAYS runs (else set -e skips it and
+         # the bazel daemon keeps the gpu-run flock held ~3h, blocking later gpu-runs incl. DD restore)
 "$BAZELISK" run //examples/sharding \
   --config=release \
   --@zml//platforms:cpu=false \

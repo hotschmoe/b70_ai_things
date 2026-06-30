@@ -24,6 +24,8 @@ export ONEAPI_DEVICE_SELECTOR="${ONEAPI_DEVICE_SELECTOR:-level_zero:gpu}"
 export ZE_FLAT_DEVICE_HIERARCHY="${ZE_FLAT_DEVICE_HIERARCHY:-FLAT}"
 export CCL_TOPO_P2P_ACCESS="${CCL_TOPO_P2P_ACCESS:-0}"   # override oneapi.zig:33 garbage default (see test_sharding.sh)
 echo "=== zml oneAPI LLM TP=2  model=$MODEL  $(date) ==="
+set +e   # capture rc even on failure (gated download, etc.) so the bazel-shutdown below ALWAYS runs
+         # (else set -e aborts before shutdown -> the daemon keeps the gpu-run flock held ~3h)
 "$BAZELISK" run //examples/llm \
   --config=release \
   --@zml//platforms:cpu=false \
