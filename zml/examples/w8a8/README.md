@@ -5,13 +5,15 @@ expresses the qwen3.6-27b W8A8 linear (per-channel symmetric int8 weight + per-t
 symmetric dynamic int8 activation + i32 accumulate + dequant) and validates it on the XLA
 **CPU** backend with NO GPU and NO zml library change.
 
-This directory is the repo-canonical source. The bazel build runs from the git-ignored
-upstream clone at `/mnt/vm_8tb/b70/zml`. Sync + run:
+These `.zig` files are browsable repo copies; the contributable / apply artifact is the
+single git patch `zml/patches/zml_w8a8.patch` (PR-ready). The bazel build runs from the
+git-ignored upstream clone at `/mnt/vm_8tb/b70/zml`. Apply + run:
 
 ```bash
-bash zml/apply_examples.sh                     # repo -> clone
+bash zml/apply_examples.sh                     # git apply the patch into the clone (idempotent)
 cd /mnt/vm_8tb/b70/zml
-~/.local/bin/bazelisk run //examples/w8a8 --config=release
+~/.local/bin/bazelisk run //examples/w8a8 --config=release            # M0 microbench
+~/.local/bin/bazelisk run //examples/llm:quant_tests --config=release # M1 QuantizedLinear parity
 ```
 
 (CPU only -- do NOT pass `--@zml//platforms:oneapi=true`. No `gpu-run` lease needed; the

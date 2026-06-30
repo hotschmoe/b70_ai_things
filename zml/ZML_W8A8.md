@@ -18,7 +18,11 @@ verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_pe
   (2048/2048; acc values >> i16 range so an i8/i16 result dtype would have wrapped) + dequant rel_l2
   0.00717 vs an independent f32 reference. Proves zml expresses the W8A8 graph + i32 accumulation on CPU.
   See `zml/examples/w8a8/README.md` and JOURNAL 2026-06-30.
-- M1 -- pending (reusable QuantizedLinear + parity vs nn.Linear on dequant weights).
+- **M1 -- DONE (2026-06-30).** `examples/llm/models/common_quant.zig` (reusable
+  `QuantizedLinear`, a drop-in for `zml.nn.Linear`: same field/forward shape, adds a
+  `weight_scale` tensor + optional bias, generic over the contracting-axis tag). Parity test
+  `//examples/llm:quant_tests` vs the real `nn.Linear` fed dequantized weights: rel_l2 0.00701
+  for both the bias and no-bias paths (< 0.02 tol). See JOURNAL 2026-06-30.
 - M2 -- pending (load the real `w8a8-sqgptq` I8 weight + BF16 weight_scale).
 - M3 -- pending (wire into qwen3_5 full-attention layers; block-level parity).
 - M4 -- pending, the go/no-go GPU perf gate (add `Tensor.dotGeneralAcc(.i32)`; measure INT8-XMX lowering).

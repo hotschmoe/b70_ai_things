@@ -6336,3 +6336,23 @@ VERDICT: PASS. W8A8_FEASIBILITY.md's "true i8 x i8 -> i32 is expressible in zml,
   without the rank-1 gymnastics. Gotcha hit: Zig 0.16 std.fmt rejects {d:.4} on a slice -> use {any}.
   NEXT: M1 (reusable QuantizedLinear + parity vs nn.Linear), M2 (load the real w8a8-sqgptq I8 weights),
   M4-prep (Tensor.dotGeneralAcc for the GPU INT8-XMX path -- staged for a zml PR).
+
+## 2026-06-30 -- zml W8A8 M1: reusable QuantizedLinear drop-in + parity vs nn.Linear PASS [result]
+
+CONFIG: examples/llm/models/common_quant.zig -- QuantizedLinear, same field/forward shape as zml.nn.Linear
+  (weight now .i8 {dout,d}, adds weight_scale {dout}, optional bias, generic over the contracting-axis tag
+  via Shape.Tag). forward = per-token symmetric dynamic int8 act quant (max over the contracting axis) +
+  i8->i32 dot + dequant(weight_scale[chan]*act_scale[row]) + optional bias. Drops into the qwen3_5 loader
+  unchanged (io.load reflects over the two Tensor fields). Parity binary //examples/llm:quant_tests builds
+  QuantizedLinear AND a real nn.Linear fed the HOST-dequantized weights (wf = w_i8*w_scale) -- so the only
+  difference is the activation quant -- and compares. TOKENS=16 D=256 DOUT=128, CPU, no GPU.
+COMMAND: bash zml/apply_examples.sh && cd /mnt/vm_8tb/b70/zml &&
+  ~/.local/bin/bazelisk run //examples/llm:quant_tests --config=release
+RESULT: with_bias=false rel_l2 = 0.00701; with_bias=true rel_l2 = 0.00701 (max_abs ~1.406); both < 0.02 tol.
+  PASS. Confirms QuantizedLinear is a correct drop-in for nn.Linear (both the bias and no-bias branches) up
+  to activation-quant error.
+VERDICT: PASS. M1 done. Gotcha: zml.Bufferized(Struct) keeps ONLY Tensor fields (drops the Shape.Tag `tag`
+  field) -- the Bufferized literal must not set `.tag`. Contribution staged as zml/patches/zml_w8a8.patch
+  (PR-ready git apply; M0+M1: examples/w8a8/, common_quant.zig, quant_tests.zig, BUILD target). apply via
+  zml/apply_examples.sh (idempotent git apply into the build clone).
+  NEXT: M2 (read the real w8a8-sqgptq I8 weight + BF16 weight_scale headers into QuantizedLinear).
