@@ -37,7 +37,11 @@ DO NOT submit upstream without the user's explicit go-ahead.
 5. **`examples/llm/models/quant_load_probe.zig`** -- loads a real W8A8 `q_proj` from the
    `w8a8-sqgptq` checkpoint and validates on CPU (lazy: only the bound projection).
 
-6. **`examples/llm/BUILD.bazel`** -- `quant_tests` + `quant_load_probe` targets.
+6. **`examples/llm/models/quant_block_probe.zig`** -- loads a real W8A8 MLP block
+   (gate/up/down) and validates block-level parity (3 quantized projections + SiLU) vs a
+   bf16 dequant reference on CPU.
+
+7. **`examples/llm/BUILD.bazel`** -- `quant_tests`, `quant_load_probe`, `quant_block_probe`.
 
 ## Suggested PR split (when approved)
 

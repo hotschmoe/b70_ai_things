@@ -6402,3 +6402,25 @@ VERDICT: PASS. M4-prep done; the model path is now the s8-operand path validated
   standalone upstream candidate; examples are the research vehicle. NOT submitted (awaiting user go-ahead).
   NEXT: M3 (wire QuantizedLinear into the qwen3_5 model: full-attn q/k/v/o + mlp gate/up/down; bf16 GDN /
   vision / mtp / lm_head; block-level logit parity on CPU), then M4 on the B70 (daily driver down, attended).
+
+## 2026-06-30 -- zml W8A8 M3 (block slice): real W8A8 MLP block parity vs bf16 dequant PASS [result]
+
+CONFIG: //examples/llm:quant_block_probe -- a quantized Mlp (gate/up/down via QuantizedLinear) mirroring
+  qwen3_5/model.zig Mlp.forward = down(silu(gate(x))*up(x)), loaded from the real w8a8-sqgptq layer-0 mlp,
+  vs a reference Mlp built from the SAME loaded int8 weights dequantized in-graph to bf16. The MLP is the
+  right M3 slice: W8A8 on EVERY layer (only linear_attn/vision/mtp/lm_head ignored), pure projections +
+  SiLU (no rotary/attention/KV/GDN), and it COMPOSES 3 quantized projections so it tests error accumulation
+  through a real block. bf16 activations (matching the model). CPU, no GPU, lazy load (gate/up/down only).
+COMMAND: ~/.local/bin/bazelisk run //examples/llm:quant_block_probe --config=release -- --layer=0
+RESULT: up/gate {17408,5120,i8}, down {5120,17408,i8} (transposed {d,dout} layout, contract .dout). block
+  rel_l2 (W8A8 vs bf16 dequant ref) = 0.01537, max_abs 1.80, all finite -> PASS (<0.05 block tol). Higher
+  than the single-projection 0.0082 as expected (3 projections + silu + bf16 intermediate rounding compose).
+VERDICT: PASS for the block slice. Two robustness fixes to QuantizedLinear made it dtype-generic for the
+  real bf16 path (clamp bounds use x.dtype(); act_scale converted to f32 before the dequant mul) -- M1 (f32)
+  re-validated unchanged. Added QuantizedLinear.dequantWeight(dtype) (per-channel scale aligns by tag, so it
+  handles both {dout,d} and the transposed {d,dout} down_proj). REMAINING M3 (deferred to the GPU push, since
+  the 27B can't run inference on CPU): edit qwen3_5/model.zig SelfAttn+Mlp to conditionally select
+  QuantizedLinear per the ignore list, and a full SelfAttn block parity (adds rotary + attention).
+  Patch zml/patches/zml_w8a8.patch regenerated (now M0-M3 + the tensor.zig helper).
+  NEXT: M4 on the B70 -- build --@zml//platforms:oneapi=true, run the W8A8 path on ONE card (daily driver
+  down, attended), and INSPECT whether s8 dot_general lowers to INT8-XMX vs widening (the go/no-go perf gate).

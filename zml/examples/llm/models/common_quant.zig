@@ -40,9 +40,10 @@ pub const QuantizedLinear = struct {
         //    zml's reduce keeps the reduced axis as size 1, so act_scale broadcasts against x.
         const amax = x.abs().max(self.tag); // x.shape, contracting axis -> 1
         const act_scale = amax.scale(1.0 / 127.0);
+        // clamp bounds must share x's dtype (x is bf16 in the real model, f32 in microbenches).
         const x_i8 = x.div(act_scale)
             .round()
-            .clamp(zml.Tensor.scalar(-127, .f32), zml.Tensor.scalar(127, .f32))
+            .clamp(zml.Tensor.scalar(-127, x.dtype()), zml.Tensor.scalar(127, x.dtype()))
             .convert(.i8);
 
         // 2) i8 x i8 -> i32 accumulate via true s8 operands (GPU INT8-XMX-ready; bit-identical
@@ -57,10 +58,22 @@ pub const QuantizedLinear = struct {
         var wscale = self.weight_scale.convert(.f32);
         if (wscale.rank() > 1) wscale = wscale.squeeze(wscale.rank() - 1);
         y = y.mul(wscale.broad(y.shape()));
-        const act_scale_row = act_scale.squeeze(self.tag); // drop the size-1 contracting axis
+        // drop the size-1 contracting axis; convert to f32 to match the f32 accumulator dtype
+        // (act_scale carries x's dtype, which is bf16 in the real model).
+        const act_scale_row = act_scale.squeeze(self.tag).convert(.f32);
         y = y.mul(act_scale_row.broad(y.shape()));
         y = y.convert(out_dtype);
 
         return if (self.bias) |bias| y.add(bias.broad(y.shape())) else y;
+    }
+
+    /// The dequantized weight (weight_int8 * weight_scale) in `dtype` -- the full-precision
+    /// weight the int8 weight represents. The per-channel scale aligns by tag to the output
+    /// (non-contracting) axis, so this works for both `{dout, d}` and the transposed
+    /// `{d, dout}` (down_proj) layouts. Handy for parity references and bf16 fallbacks.
+    pub fn dequantWeight(self: QuantizedLinear, dtype: zml.DataType) zml.Tensor {
+        var ws = self.weight_scale.convert(.f32);
+        if (ws.rank() > 1) ws = ws.squeeze(ws.rank() - 1);
+        return self.weight.convert(.f32).mul(ws.broad(self.weight.shape())).convert(dtype);
     }
 };

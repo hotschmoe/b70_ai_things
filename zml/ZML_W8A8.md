@@ -30,7 +30,15 @@ verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_pe
   ~0.0082 vs in-graph dequant ref, all finite); a GDN layer errors cleanly. Confirmed the
   artifact details: full-attn layers 3,7,11,...,63; weight_scale is `[out,1]` (handled by a
   trailing-singleton squeeze in QuantizedLinear). See JOURNAL 2026-06-30.
-- M3 -- pending (wire into qwen3_5 full-attention layers; block-level parity).
+- **M3 (block slice) -- DONE (2026-06-30).** `//examples/llm:quant_block_probe` loads a real
+  W8A8 MLP block (gate/up/down) from `w8a8-sqgptq` into a quantized `Mlp` (mirroring the model's
+  `Mlp.forward`) and validates block-level parity vs a bf16 dequant-weight reference on CPU:
+  rel_l2 0.01537 composed through 3 quantized projections + SiLU, bf16 activations, all finite
+  (< 0.05 block tol). Exercises the transposed down_proj layout `{d,dout}` contracting `.dout`.
+  Required making QuantizedLinear dtype-generic (bf16 clamp bounds + f32 act_scale) and adding
+  `QuantizedLinear.dequantWeight`. REMAINING M3: edit the real `qwen3_5/model.zig` SelfAttn/Mlp
+  to conditionally pick QuantizedLinear (full-attn q/k/v/o + mlp) and a full SelfAttn block (rotary
+  + attention) -- deferred to the GPU-bound push (the 27B can't run inference on CPU). See JOURNAL.
 - **M4-prep -- DONE (2026-06-30).** `Tensor.dotGeneralAcc(out_dtype)` + tag-based `Tensor.dotAcc`
   added to `zml/tensor.zig` (mirror `dotGeneral`/`dot` but with a caller-chosen result dtype, so
   TRUE `s8 x s8 -> s32` reaches `dot_general`). Validated on CPU bit-for-bit vs the convert-to-i32
