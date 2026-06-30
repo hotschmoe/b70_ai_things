@@ -33,6 +33,11 @@ echo "=== zml oneAPI LLM TP=2  model=$MODEL  $(date) ==="
   --topk="$TOPK" \
   --prompt="$PROMPT"
 rc=$?
+# Shut down the bazel DAEMON before returning. CRITICAL: when bazelisk runs under the gpu-run flock,
+# the persistent bazel server inherits the lock fds and keeps the GPU lease HELD for ~3h after this
+# script exits -- blocking every later gpu-run (incl. the daily-driver restore). Shutting it down here
+# releases the inherited fds while we still hold the lease.
+"$BAZELISK" shutdown >/dev/null 2>&1 || true
 echo "=== llm exit rc=$rc ; post-run xpu-health ==="
 "$REPO/bin/xpu-health" 2>&1 | tail -2 || echo "[!] box may be wedged -- bin/xe-reset"
 exit $rc

@@ -34,6 +34,9 @@ echo "=== zml oneAPI sharding smoke (CCL_TOPO_P2P_ACCESS=$CCL_TOPO_P2P_ACCESS) $
   --partitioner=shardy \
   --mesh=auto
 rc=$?
+# Shut down the bazel DAEMON before returning -- it inherits the gpu-run flock fds and would otherwise
+# keep the GPU lease HELD for ~3h, blocking every later gpu-run (incl. the daily-driver restore).
+"$BAZELISK" shutdown >/dev/null 2>&1 || true
 echo "=== sharding exit rc=$rc ; post-run xpu-health ==="
 "$REPO/bin/xpu-health" 2>&1 | tail -2 || echo "[!] box may be wedged -- bin/xe-reset"
 exit $rc
