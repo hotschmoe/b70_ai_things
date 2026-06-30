@@ -41,7 +41,7 @@ source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
 export LD_LIBRARY_PATH=/llama/build/bin:/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH
 exec /llama/build/bin/llama-server -m $MODEL $mm -ngl 999 --ctx-size $CTX \
   --split-mode none --main-gpu 0 --flash-attn auto --parallel $PAR --cont-batching \
-  --jinja $met $key --served-model-name $SERVED --host 0.0.0.0 --port $p
+  --jinja $met $key --alias $SERVED --host 0.0.0.0 --port $p
 EOF
 }
 

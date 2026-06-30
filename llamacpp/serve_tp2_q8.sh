@@ -53,7 +53,7 @@ start(){
       export LD_LIBRARY_PATH=/llama/build/bin:/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
       exec /llama/build/bin/llama-server -m $MODEL $mm -ngl 999 --ctx-size $CTX \
       --split-mode tensor --main-gpu 0 --flash-attn auto --parallel $PAR --cont-batching \
-      --jinja $met $key --served-model-name $SERVED --host 0.0.0.0 --port $PORT" >/dev/null
+      --jinja $met $key --alias $SERVED --host 0.0.0.0 --port $PORT" >/dev/null
   say "waiting for /health (model load + TP init)..."
   for i in $(seq 1 160); do
     docker ps --filter "name=$NAME" --format '{{.Names}}' | grep -q "$NAME" || { say "EXITED"; docker logs "$NAME" 2>&1|tail -40; return 1; }
