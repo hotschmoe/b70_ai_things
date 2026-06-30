@@ -26,7 +26,8 @@
 #
 #   DD_MTP=1 ... start   # opt-in MTP spec decode (dense models, interactive -- see SERVING.md)
 #
-# Usage: start (default) | stop | restart | status | logs | logs1 | webui | webui-down
+# Usage: start (default) | stop | restart | status | logs | logs1 | webui | webui-down | monitor | monitor-down
+#   monitor: Prometheus (:9090) + Grafana (:3001, anon viewer, sglang dashboard) -- comes up with the driver.
 # Lease: DP/TP modes hold BOTH cards; DD_CARD mode holds ONLY that card (leaving the other free).
 set -uo pipefail
 
@@ -69,6 +70,18 @@ WEBUI_ENABLE=1
 WEBUI_NAME=open-webui
 WEBUI_PORT=3000
 WEBUI_IMAGE=ghcr.io/open-webui/open-webui:main
+# ----- monitoring (Prometheus + Grafana) -- tied to the lifecycle, exactly like Open WebUI ---
+# Off-the-shelf sglang stack (examples/monitoring), assets vendored to $REPO/bin/monitoring:
+# Prometheus scrapes the serve's /metrics on :$PORT (needs the serve.sh METRICS=1 knob, default on);
+# Grafana auto-provisions the datasource + the shipped sglang dashboard, anonymous Viewer (no login).
+MONITOR_ENABLE=1
+PROM_NAME=b70_prometheus
+GRAF_NAME=b70_grafana
+PROM_PORT=9090
+GRAF_PORT=3001                      # NOT 3000 -- Open WebUI owns 3000; Grafana runs --network host on 3001
+PROM_IMAGE=prom/prometheus:latest
+GRAF_IMAGE=grafana/grafana:latest
+MONITOR_DIR=$REPO/bin/monitoring    # prometheus.yaml + grafana/ provisioning (datasource + dashboard JSON)
 # ---------------------------------------------------------------------------------------------
 
 # LOCAL execution. Post-2026-06-23 migration we run ON the box (b70s4dayz) as user hotschmoe; the old
@@ -103,9 +116,39 @@ webui_up() {
 }
 webui_down() { ssh_h "docker stop $WEBUI_NAME >/dev/null 2>&1 && echo '  web ui: down' || true"; }
 
+monitor_up() {
+  [ "${MONITOR_ENABLE:-0}" = 1 ] || return 0
+  # Prometheus -- scrapes the daily driver's /metrics on :$PORT (host net -> 127.0.0.1:$PORT). TSDB persists
+  # across restarts in the named volume b70_prometheus_data.
+  if ssh_h "docker inspect $PROM_NAME >/dev/null 2>&1"; then
+    ssh_h "docker start $PROM_NAME >/dev/null 2>&1 || true"
+  else
+    ssh_h "docker run -d --name $PROM_NAME --network host \
+      -v $MONITOR_DIR/prometheus.yaml:/etc/prometheus/prometheus.yml:ro \
+      -v b70_prometheus_data:/prometheus --restart unless-stopped $PROM_IMAGE \
+      --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus >/dev/null 2>&1 || true"
+  fi
+  # Grafana -- anonymous Viewer (no login, like WEBUI_AUTH=False); auto-provisions the Prometheus datasource +
+  # the shipped sglang dashboard as the home page. Stateless (provisioned from files), so no named volume.
+  if ssh_h "docker inspect $GRAF_NAME >/dev/null 2>&1"; then
+    ssh_h "docker start $GRAF_NAME >/dev/null 2>&1 || true"
+  else
+    ssh_h "docker run -d --name $GRAF_NAME --network host \
+      -v $MONITOR_DIR/grafana/datasources:/etc/grafana/provisioning/datasources:ro \
+      -v $MONITOR_DIR/grafana/dashboards/config:/etc/grafana/provisioning/dashboards:ro \
+      -v $MONITOR_DIR/grafana/dashboards/json:/var/lib/grafana/dashboards:ro \
+      -e GF_SERVER_HTTP_PORT=$GRAF_PORT -e GF_AUTH_ANONYMOUS_ENABLED=true -e GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer \
+      -e GF_AUTH_BASIC_ENABLED=false -e GF_USERS_ALLOW_SIGN_UP=false \
+      -e GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/sglang-dashboard.json \
+      --restart unless-stopped $GRAF_IMAGE >/dev/null 2>&1 || true"
+  fi
+  echo "  monitor: grafana -> http://$HOST_IP:$GRAF_PORT (anon viewer)   prometheus -> http://$HOST_IP:$PROM_PORT"
+}
+monitor_down() { ssh_h "docker stop $GRAF_NAME $PROM_NAME >/dev/null 2>&1 && echo '  monitor: down' || true"; }
+
 start() {
   if ssh_h "curl -sf http://localhost:$PORT/health >/dev/null 2>&1"; then
-    echo "daily driver already UP (:$PORT): $(served_id)"; echo "endpoint: $ENDPOINT"; webui_up; return 0
+    echo "daily driver already UP (:$PORT): $(served_id)"; echo "endpoint: $ENDPOINT"; webui_up; monitor_up; return 0
   fi
   if ! ssh_h "test -f $SERVE"; then
     echo "[!] no such model: $SERVE"; echo "    pick a <backend>/<dir> under rdy_to_serve/:"; ssh_h "cd $RTS && ls -d */*/ | sed 's#/\$##' | grep -v '^_'"; return 1
@@ -154,7 +197,7 @@ start() {
   done
   echo
   if [ "$ok" = 1 ]; then
-    echo "UP. served id: $(served_id)"; echo "endpoint: $ENDPOINT   (chat: $ENDPOINT/chat/completions)"; webui_up
+    echo "UP. served id: $(served_id)"; echo "endpoint: $ENDPOINT   (chat: $ENDPOINT/chat/completions)"; webui_up; monitor_up
   else
     echo "NOT healthy after wait -- check: ./daily_driver_serve.sh logs"; return 1
   fi
@@ -164,6 +207,7 @@ stop() {
   echo "stopping daily driver (releases GPU lease)..."
   ssh_h "docker stop $PROXY $DP0 $DP1 >/dev/null 2>&1 && echo '  replicas + proxy stopped' || echo '  not running'"
   webui_down
+  monitor_down
 }
 
 case "${1:-start}" in
@@ -176,10 +220,13 @@ case "${1:-start}" in
     echo "=== replicas+proxy ==="; ssh_h "docker ps --filter name=b70_daily --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
     echo "=== served model ===";  echo "$(served_id || true)" | grep . || echo "(not serving)"
     echo "=== web ui ===";        ssh_h "docker ps --filter name=$WEBUI_NAME --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
-    echo "endpoint: $ENDPOINT    web ui: http://$HOST_IP:$WEBUI_PORT" ;;
+    echo "=== monitor ===";       ssh_h "docker ps --filter name=$PROM_NAME --filter name=$GRAF_NAME --format '{{.Names}}  {{.Status}}' | grep . || echo '(not running)'"
+    echo "endpoint: $ENDPOINT    web ui: http://$HOST_IP:$WEBUI_PORT    grafana: http://$HOST_IP:$GRAF_PORT" ;;
   logs)    ssh_h "docker logs --tail 60 -f $DP0" ;;
   logs1)   ssh_h "docker logs --tail 60 -f $DP1" ;;
   webui)      webui_up ;;
   webui-down) webui_down ;;
-  *) echo "usage: $0 [start|stop|restart|status|logs|logs1|webui|webui-down]   (pick model via DD_MODEL=)"; exit 2 ;;
+  monitor)      monitor_up ;;
+  monitor-down) monitor_down ;;
+  *) echo "usage: $0 [start|stop|restart|status|logs|logs1|webui|webui-down|monitor|monitor-down]   (pick model via DD_MODEL=)"; exit 2 ;;
 esac

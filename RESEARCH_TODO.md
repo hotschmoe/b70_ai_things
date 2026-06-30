@@ -396,11 +396,15 @@ NVMe/SSD" ask. It is a layer ON TOP of radix, so it is unreachable until 10a wor
 helps cross-request reuse / effective KV capacity -- it is NOT a single-stream speedup and NOT a free context extender.
 Do not pursue before 10a lands.
 
-**10d -- Observability: Prometheus metrics + Grafana.  [DONE in script 2026-06-30, dashboard pending]** Added the
-`METRICS` knob (default on -> `--enable-metrics`) to the w8a8 shelf `serve.sh`; lands on next daily-driver restart.
-Exposes `/metrics` on the serve port (input/output token counters, TTFT, gen throughput, cache_hit_rate, queue depth).
-Remaining: stand up sglang's `examples/monitoring/` Prometheus+Grafana compose (Grafana on a port other than :3000 --
-the WebUI owns :3000) and import the shipped dashboard JSON. `cache_hit_rate` will read ~0 until 10a lands.
+**10d -- Observability: Prometheus metrics + Grafana.  [DONE 2026-06-30]** (1) Added the `METRICS` knob (default on
+-> `--enable-metrics`) to the w8a8 shelf `serve.sh`; exposes `/metrics` on the serve port (input/output token
+counters, TTFT, gen throughput, cache_hit_rate, queue depth). (2) Vendored sglang's `examples/monitoring/` stack to
+`bin/monitoring/` (prometheus.yaml retargeted 30000->18080; datasource uid pinned to the dashboard's hard-coded
+`ddyfngn31dg5cf`) and wired Prometheus+Grafana into `vllm/daily_driver_serve.sh` as `monitor_up`/`monitor_down`,
+lifecycle-tied exactly like Open WebUI -- Grafana on :3001 (WebUI owns :3000), anon Viewer, sglang dashboard as home.
+Validated: containers up, dashboard+datasource provisioned, Grafana :3001 healthy. REMAINING: the live Prometheus
+target reads 404/down until the daily driver is RESTARTED to pick up `--enable-metrics`. `cache_hit_rate` will read
+~0 until 10a lands.
 
 See also: memory `xpu-serve-limits-fp8kv-and-radix`, JOURNAL 2026-06-29 (RADIX knob), and the serve.sh `RADIX=` comment.
 

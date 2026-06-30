@@ -1,0 +1,17 @@
+# prometheus.yaml -- scrape config for the b70 daily driver's sglang /metrics.
+# Adapted from sglang examples/monitoring/prometheus.yaml: target 30000 -> 18080
+# (THE public daily-driver port; sglang serves /metrics on the same port as /v1
+# when launched with --enable-metrics, i.e. the serve.sh METRICS=1 knob).
+# Prometheus runs --network host, so 127.0.0.1:18080 reaches the published port.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: sglang
+    static_configs:
+      # TP=2 / single-card daily driver (the default). For DD_REPLICAS=2 data-parallel,
+      # add the per-replica backend ports 127.0.0.1:18091 / 127.0.0.1:18092 here
+      # (each replica exposes its own /metrics; the nginx proxy on :18080 does not fan /metrics).
+      - targets:
+          - '127.0.0.1:18080'
