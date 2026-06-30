@@ -6424,3 +6424,26 @@ VERDICT: PASS for the block slice. Two robustness fixes to QuantizedLinear made 
   Patch zml/patches/zml_w8a8.patch regenerated (now M0-M3 + the tensor.zig helper).
   NEXT: M4 on the B70 -- build --@zml//platforms:oneapi=true, run the W8A8 path on ONE card (daily driver
   down, attended), and INSPECT whether s8 dot_general lowers to INT8-XMX vs widening (the go/no-go perf gate).
+
+## 2026-06-30 -- zml W8A8 M4 GPU GO: s8 dot_general LOWERS TO INT8-XMX on the B70 (1.66x vs bf16) [result]
+
+CONFIG: the go/no-go gate. Daily driver brought DOWN (vllm/daily_driver_serve.sh stop -> lease free, cards
+  free), oneAPI binaries pre-built while it was up. Ran under gpu-run (both cards leased for safety, compute
+  pinned to ONE card via ONEAPI_DEVICE_SELECTOR=level_zero:0; CCL_TOPO_P2P_ACCESS=0, ZE_FLAT_DEVICE_HIERARCHY
+  =FLAT). Two on-device tests (oneAPI PJRT, --@zml//platforms:oneapi=true), then bazelisk shutdown.
+COMMAND: gpu-run bash m4_gpu_run.sh  (runs //examples/llm:quant_tests then //examples/w8a8_bench --iters=100)
+RESULT:
+  - CORRECTNESS (quant_tests on B70): with_bias rel_l2 0.00701, dotAcc(.i32) vs convert-to-i32 0/2048
+    mismatches, PASS -- the int8 W8A8 path is COHERENT on the GPU.
+  - PERF (w8a8_bench, q_proj shape M=512 K=5120 N=12288, 64.4 GFLOP/call): bf16 0.572 ms/call (112.7 TFLOP/s)
+    vs int8 0.344 ms/call (187.1 TFLOP/s) = 1.66x. int8 out[0]=-214260 (large i32 -> i32 accum on GPU too).
+VERDICT: **GO.** s8 dot_general LOWERS TO INT8-XMX/DP4A on the prebuilt oneAPI PJRT plugin -- a 1.66x speedup
+  only happens if the int8 fast path is taken (a widening-to-bf16 fallback would be ~1x or SLOWER). W8A8 is a
+  real perf win on zml, not just weight-only. The M4 open question (W8A8_FEASIBILITY.md Q3 / risk #1) is
+  ANSWERED YES. ONEDNN_VERBOSE printed nothing (the prebuilt plugin doesn't surface oneDNN verbose); the
+  timing ratio is the decisive evidence. Teardown CLEAN: gpu-run exit 0 in 21s, no bazel flock leak
+  (fuser empty), xpu-health HEALTHY both cards, daily driver RESTORED (:18080 health 200, all containers up,
+  both cards re-held). The dotAcc helper (true s8 operands) is what made the backend see the int8 GEMM --
+  validates the M4-prep design choice. Bench staged in the patch (examples/w8a8_bench).
+  NEXT: push int8 toward the ~2x peak (larger shapes/tiling), decode-shape M=1 GEMV, M5 TP=2 (attended;
+  reboot-only wedge), and the full-model M3 wiring for an end-to-end zml W8A8 serve to compare vs sglang ~25 t/s.

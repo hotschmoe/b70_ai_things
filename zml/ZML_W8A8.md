@@ -45,8 +45,17 @@ verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_pe
   path (0/2048 mismatches) -- which also confirms CPU PJRT accepts genuine s8 `dot_general`.
   QuantizedLinear now uses `dotAcc` (GPU-INT8-XMX-ready); M1/M2 re-validated identical. The
   remaining M4 work is purely the on-GPU measurement (does oneAPI lower it to INT8-XMX?).
-- M4 -- pending, the go/no-go GPU perf gate (build oneAPI; MEASURE INT8-XMX lowering vs bf16).
-- M5 -- pending (TP=2).
+- **M4 -- DONE (2026-06-30): GO.** Built `--@zml//platforms:oneapi=true`, ran on ONE B70 (daily
+  driver down, attended). (a) Correctness: `quant_tests` on-device rel_l2 0.00701, dotAcc vs convert
+  0/2048 mismatches -- the int8 path is coherent on GPU. (b) Perf gate `//examples/w8a8_bench` at the
+  q_proj shape (M512 K5120 N12288): bf16 0.572 ms/call (112.7 TFLOP/s) vs int8 0.344 ms/call (187.1
+  TFLOP/s) = **1.66x** -> s8 `dot_general` LOWERS TO INT8-XMX (a widening fallback would be ~1x or
+  slower). W8A8 is a real win on zml. Clean teardown (bazel shutdown, no flock leak, xpu-health
+  HEALTHY), daily driver restored. ONEDNN_VERBOSE emitted nothing (prebuilt plugin doesn't surface it)
+  -- the 1.66x ratio is the decisive evidence. See JOURNAL 2026-06-30.
+- M5 -- pending (TP=2 W8A8 across both B70s; attended only -- the TP=2 wedge is reboot-only).
+- Follow-ups: push int8 efficiency toward the ~2x peak (larger shapes / tiling), profile decode-shape
+  (M=1) GEMV where XMX may help less, and the full-model M3 wiring for an end-to-end zml W8A8 serve.
 
 ## 0. Why this is worth doing / why it's hard
 
@@ -235,7 +244,9 @@ M5. **TP=2 W8A8** across both B70s (only after M4 single-card is coherent + the 
 
 ## 8. Open questions / risks (rank-ordered)
 
-1. (M4 gate) Does oneAPI PJRT lower `s8 dot_general` to INT8 XMX? If not, W8A8 has no perf upside on zml.
+1. (M4 gate) Does oneAPI PJRT lower `s8 dot_general` to INT8 XMX? **ANSWERED YES (2026-06-30):** int8
+   GEMM measured 1.66x faster than bf16 at the q_proj shape on a B70 (`//examples/w8a8_bench`), which only
+   happens if the INT8-XMX path is taken. W8A8 has a real perf upside on zml. (was: the go/no-go gate.)
 2. Per-token DYNAMIC activation quant inside the XLA graph -- cheap enough? (reduce_max + div + round +
    convert per linear; may or may not fuse well on oneAPI). Measure overhead vs the GEMM win.
 3. Loader for compressed-tensors int8 + bf16 scales into zml's TensorStore (custom dtype/byte handling).

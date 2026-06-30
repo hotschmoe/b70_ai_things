@@ -41,7 +41,18 @@ DO NOT submit upstream without the user's explicit go-ahead.
    (gate/up/down) and validates block-level parity (3 quantized projections + SiLU) vs a
    bf16 dequant reference on CPU.
 
-7. **`examples/llm/BUILD.bazel`** -- `quant_tests`, `quant_load_probe`, `quant_block_probe`.
+7. **`examples/w8a8_bench/`** -- the INT8-XMX perf gate: times an int8 (`dotAcc`) GEMM vs a
+   bf16 GEMM of the same shape. On a B70 (oneAPI) at the q_proj shape, int8 is **1.66x**
+   faster than bf16 -> s8 `dot_general` lowers to the INT8-XMX path.
+
+8. **`examples/llm/BUILD.bazel`** -- `quant_tests`, `quant_load_probe`, `quant_block_probe`.
+
+## Validated end-to-end
+
+CPU (M0-M3): all parity gates pass. GPU (M4, one B70, oneAPI): `quant_tests` coherent
+(0/2048 mismatches) and `w8a8_bench` int8 1.66x bf16 -- confirming the `dotGeneralAcc`
+helper's true-s8 operands reach the INT8-XMX kernel. So this patch is not just compilable;
+its central claim (int8 GEMM win on Intel Arc via a result-dtype-choosing dot) is measured.
 
 ## Suggested PR split (when approved)
 
