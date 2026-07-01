@@ -114,6 +114,7 @@ pub const MtpExes = struct {
     draft: zml.Exe, // model.MtpDraft.forward @ s=1 -> (draft token, updated SelfAttnCache, rng)
     verify: KernelExe, // main model @ s=Kv (prefill-style sampler + GDN forwardVerify from cache)
     gdn_snapshot: zml.Exe, // model.GdnSnapshot.forward -> deep copy of the GDN state (rollback)
+    slice_hidden: zml.Exe, // model.SliceHidden.forward -> extract one position of the verify hidden
     mtp_kv: model.KvCache.SelfAttnCache, // 1-layer cache template (drives buffer allocation)
     seqlen: u32,
     kv: u32,
@@ -202,12 +203,25 @@ pub const MtpExes = struct {
                 .program_name = "qwen3_5_gdn_snapshot",
             });
         };
+        errdefer gdn_snapshot_exe.deinit();
+
+        // Slice-hidden exe: extract one sequence position from the s=Kv verify hidden ({b,Kv,d} ->
+        // {b,1,d}) to feed the next MTP draft + the accept catch-up.
+        const slice_hidden_exe = b: {
+            const verify_hidden = mtpHidden(qwen_model, MTP_KV);
+            const index: zml.Tensor = .init(.{}, .u32);
+            break :b try platform.compile(allocator, io, model.SliceHidden{}, .forward, .{ verify_hidden, index }, .{
+                .shardings = &parameters.shardings.all(),
+                .program_name = "qwen3_5_slice_hidden",
+            });
+        };
 
         return .{
             .prefill = prefill_exe,
             .draft = draft_exe,
             .verify = verify_exe,
             .gdn_snapshot = gdn_snapshot_exe,
+            .slice_hidden = slice_hidden_exe,
             .mtp_kv = mtp_kv,
             .seqlen = @intCast(seqlen),
             .kv = MTP_KV,
@@ -219,6 +233,7 @@ pub const MtpExes = struct {
         self.draft.deinit();
         self.verify.deinit();
         self.gdn_snapshot.deinit();
+        self.slice_hidden.deinit();
     }
 };
 

@@ -146,7 +146,24 @@ pub const Session = struct {
         }
     }
 
+    // Stream one decoded token to stdout with the <think> dim styling (shared by runDecode + the MTP
+    // drive loop).
+    fn streamToken(self: *Session, decoder: anytype, token_id: u32, out_buf: []u8, stdout: *std.Io.Writer) !void {
+        const token = try decoder.feedOne(token_id, out_buf);
+        if (self.think_start) |think_start| if (token_id == think_start) {
+            try stdout.writeAll("\x1b[2m");
+        };
+        try stdout.writeAll(token);
+        if (self.think_end) |think_end| if (token_id == think_end) {
+            try stdout.writeAll("\x1b[0m");
+        };
+        try stdout.flush();
+    }
+
     pub fn runDecode(self: *Session, all_tokens: *std.ArrayList(u32), stdout: *std.Io.Writer) !void {
+        // MTP drive mode: run the speculative-decode loop (draft -> verify Kv -> accept/commit) instead.
+        if (self.mtp) |*m| if (m.mode == .drive) return self.runDecodeMtp(all_tokens, stdout);
+
         var decoder = try self.tokenizer.decoder();
         defer decoder.deinit();
 
@@ -209,7 +226,7 @@ pub const Session = struct {
                     if (d == produced) mtp.accepted += 1;
                 }
                 const pos: u32 = @intCast(all_tokens.items.len - 1);
-                try mtp.draftStep(self.io, self.platform, &current_token_buffer, &captured_hidden.?, pos);
+                _ = try mtp.draftStep(self.io, self.platform, &current_token_buffer, &captured_hidden.?, pos);
             }
         }
 
@@ -224,7 +241,175 @@ pub const Session = struct {
             try stdout.flush();
         };
     }
+
+    // MTP spec-decode DRIVE loop (K=1): each step drafts 1 token (d1), verifies [cur, d1] in ONE
+    // s=Kv main forward, accepts d1 iff d1==y_0 (greedy speculative decode is exact), and commits 1
+    // or 2 tokens. On a rejected draft the GDN recurrent state -- advanced by the wrong token during
+    // verify, and not invertible -- is rolled back to a pre-verify snapshot and re-advanced by a
+    // single normal decode of cur. The emitted token stream is byte-identical to greedy MTP-off
+    // decode (the validation oracle). See zml/ZML_MTP_PLAN.md.
+    pub fn runDecodeMtp(self: *Session, all_tokens: *std.ArrayList(u32), stdout: *std.Io.Writer) !void {
+        const mtp = &self.mtp.?;
+        var decoder = try self.tokenizer.decoder();
+        defer decoder.deinit();
+
+        const out_buf: []u8 = try self.allocator.alloc(u8, 1024);
+        defer self.allocator.free(out_buf);
+        const replicated: zml.Sharding = .replicated;
+
+        var cur_token_buffer = try zml.Buffer.fromSlice(self.io, self.platform, self.generated_token_slice, replicated);
+        defer cur_token_buffer.deinit();
+
+        var cur_hidden: ?zml.Buffer = null;
+        defer if (cur_hidden) |*h| h.deinit();
+
+        // --- bootstrap: emit t0 (=x_L from prefill) and run ONE normal decode to establish cur =
+        // x_{L+1} and cur_hidden = h_L. The MTP KV was filled 0..L-1 over the prompt in runPrefill;
+        // the first drive draft then writes MTP-KV[L], contiguous.
+        {
+            const t0 = self.generated_token_slice.items(u32)[0];
+            if (t0 == self.eos_token_id) return;
+            try self.streamToken(&decoder, t0, out_buf, stdout);
+            try all_tokens.append(self.allocator, t0);
+            if (all_tokens.items.len >= self.seqlen) {
+                try stdout.writeAll(try decoder.finalize(out_buf));
+                try stdout.flush();
+                return;
+            }
+            var idx = try zml.Buffer.scalar(self.io, self.platform, @as(u32, @intCast(all_tokens.items.len - 1)), .u32);
+            defer idx.deinit();
+            try self.decode_runner.run(.{
+                .allocator = self.allocator,
+                .io = self.io,
+                .platform = self.platform,
+                .model_buffers = self.model_buffers,
+                .tokens_buf = &cur_token_buffer,
+                .token_index_buf = &idx,
+                .kv_cache_buffers = &self.kv_cache_buffers,
+                .rng_buffers = &self.rng_buffers,
+                .capture_hidden = &cur_hidden,
+            });
+            try cur_token_buffer.toSlice(self.io, self.generated_token_slice);
+        }
+
+        generation: while (true) {
+            const cur = self.generated_token_slice.items(u32)[0]; // x_{p+1}
+            if (cur == self.eos_token_id) break :generation;
+            if (all_tokens.items.len >= self.seqlen) break :generation;
+
+            const p: u32 = @intCast(all_tokens.items.len - 1); // main committed through p
+
+            // 1) DRAFT d1 from (cur, h_p) at MTP position p (writes MTP-KV[p]).
+            const d1 = try mtp.draftStep(self.io, self.platform, &cur_token_buffer, &cur_hidden.?, p);
+
+            // 2) VERIFY [cur, d1] at main positions p+1..p+Kv from the committed cache. Snapshot the
+            //    GDN state first so a rejected draft can roll back.
+            var gdn_snap = mtp.snapshotGdn(&self.kv_cache_buffers.gated_delta_net);
+            mtp.verify_tokens_slice.items(u32)[0] = cur;
+            mtp.verify_tokens_slice.items(u32)[1] = d1;
+            var verify_tokens = try zml.Buffer.fromSlice(self.io, self.platform, mtp.verify_tokens_slice, replicated);
+            defer verify_tokens.deinit();
+            var verify_idx = try zml.Buffer.scalar(self.io, self.platform, p + 1, .u32);
+            defer verify_idx.deinit();
+            var verify_hidden: ?zml.Buffer = null;
+            defer if (verify_hidden) |*h| h.deinit();
+            try mtp.verify_runner.run(.{
+                .allocator = self.allocator,
+                .io = self.io,
+                .platform = self.platform,
+                .model_buffers = self.model_buffers,
+                .tokens_buf = &verify_tokens,
+                .token_index_buf = &verify_idx,
+                .kv_cache_buffers = &self.kv_cache_buffers,
+                .rng_buffers = &self.rng_buffers,
+                .capture_hidden = &verify_hidden,
+            });
+            try verify_tokens.toSlice(self.io, mtp.verify_tokens_slice);
+            const y0 = mtp.verify_tokens_slice.items(u32)[0]; // true x_{p+2}
+            const y1 = mtp.verify_tokens_slice.items(u32)[1]; // true x_{p+3} (if d1 accepted)
+
+            mtp.drive_iters += 1;
+            const accept = (d1 == y0);
+
+            // 3) EMIT cur (always correct); commit x_{p+1}.
+            try self.streamToken(&decoder, cur, out_buf, stdout);
+            try all_tokens.append(self.allocator, cur);
+
+            if (accept) {
+                mtp.drive_accepted += 1;
+                // GDN state through p+2 (verify) is correct -> keep it, drop the snapshot.
+                model.KvCache.GatedDeltaNetCache.deinitBuffer(&gdn_snap);
+                // commit d1 (=x_{p+2}) unless it is EOS (match MTP-off: never emit past EOS).
+                if (d1 == self.eos_token_id) break :generation;
+                try self.streamToken(&decoder, d1, out_buf, stdout);
+                try all_tokens.append(self.allocator, d1);
+                if (all_tokens.items.len >= self.seqlen) break :generation;
+
+                // MTP catch-up: fill MTP-KV[p+1] for x_{p+2}=d1 with hidden h_{p+1} (verify pos 0),
+                // so the MTP KV stays contiguous (the single draft only wrote MTP-KV[p]).
+                var d1_buf = try tokenBuffer(self.allocator, self.io, self.platform, d1);
+                defer d1_buf.deinit();
+                var catchup_hidden = try mtp.sliceHidden(self.io, self.platform, &verify_hidden.?, 0);
+                defer catchup_hidden.deinit();
+                _ = try mtp.draftStep(self.io, self.platform, &d1_buf, &catchup_hidden, p + 1);
+
+                // next: cur = y1, cur_hidden = h_{p+2} (verify last position).
+                const next_hidden = try mtp.sliceHidden(self.io, self.platform, &verify_hidden.?, inference.MTP_KV - 1);
+                if (cur_hidden) |*h| h.deinit();
+                cur_hidden = next_hidden;
+                self.generated_token_slice.items(u32)[0] = y1;
+                cur_token_buffer.deinit();
+                cur_token_buffer = try zml.Buffer.fromSlice(self.io, self.platform, self.generated_token_slice, replicated);
+            } else {
+                // reject: committed must be through p+1. Restore the GDN snapshot (verify advanced it
+                // to p+2 with the wrong d1), then re-decode cur to advance GDN + full-attn to p+1
+                // (the verify's full-attn slot p+2 is scratch, overwritten by a later step).
+                inference.replaceBufferImpl(&self.kv_cache_buffers.gated_delta_net.conv_state, &gdn_snap.conv_state);
+                inference.replaceBufferImpl(&self.kv_cache_buffers.gated_delta_net.recurrent_state, &gdn_snap.recurrent_state);
+                gdn_snap.layer_index.deinit(); // committed keeps its own layer_index
+                if (all_tokens.items.len >= self.seqlen) break :generation;
+
+                var re_hidden: ?zml.Buffer = null;
+                var idx = try zml.Buffer.scalar(self.io, self.platform, p + 1, .u32);
+                defer idx.deinit();
+                try self.decode_runner.run(.{
+                    .allocator = self.allocator,
+                    .io = self.io,
+                    .platform = self.platform,
+                    .model_buffers = self.model_buffers,
+                    .tokens_buf = &cur_token_buffer,
+                    .token_index_buf = &idx,
+                    .kv_cache_buffers = &self.kv_cache_buffers,
+                    .rng_buffers = &self.rng_buffers,
+                    .capture_hidden = &re_hidden,
+                });
+                try cur_token_buffer.toSlice(self.io, self.generated_token_slice); // = y0 (=x_{p+2})
+                if (cur_hidden) |*h| h.deinit();
+                cur_hidden = re_hidden;
+            }
+        }
+
+        try stdout.writeAll(try decoder.finalize(out_buf));
+        try stdout.flush();
+
+        if (mtp.drive_iters > 0) {
+            try stdout.print("\n\x1b[35m[mtp] drive accept {d}/{d} = {d:.1}%  (avg {d:.2} tok/verify)\x1b[0m\n", .{
+                mtp.drive_accepted, mtp.drive_iters,
+                100.0 * @as(f64, @floatFromInt(mtp.drive_accepted)) / @as(f64, @floatFromInt(mtp.drive_iters)),
+                1.0 + @as(f64, @floatFromInt(mtp.drive_accepted)) / @as(f64, @floatFromInt(mtp.drive_iters)),
+            });
+            try stdout.flush();
+        }
+    }
 };
+
+// Build a {b=1, s=1} u32 token buffer holding `val` (for MTP draft inputs built from host tokens).
+fn tokenBuffer(allocator: std.mem.Allocator, io: std.Io, platform: *const zml.Platform, val: u32) !zml.Buffer {
+    const s = try zml.Slice.alloc(allocator, zml.Shape.init(.{ .b = 1, .s = 1 }, .u32));
+    defer s.free(allocator);
+    s.items(u32)[0] = val;
+    return zml.Buffer.fromSlice(io, platform, s, .replicated);
+}
 
 // NEXTN/MTP speculative-decode runtime state: the compiled prefill/draft exes (borrowed from the
 // CompiledModel), their baked arguments/results, and the MTP head's OWN 1-layer self-attn KV cache.
@@ -244,6 +429,17 @@ pub const Mtp = struct {
     pending_draft: ?u32 = null,
     accepted: u64 = 0,
     total: u64 = 0,
+
+    // --- drive-mode (.drive) state: the s=Kv verify + GDN rollback machinery ---
+    verify_runner: inference.KernelExe.Runner, // main model @ s=Kv over the shared committed cache
+    verify_tokens_slice: zml.Slice, // host {b=1, s=Kv}: input [t, d_1] and output [y_0, y_1]
+    snap_args: zml.exe.Exe.Arguments, // gdn_snapshot exe
+    snap_results: zml.exe.Exe.Results,
+    slice_args: zml.exe.Exe.Arguments, // slice_hidden exe
+    slice_results: zml.exe.Exe.Results,
+    // Accept/verify counters for the drive-mode summary (drafts accepted / spec iterations).
+    drive_accepted: u64 = 0,
+    drive_iters: u64 = 0,
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -282,6 +478,21 @@ pub const Mtp = struct {
         var rng = try zml.Tensor.Rng.initBuffer(io, platform, .replicated, seed);
         errdefer zml.Tensor.Rng.deinitBuffer(&rng);
 
+        // Drive-mode machinery (also allocated in measure mode -- cheap; only args/results, no big
+        // buffers): the verify runner over the shared committed cache, and the snapshot/slice exes.
+        var verify_runner = try exes.verify.initRunner(allocator, io, platform, model_buffers);
+        errdefer verify_runner.deinit(allocator);
+
+        var snap_args = try exes.gdn_snapshot.args(allocator); // no weights to bake
+        errdefer snap_args.deinit(allocator);
+        var snap_results = try exes.gdn_snapshot.results(allocator);
+        errdefer snap_results.deinit(allocator);
+
+        var slice_args = try exes.slice_hidden.args(allocator); // no weights to bake
+        errdefer slice_args.deinit(allocator);
+        var slice_results = try exes.slice_hidden.results(allocator);
+        errdefer slice_results.deinit(allocator);
+
         return .{
             .exes = exes,
             .kv = kv,
@@ -292,6 +503,12 @@ pub const Mtp = struct {
             .rng = rng,
             .draft_token_slice = try .alloc(allocator, zml.Shape.init(.{ .b = 1, .s = 1 }, .u32)),
             .mode = mode,
+            .verify_runner = verify_runner,
+            .verify_tokens_slice = try .alloc(allocator, zml.Shape.init(.{ .b = 1, .s = inference.MTP_KV }, .u32)),
+            .snap_args = snap_args,
+            .snap_results = snap_results,
+            .slice_args = slice_args,
+            .slice_results = slice_results,
         };
     }
 
@@ -303,6 +520,12 @@ pub const Mtp = struct {
         self.draft_results.deinit(allocator);
         zml.Tensor.Rng.deinitBuffer(&self.rng);
         self.draft_token_slice.free(allocator);
+        self.verify_runner.deinit(allocator);
+        self.verify_tokens_slice.free(allocator);
+        self.snap_args.deinit(allocator);
+        self.snap_results.deinit(allocator);
+        self.slice_args.deinit(allocator);
+        self.slice_results.deinit(allocator);
     }
 
     // Fill the MTP KV over the prompt (positions 0..L-1). Input_ids are the prompt SHIFTED LEFT by
@@ -343,8 +566,8 @@ pub const Mtp = struct {
     }
 
     // One MTP draft: consume `token_buf` (the just-committed token x_{p+1}) with `prev_hidden` (h_p)
-    // at rope-position/KV-slot `pos` (= p), producing the drafted next token (into pending_draft)
-    // and advancing the MTP KV cache by one slot.
+    // at rope-position/KV-slot `pos` (= p), advancing the MTP KV cache by one slot and returning the
+    // drafted next token (also stored in pending_draft for the measure path).
     pub fn draftStep(
         self: *Mtp,
         io: std.Io,
@@ -352,7 +575,7 @@ pub const Mtp = struct {
         token_buf: *zml.Buffer,
         prev_hidden: *zml.Buffer,
         pos: u32,
-    ) !void {
+    ) !u32 {
         var pos_buf = try zml.Buffer.scalar(io, platform, pos, .u32);
         defer pos_buf.deinit();
 
@@ -371,6 +594,24 @@ pub const Mtp = struct {
         try new_token.toSlice(io, self.draft_token_slice);
         self.pending_draft = self.draft_token_slice.items(u32)[0];
         new_token.deinit();
+        return self.pending_draft.?;
+    }
+
+    // Deep-copy the committed GDN conv+recurrent state (fresh buffers) so a rejected draft can be
+    // rolled back. Caller owns the returned buffers (deinit on accept, or swap-in on reject).
+    fn snapshotGdn(self: *Mtp, gdn: *const zml.Bufferized(model.KvCache.GatedDeltaNetCache)) zml.Bufferized(model.KvCache.GatedDeltaNetCache) {
+        self.snap_args.set(.{gdn.*});
+        self.exes.gdn_snapshot.call(self.snap_args, &self.snap_results);
+        return self.snap_results.get(zml.Bufferized(model.KvCache.GatedDeltaNetCache));
+    }
+
+    // Extract sequence position `index` from the s=Kv verify hidden ({b,Kv,d} -> {b,1,d}).
+    fn sliceHidden(self: *Mtp, io: std.Io, platform: *const zml.Platform, hidden: *zml.Buffer, index: u32) !zml.Buffer {
+        var index_buf = try zml.Buffer.scalar(io, platform, index, .u32);
+        defer index_buf.deinit();
+        self.slice_args.set(.{ hidden, &index_buf });
+        self.exes.slice_hidden.call(self.slice_args, &self.slice_results);
+        return self.slice_results.get(zml.Buffer);
     }
 };
 

@@ -609,6 +609,16 @@ pub const MtpDraft = struct {
     }
 };
 
+// Extract a single sequence position from the captured verify hidden ({b, s=Kv, d} -> {b, 1, d}).
+// The spec-decode drive loop needs the per-position pre-norm hidden (h_{p+1}, h_{p+2}) from the s=Kv
+// verify forward to feed the next MTP draft + the accept catch-up; this slices it on-device.
+pub const SliceHidden = struct {
+    pub fn forward(self: SliceHidden, hidden: zml.Tensor, index: zml.Tensor) zml.Tensor {
+        _ = self;
+        return hidden.withPartialTags(.{ .s, .d }).dynamicSlice(.{ .s = zml.Tensor.DynSlice{ .start = index, .len = 1 } });
+    }
+};
+
 // Snapshot (deep copy) of the GDN conv+recurrent state, for MTP spec-decode rollback: the verify
 // forward advances the GDN state over the speculative tokens, but the recurrent state is not
 // invertible, so on a REJECTED draft we must restore the pre-verify state. optimizationBarrier
@@ -619,7 +629,9 @@ pub const GdnSnapshot = struct {
         return .{
             .conv_state = cache.conv_state.optimizationBarrier(),
             .recurrent_state = cache.recurrent_state.optimizationBarrier(),
-            .layer_index = cache.layer_index,
+            // Copy layer_index too (fresh buffer): the snapshot must not alias the committed cache,
+            // else freeing one dangles the other during the rollback swap.
+            .layer_index = cache.layer_index.optimizationBarrier(),
         };
     }
 };
@@ -1551,6 +1563,7 @@ comptime {
     _ = &MtpDraft.forward;
     _ = &MtpPrefill.forward;
     _ = &GdnSnapshot.forward;
+    _ = &SliceHidden.forward;
     _ = &TransformerLayer.forwardLinearAttnVerify;
     _ = &GatedDeltaNet.forwardVerify;
     _ = &KvCache.SelfAttnCache.initSingleLayer;
