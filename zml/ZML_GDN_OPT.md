@@ -388,3 +388,41 @@ CLAUDE.md shelf rules), plus microbench %-of-608GB/s (decode) and %-of-367TOPS (
   accept decay :109); `zml/ZML_W8A8.md` (scheme+ignore :112-146, sweep/roofline :64-73);
   `docs/kernel/21_gdn_spec_capture_issue.md` (GDN + spec-decode FULL-capture upstream block on XPU);
   memory `b70-int8-xmx-roofline`.
+
+---
+
+## 9. Implementation decisions (2026-07-01, deep-session research + being implemented)
+
+Lever 2 (chunked scan) is being implemented in `zml/nn.zig` (`GatedDeltaNet.forwardChunked`) with a
+validated numpy reference (machine-precision, rel-L2 ~1e-15 vs the zml `step()` recurrence) driving a
+CPU parity test vs the existing while-scan. Decisions, grounded in a dedicated FLA/GDN research pass:
+
+- **Chunk size C=32 (not FLA's 64).** FLA's C=64 is justified by HBM<->SRAM amortization INSIDE one
+  fused Triton kernel. For a PURE batched-matmul StableHLO expression (no fused kernel) that
+  justification disappears -- every chunk op already round-trips HBM -- leaving raw FLOPs + the CxC
+  inverse, both of which FAVOR smaller C. C=32 halves the LCd intra term and quarters the CxC-inverse
+  element count vs 64, at the cost of doubling the (cheap, `stablehlo.while`) inter-chunk scan length.
+  Keep C a multiple of 16 for DPAS alignment; sweep {16,32,64} on GPU later.
+- **fp32 boundaries mirror FLA exactly:** keep in fp32 the log-gate cumsum, the decay exponent
+  (exponentiate LATE; all exponents <=0 on the strict-lower triangle so NO overflow and no clamp
+  needed), the `A = beta*KK^T*decay` matrix, the entire `(I-A)^-1` Neumann computation, and the state
+  accumulation. Inputs q,k,v may be bf16 but the model already upcasts to f32 (model.zig:1044-1063).
+  f32 single-chunk-whole-sequence UNDERFLOWS `d_j=exp(cumsum)` for long s (exp(-128)->0) -- which is
+  exactly WHY chunking (per-chunk cumsum reset) is mandatory for prefill; short s (decode/verify) is
+  safe either way.
+- **Inverse = finite Neumann via fp32 iterative DOUBLING**, `ceil(log2 C)` stages (C=32 -> 5), exact by
+  nilpotency (A strict-lower => A^C=0). This is O(log C)-depth pure batched-matmul (XLA-friendly),
+  strictly better than porting FLA's O(C)-depth blocked forward-substitution. SIGN is load-bearing:
+  FLA inverts `(I + A_fla)` with A_fla POSITIVE, so the port uses `N = -A_fla`, `T = sum N^n`.
+- **Static tril masks** (`triangular(.{.i,.j}, num_diagonals)`), NOT data-dependent -- a Compiler-First
+  SSD paper measured dynamic row-masking dropping throughput 82.8%. num_diagonals=-1 for the strict A
+  (step 2), num_diagonals=0 INCLUSIVE for the intra output Aqk (step 6) -- the one-diagonal difference
+  is load-bearing (excluding it = 84% error, confirmed empirically).
+- **Where it pays / does not:** decode s=1 chunk-size is irrelevant (scan is one step; the 79% is the
+  projections). The chunked scan's real wins are (a) PREFILL/TTFT (O(s)->O(s/C) sequential) and (b)
+  removing the MTP-verify's sequential-scan dependency so the PROJECTIONS can amortize once the
+  batched-M w8a16 GEMM lands (ZML_INT8_GEMM_OPT.md 7.4). It is NOT a single-stream decode win on its
+  own -- the M=1 int8 projection bandwidth/layout problem is (ZML_INT8_GEMM_OPT.md 7.1-7.3).
+- **Head config (served qwen3.6-27B dense, confirmed from config.json):** 16 k/q heads, 48 v-heads
+  (GVA repeat 3), head_k=head_v=128, conv kernel 4, full-attn every 4th layer. (35B/80B variants have
+  32 v-heads, ratio 2.)

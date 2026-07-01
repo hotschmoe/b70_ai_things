@@ -325,3 +325,102 @@ need to instrument every subsequent kernel change on the "blindfolded" prebuilt 
   `platforms/oneapi/oneapi.zig:36`.
 - Numbers: `zml/W8A8_SWEEP_RESULTS.md` (prefill 67-69% peak; M=1 int8 361 vs bf16 460 GB/s; woq dead
   end); memory `b70-int8-xmx-roofline` (367 TOPS / 608 GB/s; s32 mandatory; M=1 GEMV trap).
+
+--------------------------------------------------------------------------------------------------
+## 7. Research update (2026-07-01, deep-session): M=1 decode is BANDWIDTH/LAYOUT-bound, not XMX
+
+A dedicated web+source research pass (Intel-XPU Triton, oneDNN release notes, XeTLA/ESIMD, llama.cpp
++ vLLM-XPU issues, arXiv) reframes the whole decode-kernel plan. The load-bearing conclusions are
+CONFIRMED against primary sources (adversarially verified). This section SUPERSEDES the "make it hit
+XMX" framing in sections 2-3 for the M=1 case.
+
+### 7.1 The reframing (the single most important finding)
+- **At M=1..8, weight-only int8 matmul is 30-300x below the compute roofline -- it is PURELY
+  weight-bandwidth-bound.** The entire win over bf16 comes from reading FEWER WEIGHT BYTES (int8=2x,
+  int4=4x) and hitting PEAK BANDWIDTH via a good weight MEMORY LAYOUT -- NOT from the systolic array.
+  "Reaching DPAS at M=1" is the wrong goal: DPAS can be *issued* at M=1 (Intel Triton emits an rcount=1
+  DPAS tile, no FMA fallback) but it does not help throughput there.
+- Roofline crossover (B70, 367 TOPS / 608 GB/s = 603 ops/byte; int8 weight-only AI = 2*M ops/byte):
+  int8 becomes compute-bound only near **M~=300**, int4 near **M~=150**. So M=1..8 (decode + MTP
+  verify) is DEEP in the bandwidth-bound regime.
+- **On-THIS-box proof:** llama.cpp issue #21517 (created 2026-04-06, Qwen3.5-27B dense, a B70):
+  Q8_0 decode = 4.88 t/s (130 GB/s = **21% of 608**) vs Q4_K_M = 20.56 t/s (53%). Root cause was
+  KERNEL/LAYOUT DISPATCH (Q8_0 fell to the generic DMMV path: 2 values/thread, stride 64), NOT XMX.
+  Fix PR #21527 (merged 2026-04-07, `dequantize_q8_0_reorder`) -> **15.24 t/s = 3.1x, 21%->66% BW, via
+  a WEIGHT LAYOUT REORDER ALONE, still no XMX.** Same regression on Vulkan; absent on Xe1 A770 => it is
+  a Xe2-specific int8 kernel/layout gap. THIS is the existence proof that the decode win is a
+  layout-optimized weight load, and it was measured on our exact GPU + model.
+
+### 7.2 Consequence for the four paths (revised verdicts)
+- **PATH 1 (subchannel-dequant fusion flag)** -- unchanged: still the cheapest probe. CODE LANDED this
+  session (env-gated `ZML_SUBCHANNEL_FUSION` in `module.zig` .oneapi arm, flag string verified against
+  the plugin .so; HLO dump via `ZML_DUMP_HLO` in the sweep). GPU A/B pending. Its ceiling is the same
+  Intel-Triton GEMM as Path 4-Triton, and per 7.1 a Triton `tl.dot(s8,s8)` stays bandwidth-bound at
+  M=1 -- so even if it fires it may not beat a layout-optimized load. Run it, but do not expect a
+  ceiling result.
+- **PATH 2 (oneDNN-SYCL w8a16 via FFI)** -- STILL WORTH DOING, but with a corrected expectation: the
+  oneDNN GPU matmul dispatches to `jit:gemm:any` (GemmStone) which has **NO dedicated GPU GEMV kernel**;
+  at M=1 it picks a small-unroll/FMA strategy and likely leaves BW on the table. HOWEVER at **M=2..8 it
+  is a real tiled GEMM that reads the weight ONCE** -- so it should deliver the MTP-verify amortization
+  (7.4) even if it under-serves pure M=1 decode. Recommended as the low-effort BASELINE: benchmark it
+  at M=1,2,4,8 first (confirm native s8s8 vs u8s8+compensation via `ONEDNN_VERBOSE=dispatch`), then
+  decide whether the layout-first kernel (7.3) is needed for M=1. oneDNN GPU weight-decompression is
+  v3.5+ (int8/int4 weights), int8-activations-with-grouped-scales is v3.6+, Battlemage perf in v3.7.
+  The bundled plugin oneDNN is CPU-only, so link our own DNNL_GPU_RUNTIME=SYCL build -- OR reuse the
+  already-built sglang GPU oneDNN in `_xpu_C.abi3.so` / `vllm-xpu-kernels-w8a8/csrc/xpu/onednn/`
+  (kernels-mining agent confirmed it exists and is dlopen-able, like flashattn dlopens its lib).
+- **PATH 4 (hand kernel) -- PROMOTED to the real decode ceiling.** The layout-first weight-only kernel
+  (7.3) is THE lever, and a fused ESIMD/XeTLA kernel is the ceiling. Two concrete reference
+  implementations to study/port:
+  1. **llama.cpp `dequantize_q8_0_reorder` (PR #21527)** -- the minimal proven 3.1x: reorder the int8
+     weight for coalesced Xe2 loads (16 values/thread, stride 512), dequant-to-f16 + vector-ALU, no XMX.
+  2. **Intel arXiv:2508.06753 "Pushing the Envelope of LLM Inference on ... Intel GPUs"** (v2 Jan 2026)
+     -- fused ESIMD/XeTLA kernels with an autotuner, weights offline in **VNNI16**, activation
+     quant/dequant fused INSIDE the GEMM, shipped as a **vLLM quantization plugin**. Measured GEMV
+     within 10% of the int8 roofline (380 of 456 GB/s on B580), 6.3x end-to-end vs bf16. This is the
+     "hand-write the kernel" endgame recipe.
+  - Xe2 DPAS int8 shape (verified from the SYCL joint_matrix spec): **s8xs8->s32 native, M<=8, N=16,
+    K=32** (N=8 on older Alchemist). Variable rcount=M 1..8 with NO M-padding -- unlike NVIDIA's fixed
+    16x16 fragments -- which is exactly why batching MTP tokens (7.4) is free on Xe2.
+
+### 7.3 The recommended decode-kernel lever (revised): layout-first weight-only w8a16
+int8 weight + bf16 activation + per-channel weight dequant in the epilogue, with the WEIGHT
+PRE-SHUFFLED OFFLINE (VNNI16 / reorder) so the M=1 load is fully coalesced at ~peak BW. This is the
+llama.cpp-proven 3.1x on this box and "the ~2x-over-bf16 that is actually on the table." Whether it
+emits DPAS(rcount=1) or an FMA reduction is second-order -- both are bandwidth-bound; pick whichever
+the compiler coalesces best. Secondary M=1 occupancy lever: Split-K (4-8) with an i32 partial-sum
+reduce (a single GEMV tile under-occupies the 32 Xe cores). Keep symmetric zero-point-free per-channel
+int8 (Xe2 s8xs8 is native, so the old "+128 tax" is the asymmetric zero-point compensation + act-quant
+prologue, NOT signedness -- our scheme is already symmetric, good).
+
+### 7.4 The MTP amortization is a batched-M GEMM (structural, may not even need a new kernel)
+The measured "verify(s=Kv=2) ~= 2x decode(s=1), nothing amortizes" is because the current small-M int8
+path is GEMV-per-token that RE-READS the weight M times. The fix: run the projection as ONE GEMM over
+the M=Kv verify tokens so the weight is read ONCE for all M (Xe2 rcount absorbs M=1..8 with no padding
+waste). zml's `dotAcc` over M=Kv is already a single dot, but it dispatches to the inefficient small-M
+kernel; a proper w8a16 GEMM (Path 2 at M=2..8, or the 7.3 kernel) makes MTP amortize "for free." This
+is the biggest structural MTP win and it is orthogonal to the M=1 decode problem.
+
+### 7.5 P2P / TP collectives -- verdict (from the kernels/patches mining + ZML_TP_ALLREDUCE.md)
+- DO NOT port the vLLM push-all-reduce kernel. zml's TP all_reduce is an in-graph StableHLO
+  `all_reduce` (`zml/ops.zig:142`) that Shardy/SPMD schedules and OVERLAPS with the matmul -- a
+  PJRT custom-call would be opaque to SPMD and lose that. The push-AR host-barrier/graph-break problem
+  simply does not exist in zml.
+- int8/int32-partial reduce does NOT help the row-parallel o_proj/down_proj: the contracting axis is
+  `.model`-SHARDED with PER-SHARD act-scales, so reducing int32 partials before the per-shard scale is
+  WRONG. The bf16 dequantized `add`-reducer all_reduce Shardy already emits is the correct minimal
+  collective. (Verify on GPU: dump StableHLO, confirm down_proj has an `add`-reducer all_reduce and NO
+  `maximum`-reducer.)
+- The ONE transferable P2P lever: an attended `CCL_TOPO_P2P_ACCESS=1` A/B (zml single-process PJRT is
+  the H.12 topology that worked with P2P=1). Expect a PREFILL/TTFT win, not decode. Respect the wedge
+  constraints: export `CCL_TOPO_P2P_ACCESS` explicitly (oneapi.zig:33 garbage-defaults it), oneCCL
+  2022 bundled = same wedge risk, reboot-only recovery, run attended.
+
+### 7.6 Revised execution order (int8 kernel track)
+1. Path 1 GPU A/B (coded) -- cheap, informs the Triton ceiling. Batch into the next attended run.
+2. Path 2 oneDNN w8a16 via FFI as the BASELINE -- benchmark M=1,2,4,8; expect it to unlock MTP
+   (M=2..8) even if it under-serves M=1. Reuse the sglang GPU-oneDNN .so to skip a 14-min build.
+3. If M=1 still lags peak BW: the 7.3 layout-first weight-only kernel (port llama.cpp #21527's reorder;
+   then the arXiv:2508.06753 fused ESIMD/XeTLA recipe as the ceiling).
+4. In parallel (independent of the kernel): the chunked GDN scan (C=32; ZML_GDN_OPT.md) for prefill +
+   to remove the verify's sequential-scan dependency so 7.4 can amortize.

@@ -6711,3 +6711,34 @@ VERDICT: definitive -- spec-decode cannot amortize on the current zml forward be
   #2. Both must become bandwidth/XMX-bound for MTP to pay off. Two research tracks documented for the
   dedicated kernel session: zml/ZML_GDN_OPT.md (chunked scan + int8 GDN projections) and
   zml/ZML_INT8_GEMM_OPT.md (fused w8a16/w8a8), plus the umbrella zml/ZML_INT8_PERF_HANDOFF.md.
+
+## 2026-07-01 -- zml deep perf session: research synthesis + Path-1 code + chunked-scan port [milestone]
+
+CONFIG: dedicated optimization session (opus 4.8, multi-agent). Goal: milk the B70 for int8/GDN decode
+  throughput -- profile/disassemble each step, roll our own kernels where it pays. Daily driver kept
+  DOWN (user-authorized). GPU untouched this session (all CPU/code/research); attended GPU run batched
+  for later. 5 research/mining agents + 1 impl fork.
+COMMAND: (research) 5 agents: chunked-delta-rule numpy reference; Intel Xe2 int8 GEMV SOTA; FLA/GDN
+  chunked-attn SOTA; kernels/+sglang/vllm patch mining; (code) env-gated ZML_SUBCHANNEL_FUSION +
+  ZML_DUMP_HLO (Path 1), `bazelisk build //examples/w8a8_sweep --config=release`; (impl) fork porting
+  GatedDeltaNet.forwardChunked to zml/nn.zig + CPU parity test.
+RESULT:
+  - REFRAME (CONFIRMED on this box): M=1 int8 decode is BANDWIDTH/LAYOUT-bound, not XMX. llama.cpp
+    #21517->#21527 took Qwen3.5-27B Q8_0 decode 4.88->15.24 t/s (21%->66% of 608 GB/s, 3.1x) via a
+    WEIGHT LAYOUT REORDER alone, no XMX. Crossover to compute-bound ~M=300 (int8). => the decode lever
+    is a layout-optimized weight-only w8a16 load (VNNI16 reorder), and MTP amortizes by batching the
+    M=2..8 verify tokens into ONE GEMM (weight read once; Xe2 rcount absorbs M<=8 no-pad). oneDNN GPU
+    matmul (jit:gemm:any, no GPU GEMV kernel) may under-serve M=1 but should unlock MTP at M>=2.
+  - CHUNKED SCAN decisions: C=32 (not FLA's 64 -- fused-kernel reason gone for pure StableHLO), fp32
+    map mirrors FLA, finite Neumann inverse via fp32 doubling (ceil(log2 C) stages, sign N=-A_fla),
+    static tril masks (dynamic masking -82.8% in a paper); diagonal inclusive in the output term
+    (exclusive = 84% err). numpy reference validated rel-L2 ~1e-15 vs zml step().
+  - P2P: do NOT port push-AR (in-graph Shardy all_reduce is the win); int8-partial reduce is WRONG for
+    the sharded row-parallel collective. Only an attended CCL_TOPO_P2P_ACCESS=1 prefill A/B is worth it.
+  - Path 1 code LANDED + built clean (flag string verified vs plugin .so; FFI stream/handler symbols
+    confirmed present => Path 2 viable). GPU A/B pending.
+VERDICT: kernel plan re-sequenced in zml/ZML_INT8_GEMM_OPT.md section 7 (Path 1 A/B -> oneDNN w8a16 FFI
+  baseline -> layout-first/fused ESIMD kernel per llama.cpp #21527 + Intel arXiv:2508.06753). Chunked
+  scan (C=32) decisions in zml/ZML_GDN_OPT.md section 9. Chunked-scan port + s==1 fast path being CPU-
+  validated (fork); code milestone commit to follow when green. Next attended GPU run: baseline reconfirm
+  + P0-deep GDN sub-block profiling + Path 1 woq_fused fusion A/B (dump HLO, confirm fires).
