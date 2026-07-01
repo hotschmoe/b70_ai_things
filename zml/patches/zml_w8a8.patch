@@ -1280,7 +1280,7 @@ index 1ad962fe..17a38287 100644
              allocator,
              io,
 diff --git a/examples/llm/models/qwen3_5/model.zig b/examples/llm/models/qwen3_5/model.zig
-index bc14ab72..6bbd64b7 100644
+index bc14ab72..dc51281f 100644
 --- a/examples/llm/models/qwen3_5/model.zig
 +++ b/examples/llm/models/qwen3_5/model.zig
 @@ -4,8 +4,15 @@ const zml = @import("zml");
@@ -1748,7 +1748,7 @@ index bc14ab72..6bbd64b7 100644
          const kv_head_sharding = zml.module.CompilationContext.current().partitioning.shardableDim(
              k.shape().withPartitioning(.{ .h = .model }),
              .h,
-@@ -784,14 +1062,28 @@ pub const GatedDeltaNet = struct {
+@@ -784,14 +1062,33 @@ pub const GatedDeltaNet = struct {
              }, .f32));
          };
  
@@ -1760,10 +1760,15 @@ index bc14ab72..6bbd64b7 100644
 -            beta_f32,
 -            .{ .s = initial_recurrent_state },
 -        );
-+        // s>1 (prefill / MTP verify): the chunked/parallel scan (O(s/C) chunk-steps, amortizes the
-+        // verify + cuts prefill TTFT). s==1 (decode): the per-step path, which has its own
-+        // no-`while` fast path. Both are f32 and byte/rel-L2-parity (see nn.zig chunked-parity test).
-+        const result = if (query_f32.dim(.s) > 1)
++        // The chunked/parallel scan only pays off at LARGE s (long prefill: O(s/C) chunk-steps beat
++        // O(s) token-steps). MEASURED on GPU (2026-07-01): at the MTP-verify shape s=Kv=2 the chunked
++        // path is ~3.2x SLOWER than the while-scan (455 vs 143 ms/verify, MTP 4.3 vs ~12 t/s) -- its
++        // ~30 tiny ops/layer (WY + Neumann + triangular, x48 GDN layers) lose to 2 sequential step()s
++        // on GPU op-launch overhead. So gate it to s>=CHUNK_SCAN_MIN_S (long prefill); the small-s
++        // verify + short prefill use the per-step while-scan, and decode (s==1) its no-while fast path.
++        // (byte/rel-L2-parity for the chosen path -- see the nn.zig chunked-parity test.)
++        const CHUNK_SCAN_MIN_S = 32;
++        const result = if (query_f32.dim(.s) >= CHUNK_SCAN_MIN_S)
 +            zml.nn.GatedDeltaNet.forwardChunked(
 +                query_f32,
 +                key_f32,
@@ -1785,7 +1790,7 @@ index bc14ab72..6bbd64b7 100644
  
          return .{
              result.outputs.rename(.{ .h = .vh, .v = .vhd }).convert(query.dtype()),
-@@ -810,6 +1102,20 @@ pub const GatedDeltaNet = struct {
+@@ -810,6 +1107,20 @@ pub const GatedDeltaNet = struct {
      }
  
      pub fn forward(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
@@ -1806,7 +1811,7 @@ index bc14ab72..6bbd64b7 100644
          const key_dim = self.num_k_heads * self.head_k_dim;
          const value_dim = self.num_v_heads * self.head_v_dim;
          const conv_dim = 2 * key_dim + value_dim;
-@@ -819,7 +1125,8 @@ pub const GatedDeltaNet = struct {
+@@ -819,7 +1130,8 @@ pub const GatedDeltaNet = struct {
          const projected_qkv = self.in_proj_qkv.forward(x_in)
              .rename(.{ .dout = .mix })
              .withPartitioning(.{ .s = .replicated, .mix = .model });
@@ -1816,7 +1821,7 @@ index bc14ab72..6bbd64b7 100644
          const conv_input = b: {
              if (use_cached_state) break :b zml.Tensor.concatenate(&.{ cache.convState(), projected_qkv }, .s);
              break :b projected_qkv;
-@@ -846,7 +1153,9 @@ pub const GatedDeltaNet = struct {
+@@ -846,7 +1158,9 @@ pub const GatedDeltaNet = struct {
              .silu();
  
          if (use_cached_state) {
@@ -1827,7 +1832,7 @@ index bc14ab72..6bbd64b7 100644
          }
          mixed_qkv = mixed_qkv.withPartitioning(.{ .s = .replicated, .mix = .model });
  
-@@ -947,7 +1256,9 @@ pub const RmsNormGated = struct {
+@@ -947,7 +1261,9 @@ pub const RmsNormGated = struct {
          const gate_f32 = gate.convert(.f32);
  
          const normalized = zml.nn.rmsNorm(x_f32, .d, self.eps);
@@ -1838,7 +1843,7 @@ index bc14ab72..6bbd64b7 100644
  
          const gated_output = output.mul(gate_f32.silu());
          return gated_output.convert(x.dtype());
-@@ -968,9 +1279,20 @@ pub const KvCache = struct {
+@@ -968,9 +1284,20 @@ pub const KvCache = struct {
  
          pub fn init(config: Config, batch_dim: i64, max_seq_len: i64, dtype: zml.DataType, model_sharding: zml.Sharding) SelfAttnCache {
              const num_self_attn_layers = countLayers(config.text_config.layer_types, .full_attention);
@@ -1860,7 +1865,7 @@ index bc14ab72..6bbd64b7 100644
                  .s = max_seq_len,
                  .h = config.text_config.num_key_value_heads,
                  .hd = config.text_config.head_dim,
-@@ -1247,3 +1569,16 @@ pub const KvCache = struct {
+@@ -1247,3 +1574,16 @@ pub const KvCache = struct {
  fn softplus(x: zml.Tensor) zml.Tensor {
      return x.exp().addConstant(1).log();
  }

@@ -6763,3 +6763,22 @@ VERDICT: lever 2 CPU-validated + landed (patch zml_w8a8.patch, 18 files, 3768 li
   is the projections -- see ZML_INT8_GEMM_OPT.md 7). GPU A/B pending (byte-identical greedy + TTFT +
   verify timing) in the next attended run. WATCH: the Zig-unroll makes long-prefill graphs large
   (n_chunks unrolled); convert to stablehlo.while or raise C if prefill compile time regresses.
+
+## 2026-07-01 -- zml chunked scan GPU-validated + gate fix: chunked hurts small-s verify [result]
+
+CONFIG: overnight GPU session (machine granted). Validate the chunked scan end-to-end on dual B70 TP=2,
+  measure decode/MTP, fix any regression. Daily driver down.
+COMMAND: ./bin/gpu-run bash zml/run_w8a8_serve_tp2_gpu.sh (serve + long-gen) ; zml/run_w8a8_mtp_drive_tp2_gpu.sh (MTP)
+RESULT:
+  - CORRECTNESS: byte-identical "The capital of France is Paris." with chunked prefill + s==1 fast path. Coherent
+    (long essay), HEALTHY, no wedge, lock freed clean.
+  - DECODE (non-MTP): 13.9 tok/s over 654 tokens = faster-or-equal to 13.7 baseline (s==1 fast path is neutral+).
+    (A 13-token probe read 12.1 -- short-gen noise; the long-gen number is the real one.)
+  - MTP REGRESSION FOUND: with `s>1 -> forwardChunked` the s=Kv=2 verify was 455.7 ms (was 143.7), MTP 4.3 t/s.
+    The chunked path emits ~30 tiny ops/GDN-layer (WY+Neumann+triangular) x48 layers -> GPU op-launch overhead
+    beats 2 sequential step()s at tiny s. FIX: gate `s >= 32 -> forwardChunked` (large prefill only); verify +
+    short prefill use the while-scan. RE-VALIDATED: verify back to 147.4 ms, byte-identical, 100% accept, no wedge.
+VERDICT: chunked scan is CORRECT + validated, and is now a PREFILL-only lever (gated s>=32). It does NOT help the
+  MTP verify (op-launch overhead at tiny s) -- so MTP amortization must come from the Path-2 batched-M w8a16 GEMM,
+  not the scan (matches the research reframing, ZML_INT8_GEMM_OPT.md 7.4). Prefill TTFT benefit not yet isolated
+  (secondary). Gate fix committed; moving to Path 2 (the w8a16 decode kernel -- fork built the native lib).
