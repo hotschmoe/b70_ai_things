@@ -6782,3 +6782,22 @@ VERDICT: chunked scan is CORRECT + validated, and is now a PREFILL-only lever (g
   MTP verify (op-launch overhead at tiny s) -- so MTP amortization must come from the Path-2 batched-M w8a16 GEMM,
   not the scan (matches the research reframing, ZML_INT8_GEMM_OPT.md 7.4). Prefill TTFT benefit not yet isolated
   (secondary). Gate fix committed; moving to Path 2 (the w8a16 decode kernel -- fork built the native lib).
+
+## 2026-07-01 -- zml Path-2 oneDNN wrapper BLOCKED (SYCL 8/9 conflict); pivot to Triton [result]
+
+CONFIG: Path-2 w8a16 decode kernel. Native C-ABI wrapper (libint8gemm_xpu.so) + XLA typed-FFI wiring built
+  (probe + w8a16 + w8a8_sweep variants, all clean). GPU-test the SYCL-ABI probe = the gate.
+COMMAND: ./bin/gpu-run env LD_LIBRARY_PATH=.../int8gemm_kernel/runtime_libs:$... w8a8_sweep --variant=probe
+RESULT: PROBE ABORTED (core dumped). Stack: crash inside libsycl.so.9 (the PLUGIN's bundled 2026.0 SYCL
+  runtime) called from the wrapper's libdnnl.so.3 (built against oneAPI 2025.3 / libsycl.so.8, from the
+  sglang-xpu:woq container). The wrapper's oneDNN + the plugin's SYCL runtime CANNOT coexist in one process
+  (different libsycl major: 8 vs 9). ldd predicted it (wrapper needs libsycl.so.8, plugin links libsycl.so.9).
+  Clean process abort -- NO GPU wedge, locks freed, single-card.
+VERDICT: oneDNN-wrapper Path 2 is BLOCKED without a oneAPI 2026.0 DPC++ (compiler NOT on box -- only the
+  2026.0 runtime lib is, in the bazel cache) to rebuild oneDNN+wrapper against libsycl.so.9. PIVOT to Triton
+  (user's preferred, zml-native path): write the w8a16 kernel via zml.kernel.triton (Zig Triton-IR builder ->
+  __gpu$xla.gpu.triton -> the plugin's OWN Intel Triton -> SPIR-V DPAS) -- uses the plugin runtime, so NO
+  external SYCL/oneDNN, NO ABI conflict, and it is upstreamable. The oneDNN wrapper + FFI wiring are kept as
+  reference (platforms/oneapi/int8gemm/, zml/int8_gemm*.zig). Design: tiled GEMM, coalesced int8 weight load
+  (llama.cpp #21527 layout lesson), dequant in the epilogue (x wscale[n]), f32 accum; tl.sum-reduction GEMV
+  form for M=1 (BW-bound). Bench M=1,2,4,8 vs bf16/woq in w8a8_sweep.
