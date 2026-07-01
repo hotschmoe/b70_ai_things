@@ -90,6 +90,12 @@ verdict), `zml/REVIEW_intel_arch.md` (zml oneAPI status), `docs/intel_support_pe
   into RMSNorm (the ~25-30% W8A8 cap from the sweep); (3) MTP/spec-decode (sglang's 1.6x) to close the
   13.0 vs ~25 t/s gap to the daily driver; (4) improve the M=1 int8 GEMV (oneDNN 309 vs bf16 434 GB/s,
   the llama.cpp #21517 trap); (5) re-measure the M=2048 bf16 kernel pathology.
+- 2026-07-01 act-quant dedup -> 13.7 t/s. MTP/spec-decode (follow-up 3) IMPLEMENTED + byte-exact @ 98.8%
+  accept (see zml/ZML_MTP_PLAN.md STATUS) but gives NO speedup: the s=Kv verify is compute-bound at small
+  M (~2x a decode, no amortization), because zml's int8 GEMM is GEMV-trapped at M=1/2 (follow-up 4). So
+  follow-up (4) -- a DPAS-efficient small-M int8 kernel -- is the PREREQUISITE lever: it makes decode
+  bandwidth-bound, after which the (already-done) MTP amortizes 98.8% accept into ~1.9x. MTP and the
+  fused kernel are complementary; the kernel must land first.
 
 ## 0. Why this is worth doing / why it's hard
 

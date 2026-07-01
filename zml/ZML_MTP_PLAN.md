@@ -4,6 +4,28 @@ Goal: add NEXTN Multi-Token-Prediction (MTP) speculative decoding to the zml qwe
 close the decode gap (13.7 t/s -> ~22 t/s, sglang's 1.62x on the same B70). Greedy-only (matches
 sglang XPU; exact-output). Scoped 2026-06-30; branch zml-w8a8-optimize. See JOURNAL for status.
 
+## STATUS (2026-07-01): Steps 0-4 DONE. MTP correct + byte-exact @ 98.8% accept, but NO speedup yet.
+
+- Steps 0-3 landed + validated on GPU TP=2: the MTP head drafts at 96.2% accept (measure mode) and the
+  full DRIVE loop (draft -> s=Kv verify -> accept/commit -> GDN rollback) produces output BYTE-IDENTICAL
+  to MTP-off greedy ("The capital of France is Paris."), 98.8% accept, avg 1.99 tok/verify, wedge-free.
+- Step 4 (speed): FAILS the >=1.4x gate. decode 10.5-12.7 t/s <= 13.7 baseline. Per-iter timers: draft
+  4.2ms | GDN snapshot 0.7ms | VERIFY 143.7ms | commit 6.0ms. The s=Kv=2 verify costs ~2x a single s=1
+  decode -> it does NOT amortize.
+- ROOT CAUSE: zml W8A8 decode is COMPUTE-bound at small M (oneDNN int8-GEMV trap, ~1.14ms/layer at M=1,
+  ~2.2ms at M=2, linear in M -- see b70-int8-xmx-roofline), NOT weight-bandwidth-bound. So verify(Kv) ~
+  Kv x decode; spec-decode's premise fails. The GDN snapshot is cheap (0.7ms, not the issue). sglang
+  W8A8+MTP amortizes because it uses FUSED DPAS int8 kernels (w8a8-fused-int8-kernels-mtp, 23.8 t/s).
+- NEXT LEVER (Step 5): a DPAS-efficient small-M int8 GEMM (fused kernel, sglang-parity) to make decode
+  bandwidth-bound; MTP is already done and will then amortize the 98.8% accept into ~1.9x for free.
+
+CORRECTIONS to the design below, confirmed by parallel vLLM + sglang reference agents (file:line):
+- prev_hidden is the target's POST-final-norm hidden, then re-normed by pre_fc_norm_hidden (DOUBLE
+  norm). zml exposes the pre-norm hidden_buf, so MtpHead.project applies text_model.norm itself.
+- MTP rope position = p (the hidden's position), NOT p+1 -- input_ids shifted left, positions
+  unchanged. RoPE is relative so a uniform shift is a no-op, and zml couples KV-slot==position, so
+  position=p is required for contiguous MTP-KV from slot 0.
+
 ## The MTP head (1 NEXTN layer; reuses existing zml modules)
 
 Checkpoint `model-mtp.safetensors` (bf16, num_nextn_predict_layers=1): `mtp.fc.weight [5120,10240]`

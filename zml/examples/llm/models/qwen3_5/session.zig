@@ -292,6 +292,12 @@ pub const Session = struct {
             try cur_token_buffer.toSlice(self.io, self.generated_token_slice);
         }
 
+        // Coarse phase timers (host wall-clock between device syncs) to locate the drive overhead.
+        var ns_draft: u64 = 0;
+        var ns_snap: u64 = 0;
+        var ns_verify: u64 = 0;
+        var ns_commit: u64 = 0;
+
         generation: while (true) {
             const cur = self.generated_token_slice.items(u32)[0]; // x_{p+1}
             if (cur == self.eos_token_id) break :generation;
@@ -300,11 +306,17 @@ pub const Session = struct {
             const p: u32 = @intCast(all_tokens.items.len - 1); // main committed through p
 
             // 1) DRAFT d1 from (cur, h_p) at MTP position p (writes MTP-KV[p]).
+            const t_draft = std.Io.Timestamp.now(self.io, .awake);
             const d1 = try mtp.draftStep(self.io, self.platform, &cur_token_buffer, &cur_hidden.?, p);
+            ns_draft += @intCast(t_draft.untilNow(self.io, .awake).toNanoseconds());
 
             // 2) VERIFY [cur, d1] at main positions p+1..p+Kv from the committed cache. Snapshot the
             //    GDN state first so a rejected draft can roll back.
+            const t_snap = std.Io.Timestamp.now(self.io, .awake);
             var gdn_snap = mtp.snapshotGdn(&self.kv_cache_buffers.gated_delta_net);
+            _ = try gdn_snap.layer_index.getValue(u32, self.io); // force the snapshot to complete (sync) for timing
+            ns_snap += @intCast(t_snap.untilNow(self.io, .awake).toNanoseconds());
+            const t_verify = std.Io.Timestamp.now(self.io, .awake);
             mtp.verify_tokens_slice.items(u32)[0] = cur;
             mtp.verify_tokens_slice.items(u32)[1] = d1;
             var verify_tokens = try zml.Buffer.fromSlice(self.io, self.platform, mtp.verify_tokens_slice, replicated);
@@ -327,11 +339,13 @@ pub const Session = struct {
             try verify_tokens.toSlice(self.io, mtp.verify_tokens_slice);
             const y0 = mtp.verify_tokens_slice.items(u32)[0]; // true x_{p+2}
             const y1 = mtp.verify_tokens_slice.items(u32)[1]; // true x_{p+3} (if d1 accepted)
+            ns_verify += @intCast(t_verify.untilNow(self.io, .awake).toNanoseconds());
 
             mtp.drive_iters += 1;
             const accept = (d1 == y0);
 
             // 3) EMIT cur (always correct); commit x_{p+1}.
+            const t_commit = std.Io.Timestamp.now(self.io, .awake);
             try self.streamToken(&decoder, cur, out_buf, stdout);
             try all_tokens.append(self.allocator, cur);
 
@@ -387,16 +401,24 @@ pub const Session = struct {
                 if (cur_hidden) |*h| h.deinit();
                 cur_hidden = re_hidden;
             }
+            ns_commit += @intCast(t_commit.untilNow(self.io, .awake).toNanoseconds());
         }
 
         try stdout.writeAll(try decoder.finalize(out_buf));
         try stdout.flush();
 
         if (mtp.drive_iters > 0) {
+            const iters_f: f64 = @floatFromInt(mtp.drive_iters);
             try stdout.print("\n\x1b[35m[mtp] drive accept {d}/{d} = {d:.1}%  (avg {d:.2} tok/verify)\x1b[0m\n", .{
                 mtp.drive_accepted, mtp.drive_iters,
-                100.0 * @as(f64, @floatFromInt(mtp.drive_accepted)) / @as(f64, @floatFromInt(mtp.drive_iters)),
-                1.0 + @as(f64, @floatFromInt(mtp.drive_accepted)) / @as(f64, @floatFromInt(mtp.drive_iters)),
+                100.0 * @as(f64, @floatFromInt(mtp.drive_accepted)) / iters_f,
+                1.0 + @as(f64, @floatFromInt(mtp.drive_accepted)) / iters_f,
+            });
+            try stdout.print("\x1b[35m[mtp] per-iter ms: draft {d:.1}  snap {d:.1}  verify {d:.1}  commit {d:.1}\x1b[0m\n", .{
+                @as(f64, @floatFromInt(ns_draft)) / 1e6 / iters_f,
+                @as(f64, @floatFromInt(ns_snap)) / 1e6 / iters_f,
+                @as(f64, @floatFromInt(ns_verify)) / 1e6 / iters_f,
+                @as(f64, @floatFromInt(ns_commit)) / 1e6 / iters_f,
             });
             try stdout.flush();
         }

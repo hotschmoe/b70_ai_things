@@ -6639,3 +6639,40 @@ VERDICT: MTP head PROVEN correct on GPU TP=2 -- 96.2% draft accept, coherent, we
   Foundation solid for Step 2 (verify exes at s=Kv) + Step 3 (drive loop + GDN replay-rollback; the sglang
   reference is freeze-during-verify + commit-last-accepted-step-scatter, but the plan's REPLAY is the simpler
   first cut). Scripts: zml/run_w8a8_mtp_measure_tp2_gpu.sh. Patch zml/patches/zml_w8a8.patch (2886 lines).
+
+## 2026-07-01 -- zml MTP Steps 2-4: spec-decode DRIVE byte-exact @ 98.8% accept, but verify does NOT amortize on W8A8/B70 (compute-bound small-M) [result]
+
+CONFIG: complete NEXTN/MTP spec-decode for the zml qwen3.6-27b W8A8 serve (verify exes at s=Kv + GDN
+  rollback + drive loop), then measure decode t/s vs the 13.7 baseline. Daily driver DOWN. TP=2, topk=1,
+  seqlen 1024. Branch zml-w8a8-optimize.
+COMMAND: ./bin/gpu-run bash zml/run_w8a8_mtp_drive_tp2_gpu.sh (ZML_MTP=1: draft -> verify [cur,d1] in
+  ONE s=Kv=2 main forward -> accept d1 iff d1==y_0 -> commit 1 or 2 tokens, GDN rollback on reject).
+RESULT:
+  - CORRECTNESS (the oracle): output BYTE-IDENTICAL to MTP-off greedy -- "The capital of France is
+    Paris." + full reasoning trace. drive accept 79/80 = 98.8%, avg 1.99 tok/verify. rc=0, xpu-health
+    HEALTHY both cards, NO WEDGE across ~4 TP=2 drive runs. The verify (s=Kv full-attn + GDN
+    forwardVerify-from-cache) and the GDN recurrent-state rollback (snapshot -> restore on reject +
+    re-decode) are PROVEN correct. Greedy spec-decode is exact; the byte-exact stream confirms the whole
+    pipeline (draft head, double-norm, position=p alignment, MTP-KV contiguity + accept catch-up, GDN
+    rollback).
+  - SPEED: decode 10.5-12.7 tok/s across runs -- AT OR BELOW the 13.7 baseline (NO speedup; GO gate
+    "byte-identical AND >=1.4x" FAILS on speed). Per-iter phase timers (host wall between device syncs):
+    draft 4.2ms | GDN snapshot 0.7ms | VERIFY 143.7ms | commit 6.0ms. The verify (2 tokens in one s=Kv
+    forward) costs ~2x a single s=1 decode (~73ms), i.e. it does NOT amortize.
+  - ROOT CAUSE (decisive): zml's W8A8 decode is COMPUTE-bound at small M, not weight-bandwidth-bound.
+    Evidence: the draft reads the 2.5GiB bf16 lm_head in 4.2ms (~600 GB/s -- bandwidth is fast), yet a
+    full 64-layer int8 decode is 73ms = ~240 GB/s effective = ~5x slower than bandwidth. So the int8
+    layers are ~1.14ms/layer at M=1 and ~2.2ms at M=2 -- LINEAR in M (the oneDNN int8-GEMV trap:
+    M=1/2 never hits XeTLA/DPAS; see b70-int8-xmx-roofline). Verifying Kv tokens therefore costs ~Kv x a
+    decode, so spec-decode's premise (verify Kv ~= 1 forward) does not hold. The GDN sequential scan
+    (48 layers, f32 recurrence, Kv steps at verify) compounds it. The GDN snapshot (1.5GiB recurrent
+    copy) is NOT the problem (0.7ms via optimizationBarrier).
+  - CONTRAST: sglang W8A8+MTP on the SAME box DOES speed up (decode 23.8 = 2.6x bf16, w8a8-fused-int8-
+    kernels-mtp) because it uses FUSED DPAS int8 kernels that make small-M decode bandwidth-bound. zml
+    uses the naive Tensor.dotAcc int8 path (GEMV-trapped at small M).
+VERDICT: MTP spec-decode is COMPLETE + CORRECT on zml (byte-exact, 98.8% accept, wedge-free, TP=2) and
+  is a reusable capability. It does NOT yet yield a speedup because the verify is compute-bound at
+  small M on zml's int8 GEMM -- the missing lever is a DPAS-efficient small-M int8 kernel (the "fused
+  kernels" work, sglang-parity), NOT MTP. Once decode is bandwidth-bound, the verify amortizes and the
+  98.8% accept -> ~1.9x is unlocked "for free" (MTP already done). Steps 0-4 landed (5 commits);
+  Step 5 = fused int8 kernel then re-measure. Scripts: zml/run_w8a8_mtp_{measure,drive}_tp2_gpu.sh.
