@@ -6801,3 +6801,28 @@ VERDICT: oneDNN-wrapper Path 2 is BLOCKED without a oneAPI 2026.0 DPC++ (compile
   reference (platforms/oneapi/int8gemm/, zml/int8_gemm*.zig). Design: tiled GEMM, coalesced int8 weight load
   (llama.cpp #21527 layout lesson), dequant in the epilogue (x wscale[n]), f32 accum; tl.sum-reduction GEMV
   form for M=1 (BW-bound). Bench M=1,2,4,8 vs bf16/woq in w8a8_sweep.
+
+## 2026-07-01 -- PIVOTAL: existing w8a8 dotAcc ALREADY amortizes M=1..8; the real lever is int8 GDN proj [result]
+
+CONFIG: Triton w8a16 kernel built + GPU-tuned; benchmarked it vs bf16/woq/w8a8 at the q_proj shape (K5120
+  N12288), M=1,2,4,8, single card. This is the decode-matmul characterization that redirects the whole plan.
+COMMAND: w8a8_sweep --variant={w8a16_triton,woq,w8a8} --shape=q_proj --mset=decode
+RESULT (median ms | GB/s | vs-bf16):
+  - w8a16_triton (my kernel, correct relL2 0.0026): M1 0.326/193/0.88x  M2 0.388/162/1.32x  M4 0.440/143/1.24x
+    M8 0.470/135/0.99x. Coalesced UNMASKED load was the key (masked+other blocked Triton vectorization:
+    0.76->0.88x at M1; +bigger tiles/more warps HURT M1). JITs to SPIR-V, runs, no SYCL conflict.
+  - woq (materialize, the CURRENT decode path): M1 0.227/277/**1.26x** (XLA widens int8 in-reg at M=1 -> the
+    bandwidth win!) but M2..8 CRASH to 0.47-0.67x (real bf16 materialize). Good at M=1 ONLY.
+  - w8a8 (act-quant dotAcc, the "prefill" path): M1 0.230  M2 0.223  M4 0.233  M8 0.238 ms = **~CONSTANT** ->
+    it AMORTIZES M=1..8 (weight read once); vs-bf16 M2 **2.52x**, M4 1.56x, M8 1.45x; 265-283 GB/s (44-46% pk).
+  - => my Triton kernel is DOMINATED at every M by woq (M=1) or w8a8 (M>=2). Not the decode win.
+VERDICT (CORRECTS the handoff): the int8 GEMM does NOT have a "no-amortization / GEMV trap" problem -- w8a8
+  dotAcc is ~constant M=1..8 (amortizes) and woq gets the int8 BW win at M=1. The handoff's "verify ~= 2x
+  decode, int8 GEMV trap" was a measurement of the BF16 GDN (79% of decode: bf16 projections that DON'T
+  amortize + the f32 scan), NOT the int8 matmul. So the REAL lever = LEVER 1 (int8 the 3 big GDN projections
+  so they use the amortizing w8a8/woq path): gives BOTH single-stream decode (~1.2x on the 79% GDN) AND MTP
+  amortization (verify M=Kv projections read once). Chunked scan (lever 2, done) handles the GDN f32 scan.
+  The Triton kernel is kept as a PROVEN-CORRECT zml-native artifact (first XPU custom kernel that JITs to
+  SPIR-V + is numerically correct) -- useful foundation for future fused ops, but not needed for this win.
+  NEXT: run the GDN int8 requant (prototyped), wire the 3 GDN projections nn.Linear->QuantizedLinear, serve,
+  measure decode t/s + MTP amortization. (Verify w8a8 amortization holds on down/gate shapes too.)

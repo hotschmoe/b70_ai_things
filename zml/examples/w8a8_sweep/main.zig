@@ -106,7 +106,7 @@ const M_COARSE = [_]usize{ 1, 512, 2048, 4096, 8192 };
 const M_FULL = [_]usize{ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
 const M_DECODE = [_]usize{ 1, 2, 4, 8 };
 
-const Variant = enum { bf16, i8, i8b, w8a8, woq };
+const Variant = enum { bf16, i8, i8b, w8a8, woq, w8a16_ffi, w8a16_triton };
 
 const Layout = enum { nk, kn };
 
@@ -185,6 +185,41 @@ const WoqLinear = struct {
     }
 };
 
+// Path-2 fused oneDNN-SYCL w8a16 (weight-decompression) decode matmul via the FFI custom call:
+// bf16 activation x s8 weight, dequant fused in the oneDNN epilogue -- reads only the int8 weight
+// bytes. This is the DECODE lever (should beat woq's materialize at M=1). Weight {n,k} i8 (consumed
+// NT [k,n] by the native kernel), per-channel f32 scale [n], act_dtype=1 (bf16), scale_kind=0.
+const W8a16FfiLinear = struct {
+    w: zml.Tensor, // {n,k} i8
+    wscale: zml.Tensor, // {n} f32
+    pub fn forward(self: W8a16FfiLinear, x: zml.Tensor) zml.Tensor {
+        return zml.int8_gemm_ffi.matmul(x, self.w, self.wscale, 1, 0); // {m,n} bf16
+    }
+};
+
+// Path-4 zml-native w8a16 decode matmul via a Triton kernel (int8_gemm_triton.zig): bf16 act x s8
+// weight, dequant in the epilogue, authored via the Zig Triton-IR builder -> the plugin's Intel
+// Triton -> SPIR-V DPAS. No external SYCL/oneDNN (unlike w8a16_ffi, blocked by the libsycl 8/9
+// conflict). Same shapes as woq/w8a16_ffi; the reference for the correctness check is woq (identical
+// math: sum_k x*w_i8 * wscale[n]).
+const W8a16TritonLinear = struct {
+    w: zml.Tensor, // {n,k} i8
+    wscale: zml.Tensor, // {n} f32
+    pub fn forward(self: W8a16TritonLinear, x: zml.Tensor) zml.Tensor {
+        // nk-layout only: weight must be {n,k} row-major (contiguous in k). x {m,k}, wscale {n}.
+        return zml.int8_gemm_triton.matmul(x, self.w, self.wscale); // {m,n} bf16
+    }
+};
+
+// SYCL-ABI-compat probe model (not benchmarked): emits the probe custom call, which builds a oneDNN
+// engine+stream from the FFI SYCL queue and fails the exe if that pointer is not a usable
+// sycl::queue*. If the exe completes, the plugin's FFI stream IS the device queue -> Path 2 viable.
+const ProbeModel = struct {
+    pub fn forward(_: ProbeModel, x: zml.Tensor) zml.Tensor {
+        return zml.int8_gemm_ffi.Probe.call(.{ .x = x }, .{ .y = x.shape() }, .{}).y;
+    }
+};
+
 // ---- timing ---------------------------------------------------------------------------------
 
 // Median-of-iters with separate warmup discard and per-call min/max. Each call is timed
@@ -249,6 +284,8 @@ fn bytesMoved(v: Variant, m: i64, k: i64, n: i64) f64 {
         .i8b => 1.0 * nf * kf + 1.0 * mf * kf + 2.0 * mf * nf, // i8 weight, i8 act, bf16 out
         .w8a8 => 1.0 * nf * kf + 2.0 * mf * kf + 2.0 * mf * nf, // bf16 in/out, i8 weight
         .woq => 1.0 * nf * kf + 2.0 * mf * kf + 2.0 * mf * nf, // bf16 in/out, i8 weight read
+        .w8a16_ffi => 1.0 * nf * kf + 2.0 * mf * kf + 2.0 * mf * nf, // bf16 in/out, i8 weight read (fused)
+        .w8a16_triton => 1.0 * nf * kf + 2.0 * mf * kf + 2.0 * mf * nf, // bf16 in/out, i8 weight read (triton)
     };
 }
 
@@ -326,6 +363,8 @@ fn runOne(
         .i8b => Int8GemmB,
         .w8a8 => W8A8Linear,
         .woq => WoqLinear,
+        .w8a16_ffi => W8a16FfiLinear,
+        .w8a16_triton => W8a16TritonLinear,
     };
     const model: Model = switch (v) {
         .bf16 => .{ .w = .fromShape(w_shape) },
@@ -333,6 +372,8 @@ fn runOne(
         .i8b => .{ .w = .fromShape(w_shape) },
         .w8a8 => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
         .woq => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
+        .w8a16_ffi => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
+        .w8a16_triton => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
     };
     // Path-1 probe: set ZML_DUMP_HLO=<dir> to dump optimized HLO for this config and confirm the
     // subchannel-dequant fusion (ZML_SUBCHANNEL_FUSION=1, module.zig .oneapi arm) folded the
@@ -344,7 +385,7 @@ fn runOne(
 
     const t = switch (v) {
         .bf16, .i8, .i8b => try timeExe(io, allocator, &exe, .{ w_buf, x_buf }, warmup, iters),
-        .w8a8, .woq => try timeExe(io, allocator, &exe, .{ w_buf, ws_buf, x_buf }, warmup, iters),
+        .w8a8, .woq, .w8a16_ffi, .w8a16_triton => try timeExe(io, allocator, &exe, .{ w_buf, ws_buf, x_buf }, warmup, iters),
     };
 
     const flops: f64 = 2.0 * @as(f64, @floatFromInt(m)) * @as(f64, @floatFromInt(k)) * @as(f64, @floatFromInt(n));
@@ -417,6 +458,68 @@ fn shapeSelected(want: []const u8, name: []const u8) bool {
     return std.mem.eql(u8, want, name);
 }
 
+// Correctness gate for the NEW w8a16_triton kernel: run it and the woq reference (identical math --
+// bf16-dequant int8 weight x bf16 act) on the same inputs, read both back, report rel-L2. A broken
+// kernel shows a large rel-L2; a correct one is ~bf16 rounding noise (both compute in bf16). Run once
+// (not per-config) when --variant selects w8a16_triton.
+fn checkTriton(allocator: std.mem.Allocator, io: std.Io, platform: *zml.Platform, m: i64, k: i64, n: i64, rand: std.Random) !void {
+    const x_shape = zml.Shape.init(.{ .m = m, .k = k }, .bf16);
+    const w_shape = zml.Shape.init(.{ .n = n, .k = k }, .i8);
+    const ws_shape = zml.Shape.init(.{ .n = n }, .f32);
+
+    const xh = try allocator.alloc(u16, @intCast(m * k));
+    defer allocator.free(xh);
+    for (xh) |*e| e.* = bf16Bits(rand.floatNorm(f32) * 0.05);
+    const wh = try allocator.alloc(i8, @intCast(n * k));
+    defer allocator.free(wh);
+    for (wh) |*e| e.* = rand.intRangeAtMost(i8, -127, 127);
+    const wsh = try allocator.alloc(f32, @intCast(n));
+    defer allocator.free(wsh);
+    for (wsh) |*e| e.* = 0.01 + rand.float(f32) * 0.04;
+
+    var x_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(x_shape, std.mem.sliceAsBytes(xh)), .replicated);
+    defer x_buf.deinit();
+    var w_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(w_shape, std.mem.sliceAsBytes(wh)), .replicated);
+    defer w_buf.deinit();
+    var ws_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(ws_shape, std.mem.sliceAsBytes(wsh)), .replicated);
+    defer ws_buf.deinit();
+
+    const tri_model: W8a16TritonLinear = .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) };
+    var tri_exe = try platform.compile(allocator, io, tri_model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{});
+    defer tri_exe.deinit();
+    const tri_bufs: zml.Bufferized(W8a16TritonLinear) = .{ .w = w_buf, .wscale = ws_buf };
+    var y_tri = try zml.testing.autoCall(allocator, io, &tri_exe, W8a16TritonLinear.forward, .{ tri_bufs, x_buf });
+    defer y_tri.deinit();
+
+    const ref_model: WoqLinear = .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) };
+    var ref_exe = try platform.compile(allocator, io, ref_model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{});
+    defer ref_exe.deinit();
+    const ref_bufs: zml.Bufferized(WoqLinear) = .{ .w = w_buf, .wscale = ws_buf };
+    var y_ref = try zml.testing.autoCall(allocator, io, &ref_exe, WoqLinear.forward, .{ ref_bufs, x_buf });
+    defer y_ref.deinit();
+
+    const ts = try y_tri.toSliceAlloc(allocator, io);
+    defer ts.free(allocator);
+    const rs = try y_ref.toSliceAlloc(allocator, io);
+    defer rs.free(allocator);
+    const ta = ts.items(u16); // bf16 bit patterns
+    const rb = rs.items(u16);
+
+    var sse: f64 = 0;
+    var ssr: f64 = 0;
+    var maxabs: f64 = 0;
+    for (ta, rb) |tv, rv| {
+        const tf: f64 = bf16ToF32(tv);
+        const rf: f64 = bf16ToF32(rv);
+        const e = tf - rf;
+        sse += e * e;
+        ssr += rf * rf;
+        maxabs = @max(maxabs, @abs(e));
+    }
+    const rel = std.math.sqrt(sse / (ssr + 1e-30));
+    log.info("w8a16_triton CORRECTNESS (m={d} k={d} n={d}): relL2 vs woq = {d:.6}, max_abs = {d:.6}", .{ m, k, n, rel, maxabs });
+}
+
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
     const io = init.io;
@@ -425,6 +528,29 @@ pub fn main(init: std.process.Init) !void {
     var platform: *zml.Platform = try .auto(allocator, io, .{});
     defer platform.deinit(allocator, io);
     log.info("platform: {f}", .{platform.fmtVerbose()});
+
+    // SYCL-ABI-compat gate (Path 2): --variant=probe compiles + runs the probe custom call ONCE.
+    // The ffiCall builds a oneDNN engine+stream from the FFI SYCL queue and errors the exe if that
+    // pointer is not a usable sycl::queue*. If we reach the log line, the plugin's FFI stream IS the
+    // device queue and Path 2 (native w8a16) is viable. Run FIRST, before any matmul benchmark.
+    if (std.mem.eql(u8, args.variant, "probe")) {
+        const xh = [_]i32{ 1, 2, 3, 4 };
+        const px_shape = zml.Shape.init(.{ .m = 4 }, .i32);
+        var px_buf = try zml.Buffer.fromSlice(io, platform, zml.Slice.init(px_shape, std.mem.sliceAsBytes(xh[0..])), .replicated);
+        defer px_buf.deinit();
+        var pexe = try platform.compile(allocator, io, ProbeModel{}, .forward, .{zml.Tensor.fromShape(px_shape)}, .{});
+        defer pexe.deinit();
+        var pargs = try pexe.args(allocator);
+        defer pargs.deinit(allocator);
+        var pres = try pexe.results(allocator);
+        defer pres.deinit(allocator);
+        pargs.set(.{px_buf});
+        pexe.callOpts(io, pargs, &pres, .{ .wait = true });
+        var pout = pres.get(zml.Buffer);
+        pout.deinit();
+        log.info("SYCL PROBE OK -- zml_onednn_probe returned 0 (FFI queue usable as sycl::queue*, Path 2 viable)", .{});
+        return;
+    }
 
     // layouts to run: nk, kn, or both (back-to-back so the kn/nk delta is read off adjacent rows).
     const want_layouts: []const Layout = if (std.mem.eql(u8, args.layout, "both"))
@@ -454,6 +580,17 @@ pub fn main(init: std.process.Init) !void {
     var prng: std.Random.DefaultPrng = .init(0xb70b3c);
     const rand = prng.random();
 
+    // Correctness gate for the new w8a16_triton kernel, once on the first selected shape at M=8
+    // (M<BLOCK_M so the M-mask is exercised), before the timing sweep.
+    if (variantSelected(args.variant, .w8a16_triton)) {
+        for (SHAPES) |sd| {
+            if (!shapeSelected(args.shape, sd.name)) continue;
+            checkTriton(allocator, io, platform, 8, sd.k, sd.n, rand) catch |e|
+                log.err("checkTriton {s}: {s}", .{ sd.name, @errorName(e) });
+            break;
+        }
+    }
+
     for (SHAPES) |sd| {
         if (!shapeSelected(args.shape, sd.name)) continue;
 
@@ -474,7 +611,7 @@ pub fn main(init: std.process.Init) !void {
                         logRow(sd, mu, lt, "bf16", r, 1.0);
                 }
 
-                inline for (.{ Variant.i8, Variant.i8b, Variant.w8a8, Variant.woq }) |v| {
+                inline for (.{ Variant.i8, Variant.i8b, Variant.w8a8, Variant.woq, Variant.w8a16_ffi, Variant.w8a16_triton }) |v| {
                     logVariant(allocator, io, platform, v, args.variant, lt, mu, m, sd, args.warmup, args.iters, rand, bf16_ns);
                 }
             }
