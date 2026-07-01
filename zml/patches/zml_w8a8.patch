@@ -1280,7 +1280,7 @@ index 1ad962fe..17a38287 100644
              allocator,
              io,
 diff --git a/examples/llm/models/qwen3_5/model.zig b/examples/llm/models/qwen3_5/model.zig
-index bc14ab72..2e13970d 100644
+index bc14ab72..6bbd64b7 100644
 --- a/examples/llm/models/qwen3_5/model.zig
 +++ b/examples/llm/models/qwen3_5/model.zig
 @@ -4,8 +4,15 @@ const zml = @import("zml");
@@ -1379,8 +1379,8 @@ index bc14ab72..2e13970d 100644
 +
 +        return .{ mlp_output.add(x1).withPartitioning(.{ .d = .replicated }).reuseBuffer(x0), updated_kv_cache };
 +    }
- };
- 
++};
++
 +// NEXTN/MTP head (1 NEXTN layer): reuses existing zml modules -- 3 `(1+w)` RMSNorms, an `fc`
 +// (2H->H plain bf16 Linear, no bias), one FULL-ATTENTION TransformerLayer, and a final norm; the
 +// main model's embed_tokens + lm_head are shared (not stored here). Head math (vLLM
@@ -1555,8 +1555,8 @@ index bc14ab72..2e13970d 100644
 +const Act = union(enum) {
 +    bf16: zml.Tensor,
 +    quant: common_quant.QuantAct,
-+};
-+
+ };
+ 
 +// Dispatch a QuantizedLinear over an `Act`: the pre-quantized W8A8 fast path when the shared int8
 +// activation is present, else the ordinary bf16 forward (bf16 ckpt / weight-only / row-parallel).
 +fn projLinear(linear: QuantizedLinear, act: Act) zml.Tensor {
@@ -1748,7 +1748,44 @@ index bc14ab72..2e13970d 100644
          const kv_head_sharding = zml.module.CompilationContext.current().partitioning.shardableDim(
              k.shape().withPartitioning(.{ .h = .model }),
              .h,
-@@ -810,6 +1088,20 @@ pub const GatedDeltaNet = struct {
+@@ -784,14 +1062,28 @@ pub const GatedDeltaNet = struct {
+             }, .f32));
+         };
+ 
+-        const result = zml.nn.GatedDeltaNet.forward(
+-            query_f32,
+-            key_f32,
+-            value_f32,
+-            alpha_f32,
+-            beta_f32,
+-            .{ .s = initial_recurrent_state },
+-        );
++        // s>1 (prefill / MTP verify): the chunked/parallel scan (O(s/C) chunk-steps, amortizes the
++        // verify + cuts prefill TTFT). s==1 (decode): the per-step path, which has its own
++        // no-`while` fast path. Both are f32 and byte/rel-L2-parity (see nn.zig chunked-parity test).
++        const result = if (query_f32.dim(.s) > 1)
++            zml.nn.GatedDeltaNet.forwardChunked(
++                query_f32,
++                key_f32,
++                value_f32,
++                alpha_f32,
++                beta_f32,
++                .{ .s = initial_recurrent_state },
++                16,
++            )
++        else
++            zml.nn.GatedDeltaNet.forward(
++                query_f32,
++                key_f32,
++                value_f32,
++                alpha_f32,
++                beta_f32,
++                .{ .s = initial_recurrent_state },
++            );
+ 
+         return .{
+             result.outputs.rename(.{ .h = .vh, .v = .vhd }).convert(query.dtype()),
+@@ -810,6 +1102,20 @@ pub const GatedDeltaNet = struct {
      }
  
      pub fn forward(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
@@ -1769,7 +1806,7 @@ index bc14ab72..2e13970d 100644
          const key_dim = self.num_k_heads * self.head_k_dim;
          const value_dim = self.num_v_heads * self.head_v_dim;
          const conv_dim = 2 * key_dim + value_dim;
-@@ -819,7 +1111,8 @@ pub const GatedDeltaNet = struct {
+@@ -819,7 +1125,8 @@ pub const GatedDeltaNet = struct {
          const projected_qkv = self.in_proj_qkv.forward(x_in)
              .rename(.{ .dout = .mix })
              .withPartitioning(.{ .s = .replicated, .mix = .model });
@@ -1779,7 +1816,7 @@ index bc14ab72..2e13970d 100644
          const conv_input = b: {
              if (use_cached_state) break :b zml.Tensor.concatenate(&.{ cache.convState(), projected_qkv }, .s);
              break :b projected_qkv;
-@@ -846,7 +1139,9 @@ pub const GatedDeltaNet = struct {
+@@ -846,7 +1153,9 @@ pub const GatedDeltaNet = struct {
              .silu();
  
          if (use_cached_state) {
@@ -1790,7 +1827,7 @@ index bc14ab72..2e13970d 100644
          }
          mixed_qkv = mixed_qkv.withPartitioning(.{ .s = .replicated, .mix = .model });
  
-@@ -947,7 +1242,9 @@ pub const RmsNormGated = struct {
+@@ -947,7 +1256,9 @@ pub const RmsNormGated = struct {
          const gate_f32 = gate.convert(.f32);
  
          const normalized = zml.nn.rmsNorm(x_f32, .d, self.eps);
@@ -1801,7 +1838,7 @@ index bc14ab72..2e13970d 100644
  
          const gated_output = output.mul(gate_f32.silu());
          return gated_output.convert(x.dtype());
-@@ -968,9 +1265,20 @@ pub const KvCache = struct {
+@@ -968,9 +1279,20 @@ pub const KvCache = struct {
  
          pub fn init(config: Config, batch_dim: i64, max_seq_len: i64, dtype: zml.DataType, model_sharding: zml.Sharding) SelfAttnCache {
              const num_self_attn_layers = countLayers(config.text_config.layer_types, .full_attention);
@@ -1823,7 +1860,7 @@ index bc14ab72..2e13970d 100644
                  .s = max_seq_len,
                  .h = config.text_config.num_key_value_heads,
                  .hd = config.text_config.head_dim,
-@@ -1247,3 +1555,16 @@ pub const KvCache = struct {
+@@ -1247,3 +1569,16 @@ pub const KvCache = struct {
  fn softplus(x: zml.Tensor) zml.Tensor {
      return x.exp().addConstant(1).log();
  }
@@ -2871,10 +2908,10 @@ index 00000000..c5527ada
 +)
 diff --git a/examples/w8a8_sweep/main.zig b/examples/w8a8_sweep/main.zig
 new file mode 100644
-index 00000000..f506010f
+index 00000000..3d089b3b
 --- /dev/null
 +++ b/examples/w8a8_sweep/main.zig
-@@ -0,0 +1,479 @@
+@@ -0,0 +1,484 @@
 +// W8A8 GEMM/GEMV sweep (zml/ZML_W8A8.md follow-ups): push int8 toward the ~2x peak, profile the
 +// decode-shape (M=1) GEMV, and CHARACTERIZE the kernel robustly (median timing, layout probe,
 +// per-call spread) so a one-off device stall can no longer masquerade as a kernel-selection cliff.
@@ -3211,7 +3248,12 @@ index 00000000..f506010f
 +        .w8a8 => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
 +        .woq => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
 +    };
-+    var exe = try platform.compile(allocator, io, model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{});
++    // Path-1 probe: set ZML_DUMP_HLO=<dir> to dump optimized HLO for this config and confirm the
++    // subchannel-dequant fusion (ZML_SUBCHANNEL_FUSION=1, module.zig .oneapi arm) folded the
++    // convert/multiply into the dot (an s8 param feeding a __triton_gemm/fusion with no standalone
++    // bf16 multiply). Run one config at a time (e.g. --variant=woq --shape=q --m=1) to keep it small.
++    const dump_to: ?[]const u8 = if (std.c.getenv("ZML_DUMP_HLO")) |d| std.mem.span(d) else null;
++    var exe = try platform.compile(allocator, io, model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{ .xla_dump_to = dump_to });
 +    defer exe.deinit();
 +
 +    const t = switch (v) {
@@ -3354,6 +3396,274 @@ index 00000000..f506010f
 +    }
 +    log.info("done.", .{});
 +}
+diff --git a/zml/module.zig b/zml/module.zig
+index 22014be6..bc9bb31f 100644
+--- a/zml/module.zig
++++ b/zml/module.zig
+@@ -649,6 +649,16 @@ fn compileModuleToPjrtExecutable(arena: std.mem.Allocator, io: std.Io, platform:
+                 try setXlaOverrideFlag(overrides_map, "xla_gpu_autotune_level", 0, upb_arena);
+                 try setXlaOverrideFlag(overrides_map, "xla_gpu_enable_command_buffer", "", upb_arena);
+                 try setXlaOverrideFlag(overrides_map, "xla_gpu_enable_cublaslt", false, upb_arena);
++                // Path-1 probe (zml/ZML_INT8_GEMM_OPT.md): env-gated experimental subchannel-dequant
++                // -> Triton-GEMM fusion. OFF by default (no baseline change); set
++                // ZML_SUBCHANNEL_FUSION=1 to A/B whether a canonical
++                //   s8 param -> broadcast(scale) -> multiply -> dot
++                // folds into the GEMM so weight-only int8 decode becomes bandwidth-bound. The plugin
++                // help-text warns block-size/split-k>1 is not considered, so this is a probe, not a
++                // commitment; confirm it fired via an HLO dump (opts.xla_dump_to).
++                if (std.c.getenv("ZML_SUBCHANNEL_FUSION") != null) {
++                    try setXlaOverrideFlag(overrides_map, "xla_gpu_experimental_enable_subchannel_dequantisation_fusion", true, upb_arena);
++                }
+             },
+             else => {},
+         }
+diff --git a/zml/nn.zig b/zml/nn.zig
+index e0a564d0..a5e6cfed 100644
+--- a/zml/nn.zig
++++ b/zml/nn.zig
+@@ -1345,6 +1345,23 @@ pub const GatedDeltaNet = struct {
+             stdx.debug.panic(err_template ++ "value dimensions are inconsistent.", err_args);
+         };
+ 
++        // Fast path: a single-position decode step needs no `stablehlo.while` -- call `step`
++        // directly (byte-identical to the 1-iteration loop below; covered by the chunked-parity
++        // test's s==1 case). Removes the loop wrapper on the hot decode path.
++        if (queries.dim(.s) == 1) {
++            const step_out = step(initial_state, .{
++                .q = queries.squeeze(.s),
++                .k = keys.squeeze(.s),
++                .v = values.squeeze(.s),
++                .alpha = alphas.squeeze(.s),
++                .beta = betas.squeeze(.s),
++            });
++            return .{
++                .outputs = step_out.output.insertAxes(.last, .{.s}).transpose(values.shape()),
++                .state = step_out.state,
++            };
++        }
++
+         const WhileContext = struct {
+             queries: Tensor,
+             keys: Tensor,
+@@ -1402,6 +1419,141 @@ pub const GatedDeltaNet = struct {
+             .state = .{ .s = loop_state[1] },
+         };
+     }
++
++    // ---- Chunked (parallel) gated-delta-rule scan -------------------------------------------
++    // FLA "chunk_gated_delta_rule" WY / UT-transform form, expressed in pure zml ops (cumsum +
++    // triangular masks + batched matmuls + a finite Neumann inverse). Numerically equivalent to
++    // the per-token `forward` scan above but O(s/C) sequential chunk-steps instead of O(s) token-
++    // steps, so it amortizes the MTP verify and cuts prefill TTFT. Everything is f32 (the caller
++    // already upcasts). Chunking is what keeps the f32 exp() of the cumulative log-gate from
++    // underflowing on long sequences (each chunk's cumsum is local). See zml/ZML_GDN_OPT.md and the
++    // machine-precision numpy reference; validated by "gated delta net chunked parity".
++
++    /// Batched matrix product over the (.i, .j) axes: A{..,i,j} @ B{..,i,j} -> {..,i,j},
++    /// contracting A's .j with B's .i. Other shared tags (batch/head) ride along as batch axes.
++    fn matmulIJ(a: Tensor, b: Tensor) Tensor {
++        // Relabel B{..,i,j} -> {..,j,m} for the contraction. Done as two sequential renames because
++        // a simultaneous .i=.j,.j=.m swap transiently duplicates .j (rejected by rename).
++        const b_jm = b.rename(.{ .j = .m }).rename(.{ .i = .j });
++        return a.dot(b_jm, .j).rename(.{ .m = .j });
++    }
++
++    /// f32 identity over the (.i, .j) axes matching `like`'s shape (1 on the diagonal, else 0).
++    fn eyeIJ(like: Tensor) Tensor {
++        const ii = Tensor.iota(like.shape(), .i);
++        const jj = Tensor.iota(like.shape(), .j);
++        const ones = Tensor.scalar(1.0, .f32).broad(like.shape());
++        const zeros = Tensor.scalar(0.0, .f32).broad(like.shape());
++        return ii.cmp(.EQ, jj).select(ones, zeros);
++    }
++
++    /// Sum of the finite Neumann series `I + N + N^2 + ... + N^{l-1}` for a strictly-lower
++    /// (nilpotent, N^l = 0) matrix N over the (.i, .j) axes, built by ceil(log2 l) iterative
++    /// doubling (T_{2p} = T_p (I + N^p)). Exact by nilpotency. To invert (I + A) with A
++    /// strictly-lower, pass N = -A (then this returns (I + A)^{-1}). All f32.
++    fn neumannInverseIJ(n_mat: Tensor, l: i64) Tensor {
++        var t = eyeIJ(n_mat);
++        var np = n_mat;
++        var p: i64 = 1;
++        while (p < l) : (p *= 2) {
++            t = t.add(matmulIJ(t, np));
++            np = matmulIJ(np, np);
++        }
++        return t;
++    }
++
++    /// One chunk of the chunked scan. Processes L positions in parallel (tag .p, L = q.dim(.p))
++    /// continuing from `s_prev` {..,v,k}; returns chunk outputs {..,h,p,v} and updated state
++    /// {..,v,k}. `g` is the LOG forget-gate (not exp(g)); `q` is assumed pre-scaled by the caller.
++    fn chunkStep(q: Tensor, k: Tensor, v: Tensor, g: Tensor, beta: Tensor, s_prev: Tensor) struct { Tensor, Tensor } {
++        const l = q.dim(.p);
++        const gcs = g.cumulativeSum(.p); // inclusive within-chunk cumulative log-gate {..,p,h}
++
++        const ki = k.rename(.{ .p = .i });
++        const kj = k.rename(.{ .p = .j });
++        const qi = q.rename(.{ .p = .i });
++        const vj = v.rename(.{ .p = .j });
++        const beta_i = beta.rename(.{ .p = .i });
++        const beta_j = beta.rename(.{ .p = .j });
++        const gcs_i = gcs.rename(.{ .p = .i });
++        const gcs_j = gcs.rename(.{ .p = .j });
++
++        // decay[i,j] = exp(gcs_i - gcs_j); on the used (lower) triangles gcs_i - gcs_j <= 0.
++        const kk = ki.dot(kj, .k); // {..,h,i,j}
++        const decay = gcs_i.broad(kk.shape()).sub(gcs_j.broad(kk.shape())).exp();
++
++        // A[i,j] = beta_i * (k_i . k_j) * decay, STRICTLY lower (i>j). T = (I + A)^{-1} = sum(-A)^p.
++        const a_mat = beta_i.broad(kk.shape()).mul(kk).mul(decay).triangular(.{ .i, .j }, -1);
++        const t_mat = neumannInverseIJ(a_mat.negate(), l);
++
++        // WY vectors: u = T @ (beta*v); w = T @ (beta * exp(gcs) * k).
++        const d_j = gcs_j.exp();
++        const u = t_mat.dot(vj.mul(beta_j.broad(vj.shape())), .j); // {..,h,i,v}
++        const w = t_mat.dot(kj.mul(beta_j.broad(kj.shape())).mul(d_j.broad(kj.shape())), .j); // {..,h,i,k}
++
++        // Pseudo-values and output (intra term INCLUSIVE of the diagonal -> current token counts).
++        const v_new = u.sub(w.dot(s_prev, .k)); // {..,h,i,v}
++        const d_i = gcs_i.exp();
++        const o_inter = qi.dot(s_prev, .k).mul(d_i.broad(u.shape())); // {..,h,i,v}
++        const aqk = qi.dot(kj, .k).mul(decay).triangular(.{ .i, .j }, 0); // inclusive (i>=j)
++        const intra = aqk.dot(v_new.rename(.{ .i = .j }), .j); // {..,h,i,v}
++        const o = o_inter.add(intra).rename(.{ .i = .p }); // {..,h,p,v}; q pre-scaled -> no extra scale
++
++        // State carry: S' = exp(gcs_last)*S + sum_m exp(gcs_last - gcs_m) * v_new_m (x) k_m.
++        const gcs_last = gcs.slice1d(.p, .{ .start = l - 1, .end = l }).squeeze(.p); // {..,h}
++        const gcs_m = gcs.rename(.{ .p = .m });
++        const coeff = gcs_last.broad(gcs_m.shape()).sub(gcs_m).exp(); // {..,m,h}
++        const v_new_m = v_new.rename(.{ .i = .m });
++        const carry = v_new_m.mul(coeff.broad(v_new_m.shape())).dot(k.rename(.{ .p = .m }), .m); // {..,h,v,k}
++        const s_new = s_prev.mul(gcs_last.exp().broad(s_prev.shape())).add(carry);
++
++        return .{ o, s_new };
++    }
++
++    /// Chunked/parallel gated-delta-rule scan -- a drop-in for `forward` at s>1. Splits the s
++    /// positions into chunks of `chunk_size` (last chunk may be shorter), processes each chunk with
++    /// `chunkStep`, and threads the recurrent state across chunks with a Zig-unrolled loop. Same
++    /// Output as `forward`; `queries` pre-scaled and `alphas` = exp(log-gate), exactly as `forward`.
++    pub fn forwardChunked(
++        queries: Tensor,
++        keys: Tensor,
++        values: Tensor,
++        alphas: Tensor,
++        betas: Tensor,
++        initial_state: State,
++        chunk_size: i64,
++    ) Output {
++        stdx.debug.assert(queries.shape().hasTags(.{ .s, .h, .k }), "GatedDeltaNet.forwardChunked: queries missing {{.s,.h,.k}} ({f})", .{queries});
++        stdx.debug.assert(initial_state.s.shape().hasTags(.{ .h, .v, .k }), "GatedDeltaNet.forwardChunked: initial_state.s missing {{.h,.v,.k}} ({f})", .{initial_state.s});
++
++        const s = queries.dim(.s);
++        const c_eff = @min(chunk_size, s);
++        const g = alphas.log(); // recover the log-gate (alphas = exp(g))
++
++        var state = initial_state.s;
++        var outputs: ?Tensor = null;
++        var start: i64 = 0;
++        while (start < s) : (start += c_eff) {
++            const end = @min(start + c_eff, s);
++            const sl: Tensor.Slice = .{ .start = start, .end = end };
++            const o_c, const s_new = chunkStep(
++                queries.slice1d(.s, sl).rename(.{ .s = .p }),
++                keys.slice1d(.s, sl).rename(.{ .s = .p }),
++                values.slice1d(.s, sl).rename(.{ .s = .p }),
++                g.slice1d(.s, sl).rename(.{ .s = .p }),
++                betas.slice1d(.s, sl).rename(.{ .s = .p }),
++                state,
++            );
++            state = s_new;
++            const o_s = o_c.rename(.{ .p = .s });
++            outputs = if (outputs) |prev| Tensor.concatenate(&.{ prev, o_s }, .s) else o_s;
++        }
++
++        return .{
++            .outputs = outputs.?.transpose(values.shape()),
++            .state = .{ .s = state.transpose(initial_state.s.shape()) },
++        };
++    }
+ };
+ 
+ test "gated delta net" {
+@@ -1526,6 +1678,76 @@ test "gated delta net" {
+     });
+ }
+ 
++test "gated delta net chunked parity" {
++    const platform = zml.testing.env();
++    const alloc = std.testing.allocator;
++    const io = std.testing.io;
++
++    inline for (.{ 1, 2, 4, 7, 16, 32, 64, 100, 256 }) |s_val| {
++        const Case = struct {
++            fn relL2(a: Tensor, b: Tensor) Tensor {
++                const diff = a.sub(b).flatten();
++                const bf = b.flatten();
++                const num = diff.mul(diff).sum(0);
++                const den = bf.mul(bf).sum(0).add(Tensor.scalar(1e-12, .f32));
++                return num.div(den).sqrt();
++            }
++            // L2-normalize over .k, matching the model (recurrentGatedDeltaRule normalizes q,k).
++            // This keeps |k_i . k_j| <= 1 so the strictly-lower A has |A| <= 1 and the Neumann
++            // inverse stays numerically stable (un-normalized keys make A entries > 1 -> the
++            // alternating series cancels catastrophically in f32 for larger chunks).
++            fn l2norm(x: Tensor) Tensor {
++                const nrm = x.mul(x).sum(.k).sqrt().add(Tensor.scalar(1e-6, .f32));
++                return x.div(nrm.broad(x.shape()));
++            }
++            // deterministic pseudo-random tensor via a per-axis iota mix (+ caller applies sin/etc.)
++            fn mix(sh: Shape, ca: f32, cb: f32, cc: f32, off: f32) Tensor {
++                var acc = Tensor.scalar(off, .f32).broad(sh);
++                if (sh.hasTag(.s) != null) acc = acc.add(Tensor.iota(sh, .s).convert(.f32).scale(ca));
++                if (sh.hasTag(.h) != null) acc = acc.add(Tensor.iota(sh, .h).convert(.f32).scale(cb));
++                if (sh.hasTag(.k) != null) acc = acc.add(Tensor.iota(sh, .k).convert(.f32).scale(cc));
++                if (sh.hasTag(.v) != null) acc = acc.add(Tensor.iota(sh, .v).convert(.f32).scale(cc));
++                return acc;
++            }
++            fn parity() struct { rel_out: Tensor, rel_state: Tensor } {
++                const s: i64 = s_val;
++                const h: i64 = 4;
++                const kd: i64 = 8;
++                const vd: i64 = 8;
++                const qkv_shape = Shape.init(.{ .s = s, .h = h, .k = kd }, .f32);
++                const val_shape = Shape.init(.{ .s = s, .h = h, .v = vd }, .f32);
++                const g_shape = Shape.init(.{ .s = s, .h = h }, .f32);
++                const st_shape = Shape.init(.{ .h = h, .v = vd, .k = kd }, .f32);
++                const q = l2norm(mix(qkv_shape, 0.11, 0.31, 0.71, 0.0).sin());
++                const k = l2norm(mix(qkv_shape, 0.17, 0.53, 0.23, 1.0).sin());
++                const val = mix(val_shape, 0.29, 0.13, 0.37, 2.0).sin();
++                // alpha = exp(-1.5*sin^2) in ~(0.22, 1] -> mild gates (f32-chunk-safe like the ref).
++                const gate = mix(g_shape, 0.19, 0.41, 0.0, 3.0).sin();
++                const alpha = gate.mul(gate).scale(-1.5).exp();
++                const beta = mix(g_shape, 0.23, 0.61, 0.0, 4.0).sigmoid();
++                const st = mix(st_shape, 0.07, 0.43, 0.29, 5.0).sin().scale(0.1);
++                const fwd = GatedDeltaNet.forward(q, k, val, alpha, beta, .{ .s = st });
++                const chk = GatedDeltaNet.forwardChunked(q, k, val, alpha, beta, .{ .s = st }, 16);
++                return .{
++                    .rel_out = relL2(chk.outputs, fwd.outputs),
++                    .rel_state = relL2(chk.state.s, fwd.state.s),
++                };
++            }
++        };
++
++        var exe = try zml.module.compile(alloc, io, Case.parity, .{}, platform, .{});
++        defer exe.deinit();
++        var res = try zml.testing.autoCall(alloc, io, &exe, Case.parity, {});
++        defer res.rel_out.deinit();
++        defer res.rel_state.deinit();
++        const ro = try res.rel_out.getValue(f32, io);
++        const rs = try res.rel_state.getValue(f32, io);
++        std.debug.print("chunked-parity s={d:>4}: rel_out={e} rel_state={e}\n", .{ s_val, ro, rs });
++        try std.testing.expect(ro < 1e-3);
++        try std.testing.expect(rs < 1e-3);
++    }
++}
++
+ /// Options controlling generation. The default values correspond to greedy decoding.
+ pub const SamplingStrategy = struct {
+     topk: u32 = 1,
 diff --git a/zml/tensor.zig b/zml/tensor.zig
 index e75208d8..35ea43df 100644
 --- a/zml/tensor.zig

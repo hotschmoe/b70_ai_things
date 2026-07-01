@@ -397,12 +397,15 @@ Lever 2 (chunked scan) is being implemented in `zml/nn.zig` (`GatedDeltaNet.forw
 validated numpy reference (machine-precision, rel-L2 ~1e-15 vs the zml `step()` recurrence) driving a
 CPU parity test vs the existing while-scan. Decisions, grounded in a dedicated FLA/GDN research pass:
 
-- **Chunk size C=32 (not FLA's 64).** FLA's C=64 is justified by HBM<->SRAM amortization INSIDE one
-  fused Triton kernel. For a PURE batched-matmul StableHLO expression (no fused kernel) that
-  justification disappears -- every chunk op already round-trips HBM -- leaving raw FLOPs + the CxC
-  inverse, both of which FAVOR smaller C. C=32 halves the LCd intra term and quarters the CxC-inverse
-  element count vs 64, at the cost of doubling the (cheap, `stablehlo.while`) inter-chunk scan length.
-  Keep C a multiple of 16 for DPAS alignment; sweep {16,32,64} on GPU later.
+- **Chunk size: WIRED at C=16 (sweep {16,32,64} on GPU).** FLA's C=64 is justified by HBM<->SRAM
+  amortization INSIDE one fused Triton kernel. For a PURE batched-matmul StableHLO expression (no
+  fused kernel) that justification disappears -- every chunk op already round-trips HBM -- leaving raw
+  FLOPs + the CxC inverse, both of which FAVOR smaller C (16 quarters the CxC-inverse element count vs
+  32). COUNTER-tension specific to our implementation: `forwardChunked` UNROLLS the inter-chunk loop at
+  trace time (a Zig `while`, NOT a `stablehlo.while`) and concatenates per-chunk outputs, so smaller C =
+  MORE unrolled chunks = a bigger graph (and slower compile) for long prefill. So C=16 is a good default
+  for decode/verify + moderate prefill; for long prefill, C=32/64 (fewer unrolled chunks) OR converting
+  the unroll to a real `stablehlo.while` is the follow-up. Keep C a multiple of 16 for DPAS alignment.
 - **fp32 boundaries mirror FLA exactly:** keep in fp32 the log-gate cumsum, the decay exponent
   (exponentiate LATE; all exponents <=0 on the strict-lower triangle so NO overflow and no clamp
   needed), the `A = beta*KK^T*decay` matrix, the entire `(I-A)^-1` Neumann computation, and the state

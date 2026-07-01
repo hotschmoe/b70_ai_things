@@ -6742,3 +6742,24 @@ VERDICT: kernel plan re-sequenced in zml/ZML_INT8_GEMM_OPT.md section 7 (Path 1 
   scan (C=32) decisions in zml/ZML_GDN_OPT.md section 9. Chunked-scan port + s==1 fast path being CPU-
   validated (fork); code milestone commit to follow when green. Next attended GPU run: baseline reconfirm
   + P0-deep GDN sub-block profiling + Path 1 woq_fused fusion A/B (dump HLO, confirm fires).
+
+## 2026-07-01 -- zml chunked GDN scan (lever 2) LANDS: CPU rel-L2 ~1e-7 vs while-scan [result]
+
+CONFIG: implement GatedDeltaNet.forwardChunked (FLA chunk_gated_delta_rule WY/UT-transform form in pure
+  zml ops: local log-gate cumsum + strict/inclusive triangular masks + batched dot + finite Neumann
+  inverse via fp32 doubling, sign N=-A) + an s==1 decode fast path (bypass the stablehlo.while, call
+  step() directly), wired into recurrentGatedDeltaRule (s>1 -> forwardChunked C=16; s==1 -> forward).
+  C=16 chunks, everything f32. Implementation UNROLLS the inter-chunk loop at trace time (Zig while +
+  concatenate), no padding (natural variable-length last chunk).
+COMMAND: bazelisk test //zml:test --config=release --test_filter="gated delta net chunked parity";
+  bazelisk build //examples/llm:llm --config=release
+RESULT: chunked-parity test PASSED. rel-L2 vs the per-token while-scan (f32 CPU), outputs / state:
+  s=1 8.1e-8/7.9e-8 | s=2 1.1e-7/9.7e-8 | s=4 1.0e-7/8.2e-8 | s=7 8.8e-8/7.7e-8 | s=16 1.5e-7/4.3e-7 |
+  s=32 1.5e-7/3.8e-7 | s=64 1.3e-7/1.9e-7 | s=100 1.3e-7/9.1e-8 | s=256 (pass). ALL ~1e-7, 4 orders
+  below the 1e-3 gate. llm build (model.zig wiring) exit 0. s==1 fast path matches the 1-iter loop.
+VERDICT: lever 2 CPU-validated + landed (patch zml_w8a8.patch, 18 files, 3768 lines). This removes the
+  MTP-verify's sequential-scan dependency (verify s=Kv is now ONE parallel chunk) and cuts prefill from
+  O(s) to O(s/C) chunk-steps. NOT a single-stream decode win on its own (decode scan is 1 step; the 79%
+  is the projections -- see ZML_INT8_GEMM_OPT.md 7). GPU A/B pending (byte-identical greedy + TTFT +
+  verify timing) in the next attended run. WATCH: the Zig-unroll makes long-prefill graphs large
+  (n_chunks unrolled); convert to stablehlo.while or raise C if prefill compile time regresses.

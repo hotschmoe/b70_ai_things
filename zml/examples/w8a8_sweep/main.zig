@@ -334,7 +334,12 @@ fn runOne(
         .w8a8 => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
         .woq => .{ .w = .fromShape(w_shape), .wscale = .fromShape(ws_shape) },
     };
-    var exe = try platform.compile(allocator, io, model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{});
+    // Path-1 probe: set ZML_DUMP_HLO=<dir> to dump optimized HLO for this config and confirm the
+    // subchannel-dequant fusion (ZML_SUBCHANNEL_FUSION=1, module.zig .oneapi arm) folded the
+    // convert/multiply into the dot (an s8 param feeding a __triton_gemm/fusion with no standalone
+    // bf16 multiply). Run one config at a time (e.g. --variant=woq --shape=q --m=1) to keep it small.
+    const dump_to: ?[]const u8 = if (std.c.getenv("ZML_DUMP_HLO")) |d| std.mem.span(d) else null;
+    var exe = try platform.compile(allocator, io, model, .forward, .{zml.Tensor.fromShape(x_shape)}, .{ .xla_dump_to = dump_to });
     defer exe.deinit();
 
     const t = switch (v) {
