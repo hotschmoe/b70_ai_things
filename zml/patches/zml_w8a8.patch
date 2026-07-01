@@ -868,7 +868,7 @@ index 00000000..6f6318ec
 +    }
 +}
 diff --git a/examples/llm/models/qwen3_5/inference.zig b/examples/llm/models/qwen3_5/inference.zig
-index 1ad962fe..da3764bc 100644
+index 1ad962fe..ddef0372 100644
 --- a/examples/llm/models/qwen3_5/inference.zig
 +++ b/examples/llm/models/qwen3_5/inference.zig
 @@ -42,12 +42,19 @@ pub const Args = struct {
@@ -891,15 +891,26 @@ index 1ad962fe..da3764bc 100644
      params: CompilationParameters,
  
      pub fn init(
-@@ -81,6 +88,7 @@ pub const CompiledModel = struct {
+@@ -69,6 +76,7 @@ pub const CompiledModel = struct {
+                 parameters,
+                 @intCast(parameters.prefill_tokens.dim(.s)),
+                 .prefill,
++                false,
+                 progress,
+             ),
+             .decode = try .init(
+@@ -79,8 +87,10 @@ pub const CompiledModel = struct {
+                 parameters,
+                 @intCast(parameters.decode_tokens.dim(.s)),
                  .decode,
++                false,
                  progress,
              ),
 +            .mtp = try MtpExes.init(allocator, io, platform, qwen_model, parameters, parameters.seqlen, progress),
              .params = parameters,
          };
      }
-@@ -88,9 +96,123 @@ pub const CompiledModel = struct {
+@@ -88,9 +98,167 @@ pub const CompiledModel = struct {
      pub fn deinit(self: *CompiledModel) void {
          self.prefill.deinit();
          self.decode.deinit();
@@ -910,11 +921,18 @@ index 1ad962fe..da3764bc 100644
 +// The NEXTN/MTP speculative-decode executables, compiled once alongside prefill/decode. `prefill`
 +// fills the MTP's 1-layer self-attn KV over the prompt (s=seqlen, no lm_head); `draft` runs the
 +// head for one token (s=1) and returns the drafted token + updated cache + rng. See zml/ZML_MTP_PLAN.md.
++// Speculative window: K=1 drafted token per step -> verify Kv=2 tokens [t, d_1] in one forward.
++pub const MTP_K: usize = 1;
++pub const MTP_KV: usize = MTP_K + 1;
++
 +pub const MtpExes = struct {
 +    prefill: zml.Exe, // model.MtpPrefill.forward @ s=seqlen -> updated SelfAttnCache
 +    draft: zml.Exe, // model.MtpDraft.forward @ s=1 -> (draft token, updated SelfAttnCache, rng)
++    verify: KernelExe, // main model @ s=Kv (prefill-style sampler + GDN forwardVerify from cache)
++    gdn_snapshot: zml.Exe, // model.GdnSnapshot.forward -> deep copy of the GDN state (rollback)
 +    mtp_kv: model.KvCache.SelfAttnCache, // 1-layer cache template (drives buffer allocation)
 +    seqlen: u32,
++    kv: u32,
 +
 +    pub fn init(
 +        allocator: std.mem.Allocator,
@@ -973,13 +991,50 @@ index 1ad962fe..da3764bc 100644
 +                .program_name = "qwen3_5_mtp_draft",
 +            });
 +        };
++        errdefer draft_exe.deinit();
 +
-+        return .{ .prefill = prefill_exe, .draft = draft_exe, .mtp_kv = mtp_kv, .seqlen = @intCast(seqlen) };
++        // Verify: the FULL main model over s=Kv tokens against the committed cache. Compiled as a
++        // prefill-phase exe (all-position argmax sampler, no token_index increment) at seqlen=Kv,
++        // with verify=true so the GDN layer continues from the cached state (forwardVerify).
++        var verify_exe = try KernelExe.init(allocator, io, platform, qwen_model, parameters, MTP_KV, .prefill, true, progress);
++        errdefer verify_exe.deinit();
++
++        // GDN snapshot exe: deep-copies the committed GDN conv+recurrent state before verify so a
++        // rejected draft can be rolled back (the recurrent state is not invertible).
++        const gdn_snapshot_exe = b: {
++            progress.increaseEstimatedTotalItems(1);
++            var node = progress.start("compiling gdn snapshot", 1);
++            defer node.end();
++            const from: std.Io.Timestamp = .now(io, .awake);
++            defer Phase.decode.logCompileDone(log, "gdn snapshot", io, from);
++
++            const gdn_template: model.KvCache.GatedDeltaNetCache = .{
++                .conv_state = parameters.kv_cache.gated_delta_net.conv_state,
++                .recurrent_state = parameters.kv_cache.gated_delta_net.recurrent_state,
++                .layer_index = zml.Tensor.init(.{}, .u32),
++            };
++            break :b try platform.compile(allocator, io, model.GdnSnapshot{}, .forward, .{gdn_template}, .{
++                .shardings = &parameters.shardings.all(),
++                .program_name = "qwen3_5_gdn_snapshot",
++            });
++        };
++
++        return .{
++            .prefill = prefill_exe,
++            .draft = draft_exe,
++            .verify = verify_exe,
++            .gdn_snapshot = gdn_snapshot_exe,
++            .mtp_kv = mtp_kv,
++            .seqlen = @intCast(seqlen),
++            .kv = MTP_KV,
++        };
 +    }
 +
 +    pub fn deinit(self: *MtpExes) void {
 +        self.prefill.deinit();
 +        self.draft.deinit();
++        self.verify.deinit();
++        self.gdn_snapshot.deinit();
 +    }
 +};
 +
@@ -1023,7 +1078,7 @@ index 1ad962fe..da3764bc 100644
  pub const Inference = CompiledModel;
  
  pub const KernelExe = struct {
-@@ -251,7 +373,6 @@ pub const KernelExe = struct {
+@@ -251,7 +419,6 @@ pub const KernelExe = struct {
  
                  break :b self.embed_results.get(zml.Buffer);
              };
@@ -1031,7 +1086,7 @@ index 1ad962fe..da3764bc 100644
  
              for (
                  self.layers.args,
-@@ -263,6 +384,10 @@ pub const KernelExe = struct {
+@@ -263,6 +430,10 @@ pub const KernelExe = struct {
              }
  
              self.exe.runSampler(&self.sampler_args, &self.sampler_results, args, &hidden_buf);
@@ -1042,7 +1097,41 @@ index 1ad962fe..da3764bc 100644
          }
      };
  
-@@ -379,7 +504,8 @@ const ComposedKernelExe = struct {
+@@ -274,10 +445,11 @@ pub const KernelExe = struct {
+         parameters: CompilationOptions,
+         seqlen: usize,
+         phase: Phase,
++        verify: bool,
+         progress: *std.Progress.Node,
+     ) !KernelExe {
+         return .{
+-            .composed = try .init(allocator, io, platform, qwen_model, parameters, seqlen, phase, progress),
++            .composed = try .init(allocator, io, platform, qwen_model, parameters, seqlen, phase, verify, progress),
+         };
+     }
+ 
+@@ -327,6 +499,7 @@ const ComposedKernelExe = struct {
+         parameters: CompilationOptions,
+         seqlen: usize,
+         phase: Phase,
++        verify: bool,
+         progress: *std.Progress.Node,
+     ) !ComposedKernelExe {
+         const embed_tokens = try ComposedKernelExe.compileEmbedTokens(allocator, io, platform, qwen_model.text_model.embed_tokens, parameters, seqlen, phase, progress);
+@@ -338,9 +511,11 @@ const ComposedKernelExe = struct {
+         };
+         errdefer if (full_attention_layer) |exe| exe.deinit();
+ 
++        // verify -> the linear-attention layer CONTINUES from the cached GDN state over s=Kv tokens
++        // (forwardLinearAttnVerify); prefill/decode use forwardLinearAttn.
+         const linear_attention_layer: ?zml.Exe = b: {
+             const index = ComposedKernelExe.findFirstLayerIndex(qwen_model.config.text_config.layer_types, .linear_attention) orelse break :b null;
+-            break :b try ComposedKernelExe.compileLinearAttentionLayer(allocator, io, platform, qwen_model, parameters, seqlen, index, phase, progress);
++            break :b try ComposedKernelExe.compileLinearAttentionLayer(allocator, io, platform, qwen_model, parameters, seqlen, index, phase, verify, progress);
+         };
+         errdefer if (linear_attention_layer) |exe| exe.deinit();
+ 
+@@ -379,7 +554,8 @@ const ComposedKernelExe = struct {
  
              break :b results.get(zml.Buffer);
          };
@@ -1052,7 +1141,7 @@ index 1ad962fe..da3764bc 100644
  
          var self_attn_layer_index: usize = 0;
          var linear_attn_layer_index: usize = 0;
-@@ -423,6 +549,13 @@ const ComposedKernelExe = struct {
+@@ -423,6 +599,13 @@ const ComposedKernelExe = struct {
  
              self.runSampler(&exe_args, &results, args, &hidden_buf);
          }
@@ -1066,7 +1155,7 @@ index 1ad962fe..da3764bc 100644
      }
  
      fn runLayer(
-@@ -540,29 +673,9 @@ const ComposedKernelExe = struct {
+@@ -540,29 +723,9 @@ const ComposedKernelExe = struct {
          };
      }
  
@@ -1099,8 +1188,37 @@ index 1ad962fe..da3764bc 100644
  
      fn compileEmbedTokens(
          allocator: std.mem.Allocator,
+@@ -636,6 +799,7 @@ const ComposedKernelExe = struct {
+         seqlen: usize,
+         layer_index: usize,
+         phase: Phase,
++        verify: bool,
+         progress: *std.Progress.Node,
+     ) !zml.Exe {
+         progress.increaseEstimatedTotalItems(1);
+@@ -652,6 +816,20 @@ const ComposedKernelExe = struct {
+             .layer_index = zml.Tensor.init(.{}, .u32),
+         };
+ 
++        // `func` is a comptime parameter, so branch on the runtime `verify` flag here.
++        if (verify) {
++            return platform.compile(
++                allocator,
++                io,
++                qwen_model.text_model.layers[layer_index],
++                .forwardLinearAttnVerify,
++                .{ hidden_tensor, parameters.token_index, linear_attn_cache },
++                .{
++                    .shardings = &parameters.shardings.all(),
++                    .program_name = phase.programName("qwen3_5", "linear_attention_layer_verify"),
++                },
++            );
++        }
+         return platform.compile(
+             allocator,
+             io,
 diff --git a/examples/llm/models/qwen3_5/model.zig b/examples/llm/models/qwen3_5/model.zig
-index bc14ab72..f3d9a788 100644
+index bc14ab72..f96c53f4 100644
 --- a/examples/llm/models/qwen3_5/model.zig
 +++ b/examples/llm/models/qwen3_5/model.zig
 @@ -4,8 +4,15 @@ const zml = @import("zml");
@@ -1169,8 +1287,36 @@ index bc14ab72..f3d9a788 100644
      }
      pub fn forward(
          self: Model,
-@@ -421,43 +443,227 @@ pub const TransformerLayer = struct {
+@@ -419,45 +441,270 @@ pub const TransformerLayer = struct {
+ 
+         return .{ mlp_output.add(x1).withPartitioning(.{ .d = .replicated }).reuseBuffer(x0), updated_kv_cache };
      }
++
++    // MTP spec-decode VERIFY variant of the linear-attention layer: identical to forwardLinearAttn
++    // except the GDN CONTINUES from the cached state over s=Kv tokens (forwardVerify) instead of
++    // decode's s==1-only cached path. The full-attention verify reuses forwardSelfAttn at s=Kv.
++    pub fn forwardLinearAttnVerify(
++        self: TransformerLayer,
++        x0: zml.Tensor,
++        token_index: zml.Tensor,
++        kv_cache: KvCache.GatedDeltaNetCache,
++    ) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
++        _ = token_index;
++        const x0_replicated = x0.withPartitioning(.{ .d = .replicated });
++        const normalized_x0 = self.input_layernorm.forward(x0_replicated);
++
++        const linear_attn = switch (self.attn) {
++            .linear_attention => |linear_attn| linear_attn,
++            .full_attention => unreachable,
++        };
++        const attention_output, const updated_kv_cache = linear_attn.forwardVerify(normalized_x0, kv_cache);
++
++        const x1 = attention_output.add(x0_replicated).withPartitioning(.{ .d = .replicated });
++        const normalized_hidden = self.post_attention_layernorm.forward(x1);
++        const mlp_output = self.mlp.forward(normalized_hidden).withPartitioning(.{ .d = .replicated });
++
++        return .{ mlp_output.add(x1).withPartitioning(.{ .d = .replicated }).reuseBuffer(x0), updated_kv_cache };
++    }
  };
  
 +// NEXTN/MTP head (1 NEXTN layer): reuses existing zml modules -- 3 `(1+w)` RMSNorms, an `fc`
@@ -1313,6 +1459,21 @@ index bc14ab72..f3d9a788 100644
 +    }
 +};
 +
++// Snapshot (deep copy) of the GDN conv+recurrent state, for MTP spec-decode rollback: the verify
++// forward advances the GDN state over the speculative tokens, but the recurrent state is not
++// invertible, so on a REJECTED draft we must restore the pre-verify state. optimizationBarrier
++// forces a materialized, non-aliased copy (a fresh buffer), not an alias of the input.
++pub const GdnSnapshot = struct {
++    pub fn forward(self: GdnSnapshot, cache: KvCache.GatedDeltaNetCache) KvCache.GatedDeltaNetCache {
++        _ = self;
++        return .{
++            .conv_state = cache.conv_state.optimizationBarrier(),
++            .recurrent_state = cache.recurrent_state.optimizationBarrier(),
++            .layer_index = cache.layer_index,
++        };
++    }
++};
++
 +// The activation feeding a column-parallel projection: either a plain float tensor (bf16
 +// checkpoint, or a weight-only/row-parallel layer) or a per-token int8 activation quantized ONCE
 +// and shared by every projection contracting the same axis (q/k/v share input_layernorm; gate/up
@@ -1404,7 +1565,7 @@ index bc14ab72..f3d9a788 100644
          const hidden = gate.silu().mul(up_projed);
  
          const output = self.down_proj.forward(hidden);
-@@ -466,9 +672,10 @@ pub const Mlp = struct {
+@@ -466,9 +713,10 @@ pub const Mlp = struct {
  };
  
  pub const SelfAttn = struct {
@@ -1418,7 +1579,7 @@ index bc14ab72..f3d9a788 100644
  
      q_norm: RmsNorm,
      k_norm: RmsNorm,
-@@ -478,11 +685,15 @@ pub const SelfAttn = struct {
+@@ -478,11 +726,15 @@ pub const SelfAttn = struct {
      head_dim: i64,
      rotary_dim: i64,
      rotary_embed: TextRotaryEmbedding,
@@ -1436,7 +1597,7 @@ index bc14ab72..f3d9a788 100644
              store.maybeCreateTensor("bias", .{.dout}, bias_partitions),
              .d,
          );
-@@ -492,10 +703,16 @@ pub const SelfAttn = struct {
+@@ -492,10 +744,16 @@ pub const SelfAttn = struct {
          const rotary_dim: i64 = @intFromFloat(@as(f32, @floatFromInt(config.text_config.head_dim)) *
              config.text_config.rope_parameters.partial_rotary_factor);
          return .{
@@ -1457,7 +1618,7 @@ index bc14ab72..f3d9a788 100644
              .q_norm = RmsNorm.init(store.withPrefix("q_norm"), config.text_config.rms_norm_eps),
              .k_norm = RmsNorm.init(store.withPrefix("k_norm"), config.text_config.rms_norm_eps),
              .num_heads = config.text_config.num_attention_heads,
-@@ -508,31 +725,35 @@ pub const SelfAttn = struct {
+@@ -508,31 +766,35 @@ pub const SelfAttn = struct {
  
      pub fn unloadBuffers(self: *zml.Bufferized(SelfAttn)) void {
          self.q_proj.weight.deinit();
@@ -1498,7 +1659,7 @@ index bc14ab72..f3d9a788 100644
          return .{ k, v };
      }
  
-@@ -567,8 +788,12 @@ pub const SelfAttn = struct {
+@@ -567,8 +829,12 @@ pub const SelfAttn = struct {
      ) struct { zml.Tensor, KvCache.SelfAttnCache } {
          const x_qkv = x.withPartitioning(.{ .d = .replicated });
  
@@ -1513,7 +1674,49 @@ index bc14ab72..f3d9a788 100644
          const kv_head_sharding = zml.module.CompilationContext.current().partitioning.shardableDim(
              k.shape().withPartitioning(.{ .h = .model }),
              .h,
-@@ -947,7 +1172,9 @@ pub const RmsNormGated = struct {
+@@ -810,6 +1076,20 @@ pub const GatedDeltaNet = struct {
+     }
+ 
+     pub fn forward(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
++        // decode (s==1) continues from the cached conv+recurrent state; prefill (s>1) starts fresh.
++        return self.forwardImpl(x, cache, x.dim(.s) == 1);
++    }
++
++    /// MTP spec-decode VERIFY variant: process s=Kv (>1) tokens CONTINUING from the cached
++    /// conv+recurrent state (unlike prefill, which starts fresh). Same math as decode but keeps all
++    /// Kv outputs and advances the state by Kv tokens. Used by the s=Kv verify exe. The caller must
++    /// snapshot the pre-verify GDN state to allow rollback on a rejected draft (state is not
++    /// invertible). See zml/ZML_MTP_PLAN.md.
++    pub fn forwardVerify(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
++        return self.forwardImpl(x, cache, true);
++    }
++
++    fn forwardImpl(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache, from_cache: bool) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
+         const key_dim = self.num_k_heads * self.head_k_dim;
+         const value_dim = self.num_v_heads * self.head_v_dim;
+         const conv_dim = 2 * key_dim + value_dim;
+@@ -819,7 +1099,8 @@ pub const GatedDeltaNet = struct {
+         const projected_qkv = self.in_proj_qkv.forward(x_in)
+             .rename(.{ .dout = .mix })
+             .withPartitioning(.{ .s = .replicated, .mix = .model });
+-        const use_cached_state = x.dim(.s) == 1 and left_pad > 0;
++        // Continue from the cached conv state when decoding (s==1) OR verifying (s=Kv from cache).
++        const use_cached_state = from_cache and left_pad > 0;
+         const conv_input = b: {
+             if (use_cached_state) break :b zml.Tensor.concatenate(&.{ cache.convState(), projected_qkv }, .s);
+             break :b projected_qkv;
+@@ -846,7 +1127,9 @@ pub const GatedDeltaNet = struct {
+             .silu();
+ 
+         if (use_cached_state) {
+-            mixed_qkv = mixed_qkv.slice1d(.s, .{ .start = mixed_qkv.dim(.s) - 1, .end = mixed_qkv.dim(.s) });
++            // Keep the last x.dim(.s) conv outputs (decode: 1; verify: Kv). The conv over
++            // [conv_state(kernel-1) ++ x(s)] yields s+kernel-1 outputs; the last s are the new tokens.
++            mixed_qkv = mixed_qkv.slice1d(.s, .{ .start = mixed_qkv.dim(.s) - x.dim(.s), .end = mixed_qkv.dim(.s) });
+         }
+         mixed_qkv = mixed_qkv.withPartitioning(.{ .s = .replicated, .mix = .model });
+ 
+@@ -947,7 +1230,9 @@ pub const RmsNormGated = struct {
          const gate_f32 = gate.convert(.f32);
  
          const normalized = zml.nn.rmsNorm(x_f32, .d, self.eps);
@@ -1524,7 +1727,7 @@ index bc14ab72..f3d9a788 100644
  
          const gated_output = output.mul(gate_f32.silu());
          return gated_output.convert(x.dtype());
-@@ -968,9 +1195,20 @@ pub const KvCache = struct {
+@@ -968,9 +1253,20 @@ pub const KvCache = struct {
  
          pub fn init(config: Config, batch_dim: i64, max_seq_len: i64, dtype: zml.DataType, model_sharding: zml.Sharding) SelfAttnCache {
              const num_self_attn_layers = countLayers(config.text_config.layer_types, .full_attention);
@@ -1546,7 +1749,7 @@ index bc14ab72..f3d9a788 100644
                  .s = max_seq_len,
                  .h = config.text_config.num_key_value_heads,
                  .hd = config.text_config.head_dim,
-@@ -1247,3 +1485,12 @@ pub const KvCache = struct {
+@@ -1247,3 +1543,15 @@ pub const KvCache = struct {
  fn softplus(x: zml.Tensor) zml.Tensor {
      return x.exp().addConstant(1).log();
  }
@@ -1557,6 +1760,9 @@ index bc14ab72..f3d9a788 100644
 +comptime {
 +    _ = &MtpDraft.forward;
 +    _ = &MtpPrefill.forward;
++    _ = &GdnSnapshot.forward;
++    _ = &TransformerLayer.forwardLinearAttnVerify;
++    _ = &GatedDeltaNet.forwardVerify;
 +    _ = &KvCache.SelfAttnCache.initSingleLayer;
 +}
 diff --git a/examples/llm/models/qwen3_5/session.zig b/examples/llm/models/qwen3_5/session.zig

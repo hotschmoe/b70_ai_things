@@ -76,6 +76,7 @@ pub const CompiledModel = struct {
                 parameters,
                 @intCast(parameters.prefill_tokens.dim(.s)),
                 .prefill,
+                false,
                 progress,
             ),
             .decode = try .init(
@@ -86,6 +87,7 @@ pub const CompiledModel = struct {
                 parameters,
                 @intCast(parameters.decode_tokens.dim(.s)),
                 .decode,
+                false,
                 progress,
             ),
             .mtp = try MtpExes.init(allocator, io, platform, qwen_model, parameters, parameters.seqlen, progress),
@@ -103,11 +105,18 @@ pub const CompiledModel = struct {
 // The NEXTN/MTP speculative-decode executables, compiled once alongside prefill/decode. `prefill`
 // fills the MTP's 1-layer self-attn KV over the prompt (s=seqlen, no lm_head); `draft` runs the
 // head for one token (s=1) and returns the drafted token + updated cache + rng. See zml/ZML_MTP_PLAN.md.
+// Speculative window: K=1 drafted token per step -> verify Kv=2 tokens [t, d_1] in one forward.
+pub const MTP_K: usize = 1;
+pub const MTP_KV: usize = MTP_K + 1;
+
 pub const MtpExes = struct {
     prefill: zml.Exe, // model.MtpPrefill.forward @ s=seqlen -> updated SelfAttnCache
     draft: zml.Exe, // model.MtpDraft.forward @ s=1 -> (draft token, updated SelfAttnCache, rng)
+    verify: KernelExe, // main model @ s=Kv (prefill-style sampler + GDN forwardVerify from cache)
+    gdn_snapshot: zml.Exe, // model.GdnSnapshot.forward -> deep copy of the GDN state (rollback)
     mtp_kv: model.KvCache.SelfAttnCache, // 1-layer cache template (drives buffer allocation)
     seqlen: u32,
+    kv: u32,
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -166,13 +175,50 @@ pub const MtpExes = struct {
                 .program_name = "qwen3_5_mtp_draft",
             });
         };
+        errdefer draft_exe.deinit();
 
-        return .{ .prefill = prefill_exe, .draft = draft_exe, .mtp_kv = mtp_kv, .seqlen = @intCast(seqlen) };
+        // Verify: the FULL main model over s=Kv tokens against the committed cache. Compiled as a
+        // prefill-phase exe (all-position argmax sampler, no token_index increment) at seqlen=Kv,
+        // with verify=true so the GDN layer continues from the cached state (forwardVerify).
+        var verify_exe = try KernelExe.init(allocator, io, platform, qwen_model, parameters, MTP_KV, .prefill, true, progress);
+        errdefer verify_exe.deinit();
+
+        // GDN snapshot exe: deep-copies the committed GDN conv+recurrent state before verify so a
+        // rejected draft can be rolled back (the recurrent state is not invertible).
+        const gdn_snapshot_exe = b: {
+            progress.increaseEstimatedTotalItems(1);
+            var node = progress.start("compiling gdn snapshot", 1);
+            defer node.end();
+            const from: std.Io.Timestamp = .now(io, .awake);
+            defer Phase.decode.logCompileDone(log, "gdn snapshot", io, from);
+
+            const gdn_template: model.KvCache.GatedDeltaNetCache = .{
+                .conv_state = parameters.kv_cache.gated_delta_net.conv_state,
+                .recurrent_state = parameters.kv_cache.gated_delta_net.recurrent_state,
+                .layer_index = zml.Tensor.init(.{}, .u32),
+            };
+            break :b try platform.compile(allocator, io, model.GdnSnapshot{}, .forward, .{gdn_template}, .{
+                .shardings = &parameters.shardings.all(),
+                .program_name = "qwen3_5_gdn_snapshot",
+            });
+        };
+
+        return .{
+            .prefill = prefill_exe,
+            .draft = draft_exe,
+            .verify = verify_exe,
+            .gdn_snapshot = gdn_snapshot_exe,
+            .mtp_kv = mtp_kv,
+            .seqlen = @intCast(seqlen),
+            .kv = MTP_KV,
+        };
     }
 
     pub fn deinit(self: *MtpExes) void {
         self.prefill.deinit();
         self.draft.deinit();
+        self.verify.deinit();
+        self.gdn_snapshot.deinit();
     }
 };
 
@@ -399,10 +445,11 @@ pub const KernelExe = struct {
         parameters: CompilationOptions,
         seqlen: usize,
         phase: Phase,
+        verify: bool,
         progress: *std.Progress.Node,
     ) !KernelExe {
         return .{
-            .composed = try .init(allocator, io, platform, qwen_model, parameters, seqlen, phase, progress),
+            .composed = try .init(allocator, io, platform, qwen_model, parameters, seqlen, phase, verify, progress),
         };
     }
 
@@ -452,6 +499,7 @@ const ComposedKernelExe = struct {
         parameters: CompilationOptions,
         seqlen: usize,
         phase: Phase,
+        verify: bool,
         progress: *std.Progress.Node,
     ) !ComposedKernelExe {
         const embed_tokens = try ComposedKernelExe.compileEmbedTokens(allocator, io, platform, qwen_model.text_model.embed_tokens, parameters, seqlen, phase, progress);
@@ -463,9 +511,11 @@ const ComposedKernelExe = struct {
         };
         errdefer if (full_attention_layer) |exe| exe.deinit();
 
+        // verify -> the linear-attention layer CONTINUES from the cached GDN state over s=Kv tokens
+        // (forwardLinearAttnVerify); prefill/decode use forwardLinearAttn.
         const linear_attention_layer: ?zml.Exe = b: {
             const index = ComposedKernelExe.findFirstLayerIndex(qwen_model.config.text_config.layer_types, .linear_attention) orelse break :b null;
-            break :b try ComposedKernelExe.compileLinearAttentionLayer(allocator, io, platform, qwen_model, parameters, seqlen, index, phase, progress);
+            break :b try ComposedKernelExe.compileLinearAttentionLayer(allocator, io, platform, qwen_model, parameters, seqlen, index, phase, verify, progress);
         };
         errdefer if (linear_attention_layer) |exe| exe.deinit();
 
@@ -749,6 +799,7 @@ const ComposedKernelExe = struct {
         seqlen: usize,
         layer_index: usize,
         phase: Phase,
+        verify: bool,
         progress: *std.Progress.Node,
     ) !zml.Exe {
         progress.increaseEstimatedTotalItems(1);
@@ -765,6 +816,20 @@ const ComposedKernelExe = struct {
             .layer_index = zml.Tensor.init(.{}, .u32),
         };
 
+        // `func` is a comptime parameter, so branch on the runtime `verify` flag here.
+        if (verify) {
+            return platform.compile(
+                allocator,
+                io,
+                qwen_model.text_model.layers[layer_index],
+                .forwardLinearAttnVerify,
+                .{ hidden_tensor, parameters.token_index, linear_attn_cache },
+                .{
+                    .shardings = &parameters.shardings.all(),
+                    .program_name = phase.programName("qwen3_5", "linear_attention_layer_verify"),
+                },
+            );
+        }
         return platform.compile(
             allocator,
             io,

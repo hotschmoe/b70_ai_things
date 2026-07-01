@@ -441,6 +441,32 @@ pub const TransformerLayer = struct {
 
         return .{ mlp_output.add(x1).withPartitioning(.{ .d = .replicated }).reuseBuffer(x0), updated_kv_cache };
     }
+
+    // MTP spec-decode VERIFY variant of the linear-attention layer: identical to forwardLinearAttn
+    // except the GDN CONTINUES from the cached state over s=Kv tokens (forwardVerify) instead of
+    // decode's s==1-only cached path. The full-attention verify reuses forwardSelfAttn at s=Kv.
+    pub fn forwardLinearAttnVerify(
+        self: TransformerLayer,
+        x0: zml.Tensor,
+        token_index: zml.Tensor,
+        kv_cache: KvCache.GatedDeltaNetCache,
+    ) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
+        _ = token_index;
+        const x0_replicated = x0.withPartitioning(.{ .d = .replicated });
+        const normalized_x0 = self.input_layernorm.forward(x0_replicated);
+
+        const linear_attn = switch (self.attn) {
+            .linear_attention => |linear_attn| linear_attn,
+            .full_attention => unreachable,
+        };
+        const attention_output, const updated_kv_cache = linear_attn.forwardVerify(normalized_x0, kv_cache);
+
+        const x1 = attention_output.add(x0_replicated).withPartitioning(.{ .d = .replicated });
+        const normalized_hidden = self.post_attention_layernorm.forward(x1);
+        const mlp_output = self.mlp.forward(normalized_hidden).withPartitioning(.{ .d = .replicated });
+
+        return .{ mlp_output.add(x1).withPartitioning(.{ .d = .replicated }).reuseBuffer(x0), updated_kv_cache };
+    }
 };
 
 // NEXTN/MTP head (1 NEXTN layer): reuses existing zml modules -- 3 `(1+w)` RMSNorms, an `fc`
@@ -580,6 +606,21 @@ pub const MtpDraft = struct {
         const sampler: Sampler = .{ .norm = self.head.norm, .lm_head = self.lm_head, .gen_options = self.gen_options };
         const draft, const new_rng, _ = sampler.sampleTokens(hidden, rng, null);
         return .{ draft.convert(.u32), new_mtp_kv, new_rng };
+    }
+};
+
+// Snapshot (deep copy) of the GDN conv+recurrent state, for MTP spec-decode rollback: the verify
+// forward advances the GDN state over the speculative tokens, but the recurrent state is not
+// invertible, so on a REJECTED draft we must restore the pre-verify state. optimizationBarrier
+// forces a materialized, non-aliased copy (a fresh buffer), not an alias of the input.
+pub const GdnSnapshot = struct {
+    pub fn forward(self: GdnSnapshot, cache: KvCache.GatedDeltaNetCache) KvCache.GatedDeltaNetCache {
+        _ = self;
+        return .{
+            .conv_state = cache.conv_state.optimizationBarrier(),
+            .recurrent_state = cache.recurrent_state.optimizationBarrier(),
+            .layer_index = cache.layer_index,
+        };
     }
 };
 
@@ -1035,6 +1076,20 @@ pub const GatedDeltaNet = struct {
     }
 
     pub fn forward(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
+        // decode (s==1) continues from the cached conv+recurrent state; prefill (s>1) starts fresh.
+        return self.forwardImpl(x, cache, x.dim(.s) == 1);
+    }
+
+    /// MTP spec-decode VERIFY variant: process s=Kv (>1) tokens CONTINUING from the cached
+    /// conv+recurrent state (unlike prefill, which starts fresh). Same math as decode but keeps all
+    /// Kv outputs and advances the state by Kv tokens. Used by the s=Kv verify exe. The caller must
+    /// snapshot the pre-verify GDN state to allow rollback on a rejected draft (state is not
+    /// invertible). See zml/ZML_MTP_PLAN.md.
+    pub fn forwardVerify(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
+        return self.forwardImpl(x, cache, true);
+    }
+
+    fn forwardImpl(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache, from_cache: bool) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
         const key_dim = self.num_k_heads * self.head_k_dim;
         const value_dim = self.num_v_heads * self.head_v_dim;
         const conv_dim = 2 * key_dim + value_dim;
@@ -1044,7 +1099,8 @@ pub const GatedDeltaNet = struct {
         const projected_qkv = self.in_proj_qkv.forward(x_in)
             .rename(.{ .dout = .mix })
             .withPartitioning(.{ .s = .replicated, .mix = .model });
-        const use_cached_state = x.dim(.s) == 1 and left_pad > 0;
+        // Continue from the cached conv state when decoding (s==1) OR verifying (s=Kv from cache).
+        const use_cached_state = from_cache and left_pad > 0;
         const conv_input = b: {
             if (use_cached_state) break :b zml.Tensor.concatenate(&.{ cache.convState(), projected_qkv }, .s);
             break :b projected_qkv;
@@ -1071,7 +1127,9 @@ pub const GatedDeltaNet = struct {
             .silu();
 
         if (use_cached_state) {
-            mixed_qkv = mixed_qkv.slice1d(.s, .{ .start = mixed_qkv.dim(.s) - 1, .end = mixed_qkv.dim(.s) });
+            // Keep the last x.dim(.s) conv outputs (decode: 1; verify: Kv). The conv over
+            // [conv_state(kernel-1) ++ x(s)] yields s+kernel-1 outputs; the last s are the new tokens.
+            mixed_qkv = mixed_qkv.slice1d(.s, .{ .start = mixed_qkv.dim(.s) - x.dim(.s), .end = mixed_qkv.dim(.s) });
         }
         mixed_qkv = mixed_qkv.withPartitioning(.{ .s = .replicated, .mix = .model });
 
@@ -1492,5 +1550,8 @@ fn softplus(x: zml.Tensor) zml.Tensor {
 comptime {
     _ = &MtpDraft.forward;
     _ = &MtpPrefill.forward;
+    _ = &GdnSnapshot.forward;
+    _ = &TransformerLayer.forwardLinearAttnVerify;
+    _ = &GatedDeltaNet.forwardVerify;
     _ = &KvCache.SelfAttnCache.initSingleLayer;
 }
