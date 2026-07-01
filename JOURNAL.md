@@ -6826,3 +6826,27 @@ VERDICT (CORRECTS the handoff): the int8 GEMM does NOT have a "no-amortization /
   SPIR-V + is numerically correct) -- useful foundation for future fused ops, but not needed for this win.
   NEXT: run the GDN int8 requant (prototyped), wire the 3 GDN projections nn.Linear->QuantizedLinear, serve,
   measure decode t/s + MTP amortization. (Verify w8a8 amortization holds on down/gate shapes too.)
+
+## 2026-07-01 -- LEVER 1 WIN: int8 GDN projections = +7% decode, COHERENT (13.9 -> 14.9 t/s) [result]
+
+CONFIG: int8 the 3 big GDN projections (in_proj_qkv/z, out_proj) x48 linear-attn layers. Offline RTN
+  per-channel symmetric requant -> new checkpoint variant w8a8-sqgptq-gdnint8 (model.safetensors 35.0 ->
+  29.47 GB; 144 GDN weights I8 + 144 BF16 [dout,1] scales; unchanged tensors byte-identical + hardlinked;
+  served ckpt untouched). model.zig: in_proj_qkv/z -> QuantizedLinear full-W8A8 (col-parallel), out_proj ->
+  QuantizedLinear.weightOnly() (row-parallel), in_proj_b/a stay bf16. Wiring is byte-identical on the bf16
+  ckpt (QuantizedLinear bf16 fallback -- validated: "Paris" unchanged).
+COMMAND: MODEL=.../w8a8-sqgptq-gdnint8 ./bin/gpu-run bash zml/run_w8a8_serve_tp2_gpu.sh (+ mtp drive)
+RESULT:
+  - DECODE: **14.9 tok/s** over 654 tokens = **+7% vs the 13.9 bf16-GDN baseline**. COHERENT (detailed France
+    history -- Richelieu, Louis XIV, Bastille; no degeneration, no "!!!!"). GDN RTN-int8 does NOT break
+    coherence (the risky quant the sqgptq authors excluded -- RTN per-channel is fine here). HEALTHY, no wedge.
+  - MTP verify got SLOWER: 190.9 ms (vs 147.4 bf16 GDN). Root cause: out_proj.weightOnly() MATERIALIZES bf16
+    and is 0.67x at M=2 (the sweep predicted woq is great at M=1 (1.26x) but bad at M>1). in_proj_qkv/z
+    (full-W8A8) DO amortize. So MTP verify has a decode-vs-verify tradeoff on out_proj (weightOnly best for
+    M=1 decode, rowParallelW8A8 would be best for M=Kv verify). MTP wasn't a win anyway; decode is the target.
+VERDICT: LEVER 1 = a validated, coherent **+7% single-stream decode win** (int8 GDN projections via the
+  amortizing w8a8/woq paths) -- exactly the lever tonight's benchmark pointed to (w8a8 amortizes; the 79% GDN
+  bf16 projections were the non-amortizing cost). The int8-GDN variant is a candidate NEW daily driver
+  (+7%, coherent). Requant recipe = models/gdn_int8_requant.py; variant git-ignored under models/files/.
+  FOLLOW-UPS: shared-act dedup for in_proj_qkv+in_proj_z (more decode); for MTP, use rowParallelW8A8 out_proj
+  in the verify exe only (decode keeps weightOnly); HumanEval+ coherence check before shelving.

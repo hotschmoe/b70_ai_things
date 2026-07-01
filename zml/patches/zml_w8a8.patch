@@ -1280,7 +1280,7 @@ index 1ad962fe..17a38287 100644
              allocator,
              io,
 diff --git a/examples/llm/models/qwen3_5/model.zig b/examples/llm/models/qwen3_5/model.zig
-index bc14ab72..dc51281f 100644
+index bc14ab72..09491c65 100644
 --- a/examples/llm/models/qwen3_5/model.zig
 +++ b/examples/llm/models/qwen3_5/model.zig
 @@ -4,8 +4,15 @@ const zml = @import("zml");
@@ -1490,8 +1490,8 @@ index bc14ab72..dc51281f 100644
 +        _, const new_mtp_kv = self.head.project(embedded, prev_hidden, token_index, mtp_kv, self.target_norm);
 +        return new_mtp_kv;
 +    }
-+};
-+
+ };
+ 
 +// The compilable MTP-draft module: bundles the shared embed_tokens + lm_head with the MtpHead so a
 +// single fused exe (embed + head + norm + lm_head + argmax) can be compiled at s=1. Non-Tensor
 +// fields (gen_options) are baked as compile-time constants; only the Tensor fields are bufferized.
@@ -1555,8 +1555,8 @@ index bc14ab72..dc51281f 100644
 +const Act = union(enum) {
 +    bf16: zml.Tensor,
 +    quant: common_quant.QuantAct,
- };
- 
++};
++
 +// Dispatch a QuantizedLinear over an `Act`: the pre-quantized W8A8 fast path when the shared int8
 +// activation is present, else the ordinary bf16 forward (bf16 ckpt / weight-only / row-parallel).
 +fn projLinear(linear: QuantizedLinear, act: Act) zml.Tensor {
@@ -1748,7 +1748,74 @@ index bc14ab72..dc51281f 100644
          const kv_head_sharding = zml.module.CompilationContext.current().partitioning.shardableDim(
              k.shape().withPartitioning(.{ .h = .model }),
              .h,
-@@ -784,14 +1062,33 @@ pub const GatedDeltaNet = struct {
+@@ -696,11 +974,16 @@ pub const TextRotaryEmbedding = struct {
+ };
+ 
+ pub const GatedDeltaNet = struct {
+-    in_proj_qkv: zml.nn.Linear,
+-    in_proj_z: zml.nn.Linear,
++    // The 3 big GDN projections are QuantizedLinear (int8 W8A8 when the checkpoint carries
++    // weight_scale, else plain bf16 -- byte-identical to nn.Linear). in_proj_b/a stay bf16 (tiny; a
++    // 48-row per-channel scale buys nothing). See zml/ZML_GDN_OPT.md lever 1: int8-ing these halves
++    // the 48-layer GDN-projection weight bandwidth (the ~79%-of-decode cost) and lets them AMORTIZE
++    // across the MTP-verify M=Kv tokens via the same w8a8 dotAcc path the full-attn q/k/v/gate/up use.
++    in_proj_qkv: QuantizedLinear,
++    in_proj_z: QuantizedLinear,
+     in_proj_b: zml.nn.Linear,
+     in_proj_a: zml.nn.Linear,
+-    out_proj: zml.nn.Linear,
++    out_proj: QuantizedLinear,
+     conv1d_weight: zml.Tensor,
+     dt_bias: zml.Tensor,
+     aLog: zml.Tensor,
+@@ -721,11 +1004,29 @@ pub const GatedDeltaNet = struct {
+         const qk_head_repetition: u32 =
+             @intCast(@divExact(config.text_config.linear_num_value_heads, config.text_config.linear_num_key_heads));
+         return .{
+-            .in_proj_qkv = initProj(store.withPrefix("in_proj_qkv"), .{ .dout = .model, .d = .replicated }),
+-            .in_proj_z = initProj(store.withPrefix("in_proj_z"), .{ .dout = .model, .d = .replicated }),
++            // in_proj_qkv/z: COLUMN-parallel (contract .d=.replicated) -> full W8A8 (act_quant
++            // default); shared-act dedup is a follow-up. out_proj: ROW-parallel (contract .d=.model,
++            // sharded) -> .weightOnly() (decode-optimal, one bf16 all_reduce(SUM); mirrors down_proj).
++            .in_proj_qkv = .init(
++                store.withPrefix("in_proj_qkv").createTensor("weight", .{ .dout, .d }, .{ .dout = .model, .d = .replicated }),
++                store.withPrefix("in_proj_qkv").maybeCreateTensor("weight_scale", .{ .dout, .one }, .{ .dout = .model, .one = .replicated }),
++                null,
++                .d,
++            ),
++            .in_proj_z = .init(
++                store.withPrefix("in_proj_z").createTensor("weight", .{ .dout, .d }, .{ .dout = .model, .d = .replicated }),
++                store.withPrefix("in_proj_z").maybeCreateTensor("weight_scale", .{ .dout, .one }, .{ .dout = .model, .one = .replicated }),
++                null,
++                .d,
++            ),
+             .in_proj_b = initProj(store.withPrefix("in_proj_b"), .{ .dout = .model, .d = .replicated }),
+             .in_proj_a = initProj(store.withPrefix("in_proj_a"), .{ .dout = .model, .d = .replicated }),
+-            .out_proj = initProj(store.withPrefix("out_proj"), .{ .dout = .replicated, .d = .model }),
++            .out_proj = QuantizedLinear.init(
++                store.withPrefix("out_proj").createTensor("weight", .{ .dout, .d }, .{ .dout = .replicated, .d = .model }),
++                store.withPrefix("out_proj").maybeCreateTensor("weight_scale", .{ .dout, .one }, .{ .dout = .replicated, .one = .replicated }),
++                null,
++                .d,
++            ).weightOnly(),
+             .conv1d_weight = store.withPrefix("conv1d").createTensor("weight", .{ .out, .in, .kernel_size }, .{ .out = .model, .in = .replicated, .kernel_size = .replicated }),
+             .dt_bias = store.createTensor("dt_bias", .{.vh}, .{ .vh = .model }),
+             .aLog = store.createTensor("A_log", .{.vh}, .{ .vh = .model }),
+@@ -741,10 +1042,13 @@ pub const GatedDeltaNet = struct {
+ 
+     pub fn unloadBuffers(self: *zml.Bufferized(GatedDeltaNet)) void {
+         self.in_proj_qkv.weight.deinit();
++        if (self.in_proj_qkv.weight_scale) |*ws| ws.deinit();
+         self.in_proj_z.weight.deinit();
++        if (self.in_proj_z.weight_scale) |*ws| ws.deinit();
+         self.in_proj_b.weight.deinit();
+         self.in_proj_a.weight.deinit();
+         self.out_proj.weight.deinit();
++        if (self.out_proj.weight_scale) |*ws| ws.deinit();
+         self.conv1d_weight.deinit();
+         self.dt_bias.deinit();
+         self.aLog.deinit();
+@@ -784,14 +1088,33 @@ pub const GatedDeltaNet = struct {
              }, .f32));
          };
  
@@ -1790,7 +1857,7 @@ index bc14ab72..dc51281f 100644
  
          return .{
              result.outputs.rename(.{ .h = .vh, .v = .vhd }).convert(query.dtype()),
-@@ -810,6 +1107,20 @@ pub const GatedDeltaNet = struct {
+@@ -810,6 +1133,20 @@ pub const GatedDeltaNet = struct {
      }
  
      pub fn forward(self: GatedDeltaNet, x: zml.Tensor, cache: KvCache.GatedDeltaNetCache) struct { zml.Tensor, KvCache.GatedDeltaNetCache } {
@@ -1811,7 +1878,7 @@ index bc14ab72..dc51281f 100644
          const key_dim = self.num_k_heads * self.head_k_dim;
          const value_dim = self.num_v_heads * self.head_v_dim;
          const conv_dim = 2 * key_dim + value_dim;
-@@ -819,7 +1130,8 @@ pub const GatedDeltaNet = struct {
+@@ -819,7 +1156,8 @@ pub const GatedDeltaNet = struct {
          const projected_qkv = self.in_proj_qkv.forward(x_in)
              .rename(.{ .dout = .mix })
              .withPartitioning(.{ .s = .replicated, .mix = .model });
@@ -1821,7 +1888,7 @@ index bc14ab72..dc51281f 100644
          const conv_input = b: {
              if (use_cached_state) break :b zml.Tensor.concatenate(&.{ cache.convState(), projected_qkv }, .s);
              break :b projected_qkv;
-@@ -846,7 +1158,9 @@ pub const GatedDeltaNet = struct {
+@@ -846,7 +1184,9 @@ pub const GatedDeltaNet = struct {
              .silu();
  
          if (use_cached_state) {
@@ -1832,7 +1899,7 @@ index bc14ab72..dc51281f 100644
          }
          mixed_qkv = mixed_qkv.withPartitioning(.{ .s = .replicated, .mix = .model });
  
-@@ -947,7 +1261,9 @@ pub const RmsNormGated = struct {
+@@ -947,7 +1287,9 @@ pub const RmsNormGated = struct {
          const gate_f32 = gate.convert(.f32);
  
          const normalized = zml.nn.rmsNorm(x_f32, .d, self.eps);
@@ -1843,7 +1910,7 @@ index bc14ab72..dc51281f 100644
  
          const gated_output = output.mul(gate_f32.silu());
          return gated_output.convert(x.dtype());
-@@ -968,9 +1284,20 @@ pub const KvCache = struct {
+@@ -968,9 +1310,20 @@ pub const KvCache = struct {
  
          pub fn init(config: Config, batch_dim: i64, max_seq_len: i64, dtype: zml.DataType, model_sharding: zml.Sharding) SelfAttnCache {
              const num_self_attn_layers = countLayers(config.text_config.layer_types, .full_attention);
@@ -1865,7 +1932,7 @@ index bc14ab72..dc51281f 100644
                  .s = max_seq_len,
                  .h = config.text_config.num_key_value_heads,
                  .hd = config.text_config.head_dim,
-@@ -1247,3 +1574,16 @@ pub const KvCache = struct {
+@@ -1247,3 +1600,16 @@ pub const KvCache = struct {
  fn softplus(x: zml.Tensor) zml.Tensor {
      return x.exp().addConstant(1).log();
  }
