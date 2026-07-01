@@ -95,13 +95,21 @@ Read all of: `kernels/README.md`, `kernels/int8_gemm_w8a8.h`, `kernels/int8_gemm
 ## 3. The zml integration problem (the hard, open part -- research first)
 
 zml emits StableHLO; the oneAPI PJRT plugin (`libpjrt_oneapi`, a PREBUILT binary -- MODULE.bazel
-`use_repo(oneapi, "libpjrt_oneapi")`) lowers it to oneDNN. Two facts constrain us:
-- The prebuilt plugin IGNORES XLA_FLAGS / ONEDNN_VERBOSE dumps (empty output), so you CANNOT
-  inspect the emitted HLO or oneDNN dispatch from the outside. Validate by BEHAVIOR (A/B timings,
-  byte-identical outputs) -- or build a plugin you can instrument.
-- zml HAS a CustomCall surface: `zml/kernel.zig` (stablehlo.custom_call, output-operand aliasing,
-  `callTpuCustomCall` for TPU). Whether the oneAPI/XPU PJRT honors XLA FFI custom calls registered
-  for the XPU backend is UNKNOWN and is the first thing to determine.
+`use_repo(oneapi, "libpjrt_oneapi")`) lowers it. **UPDATE: `zml/ZML_INT8_GEMM_OPT.md` (binary-evidence
+study) resolved the two blockers below -- read it; both old "UNKNOWN" assumptions are FALSE:**
+- **HLO dump DOES work** via PJRT compile-options overrides (`zml/module.zig:626`, `:656-665`), not
+  the ignored env var -- so you CAN dump optimized/per-pass HLO and flip experimental fusion flags
+  for the oneapi target (the "blindfold" is removable).
+- **Typed FFI custom calls DO work on the XPU plugin.** The prebuilt `libpjrt_oneapi.so` is XLA's
+  generic gpu_plugin retargeted to `stream_executor::sycl::SyclStream`; it exports the full
+  `XLA_FFI_*` C-API + `XLA_FFI_Stream_Get` (returns the device SYCL queue). zml's flashattn CUDA
+  kernel (`zml/attention/flashattn.zig:188`: `call_frame.api.stream(ctx)` -> native GPU lib) is the
+  exact template; `Platform.registerFfi` (`zml/platform.zig:551`) succeeds. So Path 2 below (FFI ->
+  native oneDNN-SYCL w8a16) is VIABLE and is the recommended durable win.
+- Also: the plugin's bundled oneDNN is CPU-only; the XPU int8 dot runs on MKL SYCL BLAS / Intel
+  Triton (which IS compiled in -- `TritonIntelGPUAccelerateMatmulPass`, `Subgroup2DBlockLoad`; zml
+  already runs Triton on Intel, `triton_attention.zig:96`). A subchannel-dequant->Triton-GEMM fusion
+  exists but is OFF for oneapi by default (flag `xla_gpu_experimental_enable_subchannel_dequantisation_fusion`).
 
 Candidate integration paths (evaluate, pick, or invent):
 1. **Emit an HLO pattern the plugin's oneDNN pass already fuses into weight-decompression.** Test
@@ -223,6 +231,9 @@ then confirm `:18080/health` 200 + `bin/xpu-health` HEALTHY. Stop again for GPU 
 
 ## 9. References
 
+- **Per-track deep plans (read these -- produced alongside this handoff):**
+  `zml/ZML_GDN_OPT.md` (the ~79% lever: FLA chunked delta-rule scan in pure StableHLO +
+  int8 GDN projections) and `zml/ZML_INT8_GEMM_OPT.md` (the fused w8a16/w8a8 integration paths).
 - Kernels (the blueprint): `kernels/README.md`, `kernels/int8_gemm_w8a8.h`,
   `kernels/int8_gemm_w8a16.h`, `kernels/int8_gemm_kernel.patch`. sglang build recipe +
   shim: `research/w8a8/W8A8_BUILD.md`, `sglang/patches/w8a8_shim.py`; vLLM: `vllm/images/int8g/`.
