@@ -42,12 +42,19 @@ pub const Args = struct {
     token_index_buf: *zml.Buffer,
     kv_cache_buffers: *zml.Bufferized(model.KvCache),
     rng_buffers: *zml.Bufferized(zml.Tensor.Rng),
+    // If non-null, run() stores the post-layer-loop hidden buffer here (the last-layer output
+    // BEFORE text_model.norm -- the `prev_hidden` the MTP head consumes) and transfers ownership
+    // to the caller (who must deinit) INSTEAD of deinit-ing it. null -> hidden is freed as before.
+    capture_hidden: ?*?zml.Buffer = null,
 };
 
 pub const CompiledModel = struct {
     loaded_model: *const model.LoadedModel,
     prefill: KernelExe,
     decode: KernelExe,
+    // NEXTN/MTP spec-decode exes (prefill s=seqlen + draft s=1), present iff the model has an MTP
+    // head. null for bf16/non-MTP checkpoints -> the plain decode path runs unchanged.
+    mtp: ?MtpExes,
     params: CompilationParameters,
 
     pub fn init(
@@ -81,6 +88,7 @@ pub const CompiledModel = struct {
                 .decode,
                 progress,
             ),
+            .mtp = try MtpExes.init(allocator, io, platform, qwen_model, parameters, parameters.seqlen, progress),
             .params = parameters,
         };
     }
@@ -88,8 +96,122 @@ pub const CompiledModel = struct {
     pub fn deinit(self: *CompiledModel) void {
         self.prefill.deinit();
         self.decode.deinit();
+        if (self.mtp) |*mtp| mtp.deinit();
     }
 };
+
+// The NEXTN/MTP speculative-decode executables, compiled once alongside prefill/decode. `prefill`
+// fills the MTP's 1-layer self-attn KV over the prompt (s=seqlen, no lm_head); `draft` runs the
+// head for one token (s=1) and returns the drafted token + updated cache + rng. See zml/ZML_MTP_PLAN.md.
+pub const MtpExes = struct {
+    prefill: zml.Exe, // model.MtpPrefill.forward @ s=seqlen -> updated SelfAttnCache
+    draft: zml.Exe, // model.MtpDraft.forward @ s=1 -> (draft token, updated SelfAttnCache, rng)
+    mtp_kv: model.KvCache.SelfAttnCache, // 1-layer cache template (drives buffer allocation)
+    seqlen: u32,
+
+    pub fn init(
+        allocator: std.mem.Allocator,
+        io: std.Io,
+        platform: *const zml.Platform,
+        qwen_model: model.Model,
+        parameters: CompilationParameters,
+        seqlen: usize,
+        progress: *std.Progress.Node,
+    ) !?MtpExes {
+        if (qwen_model.mtp_head == null) return null;
+
+        const config = qwen_model.config;
+        const dtype = qwen_model.text_model.embed_tokens.weight.dtype();
+        const mtp_kv = model.KvCache.SelfAttnCache.initSingleLayer(config, 1, @intCast(seqlen), dtype, parameters.shardings.model);
+
+        const prefill_exe = b: {
+            progress.increaseEstimatedTotalItems(1);
+            var node = progress.start("compiling mtp prefill", 1);
+            defer node.end();
+            const from: std.Io.Timestamp = .now(io, .awake);
+            defer Phase.prefill.logCompileDone(log, "mtp prefill", io, from);
+
+            const prefill_tokens: zml.Tensor = .init(.{ .b = 1, .s = seqlen }, .u32);
+            const prefill_hidden = mtpHidden(qwen_model, seqlen);
+            const prefill_module: model.MtpPrefill = .{
+                .embed_tokens = qwen_model.text_model.embed_tokens,
+                .head = qwen_model.mtp_head.?,
+                .target_norm = qwen_model.text_model.norm,
+            };
+            break :b try platform.compile(allocator, io, prefill_module, .forward, .{ prefill_tokens, prefill_hidden, parameters.token_index, mtp_kv }, .{
+                .shardings = &parameters.shardings.all(),
+                .program_name = "qwen3_5_mtp_prefill",
+            });
+        };
+        errdefer prefill_exe.deinit();
+
+        const draft_exe = b: {
+            progress.increaseEstimatedTotalItems(1);
+            var node = progress.start("compiling mtp draft", 1);
+            defer node.end();
+            const from: std.Io.Timestamp = .now(io, .awake);
+            defer Phase.decode.logCompileDone(log, "mtp draft", io, from);
+
+            const draft_token: zml.Tensor = .init(.{ .b = 1, .s = 1 }, .u32);
+            const draft_hidden = mtpHidden(qwen_model, 1);
+            const draft_module: model.MtpDraft = .{
+                .embed_tokens = qwen_model.text_model.embed_tokens,
+                .head = qwen_model.mtp_head.?,
+                .lm_head = qwen_model.lm_head,
+                .target_norm = qwen_model.text_model.norm,
+                .gen_options = qwen_model.gen_options,
+            };
+            break :b try platform.compile(allocator, io, draft_module, .forward, .{ draft_token, draft_hidden, parameters.token_index, mtp_kv, parameters.rng }, .{
+                .shardings = &parameters.shardings.all(),
+                .program_name = "qwen3_5_mtp_draft",
+            });
+        };
+
+        return .{ .prefill = prefill_exe, .draft = draft_exe, .mtp_kv = mtp_kv, .seqlen = @intCast(seqlen) };
+    }
+
+    pub fn deinit(self: *MtpExes) void {
+        self.prefill.deinit();
+        self.draft.deinit();
+    }
+};
+
+// The MTP head's per-position hidden input template ({b=1, s, d} replicated), matching the shape of
+// the captured main-model hidden (ComposedKernelExe.hidden). See zml/ZML_MTP_PLAN.md.
+fn mtpHidden(qwen_model: model.Model, seqlen: usize) zml.Tensor {
+    return .fromShape(zml.Shape.init(
+        .{ .b = 1, .s = seqlen, .d = qwen_model.config.text_config.hidden_size },
+        qwen_model.text_model.embed_tokens.weight.dtype(),
+    ).withPartitioning(.{
+        .b = .replicated,
+        .s = .replicated,
+        .d = .replicated,
+    }));
+}
+
+// Buffer-donation-aware swap helpers, shared by the composed exe path and the MTP path in
+// session.zig. A compiled graph may donate (reuseBuffer) an input into an output, so the returned
+// handle can equal the input handle; only deinit the old handle when it actually changed.
+pub fn replaceBufferImpl(dst: *zml.Buffer, src: *zml.Buffer) void {
+    if (!sameBufferHandleImpl(dst.*, src.*)) {
+        dst.deinit();
+    }
+    dst.* = src.*;
+}
+
+pub fn releaseBufferImpl(expected: zml.Buffer, actual: *zml.Buffer) void {
+    if (!sameBufferHandleImpl(expected, actual.*)) {
+        actual.deinit();
+    }
+}
+
+pub fn sameBufferHandleImpl(a: zml.Buffer, b: zml.Buffer) bool {
+    if (a._shards.len != b._shards.len) return false;
+    for (a._shards.constSlice(), b._shards.constSlice()) |a_shard, b_shard| {
+        if (a_shard != b_shard) return false;
+    }
+    return true;
+}
 
 pub const Inference = CompiledModel;
 
@@ -251,7 +373,6 @@ pub const KernelExe = struct {
 
                 break :b self.embed_results.get(zml.Buffer);
             };
-            defer hidden_buf.deinit();
 
             for (
                 self.layers.args,
@@ -263,6 +384,10 @@ pub const KernelExe = struct {
             }
 
             self.exe.runSampler(&self.sampler_args, &self.sampler_results, args, &hidden_buf);
+
+            // The sampler reads but does not donate hidden_buf, so it is still valid here. Hand it
+            // to the MTP head (ownership transfers) when requested, else free it.
+            if (args.capture_hidden) |slot| slot.* = hidden_buf else hidden_buf.deinit();
         }
     };
 
@@ -379,7 +504,8 @@ const ComposedKernelExe = struct {
 
             break :b results.get(zml.Buffer);
         };
-        defer hidden_buf.deinit();
+        var hidden_captured = false;
+        defer if (!hidden_captured) hidden_buf.deinit();
 
         var self_attn_layer_index: usize = 0;
         var linear_attn_layer_index: usize = 0;
@@ -422,6 +548,13 @@ const ComposedKernelExe = struct {
             exe_args.bake(ComposedKernelExe.samplerBuffers(args.model_buffers));
 
             self.runSampler(&exe_args, &results, args, &hidden_buf);
+        }
+
+        // Prefill hidden capture (all seqlen positions): hand ownership to the caller for the MTP
+        // prefill (which pairs each prompt token with its per-position hidden), else the defer frees it.
+        if (args.capture_hidden) |slot| {
+            slot.* = hidden_buf;
+            hidden_captured = true;
         }
     }
 
@@ -540,29 +673,9 @@ const ComposedKernelExe = struct {
         };
     }
 
-    fn replaceBuffer(dst: *zml.Buffer, src: *zml.Buffer) void {
-        if (!ComposedKernelExe.sameBufferHandle(dst.*, src.*)) {
-            dst.deinit();
-        }
-
-        dst.* = src.*;
-    }
-
-    fn releaseBuffer(expected: zml.Buffer, actual: *zml.Buffer) void {
-        if (!ComposedKernelExe.sameBufferHandle(expected, actual.*)) {
-            actual.deinit();
-        }
-    }
-
-    fn sameBufferHandle(a: zml.Buffer, b: zml.Buffer) bool {
-        if (a._shards.len != b._shards.len) return false;
-
-        for (a._shards.constSlice(), b._shards.constSlice()) |a_shard, b_shard| {
-            if (a_shard != b_shard) return false;
-        }
-
-        return true;
-    }
+    const replaceBuffer = replaceBufferImpl;
+    const releaseBuffer = releaseBufferImpl;
+    const sameBufferHandle = sameBufferHandleImpl;
 
     fn compileEmbedTokens(
         allocator: std.mem.Allocator,

@@ -6600,3 +6600,42 @@ RESULT: FAVORABLE. The checkpoint MTP head (1 NEXTN layer, bf16) is byte-for-byt
 VERDICT: tractable, multi-step. Step 0 (MtpHead module + load mtp.*) is the concrete foundation; the
   spec loop (verify s=Kv + GDN replay-rollback in inference/session) is the bulk. Target ~1.6x -> ~22 t/s,
   TP=2 (zml single-process PJRT sidesteps vLLM's distributed-no-graph-capture wall). NEXT: implement Step 0.
+
+## 2026-07-01 -- zml MTP Steps 0+1: MtpHead wired + GPU draft ACCEPT 96.2% (TP=2, coherent, no wedge) [result]
+
+CONFIG: implement NEXTN/MTP for the zml qwen3.6-27b W8A8 serve. Step 0 = MtpHead/MtpDraft/MtpPrefill
+  modules + loader wiring; Step 1 = compile the MTP exes + measure draft accept rate on GPU. Daily
+  driver DOWN. Branch zml-w8a8-optimize.
+REFERENCE CHECK (2 parallel agents, vLLM + sglang, file:line-cited): CONFIRMED the head math (cat([e,h])
+  embedding-first; final norm on mlp_out+residual; MTP layer is FULL-attention w/ its OWN 1-layer KV, no
+  recurrent state; (1+w) Gemma RMSNorm; shared embed/lm_head). CORRECTED the plan on TWO points:
+  (1) the drafter is fed the target's POST-final-norm hidden, then re-normed by pre_fc_norm_hidden (a
+  DELIBERATE double-norm) -- NOT the pre-norm residual the plan named. zml exposes the pre-norm hidden_buf,
+  so the MTP applies text_model.norm itself (MtpHead.project target_norm arg). (2) rope position = p (the
+  hidden's position), input_ids shifted left, positions unchanged -> MTP-KV contiguous from slot 0 (prefill
+  0..L-1, decode L,L+1,...). Since RoPE is relative a uniform position shift is a no-op, and zml couples
+  KV-slot==position, so position=p is the only choice that avoids attending an unwritten slot 0.
+COMMAND: CPU build (type-check) then ./bin/gpu-run bash zml/run_w8a8_mtp_measure_tp2_gpu.sh (ZML_MTP_MEASURE=1:
+  the head drafts alongside the normal greedy decode as an OBSERVER and scores each draft against the token
+  the main model actually produces; main model still drives, output unchanged). Prompt "capital of France?",
+  topk=1, seqlen=1024, TP=2 (both cards).
+RESULT:
+  - Step 0: MtpHead (3 RmsNorm + fc QuantizedLinear 2H->H bf16 + 1 full-attn TransformerLayer built directly),
+    MtpDraft (s=1: embed+head+norm+lm_head+argmax) and MtpPrefill (s=seqlen: fill KV over prompt, no lm_head)
+    added to model.zig; Model.mtp_head:?MtpHead gated on mtp.fc.weight in the registry; main.zig merges the
+    separate model-mtp.safetensors (top-level mtp.*, not in the index). SelfAttnCache.initSingleLayer for the
+    head's 1-layer cache. CPU build clean.
+  - Step 1: inference.zig MtpExes (prefill+draft exes) + Args.capture_hidden (hand the post-layer hidden to
+    the MTP); session.zig Mtp state (own 1-layer KV, baked args, measure loop). BOTH MTP exes COMPILED on GPU
+    (prefill 296ms, draft 594ms). Generation fully COHERENT + identical to baseline: "The capital of France
+    is Paris." + reasoning trace. **MTP draft accept 152/158 = 96.2%** (well above the ~0.84 target -- easy
+    factual prompt; validates the head math end-to-end incl the double-norm, shifted-input prefill, position=p
+    alignment, KV contiguity). exit rc=0, POST xpu-health HEALTHY (both cards), locks freed, NO WEDGE.
+  - decode 11.5 tok/s in measure mode (< 13.7 baseline) is EXPECTED: measure runs an extra draft forward
+    every step with the main model still driving; the speedup comes in Step 3 drive mode (accepted drafts
+    skip a main step). Measure only validates draft correctness + no-wedge.
+VERDICT: MTP head PROVEN correct on GPU TP=2 -- 96.2% draft accept, coherent, wedge-free. The 2 plan
+  corrections (post-norm double-norm; position=p) were essential and confirmed by both vLLM and sglang.
+  Foundation solid for Step 2 (verify exes at s=Kv) + Step 3 (drive loop + GDN replay-rollback; the sglang
+  reference is freeze-during-verify + commit-last-accepted-step-scatter, but the plan's REPLAY is the simpler
+  first cut). Scripts: zml/run_w8a8_mtp_measure_tp2_gpu.sh. Patch zml/patches/zml_w8a8.patch (2886 lines).

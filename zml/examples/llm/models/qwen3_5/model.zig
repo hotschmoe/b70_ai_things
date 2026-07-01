@@ -500,20 +500,57 @@ pub const MtpHead = struct {
 
     /// Core MTP head projection: returns the layer output hidden (residual-added, PRE the final
     /// mtp.norm -- exactly what the Sampler's norm consumes) + the updated 1-layer self-attn KV
-    /// cache. `embedded` = embed(token); `prev_hidden` = the main model's last pre-norm hidden for
-    /// the token that produced `token`.
+    /// cache. `embedded` = embed(token); `prev_hidden` = the main model's last PRE-norm hidden
+    /// (zml's host-visible hidden_buf) for the token that produced `token`; `target_norm` = the main
+    /// model's final norm (text_model.norm).
+    ///
+    /// CRITICAL (verified against vLLM Qwen3NextModel.forward:541 + gpu_model_runner + sglang
+    /// logits_processor:602): the drafter is fed the target's POST-final-norm hidden, then the MTP
+    /// applies its OWN pre_fc_norm_hidden on top -- a deliberate DOUBLE norm. zml exposes the
+    /// pre-norm hidden_buf, so we apply target_norm here to recover the post-norm hidden before
+    /// pre_fc_norm_hidden. (The plan's "hidden BEFORE text_model.norm" was the wrong reference.)
     pub fn project(
         self: MtpHead,
         embedded: zml.Tensor,
         prev_hidden: zml.Tensor,
         token_index: zml.Tensor,
         mtp_kv: KvCache.SelfAttnCache,
+        target_norm: RmsNorm,
     ) struct { zml.Tensor, KvCache.SelfAttnCache } {
         const e = self.pre_fc_norm_embedding.forward(embedded.withPartitioning(.{ .d = .replicated }));
-        const h = self.pre_fc_norm_hidden.forward(prev_hidden.withPartitioning(.{ .d = .replicated }));
+        const post_norm = target_norm.forward(prev_hidden.withPartitioning(.{ .d = .replicated }));
+        const h = self.pre_fc_norm_hidden.forward(post_norm);
         const cat = zml.Tensor.concatenate(&.{ e, h }, .d); // [.., 2H], embedding first (vLLM order)
         const x = self.fc.forward(cat).rename(.{ .dout = .d }).withPartitioning(.{ .d = .replicated });
         return self.layer.forwardSelfAttn(x, token_index, mtp_kv);
+    }
+};
+
+// The compilable MTP-prefill module: runs the head over the prompt (s=seqlen) to fill the MTP's own
+// 1-layer self-attn KV cache with valid history, so decode-time drafts attend to a correct prefix
+// (not uninitialized memory). No lm_head/sampler -- returns only the updated cache. Input alignment
+// mirrors vLLM (llm_base_proposer.set_inputs_first_pass): input_ids are the prompt SHIFTED LEFT by
+// one (last slot = the first sampled token), positions unchanged (token_index=0 -> 0..L-1), and
+// prev_hidden = the main prefill's per-position hidden (slot j pairs token x_{j+1} with hidden h_j
+// at position j). This writes MTP-KV[0..L-1]; decode then fills L, L+1, ... contiguously.
+pub const MtpPrefill = struct {
+    embed_tokens: zml.nn.TokenEmbedding,
+    head: MtpHead,
+    target_norm: RmsNorm, // main model's final norm (text_model.norm), shared; post-norms prev_hidden
+
+    pub fn forward(
+        self: MtpPrefill,
+        tokens_: zml.Tensor,
+        prev_hidden: zml.Tensor,
+        token_index: zml.Tensor,
+        mtp_kv: KvCache.SelfAttnCache,
+    ) KvCache.SelfAttnCache {
+        const tokens = tokens_.withPartialTags(.{.s});
+        const embedded = self.embed_tokens.forward(tokens)
+            .withPartialTags(.{.d})
+            .withPartitioning(.{ .d = .replicated });
+        _, const new_mtp_kv = self.head.project(embedded, prev_hidden, token_index, mtp_kv, self.target_norm);
+        return new_mtp_kv;
     }
 };
 
@@ -524,6 +561,7 @@ pub const MtpDraft = struct {
     embed_tokens: zml.nn.TokenEmbedding,
     head: MtpHead,
     lm_head: zml.nn.Linear,
+    target_norm: RmsNorm, // main model's final norm (text_model.norm), shared; post-norms prev_hidden
     gen_options: Model.GenOptions,
 
     pub fn forward(
@@ -538,7 +576,7 @@ pub const MtpDraft = struct {
         const embedded = self.embed_tokens.forward(tokens)
             .withPartialTags(.{.d})
             .withPartitioning(.{ .d = .replicated });
-        const hidden, const new_mtp_kv = self.head.project(embedded, prev_hidden, token_index, mtp_kv);
+        const hidden, const new_mtp_kv = self.head.project(embedded, prev_hidden, token_index, mtp_kv, self.target_norm);
         const sampler: Sampler = .{ .norm = self.head.norm, .lm_head = self.lm_head, .gen_options = self.gen_options };
         const draft, const new_rng, _ = sampler.sampleTokens(hidden, rng, null);
         return .{ draft.convert(.u32), new_mtp_kv, new_rng };
@@ -1453,5 +1491,6 @@ fn softplus(x: zml.Tensor) zml.Tensor {
 // type-checked by the fast CPU build during development. See zml/ZML_MTP_PLAN.md.
 comptime {
     _ = &MtpDraft.forward;
+    _ = &MtpPrefill.forward;
     _ = &KvCache.SelfAttnCache.initSingleLayer;
 }
