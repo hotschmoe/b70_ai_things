@@ -33,6 +33,26 @@ index 6a501aea..779ad279 100644
  build_test(
      name = "test",
      targets = [":llm"],
+diff --git a/examples/llm/main.zig b/examples/llm/main.zig
+index c328eaa5..75f06f89 100644
+--- a/examples/llm/main.zig
++++ b/examples/llm/main.zig
+@@ -108,6 +108,15 @@ pub fn main(init: std.process.Init) !void {
+     var registry: zml.safetensors.TensorRegistry = try .fromRepo(allocator, io, repo);
+     defer registry.deinit();
+ 
++    // Merge the optional NEXTN/MTP head weights. `model-mtp.safetensors` carries top-level `mtp.*`
++    // tensors and is NOT listed in model.safetensors.index.json, so fromRepo skips it -- parse it
++    // explicitly into the same registry. Harmless (a no-op) for checkpoints without the file.
++    if (repo.openFile(io, "model-mtp.safetensors", .{ .mode = .read_only })) |mtp_file| {
++        defer mtp_file.close(io);
++        try zml.safetensors.parseSafetensors(allocator, io, &registry, mtp_file);
++        log.info("Merged NEXTN/MTP head weights (model-mtp.safetensors)", .{});
++    } else |_| {}
++
+     var store: zml.io.TensorStore = .fromRegistry(allocator, &registry);
+     defer store.deinit();
+ 
 diff --git a/examples/llm/models/common_quant.zig b/examples/llm/models/common_quant.zig
 new file mode 100644
 index 00000000..678dffd2
@@ -848,7 +868,7 @@ index 00000000..6f6318ec
 +    }
 +}
 diff --git a/examples/llm/models/qwen3_5/model.zig b/examples/llm/models/qwen3_5/model.zig
-index bc14ab72..1bf3f7e5 100644
+index bc14ab72..dca88ebb 100644
 --- a/examples/llm/models/qwen3_5/model.zig
 +++ b/examples/llm/models/qwen3_5/model.zig
 @@ -4,8 +4,15 @@ const zml = @import("zml");
@@ -867,10 +887,162 @@ index bc14ab72..1bf3f7e5 100644
  const log = std.log.scoped(.qwen3_5);
  
  pub const Config = struct {
-@@ -421,43 +428,87 @@ pub const TransformerLayer = struct {
+@@ -110,6 +117,7 @@ pub const LoadedModel = struct {
+         _ = self;
+         TextModel.unloadBuffers(&buffers.text_model, allocator);
+         buffers.lm_head.weight.deinit();
++        if (buffers.mtp_head) |*mtp_head| MtpHead.unloadBuffers(mtp_head);
+     }
+ 
+     pub fn compile(
+@@ -141,6 +149,11 @@ pub const Model = struct {
+ 
+     text_model: TextModel,
+     lm_head: zml.nn.Linear,
++    // NEXTN/MTP speculative-decode head (1 layer), present iff the checkpoint carries the top-level
++    // `mtp.*` weights (a separate model-mtp.safetensors, merged into the registry in main.zig).
++    // null for bf16/non-MTP checkpoints. Inert for the prefill/decode graphs (they never reference
++    // it); the spec-decode path compiles it into its own `mtp_draft` exe. See zml/ZML_MTP_PLAN.md.
++    mtp_head: ?MtpHead = null,
+ 
+     config: Config,
+     gen_options: GenOptions,
+@@ -156,6 +169,13 @@ pub const Model = struct {
+             if (store.hasKey("lm_head.weight")) break :b "lm_head";
+             break :b "model.language_model.embed_tokens";
+         };
++        // MTP head: construct only when the top-level `mtp.*` weights are present (gating on the
++        // registry avoids createTensor asserting on a missing key for bf16/non-MTP checkpoints).
++        const mtp_head: ?MtpHead = if (store.hasKey("mtp.fc.weight"))
++            try MtpHead.init(store.withPrefix("mtp"), config)
++        else
++            null;
++
+         return .{
+             .text_model = try .init(allocator, store.withPrefix("model.language_model"), config),
+             .lm_head = .init(
+@@ -163,6 +183,7 @@ pub const Model = struct {
+                 null,
+                 .d,
+             ),
++            .mtp_head = mtp_head,
+             .config = config,
+             .gen_options = gen_options,
+         };
+@@ -202,6 +223,7 @@ pub const Model = struct {
+     pub fn unloadBuffers(self: *zml.Bufferized(Model), allocator: std.mem.Allocator) void {
+         TextModel.unloadBuffers(&self.text_model, allocator);
+         self.lm_head.weight.deinit();
++        if (self.mtp_head) |*mtp_head| MtpHead.unloadBuffers(mtp_head);
+     }
+     pub fn forward(
+         self: Model,
+@@ -421,43 +443,189 @@ pub const TransformerLayer = struct {
      }
  };
  
++// NEXTN/MTP head (1 NEXTN layer): reuses existing zml modules -- 3 `(1+w)` RMSNorms, an `fc`
++// (2H->H plain bf16 Linear, no bias), one FULL-ATTENTION TransformerLayer, and a final norm; the
++// main model's embed_tokens + lm_head are shared (not stored here). Head math (vLLM
++// Qwen3NextMultiTokenPredictor.forward, qwen3_next_mtp.py:101-137):
++//   e = pre_fc_norm_embedding(embed(token)); h = pre_fc_norm_hidden(prev_hidden)
++//   x = fc(concat([e, h], .d));  hidden, mtp_kv = layer.forwardSelfAttn(x, token_index, mtp_kv)
++//   draft = argmax(lm_head(norm(hidden)))
++// `prev_hidden` is the main model's LAST hidden BEFORE text_model.norm (zml's host-visible
++// `hidden_buf` in inference.zig between the layer loop and the sampler). See zml/ZML_MTP_PLAN.md.
++pub const MtpHead = struct {
++    pre_fc_norm_embedding: RmsNorm,
++    pre_fc_norm_hidden: RmsNorm,
++    fc: QuantizedLinear, // {dout=H, d=2H}, contracts .d; weight_scale null (bf16 ckpt) -> plain dot
++    layer: TransformerLayer, // full-attention variant (built directly, NOT via TransformerLayer.init)
++    norm: RmsNorm,
++
++    pub fn init(store: zml.io.TensorStore.View, config: Config) !MtpHead {
++        const eps = config.text_config.rms_norm_eps;
++        // The MTP layer is ALWAYS full-attention (its checkpoint is byte-for-byte a full-attn
++        // TransformerLayer), so build the Attn union directly rather than TransformerLayer.init
++        // (which would pick the variant from config.layer_types[0], a linear-attention layer).
++        const layer_store = store.withPrefix("layers").withLayer(0);
++        const layer: TransformerLayer = .{
++            .input_layernorm = RmsNorm.init(layer_store.withPrefix("input_layernorm"), eps),
++            .attn = .{ .full_attention = try SelfAttn.init(layer_store.withPrefix("self_attn"), config) },
++            .mlp = Mlp.init(layer_store.withPrefix("mlp")),
++            .post_attention_layernorm = RmsNorm.init(layer_store.withPrefix("post_attention_layernorm"), eps),
++        };
++        // fc is small (2H x H) -> keep it fully replicated so the head introduces no extra
++        // sharding collective; the layer's q/k/v/o carry the usual .model partitions (SelfAttn.init).
++        const fc_store = store.withPrefix("fc");
++        return .{
++            .pre_fc_norm_embedding = RmsNorm.init(store.withPrefix("pre_fc_norm_embedding"), eps),
++            .pre_fc_norm_hidden = RmsNorm.init(store.withPrefix("pre_fc_norm_hidden"), eps),
++            .fc = QuantizedLinear.init(
++                fc_store.createTensor("weight", .{ .dout, .d }, .{ .dout = .replicated, .d = .replicated }),
++                fc_store.maybeCreateTensor("weight_scale", .{ .dout, .one }, .{ .dout = .replicated, .one = .replicated }),
++                fc_store.maybeCreateTensor("bias", .{.dout}, .{ .dout = .replicated }),
++                .d,
++            ),
++            .layer = layer,
++            .norm = RmsNorm.init(store.withPrefix("norm"), eps),
++        };
++    }
++
++    pub fn unloadBuffers(self: *zml.Bufferized(MtpHead)) void {
++        RmsNorm.unloadBuffers(&self.pre_fc_norm_embedding);
++        RmsNorm.unloadBuffers(&self.pre_fc_norm_hidden);
++        self.fc.weight.deinit();
++        if (self.fc.weight_scale) |*ws| ws.deinit();
++        if (self.fc.bias) |*bias| bias.deinit();
++        TransformerLayer.unloadBuffers(&self.layer);
++        RmsNorm.unloadBuffers(&self.norm);
++    }
++
++    /// Core MTP head projection: returns the layer output hidden (residual-added, PRE the final
++    /// mtp.norm -- exactly what the Sampler's norm consumes) + the updated 1-layer self-attn KV
++    /// cache. `embedded` = embed(token); `prev_hidden` = the main model's last pre-norm hidden for
++    /// the token that produced `token`.
++    pub fn project(
++        self: MtpHead,
++        embedded: zml.Tensor,
++        prev_hidden: zml.Tensor,
++        token_index: zml.Tensor,
++        mtp_kv: KvCache.SelfAttnCache,
++    ) struct { zml.Tensor, KvCache.SelfAttnCache } {
++        const e = self.pre_fc_norm_embedding.forward(embedded.withPartitioning(.{ .d = .replicated }));
++        const h = self.pre_fc_norm_hidden.forward(prev_hidden.withPartitioning(.{ .d = .replicated }));
++        const cat = zml.Tensor.concatenate(&.{ e, h }, .d); // [.., 2H], embedding first (vLLM order)
++        const x = self.fc.forward(cat).rename(.{ .dout = .d }).withPartitioning(.{ .d = .replicated });
++        return self.layer.forwardSelfAttn(x, token_index, mtp_kv);
++    }
++};
++
++// The compilable MTP-draft module: bundles the shared embed_tokens + lm_head with the MtpHead so a
++// single fused exe (embed + head + norm + lm_head + argmax) can be compiled at s=1. Non-Tensor
++// fields (gen_options) are baked as compile-time constants; only the Tensor fields are bufferized.
++pub const MtpDraft = struct {
++    embed_tokens: zml.nn.TokenEmbedding,
++    head: MtpHead,
++    lm_head: zml.nn.Linear,
++    gen_options: Model.GenOptions,
++
++    pub fn forward(
++        self: MtpDraft,
++        token_: zml.Tensor,
++        prev_hidden: zml.Tensor,
++        token_index: zml.Tensor,
++        mtp_kv: KvCache.SelfAttnCache,
++        rng: zml.Tensor.Rng,
++    ) struct { zml.Tensor, KvCache.SelfAttnCache, zml.Tensor.Rng } {
++        const tokens = token_.withPartialTags(.{.s});
++        const embedded = self.embed_tokens.forward(tokens)
++            .withPartialTags(.{.d})
++            .withPartitioning(.{ .d = .replicated });
++        const hidden, const new_mtp_kv = self.head.project(embedded, prev_hidden, token_index, mtp_kv);
++        const sampler: Sampler = .{ .norm = self.head.norm, .lm_head = self.lm_head, .gen_options = self.gen_options };
++        const draft, const new_rng, _ = sampler.sampleTokens(hidden, rng, null);
++        return .{ draft.convert(.u32), new_mtp_kv, new_rng };
++    }
++};
++
 +// The activation feeding a column-parallel projection: either a plain float tensor (bf16
 +// checkpoint, or a weight-only/row-parallel layer) or a per-token int8 activation quantized ONCE
 +// and shared by every projection contracting the same axis (q/k/v share input_layernorm; gate/up
@@ -962,7 +1134,7 @@ index bc14ab72..1bf3f7e5 100644
          const hidden = gate.silu().mul(up_projed);
  
          const output = self.down_proj.forward(hidden);
-@@ -466,9 +517,10 @@ pub const Mlp = struct {
+@@ -466,9 +634,10 @@ pub const Mlp = struct {
  };
  
  pub const SelfAttn = struct {
@@ -976,7 +1148,7 @@ index bc14ab72..1bf3f7e5 100644
  
      q_norm: RmsNorm,
      k_norm: RmsNorm,
-@@ -478,11 +530,15 @@ pub const SelfAttn = struct {
+@@ -478,11 +647,15 @@ pub const SelfAttn = struct {
      head_dim: i64,
      rotary_dim: i64,
      rotary_embed: TextRotaryEmbedding,
@@ -994,7 +1166,7 @@ index bc14ab72..1bf3f7e5 100644
              store.maybeCreateTensor("bias", .{.dout}, bias_partitions),
              .d,
          );
-@@ -492,10 +548,16 @@ pub const SelfAttn = struct {
+@@ -492,10 +665,16 @@ pub const SelfAttn = struct {
          const rotary_dim: i64 = @intFromFloat(@as(f32, @floatFromInt(config.text_config.head_dim)) *
              config.text_config.rope_parameters.partial_rotary_factor);
          return .{
@@ -1015,7 +1187,7 @@ index bc14ab72..1bf3f7e5 100644
              .q_norm = RmsNorm.init(store.withPrefix("q_norm"), config.text_config.rms_norm_eps),
              .k_norm = RmsNorm.init(store.withPrefix("k_norm"), config.text_config.rms_norm_eps),
              .num_heads = config.text_config.num_attention_heads,
-@@ -508,31 +570,35 @@ pub const SelfAttn = struct {
+@@ -508,31 +687,35 @@ pub const SelfAttn = struct {
  
      pub fn unloadBuffers(self: *zml.Bufferized(SelfAttn)) void {
          self.q_proj.weight.deinit();
@@ -1056,7 +1228,7 @@ index bc14ab72..1bf3f7e5 100644
          return .{ k, v };
      }
  
-@@ -567,8 +633,12 @@ pub const SelfAttn = struct {
+@@ -567,8 +750,12 @@ pub const SelfAttn = struct {
      ) struct { zml.Tensor, KvCache.SelfAttnCache } {
          const x_qkv = x.withPartitioning(.{ .d = .replicated });
  
@@ -1071,7 +1243,7 @@ index bc14ab72..1bf3f7e5 100644
          const kv_head_sharding = zml.module.CompilationContext.current().partitioning.shardableDim(
              k.shape().withPartitioning(.{ .h = .model }),
              .h,
-@@ -947,7 +1017,9 @@ pub const RmsNormGated = struct {
+@@ -947,7 +1134,9 @@ pub const RmsNormGated = struct {
          const gate_f32 = gate.convert(.f32);
  
          const normalized = zml.nn.rmsNorm(x_f32, .d, self.eps);
@@ -1082,6 +1254,40 @@ index bc14ab72..1bf3f7e5 100644
  
          const gated_output = output.mul(gate_f32.silu());
          return gated_output.convert(x.dtype());
+@@ -968,9 +1157,20 @@ pub const KvCache = struct {
+ 
+         pub fn init(config: Config, batch_dim: i64, max_seq_len: i64, dtype: zml.DataType, model_sharding: zml.Sharding) SelfAttnCache {
+             const num_self_attn_layers = countLayers(config.text_config.layer_types, .full_attention);
++            return initLayers(config, num_self_attn_layers, batch_dim, max_seq_len, dtype, model_sharding);
++        }
++
++        /// A self-attn KV cache with an explicit layer count. The MTP head runs its own single
++        /// full-attention layer, so it needs a 1-layer cache (num_layers = 1) distinct from the
++        /// main model's cache. Sharding matches the main cache so the same attention exe path works.
++        pub fn initSingleLayer(config: Config, batch_dim: i64, max_seq_len: i64, dtype: zml.DataType, model_sharding: zml.Sharding) SelfAttnCache {
++            return initLayers(config, 1, batch_dim, max_seq_len, dtype, model_sharding);
++        }
++
++        fn initLayers(config: Config, num_layers: i64, batch_dim: i64, max_seq_len: i64, dtype: zml.DataType, model_sharding: zml.Sharding) SelfAttnCache {
+             const kv_shape = zml.Shape.init(.{
+                 .b = batch_dim,
+-                .layer = num_self_attn_layers,
++                .layer = num_layers,
+                 .s = max_seq_len,
+                 .h = config.text_config.num_key_value_heads,
+                 .hd = config.text_config.head_dim,
+@@ -1247,3 +1447,11 @@ pub const KvCache = struct {
+ fn softplus(x: zml.Tensor) zml.Tensor {
+     return x.exp().addConstant(1).log();
+ }
++
++// Force full semantic analysis of the MTP graph on every build (Zig lazily analyzes unreferenced
++// pub fns; the spec-decode exes that call these are wired in a later step). Keeps the head math
++// type-checked by the fast CPU build during development. See zml/ZML_MTP_PLAN.md.
++comptime {
++    _ = &MtpDraft.forward;
++    _ = &KvCache.SelfAttnCache.initSingleLayer;
++}
 diff --git a/examples/w8a8/BUILD.bazel b/examples/w8a8/BUILD.bazel
 new file mode 100644
 index 00000000..07e81e24
