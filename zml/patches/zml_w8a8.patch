@@ -1841,7 +1841,7 @@ index bc14ab72..2e13970d 100644
 +    _ = &KvCache.SelfAttnCache.initSingleLayer;
 +}
 diff --git a/examples/llm/models/qwen3_5/session.zig b/examples/llm/models/qwen3_5/session.zig
-index d593e319..83913ee5 100644
+index d593e319..9f6507b5 100644
 --- a/examples/llm/models/qwen3_5/session.zig
 +++ b/examples/llm/models/qwen3_5/session.zig
 @@ -5,6 +5,10 @@ const zml = @import("zml");
@@ -1964,7 +1964,7 @@ index d593e319..83913ee5 100644
              try self.decode_runner.run(.{
                  .allocator = self.allocator,
                  .io = self.io,
-@@ -150,13 +206,447 @@ pub const Session = struct {
+@@ -150,13 +206,459 @@ pub const Session = struct {
                  .token_index_buf = &token_index_buffer,
                  .kv_cache_buffers = &self.kv_cache_buffers,
                  .rng_buffers = &self.rng_buffers,
@@ -2195,6 +2195,18 @@ index d593e319..83913ee5 100644
 +                @as(f64, @floatFromInt(ns_verify)) / 1e6 / iters_f,
 +                @as(f64, @floatFromInt(ns_commit)) / 1e6 / iters_f,
 +            });
++            // ZML_PROFILE_LAYERS: the verify (s=Kv) layer split. Compared to the s=1 decode split
++            // (run plain decode with ZML_PROFILE_LAYERS=1), the delta per layer estimates the GDN's
++            // amortizing bf16 projections vs its non-amortizing f32 scan.
++            const vr = &mtp.verify_runner;
++            if (vr.prof and (vr.prof_full_ns + vr.prof_linear_ns) > 0) {
++                const full_ms = @as(f64, @floatFromInt(vr.prof_full_ns)) / 1e6;
++                const lin_ms = @as(f64, @floatFromInt(vr.prof_linear_ns)) / 1e6;
++                const tot = full_ms + lin_ms;
++                try stdout.print("\x1b[35m[prof] VERIFY(s=Kv) layer time: full-attn(int8x16) {d:.0}ms ({d:.0}%)  GDN(bf16x48) {d:.0}ms ({d:.0}%)\x1b[0m\n", .{
++                    full_ms, 100.0 * full_ms / tot, lin_ms, 100.0 * lin_ms / tot,
++                });
++            }
 +            try stdout.flush();
 +        }
 +    }

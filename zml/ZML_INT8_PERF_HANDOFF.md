@@ -122,8 +122,10 @@ Candidate integration paths (evaluate, pick, or invent):
 
 ## 4. Concrete work plan (profile-driven; do NOT guess -- measure each step)
 
-- **P0 -- PROFILE the GDN internals (DONE at the layer level: GDN=79%, int8-attn=21%; now go one
-  level deeper).** The 48 GDN layers dominate decode. Each GDN layer = bf16 projections (in_proj_qkv
+- **P0 -- PROFILE the GDN internals (DONE at the layer level: GDN=79%, int8-attn=21% at BOTH s=1
+  decode AND s=2 verify; verify(s=2) ~= 2x decode(s=1) total, i.e. NOTHING amortizes at s=2 -- both
+  the int8 attn and the GDN scale ~linearly with s. That is exactly why MTP gives no speedup. Now go
+  one level deeper INTO the GDN.).** The 48 GDN layers dominate decode. Each GDN layer = bf16 projections (in_proj_qkv
   [10240,5120], in_proj_z/b/a, out_proj, conv1d -- all nn.Linear bf16) + an f32 recurrent delta-rule
   scan (`zml.nn.GatedDeltaNet.forward` = a `stablehlo.while` over s steps; runs Kv steps at verify).
   Split the GDN time between the bf16 projections (bandwidth-bound, SHOULD amortize at M>1) and the

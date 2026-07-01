@@ -6695,3 +6695,19 @@ VERDICT: MAJOR redirect. The fused int8 GEMM (w8a16) is a SECONDARY (~21%) lever
   today) + a fused/chunked delta-rule scan kernel are the real levers. This is captured in
   zml/ZML_INT8_PERF_HANDOFF.md (new-session prompt for the deep int8/GDN perf work). Next session must
   profile the GDN internals (projections vs scan, s=1 vs s=2) before spending kernel effort.
+
+## 2026-07-01 -- zml MTP verify layer split confirms nothing amortizes at s=Kv (GDN 79% at s=2 too) [result]
+
+CONFIG: extend ZML_PROFILE_LAYERS to the MTP verify runner; run drive mode with it to get the s=Kv=2
+  verify's per-layer-type split, to compare with the s=1 decode split.
+COMMAND: ZML_PROFILE_LAYERS=1 ./bin/gpu-run bash zml/run_w8a8_mtp_drive_tp2_gpu.sh
+RESULT: VERIFY(s=Kv) split = full-attn(int8x16) 21% vs GDN(bf16x48) 79% -- IDENTICAL to the s=1 decode
+  split. Per-iter: draft 4.3 | snap 0.8 | verify 149.3 | commit 6.3 ms; drive accept 98.8%, byte-exact
+  "Paris", HEALTHY, no wedge. Since the whole verify(s=2) ~= 2x a decode(s=1) AND the split is the same
+  at s=1 and s=2, BOTH the int8 attn and the GDN scale ~linearly with s -> NOTHING amortizes at s=2.
+VERDICT: definitive -- spec-decode cannot amortize on the current zml forward because the whole forward
+  is compute-bound at small M (int8 attn = GEMV trap; GDN = f32 sequential scan + bf16 small-M proj).
+  The GDN (79%, dominated by the s-linear f32 delta-rule scan) is the #1 lever; the int8 GEMM (21%) is
+  #2. Both must become bandwidth/XMX-bound for MTP to pay off. Two research tracks documented for the
+  dedicated kernel session: zml/ZML_GDN_OPT.md (chunked scan + int8 GDN projections) and
+  zml/ZML_INT8_GEMM_OPT.md (fused w8a16/w8a8), plus the umbrella zml/ZML_INT8_PERF_HANDOFF.md.

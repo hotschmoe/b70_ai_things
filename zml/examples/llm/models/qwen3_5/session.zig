@@ -433,6 +433,18 @@ pub const Session = struct {
                 @as(f64, @floatFromInt(ns_verify)) / 1e6 / iters_f,
                 @as(f64, @floatFromInt(ns_commit)) / 1e6 / iters_f,
             });
+            // ZML_PROFILE_LAYERS: the verify (s=Kv) layer split. Compared to the s=1 decode split
+            // (run plain decode with ZML_PROFILE_LAYERS=1), the delta per layer estimates the GDN's
+            // amortizing bf16 projections vs its non-amortizing f32 scan.
+            const vr = &mtp.verify_runner;
+            if (vr.prof and (vr.prof_full_ns + vr.prof_linear_ns) > 0) {
+                const full_ms = @as(f64, @floatFromInt(vr.prof_full_ns)) / 1e6;
+                const lin_ms = @as(f64, @floatFromInt(vr.prof_linear_ns)) / 1e6;
+                const tot = full_ms + lin_ms;
+                try stdout.print("\x1b[35m[prof] VERIFY(s=Kv) layer time: full-attn(int8x16) {d:.0}ms ({d:.0}%)  GDN(bf16x48) {d:.0}ms ({d:.0}%)\x1b[0m\n", .{
+                    full_ms, 100.0 * full_ms / tot, lin_ms, 100.0 * lin_ms / tot,
+                });
+            }
             try stdout.flush();
         }
     }
