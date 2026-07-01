@@ -11,17 +11,22 @@ hand-write GPU assembly / low-level XeTLA/DPAS.
 ## 0. Mission
 
 Make the zml (oneAPI PJRT over XLA/StableHLO) W8A8 serve of qwen3.6-27b ("qwen3_5" model) FAST on
-dual B70 TP=2, by fixing the int8 compute path so that:
+dual B70 TP=2. Profiling this session found decode is ~79% GDN (Gated-DeltaNet linear-attention) and
+~21% int8 full-attention, so the priorities are:
 
-1. **Decode is weight-bandwidth-bound** (not the oneDNN int8-GEMV trap it is today), via a FUSED
-   w8a16 weight-decompression matmul (s8 weight read + f16/bf16 XMX, epilogue dequant, NO bf16
-   weight materialization).
-2. **Prefill saturates int8 XMX** (s8xs8->s32 DPAS; already ~2.1-2.6x bf16 at large M -- verify it
+1. **GDN is the PRIMARY lever (~79% of decode).** Optimize the 48 bf16 GDN layers: int8 their
+   projections (via the fused w8a16 matmul below) to halve weight bandwidth, AND replace the naive
+   per-step f32 `stablehlo.while` delta-rule scan with a fused/chunked scan kernel (the compute-bound
+   part that also blocks MTP-verify amortization).
+2. **Fused w8a16 decode matmul** (both the GDN projections and the 21% int8 full-attn layers): s8
+   weight read + f16/bf16 XMX, epilogue dequant, NO bf16 weight materialization (not the oneDNN
+   int8-GEMV trap it is today).
+3. **Prefill saturates int8 XMX** (s8xs8->s32 DPAS; already ~2.1-2.6x bf16 at large M -- verify it
    holds and push it).
-3. **MTP/spec-decode then amortizes** the already-working 98.8%-accept verify into ~1.9x -- for FREE
-   once (1) lands (the MTP code is DONE and byte-exact; it just needs the verify to stop costing
-   ~Kv x a decode).
-4. **TP=2 collectives are int8-aware / cheaper** (P2P GPU comms): reduce int8 partials, not bf16;
+4. **MTP/spec-decode then amortizes** the already-working 98.8%-accept verify into ~1.9x -- for FREE
+   once (1)+(2) land (the MTP code is DONE and byte-exact; it just needs the verify to stop costing
+   ~Kv x a decode, which is mostly the GDN f32 scan running Kv sequential steps).
+5. **TP=2 collectives are int8-aware / cheaper** (P2P GPU comms): reduce int8 partials, not bf16;
    evaluate P2P BW; keep the box wedge-free.
 
 Target: close 13.7 t/s -> ~22-30+ t/s decode (sglang W8A8+fused+MTP on the SAME box hits ~23.8 t/s
@@ -45,7 +50,18 @@ Target: close 13.7 t/s -> ~22-30+ t/s decode (sglang W8A8+fused+MTP on the SAME 
   verify costs ~2x a single s=1 decode -> it does NOT amortize. Root cause: decode is COMPUTE-bound
   at small M, not bandwidth-bound. Evidence: the MTP draft reads the 2.5 GiB bf16 lm_head in 4.2ms
   (~600 GB/s -- bandwidth is fast), yet a 64-layer int8 decode is ~73ms = ~240 GB/s effective
-  (~5x below bandwidth). int8 layers are ~1.14ms at M=1 and ~2.2ms at M=2 (LINEAR in M = GEMV trap).
+  (~5x below bandwidth). int8 full-attn layers are ~1.14ms at M=1 and ~2.2ms at M=2 (LINEAR in M).
+
+- **SURPRISE (per-layer-type profiling, ZML_PROFILE_LAYERS=1, this session -- READ THIS):** decode
+  time is DOMINATED BY THE GDN, not the int8 matmuls. Split: **full-attn (int8 x16 layers) = 21%
+  (2423ms) vs GDN linear-attn (bf16 x48 layers) = 79% (9073ms)** over a full generation. So the
+  16 int8 full-attention layers are only ~1/5 of decode; the 48 Gated-DeltaNet layers (bf16
+  projections nn.Linear + f32 sequential recurrent scan via stablehlo.while + conv1d) are ~4/5. The
+  fused int8 GEMM is therefore a SECONDARY (~21%) lever; the GDN is the PRIMARY (~79%) one. The MTP
+  verify likely fails to amortize mostly because the GDN f32 scan runs Kv sequential steps (compute-
+  bound, linear in s) while the int8 full-attn GEMV also scales with M. PROFILE THE GDN INTERNALS
+  FIRST (bf16 projections -- bandwidth-bound, should amortize -- vs the f32 recurrent scan -- does
+  not) before deciding where to spend kernel effort.
 
 ## 2. What we learned from `kernels/` (the sglang/vLLM fused int8 ops -- the blueprint)
 
@@ -106,25 +122,31 @@ Candidate integration paths (evaluate, pick, or invent):
 
 ## 4. Concrete work plan (profile-driven; do NOT guess -- measure each step)
 
-- **P0 -- PROFILE the verify + decode to attribute time.** The 143.7ms verify is a mix; find the
-  dominant consumer before optimizing. qwen3.6-27b is 64 layers: 16 full-attention (int8 q/k/v/o +
-  int8 gate/up/down MLP) + 48 Gated-DeltaNet (GDN) layers whose projections are BF16 (nn.Linear,
-  NOT quantized) plus an f32 recurrent scan (`zml.nn.GatedDeltaNet.forward` = a `stablehlo.while`
-  over s steps; at verify s=Kv it runs Kv steps). So the non-amortizing cost is (a) the int8
-  full-attn GEMV trap AND possibly (b) the GDN f32 sequential scan (Kv steps) and its bf16
-  projections. Instrument per-layer-type timing (sync-bounded), or compile attn-only / GDN-only
-  verify variants, to get the split. This decides whether the lever is the int8 GEMM, the GDN scan,
-  or both. (Note: bf16 GDN projections at M=2 DO amortize on bandwidth; the f32 scan does not.)
-- **P1 -- Fused w8a16 decode matmul** (section 3). Make the M=1/M=2 int8-weight x f16-act matmul
-  bandwidth-bound. Bench at the real qwen shapes (q_proj [12288,5120], o_proj [5120,6144], gate/up
-  [17408,5120], down [5120,17408]) at M=1,2,4,8. Success = int8-weight decode ~2x faster than
-  today AND >= bf16-weight bandwidth. Wire into `QuantizedLinear` as the decode path (replace the
-  materializing weightOnly + the s8xs8 dotAcc at small M).
-- **P2 -- Confirm/keep the w8a8 prefill XMX path** (dotAcc at large M). Re-bench with the sweep
+- **P0 -- PROFILE the GDN internals (DONE at the layer level: GDN=79%, int8-attn=21%; now go one
+  level deeper).** The 48 GDN layers dominate decode. Each GDN layer = bf16 projections (in_proj_qkv
+  [10240,5120], in_proj_z/b/a, out_proj, conv1d -- all nn.Linear bf16) + an f32 recurrent delta-rule
+  scan (`zml.nn.GatedDeltaNet.forward` = a `stablehlo.while` over s steps; runs Kv steps at verify).
+  Split the GDN time between the bf16 projections (bandwidth-bound, SHOULD amortize at M>1) and the
+  f32 sequential scan (compute-bound, does NOT amortize -- likely the real verify blocker) + conv1d.
+  Also confirm at s=1 vs s=2 to see which parts scale with s. Instrument like the ZML_PROFILE_LAYERS
+  timer (session.zig / inference.zig Runner) but inside GatedDeltaNet.forward, or compile
+  projections-only vs scan-only GDN variants. THIS decides the primary kernel target.
+- **P1 (PRIMARY, ~79%) -- GDN optimization.** Two sub-levers, prioritized by P0:
+  (a) INT8 the GDN bf16 projections via the fused w8a16 weight-decompression matmul (section 3) --
+      halves their weight bandwidth (48 layers of bf16 proj is the bulk of decode bytes). Needs an
+      int8 GDN checkpoint (or on-the-fly quant) + the fused kernel; today the GDN is entirely bf16.
+  (b) FUSED/CHUNKED delta-rule scan kernel (sglang/FLA "chunked_gated_delta_rule") to replace the
+      naive per-step `stablehlo.while` f32 scan -- this is the compute-bound part that blocks MTP
+      verify amortization (Kv sequential steps). A hand-written XeTLA/SYCL/Zig chunked scan is the
+      likely endgame. This is on the critical path for BOTH decode and the MTP verify.
+- **P2 (SECONDARY, ~21%) -- Fused w8a16 decode matmul for the full-attn int8 layers** (section 3).
+  Make the M=1/M=2 int8-weight x f16-act matmul bandwidth-bound. Bench at the real qwen shapes
+  (q_proj [12288,5120], o_proj [5120,6144], gate/up [17408,5120], down [5120,17408]) at M=1,2,4,8.
+  Success = int8-weight decode ~2x faster than today AND >= bf16-weight bandwidth. Wire into
+  `QuantizedLinear` as the decode path (replace the materializing weightOnly + the s8xs8 dotAcc at
+  small M). The SAME fused w8a16 kernel serves P1(a).
+- **P3 -- Confirm/keep the w8a8 prefill XMX path** (dotAcc at large M). Re-bench with the sweep
   harness (`//examples/w8a8_sweep`) to confirm 2.1-2.6x still holds; fix if regressed.
-- **P3 -- GDN scan** (if P0 shows it dominates): a fused/chunked delta-rule kernel (the sglang/FLA
-  "chunked" GDN) instead of the naive per-step `stablehlo.while`. This is a separate kernel but on
-  the same critical path for both decode and the MTP verify.
 - **P4 -- MTP amortization + overhead trim** (after P1/P3 make the verify amortize): re-measure the
   drive loop (should jump to ~1.9x). Then trim the ~10ms/iter overhead: the accept catch-up should
   use a KV-only MtpPrefill-style update (no lm_head/sampler); cut host<->device syncs (batch the
@@ -217,12 +239,17 @@ then confirm `:18080/health` 200 + `bin/xpu-health` HEALTHY. Stop again for GPU 
 ## 10. First moves for the new session
 
 1. Read `kernels/*` + `zml/ZML_MTP_PLAN.md` STATUS + this file. Bring the daily driver down.
-2. P0: instrument the verify/decode to split int8-full-attn vs GDN-scan vs bf16-GDN-proj vs
-   lm_head/collective time (one attended TP=2 run). This decides the primary lever.
+   (The layer-level split is already done: GDN=79%, int8-attn=21%, via ZML_PROFILE_LAYERS=1 in
+   inference.zig Runner + session.zig.)
+2. P0-deep: split the GDN's 79% between bf16 projections (should amortize) and the f32 recurrent
+   scan (does not) + conv1d, at s=1 vs s=2 (one attended TP=2 run). This picks P1(a) vs P1(b) order.
 3. Determine the integration path (section 3): probe whether a bf16xs8 HLO pattern fuses (cheap
    A/B at M=1), else scope the XLA FFI custom-call-to-oneDNN route (reuse kernels/*.h).
-4. Land the fused w8a16 decode matmul; bench in isolation then end-to-end; keep byte-identical.
+4. Land the biggest GDN lever first (int8 projections via fused w8a16, and/or the chunked scan);
+   bench in isolation then end-to-end; keep byte-identical. Then the 21% int8 full-attn matmul.
 5. Re-measure MTP drive -- expect the ~1.9x to appear. Then trim overhead + P2P comms.
 
-The MTP is already done and correct; this session's job is the int8 compute path that lets it (and
-plain decode) actually be fast on the B70. Commit + push at each measured, byte-identical milestone.
+The MTP is already done and correct; this session's job is the GDN + int8 compute path that lets it
+(and plain decode) actually be fast on the B70. Commit + push at each measured, byte-identical
+milestone. NOTE the surprise: the GDN linear-attention -- not the int8 GEMM -- is the main decode
+cost; do not over-invest in the int8 matmul before profiling the GDN internals.

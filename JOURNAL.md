@@ -6676,3 +6676,22 @@ VERDICT: MTP spec-decode is COMPLETE + CORRECT on zml (byte-exact, 98.8% accept,
   kernels" work, sglang-parity), NOT MTP. Once decode is bandwidth-bound, the verify amortizes and the
   98.8% accept -> ~1.9x is unlocked "for free" (MTP already done). Steps 0-4 landed (5 commits);
   Step 5 = fused int8 kernel then re-measure. Scripts: zml/run_w8a8_mtp_{measure,drive}_tp2_gpu.sh.
+
+## 2026-07-01 -- zml decode profiling: GDN linear-attention is 79% of decode, int8 full-attn only 21% [result]
+
+CONFIG: attribute the zml W8A8 27B decode time per layer-type to find the real bottleneck (why the
+  MTP verify doesn't amortize). Added a ZML_PROFILE_LAYERS=1 per-layer timer (sync each layer via
+  hidden_buf.await, accumulate by layer_type) to inference.zig Runner + session.zig. TP=2, plain decode.
+COMMAND: ZML_PROFILE_LAYERS=1 ./bin/gpu-run bash zml/run_w8a8_serve_tp2_gpu.sh
+RESULT: over a full generation the decode LAYER time splits **full-attn (int8 x16 layers) = 2423ms
+  (21%) vs GDN linear-attn (bf16 x48 layers) = 9073ms (79%)**. Layers = ~95% of decode; the GDN is
+  ~75% of TOTAL decode. Output still "The capital of France is Paris.", 13.2 t/s (per-layer sync adds
+  a little overhead), HEALTHY, no wedge. So the int8 full-attention matmuls are only ~1/5 of decode;
+  the 48 Gated-DeltaNet layers (bf16 nn.Linear projections + f32 sequential recurrent scan via
+  stablehlo.while + conv1d) are ~4/5.
+VERDICT: MAJOR redirect. The fused int8 GEMM (w8a16) is a SECONDARY (~21%) lever, NOT the main one.
+  The GDN is the PRIMARY (~79%) decode cost, and its f32 sequential scan (Kv steps at verify) is the
+  likely reason the MTP verify costs ~2x a decode (doesn't amortize). The int8 GDN projections (bf16
+  today) + a fused/chunked delta-rule scan kernel are the real levers. This is captured in
+  zml/ZML_INT8_PERF_HANDOFF.md (new-session prompt for the deep int8/GDN perf work). Next session must
+  profile the GDN internals (projections vs scan, s=1 vs s=2) before spending kernel effort.

@@ -240,6 +240,19 @@ pub const Session = struct {
             });
             try stdout.flush();
         };
+
+        // ZML_PROFILE_LAYERS: report the decode time split between int8 full-attention (16 layers)
+        // and bf16+f32-scan GDN (48 linear-attention layers) -- which lever dominates decode.
+        const r = &self.decode_runner;
+        if (r.prof and (r.prof_full_ns + r.prof_linear_ns) > 0) {
+            const full_ms = @as(f64, @floatFromInt(r.prof_full_ns)) / 1e6;
+            const lin_ms = @as(f64, @floatFromInt(r.prof_linear_ns)) / 1e6;
+            const tot = full_ms + lin_ms;
+            try stdout.print("\x1b[35m[prof] decode layer time: full-attn(int8x16) {d:.0}ms ({d:.0}%)  GDN(bf16x48) {d:.0}ms ({d:.0}%)\x1b[0m\n", .{
+                full_ms, 100.0 * full_ms / tot, lin_ms, 100.0 * lin_ms / tot,
+            });
+            try stdout.flush();
+        }
     }
 
     // MTP spec-decode DRIVE loop (K=1): each step drafts 1 token (d1), verifies [cur, d1] in ONE

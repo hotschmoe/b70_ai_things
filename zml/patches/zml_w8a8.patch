@@ -868,10 +868,20 @@ index 00000000..6f6318ec
 +    }
 +}
 diff --git a/examples/llm/models/qwen3_5/inference.zig b/examples/llm/models/qwen3_5/inference.zig
-index 1ad962fe..2dfaf299 100644
+index 1ad962fe..17a38287 100644
 --- a/examples/llm/models/qwen3_5/inference.zig
 +++ b/examples/llm/models/qwen3_5/inference.zig
-@@ -42,12 +42,19 @@ pub const Args = struct {
+@@ -8,6 +8,9 @@ const model = @import("model.zig");
+ const log = std.log.scoped(.qwen3_5);
+ const Phase = common.Phase;
+ 
++// libc getenv (binary links -lc); used only to gate the ZML_PROFILE_LAYERS per-layer-type timer.
++extern "c" fn getenv(name: [*:0]const u8) ?[*:0]const u8;
++
+ pub const CompilationParameters = struct {
+     prefill_tokens: zml.Tensor,
+     decode_tokens: zml.Tensor,
+@@ -42,12 +45,19 @@ pub const Args = struct {
      token_index_buf: *zml.Buffer,
      kv_cache_buffers: *zml.Bufferized(model.KvCache),
      rng_buffers: *zml.Bufferized(zml.Tensor.Rng),
@@ -891,7 +901,7 @@ index 1ad962fe..2dfaf299 100644
      params: CompilationParameters,
  
      pub fn init(
-@@ -69,6 +76,7 @@ pub const CompiledModel = struct {
+@@ -69,6 +79,7 @@ pub const CompiledModel = struct {
                  parameters,
                  @intCast(parameters.prefill_tokens.dim(.s)),
                  .prefill,
@@ -899,7 +909,7 @@ index 1ad962fe..2dfaf299 100644
                  progress,
              ),
              .decode = try .init(
-@@ -79,8 +87,10 @@ pub const CompiledModel = struct {
+@@ -79,8 +90,10 @@ pub const CompiledModel = struct {
                  parameters,
                  @intCast(parameters.decode_tokens.dim(.s)),
                  .decode,
@@ -910,7 +920,7 @@ index 1ad962fe..2dfaf299 100644
              .params = parameters,
          };
      }
-@@ -88,9 +98,182 @@ pub const CompiledModel = struct {
+@@ -88,9 +101,182 @@ pub const CompiledModel = struct {
      pub fn deinit(self: *CompiledModel) void {
          self.prefill.deinit();
          self.decode.deinit();
@@ -1093,7 +1103,28 @@ index 1ad962fe..2dfaf299 100644
  pub const Inference = CompiledModel;
  
  pub const KernelExe = struct {
-@@ -251,7 +434,6 @@ pub const KernelExe = struct {
+@@ -103,6 +289,12 @@ pub const KernelExe = struct {
+         layers: Layers,
+         sampler_args: zml.exe.Exe.Arguments,
+         sampler_results: zml.exe.Exe.Results,
++        // Per-layer-type profiling (ZML_PROFILE_LAYERS=1): sync + time each layer to attribute decode
++        // time to int8 full-attention vs bf16+f32-scan GDN (linear-attention). Perturbs (syncs per
++        // layer) -- diagnostic only. Read by session.zig after the decode loop.
++        prof: bool = false,
++        prof_full_ns: u64 = 0,
++        prof_linear_ns: u64 = 0,
+ 
+         const Layers = struct {
+             args: []zml.exe.Exe.Arguments,
+@@ -233,6 +425,7 @@ pub const KernelExe = struct {
+                 .layers = layers,
+                 .sampler_args = sampler_args,
+                 .sampler_results = sampler_results,
++                .prof = getenv("ZML_PROFILE_LAYERS") != null,
+             };
+         }
+ 
+@@ -251,7 +444,6 @@ pub const KernelExe = struct {
  
                  break :b self.embed_results.get(zml.Buffer);
              };
@@ -1101,7 +1132,23 @@ index 1ad962fe..2dfaf299 100644
  
              for (
                  self.layers.args,
-@@ -263,6 +445,10 @@ pub const KernelExe = struct {
+@@ -259,10 +451,25 @@ pub const KernelExe = struct {
+                 self.layers.layer_indices,
+                 self.layers.layer_types,
+             ) |*exe_args, *results, *layer_index_buf, layer_type| {
+-                self.exe.runLayer(exe_args, results, layer_type, args, &hidden_buf, layer_index_buf);
++                if (self.prof) {
++                    const t = std.Io.Timestamp.now(args.io, .awake);
++                    self.exe.runLayer(exe_args, results, layer_type, args, &hidden_buf, layer_index_buf);
++                    hidden_buf.await(args.io) catch {}; // sync so the timer captures real layer time
++                    const dt: u64 = @intCast(t.untilNow(args.io, .awake).toNanoseconds());
++                    switch (layer_type) {
++                        .full_attention => self.prof_full_ns += dt,
++                        .linear_attention => self.prof_linear_ns += dt,
++                    }
++                } else {
++                    self.exe.runLayer(exe_args, results, layer_type, args, &hidden_buf, layer_index_buf);
++                }
              }
  
              self.exe.runSampler(&self.sampler_args, &self.sampler_results, args, &hidden_buf);
@@ -1112,7 +1159,7 @@ index 1ad962fe..2dfaf299 100644
          }
      };
  
-@@ -274,10 +460,11 @@ pub const KernelExe = struct {
+@@ -274,10 +481,11 @@ pub const KernelExe = struct {
          parameters: CompilationOptions,
          seqlen: usize,
          phase: Phase,
@@ -1125,7 +1172,7 @@ index 1ad962fe..2dfaf299 100644
          };
      }
  
-@@ -327,6 +514,7 @@ const ComposedKernelExe = struct {
+@@ -327,6 +535,7 @@ const ComposedKernelExe = struct {
          parameters: CompilationOptions,
          seqlen: usize,
          phase: Phase,
@@ -1133,7 +1180,7 @@ index 1ad962fe..2dfaf299 100644
          progress: *std.Progress.Node,
      ) !ComposedKernelExe {
          const embed_tokens = try ComposedKernelExe.compileEmbedTokens(allocator, io, platform, qwen_model.text_model.embed_tokens, parameters, seqlen, phase, progress);
-@@ -338,9 +526,11 @@ const ComposedKernelExe = struct {
+@@ -338,9 +547,11 @@ const ComposedKernelExe = struct {
          };
          errdefer if (full_attention_layer) |exe| exe.deinit();
  
@@ -1146,7 +1193,7 @@ index 1ad962fe..2dfaf299 100644
          };
          errdefer if (linear_attention_layer) |exe| exe.deinit();
  
-@@ -379,7 +569,8 @@ const ComposedKernelExe = struct {
+@@ -379,7 +590,8 @@ const ComposedKernelExe = struct {
  
              break :b results.get(zml.Buffer);
          };
@@ -1156,7 +1203,7 @@ index 1ad962fe..2dfaf299 100644
  
          var self_attn_layer_index: usize = 0;
          var linear_attn_layer_index: usize = 0;
-@@ -423,6 +614,13 @@ const ComposedKernelExe = struct {
+@@ -423,6 +635,13 @@ const ComposedKernelExe = struct {
  
              self.runSampler(&exe_args, &results, args, &hidden_buf);
          }
@@ -1170,7 +1217,7 @@ index 1ad962fe..2dfaf299 100644
      }
  
      fn runLayer(
-@@ -540,29 +738,9 @@ const ComposedKernelExe = struct {
+@@ -540,29 +759,9 @@ const ComposedKernelExe = struct {
          };
      }
  
@@ -1203,7 +1250,7 @@ index 1ad962fe..2dfaf299 100644
  
      fn compileEmbedTokens(
          allocator: std.mem.Allocator,
-@@ -636,6 +814,7 @@ const ComposedKernelExe = struct {
+@@ -636,6 +835,7 @@ const ComposedKernelExe = struct {
          seqlen: usize,
          layer_index: usize,
          phase: Phase,
@@ -1211,7 +1258,7 @@ index 1ad962fe..2dfaf299 100644
          progress: *std.Progress.Node,
      ) !zml.Exe {
          progress.increaseEstimatedTotalItems(1);
-@@ -652,6 +831,20 @@ const ComposedKernelExe = struct {
+@@ -652,6 +852,20 @@ const ComposedKernelExe = struct {
              .layer_index = zml.Tensor.init(.{}, .u32),
          };
  
@@ -1794,7 +1841,7 @@ index bc14ab72..2e13970d 100644
 +    _ = &KvCache.SelfAttnCache.initSingleLayer;
 +}
 diff --git a/examples/llm/models/qwen3_5/session.zig b/examples/llm/models/qwen3_5/session.zig
-index d593e319..fd8714f1 100644
+index d593e319..83913ee5 100644
 --- a/examples/llm/models/qwen3_5/session.zig
 +++ b/examples/llm/models/qwen3_5/session.zig
 @@ -5,6 +5,10 @@ const zml = @import("zml");
@@ -1917,7 +1964,7 @@ index d593e319..fd8714f1 100644
              try self.decode_runner.run(.{
                  .allocator = self.allocator,
                  .io = self.io,
-@@ -150,13 +206,434 @@ pub const Session = struct {
+@@ -150,13 +206,447 @@ pub const Session = struct {
                  .token_index_buf = &token_index_buffer,
                  .kv_cache_buffers = &self.kv_cache_buffers,
                  .rng_buffers = &self.rng_buffers,
@@ -1955,6 +2002,19 @@ index d593e319..fd8714f1 100644
 +            });
 +            try stdout.flush();
 +        };
++
++        // ZML_PROFILE_LAYERS: report the decode time split between int8 full-attention (16 layers)
++        // and bf16+f32-scan GDN (48 linear-attention layers) -- which lever dominates decode.
++        const r = &self.decode_runner;
++        if (r.prof and (r.prof_full_ns + r.prof_linear_ns) > 0) {
++            const full_ms = @as(f64, @floatFromInt(r.prof_full_ns)) / 1e6;
++            const lin_ms = @as(f64, @floatFromInt(r.prof_linear_ns)) / 1e6;
++            const tot = full_ms + lin_ms;
++            try stdout.print("\x1b[35m[prof] decode layer time: full-attn(int8x16) {d:.0}ms ({d:.0}%)  GDN(bf16x48) {d:.0}ms ({d:.0}%)\x1b[0m\n", .{
++                full_ms, 100.0 * full_ms / tot, lin_ms, 100.0 * lin_ms / tot,
++            });
++            try stdout.flush();
++        }
 +    }
 +
 +    // MTP spec-decode DRIVE loop (K=1): each step drafts 1 token (d1), verifies [cur, d1] in ONE

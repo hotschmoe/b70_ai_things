@@ -8,6 +8,9 @@ const model = @import("model.zig");
 const log = std.log.scoped(.qwen3_5);
 const Phase = common.Phase;
 
+// libc getenv (binary links -lc); used only to gate the ZML_PROFILE_LAYERS per-layer-type timer.
+extern "c" fn getenv(name: [*:0]const u8) ?[*:0]const u8;
+
 pub const CompilationParameters = struct {
     prefill_tokens: zml.Tensor,
     decode_tokens: zml.Tensor,
@@ -286,6 +289,12 @@ pub const KernelExe = struct {
         layers: Layers,
         sampler_args: zml.exe.Exe.Arguments,
         sampler_results: zml.exe.Exe.Results,
+        // Per-layer-type profiling (ZML_PROFILE_LAYERS=1): sync + time each layer to attribute decode
+        // time to int8 full-attention vs bf16+f32-scan GDN (linear-attention). Perturbs (syncs per
+        // layer) -- diagnostic only. Read by session.zig after the decode loop.
+        prof: bool = false,
+        prof_full_ns: u64 = 0,
+        prof_linear_ns: u64 = 0,
 
         const Layers = struct {
             args: []zml.exe.Exe.Arguments,
@@ -416,6 +425,7 @@ pub const KernelExe = struct {
                 .layers = layers,
                 .sampler_args = sampler_args,
                 .sampler_results = sampler_results,
+                .prof = getenv("ZML_PROFILE_LAYERS") != null,
             };
         }
 
@@ -441,7 +451,18 @@ pub const KernelExe = struct {
                 self.layers.layer_indices,
                 self.layers.layer_types,
             ) |*exe_args, *results, *layer_index_buf, layer_type| {
-                self.exe.runLayer(exe_args, results, layer_type, args, &hidden_buf, layer_index_buf);
+                if (self.prof) {
+                    const t = std.Io.Timestamp.now(args.io, .awake);
+                    self.exe.runLayer(exe_args, results, layer_type, args, &hidden_buf, layer_index_buf);
+                    hidden_buf.await(args.io) catch {}; // sync so the timer captures real layer time
+                    const dt: u64 = @intCast(t.untilNow(args.io, .awake).toNanoseconds());
+                    switch (layer_type) {
+                        .full_attention => self.prof_full_ns += dt,
+                        .linear_attention => self.prof_linear_ns += dt,
+                    }
+                } else {
+                    self.exe.runLayer(exe_args, results, layer_type, args, &hidden_buf, layer_index_buf);
+                }
             }
 
             self.exe.runSampler(&self.sampler_args, &self.sampler_results, args, &hidden_buf);
