@@ -84,7 +84,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
     --device xpu $ATTN_ARGS --linear-attn-backend triton \
     --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
     --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton \
-    --cuda-graph-max-bs $MAXBS --cuda-graph-backend-decode $GRAPH_BACKEND ${EXTRA_ARGS:-} \
+    --cuda-graph-max-bs $MAXBS --cuda-graph-bs ${BS_LIST:-2 3 4} --cuda-graph-backend-decode $GRAPH_BACKEND ${EXTRA_ARGS:-} \
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
     --tp 2 --context-length $CTX --mem-fraction-static 0.87 --max-running-requests 4 --skip-server-warmup \
     --host 0.0.0.0 --port $PORT" >/dev/null

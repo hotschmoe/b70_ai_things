@@ -252,6 +252,71 @@ def install():
     except Exception as e:
         print(f"[xpu-cudagraph] weak_ref_tensor fallback FAILED: {e}", flush=True)
 
+    # ---- 4e. BCG output handling for LogitsProcessorOutput (spec/TARGET_VERIFY forward output) ----
+    # BreakableCudaGraphBackend._slice_output/_copy_output_to_buffer only handle Tensor/tuple/list/
+    # PPProxyTensors; the MTP verify forward returns a LogitsProcessorOutput dataclass -> TypeError
+    # (run 15). Recurse over its dataclass fields; pass non-tensor scalars through unchanged.
+    try:
+        import dataclasses as _dc
+        from sglang.srt.layers.logits_processor import LogitsProcessorOutput as _LPO
+        from sglang.srt.model_executor.runner_backend.breakable_cuda_graph_backend import (
+            BreakableCudaGraphBackend as _BCGB,
+        )
+        _oslice = _BCGB._slice_output
+        _ocopy = _BCGB._copy_output_to_buffer
+
+        def _slice2(self, output, num_tokens):
+            if isinstance(output, _LPO):
+                return _LPO(**{
+                    f.name: _slice2(self, getattr(output, f.name), num_tokens)
+                    for f in _dc.fields(output)
+                })
+            if output is None or torch.is_tensor(output) or isinstance(output, (tuple, list)):
+                return _oslice(self, output, num_tokens)
+            return output  # scalars/None-likes pass through
+
+        def _copy2(self, output, output_buffer, num_tokens):
+            if isinstance(output, _LPO) and isinstance(output_buffer, _LPO):
+                for f in _dc.fields(output):
+                    _copy2(self, getattr(output, f.name), getattr(output_buffer, f.name), num_tokens)
+                return
+            if output is None and not torch.is_tensor(output_buffer) and output_buffer is not None:
+                return
+            if not torch.is_tensor(output) and not isinstance(output, (tuple, list)) and output is not None:
+                return  # non-tensor scalar field: nothing to copy
+            return _ocopy(self, output, output_buffer, num_tokens)
+
+        _BCGB._slice_output = _slice2
+        _BCGB._copy_output_to_buffer = _copy2
+
+        # BCG passes shape_key.size (= BS for the decode runner) as the slice length, but SPEC
+        # forwards produce bs * num_tokens_per_bs (=11 for NEXTN draft=11) output rows -> the stored
+        # verify logits get sliced 11x too small ("shape [1, 11] invalid for input of size 2", run 18).
+        # Stash the runner's num_tokens_per_bs on the backend and scale the slice/copy lengths.
+        _oinit = _BCGB.__init__
+
+        def _init2(self, cuda_graph_runner, **kw):
+            _oinit(self, cuda_graph_runner, **kw)
+            self._b70_tpb = int(getattr(cuda_graph_runner, "num_tokens_per_bs", 1) or 1)
+            if self._b70_tpb > 1:
+                print(f"[xpu-cudagraph] BCG spec token scaling: num_tokens_per_bs={self._b70_tpb}", flush=True)
+
+        _BCGB.__init__ = _init2
+        _slice_base = _BCGB._slice_output
+        _copy_base = _BCGB._copy_output_to_buffer
+
+        def _slice3(self, output, num_tokens):
+            return _slice_base(self, output, num_tokens * getattr(self, "_b70_tpb", 1))
+
+        def _copy3(self, output, output_buffer, num_tokens):
+            return _copy_base(self, output, output_buffer, num_tokens * getattr(self, "_b70_tpb", 1))
+
+        _BCGB._slice_output = _slice3
+        _BCGB._copy_output_to_buffer = _copy3
+        print("[xpu-cudagraph] BCG LogitsProcessorOutput slice/copy support installed", flush=True)
+    except Exception as e:
+        print(f"[xpu-cudagraph] BCG LPO output patch FAILED: {e}", flush=True)
+
     # ---- 4c. BCG segment-lifecycle trace (B70_XPU_BCG_TRACE=1): find which segment begin/end dies ----
     if os.environ.get("B70_XPU_BCG_TRACE") == "1":
         try:
