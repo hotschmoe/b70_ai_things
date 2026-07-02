@@ -379,6 +379,15 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] W8A8 shim install FAILED: {e}", flush=True)
 
+    # --- PUSH ALL-REDUCE (hand-rolled L0-IPC push collective, decode AR ~34-45us vs oneCCL ~85-88us;
+    #     OPT-IN via B70_XPU_PUSH_AR=1 + PUSH_AR_SO=/path/to/libxpu_push_ar_graph.so). P2PACCESS-independent. ---
+    if os.environ.get("B70_XPU_PUSH_AR") == "1":
+        try:
+            import push_ar_xpu
+            push_ar_xpu.install()
+        except Exception as e:
+            print(f"[woq-shim] push-AR install FAILED: {e}", flush=True)
+
     # --- W4A8/W4A16 HYBRID (oneDNN int4w x {int8a prefill, fp16a decode}; OPT-IN via B70_XPU_W4A8=1) ---
     # Wraps compressed-tensors _get_scheme_from_parts to route dense W4A8 int-quantized linears to
     # CompressedTensorsW4A8Int8XPU -> torch.ops._xpu_C.int4_gemm_w4a{8,16}. Needs the built _xpu_C.abi3.so

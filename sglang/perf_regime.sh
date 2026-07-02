@@ -22,7 +22,9 @@ g=$(curl -s "http://localhost:$PORT/v1/chat/completions" -H 'content-type: appli
   -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue? Two sentences.\"}],\"max_tokens\":80,\"temperature\":0}")
 coh=$(echo "$g" | python3 -c "import sys,json;from collections import Counter
 try:
- t=json.load(sys.stdin)['choices'][0]['message']['content'].strip()
+ m=json.load(sys.stdin)['choices'][0]['message']
+ # --reasoning-parser puts short answers entirely in reasoning_content (content empty) -- fall back
+ t=((m.get('content') or '') or (m.get('reasoning_content') or '')).strip()
 except Exception as e: print('PARSE_FAIL'); sys.exit()
 v='OK'
 if len(t)>=16:

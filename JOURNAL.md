@@ -6985,3 +6985,29 @@ VERDICT: the 7.1 + ICR-26.22 upgrade CURED the TP=2 BCS/GuC wedge (5/5 clean; th
   clean even on 7.0+pin, and 7.1 removes the root cause; unattended TP=2 serving is fine. AGENTS.md updated
   (kernel 7.1; wedge-cured status banner). NEXT: restart daily driver; bin/serve-sweep --smoke shelf gate;
   optionally A/B GPU P2P as a separate experiment (may not help on X399).
+
+================================================================================
+2026-07-02 -- W8A8 PERF CAMPAIGN OPENED: squeeze qwen3.6-27b w8a8 on dual B70 (all levers)
+================================================================================
+GOAL (user): relentlessly optimize the w8a8-int8 daily driver across all 4 backends; profile every step;
+custom GEMV/GEMM/comms/spec-decode/prefill work welcome; pick the backend by evidence. Codex = consultant.
+
+## 2026-07-02 -- post-7.1 baseline + two harness bugs fixed (reasoning-parser gate, MTP delta-undercount) [result]
+
+CONFIG: rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh run (shelf bench, kernel 7.1 + ICR 26.22 host).
+RESULT: WARM c1 decode 25.06 t/s / TTFT 545ms / agg 21.57; c4 agg_out 21.85 -- MATCHES the pre-upgrade
+  25.2/471 shelf header: kernel 7.1 host upgrade causes NO w8a8 perf regression. Box healthy.
+HARNESS BUGS found + fixed in the process:
+  1. perf_regime.sh coherence gate read only message.content -> EMPTY-fail now that the shelf defaults
+     --reasoning-parser qwen3 (short answers live in reasoning_content). Gate now falls back (same as
+     serve.sh's own gate). Was aborting every shelf bench of the agentic-default entry.
+  2. soak_probe.py counted SSE DELTAS as tokens -> under MTP each delta packs ~accept-len tokens, so the
+     soak under-reported ~4x (reported 4.83 "t/s" = ITERATIONS/s; true ~19-20 t/s sustained). Fixed via
+     stream_options include_usage -> completion_tokens scaling. BONUS: deltas/s is a free accept-length
+     probe: 2000 tok / 499 deltas = ~4.0 tok/iteration sustained (vs ~5+ on short c1) -> mild accept decay
+     on long generations.
+DECODE BUDGET (derived, to be profile-confirmed): iteration ~207ms yields ~4 tokens. The ~128 x 10KB
+  oneCCL all-reduces are ~11ms (~5%) of that -> TP=2 w8a8+MTP decode is LAUNCH/PYTHON-BOUND (eager verify
+  M=11 + 10 draft steps), NOT AR-bound. Graph capture of verify+draft = the 2-3x lever; push-AR = a few %.
+VERDICT: baseline banked; harness now truthful. NEXT: push-AR port A/B (bounded, in flight) -> then the
+  capture campaign.
