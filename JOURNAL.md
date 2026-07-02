@@ -7208,3 +7208,52 @@ NEXT (first thing next session): bump-pointer slot allocation at record time (sl
   round_up(payload) per node; MAXB -> 384-512MB via PUSH_AR_MAXB) -> expect the first COHERENT full-capture
   serve, then the perf number that decides the campaign.
 Files: sglang/graph_mtp/118b_push_ar_graph_bisect.cpp (v2), hang_stacks_*.txt, last_run_2135*/2146*.log.
+
+## 2026-07-02 -- runs 26-27c: bump-pointer slots + consume-ack CRACK the deterministic corruption; cross-device VISIBILITY is the last wall [progress]
+
+Picked up from run-25 (garbage-logits = payload-slot aliasing). Fixed a STACK of three, each revealing
+the next -- the captured full-graph MTP verify now produces COHERENT output on some requests (proving
+the approach), but a non-deterministic cross-device race caps it at ~25-33% coherent.
+
+BUG A (run 26, FIXED): payload slot allocation. Old (node%64)*1MB aliased within a 129-node graph AND
+  the 11MB logits all_gather overran its 1MB slot. FIX = bump-pointer: each recorded node gets a
+  distinct exactly-sized slot; cursor reset per captured graph via ar_graph_new_capture() (hooked from
+  _B70XPUGraph.capture_begin); flag ids stay GLOBAL (decouples sync from payload memory). slot_alloc_test.py
+  (130 nodes incl 11MB + interleaved 2-graph replay) PASSES. RESULT: '!' NaN-flood GONE, but output still
+  deterministically wrong ('_privacy_policy' for "why is the sky blue"). First forward wrong (fresh slots)
+  => NOT a cross-forward race; a within-forward correctness bug.
+
+ISOLATION: proved the collectives are CORRECT in op-semantics (Explore agent: SUM all_reduce + faithful
+  zero-padded all_gather; logits ARE vocab-all_gathered inside the captured verify; no metadata collective
+  mis-summed), reshape matches concat (CPU test), all_gather emulation replays correctly with changing
+  inputs (allgather_emul_test.py), and matmul->clone->pushAR->matmul chains in-graph match eager oneCCL
+  (ar_integration_test.py). The iso-AR serve (breakable, push-AR all_reduce RECORDED, all_gather EAGER
+  oneCCL via new PUSH_AR_GATHER_GRAPH=0 knob) still garbled -> pinned the bug to the ALL_REDUCE-in-graph
+  path, not all_gather. Every lockstep-barriered microbench passed -> the bug needs the real replay cadence.
+
+BUG B (run 27, FIXED): cross-replay scratch-slot GENERATION race. The per-node flag says "peer pushed gen g"
+  but nothing stopped the peer from overwriting my slot for gen g+1 before my reduce consumed gen g (codex
+  flagged this; my lockstep microbenches masked it). FIX = per-node CONSUME-ACK (v3): reduce epilogue
+  signals peer_consumed[node]; push prologue waits my_consumed[node] >= prev-push-count before overwriting
+  peer's slot. seq region 256KB->512KB (4 pages: flags/counts/consumed/consume_ct). RESULT: the FIRST
+  request is now COHERENT ('The sky appears blue because Earth's atmosphere scatters shorter wavelengths...').
+
+BUG C (runs 27b/c, OPEN -- the wall): non-deterministic cross-device VISIBILITY race. temp0 (greedy =
+  must be deterministic) gives DIFFERENT outputs across identical requests -> a real race. ~25-33% coherent,
+  rest '!'/newline/period floods with weird prefixes (milfs/oplast/{EIF/engo) that sometimes recover into
+  correct text. The consume-ack fixed ORDERING (clobber); this is DATA visibility: the flag becomes
+  observable before the peer's payload P2P writes drain to my memory, so the reduce reads a stale slot.
+  Consumer per-element acquire fence: 4/15 (no help, too slow, reverted). Producer system-scope release
+  fence in the flag kernel before the flag store: 5/15 (kept -- correct intent, negligible cost, insufficient).
+  => system-scope atomic_fences do NOT enforce Xe2/DPC++-2025.3 cross-device P2P data-arrival ordering.
+  This is the class the original K.3-K.5 L0 HW-semaphore (command-streamer wait) solved correctly -- but
+  that path breaks XPUGraph capture_end finalize (ext_codeplay native-cmd bisect MODE 2). Wedged between
+  correct-sync-that-cant-capture and captures-but-races.
+
+VERDICT: capture of the W8A8 MTP verify is now mechanically working and CAN be coherent (proven end-to-end
+  on passing requests) -- the ONLY remaining blocker is a correct, capturable cross-device sync. NEXT:
+  (a) consumer data-arrival CHECKSUM/re-read (SYCL-only, tolerates arbitrary arrival order), (b) an alternate
+  capturable HW-semaphore primitive, (c) upstream the DPC++ ext_codeplay finalize bug. Perf number still
+  gated on coherence (never got a clean t/s). Config: GRAPH_BACKEND=full EAGER_COLL=0 PUSHAR=1 PUSH_AR_MAXB=256MB.
+  New microbenches: slot_alloc_test.py, allgather_emul_test.py, ar_integration_test.py (all in graph_mtp/).
+  Commits ada5def (slots) + 77370cc (consume-ack) + f294909 (visibility findings). DD restored (RADIX=1).
