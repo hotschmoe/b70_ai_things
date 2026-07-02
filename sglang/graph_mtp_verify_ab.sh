@@ -39,11 +39,10 @@ DECODE_ATTN="${DECODE_ATTN:-triton}"
 # section 4) TP collectives run EAGER between segments -- the vLLM-PIECEWISE-equivalent shape.
 # Under breakable the intel_xpu XMX attn is fine EVERYWHERE (runs eager), so ATTN_ARGS goes single-backend.
 GRAPH_BACKEND="${GRAPH_BACKEND:-breakable}"
-if [ "$GRAPH_BACKEND" = breakable ]; then
-  ATTN_ARGS="--attention-backend intel_xpu"
-else
-  ATTN_ARGS="--prefill-attention-backend $PREFILL_ATTN --decode-attention-backend $DECODE_ATTN --speculative-attention-mode decode"
-fi
+# The fork's breakable backend only breaks ATTENTION eager on the extend/tc_piecewise path -- decode/
+# TARGET_VERIFY attention is CAPTURED (run 8: intel_xpu scratch-memory error even under breakable). So
+# keep the run-3 split: triton (capturable) for the decode/verify path, intel_xpu XMX for eager prefill.
+ATTN_ARGS="--prefill-attention-backend $PREFILL_ATTN --decode-attention-backend $DECODE_ATTN --speculative-attention-mode decode"
 # RUN 4 hang root-cause hypothesis: oneCCL all-reduces RECORDED into the captured verify graph deadlock
 # at replay (host-staged half never re-executes) -> both ranks wedge, next eager D2H spins in
 # appendUSMMemcpy (watchdog stack: mtp_tree_xpu _build_tree sl.tolist). Fix = the K.6 capturable
@@ -76,6 +75,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
   -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
   -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 -e B70_XPU_DRAFT_GRAPH=$DRAFT_GRAPH \
+  -e B70_XPU_EAGER_COLLECTIVES=${EAGER_COLL:-1} \
   "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
     exec python -m sglang.launch_server --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \

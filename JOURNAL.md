@@ -7089,3 +7089,23 @@ PIVOT (RUN 6, in flight): --cuda-graph-backend-decode breakable (the fork/upstre
   section 4 now wraps XpuCommunicator.all_reduce + GroupCoordinator.all_gather in eager_on_graph -> ALL TP
   collectives run eagerly between segments at capture AND replay. This is exactly the vLLM-PIECEWISE shape
   that was the only working captured-TP config on this box. Launch-heavy linear/norm chains still capture.
+
+## 2026-07-02 -- capture RUNs 6-8: breakable API shim + the REAL breakable semantics (attention only breaks on prefill) [progress]
+
+RUN 6 (breakable, single intel_xpu attn, collectives wrapped eager_on_graph): fast clean fail --
+  XPUGraph.capture_begin() lacks CUDA's capture_error_mode kwarg. FIXED: woq_shim now redirects
+  torch.cuda.CUDAGraph to a _B70XPUGraph adapter subclass that drops the kwarg.
+RUN 7 (same + adapter): rank0 SEGFAULT in BreakableCUDAGraphCapture.__exit__ -> _end_current_segment ->
+  torch/xpu/graphs.py capture_end. Microbenches CLEARED torch.xpu itself: empty capture OK, 4-segment
+  shared-pool capture+replay OK on B70. Likely the segfault is capture_end during EXCEPTION UNWINDING
+  (masking the real error below) -- a breakable-backend error-path bug on XPU.
+RUN 8 (breakable, collective wraps OFF -- discriminator): the REAL error resurfaces = the intel_xpu
+  scratch-memory wall. ROOT INSIGHT: the fork's breakable backend only breaks attention eager on the
+  EXTEND/tc_piecewise path (radix_attention.py: is_extend() and get_tc_piecewise_forward_context());
+  DECODE/TARGET_VERIFY attention goes straight to the backend and is CAPTURED. deepseek/nemotron wrap
+  their decode attention entries in eager_on_graph explicitly (model-specific); qwen3_5 has no such wrap.
+  So under breakable-decode the intel_xpu mha still records -> scratch error (run 8), and with my
+  collective wraps the same error got masked by the __exit__ segfault (run 7).
+RUN 9 (in flight): breakable + eager_on_graph collectives + the PROVEN-capturable triton decode/verify
+  attention (prefill keeps intel_xpu XMX): no scratch wall (run 3 captured triton fine), no recorded
+  oneCCL (breaks at every all_reduce/all_gather = vLLM-PIECEWISE semantics).

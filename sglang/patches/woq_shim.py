@@ -343,7 +343,13 @@ def _install():
     # We flip support_cuda_graph->True and redirect torch.cuda.{CUDAGraph,graph,graph_pool_handle}->torch.xpu.
     if os.environ.get("B70_XPU_CUDAGRAPH") == "1":
         try:
-            torch.cuda.CUDAGraph = torch.xpu.XPUGraph
+            # Adapter: the BREAKABLE graph backend calls capture_begin(pool=..., capture_error_mode=...)
+            # (CUDA signature); torch.xpu.XPUGraph.capture_begin only takes pool. Drop the extra kwarg.
+            class _B70XPUGraph(torch.xpu.XPUGraph):
+                def capture_begin(self, pool=None, capture_error_mode=None):
+                    return super().capture_begin(pool=pool)
+
+            torch.cuda.CUDAGraph = _B70XPUGraph
             torch.cuda.graph_pool_handle = torch.xpu.graph_pool_handle
 
             # sglang's full_cuda_graph_backend does `self._device_module.graph(cuda_graph=graph, ...)` where
