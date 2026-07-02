@@ -75,6 +75,7 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 
 ## Environment
 
-2x Intel Arc Pro B70 (Battlemage, 32 GB each), Ubuntu kernel 7.0, run locally as `hotschmoe`. Images:
+2x Intel Arc Pro B70 (Battlemage, 32 GB each), Ubuntu kernel 7.1 (since 2026-07-02; cured the TP=2 wedge),
+run locally as `hotschmoe`. Images:
 sglang `sglang-xpu:mtp`, vLLM `vllm-xpu-env:{v0230,v0230moe,int8g}`. Every GPU touch goes through the
 shared lease (`bin/gpu-run`); TP=2 = both cards. The smoke/bench gate is `bin/serve-sweep`.
