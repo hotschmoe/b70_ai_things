@@ -156,9 +156,18 @@ sudo dpkg -i ./*.deb
 sudo apt-mark hold intel-opencl-icd libze-intel-gpu1 intel-ocloc libigdgmm12 intel-igc-core-2 intel-igc-opencl-2
 cd ..
 
-# 4.4 remove the 7.0-era GuC pin, rebuild initramfs
+# 4.4 remove the 7.0-era GuC pin, build the 7.1 initramfs
+# GOTCHA (hit 2026-07-02): the mainline unsigned 7.1 deb installed vmlinuz but LEFT NO initrd
+# (/boot/initrd.img-7.1.0-070100-generic was absent). Booting 7.1 with no initrd = failed boot
+# (fatal on a headless box). `update-initramfs -u` does NOT create a missing initrd -- use -c.
+# Also: build ONLY 7.1, NOT `-k all` -- leave the 7.0 initrds untouched so they keep the 70.54
+# GuC pin baked in = a truly known-good rollback (the modprobe.d pin is copied into each initrd).
 sudo rm /etc/modprobe.d/xe-bmg-guc.conf
-sudo update-initramfs -u -k all
+sudo update-initramfs -c -k 7.1.0-070100-generic   # if it says "already exists": -u -k 7.1.0-070100-generic
+sudo update-grub
+# VERIFY before reboot -- BOTH files must exist and the default entry must point at 7.1:
+ls -l /boot/vmlinuz-7.1.0-070100-generic /boot/initrd.img-7.1.0-070100-generic
+sudo grep -m1 -A20 "menuentry 'Ubuntu'" /boot/grub/grub.cfg | grep -E 'vmlinuz|initrd'
 
 # 4.5 boot into 7.1 as the PERMANENT default (HEADLESS: GRUB_DEFAULT=0 already boots newest = 7.1)
 dpkg -l | grep 7.1.0-070100          # confirm image + modules + headers all installed
