@@ -7011,3 +7011,39 @@ DECODE BUDGET (derived, to be profile-confirmed): iteration ~207ms yields ~4 tok
   M=11 + 10 draft steps), NOT AR-bound. Graph capture of verify+draft = the 2-3x lever; push-AR = a few %.
 VERDICT: baseline banked; harness now truthful. NEXT: push-AR port A/B (bounded, in flight) -> then the
   capture campaign.
+
+## 2026-07-02 -- push-AR ported to sglang: CORRECT but +0% eager (decode is NOT AR-bound); kept for the capture path [result]
+
+CONFIG: sglang/push_ar_ab.sh -- DD config (W8A8 fused+MTP TP=2 eager) + sglang/patches/push_ar_xpu.py
+  (port of the vLLM _push_ar_patch: monkeypatch XpuCommunicator.all_reduce -> libxpu_push_ar_graph.so,
+  woq_shim chain B70_XPU_PUSH_AR=1; sglang-specific: dist.get_rank(self.group), one-pair-per-process guard,
+  fixed sock path). GroupCoordinator.all_reduce on xpu dispatches to XpuCommunicator -> same injection point.
+COMMAND: /mnt/vm_8tb/b70/gpu-run bash sglang/push_ar_ab.sh
+RESULT: ENGAGED (120k+ all-reduces via push, fallback=0, ~91% decode-sized), COHERENT, no wedge.
+  WARM c1 decode 25.07 t/s / TTFT 589ms vs same-day baseline 25.06 / 545 -> NO CHANGE (within noise).
+  c4 5.98 vs 6.13 (~tie). Soak (fixed probe) 19.58 t/s sustained, tok/delta 4.01.
+  Note: ~2min stall at first AR (rendezvous while oneCCL also inits its non-AR collectives) -> one health
+  503 blip at startup, then clean.
+VERDICT: CONFIRMS the budget analysis -- the ~128 x 10KB ARs (~11ms) are only ~5% of the ~220ms MTP
+  iteration; halving AR latency moves nothing. Decode at TP=2 w8a8+MTP is LAUNCH/PYTHON-bound. push-AR
+  stays as infrastructure for the CAPTURE config (ar_allreduce_graph is our only graph-recordable AR).
+  ALSO: accept len 5.50 (short-gen) / 4.0 (2k-token sustained) from the fixed soak probe + decode logs.
+  Codex consult ranked push-AR #1 (+20-35%) -- REFUTED by measurement; its "!!!!"-diagnosis + PP=2 idea noted.
+
+## 2026-07-02 -- capture campaign Step 1: TARGET_VERIFY static metadata hooks + import-order bug found [progress]
+
+- xpu_cudagraph.py extended (codex-drafted, reviewed): TARGET_VERIFY (topk<=1) static buffers
+  (cache_seqlens=seq_lens+draft, precomputed cu_seqlens_q arange step draft, cumsum cu_seqlens_k,
+  token-level page_table refill) mirroring the eager xpu_backend branch; topk>1/draft-extend stay eager.
+- Section 3 restructured: draft-graph capture now a SEPARATE opt-in (B70_XPU_DRAFT_GRAPH=1; the 06-28
+  draft replay HUNG); default patches EagleDraftWorker._capture_cuda_graphs to SKIP cleanly -> the
+  intended Step-2 shape "target-verify captured, draft eager".
+- IMPORT-ORDER BUG (likely a root fragment of the 06-28 "install breaks spec" mystery): eagle_worker_v2
+  imports build_tree_kernel_efficient BY NAME; xpu_cudagraph section 3 imports eagle_worker_v2 BEFORE
+  mtp_tree_xpu patched eagle_utils -> the worker kept the unregistered CUDA op. FIXED both ways:
+  mtp_tree_xpu re-binds in already-imported eagle_worker_v2 + woq_shim now installs MTP before CUDAGRAPH.
+- Discovery: the fork's hybrid_linear_attn_backend (GDN/mamba side) ALREADY has target_verify out_graph
+  support -> only the full-attn XPUAttentionBackend lacked hooks. Runner drives TARGET_VERIFY as the
+  capture mode natively when spec is on (decode_cuda_graph_runner ~236).
+- Experiment: sglang/graph_mtp_verify_ab.sh (in flight). Sources snapshot sglang/graph_mtp/src/;
+  hazards notes sglang/graph_mtp/NOTES_codex.md.

@@ -325,6 +325,19 @@ def _install():
     except Exception as e:
         print(f"[woq-shim] cuda->xpu redirect failed: {e}", flush=True)
 
+    # --- MTP/NEXTN tree kernels (the stable-speedup lever; OPT-IN via B70_XPU_MTP=1) ---
+    # sgl_kernel's build_tree_kernel_efficient + verify_tree_greedy are CUDA-only (unregistered on XPU).
+    # Install pure-torch chain (topk=1) fallbacks so NEXTN spec-decode runs. MUST run BEFORE the CUDAGRAPH
+    # section: xpu_cudagraph section 3 imports eagle_worker_v2, which binds build_tree_kernel_efficient
+    # BY NAME -- patching eagle_utils after that import would leave the worker on the CUDA op. (mtp_tree_xpu
+    # also re-binds defensively if eagle_worker_v2 is already imported.)
+    if os.environ.get("B70_XPU_MTP") == "1":
+        try:
+            import mtp_tree_xpu
+            mtp_tree_xpu.install()
+        except Exception as e:
+            print(f"[woq-shim] MTP tree fallback install FAILED: {e}", flush=True)
+
     # --- XPU CUDAGRAPH (the eager-ceiling breaker; OPT-IN via B70_XPU_CUDAGRAPH=1) ---
     # torch.xpu supports graph capture (XPUGraph/graph); the GDN + triton attn backends have graph state.
     # We flip support_cuda_graph->True and redirect torch.cuda.{CUDAGraph,graph,graph_pool_handle}->torch.xpu.
@@ -359,17 +372,6 @@ def _install():
                 print(f"[woq-shim] xpu_cudagraph.install FAILED: {_e}", flush=True)
         except Exception as e:
             print(f"[woq-shim] xpu cudagraph enable FAILED: {e}", flush=True)
-
-    # --- MTP/NEXTN tree kernels (the stable-speedup lever; OPT-IN via B70_XPU_MTP=1) ---
-    # sgl_kernel's build_tree_kernel_efficient + verify_tree_greedy are CUDA-only (unregistered on XPU).
-    # Install pure-torch chain (topk=1) fallbacks so NEXTN spec-decode runs. Must patch eagle_utils BEFORE
-    # eagle_worker_v2 imports build_tree_kernel_efficient (the shim runs at startup -> before server init).
-    if os.environ.get("B70_XPU_MTP") == "1":
-        try:
-            import mtp_tree_xpu
-            mtp_tree_xpu.install()
-        except Exception as e:
-            print(f"[woq-shim] MTP tree fallback install FAILED: {e}", flush=True)
 
     # --- W8A8 INT8 (torch._int_mm = oneDNN INT8 XMX, ~1.8x bf16; OPT-IN via B70_XPU_W8A8=1) ---
     if os.environ.get("B70_XPU_W8A8") == "1":

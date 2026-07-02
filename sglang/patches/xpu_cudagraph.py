@@ -1,3 +1,10 @@
+"""XPU cudagraph hooks for sglang on Intel B70.
+
+Spec TARGET_VERIFY capture is supported for topk<=1. Spec DRAFT capture stays
+separately gated in section 3; the intended MTP serve shape is target-verify
+captured while draft remains eager via this fork's per-phase cuda_graph_config
+decode backend gate in eagle_worker_v2._capture_cuda_graphs.
+"""
 # xpu_cudagraph.py -- wire torch.xpu.XPUGraph capture into sglang's decode path on Intel B70.
 # Stock sglang stays eager on XPU ("cuda graph: False") because (a) model_runner.init_cuda_graphs gates
 # init_decode_cuda_graph() behind a hardcoded device allow-list ("cuda","musa","cpu","npu") that omits "xpu",
@@ -10,7 +17,7 @@
 # XPUAttentionBackend for the NORMAL DECODE (no-spec, topk<=1) case: a fixed-width TOKEN-LEVEL static
 # page_table [max_bs, max_context_len] + static cache_seqlens/cu_seqlens, refilled IN-PLACE each replay
 # (cache_seqlens bounds the kernel read, so the zero-padded tail is ignored). The GDN/mamba sub-backend is
-# already capture-safe (static MambaPool + in-place writes). Spec-decode (MTP) graph is NOT handled here.
+# already capture-safe (static MambaPool + in-place writes). MTP target-verify graph is handled for topk<=1.
 # Gated opt-in via B70_XPU_CUDAGRAPH=1 (installed from woq_shim). No-op unless sglang+xpu present.
 import os
 
@@ -57,6 +64,7 @@ def install():
 
     def init_cuda_graph_state(self, max_bs, max_num_tokens):
         dev = self.device
+        draft = int(getattr(self, "speculative_num_draft_tokens", 0) or 0)
         self._b70_cg = {
             "cache_seqlens": torch.zeros(max_bs, dtype=torch.int32, device=dev),
             "cu_seqlens_q": torch.arange(0, max_bs + 1, dtype=torch.int32, device=dev),
@@ -64,9 +72,24 @@ def install():
             # TOKEN-level page_table (matches the eager XPU path: req_to_token[req, :len]), fixed width.
             "page_table": torch.zeros(max_bs, self.max_context_len, dtype=torch.int32, device=dev),
         }
+        self._b70_target_verify_cg = {
+            "cache_seqlens": torch.zeros(max_bs, dtype=torch.int32, device=dev),
+            "cu_seqlens_q": (
+                torch.arange(0, max_bs * draft + 1, step=draft, dtype=torch.int32, device=dev)
+                if draft > 0
+                else torch.zeros(max_bs + 1, dtype=torch.int32, device=dev)
+            ),
+            "cu_seqlens_k": torch.zeros(max_bs + 1, dtype=torch.int32, device=dev),
+            # TOKEN-level page_table for target-verify: req_to_token[req, :max_seq_len_k].
+            "page_table": torch.zeros(max_bs, self.max_context_len, dtype=torch.int32, device=dev),
+        }
         self.decode_cuda_graph_metadata = {}
+        self.target_verify_metadata = {}
         if dbg:
-            print(f"[xpu-cudagraph] init_cuda_graph_state max_bs={max_bs} max_ctx={self.max_context_len}", flush=True)
+            if draft > 0:
+                print(f"[xpu-cudagraph] init_cuda_graph_state max_bs={max_bs} max_ctx={self.max_context_len} draft={draft}", flush=True)
+            else:
+                print(f"[xpu-cudagraph] init_cuda_graph_state max_bs={max_bs} max_ctx={self.max_context_len}", flush=True)
 
     def _b70_bind(self, bs):
         b = self._b70_cg
@@ -91,12 +114,48 @@ def install():
         # page_table[:, :max_len] <- req_to_token[req, :max_len] (in-place); tail untouched (cache_seqlens bounds).
         m.page_table[:, :max_len].copy_(self.req_to_token[req_pool_indices, :max_len])
 
+    def _b70_bind_target_verify(self, bs):
+        b = self._b70_target_verify_cg
+        m = FlashAttentionMetadata()
+        m.cache_seqlens_int32 = b["cache_seqlens"][:bs]
+        m.cu_seqlens_q = b["cu_seqlens_q"][: bs + 1]
+        m.cu_seqlens_k = b["cu_seqlens_k"][: bs + 1]
+        m.page_table = b["page_table"][:bs]
+        m.max_seq_len_q = int(getattr(self, "speculative_num_draft_tokens", 0) or 0)
+        self.target_verify_metadata[bs] = m
+        return m
+
+    def _b70_fill_target_verify(self, bs, req_pool_indices, seq_lens):
+        m = self.target_verify_metadata[bs]
+        draft = int(getattr(self, "speculative_num_draft_tokens", 0) or 0)
+        seq_lens = seq_lens[:bs]
+        req_pool_indices = req_pool_indices[:bs]
+        max_len = int(seq_lens.max().item()) + draft
+        m.max_seq_len_k = max_len
+        m.cache_seqlens_int32.copy_((seq_lens + draft).to(torch.int32))
+        # cu_seqlens_k = [0, cumsum(seq_lens + draft)]; index 0 stays 0 (static zero buffer).
+        torch.cumsum(m.cache_seqlens_int32, dim=0, dtype=torch.int32, out=m.cu_seqlens_k[1:])
+        # page_table[:, :max_len] <- req_to_token[req, :max_len] (in-place); tail untouched (cache_seqlens bounds).
+        m.page_table[:, :max_len].copy_(self.req_to_token[req_pool_indices, :max_len])
+
     def init_forward_metadata_out_graph(self, forward_batch, in_capture=False):
         # Called by the hybrid wrapper for the full-attn sub-backend: at capture (in_capture=True) and
         # before each replay (in_capture=False, line ~950 of decode_cuda_graph_runner).
         fm = forward_batch.forward_mode
+        if (
+            fm.is_target_verify()
+            and getattr(self, "topk", 1) <= 1
+            and forward_batch.spec_info is not None
+            and int(getattr(self, "speculative_num_draft_tokens", 0) or 0) > 0
+        ):
+            bs = forward_batch.batch_size
+            if in_capture or bs not in self.target_verify_metadata:
+                _b70_bind_target_verify(self, bs)
+            _b70_fill_target_verify(self, bs, forward_batch.req_pool_indices, forward_batch.seq_lens)
+            self.forward_metadata = self.target_verify_metadata[bs]
+            return None
         if not (fm.is_decode_or_idle() and forward_batch.spec_info is None):
-            # spec/verify/extend not handled by this graph patch -- leave eager metadata (won't be captured here).
+            # topk>1 spec, draft-extend, and other modes stay on the eager metadata path.
             return XPUAttentionBackend.init_forward_metadata(self, forward_batch)
         bs = forward_batch.batch_size
         if in_capture or bs not in self.decode_cuda_graph_metadata:
@@ -119,27 +178,38 @@ def install():
         XPUAttentionBackend.on_after_cuda_graph_warmup = on_after_cuda_graph_warmup
     print("[xpu-cudagraph] XPUAttentionBackend decode graph hooks installed (no-spec, token-level static page_table)", flush=True)
 
-    # ---- 3. (graph+MTP STACK) open the EAGLE/NEXTN spec-decode DRAFT cuda-graph device gate to xpu ----
-    # When B70_XPU_MTP=1 too, NEXTN runs via EagleDraftWorker._capture_cuda_graphs, whose Device2Draft/
-    # Device2Extend CudaGraphRunner dicts are keyed {npu,cuda,musa} -> KeyError on xpu (num_steps>1). The runner
-    # classes themselves are device-agnostic (use get_device_module = torch.xpu) and the triton draft backend has
-    # init_cuda_graph_state, so adding "xpu" lets the DRAFT forward capture. The TARGET-VERIFY forward is captured
-    # by the main DecodeCudaGraphRunner (gate already opened above; triton handles target_verify metadata).
+    # ---- 3. (graph+MTP STACK) EAGLE/NEXTN spec-decode DRAFT cuda-graph handling on xpu ----
+    # When B70_XPU_MTP=1 and graphs are globally ON, EagleDraftWorker._capture_cuda_graphs runs; its
+    # Device2Draft/Device2Extend CudaGraphRunner dicts are keyed {npu,cuda,musa} -> KeyError on xpu
+    # (num_steps>1). Two modes:
+    #   B70_XPU_DRAFT_GRAPH=1  -> add "xpu" to the dicts so the DRAFT forward captures too (the 2026-06-28
+    #                             attempt HUNG on replay -- keep opt-in until root-caused).
+    #   default                -> patch _capture_cuda_graphs to SKIP cleanly (runners=None) so the draft
+    #                             chain stays EAGER while the main DecodeCudaGraphRunner still captures the
+    #                             TARGET_VERIFY forward (metadata hooks in section 2). This is the intended
+    #                             "target captured, draft eager" Step-2 config.
     if os.environ.get("B70_XPU_MTP") == "1":
         try:
             import inspect as _insp, textwrap as _tw
             import sglang.srt.speculative.eagle_worker_v2 as _ew
-            _src = _tw.dedent(_insp.getsource(_ew.EagleDraftWorker._capture_cuda_graphs))
-            _d = '"cuda": EAGLEDraftCudaGraphRunner,'
-            _e = '"cuda": EAGLEDraftExtendCudaGraphRunner,'
-            if _d in _src and _e in _src:
-                _src = _src.replace(_d, _d + '\n            "xpu": EAGLEDraftCudaGraphRunner,')
-                _src = _src.replace(_e, _e + '\n            "xpu": EAGLEDraftExtendCudaGraphRunner,')
-                _ns = dict(_ew.__dict__)
-                exec(_src, _ns)
-                _ew.EagleDraftWorker._capture_cuda_graphs = _ns["_capture_cuda_graphs"]
-                print("[xpu-cudagraph] EAGLE draft cuda-graph gate: added 'xpu' (graph+MTP stack)", flush=True)
+            if os.environ.get("B70_XPU_DRAFT_GRAPH") == "1":
+                _src = _tw.dedent(_insp.getsource(_ew.EagleDraftWorker._capture_cuda_graphs))
+                _d = '"cuda": EAGLEDraftCudaGraphRunner,'
+                _e = '"cuda": EAGLEDraftExtendCudaGraphRunner,'
+                if _d in _src and _e in _src:
+                    _src = _src.replace(_d, _d + '\n            "xpu": EAGLEDraftCudaGraphRunner,')
+                    _src = _src.replace(_e, _e + '\n            "xpu": EAGLEDraftExtendCudaGraphRunner,')
+                    _ns = dict(_ew.__dict__)
+                    exec(_src, _ns)
+                    _ew.EagleDraftWorker._capture_cuda_graphs = _ns["_capture_cuda_graphs"]
+                    print("[xpu-cudagraph] EAGLE draft cuda-graph gate: added 'xpu' (graph+MTP stack)", flush=True)
+                else:
+                    print("[xpu-cudagraph] WARN: EAGLE draft gate needles not found (upstream changed) -- draft stays eager", flush=True)
             else:
-                print("[xpu-cudagraph] WARN: EAGLE draft gate needles not found (upstream changed) -- draft stays eager", flush=True)
+                def _skip_draft_capture(self):
+                    self.cuda_graph_runner = None
+                    self.cuda_graph_runner_for_draft_extend = None
+                    print("[xpu-cudagraph] draft cuda-graphs SKIPPED (B70_XPU_DRAFT_GRAPH!=1) -- draft eager, target-verify captured", flush=True)
+                _ew.EagleDraftWorker._capture_cuda_graphs = _skip_draft_capture
         except Exception as e:
             print(f"[xpu-cudagraph] EAGLE draft gate patch FAILED: {e}", flush=True)

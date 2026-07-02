@@ -141,6 +141,14 @@ def install():
 
     eu.build_tree_kernel_efficient = _build_tree
     eu.verify_tree_greedy_func = _verify
+    # eagle_worker_v2 imports build_tree_kernel_efficient BY NAME (from ... import), so if it was
+    # imported before this install (e.g. xpu_cudagraph section 3 imports it under B70_XPU_CUDAGRAPH=1),
+    # its module-global still points at the unregistered CUDA op -> crash at first spec forward. Re-bind.
+    import sys as _sys
+    _ewv2_mod = _sys.modules.get("sglang.srt.speculative.eagle_worker_v2")
+    if _ewv2_mod is not None and hasattr(_ewv2_mod, "build_tree_kernel_efficient"):
+        _ewv2_mod.build_tree_kernel_efficient = _build_tree
+        print("[mtp-tree-xpu] re-bound build_tree_kernel_efficient in already-imported eagle_worker_v2", flush=True)
 
     # --- THE MTP UNBLOCK (2026-06-27): the spec-decode VERIFY out_cache_loc is None on XPU, not a bad index.
     # triton_ops/cache_locs.py:assign_extend_cache_locs_func gates on _is_cuda/_is_hip/_is_musa/_is_npu with
