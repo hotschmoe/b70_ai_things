@@ -1,5 +1,12 @@
 # TP=2 hardware wedge ROOT CAUSE: BCS (copy engine) kernel-job timeout on xe/GuC (2026-06-25)
 
+> **RESOLVED 2026-07-02 by the host upgrade to kernel 7.1 + ICR 26.22.38646.4 (docs/20260702_kernel71_upgrade_plan.md).**
+> On 7.1 both cards use GuC **70.58.0 with NO "(wanted X)"** skew (7.1's KMD wants 70.58.0), so the 70.54.0 pin
+> below is RETIRED (removed; do NOT re-add on 7.1). 5/5 back-to-back TP=2 W8A8 fused+MTP serve cycles ran clean
+> with ZERO Engine reset/DEVICE_LOST/Timedout/bcs. This is the real cure vs the 70.54 pin workaround (which was
+> "rare, not impossible"). One SUSTAINED concurrent-decode soak still owed before formally lifting the
+> "w8a8 TP=2 = attended-only" rule. History below is the 7.0-era diagnosis; kept for the record.
+
 Status: ROOT-CAUSED **and FIX CONFIRMED** (2026-06-25). The wedge was the "device_lost / cumulative-TP2 wedge".
 This is a DRIVER/FIRMWARE bug in the Intel xe + GuC stack on Battlemage B70 -- NOT a vLLM bug.
 

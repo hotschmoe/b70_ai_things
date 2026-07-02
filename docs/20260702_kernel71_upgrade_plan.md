@@ -1,8 +1,9 @@
 # HOST-UPGRADE PLAN -- cure the dual-B70 TP=2 wedge (kernel 7.1 + Intel Compute Runtime 26.22.38646.4)
 
-Status: PLAN (nothing installed/executed). Drafted 2026-07-02; pre-flight VERIFIED 2026-07-02 (see section 8).
-Decision: install kernel **7.1 GA** (build 202606141628) -- NOT a 7.1.x point release, NOT 7.2 (both reasoned in
-section 8). Execute in a GPU-idle maintenance window (this box is the daily driver + the NAS). Cross-ref: vLLM
+Status: **EXECUTED 2026-07-02 -- SUCCESS. TP=2 BCS/GuC wedge CURED** (5/5 clean TP=2 W8A8 cycles, zero Engine
+reset/DEVICE_LOST/Timedout; GuC 70.58.0 with no "(wanted)" skew, pin-free; see JOURNAL 2026-07-02). Installed
+kernel **7.1 GA** (build 202606141628) + ICR 26.22.38646.4 + IGC 2.36.3, headless boot model, GuC pin removed.
+Original decision rationale (7.1 GA -- NOT a 7.1.x point release, NOT 7.2) reasoned in section 8. Execute in a GPU-idle maintenance window (this box is the daily driver + the NAS). Cross-ref: vLLM
 issue #41663 (our exact hardware), docs/20260625_bcs_wedge_rootcause.md, docs/20260624_devicelost_thoughts.md,
 AGENTS.md (GPU Discipline), MIGRATION.md (sections 10/12/13).
 

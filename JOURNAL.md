@@ -6956,3 +6956,31 @@ VERDICT: int8 mamba checkpoint is a clean win (2x capacity, no coherence/decode 
   config = extra_buffer + int8-checkpoint + intel_xpu XMX + page 128. DD brought up via DD_ENV="RADIX=1".
   Watch: pool is 0.6GB from headroom -- if OOM at full 128k ctx, lower mem-fraction slightly. Script:
   sglang/extra_buffer_int8ckpt_sweep.sh. NEXT SESSION: kernel 7.1 host upgrade + vLLM v0.23.0 rebase.
+
+## 2026-07-02 -- HOST UPGRADE kernel 7.1 + ICR 26.22: TP=2 BCS/GuC wedge CURED [result]
+
+CONFIG: kernel 7.0.0-27 -> mainline 7.1.0-070100-generic (unsigned; Secure Boot off). Intel Compute Runtime
+  26.05.37020.3 -> 26.22.38646.4 + its mandatory IGC 2.36.3 companion (intel-igc-{core,opencl}-2). GuC 70.54.0
+  PIN REMOVED (/etc/modprobe.d/xe-bmg-guc.conf deleted); linux-firmware unchanged (ships bmg_guc_70.bin=70.58.0).
+  Headless boot model: GRUB_DEFAULT=0 (newest=7.1), GRUB_RECORDFAIL_TIMEOUT=15; 7.0 initrds left pinned for
+  rollback. Motive: cure the TP=2 BCS copy-engine / GuC-skew wedge (docs/20260625_bcs_wedge_rootcause.md, vLLM
+  #41663). Our cards are cross-root-complex (pci0000:00 vs pci0000:40) = F3zz1k's confirmed-working case. Full
+  runbook + the three execution gotchas (IGC dep; the 7.1 deb left NO initrd; sycl-ls is container-only) in
+  docs/20260702_kernel71_upgrade_plan.md.
+COMMAND: (host, GPU-idle) install 7.1 + ICR/IGC debs; rm GuC pin; update-initramfs -c -k 7.1.0-070100-generic;
+  update-grub; reboot. Verify: uname -r; dmesg guc; clinfo -l; IMG=sglang-xpu:mtp bin/xpu-health; then 5x
+  ./bin/gpu-run bash rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh smoke
+RESULT:
+  - uname 7.1.0-070100-generic. GuC: BOTH cards, BOTH GTs "Using GuC firmware from xe/bmg_guc_70.bin version
+    70.58.0" with NO "(wanted X)" -- the 70.58-vs-70.54 KMD skew is GONE (7.1 KMD wants 70.58.0), pin-free.
+  - clinfo: both B70 under Driver 26.22.38646.4. xpu-health HEALTHY (cards 0 1).
+  - 5/5 TP=2 W8A8 fused+MTP serve cycles CLEAN: /health 200 in ~100-105s, COHERENCE OK, exit 0, ~288-293s each;
+    pre-flight AND post-teardown xpu-health HEALTHY every cycle. (Old wedge hit within ~3 serves / even serve 1.)
+  - dmesg post-soak: ZERO Engine reset / DEVICE_LOST / Timedout / bcs. Only benign boot-time "ccs1/2/3 fused off"
+    (hardware engine fusing at ~8-9s), NOT the CCS-reset wedge symptom.
+VERDICT: the 7.1 + ICR-26.22 upgrade CURED the TP=2 BCS/GuC wedge at the confirmed-gate level (5/5 clean; the
+  root-cause firmware<->KMD skew is resolved; the 70.54 pin is no longer needed and must NOT be re-added on 7.1).
+  This is the real fix vs the 70.54 pin workaround ("rare, not impossible"). STILL OPEN before lifting the
+  "w8a8 TP=2 = attended-only" rule: one SUSTAINED concurrent-decode soak (even 70.54-pinned still wedged card1
+  under sustained MTP+concurrency per the 2026-06-26 note). NEXT: restart daily driver; bin/serve-sweep --smoke
+  shelf gate; then a long concurrent soak; optionally A/B GPU P2P (may not help on X399).
