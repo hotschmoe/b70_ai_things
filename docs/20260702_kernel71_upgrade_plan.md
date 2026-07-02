@@ -1,9 +1,10 @@
 # HOST-UPGRADE PLAN -- cure the dual-B70 TP=2 wedge (kernel 7.1 + Intel Compute Runtime 26.22.38646.4)
 
-Status: PLAN (nothing installed/executed). Drafted 2026-07-02. Execute in a GPU-idle maintenance window
-(this box is the daily driver + the NAS). Cross-ref: vLLM issue #41663 (our exact hardware),
-docs/20260625_bcs_wedge_rootcause.md, docs/20260624_devicelost_thoughts.md, AGENTS.md (GPU Discipline),
-MIGRATION.md (sections 10/12/13).
+Status: PLAN (nothing installed/executed). Drafted 2026-07-02; pre-flight VERIFIED 2026-07-02 (see section 8).
+Decision: install kernel **7.1 GA** (build 202606141628) -- NOT a 7.1.x point release, NOT 7.2 (both reasoned in
+section 8). Execute in a GPU-idle maintenance window (this box is the daily driver + the NAS). Cross-ref: vLLM
+issue #41663 (our exact hardware), docs/20260625_bcs_wedge_rootcause.md, docs/20260624_devicelost_thoughts.md,
+AGENTS.md (GPU Discipline), MIGRATION.md (sections 10/12/13).
 
 ## 0. What the box is right now (verified read-only 2026-07-02)
 
@@ -61,17 +62,42 @@ loader 1.28.6):
 - libze-intel-gpu1_26.22.38646.4-0_amd64.deb
 - intel-ocloc_26.22.38646.4-0_amd64.deb
 - libigdgmm12_22.10.0_amd64.deb
-Upgrades intel-opencl-icd + libze-intel-gpu1 from 26.05.37020.3 -> 26.22.38646.4. Does not bundle the L0
-loader (libze1); box has 1.28.2, release wants 1.28.6 (optional bump, see Unknowns).
+
+**MANDATORY companion: Intel Graphics Compiler (IGC) 2.x** -- 26.22 DEPENDS on `intel-igc-opencl-2 (>= 2.36.3, <<
+2.36.3+~)` and `intel-igc-core-2 (same)`, which are NOT on this box (it has the older IGC: `libigc2`/`libigdfcl2`
+2.28.4, plus IGC-1.x `libigc1`/`libigdfcl1`). The new runtime uses the RENAMED `intel-igc-*-2` packages. Get the
+matching build from https://github.com/intel/intel-graphics-compiler/releases/tag/v2.36.3:
+- intel-igc-core-2_2.36.3+21719_amd64.deb    (filename says +21719; the .deb's internal Version is `2.36.3`,
+- intel-igc-opencl-2_2.36.3+21719_amd64.deb   which is what satisfies the `>= 2.36.3, << 2.36.3+~` pin)
+
+Verified 2026-07-02 via `dpkg-deb -f`: internal Version = 2.36.3 (NOT 2.36.3+21719; the +build is filename-only,
+and `dpkg --compare-versions 2.36.3+21719 lt 2.36.3+~` is FALSE, so do not go by the filename). Upgrades
+intel-opencl-icd + libze-intel-gpu1 from 26.05.37020.3 -> 26.22.38646.4. Does not bundle the L0 loader (libze1);
+box has 1.28.2, release wants 1.28.6 (optional bump, see Unknowns).
+
+GOTCHA (hit 2026-07-02): installing the 4 runtime debs WITHOUT the 2 IGC debs fails the IGC dependency, and the
+`|| sudo apt -f install` fallback then REMOVES intel-opencl-icd + libze-intel-gpu1 to satisfy apt (leaving the box
+with no Intel OpenCL/L0 userspace). NEVER run `apt -f install` here -- put all 6 debs in one dir and
+`sudo dpkg -i ./*.deb` so they resolve among themselves.
 
 ### 2c. Firmware
 Remove the 70.54.0 pin, refresh linux-firmware (apt), let 7.1 load its wanted GuC, then verify the
 "using vs wanted" dmesg line matches. Do NOT carry the 70.54.0 pin onto 7.1.
 
-## 3. Pre-upgrade: bullet-proof rollback (display-attached box)
+## 3. Pre-upgrade: bullet-proof rollback (HEADLESS box; decision 2026-07-02)
 
-GRUB draws on the UEFI framebuffer BEFORE xe loads, so the menu is visible even if 7.1's xe is broken --
-but the menu is currently HIDDEN. Unhide it first.
+The box runs HEADLESS (no monitor normally attached). Decision: 7.1 is the PERMANENT default; rollback is manual
+(attach a monitor + keyboard, pick 7.0 at the GRUB menu). Two facts make this safe:
+- `GRUB_DEFAULT=0` boots the top-level "Ubuntu" entry, which Ubuntu always aims at the NEWEST installed kernel.
+  Once 7.1 is installed it becomes the default automatically -- NO `grub-reboot` / `grub-set-default` needed.
+- GRUB draws on the UEFI framebuffer BEFORE xe loads, so even a broken 7.1 xe still shows the menu when a
+  monitor is attached. Keep `GRUB_TIMEOUT_STYLE=menu` + `GRUB_TIMEOUT=15` so the menu is catchable.
+
+HEADLESS HARDENING: also set `GRUB_RECORDFAIL_TIMEOUT=15`. A failed boot sets `recordfail=1` (already set in this
+box's grubenv); without a finite recordfail timeout GRUB can wait FOREVER at the menu for a keypress that never
+comes on a headless box. A finite value counts down and proceeds. (It will re-attempt the 7.1 default after a
+failed boot, which is correct for "default 7.1 + manual rollback"; if you ever want zero-touch auto-fallback to
+7.0 instead, use the display-attached one-shot in 4.5-ALT.)
 
 ```bash
 # 3.1 back up state
@@ -83,9 +109,11 @@ lspci -nnk > lspci-before.txt; ls /sys/class/drm > drm-before.txt
 sudo dmesg | grep -iE 'guc|huc|xe ' > dmesg-xe-before.txt
 cp /etc/modprobe.d/xe-bmg-guc.conf ./xe-bmg-guc.conf.bak
 
-# 3.2 UNHIDE the GRUB menu (edit /etc/default/grub):
+# 3.2 UNHIDE the GRUB menu + headless hardening (edit /etc/default/grub):
 #   GRUB_TIMEOUT_STYLE=menu
 #   GRUB_TIMEOUT=15
+#   GRUB_RECORDFAIL_TIMEOUT=15   # headless: don't hang forever at the menu after a failed boot
+#   GRUB_DEFAULT=0               # keep 0 -> boots NEWEST kernel = 7.1 once installed (no grub-set-default)
 sudoedit /etc/default/grub
 sudo update-grub
 
@@ -112,26 +140,41 @@ sudo apt install ./linux-*7.1.0-070100*.deb                   # runs update-grub
 # 4.2 refresh firmware
 sudo apt update && sudo apt install --only-upgrade linux-firmware
 
-# 4.3 Intel Compute Runtime 26.22.38646.4
+# 4.3 Intel Compute Runtime 26.22.38646.4 + its MANDATORY IGC 2.36.3 companion
 ICR=https://github.com/intel/compute-runtime/releases/download/26.22.38646.4
+IGC=https://github.com/intel/intel-graphics-compiler/releases/download/v2.36.3
 mkdir icr && cd icr
 for f in intel-opencl-icd_26.22.38646.4-0_amd64.deb \
          libze-intel-gpu1_26.22.38646.4-0_amd64.deb \
          intel-ocloc_26.22.38646.4-0_amd64.deb \
          libigdgmm12_22.10.0_amd64.deb ; do wget -q "$ICR/$f"; done
-sudo dpkg -i ./*.deb || sudo apt -f install
-sudo apt-mark hold intel-opencl-icd libze-intel-gpu1 intel-ocloc libigdgmm12
+for f in "intel-igc-core-2_2.36.3+21719_amd64.deb" \
+         "intel-igc-opencl-2_2.36.3+21719_amd64.deb" ; do wget -q "$IGC/$f" -O "$f"; done
+# install ALL 6 together so the IGC<->runtime deps resolve among themselves.
+# DO NOT append "|| sudo apt -f install" -- on any dep miss it REMOVES the runtime (see 2b GOTCHA).
+sudo dpkg -i ./*.deb
+sudo apt-mark hold intel-opencl-icd libze-intel-gpu1 intel-ocloc libigdgmm12 intel-igc-core-2 intel-igc-opencl-2
 cd ..
 
 # 4.4 remove the 7.0-era GuC pin, rebuild initramfs
 sudo rm /etc/modprobe.d/xe-bmg-guc.conf
 sudo update-initramfs -u -k all
 
-# 4.5 one-shot boot into 7.1 (next power cycle falls back to 7.0 if 7.1 fails)
-sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 7.1.0-070100-generic"
+# 4.5 boot into 7.1 as the PERMANENT default (HEADLESS: GRUB_DEFAULT=0 already boots newest = 7.1)
+dpkg -l | grep 7.1.0-070100          # confirm image + modules + headers all installed
+sudo update-grub                     # regenerate; 7.1 is now newest => top-level "Ubuntu" boots it
 sync
 sudo reboot
 ```
+
+### 4.5-ALT. Display-attached ONLY (zero-touch auto-fallback; NOT used for this headless box)
+If a monitor were permanently attached and you wanted the box to auto-return to 7.0 on a failed 7.1 boot without
+any manual step, boot 7.1 ONCE and leave the default at 7.0:
+```bash
+sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 7.1.0-070100-generic"
+sync && sudo reboot
+```
+We are NOT doing this -- the box is headless and 7.1 is the chosen permanent default.
 
 ## 5. Post-upgrade verification (in order; stop at first failure -> roll back)
 
@@ -161,8 +204,12 @@ REBOOT between every attempt: `I_KNOW_P2P_WEDGES=1 CCL_TOPO_P2P_ACCESS=1 ./bin/g
 
 ## 6. Recovery
 
-- 7.1 hangs / black screen: power-cycle -> lands on 7.0.0-27 (one-shot entry) or pick it at the now-visible
-  GRUB menu (Advanced options > Ubuntu, with Linux 7.0.0-27-generic).
+- 7.1 boots but SSH is alive (e.g. only the GPU is broken): roll back over the network, NO monitor needed --
+  `sudo apt remove 'linux-*7.1.0-070100*' && sudo update-grub && sudo reboot` (newest is 7.0.0-27 again), or
+  revert ICR/firmware per below and stay on 7.1. This is the most likely failure mode.
+- 7.1 hangs / no network (headless, can't SSH in): attach a monitor + keyboard, power-cycle, and at the GRUB
+  menu (visible 15s) pick Advanced options for Ubuntu > Ubuntu, with Linux 7.0.0-27-generic. Then purge 7.1 as
+  above so the next unattended boot defaults to 7.0.
 - Boots 7.1 but GPUs misbehave: revert ICR + firmware:
   `sudo apt-mark unhold intel-opencl-icd libze-intel-gpu1 intel-ocloc libigdgmm12;`
   `sudo apt install --reinstall --allow-downgrades intel-opencl-icd=26.05.37020.3-1 libze-intel-gpu1=26.05.37020.3-1`
@@ -195,3 +242,41 @@ REBOOT between every attempt: `I_KNOW_P2P_WEDGES=1 CCL_TOPO_P2P_ACCESS=1 ./bin/g
 Sources: vLLM #41663; kernel.ubuntu.com/mainline/v7.1/amd64; github.com/intel/compute-runtime releases
 26.22.38646.4 and issue #922; repo AGENTS.md, MIGRATION.md, docs/20260625_bcs_wedge_rootcause.md,
 docs/20260624_devicelost_thoughts.md.
+
+## 8. Pre-flight verification + kernel-version decision (2026-07-02, read-only)
+
+All checks GO. The command list in sections 3-5 is unchanged; run as written with 7.1 GA.
+
+### 8a. Downloads live + no drift
+- Kernel 7.1 GA debs (build 202606141628): all 4 + CHECKSUMS return live (wget --spider OK).
+- ICR 26.22.38646.4 debs: all HTTP 200; `intel/compute-runtime` latest release tag IS still 26.22.38646.4 (no newer runtime to chase).
+- Disk: 275 GB free on / (holds /boot; no separate /boot partition). Ample.
+
+### 8b. Topology re-confirmed = F3zz1k's WORKING case
+Both B70 bound to `xe`. Cards are on DIFFERENT root complexes / dies:
+- card1 `0000:0b:00.0` -> root `pci0000:00` (via 00:03.1)
+- card0 `0000:44:00.0` -> root `pci0000:40` (via 40:03.1)
+`numa_node=-1` on both (board/kernel does not expose PCI NUMA; the root-complex split is the signal, and it holds).
+This is the cross-root-complex case F3zz1k confirmed stable for TP=2 on a 1950X + kernel >= 7.1.
+
+### 8c. Why 7.1 GA and NOT 7.1.1/7.1.2 (verified against the actual CHANGES)
+Point releases are pure stable backports; read in full:
+- 7.1.1: only drm change is `drm/amdgpu` (AMD). Rest = arm64 errata, driver-core, HID, fs. ZERO Intel xe.
+- 7.1.2: io_uring, ksmbd, fuse, virtiofs, agp, media, iio, serial, nfsd. ZERO Intel xe, ZERO drm/i915.
+=> A 7.1.x point release buys the B70 nothing over 7.1 GA (wedge fix already in 7.1 GA; no GPU perf content).
+Install 7.1 GA -- the exact build the upstream reporters validated.
+
+### 8d. 7.2 is where B70 work lands -- but only rc1 exists; defer to 7.2 GA
+7.2-rc1 is out (238 drm/xe commits). Battlemage-relevant items to re-evaluate AFTER 7.2 GA:
+- `drm/xe: Set GT rp min frequency as 1.2GHz default for BMG/CRI` -- the one direct BMG perf change; raises the
+  min GPU clock floor, targets the decode/light-load downclock (and possibly the display-attached card1 downclock).
+- BCS copy-engine changes (`Stop programming BLIT_CCTL on Xe2`, Xe2-blitter-instructions feature flag,
+  `Mark BCS engines as belonging to the GT forcewake domain`) -- touch the exact engine that wedges us; possible
+  extra wedge insurance.
+- `Restore IDLEDLY register on engine reset` (our CCS-reset path); L3-bank MCR steering on Xe2; OA/eustall profiling.
+Do NOT run an rc kernel on this daily-driver + NAS box; the wedge-cure evidence base is all on 7.1.
+
+### 8e. Reframe -- the real compute-perf lever is the runtime, not the kernel
+Kernel does scheduling/power/memory, not matmul codegen. INT8-XMX throughput lives in the compute-runtime/oneDNN/
+Level-Zero layer, which this plan already bumps (ICR 26.05.37020.3 -> 26.22.38646.4, Level-Zero spec 1.15.31).
+That runtime bump, not any 7.1->7.2 kernel delta, is what can move compute perf here.
