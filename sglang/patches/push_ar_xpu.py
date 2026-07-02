@@ -143,4 +143,50 @@ def install():
         return _orig_all_reduce(self, input_)
 
     XpuCommunicator.all_reduce = all_reduce
+
+    # ---- capture-time ALL_GATHER via zero-padded push-AR (PUSH_AR_GRAPH=1 only) ----
+    # oneCCL all_gather has NO SYCL-Graph-recordable impl (the vLLM splitting_ops finding; recording it
+    # HANGS capture on sglang). all_gather == sum of zero-padded per-rank slices, so during capture we
+    # emulate it with ONE recorded push-AR on a [ws, *shape] buffer. Mirrors GroupCoordinator.all_gather
+    # concat semantics (stack on dim0 -> movedim -> reshape). Eager path unchanged.
+    if GRAPH:
+        try:
+            import sglang.srt.distributed.parallel_state as _ps
+
+            _orig_all_gather = _ps.GroupCoordinator.all_gather
+
+            def _push_all_gather(self, input_, dim=-1, output_tensor_list=None):
+                comm = getattr(self, "xpu_communicator", None)
+                if (
+                    _is_capturing()
+                    and output_tensor_list is None
+                    and self.world_size == 2
+                    and comm is not None
+                    and getattr(comm, "_push_ar_ready", False)
+                    and input_.is_contiguous()
+                    and input_.dtype in DT
+                ):
+                    lib2 = _load_lib(so)
+                    ws = self.world_size
+                    input_size = input_.size()
+                    d = dim + input_.dim() if dim < 0 else dim
+                    rank = getattr(self, "rank_in_group", None)
+                    if rank is None:
+                        rank = dist.get_rank(self.device_group)
+                    out = torch.zeros((ws,) + tuple(input_size), dtype=input_.dtype, device=input_.device)
+                    out[rank].copy_(input_)
+                    q = torch.xpu.current_stream().sycl_queue
+                    lib2.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
+                                            out.numel() * out.element_size(), DT[input_.dtype])
+                    out = out.movedim(0, d).reshape(
+                        input_size[:d] + (ws * input_size[d],) + input_size[d + 1:]
+                    )
+                    return out.contiguous()
+                return _orig_all_gather(self, input_, dim, output_tensor_list)
+
+            _ps.GroupCoordinator.all_gather = _push_all_gather
+            print("[push-ar] capture-time all_gather -> zero-padded push-AR (recordable)", flush=True)
+        except Exception as e:
+            print(f"[push-ar] all_gather capture patch FAILED: {e}", flush=True)
+
     print(f"[push-ar] patched sglang XpuCommunicator.all_reduce (so={so}, maxB={MAXB})", flush=True)

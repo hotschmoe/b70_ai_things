@@ -7145,3 +7145,20 @@ RUN 20 (the few-breaks shape: PUSH_AR_GRAPH=1 recorded push-ARs + all_gather-onl
 PATH FORWARD (priority order): (a) honest warm-cache number for run-19 config; (b) fix bs=1 capture (kills
   the padding tax); (c) make the breaks cheap (batch the replay_fns, skip output copies for in-place ARs)
   or few (debug ar_allreduce_graph record-time handshake); (d) chase the c4/soak crash.
+
+## 2026-07-02 -- capture campaign SESSION CLOSE: honest numbers, decisive microbench, DD restored [result]
+
+- RUN 21 (run-19 config, WARM triton caches): decode ~10.2 t/s -- identical to run 19, so the 2.5x
+  slowdown vs eager is REAL break overhead (129 python replay_fns + per-segment sycl-graph submissions),
+  not JIT. c4/soak crash reproduces (untriaged).
+- RUN 22 (FULL + push-AR ARs + NEW capture-time all_gather-as-zero-padded-push-AR in push_ar_xpu.py):
+  still hangs at capture -> NOT the all_gather.
+- DECISIVE MICROBENCH (sglang/graph_mtp/push_ar_record_test.py, 2 ranks, raw XPUGraph):
+  ar_allreduce_graph RECORDS on both ranks, then capture_end HANGS finalizing the graph. So the K.6
+  capturable push-AR does not survive torch-2.12 sycl command_graph finalize on this image (it was
+  proven only inside vLLM torch.compile capture). This is the ONE blocker between us and the
+  few-breaks FULL-capture shape -- next session's kernel-debug target.
+- Campaign state, runbook, and upstream-issue drafts: sglang/graph_mtp/README.md + upstream_issues.md.
+  perf verdict tonight: breakable capture shape = coherent but 10 t/s (vs 25 eager) -> NOT shipped;
+  the DD stays on the proven eager fused+MTP shelf config.
+- Daily driver RESTARTED (DD_ENV="RADIX=1": extra_buffer + int8 mamba checkpoint cache config).
