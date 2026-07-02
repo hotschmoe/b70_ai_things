@@ -7162,3 +7162,31 @@ PATH FORWARD (priority order): (a) honest warm-cache number for run-19 config; (
   perf verdict tonight: breakable capture shape = coherent but 10 t/s (vs 25 eager) -> NOT shipped;
   the DD stays on the proven eager fused+MTP shelf config.
 - Daily driver RESTARTED (DD_ENV="RADIX=1": extra_buffer + int8 mamba checkpoint cache config).
+
+## 2026-07-02 -- *** CAPTURABLE ALL-REDUCE SOLVED: pure-SYCL spin-kernel sync (bisect + mode-4 win) *** [milestone]
+
+BISECT (sglang/graph_mtp/118b_push_ar_graph_bisect.cpp + push_ar_record_test.py, 2-rank raw XPUGraph):
+  MODE 1 (push kernel + reduce, NO native cmd):        capture_end OK, replays (racy w/o sync, as expected)
+  MODE 2 (EMPTY ext_codeplay_enqueue_native_command):  capture_end HANGS  <- THE CULPRIT
+  MODE 3/0 (signal / full K.6 native cmds):            capture_end HANGS (contain mode 2)
+=> ext_codeplay_enqueue_native_command itself breaks sycl-graph finalize on DPC++ 2025.3 / torch 2.12
+   (even appending nothing). The K.6 native-command push-AR is dead on this stack. The cross-device IPC
+   posted-write KERNEL records and replays fine.
+MODE 4 (NEW): pure-SYCL spin-kernel sync -- push payload -> single_task bumps a device seq counter and
+  release-stores it to the peer's flag page (system-scope atomic, scratch tail); reduce first single_task
+  acquire-spins on the LOCAL flag reaching its own expect counter. All state device-side -> replay-safe.
+  RESULT: records, capture_end OK, 5/5 replays CORRECT and rank-identical (10/44/180/724/2896). The J.9
+  "mid-kernel peer-write invisibility" does NOT bite system-scope atomics here.
+WIRED: ar_allreduce_graph_spin + ar_graph_spin_init in the bisect .so; push_ar_xpu.py prefers it (also for
+  the capture-time all_gather-as-zero-padded-push-AR emulation).
+
+RUN 23 (FULL backend + spin-sync collectives): CAPTURE COMPLETES (42.5s, all buckets -- the config that
+  hung 3x today) -- but the FIRST VERIFY REPLAY in the live serve HANGS (prefill batches complete, then
+  silence; 120s gen timeout). Microbench replays 5/5, serve replay deadlocks. HYPOTHESES for next session:
+  (a) seq-counter desync from bucket-init replays or asymmetric replay counts (any per-rank replay-count
+      difference permanently wedges the expect/flag pairing -- add a per-AR-NODE flag slot instead of one
+      global counter pair, e.g. flag[node_idx % PAGE]), (b) long-spin visibility under rank desync (draft
+      chain runs ~50-100ms eager between replays; spin starts long before the peer's push).
+  NEXT DIAGNOSTICS: on first-gen hang, py-spy both schedulers + GPU-busy snapshot BEFORE teardown (add to
+  graph_mtp_verify_ab.sh failure path); per-node flag slots are likely the robust fix regardless.
+DD restarted (RADIX=1) after the bisect window.
