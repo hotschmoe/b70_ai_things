@@ -53,8 +53,8 @@ The `woqgemm` int4 path + `woq_shim.py` are inherited unchanged from `:woq`. To 
 |---|---|---|---|---|---|
 | **int4 + NEXTN MTP steps=7 (this)** | **~15.3 (1.62x)** | ~26 MC4/card | greedy only | 1 | LATENCY / interactive single stream |
 | **int4 + MTP DP=2 (`../../sglang/serve_dp2_mtp.sh`)** | ~15 x2 slots | **~50.7 MC8** | greedy only | 2 | latency AND multi-user (2x full-speed slots, wedge-proof) |
-| int4 woq DP=2 (`../../sglang/serve_dp2.sh`) | ~9.4/replica | — | yes | 2 | high-concurrency / unattended (sampling, wedge-proof) |
-| bf16 TP=2 (`../../sglang/serve_sglang.sh`) | ~9.2 (c4 agg ~23) | — | yes | 2 | best c4 aggregate, attended |
+| int4 woq DP=2 (`../../sglang/serve_dp2.sh`) | ~9.4/replica | — | yes | 2 | high-concurrency (sampling, structurally wedge-proof) |
+| bf16 TP=2 (`../../sglang/serve_sglang.sh`) | ~9.2 (c4 agg ~23) | — | yes | 2 | best c4 aggregate |
 
 DP=2 MTP (2026-06-28): two single-card replicas behind nginx :18080. proxy MC2 = 2 users each at full ~15 t/s;
 proxy MC8 = ~50.7 tok/s aggregate (~1.9x one card), accept_len holds 4.31 under load. No cross-card collective

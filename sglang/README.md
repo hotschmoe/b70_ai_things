@@ -23,8 +23,8 @@ int4_gemm ops. All drivers correct + vision-retaining; pick by use:
      2 users: `./sglang/serve_dp2_graph.sh` (~23.5+15.3). Use this if you want a no-mounts baked image.
   3. **int4 + NEXTN MTP (greedy latency):**  `rdy_to_serve/qwen36-27b-int4-mtp/serve.sh` -> 15.3 t/s (1.62x),
      greedy-only, vision. Superseded by the graph drivers for single-user (graph is faster AND samples).
-  4. **woq int4 DP=2 (>2 users / unattended, wedge-proof):**  `./sglang/serve_dp2.sh` -> ~9.4/replica, sampling.
-  5. **bf16 TP=2 (best c4 aggregate, attended):**  the serve command below. ~9.2 c1 / 23.4 c4-aggregate.
+  4. **woq int4 DP=2 (>2 users / high-concurrency, structurally wedge-proof):**  `./sglang/serve_dp2.sh` -> ~9.4/replica, sampling.
+  5. **bf16 TP=2 (best c4 aggregate):**  the serve command below. ~9.2 c1 / 23.4 c4-aggregate.
 
 ### W8A8 (int8) drivers -- the PREFILL/TTFT champion (+ MTP = all-rounder), NEW 2026-06-28
 Built fused int8 oneDNN ops (`int8_gemm_w8a16` decode fp16-act / `int8_gemm_w8a8` prefill s8-act, both from

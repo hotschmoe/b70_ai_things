@@ -44,8 +44,10 @@ TAKEAWAY: the practical STABLE ceiling for sglang-XPU serving is ~9.2-9.4 t/s (e
 auto_round_kernel.woqgemm wired into sglang, (c) int4 single-card == bf16-TP2 warm -> woq int4 DP=2 (wedge-proof+vision)
 driver, (d) MTP characterized (works to the tree kernels), (e) XPU cudagraph WIRED (works, but hits the known torch-xpu
 degradation -> awaits an upstream fix).
-DAILY DRIVER PICK: woq int4 DP=2 (serve_dp2.sh) for UNATTENDED (wedge-proof+vision, ~9.4/replica) OR bf16 TP=2 for best
-c4 aggregate (23.4). ALL CORRECT. Did NOT beat the eager ceiling stably: 4-bit-without-graph, GDN num_warps (cold
+DAILY DRIVER PICK [UPDATE 2026-07-02: production DD = sglang w8a8 27b TP=2 (fused+MTP, RADIX=1) since 2026-06-29;
+the TP=2 BCS/GuC wedge is CURED on kernel 7.1, so the old UNATTENDED-vs-ATTENDED split is RETIRED -- both run
+unattended (AGENTS.md GPU Discipline)]: woq int4 DP=2 (serve_dp2.sh) is a big-KV/high-concurrency alt
+(~9.4/replica, vision); bf16 TP=2 gives best c4 aggregate (23.4). ALL CORRECT. Did NOT beat the eager ceiling stably: 4-bit-without-graph, GDN num_warps (cold
 artifact), PP=2 (hangs), TP=2-woq (hangs), MTP (needs tree-kernel reimpl), cudagraph (torch-xpu accumulation dead-end).
 ## ====================================================================================================
 
@@ -294,9 +296,10 @@ nginx round-robin proxy :18080 (sglang/dp_nginx.conf). VERIFIED: both replicas h
 (one per card), proxy /health 200, round-robin requests coherent ("capital of France"). No cross-card collective
 -> cannot BCS-wedge. CORRECT (gdn_nan_repro clean under load) + VISION + ~9.44 t/s/replica warm.
   Launch: ./sglang/serve_dp2.sh start | status | stop
-TWO DAILY DRIVERS, both CORRECT + VISION:
-  1. woq int4 DP=2 (serve_dp2.sh) -- UNATTENDED: wedge-proof, ~9.44/replica, int4 = big KV, :18080.
-  2. bf16 TP=2 (serve_sglang.sh)  -- ATTENDED: ~9.2 c1 / 23.4 c4 aggregate, both cards.
+DAILY DRIVERS, all CORRECT + VISION (TP=2 wedge CURED on kernel 7.1 as of 2026-07-02 -> the old
+UNATTENDED/ATTENDED tags are RETIRED; production DD = w8a8 27b TP=2 fused+MTP since 2026-06-29):
+  1. woq int4 DP=2 (serve_dp2.sh) -- big-KV / high-concurrency: ~9.44/replica, structurally wedge-proof, :18080.
+  2. bf16 TP=2 (serve_sglang.sh)  -- ~9.2 c1 / 23.4 c4 aggregate, both cards.
 
 ## *** BREAKTHROUGH: XPU CUDAGRAPH WORKS -- decode 9.4 -> 23.6 t/s (graph steps) *** [2026-06-27]
 WIRED UP via woq_shim (opt-in B70_XPU_CUDAGRAPH=1) + a mounted model_runner.py patch:

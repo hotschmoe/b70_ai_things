@@ -41,12 +41,12 @@ journalctl -u b70-daily-driver -f                 # follow
 sudo systemctl stop b70-daily-driver              # stop
 ```
 
-The unit defaults to the **wedge-proof int4 DP=2** serve (`DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2`,
-`DD_MAXLEN=98304`, `DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88"`). To switch to the faster-but-attended-only **w8a8 +MTP TP=2**
+The unit defaults to the **int4 DP=2** serve (`DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2`,
+`DD_MAXLEN=98304`, `DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88"`). To switch to the faster **w8a8 +MTP TP=2**
 (`DD_MODEL=qwen36-27b-w8a8-sqgptq-mtp DD_REPLICAS=1`, drop the `DD_ENV` line), edit the `Environment=DD_*` lines,
-then `daemon-reload` + `restart`. w8a8 TP=2 can DEVICE_LOST-wedge under load (reboot-only) even with the GuC
-70.54.0 fix, so do NOT use it for an unattended/traveling window. If the manual launch is already running, `stop`
-it first so the unit owns the lease.
+then `daemon-reload` + `restart`. NOTE (2026-07-02): the TP=2 BCS/GuC DEVICE_LOST wedge is CURED on kernel 7.1
+(the 70.54.0 pin is retired; AGENTS.md GPU Discipline), so w8a8 TP=2 is fine unattended -- and on sglang it is
+already the production daily driver. If the manual launch is already running, `stop` it first so the unit owns the lease.
 
 ### Caveats / levels of resilience
 

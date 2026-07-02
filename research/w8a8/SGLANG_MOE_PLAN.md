@@ -134,7 +134,7 @@ A pure-Python, mount-not-bake patch (same delivery model as `sglang/patches/w8a8
    image (like `w8a8_shim.py`) and call `quark_moe_int8.install()` BEFORE the model builds (env
    `B70_QUARK_MOE_INT8_AUTOINSTALL=1` auto-installs on import, or call it from the launch shim). If
    using the fused dense path also install `w8a8_shim` and set `B70_XPU_W8A8_FUSED=1` + `B70_XPU_C_SO`.
-3. **Serve TP=2 (ATTENDED -- wedge risk).** int8 weights ~35 GB -> ~17.5 GB/card, fits TP=2. Start from
+3. **Serve TP=2.** (TP=2 BCS/GuC wedge CURED on kernel 7.1, 2026-07-02.) int8 weights ~35 GB -> ~17.5 GB/card, fits TP=2. Start from
    a copy of `rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh` (it already does TP=2, `--device xpu
    --attention-backend intel_xpu --linear-attn-backend triton`, `--disable-cuda-graph`,
    `--mamba-ssm-dtype float32`, `--skip-server-warmup`). Point `--model-path` at
@@ -166,8 +166,9 @@ A pure-Python, mount-not-bake patch (same delivery model as `sglang/patches/w8a8
   shared expert through the routed-expert int8 path.
 - **`get_supported_act_dtypes`.** Our patch leaves QuarkConfig's bf16/fp16 support intact; the GDN
   linear-attn path on B70 wants bf16 (fp16 causal_conv1d crashes, cf. awq.py:104-108). Serve in bf16.
-- **TP=2 hardware wedge** (BCS copy-engine job timeout, reboot-only). Standard B70 caveat: serve
-  attended, run `bin/xpu-health` pre-flight, do not chain TP=2 worker-init crashes.
+- **TP=2 hardware wedge** (BCS copy-engine job timeout) -- CURED on kernel 7.1 (2026-07-02; AGENTS.md GPU
+  Discipline; 70.54.0 pin retired). Still good hygiene: `bin/xpu-health` pre-flight, and do not chain TP=2
+  worker-init crashes (that trips the SEPARATE oneCCL state-corruption wedge, untested on 7.1).
 - **Sustained concurrent load / `!!!!`.** Same open question as the vLLM entry (MOE_UNBLOCK sec 3): a
   long c4+ soak is needed before calling either backend production for this GDN MoE.
 

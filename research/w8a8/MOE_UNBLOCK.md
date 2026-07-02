@@ -71,7 +71,7 @@ help memory-bound decode (W4A16 stays the decode recipe). Build only if Route A'
    `Int8DequantLinear`, mirroring the v0230 `quark_moe.py`/`quark.py` references above. Also handle the
    compressed-tensors W8A8 MoE config (we can produce that with llmcompressor; avoids needing the Quark
    quantizer, which we do not have locally).
-3. **Serve + gate (TP=2, ATTENDED -- wedge risk):** the 35B int8 (~35GB) splits ~17.5GB/card -> fits
+3. **Serve + gate (TP=2; the BCS/GuC wedge is CURED on kernel 7.1, 2026-07-02):** the 35B int8 (~35GB) splits ~17.5GB/card -> fits
    TP=2. Coherence-gate, then bench vs the existing vLLM Quark 43.1 t/s and the 35B W4A16 (56.8 t/s).
    Greedy-only on XPU; vision excluded by the quant (text-only serve, or graft visual like the dense path).
 4. **Only if Triton is slow:** Route C (fused SYCL `is_w8a8`).
