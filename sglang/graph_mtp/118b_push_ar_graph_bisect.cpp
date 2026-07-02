@@ -244,8 +244,17 @@ static void do_ar_graph_mode(queue *q, unsigned long long inout, size_t nbytes, 
 // counts[2n]=my push count for node n, counts[2n+1]=my expect count for node n. A spin only waits on
 // ITS OWN node's flag, so any cross-node execution reordering (captured side streams -> parallel graph
 // branches) cannot circular-wait. 16K nodes max.
+// device-side seq state: carve the LAST 512KB of the local scratch = 4 pages of 32768 words each:
+//   page 0 flags[n]        -- peer's PUSH signals its push-count here (my reduce waits on it)
+//   page 1 counts[2n/2n+1] -- my push-count / my expect-count for node n
+//   page 2 consumed[n]     -- peer's REDUCE signals its consume-count here (my push waits on it)
+//   page 3 consume_ct[n]   -- my consume-count for node n
+// The consumed/consume_ct pages (v3, run-26 fix) add a per-node CONSUME-ACK so a peer cannot overwrite
+// my slot for generation g+1 until I have reduced generation g -- prevents the cross-replay slot clobber
+// that corrupts logits when replay cadence is not lockstep (eager draft steps between verify replays).
+static const long SEQ_BYTES = 524288;   // 512KB
 static inline uint32_t *seq_base(void *scratch, long max_bytes) {
-    return reinterpret_cast<uint32_t *>((char *)scratch + max_bytes - 262144);
+    return reinterpret_cast<uint32_t *>((char *)scratch + max_bytes - SEQ_BYTES);
 }
 static int g_node_counter = 0;
 // PAYLOAD bump-pointer (run-25 garbage-logits fix): the old (node%64)*1MB scheme aliased within a
@@ -261,7 +270,7 @@ static const long AR_SLOT_BASE = (32L << 20);
 extern "C" int ar_graph_spin_init(long max_bytes) {
     // zero the flag+count pages (called once, eager, before any capture)
     uint32_t *loc = seq_base(g_scratch, max_bytes);
-    g_q->memset(loc, 0, 262144).wait();
+    g_q->memset(loc, 0, SEQ_BYTES).wait();
     g_node_counter = 0;
     g_slot_cursor = 0;
     return 0;
@@ -279,7 +288,7 @@ static void do_ar_graph_spin(queue *q, unsigned long long inout, size_t nbytes, 
     long slot_off = AR_SLOT_BASE + g_slot_cursor;
     long slot_sz  = ((long)nbytes + 4095L) & ~4095L;
     g_slot_cursor += slot_sz;
-    long flags_off = max_bytes - 262144;      // seq/flag region at scratch tail (must not be overrun)
+    long flags_off = max_bytes - SEQ_BYTES;   // seq/flag region at scratch tail (must not be overrun)
     if (slot_off + (long)nbytes > flags_off) {
         fprintf(stderr, "[argraph r%d] PAYLOAD SLOT OVERFLOW node=%d off=%ld nbytes=%zu flags_off=%ld "
                 "-- bump PUSH_AR_MAXB (wrapping to base; will alias)\n", g_rank, node, slot_off, nbytes, flags_off);
@@ -287,10 +296,22 @@ static void do_ar_graph_spin(queue *q, unsigned long long inout, size_t nbytes, 
     }
     uint32_t *ws=reinterpret_cast<uint32_t*>(inout);
     uint32_t *wd=(uint32_t*)((char*)g_peerScratch + slot_off);
-    uint32_t *peer_flags = seq_base(g_peerScratch, max_bytes);
-    uint32_t *my_flags   = seq_base(g_scratch,     max_bytes);
-    uint32_t *my_counts  = my_flags + 32768;     // page B: [2n]=push count, [2n+1]=expect count
-    event ep = q->parallel_for(range<1>(nw),[=](id<1> i){ wd[i]=ws[i]; });
+    uint32_t *peer_flags    = seq_base(g_peerScratch, max_bytes);
+    uint32_t *my_flags      = seq_base(g_scratch,     max_bytes);
+    uint32_t *my_counts     = my_flags + 32768;      // page 1: [2n]=push count, [2n+1]=expect count
+    uint32_t *my_consumed   = my_flags + 65536;      // page 2: peer's reduce signals its consume-count here
+    uint32_t *peer_consumed = peer_flags + 65536;    // page 2 in peer's region: my reduce signals here
+    uint32_t *my_consume_ct = my_flags + 98304;      // page 3: my consume-count for node n
+    // CONSUME-ACK PROLOGUE: do not overwrite peer's slot for this (g-th) push until peer has REDUCED my
+    // previous (g-1)-th push. my_counts[2n] currently holds g-1 (pushes done so far); wait my_consumed>=g-1.
+    event epre = q->single_task([=](){
+        uint32_t need = my_counts[2*node];
+        sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+            sycl::access::address_space::global_space> af(my_consumed[node]);
+        while (af.load(sycl::memory_order::acquire) < need) { }
+    });
+    event ep = q->submit([&](handler &h){ h.depends_on(epre);
+        h.parallel_for(range<1>(nw),[=](id<1> i){ wd[i]=ws[i]; }); });
     event ef = q->submit([&](handler &h){ h.depends_on(ep);
         h.single_task([=](){
             uint32_t s = my_counts[2*node] + 1; my_counts[2*node] = s;
@@ -308,8 +329,16 @@ static void do_ar_graph_spin(queue *q, unsigned long long inout, size_t nbytes, 
     size_t n=nbytes/sizeof(T);
     T *src=reinterpret_cast<T*>(inout);
     T *scr=(T*)((char*)g_scratch + slot_off);
-    q->submit([&](handler &h){ h.depends_on(es);
+    event ered = q->submit([&](handler &h){ h.depends_on(es);
         h.parallel_for(range<1>(n),[=](id<1> i){ src[i]=(T)(float(src[i])+float(scr[i])); }); });
+    // CONSUME-ACK EPILOGUE: I have read my slot[node] for this generation -> tell peer it may reuse it.
+    q->submit([&](handler &h){ h.depends_on(ered);
+        h.single_task([=](){
+            uint32_t c = my_consume_ct[node] + 1; my_consume_ct[node] = c;
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> af(peer_consumed[node]);
+            af.store(c, sycl::memory_order::release);
+        }); });
 }
 extern "C" void ar_allreduce_graph_spin(unsigned long long q_addr, unsigned long long inout, long nbytes, int dtype, long max_bytes) {
     queue *q = q_addr ? reinterpret_cast<queue*>(q_addr) : g_q;

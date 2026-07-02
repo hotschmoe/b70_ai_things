@@ -55,7 +55,9 @@ PUSHDIR=$REPO/vllm/contrib/vllm_push_allreduce/prebuilt
 PUSH_SO="${PUSH_SO:-/work/gm/libxpu_push_ar_bisect.so}"
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 LOGSAVE="$REPO/sglang/graph_mtp/last_run_$(date +%H%M%S).log"
-cleanup(){ say "cleanup: rm $NAME (logs -> $LOGSAVE)"; docker logs "$NAME" >"$LOGSAVE" 2>&1 || true; docker rm -f "$NAME" >/dev/null 2>&1; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
+cleanup(){ docker logs "$NAME" >"$LOGSAVE" 2>&1 || true;
+  if [ "${KEEP:-0}" = "1" ]; then say "KEEP=1: leaving $NAME up on :$PORT (logs -> $LOGSAVE); remove with: docker rm -f $NAME"; return; fi
+  say "cleanup: rm $NAME (logs -> $LOGSAVE)"; docker rm -f "$NAME" >/dev/null 2>&1; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
 trap cleanup EXIT
 
 say "pre-flight xpu-health"
@@ -76,6 +78,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
   -v "$REPO/sglang/graph_mtp:/work/gm:ro" \
   -e B70_XPU_PUSH_AR=$PUSHAR -e PUSH_AR_SO=$PUSH_SO -e PUSH_AR_GRAPH=$PUSHAR -e PUSH_AR_MAXB=${PUSH_AR_MAXB:-268435456} \
+  -e PUSH_AR_GATHER_GRAPH=${PUSH_AR_GATHER_GRAPH:-1} \
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
   -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
   -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 -e B70_XPU_DRAFT_GRAPH=$DRAFT_GRAPH \

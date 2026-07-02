@@ -181,7 +181,8 @@ def install():
     # HANGS capture on sglang). all_gather == sum of zero-padded per-rank slices, so during capture we
     # emulate it with ONE recorded push-AR on a [ws, *shape] buffer. Mirrors GroupCoordinator.all_gather
     # concat semantics (stack on dim0 -> movedim -> reshape). Eager path unchanged.
-    if GRAPH:
+    GATHER_GRAPH = os.environ.get("PUSH_AR_GATHER_GRAPH", "1") == "1"  # 0 -> leave all_gather on oneCCL
+    if GRAPH and GATHER_GRAPH:
         try:
             import sglang.srt.distributed.parallel_state as _ps
 
