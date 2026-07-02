@@ -55,8 +55,23 @@ def _load_lib(so):
                 lib.ar_graph_spin_init.argtypes = [ctypes.c_long]
                 lib.ar_allreduce_graph_spin.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
                                                         ctypes.c_long, ctypes.c_int, ctypes.c_long]
+            # run-25 payload-slot fix: reset the per-graph payload bump-pointer at each capture_begin.
+            if hasattr(lib, "ar_graph_new_capture"):
+                lib.ar_graph_new_capture.restype = None
+                lib.ar_graph_new_capture.argtypes = []
             _lib = lib
     return _lib
+
+
+def on_capture_begin():
+    """Reset the push-AR payload bump-pointer at the START of each captured graph. Safe no-op until the
+    push collective is loaded+engaged. Hooked from _B70XPUGraph.capture_begin (woq_shim)."""
+    lib = _lib
+    if lib is not None and _engaged_owner is not None and hasattr(lib, "ar_graph_new_capture"):
+        try:
+            lib.ar_graph_new_capture()
+        except Exception:
+            pass
 
 
 def install():

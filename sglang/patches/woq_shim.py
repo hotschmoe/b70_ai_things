@@ -347,6 +347,14 @@ def _install():
             # (CUDA signature); torch.xpu.XPUGraph.capture_begin only takes pool. Drop the extra kwarg.
             class _B70XPUGraph(torch.xpu.XPUGraph):
                 def capture_begin(self, pool=None, capture_error_mode=None):
+                    # Reset the push-AR payload bump-pointer at each graph's capture start (run-25 fix:
+                    # per-graph payload slots => ~129 nodes never alias, 11MB all_gather fits). No-op
+                    # unless push-AR is engaged.
+                    try:
+                        import push_ar_xpu
+                        push_ar_xpu.on_capture_begin()
+                    except Exception:
+                        pass
                     return super().capture_begin(pool=pool)
 
             torch.cuda.CUDAGraph = _B70XPUGraph

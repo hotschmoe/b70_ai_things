@@ -75,7 +75,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$PUSHDIR:/work/push_ar:ro" \
   -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
   -v "$REPO/sglang/graph_mtp:/work/gm:ro" \
-  -e B70_XPU_PUSH_AR=$PUSHAR -e PUSH_AR_SO=$PUSH_SO -e PUSH_AR_GRAPH=$PUSHAR \
+  -e B70_XPU_PUSH_AR=$PUSHAR -e PUSH_AR_SO=$PUSH_SO -e PUSH_AR_GRAPH=$PUSHAR -e PUSH_AR_MAXB=${PUSH_AR_MAXB:-268435456} \
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
   -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
   -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 -e B70_XPU_DRAFT_GRAPH=$DRAFT_GRAPH \

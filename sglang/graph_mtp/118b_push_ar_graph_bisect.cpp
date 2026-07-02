@@ -248,24 +248,43 @@ static inline uint32_t *seq_base(void *scratch, long max_bytes) {
     return reinterpret_cast<uint32_t *>((char *)scratch + max_bytes - 262144);
 }
 static int g_node_counter = 0;
+// PAYLOAD bump-pointer (run-25 garbage-logits fix): the old (node%64)*1MB scheme aliased within a
+// single graph (~129 nodes > 64 slots) AND the ~11MB logits all_gather overran its 1MB slot. Instead
+// each recorded node gets a distinct, exactly-sized slot via a bump cursor RESET AT capture_begin
+// (ar_graph_new_capture). Payload memory is thus bounded by the LARGEST single captured graph, not the
+// sum of all buckets, so MAXB stays small. node_counter (flag index) stays GLOBAL -- flag words are
+// never reused across graphs (decouples sync correctness from payload memory); only the payload cursor
+// resets per graph. Both TP ranks capture identical bucket order -> identical cursor progression ->
+// identical slot_off per (graph, node). AR_SLOT_BASE(32MB) sits above the eager prefill push region.
+static long g_slot_cursor = 0;
+static const long AR_SLOT_BASE = (32L << 20);
 extern "C" int ar_graph_spin_init(long max_bytes) {
     // zero the flag+count pages (called once, eager, before any capture)
     uint32_t *loc = seq_base(g_scratch, max_bytes);
     g_q->memset(loc, 0, 262144).wait();
     g_node_counter = 0;
+    g_slot_cursor = 0;
     return 0;
 }
+// Called once at the START of each captured graph (hooked from _B70XPUGraph.capture_begin). Resets the
+// payload bump-pointer so each graph reuses the same scratch region. RECORD-time / host-side only.
+extern "C" void ar_graph_new_capture(void) { g_slot_cursor = 0; }
 template<typename T>
 static void do_ar_graph_spin(queue *q, unsigned long long inout, size_t nbytes, long max_bytes) {
     size_t nw = nbytes/4;
-    int node = g_node_counter++;              // record-order node id, identical across ranks
-    if (node >= 16384) node = node % 16384;   // wrap (should never happen: ~400 nodes/serve)
-    // PER-NODE payload slot: each node gets its own scratch region so concurrent branches cannot
-    // overwrite each other's payload (flags page is the last 256KB; payload area is everything before).
-    // slot size = 1MB (decode ARs are <=1MB at bs<=4; larger falls back before reaching here).
-    // slots live ABOVE the eager region (eager do_ar uses scratch[0..~21MB for prefill pushes], and
-    // an eager push on one rank can overlap the peer's in-flight replay reads): base at 32MB.
-    long slot_off = (32L << 20) + (long)(node % 64) * (1L << 20);
+    int node = g_node_counter++;              // record-order node id, identical across ranks (flag index)
+    if (node >= 16384) node = node % 16384;   // flag-slot wrap (should never happen: ~400 nodes/serve)
+    // PER-NODE payload slot via bump-pointer (reset per graph at capture_begin): exactly-sized, distinct
+    // within a graph, so ~129 nodes never alias and an 11MB all_gather gets its full 11MB. 4KB-aligned.
+    long slot_off = AR_SLOT_BASE + g_slot_cursor;
+    long slot_sz  = ((long)nbytes + 4095L) & ~4095L;
+    g_slot_cursor += slot_sz;
+    long flags_off = max_bytes - 262144;      // seq/flag region at scratch tail (must not be overrun)
+    if (slot_off + (long)nbytes > flags_off) {
+        fprintf(stderr, "[argraph r%d] PAYLOAD SLOT OVERFLOW node=%d off=%ld nbytes=%zu flags_off=%ld "
+                "-- bump PUSH_AR_MAXB (wrapping to base; will alias)\n", g_rank, node, slot_off, nbytes, flags_off);
+        slot_off = AR_SLOT_BASE; g_slot_cursor = slot_sz;
+    }
     uint32_t *ws=reinterpret_cast<uint32_t*>(inout);
     uint32_t *wd=(uint32_t*)((char*)g_peerScratch + slot_off);
     uint32_t *peer_flags = seq_base(g_peerScratch, max_bytes);
