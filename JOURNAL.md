@@ -7109,3 +7109,39 @@ RUN 8 (breakable, collective wraps OFF -- discriminator): the REAL error resurfa
 RUN 9 (in flight): breakable + eager_on_graph collectives + the PROVEN-capturable triton decode/verify
   attention (prefill keeps intel_xpu XMX): no scratch wall (run 3 captured triton fine), no recorded
   oneCCL (breaks at every all_reduce/all_gather = vLLM-PIECEWISE semantics).
+
+## 2026-07-02 -- *** CAPTURED MTP VERIFY RUNS COHERENTLY ON XPU (runs 15-19): 5 real bugs fixed; perf still below eager *** [milestone+result]
+
+The 06-28 "graph+MTP deeply walled" verdict is now fully explained -- it was a STACK of maskable bugs:
+  BUG 1 (the great masker): sglang.srt.compilation.weak_ref_tensor hard-raises NotImplementedError on XPU
+    (CUDA/NPU only; sgl-kernel-xpu #251 added the real impl 2026-06-29, newer than our image). The breakable
+    backend lazily imports it at the FIRST eager break; the raise unwinds into BreakableCUDAGraphCapture.
+    __exit__ which DOUBLE-ENDS the already-ended segment -> capture_end on a dead sycl command graph ->
+    near-NULL deref SEGFAULT (native bt via our segv_bt.so preload: modifiable_command_graph::end_recording
+    +0xb). Every earlier "mystery segfault" (runs 7/9/11) was THIS error being eaten. FIX: identity-ref
+    fallback module pre-seeded in sys.modules (xpu_cudagraph 4d) + BCG __exit__ exception-path guard.
+    UPSTREAM: report the __exit__ double-end (error-masking) to sglang; adopt #251's from_blob impl later.
+  BUG 2: XPUGraph.capture_begin() lacks CUDA's capture_error_mode kwarg -> _B70XPUGraph adapter (woq_shim).
+  BUG 3: BCG _slice_output/_copy_output_to_buffer do not handle LogitsProcessorOutput (the spec verify
+    output) -> TypeError. FIX: dataclass-field recursion (xpu_cudagraph 4e).
+  BUG 4: BCG slices outputs by shape_key.size == BS, but spec forwards emit bs*num_tokens_per_bs rows ->
+    verify logits sliced 11x too small ("shape [1,11] invalid for input of size 2"). FIX: stash
+    num_tokens_per_bs on the backend (patched __init__), scale slice/copy. UPSTREAM: real BCG+spec bug.
+  BUG 5: at bs=1 (M=11) ONE oneDNN primitive fails under SYCL-graph recording ("could not execute a
+    primitive", ~segment 101); bs 2/3/4 capture clean. SIDESTEP: --cuda-graph-bs 2 3 4 (bs=1 pads to the
+    bs=2 graph). TODO: bisect which primitive/shape.
+  (Also isolated-cleared by microbench: empty pooled captures, 200 triton segments, oneDNN int8 op in
+  segments, 2-rank oneCCL between segments -- sglang/graph_mtp/*_test.py all PASS.)
+
+RESULT (run 19, breakable decode graphs bs[2,3,4], ~129 collective eager-breaks/forward, triton decode
+  attn, intel_xpu prefill, draft eager): SERVES, /health, COHERENT, "cuda graph: True" on decode
+  batches, accept len 4.4-5.4 -- the first captured MTP verify on sglang-XPU. BUT c1 decode = 9.93 t/s
+  vs 25.06 EAGER: the ~130 per-break python replay_fns + output copies + bs=1->2 padding eat far more
+  than graph replay saves (and the c1 window may still be triton-JIT-confounded; rerun with warm caches
+  in flight). c4 died (connection reset -- separate bug to chase; suspected replay under bs transitions).
+RUN 20 (the few-breaks shape: PUSH_AR_GRAPH=1 recorded push-ARs + all_gather-only breaks): capture HANGS
+  at bs=4 0% -- ar_allreduce_graph appears to do a cross-rank handshake at RECORD time; needs a dedicated
+  microbench session (the K.6 path was only ever proven inside vLLM torch.compile capture).
+PATH FORWARD (priority order): (a) honest warm-cache number for run-19 config; (b) fix bs=1 capture (kills
+  the padding tax); (c) make the breaks cheap (batch the replay_fns, skip output copies for in-place ARs)
+  or few (debug ar_allreduce_graph record-time handshake); (d) chase the c4/soak crash.

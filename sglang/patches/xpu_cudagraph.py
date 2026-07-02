@@ -195,14 +195,21 @@ def install():
     # TP collectives the forward uses (row-parallel all_reduce, logits all_gather) as graph breaks too:
     # they end the current segment, run eagerly at capture AND at every replay (replay_fn re-invokes on
     # the weak-ref'd static tensors). No-op under the 'full' backend (capture ctx var is None).
-    if os.environ.get("B70_XPU_EAGER_COLLECTIVES", "1") == "1":
+    # Modes: "1"/"all" = break at all_reduce AND all_gather (~130 breaks/forward -- correct but SLOW:
+    # each break pays a python replay_fn + output copy; run 19 measured 9.93 t/s vs 25 eager).
+    # "ag" = break ONLY at all_gather (the ONE collective with no SYCL-Graph-recordable oneCCL impl);
+    # all_reduces stay INSIDE segments and must be made recordable -- pair with PUSH_AR_GRAPH=1 (the
+    # K.6 capturable push-AR records them as device-side posted writes). ~2 segments per forward.
+    _coll_mode = os.environ.get("B70_XPU_EAGER_COLLECTIVES", "1")
+    if _coll_mode in ("1", "all", "ag"):
         try:
             from sglang.srt.model_executor.runner_backend_utils.breakable_cuda_graph import eager_on_graph
             from sglang.srt.distributed.device_communicators.xpu_communicator import XpuCommunicator as _XC
             import sglang.srt.distributed.parallel_state as _ps
-            _XC.all_reduce = eager_on_graph(True)(_XC.all_reduce)
+            if _coll_mode in ("1", "all"):
+                _XC.all_reduce = eager_on_graph(True)(_XC.all_reduce)
             _ps.GroupCoordinator.all_gather = eager_on_graph(True)(_ps.GroupCoordinator.all_gather)
-            print("[xpu-cudagraph] TP collectives wrapped eager_on_graph (breakable: all_reduce/all_gather run between segments)", flush=True)
+            print(f"[xpu-cudagraph] TP collectives wrapped eager_on_graph (mode={_coll_mode})", flush=True)
         except Exception as e:
             print(f"[xpu-cudagraph] eager_on_graph collective wrap FAILED: {e}", flush=True)
 
