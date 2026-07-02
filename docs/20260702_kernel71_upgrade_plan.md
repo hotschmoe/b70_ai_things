@@ -185,8 +185,9 @@ Engine reset / bcs / ccs / DEVICE_LOST.
 uname -r                                  # 7.1.0-070100-generic
 ls /sys/class/drm | grep card             # card0 card1
 lspci -nnk | grep -A3 e223                # both B70, driver: xe
-clinfo | grep -iE 'Driver Version|Device Name' | head
-sycl-ls                                   # two level_zero:gpu devices
+clinfo -l                                 # two B70 devices; clinfo shows Driver Version 26.22.38646.4
+# NOTE: sycl-ls is NOT on the bare host (ships with oneAPI, which lives inside the serve container).
+# Host enumeration = clinfo (OpenCL). Level-Zero gets verified in-container by bin/xpu-health below.
 sudo dmesg | grep -iE 'guc|huc'           # "Using GuC firmware ... version X" NO "(wanted Y)"; no taint
 cd /mnt/vm_8tb/github/b70_ai_things
 IMG=sglang-xpu:mtp bin/xpu-health         # HEALTHY (cards 0 1)
