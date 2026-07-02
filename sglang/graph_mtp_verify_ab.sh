@@ -71,18 +71,20 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
   -v "$PUSHDIR:/work/push_ar:ro" \
   -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
+  -v "$REPO/sglang/graph_mtp:/work/gm:ro" \
   -e B70_XPU_PUSH_AR=$PUSHAR -e PUSH_AR_SO=/work/push_ar/libxpu_push_ar_graph.so -e PUSH_AR_GRAPH=$PUSHAR \
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
   -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
   -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 -e B70_XPU_DRAFT_GRAPH=$DRAFT_GRAPH \
-  -e B70_XPU_EAGER_COLLECTIVES=${EAGER_COLL:-1} \
+  -e B70_XPU_EAGER_COLLECTIVES=${EAGER_COLL:-1} -e B70_XPU_EAGER_ATTN=${EAGER_ATTN:-0} -e B70_XPU_BCG_TRACE=${BCG_TRACE:-0} \
   "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
+    ${SEGVBT:+export LD_PRELOAD=/work/gm/segv_bt.so;} \
     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
     exec python -m sglang.launch_server --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
     --device xpu $ATTN_ARGS --linear-attn-backend triton \
     --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
     --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton \
-    --cuda-graph-max-bs $MAXBS --cuda-graph-backend-decode $GRAPH_BACKEND \
+    --cuda-graph-max-bs $MAXBS --cuda-graph-backend-decode $GRAPH_BACKEND ${EXTRA_ARGS:-} \
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
     --tp 2 --context-length $CTX --mem-fraction-static 0.87 --max-running-requests 4 --skip-server-warmup \
     --host 0.0.0.0 --port $PORT" >/dev/null

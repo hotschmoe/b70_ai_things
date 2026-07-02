@@ -206,6 +206,97 @@ def install():
         except Exception as e:
             print(f"[xpu-cudagraph] eager_on_graph collective wrap FAILED: {e}", flush=True)
 
+    # ---- 4b. BREAKABLE: run the per-layer ATTENTION/GDN entry eager too (B70_XPU_EAGER_ATTN=1) ----
+    # The fork only breaks attention on the extend/tc_piecewise path; under breakable-DECODE the attention
+    # and mamba kernels are captured into segments. Wrapping the OUTER hybrid backend .forward (what
+    # RadixAttention delegates to for decode/verify) makes every attention + GDN layer a graph break, so
+    # segments contain only the launch-heavy linear/norm chains (the part capture actually helps).
+    if os.environ.get("B70_XPU_EAGER_ATTN", "0") == "1":
+        try:
+            from sglang.srt.model_executor.runner_backend_utils.breakable_cuda_graph import eager_on_graph
+            from sglang.srt.layers.attention.hybrid_linear_attn_backend import HybridLinearAttnBackend
+            HybridLinearAttnBackend.forward = eager_on_graph(True)(HybridLinearAttnBackend.forward)
+            print("[xpu-cudagraph] HybridLinearAttnBackend.forward wrapped eager_on_graph (attn+GDN eager between segments)", flush=True)
+        except Exception as e:
+            print(f"[xpu-cudagraph] eager_on_graph attn wrap FAILED: {e}", flush=True)
+
+    # ---- 4d. weak_ref_tensor XPU fallback (THE run-7/9/13 root cause) ----
+    # sglang.srt.compilation.weak_ref_tensor hard-raises NotImplementedError at import on XPU (only
+    # CUDA/NPU have the kernel; sgl-kernel-xpu PR #251, merged 2026-06-29, adds the real from_blob
+    # implementation -- newer than our image). The breakable backend lazily imports it at the FIRST
+    # eager break; the raise then unwinds into BreakableCUDAGraphCapture.__exit__, which double-ends
+    # the already-ended segment -> capture_end on a dead sycl graph -> the masking SEGFAULT.
+    # Fallback: IDENTITY refs (strong). Only cost: segment-pool memory cannot be aliased across breaks.
+    try:
+        import sys as _sys
+        import types as _types
+        if "sglang.srt.compilation.weak_ref_tensor" not in _sys.modules:
+            _m = _types.ModuleType("sglang.srt.compilation.weak_ref_tensor")
+
+            def _wrt(t):
+                return t
+
+            def _wrts(tensors):
+                if isinstance(tensors, torch.Tensor):
+                    return _wrt(tensors)
+                if isinstance(tensors, list):
+                    return [_wrt(t) for t in tensors]
+                if isinstance(tensors, tuple):
+                    return tuple(_wrt(t) for t in tensors)
+                raise ValueError("Invalid type for tensors")
+
+            _m.weak_ref_tensor = _wrt
+            _m.weak_ref_tensors = _wrts
+            _sys.modules["sglang.srt.compilation.weak_ref_tensor"] = _m
+            print("[xpu-cudagraph] weak_ref_tensor XPU fallback installed (identity refs)", flush=True)
+    except Exception as e:
+        print(f"[xpu-cudagraph] weak_ref_tensor fallback FAILED: {e}", flush=True)
+
+    # ---- 4c. BCG segment-lifecycle trace (B70_XPU_BCG_TRACE=1): find which segment begin/end dies ----
+    if os.environ.get("B70_XPU_BCG_TRACE") == "1":
+        try:
+            from sglang.srt.model_executor.runner_backend_utils.breakable_cuda_graph import (
+                breakable_cuda_graph as _bcg,
+            )
+            _obeg = _bcg.BreakableCUDAGraphCapture._begin_new_segment
+            _oend = _bcg.BreakableCUDAGraphCapture._end_current_segment
+
+            def _tbeg(self):
+                n = len(self.cuda_graph._segments)
+                try:
+                    _obeg(self)
+                    print(f"[bcg-trace] begin seg {n} OK", flush=True)
+                except Exception as e:
+                    print(f"[bcg-trace] begin seg {n} RAISED {type(e).__name__}: {e}", flush=True)
+                    raise
+
+            def _tend(self):
+                n = len(self.cuda_graph._segments)
+                print(f"[bcg-trace] end seg {n-1} ...", flush=True)
+                _oend(self)
+                print(f"[bcg-trace] end seg {n-1} OK", flush=True)
+
+            _bcg.BreakableCUDAGraphCapture._begin_new_segment = _tbeg
+            _bcg.BreakableCUDAGraphCapture._end_current_segment = _tend
+
+            # The observed SEGFAULT is __exit__ double-ending an already-ended segment while an
+            # exception from an eager-break fn unwinds -- capture_end on a dead sycl graph = null
+            # deref, MASKING the real error. On the exception path: print it and skip cleanup.
+            _oexit = _bcg.BreakableCUDAGraphCapture.__exit__
+
+            def _texit(self, et, ev, tb):
+                if et is not None:
+                    import traceback
+                    print(f"[bcg-trace] __exit__ unwinding {et.__name__}: {ev}", flush=True)
+                    traceback.print_tb(tb)
+                    return False  # skip the fatal double capture_end; let the real error surface
+                return _oexit(self, et, ev, tb)
+
+            _bcg.BreakableCUDAGraphCapture.__exit__ = _texit
+            print("[xpu-cudagraph] BCG segment trace installed", flush=True)
+        except Exception as e:
+            print(f"[xpu-cudagraph] BCG trace install FAILED: {e}", flush=True)
+
     if os.environ.get("B70_XPU_MTP") == "1":
         try:
             import inspect as _insp, textwrap as _tw
