@@ -56,11 +56,23 @@ imported before mtp_tree_xpu (woq_shim order + defensive re-bind) -- likely a fr
 - segv_bt.c/.so -- LD_PRELOAD SIGSEGV native-backtrace printer (how BUG 1 was found).
 - NOTES_codex.md -- codex hazard notes on the runner/eagle paths.
 
+## SOLVED LATE-SESSION: the capturable AR (spin-kernel sync)
+
+Bisect (118b_push_ar_graph_bisect.cpp): ext_codeplay_enqueue_native_command -- even EMPTY -- breaks
+XPUGraph capture_end finalize on DPC++ 2025.3/torch 2.12; the IPC posted-write kernel itself records
+fine. MODE 4 = pure-SYCL spin sync (device seq counters + system-scope atomics on scratch-tail flag
+pages): records + replays 5/5 correct in the 2-rank microbench. Wired into push_ar_xpu.py
+(ar_allreduce_graph_spin preferred; all_gather emulated as zero-padded push-AR).
+RUN 23 (FULL backend + spin collectives): capture COMPLETES (the 3x-hung config) but the first live
+verify REPLAY hangs after prefill.
+
 ## Next-session priorities
 
-1. push-AR record hang (the few-breaks unlock): debug capture_end finalize with the native command.
-   If fixed -> FULL capture, all collectives recorded (ARs native, all_gather via the zero-padded
-   push-AR trick already in push_ar_xpu.py) -> expected the real 2x+.
+1. Fix the run-23 replay hang: (a) per-AR-NODE flag slots instead of the single global seq pair
+   (robust against any per-rank replay-count asymmetry, e.g. bucket-init replays), (b) add hang
+   diagnostics to graph_mtp_verify_ab.sh failure path (py-spy both schedulers + GPU busy snapshot
+   before teardown). If fixed -> FULL capture with ALL collectives in-graph = the real 2x+ shape.
 2. bs=1 oneDNN primitive bisect (removes the 2x padding tax for single-stream).
-3. c4/soak crash triage on the breakable shape.
-4. Upstream: file the BCG bugs (see upstream_issues.md), adopt sgl-kernel-xpu #251.
+3. c4/soak crash triage (breakable shape) -- lower priority if FULL shape lands.
+4. Upstream: file the BCG bugs (upstream_issues.md) + the ext_codeplay-native-cmd finalize bug
+   (clean repro: push_ar_record_test.py MODE 2); adopt sgl-kernel-xpu #251.
