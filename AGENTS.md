@@ -98,6 +98,20 @@ Use the shared lease for every real GPU touch:
 Editing and compiling can run in parallel. Serving, benchmarking, perf probes,
 and on-GPU quantization must not bypass the lease.
 
+### STATUS 2026-07-02: kernel 7.1 CURED the TP=2 BCS/GuC hardware wedge
+
+The box is now on **kernel 7.1.0-070100 + Intel Compute Runtime 26.22.38646.4** (was 7.0 + 26.05; runbook
+`docs/20260702_kernel71_upgrade_plan.md`, JOURNAL 2026-07-02). This CURED the TP=2 "device_lost" BCS
+copy-engine / GuC-firmware-skew wedge -- 7.1's KMD wants GuC 70.58.0 so there is no skew, and the 70.54.0
+pin is RETIRED (do NOT re-add it on 7.1). **w8a8 TP=2 (and DP=2) is the production daily driver and is STABLE:**
+a 12h+ run, millions of tokens, heavy cache-hit load ran clean even on 7.0+pin, then 5/5 back-to-back TP=2
+serve cycles ran clean on 7.1. **The old "w8a8 TP=2 = attended-only" caveat is RETIRED -- unattended TP=2
+serving is fine.**
+
+The P2P-in-vLLM-serve / chained-TP>1-worker-crash oneCCL wedge documented next is a SEPARATE software
+mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge and NOT retested on 7.1 --
+keep those cautions. If any wedge ever does recur, reboot remains the recovery on this display-attached box.
+
 ### DANGER: P2P in vLLM serve wedges the multi-GPU state
 
 Do NOT run `CCL_TOPO_P2P_ACCESS=1` inside a vLLM TP>1 serve. It crashes at
@@ -150,7 +164,8 @@ hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
 ## Host Paths
 
 - **We run LOCALLY on the box now (since the 2026-06-23 migration), NOT over SSH.** The GPU host is a
-  local Ubuntu 26.04 machine (hostname `b70s4dayz`, kernel 7.0) and we act as user `hotschmoe` (uid 1000),
+  local Ubuntu 26.04 machine (hostname `b70s4dayz`, kernel 7.1 since the 2026-07-02 upgrade that cured the TP=2
+wedge -- see `docs/20260702_kernel71_upgrade_plan.md`) and we act as user `hotschmoe` (uid 1000),
   not root. The old `ssh root@192.168.10.5` remote-driver workflow is RETIRED -- run commands on the box
   itself. Rollback/migration context lives in `MIGRATION.md` (section 13).
 - GPU host LAN address: `192.168.10.5` (still its IP; just no longer SSH'd into from a laptop).

@@ -6978,9 +6978,10 @@ RESULT:
     pre-flight AND post-teardown xpu-health HEALTHY every cycle. (Old wedge hit within ~3 serves / even serve 1.)
   - dmesg post-soak: ZERO Engine reset / DEVICE_LOST / Timedout / bcs. Only benign boot-time "ccs1/2/3 fused off"
     (hardware engine fusing at ~8-9s), NOT the CCS-reset wedge symptom.
-VERDICT: the 7.1 + ICR-26.22 upgrade CURED the TP=2 BCS/GuC wedge at the confirmed-gate level (5/5 clean; the
-  root-cause firmware<->KMD skew is resolved; the 70.54 pin is no longer needed and must NOT be re-added on 7.1).
-  This is the real fix vs the 70.54 pin workaround ("rare, not impossible"). STILL OPEN before lifting the
-  "w8a8 TP=2 = attended-only" rule: one SUSTAINED concurrent-decode soak (even 70.54-pinned still wedged card1
-  under sustained MTP+concurrency per the 2026-06-26 note). NEXT: restart daily driver; bin/serve-sweep --smoke
-  shelf gate; then a long concurrent soak; optionally A/B GPU P2P (may not help on X399).
+VERDICT: the 7.1 + ICR-26.22 upgrade CURED the TP=2 BCS/GuC wedge (5/5 clean; the root-cause firmware<->KMD
+  skew is resolved; the 70.54 pin is no longer needed and must NOT be re-added on 7.1). This is the real fix vs
+  the 70.54 pin workaround ("rare, not impossible"). The "w8a8 TP=2 = attended-only" caveat is RETIRED --
+  operator confirms a 12h+ sglang w8a8 TP=2 daily-driver run (millions of tokens, heavy cache-hit load) ran
+  clean even on 7.0+pin, and 7.1 removes the root cause; unattended TP=2 serving is fine. AGENTS.md updated
+  (kernel 7.1; wedge-cured status banner). NEXT: restart daily driver; bin/serve-sweep --smoke shelf gate;
+  optionally A/B GPU P2P as a separate experiment (may not help on X399).
