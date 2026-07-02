@@ -46,6 +46,15 @@ def _load_lib(so):
             if hasattr(lib, "ar_allreduce_graph"):
                 lib.ar_allreduce_graph.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
                                                    ctypes.c_long, ctypes.c_int]
+            # PREFERRED capturable path (2026-07-02): pure-SYCL spin-kernel sync. The K.6 native-command
+            # variant records but HANGS XPUGraph capture_end on DPC++ 2025.3/torch 2.12 (bisect: even an
+            # EMPTY ext_codeplay_enqueue_native_command breaks finalize). The spin variant records and
+            # replays correctly (5/5 microbench, device-side seq counters).
+            if hasattr(lib, "ar_allreduce_graph_spin"):
+                lib.ar_graph_spin_init.restype = ctypes.c_int
+                lib.ar_graph_spin_init.argtypes = [ctypes.c_long]
+                lib.ar_allreduce_graph_spin.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
+                                                        ctypes.c_long, ctypes.c_int, ctypes.c_long]
             _lib = lib
     return _lib
 
@@ -98,6 +107,8 @@ def install():
                     if rc == 0:
                         rc = lib.ar_exchange(rank, SOCK.encode())
                         ok = (rc == 0)
+                    if ok and hasattr(lib, "ar_allreduce_graph_spin"):
+                        lib.ar_graph_spin_init(MAXB)
                     if not ok:
                         print(f"[push-ar] setup/exchange rc={rc}; falling back to oneCCL", flush=True)
                 except Exception as e:
@@ -127,11 +138,17 @@ def install():
                     print(f"[push-ar-stats] calls={_stats['n']} small(<64k-elem)={_stats['n_small']} "
                           f"fallback={_stats['n_fallback']} MB={_stats['bytes']/1e6:.1f}", flush=True)
             # CAPTURED decode (K.6): device-side L0-event sync records into torch's XPUGraph.
-            if GRAPH and hasattr(lib, "ar_allreduce_graph") and _is_capturing():
+            if GRAPH and _is_capturing():
                 out = input_.clone()
                 q = torch.xpu.current_stream().sycl_queue
-                lib.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
-                                       out.numel() * out.element_size(), DT[input_.dtype])
+                if hasattr(lib, "ar_allreduce_graph_spin"):
+                    lib.ar_allreduce_graph_spin(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
+                                                out.numel() * out.element_size(), DT[input_.dtype], MAXB)
+                elif hasattr(lib, "ar_allreduce_graph"):
+                    lib.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
+                                           out.numel() * out.element_size(), DT[input_.dtype])
+                else:
+                    return _orig_all_reduce(self, input_)
                 return out
             if not _is_capturing() and input_.numel() >= MIN_NUMEL:
                 out = input_.clone()
@@ -176,8 +193,12 @@ def install():
                     out = torch.zeros((ws,) + tuple(input_size), dtype=input_.dtype, device=input_.device)
                     out[rank].copy_(input_)
                     q = torch.xpu.current_stream().sycl_queue
-                    lib2.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
-                                            out.numel() * out.element_size(), DT[input_.dtype])
+                    if hasattr(lib2, "ar_allreduce_graph_spin"):
+                        lib2.ar_allreduce_graph_spin(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
+                                                     out.numel() * out.element_size(), DT[input_.dtype], MAXB)
+                    else:
+                        lib2.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
+                                                out.numel() * out.element_size(), DT[input_.dtype])
                     out = out.movedim(0, d).reshape(
                         input_size[:d] + (ws * input_size[d],) + input_size[d + 1:]
                     )

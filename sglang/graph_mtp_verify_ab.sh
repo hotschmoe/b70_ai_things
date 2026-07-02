@@ -50,6 +50,9 @@ ATTN_ARGS="--prefill-attention-backend $PREFILL_ATTN --decode-attention-backend 
 # proven coherent inside captured decode on vLLM (P2P_GPU.md K). PUSHAR=1 default.
 PUSHAR="${PUSHAR:-0}"
 PUSHDIR=$REPO/vllm/contrib/vllm_push_allreduce/prebuilt
+# PUSH_SO_NAME: libxpu_push_ar_graph.so = K.6 native-cmd (capture_end HANGS on torch 2.12);
+# the graph_mtp bisect .so adds ar_allreduce_graph_spin (pure-SYCL spin sync -- WORKS, 2026-07-02).
+PUSH_SO="${PUSH_SO:-/work/gm/libxpu_push_ar_bisect.so}"
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 LOGSAVE="$REPO/sglang/graph_mtp/last_run_$(date +%H%M%S).log"
 cleanup(){ say "cleanup: rm $NAME (logs -> $LOGSAVE)"; docker logs "$NAME" >"$LOGSAVE" 2>&1 || true; docker rm -f "$NAME" >/dev/null 2>&1; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
@@ -72,7 +75,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$PUSHDIR:/work/push_ar:ro" \
   -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
   -v "$REPO/sglang/graph_mtp:/work/gm:ro" \
-  -e B70_XPU_PUSH_AR=$PUSHAR -e PUSH_AR_SO=/work/push_ar/libxpu_push_ar_graph.so -e PUSH_AR_GRAPH=$PUSHAR \
+  -e B70_XPU_PUSH_AR=$PUSHAR -e PUSH_AR_SO=$PUSH_SO -e PUSH_AR_GRAPH=$PUSHAR \
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
   -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
   -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 -e B70_XPU_DRAFT_GRAPH=$DRAFT_GRAPH \
