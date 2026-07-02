@@ -314,6 +314,11 @@ static void do_ar_graph_spin(queue *q, unsigned long long inout, size_t nbytes, 
         h.parallel_for(range<1>(nw),[=](id<1> i){ wd[i]=ws[i]; }); });
     event ef = q->submit([&](handler &h){ h.depends_on(ep);
         h.single_task([=](){
+            // PRODUCER VISIBILITY (run-27c): force the push kernel's payload P2P writes to DRAIN to peer
+            // memory before the flag becomes observable. A plain release on the single flag word does not
+            // guarantee the (separate, plain-store) payload has propagated across the P2P fabric; a
+            // system-scope release fence here orders all prior global writes ahead of the flag store.
+            sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
             uint32_t s = my_counts[2*node] + 1; my_counts[2*node] = s;
             sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
                 sycl::access::address_space::global_space> af(peer_flags[node]);
