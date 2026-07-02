@@ -4,7 +4,27 @@ Opened 2026-07-02 (perf campaign; JOURNAL entries same date). Goal: capture the 
 forward (and later the draft chain) of the sglang W8A8 fused+MTP TP=2 daily driver to break the
 launch-bound ~220ms eager iteration (~25 t/s -> target 40+).
 
-## State (end of 2026-07-02 session)
+## State (end of 2026-07-02 SECOND session -- runs 26-27c)
+
+THE CAPTURED W8A8 MTP VERIFY NOW PRODUCES COHERENT OUTPUT (some requests end-to-end correct) -- the
+approach is proven sound. Config: `GRAPH_BACKEND=full EAGER_COLL=0 PUSHAR=1 PUSH_AR_MAXB=268435456`.
+Three stacked bugs fixed/found this session (details in JOURNAL 2026-07-02 runs 26-27c):
+  A. payload slot aliasing (run 25 '!' flood): FIXED -- bump-pointer per-node slots, cursor reset per
+     graph via ar_graph_new_capture() hooked from _B70XPUGraph.capture_begin. (slot_alloc_test.py PASS)
+  B. cross-replay GENERATION race (deterministic garbage): FIXED -- per-node CONSUME-ACK in the .so v3
+     (reduce signals peer_consumed; push waits my_consumed >= prev-push before overwriting peer's slot;
+     seq region 256KB->512KB). First request now coherent.
+  C. cross-device VISIBILITY race (non-deterministic, THE OPEN WALL): temp0 gives DIFFERENT outputs ->
+     real race; ~25-33% coherent. The flag becomes observable before the peer's payload P2P writes drain.
+     Consumer + producer system-scope atomic_fences do NOT fix it (4/15, 5/15). Needs correct capturable
+     cross-device sync -- the L0 HW-semaphore (K.3-K.5) is correct but breaks capture_end finalize
+     (ext_codeplay bisect MODE 2). NEXT: consumer data-arrival CHECKSUM/re-read (SYCL-only), or an
+     alternate capturable HW-semaphore, or upstream the DPC++ finalize bug.
+Perf number still gated on coherence (never got a clean t/s). New microbenches: slot_alloc_test.py,
+allgather_emul_test.py, ar_integration_test.py. Driver knobs added: PUSH_AR_MAXB, PUSH_AR_GATHER_GRAPH,
+KEEP=1 (leave container up for probing). CONSUME_ACK_FALLBACK.md superseded (consume-ack now shipped).
+
+## State (end of 2026-07-02 FIRST session)
 
 WORKS (first ever captured MTP verify on sglang-XPU):
   GRAPH_BACKEND=breakable + EAGER_COLL=all + decode-attn triton + spec-attention-mode decode
