@@ -282,4 +282,27 @@ def install():
         except Exception as e:
             print(f"[mtp-dbg] KV trace install failed: {e}", flush=True)
 
+    # --- DOMINO 5 (opt-in B70_XPU_MAMBA_EXTRA_BUFFER=1): un-gate the mamba extra_buffer radix strategy on XPU.
+    # server_args._validate_mamba_extra_buffer asserts (is_cuda() or is_musa() or is_npu()) "needs CUDA/MUSA/NPU
+    # (FLA)" -- but "FLA" here is sglang's VENDORED Triton (layers/attention/fla/), and the whole extra_buffer
+    # runtime (track/restore, checkpoint copy, int8 quant) is Triton or pure-torch, all proven on XPU (the
+    # MTP-path scatter guards are already stripped in DOMINO 2). Dropping this one assert lets extra_buffer run
+    # with the intel_xpu XMX attention backend at page_size 64/128 -- prefix caching WITHOUT the
+    # no_buffer+page_size=1 long-context decode collapse. Inert unless --mamba-radix-cache-strategy extra_buffer.
+    if os.environ.get("B70_XPU_MAMBA_EXTRA_BUFFER") == "1":
+        try:
+            import inspect, textwrap
+            import sglang.srt.server_args as _sa
+            _src = textwrap.dedent(inspect.getsource(_sa.ServerArgs._validate_mamba_extra_buffer))
+            _needle = "is_cuda() or is_musa() or is_npu()"
+            if _needle in _src:
+                _ns = dict(_sa.__dict__)
+                exec(_src.replace(_needle, "True  # XPU: extra_buffer path is Triton/pure-torch"), _ns)
+                _sa.ServerArgs._validate_mamba_extra_buffer = _ns["_validate_mamba_extra_buffer"]
+                print("[mtp-tree-xpu] un-gated extra_buffer for XPU (dropped CUDA/MUSA/NPU assert)", flush=True)
+            else:
+                print("[mtp-tree-xpu] extra_buffer un-gate SKIPPED (assert text changed upstream)", flush=True)
+        except Exception as e:
+            print(f"[mtp-tree-xpu] extra_buffer un-gate FAILED: {e}", flush=True)
+
     print("[mtp-tree-xpu] installed chain (topk=1) build_tree + verify_tree_greedy torch fallbacks", flush=True)

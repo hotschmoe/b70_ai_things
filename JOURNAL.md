@@ -6906,3 +6906,32 @@ VERDICT: SHELF GATE PASSED (coherent under concurrent prefill+decode). Wired int
   DD_ENV="RADIX=1". Follow-ups: extra_buffer path (better: keeps XMX + page 64 + int8 pool ~2x capacity);
   clean cold-prefill A/B; kernel 7.1 host upgrade for the TP=2 wedge (docs/20260702_kernel71_upgrade_plan.md).
   Scripts: sglang/radix_nobuffer_ab.sh (single-stream), sglang/radix_concurrent_sweep.sh (load gate).
+
+## 2026-07-02 -- extra_buffer WINS: caching WITH intel_xpu XMX attn, no decode collapse (shelf RADIX=1 switched) [result]
+
+PROBLEM the no_buffer path exposed: the shipped triton+no_buffer+page1 cache config COLLAPSED long-context
+  decode on the live DD -- 29 t/s @8k but 1-4 t/s @60k (page_size=1 + triton attn, no XMX; scales with KV).
+  The caching prefill win was negated by the decode loss at the exact long contexts caching targets.
+FIX: mamba EXTRA_BUFFER strategy keeps page_size 128 AND the intel_xpu XMX attention backend. It was CUDA-gated
+  by ONE assert (server_args._validate_mamba_extra_buffer: is_cuda()/musa()/npu() "needs ... (FLA)"), but "FLA"
+  is sglang's VENDORED Triton and the whole extra_buffer runtime is Triton/pure-torch (MTP scatter guards
+  already stripped by mtp_tree_xpu DOMINO 2). Added DOMINO 5 (opt-in B70_XPU_MAMBA_EXTRA_BUFFER=1) to drop that
+  assert. With page_size=128 the default mamba_track_interval=256 satisfies the validator (256%128==0, >=11);
+  chunk_size auto. Config: --attention-backend intel_xpu --page-size 128 --mamba-radix-cache-strategy
+  extra_buffer --enable-cache-report, MTP+fused kept.
+COMMAND: /mnt/vm_8tb/b70/gpu-run bash sglang/extra_buffer_ab.sh (single-stream) + sglang/extra_buffer_sweep.sh (load)
+RESULT (TP=2):
+  - SERVES coherently, un-gate shim applied ("un-gated extra_buffer for XPU"), Tree cache = MambaRadixCache,
+    strategy=extra_buffer, attn=intel_xpu. No wedge.
+  - LONG-CONTEXT DECODE (delta-timing, single-stream) 22.7 / 18.6 / 11.5 t/s @ 12k/30k/60k -- vs no_buffer+triton
+    29 / 5.5 / 1-4. The collapse is GONE (60k: 11.5 vs 1-4 = ~3-10x).
+  - COLD PREFILL ~3.5x faster (12k cold 7.6s vs 26.6s) -- intel_xpu XMX prefill >> triton.
+  - CACHING kept: 8.3x warm @12k (cached 11776/11898); cache hits survive concurrency.
+  - CONCURRENT sweep PASS: 24/24 coherent, 0 garbage/errors; agg decode 15.6 (cold) / 29.1 (warm) t/s vs
+    no_buffer's 9.0 / 12.4 (~2x). Steady-state decode from logs: 23-27 t/s @30k, 18.8 @44k.
+VERDICT: extra_buffer is strictly better than no_buffer on EVERY axis (cold prefill, warm cache, long-context
+  decode, concurrent throughput) and keeps the XMX attention path. Switched the shelf: serve.sh RADIX=1 now =
+  extra_buffer + intel_xpu + page 128 (mounts mtp_tree_xpu.py + sets B70_XPU_MAMBA_EXTRA_BUFFER=1); RADIX=0
+  prod unchanged. DD turns caching on via DD_ENV="RADIX=1". Follow-ups: --enable-int8-mamba-checkpoint (~2x
+  cache capacity, un-CUDA-gated per plan, untested); a clean extra_buffer-vs-prod decode parity check.
+  Scripts: sglang/extra_buffer_ab.sh, sglang/extra_buffer_sweep.sh. Shim: sglang/patches/mtp_tree_xpu.py DOMINO 5.
