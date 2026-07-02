@@ -75,11 +75,12 @@ start(){
   docker rm -f "$NAME" >/dev/null 2>&1
   say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
-  # RADIX=1 -> cache-on recipe: extra_buffer strategy + page_size=128, KEEP intel_xpu XMX attn (no decode
-  #            collapse); mount the un-gate shim + set B70_XPU_MAMBA_EXTRA_BUFFER=1. RADIX=0 -> prod (no cache).
+  # RADIX=1 -> cache-on recipe: extra_buffer strategy + int8 mamba checkpoint pool (~2x cached-prefix capacity,
+  #            0.6GB from headroom) + page_size=128, KEEP intel_xpu XMX attn (no decode collapse); mount the
+  #            un-gate shim + set B70_XPU_MAMBA_EXTRA_BUFFER=1. RADIX=0 -> prod (no cache). Both sweep-gated 2026-07-02.
   local ATTN=intel_xpu PAGE=64 RADIX_ARG="--disable-radix-cache" CACHE_ARG="" EB_MOUNT=() EB_ENV=(-e B70_XPU_MAMBA_EXTRA_BUFFER=0)
   if [ "$RADIX" = 1 ]; then
-    PAGE=128; RADIX_ARG="--mamba-radix-cache-strategy extra_buffer"; CACHE_ARG="--enable-cache-report"
+    PAGE=128; RADIX_ARG="--mamba-radix-cache-strategy extra_buffer --enable-int8-mamba-checkpoint"; CACHE_ARG="--enable-cache-report"
     EB_MOUNT=(-v "$REPO/sglang/patches/mtp_tree_xpu.py:/opt/venv/lib/python3.12/site-packages/mtp_tree_xpu.py:ro")
     EB_ENV=(-e B70_XPU_MAMBA_EXTRA_BUFFER=1)
   fi

@@ -6935,3 +6935,24 @@ VERDICT: extra_buffer is strictly better than no_buffer on EVERY axis (cold pref
   prod unchanged. DD turns caching on via DD_ENV="RADIX=1". Follow-ups: --enable-int8-mamba-checkpoint (~2x
   cache capacity, un-CUDA-gated per plan, untested); a clean extra_buffer-vs-prod decode parity check.
   Scripts: sglang/extra_buffer_ab.sh, sglang/extra_buffer_sweep.sh. Shim: sglang/patches/mtp_tree_xpu.py DOMINO 5.
+
+## 2026-07-02 -- int8 mamba checkpoint pool WORKS on XPU: 2x cache capacity, folded into RADIX=1 [result]
+
+CONFIG: extra_buffer (chosen) + --enable-int8-mamba-checkpoint. Radix-cached mamba states stored int8 in a
+  separate pool (~2x cached-prefix capacity at fixed mem). Constraints clean (only rejects hierarchical-cache /
+  radix-cache-backend, neither used); quant = pure-torch .to(int8) + per-(head,k) scale. RISK: does XPU int8
+  mamba-state quant stay coherent + allocate without a CUDA path.
+COMMAND: /mnt/vm_8tb/b70/gpu-run bash sglang/extra_buffer_int8ckpt_sweep.sh
+RESULT (TP=2):
+  - int8 checkpoint pool allocates on XPU: "30 slots, 0.60GB (qdata 0.54 + scale 0.02 + conv 0.04); active
+    mamba pool 15 slots" -> 2x cached-prefix capacity for 0.6GB (from mem-fraction-static headroom; NOT in
+    max_total_num_tokens -- headroom must cover it; fits at 0.90). COHERENT, no wedge.
+  - CACHE 12k: cold 7.53s warm 0.94s (8.0x), cached 11776/11898. LONG-CTX DECODE 19.5 @30k, 10.2 @60k (== plain
+    extra_buffer 18.6/11.5, no regression).
+  - CONCURRENT gate PASS: 24/24 coherent, 0 garbage/errors. agg decode 25.4 (cold) / 34.2 (warm) t/s -- BETTER
+    than extra_buffer-alone (15.6/29.1): 2x capacity -> more cached prefixes survive under load -> fewer re-prefills.
+VERDICT: int8 mamba checkpoint is a clean win (2x capacity, no coherence/decode cost, better concurrent
+  throughput). FOLDED into serve.sh RADIX=1 (extra_buffer + --enable-int8-mamba-checkpoint). Final DD cache
+  config = extra_buffer + int8-checkpoint + intel_xpu XMX + page 128. DD brought up via DD_ENV="RADIX=1".
+  Watch: pool is 0.6GB from headroom -- if OOM at full 128k ctx, lower mem-fraction slightly. Script:
+  sglang/extra_buffer_int8ckpt_sweep.sh. NEXT SESSION: kernel 7.1 host upgrade + vLLM v0.23.0 rebase.
