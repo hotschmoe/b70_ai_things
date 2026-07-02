@@ -7047,3 +7047,25 @@ VERDICT: CONFIRMS the budget analysis -- the ~128 x 10KB ARs (~11ms) are only ~5
   capture mode natively when spec is on (decode_cuda_graph_runner ~236).
 - Experiment: sglang/graph_mtp_verify_ab.sh (in flight). Sources snapshot sglang/graph_mtp/src/;
   hazards notes sglang/graph_mtp/NOTES_codex.md.
+
+## 2026-07-02 -- *** MILESTONE: MTP TARGET_VERIFY forward CAPTURED on XPU, coherent first gen (the 06-28 graph+MTP wall is BROKEN) *** [progress]
+
+Three-run bisect of sglang/graph_mtp_verify_ab.sh (W8A8 fused+MTP TP=2, target-verify graph, draft eager):
+  RUN 1 (attention-backend intel_xpu): capture FAILS -- "sycl_ext_oneapi_work_group_scratch_memory ... not
+    yet available with SYCL Graph". The intel_xpu XMX mha kernel uses dynamic SLM -> NOT graph-recordable
+    (same wall as the vLLM FULL-capture chase; why int4-graph runs triton attn).
+  RUN 2 (--prefill-attention-backend intel_xpu --decode-attention-backend triton): STILL fails -- the
+    HybridAttnBackend routes TARGET_VERIFY to the PREFILL backend by default (verify is multi-token/extend-
+    like), so the captured verify still hit the intel_xpu kernel.
+  RUN 3 (+ --speculative-attention-mode decode): *** CAPTURE SUCCEEDS *** -- "Capture target verify unknown
+    graph begin/end. backend=full, num_tokens_per_bs=11, bs=[1,2,3,4]" on BOTH ranks (43.8s, +0.05GB), draft
+    cleanly skipped (new B70_XPU_DRAFT_GRAPH gate), /health 200, FIRST GEN COHERENT, NO HANG, no wedge.
+    Then a harness bug ended the run: perf_regime aborts on a single transient /health 503 (detokenizer
+    heartbeat stall during the JIT-heavy first gen) -> no perf numbers yet. Script hardened (health re-wait
+    + always-save logs); RUN 4 in flight.
+KEY CONFIG (the capture-compatible serve shape): --prefill-attention-backend intel_xpu (XMX prefill kept
+  EAGER) + --decode-attention-backend triton (static-SLM, graph-proven) + --speculative-attention-mode decode
+  (routes verify to the decode/triton backend) + B70_XPU_CUDAGRAPH=1 + draft eager. The fork's triton backend
+  has native out_graph target_verify support; hybrid_linear_attn (GDN) side had it too; XPUAttentionBackend
+  TARGET_VERIFY static hooks added this session (codex-drafted) end up UNUSED in this shape (kept for a
+  future scratch-memory-capable SYCL runtime).

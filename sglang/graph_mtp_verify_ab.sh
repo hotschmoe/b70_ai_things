@@ -27,8 +27,16 @@ SERVED=qwen36-27b-w8a8-mtp
 KDIR=$ROOT/w8a8_kernel
 CTX="${CTX:-8192}"
 MAXBS="${MAXBS:-4}"
+SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-$((SPEC_STEPS+1))}"
+DRAFT_GRAPH="${DRAFT_GRAPH:-0}"   # 1 = also capture the draft chain (B70_XPU_DRAFT_GRAPH)
+# The intel_xpu XMX mha kernel uses sycl work_group_scratch_memory -> NOT SYCL-Graph-recordable
+# ("feature not yet available with SYCL Graph", first run 18:05). Split backends: XMX for eager
+# PREFILL, triton (static SLM, graph-proven since int4-graph) for the captured DECODE/VERIFY path.
+PREFILL_ATTN="${PREFILL_ATTN:-intel_xpu}"
+DECODE_ATTN="${DECODE_ATTN:-triton}"
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
-cleanup(){ say "cleanup: rm $NAME"; docker rm -f "$NAME" >/dev/null 2>&1; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
+LOGSAVE="$REPO/sglang/graph_mtp/last_run_$(date +%H%M%S).log"
+cleanup(){ say "cleanup: rm $NAME (logs -> $LOGSAVE)"; docker logs "$NAME" >"$LOGSAVE" 2>&1 || true; docker rm -f "$NAME" >/dev/null 2>&1; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
 trap cleanup EXIT
 
 say "pre-flight xpu-health"
@@ -47,13 +55,14 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
   -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
-  -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 \
+  -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 -e B70_XPU_DRAFT_GRAPH=$DRAFT_GRAPH \
   "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
     exec python -m sglang.launch_server --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
-    --device xpu --attention-backend intel_xpu --linear-attn-backend triton \
-    --speculative-algorithm NEXTN --speculative-num-steps 10 --speculative-eagle-topk 1 \
-    --speculative-num-draft-tokens 11 --speculative-draft-attention-backend triton \
+    --device xpu --prefill-attention-backend $PREFILL_ATTN --decode-attention-backend $DECODE_ATTN --linear-attn-backend triton \
+    --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
+    --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton \
+    --speculative-attention-mode decode \
     --cuda-graph-max-bs $MAXBS \
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
     --tp 2 --context-length $CTX --mem-fraction-static 0.87 --max-running-requests 4 --skip-server-warmup \
@@ -78,6 +87,13 @@ echo "$g" | grep -q "content" || { say "FIRST GEN FAILED/HUNG -- logs:"; docker 
 
 say "decode-log check (want: cuda graph: True on Decode batch lines)"
 docker logs "$NAME" --since 3m 2>&1 | grep -E "Decode batch" | tail -3
+
+# the first heavy gen can stall the scheduler heartbeat -> transient /health 503; wait it out
+say "re-confirming /health before bench (up to 3min)..."
+for i in $(seq 1 36); do
+  [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:$PORT/health 2>/dev/null || echo 000)" = 200 ] && break
+  sleep 5
+done
 
 bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "w8a8-mtp-VERIFYGRAPH"
 rc=$?
