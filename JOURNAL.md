@@ -6850,3 +6850,59 @@ VERDICT: LEVER 1 = a validated, coherent **+7% single-stream decode win** (int8 
   (+7%, coherent). Requant recipe = models/gdn_int8_requant.py; variant git-ignored under models/files/.
   FOLLOW-UPS: shared-act dedup for in_proj_qkv+in_proj_z (more decode); for MTP, use rowParallelW8A8 out_proj
   in the verify exe only (decode keeps weightOnly); HumanEval+ coherence check before shelving.
+
+## 2026-07-02 -- PREFIX/RADIX CACHE UNBLOCKED on the XPU daily driver: 16-18x warm-prefill, decode unchanged [result]
+
+Prior belief (memory + rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh:55, JOURNAL 2026-06-29): mamba radix
+  cache is impossible on XPU -- extra_buffer is CUDA/MUSA/NPU-only, no_buffer "forces page_size=1, untested
+  with NEXTN+fused". Retested BOTH blockers against the pi.dev agentic 100:1 (re-prefills whole prompt/turn).
+CONFIG: daily-driver W8A8 fused+MTP (TP=2, NEXTN steps=10, fused int8 kernels, vision ckpt, skip-warmup),
+  prefix caching FORCED ON via:
+    (drop) --disable-radix-cache                    radix ON
+    (add)  --mamba-radix-cache-strategy no_buffer   extra_buffer is CUDA-gated; no_buffer is the XPU path
+    (add)  --page-size 1                            MambaRadixCache v1 asserts page_size==1
+    (chg)  --attention-backend intel_xpu -> triton  KEY FIX: the intel_xpu DECODE backend force-bumps
+             page 1->128 (server_args.py:4835-4845, non-MLA XPU supports only [64,128]); that collides with
+             MambaRadixCache's page==1. triton attn keeps page_size=1.
+  RUN 1 (intel_xpu attn) CRASHED at scheduler init: "Page size must be 1 for MambaRadixCache v1, got 128".
+  RUN 2 (triton attn) SERVED.
+COMMAND: /mnt/vm_8tb/b70/gpu-run bash sglang/radix_nobuffer_ab.sh   (self-contained A/B, own container :31000)
+RESULT (RUN 2, single-stream A/B, ~12.5k-token prompts, TP=2):
+  - Tree cache initialized: impl=MambaRadixCache hybrid_ssm=True. COHERENT (no "!!!!"). HEALTHY, no wedge.
+  - PREFIX CACHE WORKS: A cold 21.0s -> A warm 1.14-1.29s = 16-18x faster. A DIFFERENT prefix B cold 19.3s
+    (re-prefills, proving it is prefix-keyed not warmup), B warm 1.14s = 17x. Metrics confirm:
+    sglang:cached_tokens_total{cache_source=device}=36864, realtime mode=prefill_cache=36864.
+    (usage.cached_tokens=None + cache_hit_rate gauge=0.0 are a REPORTING artifact -- enable_cache_report=False
+    by default; the 16-18x timing + cached_tokens_total are the ground truth.)
+  - DECODE UNCHANGED: 25.7 tok/s (vs prod intel_xpu+MTP ~25.2). Moving full-attn to triton costs ~0 decode
+    (only 16/64 layers are full-attn; MTP dominates). No regression.
+  - Cold prefill ~600 tok/s (12569 tok / 21.0s) -- possibly slower than intel_xpu prefill; paid ONCE per new
+    conversation, then every repeat turn is a ~17x-cheaper cache hit. Needs a clean cold-prefill A/B.
+  - Our mtp-tree-xpu shim already logs "stripped is_cuda guards on fused mamba/conv state-scatter (XPU)" --
+    that is WHY no_buffer mamba radix runs on XPU here (the state-scatter is de-CUDA-gated in our patch).
+VERDICT: "radix impossible on XPU" is WRONG for our stack. Prefix caching serves coherently with
+  no_buffer + page_size=1 + triton attention, MTP+fused KEPT, decode unchanged, 16-18x warm-prefill -- exactly
+  the lever for the pi.dev 100:1 workload. NOT yet shelved. SHELF GATE before landing: (1) CONCURRENT
+  prefill+decode coherence sweep (the failure mode that matters); (2) clean cold-prefill A/B (triton vs
+  intel_xpu); (3) optional --enable-int8-mamba-checkpoint (~2x cached capacity; may be CUDA-gated -- test) +
+  --enable-cache-report (surface cached_tokens to clients). Script: sglang/radix_nobuffer_ab.sh.
+
+## 2026-07-02 -- cache config PASSES concurrent sweep; shelved as serve.sh RADIX=1 knob [result]
+
+CONFIG: the RUN 2 cache recipe under CONCURRENT prefill+decode (the "!!!!" failure mode), + --enable-cache-report.
+COMMAND: /mnt/vm_8tb/b70/gpu-run bash sglang/radix_concurrent_sweep.sh  (2 waves x 12 concurrent reqs, max_running=4)
+RESULT:
+  - WAVE 1 (cold, mixed): 12/12 coherent, 0 garbage, 0 errors. Cache hits already appear (later same-wave
+    shared reqs cached ~8192-9119 of 9931 as the first prefills the shared prefix).
+  - WAVE 2 (warm shared): 12/12 coherent, 0 garbage, 0 errors; 7/8 shared reqs cached>1000. cached_tokens_total
+    {device}=125424. HEALTHY, no wedge.
+  - CAVEAT (as predicted): under 12-deep contention with big prompts + page_size=1 triton-attn cold prefill,
+    aggregate throughput is low (wave1 9.0, wave2 12.4 tok/s) and cold prefill of a 14.7k-tok prompt hit ~250s.
+    This is the cold-miss cost, not the warm single-user path (25.7 t/s decode, ~1.2s warm prefill). extra_buffer
+    (keeps page 64 + XMX) removes it -- docs/20260702_mamba_extra_buffer_xpu_plan.md.
+VERDICT: SHELF GATE PASSED (coherent under concurrent prefill+decode). Wired into
+  rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh: RADIX=1 now = triton attn + page_size=1 + no_buffer +
+  cache-report (bare-shelf default RADIX=0 unchanged/reversible). Daily driver turns caching on via
+  DD_ENV="RADIX=1". Follow-ups: extra_buffer path (better: keeps XMX + page 64 + int8 pool ~2x capacity);
+  clean cold-prefill A/B; kernel 7.1 host upgrade for the TP=2 wedge (docs/20260702_kernel71_upgrade_plan.md).
+  Scripts: sglang/radix_nobuffer_ab.sh (single-stream), sglang/radix_concurrent_sweep.sh (load gate).

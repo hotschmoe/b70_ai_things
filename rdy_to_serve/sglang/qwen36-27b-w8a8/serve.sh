@@ -52,11 +52,14 @@ METRICS="${METRICS:-1}"   # --enable-metrics: expose Prometheus /metrics on the 
                           # examples/monitoring/ compose + dashboard JSON). Time-series for input/output token
                           # counters, TTFT (prefill), gen throughput (decode), cache_hit_rate, queue depth.
                           # Observability-only -- no effect on model outputs. METRICS=0 to disable.
-RADIX="${RADIX:-0}"   # prefix/radix cache. MUST stay 0 on XPU for this HYBRID-mamba model: sglang's mamba
-                      # radix needs either extra_buffer (CUDA/MUSA/NPU-only -> AssertionError on XPU) or
-                      # no_buffer (forces page_size=1, untested with NEXTN+fused kernels). RADIX=1 here
-                      # CRASHES at arg-parse (server_args._handle_mamba_radix_cache). Prefix caching on
-                      # XPU hybrid is a RESEARCH item, not a prod flag. See JOURNAL 2026-06-29.
+RADIX="${RADIX:-0}"   # prefix/radix cache. RADIX=1 now enables the XPU-WORKING recipe (JOURNAL 2026-07-02,
+                      # sweep PASS): no_buffer mamba radix + --page-size 1 + --attention-backend triton. The
+                      # intel_xpu attn backend force-bumps page 1->128 (server_args.py:4835-4845), which
+                      # collides with MambaRadixCache's page==1 -- so caching REQUIRES triton attn here.
+                      # Measured: coherent under concurrent prefill+decode, decode UNCHANGED ~25.7 t/s,
+                      # 16-18x warm-prefill. Tradeoff: cold prefill at page_size=1 is slower. The extra_buffer
+                      # path (keeps page 64 + XMX attn, ~2x cache via int8 pool) is the follow-up ->
+                      # docs/20260702_mamba_extra_buffer_xpu_plan.md. RADIX=0 = prod (intel_xpu, no cache).
 THINKCAP="${THINKCAP:-4096}"                                        # int -> SGLANG_MAX_THINK_TOKENS (graceful </think> cap); empty = unlimited
                                                                    # 4096 (was 8192): caps worst-case "thinking" dead-air before the
                                                                    # first tool-call token (~3min at 25t/s) that fronting-proxy idle
@@ -72,7 +75,12 @@ start(){
   docker rm -f "$NAME" >/dev/null 2>&1
   say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
-  local RADIX_ARG="--disable-radix-cache"; [ "$RADIX" = 1 ] && RADIX_ARG=""
+  # RADIX=1 -> cache-on recipe (triton attn + page_size=1 + no_buffer strategy + cache-report);
+  # RADIX=0 -> prod (intel_xpu attn + page_size=64 + radix disabled). See the RADIX comment above.
+  local ATTN=intel_xpu PAGE=64 RADIX_ARG="--disable-radix-cache" CACHE_ARG=""
+  if [ "$RADIX" = 1 ]; then
+    ATTN=triton; PAGE=1; RADIX_ARG="--mamba-radix-cache-strategy no_buffer"; CACHE_ARG="--enable-cache-report"
+  fi
   local TOOL_ARG="";   [ "$TOOLCALL" = 1 ]    && TOOL_ARG="--tool-call-parser $TOOLPARSER"
   local REASON_ARG=""; [ -n "$REASONPARSER" ] && REASON_ARG="--reasoning-parser $REASONPARSER"
   local METRICS_ARG=""; [ "$METRICS" = 1 ]    && METRICS_ARG="--enable-metrics"
@@ -89,10 +97,10 @@ start(){
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
       export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
       exec python -m sglang.launch_server --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
-      --device xpu --attention-backend intel_xpu --linear-attn-backend triton \
+      --device xpu --attention-backend $ATTN --linear-attn-backend triton \
       --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
       --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --disable-cuda-graph \
-      --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 $RADIX_ARG --skip-server-warmup \
+      --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size $PAGE $RADIX_ARG $CACHE_ARG --skip-server-warmup \
       $TOOL_ARG $REASON_ARG $METRICS_ARG \
       --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC --max-running-requests $MAXREQ $APIKEY_ARG \
       --host 0.0.0.0 --port $PORT" >/dev/null
