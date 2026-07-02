@@ -107,7 +107,12 @@ say "first gen (120s timeout; a HANG here = the captured verify path deadlock)"
 g=$(curl -s --max-time 120 "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
   -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue? Two sentences.\"}],\"max_tokens\":128,\"temperature\":0}")
 echo "$g" | head -c 400; echo
-echo "$g" | grep -q "content" || { say "FIRST GEN FAILED/HUNG -- logs:"; docker logs "$NAME" --since 3m 2>&1 | tail -60; exit 1; }
+if ! echo "$g" | grep -q "content"; then
+  say "FIRST GEN FAILED/HUNG -- capturing scheduler stacks (py-spy) before teardown"
+  docker exec "$NAME" bash -c 'for p in $(pgrep -f scheduler_TP); do echo "=== pid $p ==="; py-spy dump --native --pid $p 2>/dev/null | head -40; done' 2>&1 | tee "$REPO/sglang/graph_mtp/hang_stacks_$(date +%H%M%S).txt" | head -70
+  docker logs "$NAME" --since 3m 2>&1 | tail -20
+  exit 1
+fi
 
 say "decode-log check (want: cuda graph: True on Decode batch lines)"
 docker logs "$NAME" --since 3m 2>&1 | grep -E "Decode batch" | tail -3

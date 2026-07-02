@@ -237,42 +237,58 @@ static void do_ar_graph_mode(queue *q, unsigned long long inout, size_t nbytes, 
     q->submit([&](handler &h){ h.depends_on(es);
         h.parallel_for(range<1>(n),[=](id<1> i){ src[i]=(T)(float(src[i])+float(scr[i])); }); });
 }
-// device-side seq state: carve the LAST 4KB of the local scratch for flags.
-// layout: [0]=incoming flag (peer writes ++seq here), [1]=my push seq counter, [2]=my expect counter.
+// device-side seq state: carve the LAST 256KB of the local scratch.
+// PER-NODE layout (v2, run-24 hang fix): each RECORDED AR call gets a unique node index n (host-side
+// counter at record time; identical on both ranks -- same model, same record order). Page A (offset 0):
+// flags[n] -- peer's push for node n stores its per-node replay seq here. Page B (offset 128KB):
+// counts[2n]=my push count for node n, counts[2n+1]=my expect count for node n. A spin only waits on
+// ITS OWN node's flag, so any cross-node execution reordering (captured side streams -> parallel graph
+// branches) cannot circular-wait. 16K nodes max.
 static inline uint32_t *seq_base(void *scratch, long max_bytes) {
-    return reinterpret_cast<uint32_t *>((char *)scratch + max_bytes - 4096);
+    return reinterpret_cast<uint32_t *>((char *)scratch + max_bytes - 262144);
 }
+static int g_node_counter = 0;
 extern "C" int ar_graph_spin_init(long max_bytes) {
-    // zero the flag page on BOTH sides (called once, eager, before any capture)
+    // zero the flag+count pages (called once, eager, before any capture)
     uint32_t *loc = seq_base(g_scratch, max_bytes);
-    g_q->memset(loc, 0, 4096).wait();
+    g_q->memset(loc, 0, 262144).wait();
+    g_node_counter = 0;
     return 0;
 }
 template<typename T>
 static void do_ar_graph_spin(queue *q, unsigned long long inout, size_t nbytes, long max_bytes) {
     size_t nw = nbytes/4;
-    uint32_t *ws=reinterpret_cast<uint32_t*>(inout), *wd=(uint32_t*)g_peerScratch;
-    uint32_t *peer_flags = seq_base(g_peerScratch, max_bytes);   // peer's incoming-flag page (I write)
-    uint32_t *my_flags   = seq_base(g_scratch,     max_bytes);   // my flag page (peer writes [0]; I own [1],[2])
-    // push payload; then a SINGLE workitem bumps my push seq and posts it to the peer's flag[0]
+    int node = g_node_counter++;              // record-order node id, identical across ranks
+    if (node >= 16384) node = node % 16384;   // wrap (should never happen: ~400 nodes/serve)
+    // PER-NODE payload slot: each node gets its own scratch region so concurrent branches cannot
+    // overwrite each other's payload (flags page is the last 256KB; payload area is everything before).
+    // slot size = 1MB (decode ARs are <=1MB at bs<=4; larger falls back before reaching here).
+    // slots live ABOVE the eager region (eager do_ar uses scratch[0..~21MB for prefill pushes], and
+    // an eager push on one rank can overlap the peer's in-flight replay reads): base at 32MB.
+    long slot_off = (32L << 20) + (long)(node % 64) * (1L << 20);
+    uint32_t *ws=reinterpret_cast<uint32_t*>(inout);
+    uint32_t *wd=(uint32_t*)((char*)g_peerScratch + slot_off);
+    uint32_t *peer_flags = seq_base(g_peerScratch, max_bytes);
+    uint32_t *my_flags   = seq_base(g_scratch,     max_bytes);
+    uint32_t *my_counts  = my_flags + 32768;     // page B: [2n]=push count, [2n+1]=expect count
     event ep = q->parallel_for(range<1>(nw),[=](id<1> i){ wd[i]=ws[i]; });
     event ef = q->submit([&](handler &h){ h.depends_on(ep);
         h.single_task([=](){
-            uint32_t s = my_flags[1] + 1; my_flags[1] = s;
+            uint32_t s = my_counts[2*node] + 1; my_counts[2*node] = s;
             sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
-                sycl::access::address_space::global_space> af(peer_flags[0]);
+                sycl::access::address_space::global_space> af(peer_flags[node]);
             af.store(s, sycl::memory_order::release);
         }); });
-    // reduce: first spin (single workitem) until my flag[0] reaches my expect counter, then reduce
     event es = q->submit([&](handler &h){ h.depends_on(ef);
         h.single_task([=](){
-            uint32_t want = my_flags[2] + 1; my_flags[2] = want;
+            uint32_t want = my_counts[2*node+1] + 1; my_counts[2*node+1] = want;
             sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
-                sycl::access::address_space::global_space> af(my_flags[0]);
+                sycl::access::address_space::global_space> af(my_flags[node]);
             while (af.load(sycl::memory_order::acquire) < want) { }
         }); });
     size_t n=nbytes/sizeof(T);
-    T *src=reinterpret_cast<T*>(inout), *scr=(T*)g_scratch;
+    T *src=reinterpret_cast<T*>(inout);
+    T *scr=(T*)((char*)g_scratch + slot_off);
     q->submit([&](handler &h){ h.depends_on(es);
         h.parallel_for(range<1>(n),[=](id<1> i){ src[i]=(T)(float(src[i])+float(scr[i])); }); });
 }

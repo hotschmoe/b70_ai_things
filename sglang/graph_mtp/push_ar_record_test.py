@@ -72,7 +72,11 @@ def run(rank, world):
         g.capture_end()
         print(f"[r{rank}] capture_end ok", flush=True)
         dist.barrier()
+        import time
+        stagger = float(os.environ.get("STAGGER_S", "0"))
         for it in range(5):
+            if stagger and rank == 1:
+                time.sleep(stagger)  # rank0's spin kernel runs ALONE for stagger seconds (long-spin probe)
             g.replay()
             torch.xpu.synchronize()
             print(f"[r{rank}] replay {it} ok z0={float(z[0])}", flush=True)

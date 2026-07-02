@@ -7190,3 +7190,21 @@ RUN 23 (FULL backend + spin-sync collectives): CAPTURE COMPLETES (42.5s, all buc
   NEXT DIAGNOSTICS: on first-gen hang, py-spy both schedulers + GPU-busy snapshot BEFORE teardown (add to
   graph_mtp_verify_ab.sh failure path); per-node flag slots are likely the robust fix regardless.
 DD restarted (RADIX=1) after the bisect window.
+
+## 2026-07-02 -- runs 24-25: replay DEADLOCK FIXED (per-node flag slots); garbage-logits bug identified [progress]
+
+RUN 24 (hang diagnostics added to graph_mtp_verify_ab.sh failure path): py-spy at the hang shows BOTH
+  ranks PAST replay submit, stuck on a D2H (mtp_tree_xpu _verify) queued behind device-side spin kernels
+  that never satisfied. Long-spin microbench (STAGGER_S=2: one rank's spin polls alone for 2s) PASSES ->
+  Xe2 system-scope atomic visibility is fine even for long spins; the hang is ORDERING divergence
+  (captured side streams -> parallel graph branches -> a single global seq pair can circular-wait).
+RUN 25 (v2 .so: PER-NODE flag slots -- each recorded AR gets a unique record-order node id, its own flag
+  word + replay counters + payload slot): *** NO MORE HANG *** -- serve, /health, gen RETURNS instantly.
+  But output is GARBAGE ("!" flood = token-0/NaN logits). ROOT CAUSE (near-certain): payload slot
+  aliasing -- slots are (node % 64) x 1MB, but one graph has ~129 nodes (aliases within a graph) AND the
+  logits all_gather emulation pushes ~11MB/rank through a 1MB slot, overwriting ~10 neighboring slots and
+  reading garbage -> garbage LOGITS directly (hence "!").
+NEXT (first thing next session): bump-pointer slot allocation at record time (slot_off advances by
+  round_up(payload) per node; MAXB -> 384-512MB via PUSH_AR_MAXB) -> expect the first COHERENT full-capture
+  serve, then the perf number that decides the campaign.
+Files: sglang/graph_mtp/118b_push_ar_graph_bisect.cpp (v2), hang_stacks_*.txt, last_run_2135*/2146*.log.
