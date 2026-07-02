@@ -34,6 +34,23 @@ DRAFT_GRAPH="${DRAFT_GRAPH:-0}"   # 1 = also capture the draft chain (B70_XPU_DR
 # PREFILL, triton (static SLM, graph-proven since int4-graph) for the captured DECODE/VERIFY path.
 PREFILL_ATTN="${PREFILL_ATTN:-intel_xpu}"
 DECODE_ATTN="${DECODE_ATTN:-triton}"
+# GRAPH_BACKEND: full = one graph per bs (oneCCL records -> RUN-4 replay deadlock; needs push-AR or
+# capture-safe collectives). breakable = segmented capture, attention/mamba AND (via xpu_cudagraph
+# section 4) TP collectives run EAGER between segments -- the vLLM-PIECEWISE-equivalent shape.
+# Under breakable the intel_xpu XMX attn is fine EVERYWHERE (runs eager), so ATTN_ARGS goes single-backend.
+GRAPH_BACKEND="${GRAPH_BACKEND:-breakable}"
+if [ "$GRAPH_BACKEND" = breakable ]; then
+  ATTN_ARGS="--attention-backend intel_xpu"
+else
+  ATTN_ARGS="--prefill-attention-backend $PREFILL_ATTN --decode-attention-backend $DECODE_ATTN --speculative-attention-mode decode"
+fi
+# RUN 4 hang root-cause hypothesis: oneCCL all-reduces RECORDED into the captured verify graph deadlock
+# at replay (host-staged half never re-executes) -> both ranks wedge, next eager D2H spins in
+# appendUSMMemcpy (watchdog stack: mtp_tree_xpu _build_tree sl.tolist). Fix = the K.6 capturable
+# push-AR: during capture, ARs record as device-side L0-event-synced posted writes (ar_allreduce_graph),
+# proven coherent inside captured decode on vLLM (P2P_GPU.md K). PUSHAR=1 default.
+PUSHAR="${PUSHAR:-0}"
+PUSHDIR=$REPO/vllm/contrib/vllm_push_allreduce/prebuilt
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 LOGSAVE="$REPO/sglang/graph_mtp/last_run_$(date +%H%M%S).log"
 cleanup(){ say "cleanup: rm $NAME (logs -> $LOGSAVE)"; docker logs "$NAME" >"$LOGSAVE" 2>&1 || true; docker rm -f "$NAME" >/dev/null 2>&1; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
@@ -53,17 +70,19 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
   -v "$REPO/sglang/patches/mtp_tree_xpu.py:/opt/venv/lib/python3.12/site-packages/mtp_tree_xpu.py:ro" \
   -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
+  -v "$PUSHDIR:/work/push_ar:ro" \
+  -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
+  -e B70_XPU_PUSH_AR=$PUSHAR -e PUSH_AR_SO=/work/push_ar/libxpu_push_ar_graph.so -e PUSH_AR_GRAPH=$PUSHAR \
   -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
   -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
   -e B70_XPU_CUDAGRAPH=1 -e B70_XPU_CUDAGRAPH_DEBUG=1 -e B70_XPU_DRAFT_GRAPH=$DRAFT_GRAPH \
   "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
     export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
     exec python -m sglang.launch_server --model-path '$CKPT' --served-model-name '$SERVED' --trust-remote-code \
-    --device xpu --prefill-attention-backend $PREFILL_ATTN --decode-attention-backend $DECODE_ATTN --linear-attn-backend triton \
+    --device xpu $ATTN_ARGS --linear-attn-backend triton \
     --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
     --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton \
-    --speculative-attention-mode decode \
-    --cuda-graph-max-bs $MAXBS \
+    --cuda-graph-max-bs $MAXBS --cuda-graph-backend-decode $GRAPH_BACKEND \
     --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size 64 --disable-radix-cache \
     --tp 2 --context-length $CTX --mem-fraction-static 0.87 --max-running-requests 4 --skip-server-warmup \
     --host 0.0.0.0 --port $PORT" >/dev/null

@@ -7069,3 +7069,23 @@ KEY CONFIG (the capture-compatible serve shape): --prefill-attention-backend int
   has native out_graph target_verify support; hybrid_linear_attn (GDN) side had it too; XPUAttentionBackend
   TARGET_VERIFY static hooks added this session (codex-drafted) end up UNUSED in this shape (kept for a
   future scratch-memory-capable SYCL runtime).
+
+## 2026-07-02 -- capture RUNs 4-5: FULL-backend replay deadlock root-caused to recorded oneCCL; pivot to BREAKABLE backend [progress]
+
+RUN 4 (full backend, oneCCL recorded into the verify graph): capture OK (44s), /health, FIRST GEN COMPLETES
+  COHERENTLY (POST 200) -- then BOTH scheduler ranks deadlock within 1s of request completion. First-ever
+  hang stack (watchdog pyspy, saved log last_run_181726.log): MainThread active in mtp_tree_xpu._build_tree
+  line 76 (sl.tolist() D2H) -> ur appendUSMMemcpy -> libze sched_yield spin, on BOTH ranks. Read: the eager
+  D2H is queued behind REPLAY work that never completes -- the oneCCL all-reduces RECORDED into the SYCL
+  graph cannot complete at replay (their host-staged half does not re-execute). The likely trigger is the
+  first post-request IDLE-mode replay.
+RUN 5 (PUSH_AR_GRAPH=1, the K.6 capturable push-AR replacing oneCCL inside capture): push-AR ENGAGED with
+  graph=True + argraph setup/exchange OK on both ranks, but capture itself HANGS at the first bs=4 graph
+  (after oneCCL init for the non-AR collective -- the logits all_gather is NOT covered by push-AR and still
+  records). No watchdog (not yet armed during init) -> no stack. 15-min timeout, clean teardown, no wedge.
+PIVOT (RUN 6, in flight): --cuda-graph-backend-decode breakable (the fork/upstream-0.5.14 segmented-capture
+  backend): attention+mamba run EAGER between segment graphs (eager_on_graph markers -> intel_xpu XMX attn
+  usable EVERYWHERE again, no scratch-memory wall, single-backend config like prod) and xpu_cudagraph
+  section 4 now wraps XpuCommunicator.all_reduce + GroupCoordinator.all_gather in eager_on_graph -> ALL TP
+  collectives run eagerly between segments at capture AND replay. This is exactly the vLLM-PIECEWISE shape
+  that was the only working captured-TP config on this box. Launch-heavy linear/norm chains still capture.
