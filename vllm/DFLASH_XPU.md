@@ -134,3 +134,22 @@ Serve command (128k DD candidate, VALIDATED gate 12/12 + accept 48.8 t/s / 4.71 
 To push past 178k (untested): all-sliding drafter (uniform sliding_window=2048 -> one group,
 assertion-safe) shrinks the drafter's own ~10 KB/tok; risk = the 1 full->sliding layer may cost accept
 and the precompute single-slot-mapping on a windowed cache is unverified. 128k is the accepted fallback.
+
+## [2026-07-03 session 3 cont] all-sliding drafter = full 253952 ctx but -28% accept
+
+To push past ~186k, window the drafter's own ~10 KB/tok KV. Its true 4-sliding+1-full arch can't be
+honored (2 kv groups; DFlash requires 1). Uniform sliding_window=2048 on all 5 layers (one group,
+assertion-safe) via vllm/patches/qwen3_dflash_swa.py, gated B70_DFLASH_SWA=1 (inert by default).
+
+Result (SWA + gs patch, MAXLEN=253952): FULL context fits (GPU KV 273,661 tokens, 1.08x conc), gate
+12/12 coherent -- but accept 4.71 -> 3.37 and t/s 48.8 -> 35.4 (+27% vs MTP, down from +75%). Accept
+drops even at ctx<2048 (window not limiting) -> it's context-KV degradation on the windowed cache
+(precompute single-slot-mapping), not truncation.
+
+Decision table (w8a8-rtn drafter, 8-turn real coding):
+  MTP spec=3                      accept 2.84  27.8 t/s  253,952 ctx
+  DFlash full drafter + gs patch  accept 4.71  48.8 t/s  ~186k ctx   +75%  <-- 128k DD winner
+  DFlash all-sliding + gs patch   accept 3.37  35.4 t/s  253,952+    +27%  (only if >186k needed)
+
+The 128k daily driver = FULL drafter + gs=8 patch (do NOT set B70_DFLASH_SWA). All-sliding is a
+documented >186k lever at a steep accept cost.

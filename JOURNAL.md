@@ -7806,3 +7806,43 @@ NEXT (this session): push context past 178k via an all-sliding drafter (uniform 
 ONE group, assertion-safe) to shrink the drafter's own ~10 KB/tok; risk = the 1 full->sliding layer may
 cost accept, and DFlash's precompute_and_store_context_kv single-slot-mapping on a windowed cache is
 untested. 128k is the accepted fallback.
+
+## 2026-07-03 -- session 3 cont: all-sliding drafter FITS full 253952 but -28% accept (128k full-drafter wins)
+
+"Send it as far as you can" experiment. To push past the 178k/186k ceiling, shrink the drafter's own
+~10 KB/tok KV by windowing it. The drafter's true arch (4 sliding + 1 full) CANNOT be honored -- 2 spec
+types = 2 kv groups, and DFlash asserts all drafter layers in ONE group. So apply a UNIFORM
+sliding_window=2048 to all 5 layers (one SlidingWindowSpec type = one group, assertion-safe).
+
+PATCH: vllm/patches/qwen3_dflash_swa.py (mounts over model_executor/models/qwen3_dflash.py), gated on
+env B70_DFLASH_SWA=1 (inert by default = upstream full attention). DFlashQwen3Attention gains a
+sliding_window arg -> Attention(per_layer_sliding_window=...); the decoder layer reads
+config.sliding_window when use_sliding_window and B70_DFLASH_SWA=1.
+
+RESULT (all-sliding drafter + gs=8 patch, MAXLEN=253952, PREFIXCACHE=0):
+- FITS THE FULL CONTEXT: GPU KV cache 273,661 tokens, Maximum concurrency 1.08x @253,952. The drafter
+  KV collapsed from ~10 KB/tok (5 full layers) to windowed -> +97k tokens of budget vs the full drafter.
+- Coherent: gate_concurrent_coherence 12/12 PASS.
+- BUT accept COLLAPSED: 8-turn real-coding telemetry ALL 35.40 t/s, accept_len 3.374 (vs the full
+  drafter's 48.79 t/s / 4.711). That is +27% vs MTP (27.8) -- but it throws away most of the +75% edge.
+- KEY: the accept loss shows up even at turn 1 (ctx ~400 < the 2048 window, where sliding == full), so
+  it is NOT window truncation -- it is context-KV degradation: DFlash's precompute_and_store_context_kv
+  single-slot-mapping writes/reads context K/V incorrectly on a windowed KV cache, so the drafter drafts
+  from partially-wrong context (target still verifies -> coherent, just fewer accepts). A correct fix
+  would need DFlash to handle windowed context-KV -- upstream-level, not worth it given 128k is accepted.
+
+DECISION TABLE (TP=2, w8a8-rtn drafter, 8-turn real coding, temp 0):
+  config                                  accept  t/s    max ctx     vs MTP
+  MTP spec=3 (current production DD)       2.84    27.8   253,952     baseline
+  DFlash full drafter + gs=8 patch         4.71    48.8   ~186,000    +75%   <-- BEST for <=128k DD
+  DFlash all-sliding drafter + gs=8 patch  3.37    35.4   253,952+    +27%   (only if >186k ctx needed)
+
+VERDICT: the DFlash 128k daily-driver = FULL drafter + gs=8 padding patch (B70_DFLASH_SWA unset):
++75% single-stream, accept 4.71, coherent, 1.34x concurrency @131072. The all-sliding drafter is a
+documented lever for >186k context at a steep accept cost; NOT recommended while 128k is the target.
+Production DD restored to MTP (unchanged) at session end -- switching the live DD to DFlash is a separate
+step (agentic-parity + a shelf/launcher entry), tracked as a follow-up.
+
+REMAINING FOLLOW-UPS: spec sweep {6,8,10} on the full-drafter 128k config (spec=15 may over-draft at
+lower accept); long-context (>2048) accept hold for the full drafter; whether the DFlash 128k config
+should replace the MTP shelf/launcher.
