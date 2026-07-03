@@ -7492,3 +7492,14 @@ no false-heal), aux (webui/prom/grafana) up. GOTCHA hit during flip: killing a m
 gpu-run flock holder + orphan serve.sh that respawned; had to pkill -9 the serve.sh/gpu-run trees + verify a
 fresh `gpu-run bash -c echo` re-acquires before re-flipping. OPEN: PREFIXCACHE=0 (untested for hybrid GDN on
 vLLM) -> long agentic sessions re-prefill (sglang's RADIX cached that); next = test --enable-prefix-caching.
+
+## 2026-07-03 -- prefix caching TESTED = broken for hybrid GDN on vLLM v0.24.0 XPU (daily driver stays PREFIXCACHE=0)
+
+--enable-prefix-caching on the 27B W8A8 hybrid: vLLM auto-switches to "Mamba cache 'align' mode" (logs it as
+EXPERIMENTAL for Mamba layers) then CRASHES at init -- ValueError: Overflow when unpacking long long, in
+`self.state_base_addrs[idx] = state.data_ptr()` (vLLM mamba align-mode pointer packing; confirmed NOT push-AR --
+state_base_addrs is not in contrib/vllm_push_allreduce). So prefix caching for the hybrid GDN mamba state is
+NOT usable on vLLM XPU today -- the same mamba-state problem that forced sglang's extra_buffer/RADIX hack.
+=> daily driver stays PREFIXCACHE=0. sglang's working RADIX prefix-cache is its one remaining edge (long agentic
+sessions re-prefill on vLLM). Re-flipped the daily driver back to the working PREFIXCACHE=0 config. NEXT (if the
+long-session re-prefill cost bites): port the mamba state handling or wait for vLLM to stabilize align-mode.
