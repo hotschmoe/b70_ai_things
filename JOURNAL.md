@@ -7664,3 +7664,53 @@ env (docker inspect) before crediting it -- engagement-verify EVERY env A/B, not
 Production DD after the session: UNCHANGED decode (prefix cache retained, MRV2 auto-off), the session's
 landed value = the MRV2 default for PREFIXCACHE=0 configs, the DFlash GO, the plan doc, and three closed
 dead ends (dynamic-SD 0-depth, L0-V2-from-serve.sh, transient-WEDGED probe).
+
+## 2026-07-03 -- session 2 (parallel agents): DFlash on REAL coding = +68% single-stream; NOT yet DD (KV/c4 cost)
+
+Four agents in parallel (telemetry prep, fused-quant kernel, suffix/retention prep, sycl-tla scaffold);
+orchestrator serialized all GPU cycles. Commit a05715b has the tooling; this entry has the measurements.
+
+DFLASH ACCEPT TELEMETRY (vllm/dflash_accept_probe.py: 8 cumulative REAL coding turns, temp 0,
+400 tok/turn, per-turn /metrics deltas; serves TP=2 PIECEWISE PREFIXCACHE=0 B70_MRV2=0 MAXLEN=4096):
+- MTP spec=3:            27.80 t/s  accept_len 2.837  acc_rate 0.612  (p0 89 / p1 75 / p2 20)
+- DFlash bf16 spec=15:   41.55 t/s  accept_len 4.210  (+49% vs MTP; accepts decay smoothly to p14)
+- DFlash W8A8-RTN spec=15: 46.66 t/s accept_len 4.657  (+68% vs MTP, +12% vs bf16 drafter; the int8
+  drafter costs NO accept -- target verifies every token)
+- DFlash W8A8-RTN + PREFIXCACHE=1: 45.69 t/s accept 4.629 -- prefix caching COMPOSES with dflash
+  (align mode + ptr shim fine), gate 24/24 PASS on BOTH pc0 and pc1 configs.
+=> the 2026-07-03 spike's cold-bench verdict (19 t/s, "loses to MTP") was UNREPRESENTATIVE of real work.
+
+DRAFTER QUANT (vllm/quant_dflash_drafter.py, data-free RTN W8A8; GPTQ infeasible -- no modeling class
+in the checkpoint + drafter inputs are target hidden states): THREE serve walls root-caused:
+(1) int8 k/v -> qwen3_dflash precompute_and_store_context_kv F.linear's RAW fused-KV weights ->
+    dtype crash; (2) partial-int8 qkv -> vLLM fuses q/k/v into ONE qkv_proj needing uniform quant ->
+    loader KeyError weight_scale; fix = attention all-bf16, int8 = o_proj+MLP (the byte bulk, 1.9 GB);
+(3) STALE INDUCTOR CACHE when swapping drafter quant on the same model dir-shape -> compiled artifact
+    arg-count mismatch ("too many values to unpack (expected 14)") -> clear tmp_ssd/torchinductor_root
+    + vllm_cache/torch_compile_cache when changing a DRAFT model's quant. All fixes in-repo.
+
+WHY DFLASH IS NOT THE DAILY DRIVER YET (the honest tradeoffs, standard IN=2048/OUT=128 sweep on the
+w8a8-rtn+pc1 config): random-text c1 14.65 agg / 16.08 per-stream, c4 7.99 -- WORSE than MTP (30.24 /
+15.04) when accepts collapse on unpredictable text; and **GPU KV cache = 24,281 tokens** (vs 320k on
+the MTP DD config) -- the drafter weights + DFlash context buffers eat the memory that funds the 248K
+coding context. A 248K single request cannot even fit. => shelf entry STAYS MTP spec=3.
+DFlash adoption path (next session): root-cause the KV eater (drafter context buffers scale?), sweep
+spec {6,8,10}, re-test c4, and check a dynamic drafter config. The single-stream coding ceiling is
+proven: +68%.
+
+SYCL-TLA SCAFFOLD (kernels/SYCLTLA_SCAFFOLD.md): builds for BMG (icpx 2025.3 in v0240 image, AOT
+bmg_g31, 3 example binaries). Microbench on card 0 (71s): bf16 baseline down-proj M=16 331 GB/s = 55%
+of 608 roofline; kv_small ~10%; **stock int8-mixed-precision example = 6-9 GB/s = ~1% roofline at all
+our shapes** -- the large-M-tuned stock tiles are pathological at small M, confirming the
+arXiv:2508.06753 specialization gap C1 will close. sycl-tla ships the building blocks (xe_mma_w8a8
+mainloop, M-templated XE_DPAS_TT atoms).
+
+FUSED ACT-QUANT KERNEL (B1, research/w8a8/FUSEDQ_NOTES.md): agent root-caused the 101us quant --
+launch GEOMETRY (one 32-lane subgroup per row starved latency-hiding), not the algorithm. Fix =
+widened multi-subgroup launch + a NEW int8_gemm_w8a8_fusedq op (quant inside the op boundary, same
+in-order stream, no separate graph node -> sidesteps the opaque-op inductor-fusion regression).
+Built clean vs torch 2.12 to /mnt/vm_8tb/b70/w8a8_kernel_v0240_fusedq/ (production .so untouched).
+GPU test: BIT-EXACT (max diff 0 all shapes); fused beats two-step everywhere (down_proj 360->227us,
+qkv 303->175us -- eager timings include a ~145us host-submit floor; the captured serve A/B is the
+real verdict and is running as this entry is written). serve.sh gained B70_EXTRA_MOUNTS for the
+routing overlay.

@@ -215,5 +215,13 @@ if [ -n "${B70_EXTRA_ENV:-}" ]; then
   echo "=== B70_EXTRA_ENV -> injected: ${B70_EXTRA_ENV} ===" >&2
 fi
 
+# B70_EXTRA_MOUNTS: space-separated host:container[:ro] bind specs appended to MOUNTS -- test file
+# overlays without recipe edits (mirrors B70_EXTRA_ENV). e.g. the fusedq xpu_int8.py routing overlay
+# (research/w8a8/FUSEDQ_NOTES.md section 2).
+if [ -n "${B70_EXTRA_MOUNTS:-}" ]; then
+  for m in ${B70_EXTRA_MOUNTS}; do MOUNTS+=( -v "$m" ); done
+  echo "=== B70_EXTRA_MOUNTS -> injected: ${B70_EXTRA_MOUNTS} ===" >&2
+fi
+
 source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"
