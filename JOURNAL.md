@@ -7428,3 +7428,38 @@ DAILY-DRIVER SWITCH (recommended, NOT done tonight -- production left on stable 
 before flipping :18080 -- MAXLEN 131072 (validated at 8192), tool_call + reasoning parsers, VISION (tested
 NOMM=1 text-only; standing directive keeps the vision tower), then a full bin/serve-sweep at 131K + a long
 soak. The core perf+coherence win is PROVEN; the remaining work is config parity + long-context re-validation.
+
+## 2026-07-03 -- vLLM v0.24.0 daily-driver PARITY: vision/tool/reason/131K all work; vision+capture is the one blocker; W8A8 re-benched [parity session]
+
+Goal: make vLLM v0.24.0 the daily driver (vision + tooling + cache + 131K). Result: 3 of 4 features work; the
+capture perf win and vision are mutually exclusive on this XPU stack (one torch.compile bug). Details:
+
+WORKS (all validated on :int8g-v0240):
+- TOOL CALLING: --tool-call-parser qwen3_coder -> proper tool_calls (get_weather(city="Paris"), finish tool_calls).
+- REASONING: --reasoning-parser qwen3 -> splits <think> into the `reasoning` field (vLLM uses `reasoning`, NOT
+  sglang's `reasoning_content`).
+- VISION (EAGER): correctly described an image ("solid... bright, solid red"). The old NOMM=1 text-only workaround
+  is retired for eager.
+- 131K context: serves (max_model_len 131072, KV 156k tok @ util 0.90).
+- lib.sh already had all the knobs (NOMM/PREFIXCACHE/TOOLCALL/TOOLPARSER/REASONPARSER); shelf serve.sh now
+  defaults them on (vision-on, qwen3_coder + qwen3 parsers).
+
+BLOCKER -- VISION + torch.compile (GRAPH=1) incompatible: enabling vision (limit-mm != 0) under compile crashes
+at engine init: `'NoneType' object has no attribute 'size'` in torch/_dynamo call_size, during
+determine_available_memory -> _dummy_run. The mm-enabled compiled forward calls image_embeds.size() unguarded;
+the TEXT dummy-run (no images) hits None. NOT fixed by --skip-mm-profiling (crash is the graph itself, not the
+dummy image -- it crashes both WITH a dummy image and text-only-profiled). Root area: Qwen3-VL mm-merge /
+deepstack embed inject (vllm/model_executor/models/qwen3_vl.py). => vision works ONLY eager (~parity with sglang,
+NO capture win); capture (the 2.3x) is TEXT-only. A model-code None-guard patch (or upstream fix) is the unblock.
+
+BENCH (README, IN=2048/OUT=128, 35_sweep_bench, text+capture -- the shippable fast config): PP 2425 tok/s /
+TTFT 845 ms / TG c1 27.1 / TG c4 14.6 / KV 156k. TG c1 27.1 is the BEST coherent W8A8 decode on the box
+(> sglang 25.6 > old-vLLM 22.4). README un-paused + row updated + honest caveat. Cache gotcha: torch_compile_cache
+is keyed WITHOUT mm-mode, so a text-only AOT cache reused for a vision serve ALSO crashes -- clear the cache when
+flipping text<->vision.
+
+DAILY-DRIVER DECISION (asked user, away): vLLM v0240 EAGER+vision (~9-15 t/s) is SLOWER than sglang eager (18),
+so there is no strictly-better VISION daily driver until vision+capture is fixed. Options put to user: (1) patch
+vision+compile then flip [recommended], (2) flip text-only vLLM now (2x, drops vision), (3) keep sglang. Left
+PRODUCTION ON SGLANG (safe, has vision) pending the answer. Shelf serve.sh carries the v0240 stack + agentic
+defaults; the flip is one `DD_MODEL=vllm/qwen36-27b-w8a8` away once vision+capture lands (or if text-only accepted).
