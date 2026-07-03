@@ -1,9 +1,19 @@
+import os
 import torch
 from torch.nn import Parameter
 from vllm.model_executor.layers.quantization.utils import replace_parameter
 from vllm.model_executor.layers.quantization.utils.w8a8_utils import convert_to_channelwise
 from vllm.platforms import current_platform
 from .ScaledMMLinearKernel import Int8ScaledMMLinearKernel, Int8ScaledMMLinearLayerConfig
+
+# B1 (docs/kernel/23): route the int8 W8A8 linear through the FUSED op
+# int8_gemm_w8a8_fusedq -- one op that quantizes the f16/bf16 activation inline
+# (parallel SYCL kernel) and runs the oneDNN s8s8 matmul, so the per-token quant
+# is NOT a separate captured graph node (kills the ~101us capture-persistent
+# hotspot without the inductor-fusion loss that regressed the opaque-op swap).
+# Default ON when the op is present; set B70_FUSEDQ=0 to A/B the old two-step
+# (standalone dynamic_per_token_int8_quant + int8_gemm_w8a8) path.
+_FUSEDQ = os.environ.get("B70_FUSEDQ", "1") == "1"
 
 # --- FakeTensor/meta registration so torch.compile / XPU graph capture
 # (VLLM_XPU_ENABLE_XPU_GRAPH=1) can trace through our custom SYCL ops. Without
@@ -45,6 +55,13 @@ def _register_int8_fakes():
         dt = out_dtype if out_dtype is not None else A_scale.dtype
         return A.new_empty((A.shape[0], B.shape[1]), dtype=dt)
 
+    # int8_gemm_w8a8_fusedq(A[..,K] f16/bf16, B[K,N] i8, B_scale, bias?, out_dtype?)
+    #   -> [.., N] out_dtype (defaults to A.dtype). A is the UNQUANTIZED activation;
+    #   the quant happens inside the op, so the fake only needs the output shape.
+    def _fake_int8_gemm_fusedq(A, B, B_scale, bias, out_dtype):
+        dt = out_dtype if out_dtype is not None else A.dtype
+        return A.new_empty(tuple(A.shape[:-1]) + (B.shape[1],), dtype=dt)
+
     # int4_gemm_w4a8(A_ i8 [M,K], A_scale, A_zp, B int32 [K/8,N], B_scale, B_zp,
     #                group_size, g_idx?, bias?) -> [M, N] float16
     #   N = B.shape[1] (mat2 is packed [K/8, N]); M = A_.shape[0]. Out dtype is
@@ -60,6 +77,8 @@ def _register_int8_fakes():
     import sys
     _fakes = [("_xpu_C::dynamic_per_token_int8_quant", _fake_quant),
               ("_xpu_C::int8_gemm_w8a8", _fake_int8_gemm)]
+    if hasattr(torch.ops._xpu_C, "int8_gemm_w8a8_fusedq"):
+        _fakes.append(("_xpu_C::int8_gemm_w8a8_fusedq", _fake_int8_gemm_fusedq))
     if _int4_present:
         _fakes.append(("_xpu_C::int4_gemm_w4a8", _fake_int4_gemm_w4a8))
     for name, fn in _fakes:
@@ -109,6 +128,12 @@ class XPUInt8ScaledMMLinearKernel(Int8ScaledMMLinearKernel):
         from vllm._xpu_ops import xpu_ops as ops
         w_q, w_s, _i_s, _i_zp, _azp_adj = self._get_layer_params(layer)
         x_2d = x.reshape(-1, x.shape[-1])
+        # FUSED path (B1): one op quantizes x inline + runs the s8s8 matmul, so
+        # the per-token quant is not a separate captured graph node.
+        if _FUSEDQ and hasattr(torch.ops._xpu_C, "int8_gemm_w8a8_fusedq"):
+            out = torch.ops._xpu_C.int8_gemm_w8a8_fusedq(x_2d, w_q, w_s, bias, x.dtype)
+            return out.reshape(x.shape[:-1] + (out.size(-1),))
+        # Baseline two-step path (A/B with B70_FUSEDQ=0, or if the op is absent).
         if hasattr(torch.ops._xpu_C, "dynamic_per_token_int8_quant"):
             x_q, x_s, _x_zp = torch.ops._xpu_C.dynamic_per_token_int8_quant(x_2d, True, 8)
         else:

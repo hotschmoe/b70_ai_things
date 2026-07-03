@@ -10,6 +10,15 @@ serving backend** because the prebuilt `.so` is ABI-locked to the torch it was b
   `bf16_int8`) to `vllm-xpu-kernels`' `csrc/xpu/onednn/onednn_ext.h`.
 - `int8_gemm_w8a16.h` -- decode op (int8 weight, fp16 activation).
 - `int8_gemm_w8a8.h` -- prefill op (int8 weight, int8 activation).
+- `int8_quant_common.hpp` -- shared per-token int8 activation-quant SYCL kernel +
+  parallel launcher, reused by the standalone `dynamic_per_token_int8_quant` op
+  AND the FUSED `int8_gemm_w8a8_fusedq` op (quant-inline + s8s8 matmul in ONE op;
+  plan B1, `research/w8a8/FUSEDQ_NOTES.md`). NOTE: the fusedq additions to
+  `onednn_matmul.cpp` / `ops.h` / `torch_bindings.cpp` and the rewritten
+  `dynamic_per_token_int8_quant.cpp` live in the patched tree
+  (`/mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8`); `int8_gemm_kernel.patch` predates
+  them and still needs regenerating to capture them (follow-up; see FUSEDQ_NOTES
+  "Files changed" for the exact diff).
 - (int4 gemm ops `int4_gemm_w4a8` / `int4_gemm_w4a16` are upstream in `vllm-xpu-kernels`
   itself, gated by `XPU_SPECIFIC_KERNELS_ENABLED=ON`; no repo patch needed.)
 

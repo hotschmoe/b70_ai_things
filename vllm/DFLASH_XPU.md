@@ -27,6 +27,29 @@ taps target layers [1,16,31,46,61], shares target embedding/LM-head space (vocab
 | DFlash spec=15 | 19.06 | 912 ms | coherent, capture 3s/1.42GiB, CAPSIZES 1,2,4,8,16 |
 | DFlash spec=7 | CRASHED at init | | EngineCore died during health wait (shm_broadcast "cancelled"); post-teardown probes transiently HUNG (cleared on re-probe ~2 min later, no reset needed) |
 
+## [2026-07-03 session 2] REAL-workload telemetry OVERTURNS the cold-bench verdict
+
+vllm/dflash_accept_probe.py (8 cumulative coding turns, temp 0, 400 tok/turn, per-turn
+/metrics deltas), same TP=2 PIECEWISE PREFIXCACHE=0 B70_MRV2=0 serves:
+
+| serve | tok/s | accept_len | acc_rate | per-pos |
+|---|---|---|---|---|
+| MTP spec=3 | 27.80 | 2.837 | 0.612 | p0 89% p1 75% p2 20% (1-layer head wall) |
+| DFlash bf16 spec=15 | **41.55 (+49%)** | **4.210** | 0.214 | accepts decay smoothly out to p14 |
+
+The cold random-text bench (19.06, above) was UNREPRESENTATIVE -- hypothesis 1 confirmed.
+On real coding DFlash bf16 spec=15 beats the MTP shelf config by +49% single-stream.
+
+## Drafter W8A8 quant: two integration walls (both root-caused, config-fixed)
+
+vLLM's in-tree qwen3_dflash has TWO paths that break naive per-linear quantization:
+1. `precompute_and_store_context_kv` F.linear's the RAW fused k/v weights (bypasses the
+   quantized wrapper) -> int8 k/v = dtype crash at init (BFloat16 x signed char).
+2. q/k/v fuse into ONE qkv_proj module that must be uniformly quantized -> int8 q with
+   bf16 k/v = loader KeyError qkv_proj.weight_scale.
+FIX baked into vllm/quant_dflash_drafter.py: attention QKV stays bf16 (~315 MB / 5 layers);
+int8 = o_proj + gate/up/down (the byte bulk). Output models/files/qwen3.6-27b/dflash-draft-w8a8-rtn.
+
 spec=7 CAVEAT: the crash means the spec sweep is NOT free -- treat further DFlash starts as
 crash-prone TP=2 inits (wedge discipline: one attempt, verify xpu-health between, never chain).
 Unknown whether spec=7 itself or CAPSIZES=1,2,4,8 (vs 16-row) was the trigger; diagnose in a
