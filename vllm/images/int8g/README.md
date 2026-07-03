@@ -37,3 +37,10 @@ The `_xpu_C.abi3.so` baked here ships `GDN_KERNELS_ENABLED=OFF` -> no `gdn_atten
 the 27B uses gated-delta-net and needs it). The 27B serve mounts the GDN-enabled kernel `.so` (+ sibling
 `libgdn_attn_kernels_xe_2.so`) from `vllm-xpu-kernels/` over the baked one at run time -- see
 `rdy_to_serve/qwen36-27b-w4a8/serve.sh`.
+
+## v0.24.0 rebase (2026-07-03)
+  vllm-xpu-env:v0240          sha256:e5773e14f24d  base, vLLM 0.24.0+xpu / torch 2.12.0 (canonical Dockerfile.xpu @ tag v0.24.0)
+    -> :int8g-v0240           sha256:946a87d21c3d  + XPUInt8ScaledMMLinearKernel registry + register_fake (images/int8g/bake_v0240.sh)
+  Combined int8+GDN .so (torch 2.12, ABI-verified) at /mnt/vm_8tb/b70/w8a8_kernel_v0240/ (build_v0240_int8gdn_so.sh).
+  VALIDATED: concurrent mixed prefill+decode COHERENT (40/40), PIECEWISE stable+deterministic, usage-based
+  40.6 tok/s single (2.3x sglang daily driver 18.0). Rollback = the v0.23 :int8g (sha256:8e25c7582871) + old torch-2.11 .so.

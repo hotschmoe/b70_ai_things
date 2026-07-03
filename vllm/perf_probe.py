@@ -28,7 +28,8 @@ def one(idx, res):
                 if data == "[DONE]": break
                 try: d = json.loads(data)
                 except Exception: continue
-                delta = d.get("choices", [{}])[0].get("delta", {}).get("content")
+                dl = d.get("choices", [{}])[0].get("delta", {}) or {}
+                delta = dl.get("content") or dl.get("reasoning_content")  # count thinking tokens too
                 if delta:
                     if first is None: first = time.perf_counter()
                     n += 1

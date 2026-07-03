@@ -7399,3 +7399,32 @@ L0-IPC fabric and cut the 220ms forward pass -- the shelf reported push-AR = 3.8
 throughput. Artifacts: vllm/gate_concurrent_coherence.py, vllm/perf_probe.py, vllm/stage5_v0240_gate.sh,
 build/bake scripts under vllm/. Results in build24/v0240_results.txt. Daily driver still down (test serve up on
 :30011); watchdog paused (uid-1000, SIGSTOP) -- resume + restore DD at session end.
+
+## 2026-07-03 -- vLLM v0.24.0 is 2.3x FASTER than the sglang daily driver AND coherent (usage-based A/B) [HEADLINE, corrects earlier perf note]
+
+CORRECTION to the milestone entry above: it reported vLLM decode "below sglang 25 t/s". That was a MEASUREMENT
+BUG -- perf_probe.py counted SSE *deltas*, and MTP servers pack multiple accepted tokens per delta, so the
+streaming number undercounts by ~accept_length. Ground truth = usage-based (completion_tokens / wall-clock).
+
+USAGE-BASED A/B (both 27B W8A8 TP=2, short prompt, warm, no prefix cache; /tmp/usage_rate.py + usage_conc.py):
+  vLLM v0.24.0 :int8g-v0240  CGMODE=PIECEWISE + PUSH_AR=1 (ENGAGED), MTP spec=3, MAXLEN=8192, text-only:
+    single-stream 40.6-42.1 tok/s | N=4 agg 84.0 | N=8 agg 163.8 (21/stream). accept_length 2.0.
+  sglang daily driver  EAGER (--disable-cuda-graph), MTP steps=10, RADIX=1:
+    single-stream 18.0 tok/s (server sglang:gen_throughput 17.86). accept_length 3.8.
+  => vLLM = 2.3x FASTER single-stream. Decompose: vLLM captured fwd-pass ~74ms (40.6 t/s / ~3 tok-per-step)
+     vs sglang EAGER fwd-pass ~267ms (18 / ~4.8). sglang accepts MORE per step (3.8 vs 2.0) but its eager
+     forward pass is 3.6x slower -> loses. THE GRAPH-CAPTURE ADVANTAGE (the entire reason for the vLLM pivot)
+     is real and decisive; it was only ever blocked by the concurrent "!!!!" garbage, now fixed in v0.24.0.
+
+WINNING CONFIG validated end-to-end: coherent (gate 40/40 + 32/32 stress, NO garbage), STABLE (restarts=0
+under sustained concurrent MTP+capture), DETERMINISTIC (3/3 identical greedy -- no cross-device visibility
+race; push-AR + PIECEWISE capture is deterministic here, unlike the sglang pure-SYCL AR dead end). push-AR
+ENGAGED but is only +10% (collectives ~5% of fwd-pass, JOURNAL run-28) -- the win is CAPTURE, not push-AR.
+
+LANDED: rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh defaults -> :int8g-v0240 (sha256:946a87d21c3d282b4c99c61712588d7e4141f492271728a8dd8fc39703e1579c) + w8a8_kernel_v0240/
+.so (rollback = :int8g + old .so). vLLM is UN-PAUSED. Per shelf rules this is measured faster+coherent.
+
+DAILY-DRIVER SWITCH (recommended, NOT done tonight -- production left on stable sglang): needs agentic parity
+before flipping :18080 -- MAXLEN 131072 (validated at 8192), tool_call + reasoning parsers, VISION (tested
+NOMM=1 text-only; standing directive keeps the vision tower), then a full bin/serve-sweep at 131K + a long
+soak. The core perf+coherence win is PROVEN; the remaining work is config parity + long-context re-validation.

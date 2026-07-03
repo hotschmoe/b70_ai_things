@@ -3,6 +3,17 @@
 # Coherent single-stream 27B int8-activation serve. EAGER ~9 t/s MTP-on (2.3x vs ~4 t/s MTP-off), 48% accept.
 # Self-contained recipe; shared plumbing in ../_common/lib.sh.
 #
+# [!! 2026-07-03 -- vLLM UN-PAUSED, rebased to v0.24.0 (torch 2.12). The 5 hybrid mixed-prefill+decode PRs
+#     (#44700 split mixed -> recurrent GDN, #43990/#42430/#43961/#43556) FIX the "!!!!" concurrent garbage
+#     that paused vLLM: gate 40/40 + 32/32 coherent under staggered mixed load on BOTH CGMODE=NONE and
+#     PIECEWISE, and PIECEWISE is now STABLE under sustained MTP (restarts=0) + DETERMINISTIC (3/3 greedy).
+#     USAGE-BASED A/B (best config = CGMODE=PIECEWISE + PUSH_AR=1, spec=3, MAXLEN=8192, text): single-stream
+#     40.6 tok/s, N=8 agg 163.8 -- 2.3x the sglang daily driver's 18.0 (captured 74ms fwd-pass vs eager 267ms).
+#     Defaults below now point at the v0.24.0 stack. Kernel .so rebuilt vs torch 2.12 (int8+GDN combined),
+#     ABI-verified. Build: ../../../vllm/build_v0240_base.sh + build_v0240_int8gdn_so.sh + images/int8g/bake_v0240.sh.
+#     Gate: ../../../vllm/gate_concurrent_coherence.py + perf_probe.py. JOURNAL 2026-07-03. Daily-driver SWITCH
+#     still needs agentic parity (MAXLEN 131072, tool/reason parsers, VISION NOMM=0) + a 131K sweep -- TODO.]
+#
 # [!!! 2026-06-23 CORRECTION -- scripts/101-106]: the OLD "63-64 t/s / 3.4x captured" headline was a FALSE POSITIVE
 #   benched on GARBAGE. Two stacked bugs were found+fixed/characterized:
 #   (A) ROOT CAUSE of the garbage (FIXED, config-only, no requant): the checkpoint config.json `ignore` list had 336
@@ -38,7 +49,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export ROOT="${ROOT:-/mnt/vm_8tb/b70}"     # needed to reference the host GDN .so before sourcing lib.sh
 
-export IMG="${IMG:-vllm-xpu-env:int8g}"
+export IMG="${IMG:-vllm-xpu-env:int8g-v0240}"   # v0.24.0/torch 2.12 (2026-07-03). Old v0.23 = vllm-xpu-env:int8g (rollback).
 export CKPT="${CKPT:-/models/qwen3.6-27b/w8a8-sqgptq}"
 export SERVED="${SERVED:-qwen36-27b-w8a8-sqgptq-mtp}"
 export DTYPE="${DTYPE:-auto}"
@@ -77,8 +88,10 @@ _ATTN_OPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_wi
 export SPLITOPS="${SPLITOPS:-${_ATTN_OPS}}"
 
 PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
-GDN_SO="${GDN_SO:-$ROOT/vllm-xpu-kernels/vllm_xpu_kernels/_xpu_C.abi3.so}"
-GDN_LIB="${GDN_LIB:-$ROOT/vllm-xpu-kernels/vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so}"
+# v0.24.0/torch-2.12 combined int8+GDN .so (Stage 2, ABI-verified: gdn_attention + int8_gemm_w8a8/w8a16 +
+# dynamic_per_token_int8_quant). Old torch-2.11 .so at $ROOT/vllm-xpu-kernels/vllm_xpu_kernels/ (rollback w/ :int8g).
+GDN_SO="${GDN_SO:-$ROOT/w8a8_kernel_v0240/_xpu_C.abi3.so}"
+GDN_LIB="${GDN_LIB:-$ROOT/w8a8_kernel_v0240/libgdn_attn_kernels_xe_2.so}"
 MOUNTS=( -v "$GDN_SO:$PKGD/_xpu_C.abi3.so:ro"
          -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro"
          -v "$SCRIPT_DIR/patches:/opt/mtp_shim:ro" )
