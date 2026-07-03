@@ -7318,3 +7318,42 @@ ARTIFACTS: do_ar_graph_pull/_flush + ar_allreduce_graph_pull/_flush in graph_mtp
   (.so rebuilt, 3 modes); PUSH_AR_MODE selector in patches/push_ar_xpu.py (default reverted to spin);
   graph_mtp/coherence_probe.py (determinism metric: N identical temp0 reqs must be byte-identical + coherent);
   ar_integration_test.py now takes PUSH_AR_MODE + NREP multi-replay. DD restored (RADIX=1). Cards healthy.
+
+## 2026-07-03 -- vLLM v0.24.0 rebase (torch 2.12): Stage 0 provenance + Stage 3/4 drift analysis DONE; base build running [user retarget]
+
+CONTEXT: night optimization of the daily-driver serve path. The sglang pure-SYCL capturable AR closed as a
+dead end (run-28); the documented pivot was a vLLM v0.23.0 rebase to recover PIECEWISE graph capture (30-55
+t/s vs the sglang W8A8 daily driver's ~25 t/s) via a backend where capturable collectives already work. USER
+(2026-07-03) granted GPU access and retargeted to the LATEST tag: **vLLM v0.24.0** (torch 2.12), not v0.23.0.
+
+STAGE 0 -- provenance (read-only, DONE). The plan feared the running :v0230/:int8g might actually be the old
+0.20.2rc1/torch 2.10 commit-build (scripts/28 checks out c51df4300). RESOLVED: both images report
+`vllm 0.23.0 / torch 2.11.0+xpu` and the installed source tree carries the Qwen GDN linear-attn + mamba2
+mixed-batch split + KV-zeroing code -- genuinely v0.23.0 with the 5 "!!!!" fix PRs. Local image IDs no longer
+match the 2026-06-23 recorded digests (docker commit/retag churn), but the CONTENTS are correct. The xpu-kernels
+clone is already at the v0.1.10 tag. => the rebase is a torch-2.11->2.12 ABI bump (v0.24.0), NOT a from-scratch
+provenance rebuild.
+
+v0.24.0 build facts (gh, read-only): torch==2.12.0+xpu, triton-xpu==3.7.1, vllm_xpu_kernels v0.1.10 wheel,
+same base intel/deep-learning-essentials:2025.3.2-0-devel-ubuntu24.04 (oneAPI 2025.3). torch 2.12 == the SAME
+torch the sglang stack uses -> the existing sglang w8a8 .so (built in sglang-xpu:woq, torch 2.12) is a Stage-2
+ABI-shortcut candidate (verify load in the v0240 base; rebuild from vllm-xpu-kernels-w8a8/ is ~14 min if not).
+
+STAGE 3/4 drift analysis (read-only vs the fresh v0.24.0 clone /mnt/vm_8tb/b70/build24/vllm -- DONE, LOW RISK):
+- apply_patches.py anchors ALL survive: scaled_mm.xpu import block (line 173), _POSSIBLE_INT8_KERNELS dict
+  (282), possible_kernels[current_platform._enum] chooser (512). scaled_mm/xpu.py sibling present for the
+  xpu_int8.py drop-in. NEW in v0.24.0: a runtime register path (_POSSIBLE_INT8_KERNELS[platform].append at
+  968-970) -- a cleaner future alternative, but the text-anchor patch still applies.
+- kernel-class ABC: the base ScaledMMLinearKernel (v0.24.0 line 59) abstract set = {is_supported,
+  can_implement, process_weights_after_loading, apply_weights} -- EXACTLY the 4 our XPUInt8ScaledMMLinearKernel
+  implements. apply_scaled_mm (173) + get_output_padding (186) are FP8ScaledMMLinearKernel-only, not required
+  of the Int8 subclass. Int8ScaledMMLinearLayerConfig fields (is_static_input_scheme, is_channelwise,
+  input_symmetric) UNCHANGED vs the captured v0230 refs. => xpu_int8.py should drop in with no ABC edits.
+
+STAGE 1 -- base image build RUNNING (compile-only, no GPU, alongside the live daily driver): fresh shallow
+clone of tag v0.24.0 at /mnt/vm_8tb/b70/build24/vllm (the old build/vllm is root-owned at v0.23.0, untouchable
+as uid 1000); `docker build -f docker/Dockerfile.xpu -t vllm-xpu-env:v0240` via vllm/build_v0240_base.sh,
+logging to build24/build_v0240.log. Canonical multi-stage (rust-build + vllm-base + ucx-nixl + vllm-openai);
+the old :v0230 already carried UCX so the full path is proven on this box. NEXT: Stage 2 (.so ABI check/rebuild)
+-> Stage 3/4 (bake :int8/:int8g v0240) -> Stage 5 (GPU coherence gate: concurrent prefill+decode must NOT
+"!!!!"; then TTFT/decode parity vs sglang 25 t/s). Daily driver (sglang W8A8) stays up throughout.
