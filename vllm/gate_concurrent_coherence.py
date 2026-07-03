@@ -51,7 +51,9 @@ def ask(idx, prompt, out):
         req = urllib.request.Request(URL, data=body, headers=hdr)
         with urllib.request.urlopen(req, timeout=300) as r:
             d = json.loads(r.read())
-        out[idx] = d["choices"][0]["message"]["content"]
+        m = d["choices"][0]["message"]
+        # reasoning-parser servers put text in `reasoning` (vLLM) / `reasoning_content` (sglang), content=null
+        out[idx] = m.get("content") or m.get("reasoning") or m.get("reasoning_content") or ""
     except Exception as e:
         out[idx] = f"<ERROR: {e}>"
 

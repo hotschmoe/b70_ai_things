@@ -60,12 +60,13 @@ export GRAPH="${GRAPH:-1}"                  # PIECEWISE capture (2026-06-24: Bug
                                             # address -> stale read -> garbage). Fix = eject NOTHING (see SPLITOPS)
                                             # + a capture-safe all_gather (patches/, all-reduce-of-padded) so the
                                             # spec-verify all_gather records into the SYCL graph instead of crashing.
-export CGMODE="${CGMODE:-NONE}"             # DEFAULT NONE (2026-06-25, campaign 120): cudagraph_mode=NONE keeps
-                                            # torch.compile/inductor but SKIPS graph REPLAY -> no command-stream
-                                            # accumulation -> STABLE (soaked 57k tokens, ~2.9x the crash zone) and
-                                            # ~2x enforce-eager (decode 25.39 vs 12.78 t/s). CGMODE=PIECEWISE is
-                                            # faster (~35 t/s) but CRASHES under sustained MTP (graph-replay
-                                            # accumulation in the MTP path). docs/20260625_w8a8_27b_mtp_graph_campaign.md
+export CGMODE="${CGMODE:-PIECEWISE}"        # DEFAULT PIECEWISE (2026-07-03, v0.24.0): graph REPLAY on -> the fast
+                                            # captured decode (usage-based 44 t/s WITH vision, 2.4x the sglang daily
+                                            # driver's 18). On v0.23 PIECEWISE CRASHED under sustained MTP (graph-replay
+                                            # accumulation) so NONE was the stable default; v0.24.0 FIXES that --
+                                            # validated STABLE (restarts=0 under sustained concurrent MTP+capture) +
+                                            # coherent (gate 40/40) + deterministic. Fall back to CGMODE=NONE (torch.compile,
+                                            # no replay; ~half the decode) only if a replay regression ever recurs.
 export IGP="${IGP:-false}"                  # legacy piecewise splitter: REQUIRED on this hybrid (the inductor
                                             # partitioner KeyErrors on the mixed W8A8(scale)+BF16-GDN(no-scale) region).
 export NOMM="${NOMM-}"                       # VISION ON by default (2026-07-03: v0.24.0 vision profiling no longer
@@ -76,14 +77,18 @@ export NOMM="${NOMM-}"                       # VISION ON by default (2026-07-03:
 # (qwen3_coder emits proper tool_calls; qwen3 splits <think> into reasoning_content).
 export TOOLCALL="${TOOLCALL:-1}"; export TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
 export REASONPARSER="${REASONPARSER:-qwen3}"
-# VISION + torch.compile (GRAPH=1): the mm memory-profiling DUMMY-IMAGE run crashes under dynamo
-# ('NoneType' object has no attribute 'size', in determine_available_memory) on v0.24.0 XPU. Vision
-# INFERENCE works (validated eager: correctly described an image); only the startup dummy-image profiling
-# breaks under compile. --skip-mm-profiling skips that dummy run (profiles text-only) and KEEPS vision.
-# Auto-added when vision is on (NOMM empty) AND capture is on (GRAPH=1). ALSO clear a STALE text-only AOT
-# compile cache when flipping text<->vision (torch_compile_cache is keyed without mm-mode -> they collide).
+# VISION + torch.compile (GRAPH=1) on v0.24.0 XPU: enabling vision crashed at init with 'NoneType' object
+# has no attribute 'size' (torch/_dynamo call_size, in determine_available_memory _dummy_run). ROOT CAUSE =
+# the STANDALONE AOT COMPILE (serialize+reload of the compiled graph) mishandles the optional/None multimodal
+# inputs. THE FIX = VLLM_USE_AOT_COMPILE=0 (env): use the normal captured graph, not the serialized artifact.
+# NO runtime perf cost (AOT is only a startup-serialization optimization; the captured graph is identical --
+# validated 44 tok/s WITH vision+capture, gate 40/40 coherent, restarts=0). --skip-mm-profiling is also kept
+# (skips the vision-encoder memory-profiling dummy run; harmless, was in the validated combo). Auto-applied
+# when vision is on (NOMM empty) AND capture is on (GRAPH=1). ALSO clear a STALE text-only AOT compile cache
+# when flipping text<->vision (torch_compile_cache is keyed WITHOUT mm-mode -> they collide -> same crash).
 if [ -z "$NOMM" ] && [ "${GRAPH:-1}" = 1 ]; then
   export EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }--skip-mm-profiling"
+  export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }VLLM_USE_AOT_COMPILE=0"
 fi
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"

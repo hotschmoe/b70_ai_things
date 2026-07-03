@@ -7463,3 +7463,32 @@ so there is no strictly-better VISION daily driver until vision+capture is fixed
 vision+compile then flip [recommended], (2) flip text-only vLLM now (2x, drops vision), (3) keep sglang. Left
 PRODUCTION ON SGLANG (safe, has vision) pending the answer. Shelf serve.sh carries the v0240 stack + agentic
 defaults; the flip is one `DD_MODEL=vllm/qwen36-27b-w8a8` away once vision+capture lands (or if text-only accepted).
+
+## 2026-07-03 -- VISION+CAPTURE UNBLOCKED (VLLM_USE_AOT_COMPILE=0) -> vLLM v0.24.0 FLIPPED to production daily driver [flip DONE]
+
+The vision+torch.compile blocker (prev entry) is FIXED and vLLM v0.24.0 is now the live daily driver on :18080.
+
+ROOT CAUSE + FIX: the crash ('NoneType'.size in dynamo call_size, determine_available_memory _dummy_run when
+vision is enabled under GRAPH=1) was the STANDALONE AOT COMPILE -- vLLM serializes the compiled graph and
+reloads it ("reconstructed serializable fn from standalone compile artifacts"), and that serialize/reload
+mishandles the optional (None) multimodal inputs, so the text dummy-run through the mm-enabled graph does
+image_embeds.size() on None. FIX = **VLLM_USE_AOT_COMPILE=0** (env): use the normal in-process captured graph,
+not the serialized artifact. NO code patch, NO runtime perf cost (AOT is only a startup-serialization
+optimization; the captured graph is identical). Diagnosis path: disabling AOT + fresh compile made vision+capture
+serve HEALTHY on the first try. (--skip-mm-profiling alone did NOT fix it; it's kept as harmless.) NOT the
+mm-profiling dummy image, NOT a model-code bug -- an AOT-serialization bug.
+
+VALIDATED (test serve 8192, then live 131K): vision correctly describes images; tool-calling qwen3_coder ->
+get_weather(city=...) (needs adequate max_tokens -- the reasoning model thinks first, same as sglang's THINKCAP
+concern; enable_thinking=false also works); reasoning qwen3 -> `reasoning` field; coherence gate 40/40 + live
+18/18; restarts=0; DETERMINISTIC. PERF usage-based 44 t/s (test) / 35 t/s (live 131K+pushAR) = ~2x the sglang
+daily driver's 18. KV 309k tokens @ 131K. Graph capture 5/5 in 3s, 1.35 GiB.
+
+SHELF (rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh): CGMODE default flipped NONE->PIECEWISE (v0.24.0 fixed the
+sustained-MTP replay crash that forced NONE on v0.23); vision-on default; qwen3_coder+qwen3 parsers; auto
+VLLM_USE_AOT_COMPILE=0 + --skip-mm-profiling when vision+GRAPH=1. FLIP: DD_MODEL=vllm/qwen36-27b-w8a8
+daily_driver_serve.sh start -> b70_daily_0 on :18080, watchdog probe verified (enable_thinking=false -> 'Paris',
+no false-heal), aux (webui/prom/grafana) up. GOTCHA hit during flip: killing a mid-compile flip left a stale
+gpu-run flock holder + orphan serve.sh that respawned; had to pkill -9 the serve.sh/gpu-run trees + verify a
+fresh `gpu-run bash -c echo` re-acquires before re-flipping. OPEN: PREFIXCACHE=0 (untested for hybrid GDN on
+vLLM) -> long agentic sessions re-prefill (sglang's RADIX cached that); next = test --enable-prefix-caching.

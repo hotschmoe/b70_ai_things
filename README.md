@@ -3,8 +3,10 @@
 Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Intel Arc Pro B70
 (Battlemage, `xpu`). The headline: custom **fused INT8 W8A8** kernels make 8-bit weights beat
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
-accuracy loss. **sglang is the production backend; vLLM is UN-PAUSED on v0.24.0** -- the concurrent
-`!!!!` garbage is fixed, and captured W8A8 decode is the fastest coherent config on the box (see the vLLM table).
+accuracy loss. **The daily driver is now vLLM v0.24.0** (flipped 2026-07-03): the concurrent `!!!!` garbage is
+fixed on v0.24.0, and captured W8A8 decode runs ~2x the old sglang driver (35-44 tok/s vs 18) with vision +
+tool-calling + reasoning + 131K context all retained. sglang stays the maintained fallback (its edge: a working
+prefix cache -- vLLM's is off pending a hybrid-GDN test). See the vLLM table + `JOURNAL.md` 2026-07-03.
 
 ## What we built (the load-bearing custom work)
 
@@ -52,10 +54,13 @@ degradation), and unlike vLLM it stays coherent under sustained concurrent load.
 > capture is **stable** under sustained MTP (restarts=0) + **deterministic** (3/3 greedy), and
 > tool-calling (`qwen3_coder`) + reasoning (`qwen3`) + vision all work. Images: `vllm-xpu-env:{v0240,int8g-v0240}`.
 >
-> **Two open caveats before it can replace the sglang daily driver:** (1) **vision + torch.compile is
-> incompatible** on this XPU stack -- the mm-merge does `image_embeds.size()` on `None` under dynamo, so
-> vision works only EAGER (~parity with sglang), while the 27 t/s capture number is TEXT-only; (2) prefix
-> caching for the hybrid GDN model is untested here. Until (1) is patched, capture and vision are exclusive.
+> **Vision + capture FIXED (2026-07-03):** enabling vision under `torch.compile` crashed at init
+> (`'NoneType'.size` in dynamo) -- root cause was the **standalone AOT-compile** serialize/reload mishandling
+> the optional (None) multimodal inputs. Fix = **`VLLM_USE_AOT_COMPILE=0`** (env, no code patch, no runtime
+> cost -- the captured graph is identical). With it, vision + PIECEWISE capture + MTP run together: **44 tok/s
+> usage-based WITH vision** (2.4x the sglang daily driver's 18.0), gate 40/40 coherent, restarts=0, tool-calling
+> + reasoning intact. The shelf auto-applies it (+ `--skip-mm-profiling`) when vision is on and `GRAPH=1`.
+> (Remaining minor: prefix caching for the hybrid GDN model is untested here -- `PREFIXCACHE=0` for now.)
 
 Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- the ~4x decode lever). Only the
 **W8A8 row is re-benched on v0.24.0** (the daily-driver candidate); the other rows are the last vLLM baseline.
