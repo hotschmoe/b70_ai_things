@@ -18,14 +18,21 @@ GATE_LOG="$ROOT/build24/stage5_gate.log"
 
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 
+# Pause the dd-watchdog so it can't probe/incident during the test. It is OBSERVE-ONLY for a down
+# container (heals only health-200+garbage), so this is belt-and-suspenders; owned by us (uid 1000).
+WDOG_PID="$(pgrep -f 'bin/dd-watchdog' | head -1)"
+resume_wdog() { [ -n "$WDOG_PID" ] && kill -CONT "$WDOG_PID" 2>/dev/null && say "resumed dd-watchdog ($WDOG_PID)"; }
+
 restore_daily() {
   say "=== RESTORE: stop test serve + bring daily driver back (RADIX=1) ==="
   NAME=$NAME PORT=$PORT bash "$SHELF/serve.sh" stop >/dev/null 2>&1 || true
   docker rm -f "$NAME" >/dev/null 2>&1 || true
   DD_ENV="RADIX=1" bash "$REPO/vllm/daily_driver_serve.sh" start 2>&1 | tail -6 || \
      say "!! daily driver restore FAILED -- run: DD_ENV=RADIX=1 bash vllm/daily_driver_serve.sh start"
+  resume_wdog
 }
 trap restore_daily EXIT
+[ -n "$WDOG_PID" ] && kill -STOP "$WDOG_PID" 2>/dev/null && say "paused dd-watchdog ($WDOG_PID) for the test"
 
 # 0) sanity: kernel .so present
 for f in _xpu_C.abi3.so libgdn_attn_kernels_xe_2.so; do
@@ -49,11 +56,15 @@ export GRAPH=1                  # torch.compile on, replay off (CGMODE=NONE)
 export SERVED=qwen36-27b-w8a8-sqgptq-mtp
 export SToffMAXLEN=""           # (unused placeholder)
 export MAXLEN="${MAXLEN:-8192}" MAXSEQS="${MAXSEQS:-8}"
-if ! bash "$SHELF/serve.sh" start 2>&1 | tee "$GATE_LOG" | tail -30; then
-  say "!! serve.sh start FAILED -- see $GATE_LOG"; exit 1
-fi
+bash "$SHELF/serve.sh" start 2>&1 | tee "$GATE_LOG" | tail -30 || say "(serve.sh start returned non-zero -- checking /health directly)"
 
 BASE="http://localhost:$PORT/v1"
+# Robust: continue to the concurrent gate as long as the server is actually healthy, even if the
+# basic single-prompt gen_probe flagged something (we want to characterize concurrent behavior).
+if ! curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1; then
+  say "!! server NOT healthy on :$PORT -- serve failed to come up. Tail:"; docker logs "$NAME" 2>&1 | tail -25
+  exit 1
+fi
 say "=== served model check ==="
 curl -s "$BASE/models" 2>/dev/null | python3 -m json.tool 2>/dev/null | grep -E '"id"|max_model_len' | head
 

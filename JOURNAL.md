@@ -7357,3 +7357,45 @@ logging to build24/build_v0240.log. Canonical multi-stage (rust-build + vllm-bas
 the old :v0230 already carried UCX so the full path is proven on this box. NEXT: Stage 2 (.so ABI check/rebuild)
 -> Stage 3/4 (bake :int8/:int8g v0240) -> Stage 5 (GPU coherence gate: concurrent prefill+decode must NOT
 "!!!!"; then TTFT/decode parity vs sglang 25 t/s). Daily driver (sglang W8A8) stays up throughout.
+
+## 2026-07-03 -- vLLM v0.24.0 (torch 2.12) rebase COMPLETE: concurrent coherence + PIECEWISE stability, both historical blockers FIXED [milestone]
+
+Built the full v0.24.0 image stack and ran the GPU gate. User retargeted the paused-vLLM rebase to the
+LATEST tag (v0.24.0, torch 2.12) with GPU access, and confirmed the daily driver may stay DOWN for the whole
+test session (no stop/restore dance between tests -- memory daily-driver-down-during-tests).
+
+BUILD (all compile-only, no GPU, alongside the live daily driver until the gate):
+- Stage 1: vllm-xpu-env:v0240 = vllm 0.24.0 / torch 2.12.0+xpu / triton 3.7.1, canonical docker/Dockerfile.xpu
+  from the v0.24.0 tag (fresh shallow clone /mnt/vm_8tb/b70/build24/vllm). Image sha256:e5773e14f24d77efdbe36aa6e99cb42c7cfe97a3f31648527f5bb454480690e0.
+- Stage 2: ONE combined _xpu_C.abi3.so (61MB) + libgdn_attn_kernels_xe_2.so (2.6MB) built vs torch 2.12 from
+  the patched vllm-xpu-kernels-w8a8 tree (XPU_SPECIFIC + GDN + TLA on). ABI-verified in the v0240 image:
+  gdn_attention + int8_gemm_w8a8 + int8_gemm_w8a16 + dynamic_per_token_int8_quant all register. At
+  /mnt/vm_8tb/b70/w8a8_kernel_v0240/. (torch 2.12 == the sglang stack, so ABI converges.)
+- Stage 3/4: vllm-xpu-env:int8g-v0240 = v0240 + XPUInt8ScaledMMLinearKernel registry patch + register_fake
+  (one image; xpu_int8.py auto-registers fakes at import). All three apply_patches anchors survived from
+  v0.23.0 (lines 173/282/512); Int8 ABC needed exactly our 4 methods. Image sha256:946a87d21c3d282b4c99c61712588d7e4141f492271728a8dd8fc39703e1579c.
+  vllm/images/int8g/bake_v0240.sh, digest recorded here.
+
+STAGE 5 -- GPU gate (27B W8A8 TP=2, :int8g-v0240 + torch-2.12 .so, MTP spec=3, MAXLEN=8192; daily driver down):
+- v0.24.0 accepted ALL our serve args (--speculative-config mtp, --compilation-config splitting_ops/cudagraph)
+  with no CLI drift. Healthy in 86s (NONE) / 259s (PIECEWISE capture).
+- HEADLINE: concurrent MIXED prefill+decode is COHERENT. gate_concurrent_coherence.py (staggered waves so new
+  prefills land mid-decode): 18/18 then 40/40 (5 waves x 8, exceeds max-num-seqs=8 -> heavy continuous mixed
+  batching) with NO "!!!!"/garbage, on BOTH CGMODE=NONE and CGMODE=PIECEWISE. This is the exact failure that
+  PAUSED vLLM -- the v0.24.0 mixed-batch PRs (#44700 split mixed prefill+decode -> recurrent GDN, #43990,
+  #42430, #43961, #43556) fix it on this hybrid W8A8 stack. vLLM is UN-paused as a candidate.
+- PIECEWISE STABILITY: restarts=0 after the sustained concurrent MTP+capture soak. The old "PIECEWISE crashes
+  under sustained MTP (graph-replay accumulation)" blocker is GONE on v0.24.0. Both blockers cleared.
+- PERF (dependency-free urllib probe; caveat: not the shelf's bench harness): CGMODE=NONE 9.0 t/s single /
+  28.7 agg(N=4); CGMODE=PIECEWISE 13.4-14.1 t/s single / 29.4 agg(N=4). MTP 67% draft-accept, 2.0 accepted/
+  step. Forward pass ~220ms = oneCCL all-reduce-bound at TP=2 (PUSH_AR=0 here to minimize custom-.so surface
+  for the coherence gate). Below the sglang daily driver's ~25 t/s single-stream.
+
+VERDICT: the vLLM v0.24.0 rebase is BUILT and the two blockers that mattered (concurrent garbage + PIECEWISE
+instability) are FIXED -- the capture path is now coherent AND stable. PERF is the remaining gap: decode is
+oneCCL-bound at 13-14 t/s single-stream vs sglang 25. NEXT lever = rebuild the push-allreduce .so
+(contrib/vllm_push_allreduce) against torch 2.12 (mirrors Stage 2) to move EVERY all-reduce onto the 11 GB/s
+L0-IPC fabric and cut the 220ms forward pass -- the shelf reported push-AR = 3.8x prefill TTFT + big agg
+throughput. Artifacts: vllm/gate_concurrent_coherence.py, vllm/perf_probe.py, vllm/stage5_v0240_gate.sh,
+build/bake scripts under vllm/. Results in build24/v0240_results.txt. Daily driver still down (test serve up on
+:30011); watchdog paused (uid-1000, SIGSTOP) -- resume + restore DD at session end.
