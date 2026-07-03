@@ -149,5 +149,15 @@ only) nor upstream vLLM ships an int8-activation XMX path. Our kernels are the d
 ## 4. Session log (2026-07-03)
 
 - [x] Research sweeps + this plan.
-- [ ] A5 presence checks; A1-A4 serve A/Bs (results -> JOURNAL as usual).
-- [ ] B2 DFlash spike memo.
+- [x] A5 presence checks: ALL of MRV2 / retention-interval / dynamic-SD / suffix / DFLASH are
+      in-tree in v0.24.0 (dflash.py + qwen3_dflash.py + drafter arch registered).
+- [x] A1+A2 LANDED: L0-V2 (+3.8%) + MRV2 (+6.7%) stack to TG c1 30.24 -> 33.60 (+11%),
+      c4 15.89, gate 24/24 -> serve.sh defaults (opt-outs B70_L0V2=0 / B70_MRV2=0). JOURNAL.
+- [x] A3 dynamic SD: FAIL on this stack (0-depth toggle collapses c4 to 12.4). Closed.
+- [x] A4 spec re-sweep: SKIPPED (regime unchanged; spec3 optimum stands).
+- [x] B2 DFlash spike: GO -- first coherent DFlash serve on XPU, TP=2, zero code changes;
+      19.06 t/s at spec=15 (< MTP 30.24 at spike settings); spec=7 crashed at init.
+      Memo vllm/DFLASH_XPU.md; drafter at models/files/qwen3.6-27b/dflash-draft.
+- [ ] NEXT SESSION: DFlash accept telemetry on real coding workload + drafter W8A8 quant (memo
+      follow-ups 1-2); B1 fused act-quant prologue; A5 leftover: suffix decoding +
+      VLLM_PREFIX_CACHE_RETENTION_INTERVAL functional test.

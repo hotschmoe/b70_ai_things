@@ -73,14 +73,18 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0** | 15.4 | 320k tok |
+| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 748 ms | **33.6** | 15.9 | 320k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
 2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
 
-The v0.24.0 W8A8 row is **the live daily driver's actual config** (`35_sweep_bench` IN=2048/OUT=128 against
+The W8A8 row's TG numbers include the 2026-07-03 launch-path wins (SYCL_UR_USE_LEVEL_ZERO_V2=1 +
+VLLM_USE_V2_MODEL_RUNNER=1, now serve.sh defaults): TG c1 30.2 -> 33.6 (+11%), c4 15.0 -> 15.9, gate 24/24
+coherent (JOURNAL 2026-07-03 "faster-DD session"; opt-outs B70_L0V2=0 / B70_MRV2=0). Also new: vLLM ships
+DFlash in-tree and it WORKS on XPU (first serve, coherent, TP=2) -- slower than NEXTN MTP at spike settings,
+see `vllm/DFLASH_XPU.md`. The v0.24.0 W8A8 row is **the live daily driver's actual config** (`35_sweep_bench` IN=2048/OUT=128 against
 `b70_daily_0`: vision-on, 131K ctx, PIECEWISE capture, push-AR, MTP) -- the **best coherent W8A8 decode on the
 box** (TG c1 30.0 > sglang 25.6 > old-vLLM 22.4). A chat-workload usage-based probe (short prompt, higher MTP
 accept) reads even higher -- single-stream **44 tok/s vs the old sglang driver's 18** (the captured ~74ms

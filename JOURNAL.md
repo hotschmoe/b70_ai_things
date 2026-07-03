@@ -7588,3 +7588,47 @@ Monitoring"; Grafana datasource-proxy query vllm:num_requests_running -> success
 var model_name populated from live data. Prometheus vllm:* series present.
 VERDICT: PASS. Grafana is now resilient to jumping backends -- it shows the correct sglang/vLLM
 dashboard automatically whenever the driver (re)starts. No GPU touch (monitoring stack only).
+## 2026-07-03 -- faster-DD session: research synthesis + launch-path A/Bs (+11% c1) + DFlash-on-XPU first serve
+
+Session goal: a faster daily driver + ecosystem contributions (docs/20260703_faster_dd_plan.md = the
+research synthesis: spec-decode literature 2025-26, vLLM/sglang dev branches, Intel Battlemage low-level
+ecosystem, local bottleneck audit; committed separately).
+
+CONFIG: shelf rdy_to_serve/vllm/qwen36-27b-w8a8 (v0.24.0, TP=2, PIECEWISE, push-AR, MTP spec=3),
+bench = serve.sh run @ IN=2048 OUT=128 PREFIXCACHE=0 (cold), MAXLEN 4096 shelf default. All cycles
+gen-probe coherence-gated; wedge guard clean on every teardown (xpu-health HEALTHY x2 each cycle).
+
+A/B RESULTS (TG c1 per-stream decode / TTFT / TG c4):
+- cycle 0 stock:                        30.24 / 739 ms / 15.04   (matches the morning README row)
+- cycle 1 SYCL_UR_USE_LEVEL_ZERO_V2=1:  31.39 (+3.8%) / 755      (L0 V2 adapter: counter-based events,
+  in-order immediate lists -- the Intel-ecosystem sweep's replay-overhead lever)
+- cycle 2 VLLM_USE_V2_MODEL_RUNNER=1:   32.27 (+6.7%) / 761      (MRV2 async runner: overlaps schedule
+  N+1 with GPU step N; engagement LOG-VERIFIED in cycle 4; targets the launch/python-bound decode)
+- cycle 3 dynamic SD [[1,2,3],[3,256,0]]: FAIL -- c1 30.18 preserved but c4 COLLAPSED (12.41/stream,
+  agg 7.75 tok/s, req_s 0.07 = stall-like pathology when spec toggles 3->0 under batch on the hybrid;
+  NOT a clean spec-off). Static spec=3 stays. (The in-tree num_speculative_tokens_per_batch_size
+  knob = the DSpark-style load-aware idea; on this stack it is a dead end at 0-depth.)
+- cycle 4 COMBO (V2 + MRV2):            33.60 (+11.1%) / 748 / 15.89 (+5.7%)  -- effects stack ~additively.
+
+VERDICT: L0-V2 + MRV2 LANDED as shelf defaults (serve.sh, opt-outs B70_L0V2=0 / B70_MRV2=0) after a
+final validation cycle on the edited serve.sh: HEALTHY in 137s, MRV2 engagement log-verified, gen probe
+coherent, gate_concurrent_coherence **24/24 PASS** (4 waves x 6, mixed prefill+decode), clean teardown +
+HEALTHY probes. MRV2 caveat: no
+thinking_token_budget support (unused by us). L0-V2 caveat: vllm#41663 upstream sets V2=0 for stability
+on their oneCCL path -- our push-AR bypasses that layer, wedge guard stayed clean all session; watch it.
+
+DFLASH SPIKE (plan B2; vllm/DFLASH_XPU.md): vLLM v0.24.0 ships DFlash in-tree; drafter
+z-lab/Qwen3.6-27B-DFlash (3.3GB bf16, block 16) downloaded to models/files/qwen3.6-27b/dflash-draft.
+**FIRST DFLASH SERVE ON XPU: WORKS, TP=2, coherent, zero code changes.** Feared walls all clear:
+no #41190 crash, non-causal draft attn fine on the XPU backend, no flash_attn dep, W8A8 target +
+bf16 drafter compose, capture clean (3s/1.42GiB). Perf at spike settings LOSES to NEXTN MTP:
+spec=15 -> 19.06 t/s c1 (TTFT 912); spec=7 CRASHED at init (EngineCore shm_broadcast "cancelled"
+during health wait; CAPSIZES=1,2,4,8) -- and the post-teardown probes went transiently WEDGED-looking
+(both cards HUNG >60s) but CLEARED on a re-probe ~2 min later: **a post-teardown "WEDGED" verdict can
+be TRANSIENT while dying workers drain -- re-probe before escalating to xe-reset/reboot.** Hypotheses
++ follow-ups in the memo (over-drafting on random bench text; 3.3GB drafter weight reads ~5-6ms/step;
+drafter capture engagement unverified; spec sweep = crash-prone TP=2 inits, do NOT chain). NOT a shelf
+candidate yet; it is the accept-length ceiling play (tau~6.5 on CUDA real workloads vs our accept_len 2.0).
+
+NEGATIVE/CLOSED this session: dynamic SD 0-depth toggle (above); fuse_norm_quant/fuse_act_quant
+inductor passes are FP8-only upstream -> our int8 act-quant fusion stays a custom-kernel task (plan B1).

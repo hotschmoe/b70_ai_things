@@ -90,6 +90,15 @@ if [ -z "$NOMM" ] && [ "${GRAPH:-1}" = 1 ]; then
   export EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }--skip-mm-profiling"
   export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }VLLM_USE_AOT_COMPILE=0"
 fi
+# [2026-07-03 launch-path A/B, docs/20260703_faster_dd_plan.md Tier A + JOURNAL] Two measured, stacking wins
+# on the launch/python-bound captured decode (IN=2048/OUT=128, PREFIXCACHE=0 cold bench, this entry):
+#   SYCL_UR_USE_LEVEL_ZERO_V2=1   L0 V2 adapter (counter-based events, in-order immediate lists)  c1 +3.8%
+#   VLLM_USE_V2_MODEL_RUNNER=1    MRV2 async runner (overlaps schedule N+1 with GPU step N)       c1 +6.7%
+# Combo: TG c1 30.24 -> 33.60 (+11%), c4 15.04 -> 15.89, TTFT unchanged, gen-probe + gate coherent.
+# MRV2 caveat: no thinking_token_budget support (we do not use it). Opt out: B70_L0V2=0 / B70_MRV2=0.
+[ "${B70_L0V2:-1}" = 1 ]  && export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }SYCL_UR_USE_LEVEL_ZERO_V2=1"
+[ "${B70_MRV2:-1}" = 1 ]  && export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }VLLM_USE_V2_MODEL_RUNNER=1"
+
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"
 export MAXSEQS="${MAXSEQS:-8}"
