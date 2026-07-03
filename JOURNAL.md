@@ -7557,3 +7557,34 @@ VERDICT: PASS. Baked PREFIXCACHE default 0->1 into rdy_to_serve/vllm/qwen36-27b-
 lib.sh's shared 0 default is UNCHANGED so other/un-validated hybrids are unaffected) + block (4) shim committed.
 Live daily driver is serving the validated config. Robust to a plain `daily_driver_serve.sh start` (no DD_ENV
 needed) + watchdog restarts. PREFIXCACHE=0 still forces the clean re-prefill baseline for cold-perf benches.
+
+## 2026-07-03 -- Grafana auto-selects sglang vs vLLM dashboard at monitor boot
+
+PROBLEM: the daily-driver Grafana shipped ONE dashboard (sglang-dashboard.json, all panels query
+sglang:* metrics). When DD switched to vLLM the dashboard went blank -- vLLM emits vllm:* metric
+families, not sglang:*. Prometheus scraping was fine (both backends expose /metrics on the public
+:18080 port; the scrape target is backend-agnostic); only the dashboard metric names mismatched.
+
+CONFIG:
+- Added bin/monitoring/grafana/dashboards/json/vllm-dashboard.json (from vLLM's stock
+  examples/observability/prometheus_grafana/grafana.json; ${DS_PROMETHEUS} datasource rewritten to
+  the pinned provisioned uid ddyfngn31dg5cf, DS_PROMETHEUS picker var dropped, uid=vllm-dashboard).
+  BOTH dashboards now provision (folder renamed SGLang Monitoring -> LLM Serving Monitoring).
+- daily_driver_serve.sh monitor_up(): new detect_backend() probes the live :18080/metrics and
+  glob-matches vllm:*/sglang:* (falls back to the DD_MODEL rdy_to_serve/<backend>/ prefix when the
+  server is not up yet), then ALWAYS rm+recreates Grafana with GF_..._HOME_DASHBOARD_PATH set to the
+  matching dashboard. Grafana is stateless (provisioned from files, no named volume) so recreate is
+  cheap and makes the home view track a backend switch. Prometheus is left as-is (target unchanged).
+- prometheus.yaml job_name sglang -> b70_daily + backend-agnostic comment.
+
+GOTCHA: first detect_backend used `printf "$m" | grep -qm1 vllm:` -- under the script's `set -o
+pipefail`, grep -q's early exit hands printf a SIGPIPE so the pipeline reports FAILURE even on a
+match, and detection wrongly fell through to the DD_MODEL default. Fixed by dropping the pipe and
+glob-matching the variable with bash `case "$m" in *vllm:*)`.
+
+COMMAND: bash vllm/daily_driver_serve.sh monitor   (live DD was serving vLLM)
+RESULT: home dashboard -> vllm-dashboard.json; both dashboards provisioned into "LLM Serving
+Monitoring"; Grafana datasource-proxy query vllm:num_requests_running -> success, 1 series; template
+var model_name populated from live data. Prometheus vllm:* series present.
+VERDICT: PASS. Grafana is now resilient to jumping backends -- it shows the correct sglang/vLLM
+dashboard automatically whenever the driver (re)starts. No GPU touch (monitoring stack only).

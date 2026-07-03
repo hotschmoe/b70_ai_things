@@ -1,14 +1,17 @@
-# prometheus.yaml -- scrape config for the b70 daily driver's sglang /metrics.
-# Adapted from sglang examples/monitoring/prometheus.yaml: target 30000 -> 18080
-# (THE public daily-driver port; sglang serves /metrics on the same port as /v1
-# when launched with --enable-metrics, i.e. the serve.sh METRICS=1 knob).
-# Prometheus runs --network host, so 127.0.0.1:18080 reaches the published port.
+# prometheus.yaml -- scrape config for the b70 daily driver's /metrics.
+# The scrape target is BACKEND-AGNOSTIC: both sglang and vLLM expose Prometheus
+# /metrics on the same port as /v1 (:18080, the public daily-driver port), so this
+# one target works whichever backend is serving. Only the METRIC NAMES differ
+# (sglang:* vs vllm:*) -- that is a Grafana-dashboard concern, not a scrape concern;
+# daily_driver_serve.sh loads the matching dashboard per backend at boot.
+# sglang needs the serve.sh METRICS=1 knob (--enable-metrics); vLLM exposes /metrics
+# by default. Prometheus runs --network host, so 127.0.0.1:18080 reaches the port.
 global:
   scrape_interval: 5s
   evaluation_interval: 30s
 
 scrape_configs:
-  - job_name: sglang
+  - job_name: b70_daily
     static_configs:
       # TP=2 / single-card daily driver (the default). For DD_REPLICAS=2 data-parallel,
       # add the per-replica backend ports 127.0.0.1:18091 / 127.0.0.1:18092 here

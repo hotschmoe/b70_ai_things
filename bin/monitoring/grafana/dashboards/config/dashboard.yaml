@@ -1,8 +1,13 @@
+# Provisions EVERY *.json in the mounted dir. We ship BOTH backend dashboards
+# (sglang-dashboard.json + vllm-dashboard.json), so both are always available in
+# Grafana regardless of which backend is serving. daily_driver_serve.sh picks which
+# one is the HOME dashboard at boot based on the backend actually running (see
+# monitor_up / detect_backend). Folder name is backend-neutral for that reason.
 apiVersion: 1
 providers:
-  - name: 'SGLang'
+  - name: 'B70 Serving'
     orgId: 1
-    folder: 'SGLang Monitoring'
+    folder: 'LLM Serving Monitoring'
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10

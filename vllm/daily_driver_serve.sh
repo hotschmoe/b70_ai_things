@@ -76,9 +76,12 @@ WEBUI_NAME=open-webui
 WEBUI_PORT=3000
 WEBUI_IMAGE=ghcr.io/open-webui/open-webui:main
 # ----- monitoring (Prometheus + Grafana) -- tied to the lifecycle, exactly like Open WebUI ---
-# Off-the-shelf sglang stack (examples/monitoring), assets vendored to $REPO/bin/monitoring:
-# Prometheus scrapes the serve's /metrics on :$PORT (needs the serve.sh METRICS=1 knob, default on);
-# Grafana auto-provisions the datasource + the shipped sglang dashboard, anonymous Viewer (no login).
+# Assets vendored to $REPO/bin/monitoring. Prometheus scrapes the serve's /metrics on :$PORT
+# (sglang needs the serve.sh METRICS=1 knob, default on; vLLM exposes /metrics by default) --
+# the scrape target is backend-agnostic. Grafana auto-provisions the datasource + BOTH backend
+# dashboards (sglang + vllm), anonymous Viewer (no login). Which one is the HOME dashboard is
+# decided at monitor_up time by detect_backend() (probe live /metrics -> vllm:*/sglang:*, fall
+# back to the DD_MODEL prefix), so the view tracks whichever backend is actually serving.
 MONITOR_ENABLE=1
 PROM_NAME=b70_prometheus
 GRAF_NAME=b70_grafana
@@ -121,10 +124,28 @@ webui_up() {
 }
 webui_down() { ssh_h "docker stop $WEBUI_NAME >/dev/null 2>&1 && echo '  web ui: down' || true"; }
 
+# Decide which backend is ACTUALLY serving so Grafana can home on the matching dashboard.
+# Primary signal = the live /metrics exposition (vllm:* vs sglang:* metric families); this reflects
+# reality even if a serve was started outside this script. Fallback = the DD_MODEL prefix
+# (rdy_to_serve/<backend>/<dir>) for when the server is not up yet (e.g. a bare `monitor` call).
+detect_backend() {
+  local m
+  m="$(ssh_h "curl -s --max-time 3 http://localhost:$PORT/metrics 2>/dev/null")"
+  # Glob-match the body directly (no `printf|grep` -- with `set -o pipefail`, grep -q's early
+  # exit gives printf a SIGPIPE and the pipeline reports failure even on a match). Metric families
+  # are named vllm:* / sglang:*; only one backend's families are ever present.
+  case "$m" in
+    *vllm:*)   echo vllm;   return ;;
+    *sglang:*) echo sglang; return ;;
+  esac
+  case "$DD_MODEL" in vllm/*) echo vllm ;; sglang/*) echo sglang ;; *) echo sglang ;; esac
+}
+
 monitor_up() {
   [ "${MONITOR_ENABLE:-0}" = 1 ] || return 0
-  # Prometheus -- scrapes the daily driver's /metrics on :$PORT (host net -> 127.0.0.1:$PORT). TSDB persists
-  # across restarts in the named volume b70_prometheus_data.
+  # Prometheus -- scrapes the daily driver's /metrics on :$PORT (host net -> 127.0.0.1:$PORT). The target is
+  # backend-agnostic (both backends expose /metrics there), so it persists across backend switches. TSDB
+  # persists across restarts in the named volume b70_prometheus_data.
   if ssh_h "docker inspect $PROM_NAME >/dev/null 2>&1"; then
     ssh_h "docker start $PROM_NAME >/dev/null 2>&1 || true"
   else
@@ -134,20 +155,24 @@ monitor_up() {
       --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus >/dev/null 2>&1 || true"
   fi
   # Grafana -- anonymous Viewer (no login, like WEBUI_AUTH=False); auto-provisions the Prometheus datasource +
-  # the shipped sglang dashboard as the home page. Stateless (provisioned from files), so no named volume.
-  if ssh_h "docker inspect $GRAF_NAME >/dev/null 2>&1"; then
-    ssh_h "docker start $GRAF_NAME >/dev/null 2>&1 || true"
-  else
-    ssh_h "docker run -d --name $GRAF_NAME --network host \
+  # BOTH backend dashboards. The HOME dashboard depends on the backend actually serving, and the home path is
+  # baked in as a -e env at `docker run` time -- so we ALWAYS rm+recreate here (not `docker start`) to pick up
+  # the current backend on a switch. Grafana is stateless (provisioned from files, no named volume), so
+  # recreating it every monitor_up is cheap. The other backend's dashboard stays one click away in the
+  # "LLM Serving Monitoring" folder.
+  local backend home
+  backend="$(detect_backend)"
+  home="/var/lib/grafana/dashboards/${backend}-dashboard.json"
+  ssh_h "docker rm -f $GRAF_NAME >/dev/null 2>&1 || true"
+  ssh_h "docker run -d --name $GRAF_NAME --network host \
       -v $MONITOR_DIR/grafana/datasources:/etc/grafana/provisioning/datasources:ro \
       -v $MONITOR_DIR/grafana/dashboards/config:/etc/grafana/provisioning/dashboards:ro \
       -v $MONITOR_DIR/grafana/dashboards/json:/var/lib/grafana/dashboards:ro \
       -e GF_SERVER_HTTP_PORT=$GRAF_PORT -e GF_AUTH_ANONYMOUS_ENABLED=true -e GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer \
       -e GF_AUTH_BASIC_ENABLED=false -e GF_USERS_ALLOW_SIGN_UP=false \
-      -e GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/sglang-dashboard.json \
+      -e GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=$home \
       --restart unless-stopped $GRAF_IMAGE >/dev/null 2>&1 || true"
-  fi
-  echo "  monitor: grafana -> http://$HOST_IP:$GRAF_PORT (anon viewer)   prometheus -> http://$HOST_IP:$PROM_PORT"
+  echo "  monitor: grafana -> http://$HOST_IP:$GRAF_PORT (anon viewer, $backend dashboard)   prometheus -> http://$HOST_IP:$PROM_PORT"
 }
 monitor_down() { ssh_h "docker stop $GRAF_NAME $PROM_NAME >/dev/null 2>&1 && echo '  monitor: down' || true"; }
 
