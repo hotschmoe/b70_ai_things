@@ -7880,3 +7880,48 @@ this JOURNAL updated. Fallback: DFLASH=0 restores the MTP 253952 DD in one env f
 CLIENT NOTE: the served id CHANGED qwen36-27b-w8a8-sqgptq-mtp -> ...-dflash (Model Identity: id encodes
 method). open-webui auto-discovers so it shows the new name; any hardcoded client id must update, or pass
 SERVED=qwen36-27b-w8a8-sqgptq-mtp to keep the old id.
+
+## 2026-07-03 -- session 3 cont: DEEP-context accept overturns the DD choice -> all-sliding drafter
+
+Verifying "does DFlash accept hold at deep coding context" (user ask) found the full-drafter DD is the
+WRONG config, and flipped the DD to the all-sliding drafter. Deep accept via vllm/dflash_deep_accept_probe.py
+(real code context truncated to depth, spec /metrics deltas):
+
+accept_len by context depth:
+  ctx    MTP spec=3   DFlash FULL drafter   DFlash ALL-SLIDING
+  4K     2.90         4.46                  3.91
+  16K    2.89         2.54                  3.46
+  40K    2.72         2.17                  3.14
+  100K   3.03         1.63 (COLLAPSE)       3.60 (HOLDS)
+
+ROOT CAUSE of the full-drafter collapse: the drafter's 4 sliding-window layers are run as FULL attention
+(in-tree qwen3_dflash.py passes no per_layer_sliding_window), so at deep ctx they attend over 40-100K tokens
+when TRAINED for a 2048 window -> out-of-distribution -> accept craters. Output stays COHERENT (target verifies)
+-- verified the 40K-ctx gen is coherent reasoning, not garbage -- but the speculation speedup evaporates. The
+"+75%" from the earlier accept probe was a SHALLOW-context (~3K) artifact.
+
+FIX = the all-sliding drafter (B70_DFLASH_SWA=1, vllm/patches/qwen3_dflash_swa.py): windowing EVERY drafter
+layer keeps them in-distribution -> accept holds ~3.6 to 100K, and fits the FULL 253952 (291k KV tokens,
+1.15x conc). The earlier "all-sliding costs 28% accept" was ALSO shallow-only; at depth it WINS.
+
+DECODE t/s (two-point method, vllm/twopoint_decode_tps.py -- times a short vs long gen at the SAME context so
+prefill/TTFT cancels; the plain end-to-end tok/s and a naive first-token-clock streaming probe both gave
+inconsistent numbers at depth, this one is reliable):
+  ctx    MTP     all-sliding
+  16K    25.7    24.0
+  40K    17.7    21.3   <- all-sliding +20% at depth
+  4K     ~33     35.9
+=> all-sliding beats MTP at deep ctx (the coding common case) AND fits full ctx. USER CHOSE all-sliding.
+
+STABILITY: found a SOFT "!!!!" poison -- ABUSIVELY cancelling 40K-prefill requests mid-flight corrupts the
+GDN/mamba SSM state -> all prompts emit "!!!!". CLEARED by docker restart (bin/dd-watchdog auto-heals it, and
+it IS running). Clean load (no cancels) = coherent (48+ gate streams, gate 12/12). Same GDN-poison family as
+the int4 DP=2 "!!!!" (docker-restart-healable, not a reboot wedge). Watch-item for the DD; DFLASH=0 reverts to
+bulletproof MTP if it recurs.
+
+LANDED: serve.sh DFLASH toggle gained DFSWA (default 1 = all-sliding, mounts qwen3_dflash_swa.py + sets
+B70_DFLASH_SWA=1; DFSWA=0 = stock full drafter). Live DD = DFLASH=1 (DFSWA=1) MAXLEN=253952 -> served
+qwen36-27b-w8a8-sqgptq-dflash, 291k KV tokens @253952, gate 12/12, coherent. Table bench (random text, DFlash's
+worst case): PP 2566, TTFT 798ms, TG c1 19.6, c4 10.3. README table + footnote + JOURNAL updated. New probes:
+dflash_deep_accept_probe.py, twopoint_decode_tps.py, deep_decode_tps.py (the last is UNRELIABLE at depth,
+kept as a cautionary note).

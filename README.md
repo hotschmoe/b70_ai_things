@@ -5,11 +5,12 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss. **The daily driver is vLLM v0.24.0 W8A8 + DFlash speculative decoding** (flipped to DFlash
 2026-07-03): the concurrent `!!!!` garbage is fixed on v0.24.0, and the in-tree **DFlash block-diffusion
-drafter** (spec=8, W8A8-RTN quantized) gives **+75% single-stream decode vs the NEXTN MTP head** on real coding
-(53 tok/s, accept_len 4.5 vs MTP 2.8), with vision + tool-calling + reasoning + **prefix caching** + **131K
-(128K) context** all retained. The DFlash drafter's KV caps context at ~186K (vs MTP's 253952), so 131K is the
-tuned daily-driver point. sglang stays the maintained fallback. Served id: `qwen36-27b-w8a8-sqgptq-dflash`.
-See the vLLM table + `vllm/DFLASH_XPU.md` + `JOURNAL.md` 2026-07-03.
+drafter** (spec=8, W8A8-RTN quantized, **all-sliding-window drafter**) speeds up decode while keeping vision +
+tool-calling + reasoning + **prefix caching** + the **full 253952 (248K) context**. Critically, the drafter's
+sliding layers are windowed so accept_len **holds at deep context** (3.6 at 100K) where the stock full-attention
+drafter collapses to 1.6 -- decode beats MTP at depth (40K: 21.3 vs 17.7 tok/s) and on short coding bursts it is
+faster still. sglang stays the maintained fallback. Served id: `qwen36-27b-w8a8-sqgptq-dflash`; one-flag revert
+to the MTP driver via `DFLASH=0`. See the vLLM table + `vllm/DFLASH_XPU.md` + `JOURNAL.md` 2026-07-03.
 
 ## What we built (the load-bearing custom work)
 
@@ -77,7 +78,7 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
 | qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0** (W8A8 kernel baseline) | 35 | 2 | 2711 | 755 ms | **30.0**\*\*\* | 15.4 | 320k tok |
-| qwen3.6-27b | **W8A8 + DFlash drafter (spec=8) -- v0.24.0 (DAILY DRIVER)** | 35+2 | 2 | -- | -- | **53\*\*\*\*** | -- | 191k tok |
+| qwen3.6-27b | **W8A8 + DFlash all-sliding drafter (spec=8) -- v0.24.0 (DAILY DRIVER)** | 35+2 | 2 | 2566 | 798 ms | 19.6\*\*\*\* | 10.3\*\*\*\* | 291k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
@@ -96,18 +97,30 @@ best coherent W8A8 decode on that workload (TG c1 30.0 > sglang 25.6 > old-vLLM 
 gate `vllm/gate_concurrent_coherence.py`. JOURNAL 2026-07-03.
 
 \*\*\*\* **DFlash daily driver (2026-07-03 session 3).** The live DD swaps the NEXTN MTP head for vLLM's in-tree
-**DFlash block-diffusion drafter** (`z-lab/Qwen3.6-27B-DFlash`, W8A8-RTN, `spec=8` -- the sweep-gated peak of
-spec 6/8/10/15). On REAL coding it is **+75% single-stream** vs MTP: accept telemetry ALL **53.4 tok/s /
-accept_len 4.52** (vs MTP 27.8 / 2.84), gate 12/12 coherent, prefix-cache warm reuse intact (cold 1.96s ->
-warm 0.74s), soak 167/168 concurrent-mixed streams clean (0 restarts/wedge). NOTE: DFlash wins on
-repetitive/agentic text, NOT random bench text -- so it is deliberately NOT scored in the IN=2048/OUT=128 table
-(it regresses there); 53 t/s is the real-coding number. KV col (191k tok, 1.46x conc @131072) is why context is
-capped: the drafter's own KV + a `group_size` padding artifact hold DFlash to ~186K max ctx, so the DD runs
-**131072 (128K)**. Root cause + the KV-padding patch (`vllm/patches/kv_cache_utils_gcd.py`, `group_size`
-argmin) in `vllm/DFLASH_XPU.md`. Flip: `DFLASH=1 DD_MAXLEN=131072` (the serve.sh `DFLASH` toggle; `DFLASH=0`
-restores the 253952 MTP DD, still in-window on Qwen3.6's 262144-native rope). An all-sliding-drafter variant
-(`B70_DFLASH_SWA=1`) fits the full 253952 but costs 28% accept -- documented, not enabled.
-Decode/prefill (the table's IN=2048 numbers) are independent of max-model-len; only the KV column scales.
+**DFlash block-diffusion drafter** (`z-lab/Qwen3.6-27B-DFlash`, W8A8-RTN, `spec=8`), run in **all-sliding mode**
+(`DFSWA=1`: all 5 drafter layers windowed to 2048 -> one KV group). The table's IN=2048/OUT=128 numbers are
+RANDOM text = DFlash's worst case (the drafter can't predict random tokens); real coding is much faster. The
+metric that decides a spec config is **accept_len**, and the key finding is how it behaves with context DEPTH
+(from `vllm/dflash_deep_accept_probe.py`, /metrics counters):
+
+| context | MTP spec=3 | DFlash stock full drafter | DFlash all-sliding (DD) |
+|---|---|---|---|
+| 4K   | 2.90 | 4.46 | 3.91 |
+| 16K  | 2.89 | 2.54 | 3.46 |
+| 40K  | 2.72 | 2.17 | 3.14 |
+| 100K | 3.03 | **1.63** (collapses) | **3.60** (holds) |
+
+The stock full-attention drafter is fastest at SHALLOW context (+75% on short coding bursts) but its sliding
+layers run out-of-distribution at depth and **collapse** (accept 4.46 -> 1.63), and it caps ctx at ~186K.
+Windowing every drafter layer keeps them in-distribution: accept **holds ~3.6 to 100K**, it fits the **full
+253952** context (291k KV tokens, 1.15x conc), and reliable two-point decode t/s **beats MTP at depth** (40K:
+**21.3 vs 17.7 tok/s**), competitive/faster shallow. Gate 12/12 coherent, prefix-cache warm reuse intact
+(cold 1.96s -> warm 0.74s). CAVEAT: a request CANCELLED mid deep-prefill can soft-poison the GDN state to
+`!!!!` (cleared by `docker restart`; `bin/dd-watchdog` auto-heals it, and it is running). Config: `DFLASH=1`
+(serve.sh toggle; `DFSWA=1` all-sliding is the default, `DFSWA=0` = the stock shallow-only drafter);
+`DFLASH=0` reverts to the bulletproof MTP driver in one flag. KV-padding patch
+(`vllm/patches/kv_cache_utils_gcd.py`) + SWA overlay (`vllm/patches/qwen3_dflash_swa.py`); full analysis in
+`vllm/DFLASH_XPU.md`. Decode/prefill (the IN=2048 numbers) are independent of max-model-len; only KV scales.
 
 ## Where to look
 

@@ -225,13 +225,17 @@ fi
 
 # --- DFLASH daily-driver toggle (2026-07-03 session 3; JOURNAL + vllm/DFLASH_XPU.md) -----------------
 # DFLASH=1 swaps the NEXTN MTP head for vLLM's in-tree DFlash block-diffusion drafter (a SEPARATE draft
-# model, z-lab Qwen3.6-27B-DFlash, W8A8-RTN quantized). Sweep-gated winner: DFTOK=8 speculative tokens
-# (peak 53.4 t/s + 1.46x concurrency @131072; spec 6/8/10/15 = 49.0/53.4/52.5/51.2 t/s). On REAL coding
-# it is +75% single-stream vs the MTP shelf (accept_len 4.5 vs 2.8). TRADEOFF: the drafter's KV caps
-# max_model_len at ~186k (vs MTP 253952) -- run DFLASH at MAXLEN<=131072. Requires the gs=8 KV-group
-# padding patch (recovers the drafter-induced 25% target-KV padding waste); it is byte-identical for the
-# MTP path (argmin-padding leaves {16 full, 48 mamba} -> group_size 16 unchanged) but only mounted here.
-# Validated: gate_concurrent_coherence 12/12, prefix cache warm-reuse intact (cold 1.96s -> warm 0.74s).
+# model, z-lab Qwen3.6-27B-DFlash, W8A8-RTN). DFTOK=8 speculative tokens (sweep-gated peak). Two modes:
+#   DFSWA=1 (DEFAULT, the daily driver): all 5 drafter layers windowed (sliding_window=2048, uniform ->
+#     ONE kv cache group, assertion-safe) via the qwen3_dflash_swa.py model overlay. accept_len HOLDS at
+#     deep context (3.9@4k -> 3.6@100k) where the stock drafter COLLAPSES, and it fits the FULL 253952
+#     context (291k KV tokens, 1.15x conc). Reliable two-point decode t/s BEATS MTP at depth (40k: 21.3
+#     vs 17.7) and is competitive shallow. This is why the DD runs SWA + full context.
+#   DFSWA=0: the STOCK full-attention drafter. Faster at SHALLOW context (<8k, up to +75% on short
+#     coding bursts) BUT its sliding layers run out-of-distribution at depth -> accept COLLAPSES
+#     (4.5@4k -> 1.6@100k) and it caps ctx at ~186k. Use only for short-context-dominated workloads.
+# Both modes need the gs=8 KV-group padding patch (byte-identical for MTP: argmin-padding leaves
+# {16 full, 48 mamba} -> group_size 16 unchanged). Validated: gate 12/12, prefix cache warm-reuse intact.
 if [ "${DFLASH:-0}" = 1 ]; then
   export DFTOK="${DFTOK:-8}"
   export DFDRAFT="${DFDRAFT:-/models/qwen3.6-27b/dflash-draft-w8a8-rtn}"
@@ -240,7 +244,13 @@ if [ "${DFLASH:-0}" = 1 ]; then
   [ "$CAPSIZES" = "1,2,4,6,8" ] && export CAPSIZES="1,2,4,6,9"   # spec-verify batch = 1+DFTOK(8)
   [ "$SERVED" = "qwen36-27b-w8a8-sqgptq-mtp" ] && export SERVED="qwen36-27b-w8a8-sqgptq-dflash"
   MOUNTS+=( -v "$SCRIPT_DIR/../../../vllm/patches/kv_cache_utils_gcd.py:/opt/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py:ro" )
-  echo "=== DFLASH=1 -> DFlash drafter spec=$DFTOK, served=$SERVED, gs-padding patch mounted ===" >&2
+  if [ "${DFSWA:-1}" = 1 ]; then     # DEFAULT: all-sliding drafter -- holds accept at depth + full ctx
+    DOCKER_ENV+=( -e B70_DFLASH_SWA=1 )
+    MOUNTS+=( -v "$SCRIPT_DIR/../../../vllm/patches/qwen3_dflash_swa.py:/opt/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3_dflash.py:ro" )
+    echo "=== DFLASH=1 DFSWA=1 -> all-sliding drafter spec=$DFTOK, served=$SERVED (deep-accept + full ctx) ===" >&2
+  else
+    echo "=== DFLASH=1 DFSWA=0 -> STOCK full drafter spec=$DFTOK, served=$SERVED (shallow-only; caps ~186k ctx) ===" >&2
+  fi
 fi
 
 source "$SCRIPT_DIR/../../_common/lib.sh"
