@@ -153,3 +153,25 @@ Decision table (w8a8-rtn drafter, 8-turn real coding):
 
 The 128k daily driver = FULL drafter + gs=8 patch (do NOT set B70_DFLASH_SWA). All-sliding is a
 documented >186k lever at a steep accept cost.
+
+## [2026-07-03 session 4] TP-worker "shm_broadcast cancelled" crash ROOT-CAUSED + FIXED
+
+The crash that reverted the DD to MTP is fixed at ~zero perf cost. ROOT CAUSE: DFlash is in vLLM's
+`EagleModelTypes` (config/speculative.py) -> async scheduling AUTO-ENABLES for it. But only DFlash runs
+`precompute_and_store_context_kv` (qwen3_dflash.py), which writes ALL context K/V by slot_mapping into the
+drafter cache every draft pass via `do_kv_cache_update`->`basic_cache` (no slot-validity check). Under async
+scheduling (step N+1 prepared while step N in flight), a request cancelled in that window leaves a STALE
+slot_mapping -> the drafter writes into a freed/reused block -> hard TP-worker fault (rare; clean Exit 0 =
+the shm_broadcast "cancelled" blocker) or soft GDN "!!!!" poison. MTP is immune (no context-KV precompute).
+
+FIX: `--no-async-scheduling` on the DFlash path (now the `DFLASH=1` default in serve.sh) -> the drafter
+always sees the committed batch, race removed by construction. Validated: accept probe 35.16 t/s / acc_len
+3.24 (== async-on, ~zero cost, +26% vs MTP), 7-min concurrent cancellation soak + c4 bench clean (0 crash
+sigs, coherent), gate_concurrent_coherence.py 18/18 PASS. Serve unchanged otherwise:
+
+    DFLASH=1 DFSWA=1 MAXLEN=253952 PORT=18080 NAME=b70_daily_0 \
+      ./bin/gpu-run bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start
+
+CAVEATS: the original async-ON crash was NOT reproducible in-session (25 min of heavy load) so this is a
+source-grounded deterministic fix, not a strict crash-A/B. DFlash accept ~0% on random/non-coding text (its
+win is coding-specific); MTP stays flat-robust ~2.9 across workloads.

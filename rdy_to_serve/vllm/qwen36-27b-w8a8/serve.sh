@@ -241,6 +241,21 @@ if [ "${DFLASH:-0}" = 1 ]; then
   export DFDRAFT="${DFDRAFT:-/models/qwen3.6-27b/dflash-draft-w8a8-rtn}"
   export SPEC="${SPEC:-{\"method\":\"dflash\",\"model\":\"$DFDRAFT\",\"num_speculative_tokens\":$DFTOK}}"
   export MTPTOK=""                                  # DFlash replaces the NEXTN MTP head
+  # ROOT-CAUSE FIX (2026-07-03, JOURNAL): DFlash is a member of vLLM's EagleModelTypes
+  # (config/speculative.py: EagleModelTypes = [...MTPModelTypes, DFlashModelTypes]) so vLLM
+  # AUTO-ENABLES async scheduling for it -- the same use_async_spec_decode overlap path that MTP
+  # rides safely. But DFlash has a mechanism MTP/EAGLE do NOT: precompute_and_store_context_kv
+  # (qwen3_dflash.py) writes ALL context K/V by slot_mapping into the drafter cache on EVERY draft
+  # pass, with no slot-validity check (do_kv_cache_update -> basic_cache). Under async scheduling the
+  # scheduler prepares step N+1 while step N is in flight; a request cancelled/finished in that window
+  # leaves a STALE slot_mapping -> the drafter writes context K/V into a freed/reused block -> either a
+  # hard TP-worker fault (rare, clean Exit 0, the shm_broadcast "cancelled" blocker) or the soft GDN
+  # "!!!!" poison. Forcing sync scheduling makes use_async_spec_decode=False, so the drafter always
+  # sees the committed batch -> the race is removed BY CONSTRUCTION. Cost is ~zero for DFlash (accept
+  # probe 35.16 t/s / acc_len 3.24 == the async-on 35.4/3.37; the async +7-11% was an MTP-only effect,
+  # DFlash is drafter-cost-bound). Validated: 7-min concurrent cancellation soak + c4 bench, coherent,
+  # 0 crash sigs. (MTP DD keeps async ON -- it has no context-KV precompute, so it is not affected.)
+  export EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }--no-async-scheduling"
   [ "$CAPSIZES" = "1,2,4,6,8" ] && export CAPSIZES="1,2,4,6,9"   # spec-verify batch = 1+DFTOK(8)
   [ "$SERVED" = "qwen36-27b-w8a8-sqgptq-mtp" ] && export SERVED="qwen36-27b-w8a8-sqgptq-dflash"
   MOUNTS+=( -v "$SCRIPT_DIR/../../../vllm/patches/kv_cache_utils_gcd.py:/opt/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py:ro" )

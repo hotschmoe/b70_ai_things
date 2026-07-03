@@ -43,29 +43,28 @@ README clean. Positive optimization lessons live in `research/LESSONS.md`; raw m
   W4A16 case in particular got a spliced multimodal config (its quant was authored text-only) --
   serve + a few prompts + one image before trusting. See `models/REFACTOR.md`.
 
-- **[FOLLOW-UP, opened 2026-07-03] DFlash TP-worker crash blocks it as the daily driver.** DFlash
-  speculative decoding (vLLM in-tree, `DFLASH=1` in `rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh`) is
-  a validated *performance* win but NOT production-stable on this TP=2 hybrid, so the DD stays MTP.
-  Two instability modes seen (JOURNAL 2026-07-03 session 3):
-  1. **Hard crash under concurrent load (the blocker).** ~4 min into a live all-sliding-drafter DD, a
-     random-text bench (c4) coincident with a WebUI request killed a TP worker ->
-     `shm_broadcast.py acquire_read RuntimeError: cancelled` -> `EngineDeadError` -> graceful engine
-     shutdown (Exit 0, no wedge, cards stayed healthy). SAME `shm_broadcast cancelled` signature as the
-     2026-07-03 DFlash spec=7 spike crash at init. The dying worker's OWN traceback (upstream of the
-     shm-cancelled read) is the thing to capture.
-  2. **Soft "!!!!" GDN poison** on a request CANCELLED mid deep-prefill (40K-ctx); `docker restart` /
-     `bin/dd-watchdog` heals it. Same GDN/mamba SSM-state family as the paused-vLLM "!!!!" blocker above.
-  ROOT-CAUSE PLAN (dedicated session; DD is MTP meanwhile, DFlash is one flag away):
-  (a) reproduce deterministically = concurrent `vllm bench serve --dataset-name random` c4 + a cancelled
-      request, `B70_DEBUG=1` (faulthandler) or `=2` (L0 validation/leak + UR/CCL/vLLM debug) to dump the
-      worker py+C traceback on the fatal signal; (b) suspect the drafter's `precompute_and_store_context_kv`
-      single-slot-mapping interacting with chunked-prefill + the wide spec-verify batch (1+DFTOK) under
-      concurrency, and the all-sliding drafter's windowed KV cache eviction mid-flight; (c) test DFTOK
-      smaller (narrower verify), `--no-enable-chunked-prefill`, and DFSWA=0 vs 1 to localize; (d) the fix is
-      likely a guard around the cancelled-request path in the DFlash proposer / a fp32/zeroing of the drafter
-      SSM state. Refs: JOURNAL 2026-07-03 session 3, `vllm/DFLASH_XPU.md`, extracted source in the spike memo.
-  Accept/decode research that STANDS (do not re-litigate): all-sliding drafter holds accept 3.6@100K + fits
-  full 253952 + beats MTP decode at 40K (21.3 vs 17.7); stock full drafter COLLAPSES at depth (4.5->1.6).
+- **[RESOLVED 2026-07-03 session 4] DFlash TP-worker crash -- ROOT-CAUSED + FIXED (async-sched race).**
+  The `shm_broadcast cancelled` TP-worker crash that blocked DFlash as the DD is fixed. ROOT CAUSE: DFlash is a
+  member of vLLM's `EagleModelTypes` (`config/speculative.py`: `EagleModelTypes = [...MTPModelTypes,
+  DFlashModelTypes]`), so vLLM AUTO-ENABLES async scheduling for it -- the same `use_async_spec_decode` overlap
+  path MTP rides safely. But DFlash alone runs `precompute_and_store_context_kv` (qwen3_dflash.py): it writes
+  ALL context K/V into the drafter cache by slot_mapping on EVERY draft pass via `do_kv_cache_update` ->
+  `basic_cache` (no slot-validity check). Under async scheduling the scheduler prepares step N+1 while step N is
+  in flight; a request cancelled/finished in that window leaves a STALE slot_mapping -> the drafter writes
+  context K/V into a freed/reused block -> a hard TP-worker fault (rare; clean Exit 0 = the blocker) or the soft
+  GDN "!!!!" poison. Explains every fact: "coincident with a request", narrow timing (25 min of abuse could
+  NOT reproduce it), clean recovery, both instability modes, and MTP's immunity (no context-KV precompute).
+  FIX: `--no-async-scheduling` on the DFlash path (landed as the `DFLASH=1` default in
+  `rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh`) -> `use_async_spec_decode=False` -> the drafter always sees the
+  committed batch, race removed BY CONSTRUCTION. COST ~ZERO for DFlash (accept probe 35.16 t/s / acc_len 3.24
+  == async-on 35.4 / 3.37; the async +7-11% was MTP-only, DFlash is drafter-cost-bound), +26% over MTP.
+  VALIDATED: 7-min concurrent cancellation soak + c4 bench (combined load above the live-crash case), 0 crash
+  sigs, coherent; formal `gate_concurrent_coherence.py` 18/18 PASS. CAVEATS (honest): (i) the original async-ON
+  crash was not reproducible in-session, so this is a source-grounded DETERMINISTIC fix (removes the identified
+  path), not a strict crash-A/B; (ii) DFlash accept is ~0% on random / non-coding text (pure drafter overhead)
+  -- its win is coding-workload-specific, while MTP is flat-robust ~2.9 across all workloads. Accept/decode
+  research STANDS: all-sliding holds accept 3.6@100K + full 253952 ctx; stock full drafter COLLAPSES at depth
+  (4.5->1.6). Refs: JOURNAL 2026-07-03 session 4, `vllm/DFLASH_XPU.md`.
 
 ## Dead ends (tried, measured, did not work)
 

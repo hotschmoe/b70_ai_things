@@ -7948,3 +7948,58 @@ debug session: B70_DEBUG, chunked-prefill vs the drafter's context-KV precompute
 width). README + DFLASH_XPU.md updated to "researched, not the DD". serve.sh DFLASH/DFSWA toggle kept (inert
 by default). LESSON: an accept/throughput win is necessary but NOT sufficient for a DD -- concurrent-load
 stability is the gate, and DFlash on this TP=2 hybrid does not pass it yet.
+
+## 2026-07-03 -- session 4: DFlash TP-worker crash ROOT-CAUSED + FIXED (async-sched cancellation race)
+
+Followed up the DFlash "shm_broadcast cancelled" TP-worker crash that blocked DFlash as the DD (SHORTCOMINGS
+follow-up opened 2026-07-03). ROOT-CAUSED to source + FIXED at ~zero perf cost; DFlash all-sliding is now
+crash-safe. Config -> command -> result -> verdict:
+
+CONFIG: DFLASH=1 DFSWA=1 DFTOK=8 MAXLEN=253952, W8A8 target TP=2, PIECEWISE capture, push-AR, PREFIXCACHE=1
+(mamba align), served qwen36-27b-w8a8-sqgptq-dflash. Debug serve isolated as b70_dflash_fix:18081 (B70_DEBUG=1
+faulthandler); live DD left down for the session.
+
+REPRO (negative, important): ~25 min of heavy concurrent load on the EXACT crashed config (async-ON) did NOT
+reproduce the hard crash -- c4 `vllm bench serve --dataset-name random` (3000-3500 in / 300-400 out) + 3-4
+concurrent chats + deep-prefill cancellations at varied --max-time + a 150-deep backlog drain. 0 crash sigs, no
+"!!!!" poison. So the live crash is a RARE RACE, not a load-deterministic failure. (This also rules out a
+naive "crashes under load" framing.)
+
+ROOT CAUSE (source, vllm v0.24.0):
+  1. `EagleModelTypes = Literal["eagle","eagle3","extract_hidden_states", MTPModelTypes, DFlashModelTypes]`
+     (config/speculative.py) -- DFlash IS a member. So the auto-enable logic in config/vllm.py enables async
+     scheduling for dflash (log: "Asynchronous scheduling is enabled"), same use_async_spec_decode overlap
+     path MTP rides safely.
+  2. DFlash has a mechanism MTP/EAGLE do NOT: `precompute_and_store_context_kv` (qwen3_dflash.py) F.linears the
+     target hidden states to K/V and writes ALL context K/V into the drafter cache by slot_mapping on EVERY
+     draft pass, via `do_kv_cache_update` -> `basic_cache` (NO slot-validity check).
+  3. Under async scheduling the scheduler prepares step N+1 while step N's GPU work is in flight. A request
+     cancelled/finished in that window leaves a STALE slot_mapping -> the drafter writes context K/V into a
+     freed/reused block -> memory corruption -> either a hard TP-worker fault (rare; clean Exit 0, no wedge =
+     the shm_broadcast "cancelled" blocker) or the soft GDN "!!!!" poison (dd-watchdog-healable). Fits every
+     observed fact: "coincident with a request", narrow timing (why 25 min of abuse missed it), clean
+     recovery, both instability modes, and MTP's immunity (MTP has no context-KV precompute).
+  RULED OUT en route: H1 buffer overflow (max_num_tokens = max_num_batched_tokens = 2048 bounds the context
+  buffers; num_context<=2048 always). H2 windowed-cache-at-depth (~120 deep-context >2048 decodes ran clean in
+  the bench; that's the accept-degradation cause, not a crash).
+
+FIX: force `--no-async-scheduling` on the DFlash path (EXTRA_ARGS in the DFLASH block of serve.sh). This
+deterministically sets use_async_spec_decode=False -> the drafter always sees the committed batch -> the race
+is removed BY CONSTRUCTION (not by empirical absence). Confirmed engaged: "Asynchronous scheduling is
+disabled." MTP DD keeps async ON (unaffected -- no context-KV precompute).
+
+RESULT (b70_dflash_fix, async-OFF):
+  - Accept probe (8-turn real coding, temp0): 35.16 t/s / acc_len 3.24 == the async-ON 35.4 / 3.37 (within
+    run noise). So --no-async-scheduling costs ~ZERO for DFlash -- the async +7-11% was an MTP-only effect;
+    DFlash is drafter-cost-bound. +26% vs the MTP DD (27.8).
+  - Stability: 7-min soak = c4 random bench + 3 concurrent decodes + 3 cancelled deep-prefills/round (varied
+    cancel times = the exact race window), 37 rounds, container running exit=0 throughout, 0 crash sigs, final
+    coherence "42" (no poison). Bench hit 66/100 sharing that load = combined load ABOVE the live-crash case.
+  - Formal gate_concurrent_coherence.py 3x6: 18/18 streams coherent under concurrent mixed prefill+decode. PASS.
+
+VERDICT: DFlash all-sliding + --no-async-scheduling is crash-safe at ~zero perf cost and +26% over MTP on
+coding. Landed as the DFlash-toggle default in serve.sh (DFLASH=1 now injects --no-async-scheduling). CAVEAT
+kept honest: the original async-ON crash was NOT reproducible in-session, so this is a source-grounded
+deterministic fix (removes the identified path), not a strict crash-A/B. Also DFlash accept is ~0% on random
+/ non-coding text (pure drafter overhead) -- its win is coding-workload-specific; MTP stays flat-robust ~2.9
+across all workloads. DD-promotion decision (flip live 18080 to DFlash vs keep MTP) is the remaining call.
