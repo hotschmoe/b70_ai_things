@@ -7714,3 +7714,42 @@ GPU test: BIT-EXACT (max diff 0 all shapes); fused beats two-step everywhere (do
 qkv 303->175us -- eager timings include a ~145us host-submit floor; the captured serve A/B is the
 real verdict and is running as this entry is written). serve.sh gained B70_EXTRA_MOUNTS for the
 routing overlay.
+## 2026-07-03 -- session 2 close: fusedq = UNPROVEN at serve (cache-warmth lesson), retention interval [VERDICT]
+
+FUSED ACT-QUANT (B1) SERVE A/B -- honest negative. Cells (MTP config, PREFIXCACHE=0, B70_MRV2=0,
+IN=2048/OUT=128 c1): prod .so 30.24 | fusedq .so no-overlay 27.64 | fusedq .so + overlay
+B70_FUSEDQ=1 33.58 | same overlay B70_FUSEDQ=0 32.92. The decisive warm pair (33.58 vs 32.92,
+flag-only difference, engagement log-verified via the overlay's register_fake prints) = +2%,
+WITHIN NOISE -> the fused op is NOT a proven serve-level win; do NOT land. The scary-looking
+27.64 "regression" was a COLD-COMPILE-CACHE artifact: that cycle ran right after
+tmp_ssd/torchinductor_root + vllm_cache/torch_compile_cache were wiped (for the drafter-quant
+cache fix), so the MTP-config graph recompiled + autotuned during it.
+LESSONS: (1) BENCH DISCIPLINE: compile-cache warmth is a >=10% confound -- never compare serve
+cycles across a cache wipe; a post-wipe cycle is a burn-in, not a data point. (2) The eager
+microbench win (fused 227us vs two-step 360us on down_proj) did not translate: eager per-op
+timings carry a ~145us host-submit floor that capture already hides; docs/kernel/23's 101us
+"capture-persistent quant" estimate needs re-measure with in-graph profiling before more B1 work.
+Artifacts kept (additive, default-inert without the fusedq .so): kernels/int8_quant_common.hpp,
+vllm/contrib/vllm_int8_xpu/xpu_int8.py overlay, build_v0240_int8gdn_fusedq_so.sh, test_fusedq.py,
+FUSEDQ_NOTES.md, serve.sh B70_EXTRA_MOUNTS hook.
+
+PREFIX-CACHE RETENTION INTERVAL (VLLM_PREFIX_CACHE_RETENTION_INTERVAL=8320 = block 832 x 10;
+PREFIXCACHE=1, MAXLEN=32768, MTP config; vllm/retention_probe.py: 10k-token prompt resent after
+increasing unique traffic):
+- DENSE default: warm resend TTFT 513-533ms @ 93.4% hit through 12 intervening prompts, then
+  COLLAPSE to cold (6.1s, 0% hit) at 20 prompts (~66k tok) -- mamba snapshots evicted.
+- RETENTION=8320: hit_rate 51.9% / resend TTFT ~3.1s, ROCK-STABLE through 30 prompts (~100k tok)
+  of intervening traffic -- the prefix NEVER fully evicts.
+VERDICT: WORKS as documented; it is a TRADEOFF knob, not a free win. Retention keeps only
+1-per-8320-token mamba snapshots (+replay tail) -> warm hits drop 93.4->51.9% and warm resend
+533ms->3.1s, in exchange for indefinite survival (3.1s vs the 6.5s cold re-prefill = 2.1x better
+worst case). Dense wins rapid single-session iteration (the DD common case); retention wins
+multi-session interleave / long-gap agentic work. DD stays DENSE today. Next-session tuning: a
+SMALLER interval (1664/3328 = 2-4 blocks) should recover most of the hit-rate while keeping
+survival -- sweep before adopting.
+
+SUFFIX DECODING: prepped (probes + configs committed in a05715b) but NOT GPU-run this session --
+slipped to next session. DFlash's +68% on the same niche (repetitive/agentic) lowers its priority.
+
+DD RESTORED: DD_MODEL=vllm/qwen36-27b-w8a8 (MTP spec=3, PREFIXCACHE=1 dense, MRV2 auto-off,
+248K ctx) -- healthy, identity-verified.
