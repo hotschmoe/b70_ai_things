@@ -7257,3 +7257,64 @@ VERDICT: capture of the W8A8 MTP verify is now mechanically working and CAN be c
   gated on coherence (never got a clean t/s). Config: GRAPH_BACKEND=full EAGER_COLL=0 PUSHAR=1 PUSH_AR_MAXB=256MB.
   New microbenches: slot_alloc_test.py, allgather_emul_test.py, ar_integration_test.py (all in graph_mtp/).
   Commits ada5def (slots) + 77370cc (consume-ack) + f294909 (visibility findings). DD restored (RADIX=1).
+
+## 2026-07-03 -- run-28: PULL and FLUSH capturable AR both FAIL -> pure-SYCL cross-device drain is a dead end; pivot to vLLM v0.23.0 [closure]
+
+PICKUP from run-27c (Bug C: captured W8A8 MTP verify coherent on only ~25-33% of temp0 requests -- a
+non-deterministic cross-device VISIBILITY race). Root cause (confirmed + codex-corroborated, two consults):
+the push all-reduce does a BULK P2P WRITE of payload into the peer's HBM, and SYCL system-scope atomic_fence
+does NOT enforce that those remote writes DRAIN before the release-stored flag becomes observable on this
+Xe2/DPC++-2025.3 fabric. So the reduce reads a partially-stale slot. The only correct sync is the K.3-K.5
+L0 HW-semaphore, which breaks XPUGraph capture_end finalize (ext_codeplay native-cmd bisect MODE 2).
+
+Tried TWO new capturable (pure-SYCL) transports, each with a full microbench + serve A/B:
+
+ATTEMPT A -- PULL-REDUCE (do_ar_graph_pull, PUSH_AR_MODE=pull): flip the transport so there is NO bulk
+  remote write to race. Each rank writes its input to its OWN local scratch (kernel-boundary coherent in
+  its own HBM), signals the peer's flag (only remote write = 1 word), then the reduce P2P-READS the peer's
+  committed local slot. Correctness req drops from "peer's remote bulk writes landed before its flag is
+  visible" (unenforceable) to "peer's local writes visible to a later remote read after it signaled".
+  MICROBENCH ar_integration_test.py NREP=100: 100/100 XPUGraph replays numerically correct (worst_rel
+  0.0076). SERVE (GRAPH_BACKEND=full EAGER_COLL=0 PUSHAR=1 PUSH_AR_MAXB=256MB): coherence_probe 20 identical
+  temp0 reqs -> distinct=5/20, coherent=2/20, 16/20 IDENTICAL '!' flood. WORSE than spin. The DETERMINISTIC
+  garbage = reader-side remote-read staleness: the reduce's P2P read of peer HBM returns cached/stale data;
+  system-scope acquire does not force an uncached remote transaction. Lockstep microbench cannot expose it
+  (same limitation that hid the original race -- needs real non-lockstep replay cadence).
+
+ATTEMPT B -- PUSH + PCIe FLUSH-READ (do_ar_graph_flush, PUSH_AR_MODE=flush): keep fast push + reduce-from-
+  local, but between push and flag insert a producer coherent remote read (system-scope atomic-acquire load)
+  of the just-pushed peer words. Idea: a PCIe non-posted read cannot pass prior posted writes to the same
+  completer, so the read completing => payload landed => order the flag after it. SERVE: coherence_probe ->
+  distinct=3/20, coherent=2/20, 18/20 '!' flood. ALSO worse than spin.
+
+CODEX VERDICT (2nd consult, web-researched SYCL/L0/PCIe docs): (1) a GPU-EU-initiated P2P read is NOT
+  guaranteed to emit a real PCIe read TLP -- the GPU pipeline can satisfy it from write-combine/L2/store-
+  forward without a remote round-trip, so the CPU-MMIO read-flush analogy does not port. (2) system-scope +
+  acquire are SYCL memory-model semantics, NOT an uncached-remote-transaction request. (3) NO spec-backed
+  pure-SYCL drain primitive exists; best empirical bet is an atomic-RMW flag, but that signals the flag, it
+  does not drain the separate bulk payload -- so it does not address the root cause. (4) no known DPC++
+  2025.3/torch-2.12 way to record a completion signal without the finalize-breaking ext_codeplay native cmd.
+
+COHERENCE LADDER (real serve cadence): spin(push+fence) ~30% > pull ~10% ~= flush ~10%. None shippable.
+
+VERDICT: the sglang pure-SYCL capturable cross-device all-reduce is BLOCKED. Three transports x fences all
+  fail; codex confirms no pure-SYCL drain exists. Further fence/RMW variants are not worth serve cycles --
+  the payload arrival, not the flag signaling, is the unfixable part. This CLOSES the "make the push graph-
+  recordable" thread (P2P_GPU.md K.6 / graph_mtp campaign) on this stack; it reopens only if the upstream
+  DPC++ ext_codeplay finalize bug is fixed (then the proven L0 HW-semaphore captures) or Intel ships a
+  graph-capturable fabric-drain primitive. Draft the upstream DPC++ finalize issue (push_ar_record_test.py
+  MODE 2 is the clean repro). Note collectives are only ~5% of the 220ms iteration -- the launch-bound win
+  never needed capturable COLLECTIVES, only capturable single-device compute; sglang's own breakable backend
+  does that but pays ~129 eager-break overheads (10 t/s < 25 eager).
+
+PIVOT: vLLM v0.23.0 rebase (docs/20260702_vllm_v0230_rebase_plan.md). vLLM's torch.compile PIECEWISE capture
+  ALREADY records collectives correctly (K.6 push-AR was only ever proven inside vLLM capture) and hits
+  30-55 t/s; its ONLY blocker was the concurrent prefill+decode "!!!!" garbage. v0.23.0 carries 5 confirmed
+  upstream PRs (#44700 split mixed prefill+decode -> route decodes to recurrent GDN kernel, #43990, #42430,
+  #43961, #43556) that map exactly to that hybrid mixed-batch corruption. That is the capture win via a
+  backend where capturable collectives are SOLVED -- a build effort, not a memory-ordering wall.
+
+ARTIFACTS: do_ar_graph_pull/_flush + ar_allreduce_graph_pull/_flush in graph_mtp/118b_push_ar_graph_bisect.cpp
+  (.so rebuilt, 3 modes); PUSH_AR_MODE selector in patches/push_ar_xpu.py (default reverted to spin);
+  graph_mtp/coherence_probe.py (determinism metric: N identical temp0 reqs must be byte-identical + coherent);
+  ar_integration_test.py now takes PUSH_AR_MODE + NREP multi-replay. DD restored (RADIX=1). Cards healthy.

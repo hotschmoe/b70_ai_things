@@ -42,11 +42,21 @@ def run(rank, world):
     x = (torch.randn(M, K, device=dev, dtype=torch.bfloat16) * 0.1)
     Ws = [(torch.randn(K, N, device=dev, dtype=torch.bfloat16) * 0.05) for _ in range(NLAYERS)]
 
-    def push_ar(t):                                # mirror push_ar_xpu all_reduce: clone + spin-AR
+    MODE = os.environ.get("PUSH_AR_MODE", "spin").lower()
+    if MODE == "pull":
+        lib.ar_allreduce_graph_pull.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
+                                                ctypes.c_long, ctypes.c_int, ctypes.c_long]
+        _arfn = lib.ar_allreduce_graph_pull
+    else:
+        _arfn = lib.ar_allreduce_graph_spin
+    if rank == 0:
+        print(f"[integ] MODE={MODE}", flush=True)
+
+    def push_ar(t):                                # mirror push_ar_xpu all_reduce: clone + graph-AR
         out = t.clone()
         q = torch.xpu.current_stream().sycl_queue
-        lib.ar_allreduce_graph_spin(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
-                                    out.numel() * 2, 1, MAXB)
+        _arfn(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
+              out.numel() * 2, 1, MAXB)
         return out
 
     def forward(reduce_fn):
@@ -70,13 +80,23 @@ def run(rank, world):
         out = forward(push_ar)
         final = out.clone()
         g.capture_end(); dist.barrier()
-        g.replay(); torch.xpu.synchronize()
-
+        # Multi-replay stress: reuse the same graph/slots NREP times. Bug C (cross-device visibility) and
+        # the cross-replay slot-generation race only surface when slots are reused across replays with a
+        # non-lockstep-ish cadence. Deterministic forward -> every replay must reproduce ref.
+        NREP = int(os.environ.get("NREP", "50"))
+        worst = 0.0; bad = 0
+        for it in range(NREP):
+            g.replay(); torch.xpu.synchronize()
+            d = (final.float() - ref.float()).abs().max().item()
+            r = d / (ref.float().abs().max().item() + 1e-6)
+            worst = max(worst, r)
+            if r >= 0.02:
+                bad += 1
     diff = (final.float() - ref.float()).abs().max().item()
-    rel = diff / (ref.float().abs().max().item() + 1e-6)
-    ok = rel < 0.02
-    print(f"[r{rank}] captured-pushAR vs eager-oneCCL: max_abs_diff={diff:.4f} rel={rel:.4f} "
-          f"{'OK' if ok else 'MISMATCH -> integration/ordering bug CONFIRMED'}", flush=True)
+    rel = worst
+    ok = (bad == 0)
+    print(f"[r{rank}] captured-pushAR({MODE}) vs eager-oneCCL over {NREP} replays: worst_rel={worst:.4f} "
+          f"bad={bad}/{NREP} {'OK' if ok else 'MISMATCH -> visibility/ordering bug CONFIRMED'}", flush=True)
     dist.barrier(); dist.destroy_process_group()
 
 

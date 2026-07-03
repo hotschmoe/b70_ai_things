@@ -4,6 +4,24 @@ Opened 2026-07-02 (perf campaign; JOURNAL entries same date). Goal: capture the 
 forward (and later the draft chain) of the sglang W8A8 fused+MTP TP=2 daily driver to break the
 launch-bound ~220ms eager iteration (~25 t/s -> target 40+).
 
+## State (end of 2026-07-03 -- run-28: CLOSED, pure-SYCL capturable AR is a dead end)
+
+THE PURE-SYCL CAPTURABLE CROSS-DEVICE ALL-REDUCE IS BLOCKED ON THIS STACK. run-28 tried two more
+capturable transports for Bug C, each microbenched + serve-A/B'd:
+  - PULL-REDUCE (do_ar_graph_pull, MODE=pull): bulk stays local, reduce P2P-READS peer slot. Microbench
+    100/100. Serve: 2/20 coherent, 16/20 IDENTICAL '!' flood -> reader-side remote-read staleness.
+  - PUSH + PCIe FLUSH-READ (do_ar_graph_flush, MODE=flush): producer coherent-reads back the pushed words
+    before the flag. Serve: 2/20 coherent, 18/20 '!' -> the GPU-EU read does not force a real PCIe drain.
+Coherence ladder (real serve): spin(push+fence) ~30% > pull ~10% ~= flush ~10%. Codex (web-researched)
+confirms: NO spec-backed pure-SYCL primitive drains cross-device writes; system-scope atomic != uncached
+remote transaction; a GPU P2P read may satisfy from write-combine/L2 without a round-trip. The only correct
+sync is the L0 HW-semaphore (K.3-K.5) which breaks capture_end finalize (ext_codeplay bisect MODE 2).
+=> This thread reopens ONLY if the upstream DPC++ finalize bug is fixed, OR Intel ships a graph-capturable
+fabric-drain primitive. Collectives are only ~5% of the 220ms iteration, so the launch-bound win never
+needed capturable COLLECTIVES -- see JOURNAL 2026-07-03 run-28. PIVOT = vLLM v0.23.0 rebase (its PIECEWISE
+capture already records collectives correctly at 30-55 t/s; only the concurrent "!!!!" garbage blocked it,
+and v0.23.0 has the 5 upstream fixes). See docs/20260702_vllm_v0230_rebase_plan.md.
+
 ## State (end of 2026-07-02 SECOND session -- runs 26-27c)
 
 THE CAPTURED W8A8 MTP VERIFY NOW PRODUCES COHERENT OUTPUT (some requests end-to-end correct) -- the

@@ -352,6 +352,181 @@ extern "C" void ar_allreduce_graph_spin(unsigned long long q_addr, unsigned long
     else               do_ar_graph_spin<float>(q,inout,(size_t)nbytes,max_bytes);
 }
 
+// ---- MODE 5: PULL-REDUCE (run-28, Bug C fix). The spin/push path (do_ar_graph_spin) races because the
+// peer's BULK payload P2P writes into MY scratch may not have DRAINED to my HBM by the time I observe the
+// flag -- SYCL system-scope atomic_fence does NOT enforce cross-device P2P data-arrival ordering on this
+// Xe2/DPC++-2025.3 stack (run-27c: fences 4/15, 5/15). PULL flips the transport so there is NO bulk remote
+// write to race: each rank writes its input to its OWN LOCAL scratch slot (kernel-boundary coherent in its
+// own HBM), signals the peer's flag (the ONLY remote write, a single word), waits on my flag, then the
+// reduce kernel P2P-READS the peer's local slot directly. When I observe the flag, the peer's local writes
+// are fully committed to peer HBM (its push kernel completed before it signaled), so my P2P read fetches
+// committed data. The correctness requirement drops from "peer's remote bulk writes landed in my HBM before
+// its flag is visible" (unenforceable) to "peer's LOCAL writes are visible to a later remote read after it
+// signaled" (defensible: kernel-boundary local coherence + read-after-signal). Only downside: this box is
+// push-fast/read-slow (J.13), so the bulk moves on the slower P2P-read path -- a perf, not correctness, cost.
+// Flag/count/consume-ack bookkeeping is IDENTICAL to do_ar_graph_spin (the data producer is still the peer,
+// so the consumed-region signalling is unchanged); ONLY the two payload pointers swap:
+//   push target  wd:  g_peerScratch+slot  -> g_scratch+slot      (write my LOCAL slot)
+//   reduce src  scr:  g_scratch+slot      -> g_peerScratch+slot   (read PEER's slot over P2P)
+// The consume-ack now protects MY OWN local slot (which the peer reads) instead of the peer's slot.
+template<typename T>
+static void do_ar_graph_pull(queue *q, unsigned long long inout, size_t nbytes, long max_bytes) {
+    size_t nw = nbytes/4;
+    int node = g_node_counter++;
+    if (node >= 16384) node = node % 16384;
+    long slot_off = AR_SLOT_BASE + g_slot_cursor;
+    long slot_sz  = ((long)nbytes + 4095L) & ~4095L;
+    g_slot_cursor += slot_sz;
+    long flags_off = max_bytes - SEQ_BYTES;
+    if (slot_off + (long)nbytes > flags_off) {
+        fprintf(stderr, "[argraph r%d] PAYLOAD SLOT OVERFLOW node=%d off=%ld nbytes=%zu flags_off=%ld "
+                "-- bump PUSH_AR_MAXB (wrapping to base; will alias)\n", g_rank, node, slot_off, nbytes, flags_off);
+        slot_off = AR_SLOT_BASE; g_slot_cursor = slot_sz;
+    }
+    uint32_t *ws=reinterpret_cast<uint32_t*>(inout);
+    uint32_t *wd=(uint32_t*)((char*)g_scratch + slot_off);        // PULL: write my OWN local slot
+    uint32_t *peer_flags    = seq_base(g_peerScratch, max_bytes);
+    uint32_t *my_flags      = seq_base(g_scratch,     max_bytes);
+    uint32_t *my_counts     = my_flags + 32768;
+    uint32_t *my_consumed   = my_flags + 65536;
+    uint32_t *peer_consumed = peer_flags + 65536;
+    uint32_t *my_consume_ct = my_flags + 98304;
+    // CONSUME-ACK PROLOGUE: do not overwrite my own slot for this (g-th) generation until the peer has READ
+    // my previous (g-1)-th generation. my_counts[2n] holds g-1; wait my_consumed >= g-1.
+    event epre = q->single_task([=](){
+        uint32_t need = my_counts[2*node];
+        sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+            sycl::access::address_space::global_space> af(my_consumed[node]);
+        while (af.load(sycl::memory_order::acquire) < need) { }
+    });
+    event ep = q->submit([&](handler &h){ h.depends_on(epre);
+        h.parallel_for(range<1>(nw),[=](id<1> i){ wd[i]=ws[i]; }); });
+    event ef = q->submit([&](handler &h){ h.depends_on(ep);
+        h.single_task([=](){
+            // My payload is LOCAL and already committed at the push-kernel boundary. The release fence
+            // orders that local write ahead of the flag store as seen by the peer's acquiring read.
+            sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+            uint32_t s = my_counts[2*node] + 1; my_counts[2*node] = s;
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> af(peer_flags[node]);
+            af.store(s, sycl::memory_order::release);
+        }); });
+    event es = q->submit([&](handler &h){ h.depends_on(ef);
+        h.single_task([=](){
+            uint32_t want = my_counts[2*node+1] + 1; my_counts[2*node+1] = want;
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> af(my_flags[node]);
+            while (af.load(sycl::memory_order::acquire) < want) { }
+        }); });
+    size_t n=nbytes/sizeof(T);
+    T *src=reinterpret_cast<T*>(inout);
+    T *scr=(T*)((char*)g_peerScratch + slot_off);                 // PULL: read PEER's slot over P2P
+    event ered = q->submit([&](handler &h){ h.depends_on(es);
+        h.parallel_for(range<1>(n),[=](id<1> i){ src[i]=(T)(float(src[i])+float(scr[i])); }); });
+    // CONSUME-ACK EPILOGUE: I have finished P2P-reading the peer's slot -> tell peer its slot is free.
+    q->submit([&](handler &h){ h.depends_on(ered);
+        h.single_task([=](){
+            uint32_t c = my_consume_ct[node] + 1; my_consume_ct[node] = c;
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> af(peer_consumed[node]);
+            af.store(c, sycl::memory_order::release);
+        }); });
+}
+extern "C" void ar_allreduce_graph_pull(unsigned long long q_addr, unsigned long long inout, long nbytes, int dtype, long max_bytes) {
+    queue *q = q_addr ? reinterpret_cast<queue*>(q_addr) : g_q;
+    if (dtype==1)      do_ar_graph_pull<sycl::ext::oneapi::bfloat16>(q,inout,(size_t)nbytes,max_bytes);
+    else if (dtype==2) do_ar_graph_pull<sycl::half>(q,inout,(size_t)nbytes,max_bytes);
+    else               do_ar_graph_pull<float>(q,inout,(size_t)nbytes,max_bytes);
+}
+
+// ---- MODE 6: PUSH + PCIe FLUSH-READ (run-28b, Bug C fix attempt 2). Keeps the fast PUSH transport
+// (do_ar_graph_spin: write payload into peer HBM, reduce from my local slot) but forces the payload to
+// DRAIN before the flag is visible. Mechanism: after the push kernel, a producer-side COHERENT REMOTE
+// READ of the peer memory we just wrote. On PCIe a non-posted read cannot pass prior posted writes to the
+// same completer, so the read completes only AFTER the payload has landed in peer HBM. Ordering the flag
+// store after that read therefore guarantees "flag visible => payload landed" -- the exact property the
+// system-scope release fence could NOT provide (run-27c). The read MUST be coherent (a local-cache hit
+// would emit no PCIe transaction and flush nothing), so we use a system-scope atomic-acquire load from a
+// peer address. Unlike pull, the consumer still reads its OWN local slot (no remote-read staleness).
+// Only downside vs spin: one extra tiny remote read per AR node (latency, not bandwidth).
+template<typename T>
+static void do_ar_graph_flush(queue *q, unsigned long long inout, size_t nbytes, long max_bytes) {
+    size_t nw = nbytes/4;
+    int node = g_node_counter++;
+    if (node >= 16384) node = node % 16384;
+    long slot_off = AR_SLOT_BASE + g_slot_cursor;
+    long slot_sz  = ((long)nbytes + 4095L) & ~4095L;
+    g_slot_cursor += slot_sz;
+    long flags_off = max_bytes - SEQ_BYTES;
+    if (slot_off + (long)nbytes > flags_off) {
+        fprintf(stderr, "[argraph r%d] PAYLOAD SLOT OVERFLOW node=%d off=%ld nbytes=%zu flags_off=%ld "
+                "-- bump PUSH_AR_MAXB (wrapping to base; will alias)\n", g_rank, node, slot_off, nbytes, flags_off);
+        slot_off = AR_SLOT_BASE; g_slot_cursor = slot_sz;
+    }
+    uint32_t *ws=reinterpret_cast<uint32_t*>(inout);
+    uint32_t *wd=(uint32_t*)((char*)g_peerScratch + slot_off);   // PUSH: write peer's slot over P2P
+    uint32_t *peer_flags    = seq_base(g_peerScratch, max_bytes);
+    uint32_t *my_flags      = seq_base(g_scratch,     max_bytes);
+    uint32_t *my_counts     = my_flags + 32768;
+    uint32_t *my_consumed   = my_flags + 65536;
+    uint32_t *peer_consumed = peer_flags + 65536;
+    uint32_t *my_consume_ct = my_flags + 98304;
+    event epre = q->single_task([=](){
+        uint32_t need = my_counts[2*node];
+        sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+            sycl::access::address_space::global_space> af(my_consumed[node]);
+        while (af.load(sycl::memory_order::acquire) < need) { }
+    });
+    event ep = q->submit([&](handler &h){ h.depends_on(epre);
+        h.parallel_for(range<1>(nw),[=](id<1> i){ wd[i]=ws[i]; }); });
+    // PCIe FLUSH-READ: coherent remote read of the words we just pushed -> completes only after they land.
+    size_t last = nw ? nw-1 : 0;
+    event eflush = q->submit([&](handler &h){ h.depends_on(ep);
+        h.single_task([=](){
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> a0(wd[0]);
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> a1(wd[last]);
+            uint32_t sink = a0.load(sycl::memory_order::acquire) + a1.load(sycl::memory_order::acquire);
+            // sink to a never-read scratch tail word (page0 upper half, not a node flag) to defeat DCE
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> as(my_flags[32767]);
+            as.store(sink, sycl::memory_order::relaxed);
+        }); });
+    event ef = q->submit([&](handler &h){ h.depends_on(eflush);
+        h.single_task([=](){
+            uint32_t s = my_counts[2*node] + 1; my_counts[2*node] = s;
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> af(peer_flags[node]);
+            af.store(s, sycl::memory_order::release);
+        }); });
+    event es = q->submit([&](handler &h){ h.depends_on(ef);
+        h.single_task([=](){
+            uint32_t want = my_counts[2*node+1] + 1; my_counts[2*node+1] = want;
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> af(my_flags[node]);
+            while (af.load(sycl::memory_order::acquire) < want) { }
+        }); });
+    size_t n=nbytes/sizeof(T);
+    T *src=reinterpret_cast<T*>(inout);
+    T *scr=(T*)((char*)g_scratch + slot_off);                    // reduce from MY local slot (peer pushed)
+    event ered = q->submit([&](handler &h){ h.depends_on(es);
+        h.parallel_for(range<1>(n),[=](id<1> i){ src[i]=(T)(float(src[i])+float(scr[i])); }); });
+    q->submit([&](handler &h){ h.depends_on(ered);
+        h.single_task([=](){
+            uint32_t c = my_consume_ct[node] + 1; my_consume_ct[node] = c;
+            sycl::atomic_ref<uint32_t, sycl::memory_order::relaxed, sycl::memory_scope::system,
+                sycl::access::address_space::global_space> af(peer_consumed[node]);
+            af.store(c, sycl::memory_order::release);
+        }); });
+}
+extern "C" void ar_allreduce_graph_flush(unsigned long long q_addr, unsigned long long inout, long nbytes, int dtype, long max_bytes) {
+    queue *q = q_addr ? reinterpret_cast<queue*>(q_addr) : g_q;
+    if (dtype==1)      do_ar_graph_flush<sycl::ext::oneapi::bfloat16>(q,inout,(size_t)nbytes,max_bytes);
+    else if (dtype==2) do_ar_graph_flush<sycl::half>(q,inout,(size_t)nbytes,max_bytes);
+    else               do_ar_graph_flush<float>(q,inout,(size_t)nbytes,max_bytes);
+}
+
 extern "C" void ar_allreduce_graph_mode(unsigned long long q_addr, unsigned long long inout, long nbytes, int dtype, int mode) {
     queue *q = q_addr ? reinterpret_cast<queue*>(q_addr) : g_q;
     if (dtype==1)      do_ar_graph_mode<sycl::ext::oneapi::bfloat16>(q,inout,(size_t)nbytes,mode);

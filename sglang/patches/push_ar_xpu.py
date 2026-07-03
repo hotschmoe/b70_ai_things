@@ -55,6 +55,15 @@ def _load_lib(so):
                 lib.ar_graph_spin_init.argtypes = [ctypes.c_long]
                 lib.ar_allreduce_graph_spin.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
                                                         ctypes.c_long, ctypes.c_int, ctypes.c_long]
+            # run-28 Bug C fix: PULL-REDUCE capturable path (bulk stays local, reduce P2P-reads peer slot;
+            # no remote-write-drain race). Same 5-arg signature as _spin.
+            if hasattr(lib, "ar_allreduce_graph_pull"):
+                lib.ar_allreduce_graph_pull.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
+                                                        ctypes.c_long, ctypes.c_int, ctypes.c_long]
+            # run-28b: PUSH + PCIe FLUSH-READ path (keeps fast push, forces payload drain before flag).
+            if hasattr(lib, "ar_allreduce_graph_flush"):
+                lib.ar_allreduce_graph_flush.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
+                                                         ctypes.c_long, ctypes.c_int, ctypes.c_long]
             # run-25 payload-slot fix: reset the per-graph payload bump-pointer at each capture_begin.
             if hasattr(lib, "ar_graph_new_capture"):
                 lib.ar_graph_new_capture.restype = None
@@ -91,6 +100,13 @@ def install():
 
     MAXB = int(os.environ.get("PUSH_AR_MAXB", str(128 << 20)))
     MIN_NUMEL = int(os.environ.get("PUSH_AR_MIN_NUMEL", "0"))
+    # run-28: capturable AR sync mode selector. All three are pure-SYCL and NONE achieves a correct
+    # cross-device drain on this Xe2/DPC++-2025.3 stack (run-28 verdict; codex-confirmed no spec-backed
+    # SYCL drain primitive exists). Coherence under real serve cadence: "spin" (push+release-fence) ~30%,
+    # "pull" (reduce P2P-reads peer; remote-read staleness) ~10%, "flush" (push + PCIe flush-read; the read
+    # does not force a real drain) ~10%. Default "spin" = least-bad. The graph capture path stays BLOCKED
+    # pending the L0 HW-semaphore (correct but breaks capture_end finalize) or an upstream DPC++ fix.
+    MODE = os.environ.get("PUSH_AR_MODE", "spin").lower()
     SOCK = os.environ.get("PUSH_AR_SOCK", "/tmp/sglang_push_ar.sock")
     GRAPH = os.environ.get("PUSH_AR_GRAPH") == "1"
     STATS = os.environ.get("B70_PUSH_AR_STATS") == "1"
@@ -101,6 +117,23 @@ def install():
     _orig_all_reduce = XpuCommunicator.all_reduce
     _lock = threading.Lock()
     _stats = {"n": 0, "bytes": 0, "n_small": 0, "n_fallback": 0}
+
+    def _graph_ar(lib, q, ptr, nbytes, dt):
+        """Record one capturable all-reduce on buffer ptr. Returns True if a graph collective was
+        recorded, False if none is available (caller must fall back to oneCCL)."""
+        if MODE == "pull" and hasattr(lib, "ar_allreduce_graph_pull"):
+            lib.ar_allreduce_graph_pull(ctypes.c_ulonglong(q), ctypes.c_ulonglong(ptr), nbytes, dt, MAXB)
+            return True
+        if MODE == "flush" and hasattr(lib, "ar_allreduce_graph_flush"):
+            lib.ar_allreduce_graph_flush(ctypes.c_ulonglong(q), ctypes.c_ulonglong(ptr), nbytes, dt, MAXB)
+            return True
+        if hasattr(lib, "ar_allreduce_graph_spin"):
+            lib.ar_allreduce_graph_spin(ctypes.c_ulonglong(q), ctypes.c_ulonglong(ptr), nbytes, dt, MAXB)
+            return True
+        if hasattr(lib, "ar_allreduce_graph"):
+            lib.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(ptr), nbytes, dt)
+            return True
+        return False
 
     def _lazy_init(self):
         global _engaged_owner
@@ -156,15 +189,10 @@ def install():
             if GRAPH and _is_capturing():
                 out = input_.clone()
                 q = torch.xpu.current_stream().sycl_queue
-                if hasattr(lib, "ar_allreduce_graph_spin"):
-                    lib.ar_allreduce_graph_spin(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
-                                                out.numel() * out.element_size(), DT[input_.dtype], MAXB)
-                elif hasattr(lib, "ar_allreduce_graph"):
-                    lib.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
-                                           out.numel() * out.element_size(), DT[input_.dtype])
-                else:
-                    return _orig_all_reduce(self, input_)
-                return out
+                if _graph_ar(lib, q, out.data_ptr(),
+                             out.numel() * out.element_size(), DT[input_.dtype]):
+                    return out
+                return _orig_all_reduce(self, input_)
             if not _is_capturing() and input_.numel() >= MIN_NUMEL:
                 out = input_.clone()
                 lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
@@ -209,12 +237,8 @@ def install():
                     out = torch.zeros((ws,) + tuple(input_size), dtype=input_.dtype, device=input_.device)
                     out[rank].copy_(input_)
                     q = torch.xpu.current_stream().sycl_queue
-                    if hasattr(lib2, "ar_allreduce_graph_spin"):
-                        lib2.ar_allreduce_graph_spin(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
-                                                     out.numel() * out.element_size(), DT[input_.dtype], MAXB)
-                    else:
-                        lib2.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
-                                                out.numel() * out.element_size(), DT[input_.dtype])
+                    _graph_ar(lib2, q, out.data_ptr(),
+                              out.numel() * out.element_size(), DT[input_.dtype])
                     out = out.movedim(0, d).reshape(
                         input_size[:d] + (ws * input_size[d],) + input_size[d + 1:]
                     )
