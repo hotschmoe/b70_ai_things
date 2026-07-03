@@ -90,14 +90,18 @@ if [ -z "$NOMM" ] && [ "${GRAPH:-1}" = 1 ]; then
   export EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }--skip-mm-profiling"
   export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }VLLM_USE_AOT_COMPILE=0"
 fi
-# [2026-07-03 launch-path A/B, docs/20260703_faster_dd_plan.md Tier A + JOURNAL] Two measured, stacking wins
-# on the launch/python-bound captured decode (IN=2048/OUT=128, PREFIXCACHE=0 cold bench, this entry):
-#   SYCL_UR_USE_LEVEL_ZERO_V2=1   L0 V2 adapter (counter-based events, in-order immediate lists)  c1 +3.8%
-#   VLLM_USE_V2_MODEL_RUNNER=1    MRV2 async runner (overlaps schedule N+1 with GPU step N)       c1 +6.7%
-# Combo: TG c1 30.24 -> 33.60 (+11%), c4 15.04 -> 15.89, TTFT unchanged, gen-probe + gate coherent.
-# MRV2 caveat: no thinking_token_budget support (we do not use it). Opt out: B70_L0V2=0 / B70_MRV2=0.
-[ "${B70_L0V2:-1}" = 1 ]  && export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }SYCL_UR_USE_LEVEL_ZERO_V2=1"
-[ "${B70_MRV2:-1}" = 1 ]  && export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }VLLM_USE_V2_MODEL_RUNNER=1"
+# [2026-07-03 launch-path A/B, docs/20260703_faster_dd_plan.md Tier A + JOURNAL incl the CORRECTION entry]
+# MRV2 (VLLM_USE_V2_MODEL_RUNNER=1, async runner: overlaps schedule N+1 with GPU step N) is a measured
+# decode win on the launch/python-bound captured path: TG c1 30.24 -> 32.27/33.60 across two runs
+# (+7-11%, run-to-run noise +-4%), c4 15.89, TTFT unchanged, gen-probe + gate 24/24 coherent,
+# engagement log-verified. CAVEATS: (a) INCOMPATIBLE with prefix caching on this hybrid (mamba align
+# mode): upstream asserts "Model Runner V2 has not yet supported mamba_cache_mode='align'" at init ->
+# MRV2 defaults ON only when PREFIXCACHE=0 (cold-bench/single-shot); the PREFIXCACHE=1 daily driver
+# keeps the prefix cache (6.97x warm TTFT >> +7% decode). (b) no thinking_token_budget support (unused
+# by us). Force with B70_MRV2=0|1. (Gate applied after the PREFIXCACHE default below.)
+# NOTE: SYCL_UR_USE_LEVEL_ZERO_V2=1 (L0 V2 adapter) was NOT actually A/B-able from here -- lib.sh's
+# multicard MGPU block pins -e SYCL_UR_USE_LEVEL_ZERO_V2=0 AFTER DOCKER_ENV in the docker run (last -e
+# wins), a deliberate vllm#41663 stability pin. Testing V2=1 requires a lib.sh edit; untested, no claim.
 
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"
@@ -118,6 +122,10 @@ export PREFIXCACHE="${PREFIXCACHE:-1}"      # DEFAULT ON (2026-07-03): --enable-
                                             # prefix reuse 6.97x TTFT (cold 3620ms -> warm 519ms, identical output), and
                                             # miss-path decode 32 t/s >= the PREFIXCACHE=0 baseline (27.1). PREFIXCACHE=0
                                             # to force the clean re-prefill baseline (e.g. a cold-perf bench).
+# MRV2 gate (see the L0-V2/MRV2 block above): default ON only when prefix caching is OFF.
+_MRV2_DEF=$([ "$PREFIXCACHE" = 1 ] && echo 0 || echo 1)
+[ "${B70_MRV2:-$_MRV2_DEF}" = 1 ] && export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }VLLM_USE_V2_MODEL_RUNNER=1"
+
 export MTPTOK="${MTPTOK:-3}"                # MTP spec tokens. spec=3 = WINNER on the fixed captured path (scripts/111
                                             # coherence-gated: spec3 34.82 t/s @51% > spec4 30.56 @37% > spec5 26.10
                                             # @26% -- MONOTONIC DECREASING; the 1-layer MTP head over-drafts past ~3.

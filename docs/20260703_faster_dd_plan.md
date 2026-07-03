@@ -151,8 +151,12 @@ only) nor upstream vLLM ships an int8-activation XMX path. Our kernels are the d
 - [x] Research sweeps + this plan.
 - [x] A5 presence checks: ALL of MRV2 / retention-interval / dynamic-SD / suffix / DFLASH are
       in-tree in v0.24.0 (dflash.py + qwen3_dflash.py + drafter arch registered).
-- [x] A1+A2 LANDED: L0-V2 (+3.8%) + MRV2 (+6.7%) stack to TG c1 30.24 -> 33.60 (+11%),
-      c4 15.89, gate 24/24 -> serve.sh defaults (opt-outs B70_L0V2=0 / B70_MRV2=0). JOURNAL.
+- [x] A1 L0-V2: NOT TESTABLE from serve.sh -- lib.sh MGPU pins SYCL_UR_USE_LEVEL_ZERO_V2=0
+      last-wins (deliberate vllm#41663 stability pin). Untested; needs a lib.sh edit. The
+      initially-claimed +3.8% was a second baseline sample (noise band +-4%). JOURNAL CORRECTION.
+- [x] A2 MRV2 LANDED: +7-11% cold-bench c1 (30.24 -> 32.27/33.60), c4 15.89, gate 24/24,
+      engagement log-verified -> serve.sh default, GATED to PREFIXCACHE=0 (MRV2 is incompatible
+      with the hybrid's align-mode prefix cache; production DD keeps the cache). JOURNAL.
 - [x] A3 dynamic SD: FAIL on this stack (0-depth toggle collapses c4 to 12.4). Closed.
 - [x] A4 spec re-sweep: SKIPPED (regime unchanged; spec3 optimum stands).
 - [x] B2 DFlash spike: GO -- first coherent DFlash serve on XPU, TP=2, zero code changes;

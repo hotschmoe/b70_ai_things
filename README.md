@@ -73,16 +73,20 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 748 ms | **33.6** | 15.9 | 320k tok |
+| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0**\*\*\* | 15.4 | 320k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
 2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
 
-The W8A8 row's TG numbers include the 2026-07-03 launch-path wins (SYCL_UR_USE_LEVEL_ZERO_V2=1 +
-VLLM_USE_V2_MODEL_RUNNER=1, now serve.sh defaults): TG c1 30.2 -> 33.6 (+11%), c4 15.0 -> 15.9, gate 24/24
-coherent (JOURNAL 2026-07-03 "faster-DD session"; opt-outs B70_L0V2=0 / B70_MRV2=0). Also new: vLLM ships
+\*\*\* 2026-07-03 "faster-DD" session (JOURNAL, incl the correction entry): **MRV2**
+(VLLM_USE_V2_MODEL_RUNNER=1) lifts cold-bench decode to **32.3-33.6 c1 (+7-11%, noise +-4%)**, gate 24/24
+coherent -- but it is INCOMPATIBLE with the hybrid's prefix caching (mamba align-mode assert), so the
+PREFIXCACHE=1 production daily driver keeps the prefix cache (6.97x warm TTFT) and stays at the row's 30.0;
+serve.sh auto-gates MRV2 on PREFIXCACHE (PREFIXCACHE=0 configs get it by default). The initially-credited
+SYCL_UR_USE_LEVEL_ZERO_V2 knob was never engaged (lib.sh pins V2=0 last-wins, vllm#41663) -- untested, no
+claim. Also new: vLLM ships
 DFlash in-tree and it WORKS on XPU (first serve, coherent, TP=2) -- slower than NEXTN MTP at spike settings,
 see `vllm/DFLASH_XPU.md`. The v0.24.0 W8A8 row is **the live daily driver's actual config** (`35_sweep_bench` IN=2048/OUT=128 against
 `b70_daily_0`: vision-on, 131K ctx, PIECEWISE capture, push-AR, MTP) -- the **best coherent W8A8 decode on the

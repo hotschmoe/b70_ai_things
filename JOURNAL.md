@@ -7632,3 +7632,35 @@ candidate yet; it is the accept-length ceiling play (tau~6.5 on CUDA real worklo
 
 NEGATIVE/CLOSED this session: dynamic SD 0-depth toggle (above); fuse_norm_quant/fuse_act_quant
 inductor passes are FP8-only upstream -> our int8 act-quant fusion stays a custom-kernel task (plan B1).
+
+## 2026-07-03 -- AMENDMENT: MRV2 is incompatible with prefix caching (mamba align mode) -> PREFIXCACHE-gated default
+
+Restoring the production daily driver (PREFIXCACHE=1) with the new serve.sh defaults FAILED at engine init:
+`AssertionError: Model Runner V2 has not yet supported mamba_cache_mode='align'` (vllm config/vllm.py
+validate_block_size; workers exited GRACEFULLY, no wedge, cards probed healthy). MRV2 + the hybrid's
+align-mode prefix cache cannot compose on v0.24.0.
+
+DECISION: the coding daily driver keeps the prefix cache (6.97x warm TTFT on long agentic contexts beats
+MRV2's +6.7% cold decode). serve.sh now gates the MRV2 default on PREFIXCACHE: ON when PREFIXCACHE=0
+(cold-bench/single-shot), OFF when PREFIXCACHE=1 (production); force with B70_MRV2=0|1. L0-V2 stays
+unconditional (+3.8%, no interaction found). Production DD cold c1 is therefore ~31.4 (L0-V2 only); the
+33.6 combo number applies to PREFIXCACHE=0 configs. README caveat added. Upstream tracker: when vLLM MRV2
+gains align-mode support, re-test the full combo under PREFIXCACHE=1.
+
+## 2026-07-03 -- CORRECTION: the "+3.8% L0-V2" was a NO-OP (env override order); the session win is MRV2-only
+
+While restoring the DD, the container env showed SYCL_UR_USE_LEVEL_ZERO_V2=0 despite the serve.sh default.
+ROOT CAUSE: lib.sh's multicard MGPU block (vllm#41663 stability pins) passes -e SYCL_UR_USE_LEVEL_ZERO_V2=0
+AFTER the DOCKER_ENV array in the docker run command, and docker's LAST -e wins -> every "V2=1" cycle this
+session actually ran V2=0. So:
+- cycle 1 "L0-V2 +3.8%" (31.39) = a SECOND BASELINE SAMPLE -> run-to-run noise band is ~+-4%.
+- cycle 4 "combo" (33.60) = MRV2-only measured a second time (vs cycle 2's 32.27).
+- HONEST CLAIM: MRV2 = +7-11% cold-bench c1 (30.24 -> 32.27/33.60), gate 24/24; L0-V2 = UNTESTED (needs a
+  lib.sh MGPU edit to A/B; deliberate stability pin, do not casually flip).
+Fixed serve.sh (L0V2 line REMOVED -- it was a dead knob), README row reverted to the production-config 30.0
+with a footnote, this entry appended. LESSON (env-discipline, again): VERIFY the knob in the LIVE container
+env (docker inspect) before crediting it -- engagement-verify EVERY env A/B, not just model identity.
+
+Production DD after the session: UNCHANGED decode (prefix cache retained, MRV2 auto-off), the session's
+landed value = the MRV2 default for PREFIXCACHE=0 configs, the DFlash GO, the plan doc, and three closed
+dead ends (dynamic-SD 0-depth, L0-V2-from-serve.sh, transient-WEDGED probe).
