@@ -93,6 +93,22 @@ fi
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"
 export MAXSEQS="${MAXSEQS:-8}"
+export PREFIXCACHE="${PREFIXCACHE:-1}"      # DEFAULT ON (2026-07-03): --enable-prefix-caching, the big win for long
+                                            # agentic/coding sessions (warm reprompt reuses the cached prefix instead
+                                            # of re-prefilling). Overrides lib.sh's 0 default for THIS entry only.
+                                            # It was PREVIOUSLY forced off because vLLM's mamba "align" mode (which
+                                            # prefix-caching auto-selects on the hybrid GDN) crashed at init on XPU:
+                                            # "Overflow when unpacking long long" -- it packs Level-Zero USM device
+                                            # pointers (>=2**63) into SIGNED int64 tensors (mamba_utils.py
+                                            # MambaSpecDecodeGPUContext state_base_addrs/block_table_ptrs). FIXED by
+                                            # patches/sitecustomize.py block (4): re-exec initialize_from_forward_context
+                                            # with the two data_ptr() assignments wrapped to a two's-complement signed
+                                            # int64 (bit-identical to what CUDA stores; the triton kernel reinterprets
+                                            # the bits back to a pointer). VALIDATED 2026-07-03 @ MAXLEN=253952 TP=2 MTP
+                                            # spec=3 + PIECEWISE capture + vision: init clean, gate 24/24 coherent, warm
+                                            # prefix reuse 6.97x TTFT (cold 3620ms -> warm 519ms, identical output), and
+                                            # miss-path decode 32 t/s >= the PREFIXCACHE=0 baseline (27.1). PREFIXCACHE=0
+                                            # to force the clean re-prefill baseline (e.g. a cold-perf bench).
 export MTPTOK="${MTPTOK:-3}"                # MTP spec tokens. spec=3 = WINNER on the fixed captured path (scripts/111
                                             # coherence-gated: spec3 34.82 t/s @51% > spec4 30.56 @37% > spec5 26.10
                                             # @26% -- MONOTONIC DECREASING; the 1-layer MTP head over-drafts past ~3.

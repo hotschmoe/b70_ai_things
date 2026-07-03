@@ -105,3 +105,46 @@ if _RECYCLE_N > 0:
               f"(EXPERIMENTAL)", file=sys.stderr, flush=True)
     except Exception as e:
         print("[cg-recycle] (3) setup failed:", repr(e), file=sys.stderr, flush=True)
+
+# ---- (4) XPU mamba align-mode pointer fix (enables --enable-prefix-caching) ------------------------
+# --enable-prefix-caching on the hybrid GDN model auto-switches vLLM's mamba KV cache to "align" mode.
+# Combined with MTP spec-decode that activates MambaSpecDecodeGPUContext, whose
+# initialize_from_forward_context (vllm/v1/worker/mamba_utils.py) packs raw device pointers into SIGNED
+# int64 tensors:  self.state_base_addrs[idx] = state.data_ptr()  and  self.block_table_ptrs[i] = bt.data_ptr().
+# On CUDA a device pointer sits below 2**63 and fits a signed int64; on Intel XPU the Level-Zero USM
+# device addresses are >= 2**63, so torch's python-int -> int64 conversion (THPUtils_unpackLongLong)
+# overflows -> "Overflow when unpacking long long" at engine init (the JOURNAL 2026-07-03 crash that
+# forced PREFIXCACHE=0). The stored int64 is only ever reinterpreted back into a pointer inside the
+# triton kernel via .to(tl.pointer_type(...)) (a bit-pattern reinterpret) with modular int64 arithmetic,
+# so storing the two's-complement signed value (ptr - 2**64 when ptr >= 2**63) is BIT-IDENTICAL to what
+# CUDA stores. We re-exec the method source with the two pointer assignments wrapped -- the same
+# getsource -> substitute -> exec -> rebind trick as sglang/patches/mtp_tree_xpu.py._strip_is_cuda_guard.
+# NOTE the sibling batch_memcpy path (collect_mamba_copy_meta ~L642) already uses uint64 buffers and does
+# NOT overflow, so it is intentionally left untouched (wrapping it to a negative would corrupt uint64).
+# Toggle off with VLLM_XPU_MAMBA_PTR_FIX=0 (default on; a no-op for CUDA-range < 2**63 pointers).
+if os.environ.get("VLLM_XPU_MAMBA_PTR_FIX", "1") != "0":
+    try:
+        import inspect, textwrap
+        import vllm.v1.worker.mamba_utils as _mu
+
+        def _wrap_i64(p):
+            # Reinterpret an unsigned device address as a two's-complement signed int64 so it fits
+            # torch's int64 tensor assignment. No-op for CUDA-range (< 2**63) pointers.
+            return p - (1 << 64) if p >= (1 << 63) else p
+
+        _cls = _mu.MambaSpecDecodeGPUContext
+        _src = textwrap.dedent(inspect.getsource(_cls.initialize_from_forward_context))
+        assert "state.data_ptr()" in _src and "bt.data_ptr()" in _src, "mamba_utils source changed"
+        _patched_src = (_src
+                        .replace("state.data_ptr()", "_wrap_i64(state.data_ptr())")
+                        .replace("bt.data_ptr()", "_wrap_i64(bt.data_ptr())"))
+        # exec with a copy of the module globals (so get_conv_copy_spec/is_conv_state_dim_first/etc.
+        # resolve) plus the injected _wrap_i64 helper, then rebind the method.
+        _ns = dict(_mu.__dict__)
+        _ns["_wrap_i64"] = _wrap_i64
+        exec(_patched_src, _ns)
+        _cls.initialize_from_forward_context = _ns["initialize_from_forward_context"]
+        print("[csag-shim] (4) MambaSpecDecodeGPUContext pointer packing wrapped for XPU USM (>=2**63) "
+              "-- prefix caching unblocked", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[csag-shim] (4) mamba ptr fix failed:", repr(e), file=sys.stderr, flush=True)

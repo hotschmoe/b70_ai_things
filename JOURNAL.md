@@ -7513,3 +7513,47 @@ concurrency at full length. Chose 248K (253952) for the coding daily driver: in-
 encoder cache + a short second request). Decode/prefill (IN=2048 bench) unchanged vs 131K (a 2048-tok request is
 independent of max-model-len); only KV total scales (309k@131K -> 320k@248K). Persisted DD_MAXLEN default
 131072->253952 in vllm/daily_driver_serve.sh (DD_MAXLEN=262144 for full native). Live + coherent (coding probe OK).
+
+## 2026-07-03 -- prefix caching UNBLOCKED on vLLM v0.24.0 XPU (mamba align-mode pointer fix) -> daily driver PREFIXCACHE=1 [FIX + flip]
+
+The 2026-07-03 "prefix caching broken" blocker (entry above) is FIXED. Prefix caching now works on the vLLM
+v0.24.0 W8A8 daily driver; the shelf entry + live :18080 default to PREFIXCACHE=1. This closes sglang's one
+remaining edge (long agentic/coding sessions no longer re-prefill).
+
+ROOT CAUSE (traced in the v0.24.0 image source): --enable-prefix-caching auto-selects vLLM's mamba "align"
+cache mode on the hybrid GDN model; with MTP that activates MambaSpecDecodeGPUContext, whose
+initialize_from_forward_context (vllm/v1/worker/mamba_utils.py:441,507) packs raw device pointers into SIGNED
+int64 tensors: `state_base_addrs[idx] = state.data_ptr()` and `block_table_ptrs[i] = bt.data_ptr()`. On CUDA a
+device pointer sits < 2**63 and fits a signed int64; on Intel XPU the Level-Zero USM device addresses are
+>= 2**63, so torch's python-int -> int64 conversion (THPUtils_unpackLongLong) overflows -> "Overflow when
+unpacking long long" at engine init. (The sibling batch_memcpy path, collect_mamba_copy_meta ~L642, already
+uses torch.uint64 buffers and does NOT overflow -- left untouched; wrapping it would corrupt uint64.) DIFFERENT
+mechanism than sglang's fix (there = un-gate a CUDA-gated Triton extra_buffer strategy; here = a pointer-width
+overflow) but the same "mamba state handling assumes CUDA" pain point.
+
+FIX (runtime shim, no image/kernel rebuild): rdy_to_serve/vllm/qwen36-27b-w8a8/patches/sitecustomize.py block
+(4). Re-exec initialize_from_forward_context source (inspect.getsource -> substitute -> exec in module ns ->
+rebind, same trick as sglang/patches/mtp_tree_xpu.py._strip_is_cuda_guard) with the two data_ptr() assignments
+wrapped by `_wrap_i64(p) = p - (1<<64) if p >= (1<<63) else p`. This stores the two's-complement signed value,
+which is BIT-IDENTICAL to what CUDA stores -- the triton postprocess_mamba_fused_kernel only ever reinterprets
+the int64 back into a pointer via .to(tl.pointer_type(...)) with modular int64 arithmetic. No-op for CUDA-range
+(< 2**63) pointers; toggle VLLM_XPU_MAMBA_PTR_FIX=0.
+
+COMMAND: DD_MODEL=vllm/qwen36-27b-w8a8 DD_ENV="PREFIXCACHE=1" bash vllm/daily_driver_serve.sh start  (TP=2,
+MTP spec=3, PIECEWISE capture, vision on, MAXLEN=253952). CPU pre-check confirmed _wrap_i64 bit-identity + the
+re-exec produces a valid rebindable method.
+
+RESULT (validated end-to-end, live :18080):
+- INIT: `[csag-shim] (4) ... prefix caching unblocked` in both TP workers; enable_prefix_caching=True; ZERO
+  "Overflow" in the log; align-mode init clean; graph capture 5/5 PIECEWISE in 3s (1.35 GiB).
+- COHERENCE: gate_concurrent_coherence.py 24/24 OK under concurrent mixed prefill+decode (no "!!!!").
+- CACHE WORKS: unique ~10k-tok prompt, cold TTFT 3620ms (0% hit) -> warm resend 519ms (87% hit) = 6.97x faster,
+  output byte-identical. (Prometheus vllm:prefix_cache_hits_total climbing under load.)
+- MISS-PATH no regression: fresh/uncached ~1858-tok ctx single-stream decode 32.0 t/s >= PREFIXCACHE=0 baseline
+  (README 27.1). (A benign init-time JSONDecodeError from vLLM's usage-stats cpuinfo probe is pre-existing,
+  unrelated.)
+
+VERDICT: PASS. Baked PREFIXCACHE default 0->1 into rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh (this entry only;
+lib.sh's shared 0 default is UNCHANGED so other/un-validated hybrids are unaffected) + block (4) shim committed.
+Live daily driver is serving the validated config. Robust to a plain `daily_driver_serve.sh start` (no DD_ENV
+needed) + watchdog restarts. PREFIXCACHE=0 still forces the clean re-prefill baseline for cold-perf benches.
