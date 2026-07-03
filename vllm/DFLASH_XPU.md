@@ -99,3 +99,38 @@ Command (shelf serve.sh, no edits needed):
    cheap; DFlash is the main consumer of a fast M=8..16 int8 path.
 4. Consider `z-lab/Qwen3.6-35B-A3B-DFlash` for the MoE entry (its decode is eager-slow; a
    high-accept drafter may be worth more there).
+
+## [2026-07-03 session 3] KV eater ROOT-CAUSED; group_size padding patch; 128k DD-viable
+
+The last session's "GPU KV cache = 24,281 tokens (vs 320k)" was a MISMEASUREMENT. Real numbers
+(w8a8-rtn spec=15, TP=2, UTIL=0.90, MAXLEN=253952): Available KV 9.88 GiB/card, per-token 57,096
+B/tok/card, max_model_len caps at ~178,304 (PREFIXCACHE 0 and 1 both ~176-178k -- align mode is not
+the collapse). DFlash already serves ~178k context; the 24k blocker does not exist.
+
+Three compounding eaters (init logs):
+1. Drafter = 5 DENSE full-attention layers (~10,240 B/tok/card). Its config declares 4x
+   sliding_attention(2048)+1 full, but in-tree DFlashQwen3Attention passes no per_layer_sliding_window
+   -> all 5 run full.
+2. KV-group PADDING WASTE: the 5-layer drafter type makes group_size = min(16 full, 48 mamba, 5 draft)
+   = 5, so the 16 target full-attn layers pad to 20 (25% waste on the dominant KV) + mamba 48->50
+   (4.17%) = 6 wasted layers (~21% of per-token). MTP {16,48} -> group_size 16, zero pad.
+3. mamba/attn page unify -> 896-token attention blocks (same as MTP).
+
+FIX: vllm/patches/kv_cache_utils_gcd.py (mount via serve.sh B70_EXTRA_MOUNTS over
+vllm/v1/core/kv_cache_utils.py). group_size = argmin total padding layers over [min,max], with
+group_size >= min_layer_count so the drafter stays in ONE group (vLLM asserts "All drafting layers
+should belong to the same kv cache group"; group_size=1 CRASHES the worker -- gracefully, no wedge).
+DFlash -> gs=8 (pad 6->3, groups 15->9); MTP -> gs=16 UNCHANGED; eagle -> 13 UNCHANGED. max_model_len
+178,304 -> 186,368.
+
+Serve command (128k DD candidate, VALIDATED gate 12/12 + accept 48.8 t/s / 4.71 == prior, +75% vs MTP):
+
+    P=/mnt/vm_8tb/github/b70_ai_things/vllm/patches/kv_cache_utils_gcd.py
+    T=/opt/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py
+    SPEC='{"method":"dflash","model":"/models/qwen3.6-27b/dflash-draft-w8a8-rtn","num_speculative_tokens":15}' \
+      CAPSIZES="1,2,4,8,16" PREFIXCACHE=0 MAXLEN=131072 B70_EXTRA_MOUNTS="$P:$T:ro" \
+      ./bin/gpu-run bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start
+
+To push past 178k (untested): all-sliding drafter (uniform sliding_window=2048 -> one group,
+assertion-safe) shrinks the drafter's own ~10 KB/tok; risk = the 1 full->sliding layer may cost accept
+and the precompute single-slot-mapping on a windowed cache is unverified. 128k is the accepted fallback.

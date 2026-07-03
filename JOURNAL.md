@@ -7753,3 +7753,56 @@ slipped to next session. DFlash's +68% on the same niche (repetitive/agentic) lo
 
 DD RESTORED: DD_MODEL=vllm/qwen36-27b-w8a8 (MTP spec=3, PREFIXCACHE=1 dense, MRV2 auto-off,
 248K ctx) -- healthy, identity-verified.
+
+## 2026-07-03 -- session 3: DFlash KV eater ROOT-CAUSED + group_size padding patch (128k DD-viable)
+
+Task: root-cause the DFlash "KV eater" (last session's "24,281 tokens vs 320k") and push DFlash
+toward daily-driver. GPU permission granted; DD brought down for the whole session.
+
+FINDING 1 -- the "24,281 tokens" recollection was WRONG. Empirical (DFlash w8a8-rtn spec=15, TP=2,
+UTIL=0.90, MAXLEN=253952, CAPSIZES 1,2,4,8,16): model load 18.15 GiB/card, Available KV 9.88 GiB/card,
+per-token KV 57,096 B/tok/card, max_model_len caps at 178,304 (PREFIXCACHE=0) / 176,512 (PREFIXCACHE=1
+-- align mode is NOT the collapse; pc0 and pc1 are within 1%). So DFlash already serves ~178k context
+at UTIL 0.90, NOT 24k. The old number was a mismeasurement.
+
+FINDING 2 -- the eater is 3 compounding costs in the hybrid+drafter KV manager (init logs):
+  (1) Drafter = 5 DENSE full-attention layers (kv_heads 8, head_dim 128) = ~10,240 B/tok/card. The
+      drafter config declares 4x sliding_attention(2048) + 1 full, but in-tree DFlashQwen3Attention
+      builds Attention() with NO per_layer_sliding_window -> all 5 run full.
+  (2) PADDING WASTE (kv_cache_utils.py:1208 "Add N padding layers"): the drafter adds a 3rd attention
+      TYPE with only 5 layers, so group_size = min(16 target-full, 48 mamba, 5 drafter) = 5. Then the
+      16 target full-attn layers pad to 20 (+4 = 25% waste on the DOMINANT per-token consumer) and
+      mamba 48 -> 50 (+2 = 4.17%). 6 wasted layers ~= 21% of per-token KV. MTP avoids this entirely:
+      types {16,48} -> group_size=16, zero padding (that is why MTP fits 320k+).
+  (3) mamba/attn page unification (interface.py:773/797): attention block forced to 896 tokens so
+      attn page >= mamba page. Same as MTP, not DFlash-specific.
+
+FIX -- group_size minimizer patch (vllm/patches/kv_cache_utils_gcd.py, mounted over
+vllm/v1/core/kv_cache_utils.py via serve.sh B70_EXTRA_MOUNTS). Instead of upstream's group_size =
+min-layer-count, search group_size in [min,max] to MINIMIZE total padding layers (tiebreak: fewer
+groups). CONSTRAINT: group_size >= min_layer_count so the smallest type (the drafter) stays in ONE
+group -- vLLM asserts "All drafting layers should belong to the same kv cache group"; group_size=1
+(tried first, via gcd) CRASHED the worker with exactly that (workers exited GRACEFULLY, cards healthy,
+NO wedge). Results: DFlash -> gs=8 (padding 6->3 layers, groups 15->9; target+mamba 0 pad, only the
+cheap drafter pads 5->8). MTP -> gs=16 (UNCHANGED). eagle {12 sw,13 full} -> 13 (UNCHANGED, == the old
+1.5x override). max_model_len 178,304 -> 186,368 (+4.5%).
+
+VALIDATION (gs=8 patch, MAXLEN=131072, PREFIXCACHE=0, B70_MRV2=0):
+- GPU KV cache 176,227 tokens, Maximum concurrency 1.34x @131072. Only remaining warning = the drafter
+  group (3 padding / 60% of the tiny 5-layer group; absolute waste small).
+- gate_concurrent_coherence 12/12 PASS (2 waves x 6 mixed prefill+decode).
+- DFlash accept telemetry (8-turn real coding, temp 0, 400 tok/turn): ALL 48.79 t/s, accept_len 4.711,
+  acc_rate 0.247, accepts decay smoothly to p14. == last session's DFlash w8a8-rtn (46.7 t/s / 4.66):
+  the 9 KV-groups do NOT regress decode or accept. +75% vs the MTP shelf (27.8 t/s / accept 2.84).
+
+VERDICT: the padding patch is a small, SAFE, general win (+4.5% context, +concurrency headroom, upstream-
+worthy -- it only ever lowers padding, never raises it, and non-drafter configs are byte-identical).
+DFlash is DAILY-DRIVER-VIABLE at 128k out of the box (coherent, +75% single-stream, 1.34x concurrency);
+the old "24k KV blocker" does not exist. Perf-probe note: v0.24.0 renamed the reasoning field
+message.reasoning_content -> message.reasoning (streaming delta too); perf_probe.py counts the old name
+so it under-reports on think-heavy prompts -- use dflash_accept_probe.py (reads /metrics) for t/s+accept.
+
+NEXT (this session): push context past 178k via an all-sliding drafter (uniform sliding_window=2048 ->
+ONE group, assertion-safe) to shrink the drafter's own ~10 KB/tok; risk = the 1 full->sliding layer may
+cost accept, and DFlash's precompute_and_store_context_kv single-slot-mapping on a windowed cache is
+untested. 128k is the accepted fallback.
