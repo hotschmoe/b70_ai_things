@@ -7846,3 +7846,37 @@ step (agentic-parity + a shelf/launcher entry), tracked as a follow-up.
 REMAINING FOLLOW-UPS: spec sweep {6,8,10} on the full-drafter 128k config (spec=15 may over-draft at
 lower accept); long-context (>2048) accept hold for the full drafter; whether the DFlash 128k config
 should replace the MTP shelf/launcher.
+
+## 2026-07-03 -- session 3 cont: DFlash IS THE DAILY DRIVER (spec=8, 131072, sweep+soak gated)
+
+User call: switch the production DD to the DFlash full drafter at 128k. Sweep + soak done, DD live.
+
+SPEC SWEEP (DFlash w8a8-rtn drafter, PREFIXCACHE=1, MAXLEN=131072, gs=8 patch, vision+tool-calling,
+6-turn real-coding accept telemetry):
+  spec  t/s     accept_len  acc_rate  KV tokens  concurrency
+  15    51.23   4.778       0.252     174,279    1.33x
+  10    52.54   4.611       0.361     184,471    1.41x
+  8     53.41   4.523       0.440     190,717    1.46x   <-- PEAK (winner)
+  6     49.04   4.127       0.521     195,101    1.49x   (accept loss now costs t/s)
+=> spec=8 = best t/s AND strong concurrency (1.46x) AND efficient (acc_rate 0.44). Lower spec = more KV
+(less draft-slot activation reserve) but below 8 the accept drop wins. spec=8 chosen.
+
+PREFIX CACHE composes with DFlash+gs-patch: cold reprompt 1.96s -> warm 0.74s TTFT (2.6x), hits
+incrementing. So the DD keeps PREFIXCACHE=1 (align mode + ptr shim), no regression.
+
+SOAK (spec=8 final config): gate_concurrent_coherence x rounds = ~168 concurrent-mixed streams, 167
+coherent, 1 transient flag (one round 11/12; NEVER reproduced across 108 later streams -- a load
+transient or a code-dense alpha_frac false positive, NOT the systematic "!!!!" failure; DFlash is
+lossless via target verify). 0 container restarts, 0 wedge, health 200 throughout.
+
+LANDED: serve.sh gained a DFLASH toggle (DFLASH=1 -> dflash SPEC spec=8, served id
+qwen36-27b-w8a8-sqgptq-dflash per Model Identity, CAPSIZES 1,2,4,6,9, MTP head off, gs=8 patch mounted;
+DFLASH=0 = the unchanged 253952 MTP DD). Live DD relaunched:
+  DFLASH=1 MAXLEN=131072 PORT=18080 NAME=b70_daily_0 bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start
+Verified live: served=qwen36-27b-w8a8-sqgptq-dflash, num_spec_tokens=8, enable_prefix_caching=True,
+KV 190,717 tokens / 1.46x conc @131072, coherent gen, gate 12/12 on :18080. README + DFLASH_XPU.md +
+this JOURNAL updated. Fallback: DFLASH=0 restores the MTP 253952 DD in one env flip.
+
+CLIENT NOTE: the served id CHANGED qwen36-27b-w8a8-sqgptq-mtp -> ...-dflash (Model Identity: id encodes
+method). open-webui auto-discovers so it shows the new name; any hardcoded client id must update, or pass
+SERVED=qwen36-27b-w8a8-sqgptq-mtp to keep the old id.

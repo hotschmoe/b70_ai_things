@@ -223,5 +223,25 @@ if [ -n "${B70_EXTRA_MOUNTS:-}" ]; then
   echo "=== B70_EXTRA_MOUNTS -> injected: ${B70_EXTRA_MOUNTS} ===" >&2
 fi
 
+# --- DFLASH daily-driver toggle (2026-07-03 session 3; JOURNAL + vllm/DFLASH_XPU.md) -----------------
+# DFLASH=1 swaps the NEXTN MTP head for vLLM's in-tree DFlash block-diffusion drafter (a SEPARATE draft
+# model, z-lab Qwen3.6-27B-DFlash, W8A8-RTN quantized). Sweep-gated winner: DFTOK=8 speculative tokens
+# (peak 53.4 t/s + 1.46x concurrency @131072; spec 6/8/10/15 = 49.0/53.4/52.5/51.2 t/s). On REAL coding
+# it is +75% single-stream vs the MTP shelf (accept_len 4.5 vs 2.8). TRADEOFF: the drafter's KV caps
+# max_model_len at ~186k (vs MTP 253952) -- run DFLASH at MAXLEN<=131072. Requires the gs=8 KV-group
+# padding patch (recovers the drafter-induced 25% target-KV padding waste); it is byte-identical for the
+# MTP path (argmin-padding leaves {16 full, 48 mamba} -> group_size 16 unchanged) but only mounted here.
+# Validated: gate_concurrent_coherence 12/12, prefix cache warm-reuse intact (cold 1.96s -> warm 0.74s).
+if [ "${DFLASH:-0}" = 1 ]; then
+  export DFTOK="${DFTOK:-8}"
+  export DFDRAFT="${DFDRAFT:-/models/qwen3.6-27b/dflash-draft-w8a8-rtn}"
+  export SPEC="${SPEC:-{\"method\":\"dflash\",\"model\":\"$DFDRAFT\",\"num_speculative_tokens\":$DFTOK}}"
+  export MTPTOK=""                                  # DFlash replaces the NEXTN MTP head
+  [ "$CAPSIZES" = "1,2,4,6,8" ] && export CAPSIZES="1,2,4,6,9"   # spec-verify batch = 1+DFTOK(8)
+  [ "$SERVED" = "qwen36-27b-w8a8-sqgptq-mtp" ] && export SERVED="qwen36-27b-w8a8-sqgptq-dflash"
+  MOUNTS+=( -v "$SCRIPT_DIR/../../../vllm/patches/kv_cache_utils_gcd.py:/opt/venv/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py:ro" )
+  echo "=== DFLASH=1 -> DFlash drafter spec=$DFTOK, served=$SERVED, gs-padding patch mounted ===" >&2
+fi
+
 source "$SCRIPT_DIR/../../_common/lib.sh"
 b70_dispatch "$@"

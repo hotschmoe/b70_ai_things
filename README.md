@@ -3,10 +3,13 @@
 Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Intel Arc Pro B70
 (Battlemage, `xpu`). The headline: custom **fused INT8 W8A8** kernels make 8-bit weights beat
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
-accuracy loss. **The daily driver is now vLLM v0.24.0** (flipped 2026-07-03): the concurrent `!!!!` garbage is
-fixed on v0.24.0, and captured W8A8 decode runs ~2x the old sglang driver (35-44 tok/s vs 18) with vision +
-tool-calling + reasoning + 131K context all retained. sglang stays the maintained fallback (its edge: a working
-prefix cache -- vLLM's is off pending a hybrid-GDN test). See the vLLM table + `JOURNAL.md` 2026-07-03.
+accuracy loss. **The daily driver is vLLM v0.24.0 W8A8 + DFlash speculative decoding** (flipped to DFlash
+2026-07-03): the concurrent `!!!!` garbage is fixed on v0.24.0, and the in-tree **DFlash block-diffusion
+drafter** (spec=8, W8A8-RTN quantized) gives **+75% single-stream decode vs the NEXTN MTP head** on real coding
+(53 tok/s, accept_len 4.5 vs MTP 2.8), with vision + tool-calling + reasoning + **prefix caching** + **131K
+(128K) context** all retained. The DFlash drafter's KV caps context at ~186K (vs MTP's 253952), so 131K is the
+tuned daily-driver point. sglang stays the maintained fallback. Served id: `qwen36-27b-w8a8-sqgptq-dflash`.
+See the vLLM table + `vllm/DFLASH_XPU.md` + `JOURNAL.md` 2026-07-03.
 
 ## What we built (the load-bearing custom work)
 
@@ -73,7 +76,8 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0**\*\*\* | 15.4 | 320k tok |
+| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0** (W8A8 kernel baseline) | 35 | 2 | 2711 | 755 ms | **30.0**\*\*\* | 15.4 | 320k tok |
+| qwen3.6-27b | **W8A8 + DFlash drafter (spec=8) -- v0.24.0 (DAILY DRIVER)** | 35+2 | 2 | -- | -- | **53\*\*\*\*** | -- | 191k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
@@ -86,16 +90,23 @@ coherent -- but it is INCOMPATIBLE with the hybrid's prefix caching (mamba align
 PREFIXCACHE=1 production daily driver keeps the prefix cache (6.97x warm TTFT) and stays at the row's 30.0;
 serve.sh auto-gates MRV2 on PREFIXCACHE (PREFIXCACHE=0 configs get it by default). The initially-credited
 SYCL_UR_USE_LEVEL_ZERO_V2 knob was never engaged (lib.sh pins V2=0 last-wins, vllm#41663) -- untested, no
-claim. Also new: vLLM ships
-DFlash in-tree and it WORKS on XPU (first serve, coherent, TP=2) -- slower than NEXTN MTP at spike settings,
-see `vllm/DFLASH_XPU.md`. The v0.24.0 W8A8 row is **the live daily driver's actual config** (`35_sweep_bench` IN=2048/OUT=128 against
-`b70_daily_0`: vision-on, 131K ctx, PIECEWISE capture, push-AR, MTP) -- the **best coherent W8A8 decode on the
-box** (TG c1 30.0 > sglang 25.6 > old-vLLM 22.4). A chat-workload usage-based probe (short prompt, higher MTP
-accept) reads even higher -- single-stream **44 tok/s vs the old sglang driver's 18** (the captured ~74ms
-forward pass beats sglang's eager ~267ms). Build: `vllm/build_v0240_base.sh` + `build_v0240_int8gdn_so.sh` +
-`images/int8g/bake_v0240.sh`; gate `vllm/gate_concurrent_coherence.py`; flip `DD_MODEL=vllm/qwen36-27b-w8a8`. JOURNAL 2026-07-03.
-Context: the daily driver runs at **248K (253952)** -- Qwen3.6 is 262144-native (no rope scaling), so 248K is
-in-window with ~66K KV headroom (KV 320k -> 1.26x concurrency at full length); full 262144 also serves (1.22x).
+claim. The W8A8+MTP row is now the W8A8 KERNEL baseline (`35_sweep_bench` IN=2048/OUT=128 random text) -- the
+best coherent W8A8 decode on that workload (TG c1 30.0 > sglang 25.6 > old-vLLM 22.4). Build:
+`vllm/build_v0240_base.sh` + `build_v0240_int8gdn_so.sh` + `images/int8g/bake_v0240.sh`;
+gate `vllm/gate_concurrent_coherence.py`. JOURNAL 2026-07-03.
+
+\*\*\*\* **DFlash daily driver (2026-07-03 session 3).** The live DD swaps the NEXTN MTP head for vLLM's in-tree
+**DFlash block-diffusion drafter** (`z-lab/Qwen3.6-27B-DFlash`, W8A8-RTN, `spec=8` -- the sweep-gated peak of
+spec 6/8/10/15). On REAL coding it is **+75% single-stream** vs MTP: accept telemetry ALL **53.4 tok/s /
+accept_len 4.52** (vs MTP 27.8 / 2.84), gate 12/12 coherent, prefix-cache warm reuse intact (cold 1.96s ->
+warm 0.74s), soak 167/168 concurrent-mixed streams clean (0 restarts/wedge). NOTE: DFlash wins on
+repetitive/agentic text, NOT random bench text -- so it is deliberately NOT scored in the IN=2048/OUT=128 table
+(it regresses there); 53 t/s is the real-coding number. KV col (191k tok, 1.46x conc @131072) is why context is
+capped: the drafter's own KV + a `group_size` padding artifact hold DFlash to ~186K max ctx, so the DD runs
+**131072 (128K)**. Root cause + the KV-padding patch (`vllm/patches/kv_cache_utils_gcd.py`, `group_size`
+argmin) in `vllm/DFLASH_XPU.md`. Flip: `DFLASH=1 DD_MAXLEN=131072` (the serve.sh `DFLASH` toggle; `DFLASH=0`
+restores the 253952 MTP DD, still in-window on Qwen3.6's 262144-native rope). An all-sliding-drafter variant
+(`B70_DFLASH_SWA=1`) fits the full 253952 but costs 28% accept -- documented, not enabled.
 Decode/prefill (the table's IN=2048 numbers) are independent of max-model-len; only the KV column scales.
 
 ## Where to look
