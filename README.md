@@ -23,7 +23,10 @@ prefix cache -- vLLM's is off pending a hybrid-GDN test). See the vLLM table + `
   single-stream); **W4A8 hybrid** int4-weight kernel (1.83x decode / 1.9x prefill vs woqgemm); a custom
   **L0-IPC push-allreduce** for TP=2 + the BCS/oneCCL **wedge guard** (`bin/xpu-health`, `bin/xe-reset`).
 
-## Serve shelf -- sglang (production)
+## Serve shelf -- sglang (maintained fallback)
+
+Was the production daily driver until 2026-07-03 (now vLLM v0.24.0 -- see below); kept as the maintained
+fallback, and still the backend with a working prefix cache (RADIX) + the int8-MoE 35B entry.
 
 Warm bench, IN=2048 / OUT=128. PP = prefill (prompt-processing) throughput = IN*1000/TTFT (tok/s);
 TG = per-stream decode t/s; c1 = 1 stream, c4 = 4 concurrent. KV = engine-allocated KV cache. Each row
@@ -70,18 +73,19 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0** | 35 | 2 | 2425 | 845 ms | **27.1** | 14.6 | 156k tok |
+| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0** | 15.4 | 309k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
 2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
 
-The v0.24.0 W8A8 row (IN=2048/OUT=128, `35_sweep_bench`, text) is now the **best coherent W8A8 decode on the
-box** (TG c1 27.1 > sglang 25.6 > old-vLLM 22.4). A chat-workload usage-based probe (short prompt, higher MTP
-accept) reads even higher -- single-stream **40.6 tok/s, 2.3x the sglang daily driver's 18.0** -- because the
-captured 74ms forward pass beats sglang's eager 267ms. Build: `vllm/build_v0240_base.sh` +
-`build_v0240_int8gdn_so.sh` + `images/int8g/bake_v0240.sh`; gate `vllm/gate_concurrent_coherence.py`. JOURNAL 2026-07-03.
+The v0.24.0 W8A8 row is **the live daily driver's actual config** (`35_sweep_bench` IN=2048/OUT=128 against
+`b70_daily_0`: vision-on, 131K ctx, PIECEWISE capture, push-AR, MTP) -- the **best coherent W8A8 decode on the
+box** (TG c1 30.0 > sglang 25.6 > old-vLLM 22.4). A chat-workload usage-based probe (short prompt, higher MTP
+accept) reads even higher -- single-stream **44 tok/s vs the old sglang driver's 18** (the captured ~74ms
+forward pass beats sglang's eager ~267ms). Build: `vllm/build_v0240_base.sh` + `build_v0240_int8gdn_so.sh` +
+`images/int8g/bake_v0240.sh`; gate `vllm/gate_concurrent_coherence.py`; flip `DD_MODEL=vllm/qwen36-27b-w8a8`. JOURNAL 2026-07-03.
 
 ## Where to look
 
