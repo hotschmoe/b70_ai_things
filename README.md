@@ -73,7 +73,7 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0** | 15.4 | 309k tok |
+| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0** | 15.4 | 320k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
@@ -86,6 +86,9 @@ box** (TG c1 30.0 > sglang 25.6 > old-vLLM 22.4). A chat-workload usage-based pr
 accept) reads even higher -- single-stream **44 tok/s vs the old sglang driver's 18** (the captured ~74ms
 forward pass beats sglang's eager ~267ms). Build: `vllm/build_v0240_base.sh` + `build_v0240_int8gdn_so.sh` +
 `images/int8g/bake_v0240.sh`; gate `vllm/gate_concurrent_coherence.py`; flip `DD_MODEL=vllm/qwen36-27b-w8a8`. JOURNAL 2026-07-03.
+Context: the daily driver runs at **248K (253952)** -- Qwen3.6 is 262144-native (no rope scaling), so 248K is
+in-window with ~66K KV headroom (KV 320k -> 1.26x concurrency at full length); full 262144 also serves (1.22x).
+Decode/prefill (the table's IN=2048 numbers) are independent of max-model-len; only the KV column scales.
 
 ## Where to look
 

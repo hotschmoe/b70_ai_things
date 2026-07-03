@@ -7503,3 +7503,13 @@ NOT usable on vLLM XPU today -- the same mamba-state problem that forced sglang'
 => daily driver stays PREFIXCACHE=0. sglang's working RADIX prefix-cache is its one remaining edge (long agentic
 sessions re-prefill on vLLM). Re-flipped the daily driver back to the working PREFIXCACHE=0 config. NEXT (if the
 long-session re-prefill cost bites): port the mamba state handling or wait for vLLM to stabilize align-mode.
+
+## 2026-07-03 -- daily-driver context raised to 248K (253952) for coding
+
+Qwen3.6-27B config: max_position_embeddings=262144, rope_scaling=None -> 262144 is the NATIVE trained window
+(no extrapolation). Tested full 262144 on the vLLM v0.24.0 daily driver: HEALTHY, KV 320k tokens, 1.22x
+concurrency at full length. Chose 248K (253952) for the coding daily driver: in-window, ~8K under native, KV
+320235 tokens -> 1.26x concurrency (one full 248K request + ~66K headroom for MTP draft slots + the ~16K vision
+encoder cache + a short second request). Decode/prefill (IN=2048 bench) unchanged vs 131K (a 2048-tok request is
+independent of max-model-len); only KV total scales (309k@131K -> 320k@248K). Persisted DD_MAXLEN default
+131072->253952 in vllm/daily_driver_serve.sh (DD_MAXLEN=262144 for full native). Live + coherent (coding probe OK).

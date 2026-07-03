@@ -39,7 +39,12 @@ DD_REPLICAS="${DD_REPLICAS:-1}"           # 1 = single serve (TP=2 / big; the W8
                                           # (only for a model that FITS ONE card, e.g. DD_MODEL=vllm/qwen36-27b-int4).
 DD_CARD="${DD_CARD:-}"                     # set to 0 or 1 -> ONE-CARD mode: pin to that card + lease ONLY that card
                                           #     (leaves the other free for `gpu-run --card <other>` experiments).
-DD_MAXLEN="${DD_MAXLEN:-131072}"          # daily-driver context (the model serve.sh default is a modest 8192).
+DD_MAXLEN="${DD_MAXLEN:-253952}"          # daily-driver context = 248K, tuned for coding (2026-07-03). Qwen3.6
+                                          # native max_position_embeddings=262144 (NO rope scaling), so 248K is
+                                          # in-window (no extrapolation/quality risk); left ~8K under native +
+                                          # ~66K KV headroom (KV 320k @ vLLM v0.24.0 -> 1.26x concurrency at full
+                                          # length). Full 262144 also serves (KV 320k, 1.22x) if you want it.
+                                          # (the model serve.sh default is a modest 8192.)
 DD_MTP="${DD_MTP:-0}"                      # 1 = MTP spec=4 (~1.79x single-stream interactive; DENSE models only).
 DD_ENV="${DD_ENV:-}"                       # advanced: extra env passed verbatim to serve.sh (e.g. "GRAPH=0").
 DD_API_KEY="${DD_API_KEY:-}"               # if set, vLLM ENFORCES this key (via VLLM_API_KEY env -> --api-key).
