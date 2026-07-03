@@ -7925,3 +7925,26 @@ qwen36-27b-w8a8-sqgptq-dflash, 291k KV tokens @253952, gate 12/12, coherent. Tab
 worst case): PP 2566, TTFT 798ms, TG c1 19.6, c4 10.3. README table + footnote + JOURNAL updated. New probes:
 dflash_deep_accept_probe.py, twopoint_decode_tps.py, deep_decode_tps.py (the last is UNRELIABLE at depth,
 kept as a cautionary note).
+
+## 2026-07-03 -- session 3 cont: all-sliding DD CRASHED under load -> REVERTED to MTP (DD stays MTP)
+
+The all-sliding DFlash DD (deployed above) CRASHED ~4 min after going live, during the random-text table
+bench (+ a coincident WebUI request): TP worker died -> `shm_broadcast.py acquire_read RuntimeError:
+cancelled` -> `EngineDeadError` -> API server graceful shutdown (Exit 0), gpu-run released the lease. Same
+`shm_broadcast cancelled` mode as the 2026-07-03 DFlash spec=7 spike crash. Container exit was clean (no
+wedge, cards healthy). This is DISTINCT from and worse than the soft "!!!!" GDN poison found earlier (that one
+is docker-restart-healable; this is a hard engine death under concurrent load).
+
+So DFlash has now shown TWO instability modes as a DD: (1) soft "!!!!" poison on a request cancelled mid
+deep-prefill (restart-healable), (2) hard TP-worker EngineDeadError under concurrent bench load. Neither is
+acceptable for the production daily driver.
+
+DECISION: REVERTED the DD to the robust MTP config (DFLASH unset, MAXLEN=253952) -- restored + verified
+healthy on :18080, served qwen36-27b-w8a8-sqgptq-mtp. MTP has 12h+ production stability, is coherent under
+concurrent load, and (per the deep-accept probe) is flat-robust across context depth (~2.9). The DFlash
+research stands (all-sliding holds accept at depth 3.6, full ctx, +20% decode at 40K) and is a one-flag option
+(DFLASH=1 DFSWA=1), but it is NOT the DD until the TP-worker shm-cancelled crash is root-caused (a dedicated
+debug session: B70_DEBUG, chunked-prefill vs the drafter's context-KV precompute under concurrency, spec-batch
+width). README + DFLASH_XPU.md updated to "researched, not the DD". serve.sh DFLASH/DFSWA toggle kept (inert
+by default). LESSON: an accept/throughput win is necessary but NOT sufficient for a DD -- concurrent-load
+stability is the gate, and DFlash on this TP=2 hybrid does not pass it yet.
