@@ -43,6 +43,30 @@ README clean. Positive optimization lessons live in `research/LESSONS.md`; raw m
   W4A16 case in particular got a spliced multimodal config (its quant was authored text-only) --
   serve + a few prompts + one image before trusting. See `models/REFACTOR.md`.
 
+- **[FOLLOW-UP, opened 2026-07-03] DFlash TP-worker crash blocks it as the daily driver.** DFlash
+  speculative decoding (vLLM in-tree, `DFLASH=1` in `rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh`) is
+  a validated *performance* win but NOT production-stable on this TP=2 hybrid, so the DD stays MTP.
+  Two instability modes seen (JOURNAL 2026-07-03 session 3):
+  1. **Hard crash under concurrent load (the blocker).** ~4 min into a live all-sliding-drafter DD, a
+     random-text bench (c4) coincident with a WebUI request killed a TP worker ->
+     `shm_broadcast.py acquire_read RuntimeError: cancelled` -> `EngineDeadError` -> graceful engine
+     shutdown (Exit 0, no wedge, cards stayed healthy). SAME `shm_broadcast cancelled` signature as the
+     2026-07-03 DFlash spec=7 spike crash at init. The dying worker's OWN traceback (upstream of the
+     shm-cancelled read) is the thing to capture.
+  2. **Soft "!!!!" GDN poison** on a request CANCELLED mid deep-prefill (40K-ctx); `docker restart` /
+     `bin/dd-watchdog` heals it. Same GDN/mamba SSM-state family as the paused-vLLM "!!!!" blocker above.
+  ROOT-CAUSE PLAN (dedicated session; DD is MTP meanwhile, DFlash is one flag away):
+  (a) reproduce deterministically = concurrent `vllm bench serve --dataset-name random` c4 + a cancelled
+      request, `B70_DEBUG=1` (faulthandler) or `=2` (L0 validation/leak + UR/CCL/vLLM debug) to dump the
+      worker py+C traceback on the fatal signal; (b) suspect the drafter's `precompute_and_store_context_kv`
+      single-slot-mapping interacting with chunked-prefill + the wide spec-verify batch (1+DFTOK) under
+      concurrency, and the all-sliding drafter's windowed KV cache eviction mid-flight; (c) test DFTOK
+      smaller (narrower verify), `--no-enable-chunked-prefill`, and DFSWA=0 vs 1 to localize; (d) the fix is
+      likely a guard around the cancelled-request path in the DFlash proposer / a fp32/zeroing of the drafter
+      SSM state. Refs: JOURNAL 2026-07-03 session 3, `vllm/DFLASH_XPU.md`, extracted source in the spike memo.
+  Accept/decode research that STANDS (do not re-litigate): all-sliding drafter holds accept 3.6@100K + fits
+  full 253952 + beats MTP decode at 40K (21.3 vs 17.7); stock full drafter COLLAPSES at depth (4.5->1.6).
+
 ## Dead ends (tried, measured, did not work)
 
 - **XPUGraph multibucket capture for serving.** Custom XPU cuda-graph decode capture is great
