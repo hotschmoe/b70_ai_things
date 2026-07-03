@@ -68,7 +68,23 @@ export CGMODE="${CGMODE:-NONE}"             # DEFAULT NONE (2026-06-25, campaign
                                             # accumulation in the MTP path). docs/20260625_w8a8_27b_mtp_graph_campaign.md
 export IGP="${IGP:-false}"                  # legacy piecewise splitter: REQUIRED on this hybrid (the inductor
                                             # partitioner KeyErrors on the mixed W8A8(scale)+BF16-GDN(no-scale) region).
-export NOMM="${NOMM:-1}"                    # 27B is a qwen3_5 VLM -> text-only
+export NOMM="${NOMM-}"                       # VISION ON by default (2026-07-03: v0.24.0 vision profiling no longer
+                                            # crashes -> the old NOMM=1 text-only workaround is retired). Pass NOMM=1
+                                            # to force text-only (e.g. a pure-text perf bench). Empty = vision retained.
+# Agentic parity (daily-driver): tool-calling + reasoning split, same parsers as the sglang shelf. lib.sh maps
+# TOOLCALL -> --enable-auto-tool-choice --tool-call-parser; REASONPARSER -> --reasoning-parser. Validated on v0.24.0
+# (qwen3_coder emits proper tool_calls; qwen3 splits <think> into reasoning_content).
+export TOOLCALL="${TOOLCALL:-1}"; export TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
+export REASONPARSER="${REASONPARSER:-qwen3}"
+# VISION + torch.compile (GRAPH=1): the mm memory-profiling DUMMY-IMAGE run crashes under dynamo
+# ('NoneType' object has no attribute 'size', in determine_available_memory) on v0.24.0 XPU. Vision
+# INFERENCE works (validated eager: correctly described an image); only the startup dummy-image profiling
+# breaks under compile. --skip-mm-profiling skips that dummy run (profiles text-only) and KEEPS vision.
+# Auto-added when vision is on (NOMM empty) AND capture is on (GRAPH=1). ALSO clear a STALE text-only AOT
+# compile cache when flipping text<->vision (torch_compile_cache is keyed without mm-mode -> they collide).
+if [ -z "$NOMM" ] && [ "${GRAPH:-1}" = 1 ]; then
+  export EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }--skip-mm-profiling"
+fi
 export UTIL="${UTIL:-0.90}"                 # 17 GiB/card -> plenty of KV headroom at TP=2
 export MAXLEN="${MAXLEN:-4096}"
 export MAXSEQS="${MAXSEQS:-8}"

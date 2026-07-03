@@ -3,7 +3,8 @@
 Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Intel Arc Pro B70
 (Battlemage, `xpu`). The headline: custom **fused INT8 W8A8** kernels make 8-bit weights beat
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
-accuracy loss. **sglang is the production backend; vLLM is paused** (see the vLLM table).
+accuracy loss. **sglang is the production backend; vLLM is UN-PAUSED on v0.24.0** -- the concurrent
+`!!!!` garbage is fixed, and captured W8A8 decode is the fastest coherent config on the box (see the vLLM table).
 
 ## What we built (the load-bearing custom work)
 
@@ -42,26 +43,40 @@ best of any 35B entry** (int8-XMX prefill). Decode is eager-slow (~8 t/s single 
 graph capture / NEXTN MTP / fused int8 dense are the open decode levers. Soak: clean + stable (no
 degradation), and unlike vLLM it stays coherent under sustained concurrent load.
 
-## Serve shelf -- vLLM (PAUSED)
+## Serve shelf -- vLLM (UN-PAUSED on v0.24.0)
 
-> **vLLM is paused.** Concurrent prefill+decode trips the XPU GDN/Mamba SSM-state NaN poison ->
-> endless `!!!!` (then global until a restart). Tracking issue: **vLLM #38994** (Qwen-3.5 garbled
-> output, Intel B70, open since 2026-04); the unfixed XPU piece is **vllm-xpu-kernels #172** (fp32
-> `ssm_state` in `chunk_fwd_o`). Kept as a maintained baseline; resume when #172 lands. See `SHORTCOMINGS.md`.
+> **vLLM is un-paused (2026-07-03).** Rebased to **v0.24.0 (torch 2.12)**, whose five hybrid
+> mixed-prefill+decode PRs (#44700 split mixed -> recurrent GDN, #43990/#42430/#43961/#43556) FIX
+> the concurrent `!!!!` GDN/Mamba SSM-state garbage that paused it. The W8A8 daily-driver candidate
+> re-benched below is now **coherent** under staggered concurrent load (40/40 + 32/32 gate), PIECEWISE
+> capture is **stable** under sustained MTP (restarts=0) + **deterministic** (3/3 greedy), and
+> tool-calling (`qwen3_coder`) + reasoning (`qwen3`) + vision all work. Images: `vllm-xpu-env:{v0240,int8g-v0240}`.
+>
+> **Two open caveats before it can replace the sglang daily driver:** (1) **vision + torch.compile is
+> incompatible** on this XPU stack -- the mm-merge does `image_embeds.size()` on `None` under dynamo, so
+> vision works only EAGER (~parity with sglang), while the 27 t/s capture number is TEXT-only; (2) prefix
+> caching for the hybrid GDN model is untested here. Until (1) is patched, capture and vision are exclusive.
 
-Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- the ~4x decode lever).
+Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- the ~4x decode lever). Only the
+**W8A8 row is re-benched on v0.24.0** (the daily-driver candidate); the other rows are the last vLLM baseline.
 
 | Model | Quant | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | W8A8-sqgptq (int8) + MTP | 35 | 2 | 2576 | 795 ms | 22.4 | 15.7 | 76k tok |
+| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0** | 35 | 2 | 2425 | 845 ms | **27.1** | 14.6 | 156k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
 
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
 2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
+
+The v0.24.0 W8A8 row (IN=2048/OUT=128, `35_sweep_bench`, text) is now the **best coherent W8A8 decode on the
+box** (TG c1 27.1 > sglang 25.6 > old-vLLM 22.4). A chat-workload usage-based probe (short prompt, higher MTP
+accept) reads even higher -- single-stream **40.6 tok/s, 2.3x the sglang daily driver's 18.0** -- because the
+captured 74ms forward pass beats sglang's eager 267ms. Build: `vllm/build_v0240_base.sh` +
+`build_v0240_int8gdn_so.sh` + `images/int8g/bake_v0240.sh`; gate `vllm/gate_concurrent_coherence.py`. JOURNAL 2026-07-03.
 
 ## Where to look
 
@@ -77,5 +92,6 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 
 2x Intel Arc Pro B70 (Battlemage, 32 GB each), Ubuntu kernel 7.1 (since 2026-07-02; cured the TP=2 wedge),
 run locally as `hotschmoe`. Images:
-sglang `sglang-xpu:mtp`, vLLM `vllm-xpu-env:{v0230,v0230moe,int8g}`. Every GPU touch goes through the
+sglang `sglang-xpu:mtp`, vLLM `vllm-xpu-env:{v0240,int8g-v0240}` (v0.24.0/torch 2.12; older `{v0230,v0230moe,int8g}`
+kept as rollback). Every GPU touch goes through the
 shared lease (`bin/gpu-run`); TP=2 = both cards. The smoke/bench gate is `bin/serve-sweep`.
