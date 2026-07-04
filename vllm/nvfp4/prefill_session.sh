@@ -20,6 +20,7 @@ export TP="${TP:-2}" MODE="${MODE:-fused}" GRAPH="${GRAPH:-1}" MTPTOK="${MTPTOK:
 export CAPSIZES="${CAPSIZES:-1,2,4,8}" MAXLEN="${MAXLEN:-16384}" UTIL="${UTIL:-0.85}"
 export MAXSEQS="${MAXSEQS:-8}" PREFIXCACHE="${PREFIXCACHE:-1}"
 export PUSH_AR="${PUSH_AR:-0}" PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}"
+export MAXBATCH="${MAXBATCH:-}" PUSH_AR_MAXB="${PUSH_AR_MAXB:-134217728}"
 export NAME PORT
 
 echo "=================================================================="
@@ -53,8 +54,10 @@ fi
 
 echo "----- [$LABEL] COLD PREFILL BENCH (c1) -----"
 python3 "$DIR/bench_prefill.py" "http://localhost:$PORT/v1" "$SERVED" 1 8 "$LENS" 3
-echo "----- [$LABEL] COLD PREFILL BENCH (c4) -----"
-python3 "$DIR/bench_prefill.py" "http://localhost:$PORT/v1" "$SERVED" 4 8 "$LENS" 2
+if [ "${SKIP_C4:-0}" != 1 ]; then
+  echo "----- [$LABEL] COLD PREFILL BENCH (c4) -----"
+  python3 "$DIR/bench_prefill.py" "http://localhost:$PORT/v1" "$SERVED" 4 8 "$LENS" 2
+fi
 
 echo "----- [$LABEL] coherence probe -----"
 python3 - "$PORT" "$SERVED" <<'PY'

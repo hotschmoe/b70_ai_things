@@ -33,6 +33,13 @@ TP="${TP:-1}"              # TP=2 -> both cards, oneCCL multicard env (lib.sh re
 MODE="${MODE:-emul}"
 MAXLEN="${MAXLEN:-2048}"
 UTIL="${UTIL:-0.92}"
+# MAXBATCH: --max-num-batched-tokens (chunked-prefill chunk size). Empty = vLLM default (8192 online).
+# A LONG cold prefill is sliced into ceil(prompt/MAXBATCH) forward steps, each firing all 128 TP
+# all-reduces; a larger chunk cuts the AR-launch count (prefill is per-collective-overhead-bound) at the
+# cost of a bigger prefill activation transient (bounded by MAXBATCH). Stacks on the push-AR overlay for
+# 32K/128K prefills. Leave empty for IN<=8192 (already a single chunk). Track 11g.
+MAXBATCH="${MAXBATCH:-}"
+MAXBATCH_ARG=(); [ -n "$MAXBATCH" ] && MAXBATCH_ARG=( --max-num-batched-tokens "$MAXBATCH" )
 # MAXSEQS: TP>1 defaults to 8. [!] CORRECTNESS (2026-07-04): on the TP=2 + MTP + GRAPH path, MAXSEQS
 # MUST be >= the largest cudagraph capture size (see the guard by CAPSIZES below). MAXSEQS=4 with
 # CAPSIZES=1,2,4,8 emits "!!!!" NaN garbage on ~half of concurrent streams (gate 8-10/18 FAIL) while
@@ -149,7 +156,13 @@ if [ "$PUSH_AR" = 1 ] && [ "$TP" != 1 ]; then
   PUSH_AR_MOUNTS=( -v "$PUSH_AR_DIR:/opt/push_ar:ro" )
   PUSH_AR_ENV=( -e PUSH_AR_PATCH=/opt/push_ar/_push_ar_patch.py
                 -e PUSH_AR_SO=/opt/push_ar/prebuilt/libxpu_push_ar_torch.so
-                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}" )
+                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}"
+                -e PUSH_AR_MAXB="${PUSH_AR_MAXB:-134217728}" )
+  # PUSH_AR_MAXB (scratch bytes, default 128 MiB): CAPS the prefill chunk that push can accelerate. An
+  # all-reduce whose bytes exceed MAXB falls back to oneCCL. chunk_tokens*hidden*2 <= MAXB -> with hidden
+  # 5120 the default 128 MiB fits chunks up to ~13,107 tokens; the default 8192 chunk (83.9 MB) is inside
+  # it, but raising --max-num-batched-tokens past ~13k WITHOUT also raising PUSH_AR_MAXB silently DEFEATS
+  # push-AR (measured 2026-07-04: MAXBATCH=16384 -> 167 MB > 128 MiB -> oneCCL -> 32K PP 734 vs 1772).
   # PUSH_AR_GRAPH intentionally UNSET (prefill-only); the host-barrier .so has no ar_allreduce_graph symbol.
   echo "=== PUSH_AR prefill overlay ON (host-barrier .so, MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-65536}, P2PACCESS=0) ==="
   SERVED="${SERVED}-pushar"
@@ -184,7 +197,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --entrypoint vllm "$IMG" \
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
-  --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" \
+  --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" "${MAXBATCH_ARG[@]}" \
   "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" "$PC_ARG" --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up; follow with: docker logs -f $NAME"
