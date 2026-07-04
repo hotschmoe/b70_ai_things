@@ -8266,3 +8266,21 @@ RESULT: healthy; KV cache GREW 8,465 -> 10,685 tokens (v0.24.0 profiling reserve
 VERDICT: MAXLEN=8192 is measured faster-or-equal AND coherent -> landed as the shelf default
   per the shelf rules. Lesson: on this serve do not fear MAXLEN, fear UTIL. README KV cells
   updated to 10.7k.
+
+## 2026-07-04 (cont) -- [NEG] the int4 A/B is unrunnable on v0230/card1: EAGER poisons too [result]
+
+CONFIG: after the GRAPH=1 poisoning (previous NEG entry), the A/B was rerun EAGER (GRAPH=0) --
+the exact methodology of the recorded 0.963/0.927 -- same card 1, same v0230 image, same shelf ckpt.
+RESULT: poisoned AGAIN: 11 of the first 16 samples pure "!!!!" (clean start, then permanent garbage).
+So v0230 int4 on CARD 1 emits "!!!!" in BOTH captured and eager modes, on a plain sequential c1
+workload. xpu-health after teardown: both cards OK (serve-level poisoning, not a wedge).
+OBSERVATIONS worth keeping: (a) every historical CLEAN v0230 int4 run (incl the 0.963 eval and the
+30.8 t/s bench) ran on kernel 7.0/ICR 26.05 and/or card 0; this box moved to kernel 7.1 + ICR 26.22
+on 2026-07-02, and v0230 (torch 2.8-era stack) has NOT been re-validated on it. (b) the int4-dp2
+"soft garbage" memory already fingered the int4-v0230 path as poison-prone under DP (which includes
+a card-1 replica). Hypotheses, untested: card-1-specific numeric fault in the old stack, or
+v0230-on-kernel-7.1 incompatibility. Either way v0230 card-1 serves should be treated as SUSPECT.
+VERDICT: same-stack int4 A/B DEFERRED to a proper int4-on-v0.24.0 port (known path: the in-tree INC
+int4 + MoE-port lessons; a focused session). The NVFP4-vs-int4 comparison stands on the recorded
+0.963/0.927 with the stack-caveat honesty note in SUMMARY.md. Both invalid result dirs kept for
+forensics (...__int4-v0230-graph-samestack, ...__int4-v0230-eager-ab). Card 1 released.
