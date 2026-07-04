@@ -92,7 +92,10 @@
 > quality AND speed, no tradeoff. Two honesty notes: (a) MTP is output-invariant at greedy, so the number
 > reflects the NVFP4 numerics, not spec decode; (b) stack differs from the 0.963 row (vLLM v0.24.0
 > captured vs v0.23 eager) -- template/stack artifacts historically move this metric by a few points
-> (see the W4A8 gate note below), but the direction is consistent: FP8-attn + 4-bit-MLP with NVIDIA's
+> (see the W4A8 gate note below). A same-stack re-run was ATTEMPTED 2026-07-04 and is currently
+> IMPOSSIBLE: the v0230 int4 serve on card 1 soft-poisons to "!!!!" in BOTH captured AND eager modes
+> (post-kernel-7.1 suspect; JOURNAL NEG entries) -- deferred to an int4-on-v0.24.0 port. Still, the
+> direction is consistent: FP8-attn + 4-bit-MLP with NVIDIA's
 > calibration is simply a higher-fidelity 4-bit recipe than int4-AutoRound-everywhere. gsm8k (tier2,
 > 50 items): 96% (48/50) vs int4's 100% (50/50) -- 2 misses, small-sample noise territory (p~0.15),
 > but recorded honestly; ppl pending.
