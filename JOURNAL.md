@@ -8219,3 +8219,7 @@ bf16 on higher-fidelity numerics and accepts ~99% on code, so deeper drafting pa
 Coding decode on ONE B70 card is now 67 t/s -- 8x the eager floor, and faster than anything else
 on the box including the TP=2 captured DD (44 usage-based). Docs: serve script sweep comment,
 NVFP4_XPU.md M9, README row (MTP5). Same-stack int4 HumanEval+ A/B running on card 1 meanwhile.
+
+ADDENDUM (M9): gate_concurrent 18/18 PASS also at MTPTOK=5 (3 waves x 6, mixed prefill+decode) --
+the standing spec=5 config carries the same coherence grade as spec=3. Same-stack int4 HumanEval+
+A/B still running on card 1 (v0230-graph shelf serve, downclocked display card, ~1/min).
