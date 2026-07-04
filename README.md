@@ -57,18 +57,18 @@ best of any 35B entry** (int8-XMX prefill). Decode is eager-slow (~8 t/s single 
 graph capture / NEXTN MTP / fused int8 dense are the open decode levers. Soak: clean + stable (no
 degradation), and unlike vLLM it stays coherent under sustained concurrent load.
 
-\*\*\* **NVFP4 row = vLLM experiment, not a shelf entry** (`vllm/nvfp4/`, GRAPH=1 PIECEWISE). The ACTUAL
-`nvidia/Qwen3.6-27B-NVFP4` ModelOpt MIXED_PRECISION checkpoint (W4A16_NVFP4 MLP + FP8 attention) running
-on a device with *zero* Intel NVFP4 support, via our custom `nvfp4_gemm_w4a16` oneDNN op (weights stay
-4-bit/f4_e2m1 resident -> **24 GB, fits ONE card**, where the int8 repack is 31 GB and does not). Op is
-bit-exact (rel-err 3.7e-3 = bf16 scale rounding) and 2.85x bf16 at decode. **38.7 t/s single-stream =
-the fastest single-card 27B on this box** (M6+M7, 2026-07-04): a `register_fake` meta impl unlocked
-PIECEWISE capture (8.47 -> 25.06), then stock NEXTN MTP stacked on top (-> 38.67; the ckpt carries its
-15 bf16 `mtp.*` tensors natively, zero graft/shim). Ladder: 0.5 emul -> 8.47 eager -> 25.1 capture ->
-38.7 +MTP = 77x emul. **AND the highest-quality: HumanEval+ 0.988/0.945 = new box leaderboard #1**
-(M8; beats int4-AutoRound 0.963/0.927), gate_concurrent 18/18 PASS, MTP accept ~99% on code (~50 t/s
-coding decode). Caveats: KV 8.5k tok (c4 @ 2k-in thrashes; c1 is the headline), UTIL=0.85 hard
-ceiling. See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
+\*\*\* **NVFP4 row = a vLLM serve, shown here for the cross-backend model view** -- shelf entry
+`rdy_to_serve/vllm/qwen36-27b-nvfp4/` (recipe `vllm/nvfp4/`). The ACTUAL `nvidia/Qwen3.6-27B-NVFP4`
+ModelOpt MIXED_PRECISION checkpoint (W4A16_NVFP4 MLP + FP8 attention) running on a device with *zero*
+Intel NVFP4 support, via our custom `nvfp4_gemm_w4a16` oneDNN op (weights stay 4-bit/f4_e2m1 resident
+-> **24 GB, fits ONE card**, where the int8 repack is 31 GB and does not). Op is bit-exact (rel-err
+3.7e-3 = bf16 scale rounding) and 2.85x bf16 at decode. **The box champion (M6-M9, 2026-07-04):
+fastest single-card 27B (40.7-44.1 t/s, 67 t/s on code) AND quality #1 (HumanEval+ 0.988/0.945 beats
+int4-AutoRound 0.963/0.927)**. Ladder: 0.5 emul -> 8.47 eager -> 25.1 capture (one `register_fake`)
+-> 40.7-44.1 +MTP spec=5 (native bf16 `mtp.*`, zero graft; ~99% accept on code). gate_concurrent
+18/18, vision verified under capture+MTP. Caveats: KV 10.7k tok @ MAXLEN=8192 (concurrent long
+prefills serialize; the single-stream/quality pick), UTIL=0.85 hard ceiling.
+See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
 
 ## Serve shelf -- vLLM (UN-PAUSED on v0.24.0)
 
