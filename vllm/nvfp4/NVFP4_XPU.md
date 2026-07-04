@@ -51,8 +51,13 @@ Serve: `vllm/nvfp4/serve_nvfp4.sh` (single card, port 8077, enforce-eager).
       finish in 120s) -- the emul kernel re-dequantizes EVERY weight EVERY forward.
       Correctness reference only, unusable for serving. (needed 2 shim fixes:
       register XPU kernel + KVCacheScaleParameter shard_id tolerance.)
-- [ ] M1b: dequant mode serves coherently + bench (expect ~bf16-8B speed)
-- [ ] M2: real packed-weight fast path. Candidates:
+- [x] M1b: dequant mode SERVES COHERENTLY + FAST. "Paris" + 31.0 tok/s single-stream
+      (enforce-eager, card 0). Weights 15.27 GiB bf16 (one-time NVFP4->bf16 at load),
+      KV fp8_e4m3 10.79 GiB / 19x concurrency @ 8192. 31x faster than emul.
+      THIS is the usable NVFP4 serve path on B70 today. numerically it is a
+      W4A16 read of the W4A4 ckpt (weights exact-dequant, activations stay bf16 ->
+      if anything slightly HIGHER quality than the intended W4A4).
+- [ ] M2: real packed-weight fast path (the kernel flex). Candidates:
       (a) `torch.ops._xpu_C.fp4_gemm` -- EXISTS in vllm-xpu-kernels for MXFP4
           W4A4 on XPU (kernels/linear/mxfp4/xpu.py). Check whether the underlying
           kernel can take e4m3 block scales at group 16 (nvfp4) vs e8m0 at
