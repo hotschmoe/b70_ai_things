@@ -8238,3 +8238,20 @@ serve-cycle tested: healthy, correct served id, coherent probe. README: NVFP4 ro
 shelf table (+ footnote) alongside the earlier sglang-table row update; SUMMARY.md already carries
 the leaderboard #1. Positioning: the QUALITY + single-stream pick (KV ~8.5k tok caveat); int4 stays
 the KV/concurrency pick; the W8A8 TP=2 remains the DD.
+
+## 2026-07-04 (cont) -- [NEG] int4 v0230-GRAPH poisons "!!!!" on SINGLE-STREAM sequential eval (card 1) [result]
+
+CONFIG: the same-stack HumanEval+ A/B attempt -- rdy_to_serve/vllm/qwen36-27b-int4 (v0230 image,
+GRAPH=1 PIECEWISE, its shelf defaults) served on CARD 1 (DEVICE=1 PORT=8001), tier1 humaneval run
+sequentially (c1, greedy) against it. NVFP4 champion untouched on card 0.
+RESULT: first 5 samples CLEAN code, then samples 5..49 ALL pure "!!!!" garbage at the 2048 cap --
+the classic v0.23 soft NaN-poisoning (int4-dp2 memory signature), permanent once tripped. Notable:
+this happened WITHOUT concurrent mixed prefill+decode -- a plain c1 sequential chat workload on
+card 1 tripped it after 5 requests. The old stack's poisoning trigger is broader than the
+"concurrent" framing (or card-1-specific); either way it reinforces (a) why the 2026-06-20 0.963
+eval used EAGER, (b) why the shelf/DD moved to v0.24.0. Eval killed at 50/164, container removed,
+result dir 20260704T180152Z__qwen36-27b-int4__int4-v0230-graph-samestack is INVALID (kept for the
+garbage forensics only).
+VERDICT: the v0230-captured A/B is unrunnable. Rerunning the A/B EAGER (GRAPH=0) on card 1 -- the
+exact methodology of the recorded 0.963/0.927 -- to validate today's checkpoint+harness against the
+NVFP4 0.988/0.945. (A true v0.24.0-int4 port A/B stays future work.)
