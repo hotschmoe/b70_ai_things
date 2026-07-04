@@ -65,6 +65,10 @@ fi
 # MTPTOK=N -> NEXTN MTP spec decode (M7). The ModelOpt ckpt natively carries the
 # 15 bf16 mtp.* tensors and the quantized_layers map EXCLUDES mtp -> the drafter
 # loads unquantized without the w8a8 shelf's graft/shim. Empty = MTP off.
+# SWEEP (M9, 2026-07-04, card 0, code-probe t/s / random-c1 t/s): spec3 58.1/38.7-41.8,
+# spec5 67.4/40.7-44.1 (WINNER both workloads), spec7 63.4/42.7. MTPTOK=5 is the best
+# config -- unlike w8a8 (spec3-optimal @ 48% accept), the bf16 head on NVFP4 numerics
+# drafts well enough that 5 pays (code accept ~1.00/1.00/0.97 at spec3).
 MTPTOK="${MTPTOK:-}"
 SPEC_ARGS=( )
 if [ -n "$MTPTOK" ]; then

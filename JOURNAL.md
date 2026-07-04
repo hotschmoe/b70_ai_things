@@ -8203,3 +8203,19 @@ RESULT: 96% (48/50) vs the int4-AutoRound 27B's 100% (50/50) on the same tier2 m
   parity on gsm8k with a possible slight deficit. SUMMARY.md updated (REAL TARGETS row + callout).
 VERDICT: quality row complete enough for the shelf decision. Open eval items: ppl (tier0), a
   same-stack int4 A/B (the clean comparison), harder/agentic code evals.
+
+## 2026-07-04 (cont) -- NVFP4 27B M9: MTPTOK sweep, spec=5 peaks at 67 t/s code / 44 random [result]
+
+CONFIG: the M7 serve relaunched at MTPTOK={3,5,7}, all GRAPH=1 CAPSIZES=1,2,4,8 UTIL=0.85 card 0.
+Two probes per config: (a) code-decode probe (3 coding prompts, greedy, streamed, decode-only
+clock, scratchpad tool) -- the workload MTP loves; (b) random-text c1 (35_sweep_bench IN=2048/OUT=128).
+RESULT (code t/s / random-c1 t/s):
+  spec=3: 58.1 / 38.7-41.8
+  spec=5: 67.4 / 40.7-44.1   <- WINNER on both
+  spec=7: 63.4 / 42.7
+VERDICT: MTPTOK=5 is the standing best config. The w8a8 lesson ("spec=3 winner, monotonic
+decreasing" -- the 1-layer head over-drafts past 3) does NOT transfer to NVFP4: its drafter runs
+bf16 on higher-fidelity numerics and accepts ~99% on code, so deeper drafting pays until 7.
+Coding decode on ONE B70 card is now 67 t/s -- 8x the eager floor, and faster than anything else
+on the box including the TP=2 captured DD (44 usage-based). Docs: serve script sweep comment,
+NVFP4_XPU.md M9, README row (MTP5). Same-stack int4 HumanEval+ A/B running on card 1 meanwhile.

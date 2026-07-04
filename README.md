@@ -45,7 +45,7 @@ is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
 | qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 2224 | 921 ms | 15.3 | 4.5 | 29.8k tok |
 | qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 2062 | 993 ms | 27.3 | 27.7\* | 145k tok |
 | qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | **3786** | **541 ms** | **25.6** | 5.8 | 182k tok |
-| qwen3.6-27b | **NVFP4** (nvfp4_gemm_w4a16, PIECEWISE + MTP)\*\*\* | 24 | 1 | 1702 | 1203 ms | **38.7** | 27.0 | 8.5k tok |
+| qwen3.6-27b | **NVFP4** (nvfp4_gemm_w4a16, PIECEWISE + MTP5)\*\*\* | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 8.5k tok |
 | qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | **7529** | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,

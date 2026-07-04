@@ -193,6 +193,16 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       on code ~99% (1.00/1.00/0.97 per position) -> the eval generated in 700 s vs
       ~2300 s for previous 27B runs (~50 t/s accepted throughput on code). NVFP4 27B is
       now simultaneously the highest-quality AND fastest single-card 27B on the box.
+- [x] M9: MTPTOK sweep -- spec=5 is the peak on BOTH workloads. Code-probe decode t/s
+      (3 coding prompts, streamed, decode-only) / random-text c1 (IN=2048/OUT=128):
+        spec=3: 58.1 / 38.7-41.8      spec=5: 67.4 / 40.7-44.1  <- WINNER
+        spec=7: 63.4 / 42.7
+      The w8a8 "spec=3 optimal, monotonic decreasing" rule does NOT transfer: at 48%
+      base accept the w8a8 head over-drafts past 3, but the NVFP4 serve's bf16 head +
+      higher-fidelity numerics accept ~99% on code (1.00/1.00/0.97 at spec3, still
+      0.85/0.69/0.55/0.42/0.34 at spec5 on mixed code), so 5 pays and 7 tips over.
+      Standing serve config: MODE=fused GRAPH=1 MTPTOK=5 CAPSIZES=1,2,4,8 UTIL=0.85.
+      67 t/s coding decode on ONE card. c4 caveat unchanged (8.5k KV -> serializes).
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 
