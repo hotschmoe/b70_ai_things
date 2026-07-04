@@ -45,10 +45,19 @@ SERVED="qwen3.6-27b-NVFP4-modelopt-${MODE}"
 GRAPH="${GRAPH:-0}"
 CGMODE="${CGMODE:-PIECEWISE}"
 IGP="${IGP:-false}"
+CAPSIZES="${CAPSIZES:-}"   # e.g. 1,2,4,8 -- REQUIRED with MTPTOK (spec decode balloons the
+                           # default size list to [1..64]; the drafter + 24.1GiB resident
+                           # weights then OOM at capture, UR err 40. c1 MTP only needs
+                           # size (1+MTPTOK); larger batches fall back to eager).
+                           # PROVEN fused+GRAPH+MTP combo (2026-07-04): UTIL=0.85 MAXLEN=4096
+                           # MAXSEQS=8 CAPSIZES=1,2,4,8 -> 38.7 t/s c1. UTIL=0.88 loads +
+                           # captures but OOMs (err 40) on the FIRST 2048-token prefill --
+                           # do not raise UTIL past 0.85 on this 24.1GiB-resident serve.
 GRAPH_ARGS=( --enforce-eager )
 GRAPH_ENV=( )
 if [ "$GRAPH" = 1 ]; then
-  GRAPH_ARGS=( --compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":$IGP}" )
+  CAP=""; [ -n "$CAPSIZES" ] && CAP="\"cudagraph_capture_sizes\":[$CAPSIZES],"
+  GRAPH_ARGS=( --compilation-config "{${CAP}\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":$IGP}" )
   GRAPH_ENV=( -e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e VLLM_USE_AOT_COMPILE=0 )
   SERVED="${SERVED}-graph"
 fi

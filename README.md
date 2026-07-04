@@ -45,7 +45,7 @@ is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
 | qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 2224 | 921 ms | 15.3 | 4.5 | 29.8k tok |
 | qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 2062 | 993 ms | 27.3 | 27.7\* | 145k tok |
 | qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | **3786** | **541 ms** | **25.6** | 5.8 | 182k tok |
-| qwen3.6-27b | NVFP4 (nvfp4_gemm_w4a16, f4_e2m1, PIECEWISE)\*\*\* | 24 | 1 | 1886 | 1086 ms | 25.1 | 17.9 | 30.7k tok |
+| qwen3.6-27b | **NVFP4** (nvfp4_gemm_w4a16, PIECEWISE + MTP)\*\*\* | 24 | 1 | 1702 | 1203 ms | **38.7** | 27.0 | 8.5k tok |
 | qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | **7529** | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,
@@ -61,10 +61,12 @@ degradation), and unlike vLLM it stays coherent under sustained concurrent load.
 `nvidia/Qwen3.6-27B-NVFP4` ModelOpt MIXED_PRECISION checkpoint (W4A16_NVFP4 MLP + FP8 attention) running
 on a device with *zero* Intel NVFP4 support, via our custom `nvfp4_gemm_w4a16` oneDNN op (weights stay
 4-bit/f4_e2m1 resident -> **24 GB, fits ONE card**, where the int8 repack is 31 GB and does not). Op is
-bit-exact (rel-err 3.7e-3 = bf16 scale rounding) and 2.85x bf16 at decode. 25.1 t/s single-stream = M6
-graph capture (2026-07-04): a `register_fake` meta impl for the custom op was the ONLY missing piece ->
-2.97x the 8.47 eager floor (itself 16x the 0.5 t/s emulation). NEXTN MTP is the remaining open decode
-lever. See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
+bit-exact (rel-err 3.7e-3 = bf16 scale rounding) and 2.85x bf16 at decode. **38.7 t/s single-stream =
+the fastest single-card 27B on this box** (M6+M7, 2026-07-04): a `register_fake` meta impl unlocked
+PIECEWISE capture (8.47 -> 25.06), then stock NEXTN MTP stacked on top (-> 38.67; the ckpt carries its
+15 bf16 `mtp.*` tensors natively, zero graft/shim). Ladder: 0.5 emul -> 8.47 eager -> 25.1 capture ->
+38.7 +MTP = 77x emul. Caveats: KV 8.5k tok (c4 @ 2k-in thrashes; c1 is the headline), UTIL=0.85 hard
+ceiling. See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
 
 ## Serve shelf -- vLLM (UN-PAUSED on v0.24.0)
 

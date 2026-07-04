@@ -8119,3 +8119,38 @@ VERDICT: the NVFP4 27B now decodes at 25 t/s on ONE B70 card with vision + FP8 a
 MLP -- in the same league as the best single-card entries (W4A8 hybrid 27.3, int4-graph 23.5) on a
 format Intel has zero support for. register_fake was the entire distance from 8.47 to 25. NEXTN MTP
 (ckpt carries all 15 bf16 mtp.* tensors natively, no graft needed) is the remaining decode lever.
+
+## 2026-07-04 (cont) -- NVFP4 27B M7: NEXTN MTP stacks on capture = 38.67 t/s on ONE card [result]
+
+GOAL: stack the second open decode lever (NEXTN MTP) on the M6 captured serve. The ModelOpt ckpt
+natively carries all 15 bf16 mtp.* tensors and its quantized_layers map EXCLUDES mtp, so the w8a8
+shelf's graft + keep-drafter-bf16 shim should both be unnecessary.
+
+CONFIG: as M6 + MTPTOK=3 (--speculative-config {"method":"mtp","num_speculative_tokens":3}) +
+CAPSIZES=1,2,4,8. vLLM resolved Qwen3_5MTP, built the drafter unquantized, shared embed/lm_head
+with the target. No shim work needed -- the per-layer ModelOpt dispatch did the right thing.
+
+TWO OOM WALLS (both UR err 40, both now documented in serve_nvfp4_27b.sh):
+  (a) With spec decode the default cudagraph_capture_sizes balloon to [1..64]; drafter + 24.1 GiB
+      resident weights OOM at capture. FIX: CAPSIZES=1,2,4,8 (c1 MTP decode = size 1+3; larger
+      concurrent batches fall back to eager). Healthy: graphs 2.32 GiB, KV 8,465 tokens.
+  (b) UTIL=0.88 (for more KV) survives load AND capture, then OOMs on the FIRST 2048-token prefill
+      (short probes pass -- the wall is the prefill activation transient). UTIL=0.85 is the ceiling.
+      Card health re-probed clean after both OOMs (xpu-health OK; graceful engine exits, no wedge).
+
+BENCH (warm IN=2048/OUT=128, card 0, per-stream decode / aggregate-out):
+  M6 GRAPH only:   c1 25.06 / 20.8 . c4 17.88 / 51.1 . TTFT 1086 ms
+  M7 GRAPH+MTP3:   c1 38.67 / 28.5 . c4 27.02 / 41.0 . TTFT 1203 ms (c4 TTFT 7.2 s = KV thrash:
+                   8.5k KV tokens < 4 x 2176; c1 is the headline config)
+  Ladder: emul 0.5 -> eager fused 8.45 -> +capture 25.06 -> +MTP 38.67 = 77x emul, 4.6x eager.
+  Accept (random bench text): per-position 0.73/0.52/0.36, mean accept len 2.1-2.6. Greedy probe
+  outputs byte-identical to M6 (spec decode is output-invariant at temp 0), accept len 4.00 there.
+
+VERDICT: 38.67 t/s single-stream on ONE B70 card -- the fastest single-card 27B config measured on
+this box (beats W4A8 hybrid 27.3 and int4-XPUGraph 23.5), with vision retained, on NVFP4, a format
+with zero Intel support. The whole M6+M7 distance was: one register_fake + one CAPSIZES cap + the
+stock vLLM MTP path. Remaining ideas: MTPTOK sweep (2 vs 3), KV headroom via MAXLEN, gate_concurrent
+grading, longer soak.
+
+REPRODUCE (fresh container, reverted UTIL=0.85 config, c1-only): 41.77 t/s / TPOT 23.94 ms -- the
+M7 number is stable-or-better across serve cycles (38.7-41.8; variance = random-prompt accept rate).

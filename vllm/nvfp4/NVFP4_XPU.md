@@ -168,6 +168,23 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       No IGC/ocloc fusion crash (the custom op is opaque to inductor -- nothing fuses
       into it, unlike the MoE router-mm case).
       serve: MODE=fused GRAPH=1 ./vllm/nvfp4/serve_nvfp4_27b.sh.
+- [x] M7: NEXTN MTP STACKS on the captured serve -- 38.67 t/s single-stream (1.54x
+      over M6's 25.06, 4.6x the eager floor), c4 27.02 t/s/stream. COHERENT (greedy
+      probes byte-identical to M6; MTP is output-invariant at temp 0). NO graft, NO
+      drafter shim needed: the ModelOpt ckpt natively carries the 15 bf16 mtp.* tensors
+      and the quantized_layers map excludes mtp -> vLLM builds the drafter unquantized
+      and shares embed/lm_head with the target (Qwen3_5MTP resolved automatically).
+      Accept on random-prompt bench text: per-position 0.73/0.52/0.36, mean accept len
+      ~2.1-2.6 (spec=3); on structured/thinking text acceptance hit 4.00 (perfect).
+      TWO memory walls found, both documented in the serve script:
+        (a) default spec-decode capture sizes [1..64] + drafter OOM at capture ->
+            CAPSIZES=1,2,4,8 (c1 decode = size 4 = 1+spec; bigger batches run eager);
+        (b) UTIL=0.88 survives load+capture but OOMs (UR err 40) on the FIRST
+            2048-token prefill -> UTIL=0.85 is the ceiling. KV = 8.5k tokens, so c4
+            @ IN=2048 thrashes (TTFT ~7 s); c1 is the headline config.
+      serve: MODE=fused GRAPH=1 MTPTOK=3 CAPSIZES=1,2,4,8 ./vllm/nvfp4/serve_nvfp4_27b.sh.
+      38.67 t/s BEATS every single-card entry in the README table (W4A8 27.3,
+      int4-graph 23.5) -- on the format Intel has zero support for.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 
