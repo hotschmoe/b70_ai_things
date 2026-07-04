@@ -29,6 +29,7 @@ IMG="${IMG:-vllm-xpu-env:int8g-v0240}"
 NAME="${NAME:-nvfp4_27b}"
 PORT="${PORT:-8078}"
 CARD="${CARD:-0}"
+TP="${TP:-1}"              # TP=2 -> both cards, oneCCL multicard env (lib.sh recipe), 2x KV pool.
 MODE="${MODE:-emul}"
 MAXLEN="${MAXLEN:-2048}"
 UTIL="${UTIL:-0.92}"
@@ -96,20 +97,35 @@ fi
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
+# card/multicard env: TP=1 pins one card; TP=2 drives both through CPU-staged oneCCL
+# (Battlemage stability set from rdy_to_serve/_common/lib.sh: no Arc P2P, OFI transport,
+# spawn workers, LZ v1 adapter; CCL_ENABLE_SYCL_KERNELS=1 when capturing).
+TP_ARGS=( )
+if [ "$TP" = 1 ]; then
+  MGPU=( -e ZE_AFFINITY_MASK="$CARD" ); SHM=16g
+else
+  SK=$([ "$GRAPH" = 1 ] && echo 1 || echo 0)
+  MGPU=( -e CCL_ENABLE_SYCL_KERNELS="$SK" -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0
+         -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi
+         -e CCL_TOPO_P2P_ACCESS="${P2PACCESS:-0}" -e CCL_ZE_IPC_EXCHANGE="${IPCX:-pidfd}" )
+  SHM=32g
+  TP_ARGS=( -tp "$TP" )
+fi
+
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
-  --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
+  --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$DIR/patches:/opt/nvfp4_shim:ro" \
   "${KERN_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
-  -e ZE_AFFINITY_MASK="$CARD" "${GRAPH_ENV[@]}" \
+  "${MGPU[@]}" "${GRAPH_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" \
-  "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
+  "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up; follow with: docker logs -f $NAME"
 echo "health: curl -s http://localhost:$PORT/health"

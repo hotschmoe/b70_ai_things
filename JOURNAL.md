@@ -8284,3 +8284,45 @@ VERDICT: same-stack int4 A/B DEFERRED to a proper int4-on-v0.24.0 port (known pa
 int4 + MoE-port lessons; a focused session). The NVFP4-vs-int4 comparison stands on the recorded
 0.963/0.927 with the stack-caveat honesty note in SUMMARY.md. Both invalid result dirs kept for
 forensics (...__int4-v0230-graph-samestack, ...__int4-v0230-eager-ab). Card 1 released.
+
+## 2026-07-04 -- 128K CONTEXT: NVFP4 27B TP=2 serves 131,072 ctx, needle PASS at 115K [result]
+
+GOAL (user): understand why the NVFP4 champion's KV is so low, evaluate fp8-vs-fp4 KV + TP=2/PP=2
+for the 128K-context target, and check whether an official NVFP4 Qwen3.6-35B MoE exists.
+
+WHY KV IS LOW (measured + verified against logs):
+  - Single card: 24.11 GiB weights + ~1 GiB drafter + 2.3-2.8 GiB graphs inside the UTIL=0.85
+    budget (27.1 GiB) -> only ~1.65 GiB KV pool.
+  - The hybrid page unification quadruples per-token cost: vLLM v0.24 sets attention block = 1664
+    tokens so attention page == mamba page (3.25 MB, log line "Setting attention block size to
+    1664"), and the unified allocator charges pages across ALL 64 layers (48 GDN + 16 attn), not
+    just the 16 attention layers (32 KB/token fp8). Result: 10.7k tokens where naive attn math
+    says ~50k. MAXSEQS does NOT grow the pool (Test A: MAXSEQS=2 MAXLEN=32768 -> ValueError, one
+    32k request needs 2.05 GiB > 1.65; est. single-card max = 19,968 tokens).
+
+RESEARCH (2 agents, full citations in transcript):
+  - NVFP4 KV cache EXISTS officially (NVIDIA blog 2025-12-08, ModelOpt NVFP4_KV_CFG, dequant-to-
+    FP8-attention, RULER-64K <1% loss) but kernels are Blackwell/trtllm-gen ONLY; vLLM mainline
+    added --kv-cache-dtype nvfp4 gated on SM100/103 CUDA. NOTHING for XPU -> fp8_e4m3 (which we
+    already run, from the ckpt's own FP8 KV scales) is the XPU ceiling.
+  - 4-bit KV literature (KIVI/KVQuant/QServe): viable only with per-channel K + calibration; and
+    for THIS hybrid it is a SMALL lever anyway -- 16 attn layers = 32 KiB/token means a 128K seq
+    costs just 4 GiB at fp8; fp4 would save 2 GiB/seq. Do not quantize GDN state below 8-bit
+    (Quamba/Quamba2). VERDICT: TP=2 >> fp4-KV for the 128K goal.
+  - OFFICIAL 35B MoE NVFP4 EXISTS: nvidia/Qwen3.6-35B-A3B-NVFP4 (public, 21.82 GiB, MIXED_
+    PRECISION: 256 experts W4A16_NVFP4 g16 + FP8 attn/GDN + FP8 KV + bf16 vision(333)/router/mtp
+    (19 tensors)). DOWNLOADED to models/files/qwen3.6-35b-a3b/nvfp4-modelopt/. Single-card-sized.
+
+TP=2 TEST (serve_nvfp4_27b.sh grew TP/MGPU knobs; lib.sh Battlemage multicard env; codex reviewed
+the op sharding -- gate/up N-split and down K-split both land on clean nibble+group-16 boundaries
+for these shapes, K/tp=8704):
+  - MODE=fused GRAPH=1 TP=2 MAXLEN=131072 MAXSEQS=4 UTIL=0.85: HEALTHY. Weights 12.2 GiB/rank
+    (custom op sharded correctly), KV 902,083 tokens = 6.88x concurrency at FULL 128K. Captured.
+  - COHERENT probes; NEEDLE at 115,254 tokens: exact retrieval ("73214-ZEBRA"), e2e 3m28s
+    (prefill ~575 t/s at that depth); decode at 60K depth = 21.4 t/s; c1 (2k ctx) 21.6 t/s
+    (no MTP in this config; TP=2 collectives cost vs single-card 25).
+  - STABILITY CAVEAT: one crash -- after the long-ctx tests, a routine c1 decode hit "RPC call to
+    sample_tokens timed out" (TP worker hang) and the engine exited cleanly; cards HEALTHY after
+    (no wedge). This bare-oneCCL config lacks the push-AR overlay the w8a8 TP=2 shelf uses.
+    Reproducibility retry running. Hardening candidates: push-AR overlay, CCL_ENABLE_SYCL_KERNELS
+    A/B, MTP-on-TP2 (SPLITOPS dance) which also hides collective latency.
