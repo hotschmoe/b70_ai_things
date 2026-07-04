@@ -3,15 +3,18 @@
 Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Intel Arc Pro B70
 (Battlemage, `xpu`). The headline: custom **fused INT8 W8A8** kernels make 8-bit weights beat
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
-accuracy loss. **The daily driver is vLLM v0.24.0 W8A8 + NEXTN MTP** (spec=3, full 253952/248K context): the
-concurrent `!!!!` garbage is fixed on v0.24.0, and MTP is the robust, production-proven config -- coherent under
-concurrent load and stable across context depth (accept_len ~2.9 flat 4K->100K). **DFlash speculative decoding
-was evaluated as the DD (2026-07-03) and is NOT production-ready yet:** its all-sliding-drafter variant has the
-best accept-at-depth (holds 3.6 at 100K, +20% decode vs MTP at 40K, full context) but crashed under concurrent
-bench load (a TP-worker `shm_broadcast cancelled` engine death) and can soft-poison to `!!!!` on a cancelled
-deep-prefill request; the stock full drafter is fast at shallow context but collapses past ~8K. DFlash stays a
-one-flag research option (`DFLASH=1`, `DFSWA=1|0`) pending a stability fix. sglang is the maintained fallback.
-See the vLLM table + `vllm/DFLASH_XPU.md` + `JOURNAL.md` 2026-07-03.
+accuracy loss. **The daily driver is vLLM v0.24.0 W8A8 + DFlash all-sliding speculative decoding** (`DFLASH=1
+DFSWA=1`, spec=8, full 253952/248K context): +26% over the MTP config on coding/agentic work (35.2 t/s vs 27.8,
+accept_len 3.24) and it holds accept at depth (3.6 at 100K, +20% decode vs MTP at 40K) with full context. The
+TP-worker `shm_broadcast cancelled` crash that blocked DFlash was ROOT-CAUSED + FIXED 2026-07-03 (session 4):
+DFlash is in vLLM's `EagleModelTypes` so async scheduling auto-enabled, but only DFlash's
+`precompute_and_store_context_kv` writes context K/V by slot_mapping every draft pass -- under async scheduling a
+cancelled request leaves a stale slot_mapping -> a freed-block write -> the rare hard fault (or the soft `!!!!`
+poison). Forcing `--no-async-scheduling` on the DFlash path (now baked into the shelf) removes the race by
+construction at ~zero perf cost. Validated: 7-min concurrent cancellation soak clean, `gate_concurrent_coherence`
+18/18. **MTP is the robust one-flag fallback** (`DFLASH=0`): accept_len ~2.9 flat 4K->100K, 12h+ proven; prefer
+it for general-chat-dominated workloads (DFlash accept ~0% on non-coding prose). sglang is the maintained
+backend fallback. See the vLLM table + `vllm/DFLASH_XPU.md` + `JOURNAL.md` 2026-07-03 (session 4).
 
 ## What we built (the load-bearing custom work)
 
