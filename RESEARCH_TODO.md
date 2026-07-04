@@ -415,6 +415,27 @@ See also: memory `xpu-serve-limits-fp8kv-and-radix`, JOURNAL 2026-06-29 (RADIX k
 
 ---
 
+## Track 11 -- NVFP4 follow-ups  [NEW 2026-07-04, after the M6-M9 champion session]
+
+The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 (HumanEval+
+0.988/0.945) AND fastest single-card serve (40.7-44.1 t/s, 67 on code). Open items, ranked:
+
+- [ ] **11a. int4-on-v0.24.0 port + the same-stack A/B.** The honest NVFP4-vs-int4 comparison is
+      blocked: v0230 int4 on card 1 soft-poisons ("!!!!") in BOTH captured and eager modes
+      (JOURNAL 2026-07-04 NEG x2). Port the dense int4 entry to v0.24.0 (in-tree INC int4, reuse
+      the MoE-port lessons: ARK gate + fusion knobs), re-eval HumanEval+ on the same stack.
+- [ ] **11b. v0230-on-kernel-7.1 revalidation.** All v0230 images predate the 2026-07-02 kernel
+      7.1/ICR 26.22 upgrade; the card-1 poisoning may be a v0230-on-7.1 incompatibility. Cheap
+      test: the same int4 eval on CARD 0 v0230 eager; if it also poisons, v0230 rows are stale.
+- [ ] **11c. NVFP4 KV headroom.** 10.7k tokens is the champion's only real weakness. Levers:
+      NOMM=1 text-only variant (frees the vision tower for pure-code serving), weight-side savings
+      (drop MTP tensors when MTPTOK=0), TP=2 NVFP4 (doubles KV + prefill; op is per-shard clean).
+- [ ] **11d. Upstream the register_fake pattern.** One `torch.library.register_fake` per custom
+      _xpu_C op is the whole distance between eager-only and PIECEWISE-capturable on XPU. Fold
+      into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.
+- [ ] **11e. Harder evals on the champion** (agentic code, long-context) before promoting it past
+      "quality pick" toward daily-driver conversations (it lacks KV for that today; see 11c).
+
 ## Execution order (the 3-5 items to actually run, deduped)
 
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
