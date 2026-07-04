@@ -13,8 +13,11 @@
 #   MTPTOK=5     NEXTN MTP, sweep winner (spec3 58 code / spec5 67 / spec7 63)
 #   CAPSIZES=1,2,4,8  REQUIRED with MTP (default spec sizes [1..64] OOM at capture)
 #   UTIL=0.85    HARD ceiling -- 0.88 loads+captures then OOMs on the first 2048-tok prefill
-# CAVEATS: KV only ~8.5k tokens (24.1 GiB weights + drafter + graphs on a 31.9 GiB card) ->
+# CAVEATS: KV only ~10.7k tokens (24.1 GiB weights + drafter + graphs on a 31.9 GiB card) ->
 # concurrent long-prefill streams serialize; this entry is the QUALITY + single-stream pick.
+# MAXLEN=8192 sweep-gated 2026-07-04: c1 40.57 (== 4096's 40.7), gate 18/18, 6.2k-token
+# prefill clean, KV 10,685 tok (grew vs 8.5k @ 4096). The UTIL=0.88 OOM was the util ceiling,
+# NOT context length (chunked prefill bounds the transient) -- do not fear MAXLEN, fear UTIL.
 # Kernel .so: /mnt/vm_8tb/b70/nvfp4_fused_kernel_gdn/ (build: vllm/nvfp4/NVFP4_KERNEL_BUILD.md).
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,6 +31,6 @@ if [ "${1:-}" = stop ]; then
 fi
 
 MODE=fused GRAPH=1 MTPTOK="${MTPTOK:-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \
-CARD="${CARD:-0}" PORT="${PORT:-8078}" MAXLEN="${MAXLEN:-4096}" UTIL="${UTIL:-0.85}" \
+CARD="${CARD:-0}" PORT="${PORT:-8078}" MAXLEN="${MAXLEN:-8192}" UTIL="${UTIL:-0.85}" \
 MAXSEQS="${MAXSEQS:-8}" NAME="$NAME" \
   bash "$REPO/vllm/nvfp4/serve_nvfp4_27b.sh"

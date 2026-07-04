@@ -45,7 +45,7 @@ is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
 | qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 2224 | 921 ms | 15.3 | 4.5 | 29.8k tok |
 | qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 2062 | 993 ms | 27.3 | 27.7\* | 145k tok |
 | qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | **3786** | **541 ms** | **25.6** | 5.8 | 182k tok |
-| qwen3.6-27b | **NVFP4** (nvfp4_gemm_w4a16, PIECEWISE + MTP5)\*\*\* | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 8.5k tok |
+| qwen3.6-27b | **NVFP4** (nvfp4_gemm_w4a16, PIECEWISE + MTP5)\*\*\* | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 10.7k tok |
 | qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | **7529** | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,
@@ -92,7 +92,7 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 
 | Model | Quant | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
-| qwen3.6-27b | **NVFP4 ModelOpt (nvfp4_gemm_w4a16 + MTP5) -- v0.24.0, QUALITY #1**¶ | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 8.5k tok |
+| qwen3.6-27b | **NVFP4 ModelOpt (nvfp4_gemm_w4a16 + MTP5) -- v0.24.0, QUALITY #1**¶ | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 10.7k tok |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
@@ -110,7 +110,7 @@ custom `nvfp4_gemm_w4a16` oneDNN op (4-bit f4_e2m1 resident) + PIECEWISE capture
 `register_fake`) + stock NEXTN MTP spec=5 (sweep winner; ~99% accept on code -> **67 t/s coding
 decode**). HumanEval+ **0.988/0.945** (leaderboard #1, beats int4-AutoRound 0.963/0.927), gsm8k 96%
 (48/50), gate 18/18, vision verified under capture+MTP. Shelf entry `rdy_to_serve/vllm/qwen36-27b-nvfp4/`
-(wrapper over `vllm/nvfp4/serve_nvfp4_27b.sh`). Caveat: KV ~8.5k tok -> the QUALITY/single-stream pick,
+(wrapper over `vllm/nvfp4/serve_nvfp4_27b.sh`). Caveat: KV ~10.7k tok @ MAXLEN=8192 -> the QUALITY/single-stream pick,
 not the concurrency pick; UTIL=0.85 + CAPSIZES=1,2,4,8 are hard limits (OOM above).
 
 † **Both 35B-A3B MoE rows re-benched on vLLM v0.24.0 (torch 2.12), 2026-07-04** (JOURNAL). Ported off the old

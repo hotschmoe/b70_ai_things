@@ -8255,3 +8255,14 @@ garbage forensics only).
 VERDICT: the v0230-captured A/B is unrunnable. Rerunning the A/B EAGER (GRAPH=0) on card 1 -- the
 exact methodology of the recorded 0.963/0.927 -- to validate today's checkpoint+harness against the
 NVFP4 0.988/0.945. (A true v0.24.0-int4 port A/B stays future work.)
+
+## 2026-07-04 (cont) -- NVFP4 shelf: MAXLEN=8192 sweep-gated in (KV grew to 10.7k) [result]
+
+CONFIG: shelf wrapper relaunched at MAXLEN=8192 (was 4096), UTIL=0.85 unchanged, card 0.
+RESULT: healthy; KV cache GREW 8,465 -> 10,685 tokens (v0.24.0 profiling reserves less at the
+  longer len); a real 6,231-token prefill + coherent decode PASSED (the transient that killed
+  UTIL=0.88 is bounded by chunked prefill, NOT by context length); c1 bench 40.57 t/s == the
+  4096 config's 40.7 (noise); gate_concurrent 18/18 PASS.
+VERDICT: MAXLEN=8192 is measured faster-or-equal AND coherent -> landed as the shelf default
+  per the shelf rules. Lesson: on this serve do not fear MAXLEN, fear UTIL. README KV cells
+  updated to 10.7k.
