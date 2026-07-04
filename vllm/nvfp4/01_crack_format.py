@@ -69,7 +69,8 @@ def dequant(name: str, f) -> np.ndarray:
     return w.reshape(N, K)
 
 
-with safe_open(MODEL, "numpy") as f:
+if __name__ == "__main__":
+ with safe_open(MODEL, "numpy") as f:
     names = sorted(f.keys())
     print(f"{len(names)} tensors in shard 1")
     # Schema of layer 0
