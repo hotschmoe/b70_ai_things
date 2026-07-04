@@ -45,6 +45,7 @@ is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
 | qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 2224 | 921 ms | 15.3 | 4.5 | 29.8k tok |
 | qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 2062 | 993 ms | 27.3 | 27.7\* | 145k tok |
 | qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | **3786** | **541 ms** | **25.6** | 5.8 | 182k tok |
+| qwen3.6-27b | NVFP4 (nvfp4_gemm_w4a16, f4_e2m1)\*\*\* | 24 | 1 | 1648 | 1236 ms | 8.47 | 7.57 | 30.7k tok |
 | qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | **7529** | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,
@@ -55,6 +56,14 @@ so per-stream decode holds ~27.7 t/s but TTFT balloons to ~8.1 s. Best for singl
 best of any 35B entry** (int8-XMX prefill). Decode is eager-slow (~8 t/s single / agg 23.9 t/s at c4) --
 graph capture / NEXTN MTP / fused int8 dense are the open decode levers. Soak: clean + stable (no
 degradation), and unlike vLLM it stays coherent under sustained concurrent load.
+
+\*\*\* **NVFP4 row = vLLM experiment, not a shelf entry** (`vllm/nvfp4/`, enforce-eager). The ACTUAL
+`nvidia/Qwen3.6-27B-NVFP4` ModelOpt MIXED_PRECISION checkpoint (W4A16_NVFP4 MLP + FP8 attention) running
+on a device with *zero* Intel NVFP4 support, via our custom `nvfp4_gemm_w4a16` oneDNN op (weights stay
+4-bit/f4_e2m1 resident -> **24 GB, fits ONE card**, where the int8 repack is 31 GB and does not). Op is
+bit-exact (rel-err 3.7e-3 = bf16 scale rounding) and 2.85x bf16 at decode. The 8.47 t/s is the EAGER floor
+(no NEXTN MTP, no graph capture -- the open decode levers, same as the 35B MoE row) but is already 16x the
+0.5 t/s per-forward-dequant emulation. See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
 
 ## Serve shelf -- vLLM (UN-PAUSED on v0.24.0)
 

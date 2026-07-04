@@ -43,10 +43,13 @@ GDN_LIB="${GDN_LIB:-$ROOT/w8a8_kernel_v0240/libgdn_attn_kernels_xe_2.so}"
 [ -f "$GDN_SO" ] || { echo "MISSING GDN .so $GDN_SO"; exit 1; }
 KERN_MOUNTS=( -v "$GDN_SO:$PKGD/_xpu_C.abi3.so:ro" -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
 
-# fused mode swaps in the custom NVFP4 4-bit kernel .so (once built) over the GDN one.
+# fused mode: the GDN-ON .so carrying the custom nvfp4_gemm_w4a16 op (bit-exact NVFP4
+# weight-decompression matmul: weights stay 4-bit/f4_e2m1 resident, dequant in the
+# oneDNN JIT gemm -> 2.85x bf16 at decode). Same source tree as the GDN kernel, so it
+# has BOTH gdn_attention_core AND nvfp4_gemm_w4a16. GDN_LIB sidecar from w8a8_kernel_v0240.
 if [ "$MODE" = fused ]; then
-  FUSED_SO="${FUSED_SO:-$ROOT/nvfp4_fused_kernel/_xpu_C.abi3.so}"
-  [ -f "$FUSED_SO" ] || { echo "MISSING fused kernel $FUSED_SO -- build it first"; exit 1; }
+  FUSED_SO="${FUSED_SO:-$ROOT/nvfp4_fused_kernel_gdn/_xpu_C.abi3.so}"
+  [ -f "$FUSED_SO" ] || { echo "MISSING fused GDN kernel $FUSED_SO -- run the GDN-ON build first"; exit 1; }
   KERN_MOUNTS=( -v "$FUSED_SO:$PKGD/_xpu_C.abi3.so:ro" -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
 fi
 

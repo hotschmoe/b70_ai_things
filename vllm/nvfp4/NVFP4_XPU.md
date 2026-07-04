@@ -136,8 +136,24 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       with <think>; correct Rayleigh sky-is-blue. Speed 0.46-0.53 tok/s -- the
       honest emul floor (full-weight per-forward dequant). Fits one card, proves
       correctness; too slow to serve. serve = vllm/nvfp4/serve_nvfp4_27b.sh.
-- [ ] M5: fused E2M1 4-bit-in-VRAM dequant kernel -> fast single-card 27B serve at
-      the 22GB footprint. The real deliverable (kernel prototyped card 1).
+- [x] M5a: nvfp4_gemm_w4a16 oneDNN op BUILT + BIT-EXACT + FAST. A custom
+      weight-decompression matmul (weights stay 4-bit/f4_e2m1 resident, dequant in the
+      oneDNN JIT gemm, bf16 activations, per-16-K bf16 group scale, no zero-point).
+      Ported from int4_gemm_w4a16.h: new joint_dtypes_t::bf16_f4e2m1 (bf16 src, f4_e2m1
+      weight) + nvfp4_gemm_w4a16.h + torch binding. codex-reviewed. Validated on a real
+      27B gate_proj (N=17408 K=5120): rel-err 3.7e-3 vs the E2M1 reference (= bf16 scale
+      rounding, exact), and 2.82-2.85x faster than bf16 F.linear at M=1/M=8 decode
+      (0.109ms, 407 GB/s on 4-bit weight bytes). Source in kernels/nvfp4_gemm_w4a16.h.
+      Forward: torch.ops._xpu_C.nvfp4_gemm_w4a16(x_bf16[M,K], w_f4e2m1[K/2,N] NT-view,
+      bias?, scale_bf16[K/16,N], group_size=16). Weight is [N,K/2] uint8 -> .t() NT view.
+- [x] M5b: SERVES MODE=fused on 1x B70 (GDN-ON .so with BOTH gdn_attention_core AND
+      nvfp4_gemm_w4a16 + shim fused path). COHERENT: Paris; 17+26 step-by-step; Rayleigh
+      sky. Weights 24.1 GiB (4-bit resident, fits the 31.9 GiB card), KV 30.7k tokens.
+      Warm IN=2048/OUT=128: single-stream TG 8.47 t/s (PP 1648 tok/s, TTFT 1236 ms),
+      c4 7.57 t/s/stream (agg 30.3). That is 16x the 0.5 tok/s emul at the SAME 4-bit
+      footprint. 8.47 is the EAGER floor -- no NEXTN MTP, no graph capture (the open
+      decode levers, same caveat as the other eager entries); the OP itself is 2.85x bf16.
+      serve: MODE=fused ./vllm/nvfp4/serve_nvfp4_27b.sh. Build: NVFP4_KERNEL_BUILD.md.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 
@@ -149,8 +165,16 @@ floor at int8. AND it would not help decode anyway (M=1 is weight-bandwidth boun
 is BYTES READ: keep weights 4-bit in VRAM, dequant in registers. NVFP4 also cannot
 reuse oneDNN's s4 path: E2M1 is a 4-bit FLOAT LUT, not two's-complement int4, and
 the E2M1*2 int trick's +-12 overflows s4's [-8,7]. So a custom E2M1 LUT kernel is
-mandatory. Native int4 DPAS (route a) = confirmed deadend; fused 4-bit-in-VRAM
-(route b) = the decode win; int8-XMX repack (route c) = prefill/dense-8B only.
+mandatory. fused 4-bit-in-VRAM (route b) = the decode win (what nvfp4_gemm_w4a16
+delivers); int8-XMX repack (route c) = prefill/dense-8B only.
+
+UPDATE (INT4_DPAS_PIONEER.md): "no SW stack exposes int4 DPAS" is true for the PORTABLE
+APIs (oneDNN/joint_matrix/Triton all floor at int8) but was REFUTED for hand-written SYCL
+ESIMD -- `dpas<s4,s4>` compiles, emits a native `dpas.s4.s4` encoding (disasm-proven),
+validates 0/128, and runs 2.0x the int8 MAC rate. So native int4 DPAS (route a) IS reachable
+on Xe2 -- but it is a PREFILL / true-W4A4 lever (decode is bandwidth-bound), and NVFP4's E2M1
+float codes can't feed a two's-complement s4 path, so it does not accelerate THIS decode-bound
+W4A16 serve. It is a future-kernel unlock, not a route-a win for NVFP4.
 
 ## Status log
 
@@ -163,3 +187,8 @@ mandatory. Native int4 DPAS (route a) = confirmed deadend; fused 4-bit-in-VRAM
   prototyping (card 1). 27B serve prep on card 0.
 - 2026-07-04 07:3x M4: MIXED_PRECISION loads on XPU; W4A16 Marlin blocker fixed;
   exact sizing confirms int8xmx-on-27B is a deadend (31GB); emul serve on card 0.
+- 2026-07-04 08:0x-08:2x M5: built nvfp4_gemm_w4a16 (oneDNN f4_e2m1 weight-decompress,
+  new bf16_f4e2m1 joint dtype, no zp), codex-reviewed, bit-exact (3.7e-3) + 2.85x bf16.
+  GDN-ON .so (both gdn + nvfp4 op) -> MODE=fused SERVES coherently 1x B70 @ 8.47 t/s
+  (16x emul), 24.1GiB 4-bit resident. Native int4 DPAS separately PROVEN via ESIMD
+  (2x int8, INT4_DPAS_PIONEER.md). README perf table row added.

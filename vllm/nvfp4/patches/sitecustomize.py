@@ -113,9 +113,14 @@ try:
         _kern = [XPUDequantAtLoadNvFp4LinearKernel]
     elif _MODE == "int8xmx":
         _kern = [XPUInt8XmxNvFp4LinearKernel]
+    elif _MODE == "fused":
+        # 27B MLP is W4A16_NVFP4 (handled by the W4A16 fused path below); this
+        # registry entry only fires for any W4A4 layer (none in this ckpt) --
+        # keep a coherent emul fallback so it never crashes.
+        _kern = [EmulationNvFp4LinearKernel]
     else:
         raise ValueError(
-            f"NVFP4_XPU_MODE={_MODE!r} not in (emul, dequant, int8xmx)"
+            f"NVFP4_XPU_MODE={_MODE!r} not in (emul, dequant, int8xmx, fused)"
         )
 
     _linmod._POSSIBLE_NVFP4_KERNELS[PlatformEnum.XPU] = _kern
@@ -160,8 +165,22 @@ try:
             layer._wscale = (layer.weight_scale.data.to(torch.float32) * g).to(
                 torch.bfloat16
             )
+            if _MODE == "fused":
+                # weights stay 4-bit resident; prep the [K/16, N] bf16 scale in the
+                # op's NT layout ONCE. The weight NT view is free at apply time
+                # (layer.weight is [N, K/2] uint8 -> .t() = [K/2, N] strides [1,K/2]).
+                import vllm_xpu_kernels._xpu_C  # noqa: F401 (registers the op)
+                layer._wscale_nt = layer._wscale.t().contiguous()   # [K/16, N] bf16
 
         def apply_weights(self, layer, x, bias=None):
+            if _MODE == "fused":
+                # bit-exact NVFP4 weight-decompression matmul on INT4/f4_e2m1 XMX
+                # path: weights read at 4-bit, dequant in the oneDNN JIT gemm.
+                x2 = x.reshape(-1, x.shape[-1]).to(torch.bfloat16)
+                y = torch.ops._xpu_C.nvfp4_gemm_w4a16(
+                    x2, layer.weight.data.t(), bias, layer._wscale_nt, layer._gs
+                )
+                return y.reshape(*x.shape[:-1], layer.weight.shape[0])
             wp = layer.weight.data          # [N, K/2] uint8
             N, Kh = wp.shape
             K = Kh * 2
