@@ -286,3 +286,85 @@ try:
     )
 except Exception as e:  # never break unrelated python processes in the container
     print(f"[nvfp4-shim] FAILED: {e!r}", file=sys.stderr, flush=True)
+
+
+# ---- (3) capture-safe all_gather for MTP-on-TP2 (ported from the w8a8 shelf) ----------------------
+# Root cause: the MTP spec-verify path calls vllm::all_gather, and oneCCL 2021.17's allgather scheduler
+# has NO SYCL-graph-recordable impl -> if left captured it CRASHES capture; if ejected to eager it
+# breaks vLLM's captured-piece input-address contract -> stale-read garbage at the boundary. Fix:
+# reimplement all_gather as an ALL-REDUCE of a padded buffer (dist.all_reduce DOES record under
+# CCL_ENABLE_SYCL_KERNELS=1). Then all_gather is recordable -> keep ALL collectives captured (eject
+# nothing) -> coherent AND fully captured. Cost world_size x bytes (TP=2 = 2x), which MTP amortizes.
+# SELF-CONTAINED + env-gated + world_size==1 no-op, so this is byte-identical on the single-card path.
+# Toggle off with CSAG_DISABLE=1 to A/B test.
+if os.environ.get("CSAG_DISABLE", "0") != "1":
+    try:
+        import torch
+        import torch.distributed as dist
+        from vllm.distributed.device_communicators.xpu_communicator import XpuCommunicator
+
+        def _all_gather_via_allreduce(self, input_: torch.Tensor, dim: int = -1) -> torch.Tensor:
+            if self.world_size == 1:
+                return input_
+            if dim < 0:
+                dim += input_.dim()
+            input_ = input_.contiguous()
+            input_size = tuple(input_.size())
+            # buf[r] holds rank r's input; everyone else's slot is zero -> all_reduce(sum) fills all slots.
+            buf = torch.zeros((self.world_size,) + input_size, dtype=input_.dtype, device=input_.device)
+            buf[self.rank_in_group] = input_
+            dist.all_reduce(buf, group=self.device_group)            # RECORDABLE (CCL sycl kernels)
+            # concat-style along `dim`, matching base_device_communicator.all_gather exactly
+            out = buf.movedim(0, dim).reshape(
+                input_size[:dim] + (self.world_size * input_size[dim],) + input_size[dim + 1:]
+            )
+            return out
+
+        XpuCommunicator.all_gather = _all_gather_via_allreduce
+        print("[nvfp4-shim] (3) XpuCommunicator.all_gather -> capture-safe all-reduce-of-padded (MTP-on-TP2)",
+              file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (3) all_gather patch failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (4) Tier F (EXPERIMENTAL, default OFF): bound the PIECEWISE graph command-stream accumulation ---
+# The XPU graph REPLAY appends to a Level-Zero command list that is never reset, overflowing NEO after
+# ~5000 replays (the W8A8-27B MTP crash). Recapture the whole graph set every N decode steps so the
+# command buffer stays bounded. OFF unless B70_XPU_CG_RECYCLE_STEPS>0 (default byte-identical).
+_RECYCLE_N = int(os.environ.get("B70_XPU_CG_RECYCLE_STEPS", "0") or "0")
+if _RECYCLE_N > 0:
+    try:
+        import torch
+        from vllm.compilation.cuda_graph import CUDAGraphWrapper
+        _orig_cgw_call = CUDAGraphWrapper.__call__
+        _cg = {"n": 0, "root": None, "recaptures": 0}
+
+        def _recycling_call(self, *args, **kwargs):
+            try:
+                mode = getattr(getattr(self, "runtime_mode", None), "name", None)
+                if mode == "PIECEWISE":
+                    if _cg["root"] is None:
+                        _cg["root"] = id(self)
+                    if id(self) == _cg["root"]:          # ~once per decode step
+                        _cg["n"] += 1
+                        if _cg["n"] >= _RECYCLE_N:
+                            _cg["n"] = 0
+                            if hasattr(torch, "xpu"):
+                                torch.xpu.synchronize()
+                            cleared = False
+                            if hasattr(CUDAGraphWrapper, "clear_all_graphs"):
+                                CUDAGraphWrapper.clear_all_graphs(); cleared = True
+                            elif hasattr(self, "clear_graphs"):
+                                self.clear_graphs(); cleared = True
+                            _cg["recaptures"] += 1
+                            print(f"[cg-recycle] recapture #{_cg['recaptures']} after {_RECYCLE_N} steps "
+                                  f"(clear_all={cleared})", file=sys.stderr, flush=True)
+            except Exception as e:
+                print("[cg-recycle] step error:", repr(e), file=sys.stderr, flush=True)
+            return _orig_cgw_call(self, *args, **kwargs)
+
+        CUDAGraphWrapper.__call__ = _recycling_call
+        print(f"[cg-recycle] (4) Tier F ENABLED: recapture PIECEWISE graphs every {_RECYCLE_N} decode steps",
+              file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[cg-recycle] (4) setup failed:", repr(e), file=sys.stderr, flush=True)

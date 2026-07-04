@@ -8331,3 +8331,64 @@ ADDENDUM (TP=2 retry): fresh serve cycle ran the FULL suite clean -- c1 24.07 t/
 gate_concurrent 18/18 PASS. The sample_tokens RPC hang did NOT reproduce -> classified transient
 (one-off oneCCL stall after heavy long-ctx churn), not deterministic. TP=2 128K config stands;
 push-AR overlay + MTP-on-TP2 remain the hardening/perf follow-ups (Track 11).
+
+## 2026-07-04 -- MTP-on-TP2 NVFP4 27B: single-stream 52-58 t/s WITH the TP=2 KV pool [result]
+
+GOAL (user): keep NVFP4 single-card decode speed (~40 t/s) BUT get >=128K ctx per stream. Two levers:
+optimize single card (no path found last session) or span TP=2 for the extra VRAM -> big KV pool. The
+TP=2 128K serve already gives 902k KV tokens but lost single-stream speed to collective latency (24 vs
+40). This session closed that gap by porting MTP-on-TP2 (Track 11c REMAINING), which hides the collective
+latency behind the spec-verify batch.
+
+WHAT WAS PORTED (2 edits + 1 XPU bug fix):
+  1. vllm/nvfp4/patches/sitecustomize.py block (3): capture-safe all_gather = all-reduce-of-a-padded-buffer
+     (ported from the w8a8 shelf). oneCCL 2021.17 has NO graph-recordable allgather; reimplementing it as
+     dist.all_reduce (which DOES record under CCL_ENABLE_SYCL_KERNELS=1) lets the MTP spec-verify all_gather
+     stay CAPTURED instead of crashing capture or corrupting an ejected boundary. world_size==1 no-op ->
+     single-card path byte-identical. Also added the env-gated cg-recycle block (Tier F, OFF by default).
+  2. serve_nvfp4_27b.sh: add "splitting_ops":[attn/GDN ops] to the compilation-config ONLY when TP>1, so
+     inductor partitions the PIECEWISE graph at the genuine non-capturable ops (eject nothing else).
+  3. XPU BUG FOUND + FIXED: TP>1 capture crashed with `NameError: name 'MLARoPEKVCacheCatFusionPass' is
+     not defined`. Root cause (vllm/compilation/passes/pass_manager.py): that pass is imported only under
+     `is_cuda_alike()` but ADDED whenever pass_config.fuse_rope_kvcache_cat_mla is truthy. Its raw default
+     is None (falsy -> skipped, which is why the single-card path never hit it), but the TP>1 fusion path
+     resolves it True -> references the never-imported name on XPU. Qwen3.6 is not MLA, so the pass is a
+     no-op for it -> serve now injects "pass_config":{"fuse_rope_kvcache_cat_mla":false} on the TP>1 path.
+
+RESULT (MODE=fused GRAPH=1 TP=2 MTPTOK=5 MAXLEN=8192 UTIL=0.85 MAXSEQS=8, card0+1, warm):
+  - c1 single-stream decode: 44.3 (cold, incl prefill) / 58.2 / 52.1 t/s. Warm ~52-58 t/s.
+  - vs baselines: TP=2 NO-MTP = 24.07 (this session's ADDENDUM above); single-card+MTP5 = 40.7-44.1
+    random / 67 code. So MTP-on-TP2 = 2.2-2.4x the no-MTP TP=2 baseline AND EXCEEDS single-card decode
+    (each rank reads half the weights for the bandwidth-bound decode GEMV; MTP amortizes the captured
+    all-reduce collective). The 24->40 gap is not just closed, it is beaten.
+  - gate_concurrent 18/18 PASS (coherent under concurrent mixed prefill+decode). Captured clean (4/4
+    PIECEWISE sizes, 0.96 GiB graphs, 2s). KV pool 185,922 tokens = 22.7x concurrency @ 8k.
+  - The all_gather shim engaged on every worker ([nvfp4-shim] (3) ...); resolved pass_config shows
+    fuse_rope_kvcache_cat_mla:False.
+
+MToK=131072 validation for the 128K goal (CONFIRMED, same session): MODE=fused GRAPH=1 TP=2 MTPTOK=5
+MAXLEN=131072 UTIL=0.85 MAXSEQS=4 -> GPU KV cache size 705,356 tokens = 5.38x concurrency at FULL 128K.
+So MTP costs only ~1.5 streams of 128K headroom vs the no-MTP 902,083/6.88x, while delivering 2.2x the
+single-stream decode. (The earlier 8192-MAXLEN pool of 185,922 was a MAXLEN/MAXSEQS profiling artifact,
+NOT an MTP cost -- the pool is LARGER at the longer MAXLEN.) DECISIVELY meets ">=128K per stream": 5.38
+concurrent full-128K streams AND 52-58 t/s single-stream. Decode-at-MAXLEN / needle / gate: see ADDENDUM.
+NOTE: not yet shelf-promoted -- the shelf entry is single-card (serve.sh TP=1); TP=2+MTP is a new serving
+MODE for the 128K-context use case, pending a soak. Recommended config for long-context serving.
+
+ADDENDUM (128K coherence -- root-caused + fixed): the first MAXLEN=131072 run's gate_concurrent showed
+2/8 then 8-10/18 "!!!!" NaN garbage under concurrent mixed prefill+decode (single-stream + needle were
+fine). Isolation ruled OUT the >32K-prefill-poisoning hypothesis: a FRESH 131072 serve gated dirty
+(8/18) BEFORE any long prefill. The ONLY deltas from the clean MAXLEN=8192 run (18/18) were MAXLEN and
+MAXSEQS (8 vs 4). Decisive A/B: **MAXLEN=131072 with MAXSEQS=8 -> gate 18/18 PASS** (KV pool 705,356 tok,
+5.38x @128K). So the culprit was **MAXSEQS=4**, not MAXLEN. With CAPSIZES=1,2,4,8 + MTP spec-verify, a
+MAXSEQS below the largest capture size (8) starves the size-8 spec graph the verify batch pads to ->
+NaN on ~half of concurrent streams. FIX (serve_nvfp4_27b.sh): TP>1 MAXSEQS default is now 8, plus a hard
+guard that raises MAXSEQS to max(CAPSIZES) on the TP>1+MTP+capture path (a correctness floor, not perf).
+
+FINAL VALIDATED 128K MTP-on-TP2 CONFIG (recommended for long-context serving):
+  MODE=fused GRAPH=1 TP=2 MTPTOK=5 CAPSIZES=1,2,4,8 MAXLEN=131072 UTIL=0.85 MAXSEQS>=8
+  -> KV 705,356 tokens = 5.38x concurrency at FULL 128K; single-stream decode 45-58 t/s warm;
+     needle PASS at 88,247 tokens; gate_concurrent 18/18 PASS (fresh). Meets the user goal
+     (>=128K/stream AND single-card-or-better decode AND coherent-under-concurrency) on all three axes.
+  Open follow-ups (Track 11): a longer soak before shelf promotion; push-AR overlay (perf, not needed
+  for coherence -- MAXSEQS>=8 alone is clean); MToK vs decode-t/s sweep at 128K depth.

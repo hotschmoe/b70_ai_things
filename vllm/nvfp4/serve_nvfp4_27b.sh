@@ -33,7 +33,13 @@ TP="${TP:-1}"              # TP=2 -> both cards, oneCCL multicard env (lib.sh re
 MODE="${MODE:-emul}"
 MAXLEN="${MAXLEN:-2048}"
 UTIL="${UTIL:-0.92}"
-MAXSEQS="${MAXSEQS:-4}"
+# MAXSEQS: TP>1 defaults to 8. [!] CORRECTNESS (2026-07-04): on the TP=2 + MTP + GRAPH path, MAXSEQS
+# MUST be >= the largest cudagraph capture size (see the guard by CAPSIZES below). MAXSEQS=4 with
+# CAPSIZES=1,2,4,8 emits "!!!!" NaN garbage on ~half of concurrent streams (gate 8-10/18 FAIL) while
+# MAXSEQS=8 is clean (gate 18/18) at the SAME MAXLEN=131072 -- the small cap starves the size-8 spec
+# graph the MTP verify batch pads to. Single-card default stays 4 (no spec-verify all_gather batch).
+_MAXSEQS_DEF=$([ "$TP" != 1 ] && echo 8 || echo 4)
+MAXSEQS="${MAXSEQS:-$_MAXSEQS_DEF}"
 SERVED="qwen3.6-27b-NVFP4-modelopt-${MODE}"
 
 # GRAPH=1 -> PIECEWISE XPU graph capture (M6, 2026-07-04). Needs the register_fake
@@ -54,11 +60,35 @@ CAPSIZES="${CAPSIZES:-}"   # e.g. 1,2,4,8 -- REQUIRED with MTPTOK (spec decode b
                            # MAXSEQS=8 CAPSIZES=1,2,4,8 -> 38.7 t/s c1. UTIL=0.88 loads +
                            # captures but OOMs (err 40) on the FIRST 2048-token prefill --
                            # do not raise UTIL past 0.85 on this 24.1GiB-resident serve.
+# SPLITOPS (TP>1 + capture only): list the model's genuinely non-capturable attention/GDN custom ops
+# as compilation splitting_ops so inductor cuts the piecewise graph there. Needed for MTP-on-TP2: the
+# spec-verify all_gather (which oneCCL cannot record) is handled by the capture-safe all-reduce-of-padded
+# shim in patches/sitecustomize.py block (3), so EJECT NOTHING here -- split only at the attn/GDN ops.
+# Single-card (TP=1) keeps the byte-identical no-splitting_ops config that M6-M9 gated in.
+_ATTN_OPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
 GRAPH_ARGS=( --enforce-eager )
 GRAPH_ENV=( )
 if [ "$GRAPH" = 1 ]; then
+  # CORRECTNESS guard: TP>1 + MTP + capture emits NaN "!!!!" if MAXSEQS < the largest capture size
+  # (the size-8 spec-verify graph gets starved). Bump MAXSEQS up to cover it. Verified 2026-07-04.
+  if [ "$TP" != 1 ] && [ -n "$MTPTOK" ] && [ -n "$CAPSIZES" ]; then
+    _MAXCAP=$(echo "$CAPSIZES" | tr ',' '\n' | sort -n | tail -1)
+    if [ "$MAXSEQS" -lt "$_MAXCAP" ] 2>/dev/null; then
+      echo "[guard] TP>1+MTP+capture: raising MAXSEQS $MAXSEQS -> $_MAXCAP (largest CAPSIZES; <it emits NaN garbage)" >&2
+      MAXSEQS="$_MAXCAP"
+    fi
+  fi
   CAP=""; [ -n "$CAPSIZES" ] && CAP="\"cudagraph_capture_sizes\":[$CAPSIZES],"
-  GRAPH_ARGS=( --compilation-config "{${CAP}\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":$IGP}" )
+  SPLIT=""; PASSCFG=""
+  if [ "$TP" != 1 ]; then
+    SPLIT="\"splitting_ops\":[${SPLITOPS:-$_ATTN_OPS}],"
+    # XPU bug (v0.24.0 pass_manager.py): under the TP>1 fusion path pass_config.fuse_rope_kvcache_cat_mla
+    # resolves True (raw default is None -> skipped, which is why the single-card path never hits it), but
+    # MLARoPEKVCacheCatFusionPass is imported only under is_cuda_alike() -> NameError at compile. Qwen3.6 is
+    # not MLA, so this pass is a no-op for it -> disable it explicitly on the TP>1 capture path.
+    PASSCFG="\"pass_config\":{\"fuse_rope_kvcache_cat_mla\":false},"
+  fi
+  GRAPH_ARGS=( --compilation-config "{${CAP}${SPLIT}${PASSCFG}\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":$IGP}" )
   GRAPH_ENV=( -e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e VLLM_USE_AOT_COMPILE=0 )
   SERVED="${SERVED}-graph"
 fi
