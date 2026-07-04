@@ -8085,3 +8085,37 @@ ineffective on A3B (M5: MTP +3% flat). No recent lever lifts single-stream. The 
 parity (coherence PRs, vision+capture, prefix-cache eligibility), better w8a8 TTFT, and bigger KV -- NOT a 2x.
 Aggregate throughput is healthy (int4 116 tok/s @ c4). Serve scripts self-contained w/ the fix baked; v0230
 rollback documented in each header. NOT committed to the DD (DD stays the dense 27B).
+
+## 2026-07-04 -- NVFP4 27B M6: PIECEWISE graph capture on the fused serve = 25.06 t/s (2.97x eager) [result]
+
+GOAL (self-directed GPU-free-time session): the M5b fused NVFP4 serve was pinned at its 8.47 t/s EAGER
+floor with graph capture named as an open lever. Question: does the custom nvfp4_gemm_w4a16 op capture
+under vLLM v0.24.0 PIECEWISE like its in-tree sibling int4_gemm_w4a16 (proven in the MoE port)?
+
+CONFIG: nvfp4_27b container, vllm-xpu-env:int8g-v0240, MODE=fused GRAPH=1 CARD=0 MAXLEN=4096 UTIL=0.85
+MAXSEQS=8, nvfp4_fused_kernel_gdn .so. New in this session:
+  - patches/sitecustomize.py: torch.library.register_fake("_xpu_C::nvfp4_gemm_w4a16") meta impl
+    (out = A.new_empty((A.shape[0], B.shape[1]))), registered only in MODE=fused. Without a fake,
+    dynamo cannot trace the custom op = the ONLY capture blocker. Verified under FakeTensorMode first.
+  - serve_nvfp4_27b.sh: GRAPH/CGMODE/IGP knobs -> --compilation-config
+    {"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":false} + VLLM_XPU_ENABLE_XPU_GRAPH=1
+    + VLLM_USE_AOT_COMPILE=0 (both settings lifted from the proven w8a8 hybrid recipe). Also MTPTOK
+    knob (--speculative-config mtp) for the next lever.
+
+COMMAND: MODE=fused GRAPH=1 bash vllm/nvfp4/serve_nvfp4_27b.sh; bench via 35_sweep_bench.sh
+IN=2048 OUT=128 CONC="1 4" under gpu-run --card 0.
+
+RESULT:
+  - Capture: FIRST-TRY CLEAN. compile 66.5 s, 5/5 PIECEWISE graphs, +2.84 GiB graph memory,
+    KV 30,720 tokens unchanged. No IGC/ocloc fusion crash (custom op is opaque to inductor --
+    nothing fuses into it, unlike the MoE router-mm decomposed-rms_norm case).
+  - Bench (warm, per-stream decode / aggregate-out):
+      eager  rebase: c1 8.45 / 7.9  . c4 7.47 / 25.2 . TTFT 1245 ms   (reproduces the 8.47 M5b row)
+      GRAPH=1:       c1 25.06 / 20.8 . c4 17.88 / 51.1 . TTFT 1086 ms
+    = 2.97x single-stream, 2.4x c4 per-stream, TTFT -13%.
+  - Coherence: greedy probes clean (17+26 carry arithmetic, Rayleigh sky). Not gate_concurrent-graded.
+
+VERDICT: the NVFP4 27B now decodes at 25 t/s on ONE B70 card with vision + FP8 attn + 4-bit-resident
+MLP -- in the same league as the best single-card entries (W4A8 hybrid 27.3, int4-graph 23.5) on a
+format Intel has zero support for. register_fake was the entire distance from 8.47 to 25. NEXTN MTP
+(ckpt carries all 15 bf16 mtp.* tensors natively, no graft needed) is the remaining decode lever.

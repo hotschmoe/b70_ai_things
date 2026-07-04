@@ -35,6 +35,34 @@ UTIL="${UTIL:-0.92}"
 MAXSEQS="${MAXSEQS:-4}"
 SERVED="qwen3.6-27b-NVFP4-modelopt-${MODE}"
 
+# GRAPH=1 -> PIECEWISE XPU graph capture (M6, 2026-07-04). Needs the register_fake
+# for _xpu_C.nvfp4_gemm_w4a16 (in patches/sitecustomize.py, MODE=fused only) so
+# dynamo can trace the custom op. IGP=false = the legacy piecewise splitter, the
+# proven setting on this GDN hybrid (the inductor partitioner KeyErrors on mixed
+# quant/no-quant regions -- see rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh).
+# VLLM_USE_AOT_COMPILE=0 = the vision+capture fix (AOT serialize mishandles the
+# optional mm inputs). Single card -> no TP collectives -> no SPLITOPS needed.
+GRAPH="${GRAPH:-0}"
+CGMODE="${CGMODE:-PIECEWISE}"
+IGP="${IGP:-false}"
+GRAPH_ARGS=( --enforce-eager )
+GRAPH_ENV=( )
+if [ "$GRAPH" = 1 ]; then
+  GRAPH_ARGS=( --compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":$IGP}" )
+  GRAPH_ENV=( -e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e VLLM_USE_AOT_COMPILE=0 )
+  SERVED="${SERVED}-graph"
+fi
+
+# MTPTOK=N -> NEXTN MTP spec decode (M7). The ModelOpt ckpt natively carries the
+# 15 bf16 mtp.* tensors and the quantized_layers map EXCLUDES mtp -> the drafter
+# loads unquantized without the w8a8 shelf's graft/shim. Empty = MTP off.
+MTPTOK="${MTPTOK:-}"
+SPEC_ARGS=( )
+if [ -n "$MTPTOK" ]; then
+  SPEC_ARGS=( --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTPTOK}}" )
+  SERVED="${SERVED}-mtp${MTPTOK}"
+fi
+
 # GDN attention kernel: required for the qwen3.6 hybrid (linear_attn layers). The
 # w8a8_kernel_v0240 .so carries gdn_attention_core_xpu + int8_gemm_w8a16 + the GDN lib.
 PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
@@ -63,12 +91,12 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
-  -e ZE_AFFINITY_MASK="$CARD" \
+  -e ZE_AFFINITY_MASK="$CARD" "${GRAPH_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" \
-  --enforce-eager --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
+  "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up; follow with: docker logs -f $NAME"
 echo "health: curl -s http://localhost:$PORT/health"

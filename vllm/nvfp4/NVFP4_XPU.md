@@ -154,6 +154,20 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       footprint. 8.47 is the EAGER floor -- no NEXTN MTP, no graph capture (the open
       decode levers, same caveat as the other eager entries); the OP itself is 2.85x bf16.
       serve: MODE=fused ./vllm/nvfp4/serve_nvfp4_27b.sh. Build: NVFP4_KERNEL_BUILD.md.
+- [x] M6: PIECEWISE GRAPH CAPTURE works on the fused serve -- 25.06 t/s single-stream
+      (2.97x the 8.47 eager floor), c4 17.88 t/s/stream (agg 51.1), TTFT 1245 -> 1086 ms
+      (warm IN=2048/OUT=128, card 0). COHERENT (arithmetic + Rayleigh probes, greedy).
+      The ONLY missing piece was a torch.library.register_fake meta impl for
+      _xpu_C::nvfp4_gemm_w4a16 (dynamo cannot trace a custom op without a FakeTensor
+      impl) -- added to patches/sitecustomize.py (MODE=fused only), same move as
+      contrib/vllm_int8_xpu's int8 fakes. Capture config copied from the proven w8a8
+      hybrid recipe: CGMODE=PIECEWISE + use_inductor_graph_partition=false (legacy
+      splitter; the inductor partitioner KeyErrors on mixed quant/no-quant GDN regions)
+      + VLLM_USE_AOT_COMPILE=0 (the vision+capture fix). First-try capture: compile 66 s,
+      5/5 graphs, +2.84 GiB graph memory, KV 30.7k tokens intact @ MAXLEN=4096 UTIL=0.85.
+      No IGC/ocloc fusion crash (the custom op is opaque to inductor -- nothing fuses
+      into it, unlike the MoE router-mm case).
+      serve: MODE=fused GRAPH=1 ./vllm/nvfp4/serve_nvfp4_27b.sh.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 
@@ -192,3 +206,7 @@ W4A16 serve. It is a future-kernel unlock, not a route-a win for NVFP4.
   GDN-ON .so (both gdn + nvfp4 op) -> MODE=fused SERVES coherently 1x B70 @ 8.47 t/s
   (16x emul), 24.1GiB 4-bit resident. Native int4 DPAS separately PROVEN via ESIMD
   (2x int8, INT4_DPAS_PIONEER.md). README perf table row added.
+- 2026-07-04 16:5x M6: register_fake for nvfp4_gemm_w4a16 + GRAPH=1 knob in the serve
+  script -> PIECEWISE capture first-try clean. 25.06 t/s c1 / 17.88 c4 (2.97x eager),
+  coherent. README row updated. Next lever: NEXTN MTP (ckpt has all 15 bf16 mtp.*
+  tensors natively; MTPTOK knob added).

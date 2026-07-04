@@ -205,6 +205,45 @@ try:
                 y = y + bias
             return y.reshape(*x.shape[:-1], N)
 
+    # ---- (1c) register_fake for the custom op so PIECEWISE graph capture can
+    # trace it (same move as the int8 ops in contrib/vllm_int8_xpu/xpu_int8.py;
+    # dynamo/inductor need a FakeTensor meta impl for torch.ops._xpu_C.*).
+    # Schema: nvfp4_gemm_w4a16(Tensor A, Tensor B, Tensor? bias, Tensor B_scale,
+    #                          int group_size) -> Tensor
+    #   A [M,K] bf16, B [K/2,N] uint8 (NT view), out [M, B.shape[1]] A-dtype.
+    def _register_nvfp4_fake():
+        register_fake = getattr(torch.library, "register_fake", None) or getattr(
+            torch.library, "impl_abstract", None
+        )
+        if register_fake is None:
+            return
+        try:
+            import vllm_xpu_kernels._xpu_C  # noqa: F401 (defines the op schema)
+        except Exception:
+            return
+        if not hasattr(torch.ops._xpu_C, "nvfp4_gemm_w4a16"):
+            return
+
+        def _fake_nvfp4_gemm(A, B, bias, B_scale, group_size):
+            return A.new_empty((A.shape[0], B.shape[1]), dtype=A.dtype)
+
+        try:
+            register_fake("_xpu_C::nvfp4_gemm_w4a16", _fake_nvfp4_gemm)
+            print(
+                "[nvfp4-shim] registered fake for _xpu_C::nvfp4_gemm_w4a16",
+                file=sys.stderr,
+                flush=True,
+            )
+        except (RuntimeError, ValueError) as e:
+            print(
+                f"[nvfp4-shim] register_fake(nvfp4_gemm_w4a16) skipped: {e}",
+                file=sys.stderr,
+                flush=True,
+            )
+
+    if _MODE == "fused":
+        _register_nvfp4_fake()
+
     from vllm.model_executor.layers.quantization.modelopt import (
         ModelOptNvFp4W4A16LinearMethod as _W4A16,
     )
