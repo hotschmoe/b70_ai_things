@@ -8227,3 +8227,14 @@ A/B still running on card 1 (v0230-graph shelf serve, downclocked display card, 
 ADDENDUM (M9b): VISION verified WORKING on the champion serve (GRAPH=1 MTPTOK=5): a base64 red-square
 image via /v1/chat/completions is correctly identified ("vibrant red") under capture+MTP. The standing
 vision-retention directive is satisfied for the captured+spec config, not just the eager loads.
+
+## 2026-07-04 (cont) -- NVFP4 champion SHELVED: rdy_to_serve/vllm/qwen36-27b-nvfp4 [result]
+
+The M6-M9 config meets the shelf bar (sweep-benched best config, gate_concurrent 18/18 at spec=3 AND
+spec=5, coherent probes, vision verified under capture+MTP), so it gets a shelf entry per the rules:
+a THIN WRAPPER over vllm/nvfp4/serve_nvfp4_27b.sh with the gated best settings baked (MODE=fused
+GRAPH=1 MTPTOK=5 CAPSIZES=1,2,4,8 UTIL=0.85 MAXLEN=4096 MAXSEQS=8), stop verb included. Wrapper
+serve-cycle tested: healthy, correct served id, coherent probe. README: NVFP4 row added to the vLLM
+shelf table (+ footnote) alongside the earlier sglang-table row update; SUMMARY.md already carries
+the leaderboard #1. Positioning: the QUALITY + single-stream pick (KV ~8.5k tok caveat); int4 stays
+the KV/concurrency pick; the W8A8 TP=2 remains the DD.
