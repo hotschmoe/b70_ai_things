@@ -57,17 +57,25 @@ Serve: `vllm/nvfp4/serve_nvfp4.sh` (single card, port 8077, enforce-eager).
       THIS is the usable NVFP4 serve path on B70 today. numerically it is a
       W4A16 read of the W4A4 ckpt (weights exact-dequant, activations stay bf16 ->
       if anything slightly HIGHER quality than the intended W4A4).
-- [ ] M2: real packed-weight fast path (the kernel flex). Candidates:
-      (a) `torch.ops._xpu_C.fp4_gemm` -- EXISTS in vllm-xpu-kernels for MXFP4
-          W4A4 on XPU (kernels/linear/mxfp4/xpu.py). Check whether the underlying
-          kernel can take e4m3 block scales at group 16 (nvfp4) vs e8m0 at
-          group 32 (mxfp4).
-      (b) INT8-XMX trick: E2M1*2 is EXACT in int8 ({0,+-1,+-2,+-3,+-4,+-6,+-8,+-12}),
-          so nvfp4 = s8 weights with group-16 fp scales folded as
-          (e4m3_scale * weight_scale_2 / 2) -> ride the proven oneDNN int8 woq
-          path (w8a16 kernel) if it supports group scales at G=16.
-      (c) Triton-XPU fused dequant-GEMM (LUT in registers), weights stay 4-bit
-          in VRAM -> the bandwidth win (decode is BW-bound on B70).
+- [~] M2: INT8-XMX packed-weight path (the kernel flex). IN PROGRESS.
+      Chosen route (b): E2M1*2 is EXACT int8 ({0,+-1,+-2,+-3,+-4,+-6,+-8,+-12}),
+      so nvfp4 weight == s8 weight + per-16-K-group fp scale
+      (e4m3_block_scale * weight_scale_2 / 2). 02_int8_repack.py proves this
+      BIT-EXACT on real tensors. 03_xmx_microbench.py shows the oneDNN
+      int8_gemm_w8a16 XMX path is 1.25-1.54x faster than bf16 F.linear on B70,
+      AND keeps weights at int8 (~7.6GB vs 15.3GB bf16 -> ~2x KV headroom).
+      BLOCKER FOUND + FIXED: the kernel's is_block_quant branch hardcoded SQUARE
+      {g,g} groups -> wrong numerics (rel-err 0.46-0.80) for NVFP4's K-only
+      grouping. Fix (int8_gemm_w8a16.h): infer {grp_k, grp_n} from the scale
+      shape [K/grp_k, N/grp_n]; NVFP4 [K/16,N] -> {16,1}. Built to a SEPARATE
+      nvfp4_kernel/_xpu_C.abi3.so (daily driver untouched; it only uses the
+      per-channel branch). NEXT: rerun microbench with the fixed .so -> expect
+      exact numerics; then a linear method that repacks-to-int8 at load + calls
+      the op (M3 serve).
+      Rejected route (a): fp4_gemm EXISTS but is MXFP4-only (asserts e8m0 scales
+      @ group32; NVFP4 is e4m3 @ group16) -> rejects our tensors outright.
+      Deferred route (c): Triton-XPU fused dequant-GEMM keeping weights 4-bit in
+      VRAM -> the real bandwidth win for M=1 decode; later frontier.
 
 ## Status log
 
