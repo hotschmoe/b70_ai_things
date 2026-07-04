@@ -131,6 +131,30 @@ if [ "$MODE" = fused ]; then
   KERN_MOUNTS=( -v "$FUSED_SO:$PKGD/_xpu_C.abi3.so:ro" -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
 fi
 
+# push all-reduce PREFILL overlay (TP>1 only, Track 11g). Routes big EAGER prefill all-reduces through the
+# L0-IPC posted-write (push) collective (vllm/contrib/vllm_push_allreduce) instead of oneCCL to cut cold
+# TTFT (J.21: 3.8x prefill TTFT on the sibling W8A8 TP=2 serve). Host-barrier .so + PUSH_AR_MIN_NUMEL above
+# the largest CAPTURED all-reduce (max(CAPSIZES)*hidden = 8*5120 = 40960; the MTP all_gather shim block(3)
+# uses dist.all_reduce directly so it is NOT intercepted) and below the eager prefill all-reduce (IN*5120)
+# -> captured decode stays on graph-recordable oneCCL, only big eager prefill all-reduces use push. The .so
+# is pure C-ABI SYCL/L0 (no libtorch link) so the committed prebuilt works on int8g-v0240. P2PACCESS stays
+# 0 (push-ar does its OWN L0-IPC peer write, independent of CCL_TOPO_P2P_ACCESS -> dodges the H.13 wedge).
+# Loaded once via sitecustomize block (8). Default OFF -> single-card shelf + default TP=2 byte-identical.
+PUSH_AR="${PUSH_AR:-0}"
+PUSH_AR_MOUNTS=( ); PUSH_AR_ENV=( )
+if [ "$PUSH_AR" = 1 ] && [ "$TP" != 1 ]; then
+  PUSH_AR_DIR="$REPO/vllm/contrib/vllm_push_allreduce"
+  PUSH_AR_SO_HOST="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_torch.so"   # host-barrier (prefill) .so, committed
+  [ -f "$PUSH_AR_SO_HOST" ] || { echo "MISSING push-ar .so $PUSH_AR_SO_HOST (set PUSH_AR=0 for oneCCL)"; exit 1; }
+  PUSH_AR_MOUNTS=( -v "$PUSH_AR_DIR:/opt/push_ar:ro" )
+  PUSH_AR_ENV=( -e PUSH_AR_PATCH=/opt/push_ar/_push_ar_patch.py
+                -e PUSH_AR_SO=/opt/push_ar/prebuilt/libxpu_push_ar_torch.so
+                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}" )
+  # PUSH_AR_GRAPH intentionally UNSET (prefill-only); the host-barrier .so has no ar_allreduce_graph symbol.
+  echo "=== PUSH_AR prefill overlay ON (host-barrier .so, MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-65536}, P2PACCESS=0) ==="
+  SERVED="${SERVED}-pushar"
+fi
+
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
 # card/multicard env: TP=1 pins one card; TP=2 drives both through CPU-staged oneCCL
@@ -152,11 +176,11 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$DIR/patches:/opt/nvfp4_shim:ro" \
-  "${KERN_MOUNTS[@]}" \
+  "${KERN_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
-  "${MGPU[@]}" "${GRAPH_ENV[@]}" \
+  "${MGPU[@]}" "${GRAPH_ENV[@]}" "${PUSH_AR_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \

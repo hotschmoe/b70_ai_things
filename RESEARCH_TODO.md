@@ -455,12 +455,25 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       coherent, lower memory. REMAINING (the real serve gate): 1.91 is launch-bound (per-expert Python
       loop + M=1 GEMV x 40 layers) -> needs (a) a grouped/batched-expert nvfp4 gemm (one kernel over all
       active experts), (b) MoE graph capture, (c) MTP-on-TP2 amortization.
-- [ ] **11g. NVFP4 TP=2 prefill optimization (future session, user-requested 2026-07-04).** The TP=2
-      long-context DD's one weakness is cold prefill: PP 666 t/s vs single-card 1702 (TP=2 collective
-      cost), TTFT 3076 ms @ IN=2048. Prefix caching (3.98x warm reuse, now wired) mitigates it for
-      repeated long agentic prefixes, but a dedicated prefill pass is wanted. Levers to explore:
-      push-AR overlay on the prefill all-reduce (the w8a8 shelf reports 3.8x prefill TTFT from it),
-      chunked-prefill tuning, sequence-parallel prefill, overlap of the prefill collective with compute.
+- [~] **11g. NVFP4 TP=2 prefill optimization (user-requested 2026-07-04).** The TP=2 long-context DD's
+      one weakness was cold prefill: PP 666 t/s vs single-card 1702 (TP=2 collective cost), TTFT 3076 ms
+      @ IN=2048.
+      - [x] **push-AR PREFILL overlay = SOLVED the headline gap (2026-07-04 evening, JOURNAL).** Ported
+            the proven W8A8 push all-reduce onto the NVFP4 v0.24.0 TP=2 path (sitecustomize block 8 +
+            serve_nvfp4_27b.sh PUSH_AR=1, MIN_NUMEL=65536 prefill-only gate). MEASURED 2.4-3.3x prefill
+            (TTFT + PP, win grows with length), push-AR PP 1730-2185 now MATCHES/BEATS single-card 1702,
+            decode NEUTRAL (15.87 vs 15.88 c1), gate_concurrent 18/18 on both configs, wedge-free.
+            Recommend PUSH_AR=1 for the TP=2 DD. Levers still open below.
+      - [ ] chunked-prefill tuning (--max-num-batched-tokens sweep): only moves LONG cold prefills
+            (32K/128K sliced into 8192-chunks = more AR launches); IN<=8192 is already a single chunk.
+            Stack on top of push-AR. Env-only, low risk.
+      - [ ] PP=2 prefill-biased variant: structurally eliminates the per-layer all-reduce (128 AR -> 1
+            P2P/stage) but adds a single-stream decode bubble -> separate entry, not a DD swap. Medium
+            risk (untested PP oneCCL/L0 path, re-gate wedge).
+      - DEAD on XPU (levers-agent 2026-07-04): sequence-parallel enable_sp (no volume cut + adds an
+        uncapturable all_gather), AsyncTP fuse_gemm_comms / fuse_allreduce_rms (CUDA-symmetric-memory /
+        Hopper+FlashInfer only), AR-coalescing (no structural lever). FRONTIER reserve: TP=1 prefiller +
+        TP=1 decoder P/D-disaggregation with L0-IPC KV+GDN-state transfer (highest ceiling, highest cost).
 - [x] **11d-prereq DONE: NVFP4 TP=2 daily-driver config** (256K ctx + prefix cache + MTP, commit pending):
       764k KV @ 2.92x, prefix 3.98x, gate 18/18, decode 48-50 warm. shim block (6) mamba ptr fix +
       PREFIXCACHE toggle. Remaining for full promotion: swap live DD + tool-call/reasoning parsers + API key.

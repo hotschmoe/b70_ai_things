@@ -8479,3 +8479,46 @@ launch-bound + nvfp4 M=1 GEMV trap). Next levers: (a) MoE graph capture (IGC-fus
 serve_nvfp4_moe_35b.sh but unvalidated with block 7; GRAPH=0 for now), (b) a grouped/batched expert
 nvfp4 gemm (one kernel over all active experts, kills per-expert launch overhead), (c) MTP-on-TP2
 (amortize -- took the dense 27B 24->52 t/s). Still not a usable serve; a batched-expert kernel is the gate.
+
+---
+
+## 2026-07-04 evening -- Track 11g: push-AR PREFILL overlay ports to NVFP4 TP=2 = 3.3x prefill, decode-neutral, gate 18/18
+
+The TP=2 NVFP4 daily driver's one weakness was cold prefill (the oneCCL TP all-reduce collective cost:
+64 layers x 2 all-reduces/layer over CPU-staged oneCCL, no Arc P2P). Ported the proven W8A8 push-AR
+overlay (hand-rolled L0-IPC posted-write all-reduce, contrib/vllm_push_allreduce) onto the NVFP4 v0.24.0
+TP=2 path. It monkeypatches XpuCommunicator.all_reduce; PREFILL-ONLY via PUSH_AR_MIN_NUMEL=65536 gating so
+only large EAGER prefill all-reduces (IN*5120 numel) take the push path and captured decode all-reduces
+(max CAPSIZES*hidden = 8*5120 = 40960 < 65536) stay on graph-recordable oneCCL. The MTP all_gather shim
+(sitecustomize block 3) uses dist.all_reduce DIRECTLY so it is not intercepted -> 65536 is safe (no need
+for the 81920-margin I first feared). Does its OWN L0-IPC (P2PACCESS-independent) so it dodges the H.13
+wedge; .so is pure C-ABI (no libtorch) so the committed prebuilt runs on int8g-v0240.
+
+WIRING: sitecustomize block (8) loads _push_ar_patch.py by FILE PATH (importlib), gated on PUSH_AR_SO, so
+the contrib dir's own sitecustomize/usercustomize never auto-import and double-patch, and PYTHONPATH stays
+/opt/nvfp4_shim. serve_nvfp4_27b.sh: PUSH_AR=1 (TP>1 only) mounts contrib -> /opt/push_ar, sets
+PUSH_AR_SO/PUSH_AR_PATCH/PUSH_AR_MIN_NUMEL. Default OFF -> single-card shelf byte-identical. Model dims
+from config.json: hidden 5120, 64 layers.
+
+CONFIG: TP=2 MODE=fused GRAPH=1 MTPTOK=5 CAPSIZES=1,2,4,8 MAXLEN=16384 UTIL=0.85 MAXSEQS=8 PREFIXCACHE=1,
+image int8g-v0240, cards 0+1 via gpu-run.
+COMMAND: PUSH_AR=1 ./bin/gpu-run bash vllm/nvfp4/prefill_session.sh   (+ validate_session.sh for gate)
+
+RESULT (cold prefill = UNIQUE prompt/call so prefix cache always misses; bench_prefill.py c1):
+  IN~512 :  baseline TTFT 963ms  PP 620  ->  push-AR TTFT 391ms  PP 1506  (2.4x)
+  IN~2048:  baseline TTFT 3677ms PP 622  ->  push-AR TTFT 1351ms PP 1730  (2.7x; best rep PP 2161)
+  IN~8192:  baseline TTFT 13804ms PP 654 ->  push-AR TTFT 4272ms PP 2107  (3.2x)
+  c4 aggregate PP: 182/223/249 -> 537/732/817 (2.9-3.3x). Win GROWS with prefill length = per-collective
+  overhead saved scales with all-reduce count (prefill is per-collective-overhead-bound, not bandwidth:
+  push vs oneCCL prefill BW is ~10 vs 9.4 GB/s near-parity, yet 3.3x TTFT).
+DECODE-PARITY (validate_session.sh, IDENTICAL harness, warm IN=2048/OUT=128 random MTP-worst-case):
+  baseline c1 TG 15.87 / c4 7.36  vs  push-AR c1 TG 15.88 / c4 7.63  = DECODE NEUTRAL (MIN_NUMEL gate holds;
+  captured decode stays oneCCL). PP on the same bench: 659 -> 2185 (3.3x).
+COHERENCE: gate_concurrent_coherence 18/18 PASS on BOTH configs (3 waves x 6 mixed prefill+decode, no
+  "!!!!"/NaN). Clean teardown, no wedge, xpu-health HEALTHY after. push_ar log: setup_torch OK / exchange
+  OK / ENGAGED on rank 0, graph capture 4/4 finished 0.96 GiB (capture NOT broken by the overlay).
+VERDICT: LANDED. push-AR PREFILL overlay is a measured 2.4-3.3x prefill win, decode-neutral, coherent,
+  wedge-free -- it ERASES the TP=2 cold-prefill weakness (push-AR PP 1730-2185 now MATCHES/BEATS the
+  single-card 1702). Recommend PUSH_AR=1 for the TP=2 NVFP4 daily driver. Single-card path untouched.
+  New: bench_prefill.py, prefill_session.sh, validate_session.sh, sitecustomize block (8),
+  serve_nvfp4_27b.sh PUSH_AR opt-in.

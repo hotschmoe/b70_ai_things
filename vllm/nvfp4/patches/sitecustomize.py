@@ -541,3 +541,24 @@ if os.environ.get("NVFP4_MOE_FUSED", "0") == "1":
               file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (7) fused MoE patch failed:", repr(e), file=sys.stderr, flush=True)
+
+# ---- (8) push-AR PREFILL overlay -- port the proven W8A8 posted-write all-reduce (3.8x prefill TTFT) --
+# Track 11g: the NVFP4 TP=2 daily driver's one weakness is cold prefill (PP 666 vs single-card 1702), the
+# oneCCL collective cost. The hand-rolled push all-reduce (L0-IPC posted write, ~11 GB/s vs oneCCL's staged
+# path) is proven to cut W8A8 prefill TTFT 3.8x. It monkeypatches XpuCommunicator.all_reduce and does its OWN
+# P2P (P2PACCESS-independent) so it dodges the H.13 wedge. Gated ENTIRELY on PUSH_AR_SO: unset (single-card
+# shelf + default TP=2) -> this block is a no-op and behavior is byte-identical. With PUSH_AR_MIN_NUMEL set
+# above the captured-decode all-reduce numel (<= max_num_seqs*hidden = 8*5120 = 40960) and below the prefill
+# chunk numel (>> that), only large EAGER prefill all-reduces take the push path; captured decode all-reduces
+# stay on oneCCL (graph-recordable). The .so dlopen is DEFERRED to first all_reduce inside the patch (J.15).
+if os.environ.get("PUSH_AR_SO"):
+    try:
+        import importlib.util as _ilu
+        _pa_path = os.environ.get("PUSH_AR_PATCH", "/opt/push_ar/_push_ar_patch.py")
+        _spec = _ilu.spec_from_file_location("_push_ar_patch", _pa_path)
+        _mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)  # its bottom `try: _install()` patches XpuCommunicator.all_reduce
+        print("[nvfp4-shim] (8) push-AR prefill overlay loaded from", _pa_path,
+              "MIN_NUMEL=" + os.environ.get("PUSH_AR_MIN_NUMEL", "0"), file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (8) push-AR overlay failed:", repr(e), file=sys.stderr, flush=True)
