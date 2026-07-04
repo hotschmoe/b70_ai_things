@@ -449,9 +449,12 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       _supports_quant_scheme, which hard-gated on W4A4 only, to also accept the W4A16 (kNvfp4Static,
       None) scheme. Single-card OOMs (21.8 GiB resident + 2 GiB fp32 dequant transient/forward);
       TP=2 fits + generates but at 0.37 t/s (emulation dequants ALL 256 experts to fp32 every
-      forward). serve = vllm/nvfp4/serve_nvfp4_moe_35b.sh. REMAINING (the real work): a FUSED
-      per-expert NVFP4 MoE XPU kernel (dense 27B's nvfp4_gemm_w4a16 applied per expert, or a
-      packed-expert nvfp4 gemm) to make it a usable serve -- emulation is only the correctness ref.
+      forward). serve = vllm/nvfp4/serve_nvfp4_moe_35b.sh.
+      FUSED per-expert path DONE (shim block 7, NVFP4_MOE_FUSED=1, serve MODE=fused): reuses the dense
+      27B nvfp4_gemm_w4a16 op per active expert (no new .so) -> 1.91 t/s = 5.2x the emulation baseline,
+      coherent, lower memory. REMAINING (the real serve gate): 1.91 is launch-bound (per-expert Python
+      loop + M=1 GEMV x 40 layers) -> needs (a) a grouped/batched-expert nvfp4 gemm (one kernel over all
+      active experts), (b) MoE graph capture, (c) MTP-on-TP2 amortization.
 - [ ] **11g. NVFP4 TP=2 prefill optimization (future session, user-requested 2026-07-04).** The TP=2
       long-context DD's one weakness is cold prefill: PP 666 t/s vs single-card 1702 (TP=2 collective
       cost), TTFT 3076 ms @ IN=2048. Prefix caching (3.98x warm reuse, now wired) mitigates it for

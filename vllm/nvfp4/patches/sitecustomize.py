@@ -437,3 +437,107 @@ if os.environ.get("VLLM_XPU_MAMBA_PTR_FIX", "1") != "0":
               "-- prefix caching unblocked", file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (6) mamba ptr fix failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (7) FUSED per-expert NVFP4 MoE (Track 11f real work) -----------------------------------------
+# The emulation apply() (block 5) dequantizes the FULL stacked 256-expert weight to the compute dtype
+# EVERY forward (a ~2 GiB fp32 transient) then runs stock TritonExperts -> 0.37 t/s. Only top_k=8 of
+# 256 experts are active per token, so 248/256 of that dequant is wasted. This block replaces the
+# emulation experts' apply() with a per-expert loop that keeps weights 4-bit resident and calls the
+# dense 27B's oneDNN op `torch.ops._xpu_C.nvfp4_gemm_w4a16` (weights decompressed IN the JIT gemm,
+# 2.85x bf16 at decode) ONCE PER ACTIVE EXPERT (gate_up then down, SiluAndMul between). No fp32
+# materialize of inactive experts; the routed-expert GEMMs are the only work.
+#
+# Layout (per rank; TP shards N of w13 / K of w2 on group-16 boundaries):
+#   w1 (w13)      [E, 2I, H/2] uint8   (rows [0:I]=gate, [I:2I]=up)   -> per expert B = w1[e].t() [H/2, 2I]
+#   w2 (down)     [E, H,  I/2] uint8                                  -> per expert B = w2[e].t() [I/2, H]
+#   w1_scale_val  [E, 2I, H/16] f8e4m3 ; g1_alphas [E] fp32 (weight_scale_2)
+#   w2_scale_val  [E, H,  I/16] f8e4m3 ; g2_alphas [E] fp32
+# The op wants B_scale as [K/16, N] bf16 folded (block_scale * global_scale), NO /2 (E2M1 float grid),
+# exactly like the dense (1b) fused path -> precomputed once at first apply into self._s13/_s2.
+# Gated on NVFP4_MOE_FUSED=1; needs the nvfp4_gemm_w4a16 op mounted (serve MODE=fused).
+if os.environ.get("NVFP4_MOE_FUSED", "0") == "1":
+    try:
+        import torch
+        import torch.nn.functional as _F
+        from vllm.model_executor.layers.fused_moe.experts.nvfp4_emulation_moe import (
+            Nvfp4QuantizationEmulationTritonExperts as _FMoE,
+        )
+        import vllm_xpu_kernels._xpu_C  # noqa: F401 (registers nvfp4_gemm_w4a16)
+
+        if not hasattr(torch.ops._xpu_C, "nvfp4_gemm_w4a16"):
+            raise RuntimeError("nvfp4_gemm_w4a16 op not present (need MODE=fused .so mounted)")
+
+        def _silu_and_mul(x):
+            d = x.shape[-1] // 2
+            return _F.silu(x[..., :d]) * x[..., d:]
+
+        def _build_fused_moe_scales(self, w1, w2):
+            # Fold block scale (f8e4m3) * per-expert global scale (fp32) -> bf16, transpose to the
+            # op's [K/16, N] NT layout, ONCE. Stored as python lists of contiguous [K/16, N] bf16.
+            g1 = self.quant_config.g1_alphas.reshape(-1).to(torch.float32)  # [E]
+            g2 = self.quant_config.g2_alphas.reshape(-1).to(torch.float32)  # [E]
+            s1 = self.w1_scale_val  # [E, 2I, H/16] f8e4m3
+            s2 = self.w2_scale_val  # [E, H,  I/16] f8e4m3
+            E = w1.shape[0]
+            self._s13 = []
+            self._s2 = []
+            for e in range(E):
+                a = (s1[e].to(torch.float32) * g1[e]).t().contiguous().to(torch.bfloat16)
+                b = (s2[e].to(torch.float32) * g2[e]).t().contiguous().to(torch.bfloat16)
+                self._s13.append(a)   # [H/16, 2I]
+                self._s2.append(b)    # [I/16, H]
+            # the replaced apply() no longer needs the fp8 block scales -> free them
+            # (keeps net memory below the emulation path, which held fp8 + a per-forward
+            # fp32 dequant of ALL experts; we hold only the folded bf16 NT scales).
+            self.w1_scale_val = None
+            self.w2_scale_val = None
+            self._fused_ready = True
+
+        def _fused_nvfp4_moe_apply(
+            self, output, hidden_states, w1, w2, topk_weights, topk_ids, activation,
+            global_num_experts, expert_map, a1q_scale, a2_scale, workspace13, workspace2,
+            expert_tokens_meta, apply_router_weight_on_input,
+        ):
+            assert w1.dtype == torch.uint8 and w2.dtype == torch.uint8
+            if not getattr(self, "_fused_ready", False):
+                _build_fused_moe_scales(self, w1, w2)
+
+            x = hidden_states.reshape(-1, hidden_states.shape[-1])
+            xb = x.to(torch.bfloat16)
+            output.zero_()
+            out_flat = output.reshape(-1, output.shape[-1])
+
+            # topk_ids hold GLOBAL expert ids; expert_map[g] = local idx (or -1) under EP. TP-only -> None.
+            ids = topk_ids
+            for g in torch.unique(ids).tolist():
+                local = g
+                if expert_map is not None:
+                    local = int(expert_map[g].item())
+                    if local < 0:
+                        continue
+                mask = ids == g                         # [T, top_k]
+                tok_idx, slot_idx = mask.nonzero(as_tuple=True)
+                if tok_idx.numel() == 0:
+                    continue
+                w_route = topk_weights[tok_idx, slot_idx].to(torch.bfloat16).unsqueeze(1)
+                x_e = xb.index_select(0, tok_idx)       # [m, H]
+                if apply_router_weight_on_input:
+                    x_e = x_e * w_route
+                gu = torch.ops._xpu_C.nvfp4_gemm_w4a16(
+                    x_e, w1[local].t(), None, self._s13[local], 16
+                )                                       # [m, 2I]
+                h = _silu_and_mul(gu).to(torch.bfloat16)  # [m, I]
+                dn = torch.ops._xpu_C.nvfp4_gemm_w4a16(
+                    h, w2[local].t(), None, self._s2[local], 16
+                )                                       # [m, H]
+                if not apply_router_weight_on_input:
+                    dn = dn * w_route
+                out_flat.index_add_(0, tok_idx, dn.to(out_flat.dtype))
+
+        _FMoE.apply = _fused_nvfp4_moe_apply
+        print("[nvfp4-shim] (7) FUSED per-expert NVFP4 MoE apply installed "
+              "(nvfp4_gemm_w4a16 per active expert; weights stay 4-bit resident)",
+              file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (7) fused MoE patch failed:", repr(e), file=sys.stderr, flush=True)

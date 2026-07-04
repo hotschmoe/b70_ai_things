@@ -18,6 +18,7 @@ set -uo pipefail
 ROOT=/mnt/vm_8tb/b70
 REPO=/mnt/vm_8tb/github/b70_ai_things
 DIR="$REPO/vllm/nvfp4"
+SHIMDIR="${SHIMDIR:-$DIR/patches}"   # override to mount a worktree copy of the shim
 
 IMG="${IMG:-vllm-xpu-env:int8g-v0240}"
 NAME="${NAME:-nvfp4_moe_35b}"
@@ -26,6 +27,10 @@ CARD="${CARD:-0}"
 TP="${TP:-1}"
 MODE="${MODE:-emul}"                 # emul = pure-emulation NVFP4 linear (safest for bring-up); fused = XPU kernel
 MOEBACKEND="${MOEBACKEND:-emulation}"  # NVFP4 routed-expert path: emulation dequant->TritonExperts (XPU-clean)
+# MOE routed-expert compute: emul = dequant-all-256-experts-to-bf16/forward (slow, correctness ref);
+# fused = per-active-expert nvfp4_gemm_w4a16 (weights stay 4-bit resident, shim block 7). Default:
+# fused whenever MODE=fused (the fused .so with the nvfp4 op is mounted then), else emul.
+if [ "$MODE" = fused ]; then MOEFUSED="${MOEFUSED:-1}"; else MOEFUSED="${MOEFUSED:-0}"; fi
 MAXLEN="${MAXLEN:-8192}"
 UTIL="${UTIL:-0.90}"
 MAXSEQS="${MAXSEQS:-8}"
@@ -90,11 +95,12 @@ fi
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
-  -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$DIR/patches:/opt/nvfp4_shim:ro" \
+  -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$SHIMDIR:/opt/nvfp4_shim:ro" \
   "${KERN_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" -e NVFP4_MOE_W4A16_EMUL=1 \
+  -e NVFP4_MOE_FUSED="$MOEFUSED" \
   "${MGPU[@]}" "${GRAPH_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve "$CKPT" --served-model-name "$SERVED" \

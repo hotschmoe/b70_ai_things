@@ -8453,3 +8453,29 @@ cache, NOT cold prefill or c4 aggregate. For the long-context prefix-cached agen
 user, repeated long prefixes) the warm-reuse 3.98x mitigates cold prefill. FULL production promotion
 (swap b70_daily_0, wire tool-call qwen3_coder + reasoning qwen3 parsers + API key like
 vllm/daily_driver_serve.sh) is the remaining step -- the serving/coherence layer is validated here.
+
+## 2026-07-04 -- 35B MoE NVFP4 FUSED per-expert path: 1.91 t/s = 5.2x emulation (Track 11f) [result]
+
+GOAL: replace the 0.37 t/s emulation MoE (dequants ALL 256 experts to fp32 every forward) with a fused
+path that keeps weights 4-bit resident and dequants in-kernel. Done by a delegated agent; integrated to
+master here (shim block renumbered (6)->(7) to sit after the mamba-ptr-fix block 6).
+
+APPROACH (no new kernel build): reuse the dense 27B's oneDNN op torch.ops._xpu_C.nvfp4_gemm_w4a16 (the
+nvfp4_fused_kernel_gdn .so already carries it), applied PER ACTIVE EXPERT. shim block (7)
+(NVFP4_MOE_FUSED=1) replaces Nvfp4QuantizationEmulationTritonExperts.apply with a loop over
+torch.unique(topk_ids): gather routed tokens -> gate_up = nvfp4_gemm_w4a16(x, w13[e].t(), None, s13[e], 16)
+-> SiluAndMul -> down = nvfp4_gemm_w4a16(h, w2[e].t(), None, s2[e], 16) -> router weight -> index_add.
+Mirrors TritonExperts.apply exactly (numerical W4A16 reference). Per-expert folded bf16 NT scales
+(block_scale * weight_scale_2 -> [K/16,N]) built once, fp8 scales freed -> net memory BELOW emulation.
+serve_nvfp4_moe_35b.sh: MODE=fused auto-sets MOEFUSED=1 (the fused .so is mounted then).
+
+RESULT (TP=2 both cards, eager, emulation MoE backend gate + fused apply): LOADS + generates COHERENTLY
+("Name three primary colors" -> correct thinking-model answer, no "!!!!", clean teardown, no wedge).
+Decode 1.91 t/s (stable over 128/256-tok runs) vs 0.37 emulation = **5.2x**, at lower memory.
+
+REMAINING (perf, not correctness): 1.91 t/s is launch-bound -- a Python per-expert loop with a
+torch.unique().tolist() host sync and 8x2 small M=1 GEMV op-launches/layer x 40 layers (A3B decode
+launch-bound + nvfp4 M=1 GEMV trap). Next levers: (a) MoE graph capture (IGC-fusion-off knobs are in
+serve_nvfp4_moe_35b.sh but unvalidated with block 7; GRAPH=0 for now), (b) a grouped/batched expert
+nvfp4 gemm (one kernel over all active experts, kills per-expert launch overhead), (c) MTP-on-TP2
+(amortize -- took the dense 27B 24->52 t/s). Still not a usable serve; a batched-expert kernel is the gate.
