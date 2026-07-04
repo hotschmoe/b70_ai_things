@@ -83,11 +83,38 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
 | qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0**\*\*\* | 15.4 | 320k tok |
 | qwen3.6-27b | W8A8 + DFlash all-sliding drafter (spec=8) -- v0.24.0 (research, not DD\*\*\*\*) | 35+2 | 2 | 2566 | 798 ms | 19.6 | 10.3 | 291k tok |
-| qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) | 21 | 1 | **4644** | **441 ms** | **67.7** | 43.8 | 270k tok |
-| qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) | 35 | 2 | 1364 | 1502 ms | 43.1 | 22.2 | 684k tok |
+| qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) -- v0.24.0† | 21 | 1 | 3670 | 558 ms | 46.5‡ | 44.0 | **485k tok** |
+| qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) -- v0.24.0† | 35 | 2 | 1930 | 1061 ms | 37.0§ | 23.5 | **775k tok** |
 
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
 2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
+
+† **Both 35B-A3B MoE rows re-benched on vLLM v0.24.0 (torch 2.12), 2026-07-04** (JOURNAL). Ported off the old
+v0.23 stack (int4 = `:v0230moe` baked image; w8a8 = `:v0230` + `patches/quark.py`) to `:v0240`. The XPU MoE
+patches were re-grafted onto v0.24.0's rewritten INC package (`patches/inc_wna16_scheme.py`) and drifted
+Quark loader (`patches/quark_v0240.py`), both mount-not-bake. **The port's wins are TTFT and capacity, not
+single-stream decode:** int4 TTFT 441->558ms is *worse* but w8a8 TTFT 1502->1061ms (**-29%**) and BOTH KV
+caches grew a lot (int4 270k->485k, w8a8 684k->775k) from v0.24.0's tighter KV accounting. **The 90-100 t/s
+single-stream hope did NOT materialize** -- MoE decode is launch-bound at batch=1 (~3B active is compute-light,
+little to amortize) and spec-decode is architecturally ineffective on A3B (the 2026-06-22 M5 finding: MTP =
++3% flat on this MoE vs +79% on the dense 27B), so there is no recent lever that lifts it. Aggregate scales
+fine (int4 116 tok/s agg @ c4). Capturing on v0.24.0 needed a new IGC/ocloc workaround: inductor fuses the
+RMSNorm reduction into the small-N MoE router matmul, and IGC cannot compile that kernel in ANY GRF mode
+("Floating point exception", ocloc err 245). int4 needs `prologue_fusion=false`; the harder int8 MoE needs
+BOTH the opaque-rms_norm op-priority (`--ir-op-priority` xpu_kernels) AND all inductor fusion off. See the
+serve.sh headers.
+
+‡ int4 **c1 46.5 is DOWN from the historical 67.7** (v0230moe). Likely cause: v0.24.0's in-tree INC XPU int4
+path defaults to the `auto_round_kernel` (ARK) `woqgemm`, which is a ctypes call that graph-breaks under
+`torch.compile` -> we gate it off (`B70_INC_ARK=1` for eager-only) and use the capturable in-tree
+`int4_gemm_w4a16`, which is slower at M=1 decode. c4 (44.0) matches the old 43.8, and c1<c2 (46.5<57.6) is the
+launch-bound MoE signature. Aggregate out: 39/89/116 tok/s @ c1/2/4.
+
+§ w8a8 **c1 37.0 is the first warm run and DEGRADES run-over-run under sustained back-to-back load** (37.0 ->
+25.5 -> 19.5 across three c1 benches; TTFT stays ~1050ms, so it is clock/thermal -- the display-attached card1
+downclocks under TP=2 -- not a leak). c1 is also below the old 43.1 partly because dodging the IGC crash
+requires disabling inductor fusion (prologue+epilogue+combo), which costs some decode. Aggregate out:
+28/47/65 tok/s @ c1/2/4 (first warm run).
 
 \*\*\* 2026-07-03 "faster-DD" session (JOURNAL, incl the correction entry): **MRV2**
 (VLLM_USE_V2_MODEL_RUNNER=1) lifts cold-bench decode to **32.3-33.6 c1 (+7-11%, noise +-4%)**, gate 24/24

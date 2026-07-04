@@ -68,6 +68,20 @@ b70_setdefaults() {
                                             # graph-recordable impl -> capture crash. Listing the collectives makes
                                             # inductor partition at them so they run EAGER (decode stays captured).
                                             # Empty = vLLM's default attention-only splitting_ops (unchanged).
+  IROP="${IROP:-}"                           # --ir-op-priority JSON (IrOpPriorityConfig): force an op's
+                                            # implementation priority. On XPU-with-inductor vLLM defaults
+                                            # rms_norm/fused_add_rms_norm to ["native"] (decomposed -> inductor
+                                            # can fuse the reduction into an adjacent matmul); on a small-N MoE
+                                            # router mm that fused kernel crashes IGC/ocloc at compile. Set
+                                            # '{"rms_norm":["xpu_kernels","native"],"fused_add_rms_norm":["xpu_kernels","native"]}'
+                                            # to keep them as OPAQUE custom ops (unfusable) where supported.
+                                            # Empty = vLLM's platform default (unchanged).
+  INDUCTOR="${INDUCTOR:-}"                    # extra inductor_compile_config as a JSON OBJECT literal, merged
+                                            # into the --compilation-config. Empty = vLLM's defaults (unchanged).
+                                            # e.g. '{"combo_kernels":false,"benchmark_combo_kernel":false}' to
+                                            # opt OUT of v0.24.0's auto-enabled horizontal combo-kernel fusion
+                                            # (it force-sets those keys unless pre-provided; some fused MoE
+                                            # reduction kernels crash IGC/ocloc at compile on Battlemage).
   # MOUNTS (model-local patch mounts: -v host:container:ro ...) and DOCKER_ENV (model-local docker
   # env: -e NAME=val ...) are set by serve.sh as plain arrays. Do NOT default them here with
   # ${ARR[@]:-} -- that injects an empty-string element that docker reads as the image name. They
@@ -92,6 +106,7 @@ b70_build() {
   [ -n "$SPEC" ]    && ARGS+=(--speculative-config "$SPEC")
   [ -n "$TOOLCALL" ] && ARGS+=(--enable-auto-tool-choice --tool-call-parser "$TOOLPARSER")
   [ -n "$REASONPARSER" ] && ARGS+=(--reasoning-parser "$REASONPARSER")
+  [ -n "$IROP" ]    && ARGS+=(--ir-op-priority "$IROP")   # op-impl priority override (inert unless set)
   # shellcheck disable=SC2206
   [ -n "$EXTRA_ARGS" ] && ARGS+=($EXTRA_ARGS)   # one-off experiment passthrough (inert unless set)
 
@@ -105,12 +120,13 @@ b70_build() {
     local CAP=""; [ -n "$CAPSIZES" ] && CAP="\"cudagraph_capture_sizes\":[$CAPSIZES],"
     local CSZ=""; [ -n "$COMPILESZ" ] && CSZ="\"compile_sizes\":[$COMPILESZ],"
     local SPL=""; [ -n "$SPLITOPS" ] && SPL="\"splitting_ops\":[$SPLITOPS],"
+    local IND=""; [ -n "$INDUCTOR" ] && IND="\"inductor_compile_config\":${INDUCTOR},"
     # IGP: use_inductor_graph_partition. Default true (the newer partitioner). Set IGP=false to fall back to
     # the LEGACY piecewise splitter -- needed when a model MIXES quantized (weight_scale) + unquantized linears
     # in one captured region: the inductor partitioner raises `KeyError: weight_scale` collecting subgraph
     # inputs, while the legacy splitter handles the custom int8 op cleanly. splitting_ops still eject collectives.
     local IGP="${IGP:-true}"
-    CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":${IGP},${CAP}${CSZ}${SPL}$PASS}")
+    CC=(--compilation-config "{\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":${IGP},${CAP}${CSZ}${SPL}${IND}$PASS}")
   fi
   ARGS+=("${EAGER[@]}" "${CC[@]}")    # GRAPH=0 -> --enforce-eager ; GRAPH=1 -> the --compilation-config capture flags
 

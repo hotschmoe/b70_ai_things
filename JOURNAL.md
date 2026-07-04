@@ -8003,3 +8003,85 @@ kept honest: the original async-ON crash was NOT reproducible in-session, so thi
 deterministic fix (removes the identified path), not a strict crash-A/B. Also DFlash accept is ~0% on random
 / non-coding text (pure drafter overhead) -- its win is coding-workload-specific; MTP stays flat-robust ~2.9
 across all workloads. DD-promotion decision (flip live 18080 to DFlash vs keep MTP) is the remaining call.
+
+## 2026-07-04 -- Port BOTH 35B-A3B MoE entries (int4 + w8a8) to vLLM v0.24.0 [in progress]
+
+GOAL (user): the two 35B MoE shelf entries (rdy_to_serve/vllm/qwen36-35b-a3b-{int4,w8a8}) were still on the
+OLD v0.23 stack (int4 = :v0230moe baked-patch image; w8a8 = :v0230 + patches/quark.py). Everything recent
+(v0.24.0 rebase, prefix cache, vision+capture) landed only on the dense 27B. Port both MoE entries to v0.24.0
+and re-bench the README rows. Question was whether v0.24.0 + capture could push the int4 MoE toward 90-100 t/s
+(spec-decode explicitly does NOT apply -- the 2026-06-22 M5 finding: MTP = +3% flat on the A3B MoE).
+
+PORT WORK (patches re-grafted onto the drifted v0.24.0 tree):
+  - int4: v0.24.0 rewrote INC into a package (inc/ + schemes/). The old contrib/vllm_moe_xpu inc.py
+    RoutedExperts->MoeWNA16 routing patch is re-ported as patches/inc_wna16_scheme.py (MOUNT-not-bake now).
+    Upstream get_moe_method STILL hard-returns UnquantizedFusedMoEMethod on XPU (would bf16-inflate the 256
+    int4 experts -> ~70 GB OOM); patch routes gptq/awq-packed experts to the pure-Triton MoeWNA16 path,
+    skipping the CUDA-only Marlin probes. BONUS: v0.24.0 packages gdn_attention + int4_gemm_w4a16 in the
+    stock vllm_xpu_kernels .so (verified) -> int4 entry needs NO kernel mounts at all; linear int4 rides the
+    in-tree INC XPU path.
+  - w8a8: re-grafted patches/quark_v0240.py (QuarkW8A8Int8DequantXPU) onto v0.24.0 quark.py (replace_parameter
+    moved to utils.layer_utils). Stock QuarkW8A8Int8 still KeyErrors on XPU in v0.24.0 (_POSSIBLE_INT8_KERNELS
+    has no XPU entry) -> the dequant-linear default stands; B70_INT8_LINEAR=native opt-in kept for the
+    int8g-v0240 image A/B. 256 experts stay TRUE int8 via in-tree QuarkW8A8Int8MoEMethod (Triton fused_moe).
+
+BLOCKERS FOUND + FIXED (int4, all on the CAPTURE path; eager was clean from the first try):
+  1. ARK dynamo crash: v0.24.0's INC XPU int4 linear defaults to auto_round_kernel (ARK) woqgemm, a ctypes
+     call that is NOT dynamo-traceable -> hard graph-break under torch.compile. FIX (in the patch): gate ARK
+     behind B70_INC_ARK=1 (eager-only); default to INCXPULinearMethod (torch.ops._xpu_C.int4_gemm_w4a16, a
+     real traceable/capturable torch op).
+  2. IGC compiler crash on a fused MoE kernel: PIECEWISE capture aborts compiling
+     triton_red_fused__to_copy_add_fused_add_rms_norm_mm_t with "IGC: Internal Compiler Error: Floating point
+     exception" (ocloc err 245). Fails in BOTH default AND 256-GRF mode (Intel triton retries large-GRF; that
+     crashes too) -> the SPIR-V is uncompilable by IGC in any register mode, NOT a GRF-tuning issue. ROOT
+     CAUSE: inductor prologue/epilogue-fuses the RMSNorm reduction into the small-N MoE router-gate matmul
+     (hidden 2048 -> 256 experts) -> oversized fused reduction+mm kernel. Dense 27B never hits it (large-N
+     matmuls -> DPAS templates, no reduction fusion). FIX: new lib.sh INDUCTOR knob (inert unless set) injects
+     inductor_compile_config; the MoE entries set combo_kernels/benchmark_combo_kernel=false +
+     prologue_fusion/epilogue_fusion=false (pure optimizations, correctness identical) so the norm reduction
+     and router mm compile as separate small kernels. [combo-off alone did NOT fix it; prologue+epilogue off
+     is the actual lever -- under test now.]
+
+STATUS: int4 eager v0.24.0 = COHERENT (load 137s, "Paris"). Captured relaunch with the fusion opt-out is
+compiling. w8a8 TP=2 port staged, not yet served. README re-bench pending the captured numbers.
+
+## 2026-07-04 (cont) -- MoE v0.24.0 port DONE: both entries capture; IGC-fusion root-caused [result]
+
+RESOLVED the IGC/ocloc capture blocker for BOTH MoE entries. Root cause (generalizable, worth remembering):
+on XPU-with-inductor, vLLM lowers rms_norm/fused_add_rms_norm to ["native"] (decomposed primitives) so
+inductor fuses the RMSNorm reduction into the small-N MoE router/proj matmul; that fused reduction+mm kernel
+is uncompilable by IGC in ANY GRF mode (default AND the 256-GRF retry both throw "Floating point exception",
+ocloc err 245). Dense models never hit it (large-N matmuls -> DPAS templates, no reduction fusion).
+
+Two new lib.sh knobs (inert unless set, backend-agnostic): INDUCTOR (merges inductor_compile_config) and
+IROP (--ir-op-priority). Fix per entry:
+  - int4: INDUCTOR={combo,benchmark,prologue_fusion=false}. Its crashing kernel was a matmul-TEMPLATE
+    prologue fusion (rms_norm feeding the router mm) -> prologue_fusion=false alone kills it. (epilogue on/off
+    made zero perf difference -> epilogue left default.)
+  - w8a8 (int8, TP=2): needed BOTH IROP (rms_norm/fused_add_rms_norm -> ["xpu_kernels","native"] = opaque
+    custom op, unfusable) AND INDUCTOR all-fusion-off. Its GDN-region kernel was a SCHEDULER-level decomposed-
+    mm fusion (mm THEN rms_norm), which the template prologue/epilogue knobs do NOT govern -- only making
+    rms_norm opaque + killing the surrounding fusion closes it. IGP true/false made no difference (the fusion
+    is codegen-level, not partitioner-level). Each lever ALONE failed; the union works.
+
+Also fixed (int4): v0.24.0 INC XPU int4 linear defaults to auto_round_kernel (ARK) woqgemm -- a ctypes call
+that graph-breaks under torch.compile -> gated behind B70_INC_ARK=1 (eager only); default = capturable in-tree
+int4_gemm_w4a16.
+
+BENCH (v0.24.0, IN=2048/OUT=128, GRAPH=1 PIECEWISE, warm; per-stream decode / aggregate-out):
+  int4 MoE (TP=1): c1 46.5/39 . c2 57.6/89 . c4 44.0/116 . TTFT 558ms . KV 484,498 tok . coherent
+  w8a8 MoE (TP=2): c1 37.0/28 . c2 29.6/47 . c4 23.5/65 . TTFT 1061ms . KV 774,516 tok . coherent
+    (w8a8 c1 DEGRADES run-over-run 37->25->19; TTFT stable ~1050 -> clock/thermal card1 downclock, not a leak.)
+
+vs OLD v0230 rows: int4 was PP4644/TTFT441/c1 67.7/c4 43.8/KV270k; w8a8 was PP1364/TTFT1502/c1 43.1/c4 22.2/KV684k.
+  - TTFT: int4 WORSE (441->558), w8a8 BETTER (1502->1061, -29%). KV: BOTH much bigger (270->485k, 684->775k).
+  - Single-stream decode: int4 c1 DOWN 67.7->46.5 (ARK int4-linear gated off for capture-compat; the in-tree
+    int4_gemm_w4a16 is slower at M=1); c4 flat (43.8~44.0). w8a8 c1 DOWN 43.1->37.0 (fusion-off decode cost)
+    + sustained throttle; c4 ~flat (22.2->23.5).
+
+ANSWER to the session question (can recent lessons push the MoE to 90-100 t/s single-stream?): NO. MoE decode
+is launch-bound at batch=1 (3B active = compute-light, nothing to amortize) and spec-decode is architecturally
+ineffective on A3B (M5: MTP +3% flat). No recent lever lifts single-stream. The port's real value = v0.24.0
+parity (coherence PRs, vision+capture, prefix-cache eligibility), better w8a8 TTFT, and bigger KV -- NOT a 2x.
+Aggregate throughput is healthy (int4 116 tok/s @ c4). Serve scripts self-contained w/ the fix baked; v0230
+rollback documented in each header. NOT committed to the DD (DD stays the dense 27B).
