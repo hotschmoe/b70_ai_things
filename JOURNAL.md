@@ -8223,3 +8223,7 @@ NVFP4_XPU.md M9, README row (MTP5). Same-stack int4 HumanEval+ A/B running on ca
 ADDENDUM (M9): gate_concurrent 18/18 PASS also at MTPTOK=5 (3 waves x 6, mixed prefill+decode) --
 the standing spec=5 config carries the same coherence grade as spec=3. Same-stack int4 HumanEval+
 A/B still running on card 1 (v0230-graph shelf serve, downclocked display card, ~1/min).
+
+ADDENDUM (M9b): VISION verified WORKING on the champion serve (GRAPH=1 MTPTOK=5): a base64 red-square
+image via /v1/chat/completions is correctly identified ("vibrant red") under capture+MTP. The standing
+vision-retention directive is satisfied for the captured+spec config, not just the eager loads.
