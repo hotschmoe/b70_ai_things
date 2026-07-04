@@ -8190,3 +8190,16 @@ VERDICT: the NVFP4 27B is now the highest-QUALITY and fastest single-card 27B on
   0.988/0.945 @ 38.7-41.8 t/s vs the old champion's 0.963/0.927 @ 7.9. SUMMARY.md leaderboard updated
   (new #1 + REAL TARGETS row + dated callout). The whole M6-M8 arc cost: 1 register_fake, 1 CAPSIZES
   cap, stock vLLM MTP, and an afternoon.
+
+## 2026-07-04 (cont) -- NVFP4 27B gsm8k: 96% (48/50) tier2 [result]
+
+CONFIG: tier2 gsm8k (openai/gsm8k test[:50], greedy, thinking-off) via run_evals.py --tiers 2
+  --task gsm8k --limit 50 against the M7 serve. Also ran the cruder 12-item stdlib gsm8k_probe:
+  9/12 (its hand-items include known-ambiguous ones, e.g. the Tobias-driveways item; not comparable
+  to tier2 -- recorded only for completeness).
+RESULT: 96% (48/50) vs the int4-AutoRound 27B's 100% (50/50) on the same tier2 methodology.
+  2 misses out of 50 = small-sample territory (one-sided p ~0.15) -- not a strong signal either
+  way, but the honest read is: NVFP4 clearly wins coding (HumanEval+ +2.5/+1.8), and is at-or-near
+  parity on gsm8k with a possible slight deficit. SUMMARY.md updated (REAL TARGETS row + callout).
+VERDICT: quality row complete enough for the shelf decision. Open eval items: ppl (tier0), a
+  same-stack int4 A/B (the clean comparison), harder/agentic code evals.

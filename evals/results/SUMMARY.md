@@ -37,7 +37,7 @@
 
 | model (quant) | serves on 1xB70? | gsm8k | HumanEval+ b/+ | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
 |---|---|---|---|---|---|---|---|---|
-| **Qwen3.6-27B** (**NVFP4** ModelOpt, vLLM v0.24.0 GRAPH+MTP) | **yes** | - | **0.988 / 0.945** | - | **38.7-41.8** | 1203 | 1702 | 24.1 GB + 2.3 graphs |
+| **Qwen3.6-27B** (**NVFP4** ModelOpt, vLLM v0.24.0 GRAPH+MTP) | **yes** | 96% (48/50) | **0.988 / 0.945** | - | **38.7-41.8** | 1203 | 1702 | 24.1 GB + 2.3 graphs |
 | **Qwen3.6-27B** (AutoRound int4) | **yes** | **100% (50/50)** | 0.963 / 0.927 | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
 | **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | **yes** -- needs INC-XPU MoE patch | - | - | - | ~6 (eager, untuned) | - | - | 19.6 GiB load + 6.24 KV |
 
@@ -93,7 +93,9 @@
 > reflects the NVFP4 numerics, not spec decode; (b) stack differs from the 0.963 row (vLLM v0.24.0
 > captured vs v0.23 eager) -- template/stack artifacts historically move this metric by a few points
 > (see the W4A8 gate note below), but the direction is consistent: FP8-attn + 4-bit-MLP with NVIDIA's
-> calibration is simply a higher-fidelity 4-bit recipe than int4-AutoRound-everywhere. gsm8k/ppl pending.
+> calibration is simply a higher-fidelity 4-bit recipe than int4-AutoRound-everywhere. gsm8k (tier2,
+> 50 items): 96% (48/50) vs int4's 100% (50/50) -- 2 misses, small-sample noise territory (p~0.15),
+> but recorded honestly; ppl pending.
 > Bonus: the eval GENERATED 3.3x faster than previous 27B runs (700 s vs ~2300 s) -- MTP accept on code
 > is ~99% (per-position 1.00/1.00/0.97), i.e. coding workloads decode at ~50 t/s on one card.
 
