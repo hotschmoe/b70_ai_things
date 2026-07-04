@@ -79,5 +79,29 @@ try:
         file=sys.stderr,
         flush=True,
     )
+
+    # ---- (2) tolerate shard_id on KV-cache scale loads ------------------------
+    # qwen2.py load_weights routes k_proj.k_scale/v_proj.v_scale through the
+    # stacked-params (qkv fusion) branch, which calls
+    # weight_loader(param, weight, shard_id) -- but KVCacheScaleParameter's
+    # loader is (param, weight) only -> TypeError on any qwen2-family ModelOpt
+    # checkpoint that carries FP8 KV scales. Scales are all 1.0 in this ckpt
+    # (and unused with kv_cache_dtype=auto), so dropping shard_id is lossless.
+    from vllm.model_executor.layers.quantization.kv_cache import (
+        KVCacheScaleParameter,
+    )
+
+    _orig_kv_loader = KVCacheScaleParameter.weight_loader
+
+    @staticmethod
+    def _kv_loader_tolerant(param, loaded_weight, *_shard_id):
+        return _orig_kv_loader(param, loaded_weight)
+
+    KVCacheScaleParameter.weight_loader = _kv_loader_tolerant
+    print(
+        "[nvfp4-shim] KVCacheScaleParameter.weight_loader now tolerates shard_id",
+        file=sys.stderr,
+        flush=True,
+    )
 except Exception as e:  # never break unrelated python processes in the container
     print(f"[nvfp4-shim] FAILED: {e!r}", file=sys.stderr, flush=True)

@@ -45,7 +45,12 @@ Serve: `vllm/nvfp4/serve_nvfp4.sh` (single card, port 8077, enforce-eager).
 ## Roadmap
 
 - [x] M0: format crack + dequant math validated on CPU (numpy, no torch)
-- [ ] M1: emul mode serves coherently on 1x B70 (true fp4 math on XPU)
+- [x] M1: emul mode SERVES COHERENTLY on 1x B70 (true per-forward fp4 math on XPU).
+      "Paris" + coherent Qwen3 reasoning chat. Loaded 5.98 GiB, KV cache fp8_e4m3
+      280k tokens, 34x concurrency @ 8192. BUT: <1 tok/s decode (128 tok did not
+      finish in 120s) -- the emul kernel re-dequantizes EVERY weight EVERY forward.
+      Correctness reference only, unusable for serving. (needed 2 shim fixes:
+      register XPU kernel + KVCacheScaleParameter shard_id tolerance.)
 - [ ] M1b: dequant mode serves coherently + bench (expect ~bf16-8B speed)
 - [ ] M2: real packed-weight fast path. Candidates:
       (a) `torch.ops._xpu_C.fp4_gemm` -- EXISTS in vllm-xpu-kernels for MXFP4
