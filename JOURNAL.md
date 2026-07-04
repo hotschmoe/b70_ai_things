@@ -8424,3 +8424,32 @@ two blockers cleared:
 FILES: serve script vllm/nvfp4/serve_nvfp4_moe_35b.sh (emulation backend, TP knob, NVFP4_MOE_W4A16_EMUL);
 shim block (5) in vllm/nvfp4/patches/sitecustomize.py. VERDICT: feasibility PROVEN (loads + coherent on
 TP=2); a fused NVFP4-expert XPU kernel is the gate to a usable serve. Not a shelf entry.
+
+## 2026-07-04 -- NVFP4 27B TP=2 DAILY-DRIVER config: 256K ctx + prefix cache + MTP, gate 18/18 [result]
+
+GOAL (user): make the NVFP4 27B daily driver = TP=2, full model context (262,144 = 256K), WITH prefix
+caching. Built on the MTP-on-TP2 win (commit b8fc79f).
+
+WHAT WAS ADDED:
+  - shim block (6): ported the w8a8 shelf's XPU mamba align-mode int64 pointer fix (VLLM_XPU_MAMBA_PTR_FIX,
+    default on). --enable-prefix-caching switches the hybrid GDN mamba KV to "align" mode; MTP's
+    MambaSpecDecodeGPUContext then packs device pointers into SIGNED int64, and XPU L0 USM addrs >=2**63
+    overflow ("Overflow when unpacking long long") at init. Two's-complement wrap = bit-identical to CUDA.
+    Verified: "[nvfp4-shim] (6) ... prefix caching unblocked" engaged, no overflow.
+  - serve_nvfp4_27b.sh: PREFIXCACHE toggle (default 0 = single-card shelf unchanged; =1 -> --enable-prefix-caching).
+
+RESULT (MODE=fused GRAPH=1 TP=2 MTPTOK=5 CAPSIZES=1,2,4,8 MAXLEN=262144 UTIL=0.85 MAXSEQS=8 PREFIXCACHE=1):
+  - GPU KV cache 764,464 tokens = 2.92x concurrency at FULL 256K (262,144). Captured clean (0.96 GiB).
+  - PREFIX CACHE WORKS: ~6k-token prompt cold TTFT 17,936 ms -> warm 4,508 ms = 3.98x (HIT). This is the
+    big long-agentic-session win (skips the full re-prefill on repeated long prefixes).
+  - gate_concurrent 18/18 PASS (coherent under concurrent mixed prefill+decode at 256K + prefix cache).
+  - Warm real-text c1 decode 48-50 t/s (MTP effective on natural language). Bench IN=2048/OUT=128 random
+    (MTP worst case): c1 PP 666 t/s / TTFT 3076 ms / TG 31.9 / agg 18.1; c4 PP 458 / TTFT 4470 / TG 9.1 /
+    agg 27.1. csv /mnt/vm_8tb/b70/results/sweep_nvfp4-tp2-dd_20260704_223656.csv.
+
+TRADEOFF (honest): vs single-card NVFP4 (PP 1702, TTFT 1243 ms), TP=2 prefill is ~2.5x SLOWER (collective
+cost) and c4 per-stream drops (9.1 vs 27.0) -- TP=2 optimizes single-stream decode + KV headroom + prefix
+cache, NOT cold prefill or c4 aggregate. For the long-context prefix-cached agentic DD (mostly single
+user, repeated long prefixes) the warm-reuse 3.98x mitigates cold prefill. FULL production promotion
+(swap b70_daily_0, wire tool-call qwen3_coder + reasoning qwen3 parsers + API key like
+vllm/daily_driver_serve.sh) is the remaining step -- the serving/coherence layer is validated here.

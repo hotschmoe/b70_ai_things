@@ -452,6 +452,15 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       forward). serve = vllm/nvfp4/serve_nvfp4_moe_35b.sh. REMAINING (the real work): a FUSED
       per-expert NVFP4 MoE XPU kernel (dense 27B's nvfp4_gemm_w4a16 applied per expert, or a
       packed-expert nvfp4 gemm) to make it a usable serve -- emulation is only the correctness ref.
+- [ ] **11g. NVFP4 TP=2 prefill optimization (future session, user-requested 2026-07-04).** The TP=2
+      long-context DD's one weakness is cold prefill: PP 666 t/s vs single-card 1702 (TP=2 collective
+      cost), TTFT 3076 ms @ IN=2048. Prefix caching (3.98x warm reuse, now wired) mitigates it for
+      repeated long agentic prefixes, but a dedicated prefill pass is wanted. Levers to explore:
+      push-AR overlay on the prefill all-reduce (the w8a8 shelf reports 3.8x prefill TTFT from it),
+      chunked-prefill tuning, sequence-parallel prefill, overlap of the prefill collective with compute.
+- [x] **11d-prereq DONE: NVFP4 TP=2 daily-driver config** (256K ctx + prefix cache + MTP, commit pending):
+      764k KV @ 2.92x, prefix 3.98x, gate 18/18, decode 48-50 warm. shim block (6) mamba ptr fix +
+      PREFIXCACHE toggle. Remaining for full promotion: swap live DD + tool-call/reasoning parsers + API key.
 - [ ] **11d. Upstream the register_fake pattern.** One `torch.library.register_fake` per custom
       _xpu_C op is the whole distance between eager-only and PIECEWISE-capturable on XPU. Fold
       into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.

@@ -3,7 +3,17 @@
 Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Intel Arc Pro B70
 (Battlemage, `xpu`). The headline: custom **fused INT8 W8A8** kernels make 8-bit weights beat
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
-accuracy loss. **The daily driver is vLLM v0.24.0 W8A8 + DFlash all-sliding speculative decoding** (`DFLASH=1
+accuracy loss.
+
+> **Long-context daily driver moving to NVFP4 TP=2 (2026-07-04).** `nvidia/Qwen3.6-27B-NVFP4` (box
+> quality #1) spanned across both cards serves the **full 256K model context** (262,144) with **764k KV
+> tokens (2.92x @ 256K)** and **prefix caching** (3.98x warm-TTFT reuse), warm single-stream decode
+> **48-50 t/s** (beats single-card 40-44), gate 18/18. The tradeoff is cold prefill (TP=2 collectives:
+> PP 666 vs single-card 1702) -- prefix cache is the mitigation for repeated long agentic prefixes; a
+> dedicated prefill-optimization pass is future work. See the NVFP4 TP=2 row + footnote ◆ below. The
+> **W8A8 + DFlash** config below stays the high-concurrency / fast-prefill alternative.
+
+**The (current) W8A8 daily driver is vLLM v0.24.0 W8A8 + DFlash all-sliding speculative decoding** (`DFLASH=1
 DFSWA=1`, spec=8, full 253952/248K context): +26% over the MTP config on coding/agentic work (35.2 t/s vs 27.8,
 accept_len 3.24) and it holds accept at depth (3.6 at 100K, +20% decode vs MTP at 40K) with full context. The
 TP-worker `shm_broadcast cancelled` crash that blocked DFlash was ROOT-CAUSED + FIXED 2026-07-03 (session 4):
@@ -93,6 +103,7 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 | Model | Quant | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
 | qwen3.6-27b | **NVFP4 ModelOpt (nvfp4_gemm_w4a16 + MTP5) -- v0.24.0, QUALITY #1**¶ | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 10.7k tok |
+| qwen3.6-27b | **NVFP4 TP=2 + MTP5 + prefix cache -- 256K ctx (long-ctx DD)**◆ | 24 | 2 | 666 | 3076 ms | 31.9 (**48-50** warm) | 9.1 | **764k tok** |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
@@ -112,6 +123,23 @@ decode**). HumanEval+ **0.988/0.945** (leaderboard #1, beats int4-AutoRound 0.96
 (48/50), gate 18/18, vision verified under capture+MTP. Shelf entry `rdy_to_serve/vllm/qwen36-27b-nvfp4/`
 (wrapper over `vllm/nvfp4/serve_nvfp4_27b.sh`). Caveat: KV ~10.7k tok @ MAXLEN=8192 -> the QUALITY/single-stream pick,
 not the concurrency pick; UTIL=0.85 + CAPSIZES=1,2,4,8 are hard limits (OOM above).
+
+◆ **NVFP4 TP=2 = the long-context daily-driver config (2026-07-04).** Same NVFP4 checkpoint + kernel, spanned
+across BOTH cards to solve the single-card KV starvation: at the FULL model context 262,144 (256K) it serves
+**764,464 KV tokens = 2.92x concurrency at 256K** (vs 10.7k single-card), with **prefix caching ON** (warm
+prefix reuse **3.98x** TTFT: a ~6k-token prompt cold 17,936 ms -> warm 4,508 ms). Warm real-text single-stream
+decode is **48-50 t/s -- FASTER than single-card** (40-44): each rank reads half the decode weights (the GEMV is
+bandwidth-bound) and MTP amortizes the now-captured all-reduce. gate_concurrent **18/18** at 256K + prefix cache.
+The build: port the capture-safe all_gather (all-reduce-of-padded) + `splitting_ops` to the TP>1 path, fix an XPU
+vLLM bug (TP>1 fusion resolves `fuse_rope_kvcache_cat_mla` True but `MLARoPEKVCacheCatFusionPass` is cuda-only
+imported -> NameError; disabled, Qwen3.6 is not MLA), a MAXSEQS>=8 NaN-garbage correctness floor (MAXSEQS=4
+starves the size-8 spec graph), and the mamba align-mode int64 pointer fix that unblocks prefix caching on XPU
+(shim block 6). **Tradeoff (honest):** TP=2 prefill is ~2.5x SLOWER than single-card (PP 666 vs 1702, TTFT 3076
+vs 1243 ms) and c4 per-stream drops (9.1 vs 27.0) -- TP=2 optimizes single-stream decode + KV headroom + prefix
+cache, not cold prefill or c4 aggregate; the warm-reuse 3.98x mitigates it for repeated long agentic prefixes.
+Serve: `MODE=fused GRAPH=1 TP=2 MTPTOK=5 MAXLEN=262144 UTIL=0.85 MAXSEQS=8 PREFIXCACHE=1 bash
+vllm/nvfp4/serve_nvfp4_27b.sh`. Full production promotion (swap the live DD + wire tool-call/reasoning parsers +
+API key) is the remaining step; the serving/coherence layer is validated (JOURNAL 2026-07-04).
 
 † **Both 35B-A3B MoE rows re-benched on vLLM v0.24.0 (torch 2.12), 2026-07-04** (JOURNAL). Ported off the old
 v0.23 stack (int4 = `:v0230moe` baked image; w8a8 = `:v0230` + `patches/quark.py`) to `:v0240`. The XPU MoE

@@ -402,3 +402,38 @@ if os.environ.get("NVFP4_MOE_W4A16_EMUL", "0") == "1":
               "(kNvfp4Static, None) -- 35B MoE bring-up", file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (5) MoE W4A16 emul patch failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (6) XPU mamba align-mode pointer fix -- enables --enable-prefix-caching (ported from w8a8 shelf) --
+# --enable-prefix-caching on the hybrid GDN model auto-switches vLLM's mamba KV cache to "align" mode.
+# Combined with MTP spec-decode (MambaSpecDecodeGPUContext.initialize_from_forward_context) it packs raw
+# device pointers into SIGNED int64 tensors (state_base_addrs[idx]=state.data_ptr(), block_table_ptrs[i]=
+# bt.data_ptr()). CUDA pointers sit below 2**63; Intel XPU Level-Zero USM device addrs are >= 2**63, so
+# torch's python-int -> int64 conversion overflows -> "Overflow when unpacking long long" at engine init.
+# The stored int64 is only ever reinterpreted back to a pointer via .to(tl.pointer_type(...)) with modular
+# int64 arithmetic, so storing the two's-complement signed value (ptr - 2**64 when ptr >= 2**63) is
+# BIT-IDENTICAL to CUDA. Re-exec the method source with the two assignments wrapped. Default on; no-op for
+# CUDA-range (< 2**63) pointers and for non-prefix-cache serves (align mode not active). Off with
+# VLLM_XPU_MAMBA_PTR_FIX=0. The sibling uint64 batch_memcpy path is intentionally left untouched.
+if os.environ.get("VLLM_XPU_MAMBA_PTR_FIX", "1") != "0":
+    try:
+        import inspect as _inspect, textwrap as _textwrap
+        import vllm.v1.worker.mamba_utils as _mu
+
+        def _wrap_i64(p):
+            return p - (1 << 64) if p >= (1 << 63) else p
+
+        _cls = _mu.MambaSpecDecodeGPUContext
+        _src = _textwrap.dedent(_inspect.getsource(_cls.initialize_from_forward_context))
+        assert "state.data_ptr()" in _src and "bt.data_ptr()" in _src, "mamba_utils source changed"
+        _patched_src = (_src
+                        .replace("state.data_ptr()", "_wrap_i64(state.data_ptr())")
+                        .replace("bt.data_ptr()", "_wrap_i64(bt.data_ptr())"))
+        _ns = dict(_mu.__dict__)
+        _ns["_wrap_i64"] = _wrap_i64
+        exec(_patched_src, _ns)
+        _cls.initialize_from_forward_context = _ns["initialize_from_forward_context"]
+        print("[nvfp4-shim] (6) MambaSpecDecodeGPUContext pointer packing wrapped for XPU USM (>=2**63) "
+              "-- prefix caching unblocked", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (6) mamba ptr fix failed:", repr(e), file=sys.stderr, flush=True)

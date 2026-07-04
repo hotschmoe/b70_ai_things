@@ -40,6 +40,12 @@ UTIL="${UTIL:-0.92}"
 # graph the MTP verify batch pads to. Single-card default stays 4 (no spec-verify all_gather batch).
 _MAXSEQS_DEF=$([ "$TP" != 1 ] && echo 8 || echo 4)
 MAXSEQS="${MAXSEQS:-$_MAXSEQS_DEF}"
+# PREFIXCACHE: --enable-prefix-caching on this hybrid GDN model needs the mamba align-mode int64
+# pointer fix (shim block 6, VLLM_XPU_MAMBA_PTR_FIX, default on) or engine init overflows on XPU USM
+# addresses. Default OFF to preserve the single-card shelf behavior; the TP=2 long-context daily driver
+# sets PREFIXCACHE=1 for warm-prefix reuse (skips the full re-prefill on repeated long prefixes).
+PREFIXCACHE="${PREFIXCACHE:-0}"
+if [ "$PREFIXCACHE" = 1 ]; then PC_ARG="--enable-prefix-caching"; else PC_ARG="--no-enable-prefix-caching"; fi
 SERVED="qwen3.6-27b-NVFP4-modelopt-${MODE}"
 
 # GRAPH=1 -> PIECEWISE XPU graph capture (M6, 2026-07-04). Needs the register_fake
@@ -155,7 +161,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" \
-  "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
+  "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" "$PC_ARG" --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up; follow with: docker logs -f $NAME"
 echo "health: curl -s http://localhost:$PORT/health"
