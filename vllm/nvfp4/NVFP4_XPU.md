@@ -129,9 +129,13 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
   stays the keeper for the DENSE 8B (where 2x of 4-bit still fits); it is a deadend
   for the 27B on one card.
 
-- [x] M4: MIXED_PRECISION 27B LOADS on XPU (mixed-precision loader + both NVFP4 XPU
-      shims). emul mode (4-bit resident, ~22GB) = the fits+coherence reference.
-      BENCH: <pending emul coherence + t/s>.
+- [x] M4: MIXED_PRECISION 27B LOADS + SERVES COHERENTLY on 1x B70 (mixed-precision
+      loader + both NVFP4 XPU shims + compact N-tiled W4A16 dequant). emul mode
+      (4-bit resident, 21.96 GiB weights on a 31.9 GiB card, 3.36 GiB KV / 27.9k
+      tokens / 13.6x conc @ 2048). COHERENT: "Paris"; 17+26 correct step-by-step
+      with <think>; correct Rayleigh sky-is-blue. Speed 0.46-0.53 tok/s -- the
+      honest emul floor (full-weight per-forward dequant). Fits one card, proves
+      correctness; too slow to serve. serve = vllm/nvfp4/serve_nvfp4_27b.sh.
 - [ ] M5: fused E2M1 4-bit-in-VRAM dequant kernel -> fast single-card 27B serve at
       the 22GB footprint. The real deliverable (kernel prototyped card 1).
 
