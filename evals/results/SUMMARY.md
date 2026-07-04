@@ -37,7 +37,8 @@
 
 | model (quant) | serves on 1xB70? | gsm8k | HumanEval+ b/+ | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
 |---|---|---|---|---|---|---|---|---|
-| **Qwen3.6-27B** (AutoRound int4) | **yes** | **100% (50/50)** | **0.963 / 0.927** | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
+| **Qwen3.6-27B** (**NVFP4** ModelOpt, vLLM v0.24.0 GRAPH+MTP) | **yes** | - | **0.988 / 0.945** | - | **38.7-41.8** | 1203 | 1702 | 24.1 GB + 2.3 graphs |
+| **Qwen3.6-27B** (AutoRound int4) | **yes** | **100% (50/50)** | 0.963 / 0.927 | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
 | **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | **yes** -- needs INC-XPU MoE patch | - | - | - | ~6 (eager, untuned) | - | - | 19.6 GiB load + 6.24 KV |
 
 > ## [!] W4A8 ACCURACY GATE -- PASS (2026-06-28, sglang-XPU, HumanEval+ 164, thinking-off, greedy, sandboxed)
@@ -82,6 +83,20 @@
 
 ---
 
+> ## [!] NEW #1 (2026-07-04): NVFP4 27B = 0.988 / 0.945 -- beats int4-AutoRound on quality AND is 5x faster
+> The `nvidia/Qwen3.6-27B-NVFP4` ModelOpt MIXED_PRECISION checkpoint (W4A16_NVFP4 MLP + FP8 attention),
+> served on ONE B70 via our custom `nvfp4_gemm_w4a16` oneDNN op + PIECEWISE capture + stock NEXTN MTP
+> (`vllm/nvfp4/serve_nvfp4_27b.sh`, MODE=fused GRAPH=1 MTPTOK=3): HumanEval+ **0.988 base / 0.945 plus**
+> (164, thinking-off, greedy, sandboxed; result dir `...__nvfp4-fused-graph-mtp3`). That is **+2.5 base /
+> +1.8 plus over the long-standing int4-AutoRound champion** (0.963/0.927) at **38.7-41.8 t/s vs 7.9** --
+> quality AND speed, no tradeoff. Two honesty notes: (a) MTP is output-invariant at greedy, so the number
+> reflects the NVFP4 numerics, not spec decode; (b) stack differs from the 0.963 row (vLLM v0.24.0
+> captured vs v0.23 eager) -- template/stack artifacts historically move this metric by a few points
+> (see the W4A8 gate note below), but the direction is consistent: FP8-attn + 4-bit-MLP with NVIDIA's
+> calibration is simply a higher-fidelity 4-bit recipe than int4-AutoRound-everywhere. gsm8k/ppl pending.
+> Bonus: the eval GENERATED 3.3x faster than previous 27B runs (700 s vs ~2300 s) -- MTP accept on code
+> is ~99% (per-position 1.00/1.00/0.97), i.e. coding workloads decode at ~50 t/s on one card.
+
 ## Code-quality leaderboard (HumanEval+) + decode speed -- all single-B70 configs (2026-06-20)
 
 > Every config that serves on ONE Arc Pro B70, sorted by HumanEval+ plus pass@1 (164 problems, thinking-off,
@@ -90,7 +105,8 @@
 
 | rank | model | quant (calib) | HumanEval+ base / plus | decode t/s | TTFT ms | prefill t/s | VRAM |
 |---|---|---|---|---|---|---|---|
-| 1 | Qwen3.6-27B | int4 (AutoRound) | **0.963 / 0.927** | 7.9 | 283 | 1376 | 17.6 GB |
+| **1** | Qwen3.6-27B | **NVFP4 (NVIDIA ModelOpt)**, vLLM v0.24.0 GRAPH+MTP | **0.988 / 0.945** | **38.7-41.8** | 1203 | 1702 | 26.4 GB |
+| 2 | Qwen3.6-27B | int4 (AutoRound) | 0.963 / 0.927 | 7.9 | 283 | 1376 | 17.6 GB |
 | 2 | Qwen3-14B | w8a8 (GPTQ) | 0.921 / 0.890 | 23.5 | 101 | 5740 | ~15 GB |
 | 2 | Qwen3-14B | fp8 (online) | 0.915 / 0.890 | **32.1** | **85** | 3525 | ~15 GB |
 | ~4 | Qwen3-14B | w8a8 (AutoRound) | 0.909 / 0.872 | ~23.5 | -- | -- | ~15 GB |

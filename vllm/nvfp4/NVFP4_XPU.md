@@ -185,6 +185,14 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       serve: MODE=fused GRAPH=1 MTPTOK=3 CAPSIZES=1,2,4,8 ./vllm/nvfp4/serve_nvfp4_27b.sh.
       38.67 t/s BEATS every single-card entry in the README table (W4A8 27.3,
       int4-graph 23.5) -- on the format Intel has zero support for.
+- [x] M8: QUALITY -- HumanEval+ 0.988 base / 0.945 plus = NEW BOX LEADERBOARD #1
+      (beats int4-AutoRound 0.963/0.927 by +2.5/+1.8). 164 problems, thinking-off,
+      greedy, sandboxed grading, via the repo eval harness on the M7 serve. MTP is
+      greedy-output-invariant, so this measures the NVFP4 numerics. Also: gate_concurrent
+      18/18 PASS (3 waves x 6 mixed prefill+decode). Coding-workload bonus: MTP accept
+      on code ~99% (1.00/1.00/0.97 per position) -> the eval generated in 700 s vs
+      ~2300 s for previous 27B runs (~50 t/s accepted throughput on code). NVFP4 27B is
+      now simultaneously the highest-quality AND fastest single-card 27B on the box.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 

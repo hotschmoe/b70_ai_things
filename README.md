@@ -65,7 +65,9 @@ bit-exact (rel-err 3.7e-3 = bf16 scale rounding) and 2.85x bf16 at decode. **38.
 the fastest single-card 27B on this box** (M6+M7, 2026-07-04): a `register_fake` meta impl unlocked
 PIECEWISE capture (8.47 -> 25.06), then stock NEXTN MTP stacked on top (-> 38.67; the ckpt carries its
 15 bf16 `mtp.*` tensors natively, zero graft/shim). Ladder: 0.5 emul -> 8.47 eager -> 25.1 capture ->
-38.7 +MTP = 77x emul. Caveats: KV 8.5k tok (c4 @ 2k-in thrashes; c1 is the headline), UTIL=0.85 hard
+38.7 +MTP = 77x emul. **AND the highest-quality: HumanEval+ 0.988/0.945 = new box leaderboard #1**
+(M8; beats int4-AutoRound 0.963/0.927), gate_concurrent 18/18 PASS, MTP accept ~99% on code (~50 t/s
+coding decode). Caveats: KV 8.5k tok (c4 @ 2k-in thrashes; c1 is the headline), UTIL=0.85 hard
 ceiling. See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
 
 ## Serve shelf -- vLLM (UN-PAUSED on v0.24.0)

@@ -8154,3 +8154,39 @@ grading, longer soak.
 
 REPRODUCE (fresh container, reverted UTIL=0.85 config, c1-only): 41.77 t/s / TPOT 23.94 ms -- the
 M7 number is stable-or-better across serve cycles (38.7-41.8; variance = random-prompt accept rate).
+
+## 2026-07-04 (cont) -- NVFP4 27B: gate_concurrent PASS 18/18 on the GRAPH+MTP serve [result]
+
+CONFIG: the M7 serve (MODE=fused GRAPH=1 MTPTOK=3 CAPSIZES=1,2,4,8 UTIL=0.85), card 0.
+COMMAND: gpu-run --card 0 python3 vllm/gate_concurrent_coherence.py http://localhost:8078/v1
+  qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp3 3 6 200
+RESULT: 18/18 streams coherent under concurrent mixed prefill+decode (3 waves x 6, long-prefill
+  staggered against in-flight decoders, the exact "!!!!" trigger). PASS in 43 s.
+VERDICT: the NVFP4 capture+MTP serve survives the failure mode that matters, not just single-shot
+  probes. HumanEval+ tier1 running next for the quality row.
+
+## 2026-07-04 (cont) -- NVFP4 27B M8: HumanEval+ 0.988/0.945 = NEW LEADERBOARD #1 (quality AND speed) [result]
+
+CONFIG: HumanEval+ (164, thinking-OFF, greedy, seed 1234, EvalPlus sandboxed grading) via the repo
+harness against the LIVE M7 serve (MODE=fused GRAPH=1 MTPTOK=3 CAPSIZES=1,2,4,8 UTIL=0.85, card 0,
+served id qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp3 -- id verified against /v1/models per the
+model-identity rule).
+COMMAND: gpu-run --card 0 evals/.venv/bin/python evals/orchestrator/run_evals.py
+  --endpoint http://localhost:8078/v1 --model qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp3
+  --quant nvfp4-fused-graph-mtp3 --tiers 1 --tier1-dataset humaneval
+RESULT: pass@1 base 0.988 / plus 0.945 (gen 700 s, grade 44 s, sandbox-docker).
+  Result dir: evals/results/20260704T172906Z__...__nvfp4-fused-graph-mtp3.
+  vs the box leaderboard: int4-AutoRound 27B (old #1) 0.963/0.927 -> +2.5 base / +1.8 plus.
+  vs 14B best (fp8) 0.915/0.890 -> +7.3/+5.5.
+  Speed context: this same serve decodes 38.7-41.8 t/s random-text and ~50 t/s on code (MTP accept
+  ~99% on code: per-position 1.00/1.00/0.97 during the eval; gen 3.3x faster than the ~2300 s the
+  previous 27B evals took).
+HONESTY NOTES: (a) MTP is output-invariant at greedy -- the score measures NVFP4 numerics, not spec
+  decode. (b) Stack differs from the 0.963 row (vLLM v0.24.0 captured vs v0.23 eager); stack/template
+  artifacts have moved this metric a few points before (the 0.921-vs-0.963 sglang/vLLM same-weights
+  case). A same-stack int4 re-run would be the clean A/B, but the direction is consistent: FP8-attn +
+  NVFP4-MLP with NVIDIA ModelOpt calibration beats int4-AutoRound-everywhere. (c) gsm8k/ppl pending.
+VERDICT: the NVFP4 27B is now the highest-QUALITY and fastest single-card 27B on the box at once --
+  0.988/0.945 @ 38.7-41.8 t/s vs the old champion's 0.963/0.927 @ 7.9. SUMMARY.md leaderboard updated
+  (new #1 + REAL TARGETS row + dated callout). The whole M6-M8 arc cost: 1 register_fake, 1 CAPSIZES
+  cap, stock vLLM MTP, and an afternoon.
