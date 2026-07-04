@@ -65,12 +65,58 @@ try:
         def apply_weights(self, layer, x, bias=None):
             return torch.nn.functional.linear(x, layer.weight, bias)
 
+    # E2M1 magnitude * 2 -> exact int8 codes (sign applied separately).
+    _E2M1_INT8 = [0, 1, 2, 3, 4, 6, 8, 12]
+
+    class XPUInt8XmxNvFp4LinearKernel(EmulationNvFp4LinearKernel):
+        """W4A16-via-INT8-XMX: repack NVFP4 -> s8 weight + per-16-K-group bf16
+        scale at load, then oneDNN int8_gemm_w8a16 (INT8 XMX) each forward.
+
+        Needs the K-group-fixed nvfp4_kernel/_xpu_C.abi3.so mounted (the stock op
+        applies square {g,g} groups and is numerically wrong for NVFP4). Weights
+        stay int8 in VRAM (~half the bf16 dequant footprint).
+        """
+
+        def process_weights_after_loading(self, layer: torch.nn.Module) -> None:
+            import vllm_xpu_kernels._xpu_C  # noqa: F401 (registers the op)
+
+            dev = layer.weight.device
+            packed = layer.weight.data  # [N, K/2] uint8
+            N = packed.shape[0]
+            lut = torch.tensor(_E2M1_INT8, dtype=torch.int8, device=dev)
+            lo = packed & 0x0F
+            hi = (packed >> 4) & 0x0F
+            both = torch.stack([lo, hi], dim=-1).reshape(N, -1)  # [N,K] low-first
+            sign = torch.where((both & 0x8) != 0, -1, 1).to(torch.int8)
+            w_int8 = sign * lut[(both & 0x7).long()]             # [N,K] exact s8
+            wt = w_int8.t().contiguous()                          # [K,N] s8
+
+            # scale [N, K/16] f8e4m3 -> [K/16, N] bf16, folded * ws2 / 2
+            ws2 = layer.weight_global_scale.data.to(torch.float32)
+            g = (layer.weight_scale.data.to(torch.float32) * ws2 / 2.0)  # [N,K/16]
+            g = g.t().contiguous().to(torch.bfloat16)             # [K/16, N]
+
+            replace_parameter(layer, "weight", wt)
+            replace_parameter(layer, "weight_scale", g)
+
+        def apply_weights(self, layer, x, bias=None):
+            out_shape = (*x.shape[:-1], layer.weight.shape[1])
+            x2 = x.reshape(-1, x.shape[-1]).to(torch.bfloat16)
+            y = torch.ops._xpu_C.int8_gemm_w8a16(
+                x2, layer.weight, layer.weight_scale, bias
+            )
+            return y.reshape(out_shape)
+
     if _MODE == "emul":
         _kern = [EmulationNvFp4LinearKernel]
     elif _MODE == "dequant":
         _kern = [XPUDequantAtLoadNvFp4LinearKernel]
+    elif _MODE == "int8xmx":
+        _kern = [XPUInt8XmxNvFp4LinearKernel]
     else:
-        raise ValueError(f"NVFP4_XPU_MODE={_MODE!r} not in (emul, dequant)")
+        raise ValueError(
+            f"NVFP4_XPU_MODE={_MODE!r} not in (emul, dequant, int8xmx)"
+        )
 
     _linmod._POSSIBLE_NVFP4_KERNELS[PlatformEnum.XPU] = _kern
     print(

@@ -57,25 +57,37 @@ Serve: `vllm/nvfp4/serve_nvfp4.sh` (single card, port 8077, enforce-eager).
       THIS is the usable NVFP4 serve path on B70 today. numerically it is a
       W4A16 read of the W4A4 ckpt (weights exact-dequant, activations stay bf16 ->
       if anything slightly HIGHER quality than the intended W4A4).
-- [~] M2: INT8-XMX packed-weight path (the kernel flex). IN PROGRESS.
-      Chosen route (b): E2M1*2 is EXACT int8 ({0,+-1,+-2,+-3,+-4,+-6,+-8,+-12}),
-      so nvfp4 weight == s8 weight + per-16-K-group fp scale
-      (e4m3_block_scale * weight_scale_2 / 2). 02_int8_repack.py proves this
-      BIT-EXACT on real tensors. 03_xmx_microbench.py shows the oneDNN
-      int8_gemm_w8a16 XMX path is 1.25-1.54x faster than bf16 F.linear on B70,
-      AND keeps weights at int8 (~7.6GB vs 15.3GB bf16 -> ~2x KV headroom).
+- [x] M2: INT8-XMX packed-weight path (the kernel flex). DONE.
+      Route (b): E2M1*2 is EXACT int8 ({0,+-1,+-2,+-3,+-4,+-6,+-8,+-12}), so
+      nvfp4 weight == s8 weight + per-16-K-group fp scale
+      (e4m3_block_scale * weight_scale_2 / 2). 02_int8_repack.py proves it
+      BIT-EXACT on real tensors. 03_xmx_microbench.py: oneDNN int8_gemm_w8a16 XMX
+      is 1.16-1.66x faster than bf16 F.linear on B70 + int8 weights (half bf16).
       BLOCKER FOUND + FIXED: the kernel's is_block_quant branch hardcoded SQUARE
       {g,g} groups -> wrong numerics (rel-err 0.46-0.80) for NVFP4's K-only
-      grouping. Fix (int8_gemm_w8a16.h): infer {grp_k, grp_n} from the scale
-      shape [K/grp_k, N/grp_n]; NVFP4 [K/16,N] -> {16,1}. Built to a SEPARATE
-      nvfp4_kernel/_xpu_C.abi3.so (daily driver untouched; it only uses the
-      per-channel branch). NEXT: rerun microbench with the fixed .so -> expect
-      exact numerics; then a linear method that repacks-to-int8 at load + calls
-      the op (M3 serve).
-      Rejected route (a): fp4_gemm EXISTS but is MXFP4-only (asserts e8m0 scales
-      @ group32; NVFP4 is e4m3 @ group16) -> rejects our tensors outright.
+      grouping. FIX (int8_gemm_w8a16.h): infer {grp_k, grp_n} from the scale
+      shape [K/grp_k, N/grp_n]; NVFP4 [K/16,N] -> {16,1}. Built via
+      build_nvfp4_kernel.sh to a SEPARATE nvfp4_kernel/_xpu_C.abi3.so (daily
+      driver untouched; it only uses the per-channel branch). Post-fix microbench:
+      rel-err 0.004-0.006 (bf16 scale rounding only) = EXACT, 1.16-1.66x.
+      Rejected route (a): fp4_gemm EXISTS but is MXFP4-only (asserts e8m0 @
+      group32; NVFP4 is e4m3 @ group16) -> rejects our tensors outright.
       Deferred route (c): Triton-XPU fused dequant-GEMM keeping weights 4-bit in
-      VRAM -> the real bandwidth win for M=1 decode; later frontier.
+      VRAM -> the real M=1-decode bandwidth win; later frontier.
+- [x] M3: int8xmx mode SERVES COHERENTLY on 1x B70 via our custom kernel.
+      XPUInt8XmxNvFp4LinearKernel (shim): repack NVFP4->s8 + [K/16,N] bf16 group
+      scale at load, oneDNN int8_gemm_w8a16 each forward. "Paris" + coherent chat,
+      31.7 tok/s single-stream (== bf16 dequant speed, decode is BW-bound at 8B)
+      BUT weights 9.63 GiB vs 15.27 GiB -> KV cache 18.25 GiB vs 10.79 (2x
+      headroom). serve: `MODE=int8xmx ./vllm/nvfp4/serve_nvfp4.sh`.
+
+## Bottom line
+
+NVFP4 runs on Intel B70 three ways, all coherent: emul (reference, <1 tok/s),
+dequant-at-load (31 tok/s, 15.3GB bf16), and int8xmx (31.7 tok/s, 9.6GB int8 via
+our own oneDNN K-group kernel fix -- the flex). The int8xmx path is the keeper:
+same speed, half the weight VRAM, and it actually uses B70's INT8 XMX units on a
+format Intel has zero support for.
 
 ## Status log
 

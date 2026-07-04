@@ -15,11 +15,21 @@ IMG="${IMG:-vllm-xpu-env:int8g-v0240}"
 NAME="${NAME:-nvfp4_xpu}"
 PORT="${PORT:-8077}"
 CARD="${CARD:-0}"
-MODE="${MODE:-dequant}"          # dequant | emul
+MODE="${MODE:-dequant}"          # dequant | emul | int8xmx
 MAXLEN="${MAXLEN:-8192}"
 UTIL="${UTIL:-0.90}"
 MAXSEQS="${MAXSEQS:-4}"
 SERVED="qwen3-8b-NVFP4-modelopt-${MODE}"
+
+# int8xmx rides the K-group-fixed oneDNN int8 kernel; mount it over the pkg .so.
+PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
+KERN_MOUNTS=()
+if [ "$MODE" = int8xmx ]; then
+  SO="${SO:-$ROOT/nvfp4_kernel/_xpu_C.abi3.so}"
+  GDN_LIB="${GDN_LIB:-$ROOT/w8a8_kernel_v0240/libgdn_attn_kernels_xe_2.so}"
+  [ -f "$SO" ] || { echo "MISSING $SO -- run build_nvfp4_kernel.sh first"; exit 1; }
+  KERN_MOUNTS=( -v "$SO:$PKGD/_xpu_C.abi3.so:ro" -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
+fi
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
@@ -27,6 +37,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$DIR/patches:/opt/nvfp4_shim:ro" \
+  ${KERN_MOUNTS[@]+"${KERN_MOUNTS[@]}"} \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
