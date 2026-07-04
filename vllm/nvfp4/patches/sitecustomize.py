@@ -126,6 +126,83 @@ try:
         flush=True,
     )
 
+    # ---- (1b) W4A16_NVFP4 path (MIXED_PRECISION 27B) --------------------------
+    # The mixed checkpoint's MLP is W4A16_NVFP4 (weight-only 4-bit, bf16 acts),
+    # routed to ModelOptNvFp4W4A16LinearMethod -- which HARDCODES a CUDA-only
+    # MarlinNvFp4LinearKernel (modelopt.py:1277) instead of consulting the XPU
+    # registry, so it asserts is_supported() on XPU. We replace its kernel with
+    # an XPU one. To keep weights 4-bit resident (~22GB fits one card; a bf16
+    # dequant-at-load would balloon the MLP to ~37GB and NOT fit), we dequant
+    # per-forward (emul-class, slow but small). After the method's
+    # process_weights the layer carries: weight uint8 [N,K/2], weight_scale
+    # f8e4m3 [N,K/gs] block scale, weight_global_scale fp32 scalar.
+    # Signed E2M1 LUT indexed by the full 4-bit nibble (bit3 = sign, bits0-2 =
+    # magnitude {0,.5,1,1.5,2,3,4,6}).
+    _E2M1_SIGNED = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0,
+                    -0.0, -0.5, -1.0, -1.5, -2.0, -3.0, -4.0, -6.0]
+
+    class _XPUW4A16NvFp4Kernel:
+        """XPU W4A16_NVFP4: weights stay 4-bit-packed resident in VRAM (~22GB
+        fits the 27B on one card). apply_weights dequants per-forward with a
+        COMPACT, N-TILED unpack (no fat f32/int64 intermediates -> bounded
+        transient, ~0.3GB), so it fits alongside the resident 4-bit weights.
+        Slow (full-weight materialize per forward) but coherent + correct --
+        the reference until the fused in-register kernel lands.
+        """
+
+        def process_weights_after_loading(self, layer):
+            dev = layer.weight.device
+            layer._lut = torch.tensor(_E2M1_SIGNED, dtype=torch.bfloat16, device=dev)
+            K = layer.weight.shape[1] * 2
+            layer._gs = K // layer.weight_scale.shape[1]      # group_size (16)
+            # block scale -> bf16 once (fp8 [N, K/gs]); global scale folded in.
+            g = layer.weight_global_scale.data.to(torch.float32)
+            layer._wscale = (layer.weight_scale.data.to(torch.float32) * g).to(
+                torch.bfloat16
+            )
+
+        def apply_weights(self, layer, x, bias=None):
+            wp = layer.weight.data          # [N, K/2] uint8
+            N, Kh = wp.shape
+            K = Kh * 2
+            gs = layer._gs
+            lut = layer._lut
+            wscale = layer._wscale          # [N, K/gs] bf16 (incl global)
+            x2 = x.reshape(-1, x.shape[-1])
+            outs = []
+            TILE = 2048
+            for n0 in range(0, N, TILE):
+                n1 = min(n0 + TILE, N)
+                p = wp[n0:n1]                             # [t, K/2] uint8
+                lo = (p & 0x0F).to(torch.long)
+                hi = (p >> 4).to(torch.long)
+                nib = torch.stack([lo, hi], dim=-1).reshape(n1 - n0, K)  # low-first
+                w = lut[nib]                              # [t, K] bf16 (signed mag)
+                s = wscale[n0:n1].repeat_interleave(gs, dim=1)           # [t, K] bf16
+                w = w * s
+                outs.append(torch.nn.functional.linear(x2, w))
+            y = torch.cat(outs, dim=-1)
+            if bias is not None:
+                y = y + bias
+            return y.reshape(*x.shape[:-1], N)
+
+    from vllm.model_executor.layers.quantization.modelopt import (
+        ModelOptNvFp4W4A16LinearMethod as _W4A16,
+    )
+
+    def _w4a16_init_xpu(self, quant_config):
+        self.quant_config = quant_config
+        self.marlin_input_dtype = None
+        self.kernel = _XPUW4A16NvFp4Kernel()
+
+    _W4A16.__init__ = _w4a16_init_xpu
+    print(
+        "[nvfp4-shim] ModelOptNvFp4W4A16LinearMethod now uses XPU 4-bit-resident "
+        "dequant kernel (was CUDA-only Marlin)",
+        file=sys.stderr,
+        flush=True,
+    )
+
     # ---- (2) tolerate shard_id on KV-cache scale loads ------------------------
     # qwen2.py load_weights routes k_proj.k_scale/v_proj.v_scale through the
     # stacked-params (qkv fusion) branch, which calls

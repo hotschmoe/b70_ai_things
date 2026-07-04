@@ -89,8 +89,73 @@ our own oneDNN K-group kernel fix -- the flex). The int8xmx path is the keeper:
 same speed, half the weight VRAM, and it actually uses B70's INT8 XMX units on a
 format Intel has zero support for.
 
+## 27B (MIXED_PRECISION) -- nvidia/Qwen3.6-27B-NVFP4, 2026-07-04
+
+The real headline target: the ACTUAL NVIDIA NVFP4 build of our daily-driver model.
+It is NOT uniform NVFP4 like the 8B -- it is a ModelOpt MIXED_PRECISION checkpoint
+(21.9 GB on disk), same Qwen3_5 GDN-hybrid VLM arch as the daily driver:
+
+- MLP gate/up/down     -> W4A16_NVFP4 (4-bit E2M1 weight, per-16-K block scale, bf16 acts)
+- self_attn + GDN in_proj -> FP8 (per-tensor E4M3 weight + activation scale)
+- norms / conv1d / embed / lm_head / vision tower / mtp -> BF16 (unquantized)
+- KV cache -> FP8
+
+vLLM v0.24.0 loads this natively via ModelOptMixedPrecisionConfig (quant_algo
+MIXED_PRECISION, per-layer dispatch from the `quantized_layers` map). Confirmed on
+XPU: it resolves Qwen3_5ForConditionalGeneration and dispatches FP8/NVFP4/W4A16_NVFP4
+per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
+  (1)  W4A4 layers -> _POSSIBLE_NVFP4_KERNELS has no XPU entry (same as 8B; shim
+       registers it).
+  (1b) W4A16_NVFP4 layers -> ModelOptNvFp4W4A16LinearMethod HARDCODES a CUDA-only
+       MarlinNvFp4LinearKernel (modelopt.py:1277), bypassing the registry, so it
+       asserts is_supported() on XPU. Shim replaces its .kernel with an XPU
+       4-bit-resident dequant kernel.
+  FP8 attention layers need NO shim -- vLLM v0.24.0 already ships
+  XPUFP8ScaledMMLinearKernel.
+
+### EXACT single-card VRAM (measured from the real checkpoint headers)
+
+  keep-4bit resident (emul / fused kernel):  21.9 GB  -> FITS one ~30GB B70 card + KV
+  dequant NVFP4->int8 at load (int8xmx):     31.1 GB  -> does NOT fit one card
+  full bf16 dequant:                         56.7 GB  -> no
+
+  KEY LESSON (answers "why not just int8xmx like the 8B?"): on the 27B, int8xmx
+  DOUBLES the 4-bit footprint to 31 GB and no longer fits one card. And dequant-to-
+  int8 is only "a worse-packed W8A16" anyway -- the repacked int8 weight takes just
+  15 distinct values ({0,+-1,+-2,+-3,+-4,+-6,+-8,+-12}) = 4 bits of real info in an
+  8-bit byte, so it costs w8a8's VRAM for int4's precision. The ONLY viable FAST
+  single-card path on the 27B is to keep the weights 4-bit resident and dequant on
+  the fly in-kernel (the fused E2M1 kernel; see INT4_SPOOF_EXPERIMENTS.md). int8xmx
+  stays the keeper for the DENSE 8B (where 2x of 4-bit still fits); it is a deadend
+  for the 27B on one card.
+
+- [x] M4: MIXED_PRECISION 27B LOADS on XPU (mixed-precision loader + both NVFP4 XPU
+      shims). emul mode (4-bit resident, ~22GB) = the fits+coherence reference.
+      BENCH: <pending emul coherence + t/s>.
+- [ ] M5: fused E2M1 4-bit-in-VRAM dequant kernel -> fast single-card 27B serve at
+      the 22GB footprint. The real deliverable (kernel prototyped card 1).
+
+### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
+
+Xe2/Battlemage DPAS silicon HAS int4/int2 matrix modes (int4 = 4x bf16 rate), but
+NO software stack exposes a true int4xint4 GEMM: oneDNN s4/u4 is weight-decompression
+only (decodes to int8/f16 before DPAS), SYCL joint_matrix + Triton-XPU tl.dot both
+floor at int8. AND it would not help decode anyway (M=1 is weight-bandwidth bound,
+30-300x below the compute roofline -- more FLOPS on an idle unit). The decode lever
+is BYTES READ: keep weights 4-bit in VRAM, dequant in registers. NVFP4 also cannot
+reuse oneDNN's s4 path: E2M1 is a 4-bit FLOAT LUT, not two's-complement int4, and
+the E2M1*2 int trick's +-12 overflows s4's [-8,7]. So a custom E2M1 LUT kernel is
+mandatory. Native int4 DPAS (route a) = confirmed deadend; fused 4-bit-in-VRAM
+(route b) = the decode win; int8-XMX repack (route c) = prefill/dense-8B only.
+
 ## Status log
 
 - 2026-07-04 04:20 model downloaded to models/files/qwen3-8b/nvfp4-modelopt/
 - 2026-07-04 04:3x M0 done; shim + serve script written. GPU phase next
   (requires taking the daily driver down; user approved GPU use tonight).
+- 2026-07-04 07:1x 27B session: DD down, both cards freed. Downloaded
+  nvidia/Qwen3.6-27B-NVFP4 (21.9GB) to models/files/qwen3.6-27b/nvfp4-modelopt/.
+  Two parallel agents: int4-DPAS research (card-free, done) + fused-kernel
+  prototyping (card 1). 27B serve prep on card 0.
+- 2026-07-04 07:3x M4: MIXED_PRECISION loads on XPU; W4A16 Marlin blocker fixed;
+  exact sizing confirms int8xmx-on-27B is a deadend (31GB); emul serve on card 0.
