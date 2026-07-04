@@ -432,16 +432,26 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       c1 24.07, gate 18/18. Root cause of low single-card KV: 24.1 GiB weights + the hybrid
       unified-page allocator (1664-token pages charged across all 64 layers = ~4x naive attn
       math); single-card ceiling ~19,968 tokens. fp4 KV researched: Blackwell-only kernels, and a
-      small lever on this hybrid anyway (4 GiB per 128K seq at fp8). REMAINING: TP=2 hardening
-      (one transient sample_tokens RPC hang seen; push-AR overlay + SYCLKERNELS A/B) and
-      MTP-on-TP2 (SPLITOPS + capture-safe allgather dance, hides collective latency).
-- [ ] **11f. Official 35B MoE NVFP4 bring-up.** nvidia/Qwen3.6-35B-A3B-NVFP4 EXISTS (public,
-      21.82 GiB: 256 experts W4A16_NVFP4 g16 + FP8 attn + FP8 KV + bf16 vision/router/mtp) and is
-      DOWNLOADED to models/files/qwen3.6-35b-a3b/nvfp4-modelopt/. Single-card-sized. Bring-up
-      needs: NVFP4-expert routing on XPU (the Triton fused_moe path expects int4/int8 packing,
-      not f4_e2m1 -- likely a MoeWNA16-style loader + per-expert nvfp4_gemm_w4a16, or an emul
-      first pass), FP8 attn rides the stock XPU kernel, shim reuse from the 27B. A focused
-      session; the 27B M4->M5 ladder is the template.
+      small lever on this hybrid anyway (4 GiB per 128K seq at fp8).
+      **MTP-on-TP2 DONE (2026-07-04, commit b8fc79f):** ported the capture-safe all_gather
+      (all-reduce-of-padded) + splitting_ops to the nvfp4 TP>1 path; fixed an XPU vLLM bug
+      (fuse_rope_kvcache_cat_mla NameError under TP>1 fusion) and a MAXSEQS>=8 NaN-garbage
+      correctness floor. Result at MAXLEN=131072: 705,356 KV tokens (5.38x @128K), single-stream
+      decode 52-58 t/s (was 24 no-MTP; BEATS single-card 40-44), needle PASS @88k, gate 18/18.
+      This is the recommended long-context serving config. REMAINING: a soak before shelf
+      promotion; push-AR overlay (perf only, NOT needed for coherence -- MAXSEQS>=8 alone is clean);
+      the one transient sample_tokens RPC hang (not reproduced this session).
+- [~] **11f. Official 35B MoE NVFP4 bring-up -- FEASIBILITY PROVEN (2026-07-04, commit pending).**
+      nvidia/Qwen3.6-35B-A3B-NVFP4 (256 experts W4A16_NVFP4 g16 + FP8 attn/GDN + FP8 KV + bf16
+      vision/router/mtp) LOADS + generates COHERENTLY on XPU via the EMULATION MoE backend
+      (--moe-backend emulation, dequant-on-the-fly -> stock TritonExperts). Blocker cleared: shim
+      block (5, env NVFP4_MOE_W4A16_EMUL=1) relaxes Nvfp4QuantizationEmulationTritonExperts.
+      _supports_quant_scheme, which hard-gated on W4A4 only, to also accept the W4A16 (kNvfp4Static,
+      None) scheme. Single-card OOMs (21.8 GiB resident + 2 GiB fp32 dequant transient/forward);
+      TP=2 fits + generates but at 0.37 t/s (emulation dequants ALL 256 experts to fp32 every
+      forward). serve = vllm/nvfp4/serve_nvfp4_moe_35b.sh. REMAINING (the real work): a FUSED
+      per-expert NVFP4 MoE XPU kernel (dense 27B's nvfp4_gemm_w4a16 applied per expert, or a
+      packed-expert nvfp4 gemm) to make it a usable serve -- emulation is only the correctness ref.
 - [ ] **11d. Upstream the register_fake pattern.** One `torch.library.register_fake` per custom
       _xpu_C op is the whole distance between eager-only and PIECEWISE-capturable on XPU. Fold
       into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.

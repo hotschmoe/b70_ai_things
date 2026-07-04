@@ -368,3 +368,37 @@ if _RECYCLE_N > 0:
               file=sys.stderr, flush=True)
     except Exception as e:
         print("[cg-recycle] (4) setup failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (5) NVFP4 MoE W4A16 via the emulation backend (Track 11f bring-up) ---------------------------
+# The official 35B-A3B-NVFP4 routed experts are W4A16 (f4_e2m1 weights, group-16 fp8 scale, per-tensor
+# f32 scale2, BF16 activations). vLLM's Nvfp4QuantizationEmulationTritonExperts._supports_quant_scheme
+# HARD-gates on (kNvfp4Static, kNvfp4Dynamic) == W4A4 only, so it rejects our (kNvfp4Static, None) W4A16
+# scheme -> "backend 'EMULATION' does not support ...". But the emulation apply() dequantizes weights to
+# BF16 (using g1/g2_alphas = weight_scale_2, which W4A16 HAS) and runs stock TritonExperts with
+# expects_unquantized_inputs=True -- it does NOT need dynamically-quantized activations. So the gate is
+# stricter than the code: relax it to also accept weight-only (activation_key is None) as long as the
+# weight is kNvfp4Static. This is the XPU bring-up path (dequant-on-the-fly, no cutlass/marlin).
+# Gated on NVFP4_MOE_W4A16_EMUL=1 so the dense-27B serve is unaffected.
+if os.environ.get("NVFP4_MOE_W4A16_EMUL", "0") == "1":
+    try:
+        from vllm.model_executor.layers.fused_moe.experts.nvfp4_emulation_moe import (
+            Nvfp4QuantizationEmulationTritonExperts as _EmulMoE,
+        )
+        from vllm.model_executor.layers.quantization.utils.quant_utils import (
+            kNvfp4Static as _kStat,
+            kNvfp4Dynamic as _kDyn,
+        )
+
+        @staticmethod
+        def _supports_w4a16_or_w4a4(weight_key, activation_key):
+            # original: (kNvfp4Static, kNvfp4Dynamic). Also accept weight-only W4A16.
+            if (weight_key, activation_key) == (_kStat, _kDyn):
+                return True
+            return weight_key == _kStat and activation_key is None
+
+        _EmulMoE._supports_quant_scheme = _supports_w4a16_or_w4a4
+        print("[nvfp4-shim] (5) emulation MoE _supports_quant_scheme relaxed to accept W4A16 "
+              "(kNvfp4Static, None) -- 35B MoE bring-up", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (5) MoE W4A16 emul patch failed:", repr(e), file=sys.stderr, flush=True)

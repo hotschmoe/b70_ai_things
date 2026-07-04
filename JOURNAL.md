@@ -8392,3 +8392,35 @@ FINAL VALIDATED 128K MTP-on-TP2 CONFIG (recommended for long-context serving):
      (>=128K/stream AND single-card-or-better decode AND coherent-under-concurrency) on all three axes.
   Open follow-ups (Track 11): a longer soak before shelf promotion; push-AR overlay (perf, not needed
   for coherence -- MAXSEQS>=8 alone is clean); MToK vs decode-t/s sweep at 128K depth.
+
+## 2026-07-04 -- 35B-A3B NVFP4 MoE bring-up (Track 11f): LOADS + generates coherently on TP=2 [result]
+
+GOAL (user, secondary): "try a MoE bring-up just to see how it goes." Target = nvidia/Qwen3.6-35B-A3B-
+NVFP4 (Qwen3_5MoeForConditionalGeneration: 256 routed experts W4A16_NVFP4 g16 + FP8 attn/GDN + FP8 KV +
+bf16 vision/router/mtp), models/files/qwen3.6-35b-a3b/nvfp4-modelopt (21.8 GiB).
+
+RESULT: bring-up SUCCEEDS functionally -- the MoE loads on XPU and GENERATES COHERENTLY. Path found +
+two blockers cleared:
+  1. NVFP4 routed experts are per-expert f4_e2m1 tensors -> vLLM's cutlass/marlin/flashinfer NvFp4 MoE
+     backends are all CUDA-only. The XPU path is the EMULATION backend (--moe-backend emulation): it
+     dequantizes each expert weight on the fly to BF16 and runs stock TritonExperts (which already works
+     on XPU for int4/w8a8 MoE). Selected fine once the gate below was relaxed.
+  2. BLOCKER (fixed): Nvfp4QuantizationEmulationTritonExperts._supports_quant_scheme HARD-gates on
+     (kNvfp4Static, kNvfp4Dynamic) == W4A4 only, but these experts are W4A16 -- (kNvfp4Static, None),
+     weight-only, bf16 activations -> "backend 'EMULATION' does not support ...". The apply() only needs
+     the WEIGHT scales (g1/g2_alphas = weight_scale_2, which W4A16 has) and runs unquantized-input
+     TritonExperts, so the gate is stricter than the code. FIX = shim block (5), env NVFP4_MOE_W4A16_EMUL=1:
+     relax _supports_quant_scheme to also accept (kNvfp4Static, None). Backend then selects + runs.
+  3. Single-card OOMs: break_fp4_bytes/dequantize_to_dtype dequants the FULL stacked 256-expert weight
+     to FP32 (a 2.00 GiB transient) EVERY forward, on top of 21.8 GiB resident NVFP4 weights -> 30.11/31.9
+     GiB then +2 OOM. UTIL/max-num-batched-tokens can't fix a forward-pass transient. TP=2 IS the fix.
+  4. TP=2 (both cards, eager, emulation): LOADS, health up, generates COHERENT text -- probe "Name three
+     primary colors" -> "Here's a thinking process:\n\n1. **Analyze User Input:** ..." (coherent; it's a
+     thinking model). BUT 0.37 t/s: the dequant-all-256-experts-to-fp32-every-forward is the bottleneck
+     (matches the emul reference rate ~0.4 t/s from the dense 27B). Impractical as a serve; it's the
+     CORRECTNESS reference. Real speed needs a fused per-expert NVFP4 MoE kernel (the dense 27B's
+     nvfp4_gemm_w4a16 applied per expert, or a packed-expert nvfp4 gemm) -- the documented next step.
+
+FILES: serve script vllm/nvfp4/serve_nvfp4_moe_35b.sh (emulation backend, TP knob, NVFP4_MOE_W4A16_EMUL);
+shim block (5) in vllm/nvfp4/patches/sitecustomize.py. VERDICT: feasibility PROVEN (loads + coherent on
+TP=2); a fused NVFP4-expert XPU kernel is the gate to a usable serve. Not a shelf entry.

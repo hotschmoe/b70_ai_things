@@ -94,12 +94,13 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   "${KERN_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
-  -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
+  -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" -e NVFP4_MOE_W4A16_EMUL=1 \
   "${MGPU[@]}" "${GRAPH_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve "$CKPT" --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" --moe-backend "$MOEBACKEND" \
+  --max-num-batched-tokens "${MAXNUMBATCHED:-2048}" \
   "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up (port $PORT, moe-backend=$MOEBACKEND, mode=$MODE, graph=$GRAPH); logs: docker logs -f $NAME"
