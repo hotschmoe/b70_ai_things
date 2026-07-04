@@ -8326,3 +8326,8 @@ for these shapes, K/tp=8704):
     (no wedge). This bare-oneCCL config lacks the push-AR overlay the w8a8 TP=2 shelf uses.
     Reproducibility retry running. Hardening candidates: push-AR overlay, CCL_ENABLE_SYCL_KERNELS
     A/B, MTP-on-TP2 (SPLITOPS dance) which also hides collective latency.
+
+ADDENDUM (TP=2 retry): fresh serve cycle ran the FULL suite clean -- c1 24.07 t/s, c4 11.95/stream,
+gate_concurrent 18/18 PASS. The sample_tokens RPC hang did NOT reproduce -> classified transient
+(one-off oneCCL stall after heavy long-ctx churn), not deterministic. TP=2 128K config stands;
+push-AR overlay + MTP-on-TP2 remain the hardening/perf follow-ups (Track 11).

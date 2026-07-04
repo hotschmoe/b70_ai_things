@@ -427,9 +427,21 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
 - [ ] **11b. v0230-on-kernel-7.1 revalidation.** All v0230 images predate the 2026-07-02 kernel
       7.1/ICR 26.22 upgrade; the card-1 poisoning may be a v0230-on-7.1 incompatibility. Cheap
       test: the same int4 eval on CARD 0 v0230 eager; if it also poisons, v0230 rows are stale.
-- [ ] **11c. NVFP4 KV headroom.** 10.7k tokens is the champion's only real weakness. Levers:
-      NOMM=1 text-only variant (frees the vision tower for pure-code serving), weight-side savings
-      (drop MTP tensors when MTPTOK=0), TP=2 NVFP4 (doubles KV + prefill; op is per-shard clean).
+- [x] **11c. NVFP4 KV headroom -- SOLVED via TP=2 (2026-07-04 evening).** TP=2 MAXLEN=131072
+      serves: 902,083 KV tokens (6.88x @ 128K), needle PASS at 115K, decode 21.4 t/s @ 60K depth,
+      c1 24.07, gate 18/18. Root cause of low single-card KV: 24.1 GiB weights + the hybrid
+      unified-page allocator (1664-token pages charged across all 64 layers = ~4x naive attn
+      math); single-card ceiling ~19,968 tokens. fp4 KV researched: Blackwell-only kernels, and a
+      small lever on this hybrid anyway (4 GiB per 128K seq at fp8). REMAINING: TP=2 hardening
+      (one transient sample_tokens RPC hang seen; push-AR overlay + SYCLKERNELS A/B) and
+      MTP-on-TP2 (SPLITOPS + capture-safe allgather dance, hides collective latency).
+- [ ] **11f. Official 35B MoE NVFP4 bring-up.** nvidia/Qwen3.6-35B-A3B-NVFP4 EXISTS (public,
+      21.82 GiB: 256 experts W4A16_NVFP4 g16 + FP8 attn + FP8 KV + bf16 vision/router/mtp) and is
+      DOWNLOADED to models/files/qwen3.6-35b-a3b/nvfp4-modelopt/. Single-card-sized. Bring-up
+      needs: NVFP4-expert routing on XPU (the Triton fused_moe path expects int4/int8 packing,
+      not f4_e2m1 -- likely a MoeWNA16-style loader + per-expert nvfp4_gemm_w4a16, or an emul
+      first pass), FP8 attn rides the stock XPU kernel, shim reuse from the 27B. A focused
+      session; the 27B M4->M5 ladder is the template.
 - [ ] **11d. Upstream the register_fake pattern.** One `torch.library.register_fake` per custom
       _xpu_C op is the whole distance between eager-only and PIECEWISE-capturable on XPU. Fold
       into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.
