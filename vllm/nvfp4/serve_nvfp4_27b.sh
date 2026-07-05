@@ -164,21 +164,46 @@ PUSH_AR="${PUSH_AR:-0}"
 PUSH_AR_MOUNTS=( ); PUSH_AR_ENV=( )
 if [ "$PUSH_AR" = 1 ] && [ "$TP" != 1 ]; then
   PUSH_AR_DIR="$REPO/vllm/contrib/vllm_push_allreduce"
-  PUSH_AR_SO_HOST="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_torch.so"   # host-barrier (prefill) .so, committed
+  # PUSH_AR_GRAPH=1 (Track 11g, ported from the W8A8 shelf 2026-07-05): route the DECODE all-reduce through
+  # the CAPTURABLE push path too (libxpu_push_ar_graph.so ar_allreduce_graph -> device-side L0-event sync
+  # recorded into torch's XPUGraph, P2P_GPU.md K.6/K.8), MIN_NUMEL=0 so every all-reduce (prefill AND
+  # captured decode) uses the 11 GB/s posted-write fabric -- no oneCCL decode fallback. PUSH_AR_GRAPH=0
+  # (default here) = the proven prefill-only overlay (host-barrier .so; decode-sized all-reduces -> oneCCL).
+  # HARD GATE: the graph path records INTO an XPU graph, so it REQUIRES GRAPH=1 + CGMODE!=NONE (a real
+  # capture). Without a captured graph the captured-decode push reads a stale/uninit buffer -> input-
+  # dependent "!!!!" garbage (W8A8 J.17: NONE+GRAPH=1 emitted garbage on some prompts). So force
+  # PUSH_AR_GRAPH=0 unless capture is on; the patch itself only takes the graph branch while _is_capturing().
+  PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-0}"
+  if [ "$PUSH_AR_GRAPH" = 1 ] && { [ "$GRAPH" != 1 ] || [ "$CGMODE" = NONE ]; }; then
+    echo "[guard] PUSH_AR_GRAPH=1 needs GRAPH=1 + CGMODE!=NONE (captured decode); GRAPH=$GRAPH CGMODE=$CGMODE -> forcing PUSH_AR_GRAPH=0 (prefill-only)" >&2
+    PUSH_AR_GRAPH=0
+  fi
+  if [ "$PUSH_AR_GRAPH" = 1 ]; then
+    _PA_SO_NAME="libxpu_push_ar_graph.so"; _PA_MIN_DEF=0
+  else
+    _PA_SO_NAME="libxpu_push_ar_torch.so"; _PA_MIN_DEF=65536
+  fi
+  PUSH_AR_SO_HOST="$PUSH_AR_DIR/prebuilt/$_PA_SO_NAME"   # committed prebuilt (graph OR host-barrier)
   [ -f "$PUSH_AR_SO_HOST" ] || { echo "MISSING push-ar .so $PUSH_AR_SO_HOST (set PUSH_AR=0 for oneCCL)"; exit 1; }
   PUSH_AR_MOUNTS=( -v "$PUSH_AR_DIR:/opt/push_ar:ro" )
   PUSH_AR_ENV=( -e PUSH_AR_PATCH=/opt/push_ar/_push_ar_patch.py
-                -e PUSH_AR_SO=/opt/push_ar/prebuilt/libxpu_push_ar_torch.so
-                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}"
+                -e PUSH_AR_SO="/opt/push_ar/prebuilt/$_PA_SO_NAME"
+                -e PUSH_AR_DISABLE=0
+                -e PUSH_AR_GRAPH="$PUSH_AR_GRAPH"
+                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-$_PA_MIN_DEF}"
                 -e PUSH_AR_MAXB="${PUSH_AR_MAXB:-134217728}" )
   # PUSH_AR_MAXB (scratch bytes, default 128 MiB): CAPS the prefill chunk that push can accelerate. An
   # all-reduce whose bytes exceed MAXB falls back to oneCCL. chunk_tokens*hidden*2 <= MAXB -> with hidden
   # 5120 the default 128 MiB fits chunks up to ~13,107 tokens; the default 8192 chunk (83.9 MB) is inside
   # it, but raising --max-num-batched-tokens past ~13k WITHOUT also raising PUSH_AR_MAXB silently DEFEATS
   # push-AR (measured 2026-07-04: MAXBATCH=16384 -> 167 MB > 128 MiB -> oneCCL -> 32K PP 734 vs 1772).
-  # PUSH_AR_GRAPH intentionally UNSET (prefill-only); the host-barrier .so has no ar_allreduce_graph symbol.
-  echo "=== PUSH_AR prefill overlay ON (host-barrier .so, MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-65536}, P2PACCESS=0) ==="
-  SERVED="${SERVED}-pushar"
+  if [ "$PUSH_AR_GRAPH" = 1 ]; then
+    echo "=== PUSH_AR overlay ON (GRAPH decode push: graph .so, MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-0}, P2PACCESS=0) ==="
+    SERVED="${SERVED}-pushargraph"
+  else
+    echo "=== PUSH_AR prefill overlay ON (host-barrier .so, MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-65536}, P2PACCESS=0) ==="
+    SERVED="${SERVED}-pushar"
+  fi
 fi
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true

@@ -469,14 +469,19 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
             (PP 1772 -> 1976). Single-chunk 32768 ties it at more memory (no gain past 2 chunks). Default
             8192 optimal for IN<=8192. GUARDRAIL: raising MAXBATCH past ~13k WITHOUT raising PUSH_AR_MAXB
             silently defeats push-AR (chunk bytes > 128 MiB scratch -> oneCCL, PP 734). Env-only knobs.
-      - [ ] **PUSH_AR_GRAPH=1 on NVFP4 (DECODE push) -- HIGH PRIORITY next (user-flagged 2026-07-05).**
-            NVFP4 currently runs PREFILL-ONLY push (decode all-reduce stays on oneCCL). W8A8 defaults to
-            PUSH_AR_GRAPH=1 (the capturable libxpu_push_ar_graph.so + MIN_NUMEL=0 pushes the DECODE
-            all-reduce too, recorded into the XPU graph) and gets ~34-40 t/s decode from it. Porting the
-            same to NVFP4 could lift TP=2 decode the same way. Needs: mount the graph .so, PUSH_AR_GRAPH=1
-            MIN_NUMEL=0, and CAREFUL coherence-gating (the decode-capture push is the higher-wedge-risk
-            path per docs/handoff_decode_push_ar.md -- run one capture experiment at a time, watch for
-            empty-output/broken-capture, budget a reboot). If it holds, NVFP4 wins decode outright too.
+      - [x] **PUSH_AR_GRAPH=1 on NVFP4 (DECODE push) -- DONE 2026-07-05 (JOURNAL). IT HOLDS + is a strict
+            faster-or-equal, but the win is SMALL.** Ported the W8A8 capturable decode push (graph .so +
+            MIN_NUMEL=0, ar_allreduce_graph recorded into the XPU graph) onto NVFP4 TP=2 -- serve-script
+            wiring only (shared .so + patch already graph-aware; NO rebuild). serve_nvfp4_27b.sh now honors
+            PUSH_AR_GRAPH (default 0 = byte-identical prefill-only; guarded to 0 unless GRAPH=1 && CGMODE!=NONE).
+            A/B (fused GRAPH=1 MTP5, 18-stream gate + bench): COHERENT 18/18 both, WEDGE-FREE. Decode delta
+            = +5-6% single-stream AND agg on the LOW-accept random/chat workload (16.75 vs 15.91 c1; 30.60
+            vs 28.89 agg), NEUTRAL on high-accept CODING (45.9 vs 46.8, noise -- MTP5 accept amortizes the
+            per-token all-reduce away, so little AR left to push). Prefill PP unchanged. Smaller than W8A8's
+            K.8 +8-10% precisely because NVFP4 MTP5 accepts more. Recommend PUSH_AR_GRAPH=1 for the mixed
+            chat+coding DD; NOT yet flipped into the unattended shelf default -- DD restored to known-good
+            prefill-only; gate the shelf flip on a longer unattended soak (decode-capture push = higher-wedge
+            path per docs/handoff_decode_push_ar.md). One-env-var change once soaked.
       - [ ] PP=2 prefill-biased variant: structurally eliminates the per-layer all-reduce (128 AR -> 1
             P2P/stage) but adds a single-stream decode bubble -> separate entry, not a DD swap. Medium
             risk (untested PP oneCCL/L0 path, re-gate wedge).

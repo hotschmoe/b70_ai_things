@@ -8549,3 +8549,46 @@ single-chunk config (which gives no further gain -- past 2 chunks the residual c
 AR-launch overhead). GUARDRAIL: never raise --max-num-batched-tokens past ~13k WITHOUT also raising
 PUSH_AR_MAXB, or you silently defeat push-AR (the 734-PP row). Both are now serve_nvfp4_27b.sh env knobs
 (commit 9cc6181). box HEALTHY after all 6 TP=2 cycles, no wedge.
+
+## 2026-07-05 -- Track 11g: PUSH_AR_GRAPH=1 on NVFP4 TP=2 (captured DECODE push) -- coherent, +5-6% chat decode, neutral coding
+
+PORT of the proven W8A8 decode-side push all-reduce to the NVFP4 27B TP=2 path. Until now NVFP4 ran
+PREFILL-ONLY push (host-barrier libxpu_push_ar_torch.so + PUSH_AR_MIN_NUMEL=65536; captured decode
+all-reduces stayed on oneCCL). W8A8 defaults PUSH_AR_GRAPH=1 = the capturable libxpu_push_ar_graph.so
+(device-side L0-event sync recorded INTO torch's XPUGraph, P2P_GPU.md K.6) + MIN_NUMEL=0, so the DECODE
+all-reduce also rides the 11 GB/s posted-write fabric. The .so + _push_ar_patch.py are SHARED and already
+graph-aware (patch takes the ar_allreduce_graph branch only while torch.xpu.is_current_stream_capturing()),
+so the port is serve-script wiring only -- NO rebuild.
+
+WIRING: serve_nvfp4_27b.sh PUSH_AR block now honors PUSH_AR_GRAPH (default 0 = byte-identical prefill-only).
+PUSH_AR_GRAPH=1 -> selects prebuilt/libxpu_push_ar_graph.so, MIN_NUMEL default 0, passes -e PUSH_AR_GRAPH=1
+-e PUSH_AR_DISABLE=0. HARD GATE: forced to 0 unless GRAPH=1 && CGMODE!=NONE (the graph push reads a stale
+buffer without a real capture -> "!!!!"; mirrors the W8A8 J.17 guard). SERVED gets a -pushargraph suffix.
+
+CONFIG (both cards, one gpu-run lease, sequential A/B): TP=2 MODE=fused GRAPH=1(PIECEWISE) MTPTOK=5
+CAPSIZES=1,2,4,8 MAXLEN=16384 UTIL=0.85 MAXSEQS=8 PREFIXCACHE=1 PUSH_AR=1. KV 273,242 tokens both.
+COMMAND: PUSH_AR_GRAPH={1,0} bash vllm/nvfp4/serve_nvfp4_27b.sh; gate_concurrent_coherence 3 6 200;
+bench_2048 (warm IN~2048 OUT128, c1+c4); bench_code (real coding, c1 reps3). (scratch driver graph_push_ab.sh.)
+
+RESULT:
+  metric                         graph1 (PUSH_AR_GRAPH=1)   graph0 (PUSH_AR_GRAPH=0)   delta
+  coherence gate (18 mixed)      18/18 PASS                 18/18 PASS                 both coherent
+  bench_2048 c1 TG (random)      16.75 t/s                  15.91 t/s                  +5.3%
+  bench_2048 c4 TG/stream        7.65                       7.22                       +6.0%
+  bench_2048 c4 agg              30.60                      28.89                      +5.9%
+  bench_2048 PP c1 (prefill)     2193                       2186                       tie (both push prefill)
+  bench_code c1 (coding)         45.9 avg / 48.6 best       46.8 avg / 47.3 best       ~neutral (run noise)
+  box health after teardown      HEALTHY                    HEALTHY                    wedge-free
+Graph capture finished clean both runs (0.94 GiB, PIECEWISE), [argraph] setup+exchange OK (IPC event pool),
+[push_ar] ENGAGED on rank0; 0 device_lost / out_of_resources markers in either serve log. gpu-run 475s exit 0.
+
+VERDICT: PUSH_AR_GRAPH=1 on NVFP4 TP=2 is COHERENT (18/18) + WEDGE-FREE and a strict faster-or-equal:
+~+5-6% single-stream AND aggregate decode on the LOW-MTP-accept random/chat workload (more all-reduces
+per token -> more push benefit), NEUTRAL on high-accept CODING decode (accept-bound, not AR-bound -- MTP5
+amortizes most of the per-token collective away, so there is little AR left to accelerate). This is the
+same effect as W8A8's decode push (K.8 +8-10%) but smaller here BECAUSE NVFP4 MTP5 accepts more. No
+regression anywhere; prefill PP unchanged. RESEARCH_TODO 11g PUSH_AR_GRAPH box -> DONE. Recommend
+PUSH_AR_GRAPH=1 for the mixed chat+coding TP=2 DD (chat gains, coding neutral); NOT auto-flipped into the
+unattended shelf default yet -- the DD was restored to the known-good prefill-only config, and a longer
+unattended soak (the decode-capture push is the higher-wedge-risk path per docs/handoff_decode_push_ar.md)
+should gate the shelf-default flip. Mechanism is a one-env-var change once soaked.
