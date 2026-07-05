@@ -469,6 +469,14 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
             (PP 1772 -> 1976). Single-chunk 32768 ties it at more memory (no gain past 2 chunks). Default
             8192 optimal for IN<=8192. GUARDRAIL: raising MAXBATCH past ~13k WITHOUT raising PUSH_AR_MAXB
             silently defeats push-AR (chunk bytes > 128 MiB scratch -> oneCCL, PP 734). Env-only knobs.
+      - [ ] **PUSH_AR_GRAPH=1 on NVFP4 (DECODE push) -- HIGH PRIORITY next (user-flagged 2026-07-05).**
+            NVFP4 currently runs PREFILL-ONLY push (decode all-reduce stays on oneCCL). W8A8 defaults to
+            PUSH_AR_GRAPH=1 (the capturable libxpu_push_ar_graph.so + MIN_NUMEL=0 pushes the DECODE
+            all-reduce too, recorded into the XPU graph) and gets ~34-40 t/s decode from it. Porting the
+            same to NVFP4 could lift TP=2 decode the same way. Needs: mount the graph .so, PUSH_AR_GRAPH=1
+            MIN_NUMEL=0, and CAREFUL coherence-gating (the decode-capture push is the higher-wedge-risk
+            path per docs/handoff_decode_push_ar.md -- run one capture experiment at a time, watch for
+            empty-output/broken-capture, budget a reboot). If it holds, NVFP4 wins decode outright too.
       - [ ] PP=2 prefill-biased variant: structurally eliminates the per-layer all-reduce (128 AR -> 1
             P2P/stage) but adds a single-stream decode bubble -> separate entry, not a DD swap. Medium
             risk (untested PP oneCCL/L0 path, re-gate wedge).
