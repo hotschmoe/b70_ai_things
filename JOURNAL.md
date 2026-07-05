@@ -8522,3 +8522,30 @@ VERDICT: LANDED. push-AR PREFILL overlay is a measured 2.4-3.3x prefill win, dec
   single-card 1702). Recommend PUSH_AR=1 for the TP=2 NVFP4 daily driver. Single-card path untouched.
   New: bench_prefill.py, prefill_session.sh, validate_session.sh, sitecustomize block (8),
   serve_nvfp4_27b.sh PUSH_AR opt-in.
+
+---
+
+## 2026-07-05 -- Track 11g: chunked-prefill (MAXBATCH) STACKS on push-AR for LONG prefills = +11.5% @ 32K
+
+Follow-up to the push-AR win: does --max-num-batched-tokens (chunk size) stack? A LONG cold prefill is
+sliced into ceil(prompt/MAXBATCH) forward steps, each firing all 128 TP all-reduces; prefill is
+per-collective-overhead-bound, so fewer/larger chunks = fewer AR launches = faster -- IF push-AR can
+still accelerate each chunk's all-reduce. The catch: push-AR's scratch PUSH_AR_MAXB (default 128 MiB)
+CAPS the chunk it accelerates. chunk_tokens*hidden*2 must be <= MAXB; with hidden 5120, 128 MiB fits up
+to ~13,107 tokens. A chunk over that silently falls back to oneCCL.
+
+CONFIG: TP=2 fused GRAPH=1 MTP5 MAXLEN=40960 UTIL=0.85, PUSH_AR=1, cold prefill c1 (unique prompt).
+RESULT (IN~32768 = 35,8xx real prompt tokens, cold, 3 reps best):
+  MAXBATCH  PUSH_AR_MAXB   chunks(32K)   PP tok/s   TTFT ms    note
+  8192      128 MiB (def)  4             1772       20260      push engages (83.9 MB < 128 MiB)
+  16384     128 MiB        2             734        48871      DEFEATED: 167 MB > 128 MiB -> oneCCL fallback
+  16384     256 MiB        2             1976       18192      push engages -> +11.5% vs the 8192 chunk
+  32768     512 MiB        1             1966       18316      TIED with 2-chunk; KV drops to 10.31 GiB, no gain
+  (IN~8192 single-chunk across all: PP ~2010-2300, thermal noise -- chunk size irrelevant below MAXBATCH.)
+VERDICT: for the SHORT prefills the default 8192 chunk is already optimal (single chunk, inside the
+128 MiB scratch). For LONG prefills (>= ~16k) the sweet spot is MAXBATCH=16384 + PUSH_AR_MAXB=256 MiB:
+captures the full AR-launch-count benefit (+11.5% @ 32K, 1772 -> 1976) without the excess memory of the
+single-chunk config (which gives no further gain -- past 2 chunks the residual cost is compute, not
+AR-launch overhead). GUARDRAIL: never raise --max-num-batched-tokens past ~13k WITHOUT also raising
+PUSH_AR_MAXB, or you silently defeat push-AR (the 734-PP row). Both are now serve_nvfp4_27b.sh env knobs
+(commit 9cc6181). box HEALTHY after all 6 TP=2 cycles, no wedge.
