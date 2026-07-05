@@ -1,36 +1,50 @@
 #!/usr/bin/env bash
-# Qwen3.6-27B NVFP4 (nvidia/Qwen3.6-27B-NVFP4, ModelOpt MIXED_PRECISION) -- THE single-card
-# champion (2026-07-04, M6-M9): HumanEval+ 0.988/0.945 = box leaderboard #1, decode 40.7-44.1
-# t/s random / 67 t/s code on ONE card, gate_concurrent 18/18, vision verified under capture+MTP.
+# Qwen3.6-27B NVFP4 (nvidia/Qwen3.6-27B-NVFP4, ModelOpt MIXED_PRECISION). TWO sweep-gated modes in ONE
+# entry (per shelf rules: options as settings, not sibling dirs). Thin wrapper over the maintained recipe
+# vllm/nvfp4/serve_nvfp4_27b.sh.
 #
-#   ./bin/gpu-run --card 0 bash serve.sh        # start, stays up (container nvfp4_27b, port 8078)
-#   bash serve.sh stop                           # stop the container
+#   ./bin/gpu-run --card 0 bash serve.sh start   # [DEFAULT] single-card champion, port 8078
+#   TP=2 ./bin/gpu-run bash serve.sh start        # long-context daily driver (both cards), port 8078
+#   bash serve.sh stop
 #
-# This is a THIN WRAPPER around the maintained experiment recipe vllm/nvfp4/serve_nvfp4_27b.sh
-# with the sweep-gated best config BAKED (per shelf rules: one best config, options as settings):
-#   MODE=fused    custom nvfp4_gemm_w4a16 oneDNN op, weights 4-bit f4_e2m1 resident (24.1 GiB)
-#   GRAPH=1      PIECEWISE capture (needs the register_fake in vllm/nvfp4/patches/sitecustomize.py)
-#   MTPTOK=5     NEXTN MTP, sweep winner (spec3 58 code / spec5 67 / spec7 63)
-#   CAPSIZES=1,2,4,8  REQUIRED with MTP (default spec sizes [1..64] OOM at capture)
-#   UTIL=0.85    HARD ceiling -- 0.88 loads+captures then OOMs on the first 2048-tok prefill
-# CAVEATS: KV only ~10.7k tokens (24.1 GiB weights + drafter + graphs on a 31.9 GiB card) ->
-# concurrent long-prefill streams serialize; this entry is the QUALITY + single-stream pick.
-# MAXLEN=8192 sweep-gated 2026-07-04: c1 40.57 (== 4096's 40.7), gate 18/18, 6.2k-token
-# prefill clean, KV 10,685 tok (grew vs 8.5k @ 4096). The UTIL=0.88 OOM was the util ceiling,
-# NOT context length (chunked prefill bounds the transient) -- do not fear MAXLEN, fear UTIL.
+# [TP=1, DEFAULT] THE single-card champion (2026-07-04, M6-M9): HumanEval+ 0.988/0.945 = box leaderboard
+#   #1, decode 40.7-44.1 t/s random / 67 code on ONE card, gate 18/18, vision under capture+MTP. Baked:
+#   MODE=fused GRAPH=1 MTPTOK=5 CAPSIZES=1,2,4,8 UTIL=0.85 MAXLEN=8192 (KV ~10.7k). The QUALITY +
+#   single-stream pick. Do not fear MAXLEN, fear UTIL (0.88 OOMs the 24.1 GiB-resident serve).
+#
+# [TP=2] the LONG-CONTEXT daily driver (2026-07-04/05, Track 11d/11g): both cards, MTP5 decode +
+#   push-AR PREFILL overlay (3.3x cold prefill, PP now MATCHES single-card 1702; decode-neutral) +
+#   prefix cache + full 256K ctx. Auto-enables PUSH_AR=1 PREFIXCACHE=1 and the pi/omp/hermes agentic
+#   parsers (tool-call qwen3_coder + reasoning qwen3). KV ~757k tokens @ 256K (2.89x), gate 18/18.
+#   Long-prefill stack (optional): MAXBATCH=16384 PUSH_AR_MAXB=268435456 = +11.5% @ 32K cold prefill.
 # Kernel .so: /mnt/vm_8tb/b70/nvfp4_fused_kernel_gdn/ (build: vllm/nvfp4/NVFP4_KERNEL_BUILD.md).
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 NAME="${NAME:-nvfp4_27b}"
+ACTION="${1:-start}"
 
-if [ "${1:-}" = stop ]; then
+if [ "$ACTION" = stop ]; then
   docker rm -f "$NAME" >/dev/null 2>&1 && echo "stopped $NAME" || echo "$NAME not running"
   exit 0
 fi
+# start / run / smoke all bring the serve up (detached); the DD orchestrator's `docker wait` pins the lease.
 
-MODE=fused GRAPH=1 MTPTOK="${MTPTOK:-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \
-CARD="${CARD:-0}" PORT="${PORT:-8078}" MAXLEN="${MAXLEN:-8192}" UTIL="${UTIL:-0.85}" \
-MAXSEQS="${MAXSEQS:-8}" NAME="$NAME" \
-  bash "$REPO/vllm/nvfp4/serve_nvfp4_27b.sh"
+TP="${TP:-1}"
+# shared baked best-config
+export MODE=fused GRAPH=1 MTPTOK="${MTPTOK:-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \
+       UTIL="${UTIL:-0.85}" MAXSEQS="${MAXSEQS:-8}" PORT="${PORT:-8078}" NAME="$NAME"
+
+if [ "$TP" = 1 ]; then
+  # [single-card champion] -- unchanged.
+  export CARD="${CARD:-0}" MAXLEN="${MAXLEN:-8192}"
+else
+  # [TP=2 long-context daily driver] -- both cards; push-AR prefill + prefix cache + agentic parsers on.
+  export TP MAXLEN="${MAXLEN:-131072}"                 # >=128K; the DD passes DD_MAXLEN (253952/256K).
+  export PUSH_AR="${PUSH_AR:-1}" PREFIXCACHE="${PREFIXCACHE:-1}"
+  export TOOLCALL="${TOOLCALL:-1}" TOOLPARSER="${TOOLPARSER:-qwen3_coder}" REASONPARSER="${REASONPARSER:-qwen3}"
+  # API_KEY / VLLM_API_KEY (DD_API_KEY) pass through the environment to serve_nvfp4_27b.sh unchanged.
+fi
+
+exec bash "$REPO/vllm/nvfp4/serve_nvfp4_27b.sh"

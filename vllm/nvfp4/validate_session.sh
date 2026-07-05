@@ -19,11 +19,14 @@ done
 SERVED=$(curl -s "http://localhost:$PORT/v1/models" | python3 -c "import sys,json;print(json.load(sys.stdin)['data'][0]['id'])")
 echo "[$LABEL] served: $SERVED  (healthy ~$((i*5))s)"
 [ "$PUSH_AR" = 1 ] && docker logs "$NAME" 2>&1 | grep -i 'ENGAGED' | tail -1
+echo "[$LABEL] KV pool: $(docker logs "$NAME" 2>&1 | grep -oiE 'GPU KV cache size: [0-9,]+ tokens' | tail -1)  |  max concurrency: $(docker logs "$NAME" 2>&1 | grep -oiE 'Maximum concurrency for [0-9,]+ tokens per request: [0-9.]+x' | tail -1)"
 
 echo "== [$LABEL] CONCURRENT COHERENCE GATE (3 waves x 6 = 18 mixed prefill+decode) =="
 python3 "$DIR/../gate_concurrent_coherence.py" "http://localhost:$PORT/v1" "$SERVED" 3 6 200
 GATE=$?
-echo "== [$LABEL] DECODE-PARITY BENCH (IN=2048 OUT=128, warm; TG/stream must match baseline) =="
+echo "== [$LABEL] COLD PREFILL BENCH (unique prompt = cache miss; push-AR prefill win) =="
+python3 "$DIR/bench_prefill.py" "http://localhost:$PORT/v1" "$SERVED" 1 8 512,2048,8192 3
+echo "== [$LABEL] README BENCH (bench_2048: warm IN=2048 OUT=128; PP/TTFT + MTP decode TG) =="
 python3 "$DIR/bench_2048.py" "http://localhost:$PORT/v1" "$SERVED" 4 128
 
 docker rm -f "$NAME" >/dev/null 2>&1

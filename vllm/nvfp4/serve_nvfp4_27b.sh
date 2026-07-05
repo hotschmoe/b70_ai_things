@@ -120,6 +120,19 @@ if [ -n "$MTPTOK" ]; then
   SERVED="${SERVED}-mtp${MTPTOK}"
 fi
 
+# Agentic parity (daily-driver: pi.dev / omp.sh / hermes harnesses). Qwen3.6 emits XML <tool_call>
+# (qwen3_coder parser, NOT hermes JSON) + <think> reasoning (qwen3 parser -> reasoning_content). Same
+# parsers as the vLLM/sglang W8A8 shelf entries, validated on v0.24.0. Default OFF -> single-card shelf
+# + bare research serve unchanged; the DD sets TOOLCALL=1. API_KEY (or VLLM_API_KEY): if set, vLLM
+# ENFORCES it on /v1/* (--api-key); /health stays open. Used by the DD (DD_API_KEY) for WAN exposure.
+AGENTIC_ARGS=( )
+if [ "${TOOLCALL:-0}" = 1 ]; then
+  AGENTIC_ARGS+=( --enable-auto-tool-choice --tool-call-parser "${TOOLPARSER:-qwen3_coder}" )
+fi
+[ -n "${REASONPARSER:-}" ] && AGENTIC_ARGS+=( --reasoning-parser "$REASONPARSER" )
+_APIKEY="${API_KEY:-${VLLM_API_KEY:-}}"
+[ -n "$_APIKEY" ] && AGENTIC_ARGS+=( --api-key "$_APIKEY" )
+
 # GDN attention kernel: required for the qwen3.6 hybrid (linear_attn layers). The
 # w8a8_kernel_v0240 .so carries gdn_attention_core_xpu + int8_gemm_w8a16 + the GDN lib.
 PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
@@ -198,7 +211,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" "${MAXBATCH_ARG[@]}" \
-  "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" "$PC_ARG" --trust-remote-code --skip-mm-profiling
+  "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" "${AGENTIC_ARGS[@]}" "$PC_ARG" --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up; follow with: docker logs -f $NAME"
 echo "health: curl -s http://localhost:$PORT/health"
