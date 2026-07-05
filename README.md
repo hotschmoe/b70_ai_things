@@ -14,7 +14,26 @@ accuracy loss.
 > MATCHES single-card 1702. Long prefills stack a further +11.5% via MAXBATCH=16384 + PUSH_AR_MAXB=256 MiB.
 > See the NVFP4 TP=2 row + footnote ◆ below.
 
-**The (current) W8A8 daily driver is vLLM v0.24.0 W8A8 + DFlash all-sliding speculative decoding** (`DFLASH=1
+> **DAILY DRIVER DECIDED (2026-07-05): NVFP4 27B TP=2.** Head-to-head A/B vs W8A8-int8 TP=2 on a real
+> coding workload (same box + robust usage-based decode bench) picked NVFP4 for the coding daily driver:
+>
+> | axis (coding DD) | **NVFP4 TP=2** (+push-AR +MTP5) | W8A8-int8 TP=2 (+MTP +decode-push) |
+> |---|---|---|
+> | HumanEval+ (base/plus) | **0.988 / 0.945** | 0.970 / 0.933 |
+> | code decode c1 (interactive) | **46.7-50.3 t/s** | 36.5-39.1 t/s |
+> | code decode c2 (aggregate) | 62.3 | **71.2** |
+> | cold prefill PP @2K | 2174 | **2711** |
+> | KV @256K | **757k tok** | 320k tok |
+> | weights on-card | **24 GB** | 35 GB |
+>
+> NVFP4 wins the axes that matter for a single-developer coding DD: **accuracy, single-stream interactive
+> decode (+28%), and long-context KV (2.4x)** -- and push-AR made its prefill competitive (prefix caching
+> covers the residual). W8A8's edges (cold prefill +25%, c2 aggregate) matter less for interactive coding.
+> NVFP4 also has decode headroom left (`PUSH_AR_GRAPH=1` decode-push, W8A8's default, not yet ported).
+> Served via `DD_MODEL=vllm/qwen36-27b-nvfp4 DD_ENV="TP=2"` at 256K ctx (push-AR + MTP5 + prefix cache +
+> tool/reasoning parsers + API key auto-on).
+
+**The prior W8A8 daily driver is vLLM v0.24.0 W8A8 + DFlash all-sliding speculative decoding** (`DFLASH=1
 DFSWA=1`, spec=8, full 253952/248K context): +26% over the MTP config on coding/agentic work (35.2 t/s vs 27.8,
 accept_len 3.24) and it holds accept at depth (3.6 at 100K, +20% decode vs MTP at 40K) with full context. The
 TP-worker `shm_broadcast cancelled` crash that blocked DFlash was ROOT-CAUSED + FIXED 2026-07-03 (session 4):
