@@ -464,9 +464,11 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
             (TTFT + PP, win grows with length), push-AR PP 1730-2185 now MATCHES/BEATS single-card 1702,
             decode NEUTRAL (15.87 vs 15.88 c1), gate_concurrent 18/18 on both configs, wedge-free.
             Recommend PUSH_AR=1 for the TP=2 DD. Levers still open below.
-      - [ ] chunked-prefill tuning (--max-num-batched-tokens sweep): only moves LONG cold prefills
-            (32K/128K sliced into 8192-chunks = more AR launches); IN<=8192 is already a single chunk.
-            Stack on top of push-AR. Env-only, low risk.
+      - [x] chunked-prefill tuning (--max-num-batched-tokens) STACKS on push-AR for LONG prefills
+            (2026-07-05, JOURNAL): sweet spot MAXBATCH=16384 + PUSH_AR_MAXB=256 MiB = +11.5% @ 32K cold
+            (PP 1772 -> 1976). Single-chunk 32768 ties it at more memory (no gain past 2 chunks). Default
+            8192 optimal for IN<=8192. GUARDRAIL: raising MAXBATCH past ~13k WITHOUT raising PUSH_AR_MAXB
+            silently defeats push-AR (chunk bytes > 128 MiB scratch -> oneCCL, PP 734). Env-only knobs.
       - [ ] PP=2 prefill-biased variant: structurally eliminates the per-layer all-reduce (128 AR -> 1
             P2P/stage) but adds a single-stream decode bubble -> separate entry, not a DD swap. Medium
             risk (untested PP oneCCL/L0 path, re-gate wedge).
