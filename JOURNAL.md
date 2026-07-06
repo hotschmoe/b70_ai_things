@@ -8592,3 +8592,54 @@ PUSH_AR_GRAPH=1 for the mixed chat+coding TP=2 DD (chat gains, coding neutral); 
 unattended shelf default yet -- the DD was restored to the known-good prefill-only config, and a longer
 unattended soak (the decode-capture push is the higher-wedge-risk path per docs/handoff_decode_push_ar.md)
 should gate the shelf-default flip. Mechanism is a one-env-var change once soaked.
+
+## 2026-07-06 (session: NVFP4 DD repetition + crash ROOT-CAUSED, stable config found)
+
+INCIDENT: the NVFP4 27B TP=2 daily driver (b70_daily_0) emitted fluent-looking repetition garbage
+("...community community </community>...") on real pi/openwebui coding sessions -- coherent early,
+degenerate late. Also crashed the engine intermittently. W8A8-int8 TP=2 (prior DD) never did this in
+days/millions of tokens. Root-caused live via a forced-decode bisection (bin/bisect_probe: pi-like
+state-loading prompt + ignore_eos forced decode; per-run nonce busts prefix cache; detects repeat/crash).
+
+TWO INDEPENDENT NVFP4-ONLY FAULTS (both absent in W8A8):
+
+1. REPETITION = uncalibrated fp8 KV cache. The ModelOpt NVFP4 checkpoint declares
+   config.json quantization_config.kv_cache_scheme={num_bits:8,type:float} AND ships NO calibrated k/v
+   scales -> vLLM logs "Using KV cache scaling factor 1.0 for fp8_e4m3". On this hybrid GDN/attention
+   model that scale-1.0 fp8 KV loses precision that ACCUMULATES with generation length -> coherent
+   early, repetition-collapse late. Deterministic (greedy 6/6 identical at short len). Bisection:
+   - stock fp8 KV @8192:  REPEAT by ~tok985 (2/2 at 256K live)
+   - bf16 KV (kv_cache_scheme stripped): 3500 forced tokens CLEAN, 0 loops
+   FIX: serve knob KV_FP8=0 in vllm/nvfp4/serve_nvfp4_27b.sh -- overlays a patched config.json with
+   kv_cache_scheme removed (config_groups/NVFP4 weight quant untouched) -> kv_cache_dtype=auto (bf16).
+   COST: bf16 KV halves the KV pool (757k->461k tok @256K, still >>256K) and is ~2x KV read BW at decode.
+
+2. CRASH = MTP-verify under piecewise XPU cudagraph. Native Intel Compute Runtime (NEO) abort
+   "Abort was called at 84 line in ../../neo/shared/source/command_stream/linear_stream.h" in a TP
+   worker -> surviving proc throws shm_broadcast RuntimeError("cancelled") -> EngineDeadError -> container
+   exits (this is why "garbage recovered then returned": watchdog docker-restarted a crashed container).
+   Worker dies at variable tok (839/1094/2125) whenever MTP spec-decode runs INSIDE the captured graph.
+   Bisection (bf16 KV held constant):
+   - MTP on  + graph on  (B1): CRASH (tok839)
+   - MTP off + graph on  (B2): STABLE (0 aborts through ~330s + many forced runs)
+   - MTP on  + graph off (B3): STABLE (0 aborts, eager)
+   -> the abort needs BOTH MTP AND piecewise capture; turning off EITHER avoids it. (W8A8 runs MTP+its
+   own graph path without this NEO abort -> the bug is specific to the NVFP4 fused-kernel graph + MTP verify.)
+
+STABLE CONFIG PICKED = B4 (bf16 KV + MTP-off + graph + PUSH_AR_GRAPH=1 captured-decode push).
+The captured decode on B2 fell back to slow oneCCL (~7 t/s); routing it through the posted-write fabric
+(PUSH_AR_GRAPH=1, the "second push patch", needs GRAPH=1 which is fine with MTP off) recovers decode.
+Bench (my usage-based harness, single-stream, cache-busted, TP=2 256K bf16 KV):
+   config                              decode-generic  decode-coding  TTFT    prefill(cold)
+   B2 graph+noMTP (prefill-push only)      7.4            6.5          112ms   ~2200
+   B3 eager+MTP5                          15.1           16.4          605ms   1495
+   B4 graph+noMTP+PUSH_AR_GRAPH (PICKED)  31.7           25.5           94ms   2195
+B4 verified: forced 2000-3000 tok CLEAN (no repeat), 0 NEO aborts, coherent. Live as b70_daily_0 256K.
+
+CAVEAT / REOPENS DD DECISION: the README "DAILY DRIVER DECIDED: NVFP4" numbers (code decode c1
+46.7-50.3 t/s) were measured on the fp8-KV+MTP config that CAUSES fault #1 -- invalid for a stable DD.
+Stable NVFP4 (B4) is ~25-31 t/s decode because it must drop MTP; stable W8A8 keeps MTP (+decode-push)
+at ~36-39 t/s per the old table. A fair same-harness W8A8 rebench is needed before re-deciding the DD.
+NEXT: (a) same-harness bench of W8A8 for apples-to-apples; (b) research the NVFP4 MTP-in-graph NEO abort
+(would restore MTP+graph = best case); (c) get modelopt to ship calibrated k/v scales (would let fp8 KV
+work = smaller/faster KV without the repetition). watchdog was SIGSTOP'd during bisection (kill -CONT 3508).

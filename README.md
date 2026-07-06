@@ -14,7 +14,17 @@ accuracy loss.
 > MATCHES single-card 1702. Long prefills stack a further +11.5% via MAXBATCH=16384 + PUSH_AR_MAXB=256 MiB.
 > See the NVFP4 TP=2 row + footnote ◆ below.
 
-> **DAILY DRIVER DECIDED (2026-07-05): NVFP4 27B TP=2.** Head-to-head A/B vs W8A8-int8 TP=2 on a real
+> **[SUPERSEDED 2026-07-06 -- numbers below are INVALID for a stable DD; DD decision REOPENED.]** The
+> NVFP4 config benched below (fp8 KV + MTP5 + graph) has TWO NVFP4-only faults found 2026-07-06:
+> (1) the checkpoint's UNCALIBRATED fp8 KV cache (scale 1.0) accumulates precision loss over generation
+> length -> fluent REPETITION collapse late in long coding sessions; (2) MTP-verify inside the piecewise
+> XPU cudagraph triggers a native NEO command-stream abort that crashes the engine. The stable NVFP4
+> config is **B4 = bf16 KV (KV_FP8=0) + MTP-off + graph + PUSH_AR_GRAPH=1**: decode 25-31 t/s (drops MTP,
+> so BELOW the 46-50 headline), TTFT 94ms, no repeat, no crash. Because stable NVFP4 must drop MTP while
+> stable W8A8 keeps it (+decode-push, ~36-39 t/s), a fair same-harness W8A8 rebench is pending before
+> re-deciding the DD. See JOURNAL 2026-07-06 + vllm/nvfp4/bisect_probe.py. Original (invalid) A/B below:
+>
+> **DAILY DRIVER "DECIDED" (2026-07-05): NVFP4 27B TP=2.** Head-to-head A/B vs W8A8-int8 TP=2 on a real
 > coding workload (same box + robust usage-based decode bench) picked NVFP4 for the coding daily driver:
 >
 > | axis (coding DD) | **NVFP4 TP=2** (+push-AR +MTP5) | W8A8-int8 TP=2 (+MTP +decode-push) |

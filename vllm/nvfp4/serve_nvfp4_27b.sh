@@ -206,6 +206,29 @@ if [ "$PUSH_AR" = 1 ] && [ "$TP" != 1 ]; then
   fi
 fi
 
+# KV_FP8=0 -> DISABLE the checkpoint's fp8 KV cache and run bf16 KV (kv_cache_dtype=auto).
+# WHY (JOURNAL 2026-07-06, Track 11h root-cause): the ModelOpt NVFP4 checkpoint declares
+# quantization_config.kv_cache_scheme={num_bits:8,type:float} in config.json AND ships NO calibrated
+# k/v scales -- vLLM logs "Using KV cache scaling factor 1.0 for fp8_e4m3". On this hybrid GDN/attention
+# model that uncalibrated fp8 KV loses precision that ACCUMULATES with generation length -> coherent
+# early, degenerate repetition late (the pi/openwebui "...community community..." collapse). Proven by
+# bisection: bf16 KV ran 3500 forced tokens clean where fp8 KV looped by ~tok985. We overlay a patched
+# config.json (kv_cache_scheme stripped; config_groups/NVFP4 weight quant untouched). Default 1 = stock fp8.
+# Manual override: KV_CONFIG_OVERRIDE=/host/config.json (takes precedence).
+KV_MOUNTS=( )
+if [ -n "${KV_CONFIG_OVERRIDE:-}" ]; then
+  [ -f "$KV_CONFIG_OVERRIDE" ] || { echo "MISSING KV_CONFIG_OVERRIDE $KV_CONFIG_OVERRIDE"; exit 1; }
+  KV_MOUNTS=( -v "$KV_CONFIG_OVERRIDE:/models/qwen3.6-27b/nvfp4-modelopt/config.json:ro" )
+  echo "=== KV_CONFIG_OVERRIDE ON -> $KV_CONFIG_OVERRIDE ==="
+elif [ "${KV_FP8:-1}" = 0 ]; then
+  _CFG_SRC="$REPO/models/files/qwen3.6-27b/nvfp4-modelopt/config.json"
+  _CFG_PATCH="${KV_PATCH_DIR:-/tmp}/b70_config.nvfp4.nokvfp8.json"
+  python3 -c "import json; d=json.load(open('$_CFG_SRC')); d.get('quantization_config',{}).pop('kv_cache_scheme',None); json.dump(d,open('$_CFG_PATCH','w'))" \
+    || { echo "failed to generate $_CFG_PATCH"; exit 1; }
+  KV_MOUNTS=( -v "$_CFG_PATCH:/models/qwen3.6-27b/nvfp4-modelopt/config.json:ro" )
+  echo "=== KV_FP8=0: fp8 KV cache DISABLED (bf16 KV, kv_cache_scheme stripped) ==="
+fi
+
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
 # card/multicard env: TP=1 pins one card; TP=2 drives both through CPU-staged oneCCL
@@ -227,7 +250,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$DIR/patches:/opt/nvfp4_shim:ro" \
-  "${KERN_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" \
+  "${KERN_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" "${KV_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
