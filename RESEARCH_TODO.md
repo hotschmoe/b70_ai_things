@@ -497,6 +497,26 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.
 - [ ] **11e. Harder evals on the champion** (agentic code, long-context) before promoting it past
       "quality pick" toward daily-driver conversations (it lacks KV for that today; see 11c).
+- [ ] **11h. [HIGH -- unblocks NVFP4-as-DD] Fix the NVFP4 MTP-verify-in-piecewise-cudagraph NEO abort.**
+      (JOURNAL 2026-07-06.) With MTP spec-decode ON and GRAPH=1 (PIECEWISE), a TP worker hits a native
+      Intel Compute Runtime abort "Abort was called at 84 line ../../neo/.../command_stream/linear_stream.h"
+      at a variable output-token count (839/1094/2125) -> shm_broadcast "cancelled" -> EngineDeadError ->
+      container exit. Dropping EITHER MTP or capture avoids it, so the stable NVFP4 DD must run graph+MTP-off
+      (B4: bf16 KV + PUSH_AR_GRAPH=1, decode ~25-31 t/s) -- which LOSES to stable W8A8 (graph+MTP3, ~38-43
+      t/s) that keeps both. **Fixing this reclaims MTP+graph = best-case NVFP4 and could re-win the DD.**
+      W8A8 already runs MTP-verify inside the captured graph fine (rdy_to_serve/vllm/qwen36-27b-w8a8/patches:
+      capture-safe all-reduce-of-padded all_gather + SPLITOPS "eject nothing"), and the NVFP4 shim has the
+      same all_gather shim (block 3) -- so this is NOT the all_gather-address bug; it is a COMMAND-STREAM
+      (linear_stream.h:84) overflow specific to the NVFP4 fused-kernel graph + spec-verify batch. Leads:
+      diff the NVFP4 vs W8A8 captured-piece command-buffer sizes / capture-size padding (CAPSIZES vs
+      1+spec); check the nvfp4_gemm_w4a16 op inside the spec-verify (batch=1+spec) piece; try smaller
+      CAPSIZES / non-piecewise-region for the MTP verify. Repro harness: vllm/nvfp4/bisect_probe.py.
+- [ ] **11i. [MED] Get fp8 KV working for NVFP4 (would restore smaller/faster KV without the repetition).**
+      The ModelOpt NVFP4 checkpoint declares config.json kv_cache_scheme fp8 but ships NO calibrated k/v
+      scales -> vLLM "scaling factor 1.0" -> precision loss ACCUMULATES over gen length -> repetition
+      collapse (JOURNAL 2026-07-06; current fix = KV_FP8=0 -> bf16 KV, which halves KV capacity + ~2x decode
+      KV BW). Path: produce calibrated k/v scales (modelopt calib pass, or compute from a calibration set and
+      inject into the checkpoint) so fp8 KV is accurate -> reclaim the 757k-vs-461k KV @256K and the decode BW.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

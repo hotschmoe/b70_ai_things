@@ -5,7 +5,12 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
-> **Long-context daily driver moving to NVFP4 TP=2 (2026-07-04).** `nvidia/Qwen3.6-27B-NVFP4` (box
+> **[2026-07-06: DAILY DRIVER REVERTED TO W8A8.** NVFP4-as-DD had two NVFP4-only faults (uncalibrated
+> fp8 KV -> repetition; MTP-in-cudagraph -> NEO crash). Same-harness A/B on the STABLE configs picked
+> W8A8: decode 43.0/38.2 t/s (generic/coding) vs stable-NVFP4's 31.7/25.5 -- W8A8 keeps MTP+graph, NVFP4
+> can't (see the DD block below + JOURNAL 2026-07-06). The NVFP4 material below is now HISTORICAL.]**
+>
+> **Long-context daily driver moving to NVFP4 TP=2 (2026-07-04) [SUPERSEDED -- see 2026-07-06 above].** `nvidia/Qwen3.6-27B-NVFP4` (box
 > quality #1) spanned across both cards serves the **full 256K model context** (262,144) with **764k KV
 > tokens (2.92x @ 256K)** and **prefix caching** (3.98x warm-TTFT reuse), warm single-stream decode
 > **48-50 t/s** (beats single-card 40-44), gate 18/18. The old cold-prefill tradeoff is **SOLVED (2026-07-05)**
@@ -20,9 +25,21 @@ accuracy loss.
 > length -> fluent REPETITION collapse late in long coding sessions; (2) MTP-verify inside the piecewise
 > XPU cudagraph triggers a native NEO command-stream abort that crashes the engine. The stable NVFP4
 > config is **B4 = bf16 KV (KV_FP8=0) + MTP-off + graph + PUSH_AR_GRAPH=1**: decode 25-31 t/s (drops MTP,
-> so BELOW the 46-50 headline), TTFT 94ms, no repeat, no crash. Because stable NVFP4 must drop MTP while
-> stable W8A8 keeps it (+decode-push, ~36-39 t/s), a fair same-harness W8A8 rebench is pending before
-> re-deciding the DD. See JOURNAL 2026-07-06 + vllm/nvfp4/bisect_probe.py. Original (invalid) A/B below:
+> so BELOW the 46-50 headline), TTFT 94ms, no repeat, no crash. **RESOLUTION (2026-07-06): same-harness
+> A/B on the STABLE configs picked W8A8 -> DD REVERTED TO W8A8** (`vllm/qwen36-27b-w8a8`, PIECEWISE graph
+> + MTP3 + PUSH_AR_GRAPH, live as b70_daily_0):
+>
+> | metric (same harness, TP=2) | stable NVFP4 B4 | **stable W8A8** |
+> |---|---|---|
+> | decode generic / coding | 31.7 / 25.5 t/s | **43.0 / 38.2 t/s** |
+> | TTFT (short) | 94 ms | 195 ms |
+> | prefill (cold ~15k) | 2195 | 2395 tok/s |
+>
+> W8A8 wins decode +36-50% because it keeps BOTH MTP and graph capture (NVFP4 can't: MTP+graph = crash);
+> plus it was bulletproof for days, is 8-bit (quality preference), keeps vision+prefix-cache. NVFP4's
+> edges (TTFT, 2.4x KV @256K) don't outweigh decode for a coding DD. NVFP4 returns to research pending
+> the two fixes in RESEARCH_TODO 11h (MTP-in-graph crash) + 11i (fp8-KV calibration). See JOURNAL
+> 2026-07-06 + vllm/nvfp4/bisect_probe.py. Original (invalid, fp8-KV+MTP) A/B below:
 >
 > **DAILY DRIVER "DECIDED" (2026-07-05): NVFP4 27B TP=2.** Head-to-head A/B vs W8A8-int8 TP=2 on a real
 > coding workload (same box + robust usage-based decode bench) picked NVFP4 for the coding daily driver:
