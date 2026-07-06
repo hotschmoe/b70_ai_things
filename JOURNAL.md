@@ -8643,3 +8643,14 @@ at ~36-39 t/s per the old table. A fair same-harness W8A8 rebench is needed befo
 NEXT: (a) same-harness bench of W8A8 for apples-to-apples; (b) research the NVFP4 MTP-in-graph NEO abort
 (would restore MTP+graph = best case); (c) get modelopt to ship calibrated k/v scales (would let fp8 KV
 work = smaller/faster KV without the repetition). watchdog was SIGSTOP'd during bisection (kill -CONT 3508).
+
+## 2026-07-06 -- DD systemd override repointed NVFP4->W8A8 + stable served-id alias `hotschmoe-dd`
+Config: `/etc/systemd/system/b70-daily-driver.service.d/override.conf` still pinned the reverted-away NVFP4
+(`DD_MODEL=vllm/qwen36-27b-nvfp4 DD_ENV=TP=2 DD_MAXLEN=262144`) -> every boot/restart relaunched buggy NVFP4,
+which crashed (EngineCore `RuntimeError: cancelled` shm_broadcast, MTP-in-piecewise-graph) ~1h in and stayed DOWN
+(oneshot unit = no auto-restart; watchdog observe-only on hard exit). Command: sudo `tee` the override ->
+`DD_MODEL=vllm/qwen36-27b-w8a8` `DD_REPLICAS=1` `DD_MAXLEN=253952` `DD_ENV=SERVED=hotschmoe-dd`; daemon-reload;
+`systemctl restart b70-daily-driver`. Result: DD serves W8A8 (PIECEWISE graph+MTP3+PUSH_AR_GRAPH+prefixcache+vision)
+with served id = `hotschmoe-dd`. Verdict: stable alias decouples the API model-qualifier from the quant so consumer
+harnesses (pi, omp on other PCs) stop breaking at harness level on quant swaps; deliberate exception to the Model
+Identity rule (evals set their own descriptive SERVED; real scheme still traceable via b70_daily_0 + CKPT + logs).
