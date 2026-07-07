@@ -5,10 +5,25 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
+> **[2026-07-07 CORRECTION -- the "NVFP4-only crash / W8A8 keeps MTP+graph" claim below is REFUTED.**
+> The `linear_stream.h:84` NEO abort under MTP-verify + piecewise cudagraph is NOT NVFP4-specific: the
+> W8A8 daily driver hit the IDENTICAL abort after ~3h of real use (and a 6-way concurrent soak reproduced
+> it at ~96k decode tokens). Root cause (binary disasm): `at::xpu::XPUGraphImpl::replay` submits the
+> captured graph via `submit_with_event` and never syncs, so per-replay NEO command-list entries accumulate
+> (the MTP propose loop fires ~spec x pieces replays/step) until the command buffer overflows. It needs BOTH
+> MTP and capture; dropping either avoids it (which is why sglang -- never captures MTP -- never saw it, and
+> why enforce-eager+MTP is stable). W8A8 is NOT "bulletproof for days" with MTP+graph; it just crashes ~50-100x
+> LATER than NVFP4 (NVFP4's fused nvfp4_gemm encodes far more commands/replay -> crash at ~1-2k tokens).
+> A per-step `torch.xpu.synchronize` does NOT reclaim it; recapture-every-N is racy under load. The DD
+> decision below rests on the false "W8A8 keeps MTP+graph" premise and is REOPENED. Real-fix effort is now
+> focused on NVFP4 (fastest repro). See `docs/20260707_dd_mtp_piecewise_neo_abort.md` + RESEARCH_TODO 11h.]**
+>
 > **[2026-07-06: DAILY DRIVER REVERTED TO W8A8.** NVFP4-as-DD had two NVFP4-only faults (uncalibrated
 > fp8 KV -> repetition; MTP-in-cudagraph -> NEO crash). Same-harness A/B on the STABLE configs picked
 > W8A8: decode 43.0/38.2 t/s (generic/coding) vs stable-NVFP4's 31.7/25.5 -- W8A8 keeps MTP+graph, NVFP4
-> can't (see the DD block below + JOURNAL 2026-07-06). The NVFP4 material below is now HISTORICAL.]**
+> can't (see the DD block below + JOURNAL 2026-07-06). [2026-07-07: "W8A8 keeps MTP+graph, NVFP4 can't" is
+> WRONG -- W8A8 hits the same abort, just later; see the correction banner above.] The NVFP4 material below
+> is now HISTORICAL.]**
 >
 > **Long-context daily driver moving to NVFP4 TP=2 (2026-07-04) [SUPERSEDED -- see 2026-07-06 above].** `nvidia/Qwen3.6-27B-NVFP4` (box
 > quality #1) spanned across both cards serves the **full 256K model context** (262,144) with **764k KV
@@ -37,6 +52,10 @@ accuracy loss.
 >
 > W8A8 wins decode +36-50% because it keeps BOTH MTP and graph capture (NVFP4 can't: MTP+graph = crash);
 > plus it was bulletproof for days, is 8-bit (quality preference), keeps vision+prefix-cache. NVFP4's
+> [2026-07-07 CORRECTION: "NVFP4 can't / bulletproof for days" is FALSE -- W8A8 hits the same
+> linear_stream.h:84 abort under MTP+graph, just ~50-100x later; it crashed the live DD 2026-07-07 after
+> ~3h. The +36-50% decode edge was measured on W8A8's crashing config vs NVFP4's stable (MTP-off) config,
+> so it is apples-to-oranges. See the correction banner at the top.]
 > edges (TTFT, 2.4x KV @256K) don't outweigh decode for a coding DD. NVFP4 returns to research pending
 > the two fixes in RESEARCH_TODO 11h (MTP-in-graph crash) + 11i (fp8-KV calibration). See JOURNAL
 > 2026-07-06 + vllm/nvfp4/bisect_probe.py. Original (invalid, fp8-KV+MTP) A/B below:

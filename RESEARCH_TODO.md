@@ -497,20 +497,29 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.
 - [ ] **11e. Harder evals on the champion** (agentic code, long-context) before promoting it past
       "quality pick" toward daily-driver conversations (it lacks KV for that today; see 11c).
-- [ ] **11h. [HIGH -- unblocks NVFP4-as-DD] Fix the NVFP4 MTP-verify-in-piecewise-cudagraph NEO abort.**
-      (JOURNAL 2026-07-06.) With MTP spec-decode ON and GRAPH=1 (PIECEWISE), a TP worker hits a native
-      Intel Compute Runtime abort "Abort was called at 84 line ../../neo/.../command_stream/linear_stream.h"
-      at a variable output-token count (839/1094/2125) -> shm_broadcast "cancelled" -> EngineDeadError ->
-      container exit. Dropping EITHER MTP or capture avoids it, so the stable NVFP4 DD must run graph+MTP-off
-      (B4: bf16 KV + PUSH_AR_GRAPH=1, decode ~25-31 t/s) -- which LOSES to stable W8A8 (graph+MTP3, ~38-43
-      t/s) that keeps both. **Fixing this reclaims MTP+graph = best-case NVFP4 and could re-win the DD.**
-      W8A8 already runs MTP-verify inside the captured graph fine (rdy_to_serve/vllm/qwen36-27b-w8a8/patches:
-      capture-safe all-reduce-of-padded all_gather + SPLITOPS "eject nothing"), and the NVFP4 shim has the
-      same all_gather shim (block 3) -- so this is NOT the all_gather-address bug; it is a COMMAND-STREAM
-      (linear_stream.h:84) overflow specific to the NVFP4 fused-kernel graph + spec-verify batch. Leads:
-      diff the NVFP4 vs W8A8 captured-piece command-buffer sizes / capture-size padding (CAPSIZES vs
-      1+spec); check the nvfp4_gemm_w4a16 op inside the spec-verify (batch=1+spec) piece; try smaller
-      CAPSIZES / non-piecewise-region for the MTP verify. Repro harness: vllm/nvfp4/bisect_probe.py.
+- [ ] **11h. [HIGH -- ACTIVE, unblocks MTP+graph on BOTH quants] Fix the MTP-verify-in-piecewise-cudagraph
+      NEO command-stream leak.** [REFRAMED 2026-07-07 -- see docs/20260707_dd_mtp_piecewise_neo_abort.md.]
+      NOT NVFP4-specific: the W8A8 DD hit the IDENTICAL abort 2026-07-07 (~3h real use; 6-way concurrent
+      soak reproduces at ~96k decode tokens). ROOT CAUSE (binary disasm of libtorch_xpu):
+      `at::xpu::XPUGraphImpl::replay` submits the executable SYCL command_graph via `submit_with_event` onto
+      the in-order queue and NEVER synchronizes -> each replay leaves a graph-exec command + un-waited L0
+      event in the NEO immediate command list, reclaimed only on a full queue sync. The MTP propose loop
+      (llm_base_proposer.py:613-687) fires (spec-1) x pieces replays/step with no host sync between draft
+      steps -> the command list grows until LinearStream::getSpace overflows (linear_stream.h:84). Needs BOTH
+      MTP and capture. NVFP4 crashes ~50-100x SOONER (~1-2k tok vs W8A8 ~96k) because nvfp4_gemm_w4a16 encodes
+      far more commands/replay -> **NVFP4 is the fast-iteration repro vehicle AND the biggest beneficiary**
+      (higher 4-bit decode ceiling + top quality, currently fully blocked).
+      RULED OUT (2026-07-07, GPU-tested): (a) per-step torch.xpu.synchronize (sitecustomize block 5,
+      B70_XPU_CG_SYNC_STEPS) -- NO effect, sync does not reclaim the command-list growth; (b) recapture-every-N
+      (block 3, B70_XPU_CG_RECYCLE_STEPS) -- crashes when it fires (clears the in-flight graph mid-step, racy
+      under concurrent load); (c) event-cleanup env / buffer-enlarge -- sync-ineffective implies events aren't
+      the reclaimable unit, and OverrideCmdListCmdBufferSizeInKb only multiplies the threshold.
+      NEXT (on NVFP4, ~1min crash cycles): (1) DRAFTER-EAGER -- force the MTP drafter's cudagraph mode to NONE
+      while keeping the TARGET decode captured (kills the sync-free drafter replay loop = the leak engine per
+      the disasm; keeps most decode-capture speed); (2) FULL_DECODE_ONLY / fewer pieces (fewer replays/step);
+      (3) torch-level root fix (rebuild libtorch_xpu: submit_without_event, or reset/update the command list
+      per replay -- the upstream-worthy fix, novel: no public issue exists). Repro harnesses:
+      vllm/nvfp4/bisect_probe.py (single-stream NVFP4 fast crash), vllm/soak_concurrent.py + vllm/fix_test.sh.
 - [ ] **11i. [MED] Get fp8 KV working for NVFP4 (would restore smaller/faster KV without the repetition).**
       The ModelOpt NVFP4 checkpoint declares config.json kv_cache_scheme fp8 but ships NO calibrated k/v
       scales -> vLLM "scaling factor 1.0" -> precision loss ACCUMULATES over gen length -> repetition
