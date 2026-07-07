@@ -254,12 +254,16 @@ fi
 EXTRA_ENV=( )
 if [ "${B70_DEBUG:-0}" != 0 ]; then EXTRA_ENV+=( -e PYTHONFAULTHANDLER=1 -e PYTHONUNBUFFERED=1 ); echo "=== B70_DEBUG=${B70_DEBUG} -> faulthandler ===" >&2; fi
 if [ -n "${B70_EXTRA_ENV:-}" ]; then for kv in ${B70_EXTRA_ENV}; do EXTRA_ENV+=( -e "$kv" ); done; echo "=== B70_EXTRA_ENV -> ${B70_EXTRA_ENV} ===" >&2; fi
+# B70_EXTRA_MOUNTS="host:container[:ro] ..." -> extra -v binds (e.g. overlay the patched
+# libtorch_xpu.so over the prebuilt one to validate the submit_without_event NEO-abort fix).
+EXTRA_MOUNTS=( )
+if [ -n "${B70_EXTRA_MOUNTS:-}" ]; then for m in ${B70_EXTRA_MOUNTS}; do EXTRA_MOUNTS+=( -v "$m" ); done; echo "=== B70_EXTRA_MOUNTS -> ${B70_EXTRA_MOUNTS} ===" >&2; fi
 
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$DIR/patches:/opt/nvfp4_shim:ro" \
-  "${KERN_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" "${KV_MOUNTS[@]}" \
+  "${KERN_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" "${KV_MOUNTS[@]}" "${EXTRA_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
