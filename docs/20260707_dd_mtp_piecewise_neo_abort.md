@@ -186,4 +186,32 @@ synchronize.
 
 ## Experiment log
 
-(appended below as runs complete)
+### E1 (2026-07-07): baseline repro at MAXLEN=131072 -- did NOT crash
+config -> DD config exactly (MTP3 + PIECEWISE + PUSH_AR + prefix cache + vision),
+  MAXLEN=131072, B70_DEBUG=1 (faulthandler). Probe: 6x forced-decode (ignore_eos)
+  of ~55K-token prompts, 3000 tokens each = 18k cumulative decode tokens.
+command -> vllm/repro_campaign.sh (CFG_LABEL=e1_baseline_ml131k).
+result -> 6/6 CLEAN, prompt_tok=55148, comp_tok=3000 each, decode ~10-14 t/s at
+  55K ctx. NO abort. Container healthy after.
+verdict -> v0.24.0 leak RATE is far lower than v0.23 (old crash ~20k tokens / ~20min;
+  here 18k tokens clean). ALSO: a 55K-context request did NOT crash on run0 -> refutes
+  a pure "single long-context submission too big" (M2) trigger. It IS accumulation, but
+  slow -- the real DD crash took ~3h of production traffic. Two suspects for the gap:
+  (a) MAXLEN=200000 (real) vs 131072 (E1); (b) single-stream 18k tokens vs hours of
+  CONCURRENT traffic exercising capture sizes 6/8. Q1 (128K maxlen) partly answered:
+  128K maxlen with a 55K request is NOT sufficient to crash on its own; the operator's
+  "didn't crash at 128K" memory is consistent with lower cumulative/concurrent load then,
+  not a hard maxlen threshold. NEXT: concurrent soak (E1c) to force it fast.
+
+### E1c (2026-07-07): concurrent soak on the live MAXLEN=131072 container -- RUNNING
+config -> reuse E1's healthy container. 6 concurrent forced-decode streams, ~8K ctx
+  (fast decode = max replay rate), 4000 tok/req, ceiling 900k tok / 45 min.
+command -> vllm/soak_concurrent.py e1c_concurrent_ml131k.
+result -> *** CRASH (HTTP500) at tok=96000 t=1453s (~24min) reqs=24. faulthandler:
+  "Abort was called at 84 line ... linear_stream.h" + "torch/xpu/graphs.py line 107 in
+  replay" + EngineDeadError. REPRODUCED with the exact signature.
+verdict -> RELIABLE REPRO. Threshold on v0.24.0 ~= 96k decode tokens under 6-way
+  concurrency (~24min). Single-stream 18k (E1) was clean -> CONCURRENCY is the accelerant
+  (saturates GPU = max replays/sec, and exercises capture sizes 6/8). MAXLEN=131072 ->
+  Q1 CLOSED: maxlen is NOT the trigger; the operator's "no crash at 128K" was lower load.
+  Baseline crash threshold for fix A/B = survive >> 96k tokens (target ~220k = 2.3x).

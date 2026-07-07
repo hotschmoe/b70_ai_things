@@ -106,6 +106,48 @@ if _RECYCLE_N > 0:
     except Exception as e:
         print("[cg-recycle] (3) setup failed:", repr(e), file=sys.stderr, flush=True)
 
+# ---- (5) FIX-SYNC (EXPERIMENTAL, default OFF): drain the queue every N decode steps, NO recapture ----
+# Competing hypothesis to block (3): the NEO command-stream / L0 event-pool growth from graph REPLAY
+# (at::xpu::XPUGraphImpl::replay submits the executable SYCL command_graph via submit_with_event onto the
+# in-order queue and NEVER synchronizes -> per-replay graph-exec commands + dropped un-waited events pile up
+# in the immediate command list, reclaimed only on a full queue synchronize). If a plain torch.xpu.synchronize
+# every N decode steps RECLAIMS that growth, we do NOT need block (3)'s expensive clear+recapture -- we keep the
+# captured graphs intact (no recapture stall) AND bound the command list. This isolates "sync reclaims" (this
+# block) from "reset/recapture required" (block 3). N counts calls on the first-seen PIECEWISE wrapper
+# (~one per decode step); N=1 = sync every step (the cadence normal non-spec decode already has). OFF unless
+# B70_XPU_CG_SYNC_STEPS>0 so the shelf/production serve is byte-identical. Mutually exclusive with block (3).
+_SYNC_N = int(os.environ.get("B70_XPU_CG_SYNC_STEPS", "0") or "0")
+if _SYNC_N > 0:
+    try:
+        import torch
+        from vllm.compilation.cuda_graph import CUDAGraphWrapper
+        _orig_cgw_call_sync = CUDAGraphWrapper.__call__
+        _sy = {"n": 0, "root": None, "syncs": 0}
+
+        def _syncing_call(self, *args, **kwargs):
+            out = _orig_cgw_call_sync(self, *args, **kwargs)
+            try:
+                mode = getattr(getattr(self, "runtime_mode", None), "name", None)
+                if mode == "PIECEWISE":
+                    if _sy["root"] is None:
+                        _sy["root"] = id(self)
+                    if id(self) == _sy["root"]:            # ~once per decode step
+                        _sy["n"] += 1
+                        if _sy["n"] >= _SYNC_N:
+                            _sy["n"] = 0
+                            if hasattr(torch, "xpu"):
+                                torch.xpu.synchronize()
+                            _sy["syncs"] += 1
+            except Exception as e:
+                print("[cg-sync] step error:", repr(e), file=sys.stderr, flush=True)
+            return out
+
+        CUDAGraphWrapper.__call__ = _syncing_call
+        print(f"[cg-sync] (5) FIX-SYNC ENABLED: torch.xpu.synchronize every {_SYNC_N} decode steps "
+              f"(no recapture) (EXPERIMENTAL)", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[cg-sync] (5) setup failed:", repr(e), file=sys.stderr, flush=True)
+
 # ---- (4) XPU mamba align-mode pointer fix (enables --enable-prefix-caching) ------------------------
 # --enable-prefix-caching on the hybrid GDN model auto-switches vLLM's mamba KV cache to "align" mode.
 # Combined with MTP spec-decode that activates MambaSpecDecodeGPUContext, whose

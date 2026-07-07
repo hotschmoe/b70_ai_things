@@ -1,0 +1,13 @@
+===== [e1_baseline_ml131k] MAXLEN=131072 SERVE_ENV='B70_DEBUG=1' 2026-07-07T02:45:15Z =====
+[e1_baseline_ml131k] serve start rc=0 (log: /mnt/vm_8tb/github/b70_ai_things/results/logs/repro_e1_baseline_ml131k_20260707_024515.serve.log)
+[e1_baseline_ml131k] probe rc=0 (3=crash observed)
+  run0: CLEAN prompt_tok=55148 comp_tok=3000 dt=236s tail='usion of Block-Specific Processing**\nThe naming convention `'
+  run1: CLEAN prompt_tok=55148 comp_tok=3000 dt=219s tail=' is greater than zero and if the block is not marked as free'
+  run2: CLEAN prompt_tok=55148 comp_tok=3000 dt=256s tail='fic block. This suggests the function name is misleading; it'
+  run3: CLEAN prompt_tok=55148 comp_tok=3000 dt=329s tail='s sequentially through `state.blocks` using `enumerate`. For'
+  run4: CLEAN prompt_tok=55148 comp_tok=3000 dt=291s tail='roduct of `blk.num_tokens` and `config.head_dim` to `total`.'
+  run5: CLEAN prompt_tok=55148 comp_tok=3000 dt=315s tail=', summing`blk.num_tokens * config.head_dim` for blocks where'
+[e1_baseline_ml131k] VERDICTS=['CLEAN', 'CLEAN', 'CLEAN', 'CLEAN', 'CLEAN', 'CLEAN']
+--- container log tail (abort search) ---
+[e1_baseline_ml131k] stopped. 2026-07-07T03:16:06Z
+

@@ -1,0 +1,8 @@
+[e1_baseline_ml131k] served=qwen36-27b-w8a8-sqgptq-mtp ctx_chars=200000 maxtok=3000 runs=6
+  run0: CLEAN prompt_tok=55148 comp_tok=3000 dt=236s tail='usion of Block-Specific Processing**\nThe naming convention `'
+  run1: CLEAN prompt_tok=55148 comp_tok=3000 dt=219s tail=' is greater than zero and if the block is not marked as free'
+  run2: CLEAN prompt_tok=55148 comp_tok=3000 dt=256s tail='fic block. This suggests the function name is misleading; it'
+  run3: CLEAN prompt_tok=55148 comp_tok=3000 dt=329s tail='s sequentially through `state.blocks` using `enumerate`. For'
+  run4: CLEAN prompt_tok=55148 comp_tok=3000 dt=291s tail='roduct of `blk.num_tokens` and `config.head_dim` to `total`.'
+  run5: CLEAN prompt_tok=55148 comp_tok=3000 dt=315s tail=', summing`blk.num_tokens * config.head_dim` for blocks where'
+[e1_baseline_ml131k] VERDICTS=['CLEAN', 'CLEAN', 'CLEAN', 'CLEAN', 'CLEAN', 'CLEAN']

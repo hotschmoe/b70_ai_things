@@ -48,7 +48,8 @@ grep -E 'VERDICTS|run[0-9]:' "$PLOG" | tee -a "$RESULTS"
 echo "--- container log tail (abort search) ---" | tee -a "$RESULTS"
 docker logs "$NAME" 2>&1 | grep -nE 'Abort was called|linear_stream|faulthandler|Fatal Python|in replay|in forward|in propose|EngineDeadError|cancelled|LinearStream|command buffer' | tail -25 | tee -a "$RESULTS"
 
-bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh stop > "$LOGDIR/repro_${CFG_LABEL}_${STAMP}.stop.log" 2>&1
+NAME="$NAME" bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh stop > "$LOGDIR/repro_${CFG_LABEL}_${STAMP}.stop.log" 2>&1
+docker rm -f "$NAME" >/dev/null 2>&1   # belt-and-suspenders: ensure the repro container is gone
 echo "[$CFG_LABEL] stopped. $(date -u +%FT%TZ)" | tee -a "$RESULTS"
 echo | tee -a "$RESULTS"
 exit "$PROBE_RC"

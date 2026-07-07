@@ -1,0 +1,8 @@
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-w8a8/../../../vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== B70_EXTRA_ENV -> injected: VLLM_USE_AOT_COMPILE=0 ===
+stopped vllm_qwen36-27b-w8a8-sqgptq-mtp (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=vllm-xpu-env:int8g-v0240 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g-v0240 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
