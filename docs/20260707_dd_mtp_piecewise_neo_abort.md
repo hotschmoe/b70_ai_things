@@ -329,3 +329,30 @@ verdict -> [FIX VALIDATED] drafter-eager FIXES the NEO abort, rebuild-free, keep
   unchanged. The full-speed ceiling (keep the drafter captured too) needs the torch-level
   root fix (XPUGraphImpl::replay -> submit_without_event / reset per replay; rebuild) -- the
   upstream contribution, tracked as the follow-on.
+
+### drafter-eager decode measurement (NVFP4 TP=2, 2026-07-07)
+config -> NVFP4 TP=2 fused GRAPH=1 MTP5 KV_FP8=0 + B70_XPU_DRAFTER_EAGER=1.
+result -> CODE prompt (streaming): decode ~17 t/s, MTP mean acceptance length 4.6-5.04
+  (near-max for spec=5 -> MTP quality FULLY retained). Random forced (non-stream soak):
+  ~22-26 t/s. (Streaming undercounts vs non-stream; treat ~22-26 as the raw number.)
+verdict -> [IMPORTANT] drafter-eager decode is CAPPED by the eager-drafter cost: even at
+  accept 5.04 on code, decode ~= random text. So the ~99% accept does NOT translate to
+  speed -- running 5 eager drafter forwards/step eats it. drafter-eager (~22-26) therefore
+  lands ~= the existing stable graph+MTP-off B4 (25-31), NOT the crashing captured+MTP
+  (31.9 / 48-50 warm). It is a VALID, STABLE fix that PROVES the root cause and keeps MTP,
+  but it is NOT a speed win over B4. Reclaiming the full 31-48 (drafter captured too) needs
+  the torch-level root fix (XPUGraphImpl::replay submit_without_event / reset-per-replay).
+  Possible drafter-eager tuning: lower MTPTOK (fewer eager drafter forwards/step) -- untested.
+
+## STATE / DECISION (2026-07-07 end of session 2)
+
+- Root cause: DEFINITIVE (disasm) + REPRODUCED (NVFP4 TP=2 ~8-12k tok; W8A8 96k concurrent).
+- Fix ladder result:
+  - enforce-eager+MTP: stable, ~15-16 t/s (proven fallback).
+  - graph+MTP-off (B4): stable-ish, 25-31 t/s, NO MTP (current NVFP4 stable DD).
+  - drafter-eager (NEW, validated): stable, ~22-26 t/s, KEEPS MTP -- but ~= B4 speed.
+  - captured+MTP (was DD): 31.9/48-50 warm -- CRASHES (~8-12k NVFP4 / ~96k W8A8).
+- To get captured+MTP speed WITHOUT the crash = the torch-level fix (rebuild libtorch_xpu:
+  XPUGraphImpl::replay must not leak per replay -- submit_without_event or command-list reset).
+  This is the novel upstream contribution (no public issue exists). Multi-hour (torch-xpu-ops
+  build). => operator decision on whether to invest now.
