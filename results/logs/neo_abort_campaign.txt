@@ -20,3 +20,12 @@
 abort-lines=4
 [FIX fix_sync_n1] done 2026-07-07T04:11:37Z
 
+===== [FIX fix_recycle_n2000] B70_EXTRA_ENV='B70_XPU_CG_RECYCLE_STEPS=2000' MAXLEN=131072 soak_ceil=220000/3300 2026-07-07T04:13:20Z =====
+  [fix_recycle_n2000] t=400s tok=24000 reqs=6
+  [fix_recycle_n2000] t=420s tok=24000 reqs=6
+[fix_recycle_n2000] *** CRASH (HTTP500) after tok=24000 t=426s reqs=6
+[FIX fix_recycle_n2000] soak rc=3 (3=crash)
+--- abort trace? ---
+abort-lines=0
+[FIX fix_recycle_n2000] done 2026-07-07T04:23:29Z
+

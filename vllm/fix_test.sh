@@ -30,7 +30,11 @@ SOAK_RC=$?
 tail -3 "$KLOG" | tee -a "$RESULTS"
 echo "[FIX $CFG_LABEL] soak rc=$SOAK_RC (3=crash)" | tee -a "$RESULTS"
 echo "--- abort trace? ---" | tee -a "$RESULTS"
-docker logs "$NAME" 2>&1 | grep -cE 'Abort was called|linear_stream' | xargs -I{} echo "abort-lines={}" | tee -a "$RESULTS"
+CLOG="$LOGDIR/fix_${CFG_LABEL}_${STAMP}.container.log"
+docker logs "$NAME" > "$CLOG" 2>&1   # PRESERVE full container log before teardown
+grep -cE 'Abort was called|linear_stream' "$CLOG" | xargs -I{} echo "abort-lines={}" | tee -a "$RESULTS"
+grep -cE 'cg-recycle. recapture #|cg-sync' "$CLOG" | xargs -I{} echo "fix-fire-lines={}" | tee -a "$RESULTS"
+grep -E 'cg-recycle|cg-sync|step error|Traceback|RuntimeError|EngineDead' "$CLOG" | tail -8 | tee -a "$RESULTS"
 
 NAME="$NAME" bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh stop > "$LOGDIR/fix_${CFG_LABEL}_${STAMP}.stop.log" 2>&1
 docker rm -f "$NAME" >/dev/null 2>&1

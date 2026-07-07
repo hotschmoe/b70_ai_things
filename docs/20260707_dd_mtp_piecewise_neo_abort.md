@@ -235,4 +235,50 @@ verdict -> [KEY NEGATIVE] a full queue synchronize every decode step does NOT re
 config -> DD config + B70_XPU_CG_RECYCLE_STEPS=2000 (block 3: torch.xpu.synchronize +
   clear_all_graphs every ~2000 decode steps -> bounded command list, keeps MTP+capture).
   Same 6-way concurrent soak to 220k tokens.
-result -> (pending)
+result -> *** CRASH at tok=24000 t=426s -- EARLIER than baseline and NOT a linear_stream
+  abort (abort-lines=0 captured pre-teardown). A recapture fired around step ~2000 and
+  crashed the engine itself.
+verdict -> [FAILED, and instructive] block 3's _recycling_call calls
+  CUDAGraphWrapper.clear_all_graphs() from INSIDE a wrapper __call__ -- it clears EVERY
+  captured graph including `self`, the one about to be replayed THIS step, mid-batch under
+  6 concurrent reqs -> unsafe recapture during an active step -> engine crash (different
+  failure, not the NEO abort). clear_all_graphs/clear_graphs DO exist (cuda_graph.py:173/230),
+  so it is a RACE, not a missing API. Safe recapture needs a quiescence point (no in-flight
+  step) which a monkeypatch inside the hot wrapper cannot guarantee during live serving.
+
+## CONCLUSION (2026-07-07): cheap-fix space exhausted; root cause definitive
+
+Root cause DEFINITIVE and REPRODUCED: XPU graph REPLAY (at::xpu::XPUGraphImpl::replay,
+submit_with_event, no reset) accumulates NEO command-list entries per replay; the MTP
+propose loop fires ~spec x pieces replays/step, so the command list overflows
+(linear_stream.h:84) after ~96k decode tokens under concurrent load. Needs BOTH MTP and
+capture. NOT quant-specific (W8A8 == NVFP4), NOT maxlen-gated (crashes at 128K), NOT the
+decode-while-prefill "!!!!" bug. sglang never hit it because it never captures MTP.
+
+Cheap fixes tried and RULED OUT:
+- per-step torch.xpu.synchronize (FIX-SYNC): no effect -- sync does not reclaim the
+  command-list growth (normal decode already syncs per step and still crashes).
+- recapture-every-N (block 3 Tier F): crashes when it fires (clears the in-flight graph
+  mid-step); racy under concurrent load.
+- event-cleanup env (FIX-EVT): not attempted -- FIX-SYNC already showed a full drain does
+  not reclaim, so reclaimable-events is not the mechanism.
+- buffer enlarge (OverrideCmdListCmdBufferSizeInKb): only multiplies the threshold; the
+  growth is unbounded, so it delays, never fixes.
+
+Truly stable configs (no capture-replay accumulation): enforce-eager + MTP (PROVEN
+2026-06-25: 40min soak + full agentic eval, 0 crashes, ~16 t/s, keeps MTP) is the only
+leak-PROOF config that keeps MTP. capture + MTP-off still leaks via the target graph, just
+~spec-times slower (~290k tokens) -> not truly stable for a multi-day DD.
+
+Remaining REAL-fix options (all substantial, tracked as future work):
+1. torch-level: rebuild libtorch_xpu so XPUGraphImpl::replay uses submit_without_event or
+   resets/updates the command list per replay (the upstream-worthy root fix). Novel -- no
+   public issue exists.
+2. safe periodic recapture: coordinate a quiescence barrier (drain all in-flight reqs,
+   pause scheduler) before clear+recapture. Engine-level, non-trivial.
+3. reduce replays/step: FULL_DECODE_ONLY capture (1 replay/step vs N pieces) or drafter-eager
+   + target-captured -> pushes threshold ~spec x out; may still crash on long sessions.
+4. fast + auto-heal: keep capture+MTP (fast ~40 t/s) + systemd Restart=on-failure so the
+   ~few-hourly clean abort self-recovers in ~1 min (accept periodic blips).
+
+DD restore decision (speed vs blips) -> deferred to operator.

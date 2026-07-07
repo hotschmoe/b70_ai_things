@@ -1,0 +1,23 @@
+[fix_recycle_n2000] served=qwen36-27b-w8a8-sqgptq-mtp workers=6 ctx_chars=28000 maxtok=4000 ceil_tok=220000 ceil_sec=3300
+  [fix_recycle_n2000] t=20s tok=0 reqs=0
+  [fix_recycle_n2000] t=40s tok=0 reqs=0
+  [fix_recycle_n2000] t=60s tok=0 reqs=0
+  [fix_recycle_n2000] t=80s tok=0 reqs=0
+  [fix_recycle_n2000] t=100s tok=0 reqs=0
+  [fix_recycle_n2000] t=120s tok=0 reqs=0
+  [fix_recycle_n2000] t=140s tok=0 reqs=0
+  [fix_recycle_n2000] t=160s tok=0 reqs=0
+  [fix_recycle_n2000] t=180s tok=0 reqs=0
+  [fix_recycle_n2000] t=200s tok=0 reqs=0
+  [fix_recycle_n2000] t=220s tok=0 reqs=0
+  [fix_recycle_n2000] t=240s tok=0 reqs=0
+  [fix_recycle_n2000] t=260s tok=4000 reqs=1
+  [fix_recycle_n2000] t=280s tok=8000 reqs=2
+  [fix_recycle_n2000] t=300s tok=16000 reqs=4
+  [fix_recycle_n2000] t=320s tok=24000 reqs=6
+  [fix_recycle_n2000] t=340s tok=24000 reqs=6
+  [fix_recycle_n2000] t=360s tok=24000 reqs=6
+  [fix_recycle_n2000] t=380s tok=24000 reqs=6
+  [fix_recycle_n2000] t=400s tok=24000 reqs=6
+  [fix_recycle_n2000] t=420s tok=24000 reqs=6
+[fix_recycle_n2000] *** CRASH (HTTP500) after tok=24000 t=426s reqs=6
