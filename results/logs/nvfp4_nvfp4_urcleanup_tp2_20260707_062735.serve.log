@@ -1,0 +1,6 @@
+=== KV_FP8=0: fp8 KV cache DISABLED (bf16 KV, kv_cache_scheme stripped) ===
+=== B70_DEBUG=1 -> faulthandler ===
+=== B70_EXTRA_ENV -> UR_L0_IMMEDIATE_COMMANDLISTS_EVENT_CLEANUP_THRESHOLD=1 UR_L0_REUSE_DISCARDED_EVENTS=1 ===
+10654bcec5dee28dc4bea3be1de48f4167aeb22068ddd2a81dcb351ee21c3b0f
+container nvfp4_repro up; follow with: docker logs -f nvfp4_repro
+health: curl -s http://localhost:8078/health

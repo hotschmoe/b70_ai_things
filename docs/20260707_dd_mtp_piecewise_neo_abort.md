@@ -344,6 +344,42 @@ verdict -> [IMPORTANT] drafter-eager decode is CAPPED by the eager-drafter cost:
   the torch-level root fix (XPUGraphImpl::replay submit_without_event / reset-per-replay).
   Possible drafter-eager tuning: lower MTPTOK (fewer eager drafter forwards/step) -- untested.
 
+## TORCH-LEVEL ROOT FIX + ENV SHORTCUT (2026-07-07 session 3, binary+source research)
+
+Located the exact leak site and fix (pytorch core, NOT torch-xpu-ops):
+- `aten/src/ATen/xpu/XPUGraph.cpp:183` `XPUGraphImpl::replay()` does
+  `queue.ext_oneapi_graph(*graph_exec_)` -- and ALL `ext_oneapi_graph` overloads route through
+  `submit_with_event`, allocating a host-visible sycl::event per replay that pins its immediate-
+  command-list segment until the UR L0 cleanup pass runs. No sync in replay.
+- ROOT FIX (diff): replace with `queue.submit_without_event(empty_properties, [&](handler& cgh){
+  cgh.ext_oneapi_graph(*graph_exec_); })`. submit_without_event IS in the shipped SYCL
+  (libsycl.so.8). Compiled into libtorch_xpu.so -> INCREMENTAL relink
+  (`cmake --build build --target torch_xpu`), minutes, but needs the full pytorch-xpu build env
+  (USE_XPU=ON, oneAPI 2025.3). No IPEX in the image (stock upstream torch-xpu).
+
+### THE ENV SHORTCUT (rebuild-free -- testing now)
+The UR L0 adapter reclaims immediate-command-list event/command space only every N completed
+events: `UR_L0_IMMEDIATE_COMMANDLISTS_EVENT_CLEANUP_THRESHOLD` DEFAULT 20. So the command list
+grows for 20 replays before any reclaim -> under a fast MTP replay burst it overflows before the
+pass runs. This EXPLAINS why FIX-SYNC failed: torch.xpu.synchronize waits for completion but does
+NOT trigger the adapter's cleanup pass. Setting THRESHOLD=1 forces reclaim after every replay.
+Candidates (rebuild-free, ranked): (1) UR_L0_IMMEDIATE_COMMANDLISTS_EVENT_CLEANUP_THRESHOLD=1
+[+ UR_L0_REUSE_DISCARDED_EVENTS=1]; (2) UR_L0_USE_IMMEDIATE_COMMANDLISTS=0 (regular batched lists,
+fence reset); (3) UR_L0_USE_DRIVER_COUNTER_BASED_EVENTS=1. If (1) holds the CAPTURED+MTP config
+(31-48 t/s) -> full-speed fix with NO rebuild and NO drafter-eager haircut. TEST: nvfp4_urcleanup_tp2.
+Rebuild-free interception if env fails: rotate the XPU stream every N replays (fresh immediate
+command list); keep_graph=True re-instantiate reclaims the graph's list but not the queue's.
+
+### sglang as a fix vehicle? NO (evaluated 2026-07-07)
+sglang uses the SAME torch.xpu.XPUGraph/XPUGraphImpl::replay primitive -> identical leak
+(backend-independent torch bug). It carries an EXTRA blocker vLLM already solved: capturable
+cross-device all-reduce at TP=2 (sglang/graph_mtp closed it as a dead end 2026-06-25; vLLM's
+piecewise records collectives fine). sglang's only viable MTP+capture shape is "target captured,
+draft eager" = EXACTLY B70_XPU_DRAFTER_EAGER (no new speed), and its draft-captured path already
+HUNG (2026-06-28). NVFP4 on sglang = multi-day custom-kernel port for zero gain (the nvfp4 oneDNN
+op is vLLM-ABI). VERDICT: do the torch fix on vLLM (helps both backends); keep sglang as the
+eager fallback. (Agent-reviewed against sglang/graph_mtp/README.md + docs/20260625_...campaign.md.)
+
 ## STATE / DECISION (2026-07-07 end of session 2)
 
 - Root cause: DEFINITIVE (disasm) + REPRODUCED (NVFP4 TP=2 ~8-12k tok; W8A8 96k concurrent).

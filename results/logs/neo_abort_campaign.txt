@@ -97,3 +97,5 @@ abort-lines=0
 [drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
 [NVFP4 nvfp4_drafteager2_tp2] done 2026-07-07T06:06:38Z
 
+===== [NVFP4 nvfp4_urcleanup_tp2] B70_EXTRA_ENV='UR_L0_IMMEDIATE_COMMANDLISTS_EVENT_CLEANUP_THRESHOLD=1 UR_L0_REUSE_DISCARDED_EVENTS=1' TP=2 card=0 soak_ceil=45000/1800 2026-07-07T06:27:35Z =====
+[NVFP4 nvfp4_urcleanup_tp2] container launched; waiting for /health...
