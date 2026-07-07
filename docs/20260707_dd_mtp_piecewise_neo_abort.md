@@ -370,6 +370,14 @@ fence reset); (3) UR_L0_USE_DRIVER_COUNTER_BASED_EVENTS=1. If (1) holds the CAPT
 Rebuild-free interception if env fails: rotate the XPU stream every N replays (fresh immediate
 command list); keep_graph=True re-instantiate reclaims the graph's list but not the queue's.
 
+ENV TEST RESULTS (NVFP4 TP=2 captured+MTP, no drafter-eager):
+- THRESHOLD=1 + REUSE_DISCARDED_EVENTS=1: CRASH at ~12k tok (~= baseline). Reclaims EVENTS but
+  NOT the command-list command SEGMENTS that actually grow -> no fix. IMPORTANT byproduct: decode
+  throughput logged the FULL captured+MTP speed and its DEGRADATION: 43.5 -> 34 -> 30 -> 27 -> 20
+  t/s as the command list grows, then crash. Confirms full speed ~43 t/s AND that the growing
+  LinearStream progressively slows submission (not just a hard cap).
+- UR_L0_USE_IMMEDIATE_COMMANDLISTS=0 (regular batched lists + fence reset): RUNNING.
+
 ### sglang as a fix vehicle? NO (evaluated 2026-07-07)
 sglang uses the SAME torch.xpu.XPUGraph/XPUGraphImpl::replay primitive -> identical leak
 (backend-independent torch bug). It carries an EXTRA blocker vLLM already solved: capturable

@@ -99,3 +99,13 @@ abort-lines=0
 
 ===== [NVFP4 nvfp4_urcleanup_tp2] B70_EXTRA_ENV='UR_L0_IMMEDIATE_COMMANDLISTS_EVENT_CLEANUP_THRESHOLD=1 UR_L0_REUSE_DISCARDED_EVENTS=1' TP=2 card=0 soak_ceil=45000/1800 2026-07-07T06:27:35Z =====
 [NVFP4 nvfp4_urcleanup_tp2] container launched; waiting for /health...
+[NVFP4 nvfp4_urcleanup_tp2] HEALTHY
+  [nvfp4_urcleanup_tp2] t=800s tok=12000 reqs=3
+  [nvfp4_urcleanup_tp2] t=820s tok=12000 reqs=3
+[nvfp4_urcleanup_tp2] *** CRASH (HTTP500) after tok=12000 t=821s reqs=3
+[NVFP4 nvfp4_urcleanup_tp2] soak rc=3 (3=crash)
+abort-lines=0
+[NVFP4 nvfp4_urcleanup_tp2] done 2026-07-07T06:43:50Z
+
+===== [NVFP4 nvfp4_regularcl_tp2] B70_EXTRA_ENV='UR_L0_USE_IMMEDIATE_COMMANDLISTS=0' TP=2 card=0 soak_ceil=45000/1800 2026-07-07T06:44:38Z =====
+[NVFP4 nvfp4_regularcl_tp2] container launched; waiting for /health...
