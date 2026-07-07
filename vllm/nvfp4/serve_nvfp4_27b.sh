@@ -246,6 +246,15 @@ else
   TP_ARGS=( -tp "$TP" )
 fi
 
+# Diagnostic + arbitrary-env passthrough (mirrors the w8a8 recipe, added 2026-07-07 for the NEO
+# abort fix campaign): B70_DEBUG=1 -> faulthandler (dumps a py+C traceback on SIGABRT, which is how
+# this crash dies silently); B70_EXTRA_ENV="A=1 B=2" -> inject arbitrary -e (e.g. B70_XPU_DRAFTER_EAGER=1,
+# B70_XPU_CG_RECYCLE_STEPS=N, NEOReadDebugKeys=1 OverrideCmdListCmdBufferSizeInKb=...). Default-off => the
+# shelf serve is byte-identical.
+EXTRA_ENV=( )
+if [ "${B70_DEBUG:-0}" != 0 ]; then EXTRA_ENV+=( -e PYTHONFAULTHANDLER=1 -e PYTHONUNBUFFERED=1 ); echo "=== B70_DEBUG=${B70_DEBUG} -> faulthandler ===" >&2; fi
+if [ -n "${B70_EXTRA_ENV:-}" ]; then for kv in ${B70_EXTRA_ENV}; do EXTRA_ENV+=( -e "$kv" ); done; echo "=== B70_EXTRA_ENV -> ${B70_EXTRA_ENV} ===" >&2; fi
+
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
@@ -254,7 +263,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
-  "${MGPU[@]}" "${GRAPH_ENV[@]}" "${PUSH_AR_ENV[@]}" \
+  "${MGPU[@]}" "${GRAPH_ENV[@]}" "${PUSH_AR_ENV[@]}" "${EXTRA_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \

@@ -369,6 +369,32 @@ if _RECYCLE_N > 0:
     except Exception as e:
         print("[cg-recycle] (4) setup failed:", repr(e), file=sys.stderr, flush=True)
 
+# ---- (4b) DRAFTER-EAGER (EXPERIMENTAL, default OFF): the leak fix that keeps TARGET capture ----------
+# ROOT CAUSE (2026-07-07, docs/20260707_dd_mtp_piecewise_neo_abort.md): at::xpu::XPUGraphImpl::replay
+# submits the captured SYCL graph via submit_with_event with no sync, so per-replay NEO command-list
+# entries accumulate; the MTP drafter's propose loop fires (spec-1) x pieces replays PER decode step with
+# NO host sync between draft steps (llm_base_proposer.py:613-687) -- that sync-free burst is the dominant
+# leak engine (per binary disasm). Per-step torch.xpu.synchronize does NOT reclaim it (tested), and
+# recapture (block 4) is racy under load. THIS fix runs the DRAFTER EAGER (no graph capture/replay for the
+# spec model) while the TARGET decode stays PIECEWISE-captured -> removes the drafter's sync-free replay
+# burst (the leak) but keeps the target-decode capture speedup. Mechanism: LLMBaseProposer.initialize_cudagraph_keys
+# derives the drafter's cudagraph mode from the main mode (PIECEWISE/FULL -> drafter PIECEWISE, else NONE);
+# we force it to NONE so the drafter dispatcher only has NONE keys -> the drafter always runs eager.
+# OFF unless B70_XPU_DRAFTER_EAGER=1 (default byte-identical). Mutually exclusive with blocks (4)/(5)/sync.
+if os.environ.get("B70_XPU_DRAFTER_EAGER", "0") == "1":
+    try:
+        import vllm.v1.spec_decode.llm_base_proposer as _lbp
+        _CGM = _lbp.CUDAGraphMode
+        _orig_init_keys = _lbp.LLMBaseProposer.initialize_cudagraph_keys
+        def _drafter_eager_keys(self, cudagraph_mode):
+            # force the DRAFTER to NONE regardless of the target's mode -> drafter runs eager
+            return _orig_init_keys(self, _CGM.NONE)
+        _lbp.LLMBaseProposer.initialize_cudagraph_keys = _drafter_eager_keys
+        print("[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); "
+              "target decode stays captured", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[drafter-eager] (4b) setup failed:", repr(e), file=sys.stderr, flush=True)
+
 
 # ---- (5) NVFP4 MoE W4A16 via the emulation backend (Track 11f bring-up) ---------------------------
 # The official 35B-A3B-NVFP4 routed experts are W4A16 (f4_e2m1 weights, group-16 fp8 scale, per-tensor
