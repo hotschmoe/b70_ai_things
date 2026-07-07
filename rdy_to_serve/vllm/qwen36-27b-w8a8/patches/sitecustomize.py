@@ -148,6 +148,29 @@ if _SYNC_N > 0:
     except Exception as e:
         print("[cg-sync] (5) setup failed:", repr(e), file=sys.stderr, flush=True)
 
+# ---- (6) DRAFTER-EAGER (EXPERIMENTAL, default OFF): the VALIDATED leak fix (keeps target capture) ---
+# VALIDATED 2026-07-07 on NVFP4 TP=2 (survived 44k tokens vs baseline crash ~8-12k); see
+# docs/20260707_dd_mtp_piecewise_neo_abort.md. Root cause: at::xpu::XPUGraphImpl::replay submits the
+# captured SYCL graph via submit_with_event with no sync -> per-replay NEO command-list entries accumulate;
+# the MTP drafter propose loop (SpecDecodeBaseProposer.propose, llm_base_proposer.py) fires spec x pieces
+# replays/step with no host sync = the dominant leak. This forces the DRAFTER to CUDAGraphMode.NONE (eager,
+# no graph replay -> no accumulation) while the TARGET decode stays PIECEWISE-captured (fast). Per-step sync
+# does NOT reclaim (tested); recapture is racy (tested); drafter-eager WORKS. OFF unless
+# B70_XPU_DRAFTER_EAGER=1 (default byte-identical). Cost: drafter runs eager (~loses some MTP speed) but
+# keeps MTP accept + target capture -> beats full enforce-eager, and beats graph+MTP-off on high-accept code.
+if os.environ.get("B70_XPU_DRAFTER_EAGER", "0") == "1":
+    try:
+        import vllm.v1.spec_decode.llm_base_proposer as _lbp
+        _CGM = _lbp.CUDAGraphMode
+        _orig_init_keys = _lbp.SpecDecodeBaseProposer.initialize_cudagraph_keys
+        def _drafter_eager_keys(self, cudagraph_mode):
+            return _orig_init_keys(self, _CGM.NONE)   # force drafter -> eager, target unchanged
+        _lbp.SpecDecodeBaseProposer.initialize_cudagraph_keys = _drafter_eager_keys
+        print("[drafter-eager] (6) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); "
+              "target decode stays captured", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[drafter-eager] (6) setup failed:", repr(e), file=sys.stderr, flush=True)
+
 # ---- (4) XPU mamba align-mode pointer fix (enables --enable-prefix-caching) ------------------------
 # --enable-prefix-caching on the hybrid GDN model auto-switches vLLM's mamba KV cache to "align" mode.
 # Combined with MTP spec-decode that activates MambaSpecDecodeGPUContext, whose

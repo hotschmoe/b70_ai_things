@@ -309,4 +309,23 @@ biggest beneficiary -- higher 4-bit decode ceiling + top quality, currently full
 config -> NVFP4 TP=2 fused GRAPH=1 MTP5 KV_FP8=0 + drafter forced to CUDAGraphMode.NONE (block 4b):
   MTP drafter runs eager (no graph replay = no leak from its propose loop), target decode stays
   PIECEWISE-captured. Soak to 50k tokens (5x the ~10k crash point).
-result -> (pending)
+result -> FIRST TRY INVALID: block failed to load (AttributeError -- the class is
+  SpecDecodeBaseProposer, not LLMBaseProposer as agent-2 labeled it) -> ran as baseline,
+  crashed at ~8k. Fixed the class name, RETRIED:
+result (retry) -> *** SURVIVED 44,000 tokens / 11 reqs / ~32 min, NO abort *** (baseline
+  crashes at ~8-12k). Block confirmed ENABLED in both TP workers. Decode ~22-26 t/s
+  single-stream on random forced text.
+verdict -> [FIX VALIDATED] drafter-eager FIXES the NEO abort, rebuild-free, keeping MTP
+  AND target-decode capture. Mechanism confirmed: the drafter's sync-free replay burst was
+  the dominant leak source; running it eager removes it. The target decode graph still
+  replays (captured) but its accumulation is slow enough to be practically stable (same as
+  the graph+MTP-off "B4" config that ran as the NVFP4 DD). Toggle: B70_XPU_DRAFTER_EAGER=1
+  (sitecustomize block 4b). Class = vllm.v1.spec_decode.llm_base_proposer.SpecDecodeBaseProposer,
+  method initialize_cudagraph_keys forced to CUDAGraphMode.NONE.
+  COST: ~22-26 t/s on random text (vs eager+MTP ~15-16 -> a WIN; vs the crashing captured
+  config ~31-48 -> a haircut, because the drafter runs eager). On real CODE, MTP accept is
+  ~99% so drafter-eager should beat graph+MTP-off (B4) -- TO MEASURE next.
+  NOTE: this is quant-AGNOSTIC (SpecDecodeBaseProposer is shared vLLM code) -> ports to W8A8
+  unchanged. The full-speed ceiling (keep the drafter captured too) needs the torch-level
+  root fix (XPUGraphImpl::replay -> submit_without_event / reset per replay; rebuild) -- the
+  upstream contribution, tracked as the follow-on.

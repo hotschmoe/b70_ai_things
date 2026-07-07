@@ -377,7 +377,7 @@ if _RECYCLE_N > 0:
 # leak engine (per binary disasm). Per-step torch.xpu.synchronize does NOT reclaim it (tested), and
 # recapture (block 4) is racy under load. THIS fix runs the DRAFTER EAGER (no graph capture/replay for the
 # spec model) while the TARGET decode stays PIECEWISE-captured -> removes the drafter's sync-free replay
-# burst (the leak) but keeps the target-decode capture speedup. Mechanism: LLMBaseProposer.initialize_cudagraph_keys
+# burst (the leak) but keeps the target-decode capture speedup. Mechanism: SpecDecodeBaseProposer.initialize_cudagraph_keys
 # derives the drafter's cudagraph mode from the main mode (PIECEWISE/FULL -> drafter PIECEWISE, else NONE);
 # we force it to NONE so the drafter dispatcher only has NONE keys -> the drafter always runs eager.
 # OFF unless B70_XPU_DRAFTER_EAGER=1 (default byte-identical). Mutually exclusive with blocks (4)/(5)/sync.
@@ -385,11 +385,11 @@ if os.environ.get("B70_XPU_DRAFTER_EAGER", "0") == "1":
     try:
         import vllm.v1.spec_decode.llm_base_proposer as _lbp
         _CGM = _lbp.CUDAGraphMode
-        _orig_init_keys = _lbp.LLMBaseProposer.initialize_cudagraph_keys
+        _orig_init_keys = _lbp.SpecDecodeBaseProposer.initialize_cudagraph_keys
         def _drafter_eager_keys(self, cudagraph_mode):
             # force the DRAFTER to NONE regardless of the target's mode -> drafter runs eager
             return _orig_init_keys(self, _CGM.NONE)
-        _lbp.LLMBaseProposer.initialize_cudagraph_keys = _drafter_eager_keys
+        _lbp.SpecDecodeBaseProposer.initialize_cudagraph_keys = _drafter_eager_keys
         print("[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); "
               "target decode stays captured", file=sys.stderr, flush=True)
     except Exception as e:

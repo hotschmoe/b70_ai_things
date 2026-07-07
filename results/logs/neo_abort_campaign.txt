@@ -58,3 +58,42 @@ Fatal Python error: Aborted
 
 ===== [NVFP4 nvfp4_drafteager_tp2] B70_EXTRA_ENV='B70_XPU_DRAFTER_EAGER=1' TP=1 card=0 soak_ceil=50000/1800 2026-07-07T05:22:00Z =====
 [NVFP4 nvfp4_drafteager_tp2] container launched; waiting for /health...
+[NVFP4 nvfp4_drafteager_tp2] HEALTHY
+[drafter-eager] (4b) setup failed: AttributeError("module 'vllm.v1.spec_decode.llm_base_proposer' has no attribute 'LLMBaseProposer'")
+[drafter-eager] (4b) setup failed: AttributeError("module 'vllm.v1.spec_decode.llm_base_proposer' has no attribute 'LLMBaseProposer'")
+[drafter-eager] (4b) setup failed: AttributeError("module 'vllm.v1.spec_decode.llm_base_proposer' has no attribute 'LLMBaseProposer'")
+[drafter-eager] (4b) setup failed: AttributeError("module 'vllm.v1.spec_decode.llm_base_proposer' has no attribute 'LLMBaseProposer'")
+  [nvfp4_drafteager_tp2] t=340s tok=8000 reqs=2
+  [nvfp4_drafteager_tp2] t=360s tok=8000 reqs=2
+[nvfp4_drafteager_tp2] *** CRASH (HTTP500) after tok=8000 t=368s reqs=2
+[NVFP4 nvfp4_drafteager_tp2] soak rc=3 (3=crash)
+abort-lines=2
+[drafter-eager] (4b) setup failed: AttributeError("module 'vllm.v1.spec_decode.llm_base_proposer' has no attribute 'LLMBaseProposer'")
+Fatal Python error: Aborted
+Abort was called at 84 line in file:
+../../neo/shared/source/command_stream/linear_stream.h
+  File "/opt/venv/lib/python3.12/site-packages/torch/xpu/graphs.py", line 107 in replay
+  File "/opt/venv/lib/python3.12/site-packages/vllm/v1/spec_decode/llm_base_proposer.py", line 667 in propose
+  File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 5122 in propose_draft_token_ids
+  File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 4496 in propose_draft_token_ids
+[NVFP4 nvfp4_drafteager_tp2] done 2026-07-07T05:30:58Z
+
+===== [NVFP4 nvfp4_drafteager2_tp2] B70_EXTRA_ENV='B70_XPU_DRAFTER_EAGER=1' TP=2 card=0 soak_ceil=50000/1800 2026-07-07T05:31:55Z =====
+[NVFP4 nvfp4_drafteager2_tp2] container launched; waiting for /health...
+[NVFP4 nvfp4_drafteager2_tp2] HEALTHY
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+  [nvfp4_drafteager2_tp2] t=1900s tok=40000 reqs=10
+  [nvfp4_drafteager2_tp2] t=1920s tok=40000 reqs=10
+[nvfp4_drafteager2_tp2] SURVIVED tok=44000 reqs=11 t=1930s (no crash within ceiling)
+[NVFP4 nvfp4_drafteager2_tp2] soak rc=0 (3=crash)
+abort-lines=0
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[drafter-eager] (4b) ENABLED: MTP drafter forced to CUDAGraphMode.NONE (eager); target decode stays captured
+[NVFP4 nvfp4_drafteager2_tp2] done 2026-07-07T06:06:38Z
+
