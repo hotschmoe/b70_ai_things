@@ -145,6 +145,45 @@ Ranked fix ladder:
 3. enforce-eager + MTP (PROVEN stable, ~16 t/s) -- reliable fallback.
 4. capture + MTP-off (fast decode, loses MTP acceptance).
 
+## MECHANISM LOCALIZED (binary disasm, 2026-07-07)
+
+Disassembled `at::xpu::XPUGraphImpl::replay()` in libtorch_xpu.so (torch 2.12+xpu):
+replay submits the executable SYCL `command_graph` via `submit_with_event` onto the
+stream's in-order queue and NEVER synchronizes (no queue.wait / synchronize / event
+destroy in the function body). Each replay therefore (a) appends a graph-exec command
+into the queue's NEO immediate command list and (b) allocates a sycl::event / L0
+event-pool handle that is dropped un-waited. NEO reclaims both only on a full queue
+synchronize.
+
+- Normal single-token decode reclaims implicitly: the sampled-token D2H copy forces a
+  per-step queue sync.
+- MTP breaks it: LLMBaseProposer.propose (llm_base_proposer.py:613-687) fires
+  (num_spec_tokens-1) x (num piecewise sub-graphs) replays per outer decode step,
+  keeps all draft tokens on-GPU (torch.stack at the end), and does NOT host-sync
+  between draft steps. Across thousands of steps the un-reclaimed commands/events pile
+  into the queue's NEO command list until LinearStream::getSpace can't fit the next
+  command -> linear_stream.h:84 abort. Needs BOTH MTP (the sync-free replay loop) AND
+  capture (the graph-exec commands). Matches every prior observation.
+- Call path: qwen3_5_mtp.py forward (@support_torch_compile -> N piecewise
+  CUDAGraphWrapper sub-graphs) -> cuda_graph.py:360 replay (capture-once, replay-by-
+  descriptor; NO per-call recapture) -> torch/xpu/graphs.py:105 replay -> C++
+  XPUGraphImpl::replay submit_with_event. CUDAGraph is torch.xpu.XPUGraph (rebound in
+  xpu_model_runner.py:52-54).
+
+### Candidate fixes (all rebuild-free; ranked)
+1. FIX-SYNC (principled, keeps MTP+capture): one torch.xpu.synchronize() per propose()
+   call -> restores the per-step reclaim cadence normal decode already has. Negligible
+   cost (one sync per decode step). Patch point: wrap LLMBaseProposer.propose via
+   sitecustomize. UPSTREAM-WORTHY (torch XPUGraphImpl::replay should use
+   submit_without_event or drain per replay; the vLLM-side sync is the portable fix).
+2. FIX-EVT (cheapest if it works): UR/L0 event-cleanup env so discarded events are
+   reclaimed without a full sync (e.g. UR_L0_REUSE_DISCARDED_EVENTS=1, or the immediate-
+   command-list event-cleanup threshold). Env-only.
+3. FIX-BUF (symptom only): NEOReadDebugKeys=1 OverrideCmdListCmdBufferSizeInKb=large ->
+   bigger command buffer just DELAYS an unbounded accumulation; not a true fix, but a
+   useful mechanism corroborator (if it only postpones the crash, accumulation confirmed).
+4. Fallbacks: enforce-eager+MTP (proven) or capture+MTP-off.
+
 ## Experiment log
 
 (appended below as runs complete)
