@@ -8654,3 +8654,74 @@ which crashed (EngineCore `RuntimeError: cancelled` shm_broadcast, MTP-in-piecew
 with served id = `hotschmoe-dd`. Verdict: stable alias decouples the API model-qualifier from the quant so consumer
 harnesses (pi, omp on other PCs) stop breaking at harness level on quant swaps; deliberate exception to the Model
 Identity rule (evals set their own descriptive SERVED; real scheme still traceable via b70_daily_0 + CKPT + logs).
+
+---
+
+## 2026-07-07 -- DD crash ROOT-CAUSED (oneCCL-collective-in-SYCL-graph) + torch rebuild negative + DD restored to NVFP4 B4
+
+### Incident
+config -> live DD (vllm/qwen36-27b-w8a8 TP=2, v0.24.0, PIECEWISE graph + MTP3 + PUSH_AR + prefix cache + vision)
+result -> container b70_daily_0 died 07-07 00:39:26. Both TP workers aborted with
+  `Abort was called at 84 line ../../neo/shared/source/command_stream/linear_stream.h` -> EngineCore fatal ->
+  clean shutdown (Exited 0). NOT a hardware wedge (dmesg clean, no DEVICE_LOST). Crashed at ~50K ctx / after ~3h.
+verdict -> the MTP-verify-in-piecewise-cudagraph NEO abort. REFUTES the 2026-07-06 "W8A8 keeps MTP+graph, NVFP4
+  can't" claim: W8A8 hits the IDENTICAL abort, just ~50-100x LATER than NVFP4. Full write-up:
+  docs/20260707_dd_mtp_piecewise_neo_abort.md.
+
+### Repro + ruled-out fixes (all GPU-tested)
+- REPRO: NVFP4 TP=2 captured+MTP single-stream crashes at ~8-12k tok (~6 min); W8A8 TP=2 needs 6-way concurrency
+  (~96k tok). NVFP4 TP=1 (no in-graph collective) NEVER crashes -> the crash is TP-gated. Harnesses:
+  vllm/nvfp4_fix_test.sh, vllm/soak_concurrent.py, vllm/fix_test.sh, vllm/leak_check.sh.
+- RULED OUT: per-step torch.xpu.synchronize (block 5, no effect); recapture-every-N (block 3/4b, racy crash);
+  UR_L0_IMMEDIATE_COMMANDLISTS_EVENT_CLEANUP_THRESHOLD=1 + REUSE_DISCARDED_EVENTS=1 (no effect);
+  UR_L0_USE_IMMEDIATE_COMMANDLISTS=0 (no effect, slower).
+- WORKS: drafter-eager (B70_XPU_DRAFTER_EAGER=1, force MTP drafter to CUDAGraphMode.NONE): survived 44k tok,
+  keeps MTP+target capture, ~22-26 t/s. Removes the high-frequency drafter graph replays (each carrying a collective).
+
+### Torch-level rebuild (execute_graph) -- NEGATIVE, but conclusive
+config -> rebuilt libtorch_xpu.so from pytorch source @ 7661cd9 (exact 2.12.0+xpu SHA), ABI-matched
+  (cxx11abi=1, gcc-13, oneAPI 2025.3, USE_XCCL=ON). Patch: XPUGraphImpl::replay ext_oneapi_graph ->
+  execute_graph (public event-less submit; submit_without_event is private). Recipe: docs/torch_xpu_build_recipe.md;
+  patch: vllm/patches/xpugraph_submit_without_event.patch. Build gotchas fixed: setvars return-at-top-level,
+  cmake 4.3.4 too new (->3.31), incomplete submodules (skip CUDA flash-attention), CCL_ROOT->2021.17 for libccl.so.2.0.
+command -> vllm/build_torch_xpu.sh + relink_torch_xpu.sh in a container off the image.
+result -> BUILT + ABI-clean (75 XCCL syms, 0 missing of 23 imported-from-torch_xpu; import torch clean; GPU smoke:
+  300k XPUGraph replays in 13s no abort). END-TO-END on NVFP4 TP=2 captured+MTP: STILL crashed at 8000 tok,
+  IDENTICAL curve (peak 45.8 -> 20 -> crash) to unpatched. ZERO effect.
+verdict -> the leak is NOT the graph-exec sycl::event. Three attacks on the graph-submission-event mechanism all
+  failed -> the accumulation is elsewhere. (The rebuild is still a valid narrow upstream PR for the generic
+  event leak in pure replay.)
+
+### ROOT CAUSE (triple-confirmed)
+- L0 basic leak checker (ZEL_ENABLE_BASIC_LEAK_CHECKER) on the crashing config, drive 5k tok then graceful stop:
+  NO handle accumulation (1 context + 1 immediate cmdlist only; 0 events, 0 extra cmdlists). => the growth is
+  the INTERNAL command-buffer bytes of the ONE immediate command list (LinearStream), not leaked handles.
+- zml oneAPI plugin binary contains the string: `|CCL_SYCL| ccl_reduce does not support sycl_graph recording`.
+- Prior art: oneCCL 2021.16 release notes add "SYCL graph Record and Replay for Allgather, Allreduce, ReduceScatter";
+  torch-xpu-ops#2992 (MERGED 2026-05-07) "oneCCL support sycl graph after 2021.17.2 (maybe 2022.0)" + adds
+  errorIfCapturingNonCapturableXCCL guard + Recording mode. Our torch 2.12+xpu PREDATES #2992.
+=> ROOT CAUSE: the vLLM capture-safe all_gather records a oneCCL all_reduce INTO the captured SYCL graph; on our
+  too-old oneCCL the collective is NOT a static graph node, so it RE-APPENDS commands every replay -> the immediate
+  command list's LinearStream grows -> linear_stream.h:84. Needs BOTH MTP (high replay frequency) AND capture AND
+  TP (the collective). Matches every observation.
+
+### FIX PATH (next campaign) + zml NO-GO
+- REAL FULL-SPEED FIX: upgrade oneCCL to >=2021.17.2 / 2022.0 (SYCL-graph Record&Replay) in the serve image +
+  backport torch-xpu-ops#2992 (XCCL capture Recording mode + guard) into the 2.12 build -> allreduce becomes a
+  static graph node -> captured+MTP stable at ~43 t/s. ALT: route ALL TP collectives (incl the MTP all_gather)
+  through PUSH_AR posted-write (native L0, no oneCCL). Tracked in RESEARCH_TODO 11h.
+- zml as a leak-free fast DD: NO-GO (agent-reviewed). zml disables XLA command buffers for oneAPI (module.zig:650)
+  so it never captures -> structurally avoids the leak == same as vLLM enforce-eager (no capture = no speed).
+  Decode GDN-scan-bound (~13.7 t/s W8A8; NVFP4 only touches ~21% of decode), not a serving stack (no vision/batching).
+  ~2-3 months to MATCH not beat drafter-eager. Keep zml as TP/collective + kernel research vehicle only.
+
+### DD restored (verified)
+config -> NVFP4 B4 = MODE=fused GRAPH=1 (MTP OFF) KV_FP8=0 PUSH_AR=1 PUSH_AR_GRAPH=1 CAPSIZES=1,2,4,8 MAXLEN=131072
+  UTIL=0.85 TOOLCALL=1 REASONPARSER=qwen3 PREFIXCACHE=1 SERVED_FORCE=hotschmoe-dd, TP=2.
+command -> NAME=b70_daily_0 PORT=18080 ... ./bin/gpu-run bash vllm/nvfp4/serve_nvfp4_27b.sh start
+result -> HEALTHY, served id hotschmoe-dd, coherent (is_prime + BST code), push-AR decode engaged (MIN_NUMEL=0),
+  warm decode ~20-25 t/s, prefix cache on, bf16 KV, PIECEWISE graph, speculative_config=None.
+verdict -> STABLE by construction: MTP off -> only the target decode graph replays 1/step and its all-reduces go
+  through PUSH_AR posted-write (no oneCCL in the captured decode) -> no per-replay command re-append -> no overflow.
+  Most performant stable NVFP4 fallback until the oneCCL upgrade lands. Fallback runbook: docs/SERVE_TOMORROW_fallback.md.
+  Recipe fixes this session: nvfp4 SERVED_FORCE override + MTPTOK nounset guard.

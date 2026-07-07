@@ -1,8 +1,15 @@
 # SERVE-TOMORROW fallback runbook (2026-07-07)
 
-The MTP+graph NEO abort (docs/20260707_dd_mtp_piecewise_neo_abort.md) is being fixed at the
-torch level (in progress). Until that lands, here are the STABLE configs to serve, ranked.
-All avoid the crash by NOT running the MTP drafter inside a captured graph.
+**CURRENT LIVE DD (2026-07-07): NVFP4 B4 (Option 3 below), served as `hotschmoe-dd` on :18080.**
+Stable by construction: MTP off -> only the target decode graph replays 1/step and its all-reduces
+go through PUSH_AR posted-write (no oneCCL in the captured decode) -> no per-replay command re-append
+-> no linear_stream overflow. Warm decode ~20-25 t/s, coherent, prefix cache + vision + tool/reason parsers.
+
+ROOT CAUSE (2026-07-07, docs/20260707_dd_mtp_piecewise_neo_abort.md): the abort is a oneCCL collective
+recorded into the captured SYCL graph that re-appends commands per replay (our torch 2.12+xpu oneCCL
+predates SYCL-graph Record&Replay; torch-xpu-ops#2992). The real full-speed fix = upgrade oneCCL
+>=2021.17.2/2022.0 + backport #2992 (RESEARCH_TODO 11h). Until that lands, serve one of the STABLE
+configs below (all avoid the crash by keeping oneCCL collectives out of a high-frequency replayed graph).
 
 ## Ranked stable options (all TP=2, both cards, coherent + no NEO abort)
 
