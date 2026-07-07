@@ -1,0 +1,31 @@
+From: b70 torch-xpu fix (2026-07-07)
+Subject: [PATCH] [XPU] XPUGraph::replay: use submit_without_event to stop per-replay
+ Level-Zero command-list leak
+
+at::xpu::XPUGraphImpl::replay() submits the captured SYCL command_graph via
+queue.ext_oneapi_graph(), which routes through submit_with_event. Each replay
+allocates a host-visible sycl::event that pins the in-order queue's Level-Zero
+immediate-command-list segment until the UR adapter cleanup pass runs. Under
+repeated replay (speculative decoding replays the drafter graph thousands of
+times with no full teardown) the command buffer grows unbounded until NEO
+LinearStream::getSpace aborts (linear_stream.h:84). submit_without_event skips
+the per-submit event so the in-order queue recycles its command-list space each
+replay.
+
+Applies to pytorch @ 7661cd9c6b841b62b7f411aa52ec51f05457263b (torch 2.12.0+xpu).
+
+--- a/aten/src/ATen/xpu/XPUGraph.cpp
++++ b/aten/src/ATen/xpu/XPUGraph.cpp
+@@ void XPUGraphImpl::replay() {
+   auto& queue = at::xpu::getCurrentXPUStream().queue();
+-  queue.ext_oneapi_graph(*graph_exec_);
++  // B70 fix (2026-07-07): ext_oneapi_graph() routes through submit_with_event, allocating a
++  // per-replay sycl::event that pins the in-order queue's Level-Zero immediate-command-list
++  // segment until the UR adapter cleanup pass runs. Under repeated replay (e.g. speculative
++  // decoding replays the drafter graph thousands of times) the command buffer grows unbounded
++  // -> NEO LinearStream::getSpace overflow (linear_stream.h:84 abort). submit_without_event
++  // skips the per-submit event so the in-order queue recycles its command-list space each replay.
++  queue.submit_without_event(empty_properties_t{}, [&](sycl::handler& cgh) {
++    cgh.ext_oneapi_graph(*graph_exec_);
++  });
+ }
