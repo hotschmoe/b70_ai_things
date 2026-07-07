@@ -14,18 +14,22 @@ replay.
 
 Applies to pytorch @ 7661cd9c6b841b62b7f411aa52ec51f05457263b (torch 2.12.0+xpu).
 
+Note: queue.submit_without_event(...) is a PRIVATE internal template on sycl::queue, so the fix
+uses the PUBLIC event-less free function sycl::ext::oneapi::experimental::execute_graph(queue, G)
+(from enqueue_functions.hpp), which routes through the same event-less submit(). `using namespace
+sycl::ext::oneapi::experimental` is already in scope at the top of XPUGraph.cpp.
+
 --- a/aten/src/ATen/xpu/XPUGraph.cpp
 +++ b/aten/src/ATen/xpu/XPUGraph.cpp
 @@ void XPUGraphImpl::replay() {
    auto& queue = at::xpu::getCurrentXPUStream().queue();
 -  queue.ext_oneapi_graph(*graph_exec_);
-+  // B70 fix (2026-07-07): ext_oneapi_graph() routes through submit_with_event, allocating a
-+  // per-replay sycl::event that pins the in-order queue's Level-Zero immediate-command-list
-+  // segment until the UR adapter cleanup pass runs. Under repeated replay (e.g. speculative
-+  // decoding replays the drafter graph thousands of times) the command buffer grows unbounded
-+  // -> NEO LinearStream::getSpace overflow (linear_stream.h:84 abort). submit_without_event
-+  // skips the per-submit event so the in-order queue recycles its command-list space each replay.
-+  queue.submit_without_event(empty_properties_t{}, [&](sycl::handler& cgh) {
-+    cgh.ext_oneapi_graph(*graph_exec_);
-+  });
++  // B70 fix (2026-07-07): queue.ext_oneapi_graph() routes through submit_with_event, allocating a
++  // per-replay sycl::event that pins the in-order queue's Level-Zero immediate-command-list segment
++  // until the UR adapter cleanup pass runs. Under repeated replay (e.g. speculative decoding replays
++  // the drafter graph thousands of times) the command buffer grows unbounded -> NEO
++  // LinearStream::getSpace overflow (linear_stream.h:84 abort). The public execute_graph() free
++  // function routes through the EVENT-LESS submit(), so no per-replay event is created and the
++  // in-order queue recycles its command-list space each replay.
++  execute_graph(queue, *graph_exec_);
  }

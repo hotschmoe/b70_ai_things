@@ -56,18 +56,19 @@ event is discarded but its allocation + the appended command-list segment persis
 cleanup pass runs, which under sustained replay never keeps up.
 
 ## Fix
-Submit the graph event-lessly so the in-order queue recycles its command-list space each replay:
+Submit the graph event-lessly so the in-order queue recycles its command-list space each replay.
+`queue::submit_without_event(...)` is a PRIVATE internal template (`queue.hpp:3777`, and it also
+takes a non-deducible `bool UseFallbackAssert` template param), so use the PUBLIC event-less free
+function `sycl::ext::oneapi::experimental::execute_graph(queue, G)` from
+`ext/oneapi/experimental/enqueue_functions.hpp:488`, which routes through the same event-less
+`submit()`. (`using namespace sycl::ext::oneapi::experimental` is already in scope in XPUGraph.cpp.)
 ```diff
    auto& queue = at::xpu::getCurrentXPUStream().queue();
 -  queue.ext_oneapi_graph(*graph_exec_);
-+  namespace syclex = sycl::ext::oneapi::experimental;
-+  queue.submit_without_event(
-+      syclex::empty_properties_t{},
-+      [&](sycl::handler& cgh) { cgh.ext_oneapi_graph(*graph_exec_); });
++  execute_graph(queue, *graph_exec_);   // event-less public submit; see enqueue_functions.hpp
 ```
-`queue::submit_without_event(PropertiesT, CGF, code_location)` exists in the shipped SYCL
-(`queue.hpp:3777` -> `submit_without_event_impl`, in `libsycl.so.8`) and genuinely skips event
-creation. For an in-order queue the ordering guarantee is preserved without the per-submit event.
+For an in-order queue the ordering guarantee is preserved without the per-submit event.
+Verified to compile with g++-13 (the host compiler for XPUGraph.cpp) + oneAPI 2025.3 SYCL headers.
 
 Symbol lives in `libtorch_xpu.so` (`nm -D` shows `at::xpu::XPUGraphImpl::replay()` as `T`); the fix
 is an incremental relink of `libtorch_xpu.so` (`cmake --build build --target torch_xpu`).
