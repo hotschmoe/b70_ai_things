@@ -1,0 +1,10 @@
+[nvfp4_baseline] served=qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5 workers=1 ctx_chars=6000 maxtok=3000 ceil_tok=9000 ceil_sec=900
+  [nvfp4_baseline] t=20s tok=0 reqs=0
+  [nvfp4_baseline] t=40s tok=0 reqs=0
+  [nvfp4_baseline] t=60s tok=0 reqs=0
+  [nvfp4_baseline] t=80s tok=3000 reqs=1
+  [nvfp4_baseline] t=100s tok=3000 reqs=1
+  [nvfp4_baseline] t=120s tok=6000 reqs=2
+  [nvfp4_baseline] t=140s tok=6000 reqs=2
+  [nvfp4_baseline] t=160s tok=6000 reqs=2
+[nvfp4_baseline] SURVIVED tok=9000 reqs=3 t=180s (no crash within ceiling)

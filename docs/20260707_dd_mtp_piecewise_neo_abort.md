@@ -282,3 +282,31 @@ Remaining REAL-fix options (all substantial, tracked as future work):
    ~few-hourly clean abort self-recovers in ~1 min (accept periodic blips).
 
 DD restore decision (speed vs blips) -> deferred to operator.
+
+## NVFP4 fix campaign (2026-07-07 session 2): faster repro + drafter-eager
+
+Operator decision: chase the fix on NVFP4 (crashes far sooner = faster iteration; and it is the
+biggest beneficiary -- higher 4-bit decode ceiling + top quality, currently fully blocked).
+
+### NVFP4 repro finding: the fast crash needs TP=2
+- NVFP4 TP=1 (single card) MODE=fused GRAPH=1 MTP5 KV_FP8=0: SURVIVED 9000 forced tokens
+  single-stream at ~50-75 t/s -- NO crash. TP=1 has no TP collectives in the captured graph.
+- NVFP4 TP=2 (both cards) same config: *** CRASH at ~8-12k tokens single-stream (~6 min), EXACT
+  NEO abort. faulthandler traceback:
+  ```
+  torch/xpu/graphs.py:107 replay
+  vllm/v1/spec_decode/llm_base_proposer.py:667 propose   <- drafter self.model() in the draft loop
+  gpu_model_runner.py propose_draft_token_ids
+  ```
+- MECHANISM REFINEMENT: at TP=2 the capture-safe all-reduce (all_gather shim, block 3) is recorded
+  INTO the captured graph on EVERY replay -> each replay encodes the collective's commands too ->
+  ~10x more command bytes/replay than TP=1 -> crashes ~10x sooner. This is why NVFP4 TP=2 crashes far
+  sooner than W8A8 TP=2 (nvfp4_gemm ALSO encodes more/replay), and why single-card NVFP4 is fine.
+  The abort is IN the drafter propose loop (llm_base_proposer.py:667) -> drafter-eager should target it.
+- Reliable NVFP4 repro for fix A/B: TP=2 single-stream forced decode, crash at ~8-12k tokens / ~6 min.
+
+### DRAFTER-EAGER (B70_XPU_DRAFTER_EAGER=1) -- RUNNING
+config -> NVFP4 TP=2 fused GRAPH=1 MTP5 KV_FP8=0 + drafter forced to CUDAGraphMode.NONE (block 4b):
+  MTP drafter runs eager (no graph replay = no leak from its propose loop), target decode stays
+  PIECEWISE-captured. Soak to 50k tokens (5x the ~10k crash point).
+result -> (pending)

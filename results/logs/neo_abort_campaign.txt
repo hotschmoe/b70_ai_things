@@ -29,3 +29,32 @@ abort-lines=4
 abort-lines=0
 [FIX fix_recycle_n2000] done 2026-07-07T04:23:29Z
 
+===== [NVFP4 nvfp4_baseline] B70_EXTRA_ENV='' TP=1 card=0 soak_ceil=9000/900 2026-07-07T05:05:20Z =====
+[NVFP4 nvfp4_baseline] container launched; waiting for /health...
+[NVFP4 nvfp4_baseline] HEALTHY
+  [nvfp4_baseline] t=140s tok=6000 reqs=2
+  [nvfp4_baseline] t=160s tok=6000 reqs=2
+[nvfp4_baseline] SURVIVED tok=9000 reqs=3 t=180s (no crash within ceiling)
+[NVFP4 nvfp4_baseline] soak rc=0 (3=crash)
+abort-lines=0
+[NVFP4 nvfp4_baseline] done 2026-07-07T05:11:03Z
+
+===== [NVFP4 nvfp4_baseline_tp2] B70_EXTRA_ENV='' TP=1 card=0 soak_ceil=40000/1200 2026-07-07T05:12:32Z =====
+[NVFP4 nvfp4_baseline_tp2] container launched; waiting for /health...
+[NVFP4 nvfp4_baseline_tp2] HEALTHY
+  [nvfp4_baseline_tp2] t=340s tok=8000 reqs=2
+  [nvfp4_baseline_tp2] t=360s tok=8000 reqs=2
+[nvfp4_baseline_tp2] *** CRASH (HTTP500) after tok=8000 t=368s reqs=2
+[NVFP4 nvfp4_baseline_tp2] soak rc=3 (3=crash)
+abort-lines=2
+Abort was called at 84 line in file:
+../../neo/shared/source/command_stream/linear_stream.h
+Fatal Python error: Aborted
+  File "/opt/venv/lib/python3.12/site-packages/torch/xpu/graphs.py", line 107 in replay
+  File "/opt/venv/lib/python3.12/site-packages/vllm/v1/spec_decode/llm_base_proposer.py", line 667 in propose
+  File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 5122 in propose_draft_token_ids
+  File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 4496 in propose_draft_token_ids
+[NVFP4 nvfp4_baseline_tp2] done 2026-07-07T05:21:10Z
+
+===== [NVFP4 nvfp4_drafteager_tp2] B70_EXTRA_ENV='B70_XPU_DRAFTER_EAGER=1' TP=1 card=0 soak_ceil=50000/1800 2026-07-07T05:22:00Z =====
+[NVFP4 nvfp4_drafteager_tp2] container launched; waiting for /health...

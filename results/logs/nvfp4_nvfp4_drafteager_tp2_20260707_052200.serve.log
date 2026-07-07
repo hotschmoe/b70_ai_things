@@ -1,0 +1,6 @@
+=== KV_FP8=0: fp8 KV cache DISABLED (bf16 KV, kv_cache_scheme stripped) ===
+=== B70_DEBUG=1 -> faulthandler ===
+=== B70_EXTRA_ENV -> B70_XPU_DRAFTER_EAGER=1 ===
+569f02966d15748d88a015045b37e46289d824777a3edccbc99103e28311a79f
+container nvfp4_repro up; follow with: docker logs -f nvfp4_repro
+health: curl -s http://localhost:8078/health

@@ -1,0 +1,20 @@
+[nvfp4_baseline_tp2] served=qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5 workers=1 ctx_chars=6000 maxtok=4000 ceil_tok=40000 ceil_sec=1200
+  [nvfp4_baseline_tp2] t=20s tok=0 reqs=0
+  [nvfp4_baseline_tp2] t=40s tok=0 reqs=0
+  [nvfp4_baseline_tp2] t=60s tok=0 reqs=0
+  [nvfp4_baseline_tp2] t=80s tok=0 reqs=0
+  [nvfp4_baseline_tp2] t=100s tok=0 reqs=0
+  [nvfp4_baseline_tp2] t=120s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=140s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=160s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=180s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=200s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=220s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=240s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=260s tok=4000 reqs=1
+  [nvfp4_baseline_tp2] t=280s tok=8000 reqs=2
+  [nvfp4_baseline_tp2] t=300s tok=8000 reqs=2
+  [nvfp4_baseline_tp2] t=320s tok=8000 reqs=2
+  [nvfp4_baseline_tp2] t=340s tok=8000 reqs=2
+  [nvfp4_baseline_tp2] t=360s tok=8000 reqs=2
+[nvfp4_baseline_tp2] *** CRASH (HTTP500) after tok=8000 t=368s reqs=2
