@@ -410,8 +410,37 @@ VALIDATION (all PASS):
 - import torch: loads clean with the patched .so (no undefined symbols), cxx11abi True.
 - GPU smoke (gpu-run --card 0): xpu available True; XPUGraph replayed 300,000 times cleanly in 13s
   (directly exercises the patched replay() -- the leaking function -- no abort).
-- END-TO-END: NVFP4 TP=2 captured+MTP (the CRASHING config, NO drafter-eager) + patched .so overlay,
-  soak past 55k tokens -> (result pending; baseline crashes at ~8-12k, degrades 43->20 t/s).
+- END-TO-END: NVFP4 TP=2 captured+MTP (the CRASHING config, NO drafter-eager) + patched .so overlay
+  (mount VERIFIED: container loads the 960MB patched .so, not the 932MB prebuilt; execute_graph in
+  the .so symbol table; replay() on the crash traceback) -> *** STILL CRASHED at 8000 tok / 369s,
+  IDENTICAL to unpatched baseline (8000 tok / 368s). Throughput curve identical: peak 45.8 ->
+  36 -> 30 -> 24 -> 20 -> 12 -> crash. The event-less fix had ZERO effect on the TP=2 leak.
+
+## KEY NEGATIVE RESULT: the leak is NOT the graph-exec submission event (2026-07-07)
+
+execute_graph (event-less submit) does NOT fix the TP=2 crash -- same crash point, same degradation
+curve as unpatched. Combined with the earlier env-knob negatives (UR_L0 event-cleanup THRESHOLD=1 and
+USE_IMMEDIATE_COMMANDLISTS=0 both no help), THREE independent attacks on the "graph-submission
+event / immediate-command-list" mechanism have ALL failed. So the per-replay accumulation that
+overflows NEO LinearStream is NOT the sycl::event from submit_with_event.
+
+REVISED mechanism hypothesis: the accumulation is driven by the TP=2 COLLECTIVE (oneCCL all_reduce,
+the capture-safe all_gather shim) recorded INTO the captured graph -- each graph replay executes the
+collective, which appends command-list space that is not recycled. Evidence: (a) NVFP4 TP=1 (NO
+in-graph collective) never crashes / 300k pure-graph replays are clean under the patched .so;
+(b) NVFP4 TP=2 (collective in graph) crashes at ~8-12k regardless of the event fix; (c) drafter-eager
+WORKS precisely because it removes the high-frequency drafter graph replays (each carrying a
+collective) -- the target graph's 1-collective-per-step accumulates ~5x slower and survives 44k.
+Two caveats on the torch fix itself: SYCL's submit_without_event FALLS BACK to submit_with_event when
+__SYCL_USE_FALLBACK_ASSERT is set (so execute_graph may not even be truly event-less here) -- but the
+env-knob evidence says events are not the leak anyway, so a fallback-assert-off rebuild is unlikely to
+help. The true fix would target the oneCCL-collective-in-SYCL-graph command accumulation (deep;
+oneCCL/UR level), not XPUGraph.
+
+STATUS of the torch fix: built, ABI-clean, upstream-worthy for the GENERIC event leak (pure graph
+replay), but INSUFFICIENT for the TP=2 production workload. The VALIDATED production fix remains
+drafter-eager (B70_XPU_DRAFTER_EAGER=1): stable, keeps MTP, ~22-26 t/s. Full-speed captured+MTP
+(43 t/s) is blocked by the collective-in-graph accumulation, a deeper issue than the graph-exec event.
 
 ## STATE / DECISION (2026-07-07 end of session 2)
 
