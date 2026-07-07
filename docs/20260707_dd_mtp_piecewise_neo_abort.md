@@ -442,6 +442,34 @@ replay), but INSUFFICIENT for the TP=2 production workload. The VALIDATED produc
 drafter-eager (B70_XPU_DRAFTER_EAGER=1): stable, keeps MTP, ~22-26 t/s. Full-speed captured+MTP
 (43 t/s) is blocked by the collective-in-graph accumulation, a deeper issue than the graph-exec event.
 
+## ROOT CAUSE CONFIRMED FROM ONECCL SIDE + zml NO-GO (2026-07-07 session 3)
+
+zml-feasibility agent found the SMOKING-GUN string inside the oneAPI XLA plugin binary:
+  `|CCL_SYCL| ccl_reduce does not support sycl_graph recording`
+=> oneCCL collectives CANNOT be safely recorded into a SYCL command_graph. This independently
+CONFIRMS the mechanism: vLLM's capture-safe all_gather records an oneCCL all_reduce INTO the
+captured SYCL graph; because oneCCL doesn't support graph recording, replaying that graph
+accumulates Level-Zero command-list space that is never recycled -> NEO linear_stream.h:84.
+This is why: (a) the graph-exec event fix (execute_graph) did nothing (the leak is the collective,
+not the event); (b) TP=1 (no collective) never crashes; (c) drafter-eager / MTP-off (fewer
+collective-carrying replays/step) are stable.
+
+zml as a leak-free DD: NO-GO. zml disables XLA command buffers for oneAPI (module.zig:650) so it
+NEVER captures -> structurally avoids the leak, but that is the SAME as vLLM enforce-eager (no
+capture = no speed). zml decode is GDN-scan-bound (79% of decode = the bf16 gated-delta-net scan,
+48/64 layers); NVFP4 only touches the ~21% attention-matmul share (~10% best-case win). Plus zml
+is not a serving stack (no vision tower, no batching/paged-KV, single-prompt CLI). ~2-3 months to a
+~15-26 t/s DD = MATCHES not beats drafter-eager (22-26 today, with MTP+vision+real server). Keep zml
+as a TP/collective + int8/NVFP4-kernel research vehicle only. (Agent report 2026-07-07.)
+
+## FULL-SPEED LEAD (for later): PUSH_AR bypasses oneCCL
+Since the leak is the oneCCL-collective-in-graph, and our custom PUSH_AR is an L0-IPC posted-write
+all-reduce (native L0 commands via ext_codeplay_enqueue_native_command, NOT oneCCL), captured+MTP
+with ALL TP collectives routed through PUSH_AR (no oneCCL in the graph) MIGHT be graph-recordable
+without the accumulation = the full-speed fix. Caveat: 2026-06-25 "exonerated" push-AR on W8A8
+(crashed without it too) -- but that still had oneCCL for other collectives. UNTESTED on NVFP4:
+captured+MTP+PUSH_AR (PUSH_AR=1 PUSH_AR_GRAPH=1, all-reduce off oneCCL). Worth a dedicated test.
+
 ## STATE / DECISION (2026-07-07 end of session 2)
 
 - Root cause: DEFINITIVE (disasm) + REPRODUCED (NVFP4 TP=2 ~8-12k tok; W8A8 96k concurrent).
