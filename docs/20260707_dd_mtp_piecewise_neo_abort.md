@@ -376,7 +376,13 @@ ENV TEST RESULTS (NVFP4 TP=2 captured+MTP, no drafter-eager):
   throughput logged the FULL captured+MTP speed and its DEGRADATION: 43.5 -> 34 -> 30 -> 27 -> 20
   t/s as the command list grows, then crash. Confirms full speed ~43 t/s AND that the growing
   LinearStream progressively slows submission (not just a hard cap).
-- UR_L0_USE_IMMEDIATE_COMMANDLISTS=0 (regular batched lists + fence reset): RUNNING.
+- UR_L0_USE_IMMEDIATE_COMMANDLISTS=0 (regular batched lists + fence reset): CRASH at ~12k tok,
+  throughput slower + erratic (27->18->25->17->13). No fix.
+=> ENV-SHORTCUT PATH EXHAUSTED. Neither event-cleanup nor batched-lists reclaims the per-replay
+   graph-exec command APPENDS. Only the source-level submit_without_event fix (or not appending
+   per replay) addresses it. Next: the libtorch_xpu.so relink OR ship drafter-eager + upstream the
+   diff. NOTE the heavy cost: a source pytorch-xpu build (first full build hours; ABI must match the
+   prebuilt torch 2.12 the image + vllm_xpu_kernels were built against -- real drop-in risk).
 
 ### sglang as a fix vehicle? NO (evaluated 2026-07-07)
 sglang uses the SAME torch.xpu.XPUGraph/XPUGraphImpl::replay primitive -> identical leak
