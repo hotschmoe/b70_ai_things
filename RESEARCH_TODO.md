@@ -499,6 +499,27 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       "quality pick" toward daily-driver conversations (it lacks KV for that today; see 11c).
 - [ ] **11h. [HIGH -- ACTIVE, unblocks MTP+graph on BOTH quants] Fix the MTP-verify-in-piecewise-cudagraph
       NEO command-stream leak.** [REFRAMED 2026-07-07 -- see docs/20260707_dd_mtp_piecewise_neo_abort.md.]
+      **ROOT CAUSE NAILED 2026-07-07 (session 3): the leak is a oneCCL collective recorded into the captured
+      SYCL graph that RE-APPENDS commands per replay (not a static graph node) -> the ONE immediate command
+      list's LinearStream grows -> linear_stream.h:84. Confirmed 3 ways: (1) L0 basic leak checker shows NO
+      handle accumulation (1 context + 1 immediate cmdlist only) -> it is internal command-buffer bytes, not
+      handles; (2) zml plugin binary string "|CCL_SYCL| ccl_reduce does not support sycl_graph recording";
+      (3) prior art: oneCCL 2021.16 release notes add "SYCL graph Record and Replay for Allgather, Allreduce,
+      ReduceScatter", and torch-xpu-ops#2992 (MERGED 2026-05-07) "oneCCL support sycl graph after 2021.17.2
+      (maybe 2022.0)" + adds errorIfCapturingNonCapturableXCCL guard + Recording mode. Our torch 2.12+xpu
+      pre-dates #2992 -> XCCL capture runs UNGUARDED on a oneCCL too old to record allreduce as a static node.
+      RULED OUT (all GPU-tested): per-step sync, recapture, UR event-cleanup env, USE_IMMEDIATE_COMMANDLISTS=0,
+      and a from-source libtorch_xpu rebuild with execute_graph (event-less submit -- ZERO effect, since the
+      leak is the collective not the event).**
+      **THE FIX PATH (next campaign): upgrade oneCCL to >=2021.17.2 / 2022.0 (SYCL-graph Record&Replay) in the
+      vLLM serve image AND backport torch-xpu-ops#2992 (XCCL capture: Recording mode + capturable guard) into
+      the 2.12 build -> the allreduce becomes a static graph node -> no per-replay re-append -> captured+MTP
+      stable at full ~43 t/s. Verify the image's current oneCCL version first (image has ccl/2021.15 + 2021.17;
+      the RUNTIME-loaded one matters). ALT lead: route ALL TP collectives (incl the MTP all_gather) through our
+      PUSH_AR posted-write (native L0, no oneCCL) so nothing oneCCL is in the graph. zml is NO-GO as a fast DD
+      (structurally eager, GDN-scan-bound). Interim DD = NVFP4 B4 (graph+MTP-off+PUSH_AR, ~25-31 t/s, stable --
+      no oneCCL in the captured decode) OR drafter-eager (keeps MTP, ~22-26).**
+      [Original disasm framing below, superseded by the oneCCL root cause above.]
       NOT NVFP4-specific: the W8A8 DD hit the IDENTICAL abort 2026-07-07 (~3h real use; 6-way concurrent
       soak reproduces at ~96k decode tokens). ROOT CAUSE (binary disasm of libtorch_xpu):
       `at::xpu::XPUGraphImpl::replay` submits the executable SYCL command_graph via `submit_with_event` onto

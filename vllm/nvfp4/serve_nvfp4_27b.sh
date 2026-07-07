@@ -84,7 +84,7 @@ GRAPH_ENV=( )
 if [ "$GRAPH" = 1 ]; then
   # CORRECTNESS guard: TP>1 + MTP + capture emits NaN "!!!!" if MAXSEQS < the largest capture size
   # (the size-8 spec-verify graph gets starved). Bump MAXSEQS up to cover it. Verified 2026-07-04.
-  if [ "$TP" != 1 ] && [ -n "$MTPTOK" ] && [ -n "$CAPSIZES" ]; then
+  if [ "$TP" != 1 ] && [ -n "${MTPTOK:-}" ] && [ -n "$CAPSIZES" ]; then
     _MAXCAP=$(echo "$CAPSIZES" | tr ',' '\n' | sort -n | tail -1)
     if [ "$MAXSEQS" -lt "$_MAXCAP" ] 2>/dev/null; then
       echo "[guard] TP>1+MTP+capture: raising MAXSEQS $MAXSEQS -> $_MAXCAP (largest CAPSIZES; <it emits NaN garbage)" >&2
@@ -245,6 +245,10 @@ else
   SHM=32g
   TP_ARGS=( -tp "$TP" )
 fi
+
+# SERVED_FORCE overrides the computed served-model-name exactly (skips the scheme suffixes) so the DD
+# can expose a stable alias (e.g. hotschmoe-dd) that consumer harnesses hardcode across quant swaps.
+[ -n "${SERVED_FORCE:-}" ] && { SERVED="$SERVED_FORCE"; echo "=== SERVED forced -> $SERVED ===" >&2; }
 
 # Diagnostic + arbitrary-env passthrough (mirrors the w8a8 recipe, added 2026-07-07 for the NEO
 # abort fix campaign): B70_DEBUG=1 -> faulthandler (dumps a py+C traceback on SIGABRT, which is how
