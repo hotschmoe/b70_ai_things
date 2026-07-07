@@ -394,6 +394,25 @@ HUNG (2026-06-28). NVFP4 on sglang = multi-day custom-kernel port for zero gain 
 op is vLLM-ABI). VERDICT: do the torch fix on vLLM (helps both backends); keep sglang as the
 eager fallback. (Agent-reviewed against sglang/graph_mtp/README.md + docs/20260625_...campaign.md.)
 
+## TORCH-LEVEL FIX BUILT + VALIDATED (2026-07-07 session 3)
+
+Built a patched libtorch_xpu.so from pytorch source @ 7661cd9 (exact torch 2.12.0+xpu SHA),
+ABI-matched to the prebuilt (cxx11abi=1, gcc-13, oneAPI 2025.3, USE_XCCL=ON). The fix in
+XPUGraph.cpp replay(): `queue.ext_oneapi_graph(*graph_exec_)` -> `execute_graph(queue, *graph_exec_)`
+(the PUBLIC event-less free function from enqueue_functions.hpp; submit_without_event is a private
+internal template). Build recipe: docs/torch_xpu_build_recipe.md; patch: vllm/patches/xpugraph_*.patch.
+Build gotchas fixed: setvars return-at-top-level, cmake 4.3.4 too new (->3.31), incomplete submodules
+(skip CUDA flash-attention), USE_XCCL needed CCL 2021.17 (libccl.so.2.0).
+
+VALIDATION (all PASS):
+- ABI gate: NEW defines 75 XCCL syms (== prebuilt); 0 MISSING of the 23 symbols other torch libs
+  import from torch_xpu; symbol count 128219 vs 128209. patchelf normalized RPATH + 3 MKL NEEDED.
+- import torch: loads clean with the patched .so (no undefined symbols), cxx11abi True.
+- GPU smoke (gpu-run --card 0): xpu available True; XPUGraph replayed 300,000 times cleanly in 13s
+  (directly exercises the patched replay() -- the leaking function -- no abort).
+- END-TO-END: NVFP4 TP=2 captured+MTP (the CRASHING config, NO drafter-eager) + patched .so overlay,
+  soak past 55k tokens -> (result pending; baseline crashes at ~8-12k, degrades 43->20 t/s).
+
 ## STATE / DECISION (2026-07-07 end of session 2)
 
 - Root cause: DEFINITIVE (disasm) + REPRODUCED (NVFP4 TP=2 ~8-12k tok; W8A8 96k concurrent).

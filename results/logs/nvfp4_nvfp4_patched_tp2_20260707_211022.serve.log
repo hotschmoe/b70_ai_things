@@ -1,0 +1,6 @@
+=== KV_FP8=0: fp8 KV cache DISABLED (bf16 KV, kv_cache_scheme stripped) ===
+=== B70_DEBUG=1 -> faulthandler ===
+=== B70_EXTRA_MOUNTS -> /mnt/vm_8tb/b70/torch_xpu_build/build-torch-xpu/lib/libtorch_xpu.so.patched:/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_xpu.so:ro ===
+1b089503475670717fe37946194af95c504b2dfc1619b966b03505fa961fb30b
+container nvfp4_repro up; follow with: docker logs -f nvfp4_repro
+health: curl -s http://localhost:8078/health

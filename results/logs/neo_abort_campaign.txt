@@ -117,3 +117,5 @@ abort-lines=0
 abort-lines=0
 [NVFP4 nvfp4_regularcl_tp2] done 2026-07-07T07:01:37Z
 
+===== [NVFP4 nvfp4_patched_tp2] B70_EXTRA_ENV='' TP=2 card=0 soak_ceil=55000/2700 2026-07-07T21:10:22Z =====
+[NVFP4 nvfp4_patched_tp2] container launched; waiting for /health...
