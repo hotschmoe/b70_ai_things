@@ -215,3 +215,24 @@ verdict -> RELIABLE REPRO. Threshold on v0.24.0 ~= 96k decode tokens under 6-way
   (saturates GPU = max replays/sec, and exercises capture sizes 6/8). MAXLEN=131072 ->
   Q1 CLOSED: maxlen is NOT the trigger; the operator's "no crash at 128K" was lower load.
   Baseline crash threshold for fix A/B = survive >> 96k tokens (target ~220k = 2.3x).
+
+### FIX-SYNC (2026-07-07): per-step torch.xpu.synchronize -- FAILED (same threshold)
+config -> DD config + B70_XPU_CG_SYNC_STEPS=1 (block 5: sync every decode step, no
+  recapture). Confirmed ENABLED in both TP workers. Same 6-way concurrent soak.
+result -> *** CRASH (HTTP500) at tok=96000 t=1433s -- NEARLY IDENTICAL to baseline
+  (96000/1453s). Generation throughput ~80-90 t/s throughout (sync had NO perf cost
+  AND no benefit). 4 abort lines (linear_stream.h:84) in container log.
+verdict -> [KEY NEGATIVE] a full queue synchronize every decode step does NOT reclaim
+  the accumulation. Refutes the "submit_with_event drops reclaimable events -> sync
+  frees them" hypothesis (normal decode ALREADY syncs per step via sampled-token D2H,
+  and it still crashes; adding another sync changed nothing). The growth is in a
+  command list that is reset only by graph DESTRUCTION/RE-INSTANTIATION, not by a
+  queue drain. => the fix must RECAPTURE (or reset) the captured graphs, or bound the
+  replay count. Confirms the Tier F (block 3) design direction. FIX-EVT (event-cleanup
+  env) is now also unlikely (sync would have reclaimed events). NEXT: block 3 recapture.
+
+### FIX-RECYCLE (2026-07-07): recapture all graphs every N steps -- RUNNING
+config -> DD config + B70_XPU_CG_RECYCLE_STEPS=2000 (block 3: torch.xpu.synchronize +
+  clear_all_graphs every ~2000 decode steps -> bounded command list, keeps MTP+capture).
+  Same 6-way concurrent soak to 220k tokens.
+result -> (pending)

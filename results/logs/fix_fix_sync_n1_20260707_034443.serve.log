@@ -1,0 +1,18 @@
+=== PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, P2PACCESS=0, .so=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-w8a8/../../../vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so) ===
+=== B70_DEBUG=1 -> diagnostic env injected (faulthandler) ===
+=== B70_EXTRA_ENV -> injected: B70_XPU_CG_SYNC_STEPS=1 VLLM_USE_AOT_COMPILE=0 ===
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=vllm-xpu-env:int8g-v0240 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g-v0240 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== serve qwen36-27b-w8a8-sqgptq-mtp  IMG=vllm-xpu-env:int8g-v0240  TP=2 PP=1  GRAPH=1  port=18091  ===
+vllm serve /models/qwen3.6-27b/w8a8-sqgptq --served-model-name qwen36-27b-w8a8-sqgptq-mtp --host 0.0.0.0 --port 18091 --dtype auto --tensor-parallel-size 2 --max-model-len 131072 --max-num-seqs 8 --gpu-memory-utilization 0.90 --trust-remote-code --enable-prefix-caching --distributed-executor-backend mp --speculative-config {"method":"mtp","num_speculative_tokens":3} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --skip-mm-profiling --compilation-config {"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":false,"cudagraph_capture_sizes":[1,2,4,6,8],"splitting_ops":["vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"],"pass_config":{"fuse_rope_kvcache_cat_mla":false,"fuse_norm_quant":false,"fuse_act_quant":false,"fuse_attn_quant":false,"fuse_rope_kvcache":false,"enable_qk_norm_rope_fusion":false}}
+=== waiting for /health (ceiling 1800s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18091  qwen36-27b-w8a8-sqgptq-mtp  (TP=2 GRAPH=1) in 142s ===
+"id":"qwen36-27b-w8a8-sqgptq-mtp"
+--- gen probe (coherence-gated) ---
+gen:  Paris.\n\n<think>\n\n</think>\n\nThat is correct. Paris is the capital and most populous city of France. It is
+[probe coherence: OK]
+Serving. Stop with: bash serve.sh stop  (holds the GPU until then).

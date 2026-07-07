@@ -11,3 +11,12 @@
 --- container log tail (abort search) ---
 [e1_baseline_ml131k] stopped. 2026-07-07T03:16:06Z
 
+===== [FIX fix_sync_n1] B70_EXTRA_ENV='B70_XPU_CG_SYNC_STEPS=1' MAXLEN=131072 soak_ceil=220000/3300 2026-07-07T03:44:43Z =====
+  [fix_sync_n1] t=1400s tok=96000 reqs=24
+  [fix_sync_n1] t=1420s tok=96000 reqs=24
+[fix_sync_n1] *** CRASH (HTTP500) after tok=96000 t=1433s reqs=24
+[FIX fix_sync_n1] soak rc=3 (3=crash)
+--- abort trace? ---
+abort-lines=4
+[FIX fix_sync_n1] done 2026-07-07T04:11:37Z
+
