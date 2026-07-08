@@ -1,36 +1,36 @@
 [Unit]
-# B70 daily-driver serve. DEFAULT (2026-06-29, user choice): sglang qwen36-27b-w8a8 fused+MTP, TP=2 (both
-# cards) -- the best W8A8 27b (decode 25.6, HumanEval+ 0.970/0.933, vision), API-key enforced.
-# [!] WEDGE CAVEAT: W8A8 TP=2 is the FAST config but can BCS/oneCCL-wedge under sustained load (reboot-only
-# recovery) -- it is NOT wedge-proof like the old int4 DP=2 default. Accepted for auto-start per the
-# 2026-06-29 decision; dd-watchdog backstops SOFT garbage but NOT a hard wedge. To revert to the wedge-proof
-# unattended config: DD_MODEL=vllm/qwen36-27b-int4 + DD_REPLICAS=2 + DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88"
-# + DD_MAXLEN=98304. Managed lifecycle + auto-start on boot. See deploy/README.md + JOURNAL 2026-06-29.
-Description=B70 daily-driver serve (sglang W8A8 27b)
+# B70 daily-driver serve. DEFAULT (2026-07-08, user choice): vLLM NVFP4 qwen3.6-27b TP=2 captured+MTP + the
+# graph-replay RECLAIM leak fix (B70_XPU_CG_RECLAIM, now the GRAPH=1 default in serve_nvfp4_27b.sh) --
+# full-speed ~38 t/s, MTP on, CRASH-FREE (27k single-stream FLAT + 36k 6-way concurrent, 0 linear_stream
+# aborts; see JOURNAL 2026-07-08 session 2 + docs/SERVE_TOMORROW_fallback.md). Served as hotschmoe-dd on
+# :18080, API-key enforced (key read from the off-repo secret file at start; NOT baked into the unit).
+# Fallbacks if the reclaim ever needs disabling: CGRECLAIM=0 (+ B70_EXTRA_ENV=B70_XPU_DRAFTER_EAGER=1 for
+# drafter-eager, or drop MTPTOK for B4). dd-watchdog (b70-dd-watchdog.service) backstops SOFT garbage with a
+# per-replica docker restart (probes b70_daily_0:18080). Prior default was sglang/vLLM W8A8 27b (see git log).
+Description=B70 daily-driver serve (vLLM NVFP4 27b captured+MTP+reclaim, TP=2, served as hotschmoe-dd)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
 Wants=network-online.target
 
 [Service]
-# oneshot + RemainAfterExit: the daily-driver launches the serve DETACHED (nohup setsid gpu-run + docker run -d)
-# and waits for /health, then ExecStart returns 0 and systemd marks the unit active. `systemctl stop` tears it
-# down. `systemctl enable` -> starts on boot. (This gives boot-start + clean start/stop; for full crash-restart
-# of the container, see the Restart note in deploy/README.md.)
+# oneshot + RemainAfterExit: ExecStart launches the serve container DETACHED (gpu-run -> docker run -d) and
+# returns 0; ExecStartPost waits (best-effort) for /health so ordering is sane; `systemctl stop` tears it down.
+# `systemctl enable` -> starts on boot. The reclaim makes the container crash-free, so the oneshot pattern is
+# sufficient; dd-watchdog handles the rare soft-garbage bounce.
 Type=oneshot
 RemainAfterExit=yes
 User=hotschmoe
 Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
-Environment=DD_MODEL=sglang/qwen36-27b-w8a8
-Environment=DD_REPLICAS=1
-# sglang W8A8 27b runs at its own tuned serve.sh config (TP=2, NEXTN MTP steps=10, --disable-cuda-graph,
-# CTX=8192, mem-fraction-static=0.90, max-running-requests=4). The vLLM-specific knobs (DD_ENV GRAPH/CGMODE/
-# UTIL, DD_MAXLEN) do NOT apply to sglang and are intentionally omitted; the sglang serve.sh ignores them.
-# API key is read from the off-repo secret file at start time (NOT baked into the unit); for sglang the
-# daily_driver passes it as API_KEY -> the serve.sh adds --api-key (enforced on /v1/*, /health stays open).
-ExecStart=/bin/bash -lc 'DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" /mnt/vm_8tb/github/b70_ai_things/vllm/daily_driver_serve.sh start'
-ExecStop=/bin/bash -lc '/mnt/vm_8tb/github/b70_ai_things/vllm/daily_driver_serve.sh stop'
-# sglang W8A8 loads (~32s/rank) + NEXTN spec JIT-compiles (~3-6 min); allow generous startup.
+# Serve config is passed as env to the NVFP4 experiment serve.sh (which reads them). B70_XPU_CG_RECLAIM is NOT
+# listed here on purpose -- it is the GRAPH=1 default inside serve_nvfp4_27b.sh (opt out with CGRECLAIM=0).
+ExecStart=/bin/bash -lc 'API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+  NAME=b70_daily_0 PORT=18080 TP=2 MODE=fused GRAPH=1 MTPTOK=5 KV_FP8=0 CAPSIZES=1,2,4,8 \
+  MAXLEN=131072 MAXSEQS=8 UTIL=0.85 PUSH_AR=1 PUSH_AR_GRAPH=1 SERVED_FORCE=hotschmoe-dd \
+  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/vllm/nvfp4/serve_nvfp4_27b.sh start'
+ExecStartPost=/bin/bash -lc 'for i in $(seq 1 120); do curl -sf http://localhost:18080/health >/dev/null 2>&1 && exit 0; docker inspect -f "{{.State.Status}}" b70_daily_0 2>/dev/null | grep -q exited && { echo "container exited during startup" >&2; exit 1; }; sleep 5; done; echo "health wait timed out (container may still be warming)" >&2; true'
+ExecStop=/bin/bash -lc 'docker rm -f b70_daily_0 >/dev/null 2>&1 || true'
+# NVFP4 load + PIECEWISE capture + MTP drafter: allow generous startup.
 TimeoutStartSec=1200
 TimeoutStopSec=120
 
