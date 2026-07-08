@@ -8841,3 +8841,35 @@ verdict -> [SHIPPED] drafter-eager is the DD (keeps MTP + target capture + push-
   (safe periodic re-instantiation / fresh immediate cmdlist), a torch rebuild with UNCERTAIN payoff
   (execute_graph event-less rebuild already had zero effect) -- operator decision whether the 22-26->35-40 gap
   justifies it.
+
+## 2026-07-08 (session 2) -- FULL-SPEED FIX FOUND: XPUGraph re-instantiation reclaim
+
+Operator directed: (1) DD -> B4 MTP-off (steady ~25-31); (2) begin the torch/L0 graph-replay command-list
+reclaim journey. Result: the reclaim WORKS -- captured+MTP now runs crash-free at FULL speed (~38 t/s).
+
+### Mechanism confirmed + reclaim winner (microbench leak_matrix_reclaim.py)
+- The accumulator is reset ONLY by graph RE-INSTANTIATION, not a queue drain (confirmed the disasm).
+- torch.xpu.XPUGraph(keep_graph=True).instantiate() re-finalizes the exec graph from the kept modifiable
+  graph (NO re-trace). Microbench: RECLAIM=reinst (instantiate every 2000 replays) held inst-rate DEAD FLAT
+  (inst/first ~1.27 through 30k) while RECLAIM=none decayed to 0.23 and RECLAIM=rotate (fresh torch.xpu.Stream)
+  decayed identically to none (0.19). => re-instantiation resets; stream rotation does NOT (torch.xpu.Stream
+  returns POOL queues, not fresh immediate lists). Winner = instantiate().
+
+### Serve integration bug (keep_graph) + fix
+- First serve attempt (B70_XPU_CG_RECLAIM=1000) CRASHED at 6000 tok == baseline: 206x "instantiate() failed:
+  ... only when keep_graph=true". Root: keep_graph is consumed in __init__ (not just __new__); vLLM constructs
+  via no-arg torch.cuda.CUDAGraph() (rebound to torch.xpu.XPUGraph, xpu_model_runner:53), so a __new__-only
+  override left keep_graph=False. FIX: a subclass forcing keep_graph=True in BOTH __new__ and __init__,
+  installed as torch.xpu.XPUGraph before the rebind (validated in isolation on box). sitecustomize block (9).
+
+### DECISIVE SERVE RESULT (B70_XPU_CG_RECLAIM=1000, keep_graph fixed)
+config -> NVFP4 TP=2 fused GRAPH=1 MTP5 KV_FP8=0 PUSH_AR=1 PUSH_AR_GRAPH=1 CAPSIZES=1,2,4,8 (the CRASHING
+  captured+MTP config, NO drafter-eager) + B70_EXTRA_ENV=B70_XPU_CG_RECLAIM=1000.
+result -> 0 instantiate failures; single-stream forced-decode soak 18k+ tok, 0 linear_stream aborts,
+  throughput DEAD FLAT 39.2 -> 38.9 -> 38.4 -> 38.4 -> 38.2 -> 38.2 t/s (vs baseline decaying 35->28 then
+  crashing ~6-9k; vs drafter-eager decaying 41->26). Re-instantiate every 1000 replays/graph has NO visible
+  throughput penalty.
+verdict -> [FULL-SPEED FIX] captured+MTP crash-free at ~38 t/s -- BEATS drafter-eager (22-26) and B4 (25-31)
+  AND keeps MTP + full target capture. instantiate() DOES reset the serve accumulator (the graph-vs-queue-list
+  worry was moot). Toggle B70_XPU_CG_RECLAIM=N (0=off). This reopens the DD decision: reclaim config is the
+  new best NVFP4 DD candidate. NEXT: finish 50k soak, coherence + concurrent check, then promote to DD.
