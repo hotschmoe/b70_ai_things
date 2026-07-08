@@ -8873,3 +8873,30 @@ verdict -> [FULL-SPEED FIX] captured+MTP crash-free at ~38 t/s -- BEATS drafter-
   AND keeps MTP + full target capture. instantiate() DOES reset the serve accumulator (the graph-vs-queue-list
   worry was moot). Toggle B70_XPU_CG_RECLAIM=N (0=off). This reopens the DD decision: reclaim config is the
   new best NVFP4 DD candidate. NEXT: finish 50k soak, coherence + concurrent check, then promote to DD.
+
+## 2026-07-08 (session 3) -- NVFP4 prefill INT8-XMX + fp8 KV calibration (overnight, DD down, both cards)
+
+Operator directed two frontier thrusts (YOLO, custom ops/dead-ends welcome), GPU free for the evening,
+restore DD at the end. Ran 2 GPU forks (card-partitioned, no TP=2 = no wedge risk) + a web-research pass +
+a codex read of extracted vLLM v0.24.0 source. This entry logs the INVESTIGATION milestone; experiment
+results append below as forks land. Full findings + citations: docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md.
+
+### Milestone 1 -- investigation (research + codex), no GPU
+config -> read vLLM src (fp8-KV loader + XPU attn backends) + web (ModelOpt/HF/oneDNN/arXiv).
+result (fp8 KV) -> checkpoint declares fp8 KV but ships NO k/v scales because ModelOpt >=0.43 default
+  --kv_cache_qformat flipped fp8 (calibrated) -> fp8_cast (CONSTANT amax 448 -> scale 1.0); older 8B (0.35)
+  still ships real scales `...self_attn.{k_proj.k_scale,v_proj.v_scale}`. vLLM defaults missing scales to
+  1.0 (kv_cache.py:147). --calculate-kv-scales is a DEAD END here: vLLM disables it for hybrid GDN
+  (config.py:261-289) AND it corrupts hybrid GDN KV (vLLM #37554: uninitialized recurrent state -> wrong
+  frozen scales -> repetition). FIX = offline-calibrate amax/448 per full-attn layer (17 layers
+  [0,3,7,...,63]) and inject scalar f32 tensors via a non-destructive extra-shard + index.json overlay. XPU
+  DOES apply the scales (FlashAttn reshape_and_cache_flash + k/v_descale; Triton visibly).
+result (prefill int8) -> corrected ceiling: int4/int2 x int8 DPAS = SAME rate as int8 (arXiv 2508.06753);
+  2x/4x only for symmetric s4.s4 (W4A4). oneDNN has NO native block-scaled s8xs8->s32 (only per-tensor/
+  per-channel int8, weight-decompress-to-float, or FLOAT MXFP8/NVFP4). Xe2 DPAS has no fp8 type -> oneDNN
+  float-NVFP4 = bf16 compute = no B70 speedup. => the ONLY 2x prefill path is a CUSTOM K-blocked
+  block-scaled int8 GEMM (s32 per-16-K-block accumulate, rescale by block_scale*global/2 * per-token act
+  scale, fp32 accumulate); hand-written via SYCL-TLA (intel/sycl-tla targets bmg_g31 int8) or ESIMD.
+verdict -> both thrusts well-posed. Thrust 2 fix is clear + shippable (offline calib + inject). Thrust 1
+  needs a hand-written int8 kernel; go/no-go gated on the step-1 ceiling probe (is int8 actually ~2x bf16
+  at prefill M on real shapes). Forks executing on cards 0 (prefill) + 1 (fp8 KV).
