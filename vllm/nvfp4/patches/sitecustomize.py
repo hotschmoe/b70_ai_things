@@ -611,25 +611,31 @@ _RECLAIM_N = int(os.environ.get("B70_XPU_CG_RECLAIM", "0"))
 if _RECLAIM_N > 0:
     try:
         import torch as _t
-        _XG = _t.xpu.XPUGraph
-        _orig_new = _XG.__new__
-        def _keep_new(cls, keep_graph=False):
-            return _orig_new(cls, True)  # force keep_graph=True so instantiate() can re-finalize later
-        _XG.__new__ = staticmethod(_keep_new)
-        _orig_replay = _XG.replay
+        import torch.xpu.graphs as _tgraphs
+        _Base = _t.xpu.XPUGraph
+        _orig_replay = _Base.replay
         _rc_counts = {}
-        def _reclaim_replay(self):
-            k = id(self)
-            n = _rc_counts.get(k, 0) + 1
-            _rc_counts[k] = n
-            if n % _RECLAIM_N == 0:
-                try:
-                    self.instantiate()  # re-finalize exec graph -> fresh immediate command list (resets accum)
-                except Exception as _e:
-                    print("[nvfp4-shim] (9) instantiate() failed:", repr(_e), file=sys.stderr, flush=True)
-            return _orig_replay(self)
-        _XG.replay = _reclaim_replay
-        print(f"[nvfp4-shim] (9) XPUGraph RECLAIM ON: keep_graph=True + re-instantiate every {_RECLAIM_N} "
-              f"replays/graph (full-speed captured+MTP leak fix)", file=sys.stderr, flush=True)
+        # keep_graph is consumed in __init__ (NOT just __new__) -- vLLM constructs via torch.cuda.CUDAGraph()
+        # (rebound to torch.xpu.XPUGraph) with NO args, so a __new__-only override leaves keep_graph=False and
+        # instantiate() refuses. Force it in BOTH __new__ and __init__ via a subclass (validated on box).
+        class _XPUGraphReclaim(_Base):
+            def __new__(cls, *a, **k):
+                return _Base.__new__(cls, keep_graph=True)
+            def __init__(self, *a, **k):
+                super().__init__(keep_graph=True)
+            def replay(self):
+                k = id(self)
+                n = _rc_counts.get(k, 0) + 1
+                _rc_counts[k] = n
+                if n % _RECLAIM_N == 0:
+                    try:
+                        self.instantiate()  # re-finalize exec graph -> reset the accumulated command list
+                    except Exception as _e:
+                        print("[nvfp4-shim] (9) instantiate() failed:", repr(_e), file=sys.stderr, flush=True)
+                return _orig_replay(self)
+        _t.xpu.XPUGraph = _XPUGraphReclaim      # the rebind (xpu_model_runner:53) picks this up
+        _tgraphs.XPUGraph = _XPUGraphReclaim
+        print(f"[nvfp4-shim] (9) XPUGraph RECLAIM ON (subclass): keep_graph=True + re-instantiate every "
+              f"{_RECLAIM_N} replays/graph (full-speed captured+MTP leak fix)", file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (9) reclaim patch failed:", repr(e), file=sys.stderr, flush=True)
