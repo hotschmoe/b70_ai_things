@@ -313,27 +313,12 @@ if os.environ.get("CSAG_DISABLE", "0") != "1":
             # buf[r] holds rank r's input; everyone else's slot is zero -> all_reduce(sum) fills all slots.
             buf = torch.zeros((self.world_size,) + input_size, dtype=input_.dtype, device=input_.device)
             buf[self.rank_in_group] = input_
-            # (2026-07-08 NEO-leak fix) Route this MTP-drafter all_gather's all-reduce through the SAME
-            # transport as the model's TP all-reduce. block (8) push-AR only patches XpuCommunicator.all_reduce;
-            # the raw dist.all_reduce below goes straight to oneCCL -> the LAST oneCCL collective recorded into
-            # the captured MTP graph -> per-replay command re-append -> linear_stream.h:84 (see
-            # docs/20260707_dd_mtp_piecewise_neo_abort.md; FORCE_RECORDING can't record on the null stream).
-            # When push-AR's capturable graph path is engaged (PUSH_AR_SO set + PUSH_AR_GRAPH=1), self.all_reduce
-            # records via ar_allreduce_graph -- a native-L0 STATIC graph node, NO oneCCL -> nothing oneCCL is left
-            # in the captured graph. self.all_reduce SUMs (== the padded-buffer all_gather trick needs) and
-            # returns a clone, so reassign buf. Falls back to the old oneCCL path when push-AR/graph-push is off
-            # (byte-identical on the single-card shelf + eager/non-graph serves). Toggle off with CSAG_PUSHAR=0.
-            _cap = bool(getattr(torch.xpu, "is_current_stream_capturing", lambda: False)())
-            if (os.environ.get("CSAG_PUSHAR", "1") == "1"
-                    and os.environ.get("PUSH_AR_SO") and os.environ.get("PUSH_AR_GRAPH") == "1"):
-                _c = _all_gather_via_allreduce.__dict__
-                _c["n"] = _c.get("n", 0) + 1
-                if _c["n"] <= 3 or _c["n"] % 5000 == 0:
-                    print(f"[csag] block(3) all_gather -> push-AR self.all_reduce  call#{_c['n']} "
-                          f"capturing={_cap} numel={buf.numel()}", file=sys.stderr, flush=True)
-                buf = self.all_reduce(buf)                           # push-AR (capturable, no oneCCL)
-            else:
-                dist.all_reduce(buf, group=self.device_group)       # oneCCL (recordable via sycl kernels)
+            # NOTE (2026-07-08): this all_gather runs EAGER (capturing=False, ~10.5M-elem gather_output head),
+            # NOT inside the replayed graph -- instrumentation proved routing it through push-AR does NOT touch
+            # the linear_stream.h:84 leak (the in-graph drafter collective is the row-parallel all_reduce, and
+            # it is ALREADY push-AR). Kept on oneCCL dist.all_reduce (the proven capture-safe path). See
+            # docs/20260707_dd_mtp_piecewise_neo_abort.md "ROOT CAUSE CORRECTED (2026-07-08)".
+            dist.all_reduce(buf, group=self.device_group)            # RECORDABLE (CCL sycl kernels)
             # concat-style along `dim`, matching base_device_communicator.all_gather exactly
             out = buf.movedim(0, dim).reshape(
                 input_size[:dim] + (self.world_size * input_size[dim],) + input_size[dim + 1:]
