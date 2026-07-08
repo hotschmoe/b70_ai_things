@@ -497,8 +497,24 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.
 - [ ] **11e. Harder evals on the champion** (agentic code, long-context) before promoting it past
       "quality pick" toward daily-driver conversations (it lacks KV for that today; see 11c).
-- [ ] **11h. [HIGH -- ACTIVE, unblocks MTP+graph on BOTH quants] Fix the MTP-verify-in-piecewise-cudagraph
-      NEO command-stream leak.** [REFRAMED 2026-07-07 -- see docs/20260707_dd_mtp_piecewise_neo_abort.md.]
+- [ ] **11h. [MED -- REBUILD-FREE PATHS EXHAUSTED; ship drafter-eager] Fix the MTP-verify-in-piecewise-cudagraph
+      NEO command-stream leak.** [REFRAMED 2026-07-07; ROOT CAUSE CORRECTED 2026-07-08 -- see
+      docs/20260707_dd_mtp_piecewise_neo_abort.md.]
+      **CORRECTION 2026-07-08 (GPU-tested A/B + instrumentation): the leak is TRANSPORT-AGNOSTIC, NOT the oneCCL
+      collective. The crashing config already runs the drafter's in-graph all_reduce over PUSH-AR (native L0,
+      ZERO oneCCL) and STILL crashes ~9-12k tok, identical traceback. block(3) all_gather is EAGER (not in the
+      graph). So the overflow is ANY cross-device collective recorded into the drafter's high-freq replayed
+      graph, accumulating L0 command-list space that resets ONLY on graph re-instantiation (queue drain does
+      not reclaim -- matches FIX-SYNC + execute_graph negatives). RULED OUT rebuild-free: (A)
+      CCL_SYCL_FORCE_RECORDING_PATH=1 (null-stream fallback -> no record -> crash == baseline); (B) push-AR
+      block(3) (irrelevant, in-graph collective already push-AR). => the oneCCL-upgrade / torch-xpu-ops#2992
+      path is the WRONG LAYER (oneCCL already 2021.17.2 in-image; in-graph collective isn't oneCCL). #2992 diff
+      is in hand (use the >=2021.17.2 gate; merged >=2022.0.0 gate refuses capture here) but it will NOT fix
+      this leak. SHIPPING FIX = drafter-eager (keeps MTP, ~22-26 t/s, verified 2026-07-08). Full-speed captured+MTP
+      (~35-40 t/s) needs a torch/L0 graph-REPLAY command-list reclaim (reset immediate cmdlist / SAFE periodic
+      re-instantiation at a step boundary; the block-4 recapture was racy) -- a torch rebuild with UNCERTAIN
+      payoff. Only pursue if the 22-26 -> 35-40 gap justifies a speculative torch build. Superseded oneCCL
+      framing kept below for history.**
       **ROOT CAUSE NAILED 2026-07-07 (session 3): the leak is a oneCCL collective recorded into the captured
       SYCL graph that RE-APPENDS commands per replay (not a static graph node) -> the ONE immediate command
       list's LinearStream grows -> linear_stream.h:84. Confirmed 3 ways: (1) L0 basic leak checker shows NO

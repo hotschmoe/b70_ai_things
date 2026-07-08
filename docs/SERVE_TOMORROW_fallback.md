@@ -1,15 +1,18 @@
-# SERVE-TOMORROW fallback runbook (2026-07-07)
+# SERVE-TOMORROW fallback runbook (updated 2026-07-08)
 
-**CURRENT LIVE DD (2026-07-07): NVFP4 B4 (Option 3 below), served as `hotschmoe-dd` on :18080.**
-Stable by construction: MTP off -> only the target decode graph replays 1/step and its all-reduces
-go through PUSH_AR posted-write (no oneCCL in the captured decode) -> no per-replay command re-append
--> no linear_stream overflow. Warm decode ~20-25 t/s, coherent, prefix cache + vision + tool/reason parsers.
+**CURRENT LIVE DD (2026-07-08): NVFP4 drafter-eager (Option 2 below), served as `hotschmoe-dd` on :18080.**
+Keeps MTP (drafter runs eager -> no accumulating captured-drafter replays) + target-decode capture + PUSH_AR.
+Verified clean on box 2026-07-08. Warm decode ~22-26 t/s (higher on high-accept text), coherent, prefix
+cache + vision + tool/reason parsers. (Prior DD was B4 = MTP-off, Option 3, ~25-31 t/s -- also valid.)
 
-ROOT CAUSE (2026-07-07, docs/20260707_dd_mtp_piecewise_neo_abort.md): the abort is a oneCCL collective
-recorded into the captured SYCL graph that re-appends commands per replay (our torch 2.12+xpu oneCCL
-predates SYCL-graph Record&Replay; torch-xpu-ops#2992). The real full-speed fix = upgrade oneCCL
->=2021.17.2/2022.0 + backport #2992 (RESEARCH_TODO 11h). Until that lands, serve one of the STABLE
-configs below (all avoid the crash by keeping oneCCL collectives out of a high-frequency replayed graph).
+ROOT CAUSE CORRECTED (2026-07-08, docs/20260707_dd_mtp_piecewise_neo_abort.md): the abort is TRANSPORT-AGNOSTIC,
+NOT the oneCCL collective. The crashing config runs the drafter's in-graph all_reduce over PUSH-AR (native L0,
+zero oneCCL) and STILL crashes ~9-12k tok. It is ANY cross-device collective recorded into the drafter's
+high-frequency replayed graph, accumulating L0 command-list space that resets only on graph re-instantiation.
+=> the oneCCL-upgrade / #2992 path is the WRONG LAYER (oneCCL is already 2021.17.2 in-image). Rebuild-free
+paths exhausted (FORCE_RECORDING_PATH null-stream fallback; push-AR-block3 irrelevant). SHIP drafter-eager.
+Full-speed captured+MTP (~35-40 t/s) needs a torch graph-REPLAY command-list reclaim (uncertain; future).
+The STABLE configs below all avoid the crash by keeping collectives out of a high-frequency replayed graph.
 
 ## Ranked stable options (all TP=2, both cards, coherent + no NEO abort)
 
