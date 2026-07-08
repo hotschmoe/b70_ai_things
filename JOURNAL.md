@@ -8823,3 +8823,21 @@ graph-REPLAY command-list reclaim (reset/re-instantiate per N replays, or a per-
 command list) -- NOT a collective-transport change. RESEARCH_TODO 11h to be re-pointed.
 The PROVEN shippable fix remains DRAFTER-EAGER (B70_XPU_DRAFTER_EAGER=1): removes the drafter's captured
 replays (the accumulator), keeps MTP + target capture, ~22-26 t/s, validated 44k clean 2026-07-07.
+
+### DD RESTORED + drafter-eager VERIFIED on box (2026-07-08)
+config -> NVFP4 drafter-eager = MODE=fused GRAPH=1 MTP5 KV_FP8=0 PUSH_AR=1 PUSH_AR_GRAPH=1 CAPSIZES=1,2,4,8
+  MAXLEN=131072 UTIL=0.85 + B70_EXTRA_ENV=B70_XPU_DRAFTER_EAGER=1, SERVED_FORCE=hotschmoe-dd, TP=2, :18080.
+command -> NAME=b70_daily_0 ... B70_EXTRA_ENV="B70_XPU_DRAFTER_EAGER=1" ./bin/gpu-run bash
+  vllm/nvfp4/serve_nvfp4_27b.sh start ; soak vllm/nvfp4/soak_leak.py TARGET=25000.
+result -> drafter-eager block (4b) ENABLED (drafter -> CUDAGraphMode.NONE, target stays captured). Soak CLEAN
+  through 12k+ tokens, 0 linear_stream aborts, coherent -- clears the exact ~8-12k zone where baseline,
+  (A) FORCE_RECORDING, and (B) push-AR-block3 all crashed. Decode 30-42 t/s on the repetitive forced-decode
+  prompt (high MTP accept inflates vs the ~22-26 real-workload number).
+verdict -> [SHIPPED] drafter-eager is the DD (keeps MTP + target capture + push-AR). This session's net:
+  (1) big correction -- the leak is TRANSPORT-AGNOSTIC graph-replay accumulation, not the oneCCL collective,
+  so the oneCCL-upgrade/#2992 campaign is the WRONG LAYER and is stood down; (2) two rebuild-free candidates
+  ruled out with evidence; (3) diagnostic harnesses added (leak_matrix.py, soak_leak.py); (4) #2992 exact diff
+  captured for history. Remaining full-speed (~35-40 t/s) path = torch/L0 graph-REPLAY command-list reclaim
+  (safe periodic re-instantiation / fresh immediate cmdlist), a torch rebuild with UNCERTAIN payoff
+  (execute_graph event-less rebuild already had zero effect) -- operator decision whether the 22-26->35-40 gap
+  justifies it.
