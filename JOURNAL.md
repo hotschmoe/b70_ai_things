@@ -8725,3 +8725,61 @@ verdict -> STABLE by construction: MTP off -> only the target decode graph repla
   through PUSH_AR posted-write (no oneCCL in the captured decode) -> no per-replay command re-append -> no overflow.
   Most performant stable NVFP4 fallback until the oneCCL upgrade lands. Fallback runbook: docs/SERVE_TOMORROW_fallback.md.
   Recipe fixes this session: nvfp4 SERVED_FORCE override + MTPTOK nounset guard.
+
+## 2026-07-08 -- MTP-graph NEO leak: fix campaign (diagnostic matrix + 2 rebuild-free leads + #2992 diff)
+
+Continuation of the 2026-07-07 root cause (oneCCL-collective-in-SYCL-graph re-appends per replay ->
+NEO linear_stream.h:84). Goal: a full-speed fix that keeps captured+MTP (target ~43 t/s) instead of the
+drafter-eager / MTP-off haircut. Operator opened the GPU box for the session.
+
+### Strategic reframe: the oneCCL "upgrade" is already done
+config -> inspect the live serve image vllm-xpu-env:int8g-v0240.
+result -> oneCCL in-image is Gold-2021.17.2 (config.h CCL_UPDATE_VERSION=2; pkgconfig Version 2022.0.0);
+  runtime maps ccl/2021.17/libccl.so.2.0. RESEARCH_TODO 11h wanted ">=2021.17.2/2022.0" -> ALREADY MET.
+  libtorch_xpu.so (932MB, torch 2.12+xpu) carries NO torch-xpu-ops#2992 (grep: zero capturable-XCCL /
+  recording-mode / non-capturable guard strings; ProcessGroupXCCL::collective binds oneCCL with no capture
+  awareness).
+verdict -> the fix is NOT an oneCCL image bump (no-op) -- it is entirely torch-side. sglang is NOT a fix
+  vehicle (same torch.xpu.XPUGraph leak + extra dead-end); confirmed by prior art + agent review. So: chase
+  rebuild-free levers first, then a #2992 backport (torch-xpu-ops only, on already-proven build infra).
+
+### Op-level diagnostic matrix -- vllm/nvfp4/leak_matrix.py + run_leak_matrix.sh
+config -> record ONE collective into a raw torch.xpu.XPUGraph on 2 XPU ranks, replay up to N, watch for the
+  linear_stream abort / rate decay. Modes: oneccl_ar, oneccl_ag, block3_oneccl (current sitecustomize (3)
+  path), pushar (ar_allreduce_graph), block3_pushar (the shim fix). TP env mirrors the serve exactly.
+command -> ./bin/gpu-run bash vllm/nvfp4/run_leak_matrix.sh  (REPLAYS=60000).
+result -> oneccl_ar RECORDS into the raw XPUGraph and replays 60k times with NO hard abort -- only a GENERIC
+  per-replay slowdown (inst rate 16.9k->1.4k/s), the SAME decay slope as push-AR. So a tiny-tensor microbench
+  is dominated by the generic graph-exec-event accumulation and does NOT surface the fatal, command-BYTE-volume
+  oneCCL leak (which needs the full model's per-replay command list). Harness (xccl init + XPUGraph capture +
+  push-AR setup) all work; not the arbiter for the fatal leak.
+verdict -> [KEY] oneCCL 2021.17.2 records CLEANLY in a raw XPUGraph (recording queue auto-detected). That points
+  straight at CCL_SYCL_FORCE_RECORDING_PATH=1 as a rebuild-free fix. The real serve is the arbiter.
+
+### Root cause localized to sitecustomize (3) line 316 (drafter all_gather bypasses push-AR)
+- push-AR (block 8) patches XpuCommunicator.all_reduce -> the MAIN model TP all-reduce is off oneCCL (why
+  MTP-off B4 survives ~10x longer). But block (3) _all_gather_via_allreduce reimplements the MTP drafter's
+  all_gather as a padded-buffer all-reduce via RAW dist.all_reduce(buf) (torch.distributed -> ProcessGroupXCCL
+  -> oneCCL), which BYPASSES the push-AR patch. THAT is the last oneCCL collective recorded into the captured
+  MTP graph. Fix candidate (B): route it through self.all_reduce (push-AR) so nothing oneCCL is in the graph.
+
+### Two rebuild-free leads + the exact #2992 backport (agent research, 2026-07-08)
+- (A) CCL_SYCL_FORCE_RECORDING_PATH=1 [oneCCL 2021.17.2 env, sycl_coll_base.hpp:670 use_recording_path()]:
+  forces oneCCL to take its graph-recordable STATIC-node path unconditionally. #2992 does NOT change how the
+  collective records -- oneCCL 2021.17.2 already does; #2992 only makes torch capture-SAFE (skips event-query
+  bookkeeping during Recording) + a version guard. So env (A) may be a full-speed rebuild-free fix by itself.
+  Risk: forces the path even in eager -> may CCL_THROW at warmup for non-capturable collectives.
+- (B) route block (3) through push-AR (shim, rebuild-free) -- keeps the collective captured off oneCCL.
+- Fallback: splitting_ops=["vllm::all_gather"] (evicts drafter all_gather from capture; fragments, slower).
+- (C) backport torch-xpu-ops#2992 "Support xpu graph capture for XCCL" (merged 2026-05-07, files
+  ProcessGroupXCCL.cpp/.hpp): guard setEnqueuedPgStatus/attachRetireAndStatusCallback + watchdog enqueue on
+  CaptureStatus==Executing; add errorIfCapturingNonCapturableXCCL. CRITICAL: the merged version gate demands
+  >=2022.0.0 but ccl::get_library_version() reports 2021.17.x here -> would REFUSE capture; use the earlier
+  >=2021.17.2 gate form (from PR patch 2/8). Diff against our pinned torch-xpu-ops (pytorch 7661cd9), not main.
+
+### TEST IN PROGRESS: (A) FORCE_RECORDING_PATH on the CRASHING captured+MTP serve
+config -> NVFP4 TP=2 fused GRAPH=1 MTP5 KV_FP8=0 PUSH_AR=1 PUSH_AR_GRAPH=1 CAPSIZES=1,2,4,8 (the config that
+  crashes at ~8-12k tok) + B70_EXTRA_ENV=CCL_SYCL_FORCE_RECORDING_PATH=1 + B70_DEBUG=1 (faulthandler).
+command -> NAME=b70_leaktest PORT=18080 ... ./bin/gpu-run bash vllm/nvfp4/serve_nvfp4_27b.sh start; soak with
+  vllm/nvfp4/bisect_probe.py (forced-decode, ignore_eos) past the baseline crash.
+result -> (pending; warming up)
