@@ -5,6 +5,16 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
+> **[2026-07-08 CURRENT STATE -- supersedes the dated banners below.** The daily driver is **NVFP4 27B
+> TP=2, bf16 KV, captured + MTP5 + XPUGraph reclaim** (`hotschmoe-dd`, port 18080). The reclaim fix
+> (`B70_XPU_CG_RECLAIM`, re-instantiate captured graphs) makes captured+MTP crash-free at full speed, so
+> NVFP4 DOES keep MTP+graph. Fresh IN=2048 bench: **code decode 53 t/s** (beats W8A8's 41), KV **385k @
+> 128k** (more than W8A8 TP=2's 238k) at smaller weight (24 vs 35 GB) -> the DD choice is NVFP4, not W8A8.
+> A second NVFP4 config, **TP=1 fp8 KV**, fits a full **128k context on ONE card** (frees the other card;
+> fp8 = 1.98x bf16 context, proven with a 118,856-token needle). The 2026-07-06 "revert to W8A8" /
+> "NVFP4 returns to research" banners below are SUPERSEDED. See the two NVFP4 rows + JOURNAL 2026-07-08 +
+> docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md.]**
+
 > **[2026-07-07 CORRECTION -- the "NVFP4-only crash / W8A8 keeps MTP+graph" claim below is REFUTED.**
 > The `linear_stream.h:84` NEO abort under MTP-verify + piecewise cudagraph is NOT NVFP4-specific: the
 > W8A8 daily driver hit the IDENTICAL abort after ~3h of real use (and a 6-way concurrent soak reproduced
@@ -121,7 +131,6 @@ is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
 | qwen3.6-27b | int4-AutoRound (W4A16) + NEXTN MTP | 19 | 1 | 2224 | 921 ms | 15.3 | 4.5 | 29.8k tok |
 | qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 2062 | 993 ms | 27.3 | 27.7\* | 145k tok |
 | qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | **3786** | **541 ms** | **25.6** | 5.8 | 182k tok |
-| qwen3.6-27b | **NVFP4** (nvfp4_gemm_w4a16, PIECEWISE + MTP5)\*\*\* | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 10.7k tok |
 | qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | **7529** | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,
@@ -132,19 +141,6 @@ so per-stream decode holds ~27.7 t/s but TTFT balloons to ~8.1 s. Best for singl
 best of any 35B entry** (int8-XMX prefill). Decode is eager-slow (~8 t/s single / agg 23.9 t/s at c4) --
 graph capture / NEXTN MTP / fused int8 dense are the open decode levers. Soak: clean + stable (no
 degradation), and unlike vLLM it stays coherent under sustained concurrent load.
-
-\*\*\* **NVFP4 row = a vLLM serve, shown here for the cross-backend model view** -- shelf entry
-`rdy_to_serve/vllm/qwen36-27b-nvfp4/` (recipe `vllm/nvfp4/`). The ACTUAL `nvidia/Qwen3.6-27B-NVFP4`
-ModelOpt MIXED_PRECISION checkpoint (W4A16_NVFP4 MLP + FP8 attention) running on a device with *zero*
-Intel NVFP4 support, via our custom `nvfp4_gemm_w4a16` oneDNN op (weights stay 4-bit/f4_e2m1 resident
--> **24 GB, fits ONE card**, where the int8 repack is 31 GB and does not). Op is bit-exact (rel-err
-3.7e-3 = bf16 scale rounding) and 2.85x bf16 at decode. **The box champion (M6-M9, 2026-07-04):
-fastest single-card 27B (40.7-44.1 t/s, 67 t/s on code) AND quality #1 (HumanEval+ 0.988/0.945 beats
-int4-AutoRound 0.963/0.927)**. Ladder: 0.5 emul -> 8.47 eager -> 25.1 capture (one `register_fake`)
--> 40.7-44.1 +MTP spec=5 (native bf16 `mtp.*`, zero graft; ~99% accept on code). gate_concurrent
-18/18, vision verified under capture+MTP. Caveats: KV 10.7k tok @ MAXLEN=8192 (concurrent long
-prefills serialize; the single-stream/quality pick), UTIL=0.85 hard ceiling.
-See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
 
 ## Serve shelf -- vLLM (UN-PAUSED on v0.24.0)
 
@@ -163,17 +159,19 @@ See `vllm/nvfp4/NVFP4_XPU.md` + `NVFP4_KERNEL_BUILD.md`.
 > + reasoning intact. The shelf auto-applies it (+ `--skip-mm-profiling`) when vision is on and `GRAPH=1`.
 > (Remaining minor: prefix caching for the hybrid GDN model is untested here -- `PREFIXCACHE=0` for now.)
 
-Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- the ~4x decode lever). Only the
-**W8A8 row is re-benched on v0.24.0** (the daily-driver candidate); the other rows are the last vLLM baseline.
+Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- the ~4x decode lever). The two
+**NVFP4 rows are freshly benched 2026-07-08** (IN=2048/OUT=128 warm; TG c1 = generic-summarization decode with
+the coding-workload decode in **bold** -- generic is low-MTP-accept, code is the ~99%-accept number that
+matters for the coding DD; c4 shows per-stream with aggregate in parens); other rows are the last vLLM baseline.
 
 | Model | Quant | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
-| qwen3.6-27b | **NVFP4 ModelOpt (nvfp4_gemm_w4a16 + MTP5) -- v0.24.0, QUALITY #1**¶ | 24 | 1 | 1702 | 1243 ms | **40.7-44.1** (67 code) | 27.0 | 10.7k tok |
-| qwen3.6-27b | **NVFP4 TP=2 + MTP5 + push-AR + prefix cache -- 256K ctx (long-ctx DD)**◆ | 24 | 2 | **2174** (was 666) | **937 ms** (was 3076) | 31.9 (**48-50** warm) | 9.1 | **757k tok** |
+| qwen3.6-27b | **NVFP4 TP=2 bf16 KV + captured MTP5 + reclaim (DAILY DRIVER)**¶ | 24 | 2 | 2201 | 926 ms | 16.3 (**53** code) | 6.6 (26 agg) | **385k tok** |
+| qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
 | qwen3.6-27b | W4A8-sqgptq (int8-act) | 26 | 1 | 1888 | 1085 ms | 6.3\* | 5.8\* | OOM @GRAPH=1 |
-| qwen3.6-27b | **W8A8-sqgptq (int8) + MTP -- v0.24.0 (DAILY DRIVER)** | 35 | 2 | 2711 | 755 ms | **30.0**\*\*\* | 15.4 | 320k tok |
+| qwen3.6-27b | W8A8-sqgptq (int8) + MTP -- v0.24.0 (prior DD; see 2026-07-08 banner) | 35 | 2 | 2711 | 755 ms | **30.0**\*\*\* | 15.4 | 320k tok |
 | qwen3.6-27b | W8A8 + DFlash all-sliding drafter (spec=8) -- v0.24.0 (research, not DD\*\*\*\*) | 35+2 | 2 | 2566 | 798 ms | 19.6 | 10.3 | 291k tok |
 | qwen3.6-35b-a3b | int4-AutoRound (W4A16 MoE) -- v0.24.0† | 21 | 1 | 3670 | 558 ms | 46.5‡ | 44.0 | **485k tok** |
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) -- v0.24.0† | 35 | 2 | 1930 | 1061 ms | 37.0§ | 23.5 | **775k tok** |
@@ -181,39 +179,31 @@ Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- th
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
 2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
 
-¶ **NVFP4 = the box QUALITY #1 + fastest single-card entry (2026-07-04, M6-M9):** the actual
-`nvidia/Qwen3.6-27B-NVFP4` ModelOpt checkpoint (W4A16_NVFP4 MLP + FP8 attn + bf16 mtp/vision) via our
-custom `nvfp4_gemm_w4a16` oneDNN op (4-bit f4_e2m1 resident) + PIECEWISE capture (unlocked by one
-`register_fake`) + stock NEXTN MTP spec=5 (sweep winner; ~99% accept on code -> **67 t/s coding
-decode**). HumanEval+ **0.988/0.945** (leaderboard #1, beats int4-AutoRound 0.963/0.927), gsm8k 96%
-(48/50), gate 18/18, vision verified under capture+MTP. Shelf entry `rdy_to_serve/vllm/qwen36-27b-nvfp4/`
-(wrapper over `vllm/nvfp4/serve_nvfp4_27b.sh`). Caveat: KV ~10.7k tok @ MAXLEN=8192 -> the QUALITY/single-stream pick,
-not the concurrency pick; UTIL=0.85 + CAPSIZES=1,2,4,8 are hard limits (OOM above).
+¶ **NVFP4 TP=2 = the daily driver (2026-07-08).** `nvidia/Qwen3.6-27B-NVFP4` ModelOpt checkpoint
+(W4A16_NVFP4 MLP + FP8 attn + bf16 mtp/vision) via our custom `nvfp4_gemm_w4a16` oneDNN op (4-bit
+f4_e2m1 resident) across BOTH cards + PIECEWISE capture + NEXTN MTP spec=5 + push-AR all-reduce. Two
+fixes make this the DD: **bf16 KV** (`KV_FP8=0`) sidesteps the uncalibrated-fp8-KV repetition, and the
+**XPUGraph re-instantiation reclaim** (`B70_XPU_CG_RECLAIM`, default-on for GRAPH=1) fixes the
+MTP-verify x cudagraph `linear_stream.h:84` NEO abort -> captured+MTP now runs crash-free at full speed.
+Bench (IN=2048, warm): code decode **53 t/s** (spec=5, ~99% accept on code; 16.3 on a generic
+summarization = low MTP accept), PP 2201, TTFT 926 ms, KV **385k tok @ 128k (2.94x concurrency)** -- MORE
+KV than W8A8 TP=2 (238k) at smaller weight (24 vs 35 GB). HumanEval+ **0.988/0.945** (box #1); gate 18/18;
+vision + tool-call + reasoning retained. Serve = the systemd DD config (`SERVED_FORCE=hotschmoe-dd`, port
+18080) over `vllm/nvfp4/serve_nvfp4_27b.sh`. JOURNAL 2026-07-08 + docs/20260707_dd_mtp_piecewise_neo_abort.md.
 
-◆ **NVFP4 TP=2 = the long-context daily-driver config (2026-07-04).** Same NVFP4 checkpoint + kernel, spanned
-across BOTH cards to solve the single-card KV starvation: at the FULL model context 262,144 (256K) it serves
-**764,464 KV tokens = 2.92x concurrency at 256K** (vs 10.7k single-card), with **prefix caching ON** (warm
-prefix reuse **3.98x** TTFT: a ~6k-token prompt cold 17,936 ms -> warm 4,508 ms). Warm real-text single-stream
-decode is **48-50 t/s -- FASTER than single-card** (40-44): each rank reads half the decode weights (the GEMV is
-bandwidth-bound) and MTP amortizes the now-captured all-reduce. gate_concurrent **18/18** at 256K + prefix cache.
-The build: port the capture-safe all_gather (all-reduce-of-padded) + `splitting_ops` to the TP>1 path, fix an XPU
-vLLM bug (TP>1 fusion resolves `fuse_rope_kvcache_cat_mla` True but `MLARoPEKVCacheCatFusionPass` is cuda-only
-imported -> NameError; disabled, Qwen3.6 is not MLA), a MAXSEQS>=8 NaN-garbage correctness floor (MAXSEQS=4
-starves the size-8 spec graph), and the mamba align-mode int64 pointer fix that unblocks prefix caching on XPU
-(shim block 6). **Prefill SOLVED (2026-07-05, push-AR overlay, `PUSH_AR=1`):** the old TP=2 cold-prefill
-penalty (PP 666 vs single-card 1702) is erased by routing the big EAGER prefill all-reduces through a
-hand-rolled L0-IPC posted-write ("push") collective instead of oneCCL. Cold prefill **PP 666 -> 2174, TTFT
-3076 -> 937 ms (3.3x, win grows with length: 2.4x @512, 3.2x @8192)** -- now MATCHES single-card 1702 -- and
-**decode-neutral** (prefill-only via `PUSH_AR_MIN_NUMEL=65536`: captured decode all-reduces stay on
-graph-recordable oneCCL). gate_concurrent 18/18 with push-AR ON; KV unchanged (757k @ 256K). Long prefills
-stack **+11.5% @ 32K** via `MAXBATCH=16384 PUSH_AR_MAXB=268435456` (fewer/larger chunks = fewer AR launches;
-guardrail: a chunk's bytes must fit `PUSH_AR_MAXB` or it silently falls back to oneCCL). Serve knob
-`TP=2 PUSH_AR=1` on `rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh`; agentic parsers (tool-call qwen3_coder +
-reasoning qwen3) + API key auto-on in TP=2 DD mode. Remaining c4-aggregate gap (9.1 vs single-card 27.0) is
-the TP=2 KV-vs-throughput tradeoff, mitigated by the 3.98x warm prefix reuse for repeated long agentic prefixes.
-Serve: `MODE=fused GRAPH=1 TP=2 MTPTOK=5 MAXLEN=262144 UTIL=0.85 MAXSEQS=8 PREFIXCACHE=1 bash
-vllm/nvfp4/serve_nvfp4_27b.sh`. Full production promotion (swap the live DD + wire tool-call/reasoning parsers +
-API key) is the remaining step; the serving/coherence layer is validated (JOURNAL 2026-07-04).
+◆ **NVFP4 TP=1 fp8 KV = the single-card 128k-context config (2026-07-08).** Same NVFP4 checkpoint +
+`nvfp4_gemm_w4a16` kernel + PIECEWISE capture, on ONE card. **fp8 KV cache** (calibrated `amax/448` per-layer
+scales injected post-load by sitecustomize block 10 -- scale=1.0 is also coherent here, no clipping) gives
+**1.98x the bf16-KV context**, so a full **128k-token prompt fits on a single B70** (150k-tok pool @ UTIL=0.92;
+bf16 KV caps ~71.5k -> 128k is impossible without fp8). Proven with a real 118,856-token needle retrieval. This
+frees the second card entirely. MTP is OFF (the drafter + capture buffers would not leave room for 128k KV);
+captured decode is **25.9 t/s generic** (workload-independent -- no MTP) and it has the **best concurrency of
+the 27B configs** (c4 agg 70 t/s -- single card, no per-token TP all-reduce, no MTP-verify). fp8 KV WORKS on
+the vLLM XPU FlashAttention backend (the scales are applied -- verified); `--calculate-kv-scales` is a dead
+end on this hybrid GDN model (vLLM #37554 + config-disabled), so calibrate offline. ~200k context is
+weight-bound (24 GB resident) -> the llama.cpp GGUF route. Serve: `CARD=N TP=1 MODE=fused GRAPH=1
+MAXLEN=131072 UTIL=0.92 KV_SCALES=vllm/nvfp4/kv_scales_nvfp4_27b.json bash vllm/nvfp4/serve_nvfp4_27b.sh`.
+Details: docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md + JOURNAL 2026-07-08.
 
 † **Both 35B-A3B MoE rows re-benched on vLLM v0.24.0 (torch 2.12), 2026-07-04** (JOURNAL). Ported off the old
 v0.23 stack (int4 = `:v0230moe` baked image; w8a8 = `:v0230` + `patches/quark.py`) to `:v0240`. The XPU MoE
