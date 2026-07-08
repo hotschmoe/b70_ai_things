@@ -8901,11 +8901,11 @@ verdict -> both thrusts well-posed. Thrust 2 fix is clear + shippable (offline c
   needs a hand-written int8 kernel; go/no-go gated on the step-1 ceiling probe (is int8 actually ~2x bf16
   at prefill M on real shapes). Forks executing on cards 0 (prefill) + 1 (fp8 KV).
 
-## 2026-07-08 (session 3) -- Overnight fp8-KV + prefill campaign (Track 11h/11i)
+## 2026-07-08 (session 3) cont -- Thrust 2 fp8 KV RESULTS (card 1, TP=1)
 
-Operator: overnight GPU session, "get prefill onto INT8 XMX for NVFP4, and re-enable fp8 KV". Two thrusts run
-in parallel with a hard card-split (card 0 = prefill, card 1 = KV, NO TP=2 all session). DD taken down. This
-entry = Thrust 2 (fp8 KV); Thrust 1 (prefill) lands separately.
+(Milestone-1 investigation is the entry above; this is the GPU results for Thrust 2. Thrust 1 prefill
+lands separately. NOTE: these results REFUTE the investigation's clipping/precision theory -- scale=1.0 is
+near-lossless here, the real win is 2x context. See docs/20260708_...investigation.md POST-GPU CORRECTIONS.)
 
 ### Thrust 2 -- fp8 KV calibration + single-card 128k context (card 1, TP=1)
 premise -> the NVFP4 27B ckpt declares quantization_config.kv_cache_scheme fp8 (dynamic:False) but ships NO

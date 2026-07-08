@@ -7,6 +7,27 @@ complete. Sources: a web/vendor research pass (URLs inline) + a codex read of th
 v0.24.0 source (file:line inline). ASCII only.
 
 --------------------------------------------------------------------------------
+## POST-GPU CORRECTIONS (2026-07-08, after the experiments landed) -- READ FIRST
+
+The pre-GPU THRUST 2 theory below was PARTIALLY REFUTED by the on-box results (JOURNAL "session 3 cont"):
+- fp8 KV scale=1.0 is NEAR-LOSSLESS on this checkpoint, NOT lossy. Measured per-layer amax: K 11.7-21.8,
+  V 7.5-133.0 -- ALL far below e4m3's max of 448, so scale=1.0 does NOT clip. And e4m3 is a FLOAT (roughly
+  constant RELATIVE precision across its range), so values sitting "at the bottom of [-448,448]" are NOT
+  low-precision -- the "poor precision at the bottom of the range" reasoning below is a fixed-point
+  intuition that does not hold for a float format. fp8 scale=1.0 ran CLEAN over 3500 forced tokens on the
+  clean config (TP=1, no-MTP, v0.24.0 fused); the earlier "repetition ~tok985" did NOT reproduce and was
+  the TP=2+MTP path, not KV precision.
+- Calibration IS mechanically viable (the XPU FlashAttention backend applies the scales -- proven by 3
+  scales -> 3 distinct temp-0 hashes) and the offline calibrator + injector shipped (sitecustomize block
+  (10), serve KV_SCALES knob, kv_scales_nvfp4_27b.json). But on THIS checkpoint calibrated scales are
+  near-neutral (no clipping to fix); kept for other checkpoints / robustness.
+- The REAL, shipped win of fp8 KV is CONTEXT: fp8 = 1.98x the bf16 KV context -> 128k fits on ONE card
+  (bf16 caps ~71.5k; proven with a real 118,856-token needle retrieval). Binding constraint = weights
+  (24.11 GiB), not KV (only ~16/64 layers cache KV).
+The Thrust-1 (prefill) findings below stand (int8-XMX is the only 2x path; needs a custom K-blocked kernel).
+
+
+--------------------------------------------------------------------------------
 ## THRUST 2 -- fp8 KV cache (re-enable, calibrated, for TP=1 long context)
 
 ### Root cause of the DD repetition, sharpened
