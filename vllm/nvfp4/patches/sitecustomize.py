@@ -593,3 +593,43 @@ if os.environ.get("PUSH_AR_SO"):
               "MIN_NUMEL=" + os.environ.get("PUSH_AR_MIN_NUMEL", "0"), file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (8) push-AR overlay failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (9) graph-replay command-list RECLAIM -- re-instantiate the exec graph every N replays ---------
+# ROOT CAUSE (2026-07-08, docs/20260707_dd_mtp_piecewise_neo_abort.md): replaying a captured XPUGraph that
+# contains a cross-device collective (oneCCL OR push-AR -- transport-agnostic) accumulates L0 immediate-
+# command-list space per replay -> NEO linear_stream.h:84 overflow (the MTP drafter's ~5-replay/step burst
+# hits it at ~9-12k tok; TP=1/no-collective replays 300k clean). A queue drain does NOT reclaim it; only
+# graph RE-INSTANTIATION does. leak_matrix_reclaim.py PROVED g.instantiate() (re-finalize the exec graph
+# from the kept modifiable graph, keep_graph=True -- no re-trace) RESETS the accumulation with ZERO throughput
+# cost (inst rate DEAD FLAT at re-instantiate-every-2000 vs baseline decaying to 0.23 by 30k; stream rotation
+# does NOT reset). This block: force keep_graph=True on every XPUGraph + re-instantiate every N replays PER
+# graph. Re-instantiation happens at the TOP of that graph's own replay() -> its previous replay has completed
+# (engine re-entered forward) -> safe, never destroys an in-flight exec. Gated B70_XPU_CG_RECLAIM=N
+# (0/unset = OFF -> byte-identical). This is the FULL-SPEED fix: keeps captured+MTP (~35-40 t/s) crash-free.
+_RECLAIM_N = int(os.environ.get("B70_XPU_CG_RECLAIM", "0"))
+if _RECLAIM_N > 0:
+    try:
+        import torch as _t
+        _XG = _t.xpu.XPUGraph
+        _orig_new = _XG.__new__
+        def _keep_new(cls, keep_graph=False):
+            return _orig_new(cls, True)  # force keep_graph=True so instantiate() can re-finalize later
+        _XG.__new__ = staticmethod(_keep_new)
+        _orig_replay = _XG.replay
+        _rc_counts = {}
+        def _reclaim_replay(self):
+            k = id(self)
+            n = _rc_counts.get(k, 0) + 1
+            _rc_counts[k] = n
+            if n % _RECLAIM_N == 0:
+                try:
+                    self.instantiate()  # re-finalize exec graph -> fresh immediate command list (resets accum)
+                except Exception as _e:
+                    print("[nvfp4-shim] (9) instantiate() failed:", repr(_e), file=sys.stderr, flush=True)
+            return _orig_replay(self)
+        _XG.replay = _reclaim_replay
+        print(f"[nvfp4-shim] (9) XPUGraph RECLAIM ON: keep_graph=True + re-instantiate every {_RECLAIM_N} "
+              f"replays/graph (full-speed captured+MTP leak fix)", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (9) reclaim patch failed:", repr(e), file=sys.stderr, flush=True)
