@@ -117,6 +117,21 @@ models:
     source: { type: hf, repo: nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8 }
     notes: AMD Quark W8A8 INT8. Vision retained; no MTP head from the creator.
 
+  # ===================== nemotron-3-puzzle-75b-a9b (Nemotron-H hybrid MoE) =====================
+  - id: nemotron-3-puzzle-75b-a9b/nvfp4-modelopt
+    family: nemotron-3-puzzle-75b-a9b
+    scheme: nvfp4-modelopt
+    vision: false
+    mtp: true
+    size_gb: 54
+    served_as: nemotron-3-puzzle-75b-a9b-nvfp4   # NOT yet served/benched -- see RESEARCH_TODO 11j
+    source: { type: hf, repo: nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4 }
+    notes: NVIDIA Nemotron-H "Puzzle" 75B total / 9B active hybrid (mamba2 + attention) MoE,
+           text-only (no vision tower). ModelOpt MIXED_PRECISION NVFP4 checkpoint -- NVFP4 experts
+           (group_size 16) + FP8 attention/shared-expert, same format family as nvidia/Qwen3.6-27B-NVFP4.
+           Ships an MTP head (mtp.safetensors). model_type=nemotron_h_puzzle with custom modeling code
+           (trust-remote-code). Downloaded via curl 2026-07-08; XPU serve + bench NOT yet done.
+
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
 # Removed from disk by reorg.sh per the 2026-06-29 review (off-target or prior-gen scaffolding):
 #   google/gemma-4-12B-it            (hf) -- off-target, not Qwen3.6

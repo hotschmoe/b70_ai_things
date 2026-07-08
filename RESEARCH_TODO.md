@@ -547,6 +547,20 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       collapse (JOURNAL 2026-07-06; current fix = KV_FP8=0 -> bf16 KV, which halves KV capacity + ~2x decode
       KV BW). Path: produce calibrated k/v scales (modelopt calib pass, or compute from a calibration set and
       inject into the checkpoint) so fp8 KV is accurate -> reclaim the 757k-vs-461k KV @256K and the decode BW.
+- [ ] **11j. [NEW 2026-07-08] Serve + bench nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4.**
+      Downloaded via curl to `models/files/nemotron-3-puzzle-75b-a9b/nvfp4-modelopt/` (~54 GB; in
+      manifest.yaml as source:hf). ModelOpt MIXED_PRECISION checkpoint = NVFP4 experts (group_size 16)
+      + FP8 attention/shared-expert (same format family as our Qwen3.6 NVFP4), ships an MTP head
+      (mtp.safetensors), text-only (no vision). New arch `model_type=nemotron_h_puzzle` -- Nemotron-H
+      hybrid (mamba2 + attention) MoE, 75B total / 9B active -- with custom modeling code
+      (modeling_nemotron_h_puzzle.py, trust-remote-code). NOT yet served or benched on the box. Steps:
+      (1) check whether vLLM v0.24.0 / sglang recognize `nemotron_h_puzzle` (likely needs the remote
+      modeling files + an XPU port of the mamba2/GDN + MoE path -- compare to the Qwen3.6 GDN work);
+      (2) load + coherence-check on XPU; (3) bench decode / prefill / TTFT / KV at its own best config
+      on the 35_sweep harness -- **TP=2 required** (54 GB weights won't fit one 32 GB card); (4) if it
+      serves, add a MEASURED README row + a `rdy_to_serve/` entry. Blocker risk: our `nvfp4_gemm_w4a16`
+      oneDNN op was built for the Qwen W4A16_NVFP4 dense layout -- verify the Nemotron expert tensor
+      layout matches before expecting kernel speed (emulation-first is the fallback, cf. 11f 35B MoE).
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

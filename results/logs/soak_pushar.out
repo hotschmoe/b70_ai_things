@@ -1,0 +1,6 @@
+[pushar] served=leaktest-pushar TOKENS_PER=3000 TARGET=30000 CONC=1
+[pushar] w0 req0: +3000 tok -> 3000 total  40.1 tok/s  ok
+[pushar] w0 req1: +3000 tok -> 6000 total  32.9 tok/s  ok
+[pushar] w0 req2: +3000 tok -> 9000 total  27.9 tok/s  ok
+[pushar] w0 req3: *** HTTP 500 (engine likely dead) at 9000 tok, 367s
+=== [pushar] CRASH at 9000 tok / 367s ===

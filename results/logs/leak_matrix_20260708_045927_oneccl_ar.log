@@ -1,0 +1,23 @@
+=== leak_matrix COLL=oneccl_ar REPLAYS=60000 NUMEL=5120 ===
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank1]:[W708 04:59:34.665204426 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+[rank0]:[W708 04:59:34.665628665 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+2026:07:08-04:59:34:   40 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:07:08-04:59:34:   40 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:07:08-04:59:34:   40 |CCL_WARN| value of CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK changed to be 0 (default:1)
+2026:07:08-04:59:34:   40 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:07:08-04:59:34:   39 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:07:08-04:59:34:   39 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:07:08-04:59:34:   39 |CCL_WARN| value of CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK changed to be 0 (default:1)
+2026:07:08-04:59:34:   39 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:07:08-04:59:35:  111:[0] |CCL_WARN| no membind support for NUMA node 0, skip thread membind
+2026:07:08-04:59:35:  110:[1] |CCL_WARN| no membind support for NUMA node 0, skip thread membind
+[r0] captured COLL=oneccl_ar; replaying up to 60000 ...
+[r1] captured COLL=oneccl_ar; replaying up to 60000 ...
+[r0] replay 10000/60000  inst=16898/s cum=16898/s (inst/first=1.00)  z0=inf
+[r0] replay 20000/60000  inst=9487/s cum=12151/s (inst/first=0.56)  z0=inf
+[r0] replay 30000/60000  inst=5677/s cum=8805/s (inst/first=0.34)  z0=inf
+[r0] replay 40000/60000  inst=3536/s cum=6415/s (inst/first=0.21)  z0=inf
+[r0] replay 50000/60000  inst=2033/s cum=4482/s (inst/first=0.12)  z0=inf
+[r0] replay 60000/60000  inst=1359/s cum=3241/s (inst/first=0.08)  z0=inf

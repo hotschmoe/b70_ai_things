@@ -282,6 +282,15 @@ root-caused. DFlash remains a one-flag research option: `DFLASH=1` (serve.sh tog
 `vllm/twopoint_decode_tps.py`; full analysis in `vllm/DFLASH_XPU.md`. Decode/prefill (the IN=2048 numbers) are
 independent of max-model-len; only KV scales.
 
+## Incoming (downloaded, NOT yet served/benched)
+
+- **`nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4`** -- a Nemotron-H hybrid (mamba2 + attention)
+  MoE, 75B total / 9B active, text-only, ModelOpt NVFP4 (NVFP4 experts group_size 16 + FP8 attention,
+  bf16 MTP head). On disk at `models/files/nemotron-3-puzzle-75b-a9b/nvfp4-modelopt/` (~54 GB, curl-fetched
+  2026-07-08; in `models/manifest.yaml` as source:hf). New `nemotron_h_puzzle` arch -- **serve + bench is an
+  open TODO** (RESEARCH_TODO Track 11j): needs the arch recognized on a backend (vLLM/sglang, trust-remote-code
+  modeling + XPU mamba2/MoE port) and a TP=2 config (won't fit one 32 GB card). No numbers yet.
+
 ## Where to look
 
 - `AGENTS.md` (= `CLAUDE.md`) -- standing rules, backend-split layout contract, shelf rules.

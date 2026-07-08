@@ -1,0 +1,45 @@
+gpu-run: [b70s4dayz] acquired card(s) 0 1 -> bash vllm/nvfp4/run_leak_matrix.sh
+=== leak_matrix: MODES='pushar oneccl_ar block3_oneccl block3_pushar oneccl_ag' REPLAYS=500000 IMG=vllm-xpu-env:int8g-v0240 ===
+
+######## COLL=pushar (port 29701) ########
+=== leak_matrix COLL=pushar REPLAYS=500000 NUMEL=5120 ===
+[argraph r0] setup_torch OK
+[argraph r1] setup_torch OK
+[argraph r0] exchange OK (scratch + shm barrier + IPC event pool)
+[r0] push-AR setup ok
+[argraph r1] exchange OK (scratch + shm barrier + IPC event pool)
+[r1] push-AR setup ok
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W708 04:55:11.303111854 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+[rank1]:[W708 04:55:11.304430538 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+2026:07:08-04:55:11:   39 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:07:08-04:55:11:   39 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:07:08-04:55:11:   39 |CCL_WARN| value of CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK changed to be 0 (default:1)
+2026:07:08-04:55:11:   39 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:07:08-04:55:11:   40 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:07:08-04:55:11:   40 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:07:08-04:55:11:   40 |CCL_WARN| value of CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK changed to be 0 (default:1)
+2026:07:08-04:55:11:   40 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:07:08-04:55:12:  110:[1] |CCL_WARN| no membind support for NUMA node 0, skip thread membind2026:07:08-04:55:12:  111:[0] |CCL_WARN| no membind support for NUMA node 0, skip thread membind
+
+[r0] captured COLL=pushar; replaying up to 500000 ...
+[r1] captured COLL=pushar; replaying up to 500000 ...
+[r0] replay 10000/500000  (16569/s)  z0=inf
+[r0] replay 20000/500000  (11863/s)  z0=inf
+[r0] replay 30000/500000  (8256/s)  z0=inf
+[r0] replay 40000/500000  (5503/s)  z0=inf
+[r0] replay 50000/500000  (3811/s)  z0=inf
+[r0] replay 60000/500000  (2863/s)  z0=inf
+[r0] replay 70000/500000  (2282/s)  z0=inf
+[r0] replay 80000/500000  (1883/s)  z0=inf
+[r0] replay 90000/500000  (1597/s)  z0=inf
+[r0] replay 100000/500000  (1386/s)  z0=inf
+[r0] replay 110000/500000  (1223/s)  z0=inf
+[r0] replay 120000/500000  (1096/s)  z0=inf
+[r0] replay 130000/500000  (995/s)  z0=inf
+[r0] replay 140000/500000  (912/s)  z0=inf
+[r0] replay 150000/500000  (842/s)  z0=inf
+[r0] replay 160000/500000  (782/s)  z0=inf
+Terminated                 "$@"
+gpu-run: [b70s4dayz] done in 243s (exit 143)

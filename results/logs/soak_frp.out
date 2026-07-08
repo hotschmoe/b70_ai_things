@@ -1,0 +1,5 @@
+[frp] served=leaktest-frp TOKENS_PER=3000 TARGET=16000 CONC=1
+[frp] w0 req0: +3000 tok -> 3000 total  35.6 tok/s  ok
+[frp] w0 req1: +3000 tok -> 6000 total  28.7 tok/s  ok
+[frp] w0 req2: *** HTTP 500 (engine likely dead) at 6000 tok, 347s
+=== [frp] CRASH at 6000 tok / 347s ===

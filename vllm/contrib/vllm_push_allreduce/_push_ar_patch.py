@@ -103,6 +103,15 @@ def _install():
                       flush=True)
             return ok
 
+    _pcnt = {"graph": 0, "eager": 0, "fallback": 0}
+
+    def _pdbg(kind):
+        _pcnt[kind] += 1
+        n = _pcnt[kind]
+        if n <= 2 or n % 5000 == 0:
+            print(f"[push_ar] all_reduce path={kind} count={n} "
+                  f"(graph={_pcnt['graph']} eager={_pcnt['eager']} fallback={_pcnt['fallback']})", flush=True)
+
     def all_reduce(self, input_):
         if (self.world_size == 2 and input_.is_contiguous()
                 and input_.dtype in DT
@@ -112,6 +121,7 @@ def _install():
             # CAPTURED decode: device-side event sync -> records into torch's XPUGraph (K.6). Capture happens
             # on a dedicated stream, so pass THAT stream's queue (NOT the setup queue) per call.
             if GRAPH and hasattr(lib, "ar_allreduce_graph") and _is_capturing():
+                _pdbg("graph")
                 out = input_.clone()
                 q = torch.xpu.current_stream().sycl_queue
                 lib.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
@@ -119,10 +129,12 @@ def _install():
                 return out
             # EAGER (prefill / warmup): host-barrier push, gated by MIN_NUMEL (small -> oneCCL fallback).
             if input_.numel() >= MIN_NUMEL:
+                _pdbg("eager")
                 out = input_.clone()
                 lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(out.data_ptr()),
                                         out.numel() * out.element_size(), DT[input_.dtype])
                 return out
+        _pdbg("fallback")
         return _orig_all_reduce(self, input_)
 
     XpuCommunicator.all_reduce = all_reduce

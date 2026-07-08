@@ -8781,5 +8781,45 @@ verdict -> [KEY] oneCCL 2021.17.2 records CLEANLY in a raw XPUGraph (recording q
 config -> NVFP4 TP=2 fused GRAPH=1 MTP5 KV_FP8=0 PUSH_AR=1 PUSH_AR_GRAPH=1 CAPSIZES=1,2,4,8 (the config that
   crashes at ~8-12k tok) + B70_EXTRA_ENV=CCL_SYCL_FORCE_RECORDING_PATH=1 + B70_DEBUG=1 (faulthandler).
 command -> NAME=b70_leaktest PORT=18080 ... ./bin/gpu-run bash vllm/nvfp4/serve_nvfp4_27b.sh start; soak with
-  vllm/nvfp4/bisect_probe.py (forced-decode, ignore_eos) past the baseline crash.
-result -> (pending; warming up)
+  vllm/nvfp4/soak_leak.py (forced-decode, ignore_eos, 3000 tok/req).
+result -> [FAILED] serve came up healthy + FULL speed (35.6 t/s captured+MTP, coherent) but CRASHED at
+  ~6-9k tok (2 linear_stream aborts), == baseline. SMOKING GUN in the log during capture:
+  "|CCL_WARN| trying to force recording on null stream; falling back to non-recording". vLLM's
+  ProcessGroupXCCL hands oneCCL the NULL/default stream, so oneCCL cannot put it in recording state even
+  with FORCE_RECORDING=1 -> silently falls back to the leaking non-recording path.
+verdict -> (A) does NOT fix it as a bare env: the blocker is the null-stream, not oneCCL capability. This
+  ALSO warns that a bare #2992 backport may not suffice unless the collective is submitted on a real
+  recording queue. push-AR sidesteps all of this (native L0, no oneCCL, no stream-state dependency) -> (B).
+
+### TEST (B): route block (3) drafter all_gather through push-AR (rebuild-free shim)
+config -> same CRASHING captured+MTP config, NO force-recording; sitecustomize (3) line 316 changed from
+  raw dist.all_reduce(buf) [oneCCL] to self.all_reduce(buf) [push-AR capturable graph path] when
+  PUSH_AR_SO + PUSH_AR_GRAPH=1 -> NO oneCCL collective anywhere in the captured MTP graph.
+result -> (pending)
+result -> [FAILED] crashed at ~9-12k tok (2 linear_stream aborts), == baseline. Faulthandler traceback:
+  torch/xpu/graphs.py:107 replay -> qwen3_5_mtp.py:426 forward (DRAFTER) -> llm_base_proposer.py:667 propose.
+verdict -> (B) does not fix it. INSTRUMENTATION (block(3) + push-AR path counters) revealed WHY, and it
+  CORRECTS the 2026-07-07 root cause:
+  - block(3) all_gather fires with capturing=False, numel=10485760 -- it is a big EAGER op (the
+    gather_output=True head, qwen3_5_mtp.py:93), NOT in the captured graph at all. Routing it to push-AR
+    was irrelevant to the in-graph leak.
+  - the collective actually INSIDE the captured drafter graph is the row-parallel all_reduce, and it is
+    ALREADY push-AR (path=graph in the counters) -- ZERO oneCCL. Yet it still crashes.
+
+### ROOT CAUSE CORRECTED (2026-07-08): the leak is TRANSPORT-AGNOSTIC, not oneCCL-specific
+The captured MTP-drafter graph crashes with push-AR (native L0, no oneCCL) as its only in-graph collective.
+So the linear_stream.h:84 overflow is NOT "a oneCCL collective that cannot be graph-recorded" (the
+2026-07-07 conclusion). It is: ANY cross-device collective recorded into the drafter's HIGH-FREQUENCY
+replayed graph (propose fires ~spec x pieces replays/step with NO host sync between draft steps) accumulates
+L0 immediate-command-list space per replay that resets only on graph RE-INSTANTIATION (not on queue
+drain/sync -- matches the 2026-07-07 FIX-SYNC + execute_graph negatives). Corroborated by:
+- microbench leak_matrix: oneCCL AND push-AR both decay identically under raw-XPUGraph replay.
+- TP=1 (no in-graph collective) = 300k replays clean; TP=2 (any collective) accumulates.
+- (A) FORCE_RECORDING failed (null-stream fallback); (B) push-AR-block3 failed (in-graph collective was
+  already push-AR).
+CONSEQUENCE: the oneCCL-upgrade / torch-xpu-ops#2992 path is the WRONG LAYER for THIS leak (it addresses
+oneCCL capture-safety; our in-graph collective isn't even oneCCL). The real full-speed fix is a torch/L0
+graph-REPLAY command-list reclaim (reset/re-instantiate per N replays, or a per-replay fresh immediate
+command list) -- NOT a collective-transport change. RESEARCH_TODO 11h to be re-pointed.
+The PROVEN shippable fix remains DRAFTER-EAGER (B70_XPU_DRAFTER_EAGER=1): removes the drafter's captured
+replays (the accumulator), keeps MTP + target capture, ~22-26 t/s, validated 44k clean 2026-07-07.

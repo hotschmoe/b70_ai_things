@@ -1,0 +1,26 @@
+=== leak_matrix COLL=pushar REPLAYS=5000 NUMEL=5120 ===
+[argraph r1] setup_torch OK
+[argraph r0] setup_torch OK
+[argraph r0] exchange OK (scratch + shm barrier + IPC event pool)
+[r0] push-AR setup ok
+[r1] push-AR setup ok
+[argraph r1] exchange OK (scratch + shm barrier + IPC event pool)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W708 04:54:43.171840418 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+[rank1]:[W708 04:54:43.173629419 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+2026:07:08-04:54:43:   39 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:07:08-04:54:43:   39 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:07:08-04:54:43:   39 |CCL_WARN| value of CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK changed to be 0 (default:1)
+2026:07:08-04:54:43:   39 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:07:08-04:54:43:   40 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:07:08-04:54:43:   40 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:07:08-04:54:43:   40 |CCL_WARN| value of CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK changed to be 0 (default:1)
+2026:07:08-04:54:43:   40 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:07:08-04:54:44:  110:[1] |CCL_WARN| no membind support for NUMA node 0, skip thread membind2026:07:08-04:54:44:  111:[0] |CCL_WARN| no membind support for NUMA node 0, skip thread membind
+
+[r1] captured COLL=pushar; replaying up to 5000 ...
+[r0] captured COLL=pushar; replaying up to 5000 ...
+[r0] CLEAN: COLL=pushar survived 5000 replays in 0.3s -- NO linear_stream abort
+[r1] CLEAN: COLL=pushar survived 5000 replays in 0.3s -- NO linear_stream abort
+=== COLL=pushar PASS (both ranks clean) ===

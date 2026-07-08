@@ -1,0 +1,6 @@
+=== KV_FP8=0: fp8 KV cache DISABLED (bf16 KV, kv_cache_scheme stripped) ===
+=== B70_DEBUG=1 -> faulthandler ===
+=== B70_EXTRA_ENV -> ZE_ENABLE_VALIDATION_LAYER=1 ZE_ENABLE_PARAMETER_VALIDATION=1 ZEL_ENABLE_BASIC_LEAK_CHECKER=1 UR_L0_LEAKS_DEBUG=1 UR_LOG_LEVEL=info ===
+70ac7c7a74d0518d2ad15ba7cb35fea60669070e25e45dae9cc073f50657086b
+container nvfp4_leak up; follow with: docker logs -f nvfp4_leak
+health: curl -s http://localhost:8078/health
