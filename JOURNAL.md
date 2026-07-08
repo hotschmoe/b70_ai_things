@@ -8943,3 +8943,37 @@ verdict -> [SHIPPED] fp8 KV is SAFE and is the ONLY way to reach 128k on ONE car
   scales = a near-neutral robustness artifact (no clipping on this ckpt); scale=1.0 already coherent. A single-
   card long-ctx serve = fp8 KV (default) TP=1, 128k proven. The old "uncalibrated fp8 KV = repetition" is
   reframed: not reproduced on the clean single-card path.
+
+## 2026-07-08 (session 3) cont -- Thrust 1 prefill INT8-XMX = QUALIFIED DEAD-END (card 0, TP=1)
+
+Full evidence + prototypes: vllm/nvfp4/proto_blockscale/ (README + bench_penalty.cpp + bs_dpas_m*.cpp),
+vllm/nvfp4/{int8_prefill_ceiling.py,validate_w4a8.py}, kernels/nvfp4_gemm_w4a8.h.
+
+premise -> reroute NVFP4 MLP prefill from bf16-compute (nvfp4_gemm_w4a16, f4->bf16 decompress) to INT8 XMX
+  for the ~2x W8A8 gets. E2M1x2 is exact s8 -> repack lossless. Question: does the 2x survive NVFP4's
+  per-16-K block scale on Xe2 DPAS.
+THE WALL (fundamental) -> Xe2 int8 DPAS reduces K=32/instr (that depth IS int8's 2x-over-bf16; bf16 DPAS
+  does K=16). NVFP4 block scale changes every 16 K -> a per-16 scale can't apply to an s32 accumulator that
+  summed 32 elems across 2 different-scaled blocks -> correct block-scaled int8 is FORCED to K=16 DPAS
+  (zero-pad upper 16, rescale/group) = SAME useful MACs/instr as bf16. The int8 2x is spent on the
+  sub-K-depth blocking. (MXFP8 group=32 would NOT hit this; specific to NVFP4 group=16.)
+results (card 0, int8g-v0240) ->
+  1. int8_prefill_ceiling.py (real oneDNN ops, gate/up N=17408 K=5120): plain per-channel int8_w8a8 =
+     1.93-2.23x bf16, 2.24-2.61x the current w4a16 path -> pure INT8 ceiling is REAL. BUT per-channel is
+     numerically WRONG for NVFP4 (collapses the per-16 block scale). Also: current w4a16 = 0.83-0.86x bf16
+     on gate/up (14% SLOWER than bf16 -- the price of 4-bit residency).
+  2. bench_penalty.cpp (register-resident, decode amortized): PCI per-channel 239 TOPS, BS block-scaled(g16)
+     157, BSD +E2M1-decode 12.7 (M=8 artifact). Correct block-scaled int8 tops ~157 useful TOPS ~= bf16
+     183 peak -> ~1.3x bf16 best case, NOT 2x.
+  3. oneDNN W4A8 (nvfp4_gemm_w4a8.h + validate_w4a8.py): numerically CORRECT (relerr 3.2-3.8e-3) but ~459ms
+     /M=512 = ~570x slower -> oneDNN has NO fast block-scaled int8 (falls to reference). Confirmed.
+  4. bs_dpas_m3.cpp (hand tiled ESIMD GEMM, 4-bit-resident E2M1 decode, real shape): CORRECT (relerr 2.7e-3)
+     but M=512 = 9.56ms (9.6 TOPS) ~= 13x SLOWER than bf16. A naive first-cut GEMM sits ~10 TOPS vs the
+     157 register-resident ceiling -> reaching even ~1.3x needs a full XeTLA/CUTLASS-quality mainloop.
+verdict -> [QUALIFIED DEAD-END] NVFP4 int8-XMX prefill not worth production on B70: ceiling only ~1.3x bf16
+  (group16<K32 eats the 2x), oneDNN refuses, realizing ~1.3x needs a from-scratch optimized ESIMD/XeTLA
+  GEMM. Current bf16 nvfp4_gemm_w4a16 stays. User's E2M1x2->s8->int8 idea was sound (exact repack), defeated
+  by DPAS granularity, not a bug. FUTURE LEVER (documented, unbuilt): dot32+correction pairs 2 groups as
+  bg1*dot32 + (bg0-bg1)*dot16 = 1.5 DPAS/2groups -> ~1.5-1.7x, but still needs the optimized GEMM first.
+  NOTE: 2 sub-agents + a fork stalled mid-run on API errors tonight; results above were recovered by the
+  coordinator re-running the built binaries directly (all clean, cards free after).

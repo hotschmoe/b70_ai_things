@@ -24,7 +24,14 @@ The pre-GPU THRUST 2 theory below was PARTIALLY REFUTED by the on-box results (J
 - The REAL, shipped win of fp8 KV is CONTEXT: fp8 = 1.98x the bf16 KV context -> 128k fits on ONE card
   (bf16 caps ~71.5k; proven with a real 118,856-token needle retrieval). Binding constraint = weights
   (24.11 GiB), not KV (only ~16/64 layers cache KV).
-The Thrust-1 (prefill) findings below stand (int8-XMX is the only 2x path; needs a custom K-blocked kernel).
+- THRUST 1 (prefill int8-XMX) RESULT (card 0): QUALIFIED DEAD-END. The pure int8 ceiling is real (~2x bf16,
+  per-channel) but numerically WRONG for NVFP4; a CORRECT block-scaled int8 GEMM is capped at ~1.3x bf16
+  because NVFP4's group_size=16 < the Xe2 int8 DPAS K-depth of 32 (forces a K=16 DPAS = same useful MACs/instr
+  as bf16, spending the int8 2x on sub-K-depth blocking). oneDNN has no fast block-scaled int8 (reference,
+  ~570x slow); a hand ESIMD tiled GEMM is correct but ~10 TOPS (needs a full XeTLA-quality mainloop to reach
+  ~1.3x). Not worth production. Details: vllm/nvfp4/proto_blockscale/README.md + JOURNAL "session 3 cont".
+  The Thrust-1 SECTION BELOW captured the pre-GPU expectation (int8 = the 2x path) -- read it with THIS
+  correction: the 2x does not survive NVFP4's group-16 block scale on Xe2.
 
 
 --------------------------------------------------------------------------------
