@@ -497,9 +497,17 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       into the parked PR set (Track 1f) -- applies to nvfp4_gemm_w4a16, int8 ops, w4a8 ops alike.
 - [ ] **11e. Harder evals on the champion** (agentic code, long-context) before promoting it past
       "quality pick" toward daily-driver conversations (it lacks KV for that today; see 11c).
-- [ ] **11h. [MED -- REBUILD-FREE PATHS EXHAUSTED; ship drafter-eager] Fix the MTP-verify-in-piecewise-cudagraph
-      NEO command-stream leak.** [REFRAMED 2026-07-07; ROOT CAUSE CORRECTED 2026-07-08 -- see
+- [x] **11h. [SOLVED 2026-07-08 -- XPUGraph re-instantiation reclaim] Fix the MTP-verify-in-piecewise-cudagraph
+      NEO command-stream leak.** [REFRAMED 2026-07-07; ROOT CAUSE CORRECTED + SOLVED 2026-07-08 -- see
       docs/20260707_dd_mtp_piecewise_neo_abort.md.]
+      **SOLVED: re-instantiate each captured torch.xpu.XPUGraph every N replays (keep_graph=True + g.instantiate(),
+      no re-trace) RESETS the accumulating L0 immediate-command-list -> captured+MTP runs crash-free at FULL speed
+      (~38 t/s). sitecustomize block (9), B70_XPU_CG_RECLAIM=N, now DEFAULT ON (=1000) for GRAPH=1 in
+      serve_nvfp4_27b.sh. Validated: 27k single-stream FLAT 38 t/s + 36k 6-way concurrent, 0 aborts, coherent.
+      keep_graph gotcha: consumed in __init__ (not just __new__) -> force via subclass. Winning reclaim = INSTANTIATE
+      (stream rotation does NOT reset -- torch.xpu.Stream returns pool queues). DD promoted to this config. The
+      oneCCL-upgrade/#2992 path was the WRONG LAYER and is stood down. Diagnostics: leak_matrix_reclaim.py,
+      soak_leak.py.**
       **CORRECTION 2026-07-08 (GPU-tested A/B + instrumentation): the leak is TRANSPORT-AGNOSTIC, NOT the oneCCL
       collective. The crashing config already runs the drafter's in-graph all_reduce over PUSH-AR (native L0,
       ZERO oneCCL) and STILL crashes ~9-12k tok, identical traceback. block(3) all_gather is EAGER (not in the

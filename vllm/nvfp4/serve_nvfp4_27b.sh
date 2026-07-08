@@ -258,6 +258,15 @@ fi
 EXTRA_ENV=( )
 if [ "${B70_DEBUG:-0}" != 0 ]; then EXTRA_ENV+=( -e PYTHONFAULTHANDLER=1 -e PYTHONUNBUFFERED=1 ); echo "=== B70_DEBUG=${B70_DEBUG} -> faulthandler ===" >&2; fi
 if [ -n "${B70_EXTRA_ENV:-}" ]; then for kv in ${B70_EXTRA_ENV}; do EXTRA_ENV+=( -e "$kv" ); done; echo "=== B70_EXTRA_ENV -> ${B70_EXTRA_ENV} ===" >&2; fi
+# NEO-leak FULL-SPEED fix (2026-07-08, sitecustomize block 9): re-instantiate each captured XPUGraph every N
+# replays to RESET the L0 immediate-command-list accumulation that overflows NEO (linear_stream.h:84) under
+# captured graphs (fatal ~9-12k tok with MTP; slow ~290k without). Validated: NVFP4 captured+MTP soak 27k
+# single-stream FLAT 38 t/s + 36k 6-way concurrent, 0 aborts. Default ON (=1000) for GRAPH=1 (0 throughput
+# cost, gated _RECLAIM>0 -> no-op when off). Opt out with CGRECLAIM=0; override cadence with CGRECLAIM=N.
+if [ "$GRAPH" = 1 ] && [[ "${B70_EXTRA_ENV:-}" != *B70_XPU_CG_RECLAIM* ]]; then
+  EXTRA_ENV+=( -e "B70_XPU_CG_RECLAIM=${CGRECLAIM:-1000}" )
+  echo "=== NEO-leak reclaim ON: B70_XPU_CG_RECLAIM=${CGRECLAIM:-1000} (re-instantiate captured graphs) ===" >&2
+fi
 # B70_EXTRA_MOUNTS="host:container[:ro] ..." -> extra -v binds (e.g. overlay the patched
 # libtorch_xpu.so over the prebuilt one to validate the submit_without_event NEO-abort fix).
 EXTRA_MOUNTS=( )
