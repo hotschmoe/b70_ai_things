@@ -639,3 +639,109 @@ if _RECLAIM_N > 0:
               f"{_RECLAIM_N} replays/graph (full-speed captured+MTP leak fix)", file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (9) reclaim patch failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (10) fp8 KV cache offline calibration + calibrated-scale injection (Track 11h) --------------
+# The ModelOpt NVFP4 checkpoint declares quantization_config.kv_cache_scheme (static fp8 KV) but ships
+# NO k/v scales, so BaseKVCacheMethod falls back to scale=1.0 (kv_cache.py:148 warning). On this hybrid
+# GDN model uncalibrated fp8 KV clips the model's massive-activation K/V channels (|x| can exceed the
+# e4m3 max of 448) -> error that ACCUMULATES over generation -> degenerate repetition late. Fix = load
+# per-full-attention-layer calibrated per-tensor DEQUANT scales (scale = amax/448; store = real/scale,
+# read = fp8*scale). Both modes DEFAULT OFF (byte-identical when both env vars unset).
+#
+#   NVFP4_KV_CALIB_OUT=/path.json  -> wrap Attention.forward to record running max|K|,max|V| per
+#       layer_name for fp8-KV (full-attention) layers; K/V here are post-RoPE/post-norm, exactly the
+#       tensors written to cache. Dumps {layer_name:{k_amax,v_amax,n}} every NVFP4_KV_CALIB_EVERY
+#       (default 40) forwards + atexit. Run under GRAPH=0 (the .item() sync breaks torch.compile).
+#   NVFP4_KV_SCALES_FILE=/path.json (dict {layer_name:{k_scale,v_scale}}) -> after the stock
+#       BaseKVCacheMethod.process_weights_after_loading runs (sets 1.0 + warns), overwrite the runtime
+#       layer._k_scale/_v_scale (+ _float host mirrors) with the calibrated scalars. No checkpoint /
+#       safetensors-index edit (weights stay read-only mounted).
+_KV_CALIB_OUT = os.environ.get("NVFP4_KV_CALIB_OUT")
+if _KV_CALIB_OUT:
+    try:
+        import torch as _tk
+        import json as _jk
+        import threading as _thk
+        import atexit as _atk
+        from vllm.model_executor.layers.attention.attention import Attention as _AttnCls
+        _kv_calib = {}                      # layer_name -> [k_amax, v_amax, n]
+        _kv_calib_lock = _thk.Lock()
+        _kv_calib_every = int(os.environ.get("NVFP4_KV_CALIB_EVERY", "40"))
+        _kv_calib_ctr = [0]
+        _orig_attn_fwd = _AttnCls.forward
+
+        def _kv_calib_dump():
+            with _kv_calib_lock:
+                snap = {k: {"k_amax": v[0], "v_amax": v[1], "n": v[2]} for k, v in _kv_calib.items()}
+            tmp = _KV_CALIB_OUT + ".tmp"
+            with open(tmp, "w") as f:
+                _jk.dump(snap, f, indent=1, sort_keys=True)
+            os.replace(tmp, _KV_CALIB_OUT)
+
+        def _kv_calib_fwd(self, query, key, value, output_shape=None):
+            try:
+                if (key is not None and value is not None
+                        and str(getattr(self, "kv_cache_dtype", "")).startswith("fp8")):
+                    ka = float(key.detach().abs().amax().item())
+                    va = float(value.detach().abs().amax().item())
+                    ln = getattr(self, "layer_name", "?")
+                    with _kv_calib_lock:
+                        e = _kv_calib.get(ln)
+                        if e is None:
+                            _kv_calib[ln] = [ka, va, 1]
+                        else:
+                            if ka > e[0]:
+                                e[0] = ka
+                            if va > e[1]:
+                                e[1] = va
+                            e[2] += 1
+                    _kv_calib_ctr[0] += 1
+                    if _kv_calib_ctr[0] % _kv_calib_every == 0:
+                        _kv_calib_dump()
+            except Exception:
+                pass
+            return _orig_attn_fwd(self, query, key, value, output_shape)
+
+        _AttnCls.forward = _kv_calib_fwd
+        _atk.register(_kv_calib_dump)
+        print("[nvfp4-shim] (10) KV CALIB mode ON -> %s (every %d fwds)" % (_KV_CALIB_OUT, _kv_calib_every),
+              file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (10) KV calib patch failed:", repr(e), file=sys.stderr, flush=True)
+
+_KV_SCALES_FILE = os.environ.get("NVFP4_KV_SCALES_FILE")
+if _KV_SCALES_FILE:
+    try:
+        import json as _js
+        from vllm.model_executor.layers.quantization.kv_cache import (
+            BaseKVCacheMethod as _BKV,
+        )
+        with open(_KV_SCALES_FILE) as f:
+            _kv_scales = _js.load(f)
+        _orig_pwal = _BKV.process_weights_after_loading
+        _kv_inj_ctr = [0]
+
+        def _pwal_inject(self, layer):
+            _orig_pwal(self, layer)
+            try:
+                ln = getattr(layer, "layer_name", None)
+                rec = _kv_scales.get(ln) if ln is not None else None
+                if rec is not None and hasattr(layer, "_k_scale"):
+                    ks = float(rec["k_scale"])
+                    vs = float(rec["v_scale"])
+                    layer._k_scale.fill_(ks)
+                    layer._v_scale.fill_(vs)
+                    layer._k_scale_float = ks
+                    layer._v_scale_float = vs
+                    _kv_inj_ctr[0] += 1
+                    print("[nvfp4-shim] (10) injected KV scales %s: k=%.5g v=%.5g" % (ln, ks, vs),
+                          file=sys.stderr, flush=True)
+            except Exception as ee:
+                print("[nvfp4-shim] (10) inject failed for layer:", repr(ee), file=sys.stderr, flush=True)
+
+        _BKV.process_weights_after_loading = _pwal_inject
+        print("[nvfp4-shim] (10) KV SCALE INJECT mode ON -> %s (%d layers in file)"
+              % (_KV_SCALES_FILE, len(_kv_scales)), file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (10) KV scale inject patch failed:", repr(e), file=sys.stderr, flush=True)

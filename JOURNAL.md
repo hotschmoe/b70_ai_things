@@ -8900,3 +8900,46 @@ result (prefill int8) -> corrected ceiling: int4/int2 x int8 DPAS = SAME rate as
 verdict -> both thrusts well-posed. Thrust 2 fix is clear + shippable (offline calib + inject). Thrust 1
   needs a hand-written int8 kernel; go/no-go gated on the step-1 ceiling probe (is int8 actually ~2x bf16
   at prefill M on real shapes). Forks executing on cards 0 (prefill) + 1 (fp8 KV).
+
+## 2026-07-08 (session 3) -- Overnight fp8-KV + prefill campaign (Track 11h/11i)
+
+Operator: overnight GPU session, "get prefill onto INT8 XMX for NVFP4, and re-enable fp8 KV". Two thrusts run
+in parallel with a hard card-split (card 0 = prefill, card 1 = KV, NO TP=2 all session). DD taken down. This
+entry = Thrust 2 (fp8 KV); Thrust 1 (prefill) lands separately.
+
+### Thrust 2 -- fp8 KV calibration + single-card 128k context (card 1, TP=1)
+premise -> the NVFP4 27B ckpt declares quantization_config.kv_cache_scheme fp8 (dynamic:False) but ships NO
+  k/v scales (confirmed: 0 k_scale/v_scale tensors in the safetensors index; HF hf_quant_config kv_cache_quant
+  _algo="FP8" with none exported) -> vLLM falls back to scale=1.0. Goal: calibrate + shrink KV -> TP=1 >=128k.
+GO (proven on box) -> the XPU attention backend (FlashAttention v2, platforms/xpu.py:86; reshape_and_cache_flash
+  gets layer._k_scale/_v_scale on write, k/v_descale on read) DOES apply the scales: 3 injected scales -> 3
+  distinct temp-0 output hashes (1.0=ee638f9e, calibrated=9fecce77, extreme0.001=90ee710d); the extreme scale
+  broke needle retrieval, 1.0/calibrated retrieved. Scale is consumed -> calibration is mechanically viable.
+--calculate-kv-scales = DEAD END for this arch -> HybridAttentionMambaModelConfig.verify_and_update_config
+  (model_executor/models/config.py:277-289) hard-disables it for GDN/Mamba hybrids (uninitialized recurrent
+  state corrupts the single-pass calib). Matches vLLM #37554. Qwen3_5ForConditionalGeneration maps there.
+REPETITION DID NOT REPRODUCE (clean config v0.24.0 fused TP=1 no-MTP GRAPH=1) -> fp8 scale=1.0 ran CLEAN over
+  3500 forced tokens, gate 4/4 (Paris/17+26=43/Au), needle @6546 OK. Calibration shows WHY: per-layer K amax
+  11.7-21.8, V amax 7.5-133.0 -- ALL far below e4m3 max 448 -> NO clipping -> for a float format scale=1.0 is
+  near-lossless. So fp8-KV precision was likely NOT the sole cause of the earlier DD repetition (that was the
+  TP=2+MTP path, forbidden this session). Reframes the 2026-07-06 fault #1.
+PAYOFF (the real win) -> fp8 KV = 1.98x context (exactly 2x). MODE=fused MAXLEN=131072 MAXSEQS=1, weights
+  resident 24.11 GiB:
+    UTIL=0.90  KV 3.89 GiB -> fp8 121,600 tok vs bf16 ~60,800   (32.4 vs 64.8 KB/tok)
+    UTIL=0.92  KV 4.53 GiB -> fp8 141,866 (pool) vs bf16 71,552
+  128k FITS on ONE card with fp8 KV (1.08x @0.92); bf16 caps 71.5k -> 128k IMPOSSIBLE without fp8 KV. Proven:
+  real 118,856-token needle prompt retrieved '7391-ZULU', coherent, 295s. Binding constraint = WEIGHTS (24.11 of
+  ~31 GiB), not KV (only 16/64 layers cache KV). ~200k not reachable on one card (needs ~6.5 GiB fp8 KV; UTIL
+  ~0.97 risks activation OOM). Realistic single-card fp8 ceiling ~128k-150k.
+llama.cpp (assessment only) -> Q4_K_M GGUF (~16-17 GB, ~8 GB < vLLM 24.11) + -fa -ctk/-ctv q8_0 (~320k) / q4_0
+  (~600k) makes 128k trivial + 200k reachable (weight footprint is the lever). On-GPU SYCL serve for this arch
+  UNVALIDATED on box (CPU coherence only); Q8_0 historically ~4x slower on B70. Strongest max-ctx fallback,
+  unproven here.
+artifacts (all DEFAULT-OFF; shelf/DD byte-identical when unset) -> sitecustomize block (10): NVFP4_KV_CALIB_OUT
+  (amax recorder, GRAPH=0) + NVFP4_KV_SCALES_FILE (post-load injector -> layer._k_scale/_v_scale). serve script
+  KV_SCALES=/path knob. vllm/nvfp4/{kv_scales_nvfp4_27b.json (16 layers), kv_amax_nvfp4_27b.json, kv_calibrate.py,
+  kv_make_scales.py, kv_gate.py}.
+verdict -> [SHIPPED] fp8 KV is SAFE and is the ONLY way to reach 128k on ONE card (2x ctx, proven). Calibrated
+  scales = a near-neutral robustness artifact (no clipping on this ckpt); scale=1.0 already coherent. A single-
+  card long-ctx serve = fp8 KV (default) TP=1, 128k proven. The old "uncalibrated fp8 KV = repetition" is
+  reframed: not reproduced on the clean single-card path.

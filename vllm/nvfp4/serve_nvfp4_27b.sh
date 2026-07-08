@@ -229,6 +229,22 @@ elif [ "${KV_FP8:-1}" = 0 ]; then
   echo "=== KV_FP8=0: fp8 KV cache DISABLED (bf16 KV, kv_cache_scheme stripped) ==="
 fi
 
+# KV_SCALES=/host/scales.json -> load offline-calibrated per-full-attention-layer fp8 KV dequant scales
+# (scale = amax/448) into layer._k_scale/_v_scale via sitecustomize block (10). Only meaningful with
+# fp8 KV (KV_FP8=1, the default). Default empty = OFF (stock scale=1.0). Track 11h finding: on this
+# model K/V amax (~22 / ~133) are far below the e4m3 max of 448 so scale=1.0 does NOT clip and
+# calibrated scales are near-neutral; the knob is kept for completeness / other checkpoints. Artifact:
+# vllm/nvfp4/kv_scales_nvfp4_27b.json (built by kv_calibrate.py + kv_make_scales.py). Default-off ->
+# the shelf/DD serve is byte-identical.
+KV_SCALES="${KV_SCALES:-}"
+KV_SCALES_MOUNTS=( ); KV_SCALES_ENV=( )
+if [ -n "$KV_SCALES" ]; then
+  [ -f "$KV_SCALES" ] || { echo "MISSING KV_SCALES $KV_SCALES"; exit 1; }
+  KV_SCALES_MOUNTS=( -v "$KV_SCALES:/opt/kv_scales.json:ro" )
+  KV_SCALES_ENV=( -e NVFP4_KV_SCALES_FILE=/opt/kv_scales.json )
+  echo "=== KV_SCALES ON -> $KV_SCALES (calibrated fp8 KV dequant scales, block 10) ==="
+fi
+
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
 # card/multicard env: TP=1 pins one card; TP=2 drives both through CPU-staged oneCCL
@@ -276,11 +292,11 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$DIR/patches:/opt/nvfp4_shim:ro" \
-  "${KERN_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" "${KV_MOUNTS[@]}" "${EXTRA_MOUNTS[@]}" \
+  "${KERN_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" "${KV_MOUNTS[@]}" "${KV_SCALES_MOUNTS[@]}" "${EXTRA_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
-  "${MGPU[@]}" "${GRAPH_ENV[@]}" "${PUSH_AR_ENV[@]}" "${EXTRA_ENV[@]}" \
+  "${MGPU[@]}" "${GRAPH_ENV[@]}" "${PUSH_AR_ENV[@]}" "${KV_SCALES_ENV[@]}" "${EXTRA_ENV[@]}" \
   --entrypoint vllm "$IMG" \
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
