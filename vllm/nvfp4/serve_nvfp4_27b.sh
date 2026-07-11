@@ -133,6 +133,23 @@ fi
 _APIKEY="${API_KEY:-${VLLM_API_KEY:-}}"
 [ -n "$_APIKEY" ] && AGENTIC_ARGS+=( --api-key "$_APIKEY" )
 
+# Thinking controls (2026-07-11) -- fix Qwen3 thinking-mode runaway loops that never emit
+# code (omp.sh "thinks forever inside <think>", JOURNAL 2026-06-26). Two server-side levers:
+#  THINK_BUDGET: forces the </think> end token once thinking exceeds N tokens = sglang THINKCAP
+#    parity. vLLM 0.24.0 has SamplingParams.thinking_token_budget (needs --reasoning-parser,
+#    set above, so the </think> token ids are known) but --override-generation-config does NOT
+#    whitelist it, so it is injected server-side as a default by sitecustomize block 11 via the
+#    B70_THINK_BUDGET env (a request that sets its own thinking_token_budget still wins). Default
+#    4096 (matches the retired sglang cap); 0 = off. Proven live: greedy+MTP+graph request that
+#    hit max_tokens with 0 code -> finish=stop + real code once capped.
+#  OVERRIDE_TEMP: default sampling temperature for requests that omit one. Qwen3 warns greedy
+#    (temp 0) in thinking mode loops; thinking-mode rec is ~0.6 (vs the generation_config.json
+#    1.0). Merged over generation_config via --override-generation-config (top_k/top_p kept).
+#    Empty = keep the model default (research/eval unchanged); the DD sets 0.6.
+THINK_BUDGET="${THINK_BUDGET:-4096}"
+OVERRIDE_TEMP="${OVERRIDE_TEMP:-}"
+[ -n "$OVERRIDE_TEMP" ] && AGENTIC_ARGS+=( --override-generation-config "{\"temperature\": $OVERRIDE_TEMP}" )
+
 # GDN attention kernel: required for the qwen3.6 hybrid (linear_attn layers). The
 # w8a8_kernel_v0240 .so carries gdn_attention_core_xpu + int8_gemm_w8a16 + the GDN lib.
 PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
@@ -273,6 +290,7 @@ fi
 # shelf serve is byte-identical.
 EXTRA_ENV=( )
 if [ "${B70_DEBUG:-0}" != 0 ]; then EXTRA_ENV+=( -e PYTHONFAULTHANDLER=1 -e PYTHONUNBUFFERED=1 ); echo "=== B70_DEBUG=${B70_DEBUG} -> faulthandler ===" >&2; fi
+if [ -n "${THINK_BUDGET:-}" ] && [ "${THINK_BUDGET}" != 0 ]; then EXTRA_ENV+=( -e "B70_THINK_BUDGET=${THINK_BUDGET}" ); echo "=== THINK_BUDGET=${THINK_BUDGET} -> server-side thinking cap (shim block 11) ===" >&2; fi
 if [ -n "${B70_EXTRA_ENV:-}" ]; then for kv in ${B70_EXTRA_ENV}; do EXTRA_ENV+=( -e "$kv" ); done; echo "=== B70_EXTRA_ENV -> ${B70_EXTRA_ENV} ===" >&2; fi
 # NEO-leak FULL-SPEED fix (2026-07-08, sitecustomize block 9): re-instantiate each captured XPUGraph every N
 # replays to RESET the L0 immediate-command-list accumulation that overflows NEO (linear_stream.h:84) under

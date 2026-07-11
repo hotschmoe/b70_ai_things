@@ -28,6 +28,7 @@ ExecStart=/bin/bash -lc 'API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
   NAME=b70_daily_0 PORT=18080 TP=2 MODE=fused GRAPH=1 MTPTOK=5 KV_FP8=0 CAPSIZES=1,2,4,8 \
   MAXLEN=131072 MAXSEQS=8 UTIL=0.85 PUSH_AR=1 PUSH_AR_GRAPH=1 SERVED_FORCE=hotschmoe-dd \
   TOOLCALL=1 TOOLPARSER=qwen3_coder REASONPARSER=qwen3 \
+  THINK_BUDGET=4096 OVERRIDE_TEMP=0.6 \
   /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/vllm/nvfp4/serve_nvfp4_27b.sh start'
 ExecStartPost=/bin/bash -lc 'for i in $(seq 1 120); do curl -sf http://localhost:18080/health >/dev/null 2>&1 && exit 0; docker inspect -f "{{.State.Status}}" b70_daily_0 2>/dev/null | grep -q exited && { echo "container exited during startup" >&2; exit 1; }; sleep 5; done; echo "health wait timed out (container may still be warming)" >&2; true'
 ExecStop=/bin/bash -lc 'docker rm -f b70_daily_0 >/dev/null 2>&1 || true'

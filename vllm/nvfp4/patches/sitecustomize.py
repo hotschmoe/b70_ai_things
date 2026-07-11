@@ -745,3 +745,39 @@ if _KV_SCALES_FILE:
               % (_KV_SCALES_FILE, len(_kv_scales)), file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (10) KV scale inject patch failed:", repr(e), file=sys.stderr, flush=True)
+
+# ---------------------------------------------------------------------------
+# (11) Server-side default thinking-token budget = THINKCAP parity with sglang.
+# vLLM 0.24.0 has SamplingParams.thinking_token_budget (forces the </think> end
+# token once thinking exceeds N tokens; needs --reasoning-parser so the token ids
+# are known -- we serve qwen3). But --override-generation-config only whitelists
+# repetition_penalty/temperature/top_k/top_p/min_p/max_new_tokens, so the budget
+# has NO server-default path. This injects a default into every chat request that
+# does not set thinking_token_budget itself, bounding Qwen3 thinking-mode runaway
+# loops (the omp.sh "thinks forever inside <think>, never emits code" failure --
+# JOURNAL 2026-06-26). A request that sets its own thinking_token_budget wins.
+# Opt-in via B70_THINK_BUDGET (tokens); empty/0 = off. Proven live: greedy+MTP+graph
+# request that hit max_tokens with 0 code -> finish stop + real code once capped.
+_TB = os.environ.get("B70_THINK_BUDGET", "").strip()
+if _TB:
+    try:
+        _TB_N = int(_TB)
+        if _TB_N > 0:
+            from vllm.entrypoints.openai.chat_completion.protocol import (
+                ChatCompletionRequest as _CCR,
+            )
+            _orig_to_sp = _CCR.to_sampling_params
+
+            def _to_sp_budget(self, *a, **k):
+                if getattr(self, "thinking_token_budget", None) is None:
+                    try:
+                        self.thinking_token_budget = _TB_N
+                    except Exception:
+                        pass
+                return _orig_to_sp(self, *a, **k)
+
+            _CCR.to_sampling_params = _to_sp_budget
+            print("[nvfp4-shim] (11) default thinking_token_budget=%d injected "
+                  "(chat requests that omit it)" % _TB_N, file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (11) thinking-budget patch failed:", repr(e), file=sys.stderr, flush=True)
