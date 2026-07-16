@@ -15,6 +15,33 @@ accuracy loss.
 > "NVFP4 returns to research" banners below are SUPERSEDED. See the two NVFP4 rows + JOURNAL 2026-07-08 +
 > docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md.]**
 
+> **[2026-07-16 -- BACKENDS UPGRADED TO NEWEST + caching-on bench refresh.** vLLM **0.24.0 -> 0.25.1**
+> (`vllm-xpu-env:{v0251,int8g-v0251}`) and sglang **0.5.6 -> 0.5.15** rebuilt on XPU with all custom kernels
+> re-grafted. vLLM 0.25.1 keeps `torch==2.12.0` (no ABI bump, custom int8/nvfp4 .so load as-is) but shipped
+> FOUR XPU regressions we had to fix (all baked into the recipes): a minimal-`LD_LIBRARY_PATH`/`CCL_ROOT`
+> env that hid the GPUs ("Failed to infer device type"); an `int8g` bake-anchor rename
+> (`XPUFP8ScaledMMLinearKernel` -> `XPUW8A8FP8LinearKernel`+`XPUW8A16FP8LinearKernel`); a bundled oneCCL
+> **2021.15** that dies at TP=2 (`ze mem_to_ipc_handle: device_fd is invalid`) -> swapped back to v0.24.0's
+> **2021.17**; and a new `_attention_ops` entry (`vllm::hpc_rope_norm_forward`) that `splitting_ops` must
+> include or PIECEWISE capture asserts. All fixes: `vllm/build_v0251_base.sh` + `vllm/images/int8g/bake_v0251.sh`.
+> **Fresh bench (IN=2048/OUT=128, prefix caching ON, TP=2 same as prior tables):**
+>
+> | backend | quant | Wt GB | TP | cold PP | TTFT (warm) | code TG c1 | generic TG c1 | code agg c4 | KV @131k | prefix cache |
+> |---|---|---|---|---|---|---|---|---|---|---|
+> | **vLLM 0.25.1** | NVFP4 | 24 | 2 | 2181 | 290 ms | **48.3** (best 50.1) | 16.7 | 105 | 342k tok | **57% hit (now works)** |
+> | **vLLM 0.25.1** | W8A8 | 35 | 2 | **2598** | 514 ms | 38.5 (best 40.7) | 13.8 | 93 | 264k tok | works |
+> | sglang 0.5.15 | W8A8 | 35 | 2 | _(in progress)_ | | | | | | |
+> | sglang 0.5.15 | NVFP4 | 24 | 1 | _(new port -- yolo pending)_ | | | | | | |
+> | zml (bf16 wildcard) | bf16 | 54 | 2 | _(pending)_ | | | | | | |
+>
+> Both vLLM quants coherent on 0.25.1; NVFP4 leads decode (48.3 vs 38.5 code) + more KV at smaller weight,
+> W8A8 leads cold prefill (2598 vs 2181, int8-XMX) -- same story as the prior tables, now re-confirmed on the
+> newest backend. **New win: prefix caching WORKS on the NVFP4 path on 0.25.1** (57% hit; the running 0.24.0
+> DD has it off). NVFP4-on-sglang is a first-ever port (sglang ships the ModelOpt loader natively + our XPU
+> `nvfp4_gemm` kernel; single-card TP=1) -- infra committed (`sglang/NVFP4_PORT.md`), GPU yolo bench pending.
+> zml's `llm` example now implements the Qwen3.6 GDN-hybrid arch -> bf16 wildcard generation bench pending
+> (CLI-only; zml has no OpenAI server). The 0.24.0 DD is unchanged; 0.25.1 is validated + available to promote.]**
+
 > **[2026-07-07 CORRECTION -- the "NVFP4-only crash / W8A8 keeps MTP+graph" claim below is REFUTED.**
 > The `linear_stream.h:84` NEO abort under MTP-verify + piecewise cudagraph is NOT NVFP4-specific: the
 > W8A8 daily driver hit the IDENTICAL abort after ~3h of real use (and a 6-way concurrent soak reproduced
