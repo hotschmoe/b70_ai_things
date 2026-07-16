@@ -148,3 +148,16 @@ If eager emits "!!!!" garbage: check the op executed (DBG=1 -> out_bad=False) an
 dequant is correct; if the W4A16 op is the suspect, A/B by temporarily pointing B70_XPU_C_SO at the
 proven vLLM .so (/mnt/vm_8tb/b70/nvfp4_fused_kernel/_xpu_C.abi3.so). Do a GPU reset (bin/xe-reset)
 between failed starts if any TP path was involved (single-card TP=1 here, so usually just `stop`).
+
+## YOLO GPU RESULT (2026-07-16): infra loads, GDN-layer quant-routing bug
+
+Ran the coordinated yolo (`sglang-xpu:mtp` = sglang 0.5.6, working torch 2.12+xpu, single card 0).
+The kernel .so loads and the shim installs, but the engine dies during model build:
+  `ValueError: Weight output_partition_size = 48 is not divisible by weight quantization block_n = 128`
+in `Qwen3_5GatedDeltaNet` (GDN linear_attn in_proj). Cause: the block-quantized NVFP4/FP8 path is being
+applied to a GDN projection whose output partition (48) is not a multiple of the 128 block -- GDN layers
+must stay BF16 (unquantized), like the checkpoint's `ignore` list intends. FIX (next session): extend
+the shim's routing so GDN / small-non-128-divisible layers fall through to UnquantizedLinearMethod (bf16),
+not the NVFP4/FP8 block method. Infra (kernel + loader + serve) otherwise loads cleanly. Also seen (benign):
+torchcodec `libtorchcodec_core4.so` / libavutil.so.56 import error -> sglang logs "Ignore import error".
+VERDICT: NVFP4-on-sglang REACHES model-build (kernel + shim wired) but needs the GDN-routing fix to serve.

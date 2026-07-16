@@ -8977,3 +8977,35 @@ verdict -> [QUALIFIED DEAD-END] NVFP4 int8-XMX prefill not worth production on B
   bg1*dot32 + (bg0-bg1)*dot16 = 1.5 DPAS/2groups -> ~1.5-1.7x, but still needs the optimized GEMM first.
   NOTE: 2 sub-agents + a fork stalled mid-run on API errors tonight; results above were recovered by the
   coordinator re-running the built binaries directly (all clean, cards free after).
+
+## 2026-07-16 -- Backend upgrades to newest (vLLM 0.25.1, sglang 0.5.15) + caching-on bench + zml wildcard
+
+Goal: bench NVFP4 + W8A8 qwen3.6-27b with prefix caching ON on the NEWEST vLLM (0.24.0->0.25.1) and
+sglang (0.5.6->0.5.15), update the README table, and run a zml bf16 27B wildcard.
+
+RESULT (config -> command -> result -> verdict):
+- **vLLM 0.25.1** (torch stays 2.12.0, no ABI bump). Built `vllm-xpu-env:{v0251,int8g-v0251}` via
+  build_v0251_base.sh + images/int8g/bake_v0251.sh. Four v0.25.1 XPU regressions found+fixed (all baked):
+  (1) minimal-env -> `Failed to infer device type` (bake full setvars env); (2) int8g anchor rename
+  XPUFP8ScaledMMLinearKernel -> XPUW8A8FP8LinearKernel+XPUW8A16FP8LinearKernel; (3) bundled oneCCL 2021.15
+  dies at TP=2 `ze mem_to_ipc_handle: device_fd invalid` -> swap in v0240's 2021.17; (4) new
+  `_attention_ops` entry `vllm::hpc_rope_norm_forward` must be in splitting_ops. Bench IN=2048/OUT=128,
+  prefix-cache ON, TP=2: NVFP4 code decode c1 48.3 t/s (best 50.1), generic 16.7, cold PP 2181, KV 341,958
+  tok @131k, **prefix-cache 57% hit (works on NVFP4 now; DD had it off)**. W8A8 code 38.5 (best 40.7),
+  generic 13.8, cold PP 2598, KV 263,659 tok. Same NVFP4>W8A8-decode / W8A8>prefill story, re-confirmed.
+  VERDICT: vLLM 0.25.1 validated + available to promote; 0.24.0 DD unchanged. Commits 872f700, edc9611.
+- **zml wildcard**: bf16 qwen3.6-27b, oneAPI, TP=2 sharded (both cards), `bazel run //examples/llm`. Coherent
+  thinking-mode output, **11.7 tok/s decode** (vs zml W8A8 TP=2 13.7). qwen3_5 GDN arch now upstream; CLI
+  only (no OpenAI server). Commit 7fb6dc0.
+- **sglang 0.5.15**: images built (`sglang-xpu:{bmg,woq,mtp}-0515`, sglang 0.5.15.post1 confirmed) but W8A8
+  serve BLOCKED: torchcodec dep upgrades torch to 2.13.0+cu130 (no XPU) -> torch.xpu unavailable
+  (`get_xpu_memory_capacity: No GPU memory values found`). Fix = constraints-pin torch==2.12.0+xpu during
+  the sglang install + bounded rebuild. NVFP4-on-sglang yolo (0.5.6 image) reaches model-build (kernel+shim
+  wired) but shim mis-routes GDN layers (partition 48 vs block 128) -> needs bf16-fallthrough fix. Docs:
+  sglang/SGLANG_0515_UPGRADE.md, sglang/NVFP4_PORT.md.
+- **INCIDENT (box lockup)**: the sgl-kernel SYCL-AOT compile is a RAM bomb -- at default `-j` (16 cores),
+  stacked with a second orphaned build (setsid) + the DD's ~69 GB, it exhausted 121 GB -> 8h swap-thrash
+  until manual reboot. FIX baked into the recipe: `MAX_JOBS=4` (xpu.Dockerfile ARG), classic-builder
+  `--memory` hard cap (build.sh), build with the DD DOWN, never `setsid` a heavy build. The bounded rebuild
+  ran clean (RAM steady ~100 GB free, load ~4). Also: docker uses the containerd snapshotter, so images live
+  in /var/lib/containerd on the BOOT drive (not the 8TB data-root) -- boot-drive cleanup is a separate TODO.

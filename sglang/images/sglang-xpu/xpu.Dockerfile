@@ -45,6 +45,15 @@ WORKDIR /sgl-workspace
 RUN  pip install --no-cache-dir msgspec blake3 py-cpuinfo compressed_tensors gguf partial_json_parser einops tabulate --root-user-action=ignore && \
      pip install --no-cache-dir torch==2.12.0+xpu torchao==0.17.0+xpu torchvision==0.27.0+xpu torchaudio==2.11.0+xpu --index-url https://download.pytorch.org/whl/xpu
 
+# SAFETY (2026-07-16): the sgl-kernel SYCL AOT compile for Battlemage is a RAM bomb -- at default
+# parallelism (all cores) each icpx translation unit wants several GB and peak demand blows past
+# 121 GB -> swap thrash -> multi-hour lockup. Cap parallelism so peak RAM stays bounded. Override
+# with --build-arg MAX_JOBS=N. See SGLANG_0515_UPGRADE.md / JOURNAL 2026-07-16.
+ARG MAX_JOBS=4
+ENV MAX_JOBS=${MAX_JOBS}
+ENV CMAKE_BUILD_PARALLEL_LEVEL=${MAX_JOBS}
+ENV MAKEFLAGS=-j${MAX_JOBS}
+
 RUN echo "Cloning ${SG_LANG_BRANCH} from ${SG_LANG_REPO}" && \
     git clone --branch ${SG_LANG_BRANCH} --single-branch ${SG_LANG_REPO} sglang && \
     cd sglang && cd python && \

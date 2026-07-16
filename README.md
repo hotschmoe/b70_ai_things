@@ -30,9 +30,19 @@ accuracy loss.
 > |---|---|---|---|---|---|---|---|---|---|---|
 > | **vLLM 0.25.1** | NVFP4 | 24 | 2 | 2181 | 290 ms | **48.3** (best 50.1) | 16.7 | 105 | 342k tok | **57% hit (now works)** |
 > | **vLLM 0.25.1** | W8A8 | 35 | 2 | **2598** | 514 ms | 38.5 (best 40.7) | 13.8 | 93 | 264k tok | works |
-> | sglang 0.5.15 | W8A8 | 35 | 2 | _(in progress)_ | | | | | | |
-> | sglang 0.5.15 | NVFP4 | 24 | 1 | _(new port -- yolo pending)_ | | | | | | |
+> | sglang 0.5.15 | W8A8 | 35 | 2 | _blocked: torch-pin rebuild_ | | | | | | |
+> | sglang 0.5.15/0.5.6 | NVFP4 | 24 | 1 | _blocked: GDN routing fix_ | | | | | | |
 > | zml (bf16 wildcard) | bf16 | 54 | 2 | n/a | n/a | 11.7 (decode) | 11.7 | n/a | n/a | n/a (CLI) |
+>
+> **sglang 0.5.15 status (2026-07-16):** the 0.5.15.post1 XPU images built (`sglang-xpu:{bmg,woq,mtp}-0515`)
+> but the W8A8 serve is BLOCKED -- sglang 0.5.15's `pip install` pulls `torchcodec` which upgrades torch to
+> `2.13.0+cu130` (CUDA), clobbering the `2.12.0+xpu` it pins, so `torch.xpu` is unavailable; the recipe needs
+> a constraints-pin on torch + a bounded rebuild (`sglang/SGLANG_0515_UPGRADE.md`). NVFP4-on-sglang (novel
+> port; sglang ships the ModelOpt loader + our XPU `nvfp4_gemm` kernel) REACHES model-build on the working
+> 0.5.6 image but the shim mis-routes GDN layers (partition 48 vs NVFP4 block 128) -> needs a bf16-fallthrough
+> fix (`sglang/NVFP4_PORT.md`). Both are one focused session away; the vLLM + zml results above stand.
+> (Build-safety lesson baked into the recipes: the sgl-kernel SYCL-AOT compile is a RAM bomb -- it thrashed
+> the box for 8h at default `-j`; now capped `MAX_JOBS=4` + `--memory` + build-with-DD-down. JOURNAL 2026-07-16.)
 >
 > Both vLLM quants coherent on 0.25.1; NVFP4 leads decode (48.3 vs 38.5 code) + more KV at smaller weight,
 > W8A8 leads cold prefill (2598 vs 2181, int8-XMX) -- same story as the prior tables, now re-confirmed on the
