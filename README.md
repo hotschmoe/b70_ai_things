@@ -32,15 +32,17 @@ accuracy loss.
 > | **vLLM 0.25.1** | W8A8 | 35 | 2 | **2598** | 514 ms | 38.5 (best 40.7) | 13.8 | 93 | 264k tok | works |
 > | sglang 0.5.15 | W8A8 | 35 | 2 | _(in progress)_ | | | | | | |
 > | sglang 0.5.15 | NVFP4 | 24 | 1 | _(new port -- yolo pending)_ | | | | | | |
-> | zml (bf16 wildcard) | bf16 | 54 | 2 | _(pending)_ | | | | | | |
+> | zml (bf16 wildcard) | bf16 | 54 | 2 | n/a | n/a | 11.7 (decode) | 11.7 | n/a | n/a | n/a (CLI) |
 >
 > Both vLLM quants coherent on 0.25.1; NVFP4 leads decode (48.3 vs 38.5 code) + more KV at smaller weight,
 > W8A8 leads cold prefill (2598 vs 2181, int8-XMX) -- same story as the prior tables, now re-confirmed on the
 > newest backend. **New win: prefix caching WORKS on the NVFP4 path on 0.25.1** (57% hit; the running 0.24.0
 > DD has it off). NVFP4-on-sglang is a first-ever port (sglang ships the ModelOpt loader natively + our XPU
 > `nvfp4_gemm` kernel; single-card TP=1) -- infra committed (`sglang/NVFP4_PORT.md`), GPU yolo bench pending.
-> zml's `llm` example now implements the Qwen3.6 GDN-hybrid arch -> bf16 wildcard generation bench pending
-> (CLI-only; zml has no OpenAI server). The 0.24.0 DD is unchanged; 0.25.1 is validated + available to promote.]**
+> zml's `llm` example now implements the Qwen3.6 GDN-hybrid arch -> **bf16 wildcard RAN: full unquantized 27B,
+> TP=2 sharded across both cards, coherent (thinking mode), 11.7 tok/s decode** (CLI-only; zml has no OpenAI
+> server; vs the proven zml W8A8 TP=2 13.7 t/s -- bf16 slightly slower). The 0.24.0 DD is unchanged; vLLM
+> 0.25.1 is validated + available to promote.]**
 
 > **[2026-07-07 CORRECTION -- the "NVFP4-only crash / W8A8 keeps MTP+graph" claim below is REFUTED.**
 > The `linear_stream.h:84` NEO abort under MTP-verify + piecewise cudagraph is NOT NVFP4-specific: the
