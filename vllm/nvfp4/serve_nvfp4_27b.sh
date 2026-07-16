@@ -78,7 +78,11 @@ CAPSIZES="${CAPSIZES:-}"   # e.g. 1,2,4,8 -- REQUIRED with MTPTOK (spec decode b
 # spec-verify all_gather (which oneCCL cannot record) is handled by the capture-safe all-reduce-of-padded
 # shim in patches/sitecustomize.py block (3), so EJECT NOTHING here -- split only at the attn/GDN ops.
 # Single-card (TP=1) keeps the byte-identical no-splitting_ops config that M6-M9 gated in.
-_ATTN_OPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
+# NOTE (2026-07-16, v0.25.1): PIECEWISE capture asserts splitting_ops is a SUPERSET of vLLM's
+# CompilationConfig._attention_ops (cudagraph_dispatcher.py is_attention_compiled_piecewise). v0.25.1
+# ADDED "vllm::hpc_rope_norm_forward" to that list -> must be present here or engine-init asserts.
+# Harmless on v0.24.0 (an unregistered split op is just a no-op split point).
+_ATTN_OPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention","vllm::hpc_rope_norm_forward"'
 GRAPH_ARGS=( --enforce-eager )
 GRAPH_ENV=( )
 if [ "$GRAPH" = 1 ]; then
