@@ -7,7 +7,12 @@
 # Fallbacks if the reclaim ever needs disabling: CGRECLAIM=0 (+ B70_EXTRA_ENV=B70_XPU_DRAFTER_EAGER=1 for
 # drafter-eager, or drop MTPTOK for B4). dd-watchdog (b70-dd-watchdog.service) backstops SOFT garbage with a
 # per-replica docker restart (probes b70_daily_0:18080). Prior default was sglang/vLLM W8A8 27b (see git log).
-Description=B70 daily-driver serve (vLLM NVFP4 27b captured+MTP+reclaim, TP=2, served as hotschmoe-dd)
+# UPDATED 2026-07-17 (user): promoted to vLLM 0.25.1 (IMG=int8g-v0251) + PREFIXCACHE=1 (prefix caching now
+# WORKS on the NVFP4 path -- 57% hit, faster warm TTFT; the 0.24.0 DD had it off) + MAXLEN 131072->200000
+# (bf16 KV, KV_FP8=0; the KV pool ~342k tok is UTIL-bound not MAXLEN-bound, so 200k fits at ~1.7x conc).
+# The four v0.25.1 XPU regressions (device-env, int8g anchor, oneCCL 2021.17, hpc_rope splitting_op) are all
+# baked into int8g-v0251 + serve_nvfp4_27b.sh. Rollback = IMG=vllm-xpu-env:int8g-v0240 PREFIXCACHE=0 MAXLEN=131072.
+Description=B70 daily-driver serve (vLLM 0.25.1 NVFP4 27b captured+MTP+reclaim+prefixcache, TP=2 @200k, hotschmoe-dd)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
 Wants=network-online.target
@@ -25,8 +30,8 @@ WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
 # Serve config is passed as env to the NVFP4 experiment serve.sh (which reads them). B70_XPU_CG_RECLAIM is NOT
 # listed here on purpose -- it is the GRAPH=1 default inside serve_nvfp4_27b.sh (opt out with CGRECLAIM=0).
 ExecStart=/bin/bash -lc 'API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  NAME=b70_daily_0 PORT=18080 TP=2 MODE=fused GRAPH=1 MTPTOK=5 KV_FP8=0 CAPSIZES=1,2,4,8 \
-  MAXLEN=131072 MAXSEQS=8 UTIL=0.85 PUSH_AR=1 PUSH_AR_GRAPH=1 SERVED_FORCE=hotschmoe-dd \
+  NAME=b70_daily_0 PORT=18080 IMG=vllm-xpu-env:int8g-v0251 TP=2 MODE=fused GRAPH=1 MTPTOK=5 KV_FP8=0 CAPSIZES=1,2,4,8 \
+  PREFIXCACHE=1 MAXLEN=200000 MAXSEQS=8 UTIL=0.85 PUSH_AR=1 PUSH_AR_GRAPH=1 SERVED_FORCE=hotschmoe-dd \
   TOOLCALL=1 TOOLPARSER=qwen3_coder REASONPARSER=qwen3 \
   THINK_BUDGET=4096 OVERRIDE_TEMP=0.6 \
   /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/vllm/nvfp4/serve_nvfp4_27b.sh start'
