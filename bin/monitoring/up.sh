@@ -23,20 +23,27 @@ docker run -d --name b70_prometheus --restart unless-stopped --network host --us
   prom/prometheus:latest \
   --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus >/dev/null && echo "  prometheus up"
 
-echo "=== grafana (:3000 default + LAN, anonymous viewer, provisioned) ==="
-# NOTE: grafana/grafana:latest ignores GF_SERVER_HTTP_PORT here and serves on its DEFAULT :3000 (net=host,
-# 0.0.0.0). Access from LAN at http://<box>:3000/. To force a different port, pass a CLI arg instead of the
-# env (e.g. `grafana server ... cfg:server.http_port=3001`); the env alone did not take on this image.
+echo "=== grafana (:3001, anonymous viewer, provisioned, persistent db) ==="
+# PORT: 3000 is open-webui, so grafana MUST be on 3001. GF_SERVER_HTTP_PORT env is IGNORED by
+# grafana/grafana:latest here -- pass it as a trailing `cfg:server.http_port=3001` CLI override, which
+# grafana DOES honor ("Config overridden from command line").
+# PERSISTENCE: grafana's sqlite db lives under GF_PATHS_DATA. Left in the container writable layer it sits
+# on the btrfs-backed containerd snapshotter, where a FRESH db runs ALL migrations with COW-fsync = ~4 min
+# every recreate. Bind-mount a host dir (world-writable so grafana's uid 472 can write) so the db persists
+# and migrations run ONCE -> later restarts are instant.
+GF_DATA="${GF_DATA:-/mnt/vm_8tb/b70/grafana_data}"
+mkdir -p "$GF_DATA" && chmod 777 "$GF_DATA"
 docker rm -f b70_grafana >/dev/null 2>&1 || true
 docker run -d --name b70_grafana --restart unless-stopped --network host --user 472 \
   -e GF_AUTH_ANONYMOUS_ENABLED=true -e GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer \
   -e GF_AUTH_BASIC_ENABLED=false -e GF_USERS_ALLOW_SIGN_UP=false \
   -e GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/vllm-dashboard.json \
-  -e GF_PATHS_PROVISIONING=/etc/grafana/provisioning \
+  -e GF_PATHS_PROVISIONING=/etc/grafana/provisioning -e GF_PATHS_DATA=/gfdata \
+  -v "$GF_DATA:/gfdata" \
   -v "$M/grafana/dashboards/json:/var/lib/grafana/dashboards" \
   -v "$M/grafana/dashboards/config:/etc/grafana/provisioning/dashboards" \
   -v "$M/grafana/datasources:/etc/grafana/provisioning/datasources" \
-  grafana/grafana:latest >/dev/null && echo "  grafana up -> http://<box>:3000"
+  grafana/grafana:latest cfg:server.http_port=3001 >/dev/null && echo "  grafana up -> http://<box>:3001 (first start ~4 min: db migration)"
 
 echo "=== verify (give it ~15s to scrape) ==="
 echo "  targets:  curl -s http://localhost:9090/api/v1/targets | grep -o '\"health\":\"[a-z]*\"'"
