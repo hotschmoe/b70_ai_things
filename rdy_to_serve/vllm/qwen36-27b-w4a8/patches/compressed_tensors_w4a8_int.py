@@ -1,11 +1,29 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+#
+# b70 OVERLAY of .../compressed_tensors/schemes/compressed_tensors_w4a8_int.py for
+# vllm-xpu-env:int8g-v0251 (vLLM 0.25.1). Verbatim upstream 0.25.1 content (extracted
+# from the image 2026-07-21) PLUS ONE b70 delta, marked "b70:" below:
+#   VLLM_W4A8_PREPACKED: allocate the weight as int32 [out, in/8] (8 int4 per int32)
+#   so the offline-prepacked checkpoint loads directly, instead of the upstream int8
+#   [out, in] unpacked allocation (which would then need the ~28 GiB on-GPU repack
+#   transient that hangs/OOMs the 32 GB B70 on the 27B). Pairs with the skip-pack
+#   branch in the mounted mixed_precision/xpu.py.
+# 0.25.1 API drift vs our old v0.23 patch (both verified in-image 2026-07-21):
+#   - the group-size divisibility assert became
+#     vllm.distributed.utils.verify_group_size_divides_partition (kept as upstream).
+#   - imports MPLinearLayerConfig/choose_mp_linear_kernel from
+#     vllm.model_executor.kernels.linear (unchanged, resolves in-image).
+# If a future image drifts this upstream file, re-extract and re-apply the delta:
+#   docker run --rm --entrypoint cat vllm-xpu-env:int8g-v0251 \
+#     /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/quantization/compressed_tensors/schemes/compressed_tensors_w4a8_int.py
 
 import os
 from collections.abc import Callable
 
 import torch
 
+from vllm.distributed.utils import verify_group_size_divides_partition
 from vllm.logger import init_logger
 from vllm.model_executor.kernels.linear import (
     MPLinearLayerConfig,
@@ -80,9 +98,8 @@ class CompressedTensorsW4A8Int(CompressedTensorsScheme):
             effective_group_size = self.group_size
 
         # Ensure group_size divides input_size_per_partition
-        assert input_size_per_partition % effective_group_size == 0, (
-            f"input_size_per_partition {input_size_per_partition}"
-            f" not divisible by group_size {effective_group_size}"
+        verify_group_size_divides_partition(
+            input_size_per_partition, effective_group_size
         )
 
         # Determine scale partitioning
@@ -110,11 +127,15 @@ class CompressedTensorsW4A8Int(CompressedTensorsScheme):
 
         scales_and_zp_size = input_size_per_partition // effective_group_size
 
+        # b70: prepacked offline -> weights are int32 [out, in/8] (8 int4 per int32),
+        # loaded directly; upstream default is unpacked int8 [out, in] (then packed
+        # on-GPU at load, a ~28 GiB transient on the 27B that a 32 GB B70 cannot fit).
         if os.environ.get("VLLM_W4A8_PREPACKED"):
-            # prepacked offline: weights are int32 [out, in/8] (8 int4 per int32), loaded directly
             assert input_size_per_partition % 8 == 0
             _wdata = torch.empty(
-                output_size_per_partition, input_size_per_partition // 8, dtype=torch.int32
+                output_size_per_partition,
+                input_size_per_partition // 8,
+                dtype=torch.int32,
             )
         else:
             _wdata = torch.empty(

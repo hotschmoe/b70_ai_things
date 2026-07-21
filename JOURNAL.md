@@ -9422,3 +9422,34 @@ result -> repscan: worst top-4-gram ratio 0.0022 (r0) / 0.0072 (r1), all benign 
 verdict -> ALL Phase 1 gates green (gate 18/18, bench, 30k+52k soaks, repscan, needle, per replica).
   DP=2 NVFP4 DD is production. Remaining: sudo install of the updated systemd units + a
   systemctl-restart verification (blocked on operator password).
+
+## 2026-07-21 (g) -- Track A: W4A8 sqgptq PORTED to vLLM 0.25.1, single-card captured+MTP = 45.1 t/s code
+
+config -> research mode entered (docker stop b70_daily_1; card 0 kept serving through nginx, verified).
+  W4A8 port authored by implementor agent, GPU-gated serially on card 1.
+KEY PORT FINDING -> our v0.23 W4A8 patch classes were UPSTREAMED into vLLM 0.25.1: the image ships
+  XPUwNa16LinearKernel + XPUW4A8IntLinearKernel in mixed_precision/xpu.py and the XPU registry entry
+  is stock. The port shrank to: (1) VLLM_W4A8_PREPACKED int32 [out,in/8] alloc (avoids the ~28 GiB
+  unpack transient), (2) opt-in B70_W4A8_HYBRID small-M w4a16 route (default OFF, weight-view shared),
+  (3) sitecustomize blocks 1/4/6/7 from the W8A8 shelf (BF16 MTP drafter, mamba ptr fix, drafter-eager
+  fallback, NEO reclaim). NO kernel build: int4_gemm_w4a8 + w4a16 already live in the mounted
+  w8a8_kernel_v0240 _xpu_C.abi3.so (torch-2.12 ABI); upstream _xpu_ops.py registers both fakes.
+FIX 1 -> checkpoint lacked preprocessor_config.json (vision-ON serve needs the image processor);
+  grafted from w8a8-sqgptq sibling (vision_config byte-identical).
+DISCOVERY (kills a kickoff assumption) -> models/files/qwen3.6-27b/w4a8-sqgptq is 25.77 GiB ON DISK
+  (loads 26.01 GiB), NOT ~14 GB: the sqgptq recipe ignores ALL 432 linear_attn.* (GDN) tensors --
+  most of this arch's mass -- plus embeddings, left fp16. So single-card W4A8 has NO KV-headroom
+  advantage today (worse residency than NVFP4's 24.9 incl MTP); UTIL=0.85 @131072 -> NEGATIVE KV.
+  The fix is a requant with GDN int8 (precedent: w8a8-sqgptq-gdnint8) -- follow-up quant task.
+command -> NAME=w4a8_c1 PORT=18079 CARD=1 UTIL=0.92 MAXLEN=8192 gpu-run --card 1
+  bash rdy_to_serve/vllm/qwen36-27b-w4a8/serve.sh start (IMG int8g-v0251, DTYPE=float16, GRAPH=1
+  PIECEWISE CAPSIZES=1,2,4, MTPTOK=3, vision ON, fp16 KV, KV pool 8,936 tok).
+result -> HEALTHY; served id qwen36-27b-w4a8-sqgptq; coherent ('Paris'); PIECEWISE captured;
+  bench_code single-stream 45.1 t/s (old 0.23 shelf: 20.9; sglang hybrid: 27.3);
+  gate_concurrent_coherence 18/18 PASS; MTP3 accept 72.9% overall (88/72/59 per pos; BF16 drafter
+  graft working); vision probe answers correctly on a synthetic image. HumanEval+ vs NVFP4
+  (0.988/0.945) + W8A8 (0.970/0.933) launched (evals venv; first attempt failed system python --
+  evalplus lives in evals/.venv).
+verdict -> W4A8 kernel path on 0.25.1 is GO and FAST (45.1 t/s beats stock-MTP NVFP4 38.7's ballpark
+  at equal ctx class). Serve practicality blocked on weight residency (8k ctx cap) until a
+  gdnint8-style requant. Quality gate pending.
