@@ -9009,3 +9009,96 @@ RESULT (config -> command -> result -> verdict):
   `--memory` hard cap (build.sh), build with the DD DOWN, never `setsid` a heavy build. The bounded rebuild
   ran clean (RAM steady ~100 GB free, load ~4). Also: docker uses the containerd snapshotter, so images live
   in /var/lib/containerd on the BOOT drive (not the 8TB data-root) -- boot-drive cleanup is a separate TODO.
+
+## 2026-07-21 -- 27B NVFP4 + W8A8 speedup deep-dive (baselines, W8A8 roofline + w8a16-routing WIN, dot32 NO-GO, fp8-KV TP=2)
+
+Goal: on the vLLM 0.25.1 stack (TP=2), re-establish clean coherence-immune NVFP4-vs-W8A8 27B baselines
+with a real coding harness, then push the open kernel levers -- W8A8 decode (RESEARCH_TODO Track 1a: small-M
+GEMV fast path) and NVFP4 int8-XMX prefill (Track 11: dot32+correction) -- to a go/no-go, plus the fp8-KV-on-TP2
+question (Track 11i). Method: coordinator owned the single GPU lease (serial, health-gated -- box wedges
+reboot-only under chained TP=2 crashes); CPU-only kernel/analysis agents wrote + compiled the microbenches;
+coordinator ran every GPU touch. Harness for serve numbers = `vllm/nvfp4/bench_code.py <base/v1> <model> <conc>
+<out> <reps>` (usage-based, coherence-immune real coding prompts).
+
+### Result 0 -- fresh baselines (vLLM 0.25.1, TP=2, bench_code.py out=256)
+config -> NVFP4 27B live DD (captured + MTP5 + reclaim + prefixcache, bf16 KV) vs W8A8 27B (int8g-v0240,
+  GRAPH=1 PIECEWISE + MTP3 + PUSH_AR, MAXLEN=8192).
+command -> python3 vllm/nvfp4/bench_code.py http://192.168.10.5:1808X/v1 <served-id> {1,4} 256 {3,2}
+result ->
+  NVFP4: code decode c1 46.1 avg / 48.9 best t/s; c4 24.7/stream, 98.8 agg; TTFT short-warm 242 ms;
+    prefill ~2707 words TTFT 773 ms (~3500 words/s).
+  W8A8:  code decode c1 38.9 / 40.4; c4 22.4 / 89.7 agg; TTFT 277 ms; prefill ~4057 words/s.
+verdict -> same story, re-confirmed on 0.25.1: NVFP4 leads decode (+19% c1) at smaller weight; W8A8 leads
+  prefill (+16% words/s, int8-XMX). Both coherent.
+
+### Result 1 -- W8A8 int8 decode GEMM is AT BW roofline == FP8 (Track 1a NO-GO, closed)
+config -> the built `int8_gemm_w8a16` decode op (fp16 act x s8 weight, per-channel scale, one launch) on real
+  27B decode shapes (qkv N=8192, o/gate_up N=34816, down K=17408), eager AND XPUGraph-captured, properly synced.
+command -> gpu-run --card 0 docker run ... sglang-xpu:woq python3 research/w8a8/decode_gemv/bench_decode_gemv.py
+result -> int8_gemm_w8a16 hits 92-98% of the 581 GB/s B70 read roofline and is bit-identical in time to the FP8
+  bar (both read 1 byte/weight). NO W8A8-vs-FP8 decode gap at the GEMM level. A reordered/VNNI16 small-M GEMV
+  (llama.cpp #21527 3.1x) does NOT transfer -- that win came from a sub-roofline baseline; ours is at roofline.
+verdict -> [NO-GO] Track 1a "M=1 decode GEMV fast path" is a proven dead-end, closed. W8A8 decode is memory-bound
+  at parity with FP8; no bandwidth left to reclaim with a kernel.
+
+### Result 2 -- W8A8 small-M W8A16 ROUTING (Track 1 real win, GO + shipped env-gated)
+config -> the current vLLM W8A8 apply path pays a per-token int8 ACTIVATION QUANT at every M (s8s8 two-step). For
+  small M (<=64: decode + MTP verify batch) route through the quant-free `int8_gemm_w8a16` op (f16 act x s8
+  weight, one launch, same weight bytes, skips the act-quant).
+command ->
+  # GEMM microbench (Result 1 harness) reports W8A16 vs W8A8 vs FP8 at M in {1,2,4,6,8}, eager + captured
+  # end-to-end: overlay the patched xpu_int8.py + B70_W8A16_M_MAX=64, serve W8A8 TP=2 captured+MTP3, bench_code
+  B70_EXTRA_ENV="B70_W8A16_M_MAX=64" B70_EXTRA_MOUNTS="<repo>/vllm/contrib/vllm_int8_xpu/xpu_int8.py:/opt/venv/.../scaled_mm/xpu_int8.py:ro" \
+    GRAPH=1 CGMODE=PIECEWISE MTPTOK=3 PUSH_AR=1 gpu-run bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start
+result ->
+  GEMM level: 1.47-1.49x over the current s8s8 path, MATCHES FP8, MORE ACCURATE (f16 act relerr 8.8e-3 vs s8 1.3e-2).
+  end-to-end (W8A8 TP=2 captured + MTP3): code decode c1 38.9 -> 40.3 (+3.6%); c4 22.4 -> 23.5, agg 89.7 -> 94.1
+    (+4.9%). Coherent; concurrent mixed prefill+decode gate 18/18 PASS. Capture succeeded (register_fake traced).
+  The 1.47x GEMM win compresses to ~4% e2e -- the linear GEMMs are only a fraction of the decode step (GDN
+  recurrent scan, MTP drafter, push-AR all-reduce dominate).
+patch -> `vllm/contrib/vllm_int8_xpu/xpu_int8.py`: `process_weights_after_loading` keeps an NT weight view [K,N]
+  (stride0==1) + a [N] f16 scale; `apply_weights` routes M<=`B70_W8A16_M_MAX` (env, default 0=OFF) to
+  `int8_gemm_w8a16`; plus a `register_fake` for `int8_gemm_w8a16` so PIECEWISE capture traces it. Additive.
+  Container overlay via B70_EXTRA_MOUNTS at .../model_executor/kernels/linear/scaled_mm/xpu_int8.py. Rollback
+  B70_W8A16_M_MAX=0. Microbench + analysis: research/w8a8/decode_gemv/ (decode_roofline.md, route_w8a16_decode.md).
+verdict -> [GO, SHIPPED env-gated] +3.6% c1 / +4.9% c4 decode, more accurate, coherent, gate 18/18. Real GEMM
+  win; it just doesn't dominate the decode step, so e2e is single-digit percent. Safe default-off knob.
+
+### Result 3 -- NVFP4 prefill dot32+correction: rigorously proven NO-GO (Track 11 int8-XMX dead-end, hardened)
+config -> the dot32+correction identity for two adjacent NVFP4 g16 blocks: bg1*dot32 + (bg0-bg1)*dot16, intended
+  to pair 2 group-16 blocks into ~1.5 DPAS and beat the naive K=16 block-scaled kernel.
+command -> CPU identity check + Xe2 DPAS-count disasm of the built tiles (vllm/nvfp4/proto_blockscale/dot32/).
+result -> the identity is numerically EXACT (CPU relerr 2e-7) but emits an IDENTICAL Xe2 DPAS count to the naive
+  block-scaled kernel: disasm 1280 == 1280 dpas.s8.s8 per tile. The "1.5 DPAS / 2 groups" was an efficiency-
+  weighted miscount -- a K=16 correction still burns a full K=32 DPAS issue slot (SystolicDepth=8 fixed). Correct
+  block-scaled int8 tops ~157 useful TOPS (~1.15-1.3x bf16-achieved, ~0.86x bf16-peak) and needs an XeTLA-grade
+  mainloop to even reach it.
+verdict -> [NO-GO] hardens the 2026-07-08 QUALIFIED-DEAD-END with ISA evidence: NVFP4 group16 < Xe2 int8 DPAS
+  K-depth 32 forces K=16 DPAS = same MACs/instr as bf16; dot32+correction does not recover it. NVFP4 prefill
+  stays on bf16 `nvfp4_gemm_w4a16`.
+
+### Result 4 -- fp8 KV on NVFP4 TP=2 (Track 11i): coherent + 1.64-1.84x capacity (promising, needs full soak)
+config -> arm A3 = calibrated fp8 KV (vllm/nvfp4/kv_scales_nvfp4_27b.json, block-10 inject) + MTP5, TP=2,
+  MAXLEN=131072, else identical to the DD. Isolates whether the 2026-07-06 repetition was KV precision or the
+  TP2+MTP path.
+command -> KV_SCALES=<repo>/vllm/nvfp4/kv_scales_nvfp4_27b.json MTPTOK=5 MAXLEN=131072 ... serve_nvfp4_27b.sh;
+  then 4000-tok ignore_eos forced decode + 4-gram scan; 6-way concurrent completions soak; kv capacity from log.
+result -> KV capacity 631,037 tokens @131k (4.81x conc) vs bf16 ~342-385k = 1.64-1.84x. Coherent: short probe
+  clean; 4000-tok forced decode top-4gram x3 (clean, coherent prose tail); survived 6-way concurrent completions
+  load, still coherent, no linear_stream/EngineDead/DEVICE_LOST/"!!!!". The 2026-07-06 repetition did NOT
+  reproduce on calibrated fp8 KV TP2+MTP5. (A chat-endpoint 400 during the concurrent gate was a TEST-launch
+  artifact: I omitted REASONPARSER, so the auto-injected thinking_token_budget was rejected -- NOT an fp8-KV fault;
+  the completions path was clean throughout.)
+verdict -> [PROMISING, not yet shipped] calibrated fp8 KV on TP2+MTP5 is coherent in every test run and gives
+  1.64-1.84x KV capacity (headroom toward the DD's 200k ctx). Matches the single-card fp8-KV finding (2x, near-
+  lossless scale). Gate a full 36k concurrent + long-gen soak before flipping the unattended DD (the 2026-07-06
+  repetition was late-generation + load-dependent). DD restored to known-good bf16 KV (KV_FP8=0) this session.
+
+### Overall verdict
+Baselines re-confirmed on 0.25.1 (NVFP4 leads decode, W8A8 leads prefill). Of three open kernel levers, TWO are
+now proven NO-GOs closed with hard evidence -- W8A8 decode GEMV (Track 1a: at BW roofline == FP8) and NVFP4
+int8-XMX prefill dot32 (Track 11: identical DPAS count, ISA-proven). The ONE GO is W8A8 small-M w8a16 routing:
++4-5% decode, more accurate, coherent, gate 18/18, shipped env-gated (B70_W8A16_M_MAX). Bonus: fp8 KV on TP=2 is
+coherent + 1.64-1.84x capacity (promising, soak-gated). Net picture: W8A8's remaining decode headroom is NOT in
+the GEMM (already at BW roofline == FP8) but in the surrounding step (GDN scan / MTP drafter / push-AR); NVFP4's
+prefill headroom is not reachable in int8-XMX on this arch. Agents: 3 kernel/profiling (opus x2, fable) + 1 doc.

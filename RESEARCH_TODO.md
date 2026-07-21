@@ -121,11 +121,19 @@ Goal: keep HumanEval+ at the current 0.890, push **decode ~23 -> 27-30 t/s**, pr
 The decode gap to FP8 is the only weak spot and it is **kernel-bound** (M=1 oneDNN int8 GEMM single-row path),
 not accuracy-bound. All of this is GPU-touch -> **gate behind `scripts/gpu-run`** (other agent is on the card now).
 
-- [ ] **1a. M=1 / decode GEMV fast path** for `int8_gemm_w8a8` -- the single-row path is the remaining 22.6-vs-29
-      gap (kernel doc 02 "make-it-faster"). NOT-STARTED. **Re-prioritized DOWN:** W8A8 decode is BW-bound at large-N
-      and overhead-bound at small-N; and commit 15918cc showed int8 LINEAR gives no MoE speedup. Only a dense-W8A8 lever.
-- [ ] **1b. Vectorize the quant K-loop** in `dynamic_per_token_int8_quant` -- cut per-token activation-quant overhead.
-- [ ] **1c. Fuse scale application** where possible (per-token act scale x per-channel weight scale into the epilogue).
+- [x] **1a. M=1 / decode GEMV fast path -- PROVEN NO-GO, CLOSED (2026-07-21).** The synced microbench
+      (research/w8a8/decode_gemv/bench_decode_gemv.py, real 27B shapes, eager + XPUGraph) shows the built
+      `int8_gemm_w8a16` decode op is already at **92-98% of the 581 GB/s B70 read roofline and bit-identical in
+      time to the FP8 bar** (both read 1 byte/weight). There is NO W8A8-vs-FP8 decode gap at the GEMM level, so
+      a reordered/VNNI16 small-M GEMV has no headroom (llama.cpp #21527's 3.1x beat a sub-roofline baseline; does
+      not transfer). W8A8 decode is memory-bound at parity with FP8. JOURNAL 2026-07-21, LESSONS row 7.
+- [x] **1b/1c. Quant K-loop / scale-fusion -- SUPERSEDED by the WIN (2026-07-21): route small-M through the
+      quant-free `int8_gemm_w8a16` op** instead of optimizing the act-quant. Skipping the per-token int8 activation
+      quant entirely at small M (<=64: decode + MTP verify) is worth 1.47-1.49x at the GEMM level (== FP8, more
+      accurate) and +3.6% c1 / +4.9% c4 end-to-end on W8A8 TP=2 captured+MTP3 (gate 18/18). Shipped env-gated
+      (`B70_W8A16_M_MAX`, default 0=OFF) in vllm/contrib/vllm_int8_xpu/xpu_int8.py + register_fake. LESSONS row 8.
+      (The remaining W8A8 decode headroom is NOT in the linear GEMM but in the surrounding step -- GDN scan,
+      MTP drafter, push-AR all-reduce -- which dominate the ~4% e2e-vs-1.47x-GEMM gap.)
 - [~] **1d. PIECEWISE -> FULL graph capture. RESOLVED 2026-06-22: PIECEWISE is the ceiling; FULL is KERNEL-gated.**
       PIECEWISE DONE -- and the warmup-spoof fix made PIECEWISE+MTP **+1.79x** (NOT -19%; MTP_TODO M0-M5). The FULL-capture
       lever was chased to ground: ported vllm-ascend #7148's dispatcher fix (scripts/88) AND tried `--attention-backend

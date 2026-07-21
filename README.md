@@ -15,6 +15,30 @@ accuracy loss.
 > "NVFP4 returns to research" banners below are SUPERSEDED. See the two NVFP4 rows + JOURNAL 2026-07-08 +
 > docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md.]**
 
+> **[2026-07-21 -- 27B NVFP4 + W8A8 speedup deep-dive: W8A8 small-M routing WIN + two proven NO-GOs + fp8-KV-on-TP2.**
+> Fresh coherence-immune coding baselines on the 0.25.1 stack (`vllm/nvfp4/bench_code.py`, out=256, TP=2)
+> re-confirm the split: **NVFP4** (DD: captured+MTP5+reclaim+prefixcache, bf16 KV) code decode **c1 46.1 / best
+> 48.9 t/s**, c4 24.7/stream (98.8 agg), TTFT-warm 242 ms; **W8A8** (int8g, GRAPH=1 PIECEWISE+MTP3+PUSH_AR)
+> code decode **c1 38.9 / 40.4**, c4 22.4 (89.7 agg), TTFT 277 ms. NVFP4 leads decode +19%, W8A8 leads prefill
+> +16% -- same story.
+> **WIN (shipped, env-gated): W8A8 small-M w8a16 routing.** The W8A8 apply path pays a per-token int8 activation
+> quant at every M; routing small M (<=64: decode + MTP verify) through the quant-free `int8_gemm_w8a16` op
+> (f16 act x s8 weight, one launch, same weight bytes) is **1.47-1.49x at the GEMM level, matches FP8, more
+> accurate** (f16 relerr 8.8e-3 vs s8 1.3e-2). End-to-end (W8A8 TP=2 captured+MTP3): code decode **c1 38.9 ->
+> 40.3 (+3.6%), c4 agg 89.7 -> 94.1 (+4.9%)**, coherent, gate 18/18. Patch `vllm/contrib/vllm_int8_xpu/xpu_int8.py`
+> (env `B70_W8A16_M_MAX`, default 0=OFF; register_fake so PIECEWISE capture traces it). GEMM 1.47x compresses to
+> ~4% e2e (GDN scan / MTP drafter / push-AR dominate the decode step).
+> **Two proven NO-GOs (closed with hard evidence):** (1) W8A8 int8 decode GEMM is already **at the 581 GB/s BW
+> read roofline (92-98%) and bit-identical to FP8** -- no W8A8-vs-FP8 decode gap; llama.cpp #21527's VNNI16 GEMV
+> win does not transfer (it beat a sub-roofline baseline); Track 1a is dead. (2) NVFP4 int8-XMX prefill
+> **dot32+correction** is numerically exact (relerr 2e-7) but emits an **identical Xe2 DPAS count** to the naive
+> block-scaled kernel (disasm 1280==1280 dpas.s8.s8/tile) -- group16 < int8 DPAS K-depth 32 forces K=16 DPAS =
+> bf16 MACs/instr; NVFP4 prefill stays on bf16 `nvfp4_gemm_w4a16` (`vllm/nvfp4/proto_blockscale/dot32/`).
+> **Bonus: fp8 KV on NVFP4 TP=2** (calibrated scales, arm A3) is coherent (short + 4000-tok forced decode +
+> 6-way concurrent, the 2026-07-06 repetition did NOT reproduce) and gives **631k KV tok @131k = 1.64-1.84x** the
+> bf16 342-385k -- promising for the 200k-ctx DD, pending a full 36k concurrent soak before flipping. See JOURNAL
+> 2026-07-21.]**
+>
 > **[2026-07-16 -- BACKENDS UPGRADED TO NEWEST + caching-on bench refresh.** vLLM **0.24.0 -> 0.25.1**
 > (`vllm-xpu-env:{v0251,int8g-v0251}`) and sglang **0.5.6 -> 0.5.15** rebuilt on XPU with all custom kernels
 > re-grafted. vLLM 0.25.1 keeps `torch==2.12.0` (no ABI bump, custom int8/nvfp4 .so load as-is) but shipped

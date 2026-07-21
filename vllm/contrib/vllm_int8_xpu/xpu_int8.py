@@ -62,6 +62,11 @@ def _register_int8_fakes():
         dt = out_dtype if out_dtype is not None else A.dtype
         return A.new_empty(tuple(A.shape[:-1]) + (B.shape[1],), dtype=dt)
 
+    # int8_gemm_w8a16(A[..,K] f16/bf16, B[K,N] i8 NT, B_scale[N], bias?) -> [.., N]
+    #   quant-free decode route (skips the act-quant); out dtype follows A (f16 here).
+    def _fake_int8_gemm_w8a16(A, B, B_scale, bias):
+        return A.new_empty(tuple(A.shape[:-1]) + (B.shape[1],), dtype=A.dtype)
+
     # int4_gemm_w4a8(A_ i8 [M,K], A_scale, A_zp, B int32 [K/8,N], B_scale, B_zp,
     #                group_size, g_idx?, bias?) -> [M, N] float16
     #   N = B.shape[1] (mat2 is packed [K/8, N]); M = A_.shape[0]. Out dtype is
@@ -79,6 +84,8 @@ def _register_int8_fakes():
               ("_xpu_C::int8_gemm_w8a8", _fake_int8_gemm)]
     if hasattr(torch.ops._xpu_C, "int8_gemm_w8a8_fusedq"):
         _fakes.append(("_xpu_C::int8_gemm_w8a8_fusedq", _fake_int8_gemm_fusedq))
+    if hasattr(torch.ops._xpu_C, "int8_gemm_w8a16"):
+        _fakes.append(("_xpu_C::int8_gemm_w8a16", _fake_int8_gemm_w8a16))
     if _int4_present:
         _fakes.append(("_xpu_C::int4_gemm_w4a8", _fake_int4_gemm_w4a8))
     for name, fn in _fakes:
@@ -114,13 +121,21 @@ class XPUInt8ScaledMMLinearKernel(Int8ScaledMMLinearKernel):
 
     def process_weights_after_loading(self, layer):
         w_q_name, w_s_name, _, _, _ = self.layer_param_names
-        weight = getattr(layer, w_q_name)
+        weight = getattr(layer, w_q_name)                      # [N,K] s8
+        # --- W8A16 small-M DECODE route (additive, env-gated by B70_W8A16_M_MAX): keep an
+        # NT weight view [K,N] stride0==1 + an [N] f16 per-channel scale, so decode/MTP-verify
+        # (small M) can go through the quant-free int8_gemm_w8a16 op and skip the per-token
+        # activation quant. Same s8 weight bytes as the s8s8 path; matches the sglang shim. ---
+        _w_NK = weight.contiguous()                            # [N,K] s8 backing (keep alive)
+        layer._w8a16_B_backing = _w_NK
+        layer._w8a16_B_nt = _w_NK.t()                          # [K,N] view, stride0==1 (NT)
         replace_parameter(layer, w_q_name,
                           Parameter(weight.t().contiguous().data, requires_grad=False))
         weight_scale = getattr(layer, w_s_name)
         is_fused_module = len(layer.logical_widths) > 1
         if is_fused_module and not self.config.is_channelwise:
             weight_scale = convert_to_channelwise(weight_scale, layer.logical_widths)
+        layer._w8a16_wscale = weight_scale.reshape(-1).to(torch.float16).contiguous()  # [N]
         replace_parameter(layer, w_s_name,
                           Parameter(weight_scale.reshape(1, -1).contiguous().data, requires_grad=False))
 
@@ -128,6 +143,21 @@ class XPUInt8ScaledMMLinearKernel(Int8ScaledMMLinearKernel):
         from vllm._xpu_ops import xpu_ops as ops
         w_q, w_s, _i_s, _i_zp, _azp_adj = self._get_layer_params(layer)
         x_2d = x.reshape(-1, x.shape[-1])
+        # W8A16 small-M DECODE route (B70_W8A16_M_MAX, default 0 = OFF = old behavior):
+        # the int8 GEMM is already at the BW roofline; the avoidable cost at small M
+        # (decode + MTP verify, M<=~64) is the per-token int8 ACTIVATION QUANT. Route
+        # those through the quant-free int8_gemm_w8a16 op (f16 act x s8 wt, per-channel
+        # scale, one launch) -> ~1.47x on the linear-GEMM slice, matches FP8, more accurate.
+        # Measured: research/w8a8/decode_gemv/decode_roofline.md. Rollback: B70_W8A16_M_MAX=0.
+        M = x_2d.shape[0]
+        _wmax = int(os.environ.get("B70_W8A16_M_MAX", "0"))
+        if (0 < M <= _wmax and hasattr(layer, "_w8a16_B_nt")
+                and hasattr(torch.ops._xpu_C, "int8_gemm_w8a16")):
+            xf = x_2d.to(torch.float16)
+            b16 = bias.to(torch.float16) if bias is not None else None
+            out = torch.ops._xpu_C.int8_gemm_w8a16(
+                xf, layer._w8a16_B_nt, layer._w8a16_wscale, b16)
+            return out.reshape(x.shape[:-1] + (out.size(-1),)).to(x.dtype)
         # FUSED path (B1): one op quantizes x inline + runs the s8s8 matmul, so
         # the per-token quant is not a separate captured graph node.
         if _FUSEDQ and hasattr(torch.ops._xpu_C, "int8_gemm_w8a8_fusedq"):
