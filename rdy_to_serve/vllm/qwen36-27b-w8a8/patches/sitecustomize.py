@@ -213,3 +213,45 @@ if os.environ.get("VLLM_XPU_MAMBA_PTR_FIX", "1") != "0":
               "-- prefix caching unblocked", file=sys.stderr, flush=True)
     except Exception as e:
         print("[csag-shim] (4) mamba ptr fix failed:", repr(e), file=sys.stderr, flush=True)
+
+# ---- (7) graph-replay command-list RECLAIM -- re-instantiate the exec graph every N replays ---------
+# Ported VERBATIM from vllm/nvfp4/patches/sitecustomize.py block (9) after the 2026-07-21 overnight DD
+# crash: W8A8 TP=2 captured+MTP3 on v0.25.1 hit the NEO linear_stream.h:84 abort ~36 min in under 4-way
+# concurrent load (results/logs/dd_w8a8_crash_20260721.log) -- the SAME transport-agnostic graph-replay
+# accumulation root-caused 2026-07-08 (docs/20260707_dd_mtp_piecewise_neo_abort.md): replaying a captured
+# XPUGraph that contains a cross-device collective accumulates L0 immediate-command-list space per replay;
+# a queue drain does NOT reclaim it, only graph RE-INSTANTIATION does (keep_graph=True + g.instantiate(),
+# no re-trace, zero throughput cost). Supersedes the experimental blocks (3)/(5)/(6) above as the default
+# leak fix. Gated B70_XPU_CG_RECLAIM=N (0/unset = OFF -> byte-identical); serve.sh defaults N=1000 for GRAPH=1.
+_RECLAIM_N = int(os.environ.get("B70_XPU_CG_RECLAIM", "0"))
+if _RECLAIM_N > 0:
+    try:
+        import torch as _t
+        import torch.xpu.graphs as _tgraphs
+        _Base = _t.xpu.XPUGraph
+        _orig_replay = _Base.replay
+        _rc_counts = {}
+        # keep_graph is consumed in __init__ (NOT just __new__) -- vLLM constructs via torch.cuda.CUDAGraph()
+        # (rebound to torch.xpu.XPUGraph) with NO args, so a __new__-only override leaves keep_graph=False and
+        # instantiate() refuses. Force it in BOTH __new__ and __init__ via a subclass (validated on box).
+        class _XPUGraphReclaim(_Base):
+            def __new__(cls, *a, **k):
+                return _Base.__new__(cls, keep_graph=True)
+            def __init__(self, *a, **k):
+                super().__init__(keep_graph=True)
+            def replay(self):
+                k = id(self)
+                n = _rc_counts.get(k, 0) + 1
+                _rc_counts[k] = n
+                if n % _RECLAIM_N == 0:
+                    try:
+                        self.instantiate()  # re-finalize exec graph -> reset the accumulated command list
+                    except Exception as _e:
+                        print("[csag-shim] (7) instantiate() failed:", repr(_e), file=sys.stderr, flush=True)
+                return _orig_replay(self)
+        _t.xpu.XPUGraph = _XPUGraphReclaim      # the rebind (xpu_model_runner:53) picks this up
+        _tgraphs.XPUGraph = _XPUGraphReclaim
+        print(f"[csag-shim] (7) XPUGraph RECLAIM ON (subclass): keep_graph=True + re-instantiate every "
+              f"{_RECLAIM_N} replays/graph (full-speed captured+MTP leak fix)", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[csag-shim] (7) reclaim patch failed:", repr(e), file=sys.stderr, flush=True)

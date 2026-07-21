@@ -9302,3 +9302,39 @@ result -> HEALTHY in 147s, gen-probe coherent, served id hotschmoe-dd (root /mod
 verdict -> shelf v0251 promotion VALIDATED at the DD config (init + coherence probe; concurrent-load soak still
   outstanding). NOTE: the installed systemd unit still points at the NVFP4 DD config -- a reboot reverts; repoint
   the override (sudo) if W8A8 is to persist as the DD.
+
+## 2026-07-21 (b) -- overnight W8A8 DD crash = NEO linear_stream.h:84; reclaim ported to the W8A8 shelf
+
+config -> the 2026-07-21 W8A8 DD (v0.25.1, TP=2, PIECEWISE+MTP3+PUSH_AR_GRAPH, 253952 ctx) under real
+  4-way concurrent agentic load from 192.168.10.54.
+result -> crashed at 08:21 (~36 min after start): Worker TP1 hit "Abort was called at 84 ...
+  neo/shared/source/command_stream/linear_stream.h" (x2), engine dead, container Exited(0). Full log
+  saved results/logs/dd_w8a8_crash_20260721.log. Scheduler dump shows a normal 4-req MTP decode step,
+  KV 12.4% -- NOT OOM/DEVICE_LOST/oneCCL. This is the KNOWN transport-agnostic graph-replay
+  command-list accumulation (2026-07-08 NVFP4 root cause); the W8A8 shelf sitecustomize only carried
+  the older default-OFF drafter-eager block -- the B70_XPU_CG_RECLAIM re-instantiation fix lived ONLY
+  in vllm/nvfp4/. (W8A8 was "bulletproof for days" on v0.24.0 without it; v0.25.1 evidently
+  accumulates faster or the old stability was load-dependent.) Side note: 4 earlier ASGI 400s from a
+  malformed client payload were handled at the API layer -- unrelated, engine untouched.
+fix -> ported block (9) -> W8A8 patches/sitecustomize.py block (7) verbatim (subclass XPUGraph,
+  keep_graph=True, re-instantiate every N replays); serve.sh defaults B70_XPU_CG_RECLAIM=1000 for
+  GRAPH=1 (CGRECLAIM=0 opt-out). FOUND + FIXED a second latent bug while verifying: the push-AR block
+  REASSIGNS DOCKER_ENV (rebuilds PYTHONPATH), silently dropping any -e appended above it -- both the
+  reclaim env AND the w8a16-routing B70_W8A16_M_MAX had been dropped on the first relaunch (serve.sh
+  echoed "reclaim ON" but the container never got the var; caught by docker exec env + the missing
+  shim print). Env appends now live BELOW the push-AR block with warning comments at both sites.
+result -> relaunch HEALTHY in 153s/182s, gen-probe coherent, "[csag-shim] (7) XPUGraph RECLAIM ON"
+  printed by BOTH workers, B70_XPU_CG_RECLAIM=1000 + B70_W8A16_M_MAX=0 confirmed in container env.
+verdict -> DD back up with the leak fix actually engaged. Soak under real load pending. Lesson
+  reinforced: after wiring an env-gated fix, VERIFY the env inside the container and the shim's
+  engagement print -- the serve-side echo alone proves nothing.
+
+## 2026-07-21 (c) -- NEXT SESSION PLAN: headless box, DP=2 NVFP4 DD + 4-bit campaign
+
+Display physically removed (both cards headless after the pending reboot). User direction: default
+the DD to DP=2 single-card NVFP4 replicas with CALIBRATED fp8 KV (uncalibrated fp8 KV = the
+2026-07-06 repetition burn; calibrated-only, soak-gated), freeing card 1 for a 4-bit research
+campaign (W4A8 port to vLLM 0.25.1, W4A4 rotation/accuracy go-no-go, NVFP4 tuning) while card 0
+serves. DP also structurally dodges the linear_stream leak (needs an in-graph cross-device
+collective; TP=1 replays 300k+ clean). Full kickoff prompt with phases, gates, and safety rails:
+docs/20260721_headless_dp2_4bit_kickoff.md.

@@ -178,7 +178,8 @@ export W8A16_M_MAX="${W8A16_M_MAX:-$_W8A16_DEF}"
 XPU_INT8_SRC="$SCRIPT_DIR/../../../vllm/contrib/vllm_int8_xpu/xpu_int8.py"
 [ -f "$XPU_INT8_SRC" ] || { echo "[!] xpu_int8.py overlay missing at $XPU_INT8_SRC" >&2; exit 1; }
 MOUNTS+=( -v "$XPU_INT8_SRC:/opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu_int8.py:ro" )
-DOCKER_ENV+=( -e B70_W8A16_M_MAX="$W8A16_M_MAX" )
+# [!] the B70_W8A16_M_MAX env injection is BELOW the push-AR block -- that block REASSIGNS DOCKER_ENV
+# (rebuilds PYTHONPATH), so any -e appended before it is silently dropped when PUSH_AR=1 (the default).
 
 # push-allreduce overlay -- DEFAULT ON (PUSH_AR=1, PUSH_AR_GRAPH=1): replaces oneCCL's TP all-reduce with the
 # custom L0-IPC push transport (contrib/vllm_push_allreduce). With PUSH_AR_GRAPH=1 the DECODE all-reduce is also
@@ -218,6 +219,20 @@ if [ "${PUSH_AR:-1}" = 1 ]; then
   echo "=== PUSH_AR overlay ON [default] (GRAPH=${PUSH_AR_GRAPH:-1} MIN_NUMEL=${PUSH_AR_MIN_NUMEL:-$_DEF_MIN}, P2PACCESS=0, .so=$SO_HOST) ==="
 else
   echo "=== PUSH_AR overlay OFF (PUSH_AR=0 -> plain oneCCL TP all-reduce baseline) ==="
+fi
+
+# [!] env appends below this line only -- the push-AR block above REASSIGNS DOCKER_ENV (see routing block note).
+DOCKER_ENV+=( -e B70_W8A16_M_MAX="$W8A16_M_MAX" )
+
+# NEO graph-replay leak RECLAIM -- DEFAULT ON for GRAPH=1 (2026-07-21): without it the captured+MTP path hits
+# the NEO linear_stream.h:84 replay-accumulation abort (overnight DD crash ~36 min under 4-way concurrent load
+# on v0.25.1, results/logs/dd_w8a8_crash_20260721.log; same transport-agnostic root cause as the 2026-07-08
+# NVFP4 fix, docs/20260707_dd_mtp_piecewise_neo_abort.md). Implemented in patches/sitecustomize.py block (7)
+# (keep_graph=True + re-instantiate each captured XPUGraph every N replays, zero throughput cost). Opt out
+# with CGRECLAIM=0; override cadence with CGRECLAIM=N. No-op when GRAPH=0 (nothing captured to leak).
+if [ "${GRAPH:-1}" = 1 ] && [ "${CGRECLAIM:-1000}" != 0 ] && [[ "${B70_EXTRA_ENV:-}" != *B70_XPU_CG_RECLAIM* ]]; then
+  DOCKER_ENV+=( -e "B70_XPU_CG_RECLAIM=${CGRECLAIM:-1000}" )
+  echo "=== NEO-leak reclaim ON: B70_XPU_CG_RECLAIM=${CGRECLAIM:-1000} (re-instantiate captured graphs) ===" >&2
 fi
 
 # --- DIAGNOSTIC / BISECT TOGGLES (opt-in; default-off => the serve command is byte-identical) -------
