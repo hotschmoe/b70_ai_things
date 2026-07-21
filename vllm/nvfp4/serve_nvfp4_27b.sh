@@ -272,7 +272,8 @@ docker rm -f "$NAME" >/dev/null 2>&1 || true
 # (Battlemage stability set from rdy_to_serve/_common/lib.sh: no Arc P2P, OFI transport,
 # spawn workers, LZ v1 adapter; CCL_ENABLE_SYCL_KERNELS=1 when capturing).
 TP_ARGS=( )
-if [ "$TP" = 1 ]; then
+PP="${PP:-1}"                          # pipeline-parallel size (PP=2 = the TP-vs-PP A/B; P2P send/recv per stage instead of per-layer all-reduce)
+if [ "$TP" = 1 ] && [ "$PP" = 1 ]; then
   MGPU=( -e ZE_AFFINITY_MASK="$CARD" ); SHM=16g
 else
   SK=$([ "$GRAPH" = 1 ] && echo 1 || echo 0)
@@ -280,7 +281,8 @@ else
          -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi
          -e CCL_TOPO_P2P_ACCESS="${P2PACCESS:-0}" -e CCL_ZE_IPC_EXCHANGE="${IPCX:-pidfd}" )
   SHM=32g
-  TP_ARGS=( -tp "$TP" )
+  [ "$TP" != 1 ] && TP_ARGS+=( -tp "$TP" )
+  [ "$PP" != 1 ] && TP_ARGS+=( -pp "$PP" )
 fi
 
 # SERVED_FORCE overrides the computed served-model-name exactly (skips the scheme suffixes) so the DD
@@ -310,6 +312,16 @@ fi
 EXTRA_MOUNTS=( )
 if [ -n "${B70_EXTRA_MOUNTS:-}" ]; then for m in ${B70_EXTRA_MOUNTS}; do EXTRA_MOUNTS+=( -v "$m" ); done; echo "=== B70_EXTRA_MOUNTS -> ${B70_EXTRA_MOUNTS} ===" >&2; fi
 
+# B70_PROFILER_DIR=/prof -> enable the vLLM torch profiler (0.25.1 ProfilerConfig; the old
+# VLLM_TORCH_PROFILER_DIR env is GONE). Registers /start_profile + /stop_profile; traces (CPU + XPU
+# device kernels, per worker) dump to that dir. Mount it via B70_EXTRA_MOUNTS. with_stack=false =
+# smaller traces (kernel timings only, which is what the prefill/decode decomposition needs).
+PROFILER_ARGS=( )
+if [ -n "${B70_PROFILER_DIR:-}" ]; then
+  PROFILER_ARGS=( --profiler-config "{\"profiler\":\"torch\",\"torch_profiler_dir\":\"$B70_PROFILER_DIR\",\"torch_profiler_with_stack\":false}" )
+  echo "=== B70_PROFILER_DIR -> vLLM torch profiler to $B70_PROFILER_DIR ===" >&2
+fi
+
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
@@ -323,7 +335,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" "${MAXBATCH_ARG[@]}" \
-  "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" "${AGENTIC_ARGS[@]}" "$PC_ARG" --trust-remote-code --skip-mm-profiling
+  "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" "${AGENTIC_ARGS[@]}" "${PROFILER_ARGS[@]}" "$PC_ARG" --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up; follow with: docker logs -f $NAME"
 echo "health: curl -s http://localhost:$PORT/health"

@@ -9102,3 +9102,74 @@ int8-XMX prefill dot32 (Track 11: identical DPAS count, ISA-proven). The ONE GO 
 coherent + 1.64-1.84x capacity (promising, soak-gated). Net picture: W8A8's remaining decode headroom is NOT in
 the GEMM (already at BW roofline == FP8) but in the surrounding step (GDN scan / MTP drafter / push-AR); NVFP4's
 prefill headroom is not reachable in int8-XMX on this arch. Agents: 3 kernel/profiling (opus x2, fable) + 1 doc.
+
+## 2026-07-21 (session 2) -- full prefill/decode trace decomposition + all-reduce root-cause (2 NO-GOs)
+
+Goal (user): "trace the entirety of a prefill and decode process, then break down where we can target
+improvements"; also try other backends, P2P, and TP-vs-PP. Method: coordinator owned the GPU lease (serial,
+health-gated); wired the vLLM torch profiler; CPU agents did backend-currency + the all-reduce root-cause.
+This builds on session-1's finding that the decode GEMM is already at BW roofline (so the headroom is elsewhere).
+
+### Profiler infra (Track 6)
+config -> vLLM 0.25.1 REPLACED the VLLM_TORCH_PROFILER_DIR env with a ProfilerConfig (--profiler-config JSON,
+  profiler='torch'). Added a reusable B70_PROFILER_DIR hook to serve_nvfp4_27b.sh. Also added PP support (PP env
+  -> -pp) to the same script.
+result -> the XPU profiler dumps per-card Kineto device-kernel traces (rank0/rank1 .pt.trace.json.gz) that DO
+  decompose PIECEWISE-captured decode into device kernels (active_iterations=5 steady-state). Parser
+  research/profiling/parse_trace.py, driver trace_driver.sh. (Flaky on repeat sessions -- kineto destructor
+  error -- but the first session on a fresh serve is clean.)
+
+### The decomposition (NVFP4 27B TP=2 MTP5 captured, rank0 device-kernel time)
+DECODE (5 steps): all-reduce/collective 43.0% | linear-gemm 39.2% (AT ROOFLINE, session-1, not improvable) |
+  gdn/mamba-scan 9.2% | sampling/elementwise ~6%. The all-reduce is DOMINATED by oneccl_allreduce_pcie 472ms
+  (39.1%, ~126/step) with the fast custom push-AR do_ar only 26ms (~152/step).
+PREFILL (1 step, 5210-tok prompt): linear-gemm 55.8% (gemm_kernel 1220ms, XMX -- good) | all-reduce ~35%
+  (mostly the FAST push-AR do_ar 696ms + oneCCL only 51ms) | gdn 4.9%.
+verdict -> DECODE is all-reduce-bound (43%), PCIe-latency-bound (no Battlemage P2P). PREFILL all-reduce is
+  already on the fast push-AR. The GEMM cannot be improved (roofline). So the decode target IS the all-reduce.
+
+### All-reduce ROOT CAUSE (opus agent, research/profiling/pushar_decode_gap.md)
+config -> WHY is 472ms of decode all-reduce on SLOW oneCCL when PUSH_AR_GRAPH=1? (my contiguity hypothesis)
+result -> contiguity REFUTED. The 760 XpuCommunicator.all_reduce calls are 100% on push-AR (do_ar), ZERO
+  fallback. The 472ms oneCCL is a DISJOINT path: all 631 oneccl_allreduce_pcie are nested inside vllm::all_gather
+  -- on XPU the gather is realized as zero-pad + a DIRECT torch.distributed.all_reduce(SUM) over the TP group
+  that BYPASSES XpuCommunicator.all_reduce (the only method push-AR patches). Decode-specific (631 gathers/step
+  vs 21 in prefill), scales with the MTP spec-decode path (the drafter/verify token gather).
+verdict -> the decode all-reduce cost is the MTP all_gather, not the layer all-reduces.
+
+### FIX ATTEMPT: all-gather redirect (PUSH_AR_ALLGATHER=1) -- NO-GO (coherent but 2.4x SLOWER)
+config -> env-gated capture-safe shim (default OFF): a thread-local-gated wrap over torch.distributed.all_reduce
+  that, only inside an XpuCommunicator.all_gather and only eager (declines under capture), routes the gather's
+  SUM all-reduce to the eager host-barrier push-AR (ar_allreduce_ptr_dt). vllm/contrib/vllm_push_allreduce/_push_ar_patch.py.
+command -> PUSH_AR_ALLGATHER=1 ... serve_nvfp4_27b.sh ; bench_decode_completions.py c1/c4 vs baseline.
+result -> "[push_ar] ALLGATHER redirect ENGAGED", COHERENT (fib clean -> the SUM-substitution is numerically
+  correct). BUT decode c1 48.9 -> 20.7 t/s (2.4x SLOWER), c4 29.6 -> 21.3.
+verdict -> [NO-GO] the eager push-AR does a HOST .wait()+CPU-spin barrier PER CALL; at ~631 small high-freq
+  decode gathers/step the host cost (~30-60ms/step) dwarfs the device saving. The 472ms DEVICE oneCCL OVERSTATES
+  the reclaimable cost -- oneCCL's async device scheduling is competitive for small collectives; only the
+  GRAPH-recorded push-AR (do_ar, 0.034ms) is truly fast, and that needs the collective CAPTURED. These gathers
+  run EAGER between piecewise subgraphs. Real fix = capture the MTP all_gather (record as do_ar) = the hard,
+  deferred problem (session-1's NEO-abort saga: "block(3) all_gather is EAGER"). Shim kept DEFAULT-OFF as a
+  documented negative + a hook if a device-async eager push transport is ever built. DD byte-unchanged.
+
+### TP-vs-PP (user ask) -- PP=2 NO-GO
+config -> vLLM 0.25.1 --pipeline-parallel-size 2 (added PP plumbing to serve_nvfp4_27b.sh).
+result -> NotImplementedError: "Pipeline parallelism is not supported for this model. Supported models implement
+  the SupportsPP interface." The Qwen3.6 hybrid-GDN (qwen3_5) modeling lacks SupportsPP.
+verdict -> [NO-GO] PP for the dense 27B needs modeling-code work (add SupportsPP + stage split to the
+  trust-remote-code model). PP is more naturally an MoE lever (user's intuition). Deferred.
+
+### Backend currency (fable agent, research/profiling/backend_currency_2026-07-21.md)
+vLLM 0.25.1 is NEWEST (no 0.25.2/0.26; torch stays 2.12, ABI-locked .so keeps loading) -- nothing to upgrade.
+sglang 0.5.15 torchcodec->torch-2.13-CUDA pin still blocks (fixable w/ constraints pin, defer). torch-xpu-ops#2992
+(oneCCL SYCL-graph allreduce record/replay -- would let the MTP all_gather be captured!) merged to main only,
+needs torch>=2.13 = ABI break = NO-GO this session, but it is the upstream path to the real fix.
+
+### Overall verdict
+The decode bottleneck is now PRECISELY characterized: NVFP4/W8A8 TP=2 decode is all-reduce-bound (43%), and that
+all-reduce is the MTP spec-decode all_gather realized as an eager oneCCL SUM over PCIe (no P2P). The GEMM is at
+roofline (session-1); GDN scan is 9%. Both cheap levers are ruled out with evidence: PP=2 (model lacks SupportsPP)
+and the host-barrier all-gather redirect (2.4x slower -- host-barrier too slow for high-freq small eager
+collectives). The ONE real fix = make the MTP all_gather graph-capturable (record as the fast do_ar) OR upstream
+torch-xpu-ops#2992 (needs torch>=2.13 ABI break). Both are hard/deferred. Reusable profiler infra + the full
+decomposition shipped. No positive perf win this session; a rigorous diagnostic that redirects future work.

@@ -54,3 +54,4 @@ agentic-eval/harnesses/*/vendor/
 agentic-eval/results/*/.*.parsed.json
 agentic-eval/results/*/raw/
 agentic-eval/tasks/
+research/profiling/*.json.gz

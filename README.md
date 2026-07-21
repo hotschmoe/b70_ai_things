@@ -15,6 +15,22 @@ accuracy loss.
 > "NVFP4 returns to research" banners below are SUPERSEDED. See the two NVFP4 rows + JOURNAL 2026-07-08 +
 > docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md.]**
 
+> **[2026-07-21 (session 2) -- full prefill/decode TRACE decomposition: decode is all-reduce-bound; 2 NO-GOs.**
+> Wired the vLLM 0.25.1 XPU torch profiler (new `--profiler-config`; reusable `B70_PROFILER_DIR` hook +
+> `research/profiling/parse_trace.py`) and decomposed the device-kernel time of NVFP4 27B TP=2 MTP5 captured.
+> **DECODE: all-reduce 43% (the #1 cost) | linear-GEMM 39% (at roofline, session-1) | GDN-scan 9%.** **PREFILL:
+> GEMM 56% (XMX) | all-reduce ~35% (already on the fast push-AR) | GDN 5%.** Root cause of the decode all-reduce
+> (opus agent): it is the **MTP spec-decode `vllm::all_gather`** realized on XPU as an eager oneCCL SUM over PCIe
+> (no Battlemage P2P) that **bypasses the push-AR** (which patches only `XpuCommunicator.all_reduce`); the layer
+> all-reduces are already 100% on push-AR. **Two cheap fixes ruled out with evidence:** PP=2 -> NO-GO (the
+> Qwen3.6 hybrid-GDN model lacks vLLM's `SupportsPP`); the host-barrier all-gather redirect (`PUSH_AR_ALLGATHER`,
+> kept default-off) -> coherent but **2.4x slower** (48.9->20.7 t/s -- the eager push-AR's CPU-spin host barrier
+> per call, x ~631 gathers/step, dwarfs the device saving; only the *graph-recorded* push-AR `do_ar` is fast, so
+> the real fix needs the gather **captured**). Net: decode is genuinely all-reduce-bound and the reclaimable fix
+> (capture the MTP all_gather, or upstream torch-xpu-ops#2992 which needs torch>=2.13) is deferred. Backends:
+> vLLM 0.25.1 is newest (nothing to upgrade). A diagnostic session -- no perf win, but the decode bottleneck is
+> now precisely mapped. See JOURNAL 2026-07-21 (session 2) + research/profiling/.]**
+>
 > **[2026-07-21 -- 27B NVFP4 + W8A8 speedup deep-dive: W8A8 small-M routing WIN + two proven NO-GOs + fp8-KV-on-TP2.**
 > Fresh coherence-immune coding baselines on the 0.25.1 stack (`vllm/nvfp4/bench_code.py`, out=256, TP=2)
 > re-confirm the split: **NVFP4** (DD: captured+MTP5+reclaim+prefixcache, bf16 KV) code decode **c1 46.1 / best

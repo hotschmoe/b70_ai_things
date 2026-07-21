@@ -128,6 +128,80 @@ def _install():
     XpuCommunicator.all_reduce = all_reduce
     print(f"[push_ar] patched XpuCommunicator.all_reduce (so={so}, maxB={MAXB})", flush=True)
 
+    # ---- ALL-GATHER push-AR redirect (additive, env-gated, DEFAULT OFF) --------------------------
+    # ROOT CAUSE (research/profiling/pushar_decode_gap.md): in DECODE ~39% of device time is a SLOW
+    # oneCCL all-reduce that the override above NEVER sees, because it is emitted *inside* vLLM's
+    # all_gather collective. On XPU `XpuCommunicator.all_gather` realizes the gather as a zero-pad +
+    # `dist.all_reduce(SUM)` over the TP device_group; that direct dist.all_reduce bypasses
+    # XpuCommunicator.all_reduce (the only method we patched) and lands on oneCCL. Trace: 631
+    # c10d::allreduce_ ALL nested under vllm::all_gather; the 760 XpuCommunicator all_reduces are 100%
+    # on push-AR (do_ar) with ZERO contiguity fallback (so PUSH_AR_FORCE_CONTIG would be a no-op).
+    #
+    # These all_gather calls run EAGER at top level (630/631 have parent=None -- between the piecewise
+    # CompiledFxGraph subgraphs, NOT inside a captured region), so routing their internal SUM
+    # all-reduce to the host-barrier push-AR (ar_allreduce_ptr_dt) is CAPTURE-SAFE:
+    #   * eager -> is_current_stream_capturing()==False -> host barrier runs like the proven prefill
+    #     eager all_reduce path; no uncapturable op is inserted into any captured graph;
+    #   * if a gather ever DID run under capture, the `not _is_capturing()` guard DECLINES and falls
+    #     back to graph-recordable oneCCL. So this can ONLY move an eager oneCCL call onto push-AR.
+    # The shim over torch.distributed.all_reduce is INERT unless the thread-local `ag_self` is set
+    # (only true for the dynamic extent of an XpuCommunicator gather), so the startup oneCCL warmup
+    # and every other collective are untouched. Enable with PUSH_AR_ALLGATHER=1.
+    ALLGATHER = os.environ.get("PUSH_AR_ALLGATHER") == "1"
+    if ALLGATHER:
+        try:
+            import torch.distributed as _dist
+            _SUM = _dist.ReduceOp.SUM
+            _orig_dist_all_reduce = _dist.all_reduce
+            _ag_tls = threading.local()
+
+            def _push_ar_inplace(comm, tensor):
+                # in-place SUM all-reduce via push-AR host barrier. True if handled, else oneCCL.
+                if not (tensor.is_contiguous() and tensor.dtype in DT
+                        and tensor.numel() * tensor.element_size() <= MAXB):
+                    return False
+                if not _lazy_init(comm):
+                    return False
+                lib = _load_lib(so)
+                lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(tensor.data_ptr()),
+                                        tensor.numel() * tensor.element_size(), DT[tensor.dtype])
+                return True
+
+            def _dist_all_reduce_shim(tensor, op=_SUM, group=None, async_op=False, **kw):
+                comm = getattr(_ag_tls, "ag_self", None)
+                # only the SUM all-reduce emitted synchronously INSIDE a gather on THIS 2-rank TP
+                # group, and only while running eager (never during capture).
+                if (comm is not None and not async_op and op == _SUM
+                        and (group is comm.device_group or group is None)
+                        and not _is_capturing()
+                        and _push_ar_inplace(comm, tensor)):
+                    return None  # dist.all_reduce(async_op=False) returns None
+                return _orig_dist_all_reduce(tensor, op=op, group=group, async_op=async_op, **kw)
+
+            def _wrap_gather(name):
+                orig = getattr(XpuCommunicator, name, None)
+                if orig is None:
+                    return
+                def wrapped(self, *a, **kw):
+                    if self.world_size != 2:
+                        return orig(self, *a, **kw)
+                    prev = getattr(_ag_tls, "ag_self", None)
+                    _ag_tls.ag_self = self
+                    try:
+                        return orig(self, *a, **kw)
+                    finally:
+                        _ag_tls.ag_self = prev
+                setattr(XpuCommunicator, name, wrapped)
+
+            _dist.all_reduce = _dist_all_reduce_shim
+            for _n in ("all_gather", "all_gatherv"):
+                _wrap_gather(_n)
+            print("[push_ar] ALLGATHER redirect ENGAGED: gather-internal SUM all_reduce -> push-AR "
+                  "(eager only, capture-safe)", flush=True)
+        except Exception as _e:
+            print(f"[push_ar] ALLGATHER redirect NOT installed ({_e}); gathers stay on oneCCL",
+                  flush=True)
+
 try:
     _install()
 except Exception as e:
