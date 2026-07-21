@@ -781,3 +781,64 @@ if _TB:
                   "(chat requests that omit it)" % _TB_N, file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (11) thinking-budget patch failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (12) XPU aten::max.dim wrong on wide reductions: fix get_top_tokens (use_local_argmax_reduction) --
+# The MTP drafter's per-draft-step FULL-VOCAB logits gather is the dominant slice of the AR-bound decode
+# (43%). use_local_argmax_reduction shrinks it (vocab-parallel argmax, ~76000x fewer bytes) BUT on XPU the
+# drafter's local argmax comes out WRONG -> accept collapses (0.65 vs ~4-5, pos0~53% rank-0 bias) -> decode
+# 48.9 -> 25.7. ROOT CAUSE (research/profiling/localargmax_accept_rootcause.md): get_top_tokens uses
+# torch.max(dim=-1) at logits_processor.py:136, and aten::max.dim returns a WRONG per-shard max VALUE over
+# the ~124160-wide bf16 vocab shard on this box, while aten::argmax (used by the healthy full path) is correct.
+# FIX: derive both the per-shard value + index from argmax+gather instead of max(dim=-1) (keeps the O(2*tp)
+# comm win; byte-identical on TP=1). Default OFF (LOCALARGMAX_ARGMAX_FIX=1). LOCALARGMAX_VERIFY=1 counts
+# argmax!=max.dim disagreements to prove the op bug empirically.
+if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
+    try:
+        import torch
+        from vllm.distributed import (
+            get_tensor_model_parallel_world_size,
+            tensor_model_parallel_all_gather,
+        )
+        from vllm.model_executor.layers.logits_processor import LogitsProcessor
+
+        _LAR_VERIFY = os.environ.get("LOCALARGMAX_VERIFY", "0") == "1"
+        _lar_n = [0]
+
+        def _get_top_tokens_argmax(self, lm_head, hidden_states, embedding_bias=None):
+            if self.scale <= 0.0 and self.scale != 1.0:
+                raise ValueError("local argmax reduction needs positive logit scale")
+            tp_size = get_tensor_model_parallel_world_size()
+            logits = lm_head.quant_method.apply(lm_head, hidden_states, bias=embedding_bias)
+            if self.soft_cap is not None:
+                logits = torch.tanh(logits / self.soft_cap) * self.soft_cap
+            if self.scale != 1.0:
+                logits = logits * self.scale
+            num_pad = lm_head.shard_indices.num_org_vocab_padding
+            if num_pad > 0:
+                logits[..., -num_pad:] = -float("inf")
+            # FIX: argmax (correct on XPU) instead of max(dim=-1) (wrong value/idx on wide bf16 shard).
+            local_max_indices = logits.argmax(dim=-1)
+            local_max_vals = logits.gather(-1, local_max_indices.unsqueeze(-1)).squeeze(-1)
+            if _LAR_VERIFY:
+                _bad_v, _bad_i = logits.max(dim=-1)
+                _nmis = int((_bad_i != local_max_indices).sum().item())
+                _lar_n[0] += 1
+                if _nmis or _lar_n[0] <= 8:
+                    print("[localargmax-verify] call=%d argmax!=max.dim mismatches=%d/%d"
+                          % (_lar_n[0], _nmis, local_max_indices.numel()), file=sys.stderr, flush=True)
+            vocab_start = lm_head.shard_indices.org_vocab_start_index
+            global_indices = local_max_indices + vocab_start
+            if tp_size == 1:
+                return global_indices
+            local_pair = torch.stack([local_max_vals.float(), global_indices.float()], dim=-1)
+            gathered = tensor_model_parallel_all_gather(local_pair, dim=-1)
+            gathered = gathered.view(hidden_states.shape[0], tp_size, 2)
+            max_rank_idx = gathered[:, :, 0].argmax(dim=-1, keepdim=True)
+            top_tokens = gathered[:, :, 1].gather(dim=-1, index=max_rank_idx)
+            return top_tokens.squeeze(-1).to(torch.int64)
+
+        LogitsProcessor.get_top_tokens = _get_top_tokens_argmax
+        print("[nvfp4-shim] (12) get_top_tokens -> argmax-based (XPU max.dim fix)", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (12) localargmax fix failed:", repr(e), file=sys.stderr, flush=True)

@@ -9226,3 +9226,45 @@ CAPTURED (so the fast graph do_ar reaches it) OR cut the gather count -- the har
 sessions 2+3: the decode bottleneck is now precisely mapped and every cheap lever is ruled out with evidence; the
 int4-XMX datapath is demonstrated (dpas.s4.s4 int-exact) but unrealized in a usable kernel. No perf win; high-value
 diagnostics that keep future work from chasing dead ends. Agents this session: opus x2 (Track1, Track2) + fable (Track3).
+
+## 2026-07-21 (session 4) -- "capture the all_gather" campaign -> real lever + a real XPU bug fixed, but no net win
+
+The last decode lever (from s2/s3: the 43% decode all-reduce). User: "send it with the capture campaign."
+
+### Phase 1 (opus agent, allgather_capture_phase1.md): capture = NO-GO, but a BETTER lever found
+The 631 decode all_gathers are NOT per-layer/capturable: they are the MTP spec LOGITS gathers -- the DRAFTER's
+per-draft-step FULL-VOCAB compute_logits gather + target verify gather -- EAGER in the proposer Python between
+graph replays (data-dependent control flow vLLM v1 does not full-graph-capture on XPU). So "capture the gather so
+do_ar records it" is a STRUCTURAL NO-GO. BUT the real lever is better: the drafter gathers the full vocab when it
+only needs the argmax. use_local_argmax_reduction (vocab-parallel argmax, ~76000x fewer bytes, drops the K-1
+drafter gathers) is the fix -- capture-free, transport-free, stacks with push-AR.
+
+### Phase 2: enable use_local_argmax_reduction -> ACCEPT COLLAPSE -> root-caused a real XPU op bug -> PARTIAL fix
+config -> LOCALARGMAX=1 serve knob (adds use_local_argmax_reduction:true to --speculative-config). Qwen3_5MTP
+already inherits LocalArgmaxMixin.get_top_tokens (no monkeypatch needed).
+result A (flag only) -> HEALTHY, COHERENT, but MTP accept COLLAPSED to 0.65 (pos0 53% pos1 12% pos2+ ~0) vs
+healthy ~4-5 -> decode c1 48.9 -> 25.7 (SLOWER). The drafter's local-argmax proposals come out WRONG on XPU.
+root cause (opus agent, localargmax_accept_rootcause.md; ruled out padding/D2T/shim rigorously) -> get_top_tokens
+uses torch.max(dim=-1) (logits_processor.py:136); aten::max.dim returns a WRONG per-shard max VALUE over the
+~124160-wide bf16 vocab shard on XPU (aten::argmax, used by the healthy full path, is correct) -> a too-low
+shard-1 value makes the cross-shard reducer pick rank0 -> pos0 accept ~= P(true token on shard0) ~53%, then the
+autoregressive chain compounds. A genuine vLLM-XPU op bug (max.dim on wide reductions), not config/model.
+fix (block 12, LOCALARGMAX_ARGMAX_FIX=1, default off) -> derive per-shard value+index from argmax+gather instead
+of max.dim. Keeps the O(2*tp) comm win; TP=1 byte-identical. LOCALARGMAX_VERIFY=1 counts argmax!=max.dim.
+result B (flag + fix) -> accept 0.65 -> 1.04-1.33 (pos0 53->67%, chain now extends to pos4), decode 25.7 -> 34.1.
+IMPROVED but STILL below baseline full-gather 48.9 (accept ~4-5). VERIFY: max.dim==argmax on INDEX (the VALUE was
+the bug, fix corrects it), but a RESIDUAL local-argmax correctness gap remains (pos0 67% vs ~95%+) despite
+correct per-shard val+idx -- next suspect is the size-2 cross-shard reducer or the pair all_gather.
+verdict -> [NO NET WIN] the argmax-fix is a REAL, upstream-worthy vLLM-XPU bug fix (helps anyone using
+use_local_argmax on XPU) and improves broken-LOCALARGMAX by ~33%, but LOCALARGMAX even fixed does NOT beat the
+baseline full-gather (34.1 < 48.9) due to the residual accept gap. DD stays on full-gather (unchanged). LOCALARGMAX
++ LOCALARGMAX_ARGMAX_FIX knobs kept default-off. The residual (why pos0 is still 33% wrong with correct val+idx)
+is the remaining follow-up.
+
+### Campaign net (sessions 2-4)
+The decode bottleneck is now exhaustively characterized: all-reduce-bound (43%, MTP drafter full-vocab logits
+gather), GEMM at roofline. Every transport/structural lever is closed with data -- capture (structural NO-GO),
+PP2 (no SupportsPP), host-barrier/eager-async push-AR redirects (2.4-2.5x slower), torch2.13/#2992 (slower +
+rebuild). The argmax-reduction lever is the closest to a win: it found + fixed a real XPU op bug but retains a
+residual accept gap that keeps it net-negative. No shippable decode win landed; a very thorough map + one genuine
+XPU bug fix (default-off). Agents this session: opus x3 (Phase1, root-cause, +) -- see the three research/profiling docs.

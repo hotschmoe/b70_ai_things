@@ -118,10 +118,19 @@ fi
 # config -- unlike w8a8 (spec3-optimal @ 48% accept), the bf16 head on NVFP4 numerics
 # drafts well enough that 5 pays (code accept ~1.00/1.00/0.97 at spec3).
 MTPTOK="${MTPTOK:-}"
+# LOCALARGMAX=1 -> the drafter uses vocab-parallel argmax (use_local_argmax_reduction) instead of gathering
+# the FULL-vocab logits every draft step. The MTP drafter is greedy on XPU, so it only needs the argmax token,
+# not the gathered logits -> this shrinks each drafter logits-gather ~76000x in bytes and removes the K-1
+# drafter all-gathers (the dominant slice of the 43% decode all-reduce; trace research/profiling/). BYTE-
+# IDENTICAL for greedy (Qwen3_5MTP inherits LocalArgmaxMixin.get_top_tokens -> logits_processor.get_top_tokens).
+# Capture-free, transport-free, stacks with push-AR. Default OFF (DD byte-identical until set). Rollback: unset.
+LOCALARGMAX="${LOCALARGMAX:-0}"
 SPEC_ARGS=( )
 if [ -n "$MTPTOK" ]; then
-  SPEC_ARGS=( --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTPTOK}}" )
+  _LAR=$([ "$LOCALARGMAX" = 1 ] && echo ',"use_local_argmax_reduction":true' || echo '')
+  SPEC_ARGS=( --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTPTOK}${_LAR}}" )
   SERVED="${SERVED}-mtp${MTPTOK}"
+  [ "$LOCALARGMAX" = 1 ] && echo "=== LOCALARGMAX=1 -> drafter vocab-parallel argmax (use_local_argmax_reduction) ===" >&2
 fi
 
 # Agentic parity (daily-driver: pi.dev / omp.sh / hermes harnesses). Qwen3.6 emits XML <tool_call>
