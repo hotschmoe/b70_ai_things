@@ -55,7 +55,12 @@ def check_endpoint(base_url: str) -> dict:
     """Return {ok, models, error}. Hits /v1/models (cheap, no generation)."""
     url = base_url.rstrip("/") + "/models"
     try:
-        with urllib.request.urlopen(url, timeout=15) as resp:
+        hdrs = {}
+        key = os.environ.get("OPENAI_API_KEY", "")
+        if key and key != "EMPTY":
+            hdrs["Authorization"] = "Bearer " + key
+        req = urllib.request.Request(url, headers=hdrs)
+        with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read())
         ids = [m.get("id") for m in data.get("data", [])]
         return {"ok": True, "models": ids, "error": None}

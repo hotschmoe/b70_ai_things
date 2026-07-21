@@ -842,3 +842,96 @@ if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
         print("[nvfp4-shim] (12) get_top_tokens -> argmax-based (XPU max.dim fix)", file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (12) localargmax fix failed:", repr(e), file=sys.stderr, flush=True)
+
+# ---- (13) embed_tokens INT8-at-load (per-row symmetric) -- frees ~1.18 GiB of bf16 for KV ----------
+# The NVFP4 ckpt quantizes everything big EXCEPT embed_tokens (2.37 GiB BF16 -- GDN is already fp8,
+# lm_head already u8). Storing the embedding int8-per-row (amax/127 scale, rel err ~0.4% of row max)
+# and dequantizing at gather costs one cheap index+mul and frees ~1.18 GiB -- the difference between
+# MTP@48k and MTP@90-100k at the same UTIL (JOURNAL 2026-07-21 i/j). Opt-in: B70_EMBED_INT8=1.
+# Mechanics: wrap Worker.determine_available_memory -> quantize EVERY VocabParallelEmbedding found via
+# gc (catches the MTP drafter's shared-weight instance; dedup by weight data_ptr) BEFORE the profiling
+# run + memory measurement, pop the bf16 Parameter, empty_cache so the freed bytes reach the KV budget.
+# Forward fast path is TP=1-only (the DP replica case); TP>1 modules are left untouched (masking path).
+# Capture-safe: gather + to() + mul, no host sync; quantization completes before any graph capture.
+if os.environ.get("B70_EMBED_INT8", "0") == "1":
+    try:
+        import torch
+        from vllm.model_executor.layers.vocab_parallel_embedding import VocabParallelEmbedding
+
+        _emb_orig_fwd = VocabParallelEmbedding.forward
+        _emb_reg = {}  # weight data_ptr -> (i8, scale)
+
+        def _emb_fwd(self, input_):
+            i8 = getattr(self, "_b70_emb_i8", None)
+            if i8 is None:
+                return _emb_orig_fwd(self, input_)
+            w = i8[input_]
+            return w.to(self._b70_emb_dtype) * self._b70_emb_scale[input_]
+
+        def _emb_quantize_all():
+            import gc
+            n_q, n_shared, freed = 0, 0, 0
+            mods = [o for o in gc.get_objects() if isinstance(o, VocabParallelEmbedding)]
+            for m in mods:
+                w = getattr(m, "weight", None)
+                if w is None or not isinstance(w, torch.Tensor):
+                    continue
+                if getattr(m, "tp_size", 1) != 1 or w.dtype not in (torch.bfloat16, torch.float16):
+                    continue  # TP>1 masking path / already non-float: leave stock
+                key = w.data_ptr()
+                if key in _emb_reg:
+                    i8, sc = _emb_reg[key]
+                    n_shared += 1
+                else:
+                    # CHUNKED quantize: the whole-tensor fp32 path allocates ~6 GiB of transients and
+                    # OOMs a loaded card (observed UR_OUT_OF_RESOURCES); 8192-row blocks peak <200 MB.
+                    V = w.shape[0]
+                    CH = 8192
+                    amax = torch.empty((V, 1), dtype=torch.float32, device=w.device)
+                    for r0 in range(0, V, CH):
+                        amax[r0:r0 + CH] = w[r0:r0 + CH].abs().amax(dim=1, keepdim=True).float()
+                    amax.clamp_(min=1e-8)
+                    sc = (amax / 127.0).to(w.dtype)
+                    i8 = torch.empty(w.shape, dtype=torch.int8, device=w.device)
+                    for r0 in range(0, V, CH):
+                        blk = w[r0:r0 + CH].float().div_(amax[r0:r0 + CH]).mul_(127.0)
+                        i8[r0:r0 + CH] = blk.round_().clamp_(-127, 127).to(torch.int8)
+                        del blk
+                    _emb_reg[key] = (i8, sc)
+                    n_q += 1
+                    freed += w.numel() * w.element_size() - i8.numel() - sc.numel() * sc.element_size()
+                m._b70_emb_i8 = i8
+                m._b70_emb_scale = sc
+                m._b70_emb_dtype = w.dtype
+                m._parameters.pop("weight", None)
+                m.weight = None
+            if n_q:
+                torch.xpu.synchronize()
+                torch.xpu.empty_cache()
+            print("[nvfp4-shim] (13) embed INT8: quantized %d embedding(s) (+%d shared ref), freed ~%.2f GiB"
+                  % (n_q, n_shared, freed / 2**30), file=sys.stderr, flush=True)
+            return freed
+
+        VocabParallelEmbedding.forward = _emb_fwd
+
+        from vllm.v1.worker.gpu_worker import Worker as _EmbWorker
+        _emb_orig_dam = _EmbWorker.determine_available_memory
+
+        def _emb_dam(self, *a, **kw):
+            try:
+                _freed = _emb_quantize_all()
+                # vLLM's KV budget uses weights_memory=model_memory_usage RECORDED AT LOAD -- a
+                # post-load free is invisible to it. Subtract what we freed so the budget sees it.
+                if _freed:
+                    self.model_runner.model_memory_usage -= _freed
+                    print("[nvfp4-shim] (13) model_memory_usage adjusted -%.2f GiB for KV budget"
+                          % (_freed / 2**30), file=sys.stderr, flush=True)
+            except Exception as e:
+                print("[nvfp4-shim] (13) embed INT8 quantize failed:", repr(e), file=sys.stderr, flush=True)
+            return _emb_orig_dam(self, *a, **kw)
+
+        _EmbWorker.determine_available_memory = _emb_dam
+        print("[nvfp4-shim] (13) embed INT8-at-load ARMED (quantizes at determine_available_memory)",
+              file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (13) embed INT8 install failed:", repr(e), file=sys.stderr, flush=True)

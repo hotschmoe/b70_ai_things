@@ -9483,3 +9483,36 @@ verdict -> the MTP flip doubles interactive single-stream speed at half the cont
   replica (or both) to MTPTOK=5 MAXSEQS=8 CAPSIZES=1,2,4,8 MAXLEN=47104 for snappier interactive
   use. Asymmetric DP (one long-ctx + one MTP replica + smart routing) = possible future work.
   Replica 1 restarted -> DP=2 restored while the 14B W4A4 CPU quant runs.
+
+## 2026-07-21 (j) -- Lever 1 (embed INT8) + UTIL=0.95: MTP5 AT 100K CTX -- DD flipped, 2.4x single-stream
+
+premise -> user goal: MTP3/5 at 90-100k ctx. Gap analysis: MTP configs need 1.2 GiB fixed +
+  ~33.4 KB/tok of KV; at UTIL=0.93 avail 2.72 GiB -> 48k cap. NVFP4 ckpt audit (safetensors
+  headers): GDN already fp8 (5.2 GiB), lm_head already u8 -- the ONE big bf16 tensor left is
+  embed_tokens (2.37 GiB). Levers chosen (user: UTIL 0.95 MAX, do not exceed): embed INT8 + 0.95.
+build -> sitecustomize block (13) B70_EMBED_INT8=1: at Worker.determine_available_memory entry,
+  quantize every VocabParallelEmbedding (gc-scan; data_ptr dedup; TP=1-only fast path) to int8
+  per-row symmetric (amax/127, rel err ~0.4%), pop the bf16 param, empty_cache. TWO landmines hit
+  and fixed: (a) whole-tensor fp32 quantize transients (~6 GiB) OOM a loaded card -> CHUNKED
+  8192-row blocks (<200 MB); the failed alloc also WEDGED that container's allocator (profiling
+  hung; rm + relaunch). (b) the freed 1.18 GiB was INVISIBLE to vLLM's KV budget -- it uses
+  weights_memory=model_memory_usage RECORDED AT LOAD -- fixed by subtracting the freed bytes from
+  model_runner.model_memory_usage in the wrapper. Result: avail KV 3.32 -> 4.5 GiB @0.95, est max
+  103,168 with MTP5.
+config (gated) -> MODE=fused GRAPH=1 MTPTOK=5 MAXSEQS=8 CAPSIZES=1,2,4,8 UTIL=0.95 MAXBATCH=2048
+  MAXLEN=100352 KV_FP8=1+scales PREFIXCACHE=1 parsers B70_EMBED_INT8=1 (KV pool 101,575 tok).
+result (full battery, card 1) -> bench 60.8 t/s single-stream code / 121.8 agg c4; gate 18/18;
+  needle@93k-depth 4/4 ('7391-ZULU'); repscan worst 0.0039 clean; HumanEval+ 0.976/0.945 -- plus
+  IDENTICAL to stock NVFP4 0.988/0.945, base -2 problems = noise -> embed INT8 is quality-neutral;
+  soak 30k single-stream FLAT 41.3 t/s + 52k 4-way concurrent, 0 crashes. UTIL=0.95 held under
+  the full battery (0.96 remains the crash wall; 0.95 = operator max, do not exceed).
+flip -> shelf TP=1 default re-baked (MTP5@100352, embed-INT8 folded into B70_EXTRA_ENV, previous
+  no-MTP config documented as fallback); rolling DD flip (replica 1 first, then 0, :18080 never
+  dark): both replicas HEALTHY, 4/4 proxy probes, c2 through nginx = 64.3 t/s/stream, 128.6 agg.
+  systemd unit description updated (config inherits from the shelf wrapper). Also fixed
+  evals/orchestrator/common.py check_endpoint to send OPENAI_API_KEY (it 401'd on key-enforced
+  serves).
+verdict -> DD is now DP=2 captured+MTP5+calibrated-fp8-KV+embed-INT8 @100,352 ctx: 60-64 t/s
+  single-stream (2.4x the morning config, ~1.7x the old TP=2 DD), ~128 t/s aggregate, wedge-immunity
+  unchanged. Track C parked (user: find a public rotated W4A4 checkpoint to compare before building
+  our own).

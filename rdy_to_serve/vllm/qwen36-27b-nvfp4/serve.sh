@@ -7,16 +7,22 @@
 #   TP=2 ./bin/gpu-run bash serve.sh start        # TP=2 fallback (both cards), port 8078
 #   bash serve.sh stop
 #
-# [TP=1, DEFAULT] THE single-card serving config (gated 2026-07-21, headless DP=2 campaign): captured
-#   no-MTP + CALIBRATED fp8 KV + prefix cache + agentic parsers at 100K ctx. Baked: MODE=fused GRAPH=1
-#   MTP OFF, MAXSEQS=4 CAPSIZES=1,2,4 UTIL=0.93 MAXBATCH=2048 MAXLEN=102400, KV_FP8=1
-#   KV_SCALES=vllm/nvfp4/kv_scales_nvfp4_27b.json. Measured: 25.7 t/s single-stream, 99 t/s aggregate
-#   at DP=2 conc=4, gate_concurrent_coherence 18/18 per card, 30k single + 40k concurrent soak clean.
-#   This is the DD replica config (b70_daily_0/1 behind bin/dp_nginx.conf on :18080).
-#   MEMORY WALLS (2026-07-21, v0.25.1): MTP costs a padded 17th KV layer (43.2 vs 34.6 KB/tok) + 0.8 GiB
-#   drafter -> MTP and >64K ctx are MUTUALLY EXCLUSIVE on one card. UTIL>=0.96 CRASHES under concurrent
-#   prefill (UR_OUT_OF_RESOURCES in nvfp4_gemm_w4a16; profiling under-reserves ~1 GiB) -- 0.93 is the
-#   gated wall. MAXBATCH<1600 rejected (GDN mamba-align block_size 1600).
+# [TP=1, DEFAULT] THE single-card serving config (gated 2026-07-21 evening, embed-INT8 lever): captured
+#   + MTP5 + CALIBRATED fp8 KV + INT8 embed_tokens (sitecustomize block 13, frees 1.18 GiB) + prefix
+#   cache + agentic parsers at 100K ctx. Baked: MODE=fused GRAPH=1 MTPTOK=5 MAXSEQS=8 CAPSIZES=1,2,4,8
+#   UTIL=0.95 MAXBATCH=2048 MAXLEN=100352, KV_FP8=1 KV_SCALES=vllm/nvfp4/kv_scales_nvfp4_27b.json,
+#   B70_EMBED_INT8=1. Measured (card 1): 60.8 t/s single-stream code (2.4x the earlier no-MTP config),
+#   121.8 t/s aggregate conc=4, gate 18/18, needle@93k-depth 4/4, repscan clean, HumanEval+ 0.976/0.945
+#   (plus IDENTICAL to stock 0.988/0.945 -- embed int8 is quality-neutral), 30k single-stream soak
+#   flat 41.3 t/s + 40k concurrent soak clean. This is the DD replica config (b70_daily_0/1 behind
+#   bin/dp_nginx.conf on :18080).
+#   MEMORY WALLS (2026-07-21, v0.25.1): the MTP drafter costs a padded 17th KV layer + 0.8 GiB weights;
+#   without the embed-INT8 lever MTP caps at ~48k ctx at UTIL=0.93. UTIL=0.96 CRASHES under concurrent
+#   prefill (UR_OUT_OF_RESOURCES; profiling under-reserves ~1 GiB) -- 0.95 is the operator-set MAX, do
+#   NOT go over. MAXBATCH<1600 rejected (GDN mamba-align block_size 1600). The freed embed memory only
+#   reaches the KV budget because block 13 also adjusts model_memory_usage (vLLM uses the load-time
+#   snapshot). Previous gated no-MTP config: MTPTOK= MAXSEQS=4 CAPSIZES=1,2,4 UTIL=0.93 MAXLEN=102400
+#   B70_EXTRA_ENV= (25.7 t/s, the conservative fallback).
 #   The old short-ctx MTP champion (HumanEval+ 0.988/0.945, 67 t/s code) is reachable via env:
 #   MTPTOK=5 MAXLEN=8192 UTIL=0.85 MAXSEQS=8 CAPSIZES=1,2,4,8 bash serve.sh start
 #
@@ -43,17 +49,22 @@ TP="${TP:-1}"
 export MODE=fused GRAPH=1 PORT="${PORT:-8078}" NAME="$NAME" IMG="${IMG:-vllm-xpu-env:int8g-v0251}"
 
 if [ "$TP" = 1 ]; then
-  # [DP-replica / daily-driver config] -- gated 2026-07-21 (see header). MTP intentionally OFF: it is
-  # memory-incompatible with >64K ctx on one card (padded drafter KV layer); set MTPTOK=5 explicitly
-  # (with MAXLEN<=64K) for the short-ctx champion.
-  export CARD="${CARD:-0}" MAXLEN="${MAXLEN:-102400}" UTIL="${UTIL:-0.93}" \
-         MAXSEQS="${MAXSEQS:-4}" CAPSIZES="${CAPSIZES:-1,2,4}" MAXBATCH="${MAXBATCH:-2048}" \
-         MTPTOK="${MTPTOK:-}"
+  # [DP-replica / daily-driver config] -- gated 2026-07-21 evening (see header): captured+MTP5 at 100K
+  # ctx via the embed-INT8 lever (block 13) at the operator-capped UTIL=0.95.
+  export CARD="${CARD:-0}" MAXLEN="${MAXLEN:-100352}" UTIL="${UTIL:-0.95}" \
+         MAXSEQS="${MAXSEQS:-8}" CAPSIZES="${CAPSIZES:-1,2,4,8}" MAXBATCH="${MAXBATCH:-2048}" \
+         MTPTOK="${MTPTOK:-5}"
   export KV_FP8="${KV_FP8:-1}" KV_SCALES="${KV_SCALES:-$REPO/vllm/nvfp4/kv_scales_nvfp4_27b.json}"
   export PREFIXCACHE="${PREFIXCACHE:-1}"
   export TOOLCALL="${TOOLCALL:-1}" TOOLPARSER="${TOOLPARSER:-qwen3_coder}" REASONPARSER="${REASONPARSER:-qwen3}"
   export OVERRIDE_TEMP="${OVERRIDE_TEMP:-0.6}"    # Qwen3 thinking-runaway fix (2026-07-11); THINK_BUDGET
                                                   # defaults 4096 in the recipe itself.
+  # embed-INT8 (block 13) is REQUIRED for MTP5@100K -- without it MTP caps ~48k. Fold into B70_EXTRA_ENV
+  # without clobbering caller-supplied extras.
+  case " ${B70_EXTRA_ENV:-} " in
+    *" B70_EMBED_INT8="*) : ;;
+    *) export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }B70_EMBED_INT8=1" ;;
+  esac
 else
   # [TP=2 256K fallback] -- both cards; push-AR prefill + prefix cache + agentic parsers on.
   export TP MAXLEN="${MAXLEN:-131072}" MTPTOK="${MTPTOK:-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \

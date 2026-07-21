@@ -3,9 +3,11 @@
 # DP=2 -- one captured single-card replica per card (b70_daily_0/card0 :18091, b70_daily_1/card1 :18092)
 # behind nginx least_conn (b70_daily_proxy, bin/dp_nginx.conf) on :18080, served id hotschmoe-dd, API-key
 # enforced (key read from the off-repo secret at start). Replica config is BAKED in the shelf wrapper
-# rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh (TP=1 default): captured no-MTP + CALIBRATED fp8 KV
-# (kv_scales_nvfp4_27b.json) + prefix cache + agentic parsers, MAXLEN=102400 UTIL=0.93. Gated 2026-07-21:
-# gate 18/18 per card, 30k single + 40k concurrent soak clean, 25.7 t/s/stream, 99 t/s aggregate.
+# rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh (TP=1 default): captured + MTP5 + CALIBRATED fp8 KV
+# (kv_scales_nvfp4_27b.json) + INT8 embed_tokens (shim block 13) + prefix cache + agentic parsers,
+# MAXLEN=100352 UTIL=0.95 (operator max -- 0.96 crashes under concurrent prefill). Gated 2026-07-21
+# evening: gate 18/18, needle@93k 4/4, HumanEval+ 0.976/0.945 (quality-neutral vs stock), 30k single +
+# 40k concurrent soak clean, 60.8 t/s single-stream / 121.8 t/s aggregate conc=4 per card.
 # WHY DP=2 (not TP=2): zero cross-card collectives -> the NEO linear_stream graph-replay leak class and
 # every oneCCL/TP wedge are structurally out of the picture; failure mode is soft per-replica garbage ->
 # dd-watchdog docker-restarts ONE replica (set DD_WATCH_REPLICAS in b70-dd-watchdog.service to match).
@@ -15,7 +17,7 @@
 # UTIL>=0.96 crashes under concurrent prefill; MAXBATCH<1600 rejected (mamba align). See shelf serve.sh.
 # Fallback DD (known-good): the TP=2 256K config -- TP=2 MAXLEN=200000 via the same wrapper (see git log
 # of this unit for the exact previous ExecStart).
-Description=B70 daily-driver serve (vLLM 0.25.1 NVFP4 27b DP=2 captured+fp8KV-calibrated @102k, hotschmoe-dd)
+Description=B70 daily-driver serve (vLLM 0.25.1 NVFP4 27b DP=2 captured+MTP5+fp8KV+embedINT8 @100k, hotschmoe-dd)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
 Wants=network-online.target
