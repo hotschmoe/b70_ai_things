@@ -11,7 +11,7 @@
 # Usage:
 #   xpu-health                 # probe BOTH cards (default)
 #   xpu-health --card 0        # probe only card 0
-#   xpu-health --img TAG       # image to run the probe in (default $IMG or vllm-xpu-env:v0230)
+#   xpu-health --img TAG       # image to run the probe in (default $IMG or vllm-xpu-env:int8g-v0251)
 #   xpu-health --timeout SECS  # per-card probe wall-clock cap (default 60)
 #
 # Exit codes (consumed by lib.sh guard + xe-reset):
@@ -20,7 +20,7 @@
 #   2  INCONCLUSIVE-- the probe could not run (no docker / image / device) -> warn, do not block
 set -uo pipefail
 
-IMG="${IMG:-vllm-xpu-env:v0230}"
+IMG="${IMG:-vllm-xpu-env:int8g-v0251}"
 TIMEOUT="${XPU_HEALTH_TIMEOUT:-60}"
 CARDS=(0 1)
 

@@ -9338,3 +9338,30 @@ campaign (W4A8 port to vLLM 0.25.1, W4A4 rotation/accuracy go-no-go, NVFP4 tunin
 serves. DP also structurally dodges the linear_stream leak (needs an in-graph cross-device
 collective; TP=1 replays 300k+ clean). Full kickoff prompt with phases, gates, and safety rails:
 docs/20260721_headless_dp2_4bit_kickoff.md.
+
+## 2026-07-21 (d) -- Phase 0 post-reboot verification: headless CONFIRMED, card asymmetry CURED, xe unload still blocked
+
+config -> first boot after physical display removal (kernel 7.1.0-070100, ICR 26.22). Stale systemd
+  unit auto-started the OLD NVFP4 TP=2 DD at boot (b70_daily_0, TP=2 @200k) -- stopped via docker
+  stop before any GPU work (unit is oneshot so nothing restarts it; repoint deferred to the DP=2
+  persistence step, needs sudo password -- only modprobe -r xe / modprobe xe are NOPASSWD).
+command -> ./bin/xpu-health (default img now int8g-v0251, fixed in bin/xpu-health); /proc/fb; lsmod;
+  sudo -n modprobe -r xe; per-card sustained 4096^3 bf16 GEMM + 512MB copy bench under gpu-run
+  --card N with host-side act_freq sampling (scratchpad card_ab_bench.py).
+result ->
+  1. xpu-health HEALTHY cards 0+1.
+  2. Headless CONFIRMED: /proc/fb EMPTY (was a bound framebuffer), all 16 DP/HDMI connectors
+     "disconnected", xe refcnt 5 -> 4.
+  3. modprobe -r xe STILL FAILS ("Module xe is in use") even fully headless with zero containers,
+     zero /dev/dri fds (checked every /proc/*/fd), empty /sys/module/xe/holders. The remaining
+     refcnt=4 is kernel-internal (likely per-device driver refs that only drop on PCI unbind).
+     REBOOT REMAINS the hard wedge recovery. Possible future lever: scoped sudoers for per-device
+     /sys/bus/pci/drivers/xe/{unbind,bind} (0000:0b:00.0 / 0000:44:00.0) -- untested, needs sudo.
+  4. Card asymmetry GONE: card0 125.9 TFLOPS bf16 / 530 GB/s @ ~1950-1983 MHz; card1 127.5 TFLOPS /
+     530 GB/s @ ~1983-2033 MHz. Card1 (ex-display) now clocks slightly HIGHER than card0. Both
+     max_freq/rp0 = 2800. The old 23.5-vs-15.3 t/s serve asymmetry should be retested at serve level
+     but the microbench says the downclock is cured.
+verdict -> headless effects verified: DP=2 replicas will be balanced, card-1 research numbers are
+  trustworthy. "Reboot is the only recovery" rule STANDS (do NOT retire it -- the kickoff doc's hope
+  that headless would free modprobe -r xe is REFUTED). bin/xpu-health default img fixed
+  v0230 -> int8g-v0251.
