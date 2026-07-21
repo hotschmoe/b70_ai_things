@@ -125,17 +125,27 @@ class XPUInt8ScaledMMLinearKernel(Int8ScaledMMLinearKernel):
         # --- W8A16 small-M DECODE route (additive, env-gated by B70_W8A16_M_MAX): keep an
         # NT weight view [K,N] stride0==1 + an [N] f16 per-channel scale, so decode/MTP-verify
         # (small M) can go through the quant-free int8_gemm_w8a16 op and skip the per-token
-        # activation quant. Same s8 weight bytes as the s8s8 path; matches the sglang shim. ---
-        _w_NK = weight.contiguous()                            # [N,K] s8 backing (keep alive)
-        layer._w8a16_B_backing = _w_NK
-        layer._w8a16_B_nt = _w_NK.t()                          # [K,N] view, stride0==1 (NT)
+        # activation quant. Matches the sglang shim.
+        # [!] MEMORY COST (2026-07-21): the NT backing is a SECOND full copy of the s8 weight
+        # (the s8s8 path needs [K,N] contiguous = the opposite physical layout) -> ~2x int8
+        # weight residency (27B TP=2: model load 26.21 vs 17.5 GiB/card, KV drops to 0.55 GiB
+        # -> a 253952-ctx serve cannot init). So only materialize it when the route is enabled;
+        # B70_W8A16_M_MAX=0 (default) now costs nothing. Real fix = teach int8_gemm_w8a16 to
+        # consume the s8s8 [K,N] layout (kernel TODO). ---
+        if int(os.environ.get("B70_W8A16_M_MAX", "0")) > 0:
+            _w_NK = weight.contiguous()                        # [N,K] s8 backing (keep alive)
+            layer._w8a16_B_backing = _w_NK
+            layer._w8a16_B_nt = _w_NK.t()                      # [K,N] view, stride0==1 (NT)
+            weight_scale_nt = getattr(layer, w_s_name)
+            if len(layer.logical_widths) > 1 and not self.config.is_channelwise:
+                weight_scale_nt = convert_to_channelwise(weight_scale_nt, layer.logical_widths)
+            layer._w8a16_wscale = weight_scale_nt.reshape(-1).to(torch.float16).contiguous()  # [N]
         replace_parameter(layer, w_q_name,
                           Parameter(weight.t().contiguous().data, requires_grad=False))
         weight_scale = getattr(layer, w_s_name)
         is_fused_module = len(layer.logical_widths) > 1
         if is_fused_module and not self.config.is_channelwise:
             weight_scale = convert_to_channelwise(weight_scale, layer.logical_widths)
-        layer._w8a16_wscale = weight_scale.reshape(-1).to(torch.float16).contiguous()  # [N]
         replace_parameter(layer, w_s_name,
                           Parameter(weight_scale.reshape(1, -1).contiguous().data, requires_grad=False))
 

@@ -9268,3 +9268,37 @@ PP2 (no SupportsPP), host-barrier/eager-async push-AR redirects (2.4-2.5x slower
 rebuild). The argmax-reduction lever is the closest to a win: it found + fixed a real XPU op bug but retains a
 residual accept gap that keeps it net-negative. No shippable decode win landed; a very thorough map + one genuine
 XPU bug fix (default-off). Agents this session: opus x3 (Phase1, root-cause, +) -- see the three research/profiling docs.
+
+## 2026-07-21 -- W8A8 shelf promoted to v0.25.1 + w8a16 routing baked in; routing weight-dup found + fixed; DD -> W8A8
+
+Context: the NVFP4 DD (b70_daily_0) died mid-bench with EngineDeadError (engine-core crash; container was
+removed before the root-cause traceback was saved -- lesson: docker logs before rm). User call: spin up W8A8
+as the daily driver and promote the shelf to the newest measured image + the 2026-07-21 routing win.
+
+1) Shelf update (rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh):
+config -> IMG default int8g-v0240 -> int8g-v0251 (vLLM 0.25.1; measured 2026-07-16: code 38.5 best 40.7,
+  cold PP 2598, KV 264k, coherent -- commit 872f700) + small-M w8a16 routing (commit 63cf1e6) baked in via
+  overlay-mount of contrib/vllm_int8_xpu/xpu_int8.py + W8A16_M_MAX knob (v0251 image predates the patch).
+
+2) NEW FINDING -- the w8a16 routing overlay DOUBLES int8 weight residency (long-ctx serve cannot init):
+config -> first DD launch attempt: MAXLEN=253952 TP=2 UTIL=0.90, routing mounted (then-default ON).
+command -> NAME=b70_daily_0 PORT=18080 TP=2 MAXLEN=253952 SERVED=hotschmoe-dd gpu-run bash serve.sh start
+result -> FAILED engine-core init: "Model loading took 26.21 GiB" (vs 17.5 expected), Available KV 0.55 GiB
+  < 8.66 GiB needed for 253952 ("estimated maximum model length 4160"). Root cause: process_weights_after_loading
+  kept BOTH physical weight layouts alive UNCONDITIONALLY -- the [N,K] s8 backing for the w8a16 NT view AND the
+  [K,N] contiguous copy for the s8s8 path (opposite layouts; no zero-copy share possible). Result 2 never saw it:
+  it was measured at MAXLEN=8192 where 0.55 GiB KV suffices.
+fix -> (a) xpu_int8.py: only materialize the NT backing when B70_W8A16_M_MAX > 0 (default 0 now truly costs
+  nothing, incl. in future int8g bakes); (b) serve.sh: W8A16_M_MAX default = 64 at MAXLEN<=8192 (the measured
+  config), 0 at long ctx. Kernel TODO: teach int8_gemm_w8a16 to consume the s8s8 [K,N] layout to kill the dup.
+verdict -> routing stays a real short-ctx win (+3.6% c1 / +4.9% c4) but is ctx-gated until the layout dup is fixed.
+
+3) Relaunch on the fixed shelf = DD is now W8A8 27B TP=2 on v0.25.1:
+command -> docker rm -f b70_daily_0; NAME=b70_daily_0 PORT=18080 TP=2 MAXLEN=253952 SERVED=hotschmoe-dd
+  API_KEY=$(cat /mnt/vm_8tb/b70/secrets/dd_api_key) ./bin/gpu-run bash rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start
+result -> HEALTHY in 147s, gen-probe coherent, served id hotschmoe-dd (root /models/qwen3.6-27b/w8a8-sqgptq),
+  model load 17.36 GiB, KV 9.39 GiB = 275,312 tokens @253952 (vs 264k on 07-16), PIECEWISE + MTP3 + PUSH_AR_GRAPH
+  + prefix cache + vision + qwen3_coder/qwen3 parsers + API key.
+verdict -> shelf v0251 promotion VALIDATED at the DD config (init + coherence probe; concurrent-load soak still
+  outstanding). NOTE: the installed systemd unit still points at the NVFP4 DD config -- a reboot reverts; repoint
+  the override (sudo) if W8A8 is to persist as the DD.

@@ -3,6 +3,12 @@
 # Coherent single-stream 27B int8-activation serve. EAGER ~9 t/s MTP-on (2.3x vs ~4 t/s MTP-off), 48% accept.
 # Self-contained recipe; shared plumbing in ../_common/lib.sh.
 #
+# [!! 2026-07-21 -- SHELF UPDATED: default image -> int8g-v0251 (vLLM 0.25.1; benched 2026-07-16 coherent,
+#     38.5 code decode / cold PP 2598 / KV 264k -- commit 872f700) + small-M W8A16 routing baked in
+#     (W8A16_M_MAX, default 64 at MAXLEN<=8192 / 0 at long ctx: +3.6% c1 / +4.9% c4 decode, more accurate,
+#     gate 18/18 -- commit 63cf1e6; the route's duplicate weight layout costs ~9 GiB/card, so it cannot fit
+#     the 253952-ctx DD -- see the routing block). Rollbacks IMG=vllm-xpu-env:int8g-v0240 and W8A16_M_MAX=0.]
+#
 # [!! 2026-07-03 -- vLLM UN-PAUSED, rebased to v0.24.0 (torch 2.12). The 5 hybrid mixed-prefill+decode PRs
 #     (#44700 split mixed -> recurrent GDN, #43990/#42430/#43961/#43556) FIX the "!!!!" concurrent garbage
 #     that paused vLLM: gate 40/40 + 32/32 coherent under staggered mixed load on BOTH CGMODE=NONE and
@@ -49,7 +55,9 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export ROOT="${ROOT:-/mnt/vm_8tb/b70}"     # needed to reference the host GDN .so before sourcing lib.sh
 
-export IMG="${IMG:-vllm-xpu-env:int8g-v0240}"   # v0.24.0/torch 2.12 (2026-07-03). Old v0.23 = vllm-xpu-env:int8g (rollback).
+export IMG="${IMG:-vllm-xpu-env:int8g-v0251}"   # v0.25.1/torch 2.12 (2026-07-16, commit 872f700: 4 XPU regressions
+                                            # fixed+baked; W8A8 benched 38.5 code / cold PP 2598 / KV 264k, coherent).
+                                            # Rollbacks: int8g-v0240 (v0.24.0, prior default), int8g (old v0.23).
 export CKPT="${CKPT:-/models/qwen3.6-27b/w8a8-sqgptq}"
 export SERVED="${SERVED:-qwen36-27b-w8a8-sqgptq-mtp}"
 export DTYPE="${DTYPE:-auto}"
@@ -152,6 +160,25 @@ MOUNTS=( -v "$GDN_SO:$PKGD/_xpu_C.abi3.so:ro"
          -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro"
          -v "$SCRIPT_DIR/patches:/opt/mtp_shim:ro" )
 DOCKER_ENV=( -e PYTHONPATH=/opt/mtp_shim )
+
+# small-M W8A16 ROUTING (2026-07-21, commit 63cf1e6 + JOURNAL Result 2): route M<=64 (decode + MTP verify
+# batch) through the quant-free int8_gemm_w8a16 op (f16 act x s8 weight, one launch) instead of the s8s8
+# two-step, skipping the per-token activation quant. Measured on W8A8 TP=2 captured+MTP3 @ MAXLEN=8192: 1.47x
+# at the GEMM level (== FP8), +3.6% c1 / +4.9% c4 e2e decode, MORE accurate (f16-act relerr 8.8e-3 vs s8
+# 1.3e-2), coherent, concurrent gate 18/18 PASS, capture-safe (register_fake for PIECEWISE). The routing lives
+# in contrib/vllm_int8_xpu/xpu_int8.py -- the SAME file the int8g bake copies into the image, but images baked
+# before 2026-07-21 (incl. int8g-v0251) predate it, so overlay-mount the repo copy.
+# [!] DEFAULT = ON (64) only at MAXLEN<=8192; OFF at long ctx. The route keeps a SECOND full copy of the s8
+# weight (the w8a16 NT layout is the physical opposite of the s8s8 [K,N] layout) -> model load 26.21 vs
+# 17.5 GiB/card at TP=2, KV drops to 0.55 GiB, and a 253952-ctx serve FAILS init ("8.66 GiB KV cache is
+# needed"). Found on the first long-ctx launch 2026-07-21; kernel TODO = make int8_gemm_w8a16 consume the
+# s8s8 layout so the dup goes away. Force with W8A16_M_MAX=64 (short-ctx perf) or =0 (rollback, no overlay cost).
+_W8A16_DEF=$([ "${MAXLEN}" -le 8192 ] && echo 64 || echo 0)
+export W8A16_M_MAX="${W8A16_M_MAX:-$_W8A16_DEF}"
+XPU_INT8_SRC="$SCRIPT_DIR/../../../vllm/contrib/vllm_int8_xpu/xpu_int8.py"
+[ -f "$XPU_INT8_SRC" ] || { echo "[!] xpu_int8.py overlay missing at $XPU_INT8_SRC" >&2; exit 1; }
+MOUNTS+=( -v "$XPU_INT8_SRC:/opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu_int8.py:ro" )
+DOCKER_ENV+=( -e B70_W8A16_M_MAX="$W8A16_M_MAX" )
 
 # push-allreduce overlay -- DEFAULT ON (PUSH_AR=1, PUSH_AR_GRAPH=1): replaces oneCCL's TP all-reduce with the
 # custom L0-IPC push transport (contrib/vllm_push_allreduce). With PUSH_AR_GRAPH=1 the DECODE all-reduce is also
