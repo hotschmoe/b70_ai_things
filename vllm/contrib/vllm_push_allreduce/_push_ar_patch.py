@@ -148,23 +148,95 @@ def _install():
     # (only true for the dynamic extent of an XpuCommunicator gather), so the startup oneCCL warmup
     # and every other collective are untouched. Enable with PUSH_AR_ALLGATHER=1.
     ALLGATHER = os.environ.get("PUSH_AR_ALLGATHER") == "1"
-    if ALLGATHER:
+    # PUSH_AR_ALLGATHER_ASYNC=1 routes the SAME gather-internal SUM all-reduce to the low-host-cost
+    # EAGER path (libxpu_push_ar_eager.so, ar_allreduce_eager_async): push + cross-card rendezvous on a
+    # dedicated L0 immediate command list, ONE host sync per call (result-ready handoff), reduce async on
+    # torch's queue -- vs the host-BARRIER ar_allreduce_ptr_dt (2 host waits + shm spin). See
+    # research/profiling/eager_async_ar_plan.md. Default OFF. Implies the gather wrap even if
+    # PUSH_AR_ALLGATHER is unset. A separate .so with its own IPC state (own socket) -> does NOT perturb
+    # the proven libxpu_push_ar_graph.so used by the captured all_reduce path.
+    ALLGATHER_ASYNC = os.environ.get("PUSH_AR_ALLGATHER_ASYNC") == "1"
+    if ALLGATHER or ALLGATHER_ASYNC:
         try:
             import torch.distributed as _dist
             _SUM = _dist.ReduceOp.SUM
             _orig_dist_all_reduce = _dist.all_reduce
             _ag_tls = threading.local()
 
+            # ---- async (eager immediate-list) lib: separate .so, separate IPC state ----
+            _aso = os.environ.get("PUSH_AR_ASYNC_SO",
+                                  os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                               "prebuilt", "libxpu_push_ar_eager.so"))
+            _aring = int(os.environ.get("PUSH_AR_ASYNC_RING", "4"))
+            _achunk = int(os.environ.get("PUSH_AR_ASYNC_CHUNK", str(4 << 20)))  # 4 MiB max tensor
+            _alib = None
+            _alib_lock = threading.Lock()
+
+            def _load_alib():
+                nonlocal _alib
+                if _alib is not None:
+                    return _alib
+                with _alib_lock:
+                    if _alib is None:
+                        a = ctypes.CDLL(_aso)
+                        a.ar_ea_setup.restype = ctypes.c_int
+                        a.ar_ea_setup.argtypes = [ctypes.c_int, ctypes.c_ulonglong, ctypes.c_int, ctypes.c_long]
+                        a.ar_ea_exchange.restype = ctypes.c_int
+                        a.ar_ea_exchange.argtypes = [ctypes.c_int, ctypes.c_char_p]
+                        a.ar_allreduce_eager_async.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
+                                                               ctypes.c_long, ctypes.c_int]
+                        _alib = a
+                return _alib
+
+            def _lazy_init_async(comm):
+                if getattr(comm, "_push_ar_async_ready", None) is not None:
+                    return comm._push_ar_async_ready
+                with _lock:
+                    if getattr(comm, "_push_ar_async_ready", None) is not None:
+                        return comm._push_ar_async_ready
+                    ok = False
+                    try:
+                        if comm.world_size == 2 and os.path.exists(_aso):
+                            a = _load_alib()
+                            qaddr = torch.xpu.current_stream().sycl_queue
+                            rc = a.ar_ea_setup(comm.rank, ctypes.c_ulonglong(qaddr), _aring, _achunk)
+                            if rc == 0:
+                                port = os.environ.get("MASTER_PORT", "0")
+                                sock = os.path.join(SOCK_DIR, f"vllm_push_ar_eager_{port}.sock").encode()
+                                rc = a.ar_ea_exchange(comm.rank, sock)
+                                ok = (rc == 0)
+                            if not ok:
+                                print(f"[push_ar] async setup/exchange rc={rc}; gather stays on host-barrier/oneCCL",
+                                      flush=True)
+                        elif not os.path.exists(_aso):
+                            print(f"[push_ar] async SO not found at {_aso}; ALLGATHER_ASYNC disabled", flush=True)
+                    except Exception as _e:
+                        print(f"[push_ar] async lazy init exception {_e}; falling back", flush=True)
+                        ok = False
+                    comm._push_ar_async_ready = ok
+                    if ok and comm.rank == 0:
+                        print("[push_ar] ALLGATHER_ASYNC ENGAGED: gather-internal SUM -> eager immediate-list "
+                              "push-AR (1 host sync/call)", flush=True)
+                    return ok
+
             def _push_ar_inplace(comm, tensor):
-                # in-place SUM all-reduce via push-AR host barrier. True if handled, else oneCCL.
-                if not (tensor.is_contiguous() and tensor.dtype in DT
-                        and tensor.numel() * tensor.element_size() <= MAXB):
+                # in-place SUM all-reduce for the gather-internal reduce. True if handled, else oneCCL.
+                if not (tensor.is_contiguous() and tensor.dtype in DT):
                     return False
-                if not _lazy_init(comm):
+                nbytes = tensor.numel() * tensor.element_size()
+                # ASYNC path first (opt-in): eager immediate-list push-AR, 1 host sync/call.
+                if ALLGATHER_ASYNC and nbytes <= _achunk and _lazy_init_async(comm):
+                    a = _load_alib()
+                    a.ar_allreduce_eager_async(ctypes.c_ulonglong(torch.xpu.current_stream().sycl_queue),
+                                               ctypes.c_ulonglong(tensor.data_ptr()), nbytes, DT[tensor.dtype])
+                    return True
+                # host-barrier path (PUSH_AR_ALLGATHER): 2 host waits + shm spin.
+                if not ALLGATHER:
+                    return False
+                if nbytes > MAXB or not _lazy_init(comm):
                     return False
                 lib = _load_lib(so)
-                lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(tensor.data_ptr()),
-                                        tensor.numel() * tensor.element_size(), DT[tensor.dtype])
+                lib.ar_allreduce_ptr_dt(ctypes.c_ulonglong(tensor.data_ptr()), nbytes, DT[tensor.dtype])
                 return True
 
             def _dist_all_reduce_shim(tensor, op=_SUM, group=None, async_op=False, **kw):
@@ -196,8 +268,9 @@ def _install():
             _dist.all_reduce = _dist_all_reduce_shim
             for _n in ("all_gather", "all_gatherv"):
                 _wrap_gather(_n)
-            print("[push_ar] ALLGATHER redirect ENGAGED: gather-internal SUM all_reduce -> push-AR "
-                  "(eager only, capture-safe)", flush=True)
+            _mode = "eager-async (immediate-list, 1 host sync)" if ALLGATHER_ASYNC else "host-barrier"
+            print(f"[push_ar] ALLGATHER redirect ENGAGED [{_mode}]: gather-internal SUM all_reduce -> "
+                  "push-AR (eager only, capture-safe)", flush=True)
         except Exception as _e:
             print(f"[push_ar] ALLGATHER redirect NOT installed ({_e}); gathers stay on oneCCL",
                   flush=True)

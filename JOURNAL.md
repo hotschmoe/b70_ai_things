@@ -9173,3 +9173,56 @@ and the host-barrier all-gather redirect (2.4x slower -- host-barrier too slow f
 collectives). The ONE real fix = make the MTP all_gather graph-capturable (record as the fast do_ar) OR upstream
 torch-xpu-ops#2992 (needs torch>=2.13 ABI break). Both are hard/deferred. Reusable profiler infra + the full
 decomposition shipped. No positive perf win this session; a rigorous diagnostic that redirects future work.
+
+## 2026-07-21 (session 3) -- 3 tracks on the decode all-reduce + int4-XMX showcase (all NO-GO, decode lever fully closed)
+
+Goal (user, picked from 4 options): attack the decode all-reduce two ways (device-async push-AR; torch 2.13/#2992)
++ build the int4-XMX showcase (W4A4). 3 CPU/kernel agents (opus x2, fable) designed+prototyped; coordinator ran
+all GPU tests in one DD-down window (Track2 microbench + Track1 serve). RAM-capped per user (single-file icpx only).
+
+### Track 3 -- torch 2.13 + torch-xpu-ops#2992: NOT WORTH IT (de-prioritized)
+torch 2.13.0+xpu is released and DOES ship #2992 (pinned torch-xpu-ops is a descendant of #2992). BUT: vLLM main
+still pins torch 2.12 (bump needed); our oneCCL 2021.17 < #2992's 2021.17.2 (swap re-opens the TP=2
+mem_to_ipc_handle wedge); full 2.13 = ~4-7 session rebuild-everything (all custom .so ABI-locked to 2.12) + re-gate.
+CRITICAL: even working, #2992 records the all_gather as a oneCCL node (~85us) which is SLOWER than our push-AR's
+~40us -- a capturability fallback, NOT a speed win. VERDICT: documented fallback only (cheapest = from-source
+torch 2.12 + #2992 cherry-pick, no ABI break). research/profiling/torch213_2992_scoping.md.
+
+### Track 1 -- eager device-async push-AR: NO-GO (coherent, 2.5x slower)
+config -> the failed session-2 redirect was slow due to the eager push-AR's HOST barrier (~3 host syncs/call). The
+fast do_ar (ar_allreduce_graph) is capture-only (its L0-event sync is injected via ext_codeplay_get_native_graph,
+valid only while recording; get_native_queue<level_zero> is broken in DPC++). Agent PROVED a zero-host device-async
+result-ready handoff is impossible on B70 (needs L0-on-torch-queue [broken] or an EU spin [hangs, J.9-C]). Built the
+correct floor: ar_allreduce_eager_async = a dedicated L0 immediate list (push + IPC-event rendezvous) + ONE
+zeEventHostSynchronize + async reduce on torch's queue (1 host sync/call, down from 3). New .so
+libxpu_push_ar_eager.so, env-gated PUSH_AR_ALLGATHER_ASYNC=1 (default off), separate from the proven graph .so.
+command -> built the .so (single-file icpx, RAM-safe); served NVFP4 TP=2 + PUSH_AR_ALLGATHER_ASYNC=1
+ASYNC_HOSTWAIT_INPUT=1 (safe mode); coherence probe; bench_decode_completions.
+result -> ENGAGED, HEALTHY (survived warmup + capture, NO hang, NO wedge -- raw-L0 process-local), COHERENT (fib
+clean -> the L0 ring rendezvous is numerically correct). Decode c1 48.9 -> 19.8 (2.5x SLOWER), c4 29.6 -> 26.5.
+verdict -> [NO-GO] a single zeEventHostSynchronize/call x ~631 tiny gathers/step still dwarfs oneCCL's async device
+scheduling (same class as the host-barrier redirect's 20.7). Confirms ANY per-call host sync is too expensive here.
+
+### Track 2 -- W4A4 int4-XMX prefill: int4 DPAS PROVEN but not a serve path (showcase only)
+config -> symmetric s4xs4 -> s32 DPAS prefill GEMM (gate/up N=34816 K=5120) + a W4A4 accuracy recipe.
+command -> built the tiled ESIMD kernel (single icpx, RAM-safe); ran on card 1 at M=512 and M=2048; CPU fake-quant
+accuracy probe.
+result -> the kernel emits NATIVE dpas.s4.s4.8.8 (real int4, not int8-widen) and is INT-EXACT (relerr 3.5e-8 vs CPU).
+BUT TOPS = 63.3 @M512 / 64.3 @M2048 (mainloop-capped, not amortization-bound) vs int8 367 / bf16 183 -- the naive
+tiled mainloop realizes only ~0.17x int8, far from the 2x-int8 int4 ceiling (needs an XeTLA-grade mainloop).
+Accuracy (fake-quant): W4A4 needs a Hadamard rotation MANDATORY (no-rot cosine 0.796; +block-Hadamard 0.973;
++group128 0.988 ~W4A16, still < W8A8 0.999; outlier ratio 73.3 -> 10.3) AND an online FWHT kernel we do not have.
+verdict -> [showcase, NOT a serve path] native int4 DPAS is real + int-exact on B70 -- a genuine "int4 XMX" datapath
+demo -- but W4A4 is far from usable serving (GEMM throughput short + accuracy needs rotation/FWHT + decode is
+BW-bound so prefill TOPS don't translate). W4A8 stays the real 4-bit serve path. vllm/nvfp4/proto_int4/w4a4/.
+
+### Overall verdict -- the decode all-reduce lever is FULLY CHARACTERIZED and CLOSED to cheap fixes
+Every transport measured: host-barrier redirect 2.4x slower | eager-async (1 host sync) 2.5x slower | oneCCL
+(0 host sync, async device) = baseline (competitive for small collectives) | graph push-AR (0 host sync, do_ar) =
+fast but CAPTURE-ONLY | PP=2 = model has no SupportsPP | torch2.13/#2992 = captured oneCCL node slower than push-AR
++ huge rebuild. So the ONLY remaining path to speed up the 43% decode all-reduce is to make the MTP all_gather run
+CAPTURED (so the fast graph do_ar reaches it) OR cut the gather count -- the hard "capture the MTP drafter" problem
+(session-1's NEO-abort saga). Decode is structurally all-reduce-bound on this TP=2-over-PCIe (no P2P) box. Net for
+sessions 2+3: the decode bottleneck is now precisely mapped and every cheap lever is ruled out with evidence; the
+int4-XMX datapath is demonstrated (dpas.s4.s4 int-exact) but unrealized in a usable kernel. No perf win; high-value
+diagnostics that keep future work from chasing dead ends. Agents this session: opus x2 (Track1, Track2) + fable (Track3).

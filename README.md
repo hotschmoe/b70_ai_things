@@ -15,6 +15,22 @@ accuracy loss.
 > "NVFP4 returns to research" banners below are SUPERSEDED. See the two NVFP4 rows + JOURNAL 2026-07-08 +
 > docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md.]**
 
+> **[2026-07-21 (session 3) -- decode all-reduce lever CLOSED to cheap fixes + int4-XMX datapath demonstrated.**
+> Following the session-2 trace (decode is 43% all-reduce = the MTP spec all_gather), attacked it 3 ways. **All
+> NO-GO, decode lever now fully characterized:** (1) eager device-async push-AR -- a ZERO-host handoff is *provably*
+> impossible on B70 (broken `get_native_queue` interop / EU-spin hangs); the correct 1-host-sync floor
+> (`ar_allreduce_eager_async`, env-gated default-off) is coherent + wedge-free but **2.5x slower** (48.9->19.8 t/s)
+> -- one `zeEventHostSynchronize` x ~631 tiny gathers/step still dwarfs oneCCL's async device scheduling. (2)
+> torch-2.13/#2992 -- **not even faster** (it records the gather as an ~85us oneCCL node vs our push-AR ~40us) and a
+> 4-7 session ABI-break rebuild -> de-prioritized. (3) **W4A4 int4-XMX** -- the `s4xs4->s32` DPAS GEMM is REAL and
+> int-exact (emits native `dpas.s4.s4`, relerr 3.5e-8) = a genuine B70 int4 datapath demo, but the naive tiled
+> mainloop caps **~64 TOPS** (vs int8 367) and W4A4 accuracy needs a Hadamard rotation + an online FWHT kernel we
+> lack -> **showcase, not a serve path** (W4A8 stays the real 4-bit serve path). **Net:** every cheap transport for
+> the 43% decode all-reduce is ruled out with data (host-barrier 2.4x / eager-async 2.5x slower; oneCCL = baseline;
+> fast do_ar = capture-only; PP2 = no SupportsPP; torch2.13 = slower). The only remaining speedup is the HARD one --
+> capture the MTP all_gather so the fast `do_ar` reaches it. Decode is structurally all-reduce-bound on TP=2-over-PCIe
+> (no Battlemage P2P). See JOURNAL 2026-07-21 (session 3) + research/profiling/.]**
+>
 > **[2026-07-21 (session 2) -- full prefill/decode TRACE decomposition: decode is all-reduce-bound; 2 NO-GOs.**
 > Wired the vLLM 0.25.1 XPU torch profiler (new `--profiler-config`; reusable `B70_PROFILER_DIR` hook +
 > `research/profiling/parse_trace.py`) and decomposed the device-kernel time of NVFP4 27B TP=2 MTP5 captured.
