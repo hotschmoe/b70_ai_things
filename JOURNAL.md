@@ -9467,3 +9467,19 @@ verdict -> Track A GO/NO-GO ANSWERED: W4A8 does NOT challenge NVFP4 as the 4-bit
   potential residency winner: scripts/149 (written, not yet run) requants with GDN int8 ->
   est. 20.6 GiB resident (vs NVFP4 24.9) = ~93k-tok KV @0.92 single-card. Requant + its own
   quality gate queued behind the 14B W4A4 quant (RAM discipline: one quant container at a time).
+
+## 2026-07-21 (i) -- Track B: MTP-vs-ctx trade quantified at the crash-safe UTIL=0.93 (card 1)
+
+config -> DD-replica config but MTPTOK=5 MAXSEQS=8 CAPSIZES=1,2,4,8; MAXLEN probe: 65536 REJECTED
+  (avail 2.72 GiB -> est max 48256); measured at MAXLEN=47104. Parsers ON (a parserless probe
+  reconfirmed the kickoff gotcha: THINK_BUDGET without REASONPARSER = 400 on every chat request).
+result -> MTP5@47k: single-stream code 54.8 t/s (2.1x the DD's no-MTP 25.7); conc=4 24.3/stream,
+  97.3 agg (== no-MTP's 99.1 -- MTP amortization vanishes at concurrency). gate 18/18 PASS at
+  UTIL=0.93. Full per-replica trade at UTIL=0.93, fp8 KV, v0.25.1:
+    no-MTP: 102400 ctx, 25.7 t/s single, 99.1 agg
+    MTP5:    47104 ctx, 54.8 t/s single, 97.3 agg
+verdict -> the MTP flip doubles interactive single-stream speed at half the context; aggregate is a
+  wash. DD stays no-MTP@102400 (doc priority: agentic long-ctx). Operator option recorded: flip a
+  replica (or both) to MTPTOK=5 MAXSEQS=8 CAPSIZES=1,2,4,8 MAXLEN=47104 for snappier interactive
+  use. Asymmetric DP (one long-ctx + one MTP replica + smart routing) = possible future work.
+  Replica 1 restarted -> DP=2 restored while the 14B W4A4 CPU quant runs.
