@@ -1,0 +1,57 @@
+  [ok ] w0k0   OK       Here's a thinking thinking sequence
+
+1.  **Deconst
+  [ok ] w0k1   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w0k2   OK       Thinking Process:
+
+1.  **Deconstruct the User's Re
+  [ok ] w0k3   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w0k4   OK       Here's a thinking thinking sequence
+
+1.  **Deconst
+  [ok ] w0k5   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w1k0   OK       Thinking Process:
+
+1.  **Deconstruct the User's Re
+  [ok ] w1k1   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w1k2   OK       Thinking Process:
+
+1.  **Deconstruct the User's Re
+  [ok ] w1k3   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w1k4   OK       Here's a thinking thinking sequence
+
+1.  **Deconst
+  [ok ] w1k5   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w2k0   OK       Here's a thinking thinking sequence
+
+1.  **Deconst
+  [ok ] w2k1   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w2k2   OK       Thinking Process:
+
+1.  **Deconstruct the User's Re
+  [ok ] w2k3   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w2k4   OK       Here's a thinking thinking sequence
+
+1.  **Deconst
+  [ok ] w2k5   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+
+=== 18 streams: OK=18 ===
+GATE PASS: all streams coherent under concurrent mixed prefill+decode

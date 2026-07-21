@@ -1,43 +1,44 @@
 [Unit]
-# B70 daily-driver serve. DEFAULT (2026-07-08, user choice): vLLM NVFP4 qwen3.6-27b TP=2 captured+MTP + the
-# graph-replay RECLAIM leak fix (B70_XPU_CG_RECLAIM, now the GRAPH=1 default in serve_nvfp4_27b.sh) --
-# full-speed ~38 t/s, MTP on, CRASH-FREE (27k single-stream FLAT + 36k 6-way concurrent, 0 linear_stream
-# aborts; see JOURNAL 2026-07-08 session 2 + docs/SERVE_TOMORROW_fallback.md). Served as hotschmoe-dd on
-# :18080, API-key enforced (key read from the off-repo secret file at start; NOT baked into the unit).
-# Fallbacks if the reclaim ever needs disabling: CGRECLAIM=0 (+ B70_EXTRA_ENV=B70_XPU_DRAFTER_EAGER=1 for
-# drafter-eager, or drop MTPTOK for B4). dd-watchdog (b70-dd-watchdog.service) backstops SOFT garbage with a
-# per-replica docker restart (probes b70_daily_0:18080). Prior default was sglang/vLLM W8A8 27b (see git log).
-# UPDATED 2026-07-17 (user): promoted to vLLM 0.25.1 (IMG=int8g-v0251) + PREFIXCACHE=1 (prefix caching now
-# WORKS on the NVFP4 path -- 57% hit, faster warm TTFT; the 0.24.0 DD had it off) + MAXLEN 131072->200000
-# (bf16 KV, KV_FP8=0; the KV pool ~342k tok is UTIL-bound not MAXLEN-bound, so 200k fits at ~1.7x conc).
-# The four v0.25.1 XPU regressions (device-env, int8g anchor, oneCCL 2021.17, hpc_rope splitting_op) are all
-# baked into int8g-v0251 + serve_nvfp4_27b.sh. Rollback = IMG=vllm-xpu-env:int8g-v0240 PREFIXCACHE=0 MAXLEN=131072.
-Description=B70 daily-driver serve (vLLM 0.25.1 NVFP4 27b captured+MTP+reclaim+prefixcache, TP=2 @200k, hotschmoe-dd)
+# B70 daily-driver serve. DEFAULT (2026-07-21, headless DP=2 campaign): vLLM 0.25.1 NVFP4 qwen3.6-27b
+# DP=2 -- one captured single-card replica per card (b70_daily_0/card0 :18091, b70_daily_1/card1 :18092)
+# behind nginx least_conn (b70_daily_proxy, bin/dp_nginx.conf) on :18080, served id hotschmoe-dd, API-key
+# enforced (key read from the off-repo secret at start). Replica config is BAKED in the shelf wrapper
+# rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh (TP=1 default): captured no-MTP + CALIBRATED fp8 KV
+# (kv_scales_nvfp4_27b.json) + prefix cache + agentic parsers, MAXLEN=102400 UTIL=0.93. Gated 2026-07-21:
+# gate 18/18 per card, 30k single + 40k concurrent soak clean, 25.7 t/s/stream, 99 t/s aggregate.
+# WHY DP=2 (not TP=2): zero cross-card collectives -> the NEO linear_stream graph-replay leak class and
+# every oneCCL/TP wedge are structurally out of the picture; failure mode is soft per-replica garbage ->
+# dd-watchdog docker-restarts ONE replica (set DD_WATCH_REPLICAS in b70-dd-watchdog.service to match).
+# RESEARCH MODE: `docker stop b70_daily_1` frees card 1 (nginx marks the backend down, card 0 keeps
+# serving); `docker start b70_daily_1` restores DP=2.
+# MEMORY WALLS (do not "improve" without re-gating): MTP is memory-incompatible with >64K ctx on one card;
+# UTIL>=0.96 crashes under concurrent prefill; MAXBATCH<1600 rejected (mamba align). See shelf serve.sh.
+# Fallback DD (known-good): the TP=2 256K config -- TP=2 MAXLEN=200000 via the same wrapper (see git log
+# of this unit for the exact previous ExecStart).
+Description=B70 daily-driver serve (vLLM 0.25.1 NVFP4 27b DP=2 captured+fp8KV-calibrated @102k, hotschmoe-dd)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
 Wants=network-online.target
 
 [Service]
-# oneshot + RemainAfterExit: ExecStart launches the serve container DETACHED (gpu-run -> docker run -d) and
-# returns 0; ExecStartPost waits (best-effort) for /health so ordering is sane; `systemctl stop` tears it down.
-# `systemctl enable` -> starts on boot. The reclaim makes the container crash-free, so the oneshot pattern is
-# sufficient; dd-watchdog handles the rare soft-garbage bounce.
+# oneshot + RemainAfterExit: each ExecStart launches detached (gpu-run --card N -> docker run -d) and
+# returns; ExecStartPost waits (best-effort) for the proxy to go healthy. `systemctl stop` tears down
+# both replicas + proxy. Replica 1 is staggered behind replica 0 to avoid first-boot shared-cache races.
 Type=oneshot
 RemainAfterExit=yes
 User=hotschmoe
 Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
-# Serve config is passed as env to the NVFP4 experiment serve.sh (which reads them). B70_XPU_CG_RECLAIM is NOT
-# listed here on purpose -- it is the GRAPH=1 default inside serve_nvfp4_27b.sh (opt out with CGRECLAIM=0).
 ExecStart=/bin/bash -lc 'API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  NAME=b70_daily_0 PORT=18080 IMG=vllm-xpu-env:int8g-v0251 TP=2 MODE=fused GRAPH=1 MTPTOK=5 KV_FP8=0 CAPSIZES=1,2,4,8 \
-  PREFIXCACHE=1 MAXLEN=200000 MAXSEQS=8 UTIL=0.85 PUSH_AR=1 PUSH_AR_GRAPH=1 SERVED_FORCE=hotschmoe-dd \
-  TOOLCALL=1 TOOLPARSER=qwen3_coder REASONPARSER=qwen3 \
-  THINK_BUDGET=4096 OVERRIDE_TEMP=0.6 \
-  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/vllm/nvfp4/serve_nvfp4_27b.sh start'
-ExecStartPost=/bin/bash -lc 'for i in $(seq 1 120); do curl -sf http://localhost:18080/health >/dev/null 2>&1 && exit 0; docker inspect -f "{{.State.Status}}" b70_daily_0 2>/dev/null | grep -q exited && { echo "container exited during startup" >&2; exit 1; }; sleep 5; done; echo "health wait timed out (container may still be warming)" >&2; true'
-ExecStop=/bin/bash -lc 'docker rm -f b70_daily_0 >/dev/null 2>&1 || true'
-# NVFP4 load + PIECEWISE capture + MTP drafter: allow generous startup.
+  NAME=b70_daily_0 PORT=18091 CARD=0 SERVED_FORCE=hotschmoe-dd \
+  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run --card 0 bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start'
+ExecStart=/bin/bash -lc 'sleep 20; API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+  NAME=b70_daily_1 PORT=18092 CARD=1 SERVED_FORCE=hotschmoe-dd \
+  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run --card 1 bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start'
+ExecStart=/bin/bash -lc 'docker rm -f b70_daily_proxy >/dev/null 2>&1; docker run -d --name b70_daily_proxy --network host -v /mnt/vm_8tb/github/b70_ai_things/bin/dp_nginx.conf:/etc/nginx/nginx.conf:ro --restart unless-stopped nginx:alpine'
+ExecStartPost=/bin/bash -lc 'for i in $(seq 1 120); do curl -sf http://localhost:18091/health >/dev/null 2>&1 && curl -sf http://localhost:18092/health >/dev/null 2>&1 && exit 0; for c in b70_daily_0 b70_daily_1; do docker inspect -f "{{.State.Status}}" $c 2>/dev/null | grep -q exited && { echo "$c exited during startup" >&2; exit 1; }; done; sleep 5; done; echo "health wait timed out (replicas may still be warming)" >&2; true'
+ExecStop=/bin/bash -lc 'docker rm -f b70_daily_proxy b70_daily_0 b70_daily_1 >/dev/null 2>&1 || true'
+# NVFP4 load + PIECEWISE capture x2 replicas: allow generous startup.
 TimeoutStartSec=1200
 TimeoutStopSec=120
 

@@ -7,16 +7,25 @@ import json, os, urllib.request
 
 HOST = os.environ.get("PROBE_HOST", "http://127.0.0.1:8079")
 NEEDLE_DEPTH = int(os.environ.get("NEEDLE_DEPTH", "0"))  # approx tokens of filler; 0 disables
+KEY = os.environ.get("KEY", "")  # optional API key (Authorization: Bearer) for key-enforced serves
+
+
+def _hdr():
+    h = {"Content-Type": "application/json"}
+    if KEY:
+        h["Authorization"] = "Bearer " + KEY
+    return h
 
 
 def mid():
-    return json.load(urllib.request.urlopen(HOST + "/v1/models", timeout=15))["data"][0]["id"]
+    r = urllib.request.Request(HOST + "/v1/models", headers=_hdr())
+    return json.load(urllib.request.urlopen(r, timeout=15))["data"][0]["id"]
 
 
 def gen(m, prompt, maxtok=64, temp=0.0):
     body = {"model": m, "prompt": prompt, "max_tokens": maxtok, "temperature": temp}
     r = urllib.request.Request(HOST + "/v1/completions", data=json.dumps(body).encode(),
-                               headers={"Content-Type": "application/json"})
+                               headers=_hdr())
     with urllib.request.urlopen(r, timeout=600) as x:
         return json.load(x)["choices"][0]["text"]
 

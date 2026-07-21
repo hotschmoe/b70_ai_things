@@ -21,6 +21,9 @@ Environment=DD_WATCH_DEBOUNCE=2
 Environment=DD_WATCH_COOLDOWN=420
 Environment=DD_WATCH_MAX_RESTARTS_HR=4
 Environment=DD_API_KEY_FILE=/mnt/vm_8tb/b70/secrets/dd_api_key
+# DP=2 NVFP4 DD (2026-07-21): watch BOTH replicas on their backend ports (name:port:card). A soft-garbage
+# heal restarts ONLY the affected replica; nginx keeps routing to the healthy one meanwhile.
+Environment=DD_WATCH_REPLICAS=b70_daily_0:18091:0,b70_daily_1:18092:1
 ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/bin/dd-watchdog
 # Keep the watchdog itself alive (it must outlive transient errors); it does NOT restart on a clean stop.
 Restart=on-failure

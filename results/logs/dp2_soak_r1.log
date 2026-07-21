@@ -1,0 +1,49 @@
+=== [18:36:44] replica 1 single-stream 30k soak ===
+[dp2_r1_single] served=hotschmoe-dd TOKENS_PER=3000 TARGET=30000 CONC=1
+[dp2_r1_single] w0 req0: +3000 tok -> 3000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req1: +3000 tok -> 6000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req2: +3000 tok -> 9000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req3: +3000 tok -> 12000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req4: +3000 tok -> 15000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req5: +3000 tok -> 18000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req6: +3000 tok -> 21000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req7: +3000 tok -> 24000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req8: +3000 tok -> 27000 total  25.4 tok/s  ok
+[dp2_r1_single] w0 req9: +3000 tok -> 30000 total  25.4 tok/s  ok
+=== [dp2_r1_single] SURVIVED 30000 tok / 1180s -- NO crash ===
+=== [18:56:24] replica 1 concurrent 40k soak ===
+[dp2_r1_conc] served=hotschmoe-dd workers=4 ctx_chars=28000 maxtok=4000 ceil_tok=40000 ceil_sec=2400
+  [dp2_r1_conc] t=20s tok=0 reqs=0
+  [dp2_r1_conc] t=40s tok=0 reqs=0
+  [dp2_r1_conc] t=60s tok=0 reqs=0
+  [dp2_r1_conc] t=80s tok=0 reqs=0
+  [dp2_r1_conc] t=100s tok=0 reqs=0
+  [dp2_r1_conc] t=120s tok=0 reqs=0
+  [dp2_r1_conc] t=140s tok=0 reqs=0
+  [dp2_r1_conc] t=160s tok=0 reqs=0
+  [dp2_r1_conc] t=180s tok=0 reqs=0
+  [dp2_r1_conc] t=200s tok=0 reqs=0
+  [dp2_r1_conc] t=220s tok=12000 reqs=3
+  [dp2_r1_conc] t=240s tok=16000 reqs=4
+  [dp2_r1_conc] t=260s tok=16000 reqs=4
+  [dp2_r1_conc] t=280s tok=16000 reqs=4
+  [dp2_r1_conc] t=300s tok=16000 reqs=4
+  [dp2_r1_conc] t=320s tok=16000 reqs=4
+  [dp2_r1_conc] t=340s tok=16000 reqs=4
+  [dp2_r1_conc] t=360s tok=16000 reqs=4
+  [dp2_r1_conc] t=380s tok=16000 reqs=4
+  [dp2_r1_conc] t=400s tok=16000 reqs=4
+  [dp2_r1_conc] t=420s tok=24000 reqs=6
+  [dp2_r1_conc] t=440s tok=32000 reqs=8
+  [dp2_r1_conc] t=460s tok=32000 reqs=8
+  [dp2_r1_conc] t=480s tok=32000 reqs=8
+  [dp2_r1_conc] t=500s tok=32000 reqs=8
+  [dp2_r1_conc] t=520s tok=32000 reqs=8
+  [dp2_r1_conc] t=540s tok=32000 reqs=8
+  [dp2_r1_conc] t=560s tok=32000 reqs=8
+  [dp2_r1_conc] t=580s tok=32000 reqs=8
+  [dp2_r1_conc] t=600s tok=32000 reqs=8
+  [dp2_r1_conc] t=620s tok=32000 reqs=8
+  [dp2_r1_conc] t=640s tok=48000 reqs=12
+[dp2_r1_conc] SURVIVED tok=52000 reqs=13 t=792s (no crash within ceiling)
+=== [19:09:37] replica 1 soak sequence DONE ===

@@ -39,7 +39,9 @@ DD_REPLICAS="${DD_REPLICAS:-1}"           # 1 = single serve (TP=2 / big; the W8
                                           # (only for a model that FITS ONE card, e.g. DD_MODEL=vllm/qwen36-27b-int4).
 DD_CARD="${DD_CARD:-}"                     # set to 0 or 1 -> ONE-CARD mode: pin to that card + lease ONLY that card
                                           #     (leaves the other free for `gpu-run --card <other>` experiments).
-DD_MAXLEN="${DD_MAXLEN:-253952}"          # daily-driver context = 248K, tuned for coding (2026-07-03). Qwen3.6
+DD_MAXLEN="${DD_MAXLEN-253952}"           # daily-driver context = 248K, tuned for coding (2026-07-03). Set
+                                          # DD_MAXLEN="" (explicit empty) to use the model serve.sh's own
+                                          # default (the DP=2 NVFP4 shelf bakes its gated 102400). Qwen3.6
                                           # native max_position_embeddings=262144 (NO rope scaling), so 248K is
                                           # in-window (no extrapolation/quality risk); left ~8K under native +
                                           # ~66K KV headroom (KV 320k @ vLLM v0.24.0 -> 1.26x concurrency at full
@@ -100,7 +102,8 @@ served_id() { local h=""; [ -n "$DD_API_KEY" ] && h="-H \"Authorization: Bearer 
 
 # env passed to EVERY replica's serve.sh (on top of the model's own defaults).
 replica_env() {
-  local e="MAXLEN=$DD_MAXLEN"
+  local e=""
+  [ -n "$DD_MAXLEN" ] && e="MAXLEN=$DD_MAXLEN"
   [ "$DD_MTP" = 1 ] && e="$e MTPTOK=4 COMPILESZ="    # MTP: integer is quote-safe; COMPILESZ= omits compile_sizes
   # API key enforcement (both backends; assumes one token, no spaces):
   #   vLLM   -- B70_EXTRA_ENV=VLLM_API_KEY=... (lib.sh injects the docker env; vLLM --api-key defaults to it).
@@ -188,13 +191,22 @@ start() {
 
   local bringup wait_targets gpurun="$REPO/bin/gpu-run"
   if [ "$DD_REPLICAS" = 2 ]; then
-    # [DP=2] one captured replica per card (same served-model-name -> proxy transparent), nginx round-robin. Both cards.
-    local serve0="$renv DEVICE=0 PORT=$P0 NAME=$DP0 bash $SERVE start"
-    local serve1="$renv DEVICE=1 PORT=$P1 NAME=$DP1 bash $SERVE start"
+    # [DP=2] one captured replica per card (same served-model-name -> proxy transparent), nginx least_conn. Both
+    # DEVICE= (sglang-style serve.sh) and CARD= (vllm/nvfp4-style) are emitted -- each wrapper reads its own.
+    # PER-CARD leases (2026-07-21): each replica holds ONLY its card's lease via its own gpu-run --card N +
+    # docker wait, so `docker stop b70_daily_1` releases card 1 for research (`gpu-run --card 1 ...`) while
+    # replica 0 keeps serving -- the DP research-mode flow. Replica 1 start is staggered ~20s behind replica 0
+    # to avoid first-boot races on the shared triton/vllm cache mounts.
+    local serve0="$renv DEVICE=0 CARD=0 PORT=$P0 NAME=$DP0 bash $SERVE start && docker wait $DP0"
+    local serve1="sleep 20 && $renv DEVICE=1 CARD=1 PORT=$P1 NAME=$DP1 bash $SERVE start && docker wait $DP1"
     local proxy_run="docker rm -f $PROXY >/dev/null 2>&1; docker run -d --name $PROXY --network host -v $REPO/bin/dp_nginx.conf:/etc/nginx/nginx.conf:ro --restart unless-stopped nginx:alpine >/dev/null 2>&1"
-    bringup="$serve0 && $serve1 && $proxy_run && docker wait $DP0 $DP1"
     wait_targets="$DP0 $DP1"
-    echo "  replica 0 -> card 0 :$P0 ; replica 1 -> card 1 :$P1 ; proxy -> :$PORT"
+    ssh_h "docker rm -f $wait_targets $PROXY >/dev/null 2>&1 || true"
+    ssh_h "cd $REPO && mkdir -p \"$(dirname "$LOG")\" && nohup setsid $gpurun --card 0 bash -c \"$serve0\" > $LOG 2>&1 < /dev/null & echo '  launched replica 0 (pid '\$!')'"
+    ssh_h "cd $REPO && nohup setsid $gpurun --card 1 bash -c \"$serve1\" > $LOG.r1 2>&1 < /dev/null & echo '  launched replica 1 (pid '\$!')'"
+    ssh_h "$proxy_run"
+    echo "  replica 0 -> card 0 :$P0 ; replica 1 -> card 1 :$P1 ; proxy -> :$PORT (per-card leases)"
+    bringup=""
   elif [ -n "$DD_CARD" ]; then
     # [1 CARD] pin to card $DD_CARD, lease ONLY that card (other card stays free for `gpu-run --card <other>`).
     gpurun="$REPO/bin/gpu-run --card $DD_CARD"
@@ -212,9 +224,11 @@ start() {
   # "is a replica exited?" check and aborts the bringup -- which on a oneshot systemd unit then kills the
   # serve that was just starting (observed after `sudo reboot` 2026-06-29: serve.sh's own docker-rm runs
   # only AFTER its xpu-health pre-flight, too late to beat this loop).
-  ssh_h "docker rm -f $wait_targets $PROXY >/dev/null 2>&1 || true"
-  # gpu-run holds the lease; 'docker wait' pins it for the whole serving lifetime (released on stop -> docker stop).
-  ssh_h "cd $REPO && mkdir -p \"$(dirname "$LOG")\" && nohup setsid $gpurun bash -c \"$bringup\" > $LOG 2>&1 < /dev/null & echo '  launched (pid '\$!')'"
+  if [ -n "$bringup" ]; then
+    ssh_h "docker rm -f $wait_targets $PROXY >/dev/null 2>&1 || true"
+    # gpu-run holds the lease; 'docker wait' pins it for the whole serving lifetime (released on stop -> docker stop).
+    ssh_h "cd $REPO && mkdir -p \"$(dirname "$LOG")\" && nohup setsid $gpurun bash -c \"$bringup\" > $LOG 2>&1 < /dev/null & echo '  launched (pid '\$!')'"
+  fi
 
   echo -n "  waiting for healthy (model load + capture x$DD_REPLICAS, up to ~18 min) "
   local ok=0 _

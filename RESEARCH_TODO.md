@@ -1,7 +1,19 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-06-23 (compressed-tensors-first focus update; see banner)
+**Created:** 2026-06-20 - **Status-synced:** 2026-07-21 (headless DP=2 + 4-bit campaign kickoff)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
+
+> ### [CAMPAIGN 2026-07-21] -- active ordering (docs/20260721_headless_dp2_4bit_kickoff.md)
+> Box is HEADLESS (cards symmetric, ~126-128 TFLOPS each); DD = DP=2 NVFP4 27b single-card replicas
+> (captured no-MTP + calibrated fp8 KV @102400, gate 18/18 + soaked); card 1 detachable for research
+> (docker stop b70_daily_1). Active tracks, in order:
+> 1. **Track A (W4A8 on vLLM 0.25.1, single card)** -- python-wiring port (int4 ops already in the
+>    w8a8_kernel_v0240 .so, no build); goal = captured+MTP W4A8 27b vs NVFP4 (0.988/0.945) + W8A8.
+> 2. **Track B (NVFP4 tuning)** -- UTIL/ctx frontier, prefix-cache-on numbers, MTP@<=64k A/B (MTP is
+>    memory-incompatible with >64k ctx on one card -- padded drafter KV layer, measured 2026-07-21).
+> 3. **Track C (W4A4 accuracy go/no-go)** -- W4A4 is UN-DEFERRED (user green-light 2026-07-21):
+>    SpinQuant/QuaRot rotation via llmcompressor 0.12 on 14B, QDQ-shim eval route, W4A8 same-route
+>    anchor; kernels only if quality survives (criteria in the kickoff doc).
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

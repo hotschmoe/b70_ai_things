@@ -9365,3 +9365,60 @@ verdict -> headless effects verified: DP=2 replicas will be balanced, card-1 res
   trustworthy. "Reboot is the only recovery" rule STANDS (do NOT retire it -- the kickoff doc's hope
   that headless would free modprobe -r xe is REFUTED). bin/xpu-health default img fixed
   v0230 -> int8g-v0251.
+
+## 2026-07-21 (e) -- Phase 1: DP=2 NVFP4 daily driver STOOD UP + gated (calibrated fp8 KV, no-MTP @102400)
+
+config -> target per kickoff doc: 2x single-card NVFP4 27B replicas (b70_daily_0/card0 :18091,
+  b70_daily_1/card1 :18092) behind nginx least_conn :18080, served hotschmoe-dd, calibrated fp8 KV.
+DISCOVERY 1 (memory wall, v0.25.1) -> MTP is memory-INCOMPATIBLE with long ctx on one card: the MTP
+  drafter adds 0.8 GiB weights (load 24.9 vs 24.11 GiB) AND a 17th KV layer that pads to 20
+  (43.2 vs 34.6 KB/tok fp8) -> 131072 needs 5.4 GiB KV vs 4.25 no-MTP. Measured frontier
+  (UTIL / avail-KV / max-len, MAXBATCH=2048 MAXSEQS=8 CAPSIZES=1,2,4,8 MTP5): 0.85/0.29/-,
+  0.92/2.42/38272, 0.95+smallbatch/3.32/66560. Dropping CAPSIZES to 1,2,4 + MAXSEQS=4 gains ~0.
+  MTP ceiling ~64k ctx; the doc's assumed MTP@131072 is IMPOSSIBLE single-card. The proven
+  "fp8 KV 128k single-card" (2026-07-08) was no-MTP MAXSEQS=1.
+DISCOVERY 2 (UTIL wall under load) -> UTIL=0.96 no-MTP @131072 inits fine (4.49 GiB KV) but BOTH
+  replicas DIED on the 18-stream coherence gate: UR_RESULT_ERROR_OUT_OF_RESOURCES in
+  nvfp4_gemm_w4a16 during concurrent prefill -- vLLM's profiler under-reserves ~1 GiB of runtime
+  workspace; the KV pool eats all "available" so the only true slack is (1-UTIL). Soft per-replica
+  crash, docker rm + relaunch healed (the DP failure mode working as intended). xpu-health clean.
+DISCOVERY 3 -> MAXBATCH=1024 REJECTED by GDN hybrid: "Mamba cache align mode, block_size (1600)
+  must be <= max_num_batched_tokens". Min sane MAXBATCH = 2048.
+config (FINAL, gated) -> MODE=fused GRAPH=1 MTP OFF, UTIL=0.93, MAXBATCH=2048, MAXSEQS=4,
+  CAPSIZES=1,2,4, MAXLEN=102400 (ceiling est 104000 at this UTIL), KV_FP8=1 +
+  KV_SCALES=vllm/nvfp4/kv_scales_nvfp4_27b.json (block 10 injected, 16 layers, verified in logs),
+  PREFIXCACHE=1, TOOLCALL/TOOLPARSER=qwen3_coder REASONPARSER=qwen3 THINK_BUDGET=4096
+  OVERRIDE_TEMP=0.6 SERVED_FORCE=hotschmoe-dd, CGRECLAIM=1000 default, IMG=int8g-v0251.
+  KV pool 106,788 tok/card (1.04x concurrency @102400).
+command -> per-replica serve via vllm/nvfp4/serve_nvfp4_27b.sh (CARD=N PORT=1809{1,2}), nginx
+  b70_daily_proxy (bin/dp_nginx.conf, least_conn) on :18080.
+result (gates, PER REPLICA) ->
+  - gate_concurrent_coherence 18/18 PASS both replicas (results/logs/dp2_gate_r{0,1}.log).
+  - bench_code.py: 25.7 t/s single-stream BOTH replicas (cards now symmetric post-headless);
+    conc=4 via :18080 = 24.8 t/s/stream, 99.1 t/s AGGREGATE.
+  - soak: 30,000 tok single-stream FLAT 25.4 t/s (no leak drift) + 52,000 tok 4-way concurrent
+    (13 reqs) NO crash, both replicas; still healthy after (results/logs/dp2_soak_r{0,1}.log).
+  - 4-gram repetition scan + ~95k needle: run after this entry (see below).
+  vs old DDs: per-stream 25.7 vs ~38 (TP=2 MTP) -- traded for wedge-immunity (no cross-card
+  collective -> linear_stream leak class + oneCCL wedge structurally gone), 99 t/s aggregate
+  (beats TP=2), and a detachable research card. MTP@<=64k remains a one-env flip (Track B A/B).
+infra -> daily_driver_serve.sh DP=2 branch FIXED (emitted DEVICE= only; NVFP4 wrapper reads CARD=
+  -> both replicas would have landed on card 0. Now emits BOTH + per-card gpu-run leases so
+  `docker stop b70_daily_1` frees card 1's lease for research). DD_MAXLEN="" now means "model
+  default". Shelf rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh TP=1 default re-baked to this gated
+  config (old short-ctx MTP champion reachable via env; TP=2 256K fallback branch kept).
+  b70-daily-driver.service rewritten for DP=2; b70-dd-watchdog.service now sets
+  DD_WATCH_REPLICAS=b70_daily_0:18091:0,b70_daily_1:18092:1. INSTALL PENDING (sudo).
+verdict -> DP=2 DD is UP and soak-gated at 102400 ctx with calibrated fp8 KV. MTP-vs-ctx and the
+  UTIL=0.96 crash wall are the two hard constraints to remember before "improving" this config.
+
+## 2026-07-21 (f) -- Phase 1 gates COMPLETE: repetition scan + deep needle PASS both replicas
+
+command -> 4-gram repetition scan (4 prompts x ~2.2-3.2k words, temp 0.6, scans reasoning+content)
+  + kv_gate.py NEEDLE_DEPTH=95000 per replica (kv_gate.py gained optional KEY= auth header).
+result -> repscan: worst top-4-gram ratio 0.0022 (r0) / 0.0072 (r1), all benign prose/code n-grams,
+  zero degenerate loops -> PASS both. needle: 4/4 PASS both replicas incl deep needle retrieval
+  ('7391-ZULU') + Paris/43/Au factuals -- calibrated fp8 KV validated at depth on BOTH cards.
+verdict -> ALL Phase 1 gates green (gate 18/18, bench, 30k+52k soaks, repscan, needle, per replica).
+  DP=2 NVFP4 DD is production. Remaining: sudo install of the updated systemd units + a
+  systemctl-restart verification (blocked on operator password).
