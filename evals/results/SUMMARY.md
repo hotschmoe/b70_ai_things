@@ -38,6 +38,7 @@
 | model (quant) | serves on 1xB70? | gsm8k | HumanEval+ b/+ | ppl | decode t/s | TTFT ms | prefill t/s | VRAM |
 |---|---|---|---|---|---|---|---|---|
 | **Qwen3.6-27B** (**NVFP4** ModelOpt, vLLM v0.24.0 GRAPH+MTP) | **yes** | 96% (48/50) | **0.988 / 0.945** | - | **38.7-41.8** | 1203 | 1702 | 24.1 GB + 2.3 graphs |
+| **Qwen3.6-27B** (W4A8 sqgptq, vLLM v0.25.1 GRAPH+MTP3, 2026-07-21) | **yes** (ctx ~8k until gdnint8 requant) | - | 0.963 / 0.927 | - | **45.1** (code) | - | - | 26.0 GB (GDN fp16!) |
 | **Qwen3.6-27B** (AutoRound int4) | **yes** | **100% (50/50)** | 0.963 / 0.927 | 6.60 | 7.59 | 305 | 1369 | 17.6 GB |
 | **Qwen3.6-35B-A3B** (Intel int4 AutoRound, 256-expert MoE) | **yes** -- needs INC-XPU MoE patch | - | - | - | ~6 (eager, untuned) | - | - | 19.6 GiB load + 6.24 KV |
 

@@ -9453,3 +9453,17 @@ result -> HEALTHY; served id qwen36-27b-w4a8-sqgptq; coherent ('Paris'); PIECEWI
 verdict -> W4A8 kernel path on 0.25.1 is GO and FAST (45.1 t/s beats stock-MTP NVFP4 38.7's ballpark
   at equal ctx class). Serve practicality blocked on weight residency (8k ctx cap) until a
   gdnint8-style requant. Quality gate pending.
+
+## 2026-07-21 (h) -- Track A quality gate: W4A8 HumanEval+ 0.963/0.927 -- does NOT displace NVFP4
+
+command -> evals/.venv/bin/python evals/orchestrator/run_evals.py --endpoint http://localhost:18079/v1
+  --model qwen36-27b-w4a8-sqgptq --quant w4a8-sqgptq-v0251 --tiers 1 --tier1-dataset humaneval
+  --allow-code-exec (164 problems, thinking-off, greedy, sandboxed).
+result -> pass@1 base 0.963 / plus 0.927 (gen 994s @ captured+MTP3 45.1 t/s).
+  Bars: NVFP4 27B 0.988/0.945 (#1), W8A8 27B 0.970/0.933. W4A8 lands 2.5 plus-pts under NVFP4,
+  0.6 under W8A8; NVFP4 also wins code decode on v0251 (48.3 vs 45.1).
+verdict -> Track A GO/NO-GO ANSWERED: W4A8 does NOT challenge NVFP4 as the 4-bit serve path on
+  quality or speed. It stays valuable as (a) the int8-activation XMX research path and (b) a
+  potential residency winner: scripts/149 (written, not yet run) requants with GDN int8 ->
+  est. 20.6 GiB resident (vs NVFP4 24.9) = ~93k-tok KV @0.92 single-card. Requant + its own
+  quality gate queued behind the 14B W4A4 quant (RAM discipline: one quant container at a time).
