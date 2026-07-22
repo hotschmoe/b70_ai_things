@@ -9516,3 +9516,27 @@ verdict -> DD is now DP=2 captured+MTP5+calibrated-fp8-KV+embed-INT8 @100,352 ct
   single-stream (2.4x the morning config, ~1.7x the old TP=2 DD), ~128 t/s aggregate, wedge-immunity
   unchanged. Track C parked (user: find a public rotated W4A4 checkpoint to compare before building
   our own).
+
+## 2026-07-22 (a) -- systemd verified; IN=2048 bench; prefix-cache hits = 0 under MTP x fp8-KV (matrix)
+
+systemd -> operator ran the install; verified: /etc units byte-match the repo (daily-driver DP=2 +
+  watchdog DD_WATCH_REPLICAS both replicas), override.conf drop-in gone, watchdog active. Reboot now
+  auto-starts the correct DP=2 MTP5 config.
+bench (IN=2048/OUT=128 via nginx :18080; bench_2048.py FIXED to count reasoning deltas -- with
+  --reasoning-parser the stream is delta.reasoning and content-only counting reads NaN) ->
+  c1: TTFT 1200 ms, PP 1690 tok/s (single card, no push-AR at DP), TG 15.3 generic (60.8 code);
+  c4: TG/stream 12.3 generic, agg 49 generic / 121.8 code CUMULATIVE across both cards.
+DISCOVERY (warm TTFT flat -> investigated) -> prefix_cache_hits_total = 0 across 35,784 queries on the
+  live DD. Bounded A/B on card 1 (replica 1 stopped, restored after; identical 3x repeated prompts,
+  hits counter): no-MTP+fp8KV = 3200/7284 HITS; MTP5+fp8KV = 0/7284; MTP5+bf16KV = 1664/7284 HITS.
+  VERDICT: the MTP x fp8-KV COMBINATION zeroes prefix-cache reuse on v0.25.1 XPU hybrid align-mode
+  (each feature alone caches fine; consistent with 2026-07-16's 57% hit on MTP5+bf16 TP=2). The live
+  DD therefore re-prefills every agentic turn (repeat-prompt wall 2.5s vs 1.1s cached on the A config).
+serving-path options (per replica) ->
+  1. CURRENT: MTP5+fp8@100,352 -- 60.8 t/s code, NO cache reuse (deep-history turns pay full prefill:
+     ~30s at 50k @ PP 1690);
+  2. no-MTP+fp8@102,400 (morning config, fully gated) -- 25.7 t/s, cache WORKS;
+  3. MTP5+bf16@~50k (est) -- ~60 t/s + cache works, half the ctx (not yet ceiling-probed/gated).
+  Root-causing the MTP x fp8 hash/reuse failure would unlock 1+cache = strictly best; filed as the
+  next research item. README updated (new current-state banner, DP=2 DD row, DP concurrency footnote:
+  per-stream = one card, agg = cumulative across cards, KV cumulative = capacity not one pool).

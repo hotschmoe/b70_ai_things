@@ -5,15 +5,23 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
-> **[2026-07-08 CURRENT STATE -- supersedes the dated banners below.** The daily driver is **NVFP4 27B
-> TP=2, bf16 KV, captured + MTP5 + XPUGraph reclaim** (`hotschmoe-dd`, port 18080). The reclaim fix
-> (`B70_XPU_CG_RECLAIM`, re-instantiate captured graphs) makes captured+MTP crash-free at full speed, so
-> NVFP4 DOES keep MTP+graph. Fresh IN=2048 bench: **code decode 53 t/s** (beats W8A8's 41), KV **385k @
-> 128k** (more than W8A8 TP=2's 238k) at smaller weight (24 vs 35 GB) -> the DD choice is NVFP4, not W8A8.
-> A second NVFP4 config, **TP=1 fp8 KV**, fits a full **128k context on ONE card** (frees the other card;
-> fp8 = 1.98x bf16 context, proven with a 118,856-token needle). The 2026-07-06 "revert to W8A8" /
-> "NVFP4 returns to research" banners below are SUPERSEDED. See the two NVFP4 rows + JOURNAL 2026-07-08 +
-> docs/20260708_nvfp4_prefill_int8_and_fp8kv_investigation.md.]**
+> **[2026-07-22 CURRENT STATE -- supersedes ALL dated banners below.** The box is **HEADLESS** (display
+> removed 2026-07-21; the card-1 downclock is CURED -- both cards ~126-128 TFLOPS symmetric) and the daily
+> driver is **DP=2: two independent single-card NVFP4 27B replicas** (`b70_daily_0`/card0 :18091,
+> `b70_daily_1`/card1 :18092) behind nginx least_conn on **:18080** as `hotschmoe-dd`. Per-replica config
+> (baked in the shelf wrapper, systemd-persistent): **captured PIECEWISE + MTP5 + CALIBRATED fp8 KV +
+> embed-INT8 (frees 1.18 GiB) @ 100,352 ctx, UTIL=0.95** (operator max; 0.96 crashes under concurrent
+> prefill). Full battery per replica: gate 18/18, needle@93k 4/4, HumanEval+ **0.976/0.945**
+> (quality-neutral vs stock 0.988/0.945), 30k+52k soaks clean. **Why DP=2:** zero cross-card collectives ->
+> the NEO linear_stream graph-replay leak class and every oneCCL/TP wedge are structurally gone; a soft
+> failure is one `docker restart` of one replica (dd-watchdog covers both); `docker stop b70_daily_1`
+> frees card 1 for research while card 0 keeps serving. **IN=2048/OUT=128 (2026-07-22, via nginx):**
+> code decode **60.8 t/s/stream** (2048-probe generic 15.3 c1), PP 1690/card, c4 agg **49 generic / 121.8
+> code** (cumulative across BOTH cards -- see the DP footnote at the vLLM table), KV **101,575 tok/card**
+> (203k cumulative). **Open trade (measured 2026-07-22): prefix-cache hits are ZERO under MTP x fp8-KV**
+> (each alone works: no-MTP+fp8 = hits, MTP5+bf16 = hits; the combination = 0/35k) -- so the current DD
+> re-prefills every agentic turn; the gated no-MTP@102400 fallback keeps cache reuse at 25.7 t/s. Fix
+> hunt = open research. JOURNAL 2026-07-21 (d)-(j).]**
 
 > **[2026-07-21 (session 3) -- decode all-reduce lever CLOSED to cheap fixes + int4-XMX datapath demonstrated.**
 > Following the session-2 trace (decode is 43% all-reduce = the MTP spec all_gather), attacked it 3 ways. **All
@@ -261,7 +269,8 @@ matters for the coding DD; c4 shows per-stream with aggregate in parens); other 
 
 | Model | Quant | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
-| qwen3.6-27b | **NVFP4 TP=2 bf16 KV + captured MTP5 + reclaim (DAILY DRIVER)**¶ | 24 | 2 | 2201 | 926 ms | 16.3 (**53** code) | 6.6 (26 agg) | **385k tok** |
+| qwen3.6-27b | **NVFP4 DP=2 replica: fp8-KV-cal + MTP5 + embed-INT8 @100k (DAILY DRIVER 2026-07-22)**‖ | 23.7/card | 1x2 | 1690/card | 1200 ms | 15.3 (**60.8** code) | 12.3 (49 agg; **121.8** code agg)‖ | 101.5k/card (203k)‖ |
+| qwen3.6-27b | NVFP4 TP=2 bf16 KV + captured MTP5 + reclaim (prior DD, 2026-07-08)¶ | 24 | 2 | 2201 | 926 ms | 16.3 (**53** code) | 6.6 (26 agg) | **385k tok** |
 | qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
@@ -272,7 +281,19 @@ matters for the coding DD; c4 shows per-stream with aggregate in parens); other 
 | qwen3.6-35b-a3b | Quark W8A8-INT8 (MoE) -- v0.24.0† | 35 | 2 | 1930 | 1061 ms | 37.0§ | 23.5 | **775k tok** |
 
 \* W4A8: at `GRAPH=1` the capture buffers leave only 0.32 GiB for KV -> engine init OOMs (est. max len
-2496); EAGER numbers shown. It is the one vLLM entry without a working captured config.
+2496); EAGER numbers shown. [2026-07-21: SUPERSEDED -- the v0.25.1 port serves captured+MTP3 at 45.1 t/s
+code / HumanEval+ 0.963/0.927; ctx capped ~8k by weight residency (GDN left fp16 by the sqgptq recipe,
+25.8 GiB on disk) until the `scripts/149` gdnint8 requant. See `rdy_to_serve/vllm/qwen36-27b-w4a8/`.]
+
+‖ **DP=2 concurrency accounting (the DAILY DRIVER row).** The DD is TWO independent single-card TP=1
+replicas behind nginx `least_conn` -- there is no cross-card work for a single stream, so per-stream
+numbers are ONE card's and never exceed a single card's ceiling. "agg" for cN = the CUMULATIVE tok/s
+summed across streams landing on BOTH cards (c4 = 2 streams/card): generic c4 agg 49, code c4 agg 121.8,
+c2 code 64.3/stream = 128.6 agg. KV likewise: 101,575 tok per card; the 203k "cumulative" is capacity
+across replicas, NOT one shared pool (a single request is bounded by one card's 100,352 ctx). PP/TTFT are
+per card (a prefill runs on exactly one replica; no push-AR at DP). Warm-TTFT caveat: prefix-cache hits
+are ZERO under MTP x fp8-KV (2026-07-22 A/B: each alone works, combo = 0) -> TTFT shown is effectively
+cold; the no-MTP@102400 shelf fallback restores cache reuse (repeat-prompt wall 2.5s -> 1.1s measured).
 
 ¶ **NVFP4 TP=2 = the daily driver (2026-07-08).** `nvidia/Qwen3.6-27B-NVFP4` ModelOpt checkpoint
 (W4A16_NVFP4 MLP + FP8 attn + bf16 mtp/vision) via our custom `nvfp4_gemm_w4a16` oneDNN op (4-bit

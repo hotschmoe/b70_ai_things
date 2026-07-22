@@ -36,9 +36,13 @@ def one(idx, res):
             try: obj = json.loads(data)
             except Exception: continue
             ch = obj.get("choices") or []
-            if ch and ch[0].get("delta", {}).get("content"):
-                if first is None: first = time.time()
-                n += 1
+            # Count content AND reasoning deltas: with --reasoning-parser (the DD default) thinking
+            # streams as delta.reasoning/reasoning_content, and content-only counting reads as NaN.
+            if ch:
+                d = ch[0].get("delta", {})
+                if d.get("content") or d.get("reasoning") or d.get("reasoning_content"):
+                    if first is None: first = time.time()
+                    n += 1
             if obj.get("usage"): ptoks = obj["usage"].get("prompt_tokens")
     end = time.time()
     ttft = (first - t0) * 1000 if first else float("nan")
