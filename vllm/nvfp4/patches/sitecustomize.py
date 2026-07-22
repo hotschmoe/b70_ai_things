@@ -935,3 +935,301 @@ if os.environ.get("B70_EMBED_INT8", "0") == "1":
               file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (13) embed INT8 install failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (14a) prefix-cache DEBUG instrumentation (MTP x fp8-KV hits=0 root-cause) ---------------------
+# Logs (a) the kv-cache group table at coordinator init (spec class, dtype, block_size, page bytes,
+# layer count, eagle bit) and (b) every per-manager find_longest_cache_hit call (manager, block_size,
+# max_length in, drop_eagle, tokens out) plus the coordinator's final intersected hit. Runs in the
+# EngineCore process -> docker logs. Diagnostic only, default OFF (B70_PC_DEBUG=1).
+if os.environ.get("B70_PC_DEBUG", "0") == "1":
+    try:
+        import vllm.v1.core.kv_cache_coordinator as _kvc
+        import vllm.v1.core.single_type_kv_cache_manager as _stm
+
+        def _spec_str(spec):
+            return "%s(block=%s dtype=%s page=%s)" % (
+                type(spec).__name__, getattr(spec, "block_size", "?"),
+                getattr(spec, "dtype", "?"), getattr(spec, "page_size_bytes", "?"))
+
+        _orig_split = _kvc.HybridKVCacheCoordinator.verify_and_split_kv_cache_groups
+
+        def _split_logged(self):
+            _orig_split(self)
+            for i, g in enumerate(self.kv_cache_config.kv_cache_groups):
+                print("[pc-debug] kv group %d: %s layers=%d %s" % (
+                    i, _spec_str(g.kv_cache_spec), len(g.layer_names),
+                    g.layer_names[:2] + (["..."] if len(g.layer_names) > 2 else [])),
+                    file=sys.stderr, flush=True)
+            for j, ag in enumerate(self.attention_groups):
+                print("[pc-debug] SpecGroup %d: mgr=%s group_ids=%s use_eagle=%s %s" % (
+                    j, ag.manager_cls.__name__, ag.group_ids, ag.use_eagle,
+                    _spec_str(ag.spec)), file=sys.stderr, flush=True)
+            print("[pc-debug] scheduler_block_size=%s hash_block_size=%s eagle_group_ids=%s" % (
+                getattr(self, "scheduler_block_size", "?"), getattr(self, "hash_block_size", "?"),
+                getattr(self, "eagle_group_ids", "?")), file=sys.stderr, flush=True)
+
+        _kvc.HybridKVCacheCoordinator.verify_and_split_kv_cache_groups = _split_logged
+
+        for _mgr in (_stm.FullAttentionManager, _stm.SlidingWindowManager,
+                     _stm.ChunkedLocalAttentionManager, _stm.MambaManager,
+                     _stm.CrossAttentionManager):
+            if "find_longest_cache_hit" not in vars(_mgr):
+                continue
+            _orig_flch = vars(_mgr)["find_longest_cache_hit"].__func__
+
+            def _flch_logged(cls, block_hashes, max_length, kv_cache_group_ids,
+                             block_pool, kv_cache_spec, drop_eagle_block,
+                             alignment_tokens, _o=_orig_flch, **kw):
+                out = _o(cls, block_hashes, max_length, kv_cache_group_ids,
+                         block_pool, kv_cache_spec, drop_eagle_block,
+                         alignment_tokens, **kw)
+                print("[pc-debug]   %s gids=%s block=%d max_len=%d eagle_drop=%s align=%d -> %d blk = %d tok" % (
+                    cls.__name__, kv_cache_group_ids, kv_cache_spec.block_size,
+                    max_length, drop_eagle_block, alignment_tokens,
+                    len(out[0]), len(out[0]) * kv_cache_spec.block_size),
+                    file=sys.stderr, flush=True)
+                return out
+
+            setattr(_mgr, "find_longest_cache_hit", classmethod(_flch_logged))
+
+        _orig_hy_flch = _kvc.HybridKVCacheCoordinator.find_longest_cache_hit
+
+        def _hy_flch_logged(self, block_hashes, max_cache_hit_length):
+            print("[pc-debug] hybrid lookup: max_cache_hit_length=%d" % max_cache_hit_length,
+                  file=sys.stderr, flush=True)
+            blocks, hit = _orig_hy_flch(self, block_hashes, max_cache_hit_length)
+            print("[pc-debug] hybrid RESULT: hit=%d tok; per-group blks=%s" % (
+                hit, [len(b) for b in blocks]), file=sys.stderr, flush=True)
+            return blocks, hit
+
+        _kvc.HybridKVCacheCoordinator.find_longest_cache_hit = _hy_flch_logged
+        print("[nvfp4-shim] (14a) prefix-cache DEBUG instrumentation ON", file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (14a) pc-debug install failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (14b) EAGLE KEEP-VERIFIED prefix-cache fix (MTP x fp8-KV hits=0 root cause) -------------------
+# ROOT CAUSE (2026-07-22, proven with (14a) instrumentation): NOT a drafter dtype/group mismatch (the
+# MTP drafter layer is already fp8, merged into the 17-layer FullAttention group). The zero hits are the
+# EAGLE/MTP LAST-BLOCK DROP x the fp8 block size: the drafter's KV for block k depends on ONE token
+# beyond the block's hash (MTP shift-by-one: position p attends embed(token[p+1])), so upstream only
+# trusts block k when block k+1's hash ALSO matched, i.e. it matches one extra block and drops the last.
+# With fp8 KV the attention block is 1664 tokens (page >= mamba page), so any prompt < 2*1664+1 = 3329
+# tokens can NEVER hit (the 2428-tok probe and the IN=2048 bench -> hits=0), and every hit loses 1664
+# tokens. bf16 KV only "worked" because its block is 832 (threshold 1665).
+# FIX: the out-of-hash dependency is exactly one token, and we can verify it directly instead of
+# demanding a full extra block: record next_token[(k+1)*B] per block hash at BlockPool INSERT time
+# (last-writer-wins == the flavor of the drafter KV physically in the pool; re-caching after eviction
+# overwrites, so a lookup that finds the block in the pool always sees the matching record), then at
+# lookup keep the last matched block iff the new request's token at the boundary equals the record.
+# Restores the no-MTP threshold (1665) and reclaims 1664 tok per hit. Companion mamba cap: the
+# coordinator inflates every eagle group's ceiling by one block; MambaManager IGNORES drop_eagle_block
+# (upstream bug, PR #48375) so mamba could claim a longer hit than the attn group validated ->
+# inconsistent state. We cap mamba's ceiling at the attn group's validated length (falling back to
+# upstream #48375's minus-one-block when attn has not run). Gated B70_PC_EAGLE_KEEP=1, default OFF.
+if os.environ.get("B70_PC_EAGLE_KEEP", "0") == "1":
+    try:
+        from vllm.v1.core.block_pool import BlockPool as _EKPool
+        from vllm.v1.core.kv_cache_manager import KVCacheManager as _EKMgr
+        import vllm.v1.core.kv_cache_coordinator as _ekco
+        import vllm.v1.core.single_type_kv_cache_manager as _ekstm
+
+        _EK_CAP = int(os.environ.get("B70_PC_EAGLE_KEEP_CAP", "200000"))
+        _ek_next = {}       # BlockHash bytes -> token id one past the block (pool-coherent)
+        _ek_req = [None]    # request whose lookup is in flight (scheduler is single-threaded)
+        _ek_attn_len = [None]  # attn group's validated hit length (tok) for the current lookup
+        _ek_stats = {"keep": 0, "drop": 0}
+        _EK_DBG = os.environ.get("B70_PC_DEBUG", "0") == "1"
+
+        # (a) record the boundary token at pool insert time.
+        _ek_orig_cfb = _EKPool.cache_full_blocks
+
+        def _ek_cfb(self, request, blocks, num_cached_blocks, num_full_blocks,
+                    block_size, kv_cache_group_id, block_mask=None):
+            _ek_orig_cfb(self, request, blocks, num_cached_blocks, num_full_blocks,
+                         block_size, kv_cache_group_id, block_mask)
+            try:
+                if block_size != self.hash_block_size:
+                    return  # hashes not at block granularity; keep-verify stays off for these
+                if len(_ek_next) > _EK_CAP:
+                    _ek_next.clear()
+                toks = request.all_token_ids
+                ntok = len(toks)
+                bh = request.block_hashes
+                nbh = len(bh)
+                for i, k in enumerate(range(num_cached_blocks, num_full_blocks)):
+                    if block_mask is not None and not block_mask[i]:
+                        continue
+                    nxt = (k + 1) * block_size
+                    if nxt < ntok and k < nbh:
+                        _ek_next[bh[k]] = toks[nxt]
+            except Exception:
+                pass
+
+        _EKPool.cache_full_blocks = _ek_cfb
+
+        # (b) expose the request to the lookup path.
+        _ek_orig_gcb = _EKMgr.get_computed_blocks
+
+        def _ek_gcb(self, request):
+            _ek_req[0] = request
+            try:
+                return _ek_orig_gcb(self, request)
+            finally:
+                _ek_req[0] = None
+
+        _EKMgr.get_computed_blocks = _ek_gcb
+
+        # (c) reset per-lookup state (hybrid coordinator only; unitary has no cross-group risk).
+        _ek_orig_hy = _ekco.HybridKVCacheCoordinator.find_longest_cache_hit
+
+        def _ek_hy(self, block_hashes, max_cache_hit_length):
+            _ek_attn_len[0] = None
+            return _ek_orig_hy(self, block_hashes, max_cache_hit_length)
+
+        _ekco.HybridKVCacheCoordinator.find_longest_cache_hit = _ek_hy
+
+        # (d) FullAttention: match WITHOUT the drop, then keep the last block iff the boundary
+        # token verifies; otherwise drop + re-align (upstream behavior).
+        _ek_orig_fa = _ekstm.FullAttentionManager.find_longest_cache_hit.__func__
+
+        def _ek_fa(cls, block_hashes, max_length, kv_cache_group_ids, block_pool,
+                   kv_cache_spec, drop_eagle_block, alignment_tokens, **kw):
+            out = _ek_orig_fa(cls, block_hashes, max_length, kv_cache_group_ids,
+                              block_pool, kv_cache_spec, False, alignment_tokens, **kw)
+            if not drop_eagle_block:
+                return out
+            n = len(out[0])
+            req = _ek_req[0]
+            keep = False
+            bs = kv_cache_spec.block_size
+            if n > 0 and req is not None:
+                try:
+                    rec = _ek_next.get(block_hashes[n - 1])
+                    toks = req.all_token_ids
+                    nxt = n * bs
+                    keep = rec is not None and nxt < len(toks) and rec == toks[nxt]
+                except Exception:
+                    keep = False
+            if keep:
+                _ek_stats["keep"] += 1
+            else:
+                _ek_stats["drop"] += 1
+                if n > 0:
+                    for computed in out:
+                        computed.pop()
+                    while out[0] and (len(out[0]) * bs) % alignment_tokens != 0:
+                        for computed in out:
+                            computed.pop()
+            _ek_attn_len[0] = len(out[0]) * bs
+            if _EK_DBG:
+                print("[eagle-keep] n=%d keep=%s attn_len=%d (keep=%d drop=%d)" % (
+                    n, keep, _ek_attn_len[0], _ek_stats["keep"], _ek_stats["drop"]),
+                    file=sys.stderr, flush=True)
+            return out
+
+        _ekstm.FullAttentionManager.find_longest_cache_hit = classmethod(_ek_fa)
+
+        # (e) Mamba: cap the eagle-inflated ceiling at the attn group's validated length
+        # (mamba has no eagle shift; it must simply never exceed the attn-validated hit).
+        _ek_orig_mm = _ekstm.MambaManager.find_longest_cache_hit.__func__
+
+        def _ek_mm(cls, block_hashes, max_length, kv_cache_group_ids, block_pool,
+                   kv_cache_spec, drop_eagle_block, alignment_tokens, **kw):
+            if drop_eagle_block:
+                if _ek_attn_len[0] is not None:
+                    max_length = min(max_length, _ek_attn_len[0])
+                else:  # no attn group ran first: upstream #48375 fallback
+                    max_length = max(0, max_length - kv_cache_spec.block_size)
+            return _ek_orig_mm(cls, block_hashes, max_length, kv_cache_group_ids,
+                               block_pool, kv_cache_spec, False, alignment_tokens, **kw)
+
+        _ekstm.MambaManager.find_longest_cache_hit = classmethod(_ek_mm)
+
+        print("[nvfp4-shim] (14b) EAGLE KEEP-VERIFIED prefix cache ON "
+              "(boundary-token verify replaces the eagle last-block drop; mamba ceiling capped)",
+              file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (14b) eagle keep-verified install failed:", repr(e), file=sys.stderr, flush=True)
+
+
+# ---- (14c) PR#45477 port: mamba align chunk-splits must END on block boundaries --------------------
+# Upstream OPEN PR https://github.com/vllm-project/vllm/pull/45477 (fixes #43559, APC+MTP accuracy
+# drop on Qwen3.6 hybrid GDN -- upstream-verified on Qwen3.6-27B-FP8). Our image's
+# Scheduler._mamba_block_aligned_split floors the chunk LENGTH (aligned only while the start is
+# aligned) and falls through UNALIGNED past last_cache_position; with MTP (use_eagle) the eagle prune
+# zeroes last_cache_position for short prompts so the first chunk is budget-capped unaligned. An
+# unaligned non-final chunk end makes the GDN kernel leave the running recurrent state in a mid-block
+# slot which cache_blocks later hashes as a BOUNDARY state -> poisoned prefix cache (wrong recurrent
+# state on every same-prefix resume; measured as cold-vs-warm temp-0 divergence) or nulls the boundary
+# slot (permanent APC miss). Port = upstream's rewritten split (align the chunk END, clamp to
+# last_cache_position, re-align after mid-block resume, stay aligned past last_cache_position until
+# the final chunk). DELTA vs upstream: the eagle prune of last_cache_position exists only to pair with
+# the FullAttn eagle last-block DROP; with (14b) keep-verified the drop is usually skipped, so pruning
+# would just deny the final boundary a state snapshot (capping warm hits one block short). We skip the
+# prune when B70_PC_EAGLE_KEEP=1: every boundary <= aligned(num_tokens) gets a snapshot; if a lookup's
+# keep-verify fails, (14b)'s mamba cap keeps the intersection coherent. Gated B70_PC_CHUNK_ALIGN=1,
+# default OFF.
+if os.environ.get("B70_PC_CHUNK_ALIGN", "0") == "1":
+    try:
+        from vllm.v1.core.sched import scheduler as _b70_sched_mod
+
+        _B70_EK_ON = os.environ.get("B70_PC_EAGLE_KEEP", "0") == "1"
+
+        def _b70_mamba_block_aligned_split(
+            self,
+            request,
+            num_new_tokens,
+            num_new_local_computed_tokens=0,
+            num_external_computed_tokens=0,
+            num_uncached_common_prefix_tokens=0,
+        ):
+            num_computed_tokens = (
+                request.num_computed_tokens
+                + num_new_local_computed_tokens
+                + num_external_computed_tokens
+            )
+            prefill_end = max(request.num_prompt_tokens, request.num_tokens - 1)
+            if num_computed_tokens >= prefill_end:
+                return num_new_tokens  # decode phase: no splitting
+
+            block_size = self.cache_config.block_size
+            last_cache_position = request.num_tokens // block_size * block_size
+            if self.use_eagle and not _B70_EK_ON:
+                # pair of the FullAttn eagle last-block drop; unnecessary with keep-verified
+                last_cache_position = max(last_cache_position - block_size, 0)
+
+            chunk_end = num_computed_tokens + num_new_tokens
+            if num_computed_tokens < last_cache_position:
+                chunk_end = min(
+                    chunk_end // block_size * block_size, last_cache_position
+                )
+                if num_computed_tokens % block_size != 0:
+                    # resumed mid-block: stop at the next boundary to re-align
+                    chunk_end = min(
+                        chunk_end,
+                        num_computed_tokens // block_size * block_size + block_size,
+                    )
+            elif chunk_end < prefill_end:
+                # past the last cacheable boundary but not finishing prefill: stay aligned
+                # (eagle-lookahead caching hashes one block past each aligned boundary)
+                chunk_end = chunk_end // block_size * block_size
+            num_new_tokens = max(chunk_end - num_computed_tokens, 0)
+
+            # Marconi cache admission optimization (kept from stock, alignment preserved)
+            if (
+                num_uncached_common_prefix_tokens >= block_size
+                and num_new_tokens > num_uncached_common_prefix_tokens
+            ):
+                num_new_tokens = (
+                    num_uncached_common_prefix_tokens // block_size * block_size
+                )
+            return num_new_tokens
+
+        _b70_sched_mod.Scheduler._mamba_block_aligned_split = _b70_mamba_block_aligned_split
+        print("[nvfp4-shim] (14c) PR45477 mamba align chunk-split fix ON (eagle prune %s)"
+              % ("SKIPPED, keep-verified pairs it" if _B70_EK_ON else "kept"),
+              file=sys.stderr, flush=True)
+    except Exception as e:
+        print("[nvfp4-shim] (14c) PR45477 chunk-split fix failed:", repr(e), file=sys.stderr, flush=True)

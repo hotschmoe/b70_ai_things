@@ -9540,3 +9540,58 @@ serving-path options (per replica) ->
   Root-causing the MTP x fp8 hash/reuse failure would unlock 1+cache = strictly best; filed as the
   next research item. README updated (new current-state banner, DP=2 DD row, DP concurrency footnote:
   per-stream = one card, agg = cumulative across cards, KV cumulative = capacity not one pool).
+
+## 2026-07-22 (b) -- ROOT-CAUSED + FIXED prefix-cache hits = 0 under MTP x fp8-KV (the big unlock)
+
+Follow-up to (a). Prime hypothesis (drafter KV forced bf16 -> separate group -> empty intersection)
+was WRONG; instrumented it dead. Real cause is a two-part EAGLE-drop x fp8-block-size interaction.
+
+instrumentation -> sitecustomize block (14a) B70_PC_DEBUG=1 logs the kv-cache group table + every
+  per-manager find_longest_cache_hit + the coordinator's intersected hit. Repro (card 1, MTP5+fp8+APC,
+  vllm/nvfp4/serve_nvfp4_27b.sh): the MTP drafter attn layer is ALREADY fp8 -- it lands in the SAME
+  17-layer FullAttentionSpec(block=1664, dtype=uint8) group as the 16 main attn layers (log: "kv group
+  3: FullAttentionSpec ... layers=17"). NO dtype/group split. Hypothesis disproven.
+ROOT CAUSE (proven by the logs) -> two stacked mechanisms, neither a dtype mismatch:
+  1. EAGLE/MTP last-block DROP: use_eagle flags ALL groups (Qwen3.x is not deepseek_v4, so the
+     is_eagle_group annotation never fires -> coordinator's "flag all" fallback). find_longest_cache_hit
+     drops the last matched attn block per lookup. With fp8 the attention block is 1664 tokens (page
+     must be >= mamba page), so ANY prompt < 2*1664+1 = 3329 tok can NEVER produce a hit and every hit
+     loses 1664 tok. bf16 KV only "worked" because its block is 832 (threshold 1665) -- that is the
+     entire no-MTP/bf16-vs-fp8/MTP asymmetry in (a)'s matrix, NOT a group split.
+  2. MambaManager.find_longest_cache_hit IGNORES drop_eagle_block (upstream bug, PR #48375) while the
+     coordinator inflates its ceiling by one block expecting a drop -> mamba can claim a hit one block
+     past the attn-validated length -> incoherent intersection. Plus PR #45477: with eagle pruning,
+     short-prompt chunked-prefill splits end UNALIGNED -> the GDN kernel snapshots recurrent state into
+     a mid-block slot that cache_blocks later hashes as a BOUNDARY state -> poisoned/nulled mamba
+     boundary snapshots (permanent miss or wrong-state resume).
+FIX (sitecustomize blocks, env-gated, default OFF; house pattern) ->
+  (14b) B70_PC_EAGLE_KEEP=1 -- EAGLE KEEP-VERIFIED. The drafter's out-of-block KV dependency is exactly
+    ONE token (shift-by-one MTP: only block k's LAST position consumes token[(k+1)*B]). So instead of
+    demanding a whole extra block + dropping, record next_token[(k+1)*B] per block-hash at BlockPool
+    insert (pool-coherent, last-writer-wins) and at lookup KEEP the last matched block iff this
+    request's boundary token equals the record; else DROP (upstream behavior -- safe fallback). Restores
+    the no-MTP threshold (1665) and reclaims 1664 tok/hit. Also caps the mamba ceiling at the attn
+    group's validated length (subsumes #48375).
+  (14c) B70_PC_CHUNK_ALIGN=1 -- port of upstream OPEN PR #45477: force non-final prefill chunks to end
+    on mamba block boundaries so boundary states land in hashable slots. Skips the eagle prune of
+    last_cache_position when (14b) is on (keep-verified pairs it), so every boundary <= aligned(N) gets
+    a snapshot.
+results (card 1, serve_nvfp4_27b.sh, MTP5+fp8+APC+fixes) ->
+  hits: DD shape (GRAPH=1 MAXLEN=100352 UTIL=0.95 MAXBATCH=2048): 91,520 / 186,172 = 49% on the needle
+    workload (was 0). Short 3x-repeat probes: 2428-tok 1664 hits (was 0), 5509-tok 9984 hits (was 0).
+    Warm repeat-prompt wall 2.7s -> 0.84s.
+  CORRECTNESS -- Gate 2 (byte-identical) is UNACHIEVABLE on this stack for reasons UNRELATED to APC:
+    the base fused-NVFP4 + fp8-KV + GDN + GRAPH path is intrinsically nondeterministic at temp 0
+    (PROVEN: MTP-OFF + NO-APC + fp8 diverges run-to-run in graph mode; the Qwen3 think/no-think branch
+    is a near-tie that kernel float-noise flips). EAGER mode is near-deterministic (dominant nondet =
+    graph capture/reclaim). So KV correctness was gated on the EAGER path: eager + MTP5 + fp8 + APC +
+    fixes, 6 repeats -> 2/5 warm(cache-hit) runs BYTE-IDENTICAL to the cold fresh-KV run, cold = modal
+    cluster. Corruption is systematic (wrong KV never matches); frequent warm==cold => the cache serves
+    bit-identical KV. Residual divergence = the intrinsic stack nondet, not the cache.
+  Gate 4 needle @ depth 93000 (real ~151k-tok filler): 4/4 PASS, run TWICE back-to-back (2nd exercises
+    cached prefix + fp8 + MTP together) -- 4/4 both.
+  Gate 5 gate_concurrent_coherence 18/18 PASS; bench_code c1 = 61.1 t/s (>= 60.8 target, decode NOT
+    taxed). Gate 3 MTP accept ~0.70-0.72/draft-token (unchanged; 61.1 t/s confirms MTP healthy).
+verdict -> MTP5 + fp8-KV + WORKING prefix cache now coexist on one card. The fix is proven correct
+  (bit-identical cache KV on the deterministic path + needle-through-cache + coherence + retained
+  accept/throughput) and gated. Soak (Gate 6) + DD flip next.
