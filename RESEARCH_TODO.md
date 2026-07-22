@@ -605,6 +605,15 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       serves, add a MEASURED README row + a `rdy_to_serve/` entry. Blocker risk: our `nvfp4_gemm_w4a16`
       oneDNN op was built for the Qwen W4A16_NVFP4 dense layout -- verify the Nemotron expert tensor
       layout matches before expecting kernel speed (emulation-first is the fallback, cf. 11f 35B MoE).
+- [x] **11k. [DONE 2026-07-22] B70 native-E4M3 NVFP4 scale path.** Keep checkpoint E4M3 group-16
+      block scales and the FP32 global scale separate in oneDNN instead of expanding every scale to
+      folded BF16. Dispatch only M<=8; larger prefill matrices retain the faster folded-BF16 path.
+      Real gate GEMM 1.22x M1 / 1.09-1.10x M2-8; full serve 60.8-61.1 -> 64.6 code t/s/card,
+      residency 24.90 -> 22.76 GiB, KV 101,575 -> 144,408 tok/card. Gated 18/18 + 36/36,
+      needle@93k 4/4 twice, full HumanEval+ 0.976/0.939 (folded-scale current 0.976/0.945;
+      one-task delta under proven graph nondeterminism). Shipped in the TP=1 NVFP4 shelf; old kernel
+      artifact retained. Quixi's tuned SYCL GEMV was useful evidence for weight-bit relocation, but the
+      incumbent oneDNN op was already near the B70 bandwidth roofline; direct scale traffic was the win.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

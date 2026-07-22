@@ -11,8 +11,11 @@
 #   + MTP5 + CALIBRATED fp8 KV + INT8 embed_tokens (sitecustomize block 13, frees 1.18 GiB) + prefix
 #   cache + agentic parsers at 100K ctx. Baked: MODE=fused GRAPH=1 MTPTOK=5 MAXSEQS=8 CAPSIZES=1,2,4,8
 #   UTIL=0.95 MAXBATCH=2048 MAXLEN=100352, KV_FP8=1 KV_SCALES=vllm/nvfp4/kv_scales_nvfp4_27b.json,
-#   B70_EMBED_INT8=1. Measured (card 1): 60.8 t/s single-stream code (2.4x the earlier no-MTP config),
-#   121.8 t/s aggregate conc=4, gate 18/18, needle@93k-depth 4/4, repscan clean, HumanEval+ 0.976/0.945
+#   B70_EMBED_INT8=1, native E4M3 NVFP4 scales for M<=8. Measured (card 0): 64.6 t/s single-stream
+#   code (1.06x the 60.8-61.1 folded-scale path), 179.1 t/s aggregate conc=4 on one card, gate 18/18
+#   plus 36/36 stress, model residency 22.76 GiB, KV 144,408 tokens. HumanEval+ 0.976/0.939
+#   (current folded-scale run 0.976/0.945; one-task plus delta amid documented graph nondeterminism),
+#   needle@93k-depth 4/4, repscan clean. The prior embed-INT8 quality gate was HumanEval+ 0.976/0.945
 #   (plus IDENTICAL to stock 0.988/0.945 -- embed int8 is quality-neutral), 30k single-stream soak
 #   flat 41.3 t/s + 40k concurrent soak clean. This is the DD replica config (b70_daily_0/1 behind
 #   bin/dp_nginx.conf on :18080).
@@ -56,6 +59,11 @@ if [ "$TP" = 1 ]; then
          MTPTOK="${MTPTOK:-5}"
   export KV_FP8="${KV_FP8:-1}" KV_SCALES="${KV_SCALES:-$REPO/vllm/nvfp4/kv_scales_nvfp4_27b.json}"
   export PREFIXCACHE="${PREFIXCACHE:-1}"
+  # Decode-scale optimization (2026-07-22): the GDN-enabled candidate keeps checkpoint-native
+  # E4M3 block scales for M<=8 and retains folded BF16 scales above that threshold. The old
+  # nvfp4_fused_kernel_gdn artifact remains untouched for rollback.
+  export FUSED_SO="${FUSED_SO:-/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/_xpu_C.abi3.so}"
+  export GDN_LIB="${GDN_LIB:-/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/libgdn_attn_kernels_xe_2.so}"
   export TOOLCALL="${TOOLCALL:-1}" TOOLPARSER="${TOOLPARSER:-qwen3_coder}" REASONPARSER="${REASONPARSER:-qwen3}"
   export OVERRIDE_TEMP="${OVERRIDE_TEMP:-0.6}"    # Qwen3 thinking-runaway fix (2026-07-11); THINK_BUDGET
                                                   # defaults 4096 in the recipe itself.
@@ -65,7 +73,8 @@ if [ "$TP" = 1 ]; then
   #    fp8-KV x prefix-caching actually produce cache hits (was 0 -- the EAGLE last-block drop x the
   #    1664-tok fp8 attention block zeroed every hit). Gated correct: needle@93k 4/4 twice, gate 18/18,
   #    byte-identical cache KV on the deterministic (eager) path, 30k single + 52k concurrent soak clean.
-  for _pcf in B70_EMBED_INT8=1 B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1; do
+  for _pcf in B70_EMBED_INT8=1 B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 \
+      B70_NVFP4_F8_SCALE_M_MAX=8; do
     case " ${B70_EXTRA_ENV:-} " in
       *" ${_pcf%%=*}="*) : ;;
       *) export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }$_pcf" ;;

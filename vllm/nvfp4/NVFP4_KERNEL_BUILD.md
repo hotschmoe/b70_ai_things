@@ -63,3 +63,57 @@ The shim (patches/sitecustomize.py) MODE=fused wires `_XPUW4A16NvFp4Kernel.apply
 `torch.ops._xpu_C.nvfp4_gemm_w4a16`; process_weights_after_loading repacks the resident weight
 to [K/2,N] and folds the E4M3 block scale x fp32 global scale into a [K/16,N] bf16 tensor ONCE
 at load, so the weights stay 4-bit resident.
+
+## Native E4M3 block-scale small-M path (2026-07-22)
+
+The checkpoint already stores one E4M3 block scale per 16 K values plus a scalar
+FP32 global scale. Expanding and folding those scales to BF16 doubles scale traffic
+in the bandwidth-bound decode GEMM. The new op keeps the checkpoint representation:
+
+    y = torch.ops._xpu_C.nvfp4_gemm_w4a16_f8scale(
+            A_bf16[M,K], B_f4e2m1_packed[K/2,N] uint8, bias?,
+            B_scale_e4m3[K/16,N], B_global_scale_fp32[1], group_size=16)
+
+oneDNN receives the E4M3 tensor as the grouped weight scale and the global FP32
+scalar as a source scale. The latter is algebraically equivalent to folding the
+global value into every weight block scale, but avoids both BF16 scale rounding and
+the extra scale bytes. A separate primitive-cache key prevents aliasing the folded
+BF16 and native-E4M3 attribute layouts.
+
+The shim dispatches the native-scale op only when flattened M is at or below
+`B70_NVFP4_F8_SCALE_M_MAX`; the measured shelf value is 8. Larger matrices retain
+the existing folded-BF16 XMX path because it is faster for prefill. Both NT scale
+layouts are prepared once at load, then the unused row-major staging tensors are
+deleted.
+
+Real Qwen3.6-27B layer-0 gate projection, N=17408 and K=5120, B70 card 0, median
+of five A-B-A rounds:
+
+| M | folded BF16 scale | native E4M3 scale | speedup |
+|---:|---:|---:|---:|
+| 1 | 0.1156 ms | 0.0948 ms | 1.220x |
+| 2 | 0.1055 ms | 0.0962 ms | 1.096x |
+| 4 | 0.1064 ms | 0.0972 ms | 1.094x |
+| 6 | 0.1070 ms | 0.0974 ms | 1.098x |
+| 8 | 0.1075 ms | 0.0982 ms | 1.095x |
+| 16 | 0.1289 ms | 0.1306 ms | 0.987x |
+| 512 | 0.8723 ms | 0.9198 ms | 0.948x |
+
+The real-model relative L2 delta versus the folded-BF16-scale op is about 0.0034;
+this is the expected removal of BF16 scale-folding roundoff, not an alternate FP4
+decode. The packed E2M1 weights are unchanged.
+
+Reproducible sources:
+
+- `kernels/nvfp4_gemm_w4a16.h`: both oneDNN implementations.
+- `kernels/nvfp4_f8scale_integration.patch`: op declaration, binding, and entry point.
+- `vllm/nvfp4/bench_f8scale.py`: real-checkpoint A/B microbenchmark.
+- `vllm/nvfp4/build_nvfp4_f8scale_gdn.sh`: fresh-tree GDN-enabled serve build.
+
+Build without modifying the production artifact:
+
+    bash vllm/nvfp4/build_nvfp4_f8scale_gdn.sh
+
+Output is `/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/`, including the ABI-matched
+GDN sidecar. The production shelf selects this directory explicitly; the older
+`nvfp4_fused_kernel_gdn` artifact remains available for rollback.

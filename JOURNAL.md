@@ -9615,3 +9615,90 @@ verdict -> DONE. MTP5 + fp8-KV + WORKING prefix cache coexist on one card at 100
   (14b) EAGLE keep-verified (token-granular boundary check vs upstream's block-granular drop) is novel --
   candidate upstream contribution. Fallbacks retained + gated: unset the two envs -> byte-identical to the
   pre-fix DD; no-MTP@102400 shelf branch still available.
+
+## 2026-07-22 (c) -- B70 NVFP4 native-E4M3 scale kernel: +6% decode, +42% KV, DP=2 live
+
+CONFIG -> Qwen3.6-27B ModelOpt NVFP4, vLLM 0.25.1 / torch 2.12, TP=1 card-0 canaries while
+  `b70_daily_1` on card 1 kept serving. Shelf shape unchanged: PIECEWISE graph, MTP5,
+  calibrated fp8 KV, prefix cache, embed INT8, MAXLEN=100352, UTIL=0.95, MAXSEQS=8,
+  MAXBATCH=2048, capture sizes 1/2/4/8. Production folded-scale kernel SHA started as
+  f997...; candidate GDN build SHA256 is
+  65913620234ea54752d3ce0a09a2c1460148c8d0bccb0d9b83428a6fd8dec7b1.
+
+LIVE AUDIT -> the claimed DP=2 was degraded at session start: `b70_daily_0` had exited cleanly after
+  repeated torch-xpu `IndexKernelUtils.h:62 vectorized gather kernel index out of bounds`; card 1 and
+  nginx stayed healthy. This was not an NVFP4 GEMM signature. `dd-watchdog` is observe-only for an
+  exited container, and detached daily-driver containers are not represented by `gpu-run --status`
+  after their launcher exits. Card 0 passed `gpu-run --card 0 bin/xpu-health --card 0`; all experiments
+  then held the card-0 lease through `docker wait`. These two service-control gaps remain separate work.
+
+RESEARCH -> cloned primary sources outside git under `/mnt/vm_8tb/b70/research/`.
+  QuixiCore-XPU commit 67c70fe uses bit relocation in a tuned SYCL NVFP4 GEMV and reports 1.92x / 219.6
+  GB/s on B60; its M-tiled GEMM was slower than repeated GEMV at M4. The unmerged XMX scaffold c431e6e
+  only wins at M>=16 and remains below int8. The b70-optimization-lab has no drop-in NVFP4 kernel;
+  its MXFP4 group-32 E8M0 layout is incompatible with NVFP4 group-16 E4M3. Useful B70 findings were
+  the measured ~579 GB/s bandwidth ceiling, separate weight/scale surfaces, GRF256, and M1-oriented
+  N64/K32/4xSG16 tuning. Our incumbent oneDNN f4 op already measured about 511 GB/s including scales,
+  so replacing it with a portable GEMV was the wrong lever. Halving scale bytes was the remaining
+  bandwidth target. Prefill stays on oneDNN BF16-XMX; prior ISA work already proved group16 cannot fill
+  an int8 DPAS K32 step without losing the supposed W4A8 advantage.
+
+IMPLEMENTATION -> added `nvfp4_gemm_w4a16_f8scale`: packed E2M1 weights are unchanged; checkpoint-native
+  E4M3 `[K/16,N]` block scales feed the oneDNN grouped weight-scale attribute, while the scalar FP32
+  global weight scale is a source-scale attribute. A disjoint primitive-cache key prevents folded/native
+  scale aliasing. The shim prepares native-E4M3 NT plus folded-BF16 NT layouts once, deletes row-major
+  staging tensors, and dispatches native scales only for flattened M<=8. M>8 uses the incumbent prefill
+  path. `B70_NVFP4_F8_SCALE_M_MAX=0` disables it. A separate compact fallback
+  `B70_NVFP4_COMPACT_SCALES=1` keeps only folded BF16 NT: identical math, 3.21 GiB reclaimed, but no
+  decode speedup. Repro artifacts: kernel header, integration patch, real-weight microbench, and the
+  GDN build scripts. Runtime output is separate at `nvfp4_f8scale_kernel_gdn`; the old .so is untouched.
+
+COMMAND ->
+  `gpu-run --card 0 docker run ... bench_f8scale.py --file model-00001-of-00003.safetensors`
+  `B70_EXTRA_ENV="B70_NVFP4_F8_SCALE_M_MAX=8" FUSED_SO=... GDN_LIB=... gpu-run --card 0 ... serve.sh`
+  `bench_code.py http://127.0.0.1:18079/v1 <full-id> {1,4} 256 {5,5}`
+  `gate_concurrent_coherence.py ... {3,6,200}` and `{6,6,200}`
+  `kv_gate.py` twice with `NEEDLE_DEPTH=93000`
+  `evals/.venv/bin/python run_evals.py ... --tiers 1 --tier1-dataset humaneval` (164, sandboxed)
+
+RESULT -> real layer-0 gate, N17408 K5120, median 5-round A-B-A:
+  M=1 0.1156 -> 0.0948 ms (1.220x); M=2/4/6/8 = 1.096/1.094/1.098/1.095x.
+  M=16 neutral (0.987x), M=512/2048 slower (0.948/0.980x), validating the M<=8 split.
+  Relative L2 versus folded BF16 scales is ~0.0034: removal of BF16 scale-fold roundoff, not a
+  different FP4 decode.
+
+RESULT -> full model, one card:
+  model residency 24.90 -> 22.76 GiB; available KV 4.50 -> 6.38 GiB; KV tokens
+  101,575 -> 144,408 (+42%). Code c1 60.8-61.1 -> 64.6 t/s (+5.7-6.3%); code c4
+  176.1 -> 179.1 aggregate in the direct single-card A/B. Warm 2038-token PP 5307 -> 5869 tok/s;
+  generic decode retained 15.9-16.0 t/s. MTP accepted 38,602/52,910 draft tokens = 72.9%.
+  Formal coherence 18/18 PASS; stronger runs 35/36 then 36/36 (the one repetitive response matched
+  the same stochastic pattern seen with unchanged folded scales). Needle gate 4/4 twice at the script's
+  ~151k-character prompt, second run exercising prefix reuse. No XPU/runtime errors.
+
+QUALITY -> full 164-problem, thinking-off, greedy, sandboxed HumanEval+ = 0.976 base / 0.939 plus.
+  Current folded-scale config was 0.976/0.945: one problem lower on plus. Status comparison shows only
+  HumanEval/116 and /132 swap base outcomes; 139/164 generated solutions are byte-identical. Five repeats
+  of /116 on the candidate produced five distinct hashes, confirming the already documented temp-0 graph
+  nondeterminism. Treat the one-problem plus delta honestly as noise-sized, not proven quality-neutral;
+  the packed weights are identical and the native path preserves the checkpoint scales more exactly.
+
+ROLLOUT -> shelf TP=1 now selects the separate GDN candidate and bakes
+  `B70_NVFP4_F8_SCALE_M_MAX=8`; TP=2 fallback remains on the old kernel. Rolled card 0 then card 1 while
+  the other replica served. First manual start used `SERVED` instead of this recipe's `SERVED_FORCE`,
+  so the servers briefly exposed the full model id and alias requests returned 404; caught by the public
+  bench, then corrected with another rolling restart. Final direct ports and nginx all report
+  `hotschmoe-dd`, both replicas are healthy, both mount the candidate .so, and the proxy-level gate is
+  18/18. Live DP=2 code: best c1 64.7 t/s, c4 202.2 t/s aggregate (three reps). No endpoint outage during
+  either rolling restart, though alias requests were affected until the correction.
+
+SECURITY HYGIENE -> `vllm/nvfp4/bench_usage.py` contained a hardcoded bearer credential. Replaced it
+  with `API_KEY`/`OPENAI_API_KEY` environment lookup and a local endpoint default. The credential is in
+  repository history and must be rotated separately with client coordination; this session did not
+  change the live key.
+
+VERDICT -> SHIP for the TP=1 DP shelf. The B70 win is smaller scale traffic, not a new GEMV or int8
+  prefill path: +6% single-stream code, +42% KV per card, coherent under the formal and stress gates,
+  with exact rollback retained. DP=2 is restored and live on both cards. Follow-ups: rotate the exposed
+  key; make the watchdog restart an exited replica; make detached service leases visible; investigate
+  the original card-0 gather-index crash separately.

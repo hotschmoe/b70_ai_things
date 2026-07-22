@@ -1,0 +1,66 @@
+diff --git a/csrc/xpu/ops.h b/csrc/xpu/ops.h
+--- a/csrc/xpu/ops.h
++++ b/csrc/xpu/ops.h
+@@ -48,6 +48,14 @@ torch::Tensor nvfp4_gemm_w4a16(
+     const torch::Tensor& B_scale,
+     int64_t group_size);
+-
++
++torch::Tensor nvfp4_gemm_w4a16_f8scale(
++    const torch::Tensor& A,
++    const torch::Tensor& B,
++    const std::optional<torch::Tensor>& bias,
++    const torch::Tensor& B_scale,
++    const torch::Tensor& B_global_scale,
++    int64_t group_size);
++
+ torch::Tensor int4_gemm_w4a8(
+     const torch::Tensor& A_,
+     const torch::Tensor& A_scale,
+diff --git a/csrc/xpu/torch_bindings.cpp b/csrc/xpu/torch_bindings.cpp
+--- a/csrc/xpu/torch_bindings.cpp
++++ b/csrc/xpu/torch_bindings.cpp
+@@ -36,6 +36,14 @@ TORCH_LIBRARY_EXPAND(TORCH_EXTENSION_NAME, xpu_ops) {
+       "int group_size) -> Tensor");
+   xpu_ops.impl("nvfp4_gemm_w4a16", torch::kXPU, &nvfp4_gemm_w4a16);
+-
++
++  xpu_ops.def(
++      "nvfp4_gemm_w4a16_f8scale(Tensor A, Tensor B, Tensor? bias, "
++      "Tensor B_scale, Tensor B_global_scale, int group_size) -> Tensor");
++  xpu_ops.impl(
++      "nvfp4_gemm_w4a16_f8scale",
++      torch::kXPU,
++      &nvfp4_gemm_w4a16_f8scale);
++
+   xpu_ops.def(
+       "int4_gemm_w4a8(Tensor A_, Tensor A_scale, Tensor A_zp, Tensor B, "
+       "Tensor B_scale, Tensor B_zp, int group_size, Tensor? g_idx, Tensor? "
+diff --git a/csrc/xpu/onednn/onednn_matmul.cpp b/csrc/xpu/onednn/onednn_matmul.cpp
+--- a/csrc/xpu/onednn/onednn_matmul.cpp
++++ b/csrc/xpu/onednn/onednn_matmul.cpp
+@@ -158,6 +158,23 @@ torch::Tensor nvfp4_gemm_w4a16(
+   return result;
+ }
+-
++
++torch::Tensor nvfp4_gemm_w4a16_f8scale(
++    const torch::Tensor& A,
++    const torch::Tensor& B,
++    const std::optional<torch::Tensor>& bias,
++    const torch::Tensor& B_scale,
++    const torch::Tensor& B_global_scale,
++    int64_t group_size) {
++  const at::DeviceGuard device_guard(A.device());
++  TORCH_CHECK(
++      B.dim() == 2 && B.strides()[B.dim() - 2] == 1,
++      "NVFP4 weight must be 2D in NT packed format (K contiguous)");
++  torch::Tensor result = check_and_create_output_tensor(A, B, A.scalar_type());
++  oneDNN::dnnl_matmul_w4a16_nvfp4_f8scale(
++      result, A, B, bias, B_scale, B_global_scale, group_size);
++  return result;
++}
++
+ torch::Tensor int4_gemm_w4a8(
+     const torch::Tensor& A_,       // quantized inputs, [b, m, k]
+     const torch::Tensor& A_scale,  // [b * m, 1] or [b]

@@ -203,6 +203,17 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       0.85/0.69/0.55/0.42/0.34 at spec5 on mixed code), so 5 pays and 7 tips over.
       Standing serve config: MODE=fused GRAPH=1 MTPTOK=5 CAPSIZES=1,2,4,8 UTIL=0.85.
       67 t/s coding decode on ONE card. c4 caveat unchanged (8.5k KV -> serializes).
+- [x] M10: native E4M3 block-scale decode on B70. The checkpoint's E4M3 group-16
+      scales now feed oneDNN directly, with the scalar FP32 global weight scale as
+      a second attribute. This halves decode scale traffic and removes the load-time
+      BF16 fold from the M<=8 path; M>8 retains folded BF16 because it wins prefill.
+      Real gate GEMM: 1.22x at M1 and 1.09-1.10x at M2-8. Full Qwen3.6-27B:
+      60.8-61.1 -> 64.6 code t/s/card, model 24.90 -> 22.76 GiB, KV 101,575 ->
+      144,408 tok/card. Gate 18/18 plus 36/36 stress, needle@93k 4/4 twice.
+      HumanEval+ 0.976/0.939 versus the folded-scale 0.976/0.945; the one-task
+      plus delta is inside the graph stack's proven greedy nondeterminism (five
+      repeats of the affected prompt produced five distinct solutions). Shipped
+      in the TP=1 DP shelf as B70_NVFP4_F8_SCALE_M_MAX=8; old .so retained.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 

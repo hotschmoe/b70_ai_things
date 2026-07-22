@@ -5,25 +5,31 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
-> **[2026-07-22 CURRENT STATE -- supersedes ALL dated banners below.** The box is **HEADLESS** (display
+> [2026-07-22 CURRENT STATE -- supersedes ALL dated banners below.] The box is **HEADLESS** (display
 > removed 2026-07-21; the card-1 downclock is CURED -- both cards ~126-128 TFLOPS symmetric) and the daily
 > driver is **DP=2: two independent single-card NVFP4 27B replicas** (`b70_daily_0`/card0 :18091,
 > `b70_daily_1`/card1 :18092) behind nginx least_conn on **:18080** as `hotschmoe-dd`. Per-replica config
 > (baked in the shelf wrapper, systemd-persistent): **captured PIECEWISE + MTP5 + CALIBRATED fp8 KV +
-> embed-INT8 (frees 1.18 GiB) @ 100,352 ctx, UTIL=0.95** (operator max; 0.96 crashes under concurrent
-> prefill). Full battery per replica: gate 18/18, needle@93k 4/4, HumanEval+ **0.976/0.945**
-> (quality-neutral vs stock 0.988/0.945), 30k+52k soaks clean. **Why DP=2:** zero cross-card collectives ->
+> embed-INT8 + native-E4M3 NVFP4 scales for M<=8 @ 100,352 ctx, UTIL=0.95** (operator max; 0.96 crashes
+> under concurrent prefill). The 2026-07-22 kernel update consumes checkpoint E4M3 block scales directly
+> instead of reading a folded BF16 copy during decode: real gate GEMM **1.22x at M1 / 1.09-1.10x at M2-8**;
+> end-to-end code **60.8-61.1 -> 64.6 t/s/card (1.06x)**. Model residency **24.90 -> 22.76 GiB** and KV
+> **101,575 -> 144,408 tok/card (+42%)**. Larger prefill matrices retain the faster folded-BF16 XMX path.
+> Candidate battery: gate 18/18 + 36/36 stress, needle@93k 4/4 twice, HumanEval+ **0.976/0.939** versus
+> the current folded-scale run **0.976/0.945** (one-task plus delta; the affected prompt produced five
+> different greedy outputs in five repeats under the known graph-mode nondeterminism). The prior graph
+> stack's 30k+52k soaks remain clean. **Why DP=2:** zero cross-card collectives ->
 > the NEO linear_stream graph-replay leak class and every oneCCL/TP wedge are structurally gone; a soft
 > failure is one `docker restart` of one replica (dd-watchdog covers both); `docker stop b70_daily_1`
 > frees card 1 for research while card 0 keeps serving. **IN=2048/OUT=128 (2026-07-22, via nginx):**
-> code decode **60.8 t/s/stream** (2048-probe generic 15.3 c1), PP 1690/card, c4 agg **49 generic / 121.8
-> code** (cumulative across BOTH cards -- see the DP footnote at the vLLM table), KV **101,575 tok/card**
-> (203k cumulative). **Prefix cache FIXED + LIVE (2026-07-22):** the MTP x fp8-KV hits=0 bug is root-caused
+> code best **64.7 t/s/stream**, c4 agg **202.2 code** (cumulative across BOTH cards -- see the DP footnote
+> at the vLLM table), KV **144,408 tok/card** (288,816 cumulative). **Prefix cache FIXED + LIVE
+> (2026-07-22):** the MTP x fp8-KV hits=0 bug is root-caused
 > (the EAGLE last-block drop x the 1664-tok fp8 attention block zeroed every hit -- NOT a drafter dtype
 > mismatch) and fixed by two gated sitecustomize blocks (14b EAGLE keep-verified + 14c PR#45477 chunk-align),
-> now default-ON in the shelf. Live DD: IN=2048 warm TTFT **1664ms -> 384ms** (PP 1225 -> 5307 tok/s), decode
+> now default-ON in the shelf. Live DD: IN=2048 warm TTFT **1664ms -> 347ms** (PP 1225 -> 5869 tok/s), decode
 > unchanged, 91,520/186,172 hits on the needle workload; needle@93k 4/4 twice + gate 18/18 + 30k/52k soaks
-> clean. JOURNAL 2026-07-22 (b).]**
+> clean. JOURNAL 2026-07-22 (b/c).
 
 > **[2026-07-21 (session 3) -- decode all-reduce lever CLOSED to cheap fixes + int4-XMX datapath demonstrated.**
 > Following the session-2 trace (decode is 43% all-reduce = the MTP spec all_gather), attacked it 3 ways. **All

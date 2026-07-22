@@ -106,3 +106,16 @@ models:
       #1 27B-int4). NO 14B-family bf16 reference -> report ABSOLUTE HumanEval+, not retention. Eval:
       run_evals.py --endpoint http://192.168.10.5:18080/v1 --model qwable-27b-int4 --quant qwable-27b-int4
       --tiers 1 --tier1-dataset humaneval --limit 164 --allow-code-exec  (greedy, sandboxed)."
+
+  - label: qwen36-27b-nvfp4-modelopt
+    served_model_id: qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5
+    public_alias: hotschmoe-dd
+    family: qwen3.6-27b
+    weights: nvfp4-modelopt-mixed
+    activations: bf16
+    calibration: nvidia-modelopt
+    serve_cmd: "rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh"
+    notes: "Single-card vLLM replica: fused oneDNN f4_e2m1, PIECEWISE graph,
+      MTP5, calibrated fp8 KV, and prefix cache. DP=2 exposes public alias
+      hotschmoe-dd through nginx; use the full served_model_id for direct
+      per-replica evals and encode nvfp4-modelopt in output directories."

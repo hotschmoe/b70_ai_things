@@ -29,6 +29,7 @@ try:
     from vllm.platforms.interface import PlatformEnum
 
     _MODE = os.environ.get("NVFP4_XPU_MODE", "dequant")
+    _F8_SCALE_M_MAX = int(os.environ.get("B70_NVFP4_F8_SCALE_M_MAX", "0"))
 
     class XPUDequantAtLoadNvFp4LinearKernel(EmulationNvFp4LinearKernel):
         """One-time NVFP4 -> BF16 weight dequant at load; plain F.linear after.
@@ -171,15 +172,57 @@ try:
                 # (layer.weight is [N, K/2] uint8 -> .t() = [K/2, N] strides [1,K/2]).
                 import vllm_xpu_kernels._xpu_C  # noqa: F401 (registers the op)
                 layer._wscale_nt = layer._wscale.t().contiguous()   # [K/16, N] bf16
+                if _F8_SCALE_M_MAX > 0:
+                    if not hasattr(
+                        torch.ops._xpu_C, "nvfp4_gemm_w4a16_f8scale"
+                    ):
+                        raise RuntimeError(
+                            "B70_NVFP4_F8_SCALE_M_MAX needs an _xpu_C build "
+                            "with nvfp4_gemm_w4a16_f8scale"
+                        )
+                    # Decode keeps checkpoint-native E4M3 block scales. The
+                    # existing folded-BF16 NT copy remains for larger prefill
+                    # matrices where it is faster. Delete row-major staging
+                    # tensors after both dispatch layouts are ready.
+                    layer._wscale_f8_nt = layer.weight_scale.data.t().contiguous()
+                    layer._wglobal = (
+                        layer.weight_global_scale.data.to(torch.float32)
+                        .reshape(-1)
+                        .contiguous()
+                    )
+                    if layer._wglobal.numel() != 1:
+                        raise RuntimeError("NVFP4 dense weight global scale is not scalar")
+                    del layer._wscale
+                    del layer.weight_scale
+                    del layer.weight_global_scale
+                elif os.environ.get("B70_NVFP4_COMPACT_SCALES", "0") == "1":
+                    # Fused inference reads only _wscale_nt. Do not retain the
+                    # row-major BF16 staging copy or the now-folded checkpoint
+                    # E4M3/global scale parameters. Across Qwen3.6-27B's 193
+                    # FP4 linears this reclaims about 3.21 GiB/card without
+                    # changing the oneDNN inputs or arithmetic.
+                    del layer._wscale
+                    del layer.weight_scale
+                    del layer.weight_global_scale
 
         def apply_weights(self, layer, x, bias=None):
             if _MODE == "fused":
                 # bit-exact NVFP4 weight-decompression matmul on INT4/f4_e2m1 XMX
                 # path: weights read at 4-bit, dequant in the oneDNN JIT gemm.
                 x2 = x.reshape(-1, x.shape[-1]).to(torch.bfloat16)
-                y = torch.ops._xpu_C.nvfp4_gemm_w4a16(
-                    x2, layer.weight.data.t(), bias, layer._wscale_nt, layer._gs
-                )
+                if _F8_SCALE_M_MAX > 0 and x2.shape[0] <= _F8_SCALE_M_MAX:
+                    y = torch.ops._xpu_C.nvfp4_gemm_w4a16_f8scale(
+                        x2,
+                        layer.weight.data.t(),
+                        bias,
+                        layer._wscale_f8_nt,
+                        layer._wglobal,
+                        layer._gs,
+                    )
+                else:
+                    y = torch.ops._xpu_C.nvfp4_gemm_w4a16(
+                        x2, layer.weight.data.t(), bias, layer._wscale_nt, layer._gs
+                    )
                 return y.reshape(*x.shape[:-1], layer.weight.shape[0])
             wp = layer.weight.data          # [N, K/2] uint8
             N, Kh = wp.shape
@@ -227,6 +270,11 @@ try:
         def _fake_nvfp4_gemm(A, B, bias, B_scale, group_size):
             return A.new_empty((A.shape[0], B.shape[1]), dtype=A.dtype)
 
+        def _fake_nvfp4_gemm_f8scale(
+            A, B, bias, B_scale, B_global_scale, group_size
+        ):
+            return A.new_empty((A.shape[0], B.shape[1]), dtype=A.dtype)
+
         try:
             register_fake("_xpu_C::nvfp4_gemm_w4a16", _fake_nvfp4_gemm)
             print(
@@ -240,6 +288,25 @@ try:
                 file=sys.stderr,
                 flush=True,
             )
+        if hasattr(torch.ops._xpu_C, "nvfp4_gemm_w4a16_f8scale"):
+            try:
+                register_fake(
+                    "_xpu_C::nvfp4_gemm_w4a16_f8scale",
+                    _fake_nvfp4_gemm_f8scale,
+                )
+                print(
+                    "[nvfp4-shim] registered fake for "
+                    "_xpu_C::nvfp4_gemm_w4a16_f8scale",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            except (RuntimeError, ValueError) as e:
+                print(
+                    "[nvfp4-shim] "
+                    f"register_fake(nvfp4_gemm_w4a16_f8scale) skipped: {e}",
+                    file=sys.stderr,
+                    flush=True,
+                )
 
     if _MODE == "fused":
         _register_nvfp4_fake()
@@ -254,6 +321,24 @@ try:
         self.kernel = _XPUW4A16NvFp4Kernel()
 
     _W4A16.__init__ = _w4a16_init_xpu
+    if _MODE == "fused" and _F8_SCALE_M_MAX > 0:
+        print(
+            "[nvfp4-shim] native E4M3 block-scale decode ON "
+            f"(M <= {_F8_SCALE_M_MAX}; folded BF16 scale above threshold)",
+            file=sys.stderr,
+            flush=True,
+        )
+    if (
+        _MODE == "fused"
+        and _F8_SCALE_M_MAX == 0
+        and os.environ.get("B70_NVFP4_COMPACT_SCALES", "0") == "1"
+    ):
+        print(
+            "[nvfp4-shim] compact fused scales ON "
+            "(retain folded BF16 NT only)",
+            file=sys.stderr,
+            flush=True,
+        )
     print(
         "[nvfp4-shim] ModelOptNvFp4W4A16LinearMethod now uses XPU 4-bit-resident "
         "dequant kernel (was CUDA-only Marlin)",

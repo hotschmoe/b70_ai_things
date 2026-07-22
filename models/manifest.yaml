@@ -41,6 +41,18 @@ models:
     source: { type: hf, repo: Qwen/Qwen3.6-27B-FP8 }
     notes: stock FP8.
 
+  - id: qwen3.6-27b/nvfp4-modelopt
+    family: qwen3.6-27b
+    scheme: nvfp4-modelopt-mixed
+    vision: true
+    mtp: true
+    size_gb: 22
+    served_as: qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5
+    source: { type: hf, repo: nvidia/Qwen3.6-27B-NVFP4 }
+    notes: ModelOpt MIXED_PRECISION checkpoint. MLP weights are group-16 NVFP4,
+           attention weights are FP8, and vision plus MTP are retained. Primary
+           vLLM DP=2 daily driver; public proxy alias is hotschmoe-dd.
+
   - id: qwen3.6-27b/int4-autoround
     family: qwen3.6-27b
     scheme: int4-autoround
