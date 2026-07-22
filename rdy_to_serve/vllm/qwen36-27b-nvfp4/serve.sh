@@ -59,12 +59,18 @@ if [ "$TP" = 1 ]; then
   export TOOLCALL="${TOOLCALL:-1}" TOOLPARSER="${TOOLPARSER:-qwen3_coder}" REASONPARSER="${REASONPARSER:-qwen3}"
   export OVERRIDE_TEMP="${OVERRIDE_TEMP:-0.6}"    # Qwen3 thinking-runaway fix (2026-07-11); THINK_BUDGET
                                                   # defaults 4096 in the recipe itself.
-  # embed-INT8 (block 13) is REQUIRED for MTP5@100K -- without it MTP caps ~48k. Fold into B70_EXTRA_ENV
-  # without clobbering caller-supplied extras.
-  case " ${B70_EXTRA_ENV:-} " in
-    *" B70_EMBED_INT8="*) : ;;
-    *) export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }B70_EMBED_INT8=1" ;;
-  esac
+  # Baked B70_EXTRA_ENV flags (folded in idempotently, without clobbering caller-supplied extras):
+  #  B70_EMBED_INT8=1   -- block 13, REQUIRED for MTP5@100K (without it MTP caps ~48k).
+  #  B70_PC_EAGLE_KEEP=1 + B70_PC_CHUNK_ALIGN=1 -- blocks 14b/14c (2026-07-22, JOURNAL b): make MTP5 x
+  #    fp8-KV x prefix-caching actually produce cache hits (was 0 -- the EAGLE last-block drop x the
+  #    1664-tok fp8 attention block zeroed every hit). Gated correct: needle@93k 4/4 twice, gate 18/18,
+  #    byte-identical cache KV on the deterministic (eager) path, 30k single + 52k concurrent soak clean.
+  for _pcf in B70_EMBED_INT8=1 B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1; do
+    case " ${B70_EXTRA_ENV:-} " in
+      *" ${_pcf%%=*}="*) : ;;
+      *) export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }$_pcf" ;;
+    esac
+  done
 else
   # [TP=2 256K fallback] -- both cards; push-AR prefill + prefix cache + agentic parsers on.
   export TP MAXLEN="${MAXLEN:-131072}" MTPTOK="${MTPTOK:-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \

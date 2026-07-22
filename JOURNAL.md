@@ -9595,3 +9595,23 @@ results (card 1, serve_nvfp4_27b.sh, MTP5+fp8+APC+fixes) ->
 verdict -> MTP5 + fp8-KV + WORKING prefix cache now coexist on one card. The fix is proven correct
   (bit-identical cache KV on the deterministic path + needle-through-cache + coherence + retained
   accept/throughput) and gated. Soak (Gate 6) + DD flip next.
+
+FLIP + Gate 6 (soak) results ->
+  Gate 6: 30k single-stream soak SURVIVED (676s, flat 44 t/s, no crash); 6-way concurrent forced-decode
+    soak SURVIVED 52,000 tok / 453s @ ~114 t/s agg (exceeds the 40k target), engine healthy + coherent.
+    (An earlier soak_concurrent big-prompt run hit a CLIENT-side urllib timeout at 20k concurrent decode
+    tokens -- engine stayed health=200 and answered "Paris" immediately after; not an engine fault.)
+  DD FLIP: shelf rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh now folds B70_PC_EAGLE_KEEP=1 +
+    B70_PC_CHUNK_ALIGN=1 into B70_EXTRA_ENV (alongside B70_EMBED_INT8=1), default-ON, idempotent. Rolling
+    restart: replica 1 (card 1) fresh first -> healthy + 9984 hits on the repeat probe; then replica 0
+    (card 0) fresh while nginx served via replica 1 (no outage). Both replicas now carry (14b)+(14c).
+  LIVE DD bench (IN=2048/OUT=128 via nginx :18080, bench_2048.py): c1 cold TTFT 1664ms / PP 1225 -> warm
+    TTFT 384ms / PP 5307 tok/s (4.3x -- the cache now serves warm agentic turns; was FLAT at hits=0 in
+    (a)); TG 15.9 t/s generic (unchanged, ~60.8 code); c4 agg 47.2 generic. Both replicas accumulating
+    hits live (replica0 4992/8212, replica1 16640/26717). systemd + dd-watchdog active.
+verdict -> DONE. MTP5 + fp8-KV + WORKING prefix cache coexist on one card at 100,352 ctx; DP=2 DD flipped,
+  soak-gated, coherent. This is the "big unlock": full MTP decode speed AND prefix reuse simultaneously.
+  README banner + DP footnote updated (hits-ZERO caveat retired). Upstreamable: (14c) is PR #45477;
+  (14b) EAGLE keep-verified (token-granular boundary check vs upstream's block-granular drop) is novel --
+  candidate upstream contribution. Fallbacks retained + gated: unset the two envs -> byte-identical to the
+  pre-fix DD; no-MTP@102400 shelf branch still available.

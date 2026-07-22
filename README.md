@@ -18,10 +18,12 @@ accuracy loss.
 > frees card 1 for research while card 0 keeps serving. **IN=2048/OUT=128 (2026-07-22, via nginx):**
 > code decode **60.8 t/s/stream** (2048-probe generic 15.3 c1), PP 1690/card, c4 agg **49 generic / 121.8
 > code** (cumulative across BOTH cards -- see the DP footnote at the vLLM table), KV **101,575 tok/card**
-> (203k cumulative). **Open trade (measured 2026-07-22): prefix-cache hits are ZERO under MTP x fp8-KV**
-> (each alone works: no-MTP+fp8 = hits, MTP5+bf16 = hits; the combination = 0/35k) -- so the current DD
-> re-prefills every agentic turn; the gated no-MTP@102400 fallback keeps cache reuse at 25.7 t/s. Fix
-> hunt = open research. JOURNAL 2026-07-21 (d)-(j).]**
+> (203k cumulative). **Prefix cache FIXED + LIVE (2026-07-22):** the MTP x fp8-KV hits=0 bug is root-caused
+> (the EAGLE last-block drop x the 1664-tok fp8 attention block zeroed every hit -- NOT a drafter dtype
+> mismatch) and fixed by two gated sitecustomize blocks (14b EAGLE keep-verified + 14c PR#45477 chunk-align),
+> now default-ON in the shelf. Live DD: IN=2048 warm TTFT **1664ms -> 384ms** (PP 1225 -> 5307 tok/s), decode
+> unchanged, 91,520/186,172 hits on the needle workload; needle@93k 4/4 twice + gate 18/18 + 30k/52k soaks
+> clean. JOURNAL 2026-07-22 (b).]**
 
 > **[2026-07-21 (session 3) -- decode all-reduce lever CLOSED to cheap fixes + int4-XMX datapath demonstrated.**
 > Following the session-2 trace (decode is 43% all-reduce = the MTP spec all_gather), attacked it 3 ways. **All
@@ -291,9 +293,9 @@ numbers are ONE card's and never exceed a single card's ceiling. "agg" for cN = 
 summed across streams landing on BOTH cards (c4 = 2 streams/card): generic c4 agg 49, code c4 agg 121.8,
 c2 code 64.3/stream = 128.6 agg. KV likewise: 101,575 tok per card; the 203k "cumulative" is capacity
 across replicas, NOT one shared pool (a single request is bounded by one card's 100,352 ctx). PP/TTFT are
-per card (a prefill runs on exactly one replica; no push-AR at DP). Warm-TTFT caveat: prefix-cache hits
-are ZERO under MTP x fp8-KV (2026-07-22 A/B: each alone works, combo = 0) -> TTFT shown is effectively
-cold; the no-MTP@102400 shelf fallback restores cache reuse (repeat-prompt wall 2.5s -> 1.1s measured).
+per card (a prefill runs on exactly one replica; no push-AR at DP). Prefix cache: the MTP x fp8-KV hits=0
+bug is FIXED (2026-07-22, blocks 14b/14c, default-ON in the shelf) -> warm TTFT now drops (IN=2048 measured
+1664ms -> 384ms, PP 1225 -> 5307 tok/s) as agentic turns reuse cached prefixes. JOURNAL 2026-07-22 (b).
 
 ¶ **NVFP4 TP=2 = the daily driver (2026-07-08).** `nvidia/Qwen3.6-27B-NVFP4` ModelOpt checkpoint
 (W4A16_NVFP4 MLP + FP8 attn + bf16 mtp/vision) via our custom `nvfp4_gemm_w4a16` oneDNN op (4-bit
