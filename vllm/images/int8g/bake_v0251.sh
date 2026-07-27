@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Stage 3/4 of the vLLM v0.25.1 rebase: bake vllm-xpu-env:int8g-v0251 FROM vllm-xpu-env:v0251.
+# Stage 3/4 of the vLLM XPU rebase: bake the custom INT8 registry onto a
+# versioned upstream base. Defaults preserve the original v0.25.1 invocation;
+# VLLM_SUFFIX=v0260 carries the same torch-2.12 ABI layer onto v0.26.0.
 # Pure-Python layer (the int8 _xpu_C ops come from the RUNTIME-mounted .so, Stage 2):
 #   1) copy contrib/vllm_int8_xpu/xpu_int8.py (XPUInt8ScaledMMLinearKernel, auto-registers fakes at import)
 #      into vllm/model_executor/kernels/linear/scaled_mm/xpu_int8.py
@@ -10,17 +12,21 @@
 # xpu_int8.py auto-registers fakes at import -> :int8 and :int8g collapse to ONE image here.
 set -uo pipefail
 REPO="${REPO:-/mnt/vm_8tb/github/b70_ai_things}"
-BASE="${BASE:-vllm-xpu-env:v0251}"
+VLLM_SUFFIX="${VLLM_SUFFIX:-v0251}"
+VLLM_LABEL="${VLLM_LABEL:-0.25.1}"
+BASE="${BASE:-vllm-xpu-env:$VLLM_SUFFIX}"
 SRC="$REPO/vllm/contrib/vllm_int8_xpu/xpu_int8.py"
 DATE="${DATE:-$(date +%Y%m%d 2>/dev/null || echo manual)}"
-TAG="vllm-xpu-env:int8g-v0251-$DATE"
+TAG="vllm-xpu-env:int8g-$VLLM_SUFFIX-$DATE"
+BUILD_CONTAINER="int8g_${VLLM_SUFFIX}_build"
+CCLFIX_CONTAINER="int8g_${VLLM_SUFFIX}_cclfix"
 
 [ -f "$SRC" ] || { echo "MISSING $SRC"; exit 1; }
 grep -q register_fake "$SRC" || { echo "FAIL: $SRC has no register_fake"; exit 1; }
 docker image inspect "$BASE" >/dev/null 2>&1 || { echo "FAIL: base $BASE not present"; exit 1; }
 
-docker rm -f int8g_v0251_build 2>/dev/null || true
-docker run --name int8g_v0251_build -v "$SRC:/tmp/xpu_int8.py:ro" --entrypoint bash "$BASE" -c '
+docker rm -f "$BUILD_CONTAINER" 2>/dev/null || true
+docker run --name "$BUILD_CONTAINER" -v "$SRC:/tmp/xpu_int8.py:ro" --entrypoint bash "$BASE" -c '
 set -e
 python - <<'"'"'PY'"'"'
 import os, shutil, sys, vllm
@@ -83,7 +89,7 @@ print("REGISTRY OK: XPU ->", _POSSIBLE_INT8_KERNELS[PlatformEnum.XPU])
 print("BAKE_OK")
 PY
 '
-[ "$(docker inspect -f '{{.State.ExitCode}}' int8g_v0251_build)" = 0 ] || { echo "BAKE FAILED"; docker logs int8g_v0251_build 2>&1 | tail -30; docker rm -f int8g_v0251_build; exit 1; }
+[ "$(docker inspect -f '{{.State.ExitCode}}' "$BUILD_CONTAINER")" = 0 ] || { echo "BAKE FAILED"; docker logs "$BUILD_CONTAINER" 2>&1 | tail -30; docker rm -f "$BUILD_CONTAINER"; exit 1; }
 # v0.25.1 FIX (2026-07-16): the upstream Dockerfile.xpu hardcoded a MINIMAL env (LD_LIBRARY_PATH =
 # ccl/mpi/compiler only; CCL_ROOT/CCL_CONFIGURATION/FI_PROVIDER_PATH/OCL_ICD_FILENAMES/... all UNSET)
 # instead of the full oneAPI setvars env that v0.24.0 baked. Two failures result:
@@ -102,26 +108,26 @@ comm -13 /tmp/b.env /tmp/a.env | grep -vE "^(PWD|SHLVL|_|OLDPWD|SETVARS_|BASH)"'
 CHANGES=( --change 'ENTRYPOINT []' )
 while IFS= read -r _l; do [ -z "$_l" ] && continue; CHANGES+=( --change "ENV $_l" ); done <<< "$DELTA"
 docker commit "${CHANGES[@]}" \
-  -m "vLLM 0.25.1 + XPUInt8ScaledMMLinearKernel registry + register_fake + FULL oneAPI setvars env (XPU device + oneCCL TP=2 fix)" \
-  int8g_v0251_build "$TAG"
-docker rm -f int8g_v0251_build
+  -m "vLLM $VLLM_LABEL + XPUInt8ScaledMMLinearKernel registry + register_fake + FULL oneAPI setvars env (XPU device + oneCCL TP=2 fix)" \
+  "$BUILD_CONTAINER" "$TAG"
+docker rm -f "$BUILD_CONTAINER"
 # v0.25.1 FIX (2026-07-16): the upstream Dockerfile bundled oneCCL 2021.15, which FAILS TP=2 worker
 # init ("ze_handle_manager mem_to_ipc_handle: device_fd is invalid") for pidfd/sockets/drmfd alike.
 # v0.24.0's oneCCL 2021.17 works. Swap the 2021.17 tree in over the 2021.15 path (so the baked
 # CCL_ROOT/LD_LIBRARY_PATH resolve unchanged). Source = extracted from vllm-xpu-env:int8g-v0240.
 CCL217="${CCL217:-/mnt/vm_8tb/b70/ccl_2021.17/2021.17}"
 if [ -d "$CCL217" ]; then
-  docker rm -f int8g_cclfix >/dev/null 2>&1
-  docker run -d --name int8g_cclfix --entrypoint sleep "$TAG" 600 >/dev/null
-  docker exec int8g_cclfix rm -rf /opt/intel/oneapi/ccl/2021.15
-  docker cp "$CCL217" int8g_cclfix:/opt/intel/oneapi/ccl/2021.15
-  docker commit -m "oneCCL 2021.17 (replaces bundled 2021.15 that fails ze mem_to_ipc_handle at TP=2)" int8g_cclfix "$TAG" >/dev/null
-  docker rm -f int8g_cclfix >/dev/null
+  docker rm -f "$CCLFIX_CONTAINER" >/dev/null 2>&1
+  docker run -d --name "$CCLFIX_CONTAINER" --entrypoint sleep "$TAG" 600 >/dev/null
+  docker exec "$CCLFIX_CONTAINER" rm -rf /opt/intel/oneapi/ccl/2021.15
+  docker cp "$CCL217" "$CCLFIX_CONTAINER":/opt/intel/oneapi/ccl/2021.15
+  docker commit -m "oneCCL 2021.17 (replaces bundled 2021.15 that fails ze mem_to_ipc_handle at TP=2)" "$CCLFIX_CONTAINER" "$TAG" >/dev/null
+  docker rm -f "$CCLFIX_CONTAINER" >/dev/null
   echo "=== oneCCL 2021.17 swapped in (TP=2 fix) ==="
 else
   echo "[!] WARN: $CCL217 not found -- TP=2 will fail on bundled oneCCL 2021.15. Extract from int8g-v0240:"
   echo "    cid=\$(docker create vllm-xpu-env:int8g-v0240); docker cp \$cid:/opt/intel/oneapi/ccl/2021.17 /mnt/vm_8tb/b70/ccl_2021.17/; docker rm \$cid"
 fi
-docker tag "$TAG" vllm-xpu-env:int8g-v0251
+docker tag "$TAG" "vllm-xpu-env:int8g-$VLLM_SUFFIX"
 echo "=== built ==="; docker images "$TAG" --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.Size}}'
 echo "digest (record in README): $(docker image inspect --format '{{.Id}}' "$TAG")"

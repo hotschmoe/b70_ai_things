@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Coherence + long-context needle gate for the fp8-KV nvfp4 server.
-Runs a few factual prompts and a needle-in-haystack recall at NEEDLE_DEPTH tokens.
+"""Coherence + long-context needle gate for the fp8-KV NVFP4 server.
+Runs a few factual prompts and a needle-in-haystack recall. NEEDLE_DEPTH controls
+filler construction; the server-reported prompt token count is authoritative.
 PROBE_HOST default http://127.0.0.1:8079. Prints PASS/FAIL per check.
 """
-import json, os, urllib.request
+import json, os, time, urllib.request
 
 HOST = os.environ.get("PROBE_HOST", "http://127.0.0.1:8079")
-NEEDLE_DEPTH = int(os.environ.get("NEEDLE_DEPTH", "0"))  # approx tokens of filler; 0 disables
+NEEDLE_DEPTH = int(os.environ.get("NEEDLE_DEPTH", "0"))  # filler units; 0 disables
+NEEDLE_MIN_TOKENS = int(os.environ.get("NEEDLE_MIN_TOKENS", "0"))
 KEY = os.environ.get("KEY", "")  # optional API key (Authorization: Bearer) for key-enforced serves
 
 
@@ -22,12 +24,16 @@ def mid():
     return json.load(urllib.request.urlopen(r, timeout=15))["data"][0]["id"]
 
 
-def gen(m, prompt, maxtok=64, temp=0.0):
+def gen_response(m, prompt, maxtok=64, temp=0.0):
     body = {"model": m, "prompt": prompt, "max_tokens": maxtok, "temperature": temp}
     r = urllib.request.Request(HOST + "/v1/completions", data=json.dumps(body).encode(),
                                headers=_hdr())
     with urllib.request.urlopen(r, timeout=600) as x:
-        return json.load(x)["choices"][0]["text"]
+        return json.load(x)
+
+
+def gen(m, prompt, maxtok=64, temp=0.0):
+    return gen_response(m, prompt, maxtok, temp)["choices"][0]["text"]
 
 
 def main():
@@ -56,10 +62,22 @@ def main():
         doc = filler_unit * half + secret + " " + filler_unit * (n_units - half)
         prompt = ("Read the following document carefully.\n\n" + doc +
                   "\n\nQuestion: What is the launch code for project Bluefinch? Answer with just the code.\nAnswer:")
-        approx_tok = len(prompt) // 4
-        t = gen(m, prompt, 24)
-        ok = "7391" in t and "zulu" in t.lower(); checks.append(ok)
-        print(f"[{'PASS' if ok else 'FAIL'}] needle@~{approx_tok}tok -> {t.strip()[:50]!r}")
+        started = time.perf_counter()
+        response = gen_response(m, prompt, 24)
+        elapsed = time.perf_counter() - started
+        t = response["choices"][0]["text"]
+        prompt_tok = int((response.get("usage") or {}).get("prompt_tokens") or 0)
+        recall_ok = "7391" in t and "zulu" in t.lower()
+        length_ok = NEEDLE_MIN_TOKENS <= 0 or prompt_tok >= NEEDLE_MIN_TOKENS
+        ok = recall_ok and length_ok
+        checks.append(ok)
+        length_note = (
+            f", need>={NEEDLE_MIN_TOKENS}" if NEEDLE_MIN_TOKENS > 0 else ""
+        )
+        print(
+            f"[{'PASS' if ok else 'FAIL'}] needle@{prompt_tok}tok{length_note} "
+            f"wall={elapsed:.2f}s -> {t.strip()[:50]!r}"
+        )
     print(f"GATE: {sum(checks)}/{len(checks)} PASS")
 
 

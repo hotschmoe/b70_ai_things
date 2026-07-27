@@ -18,6 +18,7 @@ MAXTOK    = int(os.environ.get("MAXTOK", "4000"))
 CEIL_TOK  = int(os.environ.get("CEIL_TOK", "800000"))
 CEIL_SEC  = int(os.environ.get("CEIL_SEC", "2400"))
 TIMEOUT   = int(os.environ.get("PROBE_TIMEOUT", "600"))
+MIN_PER_WORKER = int(os.environ.get("MIN_PER_WORKER", "0"))
 BASE      = f"http://{HOST}:{PORT}"
 
 def hdr():
@@ -38,7 +39,14 @@ def prompt(nonce):
     buf.append("\n# TASK: exhaustively explain every function above, one long paragraph each. Do not stop.\n")
     return "".join(buf)
 
-STATE = {"tok": 0, "reqs": 0, "crash": None, "stop": False, "t0": time.time()}
+STATE = {
+    "tok": 0,
+    "reqs": 0,
+    "crash": None,
+    "stop": False,
+    "t0": time.time(),
+    "worker_tok": [0] * WORKERS,
+}
 LOCK = threading.Lock()
 MID = None
 
@@ -56,7 +64,9 @@ def worker(wid):
                 d = json.load(x)
             c = d["usage"]["completion_tokens"]
             with LOCK:
-                STATE["tok"] += c; STATE["reqs"] += 1
+                STATE["tok"] += c
+                STATE["reqs"] += 1
+                STATE["worker_tok"][wid] += c
         except urllib.error.HTTPError as e:
             with LOCK:
                 if STATE["crash"] is None:
@@ -93,7 +103,15 @@ def main():
         print(f"[{LABEL}] *** CRASH ({kind}) after tok={tok} t={sec}s reqs={STATE['reqs']}", flush=True)
         sys.exit(3)
     print(f"[{LABEL}] SURVIVED tok={STATE['tok']} reqs={STATE['reqs']} "
-          f"t={round(time.time()-STATE['t0'])}s (no crash within ceiling)", flush=True)
+          f"t={round(time.time()-STATE['t0'])}s worker_tok={STATE['worker_tok']} "
+          "(no crash within ceiling)", flush=True)
+    if MIN_PER_WORKER > 0 and min(STATE["worker_tok"]) < MIN_PER_WORKER:
+        print(
+            f"[{LABEL}] FAIL min worker tokens {min(STATE['worker_tok'])} "
+            f"< required {MIN_PER_WORKER}",
+            flush=True,
+        )
+        sys.exit(4)
     sys.exit(0)
 
 if __name__ == "__main__":
