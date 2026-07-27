@@ -1,7 +1,7 @@
 # SERVING.md -- B70 serving: golden-path index + cross-cutting recipes
 
-> [!] GOLDEN PATH FIRST: for the v0230-family models, the AUTHORITATIVE, self-contained, reproducible
-> serve is now `rdy_to_serve/<model>/serve.sh` -- `cd` there and run it (see `rdy_to_serve/README.md`).
+> [!] GOLDEN PATH FIRST: the authoritative, self-contained serve is
+> `rdy_to_serve/<backend>/<model-quant>/serve.sh` (see `rdy_to_serve/README.md`).
 > Do NOT reconstruct those serve commands here. This doc keeps (a) one-line pointers to each golden dir,
 > (b) the recipes NOT yet on the shelf (the int8-kernel family, blocked on a `:int8g` rebuild), and
 > (c) the cross-cutting knowledge: the generic `bin/30_serve_w4a8_graph.sh` engine knobs, gpu-run,
@@ -9,30 +9,29 @@
 >
 > | model | golden dir | image |
 > |---|---|---|
-> | Qwen3.6-27B int4 (PRIMARY) | `rdy_to_serve/qwen36-27b-int4/` | `:v0230` |
-> | Qwen3.6-35B-A3B int4 MoE (FASTEST) | `rdy_to_serve/qwen36-35b-a3b-int4/` | `:v0230moe` |
-> | Qwen3.6-35B-A3B Quark W8A8 int8 (TP=2) | `rdy_to_serve/qwen36-35b-a3b-quark-w8a8-int8/` | `:v0230` |
+> | Qwen3.6-27B NVFP4 (current DD and TP=2 200K) | `rdy_to_serve/vllm/qwen36-27b-nvfp4/` | `:int8g-v0251` / `:int8g-v0260` |
+> | Qwen3.6-27B W8A8 | `rdy_to_serve/sglang/qwen36-27b-w8a8/` | `sglang-xpu:mtp` |
+> | Qwen3.6-27B W8A8 | `rdy_to_serve/vllm/qwen36-27b-w8a8/` | `:int8g-v0251` |
+> | Qwen3.6-35B-A3B W8A8 | `rdy_to_serve/{sglang,vllm}/qwen36-35b-a3b-w8a8/` | backend-specific |
 
 The single source of truth for serving model X: its `rdy_to_serve/` dir if shelved, else the recipe here.
 If you reconstruct a serve command from JOURNAL/scripts, you did it wrong -- fix the golden dir / THIS doc.
 Keep recipes verified-and-current; date each change. (Tools moved to `bin/`; the host runs them flat.)
 
-**Daily driver:** `./daily_driver_serve.sh` (repo root) keeps the API at `http://192.168.10.5:18080/v1`
-live for our apps. `start|stop|status|restart|logs`. It is a THIN orchestrator over the golden path: it
-PICKS an `rdy_to_serve/<model>` and serves it via that model's own `serve.sh` (zero recipe duplication).
-**To change what we serve, set `DD_MODEL`** (the one knob), e.g. `DD_MODEL=qwen36-35b-a3b-int4
-./daily_driver_serve.sh start`. Default: `qwen36-27b-int4`, served as **2x DATA-PARALLEL replicas** (one
-captured replica per B70 -> :18091/:18092) behind an nginx round-robin proxy on :18080 -- ~2.1x aggregate,
-full single-stream latency/replica, zero inter-GPU comms (measured; `bin/64_dataparallel_2rep.sh`). Knobs:
-`DD_REPLICAS=1` (a TP=2 / too-big-for-one-card model), `DD_MTP=1` (MTP spec decode, dense only), `DD_MAXLEN`,
-`DD_ENV` (extra serve.sh env). Holds the GPU lease (BOTH cards) while up -> `stop` before GPU experiments.
+**Daily driver:** vLLM 0.25.1 NVFP4 DP=2 at `http://192.168.10.5:18080/v1`: `b70_daily_0` on card 0
+at `:18091` and `b70_daily_1` on card 1 at `:18092`, behind nginx `least_conn`. Each request is capped
+at 100,352 tokens. The same shelf entry has a qualified vLLM 0.26.0 `TP=2 MAXLEN=200000` mode for a
+single longer request. The installed service definition is `vllm/deploy/b70-daily-driver.service`;
+the older `vllm/daily_driver_serve.sh` remains a generic orchestrator, not the authoritative live config.
 
 ## Where everything runs
 - GPU host: local Ubuntu box `b70s4dayz` @ `192.168.10.5` (we run LOCALLY on it since the 2026-06-23
   migration; the old `ssh root@192.168.10.5` workflow is retired -- see MIGRATION.md). Work on the box itself.
-- Repo is synced to the host at `/mnt/vm_8tb/b70/` (FLAT layout: `30_serve_w4a8_graph.sh`,
-  `31_decode_probe.sh`, `35_sweep_bench.sh`, `gpu-run` all live at that root -- NOT under `scripts/`).
-- Models: `/mnt/vm_8tb/b70/models/<dir>` on the host, bind-mounted into the container at `/models/<dir>`.
+- Repository: `/mnt/vm_8tb/github/b70_ai_things`. Shared tools are under `bin/`; backend-specific
+  serve and experiment scripts are under `vllm/`, `sglang/`, `llamacpp/`, and `zml/`.
+- Runtime data: `/mnt/vm_8tb/b70/` (caches, build artifacts, profiler traces, and GPU lock files).
+- Models: repository-local `models/files/<family>/<scheme>/` (git-ignored), bind-mounted into the
+  container at `/models`.
   -> `MODEL=` and `TOKPATH=` always use the **container** path `/models/...`, never the host path.
 - Serve port is always `18080`. Served container name defaults to `vllm_w4a8`.
 

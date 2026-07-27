@@ -21,10 +21,10 @@ def load(p):
 # category -> list of regexes (matched against lowercased kernel name), first match wins.
 CATS = [
     ("allreduce/collective", [r"all.?reduce", r"reduce.?scatter", r"all.?gather", r"\bccl\b",
-                              r"oneccl", r"push.?ar", r"collective", r"\bsched\b", r"nccl", r"xccl"]),
+                              r"oneccl", r"push.?ar", r"\bdo_ar\b", r"nccl", r"xccl"]),
     ("gdn/mamba-scan",       [r"gdn", r"mamba", r"\bssm\b", r"chunk", r"recurrent", r"delta",
                               r"causal.?conv", r"gated.?delta", r"segsum", r"state.?pass"]),
-    ("attention",            [r"attention", r"flash", r"\battn\b", r"\bsdpa\b", r"paged",
+    ("attention",            [r"attention", r"flash", r"\battn\b", r"fmha", r"\bsdpa\b", r"paged",
                               r"reshape.?and.?cache", r"rotary.?emb.*attn"]),
     ("linear-gemm",          [r"int8_gemm", r"nvfp4_gemm", r"fp8_gemm", r"w8a16", r"w8a8", r"w4a",
                               r"gemm", r"matmul", r"\bmm\b", r"cijk", r"\bdpas\b", r"xetla",

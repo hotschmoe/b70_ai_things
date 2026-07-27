@@ -4,7 +4,7 @@
 # vllm/nvfp4/serve_nvfp4_27b.sh.
 #
 #   ./bin/gpu-run --card 0 bash serve.sh start   # [DEFAULT] DP-replica / daily-driver config, port 8078
-#   TP=2 ./bin/gpu-run bash serve.sh start        # TP=2 fallback (both cards), port 8078
+#   TP=2 ./bin/gpu-run bash serve.sh start        # TP=2 200K mode (both cards), port 8078
 #   bash serve.sh stop
 #
 # [TP=1, DEFAULT] THE single-card serving config (gated 2026-07-21 evening, embed-INT8 lever): captured
@@ -29,11 +29,16 @@
 #   The old short-ctx MTP champion (HumanEval+ 0.988/0.945, 67 t/s code) is reachable via env:
 #   MTPTOK=5 MAXLEN=8192 UTIL=0.85 MAXSEQS=8 CAPSIZES=1,2,4,8 bash serve.sh start
 #
-# [TP=2] the 256K-context fallback (2026-07-04/05, Track 11d/11g): both cards, MTP5 decode + push-AR
-#   PREFILL overlay + prefix cache + full 256K ctx. Auto-enables PUSH_AR=1 PREFIXCACHE=1 + the agentic
-#   parsers. KV ~757k tokens @ 256K, gate 18/18. Superseded as the DD by DP=2 (wedge-immunity + a free
-#   research card) but kept measured + serveable.
-# Kernel .so: /mnt/vm_8tb/b70/nvfp4_fused_kernel_gdn/ (build: vllm/nvfp4/NVFP4_KERNEL_BUILD.md).
+# [TP=2] the CURRENT one-request 200K mode (qualified 2026-07-27): vLLM 0.26.0, both cards, captured
+#   MTP5 + calibrated fp8 KV + native E4M3 NVFP4 decode scales + graph push-AR + prefix cache.
+#   Baked: MAXLEN=200000 UTIL=0.85 MAXSEQS=8 MAXBATCH=16384 CAPSIZES=1,2,4,8,
+#   PUSH_AR_MAXB=256 MiB. Measured: exact 190,048-token needle 4/4 cold and warm (192.68s -> 7.09s),
+#   repeated 18/18 + 36/36 + 36/36 coherence, code c1 48.9 avg / 52.0 best t/s, c4 103.0 aggregate,
+#   32K prefill 1,982 tok/s, KV 640,845 tokens, and 52K concurrent forced-decode soak clean.
+#   DP=2 remains the default DD because it is faster in aggregate and isolates faults; select TP=2
+#   when a single request needs more than the per-replica 100,352-token limit.
+# Kernel source/build notes: vllm/nvfp4/NVFP4_KERNEL_BUILD.md. Both measured modes mount the
+# native-E4M3 GDN artifact under /mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/../../.." && pwd)"
@@ -48,10 +53,11 @@ fi
 # start / run / smoke all bring the serve up (detached); the DD orchestrator's `docker wait` pins the lease.
 
 TP="${TP:-1}"
-# shared baked best-config (int8g-v0251 = the vLLM 0.25.1 promotion, 2026-07-17)
-export MODE=fused GRAPH=1 PORT="${PORT:-8078}" NAME="$NAME" IMG="${IMG:-vllm-xpu-env:int8g-v0251}"
+# Shared serving shape. Each branch selects its measured image independently.
+export MODE=fused GRAPH=1 PORT="${PORT:-8078}" NAME="$NAME"
 
 if [ "$TP" = 1 ]; then
+  export IMG="${IMG:-vllm-xpu-env:int8g-v0251}"
   # [DP-replica / daily-driver config] -- gated 2026-07-21 evening (see header): captured+MTP5 at 100K
   # ctx via the embed-INT8 lever (block 13) at the operator-capped UTIL=0.95.
   export CARD="${CARD:-0}" MAXLEN="${MAXLEN:-100352}" UTIL="${UTIL:-0.95}" \
@@ -81,11 +87,22 @@ if [ "$TP" = 1 ]; then
     esac
   done
 else
-  # [TP=2 256K fallback] -- both cards; push-AR prefill + prefix cache + agentic parsers on.
-  export TP MAXLEN="${MAXLEN:-131072}" MTPTOK="${MTPTOK:-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \
-         UTIL="${UTIL:-0.85}" MAXSEQS="${MAXSEQS:-8}"
-  export PUSH_AR="${PUSH_AR:-1}" PREFIXCACHE="${PREFIXCACHE:-1}"
+  # [TP=2 200K mode] -- full qualification config from 2026-07-27.
+  export IMG="${IMG:-vllm-xpu-env:int8g-v0260}"
+  export TP MAXLEN="${MAXLEN:-200000}" MTPTOK="${MTPTOK:-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \
+         UTIL="${UTIL:-0.85}" MAXSEQS="${MAXSEQS:-8}" MAXBATCH="${MAXBATCH:-16384}"
+  export PUSH_AR="${PUSH_AR:-1}" PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}" \
+         PUSH_AR_MAXB="${PUSH_AR_MAXB:-268435456}" PREFIXCACHE="${PREFIXCACHE:-1}"
+  export KV_FP8="${KV_FP8:-1}" KV_SCALES="${KV_SCALES:-$REPO/vllm/nvfp4/kv_scales_nvfp4_27b.json}"
+  export FUSED_SO="${FUSED_SO:-/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/_xpu_C.abi3.so}"
+  export GDN_LIB="${GDN_LIB:-/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/libgdn_attn_kernels_xe_2.so}"
   export TOOLCALL="${TOOLCALL:-1}" TOOLPARSER="${TOOLPARSER:-qwen3_coder}" REASONPARSER="${REASONPARSER:-qwen3}"
+  for _pcf in B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 B70_NVFP4_F8_SCALE_M_MAX=8; do
+    case " ${B70_EXTRA_ENV:-} " in
+      *" ${_pcf%%=*}="*) : ;;
+      *) export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }$_pcf" ;;
+    esac
+  done
   # API_KEY / VLLM_API_KEY (DD_API_KEY) pass through the environment to serve_nvfp4_27b.sh unchanged.
 fi
 

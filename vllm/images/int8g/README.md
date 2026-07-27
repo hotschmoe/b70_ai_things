@@ -44,3 +44,28 @@ the 27B uses gated-delta-net and needs it). The 27B serve mounts the GDN-enabled
   Combined int8+GDN .so (torch 2.12, ABI-verified) at /mnt/vm_8tb/b70/w8a8_kernel_v0240/ (build_v0240_int8gdn_so.sh).
   VALIDATED: concurrent mixed prefill+decode COHERENT (40/40), PIECEWISE stable+deterministic, usage-based
   40.6 tok/s single (2.3x sglang daily driver 18.0). Rollback = the v0.23 :int8g (sha256:8e25c7582871) + old torch-2.11 .so.
+
+## Current torch-2.12 images (2026-07-27)
+
+```text
+vllm-xpu-env:v0251
+  -> vllm-xpu-env:int8g-v0251
+vllm-xpu-env:v0260
+  -> vllm-xpu-env:int8g-v0260
+     image sha256:8d35149d8545f4a17df08f6dfb507d5359391d9d5a4bbb01b2d050ddf89c3b18
+```
+
+Both use torch 2.12.0+xpu, so the existing custom `_xpu_C.abi3.so`
+artifacts retain ABI compatibility. The v0.26.0 image contains
+`vllm_xpu_kernels` 0.1.11.1 and `triton-xpu` 3.7.1. Build it from the
+clean upstream v0.26.0 tag with:
+
+```bash
+bash vllm/build_v0260_base.sh
+bash vllm/images/int8g/bake_v0260.sh
+```
+
+The v0.26.0 NVFP4 TP=2 path was qualified at 200,000 tokens on
+2026-07-27. The DP=2 daily-driver replicas remain on v0.25.1 because
+their long-soaked single-card result is slightly faster and no v0.26
+change justified a production restart.

@@ -1,70 +1,86 @@
-# rdy_to_serve -- self-contained, ready-to-serve B70 models (the GOLDEN PATH)
+# rdy_to_serve -- verified B70 serving shelf
 
-One directory per **verified, current-best** serve config. `cd` into a model dir and run `serve.sh` --
-no hunting through JOURNAL/scripts. The golden shelf is CURATED: a model lands here only when it is the
-current best AND has been verified to serve. Everything else on the host is accounted for in the status
-table below with a reason -- we do NOT put broken / dead-end / image-blocked recipes on the shelf.
+This is the golden path for serving. Each directory contains exactly one best
+measured configuration for a `(backend, model, quant)` tuple. Backend-specific
+code stays under its backend root; shared lifecycle helpers live in
+`_common/lib.sh`.
 
-See `../ORGANIZATION.md` for the layout + mutability contract.
+Do not reconstruct a serve from old JOURNAL entries. Start from the matching
+`serve.sh`, and do not promote an unmeasured option.
 
-## How each model dir is built
-```
-  <model>/
-    serve.sh    model-specific knobs + local patch mounts; sources ../_common/lib.sh ; b70_dispatch
-    patches/    pure-Python patches THIS model bind-mounts at runtime (copied in, LOCAL)
-    README.md   recipe + verified perf + the verified: manifest line
-  _common/
-    lib.sh      SHARED model-agnostic engine (docker-run builder, graph flags, health wait, probes)
-```
-`serve.sh` keeps everything model-specific LOCAL (image, TP, graph flags, patches); only the boring
-model-agnostic plumbing is shared in `_common/`. See the SWEEP GATE below.
+## Layout
 
-## [!!!] ALWAYS START WITH vLLM 0.23 -- images `vllm-xpu-env:v0230*`. NEVER llm-scaler 0.14.x.
-`vllm-xpu-env:v0230` = vLLM 0.23.0+xpu, our newest/most-capable B70 stack (Triton fused-MoE on XPU,
-Qwen3.6 / `Qwen3_5Moe` + Quark int8/int4 dispatch, graph capture). `:v0230moe` = `:v0230` + the baked
-MoE-routing patch (own leaf tag so it cannot affect dense models). The old `intel/llm-scaler-vllm:0.14.x`
-is an ANCIENT 0.14 fork with no `_moe_C` -- int8 MoE hard-fails; a multi-agent-day dead end. If a
-vLLM-XPU image NEWER than 0.23.0 exists, prefer it and update this line + CLAUDE.md.
-
-## How to use (on the GPU host: local Ubuntu box b70s4dayz, since the 2026-06-23 migration)
-```bash
-cd /mnt/vm_8tb/b70/rdy_to_serve/<model>
-/mnt/vm_8tb/b70/gpu-run bash serve.sh            # acquire GPU lease, start, wait healthy, gen-probe
-bash serve.sh stop                                # release the GPU
-```
-Sub-commands: `start` (default) | `stop` | `logs` | `bench` | `run` (serve+bench+stop) | `smoke`.
-Common env knobs: `GRAPH` (1=capture), `TP`, `PORT`, `DEVICE` (card 0|1 for single-card), `MAXLEN`,
-`MAXSEQS`, `UTIL`, `KVDTYPE`. Every GPU touch goes through `gpu-run` (one B70, several agents -- CLAUDE.md).
-
-Two single-card models can run AT ONCE (one per card) under one lease:
-```bash
-/mnt/vm_8tb/b70/gpu-run bash -c '
-  DEVICE=0 PORT=8001 NAME=t0 bash qwen36-27b-int4/serve.sh start
-  DEVICE=1 PORT=8002 NAME=t1 bash qwen36-35b-a3b-int4/serve.sh start'
+```text
+rdy_to_serve/
+  _common/lib.sh
+  sglang/<model-quant>/serve.sh
+  vllm/<model-quant>/serve.sh
 ```
 
-## THE SHELF (verified, current-best)
-| dir | model | quant | cards | image | notes |
-|---|---|---|---|---|---|
-| `qwen36-27b-int4/` | Qwen3.6-27B | int4 AutoRound (W4A16) | 1 | `:v0230` | ~30.8 t/s -- PRIMARY quality, daily driver |
-| `qwen36-35b-a3b-int4/` | Qwen3.6-35B-A3B MoE | int4 AutoRound | 1 | `:v0230moe` | ~56.8 / ~65 (fp8KV) t/s -- FASTEST |
-| `qwen36-35b-a3b-quark-w8a8-int8/` | Qwen3.6-35B-A3B MoE | Quark **W8A8 INT8** | 2 (TP=2) | `:v0230` | eager 4.8; GRAPH agg ~45.7 -- true-int8 MoE |
-| `qwen36-27b-w4a8/` | Qwen3.6-27B | **W4A8** int4w/int8a, SQ+GPTQ, prepacked | 1 | `:int8g` | int8-activation 27B (prepack + GDN; SECONDARY to w4a16) |
-| `qwen36-27b-w4a16/` | Qwen3.6-27B | **W4A16** compressed-tensors int4 | 1 | `:v0230` | the COMPRESSED-TENSORS 27B (parity / W4A16 research); text-only-hybrid load shim |
+The shelf currently has entries for:
 
-## NOT ON THE SHELF (every other host model, with the reason)
-| host model dir | status | reason / next step |
+| backend | entries | role |
 |---|---|---|
-| `Qwen3-14B-W4A8` / `Qwen3-14B-W8A8` / `Qwen3-14B-W4A16-gptq` | DROPPED | prior-gen Qwen3 14B scaffolding; removed in the 2026-06-29 models/ reorg (off headline target). |
-| `Qwen_Qwen3.6-27B-FP8` | UNTESTED | B70/Xe2 has NO FP8 ALU -> needs dequant path; serve-correctness unverified. Smoke before shelving. |
-| `Qwen3.6-27B-W8A8-sqgptq` | DEAD-END | dense true-int8 W8A8 serves but ~1.7 t/s (~13x slower than the `:int8` path). Kept for reference; not a serve target. |
-| (`Qwen3.6-27B-W4A16`) | SHELVED | FIXED 2026-06-23 -> `qwen36-27b-w4a16/` above. (Old note "won't serve, 4304 dim" was a red herring -- the real bug was a text-only-checkpoint name-prefix mismatch; see kernel/22.) |
-| `Qwen_Qwen3.6-27B` | RESEARCH | full BF16 27B (72G) -- too big for one card; TP=2/PP=2 capacity studies only. |
-| `Qwen_Qwen3.6-35B-A3B` | RESEARCH | full BF16 35B MoE (67G) -- TP=2 only; reference/baseline. |
-| `Qwen_Qwen3-0.6B` | DRAFT | tiny; speculative-decode draft / smoke target, not a standalone serve. |
-| `google_gemma-4-12B-it` | OLD | early-bringup experiment (scripts 24-33); superseded, not a current pick. |
+| vLLM | 27B int4, NVFP4, W4A16, W4A8, W8A8; 35B-A3B int4 and W8A8 | Current NVFP4 daily driver and measured baselines |
+| sglang | 27B int4, W4A8, W8A8; 35B-A3B W8A8 | Primary backend for new true-W8A8 serving research |
 
-## [!!!] SWEEP GATE
-Any change to `_common/` or `bin/` (shared infra) requires `bin/serve-sweep --smoke` GREEN across all
-shelf models before commit (and `--bench` if it could move perf). Each model README carries a `verified:`
-line recording the last green sweep. A break in `_common/` breaks every model -- hence the gate.
+## Current headline entry
+
+`vllm/qwen36-27b-nvfp4/serve.sh` contains two measured settings in one
+shelf entry:
+
+- Default `TP=1`: vLLM 0.25.1, one 100,352-token replica. Run one per
+  card behind nginx for the DP=2 daily driver. Each replica uses captured
+  MTP5, calibrated fp8 KV, embed INT8, native E4M3 decode scales, and
+  working prefix reuse. Measured 64.6 code tok/s per card.
+- `TP=2`: vLLM 0.26.0, one 200,000-token server across both cards.
+  It adds graph push-all-reduce and a 16,384-token prefill chunk.
+  Qualified 2026-07-27 with 18/18 plus two 36/36 coherence gates, exact
+  190,048-token retrieval cold and warm, and a 52K-token concurrent soak.
+
+Use DP=2 for aggregate throughput and fault isolation. Use TP=2 when one
+request needs more than 100,352 tokens.
+
+## Usage
+
+Run locally from the repository and hold the appropriate GPU lease for the
+entire serve/test/stop sequence:
+
+```bash
+cd /mnt/vm_8tb/github/b70_ai_things
+
+# One-card default on card 0.
+./bin/gpu-run --card 0 bash -c '
+  CARD=0 PORT=18079 NAME=test_nvfp4 \
+    bash rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start
+  # Run probes here.
+  docker stop -t 60 test_nvfp4'
+
+# One-request 200K TP=2 mode.
+./bin/gpu-run bash -c '
+  TP=2 PORT=18079 NAME=test_nvfp4_tp2 \
+    bash rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start
+  # Run probes here.
+  docker stop -t 60 test_nvfp4_tp2'
+```
+
+Common knobs include `PORT`, `NAME`, `MAXLEN`, `MAXSEQS`, `UTIL`, and
+backend-specific settings documented in each wrapper. Served IDs must
+identify the method and scheme unless the daily-driver orchestrator
+deliberately forces the stable `hotschmoe-dd` alias.
+
+## Promotion gate
+
+A shelf change must be at least as fast and coherent under concurrent
+prefill plus decode. Validate model identity, KV scheme, a mixed-load
+coherence sweep, performance, and a bounded soak before promotion.
+
+Any change to `bin/` or `rdy_to_serve/_common/` additionally requires:
+
+```bash
+bin/serve-sweep --smoke
+```
+
+The current TP=2 NVFP4 qualification driver is
+`vllm/nvfp4/tp2_longctx_qualify.sh`; profiler capture is
+`vllm/nvfp4/profile_tp2_v0260.sh`.

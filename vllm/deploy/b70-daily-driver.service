@@ -7,16 +7,18 @@
 # (kv_scales_nvfp4_27b.json) + INT8 embed_tokens (shim block 13) + prefix cache + agentic parsers,
 # MAXLEN=100352 UTIL=0.95 (operator max -- 0.96 crashes under concurrent prefill). Gated 2026-07-21
 # evening: gate 18/18, needle@93k 4/4, HumanEval+ 0.976/0.945 (quality-neutral vs stock), 30k single +
-# 40k concurrent soak clean, 60.8 t/s single-stream / 121.8 t/s aggregate conc=4 per card.
+# 52k concurrent soak clean. The native-E4M3 update then measured 64.6 t/s single-stream per card,
+# 202.2 t/s aggregate conc=4 through the proxy, and 144,408 KV tokens per card.
 # WHY DP=2 (not TP=2): zero cross-card collectives -> the NEO linear_stream graph-replay leak class and
 # every oneCCL/TP wedge are structurally out of the picture; failure mode is soft per-replica garbage ->
 # dd-watchdog docker-restarts ONE replica (set DD_WATCH_REPLICAS in b70-dd-watchdog.service to match).
 # RESEARCH MODE: `docker stop b70_daily_1` frees card 1 (nginx marks the backend down, card 0 keeps
 # serving); `docker start b70_daily_1` restores DP=2.
-# MEMORY WALLS (do not "improve" without re-gating): MTP is memory-incompatible with >64K ctx on one card;
-# UTIL>=0.96 crashes under concurrent prefill; MAXBATCH<1600 rejected (mamba align). See shelf serve.sh.
-# Fallback DD (known-good): the TP=2 256K config -- TP=2 MAXLEN=200000 via the same wrapper (see git log
-# of this unit for the exact previous ExecStart).
+# MEMORY WALLS (do not "improve" without re-gating): without embed INT8, MTP fits only about 48K on one
+# card; the current embed-INT8 config is qualified at 100,352. UTIL>=0.96 crashes under concurrent
+# prefill; MAXBATCH<1600 is rejected by mamba alignment. See shelf serve.sh.
+# Long-context fallback (qualified 2026-07-27): TP=2 selects vLLM 0.26.0 and MAXLEN=200000 via the same
+# wrapper, with calibrated fp8 KV, graph push-AR, MTP5, and prefix caching.
 Description=B70 daily-driver serve (vLLM 0.25.1 NVFP4 27b DP=2 captured+MTP5+fp8KV+embedINT8 @100k, hotschmoe-dd)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service

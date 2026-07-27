@@ -5,7 +5,7 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
-> [2026-07-22 CURRENT STATE -- supersedes ALL dated banners below.] The box is **HEADLESS** (display
+> [2026-07-27 CURRENT STATE -- supersedes ALL dated banners below.] The box is **HEADLESS** (display
 > removed 2026-07-21; the card-1 downclock is CURED -- both cards ~126-128 TFLOPS symmetric) and the daily
 > driver is **DP=2: two independent single-card NVFP4 27B replicas** (`b70_daily_0`/card0 :18091,
 > `b70_daily_1`/card1 :18092) behind nginx least_conn on **:18080** as `hotschmoe-dd`. Per-replica config
@@ -29,7 +29,13 @@ accuracy loss.
 > mismatch) and fixed by two gated sitecustomize blocks (14b EAGLE keep-verified + 14c PR#45477 chunk-align),
 > now default-ON in the shelf. Live DD: IN=2048 warm TTFT **1664ms -> 347ms** (PP 1225 -> 5869 tok/s), decode
 > unchanged, 91,520/186,172 hits on the needle workload; needle@93k 4/4 twice + gate 18/18 + 30k/52k soaks
-> clean. JOURNAL 2026-07-22 (b/c).
+> clean. JOURNAL 2026-07-22 (b/c). **One-request 200K is now qualified and shelved:** set `TP=2` on
+> `rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh` for vLLM 0.26.0, `MAXLEN=200000`, calibrated fp8 KV,
+> MTP5, native E4M3 decode scales, graph push-AR, and prefix cache. The exact 190,048-token retrieval
+> passed cold and warm (192.68s -> 7.09s); coherence passed 18/18 plus 36/36 twice; a four-worker soak
+> generated 52K tokens clean. Code decode was 48.9 average / 52.0 best t/s at c1 and 103.0 aggregate
+> at c4; KV capacity was 640,845 tokens. DP=2 remains the daily default because it gives 64.6 t/s/card,
+> 202.2 aggregate at c4, and fault isolation. TP=2 is the mode for a single prompt above 100,352 tokens.
 
 > **[2026-07-21 (session 3) -- decode all-reduce lever CLOSED to cheap fixes + int4-XMX datapath demonstrated.**
 > Following the session-2 trace (decode is 43% all-reduce = the MTP spec all_gather), attacked it 3 ways. **All
@@ -253,32 +259,20 @@ best of any 35B entry** (int8-XMX prefill). Decode is eager-slow (~8 t/s single 
 graph capture / NEXTN MTP / fused int8 dense are the open decode levers. Soak: clean + stable (no
 degradation), and unlike vLLM it stays coherent under sustained concurrent load.
 
-## Serve shelf -- vLLM (UN-PAUSED on v0.24.0)
+## Serve shelf -- vLLM (current NVFP4 images: 0.25.1 DD, 0.26.0 TP=2)
 
-> **vLLM is un-paused (2026-07-03).** Rebased to **v0.24.0 (torch 2.12)**, whose five hybrid
-> mixed-prefill+decode PRs (#44700 split mixed -> recurrent GDN, #43990/#42430/#43961/#43556) FIX
-> the concurrent `!!!!` GDN/Mamba SSM-state garbage that paused it. The W8A8 daily-driver candidate
-> re-benched below is now **coherent** under staggered concurrent load (40/40 + 32/32 gate), PIECEWISE
-> capture is **stable** under sustained MTP (restarts=0) + **deterministic** (3/3 greedy), and
-> tool-calling (`qwen3_coder`) + reasoning (`qwen3`) + vision all work. Images: `vllm-xpu-env:{v0240,int8g-v0240}`.
->
-> **Vision + capture FIXED (2026-07-03):** enabling vision under `torch.compile` crashed at init
-> (`'NoneType'.size` in dynamo) -- root cause was the **standalone AOT-compile** serialize/reload mishandling
-> the optional (None) multimodal inputs. Fix = **`VLLM_USE_AOT_COMPILE=0`** (env, no code patch, no runtime
-> cost -- the captured graph is identical). With it, vision + PIECEWISE capture + MTP run together: **44 tok/s
-> usage-based WITH vision** (2.4x the sglang daily driver's 18.0), gate 40/40 coherent, restarts=0, tool-calling
-> + reasoning intact. The shelf auto-applies it (+ `--skip-mm-profiling`) when vision is on and `GRAPH=1`.
-> (Remaining minor: prefix caching for the hybrid GDN model is untested here -- `PREFIXCACHE=0` for now.)
+vLLM's hybrid GDN fixes, XPU graph capture, vision path, MTP, and prefix caching are coherent on the
+current shelf. The DP replicas deliberately remain on the long-soaked v0.25.1 image; the 200K TP=2
+branch uses v0.26.0, whose native fine-grained FullAttention/Mamba prefix coordinator replaces the
+legacy cache monkeypatch. Both keep torch 2.12, so the custom kernel ABI is unchanged.
 
-Numbers at each entry's own production config (`GRAPH=1` PIECEWISE capture -- the ~4x decode lever). The two
-**NVFP4 rows are freshly benched 2026-07-08** (IN=2048/OUT=128 warm; TG c1 = generic-summarization decode with
-the coding-workload decode in **bold** -- generic is low-MTP-accept, code is the ~99%-accept number that
-matters for the coding DD; c4 shows per-stream with aggregate in parens); other rows are the last vLLM baseline.
+Numbers below are each entry's own production config. The first two NVFP4 rows were refreshed on
+2026-07-22 and 2026-07-27 respectively; code decode uses the coherence-immune coding harness.
 
 | Model | Quant | Wt GB | TP | PP tok/s | TTFT | TG c1 | TG c4 | KV avail |
 |---|---|---|---|---|---|---|---|---|
-| qwen3.6-27b | **NVFP4 DP=2 replica: fp8-KV-cal + MTP5 + embed-INT8 @100k (DAILY DRIVER 2026-07-22)**‖ | 23.7/card | 1x2 | 1690/card | 1200 ms | 15.3 (**60.8** code) | 12.3 (49 agg; **121.8** code agg)‖ | 101.5k/card (203k)‖ |
-| qwen3.6-27b | NVFP4 TP=2 bf16 KV + captured MTP5 + reclaim (prior DD, 2026-07-08)¶ | 24 | 2 | 2201 | 926 ms | 16.3 (**53** code) | 6.6 (26 agg) | **385k tok** |
+| qwen3.6-27b | **NVFP4 DP=2 replica: fp8-KV-cal + MTP5 + embed-INT8 @100k (DAILY DRIVER)** [dp] | 22.76/card | 1x2 | 5869/card warm | 347 ms warm | **64.6 code** | **202.2 code agg** [dp] | 144.4k/card (288.8k cumulative) [dp] |
+| qwen3.6-27b | **NVFP4 TP=2 fp8-KV-cal + MTP5 + push-AR @200k** [tp2] | 11.54/card | 2 | 1982 @36k | 18.15 s @36k | **48.9 code** (52.0 best) | 25.7/stream (**103.0 agg**) | **640.8k tok** |
 | qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
@@ -293,27 +287,18 @@ matters for the coding DD; c4 shows per-stream with aggregate in parens); other 
 code / HumanEval+ 0.963/0.927; ctx capped ~8k by weight residency (GDN left fp16 by the sqgptq recipe,
 25.8 GiB on disk) until the `scripts/149` gdnint8 requant. See `rdy_to_serve/vllm/qwen36-27b-w4a8/`.]
 
-‖ **DP=2 concurrency accounting (the DAILY DRIVER row).** The DD is TWO independent single-card TP=1
-replicas behind nginx `least_conn` -- there is no cross-card work for a single stream, so per-stream
-numbers are ONE card's and never exceed a single card's ceiling. "agg" for cN = the CUMULATIVE tok/s
-summed across streams landing on BOTH cards (c4 = 2 streams/card): generic c4 agg 49, code c4 agg 121.8,
-c2 code 64.3/stream = 128.6 agg. KV likewise: 101,575 tok per card; the 203k "cumulative" is capacity
-across replicas, NOT one shared pool (a single request is bounded by one card's 100,352 ctx). PP/TTFT are
-per card (a prefill runs on exactly one replica; no push-AR at DP). Prefix cache: the MTP x fp8-KV hits=0
-bug is FIXED (2026-07-22, blocks 14b/14c, default-ON in the shelf) -> warm TTFT now drops (IN=2048 measured
-1664ms -> 384ms, PP 1225 -> 5307 tok/s) as agentic turns reuse cached prefixes. JOURNAL 2026-07-22 (b).
+[dp] **DP=2 concurrency accounting (the DAILY DRIVER row).** The DD is two independent single-card
+TP=1 replicas behind nginx `least_conn`; a single stream never crosses cards. Aggregate c4 is cumulative
+across streams landing on both cards. KV is also cumulative only: a single request is bounded by one
+replica's 100,352-token context. Prefix caching is live; warm 2038-token PP is 5869 tok/s.
 
-¶ **NVFP4 TP=2 = the daily driver (2026-07-08).** `nvidia/Qwen3.6-27B-NVFP4` ModelOpt checkpoint
-(W4A16_NVFP4 MLP + FP8 attn + bf16 mtp/vision) via our custom `nvfp4_gemm_w4a16` oneDNN op (4-bit
-f4_e2m1 resident) across BOTH cards + PIECEWISE capture + NEXTN MTP spec=5 + push-AR all-reduce. Two
-fixes make this the DD: **bf16 KV** (`KV_FP8=0`) sidesteps the uncalibrated-fp8-KV repetition, and the
-**XPUGraph re-instantiation reclaim** (`B70_XPU_CG_RECLAIM`, default-on for GRAPH=1) fixes the
-MTP-verify x cudagraph `linear_stream.h:84` NEO abort -> captured+MTP now runs crash-free at full speed.
-Bench (IN=2048, warm): code decode **53 t/s** (spec=5, ~99% accept on code; 16.3 on a generic
-summarization = low MTP accept), PP 2201, TTFT 926 ms, KV **385k tok @ 128k (2.94x concurrency)** -- MORE
-KV than W8A8 TP=2 (238k) at smaller weight (24 vs 35 GB). HumanEval+ **0.988/0.945** (box #1); gate 18/18;
-vision + tool-call + reasoning retained. Serve = the systemd DD config (`SERVED_FORCE=hotschmoe-dd`, port
-18080) over `vllm/nvfp4/serve_nvfp4_27b.sh`. JOURNAL 2026-07-08 + docs/20260707_dd_mtp_piecewise_neo_abort.md.
+[tp2] **NVFP4 TP=2 is the one-request 200K mode, not the daily default.** vLLM 0.26.0 splits the model
+to 11.54 GiB/card and allocates 640,845 KV tokens with calibrated fp8 KV. The qualified settings are
+PIECEWISE graph + MTP5 + native E4M3 decode scales + graph push-AR + prefix cache, `MAXLEN=200000`,
+`MAXBATCH=16384`, and `PUSH_AR_MAXB=256 MiB`. It passed 18/18 plus two 36/36 mixed-load gates,
+190,048-token retrieval cold and warm, and a 52K-token concurrent soak. The v0.26 decode trace shows
+41.2% collectives, 36.0% GEMM, 9.7% GDN, and 6.3% attention on the representative rank; the 39.0%
+eager oneCCL full-vocab MTP gather remains the primary optimization target.
 
 ◆ **NVFP4 TP=1 fp8 KV = the single-card 128k-context config (2026-07-08).** Same NVFP4 checkpoint +
 `nvfp4_gemm_w4a16` kernel + PIECEWISE capture, on ONE card. **fp8 KV cache** (calibrated `amax/448` per-layer

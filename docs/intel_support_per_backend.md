@@ -28,40 +28,46 @@ backends -- there is no true W8A8 outside vLLM/sglang. The mappings below are th
 
 ## At-a-glance matrix
 
-| Capability | vLLM (paused) | sglang (primary) | llama.cpp (new) | zml (new) |
+| Capability | vLLM (current NVFP4 DD) | sglang (primary W8A8 research) | llama.cpp | zml |
 |---|---|---|---|---|
 | Stock Intel XPU support | yes (xpu platform) | yes (xpu device) | yes (SYCL/GGML backend) | yes (oneAPI PJRT plugin) |
 | Build environment | `vllm-xpu-env` images | `sglang-xpu` images | inside oneAPI image (SYCL) | hermetic bazel (oneAPI PJRT) |
 | Compute / quant model | torch; W8A8/W4A8/W4A16/int4/fp8/bf16 | torch; W8A8/W4A8/int4woq/bf16 | weight-only GGUF (Q8_0/Q4_K_M/...) | bf16/f16 only (XLA) |
 | int8 ACTIVATIONS (true W8A8) | yes (our oneDNN kernels) | yes (our oneDNN kernels) | NO (weight-only) | NO |
 | Consumes our compressed-tensors | yes | yes | no | no |
-| Multi-GPU TP | TP=2 (oneCCL, wedge-prone) | TP=2 (oneCCL) | `--split-mode tensor` (own all-reduce) | Shardy/SPMD (XLA collectives) |
+| Multi-GPU TP | TP=2 qualified at 200K (oneCCL + push-AR, P2P=0) | TP=2 (oneCCL) | `--split-mode tensor` (own all-reduce) | Shardy/SPMD (XLA collectives) |
 | Multi-GPU DP | DP=2 + nginx | DP=2 + nginx | 2x server + nginx | replicated mesh |
 | Collective stack | oneCCL + our Battlemage env | oneCCL + our Battlemage env | own SYCL ring all-reduce | XLA/PJRT in-graph |
-| qwen3.6-27b arch | yes (qwen3_5 + our patches) | yes (qwen3_5 + our patches, daily driver) | YES (stock `qwen35` + GDN SYCL kernel) | backbone only (`qwen3_5` dense; no vision/MTP) |
+| qwen3.6-27b arch | yes (qwen3_5 + our patches, daily driver) | yes (qwen3_5 + our patches) | YES (stock `qwen35` + GDN SYCL kernel) | backbone only (`qwen3_5` dense; no vision/MTP) |
 | vision tower | yes (grafted) | yes (grafted, served) | yes (mmproj `qwen3vl`) | NOT implemented |
-| MTP / spec decode | yes | yes (NEXTN, daily driver) | yes (`--mtp`) | NOT implemented |
+| MTP / spec decode | yes (MTP5, daily driver) | yes (NEXTN) | yes (`--mtp`) | NOT implemented |
 | OpenAI server + api-key + metrics | yes | yes | yes (`--api-key` `--metrics`) | example only (no server) |
-| Daily-driver-ready today | yes (shelf) | YES (current default) | candidate (pending GPU bring-up) | NO (multi-week port) |
+| Daily-driver-ready today | YES (current NVFP4 DP=2) | shelf-ready; 0.5.15 rebuild blocked by torch constraint | candidate | NO (multi-week port) |
 
 ## Per-backend detail
 
-### vLLM (paused baseline)
-- Default image `vllm-xpu-env:v0230`; W8A8 research image `:int8g` carries `XPUInt8ScaledMMLinearKernel`.
+### vLLM (current NVFP4 daily driver)
+- Current NVFP4 images are `vllm-xpu-env:int8g-v0251` for the DP=2 daily driver and
+  `vllm-xpu-env:int8g-v0260` for the qualified TP=2 200K mode. Both use torch 2.12.
 - Patched heavily: our oneDNN int8/int4 GEMM ops (`kernels/`), compressed-tensors W8A8/W4A8/W4A16 loaders,
   graph-capture fake registrations, the Battlemage multi-GPU stability env (`rdy_to_serve/_common/lib.sh`
   `MGPU=(...)`), the wedge guard.
-- Paused because it batches concurrent prefill+decode and emits "!!!!" garbage under load; kept as a
-  maintained, sweep-gated baseline on the shelf (`rdy_to_serve/vllm/*`).
-- TP=2 is the documented wedge surface: `CCL_TOPO_P2P_ACCESS=1` in a TP>1 serve deterministically wedges
-  the box (reboot-only). See `docs/P2P_GPU.md`.
+- The hybrid mixed-prefill fixes in current vLLM removed the old concurrent `!!!!` blocker. The
+  current NVFP4 shelf passed repeated 36-stream coherence. DP=2 remains the daily mode for aggregate
+  throughput and fault isolation; TP=2 is qualified for one request up to 200,000 tokens.
+- TP=2 must keep `CCL_TOPO_P2P_ACCESS=0`. Kernel 7.1 cured the old GuC/BCS hardware wedge, but the
+  separate vLLM/oneCCL worker-init failure mode and unsafe P2P setting still require the documented
+  health/teardown discipline. See `docs/P2P_GPU.md`.
 
-### sglang (primary; the daily driver)
-- Image `sglang-xpu:mtp`. The production daily driver = `rdy_to_serve/sglang/qwen36-27b-w8a8` (W8A8 fused
-  int8 oneDNN ops + NEXTN MTP, TP=2), behind `:18080` with Open WebUI + Prometheus/Grafana.
+### sglang (primary backend for new W8A8 serving work)
+- The proven 0.5.6 shelf includes `rdy_to_serve/sglang/qwen36-27b-w8a8` (W8A8 fused int8 oneDNN ops +
+  NEXTN MTP, TP=2). The attempted 0.5.15-derived image is not usable yet because an unpinned
+  `auto-round`/`torchcodec` dependency upgraded the XPU torch install to a CUDA torch build. Repair
+  that constraint before the next sglang GPU comparison.
 - Patched: fused int8 W8A8/W4A8 kernels (runtime `.so` + shims), XPU NEXTN/MTP gates, XPUGraph capture,
   GDN fused conv/gating, the qwen3_coder incremental tool-arg streaming fix, Quark int8 MoE loader.
-- This is the only stack that actually serves our true W8A8 qwen3.6-27b with vision + MTP today.
+- This remains the primary direction for new true-W8A8 serving work, but it is not the current live
+  daily driver; vLLM NVFP4 DP=2 owns `:18080`.
 
 ### llama.cpp (new -- SYCL/GGML)
 - **Build:** inside `sglang-xpu:mtp` (has oneAPI 2025.3 + icx/icpx + oneMKL + oneDNN + cmake + ninja). JIT
@@ -128,7 +134,10 @@ backend:
 
 ## Bottom line
 
-- **sglang** stays the primary W8A8 daily driver (only true-W8A8 + vision + MTP path).
+- **vLLM NVFP4** is the current measured daily driver: DP=2 at 100,352 tokens per request, with a
+  qualified TP=2 200K alternative.
+- **sglang** stays the primary new true-W8A8 research backend; fix the 0.5.15 torch constraint before
+  claiming it current.
 - **llama.cpp** is the most promising NEW backend: stock qwen3.6-27b (text+vision+MTP), full server
   parity, low-risk DP=2 Q4_K_M production path + a coherence-gated TP=2 Q8_0 experiment. Ready to test the
   moment the GPUs are idle.

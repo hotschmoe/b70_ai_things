@@ -9702,3 +9702,134 @@ VERDICT -> SHIP for the TP=1 DP shelf. The B70 win is smaller scale traffic, not
   with exact rollback retained. DP=2 is restored and live on both cards. Follow-ups: rotate the exposed
   key; make the watchdog restart an exited replica; make detached service leases visible; investigate
   the original card-0 gather-index crash separately.
+
+## 2026-07-27 -- vLLM 0.26.0 NVFP4 TP=2: 200K qualified, profiled, and shelved
+
+GOAL -> make about 200K context available to one Qwen3.6-27B request with a quality KV cache, keep
+  concurrent output coherent, update the backend, and profile data movement before choosing the next
+  performance target. Preserve the faster and more resilient DP=2 daily driver unless TP=2 proves a
+  broader production win.
+
+### Build and compatibility
+
+CONFIG -> clean upstream vLLM v0.26.0 tag at commit
+  `568afb3`, canonical `docker/Dockerfile.xpu`, then the existing torch-2.12 int8g bake and proven
+  oneCCL 2021.17 replacement. Custom runtime NVFP4/GDN libraries remain ABI-matched to torch 2.12.
+
+COMMAND ->
+  `bash vllm/build_v0260_base.sh`
+  `bash vllm/images/int8g/bake_v0260.sh`
+
+RESULT -> built `vllm-xpu-env:v0260` and `vllm-xpu-env:int8g-v0260`.
+  Final int8g image ID:
+  `sha256:8d35149d8545f4a17df08f6dfb507d5359391d9d5a4bbb01b2d050ddf89c3b18`.
+  Runtime versions: vLLM 0.26.0, torch 2.12.0+xpu, vllm-xpu-kernels 0.1.11.1,
+  triton-xpu 3.7.1.
+
+RESULT -> first single-card v0.26 request returned HTTP 500. Traceback isolated it to legacy
+  sitecustomize prefix-cache block 14 calling `.pop()` on the v0.26 coordinator's tuple result.
+  v0.26 now has native fine-grained FullAttention/Mamba partial-prefix coordination, so blocks 14b/14c
+  are version-skipped on vLLM >=0.26. The rerun passed model identity, 4/4 short/5K probes, 18/18
+  coherence, and native prefix hits 0 -> 3328. The repeated 5,048-token probe fell from 3.55s cold to
+  1.34s warm. Code c1 was 63.9 average / 64.0 best t/s versus the v0.25.1 production reference 64.6.
+
+VERDICT -> v0.26 is compatible and prefix reuse is native, but it is not a measured reason to move the
+  already-soaked DP replicas. Use it for the 200K TP=2 path.
+
+### TP=2 200K qualification
+
+CONFIG -> `vllm-xpu-env:int8g-v0260`, NVFP4 ModelOpt checkpoint, TP=2,
+  `MAXLEN=200000`, `UTIL=0.85`, `MAXSEQS=8`, `MAXBATCH=16384`, PIECEWISE graph,
+  capture sizes 1/2/4/8, MTP5, calibrated fp8 KV, native E4M3 scales for M<=8,
+  prefix cache, graph push-AR, 256 MiB push scratch, and `CCL_TOPO_P2P_ACCESS=0`.
+  Served ID:
+  `qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5`.
+
+COMMAND ->
+  `./bin/gpu-run bash vllm/nvfp4/tp2_longctx_qualify.sh`
+
+RESULT -> the first full attempt passed 18/18 but the first 36-stream gate produced 16 OK and 20
+  HTTP 500 responses. The old cleanup removed the server before preserving its traceback, so this
+  attempt is an honest unexplained failure. Both cards passed `bin/xpu-health`. A fresh bounded
+  reproduction then passed 18/18 and 36/36, followed by c1 50.8 average / 51.7 best and c4 108.3
+  aggregate. The prefill harness initially called all responses failed because v0.26 returned text in
+  `reasoning_content`; the server was healthy. The harness now recognizes content, reasoning, and
+  reasoning_content and fails only on a real empty/error response.
+
+RESULT -> the decisive fresh qualification passed:
+
+- Identity: exact served ID, `max_model_len=200000`.
+- Model residency: 11.54 GiB/card. KV capacity: 640,845 tokens.
+- Calibrated KV injection: 32 log lines, 16 attention layers x 2 ranks.
+- Coherence: 18/18, then 36/36 twice consecutively.
+- Code decode: c1 48.9 average / 52.0 best t/s; c4 25.7 t/s/stream,
+  103.0 aggregate.
+- Prefill: 2,282 real prompt tokens at 2,227 average tok/s; 35,949 real
+  prompt tokens at 1,982 tok/s.
+- MTP: accepted 15,248, drafts 6,178, draft tokens 30,890, acceptance
+  length 3.468, acceptance rate 0.494.
+- Long-context quality: exact 190,048-token needle 4/4 cold in 192.68s,
+  then 4/4 warm in 7.09s.
+- Soak: 52,000 forced decode tokens, 13 requests, four workers at
+  `[16000,12000,12000,12000]`, no crash or garbage marker.
+- Teardown: both cards passed `bin/xpu-health`; the v0.25.1 DP replicas
+  and nginx proxy returned healthy.
+
+VERDICT -> PASS. The later fresh starts produced three 36/36 passes in total and the decisive run
+  passed every long-context and soak gate. Promote this exact configuration as the shelf's TP=2 200K
+  mode. Keep DP=2 as the daily default: it is faster per interactive stream, faster in aggregate, and
+  isolates card/process faults.
+
+### v0.26 data-movement profile
+
+CONFIG -> exact qualified TP=2 server with torch profiler enabled. One fresh server per mode:
+  256-token forced decode, then a separate 5,210-token prefill plus one output token. Traces:
+  `/mnt/vm_8tb/b70/profiles/v0260_tp2_{decode,prefill}_*/`.
+
+COMMAND ->
+  `./bin/gpu-run bash vllm/nvfp4/profile_tp2_v0260.sh decode`
+  `./bin/gpu-run bash vllm/nvfp4/profile_tp2_v0260.sh prefill`
+
+RESULT -> decode representative rank (1), total device time 1,190.97 ms:
+
+- all-reduce/collective 491.26 ms, 41.2%;
+- linear GEMM 429.07 ms, 36.0%;
+- GDN/mamba 115.18 ms, 9.7%;
+- attention 75.26 ms, 6.3%;
+- elementwise/copy 49.00 ms, 4.1%;
+- sampling/logits 26.33 ms, 2.2%.
+
+RESULT -> the largest single decode item is 625 `oneccl_allreduce_pcie<bf16>` kernels:
+  464.16 ms, 39.0%. They are the eager full-vocabulary MTP gathers. Graph push `do_ar` is 25.98 ms,
+  2.2%. Rank 0 recorded identical counts but inflated those 625 kernels to 5.76s; this profiler-induced
+  asymmetric timing is rejected in favor of rank 1, which matches the prior v0.25.1 trace and the
+  balanced unprofiled behavior.
+
+RESULT -> prefill ranks agree: linear GEMM 52.3-53.1%, collectives 32.8-33.7%, GDN 5.4%, attention
+  5.0-5.1%. On rank 1, graph push kernels are about 673.5 ms (31.4%) while oneCCL is only 49.3 ms
+  (2.3%). The large prefill collectives reach push-AR as intended.
+
+VERDICT -> decode communication remains the highest-value target. Validate the default-off local
+  argmax plus independent amax reduction to remove the 625 full-vocab gathers. GEMM is already at the
+  measured bandwidth roofline; prefill push-AR works; GDN is a secondary 9.7% target. Detailed report:
+  `research/profiling/v0260_tp2_profile_20260727.md`.
+
+### Shelf and operations
+
+CONFIG -> one shelf directory, two measured settings. TP=1 stays on v0.25.1 at 100,352 tokens. TP=2
+  selects v0.26.0 and bakes the exact 200K qualification settings.
+
+RESULT -> updated the shelf, README benchmark rows, backend-support matrix, serving guide, image
+  lineage, research ordering, profiler tooling, and systemd comments. The daily driver remained the
+  v0.25.1 DP=2 configuration.
+
+RESULT -> a profiler orchestration attempt exposed a service-control hazard: passworded `sudo
+  systemctl` did not stop the user-owned containers. That attempt was terminated before model service,
+  both cards remained healthy, and subsequent captures used direct graceful container lifecycle with
+  the same-user watchdog SIGSTOP/SIGCONT around the bounded window. A later tool interruption killed an
+  outer restore shell after it removed the replicas; live inspection caught the missing containers and
+  stopped watchdog state, then both replicas were relaunched under per-card `gpu-run` leases. Final
+  proxy plus direct ports are healthy and the watchdog is running.
+
+VERDICT -> shelf promotion complete; runtime traces stay outside git and result logs remain untracked.
+  The next GPU A/B is local-argmax shadow validation, not another GEMM rewrite.
