@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Coherence + long-context needle gate for the fp8-KV NVFP4 server.
-Runs a few factual prompts and a needle-in-haystack recall. NEEDLE_DEPTH controls
-filler construction; the server-reported prompt token count is authoritative.
+Runs a few factual prompts and a needle-in-haystack recall. NEEDLE_DEPTH is the
+approximate prompt-token target; the server-reported prompt count is authoritative.
 PROBE_HOST default http://127.0.0.1:8079. Prints PASS/FAIL per check.
 """
 import json, os, time, urllib.request
 
 HOST = os.environ.get("PROBE_HOST", "http://127.0.0.1:8079")
-NEEDLE_DEPTH = int(os.environ.get("NEEDLE_DEPTH", "0"))  # filler units; 0 disables
+NEEDLE_DEPTH = int(os.environ.get("NEEDLE_DEPTH", "0"))  # approximate tokens; 0 disables
 NEEDLE_MIN_TOKENS = int(os.environ.get("NEEDLE_MIN_TOKENS", "0"))
 KEY = os.environ.get("KEY", "")  # optional API key (Authorization: Bearer) for key-enforced serves
 

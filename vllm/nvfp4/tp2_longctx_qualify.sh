@@ -37,7 +37,14 @@ export REASONPARSER="${REASONPARSER:-qwen3}"
 export B70_EXTRA_ENV="${B70_EXTRA_ENV:-B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 B70_NVFP4_F8_SCALE_M_MAX=8}"
 
 cleanup() {
+  rc=$?
+  trap - EXIT INT TERM
+  if [ "$rc" != 0 ] && docker inspect "$NAME" >/dev/null 2>&1; then
+    echo "SERVER-FAILURE -> final 400 log lines"
+    docker logs "$NAME" 2>&1 | tail -400
+  fi
   bash "$SHELF" stop >/dev/null 2>&1 || true
+  exit "$rc"
 }
 trap cleanup EXIT INT TERM
 
@@ -74,21 +81,43 @@ echo "IDENTITY -> id=$MODEL_ID max_model_len=$MODEL_LEN"
   echo "RESULT -> FAIL: max_model_len is below requested context"
   exit 1
 }
+KV_INJECTS="$(docker logs "$NAME" 2>&1 | rg -c 'injected KV scales' || true)"
+echo "KV-SCALES -> injected lines=$KV_INJECTS (expect 16 layers x 2 ranks)"
+[ "$KV_INJECTS" -ge 32 ] || {
+  echo "RESULT -> FAIL: calibrated KV scales were not injected on both ranks"
+  exit 1
+}
 
 python3 "$REPO/vllm/gate_concurrent_coherence.py" "$BASE" "$MODEL_ID" 3 6 200
 if [ "${RUN_STRESS:-1}" = 1 ]; then
-  python3 "$REPO/vllm/gate_concurrent_coherence.py" "$BASE" "$MODEL_ID" 6 6 200
+  for rep in $(seq 1 "${STRESS_REPS:-2}"); do
+    echo "STRESS -> 36 streams rep $rep/${STRESS_REPS:-2}"
+    python3 "$REPO/vllm/gate_concurrent_coherence.py" "$BASE" "$MODEL_ID" 6 6 200
+  done
 fi
 
 python3 "$REPO/vllm/nvfp4/bench_code.py" "$BASE" "$MODEL_ID" 1 256 3
 python3 "$REPO/vllm/nvfp4/bench_code.py" "$BASE" "$MODEL_ID" 4 256 2
 python3 "$REPO/vllm/nvfp4/bench_prefill.py" "$BASE" "$MODEL_ID" 1 8 2048,32768 2
+METRICS="$(curl -fsS --max-time 15 "http://127.0.0.1:$PORT/metrics")"
+ACCEPTED="$(awk '/vllm:spec_decode_num_accepted_tokens_total/{v=$NF} END{print v+0}' <<<"$METRICS")"
+DRAFTS="$(awk '/vllm:spec_decode_num_drafts_total/{v=$NF} END{print v+0}' <<<"$METRICS")"
+DRAFT_TOK="$(awk '/vllm:spec_decode_num_draft_tokens_total/{v=$NF} END{print v+0}' <<<"$METRICS")"
+awk -v a="$ACCEPTED" -v d="$DRAFTS" -v dt="$DRAFT_TOK" \
+  'BEGIN {
+     if (d <= 0 || dt <= 0) {
+       print "MTP -> FAIL: no acceptance telemetry";
+       exit 1
+     }
+     printf "MTP -> accepted=%.0f drafts=%.0f draft_tok=%.0f accept_len=%.3f accept_rate=%.3f\n",
+       a, d, dt, 1 + a / d, a / dt
+   }'
 
 if [ "${RUN_NEEDLE:-1}" = 1 ]; then
   for pass in cold warm; do
     echo "NEEDLE -> $pass"
     PROBE_HOST="http://127.0.0.1:$PORT" \
-      NEEDLE_DEPTH="${NEEDLE_DEPTH:-121000}" \
+      NEEDLE_DEPTH="${NEEDLE_DEPTH:-190000}" \
       NEEDLE_MIN_TOKENS="${NEEDLE_MIN_TOKENS:-180000}" \
       python3 "$REPO/vllm/nvfp4/kv_gate.py"
   done

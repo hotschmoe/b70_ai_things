@@ -875,10 +875,13 @@ if _TB:
 # 48.9 -> 25.7. ROOT CAUSE (research/profiling/localargmax_accept_rootcause.md): get_top_tokens uses
 # torch.max(dim=-1) at logits_processor.py:136, and aten::max.dim returns a WRONG per-shard max VALUE over
 # the ~124160-wide bf16 vocab shard on this box, while aten::argmax (used by the healthy full path) is correct.
-# FIX: derive both the per-shard value + index from argmax+gather instead of max(dim=-1) (keeps the O(2*tp)
-# comm win; byte-identical on TP=1). Default OFF (LOCALARGMAX_ARGMAX_FIX=1). LOCALARGMAX_VERIFY=1 counts
-# argmax!=max.dim disagreements to prove the op bug empirically.
-if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
+# FIX A: derive both the per-shard value + index from argmax+gather instead of max(dim=-1) (keeps the O(2*tp)
+# comm win; byte-identical on TP=1). FIX B: LOCALARGMAX_AMAX_FIX=1 replaces the still-unvalidated large indexed
+# gather with independent argmax+amax reductions and replaces the final TP=2 indexed gather with direct
+# compare/where, including a deterministic lower-token tie break. Both are default OFF.
+_LAR_ARGMAX_FIX = os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1"
+_LAR_AMAX_FIX = os.environ.get("LOCALARGMAX_AMAX_FIX", "0") == "1"
+if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX:
     try:
         import torch
         from vllm.distributed import (
@@ -888,13 +891,21 @@ if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
         from vllm.model_executor.layers.logits_processor import LogitsProcessor
 
         _LAR_VERIFY = os.environ.get("LOCALARGMAX_VERIFY", "0") == "1"
+        _LAR_VERIFY_CALLS = int(os.environ.get("LOCALARGMAX_VERIFY_CALLS", "64"))
         _lar_n = [0]
 
         def _get_top_tokens_argmax(self, lm_head, hidden_states, embedding_bias=None):
             if self.scale <= 0.0 and self.scale != 1.0:
                 raise ValueError("local argmax reduction needs positive logit scale")
             tp_size = get_tensor_model_parallel_world_size()
-            logits = lm_head.quant_method.apply(lm_head, hidden_states, bias=embedding_bias)
+            # v0.26 factors head_dtype handling into _apply_head; v0.25 calls
+            # quant_method.apply directly. Preserve the version's stock path.
+            if hasattr(self, "_apply_head"):
+                logits = self._apply_head(lm_head, hidden_states, embedding_bias)
+            else:
+                logits = lm_head.quant_method.apply(
+                    lm_head, hidden_states, bias=embedding_bias
+                )
             if self.soft_cap is not None:
                 logits = torch.tanh(logits / self.soft_cap) * self.soft_cap
             if self.scale != 1.0:
@@ -904,14 +915,49 @@ if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
                 logits[..., -num_pad:] = -float("inf")
             # FIX: argmax (correct on XPU) instead of max(dim=-1) (wrong value/idx on wide bf16 shard).
             local_max_indices = logits.argmax(dim=-1)
-            local_max_vals = logits.gather(-1, local_max_indices.unsqueeze(-1)).squeeze(-1)
+            if _LAR_AMAX_FIX:
+                local_max_vals = logits.amax(dim=-1)
+            else:
+                local_max_vals = logits.gather(
+                    -1, local_max_indices.unsqueeze(-1)
+                ).squeeze(-1)
             if _LAR_VERIFY:
-                _bad_v, _bad_i = logits.max(dim=-1)
-                _nmis = int((_bad_i != local_max_indices).sum().item())
                 _lar_n[0] += 1
-                if _nmis or _lar_n[0] <= 8:
-                    print("[localargmax-verify] call=%d argmax!=max.dim mismatches=%d/%d"
-                          % (_lar_n[0], _nmis, local_max_indices.numel()), file=sys.stderr, flush=True)
+                _call = _lar_n[0]
+                _bad_v, _bad_i = logits.max(dim=-1)
+                _imis = int((_bad_i != local_max_indices).sum().item())
+                _vmis = int((_bad_v != local_max_vals).sum().item())
+                if _call <= min(_LAR_VERIFY_CALLS, 8):
+                    # The XPU argmax/amax operators are the thing under test.
+                    # Compare their per-shard result against a host reduction
+                    # before trusting the much smaller pair collective.
+                    _cpu_v, _cpu_i = logits.detach().float().cpu().max(dim=-1)
+                    _cpu_imis = int(
+                        (_cpu_i != local_max_indices.detach().cpu()).sum().item()
+                    )
+                    _cpu_vmis = int(
+                        (
+                            _cpu_v
+                            != local_max_vals.detach().float().cpu()
+                        ).sum().item()
+                    )
+                else:
+                    _cpu_imis = _cpu_vmis = -1
+                if _imis or _vmis or _cpu_imis > 0 or _cpu_vmis > 0 or _call <= 8:
+                    print(
+                        "[localargmax-verify] call=%d idx_mismatch=%d "
+                        "value_mismatch=%d cpu_idx=%d cpu_value=%d/%d"
+                        % (
+                            _call,
+                            _imis,
+                            _vmis,
+                            _cpu_imis,
+                            _cpu_vmis,
+                            local_max_indices.numel(),
+                        ),
+                        file=sys.stderr,
+                        flush=True,
+                    )
             vocab_start = lm_head.shard_indices.org_vocab_start_index
             global_indices = local_max_indices + vocab_start
             if tp_size == 1:
@@ -919,12 +965,42 @@ if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
             local_pair = torch.stack([local_max_vals.float(), global_indices.float()], dim=-1)
             gathered = tensor_model_parallel_all_gather(local_pair, dim=-1)
             gathered = gathered.view(hidden_states.shape[0], tp_size, 2)
-            max_rank_idx = gathered[:, :, 0].argmax(dim=-1, keepdim=True)
-            top_tokens = gathered[:, :, 1].gather(dim=-1, index=max_rank_idx)
-            return top_tokens.squeeze(-1).to(torch.int64)
+            if _LAR_AMAX_FIX and tp_size == 2:
+                value0, index0 = gathered[:, 0, 0], gathered[:, 0, 1]
+                value1, index1 = gathered[:, 1, 0], gathered[:, 1, 1]
+                take1 = (value1 > value0) | (
+                    (value1 == value0) & (index1 < index0)
+                )
+                top_tokens = torch.where(take1, index1, index0).to(torch.int64)
+            else:
+                max_rank_idx = gathered[:, :, 0].argmax(dim=-1, keepdim=True)
+                top_tokens = gathered[:, :, 1].gather(
+                    dim=-1, index=max_rank_idx
+                ).squeeze(-1).to(torch.int64)
+
+            if _LAR_VERIFY and _lar_n[0] <= _LAR_VERIFY_CALLS:
+                # Shadow against the known-good full-vocabulary collective.
+                # Return the reference while verifying so a first mismatch
+                # cannot cascade through autoregressive draft generation.
+                full_logits = tensor_model_parallel_all_gather(logits, dim=-1)
+                ref_tokens = full_logits[..., : self.org_vocab_size].argmax(dim=-1)
+                global_mis = int((top_tokens != ref_tokens).sum().item())
+                print(
+                    "[localargmax-shadow] call=%d global_mismatch=%d/%d"
+                    % (_lar_n[0], global_mis, top_tokens.numel()),
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return ref_tokens
+            return top_tokens
 
         LogitsProcessor.get_top_tokens = _get_top_tokens_argmax
-        print("[nvfp4-shim] (12) get_top_tokens -> argmax-based (XPU max.dim fix)", file=sys.stderr, flush=True)
+        print(
+            "[nvfp4-shim] (12) get_top_tokens -> argmax+%s (XPU max.dim fix)"
+            % ("amax/direct-tp2" if _LAR_AMAX_FIX else "gather"),
+            file=sys.stderr,
+            flush=True,
+        )
     except Exception as e:
         print("[nvfp4-shim] (12) localargmax fix failed:", repr(e), file=sys.stderr, flush=True)
 
@@ -1094,6 +1170,20 @@ if os.environ.get("B70_PC_DEBUG", "0") == "1":
         print("[nvfp4-shim] (14a) pc-debug install failed:", repr(e), file=sys.stderr, flush=True)
 
 
+# v0.26 replaced the hybrid prefix-cache lookup contract and incorporated
+# fine-grained FullAttention+Mamba partial hits plus the aligned Mamba split.
+# Blocks 14b/14c are v0.25 compatibility patches and must not wrap that API.
+try:
+    from importlib.metadata import version as _dist_version
+
+    _B70_VLLM_VERSION = tuple(
+        int(x) for x in _dist_version("vllm").split("+", 1)[0].split(".")[:3]
+    )
+except Exception:
+    _B70_VLLM_VERSION = (0, 0, 0)
+_B70_NATIVE_HYBRID_PC = _B70_VLLM_VERSION >= (0, 26, 0)
+
+
 # ---- (14b) EAGLE KEEP-VERIFIED prefix-cache fix (MTP x fp8-KV hits=0 root cause) -------------------
 # ROOT CAUSE (2026-07-22, proven with (14a) instrumentation): NOT a drafter dtype/group mismatch (the
 # MTP drafter layer is already fp8, merged into the 17-layer FullAttention group). The zero hits are the
@@ -1113,7 +1203,10 @@ if os.environ.get("B70_PC_DEBUG", "0") == "1":
 # (upstream bug, PR #48375) so mamba could claim a longer hit than the attn group validated ->
 # inconsistent state. We cap mamba's ceiling at the attn group's validated length (falling back to
 # upstream #48375's minus-one-block when attn has not run). Gated B70_PC_EAGLE_KEEP=1, default OFF.
-if os.environ.get("B70_PC_EAGLE_KEEP", "0") == "1":
+if (
+    os.environ.get("B70_PC_EAGLE_KEEP", "0") == "1"
+    and not _B70_NATIVE_HYBRID_PC
+):
     try:
         from vllm.v1.core.block_pool import BlockPool as _EKPool
         from vllm.v1.core.kv_cache_manager import KVCacheManager as _EKMgr
@@ -1237,6 +1330,13 @@ if os.environ.get("B70_PC_EAGLE_KEEP", "0") == "1":
               file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (14b) eagle keep-verified install failed:", repr(e), file=sys.stderr, flush=True)
+elif os.environ.get("B70_PC_EAGLE_KEEP", "0") == "1":
+    print(
+        "[nvfp4-shim] (14b) legacy EAGLE keep-verified SKIPPED "
+        "(vLLM >=0.26 has native fine-grained hybrid prefix hits)",
+        file=sys.stderr,
+        flush=True,
+    )
 
 
 # ---- (14c) PR#45477 port: mamba align chunk-splits must END on block boundaries --------------------
@@ -1256,7 +1356,10 @@ if os.environ.get("B70_PC_EAGLE_KEEP", "0") == "1":
 # prune when B70_PC_EAGLE_KEEP=1: every boundary <= aligned(num_tokens) gets a snapshot; if a lookup's
 # keep-verify fails, (14b)'s mamba cap keeps the intersection coherent. Gated B70_PC_CHUNK_ALIGN=1,
 # default OFF.
-if os.environ.get("B70_PC_CHUNK_ALIGN", "0") == "1":
+if (
+    os.environ.get("B70_PC_CHUNK_ALIGN", "0") == "1"
+    and not _B70_NATIVE_HYBRID_PC
+):
     try:
         from vllm.v1.core.sched import scheduler as _b70_sched_mod
 
@@ -1318,3 +1421,10 @@ if os.environ.get("B70_PC_CHUNK_ALIGN", "0") == "1":
               file=sys.stderr, flush=True)
     except Exception as e:
         print("[nvfp4-shim] (14c) PR45477 chunk-split fix failed:", repr(e), file=sys.stderr, flush=True)
+elif os.environ.get("B70_PC_CHUNK_ALIGN", "0") == "1":
+    print(
+        "[nvfp4-shim] (14c) legacy Mamba chunk-align SKIPPED "
+        "(vLLM >=0.26 has the native aligned partial-hit scheduler)",
+        file=sys.stderr,
+        flush=True,
+    )

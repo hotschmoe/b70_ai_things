@@ -59,7 +59,12 @@ def one(approx_tokens, res, idx):
             try: obj = json.loads(data)
             except Exception: continue
             ch = obj.get("choices") or []
-            if ch and ch[0].get("delta", {}).get("content"):
+            delta = ch[0].get("delta", {}) if ch else {}
+            if (
+                delta.get("content")
+                or delta.get("reasoning")
+                or delta.get("reasoning_content")
+            ):
                 if first is None: first = time.time()
                 n += 1
             if obj.get("usage"): ptoks = obj["usage"].get("prompt_tokens")
@@ -80,6 +85,7 @@ def run(approx_tokens, N):
 
 if __name__ == "__main__":
     print(f"model={MODEL} conc={NC} out={OUT} reps={REPS} (unique prompt/call = cold prefill)")
+    failed = False
     for L in LENS:
         # one warm-nothing throwaway to reach steady clocks, then REPS measured
         _ = run(L, 1)
@@ -90,9 +96,13 @@ if __name__ == "__main__":
             rows.append(r)
             if best is None or r["ttft"] < best["ttft"]: best = r
         if not rows:
-            print(f"IN~{L}: ALL FAILED"); continue
+            print(f"IN~{L}: ALL FAILED")
+            failed = True
+            continue
         avg_ttft = sum(x["ttft"] for x in rows) / len(rows)
         avg_pp   = sum(x["pp"] for x in rows) / len(rows)
         pt = rows[0]["ptoks"]
         print(f"IN~{L} (real_ptoks={pt}) c{NC}: TTFT avg={avg_ttft:.0f}ms best={best['ttft']:.0f}ms "
               f"| PP avg={avg_pp:.0f} best={best['pp']:.0f} tok/s")
+    if failed:
+        sys.exit(2)
