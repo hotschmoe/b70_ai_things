@@ -1,6 +1,6 @@
 # use_local_argmax_reduction MTP accept-collapse: root cause
 
-Date: 2026-07-21
+Date: 2026-07-21; validation update: 2026-07-28
 Model: nvidia/Qwen3.6-27B-NVFP4 (ModelOpt), vLLM 0.25.1, XPU, 2x B70, TP=2, MTP spec=5
 Symptom: `--speculative-config use_local_argmax_reduction:true` -> serve HEALTHY,
 output COHERENT, but MTP accept_len 0.65 (per-pos pos0=53% / pos1=12% / pos2+~0)
@@ -14,7 +14,39 @@ so the collapse is a runtime numeric discrepancy in the ONE op that only the
 local-argmax path uses: `torch.max(dim=-1)` (`aten::max.dim`) over the wide
 per-shard vocab, at
 `vllm/model_executor/layers/logits_processor.py:136`.
-GO on a fix (small, self-contained sitecustomize monkeypatch, default-off).
+The diagnosis is confirmed, but the two stock-op repairs are NO-GO for the shelf.
+The token-exact argmax+indexed-gather form is materially slower at c1; the
+argmax+amax form also exposed value differences. Keep every local-argmax switch
+default-off and move the next attempt into a fused shard top-1 XPU kernel.
+
+## 2026-07-28 validation
+
+CONFIG -> vLLM 0.26.0, exact qualified NVFP4 TP=2 200K configuration,
+MTP5, `LOCALARGMAX=1`, and 64 shadow calls per rank. The verifier compares
+the compact result with a known-good full-vocabulary gather and returns the
+reference during the shadow window.
+
+RESULT -> argmax+indexed-gather produced 128 shadow records with zero global,
+CPU-index, or CPU-value mismatches. It passed 18/18 and 36/36 mixed-load
+coherence. Prefill remained 2,182 tok/s at 2K and 1,973 tok/s at 32K.
+However, code c1 fell from the shelf baseline 48.9 to 36.5 t/s average
+(39.3 best). c4 was 104.2 aggregate versus 103.0 baseline. MTP acceptance
+length was 3.330 versus 3.468 baseline.
+
+RESULT -> argmax+amax/direct-TP2 also produced 128 zero-global-mismatch shadow
+records and passed 18/18 plus 36/36. It measured only 25.7 c1 and 96.7 c4
+aggregate, with MTP acceptance length 3.088. The first verifier version kept
+running the old `max.dim` comparison after the 64-call shadow window, so this
+throughput number includes diagnostic overhead and is not a clean speed
+estimate. It nevertheless logged sporadic cases where `max.dim` and `amax`
+returned different values for the same argmax index, so this form is not
+eligible for promotion.
+
+VERDICT -> the compact collective is mathematically sound when fed the value
+from argmax+indexed-gather, but composing stock XPU reductions costs more than
+the full-vocabulary oneCCL path saves at c1. Do not run a shelf A/B or long
+soak for either variant. Preserve the verifier as a gate for a future fused
+top-1 kernel.
 
 ## 5-line root cause
 
@@ -145,7 +177,10 @@ if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
               file=sys.stderr, flush=True)
 ```
 
-## How the coordinator tests it (one GPU run each)
+## Original validation plan (completed)
+
+This was the pre-run plan retained for provenance. The 2026-07-28 results above
+supersede its expected promotion outcome.
 
 1. CONFIRM the diagnosis (cheap, no fix behavior needed):
    serve with `LOCALARGMAX=1 LOCALARGMAX_ARGMAX_FIX=1 LOCALARGMAX_VERIFY=1`. If
@@ -166,11 +201,10 @@ if os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1":
 
 ## Go / No-go
 
-GO. The fix is a self-contained, env-gated monkeypatch that keeps the communication
-reduction and only swaps a per-shard `max(dim=-1)` for the proven-good `argmax`+`gather`.
-Not structural for MTP; TP=1 is byte-identical (early return). Worst case (if the size-2
-reducer is the real culprit) the diagnostic step 1 will still have proven whether
-`max.dim` is broken, and the fallback is a CPU size-2 reduction.
+NO-GO for both stock-op repairs. Keep the diagnostic monkeypatch default-off.
+The useful result is the proven 128-record shadow gate and the confirmed
+`max.dim` defect. A future fused top-1 kernel must beat 48.9 c1 t/s without
+regressing MTP acceptance or the mixed-load gates before any shelf change.
 
 ## Key file:line references
 

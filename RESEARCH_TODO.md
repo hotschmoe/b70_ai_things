@@ -1,6 +1,6 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-07-27 (NVFP4 200K TP=2 qualified)
+**Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (NVFP4 local-argmax stock ops rejected)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
 > ### [CAMPAIGN 2026-07-27] -- active ordering
@@ -11,8 +11,10 @@
 > 52K-token concurrent soak all passed. Active tracks, in order:
 > 1. **NVFP4 TP=2 decode communication** -- the v0.26 trace reconfirms the target: representative
 >    rank device time is 41.2% collectives, including 39.0% eager oneCCL from the MTP full-vocab
->    gather. Validate the env-gated local-argmax + amax reduction and promote only if acceptance,
->    coherence, and code throughput all improve.
+>    gather. Two stock-op local reductions are now rejected: argmax+indexed-gather was token-exact
+>    over 128 shadow records but cut c1 48.9 -> 36.5 t/s; argmax+amax exposed sporadic value
+>    differences and was slower. Prototype a fused shard top-1 XPU kernel before revisiting the
+>    compact pair collective. Keep all local-argmax switches default-off.
 > 2. **W8A8/W4A8 compressed-tensors paths** -- retain W8A8 as the preferred quality/INT8-XMX
 >    research format and keep the proven small-M W8A16 route. Compare any new 27B serve against the
 >    qualified NVFP4 200K path, including KV quality and long-context retrieval.

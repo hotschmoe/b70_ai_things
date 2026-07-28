@@ -875,10 +875,11 @@ if _TB:
 # 48.9 -> 25.7. ROOT CAUSE (research/profiling/localargmax_accept_rootcause.md): get_top_tokens uses
 # torch.max(dim=-1) at logits_processor.py:136, and aten::max.dim returns a WRONG per-shard max VALUE over
 # the ~124160-wide bf16 vocab shard on this box, while aten::argmax (used by the healthy full path) is correct.
-# FIX A: derive both the per-shard value + index from argmax+gather instead of max(dim=-1) (keeps the O(2*tp)
-# comm win; byte-identical on TP=1). FIX B: LOCALARGMAX_AMAX_FIX=1 replaces the still-unvalidated large indexed
-# gather with independent argmax+amax reductions and replaces the final TP=2 indexed gather with direct
-# compare/where, including a deterministic lower-token tie break. Both are default OFF.
+# FIX A: derive both the per-shard value + index from argmax+gather instead of max(dim=-1). FIX B:
+# LOCALARGMAX_AMAX_FIX=1 uses independent argmax+amax reductions and a direct TP=2 compare/where. Both remain
+# default OFF after the 2026-07-28 shadow A/B: FIX A was token-exact but cut c1 48.9 -> 36.5 t/s; FIX B exposed
+# sporadic max-vs-amax value differences and its verifier-contaminated run cut c1 to 25.7 t/s. The next viable
+# form is a fused shard top-1 kernel, not these compositions of stock XPU reductions.
 _LAR_ARGMAX_FIX = os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1"
 _LAR_AMAX_FIX = os.environ.get("LOCALARGMAX_AMAX_FIX", "0") == "1"
 if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX:
@@ -924,9 +925,12 @@ if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX:
             if _LAR_VERIFY:
                 _lar_n[0] += 1
                 _call = _lar_n[0]
-                _bad_v, _bad_i = logits.max(dim=-1)
-                _imis = int((_bad_i != local_max_indices).sum().item())
-                _vmis = int((_bad_v != local_max_vals).sum().item())
+                if _call <= _LAR_VERIFY_CALLS:
+                    _bad_v, _bad_i = logits.max(dim=-1)
+                    _imis = int((_bad_i != local_max_indices).sum().item())
+                    _vmis = int((_bad_v != local_max_vals).sum().item())
+                else:
+                    _imis = _vmis = -1
                 if _call <= min(_LAR_VERIFY_CALLS, 8):
                     # The XPU argmax/amax operators are the thing under test.
                     # Compare their per-shard result against a host reduction
@@ -943,7 +947,13 @@ if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX:
                     )
                 else:
                     _cpu_imis = _cpu_vmis = -1
-                if _imis or _vmis or _cpu_imis > 0 or _cpu_vmis > 0 or _call <= 8:
+                if (
+                    (_imis > 0)
+                    or (_vmis > 0)
+                    or (_cpu_imis > 0)
+                    or (_cpu_vmis > 0)
+                    or _call <= min(_LAR_VERIFY_CALLS, 8)
+                ):
                     print(
                         "[localargmax-verify] call=%d idx_mismatch=%d "
                         "value_mismatch=%d cpu_idx=%d cpu_value=%d/%d"

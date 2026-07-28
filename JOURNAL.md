@@ -9833,3 +9833,58 @@ RESULT -> a profiler orchestration attempt exposed a service-control hazard: pas
 
 VERDICT -> shelf promotion complete; runtime traces stay outside git and result logs remain untracked.
   The next GPU A/B is local-argmax shadow validation, not another GEMM rewrite.
+
+## 2026-07-28 -- NVFP4 TP=2 local-argmax shadow A/B: stock reductions rejected
+
+GOAL -> remove the decode profile's 625 eager full-vocabulary MTP collectives without changing
+  greedy draft tokens. The qualified TP=2 shelf baseline is c1 48.9 average / 52.0 best t/s,
+  c4 103.0 aggregate, and MTP acceptance length 3.468.
+
+### Argmax plus amax/direct-TP2
+
+CONFIG -> exact vLLM 0.26.0 NVFP4 TP=2 200K settings, MTP5, `LOCALARGMAX=1`,
+  `LOCALARGMAX_AMAX_FIX=1`, and 64 shadow calls per rank. Needle and soak were disabled for this
+  bounded reduction experiment; identity, calibrated KV, 18-stream, 36-stream, code, prefill,
+  MTP, and shadow gates remained enabled.
+
+COMMAND ->
+  `B70_EXTRA_ENV="B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 B70_NVFP4_F8_SCALE_M_MAX=8 LOCALARGMAX_AMAX_FIX=1 LOCALARGMAX_VERIFY=1 LOCALARGMAX_VERIFY_CALLS=64" LOCALARGMAX=1 LOCALARGMAX_SHADOW_GATE=1 LOCALARGMAX_SHADOW_MIN=64 RUN_STRESS=1 STRESS_REPS=1 RUN_NEEDLE=0 RUN_SOAK=0 ./bin/gpu-run bash vllm/nvfp4/tp2_longctx_qualify.sh`
+
+RESULT -> exact identity and 32 KV injections; 18/18 and 36/36 coherent. The 128 shadow records
+  had zero global mismatches. Code c1 was 25.7 average / 28.3 best t/s and c4 was 96.7 aggregate.
+  Prefill was 2,212 tok/s at 2K and 1,970 tok/s at 32K. MTP acceptance length/rate was
+  3.088/0.418. Later diagnostics found sporadic `max.dim` versus `amax` value differences with
+  identical indices. The verifier also mistakenly kept executing the old `max.dim` comparison
+  after call 64, so this is a diagnostic-overhead-contaminated speed number.
+
+RESULT -> the first shadow gate printed empty zero counts because `rg -c` returns no text when
+  there are no matches. That produced a false gate failure after the useful measurements.
+  The driver now normalizes empty counts to zero, and the verifier stops all wide reference
+  reductions after the requested shadow window.
+
+VERDICT -> NO-GO. The variant is coherent in the bounded shadow window, but it is slower and the
+  independent max-value path is not trustworthy enough to promote. It remains default-off.
+
+### Argmax plus indexed-gather
+
+CONFIG -> same server and gates, but `LOCALARGMAX_ARGMAX_FIX=1`. This derives each shard's value
+  from the proven argmax index, sends only the compact value/index pair, and uses the corrected
+  verifier that performs no wide reference reduction after call 64.
+
+COMMAND ->
+  `B70_EXTRA_ENV="B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 B70_NVFP4_F8_SCALE_M_MAX=8 LOCALARGMAX_ARGMAX_FIX=1 LOCALARGMAX_VERIFY=1 LOCALARGMAX_VERIFY_CALLS=64" LOCALARGMAX=1 LOCALARGMAX_SHADOW_GATE=1 LOCALARGMAX_SHADOW_MIN=64 RUN_STRESS=1 STRESS_REPS=1 RUN_NEEDLE=0 RUN_SOAK=0 ./bin/gpu-run bash vllm/nvfp4/tp2_longctx_qualify.sh`
+
+RESULT -> exact identity and 32 KV injections; 18/18 and 36/36 coherent. All 128 shadow records
+  matched the full-vocabulary reference, including the first eight per-rank CPU comparisons:
+  global, CPU index, and CPU value mismatch counts were all zero. Code c1 was 36.5 average /
+  39.3 best t/s; c4 was 104.2 aggregate. Prefill was 2,182 tok/s at 2K and 1,973 tok/s at 32K.
+  MTP acceptance length/rate was 3.330/0.466.
+
+RESULT -> both cards passed post-teardown `bin/xpu-health`. The v0.25.1 DP=2 replicas and proxy
+  were restored; direct ports and the proxy are healthy, serve `hotschmoe-dd`, and the watchdog
+  is running.
+
+VERDICT -> NO-GO for the shelf. The compact indexed-gather algorithm is token-exact, but stock
+  XPU argmax plus gather costs more than the removed collective saves for interactive decode:
+  c1 is 25% below the 48.9 baseline while c4 is only 1% higher. Preserve the shadow gate for a
+  future fused shard top-1 kernel; keep the qualified TP=2 shelf unchanged.

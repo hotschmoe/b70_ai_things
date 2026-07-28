@@ -298,7 +298,9 @@ PIECEWISE graph + MTP5 + native E4M3 decode scales + graph push-AR + prefix cach
 `MAXBATCH=16384`, and `PUSH_AR_MAXB=256 MiB`. It passed 18/18 plus two 36/36 mixed-load gates,
 190,048-token retrieval cold and warm, and a 52K-token concurrent soak. The v0.26 decode trace shows
 41.2% collectives, 36.0% GEMM, 9.7% GDN, and 6.3% attention on the representative rank; the 39.0%
-eager oneCCL full-vocab MTP gather remains the primary optimization target.
+eager oneCCL full-vocab MTP gather remains the primary optimization target. Stock XPU
+argmax+indexed-gather was token-exact but cut c1 to 36.5 t/s, so a fused shard top-1 kernel is the
+next credible implementation; all local-argmax switches remain default-off.
 
 ◆ **NVFP4 TP=1 fp8 KV = the single-card 128k-context config (2026-07-08).** Same NVFP4 checkpoint +
 `nvfp4_gemm_w4a16` kernel + PIECEWISE capture, on ONE card. **fp8 KV cache** (calibrated `amax/448` per-layer

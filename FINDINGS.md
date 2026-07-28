@@ -11,7 +11,9 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   64.6 code tok/s with calibrated fp8 KV and working prefix reuse. A vLLM 0.26.0 TP=2 shelf mode serves
   one 200,000-token request and passed exact 190,048-token retrieval plus a 52K-token concurrent soak.
   Its representative decode trace is 41.2% collectives, 36.0% GEMM, 9.7% GDN, and 6.3% attention;
-  the eager oneCCL full-vocab MTP gather alone is 39.0% and is the next optimization target.
+  the eager oneCCL full-vocab MTP gather alone is 39.0%. Stock XPU local-argmax compositions do not
+  convert that profile opportunity into a c1 win: the token-exact argmax+gather form measured
+  36.5 t/s versus the 48.9 shelf baseline. A fused shard top-1 kernel is the remaining form to test.
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
   does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)

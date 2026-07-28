@@ -113,6 +113,28 @@ awk -v a="$ACCEPTED" -v d="$DRAFTS" -v dt="$DRAFT_TOK" \
        a, d, dt, 1 + a / d, a / dt
    }'
 
+if [ "${LOCALARGMAX_SHADOW_GATE:-0}" = 1 ]; then
+  SERVER_LOG="$(docker logs "$NAME" 2>&1)"
+  SHADOW_LINES="$(rg -c '\[localargmax-shadow\]' <<<"$SERVER_LOG" || true)"
+  GLOBAL_BAD="$(rg -c 'global_mismatch=[1-9][0-9]*/' <<<"$SERVER_LOG" || true)"
+  CPU_IDX_BAD="$(rg -c 'cpu_idx=[1-9][0-9]*' <<<"$SERVER_LOG" || true)"
+  CPU_VALUE_BAD="$(rg -c 'cpu_value=[1-9][0-9]*/' <<<"$SERVER_LOG" || true)"
+  SHADOW_LINES="${SHADOW_LINES:-0}"
+  GLOBAL_BAD="${GLOBAL_BAD:-0}"
+  CPU_IDX_BAD="${CPU_IDX_BAD:-0}"
+  CPU_VALUE_BAD="${CPU_VALUE_BAD:-0}"
+  echo "LOCALARGMAX-SHADOW -> lines=$SHADOW_LINES global_bad=$GLOBAL_BAD cpu_idx_bad=$CPU_IDX_BAD cpu_value_bad=$CPU_VALUE_BAD"
+  [ "$SHADOW_LINES" -ge "${LOCALARGMAX_SHADOW_MIN:-64}" ] || {
+    echo "RESULT -> FAIL: insufficient local-argmax shadow comparisons"
+    exit 1
+  }
+  [ "$GLOBAL_BAD" = 0 ] && [ "$CPU_IDX_BAD" = 0 ] && [ "$CPU_VALUE_BAD" = 0 ] || {
+    echo "RESULT -> FAIL: local-argmax shadow mismatch"
+    rg '\[localargmax-(verify|shadow)\]' <<<"$SERVER_LOG" | tail -120
+    exit 1
+  }
+fi
+
 if [ "${RUN_NEEDLE:-1}" = 1 ]; then
   for pass in cold warm; do
     echo "NEEDLE -> $pass"
