@@ -150,4 +150,8 @@ regressed c4 to 93.4. Both flags remain default-off and the production
 artifact/shelf remain unchanged. Reducing speculative depth also failed:
 fused MTP3 passed 18/18 plus 36/36 but reached only c1 37.2/c4 103.0,
 while fused MTP4 emitted visible `!` garbage in 1/18 streams. Do not
-promote any local-top1 configuration.
+promote any local-top1 configuration. Replicating the full packed
+drafter head also failed: 341 MiB extra/rank, c1 30.1/c4 113.5, and
+intermittent rank-1 shadow mismatches even though both ranks' gathered
+weight and scale hashes exactly matched the checkpoint. That flag remains
+default-off as a diagnostic only.

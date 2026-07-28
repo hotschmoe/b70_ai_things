@@ -902,10 +902,12 @@ if _TB:
 # sporadic max-vs-amax value differences and its verifier-contaminated run cut c1 to 25.7 t/s. The custom
 # LOCALARGMAX_FUSED_FIX is also default OFF: it improved c4 103.0 -> 115.7 aggregate but cut c1 to 32.5.
 # LOCALARGMAX_FUSED_MIN_ROWS=2 preserved c1 but regressed c4 to 93.4 as the active batch changed shape.
-# LOCALARGMAX_REPLICATED_HEAD=1 is the next default-OFF research path. It gathers the target/drafter's
+# LOCALARGMAX_REPLICATED_HEAD=1 is a measured default-OFF research path. It gathers the target/drafter's
 # packed vocabulary head ONCE, keeps the full 682 MiB FP4+E4M3 head on each TP rank (341 MiB extra/rank),
 # and computes the same full-vocabulary draft logits locally. This removes the per-draft collective
 # entirely at the cost of one extra local half-head GEMM. It requires the native-E4M3 decode op.
+# The 2026-07-28 shadow found intermittent rank-1 token mismatches despite exact checkpoint hashes;
+# c1 also fell 48.9 -> 30.1 t/s. Preserve only for diagnosis; do not promote.
 _LAR_ARGMAX_FIX = os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1"
 _LAR_AMAX_FIX = os.environ.get("LOCALARGMAX_AMAX_FIX", "0") == "1"
 _LAR_FUSED_FIX = os.environ.get("LOCALARGMAX_FUSED_FIX", "0") == "1"
@@ -935,6 +937,9 @@ if (
 
         _LAR_VERIFY = os.environ.get("LOCALARGMAX_VERIFY", "0") == "1"
         _LAR_VERIFY_CALLS = int(os.environ.get("LOCALARGMAX_VERIFY_CALLS", "64"))
+        _REPLICATED_HEAD_DEBUG = (
+            os.environ.get("LOCALARGMAX_REPLICATED_DEBUG", "0") == "1"
+        )
         _lar_n = [0]
 
         def _replicated_head_gather_dim0(local: torch.Tensor) -> torch.Tensor:
@@ -954,6 +959,18 @@ if (
                 group=get_tp_group().device_group,
             )
             return out
+
+        def _replicated_head_sha256(tensor: torch.Tensor) -> str:
+            """Exact debug hash with bounded host staging memory."""
+            import hashlib
+
+            digest = hashlib.sha256()
+            flat = tensor.contiguous().view(torch.uint8).reshape(-1)
+            chunk_elements = 64 * 1024 * 1024
+            for start in range(0, flat.numel(), chunk_elements):
+                chunk = flat[start : start + chunk_elements].cpu().numpy()
+                digest.update(chunk.tobytes())
+            return digest.hexdigest()
 
         def _ensure_replicated_head(lm_head) -> None:
             if getattr(lm_head, "_b70_replicated_head_ready", False):
@@ -1042,6 +1059,18 @@ if (
                 file=sys.stderr,
                 flush=True,
             )
+            if _REPLICATED_HEAD_DEBUG:
+                tp_group = get_tp_group()
+                print(
+                    "[replicated-head-hash] rank=%d weight=%s scale_rows=%s"
+                    % (
+                        tp_group.rank_in_group,
+                        _replicated_head_sha256(full_weight),
+                        _replicated_head_sha256(full_scale_rows_bytes),
+                    ),
+                    file=sys.stderr,
+                    flush=True,
+                )
 
         def _postprocess_head_logits(processor, logits: torch.Tensor) -> torch.Tensor:
             if processor.soft_cap is not None:
@@ -1052,7 +1081,7 @@ if (
                 logits = logits * processor.scale
             return logits
 
-        def _full_gather_top_tokens(
+        def _full_gather_head_logits(
             processor,
             lm_head,
             hidden_states,
@@ -1071,7 +1100,20 @@ if (
             if num_pad > 0:
                 logits[..., -num_pad:] = -float("inf")
             full_logits = tensor_model_parallel_all_gather(logits, dim=-1)
-            return full_logits[..., : processor.org_vocab_size].argmax(dim=-1)
+            return full_logits[..., : processor.org_vocab_size]
+
+        def _full_gather_top_tokens(
+            processor,
+            lm_head,
+            hidden_states,
+            embedding_bias=None,
+        ):
+            return _full_gather_head_logits(
+                processor,
+                lm_head,
+                hidden_states,
+                embedding_bias,
+            ).argmax(dim=-1)
 
         def _get_top_tokens_replicated(
             self,
@@ -1115,9 +1157,10 @@ if (
             if _LAR_VERIFY:
                 _lar_n[0] += 1
                 if _lar_n[0] <= _LAR_VERIFY_CALLS:
-                    ref_tokens = _full_gather_top_tokens(
+                    ref_logits = _full_gather_head_logits(
                         self, lm_head, hidden_states, embedding_bias
                     )
+                    ref_tokens = ref_logits.argmax(dim=-1)
                     global_mis = int(
                         (top_tokens != ref_tokens).sum().item()
                     )
@@ -1127,6 +1170,54 @@ if (
                         file=sys.stderr,
                         flush=True,
                     )
+                    if (
+                        _REPLICATED_HEAD_DEBUG
+                        and global_mis > 0
+                    ):
+                        direct_at_direct = logits.gather(
+                            -1, top_tokens.unsqueeze(-1)
+                        ).squeeze(-1)
+                        direct_at_ref = logits.gather(
+                            -1, ref_tokens.unsqueeze(-1)
+                        ).squeeze(-1)
+                        ref_at_direct = ref_logits.gather(
+                            -1, top_tokens.unsqueeze(-1)
+                        ).squeeze(-1)
+                        ref_at_ref = ref_logits.gather(
+                            -1, ref_tokens.unsqueeze(-1)
+                        ).squeeze(-1)
+                        mismatch = top_tokens != ref_tokens
+                        print(
+                            "[replicated-head-mismatch] call=%d direct=%s "
+                            "ref=%s direct_values=%s/%s ref_values=%s/%s"
+                            % (
+                                _lar_n[0],
+                                top_tokens[mismatch].detach().cpu().tolist(),
+                                ref_tokens[mismatch].detach().cpu().tolist(),
+                                direct_at_direct[mismatch]
+                                .detach()
+                                .float()
+                                .cpu()
+                                .tolist(),
+                                direct_at_ref[mismatch]
+                                .detach()
+                                .float()
+                                .cpu()
+                                .tolist(),
+                                ref_at_direct[mismatch]
+                                .detach()
+                                .float()
+                                .cpu()
+                                .tolist(),
+                                ref_at_ref[mismatch]
+                                .detach()
+                                .float()
+                                .cpu()
+                                .tolist(),
+                            ),
+                            file=sys.stderr,
+                            flush=True,
+                        )
                     # Do not allow an early prototype mismatch to cascade
                     # through autoregressive draft generation.
                     return ref_tokens

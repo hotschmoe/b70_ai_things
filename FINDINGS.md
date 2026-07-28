@@ -18,7 +18,10 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   full-vocab messages are removed; the replacement's 865 compact device collectives total only
   9.72 ms on representative rank 1, while synchronous host latency remains the c1 issue.
   Lower depth did not solve it: MTP3 measured c1 37.2/c4 103.0 and MTP4 emitted visible
-  `!` garbage in 1/18 streams. All local-argmax paths remain default-off.
+  `!` garbage in 1/18 streams. Replicating the full packed drafter head cost 341 MiB/rank and
+  eliminated the draft gather, but cut c1 to 30.1 and produced 9/64 intermittent rank-1 mismatch
+  records despite byte-exact full-head hashes. All local-argmax/replicated-head paths remain
+  default-off; the shelf is unchanged.
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
   does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)

@@ -125,8 +125,9 @@ MTPTOK="${MTPTOK:-}"
 # c1 to 32.5; a dynamic M=1 fallback preserved c1 but cut c4 to 93.4. Fused MTP3 reached only
 # c1 37.2/c4 103.0, and fused MTP4 emitted visible ! garbage in 1/18 streams. Keep this research
 # switch OFF on the shelf. LOCALARGMAX_REPLICATED_HEAD=1 (passed through B70_EXTRA_ENV) is a
-# separate default-OFF prototype: it uses 341 MiB extra/rank to replicate the packed drafter head
-# and removes the per-draft collective. It still needs LOCALARGMAX=1 to route drafting through
+# separate rejected prototype: it uses 341 MiB extra/rank to replicate the packed drafter head
+# and removes the per-draft collective, but shadow validation found intermittent rank-1 token
+# mismatches and c1 fell 48.9 -> 30.1 t/s. It still needs LOCALARGMAX=1 to route drafting through
 # get_top_tokens. See research/profiling/localargmax_accept_rootcause.md.
 LOCALARGMAX="${LOCALARGMAX:-0}"
 if [[ "${B70_EXTRA_ENV:-}" == *"LOCALARGMAX_REPLICATED_HEAD=1"* ]] && \

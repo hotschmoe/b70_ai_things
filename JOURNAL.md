@@ -10042,3 +10042,61 @@ VERDICT -> static MTP depth does not resolve the local-top1 tradeoff.
   long soak or shelf promotion. The next architectural option is a
   replicated drafter lm_head that trades memory and extra local GEMM
   work for zero per-draft cross-card token-selection collectives.
+
+## 2026-07-28 -- replicated NVFP4 drafter head: exact bytes, rank-asymmetric tokens, no-go
+
+GOAL -> remove every per-draft token-selection collective by keeping the
+  complete packed target/drafter vocabulary head on both TP ranks. Each rank
+  computes the same full-vocabulary logits and token locally; target
+  verification remains unchanged.
+
+CONFIG -> exact qualified vLLM 0.26.0 NVFP4 TP=2 200K settings, MTP5,
+  calibrated fp8 KV, native E4M3 decode scales, graph push-AR, prefix cache,
+  `LOCALARGMAX=1`, `LOCALARGMAX_REPLICATED_HEAD=1`, and 64 shadow calls/rank.
+  Checkpoint metadata: packed U8 head `[248320,2560]` = 606.250 MiB; E4M3
+  scale `[248320,320]` = 75.781 MiB. The existing rank owns half, so the
+  one-time concat gather adds exactly 341.016 MiB/card.
+
+COMMAND ->
+  `LOCALARGMAX=1 B70_EXTRA_ENV="B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 B70_NVFP4_F8_SCALE_M_MAX=8 LOCALARGMAX_REPLICATED_HEAD=1 LOCALARGMAX_VERIFY=1 LOCALARGMAX_VERIFY_CALLS=64" REPLICATED_HEAD_SHADOW_GATE=1 REPLICATED_HEAD_SHADOW_MIN=64 RUN_STRESS=0 RUN_NEEDLE=0 RUN_SOAK=0 SERVED_FORCE=qwen3.6-27b-NVFP4-modelopt-replicated-head-shadow ./bin/gpu-run bash vllm/nvfp4/tp2_longctx_qualify.sh`
+
+RESULT -> both ranks assembled weight `[248320,2560]` and scale
+  `[320,248320]` without OOM; each reported 341.016 MiB incremental storage.
+  Identity, 32 KV-scale injections, and 18/18 mixed-load coherence passed
+  because shadow mode returned the known-good reference token. The 128 shadow
+  records found nine mismatching rank-1 calls and zero rank-0 calls. The nine
+  M=8 records contained 14 wrong draft tokens.
+
+RESULT -> code c1 was 30.1 average/31.0 best t/s and c4 was 113.5 aggregate.
+  Prefill was 2,227 tok/s at 2K and 1,980 at 32K. MTP acceptance length/rate
+  was 2.954/0.391. Compared with the shelf, c1 regressed 38.4% from 48.9,
+  while c4 improved 10.2% from 103.0. This is not a universal speed win even
+  before the correctness failure.
+
+CONFIG -> exact-hash diagnostic, same server with
+  `LOCALARGMAX_REPLICATED_DEBUG=1`. Hashing staged the full tensors to the host
+  in bounded 64 MiB chunks. A short 16-call run happened to produce zero
+  mismatches; a longer retry reproduced a rank-1 mismatch at call 9 while rank
+  0 remained exact.
+
+RESULT -> both ranks' complete gathered tensors exactly matched the checkpoint:
+  packed weight SHA256
+  `746c1d13e9cf69bfca6f5901a7dec5a7f2b252359696644a1ee55953b9680205`;
+  row-major E4M3 scale SHA256
+  `e20faadf62bd2b3bf88f2fc9fbf4f42462fdfdd0f4bc9f23d7eaabcc1b697f9b`.
+  Therefore the asymmetric token result is not corrupted/reordered gather data.
+
+RESULT -> the first hidden-state diagnostic incorrectly entered a collective
+  only on the rank that observed a mismatch, deadlocking that debug request.
+  The run was aborted, the container was removed, and that unsafe conditional
+  collective was deleted. Both cards passed `bin/xpu-health`; both v0.25.1
+  daily replicas and the proxy were restored. Direct ports and proxy serve
+  `hotschmoe-dd` at 100,352 tokens, the watchdog is running, and leases are free.
+
+VERDICT -> NO-GO and branch closed. Full-head replication spends bandwidth as
+  well as memory, cuts interactive decode badly, and is not token-exact across
+  ranks even with byte-exact weights/scales. Keep the prototype and hash probe
+  default-off for provenance; do not soak or change the shelf. The only
+  communication-first route left is capturing the eager MTP gather, already
+  classified as a hard runtime/kernel project. Return active ordering to
+  sglang W8A8/W4A8 compressed-tensors serving work.

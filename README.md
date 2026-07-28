@@ -302,7 +302,9 @@ eager oneCCL full-vocab MTP gather remains the primary optimization target. Stoc
 argmax+indexed-gather was token-exact but cut c1 to 36.5 t/s. A custom fused top-1 kernel improved
 c4 aggregate to 115.7 t/s but cut c1 to 32.5; an M=1 fallback restored c1 but lost the c4 gain.
 Lower-depth fused MTP3 reached only c1 37.2/c4 103.0, and MTP4 emitted visible `!` garbage in
-1/18 streams. All local-argmax switches remain default-off.
+1/18 streams. A full replicated drafter head then used 341 MiB extra/rank and removed the draft
+gather, but measured only c1 30.1/c4 113.5 and produced intermittent rank-1 shadow mismatches
+despite exact checkpoint hashes. All local-argmax/replicated-head switches remain default-off.
 
 ◆ **NVFP4 TP=1 fp8 KV = the single-card 128k-context config (2026-07-08).** Same NVFP4 checkpoint +
 `nvfp4_gemm_w4a16` kernel + PIECEWISE capture, on ONE card. **fp8 KV cache** (calibrated `amax/448` per-layer

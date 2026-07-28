@@ -96,9 +96,11 @@ if [ "${RUN_STRESS:-1}" = 1 ]; then
   done
 fi
 
-python3 "$REPO/vllm/nvfp4/bench_code.py" "$BASE" "$MODEL_ID" 1 256 3
-python3 "$REPO/vllm/nvfp4/bench_code.py" "$BASE" "$MODEL_ID" 4 256 2
-python3 "$REPO/vllm/nvfp4/bench_prefill.py" "$BASE" "$MODEL_ID" 1 8 2048,32768 2
+if [ "${RUN_PERF:-1}" = 1 ]; then
+  python3 "$REPO/vllm/nvfp4/bench_code.py" "$BASE" "$MODEL_ID" 1 256 3
+  python3 "$REPO/vllm/nvfp4/bench_code.py" "$BASE" "$MODEL_ID" 4 256 2
+  python3 "$REPO/vllm/nvfp4/bench_prefill.py" "$BASE" "$MODEL_ID" 1 8 2048,32768 2
+fi
 METRICS="$(curl -fsS --max-time 15 "http://127.0.0.1:$PORT/metrics")"
 ACCEPTED="$(awk '/vllm:spec_decode_num_accepted_tokens_total/{v=$NF} END{print v+0}' <<<"$METRICS")"
 DRAFTS="$(awk '/vllm:spec_decode_num_drafts_total/{v=$NF} END{print v+0}' <<<"$METRICS")"
@@ -145,6 +147,9 @@ if [ "${REPLICATED_HEAD_SHADOW_GATE:-0}" = 1 ]; then
   SHADOW_LINES="${SHADOW_LINES:-0}"
   GLOBAL_BAD="${GLOBAL_BAD:-0}"
   echo "REPLICATED-HEAD-SHADOW -> ready=$READY_LINES lines=$SHADOW_LINES global_bad=$GLOBAL_BAD"
+  if [[ "${B70_EXTRA_ENV:-}" == *"LOCALARGMAX_REPLICATED_DEBUG=1"* ]]; then
+    rg '\[replicated-head-(hash|mismatch)\]' <<<"$SERVER_LOG" || true
+  fi
   [ "$READY_LINES" -ge 2 ] || {
     echo "RESULT -> FAIL: replicated head was not initialized on both TP ranks"
     exit 1

@@ -1,7 +1,17 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 · **Updated:** 2026-06-24 (Bug B ROOT-CAUSED + FIXED; captured TP=2 MTP shipped)
+**Created:** 2026-06-20 - **Updated:** 2026-07-28 (NVFP4 TP=2 draft-gather alternatives closed)
 **Owner:** b70 team
+
+> ### [2026-07-28 NVFP4 TP=2 COMMUNICATION RESULT]
+> The qualified vLLM 0.26 NVFP4 TP=2 200K path spends 39.0% representative device time in eager
+> full-vocabulary MTP gathers. Stock and fused local-top1 replacements are closed: the best fused
+> arm raised c4 103.0 -> 115.7 but cut c1 48.9 -> 32.5, and lower MTP depth did not repair both.
+> Replicating the complete 682 MiB packed drafter head added 341 MiB/rank and removed the draft
+> gather, but measured c1 30.1/c4 113.5 and produced intermittent rank-1 token mismatches despite
+> both ranks' gathered weight and scale SHA256 values matching the checkpoint exactly. Keep every
+> local-top1/replicated-head switch default-off. Capturing the eager gather is the only remaining
+> communication-first route and is a hard runtime/kernel project, not the next shelf A/B.
 
 > ### [!!! 2026-06-24 RESOLVED -- Bug B was COLLECTIVE EJECTION, not "captured numerics"; captured TP=2 MTP NOW WORKS]
 > (JOURNAL 2026-06-23/24, scripts/106-111, FINDINGS "BUG B" entry.)

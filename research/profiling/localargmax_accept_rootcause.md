@@ -76,6 +76,35 @@ the remaining c1 cost is the compact oneCCL pair collective or surrounding
 local-argmax scheduling. It is eligible only as an explicit high-concurrency
 mode unless one static policy beats both c1 and c4 shelf results.
 
+## 2026-07-28 replicated drafter-head result
+
+CONFIG -> gather the target/drafter's packed vocabulary head once on each TP
+rank, then run a full local head GEMM and argmax on every rank. The checkpoint
+head is U8 `[248320,2560]` plus E4M3 `[248320,320]`: 682.031 MiB total and
+341.016 MiB incremental storage/rank over the existing local shard.
+`LOCALARGMAX_REPLICATED_HEAD=1` and the 64-call-per-rank shadow were default-off.
+
+RESULT -> both ranks initialized the full head without OOM and the 18-stream
+gate passed because shadow mode returned reference tokens. The gate then found
+9 rank-1 mismatch records among 64 calls (14 bad tokens across those M=8
+records); rank 0 matched all 64. Code measured c1 30.1 and c4 113.5 aggregate.
+Prefill remained 2,227/1,980 tok/s at 2K/32K. MTP acceptance length/rate was
+2.954/0.391.
+
+RESULT -> an exact chunked host hash ruled out gather corruption. On both ranks:
+packed weight SHA256 was
+`746c1d13e9cf69bfca6f5901a7dec5a7f2b252359696644a1ee55953b9680205`
+and row-major scale SHA256 was
+`e20faadf62bd2b3bf88f2fc9fbf4f42462fdfdd0f4bc9f23d7eaabcc1b697f9b`.
+Both match the raw checkpoint tensors. A later bounded run reproduced an
+asymmetric rank-1 mismatch after the hashes matched.
+
+VERDICT -> NO-GO. Replication removes the collective but duplicates enough
+memory-bandwidth work to cut c1 38%, and independently fails token-exactness on
+rank 1. Keep the flag only as a default-off diagnostic. The local-top1 and
+replicated-head branches are closed; capturing the eager gather is the only
+remaining communication-first direction.
+
 ## 5-line root cause
 
 - Full/healthy path (`llm_base_proposer.py:438`) samples with `.argmax(dim=-1)`;
