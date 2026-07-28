@@ -10100,3 +10100,30 @@ VERDICT -> NO-GO and branch closed. Full-head replication spends bandwidth as
   communication-first route left is capturing the eager MTP gather, already
   classified as a hard runtime/kernel project. Return active ordering to
   sglang W8A8/W4A8 compressed-tensors serving work.
+
+## 2026-07-28 -- sglang 0.5.15 XPU image blocker corrected in WOQ layer
+
+GOAL -> restore the current sglang 0.5.15 W8A8 test image to XPU torch without
+  rebuilding the already-correct, expensive sglang/sgl-kernel base.
+
+CONFIG -> inspect `sglang-xpu:{bmg,woq,mtp}-0515` independently. The base reports
+  torch 2.12.0+xpu and sglang 0.5.15.post1. The WOQ layer is the first image with
+  CUDA-only torch 2.13.0+cu130; MTP inherits it. `auto-round-lib==0.14.2` declares
+  only unbounded `Requires: torch`, so the layer's plain PyPI install re-resolved
+  the newest CUDA wheel. The earlier attribution to base-image `torchcodec` was
+  wrong.
+
+COMMAND ->
+  `docker run --rm --entrypoint /bin/bash sglang-xpu:{bmg,woq,mtp}-0515 -lc 'python3 -c "import torch,sglang; print(torch.__version__,sglang.__version__)"'`
+  `bash sglang/images/build_layers_0515.sh`
+
+RESULT -> `sglang-xpu-woq-0515/Dockerfile` now installs the known
+  `auto-round-lib==0.14.2` with `--no-deps` and asserts torch
+  `2.12.0+xpu` during the build. The layer build script asserts torch and sglang
+  versions in both final images. Lightweight rebuild passed:
+  base `8602d8966f1b`, WOQ `8f30adeddeae`, MTP `c99cf2b7a8e2`.
+  Both final images report torch 2.12.0+xpu and sglang 0.5.15.post1.
+
+VERDICT -> packaging blocker fixed without a base/kernel rebuild. GO to a
+  leased GPU visibility, W8A8 load, coherence, and performance gate. Do not
+  promote the 0.5.15 image or change the shelf before those measurements.

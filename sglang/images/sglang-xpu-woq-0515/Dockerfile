@@ -6,8 +6,13 @@
 # are byte-identical to upstream 0.5.15 (our copies add only an inert B70_GDN_DECODE_WARPS env knob;
 # PERF.md: NO warm speedup) so baking them is a zero-drift no-op.
 FROM sglang-xpu:bmg-0515
-RUN pip install --no-input --no-cache-dir auto-round-lib && \
-    python -c "import auto_round_kernel; print('auto_round_kernel OK')"
+# auto-round-lib 0.14.2 declares only an unbounded `torch` dependency. A normal
+# pip install re-resolved that dependency from PyPI and replaced the base image's
+# torch 2.12.0+xpu with CUDA-only torch 2.13.0+cu130. The base already carries
+# every runtime dependency, so install the known WOQ package without dependency
+# resolution and fail the image build if the XPU torch invariant changes.
+RUN pip install --no-input --no-cache-dir --no-deps auto-round-lib==0.14.2 && \
+    python -c "import torch; assert torch.__version__ == '2.12.0+xpu', torch.__version__; import auto_round_kernel; print('auto_round_kernel OK; torch', torch.__version__)"
 COPY woq_shim.py /opt/venv/lib/python3.12/site-packages/woq_shim.py
 COPY mtp_tree_xpu.py /opt/venv/lib/python3.12/site-packages/mtp_tree_xpu.py
 COPY w8a8_shim.py /opt/venv/lib/python3.12/site-packages/w8a8_shim.py

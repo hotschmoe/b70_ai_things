@@ -27,9 +27,11 @@
 > 2. **W8A8/W4A8 compressed-tensors paths** -- retain W8A8 as the preferred quality/INT8-XMX
 >    research format and keep the proven small-M W8A16 route. Compare any new 27B serve against the
 >    qualified NVFP4 200K path, including KV quality and long-context retrieval.
-> 3. **Backend currency** -- vLLM 0.26.0 is built and gated. Repair the sglang 0.5.15 torch constraint
->    before its next GPU comparison; llama.cpp remains weight-only and zml remains bf16/no-server, so
->    neither substitutes for true W8A8 today.
+> 3. **Backend currency** -- vLLM 0.26.0 is built and gated. The sglang 0.5.15 CUDA-torch blocker
+>    was corrected in the WOQ layer: pin `auto-round-lib==0.14.2 --no-deps`; rebuilt WOQ/MTP images
+>    both report torch 2.12.0+xpu plus sglang 0.5.15.post1. GPU visibility, W8A8 load, coherence,
+>    and performance are the next gates. llama.cpp remains weight-only and zml remains bf16/no-server,
+>    so neither substitutes for true W8A8 today.
 > 4. **W4A4 later frontier** -- the native int4-XMX datapath is demonstrated, but the naive kernel is
 >    slow and quality still needs rotation/FWHT. Do not displace the robust W8A8/W4A8 work with it.
 

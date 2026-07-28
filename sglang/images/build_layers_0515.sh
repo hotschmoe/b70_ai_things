@@ -18,3 +18,7 @@ docker build -t sglang-xpu:mtp-0515 -f "$SCRIPT_DIR/sglang-xpu-mtp-0515/Dockerfi
 
 echo "=== done: sglang-xpu:{woq-0515,mtp-0515} ==="
 docker images | grep -E 'sglang-xpu:(bmg|woq|mtp)-0515' || true
+for image in sglang-xpu:woq-0515 sglang-xpu:mtp-0515; do
+  docker run --rm --entrypoint /bin/bash "$image" -lc \
+    "python3 -c \"import torch,sglang; assert torch.__version__ == '2.12.0+xpu', torch.__version__; print('$image', torch.__version__, sglang.__version__)\""
+done

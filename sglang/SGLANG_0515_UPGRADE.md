@@ -126,11 +126,8 @@ are the canonical `sglang/patches/` files (validated above).
 - `sglang/serve_w8a8_0515.sh` (caching on), `bash -n` clean.
 
 ## OPEN (needs the GPU session)
-- Actually run `build_layers_0515.sh` if the machine building the base isn't the same (it is; both are
-  GPU-free -- can run now). [status: see build logs]
 - **GPU gate** (main session, holds the lease): serve on 0.5.15 and confirm coherence + bench. Nothing
   in 0.5.15 was GPU-validated here.
-- Confirm the built `sglang.__version__ == 0.5.15.post1` from the image (one-liner above).
 
 ## EXACT command for the main session (coordinated GPU W8A8 bench)
 
@@ -153,24 +150,29 @@ Reference (0.5.6 shelf, warm TP=2): decode ~25.2 t/s | PP ~4344 tok/s | TTFT ~47
 at faster-or-equal AND coherent is the gate to promote `sglang-xpu:mtp-0515` + `serve_w8a8_0515.sh`
 onto the shelf.
 
-## BLOCKER (2026-07-16 GPU session): torch upgraded to 2.13.0+cu130 -> no XPU
+## BLOCKER ROOT CAUSE CORRECTED (2026-07-28): WOQ layer upgraded torch -> no XPU
 
-The base image built (`sglang-xpu:{bmg,woq,mtp}-0515`, sglang 0.5.15.post1 confirmed) but W8A8 serve
-DIES at startup: `sglang/srt/utils/common.py get_xpu_memory_capacity -> ValueError: No GPU memory
-values found` because `torch.xpu.is_available()` is False. Root-caused (NOT the driver -- transplanting
-the 26.18 UMD did not help): the built image has **torch 2.13.0+cu130** (the CUDA wheel), not
-`2.12.0+xpu`. sglang 0.5.15's OWN metadata pins `torch==2.12.0+xpu`, but during `pip install .` a
-transitive dep (new in 0.5.15 -- `torchcodec==0.12.0` has no +xpu pin and pulls torch>=2.13) made pip
-UPGRADE torch to 2.13.0+cu130 from the default PyPI index (there is no torch 2.13.0+xpu for cp312 --
-the xpu index only has 2.13.0+xpu for cp315). Because torch was 2.13 during the build, sgl-kernel also
-compiled against 2.13 -> a plain torch downgrade won't fix it (ABI mismatch); the whole base must rebuild
-with torch pinned.
+The W8A8 serve died at startup because the final `sglang-xpu:mtp-0515` image carried CUDA-only
+`torch 2.13.0+cu130`. Fresh inspection corrected the earlier attribution:
 
-FIX for the recipe (next focused session): in xpu.Dockerfile, force `pip install .` to keep
-torch==2.12.0+xpu, e.g. add a constraints file:
-    RUN printf 'torch==2.12.0+xpu\ntorchvision==0.27.0+xpu\ntorchaudio==2.11.0+xpu\n' > /tmp/c.txt && \
-        pip install --no-cache-dir . -c /tmp/c.txt --extra-index-url https://download.pytorch.org/whl/xpu
-and if a dep (torchcodec) then hard-conflicts, drop/replace it (audio path unused for our W8A8 serve).
-Then rebuild bounded (MAX_JOBS=4, DD down) and re-verify `torch.__version__ == 2.12.0+xpu` +
-`torch.xpu.device_count()==2` BEFORE the GPU serve. The 0.5.15 IMAGES + shim-audit stand; only the
-torch pin + a rebuild remain. VERDICT: sglang 0.5.15 W8A8 bench BLOCKED on this rebuild (deferred).
+- `sglang-xpu:bmg-0515` is healthy and still carries `torch 2.12.0+xpu` plus sglang
+  `0.5.15.post1`; its `pip install .` and `torchcodec==0.12.0` did not replace torch.
+- `sglang-xpu:woq-0515` is the first bad layer. Its unconstrained
+  `pip install auto-round-lib` sees auto-round-lib 0.14.2's unbounded `Requires: torch` and
+  re-resolves the newest PyPI CUDA wheel, replacing the installed XPU build.
+- `sglang-xpu:mtp-0515` inherits that bad WOQ environment. sgl-kernel was compiled in the
+  correct base image, so a full base/kernel rebuild is unnecessary.
+
+FIX -> the WOQ layer now installs the known `auto-round-lib==0.14.2` with `--no-deps` and asserts
+`torch.__version__ == "2.12.0+xpu"` while building. `build_layers_0515.sh` also verifies both final
+layer images. Rebuild only the two lightweight layers, then run the GPU image gate before serving.
+
+RESULT (2026-07-28) -> lightweight rebuild passed:
+
+- base `sglang-xpu:bmg-0515` image id `8602d8966f1b`
+- corrected `sglang-xpu:woq-0515` image id `8f30adeddeae`
+- corrected `sglang-xpu:mtp-0515` image id `c99cf2b7a8e2`
+- both final layers report `torch 2.12.0+xpu` and sglang `0.5.15.post1`
+
+VERDICT -> packaging blocker fixed. GPU device visibility, W8A8 load, coherence, and performance
+remain the promotion gates.
