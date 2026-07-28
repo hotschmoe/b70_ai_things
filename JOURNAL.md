@@ -9954,3 +9954,51 @@ RESULT -> both cards passed `bin/xpu-health` after every completed run. Final di
 VERDICT -> NO-GO for shelf promotion and no long soak. Preserve the fused op as a default-off
   high-concurrency research branch. Profile pure fused decode next to distinguish compact-pair
   collective latency from top-1 kernel cost; do not dynamically switch reductions by active M.
+
+### Pure-fused decode profile
+
+CONFIG -> exact qualified vLLM 0.26.0 NVFP4 TP=2 200K configuration,
+  MTP5, `LOCALARGMAX=1`, `LOCALARGMAX_FUSED_FIX=1`, prototype extension,
+  and torch profiler. The daily DP replicas were stopped under the guarded
+  lifecycle and restored after the capture. Runtime traces:
+  `/mnt/vm_8tb/b70/profiles/v0260_tp2_decode_fusedtop1_20260728/`.
+
+COMMAND ->
+  `FUSED_SO=/mnt/vm_8tb/b70/nvfp4_top1_proto/_xpu_C.abi3.so GDN_LIB=/mnt/vm_8tb/b70/nvfp4_top1_proto/libgdn_attn_kernels_xe_2.so B70_EXTRA_ENV="B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 B70_NVFP4_F8_SCALE_M_MAX=8 LOCALARGMAX_FUSED_FIX=1" LOCALARGMAX=1 OUTDIR=/mnt/vm_8tb/b70/profiles/v0260_tp2_decode_fusedtop1_20260728 ./bin/gpu-run bash vllm/nvfp4/profile_tp2_v0260.sh decode`
+
+RESULT -> representative rank 1 device time was 1,789.99 ms: GEMM
+  699.74 ms/39.1%, collectives 490.34/27.4%, sampling/logits
+  188.41/10.5%, GDN 186.25/10.4%, attention 124.81/7.0%, and copy
+  90.49/5.1%. Rank 0 timing is rejected: profiler skew inflated its
+  865 compact oneCCL kernels to 22.99 seconds versus 9.72 ms on rank 1.
+
+RESULT -> communication shapes prove the substitution worked. Baseline
+  draft M=1 full-vocab messages, bf16 x 248,320 elements, fell from
+  521 to 1. The fused path emitted 865 fp32 x 4-element compact pair
+  messages, whose device kernels totaled only 9.72 ms/0.0112 ms each.
+  Fused shard top-1 itself totaled 163.03 ms/0.188 ms each under the
+  profiler. The 174 remaining large oneCCL calls were 172 target
+  verification M=6 gathers, one M=1 gather, and one 46,080-element
+  gather. Target M=6 cost was 2.506 ms/call versus 2.492 baseline.
+
+RESULT -> the compact path remains synchronous and host-latency-bound:
+  its enclosing `vllm::all_gather` scopes averaged 5.27 ms on rank 0
+  and 15.93 ms on rank 1 under profiling, above the baseline draft
+  gather's 3.10/6.55 ms. These host values are profiler-inflated and
+  rank-asymmetric, but their direction matches the unprofiled c1
+  regression and c4 improvement. The captures also traversed different
+  target-step counts, 103 baseline versus 172 fused, so raw total model
+  times are not a direct A/B. The trace driver now fixes seed 1701,
+  prints the response SHA256, and reports collective message shapes.
+
+RESULT -> both cards passed post-capture `bin/xpu-health`. The v0.25.1
+  DP replicas and proxy were restored; both direct ports and the proxy
+  are healthy, serve `hotschmoe-dd`, the watchdog is running, and both
+  GPU leases are free.
+
+VERDICT -> the top-1 kernel and compact collective device work are not
+  the c1 bottleneck. Per-draft synchronous host collective latency is.
+  The remaining M=6 full-vocab gather is target verification and cannot
+  be replaced with argmax alone. Keep the shelf unchanged and run the
+  next bounded fused A/B at MTP3/4 to reduce compact call count without
+  dynamic switching by active batch size.

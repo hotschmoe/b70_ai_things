@@ -33,8 +33,8 @@ CATS = [
                               r"convert.*int8", r"cast.*int8"]),
     ("norm/rope/act",        [r"rms.?norm", r"layer.?norm", r"\bnorm\b", r"rope", r"rotary",
                               r"silu", r"gelu", r"swiglu", r"activation"]),
-    ("sampling/logits",      [r"sample", r"top.?k", r"top.?p", r"softmax", r"argmax", r"logit",
-                              r"gather", r"embedding", r"penalt"]),
+    ("sampling/logits",      [r"sample", r"top.?k", r"top.?p", r"shard.?top.?1", r"softmax",
+                              r"argmax", r"logit", r"gather", r"embedding", r"penalt"]),
     ("elementwise/copy",     [r"elementwise", r"\bcopy\b", r"\bcat\b", r"\badd\b", r"\bmul\b",
                               r"fill", r"index", r"slice", r"contiguous", r"memcpy", r"memset",
                               r"vectorized", r"reduce_kernel", r"transpose", r"permute"]),
@@ -87,12 +87,37 @@ cat_tot = collections.Counter()
 for name, dur in by_kernel.items():
     cat_tot[categorize(name)] += dur
 
+comm_messages = collections.Counter()
+for e in events:
+    if not isinstance(e, dict) or e.get("name") != "record_param_comms":
+        continue
+    args = e.get("args", {})
+    try:
+        nelems = int(args.get("In msg nelems", 0))
+    except (TypeError, ValueError):
+        continue
+    comm_messages[
+        (
+            str(args.get("Collective name", "unknown")),
+            str(args.get("dtype", "unknown")),
+            nelems,
+        )
+    ] += 1
+
 print(f"=== TRACE: {PATH}")
 print(f"device-kernel events: {ndev}   total device time: {total/1000:.2f} ms\n")
 print("=== BY CATEGORY (share of device-kernel time) ===")
 print(f"{'category':<22} {'ms':>10} {'share':>8}")
 for cname, dur in cat_tot.most_common():
     print(f"{cname:<22} {dur/1000:>10.2f} {100*dur/total:>7.1f}%")
+
+if comm_messages:
+    print("\n=== COLLECTIVE MESSAGES (host record_param_comms) ===")
+    print(f"{'collective':<16} {'dtype':<12} {'elements':>12} {'count':>8}")
+    for (collective, dtype, nelems), count in sorted(
+        comm_messages.items(), key=lambda item: (-item[1], item[0])
+    ):
+        print(f"{collective:<16} {dtype:<12} {nelems:>12} {count:>8}")
 
 print(f"\n=== TOP {TOPN} KERNELS (name | ms | share | count | category) ===")
 for name, dur in by_kernel.most_common(TOPN):

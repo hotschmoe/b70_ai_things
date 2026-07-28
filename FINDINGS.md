@@ -14,7 +14,10 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   the eager oneCCL full-vocab MTP gather alone is 39.0%. Stock XPU local-argmax compositions do not
   convert that profile opportunity into a universal win. The custom fused top-1 op is token-exact
   and raised c4 aggregate from 103.0 to 115.7 t/s, but cut c1 from 48.9 to 32.5. A dynamic M=1
-  fallback restored c1 to 48.6 but cut c4 to 93.4. All local-argmax paths remain default-off.
+  fallback restored c1 to 48.6 but cut c4 to 93.4. A pure-fused trace proves 520/521 M=1
+  full-vocab messages are removed; the replacement's 865 compact device collectives total only
+  9.72 ms on representative rank 1, while synchronous host latency remains the c1 issue.
+  All local-argmax paths remain default-off; test lower MTP depth next.
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
   does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)

@@ -14,9 +14,11 @@
 >    gather. The fused XPU shard top-1 op is now correct and 1.28x faster than argmax+gather in
 >    isolation. End to end, pure fused local reduction improved c4 103.0 -> 115.7 aggregate but cut
 >    c1 48.9 -> 32.5; an M=1 full-gather fallback restored c1 to 48.6 but regressed c4 to 93.4 as
->    active batch shapes switched. Keep all local-argmax switches default-off. Profile the pure
->    fused path next to separate compact-pair collective latency from top-1 cost; retain it only as
->    an explicit high-concurrency mode unless one static policy beats both shelf gates.
+>    active batch shapes switched. Keep all local-argmax switches default-off. The pure-fused
+>    trace removed 520/521 M=1 full-vocab gathers; its 865 compact pair kernels cost only
+>    9.72 ms on representative rank 1, but their synchronous host scopes remained latency-heavy.
+>    Sweep fused local-argmax at MTP3/4 next to reduce compact collective count without dynamic
+>    active-batch switching.
 > 2. **W8A8/W4A8 compressed-tensors paths** -- retain W8A8 as the preferred quality/INT8-XMX
 >    research format and keep the proven small-M W8A16 route. Compare any new 27B serve against the
 >    qualified NVFP4 200K path, including KV quality and long-context retrieval.
