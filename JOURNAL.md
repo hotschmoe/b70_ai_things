@@ -10422,3 +10422,13 @@ VERDICT -> GO for `PUSH_AR=1 PUSH_AR_MIN_NUMEL=1048576` as the single
   W8A8 shelf configuration and the sglang 0.5.15 research default.
   This is a measured large-prefill and TTFT win with sustained decode,
   BF16 KV quality, prefix reuse, and coherence preserved.
+
+RESULT -> production was restored after the completed test campaign.
+  Direct replicas 18091/18092 and proxy 18080 return health 200, reject
+  unauthenticated model requests with 401, and authenticate as
+  `hotschmoe-dd` at 100,352 tokens. Watchdog PID 3528 is back in `Ss`,
+  all three production containers are running, and both GPU leases are
+  free. Because non-interactive sudo was unavailable, the exact three
+  `ExecStart` commands from the active systemd unit were run as its
+  configured `hotschmoe` user; restarting nginx after replica warmup
+  cleared its temporary no-live-upstreams state.
