@@ -1,5 +1,6 @@
 # push_ar_xpu.py -- port of vllm/contrib/vllm_push_allreduce/_push_ar_patch.py to SGLANG.
-# Monkeypatches sglang's XpuCommunicator.all_reduce to use the hand-rolled PUSH all-reduce
+# Monkeypatches sglang's all-reduce route to use the hand-rolled PUSH all-reduce:
+# XpuCommunicator.all_reduce on 0.5.6 and GroupCoordinator._all_reduce_in_place on >=0.5.15.
 # (libxpu_push_ar_graph.so, C ABI, torch-independent -- see scripts/106 + P2P_GPU.md J.7-J.12/K).
 # On dual B70 this beats oneCCL on decode latency (~34-45us vs ~85-88us) and prefill bandwidth
 # (~10.6 vs ~9.4 GB/s), and does its OWN L0-IPC P2P (independent of CCL_TOPO_P2P_ACCESS, so the
@@ -116,7 +117,28 @@ def install():
 
     _orig_all_reduce = XpuCommunicator.all_reduce
     _lock = threading.Lock()
-    _stats = {"n": 0, "bytes": 0, "n_small": 0, "n_fallback": 0}
+    _stats = {"n": 0, "bytes": 0, "n_below_min": 0, "n_fallback": 0}
+
+    def _record_stats(comm, input_, fallback=False):
+        if not STATS:
+            return
+        _stats["n"] += 1
+        _stats["bytes"] += input_.numel() * input_.element_size()
+        if input_.numel() < MIN_NUMEL:
+            _stats["n_below_min"] += 1
+        if fallback:
+            _stats["n_fallback"] += 1
+        if (
+            _stats["n"] % STATS_EVERY == 0
+            and getattr(comm, "_push_ar_rank", 1) == 0
+        ):
+            print(
+                f"[push-ar-stats] calls={_stats['n']} "
+                f"below_min({MIN_NUMEL})={_stats['n_below_min']} "
+                f"fallback={_stats['n_fallback']} "
+                f"MB={_stats['bytes']/1e6:.1f}",
+                flush=True,
+            )
 
     def _graph_ar(lib, q, ptr, nbytes, dt):
         """Record one capturable all-reduce on buffer ptr. Returns True if a graph collective was
@@ -135,7 +157,7 @@ def install():
             return True
         return False
 
-    def _lazy_init(self):
+    def _lazy_init(self, path_name="XpuCommunicator.all_reduce"):
         global _engaged_owner
         ready = getattr(self, "_push_ar_ready", None)
         if ready is not None:
@@ -166,7 +188,7 @@ def install():
                     _engaged_owner = id(self)
                     self._push_ar_rank = dist.get_rank(self.group)
                     if self._push_ar_rank == 0:
-                        print("[push-ar] ENGAGED: sglang XpuCommunicator.all_reduce -> push collective "
+                        print(f"[push-ar] ENGAGED: sglang {path_name} -> push collective "
                               f"(sock={SOCK}, graph={GRAPH}, min_numel={MIN_NUMEL})", flush=True)
             self._push_ar_ready = ok
             return ok
@@ -177,14 +199,7 @@ def install():
                 and input_.numel() * input_.element_size() <= MAXB
                 and _lazy_init(self)):
             lib = _load_lib(so)
-            if STATS:
-                _stats["n"] += 1
-                _stats["bytes"] += input_.numel() * input_.element_size()
-                if input_.numel() < 65536:
-                    _stats["n_small"] += 1
-                if _stats["n"] % STATS_EVERY == 0 and getattr(self, "_push_ar_rank", 1) == 0:
-                    print(f"[push-ar-stats] calls={_stats['n']} small(<64k-elem)={_stats['n_small']} "
-                          f"fallback={_stats['n_fallback']} MB={_stats['bytes']/1e6:.1f}", flush=True)
+            _record_stats(self, input_)
             # CAPTURED decode (K.6): device-side L0-event sync records into torch's XPUGraph.
             if GRAPH and _is_capturing():
                 out = input_.clone()
@@ -203,6 +218,49 @@ def install():
         return _orig_all_reduce(self, input_)
 
     XpuCommunicator.all_reduce = all_reduce
+
+    # sglang >=0.5.15 routes XPU through the registered inplace_all_reduce custom op.
+    # That calls GroupCoordinator._all_reduce_in_place -> torch.distributed directly and
+    # bypasses XpuCommunicator.all_reduce, which was the 0.5.6 injection point above.
+    # Patch the new in-place implementation too. This is eager-only: graph capture keeps
+    # the upstream path, and tensors below MIN_NUMEL still fall back to oneCCL.
+    try:
+        import sglang.srt.distributed.parallel_state as _ps_inplace
+
+        _orig_group_inplace = _ps_inplace.GroupCoordinator._all_reduce_in_place
+
+        def _push_group_inplace(self, input_):
+            comm = getattr(self, "xpu_communicator", None)
+            if (
+                comm is not None
+                and not getattr(comm, "disabled", True)
+                and self.world_size == 2
+                and input_.is_contiguous()
+                and input_.dtype in DT
+                and input_.numel() * input_.element_size() <= MAXB
+                and _lazy_init(comm, "GroupCoordinator._all_reduce_in_place")
+            ):
+                lib = _load_lib(so)
+                if not _is_capturing() and input_.numel() >= MIN_NUMEL:
+                    _record_stats(comm, input_)
+                    lib.ar_allreduce_ptr_dt(
+                        ctypes.c_ulonglong(input_.data_ptr()),
+                        input_.numel() * input_.element_size(),
+                        DT[input_.dtype],
+                    )
+                    return None
+                _record_stats(comm, input_, fallback=True)
+            elif STATS:
+                _stats["n_fallback"] += 1
+            return _orig_group_inplace(self, input_)
+
+        _ps_inplace.GroupCoordinator._all_reduce_in_place = _push_group_inplace
+        print(
+            "[push-ar] patched sglang GroupCoordinator._all_reduce_in_place",
+            flush=True,
+        )
+    except Exception as e:
+        print(f"[push-ar] in-place GroupCoordinator patch FAILED: {e}", flush=True)
 
     # ---- capture-time ALL_GATHER via zero-padded push-AR (PUSH_AR_GRAPH=1 only) ----
     # oneCCL all_gather has NO SYCL-Graph-recordable impl (the vLLM splitting_ops finding; recording it

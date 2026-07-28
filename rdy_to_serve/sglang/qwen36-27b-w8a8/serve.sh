@@ -41,6 +41,9 @@ TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 SERVED="${SERVED:-qwen36-27b-w8a8-mtp}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
 SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ:-4}"
+PUSH_AR="${PUSH_AR:-1}"  # Large-prefill-only L0-IPC transport; measured through the 200K mode.
+PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-1048576}"  # Exclude batched MTP verify; keep prefill on push.
+PUSH_AR_MAXB="${PUSH_AR_MAXB:-536870912}"
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
@@ -67,13 +70,14 @@ THINKCAP="${THINKCAP:-4096}"                                        # int -> SGL
 API_KEY="${API_KEY:-}"   # if set, sglang ENFORCES it on /v1/* (--api-key); /health stays open. Used by the
                          # daily driver (DD_API_KEY) for WAN exposure. Empty = OPEN (LAN-only). Inert if unset.
 LOG="${LOG:-$SCRIPT_DIR/serve.log}"
+PUSHDIR="${PUSHDIR:-$REPO/vllm/contrib/vllm_push_allreduce/prebuilt}"
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"; AUTH_H=(-H "Authorization: Bearer $API_KEY"); }
 
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
   docker rm -f "$NAME" >/dev/null 2>&1
-  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
+  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX push_ar=$PUSH_AR tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
   # RADIX=1 -> cache-on recipe: extra_buffer strategy + int8 mamba checkpoint pool (~2x cached-prefix capacity,
   #            0.6GB from headroom) + page_size=128, KEEP intel_xpu XMX attn (no decode collapse); mount the
@@ -92,11 +96,17 @@ start(){
     --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
     -v "$REPO/models/files:/models:ro" \
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" -v "$KDIR:/work/kernel:ro" \
+    -v "$PUSHDIR:/work/push_ar:ro" \
+    -v "$REPO/sglang/patches/woq_shim.py:/opt/venv/lib/python3.12/site-packages/woq_shim.py:ro" \
+    -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
     -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
     -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
     "${EB_MOUNT[@]}" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
+    -e "B70_XPU_PUSH_AR=$PUSH_AR" -e PUSH_AR_SO=/work/push_ar/libxpu_push_ar_graph.so \
+    -e PUSH_AR_GRAPH=0 -e "PUSH_AR_MIN_NUMEL=$PUSH_AR_MIN_NUMEL" -e "PUSH_AR_MAXB=$PUSH_AR_MAXB" \
+    -e B70_PUSH_AR_STATS=1 -e PUSH_AR_STATS_EVERY=2000 -e CCL_TOPO_P2P_ACCESS=0 \
     "${EB_ENV[@]}" "${THINK_ENV[@]}" \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
       export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
@@ -121,9 +131,25 @@ m=json.load(sys.stdin)['choices'][0]['message']            # --reasoning-parser 
 c=(m.get('content') or '') or (m.get('reasoning_content') or '')
 print('COHERENCE OK:',repr(c[:160])) if c.strip() and (len(c)<16 or max(c.count(x) for x in set(c))/len(c)<0.6) else (print('GATE FAIL:',repr(c[:120])) or sys.exit(1))" \
     || { say "coherence gate FAILED -- see: docker logs $NAME"; return 1; }
+  if [ "$PUSH_AR" = 1 ]; then
+    local engaged_hits
+    engaged_hits="$(docker logs "$NAME" 2>&1 | rg -c \
+      '\[push-ar\] ENGAGED: sglang .* -> push collective' || true)"
+    engaged_hits="${engaged_hits:-0}"
+    say "push-AR engagement hits=$engaged_hits"
+    [ "$engaged_hits" -ge 1 ] || {
+      say "push-AR engagement FAILED -- see: docker logs $NAME"
+      return 1
+    }
+  fi
   say "healthy + coherent; serving $SERVED on :$PORT"
 }
-stop(){ docker rm -f "$NAME" >/dev/null 2>&1; say "stopped $NAME"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
+stop(){
+  docker stop -t 30 "$NAME" >/dev/null 2>&1 || true
+  docker rm "$NAME" >/dev/null 2>&1 || true
+  say "stopped $NAME"
+  "$REPO/bin/xpu-health" 2>&1 | tail -2 || true
+}
 # c1 + c4 regime bench (same harness as the int4/w4a8 sglang entries -> comparable table rows).
 bench(){ bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "w8a8-fused-mtp"; }
 

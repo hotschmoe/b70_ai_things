@@ -1,9 +1,9 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (sglang W8A8 200K BF16-KV mode qualified)
+**Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (sglang W8A8 long-prefill push shipped)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
-> ### [CAMPAIGN 2026-07-27] -- active ordering
+> ### [CAMPAIGN 2026-07-28] -- active ordering
 > Box is HEADLESS (cards symmetric, ~126-128 TFLOPS each). The DD is DP=2 NVFP4 27B: two vLLM
 > 0.25.1 single-card replicas with captured MTP5, calibrated fp8 KV, embed INT8, native E4M3 decode
 > scales, and working prefix reuse at 100,352 tokens. The alternative TP=2 branch is now qualified on
@@ -26,7 +26,11 @@
 >    prior phase-1 work classifies that as a hard kernel/runtime project rather than the next A/B.
 > 2. **W8A8/W4A8 compressed-tensors paths** -- retain W8A8 as the preferred quality/INT8-XMX
 >    research format and keep the proven small-M W8A16 route. Compare any new 27B serve against the
->    qualified NVFP4 200K path, including KV quality and long-context retrieval.
+>    qualified NVFP4 200K path, including KV quality and long-context retrieval. The sglang W8A8
+>    large-prefill transport is now solved: a Level Zero IPC push all-reduce raised 0.5.6 cold
+>    prefill 2.09-3.17x across 512-32K and reduced matched 0.5.15 exact 190,048-token cold wall
+>    525.00s -> 333.73s while retaining BF16 KV, 99.93% prefix reuse, and coherence. The shelf
+>    uses a conservative 1,048,576-element gate so decode and MTP verification remain on oneCCL.
 > 3. **Backend currency** -- vLLM 0.26.0 is built and gated. sglang 0.5.15 now loads W8A8 on both
 >    cards and passed 18/18 mixed-load coherence at 131K and 200K. Auto-sized 200K advertised the
 >    requested length but physically allocated only 147,456 BF16 KV tokens. Right-sizing speculative
@@ -39,8 +43,10 @@
 >    oneCCL time rose from 299/664 ms to 615/970 ms across the two ranks. Upstream commit
 >    4fffc6448 also disabled compile on two XPU speculative metadata helpers. Re-enabling it
 >    removed the extra eager metadata kernels but lost 1.8-4.9% in matched throughput, so that
->    override remains default-off. Keep 0.5.6 shelved; investigate large-prefill collective
->    transport, not another math-kernel rewrite. llama.cpp remains weight-only and zml remains
+>    override remains default-off. The new 0.5.15 `GroupCoordinator._all_reduce_in_place` route
+>    initially bypassed the old push hook; the version-compatible patch now engages on both ranks
+>    and restores 1,643/1,548 tok/s at 2K/36K cold prefill. Keep 0.5.6 as the shelf image and
+>    0.5.15 as the current one-request 200K research path. llama.cpp remains weight-only and zml remains
 >    bf16/no-server, so neither substitutes for true W8A8 today.
 > 4. **W4A4 later frontier** -- the native int4-XMX datapath is demonstrated, but the naive kernel is
 >    slow and quality still needs rotation/FWHT. Do not displace the robust W8A8/W4A8 work with it.

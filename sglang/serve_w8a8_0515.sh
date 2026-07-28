@@ -52,6 +52,9 @@ KDIR="${KDIR:-$ROOT/w8a8_kernel}"
 SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ:-4}"
 MAMBA_CACHE="${MAMBA_CACHE:-}"  # Optional explicit slot cap. extra_buffer+no-overlap needs 4 slots/request.
 SPEC_COMPILE="${SPEC_COMPILE:-0}"  # Opt-in re-enable of two proven XPU MTP metadata torch.compile helpers.
+PUSH_AR="${PUSH_AR:-1}"  # Measured 2.5x cold-prefill win; small eager decode stays on oneCCL.
+PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-1048576}"  # Exclude batched MTP verify; keep prefill on push.
+PUSH_AR_MAXB="${PUSH_AR_MAXB:-536870912}"  # Covers the default <=16K-token prefill chunks.
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
@@ -79,13 +82,14 @@ THINKCAP="${THINKCAP:-4096}"                                        # int -> SGL
 API_KEY="${API_KEY:-}"   # if set, sglang ENFORCES it on /v1/* (--api-key); /health stays open. Used by the
                          # daily driver (DD_API_KEY) for WAN exposure. Empty = OPEN (LAN-only). Inert if unset.
 LOG="${LOG:-$SCRIPT_DIR/serve.log}"
+PUSHDIR="${PUSHDIR:-$REPO/vllm/contrib/vllm_push_allreduce/prebuilt}"
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"; AUTH_H=(-H "Authorization: Bearer $API_KEY"); }
 
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
   docker rm -f "$NAME" >/dev/null 2>&1
-  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX maxreq=$MAXREQ mamba=${MAMBA_CACHE:-auto} spec_compile=$SPEC_COMPILE tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
+  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX maxreq=$MAXREQ mamba=${MAMBA_CACHE:-auto} spec_compile=$SPEC_COMPILE push_ar=$PUSH_AR tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
   # RADIX=1 -> cache-on recipe: extra_buffer strategy + int8 mamba checkpoint pool (~2x cached-prefix capacity,
   #            0.6GB from headroom) + page_size=128, KEEP intel_xpu XMX attn (no decode collapse); mount the
@@ -104,12 +108,18 @@ start(){
     --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
     -v "$REPO/models/files:/models:ro" \
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" -v "$KDIR:/work/kernel:ro" \
+    -v "$PUSHDIR:/work/push_ar:ro" \
+    -v "$REPO/sglang/patches/woq_shim.py:/opt/venv/lib/python3.12/site-packages/woq_shim.py:ro" \
     -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
+    -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
     -v "$REPO/sglang/patches/mtp_tree_xpu.py:/opt/venv/lib/python3.12/site-packages/mtp_tree_xpu.py:ro" \
     -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
     -e "B70_XPU_SPEC_COMPILE=$SPEC_COMPILE" \
+    -e "B70_XPU_PUSH_AR=$PUSH_AR" -e PUSH_AR_SO=/work/push_ar/libxpu_push_ar_graph.so \
+    -e PUSH_AR_GRAPH=0 -e "PUSH_AR_MIN_NUMEL=$PUSH_AR_MIN_NUMEL" -e "PUSH_AR_MAXB=$PUSH_AR_MAXB" \
+    -e B70_PUSH_AR_STATS=1 -e PUSH_AR_STATS_EVERY=2000 -e CCL_TOPO_P2P_ACCESS=0 \
     "${EB_ENV[@]}" "${THINK_ENV[@]}" \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
       export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \

@@ -114,6 +114,8 @@ ckpt, TP=2, NEXTN MTP steps=10, `--disable-cuda-graph`, page/mamba-extra-buffer,
   checkpoint pool + page 128, keeping the intel_xpu XMX attention backend).
 - optional `MAMBA_CACHE=<slots>` maps to `--max-mamba-cache-size`. The default stays auto-sized.
   For one-request 200K BF16-KV mode, `MAXREQ=1 MAMBA_CACHE=4` is the measured configuration.
+- `PUSH_AR=1` routes only all-reduces at or above 1,048,576 elements through the custom
+  Level Zero IPC transport. Smaller decode and MTP-verification collectives stay on oneCCL.
 
 It is deliberately NOT a shelf sibling (shelf rule: exactly one best config per backend/model/quant;
 no promotion until GPU-bench-gated faster-or-equal AND coherent). `bash -n` clean. All runtime mounts
@@ -140,6 +142,9 @@ are the canonical `sglang/patches/` files (validated above).
   per-rank artifacts, parser output, graceful cleanup, and card-health gates.
 - `sglang/ab_w8a8_0515_spec_compile.sh`: controlled default-off/on test of the two XPU
   speculative metadata helpers disabled by upstream commit 4fffc6448.
+- `sglang/ab_w8a8_push_ar_prefill.sh`: controlled 0.5.6 large-prefill push off/on A/B.
+- `sglang/ab_w8a8_0515_push_ar_200k.sh`: matched 0.5.15 one-request 200K/BF16-KV
+  push off/on A/B with exact long-context retrieval.
 
 ## Regression profile
 
@@ -192,15 +197,49 @@ the controlled A/B rejected it:
 Both arms passed 18/18 mixed-load coherence and both cards passed health. Fewer device kernels do
 not repay the Dynamo/runtime overhead on this stack. Keep the override default-off.
 
+## Large-prefill collective fix
+
+The 0.5.6 shelf's `XpuCommunicator.all_reduce` hook proved the transport lever under a
+65,536-element diagnostic threshold. Push improved unique cold prefill 2.09x at 512 tokens,
+2.73x at 2K, 3.12x at 8K, and 2.63x at 32K; c4 improved 3.12x at 2K and 3.17x at 8K.
+Both arms passed 18/18 coherence, code c1 stayed neutral, and the focused confirmation repeated
+2.68x at c1 2K, 3.09x at c1 8K, and 2.81x at c4 2K.
+
+sglang 0.5.15 no longer routes this operation through the old hook. Its registered
+`inplace_all_reduce` custom op calls `GroupCoordinator._all_reduce_in_place` and then
+`torch.distributed` directly. The first nominal push arm did not print an engagement marker and
+matched the control, which isolated the API bypass. `push_ar_xpu.py` now patches the new in-place
+route as well as the legacy route. The fixed arm logged both-rank rendezvous and exact engagement.
+
+The matched 0.5.15 one-request 200K/BF16-KV comparison kept 220,288 physical KV tokens:
+
+| measure | oneCCL | push | delta |
+| --- | ---: | ---: | ---: |
+| cold prefill, 2K | 651 tok/s | 1,643 tok/s | 2.52x |
+| cold prefill, 36K | 601 tok/s | 1,548 tok/s | 2.58x |
+| exact 190,048-token cold retrieval | 525.00s | 333.73s | 1.57x |
+| exact warm retrieval | 3.53s | 3.55s | neutral |
+| prefix hit | 99.93% | 99.93% | unchanged |
+
+The production threshold is 1,048,576 elements. That selects 512-token and larger EXTEND
+tensors but leaves small decode and batched MTP verification on oneCCL. A same-condition 0.5.6
+shelf-wrapper run measured c1 decode 21.39 -> 21.12 t/s and soak 16.25 -> 16.16 t/s, while c1
+TTFT improved 1,725 -> 582 ms. At c4, aggregate decode improved 13.85 -> 19.92 t/s and TTFT
+improved 4,310 -> 2,373 ms. A final 0.5.15 qualifier at the 1M threshold retained 1,735 tok/s
+at 2K cold prefill and 1,555 tok/s at 32K, stayed coherent/stable, and passed both card-health
+probes.
+
 ## Shelf promotion verdict
 
-- NO-GO. The controlled 8K, radix-off A/B passed 18/18 coherence on both versions, but 0.5.15 was
+- NO-GO for replacing the 0.5.6 shelf image. The controlled 8K, radix-off A/B passed 18/18
+  coherence on both versions, but stock 0.5.15 was
   slower in every matched measure: native c1 24.04 versus 25.60 t/s (-6.1%), native c4 aggregate
   35.26 versus 36.31 t/s (-2.9%), code c1 24.9 versus 25.6 t/s (-2.7%), code c4 aggregate 89.4
   versus 91.7 t/s (-2.5%), and unique cold prefill 1,719 versus 1,988 t/s (-13.5%).
-- Keep 0.5.6 as the shelf entry. Retain 0.5.15 as the research and one-request 200K path; profile
-  data localizes the regression to collective/runtime handling, but no measured fix has recovered
-  it. Investigate a large-prefill collective transport A/B before attempting another promotion.
+- GO for the version-compatible large-prefill push transport in both the 0.5.6 shelf and the
+  0.5.15 research serve. It directly recovers the profiled collective loss without changing
+  sustained decode. Keep 0.5.6 as the shelf image and retain 0.5.15 as the current one-request
+  200K/BF16-KV research path.
 
 ## Qualification commands
 

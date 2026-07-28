@@ -462,3 +462,47 @@ CONFIG: upstream commit 4fffc6448 disabled compile for two XPU speculative metad
 
 VERDICT: NO-GO. The override removes extra metadata kernels but its Dynamo/runtime overhead loses
 end to end. It remains default-off. Next bounded lever is large-prefill collective transport.
+
+## sglang W8A8 large-prefill push all-reduce [2026-07-28]
+
+CONFIG: the first controlled A/B used the 0.5.6 W8A8 shelf stack at 65K context, TP=2,
+radix off, MTP 10/draft 11, eager mode, and BF16 KV. Only all-reduces with at least
+65,536 elements used the custom Level Zero IPC push transport. Both arms passed 18/18
+mixed-load coherence and post-run card health.
+
+| unique cold prefill | oneCCL | push | speedup |
+|---|---:|---:|---:|
+| c1, 512 tokens | 569 tok/s | 1,191 tok/s | 2.09x |
+| c1, 2K tokens | 650 tok/s | 1,775 tok/s | 2.73x |
+| c1, 8K tokens | 670 tok/s | 2,092 tok/s | 3.12x |
+| c1, 32K tokens | 610 tok/s | 1,606 tok/s | 2.63x |
+| c4, 2K tokens | 232 tok/s | 724 tok/s | 3.12x |
+| c4, 8K tokens | 265 tok/s | 840 tok/s | 3.17x |
+
+Code c1 was neutral at 22.1 versus 22.4 t/s. A focused confirmation repeated 2.68x at
+c1 2K, 3.09x at c1 8K, and 2.81x at c4 2K.
+
+CONFIG: sglang 0.5.15 moved the XPU route from `XpuCommunicator.all_reduce` to
+`GroupCoordinator._all_reduce_in_place`. The first nominal push arm did not engage and matched
+its control, proving the route bypass. The patch now covers both APIs. A matched one-request
+200K/BF16-KV A/B used `MAXREQ=1 MAMBA_CACHE=4`, retained 220,288 physical KV tokens, and passed
+18/18 coherence.
+
+| 0.5.15 200K measure | oneCCL control | push |
+|---|---:|---:|
+| c1 cold prefill, 2K | 651 tok/s | 1,643 tok/s |
+| c1 cold prefill, 36K | 601 tok/s | 1,548 tok/s |
+| exact 190,048-token cold retrieval | 525.00s | 333.73s |
+| exact 190,048-token warm retrieval | 3.53s | 3.55s |
+| cache hit | 99.93% | 99.93% |
+
+The shelf uses a conservative 1,048,576-element threshold so large EXTEND tensors use push while
+decode and MTP verification stay on oneCCL. In a same-condition shelf-wrapper on/off run, push
+changed c1 decode 21.39 -> 21.12 t/s and soak 16.25 -> 16.16 t/s, while c1 TTFT improved
+1,725 -> 582 ms. At c4, aggregate decode improved 13.85 -> 19.92 t/s and TTFT improved
+4,310 -> 2,373 ms. The final 0.5.15 1M-gate qualifier measured cold prefill 1,735 tok/s at
+2K and 1,555 tok/s at 32K, stayed coherent and stable, and left both cards healthy.
+
+VERDICT: GO for the large-prefill-only push transport in the W8A8 shelf and 0.5.15 research
+serve. It fixes the dominant long-prefill collective bottleneck without a sustained-decode
+regression. Keep graph capture off and keep small decode/MTP collectives on oneCCL.

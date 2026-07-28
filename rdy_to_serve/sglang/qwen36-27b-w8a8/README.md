@@ -21,12 +21,42 @@ higher code accuracy than int4. Built on our fused int8 oneDNN kernels + NEXTN c
   int8 weights are more accurate than int4; the fused kernels add zero loss; MTP is greedy-lossless.
   Result: `../../evals/results/20260628T233713Z__qwen36-27b-w8a8-vision-mtp__w8a8-fused-vision`.
 
+## Large-prefill qualification (2026-07-28)
+
+The shelf now uses the custom Level Zero IPC push all-reduce only at
+`PUSH_AR_MIN_NUMEL=1048576`. A matched shelf-wrapper run in the same thermal/session state measured:
+
+| metric | push off | push on, 1M gate | delta |
+|---|---:|---:|---:|
+| c1 decode | 21.39 t/s | 21.12 t/s | -1.3% |
+| c1 TTFT | 1,725 ms | 582 ms | 2.96x faster |
+| c4 aggregate decode | 13.85 t/s | 19.92 t/s | +43.8% |
+| c4 TTFT | 4,310 ms | 2,373 ms | 1.82x faster |
+| 2K-token soak | 16.25 t/s | 16.16 t/s | -0.6% |
+
+Both arms were coherent and the soak stayed stable. These absolute decode values were collected
+after hours of continuous GPU work and are lower than the cooler historical shelf numbers, so use
+this table only as the matched on/off comparison. The separate 0.5.6 prefill A/B measured 2.09x to
+3.12x c1 cold-prefill gains from 512 through 32K tokens and 3.12x to 3.17x at c4.
+
+The version-compatible patch also covers sglang 0.5.15's newer in-place collective route. In the
+matched one-request 200K/BF16-KV A/B, exact 190,048-token retrieval remained correct and cold wall
+time fell from 525.00s to 333.73s (1.57x); warm reuse stayed about 3.5s with 99.93% cache hit.
+The final 1M gate retained 1,735 tok/s at 2K cold prefill and 1,555 tok/s at 32K, passed the
+qualifier, and left both cards healthy.
+
 ## How it works
 
 - **Decode (M==1):** `int8_gemm_w8a16` -- s8 weight x fp16 act, per-channel dequant fused in the oneDNN
   epilogue (1 launch). At M=1 the GEMV is weight-BW-bound so int8 activations buy nothing; fp16-act is leaner.
 - **Prefill / MTP-verify (M>1):** `int8_gemm_w8a8` -- s8 x s8 on the XMX/DPAS systolic array (2.0x bf16),
   with `dynamic_per_token_int8_quant` (fused single-launch act-quant).
+- **Large TP prefill all-reduces:** the custom Level Zero IPC push transport is enabled only for tensors
+  with at least 1,048,576 elements. This keeps batched MTP verify/decode on oneCCL while routing 512+
+  token prefills to push. During the discovery A/B at the lower 65,536-element diagnostic threshold, it
+  raised unique cold prefill 2.68x at 2K, 3.09x at 8K, and 2.81x at c4 2K on the confirmation run;
+  code c1 stayed neutral. The 1,048,576 production cutoff is deliberately conservative: only large
+  EXTEND tensors use push, while decode and batched MTP verification remain on the proven oneCCL route.
 - **MTP:** NEXTN chain spec-decode, steps=10 (W8A8 peak -- the cheap int8-XMX verify rewards deeper drafts
   than int4's steps=7: 7->23.8, 10->25.25, 12->24.35). Greedy-only on XPU.
 - Both ops built from vllm-xpu-kernels source vs sglang torch 2.12 (`../../../research/w8a8/W8A8_BUILD.md`).
@@ -36,9 +66,10 @@ higher code accuracy than int4. Built on our fused int8 oneDNN kernels + NEXTN c
 - image `sglang-xpu:mtp` (baked XPU NEXTN gates + compressed_tensors W8A8 scheme)
 - built kernel `.so` at `/mnt/vm_8tb/b70/w8a8_kernel/_xpu_C.abi3.so` (sha bc643c3f8a61; build: W8A8_BUILD.md)
 - the FUSED `w8a8_shim.py` (`../../sglang/patches/w8a8_shim.py`, `B70_XPU_W8A8_FUSED=1`)
-- grafted ckpt `/mnt/vm_8tb/b70/models_w8a8/Qwen3.6-27B-W8A8-sqgptq-vision-mtp` (vision 333 + W8A8 LM +
-  BF16 MTP head; built by `../../sglang/graft_mtp.py` onto `Qwen3.6-27B-W8A8-sqgptq-vision`; symlinks into
-  `/models`, so the serve mounts BOTH `/models` and `/models_w8a8`)
+- custom push-allreduce `.so` under `vllm/contrib/vllm_push_allreduce/prebuilt/`, with canonical
+  `woq_shim.py` and `push_ar_xpu.py` runtime mounts
+- materialized checkpoint `models/files/qwen3.6-27b/w8a8-sqgptq` (vision + W8A8 language model +
+  BF16 MTP head), mounted as `/models/qwen3.6-27b/w8a8-sqgptq`
 
 ## Use
 
@@ -69,11 +100,11 @@ The daily driver runs this entry at its agentic config. Knobs (env, defaults in 
 - **`THINKCAP=4096`** -> `SGLANG_MAX_THINK_TOKENS` (graceful `</think>` cap). `THINKCAP=` for unlimited.
   Lowered from 8192 on 2026-06-29: caps the worst-case thinking dead-air (~3min at 25t/s) before the first
   tool-call token, which a fronting reverse-proxy idle timeout can cut on long agentic tool calls.
-- **`RADIX=0` (prefix caching OFF, and it MUST stay off here).** sglang's mamba/hybrid radix needs the
-  `extra_buffer` path (CUDA/MUSA/NPU-only -> `AssertionError` on XPU at arg-parse) or `no_buffer` (forces
-  `page_size=1`, untested with NEXTN+fused). `RADIX=1` CRASHES the serve. Prefix caching on XPU hybrid is an
-  open research item, not a prod flag (`RESEARCH_TODO.md` Track 10a -- the top day-to-day TTFT lever, since
-  RADIX=0 re-prefills the full prompt every turn).
+- **`RADIX=0` by default; `RADIX=1` is now a qualified option.** The mounted XPU patch un-gates the
+  `extra_buffer` strategy with INT8 mamba checkpoints and page size 128 while retaining Intel XPU
+  attention. Repeated 12K prompts measured 4.35x reuse, and the 0.5.15 one-request 200K mode passed
+  exact 190,048-token cold/warm retrieval with 99.93% cache hit. Use the 0.5.15 research serve for
+  the measured 200K/BF16-KV mode: `MAXREQ=1 MAMBA_CACHE=4 sglang/serve_w8a8_0515.sh start`.
 - **`METRICS=1` (Prometheus `/metrics` ON).** Adds `--enable-metrics`; exposes input/output token counters,
   TTFT (prefill), gen throughput (decode), `cache_hit_rate`, and queue depth on the serve port (same `:$PORT`,
   NOT api-key-gated). Dashboard = sglang `examples/monitoring/` Prometheus+Grafana (Grafana on a port other

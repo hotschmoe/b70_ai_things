@@ -1,7 +1,17 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 - **Updated:** 2026-07-28 (sglang 0.5.15 speculative compile A/B closed)
+**Created:** 2026-06-20 - **Updated:** 2026-07-28 (sglang W8A8 large-prefill transport shipped)
 **Owner:** b70 team
+
+> ### [2026-07-28 SGLANG W8A8 LARGE-PREFILL COLLECTIVE RESULT]
+> The eager Level Zero IPC push all-reduce is now enabled only for tensors with at least
+> 1,048,576 elements. This deliberately keeps decode and batched NEXTN verification on oneCCL
+> while routing large EXTEND collectives through push. It improved 0.5.6 cold prefill 2.09-3.17x
+> across the measured 512-32K/c1-c4 range and reduced matched sglang 0.5.15 exact 190,048-token
+> cold wall 525.00s -> 333.73s with BF16 KV and 99.93% reuse unchanged. A same-condition shelf
+> on/off run kept c1 decode and a 2K-token soak neutral. This is a prefill transport win, not a
+> new MTP-decode route; do not lower the gate or redirect small verification collectives without
+> a fresh coherence and concurrent-throughput A/B.
 
 > ### [2026-07-28 SGLANG 0.5.15 SPECULATIVE METADATA COMPILE RESULT]
 > Upstream sglang commit 4fffc6448 disabled `torch.compile` for

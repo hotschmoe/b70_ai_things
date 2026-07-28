@@ -13,6 +13,9 @@ NAME="${NAME:-sglang_w8a8_0515_qual}"
 PORT="${PORT:-30000}"
 SERVED="${SERVED:-qwen36-27b-w8a8-gptq-mtp}"
 MAXLEN="${MAXLEN:-200000}"
+PUSH_AR="${PUSH_AR:-1}"
+PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-1048576}"
+PUSH_AR_MAXB="${PUSH_AR_MAXB:-536870912}"
 BASE="http://127.0.0.1:$PORT/v1"
 TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 
@@ -23,15 +26,18 @@ cleanup() {
     echo "SERVER-FAILURE -> final 300 log lines"
     docker logs "$NAME" 2>&1 | tail -300
   fi
-  docker rm -f "$NAME" >/dev/null 2>&1 || true
+  docker stop -t 30 "$NAME" >/dev/null 2>&1 || true
+  docker rm "$NAME" >/dev/null 2>&1 || true
   "$REPO/bin/xpu-health" || true
   exit "$rc"
 }
 trap cleanup EXIT INT TERM
 
-echo "CONFIG -> image=sglang-xpu:mtp-0515 tp=2 maxlen=$MAXLEN radix=1"
+echo "CONFIG -> image=sglang-xpu:mtp-0515 tp=2 maxlen=$MAXLEN radix=1 push_ar=$PUSH_AR min_numel=$PUSH_AR_MIN_NUMEL"
 echo "CONFIG -> served=$SERVED port=$PORT max_running_requests=${MAXREQ:-4} mamba_cache=${MAMBA_CACHE:-auto} mtp_steps=10"
-CTX="$MAXLEN" RADIX=1 PORT="$PORT" NAME="$NAME" SERVED="$SERVED" bash "$SERVE" start
+CTX="$MAXLEN" RADIX=1 PORT="$PORT" NAME="$NAME" SERVED="$SERVED" \
+  PUSH_AR="$PUSH_AR" PUSH_AR_MIN_NUMEL="$PUSH_AR_MIN_NUMEL" PUSH_AR_MAXB="$PUSH_AR_MAXB" \
+  bash "$SERVE" start
 
 MODEL_JSON="$(curl -fsS --max-time 15 "$BASE/models")"
 MODEL_ID="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["data"][0]["id"])' <<<"$MODEL_JSON")"
@@ -108,6 +114,20 @@ if docker logs "$NAME" 2>&1 | rg -i \
   docker logs "$NAME" 2>&1 | rg -i \
     'device_lost|out_of_resources|enginedead|!!!!|(^|[^a-z])nan([^a-z]|$)' | tail -80
   exit 1
+fi
+
+if [ "$PUSH_AR" = 1 ]; then
+  ENGAGED_HITS="$(
+    docker logs "$NAME" 2>&1 |
+      rg -c '\[push-ar\] ENGAGED: sglang .* -> push collective' || true
+  )"
+  ENGAGED_HITS="${ENGAGED_HITS:-0}"
+  echo "ENGAGEMENT -> push_ar_engaged_hits=$ENGAGED_HITS"
+  docker logs "$NAME" 2>&1 | rg 'push-ar-stats' | tail -10 || true
+  [ "$ENGAGED_HITS" -ge 1 ] || {
+    echo "RESULT -> FAIL: push-AR never engaged"
+    exit 1
+  }
 fi
 
 echo "VERDICT -> PASS: sglang 0.5.15 W8A8 TP2 at $MAXLEN context"

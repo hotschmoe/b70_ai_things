@@ -108,13 +108,15 @@ accuracy loss.
 > |---|---|---|---|---|---|---|---|---|---|---|
 > | **vLLM 0.25.1** | NVFP4 | 24 | 2 | 2181 | 290 ms | **48.3** (best 50.1) | 16.7 | 105 | 342k tok | **57% hit (now works)** |
 > | **vLLM 0.25.1** | W8A8 | 35 | 2 | **2598** | 514 ms | 38.5 (best 40.7) | 13.8 | 93 | 264k tok | works |
-> | sglang 0.5.15 candidate | W8A8 | 35 | 2 | 1719 | 577 ms | 24.9 | 24.0 | 89.4 | 220k tok [sgl-200k] | 99.93% hit |
+> | sglang 0.5.15 candidate | W8A8 | 35 | 2 | 1735 @2K / 1555 @36K [sgl-push] | 555 ms | 24.9 | 24.0 | 89.4 | 220k tok [sgl-200k] | 99.93% hit |
 > | sglang 0.5.15/0.5.6 | NVFP4 | 24 | 1 | _blocked: GDN routing fix_ | | | | | | |
 > | zml (bf16 wildcard) | bf16 | 54 | 2 | n/a | n/a | 11.7 (decode) | 11.7 | n/a | n/a | n/a (CLI) |
 >
 > [sgl-200k] Performance columns are from the matched 8K, radix-off shelf A/B. KV capacity and
 > prefix reuse are from the one-request 200K `MAXREQ=1 MAMBA_CACHE=4` mode. The 0.5.6 shelf is
 > faster; this row records the current 0.5.15 research candidate, not a promoted shelf entry.
+> [sgl-push] Cold-prefill and TTFT values are from the final 1,048,576-element push gate run;
+> the decode columns remain the prior matched short-context values.
 >
 > **sglang 0.5.15 status (updated 2026-07-28):** the blocker was not base-image `torchcodec`. The WOQ
 > layer's unconstrained `auto-round-lib` install replaced XPU torch; pinning
@@ -127,8 +129,13 @@ accuracy loss.
 > INT8/BF16 GEMMs, activation quantization, attention, and copies are flat or faster; the loss is
 > in TP=2 oneCCL/driver handling above the math kernels. Re-enabling two upstream-disabled XPU
 > speculative metadata compile helpers reduced kernel count but made end-to-end performance worse.
-> Keep 0.5.6 shelved and target large-prefill collective transport
-> (`sglang/SGLANG_0515_UPGRADE.md`). NVFP4-on-sglang (novel
+> The large-prefill collective target is now solved: a version-compatible Level Zero IPC push
+> path improved 0.5.6 unique cold prefill 2.09-3.17x across the measured 512-32K range. On 0.5.15,
+> it raised 2K/36K cold prefill 651/601 -> 1,643/1,548 tok/s and reduced matched exact
+> 190,048-token cold wall 525.00s -> 333.73s while preserving BF16 KV and 99.93% reuse.
+> The shelf's 1,048,576-element gate leaves decode/MTP verification on oneCCL; same-condition
+> c1/soak were neutral and c4 aggregate improved 43.8%. Keep 0.5.6 as the shelf image and use
+> 0.5.15 for the 200K research mode (`sglang/SGLANG_0515_UPGRADE.md`). NVFP4-on-sglang (novel
 > port; sglang ships the ModelOpt loader + our XPU `nvfp4_gemm` kernel) REACHES model-build on the working
 > 0.5.6 image but the shim mis-routes GDN layers (partition 48 vs NVFP4 block 128) -> needs a bf16-fallthrough
 > fix (`sglang/NVFP4_PORT.md`). Both are one focused session away; the vLLM + zml results above stand.
@@ -262,6 +269,10 @@ is `rdy_to_serve/sglang/<dir>/serve.sh` at *its own* best config.
 | qwen3.6-27b | W4A8 hybrid (int4-w / int8-a, XPUGraph) | 19 | 1 | 2062 | 993 ms | 27.3 | 27.7\* | 145k tok |
 | qwen3.6-27b | **W8A8 int8 fused + NEXTN MTP** | 35 | 2 | **3786** | **541 ms** | **25.6** | 5.8 | 182k tok |
 | qwen3.6-35b-a3b | **W8A8 int8 MoE** (Route A, eager) | 35 | 2 | **7529** | **272 ms** | 7.9 | 5.6\*\* | 1.04M tok |
+
+The W8A8 shelf row now includes the measured large-prefill-only push all-reduce at a
+1,048,576-element gate. The table retains its historical warm score; the matched push on/off run
+showed neutral c1/soak, 2.96x faster c1 TTFT, and +43.8% c4 aggregate in the same session.
 
 \* W4A8 is the single-stream XPUGraph driver (`max-running-requests=1`): at c4 the 4 requests serialize,
 so per-stream decode holds ~27.7 t/s but TTFT balloons to ~8.1 s. Best for single-stream throughput.

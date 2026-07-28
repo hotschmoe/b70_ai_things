@@ -10306,3 +10306,119 @@ VERDICT -> NO-GO. Recompiling the helpers reduces eager metadata kernel
   `B70_XPU_SPEC_COMPILE=0` by default and retain the switch only as a
   provenance/debug artifact. The main recoverable 0.5.15 loss remains
   TP collective/runtime handling.
+
+### 2026-07-28 - sglang 0.5.6 W8A8 large-prefill push all-reduce A/B
+
+CONFIG -> Qwen3.6-27B W8A8 GPTQ compressed-tensors, sglang 0.5.6,
+  torch 2.12.0+xpu, TP=2, context 65,536, radix off, MTP 10/draft 11,
+  eager mode, Intel XPU attention, Triton GDN, BF16 KV, and memory
+  fraction 0.90. The candidate used the existing Level Zero IPC push
+  all-reduce only for tensors with at least 65,536 elements and kept
+  `CCL_TOPO_P2P_ACCESS=0`. Both arms ran under one dual-card lease.
+
+COMMAND ->
+  `./bin/gpu-run bash sglang/ab_w8a8_push_ar_prefill.sh 2>&1 | tee results/logs/sglang_w8a8_push_ar_prefill_ab_20260728.log`
+  followed by the focused 2K/8K c1 and 2K c4 confirmation in
+  `results/logs/sglang_w8a8_push_ar_prefill_ab_retry_20260728.log`.
+
+RESULT -> both arms passed 18/18 mixed prefill/decode coherence. Control
+  c1 cold prefill was 569, 650, 670, and 610 tok/s at 512, 2K, 8K, and
+  32K. Push measured 1,191, 1,775, 2,092, and 1,606 tok/s: 2.09x,
+  2.73x, 3.12x, and 2.63x. Control c4 was 232/265 tok/s at 2K/8K;
+  push was 724/840 tok/s, or 3.12x/3.17x. Code c1 stayed neutral at
+  22.1 versus 22.4 t/s. The focused confirmation repeated 2.68x at c1
+  2K, 3.09x at c1 8K, and 2.81x at c4 2K. The first driver exit was a
+  false harness failure from `rg -q` plus pipefail after all benchmarks;
+  replacing it with a count made the confirmation exit 0. Both cards
+  passed health after both cycles.
+
+VERDICT -> GO. Long-prefill TP all-reduce, not INT8 GEMM, was the
+  recoverable bottleneck. Preserve the eager push transport for large
+  EXTEND tensors and keep small decode collectives on oneCCL.
+
+### 2026-07-28 - sglang 0.5.15 in-place route fix and 200K push A/B
+
+CONFIG -> matched sglang 0.5.15 W8A8 TP=2/BF16-KV arms used context
+  200,000, radix extra_buffer, `MAXREQ=1 MAMBA_CACHE=4`, physical pool
+  minimum 190,128, MTP 10/draft 11, and exact 190,048-token retrieval.
+  The first candidate mounted the legacy 0.5.6 push hook unchanged.
+
+COMMAND ->
+  `./bin/gpu-run bash sglang/ab_w8a8_0515_push_ar_200k.sh 2>&1 | tee results/logs/sglang_w8a8_0515_push_ar_200k_ab_20260728.log`
+
+RESULT -> the control passed 18/18 coherence, measured 651/601 tok/s at
+  2K/36K cold prefill, and returned the exact long-context answer cold
+  and warm in 525.00s/3.53s with 99.93% cache hit. The nominal push arm
+  matched at 657/604 tok/s and 521.07s/3.52s but printed no engagement
+  marker, so the harness correctly rejected it. Source and trace
+  inspection showed sglang 0.5.15 routes the registered
+  `inplace_all_reduce` op through
+  `GroupCoordinator._all_reduce_in_place` directly to
+  `torch.distributed`, bypassing `XpuCommunicator.all_reduce`.
+
+CONFIG -> `sglang/patches/push_ar_xpu.py` gained a version-compatible
+  in-place hook. It reuses the same one-pair rendezvous and scratch,
+  mutates the input pointer as the new API requires, remains eager-only,
+  and falls back to upstream oneCCL below the size gate.
+
+COMMAND ->
+  `PUSH_AR=1 PUSH_AR_MIN_NUMEL=65536 NAME=sglang_w8a8_0515_200k_ar_fixed SERVED=qwen36-27b-w8a8-gptq-mtp-sgl0515-200k-ar-fixed MAXLEN=200000 MAXREQ=1 MAMBA_CACHE=4 MIN_POOL_TOKENS=190128 RUN_COHERENCE=1 RUN_PERF=0 RUN_PREFILL=1 RUN_NEEDLE=1 ./bin/gpu-run bash sglang/qualify_w8a8_0515.sh 2>&1 | tee results/logs/sglang_w8a8_0515_push_ar_200k_fixed_20260728.log`
+
+RESULT -> both ranks logged the new GroupCoordinator patch, completed
+  Level Zero setup/exchange, and printed the exact push engagement
+  marker. Capacity stayed 220,288 physical BF16 KV tokens. The arm
+  passed 18/18 coherence; cold prefill rose to 1,643 tok/s at 2K and
+  1,548 tok/s at 36K, or 2.52x/2.58x. Exact 190,048-token retrieval
+  stayed correct and cold wall fell 525.00s -> 333.73s (1.57x);
+  warm wall was 3.55s with the same 99.93% cache hit. Fatal-log scan
+  was clean and both cards passed health.
+
+VERDICT -> GO for the version-compatible in-place route. The failed
+  nominal arm is a valid negative control proving the API drift; the
+  fixed arm recovers long prefill without quantizing KV or changing
+  capacity/correctness.
+
+### 2026-07-28 - W8A8 shelf integration and conservative 1M gate
+
+CONFIG -> the 0.5.6 W8A8 shelf wrapper gained the push runtime mounts,
+  explicit P2P-off environment, graceful teardown, and a mandatory
+  engagement gate. The production threshold is 1,048,576 elements,
+  which selects 512-token and larger EXTEND tensors but leaves decode
+  and batched MTP verification on oneCCL. Push off/on comparisons used
+  the identical wrapper at context 8,192 after hours of continuous GPU
+  work, so only same-condition deltas are trusted.
+
+COMMAND ->
+  `PUSH_AR=1 PUSH_AR_MIN_NUMEL=1048576 ./bin/gpu-run bash rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh run 2>&1 | tee results/logs/sglang_w8a8_shelf_push_ar_1m_run_20260728.log`
+  and
+  `PUSH_AR=0 ./bin/gpu-run bash rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh run 2>&1 | tee results/logs/sglang_w8a8_shelf_push_ar_off_current_20260728.log`.
+
+RESULT -> both arms were coherent, stable, and card-healthy. Push off/on
+  changed c1 decode 21.39 -> 21.12 t/s (-1.3%) and the 2K-token soak
+  16.25 -> 16.16 t/s (-0.6%), both noise-neutral, while c1 TTFT improved
+  1,725 -> 582 ms (2.96x). At c4, per-stream decode rose 4.48 -> 5.29
+  t/s, aggregate rose 13.85 -> 19.92 t/s (+43.8%), and TTFT improved
+  4,310 -> 2,373 ms (1.82x). Absolute decode was lower than the cooler
+  historical shelf run in both arms; the matched delta isolates push
+  from that session/thermal effect.
+
+CONFIG -> the final sglang 0.5.15 one-request 200K validation used the
+  same 1,048,576-element gate, BF16 KV, `MAXREQ=1 MAMBA_CACHE=4`,
+  physical minimum 190,128, radix caching, and performance plus cold
+  prefill phases.
+
+COMMAND ->
+  `PUSH_AR=1 PUSH_AR_MIN_NUMEL=1048576 NAME=sglang_w8a8_0515_200k_ar_1m SERVED=qwen36-27b-w8a8-gptq-mtp-sgl0515-200k-ar-1m MAXLEN=200000 MAXREQ=1 MAMBA_CACHE=4 MIN_POOL_TOKENS=190128 RUN_COHERENCE=0 RUN_PERF=1 RUN_PREFILL=1 RUN_NEEDLE=0 ./bin/gpu-run bash sglang/qualify_w8a8_0515.sh 2>&1 | tee results/logs/sglang_w8a8_0515_push_ar_200k_1m_perf_20260728.log`
+
+RESULT -> the server advertised the exact identity and context, retained
+  220,288 physical KV tokens, engaged the new in-place push route, and
+  passed its internal coherence check. The 2K-token soak was coherent
+  and stable at 16.01 t/s with a 1.01x first/last-window ratio. Unique
+  cold prefill measured 1,735 tok/s at 2K and 1,555 tok/s at 32K.
+  Fatal-log and engagement gates passed, teardown was graceful, the
+  command exited 0, and both cards passed post-run health.
+
+VERDICT -> GO for `PUSH_AR=1 PUSH_AR_MIN_NUMEL=1048576` as the single
+  W8A8 shelf configuration and the sglang 0.5.15 research default.
+  This is a measured large-prefill and TTFT win with sustained decode,
+  BF16 KV quality, prefix reuse, and coherence preserved.
