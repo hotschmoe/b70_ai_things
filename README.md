@@ -123,8 +123,12 @@ accuracy loss.
 > `MAXREQ=1 MAMBA_CACHE=4` raises that to 220,288 and passes exact 190,048-token retrieval cold/warm
 > (334.58s -> 3.54s, 99.93% prefix hit). The exact 8K, radix-off A/B rejected promotion: 0.5.15
 > versus 0.5.6 was -6.1% native c1, -2.9% native c4 aggregate, -2.7% code c1, -2.5% code c4
-> aggregate, and -13.5% unique cold prefill; both passed 18/18 coherence. Keep 0.5.6 shelved and
-> profile the regression (`sglang/SGLANG_0515_UPGRADE.md`). NVFP4-on-sglang (novel
+> aggregate, and -13.5% unique cold prefill; both passed 18/18 coherence. Stage traces show the
+> INT8/BF16 GEMMs, activation quantization, attention, and copies are flat or faster; the loss is
+> in TP=2 oneCCL/driver handling above the math kernels. Re-enabling two upstream-disabled XPU
+> speculative metadata compile helpers reduced kernel count but made end-to-end performance worse.
+> Keep 0.5.6 shelved and target large-prefill collective transport
+> (`sglang/SGLANG_0515_UPGRADE.md`). NVFP4-on-sglang (novel
 > port; sglang ships the ModelOpt loader + our XPU `nvfp4_gemm` kernel) REACHES model-build on the working
 > 0.5.6 image but the shim mis-routes GDN layers (partition 48 vs NVFP4 block 128) -> needs a bf16-fallthrough
 > fix (`sglang/NVFP4_PORT.md`). Both are one focused session away; the vLLM + zml results above stand.

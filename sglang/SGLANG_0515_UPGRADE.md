@@ -136,6 +136,61 @@ are the canonical `sglang/patches/` files (validated above).
 - `sglang/ab_w8a8_0515_vs_0506.sh`: matched short-context, radix-off A/B with runtime identity,
   coherence, native performance, unique cold prefill, usage-based code throughput, fatal-log,
   cleanup, and card-health gates.
+- `sglang/profile_w8a8_0515_vs_0506.sh`: matched EXTEND and DECODE CPU+XPU traces, shapes,
+  per-rank artifacts, parser output, graceful cleanup, and card-health gates.
+- `sglang/ab_w8a8_0515_spec_compile.sh`: controlled default-off/on test of the two XPU
+  speculative metadata helpers disabled by upstream commit 4fffc6448.
+
+## Regression profile
+
+`sglang/profile_w8a8_0515_vs_0506.sh` profiled one cold approximately 2K-token EXTEND and five
+decode batches per version with radix disabled. Both versions used torch 2.12.0+xpu and the same
+custom W8A8 kernel. The images differ in sglang, transformers, auto-round-lib, and sgl-kernel:
+the 0.5.6 image uses sglang 09ca4fc96 and sgl-kernel 6cd2a07; the 0.5.15 image uses sglang
+0b3bb0 and the descendant sgl-kernel 3bc8de6.
+
+| EXTEND device time | 0.5.6 rank 0/1 | 0.5.15 rank 0/1 |
+| --- | ---: | ---: |
+| total kernels | 961 / 1,276 ms | 1,217 / 1,557 ms |
+| collectives | 299 / 664 ms | 615 / 970 ms |
+| INT8 GEMM | 175 / 158 ms | 165 / 162 ms |
+| BF16 GEMM | 122 / 114 ms | 119 / 114 ms |
+| GDN recurrent | 116 / 106 ms | 76 / 72 ms |
+| copy/reshape | 106 / 98 ms | 103 / 101 ms |
+| activation quant | 36 / 33 ms | 34 / 34 ms |
+| raw FMHA | 11.5 / 11.1 ms | 10.8 / 10.4 ms |
+
+The all-reduce count is unchanged at 264/rank. Normal GPU memcpy is about 0.1 ms/rank, so this is
+not a host/device-copy regression. The newer trace adds `sglang::inplace_all_reduce` and registered
+all-gather CPU annotations around the same oneCCL work, and its XPU driver span grows sharply. The
+math kernels and attention are flat or faster. The matched decode traces likewise have essentially
+identical summed device time across ranks, but 0.5.15 adds 225 device kernels over five batches and
+about 8% CPU-op duration. Therefore the shelf loss is in collective scheduling/driver and eager
+metadata overhead above the XMX kernels, not in the W8A8 GEMM or the newer FMHA implementation.
+
+Traces:
+`/mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260728_064224`.
+Run log:
+`results/logs/sglang_w8a8_0515_vs_0506_profile_retry2_20260728.log`.
+
+## Speculative metadata compile A/B
+
+Upstream commit 4fffc6448, "Speculative decoding support on XPU", changed two decorators to disable
+compile on XPU. `B70_XPU_SPEC_COMPILE=1` in `mtp_tree_xpu.py` is a default-off diagnostic that
+rewraps both helpers. It removed the five extra eager metadata kernels per draft iteration, but
+the controlled A/B rejected it:
+
+| metric | compile off | compile on | delta |
+| --- | ---: | ---: | ---: |
+| native c1 | 24.32 t/s | 24.28 t/s | -0.2% |
+| native c4 aggregate | 35.47 t/s | 33.73 t/s | -4.9% |
+| 2K-token soak | 19.40 t/s | 19.34 t/s | -0.3% |
+| unique cold prefill | 1,868 t/s | 1,820 t/s | -2.6% |
+| code c1 | 25.9 t/s | 25.3 t/s | -2.3% |
+| code c4 aggregate | 91.3 t/s | 89.7 t/s | -1.8% |
+
+Both arms passed 18/18 mixed-load coherence and both cards passed health. Fewer device kernels do
+not repay the Dynamo/runtime overhead on this stack. Keep the override default-off.
 
 ## Shelf promotion verdict
 
@@ -144,7 +199,8 @@ are the canonical `sglang/patches/` files (validated above).
   35.26 versus 36.31 t/s (-2.9%), code c1 24.9 versus 25.6 t/s (-2.7%), code c4 aggregate 89.4
   versus 91.7 t/s (-2.5%), and unique cold prefill 1,719 versus 1,988 t/s (-13.5%).
 - Keep 0.5.6 as the shelf entry. Retain 0.5.15 as the research and one-request 200K path; profile
-  the regression before attempting another promotion.
+  data localizes the regression to collective/runtime handling, but no measured fix has recovered
+  it. Investigate a large-prefill collective transport A/B before attempting another promotion.
 
 ## Qualification commands
 

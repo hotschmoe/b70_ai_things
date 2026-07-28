@@ -263,6 +263,41 @@ def install():
     except Exception as e:
         print(f"[mtp-tree-xpu] eagle_sample greedy-force FAILED: {e}", flush=True)
 
+    # --- 0.5.15 XPU regression (opt-in B70_XPU_SPEC_COMPILE=1): upstream commit 4fffc6448
+    # disabled torch.compile for two speculative metadata helpers on every XPU. The 0.5.6 shelf
+    # compiled these exact helpers successfully on torch 2.12 XPU. A stage-separated trace showed
+    # that disabling _select_top_k_tokens_later decomposes each of nine MTP draft iterations into
+    # five extra device kernels (45 extra kernels per five decode batches). Re-wrap the undecorated
+    # functions with torch.compile. Inert by default and on non-XPU platforms.
+    if os.environ.get("B70_XPU_SPEC_COMPILE") == "1":
+        try:
+            from sglang.srt.speculative import spec_utils as _su
+
+            if getattr(_su, "_is_xpu", False):
+                _su.create_num_accept_tokens_filter = torch.compile(
+                    _su.create_num_accept_tokens_filter, dynamic=True
+                )
+                _su._select_top_k_tokens_later = torch.compile(
+                    _su._select_top_k_tokens_later, dynamic=True
+                )
+
+                # eagle_worker_v2 imports create_num_accept_tokens_filter by value.
+                _ewv2_compile = _sys.modules.get(
+                    "sglang.srt.speculative.eagle_worker_v2"
+                )
+                if _ewv2_compile is not None and hasattr(
+                    _ewv2_compile, "create_num_accept_tokens_filter"
+                ):
+                    _ewv2_compile.create_num_accept_tokens_filter = (
+                        _su.create_num_accept_tokens_filter
+                    )
+                print(
+                    "[mtp-tree-xpu] re-enabled torch.compile for XPU speculative metadata",
+                    flush=True,
+                )
+        except Exception as e:
+            print(f"[mtp-tree-xpu] XPU speculative compile FAILED: {e}", flush=True)
+
     # DEBUG (B70_MTP_DEBUG=1): trace the MHA KV-write shapes to locate the spec-decode 2-vs-75840 mismatch.
     if os.environ.get("B70_MTP_DEBUG") == "1":
         try:

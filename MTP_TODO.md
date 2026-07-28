@@ -1,7 +1,17 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 - **Updated:** 2026-07-28 (sglang W8A8 200K mamba sizing qualified)
+**Created:** 2026-06-20 - **Updated:** 2026-07-28 (sglang 0.5.15 speculative compile A/B closed)
 **Owner:** b70 team
+
+> ### [2026-07-28 SGLANG 0.5.15 SPECULATIVE METADATA COMPILE RESULT]
+> Upstream sglang commit 4fffc6448 disabled `torch.compile` for
+> `create_num_accept_tokens_filter` and `_select_top_k_tokens_later` on XPU. Relative to the 0.5.6
+> shelf, this exposes five extra small device kernels per MTP draft iteration. A default-off
+> `B70_XPU_SPEC_COMPILE=1` override rewrapped both helpers and engaged on both TP ranks, but a
+> controlled 0.5.15 A/B rejected it: both arms passed 18/18 coherence, while compile-on changed
+> native c1 -0.2%, native c4 aggregate -4.9%, soak -0.3%, cold prefill -2.6%, code c1 -2.3%,
+> and code c4 aggregate -1.8%. The reduced kernel count does not repay Dynamo/runtime overhead.
+> Keep the override default-off; this is not the route to recover the 0.5.15 regression.
 
 > ### [2026-07-28 SGLANG W8A8 200K MAMBA MEMORY RESULT]
 > On sglang 0.5.15, auto-sized radix+MTP state used 13 active mamba slots plus 26 INT8 checkpoint

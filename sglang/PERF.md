@@ -423,3 +423,42 @@ under one dual-card lease. Both passed the 18/18 mixed prefill+decode coherence 
 VERDICT: NO-GO for shelf promotion. Keep 0.5.6 as the coherent performance shelf. Retain
 0.5.15 as the current research and one-request 200K path, and profile the regression before
 another promotion attempt.
+
+## sglang 0.5.15 versus 0.5.6 stage-separated profile [2026-07-28]
+
+CONFIG: same 8K radix-off TP=2 W8A8 GPTQ serve as the shelf A/B. The driver profiled one
+approximately 2K-token cold EXTEND and five DECODE batches with CPU+XPU activities and shapes.
+Both arms were coherent and both cards passed health.
+
+| EXTEND device time | 0.5.6 rank 0/1 | 0.5.15 rank 0/1 |
+|---|---:|---:|
+| total | 961 / 1276 ms | 1217 / 1557 ms |
+| collectives | 299 / 664 ms | 615 / 970 ms |
+| INT8 GEMM | 175 / 158 ms | 165 / 162 ms |
+| BF16 GEMM | 122 / 114 ms | 119 / 114 ms |
+| GDN | 116 / 106 ms | 76 / 72 ms |
+| copy/reshape | 106 / 98 ms | 103 / 101 ms |
+| activation quant | 36 / 33 ms | 34 / 34 ms |
+| raw FMHA | 11.5 / 11.1 ms | 10.8 / 10.4 ms |
+
+The all-reduce count stayed 264/rank and ordinary GPU memcpy was only about 0.1 ms. The decode
+sum across ranks was nearly unchanged, but 0.5.15 added 225 small device kernels over five
+batches and about 8% CPU-op duration. VERDICT: the regression is collective/scheduler/driver
+overhead above the math kernels, not INT8-XMX, BF16 GEMM, FMHA, or normal tensor copies.
+
+## sglang 0.5.15 speculative metadata compile A/B [2026-07-28]
+
+CONFIG: upstream commit 4fffc6448 disabled compile for two XPU speculative metadata helpers.
+`B70_XPU_SPEC_COMPILE=1` re-enables both as an opt-in diagnostic. Both arms passed 18/18.
+
+| metric | compile off | compile on | delta |
+|---|---:|---:|---:|
+| native c1 | 24.32 | 24.28 | -0.2% |
+| native c4 aggregate | 35.47 | 33.73 | -4.9% |
+| soak | 19.40 | 19.34 | -0.3% |
+| cold prefill | 1868 | 1820 | -2.6% |
+| code c1 | 25.9 | 25.3 | -2.3% |
+| code c4 aggregate | 91.3 | 89.7 | -1.8% |
+
+VERDICT: NO-GO. The override removes extra metadata kernels but its Dynamo/runtime overhead loses
+end to end. It remains default-off. Next bounded lever is large-prefill collective transport.

@@ -30,6 +30,15 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   The matched 8K, radix-off shelf A/B passed 18/18 coherence on both versions but rejected 0.5.15:
   versus 0.5.6 it was -6.1% native c1, -2.9% native c4 aggregate, -2.7% code c1, -2.5% code c4
   aggregate, and -13.5% unique cold prefill. Keep 0.5.6 shelved; use 0.5.15 for research/200K.
+- **The sglang 0.5.15 regression is collective/runtime-side, not an INT8-XMX or attention regression.**
+  Matched CPU+XPU stage traces show the same 264 prefill all-reduces on each version. Across ranks,
+  their device time rose from 299/664 ms on 0.5.6 to 615/970 ms on 0.5.15, while INT8 GEMM,
+  BF16 GEMM, activation quantization, copies, and FMHA were flat or faster. Ordinary GPU memcpy
+  was only about 0.1 ms, so the movement cost is asynchronous TP collectives rather than host/device
+  tensor copies. Upstream also disabled compile for two XPU speculative metadata helpers; an opt-in
+  recompile removed their extra eager kernels but regressed matched c4 aggregate 4.9%, cold prefill
+  2.6%, and code throughput 1.8-2.3%. Keep the override default-off and target large-prefill
+  collective transport.
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
   does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)

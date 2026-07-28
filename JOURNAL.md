@@ -10243,3 +10243,66 @@ VERDICT -> NO-GO for 0.5.15 shelf promotion: it was coherent but slower in
   every matched performance measure. Keep 0.5.6 as the sglang W8A8 shelf
   entry. Retain 0.5.15 as the research and one-request 200K path, and
   profile the regression before another promotion attempt.
+
+### 2026-07-28 - sglang W8A8 0.5.15 versus 0.5.6 stage-separated profile
+
+CONFIG -> matched 8K radix-off TP=2 W8A8 GPTQ serves, MTP 10/draft 11,
+  Intel XPU attention, Triton GDN, torch 2.12.0+xpu, and the same custom
+  W8A8 kernel. `sglang/profile_w8a8_0515_vs_0506.sh` captured CPU+XPU
+  traces with shapes for one approximately 2K-token cold EXTEND and five
+  DECODE batches on each version. Both cards stayed under one `gpu-run`
+  lease. The 0.5.6 image uses sglang 09ca4fc96 and sgl-kernel 6cd2a07;
+  0.5.15 uses sglang 0b3bb0 and descendant sgl-kernel 3bc8de6.
+
+COMMAND ->
+  `./bin/gpu-run bash sglang/profile_w8a8_0515_vs_0506.sh 2>&1 | tee results/logs/sglang_w8a8_0515_vs_0506_profile_retry2_20260728.log`
+
+RESULT -> EXTEND total device time was 961/1,276 ms across 0.5.6 ranks
+  0/1 versus 1,217/1,557 ms on 0.5.15. The same 264 all-reduces/rank
+  consumed 299/664 ms versus 615/970 ms. In contrast, INT8 GEMM was
+  175/158 versus 165/162 ms, BF16 GEMM 122/114 versus 119/114 ms,
+  GDN 116/106 versus 76/72 ms, copy/reshape 106/98 versus 103/101 ms,
+  activation quant 36/33 versus 34/34 ms, and raw FMHA 11.5/11.1
+  versus 10.8/10.4 ms. Ordinary GPU memcpy was about 0.1 ms/rank.
+
+RESULT -> five DECODE batches summed to nearly the same device time across
+  ranks. The math buckets remained equal, but 0.5.15 added 225 device
+  kernels and about 8% CPU-op duration. Trace diff identified eager
+  max/gather/index/arange/floor-divide metadata where 0.5.6 has compiled
+  regions. Upstream commit 4fffc6448 disabled compile for two speculative
+  metadata helpers on XPU. Both profile arms were coherent, all four traces
+  per arm were parsed, and both cards passed post-run health. Artifacts:
+  `/mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260728_064224`.
+
+VERDICT -> the 0.5.15 regression is not in INT8-XMX GEMM, BF16 GEMM,
+  activation quantization, FMHA, GDN, or normal H2D/D2H copies. It is
+  primarily TP collective/scheduler/driver overhead above the math kernels,
+  with a smaller eager speculative-metadata component. Do not rewrite the
+  W8A8 or attention kernels for this regression. Test the metadata compile
+  hypothesis and large-prefill collective transport independently.
+
+### 2026-07-28 - sglang 0.5.15 XPU speculative metadata compile A/B
+
+CONFIG -> added default-off `B70_XPU_SPEC_COMPILE=1` to rewrap
+  `create_num_accept_tokens_filter` and `_select_top_k_tokens_later` with
+  `torch.compile(dynamic=True)`, reversing only upstream commit 4fffc6448's
+  XPU disable. `sglang/ab_w8a8_0515_spec_compile.sh` ran compile off/on
+  sequentially at 8K, radix off, TP=2, MTP 10/draft 11. Both arms checked
+  engagement, identity, 18-stream coherence, native c1/c4, soak, unique
+  cold prefill, code c1/c4, fatal logs, teardown, and card health.
+
+COMMAND ->
+  `./bin/gpu-run bash sglang/ab_w8a8_0515_spec_compile.sh 2>&1 | tee results/logs/sglang_w8a8_0515_spec_compile_ab_20260728.log`
+
+RESULT -> both arms passed 18/18 coherence and both cards passed health.
+  Compile off measured native c1 24.32, c4 aggregate 35.47, soak 19.40,
+  cold prefill 1,868, code c1 25.9, and code c4 aggregate 91.3 t/s.
+  Compile on engaged in five server processes but measured 24.28 (-0.2%),
+  33.73 (-4.9%), 19.34 (-0.3%), 1,820 (-2.6%), 25.3 (-2.3%), and
+  89.7 (-1.8%) respectively.
+
+VERDICT -> NO-GO. Recompiling the helpers reduces eager metadata kernel
+  count but Dynamo/runtime overhead costs more end to end. Keep
+  `B70_XPU_SPEC_COMPILE=0` by default and retain the switch only as a
+  provenance/debug artifact. The main recoverable 0.5.15 loss remains
+  TP collective/runtime handling.

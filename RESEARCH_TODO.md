@@ -34,8 +34,14 @@
 >    190,048-token retrieval cold/warm in 334.58s/3.54s with 99.93% prefix reuse. The matched 8K,
 >    radix-off A/B rejected shelf promotion: 0.5.15 versus 0.5.6 was -6.1% native c1, -2.9% native
 >    c4 aggregate, -2.7% code c1, -2.5% code c4 aggregate, and -13.5% unique cold prefill; both
->    passed 18/18 coherence. Keep 0.5.6 shelved and profile the regression. llama.cpp remains
->    weight-only and zml remains bf16/no-server, so neither substitutes for true W8A8 today.
+>    passed 18/18 coherence. Stage-separated traces localize the loss above the math kernels:
+>    0.5.15 INT8/BF16 GEMM, attention, quant, and copies were flat or faster, while prefill
+>    oneCCL time rose from 299/664 ms to 615/970 ms across the two ranks. Upstream commit
+>    4fffc6448 also disabled compile on two XPU speculative metadata helpers. Re-enabling it
+>    removed the extra eager metadata kernels but lost 1.8-4.9% in matched throughput, so that
+>    override remains default-off. Keep 0.5.6 shelved; investigate large-prefill collective
+>    transport, not another math-kernel rewrite. llama.cpp remains weight-only and zml remains
+>    bf16/no-server, so neither substitutes for true W8A8 today.
 > 4. **W4A4 later frontier** -- the native int4-XMX datapath is demonstrated, but the naive kernel is
 >    slow and quality still needs rotation/FWHT. Do not displace the robust W8A8/W4A8 work with it.
 

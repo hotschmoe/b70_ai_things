@@ -51,6 +51,7 @@ SERVED="${SERVED:-qwen36-27b-w8a8-gptq-mtp}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
 SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ:-4}"
 MAMBA_CACHE="${MAMBA_CACHE:-}"  # Optional explicit slot cap. extra_buffer+no-overlap needs 4 slots/request.
+SPEC_COMPILE="${SPEC_COMPILE:-0}"  # Opt-in re-enable of two proven XPU MTP metadata torch.compile helpers.
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
@@ -84,15 +85,14 @@ APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
   docker rm -f "$NAME" >/dev/null 2>&1
-  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX maxreq=$MAXREQ mamba=${MAMBA_CACHE:-auto} tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
+  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX maxreq=$MAXREQ mamba=${MAMBA_CACHE:-auto} spec_compile=$SPEC_COMPILE tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
   # RADIX=1 -> cache-on recipe: extra_buffer strategy + int8 mamba checkpoint pool (~2x cached-prefix capacity,
   #            0.6GB from headroom) + page_size=128, KEEP intel_xpu XMX attn (no decode collapse); mount the
   #            un-gate shim + set B70_XPU_MAMBA_EXTRA_BUFFER=1. RADIX=0 -> prod (no cache). Both sweep-gated 2026-07-02.
-  local ATTN=intel_xpu PAGE=64 RADIX_ARG="--disable-radix-cache" CACHE_ARG="" EB_MOUNT=() EB_ENV=(-e B70_XPU_MAMBA_EXTRA_BUFFER=0)
+  local ATTN=intel_xpu PAGE=64 RADIX_ARG="--disable-radix-cache" CACHE_ARG="" EB_ENV=(-e B70_XPU_MAMBA_EXTRA_BUFFER=0)
   if [ "$RADIX" = 1 ]; then
     PAGE=128; RADIX_ARG="--mamba-radix-cache-strategy extra_buffer --enable-int8-mamba-checkpoint"; CACHE_ARG="--enable-cache-report"
-    EB_MOUNT=(-v "$REPO/sglang/patches/mtp_tree_xpu.py:/opt/venv/lib/python3.12/site-packages/mtp_tree_xpu.py:ro")
     EB_ENV=(-e B70_XPU_MAMBA_EXTRA_BUFFER=1)
   fi
   local TOOL_ARG="";   [ "$TOOLCALL" = 1 ]    && TOOL_ARG="--tool-call-parser $TOOLPARSER"
@@ -105,10 +105,11 @@ start(){
     -v "$REPO/models/files:/models:ro" \
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" -v "$KDIR:/work/kernel:ro" \
     -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
+    -v "$REPO/sglang/patches/mtp_tree_xpu.py:/opt/venv/lib/python3.12/site-packages/mtp_tree_xpu.py:ro" \
     -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
-    "${EB_MOUNT[@]}" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
+    -e "B70_XPU_SPEC_COMPILE=$SPEC_COMPILE" \
     "${EB_ENV[@]}" "${THINK_ENV[@]}" \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
       export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
