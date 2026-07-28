@@ -8,7 +8,7 @@
 # All runtime mounts (w8a8_shim, qwen3_coder_detector, mtp_tree_xpu, the built _xpu_C.so) are the same
 # canonical sglang/patches/ files -- validated to still apply against 0.5.15 source.
 # ===========================================================================================
-# qwen36-27b-w8a8-mtp -- W8A8 (int8) + NEXTN MTP, the int8 all-rounder that HANDILY beats bf16/fp8 on
+# qwen36-27b-w8a8-gptq-mtp -- W8A8 (int8) + NEXTN MTP, the int8 all-rounder that HANDILY beats bf16/fp8 on
 # prefill, TTFT, AND decode. Built fused int8 oneDNN ops (int8_gemm_w8a16 decode fp16-act /
 # int8_gemm_w8a8 prefill s8-act) + NEXTN chain-MTP (steps=10) on the grafted W8A8 vision+MTP checkpoint.
 #
@@ -47,9 +47,10 @@ IMG="${IMG:-sglang-xpu:mtp-0515}"
 NAME="${NAME:-sglang_w8a8_mtp_0515}"
 CKPT="${CKPT:-/models/qwen3.6-27b/w8a8-sqgptq}"
 TOK="${TOK:-/models/qwen3.6-27b/bf16}"
-SERVED="${SERVED:-qwen36-27b-w8a8-mtp}"
+SERVED="${SERVED:-qwen36-27b-w8a8-gptq-mtp}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
 SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ:-4}"
+MAMBA_CACHE="${MAMBA_CACHE:-}"  # Optional explicit slot cap. extra_buffer+no-overlap needs 4 slots/request.
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
@@ -83,7 +84,7 @@ APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
   docker rm -f "$NAME" >/dev/null 2>&1
-  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
+  say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX maxreq=$MAXREQ mamba=${MAMBA_CACHE:-auto} tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
   # RADIX=1 -> cache-on recipe: extra_buffer strategy + int8 mamba checkpoint pool (~2x cached-prefix capacity,
   #            0.6GB from headroom) + page_size=128, KEEP intel_xpu XMX attn (no decode collapse); mount the
@@ -97,6 +98,7 @@ start(){
   local TOOL_ARG="";   [ "$TOOLCALL" = 1 ]    && TOOL_ARG="--tool-call-parser $TOOLPARSER"
   local REASON_ARG=""; [ -n "$REASONPARSER" ] && REASON_ARG="--reasoning-parser $REASONPARSER"
   local METRICS_ARG=""; [ "$METRICS" = 1 ]    && METRICS_ARG="--enable-metrics"
+  local MAMBA_ARG=""; [ -n "$MAMBA_CACHE" ]   && MAMBA_ARG="--max-mamba-cache-size $MAMBA_CACHE"
   local THINK_ENV=();  [ -n "$THINKCAP" ]     && THINK_ENV=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
@@ -114,7 +116,7 @@ start(){
       --device xpu --attention-backend $ATTN --linear-attn-backend triton \
       --speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 \
       --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --disable-cuda-graph \
-      --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size $PAGE $RADIX_ARG $CACHE_ARG --skip-server-warmup \
+      --mamba-ssm-dtype float32 --disable-overlap-schedule --page-size $PAGE $RADIX_ARG $CACHE_ARG $MAMBA_ARG --skip-server-warmup \
       $TOOL_ARG $REASON_ARG $METRICS_ARG \
       --tp $TP --context-length $CTX --mem-fraction-static $MEMFRAC --max-running-requests $MAXREQ $APIKEY_ARG \
       --host 0.0.0.0 --port $PORT" >/dev/null

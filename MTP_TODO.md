@@ -1,7 +1,17 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 - **Updated:** 2026-07-28 (NVFP4 TP=2 draft-gather alternatives closed)
+**Created:** 2026-06-20 - **Updated:** 2026-07-28 (sglang W8A8 200K mamba sizing qualified)
 **Owner:** b70 team
+
+> ### [2026-07-28 SGLANG W8A8 200K MAMBA MEMORY RESULT]
+> On sglang 0.5.15, auto-sized radix+MTP state used 13 active mamba slots plus 26 INT8 checkpoint
+> slots: about 4.11 GiB + 0.53 GiB/card. That left only 147,456 BF16 KV tokens and silently reduced
+> max-running requests 4 -> 3, despite advertising context length 200,000. The one-request setting
+> `MAXREQ=1 MAMBA_CACHE=4` right-sizes extra_buffer's four slots/request, shrinks the checkpoint pool
+> to 8 slots, and raises physical BF16 KV capacity to 220,288 tokens at the unchanged 0.90 memory
+> fraction. Exact 190,048-token retrieval passed cold/warm in 334.58s/3.54s, with 189,952 cached
+> tokens and a 99.93% hit rate. Keep BF16 KV for quality. This is a one-request long-context mode,
+> not a concurrency improvement.
 
 > ### [2026-07-28 NVFP4 TP=2 COMMUNICATION RESULT]
 > The qualified vLLM 0.26 NVFP4 TP=2 200K path spends 39.0% representative device time in eager

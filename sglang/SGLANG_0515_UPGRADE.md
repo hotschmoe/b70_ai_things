@@ -5,8 +5,9 @@ Config -> command -> result -> verdict for bumping the sglang XPU serving stack 
 **v0.5.15.post1** (tag confirmed via `git ls-remote`, released 2026-07-14), and re-grafting all
 custom B70/XPU work so the W8A8 Qwen3.6-27B serve can be benched on 0.5.15.
 
-This session was **COMPILE-ONLY** (no GPU lease, no serve/bench). The GPU W8A8 bench is handed to
-the main session (command at the bottom).
+The initial re-graft session was compile-only. The 2026-07-28 GPU campaign below now covers device
+visibility, load, mixed-load coherence, performance, physical KV capacity, and exact long-context
+retrieval with prefix reuse.
 
 ## Images / tags
 
@@ -111,6 +112,8 @@ ckpt, TP=2, NEXTN MTP steps=10, `--disable-cuda-graph`, page/mamba-extra-buffer,
 - `NAME=sglang_w8a8_mtp_0515`
 - `RADIX=1` by default (prefix/radix caching ON -- user request; extra_buffer strategy + int8 mamba
   checkpoint pool + page 128, keeping the intel_xpu XMX attention backend).
+- optional `MAMBA_CACHE=<slots>` maps to `--max-mamba-cache-size`. The default stays auto-sized.
+  For one-request 200K BF16-KV mode, `MAXREQ=1 MAMBA_CACHE=4` is the measured configuration.
 
 It is deliberately NOT a shelf sibling (shelf rule: exactly one best config per backend/model/quant;
 no promotion until GPU-bench-gated faster-or-equal AND coherent). `bash -n` clean. All runtime mounts
@@ -124,31 +127,35 @@ are the canonical `sglang/patches/` files (validated above).
 - Re-derived memory_pool.py (0.5.15 upstream + 3-site device fix) -> `sglang-xpu-mtp-0515/`.
 - 0.5.15 layer Dockerfiles + `build_layers_0515.sh` -> `sglang-xpu:{woq,mtp}-0515`.
 - `sglang/serve_w8a8_0515.sh` (caching on), `bash -n` clean.
+- `sglang/qualify_w8a8_0515.sh`: identity, physical token-pool, coherence, native performance,
+  unique-prompt prefill, exact long-context, cache metrics, fatal-log, cleanup, and card-health gates.
+- GPU runtime: torch 2.12.0+xpu, sglang 0.5.15.post1, and both XPU devices confirmed.
+- Coherence: 18/18 mixed prefill+decode at 131K and again at 200K with auto-sized pools.
+- One-request 200K BF16 KV: `MAXREQ=1 MAMBA_CACHE=4` allocates 220,288 tokens and passes exact
+  190,048-token retrieval cold/warm in 334.58s/3.54s, with 189,952 cached tokens and 99.93% hit rate.
 
-## OPEN (needs the GPU session)
-- **GPU gate** (main session, holds the lease): serve on 0.5.15 and confirm coherence + bench. Nothing
-  in 0.5.15 was GPU-validated here.
+## OPEN
 
-## EXACT command for the main session (coordinated GPU W8A8 bench)
+- Shelf promotion remains blocked on an exact short-context, radix-off 0.5.15 versus 0.5.6 performance
+  A/B. The 200K auto-pool candidate measured native random c1 23.64 t/s versus the 0.5.6 short-context
+  reference 25.2 t/s, so it is not a valid faster-or-equal promotion result.
+- Keep the 0.5.6 shelf entry unchanged until that controlled A/B passes.
 
-Serve (holds both cards), then bench IN~=2048/OUT=128 with caching on, then stop:
+## Qualification commands
+
+Full 200K qualification under one dual-card lease:
 ```
 cd /mnt/vm_8tb/github/b70_ai_things
-
-# 1) serve W8A8 27B on the 0.5.15 image, caching ON (RADIX=1 is the default in this script)
-PORT=30000 ./bin/gpu-run bash sglang/serve_w8a8_0515.sh start
-
-# 2) bench against the sglang OpenAI endpoint (backend-agnostic HTTP harnesses)
-#    served-model-name defaults to qwen36-27b-w8a8-mtp
-python3 vllm/nvfp4/bench_2048.py http://localhost:30000/v1 qwen36-27b-w8a8-mtp 4 128   # IN~2048/OUT128, c1+c4
-python3 vllm/nvfp4/bench_code.py http://localhost:30000/v1 qwen36-27b-w8a8-mtp 1 256 3 # real-code decode t/s
-
-# 3) stop + release
-bash sglang/serve_w8a8_0515.sh stop
+MAXREQ=1 MAMBA_CACHE=4 MIN_POOL_TOKENS=190128 \
+  ./bin/gpu-run bash sglang/qualify_w8a8_0515.sh
 ```
-Reference (0.5.6 shelf, warm TP=2): decode ~25.2 t/s | PP ~4344 tok/s | TTFT ~471 ms. A 0.5.15 run
-at faster-or-equal AND coherent is the gate to promote `sglang-xpu:mtp-0515` + `serve_w8a8_0515.sh`
-onto the shelf.
+
+Focused capacity/retrieval rerun:
+```
+MAXREQ=1 MAMBA_CACHE=4 MIN_POOL_TOKENS=190128 \
+  RUN_COHERENCE=0 RUN_PERF=0 RUN_PREFILL=0 \
+  ./bin/gpu-run bash sglang/qualify_w8a8_0515.sh
+```
 
 ## BLOCKER ROOT CAUSE CORRECTED (2026-07-28): WOQ layer upgraded torch -> no XPU
 
@@ -174,5 +181,6 @@ RESULT (2026-07-28) -> lightweight rebuild passed:
 - corrected `sglang-xpu:mtp-0515` image id `c99cf2b7a8e2`
 - both final layers report `torch 2.12.0+xpu` and sglang `0.5.15.post1`
 
-VERDICT -> packaging blocker fixed. GPU device visibility, W8A8 load, coherence, and performance
-remain the promotion gates.
+VERDICT -> packaging blocker fixed and GPU-qualified. The 0.5.15 image is a valid research serve and
+the BF16-KV one-request 200K path is proven. Shelf promotion still waits on the controlled
+short-context, radix-off performance A/B.

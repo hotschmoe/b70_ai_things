@@ -9,6 +9,7 @@ import json, os, time, urllib.request
 HOST = os.environ.get("PROBE_HOST", "http://127.0.0.1:8079")
 NEEDLE_DEPTH = int(os.environ.get("NEEDLE_DEPTH", "0"))  # approximate tokens; 0 disables
 NEEDLE_MIN_TOKENS = int(os.environ.get("NEEDLE_MIN_TOKENS", "0"))
+NEEDLE_ONLY = os.environ.get("NEEDLE_ONLY", "0") == "1"
 KEY = os.environ.get("KEY", "")  # optional API key (Authorization: Bearer) for key-enforced serves
 
 
@@ -40,19 +41,21 @@ def main():
     m = mid()
     print("served:", m)
     checks = []
-    # 1. capital of France
-    t = gen(m, "Question: What is the capital of France?\nAnswer:", 12)
-    ok = "paris" in t.lower(); checks.append(ok)
-    print(f"[{'PASS' if ok else 'FAIL'}] capital-of-France -> {t.strip()[:60]!r}")
-    # 2. arithmetic with reasoning
-    t = gen(m, "What is 17+26? Think step by step, then give the final number.", 120)
-    ok = "43" in t; checks.append(ok)
-    print(f"[{'PASS' if ok else 'FAIL'}] 17+26=43 -> ...{t.strip()[-70:]!r}")
-    # 3. short factual
-    t = gen(m, "The chemical symbol for gold is", 6)
-    ok = "au" in t.lower(); checks.append(ok)
-    print(f"[{'PASS' if ok else 'FAIL'}] gold=Au -> {t.strip()[:30]!r}")
-    # 4. needle in haystack
+    if not NEEDLE_ONLY:
+        # 1. capital of France
+        t = gen(m, "Question: What is the capital of France?\nAnswer:", 12)
+        ok = "paris" in t.lower(); checks.append(ok)
+        print(f"[{'PASS' if ok else 'FAIL'}] capital-of-France -> {t.strip()[:60]!r}")
+        # 2. arithmetic with reasoning
+        t = gen(m, "What is 17+26? Think step by step, then give the final number.", 120)
+        ok = "43" in t; checks.append(ok)
+        print(f"[{'PASS' if ok else 'FAIL'}] 17+26=43 -> ...{t.strip()[-70:]!r}")
+        # 3. short factual
+        t = gen(m, "The chemical symbol for gold is", 6)
+        ok = "au" in t.lower(); checks.append(ok)
+        print(f"[{'PASS' if ok else 'FAIL'}] gold=Au -> {t.strip()[:30]!r}")
+    # Needle in haystack. NEEDLE_ONLY avoids short completion budgets that can
+    # be consumed by visible reasoning on reasoning-parser servers.
     if NEEDLE_DEPTH > 0:
         secret = "The launch code for project Bluefinch is 7391-ZULU."
         filler_unit = ("In the archives of the northern library, scholars catalogued "

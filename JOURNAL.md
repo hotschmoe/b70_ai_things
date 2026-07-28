@@ -10127,3 +10127,80 @@ RESULT -> `sglang-xpu-woq-0515/Dockerfile` now installs the known
 VERDICT -> packaging blocker fixed without a base/kernel rebuild. GO to a
   leased GPU visibility, W8A8 load, coherence, and performance gate. Do not
   promote the 0.5.15 image or change the shelf before those measurements.
+
+## 2026-07-28 -- sglang 0.5.15 W8A8 GPU gate and BF16-KV 200K mode
+
+GOAL -> validate the corrected sglang 0.5.15 XPU image on real GPUs, compare
+  its W8A8 serve behavior with the 0.5.6 shelf, and make one near-200K request
+  fit without lowering KV precision.
+
+CONFIG -> `sglang-xpu:mtp-0515`, torch 2.12.0+xpu, sglang 0.5.15.post1,
+  Qwen3.6-27B W8A8 GPTQ compressed-tensors, TP=2, fused oneDNN W8A16 decode
+  plus W8A8 prefill, NEXTN MTP steps=10/draft=11, eager graph mode,
+  intel_xpu attention, triton GDN, radix extra_buffer, INT8 mamba checkpoints,
+  BF16 KV, memory fraction 0.90, and a method-explicit served id. All GPU work
+  held one dual-card `gpu-run` lease. The vLLM DP daily driver was paused,
+  gracefully stopped, and restored after every run.
+
+COMMAND ->
+  `CTX=131072 RADIX=1 ./bin/gpu-run bash sglang/serve_w8a8_0515.sh start`
+  followed by the 18-stream mixed prefill/decode gate, usage-based code c1/c4,
+  and a repeated 12K cache A/B.
+
+RESULT -> runtime reported both XPU devices and the exact torch/sglang
+  versions. The 131K serve passed 18/18 mixed-load coherence. Usage-based code
+  decode was 25.7 t/s c1 and 71.9 aggregate c4. The 12K repeated prompt reused
+  10,240/11,904 tokens and improved 7.415s -> 1.705s (4.35x), with an 86.0%
+  cache hit rate. The generic streaming client reported about 5 t/s because
+  sglang batches multiple generated tokens per stream chunk; that decode value
+  is rejected.
+
+CONFIG -> first 200K attempt kept auto mamba sizing and max-running-requests 4.
+  The server advertised max_model_len 200,000, but logs showed 13 active mamba
+  slots, 26 INT8 checkpoint slots, physical BF16 KV capacity 147,456, and an
+  automatic request-cap reduction 4 -> 3.
+
+COMMAND ->
+  `./bin/gpu-run bash sglang/qualify_w8a8_0515.sh`
+
+RESULT -> the auto-sized 200K run again passed 18/18 mixed-load coherence.
+  Native random c1 was 23.64 t/s, c4 was 12.27 t/s/stream and 37.38 aggregate,
+  and a 2,000-token single-stream soak was stable at 19.32 t/s (first/last
+  19.41/18.94, 1.02x). Unique-prompt cold prefill was 1,955 tok/s at 2,271
+  tokens and 1,575 tok/s at 35,892 tokens. The exact 190,048-token request was
+  correctly rejected because its input exceeded the real 147,450-token limit.
+
+CONFIG -> source inspection showed extra_buffer with overlap disabled needs
+  four mamba slots per active request. The one-request long-context retry used
+  `MAXREQ=1 MAMBA_CACHE=4`; BF16 KV and memory fraction 0.90 stayed unchanged.
+  The active mamba pool fell 13 -> 4 slots, its intermediate state fell
+  3.09 -> 1.55 GiB, and the INT8 checkpoint pool fell 26 -> 8 slots
+  (0.53 -> 0.18 GiB).
+
+COMMAND ->
+  `MAXREQ=1 MAMBA_CACHE=4 MIN_POOL_TOKENS=190128 RUN_COHERENCE=0 RUN_PERF=0 RUN_PREFILL=0 ./bin/gpu-run bash sglang/qualify_w8a8_0515.sh`
+
+RESULT -> physical BF16 KV capacity rose to 220,288 tokens with 1.56 GiB free
+  on the tighter rank. Exact 190,048-token retrieval returned `7391-ZULU`
+  cold and warm in 334.58s and 3.54s. The warm request reused 189,952 tokens;
+  metrics reported a 99.93% hit rate. `vllm/nvfp4/kv_gate.py` gained a
+  default-off `NEEDLE_ONLY=1` mode because sglang's visible reasoning consumed
+  the tiny budgets of unrelated short completion checks. The full qualifier
+  passed, fatal-log scan stayed clean, and both cards passed post-run health.
+
+RESULT -> `sglang/qualify_w8a8_0515.sh` now enforces model identity,
+  advertised length, physical `max_total_num_tokens`, runtime versions,
+  optional coherence/performance/prefill phases, exact cold/warm long-context
+  retrieval, cache counters, fatal-log scanning, cleanup, and card health.
+  `sglang/serve_w8a8_0515.sh` exposes the default-off `MAMBA_CACHE` slot cap.
+
+RESULT -> final production state is restored: direct ports 18091/18092 and
+  proxy 18080 all serve `hotschmoe-dd` at 100,352 tokens, watchdog PID 3528 is
+  running, both GPU leases are free, and both daily containers are healthy.
+
+VERDICT -> GO for a sglang 0.5.15 W8A8 research serve and for a BF16-KV,
+  one-request 200K mode using `MAXREQ=1 MAMBA_CACHE=4`. NO-GO for shelf
+  promotion yet: the 200K native c1 result is below the old short-context
+  25.2 t/s reference. Run an exact 0.5.15 versus 0.5.6 short-context,
+  radix-off A/B next; keep the 0.5.6 shelf unchanged until faster-or-equal
+  and coherent are both measured.

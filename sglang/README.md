@@ -107,8 +107,10 @@ Measured 2026-06-27: all clean (incl. post-sustained re-confirm). TTFT ~0.19 s, 
 (30.8 t/s graph) -- the trade is correctness for throughput.
 
 ## Key gotchas
-- `--disable-radix-cache` is REQUIRED on XPU: the "auto" mamba radix cache picks an `extra_buffer`
-  strategy that asserts CUDA/MUSA/NPU and refuses to start (`extra_buffer needs CUDA/MUSA/NPU (FLA)`).
+- Stock XPU still rejects the auto-selected mamba `extra_buffer` radix strategy. The W8A8 MTP path
+  now has a measured exception: `patches/mtp_tree_xpu.py` un-gates the XPU-capable operations, and
+  page 128 plus INT8 mamba checkpoints passed 190,048-token cold/warm reuse on 0.5.15. Other recipes
+  must keep `--disable-radix-cache` until they mount or bake the same gate.
 - int4 AutoRound: Marlin GEMM is CUDA-gated on XPU, BUT we wired `auto_round_kernel.woqgemm` (auto-round-lib)
   into sglang via `sglang/patches/woq_shim.py` (image `sglang-xpu:woq`) -> int4 serves single-card, coherent,
   vision-retaining (see serve_dp2.sh + PERF.md). FP8 is open-bugged for this model (sglang #23687 / #19603).

@@ -22,6 +22,13 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   eliminated the draft gather, but cut c1 to 30.1 and produced 9/64 intermittent rank-1 mismatch
   records despite byte-exact full-head hashes. All local-argmax/replicated-head paths remain
   default-off; the shelf is unchanged.
+- **sglang 0.5.15 W8A8 reaches real 200K with BF16 KV when speculative state is right-sized.**
+  Auto sizing spent about 4.64 GiB/card on 13 active mamba plus 26 INT8 checkpoint slots, leaving
+  only 147,456 physical KV tokens behind an advertised 200,000 limit. `MAXREQ=1 MAMBA_CACHE=4`
+  raises the BF16 KV pool to 220,288 tokens at the same 0.90 memory fraction. Exact 190,048-token
+  retrieval passed cold/warm in 334.58s/3.54s with 189,952 cached tokens and 99.93% cache hit.
+  The 0.5.15 image passed 18/18 mixed-load coherence, but is not shelved yet because the 200K
+  native random c1 result was 23.64 t/s versus the old short-context 25.2 reference.
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
   does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)

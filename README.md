@@ -108,14 +108,22 @@ accuracy loss.
 > |---|---|---|---|---|---|---|---|---|---|---|
 > | **vLLM 0.25.1** | NVFP4 | 24 | 2 | 2181 | 290 ms | **48.3** (best 50.1) | 16.7 | 105 | 342k tok | **57% hit (now works)** |
 > | **vLLM 0.25.1** | W8A8 | 35 | 2 | **2598** | 514 ms | 38.5 (best 40.7) | 13.8 | 93 | 264k tok | works |
-> | sglang 0.5.15 | W8A8 | 35 | 2 | _blocked: torch-pin rebuild_ | | | | | | |
+> | sglang 0.5.15 candidate | W8A8 | 35 | 2 | 1955 | 479 ms | 25.7 | 23.6 | 71.9 | 220k tok [sgl-200k] | 99.93% hit |
 > | sglang 0.5.15/0.5.6 | NVFP4 | 24 | 1 | _blocked: GDN routing fix_ | | | | | | |
 > | zml (bf16 wildcard) | bf16 | 54 | 2 | n/a | n/a | 11.7 (decode) | 11.7 | n/a | n/a | n/a (CLI) |
 >
-> **sglang 0.5.15 status (2026-07-16):** the 0.5.15.post1 XPU images built (`sglang-xpu:{bmg,woq,mtp}-0515`)
-> but the W8A8 serve is BLOCKED -- sglang 0.5.15's `pip install` pulls `torchcodec` which upgrades torch to
-> `2.13.0+cu130` (CUDA), clobbering the `2.12.0+xpu` it pins, so `torch.xpu` is unavailable; the recipe needs
-> a constraints-pin on torch + a bounded rebuild (`sglang/SGLANG_0515_UPGRADE.md`). NVFP4-on-sglang (novel
+> [sgl-200k] Physical pool for the measured one-request `MAXREQ=1 MAMBA_CACHE=4` mode. Cold PP,
+> warm TTFT, and native random c1 are from the 200K run; usage-based code c1/c4 are from the 131K
+> coherence run. This is a candidate row, not a shelf-to-shelf performance claim.
+>
+> **sglang 0.5.15 status (updated 2026-07-28):** the blocker was not base-image `torchcodec`. The WOQ
+> layer's unconstrained `auto-round-lib` install replaced XPU torch; pinning
+> `auto-round-lib==0.14.2` with `--no-deps` preserves torch 2.12.0+xpu. The rebuilt W8A8 image loads on both cards and passes 18/18
+> mixed-load coherence. Auto-sized 200K exposed only 147,456 physical BF16 KV tokens; one-request
+> `MAXREQ=1 MAMBA_CACHE=4` raises that to 220,288 and passes exact 190,048-token retrieval cold/warm
+> (334.58s -> 3.54s, 99.93% prefix hit). It remains a candidate, not the shelf: native random c1
+> at 200K was 23.64 t/s versus the old short-context 25.2 reference, so an exact short-context
+> radix-off A/B is next (`sglang/SGLANG_0515_UPGRADE.md`). NVFP4-on-sglang (novel
 > port; sglang ships the ModelOpt loader + our XPU `nvfp4_gemm` kernel) REACHES model-build on the working
 > 0.5.6 image but the shim mis-routes GDN layers (partition 48 vs NVFP4 block 128) -> needs a bf16-fallthrough
 > fix (`sglang/NVFP4_PORT.md`). Both are one focused session away; the vLLM + zml results above stand.
