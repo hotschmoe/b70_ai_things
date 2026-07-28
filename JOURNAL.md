@@ -10204,3 +10204,42 @@ VERDICT -> GO for a sglang 0.5.15 W8A8 research serve and for a BF16-KV,
   25.2 t/s reference. Run an exact 0.5.15 versus 0.5.6 short-context,
   radix-off A/B next; keep the 0.5.6 shelf unchanged until faster-or-equal
   and coherent are both measured.
+
+### 2026-07-28 - sglang 0.5.15 versus 0.5.6 W8A8 shelf A/B
+
+CONFIG -> matched Qwen3.6-27B W8A8 GPTQ TP=2 serves used context 8,192,
+  radix cache off, max-running-requests 4, MTP 10/draft 11, memory fraction
+  0.90, eager mode, Intel XPU attention, Triton GDN, and the same W8A8
+  shim/custom kernel. Served ids encoded `sgl056` and `sgl0515`. The driver
+  checked runtime identity, 18-stream coherence, native random performance,
+  unique cold prefill, usage-based code throughput, fatal logs, teardown,
+  and both cards under one dual-card lease.
+
+COMMAND ->
+  `./bin/gpu-run bash sglang/ab_w8a8_0515_vs_0506.sh 2>&1 | tee results/logs/sglang_w8a8_0515_vs_0506_ab_20260728.log`
+
+RESULT -> 0.5.6 reported sglang 0.5.6.post3.dev6841+g09ca4fc96 and
+  torch 2.12.0+xpu, passed 18/18 coherence, and measured native c1
+  25.60 t/s, native c4 9.45 t/s/stream and 36.31 aggregate, c4 TTFT
+  1,385.25 ms, code c1 25.6 t/s, code c4 22.9 t/s/stream and 91.7
+  aggregate, unique cold prefill average/best 1,988/2,192 t/s, and a
+  stable 2K-token soak at 19.48 t/s.
+
+RESULT -> 0.5.15 reported sglang 0.5.15.post1 and torch 2.12.0+xpu,
+  passed 18/18 coherence, and measured native c1 24.04 t/s, native c4
+  9.11 t/s/stream and 35.26 aggregate, c4 TTFT 1,403.97 ms, code c1
+  24.9 t/s, code c4 22.4 t/s/stream and 89.4 aggregate, unique cold
+  prefill average/best 1,719/1,827 t/s, and a stable 2K-token soak at
+  19.32 t/s. Relative to 0.5.6, the deltas were -6.1% native c1, -2.9%
+  native c4 aggregate, -2.7% code c1, -2.5% code c4 aggregate, -13.5%
+  unique cold prefill, and -0.8% soak. Both cards passed post-run health.
+
+RESULT -> production was restored after the controlled cycle. Direct ports
+  18091/18092 and proxy 18080 all serve `hotschmoe-dd` at 100,352 tokens,
+  watchdog PID 3528 is in `Ss` state, both daily containers are healthy,
+  and both GPU leases are free.
+
+VERDICT -> NO-GO for 0.5.15 shelf promotion: it was coherent but slower in
+  every matched performance measure. Keep 0.5.6 as the sglang W8A8 shelf
+  entry. Retain 0.5.15 as the research and one-request 200K path, and
+  profile the regression before another promotion attempt.

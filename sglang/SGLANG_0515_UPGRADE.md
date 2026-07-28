@@ -133,13 +133,18 @@ are the canonical `sglang/patches/` files (validated above).
 - Coherence: 18/18 mixed prefill+decode at 131K and again at 200K with auto-sized pools.
 - One-request 200K BF16 KV: `MAXREQ=1 MAMBA_CACHE=4` allocates 220,288 tokens and passes exact
   190,048-token retrieval cold/warm in 334.58s/3.54s, with 189,952 cached tokens and 99.93% hit rate.
+- `sglang/ab_w8a8_0515_vs_0506.sh`: matched short-context, radix-off A/B with runtime identity,
+  coherence, native performance, unique cold prefill, usage-based code throughput, fatal-log,
+  cleanup, and card-health gates.
 
-## OPEN
+## Shelf promotion verdict
 
-- Shelf promotion remains blocked on an exact short-context, radix-off 0.5.15 versus 0.5.6 performance
-  A/B. The 200K auto-pool candidate measured native random c1 23.64 t/s versus the 0.5.6 short-context
-  reference 25.2 t/s, so it is not a valid faster-or-equal promotion result.
-- Keep the 0.5.6 shelf entry unchanged until that controlled A/B passes.
+- NO-GO. The controlled 8K, radix-off A/B passed 18/18 coherence on both versions, but 0.5.15 was
+  slower in every matched measure: native c1 24.04 versus 25.60 t/s (-6.1%), native c4 aggregate
+  35.26 versus 36.31 t/s (-2.9%), code c1 24.9 versus 25.6 t/s (-2.7%), code c4 aggregate 89.4
+  versus 91.7 t/s (-2.5%), and unique cold prefill 1,719 versus 1,988 t/s (-13.5%).
+- Keep 0.5.6 as the shelf entry. Retain 0.5.15 as the research and one-request 200K path; profile
+  the regression before attempting another promotion.
 
 ## Qualification commands
 

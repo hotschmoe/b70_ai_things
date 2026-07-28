@@ -402,3 +402,24 @@ on triton-xpu; torch._int_mm is already the best int8 kernel. Implication: W8A8 
 fixed +2-launch/layer DECODE penalty (launch-bound ceiling) that can't be removed. NET: W8A8 = prefill 1.24-1.61x +
 better accuracy, but decode likely SLOWER than int4. int4 woqgemm stays the decode-optimal daily driver; W8A8 wins
 for prefill-heavy / accuracy / high-concurrency. REAL end-to-end tradeoff needs a TP=2 W8A8 serve (card 0 reboot).
+
+## sglang 0.5.15 versus 0.5.6 W8A8 shelf A/B [2026-07-28]
+
+CONFIG: Qwen3.6-27B W8A8 GPTQ, TP=2, context 8,192, radix cache off, max-running-requests 4,
+MTP 10/draft 11, memory fraction 0.90, eager mode, Intel XPU attention, Triton GDN, and the
+same W8A8 shim/custom kernel. `sglang/ab_w8a8_0515_vs_0506.sh` ran both versions sequentially
+under one dual-card lease. Both passed the 18/18 mixed prefill+decode coherence gate.
+
+| metric | 0.5.6 shelf | 0.5.15 candidate | delta |
+|---|---:|---:|---:|
+| native random c1 | 25.60 t/s | 24.04 t/s | -6.1% |
+| native random c4 aggregate | 36.31 t/s | 35.26 t/s | -2.9% |
+| native c4 TTFT | 1,385.25 ms | 1,403.97 ms | +1.4% |
+| code c1 | 25.6 t/s | 24.9 t/s | -2.7% |
+| code c4 aggregate | 91.7 t/s | 89.4 t/s | -2.5% |
+| unique cold prefill, average | 1,988 t/s | 1,719 t/s | -13.5% |
+| 2K-token soak | 19.48 t/s | 19.32 t/s | -0.8% |
+
+VERDICT: NO-GO for shelf promotion. Keep 0.5.6 as the coherent performance shelf. Retain
+0.5.15 as the current research and one-request 200K path, and profile the regression before
+another promotion attempt.

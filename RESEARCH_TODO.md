@@ -31,9 +31,10 @@
 >    cards and passed 18/18 mixed-load coherence at 131K and 200K. Auto-sized 200K advertised the
 >    requested length but physically allocated only 147,456 BF16 KV tokens. Right-sizing speculative
 >    state with `MAXREQ=1 MAMBA_CACHE=4` raised the physical pool to 220,288 and passed exact
->    190,048-token retrieval cold/warm in 334.58s/3.54s with 99.93% prefix reuse. Do not promote the
->    0.5.15 shelf yet: its 200K native random c1 was 23.64 t/s versus the old short-context 25.2
->    reference. Run an exact 0.5.15/0.5.6 short-context, radix-off A/B next. llama.cpp remains
+>    190,048-token retrieval cold/warm in 334.58s/3.54s with 99.93% prefix reuse. The matched 8K,
+>    radix-off A/B rejected shelf promotion: 0.5.15 versus 0.5.6 was -6.1% native c1, -2.9% native
+>    c4 aggregate, -2.7% code c1, -2.5% code c4 aggregate, and -13.5% unique cold prefill; both
+>    passed 18/18 coherence. Keep 0.5.6 shelved and profile the regression. llama.cpp remains
 >    weight-only and zml remains bf16/no-server, so neither substitutes for true W8A8 today.
 > 4. **W4A4 later frontier** -- the native int4-XMX datapath is demonstrated, but the naive kernel is
 >    slow and quality still needs rotation/FWHT. Do not displace the robust W8A8/W4A8 work with it.
