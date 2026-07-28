@@ -9888,3 +9888,69 @@ VERDICT -> NO-GO for the shelf. The compact indexed-gather algorithm is token-ex
   XPU argmax plus gather costs more than the removed collective saves for interactive decode:
   c1 is 25% below the 48.9 baseline while c4 is only 1% higher. Preserve the shadow gate for a
   future fused shard top-1 kernel; keep the qualified TP=2 shelf unchanged.
+
+## 2026-07-28 -- fused XPU shard top-1: correct c4 win, no universal shelf win
+
+GOAL -> replace the correct-but-slow stock `argmax` plus indexed-gather composition with one
+  native SYCL reduction, then measure whether removing the MTP full-vocabulary collective improves
+  the exact qualified TP=2 200K server.
+
+### Build and microbenchmark
+
+CONFIG -> one work-group per logits row, 256 work-items, one bf16/fp16/fp32 shard read, fp32 max
+  value plus deterministic lowest int64 index output. Source lives in `kernels/`; integration adds
+  the op to the existing torch-2.12 NVFP4/GDN extension. Build output uses a separate source tree,
+  container name, and output directory, leaving the production artifact untouched.
+
+COMMAND ->
+  `SRC=/mnt/vm_8tb/b70/vllm-xpu-kernels-nvfp4-top1-proto OUT=/mnt/vm_8tb/b70/nvfp4_top1_proto BUILD_CONTAINER=nvfp4_top1_proto_build bash vllm/nvfp4/build_nvfp4_f8scale_gdn.sh`
+  `./bin/gpu-run --card 1 bash vllm/nvfp4/run_ceiling.sh vllm/nvfp4/bench_shard_top1.py --iters 500 --warmup 50 --rounds 7`
+
+RESULT -> build passed. Prototype `_xpu_C.abi3.so` SHA256:
+  `129acaecdc6069847e0dc6d246ff32c987c3dddfda77f714a2f3251773c19bcc`.
+  At width 124,160, fused latency for M=1/2/4/8 was
+  0.09069/0.09145/0.09150/0.09210 ms versus
+  0.11611/0.11561/0.11675/0.11735 ms for argmax+gather: 1.26-1.28x faster.
+  All fused values and indices matched the reference.
+
+VERDICT -> GO to bounded server shadow validation.
+
+### Pure fused local reduction
+
+CONFIG -> exact qualified vLLM 0.26.0 NVFP4 TP=2 200K server, MTP5,
+  `LOCALARGMAX=1`, `LOCALARGMAX_FUSED_FIX=1`, prototype extension, graph fake
+  registration, and 64 full-vocabulary shadow calls per rank. Needle and soak were disabled pending
+  a throughput win; identity, KV, 18-stream, 36-stream, code, prefill, MTP, and shadow gates ran.
+
+COMMAND ->
+  `FUSED_SO=/mnt/vm_8tb/b70/nvfp4_top1_proto/_xpu_C.abi3.so GDN_LIB=/mnt/vm_8tb/b70/nvfp4_top1_proto/libgdn_attn_kernels_xe_2.so B70_EXTRA_ENV="B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1 B70_NVFP4_F8_SCALE_M_MAX=8 LOCALARGMAX_FUSED_FIX=1 LOCALARGMAX_VERIFY=1 LOCALARGMAX_VERIFY_CALLS=64" LOCALARGMAX=1 LOCALARGMAX_SHADOW_GATE=1 RUN_STRESS=1 STRESS_REPS=1 RUN_NEEDLE=0 RUN_SOAK=0 ./bin/gpu-run bash vllm/nvfp4/tp2_longctx_qualify.sh`
+
+RESULT -> the first 36-stream run reported 35/36 because the gate classified 12 spaces of valid
+  Markdown indentation as repeated-character corruption. The gate's regex now ignores whitespace
+  runs while still detecting repeated visible tokens such as `!!!!!!!!!!`; focused classifier tests
+  passed. This was a gate false positive, not model garbage.
+
+RESULT -> the fresh corrected-gate run passed identity, 32 KV injections, 18/18, 36/36, and all
+  128 shadow comparisons with zero global/CPU index/value mismatches. Code c1 was 32.5 average /
+  35.3 best t/s; c4 was 115.7 aggregate. Prefill was 2,172 tok/s at 2K and 1,981 tok/s at 32K.
+  MTP acceptance length/rate was 3.210/0.442.
+
+VERDICT -> coherent and a real high-concurrency win: c4 is 12.3% above the 103.0 shelf baseline.
+  It is not a general shelf win because c1 is 33.5% below the 48.9 baseline.
+
+### M=1 full-gather fallback
+
+CONFIG -> same prototype, but `LOCALARGMAX_FUSED_MIN_ROWS=2`: use the incumbent full-vocabulary
+  path for one active row and fused compact top-1 for two or more. This bounded decision run used
+  18-stream coherence plus code/prefill/MTP/shadow gates; 36-stream stress remained deferred.
+
+RESULT -> 18/18 and all 128 shadow records passed. c1 recovered to 48.6 t/s, but c4 fell to
+  93.4 aggregate as the active batch changed shape. Prefill was 2,231/1,980 tok/s at 2K/32K.
+  MTP acceptance length/rate was 3.018/0.404.
+
+RESULT -> both cards passed `bin/xpu-health` after every completed run. Final direct ports and proxy
+  are healthy, serve `hotschmoe-dd` at 100,352 tokens, the watchdog is running, and leases are free.
+
+VERDICT -> NO-GO for shelf promotion and no long soak. Preserve the fused op as a default-off
+  high-concurrency research branch. Profile pure fused decode next to distinguish compact-pair
+  collective latency from top-1 kernel cost; do not dynamically switch reductions by active M.

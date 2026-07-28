@@ -19,6 +19,11 @@ serving backend** because the prebuilt `.so` is ABI-locked to the torch it was b
   (`/mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8`); `int8_gemm_kernel.patch` predates
   them and still needs regenerating to capture them (follow-up; see FUSEDQ_NOTES
   "Files changed" for the exact diff).
+- `xpu_shard_top1.cpp` + `xpu_shard_top1_integration.patch` -- fused per-row
+  bf16 logits-shard top-1 value/index reduction for the vLLM MTP local-argmax
+  path. It is token-exact and 1.26-1.28x faster than argmax+indexed-gather at
+  M=1/2/4/8, but the end-to-end path trades c1 for c4 throughput. It is wired
+  only into the default-off NVFP4 research artifact today, not sglang.
 - (int4 gemm ops `int4_gemm_w4a8` / `int4_gemm_w4a16` are upstream in `vllm-xpu-kernels`
   itself, gated by `XPU_SPECIFIC_KERNELS_ENABLED=ON`; no repo patch needed.)
 

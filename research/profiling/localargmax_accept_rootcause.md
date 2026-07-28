@@ -14,10 +14,11 @@ so the collapse is a runtime numeric discrepancy in the ONE op that only the
 local-argmax path uses: `torch.max(dim=-1)` (`aten::max.dim`) over the wide
 per-shard vocab, at
 `vllm/model_executor/layers/logits_processor.py:136`.
-The diagnosis is confirmed, but the two stock-op repairs are NO-GO for the shelf.
+The diagnosis is confirmed, but no tested repair is a universal shelf win.
 The token-exact argmax+indexed-gather form is materially slower at c1; the
-argmax+amax form also exposed value differences. Keep every local-argmax switch
-default-off and move the next attempt into a fused shard top-1 XPU kernel.
+argmax+amax form exposed value differences. A custom fused shard top-1 op
+improves c4 but regresses c1, and a dynamic M=1 fallback reverses that tradeoff.
+Keep every local-argmax switch default-off.
 
 ## 2026-07-28 validation
 
@@ -47,6 +48,33 @@ from argmax+indexed-gather, but composing stock XPU reductions costs more than
 the full-vocabulary oneCCL path saves at c1. Do not run a shelf A/B or long
 soak for either variant. Preserve the verifier as a gate for a future fused
 top-1 kernel.
+
+## 2026-07-28 fused XPU top-1 result
+
+CONFIG -> `torch.ops._xpu_C.xpu_shard_top1`, one fused bf16 shard read and
+work-group value/index reduction, built into a separate torch-2.12/GDN runtime
+artifact. The op returns fp32 values plus int64 local indices. The same compact
+pair collective and 64-call-per-rank shadow verifier remain downstream.
+
+RESULT -> at width 124,160 and M=1/2/4/8, the fused op measured
+0.0907/0.0915/0.0915/0.0921 ms. It was 1.26-1.28x faster than stock
+argmax+indexed-gather and matched its value/index output exactly.
+
+RESULT -> pure fused local reduction passed 18/18 and 36/36 coherence plus
+128 zero-mismatch shadow records. It retained 1,981 tok/s 32K prefill and
+raised c4 aggregate from 103.0 to 115.7 t/s. It cut c1 from 48.9 to
+32.5 t/s and measured MTP acceptance length/rate 3.210/0.442.
+
+RESULT -> `LOCALARGMAX_FUSED_MIN_ROWS=2` used the full-vocabulary path for
+M=1 and fused local reduction above it. This restored c1 to 48.6 t/s,
+but c4 fell to 93.4 as active batches changed shape. MTP acceptance
+length/rate was 3.018/0.404. The policy is not a best-of-both result.
+
+VERDICT -> keep the fused op and verifier as default-off research artifacts,
+but do not change the shelf. Profile pure fused decode to determine whether
+the remaining c1 cost is the compact oneCCL pair collective or surrounding
+local-argmax scheduling. It is eligible only as an explicit high-concurrency
+mode unless one static policy beats both c1 and c4 shelf results.
 
 ## 5-line root cause
 

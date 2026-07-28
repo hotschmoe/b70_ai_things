@@ -25,7 +25,9 @@ LONG = ("Read the following and then answer. " + ("The quick brown fox jumps ove
 SHORT = "Explain in three sentences why the sky is blue."
 PROMPTS = [LONG, SHORT, LONG, SHORT, LONG, SHORT, LONG, SHORT]
 
-GARBAGE_RE = re.compile(r"(.)\1{9,}")   # any char repeated 10+ times in a row
+# Whitespace runs are valid in indented Markdown/code. The corruption signature
+# is a repeated visible token such as "!!!!!!!!!!", not formatting whitespace.
+GARBAGE_RE = re.compile(r"(\S)\1{9,}")
 
 def classify(txt):
     if not txt or txt.startswith("<ERROR"):

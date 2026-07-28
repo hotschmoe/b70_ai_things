@@ -275,6 +275,13 @@ try:
         ):
             return A.new_empty((A.shape[0], B.shape[1]), dtype=A.dtype)
 
+        def _fake_xpu_shard_top1(logits):
+            output_shape = logits.shape[:-1]
+            return (
+                logits.new_empty(output_shape, dtype=torch.float32),
+                logits.new_empty(output_shape, dtype=torch.int64),
+            )
+
         try:
             register_fake("_xpu_C::nvfp4_gemm_w4a16", _fake_nvfp4_gemm)
             print(
@@ -304,6 +311,20 @@ try:
                 print(
                     "[nvfp4-shim] "
                     f"register_fake(nvfp4_gemm_w4a16_f8scale) skipped: {e}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+        if hasattr(torch.ops._xpu_C, "xpu_shard_top1"):
+            try:
+                register_fake("_xpu_C::xpu_shard_top1", _fake_xpu_shard_top1)
+                print(
+                    "[nvfp4-shim] registered fake for _xpu_C::xpu_shard_top1",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            except (RuntimeError, ValueError) as e:
+                print(
+                    f"[nvfp4-shim] register_fake(xpu_shard_top1) skipped: {e}",
                     file=sys.stderr,
                     flush=True,
                 )
@@ -878,11 +899,14 @@ if _TB:
 # FIX A: derive both the per-shard value + index from argmax+gather instead of max(dim=-1). FIX B:
 # LOCALARGMAX_AMAX_FIX=1 uses independent argmax+amax reductions and a direct TP=2 compare/where. Both remain
 # default OFF after the 2026-07-28 shadow A/B: FIX A was token-exact but cut c1 48.9 -> 36.5 t/s; FIX B exposed
-# sporadic max-vs-amax value differences and its verifier-contaminated run cut c1 to 25.7 t/s. The next viable
-# form is a fused shard top-1 kernel, not these compositions of stock XPU reductions.
+# sporadic max-vs-amax value differences and its verifier-contaminated run cut c1 to 25.7 t/s. The custom
+# LOCALARGMAX_FUSED_FIX is also default OFF: it improved c4 103.0 -> 115.7 aggregate but cut c1 to 32.5.
+# LOCALARGMAX_FUSED_MIN_ROWS=2 preserved c1 but regressed c4 to 93.4 as the active batch changed shape.
 _LAR_ARGMAX_FIX = os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1"
 _LAR_AMAX_FIX = os.environ.get("LOCALARGMAX_AMAX_FIX", "0") == "1"
-if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX:
+_LAR_FUSED_FIX = os.environ.get("LOCALARGMAX_FUSED_FIX", "0") == "1"
+_LAR_FUSED_MIN_ROWS = int(os.environ.get("LOCALARGMAX_FUSED_MIN_ROWS", "1"))
+if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX or _LAR_FUSED_FIX:
     try:
         import torch
         from vllm.distributed import (
@@ -914,11 +938,23 @@ if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX:
             num_pad = lm_head.shard_indices.num_org_vocab_padding
             if num_pad > 0:
                 logits[..., -num_pad:] = -float("inf")
-            # FIX: argmax (correct on XPU) instead of max(dim=-1) (wrong value/idx on wide bf16 shard).
-            local_max_indices = logits.argmax(dim=-1)
-            if _LAR_AMAX_FIX:
-                local_max_vals = logits.amax(dim=-1)
+            if _LAR_FUSED_FIX and logits.shape[0] < _LAR_FUSED_MIN_ROWS:
+                # Small collectives are latency-bound on this TP=2 stack. The
+                # incumbent full-vocab path remains faster for a single row,
+                # while fused local top-1 wins once multiple rows amortize the
+                # compact pair collective.
+                full_logits = tensor_model_parallel_all_gather(logits, dim=-1)
+                return full_logits[..., : self.org_vocab_size].argmax(dim=-1)
+            # FIX: avoid max(dim=-1), whose wide-bf16 XPU value is wrong.
+            if _LAR_FUSED_FIX:
+                local_max_vals, local_max_indices = (
+                    torch.ops._xpu_C.xpu_shard_top1(logits)
+                )
             else:
+                local_max_indices = logits.argmax(dim=-1)
+            if _LAR_AMAX_FIX and not _LAR_FUSED_FIX:
+                local_max_vals = logits.amax(dim=-1)
+            elif not _LAR_FUSED_FIX:
                 local_max_vals = logits.gather(
                     -1, local_max_indices.unsqueeze(-1)
                 ).squeeze(-1)
@@ -1006,8 +1042,12 @@ if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX:
 
         LogitsProcessor.get_top_tokens = _get_top_tokens_argmax
         print(
-            "[nvfp4-shim] (12) get_top_tokens -> argmax+%s (XPU max.dim fix)"
-            % ("amax/direct-tp2" if _LAR_AMAX_FIX else "gather"),
+            "[nvfp4-shim] (12) get_top_tokens -> %s (XPU max.dim fix)"
+            % (
+                "fused-top1/min-rows-%d" % _LAR_FUSED_MIN_ROWS
+                if _LAR_FUSED_FIX
+                else ("argmax+amax/direct-tp2" if _LAR_AMAX_FIX else "argmax+gather")
+            ),
             file=sys.stderr,
             flush=True,
         )

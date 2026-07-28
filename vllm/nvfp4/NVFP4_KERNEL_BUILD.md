@@ -117,3 +117,34 @@ Build without modifying the production artifact:
 Output is `/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/`, including the ABI-matched
 GDN sidecar. The production shelf selects this directory explicitly; the older
 `nvfp4_fused_kernel_gdn` artifact remains available for rollback.
+
+## Fused shard top-1 research op (2026-07-28)
+
+`torch.ops._xpu_C.xpu_shard_top1(logits)` performs one fused per-row reduction
+over a bf16/fp16/fp32 vocabulary shard and returns `(value_fp32, index_int64)`.
+It avoids the two stock XPU kernels used by argmax plus indexed gather.
+
+Sources:
+
+- `kernels/xpu_shard_top1.cpp`
+- `kernels/xpu_shard_top1_integration.patch`
+- `vllm/nvfp4/bench_shard_top1.py`
+
+Build a separate artifact without overwriting the shelf binary:
+
+    SRC=/mnt/vm_8tb/b70/vllm-xpu-kernels-nvfp4-top1-proto \
+    OUT=/mnt/vm_8tb/b70/nvfp4_top1_proto \
+    BUILD_CONTAINER=nvfp4_top1_proto_build \
+      bash vllm/nvfp4/build_nvfp4_f8scale_gdn.sh
+
+The measured prototype SHA256 is
+`129acaecdc6069847e0dc6d246ff32c987c3dddfda77f714a2f3251773c19bcc`.
+At a real TP=2 shard width of 124,160, M=1/2/4/8 latency was
+0.0907/0.0915/0.0915/0.0921 ms, 1.26-1.28x faster than
+argmax+indexed-gather with exact output.
+
+End to end, `LOCALARGMAX_FUSED_FIX=1` passed the shadow and concurrency gates
+and improved c4 aggregate 103.0 -> 115.7 t/s, but regressed c1
+48.9 -> 32.5 t/s. `LOCALARGMAX_FUSED_MIN_ROWS=2` restored c1 to 48.6 but
+regressed c4 to 93.4. Both flags remain default-off and the production
+artifact/shelf remain unchanged.

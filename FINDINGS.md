@@ -6,14 +6,15 @@ skip the dead-ends. Living doc — see [archive/RESULTS.md](archive/RESULTS.md) 
 tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow.
 
 ## TL;DR
-- **Current 27B result (2026-07-27):** NVFP4 is the fastest coherent local path we have measured for
+- **Current 27B result (2026-07-28):** NVFP4 is the fastest coherent local path we have measured for
   this workload. The daily driver is two vLLM 0.25.1 single-card replicas at 100,352 tokens, each at
   64.6 code tok/s with calibrated fp8 KV and working prefix reuse. A vLLM 0.26.0 TP=2 shelf mode serves
   one 200,000-token request and passed exact 190,048-token retrieval plus a 52K-token concurrent soak.
   Its representative decode trace is 41.2% collectives, 36.0% GEMM, 9.7% GDN, and 6.3% attention;
   the eager oneCCL full-vocab MTP gather alone is 39.0%. Stock XPU local-argmax compositions do not
-  convert that profile opportunity into a c1 win: the token-exact argmax+gather form measured
-  36.5 t/s versus the 48.9 shelf baseline. A fused shard top-1 kernel is the remaining form to test.
+  convert that profile opportunity into a universal win. The custom fused top-1 op is token-exact
+  and raised c4 aggregate from 103.0 to 115.7 t/s, but cut c1 from 48.9 to 32.5. A dynamic M=1
+  fallback restored c1 to 48.6 but cut c4 to 93.4. All local-argmax paths remain default-off.
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
   does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)

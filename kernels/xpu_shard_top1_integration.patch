@@ -1,0 +1,28 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -604,6 +604,7 @@ if(XPU_SPECIFIC_KERNELS_ENABLED)
+       "csrc/xpu/sycl/multimodal_rope.cpp"
+       "csrc/xpu/sycl/apply_rotary_emb.cpp"
+       "csrc/xpu/sycl/dynamic_per_token_int8_quant.cpp"
++      "csrc/xpu/sycl/xpu_shard_top1.cpp"
+       "csrc/xpu/rand/exponential.cpp"
+       "csrc/xpu/utils.cpp")
+   if(MOE_KERNELS_ENABLED)
+diff --git a/csrc/xpu/ops.h b/csrc/xpu/ops.h
+--- a/csrc/xpu/ops.h
++++ b/csrc/xpu/ops.h
+@@ -90,1 +90,4 @@ dynamic_per_token_int8_quant(
+     int64_t bits);
++
++std::tuple<torch::Tensor, torch::Tensor> xpu_shard_top1(
++    const torch::Tensor& logits);
+diff --git a/csrc/xpu/torch_bindings.cpp b/csrc/xpu/torch_bindings.cpp
+--- a/csrc/xpu/torch_bindings.cpp
++++ b/csrc/xpu/torch_bindings.cpp
+@@ -64,1 +64,5 @@ TORCH_LIBRARY_EXPAND(TORCH_EXTENSION_NAME, xpu_ops) {
+       &dynamic_per_token_int8_quant);
++
++  xpu_ops.def(
++      "xpu_shard_top1(Tensor logits) -> (Tensor values, Tensor indices)");
++  xpu_ops.impl("xpu_shard_top1", torch::kXPU, &xpu_shard_top1);

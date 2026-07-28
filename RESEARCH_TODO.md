@@ -1,6 +1,6 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (NVFP4 local-argmax stock ops rejected)
+**Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (NVFP4 fused top-1 measured)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
 > ### [CAMPAIGN 2026-07-27] -- active ordering
@@ -11,10 +11,12 @@
 > 52K-token concurrent soak all passed. Active tracks, in order:
 > 1. **NVFP4 TP=2 decode communication** -- the v0.26 trace reconfirms the target: representative
 >    rank device time is 41.2% collectives, including 39.0% eager oneCCL from the MTP full-vocab
->    gather. Two stock-op local reductions are now rejected: argmax+indexed-gather was token-exact
->    over 128 shadow records but cut c1 48.9 -> 36.5 t/s; argmax+amax exposed sporadic value
->    differences and was slower. Prototype a fused shard top-1 XPU kernel before revisiting the
->    compact pair collective. Keep all local-argmax switches default-off.
+>    gather. The fused XPU shard top-1 op is now correct and 1.28x faster than argmax+gather in
+>    isolation. End to end, pure fused local reduction improved c4 103.0 -> 115.7 aggregate but cut
+>    c1 48.9 -> 32.5; an M=1 full-gather fallback restored c1 to 48.6 but regressed c4 to 93.4 as
+>    active batch shapes switched. Keep all local-argmax switches default-off. Profile the pure
+>    fused path next to separate compact-pair collective latency from top-1 cost; retain it only as
+>    an explicit high-concurrency mode unless one static policy beats both shelf gates.
 > 2. **W8A8/W4A8 compressed-tensors paths** -- retain W8A8 as the preferred quality/INT8-XMX
 >    research format and keep the proven small-M W8A16 route. Compare any new 27B serve against the
 >    qualified NVFP4 200K path, including KV quality and long-context retrieval.
