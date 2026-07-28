@@ -135,6 +135,31 @@ if [ "${LOCALARGMAX_SHADOW_GATE:-0}" = 1 ]; then
   }
 fi
 
+if [ "${REPLICATED_HEAD_SHADOW_GATE:-0}" = 1 ]; then
+  SERVER_LOG="$(docker logs "$NAME" 2>&1)"
+  READY_LINES="$(rg -c '\[replicated-head\] ready' <<<"$SERVER_LOG" || true)"
+  SHADOW_LINES="$(rg -c '\[replicated-head-shadow\]' <<<"$SERVER_LOG" || true)"
+  GLOBAL_BAD="$(rg -c 'global_mismatch=[1-9][0-9]*/' \
+    <<<"$(rg '\[replicated-head-shadow\]' <<<"$SERVER_LOG" || true)" || true)"
+  READY_LINES="${READY_LINES:-0}"
+  SHADOW_LINES="${SHADOW_LINES:-0}"
+  GLOBAL_BAD="${GLOBAL_BAD:-0}"
+  echo "REPLICATED-HEAD-SHADOW -> ready=$READY_LINES lines=$SHADOW_LINES global_bad=$GLOBAL_BAD"
+  [ "$READY_LINES" -ge 2 ] || {
+    echo "RESULT -> FAIL: replicated head was not initialized on both TP ranks"
+    exit 1
+  }
+  [ "$SHADOW_LINES" -ge "${REPLICATED_HEAD_SHADOW_MIN:-64}" ] || {
+    echo "RESULT -> FAIL: insufficient replicated-head shadow comparisons"
+    exit 1
+  }
+  [ "$GLOBAL_BAD" = 0 ] || {
+    echo "RESULT -> FAIL: replicated-head shadow mismatch"
+    rg '\[replicated-head(-shadow)?\]' <<<"$SERVER_LOG" | tail -120
+    exit 1
+  }
+fi
+
 if [ "${RUN_NEEDLE:-1}" = 1 ]; then
   for pass in cold warm; do
     echo "NEEDLE -> $pass"

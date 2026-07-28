@@ -124,8 +124,16 @@ MTPTOK="${MTPTOK:-}"
 # c1 fell from 48.9 to 36.5 t/s. A fused XPU top-1 op then raised c4 103.0 -> 115.7 aggregate but cut
 # c1 to 32.5; a dynamic M=1 fallback preserved c1 but cut c4 to 93.4. Fused MTP3 reached only
 # c1 37.2/c4 103.0, and fused MTP4 emitted visible ! garbage in 1/18 streams. Keep this research
-# switch OFF on the shelf. See research/profiling/localargmax_accept_rootcause.md.
+# switch OFF on the shelf. LOCALARGMAX_REPLICATED_HEAD=1 (passed through B70_EXTRA_ENV) is a
+# separate default-OFF prototype: it uses 341 MiB extra/rank to replicate the packed drafter head
+# and removes the per-draft collective. It still needs LOCALARGMAX=1 to route drafting through
+# get_top_tokens. See research/profiling/localargmax_accept_rootcause.md.
 LOCALARGMAX="${LOCALARGMAX:-0}"
+if [[ "${B70_EXTRA_ENV:-}" == *"LOCALARGMAX_REPLICATED_HEAD=1"* ]] && \
+   [ "$LOCALARGMAX" != 1 ]; then
+  echo "[guard] LOCALARGMAX_REPLICATED_HEAD=1 requires LOCALARGMAX=1" >&2
+  exit 1
+fi
 SPEC_ARGS=( )
 if [ -n "$MTPTOK" ]; then
   _LAR=$([ "$LOCALARGMAX" = 1 ] && echo ',"use_local_argmax_reduction":true' || echo '')

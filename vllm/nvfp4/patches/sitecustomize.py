@@ -902,14 +902,32 @@ if _TB:
 # sporadic max-vs-amax value differences and its verifier-contaminated run cut c1 to 25.7 t/s. The custom
 # LOCALARGMAX_FUSED_FIX is also default OFF: it improved c4 103.0 -> 115.7 aggregate but cut c1 to 32.5.
 # LOCALARGMAX_FUSED_MIN_ROWS=2 preserved c1 but regressed c4 to 93.4 as the active batch changed shape.
+# LOCALARGMAX_REPLICATED_HEAD=1 is the next default-OFF research path. It gathers the target/drafter's
+# packed vocabulary head ONCE, keeps the full 682 MiB FP4+E4M3 head on each TP rank (341 MiB extra/rank),
+# and computes the same full-vocabulary draft logits locally. This removes the per-draft collective
+# entirely at the cost of one extra local half-head GEMM. It requires the native-E4M3 decode op.
 _LAR_ARGMAX_FIX = os.environ.get("LOCALARGMAX_ARGMAX_FIX", "0") == "1"
 _LAR_AMAX_FIX = os.environ.get("LOCALARGMAX_AMAX_FIX", "0") == "1"
 _LAR_FUSED_FIX = os.environ.get("LOCALARGMAX_FUSED_FIX", "0") == "1"
 _LAR_FUSED_MIN_ROWS = int(os.environ.get("LOCALARGMAX_FUSED_MIN_ROWS", "1"))
-if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX or _LAR_FUSED_FIX:
+_LAR_REPLICATED_HEAD = os.environ.get("LOCALARGMAX_REPLICATED_HEAD", "0") == "1"
+if _LAR_REPLICATED_HEAD and (
+    _LAR_ARGMAX_FIX or _LAR_AMAX_FIX or _LAR_FUSED_FIX
+):
+    raise RuntimeError(
+        "LOCALARGMAX_REPLICATED_HEAD is mutually exclusive with the shard-top1 fixes"
+    )
+if (
+    _LAR_ARGMAX_FIX
+    or _LAR_AMAX_FIX
+    or _LAR_FUSED_FIX
+    or _LAR_REPLICATED_HEAD
+):
     try:
         import torch
+        import torch.distributed as dist
         from vllm.distributed import (
+            get_tp_group,
             get_tensor_model_parallel_world_size,
             tensor_model_parallel_all_gather,
         )
@@ -919,7 +937,206 @@ if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX or _LAR_FUSED_FIX:
         _LAR_VERIFY_CALLS = int(os.environ.get("LOCALARGMAX_VERIFY_CALLS", "64"))
         _lar_n = [0]
 
+        def _replicated_head_gather_dim0(local: torch.Tensor) -> torch.Tensor:
+            """One eager concat all-gather without the capture-safe padded AR."""
+            tp_size = get_tensor_model_parallel_world_size()
+            local = local.contiguous()
+            if tp_size == 1:
+                return local
+            out = torch.empty(
+                (tp_size * local.shape[0],) + tuple(local.shape[1:]),
+                dtype=local.dtype,
+                device=local.device,
+            )
+            dist.all_gather_into_tensor(
+                out,
+                local,
+                group=get_tp_group().device_group,
+            )
+            return out
+
+        def _ensure_replicated_head(lm_head) -> None:
+            if getattr(lm_head, "_b70_replicated_head_ready", False):
+                return
+            if _F8_SCALE_M_MAX <= 0:
+                raise RuntimeError(
+                    "LOCALARGMAX_REPLICATED_HEAD needs "
+                    "B70_NVFP4_F8_SCALE_M_MAX > 0"
+                )
+            if not hasattr(torch.ops._xpu_C, "nvfp4_gemm_w4a16_f8scale"):
+                raise RuntimeError(
+                    "LOCALARGMAX_REPLICATED_HEAD needs "
+                    "_xpu_C::nvfp4_gemm_w4a16_f8scale"
+                )
+            missing = [
+                name
+                for name in ("weight", "_wscale_f8_nt", "_wglobal", "_gs")
+                if not hasattr(lm_head, name)
+            ]
+            if missing:
+                raise RuntimeError(
+                    "replicated head missing processed NVFP4 fields: "
+                    + ",".join(missing)
+                )
+            is_capturing = getattr(torch.xpu, "is_current_stream_capturing", None)
+            if is_capturing is not None and is_capturing():
+                raise RuntimeError(
+                    "replicated head must be initialized outside XPU graph capture"
+                )
+
+            local_weight = lm_head.weight.data
+            if local_weight.dtype != torch.uint8 or local_weight.dim() != 2:
+                raise RuntimeError(
+                    "replicated head expected packed uint8 [N,K/2] weight, got "
+                    f"{local_weight.dtype} {tuple(local_weight.shape)}"
+                )
+            full_weight = _replicated_head_gather_dim0(local_weight)
+
+            # The kernel keeps native E4M3 scales as [K/16,N]. Transpose to
+            # [N,K/16], gather vocab rows, and communicate their raw bytes so
+            # oneCCL does not need native float8 datatype support.
+            local_scale_nt = lm_head._wscale_f8_nt
+            local_scale_rows = local_scale_nt.t().contiguous()
+            local_scale_bytes = local_scale_rows.view(torch.uint8)
+            full_scale_rows_bytes = _replicated_head_gather_dim0(local_scale_bytes)
+            full_scale_rows = full_scale_rows_bytes.view(local_scale_rows.dtype)
+            full_scale_nt = full_scale_rows.t().contiguous()
+
+            tp_size = get_tensor_model_parallel_world_size()
+            expected_vocab = tp_size * local_weight.shape[0]
+            if full_weight.shape != (
+                expected_vocab,
+                local_weight.shape[1],
+            ):
+                raise RuntimeError(
+                    "replicated packed-head gather returned bad shape "
+                    f"{tuple(full_weight.shape)}"
+                )
+            if full_scale_nt.shape != (
+                local_scale_nt.shape[0],
+                expected_vocab,
+            ):
+                raise RuntimeError(
+                    "replicated scale gather returned bad shape "
+                    f"{tuple(full_scale_nt.shape)}"
+                )
+
+            # Plain tensor attributes intentionally keep the one-time gathered
+            # storage alive without registering duplicate checkpoint parameters.
+            lm_head._b70_replicated_weight = full_weight
+            lm_head._b70_replicated_scale_f8_nt = full_scale_nt
+            lm_head._b70_replicated_head_ready = True
+            extra_bytes = (
+                full_weight.numel() * full_weight.element_size()
+                + full_scale_nt.numel() * full_scale_nt.element_size()
+                - local_weight.numel() * local_weight.element_size()
+                - local_scale_nt.numel() * local_scale_nt.element_size()
+            )
+            print(
+                "[replicated-head] ready weight=%s scale=%s extra_mib=%.3f"
+                % (
+                    tuple(full_weight.shape),
+                    tuple(full_scale_nt.shape),
+                    extra_bytes / (1024.0 * 1024.0),
+                ),
+                file=sys.stderr,
+                flush=True,
+            )
+
+        def _postprocess_head_logits(processor, logits: torch.Tensor) -> torch.Tensor:
+            if processor.soft_cap is not None:
+                logits = (
+                    torch.tanh(logits / processor.soft_cap) * processor.soft_cap
+                )
+            if processor.scale != 1.0:
+                logits = logits * processor.scale
+            return logits
+
+        def _full_gather_top_tokens(
+            processor,
+            lm_head,
+            hidden_states,
+            embedding_bias=None,
+        ):
+            if hasattr(processor, "_apply_head"):
+                logits = processor._apply_head(
+                    lm_head, hidden_states, embedding_bias
+                )
+            else:
+                logits = lm_head.quant_method.apply(
+                    lm_head, hidden_states, bias=embedding_bias
+                )
+            logits = _postprocess_head_logits(processor, logits)
+            num_pad = lm_head.shard_indices.num_org_vocab_padding
+            if num_pad > 0:
+                logits[..., -num_pad:] = -float("inf")
+            full_logits = tensor_model_parallel_all_gather(logits, dim=-1)
+            return full_logits[..., : processor.org_vocab_size].argmax(dim=-1)
+
+        def _get_top_tokens_replicated(
+            self,
+            lm_head,
+            hidden_states,
+            embedding_bias=None,
+        ):
+            if self.scale <= 0.0 and self.scale != 1.0:
+                raise ValueError(
+                    "replicated head needs positive logit scale"
+                )
+            if embedding_bias is not None:
+                raise RuntimeError(
+                    "replicated head prototype does not support lm_head bias"
+                )
+            _ensure_replicated_head(lm_head)
+            x2 = hidden_states.reshape(-1, hidden_states.shape[-1]).to(
+                torch.bfloat16
+            )
+            if x2.shape[0] > _F8_SCALE_M_MAX:
+                # MAXSEQS=8 keeps normal MTP decode on the replicated path.
+                # Preserve correctness for an unexpected larger batch.
+                return _full_gather_top_tokens(
+                    self, lm_head, hidden_states, embedding_bias
+                )
+            full_weight = lm_head._b70_replicated_weight
+            logits = torch.ops._xpu_C.nvfp4_gemm_w4a16_f8scale(
+                x2,
+                full_weight.t(),
+                None,
+                lm_head._b70_replicated_scale_f8_nt,
+                lm_head._wglobal,
+                lm_head._gs,
+            )
+            logits = logits.reshape(
+                *hidden_states.shape[:-1], full_weight.shape[0]
+            )
+            logits = _postprocess_head_logits(self, logits)
+            top_tokens = logits[..., : self.org_vocab_size].argmax(dim=-1)
+
+            if _LAR_VERIFY:
+                _lar_n[0] += 1
+                if _lar_n[0] <= _LAR_VERIFY_CALLS:
+                    ref_tokens = _full_gather_top_tokens(
+                        self, lm_head, hidden_states, embedding_bias
+                    )
+                    global_mis = int(
+                        (top_tokens != ref_tokens).sum().item()
+                    )
+                    print(
+                        "[replicated-head-shadow] call=%d global_mismatch=%d/%d"
+                        % (_lar_n[0], global_mis, top_tokens.numel()),
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    # Do not allow an early prototype mismatch to cascade
+                    # through autoregressive draft generation.
+                    return ref_tokens
+            return top_tokens
+
         def _get_top_tokens_argmax(self, lm_head, hidden_states, embedding_bias=None):
+            if _LAR_REPLICATED_HEAD:
+                return _get_top_tokens_replicated(
+                    self, lm_head, hidden_states, embedding_bias
+                )
             if self.scale <= 0.0 and self.scale != 1.0:
                 raise ValueError("local argmax reduction needs positive logit scale")
             tp_size = get_tensor_model_parallel_world_size()
@@ -1044,9 +1261,17 @@ if _LAR_ARGMAX_FIX or _LAR_AMAX_FIX or _LAR_FUSED_FIX:
         print(
             "[nvfp4-shim] (12) get_top_tokens -> %s (XPU max.dim fix)"
             % (
-                "fused-top1/min-rows-%d" % _LAR_FUSED_MIN_ROWS
-                if _LAR_FUSED_FIX
-                else ("argmax+amax/direct-tp2" if _LAR_AMAX_FIX else "argmax+gather")
+                "replicated-drafter-head"
+                if _LAR_REPLICATED_HEAD
+                else (
+                    "fused-top1/min-rows-%d" % _LAR_FUSED_MIN_ROWS
+                    if _LAR_FUSED_FIX
+                    else (
+                        "argmax+amax/direct-tp2"
+                        if _LAR_AMAX_FIX
+                        else "argmax+gather"
+                    )
+                )
             ),
             file=sys.stderr,
             flush=True,
