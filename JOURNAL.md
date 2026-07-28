@@ -10002,3 +10002,43 @@ VERDICT -> the top-1 kernel and compact collective device work are not
   be replaced with argmax alone. Keep the shelf unchanged and run the
   next bounded fused A/B at MTP3/4 to reduce compact call count without
   dynamic switching by active batch size.
+
+### Fused local top-1 MTP-depth sweep
+
+CONFIG -> same exact vLLM 0.26.0 TP=2 200K server and prototype fused
+  top-1 extension, with `LOCALARGMAX=1`, 64 shadow calls per rank,
+  one 36-stream stress repetition, and `MTPTOK=3` then `MTPTOK=4`.
+  Needle and soak remained disabled because neither arm earned them.
+  Served IDs encoded each depth and local-top1 mode.
+
+COMMAND ->
+  `for spec in 3 4; do MTPTOK="$spec" FUSED_SO=/mnt/vm_8tb/b70/nvfp4_top1_proto/_xpu_C.abi3.so B70_EXTRA_ENV="... LOCALARGMAX_FUSED_FIX=1 LOCALARGMAX_VERIFY=1 LOCALARGMAX_VERIFY_CALLS=64" LOCALARGMAX=1 LOCALARGMAX_SHADOW_GATE=1 RUN_NEEDLE=0 RUN_SOAK=0 ./bin/gpu-run bash vllm/nvfp4/tp2_longctx_qualify.sh; done`
+
+RESULT -> MTP3 passed exact identity, 32 KV injections, 18/18 and
+  36/36 coherence, and all 128 shadow records with zero global/CPU
+  mismatches. Code c1 was 37.2 average/39.9 best t/s and c4 was
+  103.0 aggregate. Prefill was 2,250 t/s at 2K and 1,973 at 32K.
+  MTP acceptance length/rate was 2.790/0.597. This improved fused-MTP5
+  c1 32.5 -> 37.2, but removed its c4 115.7 advantage and remained
+  24% below the 48.9 shelf c1.
+
+RESULT -> MTP4 passed exact identity and 32 KV injections, but failed
+  the first mixed-load gate: 17/18 coherent and one stream emitted a
+  visible run of at least 30 `!` characters. This is a real classifier
+  hit, unlike the earlier whitespace false positive. The first 128
+  shadow records had zero mismatches, so that bounded window did not
+  expose the later coherence failure. The run stopped before stress or
+  performance measurement.
+
+RESULT -> both cards passed `bin/xpu-health` after MTP3 and again after
+  the MTP4 failure. The v0.25.1 DP replicas and proxy were restored;
+  both direct ports and the proxy are healthy, serve `hotschmoe-dd`,
+  the watchdog is running, and both leases are free.
+
+VERDICT -> static MTP depth does not resolve the local-top1 tradeoff.
+  MTP3 is coherent but loses both comparisons that matter: shelf c1
+  and fused-MTP5 c4. MTP4 is incoherent under the first concurrent gate.
+  Reject both, keep every local-argmax flag default-off, and do not run
+  long soak or shelf promotion. The next architectural option is a
+  replicated drafter lm_head that trades memory and extra local GEMM
+  work for zero per-draft cross-card token-selection collectives.

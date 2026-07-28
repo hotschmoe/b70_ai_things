@@ -1,6 +1,6 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (NVFP4 fused top-1 measured)
+**Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (NVFP4 fused top-1 static sweep closed)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
 > ### [CAMPAIGN 2026-07-27] -- active ordering
@@ -17,8 +17,10 @@
 >    active batch shapes switched. Keep all local-argmax switches default-off. The pure-fused
 >    trace removed 520/521 M=1 full-vocab gathers; its 865 compact pair kernels cost only
 >    9.72 ms on representative rank 1, but their synchronous host scopes remained latency-heavy.
->    Sweep fused local-argmax at MTP3/4 next to reduce compact collective count without dynamic
->    active-batch switching.
+>    Lower depth did not close the gap: MTP3 was coherent at c1 37.2/c4 103.0, while MTP4 emitted
+>    visible `!` garbage in 1/18 streams. The local-top1 static branch is closed and default-off.
+>    Scope a replicated drafter lm_head next: spend memory and an extra local shard GEMM so both
+>    ranks select identical draft tokens without any per-draft cross-card collective.
 > 2. **W8A8/W4A8 compressed-tensors paths** -- retain W8A8 as the preferred quality/INT8-XMX
 >    research format and keep the proven small-M W8A16 route. Compare any new 27B serve against the
 >    qualified NVFP4 200K path, including KV quality and long-context retrieval.

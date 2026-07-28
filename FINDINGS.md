@@ -17,7 +17,8 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   fallback restored c1 to 48.6 but cut c4 to 93.4. A pure-fused trace proves 520/521 M=1
   full-vocab messages are removed; the replacement's 865 compact device collectives total only
   9.72 ms on representative rank 1, while synchronous host latency remains the c1 issue.
-  All local-argmax paths remain default-off; test lower MTP depth next.
+  Lower depth did not solve it: MTP3 measured c1 37.2/c4 103.0 and MTP4 emitted visible
+  `!` garbage in 1/18 streams. All local-argmax paths remain default-off.
 - **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
   does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
   (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)

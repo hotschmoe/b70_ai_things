@@ -147,4 +147,7 @@ End to end, `LOCALARGMAX_FUSED_FIX=1` passed the shadow and concurrency gates
 and improved c4 aggregate 103.0 -> 115.7 t/s, but regressed c1
 48.9 -> 32.5 t/s. `LOCALARGMAX_FUSED_MIN_ROWS=2` restored c1 to 48.6 but
 regressed c4 to 93.4. Both flags remain default-off and the production
-artifact/shelf remain unchanged.
+artifact/shelf remain unchanged. Reducing speculative depth also failed:
+fused MTP3 passed 18/18 plus 36/36 but reached only c1 37.2/c4 103.0,
+while fused MTP4 emitted visible `!` garbage in 1/18 streams. Do not
+promote any local-top1 configuration.

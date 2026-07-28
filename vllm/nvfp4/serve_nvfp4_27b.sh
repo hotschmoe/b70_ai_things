@@ -122,8 +122,9 @@ MTPTOK="${MTPTOK:-}"
 # Stock XPU max.dim is numerically wrong at this width, so LOCALARGMAX alone is unsafe. The env-gated
 # argmax+gather repair in sitecustomize block 12 was token-exact in a 128-record shadow test, but measured
 # c1 fell from 48.9 to 36.5 t/s. A fused XPU top-1 op then raised c4 103.0 -> 115.7 aggregate but cut
-# c1 to 32.5; a dynamic M=1 fallback preserved c1 but cut c4 to 93.4. Keep this research switch OFF on
-# the shelf. See research/profiling/localargmax_accept_rootcause.md.
+# c1 to 32.5; a dynamic M=1 fallback preserved c1 but cut c4 to 93.4. Fused MTP3 reached only
+# c1 37.2/c4 103.0, and fused MTP4 emitted visible ! garbage in 1/18 streams. Keep this research
+# switch OFF on the shelf. See research/profiling/localargmax_accept_rootcause.md.
 LOCALARGMAX="${LOCALARGMAX:-0}"
 SPEC_ARGS=( )
 if [ -n "$MTPTOK" ]; then
