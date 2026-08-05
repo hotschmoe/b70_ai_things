@@ -1,5 +1,18 @@
 # deploy/ -- running the daily-driver as a managed service
 
+## Current daily driver (2026-08-05)
+
+**vLLM 0.26.0 W8A8-INT8 Qwen3.6-27B TP=2**, 16-bit KV (not fp8), `MAXLEN=253952` (~248K), MTP
+spec=3, prefix cache, served id `hotschmoe-dd`, API key from `/mnt/vm_8tb/b70/secrets/dd_api_key`.
+
+- Shelf: `rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh` (image `vllm-xpu-env:int8g-v0260`)
+- Orchestrator: `vllm/daily_driver_serve.sh` (defaults match the above)
+- Unit: `deploy/b70-daily-driver.service`
+- **Watchdog RETIRED** -- `bin/dd-watchdog` exits 0 unless `DD_WATCHDOG_FORCE=1`; unit must stay disabled
+
+Context note: 253952 is the gated long-ctx DD number (under native 262144). 232k was never a W8A8
+daily-driver gate; do not use it unless re-measured.
+
 ## How the serve runs today (manual launch)
 
 `daily_driver_serve.sh start` launches the serve **fully detached**: `nohup setsid <gpu-run lease> bash -c '<recipe
@@ -7,14 +20,16 @@ serve.sh> && docker wait'` in a NEW session, and the vLLM itself is a `docker ru
 daemon. So it **survives this shell / SSH / Claude session closing** -- it keeps running until you `stop` it.
 
 ```
-# start (int4 DP=2 NONE -- the SHIPPED wedge-proof weekend serve, API-key enforced, 96k context):
-DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2 DD_MAXLEN=98304 DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88" \
-  DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+# start (default = W8A8 TP=2 @253952 16-bit KV, API-key enforced):
+DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+  DD_ENV="SERVED=hotschmoe-dd" \
   ./daily_driver_serve.sh start
-# (UTIL 0.88 is THE safety lever -- dialed back from 0.95 after the 2026-06-26 ~7h "!!!!" incident (0.95 left
-#  ~1-2 GiB headroom; the fp16 KV cache poisoned a persistent buffer after hours). max-model-len does NOT change
-#  VRAM: vLLM sizes the KV pool from UTIL (~280k tok/replica at 0.88 single-card), so 98304 (96K) only caps a
-#  single request's length and fits with room to spare. Run the watchdog alongside, below.)
+
+# explicit (same as default after 2026-08-05):
+DD_MODEL=vllm/qwen36-27b-w8a8 DD_REPLICAS=1 DD_MAXLEN=253952 \
+  DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+  DD_ENV="SERVED=hotschmoe-dd" \
+  ./daily_driver_serve.sh start
 
 ./daily_driver_serve.sh status     # model, GPU lease, replicas/proxy, served id, web ui
 ./daily_driver_serve.sh logs       # follow the serve container log
@@ -23,30 +38,28 @@ tail -f /mnt/vm_8tb/b70/dd-logs/daily_driver.log   # the launch/health log
 ```
 
 What the manual launch does NOT do: survive a **box reboot** (no restart policy; the gpu-run lease wrapper does
-not re-run). A reboot only happens here on a TP=2 BCS wedge -- which needs a manual reboot anyway -- so for an
-unattended weekend the detached launch is sufficient. For real production, use the systemd unit below.
+not re-run). For boot persistence, install the systemd unit below.
 
 ## systemd unit (boot-start + managed lifecycle)
 
 `deploy/b70-daily-driver.service` runs the daily-driver under systemd: `systemctl start/stop/status`, and
 **auto-start on boot** (`enable`). The API key is read from `/mnt/vm_8tb/b70/secrets/dd_api_key` at start (not
-baked into the unit). Install (needs sudo -- one-time):
+baked into the unit). Install / refresh (needs sudo):
 
 ```
 sudo install -m 0644 -o root -g root deploy/b70-daily-driver.service /etc/systemd/system/b70-daily-driver.service
+sudo install -m 0644 -o root -g root deploy/b70-dd-watchdog.service /etc/systemd/system/b70-dd-watchdog.service
 sudo systemctl daemon-reload
-sudo systemctl enable --now b70-daily-driver      # start now + on every boot
+sudo systemctl disable --now b70-dd-watchdog    # RETIRED -- keep off
+sudo systemctl enable --now b70-daily-driver    # start now + on every boot
 sudo systemctl status b70-daily-driver
-journalctl -u b70-daily-driver -f                 # follow
-sudo systemctl stop b70-daily-driver              # stop
+journalctl -u b70-daily-driver -f
+sudo systemctl stop b70-daily-driver
 ```
 
-The unit defaults to the **int4 DP=2** serve (`DD_MODEL=qwen36-27b-int4 DD_REPLICAS=2`,
-`DD_MAXLEN=98304`, `DD_ENV="GRAPH=1 CGMODE=NONE UTIL=0.88"`). To switch to the faster **w8a8 +MTP TP=2**
-(`DD_MODEL=qwen36-27b-w8a8-sqgptq-mtp DD_REPLICAS=1`, drop the `DD_ENV` line), edit the `Environment=DD_*` lines,
-then `daemon-reload` + `restart`. NOTE (2026-07-02): the TP=2 BCS/GuC DEVICE_LOST wedge is CURED on kernel 7.1
-(the 70.54.0 pin is retired; AGENTS.md GPU Discipline), so w8a8 TP=2 is fine unattended -- and on sglang it is
-already the production daily driver. If the manual launch is already running, `stop` it first so the unit owns the lease.
+The unit defaults to **W8A8-INT8 TP=2 @253952 16-bit KV** (`int8g-v0260`). NOTE (2026-07-02): the TP=2
+BCS/GuC DEVICE_LOST wedge is CURED on kernel 7.1, so unattended TP=2 is fine. If a manual launch is already
+running, `stop` it first so the unit owns the lease.
 
 ### Caveats / levels of resilience
 

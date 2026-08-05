@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-# dd-watchdog -- content-aware health + garbage watchdog with self-heal for the int4 DP=2 daily driver.
+# dd-watchdog -- RETIRED 2026-08-05.
 #
-# WHY THIS EXISTS (JOURNAL 2026-06-26 incident): the int4 DP=2 serve ran ~7h then returned "!!!!" on every
+# Content-aware health + garbage self-heal for the old int4/NVFP4 DP=2 daily driver.
+# Operator decision 2026-08-05: remove from the daily-driver stack entirely (no auto-boot,
+# no content probe). The binary stays for forensics: set DD_WATCHDOG_FORCE=1 to run.
+# Default path exits 0 so a leftover enabled systemd unit cannot loop-restart probes.
+#
+# WHY THIS EXISTED (JOURNAL 2026-06-26 incident): the int4 DP=2 serve ran ~7h then returned "!!!!" on every
 # prompt. The containers did NOT crash and /health stayed 200 the whole time -- it was SOFT in-process
 # corruption (a NaN poisoning a persistent KV/buffer -> argmax falls to token 0 = "!"). A liveness probe and
 # nginx max_fails BOTH miss this (the upstream answers 200 with garbage), so a plain systemd Restart=on-failure
@@ -44,10 +49,16 @@
 #
 # ASCII only. stdlib only. Long-running process -> safe to use time/datetime (not a Workflow sandbox).
 
-import json
 import os
-import subprocess
 import sys
+
+# RETIRED_EARLY_EXIT 2026-08-05: default is no-op. Force with DD_WATCHDOG_FORCE=1.
+if os.environ.get("DD_WATCHDOG_FORCE", "0") != "1":
+    print("dd-watchdog RETIRED 2026-08-05 (set DD_WATCHDOG_FORCE=1 to run)", flush=True)
+    sys.exit(0)
+
+import json
+import subprocess
 import time
 import urllib.error
 import urllib.request

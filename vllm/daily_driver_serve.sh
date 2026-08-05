@@ -32,21 +32,19 @@
 set -uo pipefail
 
 # ===== daily-driver CONFIG (knobs; defaults below) ===========================================
-DD_MODEL="${DD_MODEL:-sglang/qwen36-27b-w8a8}"   # any rdy_to_serve/<backend>/<dir> -- THE model knob. Default:
-                                          # sglang 27B W8A8 fused+MTP (the best W8A8 27b: decode 25.6, HumanEval+
-                                          # 0.970/0.933, vision). TP=2 (both cards) -> needs DD_REPLICAS=1.
+DD_MODEL="${DD_MODEL:-vllm/qwen36-27b-w8a8}"  # any rdy_to_serve/<backend>/<dir> -- THE model knob. Default
+                                          # 2026-08-05: vLLM 0.26.0 W8A8-INT8 TP=2 + 16-bit KV @253952
+                                          # (shelf rdy_to_serve/vllm/qwen36-27b-w8a8). Prior sglang W8A8 and
+                                          # vLLM NVFP4 DP=2 remain on the shelf as measured alternatives.
 DD_REPLICAS="${DD_REPLICAS:-1}"           # 1 = single serve (TP=2 / big; the W8A8 default). 2 = data-parallel
                                           # (only for a model that FITS ONE card, e.g. DD_MODEL=vllm/qwen36-27b-int4).
 DD_CARD="${DD_CARD:-}"                     # set to 0 or 1 -> ONE-CARD mode: pin to that card + lease ONLY that card
                                           #     (leaves the other free for `gpu-run --card <other>` experiments).
-DD_MAXLEN="${DD_MAXLEN-253952}"           # daily-driver context = 248K, tuned for coding (2026-07-03). Set
-                                          # DD_MAXLEN="" (explicit empty) to use the model serve.sh's own
-                                          # default (the DP=2 NVFP4 shelf bakes its gated 102400). Qwen3.6
-                                          # native max_position_embeddings=262144 (NO rope scaling), so 248K is
-                                          # in-window (no extrapolation/quality risk); left ~8K under native +
-                                          # ~66K KV headroom (KV 320k @ vLLM v0.24.0 -> 1.26x concurrency at full
-                                          # length). Full 262144 also serves (KV 320k, 1.22x) if you want it.
-                                          # (the model serve.sh default is a modest 8192.)
+DD_MAXLEN="${DD_MAXLEN-253952}"           # daily-driver context = 248K (253952). Qwen3.6 native
+                                          # max_position_embeddings=262144 (NO rope scaling), so 248K is
+                                          # in-window; left ~8K under native for KV headroom at 16-bit KV.
+                                          # Set DD_MAXLEN="" to use the model serve.sh default (often 4096/8192).
+                                          # NOT 232k -- that was never a gated W8A8 DD number; use 253952.
 DD_MTP="${DD_MTP:-0}"                      # 1 = MTP spec=4 (~1.79x single-stream interactive; DENSE models only).
 DD_ENV="${DD_ENV:-}"                       # advanced: extra env passed verbatim to serve.sh (e.g. "GRAPH=0").
 DD_API_KEY="${DD_API_KEY:-}"               # if set, vLLM ENFORCES this key (via VLLM_API_KEY env -> --api-key).

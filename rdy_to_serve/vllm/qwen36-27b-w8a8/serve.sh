@@ -3,11 +3,17 @@
 # Coherent single-stream 27B int8-activation serve. EAGER ~9 t/s MTP-on (2.3x vs ~4 t/s MTP-off), 48% accept.
 # Self-contained recipe; shared plumbing in ../_common/lib.sh.
 #
-# [!! 2026-07-21 -- SHELF UPDATED: default image -> int8g-v0251 (vLLM 0.25.1; benched 2026-07-16 coherent,
+# [!! 2026-08-05 -- SHELF UPDATED: default image -> int8g-v0260 (vLLM 0.26.0 / torch 2.12; same custom
+#     int8+GDN .so ABI as v0.25.1). Daily driver reverts to W8A8-INT8 + default 16-bit KV (leave KVDTYPE
+#     unset) at MAXLEN=253952 (~248K, under native 262144). Prior default int8g-v0251 remains a rollback.
+#     W8A16_M_MAX still 64 only at MAXLEN<=8192 / 0 at long ctx (dup weight layout cannot fit 253952).]
+#
+# [!! 2026-07-21 -- prior default image int8g-v0251 (vLLM 0.25.1; benched 2026-07-16 coherent,
 #     38.5 code decode / cold PP 2598 / KV 264k -- commit 872f700) + small-M W8A16 routing baked in
 #     (W8A16_M_MAX, default 64 at MAXLEN<=8192 / 0 at long ctx: +3.6% c1 / +4.9% c4 decode, more accurate,
 #     gate 18/18 -- commit 63cf1e6; the route's duplicate weight layout costs ~9 GiB/card, so it cannot fit
-#     the 253952-ctx DD -- see the routing block). Rollbacks IMG=vllm-xpu-env:int8g-v0240 and W8A16_M_MAX=0.]
+#     the 253952-ctx DD -- see the routing block). Rollbacks IMG=vllm-xpu-env:int8g-v0251|int8g-v0240 and
+#     W8A16_M_MAX=0.]
 #
 # [!! 2026-07-03 -- vLLM UN-PAUSED, rebased to v0.24.0 (torch 2.12). The 5 hybrid mixed-prefill+decode PRs
 #     (#44700 split mixed -> recurrent GDN, #43990/#42430/#43961/#43556) FIX the "!!!!" concurrent garbage
@@ -55,9 +61,9 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export ROOT="${ROOT:-/mnt/vm_8tb/b70}"     # needed to reference the host GDN .so before sourcing lib.sh
 
-export IMG="${IMG:-vllm-xpu-env:int8g-v0251}"   # v0.25.1/torch 2.12 (2026-07-16, commit 872f700: 4 XPU regressions
-                                            # fixed+baked; W8A8 benched 38.5 code / cold PP 2598 / KV 264k, coherent).
-                                            # Rollbacks: int8g-v0240 (v0.24.0, prior default), int8g (old v0.23).
+export IMG="${IMG:-vllm-xpu-env:int8g-v0260}"   # v0.26.0/torch 2.12 (2026-08-05 DD: most current gated XPU image;
+                                            # NVFP4 TP=2 already qualified on it 2026-07-27). Same int8+GDN .so
+                                            # mount (w8a8_kernel_v0240). Rollbacks: int8g-v0251, int8g-v0240, int8g.
 export CKPT="${CKPT:-/models/qwen3.6-27b/w8a8-sqgptq}"
 export SERVED="${SERVED:-qwen36-27b-w8a8-sqgptq-mtp}"
 export DTYPE="${DTYPE:-auto}"

@@ -1,49 +1,37 @@
 [Unit]
-# B70 daily-driver serve. DEFAULT (2026-07-21, headless DP=2 campaign): vLLM 0.25.1 NVFP4 qwen3.6-27b
-# DP=2 -- one captured single-card replica per card (b70_daily_0/card0 :18091, b70_daily_1/card1 :18092)
-# behind nginx least_conn (b70_daily_proxy, bin/dp_nginx.conf) on :18080, served id hotschmoe-dd, API-key
-# enforced (key read from the off-repo secret at start). Replica config is BAKED in the shelf wrapper
-# rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh (TP=1 default): captured + MTP5 + CALIBRATED fp8 KV
-# (kv_scales_nvfp4_27b.json) + INT8 embed_tokens (shim block 13) + prefix cache + agentic parsers,
-# MAXLEN=100352 UTIL=0.95 (operator max -- 0.96 crashes under concurrent prefill). Gated 2026-07-21
-# evening: gate 18/18, needle@93k 4/4, HumanEval+ 0.976/0.945 (quality-neutral vs stock), 30k single +
-# 52k concurrent soak clean. The native-E4M3 update then measured 64.6 t/s single-stream per card,
-# 202.2 t/s aggregate conc=4 through the proxy, and 144,408 KV tokens per card.
-# WHY DP=2 (not TP=2): zero cross-card collectives -> the NEO linear_stream graph-replay leak class and
-# every oneCCL/TP wedge are structurally out of the picture; failure mode is soft per-replica garbage ->
-# dd-watchdog docker-restarts ONE replica (set DD_WATCH_REPLICAS in b70-dd-watchdog.service to match).
-# RESEARCH MODE: `docker stop b70_daily_1` frees card 1 (nginx marks the backend down, card 0 keeps
-# serving); `docker start b70_daily_1` restores DP=2.
-# MEMORY WALLS (do not "improve" without re-gating): without embed INT8, MTP fits only about 48K on one
-# card; the current embed-INT8 config is qualified at 100,352. UTIL>=0.96 crashes under concurrent
-# prefill; MAXBATCH<1600 is rejected by mamba alignment. See shelf serve.sh.
-# Long-context fallback (qualified 2026-07-27): TP=2 selects vLLM 0.26.0 and MAXLEN=200000 via the same
-# wrapper, with calibrated fp8 KV, graph push-AR, MTP5, and prefix caching.
-Description=B70 daily-driver serve (vLLM 0.25.1 NVFP4 27b DP=2 captured+MTP5+fp8KV+embedINT8 @100k, hotschmoe-dd)
+# B70 daily-driver serve. DEFAULT (2026-08-05): vLLM 0.26.0 W8A8-INT8 qwen3.6-27b TP=2
+# single container (b70_daily_0) on public :18080, served id hotschmoe-dd, API-key enforced
+# (key read from the off-repo secret at start). Recipe: rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh
+#   - image int8g-v0260 (vLLM 0.26.0 / torch 2.12)
+#   - W8A8 compressed-tensors INT8 w x INT8 a (SmoothQuant+GPTQ) + BF16 MTP graft, MTP spec=3
+#   - 16-bit KV cache (leave KVDTYPE unset; NOT fp8)
+#   - MAXLEN=253952 (~248K; under native max_position_embeddings=262144)
+#   - PREFIXCACHE=1, PIECEWISE capture, push-AR graph, CG reclaim, tool/reason parsers
+# Watchdog (b70-dd-watchdog) is RETIRED -- do not re-enable unless DD_WATCHDOG_FORCE is intentional.
+# Prior DP=2 NVFP4 @100k unit text is in git history (pre-2026-08-05).
+Description=B70 daily-driver serve (vLLM 0.26.0 W8A8-INT8 27b TP=2 MTP3 +16bitKV @253952, hotschmoe-dd)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
 Wants=network-online.target
 
 [Service]
-# oneshot + RemainAfterExit: each ExecStart launches detached (gpu-run --card N -> docker run -d) and
-# returns; ExecStartPost waits (best-effort) for the proxy to go healthy. `systemctl stop` tears down
-# both replicas + proxy. Replica 1 is staggered behind replica 0 to avoid first-boot shared-cache races.
+# oneshot + RemainAfterExit: ExecStart launches detached (gpu-run -> docker run -d) and returns;
+# ExecStartPost waits (best-effort) for /health. `systemctl stop` tears down the container.
 Type=oneshot
 RemainAfterExit=yes
 User=hotschmoe
 Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+# TP=2 W8A8: one container, both cards, public port 18080. Stable client id hotschmoe-dd.
+# gpu-run (no --card) holds both leases until the container exits.
 ExecStart=/bin/bash -lc 'API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  NAME=b70_daily_0 PORT=18091 CARD=0 SERVED_FORCE=hotschmoe-dd \
-  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run --card 0 bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start'
-ExecStart=/bin/bash -lc 'sleep 20; API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  NAME=b70_daily_1 PORT=18092 CARD=1 SERVED_FORCE=hotschmoe-dd \
-  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run --card 1 bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start'
-ExecStart=/bin/bash -lc 'docker rm -f b70_daily_proxy >/dev/null 2>&1; docker run -d --name b70_daily_proxy --network host -v /mnt/vm_8tb/github/b70_ai_things/bin/dp_nginx.conf:/etc/nginx/nginx.conf:ro --restart unless-stopped nginx:alpine'
-ExecStartPost=/bin/bash -lc 'for i in $(seq 1 120); do curl -sf http://localhost:18091/health >/dev/null 2>&1 && curl -sf http://localhost:18092/health >/dev/null 2>&1 && exit 0; for c in b70_daily_0 b70_daily_1; do docker inspect -f "{{.State.Status}}" $c 2>/dev/null | grep -q exited && { echo "$c exited during startup" >&2; exit 1; }; done; sleep 5; done; echo "health wait timed out (replicas may still be warming)" >&2; true'
-ExecStop=/bin/bash -lc 'docker rm -f b70_daily_proxy b70_daily_0 b70_daily_1 >/dev/null 2>&1 || true'
-# NVFP4 load + PIECEWISE capture x2 replicas: allow generous startup.
-TimeoutStartSec=1200
+  NAME=b70_daily_0 PORT=18080 SERVED=hotschmoe-dd MAXLEN=253952 \
+  B70_EXTRA_ENV="VLLM_API_KEY=$API_KEY" \
+  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start'
+ExecStartPost=/bin/bash -lc 'for i in $(seq 1 180); do curl -sf http://localhost:18080/health >/dev/null 2>&1 && exit 0; docker inspect -f "{{.State.Status}}" b70_daily_0 2>/dev/null | grep -q exited && { echo "b70_daily_0 exited during startup" >&2; exit 1; }; sleep 5; done; echo "health wait timed out (serve may still be warming)" >&2; true'
+ExecStop=/bin/bash -lc 'docker rm -f b70_daily_0 b70_daily_1 b70_daily_proxy >/dev/null 2>&1 || true'
+# W8A8 load + PIECEWISE capture TP=2: allow generous startup (~15 min typical).
+TimeoutStartSec=1800
 TimeoutStopSec=120
 
 [Install]
