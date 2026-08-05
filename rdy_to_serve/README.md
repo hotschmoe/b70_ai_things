@@ -21,25 +21,22 @@ The shelf currently has entries for:
 
 | backend | entries | role |
 |---|---|---|
-| vLLM | 27B int4, NVFP4, W4A16, W4A8, W8A8; 35B-A3B int4 and W8A8 | Current NVFP4 daily driver and measured baselines |
-| sglang | 27B int4, W4A8, W8A8; 35B-A3B W8A8 | Primary backend for new true-W8A8 serving research |
+| vLLM | 27B int4, NVFP4, W4A16, W4A8, W8A8; 35B-A3B int4 and W8A8 | Current W8A8 daily driver + NVFP4 measured baselines |
+| sglang | 27B int4, W4A8, W8A8; 35B-A3B W8A8 | Research backend for true-W8A8 / long-prefill work |
 
 ## Current headline entry
 
-`vllm/qwen36-27b-nvfp4/serve.sh` contains two measured settings in one
-shelf entry:
+**Daily driver (2026-08-05):** `vllm/qwen36-27b-w8a8/serve.sh` on **vLLM 0.26.0**
+(`int8g-v0260`), TP=2, **16-bit KV**, `MAXLEN=253952`, MTP3, prefix cache. Live capacity
+269,774 KV tokens (1.06x at full length). Start via
+`DD_API_KEY=... DD_ENV=SERVED=hotschmoe-dd ./vllm/daily_driver_serve.sh start`.
 
-- Default `TP=1`: vLLM 0.25.1, one 100,352-token replica. Run one per
-  card behind nginx for the DP=2 daily driver. Each replica uses captured
-  MTP5, calibrated fp8 KV, embed INT8, native E4M3 decode scales, and
-  working prefix reuse. Measured 64.6 code tok/s per card.
-- `TP=2`: vLLM 0.26.0, one 200,000-token server across both cards.
-  It adds graph push-all-reduce and a 16,384-token prefill chunk.
-  Qualified 2026-07-27 with 18/18 plus two 36/36 coherence gates, exact
-  190,048-token retrieval cold and warm, and a 52K-token concurrent soak.
+**NVFP4 shelf** (`vllm/qwen36-27b-nvfp4/serve.sh`) remains the measured high-agg alternative:
 
-Use DP=2 for aggregate throughput and fault isolation. Use TP=2 when one
-request needs more than 100,352 tokens.
+- Default `TP=1`: vLLM 0.25.1, one 100,352-token replica (DP=2 behind nginx was the prior DD).
+  Captured MTP5, calibrated fp8 KV, embed INT8, ~64.6 code tok/s per card.
+- `TP=2`: vLLM 0.26.0, one 200,000-token server, graph push-AR, 640k KV tokens.
+  Qualified 2026-07-27 (18/18 + 36/36, exact 190k retrieval).
 
 ## Usage
 

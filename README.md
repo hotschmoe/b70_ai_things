@@ -5,7 +5,17 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
-> [2026-07-27 CURRENT STATE -- supersedes ALL dated banners below.] The box is **HEADLESS** (display
+> [2026-08-05 CURRENT STATE -- supersedes ALL dated banners below.] Daily driver is **vLLM 0.26.0
+> W8A8-INT8 Qwen3.6-27B TP=2** (`b70_daily_0` on **:18080** as `hotschmoe-dd`): image
+> `vllm-xpu-env:int8g-v0260`, compressed-tensors W8A8-sqgptq + MTP3, **16-bit KV** (no
+> `--kv-cache-dtype`), **MAXLEN=253952** (~248K; under native 262144 -- not 232k), PREFIXCACHE=1,
+> PIECEWISE + push-AR graph + CG reclaim. Live: GPU KV **269,774 tok**, 1.06x concurrency at full
+> length, gen probe coherent ("Paris"). Shelf: `rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh`.
+> Orchestrator defaults in `vllm/daily_driver_serve.sh`. **dd-watchdog RETIRED** (binary exits 0
+> unless `DD_WATCHDOG_FORCE=1`; disable host unit with `sudo systemctl disable --now b70-dd-watchdog`).
+> Prior NVFP4 DP=2 @100k fp8-KV remains on the shelf as the measured high-agg alternative.
+>
+> [2026-07-27 PRIOR STATE -- NVFP4 DP=2 daily driver, now shelved not default.] The box is **HEADLESS** (display
 > removed 2026-07-21; the card-1 downclock is CURED -- both cards ~126-128 TFLOPS symmetric) and the daily
 > driver is **DP=2: two independent single-card NVFP4 27B replicas** (`b70_daily_0`/card0 :18091,
 > `b70_daily_1`/card1 :18092) behind nginx least_conn on **:18080** as `hotschmoe-dd`. Per-replica config

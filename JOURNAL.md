@@ -10432,3 +10432,45 @@ RESULT -> production was restored after the completed test campaign.
   `ExecStart` commands from the active systemd unit were run as its
   configured `hotschmoe` user; restarting nginx after replica warmup
   cleared its temporary no-live-upstreams state.
+
+### 2026-08-05 - Daily driver reverts to W8A8-INT8 TP=2 @253952 (16-bit KV) on vLLM 0.26.0
+
+CONFIG -> stop NVFP4 DP=2 (`b70_daily_0/1` + proxy on int8g-v0251 @100k fp8-KV). Retire
+  `bin/dd-watchdog` (default exit 0 unless `DD_WATCHDOG_FORCE=1`). Point shelf + orchestrator +
+  `vllm/deploy/b70-daily-driver.service` at `rdy_to_serve/vllm/qwen36-27b-w8a8` with image
+  `vllm-xpu-env:int8g-v0260` (vLLM 0.26.0, already built 2026-07-27). Context **253952** (the gated
+  ~248K DD number under native 262144; **not 232k**). Leave `KVDTYPE` unset -> default **16-bit KV**
+  (no `--kv-cache-dtype`). MTP spec=3, PREFIXCACHE=1, PIECEWISE + push-AR graph, CG reclaim, served
+  id `hotschmoe-dd`, API key from secrets file.
+
+COMMAND ->
+  ```
+  docker rm -f b70_daily_proxy b70_daily_0 b70_daily_1
+  # kill leftover watchdog process (unit still enabled at host level until sudo disable)
+  DD_MODEL=vllm/qwen36-27b-w8a8 DD_REPLICAS=1 DD_MAXLEN=253952 \
+    DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" DD_ENV="SERVED=hotschmoe-dd" \
+    ./vllm/daily_driver_serve.sh start
+  ```
+  Host unit refresh still needs passworded sudo (non-interactive sudo only allows xe modprobe):
+  ```
+  sudo install -m 0644 vllm/deploy/b70-daily-driver.service /etc/systemd/system/
+  sudo install -m 0644 vllm/deploy/b70-dd-watchdog.service /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl disable --now b70-dd-watchdog
+  sudo systemctl enable b70-daily-driver   # boot persistence; do not restart if manual serve is live
+  ```
+
+RESULT -> healthy in ~11 min. Live identity:
+  - image `vllm-xpu-env:int8g-v0260`, vLLM **0.26.0**, TP=2, GRAPH=PIECEWISE
+  - `/v1/models`: `hotschmoe-dd`, **max_model_len=253952**, root w8a8-sqgptq
+  - CLI: **no** `--kv-cache-dtype` (16-bit auto path)
+  - engine: GPU KV **269,774 tokens**, concurrency **1.06x** at full 253952, model load 17.36 GiB/card
+  - gen probe (temp0, thinking off): **"Paris"** coherent
+  - endpoint http://192.168.10.5:18080/v1 ; Open WebUI :3000 ; Grafana :3001
+  - watchdog process stopped (unit inactive/dead after SIGTERM + retired binary); unit still
+    **enabled** on disk until the sudo disable above -- on reboot the retired binary exits 0 so
+    it will not loop.
+
+VERDICT -> GO for W8A8-INT8 16-bit-KV long-ctx as the live daily driver on v0.26.0. Image was
+  already current (no rebuild). Remaining operator step: passworded sudo to disable the watchdog
+  unit and install the new daily-driver unit for boot.
