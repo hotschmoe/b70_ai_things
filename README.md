@@ -6,7 +6,8 @@ emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head 
 accuracy loss.
 
 > [2026-08-05 CURRENT STATE -- supersedes ALL dated banners below.] Daily driver is **vLLM 0.26.0
-> W8A8-INT8 Qwen3.6-27B TP=2** (`b70_daily_0` on **:18080** as `hotschmoe-dd`): image
+> NVFP4 Qwen3.6-27B TP=2 bf16-KV @262144** (fell back from W8A8 TP=2 after dual NEO graph crashes).
+> Prior attempt: **W8A8-INT8 Qwen3.6-27B TP=2** (`b70_daily_0` on **:18080** as `hotschmoe-dd`): image
 > `vllm-xpu-env:int8g-v0260`, compressed-tensors W8A8-sqgptq + MTP3, **16-bit KV** (no
 > `--kv-cache-dtype`), **MAXLEN=253952** (~248K; under native 262144 -- not 232k), PREFIXCACHE=1,
 > PIECEWISE + push-AR graph + CG reclaim. Live: GPU KV **269,774 tok**, 1.06x concurrency at full

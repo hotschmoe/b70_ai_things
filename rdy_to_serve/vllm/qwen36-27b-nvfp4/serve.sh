@@ -93,7 +93,15 @@ else
          UTIL="${UTIL:-0.85}" MAXSEQS="${MAXSEQS:-8}" MAXBATCH="${MAXBATCH:-16384}"
   export PUSH_AR="${PUSH_AR:-1}" PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}" \
          PUSH_AR_MAXB="${PUSH_AR_MAXB:-268435456}" PREFIXCACHE="${PREFIXCACHE:-1}"
-  export KV_FP8="${KV_FP8:-1}" KV_SCALES="${KV_SCALES:-$REPO/vllm/nvfp4/kv_scales_nvfp4_27b.json}"
+  # KV: default calibrated fp8 (qualified 200k). For 16-bit/bf16 KV set KV_FP8=0 -- do NOT attach
+  # KV_SCALES in that mode (scales only apply to fp8 storage). Journal 2026-07-06: bf16 KV pool at
+  # MAXLEN=262144 still >> full native window (~461k tokens).
+  export KV_FP8="${KV_FP8:-1}"
+  if [ "$KV_FP8" = 0 ]; then
+    export KV_SCALES="${KV_SCALES-}"   # empty unless caller forces a path
+  else
+    export KV_SCALES="${KV_SCALES:-$REPO/vllm/nvfp4/kv_scales_nvfp4_27b.json}"
+  fi
   export FUSED_SO="${FUSED_SO:-/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/_xpu_C.abi3.so}"
   export GDN_LIB="${GDN_LIB:-/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/libgdn_attn_kernels_xe_2.so}"
   export TOOLCALL="${TOOLCALL:-1}" TOOLPARSER="${TOOLPARSER:-qwen3_coder}" REASONPARSER="${REASONPARSER:-qwen3}"

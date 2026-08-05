@@ -10505,3 +10505,29 @@ RESULT (bring-up) -> healthy ~2.5 min, probe "Paris", max_model_len 253952,
 VERDICT -> LIVE with CGRECLAIM=0. If the old NEO leak abort recurs under load,
   fall back to NVFP4 TP=2 (shelf `vllm/qwen36-27b-nvfp4` TP=2 @200k) rather than
   re-enabling reclaim without a safer re-instantiate path.
+
+### 2026-08-05c - Cut over to NVFP4 TP=2 full-native + bf16 KV
+
+CONTEXT -> W8A8 TP=2 v0.26.0 failed both ways under remote long-ctx bench:
+  CGRECLAIM=1000 -> Worker-1 SEGfault in XPUGraphImpl::instantiate();
+  CGRECLAIM=0 -> NEO linear_stream.h:84 abort after ~43 min. Fallback = NVFP4 TP=2.
+
+CONFIG -> model native max_position_embeddings=**262144** (not 252k; 253952 was the
+  old W8A8 coding DD under-native headroom pick). NVFP4 TP=2 on int8g-v0260 with
+  **KV_FP8=0** (16-bit bf16 KV; strips checkpoint kv_cache_scheme), MAXLEN=**262144**,
+  MTP5, PREFIXCACHE=1, push-AR graph, CG reclaim ON (NVFP4-validated path), served
+  hotschmoe-dd, API key. Shelf: only attach KV_SCALES when KV_FP8!=0.
+
+COMMAND ->
+  ```
+  DD_MODEL=vllm/qwen36-27b-nvfp4 DD_REPLICAS=1 DD_MAXLEN=262144 \
+    DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+    DD_ENV="TP=2 SERVED_FORCE=hotschmoe-dd KV_FP8=0" \
+    ./vllm/daily_driver_serve.sh start
+  ```
+
+RESULT -> healthy; kv_cache_dtype=auto; max_model_len=262144; gen probe coherent.
+  Engine: model load ~11.54 GiB/card, Available KV ~12.3 GiB, GPU KV **353933 tokens**, concurrency **1.35x** at full 262144.
+
+VERDICT -> LIVE daily driver = NVFP4 TP=2 bf16-KV @ full native 262144. Prefer this
+  over W8A8 TP=2 until the dual NEO graph failure modes are resolved.
