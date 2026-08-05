@@ -24,8 +24,9 @@ Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
 # TP=2 W8A8: one container, both cards, public port 18080. Stable client id hotschmoe-dd.
 # gpu-run (no --card) holds both leases until the container exits.
+# CGRECLAIM=0: shelf default after 2026-08-05 Worker-1 segfault in XPUGraph re-instantiate.
 ExecStart=/bin/bash -lc 'API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  NAME=b70_daily_0 PORT=18080 SERVED=hotschmoe-dd MAXLEN=253952 \
+  NAME=b70_daily_0 PORT=18080 SERVED=hotschmoe-dd MAXLEN=253952 CGRECLAIM=0 \
   B70_EXTRA_ENV="VLLM_API_KEY=$API_KEY" \
   /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start'
 ExecStartPost=/bin/bash -lc 'for i in $(seq 1 180); do curl -sf http://localhost:18080/health >/dev/null 2>&1 && exit 0; docker inspect -f "{{.State.Status}}" b70_daily_0 2>/dev/null | grep -q exited && { echo "b70_daily_0 exited during startup" >&2; exit 1; }; sleep 5; done; echo "health wait timed out (serve may still be warming)" >&2; true'

@@ -230,15 +230,20 @@ fi
 # [!] env appends below this line only -- the push-AR block above REASSIGNS DOCKER_ENV (see routing block note).
 DOCKER_ENV+=( -e B70_W8A16_M_MAX="$W8A16_M_MAX" )
 
-# NEO graph-replay leak RECLAIM -- DEFAULT ON for GRAPH=1 (2026-07-21): without it the captured+MTP path hits
-# the NEO linear_stream.h:84 replay-accumulation abort (overnight DD crash ~36 min under 4-way concurrent load
-# on v0.25.1, results/logs/dd_w8a8_crash_20260721.log; same transport-agnostic root cause as the 2026-07-08
-# NVFP4 fix, docs/20260707_dd_mtp_piecewise_neo_abort.md). Implemented in patches/sitecustomize.py block (7)
-# (keep_graph=True + re-instantiate each captured XPUGraph every N replays, zero throughput cost). Opt out
-# with CGRECLAIM=0; override cadence with CGRECLAIM=N. No-op when GRAPH=0 (nothing captured to leak).
-if [ "${GRAPH:-1}" = 1 ] && [ "${CGRECLAIM:-1000}" != 0 ] && [[ "${B70_EXTRA_ENV:-}" != *B70_XPU_CG_RECLAIM* ]]; then
-  DOCKER_ENV+=( -e "B70_XPU_CG_RECLAIM=${CGRECLAIM:-1000}" )
-  echo "=== NEO-leak reclaim ON: B70_XPU_CG_RECLAIM=${CGRECLAIM:-1000} (re-instantiate captured graphs) ===" >&2
+# NEO graph-replay leak RECLAIM -- DEFAULT OFF as of 2026-08-05 on v0.26.0.
+# History: on v0.25.1, without reclaim the captured+MTP path hit the NEO linear_stream.h:84
+# replay-accumulation abort (~36 min concurrent; docs/20260707_dd_mtp_piecewise_neo_abort.md).
+# Reclaim (patches/sitecustomize.py block 7: keep_graph=True + re-instantiate every N replays)
+# fixed that, but on v0.26.0 W8A8 TP=2 a remote long-ctx bench hit a SEGfault in
+# XPUGraphImpl::instantiate() / urCommandBufferReleaseExp during that re-instantiate path
+# (incident dd-incident-20260805-050856-w8a8-tp1-worker-death.log; Worker-1 dead, GPUs healthy).
+# Hypothesis: v0.26.0 may no longer need the reclaim, and re-instantiate itself is unsafe.
+# DEFAULT CGRECLAIM=0. Force reclaim back with CGRECLAIM=1000 (or any N>0). No-op when GRAPH=0.
+if [ "${GRAPH:-1}" = 1 ] && [ "${CGRECLAIM:-0}" != 0 ] && [[ "${B70_EXTRA_ENV:-}" != *B70_XPU_CG_RECLAIM* ]]; then
+  DOCKER_ENV+=( -e "B70_XPU_CG_RECLAIM=${CGRECLAIM}" )
+  echo "=== NEO-leak reclaim ON: B70_XPU_CG_RECLAIM=${CGRECLAIM} (re-instantiate captured graphs) ===" >&2
+else
+  echo "=== NEO-leak reclaim OFF (CGRECLAIM=${CGRECLAIM:-0}; set CGRECLAIM=N>0 to enable) ===" >&2
 fi
 
 # --- DIAGNOSTIC / BISECT TOGGLES (opt-in; default-off => the serve command is byte-identical) -------

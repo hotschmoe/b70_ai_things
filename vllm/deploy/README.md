@@ -8,7 +8,12 @@ spec=3, prefix cache, served id `hotschmoe-dd`, API key from `/mnt/vm_8tb/b70/se
 - Shelf: `rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh` (image `vllm-xpu-env:int8g-v0260`)
 - Orchestrator: `vllm/daily_driver_serve.sh` (defaults match the above)
 - Unit: `deploy/b70-daily-driver.service`
-- **Watchdog RETIRED** -- `bin/dd-watchdog` exits 0 unless `DD_WATCHDOG_FORCE=1`; unit must stay disabled
+- **CGRECLAIM=0** is the W8A8 default after the 2026-08-05 Worker-1 segfault in
+`XPUGraphImpl::instantiate()` under a remote long-ctx bench (reclaim re-instantiate path).
+If the old NEO linear_stream abort returns under soak, fall back to NVFP4 TP=2 rather than
+blindly re-enabling reclaim.
+
+**Watchdog RETIRED** -- `bin/dd-watchdog` exits 0 unless `DD_WATCHDOG_FORCE=1`; unit must stay disabled
 
 Context note: 253952 is the gated long-ctx DD number (under native 262144). 232k was never a W8A8
 daily-driver gate; do not use it unless re-measured.

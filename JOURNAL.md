@@ -10474,3 +10474,34 @@ RESULT -> healthy in ~11 min. Live identity:
 VERDICT -> GO for W8A8-INT8 16-bit-KV long-ctx as the live daily driver on v0.26.0. Image was
   already current (no rebuild). Remaining operator step: passworded sudo to disable the watchdog
   unit and install the new daily-driver unit for boot.
+
+### 2026-08-05b - W8A8 Worker-1 segfault under remote bench; retry CGRECLAIM=0
+
+CONFIG -> prior live DD was W8A8 TP=2 v0.26.0 @253952 16-bit KV with default
+  `B70_XPU_CG_RECLAIM=1000` (re-instantiate captured XPUGraphs every 1000 replays).
+
+RESULT (crash) -> after ~18 min serving, remote bench host 192.168.10.54 long-ctx
+  traffic (KV peak ~83%) then a short decode step: Worker-1 SEGfaulted in
+  `XPUGraphImpl::instantiate()` -> `urCommandBufferReleaseExp` /
+  `cleanupCommandBufferResources` / `urEventReleaseInternal`. Engine cascade
+  EngineDeadError; container exit 0; GPUs stayed healthy (xpu-health OK). Incident:
+  `dd-logs/incidents/dd-incident-20260805-050856-w8a8-tp1-worker-death.log`.
+  Class = software graph re-instantiate race, not DEVICE_LOST / OOM.
+
+COMMAND -> restart same recipe with reclaim OFF:
+  ```
+  DD_MODEL=vllm/qwen36-27b-w8a8 DD_REPLICAS=1 DD_MAXLEN=253952 \
+    DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+    DD_ENV="SERVED=hotschmoe-dd CGRECLAIM=0" \
+    ./vllm/daily_driver_serve.sh start
+  ```
+  Shelf default flipped to `CGRECLAIM=0` (opt-in with CGRECLAIM=N>0). Hypothesis:
+  v0.26.0 may have fixed the old NEO linear_stream replay-leak abort that reclaim
+  was papering over; re-instantiate itself is the crash site we just hit.
+
+RESULT (bring-up) -> healthy ~2.5 min, probe "Paris", max_model_len 253952,
+  no `B70_XPU_CG_RECLAIM` in container env. Ready for the remote bench retry.
+
+VERDICT -> LIVE with CGRECLAIM=0. If the old NEO leak abort recurs under load,
+  fall back to NVFP4 TP=2 (shelf `vllm/qwen36-27b-nvfp4` TP=2 @200k) rather than
+  re-enabling reclaim without a safer re-instantiate path.
