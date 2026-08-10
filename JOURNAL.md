@@ -10531,3 +10531,42 @@ RESULT -> healthy; kv_cache_dtype=auto; max_model_len=262144; gen probe coherent
 
 VERDICT -> LIVE daily driver = NVFP4 TP=2 bf16-KV @ full native 262144. Prefer this
   over W8A8 TP=2 until the dual NEO graph failure modes are resolved.
+
+### 2026-08-10 - Cookbook campaign: MoE MTP reopened; public-image baselines
+
+CONFIG -> compared SergiioB/intel-arc-pro-b70-inference-cookbook against our
+  stack. Ported patches: vllm/patches/cookbook/{patch_mtp_nightly,
+  patch_mtp_bf16_draft_v0260, patch_mtp_boundary, apply_mtp_patches}.
+  Harness: vllm/cookbook_campaign/phase_bench.py (client post-first).
+  Image: public vllm/vllm-openai-xpu@sha256:2c427ef... (0.26.1rc1.dev457).
+  Models: llmfan46 GPTQ-INT4 Native-MTP-Preserved dense 27B + MoE 35B under
+  models/files/community/. DD stopped for the campaign; restored NVFP4 TP=2
+  @262144 bf16-KV after.
+
+COMMAND ->
+  bash vllm/cookbook_campaign/launch.sh dense27-gptq {no-spec,mtp4} on 8000 0
+  bash vllm/cookbook_campaign/launch.sh moe35-gptq {no-spec,mtp2,mtp4} on 8000 0
+  python3 vllm/cookbook_campaign/phase_bench.py --prompt-tokens 512|2048 --gen-tokens 128 --n 3
+
+RESULT (median client post-first tok/s, n=3) ->
+  Dense no-spec p512/p2048: 27.1 / 21.6 ; prefill proxy ~1.87k
+  Dense MTP4  p512/p2048: 52.1 / 43.7 ; gen "Paris"; ~1.92x decode
+  Dense MTP4 @~32k (MAXLEN=131072): 59.5 post-first
+  MoE no-spec p512/p2048: 69.3 / 51.7 ; prefill ~6.8–7.6k
+  MoE MTP2    p512/p2048: 94.5 / 85.7 ; +36% / +66%
+  MoE MTP4    p512/p2048: 88.7 / 85.6
+  Dense MTP4 MAXSEQS=64: OOM during int4_gemm capture; MAXSEQS=8 required.
+  Exact 100k–130k chat cells: HTTP 400 (entropy prompt overshoots max_model_len);
+  patches apply cleanly; 128k MAXLEN MTP4 serves healthy.
+  Bare vllm-xpu-env:v0260: 0 XPU devices; int8g-v0260 and public image OK.
+
+VERDICT -> GO for items 1–5 documentation.
+  (1) M5 "MoE MTP +3% flat" is RETIRED for BF16-preserved GPTQ drafts on
+      0.26.1 nightly -- MoE MTP is a real 1.3–1.7x C1 lever.
+  (2) Boundary+draft patches ported; long-ctx MTP serve works; exact-131072
+      cell needs token-exact prompts (follow-up).
+  (3) Public-image dense/MoE GPTQ baselines measured on this box.
+  (4) INT4+MTP remains C1 ceiling reference only -- does not demote W8A8/NVFP4 DD.
+  (5) phase_bench.py is the publishable post-first harness.
+  Details: docs/COOKBOOK_CAMPAIGN.md ; raw JSON under
+  results/cookbook_campaign/public_matrix_20260810T220015Z/.

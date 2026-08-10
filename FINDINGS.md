@@ -484,3 +484,23 @@ MTP: ~~not viable on B70~~ **VIABLE + POSITIVE as of 2026-06-22 (this note STALE
 spec-decode VERIFIER bug" was a stack gap on the old image. On `vllm-xpu-env:v0230` (vLLM 0.23.0, #43565 native) MTP on
 the qwen3_5 27B is +79% (1.79x, PIECEWISE spec=4); see the "Speculative decoding" bullet above + MTP_TODO.md M0-M5. The
 remaining bug (the spec-op can't run in a FULL captured graph) only blocks the FULL-capture upside, not PIECEWISE MTP.
+
+
+## Cookbook public-image C1 baselines (2026-08-10)
+
+Public `vllm/vllm-openai-xpu` 0.26.1rc1 + GPTQ-INT4 MTP-preserved + BF16 draft patches
+(SergiioB cookbook port). Client post-first, n=3, 1x B70. Full writeup:
+`docs/COOKBOOK_CAMPAIGN.md`.
+
+| Model | Mode | p512 t/s | p2048 t/s | prefill proxy |
+|-------|------|---------:|----------:|--------------:|
+| 27B dense GPTQ | no-spec | 27.1 | 21.6 | ~1.87k |
+| 27B dense GPTQ | MTP4 | **52.1** | **43.7** | ~1.66k |
+| 35B MoE GPTQ | no-spec | 69.3 | 51.7 | ~6.8–7.6k |
+| 35B MoE GPTQ | MTP2 | **94.5** | **85.7** | ~5.7–7.6k |
+| 35B MoE GPTQ | MTP4 | 88.7 | 85.6 | ~5.5–7.5k |
+
+**M5 correction:** MoE MTP is NOT flat when the MTP draft is BF16-preserved (GPTQ
+path). Prior +3% was AutoRound with quantized MTP experts. Ceiling reference only
+-- does not replace W8A8/NVFP4 daily driver.
+

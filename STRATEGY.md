@@ -17,7 +17,7 @@ From the literature sweep (`docs/literature/`) + first hands-on runs:
    where the card's compute shines; TG is bandwidth-bound -> MTP/spec-decode is the only lever there.
 5. **MTP [UPDATED 2026-06-22 -- PROVEN on vLLM-XPU]:** vLLM-XPU 0.23.0 (`vllm-xpu-env:v0230`, #43565 native) DOES MTP
    on Gated-DeltaNet -- single-card 27B W4A16 + MTP spec=4 PIECEWISE = **1.79x (55.28 t/s vs 30.84)**, the primary
-   decode lever (DENSE only; MoE MTP is flat). No llama.cpp / draft-model fallback needed. Full campaign: MTP_TODO.md.
+   decode lever (DENSE primary; MoE MTP real only with BF16-preserved draft -- see COOKBOOK_CAMPAIGN 2026-08-10). No llama.cpp / draft-model fallback needed. Full campaign: MTP_TODO.md.
    (The old "vLLM-XPU can't do MTP on DeltaNet" was true on pre-0.23 images.)
 6. **Dual-card:** no P2P on Arc; prefer **pipeline/layer-split over tensor-parallel** on PCIe3; expect
    ~1.0-1.3x single-stream, real wins in **capacity + concurrency (esp. MoE)**. Two independent

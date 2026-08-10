@@ -1,0 +1,100 @@
+[
+  {
+    "file": "dense27_gptq_mtp4_p2048.json",
+    "post_first": 43.677568673222346,
+    "prefill_proxy": 1683.6642940361503,
+    "n_ok": 3,
+    "label": "dense27_gptq_mtp4_p2048"
+  },
+  {
+    "file": "dense27_gptq_mtp4_p512.json",
+    "post_first": 52.070826212817686,
+    "prefill_proxy": 1655.5128727461788,
+    "n_ok": 3,
+    "label": "dense27_gptq_mtp4_p512"
+  },
+  {
+    "file": "dense27_gptq_nospec_p2048.json",
+    "post_first": 21.637239282364767,
+    "prefill_proxy": 1820.2810487458112,
+    "n_ok": 3,
+    "label": "dense27_gptq_nospec_p2048"
+  },
+  {
+    "file": "dense27_gptq_nospec_p512.json",
+    "post_first": 27.115273606881463,
+    "prefill_proxy": 1868.3932158126713,
+    "n_ok": 3,
+    "label": "dense27_gptq_nospec_p512"
+  },
+  {
+    "file": "dense27_mtp4_boundary128k.json",
+    "post_first": NaN,
+    "prefill_proxy": NaN,
+    "n_ok": 0,
+    "label": "dense27_mtp4_boundary128k"
+  },
+  {
+    "file": "dense27_mtp4_p100k_boundary.json",
+    "post_first": NaN,
+    "prefill_proxy": NaN,
+    "n_ok": 0,
+    "label": "dense27_mtp4_p100k_boundary"
+  },
+  {
+    "file": "dense27_mtp4_p120k_boundary.json",
+    "post_first": NaN,
+    "prefill_proxy": NaN,
+    "n_ok": 0,
+    "label": "dense27_mtp4_p120k_boundary"
+  },
+  {
+    "file": "dense27_mtp4_p16k.json",
+    "post_first": 59.52396879417489,
+    "prefill_proxy": 1354.9460508723816,
+    "n_ok": 1,
+    "label": "dense27_mtp4_p16k_boundaryish"
+  },
+  {
+    "file": "moe35_gptq_mtp2_p2048.json",
+    "post_first": 85.68158405569588,
+    "prefill_proxy": 7645.997233968874,
+    "n_ok": 3,
+    "label": "moe35_gptq_mtp2_p2048"
+  },
+  {
+    "file": "moe35_gptq_mtp2_p512.json",
+    "post_first": 94.51689552973993,
+    "prefill_proxy": 5732.069409128838,
+    "n_ok": 3,
+    "label": "moe35_gptq_mtp2_p512"
+  },
+  {
+    "file": "moe35_gptq_mtp4_p2048.json",
+    "post_first": 85.5986791843939,
+    "prefill_proxy": 7455.003605983133,
+    "n_ok": 3,
+    "label": "moe35_gptq_mtp4_p2048"
+  },
+  {
+    "file": "moe35_gptq_mtp4_p512.json",
+    "post_first": 88.73446130050107,
+    "prefill_proxy": 5453.864074846955,
+    "n_ok": 3,
+    "label": "moe35_gptq_mtp4_p512"
+  },
+  {
+    "file": "moe35_gptq_no-spec_p2048.json",
+    "post_first": 51.744214813047826,
+    "prefill_proxy": 7604.447705129359,
+    "n_ok": 3,
+    "label": "moe35_gptq_no-spec_p2048"
+  },
+  {
+    "file": "moe35_gptq_no-spec_p512.json",
+    "post_first": 69.33002416292236,
+    "prefill_proxy": 6801.016765936236,
+    "n_ok": 3,
+    "label": "moe35_gptq_no-spec_p512"
+  }
+]

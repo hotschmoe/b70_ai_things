@@ -26,7 +26,9 @@ MODELS_FILES="${MODELS_FILES:-$REPO/models/files}"
 PUBLIC_IMAGE='vllm/vllm-openai-xpu@sha256:2c427ef477da092eb6f2cdbbbd24950b5fa171565b916db69d4c7bb10e68ca97'
 MAXLEN="${MAXLEN:-131072}"
 MAXBATCH="${MAXBATCH:-8192}"
-MAXSEQS="${MAXSEQS:-64}"
+# Dense MTP4 capture OOMs at max-seqs 64 on this box (graph buffers + 17 GiB weights).
+# Default 8 unless caller overrides; no-spec can still raise MAXSEQS.
+MAXSEQS="${MAXSEQS:-8}"
 LANGUAGE_ONLY="${LANGUAGE_ONLY:-1}"
 
 QUANT_FLAG=""
@@ -50,7 +52,8 @@ case "$TRACK" in
   dense27-autoround)
     HOST_CKPT="$MODELS_FILES/qwen3.6-27b/int4-autoround"
     SERVED="qwen36-27b-int4-autoround-mtp"
-    IMAGE="${IMAGE:-vllm-xpu-env:v0240}"
+    # base :v0260 has broken XPU device discovery on this host; int8g bake is the working 0.26 image
+    IMAGE="${IMAGE:-vllm-xpu-env:int8g-v0260}"
     QUANT_FLAG=""
     DTYPE="auto"
     KVDTYPE="fp8_e5m2"
@@ -58,7 +61,7 @@ case "$TRACK" in
   moe35-autoround)
     HOST_CKPT="$MODELS_FILES/qwen3.6-35b-a3b/int4-autoround"
     SERVED="qwen36-35b-a3b-int4-autoround-mtp"
-    IMAGE="${IMAGE:-vllm-xpu-env:v0240}"
+    IMAGE="${IMAGE:-vllm-xpu-env:int8g-v0260}"
     QUANT_FLAG=""
     DTYPE="auto"
     KVDTYPE="fp8_e5m2"
@@ -112,12 +115,20 @@ esac
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
 RENDER_GID=$(stat -c '%g' /dev/dri/render* 2>/dev/null | sort -u | head -1 || true)
-SPEC_HOST=$(mktemp /tmp/b70_spec.XXXXXX.json)
+# Stable path: must outlive this script (container bind-mounts it).
+SPEC_HOST="/tmp/b70_spec_${NAME}.json"
 echo "$SPEC_JSON" > "$SPEC_HOST"
-trap 'rm -f "$SPEC_HOST"' EXIT
 
-# Build the inner serve command as a single string
-SERVE_CMD="python /patches/apply_mtp_patches.py && vllm serve /model"
+# Build the inner serve command as a single string.
+# NOTE: vLLM 0.26 on XPU wants --speculative-config as a JSON *string*, not a
+# path (path form is rejected by argparse). We cat /spec.json inside the container.
+# PIECEWISE cudagraph avoids FULL-mode SYCL Graph + flash_attn scratch errors
+# seen with default FULL_AND_PIECEWISE on this stack.
+CGMODE="${CGMODE:-PIECEWISE}"
+COMPILE_JSON="{\"cudagraph_mode\":\"${CGMODE}\"}"
+SERVE_CMD="python /patches/apply_mtp_patches.py && "
+SERVE_CMD+='SPEC_JSON=$(cat /spec.json) && '
+SERVE_CMD+="vllm serve /model"
 SERVE_CMD+=" --host 0.0.0.0 --port 8000"
 SERVE_CMD+=" --dtype $DTYPE"
 SERVE_CMD+=" --max-model-len $MAXLEN"
@@ -127,13 +138,20 @@ SERVE_CMD+=" --max-num-batched-tokens $MAXBATCH"
 SERVE_CMD+=" --enable-auto-tool-choice --tool-call-parser qwen3_coder"
 SERVE_CMD+=" --served-model-name $SERVED"
 SERVE_CMD+=" --trust-remote-code"
+SERVE_CMD+=" --compilation-config '$COMPILE_JSON'"
 SERVE_CMD+=" $CACHE_ARG"
 if [ -n "$QUANT_FLAG" ]; then SERVE_CMD+=" --quantization $QUANT_FLAG"; fi
 if [ -n "$KVDTYPE" ] && [ "$KVDTYPE" != "auto" ] && [ "$KVDTYPE" != "0" ]; then
   SERVE_CMD+=" --kv-cache-dtype $KVDTYPE"
 fi
 if [ "$LANGUAGE_ONLY" = 1 ]; then SERVE_CMD+=" --language-model-only"; fi
-if [ "$SPEC_USE" = 1 ]; then SERVE_CMD+=" --speculative-config /spec.json"; fi
+if [ "$SPEC_USE" = 1 ]; then
+  SERVE_CMD+=' --speculative-config "$SPEC_JSON"'
+fi
+# Allow full eager fallback for bring-up
+if [ "${EAGER:-0}" = 1 ]; then
+  SERVE_CMD+=" --enforce-eager"
+fi
 
 echo "=== cookbook launch ==="
 echo "  name=$NAME image=$IMAGE"
@@ -141,23 +159,29 @@ echo "  track=$TRACK mode=$MODE cache=$CACHE util=$GPU_UTIL maxlen=$MAXLEN"
 echo "  ckpt=$HOST_CKPT (${sz} MB) card=$CARD port=$PORT"
 echo "  cmd=$SERVE_CMD"
 
+# Device/env match rdy_to_serve/_common/lib.sh (b70_serve). The cookbook's
+# ZE_FLAT_DEVICE_HIERARCHY=COMPOSITE + ONEAPI_DEVICE_SELECTOR combo can yield
+# "XPU device count is zero" on this host -- pin with ZE_AFFINITY_MASK only.
+SHM="${SHM:-32g}"
 DOCKER_ARGS=(
   run -d --name "$NAME"
   --device /dev/dri
+  -v /dev/dri/by-path:/dev/dri/by-path
+  --ipc=host
+  --shm-size "$SHM"
   -p "${PORT}:8000"
-  -v /dev/dri:/dev/dri
   -v "$HOST_CKPT:/model:ro"
   -v "$PATCH_DIR:/patches:ro"
   -v "$SPEC_HOST:/spec.json:ro"
   -e VLLM_TARGET_DEVICE=xpu
-  -e ZE_FLAT_DEVICE_HIERARCHY=COMPOSITE
   -e B70_MTP_BF16_DRAFT=1
   -e VLLM_XPU_ENABLE_XPU_GRAPH=1
   -e PYTORCH_ALLOC_CONF=expandable_segments:True
   -e HF_HUB_OFFLINE=1
   -e TRANSFORMERS_OFFLINE=1
   -e "ZE_AFFINITY_MASK=${CARD}"
-  -e "ONEAPI_DEVICE_SELECTOR=level_zero:${CARD}"
+  -e SYCL_UR_USE_LEVEL_ZERO_V2=0
+  -e VLLM_LOGGING_LEVEL=INFO
   --entrypoint bash
 )
 if [ -n "${RENDER_GID:-}" ]; then

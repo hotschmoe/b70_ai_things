@@ -41,7 +41,7 @@ experts to the pure-Triton `MoeWNA16` path, skipping the CUDA-only Marlin probes
 - **c1 (46.5) is DOWN from the historical v0230moe 67.7** -- the ARK int4-linear kernel is gated off for
   capture-compat (gotcha 1); the in-tree `int4_gemm_w4a16` is slower at M=1. c4 (44.0) matches the old 43.8.
   c1 < c2 (46.5 < 57.6) is the launch-bound MoE signature (~3B active is compute-light at batch=1).
-- Spec-decode does NOT help this MoE (2026-06-22 M5: MTP = +3% flat vs +79% on the dense 27B). MoE headline
+- Spec-decode on THIS AutoRound/Quark shelf (quantized or incomplete MTP draft) was flat (2026-06-22 M5). RETIRED for BF16-preserved GPTQ drafts: public-image MTP2 +36% on 35B (docs/COOKBOOK_CAMPAIGN.md 2026-08-10). MoE headline
   is CAPTURE, not MTP. There is no recent lever that lifts single-stream toward 90-100; aggregate scales fine.
 
 verified 2026-07-04: coherent gen "Paris", gate-clean start, benched captured. Re-verify via `serve.sh run`.
