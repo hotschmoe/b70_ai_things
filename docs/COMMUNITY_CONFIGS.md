@@ -230,3 +230,14 @@ CORRECTS our row #2 above.
    to the row here we were chasing.
 3. Add new community data points as rows in the scoreboard; promote anything we decide to actively
    chase into its own [TARGET] section like the 27B run above.
+
+
+## Cookbook campaign (2026-08-10)
+
+Ported and measured against [SergiioB/intel-arc-pro-b70-inference-cookbook](https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook).
+
+- Patches: `vllm/patches/cookbook/` (BF16 MTP draft + GDN boundary)
+- Harness: `vllm/cookbook_campaign/phase_bench.py` (client post-first methodology)
+- Policy + results: `docs/COOKBOOK_CAMPAIGN.md`
+- **INT4+MTP peaks are a C1 ceiling reference only** -- they do not demote our W8A8/NVFP4 daily driver (see item 4 in that doc).
+

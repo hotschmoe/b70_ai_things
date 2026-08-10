@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+# Launch a single-card cookbook-style vLLM serve with MTP patches applied.
+#
+# Usage:
+#   bash vllm/cookbook_campaign/launch.sh TRACK MODE CACHE [PORT] [CARD]
+#
+# TRACK: dense27-gptq | moe35-gptq | dense27-autoround | moe35-autoround
+# MODE:  no-spec | mtp1 | mtp2 | mtp4
+# CACHE: on | off
+# PORT:  default 8000
+# CARD:  0|1 default 0
+#
+# IMAGE: default = public cookbook digest for *-gptq tracks.
+#        autoround tracks default to vllm-xpu-env:v0240 (our validated INT4 path).
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TRACK=${1:?usage: $0 TRACK MODE CACHE [PORT] [CARD]}
+MODE=${2:?}
+CACHE=${3:?}
+PORT=${4:-8000}
+CARD=${5:-0}
+NAME="${NAME:-b70_cb_${TRACK}_${MODE}_${CACHE}}"
+PATCH_DIR="$REPO/vllm/patches/cookbook"
+MODELS_FILES="${MODELS_FILES:-$REPO/models/files}"
+PUBLIC_IMAGE='vllm/vllm-openai-xpu@sha256:2c427ef477da092eb6f2cdbbbd24950b5fa171565b916db69d4c7bb10e68ca97'
+MAXLEN="${MAXLEN:-131072}"
+MAXBATCH="${MAXBATCH:-8192}"
+MAXSEQS="${MAXSEQS:-64}"
+LANGUAGE_ONLY="${LANGUAGE_ONLY:-1}"
+
+QUANT_FLAG=""
+DTYPE="float16"
+KVDTYPE="fp8"
+IMAGE="${IMAGE:-}"
+
+case "$TRACK" in
+  dense27-gptq)
+    HOST_CKPT="$MODELS_FILES/community/qwen36-27b-gptq-mtp-preserved"
+    SERVED="Qwen3.6-27B-MTP-Preserved-GPTQ-Int4"
+    QUANT_FLAG="gptq"
+    IMAGE="${IMAGE:-$PUBLIC_IMAGE}"
+    ;;
+  moe35-gptq)
+    HOST_CKPT="$MODELS_FILES/community/qwen36-35b-gptq-mtp-preserved"
+    SERVED="Qwen3.6-35B-A3B-MTP-Preserved-GPTQ-Int4"
+    QUANT_FLAG="gptq"
+    IMAGE="${IMAGE:-$PUBLIC_IMAGE}"
+    ;;
+  dense27-autoround)
+    HOST_CKPT="$MODELS_FILES/qwen3.6-27b/int4-autoround"
+    SERVED="qwen36-27b-int4-autoround-mtp"
+    IMAGE="${IMAGE:-vllm-xpu-env:v0240}"
+    QUANT_FLAG=""
+    DTYPE="auto"
+    KVDTYPE="fp8_e5m2"
+    ;;
+  moe35-autoround)
+    HOST_CKPT="$MODELS_FILES/qwen3.6-35b-a3b/int4-autoround"
+    SERVED="qwen36-35b-a3b-int4-autoround-mtp"
+    IMAGE="${IMAGE:-vllm-xpu-env:v0240}"
+    QUANT_FLAG=""
+    DTYPE="auto"
+    KVDTYPE="fp8_e5m2"
+    ;;
+  *)
+    echo "TRACK must be dense27-gptq|moe35-gptq|dense27-autoround|moe35-autoround" >&2
+    exit 2
+    ;;
+esac
+
+HOST_CKPT="${CKPT_HOST:-$HOST_CKPT}"
+if [ ! -d "$HOST_CKPT" ] || [ ! -f "$HOST_CKPT/config.json" ]; then
+  echo "Model dir missing/incomplete: $HOST_CKPT" >&2
+  exit 1
+fi
+sz=$(du -sm "$HOST_CKPT" | awk '{print $1}')
+if [ "$sz" -lt 1000 ]; then
+  echo "Model dir looks incomplete (${sz} MB): $HOST_CKPT" >&2
+  exit 1
+fi
+
+case "$MODE" in
+  no-spec)
+    SPEC_JSON='{}'
+    SPEC_USE=0
+    GPU_UTIL="${UTIL:-0.90}"
+    ;;
+  mtp1|mtp2|mtp4)
+    N=${MODE#mtp}
+    SPEC_JSON="{\"method\":\"mtp\",\"num_speculative_tokens\":$N}"
+    SPEC_USE=1
+    if [ "$N" = "4" ] && [[ "$TRACK" == dense* ]]; then
+      GPU_UTIL="${UTIL:-0.88}"
+    else
+      GPU_UTIL="${UTIL:-0.90}"
+    fi
+    if [[ "$TRACK" == moe* ]]; then GPU_UTIL="${UTIL:-0.85}"; fi
+    ;;
+  *)
+    echo "MODE must be no-spec|mtp1|mtp2|mtp4" >&2
+    exit 2
+    ;;
+esac
+
+case "$CACHE" in
+  on) CACHE_ARG="--enable-prefix-caching" ;;
+  off) CACHE_ARG="--no-enable-prefix-caching" ;;
+  *) echo "CACHE must be on|off" >&2; exit 2 ;;
+esac
+
+docker rm -f "$NAME" >/dev/null 2>&1 || true
+
+RENDER_GID=$(stat -c '%g' /dev/dri/render* 2>/dev/null | sort -u | head -1 || true)
+SPEC_HOST=$(mktemp /tmp/b70_spec.XXXXXX.json)
+echo "$SPEC_JSON" > "$SPEC_HOST"
+trap 'rm -f "$SPEC_HOST"' EXIT
+
+# Build the inner serve command as a single string
+SERVE_CMD="python /patches/apply_mtp_patches.py && vllm serve /model"
+SERVE_CMD+=" --host 0.0.0.0 --port 8000"
+SERVE_CMD+=" --dtype $DTYPE"
+SERVE_CMD+=" --max-model-len $MAXLEN"
+SERVE_CMD+=" --gpu-memory-utilization $GPU_UTIL"
+SERVE_CMD+=" --max-num-seqs $MAXSEQS"
+SERVE_CMD+=" --max-num-batched-tokens $MAXBATCH"
+SERVE_CMD+=" --enable-auto-tool-choice --tool-call-parser qwen3_coder"
+SERVE_CMD+=" --served-model-name $SERVED"
+SERVE_CMD+=" --trust-remote-code"
+SERVE_CMD+=" $CACHE_ARG"
+if [ -n "$QUANT_FLAG" ]; then SERVE_CMD+=" --quantization $QUANT_FLAG"; fi
+if [ -n "$KVDTYPE" ] && [ "$KVDTYPE" != "auto" ] && [ "$KVDTYPE" != "0" ]; then
+  SERVE_CMD+=" --kv-cache-dtype $KVDTYPE"
+fi
+if [ "$LANGUAGE_ONLY" = 1 ]; then SERVE_CMD+=" --language-model-only"; fi
+if [ "$SPEC_USE" = 1 ]; then SERVE_CMD+=" --speculative-config /spec.json"; fi
+
+echo "=== cookbook launch ==="
+echo "  name=$NAME image=$IMAGE"
+echo "  track=$TRACK mode=$MODE cache=$CACHE util=$GPU_UTIL maxlen=$MAXLEN"
+echo "  ckpt=$HOST_CKPT (${sz} MB) card=$CARD port=$PORT"
+echo "  cmd=$SERVE_CMD"
+
+DOCKER_ARGS=(
+  run -d --name "$NAME"
+  --device /dev/dri
+  -p "${PORT}:8000"
+  -v /dev/dri:/dev/dri
+  -v "$HOST_CKPT:/model:ro"
+  -v "$PATCH_DIR:/patches:ro"
+  -v "$SPEC_HOST:/spec.json:ro"
+  -e VLLM_TARGET_DEVICE=xpu
+  -e ZE_FLAT_DEVICE_HIERARCHY=COMPOSITE
+  -e B70_MTP_BF16_DRAFT=1
+  -e VLLM_XPU_ENABLE_XPU_GRAPH=1
+  -e PYTORCH_ALLOC_CONF=expandable_segments:True
+  -e HF_HUB_OFFLINE=1
+  -e TRANSFORMERS_OFFLINE=1
+  -e "ZE_AFFINITY_MASK=${CARD}"
+  -e "ONEAPI_DEVICE_SELECTOR=level_zero:${CARD}"
+  --entrypoint bash
+)
+if [ -n "${RENDER_GID:-}" ]; then
+  DOCKER_ARGS+=( --group-add "$RENDER_GID" )
+fi
+
+docker "${DOCKER_ARGS[@]}" "$IMAGE" -lc "set -e; $SERVE_CMD"
+
+echo "Container: $NAME"
+echo "Logs:      docker logs -f $NAME"
+echo "Health:    curl -sf http://127.0.0.1:$PORT/health"
+echo "Stop:      docker rm -f $NAME"
