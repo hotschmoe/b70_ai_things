@@ -6,6 +6,17 @@ skip the dead-ends. Living doc — see [archive/RESULTS.md](archive/RESULTS.md) 
 tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow.
 
 ## TL;DR
+- **Qwen3.8-27B Unsloth NVFP4 (2026-08-14): loads, NOT a daily-driver candidate.** Same
+  `qwen3_5` hybrid as 3.6-27B. `unsloth/Qwen3.8-27B-NVFP4` is compressed-tensors mixed
+  NVFP4 (MLP nvfp4-pack g16, attn/last-8-MLP/lm_head FP8), not ModelOpt. vLLM 0.26.0
+  TP=2 @262144 bf16-KV loaded (10.77-11.16 GiB/card, KV 349k with MTP5 / 409k MTP-off)
+  but emitted `!!!!` / looped garbage even with MTP off. MTP5 scheduled draft tokens
+  `[-1,-1,-1,-1,-1]` and killed the engine under concurrent load. IN=2048 MTP-off:
+  TTFT 12333 ms, PP 166 tok/s, TG 9.66 / c4 6.53 -- ~10x slower than 3.6 NVFP4 TP=2.
+  Cause: our XPU fused kernel is ModelOpt-shaped; the shim attached
+  EmulationNvFp4LinearKernel to the Unsloth layout. No public Unsloth/NVIDIA/Qwen
+  W8A8-INT8 on release day. Official BF16 + Inferact ModelOpt NVFP4 are on disk for
+  the next serve. DD restored to 3.6 NVFP4 TP=2; systemd not swapped.
 - **Current 27B result (2026-07-28):** NVFP4 is the fastest coherent local path we have measured for
   this workload. The daily driver is two vLLM 0.25.1 single-card replicas at 100,352 tokens, each at
   64.6 code tok/s with calibrated fp8 KV and working prefix reuse. A vLLM 0.26.0 TP=2 shelf mode serves

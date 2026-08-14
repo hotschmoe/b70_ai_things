@@ -53,7 +53,14 @@ MAXSEQS="${MAXSEQS:-$_MAXSEQS_DEF}"
 # sets PREFIXCACHE=1 for warm-prefix reuse (skips the full re-prefill on repeated long prefixes).
 PREFIXCACHE="${PREFIXCACHE:-0}"
 if [ "$PREFIXCACHE" = 1 ]; then PC_ARG="--enable-prefix-caching"; else PC_ARG="--no-enable-prefix-caching"; fi
-SERVED="qwen3.6-27b-NVFP4-modelopt-${MODE}"
+# MODEL_REL is the path under models/files (mounted as /models). Default keeps the
+# original Qwen3.6 ModelOpt checkpoint. Qwen3.8 Unsloth NVFP4 is
+# qwen3.8-27b/nvfp4-unsloth (compressed-tensors mixed-precision, not ModelOpt).
+MODEL_REL="${MODEL_REL:-qwen3.6-27b/nvfp4-modelopt}"
+MODEL_HOST="$REPO/models/files/$MODEL_REL"
+MODEL_CTR="/models/$MODEL_REL"
+[ -d "$MODEL_HOST" ] || { echo "MISSING MODEL_REL $MODEL_HOST"; exit 1; }
+SERVED="${SERVED:-qwen3.6-27b-NVFP4-modelopt-${MODE}}"
 
 # GRAPH=1 -> PIECEWISE XPU graph capture (M6, 2026-07-04). Needs the register_fake
 # for _xpu_C.nvfp4_gemm_w4a16 (in patches/sitecustomize.py, MODE=fused only) so
@@ -258,14 +265,14 @@ fi
 KV_MOUNTS=( )
 if [ -n "${KV_CONFIG_OVERRIDE:-}" ]; then
   [ -f "$KV_CONFIG_OVERRIDE" ] || { echo "MISSING KV_CONFIG_OVERRIDE $KV_CONFIG_OVERRIDE"; exit 1; }
-  KV_MOUNTS=( -v "$KV_CONFIG_OVERRIDE:/models/qwen3.6-27b/nvfp4-modelopt/config.json:ro" )
+  KV_MOUNTS=( -v "$KV_CONFIG_OVERRIDE:$MODEL_CTR/config.json:ro" )
   echo "=== KV_CONFIG_OVERRIDE ON -> $KV_CONFIG_OVERRIDE ==="
 elif [ "${KV_FP8:-1}" = 0 ]; then
-  _CFG_SRC="$REPO/models/files/qwen3.6-27b/nvfp4-modelopt/config.json"
+  _CFG_SRC="$MODEL_HOST/config.json"
   _CFG_PATCH="${KV_PATCH_DIR:-/tmp}/b70_config.nvfp4.nokvfp8.json"
   python3 -c "import json; d=json.load(open('$_CFG_SRC')); d.get('quantization_config',{}).pop('kv_cache_scheme',None); json.dump(d,open('$_CFG_PATCH','w'))" \
     || { echo "failed to generate $_CFG_PATCH"; exit 1; }
-  KV_MOUNTS=( -v "$_CFG_PATCH:/models/qwen3.6-27b/nvfp4-modelopt/config.json:ro" )
+  KV_MOUNTS=( -v "$_CFG_PATCH:$MODEL_CTR/config.json:ro" )
   echo "=== KV_FP8=0: fp8 KV cache DISABLED (bf16 KV, kv_cache_scheme stripped) ==="
 fi
 
@@ -351,7 +358,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" \
   "${MGPU[@]}" "${GRAPH_ENV[@]}" "${PUSH_AR_ENV[@]}" "${KV_SCALES_ENV[@]}" "${EXTRA_ENV[@]}" \
   --entrypoint vllm "$IMG" \
-  serve /models/qwen3.6-27b/nvfp4-modelopt --served-model-name "$SERVED" \
+  serve "$MODEL_CTR" --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" "${MAXBATCH_ARG[@]}" \
   "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" "${AGENTIC_ARGS[@]}" "${PROFILER_ARGS[@]}" "$PC_ARG" --trust-remote-code --skip-mm-profiling

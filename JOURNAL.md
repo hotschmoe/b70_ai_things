@@ -10570,3 +10570,90 @@ VERDICT -> GO for items 1–5 documentation.
   (5) phase_bench.py is the publishable post-first harness.
   Details: docs/COOKBOOK_CAMPAIGN.md ; raw JSON under
   results/cookbook_campaign/public_matrix_20260810T220015Z/.
+
+### 2026-08-14 - Qwen3.8-27B release: download + NVFP4 TP=2 bring-up
+
+CONTEXT -> Qwen3.8-27B open weights landed today (HF Qwen/Qwen3.8-27B, likes 8.3k).
+  Same `qwen3_5` hybrid GDN+attention as 3.6-27B: 64 layers, 16x (3x GDN + 1x gated
+  attn), 262144 native ctx (1M YaRN), vision + MTP. Official scores are a real step
+  up vs 3.6-27B (SWE-bench Pro 61.7 vs 53.5; LiveCodeBench v6 90.3 vs 83.9). Current
+  DD is vLLM 0.26.0 NVFP4 Qwen3.6-27B TP=2 bf16-KV @262144 (`b70_daily_0` :18080).
+
+CONFIG (weights) ->
+  NVFP4: unsloth/Qwen3.8-27B-NVFP4 (~23.4 GB, compressed-tensors mixed-precision:
+    MLP nvfp4-pack-quantized g16, attn+last-8-MLP+lm_head FP8, vision bf16, MTP
+    bf16 in model_mtp.safetensors). Reputable source. NOT ModelOpt -- fused XPU
+    NVFP4 kernel is ModelOpt-shaped; first serve may fall back to the generic
+    compressed-tensors path.
+  W8A8-INT8: NO Unsloth/NVIDIA/Qwen public W8A8. Community-only (lokeshe09 INT8,
+    lued W8A16) -- skipped. Official BF16 queued as the on-box GPTQ W8A8 source.
+  Official recipes: vLLM recipes.vllm.ai/Qwen/Qwen3.8-27B (cites Inferact
+    ModelOpt NVFP4 + Qwen FP8; MTP spec=3; reasoning-parser qwen3; tool-call
+    qwen3_coder; temp 1.0 / top_p 0.95 / top_k 20). SGLang cookbook exists but
+    sglang/NVFP4_PORT.md is still "no XPU NVFP4 kernel".
+
+COMMAND (download) ->
+  ```
+  hf download unsloth/Qwen3.8-27B-NVFP4 \
+    --local-dir models/files/qwen3.8-27b/nvfp4-unsloth
+  ```
+
+BACKEND DECISION -> **vLLM 0.26.0 (`int8g-v0260`)**, same TP=2 long-ctx NVFP4
+  recipe as the current DD. Reasons: (1) this box already serves qwen3_5 GDN
+  NVFP4 TP=2 @262144 on that image; (2) sglang NVFP4-XPU is still a port with
+  no native kernel; (3) no newer XPU production image with our fused kernels --
+  local vllm checkout is v0.26.0, sglang image is 0.5.15.post1 (upstream
+  sglang is at 0.5.17 as of 2026-08-08; a rebase is a separate session).
+  Daily-driver + systemd stay on 3.6 until this 3.8 serve is benched coherent.
+
+COMMAND (serve 1, MTP5) ->
+  ```
+  TP=2 PORT=18080 NAME=qwen38_nvfp4 MAXLEN=262144 KV_FP8=0 \
+    bash rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh start
+  ```
+  Image int8g-v0260, PIECEWISE + push-AR + prefix cache + MTP5. Load 11.16 GiB/card
+  in 22s, compile 193s, healthy ~6 min. KV 349,266 tok (1.33x @262144). Log:
+  "Using EmulationNvFp4LinearKernel for NVFP4 GEMM", quantization=compressed-tensors.
+
+RESULT (serve 1) -> LOADS. NOT COHERENT. Paris probe: "Paris" then loops
+  ("you're answer you're answer..."). Chat later emitted empty content / broken
+  reasoning. Completions: "the city where you can find you'll have been.</span>".
+  Concurrent perf_probe crashed the engine: MTP scheduled
+  `spec_decode_tokens=[-1,-1,-1,-1,-1]`, then RuntimeError cancelled / EngineDead.
+  xpu-health after teardown: HEALTHY.
+
+COMMAND (serve 2, MTP off) -> same wrapper with `MTPTOK=` (empty disables spec).
+  Load 10.77 GiB/card, KV 409,498 tok (1.56x @262144), speculative_config=None.
+
+RESULT (serve 2 + bench) -> still NOT COHERENT even without MTP:
+  chat: "You're right ! !．．．． ! ! ! ! ! ! ! ! !"
+  completions: "the city where you can see city's```````` city's"
+  IN=2048/OUT=128 `35_sweep_bench` (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-27b-nvfp4-unsloth-nomtp_20260814_165240.csv):
+    c1: TTFT 12333 ms, PP 166 tok/s, TG 9.66 t/s, out 5.02 t/s
+    c4: TTFT 18628 ms, PP 110 tok/s, TG 6.53 t/s, agg out 13.45 t/s
+  Versus the live 3.6 NVFP4 TP=2 row (PP 1982 @36k, TG ~49 code): this is ~10x
+  slower prefill and garbage text. Cause: Unsloth is compressed-tensors
+  nvfp4-pack-quantized; our XPU fused kernel is ModelOpt-shaped. The shim
+  attaches EmulationNvFp4LinearKernel and dequants the wrong layout.
+
+W8A8 -> no Unsloth/NVIDIA/Qwen public W8A8-INT8 on release day. Official BF16
+  (Qwen/Qwen3.8-27B, 18 shards / ~52 GB) downloaded to
+  models/files/qwen3.8-27b/bf16 as the on-box GPTQ source.
+  Inferact/Qwen3.8-27B-NVFP4 (ModelOpt MIXED_PRECISION, official vLLM recipe
+  NVFP4; producer modelopt 0.0.1.dev1) downloaded to
+  models/files/qwen3.8-27b/nvfp4-modelopt (6 shards + nvfp4_experts_mtp,
+  ~25 GB). Not NVIDIA-org; format-compatible fallback for our fused kernel.
+
+RESTORE -> DD brought back:
+  DD_MODEL=vllm/qwen36-27b-nvfp4 DD_REPLICAS=1 DD_MAXLEN=262144
+  DD_ENV="TP=2 SERVED_FORCE=hotschmoe-dd KV_FP8=0"
+  Healthy as hotschmoe-dd @262144; Open WebUI + Grafana back. systemd unit
+  text still describes the old W8A8 recipe (already stale before this session);
+  not edited.
+
+VERDICT -> **DO NOT swap the daily driver or systemd.** Unsloth NVFP4 on this
+  stack is a format miss, not a 3.8 quality miss. Next: serve Inferact
+  ModelOpt NVFP4 on the same vLLM 0.26.0 TP=2 recipe, then on-box GPTQ W8A8
+  from official BF16. vLLM/sglang image bump is a separate session (no XPU
+  0.27 with our fused kernels; sglang 0.5.17 exists upstream of 0.5.15.post1).

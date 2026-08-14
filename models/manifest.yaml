@@ -144,6 +144,48 @@ models:
            Ships an MTP head (mtp.safetensors). model_type=nemotron_h_puzzle with custom modeling code
            (trust-remote-code). Downloaded via curl 2026-07-08; XPU serve + bench NOT yet done.
 
+  # ===================== qwen3.8-27b (dense VLM, released 2026-08-14) =====================
+  - id: qwen3.8-27b/bf16
+    family: qwen3.8-27b
+    scheme: bf16
+    vision: true
+    mtp: true
+    size_gb: 56
+    served_as: qwen38-27b (base / future W8A8 source)
+    source: { type: hf, repo: Qwen/Qwen3.8-27B }
+    notes: official BF16. Same qwen3_5 hybrid GDN+attention as 3.6-27B (64 layers,
+           262144 native ctx, 1M YaRN). Downloaded as the on-box GPTQ W8A8 source;
+           no reputable public W8A8-INT8 (Unsloth/NVIDIA) existed on release day.
+
+  - id: qwen3.8-27b/nvfp4-modelopt
+    family: qwen3.8-27b
+    scheme: nvfp4-modelopt-mixed
+    vision: true
+    mtp: true
+    size_gb: 26
+    served_as: qwen3.8-27b-NVFP4-modelopt
+    source: { type: hf, repo: Inferact/Qwen3.8-27B-NVFP4 }
+    notes: ModelOpt MIXED_PRECISION NVFP4 cited by the official vLLM Qwen3.8 recipe
+           as the NVIDIA-format build. Same family as nvidia/Qwen3.6-27B-NVFP4 (the
+           format our XPU fused kernel already runs). Not NVIDIA-org. Next serve
+           candidate after Unsloth compressed-tensors failed coherence 2026-08-14.
+
+  - id: qwen3.8-27b/nvfp4-unsloth
+    family: qwen3.8-27b
+    scheme: nvfp4-unsloth-mixed
+    vision: true
+    mtp: true
+    size_gb: 23
+    served_as: qwen3.8-27b-NVFP4-unsloth
+    source: { type: hf, repo: unsloth/Qwen3.8-27B-NVFP4 }
+    notes: Unsloth Dynamic NVFP4 compressed-tensors MIXED_PRECISION. MLP is
+           nvfp4-pack-quantized (group 16); attention + last-8 MLP + lm_head are
+           FP8 float-quantized; vision ignored (bf16); MTP in model_mtp.safetensors
+           (bf16). NOT ModelOpt -- our fused XPU NVFP4 kernel is ModelOpt-shaped.
+           Official vLLM recipe also cites Inferact/Qwen3.8-27B-NVFP4 (modelopt)
+           as a NVIDIA-format fallback. Served 2026-08-14 on vLLM 0.26.0 TP=2:
+           loads, NOT coherent (Paris -> !!!!), IN=2048 PP 166 / TG 9.7. Do not promote.
+
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
 # Removed from disk by reorg.sh per the 2026-06-29 review (off-target or prior-gen scaffolding):
 #   google/gemma-4-12B-it            (hf) -- off-target, not Qwen3.6

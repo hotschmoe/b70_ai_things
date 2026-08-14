@@ -308,6 +308,7 @@ Numbers below are each entry's own production config. The first two NVFP4 rows w
 |---|---|---|---|---|---|---|---|---|
 | qwen3.6-27b | **NVFP4 DP=2 replica: fp8-KV-cal + MTP5 + embed-INT8 @100k (DAILY DRIVER)** [dp] | 22.76/card | 1x2 | 5869/card warm | 347 ms warm | **64.6 code** | **202.2 code agg** [dp] | 144.4k/card (288.8k cumulative) [dp] |
 | qwen3.6-27b | **NVFP4 TP=2 fp8-KV-cal + MTP5 + push-AR @200k** [tp2] | 11.54/card | 2 | 1982 @36k | 18.15 s @36k | **48.9 code** (52.0 best) | 25.7/stream (**103.0 agg**) | **640.8k tok** |
+| qwen3.8-27b | Unsloth NVFP4 compressed-tensors TP=2 MTP-off @262k (research; NOT coherent) [38u] | 10.77/card | 2 | 166 | 12333 ms | 9.66 | 6.53 (13.45 agg) | 409k tok |
 | qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
@@ -340,6 +341,14 @@ Lower-depth fused MTP3 reached only c1 37.2/c4 103.0, and MTP4 emitted visible `
 1/18 streams. A full replicated drafter head then used 341 MiB extra/rank and removed the draft
 gather, but measured only c1 30.1/c4 113.5 and produced intermittent rank-1 shadow mismatches
 despite exact checkpoint hashes. All local-argmax/replicated-head switches remain default-off.
+
+[38u] **Qwen3.8-27B Unsloth NVFP4 is research-only (2026-08-14).** Same vLLM 0.26.0 TP=2
+long-ctx recipe as the 3.6 DD (bf16 KV, MAXLEN=262144, PIECEWISE + push-AR). Checkpoint is
+`unsloth/Qwen3.8-27B-NVFP4` (compressed-tensors mixed-precision), not ModelOpt. It loads
+(10.77 GiB/card, KV 409k) but is **not coherent** (Paris probe degenerates to "!!!!" even
+with MTP off) and is ~10x slower at IN=2048 (TTFT 12.3 s / PP 166 / TG 9.7). Our fused XPU
+NVFP4 kernel is ModelOpt-shaped; do not promote. Next: Inferact ModelOpt NVFP4, then on-box
+W8A8 from official BF16. Daily driver stays Qwen3.6 NVFP4 TP=2.
 
 ◆ **NVFP4 TP=1 fp8 KV = the single-card 128k-context config (2026-07-08).** Same NVFP4 checkpoint +
 `nvfp4_gemm_w4a16` kernel + PIECEWISE capture, on ONE card. **fp8 KV cache** (calibrated `amax/448` per-layer
