@@ -10657,3 +10657,108 @@ VERDICT -> **DO NOT swap the daily driver or systemd.** Unsloth NVFP4 on this
   ModelOpt NVFP4 on the same vLLM 0.26.0 TP=2 recipe, then on-box GPTQ W8A8
   from official BF16. vLLM/sglang image bump is a separate session (no XPU
   0.27 with our fused kernels; sglang 0.5.17 exists upstream of 0.5.15.post1).
+
+### 2026-08-14b - Inferact ModelOpt NVFP4 TP=2 + 3.6 accuracy check
+
+CONTEXT -> Follow-up to 2026-08-14. User asked to execute Inferact first, and
+  to check the feel that 3.6 W8A8 and official NVIDIA NVFP4 had the same
+  accuracy. Codex + explore audit: Inferact is ModelOpt `quant_algo=NVFP4`
+  (uniform W4A4), not 3.6 `MIXED_PRECISION`. Tensor names match ModelOpt
+  (weight / weight_scale / weight_scale_2 / input_scale). GDN in_projs +
+  lm_head + MTP stay bf16. Fused W4A16 kernel will NOT attach; W4A4 emul
+  will. GO-WITH-CAVEATS. MTP off, KV_FP8=0, UTIL=0.85.
+
+ACCURACY (3.6, HumanEval+ thinking-off greedy) ->
+  NVFP4 vLLM 0.24 fused MTP3 bf16-KV: **0.988 / 0.945**
+  NVFP4 vLLM 0.25.1 DD replica MTP5 fp8-KV: **0.976 / 0.939-0.945**
+  W8A8 sglang fused MTP graph-off: **0.970 / 0.933**
+  Not same-stack (vLLM vs sglang; graph vs eager). Face-value NVFP4 +1-2
+  plus points (~1-3 problems). Harness rule: 1-2 pt HumanEval is noise.
+  "Same accuracy" is the right practical read. Slightly-NVFP4-ahead on the
+  published board. W8A8 remains the INT8-XMX research path, not a quality
+  rescue for 3.8.
+
+CONFIG -> Inferact TP=2, vLLM 0.26.0 int8g-v0260, GRAPH=1 PIECEWISE, MTP off,
+  MAXLEN=262144, KV_FP8=0, UTIL=0.85, PREFIXCACHE=1, push-AR graph.
+  MODEL_REL=qwen3.8-27b/nvfp4-modelopt
+
+COMMAND ->
+  ```
+  MTPTOK= MODEL_REL=qwen3.8-27b/nvfp4-modelopt \
+    SERVED=qwen3.8-27b-NVFP4-modelopt \
+    TP=2 PORT=18080 NAME=qwen38_nvfp4 MAXLEN=262144 KV_FP8=0 \
+    bash rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh start
+  ```
+
+RESULT -> LOADS as `quantization=modelopt_fp4`. "Using EmulationNvFp4LinearKernel
+  for NVFP4 GEMM" (W4A4 emul, as predicted). Load 12.09 GiB/card (3.6 was
+  11.16; extra is bf16 GDN in_proj + lm_head). KV 364,722 tok, 1.39x @262144.
+  Paris chat: **"Paris"** (2 completion tokens). Completions: "Paris. The
+  capital of Germany is Berlin. The capital of Italy is" -- coherent.
+  IN=2048/OUT=128 MTP-off (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-27b-nvfp4-modelopt-nomtp_20260814_174207.csv):
+    c1: TTFT 1042 ms, PP 1967 tok/s, TG 8.58 t/s
+    c4: engine died (`shm_broadcast cancelled` / EngineDead). xpu-health after.
+  Prefill matches 3.6 NVFP4 TP=2 (~1982). Decode is emul-slow vs 3.6 MTP-off
+  ~25-31 or MTP-on ~49.
+
+VERDICT -> **Coherent 3.8 NVFP4 exists.** Not a DD: decode 8.6 t/s and c4
+  unstable. Do not swap systemd. Next levers (fun Intel work): (1) route
+  Inferact MLP/attn onto fused `nvfp4_gemm_w4a16` by treating W4A4 weights
+  as W4A16 (ignore input_scale) -- Codex/explore both called this the
+  speed path; (2) on-box GPTQ W8A8 from official BF16 (INT8 XMX, the B70
+  story). Restore 3.6 NVFP4 TP=2 DD after health.
+
+### 2026-08-14c - Inferact fused W4A16 + W8A8 method pick + GPTQ start
+
+CONTEXT -> User: try (1) fused W4A16 route, then on-box GPTQ W8A8 from BF16
+  using the B70s, plus a deep dive on newer W8A8-INT8 methods.
+
+FUSE CONFIG -> sitecustomize MODE=fused now registers
+  `_XPUW4A4FusedAsW4A16Kernel` (subclass of Emulation) as
+  `_POSSIBLE_NVFP4_KERNELS[XPU]`. Reuses `_XPUW4A16NvFp4Kernel` scale fold +
+  `nvfp4_gemm_w4a16` / `_f8scale`. Act fake-quant / `input_scale` unused.
+  Same Inferact serve as 2026-08-14b: TP=2, GRAPH=1, MTP-off, MAXLEN=262144,
+  KV_FP8=0, UTIL=0.85, PREFIXCACHE=1, push-AR graph.
+
+COMMAND ->
+  ```
+  MTPTOK= MODEL_REL=qwen3.8-27b/nvfp4-modelopt \
+    SERVED=qwen3.8-27b-NVFP4-modelopt \
+    TP=2 PORT=18080 NAME=qwen38_nvfp4 MAXLEN=262144 KV_FP8=0 \
+    bash rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh start
+  ```
+
+RESULT -> LOADS. Worker log: "Using _XPUW4A4FusedAsW4A16Kernel for NVFP4 GEMM".
+  Weight 13.32 GiB/card (emul was 12.09; extra is folded/f8 scale copies).
+  KV 339,484 tok, 1.30x @262144. Non-fatal torch.compile JSONDecodeError then
+  recovered. Paris thinking-off: **"Paris"** (2 toks). Completions: "Paris.
+  The capital of Germany is Berlin..." IN=2048/OUT=128 MTP-off (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-27b-nvfp4-modelopt-fused-nomtp_20260814_182912.csv):
+    c1: TTFT 947 ms, PP 2163 tok/s, TG **23.78** t/s
+    c4: engine died (`shm_broadcast cancelled` / EngineDead) -- same as emul.
+  xpu-health after stop: HEALTHY both cards.
+
+VERDICT (fuse) -> **Fused W4A16 route works and is coherent.** Decode 8.58 ->
+  23.78 (2.8x). Prefill 1967 -> 2163. In 3.6 MTP-off class (~25-31), not a
+  DD (c4 still dies; MTP not retested). Do not swap systemd.
+
+W8A8 METHODS (2026-08-14 literature, docs/literature/07 section 9) ->
+  No new W8A8-INT8 algorithm. Production recipe is still SmoothQuant + GPTQ
+  (llm-compressor official). 2025-26 SOTA (FlatQuant, ReSpinQuant, SignRoundV2,
+  AutoRound-in-llmcompressor) is W4 / NVFP4 / MXFP. AutoRound now first-class
+  in llm-compressor but the W8A8 headline is FP8, not INT8; our 14B HE+ had
+  GPTQ slightly ahead. Rotation still skip at W8A8 (no SYCL Hadamard). OS+
+  remains the only INT8-specific successor (no compressed-tensors exporter).
+  **Pick: GPTQ W8A8, SMOOTHQUANT=0 first** (hybrid auto-SQ throws). Selective
+  SQ is the second pass. AutoRound 2xpu is the A/B, not the first artifact.
+  Script: `scripts/150_quantize_qwen38_27b_w8a8.sh` (copy of 49; 3.8 BF16
+  source; IMG=int8g-v0260; XPU SequentialPipeline on card 0; gpu-run holds
+  both cards).
+
+W8A8 COMMAND (started after fuse gate + health) ->
+  ```
+  ./bin/gpu-run bash scripts/150_quantize_qwen38_27b_w8a8.sh
+  ```
+  OUT=models/files/qwen3.8-27b/w8a8-gptq. DD stays down for the quant
+  (hours). Restore 3.6 NVFP4 TP=2 after it finishes.

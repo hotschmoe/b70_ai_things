@@ -158,3 +158,40 @@ Our top-1-agreement work is already ahead of perplexity-only shops. Two papers e
 | Token-wise outlier removal | PrefixQuant | 2410.05265 | SINGLE |
 
 **Flagged unverified (re-check before citing):** the "92% HumanEval" figure (2508.16712, blog-sourced); MambaQuant's GitHub link; several search-surfaced 2026 arXiv IDs (some real like DuQuant++ 2604.17789, but all FP4/W4A4-focused and irrelevant to W8A8); per-task numbers for 2504.04823 / 2505.11574 are paper-body-sourced (abstracts confirm only the "W8A8 ≈ lossless" direction). The §1 hardware verdict and §2 root-cause are verified against primary sources / our own evals.
+
+---
+
+## 9. 2026-08-14 addendum -- is there a newer W8A8-INT8 method?
+
+**Question:** Qwen3.8-27B landed; we are about to GPTQ it on-box from official BF16. Did 2025-2026 produce a better W8A8-INT8 algorithm than SmoothQuant + GPTQ?
+
+**Short answer: no.** The production W8A8-INT8 recipe is unchanged. Everything shiny since mid-2024 is a W4A4 / NVFP4 / MXFP4 game. Pick GPTQ W8A8 (XPU SequentialPipeline), `SMOOTHQUANT=0` on this hybrid for the first artifact, then selective SmoothQuant as the recovery lever. AutoRound is the runner-up, not the replacement.
+
+### What the field actually shipped since the June survey
+
+| Item | Date | W8A8-INT8 relevance |
+|---|---|---|
+| llm-compressor official W8A8 recipe | still current 2026-08 | SmoothQuant (alpha 0.8) + GPTQ `scheme=W8A8` + ignore `lm_head`. Dynamic per-token INT8 acts. 512 / 2048 ultrachat. **Unchanged.** https://docs.vllm.ai/projects/llm-compressor/en/latest/examples/quantization_w8a8_int8/ |
+| AutoRound x LLM Compressor | 2025-12-09 (Intel + Red Hat) | AutoRound now emits compressed-tensors from llm-compressor. Support matrix: W2A16-W8A16, **W8A8-FP8** (static/dynamic/block), MXFP8, MXFP4, NVFP4. **W8A8-INT8 is not the headline.** Intel pitches AutoRound for low-bit (INT4 / sub-4 / new FP4 dtypes). SignRoundV2 (2512.04746) is the 2025 paper. |
+| FlatQuant (ICML 2025, 2410.09426) | 2025 | SOTA **W4A4**. Uses W8A8 only as a mixed-precision rescue on the top-5 layers + down_proj. Confirms 8-bit is the easy band. |
+| ReSpinQuant (2604.11080) | 2026-04 | Layer-wise residual rotation. W4A4. |
+| Closed-form / SingleQuant rotations (2511.22316) | 2025-11 | W4A4 vs SpinQuant / OSTQuant / QuaRot. |
+| AMD Quark W8A8 + R1 rotation | current docs | One of the few *W8A8-named* 2025-26 recipes: SmoothQuant and/or a fused R1 rotation before INT8. Rotation still optional at 8-bit; we have no SYCL Hadamard. |
+| Empirical Study of Qwen3 Quantization (2505.02214) | 2025-05 | SmoothQuant **W8A8 already drops** vs FP on Qwen3; W4A8 is much worse. Qwen3 family is activation-sensitive. Do not expect "free lossless" from naive SQ. |
+| Our 14B W8A8 HumanEval+ | `[OURS]` | GPTQ beat AutoRound by a small margin. Standing default stays GPTQ. |
+
+### Methods, ranked for *this* box (B70 INT8 XMX, Qwen3_5 hybrid)
+
+1. **GPTQ W8A8, compressed-tensors, XPU SequentialPipeline** -- the box recipe (`scripts/49`, now `scripts/150` for 3.8). Weights per-channel INT8, acts dynamic per-token INT8, oneDNN s8xs8. Uses the B70 for per-layer Hessian / calib forwards (model stays CPU). `actorder=None` (XPU gather device-lost). **First 3.8 run: `SMOOTHQUANT=0`.** Auto all-layers SmoothQuant still ValueErrors on the 16/64 full-attn split.
+2. **Selective SmoothQuant + GPTQ** -- already in `scripts/49` (`SMOOTHQUANT=selective`). Highest remaining fidelity lever (OS+ is the only other INT8-specific successor). Do this as the *second* 3.8 pass after a GPTQ-only artifact serves and benches.
+3. **AutoRound W8A8-INT8** (`scripts/65`, 2xpu capable) -- Intel's algorithm, now first-class in llm-compressor, and it *can* use both B70s. Keep as the A/B, not the first 3.8 artifact. AutoRound's 2025-26 energy went into W4 / NVFP4 / MXFP, not INT8.
+4. **OS+ (Outlier Suppression+)** -- still the only genuine INT8-activation successor (per-channel shift, not just scale). No compressed-tensors exporter. Port later if GPTQ+selective SQ leaves a measurable gap.
+5. **Rotation (QuaRot / SpinQuant / FlatQuant / ReSpinQuant / OSTQuant)** -- skip at W8A8. Papers themselves treat 8-bit as solved; all 2025-26 rotation SOTA is W4A4. No Hadamard/Kronecker kernel on SYCL/XMX.
+6. **AWQ** -- weight-only (W4A16/W8A16). Does not produce INT8 activations. Wrong scheme for the XMX fast path.
+7. **FP8 / NVFP4 / MXFP4 as a W8A8 substitute** -- memory formats. Xe2 has no native FP8/FP4 tensor cores. Inferact NVFP4 is a *serve* path (fused W4A16 gemm), not an INT8 compute path.
+
+### 3.8-27B specifics (same hybrid as 3.6)
+
+`config.json` is still `Qwen3_5ForConditionalGeneration` / `qwen3_5`, 64 layers, `full_attention_interval=4` (16 full-attn / 48 linear_attn). Ignore list stays: `lm_head`, `linear_attn`, `visual`, `mtp`. GPTQ on XPU (card 0, `ZE_AFFINITY_MASK=0`); `gpu-run` holds both cards so nothing else starts. SequentialPipeline cannot usefully split GPTQ across two cards -- that is an AutoRound-only lever.
+
+**Do not start W4A4 kernel work.** W8A8/W4A8 first. Rotation/FlatQuant stay notes.

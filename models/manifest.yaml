@@ -165,10 +165,9 @@ models:
     size_gb: 26
     served_as: qwen3.8-27b-NVFP4-modelopt
     source: { type: hf, repo: Inferact/Qwen3.8-27B-NVFP4 }
-    notes: ModelOpt MIXED_PRECISION NVFP4 cited by the official vLLM Qwen3.8 recipe
-           as the NVIDIA-format build. Same family as nvidia/Qwen3.6-27B-NVFP4 (the
-           format our XPU fused kernel already runs). Not NVIDIA-org. Next serve
-           candidate after Unsloth compressed-tensors failed coherence 2026-08-14.
+    notes: ModelOpt quant_algo=NVFP4 (uniform W4A4, not 3.6 MIXED). Not NVIDIA-org.
+           2026-08-14c fused W4A16 route is coherent (Paris exact, IN=2048 TG 23.78);
+           c4 still dies. Do not promote to DD.
 
   - id: qwen3.8-27b/nvfp4-unsloth
     family: qwen3.8-27b

@@ -17,6 +17,13 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   EmulationNvFp4LinearKernel to the Unsloth layout. No public Unsloth/NVIDIA/Qwen
   W8A8-INT8 on release day. Official BF16 + Inferact ModelOpt NVFP4 are on disk for
   the next serve. DD restored to 3.6 NVFP4 TP=2; systemd not swapped.
+- **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14b/c): coherent; fused decode works.**
+  Uniform `quant_algo=NVFP4` (W4A4). Emul load: Paris exact, TTFT 1042 / PP 1967 /
+  TG 8.58, c4 died. Fused route (`_XPUW4A4FusedAsW4A16Kernel` -> `nvfp4_gemm_w4a16`,
+  act fake-quant skipped): still Paris exact; IN=2048 MTP-off TTFT 947 / PP 2163 /
+  TG **23.78** (2.8x emul). c4 still dies (`shm_broadcast cancelled`). Not a DD.
+  3.6 W8A8 vs official NVFP4 HumanEval+ is practically the same (0.970/0.933 vs
+  0.988/0.945; not same-stack). Next: on-box GPTQ W8A8 from official BF16.
 - **Current 27B result (2026-07-28):** NVFP4 is the fastest coherent local path we have measured for
   this workload. The daily driver is two vLLM 0.25.1 single-card replicas at 100,352 tokens, each at
   64.6 code tok/s with calibrated fp8 KV and working prefix reuse. A vLLM 0.26.0 TP=2 shelf mode serves

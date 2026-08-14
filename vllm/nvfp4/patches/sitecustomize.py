@@ -115,9 +115,9 @@ try:
     elif _MODE == "int8xmx":
         _kern = [XPUInt8XmxNvFp4LinearKernel]
     elif _MODE == "fused":
-        # 27B MLP is W4A16_NVFP4 (handled by the W4A16 fused path below); this
-        # registry entry only fires for any W4A4 layer (none in this ckpt) --
-        # keep a coherent emul fallback so it never crashes.
+        # Placeholder: uniform NVFP4 (W4A4, Inferact 3.8) is re-registered onto
+        # the fused W4A16 gemm after _XPUW4A16NvFp4Kernel is defined below.
+        # MIXED 3.6 MLP never hits this registry (it uses W4A16LinearMethod).
         _kern = [EmulationNvFp4LinearKernel]
     else:
         raise ValueError(
@@ -366,6 +366,37 @@ try:
         file=sys.stderr,
         flush=True,
     )
+
+    # ---- (1d) uniform NVFP4 (W4A4) -> fused W4A16 gemm -----------------------
+    # Inferact Qwen3.8-27B is ModelOpt quant_algo=NVFP4 (W4A4). That selects
+    # ModelOptNvFp4LinearMethod + _POSSIBLE_NVFP4_KERNELS[XPU], which was the
+    # emulation kernel (act fake-quant + scaled_fp4_mm) -- coherent, decode-slow
+    # (TG 8.58 vs 3.6 fused ~30+). Weights are the same packed E2M1 + f8e4m3
+    # block scales + fp32 weight_scale_2 as MIXED W4A16_NVFP4, and the W4A4
+    # method already renames weight_scale_2 -> weight_global_scale before
+    # kernel.process_weights. Reuse the fused gemm; skip act fake-quant
+    # (input_scale unused at apply). Subclass Emulation so can_implement /
+    # is_supported / input_quant_key stay valid for the kernel picker.
+    if _MODE == "fused":
+
+        class _XPUW4A4FusedAsW4A16Kernel(EmulationNvFp4LinearKernel):
+            """Uniform NVFP4 (W4A4) routed onto fused nvfp4_gemm_w4a16."""
+
+            def process_weights_after_loading(self, layer):
+                _XPUW4A16NvFp4Kernel.process_weights_after_loading(self, layer)
+
+            def apply_weights(self, layer, x, bias=None):
+                return _XPUW4A16NvFp4Kernel.apply_weights(self, layer, x, bias)
+
+        _linmod._POSSIBLE_NVFP4_KERNELS[PlatformEnum.XPU] = [
+            _XPUW4A4FusedAsW4A16Kernel
+        ]
+        print(
+            "[nvfp4-shim] MODE=fused: uniform NVFP4 (W4A4) now uses "
+            "fused nvfp4_gemm_w4a16 (act fake-quant skipped)",
+            file=sys.stderr,
+            flush=True,
+        )
 
     # ---- (2) tolerate shard_id on KV-cache scale loads ------------------------
     # qwen2.py load_weights routes k_proj.k_scale/v_proj.v_scale through the
