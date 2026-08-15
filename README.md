@@ -308,7 +308,7 @@ Numbers below are each entry's own production config. The first two NVFP4 rows w
 |---|---|---|---|---|---|---|---|---|
 | qwen3.6-27b | **NVFP4 DP=2 replica: fp8-KV-cal + MTP5 + embed-INT8 @100k (DAILY DRIVER)** [dp] | 22.76/card | 1x2 | 5869/card warm | 347 ms warm | **64.6 code** | **202.2 code agg** [dp] | 144.4k/card (288.8k cumulative) [dp] |
 | qwen3.6-27b | **NVFP4 TP=2 fp8-KV-cal + MTP5 + push-AR @200k** [tp2] | 11.54/card | 2 | 1982 @36k | 18.15 s @36k | **48.9 code** (52.0 best) | 25.7/stream (**103.0 agg**) | **640.8k tok** |
-| qwen3.8-27b | Unsloth NVFP4 compressed-tensors TP=2 MTP-off @262k (research; NOT coherent) [38u] | 10.77/card | 2 | 166 | 12333 ms | 9.66 | 6.53 (13.45 agg) | 409k tok |
+| qwen3.8-27b | Unsloth NVFP4 TP=1 @8192 fused+ch-FP8 (research; coherent, slow) [38u] | 24.71 | 1 | -- | -- | coherent | -- | 35k tok |
 | qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP-off @262k fused W4A16 (coherent) [38i] | 13.32/card | 2 | 2163 | 947 ms | 23.78 | c4 died | 339k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 TP=2 MTP-off @229k (coherent, text-only) [38w] | 16.52/card | 2 | 2574 | 796 ms | 18.45 | 14.73 (51.8 agg) | 250k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 + grafted vis/MTP TP=2 MTP3 @131k [38g] | 17.14/card | 2 | 2216 | 924 ms | **26.62** | 14.40 (50.2 agg) | 270k tok |
@@ -345,16 +345,15 @@ Lower-depth fused MTP3 reached only c1 37.2/c4 103.0, and MTP4 emitted visible `
 gather, but measured only c1 30.1/c4 113.5 and produced intermittent rank-1 shadow mismatches
 despite exact checkpoint hashes. All local-argmax/replicated-head switches remain default-off.
 
-[38u] **Qwen3.8-27B Unsloth NVFP4 is research-only (2026-08-14 / one-card 2026-08-15).**
-`unsloth/Qwen3.8-27B-NVFP4` is compressed-tensors mixed (MLP nvfp4-pack g16, attn +
-last-8 MLP + lm_head channel-FP8), not ModelOpt. TP=2 @262144 MTP-off: loads
-(10.77 GiB/card, KV 409k) but is **not coherent** (`Paris` -> `!!!!`) and is ~10x
-slower at IN=2048 (TTFT 12.3 s / PP 166 / TG 9.7). One-card MAXLEN=8192 also
-fits (24.71 GiB + 1.89 GiB KV / 35k tok on `int8g-v0260`, fused kernel attached)
-and is still `Paris ! ! !`. Offline dequant vs official BF16 is clean (MLP 0.992,
-FP8 0.9996) -- not a remapper / `actorder` miss. Next isolation: CT channel-FP8
-`fp8_gemm_w8a16` apply vs NVFP4 fused apply. Inferact ModelOpt is the coherent
-3.8 NVFP4 path. Do not promote. Daily driver stays Qwen3.6 NVFP4.
+[38u] **Qwen3.8-27B Unsloth NVFP4 is research-only (coherent 2026-08-15f).**
+`unsloth/Qwen3.8-27B-NVFP4` is compressed-tensors mixed (MLP nvfp4-pack g16,
+attn + last-8 MLP + lm_head *channel*-FP8). TP=2 @262144 first bring-up was
+`Paris` -> `!!!!` because `fp8_gemm_w8a16` is per-tensor only (channel scales
+collapsed to one mean). NVFP4 fused gemm was already bit-exact. sitecustomize
+(1e) tiled `f8*scale` F.linear on channel layers. One-card MAXLEN=8192 on
+`int8g-v0260`: Paris exact, chat `The capital of France is Paris.`, 17+26
+`43`. Slow -- not a speed path, no concurrent sweep. Do not promote. Inferact
+ModelOpt is the fast coherent 3.8 NVFP4 path. Daily driver stays Qwen3.6 NVFP4.
 
 [38i] **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14 / fused 2026-08-14c).**
 Official vLLM recipe checkpoint (`quant_algo=NVFP4`, uniform W4A4, not 3.6

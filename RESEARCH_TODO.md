@@ -668,13 +668,16 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       35k tok. Card 1 free. Chat needs `--reasoning-parser qwen3` (shim injects
       thinking_token_budget). Call `vllm/nvfp4/serve_nvfp4_27b.sh` with
       `MTPTOK=` -- the shelf wrapper TP=1 `MTPTOK:-5` re-enables spec.
-- [ ] **12e. [ACTIVE] Unsloth coherence -- isolate apply path, not remapper.**
-      CPU dequant vs official BF16 is clean (MLP CT-invert + low-nibble-first
-      cosine 0.992; FP8 `f8 * channel scale` 0.9996). `actorder: static` is not
-      a leftover K-perm. Fused NVFP4 + CT FP8 kernels attach and still emit
-      `Paris ! ! !` on v0240 and v0260. Next A/B on the live one-card serve
-      (`unsloth_c0` :8078 card 0): CT channel-FP8 `fp8_gemm_w8a16` vs NVFP4
-      fused apply. Leave card 1 free unless a GPU microbench needs it.
+- [x] **12e. Unsloth coherence -- channel-FP8 apply (2026-08-15f).** Card-1
+      `probe_unsloth_apply.py`: NVFP4 fused vs CT-invert dequant cos 1.000;
+      `fp8_gemm_w8a16` matches a *mean* scale (0.9997) not per-channel
+      (0.977); 3.6 per-tensor FP8 stays exact. sitecustomize (1e) tiled
+      `f8*scale` F.linear. One-card gate: Paris / Au / 43. Slow. Do not
+      promote.
+- [ ] **12f. [ACTIVE] Unsloth channel-FP8 speed.** Replace tiled F.linear
+      with a real per-channel FP8 gemm, or repack `f8*scale` to s8 +
+      per-channel bf16 and use `int8_gemm_w8a16` (B70 INT8 XMX). Then
+      re-gate + IN=2048. One-card first; TP=2 only after coherent+faster.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

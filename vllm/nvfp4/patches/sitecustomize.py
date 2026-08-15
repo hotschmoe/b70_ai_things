@@ -398,6 +398,87 @@ try:
             flush=True,
         )
 
+    # ---- (1e) CT channel-FP8: fp8_gemm_w8a16 is per-tensor only --------------
+    # 2026-08-15e Unsloth isolation (probe_unsloth_apply.py, card 1):
+    # nvfp4_gemm_w4a16 on Unsloth MLP is bit-exact vs CT-invert dequant
+    # (cos 1.000, rmse 3e-3). fp8_gemm_w8a16 is exact on 3.6 ModelOpt
+    # *per-tensor* FP8 (cos 1.000) but ignores Unsloth *per-channel* scales
+    # (matches a single mean-scale ref at cos 0.9997; vs true channel ref
+    # cos 0.977 / 15% high). That is the Unsloth Paris-then-garbage path
+    # (attn + last-8 MLP + lm_head are channel-FP8). Per-tensor layers
+    # (numel==1) keep the fused op. Channel layers dequant a tile of N
+    # at a time so lm_head (248k x 5120) does not materialize 2.5 GiB.
+    try:
+        from vllm.model_executor.kernels.linear.scaled_mm import xpu as _xpufp8
+
+        _fp8_bases = []
+        for _bn in (
+            "XPUW8A16FP8LinearKernel",  # v0.26
+            "XPUW8A8FP8LinearKernel",   # v0.26
+            "XPUFP8ScaledMMLinearKernel",  # v0.24
+        ):
+            _bc = getattr(_xpufp8, _bn, None)
+            if _bc is not None:
+                _fp8_bases.append(_bc)
+        if not _fp8_bases:
+            raise ImportError("no XPU FP8 kernel class in scaled_mm.xpu")
+
+        def _fp8_channel_apply(self, layer, x, bias=None):
+            scale = getattr(layer, "weight_scale", None)
+            if scale is None or scale.numel() <= 1:
+                return super(type(self), self).apply_weights(layer, x, bias)
+            w = layer.weight  # [K, N] f8 after process_weights
+            if w.ndim != 2:
+                return super(type(self), self).apply_weights(layer, x, bias)
+            _k, n = w.shape
+            s = scale.reshape(-1)
+            if s.numel() != n:
+                return super(type(self), self).apply_weights(layer, x, bias)
+            x2 = x.reshape(-1, x.shape[-1]).to(torch.bfloat16)
+            tile = int(os.environ.get("B70_FP8_CHANNEL_TILE", "4096"))
+            outs = []
+            for n0 in range(0, n, tile):
+                n1 = min(n0 + tile, n)
+                wt = (w[:, n0:n1].to(torch.float32) * s[n0:n1].to(torch.float32)).to(
+                    torch.bfloat16
+                )
+                b = None if bias is None else bias[n0:n1]
+                outs.append(torch.nn.functional.linear(x2, wt.t(), b))
+            y = torch.cat(outs, dim=-1)
+            return y.reshape(*x.shape[:-1], n)
+
+        _fp8_wrapped = []
+        for _base in _fp8_bases:
+            _cls = type(
+                "_ChannelAware" + _base.__name__,
+                (_base,),
+                {"apply_weights": _fp8_channel_apply},
+            )
+            _fp8_wrapped.append(_cls)
+
+        _a16 = [c for c in _fp8_wrapped if "W8A16" in c.__name__ or "ScaledMM" in c.__name__]
+        if not _a16:
+            _a16 = _fp8_wrapped[:1]
+        _reg = getattr(_linmod, "_POSSIBLE_FP8_KERNELS", None)
+        if isinstance(_reg, dict):
+            _reg[PlatformEnum.XPU] = _fp8_wrapped
+        _reg16 = getattr(_linmod, "_POSSIBLE_WFP8A16_KERNELS", None)
+        if isinstance(_reg16, dict) and PlatformEnum.XPU in _reg16:
+            _reg16[PlatformEnum.XPU] = _a16
+        print(
+            "[nvfp4-shim] (1e) channel-FP8 uses tiled f8*scale F.linear "
+            f"(wrapped {[c.__name__ for c in _fp8_wrapped]}); "
+            "per-tensor FP8 stays on fp8_gemm_w8a16",
+            file=sys.stderr,
+            flush=True,
+        )
+    except Exception as _fp8e:
+        print(
+            f"[nvfp4-shim] (1e) channel-FP8 wrap skipped: {_fp8e!r}",
+            file=sys.stderr,
+            flush=True,
+        )
+
     # ---- (2) tolerate shard_id on KV-cache scale loads ------------------------
     # qwen2.py load_weights routes k_proj.k_scale/v_proj.v_scale through the
     # stacked-params (qkv fusion) branch, which calls

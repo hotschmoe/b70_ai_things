@@ -6,18 +6,16 @@ skip the dead-ends. Living doc — see [archive/RESULTS.md](archive/RESULTS.md) 
 tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow.
 
 ## TL;DR
-- **Qwen3.8-27B Unsloth NVFP4 (2026-08-14 / one-card 2026-08-15): loads, NOT coherent.**
-  Same `qwen3_5` hybrid as 3.6-27B. `unsloth/Qwen3.8-27B-NVFP4` is compressed-tensors
-  mixed (MLP nvfp4-pack g16, attn + last-8 MLP + lm_head channel-FP8). TP=2 @262144
-  (2026-08-14): 10.77 GiB/card, KV 409k MTP-off, Paris -> `!!!!`, IN=2048 PP 166 /
-  TG 9.66. One-card (2026-08-15e): MAXLEN=8192 fits (24.71 GiB + 1.89 GiB KV /
-  35k tok), card 1 free, fused kernel attached
-  (`_XPUW4A4FusedAsW4A16Kernel` + `XPUFP8ScaledMMLinearKernel`); still
-  `Paris ! ! !`. CPU dequant vs official BF16 is clean (NVFP4 MLP cosine 0.992
-  with CT 1/scale invert + low-nibble-first; FP8 `f8 * channel scale` 0.9996).
-  `actorder: static` is not a leftover K-perm. Not a remapper bug -- isolate
-  CT channel-FP8 `fp8_gemm_w8a16` vs NVFP4 fused apply. Do not promote. DD
-  stays 3.6 NVFP4; Inferact ModelOpt NVFP4 is the coherent 3.8 NVFP4 path.
+- **Qwen3.8-27B Unsloth NVFP4 (2026-08-15f): one-card COHERENT after channel-FP8 fix.**
+  Checkpoint was always fine (CPU dequant vs BF16: MLP 0.992, FP8 0.9996).
+  `nvfp4_gemm_w4a16` on Unsloth MLP is bit-exact (cos 1.000). The garbage was
+  `fp8_gemm_w8a16` treating Unsloth *per-channel* FP8 scales as one tensor
+  scale (matches mean-scale ref 0.9997; 3.6 per-tensor FP8 stays exact).
+  sitecustomize (1e) tiled `f8*scale` F.linear on channel layers. One-card
+  MAXLEN=8192: Paris exact, chat `The capital of France is Paris.`, 17+26
+  `43`. Slow (eager tiled FP8 on attn+last-8+lm_head) -- research, not a
+  DD. Next: real per-channel FP8 / INT8-XMX repack. Inferact ModelOpt remains
+  the fast coherent 3.8 NVFP4 path.
 - **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): coherent INT8 XMX + grafted VLM/MTP.**
   GPTQ-only compressed-tensors. Overnight save was text-only; CPU graft
   restored 333 visual + 15 mtp from official BF16. TP=2 MTP3 @131k:

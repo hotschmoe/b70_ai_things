@@ -214,17 +214,13 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       plus delta is inside the graph stack's proven greedy nondeterminism (five
       repeats of the affected prompt produced five distinct solutions). Shipped
       in the TP=1 DP shelf as B70_NVFP4_F8_SCALE_M_MAX=8; old .so retained.
-- [~] M11: Qwen3.8 Unsloth NVFP4 (compressed-tensors mixed) -- ONE-CARD FITS,
-      NOT COHERENT. 2026-08-15e: TP=1 CARD=0 MAXLEN=8192 MODE=fused GRAPH=0
-      MTP-off on `int8g-v0260`, 24.71 GiB + 1.89 GiB KV / 35k tok. Fused
-      `_XPUW4A4FusedAsW4A16Kernel` attaches (CT W4A4 inverts `weight_global_scale`
-      6400 -> 1/6400 then folds into the W4A16 gemm). Completions still
-      `Paris ! ! !`. CPU dequant (`probe_unsloth_dequant.py`) vs official BF16
-      is clean: MLP 0.992 (CT invert + low-nibble-first), FP8 attn/last-8
-      `f8 * [N,1] scale` 0.9996. `actorder: static` has no `g_idx` and is not
-      a K-perm. This is a runtime apply isolation (CT channel-FP8
-      `fp8_gemm_w8a16` vs NVFP4 fused), not a remapper. Inferact ModelOpt
-      remains the coherent 3.8 NVFP4 path. Do not promote.
+- [x] M11: Qwen3.8 Unsloth NVFP4 one-card COHERENT (2026-08-15f). Fit at
+      MAXLEN=8192 (24.71 GiB + 1.89 GiB KV). `nvfp4_gemm_w4a16` already
+      bit-exact on Unsloth MLP (cos 1.000 vs CT-invert dequant). Garbage
+      was `fp8_gemm_w8a16` ignoring per-channel scales (Unsloth attn +
+      last-8 MLP + lm_head). sitecustomize (1e) tiled `f8*scale` F.linear
+      on channel layers; per-tensor FP8 (3.6) unchanged. Paris / Au / 43.
+      Slow -- not a DD. Next: per-channel FP8 kernel or INT8-XMX repack.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 
@@ -270,3 +266,5 @@ W4A16 serve. It is a future-kernel unlock, not a route-a win for NVFP4.
 - 2026-08-15e Qwen3.8 Unsloth one-card: MAXLEN=8192 fits on card 0 (24.71 GiB
   + 1.89 GiB KV). Fused kernel on, still Paris-then-garbage. CPU dequant vs
   BF16 is clean -- next is FP8-channel apply isolation. Journal 2026-08-15d/e.
+- 2026-08-15f Unsloth COHERENT: `fp8_gemm_w8a16` is per-tensor only (card-1
+  probe). sitecustomize (1e) tiled channel dequant. Paris / 43. Journal 15f.

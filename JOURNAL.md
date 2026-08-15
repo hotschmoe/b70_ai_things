@@ -10945,3 +10945,45 @@ DOCS (same milestone) -> FINDINGS / README [38u] / RESEARCH_TODO Track 12 /
   next isolate is FP8-channel apply. Shelf wrapper TP=1 still has
   unmeasured 100k+MTP5 defaults -- research one-card must call
   serve_nvfp4_27b.sh with MTPTOK=.
+
+### 2026-08-15f - Unsloth coherence: channel-FP8 apply was the bug
+
+CONTEXT -> One-card Unsloth still `Paris ! ! !` after fused+v0260.
+  CPU dequant was clean. Isolate apply path on card 1 (serve stayed
+  on card 0).
+
+CONFIG (probe) -> `vllm/nvfp4/probe_unsloth_apply.py` via
+  `run_ceiling.sh` on CARD=1, `int8g-v0260`, same fused
+  `_xpu_C.abi3.so` as the live serve.
+
+RESULT (probe) ->
+  NVFP4 Unsloth `mlp.gate_proj` `nvfp4_gemm_w4a16` vs CT-invert
+  dequant: cos **1.0000** rmse 0.003 (bf16 rounding). no-invert
+  explodes. Inferact ModelOpt same layer also 1.0000.
+  FP8 Unsloth `in_proj_qkv` `fp8_gemm_w8a16` vs `f8 * channel
+  scale`: cos 0.977, |y| 15% high. Same y vs a *mean-scale*
+  ref: cos **0.9997**. 3.6 ModelOpt q_proj *per-tensor* FP8:
+  cos **1.0000**. So `fp8_gemm_w8a16` is per-tensor only;
+  Unsloth channel scales are dropped.
+
+CONFIG (fix) -> sitecustomize (1e): wrap v0.26
+  `XPUW8A16FP8LinearKernel` + `XPUW8A8FP8LinearKernel` (v0.24
+  `XPUFP8ScaledMMLinearKernel` fallback). Channel
+  (`weight_scale.numel()>1`): tiled `f8 * scale` F.linear
+  (TILE=4096 so lm_head does not allocate 2.5 GiB). Per-tensor
+  stays on `fp8_gemm_w8a16` (3.6 DD unchanged). Restart same
+  one-card recipe.
+
+RESULT (gate) -> COHERENT.
+  completions: `Paris.` / gold `Au, derived from the Latin` /
+  17+26 with 200 tok ends `**43**` (short 120-tok gate failed
+  only because the model was still in the carry explanation).
+  chat thinking-off: `The capital of France is Paris.` /
+  `43`. Decode is slow (eager tiled FP8 on attn+last-8+lm_head);
+  this is a correctness path, not a speed path.
+
+VERDICT -> Unsloth NVFP4 **serves coherently on one card** once
+  channel-FP8 is dequanted correctly. Not a remapper, not NVFP4
+  fused. Do not promote (slow; no concurrent sweep). Next speed
+  lever: a real per-channel FP8 gemm (or INT8-XMX repack of
+  f8*scale). No systemd / DD swap. Left on :8078 card 0.

@@ -195,10 +195,9 @@ models:
            MLP + lm_head are channel-FP8 (f8 * [N,1] scale); vision bf16; MTP
            bf16 in model_mtp.safetensors. actorder:static but no g_idx -- CPU
            dequant vs official BF16 is clean (MLP 0.992, FP8 0.9996). Served
-           2026-08-14 TP=2 @262k and 2026-08-15e TP=1 @8192 fused: loads, NOT
-           coherent (Paris -> !!!!). Not a remapper. Isolate CT channel-FP8
-           fp8_gemm_w8a16 apply. Inferact ModelOpt is the coherent 3.8 NVFP4.
-           Do not promote.
+           2026-08-15f one-card COHERENT after sitecustomize (1e) tiled
+           f8*scale F.linear (fp8_gemm_w8a16 is per-tensor only). Slow.
+           Inferact ModelOpt is the fast coherent 3.8 NVFP4. Do not promote.
 
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
 # Removed from disk by reorg.sh per the 2026-06-29 review (off-target or prior-gen scaffolding):

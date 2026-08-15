@@ -16,9 +16,9 @@
 #       MODEL_REL=qwen3.8-27b/nvfp4-unsloth \
 #       SERVED=qwen3.8-27b-NVFP4-unsloth MTPTOK= REASONPARSER=qwen3 \
 #       ./bin/gpu-run --card 0 bash vllm/nvfp4/serve_nvfp4_27b.sh
-#   Load 24.71 GiB, KV 1.89 GiB / 35k tok. Fused NVFP4 + CT FP8 kernels attach.
-#   Completions still `Paris ! ! !`. CPU dequant vs BF16 is clean -- isolate
-#   FP8-channel apply, not a remapper. Do not promote.
+#   Load 24.71 GiB, KV 1.89 GiB / 35k tok. 2026-08-15f: COHERENT after
+#   sitecustomize (1e) tiled channel-FP8 dequant (Paris / 43). Slow -- do
+#   not promote. Inferact ModelOpt is the fast coherent 3.8 NVFP4.
 # Inferact ModelOpt (coherent): MODEL_REL=qwen3.8-27b/nvfp4-modelopt.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
