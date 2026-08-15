@@ -11122,3 +11122,41 @@ VERDICT -> Compact NVFP4 scales are the KV lever (2.6 GiB back,
   Inferact fused MTP-off class / on-box W8A8 MTP3 class.
   Serves left up for more probes; no DD/systemd. Next: MTP=5
   A/B, or prefix-cache on the 104k GRAPH box.
+
+### 2026-08-15j - Unsloth TP=2 bf16 KV: GRAPH !!!! vs eager coherent
+
+CONTEXT -> User asked for bf16 TP=2 (262k ctx) plus TP opts, and
+  whether an AEON uncensored / abliterated Qwen3.8-27B exists.
+
+HF (2026-08-15) -> **No AEON-7 Qwen3.8-27B.** AEON is still 3.6
+  (AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-*). 3.8 abliterated
+  dumps that do exist (hours old): JonathanColetti/Qwen3.8-27B-Uncensored
+  (bf16 safetensors + MTP grafted back; Heretic; 12/100 refusals),
+  Blackfrost-AI BF16/GGUF/NVFP4, davetha W8A8/W8A16, KridgeDookie
+  PHILADELPHIA-CLASS, plus many GGUF/MLX. Not downloaded. None is
+  Unsloth-NVFP4-shaped. A usable vLLM path would be official-BF16
+  edit -> our GPTQ W8A8 or a ModelOpt NVFP4, not a GGUF.
+
+CONFIG (TP=2 GRAPH, fail) -> unsloth_tp2 :8078 MODE=fused GRAPH=1
+  PUSH_AR=1 PUSH_AR_GRAPH=1 PREFIXCACHE=1 KV_FP8=0 MAXLEN=262144
+  UTIL=0.85 compact+INT8XMX MTP-off. P2P=0.
+
+RESULT (GRAPH) -> HEALTHY. 11.16 GiB/card, KV 12.78 GiB /
+  **409,498 tok** (1.56x @262144). Capture 3s / 0.33 GiB.
+  Gate **0/3**: `Answer:` loops / `!!!!`. Chat `!!!!!!!!!!!!!!!!`.
+  Full ctx fits. TEXT is garbage. One-card GRAPH was coherent so
+  this is TP+capture, not shard math.
+
+CONFIG (TP=2 eager isolate) -> unsloth_tp2e GRAPH=0 PUSH_AR=1
+  PUSH_AR_GRAPH=0 PREFIXCACHE=0 same kernels/KV_FP8=0/262144.
+
+RESULT (eager) -> HEALTHY. 11.16 GiB/card, KV **401,844 tok**.
+  kv_gate 2/3: `Paris.` / gold Au; 17+26 is the known short-budget
+  carry writeup (not !!!!). Chat thinking-off: **Paris**.
+
+VERDICT -> **TP=2 bf16 262k FITS and is coherent in eager.**
+  GRAPH+push-AR-graph on TP=2 reintroduces `!!!!`. Keep eager
+  TP=2 as the 262k path until capture-safe TP decode is fixed.
+  TP opts: (1) capture-safe GRAPH on INT8-XMX+NVFP4 mix,
+  (2) keep PUSH_AR for prefill, (3) never P2P, (4) MTP only
+  after GRAPH is clean. No DD swap. Left eager TP=2 on :8078.
