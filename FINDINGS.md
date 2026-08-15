@@ -15,8 +15,10 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   (2026-08-15g) repacks channel-FP8 to s8 + per-out-channel scale and hits
   `int8_gemm_w8a16` (B70 INT8 XMX; Xe2 has no FP8 XMX). Probe: cos 1.000,
   M=1 56x vs tiled. Dual-card 2026-08-15h IN=2048: eager TG 8.56;
-  GRAPH PIECEWISE TG **23.54** (2.75x), both Paris 3/3. GRAPH KV
-  only 4096 tok at UTIL=0.85. Stay on `int8g-v0260`. Not a DD.
+  GRAPH PIECEWISE TG **23.54** (2.75x), both Paris 3/3. Compact
+  scales (15i) cut weights 24.7 -> 22.09 GiB and GRAPH KV 4k ->
+  **104k**. GRAPH+MTP3: TG **27.37**, accept ~2.2-2.6. Stay on
+  `int8g-v0260`. Not a DD.
 - **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): coherent INT8 XMX + grafted VLM/MTP.**
   GPTQ-only compressed-tensors. Overnight save was text-only; CPU graft
   restored 333 visual + 15 mtp from official BF16. TP=2 MTP3 @131k:

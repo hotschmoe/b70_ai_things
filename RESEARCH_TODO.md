@@ -688,10 +688,14 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       **23.54** (2.75x), kv_gate 3/3 both. GRAPH KV only 4096 tok
       at UTIL=0.85. Inferact fused MTP-off was 23.78 -- Unsloth
       GRAPH is in that class. Reports under results/unsloth_c*.
-- [ ] **12h. [ACTIVE] GRAPH KV + MTP.** Raise UTIL or compact
-      scales so GRAPH has >4k KV, then MTP=3 (Unsloth native
-      811 MB bf16 mtp.*) on card 1. CAPSIZES must cover 1+spec.
-      DFlash is 3.6-only; skip until a 3.8 drafter exists.
+- [x] **12h. GRAPH KV + MTP3 (2026-08-15i).** Compact scales
+      24.7 -> 22.09 GiB; GRAPH UTIL=0.93 KV **104k tok**. MTP3
+      GRAPH: detect+share embed/lm_head, KV 21k @4096, kv_gate
+      3/3, IN=2048 TG **27.37** (MTP-off GRAPH 23.52), accept
+      ~2.2-2.6. DFlash still 3.6-only.
+- [ ] **12i. [ACTIVE] MTP=5 A/B and/or prefix-cache on the
+      104k GRAPH box.** Same one-card recipe. Keep compact
+      scales. No DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

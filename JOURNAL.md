@@ -11079,3 +11079,46 @@ VERDICT -> GRAPH=1 is the Unsloth decode lever (8.56 -> 23.54)
   KV headroom (35k vs 4k). Both serves left up (:8078 eager,
   :8079 graph). Next: GRAPH UTIL bump for KV, then MTP=3 on
   card 1. No systemd / DD swap.
+
+### 2026-08-15i - Unsloth GRAPH KV unlock + MTP3 (both cards)
+
+CONTEXT -> User: no live API to protect; free reign on both GPUs.
+  Prior GRAPH UTIL=0.85 left 0.3 GiB / 4096 KV. Hunt KV via compact
+  NVFP4 scales + higher UTIL; in parallel stand GRAPH+MTP3.
+
+CONFIG (card 0, KV hunt) -> unsloth_gkv :8078 GRAPH=1 PIECEWISE
+  CAPSIZES=1,2,4,8 MAXLEN=8192 UTIL=0.93 MAXSEQS=8 MTP off
+  B70_NVFP4_COMPACT_SCALES=1 INT8XMX=1.
+
+CONFIG (card 1, MTP) -> unsloth_mtp3 :8079 GRAPH=1 PIECEWISE
+  CAPSIZES=1,2,4 MAXLEN=4096 UTIL=0.90 MAXSEQS=8 MTPTOK=3
+  same compact+INT8XMX.
+
+RESULT (memory) -> compact scales dropped resident weights
+  24.7 -> **22.09 GiB** (MTP 22.88 with shared embed/lm_head).
+  card 0 KV **5.59 GiB / 103,765 tok** (was 4096).
+  card 1 KV **4.0 GiB / 21,026 tok**. Both captured (2s/0.22 and
+  1s/0.18 GiB). MTP log: "Detected MTP model. Sharing target
+  model embedding/lm_head with the draft model."
+
+RESULT (gate) -> both kv_gate **3/3**. Paris / 43 / Au.
+
+RESULT (IN=2048/OUT=128) ->
+  GRAPH compact MTP-off (csv
+  /mnt/vm_8tb/b70/results/sweep_unsloth-gkv-graph_20260815_210440.csv):
+    c1: TTFT 1407 ms, TG **23.52**
+    c4: TTFT 3725 ms, TG 15.35/stream, **agg 42.77**
+      (was 18.86 agg when KV=4096 serialized)
+  GRAPH+MTP3 (csv
+  /mnt/vm_8tb/b70/results/sweep_unsloth-mtp3-graph_20260815_210440.csv):
+    c1: TTFT 1479 ms, TG **27.37** (+16% vs MTP-off)
+    c4: TTFT 2670 ms, TG 14.43/stream, agg 43.33
+  Spec windows during bench: accept_len typically 2.2-2.6
+  (per-pos ~0.55/0.43/0.35); cold windows 1.26-1.49; one
+  structured window 4.00. Real MTP, not 0%.
+
+VERDICT -> Compact NVFP4 scales are the KV lever (2.6 GiB back,
+  4k -> 104k tok). GRAPH+MTP3 is coherent and 27.4 t/s c1 --
+  Inferact fused MTP-off class / on-box W8A8 MTP3 class.
+  Serves left up for more probes; no DD/systemd. Next: MTP=5
+  A/B, or prefix-cache on the 104k GRAPH box.
