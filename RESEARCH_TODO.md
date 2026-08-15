@@ -693,9 +693,12 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       GRAPH: detect+share embed/lm_head, KV 21k @4096, kv_gate
       3/3, IN=2048 TG **27.37** (MTP-off GRAPH 23.52), accept
       ~2.2-2.6. DFlash still 3.6-only.
-- [ ] **12i. [ACTIVE] MTP=5 A/B and/or prefix-cache on the
-      104k GRAPH box.** Same one-card recipe. Keep compact
-      scales. No DD.
+- [x] **12i. TP=2 bf16 262k (2026-08-15j).** Eager+push-AR
+      coherent (`Paris`); KV **402k**. GRAPH+PUSH_AR_GRAPH TP=2
+      is `!!!!` (one-card GRAPH was clean). 262k fits.
+- [ ] **12j. [ACTIVE] Capture-safe TP=2 GRAPH on Unsloth
+      INT8-XMX+NVFP4.** Isolate CSAG / int8_gemm fake / push-AR
+      graph. Then MTP. P2P stays 0.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

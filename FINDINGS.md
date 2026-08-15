@@ -18,7 +18,8 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   GRAPH PIECEWISE TG **23.54** (2.75x), both Paris 3/3. Compact
   scales (15i) cut weights 24.7 -> 22.09 GiB and GRAPH KV 4k ->
   **104k**. GRAPH+MTP3: TG **27.37**, accept ~2.2-2.6. Stay on
-  `int8g-v0260`. Not a DD.
+  `int8g-v0260`. TP=2 bf16 @262k (15j): eager coherent, KV 402k;
+  GRAPH+push-AR-graph TP=2 is `!!!!`. Not a DD.
 - **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): coherent INT8 XMX + grafted VLM/MTP.**
   GPTQ-only compressed-tensors. Overnight save was text-only; CPU graft
   restored 333 visual + 15 mtp from official BF16. TP=2 MTP3 @131k:
