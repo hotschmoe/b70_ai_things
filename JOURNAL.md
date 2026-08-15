@@ -11160,3 +11160,23 @@ VERDICT -> **TP=2 bf16 262k FITS and is coherent in eager.**
   TP opts: (1) capture-safe GRAPH on INT8-XMX+NVFP4 mix,
   (2) keep PUSH_AR for prefill, (3) never P2P, (4) MTP only
   after GRAPH is clean. No DD swap. Left eager TP=2 on :8078.
+
+### 2026-08-15k - Unsloth TP=2 eager IN=2048 bench
+
+CONFIG -> live unsloth_tp2e :8078 (15j), GRAPH=0 PUSH_AR=1 MTP-off
+  KV_FP8=0 MAXLEN=262144 compact+INT8XMX.
+
+COMMAND -> IN=2048 OUT=128 CONC="1 4" bin/35_sweep_bench.sh
+  csv /mnt/vm_8tb/b70/results/sweep_unsloth-tp2-eager_20260815_221646.csv
+
+RESULT ->
+  c1: TTFT 1199 ms, PP ~1708, TG **4.62**, out 4.46
+  c4: TTFT 3827 ms, TG 4.33/stream, agg 15.45
+  vs one-card eager: TG 8.56 / c4 agg 24.23 (decode ~0.54x)
+  vs one-card GRAPH: TG 23.54 (decode ~0.20x)
+  vs one-card GRAPH+MTP3: TG 27.37
+  Prefill is the TP win (TTFT 1199 vs one-card 1389-1572).
+
+VERDICT -> Eager TP=2 buys 262k ctx and faster prefill, pays
+  ~2x decode vs one-card eager (per-layer all-reduce, no graph).
+  Capture-safe GRAPH is the TP decode lever. Serve left up.
