@@ -10938,3 +10938,10 @@ VERDICT -> Image bump did not fix Unsloth. Left serving on :8078
   card 0 for further one-card experiments. Next isolate is CT
   channel-FP8 `fp8_gemm_w8a16` vs NVFP4 fused apply (checkpoint
   dequant is already proven). No systemd / DD swap.
+
+DOCS (same milestone) -> FINDINGS / README [38u] / RESEARCH_TODO Track 12 /
+  NVFP4_XPU M11 / models/manifest Unsloth notes / qwen38-27b-nvfp4
+  serve.sh header: one-card fit, fused attached, CPU dequant clean,
+  next isolate is FP8-channel apply. Shelf wrapper TP=1 still has
+  unmeasured 100k+MTP5 defaults -- research one-card must call
+  serve_nvfp4_27b.sh with MTPTOK=.
