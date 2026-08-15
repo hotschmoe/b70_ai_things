@@ -11031,3 +11031,51 @@ VERDICT -> First B70 XMX path for Unsloth channel-FP8 is live and
   (drops our NVFP4/int8 .so). Next: IN=2048 bench vs Inferact;
   optional decode GEMV (M=1 still oneDNN matmul); sglang NVFP4
   port remains a separate session. No systemd / DD swap.
+
+### 2026-08-15h - Unsloth dual-card: eager vs GRAPH (INT8-XMX)
+
+CONTEXT -> User asked to use both cards in parallel (or parallel
+  agents) for kernel/memory/MTP/DFlash/graph vs eager, and keep
+  journaling. Two agents: card 0 kept the live eager INT8-XMX
+  serve; card 1 stood up GRAPH=1 PIECEWISE.
+
+CONFIG (card 0, already up) -> unsloth_c0 :8078, GRAPH=0,
+  MAXLEN=8192 UTIL=0.90 MAXSEQS=4 MTP off. Weight 24.7 GiB,
+  KV 1.9 GiB / 34,588 tok.
+
+CONFIG (card 1) -> unsloth_c1_graph :8079, GRAPH=1
+  PIECEWISE CAPSIZES=1,2,4,8 MAXLEN=4096 UTIL=0.85 MAXSEQS=8
+  MTP off. Capture 2s / 0.22 GiB. Weight 24.7 GiB, KV 0.3 GiB
+  / 4096 tok (UTIL 0.85 oversubscribed vs 24.7+0.56 act+0.22
+  graph). Served id ...-graph-graph (script suffix).
+
+COMMAND -> card 0: kv_gate + IN=2048/OUT=128 CONC="1 4"
+  bin/35_sweep_bench.sh (csv
+  /mnt/vm_8tb/b70/results/sweep_unsloth-c0-eager-int8xmx_combined.csv).
+  card 1: same gate + bench (csv
+  /mnt/vm_8tb/b70/results/sweep_unsloth-c1-graph-int8xmx_20260815_205012.csv).
+  Reports: results/unsloth_c0_eager_bench.md,
+  results/unsloth_c1_graph_bench.md.
+
+RESULT -> both COHERENT (kv_gate 3/3, chat "Paris").
+  IN=2048/OUT=128:
+    eager c1: TTFT 1572 ms, PP 1303, TG **8.56**, c4 agg 24.23
+              (7.47/stream)
+    GRAPH c1: TTFT 1389 ms, PP 1475, TG **23.54** (2.75x eager)
+              c4 TG 23.51 but TTFT 20.5 s -- 4096 KV cannot hold
+              four 2048 prefills (serialized).
+  GRAPH decode matches Inferact fused MTP-off (23.78) on this
+  one-card Unsloth path.
+
+MTP / DFlash (not run this wave) -> Unsloth ships native bf16
+  MTP (model_mtp.safetensors 811 MB, 15 tensors). Next GRAPH+MTP
+  needs more KV than 4096 (raise UTIL or compact scales) and
+  CAPSIZES covering 1+spec. DFlash drafter on disk is
+  qwen3.6-27b/dflash-draft only -- no 3.8 DFlash; do not graft
+  a 3.6 drafter onto 3.8.
+
+VERDICT -> GRAPH=1 is the Unsloth decode lever (8.56 -> 23.54)
+  and stays coherent with INT8-XMX channel-FP8. Eager keeps the
+  KV headroom (35k vs 4k). Both serves left up (:8078 eager,
+  :8079 graph). Next: GRAPH UTIL bump for KV, then MTP=3 on
+  card 1. No systemd / DD swap.

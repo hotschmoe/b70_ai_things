@@ -352,7 +352,8 @@ attn + last-8 MLP + lm_head *channel*-FP8). TP=2 @262144 first bring-up was
 collapsed to one mean). NVFP4 fused gemm was already bit-exact. sitecustomize
 (1e) first tiled `f8*scale` F.linear, then (15g) repacks channel-FP8 to
 INT8-XMX `int8_gemm_w8a16` (Xe2 has no FP8 XMX). One-card MAXLEN=8192 on
-`int8g-v0260`: Paris / 43. Probe M=1 56x vs tiled. Stay on this image
+`int8g-v0260`: Paris / 43. GRAPH=1 TG **23.54** vs eager 8.56 @IN=2048
+(2026-08-15h). Probe M=1 56x vs tiled. Stay on this image
 (torch 2.12); public 0.26.1rc1 is torch 2.13 and will not load our
 kernels. Do not promote. Inferact ModelOpt is the fast coherent 3.8
 NVFP4 path. Daily driver stays Qwen3.6 NVFP4.

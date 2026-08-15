@@ -683,11 +683,15 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       `vllm/vllm-openai-xpu` is 0.26.1rc1 / torch 2.13 and will not
       load our fused .so. sglang 0.5.15.post1 has no XPU NVFP4 serve
       path yet.
-- [ ] **12g. [ACTIVE] Measure + decode GEMV.** IN=2048 vs Inferact
-      fused on the INT8-XMX Unsloth serve. M=1 is still oneDNN
-      matmul; a dedicated INT8 GEMV is the decode lever if the
-      bench is BW-bound. Stay on int8g-v0260 until a torch-2.12
-      compatible image bump is gated.
+- [x] **12g. Eager vs GRAPH measured (2026-08-15h).** Dual-card:
+      eager :8078 TG **8.56** @IN=2048; GRAPH PIECEWISE :8079 TG
+      **23.54** (2.75x), kv_gate 3/3 both. GRAPH KV only 4096 tok
+      at UTIL=0.85. Inferact fused MTP-off was 23.78 -- Unsloth
+      GRAPH is in that class. Reports under results/unsloth_c*.
+- [ ] **12h. [ACTIVE] GRAPH KV + MTP.** Raise UTIL or compact
+      scales so GRAPH has >4k KV, then MTP=3 (Unsloth native
+      811 MB bf16 mtp.*) on card 1. CAPSIZES must cover 1+spec.
+      DFlash is 3.6-only; skip until a 3.8 drafter exists.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
