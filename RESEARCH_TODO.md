@@ -696,9 +696,12 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 - [x] **12i. TP=2 bf16 262k (2026-08-15j).** Eager+push-AR
       coherent (`Paris`); KV **402k**. GRAPH+PUSH_AR_GRAPH TP=2
       is `!!!!` (one-card GRAPH was clean). 262k fits.
-- [ ] **12j. [ACTIVE] Capture-safe TP=2 GRAPH on Unsloth
-      INT8-XMX+NVFP4.** Isolate CSAG / int8_gemm fake / push-AR
-      graph. Then MTP. P2P stays 0.
+- [x] **12j. TP=2 GRAPH clone fix (2026-08-15l).** int8_gemm
+      output was invisible to the captured TP all-reduce.
+      `B70_INT8_GRAPH_CLONE=1` (default) 3/3 Paris, IN=2048 TG
+      **24.86**. PREFIXCACHE off. c4 EngineDead unsolved.
+- [ ] **12k. [ACTIVE] TP=2 GRAPH @262k + PREFIXCACHE + c4
+      soak; then MTP.** Clone stays on. P2P=0.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

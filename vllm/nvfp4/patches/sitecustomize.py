@@ -314,6 +314,30 @@ try:
                     file=sys.stderr,
                     flush=True,
                 )
+        # Unsloth channel-FP8 is repacked onto int8_gemm_w8a16. 3.6 NVFP4
+        # TP=2 GRAPH never called that op (attn is per-tensor fp8_gemm).
+        # Without a fake, dynamo/piecewise can mis-trace the INT8 apply and
+        # TP=2 captured decode emits !!!! while TP=1 GRAPH and TP=2 eager
+        # stay coherent. Same schema as contrib/vllm_int8_xpu/xpu_int8.py.
+        if hasattr(torch.ops._xpu_C, "int8_gemm_w8a16"):
+            def _fake_int8_gemm_w8a16(A, B, B_scale, bias):
+                return A.new_empty(
+                    tuple(A.shape[:-1]) + (B.shape[1],), dtype=A.dtype
+                )
+
+            try:
+                register_fake("_xpu_C::int8_gemm_w8a16", _fake_int8_gemm_w8a16)
+                print(
+                    "[nvfp4-shim] registered fake for _xpu_C::int8_gemm_w8a16",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            except (RuntimeError, ValueError) as e:
+                print(
+                    f"[nvfp4-shim] register_fake(int8_gemm_w8a16) skipped: {e}",
+                    file=sys.stderr,
+                    flush=True,
+                )
         if hasattr(torch.ops._xpu_C, "xpu_shard_top1"):
             try:
                 register_fake("_xpu_C::xpu_shard_top1", _fake_xpu_shard_top1)
@@ -470,6 +494,13 @@ try:
                 y = torch.ops._xpu_C.int8_gemm_w8a16(
                     x2, layer.weight, layer.weight_scale, bias
                 )
+                # TP=2 + PIECEWISE: int8_gemm_w8a16 is captured on TP=1 and
+                # coherent in TP=2 eager, but the recorded all-reduce after it
+                # on TP=2 GRAPH reads a stale buffer -> !!!! . Materialize a
+                # fresh contiguous output so the collective sees a recorded
+                # copy. Disable with B70_INT8_GRAPH_CLONE=0.
+                if os.environ.get("B70_INT8_GRAPH_CLONE", "1") != "0":
+                    y = y.contiguous().clone()
                 return y.reshape(*x.shape[:-1], layer.weight.shape[1])
             scale = getattr(layer, "weight_scale", None)
             if scale is None or scale.numel() <= 1:

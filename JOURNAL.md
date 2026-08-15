@@ -11180,3 +11180,29 @@ RESULT ->
 VERDICT -> Eager TP=2 buys 262k ctx and faster prefill, pays
   ~2x decode vs one-card eager (per-layer all-reduce, no graph).
   Capture-safe GRAPH is the TP decode lever. Serve left up.
+
+### 2026-08-15l - TP=2 GRAPH fixed: int8_gemm output clone
+
+CONTEXT -> 3.6 NVFP4 TP=2 GRAPH is the proven DD path. Unsloth
+  one-card GRAPH was coherent; Unsloth TP=2 GRAPH was `!!!!`.
+  3.6 never runs int8_gemm on attn (per-tensor fp8_gemm).
+
+A/B ->
+  GRAPH+push-AR-graph+PC+INT8XMX @262k: 0/3 `!!!!`
+  GRAPH+push-AR-graph no-PC +INT8XMX @262k: 1/3 (Au pass,
+    Paris `Answer:` loop). Fake for int8 already in-image.
+  GRAPH+push-AR-graph no-PC INT8XMX=0 (tiled F.linear):
+    **3/3 Paris**. IN=2048 c1 TG **9.19** TTFT 894 ms.
+  GRAPH+push-AR-graph no-PC INT8XMX=1 + y.contiguous().clone()
+    after int8_gemm: **3/3 Paris**. IN=2048 c1 TG **24.86**
+    TTFT 1031 ms (csv
+    sweep_unsloth-tp2-graph-int8clone_20260815_224705.csv).
+    c4 EngineDead (same post-bench crash as 15i GKV).
+
+FIX -> sitecustomize (1e) `B70_INT8_GRAPH_CLONE=1` (default):
+  clone INT8 output so the recorded TP all-reduce sees a
+  captured copy. 3.6 never hits this path.
+
+VERDICT -> TP=2 GRAPH is coherent with the clone. Decode 4.62
+  -> **24.86** (eager TP=2 -> one-card GRAPH class). c4/soak
+  not gated. PREFIXCACHE still off. No DD.
