@@ -423,7 +423,54 @@ try:
         if not _fp8_bases:
             raise ImportError("no XPU FP8 kernel class in scaled_mm.xpu")
 
+        def _fp8_channel_process(self, layer):
+            super(type(self), self).process_weights_after_loading(layer)
+            # Default ON: Unsloth channel-FP8 -> s8 + per-out-channel scale,
+            # then int8_gemm_w8a16 (B70 INT8 XMX). Xe2 has no native FP8;
+            # fp8_gemm_w8a16 is emulated and per-tensor-only. Probe
+            # (probe_unsloth_fp8_int8xmx.py): 1D [N] scale is cos 1.000 vs
+            # f8*channel ref; M=1 ~56x tiled F.linear. Opt out with
+            # B70_FP8_CHANNEL_INT8XMX=0 (keeps tiled F.linear).
+            if os.environ.get("B70_FP8_CHANNEL_INT8XMX", "1") != "1":
+                return
+            scale = getattr(layer, "weight_scale", None)
+            w = getattr(layer, "weight", None)
+            if scale is None or w is None or scale.numel() <= 1 or w.ndim != 2:
+                return
+            if w.dtype not in (torch.float8_e4m3fn, getattr(torch, "float8_e4m3fnuz", torch.float8_e4m3fn)):
+                return
+            _k, n = w.shape
+            if scale.numel() != n:
+                return
+            if not hasattr(torch.ops._xpu_C, "int8_gemm_w8a16"):
+                return
+            s = scale.reshape(1, n).to(torch.float32)
+            # Tile along N: lm_head is [5120, 248320]; a full f32 copy is 5 GiB.
+            tile = int(os.environ.get("B70_FP8_CHANNEL_TILE", "4096"))
+            w_s8 = torch.empty((w.shape[0], n), dtype=torch.int8, device=w.device)
+            iscale = torch.empty(n, dtype=torch.float32, device=w.device)
+            for n0 in range(0, n, tile):
+                n1 = min(n0 + tile, n)
+                chunk = w[:, n0:n1].to(torch.float32) * s[:, n0:n1]
+                am = chunk.abs().amax(dim=0).clamp(min=1e-8)
+                isc = am / 127.0
+                iscale[n0:n1] = isc
+                w_s8[:, n0:n1] = torch.round(chunk / isc.reshape(1, -1)).clamp(
+                    -127, 127
+                ).to(torch.int8)
+            replace_parameter(layer, "weight", w_s8.contiguous())
+            replace_parameter(
+                layer, "weight_scale", iscale.to(torch.bfloat16).contiguous()
+            )
+            layer._b70_fp8_int8xmx = True
+
         def _fp8_channel_apply(self, layer, x, bias=None):
+            if getattr(layer, "_b70_fp8_int8xmx", False):
+                x2 = x.reshape(-1, x.shape[-1]).to(torch.bfloat16)
+                y = torch.ops._xpu_C.int8_gemm_w8a16(
+                    x2, layer.weight, layer.weight_scale, bias
+                )
+                return y.reshape(*x.shape[:-1], layer.weight.shape[1])
             scale = getattr(layer, "weight_scale", None)
             if scale is None or scale.numel() <= 1:
                 return super(type(self), self).apply_weights(layer, x, bias)
@@ -452,7 +499,10 @@ try:
             _cls = type(
                 "_ChannelAware" + _base.__name__,
                 (_base,),
-                {"apply_weights": _fp8_channel_apply},
+                {
+                    "process_weights_after_loading": _fp8_channel_process,
+                    "apply_weights": _fp8_channel_apply,
+                },
             )
             _fp8_wrapped.append(_cls)
 
@@ -466,8 +516,10 @@ try:
         if isinstance(_reg16, dict) and PlatformEnum.XPU in _reg16:
             _reg16[PlatformEnum.XPU] = _a16
         print(
-            "[nvfp4-shim] (1e) channel-FP8 uses tiled f8*scale F.linear "
-            f"(wrapped {[c.__name__ for c in _fp8_wrapped]}); "
+            "[nvfp4-shim] (1e) channel-FP8 -> INT8-XMX int8_gemm_w8a16 "
+            f"(wrapped {[c.__name__ for c in _fp8_wrapped]}; "
+            "B70_FP8_CHANNEL_INT8XMX="
+            f"{os.environ.get('B70_FP8_CHANNEL_INT8XMX', '1')}); "
             "per-tensor FP8 stays on fp8_gemm_w8a16",
             file=sys.stderr,
             flush=True,

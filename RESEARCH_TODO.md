@@ -674,10 +674,20 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       (0.977); 3.6 per-tensor FP8 stays exact. sitecustomize (1e) tiled
       `f8*scale` F.linear. One-card gate: Paris / Au / 43. Slow. Do not
       promote.
-- [ ] **12f. [ACTIVE] Unsloth channel-FP8 speed.** Replace tiled F.linear
-      with a real per-channel FP8 gemm, or repack `f8*scale` to s8 +
-      per-channel bf16 and use `int8_gemm_w8a16` (B70 INT8 XMX). Then
-      re-gate + IN=2048. One-card first; TP=2 only after coherent+faster.
+- [x] **12f. Unsloth channel-FP8 -> INT8-XMX (2026-08-15g).** Do NOT
+      write an FP8 GEMM (Xe2 has no FP8 XMX; `fp8_gemm_w8a16` is
+      emulated + per-tensor-only). Repack `f8*channel` to s8 + `[N]`
+      scale, `int8_gemm_w8a16`. Probe: cos 1.000, M=1 56x vs tiled
+      F.linear. Serve coherent (Paris / 43). Image stays
+      `int8g-v0260` (v0.26.0 / torch 2.12) -- local newer
+      `vllm/vllm-openai-xpu` is 0.26.1rc1 / torch 2.13 and will not
+      load our fused .so. sglang 0.5.15.post1 has no XPU NVFP4 serve
+      path yet.
+- [ ] **12g. [ACTIVE] Measure + decode GEMV.** IN=2048 vs Inferact
+      fused on the INT8-XMX Unsloth serve. M=1 is still oneDNN
+      matmul; a dedicated INT8 GEMV is the decode lever if the
+      bench is BW-bound. Stay on int8g-v0260 until a torch-2.12
+      compatible image bump is gated.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

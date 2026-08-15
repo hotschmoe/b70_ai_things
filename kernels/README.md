@@ -27,6 +27,21 @@ serving backend** because the prebuilt `.so` is ABI-locked to the torch it was b
 - (int4 gemm ops `int4_gemm_w4a8` / `int4_gemm_w4a16` are upstream in `vllm-xpu-kernels`
   itself, gated by `XPU_SPECIFIC_KERNELS_ENABLED=ON`; no repo patch needed.)
 
+## B70 XMX vs what to write (2026-08-15g)
+
+Xe2/Battlemage on-chip XMX is INT8 (and INT4 DPAS). There is **no native FP8 or
+FP4** tensor-core path. So:
+
+- Prefer `int8_gemm_w8a16` (decode / M=1 GEMV-shaped) and `int8_gemm_w8a8`
+  (prefill) for any 8-bit-weight work. Unsloth channel-FP8 is repacked to s8
+  + per-out-channel scale at load (sitecustomize 1e); do not add an FP8 GEMM.
+- `nvfp4_gemm_w4a16` is weight-decompress of E2M1 into the matmul, not FP4 XMX.
+- `fp8_gemm_w8a16` is emulated and per-tensor-only (Unsloth channel scales
+  were dropped). Keep it only for 3.6 ModelOpt per-tensor FP8.
+- Newest *compatible* image is `vllm-xpu-env:int8g-v0260` (vLLM 0.26.0, torch
+  2.12). Local `vllm/vllm-openai-xpu` is 0.26.1rc1 / torch 2.13 -- ABI break
+  for these `.so`s. Rebuild is a separate session.
+
 ## How it builds (per backend)
 
 The same source compiles against each backend's torch into ABI-specific binaries. The built

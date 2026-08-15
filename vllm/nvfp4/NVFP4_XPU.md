@@ -220,7 +220,9 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       was `fp8_gemm_w8a16` ignoring per-channel scales (Unsloth attn +
       last-8 MLP + lm_head). sitecustomize (1e) tiled `f8*scale` F.linear
       on channel layers; per-tensor FP8 (3.6) unchanged. Paris / Au / 43.
-      Slow -- not a DD. Next: per-channel FP8 kernel or INT8-XMX repack.
+      Slow -- not a DD. 2026-08-15g: channel-FP8 now repacks to s8 +
+      `[N]` scale and uses `int8_gemm_w8a16` (INT8 XMX). Probe cos 1.000,
+      M=1 56x tiled. Stay on int8g-v0260 / torch 2.12.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 
@@ -268,3 +270,6 @@ W4A16 serve. It is a future-kernel unlock, not a route-a win for NVFP4.
   BF16 is clean -- next is FP8-channel apply isolation. Journal 2026-08-15d/e.
 - 2026-08-15f Unsloth COHERENT: `fp8_gemm_w8a16` is per-tensor only (card-1
   probe). sitecustomize (1e) tiled channel dequant. Paris / 43. Journal 15f.
+- 2026-08-15g channel-FP8 -> INT8-XMX. Do not write FP8 GEMM (no FP8 XMX
+  on Xe2). 1D [N] scale cos 1.000, M=1 56x vs tiled. Image stays
+  int8g-v0260 (torch 2.12). Journal 15g.

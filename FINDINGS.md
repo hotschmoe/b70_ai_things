@@ -11,11 +11,11 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   `nvfp4_gemm_w4a16` on Unsloth MLP is bit-exact (cos 1.000). The garbage was
   `fp8_gemm_w8a16` treating Unsloth *per-channel* FP8 scales as one tensor
   scale (matches mean-scale ref 0.9997; 3.6 per-tensor FP8 stays exact).
-  sitecustomize (1e) tiled `f8*scale` F.linear on channel layers. One-card
-  MAXLEN=8192: Paris exact, chat `The capital of France is Paris.`, 17+26
-  `43`. Slow (eager tiled FP8 on attn+last-8+lm_head) -- research, not a
-  DD. Next: real per-channel FP8 / INT8-XMX repack. Inferact ModelOpt remains
-  the fast coherent 3.8 NVFP4 path.
+  sitecustomize (1e) first tiled `f8*scale` F.linear (coherent, slow), then
+  (2026-08-15g) repacks channel-FP8 to s8 + per-out-channel scale and hits
+  `int8_gemm_w8a16` (B70 INT8 XMX; Xe2 has no FP8 XMX). Probe: cos 1.000,
+  M=1 56x vs tiled. Serve still Paris / 43. Stay on `int8g-v0260` (torch
+  2.12); newer public vLLM is torch 2.13 and drops our .so. Not a DD.
 - **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): coherent INT8 XMX + grafted VLM/MTP.**
   GPTQ-only compressed-tensors. Overnight save was text-only; CPU graft
   restored 333 visual + 15 mtp from official BF16. TP=2 MTP3 @131k:

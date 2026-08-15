@@ -350,10 +350,12 @@ despite exact checkpoint hashes. All local-argmax/replicated-head switches remai
 attn + last-8 MLP + lm_head *channel*-FP8). TP=2 @262144 first bring-up was
 `Paris` -> `!!!!` because `fp8_gemm_w8a16` is per-tensor only (channel scales
 collapsed to one mean). NVFP4 fused gemm was already bit-exact. sitecustomize
-(1e) tiled `f8*scale` F.linear on channel layers. One-card MAXLEN=8192 on
-`int8g-v0260`: Paris exact, chat `The capital of France is Paris.`, 17+26
-`43`. Slow -- not a speed path, no concurrent sweep. Do not promote. Inferact
-ModelOpt is the fast coherent 3.8 NVFP4 path. Daily driver stays Qwen3.6 NVFP4.
+(1e) first tiled `f8*scale` F.linear, then (15g) repacks channel-FP8 to
+INT8-XMX `int8_gemm_w8a16` (Xe2 has no FP8 XMX). One-card MAXLEN=8192 on
+`int8g-v0260`: Paris / 43. Probe M=1 56x vs tiled. Stay on this image
+(torch 2.12); public 0.26.1rc1 is torch 2.13 and will not load our
+kernels. Do not promote. Inferact ModelOpt is the fast coherent 3.8
+NVFP4 path. Daily driver stays Qwen3.6 NVFP4.
 
 [38i] **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14 / fused 2026-08-14c).**
 Official vLLM recipe checkpoint (`quant_algo=NVFP4`, uniform W4A4, not 3.6

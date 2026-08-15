@@ -10987,3 +10987,47 @@ VERDICT -> Unsloth NVFP4 **serves coherently on one card** once
   fused. Do not promote (slow; no concurrent sweep). Next speed
   lever: a real per-channel FP8 gemm (or INT8-XMX repack of
   f8*scale). No systemd / DD swap. Left on :8078 card 0.
+
+### 2026-08-15g - Unsloth channel-FP8 -> INT8-XMX (B70 fast path)
+
+CONTEXT -> User asked to target the newest vLLM/sglang image AND
+  write/optimize B70 GEMM/GEMV on on-chip XMX. Xe2 has native INT8
+  XMX, no native FP8/FP4. A public newer vLLM (local untagged
+  `vllm/vllm-openai-xpu` = 0.26.1rc1 / torch 2.13, 2026-08-07) is
+  ABI-incompatible with our fused `_xpu_C` (torch 2.12). sglang
+  newest local is 0.5.15.post1 (torch 2.12); NVFP4-XPU port is
+  still incomplete. Stay on `int8g-v0260` (newest image that has
+  our kernels) for this work.
+
+CONFIG (probe) -> card 1 `probe_unsloth_fp8_int8xmx.py`, same fused
+  .so as the serve. Repack Unsloth `in_proj_qkv` f8*channel -> s8
+  + per-out-channel scale.
+
+RESULT (probe) -> 1D `[N]` (also `[N,1]` / `[1,N]`) int8_gemm_w8a16
+  vs true f8*channel F.linear: cos **1.0000** rmse 0.011 (int8
+  quant noise). `[1,1]` mean-scale is the old 0.977 miss.
+  Time on that 10240x5120 layer:
+    M=1:  tiled F.linear 9.59 ms, int8 XMX **0.171 ms (56x)**,
+          fp8_gemm emul 0.209 ms (wrong numerics)
+    M=8:  9.56 vs **0.139 ms (69x)**
+    M=256: 8.68 vs **0.498 ms (17x)**
+  Decode M=1 is this same op (GEMV-shaped matmul), not a new kernel.
+
+CONFIG (serve) -> sitecustomize (1e) process_weights tiles the
+  f8->s8 repack (lm_head would be 5 GiB as one f32 copy), apply
+  calls `int8_gemm_w8a16`. `B70_FP8_CHANNEL_INT8XMX=1` default.
+  Same one-card Unsloth recipe. Per-tensor FP8 (3.6) unchanged.
+
+RESULT (gate) -> HEALTHY, weight still 24.7 GiB. Chat thinking-off:
+  `The capital of France is Paris.` / `43`. Completions: `Paris.`
+  / `Au, derived from the Latin`. 17+26 short-budget still cuts
+  off in the carry writeup (same as tiled; longer budget was 43).
+  Logger after the 120-tok prompt ~6.4 gen tok/s (first-request
+  mix); this is not an IN=2048 sweep.
+
+VERDICT -> First B70 XMX path for Unsloth channel-FP8 is live and
+  coherent. Do not write an FP8 GEMM -- there is no FP8 XMX on
+  Xe2. Do not rebuild onto torch-2.13 v0.26.1rc1 in this session
+  (drops our NVFP4/int8 .so). Next: IN=2048 bench vs Inferact;
+  optional decode GEMV (M=1 still oneDNN matmul); sglang NVFP4
+  port remains a separate session. No systemd / DD swap.
