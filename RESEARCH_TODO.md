@@ -651,6 +651,31 @@ The NVFP4 27B (`rdy_to_serve/vllm/qwen36-27b-nvfp4/`) is now the box quality #1 
       artifact retained. Quixi's tuned SYCL GEMV was useful evidence for weight-bit relocation, but the
       incumbent oneDNN op was already near the B70 bandwidth roofline; direct scale traffic was the win.
 
+## Track 12 -- Qwen3.8-27B Unsloth / Inferact / on-box W8A8  [NEW 2026-08-15]
+
+Do not promote any 3.8 path to DD/systemd until it is sweep-gated coherent AND
+faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
+
+- [x] **12a. Download + identity.** Official BF16, Unsloth NVFP4, Inferact
+      ModelOpt NVFP4, on-box GPTQ W8A8 (+ grafted vision/MTP) all on disk under
+      `models/files/qwen3.8-27b/`. Served ids encode method/scheme.
+- [x] **12b. Inferact ModelOpt NVFP4 is the coherent 3.8 NVFP4 path.** Fused
+      `_XPUW4A4FusedAsW4A16Kernel` Paris-exact, IN=2048 TG 23.78. c4 still dies.
+- [x] **12c. On-box GPTQ W8A8 + graft is the coherent 3.8 INT8 path.** TP=2
+      MTP3 @131k Paris + vision live, TG 26.62, c4 stayed up.
+- [x] **12d. Unsloth one-card FIT (2026-08-15e).** TP=1 CARD=0 MAXLEN=8192
+      MODE=fused GRAPH=0 MTP-off on `int8g-v0260`: 24.71 GiB + 1.89 GiB KV /
+      35k tok. Card 1 free. Chat needs `--reasoning-parser qwen3` (shim injects
+      thinking_token_budget). Call `vllm/nvfp4/serve_nvfp4_27b.sh` with
+      `MTPTOK=` -- the shelf wrapper TP=1 `MTPTOK:-5` re-enables spec.
+- [ ] **12e. [ACTIVE] Unsloth coherence -- isolate apply path, not remapper.**
+      CPU dequant vs official BF16 is clean (MLP CT-invert + low-nibble-first
+      cosine 0.992; FP8 `f8 * channel scale` 0.9996). `actorder: static` is not
+      a leftover K-perm. Fused NVFP4 + CT FP8 kernels attach and still emit
+      `Paris ! ! !` on v0240 and v0260. Next A/B on the live one-card serve
+      (`unsloth_c0` :8078 card 0): CT channel-FP8 `fp8_gemm_w8a16` vs NVFP4
+      fused apply. Leave card 1 free unless a GPU microbench needs it.
+
 ## Execution order (the 3-5 items to actually run, deduped)
 
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same

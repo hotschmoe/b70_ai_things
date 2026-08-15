@@ -2,15 +2,24 @@
 # Qwen3.8-27B NVFP4 (unsloth/Qwen3.8-27B-NVFP4, compressed-tensors mixed-precision).
 # Thin wrapper over vllm/nvfp4/serve_nvfp4_27b.sh via MODEL_REL.
 #
-#   TP=2 ./bin/gpu-run bash serve.sh start     # TP=2 native 262144, bf16 KV (first bring-up)
-#   ./bin/gpu-run --card 0 bash serve.sh start # single-card 100k (unmeasured)
+#   TP=2 ./bin/gpu-run bash serve.sh start     # TP=2 native 262144, bf16 KV
+#   ./bin/gpu-run --card 0 bash serve.sh start # single-card (wrapper default 100k+MTP5, UNMEASURED)
 #   bash serve.sh stop
 #
-# First bring-up (2026-08-14): same long-ctx TP=2 shape as the live Qwen3.6 DD
-# (int8g-v0260, prefix cache, push-AR graph, bf16 KV). Unsloth checkpoint is
-# compressed-tensors, NOT ModelOpt. Measured: loads, NOT coherent (Paris ->
-# !!!! even MTP-off), IN=2048 PP 166 / TG 9.7. Do not promote. Next candidate
-# is Inferact ModelOpt via MODEL_REL=qwen3.8-27b/nvfp4-modelopt.
+# Measured one-card research recipe (2026-08-15e; FITS, NOT coherent):
+#   call serve_nvfp4_27b.sh DIRECTLY with MTPTOK= (empty). This wrapper's TP=1
+#   `MTPTOK:-5` treats empty as 5. Do not use this wrapper for the one-card
+#   isolation serve.
+#     TP=1 CARD=0 PORT=8078 NAME=unsloth_c0 MODE=fused GRAPH=0 \
+#       MAXLEN=8192 UTIL=0.90 MAXSEQS=4 PREFIXCACHE=0 \
+#       IMG=vllm-xpu-env:int8g-v0260 \
+#       MODEL_REL=qwen3.8-27b/nvfp4-unsloth \
+#       SERVED=qwen3.8-27b-NVFP4-unsloth MTPTOK= REASONPARSER=qwen3 \
+#       ./bin/gpu-run --card 0 bash vllm/nvfp4/serve_nvfp4_27b.sh
+#   Load 24.71 GiB, KV 1.89 GiB / 35k tok. Fused NVFP4 + CT FP8 kernels attach.
+#   Completions still `Paris ! ! !`. CPU dequant vs BF16 is clean -- isolate
+#   FP8-channel apply, not a remapper. Do not promote.
+# Inferact ModelOpt (coherent): MODEL_REL=qwen3.8-27b/nvfp4-modelopt.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/../../.." && pwd)"

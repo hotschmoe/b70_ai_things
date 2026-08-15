@@ -190,13 +190,15 @@ models:
     size_gb: 23
     served_as: qwen3.8-27b-NVFP4-unsloth
     source: { type: hf, repo: unsloth/Qwen3.8-27B-NVFP4 }
-    notes: Unsloth Dynamic NVFP4 compressed-tensors MIXED_PRECISION. MLP is
-           nvfp4-pack-quantized (group 16); attention + last-8 MLP + lm_head are
-           FP8 float-quantized; vision ignored (bf16); MTP in model_mtp.safetensors
-           (bf16). NOT ModelOpt -- our fused XPU NVFP4 kernel is ModelOpt-shaped.
-           Official vLLM recipe also cites Inferact/Qwen3.8-27B-NVFP4 (modelopt)
-           as a NVIDIA-format fallback. Served 2026-08-14 on vLLM 0.26.0 TP=2:
-           loads, NOT coherent (Paris -> !!!!), IN=2048 PP 166 / TG 9.7. Do not promote.
+    notes: Unsloth Dynamic NVFP4 compressed-tensors MIXED. MLP nvfp4-pack g16
+           (wgs/igs are CT divisors; invert to ModelOpt-scale); attn + last-8
+           MLP + lm_head are channel-FP8 (f8 * [N,1] scale); vision bf16; MTP
+           bf16 in model_mtp.safetensors. actorder:static but no g_idx -- CPU
+           dequant vs official BF16 is clean (MLP 0.992, FP8 0.9996). Served
+           2026-08-14 TP=2 @262k and 2026-08-15e TP=1 @8192 fused: loads, NOT
+           coherent (Paris -> !!!!). Not a remapper. Isolate CT channel-FP8
+           fp8_gemm_w8a16 apply. Inferact ModelOpt is the coherent 3.8 NVFP4.
+           Do not promote.
 
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
 # Removed from disk by reorg.sh per the 2026-06-29 review (off-target or prior-gen scaffolding):

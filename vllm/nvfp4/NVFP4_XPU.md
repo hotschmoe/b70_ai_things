@@ -214,6 +214,17 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       plus delta is inside the graph stack's proven greedy nondeterminism (five
       repeats of the affected prompt produced five distinct solutions). Shipped
       in the TP=1 DP shelf as B70_NVFP4_F8_SCALE_M_MAX=8; old .so retained.
+- [~] M11: Qwen3.8 Unsloth NVFP4 (compressed-tensors mixed) -- ONE-CARD FITS,
+      NOT COHERENT. 2026-08-15e: TP=1 CARD=0 MAXLEN=8192 MODE=fused GRAPH=0
+      MTP-off on `int8g-v0260`, 24.71 GiB + 1.89 GiB KV / 35k tok. Fused
+      `_XPUW4A4FusedAsW4A16Kernel` attaches (CT W4A4 inverts `weight_global_scale`
+      6400 -> 1/6400 then folds into the W4A16 gemm). Completions still
+      `Paris ! ! !`. CPU dequant (`probe_unsloth_dequant.py`) vs official BF16
+      is clean: MLP 0.992 (CT invert + low-nibble-first), FP8 attn/last-8
+      `f8 * [N,1] scale` 0.9996. `actorder: static` has no `g_idx` and is not
+      a K-perm. This is a runtime apply isolation (CT channel-FP8
+      `fp8_gemm_w8a16` vs NVFP4 fused), not a remapper. Inferact ModelOpt
+      remains the coherent 3.8 NVFP4 path. Do not promote.
 
 ### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
 
@@ -256,3 +267,6 @@ W4A16 serve. It is a future-kernel unlock, not a route-a win for NVFP4.
   script -> PIECEWISE capture first-try clean. 25.06 t/s c1 / 17.88 c4 (2.97x eager),
   coherent. README row updated. Next lever: NEXTN MTP (ckpt has all 15 bf16 mtp.*
   tensors natively; MTPTOK knob added).
+- 2026-08-15e Qwen3.8 Unsloth one-card: MAXLEN=8192 fits on card 0 (24.71 GiB
+  + 1.89 GiB KV). Fused kernel on, still Paris-then-garbage. CPU dequant vs
+  BF16 is clean -- next is FP8-channel apply isolation. Journal 2026-08-15d/e.

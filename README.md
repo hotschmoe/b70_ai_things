@@ -345,13 +345,16 @@ Lower-depth fused MTP3 reached only c1 37.2/c4 103.0, and MTP4 emitted visible `
 gather, but measured only c1 30.1/c4 113.5 and produced intermittent rank-1 shadow mismatches
 despite exact checkpoint hashes. All local-argmax/replicated-head switches remain default-off.
 
-[38u] **Qwen3.8-27B Unsloth NVFP4 is research-only (2026-08-14).** Same vLLM 0.26.0 TP=2
-long-ctx recipe as the 3.6 DD (bf16 KV, MAXLEN=262144, PIECEWISE + push-AR). Checkpoint is
-`unsloth/Qwen3.8-27B-NVFP4` (compressed-tensors mixed-precision), not ModelOpt. It loads
-(10.77 GiB/card, KV 409k) but is **not coherent** (Paris probe degenerates to "!!!!" even
-with MTP off) and is ~10x slower at IN=2048 (TTFT 12.3 s / PP 166 / TG 9.7). Our fused XPU
-NVFP4 kernel is ModelOpt-shaped; do not promote. Next: Inferact ModelOpt NVFP4, then on-box
-W8A8 from official BF16. Daily driver stays Qwen3.6 NVFP4 TP=2.
+[38u] **Qwen3.8-27B Unsloth NVFP4 is research-only (2026-08-14 / one-card 2026-08-15).**
+`unsloth/Qwen3.8-27B-NVFP4` is compressed-tensors mixed (MLP nvfp4-pack g16, attn +
+last-8 MLP + lm_head channel-FP8), not ModelOpt. TP=2 @262144 MTP-off: loads
+(10.77 GiB/card, KV 409k) but is **not coherent** (`Paris` -> `!!!!`) and is ~10x
+slower at IN=2048 (TTFT 12.3 s / PP 166 / TG 9.7). One-card MAXLEN=8192 also
+fits (24.71 GiB + 1.89 GiB KV / 35k tok on `int8g-v0260`, fused kernel attached)
+and is still `Paris ! ! !`. Offline dequant vs official BF16 is clean (MLP 0.992,
+FP8 0.9996) -- not a remapper / `actorder` miss. Next isolation: CT channel-FP8
+`fp8_gemm_w8a16` apply vs NVFP4 fused apply. Inferact ModelOpt is the coherent
+3.8 NVFP4 path. Do not promote. Daily driver stays Qwen3.6 NVFP4.
 
 [38i] **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14 / fused 2026-08-14c).**
 Official vLLM recipe checkpoint (`quant_algo=NVFP4`, uniform W4A4, not 3.6
