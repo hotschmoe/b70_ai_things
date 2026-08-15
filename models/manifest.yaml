@@ -167,7 +167,8 @@ models:
     derived_from: Qwen/Qwen3.8-27B
     build: scripts/150 GPTQ W8A8 SMOOTHQUANT=0 XPU SequentialPipeline
     notes: 2026-08-15. compressed-tensors int-quantized. Text-only save
-           (Qwen3_5ForCausalLM); vision+MTP not in this dir. Not shelved.
+           (CausalLM loader; config wrapped to VLM for vLLM). Paris exact.
+           IN=2048 MTP-off PP 2574 / TG 18.45; c4 stable. Not shelved.
 
   - id: qwen3.8-27b/nvfp4-modelopt
     family: qwen3.8-27b

@@ -310,6 +310,7 @@ Numbers below are each entry's own production config. The first two NVFP4 rows w
 | qwen3.6-27b | **NVFP4 TP=2 fp8-KV-cal + MTP5 + push-AR @200k** [tp2] | 11.54/card | 2 | 1982 @36k | 18.15 s @36k | **48.9 code** (52.0 best) | 25.7/stream (**103.0 agg**) | **640.8k tok** |
 | qwen3.8-27b | Unsloth NVFP4 compressed-tensors TP=2 MTP-off @262k (research; NOT coherent) [38u] | 10.77/card | 2 | 166 | 12333 ms | 9.66 | 6.53 (13.45 agg) | 409k tok |
 | qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP-off @262k fused W4A16 (coherent) [38i] | 13.32/card | 2 | 2163 | 947 ms | 23.78 | c4 died | 339k tok |
+| qwen3.8-27b | on-box GPTQ W8A8 TP=2 MTP-off @229k (coherent, text-only) [38w] | 16.52/card | 2 | 2574 | 796 ms | 18.45 | 14.73 (51.8 agg) | 250k tok |
 | qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
@@ -360,6 +361,13 @@ fake-quant skipped). Paris still "Paris". IN=2048 MTP-off fused: TTFT 947 ms /
 PP 2163 / TG **23.78** (2.8x emul decode; 3.6 MTP-off class). c4 still kills
 the engine (`shm_broadcast cancelled`, same as emul). Weights 13.32 GiB/card,
 KV 339k @262144. Not a DD (c4 unstable; no MTP yet). Next: on-box GPTQ W8A8.
+
+[38w] **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15).** scripts/150 GPTQ-only from
+official BF16 (SMOOTHQUANT=0). compressed-tensors INT8 w x INT8 a. Save is
+text-only (Qwen3_5ForCausalLM); wrapped as VLM config to load in vLLM 0.26.
+XPUInt8ScaledMMLinearKernel. Paris exact. IN=2048 MTP-off: TTFT 796 / PP 2574
+/ TG 18.45; c4 survived (14.73). Prefill beats Inferact fused; decode does
+not. No MTP/vision in this dir. Not a DD.
 
 ◆ **NVFP4 TP=1 fp8 KV = the single-card 128k-context config (2026-07-08).** Same NVFP4 checkpoint +
 `nvfp4_gemm_w4a16` kernel + PIECEWISE capture, on ONE card. **fp8 KV cache** (calibrated `amax/448` per-layer

@@ -10787,3 +10787,35 @@ CAVEAT -> AutoModelForCausalLM succeeded, so the save is
 
 VERDICT (quant) -> Artifact exists and looks like the intended W8A8
   scheme. Next: serve TP=2 MTP-off, Paris + IN=2048, then restore DD.
+
+### 2026-08-15b - Qwen3.8 W8A8-gptq TP=2 MTP-off serve gate
+
+CONFIG -> Wrapped CausalLM config as Qwen3_5ForConditionalGeneration
+  + language_model_only=true (vLLM refused Qwen3_5TextConfig).
+  vLLM 0.26.0 int8g-v0260, GRAPH=1 PIECEWISE, MTP off, NOMM=1,
+  MAXLEN=229376 (262144 needed 8.18 GiB KV vs 7.48 at UTIL=0.85),
+  UTIL=0.90, PREFIXCACHE=1, push-AR. Kernel:
+  XPUInt8ScaledMMLinearKernel for CompressedTensorsW8A8Int8.
+
+COMMAND ->
+  ```
+  B70_NOMTP=1 NOMM=1 TP=2 PORT=18080 NAME=qwen38_w8a8 \
+    MAXLEN=229376 UTIL=0.90 \
+    bash vllm/w8a8/serve_qwen38_27b.sh start
+  ```
+
+RESULT -> HEALTHY in 233s. Weight 16.52 GiB/card. KV 249,710 tok,
+  1.09x @229376. Paris thinking-off: **"Paris"** (2 toks).
+  Completions: "Paris. The capital of Germany is Berlin..."
+  IN=2048/OUT=128 MTP-off (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-27b-w8a8-gptq-nomtp_20260815_074452.csv):
+    c1: TTFT 796 ms, PP 2574 tok/s, TG **18.45** t/s
+    c4: TTFT 1244 ms, TG 14.73 /stream (51.76 agg) -- engine STAYED UP
+  vs Inferact fused MTP-off: PP 2163 / TG 23.78 / c4 died.
+  vs 3.6 W8A8+MTP README: PP 2711 / TG 30.0.
+
+VERDICT -> **Coherent on-box 3.8 W8A8 INT8 XMX path exists.** Prefill
+  beats Inferact; decode trails Inferact fused and 3.6 W8A8+MTP.
+  c4 is stable (Inferact was not). Text-only, no MTP, not a DD.
+  Do not swap systemd. Next: graft vision+MTP from BF16, then MTP
+  spec; selective SQ as quality A/B. Restore 3.6 NVFP4 TP=2 DD.
