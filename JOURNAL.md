@@ -10819,3 +10819,6 @@ VERDICT -> **Coherent on-box 3.8 W8A8 INT8 XMX path exists.** Prefill
   c4 is stable (Inferact was not). Text-only, no MTP, not a DD.
   Do not swap systemd. Next: graft vision+MTP from BF16, then MTP
   spec; selective SQ as quality A/B. Restore 3.6 NVFP4 TP=2 DD.
+
+RESTORE -> 3.6 NVFP4 TP=2 DD back as hotschmoe-dd @262144. WebUI +
+  Grafana up. systemd not edited.
