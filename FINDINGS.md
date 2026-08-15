@@ -17,12 +17,12 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   EmulationNvFp4LinearKernel to the Unsloth layout. No public Unsloth/NVIDIA/Qwen
   W8A8-INT8 on release day. Official BF16 + Inferact ModelOpt NVFP4 are on disk for
   the next serve. DD restored to 3.6 NVFP4 TP=2; systemd not swapped.
-- **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): coherent INT8 XMX serve.**
-  GPTQ-only compressed-tensors, text-only save (no vision/MTP). Wrapped
-  as Qwen3_5 VLM config to load. `XPUInt8ScaledMMLinearKernel`. TP=2
-  MTP-off @229k: Paris exact. IN=2048 TTFT 796 / PP 2574 / TG 18.45;
-  c4 14.73 (engine stayed up). Prefill beats Inferact fused; decode
-  trails it (23.78) and 3.6 W8A8+MTP (30). Not a DD. Graft MTP next.
+- **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): coherent INT8 XMX + grafted VLM/MTP.**
+  GPTQ-only compressed-tensors. Overnight save was text-only; CPU graft
+  restored 333 visual + 15 mtp from official BF16. TP=2 MTP3 @131k:
+  Paris exact; vision path live (landscape-vs-person correct). IN=2048
+  TTFT 924 / PP 2216 / TG **26.62** (was 18.45 MTP-off); c4 14.40 and
+  stayed up. Spec accept length ~2.1-2.6. Not a DD.
 - **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14b/c): coherent; fused decode works.**
   Uniform `quant_algo=NVFP4` (W4A4). Emul load: Paris exact, TTFT 1042 / PP 1967 /
   TG 8.58, c4 died. Fused route (`_XPUW4A4FusedAsW4A16Kernel` -> `nvfp4_gemm_w4a16`,

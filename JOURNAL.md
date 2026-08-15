@@ -10822,3 +10822,45 @@ VERDICT -> **Coherent on-box 3.8 W8A8 INT8 XMX path exists.** Prefill
 
 RESTORE -> 3.6 NVFP4 TP=2 DD back as hotschmoe-dd @262144. WebUI +
   Grafana up. systemd not edited.
+
+### 2026-08-15c - graft BF16 vision+MTP onto 3.8 W8A8-gptq
+
+CONTEXT -> User wants vision + MTP on the on-box W8A8. Same 3.6
+  playbook: CPU graft, no requant.
+
+COMMAND ->
+  ```
+  docker run --rm --entrypoint python3 -v models/files:/models \
+    -v models/graft_qwen38_w8a8.py:/graft.py:ro \
+    vllm-xpu-env:int8g-v0260 \
+    /graft.py /models/qwen3.8-27b/w8a8-gptq /models/qwen3.8-27b/bf16
+  ```
+
+GRAFT -> 333 visual + 15 mtp.* from official BF16.
+  model-visual.safetensors 879 MB, model-mtp.safetensors 810 MB.
+  Index 1455 tensors (1107 LM + 333 vis + 15 mtp), 35 GB on disk.
+  Config: Qwen3_5ForConditionalGeneration, language_model_only=false,
+  vision_config present, num_nextn_predict_layers=1.
+
+SERVE -> B70_NOMTP=0 MTPTOK=3 GRAPH=1 NOMM off MAXLEN=131072 UTIL=0.90
+  TP=2. Kernel still XPUInt8ScaledMMLinearKernel. "Detected MTP model.
+  Sharing target model embedding/lm_head with the draft model."
+  Weight 17.14 GiB/card (was 16.52). KV 270k, 2.06x @131072.
+
+RESULT ->
+  Paris thinking-off: **"Paris"**
+  Vision: image tokens ~300. Forced landscape-vs-person ->
+  **"landscape"** (correct; photo is a fjord/cliff). Freeform first
+  pass over-focused on tiny people on the cliff ("person in a white
+  t-shirt") -- path is live, not a silent-zero tower.
+  IN=2048/OUT=128 MTP3 (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-27b-w8a8-gptq-mtp3_20260815_184358.csv):
+    c1: TTFT 924 ms, PP 2216, TG **26.62** (was 18.45 MTP-off)
+    c4: TTFT 1231 ms, TG 14.40 (50.2 agg), engine stayed up
+  Spec metrics (in-bench): mean accept length ~2.0-2.65, draft accept
+  ~27-55%. Real MTP, not 0%.
+
+VERDICT -> **Vision + MTP grafted and both fire.** Decode +44% vs
+  MTP-off. Not a DD (accept not 3.6-class, MAXLEN 131k this run, no
+  systemd). Left serving on :18080 for the user to poke. Restore 3.6
+  NVFP4 when they are done.

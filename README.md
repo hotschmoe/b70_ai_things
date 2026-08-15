@@ -311,6 +311,7 @@ Numbers below are each entry's own production config. The first two NVFP4 rows w
 | qwen3.8-27b | Unsloth NVFP4 compressed-tensors TP=2 MTP-off @262k (research; NOT coherent) [38u] | 10.77/card | 2 | 166 | 12333 ms | 9.66 | 6.53 (13.45 agg) | 409k tok |
 | qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP-off @262k fused W4A16 (coherent) [38i] | 13.32/card | 2 | 2163 | 947 ms | 23.78 | c4 died | 339k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 TP=2 MTP-off @229k (coherent, text-only) [38w] | 16.52/card | 2 | 2574 | 796 ms | 18.45 | 14.73 (51.8 agg) | 250k tok |
+| qwen3.8-27b | on-box GPTQ W8A8 + grafted vis/MTP TP=2 MTP3 @131k [38g] | 17.14/card | 2 | 2216 | 924 ms | **26.62** | 14.40 (50.2 agg) | 270k tok |
 | qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
 | qwen3.6-27b | int4-AutoRound (W4A16) | 19 | 1 | 1589 | 1289 ms | 28.6 | 19.5 | 103k tok |
 | qwen3.6-27b | W4A16 (compressed-tensors) + MTP | 26 | 2 | 651 | 3145 ms | 22.1 | 8.9 | 172k tok |
@@ -367,7 +368,12 @@ official BF16 (SMOOTHQUANT=0). compressed-tensors INT8 w x INT8 a. Save is
 text-only (Qwen3_5ForCausalLM); wrapped as VLM config to load in vLLM 0.26.
 XPUInt8ScaledMMLinearKernel. Paris exact. IN=2048 MTP-off: TTFT 796 / PP 2574
 / TG 18.45; c4 survived (14.73). Prefill beats Inferact fused; decode does
-not. No MTP/vision in this dir. Not a DD.
+not. No MTP/vision in this dir until the [38g] graft. Not a DD.
+
+[38g] **Vision+MTP graft (2026-08-15c).** CPU copy of 333 visual + 15 mtp.*
+from official BF16 into the W8A8 dir (`models/graft_qwen38_w8a8.py`).
+MTP3 accepted for real (mean accept length ~2.1-2.6). IN=2048 TG 26.62
+(+44% vs MTP-off). Vision path live (landscape-vs-person correct). Not a DD.
 
 ◆ **NVFP4 TP=1 fp8 KV = the single-card 128k-context config (2026-07-08).** Same NVFP4 checkpoint +
 `nvfp4_gemm_w4a16` kernel + PIECEWISE capture, on ONE card. **fp8 KV cache** (calibrated `amax/448` per-layer

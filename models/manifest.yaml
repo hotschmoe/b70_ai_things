@@ -159,16 +159,16 @@ models:
   - id: qwen3.8-27b/w8a8-gptq
     family: qwen3.8-27b
     scheme: w8a8-gptq
-    vision: false
-    mtp: false
-    size_gb: 33
+    vision: true
+    mtp: true
+    size_gb: 35
     served_as: qwen3.8-27b-W8A8-gptq
     source: { type: custom, origin: quantized-on-device }
     derived_from: Qwen/Qwen3.8-27B
-    build: scripts/150 GPTQ W8A8 SMOOTHQUANT=0 XPU SequentialPipeline
-    notes: 2026-08-15. compressed-tensors int-quantized. Text-only save
-           (CausalLM loader; config wrapped to VLM for vLLM). Paris exact.
-           IN=2048 MTP-off PP 2574 / TG 18.45; c4 stable. Not shelved.
+    build: scripts/150 GPTQ W8A8 SMOOTHQUANT=0; vision+MTP grafted from bf16
+    notes: 2026-08-15. compressed-tensors. Overnight save was text-only;
+           graft_qwen38_w8a8.py restored 333 visual + 15 mtp. Paris exact.
+           MTP3 IN=2048 TG 26.62; vision landscape probe correct. Not shelved.
 
   - id: qwen3.8-27b/nvfp4-modelopt
     family: qwen3.8-27b
