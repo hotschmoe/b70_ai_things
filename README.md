@@ -309,7 +309,7 @@ Numbers below are each entry's own production config. The first two NVFP4 rows w
 | qwen3.6-27b | **NVFP4 DP=2 replica: fp8-KV-cal + MTP5 + embed-INT8 @100k (DAILY DRIVER)** [dp] | 22.76/card | 1x2 | 5869/card warm | 347 ms warm | **64.6 code** | **202.2 code agg** [dp] | 144.4k/card (288.8k cumulative) [dp] |
 | qwen3.6-27b | **NVFP4 TP=2 fp8-KV-cal + MTP5 + push-AR @200k** [tp2] | 11.54/card | 2 | 1982 @36k | 18.15 s @36k | **48.9 code** (52.0 best) | 25.7/stream (**103.0 agg**) | **640.8k tok** |
 | qwen3.8-27b | Unsloth NVFP4 TP=1 @8192 fused+ch-FP8 (research; coherent, slow) [38u] | 24.71 | 1 | -- | -- | coherent | -- | 35k tok |
-| qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP-off @262k fused W4A16 (coherent) [38i] | 13.32/card | 2 | 2163 | 947 ms | 23.78 | c4 died | 339k tok |
+| qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP5 GRAPH+prefix @200k (18/18, not DD) [38i] | 13.72/card | 2 | 1779 | 1151 ms | **29.0 code** (30.0 best) | 19.1 (**76.4** agg) | 286k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 TP=2 MTP-off @229k (coherent, text-only) [38w] | 16.52/card | 2 | 2574 | 796 ms | 18.45 | 14.73 (51.8 agg) | 250k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 + grafted vis/MTP TP=2 MTP3 @131k [38g] | 17.14/card | 2 | 2216 | 924 ms | **26.62** | 14.40 (50.2 agg) | 270k tok |
 | qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
@@ -359,15 +359,14 @@ INT8-XMX `int8_gemm_w8a16` (Xe2 has no FP8 XMX). One-card MAXLEN=8192 on
 kernels. Do not promote. Inferact ModelOpt is the fast coherent 3.8
 NVFP4 path. Daily driver stays Qwen3.6 NVFP4.
 
-[38i] **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14 / fused 2026-08-14c).**
+[38i] **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14 / fused 14c / gated 15m).**
 Official vLLM recipe checkpoint (`quant_algo=NVFP4`, uniform W4A4, not 3.6
-MIXED_PRECISION). First load used `EmulationNvFp4LinearKernel` (TTFT 1042 ms /
-PP 1967 / TG 8.58). sitecustomize MODE=fused now registers
-`_XPUW4A4FusedAsW4A16Kernel` so W4A4 weights hit `nvfp4_gemm_w4a16` (act
-fake-quant skipped). Paris still "Paris". IN=2048 MTP-off fused: TTFT 947 ms /
-PP 2163 / TG **23.78** (2.8x emul decode; 3.6 MTP-off class). c4 still kills
-the engine (`shm_broadcast cancelled`, same as emul). Weights 13.32 GiB/card,
-KV 339k @262144. Not a DD (c4 unstable; no MTP yet). Next: on-box GPTQ W8A8.
+MIXED_PRECISION). Fused `_XPUW4A4FusedAsW4A16Kernel` -> `nvfp4_gemm_w4a16`.
+2026-08-15m put it on the 3.6 TP=2 stack (GRAPH + MTP5 + prefix + push-AR,
+bf16 KV, MAXLEN=200000): kv_gate 3/3, **18/18 PASS**, c4 stayed up, prefix
+hits live. Code c1 **29.0** (best 30.0) / c4 agg 76.4 vs 3.6 TP=2 48.9 /
+103.0. MTP accept_len 2.45 is the hole. Not a DD -- coherent but not
+faster-or-equal. Do not wait for nvidia/; the artifact is already ModelOpt.
 
 [38w] **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15).** scripts/150 GPTQ-only from
 official BF16 (SMOOTHQUANT=0). compressed-tensors INT8 w x INT8 a. Save is

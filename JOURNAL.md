@@ -11206,3 +11206,65 @@ FIX -> sitecustomize (1e) `B70_INT8_GRAPH_CLONE=1` (default):
 VERDICT -> TP=2 GRAPH is coherent with the clone. Decode 4.62
   -> **24.86** (eager TP=2 -> one-card GRAPH class). c4/soak
   not gated. PREFIXCACHE still off. No DD.
+
+### 2026-08-15m - Inferact 3.8 on 3.6 stack: 18/18 PASS, not a DD
+
+CONTEXT -> User: get 3.6 speed+ctx with 3.8 quality; do not wait
+  for nvidia/ official NVFP4; sweep-gate for a possible DD swap.
+  Inferact is already ModelOpt `quant_algo=NVFP4` (official vLLM
+  recipe). 3.6 speed is MTP5 + prefix + GRAPH + push-AR, not the
+  producer name.
+
+CONFIG -> Inferact `qwen3.8-27b/nvfp4-modelopt` on the 3.6 TP=2
+  recipe minus 3.6 KV scales (wrong checkpoint):
+  int8g-v0260 MODE=fused GRAPH=1 PIECEWISE MTPTOK=5
+  PREFIXCACHE=1 PUSH_AR=1 PUSH_AR_GRAPH=1
+  B70_PC_EAGLE_KEEP=1 B70_PC_CHUNK_ALIGN=1
+  B70_NVFP4_F8_SCALE_M_MAX=8 KV_FP8=0
+  MAXLEN=200000 UTIL=0.85 MAXSEQS=8 MAXBATCH=16384
+  CAPSIZES=1,2,4,8 P2P=0 PORT=8078 NAME=qwen38_nvfp4
+
+COMMAND ->
+  ```
+  TP=2 MODEL_REL=qwen3.8-27b/nvfp4-modelopt \
+    SERVED=qwen3.8-27b-NVFP4-modelopt \
+    NAME=qwen38_nvfp4 PORT=8078 MAXLEN=200000 \
+    MTPTOK=5 KV_FP8=0 PREFIXCACHE=1 GRAPH=1 \
+    IMG=vllm-xpu-env:int8g-v0260 \
+    ./bin/gpu-run bash rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh start
+  ```
+
+RESULT -> HEALTHY ~3 min. Served
+  `qwen3.8-27b-NVFP4-modelopt-graph-mtp5-pushargraph`.
+  `_XPUW4A4FusedAsW4A16Kernel`. MTP detected, share embed/lm_head.
+  Weight 13.72 GiB/card. KV **286,259 tok** (1.43x @200k).
+  Capture 2s / 0.04 GiB.
+  kv_gate **3/3** (Paris / 43 / Au). Chat thinking-off: **Paris**
+  (2 toks).
+  IN=2048/OUT=128 (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-inferact-mtp5-200k_20260815_234349.csv):
+    c1: TTFT 1151 ms, PP ~1779, TG **27.14**
+    c4: TTFT 1537 ms, TG 14.69/stream, **agg 47.77** -- engine STAYED UP
+      (2026-08-14c MTP-off fused c4 died)
+  bench_code (usage-based, out=256):
+    c1: **29.0 avg / 30.0 best** t/s
+    c4: 19.1/stream, **76.4 agg**
+  MTP after code: accepted=5072 drafts=3507 draft_tok=17535
+    accept_len=**2.446** accept_rate=0.289
+  gate_concurrent_coherence 3x6: **18/18 PASS**. Prefix cache
+    live (6656 hits / 95228 queries). xpu-health after stop:
+    HEALTHY both cards.
+
+VS 3.6 NVFP4 TP=2 (the DD-comparable bar):
+  code c1 29.0 vs **48.9** (59%). c4 agg 76.4 vs **103.0** (74%).
+  ctx 200k advertised, 286k pool vs 640k (3.6 has cal FP8 KV).
+  MTP accept 2.45 vs 3.6 often ~3.3-5 -- that is the speed hole.
+
+VERDICT -> **Do not swap the daily driver or systemd.** Inferact
+  on the 3.6 stack is now a coherent 3.8 NVFP4 server: 18/18,
+  c4 lives, 200k fits, prefix works. It is not faster-or-equal.
+  Body is 3.6 MTP-off class; spec does not pay like 3.6 MTP5.
+  Waiting for nvidia/ would not close that accept gap. Next
+  levers if we want a 3.8 DD later: MTP3 A/B (less wasted
+  draft), 3.8-specific KV calib (pool, not decode), HumanEval+.
+  DD stays 3.6 NVFP4. Serve torn down.
