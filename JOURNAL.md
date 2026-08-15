@@ -10864,3 +10864,77 @@ VERDICT -> **Vision + MTP grafted and both fire.** Decode +44% vs
   MTP-off. Not a DD (accept not 3.6-class, MAXLEN 131k this run, no
   systemd). Left serving on :18080 for the user to poke. Restore 3.6
   NVFP4 when they are done.
+
+### 2026-08-15d - Unsloth NVFP4 one-card bring-up (ctx cut to fit)
+
+CONTEXT -> User asked to run Unsloth Qwen3.8-27B NVFP4 on ONE card so
+  card 1 stays free for parallel experiments. Lower ctx to fit.
+
+CONFIG -> TP=1 CARD=0 PORT=8078 NAME=unsloth_c0 MODE=fused GRAPH=0
+  (eager), MAXLEN=8192 UTIL=0.90 MAXSEQS=4 PREFIXCACHE=0 MTP off
+  (`MTPTOK=` into `vllm/nvfp4/serve_nvfp4_27b.sh` -- the shelf wrapper
+  TP=1 default `MTPTOK:-5` would re-enable spec). Image this first
+  pass: `int8g-v0240` (script default; shelf Unsloth wrapper wants
+  `int8g-v0260`). Served id `qwen3.8-27b-NVFP4-unsloth`.
+
+COMMAND ->
+  ```
+  TP=1 CARD=0 PORT=8078 NAME=unsloth_c0 MODE=fused GRAPH=0 \
+    MAXLEN=8192 UTIL=0.90 MAXSEQS=4 PREFIXCACHE=0 \
+    MODEL_REL=qwen3.8-27b/nvfp4-unsloth \
+    SERVED=qwen3.8-27b-NVFP4-unsloth MTPTOK= \
+    ./bin/gpu-run --card 0 bash vllm/nvfp4/serve_nvfp4_27b.sh
+  ```
+
+RESULT (fit) -> HEALTHY ~3 min. Card 1 stayed free. Load 24.71 GiB
+  in 57s. KV 3.3 GiB / 60,984 tokens (7.4x @8192). Kernel:
+  `_XPUW4A4FusedAsW4A16Kernel` for NVFP4 GEMM;
+  `XPUFP8ScaledMMLinearKernel` for CT W8A8 FP8. speculative_config=None.
+
+RESULT (coherence) -> LOADS. NOT COHERENT. Completions gate 1/3:
+  capital-of-France -> `Paris !.</</ answer> ! !.! ! !.` (PASS only
+  because "paris" is in the string); 17+26 -> ` ``` # => => =>`;
+  gold -> `\_< () \», where`. Same class as the 2026-08-14 TP=2 emul
+  miss (`Paris` then `!!!!`). Chat /v1/chat/completions 400:
+  shim block 11 injects `thinking_token_budget=4096` but this launch
+  omitted `--reasoning-parser`.
+
+CPU DEQUANT (no GPU; `vllm/nvfp4/probe_unsloth_dequant.py`) ->
+  the checkpoint itself is fine. Layer0 `mlp.gate_proj` vs official
+  BF16: CT invert + low-nibble-first cosine **0.9921** rmse 0.00128
+  (better than Inferact ModelOpt on the same layer, 0.9854).
+  `actorder: static` is NOT a leftover K-perm -- no `g_idx` in the
+  shard, and dequant lands in original K order. Unsloth `wgs=6400`
+  / `igs=836` are CT divisors; invert-off explodes magnitude
+  (`|w|=4e9` vs BF16 96) while keeping the same cosine.
+  FP8 group (attn + last-8 MLP + lm_head): `f8 * per-channel scale`
+  cosine **0.9996** on in_proj_qkv / out_proj / q_proj / layer56
+  gate. So pack, nibble order, CT 1/scale, and FP8 multiply-scale
+  are all correct offline. Garbage is a runtime apply path
+  (most likely CT channel-FP8 `fp8_gemm_w8a16` layout, not an
+  Unsloth remapper).
+
+VERDICT -> One-card fit is solved (8192 ctx, card 1 free). Unsloth
+  is not coherent yet; do not treat this as a remapping bug.
+  Next: same recipe on `int8g-v0260` + `--reasoning-parser qwen3`
+  (the Inferact-fused image), then isolate FP8-channel vs NVFP4
+  fused apply. No systemd / DD swap.
+
+### 2026-08-15e - Unsloth one-card on int8g-v0260 (still garbage)
+
+CONFIG -> Same TP=1 CARD=0 MAXLEN=8192 MODE=fused GRAPH=0 MTP-off,
+  now `IMG=vllm-xpu-env:int8g-v0260` (vLLM 0.26.0) +
+  `REASONPARSER=qwen3`. Card 1 left free.
+
+RESULT -> HEALTHY ~2 min. Weight 24.71 GiB (8.7s). KV 1.89 GiB /
+  34,588 tokens (tighter than v0240's 3.3 GiB / 61k -- 0.26 reports
+  more non-torch/activation overhead). Same kernels:
+  `_XPUW4A4FusedAsW4A16Kernel` + `XPUFP8ScaledMMLinearKernel`.
+  Completions gate still 1/3: `Paris !.</</ answer> ! !.! ! !.` /
+  ` ``` # =>` / `\_< ()`. Chat thinking-off now returns 200 (parser
+  on) but content is `Paris ! ! ! ! ! ! ...`.
+
+VERDICT -> Image bump did not fix Unsloth. Left serving on :8078
+  card 0 for further one-card experiments. Next isolate is CT
+  channel-FP8 `fp8_gemm_w8a16` vs NVFP4 fused apply (checkpoint
+  dequant is already proven). No systemd / DD swap.
