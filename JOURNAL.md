@@ -10762,3 +10762,28 @@ W8A8 COMMAND (started after fuse gate + health) ->
   ```
   OUT=models/files/qwen3.8-27b/w8a8-gptq. DD stays down for the quant
   (hours). Restore 3.6 NVFP4 TP=2 after it finishes.
+
+### 2026-08-15 - Qwen3.8-27B GPTQ W8A8 finished (text-only save)
+
+CONTEXT -> Overnight continuation of scripts/150. Host `gpu-run` wrapper
+  hit the 10h tracker timeout at ~04:32 (pid 1958194 died, stale lock).
+  Docker `quant38` kept going; host log tee stopped at 04:31:35 mid
+  `layers.60.mlp.up_proj` (stage 62/65). No DONE line in the log.
+
+RESULT -> Checkpoint landed at 07:27-07:28:
+  `models/files/qwen3.8-27b/w8a8-gptq` (33 GB).
+  format=int-quantized / compressed-tensors.
+  weights INT8 per-channel symmetric; acts INT8 per-token dynamic.
+  1107 tensors, 256 `weight_scale` (the GPTQ linears), 16 q_proj,
+  432 linear_attn tensors kept. recipe.yaml = GPTQModifier W8A8
+  ignore lm_head / linear_attn / visual / mtp.
+  Safetensors headers OK (550+557). xpu-health after: HEALTHY.
+
+CAVEAT -> AutoModelForCausalLM succeeded, so the save is
+  `Qwen3_5ForCausalLM` / `qwen3_5_text` -- NO vision, NO MTP.
+  3.6 W8A8 on disk is still the VLM wrapper + grafted MTP. First
+  3.8 gate is text-only MTP-off. Graft vision+MTP from official
+  BF16 later if we want spec-decode / mm.
+
+VERDICT (quant) -> Artifact exists and looks like the intended W8A8
+  scheme. Next: serve TP=2 MTP-off, Paris + IN=2048, then restore DD.

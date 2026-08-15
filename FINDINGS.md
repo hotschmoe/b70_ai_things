@@ -17,6 +17,11 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   EmulationNvFp4LinearKernel to the Unsloth layout. No public Unsloth/NVIDIA/Qwen
   W8A8-INT8 on release day. Official BF16 + Inferact ModelOpt NVFP4 are on disk for
   the next serve. DD restored to 3.6 NVFP4 TP=2; systemd not swapped.
+- **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): checkpoint saved, text-only.**
+  `scripts/150` GPTQ-only (SMOOTHQUANT=0) on official BF16 via XPU
+  SequentialPipeline. 33 GB compressed-tensors W8A8 (per-channel INT8 w,
+  dynamic per-token INT8 a). Save is `Qwen3_5ForCausalLM` -- no vision,
+  no MTP (CausalLM loader). Serve/bench next; do not shelf yet.
 - **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14b/c): coherent; fused decode works.**
   Uniform `quant_algo=NVFP4` (W4A4). Emul load: Paris exact, TTFT 1042 / PP 1967 /
   TG 8.58, c4 died. Fused route (`_XPUW4A4FusedAsW4A16Kernel` -> `nvfp4_gemm_w4a16`,

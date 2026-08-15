@@ -154,8 +154,20 @@ models:
     served_as: qwen38-27b (base / future W8A8 source)
     source: { type: hf, repo: Qwen/Qwen3.8-27B }
     notes: official BF16. Same qwen3_5 hybrid GDN+attention as 3.6-27B (64 layers,
-           262144 native ctx, 1M YaRN). Downloaded as the on-box GPTQ W8A8 source;
-           no reputable public W8A8-INT8 (Unsloth/NVIDIA) existed on release day.
+           262144 native ctx, 1M YaRN). Source for on-box GPTQ W8A8 (2026-08-15).
+
+  - id: qwen3.8-27b/w8a8-gptq
+    family: qwen3.8-27b
+    scheme: w8a8-gptq
+    vision: false
+    mtp: false
+    size_gb: 33
+    served_as: qwen3.8-27b-W8A8-gptq
+    source: { type: custom, origin: quantized-on-device }
+    derived_from: Qwen/Qwen3.8-27B
+    build: scripts/150 GPTQ W8A8 SMOOTHQUANT=0 XPU SequentialPipeline
+    notes: 2026-08-15. compressed-tensors int-quantized. Text-only save
+           (Qwen3_5ForCausalLM); vision+MTP not in this dir. Not shelved.
 
   - id: qwen3.8-27b/nvfp4-modelopt
     family: qwen3.8-27b
