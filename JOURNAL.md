@@ -11382,3 +11382,27 @@ RESULT -> UP. Served `hotschmoe-dd` max_model_len **262144**.
 VERDICT -> Live DD is 3.6 NVFP4 TP=2 @ native 262k. 3.8 stays
   research. Orchestrator defaults + deploy unit text updated
   to match. Install the unit with sudo so boot-start follows.
+
+### 2026-08-16c - post-reboot health + Open WebUI never auto-starts
+
+CONTEXT -> User rebooted after updates; asked to check everything
+  and stop Open WebUI from ever auto-starting.
+
+RESULT (health, ~3 min after boot) ->
+  kernel still 7.1.0-070100; NEO still 26.22.38646.4.
+  b70-daily-driver enabled, came up: hotschmoe-dd max_len 262144,
+  kv_cache_dtype=fp8_e4m3, 32 scale injects, KV 666343 tok,
+  Paris exact. systemd active.
+  smbd / nfs-server / wsdd active. disk1/disk2/parity1/storage/vm_8tb
+  mounted. snapraid-initial-sync no-op (done 2026-06-24).
+  snapraid-sync.timer armed for tonight 23:06 (last night still
+  the failed 61571-file-error run). Grafana+Prometheus
+  unless-stopped came back.
+
+WEBUI -> was unless-stopped, came back on boot. Now:
+  docker update --restart=no && docker stop. Exited, policy no.
+  daily_driver_serve.sh WEBUI_ENABLE=0; docker run path uses
+  --restart no. Manual start: docker start open-webui.
+
+VERDICT -> DD+shares healthy after reboot. WebUI stays down
+  until started by hand.
