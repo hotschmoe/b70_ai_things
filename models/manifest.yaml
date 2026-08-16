@@ -179,9 +179,9 @@ models:
     served_as: qwen3.8-27b-NVFP4-modelopt
     source: { type: hf, repo: Inferact/Qwen3.8-27B-NVFP4 }
     notes: ModelOpt quant_algo=NVFP4 (uniform W4A4, not 3.6 MIXED). Not NVIDIA-org.
-           2026-08-15m 3.6-stack gate (GRAPH+MTP5+prefix @200k): 18/18 PASS,
-           c4 live, code c1 29.0 / c4 agg 76.4. Do not promote to DD
-           (3.6 TP=2 is 48.9 / 103; MTP accept_len 2.45).
+           2026-08-15n MTP A/B: spec3 wins (code c1 35.0 / c4 agg 93.3,
+           18/18). spec5 29.0, spec2 33.6. Do not promote to DD
+           (3.6 TP=2 is 48.9 / 103; accept_len stuck ~2.5).
 
   - id: qwen3.8-27b/nvfp4-unsloth
     family: qwen3.8-27b

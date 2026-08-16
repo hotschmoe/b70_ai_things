@@ -6,9 +6,10 @@
 #   TP=2 ./bin/gpu-run bash serve.sh start     # Inferact TP=2 GRAPH+MTP5 @200k
 #   bash serve.sh stop
 #
-# Gated 2026-08-15m (Inferact, TP=2): fused GRAPH + MTP5 + prefix + push-AR,
+# Gated 2026-08-15m/n (Inferact, TP=2): fused GRAPH + MTP3 + prefix + push-AR,
 #   KV_FP8=0, MAXLEN=200000. kv_gate 3/3, 18/18 PASS, c4 stayed up.
-#   Code c1 29.0 / c4 agg 76.4. NOT a DD vs 3.6 NVFP4 TP=2 48.9 / 103.
+#   MTP A/B: spec5 code 29.0 / spec3 **35.0** (18/18) / spec2 33.6.
+#   NOT a DD vs 3.6 NVFP4 TP=2 48.9 / 103. Default MTPTOK=3.
 # Unsloth one-card research: call serve_nvfp4_27b.sh DIRECTLY with MTPTOK=
 #   (this wrapper's TP=1 MTPTOK:-5 treats empty as 5).
 set -uo pipefail
@@ -48,7 +49,7 @@ if [ "$TP" = 1 ]; then
 else
   export IMG="${IMG:-vllm-xpu-env:int8g-v0260}"
   # MTPTOK:- would treat a caller-empty value as 5. Use - so MTPTOK= disables spec.
-  export TP MAXLEN="${MAXLEN:-200000}" MTPTOK="${MTPTOK-5}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \
+  export TP MAXLEN="${MAXLEN:-200000}" MTPTOK="${MTPTOK-3}" CAPSIZES="${CAPSIZES:-1,2,4,8}" \
          UTIL="${UTIL:-0.85}" MAXSEQS="${MAXSEQS:-8}" MAXBATCH="${MAXBATCH:-16384}"
   export PUSH_AR="${PUSH_AR:-1}" PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}" \
          PUSH_AR_MAXB="${PUSH_AR_MAXB:-268435456}" PREFIXCACHE="${PREFIXCACHE:-1}"

@@ -27,15 +27,13 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   Paris exact; vision path live (landscape-vs-person correct). IN=2048
   TTFT 924 / PP 2216 / TG **26.62** (was 18.45 MTP-off); c4 14.40 and
   stayed up. Spec accept length ~2.1-2.6. Not a DD.
-- **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-15m): 3.6 stack gates; not a DD.**
-  Uniform `quant_algo=NVFP4` (W4A4) on the 3.6 TP=2 recipe (fused GRAPH +
-  MTP5 + prefix + push-AR, bf16 KV, MAXLEN=200000). kv_gate 3/3, Paris
-  exact, **18/18 mixed-load PASS**, c4 stayed up (was EngineDead MTP-off
-  on 2026-08-14c). Weight 13.72 GiB/card, KV **286k**. IN=2048 TG 27.14
-  / c4 agg 47.77. Code c1 **29.0** (best 30.0) / c4 agg 76.4. MTP
-  accept_len 2.45 (rate 0.29) -- 3.6 TP=2 is 48.9 / 103 agg because
-  its MTP5 accepts ~3.3-5. Coherent 3.8 NVFP4 server exists; **do not
-  swap DD** (59% of 3.6 TP=2 code decode). No nvidia/ dump required.
+- **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-15m/n): 3.6 stack + MTP3; not a DD.**
+  Uniform `quant_algo=NVFP4` on the 3.6 TP=2 recipe (fused GRAPH + prefix
+  + push-AR, bf16 KV, MAXLEN=200000). MTP A/B: spec5 code 29.0 / spec3
+  **35.0** (18/18, accept_rate 0.49) / spec2 33.6. kv_gate 3/3, c4
+  stayed up, KV 293k. c4 code agg **93.3** (90% of 3.6 103). Still
+  **do not swap DD** -- code c1 35.0 vs 3.6 TP=2 48.9. Accept_len
+  stuck ~2.5; depth is done. Default MTPTOK=3.
 - **Current 27B result (2026-07-28):** NVFP4 is the fastest coherent local path we have measured for
   this workload. The daily driver is two vLLM 0.25.1 single-card replicas at 100,352 tokens, each at
   64.6 code tok/s with calibrated fp8 KV and working prefix reuse. A vLLM 0.26.0 TP=2 shelf mode serves

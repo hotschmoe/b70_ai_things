@@ -11268,3 +11268,42 @@ VERDICT -> **Do not swap the daily driver or systemd.** Inferact
   levers if we want a 3.8 DD later: MTP3 A/B (less wasted
   draft), 3.8-specific KV calib (pool, not decode), HumanEval+.
   DD stays 3.6 NVFP4. Serve torn down.
+
+### 2026-08-15n - Inferact MTP A/B: spec=3 wins, still not a DD
+
+CONTEXT -> 15m MTP5 accept_len 2.45 / rate 0.29. Tokens past ~2.5
+  are wasted draft. Same 3.6 stack, only MTPTOK changes.
+
+CONFIG -> same as 15m except MTPTOK=3 then MTPTOK=2.
+  NAME=qwen38_nvfp4 PORT=8078 MAXLEN=200000 KV_FP8=0.
+
+RESULT (MTP3) -> HEALTHY. Served
+  `...-graph-mtp3-pushargraph`. Weight 13.72 GiB, KV **292,968**.
+  kv_gate 3/3, chat Paris. 18/18 PASS. Engine stayed up.
+  IN=2048 (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-inferact-mtp3-200k_20260815_235419.csv):
+    c1: TTFT 1046 ms, PP ~1958, TG **42.03**
+    c4: TTFT 1558 ms, TG 16.08/stream, agg 52.17
+  bench_code: c1 **35.0 avg / 37.3 best**, c4 23.3 / **93.3 agg**
+  MTP after code: accept_len=**2.474** accept_rate=**0.491**
+
+RESULT (MTP2) -> HEALTHY. KV 296,442. kv_gate 3/3.
+  IN=2048 (csv
+  /mnt/vm_8tb/b70/results/sweep_qwen38-inferact-mtp2-200k_20260816_000053.csv):
+    c1: TTFT 1038 ms, TG **25.87**
+    c4: TTFT 1474 ms, TG 16.17/stream, agg 52.30
+  bench_code: c1 **33.6 avg / 37.5 best**, c4 22.5 / 89.9 agg
+  MTP after code: accept_len=2.097 accept_rate=0.549
+
+A/B (code c1 avg / c4 agg / accept_len / rate) ->
+  spec5  29.0 / 76.4 / 2.45 / 0.29
+  spec3  **35.0 / 93.3 / 2.47 / 0.49**   WINNER
+  spec2  33.6 / 89.9 / 2.10 / 0.55
+  3.6 TP=2 bar: 48.9 / 103
+
+VERDICT -> **MTP3 is the Inferact default.** Same accept_len as
+  spec5, half the wasted drafts, +21% code c1, c4 agg 76->93
+  (90% of 3.6). Still 35.0 vs 48.9 -- do not swap DD. The
+  remaining hole is draft *quality* (accept_len stuck ~2.5),
+  not depth. Shelf TP=2 MTPTOK default 5 -> 3. Serve torn
+  down. xpu-health HEALTHY.

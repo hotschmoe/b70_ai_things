@@ -660,8 +660,8 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       ModelOpt NVFP4, on-box GPTQ W8A8 (+ grafted vision/MTP) all on disk under
       `models/files/qwen3.8-27b/`. Served ids encode method/scheme.
 - [x] **12b. Inferact ModelOpt NVFP4 is the coherent 3.8 NVFP4 path.** Fused
-      `_XPUW4A4FusedAsW4A16Kernel` Paris-exact. 15m: 3.6 stack (MTP5+
-      prefix+GRAPH) 18/18 + c4 live, code c1 29.0. Not a DD.
+      `_XPUW4A4FusedAsW4A16Kernel` Paris-exact. 15n: MTP3 on 3.6 stack
+      18/18, code c1 35.0 / c4 agg 93.3. Not a DD.
 - [x] **12c. On-box GPTQ W8A8 + graft is the coherent 3.8 INT8 path.** TP=2
       MTP3 @131k Paris + vision live, TG 26.62, c4 stayed up.
 - [x] **12d. Unsloth one-card FIT (2026-08-15e).** TP=1 CARD=0 MAXLEN=8192
@@ -707,9 +707,14 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       MTP accept_len 2.45. **Not a DD** vs 3.6 TP=2 48.9/103.
       Unsloth 12k (GRAPH@262k+PC+c4) still open if we want
       that CT path; Inferact is the 3.8 NVFP4 serve.
-- [ ] **12l. [ACTIVE] 3.8 DD still blocked on spec accept.**
-      MTP3 A/B, 3.8 KV calib (pool only), HumanEval+. Do not
-      swap systemd until code c1 is faster-or-equal 3.6 TP=2.
+- [x] **12l. Inferact MTP A/B (2026-08-15n).** spec3 wins:
+      code c1 35.0 / c4 agg 93.3 / 18/18. spec5 29.0, spec2
+      33.6. Accept_len stuck ~2.5; depth is done. Default
+      MTPTOK=3. Still not a DD vs 3.6 48.9.
+- [ ] **12m. [ACTIVE] 3.8 DD still blocked on draft quality.**
+      HumanEval+ (quality claim), then a better drafter if we
+      want 35->49. KV calib is pool-only. Do not swap systemd
+      until code c1 is faster-or-equal 3.6 TP=2.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
