@@ -11353,3 +11353,32 @@ VERDICT -> **Do not swap DD.** 3.8 Inferact is slower (35 vs
   quality jump is not visible here. Next quality check would
   be a harder bench (LiveCodeBench), not another HE+ rerun.
   Serve torn down after docs.
+
+### 2026-08-16b - DD back to 3.6 NVFP4 TP=2 @262144 (wait on 3.8)
+
+CONTEXT -> User: park 3.8 (wait nvidia/ or AEON); update systemd
+  and launch 3.6 NVFP4 TP=2 at full native ctx.
+
+CONFIG -> TP=2 MAXLEN=262144 KV_FP8=1 (calibrated scales)
+  MTP5 GRAPH prefix push-AR, SERVED_FORCE=hotschmoe-dd,
+  PORT=18080 NAME=b70_daily_0, API key from secrets.
+  Image int8g-v0260. P2P=0.
+
+COMMAND ->
+  ```
+  DD_MODEL=vllm/qwen36-27b-nvfp4 DD_REPLICAS=1 DD_MAXLEN=262144 \
+    DD_API_KEY="$(tr -d '\n' < /mnt/vm_8tb/b70/secrets/dd_api_key)" \
+    DD_ENV="TP=2 SERVED_FORCE=hotschmoe-dd KV_FP8=1" \
+    bash vllm/daily_driver_serve.sh start
+  ```
+
+RESULT -> UP. Served `hotschmoe-dd` max_model_len **262144**.
+  Weight 11.54 GiB/card. KV **666,343 tok** (2.54x @262144).
+  Calibrated k/v scales injected. MTP share embed/lm_head.
+  Chat thinking-off: **Paris** (2 toks). WebUI :3000 + Grafana
+  :3001 up. Host systemd still the old DP=2 @100k unit
+  (sudo required to install `vllm/deploy/b70-daily-driver.service`).
+
+VERDICT -> Live DD is 3.6 NVFP4 TP=2 @ native 262k. 3.8 stays
+  research. Orchestrator defaults + deploy unit text updated
+  to match. Install the unit with sudo so boot-start follows.
