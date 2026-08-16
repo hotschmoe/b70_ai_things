@@ -68,8 +68,8 @@ PROXY=b70_daily_proxy              # nginx round-robin proxy on :$PORT (DD_REPLI
 LOG="${DD_LOG:-$ROOT/dd-logs/daily_driver.log}"   # hotschmoe-writable ($ROOT/logs is root-owned from the old SSH workflow)
 ENDPOINT="http://$HOST_IP:${PORT}/v1"
 
-# ----- web UI (Open WebUI) -- tied to the daily-driver lifecycle -----------------------------
-WEBUI_ENABLE=1
+# ----- web UI (Open WebUI) -- manual only; never auto-start (2026-08-16) -------------------
+WEBUI_ENABLE=0
 WEBUI_NAME=open-webui
 WEBUI_PORT=3000
 WEBUI_IMAGE=ghcr.io/open-webui/open-webui:main
@@ -117,7 +117,7 @@ webui_up() {
     ssh_h "docker run -d --name $WEBUI_NAME -p $WEBUI_PORT:8080 \
       -e OPENAI_API_BASE_URL=http://$HOST_IP:$PORT/v1 -e OPENAI_API_KEY=${DD_API_KEY:-dummy} \
       -e ENABLE_OLLAMA_API=False -e WEBUI_AUTH=False \
-      -v open-webui:/app/backend/data --restart unless-stopped $WEBUI_IMAGE >/dev/null 2>&1 \
+      -v open-webui:/app/backend/data --restart no $WEBUI_IMAGE >/dev/null 2>&1 \
       && echo '  web ui: created -> http://$HOST_IP:$WEBUI_PORT (first open pulls the image, ~1 min)'"
   fi
 }
