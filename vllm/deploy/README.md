@@ -14,6 +14,9 @@ prefix cache, push-AR graph, served id `hotschmoe-dd`, API key from
 
 **Watchdog RETIRED** -- `bin/dd-watchdog` exits 0 unless `DD_WATCHDOG_FORCE=1`; unit must stay disabled
 
+**Open WebUI does not auto-start** (2026-08-16). Container restart policy is `no`;
+`daily_driver_serve.sh` has `WEBUI_ENABLE=0`. Manual: `docker start open-webui`.
+
 Qualified TP=2 long-ctx was 200000 (18/18 + 36/36 + 190k needle). 262144 is native and
 fits the same weight/KV budget (fp8 KV pool was 640k at 200k). W8A8 TP=2 @253952 stays
 on the shelf.
