@@ -32,21 +32,19 @@
 set -uo pipefail
 
 # ===== daily-driver CONFIG (knobs; defaults below) ===========================================
-DD_MODEL="${DD_MODEL:-vllm/qwen36-27b-w8a8}"  # any rdy_to_serve/<backend>/<dir> -- THE model knob. Default
-                                          # 2026-08-05: vLLM 0.26.0 W8A8-INT8 TP=2 + 16-bit KV @253952
-                                          # (shelf rdy_to_serve/vllm/qwen36-27b-w8a8). Prior sglang W8A8 and
-                                          # vLLM NVFP4 DP=2 remain on the shelf as measured alternatives.
-DD_REPLICAS="${DD_REPLICAS:-1}"           # 1 = single serve (TP=2 / big; the W8A8 default). 2 = data-parallel
+DD_MODEL="${DD_MODEL:-vllm/qwen36-27b-nvfp4}"  # any rdy_to_serve/<backend>/<dir> -- THE model knob. Default
+                                          # 2026-08-16: vLLM 0.26.0 NVFP4 TP=2 + cal fp8 KV @262144 (native).
+                                          # Wrapper defaults TP=1 (DP replica); this orchestrator passes TP=2.
+                                          # W8A8 TP=2 @253952 and NVFP4 DP=2 @100k stay on the shelf.
+DD_REPLICAS="${DD_REPLICAS:-1}"           # 1 = single serve (TP=2 / big). 2 = data-parallel
                                           # (only for a model that FITS ONE card, e.g. DD_MODEL=vllm/qwen36-27b-int4).
 DD_CARD="${DD_CARD:-}"                     # set to 0 or 1 -> ONE-CARD mode: pin to that card + lease ONLY that card
                                           #     (leaves the other free for `gpu-run --card <other>` experiments).
-DD_MAXLEN="${DD_MAXLEN-253952}"           # daily-driver context = 248K (253952). Qwen3.6 native
-                                          # max_position_embeddings=262144 (NO rope scaling), so 248K is
-                                          # in-window; left ~8K under native for KV headroom at 16-bit KV.
-                                          # Set DD_MAXLEN="" to use the model serve.sh default (often 4096/8192).
-                                          # NOT 232k -- that was never a gated W8A8 DD number; use 253952.
-DD_MTP="${DD_MTP:-0}"                      # 1 = MTP spec=4 (~1.79x single-stream interactive; DENSE models only).
-DD_ENV="${DD_ENV:-}"                       # advanced: extra env passed verbatim to serve.sh (e.g. "GRAPH=0").
+DD_MAXLEN="${DD_MAXLEN-262144}"           # daily-driver context = native 262144. Qwen3.6
+                                          # max_position_embeddings=262144 (NO rope scaling).
+                                          # Set DD_MAXLEN="" to use the model serve.sh default (200000 on TP=2).
+DD_MTP="${DD_MTP:-0}"                      # 1 = MTP spec=4. NVFP4 shelf already bakes MTPTOK=5; leave 0.
+DD_ENV="${DD_ENV:-TP=2 SERVED_FORCE=hotschmoe-dd KV_FP8=1}"  # default model needs TP=2 (wrapper is TP=1).
 DD_API_KEY="${DD_API_KEY:-}"               # if set, vLLM ENFORCES this key (via VLLM_API_KEY env -> --api-key).
                                           # REQUIRED before any WAN exposure (Traefik in front). Clients send
                                           # `Authorization: Bearer $DD_API_KEY`. Empty = OPEN (LAN-only, do NOT

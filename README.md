@@ -5,8 +5,11 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
-> [2026-08-05 CURRENT STATE -- supersedes ALL dated banners below.] Daily driver is **vLLM 0.26.0
-> NVFP4 Qwen3.6-27B TP=2 bf16-KV @262144** (fell back from W8A8 TP=2 after dual NEO graph crashes).
+> [2026-08-16 CURRENT STATE -- supersedes ALL dated banners below.] Daily driver is **vLLM 0.26.0
+> NVFP4 Qwen3.6-27B TP=2 calibrated-fp8-KV @262144** (native ctx; MTP5 + prefix + GRAPH + push-AR;
+> served `hotschmoe-dd` on :18080). Qwen3.8 Inferact was gated and is **not** the DD (code 35 vs
+> 48.9, HumanEval+ 0.939/0.915 vs 3.6 0.988/0.945). Wait for nvidia/ or AEON 3.8.
+> Prior W8A8 TP=2 @253952 and NVFP4 DP=2 @100k stay on the shelf.
 > Prior attempt: **W8A8-INT8 Qwen3.6-27B TP=2** (`b70_daily_0` on **:18080** as `hotschmoe-dd`): image
 > `vllm-xpu-env:int8g-v0260`, compressed-tensors W8A8-sqgptq + MTP3, **16-bit KV** (no
 > `--kv-cache-dtype`), **MAXLEN=253952** (~248K; under native 262144 -- not 232k), PREFIXCACHE=1,

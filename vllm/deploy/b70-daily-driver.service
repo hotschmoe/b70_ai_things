@@ -1,15 +1,15 @@
 [Unit]
-# B70 daily-driver serve. DEFAULT (2026-08-05): vLLM 0.26.0 W8A8-INT8 qwen3.6-27b TP=2
+# B70 daily-driver serve. DEFAULT (2026-08-16): vLLM 0.26.0 NVFP4 qwen3.6-27b TP=2
 # single container (b70_daily_0) on public :18080, served id hotschmoe-dd, API-key enforced
-# (key read from the off-repo secret at start). Recipe: rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh
+# (key read from the off-repo secret at start). Recipe:
+#   rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh
 #   - image int8g-v0260 (vLLM 0.26.0 / torch 2.12)
-#   - W8A8 compressed-tensors INT8 w x INT8 a (SmoothQuant+GPTQ) + BF16 MTP graft, MTP spec=3
-#   - 16-bit KV cache (leave KVDTYPE unset; NOT fp8)
-#   - MAXLEN=253952 (~248K; under native max_position_embeddings=262144)
-#   - PREFIXCACHE=1, PIECEWISE capture, push-AR graph, CG reclaim, tool/reason parsers
+#   - nvidia/Qwen3.6-27B-NVFP4 ModelOpt MIXED_PRECISION, fused nvfp4_gemm_w4a16
+#   - TP=2, MAXLEN=262144 (native ctx), calibrated fp8 KV, MTP5, prefix cache
+#   - PIECEWISE graph + push-AR graph, native E4M3 decode scales M<=8
 # Watchdog (b70-dd-watchdog) is RETIRED -- do not re-enable unless DD_WATCHDOG_FORCE is intentional.
-# Prior DP=2 NVFP4 @100k unit text is in git history (pre-2026-08-05).
-Description=B70 daily-driver serve (vLLM 0.26.0 W8A8-INT8 27b TP=2 MTP3 +16bitKV @253952, hotschmoe-dd)
+# Qwen3.8 Inferact was gated 2026-08-15n/16 and is NOT the DD (code 35 vs 48.9, HE+ 0.939/0.915).
+Description=B70 daily-driver serve (vLLM 0.26.0 NVFP4 27b TP=2 MTP5 +cal-fp8KV @262144, hotschmoe-dd)
 After=docker.service network-online.target mnt-vm_8tb.mount
 Requires=docker.service
 Wants=network-online.target
@@ -22,16 +22,15 @@ RemainAfterExit=yes
 User=hotschmoe
 Group=hotschmoe
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
-# TP=2 W8A8: one container, both cards, public port 18080. Stable client id hotschmoe-dd.
-# gpu-run (no --card) holds both leases until the container exits.
-# CGRECLAIM=0: shelf default after 2026-08-05 Worker-1 segfault in XPUGraph re-instantiate.
+# TP=2 NVFP4: one container, both cards, public port 18080. Stable client id hotschmoe-dd.
+# gpu-run (no --card) holds both leases until the container exits. P2P stays off (shelf default).
 ExecStart=/bin/bash -lc 'API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  NAME=b70_daily_0 PORT=18080 SERVED=hotschmoe-dd MAXLEN=253952 CGRECLAIM=0 \
-  B70_EXTRA_ENV="VLLM_API_KEY=$API_KEY" \
-  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh start'
+  NAME=b70_daily_0 PORT=18080 TP=2 MAXLEN=262144 SERVED_FORCE=hotschmoe-dd \
+  KV_FP8=1 \
+  /mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start'
 ExecStartPost=/bin/bash -lc 'for i in $(seq 1 180); do curl -sf http://localhost:18080/health >/dev/null 2>&1 && exit 0; docker inspect -f "{{.State.Status}}" b70_daily_0 2>/dev/null | grep -q exited && { echo "b70_daily_0 exited during startup" >&2; exit 1; }; sleep 5; done; echo "health wait timed out (serve may still be warming)" >&2; true'
 ExecStop=/bin/bash -lc 'docker rm -f b70_daily_0 b70_daily_1 b70_daily_proxy >/dev/null 2>&1 || true'
-# W8A8 load + PIECEWISE capture TP=2: allow generous startup (~15 min typical).
+# NVFP4 load + PIECEWISE capture TP=2: allow generous startup (~5-10 min typical).
 TimeoutStartSec=1800
 TimeoutStopSec=120
 

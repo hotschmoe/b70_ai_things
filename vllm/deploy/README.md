@@ -1,22 +1,22 @@
 # deploy/ -- running the daily-driver as a managed service
 
-## Current daily driver (2026-08-05)
+## Current daily driver (2026-08-16)
 
-**vLLM 0.26.0 W8A8-INT8 Qwen3.6-27B TP=2**, 16-bit KV (not fp8), `MAXLEN=253952` (~248K), MTP
-spec=3, prefix cache, served id `hotschmoe-dd`, API key from `/mnt/vm_8tb/b70/secrets/dd_api_key`.
+**vLLM 0.26.0 NVFP4 Qwen3.6-27B TP=2**, calibrated fp8 KV, `MAXLEN=262144` (native ctx), MTP5,
+prefix cache, push-AR graph, served id `hotschmoe-dd`, API key from
+`/mnt/vm_8tb/b70/secrets/dd_api_key`.
 
-- Shelf: `rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh` (image `vllm-xpu-env:int8g-v0260`)
-- Orchestrator: `vllm/daily_driver_serve.sh` (defaults match the above)
+- Shelf: `rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh` (image `vllm-xpu-env:int8g-v0260`)
+- Orchestrator: `vllm/daily_driver_serve.sh` (defaults match the above; pass `TP=2`)
 - Unit: `deploy/b70-daily-driver.service`
-- **CGRECLAIM=0** is the W8A8 default after the 2026-08-05 Worker-1 segfault in
-`XPUGraphImpl::instantiate()` under a remote long-ctx bench (reclaim re-instantiate path).
-If the old NEO linear_stream abort returns under soak, fall back to NVFP4 TP=2 rather than
-blindly re-enabling reclaim.
+- Qwen3.8 Inferact was gated and is **not** the DD (code 35 vs 48.9, HE+ 0.939/0.915).
+  Wait for nvidia/ or AEON 3.8.
 
 **Watchdog RETIRED** -- `bin/dd-watchdog` exits 0 unless `DD_WATCHDOG_FORCE=1`; unit must stay disabled
 
-Context note: 253952 is the gated long-ctx DD number (under native 262144). 232k was never a W8A8
-daily-driver gate; do not use it unless re-measured.
+Qualified TP=2 long-ctx was 200000 (18/18 + 36/36 + 190k needle). 262144 is native and
+fits the same weight/KV budget (fp8 KV pool was 640k at 200k). W8A8 TP=2 @253952 stays
+on the shelf.
 
 ## How the serve runs today (manual launch)
 
@@ -25,15 +25,14 @@ serve.sh> && docker wait'` in a NEW session, and the vLLM itself is a `docker ru
 daemon. So it **survives this shell / SSH / Claude session closing** -- it keeps running until you `stop` it.
 
 ```
-# start (default = W8A8 TP=2 @253952 16-bit KV, API-key enforced):
+# start (default = NVFP4 TP=2 @262144 cal-fp8 KV, API-key enforced):
 DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  DD_ENV="SERVED=hotschmoe-dd" \
   ./daily_driver_serve.sh start
 
-# explicit (same as default after 2026-08-05):
-DD_MODEL=vllm/qwen36-27b-w8a8 DD_REPLICAS=1 DD_MAXLEN=253952 \
+# explicit:
+DD_MODEL=vllm/qwen36-27b-nvfp4 DD_REPLICAS=1 DD_MAXLEN=262144 \
   DD_API_KEY="$(cat /mnt/vm_8tb/b70/secrets/dd_api_key)" \
-  DD_ENV="SERVED=hotschmoe-dd" \
+  DD_ENV="TP=2 SERVED_FORCE=hotschmoe-dd KV_FP8=1" \
   ./daily_driver_serve.sh start
 
 ./daily_driver_serve.sh status     # model, GPU lease, replicas/proxy, served id, web ui
@@ -62,7 +61,7 @@ journalctl -u b70-daily-driver -f
 sudo systemctl stop b70-daily-driver
 ```
 
-The unit defaults to **W8A8-INT8 TP=2 @253952 16-bit KV** (`int8g-v0260`). NOTE (2026-07-02): the TP=2
+The unit defaults to **NVFP4 TP=2 @262144 cal-fp8 KV MTP5** (`int8g-v0260`). NOTE (2026-07-02): the TP=2
 BCS/GuC DEVICE_LOST wedge is CURED on kernel 7.1, so unattended TP=2 is fine. If a manual launch is already
 running, `stop` it first so the unit owns the lease.
 
