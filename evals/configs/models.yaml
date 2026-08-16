@@ -119,3 +119,14 @@ models:
       MTP5, calibrated fp8 KV, and prefix cache. DP=2 exposes public alias
       hotschmoe-dd through nginx; use the full served_model_id for direct
       per-replica evals and encode nvfp4-modelopt in output directories."
+
+  - label: qwen38-27b-nvfp4-modelopt
+    served_model_id: qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph
+    family: qwen3.8-27b
+    weights: nvfp4-modelopt-w4a4
+    activations: bf16
+    calibration: inferact-modelopt
+    serve_cmd: "rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh"
+    notes: "Inferact ModelOpt uniform NVFP4 (not 3.6 MIXED). 2026-08-15n gated
+      TP=2 fused GRAPH+MTP3+prefix @200k, 18/18, code c1 35.0. HumanEval+
+      2026-08-16. Not a DD. Encode method+scheme in the served id / out dir."

@@ -364,8 +364,8 @@ Official vLLM recipe checkpoint (`quant_algo=NVFP4`, uniform W4A4, not 3.6
 MIXED_PRECISION). Fused `_XPUW4A4FusedAsW4A16Kernel` -> `nvfp4_gemm_w4a16`.
 3.6 TP=2 stack (GRAPH + prefix + push-AR, bf16 KV, MAXLEN=200000). MTP A/B
 2026-08-15n: spec5 code 29.0 / spec3 **35.0** (18/18, rate 0.49) / spec2
-33.6. c4 agg 93.3 vs 3.6 103. Accept_len stuck ~2.5 so spec>3 wastes
-drafts. Not a DD (35.0 vs 48.9). Default MTPTOK=3.
+33.6. HumanEval+ 2026-08-16: **0.939 / 0.915** vs 3.6 NVFP4 0.988/0.945.
+Not a DD (slower and not better on HE+). Default MTPTOK=3.
 
 [38w] **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15).** scripts/150 GPTQ-only from
 official BF16 (SMOOTHQUANT=0). compressed-tensors INT8 w x INT8 a. Save is

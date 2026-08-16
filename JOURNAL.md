@@ -11307,3 +11307,49 @@ VERDICT -> **MTP3 is the Inferact default.** Same accept_len as
   remaining hole is draft *quality* (accept_len stuck ~2.5),
   not depth. Shelf TP=2 MTPTOK default 5 -> 3. Serve torn
   down. xpu-health HEALTHY.
+
+### 2026-08-16 - Inferact 3.8 HumanEval+: 0.939 / 0.915, not a 3.6 upgrade
+
+CONTEXT -> 12m. Measure the "3.8 quality" claim on the gated
+  Inferact MTP3 stack vs 3.6 NVFP4 HumanEval+ (0.988/0.945 MTP3
+  fused; 0.976/0.939 MTP5 DD replica).
+
+CONFIG -> same 15n Inferact TP=2 GRAPH+MTP3+prefix @200k
+  NAME=qwen38_nvfp4 PORT=8078. Served
+  `qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph` (id
+  verified against /v1/models). thinking-off, greedy, seed=1234,
+  max_tokens=2048, concurrency=1. evals/.venv +
+  evalplus-sandbox:0.3.1.
+
+COMMAND ->
+  ```
+  evals/.venv/bin/python evals/orchestrator/run_evals.py \
+    --endpoint http://127.0.0.1:8078/v1 \
+    --model qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph \
+    --quant nvfp4-modelopt-mtp3 \
+    --tiers 1 --tier1-dataset humaneval --limit 164
+  ```
+
+RESULT -> Paris exact. HumanEval+ 164:
+  **0.939 base / 0.915 plus** (gen 1126s, eval 41s, sandbox).
+  10 base fails: 32, 67, 87, 92, 95, 109, 116, 145, 147, 154.
+  Plus-only: 39, 91, 132, 141. Result dir
+  evals/results/20260816T005900Z__qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph__nvfp4-modelopt-mtp3
+  Engine stayed up. No !!!! garbage.
+
+VS 3.6 (same harness, thinking-off greedy sandboxed):
+  3.6 NVFP4 MTP3: 0.988 / 0.945
+  3.6 NVFP4 MTP5 DD: 0.976 / 0.939
+  Inferact 3.8 MTP3: **0.939 / 0.915**
+  Delta vs 3.6 MTP3: -8 base / -5 plus (164-item). Harness
+  rule: 1-2 pt is noise; this is ~3-5 plus -- a real miss
+  on this bench, not a 3.8 quality win. Still a strong 27B
+  (near int4-AutoRound 0.963/0.927). MTP is output-invariant
+  at greedy so this is Inferact NVFP4 numerics + 3.8 base,
+  not spec depth.
+
+VERDICT -> **Do not swap DD.** 3.8 Inferact is slower (35 vs
+  48.9) AND behind 3.6 on HumanEval+. The published 3.8
+  quality jump is not visible here. Next quality check would
+  be a harder bench (LiveCodeBench), not another HE+ rerun.
+  Serve torn down after docs.

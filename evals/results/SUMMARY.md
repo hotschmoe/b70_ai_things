@@ -1,4 +1,13 @@
-# Qwen3.6 quant eval on a single Arc Pro B70 (2026-06-19)
+# Qwen3.6 / 3.8 quant eval on Arc Pro B70 (2026-06-19)
+
+> ## [!] Qwen3.8 Inferact NVFP4 HumanEval+ (2026-08-16): 0.939 / 0.915 -- NOT a 3.6 upgrade
+> Inferact/Qwen3.8-27B-NVFP4 on the gated TP=2 stack (fused GRAPH + MTP3 + prefix,
+> `qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph`, thinking-off greedy sandboxed,
+> 164 items, result dir `20260816T005900Z__...-mtp3-pushargraph__nvfp4-modelopt-mtp3`):
+> **0.939 base / 0.915 plus**. 3.6 NVFP4 same harness is 0.988/0.945 (MTP3) and
+> 0.976/0.939 (MTP5 DD). 3-5 plus pts behind -- past the 1-2 pt noise rule. Still a
+> strong 27B (near int4-AutoRound 0.927 plus) but **not a reason to swap the DD**.
+> MTP is greedy-invariant, so this is Inferact NVFP4 + 3.8 base, not spec depth.
 
 > **The real targets are Qwen3.6-27B and Qwen3.6-35B-A3B** (quality + real-world speed). The Qwen3-14B
 > campaign below was harness verification + a quant-delta study (don't read it as the headline).

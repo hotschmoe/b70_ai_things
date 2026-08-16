@@ -711,10 +711,13 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
       code c1 35.0 / c4 agg 93.3 / 18/18. spec5 29.0, spec2
       33.6. Accept_len stuck ~2.5; depth is done. Default
       MTPTOK=3. Still not a DD vs 3.6 48.9.
-- [ ] **12m. [ACTIVE] 3.8 DD still blocked on draft quality.**
-      HumanEval+ (quality claim), then a better drafter if we
-      want 35->49. KV calib is pool-only. Do not swap systemd
-      until code c1 is faster-or-equal 3.6 TP=2.
+- [x] **12m. Inferact HumanEval+ (2026-08-16).** 164
+      thinking-off greedy sandboxed: **0.939 / 0.915** vs 3.6
+      NVFP4 MTP3 0.988/0.945. Not a quality win. Not a DD.
+- [ ] **12n. [ACTIVE] 3.8 DD still blocked.** Slower (35 vs
+      48.9) and HE+ behind. Harder eval (LiveCodeBench) if we
+      still want a 3.8 quality claim; a better drafter if we
+      want 35->49. Do not swap systemd.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
