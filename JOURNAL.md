@@ -11845,3 +11845,32 @@ VERDICT -> M1 DONE. DSpark on v0.26 RadixArk @ native
   DSpark stays a live recipe, not a swap. Next: M2
   0xSero llama.cpp SYCL Q4_K_M TP=2 @262k. Serve left
   up on :8078 for poking.
+
+### 2026-08-17i - M3 currency check (no GPU)
+
+CONTEXT -> Campaign M3: is there an official Intel 3.8 AutoRound
+  or a newer XPU sglang DSpark path?
+
+RESULT ->
+  Intel org: Qwen3.6-27B-int4-AutoRound exists.
+  Intel/Qwen3.8-27B-int4-AutoRound does NOT. Community
+  AutoRounds do (Frozenlock MTP-working 18G; MKRWW;
+  Vishva007 W4A16; goldhub/Avuja/SergiioB used in the
+  53-55 1x-B70 report). Do not treat those as official.
+
+  sglang latest release 0.5.17 (2026-08-07). Main just
+  upgraded the XPU backend to torch 2.13 (PR #31751,
+  2026-08-17). Qwen3.8 cookbook + DSpark is CUDA/Spark
+  only (H200 / 5090 / DGX Spark). No XPU cookbook cell.
+  Our shelf is 0.5.6; research path is 0.5.15.
+
+  M2 prep started (no GPU): cloned
+  /mnt/vm_8tb/b70/qwen38-b70 (17323a6), docker compose
+  build of intel/oneapi-basekit:2025.3.2 + SYCL JIT,
+  and hf download of the SHA-pinned
+  ggml-org Qwen3.8-27B-Q4_K_M.gguf @0669b986.
+
+VERDICT -> M3 is a wait, not a serve. Next GPU work is
+  M2 once the SYCL image and GGUF land. Do not bump
+  sglang to 0.5.17/torch-2.13 in this campaign (ABI
+  break vs our XPU kernels). M1 DSpark stay on :8078.

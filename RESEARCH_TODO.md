@@ -56,8 +56,9 @@
 >    M1 DONE -- DSpark on v0.26 RadixArk @262k serves (method=dspark, V2 runner, fp8 KV,
 >       pool 438k). Paris exact. code c1 **34.4** vs MTP3 **41.2**. Keep MTP3. Recipe:
 >       `vllm/dflash/serve_qwen38_radixark_dspark.sh`.
->    M2 NEXT -- 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k (claimed 51; HE+ gate).
->    M3 -- Intel official 3.8 AutoRound INT4 and/or sglang XPU DSpark when those bits exist.
+>    M2 IN PROGRESS -- 0xSero llama.cpp SYCL image build + Q4_K_M download (no GPU yet).
+>    M3 CHECKED -- no official Intel/Qwen3.8-27B-int4-AutoRound; sglang DSpark cookbook is
+>       CUDA/Spark only. XPU sglang just moved to torch 2.13; do not bump this campaign.
 >    Do not iterate rmacy v10-slim (8k, 17-22 tok/s). W8A8 3.8 stays the INT8-XMX track.
 >    zml stays a findings backend. Journal + commit at each milestone.
 
