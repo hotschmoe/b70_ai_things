@@ -11406,3 +11406,379 @@ WEBUI -> was unless-stopped, came back on boot. Now:
 
 VERDICT -> DD+shares healthy after reboot. WebUI stays down
   until started by hand.
+
+### 2026-08-16d - download RadixArk Qwen3.8-27B NVFP4 (cookbook)
+
+CONTEXT -> SGLang cookbook 5090/NVFP4 cell uses
+  RadixArk/Qwen3.8-27B-NVFP4, not Inferact. Inferact is
+  uniform W4A4 + kv_cache_quant_algo=null; RadixArk is the
+  3.6-shaped mixed ModelOpt recipe. No GPU used.
+
+COMMAND ->
+  ```
+  hf download RadixArk/Qwen3.8-27B-NVFP4 \
+    --local-dir models/files/qwen3.8-27b/nvfp4-radixark
+  ```
+  (models/fetch.sh still calls huggingface-cli, which is
+  dead on this box; used hf directly.)
+
+RESULT -> 21G on disk (3 shards 9.3+9.3+1.9). 2194 tensors,
+  333 visual, 15 mtp. hf_quant_config:
+    quant_algo=MIXED_PRECISION
+    kv_cache_quant_algo=FP8
+    193 NVFP4 g16 (MLP + lm_head) + 208 FP8 (attn/GDN)
+    exclude mtp* only
+  No k_scale/v_scale tensors. Producer qualification.json:
+    GSM8K 97.27% (1283/1319, thinking-on), MTP accept 2.775,
+    fp8_kv scales_calibrated=false (scale=1.0). Same on-disk
+    class as 3.6 nvidia/ NVFP4 (21G); Inferact is 25G uniform.
+
+VERDICT -> Preferred 3.8 NVFP4 artifact is now on disk as
+  qwen3.8-27b/nvfp4-radixark. Not served. Do not swap DD.
+  Next GPU session: vLLM int8g-v0260 TP=2 fused MTP3, same
+  3.6 stack as Inferact 15n, then HE+ vs Inferact/3.6.
+
+### 2026-08-17 - delete Inferact; RadixArk first serve coherent
+
+CONTEXT -> User: delete Inferact W4A4, check orcarouter
+  uncensored on HF, start RadixArk (working first, no
+  optimize). DD was 3.6 NVFP4 TP=2 on :18080; stopped for
+  this serve.
+
+DELETE -> rm -rf models/files/qwen3.8-27b/nvfp4-modelopt
+  (25G). Manifest entry moved to DROPPED. Wrapper default
+  MODEL_REL now qwen3.8-27b/nvfp4-radixark.
+
+ORCAROUTER (HF, no download) -> three public repos:
+  orcarouter/Qwen3.8-27B-Uncensored-FP8 (gated accept,
+    block-FP8 E4M3, 30.9 GB, abliterated, MTP+vision kept;
+    they claim ~40 GB VRAM min -- tight on one B70)
+  orcarouter/Qwen3.8-27B-Uncensored-GGUF
+  orcarouter/Gemma-4-26B-A4B-it-Uncensored-FP8
+  No NVFP4 from orcarouter.
+
+CONFIG (first serve, conservative) ->
+  TP=1 CARD=0 PORT=8078 NAME=qwen38_radixark
+  MODEL_REL=qwen3.8-27b/nvfp4-radixark
+  MODE=fused GRAPH=1 PIECEWISE MTP-off
+  MAXLEN=8192 KV_FP8=0 PREFIXCACHE=0 UTIL=0.85
+  IMG=int8g-v0260, existing sitecustomize + fused .so.
+  No new custom pieces. Mixed NVFP4 MLP hits (1d)
+  _XPUW4A4FusedAsW4A16Kernel; FP8 attn uses 3.6 path.
+
+COMMAND ->
+  ```
+  TP=1 CARD=0 PORT=8078 NAME=qwen38_radixark \
+    MODEL_REL=qwen3.8-27b/nvfp4-radixark \
+    SERVED=qwen3.8-27b-NVFP4-radixark \
+    MODE=fused GRAPH=1 MTPTOK= KV_FP8=0 PREFIXCACHE=0 \
+    MAXLEN=8192 \
+    ./bin/gpu-run --card 0 bash vllm/nvfp4/serve_nvfp4_27b.sh
+  ```
+
+RESULT -> HEALTHY ~160s. quantization=modelopt_mixed.
+  "Using _XPUW4A4FusedAsW4A16Kernel for NVFP4 GEMM".
+  Weight 21.97 GiB, KV 2.93 GiB / 35,918 tok.
+  kv_gate 3/3 PASS (Paris / 43 / Au).
+  Chat thinking-off: "Paris" (2 toks).
+
+VERDICT -> RadixArk loads and is coherent on the existing
+  fused 3.8/3.6 stack. No new kernel work needed for bring-up.
+  Left up on :8078 as qwen3.8-27b-NVFP4-radixark-graph.
+  DD is down. Restore with daily_driver_serve.sh start.
+  Next optimize: TP=2, MTP3, longer ctx, FP8 KV (scale=1.0),
+  then HE+. Do not swap systemd.
+
+### 2026-08-17b - RadixArk TP=2 MTP3 @ native 262144
+
+CONTEXT -> User: TP=2, MTP3, full context (262k). One-card
+  MTP-off @8192 was already 3/3. Same fused stack.
+
+CONFIG -> TP=2 GRAPH=1 PIECEWISE MTPTOK=3 PREFIXCACHE=1
+  PUSH_AR=1 PUSH_AR_GRAPH=1 KV_FP8=0 MAXLEN=262144
+  UTIL=0.85 MAXSEQS=8 MAXBATCH=16384 CAPSIZES=1,2,4,8
+  PORT=8078 NAME=qwen38_radixark IMG=int8g-v0260.
+
+COMMAND ->
+  ```
+  TP=2 PORT=8078 NAME=qwen38_radixark MAXLEN=262144 MTPTOK=3 \
+    KV_FP8=0 ./bin/gpu-run bash \
+    rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh start
+  ```
+
+RESULT -> HEALTHY ~170s. Served
+  qwen3.8-27b-NVFP4-radixark-graph-mtp3-pushargraph
+  max_model_len **262144**.
+  _XPUW4A4FusedAsW4A16Kernel. MTP share embed/lm_head.
+  Weight **11.54 GiB/card** (same as 3.6 TP=2).
+  KV **360,349 tok** (1.37x @262144) on bf16 -- 262k FITS
+  without FP8 KV. Capture 2s / 0.04 GiB.
+  Non-fatal torch.compile JSONDecodeError then recovered
+  (same as Inferact 14c).
+  kv_gate **3/3**. Chat thinking-off: **Paris** (2 toks).
+  bench_2048 chat (thinking-on, not code harness):
+    c1: TTFT 618 ms, PP 3367, TG **19.42**
+    c4: TG 9.16/stream, agg 36.64 -- engine STAYED UP.
+
+VERDICT -> Native 262k + MTP3 + TP=2 is a live coherent
+  3.8 serve. Prefill beats Inferact MTP3 (3367 vs 1958).
+  Decode 19.4 is thinking-on chat, not the Inferact code
+  35.0 number -- need bench_code / HE+ next. Wrapper
+  TP=2 MAXLEN default 200000 -> 262144. Left up on :8078.
+  DD still down. Do not swap systemd.
+
+### 2026-08-17c - RadixArk code bench + HumanEval+
+
+CONTEXT -> User: run the Inferact-matched code c1/c4 + HE+
+  gate on the live TP=2 MTP3 @262144 serve.
+
+CONFIG -> same 17b serve. Served
+  qwen3.8-27b-NVFP4-radixark-graph-mtp3-pushargraph (id
+  verified against /v1/models). bench_code out=256 reps=3.
+  HE+ 164 thinking-off greedy seed=1234 max_tokens=2048
+  concurrency=1, evalplus-sandbox:0.3.1.
+
+COMMAND ->
+  ```
+  python3 vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:8078/v1 \
+    qwen3.8-27b-NVFP4-radixark-graph-mtp3-pushargraph 1 256 3
+  python3 vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:8078/v1 \
+    qwen3.8-27b-NVFP4-radixark-graph-mtp3-pushargraph 4 256 3
+  evals/.venv/bin/python evals/orchestrator/run_evals.py \
+    --endpoint http://127.0.0.1:8078/v1 \
+    --model qwen3.8-27b-NVFP4-radixark-graph-mtp3-pushargraph \
+    --quant nvfp4-radixark-mtp3 \
+    --tiers 1 --tier1-dataset humaneval --limit 164
+  ```
+
+RESULT (code) ->
+  c1: **41.2 avg / 42.9 best** t/s (wall ~6.4s, out 256)
+  c4: 23.2/stream, **92.9 agg** -- engine STAYED UP
+  MTP after code: accepted=2571 drafts=1773 draft_tok=5319
+    accept_len=**2.450** accept_rate=**0.483**
+
+RESULT (HE+) -> 164 thinking-off greedy sandboxed:
+  **0.933 base / 0.890 plus** (gen 889s, eval 82s).
+  11 base fails: 32, 56, 62, 83, 92, 95, 100, 116, 132, 140, 145.
+  Plus-only: 39, 76, 91, 141, 151, 154, 163.
+  Result dir
+  evals/results/20260817T081950Z__qwen3.8-27b-NVFP4-radixark-graph-mtp3-pushargraph__nvfp4-radixark-mtp3
+  Engine stayed up.
+
+VS Inferact MTP3 / 3.6 NVFP4 MTP3:
+  code c1  41.2 vs Inferact 35.0 vs 3.6 **48.9**
+  c4 agg   92.9 vs Inferact 93.3 vs 3.6 **103.0**
+  HE+      0.933/0.890 vs Inferact 0.939/0.915 vs 3.6 **0.988/0.945**
+  accept   2.45 vs Inferact 2.47 vs 3.6 ~3.3-5
+
+VERDICT -> RadixArk is the faster 3.8 NVFP4 (code +18% vs
+  Inferact) and fits native 262k. It is not a quality win
+  on HE+ (a bit behind Inferact, 5-plus pts behind 3.6) and
+  not a DD (41 vs 49). Mixed producer helped speed/fit, not
+  HumanEval+. Do not swap systemd. Serve stays on :8078.
+
+### 2026-08-17d - restore 3.6 NVFP4 TP=2 DD, session end
+
+CONTEXT -> User: bring 3.6 DD back and end the night.
+
+COMMAND -> docker rm -f qwen38_radixark; xpu-health HEALTHY;
+  DD_MODEL=vllm/qwen36-27b-nvfp4 DD_REPLICAS=1 DD_MAXLEN=262144
+  DD_ENV="TP=2 SERVED_FORCE=hotschmoe-dd KV_FP8=1"
+  bash vllm/daily_driver_serve.sh start
+
+RESULT -> UP as hotschmoe-dd :18080. max_model_len 262144.
+  Weight 11.54 GiB/card. KV 666,343 tok. kv_cache_dtype=fp8_e4m3.
+  MTP5. Chat thinking-off: Paris. Grafana :3001 + Prometheus
+  :9090 back.
+
+VERDICT -> Nightly DD restored. 3.8 RadixArk stays research
+  (code 41.2 / HE+ 0.933, not a swap). Session closed.
+
+### 2026-08-17e - rmacy Qwen3.8-27B FP8 + DSpark image first try
+
+CONTEXT -> User: try ghcr.io/rmacy/qwen38-fp8-dspark (dual B70).
+  Sources: intel/llm-scaler#620, sgl-project/SpecForge#769,
+  rmacy/vllm (dflash readout fix), HF
+  rwmacy/qwen3.8-27b-dflash-drafter-fp8-b70. Claimed isolated
+  C1 72.2 tok/s median (85.9 peak) vs 32.4 no-spec / 54.67 MTP2.
+  Welcome to take the 3.6 DD down.
+
+CONFIG -> image v10-slim (sha256:e5b9b8b4..., vLLM
+  0.21.1.dev0+gad7125a43.d20260810). Target official
+  Qwen/Qwen3.8-27B-FP8 (block e4m3 [128,128], 29G). Drafter
+  1.36B BF16, 5-layer GQA, block_size=7, k=4, taps
+  4/16/28/40/52. Serve: TP=2 maxlen=8192 max-num-seqs=1
+  graphs OFF async-scheduling P2P=0. Port 8078. Recipe
+  notes: vllm/dflash/DSPARK_RMACY.md +
+  vllm/dflash/serve_qwen38_fp8_dspark.sh.
+
+COMMAND ->
+  ```
+  hf download Qwen/Qwen3.8-27B-FP8 --local-dir models/files/qwen3.8-27b/fp8
+  hf download rwmacy/qwen3.8-27b-dflash-drafter-fp8-b70 \
+    --local-dir models/files/qwen3.8-27b/dflash-drafter-fp8-b70
+  docker pull ghcr.io/rmacy/qwen38-fp8-dspark:v10-slim
+  bash vllm/daily_driver_serve.sh stop
+  ./bin/xpu-health   # HEALTHY
+  ./bin/gpu-run bash vllm/dflash/serve_qwen38_fp8_dspark.sh start
+  ```
+
+RESULT ->
+  Stock image oneCCL 2021.15.9 dies at xpu_worker warmup
+  all_reduce: `ze_handle_manager mem_to_ipc_handle: device_fd
+  is invalid` for both drmfd (their recipe) and pidfd. Same
+  bug as v0.25.1 bake (JOURNAL 2026-07-16). Bind-mount
+  /mnt/vm_8tb/b70/ccl_2021.17/2021.17 over
+  /opt/intel/oneapi/ccl/2021.15 + CCL_ROOT /
+  CCL_CONFIGURATION=cpu_gpu_dpcpp unblocked TP=2. Cards
+  stayed HEALTHY after the failed inits (no wedge).
+
+  UP as qwen3.8-27b-fp8-dspark :8078. KV 10.52 GiB /
+  135,735 tok advertised (maxlen 8192). Engine init 216.5s
+  (compile 185s). XPUFp8BlockScaledMMKernel. Prefix cache
+  off. Drafter aux layers (5,17,29,41,53).
+
+  Smoke: thinking-off "capital of France" -> Paris exact
+  (2 tok). fib(n) coherent.
+
+  Isolated C1 (temp=0, thinking-off, short greeting, n~10
+  EOS): median 20.58 tok/s wall (16 reps). Code bench
+  out=256 reps=3: **c1 20.0 tok/s** wall 12.9s. Streaming
+  LRU thinking-off out=128: TTFT 161 ms, wall 22.3-22.6
+  tok/s. bench_2048 thinking-on IN~2080: TTFT 2.9s,
+  PP ~700, TG 8.4 (chunk-count undercounts DSpark
+  multi-token steps; ignore).
+
+  Spec metrics after code vs after C1 greetings:
+    drafts 424  draft_tok 1696  accepted 600
+    pos0 63.2% pos1 39.6% pos2 23.6% pos3 15.1%
+    accept_len **2.42**  accept_rate 0.354
+  Greeting-only was near-perfect (pos0-3 ~97-100%). Kernel
+  readout fix IS in v10-slim (not the 24% collapse).
+
+  max-num-seqs=1 so no concurrent c4. Engine stayed up.
+
+VS claimed / our DD:
+  their isolated C1 72.2 vs our 20-22.5 (~3.2x short)
+  code c1 20.0 vs 3.8 RadixArk MTP3 41.2 vs 3.6 NVFP4 **48.9**
+  accept 2.42 / pos0 63% matches their 2.5-3.5 / 62-74%
+
+VERDICT -> Image serves COHERENTLY on this box after the
+  oneCCL 2021.17 swap. DSpark acceptance is real. Speed is
+  not: 20 tok/s isolated C1 vs claimed 72 and vs our 49
+  NVFP4. Likely: graphs OFF + P2P=0 + 2021.17 CPU/OFI
+  collectives + isolated-C1 protocol mismatch. Not a DD.
+  Do not swap systemd. Serve left up on :8078 for poking.
+  Restore DD with daily_driver_serve.sh start after
+  `bash vllm/dflash/serve_qwen38_fp8_dspark.sh stop`.
+  P2P=1 not tried (wedge).
+
+### 2026-08-17f - DSpark long-decode collapse probe + 0xSero recipe
+
+CONTEXT -> User: author says that one eventually collapses in
+  decode; test ourselves. Also look at
+  https://github.com/0xSero/qwen38-b70 (1x/2x B70 recipes).
+
+CONFIG -> same live :8078 qwen3.8-27b-fp8-dspark (17e). Probe
+  vllm/dflash/probe_decode_collapse.py (windowed !!!! /
+  uniq / 4-gram loop + spec deltas).
+
+COMMAND ->
+  ```
+  python3 vllm/dflash/probe_decode_collapse.py \
+    --base-url http://127.0.0.1:8078/v1 \
+    --model qwen3.8-27b-fp8-dspark --out 2048 --windows 8 --reps 2
+  python3 vllm/dflash/probe_decode_collapse.py ... --out 1024 --thinking
+  python3 vllm/dflash/probe_decode_collapse.py ... --out 4096 --reps 1
+  ```
+
+RESULT (collapse) -> NO_COLLAPSE on all three.
+  2x2048 thinking-off: 16.80 / 16.76 tok/s, bangs=0, uniq 76/77,
+    rep4=0.01, acc_len 2.05/2.04 pos0 56/55%. All 8 windows
+    stay technical prose (head+tail coherent).
+  1x1024 thinking-on: 15.63 tok/s, bangs=0, uniq 71, acc_len
+    1.93 pos0 51%. Internal monologue stays on-topic.
+  1x4096 thinking-off: **18.19 tok/s**, bangs=0, uniq 80,
+    acc_len 2.23 pos0 61%. Last window still coherent
+    (checkpointing / verification). Speed did not fall off
+    across windows (est 19.5 -> 21.0). Engine still UP,
+    /v1/models 200, no new ERROR/DEVICE_LOST in logs.
+
+  So on this box, 4k-token greedy decode does not collapse
+  in quality or tok/s. The 72 tok/s claim is still
+  unreproduced; the 17-22 tok/s band is stable.
+
+RESULT (0xSero/qwen38-b70) -> llama.cpp SYCL, not vLLM.
+  mndodd/llama.cpp @4302fb5 + b70-optimization-lab TP2 +
+  Q4K increment, JIT oneAPI 2025.3.3. Model
+  ggml-org/Qwen3.8-27B-Q4_K_M.gguf ~19G SHA-pinned.
+  GPU_COUNT=1|2. Their published table:
+
+    2x TP2 decode ~51 tok/s flat to 40k, 42 @160k, 31 @245k
+    1x decode ~33 tok/s to 40k, 27.5 @128k, OOM >=192k
+    1x prefill BEATS TP2 at every length
+    MTP easy 84.3 (97% acc) / hard 49.0 (38% acc, net loss)
+    vLLM XPU 0.27.2 FP8: **21.7 tok/s** (matches our 17e)
+    llm-scaler 0.21 eager: crashed on first request
+
+  Notes in llamacpp/QWEN38_B70_0XSERO.md. Not served here
+  (would need SYCL image build + take DSpark down). Our
+  llamacpp/ tree is 3.6-era; we do not have this 3.8 GGUF
+  or those lab patches applied.
+
+VERDICT -> Author-collapse claim NOT reproduced at 4k
+  greedy on the live DSpark serve. 0xSero's independent
+  vLLM FP8 21.7 agrees with us, not with rmacy 72.
+  llama.cpp Q4_K_M 51/33 is the interesting dual/single
+  B70 alternative (weight-only, 262k, they call it
+  coherent/stable). Do not swap systemd. DSpark stays
+  on :8078. Do not start 0xSero until asked.
+
+### 2026-08-17g - next 3.8-27B decode path (262k, 1 or 2 cards)
+
+CONTEXT -> User: journal, commit, push. Goal is fastest decode
+  on a good Qwen3.8-27B at native 262k, one or two cards.
+  Other backends welcome; prefer Intel-specific / newest.
+
+SCOREBOARD (this box, 3.8-27B unless noted) ->
+  3.6 NVFP4 TP=2 MTP5 @262k     code **48.9**  HE+ 0.988/0.945  DD
+  3.8 RadixArk NVFP4 TP=2 MTP3  code **41.2**  HE+ 0.933/0.890  262k
+  3.8 Inferact NVFP4 MTP3       code 35.0     HE+ 0.939/0.915  deleted
+  3.8 W8A8-gptq MTP3            TG 26.62      131k
+  3.8 rmacy FP8+DSpark 0.21     17-22         8k only
+  0xSero llama.cpp Q4_K_M TP2   claimed 51    262k, not run here
+  community 1x B70 INT4 MTP3    claimed 53-55 131k, v0.26.1rc1
+
+NEXT (in order) ->
+  1. Port DSpark onto OUR v0.26.0 3.8 stack at 262k, not
+     the rmacy 0.21 image. Kernel fix is 3 lines
+     (rmacy/vllm). Drafter: RadixArk/Qwen3.8-27B-DSpark
+     (SGLang cookbook, rename arch to Qwen3DSparkModel)
+     or the B70-tuned rwmacy weights. Target stays
+     RadixArk NVFP4 (already 41.2 @262k). Community
+     single-card INT4 got 52 with probabilistic DSpark
+     k=7; we want that accept on our fused NVFP4 +
+     graphs + 262k. Skip more time on v10-slim (8k,
+     graphs off, 20 tok/s).
+  2. 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k. Newest
+     packaged Intel SYCL path (mndodd + lab TP2 JIT).
+     Claimed 51 decode, 262k, 1x/2x recipes. Gate
+     coherence + HE+ before trusting vs NVFP4 41.2.
+     MTP-on only after baseline; their hard-task MTP
+     is a net loss.
+  3. Backend currency: Intel official 3.8 AutoRound
+     INT4 if/when it lands (community 1x B70 53-55
+     MTP3 on unofficial INT4 + v0.26.1rc1 graphs).
+     sglang cookbook DSpark is the upstream 3.8
+     default -- try on our sglang XPU image only
+     after (1) or if a newer XPU sglang ships DSPARK.
+  4. Standing: W8A8 3.8 remains the quality/INT8-XMX
+     research path, not the first decode lever.
+     zml stays a findings backend (bf16, no server).
+
+VERDICT -> Stop iterating the rmacy 0.21 image. Next
+  GPU session is (1) DSpark on v0.26 RadixArk @262k,
+  then (2) 0xSero SYCL Q4_K_M as the other-backend
+  A/B. Restore the 3.6 DD when this serve comes down.

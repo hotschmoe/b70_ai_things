@@ -391,16 +391,18 @@ try:
         flush=True,
     )
 
-    # ---- (1d) uniform NVFP4 (W4A4) -> fused W4A16 gemm -----------------------
-    # Inferact Qwen3.8-27B is ModelOpt quant_algo=NVFP4 (W4A4). That selects
-    # ModelOptNvFp4LinearMethod + _POSSIBLE_NVFP4_KERNELS[XPU], which was the
-    # emulation kernel (act fake-quant + scaled_fp4_mm) -- coherent, decode-slow
-    # (TG 8.58 vs 3.6 fused ~30+). Weights are the same packed E2M1 + f8e4m3
-    # block scales + fp32 weight_scale_2 as MIXED W4A16_NVFP4, and the W4A4
-    # method already renames weight_scale_2 -> weight_global_scale before
-    # kernel.process_weights. Reuse the fused gemm; skip act fake-quant
-    # (input_scale unused at apply). Subclass Emulation so can_implement /
-    # is_supported / input_quant_key stay valid for the kernel picker.
+    # ---- (1d) per-layer NVFP4 (W4A4) -> fused W4A16 gemm ---------------------
+    # ModelOpt quant_algo=NVFP4 (W4A4) selects ModelOptNvFp4LinearMethod +
+    # _POSSIBLE_NVFP4_KERNELS[XPU]. Used by Inferact (uniform W4A4, deleted)
+    # and by RadixArk MIXED_PRECISION MLP/lm_head (per-layer NVFP4, not
+    # W4A16_NVFP4 -- those still use the 1b Marlin-replace path). The
+    # emulation kernel is coherent but decode-slow. Weights are the same
+    # packed E2M1 + f8e4m3 block scales + fp32 weight_scale_2 as MIXED
+    # W4A16_NVFP4; the W4A4 method already renames weight_scale_2 ->
+    # weight_global_scale before kernel.process_weights. Reuse the fused
+    # gemm; skip act fake-quant (input_scale unused at apply). Subclass
+    # Emulation so can_implement / is_supported / input_quant_key stay
+    # valid for the kernel picker.
     if _MODE == "fused":
 
         class _XPUW4A4FusedAsW4A16Kernel(EmulationNvFp4LinearKernel):

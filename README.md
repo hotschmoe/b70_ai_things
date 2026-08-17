@@ -5,10 +5,11 @@ Serving **Qwen3.6-27B** (dense VLM) and **Qwen3.6-35B-A3B** (MoE VLM) on 2x Inte
 emulated-fp8 and bf16 on prefill, TTFT, *and* decode -- vision tower + MTP head retained, zero
 accuracy loss.
 
-> [2026-08-16 CURRENT STATE -- supersedes ALL dated banners below.] Daily driver is **vLLM 0.26.0
+> [2026-08-17 CURRENT STATE -- supersedes ALL dated banners below.] Daily driver is **vLLM 0.26.0
 > NVFP4 Qwen3.6-27B TP=2 calibrated-fp8-KV @262144** (native ctx; MTP5 + prefix + GRAPH + push-AR;
-> served `hotschmoe-dd` on :18080). Qwen3.8 Inferact was gated and is **not** the DD (code 35 vs
-> 48.9, HumanEval+ 0.939/0.915 vs 3.6 0.988/0.945). Wait for nvidia/ or AEON 3.8.
+> served `hotschmoe-dd` on :18080). Qwen3.8
+> RadixArk mixed NVFP4 TP=2 MTP3 @262k is coherent (code 41.2 vs 3.6 48.9, HumanEval+
+> 0.933/0.890 vs 3.6 0.988/0.945) and is **not** the DD. Inferact was deleted.
 > Prior W8A8 TP=2 @253952 and NVFP4 DP=2 @100k stay on the shelf.
 > Prior attempt: **W8A8-INT8 Qwen3.6-27B TP=2** (`b70_daily_0` on **:18080** as `hotschmoe-dd`): image
 > `vllm-xpu-env:int8g-v0260`, compressed-tensors W8A8-sqgptq + MTP3, **16-bit KV** (no
@@ -312,7 +313,8 @@ Numbers below are each entry's own production config. The first two NVFP4 rows w
 | qwen3.6-27b | **NVFP4 DP=2 replica: fp8-KV-cal + MTP5 + embed-INT8 @100k (DAILY DRIVER)** [dp] | 22.76/card | 1x2 | 5869/card warm | 347 ms warm | **64.6 code** | **202.2 code agg** [dp] | 144.4k/card (288.8k cumulative) [dp] |
 | qwen3.6-27b | **NVFP4 TP=2 fp8-KV-cal + MTP5 + push-AR @200k** [tp2] | 11.54/card | 2 | 1982 @36k | 18.15 s @36k | **48.9 code** (52.0 best) | 25.7/stream (**103.0 agg**) | **640.8k tok** |
 | qwen3.8-27b | Unsloth NVFP4 TP=1 @8192 fused+ch-FP8 (research; coherent, slow) [38u] | 24.71 | 1 | -- | -- | coherent | -- | 35k tok |
-| qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP3 GRAPH+prefix @200k (18/18, not DD) [38i] | 13.72/card | 2 | 1958 | 1046 ms | **35.0 code** (37.3 best) | 23.3 (**93.3** agg) | 293k tok |
+| qwen3.8-27b | RadixArk mixed NVFP4 TP=2 MTP3 GRAPH+prefix @262k (not DD) [38r] | 11.54/card | 2 | 3367 | 618 ms | **41.2 code** (42.9 best) | 23.2 (**92.9** agg) | **360k tok** |
+| qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP3 GRAPH+prefix @200k (deleted; 18/18, not DD) [38i] | 13.72/card | 2 | 1958 | 1046 ms | **35.0 code** (37.3 best) | 23.3 (**93.3** agg) | 293k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 TP=2 MTP-off @229k (coherent, text-only) [38w] | 16.52/card | 2 | 2574 | 796 ms | 18.45 | 14.73 (51.8 agg) | 250k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 + grafted vis/MTP TP=2 MTP3 @131k [38g] | 17.14/card | 2 | 2216 | 924 ms | **26.62** | 14.40 (50.2 agg) | 270k tok |
 | qwen3.6-27b | **NVFP4 TP=1 fp8 KV + captured (single-card 128k ctx)**◆ | 24 | 1 | 1909 | 1068 ms | **25.9** (MTP-off) | 17.4 (**70** agg) | 150k tok |
@@ -359,8 +361,15 @@ INT8-XMX `int8_gemm_w8a16` (Xe2 has no FP8 XMX). One-card MAXLEN=8192 on
 (2026-08-15h); compact-scale GRAPH KV 104k, MTP3 TG **27.37**
 (2026-08-15i). Probe M=1 56x vs tiled. Stay on this image
 (torch 2.12); public 0.26.1rc1 is torch 2.13 and will not load our
-kernels. Do not promote. Inferact ModelOpt is the fast coherent 3.8
-NVFP4 path. Daily driver stays Qwen3.6 NVFP4.
+kernels. Do not promote. RadixArk mixed ModelOpt is the 3.8 NVFP4
+serve. Daily driver stays Qwen3.6 NVFP4.
+
+[38r] **Qwen3.8-27B RadixArk mixed NVFP4 (2026-08-17).** SGLang cookbook
+checkpoint (`MIXED_PRECISION`, 193 NVFP4 + 208 FP8). Same fused kernel
++ 3.6 TP=2 stack at native 262144 bf16 KV (pool 360k). Code c1 **41.2**
+/ c4 agg 92.9; MTP accept_len 2.45. HumanEval+ **0.933 / 0.890**. Faster
+than Inferact 35.0, still not a DD vs 3.6 48.9 / 0.988. PP/TTFT in the
+table is bench_2048 chat thinking-on; code is bench_code out=256.
 
 [38i] **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14 / fused 14c / gated 15m/n).**
 Official vLLM recipe checkpoint (`quant_algo=NVFP4`, uniform W4A4, not 3.6
@@ -368,7 +377,8 @@ MIXED_PRECISION). Fused `_XPUW4A4FusedAsW4A16Kernel` -> `nvfp4_gemm_w4a16`.
 3.6 TP=2 stack (GRAPH + prefix + push-AR, bf16 KV, MAXLEN=200000). MTP A/B
 2026-08-15n: spec5 code 29.0 / spec3 **35.0** (18/18, rate 0.49) / spec2
 33.6. HumanEval+ 2026-08-16: **0.939 / 0.915** vs 3.6 NVFP4 0.988/0.945.
-Not a DD (slower and not better on HE+). Default MTPTOK=3.
+Not a DD (slower and not better on HE+). Deleted 2026-08-17; replaced
+by [38r]. Default MTPTOK=3.
 
 [38w] **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15).** scripts/150 GPTQ-only from
 official BF16 (SMOOTHQUANT=0). compressed-tensors INT8 w x INT8 a. Save is

@@ -50,6 +50,13 @@
 >    bf16/no-server, so neither substitutes for true W8A8 today.
 > 4. **W4A4 later frontier** -- the native int4-XMX datapath is demonstrated, but the naive kernel is
 >    slow and quality still needs rotation/FWHT. Do not displace the robust W8A8/W4A8 work with it.
+> 5. **3.8-27B fastest decode @262k (2026-08-17g)** -- goal is a good Qwen3.8-27B at native 262k, 1 or 2 cards.
+>    Current best on-box 3.8 is RadixArk NVFP4 TP=2 MTP3 (code 41.2 / HE+ 0.933). rmacy v10-slim FP8+DSpark is
+>    coherent and does NOT collapse at 4k, but is 17-22 tok/s and 8k-only -- do not iterate that image. Next:
+>    (1) port DSpark (kernel readout fix + RadixArk or rwmacy drafter) onto our v0.26 RadixArk @262k;
+>    (2) 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k (claimed 51; HE+ gate required);
+>    (3) Intel official 3.8 AutoRound INT4 and/or sglang cookbook DSpark when those XPU bits exist.
+>    W8A8 3.8 stays the quality/INT8-XMX track. zml stays a findings backend.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,
@@ -714,10 +721,12 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 - [x] **12m. Inferact HumanEval+ (2026-08-16).** 164
       thinking-off greedy sandboxed: **0.939 / 0.915** vs 3.6
       NVFP4 MTP3 0.988/0.945. Not a quality win. Not a DD.
-- [ ] **12n. [ACTIVE] 3.8 DD still blocked.** Slower (35 vs
-      48.9) and HE+ behind. Harder eval (LiveCodeBench) if we
-      still want a 3.8 quality claim; a better drafter if we
-      want 35->49. Do not swap systemd.
+- [ ] **12n. [ACTIVE] RadixArk gated, still not a DD
+      (2026-08-17).** Code c1 41.2 / c4 92.9 (beats Inferact
+      35.0/93.3; loses to 3.6 48.9/103). HE+ 0.933/0.890
+      (Inferact 0.939/0.915, 3.6 0.988/0.945). Accept_len
+      2.45. Next: harder eval if we want a 3.8 quality claim,
+      or a better drafter for 41->49. Do not swap systemd.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 

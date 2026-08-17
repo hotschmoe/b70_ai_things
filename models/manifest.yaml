@@ -156,6 +156,30 @@ models:
     notes: official BF16. Same qwen3_5 hybrid GDN+attention as 3.6-27B (64 layers,
            262144 native ctx, 1M YaRN). Source for on-box GPTQ W8A8 (2026-08-15).
 
+  - id: qwen3.8-27b/fp8
+    family: qwen3.8-27b
+    scheme: fp8
+    vision: true
+    mtp: true
+    size_gb: 29
+    served_as: qwen3.8-27b-fp8
+    source: { type: hf, repo: Qwen/Qwen3.8-27B-FP8 }
+    notes: official block FP8 e4m3 [128,128]. Target for the rmacy DSpark
+           stack (ghcr.io/rmacy/qwen38-fp8-dspark, intel/llm-scaler#620).
+
+  - id: qwen3.8-27b/dflash-drafter-fp8-b70
+    family: qwen3.8-27b
+    scheme: dflash-drafter-fp8
+    vision: false
+    mtp: false
+    size_gb: 3
+    served_as: qwen3.8-27b-dflash-drafter (rmacy B70-tuned)
+    source: { type: hf, repo: rwmacy/qwen3.8-27b-dflash-drafter-fp8-b70 }
+    notes: 1.36B DSpark/DFlash drafter, warm-start from RadixArk then
+           fine-tuned on B70 FP8 hidden states (SpecForge#769). Needs the
+           vLLM dflash kernel readout fix (rmacy/vllm). Claimed isolated
+           C1 72.2 tok/s with the fp8 target on 2x B70 TP=2 k=4.
+
   - id: qwen3.8-27b/w8a8-gptq
     family: qwen3.8-27b
     scheme: w8a8-gptq
@@ -170,18 +194,21 @@ models:
            graft_qwen38_w8a8.py restored 333 visual + 15 mtp. Paris exact.
            MTP3 IN=2048 TG 26.62; vision landscape probe correct. Not shelved.
 
-  - id: qwen3.8-27b/nvfp4-modelopt
+  - id: qwen3.8-27b/nvfp4-radixark
     family: qwen3.8-27b
-    scheme: nvfp4-modelopt-mixed
+    scheme: nvfp4-radixark-mixed
     vision: true
     mtp: true
-    size_gb: 26
-    served_as: qwen3.8-27b-NVFP4-modelopt
-    source: { type: hf, repo: Inferact/Qwen3.8-27B-NVFP4 }
-    notes: ModelOpt quant_algo=NVFP4 (uniform W4A4, not 3.6 MIXED). Not NVIDIA-org.
-           2026-08-15n MTP A/B: spec3 wins (code c1 35.0 / c4 agg 93.3,
-           18/18). spec5 29.0, spec2 33.6. Do not promote to DD
-           (3.6 TP=2 is 48.9 / 103; accept_len stuck ~2.5).
+    size_gb: 21
+    served_as: qwen3.8-27b-NVFP4-radixark
+    source: { type: hf, repo: RadixArk/Qwen3.8-27B-NVFP4 }
+    notes: >
+      SGLang cookbook NVFP4 (downloaded 2026-08-16). ModelOpt 0.47 MIXED_PRECISION:
+      193x NVFP4 g16 (MLP + lm_head) + 208x FP8 (attn/GDN). kv_cache_quant_algo=FP8
+      but no k/v scale tensors (producer used scale=1.0). 21G on disk, 333 visual
+      + 15 mtp (bf16). Preferred 3.8 NVFP4 (Inferact uniform W4A4 deleted 2026-08-17).
+      First serve 2026-08-17: TP=1 fused GRAPH MTP-off @8192, kv_gate 3/3 Paris.
+      Do not promote.
 
   - id: qwen3.8-27b/nvfp4-unsloth
     family: qwen3.8-27b
@@ -198,9 +225,13 @@ models:
            dequant vs official BF16 is clean (MLP 0.992, FP8 0.9996). Served
            2026-08-15f one-card COHERENT after sitecustomize (1e) tiled
            f8*scale F.linear (fp8_gemm_w8a16 is per-tensor only). Slow.
-           Inferact ModelOpt is the fast coherent 3.8 NVFP4. Do not promote.
+           Inferact was the first coherent 3.8 NVFP4; prefer nvfp4-radixark
+           for new serves. Do not promote.
 
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
+#   qwen3.8-27b/nvfp4-modelopt (hf Inferact/Qwen3.8-27B-NVFP4) -- deleted 2026-08-17.
+#     Uniform W4A4, no KV scales. Gated 18/18 MTP3 code 35.0 / HE+ 0.939/0.915; not a DD.
+#     Replaced by qwen3.8-27b/nvfp4-radixark (cookbook MIXED_PRECISION).
 # Removed from disk by reorg.sh per the 2026-06-29 review (off-target or prior-gen scaffolding):
 #   google/gemma-4-12B-it            (hf) -- off-target, not Qwen3.6
 #   Qwen/Qwen3-0.6B                  (hf) -- tiny prior-gen, off-target
