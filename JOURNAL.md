@@ -11874,3 +11874,81 @@ VERDICT -> M3 is a wait, not a serve. Next GPU work is
   M2 once the SYCL image and GGUF land. Do not bump
   sglang to 0.5.17/torch-2.13 in this campaign (ABI
   break vs our XPU kernels). M1 DSpark stay on :8078.
+
+### 2026-08-17j - M2 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k
+
+CONTEXT -> Campaign M2. Goal is fastest decode on a good
+  Qwen3.8-27B at native 262k. User note during the run:
+  3.8 is supposed to get much smarter if you let it
+  reason for a long time, but extra think tokens are
+  wall time. Slow decode makes "think twice as long"
+  a huge bill.
+
+CONFIG -> 0xSero/qwen38-b70 @17323a6. Image
+  qwen38-b70:latest (oneAPI 2025.3.2 SYCL JIT,
+  mndodd/llama.cpp @4302fb5 + lab TP2 + Q4K increment).
+  GGUF ggml-org Qwen3.8-27B-Q4_K_M.gguf @0669b986
+  SHA256 31629f53165ab6a7dad8c9847dcfd1fdf55829dac1e6e748f4a68581b0033d34
+  (18G). ENABLE_MTP=0 ENABLE_VISION=0 GPU_COUNT=2
+  ctx 262144 f16 KV PARALLEL=1. Wrapper
+  llamacpp/serve_qwen38_b70_0xsero.sh. Port 8010.
+
+COMMAND ->
+  ```
+  bash vllm/dflash/serve_qwen38_radixark_dspark.sh stop
+  ./bin/gpu-run bash llamacpp/serve_qwen38_b70_0xsero.sh start
+  python3 vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:8010/v1 \
+    /models/Qwen3.8-27B-Q4_K_M.gguf 1 256 3
+  evals/.venv/bin/python evals/orchestrator/run_evals.py \
+    --endpoint http://127.0.0.1:8010/v1 \
+    --model /models/Qwen3.8-27B-Q4_K_M.gguf \
+    --quant q4km-0xsero-sycl-tp2 \
+    --tiers 1 --tier1-dataset humaneval --limit 164
+  ```
+
+RESULT -> xpu-health both cards OK. Load 211s. Served
+  id /models/Qwen3.8-27B-Q4_K_M.gguf. n_ctx 262144.
+  Cmdline confirmed TP=2: --device SYCL0,SYCL1
+  --split-mode tensor --tensor-split 1,1. Both
+  BMG_G31_B70 devices enumerated. Q4K reorder-family
+  OFF (as they require for stock ggml-org + JIT).
+
+  Paris exact: "The capital of France is **Paris**."
+  fib coherent (iterative, 76 tok).
+  code c1: **32.8 avg / 32.8 best** (wall 7.8s, out 256)
+  server predicted_tokens_seconds 32.8 during bench,
+  34.1 after HE+ (48.9k predicted tokens). Not HTTP
+  overhead -- llama.cpp itself reports ~33 tok/s.
+
+  HE+ 164 thinking-off greedy sandboxed:
+  **0.970 base / 0.927 plus** (gen 1458s, eval 40s).
+  5 base fails: 32, 95, 130, 140, 145.
+  Plus-only extras: 39, 76, 91, 132, 141, 151, 163.
+  Result dir
+  evals/results/20260817T231333Z___models_Qwen3.8-27B-Q4_K_M.gguf__q4km-0xsero-sycl-tp2
+  Engine stayed up.
+
+VS claimed / our 3.8 / 3.6:
+  code c1  32.8 vs claimed **51** vs MTP3 **41.2** vs
+           DSpark 34.4 vs 3.6 MTP5 **48.9**
+  HE+      0.970/0.927 vs RadixArk 0.933/0.890 vs
+           Inferact 0.939/0.915 vs 3.6 **0.988/0.945**
+  32.8 matches their published 1x B70 row (33.3), not
+  the 2x TP2 row (51). Prefill ~440-508 tok/s vs their
+  2.5k-ctx 955.
+
+4k think-token wall (decode only, same bench):
+  3.6 MTP5 ~82s, RadixArk MTP3 ~97s, DSpark ~116s,
+  this Q4_K_M ~122s. Long-think on this path is the
+  most expensive 3.8 we have measured.
+
+VERDICT -> M2 DONE. Best 3.8 HumanEval+ on the box
+  (thinking-off; almost 3.6 plus). Not a decode win
+  (32.8 < 41.2 MTP3 < claimed 51). Do not shelf. Do
+  not flip ENABLE_MTP=1: their own hard-task MTP is a
+  net loss, and long think is a hard task. Next GPU
+  work is why TP=2 decode equals their 1x number --
+  if 51 is real here, this path would beat MTP3 on
+  BOTH speed and quality and is the long-think unlock.
+  Serve left up on :8010.

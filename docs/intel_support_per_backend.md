@@ -88,7 +88,10 @@ backends -- there is no true W8A8 outside vLLM/sglang. The mappings below are th
   `--jinja` tool-calling, `--mmproj` vision, `--mtp` speculative -- full daily-driver parity.
 - Patches needed from us: NONE for arch/serve. We reuse `bin/xpu-health`/`xe-reset` and the
   `SYCL_UR_USE_LEVEL_ZERO_V2` knob; everything int8/oneCCL-specific is N/A (its kernels + multi-GPU are its
-  own). Scripts: `llamacpp/{build_sycl,convert_gguf,serve_dp2_q4km,serve_tp2_q8}.sh`.
+  own). Scripts: `llamacpp/{build_sycl,convert_gguf,serve_dp2_q4km,serve_tp2_q8,serve_qwen38_b70_0xsero}.sh`.
+- **3.8 Q4_K_M TP=2 measured 2026-08-17j** (0xSero image, native 262k): Paris + fib
+  coherent, HE+ 0.970/0.927, code c1 32.8 vs claimed 51. Speed matches their 1x
+  row. Not a shelf. Details: `llamacpp/QWEN38_B70_0XSERO.md`.
 
 ### zml (new -- Zig + MLIR/XLA/PJRT-oneAPI)
 - **Build:** hermetic bazel 9.1.1 (`bazelisk`) fetches the oneAPI PJRT plugin (`manual-2026-06-23T00-20-00Z`,

@@ -74,12 +74,41 @@ Trying it means taking the current DSpark serve down, building their
 image (SYCL compile, long), downloading ~19 GB Q4_K_M, then a coherence
 + decode gate against 51 tok/s / 262k. Do not shelf until measured here.
 
-## How we would run it (not started)
+## How to run it
 
 ```
 # after stopping the current GPU serve
-git clone https://github.com/0xSero/qwen38-b70 /mnt/vm_8tb/b70/qwen38-b70
-cd /mnt/vm_8tb/b70/qwen38-b70
-# GPU_COUNT=2 default; ENABLE_MTP=0 first (hard-task MTP is a loss)
-./bin/gpu-run docker compose up -d --build
+# clone + image + GGUF already at /mnt/vm_8tb/b70/qwen38-b70
+cd /mnt/vm_8tb/github/b70_ai_things
+./bin/gpu-run bash llamacpp/serve_qwen38_b70_0xsero.sh start
+bash llamacpp/serve_qwen38_b70_0xsero.sh stop
 ```
+
+Served id: `/models/Qwen3.8-27B-Q4_K_M.gguf` on :8010. n_ctx 262144.
+
+## Measured here (2026-08-17j, ENABLE_MTP=0, GPU_COUNT=2)
+
+xpu-health both cards OK. Load 211s. Cmdline really is TP=2
+(`--device SYCL0,SYCL1 --split-mode tensor --tensor-split 1,1`).
+Both BMG_G31_B70 devices enumerated. Q4K reorder-family OFF.
+
+| workload | result |
+|---|---|
+| Paris | exact ("The capital of France is **Paris**.") |
+| fib | coherent iterative |
+| code c1 out=256 | **32.8 avg / 32.8 best** (wall 7.8s) |
+| llama.cpp predicted_tokens_seconds | 32.8 bench / 34.1 after HE+ |
+| HE+ 164 thinking-off | **0.970 base / 0.927 plus** (gen 1458s) |
+| prefill (server gauge) | 440-508 tok/s |
+
+vs claimed 51 / RadixArk MTP3 41.2 / DSpark 34.4 / 3.6 MTP5 48.9.
+32.8 matches their published **1x B70** row (33.3), not the 2x TP2
+row (51). Quality is the best 3.8 HE+ on this box (RadixArk 0.933/
+0.890, Inferact 0.939/0.915, 3.6 0.988/0.945).
+
+Long think is decode-bound. 4k think tokens is ~122s here vs ~97s
+on MTP3 vs ~82s on 3.6 MTP5. Do not flip ENABLE_MTP=1: their hard-
+task MTP is a net loss, and long think is a hard task.
+
+Not a shelf. Next GPU work is why TP=2 decode equals 1x -- if 51
+reproduces here this path beats MTP3 on speed and quality.
