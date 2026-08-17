@@ -50,13 +50,16 @@
 >    bf16/no-server, so neither substitutes for true W8A8 today.
 > 4. **W4A4 later frontier** -- the native int4-XMX datapath is demonstrated, but the naive kernel is
 >    slow and quality still needs rotation/FWHT. Do not displace the robust W8A8/W4A8 work with it.
-> 5. **3.8-27B fastest decode @262k (2026-08-17g)** -- goal is a good Qwen3.8-27B at native 262k, 1 or 2 cards.
->    Current best on-box 3.8 is RadixArk NVFP4 TP=2 MTP3 (code 41.2 / HE+ 0.933). rmacy v10-slim FP8+DSpark is
->    coherent and does NOT collapse at 4k, but is 17-22 tok/s and 8k-only -- do not iterate that image. Next:
->    (1) port DSpark (kernel readout fix + RadixArk or rwmacy drafter) onto our v0.26 RadixArk @262k;
->    (2) 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k (claimed 51; HE+ gate required);
->    (3) Intel official 3.8 AutoRound INT4 and/or sglang cookbook DSpark when those XPU bits exist.
->    W8A8 3.8 stays the quality/INT8-XMX track. zml stays a findings backend.
+> 5. **CAMPAIGN 2026-08-17 -- 3.8-27B fastest decode @262k** (started 17h)
+>    Goal: fastest decode on a good Qwen3.8-27B at native 262k, 1 or 2 cards.
+>    Current best on-box 3.8 is RadixArk NVFP4 TP=2 MTP3 (code 41.2 / HE+ 0.933).
+>    M1 DONE -- DSpark on v0.26 RadixArk @262k serves (method=dspark, V2 runner, fp8 KV,
+>       pool 438k). Paris exact. code c1 **34.4** vs MTP3 **41.2**. Keep MTP3. Recipe:
+>       `vllm/dflash/serve_qwen38_radixark_dspark.sh`.
+>    M2 NEXT -- 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k (claimed 51; HE+ gate).
+>    M3 -- Intel official 3.8 AutoRound INT4 and/or sglang XPU DSpark when those bits exist.
+>    Do not iterate rmacy v10-slim (8k, 17-22 tok/s). W8A8 3.8 stays the INT8-XMX track.
+>    zml stays a findings backend. Journal + commit at each milestone.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

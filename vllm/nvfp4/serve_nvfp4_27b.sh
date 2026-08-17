@@ -143,7 +143,11 @@ if [[ "${B70_EXTRA_ENV:-}" == *"LOCALARGMAX_REPLICATED_HEAD=1"* ]] && \
   exit 1
 fi
 SPEC_ARGS=( )
-if [ -n "$MTPTOK" ]; then
+if [ -n "${SPEC:-}" ]; then
+  # Raw speculative-config JSON (DSpark/DFlash). Wins over MTPTOK.
+  SPEC_ARGS=( --speculative-config "$SPEC" )
+  echo "=== SPEC override -> $SPEC ===" >&2
+elif [ -n "$MTPTOK" ]; then
   _LAR=$([ "$LOCALARGMAX" = 1 ] && echo ',"use_local_argmax_reduction":true' || echo '')
   SPEC_ARGS=( --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTPTOK}${_LAR}}" )
   SERVED="${SERVED}-mtp${MTPTOK}"

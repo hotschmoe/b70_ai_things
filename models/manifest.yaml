@@ -180,6 +180,18 @@ models:
            vLLM dflash kernel readout fix (rmacy/vllm). Claimed isolated
            C1 72.2 tok/s with the fp8 target on 2x B70 TP=2 k=4.
 
+  - id: qwen3.8-27b/dflash-drafter-radixark
+    family: qwen3.8-27b
+    scheme: dflash-drafter
+    vision: false
+    mtp: false
+    size_gb: 3
+    served_as: qwen3.8-27b-dflash-drafter (RadixArk cookbook)
+    source: { type: hf, repo: RadixArk/Qwen3.8-27B-DSpark }
+    notes: official 1.36B DSpark drafter for Qwen3.8-27B-FP8. v0.26
+           registry needs architectures remapped to Qwen3DSparkModel
+           (stock DSparkDraftModel routes to DeepSeek-V4).
+
   - id: qwen3.8-27b/w8a8-gptq
     family: qwen3.8-27b
     scheme: w8a8-gptq

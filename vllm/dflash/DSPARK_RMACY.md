@@ -1,3 +1,10 @@
+# DSpark on dual B70 -- rmacy image notes + campaign M1
+
+Campaign 2026-08-17: fastest 3.8-27B decode at native 262k.
+M1 serve is `vllm/dflash/serve_qwen38_radixark_dspark.sh` (our v0.26
+RadixArk NVFP4 + readout fix). The `v10-slim` image notes below are
+the closed first-try (17e/f), not the active path.
+
 # rmacy Qwen3.8-27B FP8 + DSpark on dual B70
 
 Research notes for `ghcr.io/rmacy/qwen38-fp8-dspark` (latest `v10-slim`).

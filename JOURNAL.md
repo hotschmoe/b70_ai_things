@@ -11782,3 +11782,66 @@ VERDICT -> Stop iterating the rmacy 0.21 image. Next
   GPU session is (1) DSpark on v0.26 RadixArk @262k,
   then (2) 0xSero SYCL Q4_K_M as the other-backend
   A/B. Restore the 3.6 DD when this serve comes down.
+
+### 2026-08-17h - campaign start: DSpark on v0.26 RadixArk @262k
+
+CONTEXT -> User: line up M1/M2/M3 and start. Journal + commit
+  at milestones.
+
+PLAN ->
+  M1 DSpark on our v0.26 RadixArk NVFP4 TP=2 GRAPH @262k
+     (readout fix + Qwen3DSparkModel overlay). Gate vs
+     MTP3 code 41.2.
+  M2 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k.
+  M3 Intel 3.8 AutoRound / sglang XPU DSpark currency.
+
+CONFIG (M1) -> vllm-xpu-env:int8g-v0260. Target
+  qwen3.8-27b/nvfp4-radixark. Drafter
+  qwen3.8-27b/dflash-drafter-fp8-b70 (rwmacy B70-tuned)
+  with architectures remapped DSparkDraftModel ->
+  Qwen3DSparkModel (v0.26 registry would otherwise
+  route to DeepSeek-V4). Patches
+  vllm/dflash/patches/v0260/{dflash,utils}.py:
+  num_query_per_req=k; is_sample=is_query;
+  sample_out_idx=req*k+off. SPEC method=dspark k=7.
+  GRAPH=1 MAXLEN=262144. Recipe
+  vllm/dflash/serve_qwen38_radixark_dspark.sh.
+
+COMMAND ->
+  ```
+  bash vllm/dflash/serve_qwen38_fp8_dspark.sh stop
+  ./bin/gpu-run bash vllm/dflash/serve_qwen38_radixark_dspark.sh start
+  python3 vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:8078/v1 \
+    qwen3.8-27b-NVFP4-radixark-dspark7-graph-pushargraph 1 256 3
+  ```
+
+RESULT ->
+  method=dflash rejected: v0.26 wraps arch as
+  DFlashQwen3DSparkModel (not registered). method=dspark
+  forces Model Runner V2, which already implements
+  sample-from-anchor (the SpecForge readout). V2 rejects
+  B70_THINK_BUDGET; THINK_BUDGET=0 required.
+
+  bf16 KV + DSpark @262k needs 13.25 GiB, 0.85 util had
+  9.81 (est 190k), 0.92 had 12.29 (est 242k). KV_FP8=1
+  UTIL=0.90 MAXSEQS=2 fits: Available KV 11.68 GiB,
+  pool **438,495 tok**, max_model_len **262144**.
+  DSpark speculator captured. Engine UP.
+
+  Paris exact (2 tok).
+  code c1: **34.4 avg / 35.9 best** (wall 7.1s, out 256)
+  spec: drafts=406 draft_tok=2842 accepted=622
+    accept_len=**2.53** rate=0.219 pos0=**58.4%**
+    pos1-6: 34/23/15/11/7/5 %
+  Engine stayed up.
+
+VS RadixArk MTP3 @262k: DSpark 34.4 vs MTP3 **41.2**.
+  Acceptance is real; verify of k=7 is more expensive
+  than MTP3 on this stack. Not a speed win.
+
+VERDICT -> M1 DONE. DSpark on v0.26 RadixArk @ native
+  262k is coherent. Keep MTP3 as the 3.8 default (41.2).
+  DSpark stays a live recipe, not a swap. Next: M2
+  0xSero llama.cpp SYCL Q4_K_M TP=2 @262k. Serve left
+  up on :8078 for poking.
