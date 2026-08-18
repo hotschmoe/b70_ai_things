@@ -230,3 +230,34 @@ Retry if: DSparkSpeculator._sample_sequential is
   named pick. Do not retry the SPEC flag on
   method=dspark.
 Related JOURNAL: ### 2026-08-18y
+
+## D7 -- DSpark shard-top1 hook no decode win -- 2026-08-18 -- LOOP 21
+
+Tried: overlay DSparkSpeculator._sample_sequential
+  (local lm_head + local Markov bias + xpu_shard_top1
+  + pair all-gather). Mount nvfp4_top1_proto SO
+  (has shard_top1 + int8 gemm). Keep AGASYNC k=4
+  GRAPH=1 @122880 W8A16=0. Wipe b3f7e9e010.
+Command / config:
+  GDN_SO=/mnt/vm_8tb/b70/nvfp4_top1_proto/_xpu_C.abi3.so
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+    PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/e1_shim/sitecustomize.py
+  GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync-shardtop1
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Result: Hook ENGAGED. HEALTHY 163s. G1 Paris / 391
+  / fib. bench_code c1 avg **28.4** / best 29.8
+  (wall 9.1s) vs AGASYNC **29.4** / 33.2. No
+  DEVICE_LOST. Wipe + revert AGASYNC: HEALTHY 137s,
+  Paris exact.
+Why it is closed: coherent but no e2e decode move.
+  Sequential Markov still pays N pair-gathers plus
+  the proto SO is not faster here. Do not retry
+  this overlay for bench_code c1.
+Retry if: shard-top1 is fused with Markov in one
+  kernel, or pair-gather is captured without the
+  host sync. Do not remount this proto SO for c1
+  without a new hook.
+Related JOURNAL: ### 2026-08-18z
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop21_serve.log
+  bench loop21_bench_code_c1.log

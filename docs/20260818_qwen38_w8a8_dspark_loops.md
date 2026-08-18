@@ -36,14 +36,15 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-D6 hook -- patch DSparkSpeculator._sample_sequential
-to sharded logits + xpu_shard_top1 (Markov kept),
-mount nvfp4_top1_proto SO, G1 + bench_code vs 29.4.
-E1 SPEC flag is MTP-only (packet D6). Do not retry
-use_local_argmax_reduction on method=dspark. Do not
-start DD. Do not enter Phase 2. Do not train. D4:
-W8A16=0 at 122880. D5: no v0240 fusedq retry. Quality
-floor HE+ 0.957/0.927. c1 29.4 < 41.2.
+E2 -- host-barrier ALLGATHER=1 A/B on live k=4
+GRAPH=1 vs AGASYNC 29.4 (NVFP4 was 2.4x slower;
+ASYNC helped here so host-barrier is still open
+once). G1 fail => revert, no publish. D7: shard-top1
+hook c1 28.4 < 29.4; do not remount proto SO for
+c1. D6: no SPEC flag on dspark. D4: W8A16=0 at
+122880. D5: no v0240 fusedq. Do not start DD. Do
+not train. Do not enter Phase 2. Quality floor
+HE+ 0.957/0.927. c1 29.4 < 41.2.
 
 ---
 
@@ -928,3 +929,43 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 528521.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18y
+
+---
+
+## LOOP 21 -- 2026-08-18T2328Z -- D6 shard-top1 hook c1 28.4
+
+Picked: D6 hook -- DSparkSpeculator shard-top1 +
+  nvfp4_top1_proto SO, G1, bench_code vs 29.4
+Why this, not the other open row: living-header Next
+  pick after LOOP 20 D6. Retry-if was now true.
+GPU: lease HELD both cards by docker-wait pid=536779
+  since 2026-08-18 23:28:03 (reverted AGASYNC).
+  DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880.
+Command:
+  GDN_SO=nvfp4_top1_proto ... shardtop1 start
+  bench_code 1 256 3
+  # revert: wipe b3f7e9e010 then AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop21_serve.log
+  bench: loop21_bench_code_c1.log
+  revert: loop21_revert.log
+  wait pid 536779
+Result: Hook ENGAGED. HEALTHY 163s. G1 Paris / 391
+  / fib. c1 avg **28.4** / best 29.8 (wall 9.1s) vs
+  AGASYNC **29.4** / 33.2. No DEVICE_LOST. Revert
+  HEALTHY 137s, Paris exact.
+Verdict: NO-GO
+Changed beliefs: DSpark shard-top1 hook is
+  coherent (G1 hold) but not a decode win. Keep
+  AGASYNC 29.4. Overlay file stays off by default.
+  Wipe hash when leaving proto SO (D5/D7).
+Next pick: E2 host-barrier ALLGATHER=1 A/B on this
+  live AGASYNC serve vs 29.4. Do not start E2 this
+  fire.
+Do not: remount proto SO for c1; retry SPEC flag
+  on dspark; train; start DD; enter Phase 2;
+  retry fusedq; W8A16>0 @122880.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 536779.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18z

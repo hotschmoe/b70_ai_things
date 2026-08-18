@@ -13097,3 +13097,48 @@ VERDICT -> DEAD-END (D6). Do not flip that SPEC
   / DD / Phase 2 this fire. Scheduler stays
   (29.4 < 41.2).
 
+### 2026-08-18z - LOOP 21: D6 shard-top1 hook c1 28.4 NO-GO
+
+CONTEXT -> LOOP 20 D6. Next pick: overlay
+  DSparkSpeculator._sample_sequential + proto SO.
+  G1 fail => no speed, revert. DD PARKED.
+
+CONFIG -> GDN_SO=/mnt/vm_8tb/b70/nvfp4_top1_proto/_xpu_C.abi3.so
+  GDN_LIB=.../libgdn_attn_kernels_xe_2.so
+  B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1
+    PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/e1_shim/sitecustomize.py"
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync-shardtop1
+  IMG=int8g-v0260 method=dspark P2PACCESS=0.
+  Overlay vllm/dflash/patches/v0260/e1_dspark_shard_top1.py
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  docker rm ... torch_compile_cache/b3f7e9e010
+  GDN_SO=.../nvfp4_top1_proto/_xpu_C.abi3.so \
+    B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1 PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/e1_shim/sitecustomize.py" \
+    GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync-shardtop1 \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py ... 1 256 3
+  # revert: wipe hash then AGASYNC start
+  # lease holder pid 536779
+  ```
+
+RESULT -> [e1-dspark] ENGAGED. HEALTHY 163s. G0 id
+  **qwen3.8-27b-W8A8-gptq-dspark4-agasync-shardtop1**
+  max_model_len 122880. G1 thinking-off: Paris
+  exact, 17*23=391, fib iterative. bench_code c1
+  avg **28.4** / best 29.8 t/s (out 256, wall
+  ~9.1s) vs AGASYNC **29.4** / 33.2 wall 7.7s.
+  No DEVICE_LOST. Do not publish 28.4 as a win.
+  Revert wipe+AGASYNC: HEALTHY 137s, Paris exact.
+  DD PARKED.
+
+VERDICT -> NO-GO (D7). Hook is coherent, not
+  faster. Keep AGASYNC 29.4. Next pick E2
+  host-barrier ALLGATHER=1. Leave AGASYNC up.
+  Do not start E2 / train / DD / Phase 2 this
+  fire. Scheduler stays (29.4 < 41.2).
+
