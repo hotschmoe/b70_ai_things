@@ -12188,3 +12188,50 @@ RESULT -> DD replicas+proxy not running. Served id
 VERDICT -> GO (policy). DD PARKED. Next fire must not
   start DD even though LOOP 2 originally said restore.
   Standing fact L.5 and scheduler 01a01345a5ed updated.
+
+### 2026-08-18g - LOOP 3: P0.1 HE+ died 90/164 on NEO linear_stream.h:84
+
+CONTEXT -> LOOP 2 Verdict RUNNING. Next pick: if pid 467692
+  live, STOP; if done, write plus, leave W8A8 serve up.
+  DD PARKED (2026-08-18f). Do not start P0.2 or DD.
+
+CONFIG -> same as LOOP 2: GRAPH=1 CGRECLAIM=0 MTPTOK=3
+  MAXLEN=131072 TP=2 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq-mtp3 IMG=int8g-v0260
+  HE+ thinking-off greedy seed=1234 limit=164.
+
+COMMAND ->
+  ```
+  ps -p 467692; ps -p 464242
+  docker inspect qwen38_w8a8 --format \
+    'Status={{.State.Status}} ExitCode={{.State.ExitCode}}'
+  tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_heplus.log
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  ```
+
+RESULT -> Both pids DEAD. Container Exited(0) at
+  2026-08-18T06:01:59Z (Started 05:41:51Z). HE+ log:
+  generated 90/164 then openai.APIConnectionError
+  (connection refused). Raw jsonl has HumanEval/0..89
+  (90 lines); no sanitize, no plus. Serve crash:
+  VllmWorker-0 SIGABRT
+  `Abort was called at 84 line in file:
+  ../../neo/shared/source/command_stream/linear_stream.h`
+  (x2) at 06:01:53 during MTP-verify decode (KV 3.7%,
+  accept_len ~2.95-3.30). EngineDeadError, API 500,
+  container exit 0. Crash tail:
+  /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_serve_crash_tail.log
+  xpu-health card 0 OK after teardown. Lease FREE.
+  :18080 empty. No DEVICE_LOST. G1 from LOOP 2 still
+  holds for the short window; no plus to publish.
+
+VERDICT -> NO-GO (P0.1 unfinished). Plus unmeasured.
+  GRAPH=1 CGRECLAIM=0 MTP3 on 3.8 W8A8 dies at ~90
+  sequential HE+ gens (~15 min), same NEO leak as
+  2026-07-07 / 2026-08-05. Do not retry that pair.
+  Do not flip CGRECLAIM=1000 (W8A8 v0.26 instantiate
+  SEGfault, JOURNAL 2026-08-05b). Next = P0.1 retry
+  GRAPH=0 MTP3 (proven long HE+ path), then HE+ 164.
+  Leave serve DOWN this fire (wrong flags). DD PARKED.
+

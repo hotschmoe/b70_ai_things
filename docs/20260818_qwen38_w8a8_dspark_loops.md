@@ -36,11 +36,15 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.1 finish -- HE+ is RUNNING. First: `ps -p 467692` and
-`tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_heplus.log`.
-If live: one status line, STOP, no sibling. If done: write plus,
-leave the W8A8 research serve up, STOP. Do not start DD. Do not
-start P0.2 in that fire. Operator 2026-08-18f: DD stays PARKED.
+P0.1 retry -- GRAPH=0 MTP3 then HE+ 164. First: xpu-health
+card 0, then
+`B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90 TP=2
+PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start`
+Query /v1/models, then same HE+ 164 command as LOOP 2
+(new result dir). Multi-hour: start HE+, LOOP-STARTED,
+Verdict RUNNING, STOP. Do not retry GRAPH=1 CGRECLAIM=0.
+Do not CGRECLAIM=1000. Do not start DD. Do not start P0.2.
 
 ---
 
@@ -150,3 +154,47 @@ Restore: DD stays PARKED. After HE+ ends leave
   `qwen38_w8a8` / `qwen3.8-27b-W8A8-gptq-mtp3` up for P0.2.
   Do not run `vllm/daily_driver_serve.sh start`.
 JOURNAL: ### 2026-08-18e (operator override ### 2026-08-18f)
+
+---
+
+## LOOP 3 -- 2026-08-18T0611Z -- P0.1 HE+ finish: died 90/164
+
+Picked: P0.1 finish (monitor pid 467692 / write plus)
+Why this, not the other open row: living-header Next pick;
+  last verdict RUNNING; do not start a sibling.
+GPU: lease FREE both cards. DD PARKED. :18080 empty.
+  qwen38_w8a8 Exited(0) 2026-08-18T06:01:59Z. xpu-health
+  card 0 OK after teardown.
+Command:
+  ps -p 467692; docker inspect qwen38_w8a8
+  tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_heplus.log
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_heplus.log
+  crash: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_serve_crash_tail.log
+  raw: evals/results/20260818T054613Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3/tier1_evalplus/humaneval_raw.jsonl
+Result: HE+ generated 90/164 (HumanEval/0..89) then
+  connection refused. Serve: VllmWorker-0 NEO abort
+  linear_stream.h:84 during MTP-verify (GRAPH=1
+  CGRECLAIM=0). No plus. Cards healthy. No DEVICE_LOST.
+Verdict: NO-GO
+Changed beliefs: 3.8 W8A8 GRAPH=1 CGRECLAIM=0 MTP3 is
+  unsafe for HE+ 164 (~15 min / 90 sequential gens).
+  Same leak as 2026-07-07 / 2026-08-05. Do not retry
+  that pair. Do not CGRECLAIM=1000 (instantiate SEGV
+  on W8A8 v0.26). HE+ retry = GRAPH=0 MTP3.
+Next pick: P0.1 retry GRAPH=0 MTP3 then HE+ 164.
+  First command: xpu-health card 0, then
+  B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90
+  TP=2 PORT=18080 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+  ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  then same run_evals HE+ 164 (new result dir).
+  Multi-hour: LOOP-STARTED + RUNNING, STOP.
+Do not: retry GRAPH=1 CGRECLAIM=0; CGRECLAIM=1000;
+  start P0.2; publish a plus from 90 samples; start DD;
+  enter Phase 2; overwrite w8a8-gptq; P2P=1.
+Restore: DD stays PARKED. Serve left DOWN (wrong flags
+  for a 164). Lease released. Cards healthy. Next fire
+  starts GRAPH=0 serve. No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18g
