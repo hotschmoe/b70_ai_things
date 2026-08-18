@@ -73,9 +73,10 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P0.5 sglang 0.5.15 W8A8 3.8 NEXTN smoke.
+>    Next pick: leftover k=3/4/7 x greedy/prob (vLLM DSpark).
+>    P0.5 GO: sglang 0.5.15 W8A8 3.8 NEXTN loads + G1.
 >    S0: DSpark k=7 GRAPH=1 c1 26.2 @122880 (G1 hold).
->    Then k-sweep / P1.5 / P1.7 / P1.6. DD PARKED.
+>    Then P1.5 / P1.7 / P1.6. DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

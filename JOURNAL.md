@@ -12531,3 +12531,51 @@ VERDICT -> GO (S0 measured). GRAPH=1 is the speed hole
   serve up. Do not start P0.5 / train / DD this fire.
   Scheduler stays (26.2 < 41.2).
 
+### 2026-08-18o - LOOP 10: P0.5 sglang 0.5.15 W8A8 3.8 NEXTN loads + Paris
+
+CONTEXT -> LOOP 9 S0 GO. Next pick P0.5: port the same
+  W8A8-gptq CKPT to sglang 0.5.15 + w8a8_shim + NEXTN.
+  Smoke = loads + Paris. Last serve was vLLM GRAPH=1
+  DSpark on :18080. DD PARKED. shim/ABI/GDN fail => stay
+  vLLM for DSpark. Do not start k-sweep / train / DD.
+
+CONFIG -> IMG=sglang-xpu:mtp-0515 NAME=qwen38_w8a8_sglang
+  CKPT=/models/qwen3.8-27b/w8a8-gptq
+  SERVED=qwen3.8-27b-W8A8-gptq-nextn
+  PORT=18080 MAXLEN=8192 TP=2 SPEC_STEPS=10 SPEC_DRAFT=11
+  RADIX=1 PUSH_AR=1 MEMFRAC=0.90 MAXREQ=4
+  B70_XPU_W8A8_FUSED=1 CCL_TOPO_P2P_ACCESS=0
+  --disable-cuda-graph --skip-server-warmup.
+  Wrapper sglang/serve_qwen38_w8a8_0515.sh (3.6 recipe).
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  PORT=18080 NAME=qwen38_w8a8_sglang MAXLEN=8192 \
+    ./bin/gpu-run bash sglang/serve_qwen38_w8a8_0515.sh start
+  # lease holder: gpu-run bash -c 'docker wait qwen38_w8a8_sglang'
+  # wrapper pid 492514  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop10_serve.log
+  curl -s http://192.168.10.5:18080/v1/chat/completions \
+    -H 'content-type: application/json' \
+    -d '{"model":"qwen3.8-27b-W8A8-gptq-nextn","messages":[{"role":"user","content":"What is the capital of France? Answer in one short sentence."}],"max_tokens":64,"temperature":0,"chat_template_kwargs":{"enable_thinking":false}}'
+  ```
+
+RESULT -> xpu-health card 0 OK. Weights load as
+  Qwen3_5ForCausalLMMTP compressed-tensors (~2s). KV
+  151552 tok bf16. /v1/models id
+  **qwen3.8-27b-W8A8-gptq-nextn** (max_model_len **8192**).
+  First /health 503 during Triton GDN JIT; after first
+  gen /health 200. G1 thinking-off: Paris exact ("The
+  capital of France is Paris."), 17*23=391, fib
+  iterative (`a, b = 0, 1` loop). No DEVICE_LOST. No
+  bench_code this fire. DD PARKED.
+
+VERDICT -> GO (P0.5 loads + Paris). 3.8 W8A8 NEXTN on
+  0.5.15 is coherent. Not a speed number. Next pick
+  leftover k=3/4/7 x greedy/prob on vLLM DSpark (GRAPH=1
+  @122880, not 131k). Leave sglang serve up. Do not
+  start k-sweep / train / DD this fire. Scheduler stays
+  (c1 26.2 < 41.2).
+

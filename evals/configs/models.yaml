@@ -169,3 +169,14 @@ models:
     notes: "P0.4 identity. W8A8-gptq + off-shelf DSpark k=7, method=dspark,
       THINK_BUDGET=0, GRAPH=0. Draft models/files/qwen3.8-27b/dflash-drafter-fp8-b70
       with v0260 Qwen3DSparkModel overlay. Do not score as MTP3 or hotschmoe-dd."
+
+  - label: qwen38-27b-w8a8-gptq-nextn
+    served_model_id: qwen3.8-27b-W8A8-gptq-nextn
+    family: qwen3.8-27b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: gptq
+    serve_cmd: "PORT=18080 NAME=qwen38_w8a8_sglang MAXLEN=8192 SERVED=qwen3.8-27b-W8A8-gptq-nextn ./bin/gpu-run bash sglang/serve_qwen38_w8a8_0515.sh start"
+    notes: "P0.5 identity. Same grafted W8A8-gptq on sglang 0.5.15
+      (sglang-xpu:mtp-0515) + NEXTN steps=10. Do not score as vLLM
+      DSpark/MTP3 or hotschmoe-dd. Smoke = loads + Paris."

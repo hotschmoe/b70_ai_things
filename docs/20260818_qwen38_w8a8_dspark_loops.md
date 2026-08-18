@@ -36,12 +36,12 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN smoke (loads + Paris).
-S0 done: GRAPH=1 DSpark k=7 c1 26.2 @122880 (G1 hold).
-131k UTIL=0.90 is D1. Do not start DD. Do not train. Do not
-method=dflash. Do not retry GRAPH=1 CGRECLAIM=0 as a long-eval
-fix. After P0.5: leftover k=3/4/7 x greedy/prob, then P1.5 /
-P1.7 / P1.6. Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
+leftover k=3/4/7 x greedy/prob on vLLM DSpark (GRAPH=1 @122880).
+P0.5 GO: sglang 0.5.15 W8A8 3.8 NEXTN loads + G1 hold.
+S0: GRAPH=1 DSpark k=7 c1 26.2 @122880. 131k UTIL=0.90 is D1.
+Do not start DD. Do not train. Do not method=dflash. Do not
+retry GRAPH=1 CGRECLAIM=0 as a long-eval fix. After k-sweep:
+P1.5 / P1.7 / P1.6. Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
 
 ---
 
@@ -460,3 +460,47 @@ Restore: DD stays PARKED. GRAPH=1 DSpark serve left UP
   (next pick replaces it). Lease held by 488659.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18n
+
+---
+
+## LOOP 10 -- 2026-08-18T1759Z -- P0.5 sglang 0.5.15 W8A8 3.8 NEXTN smoke
+
+Picked: P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN (loads + Paris)
+Why this, not the other open row: living-header Next pick
+  after LOOP 9 S0 GO. Default speed order: P0.5 then leftover
+  k-sweep.
+GPU: lease HELD both cards by docker-wait pid=492514 since
+  2026-08-18 17:56:32. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-nextn` (root same, max_model_len
+  **8192**). NAME=qwen38_w8a8_sglang. IMG=sglang-xpu:mtp-0515
+  NEXTN steps=10 draft=11 RADIX=1 PUSH_AR=1 P2P=0.
+Command:
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  PORT=18080 NAME=qwen38_w8a8_sglang MAXLEN=8192
+    ./bin/gpu-run bash sglang/serve_qwen38_w8a8_0515.sh start
+  chat G1 thinking-off Paris / 17*23 / fib
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop10_serve.log
+  wait pid 492514 (file loop10_serve.pid)
+Result: Loads Qwen3_5ForCausalLMMTP compressed-tensors.
+  /health 200 after first gen (JIT). G0 match. G1
+  thinking-off: Paris exact, 17*23=391, fib iterative.
+  No DEVICE_LOST. No c1 this fire (smoke only).
+Verdict: GO
+Changed beliefs: 3.8 W8A8-gptq ports to sglang 0.5.15 +
+  w8a8_shim + NEXTN without a new model class. Shim/ABI/GDN
+  is not the P0.5 dead-end. First /health 503 is Triton JIT,
+  not a load fail. DSpark on sglang-XPU stays Phase 3.
+Next pick: leftover k=3/4/7 x greedy/prob. First command:
+  NAME=qwen38_w8a8_sglang bash sglang/serve_qwen38_w8a8_0515.sh stop
+  then GRAPH=1 SPECTOK=3 MAXLEN=122880 PORT=18080
+  NAME=qwen38_w8a8_dspark ./bin/gpu-run bash
+  vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  (122880 not 131k -- D1). G1 then bench_code c1.
+Do not: start k-sweep / train / DD this fire; method=dflash;
+  retry GRAPH=1 @131k UTIL=0.90; enter Phase 2 or 3 DSpark
+  port; overwrite w8a8-gptq; score this slot as MTP3/DSpark.
+Restore: DD stays PARKED. sglang NEXTN serve left UP (next
+  pick replaces it). Lease held by 492514.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18o

@@ -23,11 +23,11 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 9 (S0 GO DSpark k=7 GRAPH=1 c1 26.2 @122880) |
-| Last JOURNAL heading | `2026-08-18n` |
+| Last loop | 10 (P0.5 GO sglang 0.5.15 W8A8 3.8 NEXTN loads+Paris) |
+| Last JOURNAL heading | `2026-08-18o` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN smoke (loads + Paris) |
+| Next pick | leftover k=3/4/7 x greedy/prob (vLLM DSpark) |
 | Blocked on | none. Speed window. Train not forced. Quality floor HE+ 0.957/0.927. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
