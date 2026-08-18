@@ -240,6 +240,24 @@ models:
            Inferact was the first coherent 3.8 NVFP4; prefer nvfp4-radixark
            for new serves. Do not promote.
 
+  - id: community/qwen38-27b-gptq-mtp-preserved
+    family: qwen3.8-27b
+    scheme: gptq-int4-mtp-bf16
+    vision: false
+    mtp: true
+    size_gb: 20
+    served_as: qwen3.8-27b-GPTQ-Int4-mtp4
+    source:
+      type: hf
+      repo: SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16
+      revision: 9d189a60e4c0ad7f9f47cd94bfa393ca10b3924e
+    notes: >
+      SergiioB 3.8 cookbook GPTQ-Int4-sym-G128 + BF16-preserved MTP. Pin
+      rev 9d189a60. fetch.sh does not yet honor source.revision -- S1
+      smoke downloads with hf --revision. Image digest f01e24f6
+      (0.27.2rc1), not 3.6 2c427ef. Ceiling reference only; does not
+      demote W8A8.
+
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
 #   qwen3.8-27b/nvfp4-modelopt (hf Inferact/Qwen3.8-27B-NVFP4) -- deleted 2026-08-17.
 #     Uniform W4A4, no KV scales. Gated 18/18 MTP3 code 35.0 / HE+ 0.939/0.915; not a DD.

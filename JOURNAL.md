@@ -12965,3 +12965,49 @@ RESULT -> Cookbook 3.8 pin: GPTQ-Int4-sym-G128 + BF16 MTP
 VERDICT -> GO (ingest). Next GPU pick stays P1.6. Do not
   enter Phase 2 this note. Do not demote W8A8.
 
+### 2026-08-18w - LOOP 18: start S1 3.8 GPTQ-Int4 MTP4 1xB70 smoke
+
+CONTEXT -> LOOP 17 NO-GO (D5). Living-header Next pick
+  S1: 1-card cookbook smoke of SergiioB 3.8 GPTQ-Int4
+  + MTP4 on digest f01e24f6. Image and weights were
+  not local. Multi-hour: fetch+pull then --card 0
+  G1 + one phase_bench p512/g128, restore AGASYNC.
+  DD PARKED. Do not enter Phase 2. Do not demote
+  W8A8. 83.7 is not our W8A8 TP=2 bench_code c1.
+
+CONFIG -> IMAGE=vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f
+  CKPT=models/files/community/qwen38-27b-gptq-mtp-preserved
+  HF=SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16
+  rev=9d189a60e4c0ad7f9f47cd94bfa393ca10b3924e
+  NAME=qwen38_s1_gptq PORT=18080 CARD=0
+  SERVED=qwen3.8-27b-GPTQ-Int4-mtp4
+  MODE=mtp4 CACHE=off MAXLEN=131072 MAXSEQS=8
+  UTIL=0.88 kv=fp8 language-only tool=qwen3_xml
+  phase_bench p512/g128 n=5. AGASYNC left UP until
+  fetch+pull finish.
+
+COMMAND ->
+  ```
+  # no-GPU unblock: dense38-gptq track + manifest pin
+  nohup bash vllm/cookbook_campaign/s1_qwen38_gptq_int4_smoke.sh \
+    > /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop18_s1.log 2>&1 &
+  # pid 523137  file loop18_s1.pid
+  # status loop18_s1.status
+  ```
+
+RESULT -> Pipeline started 2026-08-18T2153Z.
+  S1_STATUS=FETCH. hf download + docker pull live.
+  AGASYNC still on :18080 id
+  **qwen3.8-27b-W8A8-gptq-dspark4-agasync**.
+  Lease still held by pid 522546 (docker wait).
+  DD PARKED. No c1 this fire.
+
+VERDICT -> RUNNING. Next fire: `ps -p 523137`.
+  Live -> one status line, STOP. Dead -> read
+  loop18_s1.status + G1 + phase_bench.json, write
+  verdict, leave AGASYNC up, STOP. Do not start
+  D/E in that fire. How to tell done: pid gone
+  AND status has DONE / G1_FAIL / SERVE_FAIL /
+  FETCH_FAIL / PULL_FAIL / BENCH_FAIL / RESTORED.
+  Scheduler stays (29.4 < 41.2).
+

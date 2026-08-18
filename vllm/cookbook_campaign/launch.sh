@@ -4,7 +4,7 @@
 # Usage:
 #   bash vllm/cookbook_campaign/launch.sh TRACK MODE CACHE [PORT] [CARD]
 #
-# TRACK: dense27-gptq | moe35-gptq | dense27-autoround | moe35-autoround
+# TRACK: dense27-gptq | moe35-gptq | dense38-gptq | dense27-autoround | moe35-autoround
 # MODE:  no-spec | mtp1 | mtp2 | mtp4
 # CACHE: on | off
 # PORT:  default 8000
@@ -23,7 +23,10 @@ CARD=${5:-0}
 NAME="${NAME:-b70_cb_${TRACK}_${MODE}_${CACHE}}"
 PATCH_DIR="$REPO/vllm/patches/cookbook"
 MODELS_FILES="${MODELS_FILES:-$REPO/models/files}"
+# 3.6 cookbook digest. Do NOT use this for 3.8 (f01e24f6) or Nemotron (1da0a954).
 PUBLIC_IMAGE='vllm/vllm-openai-xpu@sha256:2c427ef477da092eb6f2cdbbbd24950b5fa171565b916db69d4c7bb10e68ca97'
+# 3.8 cookbook digest (vLLM 0.27.2rc1). Do NOT mix with 3.6 2c427ef.
+PUBLIC_IMAGE_38='vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f'
 MAXLEN="${MAXLEN:-131072}"
 MAXBATCH="${MAXBATCH:-8192}"
 # Dense MTP4 capture OOMs at max-seqs 64 on this box (graph buffers + 17 GiB weights).
@@ -35,6 +38,7 @@ QUANT_FLAG=""
 DTYPE="float16"
 KVDTYPE="fp8"
 IMAGE="${IMAGE:-}"
+TOOL_PARSER="${TOOL_PARSER:-}"
 
 case "$TRACK" in
   dense27-gptq)
@@ -42,12 +46,21 @@ case "$TRACK" in
     SERVED="Qwen3.6-27B-MTP-Preserved-GPTQ-Int4"
     QUANT_FLAG="gptq"
     IMAGE="${IMAGE:-$PUBLIC_IMAGE}"
+    TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
     ;;
   moe35-gptq)
     HOST_CKPT="$MODELS_FILES/community/qwen36-35b-gptq-mtp-preserved"
     SERVED="Qwen3.6-35B-A3B-MTP-Preserved-GPTQ-Int4"
     QUANT_FLAG="gptq"
     IMAGE="${IMAGE:-$PUBLIC_IMAGE}"
+    TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
+    ;;
+  dense38-gptq)
+    HOST_CKPT="$MODELS_FILES/community/qwen38-27b-gptq-mtp-preserved"
+    SERVED="${SERVED:-qwen3.8-27b-GPTQ-Int4-mtp4}"
+    QUANT_FLAG="gptq"
+    IMAGE="${IMAGE:-$PUBLIC_IMAGE_38}"
+    TOOL_PARSER="${TOOL_PARSER:-qwen3_xml}"
     ;;
   dense27-autoround)
     HOST_CKPT="$MODELS_FILES/qwen3.6-27b/int4-autoround"
@@ -57,6 +70,7 @@ case "$TRACK" in
     QUANT_FLAG=""
     DTYPE="auto"
     KVDTYPE="fp8_e5m2"
+    TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
     ;;
   moe35-autoround)
     HOST_CKPT="$MODELS_FILES/qwen3.6-35b-a3b/int4-autoround"
@@ -65,9 +79,10 @@ case "$TRACK" in
     QUANT_FLAG=""
     DTYPE="auto"
     KVDTYPE="fp8_e5m2"
+    TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
     ;;
   *)
-    echo "TRACK must be dense27-gptq|moe35-gptq|dense27-autoround|moe35-autoround" >&2
+    echo "TRACK must be dense27-gptq|moe35-gptq|dense38-gptq|dense27-autoround|moe35-autoround" >&2
     exit 2
     ;;
 esac
@@ -135,7 +150,9 @@ SERVE_CMD+=" --max-model-len $MAXLEN"
 SERVE_CMD+=" --gpu-memory-utilization $GPU_UTIL"
 SERVE_CMD+=" --max-num-seqs $MAXSEQS"
 SERVE_CMD+=" --max-num-batched-tokens $MAXBATCH"
-SERVE_CMD+=" --enable-auto-tool-choice --tool-call-parser qwen3_coder"
+if [ -n "$TOOL_PARSER" ]; then
+  SERVE_CMD+=" --enable-auto-tool-choice --tool-call-parser $TOOL_PARSER"
+fi
 SERVE_CMD+=" --served-model-name $SERVED"
 SERVE_CMD+=" --trust-remote-code"
 SERVE_CMD+=" --compilation-config '$COMPILE_JSON'"

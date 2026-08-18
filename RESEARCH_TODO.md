@@ -73,8 +73,7 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: S1 SergiioB 3.8 GPTQ-Int4 MTP4 1xB70 smoke.
->    LOOP 17 NO-GO: fusedq e2e c1 28.3 < 29.4 (D5). AGASYNC 29.4 stands. DD PARKED.
+>    Next pick: S1 finish (LOOP 18 RUNNING). AGASYNC 29.4 stands. DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

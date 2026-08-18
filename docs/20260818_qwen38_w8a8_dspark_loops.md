@@ -36,15 +36,14 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S1 -- SergiioB 3.8 GPTQ-Int4 MTP4 1xB70 smoke.
-D5: fusedq e2e decode c1 28.3 < AGASYNC 29.4. G1 held.
-Reverted; wipe b3f7e9e010 after fusedq graphs. Do not
-retry v0240 fusedq SO on this recipe. Keep AGASYNC
-29.4. D4: W8A16=0 at 122880. Do not start DD.
-Do not train. Do not enter Phase 2. Quality floor
-HE+ 0.957/0.927. c1 29.4 < 41.2.
-S1 is 1-card smoke (`docs/20260818_qwen38_sergiioB_cookbook.md`).
-Ceiling only. Do not demote W8A8.
+S1 finish -- if pid 523137 live, one status line STOP.
+If dead, read loop18_s1.status + G1 + phase_bench,
+write verdict, leave AGASYNC up, STOP. Do not start
+D/E in that fire. Do not start DD. Do not enter
+Phase 2. Do not demote W8A8. 83.7 is not W8A8 c1.
+Keep AGASYNC 29.4. D4: W8A16=0 at 122880. D5: no
+v0240 fusedq retry. Quality floor HE+ 0.957/0.927.
+c1 29.4 < 41.2.
 
 ---
 
@@ -809,3 +808,42 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC serve
   left UP. Lease held by 522546. Hash rebuilt as
   non-fusedq. No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18v
+
+---
+
+## LOOP 18 -- 2026-08-18T2153Z -- S1 3.8 GPTQ-Int4 MTP4 1xB70 smoke started
+
+Picked: S1 -- SergiioB 3.8 GPTQ-Int4 MTP4 1xB70 smoke
+Why this, not the other open row: living-header Next
+  pick after LOOP 17 / P1.6 verdict. Cookbook after
+  fusedq. S1 is --card 0.
+GPU: lease HELD both cards by docker-wait pid=522546
+  (AGASYNC still up during fetch). DD PARKED. :18080
+  id qwen3.8-27b-W8A8-gptq-dspark4-agasync until
+  fetch+pull finish.
+Command:
+  nohup bash vllm/cookbook_campaign/s1_qwen38_gptq_int4_smoke.sh
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop18_s1.log
+  status: loop18_s1.status
+  hf: loop18_hf.log  pull: loop18_pull.log
+  s1 pid 523137 (file loop18_s1.pid)
+Result: S1_STATUS=FETCH at start. Image was missing.
+  Weights were missing (~19.6G rev 9d189a60). No
+  G1 / phase_bench this fire.
+Verdict: RUNNING
+Changed beliefs: 3.8 cookbook pin is not on disk;
+  must fetch f01e24f6 + 9d189a60 before the 1-card
+  smoke. Do not mix with 2c427ef. launch.sh now has
+  dense38-gptq (qwen3_xml, PUBLIC_IMAGE_38).
+Next pick: S1 finish. First command: `ps -p 523137`.
+  Live -> one status line, STOP. Dead -> write
+  verdict from status/G1/bench, leave AGASYNC up,
+  STOP. Do not start D/E in that fire.
+Do not: enter Phase 2; pip-install 0.27; demote
+  W8A8; publish 83.7 as our c1; start DD; train;
+  retry fusedq SO; W8A16>0 @122880; mix digests.
+Restore: DD stays PARKED. AGASYNC left UP during
+  fetch. Script stops it only after artifacts
+  exist, then restores AGASYNC after G1/bench.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18w
