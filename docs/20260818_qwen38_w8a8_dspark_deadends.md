@@ -144,3 +144,27 @@ Retry if: capture sizes / DSpark graph path change, or
   retry the same recipe.
 Related JOURNAL: ### 2026-08-18q
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop12_graph1_k3_cold_g1fail.log
+
+## D4 -- P1.5 W8A16_M_MAX>0 @122880 KV OOM -- 2026-08-18 -- LOOP 15
+
+Tried: default-on small-M w8a16 at the live long-ctx
+  DSpark recipe (GRAPH=1 SPECTOK=4 MAXLEN=122880
+  UTIL=0.90). W8A16_M_MAX=8 (covers verify M=k+1=5).
+Command / config:
+  W8A16_M_MAX=8 GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-w8a16
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Result: EngineCore ValueError. Model load 27.31 GiB/card
+  (clone ON). Available KV cache memory: **-0.93 GiB**.
+  No cache blocks. Workers died. No DEVICE_LOST.
+  xpu-health card 0 OK. Revert W8A16_M_MAX=0: HEALTHY
+  147s, G1 Paris exact.
+Why it is closed: NT layout clone doubles s8 weight
+  residency. Any W8A16_M_MAX>0 costs the same clone.
+  122880 GRAPH=1 DSpark cannot spare ~9 GiB/card.
+Retry if: int8_gemm_w8a16 consumes the s8s8 [K,N]
+  layout (no NT clone), or a measured MAXLEN/UTIL
+  where KV stays positive with the clone. Do not
+  retry W8A16_M_MAX>0 at 122880 UTIL=0.90.
+Related JOURNAL: ### 2026-08-18t
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop15_w8a16_oom.log

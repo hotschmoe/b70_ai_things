@@ -12766,3 +12766,46 @@ VERDICT -> GO (P0.4 leftover prob table). Accept is
   serve up. Do not start P1.5 / train / DD this fire.
   Scheduler stays (c1 28.7 < 41.2).
 
+### 2026-08-18t - LOOP 15: P1.5 W8A16_M_MAX=8 @122880 KV OOM
+
+CONTEXT -> LOOP 14 GO. Next pick P1.5: default-on
+  small-M int8_gemm_w8a16 at long ctx. DSpark verify
+  is M=k+1=5. W8A16_M_MAX is 0 at MAXLEN>8192 because
+  the NT clone doubles s8 weights. Dead-end if extra
+  9 GiB/card does not fit. DD PARKED.
+
+CONFIG -> W8A16_M_MAX=8 GRAPH=1 SPECTOK=4
+  MAXLEN=122880 UTIL=0.90 MAXSEQS=2 TP=2
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-w8a16
+  IMG=int8g-v0260 method=dspark THINK_BUDGET=0
+  CGRECLAIM=0 P2PACCESS=0. Revert W8A16_M_MAX=0
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  W8A16_M_MAX=8 GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-w8a16 \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # ValueError KV -0.93 GiB. xpu-health card 0 OK.
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4 \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # lease holder pid 512036
+  ```
+
+RESULT -> W8A16 ON: [xpu_int8] fake registered.
+  Model load **27.31 GiB/card**. Available KV
+  **-0.93 GiB**. ValueError no cache blocks.
+  No DEVICE_LOST. No c1 published.
+  Revert W8A16=0: HEALTHY 147s. /v1/models id
+  **qwen3.8-27b-W8A8-gptq-dspark4** max_model_len
+  **122880**. G1 Paris exact. DD PARKED.
+
+VERDICT -> DEAD-END (D4). Stay W8A16_M_MAX=0 at
+  122880. Next pick P1.7 verify-AR. Leave k=4
+  GRAPH=1 serve up. Do not start P1.7 / train / DD
+  this fire. Scheduler stays (c1 28.7 < 41.2).
+

@@ -36,12 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P1.5 -- small-M w8a16 default-on (verify cheaper).
-LOOP 14 GO: k=4 GRAPH=1 prob accept_len 3.16 / pos0 0.80
-(not collapsed). Greedy c1 28.7 stands. Train not forced.
-Hash b3f7e9e010 holds k=4 graphs -- wipe before any other
-k GRAPH=1. Do not retry GRAPH=1 k=3 (D3). Do not start DD.
-After P1.5: P1.7 / P1.6. Quality floor HE+ 0.957/0.927.
+P1.7 -- L0-IPC / push-AR on DSpark verify gather.
+D4: W8A16_M_MAX=8 @122880 GRAPH=1 k=4 OOMs KV
+(model 27.31 GiB/card, available KV -0.93 GiB). Stay
+W8A16_M_MAX=0 at long ctx. Do not retry P1.5 until
+int8_gemm_w8a16 consumes s8s8 [K,N] (no NT clone).
+c1 28.7 stands. Do not start DD. Do not train.
+After P1.7: P1.6. Quality floor HE+ 0.957/0.927.
 c1 28.7 < 41.2.
 
 ---
@@ -677,3 +678,44 @@ Do not: start P1.5 / train / DD this fire; retry
 Restore: DD stays PARKED. GRAPH=1 k=4 serve left UP.
   Lease held by 506899. No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18s
+
+---
+
+## LOOP 15 -- 2026-08-18T2024Z -- P1.5 W8A16_M_MAX=8 KV OOM
+
+Picked: P1.5 small-M w8a16 default-on at long ctx
+Why this, not the other open row: living-header Next pick
+  after LOOP 14. L.4: kernels not train.
+GPU: lease HELD both cards by docker-wait pid=512036 since
+  2026-08-18 20:24:04. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark4` GRAPH=1 k=4 @122880
+  (reverted W8A16_M_MAX=0).
+Command:
+  W8A16_M_MAX=8 GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-w8a16
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # OOM. revert W8A16_M_MAX=0 same k=4 GRAPH=1
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop15_w8a16.log
+  oom: loop15_w8a16_oom.log
+  revert: loop15_revert.log
+  wait pid 512036
+Result: W8A16 ON: model 27.31 GiB/card, available KV
+  **-0.93 GiB**, ValueError no cache blocks. No
+  DEVICE_LOST. No c1 published. Revert W8A16=0:
+  HEALTHY 147s, G1 Paris exact. c1 28.7 stands.
+Verdict: DEAD-END
+Changed beliefs: any W8A16_M_MAX>0 clones NT s8
+  weights. 122880 GRAPH=1 DSpark cannot pay that.
+  Stay W8A16_M_MAX=0 at long ctx. Kernel TODO is
+  s8s8-layout w8a16, not a UTIL bump.
+Next pick: P1.7 push-AR on DSpark verify gather.
+  First command: stay on this k=4 GRAPH=1 serve
+  (PUSH_AR already default ON for large AR; check
+  whether verify gather is already push or still
+  oneCCL).
+Do not: retry W8A16_M_MAX>0 @122880; UTIL>0.90 as
+  a P1.5 fix; train; start DD; retry GRAPH=1 k=3.
+Restore: DD stays PARKED. GRAPH=1 k=4 W8A16=0 serve
+  left UP. Lease held by 512036.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18t

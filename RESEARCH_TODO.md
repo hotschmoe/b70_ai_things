@@ -73,8 +73,8 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P1.5 small-M w8a16 default-on.
->    LOOP 14 GO: k=4 GRAPH=1 prob accept 3.16 / pos0 0.80. c1 28.7. DD PARKED.
+>    Next pick: P1.7 push-AR on DSpark verify gather.
+>    LOOP 15 DEAD-END: W8A16_M_MAX=8 @122880 KV -0.93 GiB (D4). c1 28.7. DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,
