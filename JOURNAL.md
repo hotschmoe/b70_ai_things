@@ -12728,3 +12728,41 @@ VERDICT -> GO (k=4 GRAPH=1 measured). New best W8A8
   this live serve. Do not start P1.5 / train / DD
   this fire. Scheduler stays (28.7 < 41.2).
 
+### 2026-08-18s - LOOP 14: k=4 GRAPH=1 probabilistic accept 3.16 / 0.80
+
+CONTEXT -> LOOP 13 GO. Next pick leftover k=4 GRAPH=1
+  probabilistic accept on the live serve (no restart).
+  Greedy accept was 2.45 / pos0 0.65. P0.4 dead-end if
+  pos0 < 30% (train mandatory). DD PARKED.
+
+CONFIG -> live NAME=qwen38_w8a8_dspark
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4
+  GRAPH=1 SPECTOK=4 MAXLEN=122880 method=dspark
+  THINK_BUDGET=0. Probe: temp=1.0 top_p=0.95 top_k=20
+  thinking-off, 3 coding prompts, out=256. No bench_code
+  republish. No HE+.
+
+COMMAND ->
+  ```
+  # no serve restart
+  python3 inline: G1 Paris thinking-off greedy, then
+  3x chat temp=1.0 top_p=0.95 top_k=20 enable_thinking=false
+  scrape /metrics vllm:spec_decode_* before/after
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop14_prob_accept.log
+  ```
+
+RESULT -> G0 id **qwen3.8-27b-W8A8-gptq-dspark4**
+  max_model_len 122880. G1 Paris exact. Window
+  accept_len **3.16**, pos0 **0.80**, acc_rate 0.54
+  (drafts 246, accepted 531 / draft_tok 984). Per-pos
+  0.80 / 0.57 / 0.45 / 0.34. Previews coherent Python.
+  Window tps 27.6-36.7 is NOT official c1 (sampling).
+  Greedy c1 **28.7** stands. pos0 is NOT < 30%.
+  No DEVICE_LOST. DD PARKED.
+
+VERDICT -> GO (P0.4 leftover prob table). Accept is
+  finer under sampling than greedy. Train not forced.
+  Next pick P1.5 small-M w8a16. Leave k=4 GRAPH=1
+  serve up. Do not start P1.5 / train / DD this fire.
+  Scheduler stays (c1 28.7 < 41.2).
+

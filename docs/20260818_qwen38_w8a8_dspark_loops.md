@@ -36,13 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-leftover k=4 GRAPH=1 probabilistic accept on the live
-serve (no restart). LOOP 13 GO: greedy c1 **28.7**
-beats MTP3 26.62 and k=7 GRAPH=1 26.2. Hash b3f7e9e010
-now holds k=4 graphs -- wipe before any other k GRAPH=1.
-Do not retry GRAPH=1 k=3 (D3). Do not start DD. Do not
-train. After prob: P1.5 / P1.7 / P1.6. Quality floor
-HE+ 0.957/0.927. c1 28.7 < 41.2.
+P1.5 -- small-M w8a16 default-on (verify cheaper).
+LOOP 14 GO: k=4 GRAPH=1 prob accept_len 3.16 / pos0 0.80
+(not collapsed). Greedy c1 28.7 stands. Train not forced.
+Hash b3f7e9e010 holds k=4 graphs -- wipe before any other
+k GRAPH=1. Do not retry GRAPH=1 k=3 (D3). Do not start DD.
+After P1.5: P1.7 / P1.6. Quality floor HE+ 0.957/0.927.
+c1 28.7 < 41.2.
 
 ---
 
@@ -642,3 +642,38 @@ Restore: DD stays PARKED. GRAPH=1 k=4 serve left UP.
   Lease held by 506899. Hash b3f7e9e010 is k=4 now.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18r
+
+---
+
+## LOOP 14 -- 2026-08-18T1949Z -- k=4 GRAPH=1 probabilistic accept
+
+Picked: leftover k=4 GRAPH=1 prob accept table on live
+  serve (no restart)
+Why this, not the other open row: living-header Next pick
+  after LOOP 13 GO. Completes P0.4 leftover greedy/prob.
+GPU: lease HELD both cards by docker-wait pid=506899 since
+  2026-08-18 19:21:06. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark4` GRAPH=1 k=4 @122880.
+Command:
+  inline chat temp=1.0 top_p=0.95 top_k=20 thinking-off
+  3 coding prompts out=256; scrape vllm:spec_decode_*
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop14_prob_accept.log
+Result: G0 match. G1 Paris exact. Window accept_len
+  **3.16**, pos0 **0.80**, acc_rate 0.54 (drafts 246).
+  Per-pos 0.80 / 0.57 / 0.45 / 0.34. Coherent code
+  previews. Not the 20% band. No c1 republish (greedy
+  28.7 stands). No DEVICE_LOST.
+Verdict: GO
+Changed beliefs: off-shelf DSpark accept on W8A8 is
+  FINE under sampling too (pos0 80% > greedy 65%).
+  Train is not forced. P0.4 leftover sweep is done.
+  Next is kernels (P1.5), not more k or train.
+Next pick: P1.5 small-M w8a16 default-on. First look
+  at W8A16_M_MAX / int8_gemm_w8a16 and a serve flag.
+  Live k=4 serve can stay until P1.5 needs a restart.
+Do not: start P1.5 / train / DD this fire; retry
+  GRAPH=1 k=3; wipe k=4 hash while this serve is up;
+  method=dflash; enter Phase 2.
+Restore: DD stays PARKED. GRAPH=1 k=4 serve left UP.
+  Lease held by 506899. No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18s
