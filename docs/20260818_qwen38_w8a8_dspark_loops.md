@@ -36,14 +36,14 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P1.7 -- L0-IPC / push-AR on DSpark verify gather.
-D4: W8A16_M_MAX=8 @122880 GRAPH=1 k=4 OOMs KV
-(model 27.31 GiB/card, available KV -0.93 GiB). Stay
-W8A16_M_MAX=0 at long ctx. Do not retry P1.5 until
-int8_gemm_w8a16 consumes s8s8 [K,N] (no NT clone).
-c1 28.7 stands. Do not start DD. Do not train.
-After P1.7: P1.6. Quality floor HE+ 0.957/0.927.
-c1 28.7 < 41.2.
+P1.6 -- fusedq e2e (int8_gemm_w8a8_fusedq).
+LOOP 16 GO: PUSH_AR_ALLGATHER_ASYNC=1 on k=4 GRAPH=1
+c1 **29.4** / best 33.2 (was 28.7 / 31.2). G1 hold.
+No DEVICE_LOST. NVFP4 was 2.5x slower; W8A8 DSpark
+k=4 is slightly faster. Keep AGASYNC on this serve.
+D4: stay W8A16_M_MAX=0 at 122880. Do not start DD.
+Do not train. Quality floor HE+ 0.957/0.927.
+c1 29.4 < 41.2.
 
 ---
 
@@ -719,3 +719,47 @@ Restore: DD stays PARKED. GRAPH=1 k=4 W8A16=0 serve
   left UP. Lease held by 512036.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18t
+
+---
+
+## LOOP 16 -- 2026-08-18T2053Z -- P1.7 ALLGATHER_ASYNC c1 29.4
+
+Picked: P1.7 PUSH_AR_ALLGATHER_ASYNC=1 on k=4 GRAPH=1
+Why this, not the other open row: living-header Next pick.
+  Live serve had all_reduce push ON, gather still oneCCL.
+  Host-barrier ALLGATHER=1 was 2.4x slower on NVFP4;
+  ASYNC is the remaining gather lever.
+GPU: lease HELD both cards by docker-wait pid=514764 since
+  2026-08-18 20:52:29. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark4-agasync` GRAPH=1 k=4
+  @122880. P2PACCESS=0. W8A16_M_MAX=0.
+Command:
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py ... 1 256 3
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop16_agasync.log
+  bench: loop16_bench_code_c1.log
+  wait pid 514764
+Result: ALLGATHER_ASYNC ENGAGED. HEALTHY 142s. G0 match.
+  G1 Paris / 391 / fib. bench_code c1 avg **29.4** /
+  best 33.2 (out 256, wall ~7.7s). Bench-window accept
+  ~2.57 / pos0 ~0.65. No DEVICE_LOST. vs baseline
+  28.7 / 31.2 wall 8.7s.
+Verdict: GO
+Changed beliefs: W8A8 DSpark k=4 verify gather is
+  NOT the NVFP4 MTP 631-gather tax. Eager-async push
+  on gather is slightly faster here, not 2.5x slower.
+  Keep ALLGATHER_ASYNC on this recipe. Host-barrier
+  ALLGATHER=1 still not retried (NVFP4 closed).
+Next pick: P1.6 fusedq e2e. First look at B70_FUSEDQ /
+  int8_gemm_w8a8_fusedq. Leave this serve up until
+  P1.6 needs a restart.
+Do not: start P1.6 / train / DD this fire; retry
+  W8A16_M_MAX>0 @122880; P2P=1; method=dflash;
+  retry GRAPH=1 k=3.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC serve
+  left UP. Lease held by 514764.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18u

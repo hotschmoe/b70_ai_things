@@ -12809,3 +12809,51 @@ VERDICT -> DEAD-END (D4). Stay W8A16_M_MAX=0 at
   GRAPH=1 serve up. Do not start P1.7 / train / DD
   this fire. Scheduler stays (c1 28.7 < 41.2).
 
+### 2026-08-18u - LOOP 16: P1.7 ALLGATHER_ASYNC bench_code c1 29.4
+
+CONTEXT -> LOOP 15 D4. Next pick P1.7: push-AR on
+  DSpark verify gather. Live serve already pushed
+  XpuCommunicator.all_reduce (MIN_NUMEL=0); gather
+  stayed oneCCL. NVFP4 ALLGATHER=1 was 2.4x slower
+  (host barrier); ALLGATHER_ASYNC=1 was 2.5x slower
+  (1 host sync x 631 MTP gathers). Re-A/B on W8A8
+  DSpark k=4. P2PACCESS=0. DD PARKED.
+
+CONFIG -> B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+  UTIL=0.90 MAXSEQS=2 TP=2
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  IMG=int8g-v0260 method=dspark THINK_BUDGET=0
+  CGRECLAIM=0 P2PACCESS=0. bench_code out=256 reps=3.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1 \
+    W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 \
+    qwen3.8-27b-W8A8-gptq-dspark4-agasync 1 256 3
+  # lease holder pid 514764
+  ```
+
+RESULT -> ALLGATHER redirect ENGAGED [eager-async].
+  Worker: ALLGATHER_ASYNC ENGAGED. HEALTHY 142s.
+  /v1/models id **qwen3.8-27b-W8A8-gptq-dspark4-agasync**
+  max_model_len **122880**. G1 thinking-off: Paris
+  exact, 17*23=391, fib iterative. bench_code c1
+  avg **29.4** / best 33.2 t/s (out 256, wall ~7.7s).
+  Bench-window accept ~2.57 / pos0 ~0.65. No
+  DEVICE_LOST. vs LOOP 13 baseline 28.7 / 31.2
+  wall 8.7s. DD PARKED.
+
+VERDICT -> GO (P1.7 c1 up, no wedge). New best
+  W8A8 DSpark c1 is 29.4. Keep AGASYNC. Next pick
+  P1.6 fusedq e2e. Leave this serve up. Do not
+  start P1.6 / train / DD this fire. Scheduler
+  stays (29.4 < 41.2).
+
