@@ -12021,3 +12021,37 @@ VERDICT -> Closed most of the 51 gap. New 3.8 speed
   is Paris/fib/391 only -- re-gate before shelving.
   Default the wrapper to LAB_DOORS=1. Serve left up
   on :8010.
+
+### 2026-08-18b - restore 3.6 DD; W8A8+DSpark campaign plan
+
+CONTEXT -> User: relaunch the 3.6 daily driver while we
+  plan. Then research and write a plan for our own
+  Qwen3.8-27B W8A8-INT8 + DSpark campaign (both newest
+  vLLM and sglang, own train, XMX, vision, FP8-level
+  quality, PSpark/prefill, dead-ends welcome).
+
+COMMAND (DD) ->
+  ```
+  bash llamacpp/serve_qwen38_b70_0xsero.sh stop
+  ./bin/xpu-health --img vllm-xpu-env:int8g-v0260
+  DD_API_KEY=... bash vllm/daily_driver_serve.sh start
+  ```
+
+RESULT (DD) -> xpu-health both OK. 8010 down. b70_daily_0
+  `vllm-xpu-env:int8g-v0260` on :18080. Served
+  **hotschmoe-dd**. Paris exact (9 tok). Grafana +
+  Prometheus up. WebUI left off (policy).
+
+PLAN -> `docs/20260818_qwen38_w8a8_dspark_campaign.md`
+  Agents inventoried in-repo W8A8/DSpark/kernels,
+  SpecForge/PSpark, and newest vLLM 0.27.1 / sglang
+  0.5.17 + torch 2.13 ABI. Headline: no public 3.8
+  W8A8-INT8+DSpark exists; 5090 206 is cheap-verify
+  not a photocopy; PSpark is not a product (prefill
+  arm = SpecPrefill/PFlash); Phase 0 stays on 0.26 /
+  0.5.15 torch 2.12; Phase 2 is a kernel rewrite if
+  we want newest-in-name.
+
+VERDICT -> DD is the 3.6 NVFP4 daily driver again.
+  Next GPU work is plan Phase 0: HE+ on grafted W8A8
+  MTP3, then off-shelf DSpark accept on that target.
