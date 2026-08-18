@@ -13056,3 +13056,44 @@ VERDICT -> GO (S1 smoke). Ceiling on this box is
   29.4. Do not start E1 / train / DD / Phase 2 this
   fire. Scheduler stays (29.4 < 41.2).
 
+### 2026-08-18y - LOOP 20: E1 xpu_shard_top1 SPEC flag is MTP-only
+
+CONTEXT -> LOOP 19 GO. Next pick E1 PRE.11 once on
+  live W8A8 DSpark. Look at the flag before any
+  restart. DD PARKED.
+
+CONFIG -> live NAME=qwen38_w8a8_dspark
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  GRAPH=1 SPECTOK=4 MAXLEN=122880 method=dspark
+  IMG=int8g-v0260 GDN_SO=w8a8_kernel_v0240.
+  No SPEC change this fire.
+
+COMMAND ->
+  ```
+  # inspect only; no gpu-run restart
+  docker exec qwen38_w8a8_dspark python3 -c \
+    'import torch; print(hasattr(torch.ops._xpu_C,"xpu_shard_top1"))'
+  # DSparkSpeculator._sample_sequential:
+  #   compute_draft_logits + Markov + argmax/gumbel
+  # SpeculativeConfig has use_local_argmax_reduction
+  # (llm_base_proposer / MTP only)
+  curl -s http://192.168.10.5:18080/v1/models
+  ```
+
+RESULT -> Live op xpu_shard_top1 **False**.
+  w8a8_kernel_v0240 has int8 gemm, no shard_top1.
+  Proto SO /mnt/vm_8tb/b70/nvfp4_top1_proto has
+  shard_top1 + int8_gemm_w8a8/w8a16. DSpark
+  ignores use_local_argmax_reduction. G0 id
+  **qwen3.8-27b-W8A8-gptq-dspark4-agasync**
+  max_model_len 122880. Paris exact. No DEVICE_LOST.
+  No c1 published. DD PARKED.
+
+VERDICT -> DEAD-END (D6). Do not flip that SPEC
+  field on method=dspark. Next pick: patch
+  DSparkSpeculator._sample_sequential + mount
+  nvfp4_top1_proto, G1, bench_code vs 29.4.
+  Leave AGASYNC up. Do not start the hook / train
+  / DD / Phase 2 this fire. Scheduler stays
+  (29.4 < 41.2).
+

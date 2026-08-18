@@ -23,11 +23,11 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 19 (GO S1 GPTQ-Int4 MTP4 post-first 47.58; AGASYNC restored) |
-| Last JOURNAL heading | `2026-08-18x` |
+| Last loop | 20 (DEAD-END E1 SPEC flag MTP-only; packet D6) |
+| Last JOURNAL heading | `2026-08-18y` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | E1 xpu_shard_top1 A/B on live k=4 GRAPH=1 AGASYNC (PRE.11 once) |
+| Next pick | D6 hook: DSparkSpeculator shard-top1 + nvfp4_top1_proto SO |
 | Blocked on | none. Speed window. Train not forced. Quality floor HE+ 0.957/0.927. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

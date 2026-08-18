@@ -73,7 +73,7 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: E1 xpu_shard_top1 A/B (PRE.11 once). S1 GO: GPTQ-Int4 MTP4 post-first 47.58 (not 83.7). AGASYNC 29.4 stands. DD PARKED.
+>    Next pick: D6 DSparkSpeculator shard-top1 hook (E1 SPEC flag is MTP-only). AGASYNC 29.4 stands. DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

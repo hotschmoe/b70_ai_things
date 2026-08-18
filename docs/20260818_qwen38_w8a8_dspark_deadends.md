@@ -198,3 +198,35 @@ Retry if: fusedq rebuilt vs v0260 ABI and a
 Related JOURNAL: ### 2026-08-18v
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop17_fusedq.log
   bench loop17_bench_code_c1.log
+
+## D6 -- xpu_shard_top1 SPEC flag is MTP-only, not DSpark -- 2026-08-18 -- LOOP 20
+
+Tried: E1 / PRE.11 once on live W8A8 DSpark k=4
+  GRAPH=1 AGASYNC. Inspected flag + op + proposer
+  before any restart.
+Command / config: no serve restart. Looked at
+  SpeculativeConfig.use_local_argmax_reduction,
+  DSparkSpeculator._sample_sequential, live
+  torch.ops._xpu_C, host SOs.
+Result: DSparkSpeculator does
+  compute_draft_logits (full vocab) then sequential
+  Markov + argmax/gumbel. It never reads
+  use_local_argmax_reduction and has no
+  get_top_tokens. That flag lives on
+  llm_base_proposer (MTP/EAGLE). Live GDN_SO
+  w8a8_kernel_v0240 has no xpu_shard_top1
+  (has False). Proto SO with both int8 gemm and
+  shard_top1 exists at
+  /mnt/vm_8tb/b70/nvfp4_top1_proto/_xpu_C.abi3.so.
+  AGASYNC left up; Paris exact. No c1 published.
+Why it is closed: flipping the SPEC flag on this
+  DSpark recipe is a no-op (or a load error if
+  some parent checked get_top_tokens). Do not
+  burn a TP=2 restart for an ignored JSON field.
+Retry if: DSparkSpeculator._sample_sequential is
+  patched to consume sharded logits +
+  xpu_shard_top1 (keep Markov bias), or a
+  dedicated W8A8 *MTP3* LOCALARGMAX A/B is the
+  named pick. Do not retry the SPEC flag on
+  method=dspark.
+Related JOURNAL: ### 2026-08-18y

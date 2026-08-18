@@ -36,10 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-E1 -- xpu_shard_top1 A/B on live k=4 GRAPH=1 AGASYNC
-(PRE.11 once) vs bench_code c1 29.4. G1 fail => revert,
-no publish. S1 GO: 3.8 GPTQ-Int4 MTP4 post-first 47.58
-(not 83.7; not W8A8 c1). Do not demote W8A8. Do not
+D6 hook -- patch DSparkSpeculator._sample_sequential
+to sharded logits + xpu_shard_top1 (Markov kept),
+mount nvfp4_top1_proto SO, G1 + bench_code vs 29.4.
+E1 SPEC flag is MTP-only (packet D6). Do not retry
+use_local_argmax_reduction on method=dspark. Do not
 start DD. Do not enter Phase 2. Do not train. D4:
 W8A16=0 at 122880. D5: no v0240 fusedq retry. Quality
 floor HE+ 0.957/0.927. c1 29.4 < 41.2.
@@ -887,3 +888,43 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 528521.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18x
+
+---
+
+## LOOP 20 -- 2026-08-18T2255Z -- E1 shard_top1 flag is MTP-only
+
+Picked: E1 xpu_shard_top1 A/B (PRE.11 once) -- look
+  at the flag first, as LOOP 19 named.
+Why this, not the other open row: living-header Next
+  pick after LOOP 19 GO.
+GPU: lease HELD both cards by docker-wait pid=528521
+  since 2026-08-18 22:12:54. DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880.
+  No restart.
+Command: inspect SpeculativeConfig, DSparkSpeculator,
+  live torch.ops._xpu_C, host SOs. curl /v1/models +
+  Paris.
+Log: n/a (no GPU job). Packet D6.
+Result: use_local_argmax_reduction unused by
+  DSparkSpeculator (full-vocab compute_draft_logits
+  + Markov + argmax). Live SO has no xpu_shard_top1.
+  Proto SO at nvfp4_top1_proto has shard+int8.
+  Paris exact. No c1 published. Serve left up.
+Verdict: DEAD-END
+Changed beliefs: PRE.11 NVFP4 path is MTP
+  get_top_tokens, not DSpark. Do not flip that SPEC
+  field on method=dspark. Real hook is
+  _sample_sequential + proto SO.
+Next pick: D6 hook -- overlay
+  DSparkSpeculator._sample_sequential + GDN_SO=
+  nvfp4_top1_proto, G1, bench_code vs 29.4.
+  Do not start it this fire. Wipe compile hash on
+  SO swap (D5).
+Do not: restart just to add an ignored JSON field;
+  swap proto SO without a speculator hook; demote
+  W8A8; enter Phase 2; train; start DD; retry
+  fusedq; W8A16>0 @122880.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 528521.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18y
