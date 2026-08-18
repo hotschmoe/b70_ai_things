@@ -36,14 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S1 finish -- if pid 523137 live, one status line STOP.
-If dead, read loop18_s1.status + G1 + phase_bench,
-write verdict, leave AGASYNC up, STOP. Do not start
-D/E in that fire. Do not start DD. Do not enter
-Phase 2. Do not demote W8A8. 83.7 is not W8A8 c1.
-Keep AGASYNC 29.4. D4: W8A16=0 at 122880. D5: no
-v0240 fusedq retry. Quality floor HE+ 0.957/0.927.
-c1 29.4 < 41.2.
+E1 -- xpu_shard_top1 A/B on live k=4 GRAPH=1 AGASYNC
+(PRE.11 once) vs bench_code c1 29.4. G1 fail => revert,
+no publish. S1 GO: 3.8 GPTQ-Int4 MTP4 post-first 47.58
+(not 83.7; not W8A8 c1). Do not demote W8A8. Do not
+start DD. Do not enter Phase 2. Do not train. D4:
+W8A16=0 at 122880. D5: no v0240 fusedq retry. Quality
+floor HE+ 0.957/0.927. c1 29.4 < 41.2.
 
 ---
 
@@ -847,3 +846,44 @@ Restore: DD stays PARKED. AGASYNC left UP during
   exist, then restores AGASYNC after G1/bench.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18w
+
+---
+
+## LOOP 19 -- 2026-08-18T2220Z -- S1 finish post-first 47.58
+
+Picked: S1 finish (pid 523137 dead, status DONE)
+Why this, not the other open row: last verdict RUNNING;
+  do not start a sibling.
+GPU: lease HELD both cards by docker-wait pid=528521
+  since 2026-08-18 22:12:54. DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880
+  (restored). S1 container gone.
+Command:
+  ps -p 523137; cat loop18_s1.status / loop18_g1.log
+  / loop18_phase_bench.json
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop18_s1.log
+  bench: loop18_phase_bench.json
+  restore: loop18_restore.log
+Result: G1 Paris / 391 / fib. phase_bench median
+  post_first **47.58** tok/s (n=5/5, p~1150/g128).
+  vs cookbook 83.7 and 08-10 3.6 dense 52.1. MTP
+  pos0 0.80. AGASYNC restored, Paris exact. No
+  DEVICE_LOST. Not a W8A8 c1.
+Verdict: GO
+Changed beliefs: 0.27.2rc1 digest f01e24f6 + pinned
+  9d189a60 loads coherent on 1x B70. This box does
+  not reproduce 83.7 at MAXSEQS=8 / entropy p~1150.
+  47.58 is a C1 ceiling reference, not a reason to
+  drop W8A8. Patches applied. qwen3_xml works.
+Next pick: E1 xpu_shard_top1 A/B on this live
+  AGASYNC serve (PRE.11 once). First look at the
+  flag, then restart+G1+bench_code c1 vs 29.4.
+  Do not start E1 this fire.
+Do not: publish 47.58 or 83.7 as W8A8 c1; demote
+  W8A8; enter Phase 2; pip-install 0.27; mix
+  digests; train; start DD; retry fusedq SO;
+  W8A16>0 @122880.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 528521.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18x

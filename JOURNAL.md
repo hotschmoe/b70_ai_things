@@ -13011,3 +13011,48 @@ VERDICT -> RUNNING. Next fire: `ps -p 523137`.
   FETCH_FAIL / PULL_FAIL / BENCH_FAIL / RESTORED.
   Scheduler stays (29.4 < 41.2).
 
+### 2026-08-18x - LOOP 19: S1 finish, GPTQ-Int4 MTP4 post-first 47.58
+
+CONTEXT -> LOOP 18 RUNNING. pid 523137 dead.
+  S1_STATUS=DONE. Write verdict, leave AGASYNC up,
+  STOP. Do not start D/E this fire. DD PARKED.
+
+CONFIG -> IMAGE=f01e24f6 (0.27.2rc1) CARD=0
+  SERVED=qwen3.8-27b-GPTQ-Int4-mtp4
+  mtp4 cache=off MAXLEN=131072 MAXSEQS=8 UTIL=0.88
+  kv=fp8 language-only tool=qwen3_xml
+  phase_bench p512/g128 n=5. Not W8A8. Not TP=2.
+  Not bench_code c1.
+
+COMMAND ->
+  ```
+  ps -p 523137   # dead
+  cat /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop18_s1.status
+  cat /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop18_g1.log
+  cat /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop18_phase_bench.json
+  curl -s http://192.168.10.5:18080/v1/models
+  ```
+
+RESULT -> FETCH_OK 11 min (ckpt 19G / 18673 MB, image
+  f01e24f6). HEALTHY 264s on card 0. G0 id
+  **qwen3.8-27b-GPTQ-Int4-mtp4**. G1 thinking-off:
+  Paris exact, 17*23=391, fib iterative. phase_bench
+  n=5/5 median post_first **47.58** tok/s (range
+  44.58-49.39), prefill_proxy **1620.6**, ttft
+  0.715s. Prompt landed ~1150 tok not 512 (entropy
+  overshoot). MTP window drafts 243 / draft_tok 972
+  / accepted 523; pos0 195/243=**0.80**, per-pos
+  0.80/0.58/0.42/0.35. vs cookbook 83.7 and 08-10
+  3.6 dense 52.1. MAXSEQS=8 not 64; no 230 W cap.
+  Do not publish 47.58 as W8A8 c1. Do not demote
+  W8A8. AGASYNC restore HEALTHY 203s, live G0
+  **qwen3.8-27b-W8A8-gptq-dspark4-agasync** @122880,
+  Paris exact. Lease pid 528521. DD PARKED.
+
+VERDICT -> GO (S1 smoke). Ceiling on this box is
+  47.58 post-first, not 83.7. W8A8 DSpark c1 **29.4**
+  stands. Next pick remaining D/E: E1 xpu_shard_top1
+  A/B on live k=4 GRAPH=1 AGASYNC (PRE.11 once) vs
+  29.4. Do not start E1 / train / DD / Phase 2 this
+  fire. Scheduler stays (29.4 < 41.2).
+
