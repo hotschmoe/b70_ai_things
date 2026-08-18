@@ -13142,3 +13142,44 @@ VERDICT -> NO-GO (D7). Hook is coherent, not
   Do not start E2 / train / DD / Phase 2 this
   fire. Scheduler stays (29.4 < 41.2).
 
+### 2026-08-18aa - LOOP 22: E2 host-barrier ALLGATHER c1 26.6 NO-GO
+
+CONTEXT -> LOOP 21 D7. Next pick E2: host-barrier
+  PUSH_AR_ALLGATHER=1 vs AGASYNC 29.4. NVFP4 was
+  2.4x slower; W8A8 ASYNC helped so this is the
+  once A/B. G1 fail => no speed, revert. DD PARKED.
+
+CONFIG -> B70_EXTRA_ENV=PUSH_AR_ALLGATHER=1
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-aghost
+  IMG=int8g-v0260 method=dspark P2PACCESS=0.
+  No proto SO. No e1 hook.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER=1 \
+    W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-aghost \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py ... 1 256 3
+  # revert: B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1 agasync
+  # lease holder pid 541759
+  ```
+
+RESULT -> ALLGATHER redirect ENGAGED [host-barrier].
+  HEALTHY 132s. G0 id
+  **qwen3.8-27b-W8A8-gptq-dspark4-aghost**
+  max_model_len 122880. G1 thinking-off: Paris
+  exact, 17*23=391, fib iterative. bench_code c1
+  avg **26.6** / best 28.3 t/s (out 256, wall
+  ~9.0s) vs AGASYNC **29.4** / 33.2. No DEVICE_LOST.
+  Do not publish 26.6 as a win. Revert AGASYNC:
+  HEALTHY 137s, Paris exact. DD PARKED.
+
+VERDICT -> NO-GO (D8). Host-barrier gather is
+  slower. Keep AGASYNC 29.4. Next pick P4.1
+  prefix-cache TTFT baseline. Leave AGASYNC up.
+  Do not start P4.1 / train / DD / Phase 2 this
+  fire. Scheduler stays (29.4 < 41.2).
+

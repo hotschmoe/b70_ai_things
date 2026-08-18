@@ -261,3 +261,30 @@ Retry if: shard-top1 is fused with Markov in one
 Related JOURNAL: ### 2026-08-18z
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop21_serve.log
   bench loop21_bench_code_c1.log
+
+## D8 -- host-barrier ALLGATHER=1 no decode win -- 2026-08-18 -- LOOP 22
+
+Tried: PUSH_AR_ALLGATHER=1 (host-barrier, not ASYNC)
+  on k=4 GRAPH=1 @122880 W8A16=0. Same recipe as
+  AGASYNC 29.4 minus the eager-async gather path.
+Command / config:
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER=1
+  GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-aghost
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Result: ALLGATHER redirect ENGAGED [host-barrier].
+  HEALTHY 132s. G1 Paris / 391 / fib. bench_code
+  c1 avg **26.6** / best 28.3 (wall 9.0s) vs
+  AGASYNC **29.4** / 33.2. No DEVICE_LOST. Revert
+  AGASYNC: HEALTHY 137s, Paris exact.
+Why it is closed: coherent but slower (same
+  direction as NVFP4 2.4x; here ~10% down). Host
+  barrier per gather is not a W8A8 DSpark win.
+  Keep ALLGATHER_ASYNC. Do not retry host-barrier
+  on this recipe.
+Retry if: gather is captured (device-side do_ar)
+  so the host wait goes away. Do not retry
+  PUSH_AR_ALLGATHER=1 for bench_code c1.
+Related JOURNAL: ### 2026-08-18aa
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop22_serve.log
+  bench loop22_bench_code_c1.log

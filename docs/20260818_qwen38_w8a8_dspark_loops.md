@@ -36,15 +36,14 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-E2 -- host-barrier ALLGATHER=1 A/B on live k=4
-GRAPH=1 vs AGASYNC 29.4 (NVFP4 was 2.4x slower;
-ASYNC helped here so host-barrier is still open
-once). G1 fail => revert, no publish. D7: shard-top1
-hook c1 28.4 < 29.4; do not remount proto SO for
-c1. D6: no SPEC flag on dspark. D4: W8A16=0 at
-122880. D5: no v0240 fusedq. Do not start DD. Do
-not train. Do not enter Phase 2. Quality floor
-HE+ 0.957/0.927. c1 29.4 < 41.2.
+P4.1 -- prefix-cache TTFT baseline on live AGASYNC
+@122880 (only prefill number allowed early). Do
+not restart unless the probe needs it. D8: host-
+barrier ALLGATHER=1 c1 26.6 < 29.4; keep ASYNC.
+D7: no proto-SO remount. D6: no SPEC flag on
+dspark. D4: W8A16=0 at 122880. D5: no v0240 fusedq.
+Do not start DD. Do not train. Do not enter Phase 2.
+Quality floor HE+ 0.957/0.927. c1 29.4 < 41.2.
 
 ---
 
@@ -969,3 +968,44 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 536779.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18z
+
+---
+
+## LOOP 22 -- 2026-08-18T2354Z -- E2 host-barrier ALLGATHER c1 26.6
+
+Picked: E2 PUSH_AR_ALLGATHER=1 host-barrier A/B
+  vs AGASYNC 29.4
+Why this, not the other open row: living-header
+  Next pick after LOOP 21. Remaining verify-AR.
+GPU: lease HELD both cards by docker-wait pid=541759
+  since 2026-08-18 23:54:34 (reverted AGASYNC).
+  DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880.
+Command:
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER=1 GRAPH=1 SPECTOK=4
+    MAXLEN=122880 SERVED=...-aghost ... start
+  bench_code 1 256 3
+  # revert ASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop22_serve.log
+  bench: loop22_bench_code_c1.log
+  revert: loop22_revert.log
+  wait pid 541759
+Result: host-barrier ENGAGED. HEALTHY 132s. G1
+  Paris / 391 / fib. c1 avg **26.6** / best 28.3
+  (wall 9.0s) vs AGASYNC **29.4** / 33.2. No
+  DEVICE_LOST. Revert HEALTHY 137s, Paris exact.
+Verdict: NO-GO
+Changed beliefs: host-barrier gather is slower
+  on W8A8 DSpark too (26.6 < 29.4). Keep ASYNC.
+  Both gather levers measured. Next is prefill
+  (P4.1), not another gather flag.
+Next pick: P4.1 prefix-cache TTFT baseline on
+  this live AGASYNC serve. Do not start P4.1
+  this fire.
+Do not: retry ALLGATHER=1; remount proto SO;
+  retry SPEC flag; train; start DD; enter Phase 2;
+  retry fusedq; W8A16>0 @122880.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 541759.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18aa
