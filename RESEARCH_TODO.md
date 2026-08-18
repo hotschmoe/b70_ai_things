@@ -67,10 +67,15 @@
 >       CUDA/Spark only. XPU sglang just moved to torch 2.13; do not bump this campaign.
 >    Do not iterate rmacy v10-slim (8k, 17-22 tok/s). W8A8 3.8 stays the INT8-XMX track.
 >    zml stays a findings backend. Journal + commit at each milestone.
->    **NEXT CAMPAIGN PLAN (2026-08-18):** 3.8 W8A8-INT8 + matched DSpark on both
->    newest vLLM and sglang, own train, XMX verify, optional speculative prefill.
->    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md`. DD restored to 3.6
->    NVFP4 `hotschmoe-dd` while that plan executes.
+>    **NEXT CAMPAIGN (2026-08-18, LOOPING):** 3.8 W8A8-INT8 + matched DSpark on
+>    both newest vLLM and sglang, own train, XMX verify, optional speculative
+>    prefill. Agents re-read the plan every loop.
+>    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
+>    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
+>    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
+>    Next pick: P0.1 HE+ GPU (yaml ids landed LOOP 1). Stop DD, serve
+>    `qwen3.8-27b-W8A8-gptq-mtp3` @131k, HE+ 164. DD is 3.6 NVFP4
+>    `hotschmoe-dd` until that slot.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

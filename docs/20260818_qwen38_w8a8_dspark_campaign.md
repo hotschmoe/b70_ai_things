@@ -1,11 +1,15 @@
 # Qwen3.8-27B W8A8-INT8 + DSpark -- frontier campaign
 
 **Created:** 2026-08-18
-**Status:** PLAN -- research locked, no GPU work started on this track
+**Status:** LOOPING -- research locked, no GPU work started on this track
 **Goal:** make 2x Intel Arc Pro B70 the place people point at for private
 Qwen3.8-27B: W8A8-INT8 on native XMX, a *matched* DSpark (and a prefill
 arm), FP8-class quality, vision + MTP retained, both newest vLLM *and*
 sglang as first-class vehicles.
+
+This file is the standing prompt for a **continual loop**. Agents re-read
+it every iteration. Do not treat it as a one-shot plan. See **LOOP**
+(section L) before doing anything else.
 
 Dead-ends are first-class results. Log them. Do not hide them.
 
@@ -14,6 +18,202 @@ says sglang is the W8A8 research backend and vLLM is paused; here we
 run **both** to the newest Intel-capable cut, and we will rebuild
 kernels / torch / dispatch / comms rather than stop at the 2.12 ABI
 lock. The lock is Phase 0, not the ceiling.
+
+### Living header (every loop updates this block, nothing above section 0)
+
+| field | value |
+|---|---|
+| Last loop | 1 (yaml unblock; HE+ still unmeasured) |
+| Last JOURNAL heading | `2026-08-18d` |
+| Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
+| Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
+| Next pick | P0.1 -- HE+ on grafted W8A8-gptq MTP3 (stop DD, serve MTP3 @131k, 164) |
+| Blocked on | GPU slot + stop DD. Yaml ids now exist. |
+| HE+ (W8A8-gptq) | unmeasured |
+| Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
+| Best W8A8 DSpark accept_len / pos0 | none yet (off-shelf table is P0.4) |
+| DD | `hotschmoe-dd` 3.6 NVFP4 TP=2 :18080 -- do not take down for edits |
+
+---
+
+## L. LOOP -- read this every iteration
+
+You are one iteration of a long campaign. Previous loops left you a
+ledger and a JOURNAL tail. Subsequent loops will only be as good as
+the handoff you write. Re-planning the campaign from scratch is a
+failure mode, not diligence.
+
+### L.0 Read order (do this before any edit or GPU touch)
+
+1. This file, especially the living header and this section.
+2. `docs/20260818_qwen38_w8a8_dspark_loops.md` -- last 3 loops, then
+   the "NEXT PICK" line. That file is the feedback channel.
+3. `docs/20260818_qwen38_w8a8_dspark_deadends.md` -- do not retry a
+   closed packet unless the packet itself says the retry condition
+   is now true.
+4. JOURNAL.md, newest entries at the **bottom**. Search headings
+   `2026-08-18` onward and any `LOOP` / `W8A8` / `DSpark` / `qwen38`
+   tags. The ledger is the index; JOURNAL is the evidence.
+5. `./bin/gpu-run --status` and `curl -s http://192.168.10.5:18080/v1/models`.
+   The served id on :18080 should be `hotschmoe-dd` unless a loop
+   already owns a research slot.
+6. Only then pick work. One pick per loop unless the first pick is
+   a 5-minute no-GPU edit that unblocks the real pick.
+
+### L.1 What one loop is
+
+A loop is **one verdict**, not one phase.
+
+- Allowed: one P0/P1/P2/P3/P4 row, or one standing-list packet, or
+  one no-GPU unblock (yaml id, serve-script clone, eval config).
+- Not allowed: "do Phase 0", "train the draft", "rebuild torch 2.13",
+  "rewrite the campaign", "improve the plan a bit first".
+- Stop when you have config -> command -> result -> verdict, **or**
+  you are blocked on lease / DD / health / a missing artifact.
+- If the pick is a multi-hour GPU job (HE+, quant, train), start it
+  under `gpu-run`, write a LOOP-STARTED ledger line with the log
+  path and pid, and leave a restore-DD instruction. Do not sit on
+  the lease after the job ends.
+
+### L.2 Where to write (so the next loop can start)
+
+Write in this order at the end of the loop. Skip none.
+
+| dest | what goes there |
+|---|---|
+| `JOURNAL.md` bottom | Full evidence. Heading `### YYYY-MM-DD<letter> - LOOP N: <one line>`. Body = CONTEXT / CONFIG / COMMAND / RESULT / VERDICT. Commands are copy-pasteable. Numbers have units, ctx, concurrency, served id. |
+| `docs/20260818_qwen38_w8a8_dspark_loops.md` | One `## LOOP N` block. See L.3. This is what the next agent reads first. |
+| `docs/20260818_qwen38_w8a8_dspark_deadends.md` | Only if you closed a path. Packet format is in that file. |
+| This file, living header only | Bump Last loop / Last JOURNAL heading / Next pick / Blocked on / the three score rows if they moved. |
+| `RESEARCH_TODO.md` campaign blurb | One-line status if Next pick or a north-star number changed. |
+
+Do **not** rewrite sections 0-9 of this file to narrate the loop.
+Do **not** rewrite old `scripts/NN_*.sh`. Copy to a new number.
+New experiment scripts live under the backend root (`vllm/`, `sglang/`).
+
+### L.3 Ledger block the next loop needs
+
+Append this shape to the loop ledger. Keep it short. The JOURNAL
+entry holds the long form.
+
+```
+## LOOP N -- YYYY-MM-DDThhmmZ -- <one-line pick>
+
+Picked: P0.x / P1.x / unblock / packet
+Why this, not the other open row: <one sentence, cite last loop>
+GPU: lease holder / card / DD stopped? / port / served id
+Command: <the actual command>
+Log: <path>
+Result: <the number or the error, one or two lines>
+Verdict: GO / NO-GO / BLOCKED / DEAD-END
+Changed beliefs: <what a future loop must not re-discover>
+Next pick: <exact next row or unblock, and the first command>
+Do not: <the tempting wrong follow-up>
+Restore: DD back? xpu-health? lock released?
+JOURNAL: ### YYYY-MM-DD<letter>
+```
+
+If you started a long job and are handing off mid-run, use
+`Verdict: RUNNING` and fill Command / Log / pid / how to tell it
+finished / what the next loop should do on success vs fail.
+
+### L.4 How to pick (decision tree, every loop)
+
+Honor the living-header **Next pick** unless one of these is true:
+
+- The ledger says that pick is RUNNING and the log is still live
+  -- then you monitor / finish / restore, you do not start a sibling.
+- The last verdict BLOCKED and the blocker is now gone -- same pick.
+- The last verdict DEAD-END or NO-GO -- take the "likely dead-end"
+  branch in section 6 for that row, not a creative new idea.
+- HE+ plus is measured and `< 0.90` -- **stop speed work**. Quality
+  only (A.2 SQ, A.3 AutoRound, A.4 RukaRat). Write that in Next pick.
+- Off-shelf DSpark pos0 is already within ~2% of RadixArk-on-FP8
+  -- skip the long train (C); short 400-step polish only.
+- Accept is ugly (~20% band) -- train is mandatory (C), not more
+  k-sweeps.
+- Accept is fine but c1 < W8A8 MTP3 -- kernels / verify-AR (D, E),
+  not more training.
+- Phase 0+1 do not yet have a coherent W8A8+DSpark number **and**
+  a written list of 0.27-only features we need -- **do not enter
+  Phase 2**.
+- Phase 4 / "PSpark" is not a week-1-2 pick. Prefix-cache TTFT
+  baseline (P4.1) is the only prefill number allowed early.
+
+Default order while Phase 0 is open: P0.1 -> P0.2 -> P0.3 -> P0.4
+-> P0.5. Week-1 concrete list in section 8 still stands. A no-GPU
+unblock that is on that list (evals yaml id, serve-script clone)
+may run before the GPU slot for P0.1.
+
+### L.5 Standing facts that loops keep forgetting
+
+Memorize these. They are how previous weeks got burned.
+
+- Query `/v1/models` before trusting any number. Served ids encode
+  method+scheme (`qwen3.8-27b-W8A8-gptq-mtp3`,
+  `qwen3.8-27b-W8A8-gptq-dspark7`). Never a bare `qwen3-14b-w8a8`.
+- Fail-closed: G1 (Paris / 17*23 / fib) or G5 (18/18, no "!!!!")
+  fail => do not publish the speed number.
+- `gpu-run` for every real GPU touch. `gpu-run --card N` for one
+  card. Editing and compiling do not take the lease.
+- Do **not** stop `hotschmoe-dd` for Phase 0 editing/compiling.
+  Stop it only for on-GPU quant / serve / bench, then restore it
+  before you walk away. Restoration is part of the loop, not a
+  courtesy.
+- P2P=1 in vLLM TP>1 wedges the box. Recovery = reboot. Never
+  chain two tries. `I_KNOW_P2P_WEDGES=1` required. oneCCL overlay
+  is 2021.17; 2021.15 is broken.
+- After any TP>1 teardown that threw DEVICE_LOST, run `xpu-health`
+  on a single card before the next TP>1 start.
+- method=dflash is unregistered on v0.26. method=dspark, V2,
+  `THINK_BUDGET=0`. Adaptive verify is dead on GDN.
+- Draft geometry is locked (section C). Do not invent a new arch.
+- Capture target for a matched draft is the **live W8A8 serve**,
+  not the FP8/NVFP4 DD. Draft stays BF16.
+- Do not overwrite `models/files/qwen3.8-27b/w8a8-gptq`. SQ /
+  AutoRound get new dirs.
+- GDN / visual / mtp stay BF16. Ignore lists stay ignore lists.
+- Xe2 rule: never write an FP8 GEMM. Repack FP8 weights to s8.
+- Do not tune a GEMM already at 88-100% of the 581 GB/s roofline.
+  Win is shape and fusion, not a faster large-M s8s8s32.
+- sglang 0.5.6 stays the W8A8 *shelf* until a newer cut is
+  measured faster-or-equal **and** coherent. 0.5.15 already lost
+  once vs 0.5.6 (-6.1% c1).
+- "PSpark" is our name for a speculative-prefill arm, not a
+  DeepSeek/SpecForge sibling. Do not invent a fake checkpoint.
+- ASCII only. No emoji, typographic arrows, or smart punctuation.
+- We run locally on this box. Do not SSH. Repo is
+  `/mnt/vm_8tb/github/b70_ai_things`. Runtime root `/mnt/vm_8tb/b70`.
+
+### L.6 Gates you must run when the pick is a serve/bench
+
+Reuse section 6. Minimum for any published speed: G0, G1, G3, and
+G5 if you claim concurrent. Spec picks add G4. Quality artifacts
+add G6. Ctx >= 200k adds G7.
+
+Identity check is not optional. If `/v1/models` does not match the
+planned id, the number is trash even if Paris is exact.
+
+### L.7 Commit and push
+
+On the host, commit when a loop has a verdict or a durable artifact
+(script, yaml, ledger, dead-end packet). Do not rewrite history.
+Do not leave the only copy of a result in a chat transcript.
+
+### L.8 Stop-the-line
+
+Stop the loop (and write BLOCKED / DEAD-END) if:
+
+- cards are unhealthy and `xe-reset` wants a reboot
+- you are about to start Phase 2 without a Phase 0+1 number
+- you are about to start a long DSpark train without the 10-sample
+  overfit gate (P1.2)
+- HE+ plus `< 0.90` and the pick is a speed experiment
+- someone asks for P2P=1 and you do not have a reboot window
+- the pick needs both a kernel exploit-style attack and a fix --
+  fix only; do not write attack payloads
+
+Then hand off. The next loop exists so you do not have to hero.
 
 ---
 
@@ -419,8 +619,9 @@ Week 1 (DD stays up except the HE+/serve slots):
 2. Stop DD, serve W8A8 MTP3, HE+ 164 + `bench_code` c1/c4, restore DD.
 3. Write `vllm/dflash/serve_qwen38_w8a8_dspark.sh` (clone of M1,
    CKPT=w8a8-gptq). Off-shelf DSpark accept table. Restore DD.
-4. Open `docs/20260818_qwen38_w8a8_dspark_deadends.md` (or a
-   section in JOURNAL) and log P0.4 even if it is ugly.
+4. Log P0.4 in JOURNAL + the loop ledger even if it is ugly.
+   If it is a closed path, also packet it in
+   `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
 
 Week 2:
 
@@ -436,6 +637,9 @@ Do not start Phase 2 or "PSpark" in week 1-2.
 
 ## 9. Pointers
 
+- **Loop ledger (read every iteration):** `docs/20260818_qwen38_w8a8_dspark_loops.md`
+- **Dead-end packets:** `docs/20260818_qwen38_w8a8_dspark_deadends.md`
+- **Evidence:** `JOURNAL.md` newest-at-bottom; headings `2026-08-18` onward
 - This box W8A8 3.8: `vllm/w8a8/serve_qwen38_27b.sh`, JOURNAL 2026-08-15b/c
 - DSpark M1: `vllm/dflash/serve_qwen38_radixark_dspark.sh`, JOURNAL 17h
 - Kernels: `kernels/README.md`, `kernels/SYCLTLA_SCAFFOLD.md`

@@ -12055,3 +12055,63 @@ PLAN -> `docs/20260818_qwen38_w8a8_dspark_campaign.md`
 VERDICT -> DD is the 3.6 NVFP4 daily driver again.
   Next GPU work is plan Phase 0: HE+ on grafted W8A8
   MTP3, then off-shelf DSpark accept on that target.
+
+### 2026-08-18c - LOOP protocol on the W8A8+DSpark campaign
+
+CONTEXT -> Campaign doc will be re-read every iteration by a
+  looping agent. Need a standing LOOP section plus sidecar
+  files so later loops inherit picks, dead-ends, and "do not
+  redo" notes instead of re-planning.
+
+CONFIG -> docs only. No GPU. DD left up.
+
+COMMAND -> edited
+  `docs/20260818_qwen38_w8a8_dspark_campaign.md` (status
+  LOOPING, living header, new section L). Created
+  `docs/20260818_qwen38_w8a8_dspark_loops.md` (LOOP 0 +
+  NEXT PICK = P0.1) and
+  `docs/20260818_qwen38_w8a8_dspark_deadends.md` (PRE.1-17
+  seeded from prior lab / campaign standing list).
+
+RESULT -> Agents looping this campaign now have: read order,
+  one-verdict-per-loop rule, ledger block template, decision
+  tree, standing "forgotten facts", write destinations
+  (JOURNAL + loops.md + deadends.md + living header).
+
+VERDICT -> Protocol in place. Next loop picks P0.1 (HE+ on
+  grafted W8A8-gptq MTP3) or the no-GPU yaml unblock in
+  section 8 item 1. Do not start Phase 2 / train / PSpark.
+
+### 2026-08-18d - LOOP 1: yaml ids for Qwen3.8 W8A8-gptq
+
+CONTEXT -> LOOP 0 Next pick is P0.1 HE+ on grafted W8A8-gptq
+  MTP3. GPU lease is held by the 3.6 NVFP4 daily driver.
+  L.4 allows the section 8 item 1 no-GPU yaml unblock first.
+  Do not stop DD for edits.
+
+CONFIG -> docs + evals yaml only. No GPU. DD left up.
+  Ckpt on disk: models/files/qwen3.8-27b/w8a8-gptq
+  (grafted vision+MTP from 2026-08-15c). Serve wrapper:
+  vllm/w8a8/serve_qwen38_27b.sh.
+
+COMMAND ->
+  ```
+  ./bin/gpu-run --status
+  curl -s -H "Authorization: Bearer $DD_API_KEY" \
+    http://192.168.10.5:18080/v1/models
+  # then edit evals/configs/models.yaml
+  ```
+
+RESULT -> Lease HELD both cards by b70_daily_0 pid=460274
+  since 2026-08-18 03:02:11. Served id **hotschmoe-dd**
+  (root /models/qwen3.6-27b/nvfp4-modelopt, max_model_len
+  262144). Added two evals ids:
+    qwen3.8-27b-W8A8-gptq        (MTP-off, MAXLEN=229376)
+    qwen3.8-27b-W8A8-gptq-mtp3   (P0.1, MTP3 @131k)
+  HE+ still unmeasured. No speed published.
+
+VERDICT -> GO (unblock). Next fire is the P0.1 GPU slot:
+  stop DD, serve MTP3 as qwen3.8-27b-W8A8-gptq-mtp3,
+  query /v1/models, HE+ 164 thinking-off greedy, then
+  restore DD. Multi-hour: start HE+, LOOP-STARTED, do not
+  sit on the lease. Do not score hotschmoe-dd as W8A8.

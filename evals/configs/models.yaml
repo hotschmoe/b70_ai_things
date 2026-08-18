@@ -130,3 +130,31 @@ models:
     notes: "Inferact ModelOpt uniform NVFP4 (not 3.6 MIXED). 2026-08-15n gated
       TP=2 fused GRAPH+MTP3+prefix @200k, 18/18, code c1 35.0. HumanEval+
       2026-08-16. Not a DD. Encode method+scheme in the served id / out dir."
+
+  # --- 2026-08-18 LOOP 1: Qwen3.8 W8A8-gptq campaign ids (section 8 item 1 / A.1) ---
+  # Do NOT serve a bare qwen3.8-27b-w8a8. Method+scheme in the id. HE+ still unmeasured.
+  - label: qwen38-27b-w8a8-gptq
+    served_model_id: qwen3.8-27b-W8A8-gptq
+    family: qwen3.8-27b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: gptq
+    serve_cmd: "B70_NOMTP=1 TP=2 PORT=18080 NAME=qwen38_w8a8 MAXLEN=229376 SERVED=qwen3.8-27b-W8A8-gptq ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start"
+    notes: "On-box compressed-tensors W8A8-gptq (models/files/qwen3.8-27b/w8a8-gptq),
+      MTP-off default of vllm/w8a8/serve_qwen38_27b.sh. 2026-08-15b gate: Paris
+      exact, c1 18.45 @229k. Not a DD. Do not overwrite the ckpt dir."
+
+  - label: qwen38-27b-w8a8-gptq-mtp3
+    served_model_id: qwen3.8-27b-W8A8-gptq-mtp3
+    family: qwen3.8-27b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: gptq
+    serve_cmd: "B70_NOMTP=0 MTPTOK=3 GRAPH=1 MAXLEN=131072 UTIL=0.90 TP=2 PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3 ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start"
+    notes: "P0.1 identity. Same grafted W8A8-gptq + BF16 vision/MTP (JOURNAL
+      2026-08-15c): Paris, vision live, c1 26.62 @131k. HE+ 164 thinking-off
+      greedy is the next GPU pick. Query /v1/models before scoring.
+      evals/.venv/bin/python evals/orchestrator/run_evals.py
+      --endpoint http://192.168.10.5:18080/v1
+      --model qwen3.8-27b-W8A8-gptq-mtp3 --quant W8A8-gptq-mtp3
+      --tiers 1 --tier1-dataset humaneval --limit 164"
