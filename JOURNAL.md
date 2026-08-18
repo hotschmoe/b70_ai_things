@@ -12283,3 +12283,39 @@ VERDICT -> RUNNING. Next fire: if `ps -p 471978` is live,
   or bench_code in the finish fire. Leave the W8A8
   GRAPH=0 research serve up. Do not start DD.
 
+### 2026-08-18i - LOOP 5: P0.1 HE+ plus 0.927 on W8A8-gptq MTP3 GRAPH=0
+
+CONTEXT -> LOOP 4 Verdict RUNNING. Next pick: if pid 471978
+  live, STOP; if done, write plus, leave GRAPH=0 serve up.
+  Do not start P0.2 or DD in the finish fire.
+
+CONFIG -> same as LOOP 4: GRAPH=0 --enforce-eager MTPTOK=3
+  MAXLEN=131072 TP=2 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq-mtp3 IMG=int8g-v0260
+  HE+ thinking-off greedy seed=1234 limit=164
+  sandbox evalplus-sandbox:0.3.1.
+
+COMMAND ->
+  ```
+  ps -p 471978
+  tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_heplus.log
+  curl -s http://192.168.10.5:18080/v1/models
+  cat evals/results/20260818T064331Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3/summary.json
+  ```
+
+RESULT -> pid 471978 DEAD. Log: generated 164/164, then
+  sanitize + sandbox evaluate. pass@1 base **0.957** plus
+  **0.927** (gen 2700s, eval 40s). 164 raw samples.
+  G0 still **qwen3.8-27b-W8A8-gptq-mtp3** (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len 131072).
+  Serve still up GRAPH=0. Lease still HELD by pid 471943.
+  DD PARKED. Plus equals Q4_K_M 0.927; base 0.957 is 1.3
+  pts under Q4_K_M 0.970. Gate plus >= 0.90 PASSES. Not
+  plus << Q4_K_M, so SQ/AutoRound is not forced.
+
+VERDICT -> GO (P0.1). Speed work allowed. Next pick P0.2
+  (W8A8 @262k MTP-off, KV_FP8 A/B). Leave GRAPH=0 MTP3
+  serve up; do not start P0.2 in this fire. Do not start DD.
+  North-star HE+ is now measured; DSpark accept/c1 still
+  missing so scheduler stays.
+

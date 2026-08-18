@@ -23,13 +23,13 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 4 (P0.1 HE+ GRAPH=0 RUNNING) |
-| Last JOURNAL heading | `2026-08-18h` |
+| Last loop | 5 (P0.1 HE+ GO 0.957/0.927) |
+| Last JOURNAL heading | `2026-08-18i` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | P0.1 finish -- if HE+ live, STOP; if done, write plus, leave GRAPH=0 serve up |
-| Blocked on | HE+ 164 still generating (pid 471978). Do not start a sibling. |
-| HE+ (W8A8-gptq) | unmeasured (RUNNING, GRAPH=0) |
+| Next pick | P0.2 -- W8A8 @262k MTP-off, KV_FP8=0 first (bf16 KV), G1/Paris |
+| Blocked on | none. plus 0.927 >= 0.90; speed work allowed. |
+| HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark accept_len / pos0 | none yet (off-shelf table is P0.4) |
 | DD | PARKED. Do not start. Cards belong to this campaign. :18080 is research. |

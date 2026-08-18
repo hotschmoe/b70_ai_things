@@ -36,11 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.1 finish -- HE+ GRAPH=0 is RUNNING. First: `ps -p 471978`
-and `tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_heplus.log`.
-If live: one status line, STOP, no sibling. If done: write plus,
-leave the GRAPH=0 W8A8 research serve up, STOP. Do not start DD.
-Do not start P0.2 in that fire. Do not retry GRAPH=1 CGRECLAIM=0.
+P0.2 -- W8A8 @262k MTP-off, KV_FP8=0 first (bf16 KV). Current
+GRAPH=0 MTP3 serve is still up on :18080; stop it, then
+`B70_NOMTP=1 GRAPH=0 MAXLEN=262144 UTIL=0.90 TP=2 PORT=18080
+NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq
+./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start`
+Query /v1/models, G1/Paris. Do not start DD. Do not retry
+GRAPH=1 CGRECLAIM=0. Do not start P0.3/P0.4 in that fire.
 
 ---
 
@@ -243,3 +245,42 @@ Restore: DD stays PARKED. After HE+ ends leave
   for P0.2 only if plus >= 0.90. Do not run
   `vllm/daily_driver_serve.sh start`.
 JOURNAL: ### 2026-08-18h
+
+---
+
+## LOOP 5 -- 2026-08-18T0739Z -- P0.1 HE+ finish: plus 0.927
+
+Picked: P0.1 finish (read plus from LOOP 4 HE+)
+Why this, not the other open row: living-header Next pick;
+  last verdict RUNNING; pid 471978 dead with a plus.
+GPU: lease HELD both cards by docker-wait pid=471943 since
+  2026-08-18 06:43:13. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-mtp3` (root /models/qwen3.8-27b/w8a8-gptq,
+  max_model_len 131072). NAME=qwen38_w8a8. GRAPH=0.
+Command:
+  ps -p 471978
+  tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_heplus.log
+  cat evals/results/20260818T064331Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3/summary.json
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_heplus.log
+  result:
+    evals/results/20260818T064331Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3
+Result: pass@1 base **0.957** plus **0.927** (164/164,
+  gen 2700s, eval 40s, thinking=off, greedy, seed=1234).
+  G0 still matches. Serve left up. Plus == Q4_K_M 0.927;
+  base 1.3 pts under 0.970. Gate plus >= 0.90 PASSES.
+Verdict: GO
+Changed beliefs: grafted W8A8-gptq MTP3 is quality-ok for
+  DSpark work. GRAPH=0 completed 164; GRAPH=1 CGRECLAIM=0
+  did not. Speed work is allowed. SQ/AutoRound not forced.
+Next pick: P0.2 W8A8 @262k MTP-off KV_FP8=0 (bf16 KV) then
+  G1/Paris. First: stop current MTP3 serve, then
+  B70_NOMTP=1 GRAPH=0 MAXLEN=262144 UTIL=0.90 TP=2 PORT=18080
+  NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq
+  ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+Do not: start P0.2 in this fire; start DD; retry GRAPH=1
+  CGRECLAIM=0; enter Phase 2; train; overwrite w8a8-gptq;
+  treat this as a DSpark number (it is MTP3 HE+ only).
+Restore: DD stays PARKED. GRAPH=0 MTP3 serve left UP
+  (next pick will replace it). Lease still held by 471943.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18i
