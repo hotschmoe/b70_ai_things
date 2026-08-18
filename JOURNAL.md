@@ -12682,3 +12682,49 @@ VERDICT -> DEAD-END (D3). GRAPH=1 k=3 is broken even
   Leave GRAPH=0 k=3 serve up. Do not start k=4 / train
   / DD this fire. Scheduler stays (c1 26.2 < 41.2).
 
+### 2026-08-18r - LOOP 13: leftover k=4 GRAPH=1 bench_code c1 28.7
+
+CONTEXT -> LOOP 12 D3 closed GRAPH=1 k=3. Next pick
+  leftover k=4 GRAPH=1 G1 @122880. Hash b3f7e9e010
+  already gone. If G1 holds, bench_code c1. DD PARKED.
+  Fail-closed: G1 fail => no speed, revert, packet.
+
+CONFIG -> IMG=vllm-xpu-env:int8g-v0260
+  NAME=qwen38_w8a8_dspark
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4
+  SPECTOK=4 method=dspark THINK_BUDGET=0
+  GRAPH=1 MAXLEN=122880 UTIL=0.90 MAXSEQS=2 TP=2
+  CGRECLAIM=0 P2PACCESS=0. bench_code out=256 reps=3
+  conc=1. No HE+.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  GRAPH=1 SPECTOK=4 MAXLEN=122880 PORT=18080 \
+    NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # lease holder pid 506899
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 \
+    qwen3.8-27b-W8A8-gptq-dspark4 1 256 3
+  ```
+
+RESULT -> Hash was GONE. Cold compile 1.53 s (not
+  Directly load). HEALTHY 142s GRAPH=1 PIECEWISE.
+  /v1/models id **qwen3.8-27b-W8A8-gptq-dspark4**
+  (root /models/qwen3.8-27b/w8a8-gptq, max_model_len
+  **122880**). G1 thinking-off: Paris exact, 17*23=391,
+  fib iterative. bench_code c1 avg **28.7** / best
+  31.2 t/s (out 256, wall ~8.7s). Bench-window mean
+  accept_len **2.45**, pos0 **0.65** (0.58-0.71).
+  Beats MTP3 GRAPH=1 26.62 and DSpark k=7 GRAPH=1
+  26.2. Still < 41.2. No DEVICE_LOST. DD PARKED.
+
+VERDICT -> GO (k=4 GRAPH=1 measured). New best W8A8
+  DSpark c1 is 28.7. G1 hold so no HE+ rerun. Next
+  pick leftover k=4 GRAPH=1 probabilistic accept on
+  this live serve. Do not start P1.5 / train / DD
+  this fire. Scheduler stays (28.7 < 41.2).
+

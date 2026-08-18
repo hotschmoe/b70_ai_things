@@ -23,16 +23,16 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 12 (DEAD-END GRAPH=1 k=3 still duct after cold compile) |
-| Last JOURNAL heading | `2026-08-18q` |
+| Last loop | 13 (GO GRAPH=1 k=4 c1 28.7 @122880, beats MTP3) |
+| Last JOURNAL heading | `2026-08-18r` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | leftover k=4 GRAPH=1 G1 @122880 (wipe shared compile hash first) |
+| Next pick | leftover k=4 GRAPH=1 probabilistic accept (live serve) |
 | Blocked on | none. Speed window. Train not forced. Quality floor HE+ 0.957/0.927. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
-| Best W8A8 DSpark `bench_code` c1 | **26.2** k=7 GRAPH=1 @122880 (G1 hold; 131k UTIL=0.90 D1) |
-| Best W8A8 DSpark accept_len / pos0 | **2.46 / 0.62** (k=7 GRAPH=0); GRAPH=1 bench 2.44 / 0.59 |
+| Best W8A8 DSpark `bench_code` c1 | **28.7** k=4 GRAPH=1 @122880 (G1 hold; beats MTP3 26.62; k=7 was 26.2) |
+| Best W8A8 DSpark accept_len / pos0 | **2.46 / 0.62** (k=7 GRAPH=0); k=4 GRAPH=1 bench 2.45 / 0.65 |
 | DD | PARKED. Do not start. Cards belong to this campaign. :18080 is research. |
 
 ---

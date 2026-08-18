@@ -36,13 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-leftover k=4 GRAPH=1 G1 @122880. D3: GRAPH=1 k=3 still
-duct after cold compile (D2 retry fired). Compile hash
-b3f7e9e010 ignores SPECTOK -- wipe it before any new
-GRAPH=1 k (LOOP 12 already wiped). GRAPH=0 k=3 G1 holds.
-Do not retry GRAPH=1 k=3. Do not start DD. Do not train.
-After k=4: leftover greedy/prob, then P1.5 / P1.7 / P1.6.
-Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
+leftover k=4 GRAPH=1 probabilistic accept on the live
+serve (no restart). LOOP 13 GO: greedy c1 **28.7**
+beats MTP3 26.62 and k=7 GRAPH=1 26.2. Hash b3f7e9e010
+now holds k=4 graphs -- wipe before any other k GRAPH=1.
+Do not retry GRAPH=1 k=3 (D3). Do not start DD. Do not
+train. After prob: P1.5 / P1.7 / P1.6. Quality floor
+HE+ 0.957/0.927. c1 28.7 < 41.2.
 
 ---
 
@@ -596,3 +596,49 @@ Restore: DD stays PARKED. GRAPH=0 k=3 serve left UP.
   Lease held by 504031. Hash b3f7e9e010 GONE.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18q
+
+---
+
+## LOOP 13 -- 2026-08-18T1921Z -- leftover k=4 GRAPH=1 c1 28.7
+
+Picked: leftover k=4 GRAPH=1 G1 + bench_code c1 @122880
+Why this, not the other open row: living-header Next pick
+  after LOOP 12 D3. k=3 GRAPH=1 closed.
+GPU: lease HELD both cards by docker-wait pid=506899 since
+  2026-08-18 19:21:06. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark4` (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len **122880**).
+  NAME=qwen38_w8a8_dspark. GRAPH=1 PIECEWISE method=dspark
+  k=4 CGRECLAIM=0 P2P=0. Cold compile (hash was gone).
+Command:
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  GRAPH=1 SPECTOK=4 MAXLEN=122880 PORT=18080 NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 qwen3.8-27b-W8A8-gptq-dspark4 1 256 3
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop13_serve.log
+  bench: loop13_bench_code_c1.log
+  wait pid 506899 (file loop13_serve.pid)
+Result: Hash was GONE. Cold compile 1.53s (not Directly
+  load). HEALTHY 142s. G0 match. G1 Paris / 391 / fib.
+  bench_code c1 avg **28.7** / best 31.2 (out 256,
+  wall ~8.7s). Bench-window accept_len **2.45**, pos0
+  **0.65** (0.58-0.71). Beats MTP3 26.62 and k=7
+  GRAPH=1 26.2. Still < 41.2. No DEVICE_LOST.
+Verdict: GO
+Changed beliefs: GRAPH=1 k=4 is coherent; k=3 GRAPH=1
+  fail is k-specific, not all k!=7. Compile hash still
+  b3f7e9e010 (ignores SPECTOK) -- now holds k=4 graphs.
+  Wipe before next k GRAPH=1. k=4 greedy beats MTP3.
+  Train not forced.
+Next pick: leftover k=4 GRAPH=1 probabilistic accept
+  on this live serve (no restart). Then P1.5 / P1.7 /
+  P1.6.
+Do not: retry GRAPH=1 k=3; start k=7 GRAPH=1 without
+  wiping hash; retry GRAPH=1 @131k; method=dflash;
+  train; start DD; enter Phase 2.
+Restore: DD stays PARKED. GRAPH=1 k=4 serve left UP.
+  Lease held by 506899. Hash b3f7e9e010 is k=4 now.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18r

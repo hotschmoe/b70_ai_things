@@ -73,9 +73,8 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: leftover k=4 GRAPH=1 G1 @122880 (wipe shared compile hash first).
->    LOOP 12 DEAD-END: GRAPH=1 k=3 still duct after cold compile (D3).
->    GRAPH=0 k=3 G1 holds. S0 c1 26.2 @122880. DD PARKED.
+>    Next pick: leftover k=4 GRAPH=1 probabilistic accept (live serve).
+>    LOOP 13 GO: GRAPH=1 k=4 c1 28.7 @122880 (beats MTP3 26.62). DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,
