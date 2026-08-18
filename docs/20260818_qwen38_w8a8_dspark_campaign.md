@@ -23,15 +23,15 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 7 (P0.3 NO-GO GRAPH=0 bench_code c1 13.8) |
-| Last JOURNAL heading | `2026-08-18k` |
+| Last loop | 8 (P0.4 GO DSpark k=7 accept 2.46 / pos0 0.62) |
+| Last JOURNAL heading | `2026-08-18l` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | P0.4 -- clone `vllm/dflash/serve_qwen38_w8a8_dspark.sh`, off-shelf DSpark k=7 |
-| Blocked on | none. GRAPH=0 c1 13.8 < 26.62 (eager tax). Accept 2.4-3.1. |
+| Next pick | P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN smoke (loads + Paris) |
+| Blocked on | none. Off-shelf pos0 0.62; train not forced. c1 11.1 is GRAPH=0. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
-| Best W8A8 DSpark accept_len / pos0 | none yet (off-shelf table is P0.4) |
+| Best W8A8 DSpark accept_len / pos0 | **2.46 / 0.62** (k=7 GRAPH=0 greedy, off-shelf fp8-b70) |
 | DD | PARKED. Do not start. Cards belong to this campaign. :18080 is research. |
 
 ---

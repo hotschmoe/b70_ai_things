@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# P0.4: Qwen3.8-27B W8A8-gptq + off-shelf DSpark on vLLM 0.26.0.
+# Clone of serve_qwen38_radixark_dspark.sh; target is W8A8-gptq not NVFP4.
+# Applies the SpecForge readout fix (vllm/dflash/patches/v0260) and remaps
+# the drafter architecture DSparkDraftModel -> Qwen3DSparkModel so the
+# v0.26 registry does not route it to DeepSeek-V4.
+#
+# method=dspark (not dflash -- PRE.3). THINK_BUDGET=0 (V2 rejects it).
+# GRAPH=0 default: GRAPH=1 CGRECLAIM=0 died mid-HE+ (LOOP 3).
+# P2PACCESS stays 0. Do not overwrite models/files/qwen3.8-27b/w8a8-gptq.
+#
+#   GRAPH=0 SPECTOK=7 MAXLEN=131072 PORT=18080 NAME=qwen38_w8a8_dspark \
+#     ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+#   bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+set -uo pipefail
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ACTION="${1:-start}"
+NAME="${NAME:-qwen38_w8a8_dspark}"
+PATCH="$REPO/vllm/dflash/patches/v0260"
+
+if [ "$ACTION" = stop ]; then
+  docker rm -f "$NAME" >/dev/null 2>&1 && echo "stopped $NAME" || echo "$NAME not running"
+  exit 0
+fi
+
+[ -f "$PATCH/dflash.py" ] || { echo "missing $PATCH/dflash.py"; exit 1; }
+[ -f "$PATCH/drafter_config.json" ] || { echo "missing $PATCH/drafter_config.json"; exit 1; }
+
+SPECTOK="${SPECTOK:-7}"
+DRAFTER_REL="${DRAFTER_REL:-qwen3.8-27b/dflash-drafter-fp8-b70}"
+HOST_DRAFT="$REPO/models/files/${DRAFTER_REL}"
+[ -d "$HOST_DRAFT" ] || { echo "MISSING $HOST_DRAFT"; exit 1; }
+
+export CKPT="${CKPT:-/models/qwen3.8-27b/w8a8-gptq}"
+export SERVED="${SERVED:-qwen3.8-27b-W8A8-gptq-dspark${SPECTOK}}"
+export NAME PORT="${PORT:-18080}"
+export IMG="${IMG:-vllm-xpu-env:int8g-v0260}"
+export TP="${TP:-2}" GRAPH="${GRAPH:-0}" MAXLEN="${MAXLEN:-131072}"
+export UTIL="${UTIL:-0.90}" MAXSEQS="${MAXSEQS:-2}"
+# W8A8 3.6 serve.sh has no KV_FP8 hook (LOOP 6). Stay bf16 KV.
+export KV_FP8="${KV_FP8:-0}"
+# Do NOT set B70_NOMTP=1 -- that clears SPEC.
+export B70_NOMTP=0
+# V2 runner (forced by method=dspark) rejects thinking_token_budget.
+export THINK_BUDGET="${THINK_BUDGET:-0}"
+# MTPTOK may be reset to 3 by serve.sh ${MTPTOK:-3}; SPEC wins in lib.sh.
+export SPEC="${SPEC:-{\"method\":\"dspark\",\"model\":\"/models/${DRAFTER_REL}\",\"num_speculative_tokens\":${SPECTOK}}}"
+export P2PACCESS="${P2PACCESS:-0}"
+export B70_EXTRA_MOUNTS="${B70_EXTRA_MOUNTS:+$B70_EXTRA_MOUNTS }${PATCH}/dflash.py:/workspace/vllm/vllm/v1/spec_decode/dflash.py:ro ${PATCH}/utils.py:/workspace/vllm/vllm/v1/spec_decode/utils.py:ro ${PATCH}/drafter_config.json:/models/${DRAFTER_REL}/config.json:ro"
+
+echo "=== P0.4 W8A8-gptq + DSpark k=$SPECTOK  GRAPH=$GRAPH  maxlen=$MAXLEN  name=$NAME ==="
+echo "=== method=dspark THINK_BUDGET=$THINK_BUDGET SERVED=$SERVED P2PACCESS=$P2PACCESS ==="
+exec bash "$REPO/rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh" start

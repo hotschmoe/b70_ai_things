@@ -36,13 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.4 -- off-shelf DSpark on W8A8. First: write
-`vllm/dflash/serve_qwen38_w8a8_dspark.sh` (clone of
-`serve_qwen38_radixark_dspark.sh`, target W8A8-gptq,
-method=dspark, THINK_BUDGET=0, SERVED=...-W8A8-gptq-dspark7).
-Then stop current MTP3 serve, start k=7 GRAPH=0, G1, G4
-accept table. Do not method=dflash. Do not start DD.
-Do not start P0.5 / train.
+P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN smoke. Loads + Paris
+on the grafted W8A8-gptq. Do not start DD. Do not train.
+Do not method=dflash. GRAPH=1 CGRECLAIM=0 still unsafe.
+Current vLLM DSpark serve may stay up or be stopped for
+the sglang slot; cards belong to the campaign.
 
 ---
 
@@ -372,3 +370,46 @@ Restore: DD stays PARKED. GRAPH=0 MTP3 serve left UP
   (next pick replaces it). Lease held by 479279.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18k
+
+---
+
+## LOOP 8 -- 2026-08-18T0915Z -- P0.4 W8A8 + DSpark k=7 accept table
+
+Picked: P0.4 -- clone serve script, off-shelf DSpark k=7
+  GRAPH=0, G1, G4
+Why this, not the other open row: living-header Next pick
+  after LOOP 7 NO-GO. Default order P0.4.
+GPU: lease HELD both cards by docker-wait pid=482217 since
+  2026-08-18 09:13:53. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark7` (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len 131072).
+  NAME=qwen38_w8a8_dspark. GRAPH=0 method=dspark k=7.
+  P2P=0.
+Command:
+  wrote vllm/dflash/serve_qwen38_w8a8_dspark.sh
+  NAME=qwen38_w8a8 bash vllm/w8a8/serve_qwen38_27b.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  GRAPH=0 SPECTOK=7 MAXLEN=131072 PORT=18080 NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 qwen3.8-27b-W8A8-gptq-dspark7 1 256 3
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop8_bench_code_c1.log
+  serve wrapper pid 482217 (file loop8_serve.pid)
+Result: HEALTHY 143s. G0 match. G1 Paris / 391 / fib.
+  bench_code c1 avg **11.1** / best 12.1 (GRAPH=0).
+  G4 mean accept_len **2.46** pos0 **0.62** (0.52-0.80).
+  pos0 not < 30%. Train not forced.
+Verdict: GO
+Changed beliefs: off-shelf RadixArk/fp8-b70 DSpark accepts
+  on W8A8 (pos0 ~62%, similar to NVFP4 58.4%). Ugly-accept
+  train path is not this number. Speed gap vs MTP3 is
+  GRAPH=0 + verify cost, not pos0. Do not method=dflash.
+Next pick: P0.5 sglang 0.5.15 W8A8 3.8 NEXTN smoke
+  (loads + Paris). Do not start it this fire.
+Do not: start P0.5 / train / DD; method=dflash; retry
+  GRAPH=1 CGRECLAIM=0; enter Phase 2; overwrite w8a8-gptq;
+  publish 11.1 as a GRAPH=1-class win.
+Restore: DD stays PARKED. DSpark serve left UP
+  (next pick may replace it). Lease held by 482217.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18l

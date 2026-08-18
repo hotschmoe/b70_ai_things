@@ -12400,3 +12400,51 @@ VERDICT -> NO-GO vs c1 > 26.62. Number is real (G0+G1).
   (clone serve_qwen38_w8a8_dspark.sh). Leave GRAPH=0
   MTP3 serve up. Do not start P0.4 or DD this fire.
 
+### 2026-08-18l - LOOP 8: P0.4 W8A8 + off-shelf DSpark k=7 accept table
+
+CONTEXT -> LOOP 7 NO-GO. Next pick P0.4: write
+  vllm/dflash/serve_qwen38_w8a8_dspark.sh, stop MTP3,
+  start k=7 GRAPH=0 method=dspark, G1, G4. Do not
+  method=dflash. Do not start P0.5 / train / DD.
+
+CONFIG -> GRAPH=0 SPECTOK=7 MAXLEN=131072 UTIL=0.90
+  MAXSEQS=2 TP=2 PORT=18080 NAME=qwen38_w8a8_dspark
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark7
+  CKPT=/models/qwen3.8-27b/w8a8-gptq
+  DRAFTER=/models/qwen3.8-27b/dflash-drafter-fp8-b70
+  method=dspark THINK_BUDGET=0 P2PACCESS=0
+  IMG=vllm-xpu-env:int8g-v0260. v0260 Qwen3DSpark overlay.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8 bash vllm/w8a8/serve_qwen38_27b.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  GRAPH=0 SPECTOK=7 MAXLEN=131072 PORT=18080 \
+    NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 \
+    qwen3.8-27b-W8A8-gptq-dspark7 1 256 3
+  ```
+
+RESULT -> HEALTHY 143s GRAPH=0 --enforce-eager DSpark k=7.
+  /v1/models id **qwen3.8-27b-W8A8-gptq-dspark7** (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len 131072).
+  G1: Paris exact, 17*23=391, fib iterative.
+  bench_code c1: avg **11.1** / best 12.1 t/s (GRAPH=0).
+  G4 bench-window mean accept_len **2.46**, pos0 **0.62**
+  (range 0.52-0.80). pos1-6 typically 0.35/0.20/0.13/0.09/0.05/0.03.
+  Draft accept rate ~12-30%. pos0 is NOT < 30%. Compare
+  NVFP4 off-shelf DSpark pos0 58.4% / accept 2.53 / c1 34.4
+  (GRAPH=1). DD PARKED.
+
+VERDICT -> GO (P0.4 accept table exists). Accept is fine
+  (pos0 ~62%, not the 20% band). Train is not forced.
+  c1 11.1 < MTP3 GRAPH=0 13.8: gap is verify cost /
+  GRAPH=0, not draft accept. Next pick P0.5 sglang 0.5.15
+  W8A8 3.8 NEXTN smoke. Leave DSpark serve up. Do not
+  start P0.5 / train / DD this fire. HE+ 0.927 and a
+  coherent W8A8+DSpark accept/c1 are now both in the
+  ledger.
+
