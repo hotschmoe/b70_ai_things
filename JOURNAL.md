@@ -12359,3 +12359,44 @@ VERDICT -> GO (P0.2 native ctx + Paris, KV_FP8=0). Next
   262k MTP-off serve up. Do not start DD. KV_FP8=1 A/B
   needs a W8A8 serve hook -- not this fire.
 
+### 2026-08-18k - LOOP 7: P0.3 MTP3 GRAPH=0 bench_code c1 13.8
+
+CONTEXT -> LOOP 6 GO. Next pick P0.3: stop 262k MTP-off,
+  serve MTP3 GRAPH=0 @131k, G1, bench_code c1. Do not
+  GRAPH=1 CGRECLAIM=0. Do not start P0.4 or DD.
+
+CONFIG -> B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072
+  UTIL=0.90 TP=2 PORT=18080 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+  IMG=vllm-xpu-env:int8g-v0260 CKPT=/models/qwen3.8-27b/w8a8-gptq
+  P2PACCESS=0. bench_code out=256 reps=3 conc=1.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8 bash vllm/w8a8/serve_qwen38_27b.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90 TP=2 \
+    PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3 \
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  # lease holder pid 479279
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 \
+    qwen3.8-27b-W8A8-gptq-mtp3 1 256 3
+  ```
+
+RESULT -> HEALTHY 188s GRAPH=0 --enforce-eager MTP3.
+  /v1/models id **qwen3.8-27b-W8A8-gptq-mtp3** (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len 131072).
+  G1: Paris exact, 17*23=391, fib iterative.
+  bench_code c1: avg **13.8** / best 15.3 t/s (out 256,
+  wall ~19.6s). MTP accept_len 2.39-3.06, pos0 0.69-0.88
+  (not a graft/head bug). 13.8 is GRAPH=0; pre-campaign
+  26.62 was GRAPH=1 sweep TG IN=2048/OUT=128. DD PARKED.
+
+VERDICT -> NO-GO vs c1 > 26.62. Number is real (G0+G1).
+  Gap is capture, not the graft. Do not publish 13.8 as
+  a speed win. Next pick P0.4 off-shelf DSpark on W8A8
+  (clone serve_qwen38_w8a8_dspark.sh). Leave GRAPH=0
+  MTP3 serve up. Do not start P0.4 or DD this fire.
+

@@ -36,12 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.3 -- W8A8 MTP3 @ longest ctx that fits, then bench_code c1.
-Current 262k MTP-off serve is up; stop it, then start MTP3
-GRAPH=0 (do not GRAPH=1 CGRECLAIM=0). Try MAXLEN=131072
-first (known HE+ config), G1, then bench_code c1. Push
-ctx only after c1 lands. Do not start DD. Do not start
-P0.4 DSpark in that fire.
+P0.4 -- off-shelf DSpark on W8A8. First: write
+`vllm/dflash/serve_qwen38_w8a8_dspark.sh` (clone of
+`serve_qwen38_radixark_dspark.sh`, target W8A8-gptq,
+method=dspark, THINK_BUDGET=0, SERVED=...-W8A8-gptq-dspark7).
+Then stop current MTP3 serve, start k=7 GRAPH=0, G1, G4
+accept table. Do not method=dflash. Do not start DD.
+Do not start P0.5 / train.
 
 ---
 
@@ -327,3 +328,47 @@ Restore: DD stays PARKED. 262k MTP-off serve left UP
   (next pick replaces it). Lease held by 476139.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18j
+
+---
+
+## LOOP 7 -- 2026-08-18T0844Z -- P0.3 MTP3 GRAPH=0 bench_code c1 13.8
+
+Picked: P0.3 -- MTP3 @131k GRAPH=0, G1, bench_code c1
+Why this, not the other open row: living-header Next pick
+  after LOOP 6 GO. Start 131k; do not push ctx this fire.
+GPU: lease HELD both cards by docker-wait pid=479279 since
+  2026-08-18 08:43:23. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-mtp3` (root /models/qwen3.8-27b/w8a8-gptq,
+  max_model_len 131072). NAME=qwen38_w8a8. GRAPH=0 MTP3.
+  P2P=0.
+Command:
+  NAME=qwen38_w8a8 bash vllm/w8a8/serve_qwen38_27b.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90 TP=2 PORT=18080
+    NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 qwen3.8-27b-W8A8-gptq-mtp3 1 256 3
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop7_bench_code_c1.log
+  serve wrapper pid 479279 (file loop7_serve.pid)
+Result: HEALTHY 188s. G0 match. G1 Paris / 391 / fib.
+  bench_code c1 avg **13.8** / best 15.3 t/s (out 256).
+  MTP accept_len 2.39-3.06, pos0 0.69-0.88. Not < 2.0.
+  13.8 < 26.62 (GRAPH=1 sweep TG). GRAPH=0 eager tax.
+Verdict: NO-GO
+Changed beliefs: GRAPH=0 MTP3 code c1 is ~14 t/s. Graft
+  and MTP accept are fine. Beating 26.62 needs capture
+  (not this pick). Pre-campaign 26.62 is still the best
+  W8A8 speed. Do not treat 13.8 as a shelf number.
+Next pick: P0.4 off-shelf DSpark on W8A8. First: write
+  vllm/dflash/serve_qwen38_w8a8_dspark.sh (clone M1,
+  target W8A8-gptq, method=dspark, THINK_BUDGET=0,
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark7). Then stop this
+  MTP3 serve and start k=7 GRAPH=0, G1+G4.
+Do not: start P0.4/P0.5 in this fire; start DD; retry
+  GRAPH=1 CGRECLAIM=0; enter Phase 2; train; overwrite
+  w8a8-gptq; method=dflash; publish 13.8 as a win.
+Restore: DD stays PARKED. GRAPH=0 MTP3 serve left UP
+  (next pick replaces it). Lease held by 479279.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18k

@@ -73,9 +73,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P0.3 MTP3 @ longest ctx + bench_code c1 (LOOP 6
->    GO: native 262k MTP-off Paris). Do not restore `hotschmoe-dd`.
->    Do not retry GRAPH=1 CGRECLAIM=0.
+>    Next pick: P0.4 off-shelf DSpark on W8A8 (LOOP 7 NO-GO:
+>    GRAPH=0 MTP3 bench_code c1 13.8 < 26.62). Do not restore
+>    `hotschmoe-dd`. Do not retry GRAPH=1 CGRECLAIM=0.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

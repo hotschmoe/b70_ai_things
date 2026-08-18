@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 6 (P0.2 GO native 262k MTP-off + Paris) |
-| Last JOURNAL heading | `2026-08-18j` |
+| Last loop | 7 (P0.3 NO-GO GRAPH=0 bench_code c1 13.8) |
+| Last JOURNAL heading | `2026-08-18k` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | P0.3 -- MTP3 @ longest ctx that fits (start 131k, then push), bench_code c1 |
-| Blocked on | none. 262k MTP-off fits. W8A8 serve has no KV_FP8 hook. |
+| Next pick | P0.4 -- clone `vllm/dflash/serve_qwen38_w8a8_dspark.sh`, off-shelf DSpark k=7 |
+| Blocked on | none. GRAPH=0 c1 13.8 < 26.62 (eager tax). Accept 2.4-3.1. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark accept_len / pos0 | none yet (off-shelf table is P0.4) |
