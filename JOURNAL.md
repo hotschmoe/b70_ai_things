@@ -12115,3 +12115,76 @@ VERDICT -> GO (unblock). Next fire is the P0.1 GPU slot:
   query /v1/models, HE+ 164 thinking-off greedy, then
   restore DD. Multi-hour: start HE+, LOOP-STARTED, do not
   sit on the lease. Do not score hotschmoe-dd as W8A8.
+
+### 2026-08-18e - LOOP 2: start P0.1 HE+ on W8A8-gptq MTP3
+
+CONTEXT -> LOOP 1 Next pick is P0.1 HE+ on grafted W8A8-gptq
+  MTP3. Yaml ids exist. Last verdict GO, not RUNNING. Stop DD
+  only for this on-GPU slot. Multi-hour rule: start HE+, write
+  LOOP-STARTED, leave restore-DD, Verdict RUNNING, do not wait.
+
+CONFIG -> B70_NOMTP=0 MTPTOK=3 GRAPH=1 MAXLEN=131072 UTIL=0.90
+  TP=2 PORT=18080 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+  IMG=vllm-xpu-env:int8g-v0260 CKPT=/models/qwen3.8-27b/w8a8-gptq
+  P2PACCESS=0. HE+ thinking-off greedy seed=1234 limit=164
+  sandbox evalplus-sandbox:0.3.1. No --tier1-think.
+
+COMMAND ->
+  ```
+  bash vllm/daily_driver_serve.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  B70_NOMTP=0 MTPTOK=3 GRAPH=1 MAXLEN=131072 UTIL=0.90 TP=2 \
+    PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3 \
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  # lease held via: gpu-run ... start && docker wait qwen38_w8a8
+  # wrapper pid 464242  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_serve.log
+  evals/.venv/bin/python -u evals/orchestrator/run_evals.py \
+    --endpoint http://192.168.10.5:18080/v1 \
+    --model qwen3.8-27b-W8A8-gptq-mtp3 --quant W8A8-gptq-mtp3 \
+    --tiers 1 --tier1-dataset humaneval --limit 164
+  # he+ pid 467692  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_heplus.log
+  ```
+
+RESULT -> xpu-health card 0 OK after DD stop. Both cards OK in
+  serve preflight. HEALTHY 234s. /v1/models id
+  **qwen3.8-27b-W8A8-gptq-mtp3** (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len 131072).
+  Completions probe: " Paris. ..." coherence OK.
+  G1 thinking-off: Paris exact ("The capital of France is
+  Paris."), 17*23=391, fib iterative coherent.
+  HE+ started: generating 164 humaneval solutions
+  (thinking=off, greedy, seed=1234). Result dir
+  evals/results/20260818T054613Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3
+  Plus still unmeasured. DD is down.
+
+VERDICT -> RUNNING. Next fire: if `ps -p 467692` is live,
+  one status line and STOP. If done, write plus (plus < 0.90
+  => quality only, no speed). Do not start P0.2 or bench_code
+  in the finish fire. Leave the W8A8 research serve up.
+
+### 2026-08-18f - operator: park DD for this campaign window
+
+CONTEXT -> Operator: bring down `hotschmoe-dd` and keep it
+  down for the next few days. Do not restore DD between
+  tests or loops. Cards belong to the W8A8+DSpark campaign.
+
+CONFIG -> DD already stopped by LOOP 2. :18080 is
+  `qwen3.8-27b-W8A8-gptq-mtp3` (container qwen38_w8a8).
+  HE+ pid 467692 still RUNNING.
+
+COMMAND ->
+  ```
+  bash vllm/daily_driver_serve.sh status
+  curl -s http://192.168.10.5:18080/v1/models
+  ./bin/gpu-run --status
+  ```
+
+RESULT -> DD replicas+proxy not running. Served id
+  `qwen3.8-27b-W8A8-gptq-mtp3`. Lease HELD by W8A8 serve
+  wrapper. No `daily_driver_serve.sh start` issued.
+
+VERDICT -> GO (policy). DD PARKED. Next fire must not
+  start DD even though LOOP 2 originally said restore.
+  Standing fact L.5 and scheduler 01a01345a5ed updated.

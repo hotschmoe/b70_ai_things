@@ -73,9 +73,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P0.1 HE+ GPU (yaml ids landed LOOP 1). Stop DD, serve
->    `qwen3.8-27b-W8A8-gptq-mtp3` @131k, HE+ 164. DD is 3.6 NVFP4
->    `hotschmoe-dd` until that slot.
+>    Next pick: P0.1 HE+ RUNNING (LOOP 2). If pid 467692 live, STOP.
+>    If done: write plus, leave W8A8 serve up. Do not restore
+>    `hotschmoe-dd`. Served `qwen3.8-27b-W8A8-gptq-mtp3` @131k.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

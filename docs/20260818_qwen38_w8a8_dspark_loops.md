@@ -36,10 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.1 -- HE+ on grafted W8A8-gptq MTP3 (thinking-off, greedy, 164).
-Yaml ids exist. First command: `bash vllm/daily_driver_serve.sh stop`
-then serve `qwen3.8-27b-W8A8-gptq-mtp3` @131k. Multi-hour: start HE+,
-write LOOP-STARTED, restore-DD after the job, Verdict RUNNING.
+P0.1 finish -- HE+ is RUNNING. First: `ps -p 467692` and
+`tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_heplus.log`.
+If live: one status line, STOP, no sibling. If done: write plus,
+leave the W8A8 research serve up, STOP. Do not start DD. Do not
+start P0.2 in that fire. Operator 2026-08-18f: DD stays PARKED.
 
 ---
 
@@ -101,3 +102,51 @@ Do not: start HE+ against `hotschmoe-dd`; enter Phase 2; train;
   take DD down for more editing; overwrite w8a8-gptq.
 Restore: DD was never stopped.
 JOURNAL: ### 2026-08-18d
+
+---
+
+## LOOP 2 -- 2026-08-18T0546Z -- P0.1 HE+ started on W8A8-gptq MTP3
+
+Picked: P0.1 -- HE+ 164 thinking-off greedy on grafted W8A8-gptq MTP3
+Why this, not the other open row: living-header Next pick; LOOP 1
+  yaml unblock landed; last verdict was GO not RUNNING.
+GPU: lease HELD both cards by serve wrapper pid=464242 since
+  2026-08-18 05:41:43. DD stopped. :18080 id
+  `qwen3.8-27b-W8A8-gptq-mtp3` (root /models/qwen3.8-27b/w8a8-gptq,
+  max_model_len 131072). NAME=qwen38_w8a8. P2P=0.
+Command:
+  bash vllm/daily_driver_serve.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  B70_NOMTP=0 MTPTOK=3 GRAPH=1 MAXLEN=131072 UTIL=0.90 TP=2 PORT=18080
+    NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  evals/.venv/bin/python -u evals/orchestrator/run_evals.py
+    --endpoint http://192.168.10.5:18080/v1
+    --model qwen3.8-27b-W8A8-gptq-mtp3 --quant W8A8-gptq-mtp3
+    --tiers 1 --tier1-dataset humaneval --limit 164
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_heplus.log
+  serve: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop2_serve.log
+  he+ pid 467692 (file loop2_heplus.pid)
+  serve wrapper pid 464242 (file loop2_serve.pid)
+  result dir:
+    evals/results/20260818T054613Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3
+Result: G0 id match. G1 Paris exact / 17*23=391 / fib iterative.
+  Serve HEALTHY 234s, gen probe "Paris." OK. HE+ generating 164
+  (thinking=off, greedy, seed=1234). Plus still unmeasured.
+Verdict: RUNNING
+Changed beliefs: 3.8 W8A8 MTP3 @131k still loads coherent on
+  int8g-v0260 GRAPH=1. Do not score this slot as hotschmoe-dd.
+  Next fire must finish this pick, not start P0.2.
+Next pick: P0.1 finish. First command: `ps -p 467692`.
+  Live -> one status line, STOP. Dead -> read plus from the
+  result dir / he+ log, write JOURNAL verdict, leave W8A8
+  serve up, STOP. Do not start P0.2/bench in that fire.
+  How to tell done: pid 467692 gone AND log has pass@1 / plus
+  (or a traceback). Gen ~20-40 min historically.
+Do not: start a sibling HE+ or P0.2; wait on this fire; enter
+  Phase 2; train; overwrite w8a8-gptq; P2P=1; score DD;
+  start daily_driver_serve.sh.
+Restore: DD stays PARKED. After HE+ ends leave
+  `qwen38_w8a8` / `qwen3.8-27b-W8A8-gptq-mtp3` up for P0.2.
+  Do not run `vllm/daily_driver_serve.sh start`.
+JOURNAL: ### 2026-08-18e (operator override ### 2026-08-18f)
