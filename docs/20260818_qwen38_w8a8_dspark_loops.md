@@ -36,13 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-wipe /mnt/vm_8tb/b70/vllm_cache/torch_compile_cache/b3f7e9e010
-then retry GRAPH=1 SPECTOK=3 MAXLEN=122880 G1 only.
-D2: GRAPH=1 k=3 emitted "duct" / pos0 0% after loading
-k=7 compile cache. GRAPH=0 k=3 G1 holds. Do not publish
-that GRAPH=1 c1. Do not start DD. Do not train. After
-retry: leftover k=4/7 greedy/prob, then P1.5 / P1.7 /
-P1.6. Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
+leftover k=4 GRAPH=1 G1 @122880. D3: GRAPH=1 k=3 still
+duct after cold compile (D2 retry fired). Compile hash
+b3f7e9e010 ignores SPECTOK -- wipe it before any new
+GRAPH=1 k (LOOP 12 already wiped). GRAPH=0 k=3 G1 holds.
+Do not retry GRAPH=1 k=3. Do not start DD. Do not train.
+After k=4: leftover greedy/prob, then P1.5 / P1.7 / P1.6.
+Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
 
 ---
 
@@ -553,3 +553,46 @@ Do not: publish a GRAPH=1 k=3 c1; retry GRAPH=1 without
 Restore: DD stays PARKED. GRAPH=0 k=3 serve left UP.
   Lease held by 498559. No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18p
+
+---
+
+## LOOP 12 -- 2026-08-18T1854Z -- D2 retry: GRAPH=1 k=3 cold compile
+
+Picked: D2 retry -- wipe b3f7e9e010, GRAPH=1 SPECTOK=3
+  G1 only
+Why this, not the other open row: living-header Next pick
+  after LOOP 11 NO-GO. D2 Retry-if was now true.
+GPU: lease HELD both cards by docker-wait pid=504031 since
+  2026-08-18 18:54:36. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark3` GRAPH=0 (reverted)
+  max_model_len **122880**. NAME=qwen38_w8a8_dspark.
+Command:
+  docker --entrypoint /bin/rm ... -rf
+    /vllm_cache/torch_compile_cache/b3f7e9e010
+  GRAPH=1 SPECTOK=3 MAXLEN=122880 PORT=18080
+    NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # G1 still "duct". revert GRAPH=0. wipe hash again.
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop12_serve.log
+  fail: loop12_graph1_k3_cold_g1fail.log
+  revert: loop12_revert_graph0.log
+  wait pid 504031 (file loop12_serve.pid)
+Result: Cache wiped (host sudo no tty; docker rm worked).
+  Cold compile 1.59s (not Directly load). HEALTHY 147s.
+  G1 "duct" ct=32, accept_len 1.00 pos0 0.000. No
+  DEVICE_LOST. No c1 published. GRAPH=0 revert G1 Paris
+  / 391 / fib. Hash wiped again (shared across k).
+Verdict: DEAD-END
+Changed beliefs: GRAPH=1 k=3 is broken even cold.
+  Compile hash b3f7e9e010 ignores SPECTOK. Do not retry
+  GRAPH=1 k=3. Do not leave a k=3 graph on that hash.
+  GRAPH=0 k=3 stays coherent. Train not forced.
+Next pick: leftover k=4 GRAPH=1 G1 @122880. Confirm
+  b3f7e9e010 is gone, then start. If G1 holds, bench_code
+  c1. If duct, packet and stay GRAPH=0 / leftover prob.
+Do not: retry GRAPH=1 k=3; publish a k=3 GRAPH=1 c1;
+  retry GRAPH=1 @131k; method=dflash; train; start DD.
+Restore: DD stays PARKED. GRAPH=0 k=3 serve left UP.
+  Lease held by 504031. Hash b3f7e9e010 GONE.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18q

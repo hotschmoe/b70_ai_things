@@ -114,3 +114,33 @@ Retry if: wipe host
   a real dead-end; stay GRAPH=0 / try k=4.
 Related JOURNAL: ### 2026-08-18p
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop11_graph1_k3_g1fail.log
+
+## D3 -- GRAPH=1 DSpark k=3 still duct after cold compile -- 2026-08-18 -- LOOP 12
+
+Tried: D2 retry. Wiped host
+  /mnt/vm_8tb/b70/vllm_cache/torch_compile_cache/b3f7e9e010
+  via docker --entrypoint /bin/rm (root-owned; host sudo
+  needs a tty). Then GRAPH=1 SPECTOK=3 MAXLEN=122880.
+Command / config:
+  docker run --rm --user 0:0 --entrypoint /bin/rm
+    -v /mnt/vm_8tb/b70/vllm_cache:/vllm_cache
+    vllm-xpu-env:int8g-v0260
+    -rf /vllm_cache/torch_compile_cache/b3f7e9e010
+  GRAPH=1 SPECTOK=3 MAXLEN=122880 PORT=18080
+    NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Result: Cache GONE then rebuilt. Logs: Compiling a graph
+  for compile range (1, 2048) takes 1.59 s -- NOT
+  "Directly load". HEALTHY 147s. G1 content="duct"
+  finish_reason=length ct=32. accept_len 1.00 pos0 0.000.
+  No DEVICE_LOST. Revert GRAPH=0: G1 Paris / 391 / fib.
+Why it is closed: k=3 GRAPH=1 is broken even on a cold
+  compile. Not a stale-cache-only bug. Compile key hash
+  b3f7e9e010 is shared across SPECTOK (k=7 and k=3 used
+  the same dir) so a k=3 graph must not be left on disk
+  for later k. LOOP 12 wiped it again after revert.
+Retry if: capture sizes / DSpark graph path change, or
+  compile key includes num_speculative_tokens. Do not
+  retry the same recipe.
+Related JOURNAL: ### 2026-08-18q
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop12_graph1_k3_cold_g1fail.log

@@ -12634,3 +12634,51 @@ VERDICT -> NO-GO (G1 fail on GRAPH=1 k=3). Packet D2.
   Do not start k=4 / train / DD this fire. Scheduler
   stays (c1 26.2 < 41.2).
 
+### 2026-08-18q - LOOP 12: D2 retry GRAPH=1 k=3 still duct after cold compile
+
+CONTEXT -> LOOP 11 NO-GO. D2 Retry-if now true: wipe
+  b3f7e9e010 then GRAPH=1 k=3 G1 only. If still duct,
+  close k=3 GRAPH=1. DD PARKED. Fail-closed: no speed
+  number. Host sudo needs a tty; wipe via docker rm.
+
+CONFIG -> IMG=vllm-xpu-env:int8g-v0260
+  NAME=qwen38_w8a8_dspark
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark3
+  SPECTOK=3 method=dspark THINK_BUDGET=0
+  MAXLEN=122880 UTIL=0.90 MAXSEQS=2 TP=2
+  CGRECLAIM=0 P2PACCESS=0 GRAPH=1 then revert GRAPH=0.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  docker run --rm --user 0:0 --entrypoint /bin/rm \
+    -v /mnt/vm_8tb/b70/vllm_cache:/vllm_cache \
+    vllm-xpu-env:int8g-v0260 \
+    -rf /vllm_cache/torch_compile_cache/b3f7e9e010
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  GRAPH=1 SPECTOK=3 MAXLEN=122880 PORT=18080 \
+    NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # G1 still "duct". accept 0%.
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  GRAPH=0 SPECTOK=3 MAXLEN=122880 ... start
+  # wipe b3f7e9e010 again (hash ignores SPECTOK)
+  # lease holder pid 504031
+  ```
+
+RESULT -> Cache GONE then rebuilt. Worker: Compiling a
+  graph for compile range (1, 2048) takes **1.59 s**
+  (not Directly load). HEALTHY 147s. G1 thinking-off
+  content="duct" (finish_reason=length, 32 toks).
+  SpecDecoding accept_len **1.00**, pos0 **0.000**.
+  No DEVICE_LOST. No c1 published. GRAPH=0 revert G1:
+  Paris exact, 17*23=391, fib iterative. Hash wiped
+  again so k=4/k=7 GRAPH=1 cannot load k=3 graphs.
+  DD PARKED.
+
+VERDICT -> DEAD-END (D3). GRAPH=1 k=3 is broken even
+  cold. Next pick leftover k=4 GRAPH=1 G1 @122880.
+  Leave GRAPH=0 k=3 serve up. Do not start k=4 / train
+  / DD this fire. Scheduler stays (c1 26.2 < 41.2).
+

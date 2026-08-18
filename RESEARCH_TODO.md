@@ -73,8 +73,8 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: wipe torch_compile_cache b3f7e9e010, retry GRAPH=1 k=3 G1.
->    LOOP 11 NO-GO: GRAPH=1 k=3 G1 "duct" / pos0 0% (stale k=7 cache).
+>    Next pick: leftover k=4 GRAPH=1 G1 @122880 (wipe shared compile hash first).
+>    LOOP 12 DEAD-END: GRAPH=1 k=3 still duct after cold compile (D3).
 >    GRAPH=0 k=3 G1 holds. S0 c1 26.2 @122880. DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
