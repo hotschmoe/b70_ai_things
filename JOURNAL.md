@@ -12471,6 +12471,38 @@ RESULT -> Living header / ledger NEXT PICK / L.5 speed
 VERDICT -> GO (steer). First fire is S0. Do not start
   SQ/AutoRound. Do not overnight-train.
 
+### 2026-08-18v - operator: ingest SergiioB Qwen3.8 vLLM XPU cookbook
+
+CONTEXT -> Operator pointed at
+  https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/qwen38-27/QWEN38-VLLM-XPU.md
+  and the rest of that repo. We already measured the 3.6
+  family on 2026-08-10 (`docs/COOKBOOK_CAMPAIGN.md`). This
+  page is a new 3.8 family on a newer digest.
+
+CONFIG -> docs only. No GPU. Speed window still on P1.6
+  fusedq. Quality floor HE+ 0.957/0.927. DD PARKED.
+
+COMMAND ->
+  ```
+  # fetched QWEN38-VLLM-XPU.md + README + IMAGE-AND-PATCH-MATRIX.md
+  # wrote docs/20260818_qwen38_sergiioB_cookbook.md
+  ```
+
+RESULT -> Cookbook 3.8 pin: GPTQ-Int4-sym-G128 + BF16 MTP
+  (`SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16`
+  rev 9d189a60), image
+  vllm/vllm-openai-xpu@sha256:f01e24f6..., vLLM
+  0.27.2rc1.dev77+gac7509e2b, kernels 0.1.12.3, same two
+  MTP patches we already ported, fp8 KV, 131k, 1x B70.
+  Headline MTP4 p512/g128 **83.7** client post-first
+  (accept 93-96%). Their "NVFP4 unsupported" and
+  "compressed-tensors not proven" are false on this box.
+  83.7 is not W8A8 and not TP=2 and not bench_code c1.
+  S1 queued after P1.6 as a 1-card ceiling smoke.
+
+VERDICT -> GO (ingest). Next GPU pick stays P1.6. Do not
+  enter Phase 2 this note. Do not demote W8A8.
+
 ### 2026-08-18n - LOOP 9: S0 DSpark k=7 GRAPH=1 bench_code c1 26.2
 
 CONTEXT -> Operator 2026-08-18m Next pick S0: same LOOP 8
@@ -12856,4 +12888,36 @@ VERDICT -> GO (P1.7 c1 up, no wedge). New best
   P1.6 fusedq e2e. Leave this serve up. Do not
   start P1.6 / train / DD this fire. Scheduler
   stays (29.4 < 41.2).
+
+### 2026-08-18v - operator: ingest SergiioB Qwen3.8 vLLM XPU cookbook
+
+CONTEXT -> Operator pointed at
+  https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/qwen38-27/QWEN38-VLLM-XPU.md
+  and the rest of that repo. We already measured the 3.6
+  family on 2026-08-10 (`docs/COOKBOOK_CAMPAIGN.md`). This
+  page is a new 3.8 family on a newer digest.
+
+CONFIG -> docs only. No GPU. Speed window still on P1.6
+  fusedq. Quality floor HE+ 0.957/0.927. DD PARKED.
+
+COMMAND ->
+  ```
+  # fetched QWEN38-VLLM-XPU.md + README + IMAGE-AND-PATCH-MATRIX.md
+  # wrote docs/20260818_qwen38_sergiioB_cookbook.md
+  ```
+
+RESULT -> Cookbook 3.8 pin: GPTQ-Int4-sym-G128 + BF16 MTP
+  (`SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16`
+  rev 9d189a60), image
+  vllm/vllm-openai-xpu@sha256:f01e24f6..., vLLM
+  0.27.2rc1.dev77+gac7509e2b, kernels 0.1.12.3, same two
+  MTP patches we already ported, fp8 KV, 131k, 1x B70.
+  Headline MTP4 p512/g128 **83.7** client post-first
+  (accept 93-96%). Their "NVFP4 unsupported" and
+  "compressed-tensors not proven" are false on this box.
+  83.7 is not W8A8 and not TP=2 and not bench_code c1.
+  S1 queued after P1.6 as a 1-card ceiling smoke.
+
+VERDICT -> GO (ingest). Next GPU pick stays P1.6. Do not
+  enter Phase 2 this note. Do not demote W8A8.
 

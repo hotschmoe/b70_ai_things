@@ -73,8 +73,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P1.6 fusedq e2e.
->    LOOP 16 GO: ALLGATHER_ASYNC c1 29.4 @122880 k=4 GRAPH=1. DD PARKED.
+>    Next pick: P1.6 fusedq e2e. After that: S1 SergiioB 3.8
+>    GPTQ-Int4 MTP4 1xB70 smoke (digest f01e24f6; not W8A8).
+>    LOOP 16 GO: ALLGATHER_ASYNC c1 29.4. DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

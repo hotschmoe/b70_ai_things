@@ -24,10 +24,10 @@ lock. The lock is Phase 0, not the ceiling.
 | field | value |
 |---|---|
 | Last loop | 16 (GO P1.7 ALLGATHER_ASYNC c1 29.4, no wedge) |
-| Last JOURNAL heading | `2026-08-18u` |
+| Last JOURNAL heading | `2026-08-18v` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | P1.6 fusedq e2e |
+| Next pick | P1.6 fusedq e2e (after that: S1 cookbook 3.8 GPTQ-Int4 1xB70 smoke) |
 | Blocked on | none. Speed window. Train not forced. Quality floor HE+ 0.957/0.927. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
@@ -167,6 +167,11 @@ Memorize these. They are how previous weeks got burned.
   not publish speed; revert. GRAPH=1 short bench_code is
   allowed. Do not HE+ under GRAPH=1 CGRECLAIM=0. Do not
   overnight-train; accept is already in the NVFP4 band.
+- SergiioB 3.8 cookbook (2026-08-18v):
+  `docs/20260818_qwen38_sergiioB_cookbook.md`. 83.7 is 1x B70
+  GPTQ-Int4 MTP4 on vLLM 0.27.2rc1, not our W8A8 TP=2 c1.
+  Do not demote W8A8. Do not mix digest `f01e24f6` with the
+  3.6 `2c427ef` or Nemotron `1da0a954`. S1 is after P1.6.
 - P2P=1 in vLLM TP>1 wedges the box. Recovery = reboot. Never
   chain two tries. `I_KNOW_P2P_WEDGES=1` required. oneCCL overlay
   is 2021.17; 2021.15 is broken.
@@ -349,6 +354,7 @@ Xe2 rule: never write an FP8 GEMM. Repack FP8 weights to s8.
 | DeepSpec | 38 TB offline cache if you do it their way. Do not. |
 | Steve lab DSpark7 on V4-Flash, 4x B70, **80.8** | XPU DSpark kernel lessons: sharded target top-1, persistent Markov, do not materialize full vocab. Steal after accept is real. |
 | RukaRat 3.8 W8A8-INT8 imatrix | Only public true W8A8-INT8 3.8 besides ours. A/B later, do not replace identity until gated. |
+| SergiioB QWEN38-VLLM-XPU (2026-08) | 1x B70 GPTQ-Int4 + BF16 MTP, vLLM `0.27.2rc1` digest `f01e24f6`, MTP4 p512/g128 **83.7** post-first, accept 93-96%. C1 ceiling. Digest + digest law in `docs/20260818_qwen38_sergiioB_cookbook.md`. Do not mix with 3.6 `2c427ef`. |
 | No PSpark product | SpecPrefill (arxiv 2502.02789, vLLM #39060 stale). PFlash = llama.cpp fork. P-EAGLE = decode-side. |
 
 ---
@@ -655,3 +661,6 @@ Do not start Phase 2 or "PSpark" in week 1-2.
 - DSpark paper: arXiv 2607.05147
 - Lab DSpark7 (steal later): `b70-optimization-lab` V4-Flash packets
 - P2P law: `docs/P2P_GPU.md`, CLAUDE.md
+- SergiioB 3.8 vLLM XPU 4-mode: `docs/20260818_qwen38_sergiioB_cookbook.md`
+  (source https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/qwen38-27/QWEN38-VLLM-XPU.md)
+- 3.6 cookbook already measured here: `docs/COOKBOOK_CAMPAIGN.md`

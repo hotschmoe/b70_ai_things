@@ -127,3 +127,24 @@ DD_MODEL=vllm/qwen36-27b-nvfp4 DD_REPLICAS=1 DD_MAXLEN=262144 \
 2. Token-exact long-prompt builder for exact 131072 total + boundary isolation.
 3. Dense MTP4 at cookbook MAXSEQS=64 may need lower capture sizes or UTIL -- document only.
 4. Power cap A/B (cookbook 165/230 W) -- we did not set host power this session.
+
+## 3.8 family (ingested 2026-08-18v, not measured on this box yet)
+
+Source:
+https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/qwen38-27/QWEN38-VLLM-XPU.md
+
+Loop digest: `docs/20260818_qwen38_sergiioB_cookbook.md`
+
+This is a **third image generation**. Do not reuse the 3.6 digest
+`2c427ef...` or the Nemotron digest `1da0a954...`.
+
+| pin | value |
+|---|---|
+| Weights | `SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16` rev `9d189a60` |
+| Image | `vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f` |
+| vLLM / kernels | `0.27.2rc1.dev77+gac7509e2b` / `0.1.12.3` |
+| Patches | same `patch_mtp_nightly.py` then `patch_mtp_boundary.py` |
+| Their headline | MTP4 p512/g128 **83.7** client post-first, 131k, 1x B70, fp8 KV |
+
+Queued as campaign pick **S1** after P1.6. Item-4 policy still holds:
+INT4+MTP is a C1 ceiling. It does not demote W8A8.

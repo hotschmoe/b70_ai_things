@@ -44,6 +44,9 @@ k=4 is slightly faster. Keep AGASYNC on this serve.
 D4: stay W8A16_M_MAX=0 at 122880. Do not start DD.
 Do not train. Quality floor HE+ 0.957/0.927.
 c1 29.4 < 41.2.
+After P1.6: S1 -- 1-card smoke of SergiioB 3.8 GPTQ-Int4
+MTP4 (`docs/20260818_qwen38_sergiioB_cookbook.md`). Ceiling
+only. Do not demote W8A8. Do not start S1 this fire.
 
 ---
 
