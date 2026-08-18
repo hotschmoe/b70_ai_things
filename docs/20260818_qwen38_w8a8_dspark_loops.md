@@ -36,15 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.1 retry -- GRAPH=0 MTP3 then HE+ 164. First: xpu-health
-card 0, then
-`B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90 TP=2
-PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3
-./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start`
-Query /v1/models, then same HE+ 164 command as LOOP 2
-(new result dir). Multi-hour: start HE+, LOOP-STARTED,
-Verdict RUNNING, STOP. Do not retry GRAPH=1 CGRECLAIM=0.
-Do not CGRECLAIM=1000. Do not start DD. Do not start P0.2.
+P0.1 finish -- HE+ GRAPH=0 is RUNNING. First: `ps -p 471978`
+and `tail /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_heplus.log`.
+If live: one status line, STOP, no sibling. If done: write plus,
+leave the GRAPH=0 W8A8 research serve up, STOP. Do not start DD.
+Do not start P0.2 in that fire. Do not retry GRAPH=1 CGRECLAIM=0.
 
 ---
 
@@ -198,3 +194,52 @@ Restore: DD stays PARKED. Serve left DOWN (wrong flags
   for a 164). Lease released. Cards healthy. Next fire
   starts GRAPH=0 serve. No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18g
+
+---
+
+## LOOP 4 -- 2026-08-18T0643Z -- P0.1 HE+ started on W8A8-gptq MTP3 GRAPH=0
+
+Picked: P0.1 retry -- HE+ 164 thinking-off greedy on GRAPH=0 MTP3
+Why this, not the other open row: living-header Next pick after
+  LOOP 3 NO-GO. GRAPH=1 CGRECLAIM=0 is closed for 164.
+GPU: lease HELD both cards by docker-wait wrapper pid=471943
+  since 2026-08-18 06:43:13. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-mtp3` (root /models/qwen3.8-27b/w8a8-gptq,
+  max_model_len 131072). NAME=qwen38_w8a8. GRAPH=0 --enforce-eager.
+  P2P=0.
+Command:
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90 TP=2 PORT=18080
+    NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  evals/.venv/bin/python -u evals/orchestrator/run_evals.py
+    --endpoint http://192.168.10.5:18080/v1
+    --model qwen3.8-27b-W8A8-gptq-mtp3 --quant W8A8-gptq-mtp3
+    --tiers 1 --tier1-dataset humaneval --limit 164
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_heplus.log
+  serve holder: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_serve.log
+  he+ pid 471978 (file loop4_heplus.pid)
+  serve wrapper pid 471943 (file loop4_serve.pid)
+  result dir:
+    evals/results/20260818T064331Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3
+Result: G0 id match. G1 Paris exact / 17*23=391 / fib iterative.
+  Serve HEALTHY 173s GRAPH=0. HE+ generating 164
+  (thinking=off, greedy, seed=1234). Plus still unmeasured.
+Verdict: RUNNING
+Changed beliefs: 3.8 W8A8 MTP3 @131k loads coherent on
+  int8g-v0260 GRAPH=0. Do not retry GRAPH=1 CGRECLAIM=0
+  for this HE+. Next fire must finish this pick, not P0.2.
+Next pick: P0.1 finish. First command: `ps -p 471978`.
+  Live -> one status line, STOP. Dead -> read plus from the
+  result dir / he+ log, write JOURNAL verdict, leave GRAPH=0
+  W8A8 serve up, STOP. Do not start P0.2/bench in that fire.
+  How to tell done: pid 471978 gone AND log has pass@1 / plus
+  (or a traceback). GRAPH=0 gen slower than GRAPH=1.
+Do not: start a sibling HE+ or P0.2; wait on this fire; enter
+  Phase 2; train; overwrite w8a8-gptq; P2P=1; score DD;
+  start daily_driver_serve.sh; retry GRAPH=1 CGRECLAIM=0.
+Restore: DD stays PARKED. After HE+ ends leave
+  `qwen38_w8a8` / `qwen3.8-27b-W8A8-gptq-mtp3` GRAPH=0 up
+  for P0.2 only if plus >= 0.90. Do not run
+  `vllm/daily_driver_serve.sh start`.
+JOURNAL: ### 2026-08-18h

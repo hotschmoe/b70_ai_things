@@ -12235,3 +12235,51 @@ VERDICT -> NO-GO (P0.1 unfinished). Plus unmeasured.
   GRAPH=0 MTP3 (proven long HE+ path), then HE+ 164.
   Leave serve DOWN this fire (wrong flags). DD PARKED.
 
+### 2026-08-18h - LOOP 4: start P0.1 HE+ on W8A8-gptq MTP3 GRAPH=0
+
+CONTEXT -> LOOP 3 NO-GO: GRAPH=1 CGRECLAIM=0 died 90/164
+  on linear_stream.h:84. Next pick is GRAPH=0 MTP3 then
+  HE+ 164. GPU free. DD PARKED. Multi-hour: start HE+,
+  LOOP-STARTED, Verdict RUNNING, do not wait.
+
+CONFIG -> B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072
+  UTIL=0.90 TP=2 PORT=18080 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+  IMG=vllm-xpu-env:int8g-v0260 CKPT=/models/qwen3.8-27b/w8a8-gptq
+  P2PACCESS=0 CGRECLAIM=0 (n/a at GRAPH=0).
+  HE+ thinking-off greedy seed=1234 limit=164.
+  No --tier1-think.
+
+COMMAND ->
+  ```
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90 TP=2 \
+    PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3 \
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  # lease holder: gpu-run bash -c 'docker wait qwen38_w8a8'
+  # wrapper pid 471943  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_serve.log
+  evals/.venv/bin/python -u evals/orchestrator/run_evals.py \
+    --endpoint http://192.168.10.5:18080/v1 \
+    --model qwen3.8-27b-W8A8-gptq-mtp3 --quant W8A8-gptq-mtp3 \
+    --tiers 1 --tier1-dataset humaneval --limit 164
+  # he+ pid 471978  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop4_heplus.log
+  ```
+
+RESULT -> xpu-health card 0 OK. Both cards OK in serve
+  preflight. HEALTHY 173s GRAPH=0 --enforce-eager.
+  /v1/models id **qwen3.8-27b-W8A8-gptq-mtp3** (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len 131072).
+  Serve probe "Paris." OK. G1 thinking-off: Paris exact
+  ("The capital of France is **Paris**."), 17*23=391,
+  fib iterative coherent. HE+ started: generating 164
+  (thinking=off, greedy, seed=1234). Result dir
+  evals/results/20260818T064331Z__qwen3.8-27b-W8A8-gptq-mtp3__W8A8-gptq-mtp3
+  Plus still unmeasured. DD PARKED.
+
+VERDICT -> RUNNING. Next fire: if `ps -p 471978` is live,
+  one status line and STOP. If done, write plus (plus
+  < 0.90 => quality only, no speed). Do not start P0.2
+  or bench_code in the finish fire. Leave the W8A8
+  GRAPH=0 research serve up. Do not start DD.
+

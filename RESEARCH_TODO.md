@@ -73,9 +73,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P0.1 retry GRAPH=0 MTP3 then HE+ 164 (LOOP 3
->    NO-GO: GRAPH=1 CGRECLAIM=0 died 90/164 on linear_stream.h:84).
->    Do not restore `hotschmoe-dd`. Do not retry GRAPH=1 CGRECLAIM=0.
+>    Next pick: P0.1 HE+ GRAPH=0 RUNNING (LOOP 4, pid 471978).
+>    If live, STOP. If done: write plus, leave W8A8 GRAPH=0 serve
+>    up. Do not restore `hotschmoe-dd`. Do not retry GRAPH=1 CGRECLAIM=0.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,
