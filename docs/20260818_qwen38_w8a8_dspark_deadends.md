@@ -168,3 +168,33 @@ Retry if: int8_gemm_w8a16 consumes the s8s8 [K,N]
   retry W8A16_M_MAX>0 at 122880 UTIL=0.90.
 Related JOURNAL: ### 2026-08-18t
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop15_w8a16_oom.log
+
+## D5 -- P1.6 fusedq e2e decode no win -- 2026-08-18 -- LOOP 17
+
+Tried: mount v0240 fusedq `_xpu_C.abi3.so` over
+  int8g-v0260 (live image/op has no fusedq). Keep
+  AGASYNC k=4 GRAPH=1 @122880 W8A16=0.
+Command / config:
+  B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1 B70_FUSEDQ=1"
+  GDN_SO=.../w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+  GDN_LIB=.../w8a8_kernel_v0240_fusedq/libgdn_attn_kernels_xe_2.so
+  GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-fusedq
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Result: has_fusedq True, fake registered. HEALTHY 142s.
+  G1 Paris / 391 / fib. bench_code c1 avg **28.3** /
+  best 30.7 (wall 8.9s) vs AGASYNC 29.4 / 33.2.
+  No DEVICE_LOST. Revert without fusedq SO failed
+  (cached graph calls fusedq). Wipe b3f7e9e010 then
+  AGASYNC reloads; G1 Paris holds.
+Why it is closed: no e2e decode move (slightly
+  slower). v0240 fusedq SO on this recipe is not a
+  speed win. Compile hash ignores the SO -- wipe
+  before leaving fusedq graphs on disk.
+Retry if: fusedq rebuilt vs v0260 ABI and a
+  TTFT/PP A/B is the pick (P1.6 success was
+  TTFT/PP, not decode). Do not retry this SO for
+  bench_code c1.
+Related JOURNAL: ### 2026-08-18v
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop17_fusedq.log
+  bench loop17_bench_code_c1.log

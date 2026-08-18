@@ -36,17 +36,15 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P1.6 -- fusedq e2e (int8_gemm_w8a8_fusedq).
-LOOP 16 GO: PUSH_AR_ALLGATHER_ASYNC=1 on k=4 GRAPH=1
-c1 **29.4** / best 33.2 (was 28.7 / 31.2). G1 hold.
-No DEVICE_LOST. NVFP4 was 2.5x slower; W8A8 DSpark
-k=4 is slightly faster. Keep AGASYNC on this serve.
-D4: stay W8A16_M_MAX=0 at 122880. Do not start DD.
-Do not train. Quality floor HE+ 0.957/0.927.
-c1 29.4 < 41.2.
-After P1.6: S1 -- 1-card smoke of SergiioB 3.8 GPTQ-Int4
-MTP4 (`docs/20260818_qwen38_sergiioB_cookbook.md`). Ceiling
-only. Do not demote W8A8. Do not start S1 this fire.
+S1 -- SergiioB 3.8 GPTQ-Int4 MTP4 1xB70 smoke.
+D5: fusedq e2e decode c1 28.3 < AGASYNC 29.4. G1 held.
+Reverted; wipe b3f7e9e010 after fusedq graphs. Do not
+retry v0240 fusedq SO on this recipe. Keep AGASYNC
+29.4. D4: W8A16=0 at 122880. Do not start DD.
+Do not train. Do not enter Phase 2. Quality floor
+HE+ 0.957/0.927. c1 29.4 < 41.2.
+S1 is 1-card smoke (`docs/20260818_qwen38_sergiioB_cookbook.md`).
+Ceiling only. Do not demote W8A8.
 
 ---
 
@@ -766,3 +764,48 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC serve
   left UP. Lease held by 514764.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18u
+
+---
+
+## LOOP 17 -- 2026-08-18T2128Z -- P1.6 fusedq e2e c1 28.3
+
+Picked: P1.6 fusedq e2e on k=4 GRAPH=1 AGASYNC
+Why this, not the other open row: living-header Next pick.
+  Live v0260 overlay had no fusedq op. Mount v0240
+  fusedq SO.
+GPU: lease HELD both cards by docker-wait pid=522546 since
+  2026-08-18 21:28:37. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark4-agasync` (reverted)
+  GRAPH=1 k=4 @122880. W8A16=0.
+Command:
+  GDN_SO=w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+  B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1 B70_FUSEDQ=1"
+  GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-fusedq ... start
+  bench_code 1 256 3
+  # revert needed wipe b3f7e9e010 then AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop17_fusedq.log
+  bench: loop17_bench_code_c1.log
+  revert2: loop17_revert2.log
+  wait pid 522546
+Result: has_fusedq True. HEALTHY 142s. G1 Paris / 391
+  / fib. c1 avg **28.3** / best 30.7 (wall 8.9s) vs
+  AGASYNC **29.4** / 33.2. No DEVICE_LOST. Do not
+  publish 28.3 as a win. Revert without wipe failed
+  (cached fusedq op). Wipe + AGASYNC G1 Paris holds.
+Verdict: NO-GO
+Changed beliefs: v0240 fusedq SO loads on v0260 and
+  is coherent, but decode c1 does not move up. Compile
+  hash b3f7e9e010 stores fusedq graphs -- wipe when
+  leaving that SO. Keep AGASYNC 29.4. P1.6 TTFT/PP
+  not claimed.
+Next pick: S1 SergiioB 3.8 GPTQ-Int4 MTP4 1xB70 smoke.
+  AGASYNC serve stays up until S1 needs the cards
+  (S1 is 1xB70; can use --card 0 and leave card 1,
+  or stop this TP=2 first).
+Do not: retry this fusedq SO for c1; retry W8A16>0
+  @122880; train; start DD; enter Phase 2.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC serve
+  left UP. Lease held by 522546. Hash rebuilt as
+  non-fusedq. No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18v

@@ -12889,6 +12889,50 @@ VERDICT -> GO (P1.7 c1 up, no wedge). New best
   start P1.6 / train / DD this fire. Scheduler
   stays (29.4 < 41.2).
 
+### 2026-08-18v - LOOP 17: P1.6 fusedq e2e c1 28.3 NO-GO
+
+CONTEXT -> LOOP 16 GO. Next pick P1.6 fusedq e2e.
+  Live int8g-v0260 + default GDN_SO (v0240) has no
+  int8_gemm_w8a8_fusedq. Mount v0240_fusedq SO.
+  Keep AGASYNC. Success = TTFT/PP up; we measure
+  bench_code c1 vs 29.4. DD PARKED.
+
+CONFIG -> GDN_SO=/mnt/vm_8tb/b70/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+  GDN_LIB=.../libgdn_attn_kernels_xe_2.so
+  B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1 B70_FUSEDQ=1"
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-fusedq
+  IMG=int8g-v0260 method=dspark P2PACCESS=0.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  GDN_SO=.../w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so \
+    B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1 B70_FUSEDQ=1" \
+    GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-fusedq \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py ... 1 256 3
+  # revert: wipe torch_compile_cache/b3f7e9e010 then
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1 ... agasync start
+  # lease holder pid 522546
+  ```
+
+RESULT -> has_fusedq True. HEALTHY 142s. G1 Paris /
+  391 / fib. bench_code c1 avg **28.3** / best 30.7
+  (out 256, wall ~8.9s) vs AGASYNC **29.4** / 33.2
+  wall 7.7s. No DEVICE_LOST. Do not publish 28.3 as
+  a speed win. Revert without wipe: AttributeError
+  missing int8_gemm_w8a8_fusedq (stale compile
+  cache). Wipe + AGASYNC: HEALTHY 137s, G1 Paris.
+  DD PARKED.
+
+VERDICT -> NO-GO (D5). fusedq e2e decode does not
+  beat 29.4. Keep AGASYNC. Next pick S1 SergiioB
+  3.8 GPTQ-Int4 MTP4 1xB70 smoke. Leave AGASYNC
+  serve up. Do not start S1 / train / DD this fire.
+  Scheduler stays (29.4 < 41.2).
+
 ### 2026-08-18v - operator: ingest SergiioB Qwen3.8 vLLM XPU cookbook
 
 CONTEXT -> Operator pointed at
