@@ -4,9 +4,10 @@
 > llama.cpp SYCL TP=2 Q4_K_M @262k (thinking-off greedy sandboxed, 164 items,
 > result dir `20260817T231333Z___models_Qwen3.8-27B-Q4_K_M.gguf__q4km-0xsero-sycl-tp2`):
 > **0.970 base / 0.927 plus**. Beats RadixArk NVFP4 0.933/0.890 and Inferact
-> 0.939/0.915; 1-2 plus pts behind 3.6 NVFP4 0.988/0.945. code c1 is **32.8**
-> (claimed 51; MTP3 41.2; 3.6 48.9). Quality is not the 3.8 unlock -- decode
-> is. Long think on this path is the most expensive 3.8 wall time we have.
+> 0.939/0.915; 1-2 plus pts behind 3.6 NVFP4 0.988/0.945. That HE+ was
+> **doors-off** at code c1 32.8. 2026-08-18 lab Q4K doors raised code c1
+> to **43.8** (after-TTFT 44.9) at 262k; doors-on HE+ not re-run. Claimed
+> 51 is lab AOT 49.7 + FATTN_MMA, which crash-loops this JIT image.
 
 > ## [!] Qwen3.8 Inferact NVFP4 HumanEval+ (2026-08-16): 0.939 / 0.915 -- NOT a 3.6 upgrade
 > Inferact/Qwen3.8-27B-NVFP4 on the gated TP=2 stack (fused GRAPH + MTP3 + prefix,

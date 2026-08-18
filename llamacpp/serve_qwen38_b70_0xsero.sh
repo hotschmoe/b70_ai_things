@@ -5,9 +5,11 @@
 #   ./bin/gpu-run bash llamacpp/serve_qwen38_b70_0xsero.sh start
 #   bash llamacpp/serve_qwen38_b70_0xsero.sh stop
 #
-# ENABLE_MTP=0 first: their own table says hard-task MTP is a net loss
-# vs the 51 tok/s baseline. Flip ENABLE_MTP=1 only after the baseline
-# gate (Paris + code + HE+).
+# LAB_DOORS=1 is the 2026-08-18 chase: lab Q4K reorder + SwiGLU fusion
+# raised code c1 32.8 -> 43.8 at native 262k, Paris/fib still coherent.
+# 0xSero's published entrypoint zeroes those doors (JIT quality guard).
+# FATTN_MMA=1 crash-loops this JIT image; leave it 0.
+# ENABLE_MTP=0: their hard-task MTP is a net loss.
 set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ACTION="${1:-start}"
@@ -17,6 +19,11 @@ PORT="${PORT:-8010}"
 GPU_COUNT="${GPU_COUNT:-2}"
 ENABLE_MTP="${ENABLE_MTP:-0}"
 ENABLE_VISION="${ENABLE_VISION:-0}"
+LAB_DOORS="${LAB_DOORS:-1}"
+CTX_SIZE_OVERRIDE="${CTX_SIZE_OVERRIDE:-262144}"
+BATCH="${BATCH:-1024}"
+UBATCH="${UBATCH:-256}"
+OVERLAY="${OVERLAY:-$REPO/llamacpp/qwen38_b70_entrypoint_overlay.sh}"
 
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 
@@ -36,9 +43,28 @@ docker image inspect qwen38-b70:latest >/dev/null 2>&1 || { echo "missing image 
 say "pre-flight xpu-health"
 "$REPO/bin/xpu-health" 2>&1 | tail -5 || { say "UNHEALTHY -- abort"; exit 3; }
 
-say "M2 0xSero SYCL Q4_K_M GPU_COUNT=$GPU_COUNT ENABLE_MTP=$ENABLE_MTP ctx=262144 port=$PORT"
-(cd "$SRC" && GPU_COUNT="$GPU_COUNT" ENABLE_MTP="$ENABLE_MTP" ENABLE_VISION="$ENABLE_VISION" \
-  docker compose up -d --no-build)
+ctx_show="${CTX_SIZE_OVERRIDE:-262144}"
+say "M2 0xSero SYCL Q4_K_M GPU_COUNT=$GPU_COUNT ENABLE_MTP=$ENABLE_MTP LAB_DOORS=$LAB_DOORS ctx=$ctx_show batch=$BATCH/$UBATCH port=$PORT"
+# compose hardcodes GPU_COUNT/CTX and the image entrypoint zeroes Q4K doors.
+# docker run + overlay so campaign A/Bs can match the lab record flags.
+docker rm -f "$NAME" >/dev/null 2>&1 || true
+(cd "$SRC" && docker compose down --remove-orphans >/dev/null 2>&1) || true
+docker run -d --name "$NAME" --restart unless-stopped \
+  --device /dev/dri --ipc=host --shm-size 8g \
+  -v /dev/dri/by-path:/dev/dri/by-path:ro \
+  -v "$SRC/models:/models" \
+  -v "$OVERLAY:/entrypoint.sh:ro" \
+  -e MODELS_DIR=/models \
+  -e GPU_COUNT="$GPU_COUNT" \
+  -e CTX_SIZE_OVERRIDE="$CTX_SIZE_OVERRIDE" \
+  -e PARALLEL=1 \
+  -e BATCH="$BATCH" -e UBATCH="$UBATCH" \
+  -e ENABLE_MTP="$ENABLE_MTP" -e ENABLE_VISION="$ENABLE_VISION" \
+  -e LAB_DOORS="$LAB_DOORS" \
+  -e GGML_SYCL_FATTN_MMA="${GGML_SYCL_FATTN_MMA:-0}" \
+  -e THREADS=8 \
+  -p "${PORT}:8010" \
+  qwen38-b70:latest >/dev/null
 
 say "waiting for :$PORT /health or /v1/models"
 ok=0

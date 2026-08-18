@@ -66,9 +66,9 @@ prepends the compiler libs + `build/bin`). Build is JIT/SPIR-V (portable, no AOT
 4. TP=2 `--split-mode tensor` Q8_0. -- DONE + PASS 2026-06-30 (GPU): /health ~160s, vision mmproj loaded,
    COHERENCE OK, decode ~14 t/s, clean teardown, NO wedge. The GDN+tensor-split coherence unknown resolved
    POSITIVELY. (Q8_0 ~14 t/s < sglang W8A8 fused+MTP ~25 -- llama.cpp is weight-only, no fused int8 act/MTP.)
-5. 0xSero Qwen3.8-27B Q4_K_M SYCL TP=2 @262k. -- DONE 2026-08-17j: Paris + fib coherent, native
-   262144, HE+ **0.970/0.927** (best 3.8 on the box). code c1 **32.8** vs claimed 51 / RadixArk
-   MTP3 41.2. Speed matches their 1x row, not TP2. Not a shelf. See `QWEN38_B70_0XSERO.md`.
+5. 0xSero Qwen3.8-27B Q4_K_M SYCL TP=2 @262k. -- DONE 2026-08-17j / chased 18: doors-off
+   HE+ 0.970/0.927 at code 32.8. Lab Q4K doors ON: code **43.8** / after-TTFT 44.9 at
+   native 262k, coherent. FATTN_MMA=1 crash-loops. Not a shelf. See `QWEN38_B70_0XSERO.md`.
 
 Server parity with the daily driver is complete: OpenAI `/v1/*`, `--api-key`, Prometheus `--metrics`,
 `--parallel`/`--cont-batching`, `--jinja` tool-calling, `--mmproj` vision, `--mtp` speculative.

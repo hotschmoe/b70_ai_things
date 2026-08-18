@@ -52,17 +52,17 @@
 >    slow and quality still needs rotation/FWHT. Do not displace the robust W8A8/W4A8 work with it.
 > 5. **CAMPAIGN 2026-08-17 -- 3.8-27B fastest decode @262k** (started 17h)
 >    Goal: fastest decode on a good Qwen3.8-27B at native 262k, 1 or 2 cards.
->    Current best on-box 3.8 SPEED is RadixArk NVFP4 TP=2 MTP3 (code 41.2 / HE+ 0.933).
->    Current best on-box 3.8 QUALITY is 0xSero llama.cpp Q4_K_M (HE+ 0.970/0.927) at 32.8.
->    Long think is the 3.8 quality lever and is decode-bound: 4k think tokens is ~82s on
->    3.6 MTP5, ~97s on MTP3, ~122s on this Q4_K_M. Slow decode makes "think longer" lose.
+>    Current best on-box 3.8 SPEED+QUALITY is 0xSero llama.cpp Q4_K_M + lab Q4K doors
+>    @262k: code **43.8** / after-TTFT 44.9 (claimed 51; lab AOT 49.7). Beats RadixArk
+>    MTP3 41.2. HE+ 0.970/0.927 was doors-off; doors-on is Paris/fib coherent only.
+>    Long think: 4k tokens ~91s here vs ~97s MTP3 vs ~82s 3.6 MTP5.
 >    M1 DONE -- DSpark on v0.26 RadixArk @262k serves (method=dspark, V2 runner, fp8 KV,
 >       pool 438k). Paris exact. code c1 **34.4** vs MTP3 **41.2**. Keep MTP3. Recipe:
 >       `vllm/dflash/serve_qwen38_radixark_dspark.sh`.
->    M2 DONE -- 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k. Paris + fib coherent. code c1
->       **32.8** (claimed 51; matches their 1x 33.3; server-side 32.8-34.1). HE+ **0.970 /
->       0.927**. TP=2 is on (SYCL0,SYCL1 tensor-split). No MTP-on (hard-task net loss).
->       Recipe: `llamacpp/serve_qwen38_b70_0xsero.sh`. Next: why 32.8 not 51.
+>    M2 DONE -- 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k. Doors-off was 32.8 / HE+ 0.970.
+>       2026-08-18 chase: lab Q4K reorder+SwiGLU doors raise code c1 to **43.8** at 262k
+>       (after-TTFT 44.9). FATTN_MMA=1 crash-loops JIT. Remaining 51 is AOT 2026.1.1.
+>       Recipe: `LAB_DOORS=1` default in `llamacpp/serve_qwen38_b70_0xsero.sh`.
 >    M3 CHECKED -- no official Intel/Qwen3.8-27B-int4-AutoRound; sglang DSpark cookbook is
 >       CUDA/Spark only. XPU sglang just moved to torch 2.13; do not bump this campaign.
 >    Do not iterate rmacy v10-slim (8k, 17-22 tok/s). W8A8 3.8 stays the INT8-XMX track.

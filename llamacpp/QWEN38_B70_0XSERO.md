@@ -86,29 +86,48 @@ bash llamacpp/serve_qwen38_b70_0xsero.sh stop
 
 Served id: `/models/Qwen3.8-27B-Q4_K_M.gguf` on :8010. n_ctx 262144.
 
-## Measured here (2026-08-17j, ENABLE_MTP=0, GPU_COUNT=2)
+## Measured here
 
-xpu-health both cards OK. Load 211s. Cmdline really is TP=2
-(`--device SYCL0,SYCL1 --split-mode tensor --tensor-split 1,1`).
-Both BMG_G31_B70 devices enumerated. Q4K reorder-family OFF.
+### 2026-08-17j -- published 0xSero doors (Q4K fusions OFF)
+
+xpu-health both cards OK. Load 211s. Cmdline really is TP=2.
+Q4K reorder-family OFF (their JIT quality guard).
 
 | workload | result |
 |---|---|
-| Paris | exact ("The capital of France is **Paris**.") |
-| fib | coherent iterative |
-| code c1 out=256 | **32.8 avg / 32.8 best** (wall 7.8s) |
-| llama.cpp predicted_tokens_seconds | 32.8 bench / 34.1 after HE+ |
-| HE+ 164 thinking-off | **0.970 base / 0.927 plus** (gen 1458s) |
-| prefill (server gauge) | 440-508 tok/s |
+| Paris / fib | exact / coherent |
+| code c1 out=256 | **32.8** |
+| HE+ 164 thinking-off | **0.970 / 0.927** |
+| after-TTFT conv99 (lab metric) | **35.3** |
 
-vs claimed 51 / RadixArk MTP3 41.2 / DSpark 34.4 / 3.6 MTP5 48.9.
-32.8 matches their published **1x B70** row (33.3), not the 2x TP2
-row (51). Quality is the best 3.8 HE+ on this box (RadixArk 0.933/
-0.890, Inferact 0.939/0.915, 3.6 0.988/0.945).
+### 2026-08-18 -- lab Q4K doors ON (the actual 49.7 record flags)
 
-Long think is decode-bound. 4k think tokens is ~122s here vs ~97s
-on MTP3 vs ~82s on 3.6 MTP5. Do not flip ENABLE_MTP=1: their hard-
-task MTP is a net loss, and long think is a hard task.
+The 51 / 49.7 number is the lab AOT record, not the published
+entrypoint. `repro/qwen38-27b-q4km-tp2-asrock-b70` requires
+`GGML_SYCL_MMQ_Q4K_REORDER=1` + `GGML_SYCL_FUSED_MMVQ_SWIGLU_Q4K=1`
+and measures conventional 99-interval after-TTFT. 0xSero zeroes
+those doors. Overlay: `llamacpp/qwen38_b70_entrypoint_overlay.sh`
+with `LAB_DOORS=1`.
 
-Not a shelf. Next GPU work is why TP=2 decode equals 1x -- if 51
-reproduces here this path beats MTP3 on speed and quality.
+| config | Paris | after-TTFT conv99 | code c1 |
+|---|---|---:|---:|
+| doors off, ctx 262k | exact | 35.3 | 32.8 |
+| doors on, ctx 8192 | exact, fib, 391 | **44.68** | **43.9** |
+| doors on, ctx 262k | exact | **44.91** | **43.7-43.8** |
+| + FATTN_MMA=1 | -- | crash-loop (3 restarts) | -- |
+
+262k allocation is not the tax. Reorder did not corrupt this JIT
+image (0xSero's warning did not reproduce). FATTN_MMA=1 does crash
+JIT, as they said.
+
+vs claimed 51 / lab AOT 49.7 / RadixArk MTP3 41.2 / 3.6 MTP5 48.9.
+4k think tokens ~91s at 43.8 vs ~97s MTP3 vs ~82s 3.6.
+
+Not a shelf. Remaining 51 is the AOT 2026.1.1 + FATTN_MMA stack.
+HE+ 0.970 was doors-off; re-gate before promoting.
+
+```
+LAB_DOORS=1 CTX_SIZE_OVERRIDE=262144 BATCH=1024 UBATCH=256 \
+  ./bin/gpu-run bash llamacpp/serve_qwen38_b70_0xsero.sh start
+```
+

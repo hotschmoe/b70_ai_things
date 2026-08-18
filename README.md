@@ -10,9 +10,9 @@ accuracy loss.
 > served `hotschmoe-dd` on :18080). Qwen3.8
 > RadixArk mixed NVFP4 TP=2 MTP3 @262k is coherent (code 41.2 vs 3.6 48.9, HumanEval+
 > 0.933/0.890 vs 3.6 0.988/0.945) and is **not** the DD. Inferact was deleted.
-> 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k is the best 3.8 HE+ (0.970/0.927) but
-> code c1 **32.8** (claimed 51; matches their 1x 33.3) -- slower decode makes
-> long-think wall time worse, not better.
+> 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k + lab Q4K doors is the 3.8 speed
+> leader (code **43.8**, after-TTFT 44.9 vs claimed 51 / MTP3 41.2). HE+
+> 0.970/0.927 was doors-off. FATTN_MMA=1 crash-loops this JIT image.
 > Prior W8A8 TP=2 @253952 and NVFP4 DP=2 @100k stay on the shelf.
 > Prior attempt: **W8A8-INT8 Qwen3.6-27B TP=2** (`b70_daily_0` on **:18080** as `hotschmoe-dd`): image
 > `vllm-xpu-env:int8g-v0260`, compressed-tensors W8A8-sqgptq + MTP3, **16-bit KV** (no
@@ -317,7 +317,7 @@ Numbers below are each entry's own production config. The first two NVFP4 rows w
 | qwen3.6-27b | **NVFP4 TP=2 fp8-KV-cal + MTP5 + push-AR @200k** [tp2] | 11.54/card | 2 | 1982 @36k | 18.15 s @36k | **48.9 code** (52.0 best) | 25.7/stream (**103.0 agg**) | **640.8k tok** |
 | qwen3.8-27b | Unsloth NVFP4 TP=1 @8192 fused+ch-FP8 (research; coherent, slow) [38u] | 24.71 | 1 | -- | -- | coherent | -- | 35k tok |
 | qwen3.8-27b | RadixArk mixed NVFP4 TP=2 MTP3 GRAPH+prefix @262k (not DD) [38r] | 11.54/card | 2 | 3367 | 618 ms | **41.2 code** (42.9 best) | 23.2 (**92.9** agg) | **360k tok** |
-| qwen3.8-27b | 0xSero llama.cpp SYCL Q4_K_M TP=2 @262k (not DD; best 3.8 HE+) [38s] | 18.97 tot | 2 | ~450-508 | -- | **32.8 code** | n/a (PARALLEL=1) | **262k ctx f16** |
+| qwen3.8-27b | 0xSero llama.cpp SYCL Q4_K_M TP=2 + lab Q4K doors @262k (not DD) [38s] | 18.97 tot | 2 | -- | -- | **43.8 code** (44.9 after-TTFT) | n/a (PARALLEL=1) | **262k ctx f16** |
 | qwen3.8-27b | Inferact ModelOpt NVFP4 TP=2 MTP3 GRAPH+prefix @200k (deleted; 18/18, not DD) [38i] | 13.72/card | 2 | 1958 | 1046 ms | **35.0 code** (37.3 best) | 23.3 (**93.3** agg) | 293k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 TP=2 MTP-off @229k (coherent, text-only) [38w] | 16.52/card | 2 | 2574 | 796 ms | 18.45 | 14.73 (51.8 agg) | 250k tok |
 | qwen3.8-27b | on-box GPTQ W8A8 + grafted vis/MTP TP=2 MTP3 @131k [38g] | 17.14/card | 2 | 2216 | 924 ms | **26.62** | 14.40 (50.2 agg) | 270k tok |
@@ -375,12 +375,13 @@ checkpoint (`MIXED_PRECISION`, 193 NVFP4 + 208 FP8). Same fused kernel
 than Inferact 35.0, still not a DD vs 3.6 48.9 / 0.988. PP/TTFT in the
 table is bench_2048 chat thinking-on; code is bench_code out=256.
 
-[38s] **Qwen3.8-27B 0xSero llama.cpp SYCL Q4_K_M TP=2 (2026-08-17j).**
-Weight-only GGUF, not compressed-tensors. Native 262144, Paris + fib
-coherent, HE+ **0.970 / 0.927** (best 3.8). code c1 **32.8** vs claimed
-51 and vs MTP3 41.2 -- server-side predicted 32.8-34.1, matches their
-1x B70 row. Long think is more expensive here, not less. Recipe
-`llamacpp/serve_qwen38_b70_0xsero.sh`. Not a shelf.
+[38s] **Qwen3.8-27B 0xSero llama.cpp SYCL Q4_K_M TP=2 (2026-08-17j / 18).**
+Weight-only GGUF. Published entrypoint zeroes the lab Q4K doors and
+measured code c1 32.8 / HE+ 0.970. Turning those doors on (reorder +
+SwiGLU fusion, FATTN_MMA left off) raised code c1 to **43.8** at native
+262k, Paris/fib/391 coherent, after-TTFT 44.9 vs lab AOT 49.7 / claimed
+51. FATTN_MMA=1 crash-loops JIT. Recipe
+`LAB_DOORS=1` default in `llamacpp/serve_qwen38_b70_0xsero.sh`. Not a shelf.
 
 [38i] **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-14 / fused 14c / gated 15m/n).**
 Official vLLM recipe checkpoint (`quant_algo=NVFP4`, uniform W4A4, not 3.6

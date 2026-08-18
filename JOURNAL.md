@@ -11952,3 +11952,72 @@ VERDICT -> M2 DONE. Best 3.8 HumanEval+ on the box
   if 51 is real here, this path would beat MTP3 on
   BOTH speed and quality and is the long-think unlock.
   Serve left up on :8010.
+
+### 2026-08-18 - chase 51: lab Q4K doors raise 32.8 -> 43.8
+
+CONTEXT -> User: chase the 51 decode mark. Pull their
+  repo/source to see what they actually did.
+
+PLAN -> Read 0xSero + steveseguin/b70-optimization-lab
+  Q4_K_M repro. Match their metric, then their runtime
+  doors, then FATTN_MMA.
+
+WHAT THEY DID -> Lab promoted record is NOT the published
+  0xSero entrypoint. It is:
+  - AOT BMG-G31, oneAPI 2026.1.1 (not JIT 2025.3.2)
+  - ctx **8192** for the record suite (not 262k)
+  - batch 1024 / ubatch 256
+  - `GGML_SYCL_MMQ_Q4K_REORDER=1` +
+    `GGML_SYCL_FUSED_MMVQ_SWIGLU_Q4K=1` plus MMVQ
+    pair/triple/quad ON
+  - `GGML_SYCL_FATTN_MMA=1`
+  - conventional 99-interval after-TTFT on a 12-prompt
+    cold suite: **49.717503** (historical 50.22)
+  0xSero's image ships those Q4K doors **hard-zeroed**
+  ("JIT + stock ggml-org corrupts"). They still claim
+  JIT reaches 51 vs lab 49.7. Metric is after-TTFT,
+  not chat-wall.
+
+HOST -> Kernel 7.1.0. Cards on Threadripper X399 GPP
+  bridges at **PCIe 3.0 x16** (8 GT/s). Lab host is
+  PCIe 5.0 x16. GPU-function sysfs says 2.5 GT/s x1
+  (Battlemage internal switch lie; parent e2ff is
+  8 GT/s x16). Decode all-reduce is ~10 KB, latency
+  not bandwidth.
+
+COMMAND ->
+  ```
+  # live 262k 0xSero doors: after-TTFT first
+  # then overlay entrypoint LAB_DOORS=1
+  LAB_DOORS=1 CTX_SIZE_OVERRIDE=8192 BATCH=1024 UBATCH=256 \
+    ./bin/gpu-run bash llamacpp/serve_qwen38_b70_0xsero.sh start
+  LAB_DOORS=1 CTX_SIZE_OVERRIDE=262144 BATCH=1024 UBATCH=256 \
+    ./bin/gpu-run bash llamacpp/serve_qwen38_b70_0xsero.sh start
+  GGML_SYCL_FATTN_MMA=1 ...  # crash-loop, reverted
+  ```
+
+RESULT ->
+  262k 0xSero doors (M2): after-TTFT conv99 **35.3**,
+    code c1 32.8. Completions streamed 1:1 with tokens.
+    Not a wall-vs-after-TTFT artifact.
+  LAB_DOORS=1 ctx 8192: Paris exact, fib exact, 17*23=391.
+    conv99 **44.68**, code c1 **43.9**. Reorder did NOT
+    corrupt this JIT image.
+  LAB_DOORS=1 ctx 262144: same speed. conv99 **44.91**,
+    code c1 **43.7** / restored **43.8**. 262k alloc is
+    not the tax.
+  FATTN_MMA=1: container RestartCount=3, never healthy.
+    0xSero was right about joint_matrix on JIT.
+
+  4k think-token wall: 32.8 -> **91s** at 43.8 vs MTP3
+    ~97s vs 3.6 MTP5 ~82s.
+
+VERDICT -> Closed most of the 51 gap. New 3.8 speed
+  leader is llama.cpp Q4_K_M + lab Q4K doors @262k
+  (**43.8** vs MTP3 41.2 vs doors-off 32.8). Still
+  short of lab AOT 49.7 / claimed 51. Remaining is
+  the AOT 2026.1.1 + FATTN_MMA stack, which this JIT
+  image cannot run. HE+ 0.970 was doors-off; doors-on
+  is Paris/fib/391 only -- re-gate before shelving.
+  Default the wrapper to LAB_DOORS=1. Serve left up
+  on :8010.
