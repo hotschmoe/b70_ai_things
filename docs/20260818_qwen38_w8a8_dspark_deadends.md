@@ -62,4 +62,26 @@ something new.
 
 ## Campaign packets
 
-(none yet -- LOOP 0 authored the campaign, no GPU)
+## D1 -- GRAPH=1 DSpark k=7 @131k UTIL=0.90 KV OOM -- 2026-08-18 -- LOOP 9
+
+Tried: S0 exact LOOP 8 recipe with GRAPH=1 (SPECTOK=7
+  method=dspark THINK_BUDGET=0 MAXLEN=131072 UTIL=0.90
+  MAXSEQS=2 TP=2 SERVED=qwen3.8-27b-W8A8-gptq-dspark7
+  CGRECLAIM=0 P2PACCESS=0 IMG=int8g-v0260).
+Command / config:
+  GRAPH=1 SPECTOK=7 MAXLEN=131072 PORT=18080
+    NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Result: EngineCore ValueError at KV init. Need 6.98 GiB
+  for 131072, available 6.84 GiB, estimated max 128128.
+  Capture/profile already counted (enforce_eager=False).
+  Workers died. No DEVICE_LOST. xpu-health card 0 OK.
+Why it is closed: GRAPH=1 DSpark draft+verify graphs take
+  extra memory vs GRAPH=0 @131k (LOOP 8 loaded). Same
+  131k UTIL=0.90 will fail the same way.
+Retry if: UTIL>0.90 measured, or MAXLEN<=128128, or a
+  smaller capture/graph memory path is in the image.
+  LOOP 9 already retried MAXLEN=122880 (loads, G1 hold,
+  c1 26.2). Do not retry 131k at UTIL=0.90.
+Related JOURNAL: ### 2026-08-18n
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop9_graph1_131k_crash.log

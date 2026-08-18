@@ -36,13 +36,12 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S0 -- DSpark k=7 GRAPH=1 short bench_code c1 (256x3), not HE+.
-Operator 2026-08-18m: speed window. Accept is fine (pos0 0.62);
-c1 11.1 is GRAPH=0. Do not start DD. Do not train. Do not
+P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN smoke (loads + Paris).
+S0 done: GRAPH=1 DSpark k=7 c1 26.2 @122880 (G1 hold).
+131k UTIL=0.90 is D1. Do not start DD. Do not train. Do not
 method=dflash. Do not retry GRAPH=1 CGRECLAIM=0 as a long-eval
-fix. If G1 dies, revert GRAPH=0 and packet. After S0: P0.5
-sglang 0.5.15 NEXTN smoke, then leftover k=3/4/7 x greedy/prob,
-then P1.5 / P1.7 / P1.6. Quality floor HE+ 0.957/0.927.
+fix. After P0.5: leftover k=3/4/7 x greedy/prob, then P1.5 /
+P1.7 / P1.6. Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
 
 ---
 
@@ -415,3 +414,49 @@ Restore: DD stays PARKED. DSpark serve left UP
   (next pick may replace it). Lease held by 482217.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18l
+
+---
+
+## LOOP 9 -- 2026-08-18T1728Z -- S0 DSpark k=7 GRAPH=1 bench_code c1 26.2
+
+Picked: S0 -- DSpark k=7 GRAPH=1 short bench_code c1 (256x3)
+Why this, not the other open row: living-header Next pick
+  after operator 2026-08-18m. Speed hole is GRAPH=0.
+GPU: lease HELD both cards by docker-wait pid=488659 since
+  2026-08-18 17:26:36. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark7` (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len **122880**).
+  NAME=qwen38_w8a8_dspark. GRAPH=1 PIECEWISE method=dspark
+  k=7 CGRECLAIM=0 P2P=0.
+Command:
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  GRAPH=1 SPECTOK=7 MAXLEN=131072 ... start  -> KV OOM (D1)
+  GRAPH=1 SPECTOK=7 MAXLEN=122880 PORT=18080 NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 qwen3.8-27b-W8A8-gptq-dspark7 1 256 3
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop9_bench_code_c1.log
+  131k crash: loop9_graph1_131k_crash.log
+  serve wrapper pid 488659 (file loop9_serve.pid)
+Result: 131k UTIL=0.90 ValueError KV 6.84 < 6.98 GiB (est
+  max 128128). No DEVICE_LOST. Card 0 OK. Retry 122880
+  HEALTHY ~150s, capture 1.28 GiB. G0 match. G1 Paris /
+  391 / fib iterative. bench_code c1 avg **26.2** / best
+  31.2 (out 256, wall ~10.5s). Bench-window accept 2.44
+  pos0 0.59. G1 hold; no HE+.
+Verdict: GO
+Changed beliefs: GRAPH=1 is the DSpark speed hole
+  (11.1 -> 26.2). 26.2 ~= MTP3 GRAPH=1 26.62, not a
+  beat, not 41.2. 131k GRAPH=1 DSpark at UTIL=0.90
+  does not load (D1). Do not HE+ under GRAPH=1.
+Next pick: P0.5 sglang 0.5.15 W8A8 3.8 NEXTN smoke
+  (loads + Paris). Do not start it this fire.
+Do not: start P0.5 / train / DD; method=dflash; retry
+  GRAPH=1 @131k UTIL=0.90; retry GRAPH=1 CGRECLAIM=0 as
+  a long-eval fix; enter Phase 2; overwrite w8a8-gptq;
+  publish 26.2 as beating MTP3 or 41.2.
+Restore: DD stays PARKED. GRAPH=1 DSpark serve left UP
+  (next pick replaces it). Lease held by 488659.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18n

@@ -12471,3 +12471,63 @@ RESULT -> Living header / ledger NEXT PICK / L.5 speed
 VERDICT -> GO (steer). First fire is S0. Do not start
   SQ/AutoRound. Do not overnight-train.
 
+### 2026-08-18n - LOOP 9: S0 DSpark k=7 GRAPH=1 bench_code c1 26.2
+
+CONTEXT -> Operator 2026-08-18m Next pick S0: same LOOP 8
+  recipe (serve_qwen38_w8a8_dspark.sh SPECTOK=7
+  method=dspark THINK_BUDGET=0 SERVED=
+  qwen3.8-27b-W8A8-gptq-dspark7) but GRAPH=1. Short
+  bench only, not HE+. Last serve was GRAPH=0 DSpark
+  on :18080. DD PARKED. If G1 dies or DEVICE_LOST,
+  revert GRAPH=0, packet, STOP.
+
+CONFIG -> GRAPH=1 SPECTOK=7 UTIL=0.90 MAXSEQS=2 TP=2
+  PORT=18080 NAME=qwen38_w8a8_dspark
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark7
+  CKPT=/models/qwen3.8-27b/w8a8-gptq
+  DRAFTER=/models/qwen3.8-27b/dflash-drafter-fp8-b70
+  method=dspark THINK_BUDGET=0 P2PACCESS=0 CGRECLAIM=0
+  IMG=vllm-xpu-env:int8g-v0260. First try MAXLEN=131072
+  (D1). Retry MAXLEN=122880. bench_code out=256 reps=3
+  conc=1. No HE+.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  GRAPH=1 SPECTOK=7 MAXLEN=131072 PORT=18080 \
+    NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # -> ValueError KV 6.84 < 6.98 GiB. xpu-health card 0 OK.
+  GRAPH=1 SPECTOK=7 MAXLEN=122880 PORT=18080 \
+    NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # lease holder: gpu-run bash -c 'docker wait qwen38_w8a8_dspark'
+  # wrapper pid 488659  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop9_serve_122k.log
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 \
+    qwen3.8-27b-W8A8-gptq-dspark7 1 256 3
+  ```
+
+RESULT -> 131k UTIL=0.90: EngineCore KV OOM (need 6.98,
+  have 6.84, est max 128128). No DEVICE_LOST. Packet D1.
+  122880: HEALTHY ~150s GRAPH=1 PIECEWISE. Capture 1.28
+  GiB. KV 8.14 GiB / 151749 tok / 1.23x conc.
+  /v1/models id **qwen3.8-27b-W8A8-gptq-dspark7** (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len **122880**).
+  G1 thinking-off: Paris exact ("The capital of France is
+  Paris."), 17*23=391, fib iterative coherent.
+  bench_code c1: avg **26.2** / best 31.2 t/s (out 256,
+  wall ~10.5s). Bench-window mean accept_len **2.44**,
+  pos0 **0.59** (0.54-0.68). Compare GRAPH=0 DSpark
+  11.1 / accept 2.46 pos0 0.62; MTP3 GRAPH=1 26.62.
+  DD PARKED.
+
+VERDICT -> GO (S0 measured). GRAPH=1 is the speed hole
+  (11.1 -> 26.2). 26.2 ~= MTP3 26.62, does not beat it,
+  does not hit 41.2. G1 hold so no HE+ rerun. Next pick
+  P0.5 sglang 0.5.15 NEXTN smoke. Leave GRAPH=1 DSpark
+  serve up. Do not start P0.5 / train / DD this fire.
+  Scheduler stays (26.2 < 41.2).
+
