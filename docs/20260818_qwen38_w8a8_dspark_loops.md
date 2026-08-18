@@ -36,12 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-leftover k=3/4/7 x greedy/prob on vLLM DSpark (GRAPH=1 @122880).
-P0.5 GO: sglang 0.5.15 W8A8 3.8 NEXTN loads + G1 hold.
-S0: GRAPH=1 DSpark k=7 c1 26.2 @122880. 131k UTIL=0.90 is D1.
-Do not start DD. Do not train. Do not method=dflash. Do not
-retry GRAPH=1 CGRECLAIM=0 as a long-eval fix. After k-sweep:
-P1.5 / P1.7 / P1.6. Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
+wipe /mnt/vm_8tb/b70/vllm_cache/torch_compile_cache/b3f7e9e010
+then retry GRAPH=1 SPECTOK=3 MAXLEN=122880 G1 only.
+D2: GRAPH=1 k=3 emitted "duct" / pos0 0% after loading
+k=7 compile cache. GRAPH=0 k=3 G1 holds. Do not publish
+that GRAPH=1 c1. Do not start DD. Do not train. After
+retry: leftover k=4/7 greedy/prob, then P1.5 / P1.7 /
+P1.6. Quality floor HE+ 0.957/0.927. c1 26.2 < 41.2.
 
 ---
 
@@ -504,3 +505,51 @@ Restore: DD stays PARKED. sglang NEXTN serve left UP (next
   pick replaces it). Lease held by 492514.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18o
+
+---
+
+## LOOP 11 -- 2026-08-18T1826Z -- leftover k=3 GRAPH=1 G1 fail
+
+Picked: leftover k-sweep first cell -- GRAPH=1 SPECTOK=3
+  greedy @122880
+Why this, not the other open row: living-header Next pick
+  after LOOP 10. LOOP 10 named k=3 first.
+GPU: lease HELD both cards by docker-wait pid=498559 since
+  2026-08-18 18:26:03. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq-dspark3` (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len **122880**).
+  NAME=qwen38_w8a8_dspark. GRAPH=0 (reverted) method=dspark
+  k=3 CGRECLAIM=0 P2P=0.
+Command:
+  NAME=qwen38_w8a8_sglang bash sglang/serve_qwen38_w8a8_0515.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  GRAPH=1 SPECTOK=3 MAXLEN=122880 PORT=18080 NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # G1 fail "duct". revert:
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  GRAPH=0 SPECTOK=3 MAXLEN=122880 ... start
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop11_serve.log
+  fail: loop11_graph1_k3_g1fail.log
+  revert: loop11_revert_graph0.log
+  wait pid 498559 (file loop11_serve.pid)
+Result: GRAPH=1 HEALTHY 147s. G0 match. G1 "duct" on
+  chat and completions. accept_len 1.00 pos0 0.000.
+  Loaded torch_compile_cache/b3f7e9e010 from k=7.
+  No DEVICE_LOST. No c1 published. GRAPH=0 revert G1
+  Paris / 391 / fib hold.
+Verdict: NO-GO
+Changed beliefs: GRAPH=1 k=3 is not safe on a k=7
+  compile cache. "duct" + 0% accept is G1 fail, not
+  a speed number. GRAPH=0 k=3 is coherent. Train is
+  not forced (GRAPH=0 G1 holds). Packet D2.
+Next pick: wipe
+  /mnt/vm_8tb/b70/vllm_cache/torch_compile_cache/b3f7e9e010
+  then GRAPH=1 SPECTOK=3 MAXLEN=122880 G1 only. If G1
+  holds, bench_code c1. If still duct, close k=3 GRAPH=1
+  and do k=4.
+Do not: publish a GRAPH=1 k=3 c1; retry GRAPH=1 without
+  wiping that cache; retry GRAPH=1 @131k; method=dflash;
+  train; start DD; enter Phase 2.
+Restore: DD stays PARKED. GRAPH=0 k=3 serve left UP.
+  Lease held by 498559. No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18p

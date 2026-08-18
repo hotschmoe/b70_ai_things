@@ -12579,3 +12579,58 @@ VERDICT -> GO (P0.5 loads + Paris). 3.8 W8A8 NEXTN on
   start k-sweep / train / DD this fire. Scheduler stays
   (c1 26.2 < 41.2).
 
+### 2026-08-18p - LOOP 11: leftover k=3 GRAPH=1 G1 "duct"; revert GRAPH=0
+
+CONTEXT -> LOOP 10 P0.5 GO. Next pick leftover k=3/4/7.
+  First cell GRAPH=1 SPECTOK=3 MAXLEN=122880 (not 131k,
+  D1). DD PARKED. Fail-closed: G1 fail => no speed
+  number, revert, packet, STOP.
+
+CONFIG -> IMG=vllm-xpu-env:int8g-v0260
+  NAME=qwen38_w8a8_dspark
+  CKPT=/models/qwen3.8-27b/w8a8-gptq
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark3
+  SPECTOK=3 method=dspark THINK_BUDGET=0
+  MAXLEN=122880 UTIL=0.90 MAXSEQS=2 TP=2
+  CGRECLAIM=0 P2PACCESS=0. First try GRAPH=1.
+  Revert GRAPH=0 --enforce-eager.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_sglang bash sglang/serve_qwen38_w8a8_0515.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  GRAPH=1 SPECTOK=3 MAXLEN=122880 PORT=18080 \
+    NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # G1 "duct". accept 0%.
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  GRAPH=0 SPECTOK=3 MAXLEN=122880 PORT=18080 \
+    NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # lease holder: gpu-run bash -c 'docker wait qwen38_w8a8_dspark'
+  # wrapper pid 498559
+  ```
+
+RESULT -> GRAPH=1 HEALTHY 147s. /v1/models id
+  **qwen3.8-27b-W8A8-gptq-dspark3** (max_model_len
+  **122880**). G1 thinking-off content="duct"
+  (finish_reason=length, 64 completion_tokens).
+  Completions "The capital of France is" -> "duct"
+  (16 toks). SpecDecoding: accept_len **1.00**,
+  pos0 **0.000**, 0 accepted. Workers loaded
+  /vllm_cache/torch_compile_cache/b3f7e9e010
+  backbone+dspark_head (LOOP 9 k=7 GRAPH=1 cache).
+  No DEVICE_LOST. No c1 published.
+  GRAPH=0 revert HEALTHY 127s. G1 thinking-off:
+  Paris exact, 17*23=391, fib iterative. DD PARKED.
+
+VERDICT -> NO-GO (G1 fail on GRAPH=1 k=3). Packet D2.
+  GRAPH=0 k=3 is coherent; train not forced. Next
+  pick: wipe torch_compile_cache/b3f7e9e010 then
+  retry GRAPH=1 k=3 G1 only. Leave GRAPH=0 serve up.
+  Do not start k=4 / train / DD this fire. Scheduler
+  stays (c1 26.2 < 41.2).
+

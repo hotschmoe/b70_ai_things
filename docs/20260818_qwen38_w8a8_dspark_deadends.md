@@ -85,3 +85,32 @@ Retry if: UTIL>0.90 measured, or MAXLEN<=128128, or a
   c1 26.2). Do not retry 131k at UTIL=0.90.
 Related JOURNAL: ### 2026-08-18n
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop9_graph1_131k_crash.log
+
+## D2 -- GRAPH=1 DSpark k=3 G1 "duct" / 0% accept -- 2026-08-18 -- LOOP 11
+
+Tried: leftover k-sweep first cell. Same LOOP 9 recipe
+  (method=dspark THINK_BUDGET=0 MAXLEN=122880 UTIL=0.90
+  MAXSEQS=2 TP=2 CGRECLAIM=0 P2PACCESS=0 IMG=int8g-v0260)
+  with SPECTOK=3 GRAPH=1.
+Command / config:
+  GRAPH=1 SPECTOK=3 MAXLEN=122880 PORT=18080
+    NAME=qwen38_w8a8_dspark
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Result: HEALTHY 147s. G0 id
+  qwen3.8-27b-W8A8-gptq-dspark3. G1 thinking-off and
+  completions both emit "duct" (finish_reason=length,
+  64/16 completion_tokens). Spec accept_len 1.00,
+  pos0 0.000, 0 accepted. Loaded compile cache
+  /vllm_cache/torch_compile_cache/b3f7e9e010 (k=7
+  GRAPH=1 leftover). No DEVICE_LOST. Revert GRAPH=0
+  k=3: G1 Paris / 391 / fib hold.
+Why it is closed: do not publish GRAPH=1 k=3 speed.
+  G1 fail is fail-closed. Same k+cache combo will
+  replay "duct".
+Retry if: wipe host
+  /mnt/vm_8tb/b70/vllm_cache/torch_compile_cache/b3f7e9e010
+  (backbone + dspark_head) then GRAPH=1 k=3 G1 only.
+  If still duct after a cold compile, k=3 GRAPH=1 is
+  a real dead-end; stay GRAPH=0 / try k=4.
+Related JOURNAL: ### 2026-08-18p
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop11_graph1_k3_g1fail.log
