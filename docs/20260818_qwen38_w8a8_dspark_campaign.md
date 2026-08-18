@@ -55,8 +55,8 @@ failure mode, not diligence.
    `2026-08-18` onward and any `LOOP` / `W8A8` / `DSpark` / `qwen38`
    tags. The ledger is the index; JOURNAL is the evidence.
 5. `./bin/gpu-run --status` and `curl -s http://192.168.10.5:18080/v1/models`.
-   The served id on :18080 should be `hotschmoe-dd` unless a loop
-   already owns a research slot.
+   DD is PARKED for this campaign window. :18080 is empty or a
+   research serve. Never start `daily_driver_serve.sh`.
 6. Only then pick work. One pick per loop unless the first pick is
    a 5-minute no-GPU edit that unblocks the real pick.
 
@@ -72,8 +72,9 @@ A loop is **one verdict**, not one phase.
   you are blocked on lease / DD / health / a missing artifact.
 - If the pick is a multi-hour GPU job (HE+, quant, train), start it
   under `gpu-run`, write a LOOP-STARTED ledger line with the log
-  path and pid, and leave a restore-DD instruction. Do not sit on
-  the lease after the job ends.
+  path and pid. Leave a research serve up if the next pick needs
+  the same id. Do not start DD. Do not sit on the lease after the
+  job ends.
 
 ### L.2 Where to write (so the next loop can start)
 
@@ -109,7 +110,7 @@ Verdict: GO / NO-GO / BLOCKED / DEAD-END
 Changed beliefs: <what a future loop must not re-discover>
 Next pick: <exact next row or unblock, and the first command>
 Do not: <the tempting wrong follow-up>
-Restore: DD back? xpu-health? lock released?
+Restore: DD stays down. xpu-health? lock released?
 JOURNAL: ### YYYY-MM-DD<letter>
 ```
 
@@ -156,10 +157,10 @@ Memorize these. They are how previous weeks got burned.
   fail => do not publish the speed number.
 - `gpu-run` for every real GPU touch. `gpu-run --card N` for one
   card. Editing and compiling do not take the lease.
-- Do **not** stop `hotschmoe-dd` for Phase 0 editing/compiling.
-  Stop it only for on-GPU quant / serve / bench, then restore it
-  before you walk away. Restoration is part of the loop, not a
-  courtesy.
+- DD is PARKED (operator 2026-08-18f). Do not run
+  `vllm/daily_driver_serve.sh start`. Do not restore
+  `hotschmoe-dd` between loops or after a job. Cards belong
+  to this campaign until the operator says otherwise.
 - P2P=1 in vLLM TP>1 wedges the box. Recovery = reboot. Never
   chain two tries. `I_KNOW_P2P_WEDGES=1` required. oneCCL overlay
   is 2021.17; 2021.15 is broken.
