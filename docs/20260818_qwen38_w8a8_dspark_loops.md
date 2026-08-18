@@ -36,13 +36,12 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.2 -- W8A8 @262k MTP-off, KV_FP8=0 first (bf16 KV). Current
-GRAPH=0 MTP3 serve is still up on :18080; stop it, then
-`B70_NOMTP=1 GRAPH=0 MAXLEN=262144 UTIL=0.90 TP=2 PORT=18080
-NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq
-./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start`
-Query /v1/models, G1/Paris. Do not start DD. Do not retry
-GRAPH=1 CGRECLAIM=0. Do not start P0.3/P0.4 in that fire.
+P0.3 -- W8A8 MTP3 @ longest ctx that fits, then bench_code c1.
+Current 262k MTP-off serve is up; stop it, then start MTP3
+GRAPH=0 (do not GRAPH=1 CGRECLAIM=0). Try MAXLEN=131072
+first (known HE+ config), G1, then bench_code c1. Push
+ctx only after c1 lands. Do not start DD. Do not start
+P0.4 DSpark in that fire.
 
 ---
 
@@ -284,3 +283,47 @@ Restore: DD stays PARKED. GRAPH=0 MTP3 serve left UP
   (next pick will replace it). Lease still held by 471943.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18i
+
+---
+
+## LOOP 6 -- 2026-08-18T0814Z -- P0.2 native 262k MTP-off + Paris
+
+Picked: P0.2 -- W8A8 @262k MTP-off KV_FP8=0 (bf16 KV), G1
+Why this, not the other open row: living-header Next pick
+  after LOOP 5 GO. KV_FP8=0 first as specified.
+GPU: lease HELD both cards by docker-wait pid=476139 since
+  2026-08-18 08:14:12. DD PARKED. :18080 id
+  `qwen3.8-27b-W8A8-gptq` (root /models/qwen3.8-27b/w8a8-gptq,
+  max_model_len 262144). NAME=qwen38_w8a8. GRAPH=0 MTP-off.
+  P2P=0.
+Command:
+  NAME=qwen38_w8a8 bash vllm/w8a8/serve_qwen38_27b.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260
+  B70_NOMTP=1 GRAPH=0 MAXLEN=262144 UTIL=0.90 TP=2 PORT=18080
+    NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq KV_FP8=0
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop6_serve.log
+  serve wrapper pid 476139 (file loop6_serve.pid)
+Result: HEALTHY 198s. G0 id match max_model_len 262144.
+  G1 Paris exact / 17*23=391 / fib iterative. Native 262k
+  fits MTP-off UTIL=0.90 TP=2. KV_FP8 env is a no-op on
+  the W8A8 3.6 serve.sh (bf16 KV).
+Verdict: GO
+Changed beliefs: 3.8 W8A8 native 262144 is real (not only
+  229376). GRAPH=0 MTP-off loads coherent. KV_FP8 A/B
+  needs a W8A8 serve hook before the fp8-KV half.
+Next pick: P0.3 MTP3 @ longest ctx that fits, then
+  bench_code c1. First: stop this MTP-off serve, then
+  B70_NOMTP=0 MTPTOK=3 GRAPH=0 MAXLEN=131072 UTIL=0.90
+  TP=2 PORT=18080 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq-mtp3
+  ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  Query /v1/models, G1, then bench_code c1. Push ctx
+  only after c1 lands.
+Do not: start P0.3/P0.4 in this fire; start DD; retry
+  GRAPH=1 CGRECLAIM=0; enter Phase 2; train; overwrite
+  w8a8-gptq; invent a KV_FP8 hook this fire.
+Restore: DD stays PARKED. 262k MTP-off serve left UP
+  (next pick replaces it). Lease held by 476139.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-18j

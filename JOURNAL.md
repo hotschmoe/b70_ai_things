@@ -12319,3 +12319,43 @@ VERDICT -> GO (P0.1). Speed work allowed. Next pick P0.2
   North-star HE+ is now measured; DSpark accept/c1 still
   missing so scheduler stays.
 
+### 2026-08-18j - LOOP 6: P0.2 W8A8 MTP-off @262k native ctx + Paris
+
+CONTEXT -> LOOP 5 GO. Next pick P0.2: stop GRAPH=0 MTP3,
+  serve W8A8 @262k MTP-off KV_FP8=0 (bf16 KV), G1/Paris.
+  One half of the KV_FP8 A/B. Do not start P0.3 or DD.
+
+CONFIG -> B70_NOMTP=1 GRAPH=0 MAXLEN=262144 UTIL=0.90
+  TP=2 PORT=18080 NAME=qwen38_w8a8
+  SERVED=qwen3.8-27b-W8A8-gptq KV_FP8=0
+  IMG=vllm-xpu-env:int8g-v0260 CKPT=/models/qwen3.8-27b/w8a8-gptq
+  P2PACCESS=0. No speculative-config.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8 bash vllm/w8a8/serve_qwen38_27b.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 \
+    --img vllm-xpu-env:int8g-v0260 --timeout 90
+  B70_NOMTP=1 GRAPH=0 MAXLEN=262144 UTIL=0.90 TP=2 \
+    PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq \
+    KV_FP8=0 ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  # lease holder: gpu-run bash -c 'docker wait qwen38_w8a8'
+  # wrapper pid 476139  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop6_serve.log
+  ```
+
+RESULT -> xpu-health card 0 OK. Both cards OK in serve
+  preflight. HEALTHY 198s GRAPH=0 --enforce-eager MTP-off.
+  /v1/models id **qwen3.8-27b-W8A8-gptq** (root
+  /models/qwen3.8-27b/w8a8-gptq, max_model_len **262144**).
+  Serve probe "Paris." OK. G1 thinking-off: Paris exact
+  ("The capital of France is **Paris**."), 17*23=391,
+  fib iterative coherent. Native 262k fits at UTIL=0.90
+  TP=2 MTP-off. W8A8 3.6 serve.sh has no KV_FP8 hook
+  (env is a no-op); this is bf16 KV. DD PARKED.
+
+VERDICT -> GO (P0.2 native ctx + Paris, KV_FP8=0). Next
+  pick P0.3: MTP3/5 @ longest ctx that fits, then
+  bench_code c1. Do not start P0.3 in this fire. Leave
+  262k MTP-off serve up. Do not start DD. KV_FP8=1 A/B
+  needs a W8A8 serve hook -- not this fire.
+
