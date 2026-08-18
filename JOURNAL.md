@@ -12448,3 +12448,26 @@ VERDICT -> GO (P0.4 accept table exists). Accept is fine
   coherent W8A8+DSpark accept/c1 are now both in the
   ledger.
 
+### 2026-08-18m - operator: re-arm speed window, no requant
+
+CONTEXT -> Operator: get the loop back on for speed, do
+  not drop accuracy. LOOP 8 left P0.5 as next. Speed hole
+  is GRAPH=0 (c1 11.1) vs MTP3 GRAPH=1 26.62. Off-shelf
+  DSpark accept is already fine (2.46 / pos0 0.62). No
+  W8A8-matched train has been run; L.4 says kernels not
+  train.
+
+CONFIG -> Scheduler re-armed 30m. Next pick S0: DSpark
+  k=7 GRAPH=1 short bench_code c1 only. Quality floor
+  HE+ 0.957/0.927. DD PARKED.
+
+COMMAND -> docs + scheduler_create only. No GPU this
+  note.
+
+RESULT -> Living header / ledger NEXT PICK / L.5 speed
+  window set. Stop condition is no longer "HE+ and a
+  DSpark number exist" (that deleted 01a01345a5ed).
+
+VERDICT -> GO (steer). First fire is S0. Do not start
+  SQ/AutoRound. Do not overnight-train.
+

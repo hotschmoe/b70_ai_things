@@ -73,9 +73,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P0.5 sglang 0.5.15 W8A8 3.8 NEXTN smoke
->    (LOOP 8 GO: W8A8+DSpark k=7 accept 2.46 / pos0 0.62,
->    c1 11.1 GRAPH=0). Do not restore `hotschmoe-dd`.
+>    Next pick: S0 DSpark k=7 GRAPH=1 short bench_code c1
+>    (speed window; no train; quality floor HE+ 0.957/0.927).
+>    Then P0.5 / k-sweep / P1.5 / P1.7 / P1.6. DD PARKED.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

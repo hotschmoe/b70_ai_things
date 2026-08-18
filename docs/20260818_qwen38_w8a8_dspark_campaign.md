@@ -24,11 +24,11 @@ lock. The lock is Phase 0, not the ceiling.
 | field | value |
 |---|---|
 | Last loop | 8 (P0.4 GO DSpark k=7 accept 2.46 / pos0 0.62) |
-| Last JOURNAL heading | `2026-08-18l` |
+| Last JOURNAL heading | `2026-08-18m` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN smoke (loads + Paris) |
-| Blocked on | none. Off-shelf pos0 0.62; train not forced. c1 11.1 is GRAPH=0. |
+| Next pick | S0 -- DSpark k=7 GRAPH=1 short bench_code c1 (not HE+) |
+| Blocked on | none. Speed window. Train not forced. Quality floor HE+ 0.957/0.927. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark accept_len / pos0 | **2.46 / 0.62** (k=7 GRAPH=0 greedy, off-shelf fp8-b70) |
@@ -161,6 +161,11 @@ Memorize these. They are how previous weeks got burned.
   `vllm/daily_driver_serve.sh start`. Do not restore
   `hotschmoe-dd` between loops or after a job. Cards belong
   to this campaign until the operator says otherwise.
+- Speed window (operator 2026-08-18m): do not start A.2-A.4
+  requant. Quality floor is HE+ 0.957/0.927. G1 fail => do
+  not publish speed; revert. GRAPH=1 short bench_code is
+  allowed. Do not HE+ under GRAPH=1 CGRECLAIM=0. Do not
+  overnight-train; accept is already in the NVFP4 band.
 - P2P=1 in vLLM TP>1 wedges the box. Recovery = reboot. Never
   chain two tries. `I_KNOW_P2P_WEDGES=1` required. oneCCL overlay
   is 2021.17; 2021.15 is broken.

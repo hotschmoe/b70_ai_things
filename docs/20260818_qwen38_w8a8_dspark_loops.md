@@ -36,11 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P0.5 -- sglang 0.5.15 W8A8 3.8 NEXTN smoke. Loads + Paris
-on the grafted W8A8-gptq. Do not start DD. Do not train.
-Do not method=dflash. GRAPH=1 CGRECLAIM=0 still unsafe.
-Current vLLM DSpark serve may stay up or be stopped for
-the sglang slot; cards belong to the campaign.
+S0 -- DSpark k=7 GRAPH=1 short bench_code c1 (256x3), not HE+.
+Operator 2026-08-18m: speed window. Accept is fine (pos0 0.62);
+c1 11.1 is GRAPH=0. Do not start DD. Do not train. Do not
+method=dflash. Do not retry GRAPH=1 CGRECLAIM=0 as a long-eval
+fix. If G1 dies, revert GRAPH=0 and packet. After S0: P0.5
+sglang 0.5.15 NEXTN smoke, then leftover k=3/4/7 x greedy/prob,
+then P1.5 / P1.7 / P1.6. Quality floor HE+ 0.957/0.927.
 
 ---
 
