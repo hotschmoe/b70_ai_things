@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# L60: retry Ornith GRAPH=1 after aligning 35B compile-config with the 27B recipe.
+set -uo pipefail
+REPO=/mnt/vm_8tb/github/b70_ai_things
+SERVE="$REPO/vllm/nvfp4/serve_nvfp4_moe_35b.sh"
+PROBE="$REPO/vllm/nvfp4/g1_probe.py"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUTDIR="$REPO/results/logs/ornith_nvfp4_graphfix_${STAMP}"
+mkdir -p "$OUTDIR"
+HOST=192.168.10.5
+PORT=18080
+NAME=ornith_nvfp4_sweep
+export IMG=vllm-xpu-env:int8g-v0260
+export NAME PORT
+export CKPT=/models/ornith-1.5-35b-a3b/nvfp4-modelopt
+export MODE=fused GRAPH=1
+export KV_FP8=0 LANGONLY=1 MAXSEQS=8 MAXLEN=8192 UTIL=0.90
+export CAPSIZES=1,2,4,8 MTPTOK=
+export FUSED_SO=/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/_xpu_C.abi3.so
+export GDN_LIB=/mnt/vm_8tb/b70/nvfp4_f8scale_kernel_gdn/libgdn_attn_kernels_xe_2.so
+export GDN_SO=/mnt/vm_8tb/b70/w8a8_kernel_v0240/_xpu_C.abi3.so
+export B70_EXTRA_ENV="B70_FP8_CHANNEL_INT8XMX=0 B70_NVFP4_F8_SCALE_M_MAX=8"
+export P2PACCESS=0
+
+log() { echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$OUTDIR/ledger.txt"; }
+
+wait_healthy() {
+  local i status
+  for i in $(seq 1 180); do
+    status=$(docker inspect -f '{{.State.Status}}' "$NAME" 2>/dev/null || echo missing)
+    if [ "$status" = "exited" ] || [ "$status" = "missing" ]; then return 1; fi
+    if curl -sf --max-time 3 "http://${HOST}:${PORT}/v1/models" >/dev/null 2>&1; then return 0; fi
+    sleep 5
+  done
+  return 1
+}
+
+run_one() {
+  local arm="$1" tp="$2"
+  export TP="$tp" CARD=0
+  export SERVED="ornith-1.5-35b-A3B-NVFP4-fused-tp${tp}-g1-graphfix"
+  log "===== $arm TP=$tp GRAPH=1 f8scale xmx=0 ====="
+  NAME="$NAME" bash "$SERVE" stop >/dev/null 2>&1 || true
+  docker rm -f "$NAME" >/dev/null 2>&1 || true
+  local t0 hs=NA
+  t0=$(date +%s)
+  NAME="$NAME" PORT="$PORT" IMG="$IMG" bash "$SERVE" >"$OUTDIR/${arm}_boot.txt" 2>&1
+  if ! wait_healthy; then
+    docker logs "$NAME" >"$OUTDIR/${arm}_docker.log" 2>&1 || true
+    grep -E 'AssertionError|Error|Traceback|DEVICE_LOST|cudagraph' \
+      "$OUTDIR/${arm}_docker.log" | tail -20 >"$OUTDIR/${arm}_err.txt" || true
+    log "$arm BOOTFAIL"
+    echo "$arm BOOTFAIL" >> "$OUTDIR/summary.txt"
+    return 1
+  fi
+  hs=$(( $(date +%s) - t0 ))
+  log "$arm HEALTHY ${hs}s; G1..."
+  if python3 "$PROBE" "http://${HOST}:${PORT}/v1" auto \
+      >"$OUTDIR/${arm}_g1.json" 2>"$OUTDIR/${arm}_g1.err"; then
+    log "$arm G1 GO"
+    echo "$arm GO healthy=${hs}s" >> "$OUTDIR/summary.txt"
+    python3 "$REPO/vllm/nvfp4/bench_code.py" \
+      "http://${HOST}:${PORT}/v1" "$SERVED" 1 256 3 \
+      | tee "$OUTDIR/${arm}_code.txt"
+    docker logs "$NAME" >"$OUTDIR/${arm}_docker.log" 2>&1 || true
+    return 0
+  else
+    log "$arm G1 NO-GO"
+    echo "$arm NO-GO healthy=${hs}s" >> "$OUTDIR/summary.txt"
+    docker logs "$NAME" >"$OUTDIR/${arm}_docker.log" 2>&1 || true
+    return 1
+  fi
+}
+
+run_one G1fix 1
+rc1=$?
+if [ $rc1 -eq 0 ]; then
+  run_one T2gfix 2 || true
+else
+  log "skip TP=2 GRAPH; TP=1 GRAPH did not GO"
+fi
+NAME="$NAME" bash "$SERVE" stop >/dev/null 2>&1 || true
+log "DONE $OUTDIR"
+cat "$OUTDIR/summary.txt" 2>/dev/null || true

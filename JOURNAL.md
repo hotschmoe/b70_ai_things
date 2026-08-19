@@ -15087,3 +15087,64 @@ VERDICT -> GO (D18 closed: emul
   serve emul. Do not start DD.
   Do not set P2P=1.
 
+### 2026-08-19aq - LOOP 60: TP=2 fused GO; GRAPH/MTP parked
+
+CONTEXT -> LOOP 59 fused G1 GO. Finish
+  the matrix: official CTRL, GRAPH,
+  TP=2, f8scale, decode bench, MTP.
+
+CONFIG -> same KV_FP8=0 LANGONLY=1
+  IMG int8g-v0260 P2PACCESS=0
+  FUSED_SO nvfp4_fused_kernel_gdn
+  then f8scale GDN for GRAPH/bench.
+
+COMMAND ->
+  ```
+  bash vllm/nvfp4/sweep_ornith_nvfp4.sh
+  # then 27B-style compile-config retry
+  bash vllm/nvfp4/sweep_ornith_graphfix.sh
+  bash vllm/nvfp4/sweep_ornith_bench_mtp.sh
+  MTPTOK=3 MOEBACKEND=triton retry
+  ```
+
+RESULT -> Full G1 matrix (auto KV):
+  | arm | tp | g | mode | xmx | so | G1 | t/s |
+  | A2 | 1 | 0 | fused | 1 | fused | Paris/391 | 3.49 |
+  | A3 | 1 | 0 | fused | 0 | fused | Paris/391 | 3.39 |
+  | A4 | 1 | 0 | emul | 0 | -- | !!!! | 2.50 |
+  | CTRL | 1 | 0 | fused | 0 | fused | Paris/391 | 3.44 |
+  | G1g | 1 | 1 | fused | 0 | fused | BOOTFAIL | -- |
+  | T2e | 2 | 0 | fused | 0 | fused | Paris/391 | 1.74 |
+  | T2g | 2 | 1 | fused | 0 | fused | BOOTFAIL | -- |
+  | F8S | 1 | 0 | fused | 0 | f8s8 | Paris/391 | 3.41 |
+  Official CTRL text matches the
+  27B NVFP4 Paris sentence.
+  G1g/T2g: v0260 PIECEWISE asserted
+  (35B script forced inductor knobs
+  + incomplete splitting_ops).
+  Graphfix: past assert, capture
+  dies in sitecustomize (7)
+  `torch.unique(ids).tolist()` --
+  `wait method cannot be used for
+  an event associated with a
+  command graph`.
+  Eager code c1 **3.8 / 3.8**
+  (256 tok, wall 67s). MTP3+emul:
+  unquantized MTP MoE rejects
+  emulation. MTP3+triton: NVFP4
+  MoE rejects triton. No
+  DEVICE_LOST. DD PARKED.
+
+VERDICT -> GO on fused eager TP=1
+  and TP=2. GRAPH parked until
+  fused MoE apply is capture-safe
+  (no host unique/tolist). MTP
+  parked (backend split). Decode
+  3.8 t/s is the honest eager
+  number. Keep KV=auto. Hold
+  remains k1bar 31.9. Next:
+  rewrite `_fused_nvfp4_moe_apply`
+  without host sync, then GRAPH
+  retry. Do not serve emul. Do
+  not start DD. Do not set P2P=1.
+

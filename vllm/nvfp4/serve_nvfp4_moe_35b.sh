@@ -47,15 +47,30 @@ if [ "${1:-}" = stop ]; then
   exit 0
 fi
 
-_ATTN_OPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
+# v0.26 PIECEWISE requires VLLM_COMPILE. Forcing inductor_compile_config +
+# splitting_ops on TP=1 (the old 35B bring-up knobs) sets compilation_mode=3
+# and engine-init asserts (L59 G1g/T2g BOOTFAIL). Match the 27B recipe:
+# TP=1 = no split list; TP>1 = attn/GDN split + MLA pass off.
+# hpc_rope_norm_forward is in v0.25.1+ _attention_ops and must be listed
+# whenever we do pass a split list.
+_ATTN_OPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention","vllm::hpc_rope_norm_forward"'
 GRAPH_ARGS=( --enforce-eager )
 GRAPH_ENV=( )
 if [ "$GRAPH" = 1 ]; then
+  if [ "$TP" != 1 ] && [ -n "${MTPTOK:-}" ] && [ -n "$CAPSIZES" ]; then
+    _MAXCAP=$(echo "$CAPSIZES" | tr ',' '\n' | sort -n | tail -1)
+    if [ "$MAXSEQS" -lt "$_MAXCAP" ] 2>/dev/null; then
+      echo "[guard] TP>1+MTP+capture: raising MAXSEQS $MAXSEQS -> $_MAXCAP" >&2
+      MAXSEQS="$_MAXCAP"
+    fi
+  fi
   CAP=""; [ -n "$CAPSIZES" ] && CAP="\"cudagraph_capture_sizes\":[$CAPSIZES],"
-  SPLIT="\"splitting_ops\":[${SPLITOPS:-$_ATTN_OPS}],"
-  # MoE capture needs INDUCTOR fusion-off (IGC crash on fused rms_norm+router-mm) + the MLA-pass disable.
-  PASSCFG="\"pass_config\":{\"fuse_rope_kvcache_cat_mla\":false},"
-  IND="\"inductor_compile_config\":{\"combo_kernels\":false,\"benchmark_combo_kernel\":false,\"prologue_fusion\":false},"
+  SPLIT=""; PASSCFG=""; IND=""
+  if [ "$TP" != 1 ]; then
+    SPLIT="\"splitting_ops\":[${SPLITOPS:-$_ATTN_OPS}],"
+    PASSCFG="\"pass_config\":{\"fuse_rope_kvcache_cat_mla\":false},"
+  fi
+  [ -n "${INDUCTOR:-}" ] && IND="\"inductor_compile_config\":${INDUCTOR},"
   GRAPH_ARGS=( --compilation-config "{${CAP}${SPLIT}${PASSCFG}${IND}\"cudagraph_mode\":\"$CGMODE\",\"use_inductor_graph_partition\":$IGP}" )
   GRAPH_ENV=( -e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e VLLM_USE_AOT_COMPILE=0 )
   SERVED="${SERVED}-graph"
