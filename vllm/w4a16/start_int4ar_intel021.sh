@@ -138,6 +138,10 @@ if [ "$TP" -gt 1 ]; then
         -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi
         -e VLLM_WORKER_MULTIPROC_METHOD=spawn
         -e CCL_TOPO_P2P_ACCESS=0 -e CCL_ZE_IPC_EXCHANGE="${IPCX:-pidfd}")
+  if [ -n "${CCL_LOG_LEVEL:-}" ]; then
+    MGPU+=(-e CCL_LOG_LEVEL="$CCL_LOG_LEVEL")
+    echo "=== CCL_LOG_LEVEL=$CCL_LOG_LEVEL ===" >&2
+  fi
 else
   MGPU=(-e ZE_AFFINITY_MASK="$DEVICE")
 fi

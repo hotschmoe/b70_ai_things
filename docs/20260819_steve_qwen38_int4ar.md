@@ -75,14 +75,12 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-48: 2dd55f38 SO built. 44fc+SO
-FORCE_GRAPH + in-image 2021.17 = D14 sycl_graph
-allgather. Rebuilt 4ceafd1 overlay = D15 device_fd.
-GRAPH=0 TP=2 44fc+SO+2021.17 G1 PASS, bench_code c1
-**13.4**. LOOP 46-47 GRAPH=1 hang (D16). LOOP 48
-dump: 298k sched_yield/12s + XE exec-queue poll
-on both render nodes, 4ceafd1 mapped. Not 101.922.
-Next is CCL_LOG_LEVEL=info to name the collective.
+S2b status LOOP 27+36-49: GRAPH=0 TP=2 c1 **13.4**.
+GRAPH=1 hang D16 (yield+XE poll). CCL_LOG=info:
+silent after in_order streams; ARC=0; fabric 0.
+Do not set CCL_SYCL_ALLREDUCE_ARC=1 (Steve
+deadlock). Next is
+VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1.
 Gated cells: f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66;
 intel021 GRAPH=0 TP=2 c1 13.4.
 

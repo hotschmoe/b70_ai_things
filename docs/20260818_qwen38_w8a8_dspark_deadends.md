@@ -699,3 +699,29 @@ Retry if: CCL_LOG_LEVEL names a
   change G1s. Do not set P2P=1.
 Related JOURNAL: ### 2026-08-19ae
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop48_strace_tp1.txt
+
+## D16 addendum -- CCL_LOG_LEVEL=info silent after streams -- 2026-08-19 -- LOOP 49
+
+Tried: CCL_LOG_LEVEL=info on s2b+pid=host
+  GRAPH=1 CACHE=intel021_s2b. Stop 60s
+  after compile (6.02s).
+Command / config:
+  start_int4ar_intel021.sh BAKED=1
+  CCL_LOG_LEVEL=info
+Result: 335 CCL_INFO lines, all at
+  init/compile. Last: "no ports
+  detected", in_order 0 then 1 GPU
+  streams family7. Then silence +
+  shm_broadcast. CCL_SYCL_ALLREDUCE_ARC=0
+  (do NOT set 1; Steve graph deadlock).
+  ze fabric ports 0. ATL ofi tcp:eth0.
+  No per-coll name. No G1. Cards healthy.
+Why it is closed: info is not a coll
+  name. Waiting longer is not a 101.922
+  cell.
+Retry if: COMPILE_ALLGATHER_CUSTOM_OP=1
+  (Steve wait_tensor) G1s, or debug
+  names a coll then an env/code change
+  G1s. Do not ARC=1. Do not P2P=1.
+Related JOURNAL: ### 2026-08-19af
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop49_tp2.log

@@ -36,18 +36,18 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-CCL_LOG_LEVEL=info on s2b+pid=host
-GRAPH=1 (name the spinning collective).
-Stop 60s after compile. Do not wait
-the hang. Do not retry FA as unstick.
-Do not retry 4ceafd1 overlay (D15).
-Do not retry bake without pid=host.
-Do not retry FORCE_GRAPH on in-image
-2021.17 (D14). Do not retry GRAPH=0 as
-a 101.922 cell. Do not set P2P=1.
-Do not enter Phase 2. Scheduler stays
-(29.4 < 41.2). Live serve is AGASYNC
-k=4 @122880.
+VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1
+on s2b+pid=host GRAPH=1 G1 (Steve
+wait_tensor diagnosis). Stop 60s after
+compile if hang. Do not set
+CCL_SYCL_ALLREDUCE_ARC=1 (Steve
+deadlock). Do not wait the hang. Do
+not retry FA. Do not retry overlay
+(D15). Do not P2P=1. Do not retry
+FORCE_GRAPH on 2021.17 (D14). Do not
+retry GRAPH=0 as 101.922. Do not enter
+Phase 2. Scheduler stays (29.4 < 41.2).
+Live serve is AGASYNC k=4 @122880.
 
 ---
 
@@ -2102,3 +2102,43 @@ Restore: DD stays PARKED. AGASYNC UP
   k=4 GRAPH=1 @122880. Lease pid 142782.
   Strace kept. No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19ae
+
+---
+
+## LOOP 49 -- 2026-08-19T1836Z -- CCL_LOG_LEVEL=info names silence
+
+Picked: CCL_LOG_LEVEL=info on s2b+pid=host
+  GRAPH=1; stop 60s post-compile.
+Why this, not the other open row: LOOP 48
+  Next pick; D16 retry-if is name coll.
+GPU: lease pid=147490 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  stop AGASYNC; xpu-health
+  CCL_LOG_LEVEL=info IMG=s2b BAKED=1
+  CACHE=intel021_s2b GRAPH=1 start
+  wait compile+60s; restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop49_*
+Result: info ON. Compile 6.02s. Last CCL
+  at compile: "no ports", in_order
+  streams family7. Then 60s silence
+  (shm_broadcast only). No per-coll
+  name. ARC=0; fabric ports 0; ATL
+  ofi/tcp. No G1. No 101.922. Restore
+  G1 Paris. No DEVICE_LOST.
+Verdict: GO (log). NO-GO 101.922.
+  info cannot name the spinner.
+Changed beliefs: do not set
+  CCL_SYCL_ALLREDUCE_ARC=1 (Steve
+  deadlock). Hang is after stream
+  setup with no further CCL_INFO.
+Next pick: COMPILE_ALLGATHER_CUSTOM_OP=1
+  GRAPH=1 G1.
+Do not: ARC=1; wait hang; retry FA;
+  overlay; P2P=1; GRAPH=0 as 101.922;
+  start DD; Phase 2; overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP
+  k=4 GRAPH=1 @122880. Lease pid 147490.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19af

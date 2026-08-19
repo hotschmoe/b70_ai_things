@@ -14597,3 +14597,46 @@ VERDICT -> GO on dump. NO-GO on 101.922.
   Do not start DD. Do not enter Phase 2.
   Do not set P2P=1.
 
+### 2026-08-19af - LOOP 49: CCL_LOG=info silent after streams
+
+CONTEXT -> LOOP 48 Next pick: CCL_LOG_LEVEL=info
+  name collective; stop 60s post-compile.
+  Do not wait hang. Do not P2P=1. Do not
+  fake 101.922. Do not start DD.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu-s2b
+  BAKED=1 pid=host GRAPH=1 TP=2 MTPTOK=5
+  CACHE_NAME=intel021_s2b
+  CCL_LOG_LEVEL=info P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  CCL_LOG_LEVEL=info IMG=intel/vllm:0.21.0-xpu-s2b \
+    BAKED=1 CACHE_NAME=intel021_s2b GRAPH=1 start
+  # wait torch.compile + 60s; stop
+  restore AGASYNC k=4 GRAPH=1 @122880
+  ```
+
+RESULT -> CCL_LOG_LEVEL=info engaged
+  (335 CCL_INFO). Compile 6.02s. Last
+  CCL at 18:35:38: no ports; in_order 0
+  then 1 streams family7. Then 60s no
+  CCL lines (shm_broadcast only).
+  CCL_SYCL_ALLREDUCE_ARC=0 (do not set
+  1). ze fabric ports 0. ATL ofi
+  tcp:eth0. No per-coll name. No G1.
+  Cards healthy. Restore AGASYNC
+  HEALTHY 143s G1 Paris @122880. DD
+  PARKED. w8a8-gptq not overwritten.
+  Not 101.922.
+
+VERDICT -> GO on log. NO-GO 101.922.
+  info cannot name the spinner. Next
+  pick: VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1
+  GRAPH=1 G1 (Steve wait_tensor). Do
+  not ARC=1. Scheduler stays
+  (29.4 < 41.2). Do not start DD. Do
+  not enter Phase 2. Do not set P2P=1.
+
