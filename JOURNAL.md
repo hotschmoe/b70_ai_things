@@ -14679,3 +14679,44 @@ VERDICT -> NO-GO 101.922 (D16 addendum).
   (29.4 < 41.2). Do not start DD. Do
   not enter Phase 2. Do not set P2P=1.
 
+### 2026-08-19ah - LOOP 51: HOSTNS privileged GRAPH=1 hang
+
+CONTEXT -> LOOP 50 Next pick:
+  host-not-docker Steve venv GRAPH=1 G1.
+  Box has no host torch/oneAPI/Steve
+  venv. Privileged hostns is the
+  isolation A/B. Do not wait hang. Do
+  not P2P=1. Do not fake 101.922.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu-s2b
+  BAKED=1 HOSTNS=1 --privileged
+  --network host --pid=host --cgroupns=host
+  GRAPH=1 TP=2 MTPTOK=5
+  CACHE_NAME=intel021_s2b P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  HOSTNS=1 CACHE_NAME=intel021_s2b \
+    IMG=intel/vllm:0.21.0-xpu-s2b BAKED=1 \
+    GRAPH=1 start
+  restore AGASYNC k=4 GRAPH=1 @122880
+  ```
+
+RESULT -> Compile 6.04s. Same D16 hang
+  60s post-compile: workers 111% CPU,
+  no /v1/models. Privileged hostns does
+  not unstick. No host venv. No G1. No
+  speed. Cards healthy. Restore AGASYNC
+  HEALTHY 152s G1 Paris @122880. DD
+  PARKED. w8a8-gptq not overwritten.
+  Not 101.922.
+
+VERDICT -> NO-GO 101.922 (D16 addendum).
+  Docker isolation is not the hang.
+  Next pick: CPU extract s2b rootfs
+  then GRAPH=1 as host PID. Scheduler
+  stays (29.4 < 41.2). Do not start DD.
+  Do not enter Phase 2. Do not set P2P=1.
+

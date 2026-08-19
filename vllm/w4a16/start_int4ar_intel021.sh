@@ -139,6 +139,15 @@ if [ "$TP" -gt 1 ]; then
     SEC+=(--cap-add SYS_PTRACE --security-opt apparmor=unconfined)
     echo "=== CAP_PTRACE=1 ===" >&2
   fi
+  # LOOP 51: no host Steve venv/oneAPI. Privileged + host net/cgroup is the
+  # isolation A/B vs pid=host-only D16 hang. P2P stays 0.
+  NETPUB=(-p "${PORT}:${PORT}")
+  if [ "${HOSTNS:-0}" = 1 ]; then
+    SEC=(--privileged --pid=host --network host --cgroupns=host
+         --security-opt seccomp=unconfined --security-opt apparmor=unconfined)
+    NETPUB=()
+    echo "=== HOSTNS=1 privileged host net/pid/cgroup ===" >&2
+  fi
   MGPU=(-e CCL_ENABLE_SYCL_KERNELS=1 -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0
         -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi
         -e VLLM_WORKER_MULTIPROC_METHOD=spawn
@@ -149,6 +158,12 @@ if [ "$TP" -gt 1 ]; then
   fi
 else
   MGPU=(-e ZE_AFFINITY_MASK="$DEVICE")
+  NETPUB=(-p "${PORT}:${PORT}")
+  if [ "${HOSTNS:-0}" = 1 ]; then
+    SEC=(--privileged --pid=host --network host --cgroupns=host
+         --security-opt seccomp=unconfined)
+    NETPUB=()
+  fi
 fi
 
 ARGS=(serve "$CKPT" --served-model-name "$SERVED" --host 0.0.0.0 --port "$PORT"
@@ -165,7 +180,8 @@ echo "=== intel021 serve $SERVED IMG=$IMG TP=$TP GRAPH=$GRAPH ===" >&2
 echo "vllm ${ARGS[*]}" >&2
 
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
-  --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${SEC[@]}" "${GDOCK[@]}" \
+  -v /sys/class/drm:/sys/class/drm:ro \
+  --ipc=host --shm-size "$SHM" "${NETPUB[@]}" "${SEC[@]}" "${GDOCK[@]}" \
   -v "$MODELS_FILES:/models:ro" \
   -v "$ROOT/hf_cache:/hf_cache" \
   -v "$ROOT/vllm_cache:/vllm_cache" \

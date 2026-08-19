@@ -36,15 +36,17 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Host-not-docker Steve venv GRAPH=1 G1
-(D16 docker hang closed for FA/AGCUSTOM).
-Do not retry AGCUSTOM. Do not wait the
-hang. Do not ARC=1. Do not P2P=1. Do
-not retry overlay (D15). Do not retry
-FORCE_GRAPH on 2021.17 (D14). Do not
-retry GRAPH=0 as 101.922. Do not enter
-Phase 2. Scheduler stays (29.4 < 41.2).
-Live serve is AGASYNC k=4 @122880.
+CPU extract s2b rootfs to host (no GPU;
+leave AGASYNC). Then GRAPH=1 as a host
+PID. Do not retry HOSTNS/privileged
+docker. Do not retry AGCUSTOM/FA. Do
+not wait the hang. Do not ARC=1. Do
+not P2P=1. Do not retry overlay (D15).
+Do not retry FORCE_GRAPH on 2021.17
+(D14). Do not retry GRAPH=0 as 101.922.
+Do not enter Phase 2. Scheduler stays
+(29.4 < 41.2). Live serve is AGASYNC
+k=4 @122880.
 
 ---
 
@@ -2178,3 +2180,41 @@ Restore: DD stays PARKED. AGASYNC UP
   k=4 GRAPH=1 @122880. Lease pid 152886.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19ag
+
+---
+
+## LOOP 51 -- 2026-08-19T1938Z -- HOSTNS privileged GRAPH=1 hang
+
+Picked: privileged + host net/pid/cgroup
+  GRAPH=1 G1 (no host Steve venv/oneAPI).
+Why this, not the other open row: LOOP 50
+  Next pick host-not-docker; no venv.
+GPU: lease pid=157611 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  stop AGASYNC; xpu-health
+  HOSTNS=1 CACHE=intel021_s2b IMG=s2b
+  GRAPH=1 start; stop 60s post-compile
+  restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop51_*
+Result: compile 6.04s. Same D16 hang
+  (workers 111% CPU, no /v1/models).
+  Privileged hostns does not unstick.
+  No G1. No 101.922. Restore G1 Paris.
+  No DEVICE_LOST. No host venv exists.
+Verdict: NO-GO (D16 addendum). Docker
+  isolation is not the hang.
+Changed beliefs: pid=host+privileged+
+  host net/cgroup still hangs. True
+  host PID needs extracted rootfs.
+Next pick: CPU extract s2b rootfs then
+  GRAPH=1 host PID.
+Do not: retry HOSTNS; AGCUSTOM; FA;
+  wait hang; ARC=1; P2P=1; overlay;
+  GRAPH=0 as 101.922; start DD; Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP
+  k=4 GRAPH=1 @122880. Lease pid 157611.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19ah

@@ -746,3 +746,23 @@ Retry if: host-not-docker Steve venv
   docker path. Do not ARC=1. Do not P2P=1.
 Related JOURNAL: ### 2026-08-19ag
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop50_tp2.log
+
+## D16 addendum -- privileged HOSTNS still hangs -- 2026-08-19 -- LOOP 51
+
+Tried: HOSTNS=1 --privileged --network
+  host --pid=host --cgroupns=host on
+  s2b GRAPH=1 CACHE=intel021_s2b. No
+  host Steve venv/oneAPI/torch on box.
+Command / config:
+  start_int4ar_intel021.sh HOSTNS=1
+Result: compile 6.04s. Same hang 60s
+  post-compile: workers 111% CPU, no
+  /v1/models. No G1. Cards healthy.
+Why it is closed: docker isolation is
+  not the D16 cause. Do not retry
+  privileged docker as host-not-docker.
+Retry if: vLLM runs as a host PID
+  (extracted s2b rootfs / native
+  oneAPI+torch) then G1. Do not P2P=1.
+Related JOURNAL: ### 2026-08-19ah
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop51_tp2.log

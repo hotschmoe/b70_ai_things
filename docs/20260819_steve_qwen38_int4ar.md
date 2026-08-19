@@ -75,13 +75,13 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-50: GRAPH=0 TP=2 c1 **13.4**.
-GRAPH=1 hang D16. FA and AGCUSTOM
-(COMPILE_ALLGATHER_CUSTOM_OP=1) same hang
-in docker. Next is host-not-docker Steve
-venv. Gated cells: f01e24f6 TP=1 GRAPH=0
-c1 12.8 / 16.66; intel021 GRAPH=0 TP=2
-c1 13.4.
+S2b status LOOP 27+36-51: GRAPH=0 TP=2 c1 **13.4**.
+GRAPH=1 hang D16. FA, AGCUSTOM, and
+privileged HOSTNS same hang. No host
+Steve venv/oneAPI. Next is extract s2b
+rootfs then host-PID GRAPH=1. Gated
+cells: f01e24f6 TP=1 GRAPH=0 c1 12.8 /
+16.66; intel021 GRAPH=0 TP=2 c1 13.4.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M
