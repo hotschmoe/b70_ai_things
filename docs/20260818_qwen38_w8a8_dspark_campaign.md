@@ -23,11 +23,11 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 27 (S2b INT4-AR 0.27: TP=2 blocked; TP=1 GRAPH=0 G1+12.8/16.66) |
-| Last JOURNAL heading | `2026-08-19j` |
+| Last loop | 28 (S2c HE+ STARTED on live INT4-AR GRAPH=0 TP=1) |
+| Last JOURNAL heading | `2026-08-19k` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | S2c HE+ 164 on live GRAPH=0 TP=1 `qwen3.8-27b-W4A16-autoround-mtp5` vs 0.957/0.927 |
+| Next pick | S2c finish: if pid 28816 live, status only. Dead -> write plus vs 0.957/0.927 |
 | Blocked on | 0.27 TP=2 oneCCL (D10). 101.922 cell not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

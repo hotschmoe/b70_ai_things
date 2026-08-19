@@ -13647,3 +13647,48 @@ VERDICT -> GO on gated TP=1 GRAPH=0 speed.
   41.2; S2c HE+ not on disk). Do not
   displace sglang/vLLM W8A8.
 
+### 2026-08-19k - LOOP 28: start S2c HE+ on INT4-AR GRAPH=0 TP=1
+
+CONTEXT -> LOOP 27 GO. Next pick S2c HE+ 164
+  thinking-off greedy seed=1234 on the live
+  GRAPH=0 TP=1 id. Multi-hour: start HE+,
+  LOOP-STARTED, Verdict RUNNING, do not wait.
+  Do not retry D10/D11. Do not start DD.
+
+CONFIG -> live :18080 id
+  qwen3.8-27b-W4A16-autoround-mtp5
+  max_model_len 16384
+  root /models/qwen3.8-27b/int4-autoround
+  IMG=f01e24f6 GRAPH=0 TP=1 MTPTOK=5
+  P2PACCESS=0. HE+ thinking-off greedy
+  seed=1234 limit=164. No --tier1-think.
+
+COMMAND ->
+  ```
+  curl -s http://192.168.10.5:18080/v1/models
+  # G1 Paris PASS
+  evals/.venv/bin/python -u evals/orchestrator/run_evals.py \
+    --endpoint http://192.168.10.5:18080/v1 \
+    --model qwen3.8-27b-W4A16-autoround-mtp5 \
+    --quant W4A16-autoround-mtp5 \
+    --tiers 1 --tier1-dataset humaneval --limit 164 \
+    --seed 1234
+  # he+ pid 28816  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop28_heplus.log
+  ```
+
+RESULT -> G0 id match. G1 Paris exact still
+  holds after 31 min idle. HE+ generating 164
+  (thinking=off, greedy, seed=1234). Result
+  dir evals/results/20260819T063444Z__qwen3.8-27b-W4A16-autoround-mtp5__W4A16-autoround-mtp5
+  Plus unmeasured. DD PARKED. Lease card 0
+  pid 28261. No DEVICE_LOST.
+
+VERDICT -> RUNNING. Next fire: if `ps -p 28816`
+  live, one status line and STOP. Dead ->
+  write plus vs 0.957/0.927 and fail lists.
+  Leave INT4 GRAPH=0 serve up until plus is
+  written; then restore W8A8 AGASYNC unless
+  plus < 0.90. Do not start a sibling HE+
+  or D10/D11. Do not start DD. Scheduler
+  stays (29.4 < 41.2; S2c HE+ not on disk).
+

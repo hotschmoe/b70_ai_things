@@ -36,16 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S2c -- HE+ 164 thinking-off greedy seed=1234 on the
-LIVE GRAPH=0 TP=1 0.27 serve id
-`qwen3.8-27b-W4A16-autoround-mtp5` (root
-/models/qwen3.8-27b/int4-autoround, maxlen 16384,
-IMG f01e24f6). Compare to W8A8 0.957/0.927 and
-Q4_K_M 0.970/0.927. Fail lists. Then restore W8A8
-AGASYNC unless Next pick still needs INT4. S2b speed
-is GRAPH=0 TP=1 only: c1 12.8 / after-TTFT 16.66.
-Do not publish 101.922. Do not retry D10/D11 this
-fire. Scheduler 01a01813e05d stays.
+S2c finish -- HE+ 164 RUNNING (pid 28816).
+First: `ps -p 28816`. Live -> one status line, STOP.
+Dead -> read plus from
+`evals/results/20260819T063444Z__qwen3.8-27b-W4A16-autoround-mtp5__W4A16-autoround-mtp5`
+and loop28_heplus.log. Compare to W8A8 0.957/0.927
+and Q4_K_M 0.970/0.927. Fail lists (base misses).
+Then restore W8A8 AGASYNC unless plus < 0.90
+(quality only) or Next pick still needs INT4.
+Do not start a sibling HE+. Do not retry D10/D11.
+Scheduler 01a01813e05d stays.
 
 ---
 
@@ -1252,3 +1252,50 @@ Restore: DD stays PARKED. GRAPH=0 TP=1 INT4-AR
   left UP for S2c. Lease card 0 pid 28261.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19j
+
+---
+
+## LOOP 28 -- 2026-08-19T0634Z -- S2c HE+ STARTED on INT4-AR GRAPH=0
+
+Picked: S2c -- HE+ 164 thinking-off greedy seed=1234
+  on live GRAPH=0 TP=1 id
+  qwen3.8-27b-W4A16-autoround-mtp5
+Why this, not the other open row: LOOP 27 Next pick;
+  S2b speed verdict is on disk; last verdict not
+  RUNNING. One arm. Multi-hour: start, STOP.
+GPU: card 0 HELD pid=28261 docker wait qwen38_int4ar.
+  card 1 free. DD PARKED. :18080 id
+  qwen3.8-27b-W4A16-autoround-mtp5 @16384 root
+  /models/qwen3.8-27b/int4-autoround. IMG f01e24f6.
+Command:
+  # G1 Paris PASS on the live serve
+  evals/.venv/bin/python -u evals/orchestrator/run_evals.py
+    --endpoint http://192.168.10.5:18080/v1
+    --model qwen3.8-27b-W4A16-autoround-mtp5
+    --quant W4A16-autoround-mtp5
+    --tiers 1 --tier1-dataset humaneval --limit 164
+    --seed 1234
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop28_heplus.log
+  he+ pid 28816 (file loop28_heplus.pid)
+  result dir:
+    evals/results/20260819T063444Z__qwen3.8-27b-W4A16-autoround-mtp5__W4A16-autoround-mtp5
+Result: G0 id match. G1 Paris exact still holds.
+  HE+ generating 164 (thinking=off, greedy,
+  seed=1234). Plus unmeasured.
+Verdict: RUNNING
+Changed beliefs: do not start a sibling HE+ or
+  restore W8A8 while this pid is live. GRAPH=0
+  0.27 INT4-AR still coherent after 31 min idle.
+Next pick: S2c finish. First: `ps -p 28816`.
+  Live -> one status line, STOP. Dead -> write
+  plus vs 0.957/0.927 + fail lists, restore
+  W8A8 AGASYNC unless plus < 0.90. How to tell
+  done: pid 28816 gone AND log has pass@1 / plus
+  (or a traceback).
+Do not: start a sibling HE+; retry D10/D11;
+  fake 101.922; start DD; overwrite w8a8-gptq;
+  wait on this fire.
+Restore: DD stays PARKED. INT4 GRAPH=0 serve
+  left UP. Lease card 0 pid 28261.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19k
