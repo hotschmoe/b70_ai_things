@@ -13263,3 +13263,112 @@ RESULT -> Steve HEAD `924b518` (03:04Z). Promoted:
 VERDICT -> GO (steer). First fire is P4.1. Do not
   start S2 this window.
 
+### 2026-08-19c - zml intel/INT8 pull (findings only, no serve)
+
+CONTEXT -> Owner claimed huge int8/oneAPI/XMX progress
+  for B70-class cards. Parallel findings pull. Do not
+  serve. Do not take the GPU lease.
+
+CONFIG -> clone /mnt/vm_8tb/b70/zml was dirty on
+  master@89b0908c (lab W8A8 patches). Fetched
+  origin. No `intel`/`xpu`/`xmx` branch. Intel work
+  is on master. Clean worktree:
+  /mnt/vm_8tb/b70/zml-intel branch intel-master
+  tracking origin/master @ c58d81a7. Dirty lab
+  tree left untouched.
+
+COMMAND ->
+  ```
+  git -C /mnt/vm_8tb/b70/zml fetch --all --tags
+  git worktree add -b intel-master \
+    /mnt/vm_8tb/b70/zml-intel origin/master
+  # inspect nn.zig / platforms/oneapi / PRs 706 690 698
+  ```
+
+RESULT -> 69 commits since lab pin 89b0908c
+  (2026-06-30). Newest Intel-relevant:
+  - bb860a05 2026-08-18 oneDNN 2026.0 + TBB
+    bundled; PJRT pin
+    manual-2026-08-17T19-00-00Z (#706).
+    PR text: needed for Mistral FP8 scaled
+    matmul via libdnnl on Intel GPU. Not INT8.
+  - 14a0a8f5 / 830c8fac 2026-07-31 start of
+    quantization: NVFP4 scaled_dot. Comment
+    TODO: INT4/8 and FP8 block-128/per-tensor.
+  - 24165146 2026-07-15 oneAPI 2026.1.
+  - 9c38bad5 / f29ed52e 2026-07-17 collectives
+    + 4-GPU oneAPI fixes.
+  raphael/quant-linear is 10 commits ahead:
+  NVFP4 + FP8 per-channel/block128/per-tensor.
+  Still no i8 scheme. qwen3.8-27b
+  model_type is qwen3_5 so the text backbone
+  would detect; Linear.initProj binds only
+  weight+bias (no weight_scale). No qwen3.8
+  W8A8 serve path. oneAPI README still says
+  EXPERIMENTAL / one GPU / no sharding
+  (stale vs later multi-device PRs).
+
+VERDICT -> Stock zml today is bf16/f16 CLI
+  (plus CUDA-gated NVFP4). Cannot serve our
+  Qwen3.8 W8A8-gptq. Later A/B: rebase lab
+  W8A8 patch onto c58d81a7 and re-measure
+  s8 gemm vs the new oneDNN-bundled PJRT.
+
+### 2026-08-19d - LOOP 23: P4.1 prefix-cache TTFT 1528->449 ms
+
+CONTEXT -> Post-reset. LOOP 22 left AGASYNC up;
+  hard reset 03:10Z killed it (exit 255, not xe).
+  systemd started hotschmoe-dd; this fire stopped
+  it. Next pick P4.1: k=4 GRAPH=1 ALLGATHER_ASYNC
+  @122880, G1, then prefix-cache TTFT (only early
+  prefill number). Quality floor HE+ 0.957/0.927.
+  Keep AGASYNC. Do not train / Phase 2 / INT4 /
+  overwrite w8a8-gptq.
+
+CONFIG -> B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+  UTIL=0.90 MAXSEQS=2 TP=2
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  IMG=int8g-v0260 method=dspark THINK_BUDGET=0
+  CGRECLAIM=0 P2PACCESS=0 PREFIXCACHE=1.
+  TTFT: thinking-off, max_tokens=8, fixed prompt.
+
+COMMAND ->
+  ```
+  bash vllm/daily_driver_serve.sh stop
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1 \
+    W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  # G1 thinking-off Paris / 17*23 / fib
+  # cold then 2x warm TTFT IN~2048 and IN~8192
+  # lease holder pid 9319
+  ```
+
+RESULT -> ALLGATHER_ASYNC ENGAGED [eager-async].
+  HEALTHY 208s. G0 id
+  **qwen3.8-27b-W8A8-gptq-dspark4-agasync**
+  max_model_len **122880**. enable_prefix_caching
+  True. G1 thinking-off: Paris exact, 17*23=391,
+  fib iterative. Prefix cache HITS.
+  IN=2040: cold TTFT **1528 ms** PP 1335 tok/s
+  (d_hits=0) -> warm **449 / 446 ms** PP 4544
+  (1664 hits / 4080 queries over 2 warms, ~3.4x).
+  IN=8085: cold **2875 ms** PP 2813 -> warm
+  **573 ms** PP 14122 (~5.0x; 13312 hits / 16170).
+  262k not measured (recipe MAXLEN 122880; D1
+  GRAPH=1 DSpark KV OOM at 131k). No DEVICE_LOST.
+  No c1 this fire (best remains 29.4). DD PARKED.
+  systemd b70-daily-driver.service still enabled
+  (active/exited); will start DD on next boot.
+
+VERDICT -> GO (P4.1 early number). Prefix cache
+  works on this W8A8 DSpark recipe. Warm 2048
+  TTFT 449 ms vs DD NVFP4 347 ms. Prefill is not
+  the 29.4 vs 41.2 decode gap. Next pick no-GPU
+  0.27-only feature list (PRE.15). Leave AGASYNC
+  up. Do not start P4.2 / S2 / train / DD / Phase 2
+  this fire. Scheduler stays (29.4 < 41.2).
+  Do not displace sglang/vLLM W8A8.
+

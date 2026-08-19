@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 22 (NO-GO E2 host-barrier ALLGATHER c1 26.6; reverted) |
-| Last JOURNAL heading | `2026-08-19b` |
+| Last loop | 23 (GO P4.1 prefix-cache TTFT 1528->449 ms @2040) |
+| Last JOURNAL heading | `2026-08-19d` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | P4.1 prefix-cache TTFT baseline on live AGASYNC @122880 |
-| Blocked on | none. Cards free. Loop re-armed 01a01813e05d. P4.1 first. |
+| Next pick | no-GPU 0.27-only feature list (PRE.15) + leftover speed notes |
+| Blocked on | none. 262k TTFT not taken (recipe is 122880). |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark `bench_code` c1 | **29.4** k=4 GRAPH=1 ALLGATHER_ASYNC @122880 (G1 hold; was 28.7 push-AR only) |

@@ -36,11 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P4.1 -- prefix-cache TTFT baseline. Cards are free.
-Bring up k=4 GRAPH=1 AGASYNC @122880, G1, then TTFT.
-D8/D7/D6/D5/D4 still stand. Do not start DD. Do not
-train. Do not start Steve INT4-AR (S2) or requant.
-Quality floor HE+ 0.957/0.927. Scheduler 01a01813e05d.
+no-GPU -- write the 0.27-only feature list (PRE.15
+gate) from notes already on disk (Steve compile-cache
+identity / oneDNN barriers / GDN scratch; SergiioB
+0.27.2rc1 digest f01e24f6). P4.1 landed: prefix
+cache hits on AGASYNC @122880. Do not start P4.2 /
+S2 / train / Phase 2 / DD. D8-D4 stand. Scheduler
+01a01813e05d stays (c1 29.4 < 41.2).
 
 ---
 
@@ -1006,3 +1008,56 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 541759.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-18aa
+
+---
+
+## LOOP 23 -- 2026-08-19T0342Z -- P4.1 prefix-cache TTFT 1528->449 ms
+
+Picked: P4.1 -- prefix-cache TTFT baseline on
+  k=4 GRAPH=1 AGASYNC @122880
+Why this, not the other open row: living-header
+  Next pick after LOOP 22 / post-reset. Default
+  after hard reset. Last GPU serve died exit 255
+  on reboot; systemd had brought DD back.
+GPU: lease HELD both cards by docker-wait pid=9319
+  since 2026-08-19 03:40:48. DD PARKED (official
+  stop; systemd still enabled/active-exited).
+  :18080 id qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880. P2PACCESS=0. W8A16_M_MAX=0.
+Command:
+  bash vllm/daily_driver_serve.sh stop
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+  W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  G1 thinking-off; fixed-prompt cold then warm TTFT
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop23_serve.log
+  g1: loop23_g1.log
+  ttft: loop23_ttft.log
+  wait pid 9319
+Result: HEALTHY 208s. G0 match. ALLGATHER_ASYNC
+  ENGAGED. G1 Paris / 391 / fib. Prefix cache
+  hits. IN=2040 cold TTFT **1528 ms** PP 1335
+  (0 hits) -> warm **449 / 446 ms** PP 4544
+  (1664 hits / 4080 queries over 2 warms).
+  IN=8085 cold **2875 ms** PP 2813 -> warm
+  **573 ms** PP 14122. 262k not measured
+  (MAXLEN 122880). No DEVICE_LOST. No c1
+  published this fire (already 29.4).
+Verdict: GO
+Changed beliefs: prefix cache is ON and HITS on
+  W8A8 DSpark GRAPH=1 GDN (not the NVFP4 hits=0
+  bug). Warm 2048 TTFT 449 ms vs DD NVFP4 347 ms.
+  Campaign-table 262k TTFT still needs a
+  different serve (P0.2 MTP-off). Prefill is
+  not the remaining 29.4 vs 41.2 gap.
+Next pick: no-GPU write of the 0.27-only feature
+  list (PRE.15) from notes already on disk.
+  Do not start it this fire.
+Do not: start P4.2 / S2 INT4-AR / train / Phase 2
+  / DD; retry D8-D4; W8A16>0 @122880; 262k on
+  this GRAPH=1 DSpark recipe.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 9319.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19d
