@@ -672,3 +672,30 @@ Retry if: capture dump names a fixable
   Steve venv is a separate arm.
 Related JOURNAL: ### 2026-08-19ad
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop47_tp2_fa.log
+
+## D16 addendum -- dump: sched_yield + XE exec-queue poll -- 2026-08-19 -- LOOP 48
+
+Tried: strace Worker_TP after compile on
+  s2b+pid=host GRAPH=1 CACHE=intel021_s2b
+  (CAP_PTRACE=1). 12s on TP1.
+Command / config:
+  start_int4ar_intel021.sh BAKED=1
+  CAP_PTRACE=1
+Result: compile 6-8s (AOT cache). Hang
+  is busy-wait not a stuck syscall:
+  298904 sched_yield / 12s, 18916 poll,
+  6041 futex, 124 ioctl
+  DRM_IOCTL_XE_EXEC_QUEUE_GET_PROPERTY
+  on fd4=renderD128 and fd5=renderD129
+  (each rank polls both cards).
+  libccl=/opt/ccl4ce (4ceafd1). No
+  capture log. No /v1/models. Cards
+  healthy. No DEVICE_LOST.
+Why it is closed: dump named the
+  mechanism. Waiting longer is not a
+  101.922 cell.
+Retry if: CCL_LOG_LEVEL names a
+  fixable collective then a code/env
+  change G1s. Do not set P2P=1.
+Related JOURNAL: ### 2026-08-19ae
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop48_strace_tp1.txt

@@ -36,18 +36,18 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Capture-dump D16 GRAPH=1 hang (strace
-Worker_TP after torch.compile; which
-collective). Do not retry graph-safe FA
-as the unstick (D16 addendum). Do not
-retry 4ceafd1 overlay (D15). Do not
-retry bake without pid=host. Do not
-wait out the same hang. Do not retry
-FORCE_GRAPH on in-image 2021.17 (D14).
-Do not retry GRAPH=0 as a 101.922 cell
-(c1 13.4). Do not enter Phase 2.
-Scheduler stays (29.4 < 41.2). Live
-serve is AGASYNC k=4 @122880.
+CCL_LOG_LEVEL=info on s2b+pid=host
+GRAPH=1 (name the spinning collective).
+Stop 60s after compile. Do not wait
+the hang. Do not retry FA as unstick.
+Do not retry 4ceafd1 overlay (D15).
+Do not retry bake without pid=host.
+Do not retry FORCE_GRAPH on in-image
+2021.17 (D14). Do not retry GRAPH=0 as
+a 101.922 cell. Do not set P2P=1.
+Do not enter Phase 2. Scheduler stays
+(29.4 < 41.2). Live serve is AGASYNC
+k=4 @122880.
 
 ---
 
@@ -2063,3 +2063,42 @@ Restore: DD stays PARKED. AGASYNC UP
   k=4 GRAPH=1 @122880. Lease pid 135689.
   FA so kept. No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19ad
+
+---
+
+## LOOP 48 -- 2026-08-19T1814Z -- D16 strace dump after compile
+
+Picked: capture-dump D16 hang (strace
+  Worker_TP after torch.compile).
+Why this, not the other open row: LOOP 47
+  Next pick; D16 retry-if is dump.
+GPU: lease pid=142782 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  stop AGASYNC; xpu-health
+  IMG=s2b BAKED=1 CACHE=intel021_s2b
+  GRAPH=1 pid=host; after compile
+  CAP_PTRACE strace 12s; restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop48_*
+Result: compile cache 6-8s. Hang is
+  userspace spin: 298904 sched_yield /
+  12s, 18916 poll, 124 ioctl
+  DRM_IOCTL_XE_EXEC_QUEUE_GET_PROPERTY
+  on renderD128 AND renderD129, 4ceafd1
+  mapped. No G1. No 101.922. Restore
+  G1 Paris. No DEVICE_LOST.
+Verdict: GO (dump). NO-GO 101.922.
+Changed beliefs: D16 is XE exec-queue
+  poll + yield, not a blocking syscall
+  and not FA. Both ranks poll both cards.
+Next pick: CCL_LOG_LEVEL=info name the
+  collective; stop 60s post-compile.
+Do not: wait hang; retry FA; overlay
+  4ceafd1; P2P=1; FORCE_GRAPH on 2021.17;
+  GRAPH=0 as 101.922; start DD; Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP
+  k=4 GRAPH=1 @122880. Lease pid 142782.
+  Strace kept. No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19ae

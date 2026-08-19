@@ -14553,3 +14553,47 @@ VERDICT -> NO-GO on 101.922 (D16
   compile). Scheduler stays (29.4 < 41.2).
   Do not start DD. Do not enter Phase 2.
 
+### 2026-08-19ae - LOOP 48: D16 dump yield + XE exec-queue poll
+
+CONTEXT -> LOOP 47 Next pick: strace
+  Worker_TP after compile. Do not wait
+  the hang. Do not fake 101.922. Do not
+  start DD.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu-s2b
+  BAKED=1 pid=host GRAPH=1 TP=2 MTPTOK=5
+  CACHE_NAME=intel021_s2b CAP_PTRACE=1
+  P2PACCESS=0 no FA overlay.
+  SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  CAP_PTRACE=1 IMG=intel/vllm:0.21.0-xpu-s2b \
+    BAKED=1 CACHE_NAME=intel021_s2b GRAPH=1 start
+  # after torch.compile took
+  docker exec ... strace -f -p Worker_TP1 -o ...
+  restore AGASYNC k=4 GRAPH=1 @122880
+  ```
+
+RESULT -> Compile 6.06s (AOT cache).
+  12s strace TP1: **298904 sched_yield**,
+  18916 poll, 6041 futex, 124 ioctl
+  DRM_IOCTL_XE_EXEC_QUEUE_GET_PROPERTY
+  on renderD128 and renderD129 (each
+  rank polls both). libccl 4ceafd1
+  mapped. No capture log. No /v1/models.
+  No G1. Cards healthy. Restore AGASYNC
+  HEALTHY 138s G1 Paris @122880. DD
+  PARKED. w8a8-gptq not overwritten.
+  Not 101.922.
+
+VERDICT -> GO on dump. NO-GO on 101.922.
+  Hang is XE exec-queue poll + yield
+  spin, not FA and not a blocked
+  syscall. Next pick: CCL_LOG_LEVEL=info
+  to name the collective; stop 60s after
+  compile. Scheduler stays (29.4 < 41.2).
+  Do not start DD. Do not enter Phase 2.
+  Do not set P2P=1.
+

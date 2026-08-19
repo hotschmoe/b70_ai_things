@@ -75,18 +75,16 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-47: 2dd55f38 SO built. 44fc+SO
+S2b status LOOP 27+36-48: 2dd55f38 SO built. 44fc+SO
 FORCE_GRAPH + in-image 2021.17 = D14 sycl_graph
 allgather. Rebuilt 4ceafd1 overlay = D15 device_fd.
 GRAPH=0 TP=2 44fc+SO+2021.17 G1 PASS, bench_code c1
-**13.4** (vs TP=1 GRAPH=0 12.8). phase_bench OOR 40
-n_ok=2/5 -- no after-TTFT cell. LOOP 46 baked
-intel/vllm:0.21.0-xpu-s2b. pid=host loads TP=2 then
-GRAPH=1 hang (D16). LOOP 47 graph-safe FA overlay
-same hang (D16 addendum). Not 101.922. Next is
-capture-dump of the hang. Gated cells: f01e24f6
-TP=1 GRAPH=0 c1 12.8 / 16.66; intel021 GRAPH=0
-TP=2 c1 13.4.
+**13.4**. LOOP 46-47 GRAPH=1 hang (D16). LOOP 48
+dump: 298k sched_yield/12s + XE exec-queue poll
+on both render nodes, 4ceafd1 mapped. Not 101.922.
+Next is CCL_LOG_LEVEL=info to name the collective.
+Gated cells: f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66;
+intel021 GRAPH=0 TP=2 c1 13.4.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M

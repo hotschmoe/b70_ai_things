@@ -129,6 +129,11 @@ SEC=()
 if [ "$TP" -gt 1 ]; then
   SHM=32g
   SEC=(--pid=host --security-opt seccomp=unconfined)
+  # LOOP 48 dump: ptrace workers after compile. Default off.
+  if [ "${CAP_PTRACE:-0}" = 1 ]; then
+    SEC+=(--cap-add SYS_PTRACE --security-opt apparmor=unconfined)
+    echo "=== CAP_PTRACE=1 ===" >&2
+  fi
   MGPU=(-e CCL_ENABLE_SYCL_KERNELS=1 -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0
         -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi
         -e VLLM_WORKER_MULTIPROC_METHOD=spawn
