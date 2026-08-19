@@ -36,14 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-GRAPH=0 TP=2 44fc8fde0 + 2dd55f38 SO +
-in-image 2021.17 G1 then bench_code /
-phase_bench. Honest gated speed, not
-101.922. Do not retry 4ceafd1 overlay
-(D15 device_fd). Do not retry FORCE_GRAPH
-on in-image 2021.17 (D14). Do not enter
-Phase 2. Scheduler stays (29.4 < 41.2).
-Live serve is AGASYNC k=4 @122880.
+CPU in-image Steve stack (bake 4ceafd1
++ 2dd55f38, not bind overlay) then
+GRAPH=1 TP=2 G1. Leave AGASYNC up.
+Do not retry 4ceafd1 overlay (D15).
+Do not retry FORCE_GRAPH on in-image
+2021.17 (D14). Do not retry GRAPH=0
+TP=2 as a 101.922 cell (c1 13.4).
+Do not enter Phase 2. Scheduler stays
+(29.4 < 41.2). Live serve is AGASYNC
+k=4 @122880.
 
 ---
 
@@ -1933,3 +1935,39 @@ Restore: DD stays PARKED. AGASYNC UP.
   Lease pid 109648. 4ceafd1 so kept.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19aa
+
+---
+
+## LOOP 45 -- 2026-08-19T1535Z -- GRAPH=0 TP=2 44fc+SO c1 13.4
+
+Picked: GRAPH=0 TP=2 44fc8fde0+2dd55f38
+  SO + in-image 2021.17 G1 + bench.
+Why this, not the other open row: LOOP 44
+  Next pick; D14/D15 close GRAPH=1.
+GPU: lease HELD pid=115282 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  stop AGASYNC; xpu-health
+  GRAPH=0 no CCL4CE VLLM_SRC+SO start
+  bench_code + phase_bench; restore
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop45_*
+Result: G1 PASS. bench_code c1 **13.4**.
+  phase_bench OOR 40 n_ok=2/5. No 101.922.
+  Restore G1 Paris. No DEVICE_LOST.
+Verdict: GO (gated speed) / NO-GO (101.922)
+Changed beliefs: GRAPH=0 TP=2 on 44fc+SO
+  +2021.17 is coherent. TP=2 without
+  graph is ~TP=1 12.8. phase_bench 1k
+  entropy prefill OOR at UTIL=0.88.
+Next pick: CPU in-image 4ceafd1+kernels
+  then GRAPH=1 G1. Leave AGASYNC up.
+Do not: retry 4ceafd1 overlay; FORCE_GRAPH
+  on 2021.17; GRAPH=0 as 101.922; D13
+  overlay as speed; SYCL-9 nightlies;
+  int8g-v0260 INT4; fake 101.922; start
+  DD; Phase 2; overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP.
+  Lease pid 115282. SOs kept on disk.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19ab

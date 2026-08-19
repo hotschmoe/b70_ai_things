@@ -75,12 +75,15 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-44: 2dd55f38 SO built. 44fc+SO
+S2b status LOOP 27+36-45: 2dd55f38 SO built. 44fc+SO
 FORCE_GRAPH + in-image 2021.17 = D14 sycl_graph
-allgather. Rebuilt 4ceafd1 overlay = D15 device_fd at
-TP=2 init (pidfd and sockets). Next is GRAPH=0 TP=2
-44fc+SO+2021.17 G1, not a 101.922 cell. Gated cell
-remains f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66.
+allgather. Rebuilt 4ceafd1 overlay = D15 device_fd.
+GRAPH=0 TP=2 44fc+SO+2021.17 G1 PASS, bench_code c1
+**13.4** (vs TP=1 GRAPH=0 12.8). phase_bench OOR 40
+n_ok=2/5 -- no after-TTFT cell. Not 101.922. Next is
+in-image 4ceafd1+kernels (not overlay) then GRAPH=1.
+Gated cells: f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66;
+intel021 GRAPH=0 TP=2 c1 13.4.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M

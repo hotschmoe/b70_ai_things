@@ -14383,3 +14383,67 @@ VERDICT -> NO-GO on 101.922 (D15). 4ceafd1
   fix. Scheduler stays (29.4 < 41.2).
   Do not start DD. Do not enter Phase 2.
 
+### 2026-08-19ab - LOOP 45: GRAPH=0 TP=2 44fc+SO c1 13.4
+
+CONTEXT -> LOOP 44 Next pick: GRAPH=0 TP=2
+  44fc8fde0 + 2dd55f38 SO + in-image
+  2021.17 G1 then bench_code / phase_bench.
+  Honest gated speed, not 101.922. Do not
+  retry 4ceafd1 (D15) or FORCE_GRAPH on
+  2021.17 (D14). One arm. Do not start DD.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu
+  VLLM_SRC 44fc8fde0
+  XPU_C_SO+GDN_LIB 2dd55f38 (8-arg int4)
+  NO CCL4CE. Wrapper
+  CCL_ROOT=/opt/intel/oneapi/ccl/2021.17.
+  GRAPH=0 --enforce-eager TP=2 MTPTOK=5
+  MAXLEN=16384 UTIL=0.88 MAXSEQS=8
+  DTYPE=float16 P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+  CACHE_NAME=intel021_44fc_so
+  NAME=qwen38_int4ar.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  unset CCL4CE GRAPH=0 TP=2 VLLM_SRC=... \
+    XPU_C_SO=... GDN_LIB=... \
+    bash vllm/w4a16/start_int4ar_intel021.sh start
+  python3 vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18080/v1 \
+    qwen3.8-27b-W4A16-autoround-mtp5 1 256 3
+  python3 vllm/cookbook_campaign/phase_bench.py \
+    --base http://127.0.0.1:18080 \
+    --model qwen3.8-27b-W4A16-autoround-mtp5 \
+    --prompt-tokens 512 --gen-tokens 128 --n 5
+  restore AGASYNC
+  ```
+
+RESULT -> Health OK both cards. HEALTHY
+  ~40s. G0 id match @16384. G1 PASS:
+  Paris exact / 391 / fib iterative, no
+  bangs. bench_code c1 avg **13.4** /
+  best 13.4 t/s (out 256, wall ~19.2s)
+  vs LOOP 27 TP=1 GRAPH=0 **12.8**.
+  phase_bench warmup post_first 14.84;
+  run1 18.94 then OOR 40
+  (UR_RESULT_ERROR_OUT_OF_RESOURCES) at
+  _prepare_inputs .to(int64). EngineDead
+  n_ok=2/5 median nan. Do not publish
+  after-TTFT. KV 301810 tok / 18.42x at
+  16384; usage 2.9% at crash. No
+  DEVICE_LOST. Cards healthy after
+  teardown. Restore AGASYNC HEALTHY 178s
+  G1 Paris exact @122880. DD PARKED.
+  w8a8-gptq not overwritten. Not 101.922.
+
+VERDICT -> GO on gated GRAPH=0 TP=2
+  speed (c1 13.4, G1 hold). NO-GO on
+  101.922 (GRAPH=0; GRAPH=1 still D14+D15).
+  Next pick: CPU in-image Steve stack
+  (4ceafd1+kernels baked, not overlay)
+  then GRAPH=1 TP=2 G1. Leave AGASYNC up.
+  Scheduler stays (29.4 < 41.2). Do not
+  start DD. Do not enter Phase 2.
+
