@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 46 (in-image s2b; pid=host TP=2; GRAPH=1 hang) |
-| Last JOURNAL heading | `2026-08-19ac` |
+| Last loop | 47 (graph-safe FA overlay; GRAPH=1 hang) |
+| Last JOURNAL heading | `2026-08-19ad` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | Steve graph-safe FA on baked s2b+pid=host GRAPH=1 G1 |
-| Blocked on | D16 GRAPH=1 capture hang. D15 overlay closed. 101.922 not measured. |
+| Next pick | Capture-dump D16 hang (strace after compile) |
+| Blocked on | D16 hang not FA. D15 overlay closed. 101.922 not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

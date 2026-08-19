@@ -646,3 +646,29 @@ Retry if: Steve graph-safe FA / a capture
   this hang as a speed number.
 Related JOURNAL: ### 2026-08-19ac
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop46_tp2_pidhost.log
+
+## D16 addendum -- graph-safe FA same capture hang -- 2026-08-19 -- LOOP 47
+
+Tried: Steve graph-safe FA vs 2dd55f38
+  (local_accessor + force-chunk python,
+  head256 focused --full). Overlay
+  libattn + _vllm_fa2_C + interface.py
+  on intel/vllm:0.21.0-xpu-s2b pid=host
+  GRAPH=1 FORCE_GRAPH CACHE_NAME=intel021_s2b_fa
+  VLLM_XPU_FA2_FORCE_CHUNK_DECODE=1.
+Command / config:
+  build_graphsafe_fa.sh then
+  start_int4ar_intel021.sh FA_DIR=...
+Result: FA so 27393320 B. FlashAttention
+  v2. Compile 159.64s. Then same hang:
+  both workers 100% CPU, shm_broadcast,
+  no capture log, no /v1/models. Stopped
+  at 7+ min post-compile. No G1. No
+  DEVICE_LOST. Cards healthy.
+Why it is closed: FA is not the unstick.
+  Do not wait out this hang again.
+Retry if: capture dump names a fixable
+  collective then G1. Host-not-docker
+  Steve venv is a separate arm.
+Related JOURNAL: ### 2026-08-19ad
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop47_tp2_fa.log

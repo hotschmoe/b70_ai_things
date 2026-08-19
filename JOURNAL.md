@@ -14505,3 +14505,51 @@ VERDICT -> NO-GO on 101.922 (D16).
   (29.4 < 41.2). Do not start DD. Do
   not enter Phase 2.
 
+### 2026-08-19ad - LOOP 47: graph-safe FA overlay GRAPH=1 hang
+
+CONTEXT -> LOOP 46 Next pick: Steve
+  graph-safe FA on baked s2b+pid=host
+  GRAPH=1 G1. Do not wait out D16 hang
+  without FA. Do not fake 101.922. Do
+  not start DD.
+
+CONFIG -> FA --full vs 2dd55f38:
+  local_accessor + force-chunk (barrier
+  already in tree). IMG
+  intel/vllm:0.21.0-xpu-s2b BAKED=1
+  pid=host seccomp=unconfined GRAPH=1
+  TP=2 MTPTOK=5 MAXLEN=16384
+  CACHE_NAME=intel021_s2b_fa
+  FA_DIR=/mnt/vm_8tb/b70/steve-s2b/fa-graphsafe/vllm_xpu_kernels
+  VLLM_XPU_FA2_FORCE_CHUNK_DECODE=1
+  FORCE_GRAPH_WITH_COMM=1 P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+
+COMMAND ->
+  ```
+  bash vllm/w4a16/build_graphsafe_fa.sh
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  FA_DIR=... IMG=intel/vllm:0.21.0-xpu-s2b \
+    BAKED=1 CACHE_NAME=intel021_s2b_fa \
+    GRAPH=1 TP=2 start_int4ar_intel021.sh start
+  restore AGASYNC k=4 GRAPH=1 @122880
+  ```
+
+RESULT -> FA build OK. libattn
+  27393320 B sha baee5237. FlashAttention
+  version 2. Compile 159.64 s (new cache
+  96079417c7). Then D16 hang: workers
+  100% CPU, shm_broadcast, no capture
+  log, no /v1/models at 7+ min. Stopped.
+  No G1. No speed. Cards healthy.
+  Restore AGASYNC HEALTHY 157s G1 Paris
+  exact @122880. DD PARKED. w8a8-gptq
+  not overwritten. Not 101.922.
+
+VERDICT -> NO-GO on 101.922 (D16
+  addendum). Graph-safe FA is not the
+  capture unstick. Next pick: capture-dump
+  the hang (strace Worker_TP after
+  compile). Scheduler stays (29.4 < 41.2).
+  Do not start DD. Do not enter Phase 2.
+

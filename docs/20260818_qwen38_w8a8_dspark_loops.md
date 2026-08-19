@@ -36,18 +36,18 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Steve graph-safe FA on baked
-intel/vllm:0.21.0-xpu-s2b + pid=host
-GRAPH=1 TP=2 G1. Do not retry 4ceafd1
-overlay (D15). Do not retry bake without
-pid=host (device_fd). Do not wait out
-the same GRAPH=1 capture hang (D16).
-Do not retry FORCE_GRAPH on in-image
-2021.17 (D14). Do not retry GRAPH=0
-as a 101.922 cell (c1 13.4). Do not
-enter Phase 2. Scheduler stays
-(29.4 < 41.2). Live serve is AGASYNC
-k=4 @122880.
+Capture-dump D16 GRAPH=1 hang (strace
+Worker_TP after torch.compile; which
+collective). Do not retry graph-safe FA
+as the unstick (D16 addendum). Do not
+retry 4ceafd1 overlay (D15). Do not
+retry bake without pid=host. Do not
+wait out the same hang. Do not retry
+FORCE_GRAPH on in-image 2021.17 (D14).
+Do not retry GRAPH=0 as a 101.922 cell
+(c1 13.4). Do not enter Phase 2.
+Scheduler stays (29.4 < 41.2). Live
+serve is AGASYNC k=4 @122880.
 
 ---
 
@@ -2020,3 +2020,46 @@ Restore: DD stays PARKED. AGASYNC UP
   Image intel/vllm:0.21.0-xpu-s2b kept.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19ac
+
+---
+
+## LOOP 47 -- 2026-08-19T1740Z -- graph-safe FA overlay GRAPH=1 hang
+
+Picked: Steve graph-safe FA (local_accessor
+  + force-chunk) on baked s2b+pid=host
+  GRAPH=1 TP=2 G1.
+Why this, not the other open row: LOOP 46
+  Next pick; D16 retry-if is FA.
+GPU: lease pid=135689 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  bash vllm/w4a16/build_graphsafe_fa.sh
+  FA_DIR=.../fa-graphsafe/vllm_xpu_kernels
+  IMG=intel/vllm:0.21.0-xpu-s2b BAKED=1
+  CACHE_NAME=intel021_s2b_fa GRAPH=1 start
+  restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop47_*
+Result: FA --full OK (libattn 27.4 MB).
+  FA2_FORCE_CHUNK=1. FlashAttention v2.
+  Compile 159.64s then same hang 7+ min
+  (workers 100% CPU, shm_broadcast, no
+  capture log). No G1. No 101.922.
+  Restore G1 Paris. No DEVICE_LOST.
+Verdict: NO-GO (D16 addendum). FA is not
+  the capture unstick.
+Changed beliefs: stock vs graph-safe FA
+  both hang after compile on this docker
+  4ceafd1 GRAPH=1 path. Need a dump.
+Next pick: capture-dump D16 hang (strace
+  Worker_TP after compile).
+Do not: retry FA as unstick; overlay
+  4ceafd1; bake without pid=host; wait
+  out hang; FORCE_GRAPH on 2021.17;
+  GRAPH=0 as 101.922; int8g-v0260 INT4;
+  fake 101.922; start DD; Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP
+  k=4 GRAPH=1 @122880. Lease pid 135689.
+  FA so kept. No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19ad

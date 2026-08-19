@@ -68,6 +68,22 @@ if [ "$BAKED" != 1 ] && [ -z "${VLLM_SRC:-}" ] && [ -f "$GDNFB/_xpu_ops.py" ]; t
     echo "=== overlay gdn_linear_attn.py <- $GDNFB ===" >&2
   fi
 fi
+# LOOP 47: Steve graph-safe FA (local_accessor + force-chunk). Allowed on BAKED.
+# Stock 2dd55f38 FA was D16 capture hang. New CACHE_NAME required.
+FA_DIR="${FA_DIR:-}"
+if [ -n "$FA_DIR" ] && [ -f "$FA_DIR/libattn_kernels_xe_2.so" ]; then
+  EXTRA_MOUNTS+=( -v "$FA_DIR/libattn_kernels_xe_2.so:$PKGD/libattn_kernels_xe_2.so:ro" )
+  echo "=== overlay graph-safe FA libattn <- $FA_DIR ===" >&2
+  if [ -f "$FA_DIR/flash_attn_interface.py" ]; then
+    EXTRA_MOUNTS+=( -v "$FA_DIR/flash_attn_interface.py:$PKGD/flash_attn_interface.py:ro" )
+    echo "=== overlay FA python force-chunk <- $FA_DIR ===" >&2
+  fi
+  fa2=$(ls "$FA_DIR"/_vllm_fa2_C*.so 2>/dev/null | head -1 || true)
+  if [ -n "${fa2:-}" ]; then
+    EXTRA_MOUNTS+=( -v "$fa2:$PKGD/_vllm_fa2_C.abi3.so:ro" )
+    echo "=== overlay _vllm_fa2_C <- $fa2 ===" >&2
+  fi
+fi
 
 if [ "${1:-start}" = stop ]; then
   docker stop -t 30 "$NAME" >/dev/null 2>&1 || true
@@ -89,6 +105,9 @@ if [ "$GRAPH" = 1 ]; then
   # 44fc8fde0: allow PIECEWISE capture on TP>1 (Steve 101.922 path).
   if [ "$TP" -gt 1 ]; then
     GENV+=(-e VLLM_XPU_FORCE_GRAPH_WITH_COMM=1)
+  fi
+  if [ -n "${FA_DIR:-}" ]; then
+    GENV+=(-e VLLM_XPU_FA2_FORCE_CHUNK_DECODE=1)
   fi
   GDOCK=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
   # 44fc8fde0 defaults fuse_rope_kvcache_cat_mla True but does not import
