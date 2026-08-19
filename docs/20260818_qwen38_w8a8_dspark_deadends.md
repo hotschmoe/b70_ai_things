@@ -575,3 +575,27 @@ Retry if: Steve 4ceafd1 oneCCL rebuilt
   overlaid, then G1 on GRAPH=1 TP=2.
 Related JOURNAL: ### 2026-08-19y
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop42_tp2_fail_tail.log
+
+## D15 -- 4ceafd1 overlay TP=2 device_fd -- 2026-08-19 -- LOOP 44
+
+Tried: overlay rebuilt public oneCCL
+  4ceafd1 (SYCL-8, 240177816 B) over
+  intel/vllm 2021.15+2021.17 libccl with
+  44fc8fde0 + 2dd55f38 SO, GRAPH=1
+  FORCE_GRAPH.
+Command / config:
+  CCL4CE=/mnt/vm_8tb/b70/steve-s2b/oneccl-install
+  start_int4ar_intel021.sh
+  IPC pidfd then sockets.
+Result: CCL_ROOT=/opt/ccl4ce. Worker
+  all_reduce ze_handle_manager.cpp:58
+  device_fd invalid (both IPC modes).
+  In-image 2021.17 still loads TP=2.
+  No DEVICE_LOST. Cards healthy.
+Why it is closed: this 4ceafd1 install
+  is not a drop-in for this image's L0
+  IPC. Do not retry the same bind.
+Retry if: 4ceafd1 loads TP=2 (DRM/ze
+  device_fd fixed) then G1 on GRAPH=1.
+Related JOURNAL: ### 2026-08-19aa
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop44_tp2.log

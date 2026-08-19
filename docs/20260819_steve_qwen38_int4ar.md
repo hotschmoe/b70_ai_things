@@ -75,11 +75,12 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-43: SYCL-9 nightlies D10/D11.
-2dd55f38 SO built. 44fc+SO FORCE_GRAPH hits D14
-(in-image 2021.17 sycl_graph allgather). oneCCL 4ceafd1
-rebuild STARTED (loop43_cclbuild). Gated cell remains
-f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66.
+S2b status LOOP 27+36-44: 2dd55f38 SO built. 44fc+SO
+FORCE_GRAPH + in-image 2021.17 = D14 sycl_graph
+allgather. Rebuilt 4ceafd1 overlay = D15 device_fd at
+TP=2 init (pidfd and sockets). Next is GRAPH=0 TP=2
+44fc+SO+2021.17 G1, not a 101.922 cell. Gated cell
+remains f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M

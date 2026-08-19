@@ -41,6 +41,16 @@ if [ -n "${GDN_LIB:-}" ] && [ -f "$GDN_LIB" ]; then
   EXTRA_MOUNTS+=( -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
   echo "=== overlay gdn lib <- $GDN_LIB ===" >&2
 fi
+# D14: Steve 4ceafd1 oneCCL (SYCL-8). Bind over 2021.15/2021.17 so torch RPATH cannot win.
+CCL4CE="${CCL4CE:-}"
+if [ -n "$CCL4CE" ] && [ -f "$CCL4CE/lib/libccl.so.1.0" ]; then
+  EXTRA_MOUNTS+=( -v "$CCL4CE:/opt/ccl4ce:ro" )
+  EXTRA_MOUNTS+=( -v "$CCL4CE/lib/libccl.so.1.0:/opt/intel/oneapi/ccl/2021.15/lib/libccl.so.1.0:ro" )
+  EXTRA_MOUNTS+=( -v "$CCL4CE/lib/libccl.so.1.0:/opt/intel/oneapi/ccl/2021.15/lib/libccl.so.1:ro" )
+  EXTRA_MOUNTS+=( -v "$CCL4CE/lib/libccl.so.1.0:/opt/intel/oneapi/ccl/2021.17/lib/libccl.so.1.0:ro" )
+  EXTRA_MOUNTS+=( -v "$CCL4CE/lib/libccl.so.1.0:/opt/intel/oneapi/ccl/2021.17/lib/libccl.so.1:ro" )
+  echo "=== overlay oneCCL 4ceafd1 <- $CCL4CE ===" >&2
+fi
 if [ -z "${VLLM_SRC:-}" ] && [ -f "$GDNFB/_xpu_ops.py" ]; then
   EXTRA_MOUNTS+=( -v "$GDNFB/_xpu_ops.py:/opt/vllm/vllm/_xpu_ops.py:ro" )
   echo "=== overlay _xpu_ops.py <- $GDNFB (GDN spec fallback) ===" >&2
@@ -89,7 +99,7 @@ if [ "$TP" -gt 1 ]; then
   MGPU=(-e CCL_ENABLE_SYCL_KERNELS=1 -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0
         -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi
         -e VLLM_WORKER_MULTIPROC_METHOD=spawn
-        -e CCL_TOPO_P2P_ACCESS=0 -e CCL_ZE_IPC_EXCHANGE=pidfd)
+        -e CCL_TOPO_P2P_ACCESS=0 -e CCL_ZE_IPC_EXCHANGE="${IPCX:-pidfd}")
 else
   MGPU=(-e ZE_AFFINITY_MASK="$DEVICE")
 fi

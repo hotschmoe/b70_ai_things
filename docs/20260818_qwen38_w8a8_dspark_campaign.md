@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 43 (oneCCL 4ceafd1 rebuild STARTED) |
-| Last JOURNAL heading | `2026-08-19z` |
+| Last loop | 44 (4ceafd1 overlay TP=2 device_fd) |
+| Last JOURNAL heading | `2026-08-19aa` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | finish loop43_cclbuild then FORCE_GRAPH G1 |
-| Blocked on | D14 until 4ceafd1 libccl is built. 101.922 not measured. |
+| Next pick | GRAPH=0 TP=2 44fc+SO+2021.17 G1 (not 101.922) |
+| Blocked on | D14 graph-allgather; D15 4ceafd1 device_fd. 101.922 not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

@@ -36,12 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-LOOP 43 oneCCL 4ceafd1 build RUNNING
-(loop43_cclbuild). If live: one status
-line STOP. If /mnt/vm_8tb/b70/steve-s2b/
-oneccl-install/lib/libccl.so.1.0 exists:
-overlay on 44fc8fde0+2dd55f38 SO +
-FORCE_GRAPH G1. Do not retry FORCE_GRAPH
+GRAPH=0 TP=2 44fc8fde0 + 2dd55f38 SO +
+in-image 2021.17 G1 then bench_code /
+phase_bench. Honest gated speed, not
+101.922. Do not retry 4ceafd1 overlay
+(D15 device_fd). Do not retry FORCE_GRAPH
 on in-image 2021.17 (D14). Do not enter
 Phase 2. Scheduler stays (29.4 < 41.2).
 Live serve is AGASYNC k=4 @122880.
@@ -1898,3 +1897,39 @@ Restore: DD stays PARKED. AGASYNC UP.
   Lease pid 90132. cclbuild running.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19z
+
+---
+
+## LOOP 44 -- 2026-08-19T1515Z -- 4ceafd1 overlay TP=2 device_fd
+
+Picked: overlay Steve 4ceafd1 oneCCL on
+  44fc8fde0+2dd55f38 SO FORCE_GRAPH G1.
+Why this, not the other open row: LOOP 43
+  Next pick; cclbuild DEAD exit 0 with so.
+GPU: lease HELD pid=109648 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  stop AGASYNC; xpu-health
+  CCL4CE+VLLM_SRC+XPU_C_SO start pidfd
+  IPCX=sockets retry; restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop44_*
+Result: wrapper CCL_ROOT=/opt/ccl4ce.
+  device_fd at worker init pidfd and
+  sockets. No 101.922. Restore G1 Paris.
+  No DEVICE_LOST.
+Verdict: NO-GO (D15)
+Changed beliefs: 4ceafd1 on this image
+  loses the 2021.17 TP=2 init path.
+  Graph-replay lib is not a drop-in.
+Next pick: GRAPH=0 TP=2 44fc+SO+2021.17
+  G1 then bench. Not a 101.922 cell.
+Do not: retry 4ceafd1 overlay; FORCE_GRAPH
+  on 2021.17; 44fc on 7-arg kernels; D13
+  overlay as speed; SYCL-9 nightlies;
+  int8g-v0260 INT4; fake 101.922; start
+  DD; Phase 2; overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP.
+  Lease pid 109648. 4ceafd1 so kept.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19aa

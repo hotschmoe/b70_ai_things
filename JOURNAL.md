@@ -14341,3 +14341,45 @@ VERDICT -> RUNNING. Next fire: if
   stays (29.4 < 41.2). Do not start DD.
   Do not enter Phase 2.
 
+### 2026-08-19aa - LOOP 44: 4ceafd1 overlay TP=2 device_fd
+
+CONTEXT -> LOOP 43 kbuild/cclbuild: libccl
+  4ceafd1 on disk. Next pick: overlay on
+  44fc8fde0+SO FORCE_GRAPH G1. One arm.
+  Do not retry FORCE_GRAPH on in-image
+  2021.17 (D14). Do not fake 101.922.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu
+  VLLM_SRC 44fc8fde0 XPU_C_SO+GDN_LIB
+  2dd55f38 CCL4CE oneccl-install (SYCL-8
+  8-arg SO). GRAPH=1 FORCE_GRAPH
+  CACHE_NAME=intel021_44fc_so. pidfd then
+  sockets.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  CCL4CE=... VLLM_SRC=... XPU_C_SO=... start
+  IPCX=sockets retry
+  restore AGASYNC
+  ```
+
+RESULT -> Build DEAD exit 0.
+  libccl.so.1.0 240177816 B NEEDED
+  libsycl.so.8. Wrapper CCL_ROOT=/opt/ccl4ce.
+  FORCE_GRAPH PIECEWISE. Worker init
+  ze_handle_manager.cpp:58 device_fd
+  invalid (pidfd and sockets). In-image
+  2021.17 still the only TP=2 loader.
+  No DEVICE_LOST. Cards healthy. No speed.
+  Restore G1 Paris on AGASYNC @122880.
+  DD PARKED. w8a8-gptq not overwritten.
+
+VERDICT -> NO-GO on 101.922 (D15). 4ceafd1
+  overlay breaks TP=2 init on this image.
+  Next pick: GRAPH=0 TP=2 44fc+SO+in-image
+  2021.17 G1 (gated speed, not 101.922).
+  Do not retry 4ceafd1 without a device_fd
+  fix. Scheduler stays (29.4 < 41.2).
+  Do not start DD. Do not enter Phase 2.
+
