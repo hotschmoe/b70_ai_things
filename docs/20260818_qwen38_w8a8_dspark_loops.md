@@ -1540,3 +1540,36 @@ Restore: DD stays PARKED. GRAPH=1 k=4
   AGASYNC @122880 left UP. Lease pid 46901.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19q
+
+---
+
+## LOOP 35 -- 2026-08-19T1035Z -- idle; retry-if still false
+
+Picked: leftover queue empty -- recheck
+  Retry-if, do not invent work.
+Why this, not the other open row: LOOP 34
+  Next pick. Last verdict GO not RUNNING.
+GPU: lease HELD pid=46901 docker wait
+  qwen38_w8a8_dspark. DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260. No restart.
+Command:
+  ls w8a8_kernel_v0260_fusedq  # missing
+  strings live _xpu_C | ONEDNN_INT  # 0
+  # G1 Paris
+Log: n/a
+Result: D5/D9/D10/D12 retry-if still false.
+  G1 Paris. No c1. Serve left up.
+Verdict: BLOCKED (no startable leftover)
+Changed beliefs: do not start Phase 2 or
+  remount closed SOs to keep the scheduler
+  busy. 29.4 vs 41.2 needs a kernel retry-if.
+Next pick: same. Retry-if only. Scheduler
+  stays (29.4 < 41.2; S2c HE+ on disk).
+Do not: invent a pick; retry D10/D11/D12
+  stock; remount fusedq; start DD; enter
+  Phase 2; overwrite w8a8-gptq.
+Restore: DD stays PARKED. GRAPH=1 k=4
+  AGASYNC @122880 left UP. Lease pid 46901.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19r

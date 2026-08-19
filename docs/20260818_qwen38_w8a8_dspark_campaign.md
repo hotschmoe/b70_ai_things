@@ -23,8 +23,8 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 34 (P4.1b 262k MTP-off TTFT; AGASYNC restored) |
-| Last JOURNAL heading | `2026-08-19q` |
+| Last loop | 35 (idle: leftover queue empty; retry-if still false) |
+| Last JOURNAL heading | `2026-08-19r` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
 | Next pick | leftover queue empty of startable items (29.4 vs 41.2 is verify) |

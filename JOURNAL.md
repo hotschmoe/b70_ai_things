@@ -13942,3 +13942,31 @@ VERDICT -> GO. Prefill is not the 29.4 vs
   not enter Phase 2. Scheduler stays
   (29.4 < 41.2). Do not start DD.
 
+### 2026-08-19r - LOOP 35: leftover empty; retry-if still false
+
+CONTEXT -> LOOP 34 GO. Next pick: leftover
+  startable queue empty. Retry-if only
+  (D5/D9/D10/D12). Do not enter Phase 2.
+  Do not invent a GPU pick.
+
+CONFIG -> lookup + G1. Live :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  max_model_len 122880. Lease pid 46901.
+  IMG=int8g-v0260. No restart.
+
+COMMAND ->
+  ```
+  ls /mnt/vm_8tb/b70/w8a8_kernel_v0260_fusedq  # missing
+  docker exec ... strings _xpu_C | grep ONEDNN_INT  # 0
+  curl /v1/models; G1 Paris PASS
+  ```
+
+RESULT -> No v0260 fusedq SO. Live _xpu_C
+  has 0 ONEDNN_INT. No SYCL-9 oneCCL. No
+  rectangular TiledMMA binary. G1 Paris.
+  DD PARKED. No DEVICE_LOST. No c1 (29.4).
+
+VERDICT -> BLOCKED. Next pick unchanged.
+  Scheduler stays (29.4 < 41.2). Do not
+  start DD. Do not enter Phase 2.
+
