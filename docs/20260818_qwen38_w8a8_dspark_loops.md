@@ -36,16 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S2b remaining: Steve vLLM 44fc8fde0 +
-graph-safe FA. D13 Python fallback on
-intel/vllm 8df6feb7d unsticks the GDN
-assert but G1 fib bangs and GRAPH=1 TP=2
-is disabled (comms). Do not retry that
-overlay as a speed cell. Do not retry
-SYCL-9 nightlies without SYCL-9 oneCCL.
-Do not enter Phase 2. Scheduler stays
-(29.4 < 41.2). Live serve is AGASYNC
-k=4 @122880.
+LOOP 39 kernel build RUNNING
+(loop39_kbuild). If live: one status
+line STOP. If SOs in
+/mnt/vm_8tb/b70/steve-s2b/xpu-c-install:
+overlay XPU_C_SO+GDN_LIB on 44fc8fde0
+TP=2 GRAPH=1 FORCE_GRAPH, G1. Do not
+retry 44fc8fde0 python on image kernels
+(8 vs 7 int4_gemm). Do not enter Phase 2.
+Scheduler stays (29.4 < 41.2). Live
+serve is AGASYNC k=4 @122880.
 
 ---
 
@@ -1715,3 +1715,43 @@ Restore: DD stays PARKED. GRAPH=1 k=4
   AGASYNC @122880 left UP. Lease pid 71700.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19u
+
+---
+
+## LOOP 39 -- 2026-08-19T1252Z -- 44fc8fde0 overlay + kernel build
+
+Picked: S2b Steve vLLM 44fc8fde0 overlay
+  on intel/vllm 0.21 + start 2dd55f38
+  _xpu_C rebuild. One arm.
+Why this, not the other open row: LOOP 38
+  Next pick named 44fc8fde0 + FA. Clone
+  finished; overlay is the serve attempt.
+GPU: lease HELD pid=79276 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+  loop39_kbuild CPU-only.
+Command:
+  VLLM_SRC=... start_int4ar_intel021.sh
+  docker run loop39_kbuild cmake _xpu_C
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop39_*
+Result: FORCE_GRAPH PIECEWISE on. int4_gemm
+  8 vs 7 ABI. Kernel build ~150/705.
+  Restore G1 Paris. No DEVICE_LOST.
+Verdict: RUNNING (kernel rebuild)
+Changed beliefs: 44fc8fde0 already has
+  FORCE_GRAPH_WITH_COMM. Image _xpu_C is
+  7-arg int4; Steve kernels add
+  input_dependency. Need rebuilt SO.
+Next pick: finish kbuild. First:
+  docker ps loop39_kbuild. Live -> STOP.
+  Dead+SOs -> serve 44fc8fde0 + XPU_C_SO
+  G1. Dead without SOs -> log/packet.
+Do not: retry 44fc8fde0 without new SO;
+  retry D13 overlay as speed; SYCL-9
+  nightlies; int8g-v0260 INT4; fake
+  101.922; start DD; Phase 2; overwrite
+  w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP.
+  Lease pid 79276. kbuild running.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19v

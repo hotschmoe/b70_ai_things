@@ -22,17 +22,22 @@ DTYPE="${DTYPE:-float16}"
 DEVICE="${DEVICE:-0}"
 WRAP="$REPO/vllm/w4a16/intel021_vllm_entrypoint.sh"
 chmod +x "$WRAP"
-# D13 overlay: Steve GDN spec_sequence_masks fallback (Python, not a kernel SO).
+# D13 overlay: Steve GDN spec fallback for the 8df6feb7d image only.
+# 44fc8fde0 has native GDN spec -- do not clobber it with the old files.
+VLLM_SRC="${VLLM_SRC:-}"
 GDNFB="${GDNFB:-/mnt/vm_8tb/b70/qwen38-w8a8-dspark/intel021_gdnfb}"
 CACHE_NAME="${CACHE_NAME:-intel021}"
 EXTRA_MOUNTS=()
-if [ -f "$GDNFB/_xpu_ops.py" ]; then
+if [ -n "$VLLM_SRC" ] && [ -d "$VLLM_SRC/vllm" ]; then
+  EXTRA_MOUNTS+=( -v "$VLLM_SRC:/opt/vllm:ro" )
+  echo "=== overlay vLLM source <- $VLLM_SRC ===" >&2
+elif [ -f "$GDNFB/_xpu_ops.py" ]; then
   EXTRA_MOUNTS+=( -v "$GDNFB/_xpu_ops.py:/opt/vllm/vllm/_xpu_ops.py:ro" )
   echo "=== overlay _xpu_ops.py <- $GDNFB (GDN spec fallback) ===" >&2
-fi
-if [ -f "$GDNFB/gdn_linear_attn.py" ]; then
-  EXTRA_MOUNTS+=( -v "$GDNFB/gdn_linear_attn.py:/opt/vllm/vllm/model_executor/layers/mamba/gdn_linear_attn.py:ro" )
-  echo "=== overlay gdn_linear_attn.py <- $GDNFB ===" >&2
+  if [ -f "$GDNFB/gdn_linear_attn.py" ]; then
+    EXTRA_MOUNTS+=( -v "$GDNFB/gdn_linear_attn.py:/opt/vllm/vllm/model_executor/layers/mamba/gdn_linear_attn.py:ro" )
+    echo "=== overlay gdn_linear_attn.py <- $GDNFB ===" >&2
+  fi
 fi
 
 if [ "${1:-start}" = stop ]; then
@@ -52,6 +57,10 @@ GENV=()
 if [ "$GRAPH" = 1 ]; then
   EAGER=()
   GENV=(-e VLLM_XPU_ENABLE_XPU_GRAPH=1 -e OMP_NUM_THREADS=8)
+  # 44fc8fde0: allow PIECEWISE capture on TP>1 (Steve 101.922 path).
+  if [ "$TP" -gt 1 ]; then
+    GENV+=(-e VLLM_XPU_FORCE_GRAPH_WITH_COMM=1)
+  fi
   GDOCK=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
   # 0.21.1.dev18 CompilationConfig rejects the 0.26/0.27 pass_config keys
   # (fuse_rope_kvcache_cat_mla etc). Keep the 0.21 PIECEWISE shape only.

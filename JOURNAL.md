@@ -14144,3 +14144,51 @@ VERDICT -> NO-GO on 101.922. D13 addendum:
   overlay). Scheduler stays (29.4 < 41.2).
   Do not start DD. Do not enter Phase 2.
 
+### 2026-08-19v - LOOP 39: 44fc8fde0 overlay ABI miss; kernel build RUNNING
+
+CONTEXT -> LOOP 38 Next pick: Steve 44fc8fde0
+  + graph-safe FA. Cloned vllm 44fc8fde0
+  and kernels 2dd55f38. Overlay vLLM
+  source onto intel/vllm:0.21.0-xpu
+  (torch 2.11, SYCL-8, 2021.17). One arm.
+  Fail-closed. Do not fake 101.922.
+
+CONFIG -> VLLM_SRC=/mnt/vm_8tb/b70/steve-s2b/vllm
+  IMG intel/vllm:0.21.0-xpu TP=2 GRAPH=1
+  VLLM_XPU_FORCE_GRAPH_WITH_COMM=1
+  MTPTOK=5 MAXLEN=16384 CACHE_NAME=
+  intel021_44fc P2PACCESS=0. Kernel build
+  container loop39_kbuild, AOT bmg-g31-a0
+  JOBS=2 GDN=ON FA2=OFF.
+
+COMMAND ->
+  ```
+  git fetch vllm 44fc8fde09; kernels 2dd55f38
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  VLLM_SRC=... CACHE_NAME=intel021_44fc \
+    bash vllm/w4a16/start_int4ar_intel021.sh start
+  docker run -d --name loop39_kbuild intel/vllm:0.21.0-xpu cmake/build _xpu_C
+  restore AGASYNC
+  ```
+
+RESULT -> Overlay loaded 44fc8fde0 (vdev).
+  FORCE_GRAPH_WITH_COMM=1: PIECEWISE kept
+  (not NONE). Weights 20.9s. Then dynamo
+  fake-tensor: _xpu_C.int4_gemm_w4a16
+  expected 7 args got 8 (input_dependency
+  bool). Engine init fail. No DEVICE_LOST.
+  Cards healthy. Kernel build RUNNING
+  (~150/705 oneDNN objects). Restore
+  HEALTHY, G1 Paris on AGASYNC @122880.
+  DD PARKED. w8a8-gptq not overwritten.
+
+VERDICT -> RUNNING (kernel rebuild).
+  Overlay-only 44fc8fde0 is NO-GO until
+  2dd55f38 _xpu_C is built. Next fire:
+  if loop39_kbuild live, one status line
+  STOP. Dead + SOs present -> overlay
+  XPU_C_SO+GDN_LIB + 44fc8fde0, G1.
+  Dead without SOs -> read log, packet.
+  Scheduler stays (29.4 < 41.2). Do not
+  start DD. Do not enter Phase 2.
+

@@ -77,9 +77,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: Steve 44fc8fde0 + graph-safe FA
->    (D13 addendum: Python fallback G1 fib bangs).
->    S2c 0.963/0.915. Scheduler stays. 29.4 < 41.2.
+>    Next pick: finish loop39_kbuild (2dd55f38 _xpu_C)
+>    then 44fc8fde0 + SO overlay G1. Scheduler stays.
+>    S2c 0.963/0.915. 29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

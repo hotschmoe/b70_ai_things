@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 38 (D13 GDN fallback: Paris/391 hold, fib bangs) |
-| Last JOURNAL heading | `2026-08-19u` |
+| Last loop | 39 (44fc8fde0 overlay ABI miss; kernel build RUNNING) |
+| Last JOURNAL heading | `2026-08-19v` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | Steve vLLM 44fc8fde0 + graph-safe FA |
-| Blocked on | D13 addendum (fib bangs; GRAPH TP=2 disabled). 101.922 cell not measured. |
+| Next pick | finish loop39_kbuild then overlay _xpu_C on 44fc8fde0 |
+| Blocked on | int4_gemm 8 vs 7 until 2dd55f38 SO. 101.922 cell not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
