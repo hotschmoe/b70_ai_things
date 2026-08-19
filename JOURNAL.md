@@ -13813,3 +13813,46 @@ VERDICT -> BLOCKED (D5 addendum). Next pick
   Phase 2 this fire. Scheduler stays
   (29.4 < 41.2).
 
+### 2026-08-19o - LOOP 32: P1.8 stock sycl-tla C1 NO-GO (D12)
+
+CONTEXT -> LOOP 31 BLOCKED P1.6b. Next pick
+  P1.8 sycl-tla C1 microbench. Isolated 1.2x
+  with e2e drop is a packet. Do not remount
+  fusedq. Do not start DD / Phase 2 / INT4.
+
+CONFIG -> stop AGASYNC, card 0, image
+  vllm-xpu-env:v0240, AOT binaries Jul 3
+  intel_gpu_bmg_g31. EXAMPLES=bf16,bf16_s8
+  ITERS=50 M in 1,2,4,8,16. Roofline 608
+  GB/s in harness (kernel/23 is 581). Restore
+  GRAPH=1 SPECTOK=4 AGASYNC @122880.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260 --timeout 90
+  ITERS=50 ./bin/gpu-run --card 0 bash /mnt/vm_8tb/b70/sycl-tla-bench/run_bench.sh
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1 GRAPH=1 SPECTOK=4 MAXLEN=122880 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  ```
+
+RESULT -> Health OK. Bench 51s all Passed.
+  Stock bf16: gate_up M=1 **437 GB/s / 72%**
+  of 608 (oneDNN int8 same shape 510 / 88%
+  of 581). down M=1 319 / 52%. kv_small 8-11%.
+  Mixed bf16_s8: **1.1-1.5%** roof, us/it
+  flat in M (qkv ~4830, gate_up ~22820).
+  Isolated not 1.2x -- about 0.015x on the
+  int8-weight path. Restore HEALTHY 137s.
+  G1 Paris exact. id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880. No DEVICE_LOST. No c1 (29.4).
+
+VERDICT -> NO-GO (D12). Stock tiles do not
+  close 29.4 vs 41.2. Next pick leftover B1
+  KV_FP8 hook. Leave AGASYNC up. Do not
+  start B1 / wrap sycl-tla e2e / remount
+  fusedq / DD / Phase 2 this fire. Scheduler
+  stays (29.4 < 41.2).
+

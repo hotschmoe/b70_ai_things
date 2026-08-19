@@ -36,13 +36,14 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Leftover P1.8 -- sycl-tla C1 VNNI16 / M<8 DPAS.
-First: read `kernels/SYCLTLA_SCAFFOLD.md`, then
-microbench in v0240 (no serve restart). Isolated
-1.2x with e2e drop is a packet. Do not start it
-this fire. Do not remount v0240 fusedq SO (D5).
-Do not retry D10/D11. Do not enter Phase 2.
-Scheduler 01a01813e05d stays (29.4 < 41.2).
+Leftover B1 -- KV_FP8 hook on the W8A8 3.8
+serve (P0.2 leftover). Capacity (262k+spec or
+GRAPH=1 @131k), not c1. First: add the hook
+to the W8A8 serve path, then KV_FP8=1 A/B G1.
+Do not start it this fire. Do not retry D12
+stock sycl-tla tiles. Do not remount fusedq.
+Do not retry D10/D11. Scheduler stays
+(29.4 < 41.2).
 
 ---
 
@@ -1413,3 +1414,41 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease pid 33246.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19n
+
+---
+
+## LOOP 32 -- 2026-08-19T0918Z -- P1.8 stock sycl-tla C1 NO-GO
+
+Picked: leftover P1.8 sycl-tla C1 microbench
+Why this, not the other open row: LOOP 31 Next
+  pick. D5 retry-if still false. One arm.
+GPU: stopped AGASYNC for card 0. Health OK.
+  After restore, lease HELD pid=38888 docker
+  wait qwen38_w8a8_dspark. DD PARKED. :18080
+  id qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260.
+Command:
+  NAME=qwen38_w8a8_dspark stop
+  ITERS=50 ./bin/gpu-run --card 0 bash
+    /mnt/vm_8tb/b70/sycl-tla-bench/run_bench.sh
+  # restore AGASYNC SPECTOK=4 GRAPH=1
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop32_sycltla.log
+  restore: loop32_restore.log
+Result: binaries AOT Jul 3 ran 51s. Stock bf16
+  47-81% of 608 GB/s. Mixed bf16_s8 **1.1-1.5%**
+  roof (M-flat). vs oneDNN W8A8 M=1 88-100% of
+  581. Isolated not 1.2x. Restore HEALTHY 137s,
+  G1 Paris. No DEVICE_LOST. No c1 (29.4).
+Verdict: NO-GO (D12)
+Changed beliefs: stock sycl-tla tiles are not
+  the 29.4 vs 41.2 closer. Do not wrap them
+  e2e. Rectangular TiledMMA is the retry-if.
+Next pick: leftover B1 KV_FP8 hook. Do not
+  start it this fire.
+Do not: retry D12 stock tiles; remount fusedq;
+  retry D10/D11; fake 101.922; start DD;
+  overwrite w8a8-gptq; enter Phase 2.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease pid 38888.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19o

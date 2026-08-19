@@ -417,3 +417,29 @@ Retry if: Steve graph-safe FA / a new
   with this exact ckpt. Do not republish
   GRAPH=1 speed after another garbage G1.
 Related JOURNAL: ### 2026-08-19j
+
+## D12 -- stock sycl-tla C1 not a 29.4 closer -- 2026-08-19 -- LOOP 32
+
+Tried: P1.8 stock-tile sycl-tla microbench
+  (AOT intel_gpu_bmg_g31, v0240 image, card 0)
+  vs oneDNN W8A8 88-100% of 581 GB/s at M=1.
+Command / config:
+  ITERS=50 ./bin/gpu-run --card 0 bash
+    /mnt/vm_8tb/b70/sycl-tla-bench/run_bench.sh
+  EXAMPLES=bf16,bf16_s8  M in 1,2,4,8,16
+Result: all Disposition Passed. Stock bf16
+  tiles 47-81% of 608 GB/s (gate_up M=1 437
+  GB/s vs oneDNN int8 510). Mixed bf16_s8
+  **1.1-1.5%** roof, time flat in M (~4.8 ms
+  qkv, ~23 ms gate_up) -- not a DPAS decode
+  path. Isolated << 1.2x. No e2e wrap.
+Why it is closed: stock large-M tiles do not
+  close 29.4 vs 41.2. oneDNN GEMM already at
+  the roofline; do not tune it.
+Retry if: rectangular small-M TiledMMA
+  (SYCLTLA_SCAFFOLD step 3, XE_DPAS_TT M=8)
+  is built and beats oneDNN at M=2..16. Then
+  e2e; isolated 1.2x with e2e drop is still
+  a packet.
+Related JOURNAL: ### 2026-08-19o
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop32_sycltla.log
