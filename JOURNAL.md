@@ -14959,3 +14959,40 @@ VERDICT -> GO (isolation). Keep
   fusedq TTFT/PP. Do not start DD.
   Do not set P2P=1.
 
+### 2026-08-19an - LOOP 57: K2 fusedq TTFT/PP wash; keep default ON
+
+CONTEXT -> LOOP 56 Next pick: K2 fusedq
+  TTFT/PP on v0260 combined SO (D5).
+  Live hold already has the fusedq op
+  and B70_FUSEDQ default ON.
+
+CONFIG -> same k1bar SO BARRIER=1
+  AGASYNC GRAPH=1 k=4 @122880.
+  Arm A: B70_FUSEDQ unset (on).
+  Arm B: B70_FUSEDQ=0 two-step.
+  Same paragraph TTFT probe.
+
+COMMAND ->
+  ```
+  # TTFT on live k1bar (fusedq on)
+  B70_FUSEDQ=0 BARRIER=1 AGASYNC start
+  G1 + TTFT + bench_code c1
+  restore k1bar (fusedq default)
+  ```
+
+RESULT -> Same-probe:
+  | | fusedq ON | FUSEDQ=0 |
+  | IN~2298 cold TTFT / PP | 1133 / 2029 | 1189 / 1933 |
+  | warm TTFT | 554 | 561 |
+  | IN~9123 cold / warm | 3107 / 675 | 3115 / 676 |
+  | c1 avg / best | 31.9 / 34.0 | 31.8 / 34.7 |
+  G1 Paris / 391 / fib both. Restore
+  HEALTHY 142s Paris OK. No DEVICE_LOST.
+
+VERDICT -> GO (D5 closed). Keep fusedq
+  default ON. Decode-neutral on this SO
+  (v0240 28.3 does not repeat). Cold
+  2k TTFT ~5% better; rest noise. Next:
+  Ornith-1.5-35B-A3B-NVFP4 fetch+smoke.
+  Do not start DD. Do not set P2P=1.
+

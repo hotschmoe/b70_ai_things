@@ -36,15 +36,15 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-K2 fusedq TTFT/PP on the v0260
-combined GDN SO (D5 retry-if). Keep
-BARRIER=1 (LOOP 56: getenv is the
-31.9 win). Do not retry BARRIER=0
-as a hold. Do not retry
-ALLGATHER_GRAPH env-only (D17).
-Do not overlay 51MB GDN-OFF SO.
-Do not P2P=1 / D16. Live hold k1bar
-31.9.
+Ornith-1.5-35B-A3B-NVFP4 fetch +
+serve smoke. Kernel session closed:
+BARRIER=1 hold 31.9, fusedq default
+on (TTFT wash / slight cold win),
+ALLGATHER_GRAPH D17. Do not retry
+BARRIER=0 as hold. Do not overlay
+51MB GDN-OFF SO. Do not P2P=1 / D16.
+Live hold k1bar 31.9 until 35B needs
+the cards.
 
 ---
 
@@ -2403,3 +2403,42 @@ Do not: BARRIER=0 as hold; ALLGATHER_GRAPH
 Restore: DD PARKED. k1bar BARRIER=1 UP.
   Lease pid 180789.
 JOURNAL: ### 2026-08-19am
+
+---
+
+## LOOP 57 -- 2026-08-19T2139Z -- K2 fusedq TTFT wash
+
+Picked: D5 retry-if TTFT/PP. Combined
+  v0260 SO already has fusedq; default
+  ON on the 31.9 hold. A/B B70_FUSEDQ=0.
+Why this, not the other open row:
+  LOOP 56 Next pick.
+GPU: lease pid 186007 after restore.
+  DD PARKED.
+Command:
+  TTFT on live k1bar (fusedq default on)
+  restart B70_FUSEDQ=0 BARRIER=1 AGASYNC
+  G1 + same TTFT + bench_code
+  restore k1bar default fusedq
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop57_*
+Result: fusedq ON IN~2298 cold **1133**
+  PP 2029 warm 554/556; IN~9123 cold
+  3107 warm 675. FUSEDQ=0 same probe
+  cold **1189** PP 1933 warm 563/559;
+  IN~9123 cold 3115 warm 676. c1 **31.8**
+  / 34.7 vs 31.9 / 34.0. G1 Paris / 391
+  / fib both. No DEVICE_LOST. Restore
+  k1bar HEALTHY 142s Paris OK.
+Verdict: GO (D5 closed). Keep fusedq
+  default ON. No decode tax on this SO.
+  Cold TTFT ~5% better; rest noise.
+Changed beliefs: v0240 fusedq decode
+  loss (28.3) does not reproduce on
+  v0260 combined+BARRIER=1.
+Next pick: Ornith-1.5-35B-A3B-NVFP4
+  fetch + smoke.
+Do not: FUSEDQ=0 as hold; BARRIER=0;
+  ALLGATHER_GRAPH env; 51MB SO; P2P=1.
+Restore: DD PARKED. k1bar UP. Lease
+  pid 186007.
+JOURNAL: ### 2026-08-19an

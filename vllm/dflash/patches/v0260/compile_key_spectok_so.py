@@ -81,6 +81,8 @@ def install() -> bool:
         d["b70_int8_barrier"] = os.environ.get(
             "VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER", "0"
         )
+        # Fusedq vs two-step changes captured GEMM nodes.
+        d["b70_fusedq"] = os.environ.get("B70_FUSEDQ", "1")
         return d
 
     SpeculativeConfig.compute_hash = _spec_hash  # type: ignore[method-assign]

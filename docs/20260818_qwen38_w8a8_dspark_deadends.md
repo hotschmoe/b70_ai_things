@@ -215,6 +215,18 @@ Retry if: unchanged -- fusedq rebuilt vs v0260 ABI,
   then TTFT/PP A/B vs P4.1, not c1.
 Related JOURNAL: ### 2026-08-19n
 
+## D5 addendum -- v0260 fusedq TTFT/PP -- 2026-08-19 -- LOOP 57
+
+Tried: same combined GDN SO as 31.9.
+  Default fusedq ON vs B70_FUSEDQ=0.
+Result: decode 31.8 vs 31.9 (wash).
+  Cold IN~2298 TTFT 1133 vs 1189 (~5%).
+  Warm and 9k prefill noise. G1 holds.
+Why it is closed: D5 retry-if complete.
+  Keep fusedq default ON. Do not flip
+  to two-step for a 50 ms warm delta.
+Related JOURNAL: ### 2026-08-19an
+
 ## D6 -- xpu_shard_top1 SPEC flag is MTP-only, not DSpark -- 2026-08-18 -- LOOP 20
 
 Tried: E1 / PRE.11 once on live W8A8 DSpark k=4
