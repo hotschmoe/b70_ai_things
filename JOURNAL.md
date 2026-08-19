@@ -15148,3 +15148,53 @@ VERDICT -> GO on fused eager TP=1
   retry. Do not serve emul. Do
   not start DD. Do not set P2P=1.
 
+### 2026-08-19ar - LOOP 61: capture-safe fused MoE apply; GRAPH 34.9
+
+CONTEXT -> LOOP 60 GRAPH died in
+  sitecustomize (7) unique().tolist().
+  Rewrite apply, then GRAPH.
+
+CONFIG -> IMG int8g-v0260 MODE=fused
+  KV_FP8=0 LANGONLY=1 MAXLEN=8192
+  FUSED_SO nvfp4_f8scale_kernel_gdn
+  B70_FP8_CHANNEL_INT8XMX=0
+  F8_SCALE_M_MAX=8 P2PACCESS=0
+  CAPSIZES=1,2,4,8 when GRAPH=1
+
+COMMAND ->
+  ```
+  # unit: slot vs grouped + XPUGraph
+  gpu-run --card 0 docker run ... \
+    test_fused_moe_apply.py
+  bash vllm/nvfp4/sweep_ornith_moe_l61.sh
+  TP=2 GRAPH=1 G1 + bench_code
+  ```
+
+RESULT -> Unit: solo bit-exact;
+  XPUGraph capture OK; replay with
+  new expert ids matches eager
+  (cos 1.0). w1[scalar_tensor] still
+  host-syncs -- gather via
+  index_select then Python-int
+  index is the graph-safe form.
+  Live:
+  | arm | G1 | code c1 |
+  | eager TP=1 | Paris/391 | **5.5** |
+  | GRAPH TP=1 | Paris/391 21.6 | **34.9** |
+  | GRAPH TP=2 | Paris/391 21.4 | **22.6 / 24.2** |
+  Capture 4/4 PIECEWISE in 4s.
+  Eager 5.5 vs old unique-loop 3.8.
+  No event.wait. No DEVICE_LOST.
+  DD PARKED. k1bar 31.9 still 27B
+  W8A8 hold.
+
+VERDICT -> GO. Fused MoE apply is
+  capture-safe. GRAPH is the 35B
+  NVFP4 decode unlock (34.9 vs 3.8).
+  Keep KV=auto. MTP still parked
+  (emul vs triton backend split).
+  Next: optional TP=2 push-AR or
+  MTP mixed-backend. Do not serve
+  emul. Do not start DD. Do not
+  set P2P=1.
+

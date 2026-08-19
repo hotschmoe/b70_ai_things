@@ -754,11 +754,10 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **Ornith 35B NVFP4 (NOW, 2026-08-19aq).** Fused eager G1 GO on TP=1 and
-   TP=2 (Paris/391). Emul is D18. Eager code c1 3.8 t/s. GRAPH parked:
-   fused MoE apply does `torch.unique().tolist()` inside capture. MTP
-   parked: emulation vs triton backend split. Next: capture-safe fused
-   MoE apply, then GRAPH. Hold remains k1bar 31.9. KV=auto. No emul.
+0. **Ornith 35B NVFP4 (NOW, 2026-08-19ar).** Capture-safe fused MoE apply
+   landed. GRAPH TP=1 code c1 **34.9** (eager 5.5; old unique-loop 3.8).
+   TP=2 GRAPH 22.6/24.2. G1 Paris/391. MTP still parked (emul vs triton
+   backend split). Hold remains k1bar 31.9. KV=auto. No emul.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for
