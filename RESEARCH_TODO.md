@@ -77,9 +77,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: leftover P4.1b 262k TTFT MTP-off.
->    B1 KV_FP8 hook GO: k=4 GRAPH=1 @131k, 295k KV, G1.
->    D12 stock sycl-tla. S2c 0.963/0.915. 29.4 < 41.2.
+>    Next pick: leftover queue empty (29.4 vs 41.2 is
+>    verify). P4.1b 262k MTP-off TTFT on disk. S2c
+>    0.963/0.915. Retry-if only. 29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

@@ -13899,3 +13899,46 @@ VERDICT -> GO (capacity). GRAPH=1 k=4 +
   Do not HE+ under GRAPH=1. Scheduler stays
   (29.4 < 41.2). Do not start DD.
 
+### 2026-08-19q - LOOP 34: P4.1b 262k MTP-off TTFT; leftover queue empty
+
+CONTEXT -> LOOP 33 GO B1. Next pick P4.1b:
+  stop DSpark, W8A8 @262k MTP-off KV_FP8=0,
+  same cold/warm TTFT as P4.1. Do not HE+
+  under GRAPH=1. Do not retry D12.
+
+CONFIG -> B70_NOMTP=1 GRAPH=0 MAXLEN=262144
+  UTIL=0.90 TP=2 KV_FP8=0 PREFIXCACHE=1
+  SERVED=qwen3.8-27b-W8A8-gptq NAME=qwen38_w8a8
+  IMG=int8g-v0260 P2PACCESS=0. Restore
+  SPECTOK=4 GRAPH=1 ALLGATHER_ASYNC
+  MAXLEN=122880 KV_FP8=0.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  B70_NOMTP=1 GRAPH=0 MAXLEN=262144 KV_FP8=0 PREFIXCACHE=1 \
+    SERVED=qwen3.8-27b-W8A8-gptq \
+    ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
+  # G1; stream TTFT IN~2048 and IN~8192 cold+2 warm
+  # restore AGASYNC 122880
+  ```
+
+RESULT -> 262k HEALTHY 148s. G1 Paris / 391 /
+  fib. Prefix cache hits. Clean-cold IN=1581
+  TTFT **978 ms** PP 1617 (0 hits) -> warm
+  **488 / 511 ms** PP 3238 (1664/3162 hits).
+  IN=6261 cold 2637 ms (832 leftover hits)
+  warm 417. Matched IN=2037/8085 warms **389 /
+  476 ms** (colds not clean). vs P4.1 DSpark
+  GRAPH=1 IN=2040 cold 1528 / warm 449 and
+  IN=8085 cold 2875 / warm 573. Restore
+  HEALTHY 142s, G1 Paris, id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880. No DEVICE_LOST. No c1 (29.4).
+
+VERDICT -> GO. Prefill is not the 29.4 vs
+  41.2 gap. Leftover startable queue empty.
+  Next: Retry-if only (D5/D9/D10/D12). Do
+  not enter Phase 2. Scheduler stays
+  (29.4 < 41.2). Do not start DD.
+

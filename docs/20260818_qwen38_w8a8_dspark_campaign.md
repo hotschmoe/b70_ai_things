@@ -23,11 +23,11 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 33 (B1 KV_FP8 hook: GRAPH=1 k=4 @131k G1, 295k KV) |
-| Last JOURNAL heading | `2026-08-19p` |
+| Last loop | 34 (P4.1b 262k MTP-off TTFT; AGASYNC restored) |
+| Last JOURNAL heading | `2026-08-19q` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | leftover P4.1b 262k TTFT MTP-off (do not start this fire) |
+| Next pick | leftover queue empty of startable items (29.4 vs 41.2 is verify) |
 | Blocked on | 0.27 TP=2 oneCCL (D10). 101.922 cell not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |

@@ -36,13 +36,14 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Leftover P4.1b -- 262k TTFT on MTP-off (P0.2
-recipe). Stop DSpark, serve W8A8 @262k
-MTP-off KV_FP8=0, same cold/warm TTFT as P4.1.
-Do not start it this fire. Do not HE+ under
-GRAPH=1 KV_FP8. Do not retry D12. Scheduler
-stays (29.4 < 41.2). Live serve is B1
-KV_FP8=1 k=4 GRAPH=1 @131k G1-gated.
+Leftover startable queue is empty. 29.4 vs
+41.2 remains verify cost on INT8-XMX (P4.1 /
+P4.1b prefill is not the gap). Retry-if only:
+D5 v0260 fusedq, D9 INT8 barrier port, D10
+SYCL-9 oneCCL, D12 rectangular TiledMMA.
+Do not enter Phase 2. Do not retry D10/D11/
+D12 stock tiles. Scheduler stays (29.4 <
+41.2). Live serve is AGASYNC k=4 @122880.
 
 ---
 
@@ -1491,3 +1492,51 @@ Restore: DD stays PARKED. KV_FP8=1 k=4 GRAPH=1
   @131k left UP. Lease pid 41598.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19p
+
+---
+
+## LOOP 34 -- 2026-08-19T1010Z -- P4.1b 262k MTP-off TTFT
+
+Picked: leftover P4.1b -- 262k TTFT MTP-off
+  KV_FP8=0, same cold/warm cells as P4.1.
+Why this, not the other open row: LOOP 33 Next
+  pick. Last startable leftover.
+GPU: after restore, lease HELD pid=46901
+  docker wait qwen38_w8a8_dspark. DD PARKED.
+  During measure: id qwen3.8-27b-W8A8-gptq
+  @262144 GRAPH=0 MTP-off. Restored
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880.
+Command:
+  B70_NOMTP=1 GRAPH=0 MAXLEN=262144 KV_FP8=0
+    PREFIXCACHE=1 SERVED=qwen3.8-27b-W8A8-gptq
+    bash vllm/w8a8/serve_qwen38_27b.sh start
+  G1; cold+2x warm TTFT; restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop34_serve.log
+  ttft: loop34_ttft.log + loop34_ttft_matched.log
+  restore: loop34_restore.log
+Result: HEALTHY 148s. G1 Paris / 391 / fib.
+  Clean-cold IN=1581 TTFT **978 ms** PP 1617
+  (0 hits) -> warm **488 / 511 ms** PP 3238
+  (1664 hits). vs P4.1 DSpark IN=2040 cold
+  1528 / warm 449. IN=6261 cold 2637 (832
+  prior hits) warm 417. Matched IN=2037/8085
+  warms 389/476 (colds contaminated). Prefix
+  hits. Restore HEALTHY 142s, G1 Paris.
+  No DEVICE_LOST. No c1 (29.4).
+Verdict: GO. Prefill still not the 29.4 vs
+  41.2 gap. Leftover startable queue empty.
+Changed beliefs: 262k MTP-off GRAPH=0 prefix
+  cache hits; clean-cold 2048-class TTFT is
+  faster than DSpark GRAPH=1 (978 vs 1528)
+  and warm is similar (488 vs 449).
+Next pick: no startable leftover. Verify
+  cost remains. Retry-if only. Do not start
+  Phase 2 this fire.
+Do not: retry D10/D11/D12 stock; remount
+  fusedq; HE+ under GRAPH=1; start DD;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. GRAPH=1 k=4
+  AGASYNC @122880 left UP. Lease pid 46901.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19q
