@@ -36,14 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Leftover B1 -- KV_FP8 hook on the W8A8 3.8
-serve (P0.2 leftover). Capacity (262k+spec or
-GRAPH=1 @131k), not c1. First: add the hook
-to the W8A8 serve path, then KV_FP8=1 A/B G1.
-Do not start it this fire. Do not retry D12
-stock sycl-tla tiles. Do not remount fusedq.
-Do not retry D10/D11. Scheduler stays
-(29.4 < 41.2).
+Leftover P4.1b -- 262k TTFT on MTP-off (P0.2
+recipe). Stop DSpark, serve W8A8 @262k
+MTP-off KV_FP8=0, same cold/warm TTFT as P4.1.
+Do not start it this fire. Do not HE+ under
+GRAPH=1 KV_FP8. Do not retry D12. Scheduler
+stays (29.4 < 41.2). Live serve is B1
+KV_FP8=1 k=4 GRAPH=1 @131k G1-gated.
 
 ---
 
@@ -1452,3 +1451,43 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease pid 38888.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19o
+
+---
+
+## LOOP 33 -- 2026-08-19T0940Z -- B1 KV_FP8 hook G1 @131k
+
+Picked: leftover B1 -- add KV_FP8 hook on 3.8
+  W8A8 path, then KV_FP8=1 A/B G1 (capacity).
+Why this, not the other open row: LOOP 32 Next
+  pick. LOOP 6 KV_FP8 env was a no-op.
+GPU: lease HELD pid=41598 docker wait
+  qwen38_w8a8_dspark. DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync-kvfp8
+  max_model_len 131072 kv_cache_dtype fp8_e5m2
+  IMG=int8g-v0260 GRAPH=1 SPECTOK=4.
+Command:
+  # hook in vllm/w8a8/serve_qwen38_27b.sh and
+  # vllm/dflash/serve_qwen38_w8a8_dspark.sh
+  KV_FP8=1 B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+    GRAPH=1 SPECTOK=4 MAXLEN=131072
+    SERVED=...-agasync-kvfp8 ... start
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop33_kvfp8_131k.log
+Result: hook maps KV_FP8=1 -> --kv-cache-dtype
+  fp8_e5m2. HEALTHY 137s. GPU KV **294,695**
+  tok, 2.25x conc @131k, 8.12 GiB KV.
+  G1 Paris / 391 / fib. No DEVICE_LOST. No
+  c1 (29.4 is bf16 @122880). Uncalibrated
+  fp8; HE+ not re-run.
+Verdict: GO (capacity). Default KV_FP8 stays 0.
+Changed beliefs: GRAPH=1 k=4 DSpark fits 131k
+  with fp8_e5m2 (D1 was k=7 bf16 OOM). Hook
+  is 3.8-wrapper only; 3.6 shelf untouched.
+Next pick: leftover P4.1b 262k TTFT MTP-off.
+  Do not start it this fire.
+Do not: HE+ under GRAPH=1 KV_FP8; retry D12;
+  remount fusedq; retry D10/D11; start DD;
+  overwrite w8a8-gptq; enter Phase 2.
+Restore: DD stays PARKED. KV_FP8=1 k=4 GRAPH=1
+  @131k left UP. Lease pid 41598.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19p

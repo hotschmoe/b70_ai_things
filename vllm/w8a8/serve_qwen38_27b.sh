@@ -28,6 +28,14 @@ export UTIL="${UTIL:-0.90}"
 export GRAPH="${GRAPH:-1}"
 export PREFIXCACHE="${PREFIXCACHE:-1}"
 export KV_FP8="${KV_FP8:-0}"
+# B1 (LOOP 6 leftover): KV_FP8=1 -> fp8_e5m2 storage KV. Default 0 = bf16
+# (3.6 W8A8 serve.sh never mapped this env). Do not overwrite w8a8-gptq.
+if [ "$KV_FP8" = 1 ]; then
+  export KVDTYPE="${KVDTYPE:-fp8_e5m2}"
+  echo "=== KV_FP8=1 -> --kv-cache-dtype $KVDTYPE ===" >&2
+else
+  export KVDTYPE="${KVDTYPE:-}"
+fi
 
 HOST_CKPT="$REPO/models/files/${CKPT#/models/}"
 [ -d "$HOST_CKPT" ] || { echo "MISSING $HOST_CKPT"; exit 1; }

@@ -13856,3 +13856,46 @@ VERDICT -> NO-GO (D12). Stock tiles do not
   fusedq / DD / Phase 2 this fire. Scheduler
   stays (29.4 < 41.2).
 
+### 2026-08-19p - LOOP 33: B1 KV_FP8 hook -- 131k GRAPH=1 k=4 G1
+
+CONTEXT -> LOOP 32 NO-GO D12. Next pick B1:
+  add KV_FP8 hook on W8A8 3.8 serve, then
+  KV_FP8=1 A/B G1. Capacity (262k+spec or
+  GRAPH=1 @131k), not c1. LOOP 6 env was a
+  no-op. Do not overwrite w8a8-gptq.
+
+CONFIG -> hook: KV_FP8=1 -> KVDTYPE=fp8_e5m2
+  in vllm/w8a8/serve_qwen38_27b.sh and
+  vllm/dflash/serve_qwen38_w8a8_dspark.sh.
+  Default still 0 (bf16). This fire:
+  KV_FP8=1 GRAPH=1 SPECTOK=4 MAXLEN=131072
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync-kvfp8
+  IMG=int8g-v0260 P2PACCESS=0 W8A16_M_MAX=0
+  ALLGATHER_ASYNC.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  KV_FP8=1 B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1 \
+    W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=131072 \
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync-kvfp8 \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  ```
+
+RESULT -> HEALTHY 137s. CLI has
+  --kv-cache-dtype fp8_e5m2. /v1/models
+  max_model_len **131072**. GPU KV cache
+  **294,695** tokens (8.12 GiB), 2.25x conc
+  at 131k. G1 Paris / 391 / fib iterative.
+  vLLM warns accuracy drop without a scale.
+  No DEVICE_LOST. No c1 this fire. w8a8-gptq
+  not overwritten. 3.6 shelf not edited.
+
+VERDICT -> GO (capacity). GRAPH=1 k=4 +
+  fp8_e5m2 clears D1's 131k OOM. Default
+  recipe stays KV_FP8=0 @122880 for 29.4.
+  Next pick leftover P4.1b 262k TTFT
+  MTP-off. Leave this 131k KV_FP8 serve up.
+  Do not HE+ under GRAPH=1. Scheduler stays
+  (29.4 < 41.2). Do not start DD.
+
