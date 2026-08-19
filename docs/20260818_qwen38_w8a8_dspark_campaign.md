@@ -24,11 +24,11 @@ lock. The lock is Phase 0, not the ceiling.
 | field | value |
 |---|---|
 | Last loop | 22 (NO-GO E2 host-barrier ALLGATHER c1 26.6; reverted) |
-| Last JOURNAL heading | `2026-08-19` |
+| Last JOURNAL heading | `2026-08-19b` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
 | Next pick | P4.1 prefix-cache TTFT baseline on live AGASYNC @122880 |
-| Blocked on | post-reset: systemd brought DD back. P4.1 never ran. |
+| Blocked on | none. Cards free. Loop re-armed 01a01813e05d. P4.1 first. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark `bench_code` c1 | **29.4** k=4 GRAPH=1 ALLGATHER_ASYNC @122880 (G1 hold; was 28.7 push-AR only) |
@@ -171,7 +171,12 @@ Memorize these. They are how previous weeks got burned.
   `docs/20260818_qwen38_sergiioB_cookbook.md`. 83.7 is 1x B70
   GPTQ-Int4 MTP4 on vLLM 0.27.2rc1, not our W8A8 TP=2 c1.
   Do not demote W8A8. Do not mix digest `f01e24f6` with the
-  3.6 `2c427ef` or Nemotron `1da0a954`. S1 is after P1.6.
+  3.6 `2c427ef` or Nemotron `1da0a954`. S1 already smoked
+  (47.58 on this box).
+- Steve 3.8 INT4-AR (2026-08-19b):
+  `docs/20260819_steve_qwen38_int4ar.md`. MTP5 **101.922**
+  / MTP4 100.497 after-TTFT on 2x B70. We have not served
+  3.8 AutoRound INT4. S2 later. Do not start it this window.
 - P2P=1 in vLLM TP>1 wedges the box. Recovery = reboot. Never
   chain two tries. `I_KNOW_P2P_WEDGES=1` required. oneCCL overlay
   is 2021.17; 2021.15 is broken.
@@ -353,6 +358,7 @@ Xe2 rule: never write an FP8 GEMM. Repack FP8 weights to s8.
 | SpecForge v0.3 | DSpark yamls for 3.6-27B, not 3.8. Capture = patched sglang 0.5.14 CUDA. XPU = offline only. |
 | DeepSpec | 38 TB offline cache if you do it their way. Do not. |
 | Steve lab DSpark7 on V4-Flash, 4x B70, **80.8** | XPU DSpark kernel lessons: sharded target top-1, persistent Markov, do not materialize full vocab. Steal after accept is real. |
+| Steve lab Qwen3.8 INT4-AR TP=2 (2026-08-19) | vLLM/XPU AutoRound W4A16 MTP5 **101.922** all-25 / MTP4 **100.497** (better on sel-12). After-TTFT, pinned compile cache, LocalMaxxing APPROVED. Digest `docs/20260819_steve_qwen38_int4ar.md`. S2 later, not W8A8. |
 | RukaRat 3.8 W8A8-INT8 imatrix | Only public true W8A8-INT8 3.8 besides ours. A/B later, do not replace identity until gated. |
 | SergiioB QWEN38-VLLM-XPU (2026-08) | 1x B70 GPTQ-Int4 + BF16 MTP, vLLM `0.27.2rc1` digest `f01e24f6`, MTP4 p512/g128 **83.7** post-first, accept 93-96%. C1 ceiling. Digest + digest law in `docs/20260818_qwen38_sergiioB_cookbook.md`. Do not mix with 3.6 `2c427ef`. |
 | No PSpark product | SpecPrefill (arxiv 2502.02789, vLLM #39060 stale). PFlash = llama.cpp fork. P-EAGLE = decode-side. |
@@ -664,3 +670,5 @@ Do not start Phase 2 or "PSpark" in week 1-2.
 - SergiioB 3.8 vLLM XPU 4-mode: `docs/20260818_qwen38_sergiioB_cookbook.md`
   (source https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/qwen38-27/QWEN38-VLLM-XPU.md)
 - 3.6 cookbook already measured here: `docs/COOKBOOK_CAMPAIGN.md`
+- Steve 3.8 INT4-AR 100+: `docs/20260819_steve_qwen38_int4ar.md`
+  (https://github.com/steveseguin/b70-optimization-lab HEAD `924b518`)

@@ -36,14 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P4.1 -- prefix-cache TTFT baseline. LOOP 22 left
-AGASYNC up; hard reset 2026-08-19T03:10Z killed it
-(exit 255). Not a GPU wedge -- WAN/API died
-(JOURNAL 2026-08-19). systemd re-started DD
-`hotschmoe-dd`. Stop DD before this pick. Serve
-k=4 GRAPH=1 AGASYNC @122880 again, then TTFT.
-D8/D7/D6/D5/D4 still stand. Do not train. Do not
-enter Phase 2. Quality floor HE+ 0.957/0.927.
+P4.1 -- prefix-cache TTFT baseline. Cards are free.
+Bring up k=4 GRAPH=1 AGASYNC @122880, G1, then TTFT.
+D8/D7/D6/D5/D4 still stand. Do not start DD. Do not
+train. Do not start Steve INT4-AR (S2) or requant.
+Quality floor HE+ 0.957/0.927. Scheduler 01a01813e05d.
 
 ---
 

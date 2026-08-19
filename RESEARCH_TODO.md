@@ -63,8 +63,10 @@
 >       2026-08-18 chase: lab Q4K reorder+SwiGLU doors raise code c1 to **43.8** at 262k
 >       (after-TTFT 44.9). FATTN_MMA=1 crash-loops JIT. Remaining 51 is AOT 2026.1.1.
 >       Recipe: `LAB_DOORS=1` default in `llamacpp/serve_qwen38_b70_0xsero.sh`.
->    M3 CHECKED -- no official Intel/Qwen3.8-27B-int4-AutoRound; sglang DSpark cookbook is
->       CUDA/Spark only. XPU sglang just moved to torch 2.13; do not bump this campaign.
+>    M3 UPDATED 2026-08-19 -- Steve lab now has 3.8 AutoRound INT4 TP=2
+>       MTP5 **101.922** / MTP4 100.497 after-TTFT (2x B70, pinned
+>       compile cache). We have not served that scheme. S2 later.
+>       sglang DSpark still CUDA/Spark only. Do not bump this campaign.
 >    Do not iterate rmacy v10-slim (8k, 17-22 tok/s). W8A8 3.8 stays the INT8-XMX track.
 >    zml stays a findings backend. Journal + commit at each milestone.
 >    **NEXT CAMPAIGN (2026-08-18, LOOPING):** 3.8 W8A8-INT8 + matched DSpark on
@@ -73,7 +75,8 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: P4.1 prefix-cache TTFT baseline. D8: host-barrier ALLGATHER c1 26.6 < 29.4. AGASYNC 29.4 stands. DD PARKED.
+>    Next pick: P4.1 prefix-cache TTFT (loop re-armed 01a01813e05d).
+>    AGASYNC 29.4 stands. Steve INT4-AR 101.9 is S2 later, not now.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,
