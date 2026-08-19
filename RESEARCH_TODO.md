@@ -79,6 +79,7 @@
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
 >    Next pick: S2b 3.8 INT4-AR speed YOLO on 0.27 f01e24f6
 >    (weights on disk). Then S2c HE+ vs 0.957/0.927.
+>    Compile-key SPECTOK+SO landed LOOP 26 (0.26 DSpark path).
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

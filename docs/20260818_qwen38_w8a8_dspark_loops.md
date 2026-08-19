@@ -44,9 +44,9 @@ public 0.27.2rc1 `f01e24f6` (already pulled). Allowed:
 Steve lab `/mnt/vm_8tb/b70/b70-optimization-lab-main`,
 graph-safe FA source, new vLLM/sglang image. Stop W8A8
 AGASYNC, G1, bench_code + after-TTFT toward 101.922.
-Then S2c HE+ vs 0.957/0.927. Compile-key leftover
-waits. Do not stay on int8g-v0260. Scheduler
-01a01813e05d stays.
+Then S2c HE+ vs 0.957/0.927. Compile-key landed
+LOOP 26 on the 0.26 DSpark path. Do not stay on
+int8g-v0260. Scheduler 01a01813e05d stays.
 
 ---
 
@@ -1151,3 +1151,55 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 9319.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19f
+
+---
+
+## LOOP 26 -- 2026-08-19T0512Z -- compile-key SPECTOK+SO
+
+Picked: leftover compile-key -- put SPECTOK +
+  mounted _xpu_C SO in the 0.26 cache key
+Why this, not the other open row: LOOP 25 Next
+  pick named this leftover first. Operator 19h
+  then YOLO-deferred it; this fire was already
+  on the leftover. One arm.
+GPU: lease HELD both cards by docker-wait pid=9319
+  since 2026-08-19 03:40:48. DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880.
+  No restart.
+Command:
+  docker exec ... SpeculativeConfig.compute_hash
+    dummy k=3 vs k=4 (stock same)
+  install vllm/dflash/patches/v0260/compile_key_spectok_so.py
+  selftest PASS
+Log: n/a (no GPU job)
+Result: Stock spec hash identical for k=3/k=4
+  (c3d9d001b44dc00c). After hook they differ.
+  _xpu_C sha256 74faead73d93... now in
+  compile_factors. Serve script prepends
+  /opt/compile_key_shim. Live workers unchanged.
+Verdict: GO
+Changed beliefs: b3f7e9e010 ignores SPECTOK
+  because SpeculativeConfig.compute_hash omits
+  num_speculative_tokens, and ignores GDN_SO
+  because compiler_hash is inductor-only. Hook
+  does not unstick D3 k=3 GRAPH=1 (cold duct).
+  Next GRAPH=1 0.26 DSpark start gets a new
+  hash; do not wipe b3f7e9e010 just to land
+  this. S2a is on disk (19.02 GB auto-round).
+Next pick: S2b 3.8 INT4-AR speed YOLO.
+  First: stop NAME=qwen38_w8a8_dspark, xpu-health
+  card 0, then
+  TP=2 MTPTOK=5 GRAPH=1 PORT=18080 NAME=qwen38_int4ar
+    SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+    ./bin/gpu-run bash vllm/w4a16/serve_qwen38_27b_int4ar.sh start
+  G1 first. Then bench_code c1 + phase_bench
+  after-TTFT. Default IMG f01e24f6. Do not
+  stay on int8g-v0260.
+Do not: start S2 this leftover fire (already
+  not started); retry GRAPH=1 k=3; overlay
+  Steve INT4 SO on W8A8; start DD; Phase 2;
+  wipe b3f7e9e010 while AGASYNC is up.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 9319.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19i

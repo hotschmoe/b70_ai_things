@@ -104,17 +104,18 @@ Ranked leftover (one pick per fire):
 
 | # | pick | why | first command |
 |---|---|---|---|
-| E3 | oneDNN barriers-on A/B vs 29.4 | Steve steal; only unmeasured 0.26 flag-class decode lever | fetch Steve lab, read `9f90e2c` / GDN-scratch note for the env, restart this AGASYNC recipe with it, G1, `bench_code` c1 |
-| D9 | compile-key includes SPECTOK + SO | stops D2/D3 class "duct"; not a c1 win by itself | code on 0.26 compile cache key; wipe `b3f7e9e010` before any SPECTOK change until then |
+| E3 | oneDNN barriers-on A/B vs 29.4 | CLOSED D9 LOOP 25; retry-if = port INT8 barrier into kernels/int8_gemm_w8a8.h | do not set unused VLLM_XPU_ONEDNN_INT* env |
+| D9 | compile-key includes SPECTOK + SO | LANDED LOOP 26 on 0.26 DSpark serve (not a c1 win) | next GRAPH=1 start gets a new hash; do not retry GRAPH=1 k=3 |
 | P1.6b | fusedq **TTFT/PP** A/B | D5 retry-if; decode already NO-GO 28.3 | remount v0240 fusedq SO, wipe hash, measure cold/warm TTFT vs P4.1 1528/449, not c1 |
 | P1.8 | sycl-tla C1 VNNI16 / M<8 DPAS | campaign D: the verify-shape differentiator | read `kernels/SYCLTLA_SCAFFOLD.md`; microbench then e2e. Isolated 1.2x with e2e drop is a packet |
 | B1 | KV_FP8 hook on W8A8 3.8 serve | P0.2 leftover; capacity (262k+spec or GRAPH=1 @131k), not c1 | add the hook to the W8A8 serve path, then KV_FP8=1 A/B G1 |
 | P4.1b | 262k TTFT on MTP-off | P4.1 leftover; recipe is 122880 (D1) | stop DSpark, P0.2 262k serve, same cold/warm TTFT |
 | G5 | 18/18 mixed prefill+decode | concurrent quality; not the 29.4 gap | GRAPH=1 short only; no HE+ under GRAPH=1 CGRECLAIM=0 |
 
-Not this window: P4.2 SpecPrefill, P1.1-P1.4 train, S2 INT4-AR,
+Not this window: P4.2 SpecPrefill, P1.1-P1.4 train,
 SergiioB GPTQ-Int4 as vehicle, Phase 2 ABI rewrite, method=dflash
 on 0.26, P2P=1, W8A16_M_MAX>0 @122880, overwrite w8a8-gptq.
+S2 INT4-AR is the current GPU pick (operator YOLO).
 
 29.4 vs 41.2 is still verify cost on INT8-XMX, not prefill (P4.1
 warm 2048 TTFT 449 ms already works) and not accept (pos0 65-80%).
@@ -142,5 +143,6 @@ warm 2048 TTFT 449 ms already works) and not accept (pos0 65-80%).
   close 29.4 vs 41.2.
 - E3 LOOP 25 / D9: `VLLM_XPU_ONEDNN_INT*` env is a no-op on
   int8g-v0260 (not in `_xpu_C`). Retry-if = port INT8 completion
-  barrier into `kernels/int8_gemm_w8a8.h`. Next leftover:
-  compile-key SPECTOK+SO.
+  barrier into `kernels/int8_gemm_w8a8.h`.
+- Compile-key SPECTOK+SO LOOP 26: landed on the 0.26 DSpark
+  serve. Next leftover after S2: P1.6b / P1.8 / B1.

@@ -13527,3 +13527,58 @@ RESULT -> S2a closed. Next pick S2b. Compile-key
 VERDICT -> GO (steer). Next fire serves INT4-AR on
   0.27. Then S2c HE+.
 
+### 2026-08-19i - LOOP 26: compile-key SPECTOK+SO on 0.26
+
+CONTEXT -> LOOP 25 Next pick was compile-key SPECTOK+SO
+  (no GPU). Operator 19h deferred it for S2b YOLO; this
+  fire had already started the leftover and lands it.
+  Do not start S2 this arm. Quality floor HE+ 0.957/0.927.
+
+CONFIG -> lookup + sitecustomize hook. Live :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync max_model_len
+  122880. Lease pid 9319. IMG=int8g-v0260. No restart.
+  Hook: vllm/dflash/patches/v0260/compile_key_spectok_so.py
+  + compile_key_sitecustomize.py, wired only into
+  vllm/dflash/serve_qwen38_w8a8_dspark.sh (PYTHONPATH
+  first, chains push-AR -> mtp_shim).
+
+COMMAND ->
+  ```
+  docker exec qwen38_w8a8_dspark python3 -c '
+    from vllm.config.speculative import SpeculativeConfig
+    class T:
+        num_speculative_tokens=3; method="dspark"
+        draft_model_config=None
+    h3=SpeculativeConfig.compute_hash(T())
+    T.num_speculative_tokens=4
+    h4=SpeculativeConfig.compute_hash(T())
+    print(h3==h4)  # True stock
+  '
+  # then install hook; selftest PASS
+  ```
+
+RESULT -> Stock SpeculativeConfig.compute_hash() is
+  c3d9d001b44dc00cc97829c0d62f12f9 for both k=3 and
+  k=4 (method=dspark). That is the D2/D3 shared dir
+  b3f7e9e010: factors are env_hash + vllm_config.hash
+  (spec hash omits num_speculative_tokens) + code_hash
+  + inductor compiler_hash. _xpu_C.abi3.so (59 MiB,
+  sha256 74faead73d93...) is not in any factor.
+  After hook: k=3 hash 4106b4d3... != k=4 551a4a50...
+  method dspark != mtp. compile_factors gains
+  b70_so_0/1 (xpu_C + gdn lib). Extra
+  B70_COMPILE_KEY_SO paths work. Live AGASYNC
+  workers were not patched (separate processes).
+  S2a on disk: 19016936446 B, 60 files,
+  quant_method auto-round. DD PARKED. systemd
+  b70-daily-driver active(exited); :18080 is
+  research not hotschmoe-dd. No DEVICE_LOST.
+
+VERDICT -> GO. 0.26 DSpark serve will get a new
+  cache dir on next GRAPH=1 start. Does NOT unstick
+  D3 (k=3 GRAPH=1 duct even cold). Next pick S2b
+  (operator YOLO) on 0.27 f01e24f6. Leave AGASYNC
+  up for that fire to stop. Do not start S2 / DD /
+  Phase 2 / barrier kernel port / GRAPH=1 k=3.
+  Scheduler stays (29.4 < 41.2; S2c HE+ not on disk).
+

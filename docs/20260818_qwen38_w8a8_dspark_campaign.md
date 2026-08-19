@@ -23,8 +23,8 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 25 (DEAD-END E3 oneDNN barrier env no-op; D9) |
-| Last JOURNAL heading | `2026-08-19h` |
+| Last loop | 26 (GO compile-key SPECTOK+SO on 0.26 DSpark path) |
+| Last JOURNAL heading | `2026-08-19i` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
 | Next pick | S2b 3.8 INT4-AR speed on 0.27 digest f01e24f6 (YOLO; HE+ is S2c) |
@@ -173,10 +173,12 @@ Memorize these. They are how previous weeks got burned.
   Do not demote W8A8. Do not mix digest `f01e24f6` with the
   3.6 `2c427ef` or Nemotron `1da0a954`. S1 already smoked
   (47.58 on this box).
-- Steve 3.8 INT4-AR (2026-08-19b):
+- Steve 3.8 INT4-AR (2026-08-19b / 19h YOLO):
   `docs/20260819_steve_qwen38_int4ar.md`. MTP5 **101.922**
-  / MTP4 100.497 after-TTFT on 2x B70. We have not served
-  3.8 AutoRound INT4. S2 later. Do not start it this window.
+  / MTP4 100.497 after-TTFT on 2x B70. Weights on disk.
+  S2b is the next GPU fire on 0.27 `f01e24f6`, not
+  int8g-v0260. Compile-key SPECTOK+SO landed LOOP 26
+  on the 0.26 DSpark path.
 - P2P=1 in vLLM TP>1 wedges the box. Recovery = reboot. Never
   chain two tries. `I_KNOW_P2P_WEDGES=1` required. oneCCL overlay
   is 2021.17; 2021.15 is broken.

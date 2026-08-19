@@ -324,3 +324,22 @@ Retry if: port INT8 completion-barrier (and
   G1 + bench_code vs 29.4. Do not overlay
   Steve's INT4-AR SO (wrong scheme / ABI).
 Related JOURNAL: ### 2026-08-19f
+
+## D3 addendum -- compile-key landed -- 2026-08-19 -- LOOP 26
+
+Tried: put SPECTOK + mounted _xpu_C / GDN SO in
+  the 0.26 compile cache key (no GPU).
+Command / config: sitecustomize hook
+  vllm/dflash/patches/v0260/compile_key_spectok_so.py
+  wired into serve_qwen38_w8a8_dspark.sh only.
+Result: stock SpeculativeConfig.compute_hash is
+  identical for k=3 and k=4. After hook they
+  differ. _xpu_C sha256 now in compile_factors.
+Why it is closed: this is the D2/D3 *cache-dir*
+  hole, not D3 itself. k=3 GRAPH=1 still ducted
+  on a cold compile (LOOP 12). Do not retry
+  GRAPH=1 k=3 just because the key is fixed.
+Retry if: DSpark graph path / capture sizes
+  change. Compile-key identity is no longer
+  the missing condition.
+Related JOURNAL: ### 2026-08-19i

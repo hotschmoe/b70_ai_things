@@ -25,6 +25,8 @@ fi
 
 [ -f "$PATCH/dflash.py" ] || { echo "missing $PATCH/dflash.py"; exit 1; }
 [ -f "$PATCH/drafter_config.json" ] || { echo "missing $PATCH/drafter_config.json"; exit 1; }
+[ -f "$PATCH/compile_key_spectok_so.py" ] || { echo "missing $PATCH/compile_key_spectok_so.py"; exit 1; }
+[ -f "$PATCH/compile_key_sitecustomize.py" ] || { echo "missing $PATCH/compile_key_sitecustomize.py"; exit 1; }
 
 SPECTOK="${SPECTOK:-7}"
 DRAFTER_REL="${DRAFTER_REL:-qwen3.8-27b/dflash-drafter-fp8-b70}"
@@ -46,7 +48,10 @@ export THINK_BUDGET="${THINK_BUDGET:-0}"
 # MTPTOK may be reset to 3 by serve.sh ${MTPTOK:-3}; SPEC wins in lib.sh.
 export SPEC="${SPEC:-{\"method\":\"dspark\",\"model\":\"/models/${DRAFTER_REL}\",\"num_speculative_tokens\":${SPECTOK}}}"
 export P2PACCESS="${P2PACCESS:-0}"
-export B70_EXTRA_MOUNTS="${B70_EXTRA_MOUNTS:+$B70_EXTRA_MOUNTS }${PATCH}/dflash.py:/workspace/vllm/vllm/v1/spec_decode/dflash.py:ro ${PATCH}/utils.py:/workspace/vllm/vllm/v1/spec_decode/utils.py:ro ${PATCH}/drafter_config.json:/models/${DRAFTER_REL}/config.json:ro"
+# Compile-key SPECTOK + mounted _xpu_C SO (LOOP 26 / D2 D3). First
+# PYTHONPATH sitecustomize; chains push-AR -> mtp_shim. Last -e wins.
+export B70_EXTRA_MOUNTS="${B70_EXTRA_MOUNTS:+$B70_EXTRA_MOUNTS }${PATCH}/dflash.py:/workspace/vllm/vllm/v1/spec_decode/dflash.py:ro ${PATCH}/utils.py:/workspace/vllm/vllm/v1/spec_decode/utils.py:ro ${PATCH}/drafter_config.json:/models/${DRAFTER_REL}/config.json:ro ${PATCH}/compile_key_sitecustomize.py:/opt/compile_key_shim/sitecustomize.py:ro ${PATCH}/compile_key_spectok_so.py:/opt/compile_key_shim/compile_key_spectok_so.py:ro"
+export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }PYTHONPATH=/opt/compile_key_shim:/opt/push_ar:/opt/mtp_shim"
 
 echo "=== P0.4 W8A8-gptq + DSpark k=$SPECTOK  GRAPH=$GRAPH  maxlen=$MAXLEN  name=$NAME ==="
 echo "=== method=dspark THINK_BUDGET=$THINK_BUDGET SERVED=$SERVED P2PACCESS=$P2PACCESS ==="

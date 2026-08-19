@@ -85,8 +85,8 @@ Do not overwrite w8a8-gptq. Do not start DD. One fire = one arm.
 
 ## Steal later (not this fire)
 
-- Pinned compile-cache as part of run identity (our GRAPH=1 k=3
-  "duct" / shared hash `b3f7e9e010` is the same class of bug)
+- Pinned compile-cache as part of run identity (LOOP 26 landed
+  SPECTOK+SO on the 0.26 DSpark path; b3f7e9e010 was the hole)
 - oneDNN barriers-on as a decode lever
 - GDN scratch zero-init if we ever hit residue / nondeterminism
 - After-TTFT 25-prompt suite if we want a number he will accept
