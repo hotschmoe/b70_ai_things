@@ -14304,3 +14304,40 @@ VERDICT -> NO-GO on 101.922 (D14).
   again. Scheduler stays (29.4 < 41.2).
   Do not start DD. Do not enter Phase 2.
 
+### 2026-08-19z - LOOP 43: oneCCL 4ceafd1 rebuild STARTED
+
+CONTEXT -> LOOP 42 Next pick: Steve public
+  oneCCL 4ceafd1 (SYCL-8 / 2025.3). CPU
+  build; leave AGASYNC up. Do not retry
+  FORCE_GRAPH on in-image 2021.17 (D14).
+  Do not fake 101.922. Do not start DD.
+
+CONFIG -> source uxlfoundation/oneCCL
+  top b52f40c07 / deps/libccl 4ceafd15c0
+  + 2025.3 compat patch. APPLY_SEQUENCE=0.
+  IMG intel/vllm:0.21.0-xpu icpx 2025.3
+  cmake dpcpp ARCB=ON JOBS=4. Install
+  /mnt/vm_8tb/b70/steve-s2b/oneccl-install.
+  No GPU.
+
+COMMAND ->
+  ```
+  git clone oneCCL; checkout b52f40c0; submodule 4ceafd1
+  git apply oneccl-4ceafd1-intel-2025.3-build-compat.patch
+  docker run -d --name loop43_cclbuild intel/vllm:0.21.0-xpu cmake/build install
+  ```
+
+RESULT -> Clone identity matches. Compat
+  patch applied. CMake configure OK
+  (ARC B-series LL256 ON). Build RUNNING
+  ~47/260. AGASYNC G1 Paris. DD PARKED.
+  No DEVICE_LOST. No c1 (29.4).
+
+VERDICT -> RUNNING. Next fire: if
+  loop43_cclbuild live, one status line
+  STOP. Dead + libccl.so.1.0 -> overlay
+  on 44fc8fde0+SO FORCE_GRAPH G1. Dead
+  without so -> log/packet. Scheduler
+  stays (29.4 < 41.2). Do not start DD.
+  Do not enter Phase 2.
+

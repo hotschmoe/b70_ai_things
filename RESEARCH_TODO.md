@@ -77,8 +77,8 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: Steve oneCCL 4ceafd1 then FORCE_GRAPH
->    G1 (D14). S2c 0.963/0.915. Scheduler stays.
+>    Next pick: finish loop43_cclbuild (4ceafd1) then
+>    FORCE_GRAPH G1. S2c 0.963/0.915. Scheduler stays.
 >    29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy

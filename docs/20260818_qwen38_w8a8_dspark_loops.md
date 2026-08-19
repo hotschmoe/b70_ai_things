@@ -36,15 +36,15 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Build Steve public oneCCL 4ceafd1
-(SYCL-8 / oneAPI 2025.3) then retry
-44fc8fde0 + 2dd55f38 SO + FORCE_GRAPH
-G1. Do not retry FORCE_GRAPH on
-in-image 2021.17 (D14). Do not retry
-44fc python on image 7-arg kernels.
-Do not enter Phase 2. Scheduler stays
-(29.4 < 41.2). Live serve is AGASYNC
-k=4 @122880.
+LOOP 43 oneCCL 4ceafd1 build RUNNING
+(loop43_cclbuild). If live: one status
+line STOP. If /mnt/vm_8tb/b70/steve-s2b/
+oneccl-install/lib/libccl.so.1.0 exists:
+overlay on 44fc8fde0+2dd55f38 SO +
+FORCE_GRAPH G1. Do not retry FORCE_GRAPH
+on in-image 2021.17 (D14). Do not enter
+Phase 2. Scheduler stays (29.4 < 41.2).
+Live serve is AGASYNC k=4 @122880.
 
 ---
 
@@ -1862,3 +1862,39 @@ Restore: DD stays PARKED. AGASYNC UP.
   Lease pid 90132. SOs kept on disk.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19y
+
+---
+
+## LOOP 43 -- 2026-08-19T1438Z -- oneCCL 4ceafd1 rebuild STARTED
+
+Picked: D14 retry-if -- build Steve
+  public oneCCL 4ceafd1 vs SYCL-8 2025.3.
+  CPU only. Leave AGASYNC up.
+Why this, not the other open row: LOOP 42
+  Next pick; FORCE_GRAPH on stock 2021.17
+  is closed.
+GPU: lease HELD pid=90132 docker wait
+  qwen38_w8a8_dspark. DD PARKED. :18080
+  AGASYNC @122880. loop43_cclbuild no GPU.
+Command:
+  clone b52f40c0 + libccl 4ceafd1; patch
+  docker run loop43_cclbuild cmake install
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop43_cclbuild.log
+Result: configure OK, ARCB ON, build
+  ~47/260. G1 Paris. No c1.
+Verdict: RUNNING
+Changed beliefs: none yet. oneCCL compile
+  is the D14 missing artifact.
+Next pick: finish cclbuild. First:
+  docker ps loop43_cclbuild. Live -> STOP.
+  Dead+libccl.so.1.0 -> overlay FORCE_GRAPH
+  G1. Dead without so -> log/packet.
+Do not: wait this fire; FORCE_GRAPH on
+  2021.17; 44fc on 7-arg kernels; D13
+  overlay as speed; SYCL-9 nightlies;
+  int8g-v0260 INT4; fake 101.922; start
+  DD; Phase 2; overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP.
+  Lease pid 90132. cclbuild running.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19z
