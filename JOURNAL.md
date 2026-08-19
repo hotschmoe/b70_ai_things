@@ -13233,3 +13233,33 @@ VERDICT -> Network/API outage, then hard reset.
   down across reboot. Re-arm scheduler only if the
   operator wants the 30m loop back.
 
+### 2026-08-19b - re-arm speed loop; ingest Steve 3.8 INT4-AR 101.9
+
+CONTEXT -> Operator: re-arm the 30m loop on P4.1. While
+  that runs, read newest
+  steveseguin/b70-optimization-lab (X: 3.8 INT4-AR
+  >100 tok/s on 2x B70). Do not leave W8A8. ZML intel
+  INT8 is a parallel findings pull.
+
+CONFIG -> scheduler 01a01813e05d 30m fire_immediately.
+  Docs only this note. No INT4-AR serve.
+
+COMMAND ->
+  ```
+  # GitHub API commits on b70-optimization-lab
+  # wrote docs/20260819_steve_qwen38_int4ar.md
+  ```
+
+RESULT -> Steve HEAD `924b518` (03:04Z). Promoted:
+  Qwen3.8 AutoRound INT4 W4A16 vLLM/XPU TP=2 MTP5
+  **101.922** all-25 (cmszbkxco0e11ms01l2rixxbt) and
+  MTP4 **100.497** (stronger on sel-12). After-TTFT
+  25-prompt, pinned compile cache, 25/25. We have
+  never served 3.8 INT4-AR (3.6 AR is shelf; 3.8
+  Q4_K_M is llama.cpp; S1 was GPTQ-Int4). S2 later.
+  Steal later: compile-cache identity, oneDNN
+  barriers-on, GDN scratch zero-init.
+
+VERDICT -> GO (steer). First fire is P4.1. Do not
+  start S2 this window.
+
