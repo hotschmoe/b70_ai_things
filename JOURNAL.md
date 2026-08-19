@@ -13744,3 +13744,37 @@ VERDICT -> GO (S2c). S2 quality closed. Next
   not retry D10/D11. Scheduler stays
   (29.4 < 41.2). Do not start DD.
 
+### 2026-08-19m - LOOP 30: leftover G5 18/18 PASS on AGASYNC
+
+CONTEXT -> LOOP 29 GO. Next pick leftover G5
+  18/18 on live W8A8 DSpark k=4 GRAPH=1
+  AGASYNC. Do not retry D10/D11. Do not start
+  INT4 / DD / Phase 2.
+
+CONFIG -> live :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  max_model_len 122880 GRAPH=1 SPECTOK=4
+  ALLGATHER_ASYNC IMG=int8g-v0260 TP=2
+  MAXSEQS=2 P2PACCESS=0. Gate 3 waves x 6
+  max_tokens=200.
+
+COMMAND ->
+  ```
+  curl -s http://192.168.10.5:18080/v1/models
+  # G1 Paris PASS
+  python3 -u vllm/gate_concurrent_coherence.py \
+    http://127.0.0.1:18080/v1 \
+    qwen3.8-27b-W8A8-gptq-dspark4-agasync 3 6 200
+  ```
+
+RESULT -> G0 match. G1 Paris exact. G5
+  **18/18 PASS** (all OK, no bangs, no ERROR).
+  Serve stayed up @122880. Lease pid 33246.
+  DD PARKED. No DEVICE_LOST. No c1 this fire
+  (best remains 29.4, now G5-gated too).
+
+VERDICT -> GO. Next pick leftover fusedq TTFT
+  on this live AGASYNC. Do not start it this
+  fire. Scheduler stays (29.4 < 41.2). Do
+  not start DD. Do not retry D10/D11.
+

@@ -77,8 +77,8 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: leftover G5 18/18 on live W8A8 AGASYNC.
->    S2c HE+ 0.963/0.915 on disk. S2b c1 12.8 / TTFT 16.66.
+>    Next pick: leftover fusedq TTFT on live W8A8 AGASYNC.
+>    G5 18/18 PASS. S2c HE+ 0.963/0.915. S2b c1 12.8.
 >    D10/D11 closed. Not 101.922. 29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy

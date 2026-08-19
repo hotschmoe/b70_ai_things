@@ -36,12 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Leftover G5 -- 18/18 concurrent coherence on the
-LIVE W8A8 DSpark k=4 GRAPH=1 AGASYNC @122880
-(`qwen3.8-27b-W8A8-gptq-dspark4-agasync`). Do not
-start it this fire. Do not retry D10/D11. Do not
-enter Phase 2. S2c HE+ is on disk (0.963/0.915).
-Scheduler 01a01813e05d stays (29.4 < 41.2).
+Leftover fusedq TTFT -- prefix-cache / fusedq
+prefill A/B on the LIVE W8A8 DSpark k=4 GRAPH=1
+AGASYNC @122880 (P4.1 already has 1528->449 ms
+without fusedq). Do not start it this fire. Do
+not retry D5/D10/D11. Do not enter Phase 2.
+G5 18/18 PASS. S2c HE+ on disk. Scheduler
+01a01813e05d stays (29.4 < 41.2).
 
 ---
 
@@ -1342,3 +1343,39 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease pid 33246.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19l
+
+---
+
+## LOOP 30 -- 2026-08-19T0805Z -- leftover G5 18/18 PASS
+
+Picked: leftover G5 -- gate_concurrent_coherence
+  3x6=18 on live AGASYNC
+Why this, not the other open row: LOOP 29 Next
+  pick. Last verdict GO not RUNNING. S2 closed.
+GPU: lease HELD both cards pid=33246 docker wait
+  qwen38_w8a8_dspark. DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880
+  IMG=int8g-v0260. P2PACCESS=0. MAXSEQS=2.
+Command:
+  python3 -u vllm/gate_concurrent_coherence.py
+    http://127.0.0.1:18080/v1
+    qwen3.8-27b-W8A8-gptq-dspark4-agasync 3 6 200
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop30_g5.log
+Result: G1 Paris exact. G5 **18/18 PASS** (OK=18,
+  no GARBAGE/ERROR, no "!!!!"). Serve stayed up.
+  No DEVICE_LOST. No new c1 (29.4 already G1-gated;
+  now also G5-gated).
+Verdict: GO
+Changed beliefs: 3.8 W8A8 DSpark k=4 GRAPH=1
+  AGASYNC @122880 is concurrent-coherent under
+  mixed prefill+decode even at MAXSEQS=2 (queue
+  piled). Do not treat "!!!!" as open on this
+  recipe.
+Next pick: leftover fusedq TTFT on this live
+  serve. Do not start it this fire.
+Do not: retry D5/D10/D11; fake 101.922; start DD;
+  overwrite w8a8-gptq; enter Phase 2; start INT4.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease pid 33246.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19m
