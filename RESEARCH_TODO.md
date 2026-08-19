@@ -77,9 +77,10 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: S2b 3.8 INT4-AR speed YOLO on 0.27 f01e24f6
->    (weights on disk). Then S2c HE+ vs 0.957/0.927.
->    Compile-key SPECTOK+SO landed LOOP 26 (0.26 DSpark path).
+>    Next pick: S2c HE+ 164 on live 0.27 INT4-AR GRAPH=0 TP=1
+>    id qwen3.8-27b-W4A16-autoround-mtp5 vs 0.957/0.927.
+>    S2b: TP=2 on f01e24f6 is D10; GRAPH=1 G1 garbage (D11).
+>    Gated TP=1 GRAPH=0 c1 12.8 / after-TTFT 16.66. Not 101.922.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

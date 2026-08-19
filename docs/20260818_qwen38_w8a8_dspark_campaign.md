@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 26 (GO compile-key SPECTOK+SO on 0.26 DSpark path) |
-| Last JOURNAL heading | `2026-08-19i` |
+| Last loop | 27 (S2b INT4-AR 0.27: TP=2 blocked; TP=1 GRAPH=0 G1+12.8/16.66) |
+| Last JOURNAL heading | `2026-08-19j` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | S2b 3.8 INT4-AR speed on 0.27 digest f01e24f6 (YOLO; HE+ is S2c) |
-| Blocked on | none. E3 env A/B closed; kernel port is Retry-if. |
+| Next pick | S2c HE+ 164 on live GRAPH=0 TP=1 `qwen3.8-27b-W4A16-autoround-mtp5` vs 0.957/0.927 |
+| Blocked on | 0.27 TP=2 oneCCL (D10). 101.922 cell not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark `bench_code` c1 | **29.4** k=4 GRAPH=1 ALLGATHER_ASYNC @122880 (G1 hold; was 28.7 push-AR only) |

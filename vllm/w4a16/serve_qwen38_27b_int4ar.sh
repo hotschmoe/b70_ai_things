@@ -5,10 +5,13 @@
 # digest, a home-built tag, or a Steve-stack rebuild. Not int8g-v0260
 # unless you set it.
 #
-#   TP=2 MTPTOK=5 GRAPH=1 PORT=18080 NAME=qwen38_int4ar \
+#   TP=1 GRAPH=0 PORT=18080 NAME=qwen38_int4ar \
 #     SERVED=qwen3.8-27b-W4A16-autoround-mtp5 \
-#     ./bin/gpu-run bash vllm/w4a16/serve_qwen38_27b_int4ar.sh start
+#     ./bin/gpu-run --card 0 bash vllm/w4a16/serve_qwen38_27b_int4ar.sh start
 #   bash vllm/w4a16/serve_qwen38_27b_int4ar.sh stop
+# LOOP 27: TP=2 on this digest is D10 (2021.15 device_fd; 2021.17 is SYCL-8).
+# GRAPH=1 G1 garbage (D11). Gated path is TP=1 GRAPH=0. Isolated TRITON
+# cache required (0.26 cache is libsycl.so.8; this image is .so.9).
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -51,6 +54,29 @@ fi
 if [ -n "${GDN_LIB:-}" ]; then
   MOUNTS+=( -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
   echo "=== overlay gdn lib <- $GDN_LIB ===" >&2
+fi
+
+# PRE.10: 0.27 nightlies ship oneCCL 2021.15 in /opt/venv/lib and die at
+# TP>1 (ze mem_to_ipc_handle: device_fd is invalid). Host 2021.17 is
+# SYCL-8 and ImportErrors on this SYCL-9 nightly. Default OFF. Set
+# CCL217=/mnt/vm_8tb/b70/ccl_2021.17/2021.17 only on a matching-ABI image.
+CCL217="${CCL217-}"
+if [ -n "$CCL217" ] && [ -d "$CCL217/lib" ]; then
+  SYCL8SHIM="${SYCL8SHIM:-/mnt/vm_8tb/b70/qwen38-w8a8-dspark/sycl8shim}"
+  mkdir -p "$SYCL8SHIM"
+  ln -sfn /opt/venv/lib/libsycl.so.9 "$SYCL8SHIM/libsycl.so.8"
+  # Torch 2.13 libtorch_xpu is DT_RPATH $ORIGIN/../../../.. so LD_LIBRARY_PATH
+  # cannot win. Bind the 2021.17 objects over the nightly's 2021.15 copies.
+  MOUNTS+=( -v "$CCL217:/opt/ccl217:ro" )
+  MOUNTS+=( -v "$CCL217/lib/libccl.so.1.0:/opt/venv/lib/libccl.so:ro" )
+  MOUNTS+=( -v "$CCL217/lib/libccl.so.1.0:/opt/venv/lib/libccl.so.1:ro" )
+  MOUNTS+=( -v "$CCL217/lib/libccl.so.1.0:/opt/venv/lib/libccl.so.1.0:ro" )
+  MOUNTS+=( -v "$CCL217/lib/libccl.so.2.0:/opt/venv/lib/libccl.so.2:ro" )
+  MOUNTS+=( -v "$CCL217/lib/libccl.so.2.0:/opt/venv/lib/libccl.so.2.0:ro" )
+  MOUNTS+=( -v "$SYCL8SHIM:/opt/sycl8shim:ro" )
+  DOCKER_ENV+=( -e "CCL_ROOT=/opt/ccl217" )
+  DOCKER_ENV+=( -e "LD_LIBRARY_PATH=/opt/sycl8shim:/opt/venv/lib:/tmp/ucx_install/lib:/usr/local/lib" )
+  echo "=== overlay oneCCL 2021.17 FILES over /opt/venv/lib/libccl.so* (+ sycl8 shim) ===" >&2
 fi
 
 source "$REPO/rdy_to_serve/_common/lib.sh"

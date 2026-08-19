@@ -13582,3 +13582,68 @@ VERDICT -> GO. 0.26 DSpark serve will get a new
   Phase 2 / barrier kernel port / GRAPH=1 k=3.
   Scheduler stays (29.4 < 41.2; S2c HE+ not on disk).
 
+### 2026-08-19j - LOOP 27: S2b INT4-AR 0.27 -- TP=2 blocked, TP=1 GRAPH=0 12.8/16.66
+
+CONTEXT -> LOOP 26 Next pick S2b YOLO on 0.27
+  f01e24f6. Stop W8A8 AGASYNC. Do not overwrite
+  w8a8-gptq. Do not start DD. Fail-closed G1.
+  Do not fake 101.922. One arm.
+
+CONFIG -> ckpt models/files/qwen3.8-27b/int4-autoround
+  19016936446 B auto-round 4/128. IMG
+  vllm/vllm-openai-xpu@sha256:f01e24f6...
+  (0.27.2rc1.dev77+gac7509e2b, libsycl.so.9,
+  oneCCL 2021.15 in /opt/venv/lib). SERVED
+  qwen3.8-27b-W4A16-autoround-mtp5. Isolated
+  TRITON_CACHE /vllm_cache/triton_027 (shared
+  0.26 cache is libsycl.so.8). P2PACCESS=0.
+
+COMMAND ->
+  ```
+  docker stop -t 30 qwen38_w8a8_dspark; docker rm -f ...
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260 --timeout 90
+  # TP=2 GRAPH=1 stock -> worker all_reduce device_fd (D10)
+  # TP=2 + host 2021.17 file overlay -> ImportError setNDRangeDescriptor (D10)
+  TP=1 DEVICE=0 MTPTOK=5 GRAPH=1 ... COMPILESZ= \
+    B70_EXTRA_ENV="TRITON_CACHE_DIR=/vllm_cache/triton_027 ..." \
+    bash vllm/w4a16/serve_qwen38_27b_int4ar.sh start
+  # HEALTHY 269s then G1 FAIL (D11)
+  TP=1 DEVICE=0 MTPTOK=5 GRAPH=0 ... start
+  python3 -u vllm/nvfp4/bench_code.py http://127.0.0.1:18080/v1 \
+    qwen3.8-27b-W4A16-autoround-mtp5 1 256 3
+  python3 -u vllm/cookbook_campaign/phase_bench.py \
+    --base http://127.0.0.1:18080 --model qwen3.8-27b-W4A16-autoround-mtp5 \
+    --prompt-tokens 512 --gen-tokens 128 --n 5 \
+    --label loop27-s2b-tp1-graph0-p512-g128 \
+    --out /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop27_phase_bench.json
+  ```
+
+RESULT -> Isolated cache fixed Qwen3_5 inspect
+  (stock first try: libsycl.so.8 from 0.26
+  triton cache). TP=2: PRE.10 2021.15 device_fd
+  at xpu_worker.init_device all_reduce; host
+  2021.17 cannot overlay (SYCL-8 vs .so.9).
+  GRAPH=1 TP=1 loaded, G1 FAIL (Paris/391/fib
+  garbage; mul 倒 loops). Cookbook
+  B70_MTP_BF16_DRAFT died:
+  mtp down_proj.qweight vs unquant .weight.
+  GRAPH=0 TP=1 HEALTHY 71s. G1 PASS: Paris /
+  391 / iterative fib. bench_code c1 avg
+  **12.8** / best 12.8 t/s (out 256, wall
+  ~20.1s). phase_bench median after-TTFT
+  **16.66** tok/s, TTFT 1.090 s, n=5/5.
+  MTP accept during phase_bench delta:
+  582/190 accept_len **3.06**, pos0 161/190
+  **0.85**. vs S1 GPTQ-Int4 GRAPH=1 TP=1
+  47.58 and Steve TP=2 GRAPH=1 101.922 --
+  not the same cell. No DEVICE_LOST. Cards
+  healthy. DD PARKED. systemd RemainAfterExit.
+
+VERDICT -> GO on gated TP=1 GRAPH=0 speed.
+  NO-GO on 101.922 (D10+D11). Next pick S2c
+  HE+ 164 on this live id vs 0.957/0.927.
+  Leave INT4 GRAPH=0 UP. Do not restore
+  W8A8 this fire. Scheduler stays (29.4 <
+  41.2; S2c HE+ not on disk). Do not
+  displace sglang/vLLM W8A8.
+

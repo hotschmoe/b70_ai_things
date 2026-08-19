@@ -343,3 +343,61 @@ Retry if: DSpark graph path / capture sizes
   change. Compile-key identity is no longer
   the missing condition.
 Related JOURNAL: ### 2026-08-19i
+
+## D10 -- 0.27 f01e24f6 TP=2 oneCCL -- 2026-08-19 -- LOOP 27
+
+Tried: Qwen3.8 AutoRound INT4 TP=2 on public
+  vLLM XPU 0.27.2rc1 digest f01e24f6.
+Command / config:
+  isolated TRITON_CACHE (shared 0.26 cache is
+  libsycl.so.8; nightly is .so.9). Stock oneCCL
+  in /opt/venv/lib. Then host 2021.17 file
+  overlay over those .so (torch DT_RPATH ignores
+  LD_LIBRARY_PATH) + libsycl.so.8 -> .so.9 shim
+  + IPCX=sockets.
+Result: stock 2021.15 dies at worker
+  torch.distributed.all_reduce warmup:
+  `ze_handle_manager.cpp:43 mem_to_ipc_handle:
+  device_fd is invalid value` (PRE.10). 2021.17
+  overlay ImportErrors
+  `setNDRangeDescriptor` (SYCL-8 libccl vs
+  nightly SYCL-9). Isolated-cache inspect of
+  Qwen3_5 then succeeds. No DEVICE_LOST.
+  xpu-health OK after each try.
+Why it is closed: this nightly cannot TP=2
+  without a SYCL-9-built oneCCL. Host 2021.17
+  from 0.24 is the wrong ABI.
+Retry if: a oneCCL rebuilt against this
+  image's libsycl.so.9 (Steve 2025.3.3 public
+  oneCCL, or a new 0.27 image that already
+  ships 2021.17+ on SYCL 9). Then G1 on TP=2
+  before any 101.922 cell.
+Related JOURNAL: ### 2026-08-19j
+
+## D11 -- 0.27 INT4-AR GRAPH=1 G1 garbage -- 2026-08-19 -- LOOP 27
+
+Tried: same ckpt/image TP=1 GRAPH=1 PIECEWISE
+  MTP5 isolated-triton, then with cookbook
+  MTP patches + B70_MTP_BF16_DRAFT=1.
+Command / config: serve_qwen38_27b_int4ar.sh
+  TP=1 GRAPH=1; then docker run with
+  apply_mtp_patches.py.
+Result: unpatched GRAPH=1 loaded HEALTHY 269s
+  but G1 FAIL (Paris/391/fib all garbage;
+  mul emitted 倒 loops). Completions probe
+  also junk. Patched BF16-draft died loading
+  drafter: AutoRound has
+  `layers.0.mlp.down_proj.qweight` but the
+  unquantized MTP module wants `.weight`.
+  GRAPH=0 unpatched: G1 PASS, c1 12.8,
+  after-TTFT 16.66.
+Why it is closed: GRAPH=1 on this
+  nightly+AutoRound-MTP is incoherent.
+  Cookbook BF16-draft is for GPTQ ckpts
+  that kept mtp.* in BF16 (S1). This
+  auto-round quantized mtp.layers.
+Retry if: Steve graph-safe FA / a new
+  0.27 image / kernels that G1 on GRAPH=1
+  with this exact ckpt. Do not republish
+  GRAPH=1 speed after another garbage G1.
+Related JOURNAL: ### 2026-08-19j

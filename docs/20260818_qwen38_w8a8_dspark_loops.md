@@ -36,17 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S2b -- 3.8 INT4-AR speed (YOLO). Weights ON DISK
-(`models/files/qwen3.8-27b/int4-autoround`, 19.02 GB,
-auto-round). Script
-`vllm/w4a16/serve_qwen38_27b_int4ar.sh`. Default image
-public 0.27.2rc1 `f01e24f6` (already pulled). Allowed:
-Steve lab `/mnt/vm_8tb/b70/b70-optimization-lab-main`,
-graph-safe FA source, new vLLM/sglang image. Stop W8A8
-AGASYNC, G1, bench_code + after-TTFT toward 101.922.
-Then S2c HE+ vs 0.957/0.927. Compile-key landed
-LOOP 26 on the 0.26 DSpark path. Do not stay on
-int8g-v0260. Scheduler 01a01813e05d stays.
+S2c -- HE+ 164 thinking-off greedy seed=1234 on the
+LIVE GRAPH=0 TP=1 0.27 serve id
+`qwen3.8-27b-W4A16-autoround-mtp5` (root
+/models/qwen3.8-27b/int4-autoround, maxlen 16384,
+IMG f01e24f6). Compare to W8A8 0.957/0.927 and
+Q4_K_M 0.970/0.927. Fail lists. Then restore W8A8
+AGASYNC unless Next pick still needs INT4. S2b speed
+is GRAPH=0 TP=1 only: c1 12.8 / after-TTFT 16.66.
+Do not publish 101.922. Do not retry D10/D11 this
+fire. Scheduler 01a01813e05d stays.
 
 ---
 
@@ -1203,3 +1202,53 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 9319.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19i
+
+---
+
+## LOOP 27 -- 2026-08-19T0611Z -- S2b INT4-AR 0.27 speed
+
+Picked: S2b SPEED on public 0.27 `f01e24f6`. One arm.
+Why this, not the other open row: living-header Next
+  pick after LOOP 26; operator YOLO; S2a on disk.
+GPU: card 0 HELD pid=28261 docker wait qwen38_int4ar.
+  card 1 free. DD PARKED. :18080 id
+  qwen3.8-27b-W4A16-autoround-mtp5 @16384
+  IMG f01e24f6 (not int8g-v0260). P2PACCESS=0.
+Command:
+  NAME=qwen38_w8a8_dspark stop; xpu-health card 0
+  TP=2 GRAPH=1 MTPTOK=5 ... start  -> D10
+  TP=1 GRAPH=1 isolated-triton ... start -> G1 FAIL D11
+  TP=1 GRAPH=0 isolated-triton ... start -> G1 PASS
+  python3 vllm/nvfp4/bench_code.py ... 1 256 3
+  python3 vllm/cookbook_campaign/phase_bench.py
+    --prompt-tokens 512 --gen-tokens 128 --n 5
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop27_*
+Result: TP=2 stock 2021.15 device_fd; host 2021.17
+  overlay ImportError sycl8 vs nightly sycl9.
+  GRAPH=1 TP=1 G1 garbage (倒 loops). GRAPH=0 TP=1
+  G1 Paris/391/fib. bench_code c1 **12.8** / 12.8.
+  after-TTFT median **16.66** tok/s TTFT 1.090s.
+  MTP accept_len ~3.06 pos0 ~0.85 (phase_bench
+  delta). Not 101.922. No DEVICE_LOST.
+Verdict: GO (gated TP=1 GRAPH=0 speed). NO-GO on
+  the 101.922 TP=2 GRAPH=1 cell (D10+D11).
+Changed beliefs: 0.27 TP=2 needs a SYCL-9 oneCCL,
+  not 2021.17-from-0.24. Isolated TRITON_CACHE
+  (nightly is libsycl.so.9; shared 0.26 cache is
+  .so.8). AutoRound mtp.layers are INT4; cookbook
+  B70_MTP_BF16_DRAFT expects .weight and dies.
+  GRAPH=1 on this nightly+ckpt is incoherent.
+Next pick: S2c HE+ 164 thinking-off greedy
+  seed=1234 on this live id. First:
+  evals/.venv/bin/python -u evals/orchestrator/run_evals.py
+    --endpoint http://192.168.10.5:18080/v1
+    --model qwen3.8-27b-W4A16-autoround-mtp5
+    --quant W4A16-autoround-mtp5 --tiers 1
+    --tier1-dataset humaneval --limit 164
+Do not: fake 101.922; retry D10/D11; overlay
+  2021.17 on f01e24f6; B70_MTP_BF16_DRAFT on this
+  ckpt; int8g-v0260; start DD; overwrite w8a8-gptq.
+Restore: DD stays PARKED. GRAPH=0 TP=1 INT4-AR
+  left UP for S2c. Lease card 0 pid 28261.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19j
