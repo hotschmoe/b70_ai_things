@@ -36,14 +36,14 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-P4.1 -- prefix-cache TTFT baseline on live AGASYNC
-@122880 (only prefill number allowed early). Do
-not restart unless the probe needs it. D8: host-
-barrier ALLGATHER=1 c1 26.6 < 29.4; keep ASYNC.
-D7: no proto-SO remount. D6: no SPEC flag on
-dspark. D4: W8A16=0 at 122880. D5: no v0240 fusedq.
-Do not start DD. Do not train. Do not enter Phase 2.
-Quality floor HE+ 0.957/0.927. c1 29.4 < 41.2.
+P4.1 -- prefix-cache TTFT baseline. LOOP 22 left
+AGASYNC up; hard reset 2026-08-19T03:10Z killed it
+(exit 255). Not a GPU wedge -- WAN/API died
+(JOURNAL 2026-08-19). systemd re-started DD
+`hotschmoe-dd`. Stop DD before this pick. Serve
+k=4 GRAPH=1 AGASYNC @122880 again, then TTFT.
+D8/D7/D6/D5/D4 still stand. Do not train. Do not
+enter Phase 2. Quality floor HE+ 0.957/0.927.
 
 ---
 

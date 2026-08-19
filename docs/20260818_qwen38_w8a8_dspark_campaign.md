@@ -24,11 +24,11 @@ lock. The lock is Phase 0, not the ceiling.
 | field | value |
 |---|---|
 | Last loop | 22 (NO-GO E2 host-barrier ALLGATHER c1 26.6; reverted) |
-| Last JOURNAL heading | `2026-08-18aa` |
+| Last JOURNAL heading | `2026-08-19` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
 | Next pick | P4.1 prefix-cache TTFT baseline on live AGASYNC @122880 |
-| Blocked on | none. Speed window. Train not forced. Quality floor HE+ 0.957/0.927. |
+| Blocked on | post-reset: systemd brought DD back. P4.1 never ran. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark `bench_code` c1 | **29.4** k=4 GRAPH=1 ALLGATHER_ASYNC @122880 (G1 hold; was 28.7 push-AR only) |

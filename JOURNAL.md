@@ -13183,3 +13183,53 @@ VERDICT -> NO-GO (D8). Host-barrier gather is
   Do not start P4.1 / train / DD / Phase 2 this
   fire. Scheduler stays (29.4 < 41.2).
 
+### 2026-08-19 - hard reset: WAN/API died, not a GPU wedge
+
+CONTEXT -> Operator hard-reset the box. Four scheduled
+  fires after LOOP 22 failed. Need to know if P4.1 or
+  xe wedged the cards.
+
+CONFIG -> forensics only. Prev boot 2026-08-16T01:51Z
+  -> last journal 2026-08-19T03:06:20Z. New boot
+  2026-08-19T03:10:22Z (kernel 7.1.0-070100).
+
+COMMAND ->
+  ```
+  journalctl -b -1 --since '2026-08-19 00:00'
+  sadf -d /var/log/sysstat/sa19 -- -n DEV -u
+  docker logs qwen38_w8a8_dspark
+  cat .../subagents/01a01761-.../meta.json
+  ```
+
+RESULT -> Not a GPU/xe wedge.
+  - Kernel: zero xe/GuC/DEVICE_LOST/OOM/NMI lines
+    in the crash window. CPU idle 99.8% 00:00-03:00.
+  - Campaign serve `qwen38_w8a8_dspark` stayed healthy
+    after LOOP 22 AGASYNC restore (23:54Z). Last work
+    was G1 + health polls. Exit 255 at 03:12:31Z =
+    docker killed by reboot, not OOM.
+  - LAN/WAN: sshd 00:14:48Z "No route to host" from
+    192.168.10.161. enp3s0 txkB/s 0.00 from the 00:20
+    sar sample through reboot (rx still ~0.8 kB/s).
+    01:13Z systemd-networkd-wait-online timeout;
+    apt/ESM "Temporary failure resolving esm.ubuntu.com";
+    02:17-03:06Z chronyd NTS-KE timeouts, 02:31Z
+    "5 unreachable sources".
+  - Loop 23 fire 01a01761 started 00:17:44Z (P4.1),
+    11 turns / 205 tools, died 00:55:16Z:
+    `reqwest error ... https://cli-chat-proxy.grok.com/v1/responses`.
+    No loop23 ledger/log written. Later fires
+    01a01798 / 01a017cf: 0 tools, ~409s, failed.
+    Scheduler 01a015e1058b is gone (not durable
+    across grok/process restart).
+  - After reboot systemd `b70-daily-driver.service`
+    (enabled) started `hotschmoe-dd` on :18080 at
+    03:12Z and undid DD-PARKED.
+
+VERDICT -> Network/API outage, then hard reset.
+  P4.1 did not land and did not wedge xe. Next pick
+  still P4.1 once cards are free again. Disable or
+  mask `b70-daily-driver.service` if DD must stay
+  down across reboot. Re-arm scheduler only if the
+  operator wants the 30m loop back.
+
