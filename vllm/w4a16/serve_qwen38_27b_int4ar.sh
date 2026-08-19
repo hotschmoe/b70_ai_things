@@ -47,6 +47,16 @@ fi
 # Optional Steve-kernel / FA overlays (host paths -> container).
 PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
 MOUNTS=()
+# intel/vllm:0.21.0-xpu is SYCL-8 + in-image 2021.17. lib.sh --entrypoint vllm
+# skips setvars (torch then misses libccl). Bind this wrapper over PATH vllm.
+case "${IMG}" in
+  intel/vllm*|*/intel/vllm*)
+    WRAP="$SCRIPT_DIR/intel021_vllm_entrypoint.sh"
+    chmod +x "$WRAP"
+    MOUNTS+=( -v "$WRAP:/opt/venv/bin/vllm:ro" )
+    echo "=== intel/vllm wrapper -> setvars + CCL 2021.17 (SYCL-8) ===" >&2
+    ;;
+esac
 if [ -n "${XPU_C_SO:-}" ]; then
   MOUNTS+=( -v "$XPU_C_SO:$PKGD/_xpu_C.abi3.so:ro" )
   echo "=== overlay _xpu_C <- $XPU_C_SO ===" >&2

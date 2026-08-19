@@ -77,8 +77,8 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: Steve graph-safe FA / 0.21 SYCL-8
->    (S2b remaining). c48edf76 nightly still D10+D11.
+>    Next pick: Steve 44fc8fde0 + graph-safe FA
+>    (D13: intel/vllm 0.21 TP=2 loads, MTP GDN assert).
 >    S2c 0.963/0.915. Scheduler stays. 29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy

@@ -14038,3 +14038,64 @@ VERDICT -> NO-GO on 101.922. New nightly
   oneCCL. Scheduler stays (29.4 < 41.2).
   Do not start DD. Do not enter Phase 2.
 
+### 2026-08-19t - LOOP 37: S2b intel/vllm 0.21 TP=2 loads, GDN spec assert
+
+CONTEXT -> LOOP 36 Next pick: Steve 0.21 /
+  graph-safe FA. Pulled public
+  intel/vllm:0.21.0-xpu (not int8g-v0260,
+  not a SYCL-9 nightly). One arm. Fail-closed
+  G1. Do not fake 101.922. Do not start DD.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu
+  sha256:a76ac6b89350... torch 2.11.0+xpu
+  vllm 0.21.1.dev18+g8df6feb7d SYCL-8
+  (libsycl.so.8). In-image oneCCL 2021.17
+  Gold-2021.17.2 NEEDED libsycl.so.8.
+  Wrapper sources setvars then CCL_ROOT=
+  /opt/intel/oneapi/ccl/2021.17. SERVED
+  qwen3.8-27b-W4A16-autoround-mtp5 TP=2
+  GRAPH=1 MTPTOK=5 MAXLEN=16384 DTYPE=float16
+  P2PACCESS=0 isolated
+  TRITON_CACHE triton_intel021
+  VLLM_CACHE_ROOT /vllm_cache/intel021.
+  QUANT inferred inc. w8a8-gptq not
+  overwritten.
+
+COMMAND ->
+  ```
+  docker pull intel/vllm:0.21.0-xpu
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260 --timeout 90
+  TP=2 GRAPH=1 bash vllm/w4a16/start_int4ar_intel021.sh start
+  # G1 completions; workers AssertionError; restore AGASYNC
+  ```
+
+RESULT -> Wrapper CCL_ROOT=2021.17. First
+  compile-config with 0.26 pass_config keys
+  rejected (fuse_rope_kvcache_cat_mla). Slim
+  PIECEWISE config loaded. TP=2 workers both
+  up: weights 8.56 GiB, MTP detected, NO
+  device_fd (D10 unstuck on this ABI).
+  "XPU Graph doesn't support capture
+  communication ops, disabling
+  cudagraph_mode" -> CUDAGraphMode.NONE.
+  HEALTHY 232s. G0 id match @16384. First
+  completions: HTTP 500. Workers
+  AssertionError in
+  _gdn_attention_core_xpu_impl:
+  spec_sequence_masks is None. EngineDead.
+  No DEVICE_LOST. Cards healthy after.
+  No speed published. Restore HEALTHY, G1
+  Paris exact on
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880. DD PARKED.
+
+VERDICT -> NO-GO on 101.922. intel/vllm
+  0.21.0-xpu is not Steve's 44fc8fde0 +
+  graph-safe FA. TP=2 oneCCL GO; MTP
+  generate NO-GO (D13). Next pick: Steve
+  GDN/FA kernels or his exact vLLM commit.
+  Do not retry this digest MTP generate.
+  Scheduler stays (29.4 < 41.2). Do not
+  start DD. Do not enter Phase 2.
+

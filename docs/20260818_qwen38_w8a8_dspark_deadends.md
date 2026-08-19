@@ -494,3 +494,32 @@ Retry if: Steve graph-safe FA / his 0.21
   garbage G1.
 Related JOURNAL: ### 2026-08-19s
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop36_g1.jsonl
+
+## D13 -- intel/vllm 0.21 MTP GDN spec_sequence_masks -- 2026-08-19 -- LOOP 37
+
+Tried: S2b TP=2 GRAPH=1 on
+  intel/vllm:0.21.0-xpu (torch 2.11.0+xpu,
+  v0.21.1.dev18+g8df6feb7d, SYCL-8) with
+  in-image oneCCL 2021.17.
+Command / config:
+  vllm/w4a16/start_int4ar_intel021.sh
+  wrapper setvars + CCL_ROOT=2021.17
+  MTPTOK=5 MAXLEN=16384 DTYPE=float16
+  P2PACCESS=0 isolated caches.
+Result: TP=2 workers loaded, no device_fd.
+  XPU Graph disabled (comms). HEALTHY.
+  First /v1/completions: EngineDead.
+  AssertionError in
+  vllm/_xpu_ops.py _gdn_attention_core_xpu_impl:
+  attn_metadata.spec_sequence_masks is None.
+  No DEVICE_LOST. Cards healthy after.
+Why it is closed: this digest's GDN XPU
+  op does not run MTP. Not Steve 44fc8fde0
+  + graph-safe FA. Do not republish a
+  speed cell.
+Retry if: Steve GDN spec kernels / FA
+  staged package, or vLLM 44fc8fde0, that
+  accept spec_sequence_masks on this ckpt.
+  Then G1 before any 101.922 cell.
+Related JOURNAL: ### 2026-08-19t
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop37_g1_500_tail.log

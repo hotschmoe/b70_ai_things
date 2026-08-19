@@ -36,14 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S2b remaining stack: Steve graph-safe FA
-/ vLLM 0.21 SYCL-8 (qwen38-b70 has icpx
-2025.3.3; FA binaries not on disk). Do
-not retry SYCL-9 nightlies without a
-SYCL-9 oneCCL. Do not overlay SYCL-8
-2021.17 on libsycl.so.9. Do not enter
-Phase 2. Scheduler stays (29.4 < 41.2).
-Live serve is AGASYNC k=4 @122880.
+S2b remaining: Steve exact vLLM 44fc8fde0
++ graph-safe FA / GDN spec kernels.
+intel/vllm:0.21.0-xpu (8df6feb7d) TP=2
+loads with in-image 2021.17 but MTP
+generate asserts GDN spec_sequence_masks
+(D13). Do not retry that digest MTP.
+Do not retry SYCL-9 nightlies without a
+SYCL-9 oneCCL. Do not enter Phase 2.
+Scheduler stays (29.4 < 41.2). Live serve
+is AGASYNC k=4 @122880.
 
 ---
 
@@ -1622,3 +1624,50 @@ Restore: DD stays PARKED. GRAPH=1 k=4
   AGASYNC @122880 left UP. Lease pid 55697.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19s
+
+---
+
+## LOOP 37 -- 2026-08-19T1155Z -- S2b intel/vllm 0.21 TP=2
+
+Picked: S2b on intel/vllm:0.21.0-xpu
+  (torch 2.11, SYCL-8, in-image 2021.17).
+  One arm. Not int8g-v0260.
+Why this, not the other open row: LOOP 36
+  Next pick Steve 0.21 / FA; FA binaries
+  not on disk; this public 0.21 image is
+  the SYCL-8 vehicle.
+GPU: lease HELD pid=66009 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260.
+Command:
+  docker pull intel/vllm:0.21.0-xpu
+  stop AGASYNC; xpu-health v0260
+  TP=2 GRAPH=1 start_int4ar_intel021.sh
+  G1 completions -> 500; restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop37_*
+Result: TP=2 loaded, no device_fd.
+  Graph disabled (comms). First generate
+  AssertionError gdn spec_sequence_masks
+  is None. No 101.922. Restore G1 Paris.
+  No DEVICE_LOST.
+Verdict: NO-GO on 101.922. D13.
+Changed beliefs: SYCL-8 + 2021.17 unsticks
+  D10 load on this image. intel/vllm
+  8df6feb7d GDN XPU op does not accept
+  MTP spec_sequence_masks. Steve 101.922
+  is 44fc8fde0 + FA, not this digest.
+  GRAPH=1 TP=2 is disabled here anyway.
+Next pick: Steve graph-safe FA / GDN spec
+  kernels / vLLM 44fc8fde0. Build in
+  qwen38-b70 (icpx 2025.3.3) then G1.
+Do not: retry intel/vllm 0.21.0-xpu MTP
+  generate; retry SYCL-9 nightlies; overlay
+  SYCL-8 2021.17 on .so.9; int8g-v0260 for
+  INT4; fake 101.922; start DD; Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. GRAPH=1 k=4
+  AGASYNC @122880 left UP. Lease pid 66009.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19t
