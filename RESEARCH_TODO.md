@@ -754,9 +754,9 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **Kernel session closed (2026-08-19an).** Hold: combined GDN + BARRIER=1 +
-   fusedq default, c1 **31.9**. Next: Ornith-1.5-35B-A3B-NVFP4 fetch + smoke.
-   Do not drop BARRIER=1 / fusedq. Do not retry ALLGATHER_GRAPH env-only.
+0. **Ornith 35B NVFP4 (NOW, 2026-08-19ao).** Weights on disk (22G). Emul serve
+   loads, G1 is !!!! (D18). Next: MODE=fused expert GEMM or calibrated fp8 KV.
+   Hold remains k1bar 31.9. Do not retry emul+auto-fp8-KV.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for

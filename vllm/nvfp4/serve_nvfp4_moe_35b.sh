@@ -40,7 +40,7 @@ IGP="${IGP:-false}"
 CAPSIZES="${CAPSIZES:-}"
 MTPTOK="${MTPTOK:-}"
 CKPT="${CKPT:-/models/qwen3.6-35b-a3b/nvfp4-modelopt}"
-SERVED="qwen3.6-35b-a3b-NVFP4-modelopt-${MODE}-moe${MOEBACKEND}"
+SERVED="${SERVED:-qwen3.6-35b-a3b-NVFP4-modelopt-${MODE}-moe${MOEBACKEND}}"
 
 if [ "${1:-}" = stop ]; then
   docker rm -f "$NAME" >/dev/null 2>&1 && echo "stopped $NAME" || echo "$NAME not running"
@@ -107,6 +107,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" --moe-backend "$MOEBACKEND" \
   --max-num-batched-tokens "${MAXNUMBATCHED:-2048}" \
+  ${KVDTYPE:+--kv-cache-dtype "$KVDTYPE"} \
   "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up (port $PORT, moe-backend=$MOEBACKEND, mode=$MODE, graph=$GRAPH); logs: docker logs -f $NAME"

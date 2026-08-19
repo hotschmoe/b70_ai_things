@@ -119,6 +119,17 @@ models:
     source: { type: hf, repo: Intel/Qwen3.6-35B-A3B-int4-AutoRound }
     notes: Intel AutoRound int4 MoE. Launches easily, vision + MTP retained.
 
+  - id: ornith-1.5-35b-a3b/nvfp4-modelopt
+    family: ornith-1.5-35b-a3b
+    scheme: nvfp4-modelopt-mixed
+    vision: true
+    mtp: true
+    size_gb: 23
+    served_as: ornith-1.5-35b-A3B-NVFP4
+    source: { type: hf, repo: ornith-ai/Ornith-1.5-35B-A3B-NVFP4 }
+    notes: Official ModelOpt NVFP4 of Ornith-1.5-35B-A3B (qwen3_5_moe, ~3B active).
+           Attention 8-bit, experts 4-bit, MTP ignored in quant. Fits 1-2x 32GB.
+
   - id: qwen3.6-35b-a3b/quark-w8a8-int8
     family: qwen3.6-35b-a3b
     scheme: quark-w8a8-int8

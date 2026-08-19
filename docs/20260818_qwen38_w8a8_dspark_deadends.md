@@ -227,6 +227,22 @@ Why it is closed: D5 retry-if complete.
   to two-step for a 50 ms warm delta.
 Related JOURNAL: ### 2026-08-19an
 
+## D18 -- Ornith 35B NVFP4 emul G1 bangs -- 2026-08-19 -- LOOP 58
+
+Tried: official ModelOpt NVFP4 35B-A3B
+  via serve_nvfp4_moe_35b.sh MODE=emul
+  GRAPH=0 TP=1 MAXLEN=8192. Loads.
+  G1 !!!! . Retry KVDTYPE=bfloat16
+  dies at flash_attn cache update.
+Why it is closed: emul+auto fp8 KV is
+  not a coherent serve. bf16 KV not
+  supported on this attn path.
+Retry if: MODE=fused (nvfp4_gemm per
+  expert) and/or calibrated fp8 KV
+  scales. Do not retry emul+auto-fp8-KV
+  for G1. Do not retry bf16 KV alone.
+Related JOURNAL: ### 2026-08-19ao
+
 ## D6 -- xpu_shard_top1 SPEC flag is MTP-only, not DSpark -- 2026-08-18 -- LOOP 20
 
 Tried: E1 / PRE.11 once on live W8A8 DSpark k=4

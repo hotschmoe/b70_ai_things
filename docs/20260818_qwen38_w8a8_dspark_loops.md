@@ -36,15 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Ornith-1.5-35B-A3B-NVFP4 fetch +
-serve smoke. Kernel session closed:
-BARRIER=1 hold 31.9, fusedq default
-on (TTFT wash / slight cold win),
-ALLGATHER_GRAPH D17. Do not retry
-BARRIER=0 as hold. Do not overlay
-51MB GDN-OFF SO. Do not P2P=1 / D16.
-Live hold k1bar 31.9 until 35B needs
-the cards.
+Ornith 35B NVFP4 MODE=fused (per-expert
+nvfp4_gemm) or calibrated fp8 KV.
+Do not retry emul+auto-fp8-KV (D18
+!!!!). Do not retry KVDTYPE=bfloat16
+(flash_attn Unsupported). Weights at
+models/files/ornith-1.5-35b-a3b/nvfp4-modelopt.
+Live hold k1bar 31.9.
 
 ---
 
@@ -2442,3 +2440,34 @@ Do not: FUSEDQ=0 as hold; BARRIER=0;
 Restore: DD PARKED. k1bar UP. Lease
   pid 186007.
 JOURNAL: ### 2026-08-19an
+
+---
+
+## LOOP 58 -- 2026-08-19T2215Z -- Ornith 35B NVFP4 fetch; emul G1 bangs
+
+Picked: fetch + serve smoke of
+  ornith-ai/Ornith-1.5-35B-A3B-NVFP4.
+Why this, not the other open row:
+  LOOP 57 Next pick; operator go.
+GPU: stopped k1bar; card 0 smoke;
+  restored k1bar lease pid 191745.
+Command:
+  hf download -> files/ornith-1.5-35b-a3b/nvfp4-modelopt
+  serve_nvfp4_moe_35b.sh MODE=emul GRAPH=0
+    TP=1 MAXLEN=8192 IMG int8g-v0260
+  G1; retry KVDTYPE=bfloat16; restore k1bar
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop58_*
+Result: 22G on disk. Emul HEALTHY 160s
+  load 20.44 GiB. G1 all !!!! (~2.5 t/s).
+  bf16 KV init fail: Unsupported kv cache
+  bfloat16 (flash_attn). No DEVICE_LOST.
+  Restore k1bar HEALTHY 188s Paris OK.
+Verdict: FETCH GO / SERVE G1 NO-GO (D18)
+Changed beliefs: checkpoint loads on
+  1x32. Emul+auto fp8 KV is garbage.
+  Next is fused expert GEMM or KV
+  scales, not another emul flag.
+Do not: retry emul+fp8-KV; bf16 KV;
+  P2P=1; drop BARRIER=1 hold.
+Restore: DD PARKED. k1bar UP.
+JOURNAL: ### 2026-08-19ao

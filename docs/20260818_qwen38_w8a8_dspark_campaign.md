@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 57 (K2 fusedq TTFT/PP; default-on stays) |
-| Last JOURNAL heading | `2026-08-19an` |
+| Last loop | 58 (Ornith 35B NVFP4 fetch OK; emul G1 bangs) |
+| Last JOURNAL heading | `2026-08-19ao` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | Ornith-1.5-35B-A3B-NVFP4 fetch + serve smoke (user-requested after kernel session) |
-| Blocked on | none. Kernel T0-T1 + BARRIER + fusedq closed. 101.9 / D16 / D17 parked. |
+| Next pick | Ornith 35B NVFP4 MODE=fused MoE (or calibrated fp8 KV); emul G1 is !!!! (D18) |
+| Blocked on | D18 emulation G1 garbage. Weights on disk 22G. k1bar 31.9 restored. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

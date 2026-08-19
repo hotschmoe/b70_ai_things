@@ -34,7 +34,11 @@ for row in "${ROWS[@]}"; do
     echo ">> $id  <-  hf:$repo"
     [ "$LIST_ONLY" = 1 ] && continue
     mkdir -p "$dst"
-    huggingface-cli download "$repo" --local-dir "$dst" || { echo "FAILED: $id"; exit 1; }
+    if command -v hf >/dev/null 2>&1; then
+      hf download "$repo" --local-dir "$dst" || { echo "FAILED: $id"; exit 1; }
+    else
+      huggingface-cli download "$repo" --local-dir "$dst" || { echo "FAILED: $id"; exit 1; }
+    fi
   else
     echo "-- $id  SKIP (source:custom, quantized-on-device; rebuild from ${derived:-?} -- see manifest TODO)"
   fi

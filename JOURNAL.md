@@ -14996,3 +14996,45 @@ VERDICT -> GO (D5 closed). Keep fusedq
   Ornith-1.5-35B-A3B-NVFP4 fetch+smoke.
   Do not start DD. Do not set P2P=1.
 
+### 2026-08-19ao - LOOP 58: Ornith 35B NVFP4 on disk; emul G1 !!!!
+
+CONTEXT -> Operator: fetch + smoke
+  ornith-ai/Ornith-1.5-35B-A3B-NVFP4
+  after kernel session. 22-23 GB
+  ModelOpt mixed. Existing
+  serve_nvfp4_moe_35b.sh.
+
+CONFIG -> TP=1 CARD=0 GRAPH=0 MODE=emul
+  moe-backend=emulation MAXLEN=8192
+  IMG int8g-v0260 UTIL=0.90
+  CKPT=/models/ornith-1.5-35b-a3b/nvfp4-modelopt
+  SERVED=ornith-1.5-35b-A3B-NVFP4-emul
+  P2PACCESS=0. Retry KVDTYPE=bfloat16.
+
+COMMAND ->
+  ```
+  hf download ornith-ai/Ornith-1.5-35B-A3B-NVFP4 \
+    --local-dir models/files/ornith-1.5-35b-a3b/nvfp4-modelopt
+  stop k1bar; xpu-health card 0
+  MODE=emul GRAPH=0 TP=1 start
+  G1 thinking-off
+  KVDTYPE=bfloat16 retry
+  restore k1bar BARRIER=1
+  ```
+
+RESULT -> Fetch 22G (3 shards). Load
+  20.44 GiB in 29s. HEALTHY 160s.
+  Detected mixed FP8 + NVFP4 + MXFP8.
+  G1 Paris/mul/fib = all !!!! (~2.5 t/s
+  emul). bf16 KV: RuntimeError
+  Unsupported data type of kv cache:
+  bfloat16 (reshape_and_cache_flash).
+  Restore k1bar HEALTHY 188s Paris OK.
+  No DEVICE_LOST. DD PARKED.
+
+VERDICT -> FETCH GO. G1 NO-GO (D18).
+  Next: MODE=fused expert nvfp4_gemm
+  or calibrated fp8 KV scales. Do not
+  retry emul+auto-fp8-KV. Do not start
+  DD. Do not set P2P=1.
+
