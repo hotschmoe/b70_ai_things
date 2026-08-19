@@ -14192,3 +14192,35 @@ VERDICT -> RUNNING (kernel rebuild).
   Scheduler stays (29.4 < 41.2). Do not
   start DD. Do not enter Phase 2.
 
+### 2026-08-19w - LOOP 40: kbuild still live 295/705; STOP
+
+CONTEXT -> LOOP 39 Verdict RUNNING. Next
+  pick: if loop39_kbuild live, one status
+  line STOP. Do not start a sibling. Do
+  not fake 101.922. Do not start DD.
+
+CONFIG -> lookup + G1. Live :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260. kbuild
+  loop39_kbuild started 12:48Z. No GPU
+  restart.
+
+COMMAND ->
+  ```
+  docker inspect loop39_kbuild
+  docker logs loop39_kbuild | tail
+  curl /v1/models; G1 Paris PASS
+  ```
+
+RESULT -> kbuild still running. oneDNN
+  gpu/intel ~295/705 (was ~150/705 at
+  LOOP 39). No _xpu_C.so yet. AGASYNC
+  G1 Paris exact. DD PARKED. No
+  DEVICE_LOST. No c1 (29.4).
+
+VERDICT -> RUNNING. Next pick unchanged:
+  finish kbuild. Do not overlay 44fc8fde0
+  without the new SO. Scheduler stays
+  (29.4 < 41.2). Do not start DD. Do not
+  enter Phase 2.
+

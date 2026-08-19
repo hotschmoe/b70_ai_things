@@ -23,8 +23,8 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 39 (44fc8fde0 overlay ABI miss; kernel build RUNNING) |
-| Last JOURNAL heading | `2026-08-19v` |
+| Last loop | 40 (kbuild live 295/705; STOP) |
+| Last JOURNAL heading | `2026-08-19w` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
 | Next pick | finish loop39_kbuild then overlay _xpu_C on 44fc8fde0 |
