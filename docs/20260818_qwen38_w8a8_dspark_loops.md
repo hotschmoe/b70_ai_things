@@ -36,17 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-T1 / P1.7: put the DSpark verify
-gather on the same L0/graph path as
-push-AR (D8 retry-if: device-side
-do_ar, not host-barrier). Success
-c1 > 31.9, G1 hold, no DEVICE_LOST.
-Do not overlay the 51MB GDN-OFF
-k1barrier SO. Do not overlay Steve
-INT4. Do not retry D16 / P2P=1.
-Optional control: BARRIER=0 on the
-same combined SO to isolate getenv
-vs rebuild. Live hold is k1bar 31.9.
+BARRIER=0 A/B on the same combined
+GDN SO (isolate getenv vs rebuild).
+Do not retry ALLGATHER_GRAPH as an
+env-only fire (D17: 0 graph fires,
+c1 27.9). Capturing DSpark verify
+needs moving the gather into the
+piecewise graph, not another flag.
+Do not overlay 51MB GDN-OFF SO.
+Do not P2P=1 / D16. Live hold k1bar
+31.9.
 
 ---
 
@@ -2336,3 +2335,36 @@ Do not: overlay 51MB k1barrier; Steve
 Restore: DD PARKED. k1bar UP @122880.
   Lease pid 170431.
 JOURNAL: ### 2026-08-19ak
+
+---
+
+## LOOP 55 -- 2026-08-19T2104Z -- T1 ALLGATHER_GRAPH c1 27.9
+
+Picked: P1.7 / D8 retry-if -- record
+  CSAG gather-internal SUM via
+  ar_allreduce_graph when capturing.
+Why this, not the other open row: T1
+  of the 2-card TP docket after K1 GO.
+GPU: lease after restore pid 175724.
+  DD PARKED.
+Command:
+  PUSH_AR_ALLGATHER_GRAPH=1 + AGASYNC
+  + BARRIER=1 same GDN SO GRAPH=1 k=4
+  G1 + bench_code 256x3
+  restore k1bar (no ALLGATHER_GRAPH)
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop55_*
+Result: Wrap +captured-do_ar ON. Graph
+  fire count **0**. G1 Paris / 391 / fib.
+  c1 **27.9** / 31.0 vs 31.9 / 34.0.
+  No DEVICE_LOST. Restore HEALTHY 147s
+  Paris OK. id dspark4-k1bar.
+Verdict: NO-GO (D17)
+Changed beliefs: DSpark verify gather
+  is still eager (LOOP 16). Env cannot
+  put it in the graph. Keep 31.9 hold.
+Next pick: BARRIER=0 control on this SO.
+Do not: retry ALLGATHER_GRAPH env-only;
+  51MB SO; P2P=1; D16; start DD.
+Restore: DD PARKED. k1bar UP. Lease
+  pid 175724.
+JOURNAL: ### 2026-08-19al

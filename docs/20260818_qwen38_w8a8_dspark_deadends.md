@@ -367,6 +367,38 @@ Why it is closed: retry-if complete.
   same SO (optional).
 Related JOURNAL: ### 2026-08-19ak
 
+## D17 -- ALLGATHER_GRAPH never captures DSpark verify -- 2026-08-19 -- LOOP 55
+
+Tried: PUSH_AR_ALLGATHER_GRAPH=1 so CSAG's
+  gather-internal SUM records
+  ar_allreduce_graph while
+  is_capturing(). Keep AGASYNC for eager.
+  Same combined GDN+barrier SO as 31.9.
+Command / config:
+  B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1
+    PUSH_AR_ALLGATHER_GRAPH=1
+    VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1"
+  GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=...-dspark4-k1bar-aggraph
+Result: HEALTHY 143s. Wrap installed
+  (+captured-do_ar). ALLGATHER_GRAPH
+  fire count **0** (never is_capturing
+  at gather AR). G1 Paris / 391 / fib.
+  c1 avg **27.9** / best 31.0 vs 31.9 /
+  34.0. No DEVICE_LOST. Restored k1bar
+  HEALTHY 147s Paris OK.
+Why it is closed: DSpark verify gather
+  runs eager between piecewise pieces
+  (LOOP 16). Recording do_ar_graph on
+  is_capturing() is a no-op here and
+  the extra compile key / wrap cost
+  the 31.9 hold. Default OFF.
+Retry if: DSpark/MTP verify all_gather
+  is moved inside a captured piecewise
+  region (vLLM change), then this env
+  can fire. Do not retry the env alone.
+Related JOURNAL: ### 2026-08-19al
+
 ## D3 addendum -- compile-key landed -- 2026-08-19 -- LOOP 26
 
 Tried: put SPECTOK + mounted _xpu_C / GDN SO in

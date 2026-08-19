@@ -754,10 +754,9 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **2-card TP session (NOW, 2026-08-19ak).** K1 combined GDN+barrier
-   SO is the hold: c1 **31.9** (was 29.4). Next is T1 / P1.7 -- capture
-   or device-side push-AR the DSpark verify gather (D8 retry-if). Do not
-   overlay the 51MB GDN-OFF k1barrier SO. Do not chase 101.9 / D16.
+0. **2-card TP session (NOW, 2026-08-19al).** Hold is K1 combined GDN+barrier
+   c1 **31.9**. T1 ALLGATHER_GRAPH is D17 (0 fires, c1 27.9). Next: BARRIER=0
+   control on that SO. Do not retry gather-graph as an env. Do not chase 101.9.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for

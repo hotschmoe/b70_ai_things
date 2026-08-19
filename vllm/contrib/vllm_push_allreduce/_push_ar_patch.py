@@ -142,8 +142,9 @@ def _install():
     # all-reduce to the host-barrier push-AR (ar_allreduce_ptr_dt) is CAPTURE-SAFE:
     #   * eager -> is_current_stream_capturing()==False -> host barrier runs like the proven prefill
     #     eager all_reduce path; no uncapturable op is inserted into any captured graph;
-    #   * if a gather ever DID run under capture, the `not _is_capturing()` guard DECLINES and falls
-    #     back to graph-recordable oneCCL. So this can ONLY move an eager oneCCL call onto push-AR.
+    #   * if a gather ever DID run under capture, the default is still oneCCL (recordable via
+    #     CSAG padded all-reduce). PUSH_AR_ALLGATHER_GRAPH=1 instead records ar_allreduce_graph
+    #     (device-side do_ar, no host wait) -- D8 retry-if / P1.7.
     # The shim over torch.distributed.all_reduce is INERT unless the thread-local `ag_self` is set
     # (only true for the dynamic extent of an XpuCommunicator gather), so the startup oneCCL warmup
     # and every other collective are untouched. Enable with PUSH_AR_ALLGATHER=1.
@@ -156,7 +157,11 @@ def _install():
     # PUSH_AR_ALLGATHER is unset. A separate .so with its own IPC state (own socket) -> does NOT perturb
     # the proven libxpu_push_ar_graph.so used by the captured all_reduce path.
     ALLGATHER_ASYNC = os.environ.get("PUSH_AR_ALLGATHER_ASYNC") == "1"
-    if ALLGATHER or ALLGATHER_ASYNC:
+    # PUSH_AR_ALLGATHER_GRAPH=1: when the current stream IS capturing, record the gather-internal
+    # SUM through ar_allreduce_graph (same SO / events as layer AR). Eager gathers still use
+    # ASYNC/host-barrier/oneCCL as selected above. Default OFF.
+    ALLGATHER_GRAPH = os.environ.get("PUSH_AR_ALLGATHER_GRAPH") == "1"
+    if ALLGATHER or ALLGATHER_ASYNC or ALLGATHER_GRAPH:
         try:
             import torch.distributed as _dist
             _SUM = _dist.ReduceOp.SUM
@@ -224,6 +229,24 @@ def _install():
                 if not (tensor.is_contiguous() and tensor.dtype in DT):
                     return False
                 nbytes = tensor.numel() * tensor.element_size()
+                # CAPTURED: device-side do_ar_graph (D8 retry-if / P1.7). In-place on `tensor`.
+                if (ALLGATHER_GRAPH and GRAPH and _is_capturing()
+                        and nbytes <= MAXB and _lazy_init(comm)):
+                    lib = _load_lib(so)
+                    if hasattr(lib, "ar_allreduce_graph"):
+                        q = torch.xpu.current_stream().sycl_queue
+                        lib.ar_allreduce_graph(ctypes.c_ulonglong(q),
+                                               ctypes.c_ulonglong(tensor.data_ptr()),
+                                               nbytes, DT[tensor.dtype])
+                        if not getattr(comm, "_push_ar_ag_graph_logged", False):
+                            comm._push_ar_ag_graph_logged = True
+                            if comm.rank == 0:
+                                print("[push_ar] ALLGATHER_GRAPH: gather-internal SUM -> "
+                                      "ar_allreduce_graph (captured, no host wait)", flush=True)
+                        return True
+                    return False
+                if _is_capturing():
+                    return False
                 # ASYNC path first (opt-in): eager immediate-list push-AR, 1 host sync/call.
                 if ALLGATHER_ASYNC and nbytes <= _achunk and _lazy_init_async(comm):
                     a = _load_alib()
@@ -242,10 +265,9 @@ def _install():
             def _dist_all_reduce_shim(tensor, op=_SUM, group=None, async_op=False, **kw):
                 comm = getattr(_ag_tls, "ag_self", None)
                 # only the SUM all-reduce emitted synchronously INSIDE a gather on THIS 2-rank TP
-                # group, and only while running eager (never during capture).
+                # group. Capture vs eager is decided inside _push_ar_inplace.
                 if (comm is not None and not async_op and op == _SUM
                         and (group is comm.device_group or group is None)
-                        and not _is_capturing()
                         and _push_ar_inplace(comm, tensor)):
                     return None  # dist.all_reduce(async_op=False) returns None
                 return _orig_dist_all_reduce(tensor, op=op, group=group, async_op=async_op, **kw)
@@ -268,9 +290,12 @@ def _install():
             _dist.all_reduce = _dist_all_reduce_shim
             for _n in ("all_gather", "all_gatherv"):
                 _wrap_gather(_n)
-            _mode = "eager-async (immediate-list, 1 host sync)" if ALLGATHER_ASYNC else "host-barrier"
+            _mode = "eager-async (immediate-list, 1 host sync)" if ALLGATHER_ASYNC else (
+                "host-barrier" if ALLGATHER else "eager-oneCCL")
+            if ALLGATHER_GRAPH:
+                _mode += "+captured-do_ar"
             print(f"[push_ar] ALLGATHER redirect ENGAGED [{_mode}]: gather-internal SUM all_reduce -> "
-                  "push-AR (eager only, capture-safe)", flush=True)
+                  "push-AR", flush=True)
         except Exception as _e:
             print(f"[push_ar] ALLGATHER redirect NOT installed ({_e}); gathers stay on oneCCL",
                   flush=True)

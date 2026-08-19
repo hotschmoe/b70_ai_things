@@ -72,6 +72,10 @@ def install() -> bool:
         d = dict(_orig_cf())
         for i, p in enumerate(extra_so_paths()):
             d[f"b70_so_{i}"] = f"{p}={so_id(p)}"
+        # Gather-internal AR impl is recorded into the graph; must not reuse
+        # a oneCCL-gather cache when ALLGATHER_GRAPH flips.
+        d["b70_ag_graph"] = os.environ.get("PUSH_AR_ALLGATHER_GRAPH", "0")
+        d["b70_ag_async"] = os.environ.get("PUSH_AR_ALLGATHER_ASYNC", "0")
         return d
 
     SpeculativeConfig.compute_hash = _spec_hash  # type: ignore[method-assign]

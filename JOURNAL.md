@@ -14880,3 +14880,44 @@ VERDICT -> GO. New hold 31.9. Next:
   GDN-OFF file. Do not start DD.
   Do not enter Phase 2. Do not set P2P=1.
 
+### 2026-08-19al - LOOP 55: T1 ALLGATHER_GRAPH no-op, c1 27.9
+
+CONTEXT -> LOOP 54 Next pick: T1
+  capture DSpark verify gather (P1.7 /
+  D8). CSAG already turns all_gather
+  into padded dist.all_reduce. Patch
+  routes that SUM to ar_allreduce_graph
+  when is_capturing(). LOOP 54 was
+  pushed (391e2da).
+
+CONFIG -> same k1bar SO + AGASYNC +
+  BARRIER=1 + PUSH_AR_ALLGATHER_GRAPH=1
+  GRAPH=1 SPECTOK=4 MAXLEN=122880
+  SERVED=...-dspark4-k1bar-aggraph
+  P2PACCESS=0
+
+COMMAND ->
+  ```
+  # patch _push_ar_patch.py + compile key
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  ALLGATHER_GRAPH=1 AGASYNC=1 BARRIER=1 start
+  G1 + bench_code c1 256x3
+  restore k1bar (GRAPH env off)
+  ```
+
+RESULT -> HEALTHY 143s. Redirect
+  [eager-async+captured-do_ar] installed.
+  ALLGATHER_GRAPH fire count **0**.
+  G1 Paris / 391 / iterative fib. c1
+  avg **27.9** / best 31.0 (wall 8.3s)
+  vs hold 31.9 / 34.0. No DEVICE_LOST.
+  Restore k1bar HEALTHY 147s Paris OK.
+  git push origin master did 391e2da
+  before this fire.
+
+VERDICT -> NO-GO (D17). DSpark verify
+  gather is eager; do_ar_graph never
+  runs. Next: BARRIER=0 isolation on
+  the 31.9 SO, not another gather env.
+  Do not start DD. Do not set P2P=1.
+
