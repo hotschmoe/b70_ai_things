@@ -36,12 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-no-GPU -- write the 0.27-only feature list (PRE.15
-gate) from notes already on disk (Steve compile-cache
-identity / oneDNN barriers / GDN scratch; SergiioB
-0.27.2rc1 digest f01e24f6). P4.1 landed: prefix
-cache hits on AGASYNC @122880. Do not start P4.2 /
-S2 / train / Phase 2 / DD. D8-D4 stand. Scheduler
+E3 -- oneDNN barriers-on A/B vs AGASYNC 29.4.
+PRE.15 list is written
+(`docs/20260819_qwen38_027_only_features.md`);
+Phase 2 stays closed. First: fetch Steve lab
+(local clone stale at 03f98aaf), read 9f90e2c /
+GDN-scratch note for the env, restart
+SPECTOK=4 GRAPH=1 ALLGATHER_ASYNC @122880 with
+it, G1, bench_code c1. Do not start P4.2 / S2 /
+train / Phase 2 / DD. D8-D4 stand. Wipe
+b3f7e9e010 before changing SPECTOK. Scheduler
 01a01813e05d stays (c1 29.4 < 41.2).
 
 ---
@@ -1061,3 +1065,48 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 9319.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19d
+
+---
+
+## LOOP 24 -- 2026-08-19T0403Z -- PRE.15 0.27-only feature list
+
+Picked: no-GPU PRE.15 write + leftover W8A8 speed
+  notes from disk
+Why this, not the other open row: living-header
+  Next pick after LOOP 23 GO. Last verdict not
+  RUNNING. P4.1 already landed.
+GPU: lease HELD both cards by docker-wait pid=9319
+  since 2026-08-19 03:40:48. DD PARKED
+  (b70_daily_0 Exited; systemd enabled
+  active/exited). :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880.
+  No restart. No GPU job.
+Command: wrote
+  docs/20260819_qwen38_027_only_features.md
+  from campaign + SergiioB digest f01e24f6 +
+  Steve 924b518 + LOOP 6/16-23. No fetch.
+Log: n/a
+Result: PRE.15 list exists. 0.27/2.13 features
+  do not close 29.4 vs 41.2. Phase 2 stays
+  closed. Leftover queue: E3 oneDNN barriers,
+  compile-key, fusedq TTFT, sycl-tla, KV_FP8
+  hook, 262k TTFT, G5. No c1 published.
+Verdict: GO
+Changed beliefs: PRE.15 is satisfied as a
+  document and still does not unlock Phase 2.
+  0.26 already serves the draft. Steve
+  barriers / compile-cache / GDN scratch are
+  0.26 steals, not 2.13 reasons. Local Steve
+  clone is stale (03f98aaf).
+Next pick: E3 oneDNN barriers-on A/B vs 29.4.
+  First: git -C /mnt/vm_8tb/b70/b70-optimization-lab
+  fetch, read 9f90e2c / GDN-scratch note, then
+  restart this AGASYNC recipe with that env,
+  G1, bench_code c1.
+Do not: enter Phase 2; start S2 INT4-AR; train;
+  start DD; P4.2; retry D8-D4; W8A16>0 @122880;
+  method=dflash; overwrite w8a8-gptq.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 9319.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19e

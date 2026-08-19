@@ -77,9 +77,10 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: no-GPU 0.27-only feature list (PRE.15). P4.1 GO:
->    prefix-cache TTFT 1528->449 ms @2040 (hits). AGASYNC 29.4
->    stands. Steve INT4-AR 101.9 is S2 later, not now.
+>    Next pick: E3 oneDNN barriers-on A/B vs AGASYNC 29.4.
+>    PRE.15 list written (`docs/20260819_qwen38_027_only_features.md`);
+>    Phase 2 stays closed. P4.1 GO: TTFT 1528->449 ms @2040.
+>    Steve INT4-AR 101.9 is S2 later, not now.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

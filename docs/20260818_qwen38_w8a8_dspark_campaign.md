@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 23 (GO P4.1 prefix-cache TTFT 1528->449 ms @2040) |
-| Last JOURNAL heading | `2026-08-19d` |
+| Last loop | 24 (GO PRE.15 0.27-only list; Phase 2 stays closed) |
+| Last JOURNAL heading | `2026-08-19e` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | no-GPU 0.27-only feature list (PRE.15) + leftover speed notes |
-| Blocked on | none. 262k TTFT not taken (recipe is 122880). |
+| Next pick | E3 oneDNN barriers-on A/B vs AGASYNC 29.4 (0.26 steal) |
+| Blocked on | none. PRE.15 list written; Phase 2 still optional/closed. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark `bench_code` c1 | **29.4** k=4 GRAPH=1 ALLGATHER_ASYNC @122880 (G1 hold; was 28.7 push-AR only) |

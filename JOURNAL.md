@@ -13372,3 +13372,53 @@ VERDICT -> GO (P4.1 early number). Prefix cache
   this fire. Scheduler stays (29.4 < 41.2).
   Do not displace sglang/vLLM W8A8.
 
+### 2026-08-19e - LOOP 24: PRE.15 0.27-only feature list (no GPU)
+
+CONTEXT -> LOOP 23 GO. Next pick: write the
+  0.27-only feature list (PRE.15) from notes
+  already on disk, then leftover W8A8 speed
+  notes. Last verdict not RUNNING. Do not
+  start P4.2 / S2 / train / Phase 2 / DD.
+  Quality floor HE+ 0.957/0.927. Keep AGASYNC.
+
+CONFIG -> docs only. No serve change. Live
+  :18080 id qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  max_model_len 122880. Lease pid 9319.
+  DD PARKED (b70_daily_0 Exited; systemd
+  b70-daily-driver.service enabled
+  active/exited -- will start DD on next boot).
+
+COMMAND ->
+  ```
+  # no GPU. wrote docs/20260819_qwen38_027_only_features.md
+  # sources: campaign 2.5/4/D/E, sergiioB cookbook,
+  # steve int4ar digest, LOOP 6/16-23, SYCLTLA_SCAFFOLD
+  curl -s http://192.168.10.5:18080/v1/models
+  ./bin/gpu-run --status
+  ```
+
+RESULT -> PRE.15 list on disk. Phase 0+1 number
+  29.4 already existed. Written 0.27-only
+  features: torch 2.13 vLLM 0.27.2rc1 /
+  kernels 0.1.12.3 digest f01e24f6, sglang
+  0.5.17+#31751, SO rebuild, topk/empty
+  soak, oneCCL 2021.17 overlay, quantized
+  Markov, newer V2. None of those close
+  29.4 vs 41.2. method=dflash is 0.26.1.dev668
+  not uniquely 0.27. Cookbook fp8 KV / graph /
+  MTP patches are 0.26 work or already ported.
+  Steve barriers / compile-cache identity /
+  GDN scratch are 0.26 steals. Leftover
+  ranked: E3 oneDNN barriers, compile-key,
+  fusedq TTFT, sycl-tla C1, KV_FP8 hook,
+  262k TTFT, G5. No DEVICE_LOST. No c1 this
+  fire (best remains 29.4). Serve left up.
+
+VERDICT -> GO (PRE.15 artifact). Phase 2 stays
+  closed (0.26 already serves the draft).
+  Next pick E3 oneDNN barriers-on A/B vs
+  29.4. Leave AGASYNC up. Do not start E3 /
+  S2 / train / DD / Phase 2 this fire.
+  Scheduler stays (29.4 < 41.2).
+  Do not displace sglang/vLLM W8A8.
+
