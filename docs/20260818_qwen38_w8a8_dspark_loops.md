@@ -36,17 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-E3 -- oneDNN barriers-on A/B vs AGASYNC 29.4.
-PRE.15 list is written
-(`docs/20260819_qwen38_027_only_features.md`);
-Phase 2 stays closed. First: fetch Steve lab
-(local clone stale at 03f98aaf), read 9f90e2c /
-GDN-scratch note for the env, restart
-SPECTOK=4 GRAPH=1 ALLGATHER_ASYNC @122880 with
-it, G1, bench_code c1. Do not start P4.2 / S2 /
-train / Phase 2 / DD. D8-D4 stand. Wipe
-b3f7e9e010 before changing SPECTOK. Scheduler
-01a01813e05d stays (c1 29.4 < 41.2).
+compile-key SPECTOK+SO (leftover after E3 D9).
+No GPU. Hash b3f7e9e010 ignores SPECTOK and
+mounted _xpu_C (D2/D3/D5/D7). First: find the
+v0260 torch.compile cache key, add SPECTOK +
+SO identity, do not restart this fire. Do not
+set unused VLLM_XPU_ONEDNN_INT* env. Do not
+start P4.2 / S2 / train / Phase 2 / DD /
+barrier kernel port unless that is the named
+pick. D9-D4 stand. Scheduler 01a01813e05d
+stays (c1 29.4 < 41.2).
 
 ---
 
@@ -1110,3 +1109,44 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease held by 9319.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19e
+
+---
+
+## LOOP 25 -- 2026-08-19T0436Z -- E3 oneDNN barrier env absent
+
+Picked: E3 -- Steve oneDNN barriers-on A/B vs
+  AGASYNC 29.4
+Why this, not the other open row: living-header
+  Next pick after LOOP 24 GO. Last verdict not
+  RUNNING.
+GPU: lease HELD both cards by docker-wait pid=9319
+  since 2026-08-19 03:40:48. DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880.
+  No restart.
+Command:
+  git -C /mnt/vm_8tb/b70/b70-optimization-lab fetch
+  git show 9f90e2c3 + origin/main INT4-AR notes
+  strings live vllm_xpu_kernels/_xpu_C.abi3.so
+Log: n/a (no GPU job)
+Result: Four flags named
+  VLLM_XPU_ONEDNN_INT{4,8}_{COMPLETION_BARRIER,INPUT_DEPENDENCY}.
+  Live int8g-v0260 _xpu_C has 0 ONEDNN_INT
+  strings. Steve patch is xpu-kernels getenv
+  around oneDNN execute, not an image env.
+  No c1. Serve left up.
+Verdict: DEAD-END (D9)
+Changed beliefs: E3 is a kernel port, not a
+  B70_EXTRA_ENV flip. Do not restart AGASYNC
+  just to set those vars. INT4 flags are his
+  INT4-AR SO; our path is INT8 completion
+  barrier in kernels/int8_gemm_w8a8.h.
+Next pick: compile-key SPECTOK+SO (no GPU).
+  First: find v0260 compile cache key. Do not
+  start the barrier kernel port this fire.
+Do not: set unused ONEDNN_INT env; overlay
+  Steve INT4-AR SO; enter Phase 2; start S2;
+  train; start DD; P4.2; retry D8-D4.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease held by 9319.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19f

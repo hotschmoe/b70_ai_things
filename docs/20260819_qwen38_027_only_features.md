@@ -139,4 +139,8 @@ warm 2048 TTFT 449 ms already works) and not accept (pos0 65-80%).
 - Phase 0+1 coherent W8A8+DSpark number: **yes (29.4)**.
 - Written 0.27-only feature list: **this file**.
 - Enter Phase 2? **No.** List says 2.13 is optional and does not
-  close 29.4 vs 41.2. Next pick is leftover 0.26 speed (E3).
+  close 29.4 vs 41.2.
+- E3 LOOP 25 / D9: `VLLM_XPU_ONEDNN_INT*` env is a no-op on
+  int8g-v0260 (not in `_xpu_C`). Retry-if = port INT8 completion
+  barrier into `kernels/int8_gemm_w8a8.h`. Next leftover:
+  compile-key SPECTOK+SO.

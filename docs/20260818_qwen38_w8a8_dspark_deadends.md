@@ -288,3 +288,39 @@ Retry if: gather is captured (device-side do_ar)
 Related JOURNAL: ### 2026-08-18aa
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop22_serve.log
   bench loop22_bench_code_c1.log
+
+## D9 -- E3 oneDNN barrier env no-op on int8g-v0260 -- 2026-08-19 -- LOOP 25
+
+Tried: E3 Steve oneDNN barriers-on as a 0.26 env A/B
+  vs AGASYNC 29.4. Fetched origin/main `924b518f`,
+  read `9f90e2c3` lean-flag retest. Did **not**
+  restart: live SO has no getenv.
+Command / config: no serve restart. Looked up:
+  VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER
+  VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY
+  VLLM_XPU_ONEDNN_INT4_COMPLETION_BARRIER
+  VLLM_XPU_ONEDNN_INT4_INPUT_DEPENDENCY
+  (plus INT4 scope / greedy margin -- INT4-AR stack).
+  strings of live
+  /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/_xpu_C.abi3.so
+  = 0 ONEDNN_INT hits. Host w8a8_kernel SOs same.
+  Image env has none of those keys.
+Result: flags exist only in Steve
+  `patches/qwen36-27b-autoround-int4-b70/int4-input-dependency-20260817/candidate-vllm-xpu-kernels-working.patch`
+  (publish oneDNN SYCL completion event onto the
+  current XPU stream; INT4 also submit_barrier
+  input deps). Our `kernels/int8_gemm_w8a8.h`
+  execute() has no getenv. AGASYNC left up;
+  id qwen3.8-27b-W8A8-gptq-dspark4-agasync.
+  No c1 published (would have been a no-op
+  republish of 29.4).
+Why it is closed: setting unused env on
+  int8g-v0260 cannot engage. Do not burn a
+  TP=2 restart for a silent no-op.
+Retry if: port INT8 completion-barrier (and
+  optional input-dep) getenv into
+  `kernels/int8_gemm_w8a8.h` / w8a16, rebuild
+  the v0260 `_xpu_C`, wipe compile hash, then
+  G1 + bench_code vs 29.4. Do not overlay
+  Steve's INT4-AR SO (wrong scheme / ABI).
+Related JOURNAL: ### 2026-08-19f

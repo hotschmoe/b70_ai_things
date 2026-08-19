@@ -13422,3 +13422,54 @@ VERDICT -> GO (PRE.15 artifact). Phase 2 stays
   Scheduler stays (29.4 < 41.2).
   Do not displace sglang/vLLM W8A8.
 
+### 2026-08-19f - LOOP 25: E3 oneDNN barrier env no-op (D9)
+
+CONTEXT -> LOOP 24 GO. Next pick E3: fetch Steve
+  lab, read 9f90e2c / GDN-scratch note for the
+  env, restart AGASYNC with it, G1, bench_code
+  vs 29.4. Do not start S2 INT4-AR / Phase 2 /
+  train / DD. Keep AGASYNC. Quality floor
+  HE+ 0.957/0.927.
+
+CONFIG -> lookup only. Live :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  max_model_len 122880. Lease pid 9319.
+  IMG=int8g-v0260. No B70_EXTRA_ENV change.
+
+COMMAND ->
+  ```
+  git -C /mnt/vm_8tb/b70/b70-optimization-lab fetch --all
+  # origin/main 924b518f; lean-flag 9f90e2c3
+  docker exec qwen38_w8a8_dspark strings \
+    /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/_xpu_C.abi3.so \
+    | grep ONEDNN_INT
+  # 0 hits. no restart.
+  ```
+
+RESULT -> Flags are
+  VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER,
+  VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY,
+  VLLM_XPU_ONEDNN_INT4_COMPLETION_BARRIER,
+  VLLM_XPU_ONEDNN_INT4_INPUT_DEPENDENCY.
+  9f90e2c3: dropping them on HIS INT4-AR MTP5
+  stack was slower (100.4 vs 101.9) and
+  22/25 vs 25/25. They live in
+  candidate-vllm-xpu-kernels-working.patch
+  (getenv around oneDNN execute; INT8
+  publishes the SYCL completion event onto
+  the current XPU stream). Live int8g-v0260
+  _xpu_C and host w8a8_kernel SOs have zero
+  of those strings. Our
+  kernels/int8_gemm_w8a8.h execute() has no
+  getenv. Restarting with unused env would
+  republish 29.4. No DEVICE_LOST. DD PARKED.
+  Serve left up.
+
+VERDICT -> DEAD-END (D9). Env A/B cannot
+  engage on this image. Next pick compile-key
+  SPECTOK+SO (no GPU). Leave AGASYNC up. Do
+  not start that pick / S2 / train / DD /
+  Phase 2 / barrier kernel port this fire.
+  Scheduler stays (29.4 < 41.2).
+  Do not displace sglang/vLLM W8A8.
+
