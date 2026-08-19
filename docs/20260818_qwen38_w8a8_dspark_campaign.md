@@ -1,7 +1,7 @@
 # Qwen3.8-27B W8A8-INT8 + DSpark -- frontier campaign
 
 **Created:** 2026-08-18
-**Status:** LOOPING -- research locked, no GPU work started on this track
+**Status:** PIVOTED -- INT8 kernel session (101.9 / D16 parked)
 **Goal:** make 2x Intel Arc Pro B70 the place people point at for private
 Qwen3.8-27B: W8A8-INT8 on native XMX, a *matched* DSpark (and a prefill
 arm), FP8-class quality, vision + MTP retained, both newest vLLM *and*
@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 51 (HOSTNS privileged GRAPH=1 hang) |
-| Last JOURNAL heading | `2026-08-19ah` |
+| Last loop | 53 (K1 D9 barrier port + v0260 SO) |
+| Last JOURNAL heading | `2026-08-19aj` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | CPU extract s2b rootfs; host-PID GRAPH=1 G1 |
-| Blocked on | D16 hang even privileged. No host venv. 101.922 not measured. |
+| Next pick | K1 GPU A/B: overlay k1barrier SO + BARRIER=1, wipe compile hash, G1+bench vs 29.4 |
+| Blocked on | GPU lease (AGASYNC). 101.9 / D16 parked. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

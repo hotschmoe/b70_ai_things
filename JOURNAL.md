@@ -14720,3 +14720,116 @@ VERDICT -> NO-GO 101.922 (D16 addendum).
   stays (29.4 < 41.2). Do not start DD.
   Do not enter Phase 2. Do not set P2P=1.
 
+### 2026-08-19ai - LOOP 52: pivot to INT8 kernels; Ornith-1.5 VRAM
+
+CONTEXT -> Operator: dedicated INT8 kernel
+  session, then later W8A8 quality (or HF
+  W8A8). Ornith-1.5 35B-A3B + ~300B/397B
+  MoE NVFP4 just dropped -- VRAM, RAM
+  offload, when to buy 2 more B70s.
+  L35-51 were D16 / 101.9 archaeology.
+
+CONFIG -> no GPU. Host 2x B70 32 GB
+  (64 GB VRAM, ~60 GiB usable). 121 GiB
+  RAM (53 GiB free at check). Disk 5.6 T
+  free on /mnt/vm_8tb.
+
+COMMAND ->
+  ```
+  scheduler_delete 01a01813e05d
+  HF API:
+    ornith-ai/Ornith-1.5-35B-A3B-NVFP4
+    ornith-ai/Ornith-1.5-397B-NVFP4
+    ornith-ai/Ornith-1.5-*-GGUF
+    Freaksterz/Qwen3.8-27B-SmoothQuant-W8A8-INT8
+  ```
+
+RESULT ->
+  Scheduler 01a01813e05d deleted. Living
+  header Next pick = K1 D9 barrier port
+  into kernels/int8_gemm_w8a8.h + rebuild
+  v0260 `_xpu_C`. Then K2 fusedq-vs-v0260
+  TTFT/PP (D5). Do not overlay Steve INT4.
+
+  Best public 3.8 W8A8: Freaksterz
+  rotation+SQ+GPTQ, compressed-tensors,
+  BF16 MTP grafted, ~30 GB, mean KLD
+  0.011 vs BF16 (1.92x lower than
+  lokeshe09 INT8; 400 Linears vs 264).
+  Offline rotation -- no QuaRot runtime.
+  Later A/B vs on-box w8a8-gptq HE+
+  0.957/0.927. Do not download this fire.
+
+  Ornith-1.5 (hours old, official NVFP4):
+  | build | disk | GPU-resident |
+  | 35B-A3B-NVFP4 | 23.4 GB | 1-2x 32 GB |
+  | 35B Q4_K_M GGUF | 21.7 GB | 1-2x 32 GB |
+  | 35B BF16 GGUF | 71.1 GB | no on 64 GB |
+  | 397B-NVFP4 | 238 GB | ~8x 32 GB |
+  | 397B Q4_K_M GGUF | 224 GiB | ~8x 32 GB |
+
+  397B NVFP4 weights ~222 GB + KV. Card
+  math: 2x=64 no; 4x=128 no; 6x=192 still
+  short; 8x=256 barely (weights fit, KV
+  tight). Host RAM+VRAM now = 185 GB <
+  222 GB -- cannot even hold 397B weights
+  with full RAM offload. 4 cards + 121 GB
+  RAM = 249 GB, theoretically tight if
+  llama.cpp expert offload works and OS
+  is lean. vLLM-XPU `--cpu-offload-gb` is
+  a cliff, not a MoE slope.
+
+  We already have `kernels/nvfp4_gemm_*`
+  and a measured 3.6-27B NVFP4 path, so
+  35B NVFP4 is a real 2x32 candidate, not
+  a dequant-to-bf16 trap -- if the
+  modelopt loader hits that kernel.
+
+VERDICT -> GO (retarget). 101.9 parked.
+  Two more B70s do not land 397B NVFP4
+  GPU-resident. Buy 2 more for 35B +
+  concurrent research / TP=4 / KV, not
+  for the 397B. Buy 6 more (8 cards) or
+  add ~256 GB RAM + llama.cpp if the
+  397B is the goal. Do not start DD.
+  Do not enter Phase 2. Do not set P2P=1.
+
+### 2026-08-19aj - LOOP 53: K1 D9 INT8 barrier port + v0260 SO
+
+CONTEXT -> LOOP 52 Next pick: port D9
+  INT8 completion-barrier into
+  kernels/int8_gemm_w8a8.h / w8a16,
+  rebuild v0260 _xpu_C. 101.9 parked.
+  Leave AGASYNC. Do not extract s2b.
+
+CONFIG -> getenv
+  VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1
+  -> ext_oneapi_submit_barrier({done})
+  on w8a8 and w8a16. Default off. No
+  extra execute() args (ABI-safe).
+  Rebuild: vllm-xpu-kernels-w8a8 +
+  int8g-v0260 + build_xpu_c.sh.
+
+COMMAND ->
+  ```
+  # edit kernels/int8_gemm_w8a{8,16}.h
+  cp into vllm-xpu-kernels-w8a8/csrc/xpu/onednn/
+  docker run loop53_kbuild vllm-xpu-env:int8g-v0260 \
+    bash /build/build_xpu_c.sh
+  ```
+
+RESULT -> BUILD RC=0. SO 51113216 B
+  sha256 9fa5d9a2. strings contain
+  VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER.
+  Saved
+  /mnt/vm_8tb/b70/w8a8_kernel/_xpu_C.abi3.so.k1barrier
+  June baseline kept. AGASYNC G1 id
+  dspark4-agasync untouched. No c1.
+  DD PARKED.
+
+VERDICT -> GO (port + SO). Next pick:
+  overlay k1barrier + BARRIER=1, wipe
+  compile hash, G1 + bench_code vs 29.4.
+  S2 101.9 scheduler deleted. Do not
+  start DD. Do not enter Phase 2.
+

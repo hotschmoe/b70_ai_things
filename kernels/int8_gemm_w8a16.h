@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdlib>
+
 #include <c10/xpu/XPUStream.h>
 #include <torch/torch.h>
 
@@ -151,7 +153,15 @@ static inline void dnnl_matmul_w8a16_int8(
   arg_handles.emplace_back(DNNL_ARG_SCRATCHPAD, scratchpad_tensor.data_ptr());
 
   auto& strm = GpuStreamManager::Instance().get_stream();
-  auto qint8_matmul_event =
+  auto done =
       matmul_ext.execute(strm, engine, std::move(arg_handles), arg_off);
+  // D9/K1: same INT8 completion-barrier as w8a8. Default off.
+  if (const char* barrier =
+          std::getenv("VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER");
+      barrier != nullptr && barrier[0] == '1' && barrier[1] == '\0') {
+    auto& queue = c10::xpu::getCurrentXPUStream().queue();
+    queue.ext_oneapi_submit_barrier({done});
+    TORCH_WARN_ONCE("VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER reached");
+  }
 }
 }  // namespace oneDNN

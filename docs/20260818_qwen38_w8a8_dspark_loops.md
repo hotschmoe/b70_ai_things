@@ -36,17 +36,20 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-CPU extract s2b rootfs to host (no GPU;
-leave AGASYNC). Then GRAPH=1 as a host
-PID. Do not retry HOSTNS/privileged
-docker. Do not retry AGCUSTOM/FA. Do
-not wait the hang. Do not ARC=1. Do
-not P2P=1. Do not retry overlay (D15).
-Do not retry FORCE_GRAPH on 2021.17
-(D14). Do not retry GRAPH=0 as 101.922.
-Do not enter Phase 2. Scheduler stays
-(29.4 < 41.2). Live serve is AGASYNC
-k=4 @122880.
+K1 GPU A/B: overlay
+`/mnt/vm_8tb/b70/w8a8_kernel/_xpu_C.abi3.so.k1barrier`
++ VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1,
+wipe compile hash, G1 + bench_code vs
+29.4. Then K2 fusedq vs v0260 ABI.
+Do not overlay Steve INT4 SO. Do not
+extract s2b. Do not retry D16 / HOSTNS
+/ AGCUSTOM / FA. 101.9 parked. Do not
+enter Phase 2. Scheduler 01a01813e05d
+deleted (S2 101.9). Live serve is
+AGASYNC k=4 @122880. Later: Freaksterz
+rotation+SQ+GPTQ W8A8 vs
+on-box w8a8-gptq HE+ 0.957/0.927.
+30m 101.9 scheduler deleted.
 
 ---
 
@@ -2218,3 +2221,77 @@ Restore: DD stays PARKED. AGASYNC UP
   k=4 GRAPH=1 @122880. Lease pid 157611.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19ah
+
+---
+
+## LOOP 52 -- 2026-08-19T2005Z -- pivot to INT8 kernel session
+
+Picked: operator pivot. Stop 101.9 / D16
+  overlay fires. Dedicated INT8 kernel
+  session, then later W8A8 quality.
+  HF check + Ornith-1.5 VRAM math.
+Why this, not the other open row: leftover
+  queue empty after L34; L35-51 were D16
+  archaeology. Operator asked for kernels
+  then quality, not another s2b hang.
+GPU: none this fire. Lease still held by
+  pid 157611 docker wait qwen38_w8a8_dspark
+  (AGASYNC). DD PARKED.
+Command: scheduler_delete 01a01813e05d;
+  living-header + NEXT PICK retarget;
+  HF API sizes for Freaksterz + Ornith-1.5.
+Log: n/a (no GPU)
+Result: 30m 101.9 scheduler gone. Next
+  pick is K1 D9 barrier port. Freaksterz
+  Qwen3.8-27B-SmoothQuant-W8A8-INT8 is
+  the later quality A/B (plain
+  compressed-tensors, ~30 GB, KLD 0.011).
+  Ornith-1.5-35B-A3B-NVFP4 = 23.4 GB
+  disk (fits 2x32). Ornith-1.5-397B-NVFP4
+  = 238 GB disk (needs ~8x32 resident).
+Verdict: GO (retarget). No number moved.
+Changed beliefs: 101.922 is parked, not
+  the next GPU job. Two more B70s do not
+  land 397B NVFP4 GPU-resident.
+Next pick: K1 D9 port into kernels/.
+Do not: extract s2b; retry D16; start DD;
+  Phase 2; overwrite w8a8-gptq; download
+  397B this session.
+Restore: DD PARKED. AGASYNC still up
+  (untouched). Lease pid 157611.
+JOURNAL: ### 2026-08-19ai
+
+---
+
+## LOOP 53 -- 2026-08-19T2008Z -- K1 D9 INT8 barrier port + SO
+
+Picked: K1 port D9 completion-barrier
+  getenv into kernels/int8_gemm_w8a8.h
+  and w8a16.h; rebuild v0260 _xpu_C.
+Why this, not the other open row: LOOP 52
+  Next pick; 101.9 parked.
+GPU: none. Lease pid 157611 AGASYNC.
+  DD PARKED. :18080 AGASYNC @122880.
+Command:
+  edit kernels/int8_gemm_w8a{8,16}.h
+  copy into vllm-xpu-kernels-w8a8
+  docker loop53_kbuild int8g-v0260
+  build_xpu_c.sh
+Log: docker logs loop53_kbuild
+Result: SO 51113216 B sha 9fa5d9a2
+  strings have INT8_COMPLETION_BARRIER.
+  Copy
+  /mnt/vm_8tb/b70/w8a8_kernel/_xpu_C.abi3.so.k1barrier
+  June baseline kept. AGASYNC untouched.
+  No c1 (no GPU A/B this fire).
+Verdict: GO (port + SO).
+Changed beliefs: getenv is in the v0260
+  ABI SO. GPU A/B still needed vs 29.4.
+Next pick: overlay k1barrier + BARRIER=1,
+  wipe compile hash, G1+bench vs 29.4.
+Do not: overlay Steve INT4 SO; extract
+  s2b; retry D16; start DD; Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD PARKED. AGASYNC UP. Lease
+  pid 157611. S2 scheduler deleted.
+JOURNAL: ### 2026-08-19aj
