@@ -78,7 +78,7 @@
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
 >    Next pick: Steve 44fc8fde0 + graph-safe FA
->    (D13: intel/vllm 0.21 TP=2 loads, MTP GDN assert).
+>    (D13 addendum: Python fallback G1 fib bangs).
 >    S2c 0.963/0.915. Scheduler stays. 29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy

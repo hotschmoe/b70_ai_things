@@ -75,13 +75,13 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36+37: f01e24f6 and nightly `c48edf76`
-are SYCL-9 + 2021.15 (D10/D11). intel/vllm:0.21.0-xpu
-(8df6feb7d, torch 2.11, SYCL-8, in-image 2021.17) TP=2
-loads (D10 unstuck) but MTP generate asserts GDN
-spec_sequence_masks (D13). Gated cell remains TP=1
-GRAPH=0 on f01e24f6: c1 12.8 / after-TTFT 16.66. Remaining
-stack is Steve 44fc8fde0 + graph-safe FA, not this digest.
+S2b status LOOP 27+36+37+38: SYCL-9 nightlies D10/D11.
+intel/vllm:0.21.0-xpu TP=2 loads with 2021.17. D13 GDN
+assert is unstuck by Steve MTP fallback overlay; G1
+Paris/391 hold, fib chat reasoning bangs, GRAPH=1 TP=2
+still disabled (comms). No 101.922 cell. Gated cell
+remains f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66. Remaining
+stack is Steve 44fc8fde0 + graph-safe FA.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M

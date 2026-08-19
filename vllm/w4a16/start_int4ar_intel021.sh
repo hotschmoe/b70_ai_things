@@ -22,6 +22,18 @@ DTYPE="${DTYPE:-float16}"
 DEVICE="${DEVICE:-0}"
 WRAP="$REPO/vllm/w4a16/intel021_vllm_entrypoint.sh"
 chmod +x "$WRAP"
+# D13 overlay: Steve GDN spec_sequence_masks fallback (Python, not a kernel SO).
+GDNFB="${GDNFB:-/mnt/vm_8tb/b70/qwen38-w8a8-dspark/intel021_gdnfb}"
+CACHE_NAME="${CACHE_NAME:-intel021}"
+EXTRA_MOUNTS=()
+if [ -f "$GDNFB/_xpu_ops.py" ]; then
+  EXTRA_MOUNTS+=( -v "$GDNFB/_xpu_ops.py:/opt/vllm/vllm/_xpu_ops.py:ro" )
+  echo "=== overlay _xpu_ops.py <- $GDNFB (GDN spec fallback) ===" >&2
+fi
+if [ -f "$GDNFB/gdn_linear_attn.py" ]; then
+  EXTRA_MOUNTS+=( -v "$GDNFB/gdn_linear_attn.py:/opt/vllm/vllm/model_executor/layers/mamba/gdn_linear_attn.py:ro" )
+  echo "=== overlay gdn_linear_attn.py <- $GDNFB ===" >&2
+fi
 
 if [ "${1:-start}" = stop ]; then
   docker stop -t 30 "$NAME" >/dev/null 2>&1 || true
@@ -31,7 +43,7 @@ if [ "${1:-start}" = stop ]; then
 fi
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true
-mkdir -p "$ROOT/vllm_cache/triton_intel021" "$ROOT/vllm_cache/intel021" "$ROOT/tmp_ssd" "$ROOT/hf_cache"
+mkdir -p "$ROOT/vllm_cache/triton_intel021" "$ROOT/vllm_cache/${CACHE_NAME}" "$ROOT/tmp_ssd" "$ROOT/hf_cache"
 
 CC=()
 EAGER=(--enforce-eager)
@@ -78,8 +90,9 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" \
   -v "$WRAP:/opt/venv/bin/vllm:ro" \
-  -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache/intel021 \
-  -e XDG_CACHE_HOME=/vllm_cache/intel021 \
+  "${EXTRA_MOUNTS[@]}" \
+  -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache/${CACHE_NAME} \
+  -e XDG_CACHE_HOME=/vllm_cache/${CACHE_NAME} \
   -e TRITON_CACHE_DIR=/vllm_cache/triton_intel021 -e TMPDIR=/tmp_ssd \
   -e VLLM_LOGGING_LEVEL=INFO \
   "${MGPU[@]}" "${GENV[@]}" \

@@ -14099,3 +14099,48 @@ VERDICT -> NO-GO on 101.922. intel/vllm
   Scheduler stays (29.4 < 41.2). Do not
   start DD. Do not enter Phase 2.
 
+### 2026-08-19u - LOOP 38: D13 retry GDN spec fallback -- G1 fib bangs
+
+CONTEXT -> LOOP 37 D13 retry-if: Steve GDN
+  spec fallback. Overlay
+  patches/vllm-xpu-mtp-fallback.patch onto
+  intel/vllm 0.21 (TP=2 already loads).
+  One arm. Fail-closed G1. Do not fake
+  101.922. Do not start DD.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu
+  overlays
+  vllm/w4a16/intel021_gdnfb/{_xpu_ops.py,
+  gdn_linear_attn.py}. CACHE_NAME=
+  intel021_gdnfb. TP=2 GRAPH=1 MTPTOK=5
+  MAXLEN=16384 DTYPE=float16 P2PACCESS=0
+  SERVED qwen3.8-27b-W4A16-autoround-mtp5
+  CCL_ROOT in-image 2021.17.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health v0260
+  CACHE_NAME=intel021_gdnfb bash vllm/w4a16/start_int4ar_intel021.sh start
+  # G1 completions + chat; restore AGASYNC
+  ```
+
+RESULT -> Overlay mounted. TP=2 HEALTHY 161s.
+  Graph still disabled (comms). No
+  spec_sequence_masks assert. Completions
+  Paris exact. Chat Paris exact. 17*23=391
+  with max_tokens=64 (32 was thinking-only).
+  Chat fib: reasoning is 256 "!!!!" bangs,
+  empty content, finish_reason=length.
+  Spec metrics 322 accepted / 380 draft.
+  No speed published. Restore HEALTHY, G1
+  Paris on W8A8 AGASYNC @122880. DD PARKED.
+  No DEVICE_LOST. w8a8-gptq not overwritten.
+
+VERDICT -> NO-GO on 101.922. D13 addendum:
+  Python fallback unsticks the assert;
+  G1 fib bangs. GRAPH=1 TP=2 still
+  disabled on this image. Next pick: Steve
+  44fc8fde0 + graph-safe FA (not this
+  overlay). Scheduler stays (29.4 < 41.2).
+  Do not start DD. Do not enter Phase 2.
+

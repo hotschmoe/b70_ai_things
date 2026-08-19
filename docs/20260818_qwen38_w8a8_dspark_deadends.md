@@ -523,3 +523,28 @@ Retry if: Steve GDN spec kernels / FA
   Then G1 before any 101.922 cell.
 Related JOURNAL: ### 2026-08-19t
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop37_g1_500_tail.log
+
+## D13 addendum -- GDN spec fallback G1 fib bangs -- 2026-08-19 -- LOOP 38
+
+Tried: overlay Steve
+  patches/vllm-xpu-mtp-fallback.patch onto
+  intel/vllm:0.21.0-xpu _xpu_ops.py +
+  gdn_linear_attn.py. Fresh compile cache
+  intel021_gdnfb. Same TP=2 MTP5 recipe.
+Command / config:
+  CACHE_NAME=intel021_gdnfb
+  bash vllm/w4a16/start_int4ar_intel021.sh start
+Result: HEALTHY 161s. Assert gone. Paris
+  completions/chat hold. 17*23=391 at
+  max_tokens=64. Chat fib: 256 "!!!!"
+  reasoning tokens, empty content.
+  Spec 322/380 accepted. GRAPH still
+  disabled (comms). No speed published.
+Why it is closed: Python fallback is not
+  a G1-gated 101.922 cell. Fib bangs are
+  fail-closed. GRAPH=1 TP=2 still off.
+Retry if: Steve graph-safe FA / vLLM
+  44fc8fde0 that G1 on GRAPH=1 TP=2 with
+  this ckpt. Do not republish this overlay.
+Related JOURNAL: ### 2026-08-19u
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop38_g1.jsonl

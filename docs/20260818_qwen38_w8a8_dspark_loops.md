@@ -36,16 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S2b remaining: Steve exact vLLM 44fc8fde0
-+ graph-safe FA / GDN spec kernels.
-intel/vllm:0.21.0-xpu (8df6feb7d) TP=2
-loads with in-image 2021.17 but MTP
-generate asserts GDN spec_sequence_masks
-(D13). Do not retry that digest MTP.
-Do not retry SYCL-9 nightlies without a
-SYCL-9 oneCCL. Do not enter Phase 2.
-Scheduler stays (29.4 < 41.2). Live serve
-is AGASYNC k=4 @122880.
+S2b remaining: Steve vLLM 44fc8fde0 +
+graph-safe FA. D13 Python fallback on
+intel/vllm 8df6feb7d unsticks the GDN
+assert but G1 fib bangs and GRAPH=1 TP=2
+is disabled (comms). Do not retry that
+overlay as a speed cell. Do not retry
+SYCL-9 nightlies without SYCL-9 oneCCL.
+Do not enter Phase 2. Scheduler stays
+(29.4 < 41.2). Live serve is AGASYNC
+k=4 @122880.
 
 ---
 
@@ -1671,3 +1671,47 @@ Restore: DD stays PARKED. GRAPH=1 k=4
   AGASYNC @122880 left UP. Lease pid 66009.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19t
+
+---
+
+## LOOP 38 -- 2026-08-19T1216Z -- D13 GDN spec fallback G1 fib bangs
+
+Picked: D13 retry -- overlay Steve MTP
+  GDN spec fallback on intel/vllm 0.21
+  TP=2. One arm.
+Why this, not the other open row: LOOP 37
+  Next pick named GDN spec kernels / FA;
+  the fallback is the exact assert fix
+  and applies to this image without a
+  44fc8fde0 rebuild.
+GPU: lease HELD pid=71700 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260.
+Command:
+  stop AGASYNC; xpu-health v0260
+  CACHE_NAME=intel021_gdnfb start_int4ar_intel021.sh
+  G1; restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop38_*
+Result: HEALTHY 161s. No GDN assert.
+  Paris + 391 hold. Fib chat reasoning
+  "!!!!" bangs. GRAPH disabled. No 101.922.
+  Restore G1 Paris. No DEVICE_LOST.
+Verdict: NO-GO on 101.922. D13 addendum.
+Changed beliefs: Python fallback is not
+  enough for G1-gated speed. Need Steve
+  FA / 44fc8fde0. GRAPH=1 TP=2 still
+  refuses comms on this image.
+Next pick: build Steve graph-safe FA +
+  vLLM 44fc8fde0 in qwen38-b70 (icpx
+  2025.3.3). Then G1 GRAPH=1 TP=2.
+Do not: retry this overlay as a speed
+  cell; retry unpatched 8df6feb7d MTP;
+  SYCL-9 nightlies; int8g-v0260 for INT4;
+  fake 101.922; start DD; Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. GRAPH=1 k=4
+  AGASYNC @122880 left UP. Lease pid 71700.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19u
