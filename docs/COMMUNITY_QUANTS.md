@@ -90,6 +90,7 @@ Sizes: exact where the card/API gave a file sum, else `~` estimate from param co
 
 | Repo | Base | Params | Scheme | Size | Tool / Uploader |
 |------|------|--------|--------|------|-----------------|
+| **Freaksterz/Qwen3.8-27B-SmoothQuant-W8A8-INT8** | Qwen3.8-27B | 27B dense | W8A8-INT8 | ~30 | rotation+SQ+GPTQ / Freaksterz |
 | **nameistoken/Qwen3.6-27B-Quark-W8A8-INT8** | Qwen3.6-27B | 27B dense | W8A8-INT8 | 30.4 | Quark / nameistoken |
 | **nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8** | Qwen3.6-35B-A3B | 35B/3B MoE | W8A8-INT8 | 36.7 | Quark / nameistoken |
 | **nameistoken/Gemma-4-31B-it-Quark-W8A8-INT8** | gemma-4-31B-it | 31B dense | W8A8-INT8 | 33.3 | Quark / nameistoken |
@@ -103,6 +104,12 @@ Sizes: exact where the card/API gave a file sum, else `~` estimate from param co
 | Avesed/Qwen3.6-27B-W4A8 | Qwen3.6-27B | 27B dense | W4A8-INT8 (!) | 36.2 | compressed-tensors / Avesed |
 | Avesed/Qwopus3.6-27B-v2-W4A8 | Qwopus3.6-27B-v2 (Qwen3.6 FT) | 27B dense | W4A8-INT8 (!) | 36.2 | compressed-tensors / Avesed |
 | AMbaye018/sarvam-30b-gptq-w4a8-targeted | sarvam-30b (2026-03) | 32B MoE | W4A8-INT8 | 42.6 | GPTQ / AMbaye018 |
+
+Freaksterz (2026-08-19 HF check): lowest-divergence public INT8 W8A8 of Qwen3.8-27B they
+measure (mean KLD 0.011 vs BF16; 400 Linears; BF16 MTP grafted). Offline QuaRot-style
+rotation baked into weights -- plain `compressed-tensors`, no runtime. Later quality A/B
+vs on-box `w8a8-gptq` (HE+ 0.957/0.927). NVIDIA CutlassInt8 on their card; our path is
+`XPUInt8ScaledMMLinearKernel`. Do not treat their 3.5K tok/s 2x3090 prefill as an XPU number.
 
 (!) **W4A8 bloat warning:** these "W4A8" repos are ~33-36 GB -- the *same* footprint as the
 W8A8 versions, not the ~14-16 GB a real 4-bit pack should be. They appear stored unpacked

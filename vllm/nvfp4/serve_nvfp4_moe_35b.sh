@@ -78,6 +78,31 @@ if [ "$MODE" = fused ]; then
   KERN_MOUNTS=( -v "$FUSED_SO:$PKGD/_xpu_C.abi3.so:ro" -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
 fi
 
+# KV_FP8=0: strip checkpoint kv_cache_scheme so vLLM does not force uncalibrated
+# fp8_e4m3 KV (D18 !!!! / 27B Track 11h). Use --kv-cache-dtype auto (model
+# dtype). Do NOT pass bfloat16 -- flash_attn XPU rejects that enum.
+KV_MOUNTS=( )
+if [ "${KV_FP8:-1}" = 0 ]; then
+  _HOST_CKPT="${HOST_CKPT:-}"
+  if [ -z "$_HOST_CKPT" ]; then
+    _rel="${CKPT#/models/}"
+    _HOST_CKPT="$REPO/models/files/$_rel"
+  fi
+  _CFG_SRC="$_HOST_CKPT/config.json"
+  _CFG_PATCH="${KV_PATCH_DIR:-/tmp}/b70_ornith_nokvfp8.json"
+  python3 -c "import json; d=json.load(open('$_CFG_SRC')); d.get('quantization_config',{}).pop('kv_cache_scheme',None); json.dump(d,open('$_CFG_PATCH','w'))" \
+    || { echo "failed to generate $_CFG_PATCH from $_CFG_SRC"; exit 1; }
+  KV_MOUNTS=( -v "$_CFG_PATCH:$CKPT/config.json:ro" )
+  KVDTYPE="${KVDTYPE:-auto}"
+  echo "=== KV_FP8=0: kv_cache_scheme stripped, KVDTYPE=$KVDTYPE ==="
+fi
+
+LANG_ARGS=( )
+if [ "${LANGONLY:-0}" = 1 ]; then
+  LANG_ARGS=( --language-model-only )
+  echo "=== LANGONLY=1 --language-model-only ==="
+fi
+
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
 TP_ARGS=( )
@@ -96,18 +121,20 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$SHIMDIR:/opt/nvfp4_shim:ro" \
-  "${KERN_MOUNTS[@]}" \
+  "${KERN_MOUNTS[@]}" "${KV_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" -e NVFP4_MOE_W4A16_EMUL=1 \
   -e NVFP4_MOE_FUSED="$MOEFUSED" \
   "${MGPU[@]}" "${GRAPH_ENV[@]}" \
+  $( [ -n "${B70_EXTRA_ENV:-}" ] && for kv in ${B70_EXTRA_ENV}; do printf -- '-e %s ' "$kv"; done ) \
   --entrypoint vllm "$IMG" \
   serve "$CKPT" --served-model-name "$SERVED" \
   --host 0.0.0.0 --port "$PORT" --dtype bfloat16 --max-model-len "$MAXLEN" \
   --max-num-seqs "$MAXSEQS" --gpu-memory-utilization "$UTIL" --moe-backend "$MOEBACKEND" \
   --max-num-batched-tokens "${MAXNUMBATCHED:-2048}" \
   ${KVDTYPE:+--kv-cache-dtype "$KVDTYPE"} \
+  "${LANG_ARGS[@]}" \
   "${TP_ARGS[@]}" "${GRAPH_ARGS[@]}" "${SPEC_ARGS[@]}" --no-enable-prefix-caching --trust-remote-code --skip-mm-profiling
 
 echo "container $NAME up (port $PORT, moe-backend=$MOEBACKEND, mode=$MODE, graph=$GRAPH); logs: docker logs -f $NAME"

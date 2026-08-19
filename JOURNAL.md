@@ -15038,3 +15038,52 @@ VERDICT -> FETCH GO. G1 NO-GO (D18).
   retry emul+auto-fp8-KV. Do not start
   DD. Do not set P2P=1.
 
+### 2026-08-19ap - LOOP 59: Ornith fused G1 GO; emul is the bangs
+
+CONTEXT -> Operator: stick to bf16-class
+  KV (auto, not bfloat16 enum) and
+  loop MODE / INT8XMX / kernels / TP.
+  A1 (emul + KV_FP8=0 + LANGONLY +
+  auto KV) still all !!!! at 2.6 t/s.
+  D18 was not just uncalibrated fp8 KV.
+
+CONFIG -> IMG int8g-v0260 MAXLEN=8192
+  UTIL=0.90 LANGONLY=1 KV_FP8=0
+  KVDTYPE=auto GRAPH=0 P2PACCESS=0
+  FUSED_SO=nvfp4_fused_kernel_gdn
+  SERVE=vllm/nvfp4/serve_nvfp4_moe_35b.sh
+  sweep=vllm/nvfp4/sweep_ornith_nvfp4.sh
+
+COMMAND ->
+  ```
+  # A1 live confirm then
+  B70_GPU_LOCK_TIMEOUT=0 gpu-run \
+    bash vllm/nvfp4/sweep_ornith_nvfp4.sh
+  ```
+
+RESULT ->
+  | arm | mode | xmx | G1 | t/s |
+  | A1  | emul | 1 | !!!! | 2.62 |
+  | A2  | fused | 1 | Paris / 391 | 3.49 |
+  | A3  | fused | 0 | Paris / 391 | 3.39 |
+  | A4  | emul | 0 | !!!! | 2.50 |
+  A2 chat: "The capital of France is
+  **Paris**." A2 mul exact 391.
+  Fused KV 105751 tok / 2.95 GiB
+  (emul A1 had 213736 / 5.97 GiB).
+  Shim (7) fused per-expert apply
+  installed. MXFP8 warning still
+  prints. No DEVICE_LOST.
+
+VERDICT -> GO (D18 closed: emul
+  NVFP4 path is the garbage; fused
+  nvfp4_gemm_w4a16 is coherent).
+  INT8XMX is not the bangs (A2=A3
+  GO, A1=A4 !!!!). Keep KV=auto.
+  Hold k1bar 31.9 stays the 27B
+  W8A8 DD. Next: GRAPH=1 + TP=2
+  on fused recipe (sweep still
+  running CTRL / G1g / T2). Do not
+  serve emul. Do not start DD.
+  Do not set P2P=1.
+
