@@ -1789,3 +1789,37 @@ Restore: DD stays PARKED. AGASYNC UP.
   Lease pid 79276. kbuild left running.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19w
+
+---
+
+## LOOP 41 -- 2026-08-19T1335Z -- kbuild live 687/705 STOP
+
+Picked: LOOP 39/40 RUNNING finish --
+  status only. kbuild live so STOP.
+Why this, not the other open row: ledger
+  Next pick: live -> one status line STOP.
+GPU: lease HELD pid=79276 docker wait
+  qwen38_w8a8_dspark. DD PARKED. :18080
+  AGASYNC @122880 IMG=int8g-v0260.
+  loop39_kbuild still Up 46 min.
+Command:
+  docker inspect/logs loop39_kbuild
+  G1 Paris
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop41_kbuild_snap.log
+Result: kbuild 687/705; GDN compile
+  started. No SOs. G1 Paris. No c1.
+Verdict: RUNNING
+Changed beliefs: none. Do not kill kbuild
+  this close to the link.
+Next pick: same. First: docker ps
+  loop39_kbuild. Live -> STOP. Dead+SOs
+  -> 44fc8fde0 + XPU_C_SO G1.
+Do not: wait this fire; overlay without
+  SO; retry D13 overlay as speed; SYCL-9
+  nightlies; int8g-v0260 INT4; fake
+  101.922; start DD; Phase 2; overwrite
+  w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP.
+  Lease pid 79276. kbuild left running.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19x
