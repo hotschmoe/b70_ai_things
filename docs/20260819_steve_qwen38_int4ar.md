@@ -75,12 +75,12 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-39: SYCL-9 nightlies D10/D11.
-intel/vllm 0.21 TP=2 loads. D13 Python fallback G1 fib
-bangs. 44fc8fde0 overlay enables FORCE_GRAPH PIECEWISE
-then dies: image _xpu_C int4_gemm 7-arg vs 8-arg
-input_dependency. Kernel rebuild loop39_kbuild RUNNING.
-Gated cell remains f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66.
+S2b status LOOP 27+36-42: SYCL-9 nightlies D10/D11.
+2dd55f38 _xpu_C+GDN built (8-arg int4). 44fc8fde0 + SO
++ FORCE_GRAPH compiles then dies: in-image 2021.17
+cannot record allgather in a SYCL graph (D14). Next is
+Steve public oneCCL 4ceafd1. Gated cell remains
+f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M

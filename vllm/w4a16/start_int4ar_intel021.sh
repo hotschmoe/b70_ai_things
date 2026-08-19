@@ -31,7 +31,17 @@ EXTRA_MOUNTS=()
 if [ -n "$VLLM_SRC" ] && [ -d "$VLLM_SRC/vllm" ]; then
   EXTRA_MOUNTS+=( -v "$VLLM_SRC:/opt/vllm:ro" )
   echo "=== overlay vLLM source <- $VLLM_SRC ===" >&2
-elif [ -f "$GDNFB/_xpu_ops.py" ]; then
+fi
+PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
+if [ -n "${XPU_C_SO:-}" ] && [ -f "$XPU_C_SO" ]; then
+  EXTRA_MOUNTS+=( -v "$XPU_C_SO:$PKGD/_xpu_C.abi3.so:ro" )
+  echo "=== overlay _xpu_C <- $XPU_C_SO ===" >&2
+fi
+if [ -n "${GDN_LIB:-}" ] && [ -f "$GDN_LIB" ]; then
+  EXTRA_MOUNTS+=( -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
+  echo "=== overlay gdn lib <- $GDN_LIB ===" >&2
+fi
+if [ -z "${VLLM_SRC:-}" ] && [ -f "$GDNFB/_xpu_ops.py" ]; then
   EXTRA_MOUNTS+=( -v "$GDNFB/_xpu_ops.py:/opt/vllm/vllm/_xpu_ops.py:ro" )
   echo "=== overlay _xpu_ops.py <- $GDNFB (GDN spec fallback) ===" >&2
   if [ -f "$GDNFB/gdn_linear_attn.py" ]; then
@@ -62,9 +72,14 @@ if [ "$GRAPH" = 1 ]; then
     GENV+=(-e VLLM_XPU_FORCE_GRAPH_WITH_COMM=1)
   fi
   GDOCK=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
-  # 0.21.1.dev18 CompilationConfig rejects the 0.26/0.27 pass_config keys
-  # (fuse_rope_kvcache_cat_mla etc). Keep the 0.21 PIECEWISE shape only.
-  CC=(--compilation-config '{"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,5,6,8],"max_cudagraph_capture_size":8}')
+  # 44fc8fde0 defaults fuse_rope_kvcache_cat_mla True but does not import
+  # MLARoPEKVCacheCatFusionPass on XPU (NameError). Steve's recipe sets false.
+  # Older 8df6feb7d rejects this key -- only send it when overlaying 44fc.
+  if [ -n "${VLLM_SRC:-}" ]; then
+    CC=(--compilation-config '{"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,5,6,8],"max_cudagraph_capture_size":8,"pass_config":{"fuse_rope_kvcache_cat_mla":false}}')
+  else
+    CC=(--compilation-config '{"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,5,6,8],"max_cudagraph_capture_size":8}')
+  fi
 fi
 
 MGPU=()

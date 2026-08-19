@@ -14255,3 +14255,52 @@ VERDICT -> RUNNING. Next pick unchanged.
   (29.4 < 41.2). Do not start DD. Do not
   enter Phase 2.
 
+### 2026-08-19y - LOOP 42: 44fc8fde0+SO GRAPH=1 dies on oneCCL sycl_graph
+
+CONTEXT -> LOOP 41 kbuild live; this fire
+  kbuild DEAD exit 0 with SOs. Next pick:
+  overlay XPU_C_SO+GDN_LIB on 44fc8fde0
+  TP=2 GRAPH=1 FORCE_GRAPH, G1. One arm.
+  Do not fake 101.922. Do not start DD.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu
+  VLLM_SRC 44fc8fde0
+  XPU_C_SO+GDN_LIB from
+  /mnt/vm_8tb/b70/steve-s2b/xpu-c-install
+  (8-arg int4_gemm input_dependency).
+  CACHE_NAME=intel021_44fc_so TP=2 GRAPH=1
+  FORCE_GRAPH_WITH_COMM=1 MTPTOK=5
+  MAXLEN=16384 P2PACCESS=0
+  pass_config fuse_rope_kvcache_cat_mla
+  false (NameError without it).
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  VLLM_SRC=... XPU_C_SO=... GDN_LIB=... \
+    bash vllm/w4a16/start_int4ar_intel021.sh start
+  restore AGASYNC
+  ```
+
+RESULT -> First try: NameError
+  MLARoPEKVCacheCatFusionPass (XPU does
+  not import that pass; default flag
+  True). Retry with fuse=false: int4
+  ABI OK, FORCE_GRAPH PIECEWISE, compile
+  156s. Graph capture all_gather:
+  oneCCL sched algorithms do not support
+  sycl_graph recording. EngineDead. No
+  DEVICE_LOST. Cards healthy. No speed
+  published. Restore G1 Paris on AGASYNC
+  @122880. DD PARKED. w8a8-gptq not
+  overwritten.
+
+VERDICT -> NO-GO on 101.922 (D14).
+  2dd55f38 SO + 44fc python is not
+  enough; in-image 2021.17 cannot record
+  allgather in a SYCL graph. Next pick:
+  Steve public oneCCL 4ceafd1 rebuild
+  (SYCL-8 / 2025.3), then FORCE_GRAPH
+  again. Scheduler stays (29.4 < 41.2).
+  Do not start DD. Do not enter Phase 2.
+

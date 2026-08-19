@@ -548,3 +548,30 @@ Retry if: Steve graph-safe FA / vLLM
   this ckpt. Do not republish this overlay.
 Related JOURNAL: ### 2026-08-19u
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop38_g1.jsonl
+
+## D14 -- FORCE_GRAPH + in-image 2021.17 sycl_graph allgather -- 2026-08-19 -- LOOP 42
+
+Tried: 44fc8fde0 + rebuilt 2dd55f38
+  _xpu_C+GDN on intel/vllm:0.21.0-xpu
+  TP=2 GRAPH=1 VLLM_XPU_FORCE_GRAPH_WITH_COMM=1
+  in-image oneCCL 2021.17.
+Command / config:
+  start_int4ar_intel021.sh
+  fuse_rope_kvcache_cat_mla=false
+  CACHE_NAME=intel021_44fc_so
+Result: int4 8-arg ABI OK. PIECEWISE
+  kept. torch.compile 156s. Graph
+  capture all_gather:
+  |CCL_SYCL| sched algorithms do not
+  support sycl_graph recording, please
+  use sycl_algorithms. EngineDead. No
+  DEVICE_LOST. Cards healthy.
+Why it is closed: stock 2021.17 cannot
+  record allgather in a SYCL graph.
+  Steve 101.922 used public oneCCL
+  4ceafd1 with graph-replay oracles.
+Retry if: Steve 4ceafd1 oneCCL rebuilt
+  vs this image's libsycl.so.8 is
+  overlaid, then G1 on GRAPH=1 TP=2.
+Related JOURNAL: ### 2026-08-19y
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop42_tp2_fail_tail.log

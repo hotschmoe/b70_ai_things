@@ -36,16 +36,15 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-LOOP 39 kernel build RUNNING
-(loop39_kbuild). If live: one status
-line STOP. If SOs in
-/mnt/vm_8tb/b70/steve-s2b/xpu-c-install:
-overlay XPU_C_SO+GDN_LIB on 44fc8fde0
-TP=2 GRAPH=1 FORCE_GRAPH, G1. Do not
-retry 44fc8fde0 python on image kernels
-(8 vs 7 int4_gemm). Do not enter Phase 2.
-Scheduler stays (29.4 < 41.2). Live
-serve is AGASYNC k=4 @122880.
+Build Steve public oneCCL 4ceafd1
+(SYCL-8 / oneAPI 2025.3) then retry
+44fc8fde0 + 2dd55f38 SO + FORCE_GRAPH
+G1. Do not retry FORCE_GRAPH on
+in-image 2021.17 (D14). Do not retry
+44fc python on image 7-arg kernels.
+Do not enter Phase 2. Scheduler stays
+(29.4 < 41.2). Live serve is AGASYNC
+k=4 @122880.
 
 ---
 
@@ -1823,3 +1822,43 @@ Restore: DD stays PARKED. AGASYNC UP.
   Lease pid 79276. kbuild left running.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19x
+
+---
+
+## LOOP 42 -- 2026-08-19T1423Z -- 44fc8fde0+SO GRAPH=1 oneCCL graph fail
+
+Picked: overlay 2dd55f38 _xpu_C+GDN on
+  44fc8fde0 TP=2 GRAPH=1 FORCE_GRAPH G1.
+Why this, not the other open row: LOOP 41
+  Next pick; kbuild DEAD exit 0 with SOs.
+GPU: lease HELD pid=90132 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  stop AGASYNC; xpu-health
+  VLLM_SRC+XPU_C_SO+GDN_LIB start
+  restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop42_*
+Result: SOs 8-arg int4. First NameError
+  MLARoPE pass; retry fuse=false compile
+  156s then allgather sycl_graph fail
+  (sched vs sycl_algorithms). No 101.922.
+  Restore G1 Paris. No DEVICE_LOST.
+Verdict: NO-GO (D14)
+Changed beliefs: 2dd55f38 SO unsticks
+  int4 ABI. In-image 2021.17 cannot
+  record allgather in SYCL graphs.
+  Steve 4ceafd1 oneCCL is the gap.
+Next pick: build oneCCL 4ceafd1 then
+  retry FORCE_GRAPH. First: Steve
+  oneccl_ll256/build-public-oneccl.sh
+  in qwen38-b70/intel/vllm (icpx 2025.3).
+Do not: retry FORCE_GRAPH on stock
+  2021.17; 44fc on 7-arg kernels; D13
+  overlay as speed; SYCL-9 nightlies;
+  int8g-v0260 INT4; fake 101.922; start
+  DD; Phase 2; overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP.
+  Lease pid 90132. SOs kept on disk.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19y
