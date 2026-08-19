@@ -36,13 +36,13 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Leftover fusedq TTFT -- prefix-cache / fusedq
-prefill A/B on the LIVE W8A8 DSpark k=4 GRAPH=1
-AGASYNC @122880 (P4.1 already has 1528->449 ms
-without fusedq). Do not start it this fire. Do
-not retry D5/D10/D11. Do not enter Phase 2.
-G5 18/18 PASS. S2c HE+ on disk. Scheduler
-01a01813e05d stays (29.4 < 41.2).
+Leftover P1.8 -- sycl-tla C1 VNNI16 / M<8 DPAS.
+First: read `kernels/SYCLTLA_SCAFFOLD.md`, then
+microbench in v0240 (no serve restart). Isolated
+1.2x with e2e drop is a packet. Do not start it
+this fire. Do not remount v0240 fusedq SO (D5).
+Do not retry D10/D11. Do not enter Phase 2.
+Scheduler 01a01813e05d stays (29.4 < 41.2).
 
 ---
 
@@ -1379,3 +1379,37 @@ Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
   serve left UP. Lease pid 33246.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19m
+
+---
+
+## LOOP 31 -- 2026-08-19T0834Z -- P1.6b fusedq TTFT skipped (D5)
+
+Picked: leftover fusedq TTFT / P1.6b
+Why this, not the other open row: LOOP 30 Next
+  pick. Last verdict GO not RUNNING.
+GPU: lease HELD both cards pid=33246. DD PARKED.
+  :18080 id qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260. No restart.
+Command:
+  ls /mnt/vm_8tb/b70/w8a8_kernel_v0260_fusedq
+  docker exec ... _xpu_C.abi3.so size
+  # G1 Paris
+Log: n/a (no GPU job)
+Result: no v0260 fusedq tree. Live SO 61125200 B
+  vs v0240 fusedq 61139960 B. D5 retry-if false.
+  Did not remount v0240 SO. G1 Paris. No c1.
+  P4.1 1528/449 stands.
+Verdict: BLOCKED (D5 retry-if)
+Changed beliefs: LOOP 26 compile-key does not
+  unlock remounting the same v0240 fusedq SO.
+  P1.6b stays closed until a v0260-ABI rebuild.
+Next pick: leftover P1.8 sycl-tla C1. First:
+  read kernels/SYCLTLA_SCAFFOLD.md, then
+  microbench in v0240. Do not start this fire.
+Do not: remount v0240 fusedq; retry D10/D11;
+  fake 101.922; start DD; enter Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease pid 33246.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19n

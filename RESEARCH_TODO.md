@@ -77,9 +77,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: leftover fusedq TTFT on live W8A8 AGASYNC.
->    G5 18/18 PASS. S2c HE+ 0.963/0.915. S2b c1 12.8.
->    D10/D11 closed. Not 101.922. 29.4 < 41.2.
+>    Next pick: leftover P1.8 sycl-tla C1 (microbench).
+>    P1.6b fusedq TTFT skipped (D5 retry-if false).
+>    G5 18/18. S2c 0.963/0.915. 29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

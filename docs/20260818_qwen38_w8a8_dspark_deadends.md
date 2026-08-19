@@ -199,6 +199,22 @@ Related JOURNAL: ### 2026-08-18v
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop17_fusedq.log
   bench loop17_bench_code_c1.log
 
+## D5 addendum -- P1.6b TTFT not unlocked -- 2026-08-19 -- LOOP 31
+
+Tried: check D5 retry-if before remounting v0240
+  fusedq SO for TTFT/PP vs P4.1 1528/449.
+Result: no `w8a8_kernel_v0260_fusedq` tree. Live
+  int8g-v0260 `_xpu_C` is 61125200 B (stock, not
+  the 61139960 B v0240 fusedq SO). Retry-if still
+  false. Did not remount. AGASYNC left up. G1 Paris.
+Why it is closed: LOOP 30 said do not retry D5.
+  Remounting the same v0240 SO is that retry.
+  Compile-key SO hash (LOOP 26) does not replace
+  the ABI rebuild condition.
+Retry if: unchanged -- fusedq rebuilt vs v0260 ABI,
+  then TTFT/PP A/B vs P4.1, not c1.
+Related JOURNAL: ### 2026-08-19n
+
 ## D6 -- xpu_shard_top1 SPEC flag is MTP-only, not DSpark -- 2026-08-18 -- LOOP 20
 
 Tried: E1 / PRE.11 once on live W8A8 DSpark k=4
