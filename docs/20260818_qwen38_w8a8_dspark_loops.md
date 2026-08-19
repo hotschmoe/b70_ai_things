@@ -36,14 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1
-on s2b+pid=host GRAPH=1 G1 (Steve
-wait_tensor diagnosis). Stop 60s after
-compile if hang. Do not set
-CCL_SYCL_ALLREDUCE_ARC=1 (Steve
-deadlock). Do not wait the hang. Do
-not retry FA. Do not retry overlay
-(D15). Do not P2P=1. Do not retry
+Host-not-docker Steve venv GRAPH=1 G1
+(D16 docker hang closed for FA/AGCUSTOM).
+Do not retry AGCUSTOM. Do not wait the
+hang. Do not ARC=1. Do not P2P=1. Do
+not retry overlay (D15). Do not retry
 FORCE_GRAPH on 2021.17 (D14). Do not
 retry GRAPH=0 as 101.922. Do not enter
 Phase 2. Scheduler stays (29.4 < 41.2).
@@ -2142,3 +2139,42 @@ Restore: DD stays PARKED. AGASYNC UP
   k=4 GRAPH=1 @122880. Lease pid 147490.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19af
+
+---
+
+## LOOP 50 -- 2026-08-19T1911Z -- AGCUSTOM GRAPH=1 hang
+
+Picked: VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1
+  on s2b+pid=host GRAPH=1 G1.
+Why this, not the other open row: LOOP 49
+  Next pick; Steve wait_tensor.
+GPU: lease pid=152886 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  stop AGASYNC; xpu-health
+  AGCUSTOM=1 CACHE=intel021_s2b_agcustom
+  IMG=s2b GRAPH=1 start; stop if hang
+  restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop50_*
+Result: env ON (unknown-VLLM warning).
+  New cache compile 156.54s then same
+  D16 hang (workers 100% CPU,
+  shm_broadcast, no /v1/models). No G1.
+  No 101.922. Restore G1 Paris. No
+  DEVICE_LOST.
+Verdict: NO-GO (D16 addendum). AGCUSTOM
+  is not the unstick.
+Changed beliefs: docker GRAPH=1 with
+  4ceafd1 still hangs after FA and
+  AGCUSTOM. Next is host-not-docker.
+Next pick: host-not-docker Steve venv
+  GRAPH=1 G1.
+Do not: retry AGCUSTOM; wait hang; FA;
+  overlay; ARC=1; P2P=1; GRAPH=0 as
+  101.922; start DD; Phase 2;
+  overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP
+  k=4 GRAPH=1 @122880. Lease pid 152886.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19ag

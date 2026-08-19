@@ -109,6 +109,11 @@ if [ "$GRAPH" = 1 ]; then
   if [ -n "${FA_DIR:-}" ]; then
     GENV+=(-e VLLM_XPU_FA2_FORCE_CHUNK_DECODE=1)
   fi
+  # LOOP 50: Steve wait_tensor bypass. Opaque all_gather custom op in compile.
+  if [ "${AGCUSTOM:-0}" = 1 ]; then
+    GENV+=(-e VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1)
+    echo "=== AGCUSTOM=1 COMPILE_ALLGATHER_CUSTOM_OP ===" >&2
+  fi
   GDOCK=(--pids-limit=-1 --ulimit nofile=1048576:1048576 --ulimit nproc=63556:63556)
   # 44fc8fde0 defaults fuse_rope_kvcache_cat_mla True but does not import
   # MLARoPEKVCacheCatFusionPass on XPU (NameError). Steve's recipe sets false.

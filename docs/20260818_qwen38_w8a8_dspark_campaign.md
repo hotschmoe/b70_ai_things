@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 49 (CCL_LOG=info; hang silent after streams) |
-| Last JOURNAL heading | `2026-08-19af` |
+| Last loop | 50 (AGCUSTOM GRAPH=1 hang) |
+| Last JOURNAL heading | `2026-08-19ag` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | COMPILE_ALLGATHER_CUSTOM_OP=1 GRAPH=1 G1 |
-| Blocked on | D16 hang; info logs no per-coll. 101.922 not measured. |
+| Next pick | Host-not-docker Steve venv GRAPH=1 G1 |
+| Blocked on | D16 docker GRAPH=1 hang. 101.922 not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

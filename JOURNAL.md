@@ -14640,3 +14640,42 @@ VERDICT -> GO on log. NO-GO 101.922.
   (29.4 < 41.2). Do not start DD. Do
   not enter Phase 2. Do not set P2P=1.
 
+### 2026-08-19ag - LOOP 50: AGCUSTOM GRAPH=1 hang
+
+CONTEXT -> LOOP 49 Next pick:
+  VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1
+  GRAPH=1 G1. Stop 60s post-compile if
+  hang. Do not ARC=1. Do not P2P=1. Do
+  not fake 101.922. Do not start DD.
+
+CONFIG -> IMG intel/vllm:0.21.0-xpu-s2b
+  BAKED=1 pid=host GRAPH=1 TP=2 MTPTOK=5
+  CACHE_NAME=intel021_s2b_agcustom
+  AGCUSTOM=1 P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  AGCUSTOM=1 CACHE_NAME=intel021_s2b_agcustom \
+    IMG=intel/vllm:0.21.0-xpu-s2b BAKED=1 \
+    GRAPH=1 start
+  restore AGASYNC k=4 GRAPH=1 @122880
+  ```
+
+RESULT -> Env ON (unknown-VLLM warning).
+  New-cache compile 156.54s. Then D16
+  hang: workers 100% CPU, shm_broadcast,
+  no /v1/models at 150s post-compile.
+  No G1. No speed. Cards healthy.
+  Restore AGASYNC HEALTHY 158s G1 Paris
+  @122880. DD PARKED. w8a8-gptq not
+  overwritten. Not 101.922.
+
+VERDICT -> NO-GO 101.922 (D16 addendum).
+  AGCUSTOM is not the docker unstick.
+  Next pick: host-not-docker Steve venv
+  GRAPH=1 G1. Scheduler stays
+  (29.4 < 41.2). Do not start DD. Do
+  not enter Phase 2. Do not set P2P=1.
+

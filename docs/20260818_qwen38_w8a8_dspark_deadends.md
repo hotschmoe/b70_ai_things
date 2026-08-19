@@ -725,3 +725,24 @@ Retry if: COMPILE_ALLGATHER_CUSTOM_OP=1
   G1s. Do not ARC=1. Do not P2P=1.
 Related JOURNAL: ### 2026-08-19af
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop49_tp2.log
+
+## D16 addendum -- AGCUSTOM same capture hang -- 2026-08-19 -- LOOP 50
+
+Tried: VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1
+  on s2b+pid=host GRAPH=1 new cache
+  intel021_s2b_agcustom. Steve wait_tensor
+  bypass.
+Command / config:
+  start_int4ar_intel021.sh AGCUSTOM=1
+Result: env seen. Compile 156.54s (new
+  cache). Then D16 hang: 100% CPU
+  workers, shm_broadcast, no /v1/models
+  at 150s post-compile. No G1. Cards
+  healthy. No DEVICE_LOST.
+Why it is closed: opaque all_gather
+  custom op is not the unstick in docker.
+Retry if: host-not-docker Steve venv
+  G1s. Do not retry AGCUSTOM on this
+  docker path. Do not ARC=1. Do not P2P=1.
+Related JOURNAL: ### 2026-08-19ag
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop50_tp2.log

@@ -75,14 +75,13 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-49: GRAPH=0 TP=2 c1 **13.4**.
-GRAPH=1 hang D16 (yield+XE poll). CCL_LOG=info:
-silent after in_order streams; ARC=0; fabric 0.
-Do not set CCL_SYCL_ALLREDUCE_ARC=1 (Steve
-deadlock). Next is
-VLLM_XPU_COMPILE_ALLGATHER_CUSTOM_OP=1.
-Gated cells: f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66;
-intel021 GRAPH=0 TP=2 c1 13.4.
+S2b status LOOP 27+36-50: GRAPH=0 TP=2 c1 **13.4**.
+GRAPH=1 hang D16. FA and AGCUSTOM
+(COMPILE_ALLGATHER_CUSTOM_OP=1) same hang
+in docker. Next is host-not-docker Steve
+venv. Gated cells: f01e24f6 TP=1 GRAPH=0
+c1 12.8 / 16.66; intel021 GRAPH=0 TP=2
+c1 13.4.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M
