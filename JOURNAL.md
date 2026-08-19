@@ -15198,3 +15198,57 @@ VERDICT -> GO. Fused MoE apply is
   emul. Do not start DD. Do not
   set P2P=1.
 
+### 2026-08-19as - LOOP 62: MTP boots via Triton map; not a speed win
+
+CONTEXT -> Operator: keep going +
+  review friend repos (citations).
+  LOOP 61 GRAPH 34.9. MTP parked
+  on emulation vs triton split.
+
+CONFIG -> same fused GRAPH recipe.
+  sitecustomize (5b) maps
+  unquantized moe_backend=emulation
+  to TritonExperts (XPUExperts
+  needs cutlass_grouped_gemm, only
+  in stock _xpu_C). PUSH_AR wired
+  into serve_nvfp4_moe_35b.sh.
+
+COMMAND ->
+  ```
+  # community clones under
+  # /mnt/vm_8tb/b70/community_repos
+  bash vllm/nvfp4/sweep_ornith_l62.sh
+  MTPTOK=3 GRAPH=0 then GRAPH=1
+  TP=2 GRAPH PUSH_AR=1 PUSH_AR_GRAPH=1
+  ```
+
+RESULT ->
+  | arm | G1 | code c1 |
+  | MTP3 eager | Paris/391 | 4.3 |
+  | MTP3 GRAPH | Paris/391 | **21.2** |
+  | no-MTP GRAPH | Paris/391 | **34.9** |
+  | TP=2 GRAPH | Paris/391 | 22.6/24.2 |
+  | TP=2 GRAPH+pushAR | Paris/391 | 22.5/23.9 |
+  5b XPU map: Using XPUExperts then
+  AttributeError cutlass_grouped_gemm
+  (overlay SO hides the stock op).
+  5b TRITON map: MTP GO. Push-AR
+  overlay loaded MIN_NUMEL=0.
+  Decode-neutral vs no-push.
+  Friend review:
+  docs/20260819_community_moe_repo_review.md
+  (llm-scaler sticky buffers + M=1
+  GEMV; cookbook draft-INT4 at
+  load_weights). No DEVICE_LOST.
+
+VERDICT -> MTP unparked, not the
+  default (21.2 < 34.9). Keep
+  GRAPH no-MTP as the 35B recipe.
+  Push-AR decode-neutral at this
+  bench; still the prefill lever.
+  Next: grouped NVFP4 / grow-only
+  workspaces (llm-scaler #505) or
+  load_weights draft-INT4. Hold
+  k1bar 31.9. Do not serve emul.
+  Do not start DD. Do not set P2P=1.
+

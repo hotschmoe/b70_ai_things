@@ -118,6 +118,35 @@ if [ "${LANGONLY:-0}" = 1 ]; then
   echo "=== LANGONLY=1 --language-model-only ==="
 fi
 
+# push-AR (TP>1 only). Same wiring as serve_nvfp4_27b.sh. Ornith hidden=2048
+# so decode numel is 8*2048=16384; PUSH_AR_GRAPH=1 uses MIN_NUMEL=0.
+PUSH_AR="${PUSH_AR:-0}"
+PUSH_AR_MOUNTS=( ); PUSH_AR_ENV=( )
+if [ "$PUSH_AR" = 1 ] && [ "$TP" != 1 ]; then
+  PUSH_AR_DIR="$REPO/vllm/contrib/vllm_push_allreduce"
+  PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-0}"
+  if [ "$PUSH_AR_GRAPH" = 1 ] && { [ "$GRAPH" != 1 ] || [ "$CGMODE" = NONE ]; }; then
+    echo "[guard] PUSH_AR_GRAPH=1 needs GRAPH=1; forcing 0" >&2
+    PUSH_AR_GRAPH=0
+  fi
+  if [ "$PUSH_AR_GRAPH" = 1 ]; then
+    _PA_SO_NAME="libxpu_push_ar_graph.so"; _PA_MIN_DEF=0
+  else
+    _PA_SO_NAME="libxpu_push_ar_torch.so"; _PA_MIN_DEF=65536
+  fi
+  PUSH_AR_SO_HOST="$PUSH_AR_DIR/prebuilt/$_PA_SO_NAME"
+  [ -f "$PUSH_AR_SO_HOST" ] || { echo "MISSING push-ar .so $PUSH_AR_SO_HOST"; exit 1; }
+  PUSH_AR_MOUNTS=( -v "$PUSH_AR_DIR:/opt/push_ar:ro" )
+  PUSH_AR_ENV=( -e PUSH_AR_PATCH=/opt/push_ar/_push_ar_patch.py
+                -e PUSH_AR_SO="/opt/push_ar/prebuilt/$_PA_SO_NAME"
+                -e PUSH_AR_DISABLE=0
+                -e PUSH_AR_GRAPH="$PUSH_AR_GRAPH"
+                -e PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-$_PA_MIN_DEF}"
+                -e PUSH_AR_MAXB="${PUSH_AR_MAXB:-134217728}" )
+  echo "=== PUSH_AR ON graph=$PUSH_AR_GRAPH so=$_PA_SO_NAME ==="
+  SERVED="${SERVED}-pushar"
+fi
+
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
 TP_ARGS=( )
@@ -136,12 +165,12 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$SHIMDIR:/opt/nvfp4_shim:ro" \
-  "${KERN_MOUNTS[@]}" "${KV_MOUNTS[@]}" \
+  "${KERN_MOUNTS[@]}" "${KV_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" -e NVFP4_MOE_W4A16_EMUL=1 \
   -e NVFP4_MOE_FUSED="$MOEFUSED" \
-  "${MGPU[@]}" "${GRAPH_ENV[@]}" \
+  "${MGPU[@]}" "${GRAPH_ENV[@]}" "${PUSH_AR_ENV[@]}" \
   $( [ -n "${B70_EXTRA_ENV:-}" ] && for kv in ${B70_EXTRA_ENV}; do printf -- '-e %s ' "$kv"; done ) \
   --entrypoint vllm "$IMG" \
   serve "$CKPT" --served-model-name "$SERVED" \

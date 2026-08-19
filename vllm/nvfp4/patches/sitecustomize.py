@@ -737,6 +737,38 @@ if os.environ.get("NVFP4_MOE_W4A16_EMUL", "0") == "1":
     except Exception as e:
         print("[nvfp4-shim] (5) MoE W4A16 emul patch failed:", repr(e), file=sys.stderr, flush=True)
 
+# ---- (5b) unquantized MTP MoE under --moe-backend emulation --------------------------------------
+# LOOP 60: NVFP4 experts require emulation; the ignored MTP MoE is unquantized and
+# map_unquantized_backend("emulation") raises. On XPU, auto-select is XPUExperts.
+# Map emulation (and auto) to that so MTP can share the same serve flag.
+if os.environ.get("NVFP4_MOE_W4A16_EMUL", "0") == "1":
+    try:
+        from vllm.model_executor.layers.fused_moe.oracle import unquantized as _uq
+
+        _orig_map_uq = _uq.map_unquantized_backend
+
+        def _map_uq_emul(runner_backend):
+            val = (
+                runner_backend.value
+                if hasattr(runner_backend, "value")
+                else runner_backend
+            )
+            if val in ("emulation", "auto"):
+                # XPUExperts needs cutlass_grouped_gemm_interface (not in
+                # our fused NVFP4 .so). TritonExperts is the XPU-proven
+                # unquantized path (int8/bf16 MoE).
+                return _uq.UnquantizedMoeBackend.TRITON
+            return _orig_map_uq(runner_backend)
+
+        _uq.map_unquantized_backend = _map_uq_emul
+        print(
+            "[nvfp4-shim] (5b) map_unquantized_backend(emulation)->TRITON installed",
+            file=sys.stderr,
+            flush=True,
+        )
+    except Exception as e:
+        print("[nvfp4-shim] (5b) unquantized map failed:", repr(e), file=sys.stderr, flush=True)
+
 
 # ---- (6) XPU mamba align-mode pointer fix -- enables --enable-prefix-caching (ported from w8a8 shelf) --
 # --enable-prefix-caching on the hybrid GDN model auto-switches vLLM's mamba KV cache to "align" mode.
