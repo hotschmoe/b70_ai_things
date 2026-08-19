@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 35 (idle: leftover queue empty; retry-if still false) |
-| Last JOURNAL heading | `2026-08-19r` |
+| Last loop | 36 (S2b nightly c48edf76: TP=2 D10, GRAPH=1 G1 FAIL) |
+| Last JOURNAL heading | `2026-08-19s` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | leftover queue empty of startable items (29.4 vs 41.2 is verify) |
-| Blocked on | 0.27 TP=2 oneCCL (D10). 101.922 cell not measured. |
+| Next pick | Steve graph-safe FA / vLLM 0.21 SYCL-8 (remaining S2b stack) |
+| Blocked on | SYCL-9 oneCCL (D10, also c48edf76). GRAPH=1 G1 on SYCL-9 nightlies (D11). 101.922 cell not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

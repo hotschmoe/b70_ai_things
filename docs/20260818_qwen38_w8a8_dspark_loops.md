@@ -36,14 +36,14 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Leftover startable queue is empty. 29.4 vs
-41.2 remains verify cost on INT8-XMX (P4.1 /
-P4.1b prefill is not the gap). Retry-if only:
-D5 v0260 fusedq, D9 INT8 barrier port, D10
-SYCL-9 oneCCL, D12 rectangular TiledMMA.
-Do not enter Phase 2. Do not retry D10/D11/
-D12 stock tiles. Scheduler stays (29.4 <
-41.2). Live serve is AGASYNC k=4 @122880.
+S2b remaining stack: Steve graph-safe FA
+/ vLLM 0.21 SYCL-8 (qwen38-b70 has icpx
+2025.3.3; FA binaries not on disk). Do
+not retry SYCL-9 nightlies without a
+SYCL-9 oneCCL. Do not overlay SYCL-8
+2021.17 on libsycl.so.9. Do not enter
+Phase 2. Scheduler stays (29.4 < 41.2).
+Live serve is AGASYNC k=4 @122880.
 
 ---
 
@@ -1573,3 +1573,52 @@ Restore: DD stays PARKED. GRAPH=1 k=4
   AGASYNC @122880 left UP. Lease pid 46901.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19r
+
+---
+
+## LOOP 36 -- 2026-08-19T1130Z -- S2b new nightly c48edf76
+
+Picked: S2b SPEED on today's public nightly
+  `c48edf76` (D10/D11 retry-if: new image).
+  One arm. Not int8g-v0260.
+Why this, not the other open row: operator
+  YOLO S2b; LOOP 27 only smoked f01e24f6;
+  leftover retry-if named a new 0.27 image.
+GPU: lease HELD pid=55697 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260.
+Command:
+  docker pull vllm/vllm-openai-xpu@sha256:c48edf76...
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  TP=2 GRAPH=1 MTPTOK=5 isolated-triton start
+  TP=1 GRAPH=1 isolated-triton start; G1
+  restore AGASYNC k=4
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop36_*
+Result: nightly is v0.26.1rc1.dev942+g5a4c8d992
+  SYCL-9 + 2021.15. TP=2 device_fd (D10).
+  TP=1 GRAPH=1 G1 garbage, accept 0 / pos0
+  0.000 (D11). No 101.922 cell. Restore G1
+  Paris. No DEVICE_LOST.
+Verdict: NO-GO on 101.922. D10+D11 addenda.
+Changed beliefs: today's nightly is not a
+  SYCL-9 oneCCL fix. Steve 2025.3 oneCCL
+  NEEDED libsycl.so.8 -- wrong ABI for these
+  nightlies. 101.922 is his 0.21 / SYCL-8
+  stack, not overlay-on-0.27.
+Next pick: Steve graph-safe FA / 0.21
+  SYCL-8 stack. First: build FA from
+  experiments/qwen27_graphsafe_flash_attention
+  inside qwen38-b70 (icpx 2025.3.3) or
+  stand up his vLLM 0.21 vehicle. Then G1
+  GRAPH=1 TP=2 on INT4-AR. Do not start
+  that build this leftover writeup.
+Do not: retry c48edf76/f01e24f6 TP=2;
+  overlay host/qwen38-b70 2021.17 on SYCL-9;
+  int8g-v0260 for INT4; fake 101.922;
+  start DD; overwrite w8a8-gptq; Phase 2.
+Restore: DD stays PARKED. GRAPH=1 k=4
+  AGASYNC @122880 left UP. Lease pid 55697.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19s

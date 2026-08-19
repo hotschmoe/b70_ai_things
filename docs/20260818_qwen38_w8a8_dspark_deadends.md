@@ -443,3 +443,54 @@ Retry if: rectangular small-M TiledMMA
   a packet.
 Related JOURNAL: ### 2026-08-19o
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop32_sycltla.log
+
+## D10 addendum -- nightly c48edf76 still 2021.15 -- 2026-08-19 -- LOOP 36
+
+Tried: S2b TP=2 GRAPH=1 on today's public
+  vllm/vllm-openai-xpu nightly
+  sha256:c48edf76bb9f6b03f952af9ecf25ee049c60d9b8800d6c627c19939462fa03d8
+  (v0.26.1rc1.dev942+g5a4c8d992, SYCL-9).
+Command / config: serve_qwen38_27b_int4ar.sh
+  TP=2 GRAPH=1 MTPTOK=5 isolated
+  TRITON_CACHE triton_c48edf76. No CCL217
+  overlay.
+Result: same ze_handle_manager.cpp:43
+  device_fd is invalid value at worker
+  all_reduce. libccl.so.1.0 209976424 B
+  NEEDED libsycl.so.9. qwen38-b70 /
+  oneAPI 2025.3.3 libccl NEEDED
+  libsycl.so.8 (Steve public oneCCL class).
+  No DEVICE_LOST. Health OK after.
+Why it is closed: a newer SYCL-9 nightly
+  is not a 2021.17+ fix. Steve 2025.3
+  oneCCL cannot overlay this ABI.
+Retry if: oneCCL rebuilt against this
+  image's libsycl.so.9, or a nightly that
+  already ships 2021.17+ NEEDED
+  libsycl.so.9. Then G1 on TP=2.
+Related JOURNAL: ### 2026-08-19s
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop36_tp2_graph1_docker.log
+
+## D11 addendum -- nightly c48edf76 GRAPH=1 G1 garbage -- 2026-08-19 -- LOOP 36
+
+Tried: same ckpt/image TP=1 GRAPH=1
+  PIECEWISE MTP5 isolated-triton.
+Command / config: serve_qwen38_27b_int4ar.sh
+  TP=1 DEVICE=0 GRAPH=1.
+Result: HEALTHY ~161s (compile 125.9s +
+  26.3s). G1 FAIL: chat Paris/391/fib
+  empty content, reasoning garbage,
+  finish_reason=length. Completions
+  garbage. accept_len 1.00 pos0 0.000.
+  No speed published. GRAPH=0 TP=1 on
+  f01e24f6 still the gated cell (12.8 /
+  16.66).
+Why it is closed: a newer SYCL-9 nightly
+  does not G1 on GRAPH=1 with this ckpt.
+Retry if: Steve graph-safe FA / his 0.21
+  SYCL-8 stack / kernels that G1 on
+  GRAPH=1 with this exact ckpt. Do not
+  republish GRAPH=1 speed after another
+  garbage G1.
+Related JOURNAL: ### 2026-08-19s
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop36_g1.jsonl

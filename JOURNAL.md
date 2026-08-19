@@ -13970,3 +13970,71 @@ VERDICT -> BLOCKED. Next pick unchanged.
   Scheduler stays (29.4 < 41.2). Do not
   start DD. Do not enter Phase 2.
 
+### 2026-08-19s - LOOP 36: S2b new nightly c48edf76 -- TP=2 D10, GRAPH=1 G1 FAIL
+
+CONTEXT -> Operator YOLO S2b. LOOP 35 leftover
+  empty. D11 retry-if is a new image /
+  Steve FA. Pulled today's public
+  vllm/vllm-openai-xpu nightly (not
+  int8g-v0260). Do not fake 101.922.
+  One arm. Do not start DD.
+
+CONFIG -> IMG
+  vllm/vllm-openai-xpu@sha256:c48edf76bb9f6b03f952af9ecf25ee049c60d9b8800d6c627c19939462fa03d8
+  (hub nightly 2026-08-19T05:25Z; vllm
+  0.26.1rc1.dev942+g5a4c8d992; torch
+  2.13.0+xpu; libsycl.so.9; libccl.so.1.0
+  209976424 B NEEDED libsycl.so.9 -- same
+  2021.15 class as f01e24f6). SERVED
+  qwen3.8-27b-W4A16-autoround-mtp5
+  MTPTOK=5 DTYPE=float16 MAXLEN=16384
+  COMPILESZ= P2PACCESS=0 isolated
+  TRITON_CACHE /vllm_cache/triton_c48edf76.
+  ckpt int4-autoround not overwritten
+  w8a8-gptq.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark bash vllm/dflash/serve_qwen38_w8a8_dspark.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260 --timeout 90
+  IMG=vllm/vllm-openai-xpu@sha256:c48edf76... \
+    TP=2 GRAPH=1 MTPTOK=5 COMPILESZ= P2PACCESS=0 \
+    B70_EXTRA_ENV=TRITON_CACHE_DIR=/vllm_cache/triton_c48edf76 \
+    ./bin/gpu-run bash vllm/w4a16/serve_qwen38_27b_int4ar.sh start
+  # then TP=1 DEVICE=0 GRAPH=1 same IMG
+  # G1 FAIL; stop; restore AGASYNC
+  ```
+
+RESULT -> TP=2: preflight health OK both
+  cards. Worker all_reduce
+  ze_handle_manager.cpp:43 device_fd is
+  invalid value (D10, same 2021.15). No
+  DEVICE_LOST. xpu-health card 0 OK after.
+  Did not overlay SYCL-8 2021.17 (closed).
+  oneAPI 2025.3 / qwen38-b70 libccl NEEDED
+  libsycl.so.8 -- cannot unstick this
+  nightly. TP=1 GRAPH=1 HEALTHY ~161s
+  after compile 125.9s+26.3s. G0 id
+  match @16384. G1 FAIL: chat Paris/391/fib
+  empty content, reasoning garbage
+  (WeIVAokinginch...), finish_reason=length.
+  Completions "The capital of France is"
+  also garbage. Spec accept_len 1.00
+  pos0 0.000 (0/50 then 0/305). No speed
+  published. Restore HEALTHY, G1 Paris
+  exact on
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880 IMG=int8g-v0260. DD PARKED.
+  w8a8-gptq not overwritten.
+
+VERDICT -> NO-GO on 101.922. New nightly
+  is not a SYCL-9 oneCCL image and GRAPH=1
+  is still incoherent (D10+D11 addenda).
+  Gated f01e24f6 TP=1 GRAPH=0 12.8 / 16.66
+  and S2c 0.963/0.915 stand. Next pick:
+  Steve graph-safe FA / 0.21 SYCL-8 stack
+  (remaining S2b stack). Do not retry
+  SYCL-9 nightlies without a SYCL-9
+  oneCCL. Scheduler stays (29.4 < 41.2).
+  Do not start DD. Do not enter Phase 2.
+
