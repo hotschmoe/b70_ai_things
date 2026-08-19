@@ -23,16 +23,16 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 53 (K1 D9 barrier port + v0260 SO) |
-| Last JOURNAL heading | `2026-08-19aj` |
+| Last loop | 54 (K1 GDN+barrier overlay c1 31.9) |
+| Last JOURNAL heading | `2026-08-19ak` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | K1 GPU A/B: overlay k1barrier SO + BARRIER=1, wipe compile hash, G1+bench vs 29.4 |
-| Blocked on | GPU lease (AGASYNC). 101.9 / D16 parked. |
+| Next pick | T1 / P1.7: capture or device-side push-AR the DSpark verify gather (D8 retry-if) |
+| Blocked on | none. 101.9 / D16 parked. Live hold is k1bar 31.9. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
-| Best W8A8 DSpark `bench_code` c1 | **29.4** k=4 GRAPH=1 ALLGATHER_ASYNC @122880 (G1 hold; was 28.7 push-AR only) |
+| Best W8A8 DSpark `bench_code` c1 | **31.9** k=4 GRAPH=1 AGASYNC+BARRIER=1 combined GDN SO @122880 (was 29.4 AGASYNC-only) |
 | Best W8A8 DSpark accept_len / pos0 | **2.46 / 0.62** (k=7 GRAPH=0); k=4 GRAPH=1 greedy 2.45 / 0.65, **prob 3.16 / 0.80** |
 | DD | PARKED. Do not start. Cards belong to this campaign. :18080 is research. |
 

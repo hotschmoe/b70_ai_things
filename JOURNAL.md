@@ -14833,3 +14833,50 @@ VERDICT -> GO (port + SO). Next pick:
   S2 101.9 scheduler deleted. Do not
   start DD. Do not enter Phase 2.
 
+### 2026-08-19ak - LOOP 54: K1 GDN+barrier c1 31.9
+
+CONTEXT -> LOOP 53 Next pick: overlay
+  k1barrier + BARRIER=1 vs 29.4. 51MB
+  SO from build_xpu_c.sh is GDN-OFF.
+  Do not mount it on 27B. Rebuild
+  combined GDN+int8 first.
+
+CONFIG -> IMG int8g-v0260 TP=2 GRAPH=1
+  SPECTOK=4 MAXLEN=122880 W8A16_M_MAX=0
+  P2PACCESS=0 PUSH_AR=1 PUSH_AR_GRAPH=1
+  PUSH_AR_ALLGATHER_ASYNC=1
+  VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1
+  GDN_SO=/mnt/vm_8tb/b70/w8a8_kernel_v0260_k1barrier/_xpu_C.abi3.so
+  GDN_LIB=.../libgdn_attn_kernels_xe_2.so
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-k1bar
+
+COMMAND ->
+  ```
+  docker run w8a8gdn_v0260_k1 int8g-v0260 \
+    GDN=ON XPU_SPECIFIC=ON (20-25 min)
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  GDN_SO=... GDN_LIB=... BARRIER=1 \
+    AGASYNC=1 GRAPH=1 SPECTOK=4 start
+  G1 Paris / 17*23 / fib
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://192.168.10.5:18080/v1 \
+    qwen3.8-27b-W8A8-gptq-dspark4-k1bar 1 256 3
+  ```
+
+RESULT -> Combined SO 61145432 B sha256
+  4ae45315. HEALTHY 198s. TORCH_WARN
+  BARRIER reached on rank0+1. AGASYNC
+  ENGAGED. G0 id match. G1 Paris / 391
+  / iterative fib. bench_code c1 avg
+  **31.9** / best **34.0** (wall 7.5s)
+  vs AGASYNC 29.4 / 33.2. No
+  DEVICE_LOST. DD PARKED.
+
+VERDICT -> GO. New hold 31.9. Next:
+  T1 capture DSpark verify gather
+  (P1.7 / D8). Optional BARRIER=0 on
+  this same SO to split getenv vs
+  rebuild. Do not overlay the 51MB
+  GDN-OFF file. Do not start DD.
+  Do not enter Phase 2. Do not set P2P=1.
+

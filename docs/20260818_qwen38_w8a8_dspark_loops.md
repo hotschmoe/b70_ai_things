@@ -36,20 +36,17 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-K1 GPU A/B: overlay
-`/mnt/vm_8tb/b70/w8a8_kernel/_xpu_C.abi3.so.k1barrier`
-+ VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1,
-wipe compile hash, G1 + bench_code vs
-29.4. Then K2 fusedq vs v0260 ABI.
-Do not overlay Steve INT4 SO. Do not
-extract s2b. Do not retry D16 / HOSTNS
-/ AGCUSTOM / FA. 101.9 parked. Do not
-enter Phase 2. Scheduler 01a01813e05d
-deleted (S2 101.9). Live serve is
-AGASYNC k=4 @122880. Later: Freaksterz
-rotation+SQ+GPTQ W8A8 vs
-on-box w8a8-gptq HE+ 0.957/0.927.
-30m 101.9 scheduler deleted.
+T1 / P1.7: put the DSpark verify
+gather on the same L0/graph path as
+push-AR (D8 retry-if: device-side
+do_ar, not host-barrier). Success
+c1 > 31.9, G1 hold, no DEVICE_LOST.
+Do not overlay the 51MB GDN-OFF
+k1barrier SO. Do not overlay Steve
+INT4. Do not retry D16 / P2P=1.
+Optional control: BARRIER=0 on the
+same combined SO to isolate getenv
+vs rebuild. Live hold is k1bar 31.9.
 
 ---
 
@@ -2295,3 +2292,47 @@ Do not: overlay Steve INT4 SO; extract
 Restore: DD PARKED. AGASYNC UP. Lease
   pid 157611. S2 scheduler deleted.
 JOURNAL: ### 2026-08-19aj
+
+---
+
+## LOOP 54 -- 2026-08-19T2051Z -- K1 GDN+barrier c1 31.9
+
+Picked: K1 GPU A/B. Loop 53 51MB SO
+  lacked gdn_attention. Rebuilt combined
+  GDN+int8+barrier vs int8g-v0260, then
+  overlay + BARRIER=1 + AGASYNC.
+Why this, not the other open row: T0
+  of the 2-card TP docket. Overlaying
+  the 51MB file would drop GDN.
+GPU: lease free after AGASYNC stop;
+  then pid 170431 docker wait. DD PARKED.
+Command:
+  docker w8a8gdn_v0260_k1 int8g-v0260
+    GDN=ON + barrier headers
+  GDN_SO=w8a8_kernel_v0260_k1barrier/_xpu_C.abi3.so
+  GDN_LIB=.../libgdn_attn_kernels_xe_2.so
+  B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1
+    VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1"
+  GRAPH=1 SPECTOK=4 MAXLEN=122880 W8A16=0
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-k1bar
+  bench_code c1 256x3
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop54_*
+Result: SO 61145432 B sha 4ae45315.
+  HEALTHY 198s. Barrier warn both ranks.
+  AGASYNC ENGAGED. G1 Paris / 391 /
+  iterative fib. c1 avg **31.9** / best
+  34.0 (wall 7.5s) vs 29.4 / 33.2.
+  No DEVICE_LOST.
+Verdict: GO
+Changed beliefs: D9 retry-if is done.
+  Combined v0260 GDN SO + BARRIER=1 is
+  the new hold. 51MB GDN-OFF file is
+  not a vLLM overlay. Win may mix
+  rebuild + getenv; BARRIER=0 isolates.
+Next pick: T1 / P1.7 capture verify
+  gather (D8 retry-if).
+Do not: overlay 51MB k1barrier; Steve
+  INT4 SO; D16; P2P=1; start DD; Phase 2.
+Restore: DD PARKED. k1bar UP @122880.
+  Lease pid 170431.
+JOURNAL: ### 2026-08-19ak

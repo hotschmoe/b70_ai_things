@@ -341,6 +341,32 @@ Retry if: port INT8 completion-barrier (and
   Steve's INT4-AR SO (wrong scheme / ABI).
 Related JOURNAL: ### 2026-08-19f
 
+## D9 addendum -- retry-if fired, c1 31.9 -- 2026-08-19 -- LOOP 54
+
+Tried: LOOP 53 51MB SO was GDN-OFF
+  (build_xpu_c.sh). Rebuilt combined
+  GDN+int8+barrier vs int8g-v0260
+  (~61 MB). Overlay + BARRIER=1 +
+  AGASYNC. Compile key includes SO sha.
+Command / config:
+  GDN_SO=w8a8_kernel_v0260_k1barrier/_xpu_C.abi3.so
+  GDN_LIB=.../libgdn_attn_kernels_xe_2.so
+  B70_EXTRA_ENV="PUSH_AR_ALLGATHER_ASYNC=1
+    VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1"
+  GRAPH=1 SPECTOK=4 MAXLEN=122880 W8A16=0
+Result: HEALTHY 198s. Barrier warn on
+  both ranks. AGASYNC ENGAGED. G1 Paris
+  / 391 / iterative fib. bench_code c1
+  avg **31.9** / best 34.0 vs 29.4 / 33.2.
+  No DEVICE_LOST.
+Why it is closed: retry-if complete.
+  Combined rebuild + BARRIER=1 is a
+  decode win. Do not overlay the 51MB
+  GDN-OFF file. Isolate getenv vs
+  rebuild only with BARRIER=0 on this
+  same SO (optional).
+Related JOURNAL: ### 2026-08-19ak
+
 ## D3 addendum -- compile-key landed -- 2026-08-19 -- LOOP 26
 
 Tried: put SPECTOK + mounted _xpu_C / GDN SO in
