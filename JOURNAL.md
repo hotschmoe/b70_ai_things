@@ -14921,3 +14921,41 @@ VERDICT -> NO-GO (D17). DSpark verify
   the 31.9 SO, not another gather env.
   Do not start DD. Do not set P2P=1.
 
+### 2026-08-19am - LOOP 56: BARRIER=0 is 27.8; getenv is the 31.9 win
+
+CONTEXT -> LOOP 55 Next pick: BARRIER=0
+  on the same combined GDN SO. Compile
+  key now includes the barrier env so
+  we do not replay BARRIER=1 graphs.
+
+CONFIG -> IMG int8g-v0260 TP=2 GRAPH=1
+  SPECTOK=4 MAXLEN=122880 W8A16=0
+  P2PACCESS=0 AGASYNC=1
+  VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=0
+  same GDN_SO k1barrier combined
+  SERVED=...-dspark4-k1bar-nobar
+
+COMMAND ->
+  ```
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  BARRIER=0 AGASYNC=1 GRAPH=1 k=4 start
+  G1 Paris / 17*23 / fib
+  bench_code c1 256x3
+  restore BARRIER=1 k1bar
+  ```
+
+RESULT -> HEALTHY 152s. Barrier reached
+  **0**. G1 Paris / 391 / iterative fib.
+  c1 avg **27.8** / best 30.3 (wall 9.9s)
+  vs BARRIER=1 **31.9** / 34.0 vs old
+  v0240 AGASYNC 29.4 / 33.2. Restore
+  BARRIER=1 HEALTHY 142s Paris OK;
+  barrier warn on both ranks. No
+  DEVICE_LOST. DD PARKED.
+
+VERDICT -> GO (isolation). Keep
+  BARRIER=1 on the hold. Rebuild
+  alone is not the speedup. Next: K2
+  fusedq TTFT/PP. Do not start DD.
+  Do not set P2P=1.
+

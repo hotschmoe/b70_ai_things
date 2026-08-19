@@ -36,13 +36,12 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-BARRIER=0 A/B on the same combined
-GDN SO (isolate getenv vs rebuild).
-Do not retry ALLGATHER_GRAPH as an
-env-only fire (D17: 0 graph fires,
-c1 27.9). Capturing DSpark verify
-needs moving the gather into the
-piecewise graph, not another flag.
+K2 fusedq TTFT/PP on the v0260
+combined GDN SO (D5 retry-if). Keep
+BARRIER=1 (LOOP 56: getenv is the
+31.9 win). Do not retry BARRIER=0
+as a hold. Do not retry
+ALLGATHER_GRAPH env-only (D17).
 Do not overlay 51MB GDN-OFF SO.
 Do not P2P=1 / D16. Live hold k1bar
 31.9.
@@ -2368,3 +2367,39 @@ Do not: retry ALLGATHER_GRAPH env-only;
 Restore: DD PARKED. k1bar UP. Lease
   pid 175724.
 JOURNAL: ### 2026-08-19al
+
+---
+
+## LOOP 56 -- 2026-08-19T2119Z -- BARRIER=0 c1 27.8
+
+Picked: BARRIER=0 on the same combined
+  GDN SO. Isolate getenv vs rebuild.
+Why this, not the other open row:
+  LOOP 55 Next pick.
+GPU: lease pid 180789 after restore.
+  DD PARKED.
+Command:
+  same GDN SO AGASYNC GRAPH=1 k=4
+  VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=0
+  compile key includes barrier env
+  G1 + bench_code 256x3
+  restore BARRIER=1 k1bar
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop56_*
+Result: HEALTHY 152s. Barrier reached
+  count **0**. G1 Paris / 391 / fib.
+  c1 avg **27.8** / best 30.3 vs
+  BARRIER=1 **31.9** / 34.0 and vs
+  old v0240 AGASYNC 29.4. Restore
+  BARRIER=1 HEALTHY 142s Paris OK.
+  Barrier reached count 2 (both ranks).
+Verdict: GO (isolation). Keep BARRIER=1.
+Changed beliefs: the 31.9 win is the
+  getenv, not the rebuild. Combined SO
+  with BARRIER=0 is slightly slower
+  than the June v0240 29.4.
+Next pick: K2 fusedq TTFT/PP (D5).
+Do not: BARRIER=0 as hold; ALLGATHER_GRAPH
+  env; 51MB SO; P2P=1; D16; start DD.
+Restore: DD PARKED. k1bar BARRIER=1 UP.
+  Lease pid 180789.
+JOURNAL: ### 2026-08-19am

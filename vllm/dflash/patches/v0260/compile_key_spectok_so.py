@@ -76,6 +76,11 @@ def install() -> bool:
         # a oneCCL-gather cache when ALLGATHER_GRAPH flips.
         d["b70_ag_graph"] = os.environ.get("PUSH_AR_ALLGATHER_GRAPH", "0")
         d["b70_ag_async"] = os.environ.get("PUSH_AR_ALLGATHER_ASYNC", "0")
+        # Barrier is recorded into the GEMM op during capture; must not
+        # reuse a BARRIER=1 graph when the getenv is off.
+        d["b70_int8_barrier"] = os.environ.get(
+            "VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER", "0"
+        )
         return d
 
     SpeculativeConfig.compute_hash = _spec_hash  # type: ignore[method-assign]

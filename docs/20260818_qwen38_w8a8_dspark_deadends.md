@@ -399,6 +399,18 @@ Retry if: DSpark/MTP verify all_gather
   can fire. Do not retry the env alone.
 Related JOURNAL: ### 2026-08-19al
 
+## D9 addendum -- BARRIER=0 isolation -- 2026-08-19 -- LOOP 56
+
+Tried: same combined GDN+int8 SO as
+  LOOP 54, BARRIER=0 vs BARRIER=1.
+Result: BARRIER=0 c1 **27.8** / 30.3;
+  BARRIER=1 **31.9** / 34.0. Reached
+  count 0 vs 2. G1 holds both.
+Why it is closed: getenv is the 31.9
+  win. Rebuild without BARRIER=1 is
+  not a hold. Keep BARRIER=1.
+Related JOURNAL: ### 2026-08-19am
+
 ## D3 addendum -- compile-key landed -- 2026-08-19 -- LOOP 26
 
 Tried: put SPECTOK + mounted _xpu_C / GDN SO in

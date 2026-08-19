@@ -23,12 +23,12 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 55 (T1 ALLGATHER_GRAPH c1 27.9, restored 31.9) |
-| Last JOURNAL heading | `2026-08-19al` |
+| Last loop | 56 (BARRIER=0 c1 27.8; getenv is the 31.9 win) |
+| Last JOURNAL heading | `2026-08-19am` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | BARRIER=0 control on the same combined SO (isolate getenv vs rebuild) OR profile DSpark verify (gather is eager, not in-graph) |
-| Blocked on | DSpark verify gather never sees is_capturing(); T1 env is default-off. 101.9 / D16 parked. |
+| Next pick | K2 fusedq TTFT/PP A/B on this v0260 combined SO (D5 retry-if; decode already lost on v0240) |
+| Blocked on | none. BARRIER=1 stays on. 101.9 / D16 / D17 parked. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
