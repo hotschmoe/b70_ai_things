@@ -36,16 +36,12 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-S2c finish -- HE+ 164 RUNNING (pid 28816).
-First: `ps -p 28816`. Live -> one status line, STOP.
-Dead -> read plus from
-`evals/results/20260819T063444Z__qwen3.8-27b-W4A16-autoround-mtp5__W4A16-autoround-mtp5`
-and loop28_heplus.log. Compare to W8A8 0.957/0.927
-and Q4_K_M 0.970/0.927. Fail lists (base misses).
-Then restore W8A8 AGASYNC unless plus < 0.90
-(quality only) or Next pick still needs INT4.
-Do not start a sibling HE+. Do not retry D10/D11.
-Scheduler 01a01813e05d stays.
+Leftover G5 -- 18/18 concurrent coherence on the
+LIVE W8A8 DSpark k=4 GRAPH=1 AGASYNC @122880
+(`qwen3.8-27b-W8A8-gptq-dspark4-agasync`). Do not
+start it this fire. Do not retry D10/D11. Do not
+enter Phase 2. S2c HE+ is on disk (0.963/0.915).
+Scheduler 01a01813e05d stays (29.4 < 41.2).
 
 ---
 
@@ -1299,3 +1295,50 @@ Restore: DD stays PARKED. INT4 GRAPH=0 serve
   left UP. Lease card 0 pid 28261.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19k
+
+---
+
+## LOOP 29 -- 2026-08-19T0743Z -- S2c HE+ 0.963/0.915 + restore AGASYNC
+
+Picked: S2c finish (pid 28816 dead) + restore
+  W8A8 AGASYNC
+Why this, not the other open row: LOOP 28
+  Verdict RUNNING; plus is now on disk.
+GPU: after restore, lease HELD both cards
+  pid=33246 docker wait qwen38_w8a8_dspark.
+  DD PARKED. :18080 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync @122880
+  IMG=int8g-v0260. P2PACCESS=0.
+Command:
+  ps -p 28816  # GONE
+  cat .../summary.json  # 0.963 / 0.915
+  NAME=qwen38_int4ar ... stop
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+    W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 MAXLEN=122880
+    SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop28_heplus.log
+  restore: loop29_restore.log
+  result:
+    evals/results/20260819T063444Z__qwen3.8-27b-W4A16-autoround-mtp5__W4A16-autoround-mtp5
+Result: HE+ 164/164 thinking-off greedy seed=1234.
+  pass@1 base **0.963** plus **0.915** (gen 2403s,
+  eval 41s). vs W8A8 0.957/0.927 and Q4_K_M
+  0.970/0.927. Base misses: 32, 91, 95, 116,
+  140, 145. Plus-only: 39, 76, 97, 125, 141,
+  151, 154, 163. plus 0.915 >= 0.90. Restore
+  HEALTHY 229s, G1 Paris exact. No DEVICE_LOST.
+Verdict: GO (S2c). S2 quality arm closed.
+Changed beliefs: AutoRound INT4-AR 3.8 is a
+  quality-ok W4A16 (base beats W8A8, plus 1.2
+  pts under). Not a 101.922 vehicle on 0.27
+  (D10/D11). Do not requant A.2-A.4 from this.
+Next pick: leftover G5 18/18 on this live
+  AGASYNC. Do not start G5 this fire.
+Do not: retry D10/D11; fake 101.922; start DD;
+  overwrite w8a8-gptq; enter Phase 2; start
+  INT4 again unless operator YOLO.
+Restore: DD stays PARKED. GRAPH=1 k=4 AGASYNC
+  serve left UP. Lease pid 33246.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19l

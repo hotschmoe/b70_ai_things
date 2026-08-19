@@ -13692,3 +13692,55 @@ VERDICT -> RUNNING. Next fire: if `ps -p 28816`
   or D10/D11. Do not start DD. Scheduler
   stays (29.4 < 41.2; S2c HE+ not on disk).
 
+### 2026-08-19l - LOOP 29: S2c HE+ 0.963/0.915; restore AGASYNC
+
+CONTEXT -> LOOP 28 Verdict RUNNING. Next pick:
+  if pid 28816 live, STOP; if done, write plus
+  vs 0.957/0.927 + fail lists, restore W8A8
+  AGASYNC unless plus < 0.90. Do not retry
+  D10/D11. Do not start DD.
+
+CONFIG -> HE+ same as LOOP 28: GRAPH=0 TP=1
+  MTP5 MAXLEN=16384 SERVED
+  qwen3.8-27b-W4A16-autoround-mtp5 IMG=f01e24f6
+  thinking-off greedy seed=1234 limit=164
+  sandbox evalplus-sandbox:0.3.1.
+  Restore: GRAPH=1 SPECTOK=4 MAXLEN=122880
+  SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1
+  IMG=int8g-v0260 P2PACCESS=0.
+
+COMMAND ->
+  ```
+  ps -p 28816  # GONE
+  cat evals/results/20260819T063444Z__qwen3.8-27b-W4A16-autoround-mtp5__W4A16-autoround-mtp5/summary.json
+  NAME=qwen38_int4ar bash vllm/w4a16/serve_qwen38_27b_int4ar.sh stop
+  ./bin/gpu-run --card 0 ./bin/xpu-health --card 0 --img vllm-xpu-env:int8g-v0260 --timeout 90
+  B70_EXTRA_ENV=PUSH_AR_ALLGATHER_ASYNC=1 W8A16_M_MAX=0 GRAPH=1 SPECTOK=4 \
+    MAXLEN=122880 SERVED=qwen3.8-27b-W8A8-gptq-dspark4-agasync \
+    PORT=18080 NAME=qwen38_w8a8_dspark \
+    ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start
+  ```
+
+RESULT -> pid 28816 DEAD. generated 164/164,
+  sanitize + sandbox. pass@1 base **0.963**
+  plus **0.915** (gen 2403s, eval 41s). vs
+  W8A8 **0.957 / 0.927** and Q4_K_M **0.970 /
+  0.927**. Gate plus >= 0.90 PASSES. Base
+  beats W8A8 (+0.6 pt), plus 1.2 pts under.
+  Base misses: HumanEval/32, 91, 95, 116,
+  140, 145. Plus-only misses: 39, 76, 97,
+  125, 141, 151, 154, 163. Shared base with
+  W8A8: 32, 95, 145. INT4-only base: 91,
+  116, 140. W8A8-only base: 115, 132, 134,
+  94. Restore HEALTHY 229s. G0 id
+  qwen3.8-27b-W8A8-gptq-dspark4-agasync
+  @122880. G1 Paris exact. No DEVICE_LOST.
+  w8a8-gptq not overwritten. DD PARKED.
+
+VERDICT -> GO (S2c). S2 quality closed. Next
+  pick leftover G5 18/18 on this live
+  AGASYNC. Do not start G5 this fire. Do
+  not retry D10/D11. Scheduler stays
+  (29.4 < 41.2). Do not start DD.
+

@@ -23,13 +23,14 @@ lock. The lock is Phase 0, not the ceiling.
 
 | field | value |
 |---|---|
-| Last loop | 28 (S2c HE+ STARTED on live INT4-AR GRAPH=0 TP=1) |
-| Last JOURNAL heading | `2026-08-19k` |
+| Last loop | 29 (S2c HE+ 0.963/0.915; W8A8 AGASYNC restored) |
+| Last JOURNAL heading | `2026-08-19l` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | S2c finish: if pid 28816 live, status only. Dead -> write plus vs 0.957/0.927 |
+| Next pick | leftover G5 18/18 on live AGASYNC (do not start this fire) |
 | Blocked on | 0.27 TP=2 oneCCL (D10). 101.922 cell not measured. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
+| HE+ (W4A16-autoround) | **0.963 / 0.915** (GRAPH=0 TP=1 MTP5 @16384, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |
 | Best W8A8 DSpark `bench_code` c1 | **29.4** k=4 GRAPH=1 ALLGATHER_ASYNC @122880 (G1 hold; was 28.7 push-AR only) |
 | Best W8A8 DSpark accept_len / pos0 | **2.46 / 0.62** (k=7 GRAPH=0); k=4 GRAPH=1 greedy 2.45 / 0.65, **prob 3.16 / 0.80** |

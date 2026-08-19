@@ -77,9 +77,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: S2c HE+ RUNNING pid 28816. Finish plus vs
->    0.957/0.927. S2b gated c1 12.8 / after-TTFT 16.66.
->    D10 TP=2 / D11 GRAPH=1 stay closed. Not 101.922.
+>    Next pick: leftover G5 18/18 on live W8A8 AGASYNC.
+>    S2c HE+ 0.963/0.915 on disk. S2b c1 12.8 / TTFT 16.66.
+>    D10/D11 closed. Not 101.922. 29.4 < 41.2.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,
