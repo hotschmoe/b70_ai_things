@@ -37,15 +37,15 @@ JOURNAL:
 ## NEXT PICK (keep this line true)
 
 compile-key SPECTOK+SO (leftover after E3 D9).
-No GPU. Hash b3f7e9e010 ignores SPECTOK and
-mounted _xpu_C (D2/D3/D5/D7). First: find the
-v0260 torch.compile cache key, add SPECTOK +
-SO identity, do not restart this fire. Do not
-set unused VLLM_XPU_ONEDNN_INT* env. Do not
-start P4.2 / S2 / train / Phase 2 / DD /
-barrier kernel port unless that is the named
-pick. D9-D4 stand. Scheduler 01a01813e05d
-stays (c1 29.4 < 41.2).
+No GPU this fire. After that: S2 3.8 INT4-AR
+(`docs/20260819_steve_qwen38_int4ar.md`).
+Download already started (pid in
+`/mnt/vm_8tb/b70/qwen38-w8a8-dspark/s2_hf_download.pid`).
+S2a if still fetching; S2b speed (G1 + bench_code
++ after-TTFT toward 101.9); S2c HE+ 164 vs W8A8
+0.957/0.927. One arm per fire. Do not start S2
+this compile-key fire. D9-D4 stand. Scheduler
+01a01813e05d stays (c1 29.4 < 41.2).
 
 ---
 

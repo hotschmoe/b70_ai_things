@@ -77,9 +77,9 @@
 >    Plan: `docs/20260818_qwen38_w8a8_dspark_campaign.md` (section L).
 >    Ledger: `docs/20260818_qwen38_w8a8_dspark_loops.md`.
 >    Dead-ends: `docs/20260818_qwen38_w8a8_dspark_deadends.md`.
->    Next pick: compile-key SPECTOK+SO (no GPU). E3 DEAD-END
->    (D9): VLLM_XPU_ONEDNN_INT* is Steve-kernel getenv, absent
->    from int8g-v0260. AGASYNC 29.4 stands. Phase 2 stays closed.
+>    Next pick: compile-key leftover, then S2 3.8 INT4-AR
+>    (devan-carlin download started; speed toward 101.9 +
+>    HE+ vs W8A8 0.957/0.927). AGASYNC 29.4 stands.
 
 > ### [FOCUS UPDATE 2026-06-23] -- research format policy
 > - **Use compressed-tensors for research artifacts across schemes and models.** W8A8, W4A8, W4A16, TP=2, PP=2,

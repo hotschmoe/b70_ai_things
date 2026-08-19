@@ -180,3 +180,17 @@ models:
     notes: "P0.5 identity. Same grafted W8A8-gptq on sglang 0.5.15
       (sglang-xpu:mtp-0515) + NEXTN steps=10. Do not score as vLLM
       DSpark/MTP3 or hotschmoe-dd. Smoke = loads + Paris."
+
+  - label: qwen38-27b-w4a16-autoround-mtp5
+    served_model_id: qwen3.8-27b-W4A16-autoround-mtp5
+    family: qwen3.8-27b
+    weights: int4
+    activations: fp16
+    calibration: autoround
+    serve_cmd: "TP=2 PORT=18080 NAME=qwen38_int4ar MTPTOK=5 GRAPH=1 SERVED=qwen3.8-27b-W4A16-autoround-mtp5 ./bin/gpu-run bash vllm/w4a16/serve_qwen38_27b_int4ar.sh start"
+    notes: "S2 identity. Steve-lab pin
+      models/files/qwen3.8-27b/int4-autoround
+      (devan-carlin/Qwen3.8-27B-int4-AutoRound rev bce40cac).
+      Speed: try after-TTFT toward 101.922; also bench_code c1 vs W8A8 29.4.
+      Quality: HE+ 164 thinking-off greedy vs W8A8 0.957/0.927.
+      Do not score as W8A8 or SergiioB GPTQ-Int4."

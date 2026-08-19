@@ -24,10 +24,10 @@ lock. The lock is Phase 0, not the ceiling.
 | field | value |
 |---|---|
 | Last loop | 25 (DEAD-END E3 oneDNN barrier env no-op; D9) |
-| Last JOURNAL heading | `2026-08-19f` |
+| Last JOURNAL heading | `2026-08-19g` |
 | Loop ledger | `docs/20260818_qwen38_w8a8_dspark_loops.md` |
 | Dead-ends | `docs/20260818_qwen38_w8a8_dspark_deadends.md` |
-| Next pick | compile-key SPECTOK+SO (leftover; no GPU) |
+| Next pick | compile-key SPECTOK+SO (no GPU), then S2 INT4-AR download/speed/HE+ |
 | Blocked on | none. E3 env A/B closed; kernel port is Retry-if. |
 | HE+ (W8A8-gptq) | **0.957 / 0.927** (GRAPH=0 MTP3 @131k, thinking-off greedy) |
 | Best W8A8 `bench_code` c1 | 26.62 MTP3 @131k (pre-campaign, JOURNAL 2026-08-15c) |

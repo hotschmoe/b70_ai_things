@@ -240,6 +240,24 @@ models:
            Inferact was the first coherent 3.8 NVFP4; prefer nvfp4-radixark
            for new serves. Do not promote.
 
+  - id: qwen3.8-27b/int4-autoround
+    family: qwen3.8-27b
+    scheme: int4-autoround
+    vision: true
+    mtp: true
+    size_gb: 19
+    served_as: qwen3.8-27b-W4A16-autoround / -mtp5
+    source:
+      type: hf
+      repo: devan-carlin/Qwen3.8-27B-int4-AutoRound
+      revision: bce40cacab0a4535b92fb3d57615c2bea9adf3d1
+    notes: >
+      Steve-lab 3.8 INT4-AR pin (2026-08-19). 19.02 GB, auto-round 4/128,
+      MTP tensors included. fetch.sh does not honor source.revision --
+      download with hf --revision. S2 speed+HE+ vs W8A8 0.957/0.927.
+      101.922 is his after-TTFT MTP5 on a pinned compile cache + unpublished
+      AOT FA -- do not expect that cell on int8g-v0260.
+
   - id: community/qwen38-27b-gptq-mtp-preserved
     family: qwen3.8-27b
     scheme: gptq-int4-mtp-bf16

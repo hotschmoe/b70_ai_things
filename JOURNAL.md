@@ -13473,3 +13473,33 @@ VERDICT -> DEAD-END (D9). Env A/B cannot
   Scheduler stays (29.4 < 41.2).
   Do not displace sglang/vLLM W8A8.
 
+### 2026-08-19g - operator: schedule S2 3.8 INT4-AR speed+HE+
+
+CONTEXT -> Operator: download 3.8 AutoRound INT4, try
+  to hit Steve's 100 tok/s, and measure HE+ vs W8A8
+  0.957/0.927. Compile-key leftover stays first.
+
+CONFIG -> ckpt
+  devan-carlin/Qwen3.8-27B-int4-AutoRound
+  rev bce40cacab0a4535b92fb3d57615c2bea9adf3d1
+  dest models/files/qwen3.8-27b/int4-autoround
+  served id qwen3.8-27b-W4A16-autoround-mtp5
+
+COMMAND ->
+  ```
+  hf download devan-carlin/Qwen3.8-27B-int4-AutoRound \
+    --revision bce40cacab0a4535b92fb3d57615c2bea9adf3d1 \
+    --local-dir models/files/qwen3.8-27b/int4-autoround
+  # pid /mnt/vm_8tb/b70/qwen38-w8a8-dspark/s2_hf_download.pid
+  ```
+
+RESULT -> Download started (no GPU, ~2 GB in first
+  minute of ~19 GB). Manifest + evals yaml + S2
+  protocol in docs/20260819_steve_qwen38_int4ar.md.
+  Scheduler 01a01813e05d: S2a fetch / S2b speed /
+  S2c HE+. 101.922 needs unpublished AOT FA --
+  try, do not fake.
+
+VERDICT -> GO (steer). Next GPU after compile-key
+  is S2. Do not start INT4 this note.
+

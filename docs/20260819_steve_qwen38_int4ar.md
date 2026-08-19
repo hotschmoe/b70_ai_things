@@ -4,9 +4,10 @@
 **Repo:** https://github.com/steveseguin/b70-optimization-lab
 **HEAD at ingest:** `924b518` (2026-08-19T03:04Z)
 
-Not a GPU loop. Do not start this recipe while the W8A8 speed window
-is on. Queue as **S2** after P4.1 (and after any remaining W8A8 D/E
-notes the living header still names).
+Operator 2026-08-19: S2 is now a real two-arm pick (speed + HE+).
+Download started to `models/files/qwen3.8-27b/int4-autoround`.
+Do not steal the current compile-key leftover. After that pick,
+S2a (if download still live) then S2b speed then S2c HE+.
 
 ## What he published
 
@@ -46,6 +47,36 @@ identity. Do not photocopy it onto W8A8.
 He also notes SergiioB GPTQ-Int4 failed a code canary (30 vs 14) so
 he does not promote that checkpoint. Our S1 was a speed smoke, not
 that canary.
+
+## S2 protocol (operator 2026-08-19)
+
+Checkpoint: `devan-carlin/Qwen3.8-27B-int4-AutoRound`
+rev `bce40cacab0a4535b92fb3d57615c2bea9adf3d1` (~19.02 GB).
+Dir: `models/files/qwen3.8-27b/int4-autoround`.
+Download log/pid: `/mnt/vm_8tb/b70/qwen38-w8a8-dspark/s2_hf_download.{log,pid}`.
+
+Served ids:
+- `qwen3.8-27b-W4A16-autoround-mtp5` (speed)
+- same id for HE+ (do not score as W8A8)
+
+**S2a** -- if `ps -p $(cat s2_hf_download.pid)` is live, one line STOP.
+When dead, confirm ~19 GB + config.json `quant_method: auto-round`.
+
+**S2b speed** -- stop W8A8 AGASYNC. Serve TP=2 MTP5 GRAPH=1 closest
+clone of `rdy_to_serve/vllm/qwen36-27b-int4/serve.sh` (new script
+under `vllm/`, do not rewrite the 3.6 one). G1 first. Then
+`bench_code` c1 AND a `phase_bench` after-TTFT cell. Honest bar:
+101.922 needs his unpublished 3.1 GB AOT FA + vLLM `44fc8fde` +
+pinned compile cache + oneDNN INT4 barriers. On `int8g-v0260` we
+try; we do not fake the cell. If G1 dies, revert W8A8, packet.
+
+**S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
+same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M
+**0.970 / 0.927**. Fail lists matter (base misses, not just plus).
+Steve has no 3.8 INT4-AR HE+ yet -- this is new. Then restore
+W8A8 AGASYNC unless Next pick still needs INT4.
+
+Do not overwrite w8a8-gptq. Do not start DD. One fire = one arm.
 
 ## Steal later (not this fire)
 
