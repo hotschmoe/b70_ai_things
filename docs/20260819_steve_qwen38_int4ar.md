@@ -75,13 +75,16 @@ the next stack (0.27 -> Steve kernels -> new image), then
 packet only if all three fail. Do not quietly fall back
 to int8g-v0260.
 
-S2b status LOOP 27+36-45: 2dd55f38 SO built. 44fc+SO
+S2b status LOOP 27+36-46: 2dd55f38 SO built. 44fc+SO
 FORCE_GRAPH + in-image 2021.17 = D14 sycl_graph
 allgather. Rebuilt 4ceafd1 overlay = D15 device_fd.
 GRAPH=0 TP=2 44fc+SO+2021.17 G1 PASS, bench_code c1
 **13.4** (vs TP=1 GRAPH=0 12.8). phase_bench OOR 40
-n_ok=2/5 -- no after-TTFT cell. Not 101.922. Next is
-in-image 4ceafd1+kernels (not overlay) then GRAPH=1.
+n_ok=2/5 -- no after-TTFT cell. LOOP 46 baked
+intel/vllm:0.21.0-xpu-s2b (4ceafd1+kernels+44fc).
+Bake without pid=host = same device_fd. pid=host
+loads TP=2 then GRAPH=1 capture hang (D16). Not
+101.922. Next is Steve graph-safe FA on s2b+pid=host.
 Gated cells: f01e24f6 TP=1 GRAPH=0 c1 12.8 / 16.66;
 intel021 GRAPH=0 TP=2 c1 13.4.
 

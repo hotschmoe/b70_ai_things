@@ -36,14 +36,16 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-CPU in-image Steve stack (bake 4ceafd1
-+ 2dd55f38, not bind overlay) then
-GRAPH=1 TP=2 G1. Leave AGASYNC up.
-Do not retry 4ceafd1 overlay (D15).
+Steve graph-safe FA on baked
+intel/vllm:0.21.0-xpu-s2b + pid=host
+GRAPH=1 TP=2 G1. Do not retry 4ceafd1
+overlay (D15). Do not retry bake without
+pid=host (device_fd). Do not wait out
+the same GRAPH=1 capture hang (D16).
 Do not retry FORCE_GRAPH on in-image
 2021.17 (D14). Do not retry GRAPH=0
-TP=2 as a 101.922 cell (c1 13.4).
-Do not enter Phase 2. Scheduler stays
+as a 101.922 cell (c1 13.4). Do not
+enter Phase 2. Scheduler stays
 (29.4 < 41.2). Live serve is AGASYNC
 k=4 @122880.
 
@@ -1971,3 +1973,50 @@ Restore: DD stays PARKED. AGASYNC UP.
   Lease pid 115282. SOs kept on disk.
   No daily_driver_serve.sh start.
 JOURNAL: ### 2026-08-19ab
+
+---
+
+## LOOP 46 -- 2026-08-19T1643Z -- in-image s2b pid=host GRAPH=1 hang
+
+Picked: bake 4ceafd1+2dd55f38+44fc into
+  intel/vllm:0.21.0-xpu-s2b (CPU), then
+  GRAPH=1 TP=2 G1. No bind overlay.
+Why this, not the other open row: LOOP 45
+  Next pick. D15 closed overlay.
+GPU: lease pid=128045 docker wait
+  qwen38_w8a8_dspark after restore. DD
+  PARKED. :18080 AGASYNC @122880.
+Command:
+  bash vllm/w4a16/bake_intel021_s2b.sh
+  stop AGASYNC; xpu-health
+  IMG=intel/vllm:0.21.0-xpu-s2b BAKED=1
+  GRAPH=1 TP=2 start; then pid=host retry
+  restore AGASYNC
+Log: /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop46_*
+Result: bake OK (tag s2b). First GRAPH=1
+  device_fd (pidfd unsupported -> drmfd).
+  pid=host+seccomp unconfined: TP=2 loads,
+  compile 154s, then capture hang 18+ min
+  (workers 100% CPU, no new logs). No G1.
+  No 101.922. Restore G1 Paris.
+  No DEVICE_LOST.
+Verdict: NO-GO (101.922). D15 retry-if
+  consumed (pid=host). D16 capture hang.
+Changed beliefs: 4ceafd1 in docker needs
+  --pid=host --security-opt
+  seccomp=unconfined. Bake != overlay
+  does not fix device_fd. GRAPH=1 with
+  4ceafd1 still does not reach G1.
+Next pick: Steve graph-safe FA on baked
+  s2b+pid=host GRAPH=1 G1.
+Do not: retry overlay; bake without
+  pid=host; wait out same hang; FORCE_GRAPH
+  on 2021.17; GRAPH=0 as 101.922; D13
+  overlay as speed; SYCL-9 nightlies;
+  int8g-v0260 INT4; fake 101.922; start
+  DD; Phase 2; overwrite w8a8-gptq.
+Restore: DD stays PARKED. AGASYNC UP
+  k=4 GRAPH=1 @122880. Lease pid 128045.
+  Image intel/vllm:0.21.0-xpu-s2b kept.
+  No daily_driver_serve.sh start.
+JOURNAL: ### 2026-08-19ac

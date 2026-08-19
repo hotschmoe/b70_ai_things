@@ -599,3 +599,50 @@ Retry if: 4ceafd1 loads TP=2 (DRM/ze
   device_fd fixed) then G1 on GRAPH=1.
 Related JOURNAL: ### 2026-08-19aa
   log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop44_tp2.log
+
+## D15 addendum -- bake still device_fd; pid=host loads TP=2 -- 2026-08-19 -- LOOP 46
+
+Tried: in-image copy of 4ceafd1 onto
+  torch RPATH /opt/venv/lib plus
+  2021.17 so.1 and /opt/ccl4ce,
+  2dd55f38 SOs, 44fc tree. Tag
+  intel/vllm:0.21.0-xpu-s2b. Same
+  docker --device /dev/dri as LOOP 45.
+Result: first GRAPH=1: "pidfd is not
+  supported, fallbacks to drmfd" then
+  device_fd invalid (same as overlay).
+  --pid=host --security-opt
+  seccomp=unconfined: no pidfd warning,
+  workers init, torch.compile 154s.
+Why it is closed: bake vs bind is not
+  the IPC gap. Docker default pid/seccomp
+  is. Overlay retry still closed.
+Retry if: none for overlay. GRAPH=1 after
+  TP=2 load is D16.
+Related JOURNAL: ### 2026-08-19ac
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop46_tp2.log
+
+## D16 -- baked 4ceafd1 GRAPH=1 capture hang -- 2026-08-19 -- LOOP 46
+
+Tried: IMG intel/vllm:0.21.0-xpu-s2b
+  BAKED=1 GRAPH=1 TP=2 FORCE_GRAPH
+  pid=host seccomp=unconfined MTPTOK=5
+  MAXLEN=16384 fuse_rope false.
+Command / config:
+  start_int4ar_intel021.sh
+  CACHE_NAME=intel021_s2b
+Result: TP=2 workers up. Compile 154s.
+  Then 18+ min both workers 100% CPU,
+  EngineCore shm_broadcast every 60s,
+  no capture log, no /v1/models, no
+  sycl_graph error (D14 was that error).
+  Stopped at 22 min. No G1. No speed.
+  Cards healthy. No DEVICE_LOST.
+Why it is closed: waiting longer on the
+  same hang is not a 101.922 cell.
+Retry if: Steve graph-safe FA / a capture
+  dump shows a fixable collective then
+  G1 on GRAPH=1 TP=2. Do not republish
+  this hang as a speed number.
+Related JOURNAL: ### 2026-08-19ac
+  log /mnt/vm_8tb/b70/qwen38-w8a8-dspark/loop46_tp2_pidhost.log

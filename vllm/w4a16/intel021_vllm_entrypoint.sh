@@ -10,11 +10,17 @@ if [ -f /opt/intel/oneapi/setvars.sh ]; then
 fi
 set -u
 # D14: rebuilt 4ceafd1 (graph-replay) wins over in-image 2021.17 sched algos.
-if [ -d /opt/ccl4ce/lib ]; then
+# D15 overlay lost TP=2 (device_fd). LOOP 46 bakes 4ceafd1 onto torch RPATH
+# (/opt/venv/lib) plus /opt/ccl4ce. LD_PRELOAD beats remaining RPATH.
+if [ -f /opt/ccl4ce/lib/libccl.so.1.0 ]; then
   export CCL_ROOT=/opt/ccl4ce
+  export LD_PRELOAD="/opt/ccl4ce/lib/libccl.so.1.0${LD_PRELOAD:+:$LD_PRELOAD}"
+elif [ -f /opt/venv/lib/libccl.so.1.0 ]; then
+  export CCL_ROOT=/opt/intel/oneapi/ccl/2021.17
+  export LD_PRELOAD="/opt/venv/lib/libccl.so.1.0${LD_PRELOAD:+:$LD_PRELOAD}"
 else
   export CCL_ROOT=/opt/intel/oneapi/ccl/2021.17
 fi
-export LD_LIBRARY_PATH="${CCL_ROOT}/lib:${LD_LIBRARY_PATH:-}"
-echo "=== intel021 wrapper CCL_ROOT=$CCL_ROOT ===" >&2
+export LD_LIBRARY_PATH="${CCL_ROOT}/lib:/opt/venv/lib:${LD_LIBRARY_PATH:-}"
+echo "=== intel021 wrapper CCL_ROOT=$CCL_ROOT LD_PRELOAD=${LD_PRELOAD:-} ===" >&2
 exec /opt/venv/bin/python3 -m vllm.entrypoints.cli.main "$@"

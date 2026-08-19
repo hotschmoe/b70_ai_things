@@ -24,26 +24,35 @@ WRAP="$REPO/vllm/w4a16/intel021_vllm_entrypoint.sh"
 chmod +x "$WRAP"
 # D13 overlay: Steve GDN spec fallback for the 8df6feb7d image only.
 # 44fc8fde0 has native GDN spec -- do not clobber it with the old files.
+# LOOP 46: BAKED=1 (IMG *-s2b) means 4ceafd1+2dd55f38+44fc are IN the image.
+# Do not bind-overlay those (D15). Wrapper still bind-mounted for setvars.
 VLLM_SRC="${VLLM_SRC:-}"
 GDNFB="${GDNFB:-/mnt/vm_8tb/b70/qwen38-w8a8-dspark/intel021_gdnfb}"
 CACHE_NAME="${CACHE_NAME:-intel021}"
+BAKED="${BAKED:-0}"
+case "$IMG" in
+  *-s2b|*-s2b:*) BAKED=1 ;;
+esac
 EXTRA_MOUNTS=()
-if [ -n "$VLLM_SRC" ] && [ -d "$VLLM_SRC/vllm" ]; then
+if [ "$BAKED" = 1 ]; then
+  echo "=== BAKED image $IMG (no 4ceafd1/kernel/vllm overlays) ===" >&2
+elif [ -n "$VLLM_SRC" ] && [ -d "$VLLM_SRC/vllm" ]; then
   EXTRA_MOUNTS+=( -v "$VLLM_SRC:/opt/vllm:ro" )
   echo "=== overlay vLLM source <- $VLLM_SRC ===" >&2
 fi
 PKGD=/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels
-if [ -n "${XPU_C_SO:-}" ] && [ -f "$XPU_C_SO" ]; then
+if [ "$BAKED" != 1 ] && [ -n "${XPU_C_SO:-}" ] && [ -f "$XPU_C_SO" ]; then
   EXTRA_MOUNTS+=( -v "$XPU_C_SO:$PKGD/_xpu_C.abi3.so:ro" )
   echo "=== overlay _xpu_C <- $XPU_C_SO ===" >&2
 fi
-if [ -n "${GDN_LIB:-}" ] && [ -f "$GDN_LIB" ]; then
+if [ "$BAKED" != 1 ] && [ -n "${GDN_LIB:-}" ] && [ -f "$GDN_LIB" ]; then
   EXTRA_MOUNTS+=( -v "$GDN_LIB:$PKGD/libgdn_attn_kernels_xe_2.so:ro" )
   echo "=== overlay gdn lib <- $GDN_LIB ===" >&2
 fi
 # D14: Steve 4ceafd1 oneCCL (SYCL-8). Bind over 2021.15/2021.17 so torch RPATH cannot win.
+# D15: that bind lost TP=2 device_fd. Baked image copies onto /opt/venv/lib instead.
 CCL4CE="${CCL4CE:-}"
-if [ -n "$CCL4CE" ] && [ -f "$CCL4CE/lib/libccl.so.1.0" ]; then
+if [ "$BAKED" != 1 ] && [ -n "$CCL4CE" ] && [ -f "$CCL4CE/lib/libccl.so.1.0" ]; then
   EXTRA_MOUNTS+=( -v "$CCL4CE:/opt/ccl4ce:ro" )
   EXTRA_MOUNTS+=( -v "$CCL4CE/lib/libccl.so.1.0:/opt/intel/oneapi/ccl/2021.15/lib/libccl.so.1.0:ro" )
   EXTRA_MOUNTS+=( -v "$CCL4CE/lib/libccl.so.1.0:/opt/intel/oneapi/ccl/2021.15/lib/libccl.so.1:ro" )
@@ -51,7 +60,7 @@ if [ -n "$CCL4CE" ] && [ -f "$CCL4CE/lib/libccl.so.1.0" ]; then
   EXTRA_MOUNTS+=( -v "$CCL4CE/lib/libccl.so.1.0:/opt/intel/oneapi/ccl/2021.17/lib/libccl.so.1:ro" )
   echo "=== overlay oneCCL 4ceafd1 <- $CCL4CE ===" >&2
 fi
-if [ -z "${VLLM_SRC:-}" ] && [ -f "$GDNFB/_xpu_ops.py" ]; then
+if [ "$BAKED" != 1 ] && [ -z "${VLLM_SRC:-}" ] && [ -f "$GDNFB/_xpu_ops.py" ]; then
   EXTRA_MOUNTS+=( -v "$GDNFB/_xpu_ops.py:/opt/vllm/vllm/_xpu_ops.py:ro" )
   echo "=== overlay _xpu_ops.py <- $GDNFB (GDN spec fallback) ===" >&2
   if [ -f "$GDNFB/gdn_linear_attn.py" ]; then
@@ -85,7 +94,7 @@ if [ "$GRAPH" = 1 ]; then
   # 44fc8fde0 defaults fuse_rope_kvcache_cat_mla True but does not import
   # MLARoPEKVCacheCatFusionPass on XPU (NameError). Steve's recipe sets false.
   # Older 8df6feb7d rejects this key -- only send it when overlaying 44fc.
-  if [ -n "${VLLM_SRC:-}" ]; then
+  if [ -n "${VLLM_SRC:-}" ] || [ "$BAKED" = 1 ]; then
     CC=(--compilation-config '{"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,5,6,8],"max_cudagraph_capture_size":8,"pass_config":{"fuse_rope_kvcache_cat_mla":false}}')
   else
     CC=(--compilation-config '{"cudagraph_mode":"PIECEWISE","use_inductor_graph_partition":true,"cudagraph_capture_sizes":[1,2,4,5,6,8],"max_cudagraph_capture_size":8}')
@@ -94,8 +103,13 @@ fi
 
 MGPU=()
 SHM=16g
+# LOOP 46: public 4ceafd1 logs "pidfd is not supported, fallbacks to drmfd"
+# then device_fd invalid (D15). Host pid + unconfined seccomp lets pidfd_getfd
+# work inside docker. 2021.17 did not need this. P2P stays 0.
+SEC=()
 if [ "$TP" -gt 1 ]; then
   SHM=32g
+  SEC=(--pid=host --security-opt seccomp=unconfined)
   MGPU=(-e CCL_ENABLE_SYCL_KERNELS=1 -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0
         -e SYCL_UR_USE_LEVEL_ZERO_V2=0 -e CCL_ATL_TRANSPORT=ofi
         -e VLLM_WORKER_MULTIPROC_METHOD=spawn
@@ -118,7 +132,7 @@ echo "=== intel021 serve $SERVED IMG=$IMG TP=$TP GRAPH=$GRAPH ===" >&2
 echo "vllm ${ARGS[*]}" >&2
 
 docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
-  --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
+  --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${SEC[@]}" "${GDOCK[@]}" \
   -v "$MODELS_FILES:/models:ro" \
   -v "$ROOT/hf_cache:/hf_cache" \
   -v "$ROOT/vllm_cache:/vllm_cache" \

@@ -14447,3 +14447,61 @@ VERDICT -> GO on gated GRAPH=0 TP=2
   Scheduler stays (29.4 < 41.2). Do not
   start DD. Do not enter Phase 2.
 
+### 2026-08-19ac - LOOP 46: in-image s2b pid=host GRAPH=1 hang
+
+CONTEXT -> LOOP 45 Next pick: CPU bake
+  4ceafd1+2dd55f38+44fc in-image then
+  GRAPH=1 TP=2 G1. Do not retry overlay
+  (D15) or FORCE_GRAPH on 2021.17 (D14).
+  Do not fake 101.922. Do not start DD.
+
+CONFIG -> bake tag intel/vllm:0.21.0-xpu-s2b
+  from intel/vllm:0.21.0-xpu. Copies:
+  4ceafd1 libccl onto /opt/venv/lib
+  (torch RPATH) + 2021.17 so.1 +
+  /opt/ccl4ce; 2dd55f38 _xpu_C+GDN;
+  44fc python tree. GRAPH=1 TP=2 MTPTOK=5
+  MAXLEN=16384 UTIL=0.88 DTYPE=float16
+  P2PACCESS=0 SERVED=qwen3.8-27b-W4A16-autoround-mtp5
+  CACHE_NAME=intel021_s2b BAKED=1
+  FORCE_GRAPH_WITH_COMM=1
+  fuse_rope_kvcache_cat_mla false.
+
+COMMAND ->
+  ```
+  bash vllm/w4a16/bake_intel021_s2b.sh
+  NAME=qwen38_w8a8_dspark stop; xpu-health
+  IMG=intel/vllm:0.21.0-xpu-s2b BAKED=1 \
+    GRAPH=1 TP=2 bash vllm/w4a16/start_int4ar_intel021.sh start
+  # retry with --pid=host --security-opt seccomp=unconfined
+  restore AGASYNC k=4 GRAPH=1 @122880
+  ```
+
+RESULT -> Bake 2026-08-19T161616Z
+  sha256:f2e5a94eb1db. First GRAPH=1:
+  wrapper CCL_ROOT=/opt/ccl4ce
+  LD_PRELOAD=4ceafd1. "pidfd is not
+  supported, fallbacks to drmfd" then
+  ze_handle_manager.cpp:58 device_fd
+  (D15 same). pid=host+unconfined:
+  no pidfd warning, TP=2 workers up,
+  torch.compile 154.35s, then 18+ min
+  both workers 100% CPU, shm_broadcast
+  every 60s, no capture log, no
+  /v1/models, no sycl_graph error.
+  Stopped 22 min. No G1. No speed.
+  Cards healthy after teardown. Restore
+  AGASYNC HEALTHY 147s G1 Paris exact
+  @122880. DD PARKED. w8a8-gptq not
+  overwritten. Not 101.922.
+
+VERDICT -> NO-GO on 101.922 (D16).
+  D15 overlay stays closed. Bake without
+  pid=host is the same device_fd. pid=host
+  unblocks TP=2 load; GRAPH=1 still does
+  not reach G1. Next pick: Steve
+  graph-safe FA on baked s2b+pid=host
+  GRAPH=1 G1. Scheduler stays
+  (29.4 < 41.2). Do not start DD. Do
+  not enter Phase 2.
+
