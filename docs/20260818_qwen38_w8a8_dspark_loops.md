@@ -36,16 +36,17 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-compile-key SPECTOK+SO (leftover after E3 D9).
-No GPU this fire. After that: S2 3.8 INT4-AR
-(`docs/20260819_steve_qwen38_int4ar.md`).
-Download already started (pid in
-`/mnt/vm_8tb/b70/qwen38-w8a8-dspark/s2_hf_download.pid`).
-S2a if still fetching; S2b speed (G1 + bench_code
-+ after-TTFT toward 101.9); S2c HE+ 164 vs W8A8
-0.957/0.927. One arm per fire. Do not start S2
-this compile-key fire. D9-D4 stand. Scheduler
-01a01813e05d stays (c1 29.4 < 41.2).
+S2b -- 3.8 INT4-AR speed (YOLO). Weights ON DISK
+(`models/files/qwen3.8-27b/int4-autoround`, 19.02 GB,
+auto-round). Script
+`vllm/w4a16/serve_qwen38_27b_int4ar.sh`. Default image
+public 0.27.2rc1 `f01e24f6` (already pulled). Allowed:
+Steve lab `/mnt/vm_8tb/b70/b70-optimization-lab-main`,
+graph-safe FA source, new vLLM/sglang image. Stop W8A8
+AGASYNC, G1, bench_code + after-TTFT toward 101.922.
+Then S2c HE+ vs 0.957/0.927. Compile-key leftover
+waits. Do not stay on int8g-v0260. Scheduler
+01a01813e05d stays.
 
 ---
 

@@ -13503,3 +13503,27 @@ RESULT -> Download started (no GPU, ~2 GB in first
 VERDICT -> GO (steer). Next GPU after compile-key
   is S2. Do not start INT4 this note.
 
+### 2026-08-19h - operator: YOLO S2 -- any image / Steve FA / new build
+
+CONTEXT -> Operator: do not stay on our images. Use
+  Steve's stack, his AOT FA, or a new vLLM/sglang
+  image. Chase 100 tok/s.
+
+CONFIG -> weights DONE 19016936446 B auto-round 4/128.
+  Script vllm/w4a16/serve_qwen38_27b_int4ar.sh
+  default IMG f01e24f6 (0.27.2rc1, already pulled).
+  Steve lab worktree
+  /mnt/vm_8tb/b70/b70-optimization-lab-main @ 924b518.
+  FA source
+  experiments/qwen27_graphsafe_flash_attention.
+
+COMMAND -> docs + serve script + scheduler update.
+  No GPU this note (W8A8 AGASYNC still holding
+  cards for the next fire to stop).
+
+RESULT -> S2a closed. Next pick S2b. Compile-key
+  leftover deferred. int8g-v0260 is not the default.
+
+VERDICT -> GO (steer). Next fire serves INT4-AR on
+  0.27. Then S2c HE+.
+

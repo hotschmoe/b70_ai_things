@@ -4,10 +4,10 @@
 **Repo:** https://github.com/steveseguin/b70-optimization-lab
 **HEAD at ingest:** `924b518` (2026-08-19T03:04Z)
 
-Operator 2026-08-19: S2 is now a real two-arm pick (speed + HE+).
-Download started to `models/files/qwen3.8-27b/int4-autoround`.
-Do not steal the current compile-key leftover. After that pick,
-S2a (if download still live) then S2b speed then S2c HE+.
+Operator 2026-08-19 YOLO: S2 may use Steve's stack, his
+graph-safe FA source, public nightly `f01e24f6` (already on
+disk), or a NEW vLLM/sglang image. Do not stay on int8g-v0260
+out of habit. Weights are ON DISK. Next pick is S2b.
 
 ## What he published
 
@@ -59,16 +59,21 @@ Served ids:
 - `qwen3.8-27b-W4A16-autoround-mtp5` (speed)
 - same id for HE+ (do not score as W8A8)
 
-**S2a** -- if `ps -p $(cat s2_hf_download.pid)` is live, one line STOP.
-When dead, confirm ~19 GB + config.json `quant_method: auto-round`.
+**S2a DONE 2026-08-19** -- 19016936446 bytes, `quant_method: auto-round`,
+bits 4 G128. Log showed `Downloaded`.
 
-**S2b speed** -- stop W8A8 AGASYNC. Serve TP=2 MTP5 GRAPH=1 closest
-clone of `rdy_to_serve/vllm/qwen36-27b-int4/serve.sh` (new script
-under `vllm/`, do not rewrite the 3.6 one). G1 first. Then
-`bench_code` c1 AND a `phase_bench` after-TTFT cell. Honest bar:
-101.922 needs his unpublished 3.1 GB AOT FA + vLLM `44fc8fde` +
-pinned compile cache + oneDNN INT4 barriers. On `int8g-v0260` we
-try; we do not fake the cell. If G1 dies, revert W8A8, packet.
+**S2b SPEED (YOLO)** -- stop W8A8 AGASYNC. Serve with
+`vllm/w4a16/serve_qwen38_27b_int4ar.sh` (default IMG =
+`vllm/vllm-openai-xpu@sha256:f01e24f6...` 0.27.2rc1, TP=2
+MTPTOK=5 GRAPH=1 DTYPE=float16 MAXLEN=16384). Allowed:
+Steve lab at `/mnt/vm_8tb/b70/b70-optimization-lab-main`
+(`924b518`), his `experiments/qwen27_graphsafe_flash_attention`
+build, overlay `XPU_C_SO`/`GDN_LIB`, or build a new
+vLLM/sglang image. G1 first. Then `bench_code` c1 AND
+`phase_bench` after-TTFT. Chase 101.922. If G1 dies, try
+the next stack (0.27 -> Steve kernels -> new image), then
+packet only if all three fail. Do not quietly fall back
+to int8g-v0260.
 
 **S2c quality** -- HE+ 164 thinking-off greedy seed=1234 on the
 same served id. Compare to W8A8 **0.957 / 0.927** and Q4_K_M
