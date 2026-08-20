@@ -10,9 +10,9 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 ## NEXT PICK (keep this line true)
 
 Park. Overnight speed rows closed.
-k1bar-pc1 UP, soak G1 GO, code c1
-24.8 (W8b was 28.1). Hold 31.9 not
-demoted. Do not P2P. Do not DD.
+k1bar-pc1 UP ~59m G1 GO. Soak code
+c1 24.8. Hold 31.9 not demoted.
+Do not P2P. Do not DD.
 
 ---
 
@@ -750,3 +750,26 @@ Do not: demote 31.9/34.9; P2P; DD;
   start Q8 while lease held.
 Restore: DD PARKED. Q8 DOWN. W8b UP.
 JOURNAL: ### 2026-08-20bp
+
+## LOOP 21 -- 2026-08-20T1609Z -- attach k1bar-pc1 59m G1 GO
+
+Picked: attach live k1bar-pc1. G1
+  only. Parse logs. No second serve.
+Why this, not the other open row:
+  NEXT PICK park. Lease busy. P1 Q8
+  GGUF complete but cards held.
+GPU: both cards HELD qwen38_w8a8_dspark
+  :18080. DD PARKED. P2P=0.
+Command:
+  g1_probe + docker logs scan
+Log: /mnt/vm_8tb/b70/lmx_overnight/w8d_g1_20260820T160924Z.log
+Result: G1 Paris/391. No DEVICE_LOST.
+  Serve Up 59 min.
+Verdict: Attach GO. Leave up. Park.
+Changed beliefs: none. 59m soak still
+  coherent. Hold 31.9 stays.
+Next pick: park. Leave k1bar-pc1 up.
+Do not: demote 31.9/34.9; P2P; DD;
+  start Q8 while lease held.
+Restore: DD PARKED. Q8 DOWN. W8b UP.
+JOURNAL: ### 2026-08-20bq

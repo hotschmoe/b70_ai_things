@@ -16048,3 +16048,27 @@ VERDICT -> Attach GO. Soak slower than
   up. Next park. Do not P2P. Do not
   start DD. Do not start Q8 (lease).
 
+### 2026-08-20bq - LOOP 21: attach k1bar-pc1 59m G1 GO
+
+CONTEXT -> Overnight 30m. NEXT PICK
+  park. k1bar-pc1 UP 59 min. No second
+  serve. No extra bench_code.
+
+CONFIG -> attach live ...-k1bar-pc1
+  TP=2 GRAPH BARRIER AGASYNC P2P=0.
+
+COMMAND ->
+  ```
+  g1_probe http://192.168.10.5:18080/v1
+  docker logs | grep DEVICE_LOST
+  ```
+
+RESULT -> G1 Paris/391 chat Paris no
+  bangs. No DEVICE_LOST. JSONDecode
+  at load only (same as boot). Serve
+  Up 59 min.
+
+VERDICT -> Attach GO. Leave up. Park.
+  Do not demote 31.9. Do not P2P.
+  Do not start DD. Do not start Q8.
+
