@@ -57,4 +57,19 @@ Retry if: a new Q8 door kernel lands, or
   decode mix so doors could matter.
 Related JOURNAL: ### 2026-08-20bb
 
+## P1c -- COMM_DIRECT_Q8 2 vs 0 -- 2026-08-20 -- LOOP 7
+
+Tried: Pliny Q8_0 TP2, Q8_DOORS=1 both,
+  ignore-eos g128 n=5. COMM_DIRECT=2 vs 0.
+  Never 3 (lab DEVICE_LOST).
+Result: **31.99** vs **31.83** post_first
+  (+0.5%). G1 Paris/391 both. Prefill
+  570 vs 568. Matches P1b doors=1 31.78.
+Why it is closed: llama.cpp USM comm
+  direct is not the 43.8 Q4_K_M gap
+  (~1.37x remains).
+Retry if: COMM_DIRECT=3 becomes safe, or
+  1x vs 2x shows comm-bound decode.
+Related JOURNAL: ### 2026-08-20bc
+
 ---

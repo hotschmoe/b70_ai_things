@@ -15596,3 +15596,32 @@ VERDICT -> GO. Hold Pliny Q8 ignore-eos
   Do not start DD. Do not retry P2P.
   Do not demote k1bar 31.9.
 
+### 2026-08-20bc - LOOP 7: P1c COMM_DIRECT 2 vs 0 GO 31.99 vs 31.83
+
+CONTEXT -> Overnight 30m fire. NEXT
+  PICK was P1c. Same Q8_0 ckpt. Bounced
+  leftover doors-sweep docker-wait.
+
+CONFIG -> 2x B70 llama.cpp SYCL
+  Q8_DOORS=1 both. COMM_DIRECT 2 then 0.
+  ignore_eos g128 n=5. Never COMM=3.
+  Restored COMM=2 and left up.
+
+COMMAND ->
+  ```
+  bash llamacpp/sweep_obliterated_q8_comm.sh
+  ```
+
+RESULT ->
+  G1 Paris/391 both.
+  | arm | post_first | prefill | vs 43.8 |
+  | COMM=2 | **31.99** | 569.5 | 0.730x |
+  | COMM=0 | **31.83** | 568.3 | 0.727x |
+  All 128 tok. +0.5%. Not the gap.
+
+VERDICT -> GO. COMM_DIRECT closed as
+  the 43.8 gap. Hold **31.99**. Leave
+  serve up. Next P1d GPU_COUNT=1 vs 2.
+  Do not COMM=3. Do not retry P2P.
+  Do not start DD. Do not demote 31.9.
+

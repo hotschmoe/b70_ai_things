@@ -6,12 +6,12 @@
 > ### [OVERNIGHT 2026-08-20] -- 30m LocalMaxxing loop (active)
 > Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
 > **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**.
-> **P1b DONE**: Pliny Q8_0 TP2 ignore-eos g128 doors=1 **31.78** vs
-> doors=0 **31.56** (G1 Paris/391). Not the 43.8 gap (0.726x).
-> Serve qwen38_oblit_q8 :8010 Q8_DOORS=1 UP (lease 260538).
-> Next **P1c** COMM_DIRECT_Q8=2 vs 0 (never 3). Then 1x vs 2x.
-> Do not start a second serve. Do not retry vLLM P2P=1.
-> Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**, Q8 **31.78**.
+> **P1c DONE**: Pliny Q8_0 COMM_DIRECT=2 **31.99** vs 0 **31.83**
+> (doors=1, G1 Paris/391). Doors A/B 31.78/31.56. Not the 43.8 gap.
+> Serve qwen38_oblit_q8 :8010 Q8_DOORS=1 COMM=2 UP (lease 266919).
+> Next **P1d** GPU_COUNT=1 vs 2. Then DP4A2/GDN-quad if 1x misses 43.8.
+> Do not COMM_DIRECT=3. Do not retry vLLM P2P=1.
+> Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**, Q8 **31.99**.
 > DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
 
 > ### [CAMPAIGN 2026-07-28] -- active ordering

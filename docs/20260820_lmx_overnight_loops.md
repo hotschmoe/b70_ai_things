@@ -9,11 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-P1c COMM_DIRECT_Q8=2 vs 0 (never 3).
-qwen38_oblit_q8 :8010 Q8_DOORS=1 UP
-(lease 260538). Doors A/B closed
-(+0.7%). Do not start a second
-serve. Do not retry vLLM P2P=1.
+P1d GPU_COUNT=1 vs 2. qwen38_oblit_q8
+:8010 Q8_DOORS=1 COMM=2 UP (lease
+266919). COMM A/B closed (+0.5%).
+Do not start a second serve. Do not
+COMM_DIRECT=3. Do not retry vLLM P2P.
 
 ---
 
@@ -269,3 +269,35 @@ Do not: second serve; COMM_DIRECT=3;
   retry vLLM P2P; DD; demote 31.9/34.9.
 Restore: DD PARKED. Q8_DOORS=1 UP.
 JOURNAL: ### 2026-08-20bb
+
+## LOOP 7 -- 2026-08-20T0920Z -- P1c COMM_DIRECT 2 vs 0 GO 31.99 vs 31.83
+
+Picked: P1c COMM_DIRECT_Q8=2 vs 0.
+  Q8_DOORS=1 both. Never 3.
+Why this, not the other open row:
+  NEXT PICK after doors A/B. Same ckpt.
+GPU: both cards HELD pid 266919
+  qwen38_oblit_q8 :8010 restored
+  COMM=2. DD PARKED. P2PACCESS=0.
+Command:
+  bash llamacpp/sweep_obliterated_q8_comm.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/p1c_sweep_20260820T0910Z.log
+  p1c_comm_20260820T0910Z.json
+Result: G1 Paris/391 both arms.
+  COMM=2 median post_first **31.99**
+  (31.80-32.06) prefill 569.5 TTFT 2.02s.
+  COMM=0 **31.83** (31.66-31.97)
+  prefill 568.3. vs 43.8 = 0.730x /
+  0.727x. vs P1b doors=1 31.78: +0.7%.
+Verdict: GO. COMM_DIRECT is not the
+  43.8 gap (+0.16 tok/s, +0.5%).
+  Hold 31.99. Leave COMM=2 up.
+Changed beliefs: TP2 llama.cpp USM
+  sum is not the decode limiter.
+  Next is 1x vs 2x, then DP4A2/GDN-quad
+  if 1x does not close 43.8.
+Next pick: P1d GPU_COUNT=1 vs 2.
+Do not: second serve; COMM=3; retry
+  vLLM P2P; DD; demote 31.9/34.9.
+Restore: DD PARKED. Q8 COMM=2 UP.
+JOURNAL: ### 2026-08-20bc
