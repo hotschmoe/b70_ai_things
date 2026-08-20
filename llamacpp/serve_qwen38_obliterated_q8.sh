@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Pliny OBLITERATUS Qwen3.8-27B Q8_0 on 1x/2x B70 via 0xSero SYCL image.
-# Card recipe: greedy + repeat_penalty 1.15, thinking off, no system prompt.
+# Card recipe (Pliny): temp 0, repeat_penalty 1.15, thinking off, no system
+# prompt. n_predict stays unlimited (>=2048). Open WebUI workspace model
+# qwen38-27b-obliterated-q8 pins the same params + max_tokens 8192.
 # Q8 fused doors ON. Q4K doors OFF. vLLM P2P stays off.
 #
 #   ./bin/gpu-run bash llamacpp/serve_qwen38_obliterated_q8.sh start

@@ -16,6 +16,12 @@ MODEL_FILE="${MODEL_FILE:-Qwen3.8-27B-OBLITERATED-Q8_0.gguf}"
 Q8_DOORS="${Q8_DOORS:-1}"
 REPEAT_PENALTY="${REPEAT_PENALTY:-1.15}"
 TEMP="${TEMP:-0}"
+# Pliny @elder_plinius 2026-08-20: temp 0, repetition_penalty 1.15,
+# max_new_tokens >=2048, NO system prompt, thinking off.
+TOP_K="${TOP_K:-0}"
+TOP_P="${TOP_P:-1.0}"
+MIN_P="${MIN_P:-0.0}"
+CHAT_TEMPLATE_KWARGS="${CHAT_TEMPLATE_KWARGS:-{\"enable_thinking\":false}}"
 
 if [ "$GPU_COUNT" = "1" ]; then
     DEVICE_ARGS=(--device SYCL0)
@@ -101,7 +107,11 @@ exec /build/llama.cpp/build-sycl/bin/llama-server \
     --ctx-checkpoints 0 \
     --fit off \
     --reasoning off \
+    --chat-template-kwargs "$CHAT_TEMPLATE_KWARGS" \
     --temp "$TEMP" \
+    --top-k "$TOP_K" \
+    --top-p "$TOP_P" \
+    --min-p "$MIN_P" \
     --repeat-penalty "$REPEAT_PENALTY" \
     --threads "${THREADS:-8}" \
     --poll 50 \
