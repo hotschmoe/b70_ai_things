@@ -14,11 +14,11 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 15 (O4d e2e M1_KERNEL GRAPH 32.2 NO-GO vs 34.9; G1 GO) |
-| Last JOURNAL | `2026-08-20bk` |
-| Next pick | **O1** 34.9 phase_bench (restart hold recipe, M1_KERNEL off). ornith_o4d UP 32.2. |
-| Blocked on | none. Lease card 0 ornith_o4d. Hold 34.9 not beaten. M1_KERNEL default OFF. |
-| Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
+| Last loop | 16 (O1 hold phase_bench 45.56; bench_code 34.8 recovers 34.9) |
+| Last JOURNAL | `2026-08-20bl` |
+| Next pick | **O4e** fused up+silu+down layerlet (card 1), or **W8**. ornith_o1 UP. |
+| Blocked on | none. Lease card 0 ornith_o1. Hold 34.9 not beaten. M1_KERNEL default OFF. |
+| Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. O1 phase_bench ignore-eos p512/g128 **45.56**. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
 | Hold 3.8 GPTQ-Int4 MTP4 + draft-INT4 (W1) | **65.08** post-first p512/g128. G1 Paris/391. |
@@ -117,11 +117,14 @@ XPUGraph capture+replay PASS. Env `B70_NVFP4_MOE_M1_KERNEL=1` +
 LOOP 15 O4d: e2e GRAPH no-MTP M1_KERNEL=1. G1 Paris/391.
 bench_code c1 **32.2** vs hold **34.9**. Wire GO, speed NO-GO.
 Default stays OFF. Isolated 2.36x does not beat GRAPH oneDNN
-in the slot loop. Next O1 or fused layerlet. Do not demote 34.9.
+in the slot loop. Next fused layerlet (O4e) or W8. Do not
+demote 34.9.
 
-**O1** LocalMaxxing-method C1 of the 34.9 hold (p512/g128 n=5,
-cache off) so NVFP4 has a submit-shaped number. Measurement, not
-a speed unlock. Do after W1 or when a serve is already the hold.
+**O1** LocalMaxxing-method C1 of the 34.9 hold (DONE LOOP 16)
+GRAPH no-MTP M1_KERNEL=0. G1 Paris/391. bench_code c1 **34.8**
+recovers hold 34.9. phase_bench ignore-eos p512/g128 n=5/5
+median post-first **45.56** (prefill proxy 265, TTFT 4.34s).
+Different metric than 34.9; do not swap them. Do not re-run.
 
 **W8** W8A8 k1bar 31.9 -- only if W1 and O* are blocked. Do not
 regress it.

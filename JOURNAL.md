@@ -15886,3 +15886,38 @@ VERDICT -> Wire GO. Speed NO-GO. Hold
   Do not demote 34.9/31.9. Do not P2P.
   Do not start DD.
 
+### 2026-08-20bl - LOOP 16: O1 hold phase_bench 45.56; code 34.8
+
+CONTEXT -> Overnight 30m. NEXT PICK O1
+  LocalMaxxing C1 of the 34.9 hold.
+  o4d 32.2 exists. Restart M1_KERNEL
+  off, same Ornith ckpt.
+
+CONFIG -> GRAPH=1 no-MTP CAP 1,2,4,8
+  STICKY=0 M1=0 M1_KERNEL=0. IMG
+  int8g-v0260 KV_FP8=0 LANGONLY=1
+  P2P=0. phase_bench p512/g128 n=5
+  then --ignore-eos. bench_code check.
+
+COMMAND ->
+  ```
+  docker rm -f ornith_o4d
+  gpu-run --card 0 bash vllm/nvfp4/sweep_ornith_o1.sh
+  phase_bench p512/g128 n=5
+  phase_bench --ignore-eos
+  bench_code c1 256 n=3
+  ```
+
+RESULT -> m1k=0. GRAPH 5s. G1 Paris/391.
+  phase_bench median post_first **45.57**
+  (2/5 EOS-short). ignore-eos g128 n=5/5
+  **45.56**. Prefill proxy 265. TTFT 4.34s.
+  bench_code c1 **34.8** vs hold **34.9**.
+
+VERDICT -> GO measurement. Hold 34.9
+  recovered. O1 C1 is **45.56** post-first
+  (not bench_code). Leave ornith_o1 up.
+  Next O4e fused layerlet or W8.
+  Do not demote 34.9/31.9. Do not P2P.
+  Do not start DD.
+

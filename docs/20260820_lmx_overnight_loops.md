@@ -9,12 +9,13 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O1 34.9 phase_bench (restart hold
-recipe, M1_KERNEL off). ornith_o4d
-UP, G1 GO, code c1 32.2 < 34.9.
-O4d wire GO speed NO-GO. Default
-M1_KERNEL OFF. Do not demote 34.9.
-Do not P2P. Do not DD.
+O4e fused up+silu+down layerlet
+(card 1; o1 holds 0), or W8.
+ornith_o1 UP, G1 GO, code c1 34.8
+~ hold 34.9. O1 phase_bench **45.56**
+ignore-eos p512/g128. M1_KERNEL OFF.
+Do not demote 34.9. Do not P2P.
+Do not DD.
 
 ---
 
@@ -586,3 +587,41 @@ Do not: demote 34.9/31.9; P2P; DD;
   emul NVFP4 G1; leave M1_KERNEL on.
 Restore: DD PARKED. Q8 DOWN. O4d UP.
 JOURNAL: ### 2026-08-20bk
+
+## LOOP 16 -- 2026-08-20T1346Z -- O1 hold phase_bench 45.56
+
+Picked: O1 LocalMaxxing C1 of the 34.9
+  GRAPH no-MTP hold. Stopped o4d
+  (32.2 exists). M1_KERNEL off.
+Why this, not the other open row:
+  NEXT PICK. P1 in-image done. O4d
+  speed closed. Measurement not a
+  kernel unlock.
+GPU: card 0 HELD ornith_o1 :18080.
+  Card 1 free. DD PARKED. P2P=0.
+Command:
+  docker rm -f ornith_o4d
+  gpu-run --card 0 bash vllm/nvfp4/sweep_ornith_o1.sh
+  phase_bench p512/g128 n=5 + --ignore-eos
+  bench_code c1 256 n=3
+Log: /mnt/vm_8tb/b70/lmx_overnight/o1_g1_20260820T134005Z.log
+  o1_phase_ieos_20260820T134005Z.json
+  o1_code_20260820T134005Z.txt
+Result: m1k=0. GRAPH 5s. G1 Paris/391.
+  phase_bench **45.57** (2/5 short EOS).
+  ignore-eos g128 n=5/5 **45.56**.
+  Prefill proxy 265. TTFT 4.34s.
+  bench_code c1 **34.8** vs hold 34.9.
+Verdict: GO. Hold 34.9 recovered. O1
+  C1 is 45.56 post-first, not 34.9.
+Changed beliefs: Ornith GRAPH no-MTP
+  submit-shaped decode is ~45.6, below
+  S1 47.58 / W1 65.08 (different ckpt).
+  Prefill proxy 265 is the MoE prefill
+  gap vs W1 1695.
+Next pick: O4e fused layerlet (card 1)
+  or W8. Leave o1 up.
+Do not: demote 34.9/31.9; P2P; DD;
+  emul NVFP4 G1; treat 45.56 as 34.9.
+Restore: DD PARKED. Q8 DOWN. O1 UP.
+JOURNAL: ### 2026-08-20bl
