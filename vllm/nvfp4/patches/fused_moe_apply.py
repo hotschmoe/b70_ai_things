@@ -24,8 +24,22 @@ _STICKY = os.environ.get("B70_NVFP4_MOE_STICKY", "0") == "1"
 # L64: specialize T==1 (decode GEMV-shaped). Default OFF (L64 33.3).
 # O4 LOOP 12: ESIMD M=1 1D block_load GEMV in vllm/nvfp4/proto_moe_m1/.
 # Isolated ~2.3x vs oneDNN M=1. LOOP 13: WG/SLM occupancy NO-GO.
-# Not wired (no torch op).
+# O4c: sidecar torch op. Default OFF. Do not swap live _xpu_C.
 _M1 = os.environ.get("B70_NVFP4_MOE_M1", "0") == "1"
+_M1K = os.environ.get("B70_NVFP4_MOE_M1_KERNEL", "0") == "1"
+_M1_SO = os.environ.get("B70_NVFP4_M1_SO", "").strip()
+_HAS_M1K = False
+if _M1K and _M1_SO:
+    try:
+        torch.ops.load_library(_M1_SO)
+        _HAS_M1K = hasattr(torch.ops, "b70_nvfp4_m1")
+    except Exception as e:
+        print(
+            "[nvfp4-shim] m1_gemv load_library failed:",
+            repr(e),
+            file=sys.stderr,
+            flush=True,
+        )
 _GS = 16
 _RING = int(os.environ.get("B70_NVFP4_MOE_RING", "4"))
 
@@ -96,7 +110,17 @@ def _silu_and_mul(x):
 
 
 def _gemm(x, w_row, scale):
-    # w_row [N, K/2] uint8 packed; op wants NT view [K/2, N].
+    # w_row [N, K/2] uint8 packed; oneDNN wants NT view [K/2, N].
+    # O4c sidecar: M=1 and K%256==0 (Ornith H=2048 I=512). Small unit
+    # shapes (H=64) stay on oneDNN so test_fused_moe_apply stays PASS.
+    if (
+        _HAS_M1K
+        and x.shape[0] == 1
+        and int(x.shape[-1]) % 256 == 0
+        and w_row.is_contiguous()
+        and scale.is_contiguous()
+    ):
+        return torch.ops.b70_nvfp4_m1.gemv(x, w_row, scale)
     return torch.ops._xpu_C.nvfp4_gemm_w4a16(
         x, w_row.transpose(0, 1), None, scale, _GS
     )
@@ -346,8 +370,8 @@ def install(experts_cls):
     print(
         "[nvfp4-shim] (7) FUSED per-expert NVFP4 MoE apply installed "
         f"(slot-static T<={_SLOT_MAX}, grouped unique above; "
-        f"sticky={int(_STICKY)} m1={int(_M1)} ring={_RING} "
-        f"custom_op={_HAS_CUSTOM_OP})",
+        f"sticky={int(_STICKY)} m1={int(_M1)} m1k={int(_HAS_M1K)} "
+        f"ring={_RING} custom_op={_HAS_CUSTOM_OP})",
         file=sys.stderr,
         flush=True,
     )

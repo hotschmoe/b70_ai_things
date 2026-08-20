@@ -9,13 +9,13 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O4c torch op (WG=1 1D GEMV), or
-O1 34.9 phase_bench. ornith_o3
-GRAPH+MTP3+expert-INT4 UP, G1 GO,
-code c1 21.1 < 34.9. O4b occupancy
-NO-GO (SLM/WG <= WG=1). 2.3x oneDNN
-isolated, not wired. Do not demote
-34.9. Do not P2P. Do not DD.
+O4d e2e GRAPH + M1_KERNEL=1 (same
+Ornith ckpt, restart), or O1 34.9
+phase_bench. ornith_o3 UP, G1 GO,
+code c1 21.1 < 34.9. O4c sidecar
+op 2.36x oneDNN, GRAPH PASS, default
+OFF. Do not demote 34.9. Do not P2P.
+Do not DD.
 
 ---
 
@@ -519,3 +519,37 @@ Do not: demote 34.9/31.9; P2P; DD;
   emul NVFP4 G1; swap live serve .so.
 Restore: DD PARKED. Q8 DOWN. O3 UP.
 JOURNAL: ### 2026-08-20bi
+
+## LOOP 14 -- 2026-08-20T1243Z -- O4c sidecar torch op GO 2.36x
+
+Picked: O4c torch XPU op for WG=1 1D
+  NVFP4 GEMV. Sidecar .so, current
+  stream. Leave ornith_o3 up.
+Why this, not the other open row:
+  NEXT PICK. o3 is not Q8. O1 needs
+  34.9 no-MTP ckpt.
+GPU: card 0 HELD ornith_o3 :18080.
+  Card 1 compile+unit. DD PARKED. P2P=0.
+Command:
+  bash vllm/nvfp4/proto_moe_m1/build_op.sh
+  gpu-run --card 1 test_m1_gemv_op.py
+  test_fused_moe_apply.py (M1_KERNEL off)
+Log: /mnt/vm_8tb/b70/lmx_overnight/o4c_test_20260820T124242Z.log
+Result: .so 102 KB. vs oneDNN:
+  up 0.018 vs 0.043 ms (2.36x) cos 0.999996
+  rel 4.6e-3. down 0.015 vs 0.041 (2.67x).
+  XPUGraph capture OK, replay cos 1.0.
+  Unit apply PASS default OFF. o3 Up.
+  Wired env B70_NVFP4_MOE_M1_KERNEL +
+  B70_NVFP4_M1_SO, default OFF.
+Verdict: GO op+graph. e2e not measured.
+  Hold 34.9. Do not swap live _xpu_C.
+Changed beliefs: sidecar op keeps the
+  isolated 2.3x without a GDN rebuild.
+  Next is a serve restart with M1_KERNEL
+  or O1 34.9 phase_bench.
+Next pick: O4d e2e or O1. Leave o3 up.
+Do not: demote 34.9/31.9; P2P; DD;
+  emul NVFP4 G1; swap live serve .so.
+Restore: DD PARKED. Q8 DOWN. O3 UP.
+JOURNAL: ### 2026-08-20bj

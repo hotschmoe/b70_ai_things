@@ -15823,3 +15823,34 @@ VERDICT -> Occupancy NO-GO. WG=1 stays.
   Next O4c torch op or O1. Do not demote
   34.9/31.9. Do not P2P. Do not start DD.
 
+### 2026-08-20bj - LOOP 14: O4c sidecar m1_gemv torch op GO
+
+CONTEXT -> Overnight 30m. NEXT PICK O4c
+  torch op. o3 holds card 0. Sidecar .so
+  on card 1. Do not swap live _xpu_C.
+
+CONFIG -> TORCH_LIBRARY b70_nvfp4_m1.gemv
+  WG=1 1D block_load, current XPU stream.
+  x[1,K] bf16, w[N,K/2] uint8, scale
+  [K/16,N] bf16. IMG int8g-v0260.
+  Env M1_KERNEL default OFF. P2P=0.
+
+COMMAND ->
+  ```
+  bash vllm/nvfp4/proto_moe_m1/build_op.sh
+  gpu-run --card 1 test_m1_gemv_op.py
+  gpu-run --card 1 test_fused_moe_apply.py
+  ```
+
+RESULT -> Compile OK 102 KB.
+  up 0.018 vs oneDNN 0.043 ms (**2.36x**)
+  cos 0.999996 rel 4.6e-3. down **2.67x**.
+  GRAPH capture+replay cos 1.0. Unit
+  apply PASS (H=64 stays oneDNN). o3 Up.
+  Hold 34.9.
+
+VERDICT -> Op GO. e2e not run. Next O4d
+  restart with M1_KERNEL=1 or O1. Do not
+  demote 34.9/31.9. Do not P2P. Do not
+  start DD.
+
