@@ -35,7 +35,7 @@ fi
 if docker ps --format '{{.Names}}' | grep -qx "$NAME"; then
   set_status "P1_STATUS=ATTACH name=$NAME"
 else
-  if ./bin/gpu-run --status 2>/dev/null | grep -q 'card 0: busy'; then
+  if ./bin/gpu-run --status 2>/dev/null | grep -Eq 'card 0: (HELD|busy)'; then
     set_status "P1_STATUS=LEASE_BUSY"
     ./bin/gpu-run --status || true
     exit 8

@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 2 (P1 Q8_0 TP2 G1 GO **30.89** / warmup **32.14**) |
-| Last JOURNAL | `2026-08-20ax` |
-| Next pick | **P1b** Q8_DOORS=0 vs 1 A/B + longer g128. W1 DONE 65.08. Serve qwen38_oblit_q8 :8010. |
-| Blocked on | none. |
+| Last loop | 3 (P1b script landed; GPU blocked by foreign P2P71) |
+| Last JOURNAL | `2026-08-20ay` |
+| Next pick | **P1b** `bash llamacpp/sweep_obliterated_q8_doors.sh` when lease free + xpu-health GO. |
+| Blocked on | foreign `qwen38_w8a8_p2p71b` TP2 P2P=1 (second chain). Do not steal. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |

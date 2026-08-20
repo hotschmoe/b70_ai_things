@@ -15449,3 +15449,44 @@ VERDICT -> GO. New 3.8 GPTQ-Int4 MTP4
   GRAPH-safe INT4. Do not start DD.
   Do not set P2P=1.
 
+### 2026-08-20ay - LOOP 3: P1b blocked by foreign P2P71
+
+CONTEXT -> Overnight 30m fire. NEXT PICK
+  was P1b Q8_DOORS A/B. LOOP 2 left
+  qwen38_oblit_q8 :8010 up. On attach,
+  that container was gone. Both cards
+  held by vllm/w8a8/sweep_p2p_71_retest.sh
+  (I_KNOW_P2P_WEDGES=1, GRAPH=0, TP=2).
+
+CONFIG -> P1b: 2x B70 llama.cpp SYCL
+  Q8_DOORS=1 then 0, ignore_eos g128 n=5,
+  MMVQ pair/triple/quad ON both. Image
+  qwen38-b70:latest. GGUF 27702 MB.
+  Did not start a second serve.
+
+COMMAND ->
+  ```
+  bash llamacpp/sweep_obliterated_q8_doors.sh
+  # landed: phase_bench --ignore-eos
+  # lease owner-file check; one outer gpu-run
+  ```
+
+RESULT ->
+  Foreign P2P71: peer True/True. Serve
+  loaded 16.74 GiB then hung at encoder
+  cache / shm_broadcast from 07:36-07:47.
+  Workers ~178-179% CPU. Health timeout
+  900s. NOT DEVICE_LOST. xpu-health post
+  HEALTHY both cards. Then a second
+  P2P=1 serve qwen38_w8a8_p2p71b
+  (PUSH_AR=0) took the free lease --
+  forbidden chain. P1b fail-fast exit 8.
+  Q8 hold stays 30.89 / warmup 32.14.
+  Script ready for next free+healthy.
+
+VERDICT -> BLOCKED. Do not steal p2p71b.
+  Do not start a third P2P. Next fire:
+  P1b doors A/B if lease free and
+  xpu-health GO. Do not start DD.
+  Do not demote 31.9 / 34.9 / 65.08.
+

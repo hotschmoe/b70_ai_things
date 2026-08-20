@@ -9,11 +9,12 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-P1b -- Q8_DOORS=0 vs 1 A/B. Serve
-qwen38_oblit_q8 is UP :8010 (lease
-237652). Longer g128 then doors A/B.
-W1 hold 65.08 stays. Do not steal
-cards for O2 while P1 is live.
+P1b -- `bash llamacpp/sweep_obliterated_q8_doors.sh`
+when cards FREE and xpu-health GO.
+qwen38_oblit_q8 is DOWN. Foreign
+p2p71b holds both cards (P2P=1
+chain 2). Do not steal. Do not
+start a third P2P. W1 65.08 stays.
 
 ---
 
@@ -127,3 +128,44 @@ Do not: publish 65.08 as W8A8; demote 31.9
 Restore: DD PARKED. Cards free. W1 container
   removed.
 JOURNAL: ### 2026-08-20aw
+
+## LOOP 3 -- 2026-08-20T0750Z -- P1b script + ignore-eos; GPU blocked
+
+Picked: P1b Q8_DOORS=0 vs 1 A/B +
+  longer g128. Could not attach: LOOP 2
+  Q8 serve was stopped by foreign
+  sweep_p2p_71_retest.sh.
+Why this, not the other open row:
+  operator-priority P1. W1 DONE. O2
+  needs our cards.
+GPU: both cards HELD by foreign
+  qwen38_w8a8_p2p71 then p2p71b.
+  DD PARKED. P2P=1 in vLLM TP=2.
+Command:
+  bash llamacpp/sweep_obliterated_q8_doors.sh
+  (lease-busy exit 8; no second serve)
+Log: /mnt/vm_8tb/b70/lmx_overnight/STATUS
+  p2p71_serve_20260820T0732Z.log
+Result: P2P71 GRAPH=0 TP=2 P2P=1 hung
+  15 min at encoder-cache / shm_broadcast
+  (workers ~180% CPU). NOT HEALTHY 900s.
+  No DEVICE_LOST in dmesg. xpu-health
+  post HEALTHY. Then a second P2P=1
+  start (p2p71b PUSH_AR=0) chained --
+  standing no. P1b sweep + phase_bench
+  --ignore-eos landed. GGUF 27702 MB.
+Verdict: BLOCKED (foreign P2P chain).
+  No Q8 A/B number. Hold 30.89 / 32.14
+  stays. Health recovered after first
+  hang; 7.1 did NOT cure H.13 hang.
+Changed beliefs: P2P-in-vLLM-TP2 on
+  7.1 still hangs at warmup all_reduce
+  / profiling. Do not chain a third
+  P2P start. P1b must hold lease for
+  the whole A/B (no nested gpu-run gap).
+Next pick: P1b doors A/B when lease
+  free + xpu-health GO.
+Do not: steal p2p71b; third P2P; DD;
+  COMM_DIRECT_Q8=3; demote 31.9/34.9.
+Restore: DD PARKED. Q8 serve DOWN.
+JOURNAL: ### 2026-08-20ay

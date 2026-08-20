@@ -100,6 +100,7 @@ def _stream_chat(
     max_tokens: int,
     temperature: float,
     timeout: float,
+    ignore_eos: bool = False,
 ) -> dict[str, Any]:
     """SSE chat completion with true first-token timing."""
     url = base.rstrip("/") + "/v1/chat/completions"
@@ -112,6 +113,9 @@ def _stream_chat(
         "stream_options": {"include_usage": True},
         "chat_template_kwargs": {"enable_thinking": False},
     }
+    if ignore_eos:
+        # Force gN decode. LOOP 2 Q8 early-EOS ~20 tok vs warmup length 128.
+        payload["ignore_eos"] = True
     data = json.dumps(payload).encode()
     req = urllib.request.Request(
         url,
@@ -254,6 +258,11 @@ def main() -> int:
     ap.add_argument("--out", default="")
     ap.add_argument("--label", default="")
     ap.add_argument("--skip-warmup", action="store_true")
+    ap.add_argument(
+        "--ignore-eos",
+        action="store_true",
+        help="force max_tokens (llama.cpp/vLLM ignore_eos). Use for g128 decode A/B.",
+    )
     args = ap.parse_args()
 
     # discover model if needed
@@ -270,11 +279,13 @@ def main() -> int:
         "gen_tokens": args.gen_tokens,
         "n": args.n,
         "label": args.label,
+        "ignore_eos": bool(args.ignore_eos),
         "methodology": {
             "post_first": "(completion_tokens - 1) / (request_end - first_token)",
             "prefill_proxy": "prompt_tokens / TTFT",
             "prefixes": "unique entropy-first cold",
             "warmup": "one same-shape then n timed",
+            "ignore_eos": bool(args.ignore_eos),
         },
     }
 
@@ -286,7 +297,10 @@ def main() -> int:
         warm_prompt = _entropy_prompt(args.prompt_tokens, salt=f"warmup-{args.label}-{args.prompt_tokens}")
         print(f"[warmup] p~{args.prompt_tokens} g{args.gen_tokens}", flush=True)
         try:
-            w = _stream_chat(args.base, model, warm_prompt, args.gen_tokens, args.temperature, args.timeout)
+            w = _stream_chat(
+                args.base, model, warm_prompt, args.gen_tokens, args.temperature, args.timeout,
+                ignore_eos=args.ignore_eos,
+            )
             print(f"[warmup] done ttft={w['ttft_s']:.3f}s post_first={w['post_first_tok_s']:.2f}", flush=True)
             meta["warmup"] = w
         except Exception as e:
@@ -298,7 +312,10 @@ def main() -> int:
         prompt = _entropy_prompt(args.prompt_tokens, salt=salt)
         print(f"[run {i+1}/{args.n}] salt={salt[:24]}...", flush=True)
         try:
-            r = _stream_chat(args.base, model, prompt, args.gen_tokens, args.temperature, args.timeout)
+            r = _stream_chat(
+                args.base, model, prompt, args.gen_tokens, args.temperature, args.timeout,
+                ignore_eos=args.ignore_eos,
+            )
             r["i"] = i
             r["salt"] = salt
             runs.append(r)

@@ -7,11 +7,13 @@
 > Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
 > **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**
 > (G1 Paris/391) vs S1 47.58. Board 112.65 still ceiling. Not W8A8.
-> **P1 LIVE**: Pliny OBLITERATED Q8_0 TP2 G1 GO, post-first **30.89**
-> / warmup g128 **32.14** on :8010. Next P1b Q8_DOORS A/B.
+> **P1**: Pliny Q8_0 TP2 G1 GO, post-first **30.89** / warmup **32.14**.
+> Serve DOWN. **P1b blocked**: foreign vLLM TP2 P2P=1 hung 15m at
+> warmup (not DEVICE_LOST; health recovered) then chained p2p71b.
+> Next: `bash llamacpp/sweep_obliterated_q8_doors.sh` when free+healthy.
+> Do not steal. Do not chain a third P2P. COMM_DIRECT_Q8=3 forbidden.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**.
-> DD PARKED. vLLM P2P off. COMM_DIRECT_Q8=3 forbidden.
-> Ledger: `docs/20260820_lmx_overnight_loops.md`.
+> DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
 
 > ### [CAMPAIGN 2026-07-28] -- active ordering
 > Box is HEADLESS (cards symmetric, ~126-128 TFLOPS each). The DD is DP=2 NVFP4 27B: two vLLM
