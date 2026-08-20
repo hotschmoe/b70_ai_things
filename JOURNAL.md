@@ -15490,3 +15490,38 @@ VERDICT -> BLOCKED. Do not steal p2p71b.
   xpu-health GO. Do not start DD.
   Do not demote 31.9 / 34.9 / 65.08.
 
+### 2026-08-20az - LOOP 4: 7.1 P2P send-it -- hang stays, wedge gone
+
+CONTEXT -> Operator: do not fear P2P wedge;
+  kernel 7.1 fixed it; send it. PRE.1 retry
+  condition fired (7.1 retest + window).
+
+CONFIG -> uname 7.1.0-070100-generic.
+  I_KNOW_P2P_WEDGES=1. W8A8-gptq TP=2
+  GRAPH=0 NOMTP MAXLEN=16384.
+  A: P2P=1 PUSH_AR=1. B: P2P=1 PUSH_AR=0.
+  C: P2P=0 PUSH_AR=1 (wedge probe).
+
+COMMAND ->
+  ```
+  # peer
+  torch.xpu.can_device_access_peer -> True/True
+  I_KNOW_P2P_WEDGES=1 P2PACCESS=1 ... serve start
+  P2PACCESS=0 PUSH_AR=1 ... serve start  # C
+  ```
+
+RESULT ->
+  Peer True both ways (was False on 6.18).
+  A+B: load 16.74 GiB then hang at encoder
+  cache / shm_broadcast until 900s. No
+  DEVICE_LOST. Health GO after both.
+  C: HEALTHY **147s**. G1 Paris/391 GO.
+  On 7.0, C would have been DEVICE_LOST
+  until reboot (H.13).
+
+VERDICT -> Wedge CURED. P2P-in-vLLM-serve
+  still HANGS. Keep P2PACCESS=0. TP=2 comm
+  stays PUSH_AR (L0-IPC). Do not retry
+  CCL_TOPO_P2P_ACCESS=1. Next P1b.
+  Do not start DD.
+

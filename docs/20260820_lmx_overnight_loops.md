@@ -10,11 +10,9 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 ## NEXT PICK (keep this line true)
 
 P1b -- `bash llamacpp/sweep_obliterated_q8_doors.sh`
-when cards FREE and xpu-health GO.
-qwen38_oblit_q8 is DOWN. Foreign
-p2p71b holds both cards (P2P=1
-chain 2). Do not steal. Do not
-start a third P2P. W1 65.08 stays.
+Cards FREE. xpu-health GO. P2P=1
+in vLLM TP>1 stays default-off
+(hang). Do not retry P2P. W1 65.08.
 
 ---
 
@@ -169,3 +167,34 @@ Do not: steal p2p71b; third P2P; DD;
   COMM_DIRECT_Q8=3; demote 31.9/34.9.
 Restore: DD PARKED. Q8 serve DOWN.
 JOURNAL: ### 2026-08-20ay
+
+## LOOP 4 -- 2026-08-20T0808Z -- 7.1 P2P retest: hang stays, wedge gone
+
+Picked: operator "send P2P". Kernel 7.1.0.
+  I_KNOW_P2P_WEDGES=1. OneCCL P2P=1 TP=2 then
+  P2P=0 TP=2 smoke.
+Why this, not the other open row: operator
+  override of PRE.1. 7.1 GuC wedge was cured;
+  H.13 oneCCL P2P-in-serve was never retested.
+GPU: both cards. DD PARKED.
+Command:
+  torch.xpu.can_device_access_peer True/True
+  P2PACCESS=1 GRAPH=0 TP=2 W8A8 (PUSH_AR on, then off)
+  then P2PACCESS=0 PUSH_AR=1 TP=2 GRAPH=0 smoke
+Log: p2p71_serve_20260820T0732Z.log
+  p2p71b_serve_20260820T0748Z.log
+  p2p71c_p2p0_20260820T0805Z.log
+Result: P2P=1 hung 900s both arms (shm_broadcast
+  after load). NOT DEVICE_LOST. Health stayed
+  GO. P2P=0 TP=2 HEALTHY **147s**, G1 Paris/391
+  GO. That follow-up would have wedged on 7.0.
+Verdict: GO (wedge cured). NO-GO (P2P-in-serve
+  still hangs). Default stays P2PACCESS=0.
+Changed beliefs: 7.1 fixed the *aftershock*
+  (matmul + later TP=2 P2P=0). It did not make
+  CCL_TOPO_P2P_ACCESS=1 boot. PUSH_AR L0-IPC
+  remains the TP=2 comm. Do not retry P2P=1.
+Next pick: P1b Q8 doors A/B. Cards free.
+Do not: third P2P; DD; COMM_DIRECT_Q8=3.
+Restore: DD PARKED. xpu-health GO. Serves stopped.
+JOURNAL: ### 2026-08-20az
