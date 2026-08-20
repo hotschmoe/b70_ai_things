@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 11 (O3 MTP experts INT4 GRAPH G1 GO; code c1 21.1 vs 34.9) |
-| Last JOURNAL | `2026-08-20bg` |
-| Next pick | **O4** grouped NVFP4 apply kernel, or **O1** 34.9 phase_bench. ornith_o3 UP. |
-| Blocked on | none. Lease card 0 ornith_o3. Hold 34.9 not beaten. |
+| Last loop | 12 (O4 M=1 1D GEMV proto PASS; 2.3x oneDNN isolated; not wired) |
+| Last JOURNAL | `2026-08-20bh` |
+| Next pick | **O4b** occupancy/WG + torch op, or **O1** 34.9 phase_bench. ornith_o3 UP. |
+| Blocked on | none. Lease card 0 ornith_o3. Hold 34.9 not beaten. O4 not e2e. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
@@ -104,6 +104,11 @@ Triton (~1.5 GB) so eager INT4 was 4.4 vs 4.3. This is the miss.
 Python sticky/M1 was 33.1/33.3 vs 34.9. Needs kernel work, not
 another host copy. Can span fires. Unit `test_fused_moe_apply.py`
 must stay XPUGraph PASS.
+LOOP 12 proto (`vllm/nvfp4/proto_moe_m1/`): AOT BMG-G31, 53 lsc_load,
+no DPAS. GEMV rel 1.6e-7. Isolated up 0.019 ms vs oneDNN 0.043 ms
+(2.3x); grouped 8x up 0.110 vs 0.320 ms. Bandwidth 84 GB/s WG=1
+(Intel FP8 decode cited ~528). Not wired. Next is occupancy then
+a torch op; do not swap the live serve .so.
 
 **O1** LocalMaxxing-method C1 of the 34.9 hold (p512/g128 n=5,
 cache off) so NVFP4 has a submit-shaped number. Measurement, not

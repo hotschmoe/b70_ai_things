@@ -9,11 +9,13 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O4 grouped NVFP4 apply (kernel) or
+O4b occupancy/WG + torch op, or
 O1 34.9 phase_bench. ornith_o3
 GRAPH+MTP3+expert-INT4 UP, G1 GO,
-code c1 21.1 < 34.9. Do not demote
-34.9. Do not P2P. Do not DD.
+code c1 21.1 < 34.9. O4 proto 2.3x
+oneDNN isolated, 84 GB/s WG=1, not
+wired. Do not demote 34.9. Do not
+P2P. Do not DD.
 
 ---
 
@@ -443,3 +445,43 @@ Do not: demote 34.9/31.9; P2P; DD;
   emul NVFP4 G1.
 Restore: DD PARKED. Q8 DOWN. O3 UP.
 JOURNAL: ### 2026-08-20bg
+
+## LOOP 12 -- 2026-08-20T1146Z -- O4 M=1 1D GEMV proto PASS; 2.3x oneDNN
+
+Picked: O4 ESIMD M=1 1D block_load NVFP4
+  GEMV proto (llm-scaler #491). Card 1
+  only. Leave ornith_o3 up.
+Why this, not the other open row:
+  NEXT PICK. Overnight serve is O3 not
+  Q8; do not steal. O1 needs the 34.9
+  no-MTP ckpt. Kernel work can span.
+GPU: card 0 HELD ornith_o3 :18080.
+  Card 1 proto + oneDNN + unit. DD PARKED.
+  P2P=0.
+Command:
+  bash vllm/nvfp4/proto_moe_m1/build.sh
+  gpu-run --card 1 proto_moe_m1/run.sh
+  bench_onednn_m1.py + test_fused_moe_apply.py
+Log: /mnt/vm_8tb/b70/lmx_overnight/o4_m1_run_20260820T114532Z.log
+  o4_m1_onednn_unit_20260820T114532Z.log
+Result: AOT BMG-G31, 53 lsc_load, 0 dpas.
+  GEMV max_rel 1.6e-7. Apply 1.5e-3.
+  Isolated vs oneDNN M=1:
+  up 0.019 vs 0.043 ms (2.26x, 84 vs 31 GB/s)
+  down 0.011 vs 0.041 ms (3.73x)
+  grouped 8x up 0.110 vs 0.320 ms (2.91x)
+  apply 0.176 ms. Unit XPUGraph PASS.
+  o3 still Paris-id, Up. Hold 34.9.
+Verdict: GO proto+numerics. NO-GO e2e.
+  84 GB/s WG=1 << Intel 528. Not wired.
+Changed beliefs: 1D load is real vs
+  copy_from (+22%) and vs oneDNN M=1
+  (~2.3x) on Ornith expert shapes. The
+  34.9 gap is still launch/occupancy
+  + wiring, not another Python copy.
+Next pick: O4b occupancy/WG + torch op,
+  or O1 34.9 phase_bench. Leave o3 up.
+Do not: demote 34.9/31.9; P2P; DD;
+  emul NVFP4 G1; swap live serve .so.
+Restore: DD PARKED. Q8 DOWN. O3 UP.
+JOURNAL: ### 2026-08-20bh

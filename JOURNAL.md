@@ -15757,3 +15757,41 @@ VERDICT -> Pack+GRAPH GO. Speed NO-GO.
   O4 or O1. Do not demote 34.9/31.9.
   Do not P2P. Do not start DD.
 
+### 2026-08-20bh - LOOP 12: O4 M=1 1D GEMV proto; 2.3x oneDNN
+
+CONTEXT -> Overnight 30m. NEXT PICK O4
+  grouped NVFP4 apply kernel. o3 holds
+  card 0 (21.1 < 34.9). Attach, do not
+  second serve. Kernel on card 1.
+
+CONFIG -> Standalone ESIMD M=1 1D
+  block_load along K (llm-scaler #491).
+  NVFP4 E2M1 packed + group-16 scale.
+  Ornith expert up N=1024 K=2048, down
+  N=2048 K=512, top_k=8. IMG int8g-v0260
+  AOT intel_gpu_bmg_g31. P2P=0. No DPAS.
+
+COMMAND ->
+  ```
+  bash vllm/nvfp4/proto_moe_m1/build.sh
+  gpu-run --card 1 proto_moe_m1/run.sh
+  gpu-run --card 1 bench_onednn_m1.py
+  gpu-run --card 1 test_fused_moe_apply.py
+  ```
+
+RESULT -> Compile OK, 53 lsc_load, 0
+  dpas. GEMV max_rel **1.6e-7**.
+  | path | ms | vs oneDNN |
+  | up 1D | 0.019 / 84 GB/s | 0.043 / 2.26x |
+  | down 1D | 0.011 / 74 GB/s | 0.041 / 3.73x |
+  | grouped 8x up | 0.110 | 0.320 / 2.91x |
+  | apply | 0.176 | n/a |
+  1D vs copy_from +22%. Unit XPUGraph
+  **PASS**. o3 still serving. Hold 34.9.
+
+VERDICT -> Proto GO. e2e NO-GO (not
+  wired, 84 GB/s WG=1 << 528). Hold
+  34.9. Next O4b occupancy+torch op or
+  O1. Do not demote 34.9/31.9. Do not
+  P2P. Do not start DD.
+

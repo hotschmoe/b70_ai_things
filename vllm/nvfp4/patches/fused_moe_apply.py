@@ -22,6 +22,8 @@ _FORCE = os.environ.get("B70_NVFP4_MOE_PATH", "").strip().lower()
 # (L63 measured 33.1 vs hold 34.9; extra copy). Opt-in B70_NVFP4_MOE_STICKY=1.
 _STICKY = os.environ.get("B70_NVFP4_MOE_STICKY", "0") == "1"
 # L64: specialize T==1 (decode GEMV-shaped). Default OFF (L64 33.3).
+# O4 LOOP 12: ESIMD M=1 1D block_load GEMV lives in vllm/nvfp4/proto_moe_m1/.
+# Isolated ~2.3x vs oneDNN M=1; 84 GB/s WG=1. Not wired (no torch op).
 _M1 = os.environ.get("B70_NVFP4_MOE_M1", "0") == "1"
 _GS = 16
 _RING = int(os.environ.get("B70_NVFP4_MOE_RING", "4"))

@@ -9,7 +9,9 @@
 > **P1 DONE in-image**: Q8_0 2x **32.03**.
 > **O3**: MTP routed experts INT4 packed 1688->435 MB, GRAPH boots.
 > G1 Paris/391. bench_code c1 **21.1** vs hold **34.9** (do not demote).
-> ornith_o3 UP card 0. Next **O4** NVFP4 apply kernel or **O1** 34.9
+> **O4 proto**: M=1 1D block_load GEMV PASS, isolated **2.3x** oneDNN
+> (0.019 vs 0.043 ms up). 84 GB/s WG=1, not wired.
+> ornith_o3 UP card 0. Next **O4b** occupancy+torch op or **O1** 34.9
 > phase_bench. Do not P2P. Do not emul NVFP4 G1.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**, Q8 **32.03**.
 > DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
@@ -765,11 +767,12 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **Ornith 35B NVFP4 (NOW, 2026-08-20at).** GRAPH no-MTP **34.9** is
+0. **Ornith 35B NVFP4 (NOW, 2026-08-20bh).** GRAPH no-MTP **34.9** is
    still the recipe. L63 sticky 33.1 / L64 M1 33.3 (opt-in, extra copy).
-   L65 draft-INT4 eager 4.4 (dense 78 MB only); GRAPH Half!=BF16.
-   Next: grouped NVFP4 kernel or INT4 the MTP *experts*. Hold k1bar
-   31.9. KV=auto. No emul.
+   O2/O3 GRAPH+MTP3 INT4: code c1 21.7/21.1, VRAM win only.
+   O4 proto: 1D block_load GEMV 2.3x oneDNN M=1 isolated, 84 GB/s WG=1,
+   not wired. Next: O4b occupancy + torch op, or O1 34.9 phase_bench.
+   Hold k1bar 31.9. KV=auto. No emul.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for
