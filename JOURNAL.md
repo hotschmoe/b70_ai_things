@@ -15921,3 +15921,35 @@ VERDICT -> GO measurement. Hold 34.9
   Do not demote 34.9/31.9. Do not P2P.
   Do not start DD.
 
+### 2026-08-20bm - LOOP 17: O4e fused layerlet 1.04x seq NO-GO
+
+CONTEXT -> Overnight 30m. NEXT PICK O4e
+  fused up+silu+down. o1 holds card 0
+  (45.56 / 34.8). Kernel on card 1.
+
+CONFIG -> One-launch ESIMD layerlet
+  S=8 H=2048 I=512. First WG=1024
+  DEVICE_LOST-class: ESIMD max WG=64.
+  Retry WG=64, 16 up rows/WI. IMG
+  int8g-v0260 AOT bmg_g31. P2P=0.
+
+COMMAND ->
+  ```
+  bash vllm/nvfp4/proto_moe_m1/build_layerlet.sh
+  gpu-run --card 1 proto_moe_m1/run_layerlet.sh
+  gpu-run --card 1 bench_onednn_layerlet.py
+  ```
+
+RESULT -> Compile 21 lsc_load, 0 dpas.
+  WG=1024 abort (WG<=64). WG=64 PASS
+  max_rel 1.4e-3. fused **0.133 ms**
+  vs seq GEMV **0.137 ms (1.036x)** vs
+  eager oneDNN 8x **1.159 ms (8.71x)**.
+  o1 still Up. Hold 34.9.
+
+VERDICT -> Proto GO. Speed NO-GO vs
+  own slot GEMV / GRAPH oneDNN. ESIMD
+  WG=64 serializes N=1024. Do not wire
+  e2e. Next W8. Do not demote 34.9/31.9.
+  Do not P2P. Do not start DD.
+

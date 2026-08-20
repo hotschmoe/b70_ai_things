@@ -14,9 +14,9 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 16 (O1 hold phase_bench 45.56; bench_code 34.8 recovers 34.9) |
-| Last JOURNAL | `2026-08-20bl` |
-| Next pick | **O4e** fused up+silu+down layerlet (card 1), or **W8**. ornith_o1 UP. |
+| Last loop | 17 (O4e fused layerlet 1.04x seq NO-GO; 8.7x eager oneDNN; WG=64) |
+| Last JOURNAL | `2026-08-20bm` |
+| Next pick | **W8** k1bar 31.9 (O* slot/layerlet closed). ornith_o1 UP. |
 | Blocked on | none. Lease card 0 ornith_o1. Hold 34.9 not beaten. M1_KERNEL default OFF. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. O1 phase_bench ignore-eos p512/g128 **45.56**. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
@@ -117,8 +117,11 @@ XPUGraph capture+replay PASS. Env `B70_NVFP4_MOE_M1_KERNEL=1` +
 LOOP 15 O4d: e2e GRAPH no-MTP M1_KERNEL=1. G1 Paris/391.
 bench_code c1 **32.2** vs hold **34.9**. Wire GO, speed NO-GO.
 Default stays OFF. Isolated 2.36x does not beat GRAPH oneDNN
-in the slot loop. Next fused layerlet (O4e) or W8. Do not
-demote 34.9.
+in the slot loop.
+LOOP 17 O4e: fused up+silu+down, 1 launch, ESIMD WG=64 (1024
+aborts). fused 0.133 vs seq GEMV 0.137 (1.04x) vs eager
+oneDNN 1.159 (8.7x). Launch fusion is not the GRAPH gap.
+Do not demote 34.9.
 
 **O1** LocalMaxxing-method C1 of the 34.9 hold (DONE LOOP 16)
 GRAPH no-MTP M1_KERNEL=0. G1 Paris/391. bench_code c1 **34.8**

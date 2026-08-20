@@ -15,8 +15,10 @@
 > **O4d e2e NO-GO**: GRAPH no-MTP M1_KERNEL=1 G1 Paris/391,
 > bench_code c1 **32.2** vs hold **34.9**. Default stays OFF.
 > **O1 DONE**: hold recipe recovered bench_code **34.8**.
-> phase_bench ignore-eos p512/g128 **45.56**. ornith_o1 UP.
-> Next **O4e** fused layerlet or **W8**. Do not P2P.
+> phase_bench ignore-eos p512/g128 **45.56**.
+> **O4e fused layerlet NO-GO**: 0.133 vs seq 0.137 (1.04x);
+> 8.7x eager oneDNN. ESIMD WG=64. Not wired.
+> ornith_o1 UP. Next **W8** k1bar 31.9. Do not P2P.
 > Do not emul NVFP4 G1.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9** / O1 **45.56**,
 > k1bar **31.9**, Q8 **32.03**.
@@ -773,11 +775,11 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **Ornith 35B NVFP4 (NOW, 2026-08-20bl).** GRAPH no-MTP **34.9**
-   bench_code is still the recipe (O1 recovered **34.8**).
-   O1 phase_bench ignore-eos p512/g128 **45.56**. L63/L64/O4d
-   env/kernel slot-GEMV closed (33.1/33.3/32.2). Next speed:
-   fused layerlet (O4e) or W8. Hold k1bar 31.9. KV=auto. No emul.
+0. **Ornith 35B NVFP4 (NOW, 2026-08-20bm).** GRAPH no-MTP **34.9**
+   bench_code is still the recipe (O1 recovered **34.8**,
+   phase_bench **45.56**). Slot GEMV / fused layerlet closed
+   (O4d 32.2, O4e 1.04x seq). Next overnight: W8 k1bar 31.9
+   (do not regress). KV=auto. No emul.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for

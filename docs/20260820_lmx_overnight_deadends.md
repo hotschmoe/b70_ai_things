@@ -163,4 +163,24 @@ Retry if: fused up+silu+down layerlet
   persistent decode kernel.
 Related JOURNAL: ### 2026-08-20bk
 
+## O4e -- fused up+silu+down layerlet -- 2026-08-20 -- LOOP 17
+
+Tried: one-launch ESIMD layerlet
+  S=8 H=2048 I=512 vs seq 8x
+  (up GEMV + silu + down GEMV).
+  WG=1024 aborted (ESIMD WG<=64).
+  WG=64, 16 serial up rows / WI.
+Result: numerics max_rel 1.4e-3 PASS.
+  fused **0.133 ms** vs seq **0.137**
+  (1.036x) vs eager oneDNN **1.159**
+  (8.71x). 21 lsc_load, 0 dpas.
+Why it is closed as a speed path:
+  launch fusion does not beat the
+  slot GEMV, so it cannot beat GRAPH
+  oneDNN (O4d 32.2 vs 34.9). ESIMD
+  WG=64 serializes N=1024.
+Retry if: non-ESIMD SYCL WG>=1024, or
+  a persistent decode kernel.
+Related JOURNAL: ### 2026-08-20bm
+
 ---

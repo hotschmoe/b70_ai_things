@@ -9,13 +9,12 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O4e fused up+silu+down layerlet
-(card 1; o1 holds 0), or W8.
-ornith_o1 UP, G1 GO, code c1 34.8
-~ hold 34.9. O1 phase_bench **45.56**
-ignore-eos p512/g128. M1_KERNEL OFF.
-Do not demote 34.9. Do not P2P.
-Do not DD.
+W8 k1bar 31.9 (O* slot/layerlet
+closed). ornith_o1 UP, G1 GO, code
+c1 34.8 ~ hold 34.9. O1 phase_bench
+**45.56**. O4e fused 1.04x seq NO-GO.
+M1_KERNEL OFF. Do not demote 34.9.
+Do not P2P. Do not DD.
 
 ---
 
@@ -625,3 +624,37 @@ Do not: demote 34.9/31.9; P2P; DD;
   emul NVFP4 G1; treat 45.56 as 34.9.
 Restore: DD PARKED. Q8 DOWN. O1 UP.
 JOURNAL: ### 2026-08-20bl
+
+## LOOP 17 -- 2026-08-20T1414Z -- O4e fused layerlet 1.04x NO-GO
+
+Picked: O4e fused up+silu+down one
+  launch layerlet. Card 1 only.
+  Leave ornith_o1 up.
+Why this, not the other open row:
+  NEXT PICK. o1 is not Q8. O4d retry-if
+  was this layerlet. W8 waits.
+GPU: card 0 HELD ornith_o1 :18080.
+  Card 1 compile+run. DD PARKED. P2P=0.
+Command:
+  bash vllm/nvfp4/proto_moe_m1/build_layerlet.sh
+  gpu-run --card 1 proto_moe_m1/run_layerlet.sh
+  gpu-run --card 1 bench_onednn_layerlet.py
+Log: /mnt/vm_8tb/b70/lmx_overnight/o4e_run_20260820T141353Z.log
+  o4e_onednn_*.log
+Result: WG=1024 abort (ESIMD WG<=64).
+  WG=64 PASS rel 1.4e-3. fused 0.133 ms
+  vs seq 0.137 (1.036x) vs eager oneDNN
+  1.159 (8.71x). 21 lsc_load, 0 dpas.
+  o1 still Up. Hold 34.9.
+Verdict: Proto GO. Speed NO-GO vs slot
+  GEMV. Dead-end packet O4e. Not wired.
+Changed beliefs: extra launches are not
+  the GRAPH 34.9 gap. ESIMD WG=64 makes
+  fused N=1024 serial. 8.7x eager oneDNN
+  still loses e2e like O4d 2.36x.
+Next pick: W8 k1bar 31.9. Leave o1 up
+  until that fire STOPs it.
+Do not: demote 34.9/31.9; P2P; DD;
+  emul NVFP4 G1; wire layerlet e2e.
+Restore: DD PARKED. Q8 DOWN. O1 UP.
+JOURNAL: ### 2026-08-20bm
