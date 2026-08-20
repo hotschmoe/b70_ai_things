@@ -3,6 +3,13 @@
 **Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (sglang W8A8 long-prefill push shipped)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
+> ### [CAMPAIGNS 2026-08-20] -- operator: one entire campaign per lever
+> Serial A-E, do not mix. Plan: `docs/20260820_b70_bw_campaigns.md`.
+> A INT8 GDN projections (10.4 GiB BF16). B fuse 101 us per-token quant.
+> C XPUGraph/MRV2 launch. D VNNI16 small-M INT8 tile (+10-20% not 2x).
+> E DSpark accept 2.45 -> ~3.3. Then F W4A8/XMX (not NVFP4-as-XMX).
+> 4x MoE shopping is section G; no TB-73 MoE at 3-17B active today.
+>
 > ### [OVERNIGHT 2026-08-20] -- CLOSED
 > Scheduler cancelled. Serves stopped. Cards free. xpu-health GO.
 > Postmortem: `docs/20260820_lmx_overnight_postmortem.md`.

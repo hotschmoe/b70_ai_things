@@ -16157,3 +16157,26 @@ VERDICT -> Fabric P2P is fine. vLLM hang is
   P2PACCESS. PUSH_AR already matches the
   10.4 GB/s P2P-SYCL number. P2P_GPU K.10.
 
+### 2026-08-20bu - five serial BW campaigns written
+
+CONTEXT -> Operator: campaign each of INT8
+  GDN, fused quant, XPUGraph/MRV2, VNNI16,
+  DSpark accept~3. Then NVIDIA-shaped
+  W4A16/W4A4/XMX, then 4x MoE vs TB 73.
+
+CONFIG -> docs only. No GPU.
+
+COMMAND -> wrote
+  docs/20260820_b70_bw_campaigns.md
+  RESEARCH_TODO living header.
+
+RESULT -> A-E serial. F = W4A8 is the XMX
+  steal (W4A16 kernel is dequant-to-BF16,
+  NVFP4 is not INT4 DPAS). G = no 3-17B
+  active MoE matches Qwen3.8-27B TB 73;
+  Ornith 1.5 is 67.8. 4x128G fits 122B-A10B
+  W4A16.
+
+VERDICT -> Plan parked until LOOP 1. Do
+  not mix levers. Do not start DD.
+
