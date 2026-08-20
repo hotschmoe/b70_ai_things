@@ -42,6 +42,7 @@ if _M1K and _M1_SO:
         )
 _GS = 16
 _RING = int(os.environ.get("B70_NVFP4_MOE_RING", "4"))
+_M1K_LOGGED = False
 
 
 class _GrowScratch:
@@ -120,6 +121,15 @@ def _gemm(x, w_row, scale):
         and w_row.is_contiguous()
         and scale.is_contiguous()
     ):
+        global _M1K_LOGGED
+        if not _M1K_LOGGED:
+            print(
+                "[nvfp4-shim] m1_gemv dispatch "
+                f"N={int(w_row.shape[0])} K={int(x.shape[-1])}",
+                file=sys.stderr,
+                flush=True,
+            )
+            _M1K_LOGGED = True
         return torch.ops.b70_nvfp4_m1.gemv(x, w_row, scale)
     return torch.ops._xpu_C.nvfp4_gemm_w4a16(
         x, w_row.transpose(0, 1), None, scale, _GS

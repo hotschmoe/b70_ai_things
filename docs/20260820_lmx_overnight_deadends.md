@@ -144,4 +144,23 @@ Retry if: fused layerlet / larger K
   launch mix.
 Related JOURNAL: ### 2026-08-20bi
 
+## O4d -- sidecar M1_KERNEL e2e GRAPH -- 2026-08-20 -- LOOP 15
+
+Tried: Ornith NVFP4 fused GRAPH no-MTP
+  STICKY=0 M1=0 M1_KERNEL=1 sidecar
+  b70_nvfp4_m1.gemv. Same ckpt as 34.9.
+  G1 + bench_code c1 256 n=3.
+Result: m1k=1. dispatch N=1024 K=2048
+  at capture (4s). G1 Paris/391.
+  bench_code c1 **32.2** vs hold **34.9**
+  vs L64 Python M1 33.3.
+Why it is closed as a speed path:
+  isolated 2.36x vs oneDNN does not
+  beat GRAPH oneDNN in the T x top_k
+  slot loop. Extra launches dominate.
+Retry if: fused up+silu+down layerlet
+  (one launch / expert), or a
+  persistent decode kernel.
+Related JOURNAL: ### 2026-08-20bk
+
 ---

@@ -12,8 +12,10 @@
 > **O4 proto**: M=1 1D block_load GEMV PASS, isolated **2.3x** oneDNN.
 > **O4b occupancy NO-GO**: WG/SLM <= WG=1 (down slm16 0.43x).
 > **O4c sidecar op GO**: 2.36x oneDNN, XPUGraph PASS, default OFF.
-> ornith_o3 UP card 0. Next **O4d** e2e M1_KERNEL restart or **O1**
-> 34.9 phase_bench. Do not P2P. Do not emul NVFP4 G1.
+> **O4d e2e NO-GO**: GRAPH no-MTP M1_KERNEL=1 G1 Paris/391,
+> bench_code c1 **32.2** vs hold **34.9**. Default stays OFF.
+> ornith_o4d UP card 0. Next **O1** 34.9 phase_bench (restart
+> hold recipe). Do not P2P. Do not emul NVFP4 G1.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**, Q8 **32.03**.
 > DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
 
@@ -768,12 +770,12 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **Ornith 35B NVFP4 (NOW, 2026-08-20bj).** GRAPH no-MTP **34.9** is
+0. **Ornith 35B NVFP4 (NOW, 2026-08-20bk).** GRAPH no-MTP **34.9** is
    still the recipe. L63 sticky 33.1 / L64 M1 33.3 (opt-in, extra copy).
    O2/O3 GRAPH+MTP3 INT4: code c1 21.7/21.1, VRAM win only.
-   O4c sidecar m1_gemv 2.36x oneDNN, GRAPH PASS, default OFF. Next:
-   O4d e2e M1_KERNEL restart, or O1 34.9 phase_bench.
-   Hold k1bar 31.9. KV=auto. No emul.
+   O4c sidecar m1_gemv 2.36x oneDNN, GRAPH PASS, default OFF.
+   O4d e2e M1_KERNEL GRAPH **32.2** vs 34.9 (NO-GO; default OFF).
+   Next: O1 34.9 phase_bench. Hold k1bar 31.9. KV=auto. No emul.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for

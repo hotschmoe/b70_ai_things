@@ -9,13 +9,12 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O4d e2e GRAPH + M1_KERNEL=1 (same
-Ornith ckpt, restart), or O1 34.9
-phase_bench. ornith_o3 UP, G1 GO,
-code c1 21.1 < 34.9. O4c sidecar
-op 2.36x oneDNN, GRAPH PASS, default
-OFF. Do not demote 34.9. Do not P2P.
-Do not DD.
+O1 34.9 phase_bench (restart hold
+recipe, M1_KERNEL off). ornith_o4d
+UP, G1 GO, code c1 32.2 < 34.9.
+O4d wire GO speed NO-GO. Default
+M1_KERNEL OFF. Do not demote 34.9.
+Do not P2P. Do not DD.
 
 ---
 
@@ -553,3 +552,37 @@ Do not: demote 34.9/31.9; P2P; DD;
   emul NVFP4 G1; swap live serve .so.
 Restore: DD PARKED. Q8 DOWN. O3 UP.
 JOURNAL: ### 2026-08-20bj
+
+## LOOP 15 -- 2026-08-20T1315Z -- O4d e2e M1_KERNEL 32.2 NO-GO
+
+Picked: O4d e2e GRAPH no-MTP + sidecar
+  M1_KERNEL=1 vs hold 34.9. Stopped o3
+  (21.1 exists, same ckpt).
+Why this, not the other open row:
+  NEXT PICK. P1 in-image done. O1 needs
+  the 34.9 recipe (M1_KERNEL off).
+GPU: card 0 HELD ornith_o4d :18080.
+  Card 1 free. DD PARKED. P2P=0.
+Command:
+  docker rm -f ornith_o3
+  gpu-run --card 0 bash vllm/nvfp4/sweep_ornith_o4d.sh
+  g1_probe + bench_code c1 256 n=3
+Log: /mnt/vm_8tb/b70/lmx_overnight/o4d_g1_20260820T131312Z.log
+  o4d_code_20260820T131312Z.txt
+Result: m1k=1. m1_gemv N=1024 K=2048
+  at GRAPH capture 4s. G1 Paris/391.
+  bench_code c1 **32.2** (best 32.3) vs
+  hold **34.9** (0.92x) vs L64 33.3.
+Verdict: Wire GO. Speed NO-GO. Hold
+  34.9. M1_KERNEL default OFF. Dead-end
+  packet O4d. Leave o4d up.
+Changed beliefs: isolated 2.36x vs
+  oneDNN is not e2e GRAPH decode. Slot
+  loop launches dominate. Next speed
+  is fused layerlet, not another env.
+Next pick: O1 34.9 phase_bench (restart
+  hold recipe, M1_KERNEL off).
+Do not: demote 34.9/31.9; P2P; DD;
+  emul NVFP4 G1; leave M1_KERNEL on.
+Restore: DD PARKED. Q8 DOWN. O4d UP.
+JOURNAL: ### 2026-08-20bk

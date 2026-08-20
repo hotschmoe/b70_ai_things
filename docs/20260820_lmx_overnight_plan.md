@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 14 (O4c sidecar torch op GO 2.36x oneDNN; GRAPH PASS; default OFF) |
-| Last JOURNAL | `2026-08-20bj` |
-| Next pick | **O4d** e2e GRAPH+M1_KERNEL (same ckpt, restart), or **O1** 34.9 phase_bench. ornith_o3 UP. |
-| Blocked on | none. Lease card 0 ornith_o3. Hold 34.9 not beaten. M1_KERNEL default OFF. |
+| Last loop | 15 (O4d e2e M1_KERNEL GRAPH 32.2 NO-GO vs 34.9; G1 GO) |
+| Last JOURNAL | `2026-08-20bk` |
+| Next pick | **O1** 34.9 phase_bench (restart hold recipe, M1_KERNEL off). ornith_o4d UP 32.2. |
+| Blocked on | none. Lease card 0 ornith_o4d. Hold 34.9 not beaten. M1_KERNEL default OFF. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
@@ -113,8 +113,11 @@ Occupancy closed.
 LOOP 14 O4c: sidecar `b70_nvfp4_m1.gemv` (current stream, no live
 .so swap). vs oneDNN up 0.018/0.043 ms (2.36x) cos 0.999996;
 XPUGraph capture+replay PASS. Env `B70_NVFP4_MOE_M1_KERNEL=1` +
-`B70_NVFP4_M1_SO` default OFF (H=64 unit stays oneDNN). Next e2e
-GRAPH restart or O1. Do not demote 34.9.
+`B70_NVFP4_M1_SO` default OFF (H=64 unit stays oneDNN).
+LOOP 15 O4d: e2e GRAPH no-MTP M1_KERNEL=1. G1 Paris/391.
+bench_code c1 **32.2** vs hold **34.9**. Wire GO, speed NO-GO.
+Default stays OFF. Isolated 2.36x does not beat GRAPH oneDNN
+in the slot loop. Next O1 or fused layerlet. Do not demote 34.9.
 
 **O1** LocalMaxxing-method C1 of the 34.9 hold (p512/g128 n=5,
 cache off) so NVFP4 has a submit-shaped number. Measurement, not

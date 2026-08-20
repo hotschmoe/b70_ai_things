@@ -147,6 +147,14 @@ if [ "$PUSH_AR" = 1 ] && [ "$TP" != 1 ]; then
   SERVED="${SERVED}-pushar"
 fi
 
+# O4c sidecar NVFP4 M=1 GEMV .so. Optional. Do not swap live _xpu_C.
+M1_MOUNTS=( )
+if [ -n "${B70_NVFP4_M1_SO_HOST:-}" ]; then
+  [ -f "$B70_NVFP4_M1_SO_HOST" ] || { echo "MISSING M1_SO $B70_NVFP4_M1_SO_HOST"; exit 1; }
+  M1_MOUNTS=( -v "$B70_NVFP4_M1_SO_HOST:/opt/nvfp4_m1/b70_nvfp4_m1_gemv.so:ro" )
+  echo "=== M1_SO $B70_NVFP4_M1_SO_HOST -> /opt/nvfp4_m1/b70_nvfp4_m1_gemv.so ==="
+fi
+
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
 TP_ARGS=( )
@@ -165,7 +173,7 @@ docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-p
   --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" \
   -v "$REPO/models/files:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
   -v "$ROOT/tmp_ssd:/tmp_ssd" -v "$SHIMDIR:/opt/nvfp4_shim:ro" \
-  "${KERN_MOUNTS[@]}" "${KV_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" \
+  "${KERN_MOUNTS[@]}" "${KV_MOUNTS[@]}" "${PUSH_AR_MOUNTS[@]}" "${M1_MOUNTS[@]}" \
   -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
   -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
   -e PYTHONPATH=/opt/nvfp4_shim -e NVFP4_XPU_MODE="$MODE" -e NVFP4_MOE_W4A16_EMUL=1 \

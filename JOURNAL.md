@@ -15854,3 +15854,35 @@ VERDICT -> Op GO. e2e not run. Next O4d
   demote 34.9/31.9. Do not P2P. Do not
   start DD.
 
+### 2026-08-20bk - LOOP 15: O4d e2e M1_KERNEL GRAPH 32.2 NO-GO
+
+CONTEXT -> Overnight 30m. NEXT PICK O4d
+  e2e GRAPH+M1_KERNEL. o3 benched 21.1.
+  Same Ornith ckpt, restart no-MTP.
+
+CONFIG -> GRAPH=1 no-MTP CAP 1,2,4,8
+  STICKY=0 M1=0 M1_KERNEL=1 sidecar
+  b70_nvfp4_m1_gemv.so. IMG int8g-v0260
+  KV_FP8=0 LANGONLY=1 P2P=0. vs hold
+  34.9 same recipe M1_KERNEL off.
+
+COMMAND ->
+  ```
+  docker rm -f ornith_o3
+  gpu-run --card 0 bash vllm/nvfp4/sweep_ornith_o4d.sh
+  g1_probe + bench_code c1 256 n=3
+  ```
+
+RESULT -> m1k=1. m1_gemv dispatch
+  N=1024 K=2048 at GRAPH capture (4s).
+  G1 Paris/391 no bangs. bench_code c1
+  avg **32.2** best 32.3 vs hold **34.9**
+  (0.92x). vs L64 Python M1 33.3.
+
+VERDICT -> Wire GO. Speed NO-GO. Hold
+  34.9. Default M1_KERNEL stays OFF.
+  Leave ornith_o4d up. Next O1 34.9
+  phase_bench (restart hold recipe).
+  Do not demote 34.9/31.9. Do not P2P.
+  Do not start DD.
+
