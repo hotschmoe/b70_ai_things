@@ -14,8 +14,8 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 21 (attach k1bar-pc1 59m G1 GO; hold 31.9 stays) |
-| Last JOURNAL | `2026-08-20bq` |
+| Last loop | 22 (attach k1bar-pc1 ~90m G1 GO; hold 31.9 stays) |
+| Last JOURNAL | `2026-08-20br` |
 | Next pick | park. Overnight speed rows closed. k1bar-pc1 UP. |
 | Blocked on | none. Lease both cards k1bar. Hold 31.9 not demoted. P2P=0. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. O1 phase_bench ignore-eos p512/g128 **45.56**. |
