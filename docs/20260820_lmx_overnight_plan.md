@@ -1,7 +1,8 @@
 # LocalMaxxing overnight loop -- 27B/35B B70 4-bit + W8A8
 
 **Created:** 2026-08-20
-**Status:** LOOPING (30m scheduler)
+**Status:** CLOSED 2026-08-20 ~17:10Z. Postmortem:
+`docs/20260820_lmx_overnight_postmortem.md`.
 **Goal:** move measured C1 on 1x or 2x B70 for NVFP4, W4A16, and
 W8A8-INT8. Do not chase LocalMaxxing aggregates (1139 C64, 438
 concurrency=64, 248 p4096/o32).
@@ -14,10 +15,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 22 (attach k1bar-pc1 ~90m G1 GO; hold 31.9 stays) |
-| Last JOURNAL | `2026-08-20br` |
-| Next pick | park. Overnight speed rows closed. k1bar-pc1 UP. |
-| Blocked on | none. Lease both cards k1bar. Hold 31.9 not demoted. P2P=0. |
+| Last loop | 23 (close: scheduler cancelled, serve stopped) |
+| Last JOURNAL | `2026-08-20bs` |
+| Next pick | none. Overnight CLOSED. |
+| Blocked on | none. Cards free. xpu-health GO. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. O1 phase_bench ignore-eos p512/g128 **45.56**. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |

@@ -3,28 +3,11 @@
 **Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (sglang W8A8 long-prefill push shipped)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
-> ### [OVERNIGHT 2026-08-20] -- 30m LocalMaxxing loop (active)
-> Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
-> **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**.
-> **P1 DONE in-image**: Q8_0 2x **32.03**.
-> **O3**: MTP routed experts INT4 packed 1688->435 MB, GRAPH boots.
-> G1 Paris/391. bench_code c1 **21.1** vs hold **34.9** (do not demote).
-> **O4 proto**: M=1 1D block_load GEMV PASS, isolated **2.3x** oneDNN.
-> **O4b occupancy NO-GO**: WG/SLM <= WG=1 (down slm16 0.43x).
-> **O4c sidecar op GO**: 2.36x oneDNN, XPUGraph PASS, default OFF.
-> **O4d e2e NO-GO**: GRAPH no-MTP M1_KERNEL=1 G1 Paris/391,
-> bench_code c1 **32.2** vs hold **34.9**. Default stays OFF.
-> **O1 DONE**: hold recipe recovered bench_code **34.8**.
-> phase_bench ignore-eos p512/g128 **45.56**.
-> **O4e fused layerlet NO-GO**: 0.133 vs seq 0.137 (1.04x);
-> 8.7x eager oneDNN. ESIMD WG=64. Not wired.
-> **W8/W8b remeasure**: k1bar G1 Paris/391. code c1 **28.8**
-> / **28.1** / soak **24.8** vs hold **31.9**. Do not demote.
-> k1bar-pc1 UP ~90m G1 GO. Park.
-> Do not P2P. Do not emul NVFP4 G1.
-> Holds: W1 **65.08**, Ornith GRAPH **34.9** / O1 **45.56**,
-> k1bar **31.9**, Q8 **32.03**.
-> DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
+> ### [OVERNIGHT 2026-08-20] -- CLOSED
+> Scheduler cancelled. Serves stopped. Cards free. xpu-health GO.
+> Postmortem: `docs/20260820_lmx_overnight_postmortem.md`.
+> Holds: Ornith GRAPH **34.9**, k1bar **31.9**, W1 **65.08**,
+> Pliny Q8_0 2x **32.03**. DD PARKED. P2PACCESS=0.
 
 > ### [CAMPAIGN 2026-07-28] -- active ordering
 > Box is HEADLESS (cards symmetric, ~126-128 TFLOPS each). The DD is DP=2 NVFP4 27B: two vLLM

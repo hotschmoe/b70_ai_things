@@ -16092,3 +16092,29 @@ VERDICT -> Attach GO. Leave up. Park.
   Do not demote 31.9. Do not P2P.
   Do not start DD. Do not start Q8.
 
+### 2026-08-20bs - LOOP 23: overnight closed
+
+CONTEXT -> Operator: close it all up and
+  postmortem. How did Pliny Q8 go?
+
+CONFIG -> Scheduler 01a01dff8593 cancelled.
+  docker stop -t 30 qwen38_w8a8_dspark.
+  xpu-health both cards.
+
+COMMAND ->
+  ```
+  scheduler_delete 01a01dff8593
+  docker stop -t 30 qwen38_w8a8_dspark
+  ./bin/xpu-health
+  ```
+
+RESULT ->
+  Cards free. HEALTHY. Postmortem
+  docs/20260820_lmx_overnight_postmortem.md.
+  Pliny Q8_0 2x hold **32.03** (1x 17.93),
+  G1 always GO, 0.73x vs Q4_K_M 43.8.
+  Biggest overnight move: W1 47.58 -> 65.08.
+
+VERDICT -> CLOSED. Holds 34.9 / 31.9 /
+  65.08 / 32.03. DD PARKED. P2P=0.
+

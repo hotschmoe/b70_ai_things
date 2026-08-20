@@ -9,10 +9,9 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-Park. Overnight speed rows closed.
-k1bar-pc1 UP ~90m G1 GO. Soak code
-c1 24.8. Hold 31.9 not demoted.
-Do not P2P. Do not DD.
+Overnight CLOSED. Scheduler deleted.
+Serves stopped. See
+`docs/20260820_lmx_overnight_postmortem.md`.
 
 ---
 
@@ -795,3 +794,22 @@ Do not: demote 31.9/34.9; P2P; DD;
   start Q8 while lease held.
 Restore: DD PARKED. Q8 DOWN. W8b UP.
 JOURNAL: ### 2026-08-20br
+
+## LOOP 23 -- 2026-08-20T1710Z -- close overnight
+
+Picked: operator close + postmortem.
+Why this, not the other open row: speed
+  rows parked; attach loops were noise.
+GPU: stopped qwen38_w8a8_dspark (grace 30s).
+  Scheduler 01a01dff8593 deleted. Lease free.
+  xpu-health GO both cards. DD PARKED.
+Command: docker stop -t 30; scheduler_delete;
+  docs/20260820_lmx_overnight_postmortem.md
+Log: n/a
+Result: overnight CLOSED. Holds unchanged.
+Verdict: GO (teardown).
+Changed beliefs: none.
+Next pick: none.
+Do not: restart the 30m scheduler; P2P=1; DD.
+Restore: DD PARKED. Cards free.
+JOURNAL: ### 2026-08-20bs
