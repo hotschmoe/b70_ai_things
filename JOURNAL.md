@@ -16118,3 +16118,42 @@ RESULT ->
 VERDICT -> CLOSED. Holds 34.9 / 31.9 /
   65.08 / 32.03. DD PARKED. P2P=0.
 
+### 2026-08-20bt - 7.1 P2P fabric re-measure (L0 + oneCCL, no vLLM serve)
+
+CONTEXT -> Operator: why Steve P2P=1 works and
+  our vLLM TP=2 hangs; profile actual
+  card-to-card copies; board vs kernel.
+
+CONFIG -> kernel 7.1.0-070100, GuC 70.58.0,
+  runtime 26.22.38646.4. 1950X / ASRock X399
+  Professional Gaming BIOS P4.05. GPU0
+  0000:0b:00.0 under RC 0000:00, GPU1
+  0000:44:00.0 under RC 0000:40. Uplinks
+  09:00.0 / 42:00.0 = 8.0 GT/s x16.
+  Stopped Pliny+open-webui. No vLLM P2P serve
+  (LOOP 4 hang already gated).
+
+COMMAND ->
+  ```
+  IMG=vllm-xpu-env:v0260 ./bin/gpu-run bash scripts/100_run_peer_copy.sh
+  IMG=vllm-xpu-env:v0260 ./bin/gpu-run bash scripts/102_run_push_allreduce.sh
+  IMG=vllm-xpu-env:v0260 ./bin/gpu-run bash scripts/103_run_ipc_push_allreduce.sh
+  IMG=int8g-v0260 allreduce_bench.py x4
+    P2P=0/1 x SYCL=0/1
+  ./bin/xpu-health
+  ```
+
+RESULT -> L0 PUSH 11.21 GB/s / PULL 3.24 /
+  host bounce 3.52 / 8B 8.60 us. PUSH AR
+  10.66 GB/s @16MB, 50.8 us @10KB. IPC PUSH
+  11.06 GB/s @16MB, 13.1 us @10KB. oneCCL
+  mp.spawn: P2P=0 ~1.1 GB/s; P2P=1 eager
+  3.47 (PULL); **P2P=1 SYCL 10.39 GB/s**.
+  Health GO after P2P=1 microbench.
+
+VERDICT -> Fabric P2P is fine. vLLM hang is
+  worker warmup, not Threadripper DMA.
+  Steve is EPYC 9015. Do not enable vLLM
+  P2PACCESS. PUSH_AR already matches the
+  10.4 GB/s P2P-SYCL number. P2P_GPU K.10.
+

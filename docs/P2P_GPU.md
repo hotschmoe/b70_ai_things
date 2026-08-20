@@ -1276,3 +1276,51 @@ NO flags -> "PUSH_AR overlay ON [default] (GRAPH=1 MIN_NUMEL=0, graph .so)", HEA
 event pool), post-probe both cards HEALTHY, no wedge (exit 0). README serve-shelf row + caveat (1) updated to
 default-on (opt-out PUSH_AR=0). Net default for the 27B-W8A8 serve: 3.8x prefill TTFT + +80-126% agg + +8-10%
 decode vs oneCCL, all all-reduces on the 11 GB/s posted-write transport.
+
+### K.10 [MEASURED 2026-08-20] kernel 7.1 fabric re-measure -- oneCCL P2P works; vLLM P2P hang is software
+
+Same box (1950X / X399 / cross-die RC 0000:00 vs 0000:40). Kernel 7.1.0-070100, GuC 70.58.0,
+compute-runtime 26.22.38646.4. IOMMU off. Cards still Gen3 x16 uplinks (09:00.0 / 42:00.0
+8.0 GT/s x16); GPU functions still report the Gen1 x1 BAR artifact.
+
+L0 same-process peer copy (`scripts/100`, IMG v0260), data d0->d1, 256 MB:
+
+| engine | PULL (exec dest) | PUSH (exec src) |
+|---|---:|---:|
+| copy (BCS) | 3.24 GB/s | **11.20 GB/s** |
+| compute (EU) | 3.23 GB/s | **11.21 GB/s** |
+| 8B ping | 8.60 us | |
+| host bounce d0-host-d1 | 3.52 GB/s | |
+
+Matches J.2 (7.0: PUSH 11.3 / PULL 3.24). 7.1 did not change the wire.
+
+Hand-rolled collectives, same night:
+
+| path | 10 KB lat | 16 MB algbw |
+|---|---:|---:|
+| single-ctx PUSH allreduce (`102`) | 50.8 us | 10.66 GB/s |
+| 2-proc L0-IPC PUSH (`103`) | 13.1 us (one-way) | 11.06 GB/s |
+
+oneCCL `scripts/allreduce_bench.py` mp.spawn, IMG int8g-v0260, **did not hang**, health GO after:
+
+| variant | 16 MB | 256 MB | 4 KB lat |
+|---|---:|---:|---:|
+| P2P=0 eager | 1.00 GB/s | 1.04 GB/s | 286 us |
+| P2P=0 SYCL | 1.12 GB/s | 1.09 GB/s | 90 us |
+| P2P=1 eager | 3.30 GB/s | 3.47 GB/s (PULL-class) | 780 us |
+| **P2P=1 SYCL** | **10.34 GB/s** | **10.39 GB/s** | 90 us |
+
+So `CCL_TOPO_P2P_ACCESS=1` is real on this fabric when oneCCL is allowed to use SYCL kernels.
+It matches PUSH-AR bandwidth. P2P=1 with SYCL kernels **off** falls to the PULL/host band.
+
+LOOP 4 vLLM TP=2 P2P=1 still hung 900s at `shm_broadcast` after 16.74 GiB load (workers never
+returned from warmup all_reduce). P2P=0 PUSH_AR then HEALTHY 147s. **The hang is vLLM
+multiproc warmup + oneCCL P2P, not Level Zero peer DMA.** Raw mp.spawn P2P does not wedge 7.1.
+
+Steve's working P2P=1 serves are on **EPYC 9015** (PCIe 5, typically one socket hierarchy,
+4x B70 measuring host), not 1950X dual-die X399. Same cards, different CPU/board/root-complex
+count. A same-die slot move on this X399 remains the only hardware BW lever (J.0); it will
+not fix the vLLM hang.
+
+Production stays `P2PACCESS=0` + PUSH_AR (already 11 GB/s posted-write). Turning vLLM P2P on
+would not beat that number even if it booted.
