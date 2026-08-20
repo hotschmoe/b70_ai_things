@@ -15988,3 +15988,35 @@ VERDICT -> Serve/G1 GO. Speed vs 31.9
   Do not start DD. Do not demote 31.9
   or 34.9.
 
+### 2026-08-20bo - LOOP 19: W8b pc1/mrv2=0 28.1; hold 31.9
+
+CONTEXT -> Overnight 30m. NEXT PICK W8b
+  PREFIXCACHE=1 B70_MRV2=0 rematch.
+  Same k1bar ckpt/SO. LOOP 18 28.8
+  blamed cache-off MRV2.
+
+CONFIG -> IMG int8g-v0260 TP=2 GRAPH=1
+  SPECTOK=4 MAXLEN=122880 BARRIER=1
+  AGASYNC=1 PUSH_AR_GRAPH=1 P2P=0
+  PREFIXCACHE=1 B70_MRV2=0. No V2
+  runner. SERVED ...-k1bar-pc1.
+
+COMMAND ->
+  ```
+  gpu-run bash vllm/dflash/sweep_lmx_w8b_k1bar.sh
+  g1_probe + bench_code c1 256 n=3
+  phase_bench --ignore-eos p512/g128 n=5
+  ```
+
+RESULT -> HEALTHY 218s. BARRIER rank0+1.
+  prefix-caching ON. G1 Paris/391 chat
+  Paris. bench_code c1 avg **28.1** best
+  30.7 vs hold **31.9** / LOOP 18 28.8.
+  phase_bench **28.08** prefill 2289.
+
+VERDICT -> Isolation GO (MRV2 not the
+  28.8 gap). vs 31.9 NO-GO. Do not
+  demote. Park overnight speed rows.
+  Leave k1bar-pc1 up. Do not P2P.
+  Do not start DD.
+

@@ -14,9 +14,9 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 18 (W8 k1bar remeasure code c1 28.8 / phase 26.85; hold 31.9 stays) |
-| Last JOURNAL | `2026-08-20bn` |
-| Next pick | **W8b** PREFIXCACHE=1 MRV2=0 rematch 31.9, or park. k1bar UP. |
+| Last loop | 19 (W8b pc1/mrv2=0 code c1 28.1; hold 31.9 stays) |
+| Last JOURNAL | `2026-08-20bo` |
+| Next pick | park. Overnight speed rows closed. k1bar-pc1 UP. |
 | Blocked on | none. Lease both cards k1bar. Hold 31.9 not demoted. P2P=0. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. O1 phase_bench ignore-eos p512/g128 **45.56**. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
@@ -129,12 +129,11 @@ recovers hold 34.9. phase_bench ignore-eos p512/g128 n=5/5
 median post-first **45.56** (prefill proxy 265, TTFT 4.34s).
 Different metric than 34.9; do not swap them. Do not re-run.
 
-**W8** W8A8 k1bar 31.9 (LOOP 18 remeasure)
+**W8** W8A8 k1bar 31.9 (LOOP 18+19 remeasure)
 TP=2 GRAPH=1 SPECTOK=4 MAXLEN=122880 BARRIER=1 AGASYNC.
-G1 Paris/391. bench_code c1 **28.8** best 31.5 vs hold
-**31.9**. phase_bench ignore-eos p512/g128 **26.85**.
-PREFIXCACHE=0 enabled MRV2. Do not demote 31.9. Optional
-W8b: PREFIXCACHE=1 B70_MRV2=0 rematch.
+LOOP 18 PREFIXCACHE=0/MRV2: code c1 **28.8**. LOOP 19
+PREFIXCACHE=1 MRV2=0: code c1 **28.1** phase **28.08**.
+MRV2 is not the miss. Do not demote **31.9**. Park.
 
 ## L.3 Write order at the end of every fire
 

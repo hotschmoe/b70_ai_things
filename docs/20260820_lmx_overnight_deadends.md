@@ -183,4 +183,21 @@ Retry if: non-ESIMD SYCL WG>=1024, or
   a persistent decode kernel.
 Related JOURNAL: ### 2026-08-20bm
 
+## W8b -- PREFIXCACHE/MRV2 as 31.9 miss -- 2026-08-20 -- LOOP 19
+
+Tried: same k1bar SO/GRAPH/SPECTOK=4
+  BARRIER+AGASYNC. PREFIXCACHE=1
+  B70_MRV2=0 vs LOOP 18 cache-off
+  MRV2-on 28.8.
+Result: G1 Paris/391. bench_code c1
+  **28.1** best 30.7 vs LOOP 18 28.8
+  vs hold **31.9**. phase_bench 28.08.
+Why it is closed: cache/MRV2 does not
+  explain the 31.9 miss. Hold stays
+  31.9 (do not demote).
+Retry if: a hold-faithful recipe log
+  from LOOP 54 is replayed bit-exact
+  (MAXSEQS/CGMODE/CAPSIZES).
+Related JOURNAL: ### 2026-08-20bo
+
 ---

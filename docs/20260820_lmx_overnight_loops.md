@@ -9,11 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-W8b PREFIXCACHE=1 MRV2=0 rematch
-of k1bar 31.9, or park. k1bar UP,
-G1 GO, code c1 28.8 < hold 31.9.
-phase_bench **26.85**. Do not demote
-31.9 or 34.9. Do not P2P. Do not DD.
+Park. Overnight speed rows closed.
+k1bar-pc1 UP, G1 GO, code c1 28.1
+< hold 31.9 (do not demote). W8b
+MRV2 isolation: not the gap. Do not
+P2P. Do not DD.
 
 ---
 
@@ -693,3 +693,33 @@ Do not: demote 31.9/34.9; P2P; DD;
 Restore: DD PARKED. Q8 DOWN. O1 DOWN.
   W8 UP.
 JOURNAL: ### 2026-08-20bn
+
+## LOOP 19 -- 2026-08-20T1514Z -- W8b pc1 28.1; hold 31.9 stays
+
+Picked: W8b PREFIXCACHE=1 B70_MRV2=0
+  rematch of k1bar 31.9. Same ckpt.
+Why this, not the other open row:
+  NEXT PICK. P1 in-image done. O*
+  closed. Isolate LOOP 18 MRV2.
+GPU: both cards HELD qwen38_w8a8_dspark
+  :18080. DD PARKED. P2P=0.
+Command:
+  gpu-run bash vllm/dflash/sweep_lmx_w8b_k1bar.sh
+  g1_probe + bench_code + phase_bench
+Log: /mnt/vm_8tb/b70/lmx_overnight/w8b_g1_20260820T150951Z.log
+  w8b_code_20260820T150951Z.txt
+  w8b_phase_20260820T150951Z.json
+Result: HEALTHY 218s. prefix-caching ON.
+  no V2 runner. BARRIER rank0+1. G1
+  Paris/391. bench_code c1 **28.1**
+  best 30.7 vs hold **31.9** / L18 28.8.
+  phase_bench **28.08**.
+Verdict: Isolation GO. vs 31.9 NO-GO.
+  Do not demote. Park.
+Changed beliefs: PREFIXCACHE/MRV2 is
+  not the 31.9 miss. Current k1bar on
+  this box is ~28 code / ~28 phase.
+Next pick: park. Leave k1bar-pc1 up.
+Do not: demote 31.9/34.9; P2P; DD.
+Restore: DD PARKED. Q8 DOWN. W8b UP.
+JOURNAL: ### 2026-08-20bo
