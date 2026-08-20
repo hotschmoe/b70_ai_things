@@ -16020,3 +16020,31 @@ VERDICT -> Isolation GO (MRV2 not the
   Leave k1bar-pc1 up. Do not P2P.
   Do not start DD.
 
+### 2026-08-20bp - LOOP 20: attach k1bar-pc1 soak G1 GO 24.8
+
+CONTEXT -> Overnight 30m. NEXT PICK
+  park. k1bar-pc1 UP 29 min. Do not
+  second serve. P1 GGUF complete but
+  cards held.
+
+CONFIG -> attach live
+  qwen3.8-27b-W8A8-gptq-dspark4-k1bar-pc1
+  TP=2 GRAPH BARRIER AGASYNC P2P=0
+  PREFIXCACHE=1 MRV2 off.
+
+COMMAND ->
+  ```
+  g1_probe http://192.168.10.5:18080/v1
+  bench_code c1 256 n=3
+  ```
+
+RESULT -> G1 Paris/391 chat Paris no
+  bangs. bench_code c1 avg **24.8**
+  best 25.9 vs W8b **28.1** vs hold
+  **31.9**. Serve still Up.
+
+VERDICT -> Attach GO. Soak slower than
+  W8b 28.1. Do not demote 31.9. Leave
+  up. Next park. Do not P2P. Do not
+  start DD. Do not start Q8 (lease).
+

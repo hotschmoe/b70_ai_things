@@ -19,8 +19,8 @@
 > **O4e fused layerlet NO-GO**: 0.133 vs seq 0.137 (1.04x);
 > 8.7x eager oneDNN. ESIMD WG=64. Not wired.
 > **W8/W8b remeasure**: k1bar G1 Paris/391. code c1 **28.8**
-> (MRV2) / **28.1** (pc1, no MRV2) vs hold **31.9**.
-> Do not demote. k1bar-pc1 UP. Park overnight speed rows.
+> / **28.1** / soak **24.8** vs hold **31.9**. Do not demote.
+> k1bar-pc1 UP. Park.
 > Do not P2P. Do not emul NVFP4 G1.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9** / O1 **45.56**,
 > k1bar **31.9**, Q8 **32.03**.
@@ -777,10 +777,9 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **Overnight NOW 2026-08-20bo.** Ornith GRAPH **34.9** / O1
-   **45.56**. k1bar hold **31.9** (remeasure 28.1/28.8; MRV2
-   not the miss; do not demote). Park. KV=auto. No emul.
-   No P2P.
+0. **Overnight NOW 2026-08-20bp.** Ornith GRAPH **34.9** / O1
+   **45.56**. k1bar hold **31.9** (remeasure 28.1 soak 24.8;
+   do not demote). Park. KV=auto. No emul. No P2P.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for

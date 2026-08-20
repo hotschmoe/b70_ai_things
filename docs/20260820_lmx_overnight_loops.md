@@ -10,10 +10,9 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 ## NEXT PICK (keep this line true)
 
 Park. Overnight speed rows closed.
-k1bar-pc1 UP, G1 GO, code c1 28.1
-< hold 31.9 (do not demote). W8b
-MRV2 isolation: not the gap. Do not
-P2P. Do not DD.
+k1bar-pc1 UP, soak G1 GO, code c1
+24.8 (W8b was 28.1). Hold 31.9 not
+demoted. Do not P2P. Do not DD.
 
 ---
 
@@ -723,3 +722,31 @@ Next pick: park. Leave k1bar-pc1 up.
 Do not: demote 31.9/34.9; P2P; DD.
 Restore: DD PARKED. Q8 DOWN. W8b UP.
 JOURNAL: ### 2026-08-20bo
+
+## LOOP 20 -- 2026-08-20T1540Z -- attach k1bar-pc1 soak 24.8
+
+Picked: attach live k1bar-pc1. G1 +
+  bench_code soak. No second serve.
+Why this, not the other open row:
+  NEXT PICK park. Cards held. P1 Q8
+  GGUF complete but lease busy. G1
+  already GO; recheck after 29 min.
+GPU: both cards HELD qwen38_w8a8_dspark
+  :18080. DD PARKED. P2P=0.
+Command:
+  g1_probe + bench_code c1 256 n=3
+Log: /mnt/vm_8tb/b70/lmx_overnight/w8c_g1_20260820T153930Z.log
+  w8c_code_20260820T153930Z.txt
+Result: G1 Paris/391. bench_code c1
+  **24.8** best 25.9 vs W8b 28.1 vs
+  hold 31.9. Leave up.
+Verdict: Attach GO. Soak slower. Do
+  not demote 31.9.
+Changed beliefs: k1bar current-box
+  decode is ~25-28, not a recovered
+  31.9. Hold stays historical 31.9.
+Next pick: park. Leave k1bar-pc1 up.
+Do not: demote 31.9/34.9; P2P; DD;
+  start Q8 while lease held.
+Restore: DD PARKED. Q8 DOWN. W8b UP.
+JOURNAL: ### 2026-08-20bp
