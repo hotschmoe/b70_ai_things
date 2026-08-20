@@ -57,6 +57,11 @@ export GGML_SYCL_FUSED_MMVQ_TRIPLE_ATTN=1
 export GGML_SYCL_FUSED_MMVQ_TRIPLE_GDN=1
 export GGML_SYCL_FUSED_MMVQ_QUAD_GDN=1
 export GGML_SYCL_QDEDUP_STATS="${GGML_SYCL_QDEDUP_STATS:-1}"
+# Lab Q8 geometry. QUAD_SG24 is a no-op on 0xSero JIT (no symbol).
+# SG32 exists in-image; default 0 (BMG uses SG16). Never FATTN_MMA=1 on JIT.
+export GGML_SYCL_MMVQ_SG32="${GGML_SYCL_MMVQ_SG32:-0}"
+export GGML_SYCL_MMVQ_Q8_QUAD_SG16="${GGML_SYCL_MMVQ_Q8_QUAD_SG16:-1}"
+export GGML_SYCL_MMVQ_Q8_QUAD_SG24="${GGML_SYCL_MMVQ_Q8_QUAD_SG24:-1}"
 
 if [ "$Q8_DOORS" = "1" ]; then
     echo "[entrypoint] Q8_DOORS=1 fused Q8 swiglu/attn/gdn/comm"
@@ -80,7 +85,7 @@ if [ "${LLAMA_P2P:-0}" = "1" ]; then
     export GGML_SYCL_P2P=1
 fi
 
-echo "[entrypoint] GPU_COUNT=$GPU_COUNT ctx=$CTX_SIZE batch=$BATCH/$UBATCH file=$MODEL_FILE"
+echo "[entrypoint] GPU_COUNT=$GPU_COUNT ctx=$CTX_SIZE batch=$BATCH/$UBATCH file=$MODEL_FILE MMVQ_SG32=${GGML_SYCL_MMVQ_SG32:-0} QUAD_SG24=${GGML_SYCL_MMVQ_Q8_QUAD_SG24:-1}"
 
 exec /build/llama.cpp/build-sycl/bin/llama-server \
     --model "$TARGET" \

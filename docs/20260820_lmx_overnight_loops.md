@@ -9,10 +9,10 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-P1e Q8_0 MMVQ kernel (DP4A2 /
-GDN-quad SG24). 2x hold **32.03**,
-1x 17.93. Serve UP lease 273052.
-Do not start a second serve. Do not
+O2 Ornith GRAPH-safe INT4. Q8 2x
+hold **32.03** UP (lease 279160).
+STOP Q8 only when O2 starts. P1
+in-image MMVQ doors done. Do not
 COMM=3. Do not retry vLLM P2P.
 
 ---
@@ -334,3 +334,44 @@ Do not: second serve; COMM=3; retry
   vLLM P2P; DD; demote 31.9/34.9.
 Restore: DD PARKED. Q8 2x UP.
 JOURNAL: ### 2026-08-20bd
+
+## LOOP 9 -- 2026-08-20T1024Z -- P1e SG32=1 30.11; DP4A2/SG24 absent
+
+Picked: P1e in-image MMVQ geometry.
+  Lab DP4A2 x QUAD_SG24 is the 36.8
+  Q8 stack; 0xSero JIT .so is not that
+  binary. A/B GGML_SYCL_MMVQ_SG32=1
+  (only SG geometry symbol present).
+Why this, not the other open row:
+  NEXT PICK was kernel. Serve was ours.
+GPU: both cards HELD pid 279160
+  restored SG32=0 2x qwen38_oblit_q8.
+  DD PARKED. P2PACCESS=0.
+Command:
+  bash llamacpp/sweep_obliterated_q8_sg32.sh
+  docker exec sha256sum libggml-sycl.so
+Log: /mnt/vm_8tb/b70/lmx_overnight/p1e_sweep_20260820T1017Z.log
+  p1e_phase_s1_20260820T1017Z.json
+Result: libggml-sycl.so 258f4729 != lab
+  DP4A2xSG24 e75b9603. No QUAD_SG24 /
+  DP4A2 strings. SG32=1 forced on both
+  B70s (log: SG32 q8_0 ne1=1 kernel).
+  G1 Paris/391. ignore-eos **30.11**
+  (30.04-30.49) vs hold 32.03 (-6%).
+  Prefill 572. vs 43.8 = 0.687x.
+  Restored SG32=0. Our 32.03/43.8=0.731
+  matches lab Q8/Q4 36.8/49.7=0.74.
+Verdict: NO-GO SG32=1. DP4A2/SG24
+  BLOCKED on 0xSero JIT / oneAPI
+  2026.1.1 AOT (UR enum). Hold 32.03.
+Changed beliefs: Q8 vs Q4_K_M gap is
+  the quant, not a missing DMMV. The
+  13% to lab Q8 36.8 is AOT DP4A2xSG24,
+  not an env door. P1 in-image profile
+  complete.
+Next pick: O2 GRAPH-safe INT4. Leave
+  Q8 up until that fire STOPs it.
+Do not: FATTN_MMA=1 JIT; COMM=3;
+  retry vLLM P2P; DD; demote 31.9/34.9.
+Restore: DD PARKED. Q8 2x SG32=0 UP.
+JOURNAL: ### 2026-08-20be

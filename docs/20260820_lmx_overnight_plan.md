@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 8 (P1d 2x vs 1x GO: 32.03 vs 17.93) |
-| Last JOURNAL | `2026-08-20bd` |
-| Next pick | **P1e** Q8_0 MMVQ DP4A2 / GDN-quad. Serve 2x UP. Decode is the 43.8 gap. |
-| Blocked on | none. Lease pid 273052 docker-wait. |
+| Last loop | 9 (P1e SG32=1 30.11 NO-GO; DP4A2/SG24 not in 0xSero JIT) |
+| Last JOURNAL | `2026-08-20be` |
+| Next pick | **O2** Ornith GRAPH-safe INT4. Q8 2x UP -- STOP only when O2 starts. |
+| Blocked on | none. Lease pid 279160 docker-wait. P1 in-image profile done. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |

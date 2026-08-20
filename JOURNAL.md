@@ -15653,3 +15653,38 @@ VERDICT -> GO. 1x is slower. Hold
   Do not retry P2P. Do not start DD.
   Do not demote k1bar 31.9.
 
+### 2026-08-20be - LOOP 9: P1e SG32=1 30.11 NO-GO; DP4A2/SG24 absent
+
+CONTEXT -> Overnight 30m fire. NEXT
+  PICK was DP4A2 / GDN-quad SG24.
+  Live 2x Q8 still UP. Live G1 391.
+
+CONFIG -> 0xSero JIT image
+  qwen38-b70:latest. libggml-sycl.so
+  sha256 258f4729. Lab Q8 AOT DP4A2x
+  SG24 is e75b9603. In-image door:
+  GGML_SYCL_MMVQ_SG32=1 vs 0.
+  Q8_DOORS=1 COMM=2 GPU=2. Restore 0.
+
+COMMAND ->
+  ```
+  docker exec sha256sum libggml-sycl.so
+  strings | grep QUAD_SG24   # none
+  bash llamacpp/sweep_obliterated_q8_sg32.sh
+  ```
+
+RESULT ->
+  No DP4A2 / QUAD_SG24 in JIT .so.
+  SG32=1 announced on both bmg_g31.
+  G1 Paris/391. post_first **30.11**
+  vs hold **32.03** (-6%). Prefill 572.
+  Restored SG32=0. 32.03/43.8 = 0.731
+  ~ lab 36.8/49.7 = 0.74.
+
+VERDICT -> NO-GO SG32=1. DP4A2/SG24
+  not reachable on this JIT image.
+  Hold 32.03. Leave 2x up. Next O2
+  (STOP Q8 when O2 starts). Do not
+  FATTN_MMA=1. Do not COMM=3. Do not
+  retry P2P. Do not demote 31.9.
+

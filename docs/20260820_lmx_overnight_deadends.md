@@ -87,4 +87,24 @@ Retry if: a 1x-only kernel (DP4A2) is
   measured faster than 32.03 2x.
 Related JOURNAL: ### 2026-08-20bd
 
+## P1e -- MMVQ_SG32=1 and lab DP4A2xSG24 -- 2026-08-20 -- LOOP 9
+
+Tried: 0xSero JIT libggml-sycl.so
+  258f4729 (no QUAD_SG24/DP4A2 strings).
+  Forced GGML_SYCL_MMVQ_SG32=1 on both
+  B70s (q8_0 ne1=1 kernel). Q8_DOORS=1
+  COMM=2 GPU=2 ignore-eos g128 n=5.
+Result: G1 Paris/391. **30.11** vs hold
+  32.03 (-6%). Lab DP4A2xSG24 .so
+  e75b9603 not present. AOT 2026.1.1
+  UR does not enumerate on public stacks
+  (0xSero). Our 32.03/43.8 ratio matches
+  lab Q8/Q4 (36.8/49.7).
+Why it is closed: in-image SG32 is a
+  regression. Closing the 13% to lab Q8
+  needs that AOT binary, not an env door.
+Retry if: a BMG JIT build of DP4A2xSG24
+  exists, or 2026.1.1 AOT enumerates.
+Related JOURNAL: ### 2026-08-20be
+
 ---
