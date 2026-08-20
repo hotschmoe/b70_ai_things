@@ -72,4 +72,19 @@ Retry if: COMM_DIRECT=3 becomes safe, or
   1x vs 2x shows comm-bound decode.
 Related JOURNAL: ### 2026-08-20bc
 
+## P1d -- GPU_COUNT 1 vs 2 -- 2026-08-20 -- LOOP 8
+
+Tried: Pliny Q8_0, Q8_DOORS=1 COMM=2,
+  ignore-eos g128 n=5. GPU_COUNT=2 vs 1.
+  1x booted (29GB Q8 on 1x B70).
+Result: 2x **32.03** vs 1x **17.93**
+  (scale 1.79x). Prefill 566 vs 573.
+  G1 Paris/391 both.
+Why it is closed: 1x does not close
+  the 43.8 gap; it is slower. TP2 is
+  compute-split, not the limiter.
+Retry if: a 1x-only kernel (DP4A2) is
+  measured faster than 32.03 2x.
+Related JOURNAL: ### 2026-08-20bd
+
 ---

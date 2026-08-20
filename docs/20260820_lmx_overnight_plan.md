@@ -14,15 +14,15 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 7 (P1c COMM_DIRECT 2 vs 0 GO: 31.99 vs 31.83) |
-| Last JOURNAL | `2026-08-20bc` |
-| Next pick | **P1d** GPU_COUNT=1 vs 2. Serve qwen38_oblit_q8 :8010 Q8_DOORS=1 COMM=2 UP. |
-| Blocked on | none. Lease pid 266919 docker-wait. |
+| Last loop | 8 (P1d 2x vs 1x GO: 32.03 vs 17.93) |
+| Last JOURNAL | `2026-08-20bd` |
+| Next pick | **P1e** Q8_0 MMVQ DP4A2 / GDN-quad. Serve 2x UP. Decode is the 43.8 gap. |
+| Blocked on | none. Lease pid 273052 docker-wait. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
 | Hold 3.8 GPTQ-Int4 MTP4 + draft-INT4 (W1) | **65.08** post-first p512/g128. G1 Paris/391. |
-| Hold Pliny OBLITERATED Q8_0 TP2 | **31.99** ignore-eos g128 COMM=2. COMM=0 **31.83**. P1b doors 31.78/31.56. |
+| Hold Pliny OBLITERATED Q8_0 TP2 | **32.03** ignore-eos g128 2x. 1x **17.93**. COMM 31.99/31.83. doors 31.78/31.56. |
 | DD | PARKED. Do not start. :18080 is research. |
 
 Published LocalMaxxing C1 ceilings (do not treat as our holds):

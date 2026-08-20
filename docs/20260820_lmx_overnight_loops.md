@@ -9,11 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-P1d GPU_COUNT=1 vs 2. qwen38_oblit_q8
-:8010 Q8_DOORS=1 COMM=2 UP (lease
-266919). COMM A/B closed (+0.5%).
+P1e Q8_0 MMVQ kernel (DP4A2 /
+GDN-quad SG24). 2x hold **32.03**,
+1x 17.93. Serve UP lease 273052.
 Do not start a second serve. Do not
-COMM_DIRECT=3. Do not retry vLLM P2P.
+COMM=3. Do not retry vLLM P2P.
 
 ---
 
@@ -301,3 +301,36 @@ Do not: second serve; COMM=3; retry
   vLLM P2P; DD; demote 31.9/34.9.
 Restore: DD PARKED. Q8 COMM=2 UP.
 JOURNAL: ### 2026-08-20bc
+
+## LOOP 8 -- 2026-08-20T0950Z -- P1d 2x vs 1x GO 32.03 vs 17.93
+
+Picked: P1d GPU_COUNT=2 vs 1. Same
+  Q8_0, Q8_DOORS=1 COMM=2. Always
+  restore 2x.
+Why this, not the other open row:
+  NEXT PICK after COMM A/B.
+GPU: both cards HELD pid 273052
+  restored 2x qwen38_oblit_q8 :8010.
+  DD PARKED. P2PACCESS=0.
+Command:
+  bash llamacpp/sweep_obliterated_q8_gpus.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/p1d_sweep_20260820T0940Z.log
+  p1d_gpus_20260820T0940Z.json
+Result: G1 Paris/391 both. 1x DID boot
+  (29GB Q8 on 1x B70). ignore-eos g128:
+  2x **32.03** (31.80-32.09) prefill 566.
+  1x **17.93** (17.91-17.95) prefill 573.
+  Scale 1.79x. vs 43.8 = 0.731x / 0.409x.
+Verdict: GO. 1x is slower, not the 43.8
+  path. TP2 compute split is real.
+  Hold **32.03**. Leave 2x up.
+Changed beliefs: decode gap vs Q4_K_M
+  is per-card MMVQ, not comm and not
+  missing a second GPU. Next is DP4A2
+  / GDN-quad, not MMQ-on, not P2P.
+Next pick: P1e Q8_0 MMVQ kernel notes
+  + optional llama-bench after STOP.
+Do not: second serve; COMM=3; retry
+  vLLM P2P; DD; demote 31.9/34.9.
+Restore: DD PARKED. Q8 2x UP.
+JOURNAL: ### 2026-08-20bd

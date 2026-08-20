@@ -15625,3 +15625,31 @@ VERDICT -> GO. COMM_DIRECT closed as
   Do not COMM=3. Do not retry P2P.
   Do not start DD. Do not demote 31.9.
 
+### 2026-08-20bd - LOOP 8: P1d 2x vs 1x GO 32.03 vs 17.93
+
+CONTEXT -> Overnight 30m fire. NEXT
+  PICK was P1d GPU_COUNT=1 vs 2. Same
+  Q8_0 ckpt. 1x VRAM unknown; try it.
+
+CONFIG -> Q8_DOORS=1 COMM_DIRECT=2.
+  ignore_eos g128 n=5. GPU_COUNT 2 then
+  1, always restore 2x. Never COMM=3.
+
+COMMAND ->
+  ```
+  bash llamacpp/sweep_obliterated_q8_gpus.sh
+  ```
+
+RESULT ->
+  G1 Paris/391 both. 1x booted.
+  | arm | post_first | prefill | vs 43.8 |
+  | 2x | **32.03** | 566 | 0.731x |
+  | 1x | **17.93** | 573 | 0.409x |
+  Scale 1.79x. Prefill similar.
+
+VERDICT -> GO. 1x is slower. Hold
+  **32.03**. Leave 2x up. Next P1e
+  MMVQ DP4A2/GDN-quad. Do not COMM=3.
+  Do not retry P2P. Do not start DD.
+  Do not demote k1bar 31.9.
+
