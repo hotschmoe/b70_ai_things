@@ -15560,3 +15560,39 @@ VERDICT -> RUNNING. Next fire attach
   Hold 30.89/32.14 until ignore-eos
   A/B lands.
 
+### 2026-08-20bb - LOOP 6: P1b Q8_DOORS A/B GO 31.78 vs 31.56
+
+CONTEXT -> Overnight 30m fire. NEXT
+  PICK was P1b attach. Sweep finished
+  08:19Z. qwen38_oblit_q8 still UP.
+
+CONFIG -> 2x B70 llama.cpp SYCL
+  Q8_DOORS 1 then 0. ignore_eos g128
+  n=5. MMVQ pair/triple/quad ON.
+  Q4K reorder OFF. COMM_DIRECT=2 on
+  doors=1. Left up Q8_DOORS=1.
+
+COMMAND ->
+  ```
+  # attach parse
+  cat /mnt/vm_8tb/b70/lmx_overnight/p1b_doors_20260820T0809Z.json
+  docker logs qwen38_oblit_q8 | grep SYCL
+  ```
+
+RESULT ->
+  G1 Paris/391 both arms. Live G1
+  still Paris.
+  | arm | post_first | prefill | vs 43.8 |
+  | doors=1 | **31.78** | 570.5 | 0.726x |
+  | doors=0 | **31.56** | 567.6 | 0.721x |
+  All 128 tok. Warmup doors=1 31.93.
+  mmq_q8_reorder=1 DMMV=0 mmvq_eff=13.
+  Not 4x vs Q4_K_M. Doors +0.7%.
+
+VERDICT -> GO. Hold Pliny Q8 ignore-eos
+  **31.78**. Doors closed as the 43.8
+  gap. Leave serve up. Next P1c
+  COMM_DIRECT_Q8=2 vs 0 (never 3).
+  Do not start DD. Do not retry P2P.
+  Do not demote k1bar 31.9.
+

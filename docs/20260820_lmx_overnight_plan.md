@@ -14,15 +14,15 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 5 (P1b Q8_DOORS A/B RUNNING) |
-| Last JOURNAL | `2026-08-20ba` |
-| Next pick | **P1b attach** -- parse doors 1 vs 0 if benches exist. Do not start a second serve. |
-| Blocked on | none. P1b holds both cards (pid 260538). |
+| Last loop | 6 (P1b Q8_DOORS A/B GO: 31.78 vs 31.56) |
+| Last JOURNAL | `2026-08-20bb` |
+| Next pick | **P1c** COMM_DIRECT_Q8=2 vs 0 (never 3). Serve qwen38_oblit_q8 :8010 Q8_DOORS=1 UP. |
+| Blocked on | none. Lease pid 260538 docker-wait. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
 | Hold 3.8 GPTQ-Int4 MTP4 + draft-INT4 (W1) | **65.08** post-first p512/g128. G1 Paris/391. |
-| Hold Pliny OBLITERATED Q8_0 TP2 | **30.89** median / **32.14** warmup g128. G1 Paris/391. |
+| Hold Pliny OBLITERATED Q8_0 TP2 | **31.78** ignore-eos g128 (doors=1). doors=0 **31.56**. G1 Paris/391. |
 | DD | PARKED. Do not start. :18080 is research. |
 
 Published LocalMaxxing C1 ceilings (do not treat as our holds):

@@ -9,10 +9,10 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-P1b attach -- qwen38_oblit_q8 :8010
-loading, lease pid 260538. Parse G1
-+ ignore-eos g128 doors 1 vs 0 if
-benches exist. Do not start a second
+P1c COMM_DIRECT_Q8=2 vs 0 (never 3).
+qwen38_oblit_q8 :8010 Q8_DOORS=1 UP
+(lease 260538). Doors A/B closed
+(+0.7%). Do not start a second
 serve. Do not retry vLLM P2P=1.
 
 ---
@@ -231,3 +231,41 @@ Do not: second serve; retry P2P; DD;
   COMM_DIRECT_Q8=3; demote 31.9/34.9.
 Restore: DD PARKED. Sweep left running.
 JOURNAL: ### 2026-08-20ba
+
+## LOOP 6 -- 2026-08-20T0838Z -- P1b Q8_DOORS A/B GO 31.78 vs 31.56
+
+Picked: attach P1b. Sweep DONE. Parse
+  ignore-eos g128 n=5 doors 1 vs 0.
+Why this, not the other open row:
+  NEXT PICK was attach. Serve is ours.
+GPU: both cards HELD pid 260538
+  docker-wait qwen38_oblit_q8 :8010
+  Q8_DOORS=1. DD PARKED. P2PACCESS=0.
+Command:
+  bash llamacpp/sweep_obliterated_q8_doors.sh
+  (started LOOP 5; attach+parse)
+Log: /mnt/vm_8tb/b70/lmx_overnight/p1b_sweep_20260820T0809Z.log
+  p1b_doors_20260820T0809Z.json
+Result: G1 Paris/391 both arms.
+  doors=1 median post_first **31.78**
+  (31.70-31.99) prefill 570.5 TTFT 2.03s
+  warmup 31.93. doors=0 **31.56**
+  (31.37-31.61) prefill 567.6.
+  All runs 128 tok ignore-eos. vs Q4_K_M
+  43.8 = 0.726x / 0.721x (~1.38x slower,
+  not 4x). SYCL: mmq_q8_reorder=1
+  PRIORITIZE_DMMV=0 mmvq_eff q8_0=13.
+  Live G1 still Paris.
+Verdict: GO. Doors are not the gap
+  (+0.22 tok/s, +0.7%). Hold moves to
+  ignore-eos **31.78**. Leave serve up.
+Changed beliefs: LOOP 2 30.89 was
+  early-EOS; matched g128 is 31.78.
+  Already on reorder MMVQ. Next is
+  COMM_DIRECT then 1x vs 2x, then
+  DP4A2/GDN-quad not MMQ-on.
+Next pick: P1c COMM_DIRECT_Q8=2 vs 0.
+Do not: second serve; COMM_DIRECT=3;
+  retry vLLM P2P; DD; demote 31.9/34.9.
+Restore: DD PARKED. Q8_DOORS=1 UP.
+JOURNAL: ### 2026-08-20bb

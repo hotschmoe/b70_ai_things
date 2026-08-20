@@ -39,4 +39,22 @@ Retry if: oneCCL/vLLM multiproc P2P patch lands, or a
   measured non-hang P2P serve on this box.
 Related JOURNAL: ### 2026-08-20az
 
+## P1b -- Q8 fused doors 0 vs 1 -- 2026-08-20 -- LOOP 6
+
+Tried: Pliny Q8_0 TP2, ignore-eos g128 n=5.
+  Q8_DOORS=1 (COMM_FUSED_Q8 / SWIGLU_Q8 /
+  ATTN_Q8 / GDN_Q8 + COMM_DIRECT=2) vs
+  Q8_DOORS=0 (those off, COMM_DIRECT=0).
+  MMVQ pair/triple/quad ON both.
+Result: **31.78** vs **31.56** post_first
+  (+0.7%). G1 Paris/391 both. Prefill
+  570 vs 568. Already mmq_q8_reorder=1,
+  PRIORITIZE_DMMV=0, not a 4x DMMV miss.
+Why it is closed: fused Q8 doors are not
+  the 43.8 Q4_K_M gap (~1.38x remains).
+Retry if: a new Q8 door kernel lands, or
+  COMM_DIRECT/1x-vs-2x/DP4A2 changes the
+  decode mix so doors could matter.
+Related JOURNAL: ### 2026-08-20bb
+
 ---
