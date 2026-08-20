@@ -11,9 +11,10 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 P1 when Q8_0 GGUF >= 25000 MB:
 `bash llamacpp/sweep_obliterated_q8.sh`
-While fetch incomplete, W1 may take the cards:
-`bash vllm/cookbook_campaign/sweep_lmx_w1_draftint4.sh`
-Fetch log: /mnt/vm_8tb/b70/lmx_overnight/p1_hf_q8.log
+W1 is DONE (65.08, G1 GO). If P1 still
+blocked, O2 Ornith GRAPH-safe INT4 dtype
+(L65 Half!=BF16). Fetch:
+/mnt/vm_8tb/b70/lmx_overnight/p1_hf_q8.log
 
 ---
 
@@ -67,3 +68,37 @@ Do not: fetch whole OBLITERATUS repo; vLLM P2P; demote
   31.9/34.9; start DD; 4x B70.
 Restore: DD PARKED.
 JOURNAL: ### 2026-08-20av
+
+## LOOP 1 -- 2026-08-20T0715Z -- W1 draft-INT4 G1 GO 65.08
+
+Picked: W1 3.8 GPTQ-Int4 MTP4 + cookbook 2026.08.19
+  draft-INT4 on f01e24f6, 1x B70, G1 + phase_bench
+  p512/g128 n=5 vs S1 47.58.
+Why this, not the other open row: P1 GGUF was
+  incomplete (~15.6/29 GB). W1 was the first
+  unblocked GPU row; ckpt and image local.
+GPU: card 0 via sweep gpu-run. Card 1 free.
+  Container lmx_w1_d38. DD PARKED. P2P off.
+Command:
+  bash vllm/cookbook_campaign/sweep_lmx_w1_draftint4.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/w1_serve_20260820T0709Z.log
+  G1 /mnt/vm_8tb/b70/lmx_overnight/w1_g1_20260820T0709Z.log
+  bench /mnt/vm_8tb/b70/lmx_overnight/w1_phase_20260820T0709Z.json
+Result: patches applied. MTP 0.85->0.22 GB, LM
+  head 2.54->0.66 GB. Graph 5s. G1 Paris/391.
+  median post_first **65.08** (52.84-81.91)
+  vs S1 47.58. Spec 546/984, mean accept 2.22.
+  No DEVICE_LOST. Serve stopped after bench.
+Verdict: GO. New W1 hold 65.08. Not W8A8.
+  Board 112.65 still ceiling.
+Changed beliefs: dense 3.8 GPTQ + draft-INT4
+  GRAPH-boots on float16 (unlike Ornith L65
+  Half!=BF16). Overlay is a real decode lift
+  on this box (+36.8% vs S1), still short of
+  SergiioB 112.7.
+Next pick: P1 if GGUF >=25 GB else O2.
+Do not: publish 65.08 as W8A8; demote 31.9
+  or 34.9; start DD; P2P; emul NVFP4; 4x B70.
+Restore: DD PARKED. Cards free. W1 container
+  removed.
+JOURNAL: ### 2026-08-20aw

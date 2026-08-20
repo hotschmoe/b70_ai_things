@@ -14,13 +14,14 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 0b (Pliny Q8 added; GGUF fetching) |
-| Last JOURNAL | `2026-08-20av` |
-| Next pick | **P1** as soon as Q8_0 GGUF is >=25 GB: 2x B70 llama.cpp SYCL OBLITERATED Q8_0, G1 + p512/g128. While fetching, **W1** may use the cards. |
-| Blocked on | P1 GPU blocked on ~29 GB Q8_0 download. |
+| Last loop | 1 (W1 draft-INT4 GO **65.08**) |
+| Last JOURNAL | `2026-08-20aw` |
+| Next pick | **P1** when Q8_0 GGUF >=25 GB. Else **O2** Ornith GRAPH-safe INT4 dtype. W1 DONE. |
+| Blocked on | P1 GPU blocked on Q8_0 download (~15.6/29 GB at 0717Z). |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
+| Hold 3.8 GPTQ-Int4 MTP4 + draft-INT4 (W1) | **65.08** post-first p512/g128. G1 Paris/391. |
 | DD | PARKED. Do not start. :18080 is research. |
 
 Published LocalMaxxing C1 ceilings (do not treat as our holds):
@@ -28,6 +29,7 @@ SergiioB 1x GPTQ-Int4+draft-INT4 **112.7**, Steve 2x AutoRound MTP5
 **101.9**, SergiioB 35B GPTQ MTP4 **204.6**, Steve 2x Quark W8A8 35B
 **85.9**, 5090 Ornith NVFP4 **258.8**. Our S1 was 47.58 on the same
 3.8 GPTQ ckpt without the 2026.08.19 overlay.
+W1 with that overlay is **65.08**.
 
 ## L.0 Read order (before any edit or GPU)
 
@@ -80,17 +82,11 @@ Custom kernel track (from 0xSero/lab map):
   DP4A2 + GDN-quad SG24, not vLLM P2P and not enabling MMQ.
 Do not demote k1bar 31.9.
 
-**W1** 3.8 W4A16 draft-INT4 (board steal, ckpt+image local)
-Command:
-```
-DRAFT_INT4=1 ./bin/gpu-run --card 0 bash vllm/cookbook_campaign/sweep_lmx_w1_draftint4.sh
-```
-Ckpt `models/files/community/qwen38-27b-gptq-mtp-preserved`.
-Image `vllm/vllm-openai-xpu@sha256:f01e24f6...` (present).
-Patches now in `vllm/patches/cookbook/` (lmhead + mtp INT4 + mixed-split v5).
-Gate: G1 Paris/391. Metric: `phase_bench.py` p512/g128 n=5 median post-first.
-Compare to S1 47.58. Board 112.65 is the ceiling, not the gate.
-Do not publish as W8A8. Do not demote k1bar 31.9.
+**W1** 3.8 W4A16 draft-INT4 (DONE LOOP 1)
+G1 Paris/391. Median post-first **65.08** vs S1 47.58.
+Do not re-run unless a new overlay lands. Do not
+publish as W8A8. Do not demote k1bar 31.9.
+Board 112.65 remains the ceiling, not the gate.
 
 **O2** Ornith GRAPH-safe INT4 compute (L65 Half!=BF16)
 `int4_gemm_w4a16` is fp16-out. `out.to(x.dtype)` did not satisfy

@@ -15373,3 +15373,49 @@ VERDICT -> GO (in loop). Next GPU = P1 when
   GGUF >= 25 GB else W1. Do not start DD.
   Do not set CCL_TOPO_P2P_ACCESS=1.
 
+### 2026-08-20aw - LOOP 1: W1 draft-INT4 65.08 vs S1 47.58
+
+CONTEXT -> Overnight 30m fire. LOOP 0b inserted
+  P1 (Pliny Q8_0 fetch). GGUF incomplete
+  (~15.6 GB). Cards free. First unblocked
+  GPU row = W1.
+
+CONFIG -> 1x B70 card 0. Image f01e24f6
+  (v0.27.2rc1). ckpt
+  qwen38-27b-gptq-mtp-preserved.
+  DRAFT_INT4=1 MTP4 PIECEWISE
+  dtype=float16 kv=fp8 MAXLEN=131072
+  MAXSEQS=8 cache=off P2P=0. Served
+  qwen3.8-27b-GPTQ-Int4-mtp4-draftint4.
+
+COMMAND ->
+  ```
+  bash vllm/cookbook_campaign/sweep_lmx_w1_draftint4.sh
+  ```
+
+RESULT ->
+  All five cookbook patches applied
+  (nightly, boundary, mixed-split v5,
+  draft lmhead INT4, draft mtp INT4).
+  MTP 5 linears 0.85->0.22 GB. LM head
+  2.54->0.66 GB. Graph capture 5s,
+  158959 KV tokens. G1 Paris/391 PASS.
+  phase_bench p512/g128 n=5/5 median
+  post_first **65.08** (range 52.84-
+  81.91) vs S1 47.58. Prefill proxy
+  1694.9. Spec 546/984 accepted
+  (pos 204/153/112/77 of 246 drafts,
+  mean 2.22). No DEVICE_LOST. Board
+  112.65 still ceiling. Serve stopped
+  after bench (next pick different
+  ckpt). GGUF still fetching.
+  DD PARKED.
+
+VERDICT -> GO. New 3.8 GPTQ-Int4 MTP4
+  hold is W1 **65.08** post-first. Do
+  not publish as W8A8. Do not demote
+  k1bar 31.9 or Ornith 34.9. Next:
+  P1 if GGUF >=25 GB else O2
+  GRAPH-safe INT4. Do not start DD.
+  Do not set P2P=1.
+
