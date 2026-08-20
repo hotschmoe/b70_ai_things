@@ -825,6 +825,16 @@ if os.environ.get("NVFP4_MOE_FUSED", "0") == "1":
     except Exception as e:
         print("[nvfp4-shim] (7) fused MoE patch failed:", repr(e), file=sys.stderr, flush=True)
 
+# ---- (7b) cookbook draft-INT4 at MTP load_weights (LOOP 65) ---------------------------------------
+if os.environ.get("B70_DRAFT_MTP_INT4", "0") == "1":
+    try:
+        from draft_mtp_int4 import install as _install_draft_int4
+
+        _install_draft_int4()
+    except Exception as e:
+        print("[nvfp4-shim] (7b) draft MTP INT4 install failed:", repr(e),
+              file=sys.stderr, flush=True)
+
 # ---- (8) push-AR PREFILL overlay -- port the proven W8A8 posted-write all-reduce (3.8x prefill TTFT) --
 # Track 11g: the NVFP4 TP=2 daily driver's one weakness is cold prefill (PP 666 vs single-card 1702), the
 # oneCCL collective cost. The hand-rolled push all-reduce (L0-IPC posted write, ~11 GB/s vs oneCCL's staged

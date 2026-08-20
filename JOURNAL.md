@@ -15252,3 +15252,55 @@ VERDICT -> MTP unparked, not the
   k1bar 31.9. Do not serve emul.
   Do not start DD. Do not set P2P=1.
 
+### 2026-08-20at - LOOP 63-65: community steal loop
+
+CONTEXT -> Operator: line up the
+  three steal items and loop each
+  with G1 + bench_code.
+
+CONFIG -> GRAPH TP=1 fused KV=auto
+  hold is 34.9. Isolate one idea
+  per arm. Unit sticky+M1 still
+  XPUGraph PASS.
+
+COMMAND ->
+  ```
+  # unit sticky+M1
+  gpu-run --card 0 docker run ... \
+    test_fused_moe_apply.py
+  bash vllm/nvfp4/sweep_ornith_l63_65.sh
+  L65 retry: GRAPH=0; GRAPH+drafter-eager
+  ```
+
+RESULT ->
+  | arm | G1 | code c1 | vs 34.9 |
+  | L63 sticky M1=0 | Paris/391 | **33.1** | -5% |
+  | L64 sticky+M1 | Paris/391 | **33.3** | -5% |
+  | L65 GRAPH+INT4 | BOOTFAIL Half!=BF16 | -- |
+  | L65 eager INT4 | Paris/391 | **4.4** | vs MTP 4.3 |
+  | L65 GRAPH+drafter-eager+INT4 | BOOTFAIL dummy_run Half!=BF16 | -- |
+  L63/L64: grow-only gather copy
+  is coherent; extra copy is the
+  1.6-1.8 t/s. ESIMD M=1 1D
+  block_load NOT implemented
+  (needs kernel rebuild).
+  L65: hooked Qwen3_5MTP.load_weights
+  packed 5 dense linears 78->20 MB
+  (fc, qkv, o, shared gate_up/down).
+  Routed MTP experts still BF16
+  Triton (~1.5 GB) so no speed.
+  GRAPH dummy_run still Half!=BF16
+  after out.to(x.dtype). Defaults
+  STICKY=0 M1=0 keep hold 34.9.
+  No DEVICE_LOST.
+
+VERDICT -> All three documented.
+  Hold stays GRAPH no-MTP 34.9.
+  Sticky/M1 opt-in. Draft-INT4
+  eager-only, not a win until
+  MTP experts are packed or
+  int4_gemm is bf16-native in
+  GRAPH. Next: grouped NVFP4
+  kernel or MTP-expert INT4.
+  Do not start DD. Do not set P2P=1.
+

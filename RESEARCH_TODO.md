@@ -754,11 +754,11 @@ faster-or-equal under concurrent load vs the live 3.6 NVFP4 DD.
 
 ## Execution order (the 3-5 items to actually run, deduped)
 
-0. **Ornith 35B NVFP4 (NOW, 2026-08-19as).** GRAPH no-MTP is the recipe:
-   code c1 **34.9**. MTP boots (5b emulation->Triton) but GRAPH MTP3 is
-   21.2. TP=2 GRAPH+push-AR decode-neutral (22.5). Next: grouped NVFP4
-   or grow-only workspaces (community review) or draft-INT4 at
-   load_weights. Hold k1bar 31.9. KV=auto. No emul.
+0. **Ornith 35B NVFP4 (NOW, 2026-08-20at).** GRAPH no-MTP **34.9** is
+   still the recipe. L63 sticky 33.1 / L64 M1 33.3 (opt-in, extra copy).
+   L65 draft-INT4 eager 4.4 (dense 78 MB only); GRAPH Half!=BF16.
+   Next: grouped NVFP4 kernel or INT4 the MTP *experts*. Hold k1bar
+   31.9. KV=auto. No emul.
 1. **Compressed-tensors W8A8/W4A8 kernel path** (Tracks 1/2/8) -- keep the 14B W8A8 baseline green, then use the same
    format path for 27B TP=2/PP=2 and W4A8.
 2. **W8A8 accuracy sprint** (Track 2) -- 2a selective-SQ is SHIPPED; what's open is the *measurement* (gsm8k/agreement for

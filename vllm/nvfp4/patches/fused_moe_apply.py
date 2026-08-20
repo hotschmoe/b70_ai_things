@@ -18,7 +18,73 @@ import torch.nn.functional as _F
 
 _SLOT_MAX = int(os.environ.get("B70_NVFP4_MOE_SLOT_MAX", "16"))
 _FORCE = os.environ.get("B70_NVFP4_MOE_PATH", "").strip().lower()
+# L63: llm-scaler #505/#507 -- grow-only sticky scratch. Default OFF
+# (L63 measured 33.1 vs hold 34.9; extra copy). Opt-in B70_NVFP4_MOE_STICKY=1.
+_STICKY = os.environ.get("B70_NVFP4_MOE_STICKY", "0") == "1"
+# L64: specialize T==1 (decode GEMV-shaped). Default OFF (L64 33.3).
+_M1 = os.environ.get("B70_NVFP4_MOE_M1", "0") == "1"
 _GS = 16
+_RING = int(os.environ.get("B70_NVFP4_MOE_RING", "4"))
+
+
+class _GrowScratch:
+    """Grow-only buffers + 4-deep output ring (llm-scaler #505/#507)."""
+
+    def __init__(self, ring=_RING):
+        self._buf = {}
+        self._ring = []
+        self._ri = 0
+        self._ring_n = max(1, ring)
+
+    def view(self, key, shape, dtype, device):
+        n = 1
+        for s in shape:
+            n *= int(s)
+        cur = self._buf.get(key)
+        if (
+            cur is None
+            or cur.device != device
+            or cur.dtype != dtype
+            or cur.numel() < n
+        ):
+            cur = torch.empty(n, dtype=dtype, device=device)
+            self._buf[key] = cur
+        return cur.narrow(0, 0, n).view(shape)
+
+    def stash_out(self, src):
+        """Copy src into the next ring slot; return that slot (stable addr)."""
+        if not _STICKY:
+            return src
+        need = src.numel()
+        slot = None
+        if self._ri < len(self._ring):
+            slot = self._ring[self._ri]
+        if (
+            slot is None
+            or slot.device != src.device
+            or slot.dtype != src.dtype
+            or slot.numel() < need
+        ):
+            slot = torch.empty(need, dtype=src.dtype, device=src.device)
+            if self._ri < len(self._ring):
+                self._ring[self._ri] = slot
+            else:
+                self._ring.append(slot)
+        dst = slot.narrow(0, 0, need).view(src.shape)
+        dst.copy_(src)
+        self._ri = (self._ri + 1) % self._ring_n
+        return dst
+
+
+_SCRATCH = _GrowScratch()
+
+
+def _sticky_copy(key, src):
+    if not _STICKY:
+        return src
+    dst = _SCRATCH.view(key, src.shape, src.dtype, src.device)
+    dst.copy_(src)
+    return dst
 
 
 def _silu_and_mul(x):
@@ -72,15 +138,25 @@ def apply_slots(output, xb, w1, w2, s13, s2, topk_w, topk_ids, apply_on_input):
     out = output.reshape(t_count, -1)
     out.zero_()
     ids_flat = topk_ids.reshape(n_slot)
-    wts_flat = topk_w.to(torch.bfloat16).reshape(n_slot, 1)
-    x_rep = xb.repeat_interleave(k_count, dim=0)
-    w1_g = w1.index_select(0, ids_flat)
-    w2_g = w2.index_select(0, ids_flat)
-    s13_g = s13.index_select(0, ids_flat)
-    s2_g = s2.index_select(0, ids_flat)
+    wts_flat = _sticky_copy(
+        "wts", topk_w.to(torch.bfloat16).reshape(n_slot, 1)
+    )
+    w1_g = _sticky_copy("w1g", w1.index_select(0, ids_flat))
+    w2_g = _sticky_copy("w2g", w2.index_select(0, ids_flat))
+    s13_g = _sticky_copy("s13g", s13.index_select(0, ids_flat))
+    s2_g = _sticky_copy("s2g", s2.index_select(0, ids_flat))
+    # L64: T==1 decode skips repeat_interleave (xb is already [1, H]).
+    use_m1 = _M1 and t_count == 1
+    if use_m1:
+        x_rep = None
+    else:
+        x_rep = _sticky_copy("xrep", xb.repeat_interleave(k_count, dim=0))
     for i in range(n_slot):
         wr = wts_flat[i : i + 1]
-        x_in = x_rep[i : i + 1] * wr if apply_on_input else x_rep[i : i + 1]
+        if use_m1:
+            x_in = xb * wr if apply_on_input else xb
+        else:
+            x_in = x_rep[i : i + 1] * wr if apply_on_input else x_rep[i : i + 1]
         gu = _gemm(x_in, w1_g[i], s13_g[i])
         h = _silu_and_mul(gu).to(torch.bfloat16)
         dn = _gemm(h, w2_g[i], s2_g[i])
@@ -108,7 +184,7 @@ def apply_grouped(
         if tok_idx.numel() == 0:
             continue
         w_route = topk_w[tok_idx, slot_idx].to(torch.bfloat16).unsqueeze(1)
-        x_e = xb.index_select(0, tok_idx)
+        x_e = _sticky_copy("xe", xb.index_select(0, tok_idx))
         if apply_on_input:
             x_e = x_e * w_route
         gu = _gemm(x_e, w1[local], s13[local])
@@ -267,6 +343,7 @@ def install(experts_cls):
     print(
         "[nvfp4-shim] (7) FUSED per-expert NVFP4 MoE apply installed "
         f"(slot-static T<={_SLOT_MAX}, grouped unique above; "
+        f"sticky={int(_STICKY)} m1={int(_M1)} ring={_RING} "
         f"custom_op={_HAS_CUSTOM_OP})",
         file=sys.stderr,
         flush=True,
