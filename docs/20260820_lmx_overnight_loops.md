@@ -9,12 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-W8 k1bar 31.9 (O* slot/layerlet
-closed). ornith_o1 UP, G1 GO, code
-c1 34.8 ~ hold 34.9. O1 phase_bench
-**45.56**. O4e fused 1.04x seq NO-GO.
-M1_KERNEL OFF. Do not demote 34.9.
-Do not P2P. Do not DD.
+W8b PREFIXCACHE=1 MRV2=0 rematch
+of k1bar 31.9, or park. k1bar UP,
+G1 GO, code c1 28.8 < hold 31.9.
+phase_bench **26.85**. Do not demote
+31.9 or 34.9. Do not P2P. Do not DD.
 
 ---
 
@@ -658,3 +657,39 @@ Do not: demote 34.9/31.9; P2P; DD;
   emul NVFP4 G1; wire layerlet e2e.
 Restore: DD PARKED. Q8 DOWN. O1 UP.
 JOURNAL: ### 2026-08-20bm
+
+## LOOP 18 -- 2026-08-20T1446Z -- W8 k1bar 28.8; hold 31.9 stays
+
+Picked: W8 remeasure k1bar W8A8-gptq
+  DSpark TP=2. Stopped o1 (benches
+  exist, different ckpt).
+Why this, not the other open row:
+  NEXT PICK. P1 in-image done. O*
+  slot/layerlet closed.
+GPU: both cards HELD qwen38_w8a8_dspark
+  :18080. DD PARKED. P2P=0.
+Command:
+  docker rm -f ornith_o1
+  gpu-run bash vllm/dflash/sweep_lmx_w8_k1bar.sh
+  g1_probe + bench_code + phase_bench
+Log: /mnt/vm_8tb/b70/lmx_overnight/w8_g1_20260820T144133Z.log
+  w8_code_20260820T144133Z.txt
+  w8_phase_20260820T144133Z.json
+Result: HEALTHY 213s. BARRIER rank0+1.
+  AGASYNC ENGAGED. G1 Paris/391.
+  bench_code c1 **28.8** best 31.5 vs
+  hold **31.9** / 34.0. phase_bench
+  **26.85** prefill 2321 TTFT 0.49s.
+Verdict: Serve/G1 GO. vs 31.9 NO-GO.
+  Do not demote. PREFIXCACHE=0 turned
+  on MRV2 (hold was likely cache on).
+Changed beliefs: k1bar submit-shaped
+  C1 is ~27, not 31.9 bench_code.
+  Prefill 2321 >> Ornith 265.
+Next pick: W8b PREFIXCACHE=1 MRV2=0
+  rematch, or park. Leave k1bar up.
+Do not: demote 31.9/34.9; P2P; DD;
+  emul NVFP4 G1.
+Restore: DD PARKED. Q8 DOWN. O1 DOWN.
+  W8 UP.
+JOURNAL: ### 2026-08-20bn

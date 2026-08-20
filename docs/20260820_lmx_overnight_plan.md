@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 17 (O4e fused layerlet 1.04x seq NO-GO; 8.7x eager oneDNN; WG=64) |
-| Last JOURNAL | `2026-08-20bm` |
-| Next pick | **W8** k1bar 31.9 (O* slot/layerlet closed). ornith_o1 UP. |
-| Blocked on | none. Lease card 0 ornith_o1. Hold 34.9 not beaten. M1_KERNEL default OFF. |
+| Last loop | 18 (W8 k1bar remeasure code c1 28.8 / phase 26.85; hold 31.9 stays) |
+| Last JOURNAL | `2026-08-20bn` |
+| Next pick | **W8b** PREFIXCACHE=1 MRV2=0 rematch 31.9, or park. k1bar UP. |
+| Blocked on | none. Lease both cards k1bar. Hold 31.9 not demoted. P2P=0. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. O1 phase_bench ignore-eos p512/g128 **45.56**. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
@@ -129,8 +129,12 @@ recovers hold 34.9. phase_bench ignore-eos p512/g128 n=5/5
 median post-first **45.56** (prefill proxy 265, TTFT 4.34s).
 Different metric than 34.9; do not swap them. Do not re-run.
 
-**W8** W8A8 k1bar 31.9 -- only if W1 and O* are blocked. Do not
-regress it.
+**W8** W8A8 k1bar 31.9 (LOOP 18 remeasure)
+TP=2 GRAPH=1 SPECTOK=4 MAXLEN=122880 BARRIER=1 AGASYNC.
+G1 Paris/391. bench_code c1 **28.8** best 31.5 vs hold
+**31.9**. phase_bench ignore-eos p512/g128 **26.85**.
+PREFIXCACHE=0 enabled MRV2. Do not demote 31.9. Optional
+W8b: PREFIXCACHE=1 B70_MRV2=0 rematch.
 
 ## L.3 Write order at the end of every fire
 

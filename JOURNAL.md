@@ -15953,3 +15953,38 @@ VERDICT -> Proto GO. Speed NO-GO vs
   e2e. Next W8. Do not demote 34.9/31.9.
   Do not P2P. Do not start DD.
 
+### 2026-08-20bn - LOOP 18: W8 k1bar remeasure 28.8; hold 31.9
+
+CONTEXT -> Overnight 30m. NEXT PICK W8
+  k1bar 31.9. O* slot/layerlet closed.
+  o1 benches exist. Different ckpt.
+
+CONFIG -> IMG int8g-v0260 TP=2 GRAPH=1
+  SPECTOK=4 MAXLEN=122880 BARRIER=1
+  AGASYNC=1 PUSH_AR_GRAPH=1 P2P=0
+  GDN_SO k1barrier 4ae45315.
+  PREFIXCACHE=0 (phase_bench) -> MRV2=1.
+  vs hold PREFIXCACHE default 1.
+
+COMMAND ->
+  ```
+  docker rm -f ornith_o1
+  gpu-run bash vllm/dflash/sweep_lmx_w8_k1bar.sh
+  g1_probe + bench_code c1 256 n=3
+  phase_bench --ignore-eos p512/g128 n=5
+  ```
+
+RESULT -> HEALTHY 213s. BARRIER on
+  rank0+1. AGASYNC ENGAGED. P2P=0.
+  G1 Paris/391 no bangs. bench_code c1
+  avg **28.8** best 31.5 vs hold **31.9**
+  / 34.0. phase_bench median **26.85**
+  prefill 2321 TTFT 0.49s n=5/5.
+
+VERDICT -> Serve/G1 GO. Speed vs 31.9
+  NO-GO (do not demote). Next W8b
+  PREFIXCACHE=1 MRV2=0 rematch, or
+  park. Leave k1bar up. Do not P2P.
+  Do not start DD. Do not demote 31.9
+  or 34.9.
+
