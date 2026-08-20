@@ -15373,6 +15373,36 @@ VERDICT -> GO (in loop). Next GPU = P1 when
   GGUF >= 25 GB else W1. Do not start DD.
   Do not set CCL_TOPO_P2P_ACCESS=1.
 
+### 2026-08-20ax - LOOP 2: Pliny Q8_0 TP2 is live, 30.89
+
+CONTEXT -> P1 GGUF landed 27.7 GiB. First start
+  died on inherited Q4_K_M MODEL_SHA256 from
+  qwen38-b70:latest. Cleared pin and retried.
+
+CONFIG -> GPU_COUNT=2 Q8_DOORS=1 ctx=32768
+  batch 1024/256 flash-attn on temp 0 rp 1.15
+  thinking off. MMVQ pair/triple/quad ON.
+  Q4K reorder OFF. COMM_DIRECT_Q8=2.
+  Image qwen38-b70:latest. Port 8010.
+
+COMMAND ->
+  ```
+  bash llamacpp/sweep_obliterated_q8.sh
+  ```
+
+RESULT ->
+  G1 Paris/391 PASS.
+  phase_bench n=5/5 median post_first **30.89**
+  tok/s (runs EOS ~20 tok). Warmup g128 **32.14**.
+  Prefill proxy **569** tok/s. TTFT **2.02 s**.
+  vs Q4_K_M lab doors 43.8 (~1.36x). Coherent.
+  Serve left up (lease pid 237652).
+
+VERDICT -> GO. Pliny Q8 is on the box.
+  Next: Q8_DOORS A/B + longer g128.
+  Do not start DD. Do not set vLLM P2P=1.
+  Do not try COMM_DIRECT_Q8=3.
+
 ### 2026-08-20aw - LOOP 1: W1 draft-INT4 65.08 vs S1 47.58
 
 CONTEXT -> Overnight 30m fire. LOOP 0b inserted

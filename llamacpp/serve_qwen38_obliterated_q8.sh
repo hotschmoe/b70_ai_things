@@ -49,6 +49,7 @@ docker run -d --name "$NAME" \
   -v "$OVERLAY:/entrypoint.sh:ro" \
   -e MODELS_DIR=/models \
   -e MODEL_FILE="$MODEL_FILE" \
+  -e MODEL_SHA256="${MODEL_SHA256:-}" \
   -e GPU_COUNT="$GPU_COUNT" \
   -e CTX_SIZE_OVERRIDE="$CTX_SIZE_OVERRIDE" \
   -e PARALLEL=1 \

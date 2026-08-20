@@ -9,12 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-P1 when Q8_0 GGUF >= 25000 MB:
-`bash llamacpp/sweep_obliterated_q8.sh`
-W1 is DONE (65.08, G1 GO). If P1 still
-blocked, O2 Ornith GRAPH-safe INT4 dtype
-(L65 Half!=BF16). Fetch:
-/mnt/vm_8tb/b70/lmx_overnight/p1_hf_q8.log
+P1b -- Q8_DOORS=0 vs 1 A/B. Serve
+qwen38_oblit_q8 is UP :8010 (lease
+237652). Longer g128 then doors A/B.
+W1 hold 65.08 stays. Do not steal
+cards for O2 while P1 is live.
 
 ---
 
@@ -68,6 +67,32 @@ Do not: fetch whole OBLITERATUS repo; vLLM P2P; demote
   31.9/34.9; start DD; 4x B70.
 Restore: DD PARKED.
 JOURNAL: ### 2026-08-20av
+
+## LOOP 2 -- 2026-08-20T0725Z -- P1 OBLITERATED Q8_0 2x SYCL G1 GO
+
+Picked: fetch complete (27.7 GiB); serve 2x B70 llama.cpp
+  SYCL Q8_DOORS=1 MMVQ pair/triple/quad; G1 + phase_bench.
+Why this, not the other open row: operator-priority P1.
+  First start failed: image ENV MODEL_SHA256 was the Q4_K_M
+  pin. Cleared and retried.
+GPU: both cards. Container qwen38_oblit_q8 :8010.
+  Lease pid 237652 docker wait. DD PARKED.
+Command:
+  MODEL_SHA256= bash llamacpp/sweep_obliterated_q8.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/p1_phase_20260820T0722Z.json
+Result: G1 Paris/391 PASS. median post_first **30.89**
+  tok/s (n=5, early EOS ~20 tok). Warmup g128 **32.14**.
+  Prefill proxy **569**. TTFT 2.02s. vs Q4_K_M 43.8
+  (~1.36x slower, expected weight-only Q8). Coherent.
+Verdict: GO. First live Pliny Q8 on this box.
+Changed beliefs: SHA pin must be cleared vs 0xSero image
+  ENV. COMM_DIRECT_Q8=3 still forbidden. Q8-DEDUP stats
+  dump at process exit -- capture on stop.
+Next pick: P1b Q8_DOORS A/B + longer gen.
+Do not: vLLM P2P; stop a healthy serve for W1; fetch
+  whole HF repo; COMM_DIRECT_Q8=3.
+Restore: serve LEFT UP. DD PARKED.
+JOURNAL: ### 2026-08-20ax
 
 ## LOOP 1 -- 2026-08-20T0715Z -- W1 draft-INT4 G1 GO 65.08
 
