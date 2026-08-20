@@ -7,9 +7,10 @@
 > Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
 > **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**
 > (G1 Paris/391) vs S1 47.58. Board 112.65 still ceiling. Not W8A8.
-> **P1** Pliny Q8_0 (~29 GB GGUF still fetching). Else **O2** Ornith
-> GRAPH-safe INT4. Holds: W1 **65.08**, Ornith GRAPH no-MTP **34.9**,
-> W8A8 k1bar **31.9**. DD PARKED. vLLM P2P off. No emul NVFP4 G1 (D18).
+> **P1 LIVE**: Pliny OBLITERATED Q8_0 TP2 G1 GO, post-first **30.89**
+> / warmup g128 **32.14** on :8010. Next P1b Q8_DOORS A/B.
+> Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**.
+> DD PARKED. vLLM P2P off. COMM_DIRECT_Q8=3 forbidden.
 > Ledger: `docs/20260820_lmx_overnight_loops.md`.
 
 > ### [CAMPAIGN 2026-07-28] -- active ordering
