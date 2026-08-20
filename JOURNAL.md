@@ -15339,3 +15339,37 @@ VERDICT -> GO (armed). Number still
   Do not start DD. Do not set P2P=1.
   Do not kill a healthy W1 serve at 30m.
 
+### 2026-08-20av - LOOP 0b: Pliny OBLITERATED Q8_0 added
+
+CONTEXT -> Operator: add the Pliny Qwen3.8-27B
+  Q8 quant that just landed, get it running,
+  optimize (GEMM/GEMV/comm/kernels). Love the
+  model. Try everything. Keep the 30m loop.
+
+CONFIG -> HF OBLITERATUS/Qwen3.8-27B-OBLITERATED
+  file Qwen3.8-27B-OBLITERATED-Q8_0.gguf ~29 GB.
+  llama.cpp SYCL image qwen38-b70:latest.
+  2x B70 TP2 first. Card: temp 0, rp 1.15,
+  thinking off. Q8 fused doors ON. Q4K OFF.
+  vLLM P2P stays off (wedge). llama.cpp-only
+  LLAMA_P2P is a later measured A/B.
+
+COMMAND ->
+  ```
+  hf download OBLITERATUS/Qwen3.8-27B-OBLITERATED \
+    Qwen3.8-27B-OBLITERATED-Q8_0.gguf \
+    --local-dir models/files/qwen3.8-27b/obliterated-q8
+  GPU_COUNT=2 ./bin/gpu-run bash \
+    llamacpp/serve_qwen38_obliterated_q8.sh start
+  bash llamacpp/sweep_obliterated_q8.sh
+  ```
+
+RESULT ->
+  Fetch PID in p1_hf_q8.pid (unauthenticated HF).
+  Serve/sweep/overlay/manifest/plan/ledger landed.
+  No tok/s until GGUF completes.
+
+VERDICT -> GO (in loop). Next GPU = P1 when
+  GGUF >= 25 GB else W1. Do not start DD.
+  Do not set CCL_TOPO_P2P_ACCESS=1.
+

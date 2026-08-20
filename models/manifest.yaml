@@ -287,6 +287,24 @@ models:
       (0.27.2rc1), not 3.6 2c427ef. Ceiling reference only; does not
       demote W8A8.
 
+  - id: qwen3.8-27b/obliterated-q8
+    family: qwen3.8-27b
+    scheme: gguf-q8_0
+    vision: false
+    mtp: false
+    size_gb: 29
+    served_as: qwen3.8-27b-OBLITERATED-Q8_0
+    source:
+      type: hf
+      repo: OBLITERATUS/Qwen3.8-27B-OBLITERATED
+    notes: >
+      Pliny OBLITERATUS Qwen3.8-27B, Q8_0 GGUF only
+      (Qwen3.8-27B-OBLITERATED-Q8_0.gguf ~29 GB). Do NOT
+      fetch the whole repo (mlx + all quants). Overnight P1.
+      llama.cpp SYCL 1x/2x B70. Weight-only, not W8A8.
+      Recipe: llamacpp/serve_qwen38_obliterated_q8.sh.
+      Card: temp 0, repeat_penalty 1.15, thinking off.
+
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
 #   qwen3.8-27b/nvfp4-modelopt (hf Inferact/Qwen3.8-27B-NVFP4) -- deleted 2026-08-17.
 #     Uniform W4A4, no KV scales. Gated 18/18 MTP3 code 35.0 / HE+ 0.939/0.915; not a DD.

@@ -5,10 +5,11 @@
 
 > ### [OVERNIGHT 2026-08-20] -- 30m LocalMaxxing loop (active)
 > Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
-> First GPU pick **W1**: 3.8 GPTQ-Int4 MTP4 + cookbook 2026.08.19
-> draft-INT4 on f01e24f6 vs S1 47.58. Then Ornith GRAPH dtype / MTP
-> expert INT4 / grouped NVFP4. Holds: Ornith GRAPH no-MTP **34.9**,
-> W8A8 k1bar **31.9**. DD PARKED. P2P off. No emul NVFP4 G1 (D18).
+> **P1** Pliny OBLITERATUS Qwen3.8-27B Q8_0 (~29 GB GGUF fetching).
+> Serve `llamacpp/serve_qwen38_obliterated_q8.sh` 2x B70 SYCL when
+> the file is complete. **W1** 3.8 GPTQ draft-INT4 still in queue.
+> Holds: Ornith GRAPH no-MTP **34.9**, W8A8 k1bar **31.9**.
+> DD PARKED. vLLM P2P off. No emul NVFP4 G1 (D18).
 > Ledger: `docs/20260820_lmx_overnight_loops.md`.
 
 > ### [CAMPAIGN 2026-07-28] -- active ordering

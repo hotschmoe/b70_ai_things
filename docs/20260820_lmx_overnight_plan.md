@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 0 (contract only) |
-| Last JOURNAL | `2026-08-20au` |
-| Next pick | **W1** -- 3.8 GPTQ-Int4 MTP4 + cookbook 2026.08.19 draft-INT4 on f01e24f6, 1x B70, p512/g128 n=5 vs S1 **47.58** |
-| Blocked on | none. Cards free at loop-0. |
+| Last loop | 0b (Pliny Q8 added; GGUF fetching) |
+| Last JOURNAL | `2026-08-20av` |
+| Next pick | **P1** as soon as Q8_0 GGUF is >=25 GB: 2x B70 llama.cpp SYCL OBLITERATED Q8_0, G1 + p512/g128. While fetching, **W1** may use the cards. |
+| Blocked on | P1 GPU blocked on ~29 GB Q8_0 download. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |
@@ -54,6 +54,31 @@ SergiioB 1x GPTQ-Int4+draft-INT4 **112.7**, Steve 2x AutoRound MTP5
   No `KVDTYPE=bfloat16`. No 51MB GDN-OFF overlay. No D16/101.9 retry.
 
 ## L.2 Queue (pick the first unblocked row)
+
+**P1** Pliny OBLITERATUS Qwen3.8-27B Q8_0 (operator love; just landed)
+GGUF: `models/files/qwen3.8-27b/obliterated-q8/Qwen3.8-27B-OBLITERATED-Q8_0.gguf`
+  (~29 GB, hf file only -- do not fetch the whole repo).
+Serve: `./bin/gpu-run bash llamacpp/serve_qwen38_obliterated_q8.sh start`
+Sweep: `bash llamacpp/sweep_obliterated_q8.sh`
+Image `qwen38-b70:latest`. Q8 fused doors ON, Q4K doors OFF.
+Card: temp 0, repeat_penalty 1.15, thinking off, empty system.
+2x TP2 first (29 GB weights). Then GPU_COUNT=1 if VRAM allows.
+G1 Paris/391. Metric: phase_bench p512/g128 n=5.
+Compare to 0xSero Q4_K_M lab doors **43.8** (different quant, same arch)
+and S1 GPTQ 47.58. Q8_0 is weight-only, NOT W8A8.
+Profile next: Q8_DOORS=0 vs 1; COMM_DIRECT_Q8; 1x vs 2x;
+llama-bench tg128/pp512 if the binary exists in-image.
+Custom kernel track (from 0xSero/lab map):
+- Decode is reorder MMVQ Q8_0 x Q8_1 via `dpct::dp4a`, NOT XMX/DPAS.
+- Prefill is dequant->F16 GEMM (MMQ disabled, oneDNN off in this image).
+- Enable MMVQ pair/triple/quad; leave Q4K reorder off.
+- `GGML_SYCL_COMM_DIRECT_Q8=2` only. `=3` is DEVICE_LOST (lab 2026-08-16).
+- Never `CCL_TOPO_P2P_ACCESS=1` (vLLM TP>1 wedge). llama.cpp N=2 is
+  a device-0 USM sum kernel, not oneCCL.
+- If Q8_0 is ~4x slower than 43.8, first prove we are on reorder MMVQ
+  not DMMV (`GGML_SYCL_DEBUG` / `[Q8-DEDUP]`). Next kernel is lab
+  DP4A2 + GDN-quad SG24, not vLLM P2P and not enabling MMQ.
+Do not demote k1bar 31.9.
 
 **W1** 3.8 W4A16 draft-INT4 (board steal, ckpt+image local)
 Command:

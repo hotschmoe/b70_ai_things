@@ -9,10 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-W1 -- 3.8 GPTQ-Int4 MTP4 + cookbook 2026.08.19
-draft-INT4 on f01e24f6, 1x B70, p512/g128 n=5
-vs S1 47.58. Sweep:
+P1 when Q8_0 GGUF >= 25000 MB:
+`bash llamacpp/sweep_obliterated_q8.sh`
+While fetch incomplete, W1 may take the cards:
 `bash vllm/cookbook_campaign/sweep_lmx_w1_draftint4.sh`
+Fetch log: /mnt/vm_8tb/b70/lmx_overnight/p1_hf_q8.log
 
 ---
 
@@ -39,3 +40,30 @@ Do not: start DD; P2P; emul NVFP4; demote W8A8; 4x B70; kill a
   healthy W1 serve at 30m.
 Restore: DD PARKED. Cards free for W1.
 JOURNAL: ### 2026-08-20au
+
+## LOOP 0b -- 2026-08-20T0740Z -- add Pliny OBLITERATED Q8_0 to the loop
+
+Picked: add P1. Fetch Q8_0 GGUF only (~29 GB). Write SYCL
+  serve + sweep. Q8 fused doors ON, Q4K OFF. Manifest id
+  qwen3.8-27b/obliterated-q8. No GPU serve until file complete.
+Why this, not the other open row: operator asked to add and
+  optimize the Pliny Q8 that just landed. W1 stays in queue.
+GPU: none (fetch is CPU). Cards still free. DD PARKED.
+Command:
+  hf download OBLITERATUS/Qwen3.8-27B-OBLITERATED \
+    Qwen3.8-27B-OBLITERATED-Q8_0.gguf \
+    --local-dir models/files/qwen3.8-27b/obliterated-q8
+  llamacpp/serve_qwen38_obliterated_q8.sh
+  llamacpp/sweep_obliterated_q8.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/p1_hf_q8.log
+Result: download started. Serve scripts landed. Next GPU
+  is P1 when GGUF >= 25 GB, else W1.
+Verdict: GO (added). No tok/s yet.
+Changed beliefs: Q8_0 is weight-only (~W8A16), not our
+  W8A8-INT8 XMX path. Historical B70 Q8_0 was slow vs Q4_K_M.
+  Profile Q8_DOORS before writing new GEMV.
+Next pick: P1 sweep if GGUF complete, else W1.
+Do not: fetch whole OBLITERATUS repo; vLLM P2P; demote
+  31.9/34.9; start DD; 4x B70.
+Restore: DD PARKED.
+JOURNAL: ### 2026-08-20av
