@@ -15688,3 +15688,40 @@ VERDICT -> NO-GO SG32=1. DP4A2/SG24
   FATTN_MMA=1. Do not COMM=3. Do not
   retry P2P. Do not demote 31.9.
 
+### 2026-08-20bf - LOOP 10: O2 GRAPH INT4 boots; code c1 21.7
+
+CONTEXT -> Overnight 30m fire. NEXT
+  PICK O2. Stopped Q8. Unit test first
+  then GRAPH=1 MTP3 + DRAFT_MTP_INT4.
+
+CONFIG -> Ornith NVFP4 fused TP=1
+  card 0. IMG int8g-v0260. KV_FP8=0
+  LANGONLY=1 GRAPH=1 MTP3 CAP 1,2,4,8
+  P2P=0. Opaque b70::int4_gemm_w4a16_cast.
+  STICKY=0 M1=0. Packed 5 dense 78->20 MB.
+
+COMMAND ->
+  ```
+  gpu-run --card 0 python3 test_int4_graph_dtype.py
+  # PASS capture OK bf16
+  docker rm eagle_head L65 cache
+  GRAPH=1 MTPTOK=3 B70_DRAFT_MTP_INT4=1 \
+    serve_nvfp4_moe_35b.sh
+  g1_probe + bench_code c1 256 n=3
+  ```
+
+RESULT ->
+  Unit XPUGraph PASS. First GRAPH boot
+  python_error on stale L65 eagle_head
+  cache (root-owned). Wipe then HEALTHY
+  6s graph capture. G1 Paris/391 no bangs.
+  bench_code c1 **21.7** vs hold **34.9**.
+  Experts still BF16 Triton.
+
+VERDICT -> GRAPH-safe INT4 GO (L65
+  dummy_run cured). Speed NO-GO vs 34.9.
+  Hold 34.9. Leave ornith_o2 up. Next O3
+  pack routed experts. Do not demote
+  34.9 or 31.9. Do not start DD. Do not
+  P2P.
+

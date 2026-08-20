@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 9 (P1e SG32=1 30.11 NO-GO; DP4A2/SG24 not in 0xSero JIT) |
-| Last JOURNAL | `2026-08-20be` |
-| Next pick | **O2** Ornith GRAPH-safe INT4. Q8 2x UP -- STOP only when O2 starts. |
-| Blocked on | none. Lease pid 279160 docker-wait. P1 in-image profile done. |
+| Last loop | 10 (O2 GRAPH+MTP3+INT4 G1 GO; code c1 21.7 vs hold 34.9) |
+| Last JOURNAL | `2026-08-20bf` |
+| Next pick | **O3** pack Ornith MTP routed experts INT4. ornith_o2 UP card 0. |
+| Blocked on | none. Lease pid 285957 card 0. Hold 34.9 not beaten. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |

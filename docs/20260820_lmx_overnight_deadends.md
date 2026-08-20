@@ -9,7 +9,7 @@ Carry-ins from the W8A8/Ornith loops (do not re-open casually):
 |---|---|---|
 | D18 | emul NVFP4 G1 (bangs even with KV_FP8=0) | fused path also bangs; it does not |
 | L63/L64 | Python sticky/M1 fused apply | 33.1/33.3 vs hold 34.9. Kernel ESIMD only |
-| L65 GRAPH | draft-INT4 on Ornith GRAPH Half!=BF16 | opaque bf16-out op or dtype=fp16 dummy_run fix |
+| L65 GRAPH | draft-INT4 on Ornith GRAPH Half!=BF16 | RETRIED LOOP 10. Opaque b70::int4_gemm_w4a16_cast + wipe stale eagle_head cache. GRAPH boots. code c1 21.7 < 34.9 |
 | PRE.1 | P2P=1 in vLLM TP>1 | RETESTED 7.1 LOOP 4. Hang remains. Wedge (follow-on TP=2 DEVICE_LOST) CURED. Keep P2PACCESS=0. |
 | 101.9/D16 | Steve AutoRound MTP5 photocopy | parked; not this overnight first pick |
 

@@ -41,6 +41,41 @@ def quantize_to_int4(weight: torch.Tensor, group_size: int = 128):
     return qweight, scales, qzeros, group_size
 
 
+def _ensure_cast_op():
+    """Opaque bf16-in/bf16-out wrapper. L65: fake(input.dtype)+real(fp16) made
+    GRAPH dummy_run DCE the .to() and die Half!=BF16. Hide the fp16 kernel."""
+    if getattr(_ensure_cast_op, "_ready", False):
+        return
+    if not hasattr(torch.ops._xpu_C, "int4_gemm_w4a16"):
+        return
+
+    @torch.library.custom_op("b70::int4_gemm_w4a16_cast", mutates_args=())
+    def int4_gemm_w4a16_cast(
+        x: torch.Tensor,
+        qweight: torch.Tensor,
+        scales: torch.Tensor,
+        qzeros: torch.Tensor,
+        group_size: int,
+    ) -> torch.Tensor:
+        flat = x.reshape(-1, x.shape[-1])
+        if flat.dtype != torch.float16:
+            flat = flat.to(torch.float16)
+        out = torch.ops._xpu_C.int4_gemm_w4a16(
+            flat, qweight, None, scales, qzeros, group_size, None
+        )
+        return out.to(x.dtype).reshape(*x.shape[:-1], qweight.shape[1])
+
+    @int4_gemm_w4a16_cast.register_fake
+    def _(x, qweight, scales, qzeros, group_size):
+        return torch.empty(
+            (*x.shape[:-1], qweight.shape[1]),
+            dtype=x.dtype,
+            device=x.device,
+        )
+
+    _ensure_cast_op._ready = True
+
+
 class _Int4LinearMethod:
     def __init__(self, qweight, scales, qzeros, group_size):
         self.qweight = qweight
@@ -55,24 +90,28 @@ class _Int4LinearMethod:
         pass
 
     def apply(self, layer, x, bias):
-        flat = x.reshape(-1, x.shape[-1])
-        # int4_gemm_w4a16 is fp16-out (cookbook). Cast back to the
-        # layer dtype or GRAPH capture dies Half != BFloat16 (L65).
-        if flat.dtype != torch.float16:
-            flat = flat.to(torch.float16)
-        out = torch.ops._xpu_C.int4_gemm_w4a16(
-            flat,
-            self.qweight,
-            None,
-            self.scales,
-            self.qzeros,
-            self.group_size,
-            None,
-        )
+        _ensure_cast_op()
+        if hasattr(torch.ops, "b70") and hasattr(torch.ops.b70, "int4_gemm_w4a16_cast"):
+            out = torch.ops.b70.int4_gemm_w4a16_cast(
+                x, self.qweight, self.scales, self.qzeros, int(self.group_size)
+            )
+        else:
+            flat = x.reshape(-1, x.shape[-1])
+            if flat.dtype != torch.float16:
+                flat = flat.to(torch.float16)
+            out = torch.ops._xpu_C.int4_gemm_w4a16(
+                flat,
+                self.qweight,
+                None,
+                self.scales,
+                self.qzeros,
+                self.group_size,
+                None,
+            )
+            out = out.to(x.dtype).reshape(*x.shape[:-1], self.qweight.shape[1])
         if bias is not None:
             out = out + bias.to(out.dtype)
-        out = out.to(x.dtype)
-        return out.reshape(*x.shape[:-1], self.qweight.shape[1])
+        return out
 
 
 def _collect_dense_linears(root, prefix=""):
@@ -172,6 +211,7 @@ def build_draft_mtp_int4(model):
 def install():
     if os.environ.get("B70_DRAFT_MTP_INT4", "0") != "1":
         return
+    _ensure_cast_op()
     hooked = 0
     for mod_name, cls_name in (
         ("vllm.model_executor.models.qwen3_5_mtp", "Qwen3_5MTP"),

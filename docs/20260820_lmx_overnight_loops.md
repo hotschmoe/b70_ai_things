@@ -9,11 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O2 Ornith GRAPH-safe INT4. Q8 2x
-hold **32.03** UP (lease 279160).
-STOP Q8 only when O2 starts. P1
-in-image MMVQ doors done. Do not
-COMM=3. Do not retry vLLM P2P.
+O3 pack Ornith MTP routed experts
+to INT4. ornith_o2 GRAPH+MTP3+INT4
+UP card 0, G1 GO, code c1 21.7.
+Hold 34.9 stays. Do not demote it.
+Do not retry vLLM P2P. Do not DD.
 
 ---
 
@@ -375,3 +375,37 @@ Do not: FATTN_MMA=1 JIT; COMM=3;
   retry vLLM P2P; DD; demote 31.9/34.9.
 Restore: DD PARKED. Q8 2x SG32=0 UP.
 JOURNAL: ### 2026-08-20be
+
+## LOOP 10 -- 2026-08-20T1047Z -- O2 GRAPH INT4 G1 GO; code c1 21.7
+
+Picked: O2 GRAPH-safe INT4. Stopped
+  Q8 (benches exist, different ckpt).
+Why this, not the other open row:
+  NEXT PICK. P1 in-image done.
+GPU: card 0 HELD pid 285957 ornith_o2
+  :18080. Card 1 free. DD PARKED.
+  P2PACCESS=0. KV_FP8=0.
+Command:
+  python3 vllm/nvfp4/test_int4_graph_dtype.py
+  GRAPH=1 MTPTOK=3 B70_DRAFT_MTP_INT4=1
+  bash vllm/nvfp4/serve_nvfp4_moe_35b.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/o2_g1_20260820T1047Z.log
+  o2_code_20260820T1047Z.txt
+Result: unit XPUGraph PASS (raw fp16,
+  cast bf16, capture OK). Stale L65
+  eagle_head cache python_error; wipe
+  then GRAPH capture 6s. G1 Paris/391.
+  bench_code c1 **21.7** vs 34.9.
+  Dense MTP 78->20 MB. Experts still
+  BF16 Triton.
+Verdict: GO boot (L65 dummy_run cured).
+  NO-GO speed vs 34.9. Hold 34.9.
+Changed beliefs: opaque custom op +
+  cache wipe unblocks GRAPH INT4.
+  Speed wait is O3 routed experts.
+Next pick: O3 pack MTP routed experts
+  INT4. Leave ornith_o2 up.
+Do not: demote 34.9/31.9; emul NVFP4
+  G1; P2P; DD; KVDTYPE=bfloat16.
+Restore: DD PARKED. Q8 DOWN. O2 UP.
+JOURNAL: ### 2026-08-20bf

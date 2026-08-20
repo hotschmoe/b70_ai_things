@@ -6,11 +6,12 @@
 > ### [OVERNIGHT 2026-08-20] -- 30m LocalMaxxing loop (active)
 > Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
 > **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**.
-> **P1 DONE in-image**: Q8_0 2x **32.03**. SG32=1 was 30.11 (NO-GO).
-> DP4A2xSG24 not in 0xSero JIT .so 258f4729. Ratio vs Q4_K_M 43.8
-> matches lab Q8/Q4 (0.73). Serve 2x UP lease 279160.
-> Next **O2** Ornith GRAPH-safe INT4 (STOP Q8 when O2 starts).
-> Do not COMM=3. Do not FATTN_MMA=1 JIT. Do not retry vLLM P2P=1.
+> **P1 DONE in-image**: Q8_0 2x **32.03**. Q8 serve STOPPED for O2.
+> **O2**: GRAPH+MTP3+draft-INT4 boots (L65 dummy_run cured via opaque
+> b70::int4_gemm_w4a16_cast). G1 Paris/391. bench_code c1 **21.7**
+> vs hold **34.9** (do not demote). ornith_o2 UP card 0.
+> Next **O3** pack MTP routed experts INT4.
+> Do not COMM=3. Do not retry vLLM P2P=1. Do not emul NVFP4 G1.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**, Q8 **32.03**.
 > DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
 
