@@ -15795,3 +15795,31 @@ VERDICT -> Proto GO. e2e NO-GO (not
   O1. Do not demote 34.9/31.9. Do not
   P2P. Do not start DD.
 
+### 2026-08-20bi - LOOP 13: O4b WG/SLM occupancy NO-GO
+
+CONTEXT -> Overnight 30m. NEXT PICK O4b
+  occupancy. o3 holds card 0. Attach,
+  kernel A/B on card 1.
+
+CONFIG -> Same Ornith expert GEMV proto.
+  WG=1 1D vs WG=16 vs SLM x WG=16/32.
+  Grouped 8x up SLM16. IMG int8g-v0260
+  AOT bmg_g31. P2P=0. No live .so swap.
+
+COMMAND ->
+  ```
+  bash vllm/nvfp4/proto_moe_m1/build.sh
+  gpu-run --card 1 proto_moe_m1/run.sh
+  ```
+
+RESULT -> Numerics 1.6e-7.
+  up wg1 **0.014 ms / 109 GB/s**.
+  wg16 0.986x, slm16 0.967x, slm32 0.922x.
+  down slm16 **0.427x**. grouped slm16
+  0.978x (0.069 vs 0.067). o3 Up. Hold
+  34.9.
+
+VERDICT -> Occupancy NO-GO. WG=1 stays.
+  Next O4c torch op or O1. Do not demote
+  34.9/31.9. Do not P2P. Do not start DD.
+

@@ -122,4 +122,26 @@ Retry if: grouped INT4 MoE gemm, or
   Triton reads packed INT4 weights.
 Related JOURNAL: ### 2026-08-20bg
 
+## O4b -- WG/SLM occupancy on M=1 NVFP4 GEMV -- 2026-08-20 -- LOOP 13
+
+Tried: same Ornith expert shapes as LOOP 12.
+  WG=1 1D block_load vs WG=16 (no SLM)
+  vs SLM-broadcast x WG=16/32.
+  Grouped 8x up SLM16 vs WG=1.
+Result: numerics still 1.6e-7.
+  up: wg1 0.014 ms 109 GB/s;
+  wg16 0.986x; slm16 0.967x; slm32 0.922x.
+  down slm16 0.427x (SLM setup on K=512).
+  grouped slm16 0.978x (0.069 vs 0.067).
+Why it is closed: occupancy is not the
+  84-vs-528 gap on these shapes. WG=1
+  1D load stays the proto. 2.3x vs
+  oneDNN still stands; needs a torch op
+  for e2e, not a bigger work-group.
+Retry if: fused layerlet / larger K
+  makes SLM x reuse show up, or a
+  persistent decode kernel changes
+  launch mix.
+Related JOURNAL: ### 2026-08-20bi
+
 ---

@@ -14,9 +14,9 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 12 (O4 M=1 1D GEMV proto PASS; 2.3x oneDNN isolated; not wired) |
-| Last JOURNAL | `2026-08-20bh` |
-| Next pick | **O4b** occupancy/WG + torch op, or **O1** 34.9 phase_bench. ornith_o3 UP. |
+| Last loop | 13 (O4b WG/SLM occupancy NO-GO; WG=1 stays; not wired) |
+| Last JOURNAL | `2026-08-20bi` |
+| Next pick | **O4c** torch op (WG=1 1D GEMV), or **O1** 34.9 phase_bench. ornith_o3 UP. |
 | Blocked on | none. Lease card 0 ornith_o3. Hold 34.9 not beaten. O4 not e2e. |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
@@ -107,8 +107,10 @@ must stay XPUGraph PASS.
 LOOP 12 proto (`vllm/nvfp4/proto_moe_m1/`): AOT BMG-G31, 53 lsc_load,
 no DPAS. GEMV rel 1.6e-7. Isolated up 0.019 ms vs oneDNN 0.043 ms
 (2.3x); grouped 8x up 0.110 vs 0.320 ms. Bandwidth 84 GB/s WG=1
-(Intel FP8 decode cited ~528). Not wired. Next is occupancy then
-a torch op; do not swap the live serve .so.
+(Intel FP8 decode cited ~528). Not wired.
+LOOP 13 O4b: WG=16/SLM x is 0.97-0.99x vs WG=1 (down slm16 0.43x).
+Occupancy closed. Next is a separate torch op (do not swap live
+serve .so), or O1 34.9 phase_bench.
 
 **O1** LocalMaxxing-method C1 of the 34.9 hold (p512/g128 n=5,
 cache off) so NVFP4 has a submit-shaped number. Measurement, not

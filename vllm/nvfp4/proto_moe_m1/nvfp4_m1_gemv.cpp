@@ -7,7 +7,8 @@
 //
 // This is NVFP4, not their FP8: packed E2M1 (2 nibbles/byte, low first) plus
 // per-16-K group scale. Activations are bf16. No DPAS (group=16 vs s8 K=32
-// is the proto_blockscale dead-end). One work-item = one output N.
+// is the proto_blockscale dead-end). LOOP 12: one WI = one N, WG=1, 84 GB/s.
+// LOOP 13 O4b: WG=16/32 + SLM broadcast of x.
 //
 // Ornith-1.5 35B-A3B fused expert: H=2048 I=512 top_k=8.
 //   up   N=1024 K=2048  (w13 row-major [2I, H/2] packed)
@@ -39,6 +40,7 @@ namespace esimd = sycl::ext::intel::esimd;
 #endif
 
 static constexpr int GRP = 16;
+static constexpr int KMAX = 2048;
 static constexpr float E2M1_LUT[8] = {0.f, 0.5f, 1.f, 1.5f, 2.f, 3.f, 4.f, 6.f};
 
 static uint16_t f32_to_bf16_bits(float f) {
@@ -183,6 +185,105 @@ struct GroupedGemv1D {
   }
 };
 
+template <int VL, int WG>
+struct GemvSlm {
+  const uint16_t* x;
+  const uint8_t* w;
+  const float* scale;
+  float* y;
+  int N;
+  int K;
+  void operator()(sycl::nd_item<1> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<KMAX * sizeof(uint16_t)>();
+    const int n = (int)it.get_global_id(0);
+    const int lid = (int)it.get_local_id(0);
+    for (int k = lid * VL; k < K; k += WG * VL) {
+      esimd::simd<uint16_t, VL> xu =
+          esimd::block_load<uint16_t, VL>(x + k);
+      esimd::slm_block_store<uint16_t, VL>(
+          k * (int)sizeof(uint16_t), xu);
+    }
+    esimd::barrier();
+    if (n >= N) return;
+    const uint8_t* wrow = w + (size_t)n * (K / 2);
+    const float* srow = scale + (size_t)n * (K / GRP);
+    float acc = 0.f;
+    for (int k = 0; k < K; k += VL) {
+      esimd::simd<uint16_t, VL> xu =
+          esimd::slm_block_load<uint16_t, VL>(k * (int)sizeof(uint16_t));
+      esimd::simd<float, VL> xf = bf16_to_f32<VL>(xu);
+      constexpr int NB = VL / 2;
+      constexpr int NG = VL / GRP;
+      esimd::simd<uint8_t, NB> pk =
+          esimd::block_load<uint8_t, NB>(wrow + k / 2);
+      esimd::simd<uint8_t, VL> nib;
+      nib.template select<NB, 2>(0) = pk & uint8_t(0xF);
+      nib.template select<NB, 2>(1) = pk >> 4;
+      esimd::simd<float, VL> wf = decode_e2m1<VL>(nib);
+      esimd::simd<float, NG> sg;
+      sg.copy_from(srow + k / GRP);
+      esimd::simd<float, VL> sc;
+#pragma unroll
+      for (int g = 0; g < NG; ++g) {
+        sc.template select<GRP, 1>(g * GRP) = esimd::simd<float, GRP>(sg[g]);
+      }
+      acc += hsum<VL>(xf * wf * sc);
+    }
+    y[n] = acc;
+  }
+};
+
+template <int VL, int WG>
+struct GroupedGemvSlm {
+  const uint16_t* x;
+  const uint8_t* w;
+  const float* scale;
+  float* y;
+  int S;
+  int N;
+  int K;
+  void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<KMAX * sizeof(uint16_t)>();
+    const int s = (int)it.get_global_id(0);
+    const int n = (int)it.get_global_id(1);
+    const int lid = (int)it.get_local_id(1);
+    for (int k = lid * VL; k < K; k += WG * VL) {
+      esimd::simd<uint16_t, VL> xu =
+          esimd::block_load<uint16_t, VL>(x + k);
+      esimd::slm_block_store<uint16_t, VL>(
+          k * (int)sizeof(uint16_t), xu);
+    }
+    esimd::barrier();
+    if (s >= S || n >= N) return;
+    const size_t row = ((size_t)s * N + n);
+    const uint8_t* wrow = w + row * (K / 2);
+    const float* srow = scale + row * (K / GRP);
+    float acc = 0.f;
+    for (int k = 0; k < K; k += VL) {
+      esimd::simd<uint16_t, VL> xu =
+          esimd::slm_block_load<uint16_t, VL>(k * (int)sizeof(uint16_t));
+      esimd::simd<float, VL> xf = bf16_to_f32<VL>(xu);
+      constexpr int NB = VL / 2;
+      constexpr int NG = VL / GRP;
+      esimd::simd<uint8_t, NB> pk =
+          esimd::block_load<uint8_t, NB>(wrow + k / 2);
+      esimd::simd<uint8_t, VL> nib;
+      nib.template select<NB, 2>(0) = pk & uint8_t(0xF);
+      nib.template select<NB, 2>(1) = pk >> 4;
+      esimd::simd<float, VL> wf = decode_e2m1<VL>(nib);
+      esimd::simd<float, NG> sg;
+      sg.copy_from(srow + k / GRP);
+      esimd::simd<float, VL> sc;
+#pragma unroll
+      for (int g = 0; g < NG; ++g) {
+        sc.template select<GRP, 1>(g * GRP) = esimd::simd<float, GRP>(sg[g]);
+      }
+      acc += hsum<VL>(xf * wf * sc);
+    }
+    y[row] = acc;
+  }
+};
+
 static void cpu_gemv(
     const std::vector<float>& x,
     const std::vector<uint8_t>& w,
@@ -289,16 +390,18 @@ static int run_gemv(sycl::queue& q, const char* tag, int N, int K, int warm, int
   q.copy(w.data(), dW, w.size());
   q.copy(scale.data(), dS, scale.size()).wait();
 
-  auto launch = [&](auto kind_tag, auto kernel, std::vector<float>& y_got, double* ms_out) {
-    q.parallel_for(
-         sycl::nd_range<1>{sycl::range<1>((size_t)N), sycl::range<1>(1)}, kernel)
-        .wait();
+  auto nd_of = [](int n, int wg) {
+    size_t g = ((size_t)n + (size_t)wg - 1) / (size_t)wg * (size_t)wg;
+    return sycl::nd_range<1>{sycl::range<1>(g), sycl::range<1>((size_t)wg)};
+  };
+  auto launch = [&](auto kind_tag, auto kernel, sycl::nd_range<1> nd,
+                    std::vector<float>& y_got, double* ms_out) {
+    q.memset(dY, 0, sizeof(float) * (size_t)N).wait();
+    q.parallel_for(nd, kernel).wait();
     y_got.resize(N);
     q.copy(dY, y_got.data(), N).wait();
     Stats st = compare(y_got, y_ref);
-    *ms_out = time_ms(
-        q, kernel, sycl::nd_range<1>{sycl::range<1>((size_t)N), sycl::range<1>(1)},
-        warm, iters);
+    *ms_out = time_ms(q, kernel, nd, warm, iters);
     double bytes = (double)N * (K / 2) + (double)K * 2.0 + (double)N * (K / GRP) * 4.0;
     double gbs = bytes / (*ms_out * 1e-3) / 1e9;
     std::printf(
@@ -307,18 +410,26 @@ static int run_gemv(sycl::queue& q, const char* tag, int N, int K, int warm, int
     return st.max_rel < 2e-3 && st.max_abs < 5e-2;
   };
 
-  std::vector<float> y1, y0;
-  double ms1 = 0, ms0 = 0;
+  std::vector<float> y1, y0, y16, ys16, ys32;
+  double ms1 = 0, ms0 = 0, ms16 = 0, mss16 = 0, mss32 = 0;
   Gemv1D<VL_K, LoadKind::Block1D> k1{dX, dW, dS, dY, N, K};
   Gemv1D<VL_K, LoadKind::CopyFrom> k0{dX, dW, dS, dY, N, K};
-  bool p1 = launch("block1d", k1, y1, &ms1);
-  bool p0 = launch("copyfrm", k0, y0, &ms0);
+  GemvSlm<VL_K, 16> ks16{dX, dW, dS, dY, N, K};
+  GemvSlm<VL_K, 32> ks32{dX, dW, dS, dY, N, K};
+  bool p1 = launch("block1d wg1 ", k1, nd_of(N, 1), y1, &ms1);
+  bool p0 = launch("copyfrm wg1 ", k0, nd_of(N, 1), y0, &ms0);
+  bool p16 = launch("block1d wg16", k1, nd_of(N, 16), y16, &ms16);
+  bool ps16 = launch("slm    wg16", ks16, nd_of(N, 16), ys16, &mss16);
+  bool ps32 = launch("slm    wg32", ks32, nd_of(N, 32), ys32, &mss32);
   std::printf("speedup block1d/copyfrm = %.3fx\n", ms0 / ms1);
+  std::printf("speedup wg16/wg1        = %.3fx\n", ms1 / ms16);
+  std::printf("speedup slm16/wg1       = %.3fx\n", ms1 / mss16);
+  std::printf("speedup slm32/wg1       = %.3fx\n", ms1 / mss32);
   sycl::free(dX, q);
   sycl::free(dW, q);
   sycl::free(dS, q);
   sycl::free(dY, q);
-  if (!p1 || !p0) {
+  if (!p1 || !p0 || !p16 || !ps16 || !ps32) {
     std::printf("FAIL gemv %s\n", tag);
     return 1;
   }
@@ -345,23 +456,37 @@ static int run_grouped(sycl::queue& q, int S, int N, int K, int warm, int iters)
 
   GroupedGemv1D<VL_K, LoadKind::Block1D> k{
       dX, dW, dS, dY, S, N, K};
-  auto nd = sycl::nd_range<2>{
+  GroupedGemvSlm<VL_K, 16> kslm{dX, dW, dS, dY, S, N, K};
+  auto nd1 = sycl::nd_range<2>{
       sycl::range<2>((size_t)S, (size_t)N), sycl::range<2>(1, 1)};
-  q.parallel_for(nd, k).wait();
-  std::vector<float> y_got(S * N);
-  q.copy(dY, y_got.data(), S * N).wait();
-  Stats st = compare(y_got, y_ref);
-  double ms = time_ms2(q, k, nd, warm, iters);
-  double bytes =
-      (double)S * N * (K / 2) + (double)K * 2.0 + (double)S * N * (K / GRP) * 4.0;
-  std::printf(
-      "block1d  max_abs=%.3e max_rel=%.3e  %.3f ms  %.1f GB/s\n",
-      st.max_abs, st.max_rel, ms, bytes / (ms * 1e-3) / 1e9);
+  size_t n16 = ((size_t)N + 15) / 16 * 16;
+  auto nd16 = sycl::nd_range<2>{
+      sycl::range<2>((size_t)S, n16), sycl::range<2>(1, 16)};
+  auto run_one = [&](const char* tag, auto kernel, sycl::nd_range<2> nd,
+                     double* ms_out) {
+    q.memset(dY, 0, sizeof(float) * (size_t)S * N).wait();
+    q.parallel_for(nd, kernel).wait();
+    std::vector<float> y_got(S * N);
+    q.copy(dY, y_got.data(), S * N).wait();
+    Stats st = compare(y_got, y_ref);
+    *ms_out = time_ms2(q, kernel, nd, warm, iters);
+    double bytes =
+        (double)S * N * (K / 2) + (double)K * 2.0 + (double)S * N * (K / GRP) * 4.0;
+    std::printf(
+        "%s  max_abs=%.3e max_rel=%.3e  %.3f ms  %.1f GB/s\n",
+        tag, st.max_abs, st.max_rel, *ms_out,
+        bytes / (*ms_out * 1e-3) / 1e9);
+    return st.max_rel <= 2e-3;
+  };
+  double ms1 = 0, mss = 0;
+  bool p1 = run_one("block1d wg1 ", k, nd1, &ms1);
+  bool ps = run_one("slm    wg16", kslm, nd16, &mss);
+  std::printf("speedup slm16/wg1 = %.3fx\n", ms1 / mss);
   sycl::free(dX, q);
   sycl::free(dW, q);
   sycl::free(dS, q);
   sycl::free(dY, q);
-  if (st.max_rel > 2e-3) {
+  if (!p1 || !ps) {
     std::printf("FAIL grouped\n");
     return 1;
   }

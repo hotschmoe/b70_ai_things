@@ -9,13 +9,13 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O4b occupancy/WG + torch op, or
+O4c torch op (WG=1 1D GEMV), or
 O1 34.9 phase_bench. ornith_o3
 GRAPH+MTP3+expert-INT4 UP, G1 GO,
-code c1 21.1 < 34.9. O4 proto 2.3x
-oneDNN isolated, 84 GB/s WG=1, not
-wired. Do not demote 34.9. Do not
-P2P. Do not DD.
+code c1 21.1 < 34.9. O4b occupancy
+NO-GO (SLM/WG <= WG=1). 2.3x oneDNN
+isolated, not wired. Do not demote
+34.9. Do not P2P. Do not DD.
 
 ---
 
@@ -485,3 +485,37 @@ Do not: demote 34.9/31.9; P2P; DD;
   emul NVFP4 G1; swap live serve .so.
 Restore: DD PARKED. Q8 DOWN. O3 UP.
 JOURNAL: ### 2026-08-20bh
+
+## LOOP 13 -- 2026-08-20T1212Z -- O4b WG/SLM occupancy NO-GO
+
+Picked: O4b occupancy. WG=16/32 and SLM
+  broadcast of x vs LOOP 12 WG=1.
+  Card 1 only. Leave ornith_o3 up.
+Why this, not the other open row:
+  NEXT PICK after O4 proto. Overnight
+  serve is O3 not Q8. O1 needs 34.9
+  no-MTP ckpt.
+GPU: card 0 HELD ornith_o3 :18080.
+  Card 1 proto A/B. DD PARKED. P2P=0.
+Command:
+  bash vllm/nvfp4/proto_moe_m1/build.sh
+  gpu-run --card 1 proto_moe_m1/run.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/o4b_run_20260820T121149Z.log
+Result: compile 68 lsc_load, 0 dpas.
+  GEMV max_rel 1.6e-7 all arms.
+  up wg1 0.014 ms 109 GB/s;
+  wg16 0.986x; slm16 0.967x; slm32 0.922x.
+  down slm16 0.427x. grouped slm16 0.978x
+  (0.069 vs 0.067 ms, 184 vs 188 GB/s).
+  o3 still Up. Hold 34.9.
+Verdict: NO-GO occupancy. WG=1 1D load
+  stays. Not wired. Dead-end packet O4b.
+Changed beliefs: 84-vs-528 is not WG=1
+  on Ornith expert shapes. Next speed
+  step is a torch op (keep 2.3x vs
+  oneDNN) or O1 measurement.
+Next pick: O4c torch op or O1. Leave o3.
+Do not: demote 34.9/31.9; P2P; DD;
+  emul NVFP4 G1; swap live serve .so.
+Restore: DD PARKED. Q8 DOWN. O3 UP.
+JOURNAL: ### 2026-08-20bi
