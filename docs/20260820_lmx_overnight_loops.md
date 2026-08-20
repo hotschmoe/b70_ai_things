@@ -9,11 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-O3 pack Ornith MTP routed experts
-to INT4. ornith_o2 GRAPH+MTP3+INT4
-UP card 0, G1 GO, code c1 21.7.
-Hold 34.9 stays. Do not demote it.
-Do not retry vLLM P2P. Do not DD.
+O4 grouped NVFP4 apply (kernel) or
+O1 34.9 phase_bench. ornith_o3
+GRAPH+MTP3+expert-INT4 UP, G1 GO,
+code c1 21.1 < 34.9. Do not demote
+34.9. Do not P2P. Do not DD.
 
 ---
 
@@ -409,3 +409,37 @@ Do not: demote 34.9/31.9; emul NVFP4
   G1; P2P; DD; KVDTYPE=bfloat16.
 Restore: DD PARKED. Q8 DOWN. O2 UP.
 JOURNAL: ### 2026-08-20bf
+
+## LOOP 11 -- 2026-08-20T1133Z -- O3 expert INT4 GRAPH G1 GO; c1 21.1
+
+Picked: O3 pack MTP routed experts
+  INT4 (L65 miss, 1.5 GB BF16 Triton).
+Why this, not the other open row:
+  NEXT PICK. Same Ornith ckpt.
+GPU: card 0 HELD ornith_o3 :18080.
+  Card 1 free. DD PARKED. P2P=0.
+Command:
+  pack routed_experts w13/w2 INT4 NT
+  GRAPH=1 MTPTOK=3 B70_DRAFT_MTP_INT4=1
+  bash vllm/nvfp4/serve_nvfp4_moe_35b.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/o3_g1_20260820T1133Z.log
+  o3_code_20260820T1133Z.txt
+Result: E=256 w13=(256,1024,2048)
+  w2=(256,2048,512). Packed 1688->435 MB.
+  NT .contiguous() was wrong; store
+  [N,K/8] and pass .t() view. SharedExperts
+  must not be called from apply. GRAPH
+  capture 5s. G1 Paris/391. bench_code
+  c1 **21.1** vs O2 21.7 vs hold **34.9**.
+Verdict: GO pack+boot. NO-GO speed.
+  Slot INT4 loops did not beat Triton
+  experts. Hold 34.9.
+Changed beliefs: MTP experts were the
+  VRAM (1.6 GB) not the 34.9 decode
+  limiter. Next is NVFP4 apply kernel
+  (O4) or measure 34.9 as O1.
+Next pick: O4 or O1. Leave ornith_o3 up.
+Do not: demote 34.9/31.9; P2P; DD;
+  emul NVFP4 G1.
+Restore: DD PARKED. Q8 DOWN. O3 UP.
+JOURNAL: ### 2026-08-20bg

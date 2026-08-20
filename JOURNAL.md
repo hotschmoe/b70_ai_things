@@ -15725,3 +15725,35 @@ VERDICT -> GRAPH-safe INT4 GO (L65
   34.9 or 31.9. Do not start DD. Do not
   P2P.
 
+### 2026-08-20bg - LOOP 11: O3 expert INT4 GRAPH; c1 21.1
+
+CONTEXT -> Overnight 30m. NEXT PICK O3
+  pack MTP routed experts. O2 was 21.7
+  vs hold 34.9 with dense-only INT4.
+
+CONFIG -> Same Ornith NVFP4 fused TP=1
+  GRAPH=1 MTP3. Pack FusedMoE
+  routed_experts w13/w2 INT4 (E=256).
+  Slot apply, NT-view qweight, no
+  SharedExperts call from apply.
+
+COMMAND ->
+  ```
+  # draft_mtp_int4.py _pack_fused_moe
+  GRAPH=1 MTPTOK=3 B70_DRAFT_MTP_INT4=1 \
+    serve_nvfp4_moe_35b.sh
+  g1_probe + bench_code c1 256 n=3
+  ```
+
+RESULT ->
+  Collect miss then Module assign then
+  NT contiguous then SharedExperts
+  order/assert. Final: packed 1688->435
+  MB, GRAPH 5s, G1 Paris/391. c1 **21.1**
+  vs O2 21.7 vs hold **34.9**.
+
+VERDICT -> Pack+GRAPH GO. Speed NO-GO.
+  Hold 34.9. Leave ornith_o3 up. Next
+  O4 or O1. Do not demote 34.9/31.9.
+  Do not P2P. Do not start DD.
+

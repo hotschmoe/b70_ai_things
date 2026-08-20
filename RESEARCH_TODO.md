@@ -6,12 +6,11 @@
 > ### [OVERNIGHT 2026-08-20] -- 30m LocalMaxxing loop (active)
 > Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
 > **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**.
-> **P1 DONE in-image**: Q8_0 2x **32.03**. Q8 serve STOPPED for O2.
-> **O2**: GRAPH+MTP3+draft-INT4 boots (L65 dummy_run cured via opaque
-> b70::int4_gemm_w4a16_cast). G1 Paris/391. bench_code c1 **21.7**
-> vs hold **34.9** (do not demote). ornith_o2 UP card 0.
-> Next **O3** pack MTP routed experts INT4.
-> Do not COMM=3. Do not retry vLLM P2P=1. Do not emul NVFP4 G1.
+> **P1 DONE in-image**: Q8_0 2x **32.03**.
+> **O3**: MTP routed experts INT4 packed 1688->435 MB, GRAPH boots.
+> G1 Paris/391. bench_code c1 **21.1** vs hold **34.9** (do not demote).
+> ornith_o3 UP card 0. Next **O4** NVFP4 apply kernel or **O1** 34.9
+> phase_bench. Do not P2P. Do not emul NVFP4 G1.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**, Q8 **32.03**.
 > DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
 

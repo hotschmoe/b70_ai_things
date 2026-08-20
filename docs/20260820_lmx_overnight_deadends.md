@@ -107,4 +107,19 @@ Retry if: a BMG JIT build of DP4A2xSG24
   exists, or 2026.1.1 AOT enumerates.
 Related JOURNAL: ### 2026-08-20be
 
+## O3 -- MTP routed-expert slot INT4 -- 2026-08-20 -- LOOP 11
+
+Tried: pack FusedMoE routed_experts w13/w2
+  E=256 INT4 (1688->435 MB). Slot apply
+  with NT-view qweight (.t() no contig).
+  GRAPH=1 MTP3. G1 Paris/391.
+Result: boots. bench_code c1 **21.1** vs
+  O2 dense-only 21.7 vs hold **34.9**.
+Why it is closed as a speed path: slot
+  int4_gemm loops did not beat Triton
+  BF16 experts. VRAM win only.
+Retry if: grouped INT4 MoE gemm, or
+  Triton reads packed INT4 weights.
+Related JOURNAL: ### 2026-08-20bg
+
 ---
