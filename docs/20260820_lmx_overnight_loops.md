@@ -9,10 +9,11 @@ Runtime status: `/mnt/vm_8tb/b70/lmx_overnight/STATUS` (not git).
 
 ## NEXT PICK (keep this line true)
 
-P1b -- `bash llamacpp/sweep_obliterated_q8_doors.sh`
-Cards FREE. xpu-health GO. P2P=1
-in vLLM TP>1 stays default-off
-(hang). Do not retry P2P. W1 65.08.
+P1b attach -- qwen38_oblit_q8 :8010
+loading, lease pid 260538. Parse G1
++ ignore-eos g128 doors 1 vs 0 if
+benches exist. Do not start a second
+serve. Do not retry vLLM P2P=1.
 
 ---
 
@@ -198,3 +199,35 @@ Next pick: P1b Q8 doors A/B. Cards free.
 Do not: third P2P; DD; COMM_DIRECT_Q8=3.
 Restore: DD PARKED. xpu-health GO. Serves stopped.
 JOURNAL: ### 2026-08-20az
+
+## LOOP 5 -- 2026-08-20T0809Z -- P1b Q8_DOORS A/B started
+
+Picked: P1b Q8_DOORS=1 then 0 ignore-eos
+  g128 n=5. Cards free after LOOP 4
+  P2P teardown. xpu-health GO.
+Why this, not the other open row:
+  operator-priority P1. GGUF 27702 MB.
+  W1 DONE. P2P closed PRE.1b. Do not
+  do O2 while P1b is live.
+GPU: both cards HELD pid 260538
+  qwen38_oblit_q8 :8010 Q8_DOORS=1
+  loading. DD PARKED. P2PACCESS=0.
+Command:
+  bash llamacpp/sweep_obliterated_q8_doors.sh
+Log: /mnt/vm_8tb/b70/lmx_overnight/p1b_sweep_20260820T0809Z.log
+  STATUS P1B_STATUS=START doors=1
+Result: preflight HEALTHY. Container
+  up, loading Q8_0 GGUF (blk.64 MTP
+  tensors unused, same as LOOP 2).
+  Two loads will span fires.
+Verdict: RUNNING. No A/B number yet.
+  Hold 30.89 / 32.14 stays until
+  ignore-eos benches land.
+Changed beliefs: none on Q8. LOOP 4
+  stands: do not retry vLLM P2P=1.
+Next pick: attach P1b; parse benches
+  if done; leave Q8_DOORS=1 up.
+Do not: second serve; retry P2P; DD;
+  COMM_DIRECT_Q8=3; demote 31.9/34.9.
+Restore: DD PARKED. Sweep left running.
+JOURNAL: ### 2026-08-20ba

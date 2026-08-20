@@ -5,13 +5,12 @@
 
 > ### [OVERNIGHT 2026-08-20] -- 30m LocalMaxxing loop (active)
 > Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
-> **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**
-> (G1 Paris/391) vs S1 47.58. Board 112.65 still ceiling. Not W8A8.
+> **W1 DONE**: 3.8 GPTQ-Int4 MTP4 + draft-INT4 post-first **65.08**.
 > **P1**: Pliny Q8_0 TP2 G1 GO, post-first **30.89** / warmup **32.14**.
-> Serve DOWN. **P1b blocked**: foreign vLLM TP2 P2P=1 hung 15m at
-> warmup (not DEVICE_LOST; health recovered) then chained p2p71b.
-> Next: `bash llamacpp/sweep_obliterated_q8_doors.sh` when free+healthy.
-> Do not steal. Do not chain a third P2P. COMM_DIRECT_Q8=3 forbidden.
+> **P1b RUNNING** (LOOP 5): qwen38_oblit_q8 :8010 Q8_DOORS A/B
+> ignore-eos g128, lease pid 260538. Next fire ATTACH.
+> Do not start a second serve. Do not retry vLLM P2P=1.
+> COMM_DIRECT_Q8=3 forbidden.
 > Holds: W1 **65.08**, Ornith GRAPH **34.9**, k1bar **31.9**.
 > DD PARKED. Ledger: `docs/20260820_lmx_overnight_loops.md`.
 

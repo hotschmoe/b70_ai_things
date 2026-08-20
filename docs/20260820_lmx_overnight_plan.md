@@ -14,10 +14,10 @@ This file is the standing prompt. Re-read it every fire. Details:
 
 | field | value |
 |---|---|
-| Last loop | 4 (7.1 P2P retest: hang stays, wedge cured) |
-| Last JOURNAL | `2026-08-20az` |
-| Next pick | **P1b** `bash llamacpp/sweep_obliterated_q8_doors.sh`. P2PACCESS=0. |
-| Blocked on | none. Cards free. Do not retry vLLM P2P=1. |
+| Last loop | 5 (P1b Q8_DOORS A/B RUNNING) |
+| Last JOURNAL | `2026-08-20ba` |
+| Next pick | **P1b attach** -- parse doors 1 vs 0 if benches exist. Do not start a second serve. |
+| Blocked on | none. P1b holds both cards (pid 260538). |
 | Hold Ornith NVFP4 GRAPH no-MTP | **34.9** `bench_code` c1, Paris/391. STICKY=0 M1=0. |
 | Hold W8A8 3.8 DSpark k1bar | **31.9** `bench_code` c1 @122880. |
 | Hold 3.8 GPTQ-Int4 MTP4 (S1) | **47.58** post-first p512/g128, no draft-INT4. |

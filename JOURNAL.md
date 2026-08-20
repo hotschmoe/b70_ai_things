@@ -15525,3 +15525,38 @@ VERDICT -> Wedge CURED. P2P-in-vLLM-serve
   CCL_TOPO_P2P_ACCESS=1. Next P1b.
   Do not start DD.
 
+### 2026-08-20ba - LOOP 5: P1b Q8_DOORS A/B RUNNING
+
+CONTEXT -> Overnight 30m fire. Cards
+  free after LOOP 4 P2P teardown.
+  xpu-health GO. GGUF 27702 MB. NEXT
+  PICK was P1b doors A/B.
+
+CONFIG -> 2x B70 llama.cpp SYCL
+  image qwen38-b70:latest. Q8_DOORS
+  1 then 0. ignore_eos g128 n=5.
+  MMVQ pair/triple/quad ON. Q4K
+  doors OFF. COMM_DIRECT_Q8=3 forbidden.
+  COMM_DIRECT_Q8=2 on doors=1 only.
+  Port 8010. One outer gpu-run.
+
+COMMAND ->
+  ```
+  ./bin/xpu-health   # HEALTHY
+  bash llamacpp/sweep_obliterated_q8_doors.sh
+  ```
+
+RESULT ->
+  Lease pid 260538 both cards.
+  Container qwen38_oblit_q8 up,
+  loading Q8_0. STATUS START doors=1.
+  Two full loads + benches will
+  span this fire. No tok/s yet.
+
+VERDICT -> RUNNING. Next fire attach
+  (G1 + benches if ready). Do not
+  start a second serve. Do not retry
+  vLLM P2P=1. Do not start DD.
+  Hold 30.89/32.14 until ignore-eos
+  A/B lands.
+
