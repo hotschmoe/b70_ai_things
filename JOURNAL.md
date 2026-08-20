@@ -15304,3 +15304,38 @@ VERDICT -> All three documented.
   kernel or MTP-expert INT4.
   Do not start DD. Do not set P2P=1.
 
+### 2026-08-20au - LOOP 0 overnight: LocalMaxxing 30m loop armed
+
+CONTEXT -> Operator: 30m interval overnight
+  to churn LocalMaxxing 27B/35B B70
+  4-bit (NVFP4, W4A16) and W8A8-INT8.
+  Cards free. DD PARKED.
+
+CONFIG -> Plan
+  docs/20260820_lmx_overnight_plan.md
+  Ledger docs/20260820_lmx_overnight_loops.md
+  First GPU pick W1: 3.8 GPTQ-Int4
+  MTP4 + cookbook 2026.08.19
+  draft-INT4 on f01e24f6 vs S1 47.58.
+  Holds: Ornith GRAPH 34.9, k1bar 31.9.
+
+COMMAND ->
+  ```
+  cp cookbook 2026.08.19 patches into
+    vllm/patches/cookbook/
+  DRAFT_INT4=1 wired in launch.sh
+  apply_mtp_patches.py runs mixed-split
+    v5 + draft lmhead/mtp (warn, not abort)
+  bash vllm/cookbook_campaign/sweep_lmx_w1_draftint4.sh
+  ```
+
+RESULT ->
+  No GPU this parent fire. Contract
+  + patch wire + 30m durable scheduler
+  start. Next fire is W1 on card 0.
+
+VERDICT -> GO (armed). Number still
+  47.58 / 34.9 / 31.9 until W1 benches.
+  Do not start DD. Do not set P2P=1.
+  Do not kill a healthy W1 serve at 30m.
+

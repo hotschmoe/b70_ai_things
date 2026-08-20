@@ -36,13 +36,11 @@ JOURNAL:
 
 ## NEXT PICK (keep this line true)
 
-Ornith 35B NVFP4 MODE=fused (per-expert
-nvfp4_gemm) or calibrated fp8 KV.
-Do not retry emul+auto-fp8-KV (D18
-!!!!). Do not retry KVDTYPE=bfloat16
-(flash_attn Unsupported). Weights at
-models/files/ornith-1.5-35b-a3b/nvfp4-modelopt.
-Live hold k1bar 31.9.
+Overnight 30m loop owns the GPU:
+`docs/20260820_lmx_overnight_plan.md`.
+This W8A8 ledger is paused while that
+runs. Do not start a competing serve.
+Hold k1bar 31.9 / Ornith GRAPH 34.9.
 
 ---
 

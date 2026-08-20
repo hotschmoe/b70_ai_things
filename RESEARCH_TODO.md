@@ -3,6 +3,14 @@
 **Created:** 2026-06-20 - **Status-synced:** 2026-07-28 (sglang W8A8 long-prefill push shipped)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
+> ### [OVERNIGHT 2026-08-20] -- 30m LocalMaxxing loop (active)
+> Cards belong to `docs/20260820_lmx_overnight_plan.md` until morning.
+> First GPU pick **W1**: 3.8 GPTQ-Int4 MTP4 + cookbook 2026.08.19
+> draft-INT4 on f01e24f6 vs S1 47.58. Then Ornith GRAPH dtype / MTP
+> expert INT4 / grouped NVFP4. Holds: Ornith GRAPH no-MTP **34.9**,
+> W8A8 k1bar **31.9**. DD PARKED. P2P off. No emul NVFP4 G1 (D18).
+> Ledger: `docs/20260820_lmx_overnight_loops.md`.
+
 > ### [CAMPAIGN 2026-07-28] -- active ordering
 > Box is HEADLESS (cards symmetric, ~126-128 TFLOPS each). The DD is DP=2 NVFP4 27B: two vLLM
 > 0.25.1 single-card replicas with captured MTP5, calibrated fp8 KV, embed INT8, native E4M3 decode

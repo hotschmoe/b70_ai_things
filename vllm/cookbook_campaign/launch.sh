@@ -141,6 +141,12 @@ echo "$SPEC_JSON" > "$SPEC_HOST"
 # seen with default FULL_AND_PIECEWISE on this stack.
 CGMODE="${CGMODE:-PIECEWISE}"
 COMPILE_JSON="{\"cudagraph_mode\":\"${CGMODE}\"}"
+if [ "${DRAFT_INT4:-0}" = 1 ]; then
+  case "$SERVED" in
+    *-draftint4) ;;
+    *) SERVED="${SERVED}-draftint4" ;;
+  esac
+fi
 SERVE_CMD="python /patches/apply_mtp_patches.py && "
 SERVE_CMD+='SPEC_JSON=$(cat /spec.json) && '
 SERVE_CMD+="vllm serve /model"
@@ -193,6 +199,8 @@ DOCKER_ARGS=(
   -e VLLM_TARGET_DEVICE=xpu
   -e B70_MTP_BF16_DRAFT=1
   -e VLLM_XPU_ENABLE_XPU_GRAPH=1
+  -e B70_DRAFT_MTP_INT4="${DRAFT_INT4:-0}"
+  -e B70_DRAFT_LMHEAD_INT4="${DRAFT_INT4:-0}"
   -e PYTORCH_ALLOC_CONF=expandable_segments:True
   -e HF_HUB_OFFLINE=1
   -e TRANSFORMERS_OFFLINE=1

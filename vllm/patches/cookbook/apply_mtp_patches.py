@@ -60,6 +60,16 @@ def main() -> int:
     if not _try("patch_mtp_boundary.py"):
         print("[apply] ERROR: boundary patch failed", file=sys.stderr)
         return 3
+    # 2026.08.19 overlay: mixed-split v5 is C>1; C1 homogeneous is a no-op.
+    # Draft-INT4 helpers are env-gated at runtime. Fail = warn, not abort:
+    # S1 47.58 already ran without them.
+    if (HERE / "patch_gdn_mixed_split_v5.py").exists():
+        if not _try("patch_gdn_mixed_split_v5.py"):
+            print("[apply] WARN: mixed-split v5 did not apply", file=sys.stderr)
+    for extra in ("patch_draft_lmhead_int4.py", "patch_draft_mtp_int4.py"):
+        if (HERE / extra).exists():
+            if not _try(extra):
+                print(f"[apply] WARN: {extra} did not apply", file=sys.stderr)
     print("[apply] OK: MTP cookbook patches applied")
     return 0
 
