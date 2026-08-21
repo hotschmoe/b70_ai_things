@@ -39,7 +39,29 @@ export B70_W4A8_HYBRID="${B70_W4A8_HYBRID:-0}"
 # First smoke: no MTP. Path H hybrid is a later A/B; HYBRID=0 proves int4_gemm_w4a8.
 export B70_NOMTP="${B70_NOMTP:-1}"
 export MTPTOK="${MTPTOK:-}"
+export P2PACCESS="${P2PACCESS:-0}"
+# K15: 3.6 W4A8 shelf has no PUSH_AR block (it is TP=1). Inject via B70_EXTRA_*
+# which the shelf APPENDs. GRAPH=0 -> PUSH_AR_GRAPH=0 (eager + captured-decode
+# push is the !!!! trap). Never CCL_TOPO_P2P_ACCESS=1.
+if [ "${TP:-1}" -gt 1 ] && [ "${PUSH_AR:-1}" = 1 ]; then
+  _PAR="$REPO/vllm/contrib/vllm_push_allreduce"
+  if [ "${GRAPH:-0}" = 1 ] && [ "${PUSH_AR_GRAPH:-1}" = 1 ]; then
+    _SO="$_PAR/prebuilt/libxpu_push_ar_graph.so"
+    export PUSH_AR_GRAPH=1
+    export PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-0}"
+  else
+    _SO="$_PAR/prebuilt/libxpu_push_ar_torch.so"
+    export PUSH_AR_GRAPH=0
+    export PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-65536}"
+  fi
+  [ -f "$_SO" ] || { echo "[!] PUSH_AR=1 but missing $_SO (set PUSH_AR=0)" >&2; exit 1; }
+  export B70_EXTRA_MOUNTS="${B70_EXTRA_MOUNTS:+$B70_EXTRA_MOUNTS }${_PAR}:/opt/push_ar:ro ${_SO}:/opt/push_ar_so/libxpu_push_ar_torch.so:ro"
+  export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }PYTHONPATH=/opt/push_ar:/opt/mtp_shim PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/mtp_shim/sitecustomize.py PUSH_AR_SO=/opt/push_ar_so/libxpu_push_ar_torch.so PUSH_AR_DISABLE=0 PUSH_AR_GRAPH=${PUSH_AR_GRAPH} PUSH_AR_MIN_NUMEL=${PUSH_AR_MIN_NUMEL}"
+  echo "=== PUSH_AR overlay ON GRAPH=${PUSH_AR_GRAPH} MIN_NUMEL=${PUSH_AR_MIN_NUMEL} P2PACCESS=0 ==="
+else
+  echo "=== PUSH_AR overlay OFF (TP=$TP PUSH_AR=${PUSH_AR:-0}) ==="
+fi
 
-echo "=== 3.8 W4A8 research serve SERVED=$SERVED GRAPH=$GRAPH NOMM=$NOMM DEVICE=$DEVICE PORT=$PORT ==="
+echo "=== 3.8 W4A8 research serve SERVED=$SERVED GRAPH=$GRAPH NOMM=$NOMM DEVICE=$DEVICE PORT=$PORT TP=$TP ==="
 echo "=== IMG=$IMG CKPT=$CKPT P2PACCESS=$P2PACCESS HYBRID=$B70_W4A8_HYBRID NOMTP=$B70_NOMTP ==="
 exec bash "$SHELF" "$ACTION"

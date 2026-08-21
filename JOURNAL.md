@@ -16424,3 +16424,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. GROUP=128 stays.
 
+### 2026-08-21zd - LOOP 30: K15 TP=2 GRAPH=0 PUSH_AR c1 3.7
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays TP=1 GRAPH=1 25.0.
+

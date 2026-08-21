@@ -1,0 +1,5 @@
+COMP 'The capital of Franc' gate=OK ' Paris.\nThe capital of Germany is Berlin.\nThe capital of Italy is Rome.\nThe capi'
+COMP '17*23=' gate=SHORT '391'
+model=qwen3.8-27b-W4A8-gptq-gdn conc=1 out=256 reps=3 (real coding prompts, non-streaming usage-based)
+c1: decode TG/stream avg=3.7 best=3.7 t/s | agg=3.7 | out~256 tok | wall~68.7s
+LRU wall=34.36s gate=OK top='e' frac=0.119 head='We need answer user: "Implement a complete LRU cache in Python with O(1) get/put via a doubly linked list and dict. Incl'

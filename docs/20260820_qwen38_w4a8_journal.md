@@ -1059,3 +1059,48 @@ VERDICT -> NO-GO as 1.10x. Packet D18.
   GROUP=128 stays. Next: K15 TP=2 PUSH_AR
   P2PACCESS=0 (stops :18082). Do not 151
   g32. Do not demote 25.0 / 31.9. Do not bake.
+
+---
+
+### 2026-08-21zd - LOOP 30: K15 TP=2 GRAPH=0 PUSH_AR c1 3.7
+
+CONTEXT -> 15m fire. NEXT PICK K15 TP=2.
+  Stop TP=1 GRAPH=1 :18082. Both cards.
+  GRAPH=0 first (avoid capture wedge).
+  PUSH_AR=1 PUSH_AR_GRAPH=0 (eager).
+  P2PACCESS=0. B70_NOMTP=1. xpu-health GO.
+  D14-18 closed. DD PARKED.
+
+CONFIG -> TP=2 GRAPH=0 PUSH_AR=1
+  PUSH_AR_GRAPH=0 MIN_NUMEL=65536
+  P2PACCESS=0 NOMTP=1 HYBRID=0 NOMM=1
+  MAXSEQS=8 PORT=18082
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  IMG=int8g-v0260
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l30-tp2 ./bin/gpu-run \
+    env GRAPH=0 TP=2 PUSH_AR=1 P2PACCESS=0 B70_NOMTP=1 \
+      MAXSEQS=8 PORT=18082 NAME=qwen38_w4a8_gptq \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> HEALTHY 81s. PUSH_AR patched
+  XpuCommunicator.all_reduce. world_size=2.
+  Paris OK. 391 OK. c1 avg=best 3.7 t/s
+  wall~68.7s. LRU G1 OK. vs TP=1 GRAPH=0
+  ~6.3 and score 25.0. P2PACCESS=0.
+  Logs: l30_w4a8_tp2_graph0_20260821T080715Z.log
+        l30_w4a8_tp2_c1_20260821T080911Z.log
+
+VERDICT -> GO as TP=2 load-gate. Not a
+  speed win vs 25.0. Next: GRAPH=1 TP=2
+  PUSH_AR_GRAPH=1 IGP=false. Do not MTP.
+  Do not P2PACCESS=1. Do not demote 25.0.
