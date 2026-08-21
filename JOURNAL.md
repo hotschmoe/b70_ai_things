@@ -16492,3 +16492,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. k-sweep closed 7>4>3.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Isolated spec restored.
 
+### 2026-08-21zu - LOOP 47: attach NOMTP c1 25.0 / prefill 2880
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score and prefill hold.
+
+### 2026-08-21zv - LOOP 48: attach DSpark c1 33.2 / prefill 2615
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold. Prefill tax ~9%.
+

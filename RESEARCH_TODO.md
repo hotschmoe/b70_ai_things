@@ -19,8 +19,8 @@
 > Off-shelf DSpark on W4A8: pos0 66% mean_len 2.71 c1 14.6 GRAPH=0.
 > GRAPH=1 DSpark k=7 MAXLEN=4096 c1 **34.7** coherent (pos0 69% / 2.80).
 > k=4 is 33.5 (keep 7). MAXSEQS=2 c1 32.4 / c2 agg 47.2 (no win).
-> NOMTP honesty 25.0. Spec isolated k=7 MAXSEQS=1 34.7. k-sweep 7>4>3.
-> Next: hold isolated spec or sglang 3.8 W4A8. Do not night-train.
+> NOMTP honesty 25.0 / prefill @2k 2880. Spec k=7 c1 34.7 / prefill 2615.
+> k-sweep 7>4>3. Next: sglang 3.8 W4A8 Path H. Do not night-train.
 > Do not demote 25.0 / 31.9.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang

@@ -1668,3 +1668,67 @@ RESULT -> HEALTHY 61s (cache). Paris exact.
 VERDICT -> GO. k-sweep closed 7>4>3.
   Isolated spec restored. Leave both Up.
   Do not demote 34.7 / 25.0.
+
+---
+
+### 2026-08-21zu - LOOP 47: attach NOMTP c1 25.0 / PP 2880
+
+CONTEXT -> 15m dual fire. Both campaign serves
+  Up. Attach, do not steal. NEXT PICK was
+  hold or sglang. DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 + prefill 2048 vs K10 ~2870
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  python3 -u vllm/w4a8/bench_prefill_ttft.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 2048 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.3s. prefill pt=2045 TTFT 0.710s
+  2880 tok/s. Log:
+  l47_w4a8_nomtp_attach_20260821T095057Z.log
+
+VERDICT -> GO. NOMTP score and prefill hold.
+
+---
+
+### 2026-08-21zv - LOOP 48: attach DSpark c1 33.2 / PP 2615
+
+CONTEXT -> dual with LOOP 47. Hold isolated
+  spec. Prefill A/B vs NOMTP 2880. MAXLEN
+  4096 so 2k only. D14-D19 closed.
+
+CONFIG -> :18083 GRAPH=1 DSpark k=7
+  MAXSEQS=1 MAXLEN=4096
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+  bench_code c1 vs 34.7 + prefill 2048
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 1 256 3
+  python3 -u vllm/w4a8/bench_prefill_ttft.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 2048 3
+  ```
+
+RESULT -> Paris exact. 391 exact. c1 avg=33.2
+  best=37.3 wall~9.3s (holds vs 34.7).
+  prefill pt=2045 TTFT 0.782s 2615 tok/s
+  = 0.91x vs NOMTP 2880. mean_len=2.71
+  tok_rate=24.4%. Log:
+  l48_w4a8_dspark_attach_20260821T095057Z.log
+
+VERDICT -> GO as hold. Spec decode wins
+  e2e; prefill pays ~9% drafter tax. Leave
+  both Up. Next: sglang Path H. Do not
+  demote 34.7 / 25.0.

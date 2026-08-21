@@ -48,13 +48,13 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 46 (k=7 restore c1 34.1 holds spec). 45 k=3 31.0 NO-GO. 44 NOMTP 25.0. |
-| Last JOURNAL heading | `2026-08-21zt` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 48 (DSpark attach c1 33.2 / prefill 2615). 47 NOMTP c1 25.0 / prefill 2880. |
+| Last JOURNAL heading | `2026-08-21zv` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 15m loop | ARMED `01a021be5649`. Attach `:18082` NOMTP + `:18083` k=7 if Up. |
-| Next pick | Hold isolated spec (k=7 MAXSEQS=1) or sglang 3.8 W4A8 Path H. k-sweep closed 7>4>3. Do not k=3/4 / MAXSEQS=2 as speed. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. |
+| Next pick | sglang 3.8 W4A8 Path H (stop DSpark to free card 1; keep `:18082` NOMTP). Or keep attaching. Do not k=3/4 / MAXSEQS=2 as speed. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. |
 | Blocked on | nothing. `:18082` GRAPH=1 NOMTP 25.0. `:18083` GRAPH=1 DSpark k=7 MAXSEQS=1. |
 | 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
 | Best W4A8 isolated | Path H M=1 down_proj g128 0.079 ms / 565 GB/s / 97% of 581. |
