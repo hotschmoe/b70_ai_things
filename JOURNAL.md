@@ -16544,3 +16544,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold (do not replace 34.7).
 
 See `docs/20260820_qwen38_w4a8_journal.md`. 1.08x vs 25.0; leave LMHEAD=1 Up.
 
+### 2026-08-21aah - LOOP 60: attach NOMTP lmhead32 c1 hold 27.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. K8 NOMTP holds 27.0.
+
+### 2026-08-21aai - LOOP 61: DSpark+LMHEAD c1 33.8
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Coherent; no 1.10x vs 34.7.
+

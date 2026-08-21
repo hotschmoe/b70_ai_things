@@ -2056,3 +2056,75 @@ VERDICT -> GO as lever. NO-GO as 1.10x
   score replacement. Leave LMHEAD=1 Up.
   Do not demote 25.0. Next: LMHEAD=1 on
   DSpark.
+
+---
+
+### 2026-08-21aah - LOOP 60: attach NOMTP lmhead32 27.0
+
+CONTEXT -> 15m dual fire. NEXT PICK K8 on
+  DSpark. Attach live :18082 while card 1
+  restarts. DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP
+  LMHEAD=1 g32
+  SERVED=qwen3.8-27b-W4A8-gptq-lmhead32
+  bench_code c1 vs 27.0 / 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-lmhead32 1 256 3
+  ```
+
+RESULT -> Paris exact. 391 exact. c1
+  avg=best 27.0 wall~9.5s. Log:
+  l60_w4a8_lmhead_attach_20260821T113610Z.log
+
+VERDICT -> GO. K8 NOMTP holds. Honesty
+  25.0 unchanged.
+
+---
+
+### 2026-08-21aai - LOOP 61: DSpark+LMHEAD c1 33.8
+
+CONTEXT -> NEXT PICK. Stack K8 on GRAPH=1
+  DSpark k=7. Keep :18082. D14-D19 closed.
+  DD PARKED. P2PACCESS=0.
+
+CONFIG -> GRAPH=1 SPECTOK=7 MAXSEQS=1
+  CAPSIZES=1 MAXLEN=4096 UTIL=0.90
+  LMHEAD=1 LMHEAD_GROUP=32 PORT=18083
+  DEVICE=1
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7-lmhead32
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_dspark bash \
+    vllm/w4a8/serve_qwen38_w4a8_dspark.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l61-dspark-lmhead \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXSEQS=1 CAPSIZES=1 \
+      MAXLEN=4096 UTIL=0.90 LMHEAD=1 LMHEAD_GROUP=32 \
+      PORT=18083 NAME=qwen38_w4a8_dspark DEVICE=1 \
+      CARD=1 P2PACCESS=0 \
+      SERVED=qwen3.8-27b-W4A8-gptq-dspark7-lmhead32 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7-lmhead32 1 256 3
+  ```
+
+RESULT -> HEALTHY 66s. RTN
+  language_model.lm_head g32. apply hit
+  M=7 then M=1. Paris exact. 391 exact.
+  LRU bang=0. c1 avg=33.8 best=34.4
+  wall~7.8s = 0.97x vs 34.7. drafts=397
+  accepted=679 mean_len=2.71 tok_rate=24.4%.
+  Logs:
+  l61_w4a8_dspark_lmhead_graph1_20260821T113610Z.log
+  l61_w4a8_dspark_lmhead_c1_20260821T113610Z.log
+
+VERDICT -> GO as load/coherent. NO-GO as
+  1.10x vs 34.7. Leave LMHEAD=1 Up. Do not
+  demote 34.7 / 25.0.
