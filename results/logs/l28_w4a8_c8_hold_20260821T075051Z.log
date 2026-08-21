@@ -1,0 +1,3 @@
+PARIS gate=OK ' Paris.\nThe capital of Germany is Berlin.\nThe capital of Italy is Rome.\nThe capi'
+model=qwen3.8-27b-W4A8-gptq-gdn conc=8 out=256 reps=3 (real coding prompts, non-streaming usage-based)
+c8: decode TG/stream avg=18.5 best=18.5 t/s | agg=147.8 | out~256 tok | wall~15.4s

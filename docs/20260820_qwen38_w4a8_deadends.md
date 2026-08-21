@@ -223,3 +223,19 @@ Why it is dead: tiny-N / launch bound, not missing N%16. Extra 32 columns
 Retry if: a kernel with a real N=96 fast path is 1.10x vs current at equal
   useful N=96 (not padded FLOPs). Isolated first.
 Related: K12 / GDN in_proj_ba
+
+---
+
+## D18 -- 2026-08-21 -- GROUP=32/64 isolated slower than GROUP=128
+
+Closed: switching W4A8 group-32 or group-64 for isolated speed vs group-128
+Evidence: LOOP 29 / 2026-08-21zc. down_proj M=1 w4a16: g128 0.0789 ms 97.2%roof;
+  g64 0.0828 (0.95x); g32 0.0957 (0.82x). M=2048 w4a8_op TOPS 220 / 176 / 121.
+  Not the overnight D18 emul+fp8-KV (that packet is D13 here).
+  Log: k13_group_size_20260821T075051Z.log.
+Why it is dead as a speed pick: finer groups add scale traffic at the same
+  int4 bytes. 128 stays default. Accuracy recovery (K18) may still try g32
+  later as quality, not as a 1.10x kernel win.
+Retry if: a different kernel (VNNI16 paper path, not this oneDNN) is 1.10x
+  at g32 AND HE+ needs g32. Isolated first. Do not 151 whole-model for this.
+Related: K13

@@ -48,17 +48,17 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 26+27 dual (c2 agg 48.5 hold; K12 N-pad 96->128 NO-GO D17) |
-| Last JOURNAL heading | `2026-08-21za` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 28+29 dual (c8 agg 147.8 hold; K13 g32/g64 slower than g128, D18) |
+| Last JOURNAL heading | `2026-08-21zc` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 15m loop | ARMED `01a021be5649` next ~2026-08-21T07:50:17Z (dual-card) |
-| Next pick | K13 isolated group-32 vs 128 on down_proj card1. Leave GPTQ `:18082`. Do not retry D14-D17. Do not bake. Do not demote 25.0 / 31.9. |
-| Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` (c1 25.0 / c2 agg 48.5). RTN stopped. Card1 free. |
-| 3.8 W4A8 artifact | GPTQ :18082 live. RTN+GPTQ files on disk (20.616 GiB each). lm_head still BF16. |
-| Best W4A8 isolated | Path H M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. lm_head M=1 w4a16 1.27 ms / 86% roof. |
-| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. c2 agg **48.5**. Prefill ~2870/2750 tok/s. MTP3 61.7 withdrawn (D14). |
+| 15m loop | ARMED `01a021be5649` next ~2026-08-21T08:05:17Z (dual-card) |
+| Next pick | K15 TP=2 PUSH_AR P2PACCESS=0 (stops `:18082`). Do not retry D14-D18. Do not bake. Do not demote 25.0 / 31.9. |
+| Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` (c1 25.0 / c8 agg 147.8). GROUP=128 stays. |
+| 3.8 W4A8 artifact | GPTQ :18082 live. RTN+GPTQ files on disk. lm_head still BF16. |
+| Best W4A8 isolated | Path H M=1 down_proj **g128** 0.079 ms / 565 GB/s / 97% of 581. g32 is slower (0.096 ms). |
+| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. c2 agg 48.5 / c8 agg **147.8**. Prefill ~2870/2750 tok/s. MTP3 61.7 withdrawn (D14). |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 

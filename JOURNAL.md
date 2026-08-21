@@ -16416,3 +16416,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Keep ba BF16.
 
+### 2026-08-21zb - LOOP 28: attach c8 agg 147.8
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+
+### 2026-08-21zc - LOOP 29: K13 g32/g64 slower D18
+
+See `docs/20260820_qwen38_w4a8_journal.md`. GROUP=128 stays.
+

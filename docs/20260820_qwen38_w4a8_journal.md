@@ -1003,3 +1003,59 @@ RESULT -> N=96 M=1 w4a16 0.0380 ms 1.1%roof;
 VERDICT -> NO-GO as 1.10x. Packet D17. Keep
   ba BF16. Next: K13 GROUP=32 vs 128. Do not
   demote 25.0 / 31.9. Do not bake.
+
+---
+
+### 2026-08-21zb - LOOP 28: attach c8 agg 147.8
+
+CONTEXT -> 15m dual fire. Serve attach while
+  card1 K13. c2 held last fire. 2h soak.
+  D14-17 closed. DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 GRAPH=1 NOMTP HYBRID=0
+  MAXSEQS=8 CAPSIZES=1,2,4,8
+  bench_code c=8 out=256 reps=3 vs 145.8.
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 8 256 3
+  ```
+
+RESULT -> Paris OK. c8 avg=best 18.5 t/s
+  agg=147.8 wall~15.4s. Log:
+  results/logs/l28_w4a8_c8_hold_20260821T075051Z.log
+
+VERDICT -> GO. c8 holds. Score stays c1 25.0.
+
+---
+
+### 2026-08-21zc - LOOP 29: K13 g32/g64 slower D18
+
+CONTEXT -> NEXT PICK K13 isolated. Dual with
+  LOOP 28. 128 default unless >=1.10x.
+  Do not 151 requant.
+
+CONFIG -> IMG=int8g-v0260 ZE_AFFINITY_MASK=1
+  ONLY_SHAPES=down_proj ONLY_MS=1,8,2048
+  GROUP=128 then 64 then 32.
+
+COMMAND ->
+  ```
+  for G in 128 64 32; do
+    GROUP=$G ONLY_SHAPES=down_proj ONLY_MS=1,8,2048 \
+      bench_w4a8_shapes.py
+  done
+  ```
+
+RESULT -> M=1 w4a16 g128 0.0789 ms 97.2%;
+  g64 0.0828 (0.95x); g32 0.0957 (0.82x).
+  M=2048 w4a8_op 220 / 176 / 121 TOPS.
+  g64/g32 synthesized (ckpt g128). 20s.
+  Log: results/logs/k13_group_size_20260821T075051Z.log
+
+VERDICT -> NO-GO as 1.10x. Packet D18.
+  GROUP=128 stays. Next: K15 TP=2 PUSH_AR
+  P2PACCESS=0 (stops :18082). Do not 151
+  g32. Do not demote 25.0 / 31.9. Do not bake.
