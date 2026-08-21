@@ -48,14 +48,14 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 8 (ATTACH GPTQ: layer 9/64, ~2.5h left) |
-| Last JOURNAL heading | `2026-08-21h` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 9 (ATTACH GPTQ: layer 30/64) |
+| Last JOURNAL heading | `2026-08-21i` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 30m loop | ARMED `01a021be5649` |
 | Next pick | ATTACH GPTQ (do not start a second 151). GRAPH=1 only after stop of `:18081`. |
-| Blocked on | GPTQ SequentialPipeline; layer 9/64 at attach. |
+| Blocked on | GPTQ SequentialPipeline; layer 30/64 at attach. ~1h left. |
 | 3.8 W4A8 artifact | RTN `w4a8-rtn-gdn` serving. GPTQ OUT `w4a8-gptq-gdn` not written yet. |
 | Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. |
 | Best W4A8 e2e 3.8 | GRAPH=0 TP=1 eager wall ~6.3 tok/s @128 gen (includes TTFT). Not bench_code c1. |

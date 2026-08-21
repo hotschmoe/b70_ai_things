@@ -295,3 +295,31 @@ RESULT -> RUNNING. 62 GPTQ module steps,
 VERDICT -> RUNNING. ETA ~2.5h. Next fire
   attach again. Do not steal. Do not GRAPH=1
   while this serve is the research holder.
+
+---
+
+### 2026-08-21i - LOOP 9: ATTACH GPTQ layer 30/64
+
+CONTEXT -> 30m fire. NEXT PICK attach 151.
+  Do not start a second 151. :18081 Up.
+
+CONFIG -> card0 still HELD pid=353913
+  elapsed 59m. q151_quant Up 59 min.
+
+COMMAND -> parse
+  results/logs/151_qwen38_w4a8_20260821_010557.log
+
+RESULT -> RUNNING. 188 Quantizing lines,
+  layers 0-30. Last:
+  layers.30.linear_attn.in_proj_qkv at
+  02:05:46Z. 187 GPTQ steps, mean 11.6s
+  max 55s, sum 36 min compute. Pace since
+  LOOP 8: +21 layers / 30 min. Remaining
+  ~34 layers * ~1.4 min ~ 50 min + save.
+  No Traceback. OUT not on disk. Serve
+  id still qwen3.8-27b-W4A8-rtn-gdn.
+  18080 down.
+
+VERDICT -> RUNNING. Faster than LOOP 8
+  ETA. Next fire attach; if DONE then
+  wrap_vlm_config + census. Do not steal.
