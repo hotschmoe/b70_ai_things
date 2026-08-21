@@ -16360,3 +16360,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. :18082 Up. Paris/391/fib.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. ~3.9x GRAPH=0. Not 31.9.
 
+### 2026-08-21n - LOOP 14: bench_code c1 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. GRAPH=1 GPTQ. Not 31.9.
+

@@ -450,3 +450,32 @@ RESULT -> HEALTHY 299s (compile+capture).
 VERDICT -> GO. GRAPH=1 is the decode lever
   on 3.8 W4A8 oneDNN. Next: HYBRID=1 A/B
   or bench_code c1. Do not start DD.
+
+---
+
+### 2026-08-21n - LOOP 14: bench_code c1 25.0 GRAPH=1 GPTQ
+
+CONTEXT -> NEXT PICK attach live GRAPH=1
+  for bench_code c1 (or HYBRID=1 restart).
+  Attach, do not start a third serve.
+
+CONFIG -> :18082 qwen3.8-27b-W4A8-gptq-gdn
+  GRAPH=1 TP=1 HYBRID=0 NOMM=1 NOMTP=1
+  bench_code out=256 reps=3 conc=1
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> c1 avg=25.0 best=25.0 t/s
+  agg=25.0 out~256 wall~10.3s. Matches
+  LOOP 13 24.5 wall-128. 3.6 hybrid 27.3
+  is still ahead. k1bar 31.9 is TP=2
+  W8A8 -- do not demote.
+
+VERDICT -> GO. First 3.8 W4A8 bench_code
+  c1 is 25.0. Next: HYBRID=1 GRAPH=1 A/B.
+  Leave both serves Up.
