@@ -47,15 +47,15 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 0 (plan + 151 producer written; GPU not started) |
-| Last JOURNAL heading | `2026-08-20bv` |
+| Last loop | 3 (K0 file census GO). 151 fire 1 GO. K1 matrix GO. |
+| Last JOURNAL heading | `2026-08-21c` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| Next pick | Dual-card day-1: card0 DATAFREE=1 `scripts/151`; card1 K1 kernel matrix |
-| Blocked on | nothing. Cards free at plan write. No public 3.8 W4A8 HF card. |
-| 3.8 W4A8 artifact | **NONE YET.** Produce via 151. BF16 source is on disk. |
-| Best W4A8 isolated | not measured on 3.8. 3.6 hybrid decode 27.3 (sglang GRAPH) |
-| Best W4A8 e2e 3.8 | -- |
+| Next pick | GRAPH=0 vLLM smoke on card 1 of `w4a8-rtn-gdn` (K0 dispatch + Paris/fib). Clone 3.6 serve to `vllm/w4a8/`. Do not start GPTQ fire 2 until load-gated. |
+| Blocked on | nothing. Cards free. Artifact on disk. |
+| 3.8 W4A8 artifact | `models/files/qwen3.8-27b/w4a8-rtn-gdn` (RTN, 20.616 GiB, 256 int4 packed + 144 GDN I8). GPTQ not started. |
+| Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. gate_up 0.161 ms / 552 GB/s / 95%. |
+| Best W4A8 e2e 3.8 | -- (no serve yet) |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 

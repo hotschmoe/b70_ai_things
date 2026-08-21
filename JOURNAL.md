@@ -16220,3 +16220,98 @@ VERDICT -> New session fires dual-card
   start DD. P2PACCESS=0. ASCII. Journal
   each loop.
 
+### 2026-08-21a - LOOP 1: 151 DATAFREE RTN W4A8+GDN GO
+
+CONTEXT -> W4A8 full-send day-1 card 0.
+  No public 3.8 W4A8. Produce via 151.
+
+CONFIG -> DATAFREE=1 CARD=0
+  IMG=vllm-xpu-env:int8g-v0260
+  SRC=models/files/qwen3.8-27b/bf16
+  OUT=models/files/qwen3.8-27b/w4a8-rtn-gdn
+  two-group W4A8 MLP/attn + W8A8 GDN fat.
+  P2PACCESS unset. DD parked.
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-151-rtn \
+    ./bin/gpu-run --card 0 \
+    env DATAFREE=1 CARD=0 \
+    bash scripts/151_quantize_qwen38_27b_w4a8.sh
+  ```
+
+RESULT -> 443s exit 0. DataFreePipeline
+  119s. GDN hit 144/144. Stage B
+  packed=256 int4, int8-kept=144, graft
+  vis=333 mtp=15. 20.616 GiB. is_prepacked
+  w4a8=True. Arch Qwen3_5ForCausalLM.
+  CT 0.18.0 in the live container.
+  Host rm RAW bounced (root-owned);
+  removed via docker + chown 1000.
+
+VERDICT -> GO. Pipeline smoke artifact
+  exists. GPTQ fire 2 after load-gate.
+  Do not bake. Do not start DD.
+
+### 2026-08-21b - LOOP 2: K1 kernel matrix GO
+
+CONTEXT -> Day-1 card 1. 3.8 shapes, no
+  3.8 W4A8 file. 3.6 w4a8-sqgptq stand-in.
+
+CONFIG -> card1 ZE_AFFINITY_MASK=1
+  IMG=int8g-v0260
+  SO=w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+  M in {1,2,4,8,16,32,64,256,2048}
+  7 shapes. Path S proto_int4 after.
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-k1 \
+    ./bin/gpu-run --card 1 \
+    bash vllm/w4a8/run_k1_matrix.sh
+  ```
+
+RESULT -> First start: image Entrypoint
+  is leftover `sleep` -> sleep -c. Rerun
+  --entrypoint bash, 25s, CSV n=441.
+  gate_up M=1 w4a16 0.161ms 552 GB/s 95%
+  of 581, 3.72x bf16. down_proj M=1
+  w4a16 0.079ms 565 GB/s 97%. w4a8_op
+  tied with H at M=1. w4a8_full pays
+  ~17 us quant on down_proj (not 101 us).
+  M=2048 gate_up: w8a8 260 TOPS, w4a8_op
+  197, w4a16 135. gdn_ba N=96 <3% roof.
+  Path S s8 208 / s4 558 / s2 560 TOPS.
+
+VERDICT -> GO. Split-M: decode Path H,
+  large-M Path X (or W8A8 TOPS). N=96
+  keep BF16. Do not mix H/X unnamed.
+
+### 2026-08-21c - LOOP 3: K0 file census GO
+
+CONTEXT -> Fail-closed before any 3.8
+  W4A8 speed claim. Dispatch proof is
+  the GRAPH=0 serve, not this file scan.
+
+CONFIG -> models/files/qwen3.8-27b/w4a8-rtn-gdn
+  CPU safetensors. No GPU.
+
+COMMAND -> python census by category
+  (mlp / self_attn / gdn_fat / gdn_other
+  / lm_head / embed / mtp / visual)
+
+RESULT -> MLP I32 7.969 + attn I32 0.781
+  GiB. GDN fat I8 5.156 GiB (not BF16).
+  gdn_other BF16 0.048. lm_head 2.368.
+  hot no vis/mtp 18.967. vis 0.858 mtp
+  0.791. down_proj [5120,2176] I32,
+  q_proj [12288,640] I32, in_proj_qkv
+  [10240,5120] I8, in_proj_b [48,5120]
+  BF16. No blanket linear_attn ignore.
+
+VERDICT -> File census GO. Next: GRAPH=0
+  vLLM smoke card 1, served id
+  qwen3.8-27b-W4A8-rtn-gdn. Do not GPTQ
+  until load-gate. Do not start DD.
+  P2PACCESS=0.
+
