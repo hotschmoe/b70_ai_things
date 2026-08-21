@@ -35,10 +35,12 @@ def main():
     assert qweight.stride()[0] == 1, qweight.stride()
     wscale = ws.t().contiguous()
     wzp = torch.tensor([8], dtype=torch.int8, device=DEV)
+    ms = os.environ.get("ONLY_MS", "1,8")
+    MS = [int(x) for x in ms.split(",") if x.strip()]
     print(f"down_proj K={K} N={N} packed {tuple(wq.shape)} NT {tuple(qweight.shape)} "
-          f"stride {qweight.stride()} ONEDNN_VERBOSE={os.environ.get('ONEDNN_VERBOSE')}",
+          f"stride {qweight.stride()} ONEDNN_VERBOSE={os.environ.get('ONEDNN_VERBOSE')} MS={MS}",
           flush=True)
-    for M in (1, 8):
+    for M in MS:
         x = torch.randn(M, K, device=DEV, dtype=torch.float16) * 0.05
         amax = x.abs().amax(-1, keepdim=True).clamp_(min=1e-5)
         xs = (amax / 127.0).to(torch.float16).contiguous()

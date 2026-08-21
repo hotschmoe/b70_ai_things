@@ -1,0 +1,109 @@
+gpu-run: [w4a8-l23-largeM] acquired card(s) 1 -> bash -c 
+set -o pipefail
+REPO=/mnt/vm_8tb/github/b70_ai_things
+ROOT=/mnt/vm_8tb/b70
+IMG=vllm-xpu-env:int8g-v0260
+SO=$ROOT/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+CARD=1
+docker rm -f k10_w4a8_largem k10_w4a8_onednn8k 2>/dev/null || true
+docker run --rm --name k10_w4a8_largem   --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path   --ipc=host --shm-size 16g --entrypoint bash   -e CUDA_VISIBLE_DEVICES= -e ZE_AFFINITY_MASK=$CARD   -e B70_XPU_C_SO=$SO   -e CKPT=/models/qwen3.6-27b/w4a8-sqgptq   -e OUT_CSV=/mnt/vm_8tb/github/b70_ai_things/results/logs/k10_w4a8_m256_2048_20260821T071519Z.csv   -e ONLY_MS=256,2048   -e ONLY_SHAPES=gate_up,down_proj   -v $ROOT:$ROOT -v $REPO:$REPO -v $REPO/models/files:/models   $IMG -c 'source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+    export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH
+    python3 /mnt/vm_8tb/github/b70_ai_things/vllm/w4a8/bench_w4a8_shapes.py'
+echo '=== ONEDNN_VERBOSE down_proj M=1,256,2048 ==='
+docker run --rm --name k10_w4a8_onednn8k   --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path   --ipc=host --shm-size 8g --entrypoint bash   -e CUDA_VISIBLE_DEVICES= -e ZE_AFFINITY_MASK=$CARD   -e B70_XPU_C_SO=$SO -e ONEDNN_VERBOSE=1 -e ONLY_MS=1,256,2048   -v $ROOT:$ROOT -v $REPO:$REPO   $IMG -c 'source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+    export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH
+    python3 /mnt/vm_8tb/github/b70_ai_things/vllm/w4a8/onednn_verbose_m1_m8.py'
+
+torch 2.12.0+xpu xpu True device0 Intel(R) Arc(TM) Pro B70 Graphics SO /mnt/vm_8tb/b70/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+CDLL OK /mnt/vm_8tb/b70/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+  op int4_gemm_w4a8: True
+  op int4_gemm_w4a16: True
+  op int8_gemm_w8a8: True
+  op int8_gemm_w8a16: True
+  op int8_gemm_w8a8_fusedq: True
+  op dynamic_per_token_int8_quant: True
+act-quant: _xpu_C.dynamic_per_token_int8_quant
+CKPT=/models/qwen3.6-27b/w4a8-sqgptq GROUP=128 MS=[256, 2048]
+BW_CEIL=581 GB/s
+
+================ gate_up  K=5120 N=34816  i4 89.1 MB  roof 0.1534 ms @ 581 GB/s ================
+  weights: 3.6-sqgptq (34816, 640) torch.int32 scale (34816, 40) torch.bfloat16
+      M path                ms     GB/s     TOPS   %roof   xBF16     relerr src        
+    256 bf16            0.9811    363.4    93.03   62.5%    1.00   0.00e+00 3.6-sqgptq 
+    256 w4a16           0.7131    125.0   127.98   21.5%    1.38   2.71e-03 3.6-sqgptq 
+    256 w4a8_full       0.5403    165.0   168.94   28.4%    1.82   9.13e-03 3.6-sqgptq 
+    256 w4a8_op         0.4963    179.6   183.91   30.9%    1.98   2.07e-04 3.6-sqgptq 
+    256 w8a16           0.6402    278.4   142.56   47.9%    1.53   1.14e-02 3.6-sqgptq 
+    256 w8a8_full       0.4847    367.7   188.28   63.3%    2.02   1.44e-02 3.6-sqgptq 
+    256 w8a8_fusedq     0.4870    366.0   187.40   63.0%    2.01   1.44e-02 3.6-sqgptq 
+   2048 bf16            5.1752     68.9   141.08   11.9%    1.00   0.00e+00 3.6-sqgptq 
+   2048 w4a16           5.4293     16.4   134.48    2.8%    0.95   2.71e-03 3.6-sqgptq 
+   2048 w4a8_full       3.8677     23.0   188.78    4.0%    1.34   9.22e-03 3.6-sqgptq 
+   2048 w4a8_op         3.7117     24.0   196.72    4.1%    1.39   2.07e-04 3.6-sqgptq 
+   2048 w8a16           5.0786     35.1   143.77    6.0%    1.02   1.14e-02 3.6-sqgptq 
+   2048 w8a8_full       2.8003     63.7   260.73   11.0%    1.85   1.44e-02 3.6-sqgptq 
+   2048 w8a8_fusedq     2.8503     62.5   256.16   10.8%    1.82   1.44e-02 3.6-sqgptq 
+
+================ down_proj  K=17408 N=5120  i4 44.6 MB  roof 0.0767 ms @ 581 GB/s ================
+  weights: 3.6-sqgptq (5120, 2176) torch.int32 scale (5120, 136) torch.bfloat16
+      M path                ms     GB/s     TOPS   %roof   xBF16     relerr src        
+    256 bf16            0.5033    354.2    90.67   61.0%    1.00   0.00e+00 3.6-sqgptq 
+    256 w4a16           0.4055    109.9   112.54   18.9%    1.24   2.73e-03 3.6-sqgptq 
+    256 w4a8_full       0.4316    103.3   105.73   17.8%    1.17   9.80e-03 3.6-sqgptq 
+    256 w4a8_op         0.4262    104.6   107.08   18.0%    1.18   2.08e-04 3.6-sqgptq 
+    256 w8a16           0.3853    231.3   118.44   39.8%    1.31   1.01e-02 3.6-sqgptq 
+    256 w8a8_full       0.3209    277.8   142.21   47.8%    1.57   1.39e-02 3.6-sqgptq 
+    256 w8a8_fusedq     0.3157    282.3   144.56   48.6%    1.59   1.39e-02 3.6-sqgptq 
+   2048 bf16            2.8101     63.4   129.91   10.9%    1.00   0.00e+00 3.6-sqgptq 
+   2048 w4a16           2.6203     17.0   139.33    2.9%    1.07   2.73e-03 3.6-sqgptq 
+   2048 w4a8_full       2.0766     21.5   175.80    3.7%    1.35   9.82e-03 3.6-sqgptq 
+   2048 w4a8_op         1.6497     27.0   221.30    4.6%    1.70   2.08e-04 3.6-sqgptq 
+   2048 w8a16           2.3539     37.9   155.09    6.5%    1.19   1.01e-02 3.6-sqgptq 
+   2048 w8a8_full       1.6087     55.4   226.94    9.5%    1.75   1.39e-02 3.6-sqgptq 
+   2048 w8a8_fusedq     1.6531     53.9   220.84    9.3%    1.70   1.39e-02 3.6-sqgptq 
+
+=== K1 GATE (M=1,8 x gate_up,down_proj) ===
+shape          M path                ms     GB/s     TOPS   %roof   xBF16
+
+CSV /mnt/vm_8tb/github/b70_ai_things/results/logs/k10_w4a8_m256_2048_20260821T071519Z.csv  n=28
+DONE_K1_MATRIX
+=== ONEDNN_VERBOSE down_proj M=1,256,2048 ===
+torch 2.12.0+xpu xpu True
+CDLL OK /mnt/vm_8tb/b70/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+down_proj K=17408 N=5120 packed (5120, 2176) NT (2176, 5120) stride (1, 2176) ONEDNN_VERBOSE=1 MS=[1, 256, 2048]
+=== CALL M=1 int4_gemm_w4a8 ===
+onednn_verbose,v1,info,oneDNN v3.12.0 (commit N/A)
+onednn_verbose,v1,info,gpu,runtime:SYCL
+onednn_verbose,v1,info,gpu,engine,sycl gpu device count:1 
+onednn_verbose,v1,info,gpu,engine,0,backend:Level Zero,name:Intel(R) Arc(TM) Pro B70 Graphics,driver_version:1.15.38308,binary_kernels:enabled
+onednn_verbose,v1,info,graph,backend,0:dnnl_backend
+onednn_verbose,v1,info,experimental features are enabled
+onednn_verbose,v1,info,use batch_normalization stats one pass is enabled
+onednn_verbose,v1,info,GPU convolution v2 is disabled
+onednn_verbose,v1,primitive,info,template:operation,engine,primitive,implementation,prop_kind,memory_descriptors,attributes,auxiliary,problem_desc,exec_time
+onednn_verbose,v1,graph,info,template:operation,engine,partition_id,partition_kind,op_names,data_formats,logical_tensors,fpmath_mode,implementation,backend,exec_time
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,1x17408:17408x5120,0.37793
+  y (1, 5120) torch.float16
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,1x17408:17408x5120,0.12793
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,1x17408:17408x5120,0.110107
+=== CALL M=1 int4_gemm_w4a16 ===
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:f16::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-fpmath:f16:true attr-scales:wei:3:f16:128x1 attr-zero-points:wei:0:s8,,1x17408:17408x5120,0.615967
+  y (1, 5120) torch.float16
+=== CALL M=256 int4_gemm_w4a8 ===
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,256x17408:17408x5120,1.00488
+  y (256, 5120) torch.float16
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,256x17408:17408x5120,0.437988
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,256x17408:17408x5120,0.380127
+=== CALL M=256 int4_gemm_w4a16 ===
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:f16::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-fpmath:f16:true attr-scales:wei:3:f16:128x1 attr-zero-points:wei:0:s8,,256x17408:17408x5120,1.34497
+  y (256, 5120) torch.float16
+=== CALL M=2048 int4_gemm_w4a8 ===
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,2048x17408:17408x5120,2.49707
+  y (2048, 5120) torch.float16
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,2048x17408:17408x5120,1.70508
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:s8::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-scales:src0:3:f16:1x17408+wei:3:f16:128x1 attr-zero-points:wei:0:s8,,2048x17408:17408x5120,1.66699
+=== CALL M=2048 int4_gemm_w4a16 ===
+onednn_verbose,v1,primitive,exec,gpu,matmul,jit:gemm:any,undef,src:f16::blocked:ab::f0 wei:u4::blocked:ba::f0 dst:f16::blocked:ab::f0,attr-scratchpad:user attr-fpmath:f16:true attr-scales:wei:3:f16:128x1 attr-zero-points:wei:0:s8,,2048x17408:17408x5120,3.47705
+  y (2048, 5120) torch.float16
+DONE_K4_ONEDNN
+gpu-run: [w4a8-l23-largeM] done in 13s (exit 0)

@@ -833,3 +833,66 @@ VERDICT -> NO-GO as 1.10x. Packet D16.
   prefill on live :18082. Do not retry
   MTP3/pad-M. Do not start DD. Do not bake.
   Do not demote 25.0 / 31.9.
+
+---
+
+### 2026-08-21v - LOOP 22: K10 prefill ~2870 / ~2750 tok/s
+
+CONTEXT -> Operator: dual-card + 15m loop.
+  NEXT PICK K10 on live :18082. Card1 LOOP 23
+  in parallel. Files already on disk. D14-16
+  closed. DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 qwen3.8-27b-W4A8-gptq-gdn
+  GRAPH=1 NOMTP HYBRID=0 MAXLEN=8192
+  bench_prefill_ttft lens 2048,8000 reps=3
+  max_tokens=1.
+
+COMMAND ->
+  ```
+  python3 -u vllm/w4a8/bench_prefill_ttft.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 2048,8000 3
+  ```
+
+RESULT -> 2045 tok TTFT_avg=0.713s
+  prefill_avg=2868 tok/s. 7995 tok
+  TTFT_avg=2.908s prefill_avg=2750 tok/s.
+  First token " The" (not bangs).
+  Log: results/logs/k10_w4a8_prefill_20260821T071519Z.log
+  15m loop armed 01a021be5649.
+
+VERDICT -> GO. First 3.8 W4A8 prefill
+  number. Do not vs 27.3 (decode). Score
+  stays c1 25.0. Next: K8 card1.
+
+---
+
+### 2026-08-21w - LOOP 23: M=2048 Path X 1.4-1.7x H
+
+CONTEXT -> Dual with LOOP 22. Card1 free.
+  Does large-M switch oneDNN impl? Isolated
+  1.10x Path X vs H at prefill tiles?
+
+CONFIG -> IMG=int8g-v0260 ZE_AFFINITY_MASK=1
+  ONLY_MS=256,2048 ONLY_SHAPES=gate_up,down_proj
+  ONEDNN_VERBOSE=1 ONLY_MS=1,256,2048 down_proj.
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l23-largeM \
+    ./bin/gpu-run --card 1 env ONLY_MS=256,2048 \
+    ONLY_SHAPES=gate_up,down_proj bench_w4a8_shapes.py
+  ```
+
+RESULT -> gate_up M=2048 w4a8_op 3.71 ms
+  197 TOPS 1.39x w4a16; w8a8_full 261 TOPS.
+  down M=2048 w4a8_op 1.65 ms 221 TOPS
+  1.70x w4a16; w8a8_full 227 TOPS.
+  oneDNN jit:gemm:any s8xu4 at M=1,256,2048.
+  CSV: results/logs/k10_w4a8_m256_2048_20260821T071519Z.user.csv
+  Log: results/logs/k10_w4a8_onednn_m2048_20260821T071519Z.log
+
+VERDICT -> GO. Split-M is real at M=2048.
+  Decode stays H; prefill/c>1 stays X.
+  Do not demote 25.0 / 31.9. Do not bake.

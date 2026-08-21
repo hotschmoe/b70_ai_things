@@ -16392,3 +16392,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
+### 2026-08-21v - LOOP 22: K10 prefill ~2870 / ~2750 tok/s
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+
+### 2026-08-21w - LOOP 23: M=2048 Path X 1.4-1.7x H
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Split-M confirmed at prefill M.
+

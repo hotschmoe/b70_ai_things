@@ -48,17 +48,17 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 21 (K5 stock sycl-tla mixed-dtype ~140-170x slower than Path H; D16) |
-| Last JOURNAL heading | `2026-08-21u` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 22+23 dual (K10 prefill ~2870/2750 tok/s; M=2048 Path X 1.4-1.7x H) |
+| Last JOURNAL heading | `2026-08-21w` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 30m loop | ARMED `01a021be5649` next ~2026-08-21T07:35:17Z |
-| Next pick | K10 prefill TTFT / PP tok/s @ 2k and 8k on live GRAPH=1 `:18082`. Do not retry D14/D15/D16. Do not bake. Do not demote 25.0 / 31.9. |
+| 15m loop | ARMED `01a021be5649` next ~2026-08-21T07:20:17Z (dual-card) |
+| Next pick | K8 lm_head INT4 isolated on card1 (INCLUDE_LMHEAD=1). Leave GPTQ `:18082`. Do not retry D14/D15/D16. Do not bake. Do not demote 25.0 / 31.9. |
 | Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` (score). RTN stopped. Card1 free. |
-| 3.8 W4A8 artifact | GPTQ :18082. RTN file on disk (serve stopped). |
-| Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. M=8 still ~17 TOPS / 94% roof. |
-| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. c2/c4/c8 agg 47.7 / 91.4 / 145.8 (not c1 scores). MTP3 61.7 withdrawn (D14). |
+| 3.8 W4A8 artifact | GPTQ :18082 live. RTN+GPTQ files on disk (20.616 GiB each). |
+| Best W4A8 isolated | Path H M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. Prefill tile: down M=2048 w4a8_op **221 TOPS** (1.70x w4a16). |
+| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. Prefill ~**2870** tok/s @2k / ~**2750** @8k. MTP3 61.7 withdrawn (D14). |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 
@@ -585,16 +585,16 @@ start under `gpu-run`, write LOOP-STARTED with log path and pid.
 | this file, living header only | bump Last loop / Next pick / scores / 30m loop id |
 | RESEARCH_TODO.md campaign blurb | one line if Next pick or a north-star number moved |
 
-### 30m armed loop
+### 15m armed loop (was 30m; operator 2026-08-21)
 
-A `/loop 30m` (scheduler, durable, fire-immediately then every 30m)
-owns this campaign while the operator leaves it armed. One fire = one
-verdict or a LOOP-STARTED handoff. If a card is HELD by this campaign,
-ATTACH (read the log; do not start a second job on that card). If GPU
-work will exceed 30m, start under `gpu-run`, write LOOP-STARTED with
-log path and pid, commit+push, return. Commit and push at every
-verdict or LOOP-STARTED. Do not sit idle for 25 minutes. Foreign
-lease -> CPU-only. DD PARKED. P2PACCESS=0.
+Scheduler `01a021be5649` fires every **15m**. One fire = one or **two**
+verdicts when both cards can work (live W4A8 serve attach + card1
+kernel), or LOOP-STARTED for a long GPU job. If a card is HELD by this
+campaign, ATTACH (do not start a second job on that card). If GPU work
+will exceed 15m, start under `gpu-run`, write LOOP-STARTED with log
+path and pid, commit+push, return. Do not sit idle. Foreign lease ->
+CPU-only. DD PARKED. P2PACCESS=0. W4A8 files already exist; do not
+re-run 151 unless NEXT PICK is a new scheme.
 
 Do **not** rewrite sections 4-12 of this file to narrate a loop.
 
