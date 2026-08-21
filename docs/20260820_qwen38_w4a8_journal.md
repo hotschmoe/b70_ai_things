@@ -148,9 +148,9 @@ COMMAND -> wrote this file. Pointed
   from this heading on. scheduler_create
   30m.
 
-RESULT -> See living header `30m loop`
-  for the scheduler id after arm. First
-  fire is GRAPH=0 smoke (LOOP 5+).
+RESULT -> scheduler `01a021be5649` 30m
+  durable fire_immediately. First fire
+  is GRAPH=0 smoke (LOOP 5+).
 
 VERDICT -> GO (steer). Next loop starts
   on arm (fire_immediately), then every

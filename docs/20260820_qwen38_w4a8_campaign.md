@@ -53,7 +53,7 @@ separate serial stack while this campaign owns the cards.
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 30m loop | ARMING this turn (`/loop 30m`, fire immediately then every 30m, durable) |
+| 30m loop | ARMED `01a021be5649` 30m durable fire-immediately (next GPU pick is the first fire) |
 | Next pick | GRAPH=0 vLLM smoke on card 1 of `w4a8-rtn-gdn` (K0 dispatch + Paris/fib). Clone 3.6 serve to `vllm/w4a8/`. Do not start GPTQ fire 2 until load-gated. |
 | Blocked on | nothing. Cards free. Artifact on disk. |
 | 3.8 W4A8 artifact | `models/files/qwen3.8-27b/w4a8-rtn-gdn` (RTN, 20.616 GiB, 256 int4 packed + 144 GDN I8). GPTQ not started. |
