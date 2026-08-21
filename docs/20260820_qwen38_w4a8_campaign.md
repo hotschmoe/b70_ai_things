@@ -48,16 +48,16 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 19 (K16 c=8 agg 145.8 G1 8/8; c1 held 25.0; K16 row complete) |
-| Last JOURNAL heading | `2026-08-21s` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 20 (K4 isolated M=4,8 still BW ~94% roof; oneDNN jit:gemm:any s8xu4; D15 pad-M) |
+| Last JOURNAL heading | `2026-08-21t` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 30m loop | ARMED `01a021be5649` next ~2026-08-21T06:35:17Z |
-| Next pick | K4 isolated GEMM M=4,8 on card1 (stop RTN `:18081`). Leave GPTQ score serve `:18082`. Do not retry MTP3 (D14). Do not bake. Do not demote 25.0 / 31.9. |
-| Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` MAXSEQS=8 CAPSIZES=1,2,4,8 (score). RTN GRAPH=0 `:18081`. |
-| 3.8 W4A8 artifact | RTN :18081. GPTQ :18082. |
-| Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. |
+| 30m loop | ARMED `01a021be5649` next ~2026-08-21T07:05:17Z |
+| Next pick | K5 VNNI16 isolated M=1,4,8 vs K1 (bar 1.10x or packet). Leave GPTQ `:18082`. Do not retry MTP3 (D14). Do not pad-M (D15). Do not bake. Do not demote 25.0 / 31.9. |
+| Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` (score). RTN stopped. Card1 free. |
+| 3.8 W4A8 artifact | GPTQ :18082. RTN file on disk (serve stopped). |
+| Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. M=8 still ~17 TOPS / 94% roof. |
 | Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. c2/c4/c8 agg 47.7 / 91.4 / 145.8 (not c1 scores). MTP3 61.7 withdrawn (D14). |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |

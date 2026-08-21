@@ -28,6 +28,8 @@ docker run --rm --name k1_w4a8_shapes \
   -e B70_XPU_C_SO="$SO" \
   -e CKPT=/models/qwen3.6-27b/w4a8-sqgptq \
   -e OUT_CSV="$CSV" \
+  -e ONLY_MS="${ONLY_MS:-}" \
+  -e ONLY_SHAPES="${ONLY_SHAPES:-}" \
   -v "$ROOT:$ROOT" \
   -v "$REPO:$REPO" \
   -v "$REPO/models/files:/models" \

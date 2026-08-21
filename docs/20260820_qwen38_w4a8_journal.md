@@ -747,3 +747,47 @@ VERDICT -> GO for K16 c=8. Concurrent row
   RTN). Leave GPTQ score serve. Do not
   retry MTP3. Do not start DD. Do not bake.
   Do not demote 25.0 / 31.9.
+
+---
+
+### 2026-08-21t - LOOP 20: K4 M=4,8 still BW; D15 pad-M
+
+CONTEXT -> 30m fire 01a021be5649. NEXT PICK
+  K4 isolated GEMM M=4,8 on card1. Stop RTN
+  :18081. Leave GPTQ :18082. D14 closed.
+  DD PARKED. P2PACCESS=0. ONEDNN_VERBOSE
+  M=1 vs M=8 to see DPAS.
+
+CONFIG -> IMG=int8g-v0260 --entrypoint bash
+  ZE_AFFINITY_MASK=1
+  B70_XPU_C_SO=w8a8_kernel_v0240_fusedq
+  CKPT=/models/qwen3.6-27b/w4a8-sqgptq
+  ONLY_MS=4,8. ONEDNN_VERBOSE=1 down_proj.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_rtn bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l20-k4 \
+    ./bin/gpu-run --card 1 \
+    env ONLY_MS=4,8 bash -c '...bench_w4a8_shapes.py;
+      ONEDNN_VERBOSE=1 python3 vllm/w4a8/onednn_verbose_m1_m8.py'
+  ```
+
+RESULT -> 13s. Fat GEMMs M=8 still ~94-96% of
+  581 GB/s, ~17 TOPS. Path H ~= Path X
+  (down_proj w4a16 0.080 / w4a8_op 0.0815 =
+  1.00x). o_proj/gdn_out w4a8_op ~60% roof
+  (quant tax on small N). gdn_ba <3% roof.
+  oneDNN: both M=1 and M=8
+  `gpu,matmul,jit:gemm:any` src:s8 wei:u4
+  dst:f16. No `dpas` token. Same impl.
+  Log: results/logs/k4_w4a8_m48_20260821T063757Z.log
+  GPTQ :18082 still Up. RTN stopped.
+
+VERDICT -> GO as measurement. Isolated 1.10x
+  Path X vs H at M=4,8: NO-GO. Packet D15
+  pad-M dummy 8. K4 e2e DSpark accept still
+  open (do not night-train this pick).
+  Next: K5 VNNI16. Do not retry MTP3.
+  Do not start DD. Do not bake. Do not
+  demote 25.0 / 31.9.

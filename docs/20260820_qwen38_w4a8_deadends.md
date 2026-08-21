@@ -177,3 +177,18 @@ Retry if: coding dump garbage-test OK AND spec accept < 100% on a
   hidden mismatch, v0.26 MTP). Isolated M=4,8 GEMM (K4 kernel half)
   is still open and is not this packet.
 Related: K4 e2e MTP / K16 c>1
+
+---
+
+## D15 -- 2026-08-21 -- pad M=1 dummy rows to M=8 is not a speed win
+
+Closed: padding decode M=1 to M=8 dummy rows to "fill DPAS" as an e2e trick
+Evidence: LOOP 20 / 2026-08-21t + K1. Fat GEMMs at M=8 have the same wall as
+  M=1 (down_proj w4a16 0.080 vs 0.079 ms; still ~95% of 581 GB/s). TOPS at
+  M=8 is ~17 because FLOPs grew 8x, not because the kernel got faster.
+  oneDNN uses the same `gpu,matmul,jit:gemm:any` s8xu4 at M=1 and M=8.
+Why it is dead: still BW-bound; dummy rows buy wasted FLOPs at the same
+  HBM time. Isolated bar 1.10x is not met after counting wasted FLOPs.
+Retry if: a fused kernel shows M=8 TOPS >> 8x M=1 TOPS at equal bytes
+  (real XMX occupancy), then re-bench isolated before any e2e pad.
+Related: K4 isolated / Path X M-tile

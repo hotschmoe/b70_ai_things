@@ -16384,3 +16384,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. K16 concurrent row complete. Score stays 25.0 c1.
 
+### 2026-08-21t - LOOP 20: K4 M=4,8 still BW; D15 pad-M
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+

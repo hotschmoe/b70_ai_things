@@ -48,6 +48,13 @@ if INCLUDE_LMHEAD:
     SHAPES.append(("lm_head", 5120, 248320))
 
 MS = [1, 2, 4, 8, 16, 32, 64, 256, 2048]
+_ONLY_MS = os.environ.get("ONLY_MS", "").strip()
+if _ONLY_MS:
+    MS = [int(x) for x in _ONLY_MS.split(",") if x.strip()]
+_ONLY_SHAPES = os.environ.get("ONLY_SHAPES", "").strip()
+if _ONLY_SHAPES:
+    _want = {x.strip() for x in _ONLY_SHAPES.split(",") if x.strip()}
+    SHAPES = [s for s in SHAPES if s[0] in _want]
 
 
 def sync():
