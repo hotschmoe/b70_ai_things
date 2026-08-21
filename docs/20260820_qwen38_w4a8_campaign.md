@@ -48,18 +48,18 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 33 (D04 joint_matrix still gated oneAPI<2026). 32 restore c1 **25.0**. 31 D19. |
-| Last JOURNAL heading | `2026-08-21zg` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 34 (K17 off-shelf DSpark on W4A8: pos0 66% / accept 2.71 / c1 14.6 GRAPH=0) |
+| Last JOURNAL heading | `2026-08-21zh` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 15m loop | ARMED `01a021be5649` (15m dual-card). Attach live `:18082` if Up. |
-| Next pick | K17 DSpark 10-sample overfit on live W4A8 (section 11). K14 keeps auto/bf16 KV. Do not retry GRAPH=1 TP=2 (D19) or D04 on 2025.3. Do not demote 25.0. |
-| Blocked on | nothing. GPTQ GRAPH=1 TP=1 `:18082` is the score serve. card1 free. |
+| 15m loop | ARMED `01a021be5649` (15m dual-card). Attach `:18082` score + `:18083` DSpark if Up. |
+| Next pick | K17 GRAPH=1 DSpark TP=1 card 1 vs 25.0 (stop `:18083` first). Garbage-test. Do not night-train (accept not in 20% band). Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0. |
+| Blocked on | nothing. `:18082` GRAPH=1 NOMTP 25.0. `:18083` GRAPH=0 DSpark k=7. |
 | 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
 | Best W4A8 isolated | Path H M=1 down_proj g128 0.079 ms / 565 GB/s / 97% of 581. |
-| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. TP=2 GRAPH=0 is 3.7. TP=2 GRAPH=1 23.5 then segfault (D19). MTP3 61.7 withdrawn (D14). |
-| DSpark INT | not trained. 10-sample overfit is next. |
+| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. GRAPH=0 DSpark 14.6 (not the score). TP=2 GRAPH=0 is 3.7. TP=2 GRAPH=1 D19. MTP3 61.7 withdrawn (D14). |
+| DSpark INT | off-shelf FP8 drafter on W4A8: pos0 66% mean_len 2.71. No night train. GRAPH=1 spec next. |
 | DD | PARKED. `:18080` is research. |
 
 ---

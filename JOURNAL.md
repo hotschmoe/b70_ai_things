@@ -16440,3 +16440,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Leave D04 closed.
 
+### 2026-08-21zh - LOOP 34: K17 off-shelf DSpark pos0 66% / c1 14.6
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0. Do not night-train.
+

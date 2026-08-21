@@ -15,8 +15,9 @@
 > GPTQ GRAPH=1 bench_code c1 **25.0**. HYBRID=1 is 1.00x (NO-GO as win).
 > GPTQ GRAPH=1 TP=1 c1 **25.0**. TP=2 GRAPH=0 PUSH_AR load-gate c1 3.7.
 > TP=2 GRAPH=1 PUSH_AR_GRAPH=1 is D19 (XPUGraph segfault; c1 23.5).
-> D04 joint_matrix still gated oneAPI<2026. Next: K17 DSpark 10-sample.
-> Do not demote 25.0 / 31.9.
+> D04 joint_matrix still gated oneAPI<2026.
+> Off-shelf DSpark on W4A8: pos0 66% mean_len 2.71 c1 14.6 GRAPH=0.
+> Next: GRAPH=1 DSpark vs 25.0. Do not night-train. Do not demote 25.0 / 31.9.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang
 > W4A8 images AFTER first numbers, not before. A-E in

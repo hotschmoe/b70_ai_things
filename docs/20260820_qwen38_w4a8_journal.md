@@ -1236,3 +1236,51 @@ RESULT -> synthetic: all ct FAIL
 VERDICT -> NO-GO. Leave D04 closed.
   oneDNN Path H/X stay the kernels.
   Do not re-probe on 2025.3.
+
+---
+
+### 2026-08-21zh - LOOP 34: K17 off-shelf DSpark pos0 66%
+
+CONTEXT -> 15m dual fire after D04. NEXT PICK
+  was K17 10-sample overfit. SpecForge is
+  not on disk. Dump off-shelf accept first
+  (W8A8 sequence). Score serve :18082 stays.
+  Card 1 new W4A8+DSpark GRAPH=0. D13 KV
+  auto. D14 no MTP. D19 no TP=2. DD PARKED.
+
+CONFIG -> GRAPH=0 TP=1 SPECTOK=7 method=dspark
+  DEVICE=1 PORT=18083 MAXSEQS=1 MAXLEN=8192
+  UTIL=0.88 NOMTP=0 HYBRID=0 P2PACCESS=0
+  CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn
+  DRAFTER=dflash-drafter-fp8-b70
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+  IMG=int8g-v0260 readout patches v0260
+  KV auto/bf16
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l34-dspark \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=0 TP=1 SPECTOK=7 PORT=18083 \
+      NAME=qwen38_w4a8_dspark DEVICE=1 CARD=1 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 1 256 3
+  ```
+
+RESULT -> HEALTHY 97s. Paris exact. 391 exact.
+  c1 avg=14.6 best=15.8 t/s wall~16.2s.
+  vs GRAPH=0 NOMTP ~6.3 = 2.3x. vs score
+  25.0 = 0.58x. metrics drafts=398
+  accepted=682 pos0=264/398=66.3%
+  mean_len=2.71 tok_rate=24.5%.
+  :18082 Paris still holds.
+  Logs: l34_w4a8_dspark_graph0_20260821T084152Z.log
+        l34_w4a8_dspark_c1_20260821T084341Z.log
+        l34_w4a8_tp1_attach_20260821T084152Z.log
+
+VERDICT -> GO as accept gate. Not a score
+  win. Do not night-train. Next: GRAPH=1
+  DSpark vs 25.0. Garbage-test. Do not
+  demote 25.0.
