@@ -1104,3 +1104,135 @@ VERDICT -> GO as TP=2 load-gate. Not a
   speed win vs 25.0. Next: GRAPH=1 TP=2
   PUSH_AR_GRAPH=1 IGP=false. Do not MTP.
   Do not P2PACCESS=1. Do not demote 25.0.
+
+---
+
+### 2026-08-21ze - LOOP 31: K15 GRAPH=1 TP=2 D19 segfault
+
+CONTEXT -> 15m fire. NEXT PICK K15 GRAPH=1
+  TP=2 after GRAPH=0 load-gate 3.7. Stop
+  GRAPH=0 first. PUSH_AR_GRAPH=1 graph.so
+  MIN_NUMEL=0 IGP=false P2PACCESS=0.
+  B70_NOMTP=1. Do not MTP (D14). xpu-health
+  GO. D14-D18 closed. DD PARKED.
+
+CONFIG -> TP=2 GRAPH=1 PUSH_AR=1
+  PUSH_AR_GRAPH=1 MIN_NUMEL=0
+  P2PACCESS=0 NOMTP=1 HYBRID=0 NOMM=1
+  MAXSEQS=8 CAPSIZES=1,2,4,8 PORT=18082
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  IMG=int8g-v0260 IGP=false
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l31-tp2g1 ./bin/gpu-run \
+    env GRAPH=1 TP=2 IGP=false B70_NOMTP=1 B70_W4A8_HYBRID=0 \
+      NOMM=1 MAXSEQS=8 CAPSIZES=1,2,4,8 PUSH_AR=1 \
+      PUSH_AR_GRAPH=1 P2PACCESS=0 PORT=18082 \
+      NAME=qwen38_w4a8_gptq \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> HEALTHY 381s. PUSH_AR patched.
+  Graph capture 4 sizes in 3s. Paris OK.
+  391 OK. c1 avg=23.5 best=24.7 wall~10.4s
+  (warmup HTTP 500). LRU chatcmpl:
+  Worker-0 segfault in
+  XPUGraphImpl::instantiate /
+  urCommandBufferReleaseExp /
+  exec_graph_impl dtor. EngineDead.
+  Connection reset. container exit 0.
+  xpu-health HEALTHY after (not
+  DEVICE_LOST). 23.5 = 0.94x vs 25.0.
+  Logs: l31_w4a8_tp2_graph1_20260821T082108Z.log
+        l31_w4a8_tp2_graph1_c1_20260821T082752Z.log
+        l31_w4a8_tp2_graph1_engine_20260821T082108Z.log
+
+VERDICT -> NO-GO. Packet D19. Score stays
+  GRAPH=1 TP=1 25.0. Do not chain another
+  GRAPH=1 TP=2 start. Dual restore next:
+  card 0 TP=1 GRAPH=1, card 1 D04 probe.
+
+---
+
+### 2026-08-21zf - LOOP 32: GRAPH=1 TP=1 restore STARTED
+
+CONTEXT -> 15m dual fire after D19. Restore
+  the 25.0 score path on one card. W4A8
+  files already on disk (no 151). DD PARKED.
+  P2PACCESS=0.
+
+CONFIG -> GRAPH=1 TP=1 DEVICE=0 CARD=0
+  NOMTP=1 HYBRID=0 NOMM=1 MAXSEQS=8
+  CAPSIZES=1,2,4,8 PORT=18082
+  NAME=qwen38_w4a8_gptq
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  IMG=int8g-v0260
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l32-tp1g1 \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 TP=1 NOMM=1 B70_NOMTP=1 \
+      B70_W4A8_HYBRID=0 MAXSEQS=8 \
+      CAPSIZES=1,2,4,8 PORT=18082 \
+      NAME=qwen38_w4a8_gptq DEVICE=0 CARD=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+      P2PACCESS=0 \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  ```
+
+RESULT -> HEALTHY 56s (compile cache hit).
+  Built-in Paris OK. Manual Paris exact.
+  391 exact. bench_code c1 avg=best 25.0
+  t/s wall~10.3s. Served id
+  qwen3.8-27b-W4A8-gptq-gdn. KV auto.
+  Logs: l32_w4a8_tp1_graph1_restore_20260821T083346Z.log
+        l32_w4a8_tp1_c1_20260821T083621Z.log
+
+VERDICT -> GO. Score restored. Leave
+  :18082 Up. Next: K17 DSpark 10-sample.
+  Do not demote 25.0.
+
+---
+
+### 2026-08-21zg - LOOP 33: D04 still gated oneAPI<2026
+
+CONTEXT -> dual with LOOP 32. Campaign
+  listed one woqgemm compute_type=int8
+  re-probe on runtime 26.22. Card 1.
+
+CONFIG -> IMG=sglang-xpu:woq-0515
+  ZE_AFFINITY_MASK=1. First synthetic
+  int4 5120x5120. Then real
+  qwen3.6-27b/int4-autoround layer 20
+  down_proj via QuantLinearGPTQ.
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l33-d04 \
+    ./bin/gpu-run --card 1 docker run --rm \
+    --name k_d04_joint sglang-xpu:woq-0515 \
+    python ark.woqgemm sweep
+  ```
+
+RESULT -> synthetic: all ct FAIL
+  ValueError blob dtype int8 vs int32.
+  real: "XMX int8 is not supported on
+  B70 with oneAPI < 2026. Falling back
+  to fp16." ARK libsycl.so.9 missing.
+  post_init NotImplementedError device
+  xpu:0. 39s exit 1.
+  Logs: k_d04_joint_matrix_20260821T083346Z.log
+        k_d04_joint_matrix_real_20260821T083621Z.log
+
+VERDICT -> NO-GO. Leave D04 closed.
+  oneDNN Path H/X stay the kernels.
+  Do not re-probe on 2025.3.

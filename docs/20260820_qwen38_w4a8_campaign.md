@@ -48,18 +48,18 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 30 (K15 TP=2 GRAPH=0 PUSH_AR load-gate GO, c1 3.7 vs TP=1 GRAPH=1 25.0) |
-| Last JOURNAL heading | `2026-08-21zd` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 33 (D04 joint_matrix still gated oneAPI<2026). 32 restore c1 **25.0**. 31 D19. |
+| Last JOURNAL heading | `2026-08-21zg` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 15m loop | ARMED `01a021be5649` next ~2026-08-21T08:20:17Z |
-| Next pick | K15 GRAPH=1 TP=2 PUSH_AR_GRAPH=1 P2PACCESS=0 IGP=false. Stop GRAPH=0 TP=2 first. LOOP-STARTED if capture >15m. Do not MTP (D14). Do not demote 25.0. |
-| Blocked on | nothing. GPTQ TP=2 GRAPH=0 PUSH_AR `:18082` (c1 3.7, not the score). |
-| 3.8 W4A8 artifact | GPTQ :18082 TP=2. Files on disk. |
+| 15m loop | ARMED `01a021be5649` (15m dual-card). Attach live `:18082` if Up. |
+| Next pick | K17 DSpark 10-sample overfit on live W4A8 (section 11). K14 keeps auto/bf16 KV. Do not retry GRAPH=1 TP=2 (D19) or D04 on 2025.3. Do not demote 25.0. |
+| Blocked on | nothing. GPTQ GRAPH=1 TP=1 `:18082` is the score serve. card1 free. |
+| 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
 | Best W4A8 isolated | Path H M=1 down_proj g128 0.079 ms / 565 GB/s / 97% of 581. |
-| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. TP=2 GRAPH=0 is 3.7 (eager allreduce). MTP3 61.7 withdrawn (D14). |
-| DSpark INT | not trained |
+| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. TP=2 GRAPH=0 is 3.7. TP=2 GRAPH=1 23.5 then segfault (D19). MTP3 61.7 withdrawn (D14). |
+| DSpark INT | not trained. 10-sample overfit is next. |
 | DD | PARKED. `:18080` is research. |
 
 ---

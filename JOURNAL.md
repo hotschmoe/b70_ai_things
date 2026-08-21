@@ -16428,3 +16428,15 @@ See `docs/20260820_qwen38_w4a8_journal.md`. GROUP=128 stays.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays TP=1 GRAPH=1 25.0.
 
+### 2026-08-21ze - LOOP 31: K15 GRAPH=1 TP=2 D19 segfault
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays TP=1 GRAPH=1 25.0.
+
+### 2026-08-21zf - LOOP 32: GRAPH=1 TP=1 restore c1 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+
+### 2026-08-21zg - LOOP 33: D04 joint_matrix still gated
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Leave D04 closed.
+

@@ -55,9 +55,15 @@ Closed: `auto_round_kernel.woqgemm(..., compute_type=int8)` as the W4A8 prefill
   on this box (oneAPI DPC++ 2025.3)
 Evidence: M=2048 FAIL "no matrix hardware on the target device, joint_matrix
   is not supported". M=1 ran but was not faster than fp16 woqgemm.
-Why it is dead: SYCL joint_matrix runtime gate, not missing weights
+  Re-probe LOOP 33 / 2026-08-21zg on runtime 26.22 / `sglang-xpu:woq-0515`:
+  kernel prints "XMX int8 is not supported on B70 with oneAPI < 2026.
+  Falling back to fp16." ARK cannot load `libsycl.so.9`. QuantLinearGPTQ
+  `post_init` `NotImplementedError: Current device xpu:0 is not supported`.
+  Logs: k_d04_joint_matrix_20260821T083346Z.log,
+  k_d04_joint_matrix_real_20260821T083621Z.log.
+Why it is dead: SYCL joint_matrix / XMX-int8 runtime gate, not missing weights
 Retry if: oneAPI 2026+ or a runtime that advertises joint_matrix on BMG.
-  One re-probe is campaign K1-whacky. If it still fails, leave this packet.
+  The 2026-08-21 one-shot is spent. Do not re-probe on 2025.3.
 Related: oneDNN `int4_gemm_w4a8` is the path that already works
 
 ---
@@ -239,3 +245,28 @@ Why it is dead as a speed pick: finer groups add scale traffic at the same
 Retry if: a different kernel (VNNI16 paper path, not this oneDNN) is 1.10x
   at g32 AND HE+ needs g32. Isolated first. Do not 151 whole-model for this.
 Related: K13
+
+---
+
+## D19 -- 2026-08-21 -- GRAPH=1 TP=2 PUSH_AR_GRAPH=1 segfaults on LRU/chat
+
+Closed: claiming GRAPH=1 TP=2 PUSH_AR_GRAPH=1 (graph.so, MIN_NUMEL=0) as
+  the 3.8 W4A8 TP=2 speed path
+Evidence: LOOP 31 / 2026-08-21ze. HEALTHY 381s. PUSH_AR patched
+  XpuCommunicator.all_reduce. Graph capture 4 sizes in 3s. Paris/391 OK.
+  bench_code c1 avg=23.5 best=24.7 t/s (warmup HTTP 500; vs TP=1 25.0).
+  LRU chatcmpl then Worker-0 segfault in XPUGraphImpl::instantiate /
+  urCommandBufferReleaseExp / exec_graph_impl dtor. EngineDead.
+  Connection reset. Container exit 0. xpu-health still HEALTHY (not
+  DEVICE_LOST). Logs: l31_w4a8_tp2_graph1_20260821T082108Z.log,
+  l31_w4a8_tp2_graph1_c1_20260821T082752Z.log,
+  l31_w4a8_tp2_graph1_engine_20260821T082108Z.log.
+Why it is dead as a speed pick: graph.so + PIECEWISE TP=2 dies on a
+  follow-up chat/LRU after a short coherent decode. c1 already 0.94x
+  vs 25.0 even before the crash. GRAPH=0 TP=2 PUSH_AR is the load-gate
+  (3.7). GRAPH=1 TP=1 is the score (25.0).
+Retry if: a stated hypothesis (not "try GRAPH=1 TP=2 again") AND
+  xpu-health green AND not chained immediately after a worker death.
+  GRAPH=1 + eager PUSH_AR (graph.so off) is the documented !!!! trap;
+  do not "fix" D19 by walking into that. Prefer the 25.0 TP=1 path.
+Related: K15 / PUSH_AR / XPUGraph
