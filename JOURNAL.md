@@ -16456,3 +16456,15 @@ See `docs/20260820_qwen38_w4a8_journal.md`.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Spec row 34.7. NOMTP honesty 25.0.
 
+### 2026-08-21zl - LOOP 38: attach NOMTP c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
+
+### 2026-08-21zm - LOOP 39: k=4 c1 33.5 NO-GO vs k=7 34.7
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Keep SPECTOK=7.
+
+### 2026-08-21zn - LOOP 40: restore k=7 c1 35.2
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec path restored.
+

@@ -18,7 +18,8 @@
 > D04 joint_matrix still gated oneAPI<2026.
 > Off-shelf DSpark on W4A8: pos0 66% mean_len 2.71 c1 14.6 GRAPH=0.
 > GRAPH=1 DSpark k=7 MAXLEN=4096 c1 **34.7** coherent (pos0 69% / 2.80).
-> NOMTP honesty 25.0. Next: k=4 A/B. Do not night-train. Do not demote 25.0 / 31.9.
+> k=4 is 33.5 (keep 7). k=7 restore c1 35.2. NOMTP honesty 25.0.
+> Next: MAXSEQS>1 if KV fits. Do not night-train. Do not demote 25.0 / 31.9.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang
 > W4A8 images AFTER first numbers, not before. A-E in

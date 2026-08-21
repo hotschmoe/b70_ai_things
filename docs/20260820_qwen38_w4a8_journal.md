@@ -1382,3 +1382,99 @@ RESULT -> HEALTHY 299s. Paris exact. 391
 VERDICT -> GO. Spec e2e row 34.7.
   NOMTP honesty stays 25.0. Leave both
   Up. Next: k=4 A/B. Do not demote 25.0.
+
+---
+
+### 2026-08-21zl - LOOP 38: attach NOMTP c1 hold 25.0
+
+CONTEXT -> 15m dual fire. NEXT PICK k=4
+  A/B on card 1. Attach :18082. DD PARKED.
+  P2PACCESS=0. D14-D19 closed.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 out=256 reps=3 vs 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.3s. Log:
+  l38_w4a8_tp1_c1_hold_20260821T090546Z.log
+
+VERDICT -> GO. NOMTP score holds.
+
+---
+
+### 2026-08-21zm - LOOP 39: k=4 c1 33.5 NO-GO vs k=7
+
+CONTEXT -> NEXT PICK k-sweep. Stop k=7
+  :18083. GRAPH=1 MAXLEN=4096 UTIL=0.90.
+  Isolated 1.10x vs 34.7. Garbage-test.
+  Leave :18082. DD PARKED.
+
+CONFIG -> GRAPH=1 TP=1 SPECTOK=4
+  MAXLEN=4096 UTIL=0.90 MAXSEQS=1 CAPSIZES=1
+  DEVICE=1 PORT=18083 KV auto P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark4
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_dspark bash \
+    vllm/w4a8/serve_qwen38_w4a8_dspark.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l39-dspark-k4 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=4 MAXLEN=4096 UTIL=0.90 \
+      MAXSEQS=1 CAPSIZES=1 PORT=18083 DEVICE=1 \
+      SERVED=qwen3.8-27b-W4A8-gptq-dspark4 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark4 1 256 3
+  ```
+
+RESULT -> HEALTHY 305s. Paris exact. 391
+  exact. LRU G1_OK bang_frac=0. c1 avg=33.5
+  best=34.5 wall~7.4s = 0.97x vs k=7 34.7.
+  drafts=464 accepted=746 pos0=67.5%
+  mean_len=2.61 tok_rate=40.2%. Logs:
+  l39_w4a8_dspark_k4_graph1_20260821T090546Z.log
+  l39_w4a8_dspark_k4_c1_20260821T091113Z.log
+
+VERDICT -> NO-GO as 1.10x. Keep SPECTOK=7.
+  Restore k=7. Do not demote 34.7 / 25.0.
+
+---
+
+### 2026-08-21zn - LOOP 40: restore k=7 STARTED
+
+CONTEXT -> k=4 lost. Restore spec champion
+  on card 1. :18082 stays.
+
+CONFIG -> GRAPH=1 SPECTOK=7 MAXLEN=4096
+  UTIL=0.90 MAXSEQS=1 CAPSIZES=1 PORT=18083
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l40-dspark-k7 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXLEN=4096 UTIL=0.90 \
+      PORT=18083 DEVICE=1 \
+      SERVED=qwen3.8-27b-W4A8-gptq-dspark7 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  ```
+
+RESULT -> HEALTHY 61s (k=7 compile cache).
+  Paris exact. c1 avg=35.2 best=38.1
+  wall~6.7s. Holds vs 34.7. Logs:
+  l40_w4a8_dspark_k7_restore_20260821T091204Z.log
+  l40_w4a8_dspark_k7_c1_20260821T091318Z.log
+
+VERDICT -> GO. Spec path restored. Leave
+  both Up. Next: MAXSEQS>1 if KV fits.
+  Do not demote 34.7 / 25.0.
