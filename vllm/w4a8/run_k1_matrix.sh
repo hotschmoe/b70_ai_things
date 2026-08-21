@@ -32,6 +32,7 @@ docker run --rm --name k1_w4a8_shapes \
   -e ONLY_SHAPES="${ONLY_SHAPES:-}" \
   -e INCLUDE_LMHEAD="${INCLUDE_LMHEAD:-0}" \
   -e GROUP="${GROUP:-128}" \
+  -e EXTRA_SHAPES="${EXTRA_SHAPES:-}" \
   -v "$ROOT:$ROOT" \
   -v "$REPO:$REPO" \
   -v "$REPO/models/files:/models" \

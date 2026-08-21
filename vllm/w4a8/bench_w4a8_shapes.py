@@ -46,6 +46,11 @@ SHAPES = [
 ]
 if INCLUDE_LMHEAD:
     SHAPES.append(("lm_head", 5120, 248320))
+_EXTRA = os.environ.get("EXTRA_SHAPES", "").strip()
+if _EXTRA:
+    for _item in _EXTRA.split(","):
+        _n, _k, _N = _item.split(":")
+        SHAPES.append((_n.strip(), int(_k), int(_N)))
 
 MS = [1, 2, 4, 8, 16, 32, 64, 256, 2048]
 _ONLY_MS = os.environ.get("ONLY_MS", "").strip()

@@ -951,3 +951,55 @@ VERDICT -> GO as kernel. Isolated 1.10x X vs
   H NO-GO. e2e lm_head INT4 still open (file
   is BF16). Next: K12 N-trap card1. Do not
   rewrite 151. Do not demote 25.0 / 31.9.
+
+---
+
+### 2026-08-21z - LOOP 26: attach c2 agg 48.5
+
+CONTEXT -> 15m dual fire. Serve attach while
+  card1 K12. c1 held last fire. D14-16 closed.
+  DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 GRAPH=1 NOMTP HYBRID=0
+  bench_code c=2 out=256 reps=3 vs 47.7.
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 2 256 3
+  ```
+
+RESULT -> Paris OK. c2 avg=best 24.3 t/s
+  agg=48.5 wall~10.6s. Log:
+  results/logs/l26_w4a8_c2_hold_20260821T073611Z.log
+
+VERDICT -> GO. c2 holds. Score stays c1 25.0.
+
+---
+
+### 2026-08-21za - LOOP 27: K12 N-pad 96->128 D17
+
+CONTEXT -> NEXT PICK K12. Dual with LOOP 26.
+  Isolated bar 1.10x. Not a serve change.
+
+CONFIG -> IMG=int8g-v0260 ZE_AFFINITY_MASK=1
+  EXTRA_SHAPES=gdn_ba_pad:5120:128
+  ONLY_SHAPES=gdn_ba,gdn_ba_pad ONLY_MS=1,8,256
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l27-k12 \
+    ./bin/gpu-run --card 1 env EXTRA_SHAPES=gdn_ba_pad:5120:128 \
+    ONLY_SHAPES=gdn_ba,gdn_ba_pad ONLY_MS=1,8,256 \
+    bench_w4a8_shapes.py
+  ```
+
+RESULT -> N=96 M=1 w4a16 0.0380 ms 1.1%roof;
+  N=128 0.0389 ms 1.4%roof. Wall tied. 6s.
+  Log: results/logs/k12_gdnba_pad128_20260821T073611Z.log
+  CSV: results/logs/k12_gdnba_pad128_20260821T073611Z.user.csv
+
+VERDICT -> NO-GO as 1.10x. Packet D17. Keep
+  ba BF16. Next: K13 GROUP=32 vs 128. Do not
+  demote 25.0 / 31.9. Do not bake.

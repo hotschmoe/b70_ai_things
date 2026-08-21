@@ -16408,3 +16408,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. e2e lm_head INT4 still open.
 
+### 2026-08-21z - LOOP 26: attach c2 agg 48.5
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+
+### 2026-08-21za - LOOP 27: K12 N-pad 96->128 D17
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Keep ba BF16.
+

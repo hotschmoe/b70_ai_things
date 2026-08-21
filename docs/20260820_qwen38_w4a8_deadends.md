@@ -209,3 +209,17 @@ Retry if: an instantiated XE_DPAS_TT M=8 rectangular subgroup + VNNI16
   B-operand copy atom is isolated-faster than K1 Path H by >=1.10x at
   M=1,4,8 (ms, not GB/s of a fatter s8 file). Then e2e.
 Related: K5 / kernels/SYCLTLA_SCAFFOLD.md steps 2-3
+
+---
+
+## D17 -- 2026-08-21 -- N-pad gdn_ba 96->128 does not leave the cliff
+
+Closed: padding GDN in_proj_ba N=96 to 128 as an isolated/e2e speed trick
+Evidence: LOOP 27 / 2026-08-21za. M=1 w4a16 N=96 0.0380 ms 6.5 GB/s 1.1%roof;
+  N=128 0.0389 ms 8.4 GB/s 1.4%roof. Wall tied. Still <4% of 581.
+  w4a8_full remains ~0.65x bf16. Log: k12_gdnba_pad128_20260821T073611Z.log.
+Why it is dead: tiny-N / launch bound, not missing N%16. Extra 32 columns
+  do not buy a 1.10x wall. Keep ba BF16 as 151 already does.
+Retry if: a kernel with a real N=96 fast path is 1.10x vs current at equal
+  useful N=96 (not padded FLOPs). Isolated first.
+Related: K12 / GDN in_proj_ba

@@ -1,0 +1,80 @@
+gpu-run: [w4a8-l27-k12] acquired card(s) 1 -> bash -c 
+set -o pipefail
+REPO=/mnt/vm_8tb/github/b70_ai_things
+ROOT=/mnt/vm_8tb/b70
+IMG=vllm-xpu-env:int8g-v0260
+SO=$ROOT/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+CARD=1
+docker rm -f k12_gdnba 2>/dev/null || true
+docker run --rm --name k12_gdnba   --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path   --ipc=host --shm-size 8g --entrypoint bash   -e CUDA_VISIBLE_DEVICES= -e ZE_AFFINITY_MASK=$CARD   -e B70_XPU_C_SO=$SO   -e CKPT=/models/qwen3.6-27b/w4a8-sqgptq   -e OUT_CSV=/mnt/vm_8tb/github/b70_ai_things/results/logs/k12_gdnba_pad128_20260821T073611Z.csv   -e ONLY_SHAPES=gdn_ba,gdn_ba_pad   -e EXTRA_SHAPES=gdn_ba_pad:5120:128   -e ONLY_MS=1,8,256   -v $ROOT:$ROOT -v $REPO:$REPO -v $REPO/models/files:/models   $IMG -c 'source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+    export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:$LD_LIBRARY_PATH
+    python3 /mnt/vm_8tb/github/b70_ai_things/vllm/w4a8/bench_w4a8_shapes.py'
+
+torch 2.12.0+xpu xpu True device0 Intel(R) Arc(TM) Pro B70 Graphics SO /mnt/vm_8tb/b70/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+CDLL OK /mnt/vm_8tb/b70/w8a8_kernel_v0240_fusedq/_xpu_C.abi3.so
+  op int4_gemm_w4a8: True
+  op int4_gemm_w4a16: True
+  op int8_gemm_w8a8: True
+  op int8_gemm_w8a16: True
+  op int8_gemm_w8a8_fusedq: True
+  op dynamic_per_token_int8_quant: True
+act-quant: _xpu_C.dynamic_per_token_int8_quant
+CKPT=/models/qwen3.6-27b/w4a8-sqgptq GROUP=128 MS=[1, 8, 256]
+BW_CEIL=581 GB/s
+
+================ gdn_ba  K=5120 N=96  i4 0.2 MB  roof 0.0004 ms @ 581 GB/s ================
+  weights: synthetic packed (96, 640) torch.int32 scale (96, 40)
+      M path                ms     GB/s     TOPS   %roof   xBF16     relerr src        
+      1 bf16            0.0635     15.5     0.02    2.7%    1.00   0.00e+00 synthetic  
+      1 w4a16           0.0380      6.5     0.03    1.1%    1.67   2.93e-03 synthetic  
+      1 w4a8_full       0.0953      2.6     0.01    0.4%    0.67   8.70e-03 synthetic  
+      1 w4a8_op         0.0473      5.2     0.02    0.9%    1.34   2.77e-04 synthetic  
+      1 w8a16           0.0362     13.6     0.03    2.3%    1.76   6.36e-03 synthetic  
+      1 w8a8_full       0.0958      5.1     0.01    0.9%    0.66   1.11e-02 synthetic  
+      1 w8a8_fusedq     0.0620      7.9     0.02    1.4%    1.02   1.11e-02 synthetic  
+      8 bf16            0.0634     15.5     0.12    2.7%    1.00   0.00e+00 synthetic  
+      8 w4a16           0.0400      6.1     0.20    1.1%    1.58   2.69e-03 synthetic  
+      8 w4a8_full       0.0974      2.5     0.08    0.4%    0.65   8.49e-03 synthetic  
+      8 w4a8_op         0.0473      5.2     0.17    0.9%    1.34   2.67e-04 synthetic  
+      8 w8a16           0.0359     13.7     0.22    2.4%    1.77   6.60e-03 synthetic  
+      8 w8a8_full       0.0913      5.4     0.09    0.9%    0.69   1.04e-02 synthetic  
+      8 w8a8_fusedq     0.0632      7.8     0.12    1.3%    1.00   1.04e-02 synthetic  
+    256 bf16            0.0615     16.0     4.09    2.7%    1.00   0.00e+00 synthetic  
+    256 w4a16           0.0460      5.3     5.48    0.9%    1.34   2.90e-03 synthetic  
+    256 w4a8_full       0.0940      2.6     2.68    0.5%    0.65   9.32e-03 synthetic  
+    256 w4a8_op         0.0499      4.9     5.04    0.8%    1.23   2.78e-04 synthetic  
+    256 w8a16           0.0383     12.8     6.57    2.2%    1.61   7.02e-03 synthetic  
+    256 w8a8_full       0.0946      5.2     2.66    0.9%    0.65   1.12e-02 synthetic  
+    256 w8a8_fusedq     0.0620      7.9     4.06    1.4%    0.99   1.12e-02 synthetic  
+
+================ gdn_ba_pad  K=5120 N=128  i4 0.3 MB  roof 0.0006 ms @ 581 GB/s ================
+  weights: synthetic packed (128, 640) torch.int32 scale (128, 40)
+      M path                ms     GB/s     TOPS   %roof   xBF16     relerr src        
+      1 bf16            0.0616     21.3     0.02    3.7%    1.00   0.00e+00 synthetic  
+      1 w4a16           0.0389      8.4     0.03    1.4%    1.58   3.50e-03 synthetic  
+      1 w4a8_full       0.0953      3.4     0.01    0.6%    0.65   9.15e-03 synthetic  
+      1 w4a8_op         0.0472      6.9     0.03    1.2%    1.31   3.11e-04 synthetic  
+      1 w8a16           0.0356     18.4     0.04    3.2%    1.73   6.67e-03 synthetic  
+      1 w8a8_full       0.0906      7.2     0.01    1.2%    0.68   1.16e-02 synthetic  
+      1 w8a8_fusedq     0.0596     11.0     0.02    1.9%    1.03   1.16e-02 synthetic  
+      8 bf16            0.0620     21.1     0.17    3.6%    1.00   0.00e+00 synthetic  
+      8 w4a16           0.0396      8.3     0.27    1.4%    1.57   2.88e-03 synthetic  
+      8 w4a8_full       0.0927      3.5     0.11    0.6%    0.67   9.13e-03 synthetic  
+      8 w4a8_op         0.0473      6.9     0.22    1.2%    1.31   2.70e-04 synthetic  
+      8 w8a16           0.0374     17.5     0.28    3.0%    1.66   7.14e-03 synthetic  
+      8 w8a8_full       0.0924      7.1     0.11    1.2%    0.67   1.12e-02 synthetic  
+      8 w8a8_fusedq     0.0605     10.8     0.17    1.9%    1.03   1.12e-02 synthetic  
+    256 bf16            0.0607     21.6     5.53    3.7%    1.00   0.00e+00 synthetic  
+    256 w4a16           0.0383      8.6     8.77    1.5%    1.59   2.88e-03 synthetic  
+    256 w4a8_full       0.1040      3.2     3.23    0.5%    0.58   9.27e-03 synthetic  
+    256 w4a8_op         0.0511      6.4     6.57    1.1%    1.19   2.79e-04 synthetic  
+    256 w8a16           0.0386     17.0     8.70    2.9%    1.57   7.06e-03 synthetic  
+    256 w8a8_full       0.0957      6.8     3.50    1.2%    0.63   1.13e-02 synthetic  
+    256 w8a8_fusedq     0.0632     10.4     5.31    1.8%    0.96   1.13e-02 synthetic  
+
+=== K1 GATE (M=1,8 x gate_up,down_proj) ===
+shape          M path                ms     GB/s     TOPS   %roof   xBF16
+
+CSV /mnt/vm_8tb/github/b70_ai_things/results/logs/k12_gdnba_pad128_20260821T073611Z.csv  n=42
+DONE_K1_MATRIX
+gpu-run: [w4a8-l27-k12] done in 6s (exit 0)
