@@ -48,12 +48,12 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 101 (DSpark+LMHEAD attach c1 34.1 hold). 100 NOMTP lmhead32 27.0. |
-| Last JOURNAL heading | `2026-08-21abw` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 102 (operator DISARM 15m scheduler). 101 DSpark+LMHEAD 34.1. 100 NOMTP 27.0. |
+| Last JOURNAL heading | `2026-08-21abx` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 15m loop | ARMED `01a021be5649`. Attach `:18082` lmhead32 + `:18083` dspark7-lmhead32 if Up. |
+| 15m loop | DISARMED. Was `01a021be5649`. Operator stop 2026-08-21T1637Z. |
 | Next pick | Hold LMHEAD pair. Do not GRAPH=1 sglang until GRAPH=0 coherent. Do not k=3/4 / MAXSEQS=2. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. Do not promote 27.0 as replacing 25.0. Do not promote 38.8 as replacing 34.7. |
 | Blocked on | nothing. `:18082` GRAPH=1 NOMTP LMHEAD=1 c1 27.0. `:18083` GRAPH=1 DSpark k=7 LMHEAD=1. |
 | 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
@@ -585,16 +585,11 @@ start under `gpu-run`, write LOOP-STARTED with log path and pid.
 | this file, living header only | bump Last loop / Next pick / scores / 30m loop id |
 | RESEARCH_TODO.md campaign blurb | one line if Next pick or a north-star number moved |
 
-### 15m armed loop (was 30m; operator 2026-08-21)
+### 15m loop -- DISARMED 2026-08-21T1637Z
 
-Scheduler `01a021be5649` fires every **15m**. One fire = one or **two**
-verdicts when both cards can work (live W4A8 serve attach + card1
-kernel), or LOOP-STARTED for a long GPU job. If a card is HELD by this
-campaign, ATTACH (do not start a second job on that card). If GPU work
-will exceed 15m, start under `gpu-run`, write LOOP-STARTED with log
-path and pid, commit+push, return. Do not sit idle. Foreign lease ->
-CPU-only. DD PARKED. P2PACCESS=0. W4A8 files already exist; do not
-re-run 151 unless NEXT PICK is a new scheme.
+Was scheduler `01a021be5649` every 15m. Operator stop LOOP 102.
+`scheduler_list` is empty. LMHEAD pair left Up. Do not re-arm unless
+the operator asks. DD PARKED. P2PACCESS=0.
 
 Do **not** rewrite sections 4-12 of this file to narrate a loop.
 

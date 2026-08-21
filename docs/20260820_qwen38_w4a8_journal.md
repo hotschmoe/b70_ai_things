@@ -3238,3 +3238,25 @@ RESULT -> Paris exact. 391 exact. c1
 
 VERDICT -> GO as hold of same config.
   Do not replace 34.7.
+
+---
+
+### 2026-08-21abx - LOOP 102: DISARM 15m scheduler
+
+CONTEXT -> operator: stop the loop.
+  Last attach LOOP 100-101. LMHEAD pair
+  Up. DD PARKED. P2PACCESS=0.
+
+CONFIG -> scheduler 01a021be5649 every 15m
+
+COMMAND ->
+  ```
+  scheduler_delete 01a021be5649
+  scheduler_list
+  ```
+
+RESULT -> cancelled. scheduler_list empty.
+  Serves left Up. leases free.
+
+VERDICT -> GO. 15m loop DISARMED. Do not
+  re-arm unless the operator asks.
