@@ -48,19 +48,19 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 103 (GRAPH=0 TP=2 MAXLEN=262144 hotschmoe-dd c1 3.7). 102 DISARM 15m. |
-| Last JOURNAL heading | `2026-08-21aby` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 104 (operator dual 1-card: Ornith MixedCal-v2 :18080 + NVFP4 27B :18081). 103 TP=2 262k stopped. |
+| Last JOURNAL heading | `2026-08-21abz` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 15m loop | DISARMED. Was `01a021be5649`. Operator stop 2026-08-21T1637Z. |
-| Next pick | Live GRAPH=0 TP=2 `:18080` hotschmoe-dd @262144. Do not GRAPH=1 TP=2 (D19). Do not MTP (D14). Do not shelf-promote 3.7. Do not demote 25.0 / 34.7. Do not promote 27.0 as replacing 25.0. |
-| Blocked on | nothing. `:18080` GRAPH=0 TP=2 PUSH_AR hotschmoe-dd. KV 543k tokens. c1 3.7. |
+| Next pick | Dual 1-card coding pair is live. Do not GRAPH=1 TP=2 (D19). Do not steal either replica. Do not demote 25.0 / 34.7. |
+| Blocked on | nothing. Card 0 `:18080` Ornith MixedCal-v2 MTP1 131k. Card 1 `:18081` 3.6 NVFP4 MTP5 100k. |
 | 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
 | Best W4A8 isolated | Path H M=1 down_proj g128 0.079 ms / 565 GB/s / 97% of 581. |
 | Best W4A8 e2e 3.8 | GRAPH=1 DSpark k=7 `bench_code` c1 **34.7** (coherent, pos0 69%, mean_len 2.80). k=4 is 33.5. k=3 is 31.0. NOMTP honesty **25.0**. K8 int4 lm_head g32 NOMTP **27.0** (1.08x, coherent, below 1.10x bar). GRAPH=0 DSpark 14.6. TP=2 GRAPH=0 3.7. TP=2 GRAPH=1 D19. MTP3 61.7 withdrawn (D14). |
 | DSpark INT | off-shelf FP8 drafter GRAPH=1: k-sweep 7>4>3. pos0 69% / 2.80 / 34.7. No night train. |
-| DD | TRIAL on `:18080` as `hotschmoe-dd` = 3.8 W4A8-gptq GRAPH=0 TP=2 @262144. Not shelf. Not NVFP4. |
+| DD | PARKED. Operator dual 1-card: Ornith `:18080` + NVFP4 27B `:18081`. W4A8 TP=2 262k trial stopped. |
 
 ---
 

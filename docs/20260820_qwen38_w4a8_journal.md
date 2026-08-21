@@ -3305,3 +3305,45 @@ VERDICT -> GO as long-ctx load-gate.
   Not a speed DD. Do not shelf-promote.
   Do not GRAPH=1 TP=2 (D19). Honesty
   25.0 / spec 34.7 unchanged.
+
+---
+
+### 2026-08-21abz - LOOP 104: dual 1-card Ornith + NVFP4
+
+CONTEXT -> operator: serve EXACT MixedCal-v2
+  on GPU0 (max ctx?) and best NVFP4/W4A16
+  27B on GPU1 at ~100k. Stop W4A8 TP=2.
+  P2PACCESS=0. 15m DISARMED.
+
+CONFIG -> card0 :18080 f01e24f6 GPTQ
+  MixedCal-v2 MTP1 DraftINT4 UTIL=0.90
+  MAXLEN=131072 block=64 language-only
+  card1 :18081 int8g-v0251 3.6 NVFP4
+  GRAPH=1 MTP5 MAXLEN=100352 UTIL=0.95
+  fp8 KV embed-INT8
+
+COMMAND ->
+  ```
+  hf download SergiioB/Ornith-1.5-35B-A3B-GPTQ-Int4-sym-G128-MTP-BF16-MixedCal-v2 \
+    --local-dir models/files/ornith-1.5-35b-a3b/gptq-int4-mixedcal-v2
+  docker rm -f b70_daily_0
+  ./bin/gpu-run --card 1 env CARD=1 PORT=18081 NAME=nvfp4_27b \
+    bash rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh start
+  ./bin/gpu-run --card 0 env UTIL=0.90 DRAFT_INT4=1 MAXLEN=131072 NAME=ornith_35b \
+    bash vllm/cookbook_campaign/launch.sh ornith15-gptq mtp1 off 18080 0
+  ```
+
+RESULT -> MixedCal-v2 24.455 GB + 785 MTP.
+  Ornith UTIL=0.85 131k NO-GO (KV 1.86 GiB,
+  est max 81600). UTIL=0.90 GO: weight 21.8
+  GiB, KV 3.37 GiB / 151713 tok, c1 66.1
+  best 70.3. Paris in-text. 391 continuation.
+  NVFP4 HEALTHY 198s. KV 144408. c1 64.5
+  best 64.6. Paris/391 exact.
+
+VERDICT -> GO as coding pair. Highest
+  Ornith MTP1 ctx on this box is 131k
+  advertised / 151k KV. 262k is cookbook
+  no-spec + explicit kv-cache-memory, not
+  this MTP1 replica. W4A16 27B is slower
+  (30.8); NVFP4 is the 100k pick.

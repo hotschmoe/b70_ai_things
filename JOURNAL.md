@@ -16720,3 +16720,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. 15m loop DISARMED. Serves left Up.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Long-ctx load-gate. Not a speed DD.
 
+### 2026-08-21abz - LOOP 104: dual 1-card Ornith MixedCal-v2 + NVFP4 27B
+
+See `docs/20260820_qwen38_w4a8_journal.md`. :18080 Ornith MTP1 131k c1 66.1; :18081 NVFP4 100k c1 64.5.
+

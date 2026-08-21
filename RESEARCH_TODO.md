@@ -24,7 +24,7 @@
 > K8 e2e int4 lm_head g32 NOMTP c1 **27.0** (1.08x vs 25.0, coherent, below 1.10x).
 > DSpark+LMHEAD k=7 warm attach c1 31.1-38.8 (latest 34.1); PP @2k 2635. Hold LMHEAD pair. Do not replace 34.7.
 > 15m loop DISARMED 2026-08-21 (was 01a021be5649). Do not re-arm unless operator asks.
-> LOOP 103: GRAPH=0 TP=2 `:18080` hotschmoe-dd MAXLEN=262144 KV 543k c1 3.7. Not shelf. Do not GRAPH=1 TP=2 (D19).
+> LOOP 104: dual 1-card. Ornith MixedCal-v2 `:18080` MTP1 131k KV 151k c1 66.1; 3.6 NVFP4 `:18081` 100k KV 144k c1 64.5. W4A8 TP=2 262k trial stopped.
 > Do not night-train. Do not demote 25.0 / 34.7 / 31.9. Do not promote 27.0 as honesty.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang

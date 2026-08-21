@@ -4,7 +4,7 @@
 # Usage:
 #   bash vllm/cookbook_campaign/launch.sh TRACK MODE CACHE [PORT] [CARD]
 #
-# TRACK: dense27-gptq | moe35-gptq | dense38-gptq | dense27-autoround | moe35-autoround
+# TRACK: dense27-gptq | moe35-gptq | dense38-gptq | dense27-autoround | moe35-autoround | ornith15-gptq
 # MODE:  no-spec | mtp1 | mtp2 | mtp4
 # CACHE: on | off
 # PORT:  default 8000
@@ -72,6 +72,16 @@ case "$TRACK" in
     KVDTYPE="fp8_e5m2"
     TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
     ;;
+  ornith15-gptq)
+    # EXACT SergiioB MixedCal-v2. Image f01e24f6. KV auto (not fp8). MTP1 default.
+    HOST_CKPT="$MODELS_FILES/ornith-1.5-35b-a3b/gptq-int4-mixedcal-v2"
+    SERVED="${SERVED:-Ornith-1.5-35B-A3B-GPTQ-Int4-MixedCal-v2}"
+    QUANT_FLAG="gptq"
+    IMAGE="${IMAGE:-$PUBLIC_IMAGE_38}"
+    KVDTYPE="auto"
+    TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
+    BLOCK="${BLOCK:-64}"
+    ;;
   moe35-autoround)
     HOST_CKPT="$MODELS_FILES/qwen3.6-35b-a3b/int4-autoround"
     SERVED="qwen36-35b-a3b-int4-autoround-mtp"
@@ -82,7 +92,7 @@ case "$TRACK" in
     TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
     ;;
   *)
-    echo "TRACK must be dense27-gptq|moe35-gptq|dense38-gptq|dense27-autoround|moe35-autoround" >&2
+    echo "TRACK must be dense27-gptq|moe35-gptq|dense38-gptq|dense27-autoround|moe35-autoround|ornith15-gptq" >&2
     exit 2
     ;;
 esac
@@ -113,7 +123,7 @@ case "$MODE" in
     else
       GPU_UTIL="${UTIL:-0.90}"
     fi
-    if [[ "$TRACK" == moe* ]]; then GPU_UTIL="${UTIL:-0.85}"; fi
+    if [[ "$TRACK" == moe* || "$TRACK" == ornith* ]]; then GPU_UTIL="${UTIL:-0.85}"; fi
     ;;
   *)
     echo "MODE must be no-spec|mtp1|mtp2|mtp4" >&2
@@ -168,6 +178,7 @@ if [ -n "$KVDTYPE" ] && [ "$KVDTYPE" != "auto" ] && [ "$KVDTYPE" != "0" ]; then
   SERVE_CMD+=" --kv-cache-dtype $KVDTYPE"
 fi
 if [ "$LANGUAGE_ONLY" = 1 ]; then SERVE_CMD+=" --language-model-only"; fi
+if [ -n "${BLOCK:-}" ]; then SERVE_CMD+=" --block-size $BLOCK"; fi
 if [ "$SPEC_USE" = 1 ]; then
   SERVE_CMD+=' --speculative-config "$SPEC_JSON"'
 fi
