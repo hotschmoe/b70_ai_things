@@ -16315,3 +16315,9 @@ VERDICT -> File census GO. Next: GRAPH=0
   until load-gate. Do not start DD.
   P2PACCESS=0.
 
+### 2026-08-21d - LOOP 4: W4A8 campaign journal + 30m loop
+
+See `docs/20260820_qwen38_w4a8_journal.md` (this
+campaign's journal from here on). Arming /loop 30m.
+Next fire = GRAPH=0 smoke, then every 30m. DD PARKED.
+

@@ -18,7 +18,8 @@ later. Extract every native Intel path. There is **no public 3.8 W4A8
 to download**; we produce it.
 
 1. Read this whole file, then `docs/20260820_qwen38_w4a8_loops.md`
-   (NEXT PICK), then `docs/20260820_qwen38_w4a8_deadends.md`.
+   (NEXT PICK), then `docs/20260820_qwen38_w4a8_deadends.md`, then
+   `docs/20260820_qwen38_w4a8_journal.md` bottom.
 2. `./bin/gpu-run --status`. Both cards must be free or you wait.
    Do **not** start `vllm/daily_driver_serve.sh`. P2PACCESS=0.
 3. **Day-1 parallel (the whole point of two cards):**
@@ -47,10 +48,12 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 3 (K0 file census GO). 151 fire 1 GO. K1 matrix GO. |
-| Last JOURNAL heading | `2026-08-21c` |
+| Last loop | 4 (campaign journal + 30m loop arm) |
+| Last JOURNAL heading | `2026-08-21d` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
+| 30m loop | ARMING this turn (`/loop 30m`, fire immediately then every 30m, durable) |
 | Next pick | GRAPH=0 vLLM smoke on card 1 of `w4a8-rtn-gdn` (K0 dispatch + Paris/fib). Clone 3.6 serve to `vllm/w4a8/`. Do not start GPTQ fire 2 until load-gated. |
 | Blocked on | nothing. Cards free. Artifact on disk. |
 | 3.8 W4A8 artifact | `models/files/qwen3.8-27b/w4a8-rtn-gdn` (RTN, 20.616 GiB, 256 int4 packed + 144 GDN I8). GPTQ not started. |
@@ -85,8 +88,8 @@ no-spec % of DRAM roof is the honesty metric.
 1. This file (living header + sections 8, 10, 13).
 2. `docs/20260820_qwen38_w4a8_loops.md` -- last 3 loops + NEXT PICK.
 3. `docs/20260820_qwen38_w4a8_deadends.md` -- do not retry a closed packet.
-4. JOURNAL.md **bottom**. Headings `2026-08-20` and any W4A8 / DSpark /
-   3.8 / INT8 tags.
+4. `docs/20260820_qwen38_w4a8_journal.md` **bottom**. Root JOURNAL.md
+   is a one-line pointer only.
 5. Skim, do not re-derive:
    - `sglang/W4A8_PLAN.md` + `sglang/W4A8_BUILD.md` (3.6 hybrid, ABI,
      calling convention).
@@ -575,11 +578,23 @@ start under `gpu-run`, write LOOP-STARTED with log path and pid.
 
 | dest | what |
 |---|---|
-| JOURNAL.md bottom | `### YYYY-MM-DD<letter> - LOOP N: <one line>`. CONTEXT / CONFIG / COMMAND / RESULT / VERDICT |
+| `docs/20260820_qwen38_w4a8_journal.md` bottom | full CONTEXT / CONFIG / COMMAND / RESULT / VERDICT |
+| JOURNAL.md bottom | one-line pointer: `### YYYY-MM-DD<letter> - LOOP N: see docs/20260820_qwen38_w4a8_journal.md` |
 | `docs/20260820_qwen38_w4a8_loops.md` | `## LOOP N` block below |
 | `docs/20260820_qwen38_w4a8_deadends.md` | only if a path is closed |
-| this file, living header only | bump Last loop / Next pick / scores |
+| this file, living header only | bump Last loop / Next pick / scores / 30m loop id |
 | RESEARCH_TODO.md campaign blurb | one line if Next pick or a north-star number moved |
+
+### 30m armed loop
+
+A `/loop 30m` (scheduler, durable, fire-immediately then every 30m)
+owns this campaign while the operator leaves it armed. One fire = one
+verdict or a LOOP-STARTED handoff. If a card is HELD by this campaign,
+ATTACH (read the log; do not start a second job on that card). If GPU
+work will exceed 30m, start under `gpu-run`, write LOOP-STARTED with
+log path and pid, commit+push, return. Commit and push at every
+verdict or LOOP-STARTED. Do not sit idle for 25 minutes. Foreign
+lease -> CPU-only. DD PARKED. P2PACCESS=0.
 
 Do **not** rewrite sections 4-12 of this file to narrate a loop.
 
@@ -675,6 +690,7 @@ When 151 fire 1 finishes: census, then a GRAPH=0 vLLM smoke on card 1
 ## 16. Pointers
 
 - This campaign: `docs/20260820_qwen38_w4a8_campaign.md`
+- Campaign journal: `docs/20260820_qwen38_w4a8_journal.md`
 - Loops: `docs/20260820_qwen38_w4a8_loops.md`
 - Dead-ends: `docs/20260820_qwen38_w4a8_deadends.md`
 - Parked A-E: `docs/20260820_b70_bw_campaigns.md`
