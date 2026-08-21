@@ -29,8 +29,12 @@ Do not start DD. P2PACCESS=0. One GPU pick at a time.
 | **E** | DSpark accept 2.45 -> ~3.3 | Does not raise GB/s; sells more tokens per walk. |
 
 F (Intel-shaped W4A8 / XMX) and G (4x MoE shopping) are **after** A-E
-unless the operator jumps. W4A4 integer kernels stay note-taking until
-W4A8 M=1 is not a trap (quant_methods.md Table A).
+unless the operator jumps. **JUMPED 2026-08-20:** F is now the headline
+campaign `docs/20260820_qwen38_w4a8_campaign.md` (3.8 produce-on-card0 /
+kernels-on-card1, accuracy later). A-E are PARKED while that window
+owns the cards; their levers are absorbed as K7/K6/K9/K5/K17 there.
+W4A4 integer kernels stay note-taking until W4A8 M=1 is not a trap
+(quant_methods.md Table A).
 
 Each campaign: one hypothesis, G1, one metric (`bench_code` c1 and a
 kernel BW probe where relevant), HE+ only if weights or sampling change.

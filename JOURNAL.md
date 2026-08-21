@@ -16180,3 +16180,43 @@ RESULT -> A-E serial. F = W4A8 is the XMX
 VERDICT -> Plan parked until LOOP 1. Do
   not mix levers. Do not start DD.
 
+### 2026-08-20bv - W4A8 full-send successor campaign written
+
+CONTEXT -> Operator: full-send Qwen3.8-27B W4A8,
+  extract every Intel path, accuracy later,
+  dual-card (gpu0 quant / gpu1 kernels),
+  fresh vLLM/sglang/llamacpp W4A8 container,
+  train DSpark INT if it beats FP. New Grok
+  session should be able to start from one
+  doc. No public 3.8 W4A8 on HF.
+
+CONFIG -> docs only plus a 3.8 copy of the
+  149 two-group producer. No GPU. Cards free.
+
+COMMAND -> wrote
+  docs/20260820_qwen38_w4a8_campaign.md
+  docs/20260820_qwen38_w4a8_loops.md
+  docs/20260820_qwen38_w4a8_deadends.md
+  vllm/w4a8/README.md
+  scripts/151_quantize_qwen38_27b_w4a8.sh
+  (copy of 149; SRC=qwen3.8-27b/bf16;
+  IMG=int8g-v0260; default DATAFREE=1 ->
+  models/files/qwen3.8-27b/w4a8-rtn-gdn;
+  DATAFREE=0 -> w4a8-gptq-gdn).
+  RESEARCH_TODO headline swapped to this
+  campaign. A-E parked.
+
+RESULT -> Successor standing prompt with
+  Path H (hybrid W4A16-decode / W4A8-prefill,
+  3.6 proven 27.3) vs Path X (native XMX all
+  M) vs Path S (s4 DPAS TOPS). K0-K19 loop
+  catalog. 13 imported dead-ends (AutoRound,
+  grouped _int_mm, joint_matrix, compile hang,
+  NVFP4-as-XMX, P2PACCESS, etc). Byte-budget
+  EXPECTED only until 151 census.
+
+VERDICT -> New session fires dual-card
+  day-1. Do not bake images first. Do not
+  start DD. P2PACCESS=0. ASCII. Journal
+  each loop.
+
