@@ -1,0 +1,89 @@
+gpu-run: [w4a8-l21-k5] acquired card(s) 1 -> bash -c 
+set -o pipefail
+LOG="results/logs/k5_sycltla_m148_20260821T070719Z.log"
+IMG=vllm-xpu-env:v0240
+SRC=/mnt/vm_8tb/b70/sycl-tla
+BENCH=/mnt/vm_8tb/b70/sycl-tla-bench
+CARD=1
+docker rm -f k5_sycltla 2>/dev/null || true
+docker run --rm --name k5_sycltla \
+  --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
+  --entrypoint bash \
+  -e CUDA_VISIBLE_DEVICES= \
+  -e ZE_AFFINITY_MASK="$CARD" \
+  -e ONEAPI_DEVICE_SELECTOR=level_zero:0 \
+  -v "$SRC:/src" -v "$BENCH:/bench" \
+  "$IMG" -c "
+    source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1
+    python3 /bench/bench.py --build /src/build_bmg/examples --examples bf16_s8,f16_s8 --iters 50
+  "
+
+# sycl-tla microbench | roofline 608 GB/s | iters=50
+# device: ONEAPI_DEVICE_SELECTOR=level_zero:0
+
+## bf16_s8  (02_bmg_gemm_mixed_dtype/02_bmg_gemm_bf16_s8_bf16)  A=2B B=1B C=4B  extra=['--mode=1']
+example    shape        M      N      K     us/it     GB/s   wtGB/s  %roof  TFLOP/s     chk
+bf16_s8    qkv_fused    1   8192   5120   4831.40      8.7      8.7    1.4     0.02  Passed
+bf16_s8    qkv_fused    2   8192   5120   4845.40      8.7      8.7    1.4     0.04  Passed
+bf16_s8    qkv_fused    4   8192   5120   4830.00      8.7      8.7    1.4     0.07  Passed
+bf16_s8    qkv_fused    8   8192   5120   4832.30      8.8      8.7    1.4     0.14  Passed
+bf16_s8    qkv_fused   16   8192   5120   4832.90      8.8      8.7    1.5     0.28  Passed
+bf16_s8    q_proj       1   6144   5120   4077.40      7.7      7.7    1.3     0.01  Passed
+bf16_s8    q_proj       2   6144   5120   4058.70      7.8      7.8    1.3     0.03  Passed
+bf16_s8    q_proj       4   6144   5120   4049.00      7.8      7.8    1.3     0.06  Passed
+bf16_s8    q_proj       8   6144   5120   4054.10      7.8      7.8    1.3     0.12  Passed
+bf16_s8    q_proj      16   6144   5120   4037.60      7.9      7.8    1.3     0.25  Passed
+bf16_s8    o_proj       1   5120   6144   4819.80      6.5      6.5    1.1     0.01  Passed
+bf16_s8    o_proj       2   5120   6144   4811.90      6.6      6.5    1.1     0.03  Passed
+bf16_s8    o_proj       4   5120   6144   4821.80      6.6      6.5    1.1     0.05  Passed
+bf16_s8    o_proj       8   5120   6144   4798.70      6.6      6.6    1.1     0.10  Passed
+bf16_s8    o_proj      16   5120   6144   4794.20      6.7      6.6    1.1     0.21  Passed
+bf16_s8    gate_up      1  34816   5120  22839.80      7.8      7.8    1.3     0.02  Passed
+bf16_s8    gate_up      2  34816   5120  22837.30      7.8      7.8    1.3     0.03  Passed
+bf16_s8    gate_up      4  34816   5120  22811.20      7.8      7.8    1.3     0.06  Passed
+bf16_s8    gate_up      8  34816   5120  22814.30      7.9      7.8    1.3     0.12  Passed
+bf16_s8    gate_up     16  34816   5120  22791.50      7.9      7.8    1.3     0.25  Passed
+bf16_s8    down         1   5120  17408  13471.00      6.6      6.6    1.1     0.01  Passed
+bf16_s8    down         2   5120  17408  13456.70      6.6      6.6    1.1     0.03  Passed
+bf16_s8    down         4   5120  17408  13414.00      6.7      6.6    1.1     0.05  Passed
+bf16_s8    down         8   5120  17408  13437.90      6.7      6.6    1.1     0.11  Passed
+bf16_s8    down        16   5120  17408  13385.60      6.7      6.7    1.1     0.21  Passed
+bf16_s8    kv_small     1   1024   5120   4021.40      1.3      1.3    0.2     0.00  Passed
+bf16_s8    kv_small     2   1024   5120   4016.70      1.3      1.3    0.2     0.01  Passed
+bf16_s8    kv_small     4   1024   5120   4022.50      1.3      1.3    0.2     0.01  Passed
+bf16_s8    kv_small     8   1024   5120   4021.90      1.3      1.3    0.2     0.02  Passed
+bf16_s8    kv_small    16   1024   5120   4009.90      1.4      1.3    0.2     0.04  Passed
+
+## f16_s8  (02_bmg_gemm_mixed_dtype/02_bmg_gemm_f16_s8_f16_tensorwise)  A=2B B=1B C=4B  extra=[]
+example    shape        M      N      K     us/it     GB/s   wtGB/s  %roof  TFLOP/s     chk
+f16_s8     qkv_fused    1   8192   5120   4924.70      8.5      8.5    1.4     0.02  Passed
+f16_s8     qkv_fused    2   8192   5120   4909.80      8.6      8.5    1.4     0.03  Passed
+f16_s8     qkv_fused    4   8192   5120   4887.00      8.6      8.6    1.4     0.07  Passed
+f16_s8     qkv_fused    8   8192   5120   4898.10      8.6      8.6    1.4     0.14  Passed
+f16_s8     qkv_fused   16   8192   5120   4888.70      8.7      8.6    1.4     0.28  Passed
+f16_s8     q_proj       1   6144   5120   4148.00      7.6      7.6    1.2     0.01  Passed
+f16_s8     q_proj       2   6144   5120   4130.30      7.6      7.6    1.3     0.03  Passed
+f16_s8     q_proj       4   6144   5120   4111.30      7.7      7.7    1.3     0.06  Passed
+f16_s8     q_proj       8   6144   5120   4114.30      7.7      7.6    1.3     0.12  Passed
+f16_s8     q_proj      16   6144   5120   4110.10      7.8      7.7    1.3     0.24  Passed
+f16_s8     o_proj       1   5120   6144   4947.70      6.4      6.4    1.0     0.01  Passed
+f16_s8     o_proj       2   5120   6144   4910.40      6.4      6.4    1.1     0.03  Passed
+f16_s8     o_proj       4   5120   6144   4895.10      6.5      6.4    1.1     0.05  Passed
+f16_s8     o_proj       8   5120   6144   4892.70      6.5      6.4    1.1     0.10  Passed
+f16_s8     o_proj      16   5120   6144   4846.10      6.6      6.5    1.1     0.21  Passed
+f16_s8     gate_up      1  34816   5120  22758.40      7.8      7.8    1.3     0.02  Passed
+f16_s8     gate_up      2  34816   5120  22748.60      7.8      7.8    1.3     0.03  Passed
+f16_s8     gate_up      4  34816   5120  22759.70      7.9      7.8    1.3     0.06  Passed
+f16_s8     gate_up      8  34816   5120  22770.00      7.9      7.8    1.3     0.12  Passed
+f16_s8     gate_up     16  34816   5120  22748.00      7.9      7.8    1.3     0.25  Passed
+f16_s8     down         1   5120  17408  13437.70      6.6      6.6    1.1     0.01  Passed
+f16_s8     down         2   5120  17408  13456.30      6.6      6.6    1.1     0.03  Passed
+f16_s8     down         4   5120  17408  13460.20      6.6      6.6    1.1     0.05  Passed
+f16_s8     down         8   5120  17408  13438.30      6.7      6.6    1.1     0.11  Passed
+f16_s8     down        16   5120  17408  13392.60      6.7      6.7    1.1     0.21  Passed
+f16_s8     kv_small     1   1024   5120   4113.90      1.3      1.3    0.2     0.00  Passed
+f16_s8     kv_small     2   1024   5120   4083.70      1.3      1.3    0.2     0.01  Passed
+f16_s8     kv_small     4   1024   5120   4072.70      1.3      1.3    0.2     0.01  Passed
+f16_s8     kv_small     8   1024   5120   4073.70      1.3      1.3    0.2     0.02  Passed
+f16_s8     kv_small    16   1024   5120   4062.90      1.3      1.3    0.2     0.04  Passed
+gpu-run: [w4a8-l21-k5] done in 96s (exit 0)

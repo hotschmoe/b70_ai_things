@@ -791,3 +791,45 @@ VERDICT -> GO as measurement. Isolated 1.10x
   Next: K5 VNNI16. Do not retry MTP3.
   Do not start DD. Do not bake. Do not
   demote 25.0 / 31.9.
+
+---
+
+### 2026-08-21u - LOOP 21: K5 stock sycl-tla D16
+
+CONTEXT -> 30m fire 01a021be5649. NEXT PICK
+  K5 VNNI16 isolated vs K1, bar 1.10x or
+  packet. Card1 free. GPTQ :18082 Up.
+  D14/D15 closed. DD PARKED. P2PACCESS=0.
+  Stock sycl-tla mixed-dtype examples are
+  the scaffold baseline, not the paper kernel.
+
+CONFIG -> IMG=vllm-xpu-env:v0240
+  ZE_AFFINITY_MASK=1
+  ONEAPI_DEVICE_SELECTOR=level_zero:0
+  binaries build_bmg examples 02 mixed-dtype
+  EXAMPLES=bf16_s8,f16_s8 ITERS=50
+  roofline in harness 608 GB/s.
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l21-k5 \
+    ./bin/gpu-run --card 1 \
+    docker run --entrypoint bash vllm-xpu-env:v0240 \
+      python3 /bench/bench.py --examples bf16_s8,f16_s8 --iters 50
+  ```
+
+RESULT -> 96s, all Disposition Passed.
+  down M=1 bf16_s8 13471 us vs K1 w4a16
+  79 us (171x slower). gate_up M=1 22840 us
+  vs 161 us (142x). M=1..16 wall flat
+  (down ~13.4 ms, gate_up ~22.8 ms).
+  ~1.1-1.4% of 608. f16_s8 == bf16_s8.
+  Log: results/logs/k5_sycltla_m148_20260821T070719Z.log
+  GPTQ :18082 still Up.
+
+VERDICT -> NO-GO as 1.10x. Packet D16.
+  Paper rectangular TiledMMA is the retry,
+  not a re-run of example 02. Next: K10
+  prefill on live :18082. Do not retry
+  MTP3/pad-M. Do not start DD. Do not bake.
+  Do not demote 25.0 / 31.9.

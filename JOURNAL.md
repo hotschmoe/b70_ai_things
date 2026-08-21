@@ -16388,3 +16388,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. K16 concurrent row complete. Score s
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
+### 2026-08-21u - LOOP 21: K5 stock sycl-tla D16
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+

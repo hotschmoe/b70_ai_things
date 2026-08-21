@@ -192,3 +192,20 @@ Why it is dead: still BW-bound; dummy rows buy wasted FLOPs at the same
 Retry if: a fused kernel shows M=8 TOPS >> 8x M=1 TOPS at equal bytes
   (real XMX occupancy), then re-bench isolated before any e2e pad.
 Related: K4 isolated / Path X M-tile
+
+---
+
+## D16 -- 2026-08-21 -- stock sycl-tla mixed-dtype is not K5
+
+Closed: treating sycl-tla example 02 (bf16_s8 / f16_s8, stock TileShape
+  256x256x32) as the VNNI16 / arXiv:2508.06753 win vs oneDNN Path H
+Evidence: LOOP 21 / 2026-08-21u. down M=1 13.47 ms vs K1 w4a16 0.079 ms
+  (171x slower). gate_up M=1 22.84 vs 0.161 ms (142x). Wall flat across
+  M=1..16. ~1.1-1.4% of 608 GB/s. Log: k5_sycltla_m148_20260821T070719Z.log.
+  Not the overnight "D16 GRAPH=1 hang" (that packet is D09 here).
+Why it is dead: large-M stock tiles + launch tax, not a missing GPU.
+  This is not the paper's rectangular small-M TiledMMA / VNNI16 B-pack.
+Retry if: an instantiated XE_DPAS_TT M=8 rectangular subgroup + VNNI16
+  B-operand copy atom is isolated-faster than K1 Path H by >=1.10x at
+  M=1,4,8 (ms, not GB/s of a fatter s8 file). Then e2e.
+Related: K5 / kernels/SYCLTLA_SCAFFOLD.md steps 2-3
