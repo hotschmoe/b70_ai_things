@@ -16380,3 +16380,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
+### 2026-08-21s - LOOP 19: K16 c=8 agg 145.8 G1 8/8
+
+See `docs/20260820_qwen38_w4a8_journal.md`. K16 concurrent row complete. Score stays 25.0 c1.
+

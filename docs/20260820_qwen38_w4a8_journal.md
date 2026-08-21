@@ -689,3 +689,61 @@ VERDICT -> GO for K16 c=4. Score stays
   or isolated M=4,8 (stop RTN on card1).
   Do not retry MTP3. Do not start DD.
   Do not bake. Do not demote 25.0 / 31.9.
+
+---
+
+### 2026-08-21s - LOOP 19: K16 c=8 agg 145.8 G1 8/8
+
+CONTEXT -> 30m fire 01a021be5649. NEXT PICK
+  K16 c=8. Live :18082 capture max was 4.
+  Stop and restart CAPSIZES=1,2,4,8,
+  re-gate c1 vs 25.0, then c=8. D14 closed.
+  DD PARKED. P2PACCESS=0. RTN :18081 left Up.
+
+CONFIG -> GRAPH=1 B70_NOMTP=1 MAXSEQS=8
+  CAPSIZES=1,2,4,8 HYBRID=0 NOMM=1
+  PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  P2PACCESS=0 IMG=int8g-v0260
+  bench_code c1 then c8 out=256 reps=3
+  plus 8x LRU chat 128 G1.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l19-cap8 \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 B70_NOMTP=1 B70_W4A8_HYBRID=0 NOMM=1 \
+      MAXSEQS=8 CAPSIZES=1,2,4,8 \
+      PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0 CARD=0 P2PACCESS=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 8 256 3
+  ```
+
+RESULT -> HEALTHY 279s. New compile cache
+  f6dd77a115 (capture 8). vllm
+  cudagraph_capture_sizes [1,2,4,8].
+  Built-in gen probe Paris OK. Completions
+  Paris OK. c1 avg=25.0 best=25.0 wall~10.2s
+  (holds). c8 avg=18.2 best=18.5 agg=145.8
+  wall~16.0s.
+  Per-stream 18.2/25.0 = 0.728x.
+  Agg 145.8/25.0 = 5.83x.
+  G1 8/8 OK (top e ~0.11-0.14).
+  Log: results/logs/l19_w4a8_gptq_capsizes8_20260821T060557Z.log
+  18081 still RTN. Leases free.
+
+VERDICT -> GO for K16 c=8. Concurrent row
+  complete (c2/c4/c8). Score stays c1 25.0.
+  Do not treat 145.8 agg as a c1 north-star.
+  Next: K4 isolated M=4,8 on card1 (stop
+  RTN). Leave GPTQ score serve. Do not
+  retry MTP3. Do not start DD. Do not bake.
+  Do not demote 25.0 / 31.9.
