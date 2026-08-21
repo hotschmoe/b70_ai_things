@@ -1901,3 +1901,57 @@ RESULT -> Paris exact. 391 exact. c1 avg=35.2
 VERDICT -> GO as hold. Leave both Up.
   Do not GRAPH=1 sglang. Do not demote
   34.7 / 25.0.
+
+---
+
+### 2026-08-21aac - LOOP 55: attach NOMTP c1 hold 25.0
+
+CONTEXT -> 15m dual fire. NEXT PICK hold
+  vLLM pair. Both serves Up. Attach, do
+  not steal. DD PARKED. P2PACCESS=0.
+  Do not GRAPH=1 sglang.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 vs 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.2s. Log:
+  l55_w4a8_nomtp_attach_20260821T105042Z.log
+
+VERDICT -> GO. NOMTP score holds.
+
+---
+
+### 2026-08-21aad - LOOP 56: attach DSpark c1 35.5
+
+CONTEXT -> dual with LOOP 55. Hold isolated
+  spec vs 34.7. D14-D19 closed.
+
+CONFIG -> :18083 GRAPH=1 DSpark k=7
+  MAXSEQS=1 MAXLEN=4096
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+  bench_code c1 vs 34.7
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 1 256 3
+  ```
+
+RESULT -> Paris exact. 391 exact. c1 avg=35.5
+  best=38.9 wall~7.5s. mean_len=2.77
+  tok_rate=25.2%. Log:
+  l56_w4a8_dspark_attach_20260821T105043Z.log
+
+VERDICT -> GO as hold. Leave both Up.
+  Do not GRAPH=1 sglang. Do not demote
+  34.7 / 25.0.
