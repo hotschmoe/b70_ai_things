@@ -48,8 +48,8 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 97 (DSpark+LMHEAD attach c1 31.5 hold). 96 NOMTP lmhead32 27.0. |
-| Last JOURNAL heading | `2026-08-21abs` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 99 (DSpark+LMHEAD attach c1 37.0 hold). 98 NOMTP lmhead32 27.0. |
+| Last JOURNAL heading | `2026-08-21abu` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
