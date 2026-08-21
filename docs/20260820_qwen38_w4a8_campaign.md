@@ -48,17 +48,17 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 10 (ATTACH GPTQ: layer 49/64) |
-| Last JOURNAL heading | `2026-08-21j` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 12 (GPTQ GRAPH=0 load-gate GO) |
+| Last JOURNAL heading | `2026-08-21l` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 30m loop | ARMED `01a021be5649` |
-| Next pick | ATTACH GPTQ (do not start a second 151). If Stage B GO: wrap_vlm_config.py then census. GRAPH=1 only after stop of `:18081`. |
-| Blocked on | GPTQ SequentialPipeline; layer 49/64 at attach. ~25 min + save left. |
-| 3.8 W4A8 artifact | RTN `w4a8-rtn-gdn` serving. GPTQ OUT `w4a8-gptq-gdn` not written yet. |
+| Next pick | GRAPH=1 smoke of GPTQ (`qwen38_w4a8_gptq` on :18082): stop GRAPH=0 first, then GRAPH=1. Leave RTN GRAPH=0 on :18081 as control, or stop it if card 1 is needed. |
+| Blocked on | nothing. Both GRAPH=0 serves Up. |
+| 3.8 W4A8 artifact | RTN `w4a8-rtn-gdn` :18081. GPTQ `w4a8-gptq-gdn` :18082. Both 20.616 GiB, VLM-wrapped, qkvz INT8. |
 | Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. |
-| Best W4A8 e2e 3.8 | GRAPH=0 TP=1 eager wall ~6.3 tok/s @128 gen (includes TTFT). Not bench_code c1. |
+| Best W4A8 e2e 3.8 | GRAPH=0 TP=1 load-gate GO on RTN and GPTQ (Paris/391/fib). RTN eager wall ~6.3 tok/s. |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 

@@ -351,3 +351,62 @@ RESULT -> RUNNING. 308 Quantizing lines,
 VERDICT -> RUNNING. May finish before
   next 30m fire. Then wrap_vlm_config
   (in_proj_qkvz) + census. Do not steal.
+
+---
+
+### 2026-08-21k - LOOP 11: 151 GPTQ fire 2 GO + census
+
+CONTEXT -> GPTQ gpu-run exited 0 in 7133s.
+  NEXT PICK was wrap + census after Stage B.
+
+CONFIG -> DATAFREE=0 gptq selective 128
+  OUT=models/files/qwen3.8-27b/w4a8-gptq-gdn
+  wrap_vlm_config.py (qkvz + ba ignore)
+
+COMMAND -> Stage B already in 151 log.
+  docker chown + rm RAW. wrap_vlm_config.py.
+  CPU census.
+
+RESULT -> calib+quant 6757s. pack 256 int4
+  + 144 I8 GDN. graft vis 333 mtp 15.
+  20.616 GiB. Census matches RTN byte
+  table (MLP I32 7.969, GDN I8 5.156,
+  hot 18.967). VLM wrapper + in_proj_qkvz
+  on INT8 group. is_prepacked_w4a8 True.
+  Log: results/logs/151_qwen38_w4a8_20260821_010557.log
+
+VERDICT -> GO. GPTQ artifact load-ready.
+
+---
+
+### 2026-08-21l - LOOP 12: GPTQ GRAPH=0 smoke GO
+
+CONTEXT -> Census green. Card 0 free. RTN
+  GRAPH=0 stays on card 1 :18081.
+
+CONFIG -> GRAPH=0 NOMM=1 B70_NOMTP=1
+  PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  HYBRID=0 P2PACCESS=0 IMG=int8g-v0260
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l11-gptq-smoke \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=0 NOMM=1 B70_NOMTP=1 PORT=18082 \
+      NAME=qwen38_w4a8_gptq DEVICE=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  ```
+
+RESULT -> HEALTHY 61s. Paris exact.
+  17*23=391. Fib iterative a,b=0,1.
+  XPUW4A8IntLinearKernel +
+  XPUInt8ScaledMMLinearKernel.
+  Log: results/logs/l11_w4a8_gptq_graph0_20260821T030559Z.log
+  Serve left Up :18082. RTN still :18081.
+
+VERDICT -> GO. Both artifacts load-gated.
+  Next: GRAPH=1 on GPTQ (stop :18082 first).
+  Do not start DD. Do not bake.

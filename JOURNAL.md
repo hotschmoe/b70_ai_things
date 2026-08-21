@@ -16348,3 +16348,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. ~1h left.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. ~25 min + save left.
 
+### 2026-08-21k - LOOP 11: GPTQ W4A8 artifact GO
+
+See `docs/20260820_qwen38_w4a8_journal.md`. 20.616 GiB census GO.
+
+### 2026-08-21l - LOOP 12: GPTQ GRAPH=0 smoke GO
+
+See `docs/20260820_qwen38_w4a8_journal.md`. :18082 Up. Paris/391/fib.
+
