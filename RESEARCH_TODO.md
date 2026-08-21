@@ -22,7 +22,7 @@
 > NOMTP honesty 25.0 / prefill @2k 2880. Spec k=7 c1 34.7 / prefill 2615.
 > sglang 3.8 Path H GRAPH=0: float16 GDN crash; bf16 GARBAGE.
 > K8 e2e int4 lm_head g32 NOMTP c1 **27.0** (1.08x vs 25.0, coherent, below 1.10x).
-> DSpark+LMHEAD k=7 warm attach c1 31.1-38.8 (latest 37.0); PP @2k 2635. Hold LMHEAD pair. Do not replace 34.7.
+> DSpark+LMHEAD k=7 warm attach c1 31.1-38.8 (latest 34.1); PP @2k 2635. Hold LMHEAD pair. Do not replace 34.7.
 > Do not night-train. Do not demote 25.0 / 34.7 / 31.9. Do not promote 27.0 as honesty.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang
