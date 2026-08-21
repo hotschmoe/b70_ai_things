@@ -16568,3 +16568,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. K8 NOMTP holds 27.0.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold. PP tax ~9%.
 
+### 2026-08-21aan - LOOP 66: attach NOMTP lmhead32 c1 hold 27.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. K8 NOMTP holds 27.0.
+
+### 2026-08-21aao - LOOP 67: attach DSpark+LMHEAD c1 33.4
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold (restore-class vs 34.7).
+
