@@ -16335,3 +16335,8 @@ log results/logs/151_qwen38_w4a8_20260821_010557.log
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Not bench_code c1.
 
+### 2026-08-21h - LOOP 8: ATTACH GPTQ layer 9/64
+
+See `docs/20260820_qwen38_w4a8_journal.md`. pid=353913 still.
+~2.5h left. Do not start a second 151.
+

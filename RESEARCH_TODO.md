@@ -12,7 +12,7 @@
 > K1 matrix GO (Path H M=1 ~95-97% of 581 GB/s). Campaign journal:
 > `docs/20260820_qwen38_w4a8_journal.md`. GRAPH=0 load-gate GO
 > (`qwen3.8-27b-W4A8-rtn-gdn` :18081, GRAPH=0 eager ~6.3 tok/s wall).
-> GPTQ fire 2 RUNNING card 0. Next: attach 151 / GRAPH=1 after stop.
+> GPTQ fire 2 RUNNING card 0 (layer 9/64, ~2.5h left). Next: attach 151.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang
 > W4A8 images AFTER first numbers, not before. A-E in

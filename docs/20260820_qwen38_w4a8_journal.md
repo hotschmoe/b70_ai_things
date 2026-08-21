@@ -266,3 +266,32 @@ RESULT -> warm 6.39 tok/s. dec128 6.34 tok/s
 VERDICT -> GO as an attach number. Do not
   demote 31.9 / 43.8 / 65.08. GRAPH=1 is
   the decode lever. Leave serve Up.
+
+---
+
+### 2026-08-21h - LOOP 8: ATTACH GPTQ layer 9/64
+
+CONTEXT -> 30m fire. NEXT PICK attach 151 GPTQ.
+  Do not start a second 151. Serve :18081 Up.
+
+CONFIG -> card0 HELD w4a8-151-gptq pid=353913
+  since 01:05:57. q151_quant Up 29 min.
+  DATAFREE=0 gptq selective 128.
+
+COMMAND -> read log
+  results/logs/151_qwen38_w4a8_20260821_010557.log
+  ps -p 353913; docker ps q151_quant
+
+RESULT -> RUNNING. 62 GPTQ module steps,
+  layers 0-9 of 0-63. Last:
+  layers.9.mlp.down_proj. Mean step 11.8s
+  max 54s (down_proj). ~2.8 min/layer ->
+  ~2.5h remaining + save. No Traceback.
+  OUT not written yet. :18081 still
+  qwen3.8-27b-W4A8-rtn-gdn. 18080 down.
+  gate_proj recon error ~5e3 vs out_proj
+  0.44 (scale, not a stop).
+
+VERDICT -> RUNNING. ETA ~2.5h. Next fire
+  attach again. Do not steal. Do not GRAPH=1
+  while this serve is the research holder.
