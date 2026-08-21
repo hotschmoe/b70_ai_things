@@ -16344,3 +16344,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. pid=353913 still.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. ~1h left.
 
+### 2026-08-21j - LOOP 10: ATTACH GPTQ layer 49/64
+
+See `docs/20260820_qwen38_w4a8_journal.md`. ~25 min + save left.
+

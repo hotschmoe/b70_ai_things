@@ -323,3 +323,31 @@ RESULT -> RUNNING. 188 Quantizing lines,
 VERDICT -> RUNNING. Faster than LOOP 8
   ETA. Next fire attach; if DONE then
   wrap_vlm_config + census. Do not steal.
+
+---
+
+### 2026-08-21j - LOOP 10: ATTACH GPTQ layer 49/64
+
+CONTEXT -> 30m fire. NEXT PICK attach 151.
+  pid=353913 elapsed 89m. :18081 Up.
+
+CONFIG -> same GPTQ job. Do not start a
+  second 151.
+
+COMMAND -> parse
+  results/logs/151_qwen38_w4a8_20260821_010557.log
+
+RESULT -> RUNNING. 308 Quantizing lines,
+  layers 0-49. Last:
+  layers.49.linear_attn.in_proj_z at
+  02:35:34Z. 307 GPTQ steps, mean 11.8s
+  max 56s, sum 60 min compute. Pace +19
+  layers / 30m. Remaining ~15 layers
+  * ~1.5 min ~ 25 min + save. No
+  Traceback. OUT not on disk. Serve
+  still qwen3.8-27b-W4A8-rtn-gdn.
+  18080 down.
+
+VERDICT -> RUNNING. May finish before
+  next 30m fire. Then wrap_vlm_config
+  (in_proj_qkvz) + census. Do not steal.
