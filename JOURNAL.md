@@ -16468,3 +16468,15 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Keep SPECTOK=7.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Spec path restored.
 
+### 2026-08-21zo - LOOP 41: attach NOMTP c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
+
+### 2026-08-21zp - LOOP 42: MAXSEQS=2 c1 32.4 / c2 agg 47.2
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Keep MAXSEQS=1 for isolated spec.
+
+### 2026-08-21zq - LOOP 43: restore MAXSEQS=1 c1 33.8
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Isolated spec restored.
+

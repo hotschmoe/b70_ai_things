@@ -1478,3 +1478,100 @@ RESULT -> HEALTHY 61s (k=7 compile cache).
 VERDICT -> GO. Spec path restored. Leave
   both Up. Next: MAXSEQS>1 if KV fits.
   Do not demote 34.7 / 25.0.
+
+---
+
+### 2026-08-21zo - LOOP 41: attach NOMTP c1 hold 25.0
+
+CONTEXT -> 15m dual fire. NEXT PICK MAXSEQS=2
+  on card 1. Attach :18082. DD PARKED.
+  P2PACCESS=0. D14-D19 closed.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 out=256 reps=3 vs 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.3s. Log:
+  l41_w4a8_tp1_c1_hold_20260821T092056Z.log
+
+VERDICT -> GO. NOMTP score holds.
+
+---
+
+### 2026-08-21zp - LOOP 42: MAXSEQS=2 c1 32.4 / c2 47.2
+
+CONTEXT -> NEXT PICK MAXSEQS>1 if KV fits.
+  GRAPH=1 DSpark k=7 MAXLEN=4096 UTIL=0.90.
+  Leave :18082. Garbage-test. vs 34.7 and
+  NOMTP c2 48.5.
+
+CONFIG -> GRAPH=1 TP=1 SPECTOK=7
+  MAXSEQS=2 CAPSIZES=1,2 MAXLEN=4096 UTIL=0.90
+  DEVICE=1 PORT=18083 KV auto P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_dspark bash \
+    vllm/w4a8/serve_qwen38_w4a8_dspark.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l42-dspark-ms2 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXSEQS=2 CAPSIZES=1,2 \
+      MAXLEN=4096 UTIL=0.90 PORT=18083 DEVICE=1 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 1 256 3
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 2 256 3
+  ```
+
+RESULT -> HEALTHY 285s. KV fitted. Paris
+  exact. 391 exact. LRU G1_OK. c1 avg=32.4
+  best=34.1 = 0.93x vs 34.7. c2 avg=23.6
+  agg=47.2 vs NOMTP c2 48.5 = 0.97x.
+  pos0=64.2% mean_len=2.65. Logs:
+  l42_w4a8_dspark_mseqs2_20260821T092056Z.log
+  l42_w4a8_dspark_mseqs2_bench_20260821T092603Z.log
+
+VERDICT -> GO as KV-fit. NO-GO as 1.10x.
+  Restore MAXSEQS=1. Do not demote 34.7 / 25.0.
+
+---
+
+### 2026-08-21zq - LOOP 43: restore MAXSEQS=1 STARTED
+
+CONTEXT -> MAXSEQS=2 lost isolated c1.
+  Restore spec champion. :18082 stays.
+
+CONFIG -> GRAPH=1 SPECTOK=7 MAXSEQS=1
+  CAPSIZES=1 MAXLEN=4096 UTIL=0.90 PORT=18083
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l43-dspark-ms1 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXSEQS=1 CAPSIZES=1 \
+      MAXLEN=4096 UTIL=0.90 PORT=18083 DEVICE=1 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  ```
+
+RESULT -> HEALTHY 61s (cache). Paris exact.
+  c1 avg=33.8 best=35.9 wall~8.1s. Holds vs
+  34.7. Logs:
+  l43_w4a8_dspark_mseqs1_restore_20260821T092800Z.log
+  l43_w4a8_dspark_mseqs1_c1_20260821T092920Z.log
+
+VERDICT -> GO. Isolated spec restored.
+  Leave both Up. Next: SPECTOK=3 or hold.
+  Do not demote 34.7 / 25.0.
