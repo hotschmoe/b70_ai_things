@@ -48,13 +48,13 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 77 (DSpark+LMHEAD attach c1 32.3 hold). 76 NOMTP lmhead32 27.0. |
-| Last JOURNAL heading | `2026-08-21aay` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 79 (DSpark+LMHEAD attach c1 38.8 hold). 78 NOMTP lmhead32 27.0. |
+| Last JOURNAL heading | `2026-08-21aba` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 15m loop | ARMED `01a021be5649`. Attach `:18082` lmhead32 + `:18083` dspark7-lmhead32 if Up. |
-| Next pick | Hold LMHEAD pair. Do not GRAPH=1 sglang until GRAPH=0 coherent. Do not k=3/4 / MAXSEQS=2. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. Do not promote 27.0 as replacing 25.0. |
+| Next pick | Hold LMHEAD pair. Do not GRAPH=1 sglang until GRAPH=0 coherent. Do not k=3/4 / MAXSEQS=2. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. Do not promote 27.0 as replacing 25.0. Do not promote 38.8 as replacing 34.7. |
 | Blocked on | nothing. `:18082` GRAPH=1 NOMTP LMHEAD=1 c1 27.0. `:18083` GRAPH=1 DSpark k=7 LMHEAD=1. |
 | 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
 | Best W4A8 isolated | Path H M=1 down_proj g128 0.079 ms / 565 GB/s / 97% of 581. |
