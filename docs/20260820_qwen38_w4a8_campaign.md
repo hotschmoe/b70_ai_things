@@ -48,17 +48,17 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 15 (HYBRID=1 e2e 25.0 = HYBRID=0, NO-GO as speed win) |
-| Last JOURNAL heading | `2026-08-21o` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 16 (GRAPH=1 MTP3 61.7 is GARBAGE !!!!, D14; restored NOMTP 25.0) |
+| Last JOURNAL heading | `2026-08-21p` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 30m loop | ARMED `01a021be5649` |
-| Next pick | GRAPH=1 + MTP3 on GPTQ (stop `:18082`, `B70_NOMTP=0 MTPTOK=3`, HYBRID=0 to match the 25.0 config). Do not demote 25.0 / 31.9. |
-| Blocked on | nothing. GRAPH=1 HYBRID=1 GPTQ Up `:18082` (1.00x, not the score). RTN GRAPH=0 `:18081`. |
+| 30m loop | ARMED `01a021be5649` next ~2026-08-21T05:05:17Z |
+| Next pick | K16 c=2 on live GRAPH=1 NOMTP `:18082` (max_num_seqs=2). Do not retry MTP3 e2e (D14). Do not demote 25.0 / 31.9. |
+| Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` (score). RTN GRAPH=0 `:18081`. |
 | 3.8 W4A8 artifact | RTN :18081. GPTQ :18082. |
 | Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. |
-| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 `bench_code` c1 **25.0**. HYBRID=1 also 25.0 (NO-GO as 1.10x). |
+| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. MTP3 61.7 withdrawn (D14). |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 

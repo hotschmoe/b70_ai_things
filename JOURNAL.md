@@ -16368,3 +16368,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. GRAPH=1 GPTQ. Not 31.9.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 HYBRID=0.
 
+### 2026-08-21p - LOOP 16: GRAPH=1 MTP3 !!!! false 61.7 D14
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 NOMTP.
+

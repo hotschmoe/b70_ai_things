@@ -521,3 +521,79 @@ VERDICT -> NO-GO as e2e speed win.
   HYBRID=0 25.0. Split-M: decode may use
   either op at M=1. Next: MTP3. Do not
   demote 25.0 / 31.9.
+
+---
+
+### 2026-08-21p - LOOP 16: GRAPH=1 MTP3 !!!! false 61.7 D14
+
+CONTEXT -> 30m fire 01a021be5649. NEXT PICK
+  GRAPH=1 + MTP3 on GPTQ vs 25.0. HYBRID=1
+  :18082 was Up (equal, not the score).
+  Card 0 lease w4a8-l16-mtp3 from prior
+  fire; this fire ATTACH. P2PACCESS=0.
+  DD PARKED. Do not bake.
+
+CONFIG -> GRAPH=1 PIECEWISE capsizes 1,2,4
+  B70_NOMTP=0 MTPTOK=3 B70_W4A8_HYBRID=0
+  NOMM=1 CGRECLAIM=1000 PORT=18082
+  NAME=qwen38_w4a8_gptq DEVICE=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  speculative-config method=mtp n=3
+  P2PACCESS=0 IMG=int8g-v0260
+  Restore: same minus spec (B70_NOMTP=1).
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l16-mtp3 \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 B70_NOMTP=0 MTPTOK=3 B70_W4A8_HYBRID=0 NOMM=1 \
+      PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0 CARD=0 P2PACCESS=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  # then restore
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l16-restore \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 B70_NOMTP=1 B70_W4A8_HYBRID=0 NOMM=1 \
+      PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  ```
+
+RESULT -> MTP3 HEALTHY 340s (compile cache
+  80c41e5072; torch.compile 241s + 25s
+  drafter). Shim: Qwen3_5MultiTokenPredictor
+  forced unquantized; MTP shares embed/lm_head.
+  Built-in gen probe Paris OK at start.
+  Completions Paris exact, 17*23=391 exact.
+  Then fib continuation and chat/code
+  collapsed to "!!!!". bench_code c1
+  avg=61.7 best=61.8 t/s wall~4.1s
+  (61.7/25.0 = 2.47x). SpecDecoding:
+  mean accept length 4.00, 100% draft
+  accept, per-position 1.000,1.000,1.000.
+  LRU chat dump: n=256 top='!' frac=1.000
+  GARBAGE. After collapse even Paris
+  completions were bangs. Restore NOMTP
+  HEALTHY 56s, gen probe Paris OK.
+  Re-probes: Paris exact, 391 exact,
+  fib iterative a,b=0,1, LRU thinking
+  coherent (top='e' frac=0.123).
+  Logs: results/logs/l16_w4a8_gptq_mtp3_20260821T043551Z.log
+        results/logs/l16b_w4a8_gptq_nomtp_restore_20260821T045155Z.log
+  30m loop already ARMED 01a021be5649
+  next ~2026-08-21T05:05:17Z.
+
+VERDICT -> NO-GO as speed win. Packet D14.
+  61.7 withdrawn. Score stays GRAPH=1
+  HYBRID=0 NOMTP 25.0. Next: K16 c=2 on
+  the live restore, or isolated K4 M=4,8.
+  Do not retry MTP3 e2e without a
+  hypothesis. Do not start DD. Do not bake.
+  Do not demote 25.0 / 31.9.

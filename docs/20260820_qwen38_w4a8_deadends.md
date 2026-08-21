@@ -155,3 +155,25 @@ Closed: retry of the parked D18 emulation + auto-fp8-KV G1 combo as a
   W4A8 speed trick
 Evidence: W8A8 DSpark campaign living header. G1 garbage.
 Retry if: NEVER. K14 keeps auto/bf16 KV until a W4A8 c1 exists.
+
+---
+
+## D14 -- 2026-08-21 -- GRAPH=1 MTP3 3.8 W4A8 bench_code !!!! false 61.7
+
+Closed: claiming GRAPH=1 + grafted MTP n=3 as a 3.8 W4A8 speed win
+Evidence: LOOP 16 / 2026-08-21p. First Paris/391 completions OK. Then
+  chat/code collapsed to "!!!!". bench_code c1 avg=61.7 with SpecDecoding
+  100% accept / mean length 4.00 / per-position 1.000,1.000,1.000.
+  lib.sh 55% single-char gate: LRU n=256 top='!' frac=1.000 GARBAGE.
+  After restore GRAPH=1 B70_NOMTP=1: Paris/391/fib coherent again
+  (HEALTHY 56s). Logs: l16_w4a8_gptq_mtp3_20260821T043551Z.log,
+  l16b_w4a8_gptq_nomtp_restore_20260821T045155Z.log.
+Why it is dead: degenerate target body makes draft==target (the
+  documented 3.4x MTP false-win). 3.6 W4A8 shelf MTP=3 is a different
+  image/artifact (v0.25.1, GDN BF16).
+Retry if: coding dump garbage-test OK AND spec accept < 100% on a
+  non-repeated body AND bench_code c1 > 25.0. Do not retry as the next
+  pick without a hypothesis (graph capture vs spec batch, GDN INT8
+  hidden mismatch, v0.26 MTP). Isolated M=4,8 GEMM (K4 kernel half)
+  is still open and is not this packet.
+Related: K4 e2e MTP / K16 c>1
