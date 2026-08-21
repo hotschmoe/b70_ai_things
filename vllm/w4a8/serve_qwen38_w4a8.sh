@@ -62,6 +62,17 @@ else
   echo "=== PUSH_AR overlay OFF (TP=$TP PUSH_AR=${PUSH_AR:-0}) ==="
 fi
 
+# K8: runtime RTN int4 lm_head (3.6 sglang +7.9% decode). Default 0 until
+# gated vs GRAPH=1 NOMTP 25.0. PYTHONPATH last -e wins over shelf /opt/mtp_shim.
+if [ "${LMHEAD:-0}" = 1 ]; then
+  _K8="$REPO/vllm/w4a8/patches"
+  [ -f "$_K8/sitecustomize.py" ] || { echo "[!] LMHEAD=1 missing $_K8/sitecustomize.py" >&2; exit 1; }
+  export B70_EXTRA_MOUNTS="${B70_EXTRA_MOUNTS:+$B70_EXTRA_MOUNTS }${_K8}:/opt/w4a8_k8:ro"
+  # Last PYTHONPATH -e wins. Prepend k8 so DSpark compile-key + mtp_shim still chain.
+  export B70_EXTRA_ENV="${B70_EXTRA_ENV:+$B70_EXTRA_ENV }PYTHONPATH=/opt/w4a8_k8:/opt/compile_key_shim:/opt/push_ar:/opt/mtp_shim B70_W4A8_QUANT_LMHEAD=1 B70_W4A8_LMHEAD_GROUP=${LMHEAD_GROUP:-32}"
+  echo "=== LMHEAD=1 int4 lm_head RTN g${LMHEAD_GROUP:-32} via int4_gemm_w4a16 ==="
+fi
+
 echo "=== 3.8 W4A8 research serve SERVED=$SERVED GRAPH=$GRAPH NOMM=$NOMM DEVICE=$DEVICE PORT=$PORT TP=$TP ==="
-echo "=== IMG=$IMG CKPT=$CKPT P2PACCESS=$P2PACCESS HYBRID=$B70_W4A8_HYBRID NOMTP=$B70_NOMTP ==="
+echo "=== IMG=$IMG CKPT=$CKPT P2PACCESS=$P2PACCESS HYBRID=$B70_W4A8_HYBRID NOMTP=$B70_NOMTP LMHEAD=${LMHEAD:-0} ==="
 exec bash "$SHELF" "$ACTION"

@@ -1955,3 +1955,104 @@ RESULT -> Paris exact. 391 exact. c1 avg=35.5
 VERDICT -> GO as hold. Leave both Up.
   Do not GRAPH=1 sglang. Do not demote
   34.7 / 25.0.
+
+---
+
+### 2026-08-21aae - LOOP 57: attach NOMTP c1 hold 25.0
+
+CONTEXT -> 15m dual fire. NEXT PICK hold
+  vLLM pair. Both serves Up. Attach, do
+  not steal. DD PARKED. P2PACCESS=0.
+  Do not GRAPH=1 sglang.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 vs 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.3s. Log:
+  l57_w4a8_nomtp_attach_20260821T110541Z.log
+
+VERDICT -> GO. NOMTP score holds.
+
+---
+
+### 2026-08-21aaf - LOOP 58: attach DSpark c1 37.9
+
+CONTEXT -> dual with LOOP 57. Hold isolated
+  spec vs 34.7. D14-D19 closed.
+
+CONFIG -> :18083 GRAPH=1 DSpark k=7
+  MAXSEQS=1 MAXLEN=4096
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+  bench_code c1 vs 34.7
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 1 256 3
+  ```
+
+RESULT -> Paris exact. 391 exact. c1 avg=37.9
+  best=41.7 wall~6.1s. this-bench mean_len=3.15
+  tok_rate=30.7%. Log:
+  l58_w4a8_dspark_attach_20260821T110541Z.log
+
+VERDICT -> GO as hold of same config.
+  Do not replace 34.7 with 37.9.
+
+---
+
+### 2026-08-21aag - LOOP 59: K8 e2e int4 lm_head g32 27.0
+
+CONTEXT -> 15m fire after dual attach.
+  Isolated K8 already GO. 25.0 locked by
+  holds. 3.6 sglang LMHEAD=1 was +7.9%.
+  Runtime RTN, do not rewrite 151 (D12).
+  Keep DSpark :18083. DD PARKED. P2PACCESS=0.
+
+CONFIG -> GRAPH=1 TP=1 NOMTP HYBRID=0
+  LMHEAD=1 LMHEAD_GROUP=32 MAXSEQS=8
+  CAPSIZES=1,2,4,8 PORT=18082 DEVICE=0
+  SERVED=qwen3.8-27b-W4A8-gptq-lmhead32
+  CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn
+  IMG=int8g-v0260
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l59-lmhead \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 B70_NOMTP=1 B70_W4A8_HYBRID=0 NOMM=1 \
+      MAXSEQS=8 CAPSIZES=1,2,4,8 LMHEAD=1 LMHEAD_GROUP=32 \
+      PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0 CARD=0 \
+      P2PACCESS=0 CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-lmhead32 \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-lmhead32 1 256 3
+  ```
+
+RESULT -> HEALTHY 76s. RTN
+  language_model.lm_head N=248320 K=5120
+  g=32 int4 0.64GB bf16 kept 2.54GB.
+  apply hit M=8 then M=1. Completions
+  Paris exact, 391 exact, fib exact.
+  LRU bang=0. c1 avg=best 27.0 wall~9.5s
+  = 1.08x vs 25.0. Logs:
+  l59_w4a8_lmhead_graph1_20260821T111454Z.log
+  l59_w4a8_lmhead_c1_20260821T111454Z.log
+
+VERDICT -> GO as lever. NO-GO as 1.10x
+  score replacement. Leave LMHEAD=1 Up.
+  Do not demote 25.0. Next: LMHEAD=1 on
+  DSpark.

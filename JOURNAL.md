@@ -16532,3 +16532,15 @@ See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold.
 
+### 2026-08-21aae - LOOP 57: attach NOMTP c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
+
+### 2026-08-21aaf - LOOP 58: attach DSpark c1 37.9
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold (do not replace 34.7).
+
+### 2026-08-21aag - LOOP 59: K8 e2e int4 lm_head g32 c1 27.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. 1.08x vs 25.0; leave LMHEAD=1 Up.
+
