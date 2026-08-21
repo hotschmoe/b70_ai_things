@@ -48,17 +48,17 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 5 (GRAPH=0 load-gate GO) |
-| Last JOURNAL heading | `2026-08-21e` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 7 (GRAPH=0 attach ~6.3 tok/s). LOOP 6 GPTQ fire 2 STARTED. |
+| Last JOURNAL heading | `2026-08-21g` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 30m loop | ARMED `01a021be5649` |
-| Next pick | Card 0: GPTQ fire 2 (`DATAFREE=0 METHOD=gptq SMOOTHQUANT=selective`). Card 1: leave GRAPH=0 serve up OR GRAPH=1 A/B (stop first). |
-| Blocked on | nothing. GRAPH=0 serve Up `:18081`. |
-| 3.8 W4A8 artifact | `models/files/qwen3.8-27b/w4a8-rtn-gdn` (RTN, 20.616 GiB). VLM wrapper spliced. Fused `in_proj_qkvz` added to INT8 group. GPTQ not started. |
-| Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. gate_up 0.161 ms / 552 GB/s / 95%. |
-| Best W4A8 e2e 3.8 | GRAPH=0 TP=1 load-gate GO (Paris/391/fib). No tok/s yet. |
+| Next pick | ATTACH GPTQ on card 0 (do not start a second 151). Card 1: GRAPH=0 serve stays Up; GRAPH=1 A/B only after stop. |
+| Blocked on | GPTQ SequentialPipeline in flight (hours). |
+| 3.8 W4A8 artifact | RTN `w4a8-rtn-gdn` serving. GPTQ OUT `w4a8-gptq-gdn` not written yet. |
+| Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. |
+| Best W4A8 e2e 3.8 | GRAPH=0 TP=1 eager wall ~6.3 tok/s @128 gen (includes TTFT). Not bench_code c1. |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 

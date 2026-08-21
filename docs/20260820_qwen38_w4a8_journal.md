@@ -212,3 +212,57 @@ RESULT -> First start: AssertionError
 VERDICT -> GO. K0 dispatch+load-gate green.
   Leave GRAPH=0 up. GPTQ fire 2 is unblocked
   for card 0. Do not start DD. Do not bake.
+
+---
+
+### 2026-08-21f - LOOP 6: 151 GPTQ fire 2 STARTED
+
+CONTEXT -> 30m fire. Load-gate GO. NEXT PICK
+  card 0 GPTQ. Card 1 serve Up, leave it.
+
+CONFIG -> DATAFREE=0 METHOD=gptq
+  SMOOTHQUANT=selective SAMPLES=128 CARD=0
+  IMG=int8g-v0260
+  OUT=models/files/qwen3.8-27b/w4a8-gptq-gdn
+  P2PACCESS=0. DD parked.
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-151-gptq \
+    ./bin/gpu-run --card 0 \
+    env DATAFREE=0 METHOD=gptq SMOOTHQUANT=selective \
+      SAMPLES=128 CARD=0 \
+    bash scripts/151_quantize_qwen38_27b_w4a8.sh
+  ```
+
+RESULT -> STARTED. pid=353913. GDN hit 144/144.
+  selective-sq attn=16 mlp=64 mappings=80.
+  SequentialPipeline inferred. Same root
+  "Could not match re:.*linear_attn" red herring
+  as RTN. Log:
+  results/logs/151_qwen38_w4a8_20260821_010557.log
+  Hours remaining. Do not start a second 151.
+
+VERDICT -> STARTED. Next fire ATTACH this job.
+
+---
+
+### 2026-08-21g - LOOP 7: GRAPH=0 attach tok/s
+
+CONTEXT -> Card 1 serve already Up. Attach,
+  do not start a second serve. GPTQ on card 0.
+
+CONFIG -> :18081 qwen3.8-27b-W4A8-rtn-gdn
+  GRAPH=0 TP=1 eager HYBRID=0 NOMM=1
+
+COMMAND -> timed /v1/completions greedy
+  warm 8 tok, then 128 tok, then Paris 24.
+
+RESULT -> warm 6.39 tok/s. dec128 6.34 tok/s
+  (128 tok / 20.19s wall, includes TTFT).
+  Paris still "Paris." Not bench_code c1.
+  Honest GRAPH=0 eager 1-card wall.
+
+VERDICT -> GO as an attach number. Do not
+  demote 31.9 / 43.8 / 65.08. GRAPH=1 is
+  the decode lever. Leave serve Up.

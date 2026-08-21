@@ -16326,3 +16326,12 @@ Next fire = GRAPH=0 smoke, then every 30m. DD PARKED.
 See `docs/20260820_qwen38_w4a8_journal.md`. Paris/391/fib
 coherent. Serve Up :18081. GPTQ fire 2 unblocked.
 
+### 2026-08-21f - LOOP 6: 151 GPTQ fire 2 STARTED
+
+See `docs/20260820_qwen38_w4a8_journal.md`. pid=353913
+log results/logs/151_qwen38_w4a8_20260821_010557.log
+
+### 2026-08-21g - LOOP 7: GRAPH=0 attach ~6.3 tok/s
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Not bench_code c1.
+
