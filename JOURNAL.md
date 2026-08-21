@@ -16688,3 +16688,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. K8 NOMTP holds 27.0.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold vs 34.7.
 
+### 2026-08-21abr - LOOP 96: attach NOMTP lmhead32 c1 hold 27.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. K8 NOMTP holds 27.0.
+
+### 2026-08-21abs - LOOP 97: attach DSpark+LMHEAD c1 31.5
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold vs 34.7.
+
