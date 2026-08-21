@@ -48,14 +48,14 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 48 (DSpark attach c1 33.2 / prefill 2615). 47 NOMTP c1 25.0 / prefill 2880. |
-| Last JOURNAL heading | `2026-08-21zv` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 52 (DSpark k=7 restore c1 33.4). 51 sglang bf16 GARBAGE. 50 float16 crash. 49 NOMTP 25.0. |
+| Last JOURNAL heading | `2026-08-21zz` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 15m loop | ARMED `01a021be5649`. Attach `:18082` NOMTP + `:18083` k=7 if Up. |
-| Next pick | sglang 3.8 W4A8 Path H (stop DSpark to free card 1; keep `:18082` NOMTP). Or keep attaching. Do not k=3/4 / MAXSEQS=2 as speed. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. |
-| Blocked on | nothing. `:18082` GRAPH=1 NOMTP 25.0. `:18083` GRAPH=1 DSpark k=7 MAXSEQS=1. |
+| Next pick | Hold vLLM NOMTP+DSpark, or isolate sglang GDN dtype (not GRAPH=1). Do not GRAPH=1 sglang until GRAPH=0 coherent. Do not k=3/4 / MAXSEQS=2. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. |
+| Blocked on | nothing. `:18082` GRAPH=1 NOMTP 25.0. `:18083` GRAPH=1 DSpark k=7. |
 | 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
 | Best W4A8 isolated | Path H M=1 down_proj g128 0.079 ms / 565 GB/s / 97% of 581. |
 | Best W4A8 e2e 3.8 | GRAPH=1 DSpark k=7 `bench_code` c1 **34.7** (coherent, pos0 69%, mean_len 2.80). k=4 is 33.5. k=3 is 31.0. NOMTP honesty **25.0**. GRAPH=0 DSpark 14.6. TP=2 GRAPH=0 3.7. TP=2 GRAPH=1 D19. MTP3 61.7 withdrawn (D14). |

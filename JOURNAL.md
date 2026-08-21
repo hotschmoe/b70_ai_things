@@ -16500,3 +16500,19 @@ See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score and prefill hold.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold. Prefill tax ~9%.
 
+### 2026-08-21zw - LOOP 49: attach NOMTP c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
+
+### 2026-08-21zx - LOOP 50: sglang float16 GDN triton crash
+
+See `docs/20260820_qwen38_w4a8_journal.md`.
+
+### 2026-08-21zy - LOOP 51: sglang bf16 GARBAGE
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Do not GRAPH=1 sglang yet.
+
+### 2026-08-21zz - LOOP 52: restore DSpark k=7 c1 33.4
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec path restored.
+

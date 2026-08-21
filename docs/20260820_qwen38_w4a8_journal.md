@@ -1732,3 +1732,118 @@ VERDICT -> GO as hold. Spec decode wins
   e2e; prefill pays ~9% drafter tax. Leave
   both Up. Next: sglang Path H. Do not
   demote 34.7 / 25.0.
+
+---
+
+### 2026-08-21zw - LOOP 49: attach NOMTP c1 hold 25.0
+
+CONTEXT -> 15m dual fire. NEXT PICK sglang
+  Path H on card 1. Attach :18082. DD PARKED.
+  P2PACCESS=0. D05 no torch.compile AQ.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 vs 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.2s. Log:
+  l49_w4a8_nomtp_attach_20260821T100710Z.log
+
+VERDICT -> GO. NOMTP score holds.
+
+---
+
+### 2026-08-21zx - LOOP 50: sglang float16 GDN triton crash
+
+CONTEXT -> NEXT PICK sglang 3.8 Path H.
+  Stop DSpark. GRAPH=0 first. COMPILE=0
+  (D05). B70_XPU_W4A8=1 B70_XPU_W8A8=1.
+  IMG=sglang-xpu:mtp. --dtype float16
+  (w4a8 op emits fp16).
+
+CONFIG -> GRAPH=0 DEVICE=1 PORT=18083
+  SERVED=qwen3.8-27b-W4A8-gptq-sglang
+  CKPT=w4a8-gptq-gdn CTX=4096
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_dspark bash \
+    vllm/w4a8/serve_qwen38_w4a8_dspark.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l50-sglang \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=0 PORT=18083 DEVICE=1 \
+    bash sglang/serve_qwen38_w4a8.sh start
+  ```
+
+RESULT -> shims installed. Scheduler
+  CompilationError GDN Triton mismatched
+  col0 bf16 vs fp16. container exit.
+  Logs: l50_w4a8_sglang_graph0_20260821T100710Z.log
+        l50_w4a8_sglang_graph0_engine_20260821T100710Z.log
+
+VERDICT -> NO-GO as float16. Retry bf16.
+
+---
+
+### 2026-08-21zy - LOOP 51: sglang bf16 GARBAGE
+
+CONTEXT -> LOOP 50 hypothesis: 3.6 Path H
+  uses bfloat16. COMPILE=0. GRAPH=0.
+
+CONFIG -> DTYPE=bfloat16 GRAPH=0 PORT=18083
+  SERVED=qwen3.8-27b-W4A8-gptq-sglang
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l51-sglang \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=0 DTYPE=bfloat16 PORT=18083 DEVICE=1 \
+    bash sglang/serve_qwen38_w4a8.sh start
+  ```
+
+RESULT -> HEALTHY ~282s after Triton JIT.
+  Paris x2 garbage 'onatitable...猜到猜到'.
+  391 garbage. W4A8 layers did wire.
+  Log: l51_w4a8_sglang_bf16_20260821T101630Z.log
+
+VERDICT -> NO-GO as coherent sglang 3.8
+  Path H. Do not GRAPH=1 this body.
+  Restore vLLM DSpark.
+
+---
+
+### 2026-08-21zz - LOOP 52: restore DSpark k=7 STARTED
+
+CONTEXT -> sglang GARBAGE. Restore spec
+  champion. :18082 stays.
+
+CONFIG -> GRAPH=1 SPECTOK=7 MAXSEQS=1
+  MAXLEN=4096 UTIL=0.90 PORT=18083
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_sgl bash sglang/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l52-dspark \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXSEQS=1 MAXLEN=4096 \
+      UTIL=0.90 PORT=18083 DEVICE=1 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  ```
+
+RESULT -> HEALTHY 72s (cache). Paris exact.
+  c1 avg=33.4 best=34.1 wall~7.6s. Holds vs
+  34.7. Logs:
+  l52_w4a8_dspark_k7_restore_20260821T102148Z.log
+  l52_w4a8_dspark_k7_c1_20260821T102319Z.log
+
+VERDICT -> GO. Spec path restored. Leave
+  both vLLM Up. Do not GRAPH=1 sglang until
+  GRAPH=0 is coherent. Do not demote 34.7 / 25.0.
