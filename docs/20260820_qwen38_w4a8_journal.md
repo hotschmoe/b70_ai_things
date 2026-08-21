@@ -597,3 +597,40 @@ VERDICT -> NO-GO as speed win. Packet D14.
   Do not retry MTP3 e2e without a
   hypothesis. Do not start DD. Do not bake.
   Do not demote 25.0 / 31.9.
+
+---
+
+### 2026-08-21q - LOOP 17: K16 c=2 agg 47.7 G1 OK
+
+CONTEXT -> 30m fire 01a021be5649. NEXT PICK
+  K16 c=2 on live GRAPH=1 NOMTP :18082.
+  Attach, no third serve. D14 closed for
+  MTP3 e2e. P2PACCESS=0. DD PARKED.
+
+CONFIG -> :18082 qwen3.8-27b-W4A8-gptq-gdn
+  GRAPH=1 TP=1 HYBRID=0 NOMTP=1
+  speculative_config=None max_num_seqs=2
+  capture sizes 1,2,4. bench_code c=2
+  out=256 reps=3. Dual LRU chat 128 G1.
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 2 256 3
+  ```
+
+RESULT -> Paris completions OK (not bangs).
+  c2 avg=23.9 best=24.2 t/s | agg=47.7
+  | out~256 tok | wall~10.9s.
+  Per-stream 23.9/25.0 = 0.956x.
+  Agg 47.7/25.0 = 1.91x.
+  Dual LRU chat G1 OK (top e ~0.10-0.12).
+  18081 still RTN. Leases free.
+
+VERDICT -> GO for K16 c=2. Score stays
+  c1 25.0. Do not treat 47.7 agg as a
+  c1 north-star (not vs 31.9 / 65.08).
+  Next: MAXSEQS=8 restart then c=4, or
+  card1 isolated M=4,8. Do not retry
+  MTP3. Do not start DD. Do not bake.

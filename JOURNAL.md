@@ -16372,3 +16372,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 HYBRID=0.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 NOMTP.
 
+### 2026-08-21q - LOOP 17: K16 c=2 agg 47.7 G1 OK
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+
