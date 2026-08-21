@@ -155,3 +155,60 @@ RESULT -> scheduler `01a021be5649` 30m
 VERDICT -> GO (steer). Next loop starts
   on arm (fire_immediately), then every
   30m. Do not start DD. Do not bake.
+
+---
+
+### 2026-08-21e - LOOP 5: GRAPH=0 vLLM smoke load-gate GO
+
+CONTEXT -> 30m fire 01a021be5649. NEXT PICK
+  GRAPH=0 smoke of w4a8-rtn-gdn. Cards free.
+  18080 down. Artifact on disk as CausalLM
+  config with VLM tensor names.
+
+CONFIG -> IMG=int8g-v0260 TP=1 GRAPH=0
+  DTYPE=float16 NOMM=1 B70_NOMTP=1
+  B70_W4A8_HYBRID=0 P2PACCESS=0
+  PORT=18081 NAME=qwen38_w4a8_rtn
+  DEVICE=1 MAXLEN=8192 UTIL=0.85
+  CKPT=/models/qwen3.8-27b/w4a8-rtn-gdn
+  SERVED=qwen3.8-27b-W4A8-rtn-gdn
+  3.6 shelf serve.sh via vllm/w4a8/serve_qwen38_w4a8.sh
+  VLM wrapper spliced from bf16 (graft_qwen38 pattern).
+
+COMMAND ->
+  ```
+  python3 vllm/w4a8/wrap_vlm_config.py
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l5-smoke \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=0 NOMM=1 B70_NOMTP=1 PORT=18081 \
+      NAME=qwen38_w4a8_rtn P2PACCESS=0 \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  # first start EXITED 52s: fused in_proj_qkvz got W4A8
+  # patched config group_0 += in_proj_qkvz; ignore in_proj_ba
+  # retry w4a8-l5b-smoke -> HEALTHY 66s
+  ```
+
+RESULT -> First start: AssertionError
+  load_merged_column_weight. vLLM packed
+  in_proj_qkvz=[qkv,z]; 151 regex was
+  in_proj_qkv$ / in_proj_z$ so fused
+  Linear fell through to W4A8 packed int4
+  then loaded I8 shards.
+  Retry after target/ignore patch:
+  HEALTHY 66s. Served id exact.
+  Paris: "Paris." 391: "391". Fib:
+  iterative a,b=0,1. Coherence OK.
+  Kernels: XPUW4A8IntLinearKernel +
+  XPUInt8ScaledMMLinearKernel. int4_gemm_w4a8
+  fake already registered (op present).
+  VLLM_W4A8_PREPACKED unknown-env warn on
+  0.26; prepack still engaged (66s load,
+  no 28 GiB unpack).
+  Logs: results/logs/l5_w4a8_rtn_graph0_20260821T003813Z.log
+        results/logs/l5_w4a8_rtn_graph0_crash_engine.log
+        results/logs/l5b_w4a8_rtn_graph0_20260821T004125Z.log
+  Serve left Up :18081.
+
+VERDICT -> GO. K0 dispatch+load-gate green.
+  Leave GRAPH=0 up. GPTQ fire 2 is unblocked
+  for card 0. Do not start DD. Do not bake.

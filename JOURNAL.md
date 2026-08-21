@@ -16321,3 +16321,8 @@ See `docs/20260820_qwen38_w4a8_journal.md` (this
 campaign's journal from here on). Arming /loop 30m.
 Next fire = GRAPH=0 smoke, then every 30m. DD PARKED.
 
+### 2026-08-21e - LOOP 5: GRAPH=0 W4A8 load-gate GO
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Paris/391/fib
+coherent. Serve Up :18081. GPTQ fire 2 unblocked.
+

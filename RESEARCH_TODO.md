@@ -10,7 +10,8 @@
 > `scripts/151_quantize_qwen38_27b_w4a8.sh` (no public 3.8 W4A8; make it).
 > Day-1 DONE: 151 RTN `w4a8-rtn-gdn` 20.616 GiB (256 int4 + 144 GDN I8);
 > K1 matrix GO (Path H M=1 ~95-97% of 581 GB/s). Campaign journal:
-> `docs/20260820_qwen38_w4a8_journal.md`. Next: GRAPH=0 smoke. /loop 30m.
+> `docs/20260820_qwen38_w4a8_journal.md`. GRAPH=0 load-gate GO
+> (`qwen3.8-27b-W4A8-rtn-gdn` :18081). Next: GPTQ fire 2 and/or GRAPH=1.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang
 > W4A8 images AFTER first numbers, not before. A-E in
