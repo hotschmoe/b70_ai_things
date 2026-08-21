@@ -16716,3 +16716,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold vs 34.7.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. 15m loop DISARMED. Serves left Up.
 
+### 2026-08-21aby - LOOP 103: GRAPH=0 TP=2 262k hotschmoe-dd c1 3.7
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Long-ctx load-gate. Not a speed DD.
+

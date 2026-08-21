@@ -3260,3 +3260,48 @@ RESULT -> cancelled. scheduler_list empty.
 
 VERDICT -> GO. 15m loop DISARMED. Do not
   re-arm unless the operator asks.
+
+---
+
+### 2026-08-21aby - LOOP 103: GRAPH=0 TP=2 262k hotschmoe-dd
+
+CONTEXT -> operator: try W4A8 TP=2 as
+  hotschmoe-dd, max ctx 262k. Stop LMHEAD
+  pair. D19 closed so GRAPH=0 only.
+  P2PACCESS=0. 15m DISARMED. xpu-health GO.
+
+CONFIG -> GRAPH=0 TP=2 PUSH_AR=1
+  PUSH_AR_GRAPH=0 MIN_NUMEL=65536
+  P2PACCESS=0 NOMTP=1 HYBRID=0 NOMM=1
+  MAXLEN=262144 MAXSEQS=8 UTIL=0.90
+  PORT=18080 NAME=b70_daily_0
+  SERVED=hotschmoe-dd
+  CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn
+  IMG=int8g-v0260
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  NAME=qwen38_w4a8_dspark bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l103-tp2-262k ./bin/gpu-run \
+    env GRAPH=0 TP=2 PUSH_AR=1 P2PACCESS=0 B70_NOMTP=1 \
+      MAXLEN=262144 MAXSEQS=8 UTIL=0.90 PORT=18080 \
+      NAME=b70_daily_0 SERVED=hotschmoe-dd \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18080/v1 hotschmoe-dd 1 256 3
+  ```
+
+RESULT -> HEALTHY 91s. max_model_len
+  262144. KV 543188 tokens / 16.78 GiB
+  per card. weight 9.72 GiB/card.
+  Paris exact. 391 exact. c1 avg=best
+  3.7 wall~69.2s. Same as LOOP 30.
+  Log: l103_w4a8_tp2_262k_20260821T165504Z.log
+       l103_w4a8_tp2_262k_c1_20260821T165504Z.log
+
+VERDICT -> GO as long-ctx load-gate.
+  Not a speed DD. Do not shelf-promote.
+  Do not GRAPH=1 TP=2 (D19). Honesty
+  25.0 / spec 34.7 unchanged.
