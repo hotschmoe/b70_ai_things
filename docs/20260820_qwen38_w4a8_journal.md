@@ -1575,3 +1575,96 @@ RESULT -> HEALTHY 61s (cache). Paris exact.
 VERDICT -> GO. Isolated spec restored.
   Leave both Up. Next: SPECTOK=3 or hold.
   Do not demote 34.7 / 25.0.
+
+---
+
+### 2026-08-21zr - LOOP 44: attach NOMTP c1 hold 25.0
+
+CONTEXT -> 15m dual fire. NEXT PICK k=3 A/B
+  on card 1. Attach :18082. DD PARKED.
+  P2PACCESS=0. D14-D19 closed.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 out=256 reps=3 vs 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.3s. Log:
+  l44_w4a8_tp1_c1_hold_20260821T093544Z.log
+
+VERDICT -> GO. NOMTP score holds.
+
+---
+
+### 2026-08-21zs - LOOP 45: k=3 c1 31.0 NO-GO vs k=7
+
+CONTEXT -> NEXT PICK k-sweep SPECTOK=3.
+  Stop k=7 :18083. GRAPH=1 MAXSEQS=1
+  MAXLEN=4096 UTIL=0.90. vs 34.7.
+  Garbage-test. Leave :18082.
+
+CONFIG -> GRAPH=1 TP=1 SPECTOK=3
+  MAXLEN=4096 UTIL=0.90 MAXSEQS=1 CAPSIZES=1
+  DEVICE=1 PORT=18083 KV auto P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark3
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l45-dspark-k3 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=3 MAXLEN=4096 UTIL=0.90 \
+      MAXSEQS=1 CAPSIZES=1 PORT=18083 DEVICE=1 \
+      SERVED=qwen3.8-27b-W4A8-gptq-dspark3 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark3 1 256 3
+  ```
+
+RESULT -> HEALTHY 294s. Paris exact. 391
+  exact. LRU G1_OK. c1 avg=31.0 best=33.4
+  wall~8.1s = 0.89x vs k=7 34.7.
+  drafts=500 accepted=700 pos0=65.6%
+  mean_len=2.40 tok_rate=46.7%. Logs:
+  l45_w4a8_dspark_k3_graph1_20260821T093544Z.log
+  l45_w4a8_dspark_k3_c1_20260821T094059Z.log
+
+VERDICT -> NO-GO as 1.10x. k-sweep closed
+  7>4>3. Restore k=7. Do not demote 34.7.
+
+---
+
+### 2026-08-21zt - LOOP 46: restore k=7 STARTED
+
+CONTEXT -> k=3 lost. Restore spec champion.
+  :18082 stays.
+
+CONFIG -> GRAPH=1 SPECTOK=7 MAXSEQS=1
+  CAPSIZES=1 MAXLEN=4096 UTIL=0.90 PORT=18083
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l46-dspark-k7 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXSEQS=1 CAPSIZES=1 \
+      MAXLEN=4096 UTIL=0.90 PORT=18083 DEVICE=1 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  ```
+
+RESULT -> HEALTHY 61s (cache). Paris exact.
+  c1 avg=34.1 best=36.7 wall~7.0s. Holds vs
+  34.7. Logs:
+  l46_w4a8_dspark_k7_restore_20260821T094146Z.log
+  l46_w4a8_dspark_k7_c1_20260821T094303Z.log
+
+VERDICT -> GO. k-sweep closed 7>4>3.
+  Isolated spec restored. Leave both Up.
+  Do not demote 34.7 / 25.0.

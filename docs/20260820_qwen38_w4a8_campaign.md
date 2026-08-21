@@ -48,18 +48,18 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 43 (MAXSEQS=1 restore c1 33.8 holds spec). 42 MAXSEQS=2 no win. 41 NOMTP 25.0. |
-| Last JOURNAL heading | `2026-08-21zq` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 46 (k=7 restore c1 34.1 holds spec). 45 k=3 31.0 NO-GO. 44 NOMTP 25.0. |
+| Last JOURNAL heading | `2026-08-21zt` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 15m loop | ARMED `01a021be5649`. Attach `:18082` NOMTP + `:18083` k=7 MAXSEQS=1 if Up. |
-| Next pick | SPECTOK=3 A/B or hold isolated spec. Do not MAXSEQS=2 / k=4 as speed. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. |
-| Blocked on | nothing. `:18082` GRAPH=1 NOMTP 25.0. `:18083` GRAPH=1 DSpark k=7 MAXSEQS=1 MAXLEN=4096. |
+| 15m loop | ARMED `01a021be5649`. Attach `:18082` NOMTP + `:18083` k=7 if Up. |
+| Next pick | Hold isolated spec (k=7 MAXSEQS=1) or sglang 3.8 W4A8 Path H. k-sweep closed 7>4>3. Do not k=3/4 / MAXSEQS=2 as speed. Do not night-train. Do not MTP (D14). Do not GRAPH=1 TP=2 (D19). Do not demote 25.0 / 34.7. |
+| Blocked on | nothing. `:18082` GRAPH=1 NOMTP 25.0. `:18083` GRAPH=1 DSpark k=7 MAXSEQS=1. |
 | 3.8 W4A8 artifact | GPTQ + RTN on disk, 20.616 GiB each. No public HF W4A8; 151 already ran. |
 | Best W4A8 isolated | Path H M=1 down_proj g128 0.079 ms / 565 GB/s / 97% of 581. |
-| Best W4A8 e2e 3.8 | GRAPH=1 DSpark k=7 `bench_code` c1 **34.7** (coherent, pos0 69%, mean_len 2.80). k=4 is 33.5. NOMTP honesty **25.0**. GRAPH=0 DSpark 14.6. TP=2 GRAPH=0 3.7. TP=2 GRAPH=1 D19. MTP3 61.7 withdrawn (D14). |
-| DSpark INT | off-shelf FP8 drafter GRAPH=1: k=7 wins k=4. pos0 69% / 2.80 / 34.7. No night train. |
+| Best W4A8 e2e 3.8 | GRAPH=1 DSpark k=7 `bench_code` c1 **34.7** (coherent, pos0 69%, mean_len 2.80). k=4 is 33.5. k=3 is 31.0. NOMTP honesty **25.0**. GRAPH=0 DSpark 14.6. TP=2 GRAPH=0 3.7. TP=2 GRAPH=1 D19. MTP3 61.7 withdrawn (D14). |
+| DSpark INT | off-shelf FP8 drafter GRAPH=1: k-sweep 7>4>3. pos0 69% / 2.80 / 34.7. No night train. |
 | DD | PARKED. `:18080` is research. |
 
 ---

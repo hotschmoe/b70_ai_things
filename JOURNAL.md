@@ -16480,3 +16480,15 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Keep MAXSEQS=1 for isolated spec.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Isolated spec restored.
 
+### 2026-08-21zr - LOOP 44: attach NOMTP c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
+
+### 2026-08-21zs - LOOP 45: k=3 c1 31.0 NO-GO vs k=7 34.7
+
+See `docs/20260820_qwen38_w4a8_journal.md`. k-sweep closed 7>4>3.
+
+### 2026-08-21zt - LOOP 46: restore k=7 c1 34.1
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Isolated spec restored.
+
