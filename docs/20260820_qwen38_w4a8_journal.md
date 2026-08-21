@@ -2853,3 +2853,58 @@ RESULT -> Paris exact. 391 exact. c1
 
 VERDICT -> GO as hold of same config.
   Do not replace 34.7.
+
+---
+
+### 2026-08-21abj - LOOP 88: attach NOMTP lmhead32 27.0
+
+CONTEXT -> 15m dual fire. NEXT PICK hold
+  LMHEAD pair. Both serves Up. Attach, do
+  not steal. DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP
+  LMHEAD=1 g32
+  SERVED=qwen3.8-27b-W4A8-gptq-lmhead32
+  bench_code c1 vs 27.0 / 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-lmhead32 1 256 3
+  ```
+
+RESULT -> Paris exact. 391 exact. c1
+  avg=best 27.0 wall~9.5s. Log:
+  l88_w4a8_lmhead_attach_20260821T150916Z.log
+
+VERDICT -> GO. K8 NOMTP holds. Honesty
+  25.0 unchanged.
+
+---
+
+### 2026-08-21abk - LOOP 89: attach DSpark+LMHEAD c1 36.4
+
+CONTEXT -> dual with LOOP 88. Hold spec
+  vs 34.7 after 33.0. D14-D19 closed.
+
+CONFIG -> :18083 GRAPH=1 DSpark k=7
+  MAXSEQS=1 MAXLEN=4096 LMHEAD=1
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7-lmhead32
+  bench_code c1 vs 34.7
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7-lmhead32 1 256 3
+  ```
+
+RESULT -> Paris exact. 391 exact. c1
+  avg=36.4 best=39.9 wall~6.4s.
+  this-bench mean_len=2.71 tok_rate=24.4%.
+  Log:
+  l89_w4a8_dspark_lmhead_attach_20260821T150916Z.log
+
+VERDICT -> GO as hold of same config.
+  Do not replace 34.7.
