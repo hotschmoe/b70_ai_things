@@ -479,3 +479,45 @@ RESULT -> c1 avg=25.0 best=25.0 t/s
 VERDICT -> GO. First 3.8 W4A8 bench_code
   c1 is 25.0. Next: HYBRID=1 GRAPH=1 A/B.
   Leave both serves Up.
+
+---
+
+### 2026-08-21o - LOOP 15: HYBRID=1 e2e 25.0 NO-GO as win
+
+CONTEXT -> NEXT PICK Path H A/B vs 25.0.
+  Isolated bar 1.10x. K1 M=1 w4a16 ~tied
+  w4a8_op. Stop :18082, GRAPH=1 HYBRID=1.
+
+CONFIG -> GRAPH=1 B70_W4A8_HYBRID=1
+  NOMM=1 B70_NOMTP=1 PORT=18082 DEVICE=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  P2PACCESS=0. RTN :18081 left Up.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l15-hybrid \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 B70_W4A8_HYBRID=1 NOMM=1 B70_NOMTP=1 \
+      PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> HEALTHY 56s (compile cache).
+  Paris exact. 391 exact. w4a16 fake
+  registered (hybrid xpu.py path live).
+  bench_code c1 avg=25.0 best=25.0
+  wall~10.3s. 25.0/25.0 = 1.00x < 1.10x.
+  Log: results/logs/l15_w4a8_gptq_hybrid1_20260821T040547Z.log
+
+VERDICT -> NO-GO as e2e speed win.
+  GRAPH=1 already ate the act-quant tax
+  so Path H does not move c1. Score stays
+  HYBRID=0 25.0. Split-M: decode may use
+  either op at M=1. Next: MTP3. Do not
+  demote 25.0 / 31.9.

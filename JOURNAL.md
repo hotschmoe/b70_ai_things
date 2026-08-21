@@ -16364,3 +16364,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. ~3.9x GRAPH=0. Not 31.9.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. GRAPH=1 GPTQ. Not 31.9.
 
+### 2026-08-21o - LOOP 15: HYBRID=1 e2e 1.00x NO-GO
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 HYBRID=0.
+

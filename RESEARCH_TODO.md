@@ -12,8 +12,8 @@
 > K1 matrix GO (Path H M=1 ~95-97% of 581 GB/s). Campaign journal:
 > `docs/20260820_qwen38_w4a8_journal.md`. GRAPH=0 load-gate GO
 > (`qwen3.8-27b-W4A8-rtn-gdn` :18081, GRAPH=0 eager ~6.3 tok/s wall).
-> GPTQ GRAPH=1 bench_code c1 **25.0**. GRAPH=0 was ~6.3. Next: HYBRID=1
-> A/B. Do not demote 31.9.
+> GPTQ GRAPH=1 bench_code c1 **25.0**. HYBRID=1 is 1.00x (NO-GO as win).
+> Next: MTP3 on GRAPH=1. Do not demote 25.0 / 31.9.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang
 > W4A8 images AFTER first numbers, not before. A-E in
