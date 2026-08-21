@@ -16444,3 +16444,15 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Leave D04 closed.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0. Do not night-train.
 
+### 2026-08-21zi - LOOP 35: attach NOMTP c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
+
+### 2026-08-21zj - LOOP 36: GRAPH=1 DSpark 8192 KV miss
+
+See `docs/20260820_qwen38_w4a8_journal.md`.
+
+### 2026-08-21zk - LOOP 37: GRAPH=1 DSpark c1 34.7 coherent
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec row 34.7. NOMTP honesty 25.0.
+

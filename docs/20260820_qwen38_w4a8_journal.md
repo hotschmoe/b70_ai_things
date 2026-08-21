@@ -1284,3 +1284,101 @@ VERDICT -> GO as accept gate. Not a score
   win. Do not night-train. Next: GRAPH=1
   DSpark vs 25.0. Garbage-test. Do not
   demote 25.0.
+
+---
+
+### 2026-08-21zi - LOOP 35: attach NOMTP c1 hold 25.0
+
+CONTEXT -> 15m dual fire. NEXT PICK GRAPH=1
+  DSpark on card 1. Attach :18082. D14-D19
+  closed. DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 GRAPH=1 TP=1 NOMTP HYBRID=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  bench_code c1 out=256 reps=3 vs 25.0
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris exact. c1 avg=best 25.0
+  wall~10.2s. Log:
+  l35_w4a8_tp1_c1_hold_20260821T085055Z.log
+
+VERDICT -> GO. NOMTP score holds.
+
+---
+
+### 2026-08-21zj - LOOP 36: GRAPH=1 DSpark 8192 KV miss
+
+CONTEXT -> NEXT PICK K17 GRAPH=1 DSpark.
+  Stop GRAPH=0 :18083. Leave :18082.
+  CAPSIZES=1 MAXSEQS=1. KV auto. D13/D14/D19.
+
+CONFIG -> GRAPH=1 TP=1 SPECTOK=7
+  MAXLEN=8192 UTIL=0.88 DEVICE=1 PORT=18083
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+  CGRECLAIM=1000 P2PACCESS=0
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_dspark bash \
+    vllm/w4a8/serve_qwen38_w4a8_dspark.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l36-dspark-g1 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXSEQS=1 CAPSIZES=1 \
+      PORT=18083 DEVICE=1 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  ```
+
+RESULT -> EXITED EARLY ~321s. EngineCore
+  ValueError: 8192 needs 2.06 GiB KV, have
+  1.59 (est max 3328). Not DEVICE_LOST.
+  xpu-health HEALTHY. Logs:
+  l36_w4a8_dspark_graph1_20260821T085055Z.log
+  l36_w4a8_dspark_graph1_engine_20260821T085055Z.log
+
+VERDICT -> NO-GO at 8192/0.88. Retry
+  MAXLEN=4096 UTIL=0.90.
+
+---
+
+### 2026-08-21zk - LOOP 37: GRAPH=1 DSpark c1 34.7
+
+CONTEXT -> LOOP 36 KV miss. Dual with LOOP
+  35. Garbage-test vs D14. Do not night-train.
+
+CONFIG -> GRAPH=1 TP=1 SPECTOK=7
+  MAXLEN=4096 UTIL=0.90 MAXSEQS=1 CAPSIZES=1
+  DEVICE=1 PORT=18083 KV auto P2PACCESS=0
+  SERVED=qwen3.8-27b-W4A8-gptq-dspark7
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l37-dspark-g1 \
+    ./bin/gpu-run --card 1 \
+    env GRAPH=1 SPECTOK=7 MAXLEN=4096 UTIL=0.90 \
+      MAXSEQS=1 CAPSIZES=1 PORT=18083 DEVICE=1 \
+    bash vllm/w4a8/serve_qwen38_w4a8_dspark.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18083/v1 \
+    qwen3.8-27b-W4A8-gptq-dspark7 1 256 3
+  ```
+
+RESULT -> HEALTHY 299s. Paris exact. 391
+  exact. LRU n=128 G1_OK bang_frac=0.
+  c1 avg=34.7 best=35.1 wall~7.3s.
+  1.39x vs NOMTP 25.0. 2.38x vs GRAPH=0
+  DSpark 14.6. drafts=431 accepted=775
+  pos0=298/431=69.1% mean_len=2.80
+  tok_rate=25.7%. Not D14 100% accept.
+  :18082 still Up. Logs:
+  l37_w4a8_dspark_graph1_ml4096_20260821T085659Z.log
+  l37_w4a8_dspark_graph1_c1_20260821T090214Z.log
+
+VERDICT -> GO. Spec e2e row 34.7.
+  NOMTP honesty stays 25.0. Leave both
+  Up. Next: k=4 A/B. Do not demote 25.0.
