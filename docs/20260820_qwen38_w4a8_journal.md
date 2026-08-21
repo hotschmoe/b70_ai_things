@@ -634,3 +634,58 @@ VERDICT -> GO for K16 c=2. Score stays
   Next: MAXSEQS=8 restart then c=4, or
   card1 isolated M=4,8. Do not retry
   MTP3. Do not start DD. Do not bake.
+
+---
+
+### 2026-08-21r - LOOP 18: K16 c=4 agg 91.4 G1 4/4
+
+CONTEXT -> 30m fire 01a021be5649. NEXT PICK
+  K16 c=4. Live :18082 was MAXSEQS=2.
+  Stop and restart MAXSEQS=8, re-gate c1
+  vs 25.0, then c=4. D14 closed. DD PARKED.
+  P2PACCESS=0. RTN :18081 left Up.
+
+CONFIG -> GRAPH=1 B70_NOMTP=1 MAXSEQS=8
+  HYBRID=0 NOMM=1 CAPSIZES 1,2,4
+  PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  P2PACCESS=0 IMG=int8g-v0260
+  bench_code c1 then c4 out=256 reps=3
+  plus 4x LRU chat 128 G1.
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l18-maxseqs8 \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 B70_NOMTP=1 B70_W4A8_HYBRID=0 NOMM=1 MAXSEQS=8 \
+      PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0 CARD=0 P2PACCESS=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 4 256 3
+  ```
+
+RESULT -> HEALTHY 56s. vllm --max-num-seqs 8.
+  Built-in gen probe Paris OK. Completions
+  Paris OK. c1 avg=24.9 best=25.0 wall~10.3s
+  (holds vs 25.0). c4 avg=22.9 best=23.2
+  agg=91.4 wall~11.5s.
+  Per-stream 22.9/25.0 = 0.916x.
+  Agg 91.4/25.0 = 3.66x.
+  G1 4/4 OK (top e ~0.12-0.14).
+  Log: results/logs/l18_w4a8_gptq_maxseqs8_20260821T053608Z.log
+  18081 still RTN. Leases free.
+
+VERDICT -> GO for K16 c=4. Score stays
+  c1 25.0. Do not treat 91.4 agg as a
+  c1 north-star. Next: c=8 needs
+  CAPSIZES+=8 (capture max is 4 today)
+  or isolated M=4,8 (stop RTN on card1).
+  Do not retry MTP3. Do not start DD.
+  Do not bake. Do not demote 25.0 / 31.9.

@@ -16376,3 +16376,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 NOMTP.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
+### 2026-08-21r - LOOP 18: K16 c=4 agg 91.4 G1 4/4
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+
