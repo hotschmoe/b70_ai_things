@@ -20,8 +20,8 @@
 > GRAPH=1 DSpark k=7 MAXLEN=4096 c1 **34.7** coherent (pos0 69% / 2.80).
 > k=4 is 33.5 (keep 7). MAXSEQS=2 c1 32.4 / c2 agg 47.2 (no win).
 > NOMTP honesty 25.0 / prefill @2k 2880. Spec k=7 c1 34.7 / prefill 2615.
-> sglang 3.8 Path H GRAPH=0: float16 GDN crash; bf16 GARBAGE. Next: hold vLLM.
-> Do not night-train. Do not demote 25.0 / 31.9.
+> sglang 3.8 Path H GRAPH=0: float16 GDN crash; bf16 GARBAGE. Hold vLLM
+> NOMTP 25.0 + DSpark 34.7. Do not night-train. Do not demote 25.0 / 31.9.
 > Accuracy later. Native Intel: W4A8 unpack-in-register + DPAS s8xs8,
 > GDN INT8, VNNI16, fusedq, DSpark INT if it beats FP. Fresh vLLM/sglang
 > W4A8 images AFTER first numbers, not before. A-E in

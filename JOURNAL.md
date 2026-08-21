@@ -16516,3 +16516,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Do not GRAPH=1 sglang yet.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Spec path restored.
 
+### 2026-08-21aaa - LOOP 53: attach NOMTP c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. NOMTP score holds 25.0.
+
+### 2026-08-21aab - LOOP 54: attach DSpark c1 35.2
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Spec hold.
+
