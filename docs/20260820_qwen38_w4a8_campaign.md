@@ -48,17 +48,17 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 12 (GPTQ GRAPH=0 load-gate GO) |
-| Last JOURNAL heading | `2026-08-21l` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 13 (GPTQ GRAPH=1 smoke GO, ~24.5 tok/s) |
+| Last JOURNAL heading | `2026-08-21m` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
 | 30m loop | ARMED `01a021be5649` |
-| Next pick | GRAPH=1 smoke of GPTQ (`qwen38_w4a8_gptq` on :18082): stop GRAPH=0 first, then GRAPH=1. Leave RTN GRAPH=0 on :18081 as control, or stop it if card 1 is needed. |
-| Blocked on | nothing. Both GRAPH=0 serves Up. |
-| 3.8 W4A8 artifact | RTN `w4a8-rtn-gdn` :18081. GPTQ `w4a8-gptq-gdn` :18082. Both 20.616 GiB, VLM-wrapped, qkvz INT8. |
+| Next pick | Path H `B70_W4A8_HYBRID=1` GRAPH=1 A/B on GPTQ (stop :18082 first), or `bench_code` c1 on current GRAPH=1. Do not demote 31.9. |
+| Blocked on | nothing. GRAPH=1 GPTQ Up `:18082`. RTN GRAPH=0 `:18081`. |
+| 3.8 W4A8 artifact | RTN :18081. GPTQ :18082 GRAPH=1. |
 | Best W4A8 isolated | Path H w4a16 M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. |
-| Best W4A8 e2e 3.8 | GRAPH=0 TP=1 load-gate GO on RTN and GPTQ (Paris/391/fib). RTN eager wall ~6.3 tok/s. |
+| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ wall **24.5 tok/s** @128 gen (Paris/391). GRAPH=0 was ~6.3. Not bench_code c1. |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 

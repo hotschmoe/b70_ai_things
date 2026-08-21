@@ -410,3 +410,43 @@ RESULT -> HEALTHY 61s. Paris exact.
 VERDICT -> GO. Both artifacts load-gated.
   Next: GRAPH=1 on GPTQ (stop :18082 first).
   Do not start DD. Do not bake.
+
+---
+
+### 2026-08-21m - LOOP 13: GPTQ GRAPH=1 smoke GO ~24.5 tok/s
+
+CONTEXT -> NEXT PICK GRAPH=1 on GPTQ.
+  D09 is W4A16-autoround hang, not oneDNN.
+  GRAPH=0 already GO. Stop :18082 then
+  restart GRAPH=1. Leave RTN :18081.
+
+CONFIG -> GRAPH=1 PIECEWISE capsizes 1,2,4
+  NOMM=1 B70_NOMTP=1 HYBRID=0 CGRECLAIM=1000
+  PORT=18082 NAME=qwen38_w4a8_gptq DEVICE=0
+  SERVED=qwen3.8-27b-W4A8-gptq-gdn
+  P2PACCESS=0 IMG=int8g-v0260
+
+COMMAND ->
+  ```
+  NAME=qwen38_w4a8_gptq bash vllm/w4a8/serve_qwen38_w4a8.sh stop
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l13-graph1 \
+    ./bin/gpu-run --card 0 \
+    env GRAPH=1 NOMM=1 B70_NOMTP=1 PORT=18082 \
+      NAME=qwen38_w4a8_gptq DEVICE=0 \
+      CKPT=/models/qwen3.8-27b/w4a8-gptq-gdn \
+      SERVED=qwen3.8-27b-W4A8-gptq-gdn \
+    bash vllm/w4a8/serve_qwen38_w4a8.sh start
+  ```
+
+RESULT -> HEALTHY 299s (compile+capture).
+  Paris exact. 17*23=391. Fib iterative.
+  dec128 wall 24.52 tok/s (128/5.22s) vs
+  GRAPH=0 ~6.3 (~3.9x). Not bench_code c1.
+  3.6 W4A8 GRAPH was 27.3. Do not claim
+  vs k1bar 31.9 (TP=2 W8A8).
+  Log: results/logs/l13_w4a8_gptq_graph1_20260821T030938Z.log
+  Serve left Up :18082 GRAPH=1.
+
+VERDICT -> GO. GRAPH=1 is the decode lever
+  on 3.8 W4A8 oneDNN. Next: HYBRID=1 A/B
+  or bench_code c1. Do not start DD.

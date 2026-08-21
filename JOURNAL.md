@@ -16356,3 +16356,7 @@ See `docs/20260820_qwen38_w4a8_journal.md`. 20.616 GiB census GO.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. :18082 Up. Paris/391/fib.
 
+### 2026-08-21m - LOOP 13: GPTQ GRAPH=1 ~24.5 tok/s GO
+
+See `docs/20260820_qwen38_w4a8_journal.md`. ~3.9x GRAPH=0. Not 31.9.
+
