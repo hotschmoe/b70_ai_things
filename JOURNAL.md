@@ -16400,3 +16400,11 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. Split-M confirmed at prefill M.
 
+### 2026-08-21x - LOOP 24: attach c1 hold 25.0
+
+See `docs/20260820_qwen38_w4a8_journal.md`. Score stays 25.0 c1.
+
+### 2026-08-21y - LOOP 25: K8 lm_head g32 isolated 1.27 ms
+
+See `docs/20260820_qwen38_w4a8_journal.md`. e2e lm_head INT4 still open.
+

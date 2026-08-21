@@ -896,3 +896,58 @@ RESULT -> gate_up M=2048 w4a8_op 3.71 ms
 VERDICT -> GO. Split-M is real at M=2048.
   Decode stays H; prefill/c>1 stays X.
   Do not demote 25.0 / 31.9. Do not bake.
+
+---
+
+### 2026-08-21x - LOOP 24: attach c1 hold 25.0
+
+CONTEXT -> 15m dual fire 01a021be5649. Serve attach
+  while card1 runs K8. Live :18082 ~1h.
+  D14-16 closed. DD PARKED. P2PACCESS=0.
+
+CONFIG -> :18082 qwen3.8-27b-W4A8-gptq-gdn
+  GRAPH=1 NOMTP HYBRID=0. Paris + bench_code
+  c1 1 256 3 vs 25.0.
+
+COMMAND ->
+  ```
+  python3 -u vllm/nvfp4/bench_code.py \
+    http://127.0.0.1:18082/v1 \
+    qwen3.8-27b-W4A8-gptq-gdn 1 256 3
+  ```
+
+RESULT -> Paris OK. c1 avg=best 25.0
+  wall~10.2s. Log: results/logs/l24_w4a8_c1_hold_20260821T072116Z.log
+
+VERDICT -> GO. Score holds. Leave serve Up.
+
+---
+
+### 2026-08-21y - LOOP 25: K8 lm_head g32 isolated 1.27 ms
+
+CONTEXT -> NEXT PICK K8 isolated. Dual with
+  LOOP 24. Do not 151 whole-model. GROUP=32
+  as catalog. Synthetic pack (ckpt lm_head BF16).
+
+CONFIG -> IMG=int8g-v0260 ZE_AFFINITY_MASK=1
+  INCLUDE_LMHEAD=1 ONLY_SHAPES=lm_head
+  ONLY_MS=1,8 GROUP=32. N=248320 K=5120.
+
+COMMAND ->
+  ```
+  B70_GPU_LOCK_TIMEOUT=0 B70_AGENT=w4a8-l25-k8 \
+    ./bin/gpu-run --card 1 env INCLUDE_LMHEAD=1 \
+    ONLY_SHAPES=lm_head ONLY_MS=1,8 GROUP=32 \
+    bench_w4a8_shapes.py
+  ```
+
+RESULT -> 9s. M=1 w4a16 1.274 ms 499 GB/s
+  85.9%roof 3.35x bf16. w4a8_op 1.293 ms
+  (~1.01x H). M=8 still BW ~84% / 15.6 TOPS.
+  Log: results/logs/k8_lmhead_g32_20260821T072116Z.log
+  CSV: results/logs/k8_lmhead_g32_20260821T072116Z.user.csv
+
+VERDICT -> GO as kernel. Isolated 1.10x X vs
+  H NO-GO. e2e lm_head INT4 still open (file
+  is BF16). Next: K12 N-trap card1. Do not
+  rewrite 151. Do not demote 25.0 / 31.9.

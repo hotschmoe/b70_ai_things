@@ -30,6 +30,8 @@ docker run --rm --name k1_w4a8_shapes \
   -e OUT_CSV="$CSV" \
   -e ONLY_MS="${ONLY_MS:-}" \
   -e ONLY_SHAPES="${ONLY_SHAPES:-}" \
+  -e INCLUDE_LMHEAD="${INCLUDE_LMHEAD:-0}" \
+  -e GROUP="${GROUP:-128}" \
   -v "$ROOT:$ROOT" \
   -v "$REPO:$REPO" \
   -v "$REPO/models/files:/models" \

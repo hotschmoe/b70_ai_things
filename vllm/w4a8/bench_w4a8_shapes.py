@@ -27,7 +27,7 @@ import torch
 import torch.nn.functional as F
 
 DEV = "xpu"
-GROUP = 128
+GROUP = int(os.environ.get("GROUP", "128"))
 BW_CEIL = 581.0e9
 SO = os.environ.get("B70_XPU_C_SO", "")
 CKPT = os.environ.get("CKPT", "/models/qwen3.6-27b/w4a8-sqgptq")

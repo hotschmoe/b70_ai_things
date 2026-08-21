@@ -48,17 +48,17 @@ separate serial stack while this campaign owns the cards.
 
 | field | value |
 |---|---|
-| Last loop | 22+23 dual (K10 prefill ~2870/2750 tok/s; M=2048 Path X 1.4-1.7x H) |
-| Last JOURNAL heading | `2026-08-21w` in `docs/20260820_qwen38_w4a8_journal.md` |
+| Last loop | 24+25 dual (c1 hold 25.0; K8 lm_head g32 isolated 1.27 ms / 86% roof) |
+| Last JOURNAL heading | `2026-08-21y` in `docs/20260820_qwen38_w4a8_journal.md` |
 | Campaign journal | `docs/20260820_qwen38_w4a8_journal.md` |
 | Loop ledger | `docs/20260820_qwen38_w4a8_loops.md` |
 | Dead-ends | `docs/20260820_qwen38_w4a8_deadends.md` |
-| 15m loop | ARMED `01a021be5649` next ~2026-08-21T07:20:17Z (dual-card) |
-| Next pick | K8 lm_head INT4 isolated on card1 (INCLUDE_LMHEAD=1). Leave GPTQ `:18082`. Do not retry D14/D15/D16. Do not bake. Do not demote 25.0 / 31.9. |
-| Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` (score). RTN stopped. Card1 free. |
-| 3.8 W4A8 artifact | GPTQ :18082 live. RTN+GPTQ files on disk (20.616 GiB each). |
-| Best W4A8 isolated | Path H M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. Prefill tile: down M=2048 w4a8_op **221 TOPS** (1.70x w4a16). |
-| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0**. Prefill ~**2870** tok/s @2k / ~**2750** @8k. MTP3 61.7 withdrawn (D14). |
+| 15m loop | ARMED `01a021be5649` next ~2026-08-21T07:35:17Z (dual-card) |
+| Next pick | K12 N-trap: pad gdn_ba N=96->128 isolated on card1. Leave GPTQ `:18082`. K8 e2e still needs lm_head quant (do not 151 whole-model). Do not retry D14/D15/D16. Do not bake. Do not demote 25.0 / 31.9. |
+| Blocked on | nothing. GPTQ GRAPH=1 NOMTP `:18082` (score 25.0 held). RTN stopped. Card1 free. |
+| 3.8 W4A8 artifact | GPTQ :18082 live. RTN+GPTQ files on disk (20.616 GiB each). lm_head still BF16 in file. |
+| Best W4A8 isolated | Path H M=1 down_proj 0.079 ms / 565 GB/s / 97% of 581. lm_head M=1 w4a16 1.27 ms / 499 GB/s / 86% roof. |
+| Best W4A8 e2e 3.8 | GRAPH=1 TP=1 GPTQ HYBRID=0 NOMTP `bench_code` c1 **25.0** (held). Prefill ~2870/2750 tok/s. MTP3 61.7 withdrawn (D14). |
 | DSpark INT | not trained |
 | DD | PARKED. `:18080` is research. |
 
