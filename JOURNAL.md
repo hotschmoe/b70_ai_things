@@ -16911,3 +16911,42 @@ inside a 245760-token slot. Full caveats and arithmetic are in
 VERDICT -> good daily-driver performance, not a raw single-card record. Treat
 all peer percentages as orientation until a matched harness is run. The old
 Steve 101.922 headline is corrected in active docs and must not be promoted.
+
+### 2026-08-23l - stock Qwen3.8 4-bit coding selection
+
+CONFIG -> compare stock Qwen3.8-27B Q4_K_M, AutoRound W4A16, and NVFP4 on
+the common local HumanEval+ 164 thinking-off greedy sandbox gate. Read exact
+`summary.json` results; do not substitute speed or Paris gates for coding.
+
+COMMAND -> inspect the four Qwen3.8 result directories under `evals/results`:
+stock Q4_K_M, W4A16 AutoRound, Inferact NVFP4, and RadixArk NVFP4.
+
+RESULT -> Q4_K_M 0.970/0.927; W4A16 0.963/0.915; Inferact NVFP4
+0.939/0.915; RadixArk NVFP4 0.933/0.890. Q4_K_M leads W4A16 by one base
+and two plus problems, a small observed lead rather than a universal quant law.
+
+VERDICT -> select stock Q4_K_M as the quality-first daily driver. A matched
+LiveCodeBench/agentic comparison remains unmeasured.
+
+### 2026-08-23m - stock Q4_K_M TP=2 daily-driver switch PASS
+
+CONFIG -> exact ggml-org stock Q4_K_M revision `0669b986...`, file SHA256
+`31629f53165ab6a7dad8c9847dcfd1fdf55829dac1e6e748f4a68581b0033d34`,
+TP=2, F16 KV, 262144 context, MTP off, lab doors off, alias `hotschmoe-dd`,
+API key protected on port 18080. Preserve the obliterated shelf but stop it.
+
+COMMAND -> reflink the exact verified model into
+`models/files/qwen3.8-27b/q4km-ggml-org`; validate manifest/fetch plan; under
+`gpu-run`, stop the obliterated DP=2 shelf and start
+`rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`; run identity, Paris, Open
+WebUI backend, and c1 128-token coding-smoke gates.
+
+RESULT -> both cards healthy; full model SHA passed. Runtime logs show
+`SYCL0,SYCL1 --split-mode tensor --tensor-split 1,1`, LAB_DOORS=0, MTP off.
+API reports `hotschmoe-dd`, Q4_K_M, n_ctx/train_ctx 262144, 26.896B params.
+Paris exact. Open WebUI healthy and sees `hotschmoe-dd`. Fresh coding smoke
+averaged 35.2 tok/s, best 35.4, versus the historical matching 32.8 tok/s.
+
+VERDICT -> GO live stock quality-first TP=2 daily driver. TP=2 preserves the
+coding-qualified topology. DP=2 offers two lanes but changes KV/context
+numerics and remains unqualified on the stock HumanEval+ gate.

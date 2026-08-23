@@ -6,7 +6,14 @@ skip the dead-ends. Living doc — see [archive/RESULTS.md](archive/RESULTS.md) 
 tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow.
 
 ## TL;DR
-- **Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 (2026-08-23): current large-context daily driver.**
+- **Qwen3.8-27B stock Q4_K_M TP=2 (2026-08-23): current quality-first daily driver.**
+  Exact ggml-org SHA `31629f53...`, 262144 context, F16 KV, MTP off, and
+  unqualified fusion doors off. HumanEval+ 164 thinking-off greedy was
+  **0.970 base / 0.927 plus**, the highest observed Qwen3.8 4-bit coding score
+  on this box versus W4A16 0.963/0.915 and best NVFP4 0.939/0.915. Fresh live
+  coding smoke averaged 35.2 tok/s and Paris was coherent. TP=2 preserves the
+  exact coding-qualified topology; DP=2 remains an unqualified alternative.
+- **Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 (2026-08-23): paused after user quality rejection.**
   Exact fixed-merge GGUF SHA `c5e4fe70...`, not the deleted bad pre-V3 Q8.
   Two one-card llama.cpp SYCL replicas expose one `hotschmoe-dd` endpoint at
   245760 context each with Q8_0 KV. The embedded MTP head at draft max 3 raises

@@ -1,8 +1,9 @@
 # Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 on B70
 
-Status: MTP3 DP=2 shelf config live; performance, equivalence, concurrent soak,
-real 152289-token request, and shelf-restart gates passed. Systemd installation
-requires operator sudo authentication.
+Status: PAUSED 2026-08-23 after the operator rejected its practical output
+quality. Its performance, equivalence, concurrent soak, real 152289-token
+request, and shelf-restart gates remain valid historical evidence. The live
+daily driver moved to stock Q4_K_M TP=2.
 
 Peer performance comparison, including the corrected status of Steve's old
 101.922 tok/s claim:
@@ -241,6 +242,10 @@ The measured default is now:
 ```
 rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh
 ```
+
+This was the measured default at promotion time. It remains a reproducible
+paused shelf entry, not the current daily driver. The tracked systemd unit now
+points to `rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`.
 
 The tracked systemd unit is `llamacpp/deploy/b70-daily-driver.service`. Install
 it after the final gate with:

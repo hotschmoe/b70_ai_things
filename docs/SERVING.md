@@ -9,7 +9,8 @@
 >
 > | model | golden dir | image |
 > |---|---|---|
-> | Qwen3.8-27B OBLITERATED Q4_K_M (current DD, DP=2 245760) | `rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/` | `qwen38-b70:latest` |
+> | Qwen3.8-27B stock Q4_K_M (current DD, TP=2 262144) | `rdy_to_serve/llamacpp/qwen38-27b-q4km/` | `qwen38-b70:latest` |
+> | Qwen3.8-27B OBLITERATED Q4_K_M (paused) | `rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/` | `qwen38-b70:latest` |
 > | Qwen3.6-27B NVFP4 (paused baseline and TP=2 200K) | `rdy_to_serve/vllm/qwen36-27b-nvfp4/` | `:int8g-v0251` / `:int8g-v0260` |
 > | Qwen3.6-27B W8A8 | `rdy_to_serve/sglang/qwen36-27b-w8a8/` | `sglang-xpu:mtp` |
 > | Qwen3.6-27B W8A8 | `rdy_to_serve/vllm/qwen36-27b-w8a8/` | `:int8g-v0251` |
@@ -19,13 +20,13 @@ The single source of truth for serving model X: its `rdy_to_serve/` dir if shelv
 If you reconstruct a serve command from JOURNAL/scripts, you did it wrong -- fix the golden dir / THIS doc.
 Keep recipes verified-and-current; date each change. (Tools moved to `bin/`; the host runs them flat.)
 
-**Daily driver:** llama.cpp Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 at
-`http://192.168.10.5:18080/v1`. Card 0 listens on localhost `:18181` and card 1
-on `:18182`, behind nginx round robin. Each replica has one 245760-token slot,
-Q8_0 KV, and embedded MTP3. The shelf entry is
-`rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh`; the tracked unit
-is `llamacpp/deploy/b70-daily-driver.service`. The vLLM daily-driver scripts
-remain maintained paused baselines.
+**Daily driver:** llama.cpp stock Qwen3.8-27B Q4_K_M TP=2 at
+`http://192.168.10.5:18080/v1`. It exposes one 262144-token F16-KV request slot
+across both B70 cards. MTP and the unqualified Q4 fusion doors are off to match
+the 0.970/0.927 HumanEval+ path. The shelf entry is
+`rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`; the tracked unit is
+`llamacpp/deploy/b70-daily-driver.service`. The obliterated DP=2 entry and vLLM
+daily-driver scripts remain maintained paused baselines.
 
 ## Where everything runs
 - GPU host: local Ubuntu box `b70s4dayz` @ `192.168.10.5` (we run LOCALLY on it since the 2026-06-23

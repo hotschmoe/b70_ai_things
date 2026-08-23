@@ -178,6 +178,21 @@ models:
     notes: official block FP8 e4m3 [128,128]. Target for the rmacy DSpark
            stack (ghcr.io/rmacy/qwen38-fp8-dspark, intel/llm-scaler#620).
 
+  - id: qwen3.8-27b/q4km-ggml-org
+    family: qwen3.8-27b
+    scheme: q4-k-m
+    vision: false
+    mtp: false
+    size_gb: 19
+    served_as: hotschmoe-dd
+    source:
+      type: hf
+      repo: ggml-org/Qwen3.8-27B-GGUF
+      revision: 0669b98607d47046c7c2b3f801011d54a08cfccf
+      files: [Qwen3.8-27B-Q4_K_M.gguf]
+    notes: Stock text GGUF, SHA256 31629f53165ab6a7dad8c9847dcfd1fdf55829dac1e6e748f4a68581b0033d34.
+           HumanEval+ 164 thinking-off greedy 0.970 base / 0.927 plus, best measured Qwen3.8 4-bit coding score.
+
   - id: qwen3.8-27b/dflash-drafter-fp8-b70
     family: qwen3.8-27b
     scheme: dflash-drafter-fp8

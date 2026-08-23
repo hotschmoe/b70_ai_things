@@ -20,6 +20,8 @@ a real daily-driver-class alternative. Full evidence + file:line citations in `R
 - `serve_tp2_q8.sh`      -- "W8A8-like, TP=2 DP=1": Q8_0 via `--split-mode tensor`. HIGHER RISK (GDN+TP).
 - `QWEN38_B70_0XSERO.md` -- 0xSero 3.8-27B Q4_K_M SYCL TP=2 recipe + 2026-08-17j numbers.
 - `serve_qwen38_b70_0xsero.sh` -- start/stop wrapper for that compose tree (not a shelf).
+- `serve_qwen38_stock_q4km_tp2.sh` -- authenticated stock Q4_K_M TP=2 engine
+  behind the verified `rdy_to_serve/llamacpp/qwen38-27b-q4km/` shelf entry.
 - `serve_qwen38_obliterated_q4km_dp2.sh` -- V3 fixed-merge Q4_K_M, one replica per B70,
   nginx `hotschmoe-dd`, 245760 ctx with Q8 KV. Backend implementation for the shelf entry.
 - `obliterated_q4km_entrypoint.sh` -- one-card SYCL runtime and embedded-MTP switch for that path.

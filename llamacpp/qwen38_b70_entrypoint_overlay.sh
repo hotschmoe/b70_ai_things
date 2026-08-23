@@ -19,6 +19,8 @@ PORT="${PORT:-8010}"
 ENABLE_MTP="${ENABLE_MTP:-0}"
 ENABLE_VISION="${ENABLE_VISION:-0}"
 LAB_DOORS="${LAB_DOORS:-0}"
+SERVED="${SERVED:-}"
+API_KEY_FILE="${API_KEY_FILE:-/run/secrets/dd_api_key}"
 
 if [ "$GPU_COUNT" = "1" ]; then
     DEVICE_ARGS=(--device SYCL0)
@@ -35,6 +37,11 @@ DRAFT_ARGS=()
 if [ "$ENABLE_MTP" = "1" ]; then
     DRAFT_ARGS=(--spec-type mtp --model-draft "$MODELS_DIR/$MTP_FILE" --draft-max 8)
 fi
+
+ALIAS_ARGS=()
+[ -n "$SERVED" ] && ALIAS_ARGS=(--alias "$SERVED")
+KEY_ARGS=()
+[ -s "$API_KEY_FILE" ] && KEY_ARGS=(--api-key-file "$API_KEY_FILE")
 
 export UR_L0_USE_IMMEDIATE_COMMANDLISTS=1
 export UR_L0_V2_FORCE_DISABLE_COPY_OFFLOAD=1
@@ -83,6 +90,7 @@ echo "[entrypoint] GPU_COUNT=$GPU_COUNT ctx=$CTX_SIZE batch=$BATCH ubatch=$UBATC
 exec /build/llama.cpp/build-sycl/bin/llama-server \
     --model "$TARGET" \
     "${DRAFT_ARGS[@]}" \
+    "${ALIAS_ARGS[@]}" \
     --host 0.0.0.0 --port "$PORT" \
     "${DEVICE_ARGS[@]}" \
     --gpu-layers 99 \
@@ -99,4 +107,5 @@ exec /build/llama.cpp/build-sycl/bin/llama-server \
     --poll 50 \
     --ctx-size "$CTX_SIZE" \
     --parallel "$PARALLEL" \
-    --metrics
+    --metrics \
+    "${KEY_ARGS[@]}"

@@ -1,13 +1,14 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-08-23 (OBLITERATED V3 Q4_K_M DD shelved)
+**Created:** 2026-06-20 - **Status-synced:** 2026-08-23 (stock Q4_K_M quality DD live)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
-> ### [DAILY DRIVER 2026-08-23] -- Qwen3.8 OBLITERATED V3 Q4_K_M
-> `rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh`: DP=2,
-> 245760 context/replica, Q8_0 KV, embedded MTP3, 81.86 aggregate tok/s.
-> Five-minute c4 soak 338/338 clean. This is a weight-only GGUF serving result;
-> it does not change the standing compressed-tensors W8A8/W4A8 INT8-XMX target.
+> ### [DAILY DRIVER 2026-08-23] -- stock Qwen3.8 Q4_K_M
+> `rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`: TP=2, native 262144
+> context, F16 KV, MTP off, lab doors off. HumanEval+ 0.970/0.927 is the best
+> measured stock Qwen3.8 4-bit coding result on the box. Fresh coding smoke
+> 35.2 tok/s. The obliterated DP=2 shelf is paused after the user rejected its
+> quality. This does not change the compressed-tensors W8A8/W4A8 INT8-XMX target.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.

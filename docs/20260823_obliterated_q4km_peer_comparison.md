@@ -1,8 +1,10 @@
 # Qwen3.8-27B OBLITERATED Q4_K_M peer comparison
 
 Status: point-in-time comparison after updating the clean Steve and Sergio
-clones on 2026-08-23. These are not matched A/B results. Model identity,
-quantization, runtime, context, topology, prompt set, and metric differ.
+clones on 2026-08-23. The obliterated configuration was subsequently paused
+after the operator rejected its practical output quality. These are not
+matched A/B results. Model identity, quantization, runtime, context, topology,
+prompt set, and metric differ.
 
 ## Local result under review
 
