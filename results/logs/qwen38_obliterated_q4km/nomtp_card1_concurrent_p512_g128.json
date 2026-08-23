@@ -1,0 +1,103 @@
+{
+  "base": "http://127.0.0.1:18182",
+  "gen_tokens": 128,
+  "ignore_eos": true,
+  "label": "oblit-q4km-dp2-nomtp-card1",
+  "median_completion_tokens": 128.0,
+  "median_post_first_tok_s": 23.853552794758308,
+  "median_prefill_proxy_tok_s": 589.1496382711497,
+  "median_prompt_tokens": 1154.0,
+  "median_ttft_s": 1.9644158000010066,
+  "methodology": {
+    "ignore_eos": true,
+    "post_first": "(completion_tokens - 1) / (request_end - first_token)",
+    "prefill_proxy": "prompt_tokens / TTFT",
+    "prefixes": "unique entropy-first cold",
+    "warmup": "one same-shape then n timed"
+  },
+  "metrics_after": {},
+  "metrics_before": {},
+  "metrics_delta": {},
+  "model": "hotschmoe-dd",
+  "n": 5,
+  "n_ok": 5,
+  "prompt_tokens_target": 512,
+  "runs": [
+    {
+      "completion_tokens": 128,
+      "e2e_s": 7.2805108379689045,
+      "finish_reason": "length",
+      "i": 0,
+      "post_first_tok_s": 23.864305687766354,
+      "prefill_proxy_tok_s": 589.1496382711497,
+      "prompt_tokens": 1154,
+      "salt": "oblit-q4km-dp2-nomtp-card1-p512-g128-i0-1787468312744775466",
+      "text_hash": "78fcfa4a455e17b1",
+      "text_preview": "To find the number of unique tokens, we need to identify all distinct words in the provided text.\\n\\nLet's list them:\\nprism, vector, kilo, alpha, delta, nexus, pr",
+      "ttft_s": 1.958755339961499
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 7.289433407015167,
+      "finish_reason": "length",
+      "i": 1,
+      "post_first_tok_s": 23.853552794758308,
+      "prefill_proxy_tok_s": 594.3176739643222,
+      "prompt_tokens": 1168,
+      "salt": "oblit-q4km-dp2-nomtp-card1-p512-g128-i1-1787468320025865418",
+      "text_hash": "10a14b7d60c30a9f",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  spec\\n2.  echo\\n3.  alpha\\n4.  j",
+      "ttft_s": 1.9652789260144345
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 7.277431367954705,
+      "finish_reason": "length",
+      "i": 2,
+      "post_first_tok_s": 23.903562557960637,
+      "prefill_proxy_tok_s": 584.9067188318335,
+      "prompt_tokens": 1149,
+      "salt": "oblit-q4km-dp2-nomtp-card1-p512-g128-i2-1787468327315857179",
+      "text_hash": "c4ac3485a779f87b",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  oblit-q4km-dp2-nomtp",
+      "ttft_s": 1.9644158000010066
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 7.296853831969202,
+      "finish_reason": "length",
+      "i": 3,
+      "post_first_tok_s": 23.82737028656706,
+      "prefill_proxy_tok_s": 590.7926997611411,
+      "prompt_tokens": 1162,
+      "salt": "oblit-q4km-dp2-nomtp-card1-p512-g128-i3-1787468334593850438",
+      "text_hash": "d0c689fd12fbcac9",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  oblit-q4km-dp2-nomtp",
+      "ttft_s": 1.9668489479809068
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 7.293431527970824,
+      "finish_reason": "length",
+      "i": 4,
+      "post_first_tok_s": 23.815807686946446,
+      "prefill_proxy_tok_s": 588.5236097824738,
+      "prompt_tokens": 1154,
+      "salt": "oblit-q4km-dp2-nomtp-card1-p512-g128-i4-1787468341891275539",
+      "text_hash": "ce3eb9ad3459373e",
+      "text_preview": "To find the number of unique tokens, we need to identify all distinct words in the provided text.\\n\\nLet's list them:\\n1.  SALT\\n2.  oblit-q4km-dp2-nomtp-card1-p512",
+      "ttft_s": 1.9608389210188761
+    }
+  ],
+  "warmup": {
+    "completion_tokens": 128,
+    "e2e_s": 7.278988625970669,
+    "finish_reason": "length",
+    "post_first_tok_s": 23.878378012407108,
+    "prefill_proxy_tok_s": 583.0533728376632,
+    "prompt_tokens": 1143,
+    "text_hash": "3fc979469adc07d2",
+    "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  warmup-oblit-q4km-dp",
+    "ttft_s": 1.96036941598868
+  }
+}

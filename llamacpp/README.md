@@ -20,6 +20,9 @@ a real daily-driver-class alternative. Full evidence + file:line citations in `R
 - `serve_tp2_q8.sh`      -- "W8A8-like, TP=2 DP=1": Q8_0 via `--split-mode tensor`. HIGHER RISK (GDN+TP).
 - `QWEN38_B70_0XSERO.md` -- 0xSero 3.8-27B Q4_K_M SYCL TP=2 recipe + 2026-08-17j numbers.
 - `serve_qwen38_b70_0xsero.sh` -- start/stop wrapper for that compose tree (not a shelf).
+- `serve_qwen38_obliterated_q4km_dp2.sh` -- V3 fixed-merge Q4_K_M, one replica per B70,
+  nginx `hotschmoe-dd`, 245760 ctx with Q8 KV. Experiment path until the sweep gate passes.
+- `obliterated_q4km_entrypoint.sh` -- one-card SYCL runtime and embedded-MTP switch for that path.
 
 Upstream source clone (git-ignored runtime, NOT repo content): `/mnt/vm_8tb/b70/llama.cpp` (HEAD 86b94708).
 GGUF artifacts (git-ignored, `*.gguf`): `/mnt/vm_8tb/b70/llamacpp/gguf/`.
@@ -45,6 +48,10 @@ bash llamacpp/convert_gguf.sh
 #   or
 ./bin/gpu-run bash llamacpp/serve_tp2_q8.sh start     # TP=2 Q8_0 (coherence-gated; may fall back to DP=2)
 bash llamacpp/serve_dp2_q4km.sh stop                  # release
+
+# Qwen3.8 OBLITERATED V3 fixed-merge, large-context DP=2 experiment:
+./bin/gpu-run bash llamacpp/serve_qwen38_obliterated_q4km_dp2.sh start
+./bin/gpu-run bash llamacpp/serve_qwen38_obliterated_q4km_dp2.sh stop
 ```
 
 ## Build environment
@@ -69,6 +76,11 @@ prepends the compiler libs + `build/bin`). Build is JIT/SPIR-V (portable, no AOT
 5. 0xSero Qwen3.8-27B Q4_K_M SYCL TP=2 @262k. -- DONE 2026-08-17j / chased 18: doors-off
    HE+ 0.970/0.927 at code 32.8. Lab Q4K doors ON: code **43.8** / after-TTFT 44.9 at
    native 262k, coherent. FATTN_MMA=1 crash-loops. Not a shelf. See `QWEN38_B70_0XSERO.md`.
+6. OBLITERATUS Qwen3.8-27B V3 fixed-merge Q4_K_M DP=2 @245760. -- BASELINE PASS
+   2026-08-23: both one-card replicas coherent, API reports n_ctx 245760, nginx alternates
+   18181/18182, and simultaneous p512/g128 runs sustain 23.84 + 23.85 = 47.69 tok/s.
+   Embedded-MTP and concurrent soak gates remain before promotion. See
+   `docs/20260823_qwen38_obliterated_q4km_dp2.md`.
 
 Server parity with the daily driver is complete: OpenAI `/v1/*`, `--api-key`, Prometheus `--metrics`,
 `--parallel`/`--cont-batching`, `--jinja` tool-calling, `--mmproj` vision, `--mtp` speculative.

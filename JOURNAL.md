@@ -16724,3 +16724,54 @@ See `docs/20260820_qwen38_w4a8_journal.md`. Long-ctx load-gate. Not a speed DD.
 
 See `docs/20260820_qwen38_w4a8_journal.md`. :18080 Ornith MTP1 131k c1 66.1; :18081 NVFP4 100k c1 64.5.
 
+### 2026-08-23a - OBLITERATED V3 fixed-merge Q4_K_M acquisition
+
+CONFIG -> HF `OBLITERATUS/Qwen3.8-27B-OBLITERATED` revision
+`2648a6231b82328c601ba27b9ffd5029057d0e33`, Q4_K_M file only. The
+pre-V3 Q8_0 was bad per operator and was permanently deleted. 0xSero B70
+SYCL image retained. External MTP sidecar fetched for fallback inspection.
+
+COMMAND -> `hf download ... Qwen3.8-27B-OBLITERATED-Q4_K_M.gguf
+--revision 2648a623...`; `sha256sum`; `gguf_dump --no-tensors --json`.
+
+RESULT -> 16810714400 bytes; SHA256
+`c5e4fe705883e244a468c9e445c8d6ba37fd310b0113e25d2b8a7f2d6f1243e8`.
+GGUF name `Qwen3.8 27b S99 Merged Fixed`, qwen35, native ctx 262144,
+65 blocks, 866 tensors, embedded `blk.64.nextn.*` MTP head. Both cards
+passed xpu-health before serve work.
+
+VERDICT -> GO. Exact V3 fixed-merge artifact proven; Q8 is not a fallback.
+
+### 2026-08-23b - OBLITERATED Q4_K_M DP=2 wrapper fix
+
+CONFIG -> two one-card `qwen38-b70:latest` replicas, nginx :18080,
+Q8 KV, ctx 245760, MTP off, lab Q4K doors on.
+
+COMMAND -> `./bin/gpu-run bash
+llamacpp/serve_qwen38_obliterated_q4km_dp2.sh start`.
+
+RESULT -> first start restart-looped before llama.cpp output. `bash -x`
+showed exit while sourcing oneAPI setvars under Bash nounset. Source setvars
+before `set -u`; syntax/shell checks green. Cards stayed HEALTHY.
+
+VERDICT -> GO after wrapper fix. Not a model, quant, or context failure.
+
+### 2026-08-23c - OBLITERATED Q4_K_M DP=2 no-MTP @245760 GO
+
+CONFIG -> V3 Q4_K_M, DP=2 as independent TP=1 replicas, Q8 KV,
+ctx 245760 per replica, batch/ubatch 1024/256, parallel 1, Q4K lab doors,
+temp 0, repeat penalty 1.15, thinking off. nginx serves `hotschmoe-dd`.
+
+COMMAND -> wrapper start under `gpu-run`; four Paris gates; `/v1/models`;
+phase_bench unique cold p512/g128 n=5 ignore-eos through nginx, then two
+phase benches simultaneously against :18181 and :18182.
+
+RESULT -> both replicas and proxy coherent. API reports id hotschmoe-dd,
+n_ctx 245760, train ctx 262144, Q4_K_M. Proxy alternated 18182/18181.
+Serial nginx median 23.93 tok/s. Simultaneous card medians 23.84 and 23.85,
+aggregate **47.69 tok/s** with effectively 2.00x DP scaling. Prefill proxy
+567.6/589.1 tok/s; TTFT 2.037/1.964 s. Raw JSON under
+`results/logs/qwen38_obliterated_q4km/`.
+
+VERDICT -> GO baseline. Identity, large context, DP=2, and one endpoint are
+proven. Embedded-MTP A/B plus sustained concurrent soak remain before shelf.

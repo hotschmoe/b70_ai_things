@@ -287,25 +287,28 @@ models:
       (0.27.2rc1), not 3.6 2c427ef. Ceiling reference only; does not
       demote W8A8.
 
-  - id: qwen3.8-27b/obliterated-q8
+  - id: qwen3.8-27b/obliterated-q4km
     family: qwen3.8-27b
-    scheme: gguf-q8_0
+    scheme: gguf-q4_k_m
     vision: false
-    mtp: false
-    size_gb: 29
-    served_as: qwen3.8-27b-OBLITERATED-Q8_0
+    mtp: true
+    size_gb: 17
+    served_as: hotschmoe-dd
     source:
       type: hf
       repo: OBLITERATUS/Qwen3.8-27B-OBLITERATED
+      revision: 2648a6231b82328c601ba27b9ffd5029057d0e33
     notes: >
-      Pliny OBLITERATUS Qwen3.8-27B, Q8_0 GGUF only
-      (Qwen3.8-27B-OBLITERATED-Q8_0.gguf ~29 GB). Do NOT
-      fetch the whole repo (mlx + all quants). Overnight P1.
-      llama.cpp SYCL 1x/2x B70. Weight-only, not W8A8.
-      Recipe: llamacpp/serve_qwen38_obliterated_q8.sh.
-      Card: temp 0, repeat_penalty 1.15, thinking off.
+      OBLITERATUS V3 fixed-merge Q4_K_M only. Exact file is 16810714400
+      bytes, SHA256 c5e4fe705883e244a468c9e445c8d6ba37fd310b0113e25d2b8a7f2d6f1243e8.
+      GGUF has 64 target blocks plus an embedded blk.64.nextn MTP head.
+      llama.cpp SYCL DP=2, Q8 KV, 245760 ctx per one-card replica behind
+      nginx. Recipe: llamacpp/serve_qwen38_obliterated_q4km_dp2.sh.
+      Card: temp 0, repeat_penalty 1.15, thinking off. Weight-only, not W4A8.
 
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
+#   qwen3.8-27b/obliterated-q8 -- pre-V3 Q8_0 deleted 2026-08-23 at operator request;
+#     the old merge was bad and is not a fallback for the V3 fixed-merge Q4_K_M.
 #   qwen3.8-27b/nvfp4-modelopt (hf Inferact/Qwen3.8-27B-NVFP4) -- deleted 2026-08-17.
 #     Uniform W4A4, no KV scales. Gated 18/18 MTP3 code 35.0 / HE+ 0.939/0.915; not a DD.
 #     Replaced by qwen3.8-27b/nvfp4-radixark (cookbook MIXED_PRECISION).
