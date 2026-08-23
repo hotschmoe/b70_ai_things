@@ -33,7 +33,8 @@ The shelf currently has entries for:
 replicas behind nginx, Q8_0 KV, 245760 context per replica, and the V3 GGUF's
 embedded MTP head at draft max 3. It serves `hotschmoe-dd` on port 18080.
 Measured aggregate decode is 81.86 tok/s; a five-minute c4 mixed-load soak was
-338/338 coherent with zero errors or degenerate responses.
+338/338 coherent with zero errors or degenerate responses. A real 152289-token
+cold request completed coherently with no context shift or truncation.
 
 The previous vLLM Qwen3.6 W8A8 and NVFP4 entries remain maintained baselines.
 

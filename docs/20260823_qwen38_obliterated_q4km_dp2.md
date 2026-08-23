@@ -1,7 +1,8 @@
 # Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 on B70
 
-Status: MTP3 DP=2 shelf candidate live; performance, equivalence, and concurrent
-soak gates passed. Final >=150k request and systemd installation remain.
+Status: MTP3 DP=2 shelf config live; performance, equivalence, concurrent soak,
+real 152289-token request, and shelf-restart gates passed. Systemd installation
+requires operator sudo authentication.
 
 ## Artifact identity
 
@@ -210,8 +211,15 @@ entropy-heavy generation. The phase harness's printed 30.327-second TTFT is not
 valid for this request because its timer starts after the response headers;
 use the server timing above.
 
-Verdict -> GO at 133551 real tokens. A scaled 75000-token harness request is in
-progress to prove the requested >=150k lower bound.
+The scaled run used `--prompt-tokens 75000 --gen-tokens 8 --timeout 1800`.
+Actual prompt usage was **152289 tokens**. It returned coherent text and the
+server reported 1184699.71 ms prompt eval, 128.55 prompt tok/s, 1185582.65 ms
+total, MTP acceptance 4/7 with mean length 2.33, and `truncated = 0`. No context
+shift occurred. As above, ignore the phase harness's header-excluding TTFT and
+prefill proxy figures for this request.
+
+Verdict -> GO. A real request crossed the requested 150k lower bound, while the
+live API and allocated slot expose 245760 of the model's native 262144 context.
 
 ## Backend choice and DSpark
 
@@ -244,8 +252,26 @@ Non-interactive sudo is unavailable in this agent session, so installing the
 unit requires operator authentication. The current three Docker containers use
 `--restart unless-stopped` and remain live independently of that installation.
 
-## Remaining gates
+## Experiment 6: final shelf restart
 
-1. Complete and record the real >=150k-token request.
-2. Run the shelf wrapper's final restart and post-restart identity/coherence gate.
-3. Install the tracked systemd unit when sudo authentication is available.
+Config -> no environment overrides; start only from the promoted shelf entry.
+
+Command ->
+
+```
+./bin/gpu-run bash \
+  rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh start
+```
+
+Result -> exact SHA check passed; the wrapper selected MTP3, Q8_0 KV, and
+245760 context. Both replicas, both direct Paris gates, and both proxy Paris
+gates passed. Final `/v1/models` reports `hotschmoe-dd`, n_ctx 245760,
+n_ctx_train 262144, 27320697856 parameters, and Q4_K Medium. Four proxy
+connections routed 18182, 18181, 18182, 18181.
+
+Verdict -> GO live shelf. The default handoff command is self-contained and the
+single endpoint is balanced across both cards.
+
+## Remaining operator action
+
+1. Install the tracked systemd unit when sudo authentication is available.

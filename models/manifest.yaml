@@ -50,8 +50,8 @@ models:
     served_as: qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5
     source: { type: hf, repo: nvidia/Qwen3.6-27B-NVFP4 }
     notes: ModelOpt MIXED_PRECISION checkpoint. MLP weights are group-16 NVFP4,
-           attention weights are FP8, and vision plus MTP are retained. Primary
-           vLLM DP=2 daily driver; public proxy alias is hotschmoe-dd.
+           attention weights are FP8, and vision plus MTP are retained. Paused
+           former vLLM daily-driver baseline since 2026-08-23.
 
   - id: qwen3.6-27b/int4-autoround
     family: qwen3.6-27b
@@ -298,12 +298,15 @@ models:
       type: hf
       repo: OBLITERATUS/Qwen3.8-27B-OBLITERATED
       revision: 2648a6231b82328c601ba27b9ffd5029057d0e33
+      files:
+        - Qwen3.8-27B-OBLITERATED-Q4_K_M.gguf
     notes: >
       OBLITERATUS V3 fixed-merge Q4_K_M only. Exact file is 16810714400
       bytes, SHA256 c5e4fe705883e244a468c9e445c8d6ba37fd310b0113e25d2b8a7f2d6f1243e8.
       GGUF has 64 target blocks plus an embedded blk.64.nextn MTP head.
       llama.cpp SYCL DP=2, Q8 KV, 245760 ctx per one-card replica behind
-      nginx. Recipe: llamacpp/serve_qwen38_obliterated_q4km_dp2.sh.
+      nginx. Recipe:
+      rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh.
       Card: temp 0, repeat_penalty 1.15, thinking off. Weight-only, not W4A8.
 
 # ===================== DROPPED (not kept; recorded so the decision is auditable) =====================

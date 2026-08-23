@@ -109,16 +109,28 @@ models:
 
   - label: qwen36-27b-nvfp4-modelopt
     served_model_id: qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5
-    public_alias: hotschmoe-dd
     family: qwen3.6-27b
     weights: nvfp4-modelopt-mixed
     activations: bf16
     calibration: nvidia-modelopt
     serve_cmd: "rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh"
-    notes: "Single-card vLLM replica: fused oneDNN f4_e2m1, PIECEWISE graph,
-      MTP5, calibrated fp8 KV, and prefix cache. DP=2 exposes public alias
-      hotschmoe-dd through nginx; use the full served_model_id for direct
-      per-replica evals and encode nvfp4-modelopt in output directories."
+    notes: "Paused former daily driver. Single-card vLLM replica: fused oneDNN
+      f4_e2m1, PIECEWISE graph, MTP5, calibrated fp8 KV, and prefix cache. Its
+      former hotschmoe-dd alias was retired 2026-08-23; use the full served id."
+
+  - label: qwen38-27b-obliterated-q4km-mtp3
+    served_model_id: hotschmoe-dd
+    public_alias: hotschmoe-dd
+    family: qwen3.8-27b
+    weights: gguf-q4-k-m
+    activations: fp16
+    calibration: gguf-k-quant
+    serve_cmd: "rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh"
+    notes: "Current DP=2 daily driver. OBLITERATUS V3 fixed-merge Q4_K_M,
+      llama.cpp SYCL, one replica per B70, Q8_0 KV, ctx 245760, embedded MTP3.
+      Artifact SHA c5e4fe705883e244a468c9e445c8d6ba37fd310b0113e25d2b8a7f2d6f1243e8.
+      Eval output directories must encode obliterated-q4km-mtp3 because the
+      public API intentionally keeps the stable hotschmoe-dd alias."
 
   - label: qwen38-27b-nvfp4-modelopt
     served_model_id: qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph

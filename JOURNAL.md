@@ -16820,3 +16820,50 @@ All cases ran 55-58 times, including 57 long exact-marker prefills.
 
 VERDICT -> GO shelf promotion for MTP3. Concurrent behavior is coherent and
 the two independent replicas balance evenly.
+
+### 2026-08-23g - MTP3 real 152289-token request PASS
+
+CONFIG -> shelved MTP3 candidate, ctx 245760/Q8_0 per replica, unique cold
+entropy prompt through nginx, actual prompt above the requested 150k floor.
+
+COMMAND -> `phase_bench.py --prompt-tokens 75000 --gen-tokens 8 --n 1
+--skip-warmup --ignore-eos --timeout 1800`, under `gpu-run`.
+
+RESULT -> API usage prompt=152289, completion=8, coherent text. Server prompt
+eval 1184699.71 ms / 152289 = 128.55 tok/s; total 1185582.65 ms. Draft
+acceptance 4/7, mean len 2.33. `truncated = 0`; no context shift. The phase
+harness's printed TTFT excludes the response-header wait here; server timing
+is authoritative.
+
+VERDICT -> GO large context. Real >150k request proven; live slot is 245760.
+
+### 2026-08-23h - final shelf restart and identity gate PASS
+
+CONFIG -> promoted llama.cpp shelf entry with no environment overrides.
+
+COMMAND -> stop/start/status under `gpu-run` via
+`rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh`.
+
+RESULT -> exact model SHA passed; defaults were MTP3, Q8_0 KV, ctx 245760.
+Both replicas and four Paris gates passed. `/v1/models`: hotschmoe-dd,
+n_ctx 245760, train 262144, n_params 27320697856, Q4_K Medium. Proxy routes
+alternated 18182/18181/18182/18181. Three restart-unless-stopped containers
+remain UP. Tracked systemd unit validates, but install needs interactive sudo.
+
+VERDICT -> GO live daily-driver shelf. Operator sudo install is the only
+persistence handoff; Docker restart policy keeps the present runtime live.
+
+### 2026-08-23i - pinned exact-file reprovision guard
+
+CONFIG -> manifest source revision plus exact Q4_K_M file list; generic HF
+entries remain whole-repository downloads when no file list is present.
+
+COMMAND -> `ONLY=qwen3.8-27b/obliterated-q4km bash models/fetch.sh --list`;
+Bash syntax and manifest YAML parse.
+
+RESULT -> fetch plan is pinned to revision `2648a623...` and only
+`Qwen3.8-27B-OBLITERATED-Q4_K_M.gguf`. `fetch.sh` now honors optional
+`source.revision` and `source.files`; unpinned entries still parse normally.
+
+VERDICT -> GO. Fresh reprovisioning cannot accidentally redownload the bad
+old Q8 or mix another repository revision into this shelf entry.

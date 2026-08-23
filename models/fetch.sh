@@ -20,24 +20,48 @@ m = yaml.safe_load(open(sys.argv[1]))
 root = m.get("root", "files")
 for e in m["models"]:
     s = e.get("source", {})
-    print("\t".join([e["id"], s.get("type","?"), s.get("repo",""), e.get("derived_from",""), root]))
+    files = s.get("files", e.get("files", []))
+    if isinstance(files, str):
+        files = [files]
+    fields = [
+        e["id"],
+        s.get("type", "?"),
+        s.get("repo", ""),
+        e.get("derived_from", ""),
+        root,
+        s.get("revision", ""),
+        ",".join(files),
+    ]
+    if any("|" in str(field) for field in fields):
+        raise ValueError("manifest fetch fields may not contain '|'")
+    print("|".join(str(field) for field in fields))
 PY
 )
 
 [ ${#ROWS[@]} -eq 0 ] && { echo "no models parsed from $MANIFEST"; exit 1; }
 
 for row in "${ROWS[@]}"; do
-  IFS=$'\t' read -r id type repo derived root <<<"$row"
+  IFS='|' read -r id type repo derived root revision files_csv <<<"$row"
   [ -n "$ONLY" ] && [ "$ONLY" != "$id" ] && continue
   dst="$HERE/$root/$id"
   if [ "$type" = "hf" ]; then
-    echo ">> $id  <-  hf:$repo"
+    detail=""
+    [ -n "$revision" ] && detail="$detail revision=$revision"
+    [ -n "$files_csv" ] && detail="$detail files=$files_csv"
+    echo ">> $id  <-  hf:$repo$detail"
     [ "$LIST_ONLY" = 1 ] && continue
     mkdir -p "$dst"
+    download_args=(download "$repo")
+    [ -n "$revision" ] && download_args+=(--revision "$revision")
+    if [ -n "$files_csv" ]; then
+      IFS=',' read -r -a exact_files <<<"$files_csv"
+      download_args+=("${exact_files[@]}")
+    fi
+    download_args+=(--local-dir "$dst")
     if command -v hf >/dev/null 2>&1; then
-      hf download "$repo" --local-dir "$dst" || { echo "FAILED: $id"; exit 1; }
+      hf "${download_args[@]}" || { echo "FAILED: $id"; exit 1; }
     else
-      huggingface-cli download "$repo" --local-dir "$dst" || { echo "FAILED: $id"; exit 1; }
+      huggingface-cli "${download_args[@]}" || { echo "FAILED: $id"; exit 1; }
     fi
   else
     echo "-- $id  SKIP (source:custom, quantized-on-device; rebuild from ${derived:-?} -- see manifest TODO)"

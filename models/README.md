@@ -37,7 +37,9 @@ checkpoint is addressed as `/models/<family>/<scheme>` (e.g. `/models/qwen3.6-27
 bash models/fetch.sh            # downloads every source:hf entry into files/<path>
 ```
 
-`source: hf` entries pull straight from HuggingFace. `source: custom` entries were
+`source: hf` entries pull straight from HuggingFace. Optional `source.revision`
+and `source.files` fields pin a repository revision and an exact file subset;
+`fetch.sh` honors both. `source: custom` entries were
 **quantized on this box** and are not downloadable yet -- see the TODO at the top of
 `manifest.yaml`. After `fetch.sh`, run `bash models/graft_w4_complete.sh` to rebuild the
 W4A16/W4A8 vision+MTP grafts.

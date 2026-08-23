@@ -1,7 +1,17 @@
 # MTP_TODO.md — Multi-Token Prediction as the primary decode-speed lever
 
-**Created:** 2026-06-20 - **Updated:** 2026-07-28 (sglang W8A8 large-prefill transport shipped)
+**Created:** 2026-06-20 - **Updated:** 2026-08-23 (llama.cpp embedded MTP3 DP=2 shelved)
 **Owner:** b70 team
+
+> ### [2026-08-23 LLAMA.CPP QWEN3.8 OBLITERATED EMBEDDED MTP RESULT]
+> The fixed V3 Q4_K_M GGUF contains `blk.64.nextn.*`; llama.cpp SYCL creates a
+> draft-MTP context against the same target, with no external draft model.
+> At 245760 context and Q8_0 target/draft KV on each one-card replica, draft max
+> 3 raised simultaneous DP=2 decode 47.69 -> 81.86 tok/s (+71.7%). Acceptance
+> varied by workload (~0.42-1.00; mean length 2.26-4.00). MTP/no-MTP text was
+> exact on 6/7 deterministic prompts and semantically identical on the seventh;
+> a c4 300-second soak passed 338/338. This is the verified shelf default. It is
+> weight-only GGUF, not a replacement for the compressed-tensors INT8-XMX track.
 
 > ### [2026-07-28 SGLANG W8A8 LARGE-PREFILL COLLECTIVE RESULT]
 > The eager Level Zero IPC push all-reduce is now enabled only for tensors with at least
@@ -443,6 +453,7 @@ Capture in this table (and mirror notable runs into `JOURNAL.md`):
 | 2026-06-22 | Qwen3.6-27B | W4A16 | v0230 TP=2 PIECEWISE +SYCLKERNELS | 2 | 8192/fp16 | off/4 | — | — | CRASH | 26.96 | — | — | — | — | — | **M4** TP2 MTP-off 0.87x single-card; MTP-on CRASHES (spec-allgather not graph-capturable) -> TP=2 MTP DEAD |
 | 2026-06-23 | Qwen3.6-27B | W8A8-sqgptq | int8g TP2 +mtp-graft (CT) | 2 | 4096/bf16 | off/4/4e | 3.63(eager) | — | CRASH / 14.27(eager) | 18.74 | DEAD / 0.76x | — | — | 17GiB/card | — | C1 retry (default splitting_ops): PIECEWISE crashes (oneCCL allgather sched cant sycl_graph-record), eager 0.76x; head FINE -- SUPERSEDED by the splitting_ops fix below |
 | 2026-06-23 | Qwen3.6-27B | W8A8-sqgptq | **int8g TP2 +mtp-graft +splitting_ops** (CT) | 2 | 4096/bf16 | **5** | 5.90* | — | **63.11** | 18.74 | **3.37x** | — | — | 17GiB/card | — | **C1 FIXED+SWEPT (scripts/93)** -- splitting_ops ejects collectives from capture -> oneCCL allgather crash CLEARED. **OVERTURNS M4.** spec5 winner, still climbing (50/57/63 @ spec 3/4/5). FASTEST 27B MTP. 3.37x = 63.11 vs best MTP-off 18.74; 4.37x vs same eager-collective off 14.46. *accept ~98% TEMP=0 greedy (prod temp lower). CCL env knobs did NOTHING |
+| 2026-08-23 | Qwen3.8-27B OBLITERATED | GGUF Q4_K_M | llama.cpp SYCL embedded MTP | 1 (DP2) | 245760/q8_0 | **3** | 2.26-4.00 | ~42-100% | **40.35/41.51** | 23.84/23.85 | **1.72x** | 545-567 | 2.05-2.13s | fits 32GiB | 338/338 soak | **SHELF**; 81.86 aggregate, full-output equivalence gated, no external sidecar |
 
 **Reference (REAL + PUBLIC -- localmaxxing.com, user `ytnszmy`, 2026-06-10; cached `data/localmaxxing/`):** Qwen3.6-27B BF16, **4x B70 TP=4**, spec=5 -> accept 4.04, dec 54.2, prefill 2100. Repro from the row's notes: `intel/llm-scaler-vllm:0.14.0-b8.3` + `vllm_xpu_kernels v0.1.9` + `qwen3_5.py` (#43565) + Half-KV; **on our v0230 image #43565 is native -- reproduce THERE, not on 0.14.x**. The ONE missing ingredient is `cudagraph_mode` (PIECEWISE vs FULL) -- add FULL ourselves (RagingNoper recipe). It beats our single-card MTP (currently **-19%: 25.5 vs 31.4, PIECEWISE**), so FULL capture is the unlock. (Other localmaxxing datapoints: RagingNoper 35B-A3B FULL-capture **102.5 t/s no-spec**; Lorbus 27B-int4 single-card MTP **45.2/41.3 t/s**, accept 86/65%; Lorbus TP2 MTP **35.6 t/s [NEG]**. Public sanity: Puget 4xB70 TP=4 27B-dense 13.1 t/s/1u no-MTP; vLLM PR #43565 MTP on B60/Qwen3-Next-80B/spec=2.)
 

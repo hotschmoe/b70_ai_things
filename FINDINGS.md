@@ -6,6 +6,14 @@ skip the dead-ends. Living doc — see [archive/RESULTS.md](archive/RESULTS.md) 
 tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow.
 
 ## TL;DR
+- **Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 (2026-08-23): current large-context daily driver.**
+  Exact fixed-merge GGUF SHA `c5e4fe70...`, not the deleted bad pre-V3 Q8.
+  Two one-card llama.cpp SYCL replicas expose one `hotschmoe-dd` endpoint at
+  245760 context each with Q8_0 KV. The embedded MTP head at draft max 3 raises
+  aggregate p512/g128 decode 47.69 -> **81.86 tok/s** (+71.7%). Deterministic
+  MTP/no-MTP outputs were exact on 6/7 and semantically identical on the seventh;
+  a c4 five-minute soak was 338/338 coherent with zero degeneracy/errors. A real
+  152289-token cold prompt completed coherently without shift or truncation.
 - **Qwen3.8-27B Unsloth NVFP4 (2026-08-15f): one-card COHERENT after channel-FP8 fix.**
   Checkpoint was always fine (CPU dequant vs BF16: MLP 0.992, FP8 0.9996).
   `nvfp4_gemm_w4a16` on Unsloth MLP is bit-exact (cos 1.000). The garbage was
@@ -35,7 +43,7 @@ tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow
   0.976/0.939). 3-5 plus pts behind -- not a 3.8 quality win on
   this bench. **Do not swap DD** (slower and not better). Default
   MTPTOK=3.
-- **Current 27B result (2026-07-28):** NVFP4 is the fastest coherent local path we have measured for
+- **Prior 27B result (2026-07-28):** NVFP4 was the fastest coherent local path measured for
   this workload. The daily driver is two vLLM 0.25.1 single-card replicas at 100,352 tokens, each at
   64.6 code tok/s with calibrated fp8 KV and working prefix reuse. A vLLM 0.26.0 TP=2 shelf mode serves
   one 200,000-token request and passed exact 190,048-token retrieval plus a 52K-token concurrent soak.
@@ -532,4 +540,3 @@ Public `vllm/vllm-openai-xpu` 0.26.1rc1 + GPTQ-INT4 MTP-preserved + BF16 draft p
 **M5 correction:** MoE MTP is NOT flat when the MTP draft is BF16-preserved (GPTQ
 path). Prior +3% was AutoRound with quantized MTP experts. Ceiling reference only
 -- does not replace W8A8/NVFP4 daily driver.
-
