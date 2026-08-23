@@ -16775,3 +16775,48 @@ aggregate **47.69 tok/s** with effectively 2.00x DP scaling. Prefill proxy
 
 VERDICT -> GO baseline. Identity, large context, DP=2, and one endpoint are
 proven. Embedded-MTP A/B plus sustained concurrent soak remain before shelf.
+
+### 2026-08-23d - embedded MTP3 A/B @245760: +71.7% aggregate
+
+CONFIG -> same V3 Q4_K_M DP=2 config as 2026-08-23c, changing only to
+embedded `draft-mtp`, draft max 3, Q8_0 draft KV. No external sidecar.
+
+COMMAND -> restart with `ENABLE_MTP=1 MTP_SIDECAR=0 MTP_DRAFT_MAX=3`;
+same p512/g128 n=5 phase bench through nginx and simultaneously direct.
+
+RESULT -> full 245760 context fit on both cards. Serial nginx 41.25 tok/s.
+Direct medians 40.35 and 41.51, aggregate **81.86 tok/s** versus 47.69
+no-MTP (+71.7%). Draft acceptance varied ~0.42-1.00, mean len 2.26-4.00.
+
+VERDICT -> GO. Embedded MTP3 is a large controlled speed win.
+
+### 2026-08-23e - MTP3 deterministic coherence/equivalence gate
+
+CONFIG -> seven deterministic tests on both direct replicas, save full text;
+restart without MTP and compare the same greedy seed-1 prompts.
+
+COMMAND -> `llamacpp/qualify_qwen38_obliterated_q4km.py` against :18181
+and :18182 in both modes, with MTP JSON as the no-MTP reference.
+
+RESULT -> both MTP replicas byte-identical on 7/7. MTP vs no-MTP exact on
+6/7 per card; the seventh differed only `No.` vs `No;` with the same correct
+logic. Both modes made the same modular-arithmetic miss (0 instead of 71).
+Paris, 391, Fibonacci, sort, logic, and exact 24-line squares were coherent.
+
+VERDICT -> GO MTP coherence. No MTP-only garbling or correctness regression;
+record the shared modular miss as model quality, not speculation corruption.
+
+### 2026-08-23f - MTP3 DP=2 c4 mixed-load soak PASS
+
+CONFIG -> MTP3, ctx 245760, c4 through nginx for 300 seconds; six validated
+short/medium/long cases with degeneracy checks and upstream tracking.
+
+COMMAND -> `gpu-run python3
+llamacpp/soak_qwen38_obliterated_q4km.py --concurrency 4 --duration 300`.
+
+RESULT -> 338/338 coherent, 9488 output tokens, zero coherence failures,
+zero degenerate outputs, zero request errors. Routes card0/card1 = 171/167.
+All cases ran 55-58 times, including 57 long exact-marker prefills.
+
+VERDICT -> GO shelf promotion for MTP3. Concurrent behavior is coherent and
+the two independent replicas balance evenly.

@@ -1,0 +1,40 @@
+{
+  "base": "http://127.0.0.1:18080",
+  "gen_tokens": 16,
+  "ignore_eos": true,
+  "label": "mtp3-longctx-150k",
+  "median_completion_tokens": 16.0,
+  "median_post_first_tok_s": 0.01647975386924991,
+  "median_prefill_proxy_tok_s": 4403.6866108999,
+  "median_prompt_tokens": 133551.0,
+  "median_ttft_s": 30.32708995899884,
+  "methodology": {
+    "ignore_eos": true,
+    "post_first": "(completion_tokens - 1) / (request_end - first_token)",
+    "prefill_proxy": "prompt_tokens / TTFT",
+    "prefixes": "unique entropy-first cold",
+    "warmup": "one same-shape then n timed"
+  },
+  "metrics_after": {},
+  "metrics_before": {},
+  "metrics_delta": {},
+  "model": "hotschmoe-dd",
+  "n": 1,
+  "n_ok": 1,
+  "prompt_tokens_target": 65536,
+  "runs": [
+    {
+      "completion_tokens": 16,
+      "e2e_s": 940.5348587770131,
+      "finish_reason": "length",
+      "i": 0,
+      "post_first_tok_s": 0.01647975386924991,
+      "prefill_proxy_tok_s": 4403.6866108999,
+      "prompt_tokens": 133551,
+      "salt": "mtp3-longctx-150k-p65536-g16-i0-1787470280986494311",
+      "text_hash": "e45a948453f6244a",
+      "text_preview": "To determine the number of unique tokens, we first identify all distinct words in the",
+      "ttft_s": 30.32708995899884
+    }
+  ]
+}

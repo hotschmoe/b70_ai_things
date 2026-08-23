@@ -9,7 +9,8 @@
 >
 > | model | golden dir | image |
 > |---|---|---|
-> | Qwen3.6-27B NVFP4 (current DD and TP=2 200K) | `rdy_to_serve/vllm/qwen36-27b-nvfp4/` | `:int8g-v0251` / `:int8g-v0260` |
+> | Qwen3.8-27B OBLITERATED Q4_K_M (current DD, DP=2 245760) | `rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/` | `qwen38-b70:latest` |
+> | Qwen3.6-27B NVFP4 (paused baseline and TP=2 200K) | `rdy_to_serve/vllm/qwen36-27b-nvfp4/` | `:int8g-v0251` / `:int8g-v0260` |
 > | Qwen3.6-27B W8A8 | `rdy_to_serve/sglang/qwen36-27b-w8a8/` | `sglang-xpu:mtp` |
 > | Qwen3.6-27B W8A8 | `rdy_to_serve/vllm/qwen36-27b-w8a8/` | `:int8g-v0251` |
 > | Qwen3.6-35B-A3B W8A8 | `rdy_to_serve/{sglang,vllm}/qwen36-35b-a3b-w8a8/` | backend-specific |
@@ -18,11 +19,13 @@ The single source of truth for serving model X: its `rdy_to_serve/` dir if shelv
 If you reconstruct a serve command from JOURNAL/scripts, you did it wrong -- fix the golden dir / THIS doc.
 Keep recipes verified-and-current; date each change. (Tools moved to `bin/`; the host runs them flat.)
 
-**Daily driver:** vLLM 0.25.1 NVFP4 DP=2 at `http://192.168.10.5:18080/v1`: `b70_daily_0` on card 0
-at `:18091` and `b70_daily_1` on card 1 at `:18092`, behind nginx `least_conn`. Each request is capped
-at 100,352 tokens. The same shelf entry has a qualified vLLM 0.26.0 `TP=2 MAXLEN=200000` mode for a
-single longer request. The installed service definition is `vllm/deploy/b70-daily-driver.service`;
-the older `vllm/daily_driver_serve.sh` remains a generic orchestrator, not the authoritative live config.
+**Daily driver:** llama.cpp Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 at
+`http://192.168.10.5:18080/v1`. Card 0 listens on localhost `:18181` and card 1
+on `:18182`, behind nginx round robin. Each replica has one 245760-token slot,
+Q8_0 KV, and embedded MTP3. The shelf entry is
+`rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh`; the tracked unit
+is `llamacpp/deploy/b70-daily-driver.service`. The vLLM daily-driver scripts
+remain maintained paused baselines.
 
 ## Where everything runs
 - GPU host: local Ubuntu box `b70s4dayz` @ `192.168.10.5` (we run LOCALLY on it since the 2026-06-23

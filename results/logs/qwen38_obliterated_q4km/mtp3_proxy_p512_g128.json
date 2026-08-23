@@ -1,0 +1,103 @@
+{
+  "base": "http://127.0.0.1:18080",
+  "gen_tokens": 128,
+  "ignore_eos": true,
+  "label": "mtp3-proxy",
+  "median_completion_tokens": 128.0,
+  "median_post_first_tok_s": 41.24733592417816,
+  "median_prefill_proxy_tok_s": 545.1797783275906,
+  "median_prompt_tokens": 1166.0,
+  "median_ttft_s": 2.1098410909762606,
+  "methodology": {
+    "ignore_eos": true,
+    "post_first": "(completion_tokens - 1) / (request_end - first_token)",
+    "prefill_proxy": "prompt_tokens / TTFT",
+    "prefixes": "unique entropy-first cold",
+    "warmup": "one same-shape then n timed"
+  },
+  "metrics_after": {},
+  "metrics_before": {},
+  "metrics_delta": {},
+  "model": "hotschmoe-dd",
+  "n": 5,
+  "n_ok": 5,
+  "prompt_tokens_target": 512,
+  "runs": [
+    {
+      "completion_tokens": 128,
+      "e2e_s": 6.43758099101251,
+      "finish_reason": "length",
+      "i": 0,
+      "post_first_tok_s": 30.0155184343256,
+      "prefill_proxy_tok_s": 524.828192081729,
+      "prompt_tokens": 1158,
+      "salt": "mtp3-proxy-p512-g128-i0-1787468956497291462",
+      "text_hash": "bd79db743aeffabc",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  mtp3-proxy-p512-g128",
+      "ttft_s": 2.206436349020805
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.126625315984711,
+      "finish_reason": "length",
+      "i": 1,
+      "post_first_tok_s": 41.24733592417816,
+      "prefill_proxy_tok_s": 574.3201015201299,
+      "prompt_tokens": 1176,
+      "salt": "mtp3-proxy-p512-g128-i1-1787468962935443872",
+      "text_hash": "8a33b3b315630bcb",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  mtp3-proxy-p512-g128",
+      "ttft_s": 2.0476385849760845
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 4.7887277900008485,
+      "finish_reason": "length",
+      "i": 2,
+      "post_first_tok_s": 46.31068052981008,
+      "prefill_proxy_tok_s": 571.7413646410162,
+      "prompt_tokens": 1170,
+      "salt": "mtp3-proxy-p512-g128-i2-1787468968062696694",
+      "text_hash": "639dbca0f6909e9f",
+      "text_preview": "To find the number of unique tokens, we need to identify all distinct words in the provided text.\\n\\nLet's list them:\\n1. SALT\\n2. mtp3-proxy-p512-g128-i2-178746896",
+      "ttft_s": 2.0463798359851353
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.21657068701461,
+      "finish_reason": "length",
+      "i": 3,
+      "post_first_tok_s": 41.26288269031316,
+      "prefill_proxy_tok_s": 545.1797783275906,
+      "prompt_tokens": 1166,
+      "salt": "mtp3-proxy-p512-g128-i3-1787468972851950317",
+      "text_hash": "57e468125e4a8f29",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  xenon\\n2.  echo\\n3.  wave\\n4.  f",
+      "ttft_s": 2.138744037016295
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.579393177002203,
+      "finish_reason": "length",
+      "i": 4,
+      "post_first_tok_s": 36.6041485618586,
+      "prefill_proxy_tok_s": 541.2729920202552,
+      "prompt_tokens": 1142,
+      "salt": "mtp3-proxy-p512-g128-i4-1787468978069049762",
+      "text_hash": "2ba32b4de9206e44",
+      "text_preview": "To find the number of unique tokens, we need to identify all distinct words in the provided text.\\n\\nLet's list them:\\n1. SALT=mtp3-proxy-p512-g128-i4-178746897806",
+      "ttft_s": 2.1098410909762606
+    }
+  ],
+  "warmup": {
+    "completion_tokens": 128,
+    "e2e_s": 6.520196278986987,
+    "finish_reason": "length",
+    "post_first_tok_s": 30.14277580765403,
+    "prefill_proxy_tok_s": 488.5312693947445,
+    "prompt_tokens": 1127,
+    "text_hash": "cecf841fa0350977",
+    "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  warmup-mtp3-proxy-51",
+    "ttft_s": 2.3069147680071183
+  }
+}

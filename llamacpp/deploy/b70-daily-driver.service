@@ -1,0 +1,19 @@
+[Unit]
+Description=B70 daily driver (llama.cpp Qwen3.8-27B OBLITERATED Q4_K_M DP2 MTP3 at 245760)
+After=docker.service network-online.target mnt-vm_8tb.mount
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=hotschmoe
+Group=hotschmoe
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+ExecStart=/mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh start
+ExecStop=/mnt/vm_8tb/github/b70_ai_things/bin/gpu-run bash /mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh stop
+TimeoutStartSec=1800
+TimeoutStopSec=300
+
+[Install]
+WantedBy=multi-user.target

@@ -13,6 +13,7 @@ Do not reconstruct a serve from old JOURNAL entries. Start from the matching
 ```text
 rdy_to_serve/
   _common/lib.sh
+  llamacpp/<model-quant>/serve.sh
   sglang/<model-quant>/serve.sh
   vllm/<model-quant>/serve.sh
 ```
@@ -21,15 +22,20 @@ The shelf currently has entries for:
 
 | backend | entries | role |
 |---|---|---|
-| vLLM | 27B int4, NVFP4, W4A16, W4A8, W8A8; 35B-A3B int4 and W8A8 | Current W8A8 daily driver + NVFP4 measured baselines |
+| llama.cpp | Qwen3.8-27B OBLITERATED Q4_K_M | Current large-context DP=2 daily driver |
+| vLLM | 27B int4, NVFP4, W4A16, W4A8, W8A8; 35B-A3B int4 and W8A8 | Maintained paused baselines |
 | sglang | 27B int4, W4A8, W8A8; 35B-A3B W8A8 | Research backend for true-W8A8 / long-prefill work |
 
 ## Current headline entry
 
-**Daily driver (2026-08-05):** `vllm/qwen36-27b-w8a8/serve.sh` on **vLLM 0.26.0**
-(`int8g-v0260`), TP=2, **16-bit KV**, `MAXLEN=253952`, MTP3, prefix cache. Live capacity
-269,774 KV tokens (1.06x at full length). Start via
-`DD_API_KEY=... DD_ENV=SERVED=hotschmoe-dd ./vllm/daily_driver_serve.sh start`.
+**Daily driver (2026-08-23):**
+`llamacpp/qwen38-27b-obliterated-q4km/serve.sh`, two independent one-card
+replicas behind nginx, Q8_0 KV, 245760 context per replica, and the V3 GGUF's
+embedded MTP head at draft max 3. It serves `hotschmoe-dd` on port 18080.
+Measured aggregate decode is 81.86 tok/s; a five-minute c4 mixed-load soak was
+338/338 coherent with zero errors or degenerate responses.
+
+The previous vLLM Qwen3.6 W8A8 and NVFP4 entries remain maintained baselines.
 
 **NVFP4 shelf** (`vllm/qwen36-27b-nvfp4/serve.sh`) remains the measured high-agg alternative:
 

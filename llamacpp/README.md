@@ -21,8 +21,10 @@ a real daily-driver-class alternative. Full evidence + file:line citations in `R
 - `QWEN38_B70_0XSERO.md` -- 0xSero 3.8-27B Q4_K_M SYCL TP=2 recipe + 2026-08-17j numbers.
 - `serve_qwen38_b70_0xsero.sh` -- start/stop wrapper for that compose tree (not a shelf).
 - `serve_qwen38_obliterated_q4km_dp2.sh` -- V3 fixed-merge Q4_K_M, one replica per B70,
-  nginx `hotschmoe-dd`, 245760 ctx with Q8 KV. Experiment path until the sweep gate passes.
+  nginx `hotschmoe-dd`, 245760 ctx with Q8 KV. Backend implementation for the shelf entry.
 - `obliterated_q4km_entrypoint.sh` -- one-card SYCL runtime and embedded-MTP switch for that path.
+- `qualify_qwen38_obliterated_q4km.py` -- deterministic output and MTP/no-MTP equivalence gate.
+- `soak_qwen38_obliterated_q4km.py` -- authenticated mixed-prefill concurrent coherence soak.
 
 Upstream source clone (git-ignored runtime, NOT repo content): `/mnt/vm_8tb/b70/llama.cpp` (HEAD 86b94708).
 GGUF artifacts (git-ignored, `*.gguf`): `/mnt/vm_8tb/b70/llamacpp/gguf/`.
@@ -49,9 +51,9 @@ bash llamacpp/convert_gguf.sh
 ./bin/gpu-run bash llamacpp/serve_tp2_q8.sh start     # TP=2 Q8_0 (coherence-gated; may fall back to DP=2)
 bash llamacpp/serve_dp2_q4km.sh stop                  # release
 
-# Qwen3.8 OBLITERATED V3 fixed-merge, large-context DP=2 experiment:
-./bin/gpu-run bash llamacpp/serve_qwen38_obliterated_q4km_dp2.sh start
-./bin/gpu-run bash llamacpp/serve_qwen38_obliterated_q4km_dp2.sh stop
+# Qwen3.8 OBLITERATED V3 fixed-merge, verified large-context DP=2 shelf entry:
+./bin/gpu-run bash rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh start
+./bin/gpu-run bash rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh stop
 ```
 
 ## Build environment
@@ -76,10 +78,12 @@ prepends the compiler libs + `build/bin`). Build is JIT/SPIR-V (portable, no AOT
 5. 0xSero Qwen3.8-27B Q4_K_M SYCL TP=2 @262k. -- DONE 2026-08-17j / chased 18: doors-off
    HE+ 0.970/0.927 at code 32.8. Lab Q4K doors ON: code **43.8** / after-TTFT 44.9 at
    native 262k, coherent. FATTN_MMA=1 crash-loops. Not a shelf. See `QWEN38_B70_0XSERO.md`.
-6. OBLITERATUS Qwen3.8-27B V3 fixed-merge Q4_K_M DP=2 @245760. -- BASELINE PASS
-   2026-08-23: both one-card replicas coherent, API reports n_ctx 245760, nginx alternates
-   18181/18182, and simultaneous p512/g128 runs sustain 23.84 + 23.85 = 47.69 tok/s.
-   Embedded-MTP and concurrent soak gates remain before promotion. See
+6. OBLITERATUS Qwen3.8-27B V3 fixed-merge Q4_K_M DP=2 @245760. -- SHELVED
+   2026-08-23: both one-card replicas coherent, API reports n_ctx 245760, nginx balances
+   18181/18182, and embedded MTP3 raises simultaneous p512/g128 decode from
+   47.69 to 81.86 tok/s aggregate. MTP/no-MTP deterministic outputs were exact on
+   six of seven prompts and semantically identical on the seventh. A c4 five-minute
+   soak passed 338/338 with zero degeneracy, coherence failures, or errors. See
    `docs/20260823_qwen38_obliterated_q4km_dp2.md`.
 
 Server parity with the daily driver is complete: OpenAI `/v1/*`, `--api-key`, Prometheus `--metrics`,
@@ -87,6 +91,7 @@ Server parity with the daily driver is complete: OpenAI `/v1/*`, `--api-key`, Pr
 
 ## Promotion to the shelf
 
-Per the repo shelf rules, these bring-up scripts stay under `llamacpp/` until a config is MEASURED
-faster-or-equal AND coherent under concurrent load on the GPU. Only then does a verified config get
-promoted to `rdy_to_serve/llamacpp/<model-quant>/serve.sh`.
+Per the repo shelf rules, bring-up scripts stay under `llamacpp/` until a config is
+measured faster-or-equal and coherent under concurrent load. The verified
+OBLITERATED config is at
+`rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh`.

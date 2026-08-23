@@ -1,6 +1,7 @@
 # Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 on B70
 
-Status: baseline live and measured; embedded-MTP and soak gates in progress.
+Status: MTP3 DP=2 shelf candidate live; performance, equivalence, and concurrent
+soak gates passed. Final >=150k request and systemd installation remain.
 
 ## Artifact identity
 
@@ -112,10 +113,139 @@ Verdict -> GO baseline. The requested model identity, DP=2 topology, one endpoin
 and large context are real. Do not promote until embedded-MTP A/B and sustained
 concurrent coherence complete.
 
-## Next gates
+## Experiment 2: embedded MTP3 A/B
 
-1. Same-context embedded MTP at draft lengths 2, 3, and 4; keep only a coherent
-   speed win on representative generation, not an easy counting-only win.
-2. Mixed-length concurrent proxy soak and upstream distribution proof.
-3. Long-context allocation/request probe beyond the API metadata check.
-4. Shelf recipe, systemd daily-driver update, final restart, and post-restart gate.
+Config -> identical 245760 context, Q8_0 target and draft KV, batch/ubatch
+1024/256, one slot per card. Only embedded MTP changed from off to
+`--spec-type draft-mtp --spec-draft-n-max 3`. No external sidecar was loaded.
+
+Command ->
+
+```
+ENABLE_MTP=1 MTP_SIDECAR=0 MTP_DRAFT_MAX=3 \
+  ./bin/gpu-run bash llamacpp/serve_qwen38_obliterated_q4km_dp2.sh start
+```
+
+Result -> both replicas fit at full context and passed four Paris gates. The
+main GGUF's `blk.64.nextn.*` head was used. Same phase bench as the baseline:
+
+| path | no-MTP tok/s | MTP3 tok/s | change |
+|---|---:|---:|---:|
+| nginx, serial | 23.93 | 41.25 | +72.4% |
+| card 0, simultaneous | 23.84 | 40.35 | +69.3% |
+| card 1, simultaneous | 23.85 | 41.51 | +74.0% |
+| DP=2 aggregate | 47.69 | 81.86 | +71.7% |
+
+Observed per-request draft acceptance ranged from about 0.42 to 1.00, with
+mean speculative lengths from 2.26 to 4.00. It was workload-dependent rather
+than a fixed or obviously bogus counter.
+
+Verdict -> GO. Embedded MTP3 is a large controlled speed win and fits beside
+the full 245760-token context on both 32 GB cards.
+
+## Experiment 3: MTP output equivalence and coherence
+
+Config -> seven deterministic prompts on both direct replicas: Paris,
+multiplication, modular arithmetic, Fibonacci, sorting, syllogism, and an exact
+24-line square table. Save full text, then restart without MTP and repeat the
+same prompts at temperature zero and seed 1.
+
+Command -> `llamacpp/qualify_qwen38_obliterated_q4km.py` on ports 18181 and
+18182, first with MTP3 and then without MTP using `--reference`.
+
+Result -> the two MTP replicas were byte-identical on all seven completions.
+MTP and no-MTP were byte-identical on six of seven prompts on both cards. The
+seventh was semantically identical and differed only in punctuation:
+
+```
+MTP3:   No. Since all zorps are blue ...
+no-MTP: No; since all zorps are blue ...
+```
+
+Both modes made the same model-quality miss on the harder arithmetic prompt,
+answering `(12345*6789) mod 97` as 0 instead of 71. That miss is not introduced
+by speculative decoding. Paris, 391, Fibonacci, sorting, logic, and every line
+of the 24-line square table were coherent and correct.
+
+Verdict -> GO for MTP coherence. The speedup is not accompanied by garbling or
+an MTP-only correctness regression in this deterministic gate. Keep the
+modular miss recorded as a Q4 model-quality limitation.
+
+## Experiment 4: sustained concurrent mixed-load soak
+
+Config -> MTP3, c4 through nginx for 300 seconds. Six cases cycle across short,
+medium, and long prefills: Paris, 391, Fibonacci, hash-map prose, a long exact
+marker, and a square list. Every answer is validated and every response is
+checked for empty output, repeated-character runs, and character dominance.
+
+Command ->
+
+```
+OPENAI_API_KEY=... ./bin/gpu-run python3 -u \
+  llamacpp/soak_qwen38_obliterated_q4km.py \
+  --base http://127.0.0.1:18080 --concurrency 4 --duration 300 \
+  --out results/logs/qwen38_obliterated_q4km/mtp3_proxy_c4_soak_300s.json
+```
+
+Result -> 338/338 requests passed, 9488 completion tokens, zero coherence
+failures, zero degenerate outputs, and zero request errors. nginx routed 171
+requests to card 0 and 167 to card 1. Each of the six cases ran 55-58 times,
+including 57 long exact-marker prefills.
+
+Verdict -> GO. MTP3 remains coherent under sustained concurrent proxy load and
+both replicas carry traffic evenly.
+
+## Experiment 5: real long-context requests
+
+Config -> MTP3 candidate, unique cold entropy prompt, one request through
+nginx, forced output. The first sizing run targeted 65536 harness tokens.
+
+Command -> `phase_bench.py --prompt-tokens 65536 --gen-tokens 16 --n 1
+--skip-warmup --ignore-eos --timeout 1200`.
+
+Result -> actual prompt usage was 133551 tokens and output was coherent. The
+server reported 938442.75 ms prompt eval, 142.31 prompt tok/s, 16 output tokens,
+940207.26 ms total, and `truncated = 0`. MTP accepted 7/21 draft tokens on this
+entropy-heavy generation. The phase harness's printed 30.327-second TTFT is not
+valid for this request because its timer starts after the response headers;
+use the server timing above.
+
+Verdict -> GO at 133551 real tokens. A scaled 75000-token harness request is in
+progress to prove the requested >=150k lower bound.
+
+## Backend choice and DSpark
+
+GGUF is a llama.cpp artifact, so two llama.cpp replicas are the direct DP=2
+serve path. DSpark is a vLLM/transformers hidden-state drafter and cannot be
+attached to this GGUF runtime. The fixed V3 file already carries a compatible
+MTP head, and llama.cpp can create its MTP context directly against the target
+model, avoiding a second full draft model. Embedded MTP is therefore the
+applicable speculative path.
+
+## Shelf and service
+
+The measured default is now:
+
+```
+rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh
+```
+
+The tracked systemd unit is `llamacpp/deploy/b70-daily-driver.service`. Install
+it after the final gate with:
+
+```
+sudo install -m 0644 llamacpp/deploy/b70-daily-driver.service \
+  /etc/systemd/system/b70-daily-driver.service
+sudo systemctl daemon-reload
+sudo systemctl restart b70-daily-driver.service
+```
+
+Non-interactive sudo is unavailable in this agent session, so installing the
+unit requires operator authentication. The current three Docker containers use
+`--restart unless-stopped` and remain live independently of that installation.
+
+## Remaining gates
+
+1. Complete and record the real >=150k-token request.
+2. Run the shelf wrapper's final restart and post-restart identity/coherence gate.
+3. Install the tracked systemd unit when sudo authentication is available.

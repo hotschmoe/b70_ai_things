@@ -1,0 +1,103 @@
+{
+  "base": "http://127.0.0.1:18181",
+  "gen_tokens": 128,
+  "ignore_eos": true,
+  "label": "mtp3-card0",
+  "median_completion_tokens": 128.0,
+  "median_post_first_tok_s": 40.34852478727636,
+  "median_prefill_proxy_tok_s": 545.8097887582185,
+  "median_prompt_tokens": 1161.0,
+  "median_ttft_s": 2.1282500629895367,
+  "methodology": {
+    "ignore_eos": true,
+    "post_first": "(completion_tokens - 1) / (request_end - first_token)",
+    "prefill_proxy": "prompt_tokens / TTFT",
+    "prefixes": "unique entropy-first cold",
+    "warmup": "one same-shape then n timed"
+  },
+  "metrics_after": {},
+  "metrics_before": {},
+  "metrics_delta": {},
+  "model": "hotschmoe-dd",
+  "n": 5,
+  "n_ok": 5,
+  "prompt_tokens_target": 512,
+  "runs": [
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.214094159018714,
+      "finish_reason": "length",
+      "i": 0,
+      "post_first_tok_s": 41.091967247275335,
+      "prefill_proxy_tok_s": 537.8000479835067,
+      "prompt_tokens": 1142,
+      "salt": "mtp3-card0-p512-g128-i0-1787469004883602837",
+      "text_hash": "eb9308012b2a8285",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  mtp3-card0-p512-g128",
+      "ttft_s": 2.123465783020947
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.690455860982183,
+      "finish_reason": "length",
+      "i": 1,
+      "post_first_tok_s": 35.62239129447526,
+      "prefill_proxy_tok_s": 545.8097887582185,
+      "prompt_tokens": 1160,
+      "salt": "mtp3-card0-p512-g128-i1-1787469010098303562",
+      "text_hash": "4db58d75b812156a",
+      "text_preview": "To find the number of unique tokens, we need to identify all distinct words in the provided text.\\n\\nLet's list them:\\n1.  SALT=mtp3-card0-p512-g128-i1-17874690100",
+      "ttft_s": 2.1252825139672495
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.158895984000992,
+      "finish_reason": "length",
+      "i": 2,
+      "post_first_tok_s": 41.905258255182346,
+      "prefill_proxy_tok_s": 546.4583416322529,
+      "prompt_tokens": 1163,
+      "salt": "mtp3-card0-p512-g128-i2-1787469015789335872",
+      "text_hash": "9cfa76dcd08e1945",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT\\n2.  mtp3-card0-p512-g128",
+      "ttft_s": 2.1282500629895367
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.861866455990821,
+      "finish_reason": "length",
+      "i": 3,
+      "post_first_tok_s": 34.018558660006704,
+      "prefill_proxy_tok_s": 547.3054903498501,
+      "prompt_tokens": 1165,
+      "salt": "mtp3-card0-p512-g128-i3-1787469020948782015",
+      "text_hash": "4021e786af980a94",
+      "text_preview": "To find the number of unique tokens, we first identify all distinct words in the provided text.\\n\\nThe list of unique tokens is:\\n1.  SALT=mtp3-card0-p512-g128-i3-",
+      "ttft_s": 2.1286101099685766
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 5.278426086995751,
+      "finish_reason": "length",
+      "i": 4,
+      "post_first_tok_s": 40.34852478727636,
+      "prefill_proxy_tok_s": 544.8526648848313,
+      "prompt_tokens": 1161,
+      "salt": "mtp3-card0-p512-g128-i4-1787469026811197888",
+      "text_hash": "893230f43ff38b3a",
+      "text_preview": "To determine the number of unique tokens, we first identify all distinct words in the provided text. The list includes: `SALT`, `mtp3-card0-p512-g128-i4-1787469",
+      "ttft_s": 2.13085128297098
+    }
+  ],
+  "warmup": {
+    "completion_tokens": 128,
+    "e2e_s": 6.4863405100186355,
+    "finish_reason": "length",
+    "post_first_tok_s": 29.1351727569371,
+    "prefill_proxy_tok_s": 533.9982001988762,
+    "prompt_tokens": 1136,
+    "text_hash": "1e01fe5977a32270",
+    "text_preview": "To find the number of unique tokens, we need to identify all distinct words in the provided text.\\n\\nLet's list them:\\nwarmup-mtp3-card0-512 (SALT) is not part of ",
+    "ttft_s": 2.1273479940136895
+  }
+}
