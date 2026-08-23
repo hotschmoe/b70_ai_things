@@ -4,6 +4,13 @@
 **Repo:** https://github.com/steveseguin/b70-optimization-lab
 **HEAD at ingest:** `924b518` (2026-08-19T03:04Z)
 
+**CORRECTION 2026-08-23:** Steve now marks the published 101.922 MTP5 and
+100.497 MTP4 rows as invalidated. Their 0.03125 greedy margin changed emitted
+text on 18/25 prompts, while the baseline used the same margin and could not
+detect the change. His margin-free working anchor is 101.170 tok/s, but three
+arms agree on only 21-22/25 prompts, so it is research-only and not promotable.
+Preserve the original ingest below as history; do not cite it as a valid record.
+
 Operator 2026-08-19 YOLO: S2 may use Steve's stack, his
 graph-safe FA source, public nightly `f01e24f6` (already on
 disk), or a NEW vLLM/sglang image. Do not stay on int8g-v0260

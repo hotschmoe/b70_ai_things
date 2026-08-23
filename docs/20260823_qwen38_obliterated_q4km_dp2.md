@@ -4,6 +4,10 @@ Status: MTP3 DP=2 shelf config live; performance, equivalence, concurrent soak,
 real 152289-token request, and shelf-restart gates passed. Systemd installation
 requires operator sudo authentication.
 
+Peer performance comparison, including the corrected status of Steve's old
+101.922 tok/s claim:
+`docs/20260823_obliterated_q4km_peer_comparison.md`.
+
 ## Artifact identity
 
 Source: `OBLITERATUS/Qwen3.8-27B-OBLITERATED`.

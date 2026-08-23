@@ -16867,3 +16867,47 @@ RESULT -> fetch plan is pinned to revision `2648a623...` and only
 
 VERDICT -> GO. Fresh reprovisioning cannot accidentally redownload the bad
 old Q8 or mix another repository revision into this shelf entry.
+
+### 2026-08-23j - Open WebUI launched against obliterated daily driver
+
+CONFIG -> existing `open-webui` data volume, host port 3000, auth disabled,
+Ollama disabled, OpenAI backend `http://192.168.10.5:18080/v1`, live API key
+from `/mnt/vm_8tb/b70/secrets/dd_api_key`. Existing container had a stale
+backend at port 8010.
+
+COMMAND -> remove and recreate only the disposable `open-webui` container,
+preserving the `open-webui` volume; wait for Docker health; query `/models`
+from inside the container with its configured credentials.
+
+RESULT -> container healthy at `http://192.168.10.5:3000`; backend returned
+exact model id `hotschmoe-dd`. Existing WebUI data volume was preserved. The
+three llama.cpp/nginx daily-driver containers were not restarted.
+
+VERDICT -> GO for operator chat testing of the fixed obliterated model.
+
+### 2026-08-23k - updated Steve/Sergio performance comparison
+
+CONFIG -> clean canonical Steve clone
+`/mnt/vm_8tb/b70/research/b70-lab-agent` and clean canonical Sergio clone
+`/mnt/vm_8tb/b70/community_repos/intel-arc-pro-b70-inference-cookbook`.
+Preserve the older divergent Steve checkout untouched.
+
+COMMAND -> fetch and fast-forward both clean clones; inspect current claims,
+repro packets, and Qwen3.8 methodology; compare against local MTP3 direct
+40.35/41.51 tok/s and 81.86 two-stream sum.
+
+RESULT -> Steve at `0107f278a1486b6177fc5d4e6b7b44e04f14bc52` and Sergio at
+`dca0249684769b0a945a8d702352fdeea658852a`. Steve's verified standard
+llama.cpp Q4_K_M no-spec TP1 is 27.81 tok/s; local per-card mean is 47.2%
+higher, but model, MTP, KV, and context differ. Steve refuted 101.922 because
+its greedy margin changed output; honest 101.170 remains non-promotable at
+only 21-22/25 inter-arm agreement. Sergio's one-card GPTQ-INT4 MTP4 is 81.20
+with BF16 draft, 112.65 with optional draft INT4, and 106.7 on the current
+greedy C1 stack. Local per-card decode is materially slower; its advantages
+are two isolated lanes, proven coherent MTP, and a real 152289-token request
+inside a 245760-token slot. Full caveats and arithmetic are in
+`docs/20260823_obliterated_q4km_peer_comparison.md`.
+
+VERDICT -> good daily-driver performance, not a raw single-card record. Treat
+all peer percentages as orientation until a matched harness is run. The old
+Steve 101.922 headline is corrected in active docs and must not be promoted.

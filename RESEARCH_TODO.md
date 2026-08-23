@@ -110,9 +110,12 @@
 >       2026-08-18 chase: lab Q4K reorder+SwiGLU doors raise code c1 to **43.8** at 262k
 >       (after-TTFT 44.9). FATTN_MMA=1 crash-loops JIT. Remaining 51 is AOT 2026.1.1.
 >       Recipe: `LAB_DOORS=1` default in `llamacpp/serve_qwen38_b70_0xsero.sh`.
->    M3 UPDATED 2026-08-19 -- Steve lab now has 3.8 AutoRound INT4 TP=2
->       MTP5 **101.922** / MTP4 100.497 after-TTFT (2x B70, pinned
->       compile cache). We have not served that scheme. S2 later.
+>    M3 CORRECTED 2026-08-23 -- Steve invalidated the published 3.8
+>       AutoRound INT4 TP=2 MTP5 101.922 / MTP4 100.497 rows because an
+>       output-changing greedy margin was enabled. The margin-free MTP5
+>       working anchor is 101.170, but arms agree on only 21-22/25 prompts;
+>       Steve keeps it research-only and non-promotable. We have not served
+>       that scheme. S2 later only behind an output-equivalence gate.
 >       sglang DSpark still CUDA/Spark only. Do not bump this campaign.
 >    Do not iterate rmacy v10-slim (8k, 17-22 tok/s). W8A8 3.8 stays the INT8-XMX track.
 >    zml stays a findings backend (2026-08-19c: origin/master c58d81a7 at
