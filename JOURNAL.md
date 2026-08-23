@@ -16950,3 +16950,37 @@ averaged 35.2 tok/s, best 35.4, versus the historical matching 32.8 tok/s.
 VERDICT -> GO live stock quality-first TP=2 daily driver. TP=2 preserves the
 coding-qualified topology. DP=2 offers two lanes but changes KV/context
 numerics and remains unqualified on the stock HumanEval+ gate.
+
+### 2026-08-23n - TP=2 inference profile: synchronization dominates sglang decode
+
+CONFIG -> 2x B70 under one both-card `gpu-run` lease; kernel 7.1 and compute
+runtime 26.22.38646.4. Production stock Q4_K_M llama.cpp TP=2 baseline plus
+Qwen3.6-27B compressed-tensors W8A8 sglang 0.5.6/0.5.15, TP=2, MTP10, eager,
+8K, radix off. `CCL_TOPO_P2P_ACCESS=0` throughout. Compare the 1M shelf push
+gate with `PUSH_AR_MIN_NUMEL=0`; no P2P-on serve or unsafe peer-write arm.
+
+COMMAND -> current torch 2.12 oneCCL `scripts/allreduce_bench.py`; Level Zero
+IPC push `scripts/106_run_ar_torch.sh`; stage-separated
+`sglang/profile_w8a8_0515_vs_0506.sh`; shelf `serve.sh run` at push gates 1M
+and 0; five-batch push-all mechanism trace. Logs and exact commands are in
+`docs/20260823_tp2_inference_profile.md`.
+
+RESULT -> oneCCL small-message floor 78-111 us at 4-64 KiB and large-message
+plateau 1.15-1.24 GB/s. Push: 40 us at 10 KiB and 10.66 GB/s at 16/64 MiB.
+Real default decode: 795 AR / five batches, 319/878 ms ranks 0/1 = 41.3%/65.9%
+of device time; identical math time exposes a 2.75x collective imbalance.
+Push-all mechanism trace: collective device time 8/8 ms, total device time
+469/469 ms versus 774/1333, imbalance gone. End-to-end: c1 21.36 -> 22.48
+(+5.2%), c4 aggregate 19.76 -> 19.81 (flat), TTFT 584 -> 595 ms, stable 2K
+soak 16.36 -> 17.35 (+6.1%); coherence passed. Restored stock Q4_K_M daily
+driver: identity/coherence pass, port 18080, ctx 262144; fresh baseline in this
+session 37.88 tok/s.
+
+VERDICT -> TP=2 communication synchronization is sglang decode bottleneck #1,
+but raw P2P bandwidth is not: tiny payloads pay 128-159 serial boundaries and
+host/runtime queue synchronization. Large prefill is bandwidth-bound and push
+is already the right fix. After push-all, BF16 GEMM is 46.5%, INT8 GEMM 20.6%,
+activation quant 6.8%, so math becomes the device target while eager host sync
+limits wall realization. Next: A-B-B-A + serve-sweep before any gate promotion;
+then remove/amortize host barriers and reduce boundary count. Do not pursue
+P2P-on serve or broad direct peer writes.

@@ -10,6 +10,16 @@
 > 35.2 tok/s. The obliterated DP=2 shelf is paused after the user rejected its
 > quality. This does not change the compressed-tensors W8A8/W4A8 INT8-XMX target.
 
+> ### [PROFILE 2026-08-23] -- TP=2 synchronization, not raw P2P bandwidth
+> Fresh sglang W8A8 traces: 795 all-reduces / five decode batches (159/batch),
+> 41.3%/65.9% of rank device time with a 319/878 ms rank imbalance. Eager
+> push-all removes oneCCL and drops collective device time to 8/8 ms, but
+> end-to-end gains only c1 +5.2% and 2K soak +6.1%; c4 is flat. Therefore the
+> next TP=2 project is host/runtime sync removal and boundary-count reduction,
+> not unsafe `CCL_TOPO_P2P_ACCESS=1` or raw peer-bandwidth work. Push-all is a
+> research result only until A-B-B-A plus serve-sweep/coherence gates pass.
+> Full profile: `docs/20260823_tp2_inference_profile.md`.
+
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.
 > Ledger: `docs/20260820_qwen38_w4a8_loops.md`. Dead-ends:

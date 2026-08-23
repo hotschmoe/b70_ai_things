@@ -1,0 +1,710 @@
+ARM -> sglang-0.5.6 script=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh ctx=8192 radix=0 maxreq=4
+[21:36:07] pre-flight xpu-health
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[21:36:35] serve W8A8 fused+MTP (steps=10) TP=2 -> qwen36-27b-w8a8-gptq-mtp-sgl056-profile on :30000 (ctx=8192 radix=0 push_ar=1 tool=1 think=4096 metrics=1 img=sglang-xpu:mtp)
+[21:36:40] waiting for /health (load + spec JIT ~3-6min)...
+[21:41:32] /health 200 (~200s)
+COHERENCE OK: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Two sentences.\n\n2.  **Identify Key Scientif"
+[21:42:40] push-AR engagement hits=1
+[21:42:40] healthy + coherent; serving qwen36-27b-w8a8-gptq-mtp-sgl056-profile on :30000
+IDENTITY[sglang-0.5.6] -> id=qwen36-27b-w8a8-gptq-mtp-sgl056-profile max_model_len=8192
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[mtp-tree-xpu] patched assign_extend_cache_locs_func (XPU None-index -> draft-slot gather)
+[mtp-tree-xpu] stripped is_cuda guards on fused mamba/conv state-scatter (XPU)
+[mtp-tree-xpu] patched top_p_renorm_prob in sgl_kernel + eagle_utils (XPU nucleus-renorm)
+[mtp-tree-xpu] forced greedy-verify branch in eagle_sample (XPU, with NPU/HIP)
+[mtp-tree-xpu] installed chain (topk=1) build_tree + verify_tree_greedy torch fallbacks
+[w8a8-shim] scoped _check_scheme_supported (no global sm90 fake)
+[w8a8-fused] dlopen'd /work/kernel/_xpu_C.abi3.so
+[w8a8-fused] prefill act-quant: oneDNN dynamic_per_token_int8_quant (1 launch)
+[w8a8-shim] installed: FUSED hybrid (decode=int8_gemm_w8a16, prefill=int8_gemm_w8a8)
+[push-ar] patched sglang GroupCoordinator._all_reduce_in_place
+[push-ar] patched sglang XpuCommunicator.all_reduce (so=/work/push_ar/libxpu_push_ar_graph.so, maxB=536870912)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+RUNTIME -> torch 2.12.0+xpu sglang 0.5.6.post3.dev6841+g09ca4fc96
+RUNTIME -> sgl-kernel 0.11.0 {"url": "https://github.com/sgl-project/sgl-kernel-xpu.git", "vcs_info": {"commit_id": "6cd2a07bef5bf6515423b38785ae94bb172f546a", "vcs": "git"}}
+RUNTIME -> transformers 5.8.1
+PROFILE[sglang-0.5.6] -> output=/mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl056
+PROFILE API -> HTTP success body=Start\ profiling.
+model=qwen36-27b-w8a8-gptq-mtp-sgl056-profile conc=1 out=32 reps=1 (unique prompt/call = cold prefill)
+IN~2048 (real_ptoks=2283) c1: TTFT avg=2057ms best=2057ms | PP avg=1110 best=1110 tok/s
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl056/sgl056-sgl056_20260823_213607-TP-0-DECODE.trace.json.gz 7843027 bytes
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl056/sgl056-sgl056_20260823_213607-TP-0-EXTEND.trace.json.gz 2937709 bytes
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl056/sgl056-sgl056_20260823_213607-TP-1-DECODE.trace.json.gz 7836136 bytes
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl056/sgl056-sgl056_20260823_213607-TP-1-EXTEND.trace.json.gz 2941086 bytes
+found 4 trace file(s) in /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl056
+
+==========================================================================================
+TRACE sgl056-sgl056_20260823_213607-TP-0-EXTEND.trace.json.gz  mtime=1787521387  size=2868KB
+  -- ph=X categories by total dur --
+     Trace                  cnt=       2  dur=    7458.20ms
+     user_annotation        cnt=      28  dur=    5001.58ms
+     cpu_op                 cnt=   28263  dur=    3193.50ms
+     kernel                 cnt=    5533  dur=     916.42ms
+     xpu_driver             cnt=   72766  dur=     740.96ms
+     xpu_runtime            cnt=    5579  dur=     290.57ms
+     gpu_memcpy             cnt=      45  dur=       0.50ms
+     gpu_memset             cnt=       1  dur=       0.01ms
+  -- total DEVICE-kernel time 916.93ms ; correlated-to-op 75% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     OTHER             285.269ms   31.1%
+     INT8_GEMM         169.638ms   18.5%
+     COPY_RESHAPE      160.751ms   17.5%
+     BF16_GEMM         131.814ms   14.4%
+     GDN_RECUR          77.279ms    8.4%
+     ACT_QUANT          34.794ms    3.8%
+     NORM               24.621ms    2.7%
+     ACT_FN             15.853ms    1.7%
+     CONV               10.608ms    1.2%
+     ELTWISE             3.810ms    0.4%
+     ROPE                2.272ms    0.2%
+     SAMPLE_LOGITS       0.214ms    0.0%
+     ATTENTION           0.008ms    0.0%
+  -- top 25 ops by DEVICE time --
+       169.638ms  cnt=    322  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+       125.943ms  cnt=    306  [BF16_GEMM   ] aten::mm
+       111.301ms  cnt=   1593  [COPY_RESHAPE] aten::copy_
+        77.085ms  cnt=    674  [GDN_RECUR   ] ChunkGatedDeltaRuleFunction
+        34.794ms  cnt=    321  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        19.675ms  cnt=    264  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+        16.980ms  cnt=     30  [COPY_RESHAPE] aten::reshape
+        15.196ms  cnt=    132  [ACT_FN      ] sgl_kernel::silu_and_mul
+        11.761ms  cnt=     65  [OTHER       ] sgl_kernel::fwd
+        11.324ms  cnt=     17  [OTHER       ] aten::empty
+        11.070ms  cnt=     18  [COPY_RESHAPE] aten::view
+         9.768ms  cnt=      9  [OTHER       ] aten::empty_strided
+         8.353ms  cnt=     13  [OTHER       ] aten::as_strided
+         8.080ms  cnt=      8  [OTHER       ] aten::to
+         7.443ms  cnt=    110  [COPY_RESHAPE] aten::cat
+         5.377ms  cnt=     72  [COPY_RESHAPE] aten::_index_put_impl_
+         4.181ms  cnt=      4  [OTHER       ] aten::select
+         3.977ms  cnt=      4  [COPY_RESHAPE] aten::_to_copy
+         3.781ms  cnt=      3  [BF16_GEMM   ] aten::matmul
+         3.450ms  cnt=     96  [NORM        ] LayerNormFn
+         3.424ms  cnt=    521  [ELTWISE     ] aten::fill_
+         2.829ms  cnt=      6  [COPY_RESHAPE] aten::clone
+         2.272ms  cnt=     33  [ROPE        ] sgl_kernel::multimodal_rotary_embedding
+         2.272ms  cnt=      6  [OTHER       ] aten::empty_like
+         2.242ms  cnt=      2  [OTHER       ] aten::zeros
+  -- top 25 raw KERNEL names by DEVICE time --
+       292.901ms  cnt=    528  [OTHER       ] do_ar<sycl::_V1::ext::oneapi::bfloat16>(unsigned long long
+       289.905ms  cnt=    622  [BF16_GEMM   ] gemm_kernel
+        81.558ms  cnt=    644  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+        39.593ms  cnt=      2  [OTHER       ] _fwd_kernel
+        34.791ms  cnt=    320  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        29.606ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kkt_solve_kernel_low_reg
+        29.570ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kernel_h_blockdim64_k_loop
+        18.226ms  cnt=     96  [CONV        ] _causal_conv1d_fwd_kernel
+        17.855ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+        17.068ms  cnt=    842  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+        14.729ms  cnt=    130  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+        11.659ms  cnt=     64  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+         7.099ms  cnt=    100  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         6.953ms  cnt=     96  [OTHER       ] chunk_fwd_kernel_o
+         6.708ms  cnt=     96  [OTHER       ] recompute_w_u_fwd_kernel
+         3.490ms  cnt=     71  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         3.450ms  cnt=     96  [NORM        ] _layer_norm_fwd_1pass_kernel
+         1.866ms  cnt=     34  [NORM        ] _fused_qk_gemma_rmsnorm_gate_kernel
+         1.846ms  cnt=    192  [NORM        ] l2norm_fwd_kernel
+         1.287ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         1.102ms  cnt=     34  [ACT_FN      ] _fused_sigmoid_mul_kernel
+         0.998ms  cnt=      4  [COPY_RESHAPE] at::native::xpu::IndexKernel<at::native::xpu::IndexKernelC
+         0.971ms  cnt=    193  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.416ms  cnt=     96  [OTHER       ] chunk_local_cumsum_scalar_kernel
+         0.384ms  cnt=     32  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+
+==========================================================================================
+TRACE sgl056-sgl056_20260823_213607-TP-1-EXTEND.trace.json.gz  mtime=1787521387  size=2872KB
+  -- ph=X categories by total dur --
+     Trace                  cnt=       2  dur=    7453.36ms
+     user_annotation        cnt=      28  dur=    4999.98ms
+     cpu_op                 cnt=   28267  dur=    3189.76ms
+     kernel                 cnt=    5533  dur=     895.74ms
+     xpu_driver             cnt=   72800  dur=     730.79ms
+     xpu_runtime            cnt=    5579  dur=     295.20ms
+     gpu_memcpy             cnt=      45  dur=       0.49ms
+     gpu_memset             cnt=       1  dur=       0.01ms
+  -- total DEVICE-kernel time 896.24ms ; correlated-to-op 75% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     OTHER             291.711ms   32.5%
+     INT8_GEMM         164.060ms   18.3%
+     COPY_RESHAPE      155.820ms   17.4%
+     BF16_GEMM         118.352ms   13.2%
+     GDN_RECUR          74.105ms    8.3%
+     ACT_QUANT          33.525ms    3.7%
+     NORM               26.487ms    3.0%
+     ACT_FN             15.790ms    1.8%
+     CONV               10.160ms    1.1%
+     ELTWISE             5.628ms    0.6%
+     ROPE                0.380ms    0.0%
+     SAMPLE_LOGITS       0.209ms    0.0%
+     ATTENTION           0.008ms    0.0%
+  -- top 25 ops by DEVICE time --
+       164.060ms  cnt=    322  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+       116.461ms  cnt=    305  [BF16_GEMM   ] aten::mm
+       102.406ms  cnt=   1593  [COPY_RESHAPE] aten::copy_
+        73.915ms  cnt=    673  [GDN_RECUR   ] ChunkGatedDeltaRuleFunction
+        33.525ms  cnt=    322  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        19.651ms  cnt=    264  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+        15.212ms  cnt=     19  [OTHER       ] aten::empty
+        15.128ms  cnt=    132  [ACT_FN      ] sgl_kernel::silu_and_mul
+        13.467ms  cnt=     23  [COPY_RESHAPE] aten::view
+        11.969ms  cnt=     21  [COPY_RESHAPE] aten::reshape
+        11.361ms  cnt=     65  [OTHER       ] sgl_kernel::fwd
+        10.202ms  cnt=     15  [OTHER       ] aten::as_strided
+         9.949ms  cnt=     10  [OTHER       ] aten::empty_strided
+         7.769ms  cnt=      7  [OTHER       ] aten::to
+         7.330ms  cnt=    110  [COPY_RESHAPE] aten::cat
+         6.477ms  cnt=      5  [COPY_RESHAPE] aten::clone
+         5.349ms  cnt=     98  [NORM        ] LayerNormFn
+         5.265ms  cnt=    522  [ELTWISE     ] aten::fill_
+         4.838ms  cnt=     72  [COPY_RESHAPE] aten::_index_put_impl_
+         4.178ms  cnt=      4  [OTHER       ] aten::select
+         3.011ms  cnt=      8  [OTHER       ] aten::empty_like
+         2.226ms  cnt=      2  [OTHER       ] aten::zeros
+         2.184ms  cnt=      4  [COPY_RESHAPE] aten::_to_copy
+         2.046ms  cnt=      3  [COPY_RESHAPE] aten::index_put_
+         2.003ms  cnt=      2  [OTHER       ] aten::transpose
+  -- top 25 raw KERNEL names by DEVICE time --
+       292.162ms  cnt=    528  [OTHER       ] do_ar<sycl::_V1::ext::oneapi::bfloat16>(unsigned long long
+       278.428ms  cnt=    622  [BF16_GEMM   ] gemm_kernel
+        78.728ms  cnt=    644  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+        38.914ms  cnt=      2  [OTHER       ] _fwd_kernel
+        33.423ms  cnt=    320  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        29.140ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kernel_h_blockdim64_k_loop
+        28.908ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kkt_solve_kernel_low_reg
+        17.800ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+        17.749ms  cnt=     96  [CONV        ] _causal_conv1d_fwd_kernel
+        16.599ms  cnt=    842  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+        14.681ms  cnt=    130  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+        11.261ms  cnt=     64  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+         7.024ms  cnt=     96  [OTHER       ] chunk_fwd_kernel_o
+         6.994ms  cnt=    100  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         6.597ms  cnt=     96  [OTHER       ] recompute_w_u_fwd_kernel
+         3.413ms  cnt=     96  [NORM        ] _layer_norm_fwd_1pass_kernel
+         2.952ms  cnt=     71  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         1.866ms  cnt=     34  [NORM        ] _fused_qk_gemma_rmsnorm_gate_kernel
+         1.827ms  cnt=    192  [NORM        ] l2norm_fwd_kernel
+         1.333ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         1.098ms  cnt=     34  [ACT_FN      ] _fused_sigmoid_mul_kernel
+         0.956ms  cnt=    193  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.774ms  cnt=      4  [COPY_RESHAPE] at::native::xpu::IndexKernel<at::native::xpu::IndexKernelC
+         0.415ms  cnt=     96  [OTHER       ] chunk_local_cumsum_scalar_kernel
+         0.380ms  cnt=     32  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+
+==========================================================================================
+TRACE sgl056-sgl056_20260823_213607-TP-0-DECODE.trace.json.gz  mtime=1787521401  size=7659KB
+  -- ph=X categories by total dur --
+     user_annotation        cnt=    1050  dur=    6472.31ms
+     Trace                  cnt=       2  dur=    5948.57ms
+     cpu_op                 cnt=   74748  dur=    3702.93ms
+     kernel                 cnt=   12424  dur=     758.62ms
+     xpu_runtime            cnt=   12469  dur=     597.98ms
+     xpu_driver             cnt=  209557  dur=     264.31ms
+     gpu_memcpy             cnt=     155  dur=      15.06ms
+  -- total DEVICE-kernel time 773.68ms ; correlated-to-op 92% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     COLLECTIVE        319.393ms   41.3%
+     BF16_GEMM         218.356ms   28.2%
+     INT8_GEMM          96.634ms   12.5%
+     OTHER              54.028ms    7.0%
+     COPY_RESHAPE       32.802ms    4.2%
+     ACT_QUANT          31.906ms    4.1%
+     GDN_RECUR           7.957ms    1.0%
+     NORM                3.939ms    0.5%
+     CONV                2.384ms    0.3%
+     ELTWISE             2.122ms    0.3%
+     SAMPLE_LOGITS       2.054ms    0.3%
+     ACT_FN              1.596ms    0.2%
+     ROPE                0.474ms    0.1%
+     ATTENTION           0.041ms    0.0%
+  -- top 25 ops by DEVICE time --
+       319.393ms  cnt=    795  [COLLECTIVE  ] c10d::allreduce_
+       218.356ms  cnt=   1025  [BF16_GEMM   ] aten::mm
+        96.634ms  cnt=    800  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+        31.906ms  cnt=    800  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        18.013ms  cnt=    160  [OTHER       ] sgl_kernel::fwd
+        12.163ms  cnt=   3028  [COPY_RESHAPE] aten::copy_
+         2.456ms  cnt=    740  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+         2.417ms  cnt=    496  [COPY_RESHAPE] aten::cat
+         2.045ms  cnt=     55  [SAMPLE_LOGITS] aten::argmax
+         1.394ms  cnt=    370  [ACT_FN      ] sgl_kernel::silu_and_mul
+         1.078ms  cnt=    905  [ELTWISE     ] aten::fill_
+         0.886ms  cnt=    265  [COPY_RESHAPE] aten::_index_put_impl_
+         0.683ms  cnt=    240  [NORM        ] LayerNormFn
+         0.561ms  cnt=    410  [ELTWISE     ] aten::mul
+         0.474ms  cnt=     80  [ROPE        ] sgl_kernel::multimodal_rotary_embedding
+         0.450ms  cnt=    155  [NORM        ] sgl_kernel::gemma_rmsnorm
+         0.362ms  cnt=    100  [COPY_RESHAPE] aten::index
+         0.330ms  cnt=    200  [OTHER       ] aten::sub
+         0.267ms  cnt=    170  [ELTWISE     ] aten::add
+         0.214ms  cnt=     80  [OTHER       ] aten::logical_not
+         0.138ms  cnt=     55  [COPY_RESHAPE] aten::index_select
+         0.124ms  cnt=     80  [OTHER       ] aten::gt
+         0.090ms  cnt=     55  [ELTWISE     ] aten::masked_fill_
+         0.073ms  cnt=     45  [COPY_RESHAPE] triton_poi_fused_max_mul_unsqueeze_view_0
+         0.071ms  cnt=     45  [COPY_RESHAPE] triton_poi_fused_add_arange_floor_divide_index_max_unsquee
+  -- top 25 raw KERNEL names by DEVICE time --
+       319.393ms  cnt=    795  [COLLECTIVE  ] oneccl_allreduce_pcie<sycl::_V1::ext::oneapi::bfloat16, Rt
+       314.990ms  cnt=   1825  [BF16_GEMM   ] gemm_kernel
+        31.906ms  cnt=    800  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        21.874ms  cnt=     45  [OTHER       ] _fwd_grouped_kernel_stage1
+        18.013ms  cnt=    160  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+        12.464ms  cnt=      5  [OTHER       ] _fwd_kernel
+         9.494ms  cnt=   1655  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+         8.591ms  cnt=     70  [COPY_RESHAPE] Memcpy D2M (DEVICE -> MEMORY(Unknown))
+         7.957ms  cnt=    240  [GDN_RECUR   ] fused_sigmoid_gating_delta_rule_update_kernel
+         6.404ms  cnt=     55  [COPY_RESHAPE] Memcpy M2D (MEMORY(Unknown) -> DEVICE)
+         2.906ms  cnt=    895  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         2.249ms  cnt=    240  [CONV        ] _causal_conv1d_update_kernel
+         2.045ms  cnt=     55  [OTHER       ] at::native::xpu::ReduceKernel<1, at::native::xpu::ReduceOp
+         2.008ms  cnt=    340  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         1.614ms  cnt=      5  [COPY_RESHAPE] _fused_mamba_state_scatter_with_mask_kernel
+         1.525ms  cnt=   1020  [ELTWISE     ] at::native::xpu::ElementwiseGlobalRangeKernel<at::native::
+         1.394ms  cnt=    370  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+         0.965ms  cnt=    263  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.934ms  cnt=    820  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<4, at::native
+         0.886ms  cnt=    265  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         0.683ms  cnt=    240  [NORM        ] _layer_norm_fwd_1pass_kernel
+         0.539ms  cnt=     45  [OTHER       ] get_num_kv_splits_triton
+         0.474ms  cnt=     80  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+         0.435ms  cnt=    326  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<2, at::native
+         0.401ms  cnt=    220  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+
+==========================================================================================
+TRACE sgl056-sgl056_20260823_213607-TP-1-DECODE.trace.json.gz  mtime=1787521401  size=7652KB
+  -- ph=X categories by total dur --
+     user_annotation        cnt=    1050  dur=    6462.87ms
+     Trace                  cnt=       2  dur=    5943.45ms
+     cpu_op                 cnt=   74758  dur=    3712.86ms
+     kernel                 cnt=   12424  dur=    1317.96ms
+     xpu_runtime            cnt=   12469  dur=     608.09ms
+     xpu_driver             cnt=  212931  dur=     270.42ms
+     gpu_memcpy             cnt=     155  dur=      14.65ms
+  -- total DEVICE-kernel time 1332.62ms ; correlated-to-op 95% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     COLLECTIVE        878.442ms   65.9%
+     BF16_GEMM         218.409ms   16.4%
+     INT8_GEMM          96.771ms    7.3%
+     OTHER              54.183ms    4.1%
+     COPY_RESHAPE       32.422ms    2.4%
+     ACT_QUANT          31.925ms    2.4%
+     GDN_RECUR           7.937ms    0.6%
+     NORM                3.914ms    0.3%
+     CONV                2.387ms    0.2%
+     ELTWISE             2.065ms    0.2%
+     SAMPLE_LOGITS       2.045ms    0.2%
+     ACT_FN              1.603ms    0.1%
+     ROPE                0.474ms    0.0%
+     ATTENTION           0.041ms    0.0%
+  -- top 25 ops by DEVICE time --
+       878.442ms  cnt=    795  [COLLECTIVE  ] c10d::allreduce_
+       216.290ms  cnt=   1024  [BF16_GEMM   ] aten::mm
+        96.771ms  cnt=    800  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+        31.925ms  cnt=    800  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        18.021ms  cnt=    160  [OTHER       ] sgl_kernel::fwd
+        12.173ms  cnt=   3028  [COPY_RESHAPE] aten::copy_
+         2.425ms  cnt=    739  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+         2.411ms  cnt=    496  [COPY_RESHAPE] aten::cat
+         2.035ms  cnt=     55  [SAMPLE_LOGITS] aten::argmax
+         1.402ms  cnt=    370  [ACT_FN      ] sgl_kernel::silu_and_mul
+         1.013ms  cnt=    905  [ELTWISE     ] aten::fill_
+         0.901ms  cnt=    265  [COPY_RESHAPE] aten::_index_put_impl_
+         0.688ms  cnt=    240  [NORM        ] LayerNormFn
+         0.560ms  cnt=    410  [ELTWISE     ] aten::mul
+         0.474ms  cnt=     80  [ROPE        ] sgl_kernel::multimodal_rotary_embedding
+         0.446ms  cnt=    155  [NORM        ] sgl_kernel::gemma_rmsnorm
+         0.358ms  cnt=    100  [COPY_RESHAPE] aten::index
+         0.318ms  cnt=    200  [OTHER       ] aten::sub
+         0.275ms  cnt=    170  [ELTWISE     ] aten::add
+         0.212ms  cnt=     80  [OTHER       ] aten::logical_not
+         0.131ms  cnt=     55  [COPY_RESHAPE] aten::index_select
+         0.129ms  cnt=     80  [OTHER       ] aten::gt
+         0.091ms  cnt=     55  [ELTWISE     ] aten::masked_fill_
+         0.072ms  cnt=     45  [COPY_RESHAPE] triton_poi_fused_add_arange_floor_divide_index_max_unsquee
+         0.068ms  cnt=     45  [COPY_RESHAPE] triton_poi_fused_max_mul_unsqueeze_view_0
+  -- top 25 raw KERNEL names by DEVICE time --
+       878.442ms  cnt=    795  [COLLECTIVE  ] oneccl_allreduce_pcie<sycl::_V1::ext::oneapi::bfloat16, Rt
+       315.180ms  cnt=   1825  [BF16_GEMM   ] gemm_kernel
+        31.925ms  cnt=    800  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        22.074ms  cnt=     45  [OTHER       ] _fwd_grouped_kernel_stage1
+        18.021ms  cnt=    160  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+        12.421ms  cnt=      5  [OTHER       ] _fwd_kernel
+         9.499ms  cnt=   1655  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+         8.608ms  cnt=     70  [COPY_RESHAPE] Memcpy D2M (DEVICE -> MEMORY(Unknown))
+         7.937ms  cnt=    240  [GDN_RECUR   ] fused_sigmoid_gating_delta_rule_update_kernel
+         5.983ms  cnt=     55  [COPY_RESHAPE] Memcpy M2D (MEMORY(Unknown) -> DEVICE)
+         2.874ms  cnt=    895  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         2.256ms  cnt=    240  [CONV        ] _causal_conv1d_update_kernel
+         2.035ms  cnt=     55  [OTHER       ] at::native::xpu::ReduceKernel<1, at::native::xpu::ReduceOp
+         1.999ms  cnt=    340  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         1.636ms  cnt=      5  [COPY_RESHAPE] _fused_mamba_state_scatter_with_mask_kernel
+         1.533ms  cnt=   1020  [ELTWISE     ] at::native::xpu::ElementwiseGlobalRangeKernel<at::native::
+         1.402ms  cnt=    370  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+         0.966ms  cnt=    263  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.901ms  cnt=    265  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         0.872ms  cnt=    820  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<4, at::native
+         0.688ms  cnt=    240  [NORM        ] _layer_norm_fwd_1pass_kernel
+         0.538ms  cnt=     45  [OTHER       ] get_num_kv_splits_triton
+         0.474ms  cnt=     80  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+         0.435ms  cnt=    326  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<2, at::native
+         0.405ms  cnt=    220  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+RESULT[sglang-0.5.6] -> PASS
+ARM -> sglang-0.5.15 script=/mnt/vm_8tb/github/b70_ai_things/sglang/serve_w8a8_0515.sh ctx=8192 radix=0 maxreq=4
+[21:44:32] pre-flight xpu-health
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[21:44:57] serve W8A8 fused+MTP (steps=10) TP=2 -> qwen36-27b-w8a8-gptq-mtp-sgl0515-profile on :30000 (ctx=8192 radix=0 maxreq=4 mamba=auto spec_compile=0 push_ar=1 tool=1 think=4096 metrics=1 img=sglang-xpu:mtp-0515)
+[21:45:06] waiting for /health (load + spec JIT ~3-6min)...
+[21:50:26] /health 200 (~165s)
+COHERENCE OK: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Two sentences.\n\n2.  **Identify Key Scientif"
+[21:51:45] healthy + coherent; serving qwen36-27b-w8a8-gptq-mtp-sgl0515-profile on :30000
+IDENTITY[sglang-0.5.15] -> id=qwen36-27b-w8a8-gptq-mtp-sgl0515-profile max_model_len=8192
+ARK is unable to load XPU lib: libsycl.so.9: cannot open shared object file: No such file or directory
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[mtp-tree-xpu] patched assign_extend_cache_locs_func (XPU None-index -> draft-slot gather)
+[mtp-tree-xpu] stripped is_cuda guards on fused mamba/conv state-scatter (XPU)
+[mtp-tree-xpu] patched top_p_renorm_prob in sgl_kernel + eagle_utils (XPU nucleus-renorm)
+[mtp-tree-xpu] eagle_sample greedy-force SKIPPED (condition not found -- upstream changed)
+[mtp-tree-xpu] installed chain (topk=1) build_tree + verify_tree_greedy torch fallbacks
+[w8a8-shim] scoped _check_scheme_supported (no global sm90 fake)
+[w8a8-fused] dlopen'd /work/kernel/_xpu_C.abi3.so
+[w8a8-fused] prefill act-quant: oneDNN dynamic_per_token_int8_quant (1 launch)
+[w8a8-shim] installed: FUSED hybrid (decode=int8_gemm_w8a16, prefill=int8_gemm_w8a8)
+[push-ar] patched sglang GroupCoordinator._all_reduce_in_place
+[push-ar] patched sglang XpuCommunicator.all_reduce (so=/work/push_ar/libxpu_push_ar_graph.so, maxB=536870912)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+RUNTIME -> torch 2.12.0+xpu sglang 0.5.15.post1
+RUNTIME -> sgl-kernel 0.11.0 {"url": "https://github.com/sgl-project/sgl-kernel-xpu.git", "vcs_info": {"commit_id": "3bc8de63c504c789c52e67b0ce389dd1e11c81b7", "vcs": "git"}}
+RUNTIME -> transformers 5.12.1
+PROFILE[sglang-0.5.15] -> output=/mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl0515
+PROFILE API -> HTTP success body=Start\ profiling.
+model=qwen36-27b-w8a8-gptq-mtp-sgl0515-profile conc=1 out=32 reps=1 (unique prompt/call = cold prefill)
+IN~2048 (real_ptoks=2302) c1: TTFT avg=2100ms best=2100ms | PP avg=1096 best=1096 tok/s
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl0515/sgl0515-sgl0515_20260823_213607-TP-0-DECODE.trace.json.gz 8021681 bytes
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl0515/sgl0515-sgl0515_20260823_213607-TP-0-EXTEND.trace.json.gz 2885907 bytes
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl0515/sgl0515-sgl0515_20260823_213607-TP-1-DECODE.trace.json.gz 7978303 bytes
+TRACE -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl0515/sgl0515-sgl0515_20260823_213607-TP-1-EXTEND.trace.json.gz 2894125 bytes
+found 4 trace file(s) in /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607/sgl0515
+
+==========================================================================================
+TRACE sgl0515-sgl0515_20260823_213607-TP-1-EXTEND.trace.json.gz  mtime=1787521936  size=2826KB
+  -- ph=X categories by total dur --
+     Trace                  cnt=       2  dur=    9922.79ms
+     user_annotation        cnt=      28  dur=    6336.52ms
+     cpu_op                 cnt=   27739  dur=    4823.72ms
+     xpu_driver             cnt=   72189  dur=    1980.64ms
+     kernel                 cnt=    5269  dur=     902.37ms
+     xpu_runtime            cnt=    5314  dur=     288.49ms
+     gpu_memcpy             cnt=      45  dur=       0.52ms
+     gpu_memset             cnt=       1  dur=       0.01ms
+  -- total DEVICE-kernel time 902.89ms ; correlated-to-op 94% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     COLLECTIVE        296.757ms   32.9%
+     INT8_GEMM         165.855ms   18.4%
+     BF16_GEMM         118.782ms   13.2%
+     COPY_RESHAPE      104.581ms   11.6%
+     GDN_RECUR          75.685ms    8.4%
+     OTHER              54.473ms    6.0%
+     ACT_QUANT          34.676ms    3.8%
+     NORM               24.245ms    2.7%
+     ACT_FN             15.548ms    1.7%
+     CONV                9.890ms    1.1%
+     ELTWISE             1.798ms    0.2%
+     ROPE                0.391ms    0.0%
+     SAMPLE_LOGITS       0.206ms    0.0%
+     ATTENTION           0.008ms    0.0%
+  -- top 25 ops by DEVICE time --
+       296.757ms  cnt=    528  [COLLECTIVE  ] sglang::inplace_all_reduce
+       165.855ms  cnt=    320  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+       118.782ms  cnt=    303  [BF16_GEMM   ] aten::mm
+        90.063ms  cnt=   1321  [COPY_RESHAPE] aten::copy_
+        75.503ms  cnt=    672  [GDN_RECUR   ] ChunkGatedDeltaRuleFunction
+        34.676ms  cnt=    322  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        19.066ms  cnt=    261  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+        14.894ms  cnt=    130  [ACT_FN      ] sgl_kernel::silu_and_mul
+        10.860ms  cnt=     64  [OTHER       ] sgl_kernel::fwd
+         7.432ms  cnt=    110  [COPY_RESHAPE] aten::cat
+         3.679ms  cnt=     97  [NORM        ] LayerNormFn
+         3.188ms  cnt=     71  [COPY_RESHAPE] aten::_index_put_impl_
+         1.355ms  cnt=    518  [ELTWISE     ] aten::fill_
+         1.188ms  cnt=      6  [OTHER       ] aten::empty
+         1.154ms  cnt=     10  [COPY_RESHAPE] aten::reshape
+         0.921ms  cnt=      4  [COPY_RESHAPE] aten::index_select
+         0.788ms  cnt=      4  [OTHER       ] aten::as_strided
+         0.695ms  cnt=      4  [COPY_RESHAPE] aten::view
+         0.682ms  cnt=      2  [OTHER       ] aten::empty_like
+         0.656ms  cnt=      6  [OTHER       ] aten::empty_strided
+         0.643ms  cnt=      2  [OTHER       ] aten::zero_
+         0.391ms  cnt=     32  [ROPE        ] sgl_kernel::multimodal_rotary_embedding
+         0.367ms  cnt=      9  [NORM        ] sgl_kernel::gemma_rmsnorm
+         0.351ms  cnt=      2  [OTHER       ] aten::to
+         0.333ms  cnt=      2  [COPY_RESHAPE] aten::slice
+  -- top 25 raw KERNEL names by DEVICE time --
+       296.757ms  cnt=    528  [OTHER       ] do_ar<sycl::_V1::ext::oneapi::bfloat16>(unsigned long long
+       284.631ms  cnt=    622  [BF16_GEMM   ] gemm_kernel
+        81.296ms  cnt=    644  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+        38.116ms  cnt=      2  [OTHER       ] _fwd_kernel
+        34.572ms  cnt=    320  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        29.739ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kkt_solve_kernel_low_reg
+        29.001ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kernel_h_blockdim64_k_loop
+        18.283ms  cnt=     96  [CONV        ] _causal_conv1d_fwd_kernel
+        17.777ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+        14.894ms  cnt=    130  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+        10.860ms  cnt=     64  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+         7.778ms  cnt=     96  [OTHER       ] chunk_fwd_kernel_o
+         7.092ms  cnt=    100  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         6.792ms  cnt=    578  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         6.744ms  cnt=     96  [OTHER       ] recompute_w_u_fwd_kernel
+         3.619ms  cnt=     96  [NORM        ] _layer_norm_fwd_1pass_kernel
+         3.188ms  cnt=     71  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         1.851ms  cnt=     34  [NORM        ] _fused_qk_gemma_rmsnorm_gate_kernel
+         1.805ms  cnt=    192  [NORM        ] l2norm_fwd_kernel
+         1.323ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         1.086ms  cnt=     34  [ACT_FN      ] _fused_sigmoid_mul_kernel
+         0.978ms  cnt=    193  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.921ms  cnt=      4  [COPY_RESHAPE] at::native::xpu::IndexKernel<at::native::xpu::IndexKernelC
+         0.437ms  cnt=     96  [OTHER       ] chunk_local_cumsum_scalar_kernel
+         0.391ms  cnt=     32  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+
+==========================================================================================
+TRACE sgl0515-sgl0515_20260823_213607-TP-0-EXTEND.trace.json.gz  mtime=1787521936  size=2818KB
+  -- ph=X categories by total dur --
+     Trace                  cnt=       2  dur=    9923.11ms
+     user_annotation        cnt=      28  dur=    6335.61ms
+     cpu_op                 cnt=   27735  dur=    4853.19ms
+     xpu_driver             cnt=   71985  dur=    1935.86ms
+     kernel                 cnt=    5269  dur=     914.68ms
+     xpu_runtime            cnt=    5314  dur=     286.49ms
+     gpu_memcpy             cnt=      45  dur=       0.52ms
+     gpu_memset             cnt=       1  dur=       0.01ms
+  -- total DEVICE-kernel time 915.20ms ; correlated-to-op 94% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     COLLECTIVE        299.600ms   32.7%
+     INT8_GEMM         170.922ms   18.7%
+     BF16_GEMM         122.480ms   13.4%
+     COPY_RESHAPE      105.621ms   11.5%
+     GDN_RECUR          74.096ms    8.1%
+     OTHER              55.173ms    6.0%
+     ACT_QUANT          35.108ms    3.8%
+     NORM               24.105ms    2.6%
+     ACT_FN             15.461ms    1.7%
+     CONV               10.251ms    1.1%
+     ELTWISE             1.787ms    0.2%
+     ROPE                0.377ms    0.0%
+     SAMPLE_LOGITS       0.212ms    0.0%
+     ATTENTION           0.008ms    0.0%
+  -- top 25 ops by DEVICE time --
+       299.600ms  cnt=    528  [COLLECTIVE  ] sglang::inplace_all_reduce
+       170.922ms  cnt=    320  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+       122.378ms  cnt=    303  [BF16_GEMM   ] aten::mm
+        91.806ms  cnt=   1322  [COPY_RESHAPE] aten::copy_
+        73.900ms  cnt=    672  [GDN_RECUR   ] ChunkGatedDeltaRuleFunction
+        35.108ms  cnt=    321  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        19.034ms  cnt=    261  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+        14.823ms  cnt=    130  [ACT_FN      ] sgl_kernel::silu_and_mul
+        11.160ms  cnt=     64  [OTHER       ] sgl_kernel::fwd
+         7.446ms  cnt=    110  [COPY_RESHAPE] aten::cat
+         3.576ms  cnt=     97  [NORM        ] LayerNormFn
+         3.215ms  cnt=     71  [COPY_RESHAPE] aten::_index_put_impl_
+         1.760ms  cnt=     10  [OTHER       ] aten::empty
+         1.435ms  cnt=      6  [OTHER       ] aten::to
+         1.369ms  cnt=      7  [COPY_RESHAPE] aten::reshape
+         1.368ms  cnt=    519  [ELTWISE     ] aten::fill_
+         0.919ms  cnt=      4  [COPY_RESHAPE] aten::index_select
+         0.769ms  cnt=      3  [OTHER       ] aten::t
+         0.723ms  cnt=      3  [OTHER       ] aten::as_strided
+         0.377ms  cnt=     32  [ROPE        ] sgl_kernel::multimodal_rotary_embedding
+         0.364ms  cnt=      1  [OTHER       ] aten::zero_
+         0.356ms  cnt=      9  [NORM        ] sgl_kernel::gemma_rmsnorm
+         0.346ms  cnt=      1  [OTHER       ] aten::select
+         0.296ms  cnt=      4  [ELTWISE     ] aten::masked_fill_
+         0.259ms  cnt=    128  [OTHER       ] aten::gt
+  -- top 25 raw KERNEL names by DEVICE time --
+       299.600ms  cnt=    528  [OTHER       ] do_ar<sycl::_V1::ext::oneapi::bfloat16>(unsigned long long
+       293.293ms  cnt=    622  [BF16_GEMM   ] gemm_kernel
+        83.561ms  cnt=    644  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+        37.763ms  cnt=      2  [OTHER       ] _fwd_kernel
+        35.102ms  cnt=    320  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        29.123ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kkt_solve_kernel_low_reg
+        28.368ms  cnt=     96  [GDN_RECUR   ] chunk_gated_delta_rule_fwd_kernel_h_blockdim64_k_loop
+        18.387ms  cnt=     96  [CONV        ] _causal_conv1d_fwd_kernel
+        17.541ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+        14.823ms  cnt=    130  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+        11.160ms  cnt=     64  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+         7.554ms  cnt=     96  [OTHER       ] chunk_fwd_kernel_o
+         7.117ms  cnt=    100  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         6.783ms  cnt=    578  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         6.735ms  cnt=     96  [OTHER       ] recompute_w_u_fwd_kernel
+         3.522ms  cnt=     96  [NORM        ] _layer_norm_fwd_1pass_kernel
+         3.215ms  cnt=     71  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         1.869ms  cnt=     34  [NORM        ] _fused_qk_gemma_rmsnorm_gate_kernel
+         1.696ms  cnt=    192  [NORM        ] l2norm_fwd_kernel
+         1.345ms  cnt=    134  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         1.062ms  cnt=     34  [ACT_FN      ] _fused_sigmoid_mul_kernel
+         0.931ms  cnt=    193  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.919ms  cnt=      4  [COPY_RESHAPE] at::native::xpu::IndexKernel<at::native::xpu::IndexKernelC
+         0.424ms  cnt=     96  [OTHER       ] chunk_local_cumsum_scalar_kernel
+         0.377ms  cnt=     32  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+
+==========================================================================================
+TRACE sgl0515-sgl0515_20260823_213607-TP-1-DECODE.trace.json.gz  mtime=1787521950  size=7791KB
+  -- ph=X categories by total dur --
+     user_annotation        cnt=    1005  dur=    6564.19ms
+     Trace                  cnt=       2  dur=    6043.19ms
+     cpu_op                 cnt=   76903  dur=    4276.39ms
+     kernel                 cnt=   12649  dur=    1333.37ms
+     xpu_runtime            cnt=   12694  dur=     604.65ms
+     xpu_driver             cnt=  213146  dur=     273.72ms
+     gpu_memcpy             cnt=     155  dur=      14.73ms
+  -- total DEVICE-kernel time 1348.11ms ; correlated-to-op 95% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     COLLECTIVE        892.176ms   66.2%
+     BF16_GEMM         218.404ms   16.2%
+     INT8_GEMM          96.574ms    7.2%
+     OTHER              55.975ms    4.2%
+     COPY_RESHAPE       32.355ms    2.4%
+     ACT_QUANT          31.821ms    2.4%
+     GDN_RECUR           7.976ms    0.6%
+     NORM                3.888ms    0.3%
+     CONV                2.367ms    0.2%
+     ELTWISE             2.319ms    0.2%
+     SAMPLE_LOGITS       2.126ms    0.2%
+     ACT_FN              1.622ms    0.1%
+     ROPE                0.460ms    0.0%
+     ATTENTION           0.043ms    0.0%
+  -- top 25 ops by DEVICE time --
+       891.902ms  cnt=    794  [COLLECTIVE  ] c10d::allreduce_
+       218.040ms  cnt=   1023  [BF16_GEMM   ] aten::mm
+        96.574ms  cnt=    800  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+        31.821ms  cnt=    800  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        17.237ms  cnt=    160  [OTHER       ] sgl_kernel::fwd
+        12.091ms  cnt=   3046  [COPY_RESHAPE] aten::copy_
+         2.421ms  cnt=    740  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+         2.402ms  cnt=    495  [COPY_RESHAPE] aten::cat
+         2.025ms  cnt=     55  [SAMPLE_LOGITS] aten::argmax
+         1.411ms  cnt=    370  [ACT_FN      ] sgl_kernel::silu_and_mul
+         1.011ms  cnt=    904  [ELTWISE     ] aten::fill_
+         0.886ms  cnt=    265  [COPY_RESHAPE] aten::_index_put_impl_
+         0.670ms  cnt=    240  [NORM        ] LayerNormFn
+         0.647ms  cnt=    452  [ELTWISE     ] aten::mul
+         0.512ms  cnt=    144  [COPY_RESHAPE] aten::index
+         0.460ms  cnt=     80  [ROPE        ] sgl_kernel::multimodal_rotary_embedding
+         0.441ms  cnt=    152  [NORM        ] sgl_kernel::gemma_rmsnorm
+         0.337ms  cnt=    259  [ELTWISE     ] aten::add
+         0.311ms  cnt=    199  [OTHER       ] aten::sub
+         0.261ms  cnt=     45  [OTHER       ] aten::max
+         0.214ms  cnt=     80  [OTHER       ] aten::logical_not
+         0.126ms  cnt=     54  [COPY_RESHAPE] aten::index_select
+         0.122ms  cnt=     80  [OTHER       ] aten::gt
+         0.105ms  cnt=     50  [ELTWISE     ] aten::floor_divide
+         0.104ms  cnt=    104  [OTHER       ] aten::arange
+  -- top 25 raw KERNEL names by DEVICE time --
+       892.176ms  cnt=    795  [COLLECTIVE  ] oneccl_allreduce_pcie<sycl::_V1::ext::oneapi::bfloat16, Rt
+       314.978ms  cnt=   1825  [BF16_GEMM   ] gemm_kernel
+        31.821ms  cnt=    800  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        23.367ms  cnt=     45  [OTHER       ] _fwd_grouped_kernel_stage1
+        17.237ms  cnt=    160  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+        13.424ms  cnt=      5  [OTHER       ] _fwd_kernel
+         9.530ms  cnt=   1655  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+         8.606ms  cnt=     70  [COPY_RESHAPE] Memcpy D2M (DEVICE -> MEMORY(Unknown))
+         7.976ms  cnt=    240  [GDN_RECUR   ] fused_sigmoid_gating_delta_rule_update_kernel
+         6.065ms  cnt=     55  [COPY_RESHAPE] Memcpy M2D (MEMORY(Unknown) -> DEVICE)
+         2.872ms  cnt=    895  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         2.286ms  cnt=    100  [OTHER       ] at::native::xpu::ReduceKernel<1, at::native::xpu::ReduceOp
+         2.236ms  cnt=    240  [CONV        ] _causal_conv1d_update_kernel
+         1.998ms  cnt=    340  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         1.636ms  cnt=      5  [COPY_RESHAPE] _fused_mamba_state_scatter_with_mask_kernel
+         1.487ms  cnt=   1020  [ELTWISE     ] at::native::xpu::ElementwiseGlobalRangeKernel<at::native::
+         1.411ms  cnt=    370  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+         0.974ms  cnt=    260  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.886ms  cnt=    265  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         0.872ms  cnt=    820  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<4, at::native
+         0.670ms  cnt=    240  [NORM        ] _layer_norm_fwd_1pass_kernel
+         0.532ms  cnt=     45  [OTHER       ] get_num_kv_splits_triton
+         0.473ms  cnt=    130  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         0.460ms  cnt=     80  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+         0.418ms  cnt=    371  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<2, at::native
+
+==========================================================================================
+TRACE sgl0515-sgl0515_20260823_213607-TP-0-DECODE.trace.json.gz  mtime=1787521951  size=7833KB
+  -- ph=X categories by total dur --
+     user_annotation        cnt=    1005  dur=    6561.47ms
+     Trace                  cnt=       2  dur=    6044.84ms
+     cpu_op                 cnt=   76893  dur=    4251.56ms
+     kernel                 cnt=   12649  dur=     994.14ms
+     xpu_runtime            cnt=   12694  dur=     603.23ms
+     xpu_driver             cnt=  214280  dur=     277.01ms
+     gpu_memcpy             cnt=     155  dur=      14.99ms
+  -- total DEVICE-kernel time 1009.13ms ; correlated-to-op 94% --
+  -- DEVICE time by BUCKET (op-name when matched, else kernel-name) --
+     COLLECTIVE        553.734ms   54.9%
+     BF16_GEMM         218.378ms   21.6%
+     INT8_GEMM          96.694ms    9.6%
+     OTHER              55.120ms    5.5%
+     COPY_RESHAPE       32.523ms    3.2%
+     ACT_QUANT          31.897ms    3.2%
+     GDN_RECUR           7.933ms    0.8%
+     NORM                3.912ms    0.4%
+     CONV                2.365ms    0.2%
+     ELTWISE             2.323ms    0.2%
+     SAMPLE_LOGITS       2.118ms    0.2%
+     ACT_FN              1.627ms    0.2%
+     ROPE                0.462ms    0.0%
+     ATTENTION           0.042ms    0.0%
+  -- top 25 ops by DEVICE time --
+       553.734ms  cnt=    795  [COLLECTIVE  ] c10d::allreduce_
+       218.144ms  cnt=   1024  [BF16_GEMM   ] aten::mm
+        96.694ms  cnt=    800  [INT8_GEMM   ] _xpu_C::int8_gemm_w8a8
+        31.897ms  cnt=    800  [ACT_QUANT   ] _xpu_C::dynamic_per_token_int8_quant
+        17.289ms  cnt=    160  [OTHER       ] sgl_kernel::fwd
+        12.017ms  cnt=   3068  [COPY_RESHAPE] aten::copy_
+         2.422ms  cnt=    740  [NORM        ] sgl_kernel::gemma_fused_add_rmsnorm
+         2.413ms  cnt=    495  [COPY_RESHAPE] aten::cat
+         2.017ms  cnt=     55  [SAMPLE_LOGITS] aten::argmax
+         1.416ms  cnt=    370  [ACT_FN      ] sgl_kernel::silu_and_mul
+         1.020ms  cnt=    904  [ELTWISE     ] aten::fill_
+         0.884ms  cnt=    265  [COPY_RESHAPE] aten::_index_put_impl_
+         0.689ms  cnt=    240  [NORM        ] LayerNormFn
+         0.650ms  cnt=    455  [ELTWISE     ] aten::mul
+         0.509ms  cnt=    145  [COPY_RESHAPE] aten::index
+         0.462ms  cnt=     80  [ROPE        ] sgl_kernel::multimodal_rotary_embedding
+         0.440ms  cnt=    152  [NORM        ] sgl_kernel::gemma_rmsnorm
+         0.338ms  cnt=    259  [ELTWISE     ] aten::add
+         0.315ms  cnt=    200  [OTHER       ] aten::sub
+         0.262ms  cnt=     45  [OTHER       ] aten::max
+         0.214ms  cnt=     80  [OTHER       ] aten::logical_not
+         0.137ms  cnt=     55  [COPY_RESHAPE] aten::index_select
+         0.124ms  cnt=     80  [OTHER       ] aten::gt
+         0.106ms  cnt=     50  [ELTWISE     ] aten::floor_divide
+         0.102ms  cnt=    105  [OTHER       ] aten::arange
+  -- top 25 raw KERNEL names by DEVICE time --
+       553.734ms  cnt=    795  [COLLECTIVE  ] oneccl_allreduce_pcie<sycl::_V1::ext::oneapi::bfloat16, Rt
+       315.072ms  cnt=   1825  [BF16_GEMM   ] gemm_kernel
+        31.897ms  cnt=    800  [ACT_QUANT   ] vllm::dynamic_per_token_int8_quant_kernel<sycl::_V1::detai
+        23.230ms  cnt=     45  [OTHER       ] _fwd_grouped_kernel_stage1
+        17.289ms  cnt=    160  [ATTENTION   ] (anonymous namespace)::KernelCur<cutlass::fmha::kernel::Xe
+        12.657ms  cnt=      5  [OTHER       ] _fwd_kernel
+         9.528ms  cnt=   1655  [COPY_RESHAPE] at::native::xpu::UnrolledElementwiseKernel<at::native::xpu
+         8.561ms  cnt=     70  [COPY_RESHAPE] Memcpy D2M (DEVICE -> MEMORY(Unknown))
+         7.933ms  cnt=    240  [GDN_RECUR   ] fused_sigmoid_gating_delta_rule_update_kernel
+         6.369ms  cnt=     55  [COPY_RESHAPE] Memcpy M2D (MEMORY(Unknown) -> DEVICE)
+         2.871ms  cnt=    895  [NORM        ] at::native::xpu::RMSNormNoRstdKernelFunctor<c10::BFloat16,
+         2.278ms  cnt=    100  [OTHER       ] at::native::xpu::ReduceKernel<1, at::native::xpu::ReduceOp
+         2.231ms  cnt=    240  [CONV        ] _causal_conv1d_update_kernel
+         2.011ms  cnt=    340  [COPY_RESHAPE] at::native::xpu::CatArrayBatchedCopy<at::native::xpu::Opaq
+         1.627ms  cnt=      5  [COPY_RESHAPE] _fused_mamba_state_scatter_with_mask_kernel
+         1.450ms  cnt=   1020  [ELTWISE     ] at::native::xpu::ElementwiseGlobalRangeKernel<at::native::
+         1.416ms  cnt=    370  [ACT_FN      ] op_and_mul_functor<sycl::_V1::ext::oneapi::bfloat16, silu_
+         0.951ms  cnt=    260  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<8, at::native
+         0.884ms  cnt=    265  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         0.877ms  cnt=    820  [ELTWISE     ] at::native::xpu::VectorizedElementwiseKernel<4, at::native
+         0.689ms  cnt=    240  [NORM        ] _layer_norm_fwd_1pass_kernel
+         0.531ms  cnt=     45  [OTHER       ] get_num_kv_splits_triton
+         0.468ms  cnt=    130  [COPY_RESHAPE] at::native::xpu::IndexKernelFunctor<at::native::xpu::Index
+         0.462ms  cnt=     80  [ROPE        ] at::native::xpu::(anonymous namespace)::MRoPEKernel<c10::B
+         0.394ms  cnt=    371  [COPY_RESHAPE] at::native::xpu::VectorizedElementwiseKernel<2, at::native
+RESULT[sglang-0.5.15] -> PASS
+VERDICT -> both stage-separated profile arms completed
+TRACES -> /mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607

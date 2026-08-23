@@ -1,0 +1,23 @@
+[22:06:20] pre-flight xpu-health
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+[22:06:50] serve W8A8 fused+MTP (steps=10) TP=2 -> qwen36-27b-w8a8-mtp on :31003 (ctx=8192 radix=0 push_ar=1 tool=1 think=4096 metrics=1 img=sglang-xpu:mtp)
+[22:06:57] waiting for /health (load + spec JIT ~3-6min)...
+[22:10:18] /health 200 (~115s)
+COHERENCE OK: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Two sentences.\n\n2.  **Identify Key Scientif"
+[22:11:26] push-AR engagement hits=1
+[22:11:26] healthy + coherent; serving qwen36-27b-w8a8-mtp on :31003
+[regime 22:11:30] COHERENCE[w8a8-fused-mtp]: OK :: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky "
+[regime 22:11:30] warming (discard)...
+[regime 22:13:08] WARM[c1] decode=22.48 t/s  agg_out=19.50  TTFT=594.73ms
+[regime 22:14:15] WARM[c4] decode=5.36 t/s  agg_out=19.81  TTFT=2368.80ms
+[regime 22:14:15] soak (2000-tok single stream, 400-tok windows)...
+[regime] SOAK port=31003 served=qwen36-27b-w8a8-mtp deltas=499 completion_tokens=2000 tok/delta=4.01 ttft=832ms
+[regime] window        tok/s
+[regime]   [    0- 1603]   17.37
+[regime]   [ 1603- 1995]   17.25
+[regime] OVERALL decode 17.35 t/s | first/last window ratio 1.01x (stable) | coherence OK | first 100 chars: "Here's a thinking thinking sequence\n\n1.  **Deconstruct and Analyze the Request:**\n    *   Topic: How"
+[regime 22:16:11] DONE[w8a8-fused-mtp]
+[22:16:34] stopped sglang_w8a8_prof_pushall
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
