@@ -78,11 +78,15 @@
 > and out-only GDN INT8 as serving paths. Source audit disproved the proposed
 > shared-activation route: qkv/z are already one packed projection, BA must
 > remain BF16, and out-proj consumes a different post-GDN tensor at K3072.
-> Active next is an exact-M=11 one-card comparison of BF16, current W8A8
-> including activation quantization, and quant-free W8A16 on the real
-> qkvz/out/MLP shapes. Build a default-off serving route only if W8A16 wins the
-> weighted qkvz and out ledger by at least 5% without a key-shape regression.
-> qkvz-only remains a bounded attribution probe if needed.
+> The exact-M=11 one-card comparison of BF16, current W8A8 including activation
+> quantization, and quant-free W8A16 passed. W8A16 won every real per-rank shape
+> by 18.84-38.54%, won the qkvz/out weighted ledger by 36.23%, and won the full
+> weighted linear ledger by 31.07%; repeat CVs were below 1.4%, and W8A16 was
+> numerically closer to BF16 than W8A8 on every shape. Active next is a
+> default-off `B70_W8A16_M_MAX=11` serving mechanism gate using the existing
+> shared B_nt weight layout, followed by balanced serving qualification only if
+> the exact runtime routes and outputs pass. qkvz-only remains a bounded
+> attribution probe if needed.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.

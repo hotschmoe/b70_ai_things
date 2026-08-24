@@ -178,6 +178,22 @@ Use the push-all trace as the new device baseline:
 Start with a shape/call census of BF16 MTP/draft and remaining non-INT8
 linears. Kernel work must retain the compressed-tensors W8A8 serve path.
 
+The first combined and out-projection-only GDN INT8 serving candidates were
+both rejected despite faster isolated kernels. Their extra M=11 activation
+quantization and dispatch boundaries erased the device-side GEMM gains, and
+the changed checkpoint numerics also moved speculative acceptance. Source
+audit proved qkv/z are already packed together and out-proj consumes a
+different activation, so shared GDN activation quantization is not valid.
+
+The replacement exact-M=11 microbenchmark passed. Quant-free W8A16 beat the
+complete cast/activation-quant/W8A8/cast path by 37.10% on GDN qkvz, 35.56% on
+GDN/attention out, 18.84% on MLP gate-up, 38.54% on MLP down, and 36.90% on
+attention qkv. The qkvz/out weighted gain was 36.23% and the full weighted
+linear-ledger gain was 31.07%. All repeat CVs were below 1.4%, every output was
+finite, and W8A16 was closer to BF16 than W8A8 on every shape. Sglang already
+uses one B_nt layout for both kernels, so this route has no duplicate-weight
+residency cost. Advance a default-off M<=11 serving mechanism gate.
+
 ### C5 - optimize llama.cpp production lane
 
 Profile TP=1 safely and use TP=2 source/launch census until a safe TP=2
@@ -193,7 +209,7 @@ and launch fusion. Do not transfer sglang oneCCL percentages to this lane.
 | C2 | One-host-sync immediate-list path | exact, but 4-10% slower than current push | not advanced to serve | NO-GO; native-event variant not justified |
 | C3a | Native replicated target/MTP embedding | exact 159 -> 148 AR; 11 AG unchanged; byte-identical fixed corpus; 143360-token capacity | c1 +4.69%, soak +2.20%, code c1/c4 +3.68%/+3.13%, 96/96 coherent | GO; promoted to shelf default |
 | C3b | Delayed MLP AR plus residual/RMSNorm | M1-8,10,11 exact and 1.78-1.93x; strict serve 40960/40960, generic=0 | fixed soaks +11-12%, mandatory phase/perf c1 pairs lost, code c1 flat | Kernel GO; integration NO-GO, shelf off |
-| C4 | Post-push math | pending | pending | queued |
+| C4 | Post-push math | exact-M11 W8A16 wins every real shape by 18.84-38.54%; weighted linear gain 31.07% | serving mechanism pending | GO to default-off M<=11 mechanism gate |
 | C5 | Llama.cpp weight/MMVQ | pending | pending | queued |
 
 ## First command

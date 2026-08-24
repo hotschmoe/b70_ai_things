@@ -17754,3 +17754,42 @@ census instrumentation. Do not use profiled queues or event timestamps here;
 retain counts-only census and nonprofiled external methods. Next run the
 exact-M=11 W8A16 versus current W8A8 versus BF16 kernel ledger. The endpoint
 remains down by campaign policy.
+
+### 2026-08-24v - exact-M=11 W8A16 kernel ledger GO
+
+CONFIG -> one leased Arc Pro B70 card, production `sglang-xpu:mtp` image, and
+the production W8A8 kernel SO. Each exact Qwen3.6-27B TP=2 per-rank shape used
+M=11 and compared BF16 against the complete current BF16-to-FP16,
+dynamic-activation-quant, W8A8, BF16-output chain and the candidate
+BF16-to-FP16, quant-free W8A16, BF16-output chain. Both INT8 paths shared the
+same `[K,N]` stride-0-1 B_nt weight view used by the live Sglang shim. Shapes
+and target-step call weights were GDN qkvz 5120x8192 x48, GDN/attention out
+3072x5120 x64, MLP gate-up 5120x17408 x64, MLP down 8704x5120 x64, and
+attention qkv 5120x7168 x16. Two forward/reverse repeat blocks used 20 warmups
+and 100 timed iterations, XPU-event plus synchronized-wall timing, numerical
+checks, P2P access off, and pre/post card health. No server or endpoint action
+was performed.
+
+COMMAND -> `./bin/gpu-run --card 0 bash
+sglang/05_c4_m11_w8a16_microbench.sh`. Artifact:
+`results/logs/c4_m11_w8a16_microbench_20260824T191407Z/`.
+
+RESULT -> formal PASS in 127 seconds. W8A16 device-time gains versus the full
+current W8A8 chain were GDN qkvz 37.102%, GDN/attention out 35.562%, MLP
+gate-up 18.837%, MLP down 38.541%, and attention qkv 36.904%. The qkvz/out
+weighted gain was 36.227%, from 16.856 to 10.750 ms per target-step ledger;
+the all-route weighted gain was 31.075%, from 43.965 to 30.303 ms. Candidate
+device CVs were 0.029-1.313%, and current W8A8 CVs were 0.177-0.726%. All
+outputs were finite. W8A16 relative L2 error versus BF16 was 0.00885-0.00939,
+lower than W8A8's 0.01235-0.01316 on every shape. All artifacts retained their
+hashes, card 0 passed both health probes, both leases were free at exit, and
+the endpoint remained down.
+
+VERDICT -> kernel-ledger GO for a default-off `B70_W8A16_M_MAX=11` Sglang
+serving mechanism. This is a higher-leverage candidate than unfused GDN INT8:
+it removes activation quantization from the dominant speculative M=11 path,
+improves the local numerical approximation, and reuses the existing weight
+layout without the old vLLM duplicate-residency cost. Do not make a shelf or
+end-to-end speed claim until exact runtime routing, deterministic output,
+mixed-load coherence, capacity, and balanced serving gates pass. Endpoint
+remains down by campaign policy.
