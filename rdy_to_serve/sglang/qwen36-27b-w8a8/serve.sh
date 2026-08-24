@@ -44,7 +44,7 @@ SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ
 PUSH_AR="${PUSH_AR:-1}"  # Large-prefill-only L0-IPC transport; measured through the 200K mode.
 PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-1048576}"  # Exclude batched MTP verify; keep prefill on push.
 PUSH_AR_MAXB="${PUSH_AR_MAXB:-536870912}"
-REPLICATE_MTP_EMBED="${REPLICATE_MTP_EMBED:-0}"  # Experimental C3a: native full input table, shared with NEXTN.
+REPLICATE_MTP_EMBED="${REPLICATE_MTP_EMBED:-1}"  # Qualified C3a: native full input table, shared with NEXTN.
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);

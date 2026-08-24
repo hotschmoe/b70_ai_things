@@ -133,7 +133,12 @@ collective metadata or logits-gather signature changed. Eight fixed greedy
 responses totaling 2,048 output tokens were byte-identical. At 131072 context,
 token capacity changed from 182208 to 143360 (78.68% retained), leaving 12288
 tokens above the advertised context and passing the 139264-token hard gate.
-The feature remains default-off until the A-B-B-A serving gate passes.
+The feature was promoted to the shelf default after the A-B-B-A serving gate
+passed. Drift-balanced deltas were c1 +4.69%, extended soak +2.20%, real-code
+c1 +3.68%, real-code c4 aggregate +3.13%, and standard c4 aggregate +1.43%.
+TTFT gates were within bounds, all 96 mixed streams were coherent, all four
+soaks were stable, fixed outputs were byte-identical, no fatal marker appeared,
+and every card-health probe passed.
 
 ### C4 - optimize post-push math
 
@@ -161,8 +166,8 @@ and launch fusion. Do not transfer sglang oneCCL percentages to this lane.
 | C0 | Baseline profile | oneCCL 319/878 ms -> push 8/8 ms | push-all c1 +5.2%, soak +6.1%, c4 flat | Communication sync confirmed; campaign opened |
 | C1 | Push-all A-B-B-A | 1M gate correctly fell back; push-all engaged | core gate: c1 +7.62%, soak +4.42%, code c1/c4 +6.36%/+3.32%, 96/96 coherent | GO candidate; noisy phase diagnostic excluded, shelf unchanged |
 | C2 | One-host-sync immediate-list path | exact, but 4-10% slower than current push | not advanced to serve | NO-GO; native-event variant not justified |
-| C3a | Native replicated target/MTP embedding | exact 159 -> 148 AR; 11 AG unchanged; byte-identical fixed corpus; 143360-token capacity | serving A-B-B-A pending | mechanism GO, default off |
-| C3b | Delayed MLP AR plus residual/RMSNorm | existing SGLang contract covers 63 target edges; XPU policy/kernel absent | pending | queued after C3a qualification |
+| C3a | Native replicated target/MTP embedding | exact 159 -> 148 AR; 11 AG unchanged; byte-identical fixed corpus; 143360-token capacity | c1 +4.69%, soak +2.20%, code c1/c4 +3.68%/+3.13%, 96/96 coherent | GO; promoted to shelf default |
+| C3b | Delayed MLP AR plus residual/RMSNorm | existing SGLang contract covers 63 target edges; XPU policy/kernel absent | pending | active next |
 | C4 | Post-push math | pending | pending | queued |
 | C5 | Llama.cpp weight/MMVQ | pending | pending | queued |
 

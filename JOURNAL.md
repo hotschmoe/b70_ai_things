@@ -17055,3 +17055,33 @@ VERDICT -> C3a mechanism GO. This corrects the prior 10/159 estimate: native
 target plus shared-draft replication removes 11 boundaries, giving 148. Keep
 the feature default-off and advance to deterministic A-B-B-A serving
 qualification. Do not infer an end-to-end win from profiler device time.
+
+### 2026-08-24c - TP=2 campaign C3a A-B-B-A PASS and shelf promotion
+
+CONFIG -> sglang 0.5.6 Qwen3.6-27B compressed-tensors GPTQ W8A8, TP=2,
+MTP10, eager, radix off, context 131072, push gate 1048576, P2PACCESS=0.
+A-B-B-A changed only `REPLICATE_MTP_EMBED`: A=0, B=1. Every fresh process
+ran the eight-prompt deterministic corpus, native c1/c4, isolated prefill,
+real-code c1/c4, 24-stream mixed coherence, 6.4K soak, fatal scan, and health.
+
+COMMAND -> `bin/gpu-run bash
+sglang/campaign_mtp_replicated_embedding_abba.sh`; analyze with
+`sglang/analyze_mtp_replicated_embedding_abba.py`. Artifacts:
+`results/logs/mtp_replicated_embedding_abba_20260824T021002Z/`.
+
+RESULT -> drift-balanced candidate deltas: native c1 +4.690%, extended soak
++2.198%, code c1 +3.678%, code c4 aggregate +3.129%, standard c4 aggregate
++1.425%, and standard c4 per-stream +2.788%. Native c1 TTFT was flat
+(-0.025%); native c4 TTFT improved +1.911%. Isolated prefill c1/c4 TTFT was
+-1.689%/-0.785%, within the -2% gate. Both mirrored c1 and soak comparisons
+favored B. All four deterministic outputs had identical SHA256
+`5638db8f...e54c`; 96/96 mixed streams passed; four soaks were coherent and
+stable at 1.05x; no fatal marker; every post-stop card probe passed. Candidate
+capacity was 143360 versus baseline 182208 and passed both capacity gates.
+Stock Q4_K_M production was restored: `hotschmoe-dd`, Q4_K_M, context 262144.
+
+VERDICT -> GO and promote. Set `REPLICATE_MTP_EMBED=1` as the W8A8 shelf
+default; rollback remains `REPLICATE_MTP_EMBED=0`. C3b is next: validate the
+existing 63-edge delayed-MLP contract on XPU, then fuse push reduction with
+residual add and Gemma RMSNorm. Test interaction with push-all before promoting
+both communication levers together.

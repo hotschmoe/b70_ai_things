@@ -45,6 +45,28 @@ time fell from 525.00s to 333.73s (1.57x); warm reuse stayed about 3.5s with 99.
 The final 1M gate retained 1,735 tok/s at 2K cold prefill and 1,555 tok/s at 32K, passed the
 qualifier, and left both cards healthy.
 
+## Replicated input embedding qualification (2026-08-24)
+
+The shelf replicates the native BF16 input embedding on both ranks and shares
+the exact target module with NEXTN. The LM head remains sharded. This removes
+11 serialized all-reduces per scheduler iteration, from 159 to 148, at an
+exact cost of 1.184082 GiB/card. A 131K A-B-B-A measured:
+
+| metric | drift-balanced delta |
+|---|---:|
+| c1 decode | +4.69% |
+| 6.4K-token soak | +2.20% |
+| real-code c1 | +3.68% |
+| real-code c4 aggregate | +3.13% |
+| standard c4 aggregate | +1.43% |
+| c1/c4 TTFT | -0.03% / +1.91% |
+| isolated c1/c4 prefill TTFT | -1.69% / -0.78% |
+
+All four fixed corpora were byte-identical, all 96 mixed streams were
+coherent, every soak was stable, and all health/fatal gates passed. At 131072
+context, physical token capacity is 143360, leaving 12288 slots of headroom.
+Set `REPLICATE_MTP_EMBED=0` only for a baseline or rollback.
+
 ## How it works
 
 - **Decode (M==1):** `int8_gemm_w8a16` -- s8 weight x fp16 act, per-channel dequant fused in the oneDNN
@@ -93,8 +115,9 @@ The daily driver runs this entry at its agentic config. Knobs (env, defaults in 
 - **`CTX`/`MAXLEN` -> 128K.** `CTX="${CTX:-${MAXLEN:-8192}}"`: the backend-agnostic `MAXLEN` knob is honored, so
   `daily_driver_serve.sh` (DD_MAXLEN=131072) serves the full 128K. Bare shelf use still defaults to 8192.
   KV is bf16 (fp8 KV is NOT supported on the XPU attention backend) and CHEAP -- this is a hybrid model, only
-  16/64 layers are full-attention -> ~64 KB/token. The KV pool holds ~182k tokens: a full 128K session fits,
-  and two concurrent sessions share the pool (combined < 182k; rare both-maxed -> graceful preempt).
+  16/64 layers are full-attention -> ~64 KB/token. With the qualified replicated input embedding, the KV pool
+  holds 143360 tokens: a full 128K session fits with 12288 slots of headroom, and concurrent sessions share
+  that pool (combined < 143360; rare both-large requests -> graceful preempt).
 - **`TOOLCALL=1` / `TOOLPARSER=qwen3_coder`** -- Qwen3.6 emits XML `<tool_call>` (NOT hermes JSON); returns
   structured OpenAI `tool_calls`. **`REASONPARSER=qwen3`** splits `<think>` into `reasoning_content`.
 - **`THINKCAP=4096`** -> `SGLANG_MAX_THINK_TOKENS` (graceful `</think>` cap). `THINKCAP=` for unlimited.
