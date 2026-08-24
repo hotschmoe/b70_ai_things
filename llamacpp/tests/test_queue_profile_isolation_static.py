@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Static contracts for the queue-profiling isolation mechanism."""
 
+import re
 import unittest
 from pathlib import Path
 
@@ -9,6 +10,51 @@ LLAMACPP = Path(__file__).resolve().parents[1]
 
 
 class QueueProfileIsolationStaticTest(unittest.TestCase):
+    def assert_patch_hunks_exact(self, relative_path: str) -> None:
+        lines = (LLAMACPP / relative_path).read_text(encoding="ascii").splitlines()
+        index = 0
+        found = 0
+        while index < len(lines):
+            match = re.match(
+                r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@", lines[index]
+            )
+            if match is None:
+                index += 1
+                continue
+            found += 1
+            cursor = index + 1
+            old_count = 0
+            new_count = 0
+            while (
+                cursor < len(lines)
+                and not lines[cursor].startswith("@@ ")
+                and not lines[cursor].startswith("diff --git ")
+            ):
+                marker = lines[cursor][:1]
+                if marker == " ":
+                    old_count += 1
+                    new_count += 1
+                elif marker == "-":
+                    old_count += 1
+                elif marker == "+":
+                    new_count += 1
+                elif marker != "\\":
+                    self.fail(f"malformed patch line {cursor + 1}: {lines[cursor]!r}")
+                cursor += 1
+            declared_old = int(match.group(2) or 1)
+            declared_new = int(match.group(4) or 1)
+            self.assertEqual(
+                (old_count, new_count),
+                (declared_old, declared_new),
+                f"bad hunk count at {relative_path}:{index + 1}",
+            )
+            index = cursor
+        self.assertGreater(found, 0, f"no hunks found in {relative_path}")
+
+    def test_instrumentation_patch_hunk_counts_are_exact(self) -> None:
+        self.assert_patch_hunks_exact("qwen38-b70/patches/quant-census.patch")
+        self.assert_patch_hunks_exact("qwen38-b70/patches/quant-timing.patch")
+
     def test_patch_decouples_queue_property_from_sampling(self) -> None:
         patch = (LLAMACPP / "qwen38-b70/patches/quant-timing.patch").read_text(
             encoding="ascii"
