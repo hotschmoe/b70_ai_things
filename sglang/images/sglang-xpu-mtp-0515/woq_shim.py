@@ -395,6 +395,15 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] W8A8 shim install FAILED: {e}", flush=True)
 
+    # Quark INT8 MoE loader. Keep this opt-in: it changes Quark dispatch for
+    # routed experts and dense text linears in every TP worker.
+    if os.environ.get("B70_QUARK_MOE_INT8") == "1":
+        try:
+            import quark_moe_int8
+            quark_moe_int8.install()
+        except Exception as e:
+            print(f"[woq-shim] quark_moe_int8 install FAILED: {e}", flush=True)
+
     # --- PUSH ALL-REDUCE (hand-rolled L0-IPC push collective, decode AR ~34-45us vs oneCCL ~85-88us;
     #     OPT-IN via B70_XPU_PUSH_AR=1 + PUSH_AR_SO=/path/to/libxpu_push_ar_graph.so). P2PACCESS-independent. ---
     if os.environ.get("B70_XPU_PUSH_AR") == "1":

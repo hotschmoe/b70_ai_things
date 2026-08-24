@@ -82,14 +82,19 @@
 > quantization, and quant-free W8A16 passed. W8A16 won every real per-rank shape
 > by 18.84-38.54%, won the qkvz/out weighted ledger by 36.23%, and won the full
 > weighted linear ledger by 31.07%; repeat CVs were below 1.4%, and W8A16 was
-> numerically closer to BF16 than W8A8 on every shape. Active next is a
-> default-off `B70_W8A16_M_MAX=11` serving route using the existing shared B_nt
-> weight layout. Its TP=2 mechanism gate passed: both ranks recorded the exact
+> numerically closer to BF16 than W8A8 on every shape. A default-off
+> `B70_W8A16_M_MAX=11` serving route using the existing shared B_nt weight
+> layout then passed its TP=2 mechanism gate: both ranks recorded the exact
 > 800 W8A16 M=11 calls over five steps, zero corresponding W8A8 or activation-
 > quant calls, unchanged 143360-token capacity, byte-exact deterministic
-> replay, 24/24 mixed coherence, exact artifacts, and healthy cards. Active
-> next is strict position-balanced serving qualification with route telemetry
-> off. qkvz-only remains a bounded attribution probe if needed.
+> replay, 24/24 mixed coherence, exact artifacts, and healthy cards. Strict
+> position-balanced serving qualification found +8.18% phase and +5.42% long-
+> soak decode, but warm c1/c4 were -0.72%/-0.63% and candidate phase CV was
+> 13.27-17.39%, so the formal gate failed and the shelf remains unchanged.
+> Archive this branch. The active product-choice campaign is now Pi + local
+> Terminal-Bench 3.0 across Qwen3.6 W8A8, Qwen3.8 UD-Q4_K_XL, and on-box
+> 8-bit Ornith; see `docs/20260824_pi_terminalbench_model_selection.md`.
+> qkvz-only remains a bounded attribution probe, not an active priority.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.

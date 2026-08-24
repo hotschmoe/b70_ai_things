@@ -17831,3 +17831,76 @@ route telemetry disabled in every performance arm. Do not promote the shelf
 threshold until c1, c4, soak, TTFT/prefill, restart stability, deterministic
 output, mixed coherence, and acceptance behavior pass. Endpoint remains down
 by campaign policy.
+
+### 2026-08-24x - TP=2 M<=11 W8A16 A-B-B-A strict FAIL
+
+CONFIG -> one continuous dual-card lease and four fresh Sglang TP=2 serve
+lifecycles in A-B-B-A order. A was the current M=1-only W8A16 threshold; B sent
+all M=1..11 rows through the quant-free W8A16 path. Both arms used the same
+Qwen3.6-27B SQ-GPTQ W8A8 checkpoint, 131072 context, MTP10/draft11, eager/radix
+off, push-all, replicated MTP embedding, P2P access off, and unchanged 143360
+token capacity. Route telemetry and unrelated candidate features were off.
+The predeclared gate required both matched phase and soak pairs to win, balanced
+phase >=3%, balanced soak >=2%, warm TTFT/prefill within 5%, candidate phase CV
+and restart spreads <=5%, byte-exact candidate restart outputs, mixed-load
+coherence, exact identities and artifacts, health, and endpoint-down cleanup.
+
+COMMAND -> `./bin/gpu-run bash sglang/07_c4_m11_w8a16_abba.sh`.
+Artifact: `results/logs/c4_m11_w8a16_abba_20260824T194529Z/`.
+
+RESULT -> formal analyzer FAIL after 5758 seconds. The candidate won both phase
+pairs and both 6400-token soak pairs. Position-balanced phase decode was +8.184%
+and sustained soak was +5.416%. Warm c1 was -0.720%, c4 aggregate -0.633%,
+acceptance -1.555%, c1 TTFT +2.598%, and prefill TTFT improved 1.038%/0.510%
+at c1/c4. Candidate phase medians were 18.631/18.289 tok/s versus baseline
+17.628/16.516; candidate soaks were 18.06/18.32 versus 17.27/17.24. The sole
+formal failure was candidate within-process phase CV: 13.27%/17.39% versus the
+5% ceiling. Candidate restart phase and soak spreads passed. All fixed outputs,
+deterministic corpora, 96 mixed streams, and soaks were coherent; candidate
+restart outputs were byte-identical. Every identity, config, capacity, feature,
+artifact, fatal-marker, health, and endpoint-down check passed.
+
+VERDICT -> no shelf promotion. M<=11 W8A16 has a real sustained +5.4% signal,
+but it does not improve the warm c1 or c4 serving rows and failed the strict
+within-process stability gate. Archive it as a strong mechanism and possible
+future revisit; pause this kernel branch while the product-choice campaign
+compares Qwen3.6 W8A8, Qwen3.8 UD-Q4_K_XL, and 8-bit Ornith with Pi on local
+Terminal-Bench 3.0. Endpoint remains down.
+
+### 2026-08-24y - Ornith-1.5 W8A8 XPU build and TP=2 product qualification
+
+CONFIG -> pinned `shisa-ai/Ornith-1.5-35B-A3B-MTP` revision
+`779a91ed5b7597bc6db383d9fffb4343b67892ea`, preserving its trained BF16 MTP
+sidecar. XPU RTN used symmetric per-output-channel INT8 weights and dynamic
+per-token INT8 activations. Routed experts and eligible text linears were stored
+INT8; vision, routers, GDN/linear-attention, lm_head, and MTP stayed BF16. The
+serve qualification used Sglang 0.5.15.post1, TP=2, 262144 context, MTP
+steps=3/draft=4, extra-buffer radix cache with INT8 Mamba checkpoints, and
+`CCL_TOPO_P2P_ACCESS=0`. Experts used the fused INT8 W8A8 MoE path; dense text
+linears used the current one-time-dequant BF16 compute fallback.
+
+COMMAND -> `./bin/gpu-run --card 0 bash
+sglang/w8a8/quantize_ornith15_quark_w8a8.sh`; then `./bin/gpu-run env
+CTX=262144 RADIX=1 MTP=1 PORT=18080 bash
+sglang/w8a8/serve_ornith15_w8a8.sh start`; qualification probes ran through
+full dual-card `gpu-run` leases.
+
+RESULT -> the real Arc XPU conversion completed in 426 seconds. It quantized
+32,610,713,600 elements into 30,880 INT8 tensors with 30,880 matching scales,
+relative L2 0.008452, RMSE 8.968e-05, and max absolute error 0.003322. All
+62,565 indexed keys resolved across 17 shards; 19 BF16 MTP tensors remained and
+the sidecar SHA256 stayed
+`73c6e839971fff3c6d78dbcb6a15895bbab340a2898e98aa6943070751de712e`.
+TP=2 loaded 18.06 GB target weights plus 1.70 GB MTP per card. MTP recorded mean
+accept length 3.275 and 75.83% acceptance on its qualification request. A
+4,129-token cache probe improved from 7.743 seconds cold to 0.241 seconds warm.
+The 250,042-token near-context retrieval returned the correct early needle in
+370.478 seconds cold and 5.450 seconds warm with byte-identical outputs. Native
+OpenAI tool parsing returned the exact requested call and arguments. The mixed
+prefill/decode gate passed 8/8 coherent streams. Card health remained clean.
+
+VERDICT -> qualified for the Pi + TB3-local-70 product-choice campaign. This is
+a real GPU-built and fused-expert W8A8 MoE artifact, with the dense BF16 compute
+fallback explicitly disclosed. Keep the research endpoint live at port 18080
+while the three-task Pi smoke runs; do not promote a shelf entry before the
+model-selection gates finish.

@@ -28,6 +28,31 @@ defaults:
 # Serve commands are what was ACTUALLY used (2026-06-19); all on vLLM 0.23.0-based images for parity.
 # One card -> one model at a time (each serve script evicts the others off port 18080).
 models:
+  - label: qwen36-27b-w8a8-sqgptq-mtp-sglang
+    served_model_id: qwen36-27b-w8a8-mtp
+    family: qwen3.6-27b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: sqgptq
+    serve_cmd: "RADIX=1 MAXLEN=131072 PORT=18080 rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh start"
+    notes: "Pi Terminal-Bench 3.0 arm. SGLang TP=2, fused B70 INT8 XMX,
+      NEXTN MTP10, and qualified extra-buffer radix cache. The public served id
+      predates the identity convention; the eval arm and output name must encode
+      W8A8-sqgptq."
+
+  - label: ornith15-35b-a3b-w8a8-rtn-mtp-shisa-sglang
+    served_model_id: ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: rtn-per-output-channel
+    serve_cmd: "CTX=262144 RADIX=1 MTP=1 PORT=18080 sglang/w8a8/serve_ornith15_w8a8.sh start"
+    notes: "Pi Terminal-Bench 3.0 wildcard arm. XPU-quantized Quark-compatible
+      artifact with trained Shisa MTP head. Routed experts use SGLang's INT8
+      fused-MoE path; eligible dense weights use the BF16 compute fallback.
+      Trained MTP, 250K context, radix-cache reuse, tool calls, and concurrent
+      coherence passed qualification on 2026-08-24."
+
   - label: bf16
     reference: true
     served_model_id: qwen3-14b

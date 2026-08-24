@@ -119,6 +119,35 @@ models:
     source: { type: hf, repo: Intel/Qwen3.6-35B-A3B-int4-AutoRound }
     notes: Intel AutoRound int4 MoE. Launches easily, vision + MTP retained.
 
+  # ===================== ornith-1.5-35b-a3b (MoE VLM) =====================
+  - id: ornith-1.5-35b-a3b/bf16-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    scheme: bf16
+    vision: true
+    mtp: true
+    size_gb: 68
+    source:
+      type: hf
+      repo: shisa-ai/Ornith-1.5-35B-A3B-MTP
+      revision: 779a91ed5b7597bc6db383d9fffb4343b67892ea
+    notes: Official Ornith-1.5 BF16 target weights with the code-tuned Shisa BF16 MTP head.
+           The target shards are byte-identical to ornith-ai except the native untrained MTP
+           payload is removed; model-mtp.safetensors is the replacement 12K KL-distilled head.
+
+  - id: ornith-1.5-35b-a3b/w8a8-rtn-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    scheme: quark-w8a8-int8-rtn
+    vision: true
+    mtp: true
+    size_gb: 37
+    served_as: ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa
+    source: { type: custom }
+    derived_from: ornith-1.5-35b-a3b/bf16-mtp-shisa
+    notes: Built on Arc XPU 0 in 426 seconds using per-output-channel symmetric INT8 RTN.
+           Routed experts and eligible text linears are stored INT8; experts use the SGLang fused
+           W8A8 path while dense text linears currently dequantize once for BF16 compute. Vision,
+           routers, GDN, lm_head, and the exact trained Shisa MTP sidecar stay BF16.
+
   - id: ornith-1.5-35b-a3b/nvfp4-modelopt
     family: ornith-1.5-35b-a3b
     scheme: nvfp4-modelopt-mixed
