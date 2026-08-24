@@ -19,12 +19,14 @@ BATCH="${BATCH:-1024}"
 UBATCH="${UBATCH:-256}"
 LAB_DOORS="${LAB_DOORS:-0}"
 ENABLE_MTP="${ENABLE_MTP:-0}"
+GPU_COUNT="${GPU_COUNT:-2}"
 MTP_SPEC_TYPE="${MTP_SPEC_TYPE:-mtp}"
 MTP_DRAFT_MAX_FLAG="${MTP_DRAFT_MAX_FLAG:---draft-max}"
 GGML_SYCL_QUANT_CENSUS="${GGML_SYCL_QUANT_CENSUS:-0}"
 GGML_SYCL_QUANT_TIMING_SAMPLE="${GGML_SYCL_QUANT_TIMING_SAMPLE:-0}"
 GGML_SYCL_QUANT_TIMING_SKIP="${GGML_SYCL_QUANT_TIMING_SKIP:-4}"
 GGML_SYCL_QUANT_TIMING_MAX="${GGML_SYCL_QUANT_TIMING_MAX:-65536}"
+GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE="${GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE:-auto}"
 UR_L0_USE_DRIVER_INORDER_LISTS="${UR_L0_USE_DRIVER_INORDER_LISTS:-}"
 RESTART_POLICY="${RESTART_POLICY:-unless-stopped}"
 OVERLAY="${OVERLAY:-$REPO/llamacpp/qwen38_b70_entrypoint_overlay.sh}"
@@ -42,6 +44,14 @@ auth_args() {
 }
 
 check_artifacts() {
+    case "$GPU_COUNT" in
+        1|2) ;;
+        *) say "GPU_COUNT must be 1 or 2"; return 2 ;;
+    esac
+    case "$GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE" in
+        auto|0|1) ;;
+        *) say "GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE must be auto, 0, or 1"; return 2 ;;
+    esac
     [ -s "$HOST_MODELS/$MODEL_FILE" ] || { say "missing $HOST_MODELS/$MODEL_FILE"; return 2; }
     [ "$(stat -c %s "$HOST_MODELS/$MODEL_FILE")" = "$MODEL_SIZE" ] || {
         say "wrong model size"; return 2;
@@ -88,7 +98,9 @@ start() {
     say "pre-flight xpu-health"
     # IMG selects the llama.cpp serve image. Do not leak it into xpu-health,
     # whose independent IMG variable selects a PyTorch probe image.
-    env -u IMG "$REPO/bin/xpu-health" 2>&1 | tail -5 || return 3
+    local health_args=()
+    [ "$GPU_COUNT" = "1" ] && health_args=(--card 0)
+    env -u IMG "$REPO/bin/xpu-health" "${health_args[@]}" 2>&1 | tail -5 || return 3
     check_artifacts || return $?
     if ss -ltnH "sport = :$PORT" | grep -q .; then
         say "port $PORT is already in use"
@@ -98,9 +110,11 @@ start() {
     local runtime_env=()
     [ -s "$API_KEY_FILE" ] && key_mount=(-v "$API_KEY_FILE:/run/secrets/dd_api_key:ro")
     [ -n "$UR_L0_USE_DRIVER_INORDER_LISTS" ] && \
-        runtime_env=(-e "UR_L0_USE_DRIVER_INORDER_LISTS=$UR_L0_USE_DRIVER_INORDER_LISTS")
+        runtime_env+=(-e "UR_L0_USE_DRIVER_INORDER_LISTS=$UR_L0_USE_DRIVER_INORDER_LISTS")
+    [ "$GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE" != "auto" ] && \
+        runtime_env+=(-e "GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE=$GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE")
     docker rm -f "$NAME" >/dev/null 2>&1 || true
-    say "start $MODEL_LABEL TP=2 ctx=$CTX_SIZE mtp=$ENABLE_MTP lab_doors=$LAB_DOORS"
+    say "start $MODEL_LABEL TP=$GPU_COUNT ctx=$CTX_SIZE mtp=$ENABLE_MTP lab_doors=$LAB_DOORS"
     docker run -d --name "$NAME" --restart "$RESTART_POLICY" \
         --device /dev/dri --ipc=host --shm-size 8g \
         -v /dev/dri/by-path:/dev/dri/by-path:ro \
@@ -111,7 +125,7 @@ start() {
         -e CCL_TOPO_P2P_ACCESS=0 \
         -e MODELS_DIR=/models -e MODEL_FILE="$MODEL_FILE" -e MODEL_SHA256="$MODEL_SHA256" \
         -e SERVED="$SERVED" -e API_KEY_FILE=/run/secrets/dd_api_key \
-        -e GPU_COUNT=2 -e CTX_SIZE_OVERRIDE="$CTX_SIZE" -e PARALLEL=1 \
+        -e GPU_COUNT="$GPU_COUNT" -e CTX_SIZE_OVERRIDE="$CTX_SIZE" -e PARALLEL=1 \
         -e BATCH="$BATCH" -e UBATCH="$UBATCH" \
         -e ENABLE_MTP="$ENABLE_MTP" -e MTP_SPEC_TYPE="$MTP_SPEC_TYPE" \
         -e MTP_DRAFT_MAX_FLAG="$MTP_DRAFT_MAX_FLAG" \

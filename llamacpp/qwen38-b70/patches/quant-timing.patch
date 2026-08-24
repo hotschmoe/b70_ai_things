@@ -1,7 +1,7 @@
 diff --git a/ggml/src/ggml-sycl/dpct/helper.hpp b/ggml/src/ggml-sycl/dpct/helper.hpp
 --- a/ggml/src/ggml-sycl/dpct/helper.hpp
 +++ b/ggml/src/ggml-sycl/dpct/helper.hpp
-@@ -799,13 +799,14 @@ class device_ext : public sycl::device {
+@@ -799,13 +799,23 @@ class device_ext : public sycl::device {
  
        /// PROFILER HOOK (findings 79). enable_profiling must be set at QUEUE
        /// CONSTRUCTION, but we do not want it in a production binary. Gate it on
@@ -14,7 +14,15 @@ diff --git a/ggml/src/ggml-sycl/dpct/helper.hpp b/ggml/src/ggml-sycl/dpct/helper
            const char * e = std::getenv("GGML_SYCL_PROFILE");
 -          return e && std::atoi(e) != 0;
 +          const char * t = std::getenv("GGML_SYCL_QUANT_TIMING_SAMPLE");
-+          return (e && std::atoi(e) != 0) || (t && std::strtoull(t, nullptr, 10) != 0);
++          const char * q = std::getenv("GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE");
++          // Isolation hook: an explicit 0/1 decouples queue construction from
++          // sampled timing.  Unset preserves the original timing behavior.
++          // This lets a gate execute identical CPU accounting with an
++          // unreachable sample while changing only enable_profiling.
++          const bool quant_queue_profile = q != nullptr
++              ? std::atoi(q) != 0
++              : (t && std::strtoull(t, nullptr, 10) != 0);
++          return (e && std::atoi(e) != 0) || quant_queue_profile;
          }();
          return on;
        }

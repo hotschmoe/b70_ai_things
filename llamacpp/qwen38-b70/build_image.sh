@@ -32,4 +32,7 @@ cp "$SCRIPT_DIR/patches/quant-census.patch" "$BUILD_CONTEXT/patches/"
 cp "$SCRIPT_DIR/patches/quant-timing.patch" "$BUILD_CONTEXT/patches/"
 
 printf 'building %s with pinned base patches plus quant instrumentation\n' "$IMAGE"
-docker build --tag "$IMAGE" "$BUILD_CONTEXT"
+QUANT_TIMING_PATCH_SHA="$(sha256sum "$SCRIPT_DIR/patches/quant-timing.patch" | awk '{ print $1 }')"
+docker build \
+    --label "ai.b70.quant_timing_patch_sha=$QUANT_TIMING_PATCH_SHA" \
+    --tag "$IMAGE" "$BUILD_CONTEXT"
