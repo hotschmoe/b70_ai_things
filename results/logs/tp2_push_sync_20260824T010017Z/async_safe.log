@@ -1,0 +1,119 @@
+W0824 01:04:16.717000 1 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0824 01:04:16.748000 1 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+W0824 01:04:45.107000 511 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0824 01:04:45.137000 511 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0824 01:04:45.305000 513 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0824 01:04:45.336000 513 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0824 01:04:45.399000 512 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0824 01:04:45.437000 512 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+/opt/venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/gguf.py:64: UserWarning: Only CUDA, MUSA and NPU support GGUF quantization currently.
+  warnings.warn(f"Only CUDA, MUSA and NPU support GGUF quantization currently.")
+[woq-shim] torch.cuda.{synchronize,Stream,Event,...} -> torch.xpu (for spec-decode)
+[woq-shim] installed: GPTQLinearScheme -> auto_round_kernel.woqgemm (XPU int4)
+[areager r0] ar_ea_setup OK
+[areager r1] ar_ea_setup OK
+[areager r0] ar_ea_exchange OK (scratch ring + IPC event ring)
+[areager r1] ar_ea_exchange OK (scratch ring + IPC event ring)
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank1]:[W824 01:04:49.186722492 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+[rank0]:[W824 01:04:49.187034656 ProcessGroupXCCL.cpp:1916] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+2026:08:24-01:04:49:  513 |CCL_WARN| did not find MPI-launcher specific variables, switch to ATL/OFI, to force enable ATL/MPI set CCL_ATL_TRANSPORT=mpi
+2026:08:24-01:04:49:  513 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:08:24-01:04:49:  513 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:24-01:04:49:  512 |CCL_WARN| did not find MPI-launcher specific variables, switch to ATL/OFI, to force enable ATL/MPI set CCL_ATL_TRANSPORT=mpi
+2026:08:24-01:04:49:  512 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:08:24-01:04:49:  512 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:24-01:04:49:  717:[1] |CCL_WARN| no membind support for NUMA node 0, skip thread membind
+2026:08:24-01:04:49:  718:[0] |CCL_WARN| no membind support for NUMA node 0, skip thread membind
+2026:08:24-01:04:49:  513:[1] |CCL_WARN| topology recognition shows PCIe connection between devices. If this is not correct, you can disable topology recognition, with CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0. This will assume XeLinks across devices
+2026:08:24-01:04:49:  512:[0] |CCL_WARN| topology recognition shows PCIe connection between devices. If this is not correct, you can disable topology recognition, with CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0. This will assume XeLinks across devices
+{
+  "async_hostwait_input": "1",
+  "calls_per_sequence": 159,
+  "hidden": 5120,
+  "mode": "async",
+  "rank_results": {
+    "0": [
+      {
+        "bytes": 10240,
+        "caller_ms_median": 13.361799996346235,
+        "caller_us_per_call_median": 84.03647796444173,
+        "correct": true,
+        "rows": 1,
+        "total_ms_median": 13.413639040663838,
+        "total_us_per_call_median": 84.36250968970968,
+        "total_us_per_call_p95_repeat": 93.61126441098516
+      },
+      {
+        "bytes": 112640,
+        "caller_ms_median": 14.25037399167195,
+        "caller_us_per_call_median": 89.62499365831415,
+        "correct": true,
+        "rows": 11,
+        "total_ms_median": 14.30078997509554,
+        "total_us_per_call_median": 89.94207531506629,
+        "total_us_per_call_p95_repeat": 91.41752822910371
+      },
+      {
+        "bytes": 450560,
+        "caller_ms_median": 19.01132398052141,
+        "caller_us_per_call_median": 119.56807534919126,
+        "correct": true,
+        "rows": 44,
+        "total_ms_median": 19.063282990828156,
+        "total_us_per_call_median": 119.89486157753558,
+        "total_us_per_call_p95_repeat": 120.90459133574517
+      }
+    ],
+    "1": [
+      {
+        "bytes": 10240,
+        "caller_ms_median": 13.339918048586696,
+        "caller_us_per_call_median": 83.89885565148866,
+        "correct": true,
+        "rows": 1,
+        "total_ms_median": 13.392268039751798,
+        "total_us_per_call_median": 84.22810087894213,
+        "total_us_per_call_p95_repeat": 93.54888080800855
+      },
+      {
+        "bytes": 112640,
+        "caller_ms_median": 14.22957400791347,
+        "caller_us_per_call_median": 89.49417615039918,
+        "correct": true,
+        "rows": 11,
+        "total_ms_median": 14.281391981057823,
+        "total_us_per_call_median": 89.82007535256493,
+        "total_us_per_call_p95_repeat": 91.33352212748437
+      },
+      {
+        "bytes": 450560,
+        "caller_ms_median": 18.989101983606815,
+        "caller_us_per_call_median": 119.42831436230702,
+        "correct": true,
+        "rows": 44,
+        "total_ms_median": 19.046681991312653,
+        "total_us_per_call_median": 119.79045277555127,
+        "total_us_per_call_p95_repeat": 120.75329571376619
+      }
+    ]
+  },
+  "rows": [
+    1,
+    11,
+    44
+  ]
+}

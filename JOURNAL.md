@@ -16984,3 +16984,37 @@ activation quant 6.8%, so math becomes the device target while eager host sync
 limits wall realization. Next: A-B-B-A + serve-sweep before any gate promotion;
 then remove/amortize host barriers and reduce boundary count. Do not pursue
 P2P-on serve or broad direct peer writes.
+
+### 2026-08-24a - TP=2 campaign C1/C2: push-all GO signal, one-host-sync NO-GO
+
+CONFIG -> 2x B70 under serialized both-card leases, kernel 7.1, P2PACCESS=0.
+C1: sglang Qwen3.6-27B W8A8 GPTQ, TP=2, MTP10, eager, 8K, radix off;
+A-B-B-A with A `PUSH_AR_MIN_NUMEL=1048576`, B=0, fresh process per arm.
+Each arm: identity/env, repeated phase timing, native c1/c4, cold prefill,
+real-code c1/c4, 24-stream mixed coherence, 6.4K soak, stats/fatal/health.
+C2: 159-call BF16 sequences at [1,11,44]x5120, oneCCL vs current push vs
+one-host-sync async-safe, injected rank delay, exact output verification.
+
+COMMAND -> `bin/gpu-run bash sglang/campaign_push_ar_abba.sh`; corrected C2
+after a pre-collective `ccl`-backend setup failure by importing oneCCL and using
+`xccl`, then `bin/gpu-run bash sglang/run_tp2_push_sync_microbench.sh`.
+Artifacts: `results/logs/sglang_push_ar_abba_20260823T230835Z/` and
+`results/logs/tp2_push_sync_20260824T010017Z/`.
+
+RESULT -> C1 balanced deltas: native c1 +7.622%, extended soak +4.420%,
+real-code c1 +6.364%, code c4 aggregate +3.315%, random c4 aggregate +0.340%,
+c1/c4 TTFT +1.989%/+0.869% improvement, cold-prefill TTFT -0.037%/-0.800%.
+All 96 mixed streams coherent; four 6.4K soaks coherent/stable; no fatal marker;
+all health gates green. Entropy phase timing had 6.9-18.9% CV and restart
+spread >5% in both arms, so that diagnostic invalidated its own gate. C2 us/call
+at rows 1/11/44: oneCCL 133/170/373; current push 76/82/115; one-host-sync
+safe 84/90/120. All exact. Production stock Q4_K_M restored after both blocks:
+hotschmoe-dd, Q4_K_M, ctx 262144, health/coherence pass; cards free.
+
+VERDICT -> C1 core serving result is a reproducible GO candidate; keep shelf
+default at 1M until a deterministic final review replaces the invalid entropy
+phase diagnostic. C2 one-host-sync is NO-GO: 4-10% slower than current push,
+so do not risk native-event escalation or a serve port. C3 next: replicated MTP
+input embedding removes 10/159 ARs exactly (~1.184 GiB/card), then XPU delayed
+MLP-AR plus residual/RMSNorm fusion. Full campaign ledger in
+`docs/20260823_tp2_optimization_campaign.md`.

@@ -1,0 +1,75 @@
+  [ok ] w0k0   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w0k1   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w0k2   OK       Thinking Process:
+
+1.  **Deconstruct the User's Re
+  [ok ] w0k3   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w0k4   OK       Thinking Process:
+
+1.  **Deconstruct the User's Re
+  [ok ] w0k5   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w1k0   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w1k1   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w1k2   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w1k3   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w1k4   OK       Thinking Process:
+
+1.  **Deconstruct the User's Re
+  [ok ] w1k5   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w2k0   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w2k1   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w2k2   OK       Here's a thinking thinking sequence
+
+1.  **Deconst
+  [ok ] w2k3   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w2k4   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w2k5   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w3k0   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w3k1   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w3k2   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w3k3   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+  [ok ] w3k4   OK       Thinking Process:
+
+1.  **Deconstruct the Request:*
+  [ok ] w3k5   OK       Here's a thinking process:
+
+1.  **Analyze User Inp
+
+=== 24 streams: OK=24 ===
+GATE PASS: all streams coherent under concurrent mixed prefill+decode

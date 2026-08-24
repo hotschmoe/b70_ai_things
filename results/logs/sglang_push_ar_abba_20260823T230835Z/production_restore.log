@@ -1,0 +1,64 @@
+[00:45:37] pre-flight xpu-health
+=== probe card 0 (img=vllm-xpu-env:int8g-v0251 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g-v0251 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-27b/q4km-ggml-org/Qwen3.8-27B-Q4_K_M.gguf: OK
+[00:47:04] start stock Q4_K_M TP=2 ctx=262144 mtp=0 lab_doors=0
+[00:50:10] server healthy
+[00:50:11] coherence PASS: The capital of France is Paris.
+{
+  "models": [
+    {
+      "name": "hotschmoe-dd",
+      "model": "hotschmoe-dd",
+      "modified_at": "",
+      "size": "",
+      "digest": "",
+      "type": "model",
+      "description": "",
+      "tags": [
+        ""
+      ],
+      "capabilities": [
+        "completion"
+      ],
+      "parameters": "",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "",
+        "families": [
+          ""
+        ],
+        "parameter_size": "",
+        "quantization_level": ""
+      }
+    }
+  ],
+  "object": "list",
+  "data": [
+    {
+      "id": "hotschmoe-dd",
+      "aliases": [
+        "hotschmoe-dd"
+      ],
+      "tags": [],
+      "object": "model",
+      "created": 1787532611,
+      "owned_by": "llamacpp",
+      "meta": {
+        "vocab_type": 2,
+        "n_vocab": 248320,
+        "n_ctx": 262144,
+        "n_ctx_train": 262144,
+        "n_embd": 5120,
+        "n_params": 26895998464,
+        "size": 18962876416,
+        "ftype": "Q4_K - Medium"
+      }
+    }
+  ]
+}
+[00:50:11] UP http://0.0.0.0:18080/v1 served=hotschmoe-dd

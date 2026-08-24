@@ -1,0 +1,2 @@
+model=qwen36-27b-w8a8-gptq-mtp-push-abba conc=4 out=256 reps=5 (real coding prompts, non-streaming usage-based)
+c4: decode TG/stream avg=18.0 best=18.1 t/s | agg=71.8 | out~256 tok | wall~14.5s

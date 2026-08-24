@@ -1,0 +1,11 @@
+[regime 00:03:59] COHERENCE[03_B2]: OK :: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky "
+[regime 00:03:59] warming (discard)...
+[regime 00:05:37] WARM[c1] decode=22.30 t/s  agg_out=19.45  TTFT=562.41ms
+[regime 00:06:43] WARM[c4] decode=5.46 t/s  agg_out=20.54  TTFT=2321.02ms
+[regime 00:06:43] soak (2000-tok single stream, 400-tok windows)...
+[regime] SOAK port=31003 served=qwen36-27b-w8a8-gptq-mtp-push-abba deltas=499 completion_tokens=2000 tok/delta=4.01 ttft=802ms
+[regime] window        tok/s
+[regime]   [    0- 1603]   17.35
+[regime]   [ 1603- 1995]   17.31
+[regime] OVERALL decode 17.34 t/s | first/last window ratio 1.00x (stable) | coherence OK | first 100 chars: "Here's a thinking thinking sequence\n\n1.  **Deconstruct and Analyze the Request:**\n    *   Topic: How"
+[regime 00:08:39] DONE[03_B2]

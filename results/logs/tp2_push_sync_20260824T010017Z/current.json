@@ -1,0 +1,77 @@
+{
+  "async_hostwait_input": "0",
+  "calls_per_sequence": 159,
+  "hidden": 5120,
+  "mode": "current",
+  "rank_results": {
+    "0": [
+      {
+        "bytes": 10240,
+        "caller_ms_median": 12.080698041245341,
+        "caller_us_per_call_median": 75.97923296380718,
+        "correct": true,
+        "rows": 1,
+        "total_ms_median": 12.132156000006944,
+        "total_us_per_call_median": 76.30286792457197,
+        "total_us_per_call_p95_repeat": 84.21581759814572
+      },
+      {
+        "bytes": 112640,
+        "caller_ms_median": 13.060145021881908,
+        "caller_us_per_call_median": 82.1392768671818,
+        "correct": true,
+        "rows": 11,
+        "total_ms_median": 13.111773005221039,
+        "total_us_per_call_median": 82.4639811649122,
+        "total_us_per_call_p95_repeat": 83.02435876344735
+      },
+      {
+        "bytes": 450560,
+        "caller_ms_median": 18.27806798974052,
+        "caller_us_per_call_median": 114.95640245119824,
+        "correct": true,
+        "rows": 44,
+        "total_ms_median": 18.329555983655155,
+        "total_us_per_call_median": 115.28022631229658,
+        "total_us_per_call_p95_repeat": 115.92535206860623
+      }
+    ],
+    "1": [
+      {
+        "bytes": 10240,
+        "caller_ms_median": 12.091770011465997,
+        "caller_us_per_call_median": 76.04886799664149,
+        "correct": true,
+        "rows": 1,
+        "total_ms_median": 12.144630018156022,
+        "total_us_per_call_median": 76.3813208689058,
+        "total_us_per_call_p95_repeat": 84.11196854152956
+      },
+      {
+        "bytes": 112640,
+        "caller_ms_median": 13.05431395303458,
+        "caller_us_per_call_median": 82.1026034782049,
+        "correct": true,
+        "rows": 11,
+        "total_ms_median": 13.106974947731942,
+        "total_us_per_call_median": 82.43380470271661,
+        "total_us_per_call_p95_repeat": 83.02114452909
+      },
+      {
+        "bytes": 450560,
+        "caller_ms_median": 18.287825980223715,
+        "caller_us_per_call_median": 115.01777346052651,
+        "correct": true,
+        "rows": 44,
+        "total_ms_median": 18.343732983339578,
+        "total_us_per_call_median": 115.36938983232439,
+        "total_us_per_call_p95_repeat": 115.85232049062755
+      }
+    ]
+  },
+  "rows": [
+    1,
+    11,
+    44
+  ]
+}

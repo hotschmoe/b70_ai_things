@@ -67,6 +67,17 @@ Promotion candidate thresholds, applied to the position-balanced arm means:
 Passing C1 authorizes a longer push-all qualification and shelf-gate review.
 It does not by itself promote the shelf.
 
+Result, 2026-08-24: the core serving gate passed. Drift-balanced deltas were
+c1 +7.62%, extended soak +4.42%, real-code c1 +6.36%, real-code c4 aggregate
++3.32%, and random c4 aggregate +0.34%. TTFT improved slightly and cold
+prefill was flat. All 96 mixed-load streams were coherent, every long soak
+was stable, no fatal marker appeared, and every card-health probe passed.
+
+The entropy-prompt `phase_bench` diagnostic had 6.9-18.9% within-process CV
+and large restart spread in both arms. It failed its own repeatability check
+and is excluded from the promotion evidence rather than retroactively relaxed.
+The shelf default remains unchanged pending a deterministic final shelf review.
+
 ### C2 - remove eager host synchronization
 
 Map and separately time the Python/ctypes call, host rendezvous, Level Zero
@@ -83,6 +94,14 @@ delays and many iterations, then a short real-serve mechanism trace, and only
 then the C1 serving regime. Known unsafe graph-capture spin and broad peer-write
 experiments remain closed unless new evidence changes their failure mechanism.
 
+Result, 2026-08-24: the existing one-host-sync implementation is a strict
+no-go. Across exact 159-call BF16 sequences at rows 1/11/44, oneCCL took
+133/170/373 us per call, the current two-wait push took 76/82/115 us, and the
+one-host-sync safe path took 84/90/120 us. All results were numerically exact
+with injected rank delay, but the proposed path was 4-10% slower than current
+push. The riskier native input-event variant was not run because the safe
+variant had already missed the go threshold.
+
 ### C3 - reduce collective boundary count
 
 Build a target-versus-draft census of every decode all-reduce. Rank candidates
@@ -90,6 +109,18 @@ for fused GEMM-output/reduce/residual/norm operations. A boundary can be delayed
 or batched only when no intervening operation consumes the globally reduced
 value. Compare structural TP fusion with PP=2 as a separate throughput-oriented
 topology experiment.
+
+The completed census is 159 all-reduces plus 11 logits all-gathers per
+scheduler decode iteration. The 159 all-reduces are target 129 (embedding 1,
+attention 64, MLP 64) plus MTP10 30 (embedding, attention, and MLP once per
+draft forward). Standard TP dependencies prevent batching the 128 target layer
+reductions across sublayers or layers.
+
+The first exact boundary-count prototype is replicated MTP input embedding. It
+removes 10 all-reduces without changing values for about 1.184 GiB additional
+storage per card. The next kernel prototype enables SGLang's existing delayed
+MLP all-reduce plus residual/RMSNorm fusion contract on XPU, initially covering
+63 target layer edges.
 
 ### C4 - optimize post-push math
 
@@ -115,9 +146,9 @@ and launch fusion. Do not transfer sglang oneCCL percentages to this lane.
 | ID | Change | Mechanism result | Serving result | Verdict |
 | --- | --- | --- | --- | --- |
 | C0 | Baseline profile | oneCCL 319/878 ms -> push 8/8 ms | push-all c1 +5.2%, soak +6.1%, c4 flat | Communication sync confirmed; campaign opened |
-| C1 | Push-all A-B-B-A | pending | pending | running |
-| C2 | Host-sync removal | pending | pending | queued |
-| C3 | Boundary reduction/fusion | pending | pending | queued |
+| C1 | Push-all A-B-B-A | 1M gate correctly fell back; push-all engaged | core gate: c1 +7.62%, soak +4.42%, code c1/c4 +6.36%/+3.32%, 96/96 coherent | GO candidate; noisy phase diagnostic excluded, shelf unchanged |
+| C2 | One-host-sync immediate-list path | exact, but 4-10% slower than current push | not advanced to serve | NO-GO; native-event variant not justified |
+| C3 | Boundary reduction/fusion | census: 159 AR + 11 AG per iteration | replicated MTP embedding first | active |
 | C4 | Post-push math | pending | pending | queued |
 | C5 | Llama.cpp weight/MMVQ | pending | pending | queued |
 

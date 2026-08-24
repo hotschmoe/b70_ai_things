@@ -20,6 +20,18 @@
 > research result only until A-B-B-A plus serve-sweep/coherence gates pass.
 > Full profile: `docs/20260823_tp2_inference_profile.md`.
 
+> ### [CAMPAIGN 2026-08-24] -- C1 core GO, C2 one-host-sync NO-GO, C3 active
+> Position-balanced push-all A-B-B-A passed every stable serve gate: native c1
+> +7.62%, 6.4K soak +4.42%, real-code c1/c4 +6.36%/+3.32%, random c4 +0.34%,
+> TTFT slightly better, prefill flat, 96/96 mixed streams coherent, no fatal
+> markers, all health probes green. The entropy phase diagnostic failed its own
+> CV/restart repeatability and is excluded; shelf default remains 1M pending a
+> deterministic final review. C2 one-host-sync was exact but 4-10% slower than
+> current push at 10/110/440 KiB, so NO-GO. C3 is active: replicate the MTP
+> input embedding to remove 10/159 ARs exactly, then enable delayed MLP-AR plus
+> residual/RMSNorm fusion on XPU. Full ledger:
+> `docs/20260823_tp2_optimization_campaign.md`.
+
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.
 > Ledger: `docs/20260820_qwen38_w4a8_loops.md`. Dead-ends:

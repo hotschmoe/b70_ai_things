@@ -1,0 +1,121 @@
+{
+  "base": "http://127.0.0.1:31003",
+  "gen_tokens": 128,
+  "ignore_eos": true,
+  "label": "01_A1",
+  "median_completion_tokens": 128.0,
+  "median_post_first_tok_s": 15.750892668319404,
+  "median_prefill_proxy_tok_s": 2006.7555281895561,
+  "median_prompt_tokens": 4219.0,
+  "median_ttft_s": 2.090807390981354,
+  "methodology": {
+    "ignore_eos": true,
+    "post_first": "(completion_tokens - 1) / (request_end - first_token)",
+    "prefill_proxy": "prompt_tokens / TTFT",
+    "prefixes": "unique entropy-first cold",
+    "warmup": "one same-shape then n timed"
+  },
+  "metrics_after": {
+    "sglang:spec_accept_length{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 4.8,
+    "sglang:spec_accept_rate{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 0.38,
+    "sglang:spec_num_draft_tokens{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 11.0,
+    "sglang:spec_num_steps{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 10.0,
+    "sglang:spec_verify_calls_total{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\"}": 238.0
+  },
+  "metrics_before": {
+    "sglang:spec_accept_length{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 4.825,
+    "sglang:spec_accept_rate{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 0.3825,
+    "sglang:spec_num_draft_tokens{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 11.0,
+    "sglang:spec_num_steps{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 10.0,
+    "sglang:spec_verify_calls_total{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\"}": 48.0
+  },
+  "metrics_delta": {
+    "sglang:spec_accept_length{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": -0.025000000000000355,
+    "sglang:spec_accept_rate{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": -0.0025000000000000022,
+    "sglang:spec_num_draft_tokens{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 0.0,
+    "sglang:spec_num_steps{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\",moe_ep_rank=\"0\",pp_rank=\"0\",tp_rank=\"0\"}": 0.0,
+    "sglang:spec_verify_calls_total{engine_type=\"unified\",model_name=\"qwen36-27b-w8a8-gptq-mtp-push-abba\"}": 190.0
+  },
+  "model": "qwen36-27b-w8a8-gptq-mtp-push-abba",
+  "n": 5,
+  "n_ok": 5,
+  "prompt_tokens_target": 2048,
+  "runs": [
+    {
+      "completion_tokens": 128,
+      "e2e_s": 12.521841488021892,
+      "finish_reason": "length",
+      "i": 0,
+      "post_first_tok_s": 12.59282377137607,
+      "prefill_proxy_tok_s": 1747.0116116874563,
+      "prompt_tokens": 4257,
+      "salt": "01_A1-p2048-g128-i0-1787526916558465553",
+      "text_hash": "0ef205ff5e372c17",
+      "text_preview": "To determine the number of unique tokens in the provided entropy block, we must first identify the set of distinct words (tokens) present in the text, excluding",
+      "ttft_s": 2.436732515983749
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 9.414818640972953,
+      "finish_reason": "length",
+      "i": 1,
+      "post_first_tok_s": 17.31696726119525,
+      "prefill_proxy_tok_s": 2006.7555281895561,
+      "prompt_tokens": 4176,
+      "salt": "01_A1-p2048-g128-i1-1787526929081828231",
+      "text_hash": "02e63626b0087151",
+      "text_preview": "To determine the number of unique tokens in the provided entropy block, we must first isolate the actual token data from the metadata and structural markers.\\n\\n*",
+      "ttft_s": 2.0809709709719755
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 10.170571262016892,
+      "finish_reason": "length",
+      "i": 2,
+      "post_first_tok_s": 15.750892668319404,
+      "prefill_proxy_tok_s": 2001.8636073672244,
+      "prompt_tokens": 4219,
+      "salt": "01_A1-p2048-g128-i2-1787526938498070725",
+      "text_hash": "a7024d81e2ca4522",
+      "text_preview": "To determine the number of unique tokens in the provided entropy block, we must first parse the text, separate the tokens, and then count the distinct items.\\n\\n#",
+      "ttft_s": 2.107536190014798
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 8.372432506992482,
+      "finish_reason": "length",
+      "i": 3,
+      "post_first_tok_s": 20.216747413524867,
+      "prefill_proxy_tok_s": 2021.0359872768975,
+      "prompt_tokens": 4225,
+      "salt": "01_A1-p2048-g128-i3-1787526948670069850",
+      "text_hash": "ab25a8a38f92225a",
+      "text_preview": "To determine the number of unique tokens in the provided entropy block, we must first identify the tokens and then count the distinct ones.\\n\\n### Step 1: Identif",
+      "ttft_s": 2.0905120079987682
+    },
+    {
+      "completion_tokens": 128,
+      "e2e_s": 11.343116560019553,
+      "finish_reason": "length",
+      "i": 4,
+      "post_first_tok_s": 13.726303096851872,
+      "prefill_proxy_tok_s": 2015.9676200597428,
+      "prompt_tokens": 4215,
+      "salt": "01_A1-p2048-g128-i4-1787526957044018497",
+      "text_hash": "af7bc3a379ab3031",
+      "text_preview": "To determine the number of unique tokens in the provided entropy block, we must first identify the distinct words (tokens) present in the text, ignoring the `SA",
+      "ttft_s": 2.090807390981354
+    }
+  ],
+  "warmup": {
+    "completion_tokens": 128,
+    "e2e_s": 11.096175774000585,
+    "finish_reason": "length",
+    "post_first_tok_s": 18.389493735755206,
+    "prefill_proxy_tok_s": 999.2700534028405,
+    "prompt_tokens": 4187,
+    "text_hash": "af91fe826797238a",
+    "text_preview": "To determine the number of unique tokens in the provided entropy block, we must first identify all distinct words and symbols present in the text. The text cons",
+    "ttft_s": 4.190058518957812
+  }
+}
