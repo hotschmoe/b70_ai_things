@@ -37,6 +37,7 @@ ROOT="${ROOT:-/mnt/vm_8tb/b70}"; REPO="${REPO:-/mnt/vm_8tb/github/b70_ai_things}
 IMG="${IMG:-sglang-xpu:mtp}"
 NAME="${NAME:-sglang_w8a8_mtp}"
 CKPT="${CKPT:-/models/qwen3.6-27b/w8a8-sqgptq}"
+CONFIG_OVERLAY="${CONFIG_OVERLAY:-}"
 TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 SERVED="${SERVED:-qwen36-27b-w8a8-mtp}"
 KDIR="${KDIR:-$ROOT/w8a8_kernel}"
@@ -48,6 +49,7 @@ PUSH_AR_SO="${PUSH_AR_SO:-/work/push_ar/libxpu_push_ar_graph.so}"
 REPLICATE_MTP_EMBED="${REPLICATE_MTP_EMBED:-1}"  # Qualified C3a: native full input table, shared with NEXTN.
 DELAY_MLP_AR="${DELAY_MLP_AR:-0}"
 FUSED_MLP_AR_NORM="${FUSED_MLP_AR_NORM:-0}"
+LMHEAD_INT8="${LMHEAD_INT8:-0}"
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
@@ -100,9 +102,18 @@ start(){
   local REASON_ARG=""; [ -n "$REASONPARSER" ] && REASON_ARG="--reasoning-parser $REASONPARSER"
   local METRICS_ARG=""; [ "$METRICS" = 1 ]    && METRICS_ARG="--enable-metrics"
   local THINK_ENV=();  [ -n "$THINKCAP" ]     && THINK_ENV=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
+  local CONFIG_MOUNT=()
+  if [ -n "$CONFIG_OVERLAY" ]; then
+    [ -f "$CONFIG_OVERLAY" ] || {
+      say "CONFIG_OVERLAY not found: $CONFIG_OVERLAY"
+      return 2
+    }
+    CONFIG_MOUNT=(-v "$CONFIG_OVERLAY:$CKPT/config.json:ro")
+  fi
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size 16g -p "${PORT}:${PORT}" \
     -v "$REPO/models/files:/models:ro" \
+    "${CONFIG_MOUNT[@]}" \
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" -v "$KDIR:/work/kernel:ro" \
     -v "$PUSHDIR:/work/push_ar:ro" \
     -v "$REPO/sglang/patches/woq_shim.py:/opt/venv/lib/python3.12/site-packages/woq_shim.py:ro" \
@@ -115,6 +126,7 @@ start(){
     "${EB_MOUNT[@]}" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
+    -e "B70_W8A8_QUANT_LMHEAD=$LMHEAD_INT8" \
     -e "B70_XPU_REPLICATE_MTP_EMBED=$REPLICATE_MTP_EMBED" \
     -e "B70_XPU_DELAY_MLP_AR=$DELAY_MLP_AR" \
     -e "B70_XPU_FUSED_MLP_AR_NORM=$FUSED_MLP_AR_NORM" \

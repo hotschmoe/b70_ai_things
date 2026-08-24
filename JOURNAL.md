@@ -17186,3 +17186,306 @@ inapplicable; communication/activation/GDN work still applies. Run full
 HumanEval+ with MTP enabled before changing the production shelf default or
 installing the tracked systemd unit. Add per-quant MMVQ device-time counters
 before optimizing XL's Q5_K/IQ4_XS-heavy weight path.
+
+### 2026-08-24g - C4 shaped math census and INT8 LM-head kernel gate GO
+
+CONFIG -> sglang 0.5.6 Qwen3.6-27B compressed-tensors GPTQ W8A8, TP=2,
+MTP10, replicated input embedding, eager push all-reduce, P2PACCESS=0. Parsed
+the existing five-step post-C3 shaped decode traces. The first candidate keeps
+the sharded BF16 LM head as a fallback and adds a load-time, symmetric
+per-output-channel RTN INT8 copy. M=1 uses `int8_gemm_w8a16`; M>1 uses the
+single-launch dynamic activation quantizer plus `int8_gemm_w8a8`.
+
+COMMAND -> `python3 sglang/parse_tp2_math_census.py <both replicated DECODE
+traces> --steps 5`; then `bin/gpu-run --card 0 docker run ... python3
+/work/lmhead_int8_probe.py`; then the TP=2 load/coherence gate with
+`bin/gpu-run env PUSH_AR_MIN_NUMEL=0 LMHEAD_INT8=1 ... serve.sh smoke`.
+Artifacts: `results/logs/c4_math_census_replicated_20260824.tsv`,
+`results/logs/c4_lmhead_int8_probe_20260824.log`, and
+`results/logs/c4_lmhead_int8_smoke_20260824.log`.
+
+RESULT -> the exact TP shard LM-head shape `[124160,5120]` dominates the math
+trace: 45 M=1 calls cost 95.38 ms and 10 M=11 calls cost 21.46 ms, 116.84 ms
+total over five scheduler steps, about 25% of rank-0 device time. GDN BF16
+projections are second at about 58 ms. On the real rank-0 head weights, INT8
+weight rel-L2 was 0.01062. M=1 improved 2.1328 -> 1.0797 ms (1.975x); M=11,
+including activation quantization, improved 2.1546 -> 1.1795 ms (1.827x).
+Both shapes were finite with 100% top-1 agreement in the probe. The full TP=2
+candidate loaded, emitted coherent MTP output, engaged push AR, stopped
+cleanly, and left both cards healthy. Endpoint remained down.
+
+VERDICT -> isolated kernel and load gates GO. This is the highest-value C4
+target ahead of GDN INT8. It is not promoted: the output head is
+quality-sensitive and the candidate adds 0.592 GiB/card while retaining BF16.
+Run position-balanced A-B-B-A serving gates, then HumanEval+ if performance
+passes. Keep `LMHEAD_INT8=0` as the shelf default until both gates pass.
+
+### 2026-08-24h - C4 hybrid INT8 LM head serving NO-GO; W8A16 repair gated
+
+CONFIG -> same sglang W8A8 TP=2, MTP10, replicated embedding, push-all,
+P2PACCESS=0, context 131072 C4 stack. A1 used the BF16 TP-sharded head. B1
+quantized both target and draft heads per rank, retained BF16 fallback storage,
+used W8A16 for M=1, and used dynamically quantized W8A8 for M>1. The endpoint
+policy was down between arms and after the campaign.
+
+COMMAND -> `bin/gpu-run bash sglang/campaign_c4_lmhead_int8_abba.sh`;
+campaign stopped during B1 after the predeclared capacity and speculative
+acceptance failures made promotion impossible. Then `bin/gpu-run --card 0
+docker run ... python3 /work/lmhead_int8_probe.py` tested both INT8 routes at
+M=1 and M=11. Artifacts:
+`results/logs/c4_lmhead_int8_abba_20260824T090040Z/` and
+`results/logs/c4_lmhead_int8_routes_probe_20260824.log`.
+
+RESULT -> A1 passed coherence, 24/24 mixed streams, and a coherent 6400-token
+soak at 16.41 tok/s with 1.08x first/last-window variation. A1 speculative
+acceptance was normally about 0.40-0.76. B1 installed four INT8 heads (target
+plus draft on both ranks) and reached more than 10000 routed calls/rank, but
+all 32 reported acceptance samples were exactly 0.00 with accept length 1.00;
+observed decode was about 4.8 tok/s. B1 also reduced token capacity from
+143360 to 104576, a loss of 38784 slots or 27.05%, exactly matching its two
+persistent 0.592-GiB INT8 copies/card. Cleanup stopped the candidate, both
+cards passed health, and the endpoint remained down. The exact-shape repair
+probe found W8A16 speedups of 1.965x at M=1 and 1.895x at M=11; W8A16 was
+faster than W8A8 at both shapes and had lower M=11 relative L2 error (0.01068
+vs 0.01348). Both routes had 100% top-1 agreement on the probe corpus, while
+their M=11 outputs differed by relative L2 0.00822.
+
+VERDICT -> this hybrid LM-head serving implementation is a hard NO-GO and
+remains default off. Isolated top-1 agreement did not predict MTP behavior.
+The candidate left the draft's independently created INT8 bundle attached
+after SGLang shared the target BF16 head, and it also used different W8A16 and
+W8A8 numerical routes for draft and target-sized projections; this run did not
+isolate their individual contributions to the acceptance collapse. Repair both
+conditions: use W8A16 for every head shape, quantize target once per rank,
+replace BF16 storage before KV sizing, and alias the draft to that same INT8
+weight and scale. Gate exact target/draft/rank mechanism markers, full context
+capacity, acceptance, coherence, and balanced serving performance before
+considering HumanEval+ or promotion.
+
+### 2026-08-24i - Unsloth XL MTP3 per-quant route census PASS
+
+CONFIG -> llama.cpp SYCL TP=2, Unsloth UD-Q4_K_XL, embedded NEXTN MTP3,
+native context 262144, F16 KV, LAB_DOORS=0, P2PACCESS=0. A separately tagged
+`qwen38-b70:quant-census` image used the exact production source commit and
+two pinned optimization patches plus a third default-off counts-only patch.
+The instrument adds no event timing, queue barrier, or wait.
+
+COMMAND -> `bash llamacpp/qwen38-b70/build_image.sh`; inspect candidate and
+production image IDs; then `bin/gpu-run bash
+llamacpp/run_qwen38_ud_q4k_xl_quant_census.sh`. The fixed workload generated
+512 coding tokens with embedded MTP3, stopped gracefully, and parsed at-exit
+rows with `llamacpp/parse_quant_census.py`. Artifacts:
+`results/logs/qwen38_ud_q4k_xl_quant_census_20260824T101342Z/`.
+
+RESULT -> coherent 512/512 completion. Logical and actual callback totals both
+equaled 149724. MMVQ accounted for 146716 calls (97.99%); DEQ_GEMM was 3008
+(2.01%). Width 4 dominated at 137360 calls (91.74%). By quant type, Q5_K was
+53862 calls (35.97%), Q8_0 32644 (21.80%), Q6_K 21482 (14.35%), IQ4_XS 19740
+(13.18%), and Q4_K 19176 (12.81%). Using exact packed block sizes and treating
+each actual callback as one full packed-weight read gives an attribution
+estimate of 2.696 TiB total: Q5_K 37.70%, Q6_K 33.45%, IQ4_XS 14.86%, and Q4_K
+11.15%. The largest individual weight-volume shapes were the Q6_K vocab head
+`5120x124160` at width 1 (14.56% across both devices), Q5_K `5120x8704` width 4
+(14.34%), and IQ4_XS `5120x8704` width 4 (10.00%). Both cards passed final
+health and the endpoint remained down.
+
+VERDICT -> counts-only mechanism PASS and exact XL kernel ordering established.
+Prioritize width-4 Q5_K MMVQ, then the Q6_K vocab/width-4 routes, then IQ4_XS.
+Q4_K-only fusion is not the main XL lever. Add minimally perturbing per-route
+event timing before claiming device-time shares; callback counts and packed
+byte estimates are attribution, not latency measurements. The XL MTP3
+HumanEval+ gate remains required before shelf promotion.
+
+### 2026-08-24j - C4 repaired shared W8A16 LM-head mechanism PASS
+
+CONFIG -> sglang W8A8 TP=2, MTP10, context 131072, max requests 4, replicated
+embedding, push-all, C3b off, P2PACCESS=0. The repaired default-off candidate
+quantizes the target head once per rank, replaces its BF16 Parameter storage,
+aliases the draft to the same INT8 weight and FP16 scale before KV sizing,
+asserts SGLang's later official share, and uses W8A16 for every row count.
+
+COMMAND -> exact-shape single-card route probe via `bin/gpu-run --card 0
+docker run ... python3 /work/lmhead_int8_probe.py`; then `bin/gpu-run bash
+sglang/run_c4_lmhead_int8_mechanism.sh`. Artifacts:
+`results/logs/c4_lmhead_int8_routes_probe_20260824.log` and
+`results/logs/c4_lmhead_int8_mechanism_20260824T102120Z/`.
+
+RESULT -> W8A16 improved the real TP shard by 1.965x at M=1 and 1.895x at
+M=11, faster and lower-error than W8A8 at both shapes. The full serve emitted
+the exact four target/draft/rank ready identities and two shared-rank markers;
+all four routes exceeded 100 calls. Token capacity was 201600, up 40.62% from
+the BF16 baseline 143360 and 92.78% from the broken candidate 104576. The fixed
+640-token response was coherent. Fixed-request accept samples had rate
+0.16-0.24 and length 2.58-3.45; final internal average accept length was 3.785,
+so the previous exact-zero collapse was eliminated. Eight deterministic
+prompts were nonempty and the concurrent gate passed 4/4. All hashes/config
+checks passed, no fatal marker appeared, both cards stayed healthy, and the
+endpoint remained down. Analyzer verdict: PASS.
+
+VERDICT -> repaired memory/lifecycle/acceptance mechanism GO, but not yet a
+performance or quality promotion. Acceptance is lower than the usual BF16
+range, so run the full position-balanced A-B-B-A now in progress. Require the
+predeclared serving gains and nonregressions; run HumanEval+ only if performance
+passes. Keep `LMHEAD_INT8=0` as the shelf default.
+
+### 2026-08-24k - C4 repaired shared W8A16 LM-head serving NO-GO
+
+CONFIG -> sglang W8A8 TP=2, MTP10, context 131072, replicated embedding,
+push-all, C3b off, P2PACCESS=0. Position-balanced A-B-B-A compared the BF16
+TP-sharded head against the repaired candidate that replaces target BF16
+storage with one per-rank INT8 copy, aliases draft storage and scale, and uses
+W8A16 for every target/draft row count. Artifacts and source hashes were frozen
+across all four arms. The endpoint remained down between arms and after exit.
+
+COMMAND -> `bin/gpu-run bash sglang/campaign_c4_lmhead_int8_abba.sh`.
+Artifact: `results/logs/c4_lmhead_int8_abba_20260824T103059Z/`.
+
+RESULT -> all four arms passed exact config/model identity, eight deterministic
+responses were byte-identical across every comparison, mixed serving passed
+24/24 per arm, every soak stayed coherent, no fatal marker appeared, and all
+card-health checks passed. Candidate mechanism evidence was exact on both
+ranks: target storage replaced, draft storage aliased, shared weight/scale
+asserted, and all four role/rank W8A16 routes exercised. Capacity increased
+143360 -> 201600 tokens (+40.62%). Balanced geometric-mean deltas were phase
+decode +8.42%, warm c1 +5.58%, coding c1 +5.31%, warm c4 aggregate +1.52%,
+coding c4 aggregate +2.76%, and 6400-token decode -0.23%. Prefill and TTFT were
+inside the nonregression bands. The 2000-token regime soak was repeatably about
+20.7 tok/s on both candidates versus 17.68 on both baselines, but the required
+long soak did not confirm it: A1/B1/B2/A2 were 17.06/15.93/18.42/17.28 tok/s.
+B1 degraded 20.93 -> 12.08 tok/s across its long windows (1.73x), while B2 was
+stable at 1.05x. Phase medians also had high within-arm CV and the closing A2
+baseline beat B2. Formal analyzer verdict: FAIL on soak stability, both-pair
+phase and soak wins, long-soak gain, within-process CV, and restart spreads.
+
+VERDICT -> current W8A16 LM-head serve path is NO-GO and remains default off.
+The isolated 1.9x head kernel speed and repeatable roughly 5% c1 gains are real
+research signals, but they do not survive the mandatory long-serving gate.
+The exact deterministic canary does not show a quality regression, yet the
+candidate changes speculative delta counts on longer continuations, so do not
+spend a HumanEval+ run or promote the shelf. Retain the default-off prototype
+for controlled fixed-token/device-time work; move engineering effort to the
+measured XL per-quant routes and the remaining GDN projections.
+
+### 2026-08-24l - llama.cpp main-queue event profiling NO-GO
+
+CONFIG -> llama.cpp SYCL TP=2, Unsloth UD-Q4_K_XL, MTP off, native context
+262144, F16 KV, LAB_DOORS=0, P2PACCESS=0. Candidate image
+`sha256:5029a9d394eacd46b48686b564fcc93a410c27a6b1064630008eaec83ef748d1`
+used the exact production source and optimization patches plus default-off
+counts and SYCL-event timing instrumentation. The timing path enabled queue
+profiling only when sampling was requested. A follow-up single-start probe set
+the timing skip to UINT64_MAX, so no timing barrier, atexit registration, or
+event timestamp read could execute, and also set
+`UR_L0_USE_DRIVER_INORDER_LISTS=0`. Restart policy was fixed to propagate to
+the container and set to `no`. The endpoint stayed down throughout.
+
+COMMAND -> `bin/gpu-run bash
+llamacpp/01_qwen38_ud_q4k_xl_quant_timing_campaign.sh full`; after interrupting
+the unintended restart loop and fixing restart propagation, `bin/gpu-run bash
+llamacpp/02_qwen38_ud_q4k_xl_profile_queue_probe.sh`. Artifacts:
+`results/logs/qwen38_ud_q4k_xl_quant_timing_20260824T122012Z/` and
+`results/logs/qwen38_ud_q4k_xl_profile_queue_20260824T125710Z/`.
+
+RESULT -> production and candidate timing-off arms were byte-identical on all
+seven deterministic canaries. Five 256-token decode medians were 32.4421 and
+33.1043 tok/s respectively; the candidate was +2.04%, just outside the strict
+absolute 2% inertness band, so the formal gate was not relaxed. Counts-only
+completed coherently at 32.2041 tok/s with exact logical/actual total 297206;
+98.07% of callbacks were MMVQ and width 1 dominated. Every profiling-enabled
+start failed during model load with `UR_RESULT_ERROR_DEVICE_LOST` at MUL_MAT
+after exactly 11 logical and 11 actual callbacks. Each route had at most two
+calls, below timing skip 4, and no `[QUANT-TIMING]` row appeared. The decisive
+restart-disabled probe reproduced the same failure with skip UINT64_MAX and
+driver in-order lists disabled. Its failure frontier was device-0 IQ4_XS
+`K=5120 rows=8704`; the corresponding device-1 callback was absent. Both cards
+passed health after cleanup.
+
+VERDICT -> main-queue `sycl::property::queue::enable_profiling` is a hard
+NO-GO on this B70 TP=2 oneAPI 2025.3 stack. The evidence excludes the timing
+barriers and timestamp reads because none were reachable. Do not use event
+profiling on the production queues and do not retag production. Replace it
+with a separate default-off evidence image that uses normal queues and sparse
+synchronized host-clock timing around complete logical TP=2 matmuls. Treat
+those results only as isolated-operation attribution because the waits remove
+normal pipeline overlap. Keep the endpoint down until the research campaign
+finishes or the user explicitly requests service.
+
+### 2026-08-24m - llama.cpp full-process VTune launch NO-GO
+
+CONFIG -> candidate-only llama.cpp SYCL TP=2 Unsloth UD-Q4_K_XL mechanism
+gate, MTP off, P2PACCESS=0, all queue/source profiling variables forced off.
+The first arm ran normally. The second launched the same server as a child of
+VTune 2025.10 `gpu-offload`, with collection start-paused, both B70 PCI
+adapters selected, call-stack and characterization collection disabled, and
+restart policy `no`. A 20-minute health deadline and endpoint-down/no-restore
+cleanup were predeclared.
+
+COMMAND -> `bin/gpu-run bash
+llamacpp/run_qwen38_ud_q4k_xl_vtune_gate.sh full`. The first invocation exited
+before server start because the empty-port guard returned `rg` no-match instead
+of explicit success; the guard was fixed and the exact gate rerun. Artifacts:
+`results/logs/qwen38_ud_q4k_xl_vtune_20260824T131519Z/` and
+`results/logs/qwen38_ud_q4k_xl_vtune_20260824T131636Z/`.
+
+RESULT -> the normal reference became healthy, produced exact 32- and
+512-token responses, and measured 31.6456 tok/s post-first-token with 0.2602 s
+TTFT. Its fresh teardown and both-card health passed. The VTune child never
+became healthy before the 20-minute deadline. It remained alive at about one
+full CPU core and 15.2% host memory, `/health` consistently reported `Loading
+model`, and logs contained no Level Zero, device-lost, or out-of-resource
+error. VTune's Pin launcher was still instrumenting the large SYCL process;
+collection was never resumed and no timed request ran. The trap stopped and
+removed the only trace container. Port 18080 remained down and a post-cleanup
+leased health probe passed both cards.
+
+VERDICT -> launching the complete llama.cpp process under VTune Pin is NO-GO
+for this campaign: even paused collection changes startup enough to miss a
+20-minute service gate, so it cannot provide minimally perturbing decode
+evidence. This is a profiler mechanism failure, not a GPU stability failure or
+a model performance result. Keep production tags unchanged. Next isolate an
+attach-after-load VTune path with scoped ptrace permission so normal model
+initialization is untouched; if attach is also too invasive, fall back to
+normal-queue sparse synchronized logical-op timing and label it isolated
+service-demand attribution only. Endpoint remains down.
+
+### 2026-08-24n - llama.cpp VTune attach captures decode but detach NO-GO
+
+CONFIG -> same candidate-only XL TP=2 MTP-off config and normal unprofiled SYCL
+queues. Both reference and trace servers loaded normally with restart `no`.
+Only the trace container received `CAP_SYS_PTRACE`; Docker default seccomp,
+container PID namespace, and non-privileged mode were retained. After health
+and a 32-token warmup, VTune 2025.10 `gpu-offload` attached to container PID 1,
+status proved `PID=1 STATE=RESUME NAME=llama-server`, and exactly one
+deterministic 512-token request ran before `vtune -command stop`.
+
+COMMAND -> `bin/gpu-run bash
+llamacpp/03_qwen38_ud_q4k_xl_vtune_attach_gate.sh full`. The harness wait was
+interrupted only after the hard detach-survival gate was impossible: the target
+had already exited. Offline `vtune -finalize` was then attempted without GPU
+devices. Artifact:
+`results/logs/qwen38_ud_q4k_xl_vtune_attach_20260824T135239Z/`.
+
+RESULT -> normal reference and attached requests both completed exact 512
+tokens with identical SHA256
+`438c77bec0d18bf7430e4e5c7b3b7c80d91aeab69874768b8626f89a077af203`.
+Reference decode/TTFT were 32.1011 tok/s and 0.2635 s; traced were 27.7284
+tok/s and 0.3420 s, 86.38% decode and 1.298x TTFT. Decode stayed above the 85%
+floor but TTFT missed the 1.25x ceiling. Attach readiness took about 5.1 s and
+the collection ran. However, `vtune -command stop` terminated the attached
+PID-1 server with exit 255 instead of detaching while leaving it healthy. The
+detached exec could not write its completion status because its container died,
+so the result was not finalized. Offline finalization failed with VTune
+`0x4000001e Cannot load raw collector data`. No timing report is trustworthy.
+Fail-closed cleanup removed the stopped container; port 18080 was down and both
+cards passed final leased health. No Level Zero or device-lost error appeared.
+
+VERDICT -> attach-after-load VTune is also NO-GO as a campaign profiler on this
+stack. It captured coherent decode with tolerable throughput overhead, but its
+stop path kills the served process, exceeds the TTFT perturbation band, and
+leaves an unusable raw result. Do not broaden container privileges or retry the
+same Pin mechanism. External VTune is closed alongside profiled SYCL queues.
+Use normal-queue sparse synchronized logical-op timing only as explicitly
+isolated service-demand evidence, or advance directly from the exact route and
+byte census to measured kernel candidates. The next low-risk serving candidate
+is the existing GDN-INT8 artifact through current W8A16/W8A8 kernels. Endpoint
+remains down.

@@ -17,6 +17,8 @@ BATCH="${BATCH:-8192}"
 UBATCH="${UBATCH:-8192}"
 PORT="${PORT:-8010}"
 ENABLE_MTP="${ENABLE_MTP:-0}"
+MTP_SPEC_TYPE="${MTP_SPEC_TYPE:-mtp}"
+MTP_DRAFT_MAX_FLAG="${MTP_DRAFT_MAX_FLAG:---draft-max}"
 ENABLE_VISION="${ENABLE_VISION:-0}"
 LAB_DOORS="${LAB_DOORS:-0}"
 SERVED="${SERVED:-}"
@@ -35,7 +37,11 @@ echo "$MODEL_SHA256  $TARGET" | sha256sum -c - || { echo "[entrypoint] SHA-256 m
 
 DRAFT_ARGS=()
 if [ "$ENABLE_MTP" = "1" ]; then
-    DRAFT_ARGS=(--spec-type mtp --model-draft "$MODELS_DIR/$MTP_FILE" --draft-max 8)
+    DRAFT_ARGS=(
+        --spec-type "$MTP_SPEC_TYPE"
+        --model-draft "$MODELS_DIR/$MTP_FILE"
+        "$MTP_DRAFT_MAX_FLAG" 8
+    )
 fi
 
 ALIAS_ARGS=()

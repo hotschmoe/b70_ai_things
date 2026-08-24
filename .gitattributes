@@ -3,3 +3,4 @@
 *.py text eol=lf
 *.ps1 text eol=crlf
 *.md text
+*.patch whitespace=-blank-at-eol

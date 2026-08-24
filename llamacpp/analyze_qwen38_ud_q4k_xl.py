@@ -112,6 +112,7 @@ def main() -> int:
     }
 
     mtp = None
+    heplus = None
     if args.run_mtp:
         mtp_dir = args.out_dir / "xl_mtp1"
         mtp_profile = profile_metrics(mtp_dir)
@@ -131,15 +132,19 @@ def main() -> int:
         }
         hard_gates["mtp_profile_complete"] = mtp_profile["passed"]
         hard_gates["mtp_greedy_reference_exact"] = mtp_det["reference_exact"] is True
+        heplus = heplus_metrics(mtp_dir)
 
-    heplus = heplus_metrics(xl_dir)
     if args.run_heplus:
-        hard_gates["xl_heplus_result_present"] = bool(heplus and "error" not in heplus)
+        hard_gates["xl_mtp3_heplus_result_present"] = bool(
+            heplus and "error" not in heplus
+        )
         if heplus and "error" not in heplus:
             # At most one base and two plus problems below the pinned 0.970/0.927 Q4_K_M run.
-            hard_gates["xl_heplus_quality_band"] = (
+            hard_gates["xl_mtp3_heplus_quality_band"] = (
                 heplus["base"] >= 0.963 and heplus["plus"] >= 0.915
             )
+        if mtp is not None:
+            mtp["heplus"] = heplus
 
     result = {
         "passed": all(hard_gates.values()),
@@ -153,7 +158,6 @@ def main() -> int:
             "profile": xl_profile,
             "deterministic": xl_det,
             "kernel_evidence": kernel_evidence(xl_dir),
-            "heplus": heplus,
         },
         "xl_vs_q4km_pct": deltas,
         "xl_mtp1": mtp,
@@ -162,7 +166,7 @@ def main() -> int:
                 "Six of seven exact deterministic checks is a coherence floor, not a full quality proof."
             ),
             "heplus_quality_band": (
-                "When requested, require base >=0.963 and plus >=0.915 versus pinned 0.970/0.927."
+                "For embedded MTP3, require base >=0.963 and plus >=0.915 versus pinned 0.970/0.927."
             ),
         },
     }

@@ -118,19 +118,19 @@ models:
       f4_e2m1, PIECEWISE graph, MTP5, calibrated fp8 KV, and prefix cache. Its
       former hotschmoe-dd alias was retired 2026-08-23; use the full served id."
 
-  - label: qwen38-27b-obliterated-q4km-mtp3
+  - label: qwen38-27b-ud-q4-k-xl-unsloth-mtp3
     served_model_id: hotschmoe-dd
     public_alias: hotschmoe-dd
     family: qwen3.8-27b
-    weights: gguf-q4-k-m
+    weights: gguf-ud-q4-k-xl
     activations: fp16
-    calibration: gguf-k-quant
-    serve_cmd: "rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh"
-    notes: "Current DP=2 daily driver. OBLITERATUS V3 fixed-merge Q4_K_M,
-      llama.cpp SYCL, one replica per B70, Q8_0 KV, ctx 245760, embedded MTP3.
-      Artifact SHA c5e4fe705883e244a468c9e445c8d6ba37fd310b0113e25d2b8a7f2d6f1243e8.
-      Eval output directories must encode obliterated-q4km-mtp3 because the
-      public API intentionally keeps the stable hotschmoe-dd alias."
+    calibration: unsloth-dynamic-gguf
+    serve_cmd: "ENABLE_MTP=1 rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh"
+    notes: "XL embedded-MTP3 qualification target. Unsloth UD-Q4_K_XL,
+      llama.cpp SYCL TP=2, Q8_0 KV, ctx 262144. Artifact SHA
+      3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e.
+      The public API keeps hotschmoe-dd, so eval output directories must encode
+      ud-q4-k-xl-unsloth-tp2-mtp3. Shelf MTP remains off until this HE+ gate passes."
 
   - label: qwen38-27b-nvfp4-modelopt
     served_model_id: qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph

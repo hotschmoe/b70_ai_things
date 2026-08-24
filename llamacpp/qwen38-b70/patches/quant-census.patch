@@ -1,0 +1,206 @@
+diff --git a/ggml/src/ggml-sycl/ggml-sycl.cpp b/ggml/src/ggml-sycl/ggml-sycl.cpp
+--- a/ggml/src/ggml-sycl/ggml-sycl.cpp
++++ b/ggml/src/ggml-sycl/ggml-sycl.cpp
+@@ -4173,6 +4173,163 @@ void ggml_sycl_q8_gdn_fusion_commit(
+     g_q8_fused_gdn_prefills.fetch_add(1, std::memory_order_relaxed);
+ }
+ 
++// Exact standard MUL_MAT routing and per-device callback census. This deliberately
++// does not submit events or wait on a queue. It is off unless
++// GGML_SYCL_QUANT_CENSUS=1, so the production hot path only pays a cached branch.
++// Fused graph-level MMVQ kernels bypass ggml_sycl_mul_mat and are outside this
++// census; production LAB_DOORS=0 disables those paths.
++enum class sycl_quant_census_algo : uint8_t {
++    DMMV,
++    MMVQ,
++    MMQ,
++    DEQ_GEMM,
++};
++
++static const char * ggml_sycl_quant_census_algo_name(sycl_quant_census_algo algo) {
++    switch (algo) {
++        case sycl_quant_census_algo::DMMV:     return "DMMV";
++        case sycl_quant_census_algo::MMVQ:     return "MMVQ";
++        case sycl_quant_census_algo::MMQ:      return "MMQ";
++        case sycl_quant_census_algo::DEQ_GEMM: return "DEQ_GEMM";
++    }
++    GGML_ABORT("invalid SYCL quant census algorithm");
++}
++
++struct sycl_quant_logical_key {
++    ggml_type type;
++    sycl_quant_census_algo algo;
++    bool reordered;
++    bool split;
++    int64_t width;
++    int64_t k;
++    int64_t n;
++
++    bool operator<(const sycl_quant_logical_key & other) const {
++        return std::tie(type, algo, reordered, split, width, k, n) <
++               std::tie(other.type, other.algo, other.reordered, other.split,
++                        other.width, other.k, other.n);
++    }
++};
++
++struct sycl_quant_actual_key {
++    int device;
++    ggml_type type;
++    sycl_quant_census_algo algo;
++    bool reordered;
++    bool split;
++    int64_t width;
++    int64_t k;
++    int64_t rows;
++
++    bool operator<(const sycl_quant_actual_key & other) const {
++        return std::tie(device, type, algo, reordered, split, width, k, rows) <
++               std::tie(other.device, other.type, other.algo, other.reordered,
++                        other.split, other.width, other.k, other.rows);
++    }
++};
++
++static std::map<sycl_quant_logical_key, uint64_t> g_quant_logical_census;
++static std::map<sycl_quant_actual_key, uint64_t>  g_quant_actual_census;
++static std::mutex                                  g_quant_census_mutex;
++static std::once_flag                              g_quant_census_atexit_once;
++
++static bool ggml_sycl_quant_census_on() {
++    static const bool on = [] {
++        const char * env = std::getenv("GGML_SYCL_QUANT_CENSUS");
++        return env != nullptr && std::atoi(env) != 0;
++    }();
++    return on;
++}
++
++static void ggml_sycl_quant_census_dump() {
++    std::lock_guard<std::mutex> lock(g_quant_census_mutex);
++    uint64_t logical_total = 0;
++    uint64_t actual_total  = 0;
++    fprintf(stderr, "\n[QUANT-CENSUS] version=1 scope=standard_mul_mat\n");
++    for (const auto & entry : g_quant_logical_census) {
++        const auto & key = entry.first;
++        logical_total += entry.second;
++        fprintf(stderr,
++                "[QUANT-CENSUS] kind=logical algo=%s device=-1 type=%s reordered=%d split=%d "
++                "width=%lld K=%lld N=%lld rows=-1 calls=%llu\n",
++                ggml_sycl_quant_census_algo_name(key.algo), ggml_type_name(key.type),
++                key.reordered ? 1 : 0, key.split ? 1 : 0, (long long) key.width,
++                (long long) key.k, (long long) key.n, (unsigned long long) entry.second);
++    }
++    for (const auto & entry : g_quant_actual_census) {
++        const auto & key = entry.first;
++        actual_total += entry.second;
++        fprintf(stderr,
++                "[QUANT-CENSUS] kind=actual algo=%s device=%d type=%s reordered=%d split=%d "
++                "width=%lld K=%lld N=-1 rows=%lld calls=%llu\n",
++                ggml_sycl_quant_census_algo_name(key.algo), key.device, ggml_type_name(key.type),
++                key.reordered ? 1 : 0, key.split ? 1 : 0, (long long) key.width,
++                (long long) key.k, (long long) key.rows, (unsigned long long) entry.second);
++    }
++    if (g_quant_logical_census.empty() && g_quant_actual_census.empty()) {
++        fprintf(stderr, "[QUANT-CENSUS] status=empty\n");
++    }
++    fprintf(stderr, "[QUANT-CENSUS] end logical_total=%llu actual_total=%llu\n\n",
++            (unsigned long long) logical_total, (unsigned long long) actual_total);
++}
++
++static void ggml_sycl_quant_census_register_dump() {
++    std::call_once(g_quant_census_atexit_once, [] { std::atexit(ggml_sycl_quant_census_dump); });
++}
++
++static bool ggml_sycl_quant_census_is_quantized(const ggml_tensor * src0) {
++    return src0 != nullptr && ggml_is_quantized(src0->type);
++}
++
++static bool ggml_sycl_quant_census_reordered(const ggml_tensor * src0) {
++    const auto * extra = static_cast<const ggml_tensor_extra_gpu *>(src0->extra);
++    return extra != nullptr && extra->optimized_feature.reorder;
++}
++
++static void ggml_sycl_quant_census_logical(
++        const ggml_tensor * src0, const ggml_tensor * src1,
++        sycl_quant_census_algo algo, bool split) {
++    if (!ggml_sycl_quant_census_on() || !ggml_sycl_quant_census_is_quantized(src0)) {
++        return;
++    }
++    ggml_sycl_quant_census_register_dump();
++    const sycl_quant_logical_key key {
++        src0->type, algo, ggml_sycl_quant_census_reordered(src0), split,
++        src1->ne[1], src0->ne[0], src0->ne[1],
++    };
++    std::lock_guard<std::mutex> lock(g_quant_census_mutex);
++    g_quant_logical_census[key]++;
++}
++
++static sycl_quant_census_algo ggml_sycl_quant_census_classify(ggml_sycl_op_mul_mat_t op) {
++    if (op == ggml_sycl_op_dequantize_mul_mat_vec) {
++        return sycl_quant_census_algo::DMMV;
++    }
++    if (op == ggml_sycl_op_mul_mat_vec_q) {
++        return sycl_quant_census_algo::MMVQ;
++    }
++    if (op == ggml_sycl_op_mul_mat_q) {
++        return sycl_quant_census_algo::MMQ;
++    }
++    GGML_ASSERT(op == ggml_sycl_op_mul_mat_sycl);
++    return sycl_quant_census_algo::DEQ_GEMM;
++}
++
++static void ggml_sycl_quant_census_actual(
++        const ggml_tensor * src0, bool split, ggml_sycl_op_mul_mat_t op,
++        int device, int64_t width, int64_t row_low, int64_t row_high) {
++    if (!ggml_sycl_quant_census_on() || !ggml_sycl_quant_census_is_quantized(src0)) {
++        return;
++    }
++    ggml_sycl_quant_census_register_dump();
++    const sycl_quant_actual_key key {
++        device, src0->type, ggml_sycl_quant_census_classify(op),
++        ggml_sycl_quant_census_reordered(src0), split, width, src0->ne[0], row_high - row_low,
++    };
++    std::lock_guard<std::mutex> lock(g_quant_census_mutex);
++    g_quant_actual_census[key]++;
++}
++
+ 
+ // ---- end f372 -----------------------------------------------------------------------------------
+ 
+@@ -4468,6 +4625,8 @@ static void ggml_sycl_op_mul_mat(ggml_backend_sycl_context & ctx, const ggml_ten
+                     src1_padded_col_size = (i0 * ne11 + src1_col_0) * ne10;
+                 }
+                 // do the computation
++                ggml_sycl_quant_census_actual(
++                    src0, split, op, i, src1_ncols, dev[i].row_low, dev[i].row_high);
+                 SYCL_CHECK(CHECK_TRY_ERROR(op(ctx, src0, src1, dst, src0_dd_i, src1_ddf_i, src1_ddq_i, dst_dd_i,
+                     dev[i].row_low, dev[i].row_high, src1_ncols, src1_padded_col_size, stream)));
+ 
+@@ -6816,5 +6975,6 @@ static void ggml_sycl_mul_mat(ggml_backend_sycl_context & ctx, const ggml_tensor
+         //   buffer never sets.  Latent today only because -sm row cannot load (f356).
+         if (!split) { opt_for_reorder(&ctx, src0, src1, dst, mul_mat_algo::DMMV); }
++        ggml_sycl_quant_census_logical(src0, src1, sycl_quant_census_algo::DMMV, split);
+         ggml_sycl_op_mul_mat<no_quantize_q8_1>(ctx, src0, src1, dst, ggml_sycl_op_dequantize_mul_mat_vec);
+         return;
+     }
+@@ -6837,6 +6997,7 @@ static void ggml_sycl_mul_mat(ggml_backend_sycl_context & ctx, const ggml_tensor
+         //   post-reorder state (which quantizer the activations need).  They are different questions
+         //   and collapsing them would silently feed AoS activations to an SoA kernel.
+         ggml_tensor_extra_gpu * extra = static_cast<ggml_tensor_extra_gpu *>(src0->extra);
++        ggml_sycl_quant_census_logical(src0, src1, sycl_quant_census_algo::MMVQ, split);
+         if (extra && extra->optimized_feature.reorder) {
+             ggml_sycl_op_mul_mat<quantize_and_reorder_q8_1_soa>(ctx, src0, src1, dst, ggml_sycl_op_mul_mat_vec_q);
+         } else {
+@@ -6857,6 +7018,7 @@ static void ggml_sycl_mul_mat(ggml_backend_sycl_context & ctx, const ggml_tensor
+         if (g_ggml_sycl_force_reorder && !split && ggml_sycl_mmq_reads_reordered(src0->type)) {
+             opt_for_reorder(&ctx, src0, src1, dst, mul_mat_algo::MMVQ);
+         }
++        ggml_sycl_quant_census_logical(src0, src1, sycl_quant_census_algo::MMQ, split);
+         ggml_sycl_op_mul_mat<quantize_q8_1>(ctx, src0, src1, dst, ggml_sycl_op_mul_mat_q);
+         return;
+     }
+@@ -6882,6 +7044,7 @@ static void ggml_sycl_mul_mat(ggml_backend_sycl_context & ctx, const ggml_tensor
+     if (reorder_in_gemm && !split && !ggml_sycl_in_mul_mat_id()) {
+         opt_for_reorder(&ctx, src0, src1, dst, mul_mat_algo::MUL_MAT_SYCL);
+     }
++    ggml_sycl_quant_census_logical(src0, src1, sycl_quant_census_algo::DEQ_GEMM, split);
+     ggml_sycl_op_mul_mat<no_quantize_q8_1>(ctx, src0, src1, dst, ggml_sycl_op_mul_mat_sycl);
+ }

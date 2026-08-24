@@ -15,7 +15,7 @@ GEN_TOKENS="${GEN_TOKENS:-256}"
 RUN_MTP="${RUN_MTP:-1}"
 RUN_HEPLUS="${RUN_HEPLUS:-0}"
 RUN_EVIDENCE="${RUN_EVIDENCE:-1}"
-FINAL_RESTORE="${FINAL_RESTORE:-xl}"
+FINAL_RESTORE="${FINAL_RESTORE:-none}"
 
 Q4_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh"
 XL_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh"
@@ -34,6 +34,11 @@ XL_SIZE=17559178144
 XL_SHA=3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e
 
 mkdir -p "$OUT"
+
+if [ "$RUN_HEPLUS" = "1" ] && [ "$RUN_MTP" != "1" ]; then
+    echo "RUN_HEPLUS=1 requires RUN_MTP=1 because MTP3 is the promotion target" >&2
+    exit 2
+fi
 
 say() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"; }
 
@@ -211,10 +216,10 @@ run_deterministic() {
 
 run_heplus() {
     local directory="$1"
-    say "HumanEval+ 164 on XL MTP-off"
+    say "HumanEval+ 164 on XL embedded MTP3"
     "$REPO/evals/.venv/bin/python" "$REPO/evals/orchestrator/run_evals.py" \
         --endpoint "http://127.0.0.1:$PORT/v1" \
-        --model "$SERVED" --quant ud-q4-k-xl-unsloth-tp2-mtp0 \
+        --model "$SERVED" --quant ud-q4-k-xl-unsloth-tp2-mtp3 \
         --tiers 1 --tier1-dataset humaneval --limit 164 --max-tokens 2048 \
         2>&1 | tee "$directory/heplus.log"
     local summary_path
@@ -258,7 +263,7 @@ run_timed_arm() {
         "http://127.0.0.1:$PORT/v1" "$SERVED" 1 "$GEN_TOKENS" "$REPS" \
         2>&1 | tee "$directory/bench_code_c1.log"
 
-    if [ "$label" = "xl_mtp0" ] && [ "$RUN_HEPLUS" = "1" ]; then
+    if [ "$label" = "xl_mtp1" ] && [ "$RUN_HEPLUS" = "1" ]; then
         run_heplus "$directory"
     fi
 

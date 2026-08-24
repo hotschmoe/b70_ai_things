@@ -19,6 +19,14 @@ BATCH="${BATCH:-1024}"
 UBATCH="${UBATCH:-256}"
 LAB_DOORS="${LAB_DOORS:-0}"
 ENABLE_MTP="${ENABLE_MTP:-0}"
+MTP_SPEC_TYPE="${MTP_SPEC_TYPE:-mtp}"
+MTP_DRAFT_MAX_FLAG="${MTP_DRAFT_MAX_FLAG:---draft-max}"
+GGML_SYCL_QUANT_CENSUS="${GGML_SYCL_QUANT_CENSUS:-0}"
+GGML_SYCL_QUANT_TIMING_SAMPLE="${GGML_SYCL_QUANT_TIMING_SAMPLE:-0}"
+GGML_SYCL_QUANT_TIMING_SKIP="${GGML_SYCL_QUANT_TIMING_SKIP:-4}"
+GGML_SYCL_QUANT_TIMING_MAX="${GGML_SYCL_QUANT_TIMING_MAX:-65536}"
+UR_L0_USE_DRIVER_INORDER_LISTS="${UR_L0_USE_DRIVER_INORDER_LISTS:-}"
+RESTART_POLICY="${RESTART_POLICY:-unless-stopped}"
 OVERLAY="${OVERLAY:-$REPO/llamacpp/qwen38_b70_entrypoint_overlay.sh}"
 IMG="${IMG:-qwen38-b70:latest}"
 IMG_ID="${IMG_ID:-sha256:8c6dc0462011e7d4596882009fc7fb1128fbe656cb17a998999cd1e720a2b4de}"
@@ -78,28 +86,40 @@ coherence_gate() {
 
 start() {
     say "pre-flight xpu-health"
-    "$REPO/bin/xpu-health" 2>&1 | tail -5 || return 3
+    # IMG selects the llama.cpp serve image. Do not leak it into xpu-health,
+    # whose independent IMG variable selects a PyTorch probe image.
+    env -u IMG "$REPO/bin/xpu-health" 2>&1 | tail -5 || return 3
     check_artifacts || return $?
     if ss -ltnH "sport = :$PORT" | grep -q .; then
         say "port $PORT is already in use"
         return 2
     fi
     local key_mount=()
+    local runtime_env=()
     [ -s "$API_KEY_FILE" ] && key_mount=(-v "$API_KEY_FILE:/run/secrets/dd_api_key:ro")
+    [ -n "$UR_L0_USE_DRIVER_INORDER_LISTS" ] && \
+        runtime_env=(-e "UR_L0_USE_DRIVER_INORDER_LISTS=$UR_L0_USE_DRIVER_INORDER_LISTS")
     docker rm -f "$NAME" >/dev/null 2>&1 || true
     say "start $MODEL_LABEL TP=2 ctx=$CTX_SIZE mtp=$ENABLE_MTP lab_doors=$LAB_DOORS"
-    docker run -d --name "$NAME" --restart unless-stopped \
+    docker run -d --name "$NAME" --restart "$RESTART_POLICY" \
         --device /dev/dri --ipc=host --shm-size 8g \
         -v /dev/dri/by-path:/dev/dri/by-path:ro \
         -v "$HOST_MODELS:/models:ro" \
         -v "$OVERLAY:/entrypoint.sh:ro" \
         "${key_mount[@]}" \
+        "${runtime_env[@]}" \
         -e CCL_TOPO_P2P_ACCESS=0 \
         -e MODELS_DIR=/models -e MODEL_FILE="$MODEL_FILE" -e MODEL_SHA256="$MODEL_SHA256" \
         -e SERVED="$SERVED" -e API_KEY_FILE=/run/secrets/dd_api_key \
         -e GPU_COUNT=2 -e CTX_SIZE_OVERRIDE="$CTX_SIZE" -e PARALLEL=1 \
         -e BATCH="$BATCH" -e UBATCH="$UBATCH" \
-        -e ENABLE_MTP="$ENABLE_MTP" -e ENABLE_VISION=0 -e LAB_DOORS="$LAB_DOORS" \
+        -e ENABLE_MTP="$ENABLE_MTP" -e MTP_SPEC_TYPE="$MTP_SPEC_TYPE" \
+        -e MTP_DRAFT_MAX_FLAG="$MTP_DRAFT_MAX_FLAG" \
+        -e ENABLE_VISION=0 -e LAB_DOORS="$LAB_DOORS" \
+        -e GGML_SYCL_QUANT_CENSUS="$GGML_SYCL_QUANT_CENSUS" \
+        -e GGML_SYCL_QUANT_TIMING_SAMPLE="$GGML_SYCL_QUANT_TIMING_SAMPLE" \
+        -e GGML_SYCL_QUANT_TIMING_SKIP="$GGML_SYCL_QUANT_TIMING_SKIP" \
+        -e GGML_SYCL_QUANT_TIMING_MAX="$GGML_SYCL_QUANT_TIMING_MAX" \
         -e GGML_SYCL_FATTN_MMA=0 -e THREADS=8 \
         -p "$PORT:8010" \
         --entrypoint bash "$IMG" /entrypoint.sh >/dev/null || return 1

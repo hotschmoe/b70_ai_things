@@ -17,6 +17,9 @@ MTP_DRAFT_MAX="${MTP_DRAFT_MAX:-3}"
 LAB_DOORS="${LAB_DOORS:-0}"
 PROFILE_VERBOSE="${PROFILE_VERBOSE:-0}"
 PROFILE_STATS="${PROFILE_STATS:-0}"
+VTUNE_GPU_OFFLOAD="${VTUNE_GPU_OFFLOAD:-0}"
+VTUNE_RESULT_DIR="${VTUNE_RESULT_DIR:-/profile/result}"
+VTUNE_TARGET_GPU="${VTUNE_TARGET_GPU:-0:11:0.0,0:68:0.0}"
 SERVED="${SERVED:-}"
 API_KEY_FILE="${API_KEY_FILE:-/run/secrets/dd_api_key}"
 
@@ -108,7 +111,7 @@ fi
 
 echo "[profile-entrypoint] model=$MODEL_FILE gpu_count=$GPU_COUNT ctx=$CTX_SIZE batch=$BATCH/$UBATCH mtp=$ENABLE_MTP"
 
-exec /build/llama.cpp/build-sycl/bin/llama-server \
+SERVER_CMD=(/build/llama.cpp/build-sycl/bin/llama-server \
     --model "$TARGET" \
     "${DRAFT_ARGS[@]}" \
     "${ALIAS_ARGS[@]}" \
@@ -130,4 +133,45 @@ exec /build/llama.cpp/build-sycl/bin/llama-server \
     --parallel "$PARALLEL" \
     --metrics \
     "${LOG_ARGS[@]}" \
-    "${KEY_ARGS[@]}"
+    "${KEY_ARGS[@]}")
+
+if [ "$VTUNE_GPU_OFFLOAD" = "1" ]; then
+    [ "${GGML_SYCL_QUANT_TIMING_SAMPLE:-0}" = "0" ] || {
+        echo "[profile-entrypoint] refuse VTune with SYCL queue profiling enabled"
+        exit 2
+    }
+    [ "${GGML_SYCL_PROFILE:-0}" = "0" ] || {
+        echo "[profile-entrypoint] refuse VTune with legacy SYCL profiling enabled"
+        exit 2
+    }
+    VTUNE_BIN=/opt/intel/oneapi/vtune/2025.10/bin64/vtune
+    [ -x "$VTUNE_BIN" ] || {
+        echo "[profile-entrypoint] missing VTune CLI $VTUNE_BIN"
+        exit 2
+    }
+    [ "$VTUNE_RESULT_DIR" = "/profile/result" ] || {
+        echo "[profile-entrypoint] refuse unexpected VTune result path $VTUNE_RESULT_DIR"
+        exit 2
+    }
+    [ -d /profile ] && [ -w /profile ] || {
+        echo "[profile-entrypoint] /profile must be a writable bind mount"
+        exit 2
+    }
+    [ ! -e "$VTUNE_RESULT_DIR" ] || {
+        echo "[profile-entrypoint] refuse existing VTune result $VTUNE_RESULT_DIR"
+        exit 2
+    }
+    "$VTUNE_BIN" -version > /profile/vtune_version.txt
+    echo "[profile-entrypoint] VTune gpu-offload start-paused target=$VTUNE_TARGET_GPU"
+    exec "$VTUNE_BIN" -collect gpu-offload \
+        -knob collect-programming-api=true \
+        -knob enable-tasks-stack-collection=false \
+        -knob enable-stack-collection=false \
+        -knob enable-characterization-insights=false \
+        -knob dump-compute-task-binaries=false \
+        -knob target-gpu="$VTUNE_TARGET_GPU" \
+        -start-paused \
+        -result-dir "$VTUNE_RESULT_DIR" -- "${SERVER_CMD[@]}"
+fi
+
+exec "${SERVER_CMD[@]}"
