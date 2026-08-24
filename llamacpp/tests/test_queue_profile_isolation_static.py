@@ -98,8 +98,13 @@ class QueueProfileIsolationStaticTest(unittest.TestCase):
             "health_probe final",
             "check_code_hashes",
             "apply --numstat",
+            "refuse_occupied",
         ):
             self.assertIn(required, runner)
+        refuse_body = runner.split("refuse_occupied() {", 1)[1].split(
+            "\nwrite_manifest()", 1
+        )[0]
+        self.assertIn("return 0", refuse_body)
 
     def test_build_labels_exact_timing_patch(self) -> None:
         build = (LLAMACPP / "qwen38-b70/build_image.sh").read_text(encoding="ascii")

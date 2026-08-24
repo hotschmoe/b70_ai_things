@@ -152,6 +152,7 @@ refuse_occupied() {
             return 2
         }
     done
+    return 0
 }
 
 write_manifest() {
