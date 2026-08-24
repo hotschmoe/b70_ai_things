@@ -42,7 +42,7 @@
 > plus XL per-quant MMVQ counters and the XL-MTP HumanEval+ gate. Full ledger:
 > `docs/20260823_tp2_optimization_campaign.md`.
 
-> ### [C4 2026-08-24] -- LM head NO-GO; GDN INT8 mechanism scope fix active
+> ### [C4 2026-08-24] -- LM head and unfused GDN INT8 splits are NO-GO
 > The repaired shared W8A16 LM head was coherent and improved short decode by
 > 5-8%, but the balanced long soak was flat (-0.23%) and restart/phase spread
 > was unstable, so it is default-off and closed. All full-service llama.cpp XL
@@ -67,7 +67,16 @@
 > The out-projection-only artifact is now materialized and its mechanism gate
 > passes: exact routes on both ranks, qkvz/BA retained BF16, capacity 164992,
 > deterministic replay byte-exact, 24/24 mixed coherent, soak stable, artifacts
-> and health exact. Balanced A-B-B-A is the active gate.
+> and health exact. Balanced A-B-B-A then rejected the split: phase -9.44%,
+> long soak -4.96%, warm c1 +0.61%, and c4 aggregate +1.10%. Both phase pairs
+> and both soak pairs lost; B phase CV/restart stability and fixed-output byte
+> identity also failed. The deterministic eight-prompt corpus remained byte
+> exact, 96/96 mixed streams were coherent, TTFT/prefill stayed within 3.2%,
+> and all health/identity/artifact gates passed. This closes unfused combined
+> and out-only GDN INT8 as serving paths. Active next: quantify once and reuse
+> the INT8 activation/scales across eligible GDN projections, with qkvz-only
+> retained as a bounded K5120-vs-K3072 attribution probe rather than a shelf
+> candidate.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.

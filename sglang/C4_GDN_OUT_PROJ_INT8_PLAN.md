@@ -1,7 +1,8 @@
 # C4 GDN out_proj-only INT8 candidate
 
-Status: CPU artifact and GPU mechanism gates PASS. Balanced A-B-B-A is pending.
-This is default-off and does not change the shelf.
+Status: CPU artifact and GPU mechanism gates PASS. Balanced A-B-B-A is a
+performance and repeatability NO-GO. This is default-off and does not change
+the shelf.
 
 ## Why split out_proj
 
@@ -109,3 +110,34 @@ every check. Both ranks matched the route table exactly, capacity increased
 the 1600-token soak was coherent and stable, all artifacts and identities were
 exact, and both cards remained healthy with the endpoint down. Proceed to the
 same position-balanced A-B-B-A thresholds used for the combined candidate.
+
+## Balanced serving verdict
+
+Command:
+
+```bash
+./bin/gpu-run bash sglang/04_c4_gdn_out_proj_int8_abba.sh
+```
+
+Artifact: `c4_gdn_out_proj_int8_abba_20260824T170145Z`.
+
+The fail-closed analyzer rejected the candidate after four fresh serve
+lifecycles:
+
+- balanced phase decode: -9.439 percent; both pairs lost
+- balanced 6400-token soak: -4.956 percent; both pairs lost
+- balanced warm c1: +0.611 percent
+- balanced c4 aggregate: +1.100 percent
+- TTFT and prefill: within 3.151 percent
+- B phase restart spread: 9.620 percent; failed the 5 percent gate
+- B soak restart spread: 0.121 percent; passed
+- deterministic eight-prompt corpus: byte-identical across B restarts
+- fixed output: coherent but not byte-identical across B restarts
+- mixed load: 96/96 coherent; all health, identity, hash, and endpoint-down
+  checks passed
+
+Verdict: out-only is safe enough for mechanism research but is not a serving
+optimization. Keep it default-off. Its 240 added K3072 activation-quant calls
+and dispatch boundaries erase the out-projection kernel and capacity benefit.
+Next prioritize one shared/reused quantized activation for eligible GDN
+projections. Use qkvz-only only if a clean K5120-vs-K3072 attribution is needed.
