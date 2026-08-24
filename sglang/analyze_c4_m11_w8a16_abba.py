@@ -102,6 +102,7 @@ def inspect_config(path, arm, manifest, repo):
     required = {
         "B70_XPU_W8A8=1",
         "B70_XPU_W8A8_FUSED=1",
+        "B70_XPU_MTP=1",
         f"B70_W8A16_M_MAX={threshold}",
         "B70_W8A16_ROUTE_DEBUG=0",
         "B70_W8A8_QUANT_LMHEAD=0",
@@ -110,6 +111,7 @@ def inspect_config(path, arm, manifest, repo):
         "B70_XPU_FUSED_MLP_AR_NORM=0",
         "B70_XPU_PUSH_AR=1",
         "PUSH_AR_MIN_NUMEL=0",
+        f"PUSH_AR_MAXB={manifest['push_ar_maxb']}",
         "PUSH_AR_GRAPH=0",
         "CCL_TOPO_P2P_ACCESS=0",
         "B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so",
@@ -315,10 +317,10 @@ def main():
     )
     deltas = {f"{key}_pct": throughput_delta(rows, key) for key in throughput_keys}
     deltas.update({f"{key}_pct": latency_delta(rows, key) for key in latency_keys})
-    deltas["accept_avg_pct"] = throughput_delta(rows, "accept_avg")
-    deltas["accept_avg_abs"] = gm(
-        rows["02_B1"]["accept_avg"], rows["03_B2"]["accept_avg"]
-    ) - gm(rows["01_A1"]["accept_avg"], rows["04_A2"]["accept_avg"])
+    accept_a = gm(rows["01_A1"]["accept_avg"], rows["04_A2"]["accept_avg"])
+    accept_b = gm(rows["02_B1"]["accept_avg"], rows["03_B2"]["accept_avg"])
+    deltas["accept_avg_pct"] = 100.0 * (accept_b / accept_a - 1.0) if accept_a else 0.0
+    deltas["accept_avg_abs"] = accept_b - accept_a
     config_ok = {
         arm: inspect_config(root / arm / "container_inspect.json", arm, manifest, repo)
         for arm in ARMS
@@ -359,7 +361,9 @@ def main():
         "all_soaks_coherent": all(row["soak_coherent"] for row in rows.values()),
         "all_soaks_stable": all(0.95 <= row["soak_ratio"] <= 1.10 for row in rows.values()),
         "acceptance_observed_and_finite": all(
-            row["accept_count"] > 0 and math.isfinite(row["accept_avg"])
+            row["accept_count"] > 0
+            and math.isfinite(row["accept_avg"])
+            and row["accept_avg"] > 0.0
             for row in rows.values()
         ),
         "no_fatal_markers": not any(row["fatal"] for row in rows.values()),

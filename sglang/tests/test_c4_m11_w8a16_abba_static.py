@@ -131,6 +131,7 @@ class IdentityFixtureTest(unittest.TestCase):
             "kdir": "/runtime/kernel",
             "pushdir": "/runtime/push",
             "push_ar_so": "/work/push_ar/libxpu_push_ar_graph.so",
+            "push_ar_maxb": "536870912",
         }
 
     def inspect_item(self, candidate):
@@ -151,6 +152,7 @@ class IdentityFixtureTest(unittest.TestCase):
         env = [
             "B70_XPU_W8A8=1",
             "B70_XPU_W8A8_FUSED=1",
+            "B70_XPU_MTP=1",
             f"B70_W8A16_M_MAX={threshold}",
             "B70_W8A16_ROUTE_DEBUG=0",
             "B70_W8A8_QUANT_LMHEAD=0",
@@ -159,6 +161,7 @@ class IdentityFixtureTest(unittest.TestCase):
             "B70_XPU_FUSED_MLP_AR_NORM=0",
             "B70_XPU_PUSH_AR=1",
             "PUSH_AR_MIN_NUMEL=0",
+            "PUSH_AR_MAXB=536870912",
             "PUSH_AR_GRAPH=0",
             "CCL_TOPO_P2P_ACCESS=0",
             "B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so",
