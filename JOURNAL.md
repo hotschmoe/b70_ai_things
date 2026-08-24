@@ -17904,3 +17904,47 @@ a real GPU-built and fused-expert W8A8 MoE artifact, with the dense BF16 compute
 fallback explicitly disclosed. Keep the research endpoint live at port 18080
 while the three-task Pi smoke runs; do not promote a shelf entry before the
 model-selection gates finish.
+
+### 2026-08-24z - Ornith W8A8 MTP1 semantic profile: launch-bound first
+
+CONFIG -> refreshed Steve's `b70-optimization-lab` to clean upstream revision
+`0cf5b751` without overwriting his preserved local graft, refreshed Sergio's
+Arc B70 cookbook to `44e97e1`, and refreshed 0xSero's `qwen38-b70` to
+`e873853`. The controlled local serve used Ornith-1.5-35B-A3B W8A8 RTN,
+Sglang 0.5.15.post1, TP=2, 8192 context, eager execution, overlap/radix off,
+one active request, MTP1/draft2, and `CCL_TOPO_P2P_ACCESS=0`. Both cards were
+already at the existing 230 W cap. Default-off Kineto semantic ranges covered
+target/MTP, decoder layer family, GDN, full attention, MoE routing, shared
+expert, routed W8A8 experts, and quantized dense projections without inserting
+XPU synchronizations.
+
+COMMAND -> `./bin/gpu-run bash
+sglang/w8a8/profile_ornith15_w8a8.sh`. Runtime artifacts:
+`results/logs/ornith15_w8a8_profile_20260824T231106Z/` and
+`/mnt/vm_8tb/b70/sgl_cache/ornith15_w8a8_profile_20260824T231106Z/`.
+
+RESULT -> clean PASS in 396 seconds. The p512/g128 cookbook-style median was
+11.644 output tok/s. MTP1 mean accept length was 1.975 and draft acceptance
+97.5%, proving draft quality was not the limiter. Each verify step launched
+about 1247 device kernels/copies, including 84 all-reduces, 238 dense/router
+GEMMs, 82 fused-MoE kernels, 41 top-k calls, and 80 expert activation-quant
+kernels. Slow-rank device work was 24.97 ms/verify versus about 169.6 ms of
+unprofiled verify wall implied by output rate and acceptance. The slow rank's
+all-reduce work was 14.06 ms/verify; its five-step all-reduce total was 70.30
+ms versus TP0's 24.83 ms. The instrumented trace spans were 93.1%/95.6% idle.
+Sglang also reported that both exact B70 `E=256,N=256` INT8 W8A8 MoE tuning
+files were missing and used generic Triton configs. The first semantic install
+missed only top-k/all-reduce labels due a wrong `TopK` module reference; raw
+correlation retained the exact measurements and the import was repaired.
+Cards were healthy before/after and the endpoint was stopped.
+
+VERDICT -> current Ornith Sglang is launch/scheduler bound first, collective
+bound second, and expert-GEMM bound third. Eliminating measured collective
+device time entirely only raises the current-path ceiling to about 12.7 tok/s;
+eliminating full CPU collective call time gives about 13.5. The ideal ceiling
+from current slow-rank device work is about 79 tok/s, consistent with Sergio's
+70.7 no-spec / 96.4 MTP1 and Steve's graph/eager split. Next try narrow Sglang
+MTP1 graph capture with P2P off; if it cannot capture coherently, port this
+artifact to Steve's current vLLM Quark W8A8 piecewise-graph path. Then tune the
+missing MoE configs and attack the 2.8x rank collective asymmetry. Full report:
+`docs/20260824_ornith15_w8a8_profile.md`.

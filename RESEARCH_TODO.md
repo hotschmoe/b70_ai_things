@@ -571,28 +571,29 @@ fake-quant/perplexity before writing any XMX kernel.
 
 ---
 
-## Track 9 -- Port `benchmark_moe.py` MoE-config tuner to XPU  [TODO, deferred from 2026-06-22 perf chase]
+## Track 9 -- Tune the Sglang INT8 MoE configs on XPU  [TODO after graph]
 
-**Why:** the int8 MoE 35B serve (`rdy_to_serve/qwen36-35b-a3b-quark-w8a8-int8/`) logs "Using default MoE config.
-Performance might be sub-optimal!" (no `E=256,N=256,device_name=Intel(R)_Graphics_[0xe223].json`). A tuned Triton
-fused-MoE config is a real lever -- in CAPTURED mode the MoE GEMM is a meaningful slice, so a good config could add
-~10-30% on top of the 41 t/s single-stream capture. (See FINDINGS "GRAPH CAPTURE perf" + JOURNAL/commits 1cc7900.)
+**Current evidence:** the 2026-08-24 Ornith semantic profile logs exact missing
+Sglang Triton configs under
+`sglang/srt/layers/moe/moe_runner/triton_utils/configs/triton_3_7_1/`:
 
-**The blocker (why it's deferred, not done):** `vllm/benchmarks/kernels/benchmark_moe.py --tune` does not run on XPU:
-1. `ray.init()` -> `ray.available_resources()["GPU"]` KeyError (Ray doesn't see XPU as a "GPU"). **Bypass already
-   found + proven:** a `sitecustomize.py` that forces `ray.init(num_gpus=1)` (synced to host `patches/sitecustomize.py`).
-   That gets past Ray (worker spawns, enumerates ~1920 configs).
-2. Then the benchmark worker is CUDA-centric and dies with `AssertionError: Torch not compiled with CUDA enabled`:
-   `device="cuda"` (line ~260) + CUDA-graph timing `torch.cuda.CUDAGraph()` / `torch.cuda.graph()` (lines ~307-308).
-   `torch.accelerator.synchronize()` is already device-agnostic (fine); only the device string + the graph-timer need porting.
+- `E=256,N=256,device_name=Intel(R)_Arc(TM)_Pro_B70_Graphics,dtype=int8_w8a8,per_channel_quant=True.json`;
+- the matching `_down.json` file.
 
-**The port (a later session):** bind-mount a patched `benchmark_moe.py` that (a) `device="cuda"` -> `"xpu"`, (b) replaces
-the CUDA-graph capture/replay timing block with a plain timed loop: warmup N iters, `torch.accelerator.synchronize()`,
-time `for _ in range(iters): run_kernel()`, `synchronize()`, divide -- less precise than graph-replay but correct on XPU.
-Then run `--dtype auto --tp-size 2 --batch-size 1 2 4 8` (auto -> the no-dtype-suffix filename int8 reads; ~1.5 h/batch,
-so consider `--batch-size 1` first). Note it tunes the **fp16 shape as a proxy** for int8 (tuner has no `int8_w8a8` dtype);
-the tiling mostly transfers. Alternative if the port is painful: hand-write the config from a known-good XPU MoE tiling.
-Deploy: drop the resulting JSON into the image's `model_executor/layers/fused_moe/configs/` (bind-mount) and re-serve.
+Sglang falls back to generic settings for both W13 and W2. The five-step MTP1
+decode trace measured 82 fused-MoE launches and 2.79 ms of fused-MoE device
+time per verify on the slow rank. That is less than 2% of the current 169.6 ms
+unprofiled verify wall, so tuning is not the first eager-mode lever. It becomes
+material after graph/replay removes the launch floor. See
+`docs/20260824_ornith15_w8a8_profile.md`.
+
+**Work:** port Sglang's current fused-MoE benchmark/tuner to XPU for the exact
+INT8 W8A8 per-channel scheme. Tune batch/row shapes used by decode/MTP verify,
+at minimum M=1 and M=2, and generate both ordinary and down-projection files.
+Use synchronized XPU-event or wall timing outside the unsafe profiled-queue
+path. Gate the generated configs with numerical parity, a same-process kernel
+A/B, and an endpoint A-B-B-A only after a coherent graph-capable baseline
+exists. Do not infer a 10-30% endpoint win from a kernel-only result.
 
 ---
 

@@ -12,6 +12,10 @@ wall time, not by isolated tokens/second.
 | `qwen38-xl` | llama.cpp SYCL, Qwen3.8-27B Unsloth UD-Q4_K_XL | TP=2, embedded MTP3, prompt/KV reuse, 262144 context, exact GGUF SHA already pinned, public id `hotschmoe-dd` |
 | `ornith15-w8a8` | Sglang, Ornith-1.5-35B-A3B INT8 W8A8 | TP=2, trained BF16 MTP head, radix prefix cache if coherence-qualified, 262144 context, served id `ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa` |
 
+Ornith uses MTP depth 1/draft 2. Its checkpoint contains one trained MTP
+layer; the 2026-08-24 local profile measured 97.5% first-draft acceptance, and
+the current Sergio B70 depth sweep shows deeper positions reduce throughput.
+
 This is a product-config comparison, not a same-base quant ablation. Each arm
 uses its best coherent MTP and caching configuration. Every result directory
 encodes the complete arm identity even though the llama.cpp API retains the

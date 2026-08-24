@@ -110,10 +110,11 @@ def _make_int8_moe_method_cls():
         Activation: per-token, dynamic, symmetric int8 -> quantized INSIDE the kernel (a_scale = None)
         """
 
-        def __init__(self, quant_config, weight_cfg=None, input_cfg=None):
+        def __init__(self, quant_config, weight_cfg=None, input_cfg=None, prefix=""):
             self.quant_config = quant_config
             self.weight_cfg = weight_cfg or {}
             self.input_cfg = input_cfg or {}
+            self.prefix = prefix
             # dynamic per-token activation -> no static input scale (mirror quark_moe.py:768-777)
             self.static_input_scales = not _input_is_dynamic(self.input_cfg)
             self.per_channel = _weight_is_per_channel(self.weight_cfg)
@@ -230,6 +231,14 @@ def _make_int8_moe_method_cls():
 
         def apply(self, layer: torch.nn.Module, dispatch_output):
             quant_info = self.get_triton_quant_info(layer)
+            if os.environ.get("B70_ORNITH_PROFILE_RANGES") == "1":
+                label = (
+                    "b70::mtp.routed_experts_w8a8"
+                    if "mtp" in self.prefix.lower()
+                    else "b70::moe.routed_experts_w8a8"
+                )
+                with torch.profiler.record_function(label):
+                    return self.runner.run(dispatch_output, quant_info)
             return self.runner.run(dispatch_output, quant_info)
 
     return Int8MoEMethod
@@ -323,6 +332,20 @@ def _make_int8_dequant_linear_cls():
                 torch.xpu.empty_cache()
 
         def apply(self, layer: torch.nn.Module, x: torch.Tensor, bias: Optional[torch.Tensor] = None):
+            if os.environ.get("B70_ORNITH_PROFILE_RANGES") == "1":
+                prefix = self.prefix.lower()
+                if "linear_attn" in prefix:
+                    label = "b70::gdn.quantized_projection"
+                elif "self_attn" in prefix:
+                    label = "b70::full_attention.quantized_projection"
+                elif "shared_expert" in prefix:
+                    label = "b70::moe.shared_expert_quantized_linear"
+                elif "mtp" in prefix:
+                    label = "b70::mtp.quantized_linear"
+                else:
+                    label = "b70::other.quantized_linear"
+                with torch.profiler.record_function(label):
+                    return torch.nn.functional.linear(x, layer.weight, bias)
             return torch.nn.functional.linear(x, layer.weight, bias)
 
     return Int8DequantLinear
@@ -399,7 +422,9 @@ def install():
             if isinstance(layer, FusedMoE):
                 self._quantized_layers.add(prefix)
                 logger.info("quark_moe_int8: int8 MoE method -> %s", prefix)
-                return Int8MoEMethod(self, weight_cfg=weight_cfg, input_cfg=input_cfg)
+                return Int8MoEMethod(
+                    self, weight_cfg=weight_cfg, input_cfg=input_cfg, prefix=prefix
+                )
             if isinstance(layer, LinearBase):
                 self._quantized_layers.add(prefix)
                 return Int8DequantLinear(self, prefix=prefix)
@@ -408,6 +433,13 @@ def install():
         return _orig_get_quant_method(self, layer, prefix)
 
     QuarkConfig.get_quant_method = _patched_get_quant_method
+    if os.environ.get("B70_ORNITH_PROFILE_RANGES") == "1":
+        try:
+            import ornith_profile_ranges
+
+            ornith_profile_ranges.install()
+        except Exception as e:
+            print(f"[quark_moe_int8] WARN: semantic profiler install failed: {e}", flush=True)
     logger.info("quark_moe_int8: patched QuarkConfig.get_quant_method (int8 MoE + dense dequant)")
     print("[quark_moe_int8] installed: int8 Quark MoE loader + dense int8->bf16 dequant linear", flush=True)
 

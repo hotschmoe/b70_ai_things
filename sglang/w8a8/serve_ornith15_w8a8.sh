@@ -15,21 +15,26 @@ CTX="${CTX:-8192}"
 MEMFRAC="${MEMFRAC:-0.90}"
 MAXREQ="${MAXREQ:-4}"
 MTP="${MTP:-1}"
-SPEC_STEPS="${SPEC_STEPS:-3}"
-SPEC_DRAFT="${SPEC_DRAFT:-4}"
+# Ornith has one trained MTP layer. Sergio's current B70 depth sweep and the
+# local profile both select depth 1; deeper positions spend verify work on
+# untrained/low-acceptance continuations.
+SPEC_STEPS="${SPEC_STEPS:-1}"
+SPEC_DRAFT="${SPEC_DRAFT:-2}"
 RADIX="${RADIX:-0}"
+PROFILE_RANGES="${PROFILE_RANGES:-0}"
 SP=/opt/venv/lib/python3.12/site-packages
 SHIM="$REPO/sglang/images/sglang-xpu-mtp-0515/woq_shim.py"
 MTP_TREE="$REPO/sglang/images/sglang-xpu-mtp-0515/mtp_tree_xpu.py"
 LOADER="$REPO/sglang/patches/quark_moe_int8.py"
 ACTQ="$REPO/sglang/patches/int8_actquant_xpu.py"
+PROFILE_PATCH="$REPO/sglang/w8a8/ornith_profile_ranges.py"
 
 say() { echo "[$(date +%H:%M:%S)] $*"; }
 
 start() {
   say "pre-flight xpu-health"
   "$REPO/bin/xpu-health" 2>&1 | tail -2 || return 3
-  for path in "$SHIM" "$MTP_TREE" "$LOADER" "$ACTQ"; do
+  for path in "$SHIM" "$MTP_TREE" "$LOADER" "$ACTQ" "$PROFILE_PATCH"; do
     [ -f "$path" ] || { say "missing $path"; return 2; }
   done
   [ -f "$REPO/models/files/ornith-1.5-35b-a3b/w8a8-rtn-mtp-shisa/model.safetensors.index.json" ] || {
@@ -47,18 +52,20 @@ start() {
     radix_env=1
   fi
 
-  say "serve TP=$TP ctx=$CTX MTP=$MTP steps=$SPEC_STEPS radix=$RADIX -> $SERVED"
+  say "serve TP=$TP ctx=$CTX MTP=$MTP steps=$SPEC_STEPS radix=$RADIX profile_ranges=$PROFILE_RANGES -> $SERVED"
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size 32g -p "$PORT:$PORT" \
     -v "$REPO/models/files:/models:ro" \
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" \
     -v "$LOADER:$SP/quark_moe_int8.py:ro" \
     -v "$ACTQ:$SP/int8_actquant_xpu.py:ro" \
+    -v "$PROFILE_PATCH:$SP/ornith_profile_ranges.py:ro" \
     -v "$SHIM:$SP/woq_shim.py:ro" \
     -v "$MTP_TREE:$SP/mtp_tree_xpu.py:ro" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache \
     -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor -e TRITON_CACHE_DIR=/sgl_cache/triton \
     -e B70_QUARK_MOE_INT8=1 -e B70_XPU_MTP="$MTP" \
+    -e B70_ORNITH_PROFILE_RANGES="$PROFILE_RANGES" \
     -e B70_XPU_MAMBA_EXTRA_BUFFER="$radix_env" -e CCL_TOPO_P2P_ACCESS=0 \
     "$IMG" bash -c "source /opt/intel/oneapi/setvars.sh --force >/dev/null 2>&1; \
       export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.3/lib:\$LD_LIBRARY_PATH; \
