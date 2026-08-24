@@ -17593,3 +17593,49 @@ testing, not yet for the shelf. Run the predeclared position-balanced A-B-B-A
 against the current W8A8 shelf and require both phase pairs, balanced phase and
 soak thresholds, prefill/TTFT bands, restart/CV stability, byte identity, mixed
 coherence, and health. Endpoint remains down by campaign policy.
+
+### 2026-08-24r - combined target-GDN INT8 A-B-B-A NO-GO
+
+CONFIG -> one continuous dual-card lease and four fresh sglang TP=2 serve
+lifecycles in A-B-B-A order. A used the current W8A8 SQ-GPTQ shelf checkpoint
+and native config. B used the corrected target-GDN INT8 checkpoint with the
+read-only two-leaf metadata overlay. Both used MTP10/draft11, graph/radix off,
+P2P access off, promoted push-all and replicated MTP embedding on, and C3b and
+LM-head experiments off. Predeclared gates required both phase pairs to win,
+balanced phase >=3%, both 6400-token soak pairs to not regress, balanced soak
+>=2%, TTFT/prefill within 5%, B phase CV and restart spreads <=5%, byte-exact
+B restart outputs, mixed coherence, exact runtime identity, immutable
+artifacts, health, and endpoint-down cleanup.
+
+COMMAND -> `./bin/gpu-run bash sglang/02_c4_gdn_int8_abba.sh`.
+Artifact: `results/logs/c4_gdn_int8_abba_20260824T145553Z/`.
+
+RESULT -> formal analyzer FAIL after 5902 seconds. Position-balanced deltas
+were phase decode -17.107%, warm c1 -8.528%, c4 stream -0.187%, c4 aggregate
++1.529%, and long soak +2.888%. Phase medians were A1/B1/B2/A2
+20.634/14.926/16.647/17.526 tok/s: both matched B pairs lost. B phase CVs were
+18.86%/6.64%, and B restart phase spread was about 10.9%, so all three phase
+gates failed. Warm c1 reproduced at A1/B1/B2/A2 22.76/21.03/20.90/23.08.
+Long soaks were 17.29/17.89/17.73/17.33 tok/s: both B pairs won, the balanced
+gain cleared 2%, and B restart spread was about 0.9%. Candidate c4 aggregate
+was a smaller repeatable signal at 20.37/20.72 versus baseline 20.28/20.19.
+All TTFT and prefill deltas stayed within 3.2%. The strict all-soak stability
+check also failed because A1 printed 1.11x against the analyzer's 1.10x ceiling;
+B1/B2 were both 1.05x and A2 was 1.10x. This baseline-only miss does not alter
+the decisive phase and c1 rejection.
+
+All four fixed responses, deterministic corpora, 24/24 mixed gates, and long
+soaks were coherent. B1/B2 fixed outputs and eight-prompt corpora were byte
+identical. Every checkpoint audit, model/id, config mount, environment, feature
+marker, artifact hash, fatal-marker, per-arm health, and final health check
+passed. No Level Zero, oneCCL, P2P, or cross-card stability failure occurred.
+The endpoint remained down.
+
+VERDICT -> combined qkvz plus out-projection INT8 is a serving NO-GO and stays
+default-off. It produces a genuine +2.89% sustained-decode and +1.53% c4 signal
+plus 2.577 GiB/rank capacity saving, but separate small-M activation quant and
+dispatch costs erase the 40.5% projection-kernel win at c1. Next build and gate
+an out-projection-only candidate, where the kernel economics were strongest and
+48 qkvz quant/dispatch sequences per step can be removed. If that split retains
+the soak/c4 gain without c1 loss, then pursue fused or reused GDN activation
+quantization. Endpoint remains down by campaign policy.

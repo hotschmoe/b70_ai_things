@@ -55,10 +55,15 @@
 > `in_proj_ba` also routed W8A8 despite its declared BF16 exclusion. Diagnose
 > proved that the fused-name ignore misses checkpoint leaves `in_proj_b` and
 > `in_proj_a`; the resulting runtime INT8 cast zeroed every BA coefficient.
-> The corrected two-leaf GPU mechanism now passes every exact route, capacity,
+> The corrected two-leaf GPU mechanism passed every exact route, capacity,
 > determinism, mixed-load, soak, health, and endpoint-down gate on both ranks;
-> capacity is 226368. Proceed to balanced A-B-B-A before any performance or
-> promotion claim. Keep the endpoint down throughout the research campaign.
+> capacity is 226368. Balanced A-B-B-A then rejected combined qkvz+out INT8:
+> phase -17.11%, c1 -8.53%, c4 aggregate +1.53%, but sustained soak +2.89%
+> with both pairs and restart stability passing. Correctness, identity,
+> byte-repeatability, mixed load, TTFT/prefill, artifacts, and health all
+> passed. This is launch/quant overhead, not P2P instability. Next test
+> out-projection-only, then fused/reused GDN activation quantization. Keep the
+> endpoint down throughout the research campaign.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.

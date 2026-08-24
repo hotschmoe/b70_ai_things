@@ -1,7 +1,8 @@
 # C4 target GDN projection INT8 candidate
 
-Status: corrected GPU mechanism gate PASS. The balanced A-B-B-A gate is pending.
-This candidate is default-off and does not change the shelf recipe.
+Status: corrected GPU mechanism gate PASS; balanced A-B-B-A FAIL/NO-GO.
+This combined qkvz plus out-projection candidate remains default-off and does
+not change the shelf recipe. The next candidate is out-projection-only.
 
 ## Why this is the next candidate
 
@@ -181,3 +182,20 @@ activation-quant launches per target GDN layer: `in_proj_qkvz` is already a
 fast BF16 GEMM, so its net win may be small. `out_proj` has the clearer kernel
 case. If the combined candidate misses the serving gate, split the next test to
 `out_proj` only; do not optimize or pad the tiny N=48 `in_proj_ba` path.
+
+## Balanced serving result
+
+Artifact `c4_gdn_int8_abba_20260824T145553Z` rejected the corrected combined
+candidate. Position-balanced deltas were phase decode -17.107%, warm c1
+-8.528%, c4 aggregate +1.529%, and 6400-token soak +2.888%. Both soak pairs
+won and candidate soak restart spread passed, but both phase pairs lost;
+candidate phase CV and restart spread also failed. TTFT and prefill stayed
+within 3.2%, all four mixed gates passed 24/24, B1/B2 fixed and deterministic
+outputs were byte-identical, every identity/artifact/health gate passed, and
+the endpoint remained down.
+
+The 40.5% large-projection device-time reduction is real but does not amortize
+the extra small-M activation-quantization and dispatch overhead at c1. Keep the
+combined artifact for research and capacity evidence only. Test an
+out-projection-only artifact next; pursue fused or reused GDN activation
+quantization only after the narrow split establishes remaining headroom.
