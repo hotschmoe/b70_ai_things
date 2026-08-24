@@ -31,6 +31,8 @@ say() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"; }
 
 static_checks() {
     bash -n "$0" "$SHELF" "$REPO/llamacpp/serve_qwen38_stock_q4km_tp2.sh"
+    git -C "$REPO" apply --numstat \
+        "$REPO/llamacpp/qwen38-b70/patches/quant-timing.patch" >/dev/null
     python3 -m unittest \
         llamacpp.tests.test_queue_profile_isolation \
         llamacpp.tests.test_queue_profile_isolation_static

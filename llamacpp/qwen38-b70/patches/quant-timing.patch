@@ -1,7 +1,7 @@
 diff --git a/ggml/src/ggml-sycl/dpct/helper.hpp b/ggml/src/ggml-sycl/dpct/helper.hpp
 --- a/ggml/src/ggml-sycl/dpct/helper.hpp
 +++ b/ggml/src/ggml-sycl/dpct/helper.hpp
-@@ -799,13 +799,23 @@ class device_ext : public sycl::device {
+@@ -799,13 +799,22 @@ class device_ext : public sycl::device {
  
        /// PROFILER HOOK (findings 79). enable_profiling must be set at QUEUE
        /// CONSTRUCTION, but we do not want it in a production binary. Gate it on

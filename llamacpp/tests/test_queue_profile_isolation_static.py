@@ -51,6 +51,7 @@ class QueueProfileIsolationStaticTest(unittest.TestCase):
             "health_probe after_off",
             "health_probe final",
             "check_code_hashes",
+            "apply --numstat",
         ):
             self.assertIn(required, runner)
 
