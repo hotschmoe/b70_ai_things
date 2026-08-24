@@ -17018,3 +17018,40 @@ so do not risk native-event escalation or a serve port. C3 next: replicated MTP
 input embedding removes 10/159 ARs exactly (~1.184 GiB/card), then XPU delayed
 MLP-AR plus residual/RMSNorm fusion. Full campaign ledger in
 `docs/20260823_tp2_optimization_campaign.md`.
+
+### 2026-08-24b - TP=2 campaign C3a replicated embedding mechanism GO
+
+CONFIG -> sglang 0.5.6 Qwen3.6-27B compressed-tensors GPTQ W8A8, TP=2,
+MTP10, eager, radix off, context 131072, push gate 1048576, P2PACCESS=0.
+Baseline uses the stock sharded input embedding. Candidate uses SGLang's
+native full-table `VocabParallelEmbedding` on the target and shares that exact
+module with NEXTN; LM head stays sharded. Additional table storage is exactly
+1.184082 GiB/card. Feature is opt-in and defaults off.
+
+COMMAND -> `bin/gpu-run bash
+sglang/campaign_mtp_replicated_embedding_mechanism.sh`; after the baseline
+profiler wrote both complete traces and segfaulted during teardown, reuse its
+preserved trace/corpus and run only the candidate with `SKIP_BASELINE=1`.
+Parse raw Kineto `record_param_comms` via
+`sglang/parse_tp2_collective_census.py`; compare the eight-prompt canonical
+greedy JSON with `cmp`. Artifacts are under
+`results/logs/mtp_replicated_embedding_mechanism_20260824T013500Z/`; raw traces
+are under `/mnt/vm_8tb/b70/sgl_cache/c3_mtp_replicated_embedding_20260824T013500Z/`.
+
+RESULT -> both baseline ranks measured 159 all-reduces plus 11 all-gathers per
+decode iteration. Both candidate ranks measured exactly 148 plus 11. The 11
+removed calls were nine BF16 `[1,5120]` and two BF16 `[11,5120]` embedding
+all-reduces per iteration; group `[0,1]`, dtype, async mode, and the 11 logits
+all-gathers were unchanged. Both ranks logged full shape `(248320,5120)`, BF16,
+2.368164 GiB and pointer-identical target/draft sharing. Eight fixed prompts,
+2,048 output tokens total, were byte-identical (SHA256 `5638db8f...e54c`).
+At context 131072, capacity changed 182208 -> 143360 tokens (78.68% retained),
+leaving 12288 tokens of headroom and passing the 139264 hard gate. Candidate
+profile trigger completed normally; baseline's post-trace profiler teardown
+segfault was isolated from serving evidence. All card-health gates passed and
+stock Q4_K_M production was restored at `hotschmoe-dd`, Q4_K_M, context 262144.
+
+VERDICT -> C3a mechanism GO. This corrects the prior 10/159 estimate: native
+target plus shared-draft replication removes 11 boundaries, giving 148. Keep
+the feature default-off and advance to deterministic A-B-B-A serving
+qualification. Do not infer an end-to-end win from profiler device time.

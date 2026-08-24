@@ -1,0 +1,45 @@
+CONFIG -> sglang 0.5.6 Qwen3.6-27B GPTQ W8A8, TP=2, MTP10, eager,
+radix off, context 131072, push gate 1048576, P2PACCESS=0. Baseline has a
+sharded input embedding. Candidate uses a native full target embedding shared
+with NEXTN and leaves the LM head sharded.
+
+COMMAND -> bin/gpu-run bash
+sglang/campaign_mtp_replicated_embedding_mechanism.sh. The baseline profiler
+wrote complete traces and then segfaulted during profiler teardown; the
+preserved trace and deterministic corpus were reused. Candidate ran with
+SKIP_BASELINE=1. Raw traces are in runtime storage at
+/mnt/vm_8tb/b70/sgl_cache/c3_mtp_replicated_embedding_20260824T013500Z/.
+
+RESULT -> baseline, each rank and five iterations:
+  allreduce BF16 [1,5120]: 135
+  allreduce BF16 [11,5120]: 660
+  allgather BF16 [1,124160]: 45
+  allgather BF16 [11,124160]: 10
+  total: 850 = 795 allreduce + 55 allgather
+
+RESULT -> candidate, each rank and five iterations:
+  allreduce BF16 [1,5120]: 90
+  allreduce BF16 [11,5120]: 650
+  allgather BF16 [1,124160]: 45
+  allgather BF16 [11,124160]: 10
+  total: 795 = 740 allreduce + 55 allgather
+
+RESULT -> 159 to 148 allreduces per scheduler iteration. The only removed
+signatures are nine [1,5120] and two [11,5120] embedding allreduces per
+iteration. Both ranks retain process group [0,1], BF16 dtype, and async mode.
+The eight-prompt canonical response files are byte-identical, each SHA256
+5638db8f4283c736fcbcf43256509799085460ce13d6e501210131801211e54c.
+The corpus totals 2048 output tokens. Capacity at context 131072 is baseline
+182208 versus candidate 143360 tokens: 78.68 percent retained and 12288 tokens
+above context. Both candidate ranks report full shape [248320,5120], BF16,
+2.368164 GiB, with pointer-identical target/draft sharing.
+
+TRACE SHA256 ->
+  baseline TP0 f8db5a4ccf713fc2d1b3bd25763be406f50d19a30e80f285dffa0f3ba7f1ef75
+  baseline TP1 9c369394f5aeff07edae027892322402e4af08e38f9cfd123995eeca3a929d5e
+  candidate TP0 b897e448e98c27ca7d89da0e8cd30a8c38abe80f90d987e24effc75fa5d8142e
+  candidate TP1 73c6d9e027ee7cf8b8a4785daf35551fa88bc7c5d3a072bbcb5edd453fe059ee
+
+VERDICT -> mechanism GO and capacity/equivalence PASS. Keep default off and
+advance to a position-balanced serving qualification. Do not infer a serving
+speedup from the profiler device times.

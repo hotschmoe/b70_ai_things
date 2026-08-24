@@ -44,6 +44,7 @@ SPEC_STEPS="${SPEC_STEPS:-10}"; SPEC_DRAFT="${SPEC_DRAFT:-11}"; MAXREQ="${MAXREQ
 PUSH_AR="${PUSH_AR:-1}"  # Large-prefill-only L0-IPC transport; measured through the 200K mode.
 PUSH_AR_MIN_NUMEL="${PUSH_AR_MIN_NUMEL:-1048576}"  # Exclude batched MTP verify; keep prefill on push.
 PUSH_AR_MAXB="${PUSH_AR_MAXB:-536870912}"
+REPLICATE_MTP_EMBED="${REPLICATE_MTP_EMBED:-0}"  # Experimental C3a: native full input table, shared with NEXTN.
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
@@ -98,12 +99,14 @@ start(){
     -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/sgl_cache:/sgl_cache" -v "$KDIR:/work/kernel:ro" \
     -v "$PUSHDIR:/work/push_ar:ro" \
     -v "$REPO/sglang/patches/woq_shim.py:/opt/venv/lib/python3.12/site-packages/woq_shim.py:ro" \
+    -v "$REPO/sglang/patches/mtp_replicated_embedding.py:/opt/venv/lib/python3.12/site-packages/mtp_replicated_embedding.py:ro" \
     -v "$REPO/sglang/patches/push_ar_xpu.py:/opt/venv/lib/python3.12/site-packages/push_ar_xpu.py:ro" \
     -v "$REPO/sglang/patches/w8a8_shim.py:/opt/venv/lib/python3.12/site-packages/w8a8_shim.py:ro" \
     -v "$REPO/sglang/patches/qwen3_coder_detector.py:/opt/venv/lib/python3.12/site-packages/sglang/srt/function_call/qwen3_coder_detector.py:ro" \
     "${EB_MOUNT[@]}" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
+    -e "B70_XPU_REPLICATE_MTP_EMBED=$REPLICATE_MTP_EMBED" \
     -e "B70_XPU_PUSH_AR=$PUSH_AR" -e PUSH_AR_SO=/work/push_ar/libxpu_push_ar_graph.so \
     -e PUSH_AR_GRAPH=0 -e "PUSH_AR_MIN_NUMEL=$PUSH_AR_MIN_NUMEL" -e "PUSH_AR_MAXB=$PUSH_AR_MAXB" \
     -e B70_PUSH_AR_STATS=1 -e PUSH_AR_STATS_EVERY=2000 -e CCL_TOPO_P2P_ACCESS=0 \

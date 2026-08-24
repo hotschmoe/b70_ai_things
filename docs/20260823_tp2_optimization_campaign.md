@@ -116,11 +116,24 @@ attention 64, MLP 64) plus MTP10 30 (embedding, attention, and MLP once per
 draft forward). Standard TP dependencies prevent batching the 128 target layer
 reductions across sublayers or layers.
 
-The first exact boundary-count prototype is replicated MTP input embedding. It
-removes 10 all-reduces without changing values for about 1.184 GiB additional
-storage per card. The next kernel prototype enables SGLang's existing delayed
+The first exact boundary-count prototype uses SGLang's native unsharded input
+embedding for the target and shares that exact module with NEXTN. It removes
+11 all-reduces without changing values for about 1.184 GiB additional storage
+per card. It is default-off pending a 159 -> 148 collective census, deterministic
+output equivalence, capacity gate, and position-balanced serving qualification.
+The next kernel prototype enables SGLang's existing delayed
 MLP all-reduce plus residual/RMSNorm fusion contract on XPU, initially covering
 63 target layer edges.
+
+Mechanism result, 2026-08-24: GO to serving qualification. Both candidate
+ranks measured exactly 148 all-reduces plus 11 all-gathers per scheduler
+iteration, versus 159 plus 11 for baseline. The removed embedding signatures
+were nine `[1,5120]` and two `[11,5120]` BF16 all-reduces per iteration; no
+collective metadata or logits-gather signature changed. Eight fixed greedy
+responses totaling 2,048 output tokens were byte-identical. At 131072 context,
+token capacity changed from 182208 to 143360 (78.68% retained), leaving 12288
+tokens above the advertised context and passing the 139264-token hard gate.
+The feature remains default-off until the A-B-B-A serving gate passes.
 
 ### C4 - optimize post-push math
 
@@ -148,7 +161,8 @@ and launch fusion. Do not transfer sglang oneCCL percentages to this lane.
 | C0 | Baseline profile | oneCCL 319/878 ms -> push 8/8 ms | push-all c1 +5.2%, soak +6.1%, c4 flat | Communication sync confirmed; campaign opened |
 | C1 | Push-all A-B-B-A | 1M gate correctly fell back; push-all engaged | core gate: c1 +7.62%, soak +4.42%, code c1/c4 +6.36%/+3.32%, 96/96 coherent | GO candidate; noisy phase diagnostic excluded, shelf unchanged |
 | C2 | One-host-sync immediate-list path | exact, but 4-10% slower than current push | not advanced to serve | NO-GO; native-event variant not justified |
-| C3 | Boundary reduction/fusion | census: 159 AR + 11 AG per iteration | replicated MTP embedding first | active |
+| C3a | Native replicated target/MTP embedding | exact 159 -> 148 AR; 11 AG unchanged; byte-identical fixed corpus; 143360-token capacity | serving A-B-B-A pending | mechanism GO, default off |
+| C3b | Delayed MLP AR plus residual/RMSNorm | existing SGLang contract covers 63 target edges; XPU policy/kernel absent | pending | queued after C3a qualification |
 | C4 | Post-push math | pending | pending | queued |
 | C5 | Llama.cpp weight/MMVQ | pending | pending | queued |
 

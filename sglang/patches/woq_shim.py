@@ -338,6 +338,17 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] MTP tree fallback install FAILED: {e}", flush=True)
 
+    # Replicate only Qwen3.5's input embedding, then share the same native
+    # unsharded module with NEXTN.  This removes 11 decode all-reduces at TP=2
+    # without changing the sharded LM head.  Experimental and default-off.
+    if os.environ.get("B70_XPU_REPLICATE_MTP_EMBED") == "1":
+        try:
+            import mtp_replicated_embedding
+            mtp_replicated_embedding.install()
+        except Exception as e:
+            print(f"[woq-shim] replicated MTP embedding install FAILED: {e}", flush=True)
+            raise
+
     # --- XPU CUDAGRAPH (the eager-ceiling breaker; OPT-IN via B70_XPU_CUDAGRAPH=1) ---
     # torch.xpu supports graph capture (XPUGraph/graph); the GDN + triton attn backends have graph state.
     # We flip support_cuda_graph->True and redirect torch.cuda.{CUDAGraph,graph,graph_pool_handle}->torch.xpu.
