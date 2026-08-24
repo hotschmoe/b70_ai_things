@@ -17120,3 +17120,69 @@ IPC library: push plus proven host rendezvous, then one asynchronous SYCL
 reduce/residual/Gemma kernel with a scratch ring. Preserve `bf16(local+peer)`
 before `bf16(ar+old_residual)`; do not reassociate the three-term sum. Gate in
 a randomized two-rank numerical/stress microbench before any serve port.
+
+### 2026-08-24e - C3b fused boundary kernel fast, serving integration NO-GO
+
+CONFIG -> sglang W8A8 TP=2, MTP10, replicated input embedding, eager, push AR,
+P2PACCESS=0. Candidate fuses peer reduction, BF16 residual add, and Gemma
+RMSNorm for BF16 `[M,5120]`. It packs the peer copy as uint32 and uses aligned
+16-byte vec8 loads/stores. Dispatch is fail-closed to bit-exact measured rows
+M=1-8,10,11; M=9 and larger shapes keep SGLang's original immediate AR path.
+
+COMMAND -> `bin/gpu-run env FAST_MAX_ROWS=11 WORKGROUP_SIZE=512
+ROWS=1,2,3,4,5,6,7,8,9,10,11 STRESS_CALLS=1024 bash
+sglang/run_fused_ar_rmsnorm_microbench.sh`; real mechanism via `bin/gpu-run
+env CTX=131072 bash sglang/run_c3b_fused_mechanism.sh`; serving qualification
+via `bin/gpu-run bash sglang/campaign_c3b_fused_boundary_abba.sh`. Artifacts:
+`/mnt/vm_8tb/b70/fused_ar_rmsnorm/results/20260824_packed_vec8_m1_through_m11/`,
+`results/logs/c3b_fused_mechanism_strict_rows_ctx131k_20260824/`, and partial
+ABBA `results/logs/c3b_fused_boundary_abba_20260824T073940Z/`.
+
+RESULT -> microbench candidate/gold speedup was 1.92x at M1, 1.93x M2,
+1.92x M3-4, 1.88x M5-6, 1.80-1.81x M7-10, and 1.78x M11. M1-8,10,11 were
+bit-exact across four adversarial cases; M9 had one 1-ULP cancellation
+mismatch and is excluded. The 1024-call delayed ring stress kept residual and
+cross-rank output exact. The strict real mechanism gate reached 40960 eligible
+and consumed boundaries with generic=0 on both ranks and coherent 17.98 tok/s.
+In the position-balanced serve run, B1 beat A1 on the fixed-content mechanism
+soak 17.94 vs 16.01 (+12.1%) and regime soak 18.19 vs 16.37 (+11.1%), but lost
+the mandatory paired phase result 13.89 vs 16.43 and perf c1 20.48 vs 21.51.
+Coding c1 was flat 22.1 vs 22.2; c4 aggregate was within band at 72.1 vs 72.8;
+24/24 mixed streams passed. The campaign was stopped after B1 because the two
+predeclared per-pair win checks were already impossible to pass; cleanup and
+both-card health passed, endpoint left down.
+
+VERDICT -> kernel primitive GO, current delayed-boundary serving integration
+NO-GO and not promoted. Keep the shelf flags default off. The mixed serving
+metrics indicate that removing about 50 us from an isolated boundary does not
+reliably improve end-to-end decode under all speculative workloads. Move to C4
+post-communication math; retain C3b as a proven research primitive for a later
+integration that removes more boundaries or host scheduling overhead.
+
+### 2026-08-24f - Unsloth UD-Q4_K_XL matched profile and embedded MTP GO
+
+CONFIG -> llama.cpp SYCL TP=2, native context 262144, F16 KV, P2PACCESS=0,
+LAB_DOORS=0. Matched arms: stock Q4_K_M MTP-off, Unsloth UD-Q4_K_XL MTP-off,
+and XL embedded NEXTN MTP3. Exact file sizes and SHA256 identities were checked
+against the live container. Final restore was disabled for the chained campaign.
+
+COMMAND -> `bin/gpu-run env RUN_MTP=1 RUN_EVIDENCE=1 RUN_HEPLUS=0
+FINAL_RESTORE=none bash llamacpp/campaign_qwen38_ud_q4k_xl.sh full`.
+Artifacts: `results/logs/qwen38_ud_q4k_xl_campaign_20260824T060230Z/`.
+
+RESULT -> all campaign hard gates passed. Q4_K_M and XL produced the same 6/7
+canary result and identical text hashes, including the shared modular miss.
+MTP3 was byte-exact to XL MTP-off on all seven responses. Matched median decode
+was Q4_K_M 35.57, XL MTP-off 34.44 (-3.18%), and XL MTP3 43.19 tok/s (+25.41%
+vs XL MTP-off). Coding was 35.67, 34.04 (-4.56%), and 53.87 tok/s (+58.26%).
+XL MTP-off prefill TTFT was 5.553 vs 4.814 s (+15.34%); MTP3 was 5.799 s.
+Evidence captured 9 quant-type lines, 139 all-reduce census lines, and one
+fusion exit. Cards stayed healthy and the endpoint was left down as requested.
+
+VERDICT -> exact XL artifact and embedded MTP serve path are GO for final
+quality qualification. XL changes the weight kernel workload: only 3/65
+gate/up pairs are both Q4_K, so the Q4_K-only reordered SwiGLU custom op remains
+inapplicable; communication/activation/GDN work still applies. Run full
+HumanEval+ with MTP enabled before changing the production shelf default or
+installing the tracked systemd unit. Add per-quant MMVQ device-time counters
+before optimizing XL's Q5_K/IQ4_XS-heavy weight path.

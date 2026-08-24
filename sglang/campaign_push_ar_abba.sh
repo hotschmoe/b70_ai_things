@@ -5,12 +5,13 @@
 #   ./bin/gpu-run bash sglang/campaign_push_ar_abba.sh
 #
 # Sequence: A1=1M gate, B1=push-all, B2=push-all, A2=1M gate. The script
-# snapshots/stops a running stock Q4_K_M daily driver and restores it on exit.
+# snapshots/stops a running Unsloth UD-Q4_K_XL daily driver and restores it on exit.
+# Set B70_RESTORE_PROD=0 to intentionally leave production stopped afterward.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SHELF="$REPO/rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh"
-PROD_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh"
+PROD_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT="${OUT:-$REPO/results/logs/sglang_push_ar_abba_$STAMP}"
 PORT="${PORT:-31003}"
@@ -19,9 +20,15 @@ TOK="${TOK:-/models/qwen3.6-27b/bf16}"
 CTX="${CTX:-8192}"
 MAXREQ="${MAXREQ:-4}"
 MAXB="${PUSH_AR_MAXB:-536870912}"
-PROD_NAME="${PROD_NAME:-qwen38_stock_q4km_tp2}"
+PROD_NAME="${PROD_NAME:-qwen38_unsloth_ud_q4k_xl_tp2}"
 PROD_ID="${PROD_ID:-hotschmoe-dd}"
 PROD_PORT="${PROD_PORT:-18080}"
+B70_RESTORE_PROD="${B70_RESTORE_PROD:-1}"
+
+case "$B70_RESTORE_PROD" in
+  0|1) ;;
+  *) echo "B70_RESTORE_PROD must be 0 or 1" >&2; exit 2 ;;
+esac
 
 mkdir -p "$OUT"
 exec > >(tee -a "$OUT/campaign.log") 2>&1
@@ -59,7 +66,7 @@ cleanup() {
   if [ "$restore_prod" = 1 ] && [ "$restoring" = 0 ]; then
     if [ "$health_rc" = 0 ]; then
       restoring=1
-      say "restoring exact stock Q4_K_M production shelf"
+      say "restoring exact Unsloth UD-Q4_K_XL production shelf"
       NAME="$PROD_NAME" PORT="$PROD_PORT" SERVED="$PROD_ID" \
         bash "$PROD_SHELF" start >"$OUT/production_restore.log" 2>&1 || rc=1
       cat "$OUT/production_restore.log"
@@ -120,7 +127,7 @@ print(f"PRODUCTION_SNAPSHOT -> id={model_id}")
 raise SystemExit(0 if model_id == expected else 1)
 PY
   docker inspect "$PROD_NAME" >"$OUT/production_inspect_before.json"
-  restore_prod=1
+  restore_prod="$B70_RESTORE_PROD"
   say "stopping production inside held lease"
   NAME="$PROD_NAME" PORT="$PROD_PORT" SERVED="$PROD_ID" bash "$PROD_SHELF" stop
 fi

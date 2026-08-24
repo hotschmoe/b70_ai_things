@@ -17,6 +17,7 @@ from functools import wraps
 
 
 _ENV = "B70_XPU_DELAY_MLP_AR"
+_FUSED_ENV = "B70_XPU_FUSED_MLP_AR_NORM"
 _MARKER = "_sglang_needs_allreduce_fusion"
 _PENDING = "_b70_delayed_mlp_ar_pending"
 _TAG = "_b70_delayed_mlp_ar_qwen35_dense"
@@ -24,6 +25,7 @@ _INSTALLED = False
 _COUNTERS = {"eligible": 0, "consumed": 0, "generic": 0}
 _FIRST_REPORT = 63
 _REPORT_EVERY = 4096
+_FUSED_ROWS = frozenset((*range(1, 9), 10, 11))
 _SHOULD_FUSE_SHA256 = "878c3a0cd695da2648107a6c3f010659290ccbc1d84e59231a309908f318b3e8"
 
 
@@ -179,6 +181,11 @@ def install():
             return False
         if not (1 <= rows <= 128 and 1 <= request_batch <= 128):
             return False
+        # In fused mode, do not perturb prefill, M=9, or any other unmeasured
+        # shape merely to reach the generic delayed fallback. Leave those
+        # shapes on SGLang's original immediate all-reduce route.
+        if os.environ.get(_FUSED_ENV) == "1" and rows not in _FUSED_ROWS:
+            return False
 
         assert not hasattr(forward_batch, _PENDING), (
             "C3b found an unconsumed delayed-MLP marker before producing the next one"
@@ -236,11 +243,16 @@ def install():
         assert hidden_states.device == residual.device
         assert hidden_states.is_contiguous() and residual.is_contiguous()
 
-        # This route is intentionally contract-only: if either fused policy
-        # becomes active, fail closed instead of calling
-        # input_layernorm.forward_with_allreduce_fusion.
-        assert not comm_module.apply_aiter_all_reduce_fusion(hidden_states)
-        assert not comm_module.apply_flashinfer_allreduce_fusion(expected_rows)
+        fused_boundary = (
+            os.environ.get(_FUSED_ENV) == "1"
+            and expected_rows in _FUSED_ROWS
+            and comm_module.apply_aiter_all_reduce_fusion(hidden_states)
+        )
+        if fused_boundary:
+            assert not comm_module.apply_flashinfer_allreduce_fusion(expected_rows)
+        else:
+            assert not comm_module.apply_aiter_all_reduce_fusion(hidden_states)
+            assert not comm_module.apply_flashinfer_allreduce_fusion(expected_rows)
 
         result = original_prepare_attn(
             self,
@@ -259,7 +271,8 @@ def install():
         # wrapper is observational apart from its own ForwardBatch bookkeeping.
         delattr(forward_batch, _PENDING)
         _COUNTERS["consumed"] += 1
-        _COUNTERS["generic"] += 1
+        if not fused_boundary:
+            _COUNTERS["generic"] += 1
         _report_if_due(self._context.tp_rank)
         return output, output_residual
 

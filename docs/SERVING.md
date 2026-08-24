@@ -9,7 +9,8 @@
 >
 > | model | golden dir | image |
 > |---|---|---|
-> | Qwen3.8-27B stock Q4_K_M (current DD, TP=2 262144) | `rdy_to_serve/llamacpp/qwen38-27b-q4km/` | `qwen38-b70:latest` |
+> | Qwen3.8-27B Unsloth UD-Q4_K_XL (current DD target, TP=2 262144) | `rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/` | `qwen38-b70:latest` |
+> | Qwen3.8-27B stock Q4_K_M (rollback) | `rdy_to_serve/llamacpp/qwen38-27b-q4km/` | `qwen38-b70:latest` |
 > | Qwen3.8-27B OBLITERATED Q4_K_M (paused) | `rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/` | `qwen38-b70:latest` |
 > | Qwen3.6-27B NVFP4 (paused baseline and TP=2 200K) | `rdy_to_serve/vllm/qwen36-27b-nvfp4/` | `:int8g-v0251` / `:int8g-v0260` |
 > | Qwen3.6-27B W8A8 | `rdy_to_serve/sglang/qwen36-27b-w8a8/` | `sglang-xpu:mtp` |
@@ -20,12 +21,16 @@ The single source of truth for serving model X: its `rdy_to_serve/` dir if shelv
 If you reconstruct a serve command from JOURNAL/scripts, you did it wrong -- fix the golden dir / THIS doc.
 Keep recipes verified-and-current; date each change. (Tools moved to `bin/`; the host runs them flat.)
 
-**Daily driver:** llama.cpp stock Qwen3.8-27B Q4_K_M TP=2 at
-`http://192.168.10.5:18080/v1`. It exposes one 262144-token F16-KV request slot
-across both B70 cards. MTP and the unqualified Q4 fusion doors are off to match
-the 0.970/0.927 HumanEval+ path. The shelf entry is
-`rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`; the tracked unit is
-`llamacpp/deploy/b70-daily-driver.service`. The obliterated DP=2 entry and vLLM
+**Daily-driver target:** the user-selected llama.cpp Unsloth Qwen3.8-27B
+UD-Q4_K_XL TP=2 at `http://192.168.10.5:18080/v1`. It exposes one
+262144-token F16-KV request slot across both B70 cards, with MTP and the
+unqualified Q4 fusion doors off. Its quality and weight-path profile
+qualification is still in progress. The shelf entry is
+`rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh`; the tracked unit is
+`llamacpp/deploy/b70-daily-driver.service`. The stock Q4_K_M shelf remains the
+rollback. During an explicitly authorized chained GPU campaign the endpoint
+may intentionally be down; campaign runners restore XL by default and accept
+`B70_RESTORE_PROD=0` to leave it stopped. The obliterated DP=2 entry and vLLM
 daily-driver scripts remain maintained paused baselines.
 
 ## Where everything runs

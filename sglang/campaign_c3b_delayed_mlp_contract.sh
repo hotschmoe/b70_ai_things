@@ -3,11 +3,12 @@
 # No timing is collected and this script cannot authorize a performance promotion.
 # Caller holds both cards for the entire stop/A/B/restore block:
 #   ./bin/gpu-run bash sglang/campaign_c3b_delayed_mlp_contract.sh
+# Set B70_RESTORE_PROD=0 to intentionally leave production stopped afterward.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SHELF="$REPO/rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh"
-PROD_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh"
+PROD_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh"
 PATCH="$REPO/sglang/patches/xpu_delayed_mlp_ar.py"
 WOQ_SHIM="$REPO/sglang/patches/woq_shim.py"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
@@ -16,10 +17,16 @@ PORT="${PORT:-31003}"
 CTX="${CTX:-4096}"
 MAXREQ="${MAXREQ:-1}"
 SERVED="${SERVED:-qwen36-27b-w8a8-gptq-mtp-c3b-contract}"
-PROD_NAME="${PROD_NAME:-qwen38_stock_q4km_tp2}"
+PROD_NAME="${PROD_NAME:-qwen38_unsloth_ud_q4k_xl_tp2}"
 PROD_ID="${PROD_ID:-hotschmoe-dd}"
 PROD_PORT="${PROD_PORT:-18080}"
+B70_RESTORE_PROD="${B70_RESTORE_PROD:-1}"
 REAL_DOCKER="$(type -P docker)"
+
+case "$B70_RESTORE_PROD" in
+  0|1) ;;
+  *) echo "B70_RESTORE_PROD must be 0 or 1" >&2; exit 2 ;;
+esac
 
 [ -f "$PATCH" ] || {
   echo "missing candidate patch: $PATCH" >&2
@@ -80,7 +87,7 @@ restore_production() {
   [ "$production_restored" = 0 ] || return 0
   [ "$production_restore_attempted" = 0 ] || return 1
   production_restore_attempted=1
-  say "restoring exact stock Q4_K_M production shelf"
+  say "restoring exact Unsloth UD-Q4_K_XL production shelf"
   if ! NAME="$PROD_NAME" PORT="$PROD_PORT" SERVED="$PROD_ID" \
     CTX_SIZE=262144 BATCH=1024 UBATCH=256 LAB_DOORS=0 ENABLE_MTP=0 \
     bash "$PROD_SHELF" start >"$OUT/production_restore.log" 2>&1; then
@@ -179,7 +186,7 @@ print(f"PRODUCTION_SNAPSHOT -> id={actual}")
 raise SystemExit(0 if actual == expected else 1)
 PY
   "$REAL_DOCKER" inspect "$PROD_NAME" >"$OUT/production_inspect_before.json"
-  production_expected=1
+  production_expected="$B70_RESTORE_PROD"
   NAME="$PROD_NAME" PORT="$PROD_PORT" SERVED="$PROD_ID" bash "$PROD_SHELF" stop
 fi
 echo "$production_expected" >"$OUT/production_expected.txt"

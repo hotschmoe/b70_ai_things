@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Position-balanced C3a serving qualification. Caller must hold both cards:
 #   ./bin/gpu-run bash sglang/campaign_mtp_replicated_embedding_abba.sh
+# Set B70_RESTORE_PROD=0 to intentionally leave production stopped afterward.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SHELF="$REPO/rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh"
-PROD_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh"
+PROD_SHELF="$REPO/rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT="${OUT:-$REPO/results/logs/mtp_replicated_embedding_abba_$STAMP}"
 PORT="${PORT:-31003}"
@@ -13,9 +14,15 @@ CTX="${CTX:-131072}"
 MAXREQ="${MAXREQ:-4}"
 SERVED="${SERVED:-qwen36-27b-w8a8-gptq-mtp-replicated-abba}"
 TOK="${TOK:-/models/qwen3.6-27b/bf16}"
-PROD_NAME="${PROD_NAME:-qwen38_stock_q4km_tp2}"
+PROD_NAME="${PROD_NAME:-qwen38_unsloth_ud_q4k_xl_tp2}"
 PROD_ID="${PROD_ID:-hotschmoe-dd}"
 PROD_PORT="${PROD_PORT:-18080}"
+B70_RESTORE_PROD="${B70_RESTORE_PROD:-1}"
+
+case "$B70_RESTORE_PROD" in
+  0|1) ;;
+  *) echo "B70_RESTORE_PROD must be 0 or 1" >&2; exit 2 ;;
+esac
 
 mkdir -p "$OUT"
 exec > >(tee -a "$OUT/campaign.log") 2>&1
@@ -46,7 +53,7 @@ cleanup() {
   if [ "$restore_prod" = 1 ] && [ "$restoring" = 0 ]; then
     if [ "$health_rc" = 0 ]; then
       restoring=1
-      say "restoring exact stock Q4_K_M production shelf"
+      say "restoring exact Unsloth UD-Q4_K_XL production shelf"
       NAME="$PROD_NAME" PORT="$PROD_PORT" SERVED="$PROD_ID" \
         bash "$PROD_SHELF" start >"$OUT/production_restore.log" 2>&1 || rc=1
       cat "$OUT/production_restore.log"
@@ -89,7 +96,7 @@ actual = json.load(open(path))["data"][0]["id"]
 print(f"PRODUCTION_SNAPSHOT -> id={actual}")
 raise SystemExit(0 if actual == expected else 1)
 PY
-  restore_prod=1
+  restore_prod="$B70_RESTORE_PROD"
   NAME="$PROD_NAME" PORT="$PROD_PORT" SERVED="$PROD_ID" bash "$PROD_SHELF" stop
 fi
 "$REPO/bin/xpu-health" | tee "$OUT/health_pre_campaign.log"

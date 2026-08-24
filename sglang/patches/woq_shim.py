@@ -425,6 +425,17 @@ def _install():
         except Exception as e:
             print(f"[woq-shim] push-AR install FAILED: {e}", flush=True)
 
+    # Fuse the proven delayed dense-MLP boundary for small eager decode rows.
+    # This must install after push_ar_xpu so its exact ABI and readiness state
+    # own the same TP communicator rendezvous.
+    if os.environ.get("B70_XPU_FUSED_MLP_AR_NORM") == "1":
+        try:
+            import xpu_fused_mlp_ar_norm
+            xpu_fused_mlp_ar_norm.install()
+        except Exception as e:
+            print(f"[woq-shim] fused MLP AR+norm install FAILED: {e}", flush=True)
+            raise
+
     # --- W4A8/W4A16 HYBRID (oneDNN int4w x {int8a prefill, fp16a decode}; OPT-IN via B70_XPU_W4A8=1) ---
     # Wraps compressed-tensors _get_scheme_from_parts to route dense W4A8 int-quantized linears to
     # CompressedTensorsW4A8Int8XPU -> torch.ops._xpu_C.int4_gemm_w4a{8,16}. Needs the built _xpu_C.abi3.so

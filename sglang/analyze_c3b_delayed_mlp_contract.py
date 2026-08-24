@@ -76,7 +76,9 @@ def main() -> int:
     parser.add_argument("--served", required=True)
     parser.add_argument("--eligible", type=int, default=63)
     parser.add_argument("--production-id", default="hotschmoe-dd")
-    parser.add_argument("--production-name", default="qwen38_stock_q4km_tp2")
+    parser.add_argument(
+        "--production-name", default="qwen38_unsloth_ud_q4k_xl_tp2"
+    )
     args = parser.parse_args()
 
     root = Path(args.result_dir).resolve()

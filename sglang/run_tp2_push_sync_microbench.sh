@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
 # Run the C2 collective-sync microbench under one both-card gpu-run lease.
-# Stops and restores the exact stock Q4_K_M production shelf.
+# Stops and restores the exact Unsloth UD-Q4_K_XL production shelf.
+# Set B70_RESTORE_PROD=0 to intentionally leave production stopped afterward.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PROD="$REPO/rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh"
+PROD="$REPO/rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh"
 PUSHDIR="$REPO/vllm/contrib/vllm_push_allreduce/prebuilt"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT="${OUT:-$REPO/results/logs/tp2_push_sync_$STAMP}"
 MODES="${MODES:-oneccl current async_safe}"
-PROD_NAME="qwen38_stock_q4km_tp2"
+PROD_NAME="${PROD_NAME:-qwen38_unsloth_ud_q4k_xl_tp2}"
+B70_RESTORE_PROD="${B70_RESTORE_PROD:-1}"
 RESTORE=0
 ACTIVE=""
 mkdir -p "$OUT"
+
+case "$B70_RESTORE_PROD" in
+  0|1) ;;
+  *) echo "B70_RESTORE_PROD must be 0 or 1" >&2; exit 2 ;;
+esac
 
 cleanup() {
   local rc=$?
@@ -32,7 +39,7 @@ trap cleanup EXIT INT TERM
 
 if docker ps --filter "name=^/${PROD_NAME}$" --format '{{.Names}}' | rg -qx "$PROD_NAME"; then
   curl -fsS http://127.0.0.1:18080/v1/models >"$OUT/production_models_before.json"
-  RESTORE=1
+  RESTORE="$B70_RESTORE_PROD"
   bash "$PROD" stop
 fi
 "$REPO/bin/xpu-health" | tee "$OUT/health_start.log"

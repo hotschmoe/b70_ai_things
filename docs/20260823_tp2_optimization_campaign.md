@@ -6,8 +6,9 @@ Started: 2026-08-23
 
 Increase coherent, stable TP=2 inference performance by attacking measured
 bottlenecks in order. Sglang compressed-tensors W8A8 is the primary serving
-and kernel research lane. The stock llama.cpp Q4_K_M daily driver remains the
-production service and is restored after every experiment block.
+and kernel research lane. Unsloth Qwen3.8-27B UD-Q4_K_XL is the user-selected
+llama.cpp production target while its quality and weight-path qualification
+continues. The stock Q4_K_M shelf remains the rollback.
 
 The baseline profile is `docs/20260823_tp2_inference_profile.md`.
 
@@ -16,7 +17,9 @@ The baseline profile is `docs/20260823_tp2_inference_profile.md`.
 - Hold both cards with `bin/gpu-run` for every serve, benchmark, or GPU probe.
 - Keep `CCL_TOPO_P2P_ACCESS=0`. Do not test broad peer-output writes.
 - Stop the production llama.cpp server cleanly before an experiment block and
-  restore its exact shelf entry before releasing the lease.
+  restore the exact XL shelf entry before releasing the lease by default.
+  `B70_RESTORE_PROD=0` may leave it stopped for an explicitly authorized
+  chained campaign.
 - Record config -> command -> result -> verdict in `JOURNAL.md`.
 - Use position-balanced comparisons for small performance differences.
 - Promote only when identity, coherence, c1, c4, TTFT, soak, fatal-log, and
@@ -36,7 +39,7 @@ The baseline profile is `docs/20260823_tp2_inference_profile.md`.
 - Mechanism trace: oneCCL collective 319/878 ms per five batches versus push
   8/8 ms, but only 5-6% end-to-end gain.
 
-### Llama.cpp Q4_K_M TP=2
+### Historical llama.cpp Q4_K_M TP=2 baseline
 
 - Model: stock Qwen3.8-27B Q4_K_M, F16 KV, context 262144, MTP off.
 - Fresh decode baseline: 37.88 tok/s.
@@ -151,12 +154,16 @@ gates passed. This proves boundary lifecycle and group equivalence only; it
 does not remove a collective, launch, or host wait and makes no performance
 claim.
 
-The active C3b kernel stage now combines push reduction, the BF16 residual add,
-and Gemma RMSNorm in one post-rendezvous SYCL kernel. It must preserve two BF16
-rounding points: one after the TP sum and one after adding the old residual.
-The bounded prototype retains the proven push plus host rendezvous, uses a
-scratch ring so an asynchronous epilogue cannot be overwritten, and targets
-the same 63 delayed MLP edges before considering the 64 attention edges.
+C3b fused result, 2026-08-24: kernel GO, serving integration NO-GO. Packing the
+peer copy as uint32 and using aligned vec8 loads/stores changed the M11
+candidate from 0.58x to 1.78x the stock boundary; M1-8,10,11 are bit-exact and
+1.78-1.93x, while M9 remains an exact stock fallback after a one-ULP
+adversarial mismatch. A strict 131K mechanism run reached 40960/40960 fused
+edges and generic=0 on both ranks. Serving B1 beat A1 on two fixed-content
+soaks by 11-12%, but lost mandatory phase and perf-c1 paired checks and was flat
+on code c1. The A-B-B-A was stopped once its predeclared promotion verdict was
+mathematically impossible. Keep the primitive, leave shelf flags off, and move
+engineering effort to C4 rather than tuning this integration around one prompt.
 
 ### C4 - optimize post-push math
 
@@ -185,7 +192,7 @@ and launch fusion. Do not transfer sglang oneCCL percentages to this lane.
 | C1 | Push-all A-B-B-A | 1M gate correctly fell back; push-all engaged | core gate: c1 +7.62%, soak +4.42%, code c1/c4 +6.36%/+3.32%, 96/96 coherent | GO candidate; noisy phase diagnostic excluded, shelf unchanged |
 | C2 | One-host-sync immediate-list path | exact, but 4-10% slower than current push | not advanced to serve | NO-GO; native-event variant not justified |
 | C3a | Native replicated target/MTP embedding | exact 159 -> 148 AR; 11 AG unchanged; byte-identical fixed corpus; 143360-token capacity | c1 +4.69%, soak +2.20%, code c1/c4 +3.68%/+3.13%, 96/96 coherent | GO; promoted to shelf default |
-| C3b | Delayed MLP AR plus residual/RMSNorm | contract-only route exact on both ranks: 63 eligible/consumed/generic; fixed corpus byte-identical | performance pending | lifecycle PASS; fused SYCL primitive active next |
+| C3b | Delayed MLP AR plus residual/RMSNorm | M1-8,10,11 exact and 1.78-1.93x; strict serve 40960/40960, generic=0 | fixed soaks +11-12%, mandatory phase/perf c1 pairs lost, code c1 flat | Kernel GO; integration NO-GO, shelf off |
 | C4 | Post-push math | pending | pending | queued |
 | C5 | Llama.cpp weight/MMVQ | pending | pending | queued |
 
@@ -199,6 +206,7 @@ hold both cards for its entire lifetime:
 ```
 
 The runner snapshots the live production identity and container, stops the
-exact stock Q4_K_M shelf inside the held lease, and restores it from an exit
-trap only after both cards pass health. It refuses a new TP=2 start if health
-is red.
+exact Unsloth UD-Q4_K_XL shelf inside the held lease, and restores it from an
+exit trap only after both cards pass health. It refuses a new TP=2 start if
+health is red. Set `B70_RESTORE_PROD=0` only when an authorized chained
+campaign should leave the endpoint down.

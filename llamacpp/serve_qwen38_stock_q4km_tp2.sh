@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Stock ggml-org Qwen3.8-27B Q4_K_M, tensor parallel across both B70 cards.
-# This is the exact target artifact used by the 0.970/0.927 HumanEval+ run.
+# Qwen3.8-27B GGUF, tensor parallel across both B70 cards. The defaults select
+# the stock ggml-org Q4_K_M artifact used by the 0.970/0.927 HumanEval+ run;
+# pinned shelf wrappers may override the artifact fields for another GGUF.
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,6 +13,7 @@ HOST_MODELS="${HOST_MODELS:-$REPO/models/files/qwen3.8-27b/q4km-ggml-org}"
 MODEL_FILE="${MODEL_FILE:-Qwen3.8-27B-Q4_K_M.gguf}"
 MODEL_SIZE="${MODEL_SIZE:-18973870432}"
 MODEL_SHA256="${MODEL_SHA256:-31629f53165ab6a7dad8c9847dcfd1fdf55829dac1e6e748f4a68581b0033d34}"
+MODEL_LABEL="${MODEL_LABEL:-stock Q4_K_M}"
 CTX_SIZE="${CTX_SIZE:-262144}"
 BATCH="${BATCH:-1024}"
 UBATCH="${UBATCH:-256}"
@@ -85,7 +87,7 @@ start() {
     local key_mount=()
     [ -s "$API_KEY_FILE" ] && key_mount=(-v "$API_KEY_FILE:/run/secrets/dd_api_key:ro")
     docker rm -f "$NAME" >/dev/null 2>&1 || true
-    say "start stock Q4_K_M TP=2 ctx=$CTX_SIZE mtp=$ENABLE_MTP lab_doors=$LAB_DOORS"
+    say "start $MODEL_LABEL TP=2 ctx=$CTX_SIZE mtp=$ENABLE_MTP lab_doors=$LAB_DOORS"
     docker run -d --name "$NAME" --restart unless-stopped \
         --device /dev/dri --ipc=host --shm-size 8g \
         -v /dev/dri/by-path:/dev/dri/by-path:ro \

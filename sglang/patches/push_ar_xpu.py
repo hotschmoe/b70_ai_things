@@ -44,6 +44,17 @@ def _load_lib(so):
             lib.ar_exchange.restype = ctypes.c_int
             lib.ar_exchange.argtypes = [ctypes.c_int, ctypes.c_char_p]
             lib.ar_allreduce_ptr_dt.argtypes = [ctypes.c_ulonglong, ctypes.c_long, ctypes.c_int]
+            if hasattr(lib, "ar_allreduce_residual_gemma_rmsnorm_bf16"):
+                lib.ar_allreduce_residual_gemma_rmsnorm_bf16.restype = ctypes.c_int
+                lib.ar_allreduce_residual_gemma_rmsnorm_bf16.argtypes = [
+                    ctypes.c_ulonglong,
+                    ctypes.c_ulonglong,
+                    ctypes.c_ulonglong,
+                    ctypes.c_ulonglong,
+                    ctypes.c_int32,
+                    ctypes.c_int32,
+                    ctypes.c_float,
+                ]
             if hasattr(lib, "ar_allreduce_graph"):
                 lib.ar_allreduce_graph.argtypes = [ctypes.c_ulonglong, ctypes.c_ulonglong,
                                                    ctypes.c_long, ctypes.c_int]
@@ -71,6 +82,46 @@ def _load_lib(so):
                 lib.ar_graph_new_capture.argtypes = []
             _lib = lib
     return _lib
+
+
+def fused_boundary_ready():
+    """Return whether this process owns an initialized fused-boundary ABI."""
+    lib = _lib
+    return (
+        lib is not None
+        and _engaged_owner is not None
+        and hasattr(lib, "ar_allreduce_residual_gemma_rmsnorm_bf16")
+    )
+
+
+def fused_ar_residual_gemma_rmsnorm_bf16(x, residual, raw_weight, eps):
+    """Run the initialized TP=2 small-row fused boundary in place.
+
+    The caller must make the same validated call on both ranks. Status 38 is a
+    pre-communication shape fallback and is returned as False. Any other error
+    is fatal because silently taking a one-sided fallback could deadlock the
+    peer after it enters the rendezvous.
+    """
+    if not fused_boundary_ready():
+        return False
+    import torch
+
+    rows, hidden = x.shape
+    qaddr = torch.xpu.current_stream().sycl_queue
+    rc = _lib.ar_allreduce_residual_gemma_rmsnorm_bf16(
+        ctypes.c_ulonglong(qaddr),
+        ctypes.c_ulonglong(x.data_ptr()),
+        ctypes.c_ulonglong(residual.data_ptr()),
+        ctypes.c_ulonglong(raw_weight.data_ptr()),
+        ctypes.c_int32(rows),
+        ctypes.c_int32(hidden),
+        ctypes.c_float(eps),
+    )
+    if rc == 38:
+        return False
+    if rc != 0:
+        raise RuntimeError(f"fused push-AR/residual/Gemma RMSNorm failed: rc={rc}")
+    return True
 
 
 def on_capture_begin():
