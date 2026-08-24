@@ -1,6 +1,6 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-08-23 (stock Q4_K_M quality DD live)
+**Created:** 2026-06-20 - **Status-synced:** 2026-08-24 (endpoint-down research campaign)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
 > ### [DAILY DRIVER 2026-08-23] -- stock Qwen3.8 Q4_K_M
@@ -41,6 +41,24 @@
 > perf-c1 comparisons and was flat on code c1. Active next is C4 post-push math,
 > plus XL per-quant MMVQ counters and the XL-MTP HumanEval+ gate. Full ledger:
 > `docs/20260823_tp2_optimization_campaign.md`.
+
+> ### [C4 2026-08-24] -- LM head NO-GO; GDN INT8 mechanism scope fix active
+> The repaired shared W8A16 LM head was coherent and improved short decode by
+> 5-8%, but the balanced long soak was flat (-0.23%) and restart/phase spread
+> was unstable, so it is default-off and closed. All full-service llama.cpp XL
+> timing mechanisms are also closed on this stack: profiling-enabled SYCL
+> queues lose the device during load, VTune launch never becomes healthy, and
+> VTune attach kills the served process without a usable finalized result. The
+> first target-GDN INT8 mechanism run was otherwise healthy and coherent,
+> increased capacity 143360 -> 226688, and cut the intended five-step GDN
+> projection device time about 40.5%. It formally failed because packed
+> `in_proj_ba` also routed W8A8 despite its declared BF16 exclusion. Diagnose
+> proved that the fused-name ignore misses checkpoint leaves `in_proj_b` and
+> `in_proj_a`; the resulting runtime INT8 cast zeroed every BA coefficient.
+> The corrected two-leaf GPU mechanism now passes every exact route, capacity,
+> determinism, mixed-load, soak, health, and endpoint-down gate on both ranks;
+> capacity is 226368. Proceed to balanced A-B-B-A before any performance or
+> promotion claim. Keep the endpoint down throughout the research campaign.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.

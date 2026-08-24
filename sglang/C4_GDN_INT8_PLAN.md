@@ -1,6 +1,6 @@
 # C4 target GDN projection INT8 candidate
 
-Status: CPU artifact gate PASS. GPU mechanism and A-B-B-A gates are pending.
+Status: corrected GPU mechanism gate PASS. The balanced A-B-B-A gate is pending.
 This candidate is default-off and does not change the shelf recipe.
 
 ## Why this is the next candidate
@@ -83,43 +83,58 @@ Measured artifact facts:
 - Checkpoint saving is 5,534,416,896 bytes, or 5.154 GiB total.
 - Exact TP=2 residency saving is 2,766,962,688 bytes (2.577 GiB) per rank.
   This accounts for the replicated row-parallel `out_proj` scale.
-- There is no load-time requantization, duplicate BF16 backing, target/draft
-  aliasing, or runtime weight mutation.
+- With correct packed-layer ignores, there is no load-time requantization,
+  duplicate BF16 backing, target/draft aliasing, or runtime weight mutation.
 
 The generated `config.json` is a copy of the base full model config with only
 `quantization_config` replaced. Its ignore list is exactly:
 
 ```text
 lm_head
-re:.*linear_attn\.in_proj_ba$
+re:.*linear_attn\.in_proj_b$
+re:.*linear_attn\.in_proj_a$
 re:.*visual.*
 re:.*mtp.*
 ```
 
+Compressed-tensors expands the runtime fused name `in_proj_ba` into checkpoint
+leaf names `in_proj_b` and `in_proj_a` before evaluating ignores. Both leaves
+must match. A fused-name regex matches neither leaf, while matching only one
+leaf raises a mixed-scheme error.
+
+## First mechanism result and correction
+
+Artifact `c4_gdn_int8_mechanism_20260824T141330Z` passed every lifecycle,
+capacity, acceptance, determinism, mixed-load, coherence, and health check, but
+failed exact route scope on both ranks:
+
+- BF16 M11 K5120 N48 BA: 0, expected 240
+- quant K5120: 880, expected 640
+- W8A8 M11 K5120 N48 BA: 240, expected 0
+
+This was not harmless extra INT8 coverage. The failed ignore made SGLang create
+an INT8 packed BA parameter even though the checkpoint has only BF16
+`in_proj_b.weight` and `in_proj_a.weight` and no BA scales. Its packed loader
+then used `copy_` to cast those BF16 leaves into INT8 storage. A CPU check on
+all 96 BA leaf weights found a global BF16 absolute maximum of 0.333984375, so
+all 23,592,960 coefficients cast to zero. The checkpoint contains zero BA scale
+tensors, leaving the wrongly created scale parameters without checkpoint data.
+Artifact hashes before and after the run were equal; the mutation was runtime
+representation, not an on-disk rewrite. Coherent text therefore does not make
+the N48 route valid.
+
+The smallest fix is metadata only: ignore both checkpoint leaves as shown
+above. The mechanism rerun must restore exactly 240 BF16 BA calls and reduce
+quant K5120 to exactly 640 on each rank before any performance claim.
+
 ## GPU mechanism gate
 
-All GPU commands require one enclosing dual-card lease. Keep endpoints down
-after every outcome. Use the shelf script only as the stable launcher; do not
-change its defaults:
+The append-only mechanism harness requires and verifies one enclosing dual-card
+lease. It keeps endpoints down after every outcome and uses the shelf only as
+the stable launcher without changing its defaults:
 
 ```bash
-./bin/gpu-run bash -lc '
-  out=results/logs/c4_gdn_int8_mechanism_$(date -u +%Y%m%dT%H%M%SZ)
-  mkdir -p "$out"
-  python3 sglang/prepare_c4_gdn_int8_candidate.py \
-    --overlay-out "$out/config.json" \
-    --report-out "$out/checkpoint_audit.json"
-  CKPT=/models/qwen3.6-27b/w8a8-sqgptq-gdnint8 \
-  CONFIG_OVERLAY="$PWD/$out/config.json" \
-  SERVED=qwen36-27b-W8A8-sqgptq-GDNRTN-mtp-c4 \
-  NAME=c4_gdn_int8 PORT=31003 CTX=131072 RADIX=0 MAXREQ=4 \
-  LMHEAD_INT8=0 REPLICATE_MTP_EMBED=1 DELAY_MLP_AR=0 \
-  FUSED_MLP_AR_NORM=0 PUSH_AR=1 PUSH_AR_MIN_NUMEL=0 \
-  bash rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh start
-  # Run probes and capture artifacts here.
-  NAME=c4_gdn_int8 PORT=31003 \
-  bash rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh stop
-'
+./bin/gpu-run bash sglang/01_c4_gdn_int8_mechanism.sh
 ```
 
 The mechanism gate must prove all of the following before an A/B run:

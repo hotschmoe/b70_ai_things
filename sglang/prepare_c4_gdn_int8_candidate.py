@@ -142,6 +142,10 @@ def audit(base_dir, candidate_dir, quant_path):
 
         require_tensor(candidate_metadata, f"{root}.in_proj_b.weight", "BF16", (48, hidden))
         require_tensor(candidate_metadata, f"{root}.in_proj_a.weight", "BF16", (48, hidden))
+        for projection in ("in_proj_b", "in_proj_a"):
+            scale = f"{root}.{projection}.weight_scale"
+            if scale in candidate_metadata:
+                raise ValueError(f"BF16 BA leaf unexpectedly contains scale: {scale}")
         require_tensor(candidate_metadata, f"{root}.conv1d.weight", "BF16", (10240, 1, 4))
         require_tensor(candidate_metadata, f"{root}.A_log", "BF16", (48,))
         require_tensor(candidate_metadata, f"{root}.dt_bias", "BF16", (48,))
@@ -153,7 +157,8 @@ def audit(base_dir, candidate_dir, quant_path):
     ignores = quantization.get("ignore")
     expected_ignores = {
         "lm_head",
-        r"re:.*linear_attn\.in_proj_ba$",
+        r"re:.*linear_attn\.in_proj_b$",
+        r"re:.*linear_attn\.in_proj_a$",
         r"re:.*visual.*",
         r"re:.*mtp.*",
     }

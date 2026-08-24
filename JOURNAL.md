@@ -17489,3 +17489,107 @@ isolated service-demand evidence, or advance directly from the exact route and
 byte census to measured kernel candidates. The next low-risk serving candidate
 is the existing GDN-INT8 artifact through current W8A16/W8A8 kernels. Endpoint
 remains down.
+
+### 2026-08-24o - C4 target-GDN INT8 mechanism fails only declared BA scope
+
+CONFIG -> sglang W8A8 TP=2, Qwen3.6-27B SQ-GPTQ target plus MTP10/draft11,
+graph and radix cache off, P2P access off, promoted replicated MTP embedding and
+push-all enabled, all experimental C3b and LM-head switches off. The candidate
+checkpoint contains 144 target GDN INT8 weights and 144 BF16 scales; a generated
+read-only config overlay replaced only compressed-tensors metadata and declared
+`linear_attn.in_proj_ba`, MTP, vision, and `lm_head` ignored. The mechanism gate
+required exact route counts on both ranks, capacity non-regression, fixed and
+same-process deterministic generation, mixed concurrency, soak stability,
+artifact immutability, health, and endpoint-down cleanup.
+
+COMMAND -> `./bin/gpu-run bash sglang/01_c4_gdn_int8_mechanism.sh`.
+Artifact: `results/logs/c4_gdn_int8_mechanism_20260824T141330Z/`.
+
+RESULT -> checkpoint, overlay, mount, container, served identity, fused-kernel,
+artifact, and both health audits passed. Capacity increased 143360 -> 226688
+tokens (+58.1%) and exact TP=2 target-weight residency saving remained
+2,766,962,688 bytes/rank. The fixed 640-token request, two deterministic
+eight-prompt corpora, 24/24 mixed streams, and a 1600-token 21.45 tok/s soak
+were coherent; the soak first/last ratio was 1.00x. Speculation stayed live
+with server average accepted length 4.466. Both rank traces agreed exactly:
+240 target qkvz and 320 combined out-projection W8A8 calls over five steps,
+zero BF16 target qkvz, five preserved BF16 MTP out and qkv calls, and 320
+K3072 activation quantizations. The intended large GDN projection kernels used
+19.66-19.67 ms qkvz plus 14.80-14.85 ms out per rank, versus about 35.73 plus
+22.25 ms in the baseline census, a 40.5% combined device-time reduction.
+However, both ranks also showed 240 W8A8 N48 calls and 880 K5120 activation
+quantizations: packed `in_proj_ba` routed W8A8 instead of the declared 240 BF16
+calls and expected 640 quantizations. The unexpected tiny GEMM itself cost only
+1.31-1.32 ms, but it violated the predeclared candidate boundary.
+
+VERDICT -> formal FAIL on route scope only; no performance GO and no shelf
+change. Coherence, stability, capacity, and intended large-projection kernel
+evidence passed. Diagnose whether compressed-tensors matching occurs against a
+packed loader name rather than `linear_attn.in_proj_ba`, make the smallest
+metadata-only correction that demonstrably retains BA in BF16, and rerun the
+same narrow mechanism gate before any balanced A-B-B-A. Keep the endpoint down
+until the research campaign is finished or the user explicitly requests it.
+
+### 2026-08-24p - C4 packed BA ignore root cause and metadata fix
+
+CONFIG -> CPU-only inspection of the exact `sglang-xpu:mtp` image, its
+compressed-tensors `should_ignore_layer` implementation, Qwen3.5
+`packed_modules_mapping`, the candidate safetensors metadata, and layer-0 BA
+values. No GPU or endpoint was used. The failed config ignored the runtime
+fused name with `re:.*linear_attn\.in_proj_ba$`.
+
+COMMAND -> call `should_ignore_layer` for
+`model.layers.0.linear_attn.in_proj_ba` with the model mapping
+`in_proj_ba: [in_proj_b, in_proj_a]`, first with the fused regex and then with
+both checkpoint-leaf regexes. Run `python3 -m unittest
+sglang.tests.test_c4_gdn_int8_static`, `py_compile`, the checkpoint audit, ASCII
+checks, and `git diff --check` after replacing the rule in config, generator,
+analyzer, tests, and plan.
+
+RESULT -> SGLang expands `in_proj_ba` to the two checkpoint leaves before
+testing ignores. The old fused regex returned false; the paired `in_proj_b` and
+`in_proj_a` regexes returned true. With the old rule, SGLang allocated a packed
+INT8 BA parameter without any checkpoint scale and the packed loader used
+`copy_` to cast the BF16 leaf weights into INT8 storage. Across all 96 BA leaf
+tensors, all 23,592,960 coefficients had absolute value below 1 and became zero
+at runtime; no BA scale tensor existed. This was hidden runtime representation mutation, not an on-disk
+rewrite; unchanged checkpoint hashes and coherent output did not validate it.
+The corrected metadata ignores both leaves, preserves the exact BF16 BA route
+contract, and rejects any BA `weight_scale`. Four static tests, syntax, the
+144-weight audit, exact 2.577 GiB/rank saving, ASCII, and diff checks passed.
+
+VERDICT -> root cause confirmed and smallest correction is metadata-only. Do
+not reinterpret the first mechanism result as an expanded-scope optimization:
+its BA path was invalid. Rerun the unchanged GPU mechanism gate and require
+exactly 240 BF16 BA calls plus 640 K5120 activation quantizations per rank
+before any A-B-B-A. Endpoint remains down by campaign policy.
+
+### 2026-08-24q - corrected C4 target-GDN INT8 mechanism PASS
+
+CONFIG -> identical fail-closed TP=2 mechanism gate from 2026-08-24o, with the
+only candidate correction being compressed-tensors ignores for both checkpoint
+leaves `linear_attn.in_proj_b` and `linear_attn.in_proj_a`. The BF16 BA route
+contract remained fixed at 240 calls and K5120 activation quantization at 640
+calls over five steps per rank. Production restoration remained disabled.
+
+COMMAND -> `./bin/gpu-run bash sglang/01_c4_gdn_int8_mechanism.sh`.
+Artifact: `results/logs/c4_gdn_int8_mechanism_20260824T143518Z/`.
+
+RESULT -> formal analyzer PASS. Both rank traces matched every exact route:
+target qkvz W8A8 240, combined out W8A8 320, target qkvz BF16 0, preserved MTP
+out/qkv BF16 5/5, corrected BA BF16 240, and K5120/K3072 quantization 640/320.
+Total device time was nearly symmetric at 458.831/458.811 ms. Candidate qkvz
+and out kernels used 19.662/14.917 ms on rank 0 and 19.709/14.890 ms on rank 1.
+Capacity was 226368 versus the 143360 baseline. A fixed 640-token response was
+coherent, two deterministic eight-prompt corpora were byte-identical, mixed
+load passed 24/24, and the 1600-token soak was coherent and stable at 17.62
+tok/s with a 1.00x first/last ratio. Server accepted-length average was 4.488.
+Every checkpoint, overlay, container, served-id, artifact immutability, fatal
+marker, pre/post health, and endpoint-down check passed. Both cards passed an
+additional leased exit probe, and the command exited 0 after 773 seconds.
+
+VERDICT -> corrected mechanism GO; the candidate is valid for performance
+testing, not yet for the shelf. Run the predeclared position-balanced A-B-B-A
+against the current W8A8 shelf and require both phase pairs, balanced phase and
+soak thresholds, prefill/TTFT bands, restart/CV stability, byte identity, mixed
+coherence, and health. Endpoint remains down by campaign policy.

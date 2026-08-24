@@ -40,7 +40,8 @@
   "global_compression_ratio": null,
   "ignore": [
     "lm_head",
-    "re:.*linear_attn\\.in_proj_ba$",
+    "re:.*linear_attn\\.in_proj_b$",
+    "re:.*linear_attn\\.in_proj_a$",
     "re:.*visual.*",
     "re:.*mtp.*"
   ],
