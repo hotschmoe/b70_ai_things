@@ -17639,3 +17639,38 @@ an out-projection-only candidate, where the kernel economics were strongest and
 48 qkvz quant/dispatch sequences per step can be removed. If that split retains
 the soak/c4 gain without c1 loss, then pursue fused or reused GDN activation
 quantization. Endpoint remains down by campaign policy.
+
+### 2026-08-24s - GDN out-projection-only INT8 mechanism PASS
+
+CONFIG -> new compressed-tensors artifact
+`w8a8-sqgptq-gdn-out-proj-int8` with exactly 48 target GDN `out_proj` INT8
+weights and 48 BF16 scales copied byte-for-byte from the combined source. All
+qkv/z/b/a leaves remain base-checkpoint BF16 and scale-free; unchanged auxiliary
+files are hardlinks. The dedicated overlay ignores both packed qkvz leaves and
+both packed BA leaves. The candidate-only TP=2 mechanism retained MTP10/draft11,
+graph/radix off, P2P access off, promoted push-all and replicated MTP embedding,
+and endpoint-down cleanup. Its trace contract required qkvz and BA BF16, only
+target out projection INT8, and exact activation-quant counts on both ranks.
+
+COMMAND -> `./bin/gpu-run bash
+sglang/03_c4_gdn_out_proj_int8_mechanism.sh`. Artifact:
+`results/logs/c4_gdn_out_proj_int8_mechanism_20260824T164538Z/`.
+
+RESULT -> formal analyzer PASS after 758 seconds. Both rank traces matched
+exactly over five steps: W8A8 qkvz 0, BF16 qkvz 240, W8A8 out shape 320,
+preserved BF16 MTP out 5, BF16 BA 240, preserved BF16 MTP qkv 5, and K5120/
+K3072 activation quantization 400/320. Rank device totals were closely matched
+at 462.576/461.939 ms. Target out W8A8 kernels used 14.820 ms on each rank;
+qkvz remained BF16 at 35.386/35.365 ms. Capacity increased 143360 -> 164992.
+The artifact saves 1,509,457,920 checkpoint bytes and 754,483,200 bytes/rank at
+TP=2. The fixed 640-token output, two byte-exact deterministic corpora, 24/24
+mixed requests, and 1600-token 17.03 tok/s soak were coherent; soak first/last
+was 1.00x and server average accepted length was 4.374. All audit, overlay,
+container, served-id, hash, fatal-marker, health, and endpoint-down checks
+passed. Both cards passed the additional leased exit probe.
+
+VERDICT -> out-projection-only mechanism GO; no shelf or performance claim yet.
+It successfully removes the qkvz INT8 activation-quant/dispatch sequence while
+preserving the intended out-projection kernel and 0.703 GiB/rank saving. Run
+the same strict position-balanced A-B-B-A against the current shelf. Endpoint
+remains down by campaign policy.

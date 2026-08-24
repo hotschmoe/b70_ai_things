@@ -64,6 +64,10 @@
 > passed. This is launch/quant overhead, not P2P instability. Next test
 > out-projection-only, then fused/reused GDN activation quantization. Keep the
 > endpoint down throughout the research campaign.
+> The out-projection-only artifact is now materialized and its mechanism gate
+> passes: exact routes on both ranks, qkvz/BA retained BF16, capacity 164992,
+> deterministic replay byte-exact, 24/24 mixed coherent, soak stable, artifacts
+> and health exact. Balanced A-B-B-A is the active gate.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.
