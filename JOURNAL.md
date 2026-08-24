@@ -17793,3 +17793,41 @@ layout without the old vLLM duplicate-residency cost. Do not make a shelf or
 end-to-end speed claim until exact runtime routing, deterministic output,
 mixed-load coherence, capacity, and balanced serving gates pass. Endpoint
 remains down by campaign policy.
+
+### 2026-08-24w - TP=2 M<=11 W8A16 serving mechanism GO
+
+CONFIG -> the native Qwen3.6-27B SQ-GPTQ W8A8 checkpoint at 131072 context,
+MTP10/draft11, eager/radix off, push-all, replicated MTP embedding, P2P access
+off, and the existing shared B_nt INT8 weight layout. A new strict
+`B70_W8A16_M_MAX=11` route sent rows 1 through 11 to quant-free W8A16 and kept
+larger rows on the current dynamic-quant plus W8A8 path. Values outside the
+validated 1..11 range fail closed; unset preserves the prior M=1-only route.
+Mechanism-only route telemetry was enabled, while LM-head INT8, delayed/fused
+MLP boundaries, GDN INT8 overlays, and graph capture remained off. The gate
+required exact dual-rank five-step routes, no M=11 activation quantization,
+unchanged capacity, deterministic replay, concurrent coherence, identity,
+immutable artifacts, endpoint-down cleanup, and card health.
+
+COMMAND -> `./bin/gpu-run bash sglang/06_c4_m11_w8a16_mechanism.sh`.
+Artifact: `results/logs/c4_m11_w8a16_mechanism_20260824T192541Z/`.
+
+RESULT -> formal PASS after 565 seconds. Each rank recorded exactly 320 MLP
+gate-up, 320 MLP down, 80 full-attention qkv, and 80 full-attention out W8A16
+calls over five M=11 steps, for 800 calls/rank. The corresponding M=11 W8A8
+counts were all zero, and activation-quant counts at K5120, K8704, and K3072
+were all zero. Rank total device times were closely matched at 424.213 and
+423.591 ms. Capacity stayed exactly 143360 tokens with 4.46 GB available GPU
+memory. The repeated eight-prompt corpora were byte-identical, all 24 mixed
+streams were coherent, and the initial fixed response was coherent. Exact
+served identity, container environment, mounted shim, image, route logs,
+artifact hashes, fatal-log scan, and pre/post health checks passed. The
+endpoint remained down, and both cards were healthy and leases free at exit.
+
+VERDICT -> M<=11 W8A16 mechanism GO. It removes all measured M=11 activation-
+quant boundaries for the 160 target W8A8 linears per decode step without a
+weight clone, capacity cost, coherence failure, or TP/P2P instability. Advance
+to a strict position-balanced A-B-B-A against the unchanged M=1 baseline with
+route telemetry disabled in every performance arm. Do not promote the shelf
+threshold until c1, c4, soak, TTFT/prefill, restart stability, deterministic
+output, mixed coherence, and acceptance behavior pass. Endpoint remains down
+by campaign policy.

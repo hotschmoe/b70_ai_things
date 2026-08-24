@@ -50,6 +50,8 @@ REPLICATE_MTP_EMBED="${REPLICATE_MTP_EMBED:-1}"  # Qualified C3a: native full in
 DELAY_MLP_AR="${DELAY_MLP_AR:-0}"
 FUSED_MLP_AR_NORM="${FUSED_MLP_AR_NORM:-0}"
 LMHEAD_INT8="${LMHEAD_INT8:-0}"
+W8A16_M_MAX="${W8A16_M_MAX:-1}"
+W8A16_ROUTE_DEBUG="${W8A16_ROUTE_DEBUG:-0}"
 PORT="${PORT:-30000}"; TP=2; CTX="${CTX:-${MAXLEN:-8192}}"; MEMFRAC="${MEMFRAC:-0.90}"
 # Agentic harness knobs (pi.dev / omp.sh / hermes). CTX honors the backend-agnostic MAXLEN knob so the
 # daily_driver's DD_MAXLEN=131072 actually lands (it passes MAXLEN=, which the sglang path ignored before);
@@ -126,6 +128,8 @@ start(){
     "${EB_MOUNT[@]}" \
     -e HF_HOME=/hf_cache -e XDG_CACHE_HOME=/sgl_cache -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e B70_XPU_MTP=1 -e B70_XPU_W8A8=1 -e B70_XPU_W8A8_FUSED=1 -e B70_XPU_C_SO=/work/kernel/_xpu_C.abi3.so \
+    -e "B70_W8A16_M_MAX=$W8A16_M_MAX" \
+    -e "B70_W8A16_ROUTE_DEBUG=$W8A16_ROUTE_DEBUG" \
     -e "B70_W8A8_QUANT_LMHEAD=$LMHEAD_INT8" \
     -e "B70_XPU_REPLICATE_MTP_EMBED=$REPLICATE_MTP_EMBED" \
     -e "B70_XPU_DELAY_MLP_AR=$DELAY_MLP_AR" \

@@ -74,11 +74,12 @@ the sum of both.
 
 ## Append-only live gates
 
-After the out-only campaign finishes, copy rather than rewrite its scripts:
+After the exact-M=11 W8A16 experiment 05 finishes, copy rather than rewrite the
+out-only scripts:
 
-- `05_c4_gdn_qkvz_int8_mechanism.sh`
+- `08_c4_gdn_qkvz_int8_mechanism.sh`
 - `analyze_c4_gdn_qkvz_int8_mechanism.py`
-- `06_c4_gdn_qkvz_int8_abba.sh`
+- `09_c4_gdn_qkvz_int8_abba.sh`
 - `analyze_c4_gdn_qkvz_int8_abba.py`
 
 The mechanism gate should be identical to experiment 03 except for candidate

@@ -2,8 +2,10 @@
 #
 # TWO paths, both gated by B70_XPU_W8A8=1 (installed from woq_shim):
 #  (A) FUSED hybrid (NEW, B70_XPU_W8A8_FUSED=1, the fast path): our built oneDNN ops --
-#        decode  (M==1): int8_gemm_w8a16(x_f16, B_nt, wscale[N])           -- 1 fused launch, ~1.9x bf16
-#        prefill (M>1) : dynamic_per_token_int8_quant -> int8_gemm_w8a8     -- s8xs8 XMX, ~2.0x bf16
+#        small rows (M<=B70_W8A16_M_MAX): int8_gemm_w8a16(x_f16, B_nt, wscale[N])
+#        larger rows: dynamic_per_token_int8_quant -> int8_gemm_w8a8
+#      B70_W8A16_M_MAX is default-off in the sense that unset preserves the old M==1-only route.
+#      The currently validated range is 1..11; larger configured values fail closed.
 #      Mirrors the W4A8 hybrid (woq_shim _XpuW4A8WoqKernel). Validated card-0: w8a8/w8a8_fused_probe.py
 #      (decode 1.86-1.91x, prefill 1.95-2.07x bf16; matches/beats fp8 bar; int8-accurate).
 #  (B) LEGACY _int_mm chain (default if FUSED unset): per-token int8 quant -> torch._int_mm -> dequant
@@ -12,6 +14,51 @@
 import os
 
 _DBG = {"on": os.environ.get("B70_W8A8_DEBUG") == "1", "n": 0}
+_ROUTE_COUNTS = {"w8a16": 0, "w8a8": 0}
+_ROUTE_LOGGED = set()
+
+
+def _w8a16_m_max(environ=None):
+    """Return the strict W8A16 row threshold and whether it was configured."""
+    environ = os.environ if environ is None else environ
+    if "B70_W8A16_M_MAX" not in environ:
+        return 1, False
+    raw = environ["B70_W8A16_M_MAX"]
+    if not raw or not raw.isascii() or not raw.isdecimal():
+        raise RuntimeError(
+            "B70_W8A16_M_MAX must be an ASCII decimal integer in [1, 11]"
+        )
+    value = int(raw, 10)
+    if not 1 <= value <= 11:
+        raise RuntimeError("B70_W8A16_M_MAX must be in the validated range [1, 11]")
+    return value, True
+
+
+def _use_w8a16(m, m_max):
+    return 1 <= m <= m_max
+
+
+def _record_w8a8_route(route, m, k, n, m_max):
+    """Count every route and log each shape at its threshold relation once."""
+    _ROUTE_COUNTS[route] += 1
+    if m == 1:
+        relation = "m1"
+    elif m == m_max:
+        relation = "at_max"
+    elif m < m_max:
+        relation = "below_max"
+    else:
+        relation = "above_max"
+    signature = (route, relation, k, n)
+    if signature in _ROUTE_LOGGED:
+        return
+    _ROUTE_LOGGED.add(signature)
+    print(
+        f"[w8a8-route] route={route} M={m} K={k} N={n} "
+        f"m_max={m_max} relation={relation} "
+        f"route_calls={_ROUTE_COUNTS[route]}",
+        flush=True,
+    )
 
 
 def _load_int8_gemm_op():
@@ -67,6 +114,11 @@ def install():
         torch.cuda.get_device_capability = lambda *a, **k: (9, 0)
 
     fused = os.environ.get("B70_XPU_W8A8_FUSED") == "1"
+    w8a16_m_max, w8a16_m_max_configured = _w8a16_m_max()
+    route_debug = os.environ.get("B70_W8A16_ROUTE_DEBUG") == "1"
+    if route_debug:
+        _ROUTE_COUNTS.update(w8a16=0, w8a8=0)
+        _ROUTE_LOGGED.clear()
     if fused and not _load_int8_gemm_op():
         print("[w8a8-fused] int8_gemm ops NOT available -> FALLING BACK to _int_mm chain", flush=True)
         fused = False
@@ -411,9 +463,25 @@ def install():
         M = x2.shape[0]
         b = bias.to(torch.float16) if bias is not None else None
         xf = x2.to(torch.float16).contiguous()        # ops are fp16
-        if M == 1:
+        if _use_w8a16(M, w8a16_m_max):
+            if route_debug:
+                _record_w8a8_route(
+                    "w8a16",
+                    M,
+                    layer.B_nt.shape[0],
+                    layer.B_nt.shape[1],
+                    w8a16_m_max,
+                )
             out = torch.ops._xpu_C.int8_gemm_w8a16(xf, layer.B_nt, layer.wscale_n, b)  # decode
         else:
+            if route_debug:
+                _record_w8a8_route(
+                    "w8a8",
+                    M,
+                    layer.B_nt.shape[0],
+                    layer.B_nt.shape[1],
+                    w8a16_m_max,
+                )
             if _aq is not None:
                 xq, xs, xz = _aq(xf)
             else:
@@ -458,7 +526,13 @@ def install():
     if fused:
         CompressedTensorsW8A8Int8.process_weights_after_loading = _pw_fused
         CompressedTensorsW8A8Int8.apply_weights = _apply_fused
-        print("[w8a8-shim] installed: FUSED hybrid (decode=int8_gemm_w8a16, prefill=int8_gemm_w8a8)", flush=True)
+        threshold_source = "env" if w8a16_m_max_configured else "default"
+        print(
+            "[w8a8-shim] installed: FUSED hybrid "
+            f"(M<={w8a16_m_max}=int8_gemm_w8a16, "
+            f"M>{w8a16_m_max}=int8_gemm_w8a8, source={threshold_source})",
+            flush=True,
+        )
     else:
         CompressedTensorsW8A8Int8.process_weights_after_loading = _pw_legacy
         CompressedTensorsW8A8Int8.apply_weights = _apply_legacy

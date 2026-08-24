@@ -192,7 +192,13 @@ attention qkv. The qkvz/out weighted gain was 36.23% and the full weighted
 linear-ledger gain was 31.07%. All repeat CVs were below 1.4%, every output was
 finite, and W8A16 was closer to BF16 than W8A8 on every shape. Sglang already
 uses one B_nt layout for both kernels, so this route has no duplicate-weight
-residency cost. Advance a default-off M<=11 serving mechanism gate.
+residency cost. The default-off M<=11 serving mechanism then passed: each rank
+recorded exactly 320 MLP gate-up, 320 MLP down, 80 attention qkv, and 80
+attention out W8A16 calls over five M=11 steps, with zero corresponding W8A8
+or activation-quant calls. Capacity remained 143360 tokens, deterministic
+replay was byte-exact, 24/24 mixed streams were coherent, and all identity,
+artifact, endpoint-down, and card-health gates passed. Advance strict balanced
+serving qualification with route telemetry off.
 
 ### C5 - optimize llama.cpp production lane
 
@@ -209,7 +215,7 @@ and launch fusion. Do not transfer sglang oneCCL percentages to this lane.
 | C2 | One-host-sync immediate-list path | exact, but 4-10% slower than current push | not advanced to serve | NO-GO; native-event variant not justified |
 | C3a | Native replicated target/MTP embedding | exact 159 -> 148 AR; 11 AG unchanged; byte-identical fixed corpus; 143360-token capacity | c1 +4.69%, soak +2.20%, code c1/c4 +3.68%/+3.13%, 96/96 coherent | GO; promoted to shelf default |
 | C3b | Delayed MLP AR plus residual/RMSNorm | M1-8,10,11 exact and 1.78-1.93x; strict serve 40960/40960, generic=0 | fixed soaks +11-12%, mandatory phase/perf c1 pairs lost, code c1 flat | Kernel GO; integration NO-GO, shelf off |
-| C4 | Post-push math | exact-M11 W8A16 wins every real shape by 18.84-38.54%; weighted linear gain 31.07% | serving mechanism pending | GO to default-off M<=11 mechanism gate |
+| C4 | Post-push math | exact-M11 W8A16 wins every real shape by 18.84-38.54%; exact TP=2 route 800/rank with zero M11 activation quant | mechanism coherent, byte-repeatable, capacity unchanged; performance pending | GO to balanced serving qualification |
 | C5 | Llama.cpp weight/MMVQ | pending | pending | queued |
 
 ## First command

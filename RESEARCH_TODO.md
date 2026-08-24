@@ -83,10 +83,13 @@
 > by 18.84-38.54%, won the qkvz/out weighted ledger by 36.23%, and won the full
 > weighted linear ledger by 31.07%; repeat CVs were below 1.4%, and W8A16 was
 > numerically closer to BF16 than W8A8 on every shape. Active next is a
-> default-off `B70_W8A16_M_MAX=11` serving mechanism gate using the existing
-> shared B_nt weight layout, followed by balanced serving qualification only if
-> the exact runtime routes and outputs pass. qkvz-only remains a bounded
-> attribution probe if needed.
+> default-off `B70_W8A16_M_MAX=11` serving route using the existing shared B_nt
+> weight layout. Its TP=2 mechanism gate passed: both ranks recorded the exact
+> 800 W8A16 M=11 calls over five steps, zero corresponding W8A8 or activation-
+> quant calls, unchanged 143360-token capacity, byte-exact deterministic
+> replay, 24/24 mixed coherence, exact artifacts, and healthy cards. Active
+> next is strict position-balanced serving qualification with route telemetry
+> off. qkvz-only remains a bounded attribution probe if needed.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.
