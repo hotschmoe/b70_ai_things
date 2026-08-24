@@ -17719,3 +17719,38 @@ quantization and dispatch boundaries as the next leverage point. Prioritize a
 shared/reused GDN activation quantization path; retain qkvz-only as a bounded
 K5120-versus-K3072 attribution probe, not as a presumed shelf candidate.
 Endpoint remains down by campaign policy.
+
+### 2026-08-24u - llama.cpp TP=2 SYCL queue-profiling root cause isolated
+
+CONFIG -> rebuilt `qwen38-b70:quant-timing` from pinned llama.cpp commit
+`4302fb599` plus the pinned TP=2/Q4_K_XL and repository census/timing patches.
+The build exposed and repaired a latent bad final hunk in the quant-census
+patch; the complete stack then applied and compiled. The image labels the exact
+timing-patch SHA. Two fresh UD-Q4_K_XL TP=2 MTP-off arms differed only in
+`GGML_SYCL_QUANT_TIMING_QUEUE_PROFILE=0/1`. Both used sample 64, skip
+18446744073709551615, and restart policy `no`, making timing barriers and
+timestamp reads unreachable. The ordinary-queue arm had to become healthy
+before the profiling-queue arm, with card health checked before, between, and
+after the arms.
+
+COMMAND -> `./bin/gpu-run bash
+llamacpp/04_qwen38_ud_q4k_xl_queue_profile_isolation.sh full 2`. Artifact:
+`results/logs/qwen38_ud_q4k_xl_queue_profile_isolation_20260824T185644Z_tp2/`.
+
+RESULT -> analyzer PASS with classification `queue_property_root_cause` after
+554 seconds. The profiling-off arm loaded healthy, returned a coherent Paris
+response, exposed exact `hotschmoe-dd` identity, emitted zero timing records,
+and stopped cleanly. The profiling-on arm exited once with
+`UR_RESULT_ERROR_DEVICE_LOST` at `Error OP MUL_MAT` after exactly 11 actual
+quant callbacks and before any timing record. Both arms retained restart policy
+`no` and RestartCount 0. Identity, environment, code-hash, no-barrier,
+endpoint-down, and pre/between/final health gates all passed. Both cards were
+healthy at exit.
+
+VERDICT -> merely constructing the SYCL queue with `enable_profiling` is the
+TP=2 device-loss trigger on this stack. The cause is not an event-timing
+barrier, timestamp read, restart chain, raw P2P failure, or the counts-only
+census instrumentation. Do not use profiled queues or event timestamps here;
+retain counts-only census and nonprofiled external methods. Next run the
+exact-M=11 W8A16 versus current W8A8 versus BF16 kernel ledger. The endpoint
+remains down by campaign policy.

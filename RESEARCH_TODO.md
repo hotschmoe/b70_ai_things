@@ -45,10 +45,13 @@
 > ### [C4 2026-08-24] -- LM head and unfused GDN INT8 splits are NO-GO
 > The repaired shared W8A16 LM head was coherent and improved short decode by
 > 5-8%, but the balanced long soak was flat (-0.23%) and restart/phase spread
-> was unstable, so it is default-off and closed. All full-service llama.cpp XL
-> timing mechanisms are also closed on this stack: profiling-enabled SYCL
-> queues lose the device during load, VTune launch never becomes healthy, and
-> VTune attach kills the served process without a usable finalized result. The
+> was unstable, so it is default-off and closed. Event-timestamp timing is also
+> closed on this stack. A controlled TP=2 isolation proved the ordinary SYCL
+> queue healthy, while adding only `enable_profiling` reproduced `DEVICE_LOST`
+> at `MUL_MAT` after 11 real quant callbacks and before any timing record,
+> barrier, or timestamp read. Both cards were healthy after teardown. VTune
+> launch never becomes healthy, and VTune attach kills the served process
+> without a usable finalized result. The
 > first target-GDN INT8 mechanism run was otherwise healthy and coherent,
 > increased capacity 143360 -> 226688, and cut the intended five-step GDN
 > projection device time about 40.5%. It formally failed because packed
@@ -61,9 +64,8 @@
 > phase -17.11%, c1 -8.53%, c4 aggregate +1.53%, but sustained soak +2.89%
 > with both pairs and restart stability passing. Correctness, identity,
 > byte-repeatability, mixed load, TTFT/prefill, artifacts, and health all
-> passed. This is launch/quant overhead, not P2P instability. Next test
-> out-projection-only, then fused/reused GDN activation quantization. Keep the
-> endpoint down throughout the research campaign.
+> passed. This is launch/quant overhead, not P2P instability. Keep the endpoint
+> down throughout the research campaign.
 > The out-projection-only artifact is now materialized and its mechanism gate
 > passes: exact routes on both ranks, qkvz/BA retained BF16, capacity 164992,
 > deterministic replay byte-exact, 24/24 mixed coherent, soak stable, artifacts
@@ -73,10 +75,14 @@
 > identity also failed. The deterministic eight-prompt corpus remained byte
 > exact, 96/96 mixed streams were coherent, TTFT/prefill stayed within 3.2%,
 > and all health/identity/artifact gates passed. This closes unfused combined
-> and out-only GDN INT8 as serving paths. Active next: quantify once and reuse
-> the INT8 activation/scales across eligible GDN projections, with qkvz-only
-> retained as a bounded K5120-vs-K3072 attribution probe rather than a shelf
-> candidate.
+> and out-only GDN INT8 as serving paths. Source audit disproved the proposed
+> shared-activation route: qkv/z are already one packed projection, BA must
+> remain BF16, and out-proj consumes a different post-GDN tensor at K3072.
+> Active next is an exact-M=11 one-card comparison of BF16, current W8A8
+> including activation quantization, and quant-free W8A16 on the real
+> qkvz/out/MLP shapes. Build a default-off serving route only if W8A16 wins the
+> weighted qkvz and out ledger by at least 5% without a key-shape regression.
+> qkvz-only remains a bounded attribution probe if needed.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session
 > Standing prompt: `docs/20260820_qwen38_w4a8_campaign.md`.
