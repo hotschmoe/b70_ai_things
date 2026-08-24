@@ -1,0 +1,15 @@
+VERDICT -> PASS
+CLAIM -> contract-only; no performance or shelf-promotion claim
+CHECK baseline_identity=PASS
+CHECK candidate_identity=PASS
+CHECK baseline_env_off=PASS
+CHECK candidate_env_on_and_mount=PASS
+CHECK baseline_has_no_c3b_route=PASS
+CHECK candidate_has_both_rank_contracts=PASS
+CHECK candidate_routes_stay_consistent=PASS
+CHECK deterministic_nonempty_8=PASS
+CHECK deterministic_byte_identity=PASS
+CHECK baseline_no_fatal=PASS
+CHECK candidate_no_fatal=PASS
+CHECK all_card_health_green=PASS
+CHECK production_restored_if_present=PASS

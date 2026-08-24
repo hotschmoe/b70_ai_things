@@ -119,11 +119,11 @@ reductions across sublayers or layers.
 The first exact boundary-count prototype uses SGLang's native unsharded input
 embedding for the target and shares that exact module with NEXTN. It removes
 11 all-reduces without changing values for about 1.184 GiB additional storage
-per card. It is default-off pending a 159 -> 148 collective census, deterministic
-output equivalence, capacity gate, and position-balanced serving qualification.
-The next kernel prototype enables SGLang's existing delayed
-MLP all-reduce plus residual/RMSNorm fusion contract on XPU, initially covering
-63 target layer edges.
+per card. It passed the 159 -> 148 collective census, deterministic output,
+capacity, and position-balanced serving gates and is now the shelf default.
+The next kernel prototype enables SGLang's existing delayed MLP all-reduce plus
+residual/RMSNorm fusion contract on XPU, initially covering 63 target layer
+edges.
 
 Mechanism result, 2026-08-24: GO to serving qualification. Both candidate
 ranks measured exactly 148 all-reduces plus 11 all-gathers per scheduler
@@ -139,6 +139,24 @@ c1 +3.68%, real-code c4 aggregate +3.13%, and standard c4 aggregate +1.43%.
 TTFT gates were within bounds, all 96 mixed streams were coherent, all four
 soaks were stable, fixed outputs were byte-identical, no fatal marker appeared,
 and every card-health probe passed.
+
+C3b contract-only result, 2026-08-24: PASS. A fail-closed XPU shim enabled the
+existing delayed marker route only for dense Qwen3.5, TP=2, PP=1, BF16
+contiguous `[M,5120]`, eager execution, and `M=1..128`. Both ranks reported
+exactly 63 eligible, 63 consumed, and 63 generic-fallback routes on the first
+target forward. The fallback remained SGLang's unchanged MoE-TP all-reduce plus
+Gemma RMSNorm path. Eight fixed 128-token responses were byte-identical to the
+baseline, no fatal marker appeared, and all card-health and production-restore
+gates passed. This proves boundary lifecycle and group equivalence only; it
+does not remove a collective, launch, or host wait and makes no performance
+claim.
+
+The active C3b kernel stage now combines push reduction, the BF16 residual add,
+and Gemma RMSNorm in one post-rendezvous SYCL kernel. It must preserve two BF16
+rounding points: one after the TP sum and one after adding the old residual.
+The bounded prototype retains the proven push plus host rendezvous, uses a
+scratch ring so an asynchronous epilogue cannot be overwritten, and targets
+the same 63 delayed MLP edges before considering the 64 attention edges.
 
 ### C4 - optimize post-push math
 
@@ -167,7 +185,7 @@ and launch fusion. Do not transfer sglang oneCCL percentages to this lane.
 | C1 | Push-all A-B-B-A | 1M gate correctly fell back; push-all engaged | core gate: c1 +7.62%, soak +4.42%, code c1/c4 +6.36%/+3.32%, 96/96 coherent | GO candidate; noisy phase diagnostic excluded, shelf unchanged |
 | C2 | One-host-sync immediate-list path | exact, but 4-10% slower than current push | not advanced to serve | NO-GO; native-event variant not justified |
 | C3a | Native replicated target/MTP embedding | exact 159 -> 148 AR; 11 AG unchanged; byte-identical fixed corpus; 143360-token capacity | c1 +4.69%, soak +2.20%, code c1/c4 +3.68%/+3.13%, 96/96 coherent | GO; promoted to shelf default |
-| C3b | Delayed MLP AR plus residual/RMSNorm | existing SGLang contract covers 63 target edges; XPU policy/kernel absent | pending | active next |
+| C3b | Delayed MLP AR plus residual/RMSNorm | contract-only route exact on both ranks: 63 eligible/consumed/generic; fixed corpus byte-identical | performance pending | lifecycle PASS; fused SYCL primitive active next |
 | C4 | Post-push math | pending | pending | queued |
 | C5 | Llama.cpp weight/MMVQ | pending | pending | queued |
 

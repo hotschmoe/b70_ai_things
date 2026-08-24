@@ -20,7 +20,7 @@
 > research result only until A-B-B-A plus serve-sweep/coherence gates pass.
 > Full profile: `docs/20260823_tp2_inference_profile.md`.
 
-> ### [CAMPAIGN 2026-08-24] -- C1 GO, C2 NO-GO, C3a PROMOTED, C3b active
+> ### [CAMPAIGN 2026-08-24] -- C1 GO, C2 NO-GO, C3a PROMOTED, C3b contract PASS
 > Position-balanced push-all A-B-B-A passed every stable serve gate: native c1
 > +7.62%, 6.4K soak +4.42%, real-code c1/c4 +6.36%/+3.32%, random c4 +0.34%,
 > TTFT slightly better, prefill flat, 96/96 mixed streams coherent, no fatal
@@ -31,8 +31,12 @@
 > replication removed 11 ARs exactly (159 -> 148) and passed its 131K A-B-B-A:
 > c1 +4.69%, soak +2.20%, code c1/c4 +3.68%/+3.13%, 96/96 coherent, fixed
 > outputs byte-identical. It is now the W8A8 shelf default; capacity is 143360
-> tokens. C3b is active: enable delayed MLP-AR plus residual/RMSNorm fusion on
-> XPU across 63 eligible target edges. Full ledger:
+> tokens. C3b contract-only is exact: both ranks routed 63/63/63 eligible,
+> consumed, and generic-fallback edges; eight fixed 128-token responses were
+> byte-identical and all health gates passed. This is lifecycle proof, not a
+> speed claim. Active next: one post-rendezvous SYCL kernel that preserves the
+> TP-sum and residual-add BF16 rounding points while fusing reduce + residual +
+> Gemma RMSNorm across those 63 edges. Full ledger:
 > `docs/20260823_tp2_optimization_campaign.md`.
 
 > ### [CAMPAIGN 2026-08-20 W4A8 FULL-SEND] -- HEADLINE, successor session

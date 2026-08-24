@@ -1,0 +1,14 @@
+git_sha=c809b41caaa4a8f1e73786bf9951773fe6776055
+utc_start=20260824T041922Z
+claim=contract_only_no_performance_promotion
+candidate_patch_sha256=fd2be2995d60bb86c29719ef53d1e589b2f9835e82c98de74318a8f62f03c13e
+woq_shim_sha256=b890dc95d95d8dc22d0f7bf39674cb3dab9cbb2000d2527327a03694cdeb9000
+model=/models/qwen3.6-27b/w8a8-sqgptq
+served=qwen36-27b-w8a8-gptq-mtp-c3b-contract
+ctx=4096
+maxreq=1
+replicate_mtp_embed=1
+push_ar_min_numel=1048576
+expected_target_edges=63
+order=baseline,candidate
+image_id=sha256:c6097aadaa921004f456bebfbaadf8d1955de5d197fbe5a3416ee247ede02c97

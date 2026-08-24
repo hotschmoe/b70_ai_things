@@ -349,6 +349,16 @@ def _install():
             print(f"[woq-shim] replicated MTP embedding install FAILED: {e}", flush=True)
             raise
 
+    # Delay the dense Qwen3.5 MLP all-reduce to the next layer's existing
+    # prepare_attn generic all-reduce-plus-RMSNorm path. Experimental/default-off.
+    if os.environ.get("B70_XPU_DELAY_MLP_AR") == "1":
+        try:
+            import xpu_delayed_mlp_ar
+            xpu_delayed_mlp_ar.install()
+        except Exception as e:
+            print(f"[woq-shim] delayed MLP AR install FAILED: {e}", flush=True)
+            raise
+
     # --- XPU CUDAGRAPH (the eager-ceiling breaker; OPT-IN via B70_XPU_CUDAGRAPH=1) ---
     # torch.xpu supports graph capture (XPUGraph/graph); the GDN + triton attn backends have graph state.
     # We flip support_cuda_graph->True and redirect torch.cuda.{CUDAGraph,graph,graph_pool_handle}->torch.xpu.

@@ -17085,3 +17085,38 @@ default; rollback remains `REPLICATE_MTP_EMBED=0`. C3b is next: validate the
 existing 63-edge delayed-MLP contract on XPU, then fuse push reduction with
 residual add and Gemma RMSNorm. Test interaction with push-all before promoting
 both communication levers together.
+
+### 2026-08-24d - TP=2 campaign C3b delayed-MLP contract-only PASS
+
+CONFIG -> sglang 0.5.6 Qwen3.6-27B compressed-tensors GPTQ W8A8, TP=2,
+MTP10, replicated target/draft embedding on, eager, radix off, context 4096,
+max requests 1, push gate 1048576, P2PACCESS=0. Candidate alone enables
+`B70_XPU_DELAY_MLP_AR=1`. The fail-closed shim accepts only dense Qwen3.5,
+TP=2/PP=1/EP=1, MoE-TP equal to TP, DP and quant communication off, BF16
+contiguous `[M,5120]`, rows/request batch 1-128, and no graph capture. It
+changes the upstream should-delay decision; the original prepare-attn generic
+MoE-TP all-reduce plus Gemma RMSNorm remains the sole arithmetic consumer.
+
+COMMAND -> `bin/gpu-run bash sglang/campaign_c3b_delayed_mlp_contract.sh`.
+Run a fresh env-off baseline then env-on candidate, each with the shelf
+coherence gate and the same eight-prompt deterministic corpus at 128 output
+tokens. Require exact two-rank route counters, byte identity, fatal-log scan,
+pre/post health, and exact stock production restoration. Artifacts:
+`results/logs/c3b_delayed_mlp_contract_20260824T041922Z/`.
+
+RESULT -> both candidate ranks emitted exactly `eligible=63 consumed=63
+generic=63` on the first target forward. All eight baseline and candidate
+responses completed at 128 tokens and their canonical JSON was byte-identical.
+Both files had SHA256 `a962728a6bd977f1b5856309e4b13eaf58aefa335e2511cda9d51c9dc25a6c6b`.
+Baseline and candidate model/env/mount identities passed; no device-lost,
+out-of-resources, engine-dead, NaN, or garbage marker appeared. Every card
+probe passed. Stock Q4_K_M production restored coherent at `hotschmoe-dd`,
+context 262144. Analyzer verdict: PASS, contract-only, no performance claim.
+
+VERDICT -> C3b lifecycle/group contract proven across all 63 non-final target
+MLP edges. Do not promote the delay-only switch: it removes no collective,
+launch, or host wait. Next build the true BF16 fused primitive in the same push
+IPC library: push plus proven host rendezvous, then one asynchronous SYCL
+reduce/residual/Gemma kernel with a scratch ring. Preserve `bf16(local+peer)`
+before `bf16(ar+old_residual)`; do not reassociate the three-term sum. Gate in
+a randomized two-rank numerical/stress microbench before any serve port.
