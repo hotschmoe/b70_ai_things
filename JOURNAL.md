@@ -17982,3 +17982,42 @@ replay with P2P access still off, not another raw bandwidth microbenchmark.
 The full clean-room ownership program, including `_xpu_C`, overlay mechanics,
 SGLang transfer, 27B transfer, and TP/PP/DP/single-card coverage, is recorded in
 `docs/20260825_steve_stack_reproduction_program.md` and `RESEARCH_TODO.md`.
+
+### 2026-08-25b - Exact graph policy and push-all-reduce loaded-process blocker
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision, pinned S2B image, TP=2,
+P2P access off, no MTP, async scheduling, PIECEWISE graph, and the local
+capturable Level Zero IPC push all-reduce. The second arm removed push AR and
+tested the older local legacy partition path. A final exact arm supplied only
+Steve's `{"cudagraph_mode":"PIECEWISE"}` config with no repository split-op
+list or forced inductor graph partitioning. Push-AR scratch was raised to 64
+MiB. Its chained source adapter was made importable to Dynamo, IPC open gained
+bounded retries, and rank-local open status was exchanged so asymmetric setup
+could not deadlock.
+
+COMMAND -> `./bin/gpu-run env EXACT_STEVE_CC=1 PUSH_AR=1 PUSH_AR_GRAPH=1
+P2PACCESS=0 NAME=qwen36_s2b_exactcc_pushar PORT=18080 bash
+vllm/w8a8/serve_qwen36_s2b_control.sh run`; legacy arm used `IGP=false
+PUSH_AR=0 NAME=qwen36_s2b_legacy_p2p0`. The standalone graph harness ran in
+the exact pinned image before and after rebuilding the push-AR library.
+
+RESULT -> the legacy arm failed in `vllm/compilation/codegen.py:96` because
+the injected split policy produced a non-integer split index. The exact minimal
+arm compiled successfully in 80.92 seconds, proving that Steve's graph policy
+removes that failure. Push-AR rank 0 opened rank 1's scratch, while rank 1
+failed rank 0's Level Zero IPC handle 25 times with `0x78000004`. The hardened
+status exchange made both ranks fall back to oneCCL, after which monolithic
+capture stalled as expected with P2P off. Teardown completed and both cards
+passed the single-card health probe. The rebuilt push-AR library hash is
+`3ed15e33235d359e3cd696bf844cc8781da475a2d144f3e2b12d215feea3844d`.
+The standalone exact-image harness remained correct across 50/50 graph replays
+and eight-all-reduce replay sequences at about 35.45 us for a 10 KiB tensor.
+
+VERDICT -> remove the local manual split policy from exact Steve controls. The
+remaining safe-path blocker is asymmetric Level Zero IPC import in a loaded
+vLLM worker, not push-AR math, capture mechanics, or raw B70 P2P capability.
+Steve's own results put the dominant lever in usable whole-decode graph replay:
+about 16.7 to 92 tok/s, while clone-safe custom collectives added roughly 3
+tok/s. Proceed with one guarded kernel-7.1 exact oneCCL direct-P2P transaction,
+then bisect the closest surviving June vLLM source if the later image still
+does not reproduce. Endpoint remains down and card health is green.

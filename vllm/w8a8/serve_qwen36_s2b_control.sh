@@ -24,20 +24,35 @@ export PREFIXCACHE="${PREFIXCACHE:-0}"
 export CAPSIZES="${CAPSIZES:-1,2}"
 export P2PACCESS="${P2PACCESS:-0}"
 export IPCX="${IPCX:-pidfd}"
+export PUSH_AR="${PUSH_AR:-0}"
+export PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}"
+export PUSH_AR_MAXB="${PUSH_AR_MAXB:-67108864}"
+export EXACT_STEVE_CC="${EXACT_STEVE_CC:-0}"
 export IN="${IN:-512}"
 export OUT="${OUT:-512}"
 export CONC="${CONC:-1}"
 
 BASE_SPLITOPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
-if [ "$P2PACCESS" = 1 ]; then
+if [ "$EXACT_STEVE_CC" = 1 ]; then
+  # Steve's accepted command supplied only cudagraph_mode=PIECEWISE. Let vLLM
+  # choose its own default attention boundaries; do not inject our newer
+  # repository split policy into this source-reproduction arm.
+  export SPLITOPS=""
+  export IGP=false
+elif [ "$P2PACCESS" = 1 ]; then
   # Steve's path keeps communication in the forced graph. This mode remains
   # subject to the shared P2P wedge guard and is not the default.
   export SPLITOPS="${SPLITOPS:-$BASE_SPLITOPS}"
   export SYCLKERNELS="${SYCLKERNELS:-1}"
 else
-  # Host-staged oneCCL cannot be recorded by this stack. Preserve coherent
-  # graph pieces around explicit collective boundaries.
-  P2P0_SPLITOPS="$BASE_SPLITOPS,\"vllm::all_reduce\",\"vllm::all_gather\""
+  # Host-staged oneCCL cannot be recorded by this stack. Capturable push-AR
+  # owns all-reduce inside replay; all-gather remains an eager boundary for
+  # this first one-factor transaction.
+  if [ "$PUSH_AR" = 1 ] && [ "$PUSH_AR_GRAPH" = 1 ]; then
+    P2P0_SPLITOPS="$BASE_SPLITOPS,\"vllm::all_gather\""
+  else
+    P2P0_SPLITOPS="$BASE_SPLITOPS,\"vllm::all_reduce\",\"vllm::all_gather\""
+  fi
   export SPLITOPS="${SPLITOPS:-$P2P0_SPLITOPS}"
   export SYCLKERNELS="${SYCLKERNELS:-0}"
 fi
@@ -58,9 +73,11 @@ DOCKER_ENV=(
   -e XPU_GRAPH=1
   -e VLLM_XPU_ENABLE_XPU_GRAPH=1
   -e VLLM_XPU_FORCE_GRAPH_WITH_COMM=1
+  -e VLLM_XPU_GRAPH_NOOP_COMM_CAPTURE=1
   -e VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES=1
   -e VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP=1
   -e VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT=1
+  -e VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT=1
   -e VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=1
   -e VLLM_XPU_GDN_REUSE_QKVZ_BA_QUANT=clone
   -e VLLM_XPU_GDN_NATIVE_FALLBACK=prefill
@@ -68,6 +85,30 @@ DOCKER_ENV=(
   -e VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY=1
   -e VLLM_XPU_GREEDY_SAMPLE_TOPK_FALLBACK=1
 )
+
+if [ "$PUSH_AR" = 1 ]; then
+  PUSH_AR_DIR="$SCRIPT_DIR/../contrib/vllm_push_allreduce"
+  PUSH_AR_SO_HOST="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_graph.so"
+  [ "$TP" = 2 ] || { echo "PUSH_AR=1 requires TP=2" >&2; exit 1; }
+  [ "$GRAPH" = 1 ] && [ "$PUSH_AR_GRAPH" = 1 ] || {
+    echo "This control's PUSH_AR=1 arm requires GRAPH=1 PUSH_AR_GRAPH=1" >&2
+    exit 1
+  }
+  [ -f "$PUSH_AR_SO_HOST" ] || {
+    echo "Missing capturable push-AR SO: $PUSH_AR_SO_HOST" >&2
+    exit 1
+  }
+  MOUNTS+=( -v "$PUSH_AR_DIR:/opt/push_ar:ro" )
+  DOCKER_ENV+=(
+    -e PYTHONPATH=/opt/push_ar
+    -e PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/b70_qwen36_site/sitecustomize.py
+    -e PUSH_AR_SO=/opt/push_ar/prebuilt/libxpu_push_ar_graph.so
+    -e PUSH_AR_DISABLE=0
+    -e PUSH_AR_GRAPH=1
+    -e PUSH_AR_MIN_NUMEL=0
+    -e PUSH_AR_MAXB="$PUSH_AR_MAXB"
+  )
+fi
 
 if [ -n "${B70_EXTRA_ENV:-}" ]; then
   for setting in ${B70_EXTRA_ENV}; do
@@ -79,6 +120,14 @@ source "$SCRIPT_DIR/../../rdy_to_serve/_common/lib.sh"
 
 b70_serve() {
   b70_build
+  if [ "$EXACT_STEVE_CC" = 1 ]; then
+    for ((arg_i=0; arg_i<${#ARGS[@]}; arg_i++)); do
+      if [ "${ARGS[$arg_i]}" = "--compilation-config" ]; then
+        ARGS[$((arg_i + 1))]='{"cudagraph_mode":"PIECEWISE"}'
+        break
+      fi
+    done
+  fi
   docker rm -f "$NAME" 2>/dev/null || true
   echo "=== serve $SERVED  IMG=$IMG  TP=$TP PP=$PP  GRAPH=$GRAPH  port=$PORT ==="
   echo "vllm ${ARGS[*]}"

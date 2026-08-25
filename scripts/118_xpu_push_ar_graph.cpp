@@ -93,6 +93,16 @@ static int recv_blob(int s, char *data, size_t n){
     if(recvmsg(s,&m,0)<0)return -1;
     struct cmsghdr *c=CMSG_FIRSTHDR(&m); int fd; memcpy(&fd,CMSG_DATA(c),sizeof(int)); *(int*)data=fd; return 0;
 }
+static int send_int(int s, int value){
+    const char *p=reinterpret_cast<const char*>(&value); size_t left=sizeof(value);
+    while(left){ ssize_t n=send(s,p,left,0); if(n<=0)return -1; p+=n; left-=n; }
+    return 0;
+}
+static int recv_int(int s, int *value){
+    char *p=reinterpret_cast<char*>(value); size_t left=sizeof(*value);
+    while(left){ ssize_t n=recv(s,p,left,0); if(n<=0)return -1; p+=n; left-=n; }
+    return 0;
+}
 
 // ar_exchange: scratch IPC (peer push target) + shm host barrier (eager) + IPC EVENT POOL (graph sync).
 extern "C" int ar_exchange(int rank, const char *sockpath) {
@@ -111,8 +121,32 @@ extern "C" int ar_exchange(int rank, const char *sockpath) {
     ze_ipc_mem_handle_t peerH;
     if(rank==0){ if(send_blob(sock,g_myH.data,sizeof(g_myH.data)))return 12; if(recv_blob(sock,peerH.data,sizeof(peerH.data)))return 13; }
     else       { if(recv_blob(sock,peerH.data,sizeof(peerH.data)))return 13; if(send_blob(sock,g_myH.data,sizeof(g_myH.data)))return 12; }
-    ze_result_t r=zeMemOpenIpcHandle(g_zectx,g_ze_peerdev,peerH,0,&g_peerScratch);
-    if(r!=ZE_RESULT_SUCCESS){ fprintf(stderr,"[argraph r%d] zeMemOpenIpcHandle 0x%x\n",rank,r); return 14; }
+    // A loaded vLLM worker can race peer-allocation publication under memory
+    // pressure even though the same handle exchange is deterministic in the
+    // standalone harness. Retry briefly, then exchange the result so one rank
+    // can never engage push-AR while its peer falls back to oneCCL.
+    ze_result_t r=ZE_RESULT_ERROR_UNKNOWN;
+    int open_attempt=0;
+    for(;open_attempt<25;open_attempt++){
+        r=zeMemOpenIpcHandle(g_zectx,g_ze_peerdev,peerH,0,&g_peerScratch);
+        if(r==ZE_RESULT_SUCCESS)break;
+        usleep(20000);
+    }
+    int local_open=(r==ZE_RESULT_SUCCESS)?0:14, peer_open=-1;
+    int status_io=0;
+    if(rank==0){ status_io|=send_int(sock,local_open); status_io|=recv_int(sock,&peer_open); }
+    else       { status_io|=recv_int(sock,&peer_open); status_io|=send_int(sock,local_open); }
+    if(status_io!=0){ log("IPC-open status exchange failed"); return 14; }
+    if(local_open!=0 || peer_open!=0){
+        if(local_open==0){ zeMemCloseIpcHandle(g_zectx,g_peerScratch); g_peerScratch=nullptr; }
+        fprintf(stderr,"[argraph r%d] zeMemOpenIpcHandle local=0x%x peer_status=%d attempts=%d\n",
+                rank,r,peer_open,open_attempt+1); fflush(stderr);
+        return 14;
+    }
+    if(open_attempt>0){
+        fprintf(stderr,"[argraph r%d] zeMemOpenIpcHandle recovered after %d attempts\n",
+                rank,open_attempt+1); fflush(stderr);
+    }
     // --- shm host barrier (kept for the eager path) ---
     const char *bn="/ar_shmbar_graph"; int fd=shm_open(bn,O_CREAT|O_RDWR,0600);
     if(fd<0){log("shm_open fail");return 15;}
