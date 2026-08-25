@@ -40,6 +40,17 @@ Working notes for any agent on this repo. Keep this file short; details live in
   compiled collective post-health. This is especially valuable on dense 27B,
   where MoE dispatch cannot confound the collective result. See JOURNAL
   2026-08-25p and `docs/P2P_GPU.md` J.23.
+- **Do not assume Steve's wholesale June source overlay is the missing speed.**
+  The exact `e190923b` source plus recovered scratch-aware MoE interface passed
+  all endpoint and post-health gates at 48.5315 tok/s: only +6.98% over the
+  45.3649 August-adapter control and still 1.7693x below Steve. His fresh 54 MB
+  versus restored 67 MB `_xpu_C` pair differed by only about 3%; SO size is not
+  a performance identity. Next sessions must measure graph-piece selection and
+  per-step host/device time before another broad code or binary swap. Apply
+  each proven mechanism separately to 27B dense. Its lack of routed MoE makes
+  it the clean graph/runtime control; derive its clone-fence threshold from its
+  own profile collective census, never from Qwen35's 8192-row value. See
+  JOURNAL 2026-08-25q and `docs/20260825_steve_stack_component_ledger.md`.
 
 ## Workflow
 

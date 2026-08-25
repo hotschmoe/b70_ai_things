@@ -28,6 +28,11 @@ EXPECTED_CCL_KERNELS_SHA256="0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e0
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 P2P_ACCESS="${P2P_ACCESS:-1}"
 case "$P2P_ACCESS" in 0|1) ;; *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;; esac
+SOURCE_STACK="${SOURCE_STACK:-august-adapter}"
+case "$SOURCE_STACK" in
+  august-adapter|june-e190) ;;
+  *) echo "SOURCE_STACK must be august-adapter or june-e190" >&2; exit 2 ;;
+esac
 MOE_TRACE="${MOE_TRACE:-0}"
 case "$MOE_TRACE" in 0|1) ;; *) echo "MOE_TRACE must be 0 or 1" >&2; exit 2 ;; esac
 ALLREDUCE_TRACE="${ALLREDUCE_TRACE:-0}"
@@ -60,7 +65,9 @@ STALL_TIMEOUT="${STALL_TIMEOUT:-180}"
 case "$STALL_TIMEOUT" in
   ''|*[!0-9]*) echo "STALL_TIMEOUT must be a non-negative integer" >&2; exit 2 ;;
 esac
-NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}_${STAMP}"
+source_suffix=""
+[ "$SOURCE_STACK" = june-e190 ] && source_suffix="_june_e190"
+NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
@@ -76,9 +83,34 @@ if [ -e "$CACHE_DIR" ] && [ "${ALLOW_EXISTING_CACHE:-0}" != 1 ]; then
   echo "Refusing non-fresh compilation cache: $CACHE_DIR" >&2
   exit 2
 fi
-if [ -n "${FORENSIC_VLLM_SRC:-}" ] || [ -n "${B70_EXTRA_ENV:-}" ]; then
+if [ -n "${FORENSIC_VLLM_SRC:-}" ] || [ -n "${FORENSIC_SITECUSTOMIZE_HOST:-}" ] || [ -n "${FORENSIC_FUSED_MOE_INTERFACE_HOST:-}" ] || [ -n "${B70_EXTRA_ENV:-}" ]; then
   echo "Refusing source or environment overlays in the exact control" >&2
   exit 2
+fi
+
+FORENSIC_VLLM_SRC_VALUE=""
+FORENSIC_SITECUSTOMIZE_VALUE=""
+FORENSIC_FUSED_MOE_INTERFACE_VALUE=""
+MIXED_WORKSPACE=0
+if [ "$SOURCE_STACK" = june-e190 ]; then
+  FORENSIC_VLLM_SRC_VALUE="/mnt/vm_8tb/b70/steve-s2b/vllm-e190"
+  FORENSIC_SITECUSTOMIZE_VALUE="$SCRIPT_DIR/qwen36_june_source_sitecustomize.py"
+  FORENSIC_FUSED_MOE_INTERFACE_VALUE="/mnt/vm_8tb/b70/steve-s2b/vllm-xpu-kernels/vllm_xpu_kernels/fused_moe_interface.py"
+  MIXED_WORKSPACE=1
+  [ "$(git -C "$FORENSIC_VLLM_SRC_VALUE" rev-parse HEAD)" = \
+    "e190923b32e1b87fe33d08264bff9215fb7770fc" ] || {
+    echo "June source worktree identity mismatch" >&2
+    exit 1
+  }
+  [ -z "$(git -C "$FORENSIC_VLLM_SRC_VALUE" status --short)" ] || {
+    echo "June source worktree is dirty" >&2
+    exit 1
+  }
+  [ "$(sha256sum "$FORENSIC_FUSED_MOE_INTERFACE_VALUE" | awk '{print $1}')" = \
+    "dca1423d7346debbc9bbf33398c3364e2a911b751b9d94423ec28b2778015b34" ] || {
+    echo "Scratch-aware fused MoE interface identity mismatch" >&2
+    exit 1
+  }
 fi
 
 mkdir -p "$RESULT_DIR" "$(dirname "$CACHE_DIR")"
@@ -188,12 +220,28 @@ docker run --rm --entrypoint python \
   -v "$RESULT_DIR:/opt/preflight-out" \
   "$IMG" /opt/native_moe_contract.py \
   --output /opt/preflight-out/native_moe_route_contract.json
+if [ "$SOURCE_STACK" = june-e190 ]; then
+  docker run --rm --entrypoint python \
+    -e VLLM_TARGET_DEVICE=xpu \
+    -e PYTHONPATH=/opt/forensic_vllm:/opt/june-runtime \
+    -v "$FORENSIC_VLLM_SRC_VALUE:/opt/forensic_vllm:ro" \
+    -v "$JUNE_RUNTIME:/opt/june-runtime:ro" \
+    -v "$FORENSIC_FUSED_MOE_INTERFACE_VALUE:/opt/june-runtime/vllm_xpu_kernels/fused_moe_interface.py:ro" \
+    -v "$SCRIPT_DIR/qwen36_june_source_contract.py:/opt/june_source_contract.py:ro" \
+    -v "$RESULT_DIR:/opt/preflight-out" \
+    "$IMG" /opt/june_source_contract.py \
+    --output /opt/preflight-out/june_source_contract.json
+fi
 
 echo "config -> image=$IMG model_revision=$MODEL_REVISION model_config=$actual_config_sha256 model_index=$actual_index_sha256"
 echo "config -> TP=2 PP=1 graph=PIECEWISE splitops=default igp=false async=1 mtp=0 prefix_cache=0 maxlen=32768 maxseqs=24 util=0.90"
-echo "config -> native_moe=june-base moe_mixed_workspace=0 call_abi=august-keywords-to-june-base"
+if [ "$SOURCE_STACK" = june-e190 ]; then
+  echo "config -> native_moe=june-source moe_mixed_workspace=$MIXED_WORKSPACE call_abi=recovered-scratch-aware-june"
+else
+  echo "config -> native_moe=june-base moe_mixed_workspace=$MIXED_WORKSPACE call_abi=august-keywords-to-june-base"
+fi
 echo "config -> moe_trace=$MOE_TRACE allreduce_trace=$ALLREDUCE_TRACE allreduce_trace_sync=$ALLREDUCE_TRACE_SYNC allreduce_trace_max_calls=$ALLREDUCE_TRACE_MAX_CALLS profile_fence_min_rows=$PROFILE_FENCE_MIN_ROWS profile_fence_stages=$PROFILE_FENCE_STAGES cache_reuse=${ALLOW_EXISTING_CACHE:-0}"
-echo "config -> custom_op=s2b_all_reduce_clone p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
+echo "config -> source_stack=$SOURCE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
 echo "config -> kernel_runtime=locally-rebuilt-June-complete-package xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
 echo "config -> selector=level_zero:0,1 affinity=0,1 inductor_cache=/vllm_cache/torchinductor"
 printf '%s\n' "${runtime_hashes[@]}"
@@ -216,11 +264,14 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   MAXSEQS=24 \
   UTIL=0.90 \
   PREFIXCACHE=0 \
+  FORENSIC_VLLM_SRC="$FORENSIC_VLLM_SRC_VALUE" \
+  FORENSIC_SITECUSTOMIZE_HOST="$FORENSIC_SITECUSTOMIZE_VALUE" \
+  FORENSIC_FUSED_MOE_INTERFACE_HOST="$FORENSIC_FUSED_MOE_INTERFACE_VALUE" \
   XPU_KERNEL_RUNTIME_HOST="$JUNE_RUNTIME" \
   CACHE_DIR_HOST="$CACHE_DIR" \
   B70_LOGDIR="$RESULT_DIR" \
   HEALTH_STALL="$STALL_TIMEOUT" \
-  B70_EXTRA_ENV="ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=0 B70_QWEN36_MOE_TRACE=$MOE_TRACE B70_QWEN36_ALLREDUCE_TRACE=$ALLREDUCE_TRACE B70_QWEN36_ALLREDUCE_TRACE_SYNC=$ALLREDUCE_TRACE_SYNC B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS=$ALLREDUCE_TRACE_MAX_CALLS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES=$PROFILE_FENCE_STAGES" \
+  B70_EXTRA_ENV="ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=$MIXED_WORKSPACE B70_QWEN36_MOE_TRACE=$MOE_TRACE B70_QWEN36_ALLREDUCE_TRACE=$ALLREDUCE_TRACE B70_QWEN36_ALLREDUCE_TRACE_SYNC=$ALLREDUCE_TRACE_SYNC B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS=$ALLREDUCE_TRACE_MAX_CALLS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES=$PROFILE_FENCE_STAGES B70_QWEN36_JUNE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS" \
   I_KNOW_P2P_WEDGES=1 \
   bash "$SCRIPT_DIR/serve_qwen36_s2b_control.sh" run 2>&1 | tee "$RUN_LOG"
 serve_rc="${PIPESTATUS[0]}"
@@ -258,18 +309,33 @@ cp "$metric_path" "$RESULT_DIR/steve_metric.json"
 cp "$json_canary_path" "$RESULT_DIR/json_repeat16.json"
 cp "$color_canary_path" "$RESULT_DIR/color_repeat16.json"
 
-for required in \
-  'restored June clone-safe custom all-reduce contract' \
-  'restored June prefill-replay capture contract' \
-  'restored June native XPU INT8 MoE route' \
-  'bridged June base MoE call ABI with mixed workspace off' \
-  'Selected XPUInt8ScaledMMLinearKernel for QuarkW8A8Int8' \
-  'Using XPU Int8 MoE backend' \
-  'kernel package=/opt/june-runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface' \
-  'Asynchronous scheduling is enabled' \
-  'Graph capturing finished' \
-  "'splitting_ops': ['vllm::unified_attention_with_output'" \
-  "'use_inductor_graph_partition': False"; do
+if [ "$SOURCE_STACK" = june-e190 ]; then
+  required_markers=(
+    '[qwen36-june-source] source_stack=e190923b'
+    '[qwen36-june-source] profile clone complete'
+    'Selected XPUInt8ScaledMMLinearKernel for QuarkW8A8Int8'
+    'Using XPU Int8 MoE backend'
+    'Asynchronous scheduling is enabled'
+    'Graph capturing finished'
+    "'splitting_ops': ['vllm::unified_attention_with_output'"
+    "'use_inductor_graph_partition': False"
+  )
+else
+  required_markers=(
+    'restored June clone-safe custom all-reduce contract'
+    'restored June prefill-replay capture contract'
+    'restored June native XPU INT8 MoE route'
+    'bridged June base MoE call ABI with mixed workspace off'
+    'Selected XPUInt8ScaledMMLinearKernel for QuarkW8A8Int8'
+    'Using XPU Int8 MoE backend'
+    'kernel package=/opt/june-runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface'
+    'Asynchronous scheduling is enabled'
+    'Graph capturing finished'
+    "'splitting_ops': ['vllm::unified_attention_with_output'"
+    "'use_inductor_graph_partition': False"
+  )
+fi
+for required in "${required_markers[@]}"; do
   rg -Fq "$required" "$SERVER_LOG" || {
     echo "Missing required server evidence: $required" >&2
     exit 1
@@ -283,8 +349,10 @@ rg -Fq '"failures": []' "$RUN_LOG" || {
   echo "Semantic probe did not report an empty failure list" >&2
   exit 1
 }
-rg -a -l -q 's2b_all_reduce_clone' "$CACHE_DIR/torch_compile_cache" || {
-  echo "Persisted Inductor cache has no s2b_all_reduce_clone evidence" >&2
+collective_cache_pattern='s2b_all_reduce_clone'
+[ "$SOURCE_STACK" = june-e190 ] && collective_cache_pattern='vllm.*all_reduce'
+rg -a -l -q "$collective_cache_pattern" "$CACHE_DIR/torch_compile_cache" || {
+  echo "Persisted Inductor cache has no compiled collective evidence for $SOURCE_STACK" >&2
   exit 1
 }
 

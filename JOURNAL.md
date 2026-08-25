@@ -18746,3 +18746,74 @@ boundary. The native grouped-MoE control reaches only 52.83% of Steve's
 85.8691 tok/s and is 4.58% slower than the prior generic Triton MoE control.
 The next frontier is the remaining 1.893x graph/runtime/kernel gap, not another
 collective-boundary retry.
+
+### 2026-08-25q - True June source control closes scratch ABI; 48.5315 tok/s
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision
+`cced56592e8c8935f8220836b4baa04dfd389118`; TP=2/PP=1; P2P=1;
+PIECEWISE 9-size capture; async; no MTP or prefix cache; complete locally
+rebuilt June native package; closest surviving June vLLM source
+`e190923b32e1b87fe33d08264bff9215fb7770fc`; clone-completion fence for
+profile tensors with at least 8192 rows; kernel 7.1 and compute runtime
+26.22.38646.4. A new off-device contract pinned 12 source components covering
+graph, collective, GDN, routed MoE, scheduler, sampler, runner, and the fused
+kernel interface.
+
+COMMAND -> first true-source transaction:
+
+```text
+./bin/gpu-run env \
+  STAMP=20260825T233000Z_june_source SOURCE_STACK=june-e190 \
+  P2P_ACCESS=1 PROFILE_FENCE_MIN_ROWS=8192 STALL_TIMEOUT=300 \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> the exact June source loaded both ranks and selected native dense
+and routed-MoE INT8, then failed during profile before its first collective:
+`xpu_fused_moe() got an unexpected keyword argument 'scratch'`. June
+`xpu_moe.py` passes persistent scratch, while the reconstructed June-9
+`fused_moe_interface.py` does not accept it. This was a deterministic Python
+ABI mismatch, not a device or collective failure. Graceful teardown left both
+per-card health and compiled collective health green. Evidence:
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_20260825T233000Z_june_source`.
+
+COMMAND -> retain the same native binaries and mount only the recovered
+scratch-aware fused-MoE Python dispatcher from kernel commit
+`2dd55f380df753a10a88fcd9e96192561066e713`:
+
+```text
+./bin/gpu-run env \
+  STAMP=20260825T235000Z_june_scratch SOURCE_STACK=june-e190 \
+  P2P_ACCESS=1 PROFILE_FENCE_MIN_ROWS=8192 STALL_TIMEOUT=300 \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> the 12-component source contract passed with no missing tokens or
+origin/hash failures. Both ranks selected `XPUInt8ScaledMMLinearKernel` and
+`Using XPU Int8 MoE backend`, completed 81/81 profile clone fences, allocated
+a 955090-token KV pool, and captured 9/9 PIECEWISE graphs in 9 seconds using
+1.62 GiB. Endpoint health arrived in 244 seconds. Semantic probes passed. The
+exact p498/o512 metric produced 512 coherent tokens at 311.856 ms client TTFT,
+10.548628 seconds server decode, and 48.531479 corrected output tok/s. JSON and
+color canaries each passed 16/16. Teardown was graceful; both per-card health
+and compiled collective health passed; launcher exit was 0. Evidence:
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_20260825T235000Z_june_scratch`.
+Key hashes: source contract `9e5b64c0...`, metric `c04b9f98...`, JSON
+`7117ac66...`, color `70ea2934...`, and committed run log `d3b043da...`.
+
+COMMIT HYGIENE -> the failed and successful server logs were mechanically
+converted to ASCII after capture. Their raw -> committed SHA256 pairs are
+`1eadeb70...` -> `493be3c6...` and `9ddb6e0b...` -> `cff23d0e...`.
+
+VERDICT -> true June source is a measured +3.166559 tok/s, or +6.98 percent,
+over the 45.364920 tok/s August-adapter native-MoE control. It reaches only
+56.52 percent of Steve's 85.869114 tok/s and leaves 37.337635 tok/s, or
+1.7693x, unexplained. The scratch-aware Python interface is required; wholesale
+June source is not the missing speed lever. Steve's recorded fresh 54 MB versus
+restored 67 MB `_xpu_C` control differed by only about 3 percent, so binary
+size is also lower priority. Next, instrument actual decode graph-piece replay
+and per-family host/device time. Transfer proven mechanisms separately to dense
+27B, whose lack of routed MoE removes this scratch/dispatcher confound, and
+derive its profile clone fence from its own collective shapes.

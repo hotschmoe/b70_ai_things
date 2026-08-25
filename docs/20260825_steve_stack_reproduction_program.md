@@ -112,6 +112,21 @@ prebuilt binaries.
   collective boundary is therefore closed; the remaining 40.5042 tok/s gap is
   elsewhere in graph/runtime/kernel behavior, and the current untuned native
   grouped-MoE route is not itself a speed win.
+- The closest surviving June vLLM source at `e190923b` now passes a
+  12-component source-origin/hash contract and the full exact endpoint. The
+  public June source exposed one concrete ABI seam: its MoE path passes
+  persistent `scratch`, while the reconstructed June-9 Python interface does
+  not accept it. Mounting the recovered scratch-aware interface from kernel
+  commit `2dd55f38` with the same rebuilt binaries closed the seam. The run
+  completed 81/81 clone fences per rank, captured 9/9 graphs, selected native
+  dense and MoE INT8, passed both 16/16 canaries, and passed both post-health
+  layers at 48.5315 tok/s. This is +6.98 percent over the August-adapter native
+  control and leaves a 1.7693x gap. Full June source is not the missing lever.
+- Steve's directly comparable fresh-54/restored-67 `_xpu_C` results were
+  87.2888 and 89.9613 tok/s, about a 3 percent difference. File size and the
+  recovered 116706992-byte build do not identify the accepted binary or
+  explain a 1.77x endpoint gap. Decode-step runtime attribution is now ahead
+  of binary reconstruction.
 - The GPU model matches, but the host does not: Steve's June Qwen35 system was
   an EPYC 9015 PCIe 5 host, while this system is a Threadripper 1950X with the
   cards under separate PCI domains on a PCIe Gen3-era platform. Steve also
@@ -223,8 +238,10 @@ selected an uncaptured graph and returned HTTP 500. The adapter now retains all
 nine general captures while restoring the variable before runtime dispatch. A
 v2 no-device contract guards both halves. Direct P2P plus a profile-only clone
 completion fence now crosses the compiled collective boundary and captures all
-nine graphs. The active target is the remaining 1.893x decode gap between the
-45.3649 tok/s native-MoE control and Steve's 85.8691 tok/s result.
+nine graphs. The true-June source control raises the stable endpoint to
+48.5315 tok/s. The active target is the remaining 1.7693x decode gap to Steve's
+85.8691 tok/s result. Instrument graph-piece selection/replay and per-family
+host/device time before another code toggle.
 
 ### 6. Collective paths
 
@@ -274,7 +291,7 @@ equivalence before performance tests.
 1. Freeze and hash the currently inspected Steve artifacts.
 2. DONE: make the exact Qwen P2P-off target-only graph control coherent.
 3. DONE: reproduce Steve's benchmark request exactly and add semantic canaries.
-4. Attribute graph boundaries and the remaining 1.893x decode-step gap.
+4. Attribute graph boundaries and the remaining 1.7693x decode-step gap.
 5. Attribute INT8 dense, MoE, GDN, sampler, and scheduler one factor at a time.
 6. DONE: integrate and validate our push collective graph contract; loaded
    vLLM IPC import remains asymmetric and is not the exact-Steve route.

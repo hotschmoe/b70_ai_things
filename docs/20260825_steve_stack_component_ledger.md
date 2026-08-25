@@ -2,6 +2,35 @@
 
 Date: 2026-08-25
 
+## Latest Closure: True June Source Control
+
+The closest surviving June vLLM source, commit
+`e190923b32e1b87fe33d08264bff9215fb7770fc`, now runs as a genuine full-source
+overlay with the rebuilt June native package. A 12-component off-device
+contract pins graph, collective, GDN, MoE, scheduler, sampler, runner, and
+kernel-interface origins and hashes. The public June source and June-9 Python
+kernel interface are not ABI-complete together: `xpu_moe.py` passes a
+`scratch` argument that the June-9 interface does not accept. The recovered
+scratch-aware interface at kernel commit `2dd55f380df753a10a88fcd9e96192561066e713`
+closes that seam.
+
+The guarded true-June transaction selected native dense and routed-MoE INT8,
+completed 81/81 profile clone fences per rank, captured 9/9 PIECEWISE graphs,
+passed the exact p498/o512 metric plus both 16/16 canaries, and passed per-card
+and compiled-collective health after graceful teardown. It measured 48.531479
+tok/s, 10.548628 seconds server decode, and 311.856 ms client TTFT. That is
+6.98 percent above the 45.364920 tok/s August-adapter native-MoE control, but
+only 56.52 percent of Steve's 85.869114 tok/s. The remaining gap is 37.337635
+tok/s, or 1.7693x.
+
+This changes the priority. A wholesale June source overlay is a confirmed
+single-digit lever, not the missing 1.77x. Steve previously measured only about
+a 3 percent difference between his fresh 54 MB and restored 67 MB `_xpu_C`
+classes, so shared-object size is not a performance identity and cannot explain
+the gap. The next decisive work is decode-step timing, graph-piece/replay
+attribution, and exact runtime-path census. Dense 27B is the clean transfer
+control because it removes routed-MoE and scratch-interface confounds.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B
@@ -87,16 +116,16 @@ partitioning. The later launcher default made scheduling asynchronous because
 | --- | --- | --- | --- | --- |
 | Model and scales | Exact HF Quark W8A8 revision | Yes | Exact local revision and Quark loader verified | Matched. |
 | Dense activation quant | `_xpu_C::per_token_quant_int8_xpu` | Yes | Operator present and selected | Matched. |
-| Dense W8A8 GEMM | oneDNN `_xpu_C::int8_gemm_w8a8` | Yes | June registry restored; runtime logs select `XPUInt8ScaledMMLinearKernel` | Matched reachability; binary/source ownership pending. |
-| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | Complete June package registers the schema, but the first exact-package endpoint still JIT-ran Triton because August Quark unconditionally calls generic `fused_experts`. Native dispatcher/layout adapter and off-device ABI contract now pass. | Registered but not yet measured through native endpoint dispatch. |
+| Dense W8A8 GEMM | oneDNN `_xpu_C::int8_gemm_w8a8` | Yes | June registry restored; both controls select `XPUInt8ScaledMMLinearKernel` | Reachability and source ownership matched; accepted binary is unrecoverable and is a lower-order residual. |
+| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | August adapter and true June source both select `Using XPU Int8 MoE backend`; true June requires the recovered scratch-aware Python interface. | Native endpoint dispatch, coherence, and graph capture proven. |
 | Mixed MoE workspace | BF16 and INT32 persistent scratch interface | Yes in safe TP2 label | Local env enabled | Steve measured a small full-model regression in an earlier arm; not the 5x explanation. |
 | Shared expert | Native dense W8A8 linears plus shared/routed combination | Yes | Later-image ABI mismatch bridged narrowly | Coherent; source snapshot comparison pending. |
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config, raw oneCCL XPUGraph, and all 9/9 full-model captures pass; coherent exact endpoint reached 47.54 tok/s | Matched graph reachability; remaining speed is confounded by Triton routed MoE. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config, raw oneCCL XPUGraph, and all 9/9 full-model captures pass; true June endpoint reached 48.53 tok/s | Reachability matched; replay ownership and per-step overhead remain to attribute. |
 | Ordinary no-spec PIECEWISE key | Reuse relaxed general non-uniform key | Yes | Erroneous local uniform key removed; off-device default-size contract passes | June behavior matched; no special ordinary-decode key is required. |
-| Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | August source silently removed the inner clone; corrected local GroupCoordinator routing passed eager, compiled exact-shape, export, and single-op XPUGraph gates without mismatch, mutation, or alias | Cleared through the isolated custom-op/compiler layer; exact model interleaving remains the next gate. |
+| Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | Large profile clones require completion before oneCCL; clone-only profile fence passes all 81 calls while graph recording and decode remain unfenced | Cleared through exact model interleaving and post-health. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
 | Collective transport | oneCCL/OFI direct P2P in graph | Yes | Unset/default IPC resolved to `pidfd`; 256 direct and 512 XPUGraph iterations passed on both ranks | Raw transport and graph replay are cleared; the remaining failure is in the full vLLM integration. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |
@@ -363,12 +392,18 @@ FlashAttention kernels and does not match the June accepted binary. It is a
 later forensic artifact and must not be overlaid on the exact control.
 
 The same chronology makes the June native package a required path control and
-the 54 versus 67 MB binary difference a later residual variable. Steve
+the 54 versus 67 MB binary difference a lower-priority residual variable. Steve
 measured 87.2888 tok/s with a newly rebuilt 54 MB extension,
 restored the 67 MB extension, then measured 89.9613 tok/s in a short clean
 control and 92.5220 tok/s in decisive timing. The exact model control must
 first establish the full June-package endpoint; only then can A/B work
 attribute the smaller accepted-binary residual.
+
+The exact model now establishes that endpoint at 48.5315 tok/s. The directly
+comparable 87.2888 versus 89.9613 historical pair is only a 3.06 percent
+difference. Neither the current 116706992-byte recovered build nor file size
+alone identifies Steve's accepted 67 MB binary. Do not promote a binary-size
+hunt ahead of full-step runtime attribution.
 
 ## Measured Lever Attribution
 
@@ -591,23 +626,23 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    generated 16-output Triton pointwise autotune, so the overall oracle and
    81-op graph stage did not pass. Replace that arm with a sequential
    low-live-buffer chain before reusing it.
-3. DONE for graph reachability: the exact-package endpoint captured all 9/9
-   graphs, passed the exact metric and both canaries, and tore down healthy at
-   47.5448 tok/s. The strict route gate rejected it because August Quark still
-   JIT-ran generic Triton routed MoE.
-4. After an actual reboot, rerun the identical fresh-cache control with only
-   the native Quark MoE adapter added. Require the XPU backend log, no generic
-   MoE JIT, exact metric/canaries, and healthy teardown.
+3. DONE: the August-adapter native-MoE endpoint captured 9/9 graphs, passed the
+   exact metric and both canaries, and tore down healthy at 45.3649 tok/s.
+4. DONE: the closest surviving June vLLM source plus recovered scratch-aware
+   kernel interface passed its 12-component source contract, all endpoint
+   gates, and both health layers at 48.5315 tok/s. This is only +6.98 percent;
+   broad source drift is not the missing 1.77x.
 5. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
    Preserve rebuilding the public artifact as a later provenance task only.
-6. If the narrow current-source repair still does not reproduce, run the
-   closest surviving 2026-06-16 vLLM snapshot as a forensic overlay with the
-   same runtime binaries.
-7. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
-   kernel source and patch chronology, then compare it one factor at a time.
+6. Instrument the true-June endpoint for per-step host/device time, graph-piece
+   selection/replay, GDN, MoE, dense GEMM, sampler, and collective time. Compare
+   counts and timings against Steve's preserved layer-timing packet.
+7. Treat the unrecoverable 67 MB `_xpu_C` only as a later residual. Steve's
+   fresh-54/restored-67 control differed by about 3 percent, not 1.77x.
 8. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
 9. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
    equivalence, graph replay, and hashes.
-10. Only after a healthy 80+ tok/s graph baseline, profile MoE, dense GEMM,
-   GDN, sampler, and collectives under the actual endpoint step.
+10. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
+   time. Census its own profile collective shapes and derive its clone-fence
+   threshold; do not copy Qwen35's 8192-row threshold.

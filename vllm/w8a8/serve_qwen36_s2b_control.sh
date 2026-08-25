@@ -29,6 +29,8 @@ export PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}"
 export PUSH_AR_MAXB="${PUSH_AR_MAXB:-67108864}"
 export EXACT_STEVE_CC="${EXACT_STEVE_CC:-0}"
 export FORENSIC_VLLM_SRC="${FORENSIC_VLLM_SRC:-}"
+export FORENSIC_SITECUSTOMIZE_HOST="${FORENSIC_SITECUSTOMIZE_HOST:-}"
+export FORENSIC_FUSED_MOE_INTERFACE_HOST="${FORENSIC_FUSED_MOE_INTERFACE_HOST:-}"
 export XPU_KERNEL_RUNTIME_HOST="${XPU_KERNEL_RUNTIME_HOST:-}"
 export IN="${IN:-512}"
 export OUT="${OUT:-512}"
@@ -109,7 +111,18 @@ if [ -n "$FORENSIC_VLLM_SRC" ]; then
     exit 1
   }
   MOUNTS+=( -v "$FORENSIC_VLLM_SRC:/opt/forensic_vllm:ro" )
-  DOCKER_ENV+=( -e PYTHONPATH=/opt/forensic_vllm )
+  if [ -n "$FORENSIC_SITECUSTOMIZE_HOST" ]; then
+    [ -f "$FORENSIC_SITECUSTOMIZE_HOST" ] || {
+      echo "Invalid FORENSIC_SITECUSTOMIZE_HOST: $FORENSIC_SITECUSTOMIZE_HOST" >&2
+      exit 1
+    }
+    MOUNTS+=(
+      -v "$FORENSIC_SITECUSTOMIZE_HOST:/opt/forensic_site/sitecustomize.py:ro"
+    )
+    DOCKER_ENV+=( -e PYTHONPATH=/opt/forensic_site:/opt/forensic_vllm )
+  else
+    DOCKER_ENV+=( -e PYTHONPATH=/opt/forensic_vllm )
+  fi
 else
   MOUNTS+=(
     -v "$SCRIPT_DIR/qwen36_s2b_sitecustomize.py:/opt/b70_qwen36_site/sitecustomize.py:ro"
@@ -118,10 +131,6 @@ else
 fi
 
 if [ -n "$XPU_KERNEL_RUNTIME_HOST" ]; then
-  [ -z "$FORENSIC_VLLM_SRC" ] || {
-    echo "XPU_KERNEL_RUNTIME_HOST cannot be mixed with FORENSIC_VLLM_SRC" >&2
-    exit 1
-  }
   for required in \
     vllm_xpu_kernels/__init__.py \
     vllm_xpu_kernels/_C.abi3.so \
@@ -136,7 +145,26 @@ if [ -n "$XPU_KERNEL_RUNTIME_HOST" ]; then
     }
   done
   MOUNTS+=( -v "$XPU_KERNEL_RUNTIME_HOST:/opt/june-runtime:ro" )
-  DOCKER_ENV+=( -e PYTHONPATH=/opt/june-runtime:/opt/b70_qwen36_site )
+  if [ -n "$FORENSIC_FUSED_MOE_INTERFACE_HOST" ]; then
+    [ -f "$FORENSIC_FUSED_MOE_INTERFACE_HOST" ] || {
+      echo "Invalid FORENSIC_FUSED_MOE_INTERFACE_HOST: $FORENSIC_FUSED_MOE_INTERFACE_HOST" >&2
+      exit 1
+    }
+    MOUNTS+=(
+      -v "$FORENSIC_FUSED_MOE_INTERFACE_HOST:/opt/june-runtime/vllm_xpu_kernels/fused_moe_interface.py:ro"
+    )
+  fi
+  if [ -n "$FORENSIC_VLLM_SRC" ]; then
+    if [ -n "$FORENSIC_SITECUSTOMIZE_HOST" ]; then
+      DOCKER_ENV+=(
+        -e PYTHONPATH=/opt/forensic_site:/opt/forensic_vllm:/opt/june-runtime
+      )
+    else
+      DOCKER_ENV+=( -e PYTHONPATH=/opt/forensic_vllm:/opt/june-runtime )
+    fi
+  else
+    DOCKER_ENV+=( -e PYTHONPATH=/opt/june-runtime:/opt/b70_qwen36_site )
+  fi
 fi
 
 EXACT_POST_ENV=()

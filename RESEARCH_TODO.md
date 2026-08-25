@@ -22,6 +22,19 @@
 > not import, mount, execute, or otherwise depend on Steve's checkout. Preserve
 > source-level attribution and licenses for any adapted work.
 >
+> **LATEST CLOSURE 2026-08-25:** the closest surviving June source
+> (`e190923b`) now runs with a 12-component source/hash contract and the
+> recovered scratch-aware fused-MoE interface. It passed 81/81 profile clone
+> fences per rank, 9/9 graph captures, the exact metric, both 16/16 canaries,
+> and both post-health layers at 48.5315 tok/s. This is +6.98% over the
+> 45.3649 August-adapter native control but still 1.7693x below Steve. The
+> initial source run concretely exposed the June `scratch` ABI seam; it was not
+> a device failure. Steve's fresh-54/restored-67 MB `_xpu_C` pair differed by
+> only about 3%, so do not chase SO size. NEXT: instrument the true-June
+> endpoint for graph-piece selection/replay plus GDN, MoE, dense, sampler, and
+> collective host/device time. Then transfer mechanisms one factor at a time
+> to dense 27B, with a model-specific profile collective census and fence.
+>
 > Required workstreams and exit criteria:
 >
 > 1. **Provenance:** pin model revision, vLLM commit/tree hash, torch/IPEX,
@@ -142,9 +155,11 @@
 > post-health layers at 45.3649 corrected tok/s. This is 52.83% of Steve and
 > 4.58% slower than the generic Triton MoE control, so the collective boundary
 > is DONE and the untuned native grouped-MoE route is not the missing speed.
-> NEXT: profile the now-stable 45.3649 control against Steve's source ledger to
-> attribute the remaining 1.893x gap; prioritize graph piece count, GDN path,
-> scheduler/sampler, and kernel selection rather than another boundary retry.
+> DONE: profile-source control advanced to the true-June source endpoint at
+> 48.5315 tok/s. NEXT: collect full-step timings against Steve's source ledger
+> to attribute the remaining 1.7693x gap; prioritize actual graph replay,
+> GDN, scheduler/sampler, and kernel selection rather than another boundary
+> retry or wholesale source swap.
 > Correct the oracle to use a sequential low-live-buffer chain before reusing
 > its 81-op stress; do not claim that stage passed. Then -> DONE minimal June native 54 MB-class
 > B70-AOT build and complete-package off-device dispatch gate; the exact model

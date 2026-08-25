@@ -276,6 +276,15 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   16/16 repeat canaries, and tore down with per-card plus compiled collective health at **45.3649 tok/s**. This
   closes the compiled TP=2 boundary but is only 52.83% of Steve's 85.8691 tok/s; the remaining gap is elsewhere.
   See `JOURNAL.md` 2026-08-25p and `docs/P2P_GPU.md` J.23.
+- **[SOURCE CLOSURE 2026-08-25] true June vLLM is a +6.98% lever, not the missing 1.77x.**
+  The closest surviving source (`e190923b`) plus the same rebuilt June native package initially failed at the
+  fused-MoE ABI: June vLLM passes persistent `scratch`, while the reconstructed June-9 Python interface omits it.
+  The recovered scratch-aware interface from kernel commit `2dd55f38` closed the seam. The source-pinned run
+  completed 81/81 profile clone fences per rank, captured 9/9 graphs, selected native dense and routed-MoE INT8,
+  passed the exact p498/o512 metric and both 16/16 canaries, and passed per-card plus compiled-collective health at
+  **48.5315 tok/s**. This is +3.1666 tok/s over the August-adapter native control but still 37.3376 tok/s short of
+  Steve. Steve's fresh-54/restored-67 MB `_xpu_C` pair differed by only ~3%, so binary size cannot explain the gap.
+  Next: measure actual graph-piece/replay and full decode-step timing; use dense 27B as the MoE-free transfer control.
 
 ## What does NOT work (yet) — save yourself the time
 - **Qwen3.6-27B W8A8 TP=2 + MTP + XPU graph-capture dies under sustained load -- ROOT-CAUSED + FIXED (2026-06-25).**

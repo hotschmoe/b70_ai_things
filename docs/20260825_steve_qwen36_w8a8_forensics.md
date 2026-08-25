@@ -37,6 +37,8 @@ collective handoffs, inside a low-overhead graph/runtime path.
 | Lane | Model/runtime | Parallel path | Result | Validity |
 | --- | --- | --- | ---: | --- |
 | Steve TP=2 smoke | Qwen3.6 35B-A3B Quark W8A8, custom vLLM/XPU | TP=2, PIECEWISE forced-comm graph, P2P=1 | 85.87 tok/s | JSON 16/16, color 16/16, quality skipped |
+| Local true-June source control | Exact Qwen checkpoint, June `e190923b` source, rebuilt June package, recovered scratch ABI | TP=2, 9/9 PIECEWISE graphs, P2P=1 | 48.53 tok/s | native dense/MoE, exact metric, both canaries 16/16, both post-health layers green |
+| Local August-adapter native control | Exact Qwen checkpoint, rebuilt June package plus narrow August-source repairs | TP=2, 9/9 PIECEWISE graphs, P2P=1 | 45.36 tok/s | native dense/MoE, coherent, both canaries 16/16, both post-health layers green |
 | Local exact-package control | Exact Qwen checkpoint, rebuilt June package plus narrow August-source repairs | TP=2, 9/9 PIECEWISE graphs, P2P=1 | 47.54 tok/s | coherent and both canaries 16/16; rejected because August Quark still dispatched routed MoE through Triton |
 | Local matched S2B control | Exact Qwen checkpoint, later S2B image plus narrow Qwen repairs | TP=2, PIECEWISE with split collectives, P2P=0 | 17.06 tok/s | coherent semantic canaries; exact Steve-shaped p498/o512 request |
 | Local v0.24 control | Same HF model family and Quark format, vLLM 0.24 shelf | TP=2, PIECEWISE, P2P=0 | 22.96 tok/s | coherent eight-request random sweep; not Steve's one-request metric |
@@ -61,6 +63,16 @@ decode. This is 2.788x the 17.06 control and 55.37% of Steve's result, but it
 is not a native-MoE result. The pinned image's Quark method unconditionally
 called Triton `fused_experts`; mounting the rebuilt June package registered the
 grouped operator without making that dispatcher select it.
+
+The repaired August adapter then selected native routed MoE and closed the
+compiled collective boundary at 45.3649 tok/s. The closest surviving June
+source subsequently ran as a full overlay and reached 48.5315 tok/s with all
+the same correctness and health gates. Its 12-component contract pins graph,
+collective, GDN, MoE, scheduler, sampler, runner, and kernel-interface source
+origins. The June source requires a scratch-aware fused-MoE interface absent
+from the June-9 minimal package; the recovered interface at kernel commit
+`2dd55f38` closes that ABI seam. Full June source is therefore a measured
+6.98 percent gain, not the remaining 1.7693x explanation.
 
 ## Steve's Accepted Lever Ladder
 
@@ -299,9 +311,12 @@ gate rejected the run because request-time Triton `fused_moe_kernel` proved
 that the later Quark dispatcher still bypassed the registered June grouped
 operator.
 
-The immediate experiment, after an actual reboot, is the identical guarded
-fresh-cache transaction with only the native Quark MoE dispatcher repair. Do
-not narrow capture sizes, remove eager-prefill policy, or change Steve's
-minimal `{"cudagraph_mode":"PIECEWISE"}` config. Require the XPU Int8 MoE
-backend log, no request-time generic MoE JIT, the exact metric and both
-canaries, and healthy teardown before interpreting speed.
+The native Quark repair and closest surviving June source transaction are now
+complete. The next experiment is instrumented true-June decode: count actual
+piece selection/replay and attribute host/device time across GDN, routed and
+shared MoE, dense GEMM, sampler, and all-reduce. Compare that breakdown with
+Steve's preserved timing packet before changing another mechanism. Do not
+prioritize `_xpu_C` by file size: Steve's fresh 54 MB versus restored 67 MB
+control differed by only about 3 percent. Transfer proven graph/runtime changes
+to dense 27B one factor at a time; census that model's profile collective
+shapes and derive its own clone-fence threshold.
