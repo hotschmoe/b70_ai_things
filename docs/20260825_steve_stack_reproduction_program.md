@@ -60,18 +60,20 @@ prebuilt binaries.
 - The pinned image contains the current preserved `_xpu_C` and GDN binaries,
   but this does not establish June-record identity:
   his accepted controls used a restored 67 MB `_xpu_C`, while the surviving
-  extension is 116706992 bytes. The first guarded direct-P2P model run still
-  failed on the first compiled all-reduce, but source comparison
-  found that the August vLLM tree had removed Steve's required inner clone.
-  That clone is restored locally. The next run must also reproduce Steve's
-  unset/default `CCL_ZE_IPC_EXCHANGE`; the repository helper had forced
-  `pidfd` in the failed transaction.
-- Steve's later public oneCCL program supplies a deterministic pre-model
-  oracle for the exact Qwen verifier all-reduce shape. His source-pinned build
-  passed 256/256 direct and 512/512 XPUGraph checks. Our image matches its
-  `kernels.spv` hash but not its `libccl.so.1.0` hash, so we now gate the next
-  model attempt on the locally owned oracle rather than inferring correctness
-  from the source commit or a raw all-reduce microbenchmark.
+  extension is 116706992 bytes. The first guarded direct-P2P model run failed
+  on the first compiled all-reduce, but source comparison found that the
+  August vLLM tree had removed Steve's required inner clone. That clone is
+  restored locally. The raw oneCCL oracle subsequently passed 256/256 direct
+  and 512/512 XPUGraph checks with exact loaded hashes under unset/default IPC
+  identity.
+- The clone-correct vLLM integration oracle then exported only the local op and
+  passed eager/compiled exact shapes plus 256 single-op XPUGraph replays on
+  both ranks without mismatch, mutation, or alias. Its synthetic unrolled
+  81-profile-collective arm was not model-representative: Inductor retained 81
+  independent 32 MiB outputs, emitted five 16-output pointwise fan-out kernels,
+  and rank 1 DEVICE_LOST while autotuning the second fan-out before the
+  81-collective graph stage. Correct that stress arm before reuse; after a
+  reboot, the exact interleaved model is the next decisive gate.
 - The GPU model matches, but the host does not: Steve's June Qwen35 system was
   an EPYC 9015 PCIe 5 host, while this system is a Threadripper 1950X with the
   cards under separate PCI domains on a PCIe Gen3-era platform. Steve also
@@ -232,16 +234,15 @@ equivalence before performance tests.
 7. DONE: the guarded kernel-7.1 direct-plus-XPUGraph oneCCL oracle passed 256
    direct and 512 graph iterations per rank with zero mismatch. This clears the
    hardware, topology, current oneCCL binary, direct P2P, and raw graph replay.
-8. IN PROGRESS: source audit proved the initial communicator-only clone adapter
-   was inert and the prior crash occurred during compiled profile-run before
-   graph capture. Observe the reset boundary and run the locally owned vLLM
-   custom-op integration oracle at the real Qwen shapes, including one
-   compiled-direct sequence of all 81 `[8192,2048]` profile collectives before
-   an 81-collective decode-shape XPUGraph replay. This isolates vLLM's real
-   GroupCoordinator op under stock Dynamo/Inductor; it does not reproduce the
-   VllmBackend partitioner or interleaved model operations.
-9. If that passes, observe another reset boundary and run the corrected
-   inner-clone, unset-IPC exact model control.
+8. PARTIAL: the locally owned clone-correct GroupCoordinator oracle passed
+   exact runtime identities, export, eager/compiled real shapes, and single-op
+   XPUGraph replay. Its independent 81-way profile fan-out triggered an
+   artificial 16-output Triton autotune DEVICE_LOST, so the 81-op graph stage
+   did not run. Replace this arm with a sequential low-live-buffer chain before
+   treating the oracle as a complete volume gate.
+9. IN PROGRESS: after an actual reboot, run the corrected inner-clone,
+   unset/default-IPC, active-container-NIC exact model control from a fresh
+   cache. This directly gates VllmBackend/PIECEWISE and real layer interleaving.
 10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
    a 55,523,648-byte B70-AOT `_xpu_C`, both Xe2 siblings, and a complete
    pinned-image runtime package with all required XPU dispatch registrations.

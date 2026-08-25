@@ -96,7 +96,7 @@ partitioning. The later launcher default made scheduling asynchronous because
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
 | Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config compiles and raw oneCCL XPUGraph passes; prior model failure was compiled profile-run before capture | Full model graph replay remains unproven, but it did not cause the observed failure. |
 | Uniform no-spec descriptor | June Qwen decode capture descriptor | Yes | Restored by narrow adapter | Matched and required for capture. |
-| Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | August source silently removed the inner clone; the first local communicator adapter was also inert; corrected local routing now replaces the GroupCoordinator op | Run the no-model compiled custom-op oracle before another model load. |
+| Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | August source silently removed the inner clone; corrected local GroupCoordinator routing passed eager, compiled exact-shape, export, and single-op XPUGraph gates without mismatch, mutation, or alias | Cleared through the isolated custom-op/compiler layer; exact model interleaving remains the next gate. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
 | Collective transport | oneCCL/OFI direct P2P in graph | Yes | Unset/default IPC resolved to `pidfd`; 256 direct and 512 XPUGraph iterations passed on both ranks | Raw transport and graph replay are cleared; the remaining failure is in the full vLLM integration. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |
@@ -472,6 +472,33 @@ the 17.06 tok/s result or prior full-model `DEVICE_LOST`. The fault boundary is
 now the vLLM custom-op wrapper, required inner-clone alias contract, compiled
 execution, or worker/model lifecycle. Do not rebuild oneCCL before testing it.
 
+### Clone-correct vLLM custom-op integration oracle
+
+Config -> first GPU transaction after reboot, exact pinned runtime hashes,
+unset/default IPC exchange and worker count, active container `eth0`, direct
+P2P, corrected GroupCoordinator routing through
+`vllm::s2b_all_reduce_clone`, stock dynamic Dynamo/Inductor, Qwen hidden size
+2048, exact decode/profile shapes, and an attempted 81-collective stress.
+
+Command -> `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_vllm_allreduce_graph_oracle.sh`.
+
+Result -> both ranks loaded the expected oneCCL, `_xpu_C`, and SPIR-V hashes;
+exported only the local clone op; and passed eager and compiled `[1,2048]`,
+compiled `[4,2048]` and `[8192,2048]`, and 256 single-op XPUGraph replays
+with no mismatch, input mutation, or output alias. The overall gate remained
+red because the synthetic 81-profile-collective arm caused Inductor to retain
+81 independent 32 MiB outputs and emit five 16-output Triton fan-out kernels.
+Rank 1 DEVICE_LOST while autotuning the second fan-out kernel, before the
+81-collective graph stage; this immediate failure was outside the custom op.
+Both cards passed post-teardown health.
+
+Verdict -> the isolated clone-correct custom-op/compiler route is cleared at
+the real shapes, but the 81-op stress was model-unrepresentative and did not
+pass. Replace its independent fan-out with a sequential low-live-buffer chain
+before reuse. After a real reboot, use the exact interleaved model as the next
+VllmBackend/PIECEWISE gate.
+
 ## Accepted And Rejected Mechanism Registry
 
 Accepted or required:
@@ -503,17 +530,16 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 1. DONE: the locally owned exact `[4,5120]` BF16 oneCCL oracle passed 256/256
    direct collectives and 512/512 XPUGraph replays with exact loaded hashes and
    zero mismatch under Steve's unset/default IPC identity.
-2. Observe the required reset boundary, then run the no-model vLLM integration
-   oracle through the corrected GroupCoordinator route: eager and compiled
-   custom-op calls at `[1,2048]` and `[4,2048]`, one compiled-direct sequence
-   of all 81 profile-run collectives at `[8192,2048]`, then single- and
-   81-collective decode-shape XPUGraph replay. Reject stock
-   `vllm::all_reduce`, aliases, input mutation, mismatch, or device loss.
-   This clears stock Dynamo/Inductor plus the real GroupCoordinator custom op,
-   not VllmBackend/PIECEWISE or interleaved model execution.
-3. If that passes, observe another reset boundary and retest one guarded exact
-   model transaction with the restored June inner-clone contract, unset/default
-   IPC exchange, explicit container `eth0`, and a fresh cache.
+2. PARTIAL: the no-model vLLM integration oracle cleared exact identities,
+   export, eager/compiled real shapes, mutation/alias checks, and single-op
+   XPUGraph replay. Its artificial 81-way profile fan-out DEVICE_LOST in a
+   generated 16-output Triton pointwise autotune, so the overall oracle and
+   81-op graph stage did not pass. Replace that arm with a sequential
+   low-live-buffer chain before reusing it.
+3. Observe an actual reboot boundary and run one guarded exact model
+   transaction with the restored June inner-clone contract, unset/default IPC
+   exchange, explicit container `eth0`, and a fresh cache. This is now the
+   highest-information VllmBackend/PIECEWISE and interleaved-layer gate.
 4. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
    Preserve rebuilding the public artifact as a later provenance task only.
 5. If the narrow current-source repair still does not reproduce, run the

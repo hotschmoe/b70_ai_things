@@ -18300,3 +18300,59 @@ the minimal June native replacement set. Its size reproduces Steve's recorded
 claim numerical or performance parity yet: after the required reboot boundary,
 the custom-op collective oracle comes first; leased GPU numeric/capture tests
 for this kernel package follow as a separate transaction.
+
+### 2026-08-25j - Clone-correct vLLM custom-op oracle partial pass
+
+CONFIG -> first GPU transaction after the requested reboot; pinned S2B image
+digest `f2e5a94e...`, torch 2.11.0+xpu, exact loaded oneCCL
+`542142ac...`, `_xpu_C` `ae330aff...`, and oneCCL SPIR-V `0d549c35...`;
+two XCCL ranks; direct P2P; unset/default `CCL_ZE_IPC_EXCHANGE` and
+`CCL_WORKER_COUNT`; active container `eth0`; corrected GroupCoordinator route
+through `vllm::s2b_all_reduce_clone`; stock dynamic Dynamo/Inductor; eager and
+compiled `[1,2048]`, compiled `[4,2048]` and `[8192,2048]`, single-op
+XPUGraph, and an attempted unrolled 81-collective profile/graph stress. The
+oracle cache was `/mnt/vm_8tb/b70/vllm_oracle_cache`.
+
+COMMAND -> exactly `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_vllm_allreduce_graph_oracle.sh`; after teardown,
+`./bin/gpu-run bash -lc './bin/xpu-health'`, followed by the definitive isolated
+card-1 completion `./bin/gpu-run --card 1 ./bin/xpu-health --card 1`. No model
+or second TP2/P2P experiment was chained.
+
+RESULT -> runtime identities matched on both ranks, and Dynamo export contained
+`torch.ops.vllm.s2b_all_reduce_clone` with no stock `vllm::all_reduce`. Both
+ranks passed 64 eager `[1,2048]`, 64 compiled `[1,2048]`, four compiled
+`[4,2048]`, four compiled `[8192,2048]`, and 256 compiled XPUGraph replays
+with zero output mismatches, zero input mutations, and zero output aliases.
+Compiled single-op replay averaged about 0.710 ms and XPUGraph replay about
+0.454 ms per iteration including synchronization and validation.
+
+The overall oracle then failed on rank 1 during the synthetic unrolled
+81-collective `[8192,2048]` arm. The immediate failing instruction was not an
+all-reduce: Inductor had transformed the harness's independent `input + offset`
+operands into five artificial Triton pointwise fan-out kernels, each writing
+16 separate 32 MiB outputs. Rank 1 threw `UR_RESULT_ERROR_DEVICE_LOST` while
+autotuning the second 16-output kernel
+`triton_poi_fused_add_s2b_all_reduce_clone_1`; torchrun then terminated rank 0.
+The real model interleaves its 81 collectives with layer math and does not
+materialize this 81-way fan-out plus final sum, so this last failure is not
+evidence that the corrected custom op itself failed. It does mean the oracle's
+overall pass gate was not met and the 81-collective graph stage was not run.
+Both cards passed post-teardown single-card matmul health. Evidence is
+`results/oneccl_oracle/qwen36_tp2_vllm_allreduce_graph_20260825T152954Z.log`
+and its `rank0.partial.json` and `rank1.partial.json` checkpoints. The retained
+generated program is
+`/mnt/vm_8tb/b70/vllm_oracle_cache/torchinductor/24/c24fybkziv5qe2t2vhe4glqadzw332ii7jamsxahq2ndgxsjluwb.py`,
+SHA256 `5b5767fb0cdf4aeb37908170bb08f66e4f438deb60fe38f7b012993afc63f996`.
+
+VERDICT -> the corrected GroupCoordinator op, required single inner clone,
+exact runtime identities, real decode/profile shapes, stock compiled execution,
+and single-op XPUGraph replay are cleared. Correct the oracle's artificial
+wide-fan-out stress before reusing that test, but do not spend the next reboot
+on it: the higher-information next transaction remains the corrected exact
+Qwen model control, whose real VllmBackend graph contains interleaved layer
+math. Preserve an actual reboot boundary before that run, use a new isolated
+cache with Steve's unset/default IPC exchange and active `eth0`, and do not
+describe this partial result as an 81-collective pass. Historical references
+to a required two-clone contract are superseded: only the inner registered-op
+clone was active and required in Steve's accepted route.

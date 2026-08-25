@@ -1,0 +1,139 @@
+{
+  "arguments": {
+    "collective_count": 81,
+    "compiled_iterations": 64,
+    "eager_iterations": 64,
+    "graph_iterations": 256,
+    "hidden_size": 2048,
+    "large_shape_iterations": 4,
+    "many_iterations": 32,
+    "output": "/results/qwen36_tp2_vllm_allreduce_graph_20260825T152954Z.json",
+    "rows": 1
+  },
+  "environment": {
+    "CCL_ATL_TRANSPORT": "ofi",
+    "CCL_KERNEL_PATH": "/opt/ccl4ce/lib/ccl/kernels",
+    "CCL_KVS_IFACE": "eth0",
+    "CCL_LOG_LEVEL": "info",
+    "CCL_TOPO_P2P_ACCESS": "1",
+    "CCL_WORKER_COUNT": null,
+    "CCL_ZE_IPC_EXCHANGE": null,
+    "FI_TCP_IFACE": "eth0",
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:0,1",
+    "TORCHINDUCTOR_CACHE_DIR": "/vllm_oracle_cache/torchinductor",
+    "TRITON_CACHE_DIR": "/vllm_oracle_cache/triton",
+    "VLLM_TARGET_DEVICE": "xpu",
+    "VLLM_USE_V1": "1",
+    "VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP": "1",
+    "VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT": "1",
+    "VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT": "1",
+    "VLLM_XPU_ENABLE_XPU_GRAPH": "1",
+    "VLLM_XPU_FORCE_GRAPH_WITH_COMM": "1",
+    "VLLM_XPU_GRAPH_NOOP_COMM_CAPTURE": "1",
+    "VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES": "1",
+    "XPU_GRAPH": "1",
+    "ZE_AFFINITY_MASK": "0,1"
+  },
+  "exception": {
+    "message": "level_zero backend failed with error: 20 (UR_RESULT_ERROR_DEVICE_LOST)",
+    "traceback": "Traceback (most recent call last):\n  File \"/opt/qwen36_vllm_allreduce_graph_oracle.py\", line 280, in distributed_cleanup\n    yield\n  File \"/opt/qwen36_vllm_allreduce_graph_oracle.py\", line 556, in main\n    many_stages = validate_many_collectives(\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/qwen36_vllm_allreduce_graph_oracle.py\", line 180, in validate_many_collectives\n    profile_output = compiled_many(profile_input)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py\", line 1024, in compile_wrapper\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/qwen36_vllm_allreduce_graph_oracle.py\", line 140, in many\n    def many(input_: torch.Tensor) -> torch.Tensor:\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py\", line 1263, in _fn\n    return fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_functorch/aot_autograd.py\", line 1200, in forward\n    return compiled_fn(full_args)\n           ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py\", line 580, in runtime_wrapper\n    all_outs = call_func_at_runtime_with_args(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/utils.py\", line 138, in call_func_at_runtime_with_args\n    out = normalize_as_list(f(args))\n                            ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py\", line 2298, in __call__\n    return self.compiled_fn(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py\", line 783, in wrapper\n    return compiled_fn(runtime_args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py\", line 1011, in inner_fn\n    outs = compiled_fn(args)\n           ^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/output_code.py\", line 656, in __call__\n    return self.current_callable(inputs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/utils.py\", line 3401, in run\n    out = model(new_inputs)\n          ^^^^^^^^^^^^^^^^^\n  File \"/vllm_oracle_cache/torchinductor/24/c24fybkziv5qe2t2vhe4glqadzw332ii7jamsxahq2ndgxsjluwb.py\", line 1313, in call\n    triton_poi_fused_add_s2b_all_reduce_clone_1.run(arg2_1, buf52, buf55, buf58, buf61, buf64, buf67, buf70, buf73, buf77, buf80, buf83, buf86, buf89, buf92, buf95, buf98, triton_poi_fused_add_s2b_all_reduce_clone_1_xnumel, stream=stream1)\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/triton_heuristics.py\", line 1448, in run\n    self.autotune_to_one_config(*args, **kwargs)\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/triton_heuristics.py\", line 1176, in autotune_to_one_config\n    timings = self.benchmark_all_configs(*args, **kwargs)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/triton_heuristics.py\", line 1139, in benchmark_all_configs\n    launcher: self.bench(launcher, *args, **kwargs)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/triton_heuristics.py\", line 999, in bench\n    return benchmarker.benchmark(\n           ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/benchmarking.py\", line 95, in wrapper\n    return fn(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/benchmarking.py\", line 206, in benchmark\n    return self.benchmark_gpu(_callable, warmup=warmup, rep=rep, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/benchmarking.py\", line 95, in wrapper\n    return fn(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/_inductor/runtime/benchmarking.py\", line 294, in benchmark_gpu\n    return self.triton_do_bench(_callable, **kwargs, return_mode=\"median\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/triton/testing.py\", line 162, in do_bench\n    di.synchronize()\n  File \"/opt/venv/lib/python3.12/site-packages/torch/xpu/__init__.py\", line 482, in synchronize\n    return torch._C._xpu_synchronize(device)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: level_zero backend failed with error: 20 (UR_RESULT_ERROR_DEVICE_LOST)\n",
+    "type": "RuntimeError"
+  },
+  "exported_graph": "graph():\n    %l_input_ : [num_users=1] = placeholder[target=arg0]\n    %s2b_all_reduce_clone : [num_users=1] = call_function[target=torch.ops.vllm.s2b_all_reduce_clone](args = (%l_input_,), kwargs = {group_name: tp:0})\n    return [s2b_all_reduce_clone]",
+  "group": {
+    "device_communicator": "XpuCommunicator",
+    "unique_name": "tp:0",
+    "use_custom_op_call": true
+  },
+  "local_rank": 1,
+  "rank": 1,
+  "runtime_identity": {
+    "ccl_kernels": {
+      "path": "/opt/ccl4ce/lib/ccl/kernels/kernels.spv",
+      "sha256": "0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e075290d314f0c9",
+      "size": 5257304
+    },
+    "expected": {
+      "ccl": "542142aca8f3d318616eae0f300aaa47dc62b217831599cb1461212f8aa4dc76",
+      "ccl_kernels": "0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e075290d314f0c9",
+      "xpu_c": "ae330affe0315a5be4ac50478cc15c7874ae6e8fa9fa71cf64d5e5dff158968b"
+    },
+    "loaded_ccl": [
+      {
+        "path": "/opt/ccl4ce/lib/libccl.so.1.0",
+        "sha256": "542142aca8f3d318616eae0f300aaa47dc62b217831599cb1461212f8aa4dc76",
+        "size": 240177816
+      }
+    ],
+    "loaded_xpu_c": [
+      {
+        "path": "/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/_xpu_C.abi3.so",
+        "sha256": "ae330affe0315a5be4ac50478cc15c7874ae6e8fa9fa71cf64d5e5dff158968b",
+        "size": 116706992
+      }
+    ]
+  },
+  "runtime_identity_passed": true,
+  "software": {
+    "compile_backend": "stock torch Dynamo/Inductor",
+    "dynamic_shapes": true,
+    "image": "intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94",
+    "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+    "torch": "2.11.0+xpu",
+    "vllm": "dev"
+  },
+  "stages": [
+    {
+      "avg_iteration_ms_including_sync_and_validation": 21.208124484376256,
+      "first_mismatch": null,
+      "input_mutation_iterations": 0,
+      "iterations": 64,
+      "mismatch_iterations": 0,
+      "name": "group_custom_op_eager",
+      "output_alias_iterations": 0
+    },
+    {
+      "avg_iteration_ms_including_sync_and_validation": 0.7103153749987712,
+      "first_mismatch": null,
+      "input_mutation_iterations": 0,
+      "iterations": 64,
+      "mismatch_iterations": 0,
+      "name": "group_custom_op_compiled",
+      "output_alias_iterations": 0
+    },
+    {
+      "avg_iteration_ms_including_sync_and_validation": 185.94479224998395,
+      "first_mismatch": null,
+      "input_mutation_iterations": 0,
+      "iterations": 4,
+      "mismatch_iterations": 0,
+      "name": "group_custom_op_compiled_4x2048",
+      "output_alias_iterations": 0
+    },
+    {
+      "avg_iteration_ms_including_sync_and_validation": 114.45686375000719,
+      "first_mismatch": null,
+      "input_mutation_iterations": 0,
+      "iterations": 4,
+      "mismatch_iterations": 0,
+      "name": "group_custom_op_compiled_8192x2048",
+      "output_alias_iterations": 0
+    },
+    {
+      "avg_iteration_ms_including_sync_and_validation": 0.4538098476563057,
+      "first_mismatch": null,
+      "input_mutation_iterations": 0,
+      "iterations": 256,
+      "mismatch_iterations": 0,
+      "name": "group_custom_op_compiled_graph",
+      "output_alias_iterations": 0
+    }
+  ],
+  "worker_warmup": {
+    "dtype": "float32",
+    "shape": [
+      1
+    ],
+    "value": 2.0
+  }
+}

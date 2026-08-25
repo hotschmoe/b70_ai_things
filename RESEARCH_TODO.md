@@ -79,11 +79,18 @@
 > W8A8 implementation. The source rebuild is still required for ownership and
 > controlled A/Bs, but native June math is no longer the leading explanation
 > for the endpoint gap; vLLM dispatch and graph integration remain first.
-> Next: reset boundary -> locally owned vLLM custom-op oracle at real
-> `[1,2048]` and `[4,2048]` decode shapes, one compiled-direct sequence of all
-> 81 profile-run collectives at `[8192,2048]`, and 81-collective XPUGraph replay
-> -> reset boundary -> corrected inner-clone exact model control with Steve's unset/default IPC exchange, active
-> container NIC, and fresh cache -> DONE minimal June native 54 MB-class
+> The clone-correct vLLM custom-op oracle then passed exact runtime identities,
+> the local exported op route, eager/compiled decode shapes, compiled
+> `[8192,2048]`, and 256 single-op XPUGraph replays on both ranks with zero
+> mismatch, mutation, or alias. Its overall gate did not pass: the synthetic
+> 81-profile-collective arm made Inductor emit five model-unrepresentative
+> 16-output pointwise fan-out kernels and rank 1 DEVICE_LOST while autotuning
+> the second fan-out, before the 81-collective graph stage. The immediate
+> failure was outside the custom op, so the next higher-information transaction
+> is, after an actual reboot, the corrected inner-clone exact model control with
+> Steve's unset/default IPC exchange, active container NIC, and fresh cache.
+> Correct the oracle to use a sequential low-live-buffer chain before reusing
+> its 81-op stress; do not claim that stage passed. Then -> DONE minimal June native 54 MB-class
 > B70-AOT build and off-device dispatch gate; GPU numeric/capture gate remains
 > -> June source-overlay bisect as indicated -> SGLang
 > adapter -> model/parallelism matrix.
