@@ -100,6 +100,71 @@ def _patch_shared_expert_abi() -> None:
     )
 
 
+def _patch_custom_allreduce_clone_contract() -> None:
+    """Restore the June inner-clone custom-op contract under a local op name.
+
+    The August source still honors the graph-side clone in XpuCommunicator,
+    but removed the second clone from parallel_state.all_reduce while leaving
+    the old environment setting inert. Re-registering the existing operator
+    is not supported by torch.library, so install an equivalent attributed op
+    and route only the June opt-in compile path through it.
+    """
+    from vllm.distributed import parallel_state
+    from vllm.distributed.device_communicators.xpu_communicator import (
+        XpuCommunicator,
+    )
+    from vllm.utils.torch_utils import direct_register_custom_op
+
+    def s2b_all_reduce_clone(
+        tensor: torch.Tensor, group_name: str
+    ) -> torch.Tensor:
+        group_ref = parallel_state._groups.get(group_name)
+        group = group_ref() if group_ref is not None else None
+        if group is None:
+            raise ValueError(f"Group {group_name} is not found or was destroyed")
+        if os.environ.get("VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT", "0") == "1":
+            tensor = tensor.clone()
+        return group._all_reduce_out_place(tensor)
+
+    def s2b_all_reduce_clone_fake(
+        tensor: torch.Tensor, group_name: str
+    ) -> torch.Tensor:
+        del group_name
+        return torch.empty_like(tensor)
+
+    direct_register_custom_op(
+        op_name="s2b_all_reduce_clone",
+        op_func=s2b_all_reduce_clone,
+        fake_impl=s2b_all_reduce_clone_fake,
+    )
+
+    original_all_reduce = XpuCommunicator.all_reduce
+
+    def compatible_all_reduce(self, input_: torch.Tensor) -> torch.Tensor:
+        if (
+            torch.compiler.is_compiling()
+            and os.environ.get("VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP", "0") == "1"
+        ):
+            if (
+                os.environ.get(
+                    "VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT", "0"
+                )
+                == "1"
+            ):
+                input_ = input_.clone()
+            return torch.ops.vllm.s2b_all_reduce_clone(
+                input_, group_name=self.unique_name
+            )
+        return original_all_reduce(self, input_)
+
+    XpuCommunicator.all_reduce = compatible_all_reduce
+    print(
+        "[qwen36-s2b] restored June two-clone custom all-reduce contract",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _install() -> None:
     import vllm_xpu_kernels._xpu_C  # noqa: F401
     from vllm.model_executor.kernels.linear import _POSSIBLE_INT8_KERNELS
@@ -241,4 +306,5 @@ def _install() -> None:
 
 _patch_nospec_piecewise_decode_key()
 _patch_shared_expert_abi()
+_patch_custom_allreduce_clone_contract()
 _install()

@@ -78,10 +78,13 @@ DOCKER_ENV=(
   -e VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP=1
   -e VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT=1
   -e VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT=1
+  -e VLLM_XPU_QUARK_W8A8_MOE=1
+  -e VLLM_XPU_FORCE_QUARK_REPACK=0
   -e VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=1
   -e VLLM_XPU_GDN_REUSE_QKVZ_BA_QUANT=clone
   -e VLLM_XPU_GDN_NATIVE_FALLBACK=prefill
   -e VLLM_XPU_GDN_PREFILL_RECURRENT_FALLBACK=1
+  -e VLLM_XPU_ZERO_FRESH_GDN_STATE=1
   -e VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY=1
   -e VLLM_XPU_GREEDY_SAMPLE_TOPK_FALLBACK=1
 )
@@ -117,6 +120,8 @@ if [ -n "${B70_EXTRA_ENV:-}" ]; then
 fi
 
 source "$SCRIPT_DIR/../../rdy_to_serve/_common/lib.sh"
+CACHE_DIR_HOST="${CACHE_DIR_HOST:-$ROOT/vllm_cache}"
+mkdir -p "$CACHE_DIR_HOST"
 
 b70_serve() {
   b70_build
@@ -134,7 +139,7 @@ b70_serve() {
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
     --cap-add SYS_PTRACE --security-opt seccomp=unconfined \
-    -v "$MODELS_FILES:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
+    -v "$MODELS_FILES:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$CACHE_DIR_HOST:/vllm_cache" \
     -v "$ROOT/tmp_ssd:/tmp_ssd" "${MOUNTS[@]+"${MOUNTS[@]}"}" \
     -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
     -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \

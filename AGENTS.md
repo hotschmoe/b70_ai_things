@@ -109,8 +109,12 @@ serve cycles ran clean on 7.1. **The old "w8a8 TP=2 = attended-only" caveat is R
 serving is fine.**
 
 The P2P-in-vLLM-serve / chained-TP>1-worker-crash oneCCL wedge documented next is a SEPARATE software
-mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge and NOT retested on 7.1 --
-keep those cautions. If any wedge ever does recur, reboot remains the recovery on this display-attached box.
+mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge. A guarded exact Qwen TP2
+retest on 2026-08-25 proved it still fails on 7.1: process-group init and model load passed, then the first
+compiled `vllm::all_reduce` in profile-run threw `UR_RESULT_ERROR_DEVICE_LOST` on rank 1. Both single-card
+health probes passed after teardown in that one transaction, so a persistent wedge did not reproduce, but one
+clean teardown is not enough to retire the guard or reboot rule. If a wedge recurs, reboot remains the recovery
+on this display-attached box.
 
 ### DANGER: P2P in vLLM serve wedges the multi-GPU state
 

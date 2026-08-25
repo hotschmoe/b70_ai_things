@@ -18021,3 +18021,38 @@ about 16.7 to 92 tok/s, while clone-safe custom collectives added roughly 3
 tok/s. Proceed with one guarded kernel-7.1 exact oneCCL direct-P2P transaction,
 then bisect the closest surviving June vLLM source if the later image still
 does not reproduce. Endpoint remains down and card health is green.
+
+### 2026-08-25c - Kernel-7.1 exact direct-P2P fail and hidden clone-contract drift
+
+CONFIG -> exact Qwen3.6 Quark W8A8 TP=2 control, pinned S2B image, async
+scheduling, no MTP or prefix cache, minimal Steve PIECEWISE compilation config,
+oneCCL/OFI, `CCL_TOPO_P2P_ACCESS=1`, and the explicit repository wedge
+override. No local push all-reduce was active. This was one guarded transaction
+with no chained retry.
+
+COMMAND -> `./bin/gpu-run env EXACT_STEVE_CC=1 PUSH_AR=0 P2PACCESS=1
+I_KNOW_P2P_WEDGES=1 NAME=qwen36_s2b_exactcc_p2p1 PORT=18080 bash
+vllm/w8a8/serve_qwen36_s2b_control.sh run`; then stop and one dual-card
+`bin/xpu-health` lease.
+
+RESULT -> unlike the old kernel path, both XCCL workers initialized and the
+34.15 GiB checkpoint loaded normally. The exact graph compiled, then rank 1
+failed on the first compiled `vllm::all_reduce` during profile-run with
+`UR_RESULT_ERROR_DEVICE_LOST` (error 20). Teardown completed and both cards
+passed the post single-card health probe. The run also emitted PyTorch's custom
+op output-alias warning despite both clone environment settings. Source diffing
+found why: Steve's 2026-06-16 `parallel_state.all_reduce` honors the inner
+`VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT` and clones before dispatch, while the
+August image removed that code entirely. The setting was inert locally. A new
+attributed `vllm::s2b_all_reduce_clone` adapter op now restores Steve's exact
+two-clone contract and passes a no-device schema/import check. The launcher also
+restores Steve's Qwen MoE, no-repack, and zero-fresh-GDN defaults and supports
+an isolated host compilation-cache mount.
+
+VERDICT -> kernel 7.1 cured the GuC/BCS hardware wedge but did not cure the
+oneCCL-vLLM direct-P2P model all-reduce failure. This transaction was not yet
+source-equivalent because the later image silently ignored the required inner
+clone. Reboot before the next P2P transaction; then retest the restored clone
+contract from a fresh cache. If it still fails, use the import-proven closest
+surviving June vLLM snapshot as the next one-factor forensic overlay. Endpoint
+remains down; immediate post-teardown card health was green.

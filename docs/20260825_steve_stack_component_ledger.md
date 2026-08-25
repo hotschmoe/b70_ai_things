@@ -70,9 +70,10 @@ partitioning. The later launcher default made scheduling asynchronous because
 | Shared expert | Native dense W8A8 linears plus shared/routed combination | Yes | Later-image ABI mismatch bridged narrowly | Coherent; source snapshot comparison pending. |
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
+| Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
 | Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config now compiles; P2P-off monolithic oneCCL capture stalls | Primary unresolved mechanism. |
 | Uniform no-spec descriptor | June Qwen decode capture descriptor | Yes | Restored by narrow adapter | Matched and required for capture. |
-| Custom collective wrapper | `vllm::all_reduce` custom op with two clone guards | Yes | Env and source route matched | Wrapper matched; transport differs at P2P off. |
+| Custom collective wrapper | `vllm::all_reduce` custom op with two clone guards | Yes | August source silently removed the inner clone; local attributed op now restores it | Must retest after reboot; prior exact run was not source-equivalent. |
 | Collective transport | oneCCL/OFI direct P2P in graph | Yes | Deliberately off in safe controls | Exact guarded transaction pending. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |
 | Scheduler | V1 async scheduling | Yes | Live log confirms async | Matched. |
@@ -175,6 +176,28 @@ loaded-process Level Zero IPC visibility, not its arithmetic or standalone
 capture path. The standalone exact-image harness still passes 50/50 replay and
 multi-all-reduce at about 35.45 us for 10 KiB.
 
+### Guarded direct-P2P transaction on kernel 7.1
+
+Config -> exact minimal PIECEWISE graph, oneCCL/OFI direct P2P, later pinned
+image, and the then-current adapter.
+
+Result -> process-group initialization and model load succeeded, which is
+farther than the old kernel failure. The first compiled custom-op all-reduce in
+the profile run failed on rank 1 with `UR_RESULT_ERROR_DEVICE_LOST`. Both cards
+passed the post-teardown single-card health probe.
+
+Source finding -> the run emitted PyTorch's output-alias warning. Comparing
+Steve's June source with the later image proved that the August
+`parallel_state.all_reduce` removed the implementation of
+`VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT`; the setting was present but inert.
+The June source cloned once before the custom op and again inside it. A local
+attributed custom op now restores that two-clone contract without overriding a
+registered torch operator.
+
+Verdict -> kernel 7.1 did not fix the direct-P2P vLLM failure. The transaction
+does not yet isolate whether the device loss comes from oneCCL itself or from
+the missing inner-clone/source contract. Reboot before another direct-P2P arm.
+
 ## Accepted And Rejected Mechanism Registry
 
 Accepted or required:
@@ -203,9 +226,9 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 
 ## Next Decisive Transactions
 
-1. Run one guarded kernel-7.1 exact oneCCL P2P transaction with the minimal
-   Steve compilation config. Stop after any worker-init failure and run health.
-2. If current source does not reproduce, run the closest surviving 2026-06-16
+1. After reboot, retest one guarded exact oneCCL P2P transaction with the
+   restored June two-clone contract and a fresh compilation cache.
+2. If the narrow current-source repair does not reproduce, run the closest surviving 2026-06-16
    vLLM snapshot as a forensic overlay with the same runtime binaries.
 3. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
