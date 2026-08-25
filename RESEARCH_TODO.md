@@ -75,7 +75,8 @@
 > flags produced one active required inner clone. The prior DEVICE_LOST occurred
 > during compiled profile-run with graph mode NONE, before XPUGraph capture.
 > Next: reset boundary -> locally owned vLLM custom-op oracle at real
-> `[1,2048]`, `[4,2048]`, and `[8192,2048]` shapes plus an 81-collective graph
+> `[1,2048]` and `[4,2048]` decode shapes, one compiled-direct sequence of all
+> 81 profile-run collectives at `[8192,2048]`, and 81-collective XPUGraph replay
 > -> reset boundary -> corrected inner-clone exact model control with Steve's unset/default IPC exchange, active
 > container NIC, and fresh cache -> rebuild the June native kernel candidate or
 > June source-overlay bisect as indicated -> locally owned build -> SGLang

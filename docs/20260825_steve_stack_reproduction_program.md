@@ -235,8 +235,9 @@ equivalence before performance tests.
 8. IN PROGRESS: source audit proved the initial communicator-only clone adapter
    was inert and the prior crash occurred during compiled profile-run before
    graph capture. Observe the reset boundary and run the locally owned vLLM
-   custom-op integration oracle at the real Qwen shapes, including the
-   `[8192,2048]` profile input and an 81-collective graph.
+   custom-op integration oracle at the real Qwen shapes, including one
+   compiled-direct sequence of all 81 `[8192,2048]` profile collectives before
+   an 81-collective decode-shape XPUGraph replay.
 9. If that passes, observe another reset boundary and run the corrected
    inner-clone, unset-IPC exact model control.
 10. Rebuild every native SO from local source and remove external mounts.

@@ -107,15 +107,63 @@ def validate_many_collectives(
     world_size: int,
     collective_count: int,
     iterations: int,
-) -> dict[str, Any]:
+) -> list[dict[str, Any]]:
     def many(input_: torch.Tensor) -> torch.Tensor:
-        return torch.stack([call(input_ + offset) for offset in range(collective_count)])
+        # Match the Qwen backbone's sequential collective execution without
+        # retaining every 32 MiB profile-run output at once.
+        result = torch.zeros_like(input_)
+        for offset in range(collective_count):
+            result = result + call(input_ + offset)
+        return result
+
+    def expected_many(input_base: torch.Tensor, iteration: int) -> torch.Tensor:
+        result = torch.zeros_like(input_base)
+        for offset in range(collective_count):
+            collective_output = expected_output(input_base, world_size, iteration)
+            collective_output = collective_output + offset * world_size
+            result = result + collective_output
+        return result
 
     compiled_many = torch.compile(many, fullgraph=True)
     for warmup in range(2):
         static_input.copy_(make_input(base, rank, warmup))
         compiled_many(static_input)
     torch.xpu.synchronize()
+    dist.barrier()
+
+    # vLLM's failing profile run executes 81 compiled [8192,2048] BF16
+    # collectives before graph capture. Exercise that exact shape and count.
+    profile_rows = 8192
+    profile_base = (
+        torch.arange(
+            profile_rows * base.shape[1], dtype=torch.int32, device=base.device
+        )
+        .remainder_(31)
+        .to(torch.bfloat16)
+        .reshape(profile_rows, base.shape[1])
+    )
+    profile_input = make_input(profile_base, rank, 0)
+    profile_source = profile_input.clone()
+    start = time.perf_counter()
+    profile_output = compiled_many(profile_input)
+    torch.xpu.synchronize()
+    profile_elapsed_ms = (time.perf_counter() - start) * 1000.0
+    profile_expected = expected_many(profile_base, 0)
+    profile_ok = torch.equal(profile_output, profile_expected)
+    profile_input_ok = torch.equal(profile_input, profile_source)
+    profile_alias = profile_output.data_ptr() == profile_input.data_ptr()
+    profile_result = {
+        "name": "compiled_direct_81_collective_profile",
+        "shape": [profile_rows, int(base.shape[1])],
+        "collectives": collective_count,
+        "iterations": 1,
+        "mismatch_iterations": 0 if profile_ok else 1,
+        "input_mutation_iterations": 0 if profile_input_ok else 1,
+        "output_alias_iterations": 1 if profile_alias else 0,
+        "elapsed_ms_including_compile_sync_and_validation": profile_elapsed_ms,
+    }
+    del profile_output, profile_expected, profile_source, profile_input, profile_base
+    torch.xpu.empty_cache()
     dist.barrier()
 
     static_input.copy_(make_input(base, rank, 0))
@@ -128,16 +176,13 @@ def validate_many_collectives(
     mismatches = 0
     first_mismatch: dict[str, Any] | None = None
     start = time.perf_counter()
-    offsets = torch.arange(
-        collective_count, device=base.device, dtype=base.dtype
-    ).reshape(collective_count, 1, 1)
     for iteration in range(iterations):
-        static_input.copy_(make_input(base, rank, iteration))
+        source = make_input(base, rank, iteration)
+        static_input.copy_(source)
         torch.xpu.synchronize()
         graph.replay()
         torch.xpu.synchronize()
-        expected = expected_output(base, world_size, iteration).unsqueeze(0)
-        expected = expected + offsets * world_size
+        expected = expected_many(base, iteration)
         if not torch.equal(static_output, expected):
             mismatches += 1
             if first_mismatch is None:
@@ -147,7 +192,7 @@ def validate_many_collectives(
                     "max_abs_diff": float(diff.max().item()),
                 }
 
-    return {
+    graph_result = {
         "name": "compiled_graph_many",
         "collectives_per_replay": collective_count,
         "iterations": iterations,
@@ -157,6 +202,7 @@ def validate_many_collectives(
             (time.perf_counter() - start) * 1000.0 / iterations
         ),
     }
+    return [profile_result, graph_result]
 
 
 def write_partial(path: Path | None, rank: int, document: dict[str, Any]) -> None:
@@ -221,6 +267,16 @@ def main() -> int:
             pipeline_model_parallel_size=1,
             backend="xccl",
         )
+        warmup = torch.ones(1, dtype=torch.float32, device=f"xpu:{local_rank}")
+        dist.all_reduce(warmup)
+        torch.xpu.synchronize()
+        if warmup.item() != float(world_size):
+            raise RuntimeError(f"one-element worker warmup mismatch: {warmup.item()}")
+        local_result["worker_warmup"] = {
+            "shape": [1],
+            "dtype": "float32",
+            "value": float(warmup.item()),
+        }
         group = get_tp_group()
         local_result["group"] = {
             "unique_name": group.unique_name,
@@ -322,7 +378,7 @@ def main() -> int:
         write_partial(args.output, rank, local_result)
         print(f"rank={rank} stage={compiled_graph}", flush=True)
 
-        many = validate_many_collectives(
+        many_stages = validate_many_collectives(
             call=tensor_model_parallel_all_reduce,
             base=base,
             static_input=static_input,
@@ -331,9 +387,10 @@ def main() -> int:
             collective_count=args.collective_count,
             iterations=args.many_iterations,
         )
-        local_result["stages"].append(many)
+        local_result["stages"].extend(many_stages)
         write_partial(args.output, rank, local_result)
-        print(f"rank={rank} stage={many}", flush=True)
+        for stage in many_stages:
+            print(f"rank={rank} stage={stage}", flush=True)
 
         all_results: list[dict[str, Any] | None] = [None] * world_size
         dist.all_gather_object(all_results, local_result)

@@ -436,8 +436,9 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    zero mismatch under Steve's unset/default IPC identity.
 2. Observe the required reset boundary, then run the no-model vLLM integration
    oracle through the corrected GroupCoordinator route: eager and compiled
-   custom-op calls at `[1,2048]`, `[4,2048]`, and profile `[8192,2048]`, then
-   XPUGraph replay and an unrolled 81-collective graph. Reject stock
+   custom-op calls at `[1,2048]` and `[4,2048]`, one compiled-direct sequence
+   of all 81 profile-run collectives at `[8192,2048]`, then single- and
+   81-collective decode-shape XPUGraph replay. Reject stock
    `vllm::all_reduce`, aliases, input mutation, mismatch, or device loss.
 3. If that passes, observe another reset boundary and retest one guarded exact
    model transaction with the restored June inner-clone contract, unset/default
