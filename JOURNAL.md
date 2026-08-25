@@ -18513,3 +18513,59 @@ result or hardware wedge. Preserve the consumed direct-P2P reboot boundary.
 After another actual reboot, rerun the identical exact transaction with a new
 cache; do not disable the June eager-prefill runtime policy or narrow capture
 sizes.
+
+### 2026-08-25n - Exact control is coherent at 47.54 tok/s; Quark MoE still routes through Triton
+
+CONFIG -> new boot ID `e2d5777d-f6bb-4d92-a718-0fb07ae17919`; kernel 7.1;
+exact Qwen revision `cced5659...`; complete rebuilt June runtime package;
+TP=2, PP=1, default-size PIECEWISE graphs, maxseqs 24, async, no MTP or prefix
+cache, direct P2P, unset/default IPC exchange and worker count, container
+`eth0`, and a fresh compilation cache. The boot-started P2P-off daily service
+reached health and was then stopped gracefully under the two-card lease.
+
+COMMAND -> exactly `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`. After its one guarded GPU
+transaction and teardown, inspected the digest-pinned image source without a
+GPU and ran `STAMP=20260825T183000Z_native_moe_preflight PREFLIGHT_ONLY=1
+I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`. No second GPU transaction
+was run on this boot.
+
+RESULT -> both ranks initialized with direct P2P, loaded 16.88 GiB per card,
+compiled in 100.46 seconds, profiled in 23.05 seconds, and captured all 9/9
+general PIECEWISE graphs in 26 seconds using 1.64 GiB. Endpoint identity and
+semantic probes passed. The exact natural-chat p498/o512 request was coherent:
+512 output tokens, 336.710 ms client TTFT, 11.0845 seconds end to end,
+10.7657 seconds of vLLM decode time, 46.1908 client output tok/s, and 47.5448
+tok/s corrected after the first token. JSON and color canaries each passed
+16/16 with zero mismatch. Teardown was graceful; both post-health probes
+passed, with no `DEVICE_LOST`, `OUT_OF_RESOURCES`, UR, or alias marker.
+
+The launcher exited 1 only because its strict evidence gate found request-time
+`fused_moe_kernel` Triton JIT. Source inspection proved the mounted June
+package was reachable but not selected for routed experts: digest-pinned image
+Quark source SHA256 `7e4c13d2...` unconditionally calls generic
+`fused_experts`, despite containing the XPU INT8 MoE oracle and experts class.
+The prior log line showing the grouped schema proved registration only. A
+narrow adapter now restores backend selection, `E,N,K` to `E,K,N` weight
+layout, `E,N,1` to `E,N` scale layout, native kernel construction, and native
+apply while retaining the image's RoutedExperts ABI. Its no-device contract
+passed with SHA256 `ed9ee40f...`.
+
+The measured control is 2.788x the earlier 17.0559 tok/s split-collective arm,
+55.37% of Steve's 85.8691 tok/s, and closes 44.31% of that absolute gap. The
+remaining gap is 38.3243 tok/s or 1.806x; decode remains 4.8030 seconds slower
+than Steve. Primary committed ASCII evidence under
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T180624Z` is server log
+SHA256 `cac6838b...` (raw pre-sanitization `58a55026...`), run log
+`d6f26543...`, metric `8b1213cc...`, JSON canary `b501be3e...`, color canary
+`2865ea7a...`, kernel preflight `86a5c234...`, and capture contract
+`2f3bd3ac...`.
+
+VERDICT -> the graph/capture, dense INT8, clone-safe collective, and direct-P2P
+repairs collectively recover a large coherent gain, but this is not Steve's
+native routed-MoE path and is not an exact reproduction. The fatal MoE-JIT
+gate correctly prevents promotion. Preserve the consumed direct-P2P reboot
+boundary. After an actual reboot, run the identical fresh-cache transaction
+with the new native Quark MoE adapter; require the XPU backend log, absence of
+request-time `fused_moe_kernel`, exact metric/canaries, and healthy teardown.

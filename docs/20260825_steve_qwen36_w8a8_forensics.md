@@ -37,13 +37,14 @@ collective handoffs, inside a low-overhead graph/runtime path.
 | Lane | Model/runtime | Parallel path | Result | Validity |
 | --- | --- | --- | ---: | --- |
 | Steve TP=2 smoke | Qwen3.6 35B-A3B Quark W8A8, custom vLLM/XPU | TP=2, PIECEWISE forced-comm graph, P2P=1 | 85.87 tok/s | JSON 16/16, color 16/16, quality skipped |
+| Local exact-package control | Exact Qwen checkpoint, rebuilt June package plus narrow August-source repairs | TP=2, 9/9 PIECEWISE graphs, P2P=1 | 47.54 tok/s | coherent and both canaries 16/16; rejected because August Quark still dispatched routed MoE through Triton |
 | Local matched S2B control | Exact Qwen checkpoint, later S2B image plus narrow Qwen repairs | TP=2, PIECEWISE with split collectives, P2P=0 | 17.06 tok/s | coherent semantic canaries; exact Steve-shaped p498/o512 request |
 | Local v0.24 control | Same HF model family and Quark format, vLLM 0.24 shelf | TP=2, PIECEWISE, P2P=0 | 22.96 tok/s | coherent eight-request random sweep; not Steve's one-request metric |
 | Local S2B/Qwen trial | Later Steve S2B image plus the Ornith compatibility shim | TP=2, split collectives, P2P=0 | 12.72 tok/s | invalid: corrupted output after the first word |
 | Local Ornith PP baseline | Ornith W8A8 RTN, later Steve S2B image | PP=2, graph, no MTP | 29.78 c1; 41.15 c2 aggregate | coherent |
 | Local Ornith PP+MTP | Same target, experimental PP/MTP compatibility patches | PP=2, eager, MTP1 | not benchmarked | invalid: mechanically nondegenerate but semantically corrupted |
 
-The matched local control used Steve's exact metric shape: a natural-chat
+The first matched local control used Steve's exact metric shape: a natural-chat
 prompt requested at 512 tokens and tokenized to 498, one 64-token warmup, then
 one streaming 512-token measured request with EOS ignored. It reported 624.29
 ms client TTFT, 30.010 s corrected decode time, and 17.06 corrected output
@@ -53,6 +54,13 @@ and basic coherence are controlled.
 
 The local v0.24 sweep sent eight sequential 512-output requests and is retained
 as a historical coherent reference, not a promotable matched A/B ratio.
+
+The first full exact-package endpoint then captured all nine graphs and reached
+47.5448 corrected tok/s with 336.710 ms TTFT and 10.7657 seconds of server
+decode. This is 2.788x the 17.06 control and 55.37% of Steve's result, but it
+is not a native-MoE result. The pinned image's Quark method unconditionally
+called Triton `fused_experts`; mounting the rebuilt June package registered the
+grouped operator without making that dispatcher select it.
 
 ## Steve's Accepted Lever Ladder
 
@@ -135,6 +143,15 @@ activations. `VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=1` changes workspace handling,
 but the tracked matched row did not show a standalone decode win. Keep it in
 the reproduction identity because it was part of the accepted packet; do not
 claim it is the headline speed source.
+
+The first local exact-package endpoint exposed a second routing regression in
+the later image. Its Quark source SHA256 `7e4c13d2...` contains the XPU INT8
+oracle and experts implementation elsewhere in the tree, but
+`QuarkW8A8Int8MoEMethod.apply` always calls generic Triton `fused_experts`.
+The grouped schema in the startup log therefore established registration, not
+execution. The local adapter now restores XPU backend selection, weight/scale
+layout conversion, modular-kernel construction, and native apply. A no-device
+contract proves the repaired August ABI before the next guarded model run.
 
 Ornith currently reports missing tuned B70 `E=256,N=256` MoE configurations
 and falls back to generic Triton tuning. This is a real third-order lever after
@@ -274,20 +291,17 @@ and isolated MoE workspace tuning are lower-order. PP=2 remains a useful safe
 baseline and concurrency lever, but it is not the direct route to Steve's
 target-only 85.87 TP=2 result.
 
-The direct-P2P oneCCL and clone-correct custom-op mechanism gates now pass in
-isolation. Exact June-package model transactions load both ranks, compile and
-profile the model, finish graph setup, and reach endpoint health. The first
-removed an erroneous local no-spec uniform PIECEWISE key. The next transaction
-proved a subtler June/August conflict: August also uses June's eager-prefill
-replay variable to suppress capture. June ordinary decode reuses those relaxed
-general captures, so first inference selected an uncaptured graph and returned
-HTTP 500. The adapter now retains all nine general captures while preserving
-eager dispatch for non-uniform prefill. A v2 off-device contract proves both
-halves at the unchanged default sizes.
+The direct-P2P oneCCL, clone-correct custom op, and graph-capture repairs now
+pass in the full model. The first coherent exact-package endpoint loaded both
+ranks, captured all nine general graphs, passed the exact 498/512 metric and
+both 16/16 canaries, and tore down healthy at 47.5448 tok/s. Its strict route
+gate rejected the run because request-time Triton `fused_moe_kernel` proved
+that the later Quark dispatcher still bypassed the registered June grouped
+operator.
 
-The immediate experiment, after an actual reboot, is the same guarded exact
-June-package model transaction from a new cache. Do not narrow the capture
-sizes, remove the eager-prefill policy, or change Steve's minimal
-`{"cudagraph_mode":"PIECEWISE"}` config. It must first complete endpoint
-identity, the exact 498/512 metric, and both 16/16 canaries before any transfer
-or speed claim.
+The immediate experiment, after an actual reboot, is the identical guarded
+fresh-cache transaction with only the native Quark MoE dispatcher repair. Do
+not narrow capture sizes, remove eager-prefill policy, or change Steve's
+minimal `{"cudagraph_mode":"PIECEWISE"}` config. Require the XPU Int8 MoE
+backend log, no request-time generic MoE JIT, the exact metric and both
+canaries, and healthy teardown before interpreting speed.

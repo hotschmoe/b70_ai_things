@@ -72,6 +72,135 @@ def _patch_shared_expert_abi() -> None:
     )
 
 
+def _patch_quark_int8_moe_native_route() -> None:
+    """Restore the June XPU grouped-W8A8 route for Quark routed experts.
+
+    The pinned S2B image contains the XPU INT8 MoE oracle and experts class,
+    but its Quark method still unconditionally calls generic Triton
+    ``fused_experts``. Mounting the June kernel package therefore proves only
+    operator availability unless the Quark dispatcher is repaired as well.
+
+    Keep the image's RoutedExperts/SharedExperts ABI and use its native INT8
+    oracle, while restoring June's weight transpose and scale normalization
+    before constructing the XPU modular kernel.
+    """
+    from vllm.model_executor.layers.fused_moe.oracle.int8 import (
+        Int8MoeBackend,
+        make_int8_moe_kernel,
+        make_int8_moe_quant_config,
+        select_int8_moe_backend,
+    )
+    from vllm.model_executor.layers.quantization.quark.quark_moe import (
+        QuarkW8A8Int8MoEMethod,
+    )
+    from vllm.model_executor.layers.quantization.utils.quant_utils import (
+        kInt8DynamicTokenSym,
+        kInt8StaticChannelSym,
+    )
+    from vllm.model_executor.utils import replace_parameter
+
+    original_init = QuarkW8A8Int8MoEMethod.__init__
+    original_process = QuarkW8A8Int8MoEMethod.process_weights_after_loading
+    original_apply = QuarkW8A8Int8MoEMethod.apply
+
+    def native_init(self, weight_config, input_config, moe):
+        original_init(self, weight_config, input_config, moe)
+        activation_key = (
+            None if self.static_input_scales else kInt8DynamicTokenSym
+        )
+        self.int8_backend, self.experts_cls = select_int8_moe_backend(
+            config=self.moe,
+            weight_key=kInt8StaticChannelSym,
+            activation_key=activation_key,
+        )
+        self.moe_kernel = None
+
+    def native_process(self, layer):
+        if getattr(layer, "_qwen36_native_int8_moe_ready", False):
+            return
+        original_process(self, layer)
+        if self.int8_backend != Int8MoeBackend.XPU:
+            return
+
+        from vllm.model_executor.layers.fused_moe.experts.xpu_moe import (
+            prepare_int8_moe_layer_for_xpu,
+        )
+
+        w13, w2, w13_scale, w2_scale = prepare_int8_moe_layer_for_xpu(
+            layer.w13_weight,
+            layer.w2_weight,
+            layer.w13_weight_scale,
+            layer.w2_weight_scale,
+        )
+        replace_parameter(layer, "w13_weight", w13)
+        replace_parameter(layer, "w2_weight", w2)
+        replace_parameter(layer, "w13_weight_scale", w13_scale)
+        replace_parameter(layer, "w2_weight_scale", w2_scale)
+
+        self.moe_quant_config = make_int8_moe_quant_config(
+            w1_scale=layer.w13_weight_scale,
+            w2_scale=layer.w2_weight_scale,
+            a1_scale=layer.w13_input_scale,
+            a2_scale=layer.w2_input_scale,
+            per_act_token_quant=not self.static_input_scales,
+        )
+        self.moe_kernel = make_int8_moe_kernel(
+            moe_quant_config=self.moe_quant_config,
+            moe_config=self.moe,
+            experts_cls=self.experts_cls,
+            routing_tables=layer._expert_routing_tables(),
+        )
+        layer._qwen36_native_int8_moe_ready = True
+
+    def native_apply(
+        self,
+        layer,
+        x,
+        topk_weights,
+        topk_ids,
+        shared_experts=None,
+        shared_experts_input=None,
+    ):
+        if self.int8_backend == Int8MoeBackend.XPU:
+            assert self.moe_kernel is not None
+            return self.moe_kernel.apply(
+                x,
+                layer.w13_weight,
+                layer.w2_weight,
+                topk_weights=topk_weights,
+                topk_ids=topk_ids,
+                activation=layer.activation,
+                global_num_experts=layer.global_num_experts,
+                expert_map=layer.expert_map,
+                apply_router_weight_on_input=(
+                    layer.apply_router_weight_on_input
+                ),
+                shared_experts=shared_experts,
+                shared_experts_input=shared_experts_input,
+            )
+        return original_apply(
+            self,
+            layer=layer,
+            x=x,
+            topk_weights=topk_weights,
+            topk_ids=topk_ids,
+            shared_experts=shared_experts,
+            shared_experts_input=shared_experts_input,
+        )
+
+    native_init._qwen36_native_int8_moe_route = True
+    native_process._qwen36_native_int8_moe_route = True
+    native_apply._qwen36_native_int8_moe_route = True
+    QuarkW8A8Int8MoEMethod.__init__ = native_init
+    QuarkW8A8Int8MoEMethod.process_weights_after_loading = native_process
+    QuarkW8A8Int8MoEMethod.apply = native_apply
+    print(
+        "[qwen36-s2b] restored June native XPU INT8 MoE route",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _patch_custom_allreduce_clone_contract() -> None:
     """Restore the June inner-clone custom-op contract under a local op name.
 
@@ -349,6 +478,7 @@ def _install() -> None:
 
 
 _patch_shared_expert_abi()
+_patch_quark_int8_moe_native_route()
 _patch_custom_allreduce_clone_contract()
 _patch_june_piecewise_capture_contract()
 _install()

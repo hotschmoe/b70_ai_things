@@ -88,13 +88,13 @@ partitioning. The later launcher default made scheduling asynchronous because
 | Model and scales | Exact HF Quark W8A8 revision | Yes | Exact local revision and Quark loader verified | Matched. |
 | Dense activation quant | `_xpu_C::per_token_quant_int8_xpu` | Yes | Operator present and selected | Matched. |
 | Dense W8A8 GEMM | oneDNN `_xpu_C::int8_gemm_w8a8` | Yes | June registry restored; runtime logs select `XPUInt8ScaledMMLinearKernel` | Matched reachability; binary/source ownership pending. |
-| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | Installed August `_xpu_C` lacks the grouped W8A8 schema; the 17.06 tok/s log JIT-ran Triton MoE. Complete June package passes off-device dispatch. | Prior endpoint did not match. Exact June-package model control is pending. |
+| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | Complete June package registers the schema, but the first exact-package endpoint still JIT-ran Triton because August Quark unconditionally calls generic `fused_experts`. Native dispatcher/layout adapter and off-device ABI contract now pass. | Registered but not yet measured through native endpoint dispatch. |
 | Mixed MoE workspace | BF16 and INT32 persistent scratch interface | Yes in safe TP2 label | Local env enabled | Steve measured a small full-model regression in an earlier arm; not the 5x explanation. |
 | Shared expert | Native dense W8A8 linears plus shared/routed combination | Yes | Later-image ABI mismatch bridged narrowly | Coherent; source snapshot comparison pending. |
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config and raw oneCCL XPUGraph pass; the June-package model reached capture before a local descriptor error | Full model graph replay remains unproven. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config, raw oneCCL XPUGraph, and all 9/9 full-model captures pass; coherent exact endpoint reached 47.54 tok/s | Matched graph reachability; remaining speed is confounded by Triton routed MoE. |
 | Ordinary no-spec PIECEWISE key | Reuse relaxed general non-uniform key | Yes | Erroneous local uniform key removed; off-device default-size contract passes | June behavior matched; no special ordinary-decode key is required. |
 | Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | August source silently removed the inner clone; corrected local GroupCoordinator routing passed eager, compiled exact-shape, export, and single-op XPUGraph gates without mismatch, mutation, or alias | Cleared through the isolated custom-op/compiler layer; exact model interleaving remains the next gate. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
@@ -161,13 +161,16 @@ Python MoE interface does not add it. August's extra validation, output,
 scratch, barrier, offset, policy, and layerlet source therefore cannot be
 treated as active until a separate complete August package is rebuilt.
 
-There are regressions at both boundaries. Later vLLM removed the XPU INT8
+There are regressions at three boundaries. Later vLLM removed the XPU INT8
 scaled-mm registry candidate and the required inner functional all-reduce
-clone, while the installed August native package omitted the grouped W8A8
-registration. The local attributed adapter restores the vLLM routes, and the
-complete June package restores the native route. Native routed-MoE dispatch is
-now a leading explanation for part of the 17.06 versus 85.87 tok/s gap, but
-its wall-time leverage is not proven until the exact model control runs.
+clone. Its Quark method also unconditionally calls generic Triton
+`fused_experts` even though the XPU INT8 MoE oracle remains in the tree. The
+installed August native package separately omitted the grouped W8A8
+registration. The complete June package fixed registration, but the coherent
+47.54 tok/s exact-package endpoint proved that registration alone did not
+change Quark dispatch. The local adapter now also restores backend selection,
+weight/scale layout conversion, modular-kernel construction, and native apply.
+Its wall-time leverage remains unmeasured until the next guarded endpoint run.
 
 Two source-ownership gaps remain. The repository has no independent shared
 source for the Xe2 grouped W8A8 MoE implementation or GDN implementation;
@@ -348,8 +351,9 @@ the August graph wrapper is a compatible superset. `VLLM_XPU_GRAPH_NOOP_COMM_CAP
 was removed as a flag, but its behavior is now unconditional for XPU because
 `XpuCommunicator.ca_comm` is explicitly `None`. This is not a missing action.
 The material accepted-path regressions found so far are the removed inner
-all-reduce clone and the missing installed grouped W8A8 registration. The
-Quark launcher variables `VLLM_XPU_QUARK_W8A8_MOE` and
+all-reduce clone, the missing installed grouped W8A8 registration, and the
+later Quark method's unconditional generic Triton apply. The Quark launcher
+variables `VLLM_XPU_QUARK_W8A8_MOE` and
 `VLLM_XPU_FORCE_QUARK_REPACK` have no implementation in either surviving
 vLLM snapshot; the checkpoint scheme and Quark registry select the INT8 path.
 They are preserved for launch identity but are not performance switches.
@@ -536,11 +540,19 @@ graph and failed with the capture monitor disabled. The client received HTTP
 500; teardown was graceful, both cards passed health, and no UR/device error
 occurred.
 
-Verdict -> keep the exact default capture sizes and restore the June two-part
-policy: capture relaxed general graphs, but dispatch non-uniform prefill eagerly.
-The v2 no-device contract passes all nine sizes, proves all nine captures are
-retained, and proves the replay variable is restored. Endpoint graph replay and
-performance remain open until the next reboot-bounded exact transaction.
+After restoring that capture policy and rebooting, the third exact transaction
+captured all 9/9 graphs, reached the endpoint, passed semantic probes and both
+16/16 canaries, and tore down with both cards healthy. Its exact p498/o512
+metric was 47.5448 corrected tok/s, 336.710 ms TTFT, and 10.7657 seconds of
+server decode. The evidence gate rejected the run because request-time Triton
+`fused_moe_kernel` JIT proved the registered June grouped operator was still
+not selected. Digest-pinned image Quark source SHA256 `7e4c13d2...`
+unconditionally calls generic `fused_experts`.
+
+Verdict -> graph replay is now proven in the full coherent endpoint. The
+remaining immediate mismatch is the August Quark dispatcher, not operator
+registration. The native adapter and no-device ABI contract pass; measure only
+that source repair after another reboot, with the graph configuration unchanged.
 
 ## Accepted And Rejected Mechanism Registry
 
@@ -579,16 +591,13 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    generated 16-output Triton pointwise autotune, so the overall oracle and
    81-op graph stage did not pass. Replace that arm with a sequential
    low-live-buffer chain before reusing it.
-3. PARTIAL: guarded exact model transactions loaded the complete June package,
-   compiled/profiled the model, finished graph setup, and reached endpoint
-   health. The local uniform key is removed. A second June/August collision then
-   removed every general decode graph at capture time and first inference
-   returned HTTP 500. There was no device error and post-health passed. The
-   adapter now retains those captures while keeping prefill replay eager; its v2
-   off-device contract passes.
-4. After an actual reboot, rerun the identical exact control with a new cache.
-   This remains the highest-information VllmBackend/PIECEWISE and
-   interleaved-layer gate.
+3. DONE for graph reachability: the exact-package endpoint captured all 9/9
+   graphs, passed the exact metric and both canaries, and tore down healthy at
+   47.5448 tok/s. The strict route gate rejected it because August Quark still
+   JIT-ran generic Triton routed MoE.
+4. After an actual reboot, rerun the identical fresh-cache control with only
+   the native Quark MoE adapter added. Require the XPU backend log, no generic
+   MoE JIT, exact metric/canaries, and healthy teardown.
 5. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
    Preserve rebuilding the public artifact as a later provenance task only.
 6. If the narrow current-source repair still does not reproduce, run the

@@ -99,14 +99,23 @@
 > an uncaptured graph and returned HTTP 500; there was no device error and both
 > post-health probes passed. The adapter now restores June's split contract:
 > retain all nine general captures, but dispatch non-uniform prefill eagerly. A
-> v2 no-device regression proves both halves. After another actual reboot, rerun
-> the same exact model control with Steve's unset/default IPC exchange, active
-> container NIC, and a fresh cache.
+> v2 no-device regression proves both halves. The third exact transaction then
+> captured all 9/9 graphs, passed endpoint identity, the exact p498/o512 metric,
+> both 16/16 canaries, and healthy teardown at 47.5448 corrected tok/s. This is
+> 2.788x the earlier 17.06 control but only 55.37% of Steve. The strict route
+> gate rejected request-time Triton `fused_moe_kernel`: the pinned image's Quark
+> method unconditionally calls generic `fused_experts`, so the grouped startup
+> schema proved registration rather than execution. A narrow adapter now
+> restores XPU backend selection, weight/scale layout conversion, native kernel
+> construction, and native apply; its no-device ABI contract passes. After an
+> actual reboot, rerun the identical fresh-cache control with only this repair
+> and require the XPU Int8 MoE backend log plus no generic MoE JIT.
 > Correct the oracle to use a sequential low-live-buffer chain before reusing
 > its 81-op stress; do not claim that stage passed. Then -> DONE minimal June native 54 MB-class
 > B70-AOT build and complete-package off-device dispatch gate; the exact model
 > launcher now fails closed on the package hashes and quant, dense, grouped,
-> `_C`, and `_moe_C` schemas. GPU numeric/capture gate remains
+> `_C`, and `_moe_C` schemas. Graph capture and endpoint coherence now pass;
+> native grouped-MoE endpoint dispatch remains
 > -> June source-overlay bisect as indicated -> SGLang
 > adapter -> model/parallelism matrix.
 > The no-model oracle deliberately uses stock Dynamo/Inductor around vLLM's

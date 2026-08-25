@@ -84,8 +84,15 @@ prebuilt binaries.
   and dispatch gate for activation quantization, dense W8A8, grouped W8A8,
   SiLU, remap, and gather. The exact model launcher now mounts this package as
   one unit and rejects unexpected SO hashes, module origins, or missing
-  schemas. This is the first faithful native grouped-MoE control; GPU numeric,
-  graph, and endpoint performance remain unmeasured.
+  schemas.
+- The first coherent exact-package endpoint captured all 9/9 PIECEWISE graphs,
+  passed the exact p498/o512 metric and both 16/16 canaries, and tore down
+  healthy at 47.5448 corrected tok/s. This is 2.788x the earlier control but
+  only 55.37% of Steve. The route gate correctly rejected it: the pinned
+  image's Quark source SHA256 `7e4c13d2...` unconditionally calls generic
+  Triton `fused_experts`. Registering the June grouped operator did not select
+  it. The native Quark backend/layout/apply adapter and its no-device ABI
+  contract now pass; endpoint performance through that route is unmeasured.
 - The GPU model matches, but the host does not: Steve's June Qwen35 system was
   an EPYC 9015 PCIe 5 host, while this system is a Threadripper 1950X with the
   cards under separate PCI domains on a PCIe Gen3-era platform. Steve also
@@ -259,15 +266,13 @@ equivalence before performance tests.
    artificial 16-output Triton autotune DEVICE_LOST, so the 81-op graph stage
    did not run. Replace this arm with a sequential low-live-buffer chain before
    treating the oracle as a complete volume gate.
-9. IN PROGRESS: corrected inner-clone exact model controls load the complete
-   June package, compile/profile the model, finish graph setup, and reach
-   endpoint health. The local no-spec uniform key is removed. A later August
-   filter then suppressed the general graphs that June decode reuses, and first
-   inference returned HTTP 500. The v2 repair retains those captures while
-   keeping non-uniform prefill eager, and its off-device contract passes. After
-   another actual reboot, rerun the identical unset/default-IPC,
-   active-container-NIC control from a new cache. This remains the native
-   routed-MoE, VllmBackend/PIECEWISE, and real-layer interleaving gate.
+9. IN PROGRESS: corrected exact model control captured all 9/9 graphs, passed
+   the exact metric and both canaries, and tore down healthy at 47.5448 tok/s.
+   Its strict route gate rejected request-time Triton routed MoE. Source audit
+   proved August Quark bypassed the registered June grouped operator. The
+   native Quark backend/layout/apply adapter and off-device ABI contract pass.
+   After another actual reboot, rerun the identical unset/default-IPC,
+   active-container-NIC control from a new cache with only this route repair.
 10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
    a 55,523,648-byte B70-AOT `_xpu_C`, both Xe2 siblings, and a complete
    pinned-image runtime package with all required XPU dispatch registrations.

@@ -145,6 +145,15 @@ docker run --rm --entrypoint python \
   -v "$RESULT_DIR:/opt/preflight-out" \
   "$IMG" /opt/piecewise_contract.py \
   --output /opt/preflight-out/piecewise_capture_contract.json
+docker run --rm --entrypoint python \
+  -e VLLM_TARGET_DEVICE=xpu \
+  -e PYTHONPATH=/opt/june-runtime:/opt/b70_qwen36_site \
+  -v "$JUNE_RUNTIME:/opt/june-runtime:ro" \
+  -v "$SCRIPT_DIR/qwen36_s2b_sitecustomize.py:/opt/b70_qwen36_site/sitecustomize.py:ro" \
+  -v "$SCRIPT_DIR/qwen36_native_moe_route_contract.py:/opt/native_moe_contract.py:ro" \
+  -v "$RESULT_DIR:/opt/preflight-out" \
+  "$IMG" /opt/native_moe_contract.py \
+  --output /opt/preflight-out/native_moe_route_contract.json
 
 echo "config -> image=$IMG model_revision=$MODEL_REVISION model_config=$actual_config_sha256 model_index=$actual_index_sha256"
 echo "config -> TP=2 PP=1 graph=PIECEWISE splitops=default igp=false async=1 mtp=0 prefix_cache=0 maxlen=32768 maxseqs=24 util=0.90"
@@ -205,10 +214,19 @@ done
   exit 1
 }
 
+# Preserve completed client artifacts before inspecting server-side evidence.
+# A rejected route is still a useful measured control and must remain paired
+# with the log that caused the evidence gate to reject it.
+cp "$metric_path" "$RESULT_DIR/steve_metric.json"
+cp "$json_canary_path" "$RESULT_DIR/json_repeat16.json"
+cp "$color_canary_path" "$RESULT_DIR/color_repeat16.json"
+
 for required in \
   'restored June clone-safe custom all-reduce contract' \
   'restored June prefill-replay capture contract' \
+  'restored June native XPU INT8 MoE route' \
   'Selected XPUInt8ScaledMMLinearKernel for QuarkW8A8Int8' \
+  'Using XPU Int8 MoE backend' \
   'kernel package=/opt/june-runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface' \
   'Asynchronous scheduling is enabled' \
   'Graph capturing finished' \
@@ -220,7 +238,7 @@ for required in \
   }
 done
 if rg -qi 'DEVICE_LOST|OUT_OF_RESOURCES|UR_RESULT_ERROR|output tensor.*alias|aliasing an input tensor|Triton kernel JIT compilation during inference: fused_moe_kernel' "$SERVER_LOG" "$RUN_LOG"; then
-  echo "Fatal device or alias marker found in exact-control evidence" >&2
+  echo "Fatal device, alias, or request-time MoE JIT marker found in exact-control evidence" >&2
   exit 1
 fi
 rg -Fq '"failures": []' "$RUN_LOG" || {
@@ -232,7 +250,6 @@ rg -a -l -q 's2b_all_reduce_clone' "$CACHE_DIR/torchinductor" || {
   exit 1
 }
 
-cp "$metric_path" "$RESULT_DIR/steve_metric.json"
 python3 - \
   "$RESULT_DIR/steve_metric.json" \
   "$json_canary_path" \
