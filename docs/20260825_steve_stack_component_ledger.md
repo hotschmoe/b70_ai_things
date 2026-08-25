@@ -94,9 +94,9 @@ partitioning. The later launcher default made scheduling asynchronous because
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config compiles; raw oneCCL XPUGraph replay passes, while the prior full-model custom op failed | Primary unresolved mechanism is now vLLM custom-op/compiled-graph integration. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config compiles and raw oneCCL XPUGraph passes; prior model failure was compiled profile-run before capture | Full model graph replay remains unproven, but it did not cause the observed failure. |
 | Uniform no-spec descriptor | June Qwen decode capture descriptor | Yes | Restored by narrow adapter | Matched and required for capture. |
-| Custom collective wrapper | `vllm::all_reduce` custom op with two clone guards | Yes | August source silently removed the inner clone; local attributed op now restores it | Must retest after reboot; prior exact run was not source-equivalent. |
+| Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | August source silently removed the inner clone; the first local communicator adapter was also inert; corrected local routing now replaces the GroupCoordinator op | Run the no-model compiled custom-op oracle before another model load. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
 | Collective transport | oneCCL/OFI direct P2P in graph | Yes | Unset/default IPC resolved to `pidfd`; 256 direct and 512 XPUGraph iterations passed on both ranks | Raw transport and graph replay are cleared; the remaining failure is in the full vLLM integration. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |
@@ -151,6 +151,24 @@ and pinned-image extension is 116706992 bytes. The June binary and its hash are
 not present in the refreshed lab. Its build must be reconstructed from the
 June kernel source and recorded patch chronology before accepted-record native
 identity can be claimed.
+
+The reconstruction audit found that source recovery is substantially stronger
+than binary recovery. The public base is `28e1f5e74c15744b69cf3b760f6160ceabd15de0`;
+the private June sequence from `122b698bc245d31668a7fe5f2ad5ce1d07ba08ca`
+through `3b4effeeffd83f6ef4696bbe7e76d924a0e9d171` survives in Steve's
+recorded Git bundle, and the June 9 W8A8, June 14 layerlet/prefix, and exact
+SiLU patches survive separately. No 54 MB or 67 MB binary, hash, link command,
+Docker layer, ignored result, or cache copy survives. The exact binary is not
+recoverable; only an attributed source reconstruction is possible.
+
+The build matrix must hold Python 3.12, torch 2.11 XPU, oneAPI 2025.3,
+Release/Ninja, XPU/SYCL TLA/Xe2, MoE and GDN enabled, and archive `_xpu_C` plus
+both grouped-GEMM and GDN sibling libraries as one ABI set. Build the June 9
+minimal patch over `28e1f5e`, then the pre-exact-SiLU approximation from
+`122b698`, each with `bmg-g21-a0`, the old multi-target default, and a separate
+local-card AOT arm. The hypothesis that 54 versus 67 MB reflects AOT target
+coverage remains an inference until the reconstructed ELF/operator census is
+measured.
 
 The preserved oneCCL cache used `CCL_ENABLE_ARCB=ON`, release mode, oneAPI
 2025.3 `icx`/`icpx`, and two local compile-compatibility edits that qualify the
@@ -341,21 +359,26 @@ Source finding -> the run emitted PyTorch's output-alias warning. Comparing
 Steve's June source with the later image proved that the August
 `parallel_state.all_reduce` removed the implementation of
 `VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT`; the setting was present but inert.
-The June source cloned once before the custom op and again inside it. A local
-attributed custom op now restores that two-clone contract without overriding a
-registered torch operator. The exact launcher now also removes the helper's
+The accepted source had one active required clone inside the registered op;
+its separately set graph-clone flag was inert on the outer custom-op route.
+The first local attributed op still did not restore that contract because it
+patched `XpuCommunicator.all_reduce`, while GroupCoordinator emitted stock
+`vllm::all_reduce` directly. Custom-op implementations execute with
+`torch.compiler.is_compiling()` false, so that patch fell through. The
+corrected adapter routes GroupCoordinator to the attributed local op without
+overriding a registered torch operator. The exact launcher also removes the helper's
 forced IPC-exchange setting and uses the container's active `eth0` interface,
 matching Steve's unset/default IPC and active-NIC semantics.
 
-Verdict -> kernel 7.1 did not fix the direct-P2P vLLM failure. The transaction
-did not isolate whether the device loss came from oneCCL itself or from the
-missing inner-clone/source contract. The next oracle transaction resolves that
-ambiguity.
+Verdict -> kernel 7.1 did not fix the direct-P2P vLLM failure. Later source and
+cache inspection placed this failure in compiled profile-run with graph mode
+NONE, before any XPUGraph capture. It used August's clone-less functional op;
+the first local adapter was not on that control-flow path.
 
 ### Raw oneCCL direct-plus-XPUGraph oracle
 
-Config -> post-reboot healthy cards, exact `[4,5120]` BF16 verifier shape,
-two XCCL ranks, pinned-image `libccl.so.1.0` hash `542142ac...`, exact
+Config -> post-reboot healthy cards, Steve's later `[4,5120]` BF16 oracle
+shape, two XCCL ranks, pinned-image `libccl.so.1.0` hash `542142ac...`, exact
 `kernels.spv` hash `0d549c35...`, direct P2P enabled, and Steve's unset/default
 IPC exchange and worker-count semantics. Docker bridge networking supplied the
 required container `eth0`.
@@ -373,11 +396,12 @@ before any collective; bridge networking corrected the harness. Both cards
 passed health after the valid run.
 
 Verdict -> the B70 hardware, Threadripper 1950X topology, kernel 7.1, current
-oneCCL library, direct Level Zero P2P, and oneCCL XPUGraph replay all satisfy
-the exact pre-model contract. They do not explain the 17.06 tok/s result or the
-prior full-model `DEVICE_LOST`. The fault boundary is now above raw oneCCL: the
-vLLM custom-op wrapper, two-clone alias contract, compiled graph ownership, or
-worker/model graph lifecycle. Do not rebuild oneCCL before testing that layer.
+oneCCL library, direct Level Zero P2P, and oneCCL XPUGraph replay satisfy this
+pre-model contract. The shape is not Qwen35's 2048-wide model shape, so the
+next integration oracle must test that separately. Raw oneCCL does not explain
+the 17.06 tok/s result or prior full-model `DEVICE_LOST`. The fault boundary is
+now the vLLM custom-op wrapper, required inner-clone alias contract, compiled
+execution, or worker/model lifecycle. Do not rebuild oneCCL before testing it.
 
 ## Accepted And Rejected Mechanism Registry
 
@@ -386,7 +410,8 @@ Accepted or required:
 - native XPU dense W8A8 quant/GEMM;
 - native Xe2 grouped W8A8 MoE;
 - forced-communication PIECEWISE graph;
-- both collective clone guards;
+- the required inner custom-op clone; the separately set graph-clone flag was
+  inert on Steve's accepted outer-custom-op route;
 - async scheduling;
 - no prefix cache for the record;
 - prefill-safe GDN fallback and native decode;
@@ -394,8 +419,7 @@ Accepted or required:
 
 Rejected or diagnostic-only in Steve's Qwen lane:
 
-- removing either required collective clone when output aliasing corrupts
-  tokens;
+- removing the required inner clone when output aliasing corrupts tokens;
 - fused SiLU plus quant with changed rounding/scaling semantics;
 - mixed workspace based only on microbench gains;
 - RMSNorm plus INT8 fusion before matching the live FP32-weight semantics;
@@ -410,19 +434,24 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 1. DONE: the locally owned exact `[4,5120]` BF16 oneCCL oracle passed 256/256
    direct collectives and 512/512 XPUGraph replays with exact loaded hashes and
    zero mismatch under Steve's unset/default IPC identity.
-2. Observe the required reset boundary, then retest one
-   guarded exact model transaction with the restored June two-clone contract,
-   unset/default IPC exchange, explicit container `eth0`, and a fresh cache.
-3. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
+2. Observe the required reset boundary, then run the no-model vLLM integration
+   oracle through the corrected GroupCoordinator route: eager and compiled
+   custom-op calls at `[1,2048]`, `[4,2048]`, and profile `[8192,2048]`, then
+   XPUGraph replay and an unrolled 81-collective graph. Reject stock
+   `vllm::all_reduce`, aliases, input mutation, mismatch, or device loss.
+3. If that passes, observe another reset boundary and retest one guarded exact
+   model transaction with the restored June inner-clone contract, unset/default
+   IPC exchange, explicit container `eth0`, and a fresh cache.
+4. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
    Preserve rebuilding the public artifact as a later provenance task only.
-4. If the narrow current-source repair still does not reproduce, run the
+5. If the narrow current-source repair still does not reproduce, run the
    closest surviving 2026-06-16 vLLM snapshot as a forensic overlay with the
    same runtime binaries.
-5. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
+6. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
    kernel source and patch chronology, then compare it one factor at a time.
-6. Convert the required delta into attributed local patches and a pinned image;
+7. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
-7. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
+8. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
    equivalence, graph replay, and hashes.
-8. Only after a healthy 80+ tok/s graph baseline, profile MoE, dense GEMM,
+9. Only after a healthy 80+ tok/s graph baseline, profile MoE, dense GEMM,
    GDN, sampler, and collectives under the actual endpoint step.

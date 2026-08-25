@@ -18183,3 +18183,50 @@ oneCCL: vLLM's custom-op wrapper, restored two-clone alias contract, compiled
 graph ownership, or worker/model graph lifecycle. Preserve the reset boundary,
 then run one clone-correct exact-model transaction from a fresh cache. A
 oneCCL rebuild is no longer the next action.
+
+### 2026-08-25g - Custom-op route correction and no-model integration gate
+
+CONFIG -> read-only audit of Steve's accepted June vLLM source, clone A/B
+notes, current pinned-image source, the prior local failure log and compile
+cache, Qwen checkpoint config, and preserved XPU-kernel Git bundle/patches. A
+no-device custom-op execution probe and Dynamo export were run in the pinned
+image. No GPU transaction was run because the direct-P2P lane is reset-gated.
+
+COMMAND -> `git show`, `rg`, `nl`, Python `inspect`, a CPU-dispatch custom-op
+`torch.compile` probe, and a no-device export through the local sitecustomize
+adapter. Added `vllm/w8a8/qwen36_vllm_allreduce_graph_oracle.py` and its
+guarded Docker launcher.
+
+RESULT -> the prior local clone adapter was inert. With
+`VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES=1`, GroupCoordinator emits the registered
+outer custom op directly. Its Python implementation executes with
+`torch.compiler.is_compiling()` false, so patching XpuCommunicator never routed
+to the local replacement. Steve set two clone flags, but source control flow
+and his neutral graph-clone-off A/B prove only the inner registered-op clone
+was active and required. Removing it produced the recorded alias warning and
+corrupted token soup. August merge drift removed that clone. The corrected
+adapter now routes GroupCoordinator to `vllm::s2b_all_reduce_clone`; no-device
+Dynamo export contains that op and no stock `vllm::all_reduce`.
+
+The previous `DEVICE_LOST` occurred during vLLM profile-run, which forces graph
+mode NONE, before any XPUGraph capture or replay. Its real profile tensor shape
+is `[8192,2048]`; the exact cached Qwen backbone has 81 all-reduce nodes. The
+new reset-bounded oracle therefore gates eager, compiled `[1,2048]`,
+`[4,2048]`, and `[8192,2048]`, compiled XPUGraph replay, and an unrolled
+81-collective graph while checking output identity, input mutation, pointer
+aliasing, and the exported op name.
+
+The June 54 MB and accepted 67 MB `_xpu_C` binaries are not recoverable from
+Git objects, bundles, images, caches, or manifests. Source reconstruction is:
+public base `28e1f5e`, preserved private sequence `122b698` through `3b4effe`,
+and the recorded June W8A8/layerlet/exact-SiLU patches. The first build matrix
+will compare `bmg-g21-a0` with the old multi-target AOT default under the exact
+torch 2.11/oneAPI 2025.3 ABI; the size difference being AOT coverage remains an
+inference.
+
+VERDICT -> the first failed model transaction was not clone-correct, and raw
+oneCCL has already passed. The next highest-information transaction is the
+new no-model compiled custom-op oracle after reboot, not another full model
+load or a oneCCL rebuild. If compiled profile-shape execution passes, continue
+within that one transaction through graph and 81-collective replay; then reset
+again before the corrected exact model control.

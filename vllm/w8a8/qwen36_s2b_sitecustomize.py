@@ -106,8 +106,14 @@ def _patch_custom_allreduce_clone_contract() -> None:
     The August source still honors the graph-side clone in XpuCommunicator,
     but removed the second clone from parallel_state.all_reduce while leaving
     the old environment setting inert. Re-registering the existing operator
-    is not supported by torch.library, so install an equivalent attributed op
-    and route only the June opt-in compile path through it.
+    is not supported by torch.library, so install an equivalent attributed op.
+
+    XPU uses GroupCoordinator's outer custom-op route when
+    VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES=1. A custom-op implementation executes
+    with torch.compiler.is_compiling() false, so patching only
+    XpuCommunicator.all_reduce would never select this replacement. Route the
+    GroupCoordinator call itself through the local op; retain the communicator
+    patch for the alternate non-outer-custom-op compile route.
     """
     from vllm.distributed import parallel_state
     from vllm.distributed.device_communicators.xpu_communicator import (
@@ -138,6 +144,22 @@ def _patch_custom_allreduce_clone_contract() -> None:
         fake_impl=s2b_all_reduce_clone_fake,
     )
 
+    original_group_all_reduce = parallel_state.GroupCoordinator.all_reduce
+
+    def compatible_group_all_reduce(self, input_: torch.Tensor) -> torch.Tensor:
+        if self.world_size == 1:
+            return input_
+        if (
+            self.use_custom_op_call
+            and os.environ.get("VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP", "0") == "1"
+        ):
+            return torch.ops.vllm.s2b_all_reduce_clone(
+                input_, group_name=self.unique_name
+            )
+        return original_group_all_reduce(self, input_)
+
+    parallel_state.GroupCoordinator.all_reduce = compatible_group_all_reduce
+
     original_all_reduce = XpuCommunicator.all_reduce
 
     def compatible_all_reduce(self, input_: torch.Tensor) -> torch.Tensor:
@@ -159,7 +181,7 @@ def _patch_custom_allreduce_clone_contract() -> None:
 
     XpuCommunicator.all_reduce = compatible_all_reduce
     print(
-        "[qwen36-s2b] restored June two-clone custom all-reduce contract",
+        "[qwen36-s2b] restored June clone-safe custom all-reduce contract",
         file=sys.stderr,
         flush=True,
     )

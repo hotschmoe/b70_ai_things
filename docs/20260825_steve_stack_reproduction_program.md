@@ -232,16 +232,20 @@ equivalence before performance tests.
 7. DONE: the guarded kernel-7.1 direct-plus-XPUGraph oneCCL oracle passed 256
    direct and 512 graph iterations per rank with zero mismatch. This clears the
    hardware, topology, current oneCCL binary, direct P2P, and raw graph replay.
-8. IN PROGRESS: observe the reset boundary and run the clone-correct,
-   unset-IPC exact model control. A failure now belongs above raw oneCCL, in
-   the vLLM custom-op/compiled-graph integration or model graph lifecycle.
-9. Rebuild every native SO from local source and remove external mounts.
+8. IN PROGRESS: source audit proved the initial communicator-only clone adapter
+   was inert and the prior crash occurred during compiled profile-run before
+   graph capture. Observe the reset boundary and run the locally owned vLLM
+   custom-op integration oracle at the real Qwen shapes, including the
+   `[8192,2048]` profile input and an 81-collective graph.
+9. If that passes, observe another reset boundary and run the corrected
+   inner-clone, unset-IPC exact model control.
+10. Rebuild every native SO from local source and remove external mounts.
    Reconstruct the June 67 MB `_xpu_C` as an explicit accepted-record variant;
    do not conflate it with the byte-matched current snapshot.
-10. Implement and gate the SGLang-native route.
-11. Execute the model and parallelism portability matrix.
-12. Transfer only proven wins to Ornith, then add MTP and prefix caching.
-13. Run Pi plus local Terminal-Bench and promote only a coherent winner.
+11. Implement and gate the SGLang-native route.
+12. Execute the model and parallelism portability matrix.
+13. Transfer only proven wins to Ornith, then add MTP and prefix caching.
+14. Run Pi plus local Terminal-Bench and promote only a coherent winner.
 
 ## Definition Of Done
 

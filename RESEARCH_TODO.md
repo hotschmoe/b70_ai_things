@@ -70,8 +70,14 @@
 > oracle passed 256 direct and 512 graph iterations per rank with zero mismatch;
 > graph averaged 0.349 ms versus 1.446 ms direct including synchronization and
 > validation. Raw oneCCL, direct P2P, and graph replay are therefore cleared.
-> Next: reset boundary -> restored June two-clone model control with Steve's unset/default IPC exchange, active
-> container NIC, and fresh cache -> rebuild oracle-validated public oneCCL or
+> Source audit then proved the first local clone adapter was inert: the accepted
+> outer custom-op route bypasses its communicator patch, and Steve's two set
+> flags produced one active required inner clone. The prior DEVICE_LOST occurred
+> during compiled profile-run with graph mode NONE, before XPUGraph capture.
+> Next: reset boundary -> locally owned vLLM custom-op oracle at real
+> `[1,2048]`, `[4,2048]`, and `[8192,2048]` shapes plus an 81-collective graph
+> -> reset boundary -> corrected inner-clone exact model control with Steve's unset/default IPC exchange, active
+> container NIC, and fresh cache -> rebuild the June native kernel candidate or
 > June source-overlay bisect as indicated -> locally owned build -> SGLang
 > adapter -> model/parallelism matrix.
 
