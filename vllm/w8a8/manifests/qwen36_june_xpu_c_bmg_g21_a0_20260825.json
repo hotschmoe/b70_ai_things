@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "status": "off_device_import_passed_gpu_numeric_pending",
+  "identity": {
+    "name": "qwen36-june9-xpu-c-bmg-g21-a0",
+    "classification": "minimal June 9 source reconstruction",
+    "record_relationship": "matches Steve's 54 MB rebuild class; not the unrecoverable accepted 67 MB binary",
+    "runtime_root": "/mnt/vm_8tb/b70/steve-repro/june-xpuc-bmg-g21-a0-20260825"
+  },
+  "source": {
+    "upstream": "https://github.com/vllm-project/vllm-xpu-kernels.git",
+    "base_commit": "28e1f5e74c15744b69cf3b760f6160ceabd15de0",
+    "patch": "kernels/steve_qwen36_quark_w8a8_20260609.patch",
+    "patch_sha256": "14c2e801da02a7b46e63940dbe41f5c0c45fabb98b3ee4c5bd03d7dc7d0b1266",
+    "patched_tree": "c882c446d8ea47b6a9cee8aa5d16ee5121b8cd1f",
+    "onednn_commit": "80afa71049cd69a3df32adcccb623b12cd7baa22",
+    "cutlass_sycl_commit": "cd763790ad2f74d7294435ecf77682bac0062c3a"
+  },
+  "toolchain": {
+    "image": "intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94",
+    "torch": "2.11.0+xpu",
+    "intel_llvm": "2025.3.3",
+    "build_type": "Release",
+    "generator": "Ninja",
+    "jobs": 2,
+    "aot_device": "bmg-g21-a0",
+    "gpu_device_mounted": false,
+    "enabled": [
+      "XPU",
+      "SYCL_TLA",
+      "Xe2",
+      "MoE",
+      "GDN",
+      "XPU-specific kernels"
+    ],
+    "disabled": [
+      "basic kernels",
+      "FlashAttention 2",
+      "Xe default",
+      "MQA logits",
+      "XPU memory allocator"
+    ]
+  },
+  "artifacts": {
+    "installed_xpu_c": {
+      "path": "runtime-candidate/vllm_xpu_kernels/_xpu_C.abi3.so",
+      "size": 55523648,
+      "sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d",
+      "runpath": "$ORIGIN"
+    },
+    "uninstalled_xpu_c": {
+      "path": "build/_xpu_C.abi3.so",
+      "size": 55523648,
+      "sha256": "9f4a4bbc6d3d40a59347c11f095d6a317454704fc9a181a0f73bd8dc17a48632"
+    },
+    "gdn_xe2": {
+      "path": "runtime-candidate/vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so",
+      "size": 2724136,
+      "sha256": "366935b172b5c9c3cb75bee5d7bfe0434f377a6317314a9a43c853b5d02fe83b"
+    },
+    "grouped_gemm_xe2": {
+      "path": "runtime-candidate/vllm_xpu_kernels/libgrouped_gemm_xe_2.so",
+      "size": 2936608,
+      "sha256": "f5ddc2ee3c11dcede3a7190b69d6e0dd354bb0727be7519600abaebe9fc4cd2c"
+    },
+    "patched_fused_moe_python": {
+      "path": "runtime-candidate/vllm_xpu_kernels/fused_moe_interface.py",
+      "size": 31209,
+      "sha256": "433ee08a80ab8e1c12d000e7d2a683c0e325c2971868ca31075075a863b7d81a"
+    },
+    "inherited_c": {
+      "path": "runtime-candidate/vllm_xpu_kernels/_C.abi3.so",
+      "size": 22631976,
+      "sha256": "5717476461048b5056a92926f2a52d73c121f69bdc75de22fd52720fb65b3007"
+    },
+    "inherited_moe_c": {
+      "path": "runtime-candidate/vllm_xpu_kernels/_moe_C.abi3.so",
+      "size": 31386032,
+      "sha256": "ea4c20a8dff49fc07fd799d5a2a47e8b24266a256425b41e337f852492ee3c1b"
+    },
+    "runtime_package_bytes": 1745179661,
+    "runtime_package_manifest_sha256": "4855612ca9c70cb1ba4695aa7300715d32acc755bd9dc681ef22c20807f80193"
+  },
+  "required_operators": {
+    "_xpu_C::per_token_quant_int8_xpu": "_xpu_C::per_token_quant_int8_xpu(Tensor x) -> (Tensor, Tensor)",
+    "_xpu_C::int8_gemm_w8a8": "_xpu_C::int8_gemm_w8a8(Tensor A, Tensor A_scale, Tensor B, Tensor B_scale, ScalarType? out_dtype, Tensor? bias) -> Tensor",
+    "_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface": "_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface(Tensor ptr_A, Tensor ptr_A_scales, Tensor ptr_B, Tensor ptr_B_scales, Tensor? ptr_bias, Tensor ptr_D, Tensor rows_per_expert, int N, int K, int num_experts) -> Tensor",
+    "_C::silu_and_mul": "_C::silu_and_mul(Tensor($0! -> ) result, Tensor input) -> ()",
+    "_moe_C::init_expert_map": "_moe_C::init_expert_map(Tensor expert_map, int num_experts, int ep_rank, int ep_size) -> ()",
+    "_moe_C::remap_hidden_states": "_moe_C::remap_hidden_states(Tensor hidden_states, Tensor? hidden_states_scales, Tensor remapped_hidden_states, Tensor? remapped_hidden_states_scales, Tensor? expert_map, Tensor rows_per_expert, Tensor unpermuted_row_to_permuted_row, Tensor topk_ids, int total_experts_num, int local_experts_num) -> ()",
+    "_moe_C::moe_gather": "_moe_C::moe_gather(Tensor($0! -> ) output, Tensor moe_output, Tensor topk_weights, Tensor unpermuted_row_to_permuted_row, int num_experts) -> ()"
+  },
+  "operator_counts": {
+    "_C": {
+      "registered": 31,
+      "xpu": 29
+    },
+    "_moe_C": {
+      "registered": 12,
+      "xpu": 12
+    },
+    "_xpu_C": {
+      "registered": 19,
+      "xpu": 17
+    }
+  },
+  "gates": {
+    "source_content_matches_official_base": true,
+    "independent_build_seed_transport_was_official_network": false,
+    "no_runtime_dependency_on_steve_checkout": true,
+    "owned_recipe_fetches_official_upstream_directly": true,
+    "owned_patch_hash_and_tree": true,
+    "build_completed": true,
+    "dynamic_dependencies_resolved_in_pinned_image": true,
+    "materialized_package_origins_verified": true,
+    "fused_moe_available": true,
+    "required_operator_schemas_present": true,
+    "required_xpu_dispatch_present": true,
+    "gpu_numeric_parity": false,
+    "gpu_graph_replay": false,
+    "full_model_serve": false
+  },
+  "evidence": {
+    "build_log_sha256": "6f1b6aef00e40673b8b51760773f681aa3f81e22fae2969b45caecccc3e32863",
+    "offdevice_census_sha256": "dec2ac21db8817c83b8862dc962c86190efe55dc2b08bdbec8cb5e7c99d0c3da",
+    "build_started_utc": "2026-08-25T07:30:45Z",
+    "build_finished_utc": "2026-08-25T08:25:46Z"
+  },
+  "caveats": [
+    "The independent validation build used a no-hardlink local object mirror for the initial clone, then rewrote origin to official GitHub; the owned recipe fetches official GitHub directly.",
+    "The runtime package is intentionally hybrid: _C, _moe_C, attention, and support files are inherited from the digest-pinned Intel image.",
+    "The off-device census proves imports, schemas, and XPU registrations, not numerical execution.",
+    "Source comparison shows the pinned August runtime already contains the June base dense and grouped W8A8 kernels, so this artifact is an ownership/control milestone rather than the leading endpoint-speed hypothesis."
+  ]
+}

@@ -74,12 +74,18 @@
 > outer custom-op route bypasses its communicator patch, and Steve's two set
 > flags produced one active required inner clone. The prior DEVICE_LOST occurred
 > during compiled profile-run with graph mode NONE, before XPUGraph capture.
+> A function-level native audit then proved the pinned August `_xpu_C` already
+> retains June's activation quantizer, dense W8A8 GEMM, and base grouped-MoE
+> W8A8 implementation. The source rebuild is still required for ownership and
+> controlled A/Bs, but native June math is no longer the leading explanation
+> for the endpoint gap; vLLM dispatch and graph integration remain first.
 > Next: reset boundary -> locally owned vLLM custom-op oracle at real
 > `[1,2048]` and `[4,2048]` decode shapes, one compiled-direct sequence of all
 > 81 profile-run collectives at `[8192,2048]`, and 81-collective XPUGraph replay
 > -> reset boundary -> corrected inner-clone exact model control with Steve's unset/default IPC exchange, active
-> container NIC, and fresh cache -> rebuild the June native kernel candidate or
-> June source-overlay bisect as indicated -> locally owned build -> SGLang
+> container NIC, and fresh cache -> DONE minimal June native 54 MB-class
+> B70-AOT build and off-device dispatch gate; GPU numeric/capture gate remains
+> -> June source-overlay bisect as indicated -> SGLang
 > adapter -> model/parallelism matrix.
 > The no-model oracle deliberately uses stock Dynamo/Inductor around vLLM's
 > real GroupCoordinator op. A pass clears that custom-op/compiler layer but not

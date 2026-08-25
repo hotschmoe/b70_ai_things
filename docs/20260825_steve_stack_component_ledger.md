@@ -148,6 +148,38 @@ The exact independently stored reconstruction input is
 It applies cleanly to official `vllm-project/vllm-xpu-kernels` commit
 `28e1f5e74c15744b69cf3b760f6160ceabd15de0`; no Steve checkout is required.
 
+### June-to-August native source equivalence
+
+A function-level comparison against the pinned August kernel source
+`2dd55f380df753a10a88fcd9e96192561066e713` changes the priority of the native
+rebuild. August already retains the June activation quantizer, six-argument
+dense W8A8 oneDNN operator, and base Xe2 grouped W8A8 MoE operator. With the
+later extension settings unset, those paths are default-equivalent to June.
+August adds validation, output variants, configurable scratch reuse and
+barriers, active-expert/offset/policy variants, and layerlet machinery; those
+are optional A/B arms rather than prerequisites for the accepted base path.
+
+The important regression is above the native operators: later vLLM removed the
+XPU INT8 scaled-mm registry candidate and removed the required inner functional
+all-reduce clone. The local attributed adapter restores both routes against the
+pinned six-argument ABI. This means the minimal June rebuild is an ownership,
+provenance, and clean-base control. It is not presently the leading explanation
+for the 17.06 versus 85.87 tok/s gap.
+
+Two source-ownership gaps remain. The repository has no independent shared
+source for the Xe2 grouped W8A8 MoE implementation or GDN implementation;
+today only the attributed June patch or external runtime trees carry those
+sources. The shared quantizer is also not June-equivalent: it uses adaptive
+32-512-lane workgroups, activation-dtype scales, `sycl::rint`, and a `1e-5`
+floor. It must be treated as a separate numeric arm, not silently substituted.
+
+The smallest kernel campaign is therefore: census June/August/shared schemas
+and XPU registrations; prove June-to-August quant and dense parity; test shared
+quant separately on tiny values and rounding ties; compare dense scratch-ring,
+barrier, and output variants one factor at a time; then test grouped MoE base
+parity before offsets, active-expert, policy, and reuse variants. GDN accepts
+only cloned quant reuse; raw sharing and views already failed repeatability.
+
 The current inspected native hashes are:
 
 ```text
@@ -186,6 +218,26 @@ minimal patch over `28e1f5e`, then the pre-exact-SiLU approximation from
 local-card AOT arm. The hypothesis that 54 versus 67 MB reflects AOT target
 coverage remains an inference until the reconstructed ELF/operator census is
 measured.
+
+The first independent reconstruction completed on 2026-08-25 using the exact
+minimal June 9 patch, `bmg-g21-a0` AOT, torch 2.11.0+xpu, IntelLLVM 2025.3.3,
+Release/Ninja, and no GPU device. Its installed `_xpu_C` is 55,523,648 bytes
+with SHA256 `2d931484...`; GDN is 2,724,136 bytes (`366935b1...`) and grouped
+GEMM is 2,936,608 bytes (`f5ddc2ee...`). The extension's install RUNPATH is
+`$ORIGIN`, and every dependency resolved in the pinned image. This reproduces
+Steve's recorded 54 MB fresh-build class, not his unrecoverable accepted 67 MB
+binary, strengthening the inference that their difference is build/AOT
+coverage rather than a hidden second W8A8 source implementation.
+
+The complete materialized runtime package inherits `_C`, `_moe_C`, attention,
+and support files from the digest-pinned Intel image, then replaces `_xpu_C`,
+both Xe2 siblings, and the patched MoE Python dispatcher. Off-device import
+proved every module originated in that package, `FUSEDMOE_AVAILABLE=True`, and
+all required dense, quant, grouped-MoE, `_C`, and `_moe_C` schemas had XPU
+dispatch. GPU numerical parity, capture/replay, and model serving remain open.
+The machine-readable record is
+`vllm/w8a8/manifests/qwen36_june_xpu_c_bmg_g21_a0_20260825.json`; the owned
+fresh-build recipe is `vllm/w8a8/build_qwen36_june_xpu_c.sh`.
 
 The preserved oneCCL cache used `CCL_ENABLE_ARCB=ON`, release mode, oneAPI
 2025.3 `icx`/`icpx`, and two local compile-compatibility edits that qualify the

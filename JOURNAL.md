@@ -18259,3 +18259,44 @@ I_KNOW_P2P_WEDGES=1 bash
 vllm/w8a8/run_qwen36_vllm_allreduce_graph_oracle.sh`. A pass clears the
 custom-op plus stock compiler layer only; the following reboot-bounded exact
 model control remains the VllmBackend/PIECEWISE gate.
+
+### 2026-08-25i - Independent June W8A8 native reconstruction
+
+CONFIG -> official `vllm-project/vllm-xpu-kernels` base `28e1f5e74c`, the
+owned June 9 patch SHA256 `14c2e801...`, patched tree `c882c446...`, pinned
+Intel image digest `f2e5a94e...`, torch 2.11.0+xpu, IntelLLVM 2025.3.3,
+Release/Ninja `-j2`, `bmg-g21-a0` AOT, Xe2 MoE plus GDN, and no `/dev/dri`.
+The materialized runtime package inherited support artifacts from that exact
+image and replaced only `_xpu_C`, the grouped/GDN Xe2 siblings, and patched
+`fused_moe_interface.py`.
+
+COMMAND -> independent no-hardlink clone of the official-base Git object from
+a local mirror, origin rewritten to official GitHub, then patch and exact
+CMake/Ninja `_xpu_C` build; component install; SHA256, ELF/RUNPATH, dependency,
+module-origin, operator-schema, and XPU-dispatch census in a no-device pinned
+container. The committed owned recipe does not use that mirror; it fetches
+official GitHub directly with `bash
+vllm/w8a8/build_qwen36_june_xpu_c.sh`.
+
+RESULT -> build completed in 55 minutes. Installed `_xpu_C` is 55,523,648
+bytes, SHA256 `2d931484...`, with `$ORIGIN` RUNPATH. GDN is 2,724,136 bytes,
+SHA256 `366935b1...`; grouped GEMM is 2,936,608 bytes, SHA256 `f5ddc2ee...`.
+All dynamic dependencies resolved. The complete package imported `_C`,
+`_moe_C`, rebuilt `_xpu_C`, and the patched dispatcher from its own path;
+`FUSEDMOE_AVAILABLE=True`. Native activation quant, dense W8A8, grouped W8A8,
+SiLU, expert-map/remap, and MoE-gather schemas were present with XPU dispatch.
+The manifest is
+`vllm/w8a8/manifests/qwen36_june_xpu_c_bmg_g21_a0_20260825.json`.
+
+Source comparison also proved pinned August kernel commit `2dd55f38` already
+contains June's base activation quantizer, dense W8A8 GEMM, and grouped W8A8
+MoE path. Its additions are optional output, scratch, barrier, offset, policy,
+and reuse arms. The later vLLM dispatch and all-reduce clone regressions, not
+missing June native math, remain the leading explanation for the endpoint gap.
+
+VERDICT -> source ownership and the off-device dispatch gate are achieved for
+the minimal June native replacement set. Its size reproduces Steve's recorded
+54 MB fresh-build class, not the unrecoverable accepted 67 MB binary. Do not
+claim numerical or performance parity yet: after the required reboot boundary,
+the custom-op collective oracle comes first; leased GPU numeric/capture tests
+for this kernel package follow as a separate transaction.

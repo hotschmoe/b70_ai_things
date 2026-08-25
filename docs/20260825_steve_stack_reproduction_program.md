@@ -242,9 +242,12 @@ equivalence before performance tests.
    VllmBackend partitioner or interleaved model operations.
 9. If that passes, observe another reset boundary and run the corrected
    inner-clone, unset-IPC exact model control.
-10. Rebuild every native SO from local source and remove external mounts.
-   Reconstruct the June 67 MB `_xpu_C` as an explicit accepted-record variant;
-   do not conflate it with the byte-matched current snapshot.
+10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
+   a 55,523,648-byte B70-AOT `_xpu_C`, both Xe2 siblings, and a complete
+   pinned-image runtime package with all required XPU dispatch registrations.
+   This matches Steve's 54 MB fresh-build class, not the unrecoverable accepted
+   67 MB binary. GPU numeric/capture gates and source ownership of inherited
+   `_C`, `_moe_C`, attention, and support components remain open.
 11. Implement and gate the SGLang-native route.
 12. Execute the model and parallelism portability matrix.
 13. Transfer only proven wins to Ornith, then add MTP and prefix caching.
