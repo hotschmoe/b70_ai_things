@@ -18056,3 +18056,47 @@ clone. Reboot before the next P2P transaction; then retest the restored clone
 contract from a fresh cache. If it still fails, use the import-proven closest
 surviving June vLLM snapshot as the next one-factor forensic overlay. Endpoint
 remains down; immediate post-teardown card health was green.
+
+### 2026-08-25d - Steve native-stack closure and IPC identity correction
+
+CONFIG -> read-only provenance audit of Steve's refreshed optimization lab,
+closest June vLLM snapshot, current vLLM/XPU-kernel trees, preserved oneCCL
+build/install, pinned S2B image, exact model config, and the local forensic
+launcher. No GPU operation was run because the next direct-P2P transaction is
+reboot-gated.
+
+COMMAND -> source and result inventories with `git ls-files`, `git diff`,
+`rg`, `sha256sum`, `readelf`, and no-device pinned-image Python imports; Docker
+network inspection; `bash -n` and `py_compile` on the local adapter/launcher.
+
+RESULT -> Steve's preserved oneCCL is an ARCB release build from source
+`4ceafd15`, made with oneAPI 2025.3. Its 240177816-byte `libccl.so.1.0` hash is
+`542142aca8f3d318616eae0f300aaa47dc62b217831599cb1461212f8aa4dc76`,
+byte-identical to the pinned image. Steve's currently preserved `_xpu_C` and
+GDN hashes also match that image exactly (`ae330aff...` and `cf482fd...`). This
+proves current-snapshot parity, not June-record binary parity: the June controls
+explicitly used a restored 67 MB `_xpu_C`, while the surviving/image extension
+is 116706992 bytes. The June extension and its hash were not preserved in the
+refreshed lab. The oneCCL tree's only dirty source edits qualify the ESIMD
+barrier namespace in small all-gather/reduce-scatter; they do not implement the
+decode all-reduce lever. The August piecewise backend is unchanged from June,
+and its graph wrapper is a compatible superset. The old no-op
+communicator-capture setting is now unconditional through
+`XpuCommunicator.ca_comm = None`. The material accepted-path source regression
+found remains the removed inner all-reduce clone. Steve's launcher also unset
+`CCL_ZE_IPC_EXCHANGE` and `CCL_WORKER_COUNT`, while the failed local transaction
+forced `pidfd`; it pinned his active bare-metal `eth1`, whose Docker-equivalent
+interface here is `eth0`. The local exact launcher now reproduces those
+semantics using trailing name-only Docker env removals and explicit `eth0`.
+Steve's older TP2 p512/o256 evidence reached 91.35-91.59 tok/s, establishing a
+weaker-gate ceiling above the 85.87 tok/s natural-chat smoke.
+
+VERDICT -> current-snapshot native binaries, model revision, PIECEWISE backend,
+and major graph flags are closed, but the June record's 67 MB `_xpu_C` is not.
+Reboot, then make one guarded fresh-cache direct-P2P run with both June clone
+guards and unset/default IPC exchange. If it fails, bisect with the
+import-proven June vLLM source snapshot while holding current native binaries
+fixed. Once graph replay works, reconstruct and compare the June kernel build;
+it is a plausible residual speed lever, not the first explanation for the 5x
+gap. The separate August graph-safe FlashAttention build is later forensic
+material and must not enter the exact control.

@@ -18,6 +18,8 @@ prebuilt binaries.
 - Steve's accepted Qwen3.6 TP=2 smoke reported 85.87 output tok/s and passed
   its JSON and color canaries. It used a natural-chat 512-token prompt, a
   64-token warmup, one 512-token measured generation, and ignored EOS.
+  Older repetitive-prompt TP2 artifacts reached 91.35-91.59 tok/s under
+  weaker gates.
 - The largest accepted lever was the usable PIECEWISE graph/correctness stack:
   about 12.83 to 76.48 tok/s. Disabling custom collectives reduced 76.48 to
   70.79 tok/s. A prefill-safe GDN configuration reached 93-95 tok/s before the
@@ -47,8 +49,18 @@ prebuilt binaries.
   runtime/graph-ownership gap, not a model-identity or raw INT8-selection gap.
 - In Steve's accepted configuration, direct-P2P oneCCL collectives remained in
   the forced graph. P2P-off host-staged oneCCL requires explicit per-layer
-  graph splits locally. The next safe transaction is our capturable Level Zero
-  IPC push all-reduce inside replay, still with P2P access disabled.
+  graph splits locally. The capturable Level Zero push all-reduce is correct in
+  its standalone graph harness but cannot import rank 0's IPC allocation from
+  rank 1 inside the loaded vLLM process.
+- The pinned image contains Steve's currently preserved ARCB oneCCL, `_xpu_C`,
+  and GDN binaries byte for byte. This does not establish June-record identity:
+  his accepted controls used a restored 67 MB `_xpu_C`, while the surviving
+  extension is 116706992 bytes. The first guarded direct-P2P model run still
+  failed on the first compiled all-reduce, but source comparison
+  found that the August vLLM tree had removed Steve's required inner clone.
+  That clone is restored locally. The next run must also reproduce Steve's
+  unset/default `CCL_ZE_IPC_EXCHANGE`; the repository helper had forced
+  `pidfd` in the failed transaction.
 - The image warns that no tuned B70 INT8 MoE config exists for `E=256,N=256`.
   This is a later kernel lever, not the present request-time graph failure.
 
@@ -198,9 +210,14 @@ equivalence before performance tests.
 3. DONE: reproduce Steve's benchmark request exactly and add semantic canaries.
 4. Attribute graph boundaries and the 5.0x decode-step gap.
 5. Attribute INT8 dense, MoE, GDN, sampler, and scheduler one factor at a time.
-6. Integrate our push collective into the winning graph contract.
-7. Perform one guarded kernel-7.1 direct-P2P transaction.
+6. DONE: integrate and validate our push collective graph contract; loaded
+   vLLM IPC import remains asymmetric and is not the exact-Steve route.
+7. IN PROGRESS: guarded kernel-7.1 direct-P2P reproduction. The first arm
+   exposed source and IPC-environment drift; reboot before the clone-correct,
+   unset-IPC rerun.
 8. Rebuild every native SO from local source and remove external mounts.
+   Reconstruct the June 67 MB `_xpu_C` as an explicit accepted-record variant;
+   do not conflate it with the byte-matched current snapshot.
 9. Implement and gate the SGLang-native route.
 10. Execute the model and parallelism portability matrix.
 11. Transfer only proven wins to Ornith, then add MTP and prefix caching.

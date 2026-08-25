@@ -60,9 +60,13 @@
 > The living design and evidence ledger is
 > `docs/20260825_steve_stack_reproduction_program.md`. Immediate order:
 > DONE coherent exact-Qwen P2P-off control and matched Steve metric (17.06
-> tok/s versus 85.87) -> capturable push all-reduce inside replay -> graph
-> boundary attribution -> native INT8/GDN/MoE attribution -> SGLang adapter ->
-> model/parallelism matrix -> guarded P2P=1 retest.
+> tok/s versus 85.87) -> DONE capturable push-all graph mechanics, blocked by
+> asymmetric loaded-process IPC import -> DONE current-snapshot oneCCL/XPU/GDN
+> binary provenance; June record's 67 MB `_xpu_C` remains to reconstruct -> IN
+> PROGRESS guarded direct-P2P reproduction. Reboot, then run
+> the restored June two-clone contract with Steve's unset/default IPC exchange,
+> the active container NIC, and a fresh cache -> June source-overlay bisect if
+> needed -> locally owned build -> SGLang adapter -> model/parallelism matrix.
 
 > ### [DAILY DRIVER 2026-08-23] -- stock Qwen3.8 Q4_K_M
 > `rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`: TP=2, native 262144

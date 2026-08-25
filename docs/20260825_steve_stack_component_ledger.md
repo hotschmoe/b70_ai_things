@@ -26,11 +26,17 @@ it as executable software.
 
 ## Exact Accepted Identity
 
-The TP2 reference used model revision
+The safe TP2 reference used model revision
 `cced56592e8c8935f8220836b4baa04dfd389118`, Quark W8A8, TP2/PP1, no MTP,
 PIECEWISE graph, async scheduling, no prefix cache, and direct oneCCL P2P. Its
 natural-chat request tokenized to 498 input tokens and produced 512 tokens in
 5.96267 seconds of corrected decode, or 85.869114 tok/s.
+
+Steve also retained older TP2 p512/o256 measurements at 91.592312 tok/s for
+one run and 91.351052 tok/s across three runs. Those used a repetitive prompt
+and have weaker validity gates. The reproduction target is therefore 85.87
+tok/s minimum with natural-chat coherence, with about 91.5 tok/s as the older
+same-hardware ceiling to explain.
 
 The launcher overlaid both source trees:
 
@@ -51,7 +57,14 @@ VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT=1
 VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT=1
 CCL_ATL_TRANSPORT=ofi
 CCL_TOPO_P2P_ACCESS=1
+FI_TCP_IFACE=eth1
+CCL_KVS_IFACE=eth1
 ```
+
+The accepted launcher also explicitly unset `CCL_ZE_IPC_EXCHANGE` and
+`CCL_WORKER_COUNT`. Steve's `eth1` was his bare-metal interface. The equivalent
+interface inside this repository's Docker network is `eth0`; matching the
+semantic interface is correct, while copying the literal host name is not.
 
 Steve did not pass a manual splitting-op list or force inductor graph
 partitioning. The later launcher default made scheduling asynchronous because
@@ -74,7 +87,8 @@ partitioning. The later launcher default made scheduling asynchronous because
 | Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config now compiles; P2P-off monolithic oneCCL capture stalls | Primary unresolved mechanism. |
 | Uniform no-spec descriptor | June Qwen decode capture descriptor | Yes | Restored by narrow adapter | Matched and required for capture. |
 | Custom collective wrapper | `vllm::all_reduce` custom op with two clone guards | Yes | August source silently removed the inner clone; local attributed op now restores it | Must retest after reboot; prior exact run was not source-equivalent. |
-| Collective transport | oneCCL/OFI direct P2P in graph | Yes | Deliberately off in safe controls | Exact guarded transaction pending. |
+| Collective binary | oneCCL 2022-era ARCB build, oneAPI 2025.3 | Yes | Pinned image `libccl.so.1.0` is byte-identical to Steve's preserved build | Current snapshot matched; June-record identity is not independently hashed. |
+| Collective transport | oneCCL/OFI direct P2P in graph | Yes | First direct test forced `pidfd`, unlike Steve's unset/default setting | Retest exact unset/default IPC after reboot. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |
 | Scheduler | V1 async scheduling | Yes | Live log confirms async | Matched. |
 | Prefix cache | Disabled | Yes | Disabled | Matched. |
@@ -113,11 +127,65 @@ The current inspected native hashes are:
 e043cfe218588b0440ebc1b0d208646b7ff73e4802bf2393e3d5299d5a3d4fa3  local build _xpu_C
 cf482fd898ef965eeac70682027fe5578d5005b5eb6c51a85664a68e151a4a02  local build GDN library
 ae330affe0315a5be4ac50478cc15c7874ae6e8fa9fa71cf64d5e5dff158968b  installed/pinned-image _xpu_C
+542142aca8f3d318616eae0f300aaa47dc62b217831599cb1461212f8aa4dc76  Steve/pinned-image libccl.so.1.0
 ```
 
-The GDN build matches the inspected runtime hash. `_xpu_C` does not, so an
-operator-level source/build manifest is still required before claiming binary
-identity.
+Steve's currently preserved `_xpu_C` and GDN files match the pinned image byte
+for byte.
+The different `e043cfe...` `_xpu_C` is this repository's newer local rebuild,
+not the S2B control. The image label records
+`4ceafd1+2dd55f38+44fc8fde0`: oneCCL source, XPU-kernel source, and vLLM source
+respectively. This closes current-snapshot identity only. Steve's June notes
+state that the accepted controls used a restored 67 MB `_xpu_C`; the surviving
+and pinned-image extension is 116706992 bytes. The June binary and its hash are
+not present in the refreshed lab. Its build must be reconstructed from the
+June kernel source and recorded patch chronology before accepted-record native
+identity can be claimed.
+
+The preserved oneCCL cache used `CCL_ENABLE_ARCB=ON`, release mode, oneAPI
+2025.3 `icx`/`icpx`, and two local compile-compatibility edits that qualify the
+ESIMD barrier namespace in small all-gather and reduce-scatter. The Qwen TP
+graph mainly uses all-reduce, so those two dirty edits are build fixes rather
+than a decode lever.
+
+## Source Closure Audit
+
+The closest surviving June vLLM snapshot changes 84 files relative to its
+upstream parent (`c51df43005726a09c6eb7348e8c1b00501c70a8e`). The active
+accepted path closes through these source families:
+
+- graph admission and replay: `platforms/xpu.py`, `compilation/cuda_graph.py`,
+  and `compilation/piecewise_backend.py`;
+- collective graph route: `distributed/parallel_state.py` and
+  `distributed/device_communicators/xpu_communicator.py`;
+- dense W8A8: `model_executor/kernels/linear/` and `_xpu_ops.py`;
+- routed/shared MoE: `fused_moe/experts/xpu_moe.py`, runner shared-expert
+  code, and `quantization/quark/quark_moe.py`;
+- Qwen/GDN: `models/qwen3_5.py`, `layers/mamba/gdn_linear_attn.py`, and the
+  XPU GDN backend;
+- decode boundary and sampler: `v1/worker/gpu_model_runner.py` and
+  `v1/sample/sampler.py`.
+
+The August `piecewise_backend.py` is byte-identical to the June snapshot and
+the August graph wrapper is a compatible superset. `VLLM_XPU_GRAPH_NOOP_COMM_CAPTURE`
+was removed as a flag, but its behavior is now unconditional for XPU because
+`XpuCommunicator.ca_comm` is explicitly `None`. This is not a missing action.
+The material accepted-path regression found so far is the removed inner
+all-reduce clone. The Quark launcher variables `VLLM_XPU_QUARK_W8A8_MOE` and
+`VLLM_XPU_FORCE_QUARK_REPACK` have no implementation in either surviving
+vLLM snapshot; the checkpoint scheme and Quark registry select the INT8 path.
+They are preserved for launch identity but are not performance switches.
+
+The separate August `fa-graphsafe` build specializes Qwen head-dimension-256
+FlashAttention kernels and does not match the June accepted binary. It is a
+later forensic artifact and must not be overlaid on the exact control.
+
+The same chronology makes the June 67 MB `_xpu_C` a plausible residual speed
+variable. Steve measured 87.2888 tok/s with a newly rebuilt 54 MB extension,
+restored the 67 MB extension, then measured 89.9613 tok/s in a short clean
+control and 92.5220 tok/s in decisive timing. It cannot explain why our graph
+is currently absent and decode is only 17.06 tok/s, but it may explain part of
+the remaining difference after graph replay is restored.
 
 ## Measured Lever Attribution
 
@@ -179,7 +247,8 @@ multi-all-reduce at about 35.45 us for 10 KiB.
 ### Guarded direct-P2P transaction on kernel 7.1
 
 Config -> exact minimal PIECEWISE graph, oneCCL/OFI direct P2P, later pinned
-image, and the then-current adapter.
+image, the then-current adapter, and the repository helper's forced
+`CCL_ZE_IPC_EXCHANGE=pidfd`.
 
 Result -> process-group initialization and model load succeeded, which is
 farther than the old kernel failure. The first compiled custom-op all-reduce in
@@ -192,7 +261,9 @@ Steve's June source with the later image proved that the August
 `VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT`; the setting was present but inert.
 The June source cloned once before the custom op and again inside it. A local
 attributed custom op now restores that two-clone contract without overriding a
-registered torch operator.
+registered torch operator. The exact launcher now also removes the helper's
+forced IPC-exchange setting and uses the container's active `eth0` interface,
+matching Steve's unset/default IPC and active-NIC semantics.
 
 Verdict -> kernel 7.1 did not fix the direct-P2P vLLM failure. The transaction
 does not yet isolate whether the device loss comes from oneCCL itself or from
@@ -227,10 +298,13 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 ## Next Decisive Transactions
 
 1. After reboot, retest one guarded exact oneCCL P2P transaction with the
-   restored June two-clone contract and a fresh compilation cache.
+   restored June two-clone contract, unset/default IPC exchange, explicit
+   container `eth0`, and a fresh compilation cache.
 2. If the narrow current-source repair does not reproduce, run the closest surviving 2026-06-16
    vLLM snapshot as a forensic overlay with the same runtime binaries.
-3. Convert the required delta into attributed local patches and a pinned image;
+3. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
+   kernel source and patch chronology, then compare it one factor at a time.
+4. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
 4. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
    equivalence, graph replay, and hashes.

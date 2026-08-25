@@ -28,6 +28,7 @@ export PUSH_AR="${PUSH_AR:-0}"
 export PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}"
 export PUSH_AR_MAXB="${PUSH_AR_MAXB:-67108864}"
 export EXACT_STEVE_CC="${EXACT_STEVE_CC:-0}"
+export FORENSIC_VLLM_SRC="${FORENSIC_VLLM_SRC:-}"
 export IN="${IN:-512}"
 export OUT="${OUT:-512}"
 export CONC="${CONC:-1}"
@@ -64,12 +65,12 @@ export SPEC=""
 MOUNTS=(
   -v "$SCRIPT_DIR/qwen36_s2b_probe.py:/opt/b70_qwen36_s2b_probe.py:ro"
   -v "$SCRIPT_DIR/qwen36_steve_metric.py:/opt/b70_qwen36_steve_metric.py:ro"
-  -v "$SCRIPT_DIR/qwen36_s2b_sitecustomize.py:/opt/b70_qwen36_site/sitecustomize.py:ro"
   -v "/mnt/vm_8tb/b70/results:/results"
 )
 DOCKER_ENV=(
-  -e PYTHONPATH=/opt/b70_qwen36_site
   -e VLLM_USE_V1=1
+  -e VLLM_TARGET_DEVICE=xpu
+  -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
   -e XPU_GRAPH=1
   -e VLLM_XPU_ENABLE_XPU_GRAPH=1
   -e VLLM_XPU_FORCE_GRAPH_WITH_COMM=1
@@ -87,7 +88,40 @@ DOCKER_ENV=(
   -e VLLM_XPU_ZERO_FRESH_GDN_STATE=1
   -e VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY=1
   -e VLLM_XPU_GREEDY_SAMPLE_TOPK_FALLBACK=1
+  # Steve pinned eth1 on bare metal. The isolated Docker equivalent is eth0.
+  -e FI_TCP_IFACE=eth0
+  -e CCL_KVS_IFACE=eth0
 )
+
+if [ -n "$FORENSIC_VLLM_SRC" ]; then
+  [ "$EXACT_STEVE_CC" = 1 ] || {
+    echo "FORENSIC_VLLM_SRC requires EXACT_STEVE_CC=1" >&2
+    exit 1
+  }
+  [ "$PUSH_AR" = 0 ] || {
+    echo "FORENSIC_VLLM_SRC is isolated from the local push-AR adapter" >&2
+    exit 1
+  }
+  [ -f "$FORENSIC_VLLM_SRC/vllm/__init__.py" ] || {
+    echo "Invalid FORENSIC_VLLM_SRC: $FORENSIC_VLLM_SRC" >&2
+    exit 1
+  }
+  MOUNTS+=( -v "$FORENSIC_VLLM_SRC:/opt/forensic_vllm:ro" )
+  DOCKER_ENV+=( -e PYTHONPATH=/opt/forensic_vllm )
+else
+  MOUNTS+=(
+    -v "$SCRIPT_DIR/qwen36_s2b_sitecustomize.py:/opt/b70_qwen36_site/sitecustomize.py:ro"
+  )
+  DOCKER_ENV+=( -e PYTHONPATH=/opt/b70_qwen36_site )
+fi
+
+EXACT_POST_ENV=()
+if [ "$EXACT_STEVE_CC" = 1 ]; then
+  # lib.sh normally forces pidfd. Steve's accepted launcher deliberately
+  # removed both settings and let oneCCL select its defaults. These trailing
+  # name-only entries override the earlier Docker environment assignments.
+  EXACT_POST_ENV+=( -e CCL_ZE_IPC_EXCHANGE -e CCL_WORKER_COUNT )
+fi
 
 if [ "$PUSH_AR" = 1 ]; then
   PUSH_AR_DIR="$SCRIPT_DIR/../contrib/vllm_push_allreduce"
@@ -144,7 +178,8 @@ b70_serve() {
     -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
     -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
     "${DOCKER_ENV[@]+"${DOCKER_ENV[@]}"}" \
-    "${MGPU[@]}" "${GENV[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}" >/dev/null
+    "${MGPU[@]}" "${GENV[@]}" "${EXACT_POST_ENV[@]+"${EXACT_POST_ENV[@]}"}" \
+    --entrypoint vllm "$IMG" "${ARGS[@]}" >/dev/null
 }
 
 b70_gen_probe() {
