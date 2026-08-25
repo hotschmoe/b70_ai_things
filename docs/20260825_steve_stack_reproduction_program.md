@@ -237,7 +237,9 @@ equivalence before performance tests.
    graph capture. Observe the reset boundary and run the locally owned vLLM
    custom-op integration oracle at the real Qwen shapes, including one
    compiled-direct sequence of all 81 `[8192,2048]` profile collectives before
-   an 81-collective decode-shape XPUGraph replay.
+   an 81-collective decode-shape XPUGraph replay. This isolates vLLM's real
+   GroupCoordinator op under stock Dynamo/Inductor; it does not reproduce the
+   VllmBackend partitioner or interleaved model operations.
 9. If that passes, observe another reset boundary and run the corrected
    inner-clone, unset-IPC exact model control.
 10. Rebuild every native SO from local source and remove external mounts.

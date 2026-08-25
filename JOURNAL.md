@@ -18230,3 +18230,32 @@ new no-model compiled custom-op oracle after reboot, not another full model
 load or a oneCCL rebuild. If compiled profile-shape execution passes, continue
 within that one transaction through graph and 81-collective replay; then reset
 again before the corrected exact model control.
+
+### 2026-08-25h - Hardened custom-op integration oracle
+
+CONFIG -> pre-GPU independent review of the locally owned two-rank vLLM
+custom-op oracle and launcher. The scope is the real GroupCoordinator custom
+op under stock Dynamo/Inductor, not vLLM's VllmBackend/PIECEWISE partitioner or
+interleaved Qwen model execution. No GPU operation was run; this boot's guarded
+direct-P2P transaction remains consumed.
+
+COMMAND -> `python3 -m py_compile`, `bash -n`, `git diff --check`, no-device
+pinned-image Torch API inspection, exact BF16 expected-value review, and source
+review of lifecycle cleanup, runtime identity checks, CLI validation, dynamic
+shape compilation, and 81-collective mutation/alias coverage.
+
+RESULT -> the oracle now fails closed on exact loaded oneCCL, `_xpu_C`, and
+oneCCL SPIR-V hashes before process-group initialization; records arguments,
+software, topology, graph, compiler, and cache settings; checks the direct
+input on the first unrolled collective so a missing clone cannot hide; compiles
+dynamic shapes; reproduces 81 `[8192,2048]` profile collectives; and checks
+input mutation and output aliasing during both single and 81-collective graph
+replay. Exceptions produce best-effort per-rank checkpoints, while distributed
+cleanup cannot replace the primary failure. Syntax and whitespace gates pass.
+
+VERDICT -> the reset-bounded transaction is ready but intentionally not run on
+this boot. After reboot, run exactly `./bin/gpu-run env
+I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_vllm_allreduce_graph_oracle.sh`. A pass clears the
+custom-op plus stock compiler layer only; the following reboot-bounded exact
+model control remains the VllmBackend/PIECEWISE gate.

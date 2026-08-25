@@ -457,6 +457,8 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    of all 81 profile-run collectives at `[8192,2048]`, then single- and
    81-collective decode-shape XPUGraph replay. Reject stock
    `vllm::all_reduce`, aliases, input mutation, mismatch, or device loss.
+   This clears stock Dynamo/Inductor plus the real GroupCoordinator custom op,
+   not VllmBackend/PIECEWISE or interleaved model execution.
 3. If that passes, observe another reset boundary and retest one guarded exact
    model transaction with the restored June inner-clone contract, unset/default
    IPC exchange, explicit container `eth0`, and a fresh cache.

@@ -81,6 +81,10 @@
 > container NIC, and fresh cache -> rebuild the June native kernel candidate or
 > June source-overlay bisect as indicated -> locally owned build -> SGLang
 > adapter -> model/parallelism matrix.
+> The no-model oracle deliberately uses stock Dynamo/Inductor around vLLM's
+> real GroupCoordinator op. A pass clears that custom-op/compiler layer but not
+> vLLM's VllmBackend/PIECEWISE partitioner; the corrected exact-model control is
+> the gate for that remaining layer.
 
 > ### [DAILY DRIVER 2026-08-23] -- stock Qwen3.8 Q4_K_M
 > `rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`: TP=2, native 262144

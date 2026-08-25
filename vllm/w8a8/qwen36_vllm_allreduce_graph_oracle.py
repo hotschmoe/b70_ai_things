@@ -4,15 +4,44 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+import hashlib
 import json
 import os
 from pathlib import Path
 import sys
 import time
+import traceback
 from typing import Any, Callable
 
 import torch
 import torch.distributed as dist
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        while chunk := source.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def loaded_library_identities(name: str) -> list[dict[str, Any]]:
+    paths = sorted(
+        {
+            line.rsplit(maxsplit=1)[-1]
+            for line in Path("/proc/self/maps").read_text().splitlines()
+            if name in line and line.rsplit(maxsplit=1)[-1].startswith("/")
+        }
+    )
+    return [
+        {
+            "path": path,
+            "size": Path(path).stat().st_size,
+            "sha256": sha256_file(Path(path)),
+        }
+        for path in paths
+    ]
 
 
 def make_input(base: torch.Tensor, rank: int, iteration: int) -> torch.Tensor:
@@ -113,7 +142,8 @@ def validate_many_collectives(
         # retaining every 32 MiB profile-run output at once.
         result = torch.zeros_like(input_)
         for offset in range(collective_count):
-            result = result + call(input_ + offset)
+            operand = input_ if offset == 0 else input_ + offset
+            result = result + call(operand)
         return result
 
     def expected_many(input_base: torch.Tensor, iteration: int) -> torch.Tensor:
@@ -124,15 +154,17 @@ def validate_many_collectives(
             result = result + collective_output
         return result
 
-    compiled_many = torch.compile(many, fullgraph=True)
+    compiled_many = torch.compile(many, fullgraph=True, dynamic=True)
     for warmup in range(2):
         static_input.copy_(make_input(base, rank, warmup))
         compiled_many(static_input)
     torch.xpu.synchronize()
     dist.barrier()
 
-    # vLLM's failing profile run executes 81 compiled [8192,2048] BF16
-    # collectives before graph capture. Exercise that exact shape and count.
+    # Reproduce the failing profile run's 81 compiled [8192,2048] BF16
+    # collective shapes and volume. This intentionally isolates the custom op
+    # under stock Dynamo/Inductor; it does not emulate VllmBackend partitioning
+    # or the model operations interleaved between the real collectives.
     profile_rows = 8192
     profile_base = (
         torch.arange(
@@ -160,7 +192,7 @@ def validate_many_collectives(
         "mismatch_iterations": 0 if profile_ok else 1,
         "input_mutation_iterations": 0 if profile_input_ok else 1,
         "output_alias_iterations": 1 if profile_alias else 0,
-        "elapsed_ms_including_compile_sync_and_validation": profile_elapsed_ms,
+        "wall_call_and_sync_ms_compile_cache_dependent": profile_elapsed_ms,
     }
     del profile_output, profile_expected, profile_source, profile_input, profile_base
     torch.xpu.empty_cache()
@@ -174,6 +206,8 @@ def validate_many_collectives(
     dist.barrier()
 
     mismatches = 0
+    input_mutations = 0
+    output_aliases = 0
     first_mismatch: dict[str, Any] | None = None
     start = time.perf_counter()
     for iteration in range(iterations):
@@ -183,6 +217,10 @@ def validate_many_collectives(
         graph.replay()
         torch.xpu.synchronize()
         expected = expected_many(base, iteration)
+        if not torch.equal(static_input, source):
+            input_mutations += 1
+        if static_output.data_ptr() == static_input.data_ptr():
+            output_aliases += 1
         if not torch.equal(static_output, expected):
             mismatches += 1
             if first_mismatch is None:
@@ -197,6 +235,8 @@ def validate_many_collectives(
         "collectives_per_replay": collective_count,
         "iterations": iterations,
         "mismatch_iterations": mismatches,
+        "input_mutation_iterations": input_mutations,
+        "output_alias_iterations": output_aliases,
         "first_mismatch": first_mismatch,
         "avg_replay_ms_including_sync_and_validation": (
             (time.perf_counter() - start) * 1000.0 / iterations
@@ -213,6 +253,68 @@ def write_partial(path: Path | None, rank: int, document: dict[str, Any]) -> Non
     partial.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
 
 
+def write_partial_best_effort(
+    path: Path | None, rank: int, document: dict[str, Any]
+) -> None:
+    try:
+        write_partial(path, rank, document)
+    except BaseException as error:
+        checkpoint_error = {
+            "type": type(error).__name__,
+            "message": str(error),
+        }
+        document.setdefault("checkpoint_write_errors", []).append(checkpoint_error)
+        print(
+            f"rank={rank} partial-result checkpoint failed: {checkpoint_error}",
+            file=sys.stderr,
+            flush=True,
+        )
+
+
+@contextmanager
+def distributed_cleanup(
+    path: Path | None, rank: int, document: dict[str, Any]
+):
+    primary_error: BaseException | None = None
+    try:
+        yield
+    except BaseException as error:
+        primary_error = error
+        document["exception"] = {
+            "type": type(error).__name__,
+            "message": str(error),
+            "traceback": traceback.format_exc(),
+        }
+        write_partial_best_effort(path, rank, document)
+        raise
+    finally:
+        cleanup_errors = []
+        from vllm.distributed.parallel_state import (
+            destroy_distributed_environment,
+            destroy_model_parallel,
+        )
+
+        for name, cleanup in (
+            ("destroy_model_parallel", destroy_model_parallel),
+            ("destroy_distributed_environment", destroy_distributed_environment),
+        ):
+            try:
+                cleanup()
+            except BaseException as cleanup_error:
+                cleanup_errors.append(
+                    {
+                        "step": name,
+                        "type": type(cleanup_error).__name__,
+                        "message": str(cleanup_error),
+                    }
+                )
+        if cleanup_errors:
+            document["cleanup_errors"] = cleanup_errors
+            write_partial_best_effort(path, rank, document)
+            if primary_error is None:
+                raise RuntimeError(f"distributed cleanup failed: {cleanup_errors}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--rows", type=int, default=1)
@@ -226,6 +328,10 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
+    for name, value in vars(args).items():
+        if name != "output" and isinstance(value, int) and value <= 0:
+            parser.error(f"--{name.replace('_', '-')} must be positive")
+
     rank = int(os.environ["RANK"])
     local_rank = int(os.environ["LOCAL_RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
@@ -234,10 +340,9 @@ def main() -> int:
 
     torch.xpu.set_device(local_rank)
     from vllm.config import VllmConfig, set_current_vllm_config
+    import vllm
     from vllm.distributed.communication_op import tensor_model_parallel_all_reduce
     from vllm.distributed.parallel_state import (
-        destroy_distributed_environment,
-        destroy_model_parallel,
         get_tp_group,
         init_distributed_environment,
         initialize_model_parallel,
@@ -246,21 +351,89 @@ def main() -> int:
     local_result: dict[str, Any] = {
         "rank": rank,
         "local_rank": local_rank,
+        "arguments": {
+            key: str(value) if isinstance(value, Path) else value
+            for key, value in vars(args).items()
+        },
         "stages": [],
+        "software": {
+            "python": sys.version,
+            "torch": torch.__version__,
+            "vllm": vllm.__version__,
+            "image": os.environ.get("B70_ORACLE_IMAGE"),
+            "compile_backend": "stock torch Dynamo/Inductor",
+            "dynamic_shapes": True,
+        },
         "environment": {
             key: os.environ.get(key)
             for key in (
+                "CCL_ATL_TRANSPORT",
                 "CCL_TOPO_P2P_ACCESS",
                 "CCL_ZE_IPC_EXCHANGE",
+                "CCL_WORKER_COUNT",
+                "CCL_LOG_LEVEL",
+                "CCL_KERNEL_PATH",
+                "FI_TCP_IFACE",
+                "CCL_KVS_IFACE",
+                "ONEAPI_DEVICE_SELECTOR",
+                "ZE_AFFINITY_MASK",
+                "VLLM_USE_V1",
+                "VLLM_TARGET_DEVICE",
+                "XPU_GRAPH",
+                "VLLM_XPU_ENABLE_XPU_GRAPH",
+                "VLLM_XPU_FORCE_GRAPH_WITH_COMM",
                 "VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES",
                 "VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP",
+                "VLLM_XPU_GRAPH_NOOP_COMM_CAPTURE",
                 "VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT",
                 "VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT",
+                "TORCHINDUCTOR_CACHE_DIR",
+                "TRITON_CACHE_DIR",
             )
         },
     }
 
-    with set_current_vllm_config(VllmConfig()):
+    # Fail closed before process-group initialization or any P2P operation.
+    # LD_PRELOAD and sitecustomize load these libraries at interpreter start.
+    loaded_ccl = loaded_library_identities("libccl.so")
+    loaded_xpu_c = loaded_library_identities("_xpu_C")
+    kernels_path = Path(os.environ["CCL_KERNEL_PATH"]) / "kernels.spv"
+    kernels_identity = {
+        "path": str(kernels_path),
+        "size": kernels_path.stat().st_size,
+        "sha256": sha256_file(kernels_path),
+    }
+    expected_ccl = os.environ.get("EXPECTED_CCL_SHA256")
+    expected_xpu_c = os.environ.get("EXPECTED_XPU_C_SHA256")
+    expected_kernels = os.environ.get("EXPECTED_CCL_KERNELS_SHA256")
+    local_result["runtime_identity"] = {
+        "loaded_ccl": loaded_ccl,
+        "loaded_xpu_c": loaded_xpu_c,
+        "ccl_kernels": kernels_identity,
+        "expected": {
+            "ccl": expected_ccl,
+            "xpu_c": expected_xpu_c,
+            "ccl_kernels": expected_kernels,
+        },
+    }
+    local_result["runtime_identity_passed"] = bool(
+        expected_ccl
+        and expected_xpu_c
+        and expected_kernels
+        and loaded_ccl
+        and loaded_xpu_c
+        and all(item["sha256"] == expected_ccl for item in loaded_ccl)
+        and all(item["sha256"] == expected_xpu_c for item in loaded_xpu_c)
+        and kernels_identity["sha256"] == expected_kernels
+    )
+    if not local_result["runtime_identity_passed"]:
+        write_partial(args.output, rank, local_result)
+        identity = local_result["runtime_identity"]
+        raise RuntimeError(f"runtime identity mismatch: {identity}")
+
+    with distributed_cleanup(args.output, rank, local_result), set_current_vllm_config(
+        VllmConfig()
+    ):
         init_distributed_environment(backend="xccl")
         initialize_model_parallel(
             tensor_model_parallel_size=world_size,
@@ -319,7 +492,9 @@ def main() -> int:
         write_partial(args.output, rank, local_result)
         print(f"rank={rank} stage={eager}", flush=True)
 
-        compiled = torch.compile(tensor_model_parallel_all_reduce, fullgraph=True)
+        compiled = torch.compile(
+            tensor_model_parallel_all_reduce, fullgraph=True, dynamic=True
+        )
         for warmup in range(2):
             static_input.copy_(make_input(base, rank, warmup))
             compiled(static_input)
@@ -396,6 +571,7 @@ def main() -> int:
         dist.all_gather_object(all_results, local_result)
         passed = all(
             result is not None
+            and result["runtime_identity_passed"]
             and all(
                 stage["mismatch_iterations"] == 0
                 and stage.get("input_mutation_iterations", 0) == 0
@@ -409,6 +585,10 @@ def main() -> int:
                 "passed": passed,
                 "backend": "xccl",
                 "world_size": world_size,
+                "source_attribution": (
+                    "Locally owned integration oracle for the clone contract "
+                    "identified from Steve Seguin's June vLLM work"
+                ),
                 "ranks": all_results,
             }
             rendered = json.dumps(document, indent=2, sort_keys=True)
@@ -417,8 +597,6 @@ def main() -> int:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(rendered + "\n")
 
-        destroy_model_parallel()
-        destroy_distributed_environment()
         return 0 if passed else 1
 
 

@@ -13,6 +13,9 @@ RESULT_FILE="${RESULT_FILE:-$RESULT_DIR/qwen36_tp2_vllm_allreduce_graph_${STAMP}
 LOG_FILE="${LOG_FILE:-$RESULT_DIR/qwen36_tp2_vllm_allreduce_graph_${STAMP}.log}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_oracle_cache}"
 NAME="${NAME:-qwen36_vllm_allreduce_graph_oracle}"
+EXPECTED_CCL_SHA256="${EXPECTED_CCL_SHA256:-542142aca8f3d318616eae0f300aaa47dc62b217831599cb1461212f8aa4dc76}"
+EXPECTED_XPU_C_SHA256="${EXPECTED_XPU_C_SHA256:-ae330affe0315a5be4ac50478cc15c7874ae6e8fa9fa71cf64d5e5dff158968b}"
+EXPECTED_CCL_KERNELS_SHA256="${EXPECTED_CCL_KERNELS_SHA256:-0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e075290d314f0c9}"
 
 if [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
   echo "Refusing direct P2P oracle without I_KNOW_P2P_WEDGES=1" >&2
@@ -29,6 +32,7 @@ docker run --rm --name "$NAME" --device /dev/dri \
   -v "$SCRIPT_DIR/qwen36_s2b_sitecustomize.py:/opt/b70_qwen36_site/sitecustomize.py:ro" \
   -v "$SCRIPT_DIR/qwen36_vllm_allreduce_graph_oracle.py:/opt/qwen36_vllm_allreduce_graph_oracle.py:ro" \
   -v "$RESULT_DIR:/results" -v "$CACHE_DIR:/vllm_oracle_cache" \
+  -e B70_ORACLE_IMAGE="$IMG" \
   -e PYTHONPATH=/opt/b70_qwen36_site \
   -e TORCHINDUCTOR_CACHE_DIR=/vllm_oracle_cache/torchinductor \
   -e TRITON_CACHE_DIR=/vllm_oracle_cache/triton \
@@ -36,6 +40,9 @@ docker run --rm --name "$NAME" --device /dev/dri \
   -e CCL_TOPO_P2P_ACCESS=1 \
   -e CCL_LOG_LEVEL=info \
   -e CCL_KERNEL_PATH=/opt/ccl4ce/lib/ccl/kernels \
+  -e EXPECTED_CCL_SHA256="$EXPECTED_CCL_SHA256" \
+  -e EXPECTED_XPU_C_SHA256="$EXPECTED_XPU_C_SHA256" \
+  -e EXPECTED_CCL_KERNELS_SHA256="$EXPECTED_CCL_KERNELS_SHA256" \
   -e FI_TCP_IFACE=eth0 \
   -e CCL_KVS_IFACE=eth0 \
   -e ONEAPI_DEVICE_SELECTOR=level_zero:0,1 \
