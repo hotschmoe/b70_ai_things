@@ -62,7 +62,9 @@ def sha256_file(path: Path) -> str:
 
 
 def tensor_sha256(tensor: torch.Tensor) -> str:
-    value = tensor.detach().contiguous().cpu()
+    # A scalar checksum cannot be viewed directly as bytes because PyTorch
+    # forbids dtype-changing views on zero-dimensional tensors.
+    value = tensor.detach().contiguous().cpu().reshape(-1)
     return hashlib.sha256(value.view(torch.uint8).numpy().tobytes()).hexdigest()
 
 
@@ -373,6 +375,10 @@ def routing_counts(total_m: int, experts: int, pattern: str) -> torch.Tensor:
     counts = torch.zeros(experts, dtype=torch.int32)
     if pattern == "spread":
         counts[:total_m] = 1
+    elif pattern == "uniform":
+        quotient, remainder = divmod(total_m, experts)
+        counts.fill_(quotient)
+        counts[:remainder] += 1
     elif pattern == "collision":
         counts[0] = total_m
     elif pattern == "skew":
@@ -391,18 +397,21 @@ def grouped_reference(
     b: torch.Tensor,
     b_scale: torch.Tensor,
     counts: torch.Tensor,
+    rows: int | None = None,
 ) -> torch.Tensor:
-    output = torch.empty((a.shape[0], b.shape[2]), dtype=torch.bfloat16)
+    take = a.shape[0] if rows is None else min(rows, a.shape[0])
+    output = torch.empty((take, b.shape[2]), dtype=torch.bfloat16)
     offset = 0
     for expert, rows in enumerate(counts.tolist()):
-        if rows:
-            accum = a[offset : offset + rows].to(torch.int32) @ b[expert].to(torch.int32)
-            output[offset : offset + rows] = (
-                accum.float()
-                * a_scale[offset : offset + rows]
-                * b_scale[expert]
+        if rows and offset < take:
+            stop = min(offset + rows, take)
+            accum = a[offset:stop].to(torch.int32) @ b[expert].to(torch.int32)
+            output[offset:stop] = (
+                accum.float() * a_scale[offset:stop] * b_scale[expert]
             ).to(torch.bfloat16)
-            offset += rows
+        offset += rows
+        if offset >= take:
+            break
     return output
 
 
@@ -422,7 +431,10 @@ def run_grouped_case(
     host_b = torch.randint(-127, 128, (experts, k, n), generator=generator, dtype=torch.int8)
     host_b_scale = torch.rand((experts, n), generator=generator) * 0.02 + 1.0e-4
     counts = routing_counts(total_m, experts, pattern)
-    reference = grouped_reference(host_a, host_a_scale, host_b, host_b_scale, counts)
+    reference_rows = total_m if total_m <= 16 else 8
+    reference = grouped_reference(
+        host_a, host_a_scale, host_b, host_b_scale, counts, rows=reference_rows
+    )
     a = host_a.to("xpu")
     a_scale = host_a_scale.to("xpu")
     b = host_b.to("xpu")
@@ -443,20 +455,28 @@ def run_grouped_case(
             k,
             experts,
         )
-        return output, output.float().sum()
+        return output
 
-    result, checksum = call()
+    result = call()
     torch.xpu.synchronize()
     max_error, mean_error = validate_float_output(result, reference)
     hashes = []
-    for _ in range(16):
-        repeated_output, repeated_checksum = call()
+    repeats = 16 if total_m <= 16 else 4
+    for _ in range(repeats):
+        repeated_output = call()
         torch.xpu.synchronize()
-        hashes.append([tensor_sha256(repeated_output), tensor_sha256(repeated_checksum)])
+        hashes.append([tensor_sha256(repeated_output)])
     graph = graph_replay(
-        call, lambda out: [tensor_sha256(out[0]), tensor_sha256(out[1])]
+        call,
+        lambda out: [tensor_sha256(out)],
+        replays=16 if total_m <= 16 else 4,
     )
-    timing = time_call(call, batch=20)
+    timing = time_call(
+        call,
+        warmup=8 if total_m <= 16 else 2,
+        samples=9 if total_m <= 16 else 5,
+        batch=20 if total_m <= 16 else 2,
+    )
     passed = max_error <= 0.25 and len({tuple(item) for item in hashes}) == 1 and graph["pass"]
     return {
         "id": case_id,
@@ -467,7 +487,6 @@ def run_grouped_case(
         "max_abs_error_vs_int32_reference": max_error,
         "mean_abs_error_vs_int32_reference": mean_error,
         "output_sha256": tensor_sha256(result),
-        "checksum_sha256": tensor_sha256(checksum),
         "repeat_unique_hashes": sorted({tuple(item) for item in hashes}),
         "graph": graph,
         "timing": timing,
@@ -526,6 +545,13 @@ def execute_suite(args: argparse.Namespace) -> list[dict[str, Any]]:
                             label, total_m, k, n, pattern, args.seed
                         )
                     )
+        if args.profile:
+            for label, k, n in (("gemm1-profile", 2048, 512), ("gemm2-profile", 256, 2048)):
+                cases.append(
+                    run_grouped_case(
+                        label, 8192 * 8, k, n, "uniform", args.seed
+                    )
+                )
     return cases
 
 

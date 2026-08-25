@@ -3,6 +3,17 @@
 **Created:** 2026-06-20 - **Status-synced:** 2026-08-25 (endpoint-down research campaign)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
+> ### [INFRA FOLLOW-UP 2026-08-25] -- RESET AND SLOT TOPOLOGY
+> DONE prove clean-state non-reboot rebind, xe unload/reload, endpoint FLR,
+> per-card health, and compiled two-rank health on one unchanged boot. NEXT,
+> when a natural collective wedge occurs, run the same ladder and record which
+> rung restores both health layers before considering the recovery fully
+> wedge-proven. OPTIONAL controlled hardware A/B: move card 1 only after
+> confirming motherboard silkscreen/manual mapping, require both post-move PCI
+> paths under `pci0000:00`, then compare thermals, link width, collective
+> latency, guarded direct P2P, and matched serving. Do not assume the move fixes
+> vLLM; the raw direct-P2P oracle already passes on the current cross-root paths.
+
 > ### [GIANT TODO 2026-08-25] -- FULLY OWN THE STEVE XPU SOFTWARE STACK
 > This is a top-level research program, not a launcher-copy task. Understand,
 > reproduce, and independently maintain every layer behind Steve Seguin's B70
@@ -46,7 +57,17 @@
 > 8. **Model transfer:** test the complete stack first on Steve's exact Qwen3.6
 >    35B-A3B control, then Ornith 1.5 35B-A3B W8A8, Qwen3.8 27B W8A8, and one
 >    additional 27B compressed-tensors control. Record which wins are model-
->    generic and which require Qwen3.5 GDN/MoE assumptions.
+>    generic and which require Qwen3.5 GDN/MoE assumptions. On the 27B
+>    controls, isolate every transferred layer rather than testing only the
+>    final bundle: rebuilt `_xpu_C`, dense INT8 kernels, activation quantizer,
+>    GDN, custom-op collectives, graph/capture adapters, scheduler patches,
+>    and any MoE-only code that should be inert. Use one-factor A-B-B-A plus
+>    provenance and dispatch evidence for each claimed effect. This is queued
+>    after the exact-Qwen component bisect. The first 27B dense TP=2 transfer
+>    must explicitly census its compiled profile collective shapes and test
+>    clone completion outside graph recording. Derive the fence threshold from
+>    that model's real profile, not Qwen35's 8192-row value; dense 27B is the
+>    clean control because routed-MoE dispatch is absent.
 > 9. **Parallelism matrix:** test TP=1, TP=2, PP=2, and DP=2 (two independent
 >    TP=1 replicas), with and without MTP where supported. For each, report c1,
 >    concurrent aggregate, TTFT, TPOT, prefix-cache behavior, capacity, graph
@@ -107,16 +128,30 @@
 > method unconditionally calls generic `fused_experts`, so the grouped startup
 > schema proved registration rather than execution. A narrow adapter now
 > restores XPU backend selection, weight/scale layout conversion, native kernel
-> construction, and native apply; its no-device ABI contract passes. After an
-> actual reboot, rerun the identical fresh-cache control with only this repair
-> and require the XPU Int8 MoE backend log plus no generic MoE JIT.
+> construction, and native apply; its no-device ABI contract passes.
+> Per-rank exact-model tracing then closed the compiled-collective boundary.
+> P2P off left both ranks inside the same first `[8192,2048]` BF16 oneCCL
+> all-reduce after matched entry, with zero MoE calls reached. Direct P2P plus
+> full synchronous tracing completed all 81 profile collectives and all 40
+> native MoE calls; its later graph-recording failure was solely the forbidden
+> diagnostic synchronize. The minimized fix synchronizes only the cloned input
+> for tensors with at least 8192 rows, immediately before oneCCL. It needs no
+> pre/post fence and is inactive in graph capture and decode. That arm captured
+> 9/9 graphs, passed endpoint identity, the p498/o512 metric, both 16/16
+> canaries, the strict native-route/cache gate, graceful teardown, and both
+> post-health layers at 45.3649 corrected tok/s. This is 52.83% of Steve and
+> 4.58% slower than the generic Triton MoE control, so the collective boundary
+> is DONE and the untuned native grouped-MoE route is not the missing speed.
+> NEXT: profile the now-stable 45.3649 control against Steve's source ledger to
+> attribute the remaining 1.893x gap; prioritize graph piece count, GDN path,
+> scheduler/sampler, and kernel selection rather than another boundary retry.
 > Correct the oracle to use a sequential low-live-buffer chain before reusing
 > its 81-op stress; do not claim that stage passed. Then -> DONE minimal June native 54 MB-class
 > B70-AOT build and complete-package off-device dispatch gate; the exact model
 > launcher now fails closed on the package hashes and quant, dense, grouped,
-> `_C`, and `_moe_C` schemas. Graph capture and endpoint coherence now pass;
-> native grouped-MoE endpoint dispatch remains
-> -> June source-overlay bisect as indicated -> SGLang
+> `_C`, and `_moe_C` schemas. Graph capture, native grouped-MoE endpoint
+> dispatch, coherence, and health now pass -> June source-overlay bisect as
+> indicated -> SGLang
 > adapter -> model/parallelism matrix.
 > The no-model oracle deliberately uses stock Dynamo/Inductor around vLLM's
 > real GroupCoordinator op. A pass clears that custom-op/compiler layer but not

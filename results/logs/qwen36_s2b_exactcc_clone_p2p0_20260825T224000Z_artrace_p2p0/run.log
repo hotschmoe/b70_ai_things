@@ -1,0 +1,74 @@
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== pre-flight xpu-collective-health (P2P=0) ===
+=== collective probe (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 p2p=0 timeout=120s) ===
+W0825 22:17:32.874000 1 torch/distributed/run.py:851]
+W0825 22:17:32.874000 1 torch/distributed/run.py:851] *****************************************
+W0825 22:17:32.874000 1 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed.
+W0825 22:17:32.874000 1 torch/distributed/run.py:851] *****************************************
+2026:08:25-22:17:35:   41 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:08:25-22:17:35:   41 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:08:25-22:17:35:   41 |CCL_WARN| value of CCL_KERNEL_PATH changed to be /opt/ccl4ce/lib/ccl/kernels (default:)
+2026:08:25-22:17:35:   41 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:25-22:17:35:   42 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:25-22:17:36:   41:[0] |CCL_WARN| topology recognition shows PCIe connection between devices. If this is not correct, you can disable topology recognition, with CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0. This will assume XeLinks across devices
+COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120 compiled_iterations=10 p2p=0
+xpu-collective-health: HEALTHY
+=== serve qwen36-35b-a3b-quark-w8a8-int8-s2b-control  IMG=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94  TP=2 PP=1  GRAPH=1  port=18080 ===
+vllm serve /models/qwen3.6-35b-a3b/quark-w8a8-int8 --served-model-name qwen36-35b-a3b-quark-w8a8-int8-s2b-control --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 2 --max-model-len 32768 --max-num-seqs 24 --gpu-memory-utilization 0.90 --trust-remote-code --no-enable-prefix-caching --quantization quark --distributed-executor-backend mp --language-model-only --generation-config vllm --max-num-batched-tokens 8192 --uvicorn-log-level warning --compilation-config {"cudagraph_mode":"PIECEWISE"}
+=== waiting for /health (ceiling 1800s, stall-abort 180s; first run JIT-compiles/captures) ===
+[!] STALLED: no non-heartbeat log progress for 180s -- treating as hung init/capture.
+(Worker_TP0 pid=79) INFO 08-25 22:18:57 [int8.py:209] Using MoEPrepareAndFinalizeNoDPEPModular
+(Worker_TP1 pid=80) INFO 08-25 22:18:58 [interface.py:496] Setting kv cache block size to 64 for FLASH_ATTN backend.
+(Worker_TP1 pid=80) INFO 08-25 22:18:58 [interface.py:649] Setting attention block size to 1088 tokens to ensure that attention page size is >= mamba page size.
+(Worker_TP1 pid=80) INFO 08-25 22:18:58 [interface.py:673] Padding mamba page size by 3.82% to ensure that mamba page size and attention page size are exactly equal.
+(Worker_TP0 pid=79) INFO 08-25 22:18:58 [gpu_model_runner.py:11800] Model loading took 16.88 GiB memory and 24.016630 seconds
+(Worker_TP0 pid=79) INFO 08-25 22:18:58 [interface.py:496] Setting kv cache block size to 64 for FLASH_ATTN backend.
+(Worker_TP0 pid=79) INFO 08-25 22:18:58 [interface.py:649] Setting attention block size to 1088 tokens to ensure that attention page size is >= mamba page size.
+(Worker_TP0 pid=79) INFO 08-25 22:18:58 [interface.py:673] Padding mamba page size by 3.82% to ensure that mamba page size and attention page size are exactly equal.
+(Worker_TP1 pid=80) WARNING 08-25 22:19:01 [decorators.py:321] Compiling model again due to a load failure from /vllm_cache/torch_compile_cache/torch_aot_compile/9ff689ed1a8ae45e95b4b34a04082ac7c8f66896aa8ff70589b282efafd56706/rank_1_0/model, reason: Source code has changed since the last compilation. Recompiling the model.
+(Worker_TP0 pid=79) WARNING 08-25 22:19:01 [decorators.py:321] Compiling model again due to a load failure from /vllm_cache/torch_compile_cache/torch_aot_compile/9ff689ed1a8ae45e95b4b34a04082ac7c8f66896aa8ff70589b282efafd56706/rank_0_0/model, reason: Source code has changed since the last compilation. Recompiling the model.
+(Worker_TP1 pid=80) WARNING 08-25 22:19:14 [backends.py:1048] Failed to read file <frozen os>
+(Worker_TP0 pid=79) WARNING 08-25 22:19:14 [backends.py:1048] Failed to read file <frozen os>
+(Worker_TP0 pid=79) INFO 08-25 22:19:14 [backends.py:1089] Using cache directory: /vllm_cache/torch_compile_cache/f0932c561c/rank_0_0/backbone for vLLM's torch.compile
+(Worker_TP0 pid=79) INFO 08-25 22:19:14 [backends.py:1148] Dynamo bytecode transform time: 13.36 s
+(Worker_TP0 pid=79) INFO 08-25 22:19:15 [backends.py:378] Cache the graph of compile range (1, 8192) for later use
+(Worker_TP0 pid=79) INFO 08-25 22:19:18 [backends.py:393] Compiling a graph for compile range (1, 8192) takes 2.97 s
+(Worker_TP1 pid=80) [qwen36-s2b-allreduce-trace] time_ns=15701446905631 pid=80 global_rank=1 rank_in_group=1 call=1 group=tp:0 stage=enter shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:1
+(Worker_TP1 pid=80) [qwen36-s2b-allreduce-trace] time_ns=15701446961758 pid=80 global_rank=1 rank_in_group=1 call=1 group=tp:0 stage=pre-sync-start shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:1
+(Worker_TP1 pid=80) [qwen36-s2b-allreduce-trace] time_ns=15701447120490 pid=80 global_rank=1 rank_in_group=1 call=1 group=tp:0 stage=pre-sync-ok shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:1
+(Worker_TP1 pid=80) [qwen36-s2b-allreduce-trace] time_ns=15701451481496 pid=80 global_rank=1 rank_in_group=1 call=1 group=tp:0 stage=clone-enqueued shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:1
+(Worker_TP1 pid=80) [qwen36-s2b-allreduce-trace] time_ns=15701451717576 pid=80 global_rank=1 rank_in_group=1 call=1 group=tp:0 stage=clone-sync-ok shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:1
+(Worker_TP1 pid=80) [qwen36-s2b-allreduce-trace] time_ns=15701451732254 pid=80 global_rank=1 rank_in_group=1 call=1 group=tp:0 stage=collective-enter shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:1
+(Worker_TP0 pid=79) INFO 08-25 22:19:33 [decorators.py:708] saved AOT compiled function to /vllm_cache/torch_compile_cache/torch_aot_compile/9ff689ed1a8ae45e95b4b34a04082ac7c8f66896aa8ff70589b282efafd56706/rank_0_0/model
+(Worker_TP0 pid=79) INFO 08-25 22:19:33 [monitor.py:53] torch.compile took 32.23 s in total
+(Worker_TP0 pid=79) [qwen36-s2b-allreduce-trace] time_ns=15701691954836 pid=79 global_rank=0 rank_in_group=0 call=1 group=tp:0 stage=enter shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:0
+(Worker_TP0 pid=79) [qwen36-s2b-allreduce-trace] time_ns=15701691995514 pid=79 global_rank=0 rank_in_group=0 call=1 group=tp:0 stage=pre-sync-start shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:0
+(Worker_TP0 pid=79) [qwen36-s2b-allreduce-trace] time_ns=15701692125251 pid=79 global_rank=0 rank_in_group=0 call=1 group=tp:0 stage=pre-sync-ok shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:0
+(Worker_TP0 pid=79) [qwen36-s2b-allreduce-trace] time_ns=15701696600014 pid=79 global_rank=0 rank_in_group=0 call=1 group=tp:0 stage=clone-enqueued shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:0
+(Worker_TP0 pid=79) [qwen36-s2b-allreduce-trace] time_ns=15701696796228 pid=79 global_rank=0 rank_in_group=0 call=1 group=tp:0 stage=clone-sync-ok shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:0
+(Worker_TP0 pid=79) [qwen36-s2b-allreduce-trace] time_ns=15701696809283 pid=79 global_rank=0 rank_in_group=0 call=1 group=tp:0 stage=collective-enter shape=(8192, 2048) dtype=torch.bfloat16 device=xpu:0
+qwen36_s2b_exactcc_clone_p2p0_20260825T224000Z_artrace_p2p0
+stopped qwen36_s2b_exactcc_clone_p2p0_20260825T224000Z_artrace_p2p0 (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== collective probe (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 p2p=0 timeout=120s) ===
+W0825 22:23:53.198000 1 torch/distributed/run.py:851]
+W0825 22:23:53.198000 1 torch/distributed/run.py:851] *****************************************
+W0825 22:23:53.198000 1 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed.
+W0825 22:23:53.198000 1 torch/distributed/run.py:851] *****************************************
+2026:08:25-22:23:55:   40 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:08:25-22:23:55:   40 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 0 (default:-1)
+2026:08:25-22:23:55:   40 |CCL_WARN| value of CCL_KERNEL_PATH changed to be /opt/ccl4ce/lib/ccl/kernels (default:)
+2026:08:25-22:23:55:   40 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:25-22:23:55:   41 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:25-22:23:56:   40:[0] |CCL_WARN| topology recognition shows PCIe connection between devices. If this is not correct, you can disable topology recognition, with CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0. This will assume XeLinks across devices
+COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120 compiled_iterations=10 p2p=0
+xpu-collective-health: HEALTHY

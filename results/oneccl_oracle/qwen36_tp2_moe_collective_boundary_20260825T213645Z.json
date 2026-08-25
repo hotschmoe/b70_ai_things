@@ -1,0 +1,46 @@
+{
+  "passed": true,
+  "protocol": "qwen36-june-tp2-moe-collective-boundary-v1",
+  "ranks": [
+    {
+      "collective_finite": true,
+      "collective_sha256": "5f41c60fe941531f3418c0ea04f431b17f021da4ce42c4c3ecd1b64739d38dba",
+      "local_rank": 0,
+      "moe_sha256": "4f3abb39daae693c791c885669fc05ea3c9e0429957770eb0c597ae8b479da14",
+      "rank": 0,
+      "rows": 8192,
+      "runtime": {
+        "expected_xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d",
+        "torch": "2.11.0+xpu",
+        "xpu_c": "/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so",
+        "xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d"
+      },
+      "stages": [
+        "process_group_warmup",
+        "compiled_collective_warmup",
+        "fused_moe_profile",
+        "compiled_collective_after_moe"
+      ]
+    },
+    {
+      "collective_finite": true,
+      "collective_sha256": "5f41c60fe941531f3418c0ea04f431b17f021da4ce42c4c3ecd1b64739d38dba",
+      "local_rank": 1,
+      "moe_sha256": "1d1d3cc9178dfe5b7a4aea64b7de93b1005455abf53d937b8a5ddf19d4dce411",
+      "rank": 1,
+      "rows": 8192,
+      "runtime": {
+        "expected_xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d",
+        "torch": "2.11.0+xpu",
+        "xpu_c": "/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so",
+        "xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d"
+      },
+      "stages": [
+        "process_group_warmup",
+        "compiled_collective_warmup",
+        "fused_moe_profile",
+        "compiled_collective_after_moe"
+      ]
+    }
+  ]
+}

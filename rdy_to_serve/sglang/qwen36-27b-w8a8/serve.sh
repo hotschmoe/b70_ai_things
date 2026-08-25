@@ -81,6 +81,7 @@ LOG="${LOG:-$SCRIPT_DIR/serve.log}"
 PUSHDIR="${PUSHDIR:-$REPO/vllm/contrib/vllm_push_allreduce/prebuilt}"
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
 APIKEY_ARG=""; AUTH_H=(); [ -n "$API_KEY" ] && { APIKEY_ARG="--api-key $API_KEY"; AUTH_H=(-H "Authorization: Bearer $API_KEY"); }
+collective_health(){ env -u IMG "$REPO/bin/xpu-collective-health" --p2p 0 2>&1 | tail -4; }
 
 start(){
   if [ "$FUSED_MLP_AR_NORM" = 1 ] && { [ "$DELAY_MLP_AR" != 1 ] || [ "$PUSH_AR" != 1 ]; }; then
@@ -88,6 +89,7 @@ start(){
     return 2
   fi
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
+  say "pre-flight xpu-collective-health"; collective_health || { say "COLLECTIVE UNHEALTHY -- abort"; return 3; }
   docker rm -f "$NAME" >/dev/null 2>&1
   say "serve W8A8 fused+MTP (steps=$SPEC_STEPS) TP=2 -> $SERVED on :$PORT (ctx=$CTX radix=$RADIX push_ar=$PUSH_AR tool=$TOOLCALL think=${THINKCAP:-inf} metrics=$METRICS img=$IMG)"
   # agentic args (built from the knobs; empty -> dropped by word-splitting, same pattern as $APIKEY_ARG)
@@ -175,10 +177,13 @@ print('COHERENCE OK:',repr(c[:160])) if c.strip() and (len(c)<16 or max(c.count(
   say "healthy + coherent; serving $SERVED on :$PORT"
 }
 stop(){
+  local rc=0
   docker stop -t 30 "$NAME" >/dev/null 2>&1 || true
   docker rm "$NAME" >/dev/null 2>&1 || true
   say "stopped $NAME"
-  "$REPO/bin/xpu-health" 2>&1 | tail -2 || true
+  "$REPO/bin/xpu-health" 2>&1 | tail -2 || rc=1
+  collective_health || rc=1
+  return "$rc"
 }
 # c1 + c4 regime bench (same harness as the int4/w4a8 sglang entries -> comparable table rows).
 bench(){ bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "w8a8-fused-mtp"; }
@@ -189,7 +194,7 @@ case "${1:-start}" in
   bench) bench ;;
   gen)   curl -s "http://localhost:$PORT/v1/chat/completions" "${AUTH_H[@]}" -H 'content-type: application/json' \
            -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"${2:-Why is the sky blue?}\"}],\"max_tokens\":128,\"temperature\":0}" ;;
-  run)   start && bench; rc=$?; stop; exit $rc ;;
-  smoke) start; rc=$?; stop; exit $rc ;;
+  run)   start && bench; rc=$?; stop_rc=0; stop || stop_rc=$?; [ "$rc" = 0 ] && rc=$stop_rc; exit $rc ;;
+  smoke) start; rc=$?; stop_rc=0; stop || stop_rc=$?; [ "$rc" = 0 ] && rc=$stop_rc; exit $rc ;;
   *) echo "usage: serve.sh {start|stop|bench|gen|run|smoke}"; exit 2 ;;
 esac

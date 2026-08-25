@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# One reboot-bounded exact Qwen3.6 TP2 control with the restored inner clone.
-# Usage: ./bin/gpu-run env I_KNOW_P2P_WEDGES=1 bash \
-#   vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+# Exact Qwen3.6 TP2 control with the restored inner clone.
+# Direct P2P remains the default forensic arm and requires
+# I_KNOW_P2P_WEDGES=1. Set P2P_ACCESS=0 for the stable PCIe-only arm.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,7 +26,41 @@ EXPECTED_ALLOCATOR_SHA256="76c1301123723f643e7eae6160b7c72adc3db9f76bdb51225c686
 EXPECTED_FUSED_MOE_SHA256="433ee08a80ab8e1c12d000e7d2a683c0e325c2971868ca31075075a863b7d81a"
 EXPECTED_CCL_KERNELS_SHA256="0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e075290d314f0c9"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
-NAME="qwen36_s2b_exactcc_clone_p2p1_${STAMP}"
+P2P_ACCESS="${P2P_ACCESS:-1}"
+case "$P2P_ACCESS" in 0|1) ;; *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;; esac
+MOE_TRACE="${MOE_TRACE:-0}"
+case "$MOE_TRACE" in 0|1) ;; *) echo "MOE_TRACE must be 0 or 1" >&2; exit 2 ;; esac
+ALLREDUCE_TRACE="${ALLREDUCE_TRACE:-0}"
+case "$ALLREDUCE_TRACE" in 0|1) ;; *) echo "ALLREDUCE_TRACE must be 0 or 1" >&2; exit 2 ;; esac
+ALLREDUCE_TRACE_SYNC="${ALLREDUCE_TRACE_SYNC:-$ALLREDUCE_TRACE}"
+case "$ALLREDUCE_TRACE_SYNC" in 0|1) ;; *) echo "ALLREDUCE_TRACE_SYNC must be 0 or 1" >&2; exit 2 ;; esac
+ALLREDUCE_TRACE_MAX_CALLS="${ALLREDUCE_TRACE_MAX_CALLS:-256}"
+case "$ALLREDUCE_TRACE_MAX_CALLS" in
+  ''|*[!0-9]*) echo "ALLREDUCE_TRACE_MAX_CALLS must be a non-negative integer" >&2; exit 2 ;;
+esac
+profile_fence_default_rows=0
+[ "$P2P_ACCESS" = 1 ] && profile_fence_default_rows=8192
+PROFILE_FENCE_MIN_ROWS="${PROFILE_FENCE_MIN_ROWS:-$profile_fence_default_rows}"
+case "$PROFILE_FENCE_MIN_ROWS" in
+  ''|*[!0-9]*) echo "PROFILE_FENCE_MIN_ROWS must be a non-negative integer" >&2; exit 2 ;;
+esac
+PROFILE_FENCE_STAGES="${PROFILE_FENCE_STAGES:-clone}"
+IFS=, read -r -a profile_fence_stage_list <<< "$PROFILE_FENCE_STAGES"
+[ "${#profile_fence_stage_list[@]}" -gt 0 ] || {
+  echo "PROFILE_FENCE_STAGES must not be empty" >&2
+  exit 2
+}
+for profile_fence_stage in "${profile_fence_stage_list[@]}"; do
+  case "$profile_fence_stage" in
+    pre|clone|post) ;;
+    *) echo "PROFILE_FENCE_STAGES must be a comma-separated subset of pre,clone,post" >&2; exit 2 ;;
+  esac
+done
+STALL_TIMEOUT="${STALL_TIMEOUT:-180}"
+case "$STALL_TIMEOUT" in
+  ''|*[!0-9]*) echo "STALL_TIMEOUT must be a non-negative integer" >&2; exit 2 ;;
+esac
+NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
@@ -34,11 +68,11 @@ RUN_LOG="$RESULT_DIR/run.log"
 SERVER_LOG="$RESULT_DIR/b70_${NAME}.log"
 HF_REF="/mnt/vm_8tb/b70/hf_cache/hub/models--nameistoken--Qwen3.6-35B-A3B-Quark-W8A8-INT8/refs/main"
 
-if [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
+if [ "$P2P_ACCESS" = 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
   echo "Refusing exact direct-P2P control without I_KNOW_P2P_WEDGES=1" >&2
   exit 2
 fi
-if [ -e "$CACHE_DIR" ]; then
+if [ -e "$CACHE_DIR" ] && [ "${ALLOW_EXISTING_CACHE:-0}" != 1 ]; then
   echo "Refusing non-fresh compilation cache: $CACHE_DIR" >&2
   exit 2
 fi
@@ -157,7 +191,9 @@ docker run --rm --entrypoint python \
 
 echo "config -> image=$IMG model_revision=$MODEL_REVISION model_config=$actual_config_sha256 model_index=$actual_index_sha256"
 echo "config -> TP=2 PP=1 graph=PIECEWISE splitops=default igp=false async=1 mtp=0 prefix_cache=0 maxlen=32768 maxseqs=24 util=0.90"
-echo "config -> custom_op=s2b_all_reduce_clone p2p=1 ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
+echo "config -> native_moe=june-base moe_mixed_workspace=0 call_abi=august-keywords-to-june-base"
+echo "config -> moe_trace=$MOE_TRACE allreduce_trace=$ALLREDUCE_TRACE allreduce_trace_sync=$ALLREDUCE_TRACE_SYNC allreduce_trace_max_calls=$ALLREDUCE_TRACE_MAX_CALLS profile_fence_min_rows=$PROFILE_FENCE_MIN_ROWS profile_fence_stages=$PROFILE_FENCE_STAGES cache_reuse=${ALLOW_EXISTING_CACHE:-0}"
+echo "config -> custom_op=s2b_all_reduce_clone p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
 echo "config -> kernel_runtime=locally-rebuilt-June-complete-package xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
 echo "config -> selector=level_zero:0,1 affinity=0,1 inductor_cache=/vllm_cache/torchinductor"
 printf '%s\n' "${runtime_hashes[@]}"
@@ -175,7 +211,7 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   PORT="$PORT" \
   EXACT_STEVE_CC=1 \
   PUSH_AR=0 \
-  P2PACCESS=1 \
+  P2PACCESS="$P2P_ACCESS" \
   MAXLEN=32768 \
   MAXSEQS=24 \
   UTIL=0.90 \
@@ -183,7 +219,8 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   XPU_KERNEL_RUNTIME_HOST="$JUNE_RUNTIME" \
   CACHE_DIR_HOST="$CACHE_DIR" \
   B70_LOGDIR="$RESULT_DIR" \
-  B70_EXTRA_ENV='ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor' \
+  HEALTH_STALL="$STALL_TIMEOUT" \
+  B70_EXTRA_ENV="ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=0 B70_QWEN36_MOE_TRACE=$MOE_TRACE B70_QWEN36_ALLREDUCE_TRACE=$ALLREDUCE_TRACE B70_QWEN36_ALLREDUCE_TRACE_SYNC=$ALLREDUCE_TRACE_SYNC B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS=$ALLREDUCE_TRACE_MAX_CALLS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES=$PROFILE_FENCE_STAGES" \
   I_KNOW_P2P_WEDGES=1 \
   bash "$SCRIPT_DIR/serve_qwen36_s2b_control.sh" run 2>&1 | tee "$RUN_LOG"
 serve_rc="${PIPESTATUS[0]}"
@@ -225,6 +262,7 @@ for required in \
   'restored June clone-safe custom all-reduce contract' \
   'restored June prefill-replay capture contract' \
   'restored June native XPU INT8 MoE route' \
+  'bridged June base MoE call ABI with mixed workspace off' \
   'Selected XPUInt8ScaledMMLinearKernel for QuarkW8A8Int8' \
   'Using XPU Int8 MoE backend' \
   'kernel package=/opt/june-runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface' \
@@ -245,7 +283,7 @@ rg -Fq '"failures": []' "$RUN_LOG" || {
   echo "Semantic probe did not report an empty failure list" >&2
   exit 1
 }
-rg -a -l -q 's2b_all_reduce_clone' "$CACHE_DIR/torchinductor" || {
+rg -a -l -q 's2b_all_reduce_clone' "$CACHE_DIR/torch_compile_cache" || {
   echo "Persisted Inductor cache has no s2b_all_reduce_clone evidence" >&2
   exit 1
 }
@@ -310,4 +348,4 @@ sha256sum \
   "$RESULT_DIR/steve_metric.json" \
   "$json_canary_path" \
   "$color_canary_path"
-echo "verdict -> exact control evidence complete; reboot before any later P2P/TP2 transaction"
+echo "verdict -> exact control evidence complete; post-teardown health governs recovery"

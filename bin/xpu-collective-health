@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# xpu-collective-health -- detect collective-only B70/XCCL failure.
+#
+# Unlike xpu-health's independent per-card matmuls, this runs a two-rank eager
+# all-reduce and ten torch.compile functional all-reduces at the Qwen TP2 shape
+# [4,5120] BF16. P2P is disabled by default so the detector is safe for routine
+# pre/post-reset use. P2P=1 remains an explicitly guarded experiment.
+#
+# Usage:
+#   xpu-collective-health
+#   xpu-collective-health --p2p 0|1
+#   xpu-collective-health --timeout SECONDS
+#   xpu-collective-health --img IMAGE
+#
+# Exit: 0 healthy; 1 wedged/failed/hung; 2 probe infrastructure inconclusive.
+set -uo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+IMG="${IMG:-intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94}"
+TIMEOUT="${XPU_COLLECTIVE_HEALTH_TIMEOUT:-120}"
+P2P=0
+CACHE_DIR="${XPU_COLLECTIVE_HEALTH_CACHE:-/mnt/vm_8tb/b70/collective_health_cache}"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --p2p) P2P="${2:-}"; shift 2 ;;
+    --p2p=*) P2P="${1#--p2p=}"; shift ;;
+    --timeout) TIMEOUT="${2:-}"; shift 2 ;;
+    --timeout=*) TIMEOUT="${1#--timeout=}"; shift ;;
+    --img) IMG="${2:-}"; shift 2 ;;
+    --img=*) IMG="${1#--img=}"; shift ;;
+    -h|--help) awk 'NR>1 && /^#/ {sub(/^# ?/,""); print; next} NR>1 {exit}' "$0"; exit 0 ;;
+    *) echo "xpu-collective-health: unknown argument '$1'" >&2; exit 2 ;;
+  esac
+done
+case "$P2P" in 0|1) ;; *) echo "xpu-collective-health: --p2p must be 0 or 1" >&2; exit 2 ;; esac
+if [ "$P2P" = 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
+  echo "xpu-collective-health: refusing P2P=1 without I_KNOW_P2P_WEDGES=1" >&2
+  exit 2
+fi
+command -v docker >/dev/null 2>&1 || { echo "xpu-collective-health: docker missing" >&2; exit 2; }
+docker image inspect "$IMG" >/dev/null 2>&1 || { echo "xpu-collective-health: image missing: $IMG" >&2; exit 2; }
+[ -c /dev/dri/renderD128 ] || { echo "xpu-collective-health: DRM devices missing" >&2; exit 2; }
+mkdir -p "$CACHE_DIR"
+
+name="xpu-collective-health-$$"
+cleanup() { docker rm -f "$name" >/dev/null 2>&1 || true; }
+trap cleanup EXIT INT TERM
+
+echo "=== collective probe (img=$IMG p2p=$P2P timeout=${TIMEOUT}s) ===" >&2
+set +e
+out=$(timeout --signal=TERM --kill-after=10 "$TIMEOUT" \
+  docker run --rm --name "$name" --device /dev/dri \
+    -v /dev/dri/by-path:/dev/dri/by-path --ipc=host \
+    --cap-add SYS_PTRACE --security-opt seccomp=unconfined \
+    -v "$HERE/xpu-collective-health.py:/opt/xpu-collective-health.py:ro" \
+    -v "$CACHE_DIR:/collective-health-cache" \
+    -e CCL_ATL_TRANSPORT=ofi \
+    -e CCL_TOPO_P2P_ACCESS="$P2P" \
+    -e CCL_LOG_LEVEL=warn \
+    -e CCL_KERNEL_PATH=/opt/ccl4ce/lib/ccl/kernels \
+    -e FI_TCP_IFACE=eth0 \
+    -e CCL_KVS_IFACE=eth0 \
+    -e ONEAPI_DEVICE_SELECTOR=level_zero:0,1 \
+    -e ZE_AFFINITY_MASK=0,1 \
+    -e TORCHINDUCTOR_CACHE_DIR=/collective-health-cache/torchinductor \
+    -e TRITON_CACHE_DIR=/collective-health-cache/triton \
+    -e LD_PRELOAD=/opt/ccl4ce/lib/libccl.so.1.0 \
+    -e LD_LIBRARY_PATH=/opt/ccl4ce/lib:/opt/venv/lib:/opt/venv/lib/python3.12/site-packages/torch/lib \
+    --entrypoint /opt/venv/bin/torchrun "$IMG" \
+    --standalone --nproc-per-node=2 /opt/xpu-collective-health.py 2>&1)
+rc=$?
+set -e
+printf '%s\n' "$out"
+
+if [ "$rc" = 0 ] && printf '%s' "$out" | grep -q COLLECTIVE_HEALTH_OK; then
+  echo "xpu-collective-health: HEALTHY" >&2
+  exit 0
+fi
+if [ "$rc" = 124 ] || [ "$rc" = 137 ]; then
+  echo "xpu-collective-health: HUNG -> WEDGED" >&2
+  exit 1
+fi
+if printf '%s' "$out" | grep -Eq 'DEVICE_LOST|OUT_OF_RESOURCES'; then
+  echo "xpu-collective-health: COLLECTIVE FAILED -> WEDGED" >&2
+  exit 1
+fi
+echo "xpu-collective-health: INCONCLUSIVE (rc=$rc, no health marker)" >&2
+exit 2

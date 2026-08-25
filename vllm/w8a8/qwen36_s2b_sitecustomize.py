@@ -10,6 +10,7 @@ patches.
 import os
 import sys
 import inspect
+import time
 
 import torch
 import torch.nn.functional as F
@@ -98,6 +99,61 @@ def _patch_quark_int8_moe_native_route() -> None:
         kInt8StaticChannelSym,
     )
     from vllm.model_executor.utils import replace_parameter
+
+    # The August vLLM XPU experts wrapper always passes the later ``scratch``
+    # and ``diagnostic_context`` keywords. Steve's reconstructed June Python
+    # dispatcher predates both keywords and owns its temporary tensors
+    # internally. Bridge that call ABI only when mixed workspace is disabled;
+    # silently discarding a real scratch mapping would change its semantics.
+    from vllm.model_executor.layers.fused_moe.experts import xpu_moe
+    from vllm_xpu_kernels.fused_moe_interface import (
+        xpu_fused_moe as june_xpu_fused_moe,
+    )
+
+    moe_trace_calls = 0
+
+    def june_compatible_xpu_fused_moe(
+        *args,
+        scratch=None,
+        diagnostic_context=None,
+        **kwargs,
+    ):
+        nonlocal moe_trace_calls
+        if scratch is not None:
+            raise RuntimeError(
+                "June XPU fused MoE cannot consume August mixed-workspace scratch"
+            )
+        if os.environ.get("B70_QWEN36_MOE_TRACE", "0") != "1":
+            return june_xpu_fused_moe(*args, **kwargs)
+        moe_trace_calls += 1
+        hidden_states = kwargs.get("hidden_states")
+        shape = None if hidden_states is None else tuple(hidden_states.shape)
+        print(
+            "[qwen36-s2b-moe-trace] "
+            f"call={moe_trace_calls} pid={os.getpid()} shape={shape} "
+            f"context={diagnostic_context!r} stage=enter",
+            file=sys.stderr,
+            flush=True,
+        )
+        torch.xpu.synchronize()
+        print(
+            f"[qwen36-s2b-moe-trace] call={moe_trace_calls} "
+            f"pid={os.getpid()} stage=pre-sync-ok",
+            file=sys.stderr,
+            flush=True,
+        )
+        result = june_xpu_fused_moe(*args, **kwargs)
+        torch.xpu.synchronize()
+        print(
+            f"[qwen36-s2b-moe-trace] call={moe_trace_calls} "
+            f"pid={os.getpid()} stage=exit",
+            file=sys.stderr,
+            flush=True,
+        )
+        return result
+
+    june_compatible_xpu_fused_moe._qwen36_june_moe_call_abi = True
+    xpu_moe.xpu_fused_moe = june_compatible_xpu_fused_moe
 
     original_init = QuarkW8A8Int8MoEMethod.__init__
     original_process = QuarkW8A8Int8MoEMethod.process_weights_after_loading
@@ -199,6 +255,11 @@ def _patch_quark_int8_moe_native_route() -> None:
         file=sys.stderr,
         flush=True,
     )
+    print(
+        "[qwen36-s2b] bridged June base MoE call ABI with mixed workspace off",
+        file=sys.stderr,
+        flush=True,
+    )
 
 
 def _patch_custom_allreduce_clone_contract() -> None:
@@ -224,16 +285,162 @@ def _patch_custom_allreduce_clone_contract() -> None:
     )
     from vllm.utils.torch_utils import direct_register_custom_op
 
+    all_reduce_trace_calls = 0
+    trace_enabled = os.environ.get("B70_QWEN36_ALLREDUCE_TRACE", "0") == "1"
+    trace_sync = os.environ.get("B70_QWEN36_ALLREDUCE_TRACE_SYNC", "0") == "1"
+    trace_max_calls = int(
+        os.environ.get("B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS", "256")
+    )
+    profile_fence_min_rows = int(
+        os.environ.get("B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS", "0")
+    )
+    profile_fence_stages = frozenset(
+        stage
+        for stage in os.environ.get(
+            "B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES", "clone"
+        ).split(",")
+        if stage
+    )
+    invalid_fence_stages = profile_fence_stages - {"pre", "clone", "post"}
+    if invalid_fence_stages:
+        raise ValueError(
+            "Invalid all-reduce profile fence stages: "
+            + ",".join(sorted(invalid_fence_stages))
+        )
+
+    def trace_all_reduce(
+        *,
+        call: int,
+        group,
+        tensor: torch.Tensor,
+        stage: str,
+        detail: str = "",
+    ) -> None:
+        suffix = f" detail={detail}" if detail else ""
+        print(
+            "[qwen36-s2b-allreduce-trace] "
+            f"time_ns={time.monotonic_ns()} pid={os.getpid()} "
+            f"global_rank={group.rank} rank_in_group={group.rank_in_group} "
+            f"call={call} group={group.unique_name} stage={stage} "
+            f"shape={tuple(tensor.shape)} dtype={tensor.dtype} "
+            f"device={tensor.device}{suffix}",
+            file=sys.stderr,
+            flush=True,
+        )
+
     def s2b_all_reduce_clone(
         tensor: torch.Tensor, group_name: str
     ) -> torch.Tensor:
+        nonlocal all_reduce_trace_calls
         group_ref = parallel_state._groups.get(group_name)
         group = group_ref() if group_ref is not None else None
         if group is None:
             raise ValueError(f"Group {group_name} is not found or was destroyed")
-        if os.environ.get("VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT", "0") == "1":
+
+        all_reduce_trace_calls += 1
+        call = all_reduce_trace_calls
+        traced = trace_enabled and call <= trace_max_calls
+        profile_fenced = (
+            profile_fence_min_rows > 0
+            and tensor.ndim > 0
+            and tensor.shape[0] >= profile_fence_min_rows
+        )
+        pre_sync = (trace_sync and traced) or (
+            profile_fenced and "pre" in profile_fence_stages
+        )
+        clone_sync = (trace_sync and traced) or (
+            profile_fenced and "clone" in profile_fence_stages
+        )
+        post_sync = (trace_sync and traced) or (
+            profile_fenced and "post" in profile_fence_stages
+        )
+
+        if traced:
+            trace_all_reduce(call=call, group=group, tensor=tensor, stage="enter")
+        if pre_sync:
+            if traced:
+                trace_all_reduce(
+                    call=call,
+                    group=group,
+                    tensor=tensor,
+                    stage="pre-sync-start",
+                )
+            torch.xpu.synchronize()
+            if traced:
+                trace_all_reduce(
+                    call=call,
+                    group=group,
+                    tensor=tensor,
+                    stage="pre-sync-ok",
+                )
+
+        clone_input = (
+            os.environ.get("VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT", "0") == "1"
+        )
+        if clone_input:
             tensor = tensor.clone()
-        return group._all_reduce_out_place(tensor)
+            if traced:
+                trace_all_reduce(
+                    call=call,
+                    group=group,
+                    tensor=tensor,
+                    stage="clone-enqueued",
+                )
+            if clone_sync:
+                torch.xpu.synchronize()
+                if traced:
+                    trace_all_reduce(
+                        call=call,
+                        group=group,
+                        tensor=tensor,
+                        stage="clone-sync-ok",
+                    )
+
+        if traced:
+            trace_all_reduce(
+                call=call,
+                group=group,
+                tensor=tensor,
+                stage="collective-enter",
+            )
+        try:
+            result = group._all_reduce_out_place(tensor)
+        except BaseException as exc:
+            if traced:
+                trace_all_reduce(
+                    call=call,
+                    group=group,
+                    tensor=tensor,
+                    stage="collective-error",
+                    detail=type(exc).__name__,
+                )
+            raise
+        if traced:
+            trace_all_reduce(
+                call=call,
+                group=group,
+                tensor=result,
+                stage="collective-return",
+            )
+        if post_sync:
+            if traced:
+                trace_all_reduce(
+                    call=call,
+                    group=group,
+                    tensor=result,
+                    stage="post-sync-start",
+                )
+            torch.xpu.synchronize()
+            if traced:
+                trace_all_reduce(
+                    call=call,
+                    group=group,
+                    tensor=result,
+                    stage="post-sync-ok",
+                )
+        if traced:
+            trace_all_reduce(call=call, group=group, tensor=result, stage="exit")
+        return result
 
     def s2b_all_reduce_clone_fake(
         tensor: torch.Tensor, group_name: str
@@ -246,6 +453,15 @@ def _patch_custom_allreduce_clone_contract() -> None:
         op_func=s2b_all_reduce_clone,
         fake_impl=s2b_all_reduce_clone_fake,
     )
+
+    if profile_fence_min_rows > 0:
+        print(
+            "[qwen36-s2b] all-reduce profile fence "
+            f"min_rows={profile_fence_min_rows} "
+            f"stages={','.join(sorted(profile_fence_stages))}",
+            file=sys.stderr,
+            flush=True,
+        )
 
     original_group_all_reduce = parallel_state.GroupCoordinator.all_reduce
 

@@ -1036,6 +1036,13 @@ pp2_graph_mtp.sh (replicates the 27B shelf GRAPH=1+MTP+GDN+shim env, flips TP=2 
   Tooling kept: lib.sh PP support + scripts/110 are committed so the retry is a one-liner.
 
 ### J.20 [INFRA] captured-PP corrupts collective state; xe-reset CANNOT recover this box (reboot-only)
+
+**CORRECTION 2026-08-25:** the corruption result below remains historical evidence, but its recovery
+diagnosis was wrong. The cards did not drive an active display. The unload failed because both B70 PCI
+functions and their four xe auxiliary children were still bound. J.22 proves unbind/rebind, unbind plus full
+xe unload/reload, and unbind plus endpoint FLR without reboot. Reboot is now the final fallback, not the first
+or only recovery.
+
 - **The captured-PP serves CORRUPTED the multi-GPU collective state.** After the string of 110 GRAPH=1 PP
   runs, the next production TP=2 GRAPH=1 serve (README bench A-side, oneCCL) ALSO produced empty output + an
   all-zero bench, threw `DEVICE_LOST` on teardown, and its post-probe found card 1 HUNG (wedged). The
@@ -1072,6 +1079,93 @@ TP=2 path (TP=2 renders `PP=1`, build unchanged).
   / 48.2), labelled (push-ar); caveat (1) gives the oneCCL default baseline + the PUSH_AR=1 opt-in. Audited the
   other 5 rows (4 TP=1 + 35B-quark TP=2) vs all results CSVs/JOURNAL -- they already show best achieved; only
   the 27B-W8A8 row moved. CSVs: sweep_*-tp2-graph_192053 (oneCCL), sweep_*-pushar-tp2-graph_193418 (push-ar).
+
+### J.22 [INFRA WIN 2026-08-25] non-reboot xe recovery ladder proven; display diagnosis corrected
+
+CONFIG -> kernel 7.1.0-070100; boot ID `e2d5777d-f6bb-4d92-a718-0fb07ae17919`; B70 endpoints
+`0000:0b:00.0` and `0000:44:00.0`; no running GPU container; both cards initially healthy. All 16 DP/HDMI
+connectors were disconnected and disabled, `/proc/fb` was empty, the only VT console was the dummy device,
+and no process held `/dev/dri`. The apparent xe refcount came from two `mei_gsc` and two `mtd_intel_dg`
+auxiliary children, not a display client.
+
+COMMAND -> installed root-owned `b70-xe-reset-helper` plus exact-command sudoers. Added
+`bin/xpu-collective-health`, a two-rank XCCL probe with one eager and ten compiled `[4,5120]` BF16
+all-reduces at P2P=0. Under the two-card lease, ran:
+
+```text
+./bin/xe-reset --method rebind
+./bin/xe-reset --method reload
+./bin/xe-reset --method flr
+```
+
+RESULT -> rebind unbound both endpoints before binding either and passed both card matmuls plus the compiled
+collective. Reload unbound both, reduced the xe refcount to 0, successfully ran `modprobe -r xe` and
+`modprobe xe`, automatically reprobed both endpoints, and passed both health layers. FLR unbound both,
+successfully wrote each endpoint reset, rebound both, and passed both health layers. Both PCI-qualified render
+paths and four auxiliary bindings returned after every stage. Boot ID stayed unchanged throughout.
+
+The collective probe's first development attempt omitted the established `SYS_PTRACE`/unconfined-seccomp
+container contract and failed DRM-FD exchange before a collective. Matching the proven oracle container
+contract fixed the probe; that setup failure was not a device-health verdict.
+
+VERDICT -> J.20's "display-held, reboot-only" conclusion is retired. `bin/xe-reset` now acquires both leases,
+stops only GPU-capable containers, refuses mutation while a DRM holder remains, and escalates rebind -> full
+xe reload -> endpoint FLR. Reboot remains only after the ladder fails or an unbind sysfs write hangs. These
+tests prove clean-state mechanics; a future naturally occurring deep wedge must still be used to record
+which rung actually clears corrupted state. Full evidence and PCIe-slot A/B procedure:
+`docs/20260825_xe_nonreboot_recovery_and_pcie_topology.md`.
+
+### J.23 [BOUNDARY WIN 2026-08-25] exact vLLM TP=2 profile collective localized and crossed
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8, TP=2, June-compatible native
+INT8 MoE route, clone-safe local custom op, PIECEWISE graphs, 8192-token
+compile/profile range, current pinned oneCCL, kernel 7.1, and a clean xe reload
+before each direct-P2P transaction.
+
+COMMAND -> added per-rank stages around the custom op: entry, optional device
+sync, clone enqueue/completion, oneCCL entry/return, and optional post-sync.
+Ran a P2P-off diagnostic, a direct-P2P all-stage diagnostic, then this minimized
+direct-P2P control:
+
+```text
+./bin/gpu-run env \
+  P2P_ACCESS=1 PROFILE_FENCE_MIN_ROWS=8192 \
+  PROFILE_FENCE_STAGES=clone ALLREDUCE_TRACE_SYNC=0 \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> P2P off completed prior dense work and the clone on both ranks. Rank
+1 entered the first `[8192,2048]` BF16 `tp:0` all-reduce, rank 0 entered
+245.077 ms later, and neither returned. No native MoE call had started. This
+localizes that failure inside oneCCL after matched rank entry; it is not a
+missing rank, preceding dense kernel, clone allocation, or MoE failure.
+
+Direct P2P with all-stage synchronous tracing completed all 81 profile
+all-reduces and all 40 native MoE calls on both ranks. It allocated the KV
+cache, completed 81 graph-warmup collectives, and reached actual command-graph
+recording. The diagnostic then called `torch.xpu.synchronize()` at collective
+call 163 and PyTorch rejected the wait because that queue was recording. Both
+post-health layers passed; this was an instrumentation error, not a device or
+collective failure.
+
+The minimized arm synchronized only after cloning tensors whose first
+dimension was at least 8192. No pre-collective rank fence and no post-collective
+wait were active. Smaller graph-capture and decode tensors were unfenced. It
+reached health in 198 seconds, captured all 9/9 PIECEWISE graphs, passed the
+semantic probe plus JSON 16/16 and color 16/16 canaries, and decoded the exact
+p498/o512 request coherently at 45.3649 corrected tok/s. Graceful teardown,
+both card probes, and the compiled P2P-off collective probe passed. The strict
+route and persisted-cache evidence gate passed.
+
+VERDICT -> the concrete local boundary is missing completion/visibility of the
+asynchronous input clone before oneCCL consumes that buffer from its own queue.
+A shape-bounded clone-completion fence is sufficient and stays outside graph
+recording and decode. The compiled TP=2 collective boundary is no longer the
+campaign blocker. Performance remains 52.83% of Steve's 85.8691 tok/s and the
+native grouped-MoE arm is 4.58% slower than the prior generic-Triton-MoE
+control, so the remaining work is graph/runtime/kernel attribution, not another
+P2P boundary retry.
 
 ---
 

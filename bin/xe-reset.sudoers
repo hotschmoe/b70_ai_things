@@ -1,9 +1,17 @@
 # bin/xe-reset.sudoers -- scoped passwordless sudo for the xe-driver wedge recovery.
 #
-# Install (validates before activating; never edit /etc/sudoers.d/* with a plain editor):
+# Install the helper root-owned, then validate and activate this rule:
+#   sudo install -m 0755 -o root -g root bin/xe-reset-helper /usr/local/sbin/b70-xe-reset-helper
+#   sudo visudo -cf bin/xe-reset.sudoers
 #   sudo install -m 0440 -o root -g root bin/xe-reset.sudoers /etc/sudoers.d/xe-reset
-#   sudo visudo -cf /etc/sudoers.d/xe-reset     # must print: parsed OK
+#   sudo visudo -cf /etc/sudoers.d/xe-reset
 #
-# Deliberately scoped to ONLY the two modprobe calls bin/xe-reset needs -- NOT blanket NOPASSWD,
-# NOT `reboot`. This is the minimum that lets the wedge guard self-recover without a human.
-hotschmoe ALL=(root) NOPASSWD: /usr/sbin/modprobe -r xe, /usr/sbin/modprobe xe
+# The helper is root-owned and accepts only Intel B70 PCI functions (8086:e223).
+# Sudo grants exact subcommands, not arbitrary shell, tee, sysfs paths, or reboot.
+Cmnd_Alias B70_XE_RESET = /usr/local/sbin/b70-xe-reset-helper list, \
+    /usr/local/sbin/b70-xe-reset-helper unbind-all, \
+    /usr/local/sbin/b70-xe-reset-helper bind-all, \
+    /usr/local/sbin/b70-xe-reset-helper flr-all, \
+    /usr/sbin/modprobe -r xe, /usr/sbin/modprobe xe
+
+hotschmoe ALL=(root) NOPASSWD: B70_XE_RESET

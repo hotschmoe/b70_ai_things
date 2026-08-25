@@ -268,6 +268,14 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   (19.44 GiB/stage vs TP's tight split). TP only wins if a single layer can't fit one card (not our case).
   Re-evaluate TP only if GPU P2P becomes achievable (the PCIe link is already full Gen3 x16 -- nothing to fix there).
   (`scripts/62_pp2_27b.sh`.)
+- **[BOUNDARY FIX 2026-08-25] exact Qwen3.6-35B-A3B native W8A8 TP=2 now crosses vLLM's compiled collective.**
+  Per-rank tracing proved P2P-off deadlocks inside the first `[8192,2048]` BF16 oneCCL all-reduce after both
+  ranks enter. Direct P2P completed the entire profile when the cloned input was synchronized before oneCCL.
+  The minimal repair fences only clone completion for tensors with at least 8192 rows; it does not synchronize
+  graph-capture or decode shapes. The exact control captured 9/9 PIECEWISE graphs, passed semantic and both
+  16/16 repeat canaries, and tore down with per-card plus compiled collective health at **45.3649 tok/s**. This
+  closes the compiled TP=2 boundary but is only 52.83% of Steve's 85.8691 tok/s; the remaining gap is elsewhere.
+  See `JOURNAL.md` 2026-08-25p and `docs/P2P_GPU.md` J.23.
 
 ## What does NOT work (yet) — save yourself the time
 - **Qwen3.6-27B W8A8 TP=2 + MTP + XPU graph-capture dies under sustained load -- ROOT-CAUSED + FIXED (2026-06-25).**
@@ -393,6 +401,12 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   oneCCL/xccl, ~0.7 GB/s measured). That is a software/architecture limit (no P2P + collective overhead), NOT the
   PCIe gen -- a clean H2D copy should show ~10-12 GB/s. Two cards sit on SEPARATE CPU root complexes (`00:03.1`
   die0, `40:03.1` die1) of the 2-die 1950X; single NUMA node (UMA mode), but cross-die for any P2P attempt.
+- **[CORRECTED 2026-08-25] xe is not display-held and reboot is not the first reset.** All 16 connectors are
+  disconnected/disabled, `/proc/fb` is empty, the VT uses the dummy device, and `/dev/dri` has no baseline
+  holder. The old unload failed because both B70 PCI endpoints and their four xe auxiliary children remained
+  bound. Unbind-first rebind, full xe unload/reload, and endpoint FLR all passed on one boot with per-card and
+  compiled two-rank health. Use `bin/xe-reset`; reboot only if its ladder fails or unbind hangs. A same-root
+  slot move remains a controlled topology A/B, not a link-width repair or guaranteed vLLM fix.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

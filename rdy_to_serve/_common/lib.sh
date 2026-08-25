@@ -162,8 +162,8 @@ b70_serve() {
 # Progress-aware health wait (wedge-guard Layer 3). A flat 15-min wall-clock kill is what
 # SIGKILLed a slow-but-fine GRAPH=1 TP=2 capture mid-flight and wedged both cards (P2P_GPU.md J.16).
 # Instead: (a) a higher ceiling for the genuinely slow TP>1 GRAPH=1 capture, and (b) a STALL abort
-# keyed on container-log forward progress -- a capture still emitting log lines is NOT killed, only a
-# truly hung one (no new log line for HEALTH_STALL seconds) or an exited container is.
+# keyed on meaningful container-log forward progress -- a capture still emitting log lines is NOT killed,
+# but coordinator shared-memory heartbeat warnings do not count as worker progress.
 #   HEALTH_TIMEOUT  hard ceiling secs (default 1800 for TP>1+GRAPH=1, else 900)
 #   HEALTH_STALL    abort if no log progress for this many secs (default 300)
 b70_wait_healthy() {
@@ -171,8 +171,8 @@ b70_wait_healthy() {
   [ -n "$ceiling" ] || { if b70_multicard && [ "${GRAPH:-0}" = 1 ]; then ceiling=1800; else ceiling=900; fi; }
   local stall="${HEALTH_STALL:-300}"
   echo "=== waiting for /health (ceiling ${ceiling}s, stall-abort ${stall}s; first run JIT-compiles/captures) ==="
-  local start now lines last_lines last_progress
-  start=$(date +%s); last_lines=0; last_progress=$start
+  local start now progress_sig last_progress_sig last_progress
+  start=$(date +%s); last_progress_sig=""; last_progress=$start
   while :; do
     curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1 && {
       echo "=== HEALTHY :$PORT  $SERVED  (TP=$TP GRAPH=$GRAPH) in $(( $(date +%s) - start ))s ==="
@@ -181,11 +181,19 @@ b70_wait_healthy() {
     docker inspect -f '{{.State.Status}}' "$NAME" 2>/dev/null | grep -q exited && {
       echo "[!] $NAME EXITED EARLY"; docker logs "$NAME" 2>&1 | tail -30; return 1; }
     now=$(date +%s)
-    lines=$(docker logs "$NAME" 2>&1 | wc -l)
-    [ "$lines" -gt "$last_lines" ] && { last_lines=$lines; last_progress=$now; }
+    progress_sig=$(docker logs "$NAME" 2>&1 \
+      | sed '/No available shared memory broadcast block found in [0-9][0-9]* seconds/d' \
+      | sha256sum | awk '{print $1}')
+    [ "$progress_sig" != "$last_progress_sig" ] && {
+      last_progress_sig=$progress_sig
+      last_progress=$now
+    }
     if [ $(( now - last_progress )) -ge "$stall" ]; then
-      echo "[!] STALLED: no log progress for ${stall}s -- treating as hung init/capture (NOT force-killing a live one)."
-      docker logs "$NAME" 2>&1 | tail -30; return 2
+      echo "[!] STALLED: no non-heartbeat log progress for ${stall}s -- treating as hung init/capture."
+      docker logs "$NAME" 2>&1 \
+        | sed '/No available shared memory broadcast block found in [0-9][0-9]* seconds/d' \
+        | tail -30
+      return 2
     fi
     if [ $(( now - start )) -ge "$ceiling" ]; then
       echo "[!] NOT HEALTHY after ${ceiling}s ceiling"; docker logs "$NAME" 2>&1 | tail -30; return 1
@@ -261,6 +269,22 @@ b70_preflight() {
   else
     echo "[GUARD] xpu-health not found at $B70_BIN -- skipping pre-flight probe (not blocking)."
   fi
+  # A per-card matmul cannot detect the collective-only corruption seen in P2P_GPU J.20.
+  # Use a pinned two-rank XCCL+torch.compile probe; do not inherit the serve backend image.
+  if [ "${B70_COLLECTIVE_HEALTH:-1}" = 1 ] && [ -x "$B70_BIN/xpu-collective-health" ]; then
+    echo "=== pre-flight xpu-collective-health (P2P=0) ==="
+    env -u IMG "$B70_BIN/xpu-collective-health" --p2p 0; local c=$?
+    if [ "$c" = 1 ]; then
+      echo "[GUARD] collective state is WEDGED before serve."
+      if [ "${B70_AUTO_RESET:-0}" = 1 ] && [ -x "$B70_BIN/xe-reset" ]; then
+        echo "[GUARD] B70_AUTO_RESET=1 -> xe-reset"; "$B70_BIN/xe-reset" || return 1
+      else
+        echo "[GUARD] recover with: $B70_BIN/xe-reset"; return 1
+      fi
+    elif [ "$c" = 2 ]; then
+      echo "[GUARD] collective health inconclusive; continuing with card health only."
+    fi
+  fi
   return 0
 }
 
@@ -268,7 +292,11 @@ b70_preflight() {
 # (TP>1 or PP>1) checks the serve log for wedge markers AND re-probes the cards; auto-resets if B70_AUTO_RESET=1.
 b70_teardown() {
   local logf="${B70_LOGDIR:-/tmp}/b70_${NAME}.log"
-  docker logs "$NAME" >"$logf" 2>&1 || true     # capture BEFORE removal (b70_stop deletes the container)
+  if docker inspect "$NAME" >/dev/null 2>&1; then
+    docker logs "$NAME" >"$logf" 2>&1 || true   # capture BEFORE removal (b70_stop deletes the container)
+  else
+    echo "[GUARD] container $NAME already absent; preserving any existing $logf"
+  fi
   b70_stop
   b70_multicard || return 0
   local wedge=0
@@ -279,6 +307,11 @@ b70_teardown() {
   fi
   if [ -x "$B70_BIN/xpu-health" ]; then          # probe is ground truth (markers can be benign-shutdown noise)
     IMG="$IMG" "$B70_BIN/xpu-health" || wedge=1
+  fi
+  if [ "${B70_COLLECTIVE_HEALTH:-1}" = 1 ] && [ -x "$B70_BIN/xpu-collective-health" ]; then
+    env -u IMG "$B70_BIN/xpu-collective-health" --p2p 0; local c=$?
+    [ "$c" = 1 ] && wedge=1
+    [ "$c" = 2 ] && echo "[GUARD] post-teardown collective health inconclusive."
   fi
   if [ "$wedge" = 1 ]; then
     if [ "${B70_AUTO_RESET:-0}" = 1 ] && [ -x "$B70_BIN/xe-reset" ]; then

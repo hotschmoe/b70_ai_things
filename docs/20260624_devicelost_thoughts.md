@@ -1,5 +1,14 @@
 # 2026-06-24 -- DEVICE_LOST / GPU-wedge investigation and recovery thoughts
 
+> **Status correction 2026-08-25:** keep this file as the historical J.16
+> reasoning record, but retire its bare `modprobe -r xe` procedure and any
+> reboot-only interpretation. The B70s do not drive an active display. Their
+> xe references were the still-bound PCI functions and four auxiliary
+> children. `bin/xe-reset` now unbinds both endpoints first, then escalates
+> through rebind, full xe unload/reload, and endpoint FLR. All three mechanics
+> passed without reboot with per-card and compiled two-rank health. See
+> `docs/20260825_xe_nonreboot_recovery_and_pcie_topology.md` and P2P_GPU J.22.
+
 Context: post-reboot resumption of the P2P push-allreduce campaign (docs/P2P_GPU.md J.8-J.15).
 This note captures the J.16 capture-gated A/B attempt, the re-wedge it caused, a diagnosis of
 the wedge, and the open decisions (passwordless sudo, a pre-flight guard, kernel 7.1). Factual

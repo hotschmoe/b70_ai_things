@@ -30,6 +30,16 @@ Working notes for any agent on this repo. Keep this file short; details live in
   worth fixing, but in a focused kernel/loader session.
 - **W4A4 is later frontier research.** Keep notes, but do not start W4A4 kernel
   work until W8A8/W4A8 are robust.
+- **Carry the 2026-08-25 TP=2 lesson into every 27B dense experiment.** Steve's
+  clone-safe custom-op contract alone was insufficient on this runtime: the
+  cloned profile input also needed completion before oneCCL consumed it from
+  another queue. The exact Qwen35 control fixes only large profile tensors and
+  leaves graph capture/decode unfenced. For a 27B model, measure its real
+  profile shape and collective count; do not blindly copy the 8192-row
+  threshold. Require matched per-rank entry/return evidence plus per-card and
+  compiled collective post-health. This is especially valuable on dense 27B,
+  where MoE dispatch cannot confound the collective result. See JOURNAL
+  2026-08-25p and `docs/P2P_GPU.md` J.23.
 
 ## Workflow
 
@@ -109,37 +119,39 @@ serve cycles ran clean on 7.1. **The old "w8a8 TP=2 = attended-only" caveat is R
 serving is fine.**
 
 The P2P-in-vLLM-serve / chained-TP>1-worker-crash oneCCL wedge documented next is a SEPARATE software
-mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge. A guarded exact Qwen TP2
-retest on 2026-08-25 proved it still fails on 7.1: process-group init and model load passed, then the first
-compiled `vllm::all_reduce` in profile-run threw `UR_RESULT_ERROR_DEVICE_LOST` on rank 1. Both single-card
-health probes passed after teardown in that one transaction, so a persistent wedge did not reproduce, but one
-clean teardown is not enough to retire the guard or reboot rule. If a wedge recurs, reboot remains the recovery
-on this display-attached box.
+mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge. An early guarded exact
+Qwen TP2 retest on 2026-08-25 failed at a compiled `vllm::all_reduce`; later exact-stack repairs reached a
+coherent direct-P2P endpoint on the same boot series. Direct P2P therefore remains guarded experimental work,
+not a production setting. Use both card-level and compiled two-rank collective health around each attempt.
 
 ### DANGER: P2P in vLLM serve wedges the multi-GPU state
 
-Do NOT run `CCL_TOPO_P2P_ACCESS=1` inside a vLLM TP>1 serve. It crashes at
-worker init (`UR_RESULT_ERROR_DEVICE_LOST` in `xpu_worker.py` warmup all_reduce)
-AND does not clean up: it corrupts the cross-GPU oneCCL / Level-Zero collective
-state so that EVERY subsequent TP>1 serve -- even a known-good P2P-OFF one --
-also fails with the same `DEVICE_LOST` until the GPU state is reset. Single-GPU
-(TP=1) serves are unaffected. The raw mp.spawn allreduce microbench works fine
-with P2P=1 (it is the oneCCL<->vLLM-multiproc-worker path that breaks, not the
-hardware). See JOURNAL Lever A + P2P_GPU.md H.13.
+Do NOT run arbitrary `CCL_TOPO_P2P_ACCESS=1` vLLM TP>1 serves. Stock and earlier
+custom paths crash at worker init or compiled profile all-reduce and can corrupt
+the cross-GPU oneCCL / Level-Zero state. The one scoped exception is
+`vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`: its direct-P2P arm defaults
+to a clone-completion fence only for profile tensors with at least 8192 rows,
+requires `I_KNOW_P2P_WEDGES=1`, and passed its exact metric/canaries plus both
+post-health layers on 2026-08-25. It remains experimental, not a shelf setting.
+The raw mp.spawn allreduce microbench also works with P2P=1; this is a vLLM
+multiprocess/queue-handoff issue, not a peer-DMA hardware failure. See JOURNAL
+2026-08-25p and P2P_GPU.md J.23.
 
-- GUARD (2026-06-24, P2P_GPU.md J.17): a layered wedge guard now wraps the TP>1 serve path
+- GUARD (2026-06-24; reset correction 2026-08-25, P2P_GPU.md J.17/J.22): a layered wedge guard wraps the TP>1 serve path
   (TP=1 unchanged). `bin/xpu-health` detects a wedged box (per-card matmul, timeout-wrapped);
-  `bin/xe-reset` recovers it (stop containers -> reload xe -> re-probe). lib.sh runs a pre-flight
+  `bin/xpu-collective-health` detects collective-only failure; `bin/xe-reset` runs rebind -> xe reload ->
+  endpoint FLR as a non-reboot recovery ladder. lib.sh runs a pre-flight
   probe, graceful `docker stop` teardown, a stall-aware health wait, and a post-teardown verdict.
   Set `B70_AUTO_RESET=1` to auto-recover. `CCL_TOPO_P2P_ACCESS=1` in a TP>1 serve is now refused
   unless `I_KNOW_P2P_WEDGES=1`. xe-reset needs the scoped sudoers in `bin/xe-reset.sudoers`.
-- Recovery (CORRECTED 2026-06-24, P2P_GPU.md J.19): **REBOOT is the only reliable recovery on THIS box.**
-  The lighter `modprobe -r xe` does NOT work here -- `xe` also drives the console/display (the Arc cards
-  expose the framebuffer; `lsmod` shows baseline refcount ~5 even with zero containers), so `modprobe -r xe`
-  always fails `FATAL: Module xe is in use` regardless of stopping containers. `bin/xe-reset` will try the
-  reload, detect the in-use failure, and escalate to: `sudo reboot`. (The earlier "modprobe reload CONFIRMED"
-  note was wrong for this display-attached box.)
-- If you must experiment with P2P-in-serve, do a GPU reset BETWEEN every attempt;
+- Recovery (CORRECTED 2026-08-25, P2P_GPU.md J.22): **the cards are not display-held.** All connectors are
+  disconnected/disabled, `/proc/fb` is empty, the VT uses the dummy console, and no process holds `/dev/dri`.
+  The old unload failed because both B70 PCI functions and their four xe auxiliary children were still bound.
+  Unbind both first: clean-state rebind, `xe` unload/reload, and endpoint FLR were all validated without reboot,
+  with the same boot ID and green per-card plus compiled two-rank health after each. Use `bin/xe-reset`; reboot
+  only if unbind hangs or the full ladder fails. Clearance of a future naturally occurring deep wedge remains
+  to be recorded, so retain the final reboot fallback.
+- If you must experiment with P2P-in-serve, run `bin/xe-reset` BETWEEN every attempt;
   never chain two `P2PACCESS=1` serve tries without a reset in between.
 - ALSO (CONFIRMED 2026-06-24, P2P_GPU.md J.15): it is NOT only `P2PACCESS=1` that wedges
   this state. A string of TP>1 WORKER-INIT CRASHES (e.g. repeated GRAPH=1 model-load

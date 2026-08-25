@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# Root-only sysfs helper for bin/xe-reset. Install this file root-owned under
+# /usr/local/sbin; never grant sudo access to the user-writable repo copy.
+set -euo pipefail
+
+XE_DRIVER=/sys/bus/pci/drivers/xe
+PCI_DEVICES=/sys/bus/pci/devices
+EXPECTED_VENDOR=0x8086
+EXPECTED_DEVICE=0xe223
+EXPECTED_CLASS=0x030000
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "b70-xe-reset-helper: must run as root" >&2
+  exit 1
+fi
+
+discover_b70s() {
+  local path vendor device class
+  for path in "$PCI_DEVICES"/0000:*; do
+    [ -r "$path/vendor" ] || continue
+    vendor=$(<"$path/vendor")
+    device=$(<"$path/device")
+    class=$(<"$path/class")
+    if [ "$vendor" = "$EXPECTED_VENDOR" ] &&
+       [ "$device" = "$EXPECTED_DEVICE" ] &&
+       [ "$class" = "$EXPECTED_CLASS" ]; then
+      basename "$path"
+    fi
+  done | sort
+}
+
+mapfile -t DEVICES < <(discover_b70s)
+if [ "${#DEVICES[@]}" -lt 1 ] || [ "${#DEVICES[@]}" -gt 4 ]; then
+  echo "b70-xe-reset-helper: expected 1-4 Intel B70 display functions, found ${#DEVICES[@]}" >&2
+  exit 1
+fi
+
+driver_name() {
+  local link="$PCI_DEVICES/$1/driver"
+  if [ -L "$link" ]; then
+    basename "$(readlink -f "$link")"
+  fi
+}
+
+unbind_all() {
+  local bdf driver
+  for bdf in "${DEVICES[@]}"; do
+    driver=$(driver_name "$bdf")
+    case "$driver" in
+      xe)
+        echo "b70-xe-reset-helper: unbind $bdf" >&2
+        printf '%s\n' "$bdf" > "$XE_DRIVER/unbind"
+        ;;
+      "") echo "b70-xe-reset-helper: $bdf already unbound" >&2 ;;
+      *)
+        echo "b70-xe-reset-helper: refusing $bdf bound to unexpected driver $driver" >&2
+        exit 1
+        ;;
+    esac
+  done
+  udevadm settle
+}
+
+bind_all() {
+  local bdf driver
+  for bdf in "${DEVICES[@]}"; do
+    driver=$(driver_name "$bdf")
+    case "$driver" in
+      xe) echo "b70-xe-reset-helper: $bdf already bound" >&2 ;;
+      "")
+        echo "b70-xe-reset-helper: bind $bdf" >&2
+        printf '%s\n' "$bdf" > "$XE_DRIVER/bind"
+        ;;
+      *)
+        echo "b70-xe-reset-helper: refusing $bdf bound to unexpected driver $driver" >&2
+        exit 1
+        ;;
+    esac
+  done
+  udevadm settle
+}
+
+flr_all() {
+  local bdf methods
+  for bdf in "${DEVICES[@]}"; do
+    if [ -n "$(driver_name "$bdf")" ]; then
+      echo "b70-xe-reset-helper: refusing FLR while $bdf is bound" >&2
+      exit 1
+    fi
+    methods=$(<"$PCI_DEVICES/$bdf/reset_method")
+    case " $methods " in
+      *" flr "*) ;;
+      *)
+        echo "b70-xe-reset-helper: $bdf does not advertise FLR: $methods" >&2
+        exit 1
+        ;;
+    esac
+  done
+  for bdf in "${DEVICES[@]}"; do
+    echo "b70-xe-reset-helper: FLR $bdf" >&2
+    printf '1\n' > "$PCI_DEVICES/$bdf/reset"
+  done
+  udevadm settle
+}
+
+case "${1:-}" in
+  list)
+    printf '%s\n' "${DEVICES[@]}"
+    ;;
+  unbind-all)
+    unbind_all
+    ;;
+  bind-all)
+    bind_all
+    ;;
+  flr-all)
+    flr_all
+    ;;
+  *)
+    echo "usage: b70-xe-reset-helper {list|unbind-all|bind-all|flr-all}" >&2
+    exit 2
+    ;;
+esac

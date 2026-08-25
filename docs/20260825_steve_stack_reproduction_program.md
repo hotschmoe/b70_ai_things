@@ -78,8 +78,8 @@ prebuilt binaries.
   81-profile-collective arm was not model-representative: Inductor retained 81
   independent 32 MiB outputs, emitted five 16-output pointwise fan-out kernels,
   and rank 1 DEVICE_LOST while autotuning the second fan-out before the
-  81-collective graph stage. Correct that stress arm before reuse; after a
-  reboot, the exact interleaved model is the next decisive gate.
+  81-collective graph stage. Correct that stress arm before reuse; the exact
+  interleaved model is the decisive gate.
 - The complete locally rebuilt June kernel package passes an off-device import
   and dispatch gate for activation quantization, dense W8A8, grouped W8A8,
   SiLU, remap, and gather. The exact model launcher now mounts this package as
@@ -91,8 +91,27 @@ prebuilt binaries.
   only 55.37% of Steve. The route gate correctly rejected it: the pinned
   image's Quark source SHA256 `7e4c13d2...` unconditionally calls generic
   Triton `fused_experts`. Registering the June grouped operator did not select
-  it. The native Quark backend/layout/apply adapter and its no-device ABI
-  contract now pass; endpoint performance through that route is unmeasured.
+  it.
+- Per-rank instrumentation localized the exact-model TP=2 boundary. With
+  P2P off, both ranks completed prior work and the input clone, entered the
+  same first `[8192,2048]` BF16 all-reduce 245.077 ms apart, and neither
+  returned; zero MoE calls had begun. This is an in-oneCCL deadlock after
+  matched entry, not a missing rank, dense kernel, clone allocation, or MoE
+  failure. With direct P2P and synchronous instrumentation, both ranks
+  completed all 81 profile all-reduces and all 40 native MoE calls. The only
+  failure was the diagnostic wait itself at command-graph recording, where
+  PyTorch correctly rejects synchronizing a recording queue.
+- A shape-bounded clone fence is the minimal working repair. For direct-P2P
+  profile tensors with at least 8192 rows, synchronize only after the input
+  clone and immediately before oneCCL. No pre-collective rank fence and no
+  post-collective wait are required. The fence is inactive for graph capture
+  and decode shapes. This exact native-MoE route captured all 9/9 graphs,
+  served coherently, passed both 16/16 canaries, and tore down with both health
+  layers green at 45.3649 corrected tok/s. It is 52.83% of Steve and 4.58%
+  slower than the generic-Triton-MoE exact-package control. The compiled TP=2
+  collective boundary is therefore closed; the remaining 40.5042 tok/s gap is
+  elsewhere in graph/runtime/kernel behavior, and the current untuned native
+  grouped-MoE route is not itself a speed win.
 - The GPU model matches, but the host does not: Steve's June Qwen35 system was
   an EPYC 9015 PCIe 5 host, while this system is a Threadripper 1950X with the
   cards under separate PCI domains on a PCIe Gen3-era platform. Steve also
@@ -202,8 +221,10 @@ an August capture filter under June's eager-prefill variable. That filter
 removed the relaxed general graphs ordinary decode reuses, so first inference
 selected an uncaptured graph and returned HTTP 500. The adapter now retains all
 nine general captures while restoring the variable before runtime dispatch. A
-v2 no-device contract guards both halves. The active target remains the 5.0x
-decode gap between the coherent split-collective control and Steve's result.
+v2 no-device contract guards both halves. Direct P2P plus a profile-only clone
+completion fence now crosses the compiled collective boundary and captures all
+nine graphs. The active target is the remaining 1.893x decode gap between the
+45.3649 tok/s native-MoE control and Steve's 85.8691 tok/s result.
 
 ### 6. Collective paths
 
@@ -253,7 +274,7 @@ equivalence before performance tests.
 1. Freeze and hash the currently inspected Steve artifacts.
 2. DONE: make the exact Qwen P2P-off target-only graph control coherent.
 3. DONE: reproduce Steve's benchmark request exactly and add semantic canaries.
-4. Attribute graph boundaries and the 5.0x decode-step gap.
+4. Attribute graph boundaries and the remaining 1.893x decode-step gap.
 5. Attribute INT8 dense, MoE, GDN, sampler, and scheduler one factor at a time.
 6. DONE: integrate and validate our push collective graph contract; loaded
    vLLM IPC import remains asymmetric and is not the exact-Steve route.
@@ -266,13 +287,14 @@ equivalence before performance tests.
    artificial 16-output Triton autotune DEVICE_LOST, so the 81-op graph stage
    did not run. Replace this arm with a sequential low-live-buffer chain before
    treating the oracle as a complete volume gate.
-9. IN PROGRESS: corrected exact model control captured all 9/9 graphs, passed
-   the exact metric and both canaries, and tore down healthy at 47.5448 tok/s.
-   Its strict route gate rejected request-time Triton routed MoE. Source audit
-   proved August Quark bypassed the registered June grouped operator. The
-   native Quark backend/layout/apply adapter and off-device ABI contract pass.
-   After another actual reboot, rerun the identical unset/default-IPC,
-   active-container-NIC control from a new cache with only this route repair.
+9. DONE for the collective boundary: the native Quark route plus direct P2P
+   and clone-only profile fence captured all 9/9 graphs, passed the exact
+   metric and both 16/16 canaries, and tore down healthy at 45.3649 tok/s. The
+   strict evidence gate passed, including native XPU MoE selection and absence
+   of request-time generic MoE JIT. Continue the source-overlay bisect and
+   per-step profile from this control; do not spend another transaction on the
+   now-cleared compiled-collective boundary unless a different model shape
+   needs a new fence threshold.
 10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
    a 55,523,648-byte B70-AOT `_xpu_C`, both Xe2 siblings, and a complete
    pinned-image runtime package with all required XPU dispatch registrations.

@@ -18569,3 +18569,180 @@ gate correctly prevents promotion. Preserve the consumed direct-P2P reboot
 boundary. After an actual reboot, run the identical fresh-cache transaction
 with the new native Quark MoE adapter; require the XPU backend log, absence of
 request-time `fused_moe_kernel`, exact metric/canaries, and healthy teardown.
+
+### 2026-08-25o - Display diagnosis retired; non-reboot xe recovery ladder passes
+
+CONFIG -> kernel 7.1.0-070100; boot ID
+`e2d5777d-f6bb-4d92-a718-0fb07ae17919`; B70 display functions
+`0000:0b:00.0` and `0000:44:00.0`; no running GPU-capable container; no
+`/dev/dri` holder. All 16 connectors reported disconnected and disabled,
+`/proc/fb` was empty, and the VT console was the dummy device. Both endpoints
+were initially bound to xe with two `mei_gsc` plus two `mtd_intel_dg`
+auxiliary children. Scoped sudo installed the root-owned
+`/usr/local/sbin/b70-xe-reset-helper`; sudoers allows only helper list,
+unbind-all, bind-all, flr-all, and exact xe modprobe add/remove operations.
+
+COMMAND -> added `bin/xpu-collective-health`, which runs two XCCL ranks, one
+eager all-reduce, and ten `torch.compile` functional all-reduces at
+`[4,5120]` BF16 with P2P=0. Established its green baseline under `gpu-run`,
+then ran under the self-acquired two-card lease:
+
+```text
+./bin/xe-reset --method rebind
+./bin/xe-reset --method reload
+./bin/xe-reset --method flr
+```
+
+RESULT -> the first collective-probe development attempt omitted the
+established `SYS_PTRACE`/unconfined-seccomp container permissions and failed
+DRM-FD exchange before any collective. Adding those container permissions
+produced `COLLECTIVE_HEALTH_OK` in 25 seconds. Rebind unbound both endpoints,
+rebound both, restored both PCI-qualified render paths and all four auxiliary
+bindings, passed card 0/card 1 matmuls, and passed compiled collective health.
+Reload unbound both and printed `xe_refcount_after_unbind=0`; both
+`modprobe -r xe` and `modprobe xe` succeeded, automatic reprobe restored both
+cards, and both health layers passed. FLR unbound both, successfully reset
+both endpoints using their advertised `flr bus` reset method, rebound both,
+and both health layers passed. The boot ID was unchanged after every stage.
+
+VERDICT -> the old `xe` display-held/reboot-only diagnosis was false: the
+module was in use because the GPU endpoints had not been unbound first.
+`bin/xe-reset` now implements a guarded rebind -> xe reload -> endpoint FLR
+ladder and reboot is only the final fallback. The shared multi-card serve
+guard now adds the compiled collective probe before launch and after teardown,
+closing J.20's single-card-only detection gap. Clean-state mechanics are
+proven; the next naturally occurring deep wedge must record which rung clears
+corrupted state. Current cards are on different physical Threadripper root
+domains (`pci0000:00` and `pci0000:40`). A same-root slot move is an optional
+controlled A/B, not an assumed fix; full runbook and four-card caveats are in
+`docs/20260825_xe_nonreboot_recovery_and_pcie_topology.md`.
+
+SHARED-INFRA GATE -> a full `bin/serve-sweep --smoke` was attempted because
+`bin/` and `_common/lib.sh` changed. It exposed pre-existing shelf/harness
+defects rather than a valid all-green gate: all three llama.cpp entries reject
+the harness `smoke` action in favor of their separate start/gate API; paused
+vLLM entries reference the absent local `vllm-xpu-env:v0230`; and the NVFP4
+launcher treats `smoke` as detached start, allowing the harness to advance
+while its container still owns the GPUs. The sweep was stopped, both leftover
+containers removed under the lease, and per-card plus compiled collective
+health both passed. The unrelated single-card sglang int4 shelf also failed
+KV-pool allocation with `OUT_OF_RESOURCES`; sglang W4A8 passed health and
+coherence.
+
+Targeted qualification then passed both production sglang TP=2 shelves after
+adding direct pre/post collective guards: 27B W8A8 passed health, coherence,
+push-AR engagement, and both post-health layers; 35B-A3B W8A8 passed health,
+coherence, and both post-health layers. A current-image vLLM 27B W8A8 targeted
+smoke proved the `_common/lib.sh` pre/post collective hooks but its engine
+exited during initialization; both post-health layers passed, proving no
+driver or collective degradation. A duplicate failure-cleanup call then
+overwrote the captured root-cause log; `b70_teardown` now preserves an existing
+log when the container is already absent. The mandatory all-shelf gate remains
+RED on those pre-existing artifact/action failures and must not be reported as
+green or bypassed by retagging a different image.
+
+### 2026-08-25p - Exact TP=2 collective boundary localized; clone-only profile fence passes
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 control; TP=2; PIECEWISE 9-size
+capture; locally rebuilt June kernel package; June-compatible native INT8 MoE
+route; clone-safe `s2b_all_reduce_clone`; kernel 7.1; compute runtime
+26.22.38646.4; current pinned oneCCL; cards at `0000:0b:00.0` and
+`0000:44:00.0`. Added per-rank all-reduce stages with monotonic timestamps and
+made the shared health waiter ignore 60-second `shm_broadcast` coordinator
+heartbeats when deciding whether workers had stalled. Every guarded direct-P2P
+arm began after `./bin/xe-reset --method reload`; each reload kept boot ID
+`e2d5777d-f6bb-4d92-a718-0fb07ae17919` and passed both health layers.
+
+COMMAND -> P2P-off localization:
+
+```text
+./bin/gpu-run env \
+  STAMP=20260825T224000Z_artrace_p2p0 P2P_ACCESS=0 \
+  MOE_TRACE=1 ALLREDUCE_TRACE=1 ALLREDUCE_TRACE_SYNC=1 \
+  ALLREDUCE_TRACE_MAX_CALLS=256 STALL_TIMEOUT=180 \
+  ALLOW_EXISTING_CACHE=1 \
+  CACHE_DIR=/mnt/vm_8tb/b70/vllm_cache_qwen36_s2b_exactcc_clone_p2p0_20260825T214109Z \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> both ranks completed prior work, pre-sync, clone enqueue, and clone
+sync. Rank 1 entered the first `[8192,2048]` BF16 `tp:0` collective at
+15701451732254 ns; rank 0 entered at 15701696809283 ns, 245.077 ms later.
+Neither emitted collective return and zero MoE calls began. The heartbeat-aware
+guard aborted after 180 seconds of real worker silence. Graceful teardown,
+both card probes, and compiled P2P-off collective health passed. Evidence:
+`results/logs/qwen36_s2b_exactcc_clone_p2p0_20260825T224000Z_artrace_p2p0`.
+
+COMMAND -> direct-P2P all-stage diagnostic after a clean xe reload:
+
+```text
+./bin/gpu-run env \
+  STAMP=20260825T222600Z_artrace_p2p1 P2P_ACCESS=1 \
+  MOE_TRACE=1 ALLREDUCE_TRACE=1 ALLREDUCE_TRACE_SYNC=1 \
+  ALLREDUCE_TRACE_MAX_CALLS=256 STALL_TIMEOUT=180 \
+  ALLOW_EXISTING_CACHE=1 \
+  CACHE_DIR=/mnt/vm_8tb/b70/vllm_cache_qwen36_s2b_exactcc_clone_p2p1_20260825T210027Z \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> both ranks completed all 81 model-profile collectives and all 40
+native MoE calls. KV cache allocation completed. Both ranks then completed
+graph warmup through collective call 162. At actual graph recording, call 163
+emitted pre-sync start and `torch.xpu.synchronize()` raised `wait cannot be
+called for a queue which is recording to a command graph`. This was a
+diagnostic incompatibility, not a device failure. Both post-health layers
+passed. Evidence:
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T222600Z_artrace_p2p1`.
+
+COMMAND -> first bounded all-stage fence proved the graph could capture when
+synchronization stopped after profile call 81. Then implemented a shape-bounded
+production mechanism and ran the minimized clone-only arm after another clean
+xe reload:
+
+```text
+./bin/gpu-run env \
+  STAMP=20260825T224800Z_clonefence_p2p1 P2P_ACCESS=1 \
+  MOE_TRACE=0 ALLREDUCE_TRACE=1 ALLREDUCE_TRACE_SYNC=0 \
+  ALLREDUCE_TRACE_MAX_CALLS=81 PROFILE_FENCE_MIN_ROWS=8192 \
+  PROFILE_FENCE_STAGES=clone STALL_TIMEOUT=240 \
+  ALLOW_EXISTING_CACHE=1 \
+  CACHE_DIR=/mnt/vm_8tb/b70/vllm_cache_qwen36_s2b_exactcc_clone_p2p1_20260825T210027Z \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> clone-only synchronization crossed all 81 profile collectives,
+left graph warmup/recording and decode unfenced, captured all 9/9 PIECEWISE
+graphs, and reached health in 198 seconds. Semantic probes passed. The exact
+p498/o512 request produced 512 coherent tokens at 311.421 ms client TTFT,
+11.283383 seconds decode, and 45.364920 corrected output tok/s. JSON and color
+canaries each passed 16/16 with zero mismatch. Teardown was graceful; both
+card probes and compiled collective health passed. The corrected strict cache
+gate found the custom op under `torch_compile_cache` and the launcher exited
+0. Evidence and hashes are in
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T224800Z_clonefence_p2p1`.
+
+DEFAULT-PATH PREFLIGHT -> ran the launcher with `P2P_ACCESS=1`,
+`PREFLIGHT_ONLY=1`, and no trace or fence override. All three off-device
+contracts passed. Its emitted config proved the guarded default is
+`profile_fence_min_rows=8192 profile_fence_stages=clone` while tracing remains
+off. Evidence:
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T230000Z_default_clonefence_preflight`.
+
+COMMIT HYGIENE -> the four committed server logs were mechanically converted
+to ASCII after capture; model, trace, timing, and error text were retained.
+Raw -> committed SHA256 pairs for P2P-off trace, all-stage P2P trace, bounded
+profile fence, and clone-only fence are respectively
+`b1d6a2dd...` -> `cb9d9fdf...`, `10974c0c...` -> `2a4c2b7e...`,
+`d95ada35...` -> `aeedf3ad...`, and `32ad2e6a...` -> `f16b7ef5...`.
+
+VERDICT -> P2P-off deadlocks inside oneCCL after matched rank entry. Direct P2P
+works when the asynchronous clone is complete before oneCCL consumes it. A
+clone-only fence for profile tensors with at least 8192 rows is sufficient; no
+pre-rank or post-collective fence is required, and no synchronization enters
+command-graph recording or decode. This closes the compiled TP=2 collective
+boundary. The native grouped-MoE control reaches only 52.83% of Steve's
+85.8691 tok/s and is 4.58% slower than the prior generic Triton MoE control.
+The next frontier is the remaining 1.893x graph/runtime/kernel gap, not another
+collective-boundary retry.

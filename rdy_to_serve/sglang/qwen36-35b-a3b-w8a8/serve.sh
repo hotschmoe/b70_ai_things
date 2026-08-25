@@ -41,9 +41,11 @@ LOADER="$REPO/sglang/patches/quark_moe_int8.py"
 ACTQ="$REPO/sglang/patches/int8_actquant_xpu.py"
 SP=/opt/venv/lib/python3.12/site-packages
 say(){ echo "[$(date +%H:%M:%S)] $*"; }
+collective_health(){ env -u IMG "$REPO/bin/xpu-collective-health" --p2p 0 2>&1 | tail -4; }
 
 start(){
   say "pre-flight xpu-health"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || { say "UNHEALTHY -- abort"; return 3; }
+  say "pre-flight xpu-collective-health"; collective_health || { say "COLLECTIVE UNHEALTHY -- abort"; return 3; }
   for f in "$LOADER" "$ACTQ" "$SHIM"; do [ -f "$f" ] || { say "missing $f"; return 2; }; done
   docker rm -f "$NAME" >/dev/null 2>&1
   say "serve W8A8 int8 MoE (Route A, dequant dense) TP=$TP -> $SERVED on :$PORT (img=$IMG)"
@@ -78,7 +80,14 @@ print('COHERENCE OK:',repr(c[:160])) if c.strip() and (len(c)<16 or max(c.count(
     || { say "coherence gate FAILED -- see: docker logs $NAME"; return 1; }
   say "healthy + coherent; serving $SERVED on :$PORT"
 }
-stop(){ docker rm -f "$NAME" >/dev/null 2>&1; say "stopped $NAME"; "$REPO/bin/xpu-health" 2>&1 | tail -2 || true; }
+stop(){
+  local rc=0
+  docker rm -f "$NAME" >/dev/null 2>&1
+  say "stopped $NAME"
+  "$REPO/bin/xpu-health" 2>&1 | tail -2 || rc=1
+  collective_health || rc=1
+  return "$rc"
+}
 bench(){ bash "$REPO/sglang/perf_regime.sh" "$NAME" "$PORT" "$SERVED" "$TOK" "w8a8-moe-int8"; }
 gen(){ curl -s "http://localhost:$PORT/v1/chat/completions" -H 'content-type: application/json' \
         -d "{\"model\":\"$SERVED\",\"messages\":[{\"role\":\"user\",\"content\":\"${2:-Why is the sky blue?}\"}],\"max_tokens\":128,\"temperature\":0}"; }
@@ -88,7 +97,7 @@ case "${1:-start}" in
   stop)  stop ;;
   bench) bench ;;
   gen)   gen "$@" ;;
-  run)   start && bench; rc=$?; stop; exit $rc ;;
-  smoke) start; rc=$?; stop; exit $rc ;;
+  run)   start && bench; rc=$?; stop_rc=0; stop || stop_rc=$?; [ "$rc" = 0 ] && rc=$stop_rc; exit $rc ;;
+  smoke) start; rc=$?; stop_rc=0; stop || stop_rc=$?; [ "$rc" = 0 ] && rc=$stop_rc; exit $rc ;;
   *) echo "usage: serve.sh {start|stop|bench|gen|run|smoke}"; exit 2 ;;
 esac

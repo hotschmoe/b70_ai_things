@@ -1,76 +1,241 @@
 #!/usr/bin/env bash
-# xe-reset -- recover a wedged B70 / xe-driver state WITHOUT a reboot.
+# xe-reset -- recover B70/xe state without rebooting.
 #
-# The wedge (P2P_GPU.md H.13/J.15/J.16): a TP>1 worker torn down mid-collective corrupts the
-# oneCCL / Level-Zero device context; later GPU ops DEVICE_LOST / OUT_OF_RESOURCES / hang on both
-# cards. CONFIRMED recovery (2026-06-24): reload the xe driver. That needs no `/dev/dri` in use, so
-# this stops every container first, then `modprobe -r xe && modprobe xe`, then re-probes the cards.
+# Recovery ladder:
+#   auto    rebind, then reload, then endpoint FLR until health passes
+#   rebind  unbind both xe endpoints, then bind both
+#   reload  unbind both, unload/reload xe, then bind both
+#   flr     unbind both, issue endpoint FLR, then bind both
 #
-# Requires the SCOPED passwordless sudoers (see bin/xe-reset.sudoers):
-#   hotschmoe ALL=(root) NOPASSWD: /usr/sbin/modprobe -r xe, /usr/sbin/modprobe xe
-# If that is absent, this exits 3 and prints the exact reboot fallback -- it does NOT prompt.
+# The command acquires both gpu-run locks if its caller does not already hold
+# them. It stops only containers that expose /dev/dri (or are privileged), and
+# refuses all sysfs writes while any process still has a DRM node open.
+#
+# Requires the root-owned helper and scoped sudoers from bin/xe-reset.sudoers.
+# Whole-card secondary-bus reset is intentionally not implemented because it
+# would also reset the cards' HDA siblings.
 #
 # Usage:
-#   xe-reset            # stop all containers, reload xe, re-probe
-#   xe-reset --dry-run  # show what it would do, change nothing
-#   xe-reset --no-probe # skip the post-reload xpu-health re-probe
+#   xe-reset
+#   xe-reset --method rebind|reload|flr|auto
+#   xe-reset --dry-run
+#   xe-reset --no-probe
+#   xe-reset --no-collective
 #
-# Exit: 0 recovered (re-probe healthy or skipped) ; 1 reload ran but still wedged (-> reboot) ;
-#       2 nothing to do / arg error ; 3 cannot reload (no sudoers, or -r refused -> reboot).
+# Exit: 0 recovered; 1 actions ran but health failed; 2 usage/inconclusive;
+#       3 precondition or privileged operation failed.
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+HELPER=/usr/local/sbin/b70-xe-reset-helper
 MODPROBE=/usr/sbin/modprobe
-DRY=0; PROBE=1
+METHOD=auto
+DRY=0
+PROBE=1
+COLLECTIVE=1
+ORIGINAL_ARGS=("$@")
+
 while [ $# -gt 0 ]; do
   case "$1" in
+    --method) METHOD="${2:-}"; shift 2 ;;
+    --method=*) METHOD="${1#--method=}"; shift ;;
     --dry-run) DRY=1; shift ;;
     --no-probe) PROBE=0; shift ;;
+    --no-collective) COLLECTIVE=0; shift ;;
     -h|--help) awk 'NR>1 && /^#/ {sub(/^# ?/,""); print; next} NR>1 {exit}' "$0"; exit 0 ;;
-    *) echo "xe-reset: unknown arg '$1'" >&2; exit 2 ;;
+    *) echo "xe-reset: unknown argument '$1'" >&2; exit 2 ;;
   esac
 done
+case "$METHOD" in auto|rebind|reload|flr) ;; *) echo "xe-reset: bad method '$METHOD'" >&2; exit 2 ;; esac
 
-run() { if [ "$DRY" = 1 ]; then echo "  [dry-run] $*"; else echo "  + $*"; "$@"; fi; }
-
-echo "=== xe-reset: recover wedged B70 driver state ==="
-
-# 1. Free /dev/dri -- modprobe -r xe refuses while any container holds the cards.
-running=$(docker ps -q 2>/dev/null || true)
-if [ -n "$running" ]; then
-  echo "[1/3] stopping $(echo "$running" | wc -l | tr -d ' ') running container(s) (they hold /dev/dri):"
-  docker ps --format '  - {{.Names}} ({{.Image}})' 2>/dev/null
-  run bash -c "docker stop -t 10 $running >/dev/null && docker rm -f $running >/dev/null 2>&1; true"
-else
-  echo "[1/3] no running containers (good -- /dev/dri should be free)"
+LOCK_BASE="${B70_GPU_LOCK:-/mnt/vm_8tb/b70/gpu.lock}"
+holds_fd() {
+  local fd="$1" expected="$2" actual
+  actual=$(readlink "/proc/$$/fd/$fd" 2>/dev/null || true)
+  [ "$actual" = "$expected" ]
+}
+if [ "${B70_XE_RESET_UNDER_LEASE:-0}" != 1 ] &&
+   ! { holds_fd 8 "$LOCK_BASE.0" && holds_fd 9 "$LOCK_BASE.1"; }; then
+  echo "xe-reset: acquiring both GPU leases" >&2
+  exec "$HERE/gpu-run" env B70_XE_RESET_UNDER_LEASE=1 "$0" "${ORIGINAL_ARGS[@]}"
 fi
 
-# 2. Reload the driver via the SCOPED sudoers. Fail loudly (not a prompt) if it is missing.
-echo "[2/3] reloading xe driver"
-if [ "$DRY" = 1 ]; then
-  echo "  [dry-run] sudo -n $MODPROBE -r xe && sudo -n $MODPROBE xe"
-else
-  if ! sudo -n "$MODPROBE" -r xe 2>/tmp/xe-reset.err; then
-    echo "  [!] 'sudo -n modprobe -r xe' FAILED:" >&2; sed 's/^/      /' /tmp/xe-reset.err >&2
-    if grep -qi 'in use' /tmp/xe-reset.err; then
-      echo "  'Module xe is in use' with NO containers running means xe is DISPLAY-HELD on this box:" >&2
-      echo "  the Arc cards drive the console/framebuffer (lsmod baseline refcount ~5, un-removable while up)." >&2
-      echo "  The driver-reload recovery CANNOT work here. ONLY a reboot clears the wedge:  sudo reboot" >&2
-    else
-      echo "  Scoped sudoers missing (see bin/xe-reset.sudoers) or a container still holds xe. FALLBACK: sudo reboot" >&2
-    fi
-    exit 3
+run() {
+  if [ "$DRY" = 1 ]; then
+    printf '  [dry-run]'
+    printf ' %q' "$@"
+    printf '\n'
+  else
+    printf '  +'
+    printf ' %q' "$@"
+    printf '\n'
+    "$@"
   fi
-  run sudo -n "$MODPROBE" xe
+}
+
+if [ ! -x "$HELPER" ]; then
+  echo "xe-reset: missing $HELPER; install bin/xe-reset-helper first" >&2
+  exit 3
+fi
+helper_meta=$(stat -c '%U:%G %a' "$HELPER" 2>/dev/null || true)
+case "$helper_meta" in root:root\ 755|root:root\ 555) ;; *)
+  echo "xe-reset: refusing helper with unsafe owner/mode: $helper_meta" >&2
+  exit 3
+  ;;
+esac
+if ! sudo -n "$HELPER" list >/dev/null 2>&1; then
+  echo "xe-reset: scoped passwordless sudo is not installed; see bin/xe-reset.sudoers" >&2
+  exit 3
 fi
 
-# 3. Confirm recovery.
-echo "[3/3] re-probe"
-if [ "$DRY" = 1 ] || [ "$PROBE" = 0 ]; then
-  echo "  (skipped)"; echo "xe-reset: done."; exit 0
+mapfile -t BDFS < <(sudo -n "$HELPER" list)
+if [ "${#BDFS[@]}" -lt 2 ] || [ "${#BDFS[@]}" -gt 4 ]; then
+  echo "xe-reset: expected 2-4 B70 endpoints, found ${#BDFS[@]}" >&2
+  exit 3
 fi
-if "$HERE/xpu-health"; then
-  echo "xe-reset: RECOVERED (cards healthy)."; exit 0
+echo "config -> method=$METHOD devices=${BDFS[*]} boot_id=$(cat /proc/sys/kernel/random/boot_id)"
+
+gpu_containers=()
+if command -v docker >/dev/null 2>&1; then
+  while IFS= read -r cid; do
+    [ -n "$cid" ] || continue
+    inspect=$(docker inspect "$cid" 2>/dev/null || true)
+    if printf '%s' "$inspect" | grep -q '"/dev/dri' ||
+       printf '%s' "$inspect" | grep -q '"Privileged": true'; then
+      gpu_containers+=("$cid")
+    fi
+  done < <(docker ps -q 2>/dev/null)
+fi
+if [ "${#gpu_containers[@]}" -gt 0 ]; then
+  echo "precondition -> stopping ${#gpu_containers[@]} GPU-capable container(s)"
+  for cid in "${gpu_containers[@]}"; do
+    name=$(docker inspect -f '{{.Name}}' "$cid" 2>/dev/null | sed 's#^/##')
+    echo "  container=$name id=$cid"
+    run docker stop -t 20 "$cid" || { echo "xe-reset: failed to stop $name" >&2; exit 3; }
+  done
 else
-  echo "xe-reset: reload ran but cards STILL wedged -- escalate to: sudo reboot" >&2; exit 1
+  echo "precondition -> no running GPU-capable containers"
 fi
+
+drm_holders() {
+  local nodes=()
+  while IFS= read -r -d '' node; do nodes+=("$node"); done < <(find /dev/dri -maxdepth 1 -type c -print0 2>/dev/null)
+  [ "${#nodes[@]}" -gt 0 ] || return 1
+  fuser -v "${nodes[@]}" 2>&1
+}
+if holders=$(drm_holders); then
+  echo "xe-reset: refusing reset; DRM nodes still have holders:" >&2
+  printf '%s\n' "$holders" >&2
+  exit 3
+fi
+
+preflight_bound() {
+  local bdf vendor device class driver
+  for bdf in "${BDFS[@]}"; do
+    vendor=$(<"/sys/bus/pci/devices/$bdf/vendor")
+    device=$(<"/sys/bus/pci/devices/$bdf/device")
+    class=$(<"/sys/bus/pci/devices/$bdf/class")
+    driver=$(basename "$(readlink -f "/sys/bus/pci/devices/$bdf/driver" 2>/dev/null)" 2>/dev/null || true)
+    if [ "$vendor:$device:$class:$driver" != "0x8086:0xe223:0x030000:xe" ]; then
+      echo "xe-reset: preflight failed for $bdf: $vendor:$device:$class driver=${driver:-none}" >&2
+      return 1
+    fi
+  done
+}
+preflight_bound || exit 3
+
+NEEDS_REBIND=0
+rollback() {
+  local rc=$?
+  trap - EXIT INT TERM
+  if [ "$NEEDS_REBIND" = 1 ] && [ "$DRY" = 0 ]; then
+    echo "xe-reset: interrupted/failed while unbound; attempting rollback bind" >&2
+    sudo -n "$MODPROBE" xe >/dev/null 2>&1 || true
+    sudo -n "$HELPER" bind-all || true
+  fi
+  exit "$rc"
+}
+trap rollback EXIT
+trap 'exit 130' INT TERM
+
+mutate() {
+  local stage="$1"
+  echo "action -> $stage"
+  case "$stage" in
+    rebind)
+      NEEDS_REBIND=1
+      run sudo -n "$HELPER" unbind-all || return 1
+      run sudo -n "$HELPER" bind-all || return 1
+      NEEDS_REBIND=0
+      ;;
+    reload)
+      NEEDS_REBIND=1
+      run sudo -n "$HELPER" unbind-all || return 1
+      if [ "$DRY" = 0 ]; then
+        xe_refcount=$(awk '$1 == "xe" {print $3}' /proc/modules)
+        echo "  xe_refcount_after_unbind=${xe_refcount:-not_loaded}"
+      fi
+      run sudo -n "$MODPROBE" -r xe || return 1
+      run sudo -n "$MODPROBE" xe || return 1
+      run sudo -n "$HELPER" bind-all || return 1
+      NEEDS_REBIND=0
+      ;;
+    flr)
+      NEEDS_REBIND=1
+      run sudo -n "$HELPER" unbind-all || return 1
+      run sudo -n "$HELPER" flr-all || return 1
+      run sudo -n "$HELPER" bind-all || return 1
+      NEEDS_REBIND=0
+      ;;
+  esac
+}
+
+verify_devices() {
+  local bdf driver render aux_count
+  /usr/bin/udevadm settle --timeout=30 || return 1
+  for bdf in "${BDFS[@]}"; do
+    driver=$(basename "$(readlink -f "/sys/bus/pci/devices/$bdf/driver" 2>/dev/null)" 2>/dev/null || true)
+    [ "$driver" = xe ] || { echo "verify -> $bdf driver=${driver:-none} FAIL" >&2; return 1; }
+    render="/dev/dri/by-path/pci-$bdf-render"
+    [ -e "$render" ] || { echo "verify -> missing $render" >&2; return 1; }
+    echo "verify -> $bdf driver=xe render=$render"
+  done
+  aux_count=$(find /sys/bus/auxiliary/drivers -maxdepth 2 -type l \( -name 'xe.mei-gscfi.*' -o -name 'xe.nvm.*' \) 2>/dev/null | wc -l)
+  echo "verify -> xe_aux_bindings=$aux_count"
+  [ "$aux_count" -ge "${#BDFS[@]}" ]
+}
+
+health() {
+  verify_devices || return 1
+  if [ "$PROBE" = 0 ] || [ "$DRY" = 1 ]; then
+    echo "health -> skipped"
+    return 0
+  fi
+  "$HERE/xpu-health" || return 1
+  if [ "$COLLECTIVE" = 1 ]; then
+    env -u IMG "$HERE/xpu-collective-health" --p2p 0 || return 1
+  fi
+}
+
+stages=("$METHOD")
+[ "$METHOD" = auto ] && stages=(rebind reload flr)
+for stage in "${stages[@]}"; do
+  if ! mutate "$stage"; then
+    echo "result -> $stage action failed" >&2
+    continue
+  fi
+  if health; then
+    if [ "$DRY" = 1 ]; then
+      echo "result -> DRY_RUN_OK method=$stage boot_id=$(cat /proc/sys/kernel/random/boot_id)"
+    else
+      echo "result -> RECOVERED method=$stage boot_id=$(cat /proc/sys/kernel/random/boot_id)"
+    fi
+    trap - EXIT INT TERM
+    exit 0
+  fi
+  echo "result -> method=$stage completed but health failed" >&2
+done
+
+trap - EXIT INT TERM
+echo "result -> non-reboot recovery ladder exhausted; reboot is the final fallback" >&2
+exit 1

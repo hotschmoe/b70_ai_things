@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 from vllm.model_executor.layers.fused_moe.modular_kernel import FusedMoEKernel
+from vllm.model_executor.layers.fused_moe.experts import xpu_moe
 from vllm.model_executor.layers.fused_moe.oracle.int8 import make_int8_moe_kernel
 from vllm.model_executor.layers.quantization.quark import quark_moe
 
@@ -62,6 +63,16 @@ def main() -> int:
     for name in ("shared_experts", "shared_experts_input"):
         assert name in kernel_apply_signature.parameters
 
+    call_abi = xpu_moe.xpu_fused_moe
+    assert getattr(call_abi, "_qwen36_june_moe_call_abi", False)
+    call_abi_signature = inspect.signature(call_abi)
+    for name in ("scratch", "diagnostic_context"):
+        parameter = call_abi_signature.parameters[name]
+        assert parameter.default is None
+    call_abi_source = inspect.getsource(call_abi)
+    assert "if scratch is not None" in call_abi_source
+    assert "return june_xpu_fused_moe(*args, **kwargs)" in call_abi_source
+
     process_source = inspect.getsource(cls.process_weights_after_loading)
     apply_source = inspect.getsource(cls.apply)
     for required in (
@@ -82,6 +93,8 @@ def main() -> int:
         "quark_apply_signature": str(apply_signature),
         "make_int8_moe_kernel_signature": str(make_signature),
         "fused_moe_kernel_apply_signature": str(kernel_apply_signature),
+        "june_moe_call_abi_signature": str(call_abi_signature),
+        "mixed_workspace_contract": "disabled; non-None scratch rejected",
         "weight_layout_repair": "E,N,K-to-E,K,N",
         "scale_layout_repair": "E,N,1-to-E,N",
         "verdict": "pass",

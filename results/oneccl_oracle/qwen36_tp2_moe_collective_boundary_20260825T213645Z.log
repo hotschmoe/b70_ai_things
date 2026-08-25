@@ -1,0 +1,499 @@
+/opt/vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+[qwen36-s2b] bridged August shared-expert runner ABI
+[qwen36-s2b] restored June native XPU INT8 MoE route
+[qwen36-s2b] bridged June base MoE call ABI with mixed workspace off
+[qwen36-s2b] restored June clone-safe custom all-reduce contract
+[qwen36-s2b] restored June prefill-replay capture contract
+[qwen36-s2b] kernel package=/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface(Tensor ptr_A, Tensor ptr_A_scales, Tensor ptr_B, Tensor ptr_B_scales, Tensor? ptr_bias, Tensor ptr_D, Tensor rows_per_expert, int N, int K, int num_experts) -> Tensor
+[qwen36-s2b] restored June XPU INT8 linear registry class
+W0825 21:37:36.739000 1 torch/distributed/run.py:851]
+W0825 21:37:36.739000 1 torch/distributed/run.py:851] *****************************************
+W0825 21:37:36.739000 1 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed.
+W0825 21:37:36.739000 1 torch/distributed/run.py:851] *****************************************
+/opt/vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+/opt/vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+[qwen36-s2b] bridged August shared-expert runner ABI
+[qwen36-s2b] restored June native XPU INT8 MoE route
+[qwen36-s2b] bridged June base MoE call ABI with mixed workspace off
+[qwen36-s2b] restored June clone-safe custom all-reduce contract
+[qwen36-s2b] bridged August shared-expert runner ABI
+[qwen36-s2b] restored June native XPU INT8 MoE route
+[qwen36-s2b] bridged June base MoE call ABI with mixed workspace off
+[qwen36-s2b] restored June clone-safe custom all-reduce contract
+[qwen36-s2b] restored June prefill-replay capture contract
+[qwen36-s2b] kernel package=/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface(Tensor ptr_A, Tensor ptr_A_scales, Tensor ptr_B, Tensor ptr_B_scales, Tensor? ptr_bias, Tensor ptr_D, Tensor rows_per_expert, int N, int K, int num_experts) -> Tensor
+[qwen36-s2b] restored June XPU INT8 linear registry class
+[qwen36-s2b] restored June prefill-replay capture contract
+[qwen36-s2b] kernel package=/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface(Tensor ptr_A, Tensor ptr_A_scales, Tensor ptr_B, Tensor ptr_B_scales, Tensor? ptr_bias, Tensor ptr_D, Tensor rows_per_expert, int N, int K, int num_experts) -> Tensor
+[qwen36-s2b] restored June XPU INT8 linear registry class
+INFO 08-25 21:37:45 [scheduler.py:239] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-25 21:37:45 [vllm.py:977] Asynchronous scheduling is enabled.
+INFO 08-25 21:37:45 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+WARNING 08-25 21:37:45 [xpu.py:197] XPU Graph is disabled by environment variable, please set VLLM_XPU_ENABLE_XPU_GRAPH=1 to enable it.
+INFO 08-25 21:37:45 [parallel_state.py:1446] world_size=-1 rank=-1 local_rank=-1 distributed_init_method=env:// backend=xccl
+INFO 08-25 21:37:45 [scheduler.py:239] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-25 21:37:45 [vllm.py:977] Asynchronous scheduling is enabled.
+INFO 08-25 21:37:45 [kernel.py:270] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+WARNING 08-25 21:37:45 [xpu.py:197] XPU Graph is disabled by environment variable, please set VLLM_XPU_ENABLE_XPU_GRAPH=1 to enable it.
+INFO 08-25 21:37:45 [parallel_state.py:1446] world_size=-1 rank=-1 local_rank=-1 distributed_init_method=env:// backend=xccl
+INFO 08-25 21:37:45 [parallel_state.py:1759] rank 0 in world size 2 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+2026:08:25-21:37:45:   88 |CCL_WARN| value of CCL_LOG_LEVEL changed to be info (default:warn)
+2026:08:25-21:37:45:   88 |CCL_WARN| value of CCL_ATL_TRANSPORT changed to be ofi (default:mpi)
+2026:08:25-21:37:45:   88 |CCL_WARN| value of CCL_TOPO_P2P_ACCESS changed to be 1 (default:-1)
+2026:08:25-21:37:45:   88 |CCL_WARN| value of CCL_KERNEL_PATH changed to be /opt/ccl4ce/lib/ccl/kernels (default:)
+2026:08:25-21:37:45:   88 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:25-21:37:45:   88 |CCL_INFO| process launcher: hydra, local_proc_idx: -1, local_proc_count: -1
+2026:08:25-21:37:45:   88 |CCL_INFO| initializing level-zero api
+2026:08:25-21:37:45:   88 |CCL_INFO| initializing level-zero
+2026:08:25-21:37:45:   88 |CCL_INFO| Total hardware threads: 2048
+2026:08:25-21:37:45:   88 |CCL_INFO| auto tune with port counts enabled
+2026:08:25-21:37:45:   88 |CCL_INFO| ze fabric ports: 0 were able to be detected
+2026:08:25-21:37:45:   88 |CCL_INFO| initialized level-zero
+2026:08:25-21:37:45:   88 |CCL_INFO| could not initialize umf api
+2026:08:25-21:37:45:   88 |CCL_INFO| OS info: { Linux 34f40fce1aec 7.1.0-070100-generic #202606141628 SMP PREEMPT_DYNAMIC Sun Jun 14 17:22:46 UTC 2026 x86_64 }
+2026:08:25-21:37:45:   89 |CCL_WARN| could not get local_idx/count from environment variables, trying to get them from ATL
+2026:08:25-21:37:45:   89 |CCL_INFO| process launcher: hydra, local_proc_idx: -1, local_proc_count: -1
+2026:08:25-21:37:45:   89 |CCL_INFO| initializing level-zero api
+2026:08:25-21:37:45:   89 |CCL_INFO| initializing level-zero
+2026:08:25-21:37:45:   89 |CCL_INFO| Total hardware threads: 2048
+2026:08:25-21:37:45:   89 |CCL_INFO| auto tune with port counts enabled
+2026:08:25-21:37:45:   89 |CCL_INFO| ze fabric ports: 0 were able to be detected
+2026:08:25-21:37:45:   89 |CCL_INFO| initialized level-zero
+2026:08:25-21:37:45:   89 |CCL_INFO| could not initialize umf api
+2026:08:25-21:37:45:   89 |CCL_INFO| OS info: { Linux 34f40fce1aec 7.1.0-070100-generic #202606141628 SMP PREEMPT_DYNAMIC Sun Jun 14 17:22:46 UTC 2026 x86_64 }
+2026:08:25-21:37:46:   88 |CCL_INFO| fi_version: 1.10
+2026:08:25-21:37:46:   89 |CCL_INFO| fi_version: 1.10
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| coord: global [ idx 1, cnt 2 ], local [ idx 1, cnt 2 ]
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| libfabric version: 2.2.0-impi_2021.17.2
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| coord: global [ idx 0, cnt 2 ], local [ idx 0, cnt 2 ]
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| found 1 nic(s) according to all filters2026:08:25-21:37:46:   89:[1] |CCL_INFO| found 1 nic(s) according to all filters
+
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| provider: tcp
+2026:08:25-21:37:46:   88:[0] |CCL_INFO|   nic: { name tcp:eth0, state unknown, speed 1.25 GB/s }
+2026:08:25-21:37:46:   88:[0] |CCL_INFO|   mr_mode: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO|   threading: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO|   tx_ctx_cnt: 256
+2026:08:25-21:37:46:   88:[0] |CCL_INFO|   max_ep_tx_ctx: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO|   max_msg_size: 18446744073709551615
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| tcp tag_bits: 64, max_tag: 18446744073709551615, mem_tag_format: 12297829382473034410
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| ep_idx: 0, active_prov_idxs: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| atl-ofi:
+{
+  prov_count: 1
+  nw_prov_count: 1
+  nw_prov_first_idx: 0
+  mnic_type: none
+  mnic_include_names: <empty>
+  mnic_exclude_names: <empty>
+  mnic_count: 1
+  mnic_offset: none
+  max_retry_count: 10000
+  progress_mode: 1
+  hmem: 0
+}
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| atl attrs:
+{
+  in: { shm: 0, hmem: 0, sync_coll: 0, extra_ep: 0, ep_count: 1, mnic_type: none, mnic_count: 1, mnic_offset: none }
+  out: { shm: 0, hmem: 0, mnic_type: none, mnic_count: 1, tag_bits: 64, max_tag: 18446744073709551615 }
+}2026:08:25-21:37:46:   89:[1] |CCL_INFO| tcp tag_bits: 64, max_tag: 18446744073709551615, mem_tag_format: 12297829382473034410
+
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| start workers for local process [0:2]
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| local_proc_idx: 0, local_proc_count: 2 are set by ATL transport
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| start workers for local process [1:2]
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| local_proc_idx: 1, local_proc_count: 2 are set by ATL transport
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| local process [1:2]: worker: 0, cpu: 30, numa: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| library version: Gold-2022.0.0 2026-08-19T 14:37:26Z (/)
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| specification version: 1.0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| compute backend: DPCPP
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| build mode: release
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| C compiler: IntelLLVM 2025.3.3
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| C++ compiler: IntelLLVM 2025.3.3
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| hwloc initialized: 1
+{
+  membind_thread_supported: 1
+  numa: {os_idx: 0, memory: 124333 MB, cores: 16, cpus: 32, membind: 1}
+}
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| local process [0:2]: worker: 0, cpu: 31, numa: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_WORKER_COUNT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_WORKER_OFFLOAD: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_WORKER_WAIT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_LOG_LEVEL: info
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ABORT_ON_THROW: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_QUEUE_DUMP: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SCHED_DUMP: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SCHED_PROFILE: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ENTRY_MAX_UPDATE_TIME_SEC: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_FRAMEWORK: none
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ATL_TRANSPORT: ofi
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KVS_MODE: pmi
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KVS_CONNECTION_TIMEOUT: 120
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KVS_MPI_ALLGATHER: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KVS_USE_MPI_RANKS: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ATL_SHM: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ATL_RMA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ATL_HMEM: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ATL_SEND_PROXY: none
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ATL_CACHE: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_MNIC: none
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_MNIC_NAME: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_MNIC_COUNT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_MNIC_OFFSET: none
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OFI_DOMAIN_NAMES: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALGO_FALLBACK: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHER: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHERV: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALL: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALLV: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BARRIER: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BCAST: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BROADCAST: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_RECV: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCATTER: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SEND: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHER_SCALEOUT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHERV_SCALEOUT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE_SCALEOUT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALL_SCALEOUT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALLV_SCALEOUT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCALEOUT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCATTER_SCALEOUT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_UNORDERED_COLL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_FUSION: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_FUSION_BYTES_THRESHOLD: 16384
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_FUSION_COUNT_THRESHOLD: 256
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_FUSION_CHECK_URGENT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_FUSION_CYCLE_MS: 0.2
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_PRIORITY: none
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SPIN_COUNT: 1000
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_YIELD: pause
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_MAX_SHORT_SIZE: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BCAST_PART_COUNT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_CACHE_KEY: match_id
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_CACHE_FLUSH: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BUFFER_CACHE: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_STRICT_ORDER: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_STAGING_BUFFER: regular
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OP_SYNC: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OFI_ENABLE_HOSTNAME_SHARING: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OFI_INIT_ENABLE_HOSTNAME_SHARING: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OCCP_SERVER_HOSTNAME: localhost
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OCCP_SERVER_IO_THREADS: 4
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OCCP_SERVER_OP_TIMEOUT: 120
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OCCP_SERVER_RANKS_PER_THREAD: 8
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OCCP_CLIENT_IO_THREADS: 2
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OCCP_CLIENT_OP_TIMEOUT: 120
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_CHUNK_COUNT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_MIN_CHUNK_SIZE: 65536
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_RS_CHUNK_COUNT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_RS_MIN_CHUNK_SIZE: 65536
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHERV_TOPO_LARGE_SCALE: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHERV_TOPO_READ: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALLV_TOPO_READ: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCATTER_TOPO_READ: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCATTER_MONOLITHIC_KERNEL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCATTER_MONOLITHIC_PIPELINE_KERNEL: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCATTER_FALLBACK_ALGO: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHERV_MONOLITHIC_KERNEL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHERV_MONOLITHIC_PIPELINE_KERNEL: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALLV_MONOLITHIC_KERNEL: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALLV_MONOLITHIC_READ_KERNEL: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLGATHERV_PIPE_CHUNK_COUNT: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE_PIPE_CHUNK_COUNT: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_SCATTER_PIPE_CHUNK_COUNT: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_REDUCE_PIPE_CHUNK_COUNT: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_TMP_BUF: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_SMALL_THRESHOLD: 524288
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_MEDIUM_THRESHOLD: 16777216
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_SCALEOUT_THRESHOLD: 4294967296
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_SCALEOUT: auto
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_ARC: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_LL_THRESHOLD: 4096
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_SIMPLE_THRESHOLD: 4194304
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_SIMPLE_READ: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_CHUNKING_THRESHOLD: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLREDUCE_LL: ring
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_REDUCE_SCATTER_TMP_BUF: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_REDUCE_SCATTER_SMALL_THRESHOLD: 2097152
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_REDUCE_SCATTER_MEDIUM_THRESHOLD: 67108864
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_REDUCE_SCATTER_SCALEOUT_THRESHOLD: 4294967296
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_REDUCE_SCATTER_SCALEOUT: auto
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_REDUCE_SCATTER_LL_THRESHOLD: 512
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_REDUCE_SCATTER_SIMPLE_THRESHOLD: 8388608
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_TMP_BUF: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_SMALL_THRESHOLD: 131072
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_MEDIUM_THRESHOLD: 2097152
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_SCALEOUT_THRESHOLD: 1073741824
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_SCALEOUT: auto
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_LL_THRESHOLD: 2048
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_LL_ENABLE: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_SIMPLE_THRESHOLD: 1048576
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_SCALEOUT_OVERLAP: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLGATHERV_CHUNKING_THRESHOLD: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_BROADCAST_TMP_BUF: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_BROADCAST_SMALL_THRESHOLD: 524288
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_BROADCAST_SCALEOUT_THRESHOLD: 4294967296
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLTOALL_SCALEOUT: auto
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLTOALL_ARC_LL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLTOALL_TMP_BUF:0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLTOALL_LL_THRESHOLD:2048
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLTOALL_CHUNKING_THRESHOLD:0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ALLTOALL_SINGLE_NODE_ALGORITHM: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ENABLE_SYCL_KERNELS: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_CCL_BARRIER: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_KERNEL_SYNC: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_SINGLE_NODE_ALGORITHM: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_AUTO_USE_TMP_BUF: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_FORCE_USE_TMP_BUF_SCALEOUT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_COPY_ENGINE: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_KERNEL_COPY: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ESIMD: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_FULL_VECTOR: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_TMP_BUF_SIZE: 402653184
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_SCALEOUT_HOST_BUF_SIZE: 1073741824
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_SCALEOUT_DEVICE_BUF_SIZE: 1073741824
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_KERNELS_LINE_SIZE: 128
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_SCALEOUT_BUF_ALLOC_MODE: hwloc
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_PT2PT_READ: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_PT2PT_ENABLE: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_MAX_PIPELINE_CHUNK_SIZE: 33554432
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_PIPELINE_CHUNK_SIZE: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_NUMA_NODES: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ENABLE_PIPELINE_GPU_RDMA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_ENABLE_DIRECT_GPU_RDMA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_PIPELINE_GPU_RDMA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_SUB_COMMUICATOR: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_FORCE_PCIE: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_LL_BUFFER_GLOBAL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_SIMPLE_SINGLE_KERNEL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_NUM_THREADS: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_WORK_GROUP_SIZE: 64
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE_NREDUCE_BUFFERING: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE_NREDUCE_SEGMENT_SIZE: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_DTREE_PARTITION_COUNT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE_2D_CHUNK_COUNT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE_2D_MIN_CHUNK_SIZE: 65536
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLREDUCE_2D_SWITCH_DIMS: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_CHECK_INPLACE_ALIASING: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ALLTOALL_SCATTER_MAX_OPS: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BACKEND: native
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_LOCAL_RANK: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_LOCAL_SIZE: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_PROCESS_LAUNCHER: hydra
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_MPI_LIBRARY_PATH: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_OFI_LIBRARY_PATH: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_UMF_ENABLE: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_UMF_LIBRARY_PATH: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_TOPO_ALGO: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_TOPO_COLOR: ze
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_TOPO_P2P_ACCESS: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_TOPO_WA_FABRIC_VERTEX_CONNECTION_CHECK: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_USE_MPI_BCAST_WA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_USE_ROOT_PRINT_WA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_PATH: /opt/ccl4ce/lib/ccl/kernels
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_DEBUG: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_GROUP_SIZE: 32
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_GROUP_COUNT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_MEM_ALIGN: 128
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_SYNC: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_1S_LEAD: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_1S_USE_COPY_OPS: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_1S_IPC_WA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_KERNEL_CLOSE_FD_WA: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_SYCL_OUTPUT_EVENT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BARRIER_SYNC: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DEPS_SYNC: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_USE_HMEM: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_BARRIER: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_BIDIR_ALGO: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_CACHE: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DEVICE_CACHE_EVICT_SMALLEST: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DEVICE_CACHE_UPPER_LIMIT: 838860800
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DEVICE_CACHE_NUM_BLOCKS_IN_CHUNK: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DEVICE_CACHE_POLICY: chunk
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_PTR_REGISTER_THRESHOLD: 4294967296
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_CACHE_OPEN_IPC_HANDLES: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_CACHE_OPEN_IPC_HANDLES_THRESHOLD: 1000
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_CACHE_GET_IPC_HANDLES_THRESHOLD: 1000
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_CACHE_GET_IPC_HANDLES: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_SINGLE_LIST: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DISABLE_FAMILY_CHECK: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DISABLE_PORT_CHECK: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_ENABLE_OVERSUBSCRIPTION_FALLBACK: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_ENABLE_OVERSUBSCRIPTION_THROW: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_SERIALIZE: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_COPY_ENGINE: link
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_H2D_COPY_ENGINE: none
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_D2D_COPY_ENGINE: none
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_MAX_COMPUTE_QUEUES: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_MAX_COPY_QUEUES: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_ENABLE_CCS_FALLBACK_FOR_COPY: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_LIST_DUMP: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_QUEUE_INDEX_OFFSET: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_CLOSE_IPC_WA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_LIBRARY_PATH: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_ENABLE: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_FINI_WA: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_MULTI_WORKERS: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_AUTO_TUNE_PORTS: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_IPC_EXCHANGE: pidfd
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_DRM_BDF_SUPPORT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_USE_ZESINIT: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_PT2PT_READ: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ZE_TYPE2_TUNE_PORTS: undetected
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_DRMFD_DEV_RENDER_DIR_PATH: /dev/dri/by-path/
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_DRMFD_DEV_RENDER_SUFFIX: -render
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_IPC_ALLGATHERV_WA: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_PMIX_LIBRARY_PATH: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ITT_LEVEL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_DEBUG_TIMESTAMPS_LEVEL: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_BF16: scalar
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_FP16: f16c
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| CCL_ROOT: /opt/ccl4ce
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| I_MPI_ROOT: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| FI_PROVIDER_PATH: /opt/venv/lib:/opt/venv/lib/prov
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| FI_PROVIDER: <not specified>
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| no ports detected
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| no ports detected
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| level zero driver version: 17011657
+2026:08:25-21:37:46:   88:[0] |CCL_WARN| topology recognition shows PCIe connection between devices. If this is not correct, you can disable topology recognition, with CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0. This will assume XeLinks across devices
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| all vertices connected: is_matrix_connected: 0
+ fabric connectivity matrix:
+              [R]0x37386c98              [R]0x373a8078
+[R]0x37386c98              X              0
+[R]0x373a8078              0              X
+
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| ze_rank_info_vec:
+{
+  comm_size: 2
+    host: { idx: 0, name: 34f40fce1aec }
+      rank: { idx: 0, device_uuid: { 134, 128, 35, 226, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0 }, subdev_count: 0, subdev_id: na }
+      rank: { idx: 1, device_uuid: { 134, 128, 35, 226, 0, 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 0 }, subdev_count: 0, subdev_id: na }
+}
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| host: 0, plane 0 contains ranks: 0
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| host: 0, plane 1 contains ranks: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| rank_info_vec:
+{
+  comm_size: 2
+    host: { idx: 0, name: 34f40fce1aec }
+      rank: { idx: 0, local_proc_idx: 0, uuid: 00000088-52418315-1787693866451718 }
+      rank: { idx: 1, local_proc_idx: 1, uuid: 00000089-83735734-1787693866451717 }
+}
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| topo_manager:
+{
+  comm_size: 2
+  single_node: 1
+  single_card: 0
+  host_rank_counts: 2
+  intra_card_colors: 0 1
+  inter_card_colors: 0 0
+  p2p_atomics: 0
+  p2p_access: 1
+}
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| PCI device [0:11:0:0] is on NUMA node 0 (CPU intersection: 32)
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| numa comm color: 0 (host_idx=0, numa_node=0)
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| PCI device [0:68:0:0] is on NUMA node 0 (CPU intersection: 32)
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| numa comm color: 0 (host_idx=0, numa_node=0)
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| numa comm size: 2
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| numa comm size: 2
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| numa r2r comm color: 1 (numa_node=0, position=1)
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| numa r2r comm color: 0 (numa_node=0, position=0)
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| numa r2r comm size: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| numa r2r comm size: 1
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| stream: { type: gpu, in_order: 0, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| stream: { type: gpu, in_order: 0, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:46:   88:[0] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:46:   89:[1] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }
+rank=0 stage=process_group_warmup OK
+rank=1 stage=process_group_warmup OK
+/opt/vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| no ports detected2026:08:25-21:37:48:   89:[1] |CCL_INFO| no ports detected
+
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| level zero driver version: 17011657
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| all vertices connected: is_matrix_connected: 0
+ fabric connectivity matrix:
+              [R]0x37386c98              [R]0x373a8078
+[R]0x37386c98              X              0
+[R]0x373a8078              0              X
+
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| ze_rank_info_vec:
+{
+  comm_size: 2
+    host: { idx: 0, name: 34f40fce1aec }
+      rank: { idx: 0, device_uuid: { 134, 128, 35, 226, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0 }, subdev_count: 0, subdev_id: na }
+      rank: { idx: 1, device_uuid: { 134, 128, 35, 226, 0, 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 0 }, subdev_count: 0, subdev_id: na }
+}
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| host: 0, plane 0 contains ranks: 0
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| host: 0, plane 1 contains ranks: 1
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| rank_info_vec:
+{
+  comm_size: 2
+    host: { idx: 0, name: 34f40fce1aec }
+      rank: { idx: 0, local_proc_idx: 0, uuid: 00000088-20517767-1787693868863306 }
+      rank: { idx: 1, local_proc_idx: 1, uuid: 00000089-12835330-1787693868863305 }
+}
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| topo_manager:
+{
+  comm_size: 2
+  single_node: 1
+  single_card: 0
+  host_rank_counts: 2
+  intra_card_colors: 0 1
+  inter_card_colors: 0 0
+  p2p_atomics: 0
+  p2p_access: 1
+}
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| PCI device [0:11:0:0] is on NUMA node 0 (CPU intersection: 32)
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| numa comm color: 0 (host_idx=0, numa_node=0)
+2026:08:25-21:37:48:   89:[1] |CCL_INFO| PCI device [0:68:0:0] is on NUMA node 0 (CPU intersection: 32)
+2026:08:25-21:37:48:   89:[1] |CCL_INFO| numa comm color: 0 (host_idx=0, numa_node=0)
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| numa comm size: 2
+2026:08:25-21:37:48:   89:[1] |CCL_INFO| numa comm size: 2
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| numa r2r comm color: 0 (numa_node=0, position=0)
+2026:08:25-21:37:48:   89:[1] |CCL_INFO| numa r2r comm color: 1 (numa_node=0, position=1)
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| numa r2r comm size: 1
+2026:08:25-21:37:48:   89:[1] |CCL_INFO| numa r2r comm size: 1
+2026:08:25-21:37:48:   89:[1] |CCL_INFO| stream: { type: gpu, in_order: 0, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| stream: { type: gpu, in_order: 0, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }2026:08:25-21:37:48:   89:[1] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }
+
+2026:08:25-21:37:48:   89:[1] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }
+2026:08:25-21:37:48:   88:[0] |CCL_INFO| stream: { type: gpu, in_order: 1, device: Intel(R) Graphics [0xe223], device_family: family7 }
+/opt/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+rank=1 stage=compiled_collective_warmup OK
+rank=0 stage=compiled_collective_warmup OK
+stage -> m8192-inputs: OK
+stage -> m8192-inputs: OK
+rank=0 stage=fused_moe_profile iteration=0 OK
+rank=1 stage=fused_moe_profile iteration=0 OK
+rank=1 stage=fused_moe_profile iteration=1 OK
+rank=0 stage=fused_moe_profile iteration=1 OK
+rank=0 stage=compiled_collective_after_moe OK
+rank=1 stage=compiled_collective_after_moe OK
+{"passed": true, "protocol": "qwen36-june-tp2-moe-collective-boundary-v1", "ranks": [{"collective_finite": true, "collective_sha256": "5f41c60fe941531f3418c0ea04f431b17f021da4ce42c4c3ecd1b64739d38dba", "local_rank": 0, "moe_sha256": "4f3abb39daae693c791c885669fc05ea3c9e0429957770eb0c597ae8b479da14", "rank": 0, "rows": 8192, "runtime": {"expected_xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d", "torch": "2.11.0+xpu", "xpu_c": "/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so", "xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d"}, "stages": ["process_group_warmup", "compiled_collective_warmup", "fused_moe_profile", "compiled_collective_after_moe"]}, {"collective_finite": true, "collective_sha256": "5f41c60fe941531f3418c0ea04f431b17f021da4ce42c4c3ecd1b64739d38dba", "local_rank": 1, "moe_sha256": "1d1d3cc9178dfe5b7a4aea64b7de93b1005455abf53d937b8a5ddf19d4dce411", "rank": 1, "rows": 8192, "runtime": {"expected_xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d", "torch": "2.11.0+xpu", "xpu_c": "/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so", "xpu_c_sha256": "2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d"}, "stages": ["process_group_warmup", "compiled_collective_warmup", "fused_moe_profile", "compiled_collective_after_moe"]}]}
+2026:08:25-21:37:51:   88:[0] |CCL_INFO| finalizing atl-ofi
+2026:08:25-21:37:51:   88:[0] |CCL_INFO| finalized atl-ofi
+2026:08:25-21:37:53:   88:[0] |CCL_INFO| finalizing level-zero
+2026:08:25-21:37:53:   88:[0] |CCL_INFO| finalized level-zero
+2026:08:25-21:37:53:   89:[1] |CCL_INFO| finalizing level-zero
+2026:08:25-21:37:53:   89:[1] |CCL_INFO| finalized level-zero
+[qwen36-s2b] bridged August shared-expert runner ABI
+[qwen36-s2b] restored June native XPU INT8 MoE route
+[qwen36-s2b] bridged June base MoE call ABI with mixed workspace off
+[qwen36-s2b] restored June clone-safe custom all-reduce contract
+[qwen36-s2b] restored June prefill-replay capture contract
+[qwen36-s2b] kernel package=/opt/runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface(Tensor ptr_A, Tensor ptr_A_scales, Tensor ptr_B, Tensor ptr_B_scales, Tensor? ptr_bias, Tensor ptr_D, Tensor rows_per_expert, int N, int K, int num_experts) -> Tensor
+[qwen36-s2b] restored June XPU INT8 linear registry class
