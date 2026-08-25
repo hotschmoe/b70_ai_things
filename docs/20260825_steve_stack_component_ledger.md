@@ -94,11 +94,11 @@ partitioning. The later launcher default made scheduling asynchronous because
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config now compiles; P2P-off monolithic oneCCL capture stalls | Primary unresolved mechanism. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config compiles; raw oneCCL XPUGraph replay passes, while the prior full-model custom op failed | Primary unresolved mechanism is now vLLM custom-op/compiled-graph integration. |
 | Uniform no-spec descriptor | June Qwen decode capture descriptor | Yes | Restored by narrow adapter | Matched and required for capture. |
 | Custom collective wrapper | `vllm::all_reduce` custom op with two clone guards | Yes | August source silently removed the inner clone; local attributed op now restores it | Must retest after reboot; prior exact run was not source-equivalent. |
-| Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Source commit and `kernels.spv` match; pinned-image `libccl.so.1.0` hash differs from Steve's later oracle-validated build | Build parity is incomplete; run the exact graph oracle before another model serve. |
-| Collective transport | oneCCL/OFI direct P2P in graph | Yes | First direct test forced `pidfd`, unlike Steve's unset/default setting | Retest exact unset/default IPC after reboot. |
+| Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
+| Collective transport | oneCCL/OFI direct P2P in graph | Yes | Unset/default IPC resolved to `pidfd`; 256 direct and 512 XPUGraph iterations passed on both ranks | Raw transport and graph replay are cleared; the remaining failure is in the full vLLM integration. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |
 | Scheduler | V1 async scheduling | Yes | Live log confirms async | Matched. |
 | Prefix cache | Disabled | Yes | Disabled | Matched. |
@@ -201,7 +201,7 @@ The systems share Arc Pro B70 GPUs, but not the same host platform:
 | --- | --- | --- |
 | Steve Qwen35 June host | AMD EPYC 9015; four B70s on separate PCIe 5.0 x16 root ports; pairs reported `NODE` | Ubuntu 24.04.4, kernel 6.17, UMD 26.14; direct P2P enabled |
 | Steve July two-card oneCCL oracle | Threadripper PRO 5955WX; two-card test | Public oneCCL direct 256/256 and XPUGraph 512/512 passed with `pidfd` |
-| This host | Threadripper 1950X; the B70s sit under distinct `0000:00` and `0000:40` root complexes through separate switches; host is PCIe Gen3 era | kernel 7.1, host UMD 26.22; measured H2D 12.82 GB/s, host-staged D2D 1.68 GB/s, Torch peer-access false |
+| This host | Threadripper 1950X; the B70s sit under distinct `0000:00` and `0000:40` root complexes through separate switches; host is PCIe Gen3 era | kernel 7.1, host UMD 26.22; measured H2D 12.82 GB/s, host-staged D2D 1.68 GB/s, Torch peer-access false; exact oneCCL direct plus XPUGraph oracle passed |
 
 This makes the direct-P2P device loss a possible platform, mapping, or
 KMD/UMD interaction, even though the GPU models match. It is not evidence that
@@ -348,8 +348,36 @@ forced IPC-exchange setting and uses the container's active `eth0` interface,
 matching Steve's unset/default IPC and active-NIC semantics.
 
 Verdict -> kernel 7.1 did not fix the direct-P2P vLLM failure. The transaction
-does not yet isolate whether the device loss comes from oneCCL itself or from
-the missing inner-clone/source contract. Reboot before another direct-P2P arm.
+did not isolate whether the device loss came from oneCCL itself or from the
+missing inner-clone/source contract. The next oracle transaction resolves that
+ambiguity.
+
+### Raw oneCCL direct-plus-XPUGraph oracle
+
+Config -> post-reboot healthy cards, exact `[4,5120]` BF16 verifier shape,
+two XCCL ranks, pinned-image `libccl.so.1.0` hash `542142ac...`, exact
+`kernels.spv` hash `0d549c35...`, direct P2P enabled, and Steve's unset/default
+IPC exchange and worker-count semantics. Docker bridge networking supplied the
+required container `eth0`.
+
+Command -> `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 IPCX=default bash
+vllm/w8a8/run_qwen36_oneccl_graph_oracle.sh`.
+
+Result -> both ranks passed 256 direct all-reduces and 512 XPUGraph replays
+with zero mismatches and zero maximum absolute difference. Average iteration
+time including synchronization and validation was 1.446 ms direct and 0.349
+ms under graph on both ranks. The environment left `CCL_ZE_IPC_EXCHANGE`
+absent; this oneCCL build reported its effective default as `pidfd`. The first
+launcher attempt used host networking, had no `eth0`, and failed in OFI KVS
+before any collective; bridge networking corrected the harness. Both cards
+passed health after the valid run.
+
+Verdict -> the B70 hardware, Threadripper 1950X topology, kernel 7.1, current
+oneCCL library, direct Level Zero P2P, and oneCCL XPUGraph replay all satisfy
+the exact pre-model contract. They do not explain the 17.06 tok/s result or the
+prior full-model `DEVICE_LOST`. The fault boundary is now above raw oneCCL: the
+vLLM custom-op wrapper, two-clone alias contract, compiled graph ownership, or
+worker/model graph lifecycle. Do not rebuild oneCCL before testing that layer.
 
 ## Accepted And Rejected Mechanism Registry
 
@@ -379,17 +407,14 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 
 ## Next Decisive Transactions
 
-1. After reboot, run the locally owned exact `[4,5120]` BF16 oneCCL oracle:
-   256/256 direct collectives and 512/512 XPUGraph replays in one process-group
-   lifetime, with loaded library and SPIR-V hashes recorded. Start with Steve's
-   June unset/default IPC identity.
-2. If the oracle passes, observe the required reset boundary, then retest one
+1. DONE: the locally owned exact `[4,5120]` BF16 oneCCL oracle passed 256/256
+   direct collectives and 512/512 XPUGraph replays with exact loaded hashes and
+   zero mismatch under Steve's unset/default IPC identity.
+2. Observe the required reset boundary, then retest one
    guarded exact model transaction with the restored June two-clone contract,
    unset/default IPC exchange, explicit container `eth0`, and a fresh cache.
-3. If the oracle fails, rebuild the exact public oneCCL artifact with Steve's
-   recorded script and require the known `kernels.spv` hash plus a clean oracle
-   before loading the model. Screen `pidfd` only as a separate reboot-bounded
-   transaction.
+3. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
+   Preserve rebuilding the public artifact as a later provenance task only.
 4. If the narrow current-source repair still does not reproduce, run the
    closest surviving 2026-06-16 vLLM snapshot as a forensic overlay with the
    same runtime binaries.

@@ -18150,3 +18150,36 @@ loaded hashes. If it passes, reset before the clone-correct full-model arm. If
 it fails, rebuild Steve's pinned public oneCCL source and require the oracle to
 pass before another model load. This isolates collective graph correctness
 from vLLM graph ownership and avoids another blind 34 GiB model transaction.
+
+### 2026-08-25f - Exact oneCCL direct-plus-XPUGraph oracle passes locally
+
+CONFIG -> post-reboot healthy cards, exact `[4,5120]` BF16 Qwen verifier
+all-reduce shape, two XCCL ranks, pinned S2B image, direct P2P enabled, Steve's
+unset/default IPC exchange and worker-count semantics, pinned-image oneCCL hash
+`542142ac...`, and exact device-kernel hash `0d549c35...`. Docker bridge
+networking supplied the semantic container interface `eth0`.
+
+COMMAND -> `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 IPCX=default bash
+vllm/w8a8/run_qwen36_oneccl_graph_oracle.sh`; then a dual-card
+`./bin/gpu-run bash -lc './bin/xpu-health'`. An initial host-network launcher
+attempt failed in OFI KVS because this host has no interface named `eth0`; it
+never reached a collective, both cards remained healthy, and the launcher was
+corrected to bridge networking.
+
+RESULT -> 256/256 direct all-reduces and 512/512 XPUGraph replays passed on
+both ranks with zero mismatches and max absolute difference 0.0. Average time
+including synchronization and validation was 1.446 ms direct and 0.349 ms
+graph on both ranks. Loaded library and SPIR-V identities matched the required
+hashes. Although the environment left `CCL_ZE_IPC_EXCHANGE` absent, oneCCL
+reported its effective default as `pidfd`. Both cards passed post-run health.
+Machine-readable evidence is
+`results/oneccl_oracle/qwen36_tp2_oneccl_default_20260825T065907Z.json`.
+
+VERDICT -> raw oneCCL direct P2P and XPUGraph work correctly on this exact B70
+pair, Threadripper 1950X host, kernel 7.1, and pinned current binary. Neither
+PCIe topology nor oneCCL graph correctness explains the 17.06 tok/s endpoint
+or the prior full-model `DEVICE_LOST`. The active fault boundary is above raw
+oneCCL: vLLM's custom-op wrapper, restored two-clone alias contract, compiled
+graph ownership, or worker/model graph lifecycle. Preserve the reset boundary,
+then run one clone-correct exact-model transaction from a fresh cache. A
+oneCCL rebuild is no longer the next action.

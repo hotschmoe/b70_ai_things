@@ -229,12 +229,12 @@ equivalence before performance tests.
 5. Attribute INT8 dense, MoE, GDN, sampler, and scheduler one factor at a time.
 6. DONE: integrate and validate our push collective graph contract; loaded
    vLLM IPC import remains asymmetric and is not the exact-Steve route.
-7. IN PROGRESS: guarded kernel-7.1 direct-P2P reproduction. The first arm
-   exposed source and IPC-environment drift. After reboot, run the exact local
-   direct-plus-XPUGraph oneCCL oracle before another full model load.
-8. If the oracle passes, observe the reset boundary and run the clone-correct,
-   unset-IPC exact model control. If it fails, rebuild Steve's pinned public
-   oneCCL source and validate the new binary with the oracle first.
+7. DONE: the guarded kernel-7.1 direct-plus-XPUGraph oneCCL oracle passed 256
+   direct and 512 graph iterations per rank with zero mismatch. This clears the
+   hardware, topology, current oneCCL binary, direct P2P, and raw graph replay.
+8. IN PROGRESS: observe the reset boundary and run the clone-correct,
+   unset-IPC exact model control. A failure now belongs above raw oneCCL, in
+   the vLLM custom-op/compiled-graph integration or model graph lifecycle.
 9. Rebuild every native SO from local source and remove external mounts.
    Reconstruct the June 67 MB `_xpu_C` as an explicit accepted-record variant;
    do not conflate it with the byte-matched current snapshot.

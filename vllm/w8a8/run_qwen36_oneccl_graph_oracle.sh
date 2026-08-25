@@ -69,7 +69,7 @@ fi
 
 echo "config -> image=$IMG shape=[4,5120] direct=256 graph=512 ipc=$IPCX ccl=$EXPECTED_CCL_SHA256 kernels=$EXPECTED_KERNELS_SHA256"
 docker run --rm --name "$NAME" --device /dev/dri \
-  -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --network=host \
+  -v /dev/dri/by-path:/dev/dri/by-path --ipc=host \
   --cap-add SYS_PTRACE --security-opt seccomp=unconfined \
   -v "$SCRIPT_DIR/qwen36_oneccl_graph_oracle.py:/opt/qwen36_oneccl_graph_oracle.py:ro" \
   -v "$RESULT_DIR:/results" \
