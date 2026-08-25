@@ -275,14 +275,19 @@ baseline and concurrency lever, but it is not the direct route to Steve's
 target-only 85.87 TP=2 result.
 
 The direct-P2P oneCCL and clone-correct custom-op mechanism gates now pass in
-isolation. The first exact June-package model transaction loaded both ranks and
-reached graph capture, then exposed an erroneous local no-spec uniform
-PIECEWISE key. June ordinary decode reused the relaxed general key. The local
-key is removed and an off-device contract passes the unchanged default sizes,
-including valid schedules for 32, 40, and 48 tokens over maxseqs 24.
+isolation. Exact June-package model transactions load both ranks, compile and
+profile the model, finish graph setup, and reach endpoint health. The first
+removed an erroneous local no-spec uniform PIECEWISE key. The next transaction
+proved a subtler June/August conflict: August also uses June's eager-prefill
+replay variable to suppress capture. June ordinary decode reuses those relaxed
+general captures, so first inference selected an uncaptured graph and returned
+HTTP 500. The adapter now retains all nine general captures while preserving
+eager dispatch for non-uniform prefill. A v2 off-device contract proves both
+halves at the unchanged default sizes.
 
 The immediate experiment, after an actual reboot, is the same guarded exact
 June-package model transaction from a new cache. Do not narrow the capture
-sizes or change Steve's minimal `{"cudagraph_mode":"PIECEWISE"}` config. It
-must first complete graph capture, endpoint identity, the exact 498/512 metric,
-and both 16/16 canaries before any transfer or speed claim.
+sizes, remove the eager-prefill policy, or change Steve's minimal
+`{"cudagraph_mode":"PIECEWISE"}` config. It must first complete endpoint
+identity, the exact 498/512 metric, and both 16/16 canaries before any transfer
+or speed claim.

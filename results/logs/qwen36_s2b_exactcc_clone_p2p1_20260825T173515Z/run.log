@@ -1,0 +1,54 @@
+=== pre-flight xpu-health (TP=2) ===
+=== probe card 0 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+=== serve qwen36-35b-a3b-quark-w8a8-int8-s2b-control  IMG=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94  TP=2 PP=1  GRAPH=1  port=18080 ===
+vllm serve /models/qwen3.6-35b-a3b/quark-w8a8-int8 --served-model-name qwen36-35b-a3b-quark-w8a8-int8-s2b-control --host 0.0.0.0 --port 18080 --dtype auto --tensor-parallel-size 2 --max-model-len 32768 --max-num-seqs 24 --gpu-memory-utilization 0.90 --trust-remote-code --no-enable-prefix-caching --quantization quark --distributed-executor-backend mp --language-model-only --generation-config vllm --max-num-batched-tokens 8192 --uvicorn-log-level warning --compilation-config {"cudagraph_mode":"PIECEWISE"}
+=== waiting for /health (ceiling 1800s, stall-abort 300s; first run JIT-compiles/captures) ===
+=== HEALTHY :18080  qwen36-35b-a3b-quark-w8a8-int8-s2b-control  (TP=2 GRAPH=1) in 325s ===
+"id":"qwen36-35b-a3b-quark-w8a8-int8-s2b-control"
+--- Qwen S2B semantic/repetition probe ---
+/opt/vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+[qwen36-s2b] bridged August shared-expert runner ABI
+[qwen36-s2b] restored June clone-safe custom all-reduce contract
+[qwen36-s2b] kernel package=/opt/june-runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface(Tensor ptr_A, Tensor ptr_A_scales, Tensor ptr_B, Tensor ptr_B_scales, Tensor? ptr_bias, Tensor ptr_D, Tensor rows_per_expert, int N, int K, int num_experts) -> Tensor
+[qwen36-s2b] restored June XPU INT8 linear registry class
+Traceback (most recent call last):
+  File "/opt/b70_qwen36_s2b_probe.py", line 85, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/opt/b70_qwen36_s2b_probe.py", line 62, in main
+    text = complete(args.base_url, args.model, prompt, 48)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/b70_qwen36_s2b_probe.py", line 27, in complete
+    with urllib.request.urlopen(request, timeout=180) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
+qwen36_s2b_exactcc_clone_p2p1_20260825T173515Z
+stopped qwen36_s2b_exactcc_clone_p2p1_20260825T173515Z (graceful -t30; GPU released if last holder)
+=== probe card 0 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)

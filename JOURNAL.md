@@ -18452,3 +18452,64 @@ speed and does not implicate a GPU wedge or native math. Preserve the consumed
 direct-P2P boot boundary. After another actual reboot, rerun the same exact
 transaction with a new cache; do not pin smaller capture sizes or alter Steve's
 minimal PIECEWISE configuration.
+
+### 2026-08-25m - Exact control reaches inference; August capture filter conflicts with June replay key
+
+CONFIG -> new boot ID `30f19437-793a-468e-a54a-ce0ded8f55cc`; kernel 7.1;
+exact Qwen revision `cced5659...`; complete rebuilt June package; TP=2, PP=1,
+PIECEWISE with default split operations and capture sizes
+`[1,2,4,8,16,24,32,40,48]`; maxseqs 24; async; no MTP or prefix cache;
+direct P2P; unset/default IPC exchange and worker count; container `eth0`; and
+fresh cache. The boot-started P2P-off daily TP=2 service was allowed to finish
+initialization and pass health, then stopped under the two-card lease with exit
+0 before the exact transaction.
+
+COMMAND -> exactly `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`. After teardown, performed
+source-only comparison against June vLLM `e190923b` and the pinned August image,
+then ran the launcher's no-device identity and PIECEWISE contract gate as
+`STAMP=20260825T174500Z_capturecontractpreflight PREFLIGHT_ONLY=1
+I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`. No second GPU transaction
+was run.
+
+RESULT -> model and runtime identities passed, both card pre-health probes
+passed, both XCCL ranks initialized with direct P2P, and the model loaded 16.88
+GiB per card. Compilation completed in 100.03 seconds and the initial profile
+run completed in 23.26 seconds. The engine then logged that it skipped all nine
+non-uniform PIECEWISE captures because prefill replay was disabled; graph setup
+finished in one second with zero additional graph memory, and endpoint health
+passed. The first semantic request JIT-compiled model kernels and failed on both
+ranks with `RuntimeError: CUDA graph capturing detected at an inappropriate
+time. This operation is currently disabled.` The client received HTTP 500, so
+no speed metric or canary artifact exists. Teardown was graceful and both card
+post-health probes passed. There was no `DEVICE_LOST`, `OUT_OF_RESOURCES`, or
+other UR error.
+
+June source uses `VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY=1` only to make
+non-uniform prefill dispatch eager. It still captures the relaxed general
+PIECEWISE descriptors because ordinary decode reuses them. August added a
+capture filter under the same variable. Combined with June's no-specific-key
+dispatcher, that filter removes every graph ordinary decode can select. The
+adapter now temporarily hides only this variable while August builds its
+capture list, preserving the independent spec/decode filters and restoring the
+variable before runtime dispatch. The v2 no-device contract proves zero
+ordinary specific keys, valid schedules at every default size, retention of
+all nine general capture descriptors, and preservation of the runtime setting.
+The full no-device preflight passes.
+
+Primary evidence is
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T173515Z`: committed ASCII
+server log SHA256 `6fde09ed...` (raw `74639f19...`), run log `06e5b83e...`,
+kernel preflight `86a5c234...`, and pre-repair PIECEWISE contract
+`a54ad767...`. The repaired v2 contract is
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T174500Z_capturecontractpreflight/piecewise_capture_contract.json`,
+SHA256 `2f3bd3ac...`.
+
+VERDICT -> the corrected exact stack now clears process-group initialization,
+model load, compile/profile, graph setup, and endpoint health. The inference
+failure is a reproducible June/August capture-policy mismatch, not a speed
+result or hardware wedge. Preserve the consumed direct-P2P reboot boundary.
+After another actual reboot, rerun the identical exact transaction with a new
+cache; do not disable the June eager-prefill runtime policy or narrow capture
+sizes.

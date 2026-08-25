@@ -6,10 +6,12 @@ from __future__ import annotations
 import argparse
 import inspect
 import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
 from vllm.v1.cudagraph_dispatcher import CudagraphDispatcher
+from vllm.v1.worker.gpu_model_runner import GPUModelRunner
 
 
 CAPTURE_SIZES = [1, 2, 4, 8, 16, 24, 32, 40, 48]
@@ -61,13 +63,45 @@ def main() -> int:
     ]
     assert rejected_uniform_sizes == [32, 40, 48]
 
+    # June disabled only non-uniform prefill replay. It still captured these
+    # general descriptors because ordinary decode reused them. August later
+    # made the same setting suppress capture as well. sitecustomize must
+    # restore June's capture semantics without consuming the setting needed by
+    # runtime dispatch.
+    assert getattr(
+        GPUModelRunner._xpu_filter_cudagraph_capture_descs,
+        "_qwen36_june_contract",
+        False,
+    )
+    fake_runner = SimpleNamespace(
+        device=SimpleNamespace(type="xpu"),
+        num_spec_tokens=0,
+    )
+    sentinel_capture_descs = [("PIECEWISE", [object() for _ in CAPTURE_SIZES])]
+    setting = "VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY"
+    previous = os.environ.get(setting)
+    os.environ[setting] = "1"
+    try:
+        retained = GPUModelRunner._xpu_filter_cudagraph_capture_descs(
+            fake_runner, sentinel_capture_descs
+        )
+        assert retained is sentinel_capture_descs
+        assert os.environ.get(setting) == "1"
+    finally:
+        if previous is None:
+            os.environ.pop(setting, None)
+        else:
+            os.environ[setting] = previous
+
     record = {
-        "protocol": "qwen36-june-piecewise-capture-contract-v1",
+        "protocol": "qwen36-june-piecewise-capture-contract-v2",
         "source_module": method.__module__,
         "source_file": inspect.getsourcefile(method),
         "max_num_seqs": MAX_NUM_SEQS,
         "capture_sizes": CAPTURE_SIZES,
         "ordinary_decode_specific_descriptors": 0,
+        "general_piecewise_capture_descriptors_retained": len(CAPTURE_SIZES),
+        "prefill_replay_setting_preserved": True,
         "rejected_uniform_sizes": rejected_uniform_sizes,
         "general_piecewise_schedules": results,
         "verdict": "pass",

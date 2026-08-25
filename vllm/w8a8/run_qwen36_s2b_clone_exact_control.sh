@@ -207,6 +207,7 @@ done
 
 for required in \
   'restored June clone-safe custom all-reduce contract' \
+  'restored June prefill-replay capture contract' \
   'Selected XPUInt8ScaledMMLinearKernel for QuarkW8A8Int8' \
   'kernel package=/opt/june-runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface' \
   'Asynchronous scheduling is enabled' \

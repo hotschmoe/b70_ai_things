@@ -161,6 +161,40 @@ def _patch_custom_allreduce_clone_contract() -> None:
     )
 
 
+def _patch_june_piecewise_capture_contract() -> None:
+    """Keep June's general PIECEWISE graphs when prefill replay is disabled.
+
+    June used VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY only at runtime
+    dispatch: non-uniform prefill ran eagerly, while the relaxed general
+    PIECEWISE descriptors were still captured for ordinary decode. The later
+    August snapshot also filters every non-uniform descriptor during capture.
+    With June's dispatcher keying, that removes the graphs decode needs.
+
+    Temporarily hide only the prefill setting while the August capture filter
+    runs. Its independent speculative-decode and decode filters remain active.
+    """
+    from vllm.v1.worker.gpu_model_runner import GPUModelRunner
+
+    original_filter = GPUModelRunner._xpu_filter_cudagraph_capture_descs
+    setting = "VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY"
+
+    def june_compatible_filter(self, capture_descs):
+        value = os.environ.pop(setting, None)
+        try:
+            return original_filter(self, capture_descs)
+        finally:
+            if value is not None:
+                os.environ[setting] = value
+
+    june_compatible_filter._qwen36_june_contract = True
+    GPUModelRunner._xpu_filter_cudagraph_capture_descs = june_compatible_filter
+    print(
+        "[qwen36-s2b] restored June prefill-replay capture contract",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _install() -> None:
     import vllm_xpu_kernels._xpu_C as xpu_kernel_module
     from vllm.model_executor.kernels.linear import _POSSIBLE_INT8_KERNELS
@@ -316,4 +350,5 @@ def _install() -> None:
 
 _patch_shared_expert_abi()
 _patch_custom_allreduce_clone_contract()
+_patch_june_piecewise_capture_contract()
 _install()

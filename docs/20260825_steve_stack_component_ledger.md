@@ -527,9 +527,20 @@ adapter, not June, added ordinary uniform PIECEWISE descriptors. Sizes
 32/40/48 cannot be represented as one-token uniform schedules when maxseqs is
 24. June reused the relaxed general key, whose schedules remain valid.
 
-Verdict -> remove the non-June key, keep the exact default capture sizes, and
-rerun only after reboot. The repaired no-device contract passes all nine sizes;
-endpoint graph replay and performance remain open.
+After removing the key and rebooting, the next exact run compiled/profiled the
+model, finished graph setup, and reached endpoint health. August had filtered
+all nine relaxed general captures because June's eager-prefill runtime variable
+was set. June never applied that variable at capture time, and ordinary decode
+reused those general graphs. First inference therefore selected an uncaptured
+graph and failed with the capture monitor disabled. The client received HTTP
+500; teardown was graceful, both cards passed health, and no UR/device error
+occurred.
+
+Verdict -> keep the exact default capture sizes and restore the June two-part
+policy: capture relaxed general graphs, but dispatch non-uniform prefill eagerly.
+The v2 no-device contract passes all nine sizes, proves all nine captures are
+retained, and proves the replay variable is restored. Endpoint graph replay and
+performance remain open until the next reboot-bounded exact transaction.
 
 ## Accepted And Rejected Mechanism Registry
 
@@ -568,10 +579,13 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    generated 16-output Triton pointwise autotune, so the overall oracle and
    81-op graph stage did not pass. Replace that arm with a sequential
    low-live-buffer chain before reusing it.
-3. PARTIAL: the guarded exact model transaction loaded the complete June
-   package and reached graph capture. It rejected a local non-June uniform-key
-   adapter at capture sizes 32/40/48; there was no device error and post-health
-   passed. The key is removed and its off-device contract passes.
+3. PARTIAL: guarded exact model transactions loaded the complete June package,
+   compiled/profiled the model, finished graph setup, and reached endpoint
+   health. The local uniform key is removed. A second June/August collision then
+   removed every general decode graph at capture time and first inference
+   returned HTTP 500. There was no device error and post-health passed. The
+   adapter now retains those captures while keeping prefill replay eager; its v2
+   off-device contract passes.
 4. After an actual reboot, rerun the identical exact control with a new cache.
    This remains the highest-information VllmBackend/PIECEWISE and
    interleaved-layer gate.

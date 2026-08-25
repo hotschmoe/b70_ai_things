@@ -190,8 +190,13 @@ decode descriptor, not a missing descriptor in the later snapshot. June
 ordinary decode reused the relaxed general PIECEWISE key. The local addition
 made capture sizes 32, 40, and 48 impossible to schedule with maxseqs 24. It is
 removed, and a no-device contract guards the June behavior without narrowing
-the default capture-size list. The active target remains the 5.0x decode gap
-between the coherent split-collective control and Steve's result.
+the default capture-size list. The next run reached endpoint health but exposed
+an August capture filter under June's eager-prefill variable. That filter
+removed the relaxed general graphs ordinary decode reuses, so first inference
+selected an uncaptured graph and returned HTTP 500. The adapter now retains all
+nine general captures while restoring the variable before runtime dispatch. A
+v2 no-device contract guards both halves. The active target remains the 5.0x
+decode gap between the coherent split-collective control and Steve's result.
 
 ### 6. Collective paths
 
@@ -254,11 +259,13 @@ equivalence before performance tests.
    artificial 16-output Triton autotune DEVICE_LOST, so the 81-op graph stage
    did not run. Replace this arm with a sequential low-live-buffer chain before
    treating the oracle as a complete volume gate.
-9. IN PROGRESS: the first corrected inner-clone exact model control loaded the
-   complete June package and reached graph capture. A local no-spec uniform-key
-   adapter then failed the dummy scheduler at default sizes 32/40/48 over
-   maxseqs 24. That non-June key is removed and its off-device contract passes.
-   After another actual reboot, rerun the identical unset/default-IPC,
+9. IN PROGRESS: corrected inner-clone exact model controls load the complete
+   June package, compile/profile the model, finish graph setup, and reach
+   endpoint health. The local no-spec uniform key is removed. A later August
+   filter then suppressed the general graphs that June decode reuses, and first
+   inference returned HTTP 500. The v2 repair retains those captures while
+   keeping non-uniform prefill eager, and its off-device contract passes. After
+   another actual reboot, rerun the identical unset/default-IPC,
    active-container-NIC control from a new cache. This remains the native
    routed-MoE, VllmBackend/PIECEWISE, and real-layer interleaving gate.
 10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
