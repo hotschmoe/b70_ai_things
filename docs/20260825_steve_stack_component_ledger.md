@@ -88,7 +88,7 @@ partitioning. The later launcher default made scheduling asynchronous because
 | Model and scales | Exact HF Quark W8A8 revision | Yes | Exact local revision and Quark loader verified | Matched. |
 | Dense activation quant | `_xpu_C::per_token_quant_int8_xpu` | Yes | Operator present and selected | Matched. |
 | Dense W8A8 GEMM | oneDNN `_xpu_C::int8_gemm_w8a8` | Yes | June registry restored; runtime logs select `XPUInt8ScaledMMLinearKernel` | Matched reachability; binary/source ownership pending. |
-| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | Native Quark XPU INT8 MoE selected | Matched route; exact binary/source comparison pending. |
+| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | Installed August `_xpu_C` lacks the grouped W8A8 schema; the 17.06 tok/s log JIT-ran Triton MoE. Complete June package passes off-device dispatch. | Prior endpoint did not match. Exact June-package model control is pending. |
 | Mixed MoE workspace | BF16 and INT32 persistent scratch interface | Yes in safe TP2 label | Local env enabled | Steve measured a small full-model regression in an earlier arm; not the 5x explanation. |
 | Shared expert | Native dense W8A8 linears plus shared/routed combination | Yes | Later-image ABI mismatch bridged narrowly | Coherent; source snapshot comparison pending. |
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
@@ -148,23 +148,26 @@ The exact independently stored reconstruction input is
 It applies cleanly to official `vllm-project/vllm-xpu-kernels` commit
 `28e1f5e74c15744b69cf3b760f6160ceabd15de0`; no Steve checkout is required.
 
-### June-to-August native source equivalence
+### June source presence versus August installed dispatch
 
 A function-level comparison against the pinned August kernel source
-`2dd55f380df753a10a88fcd9e96192561066e713` changes the priority of the native
-rebuild. August already retains the June activation quantizer, six-argument
-dense W8A8 oneDNN operator, and base Xe2 grouped W8A8 MoE operator. With the
-later extension settings unset, those paths are default-equivalent to June.
-August adds validation, output variants, configurable scratch reuse and
-barriers, active-expert/offset/policy variants, and layerlet machinery; those
-are optional A/B arms rather than prerequisites for the accepted base path.
+`2dd55f380df753a10a88fcd9e96192561066e713` found the June activation
+quantizer, six-argument dense W8A8 oneDNN operator, and base Xe2 grouped W8A8
+MoE source. That source result did not establish installed dispatch. A direct
+off-device census of the digest-pinned package proved
+`per_token_quant_int8_xpu` and `int8_gemm_w8a8` are registered, while
+`cutlass_grouped_gemm_w8a8_int8_interface` is absent. Importing the later
+Python MoE interface does not add it. August's extra validation, output,
+scratch, barrier, offset, policy, and layerlet source therefore cannot be
+treated as active until a separate complete August package is rebuilt.
 
-The important regression is above the native operators: later vLLM removed the
-XPU INT8 scaled-mm registry candidate and removed the required inner functional
-all-reduce clone. The local attributed adapter restores both routes against the
-pinned six-argument ABI. This means the minimal June rebuild is an ownership,
-provenance, and clean-base control. It is not presently the leading explanation
-for the 17.06 versus 85.87 tok/s gap.
+There are regressions at both boundaries. Later vLLM removed the XPU INT8
+scaled-mm registry candidate and the required inner functional all-reduce
+clone, while the installed August native package omitted the grouped W8A8
+registration. The local attributed adapter restores the vLLM routes, and the
+complete June package restores the native route. Native routed-MoE dispatch is
+now a leading explanation for part of the 17.06 versus 85.87 tok/s gap, but
+its wall-time leverage is not proven until the exact model control runs.
 
 Two source-ownership gaps remain. The repository has no independent shared
 source for the Xe2 grouped W8A8 MoE implementation or GDN implementation;
@@ -176,30 +179,35 @@ floor. It must be treated as a separate numeric arm, not silently substituted.
 The smallest kernel campaign is therefore: census June/August/shared schemas
 and XPU registrations; prove June-to-August quant and dense parity; test shared
 quant separately on tiny values and rounding ties; compare dense scratch-ring,
-barrier, and output variants one factor at a time; then test grouped MoE base
-parity before offsets, active-expert, policy, and reuse variants. GDN accepts
-only cloned quant reuse; raw sharing and views already failed repeatability.
+barrier, and output variants one factor at a time; then build a complete August
+package before testing grouped MoE base parity, offsets, active-expert, policy,
+and reuse variants. GDN accepts only cloned quant reuse; raw sharing and views
+already failed repeatability.
 
 The current inspected native hashes are:
 
 ```text
-e043cfe218588b0440ebc1b0d208646b7ff73e4802bf2393e3d5299d5a3d4fa3  local build _xpu_C
-cf482fd898ef965eeac70682027fe5578d5005b5eb6c51a85664a68e151a4a02  local build GDN library
+2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d  rebuilt June _xpu_C
+f5ddc2ee3c11dcede3a7190b69d6e0dd354bb0727be7519600abaebe9fc4cd2c  rebuilt June grouped library
+366935b172b5c9c3cb75bee5d7bfe0434f377a6317314a9a43c853b5d02fe83b  rebuilt June GDN library
 ae330affe0315a5be4ac50478cc15c7874ae6e8fa9fa71cf64d5e5dff158968b  installed/pinned-image _xpu_C
+7692db81b65be5fdb9d4509f2397d300276451ee9551d43cedb7963eaad70e4a  installed/pinned-image grouped library
+cf482fd898ef965eeac70682027fe5578d5005b5eb6c51a85664a68e151a4a02  installed/pinned-image GDN library
 542142aca8f3d318616eae0f300aaa47dc62b217831599cb1461212f8aa4dc76  Steve/pinned-image libccl.so.1.0
 ```
 
 Steve's currently preserved `_xpu_C` and GDN files match the pinned image byte
 for byte.
-The different `e043cfe...` `_xpu_C` is this repository's newer local rebuild,
-not the S2B control. The image label records
+The image label records
 `4ceafd1+2dd55f38+44fc8fde0`: oneCCL source, XPU-kernel source, and vLLM source
-respectively. This closes current-snapshot identity only. Steve's June notes
+respectively. The installed grouped sibling exists, but the installed
+`_xpu_C` does not register its W8A8 interface. Steve's June notes
 state that the accepted controls used a restored 67 MB `_xpu_C`; the surviving
 and pinned-image extension is 116706992 bytes. The June binary and its hash are
 not present in the refreshed lab. Its build must be reconstructed from the
-June kernel source and recorded patch chronology before accepted-record native
-identity can be claimed.
+June kernel source and recorded patch chronology; the 54 MB-class
+reconstruction below establishes source ownership but cannot claim byte
+identity with the unrecoverable accepted 67 MB file.
 
 The reconstruction audit found that source recovery is substantially stronger
 than binary recovery. The public base is `28e1f5e74c15744b69cf3b760f6160ceabd15de0`;
@@ -339,8 +347,9 @@ The August `piecewise_backend.py` is byte-identical to the June snapshot and
 the August graph wrapper is a compatible superset. `VLLM_XPU_GRAPH_NOOP_COMM_CAPTURE`
 was removed as a flag, but its behavior is now unconditional for XPU because
 `XpuCommunicator.ca_comm` is explicitly `None`. This is not a missing action.
-The material accepted-path regression found so far is the removed inner
-all-reduce clone. The Quark launcher variables `VLLM_XPU_QUARK_W8A8_MOE` and
+The material accepted-path regressions found so far are the removed inner
+all-reduce clone and the missing installed grouped W8A8 registration. The
+Quark launcher variables `VLLM_XPU_QUARK_W8A8_MOE` and
 `VLLM_XPU_FORCE_QUARK_REPACK` have no implementation in either surviving
 vLLM snapshot; the checkpoint scheme and Quark registry select the INT8 path.
 They are preserved for launch identity but are not performance switches.
@@ -349,12 +358,13 @@ The separate August `fa-graphsafe` build specializes Qwen head-dimension-256
 FlashAttention kernels and does not match the June accepted binary. It is a
 later forensic artifact and must not be overlaid on the exact control.
 
-The same chronology makes the June 67 MB `_xpu_C` a plausible residual speed
-variable. Steve measured 87.2888 tok/s with a newly rebuilt 54 MB extension,
+The same chronology makes the June native package a required path control and
+the 54 versus 67 MB binary difference a later residual variable. Steve
+measured 87.2888 tok/s with a newly rebuilt 54 MB extension,
 restored the 67 MB extension, then measured 89.9613 tok/s in a short clean
-control and 92.5220 tok/s in decisive timing. It cannot explain why our graph
-is currently absent and decode is only 17.06 tok/s, but it may explain part of
-the remaining difference after graph replay is restored.
+control and 92.5220 tok/s in decisive timing. The exact model control must
+first establish the full June-package endpoint; only then can A/B work
+attribute the smaller accepted-binary residual.
 
 ## Measured Lever Attribution
 

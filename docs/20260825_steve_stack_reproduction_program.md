@@ -44,14 +44,17 @@ prebuilt binaries.
   `shared_expert_gate`, while `MoERunner` does not accept it. A narrow adapter
   is required before model allocation.
 - A third narrow repair restores the no-spec uniform PIECEWISE decode
-  descriptor. With all three repairs, the exact Qwen model loads on TP=2,
-  compiles, captures, allocates 755,153 KV tokens at maxlen 8192, and passes
-  semantic canaries with native Quark W8A8 INT8 math.
+  descriptor. With all three repairs, the Qwen model loads on TP=2, compiles,
+  captures, allocates 755,153 KV tokens at maxlen 8192, and passes semantic
+  canaries with native dense Quark W8A8 INT8 math.
 - The matched P2P-off, split-collective control produced 17.06 corrected output
   tok/s: 498 actual prompt tokens, 512 output tokens, 624.29 ms client TTFT,
   and 30.010 s decode time. Steve's accepted run used the same request shape
-  and decoded in 5.963 s. The current gap is therefore a 5.0x decode-step
-  runtime/graph-ownership gap, not a model-identity or raw INT8-selection gap.
+  and decoded in 5.963 s. A later off-device schema census and the preserved
+  server log proved this control JIT-ran Triton's routed-MoE kernel because the
+  installed August `_xpu_C` does not register the grouped W8A8 operator. The
+  5.0x gap therefore combines a routed-MoE dispatch mismatch with graph and
+  runtime differences; it was not an all-native-math control.
 - In Steve's accepted configuration, direct-P2P oneCCL collectives remained in
   the forced graph. P2P-off host-staged oneCCL requires explicit per-layer
   graph splits locally. The capturable Level Zero push all-reduce is correct in
@@ -74,6 +77,12 @@ prebuilt binaries.
   and rank 1 DEVICE_LOST while autotuning the second fan-out before the
   81-collective graph stage. Correct that stress arm before reuse; after a
   reboot, the exact interleaved model is the next decisive gate.
+- The complete locally rebuilt June kernel package passes an off-device import
+  and dispatch gate for activation quantization, dense W8A8, grouped W8A8,
+  SiLU, remap, and gather. The exact model launcher now mounts this package as
+  one unit and rejects unexpected SO hashes, module origins, or missing
+  schemas. This is the first faithful native grouped-MoE control; GPU numeric,
+  graph, and endpoint performance remain unmeasured.
 - The GPU model matches, but the host does not: Steve's June Qwen35 system was
   an EPYC 9015 PCIe 5 host, while this system is a Threadripper 1950X with the
   cards under separate PCI domains on a PCIe Gen3-era platform. Steve also
@@ -242,13 +251,16 @@ equivalence before performance tests.
    treating the oracle as a complete volume gate.
 9. IN PROGRESS: after an actual reboot, run the corrected inner-clone,
    unset/default-IPC, active-container-NIC exact model control from a fresh
-   cache. This directly gates VllmBackend/PIECEWISE and real layer interleaving.
+   cache with the complete June kernel package. This directly gates native
+   routed MoE, VllmBackend/PIECEWISE, and real layer interleaving together.
 10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
    a 55,523,648-byte B70-AOT `_xpu_C`, both Xe2 siblings, and a complete
    pinned-image runtime package with all required XPU dispatch registrations.
    This matches Steve's 54 MB fresh-build class, not the unrecoverable accepted
-   67 MB binary. GPU numeric/capture gates and source ownership of inherited
-   `_C`, `_moe_C`, attention, and support components remain open.
+   67 MB binary. The June/August quant and dense A-B-B-A harness is ready; the
+   pinned August package cannot be the grouped arm because that schema is
+   absent. GPU numeric/capture gates and source ownership of inherited `_C`,
+   `_moe_C`, attention, and support components remain open.
 11. Implement and gate the SGLang-native route.
 12. Execute the model and parallelism portability matrix.
 13. Transfer only proven wins to Ornith, then add MTP and prefix caching.

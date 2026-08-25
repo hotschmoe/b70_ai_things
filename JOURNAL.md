@@ -18356,3 +18356,50 @@ cache with Steve's unset/default IPC exchange and active `eth0`, and do not
 describe this partial result as an 81-collective pass. Historical references
 to a required two-clone contract are superseded: only the inner registered-op
 clone was active and required in Steve's accepted route.
+
+### 2026-08-25k - Installed grouped-MoE mismatch and exact-control closure
+
+CONFIG -> CPU-only audit after the clone-correct oracle transaction; no
+`/dev/dri` was mounted and no new GPU operation was run. Compared the complete
+locally rebuilt June runtime package against the package installed in image
+digest `f2e5a94e...`. Pinned model identity remained revision `cced5659...`,
+config hash `b2a92fb7...`, and index hash `c973ada0...`. The corrected exact
+model transaction is TP=2, PP=1, PIECEWISE, async, no MTP, no prefix cache,
+maxlen 32768, maxseqs 24, utilization 0.90, p512/o512, direct P2P, unset IPC
+exchange and worker count, container `eth0`, a fresh persistent Inductor cache,
+the local inner-clone adapter, and the complete June package.
+
+COMMAND -> no-device fresh-container schema censuses with
+`qwen36_june_august_kernel_arm.py` for June full/grouped identity, August dense
+identity, and an August grouped negative control; no-device import of the
+June package plus `qwen36_s2b_sitecustomize.py`; and
+`PREFLIGHT_ONLY=1 ... run_qwen36_s2b_clone_exact_control.sh`. Inspected the
+preserved 17.0559 tok/s server log. Added an exact fixed-ChatML JSON/color
+16-repeat canary, a June/August numeric/repeatability/XPUGraph kernel arm, an
+A-B-B-A launcher and summary, and corrected the synthetic 81-collective oracle
+to a sequential low-live-buffer dependency chain. Python compile, shell
+syntax, ASCII, whitespace, module-origin, model-hash, SO-hash, and schema gates
+passed.
+
+RESULT -> the installed August package registers native per-token INT8
+quantization and dense W8A8 GEMM, but does not register
+`_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface`. Its grouped sibling SO is
+present, which made source/file presence an invalid reachability proxy. The
+preserved endpoint log confirms request-time JIT of Triton's
+`fused_moe_kernel`; the 17.0559 tok/s run was dense INT8 plus Triton routed MoE,
+not Steve's all-native W8A8 route. The complete June package registers quant,
+dense, grouped, SiLU, remap, and gather operators and loads `_xpu_C` from
+`/opt/june-runtime`. The exact preflight pins June `_xpu_C` `2d931484...`,
+grouped `f5ddc2ee...`, GDN `366935b1...`, inherited `_C` `57174764...`,
+inherited `_moe_C` `ea4c20a8...`, all other package SOs, oneCCL
+`542142ac...`, and SPIR-V `0d549c35...`. The pinned August package remains a
+valid quant/dense A-B-B-A arm but cannot be a grouped arm without a separate
+complete August rebuild. No GPU numeric or performance result is claimed.
+
+VERDICT -> routed-MoE dispatch joins clone/graph ownership as a leading
+mechanism; the old 17 versus 85.87 comparison did not isolate graph overhead.
+After an actual reboot, run exactly one leased
+`run_qwen36_s2b_clone_exact_control.sh` transaction. It now fails closed on
+model, runtime, import, graph, metric, model-id, semantic-probe, JSON16/16,
+color16/16, and fatal-device evidence. Reboot again before any later P2P/TP2
+or kernel transaction. Do not promote a shelf entry from this forensic gate.

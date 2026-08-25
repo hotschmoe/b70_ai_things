@@ -103,10 +103,12 @@ def _patch_shared_expert_abi() -> None:
 def _patch_custom_allreduce_clone_contract() -> None:
     """Restore the June inner-clone custom-op contract under a local op name.
 
-    The August source still honors the graph-side clone in XpuCommunicator,
-    but removed the second clone from parallel_state.all_reduce while leaving
-    the old environment setting inert. Re-registering the existing operator
-    is not supported by torch.library, so install an equivalent attributed op.
+    The August source still honors a graph-side clone in XpuCommunicator's
+    alternate path, but the accepted outer custom-op route bypasses that path.
+    August removed the one active inner clone from parallel_state.all_reduce
+    while leaving its environment setting inert. Re-registering the existing
+    operator is not supported by torch.library, so install an equivalent
+    attributed op.
 
     XPU uses GroupCoordinator's outer custom-op route when
     VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES=1. A custom-op implementation executes
@@ -188,7 +190,7 @@ def _patch_custom_allreduce_clone_contract() -> None:
 
 
 def _install() -> None:
-    import vllm_xpu_kernels._xpu_C  # noqa: F401
+    import vllm_xpu_kernels._xpu_C as xpu_kernel_module
     from vllm.model_executor.kernels.linear import _POSSIBLE_INT8_KERNELS
     from vllm.model_executor.kernels.linear.scaled_mm.ScaledMMLinearKernel import (
         Int8ScaledMMLinearKernel,
@@ -199,6 +201,20 @@ def _install() -> None:
     )
     from vllm.model_executor.utils import replace_parameter
     from vllm.platforms import PlatformEnum, current_platform
+
+    grouped_name = "_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface"
+    try:
+        grouped_schema = str(
+            torch._C._dispatch_find_schema_or_throw(grouped_name, "").schema()
+        )
+    except RuntimeError:
+        grouped_schema = "ABSENT"
+    print(
+        "[qwen36-s2b] kernel package="
+        f"{xpu_kernel_module.__file__} grouped_w8a8={grouped_schema}",
+        file=sys.stderr,
+        flush=True,
+    )
 
     def register_fake_once(op_name, implementation) -> None:
         try:

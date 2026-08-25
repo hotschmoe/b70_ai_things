@@ -138,21 +138,23 @@ def validate_many_collectives(
     iterations: int,
 ) -> list[dict[str, Any]]:
     def many(input_: torch.Tensor) -> torch.Tensor:
-        # Match the Qwen backbone's sequential collective execution without
-        # retaining every 32 MiB profile-run output at once.
-        result = torch.zeros_like(input_)
-        for offset in range(collective_count):
-            operand = input_ if offset == 0 else input_ + offset
-            result = result + call(operand)
+        # Exercise Qwen's sequential collective count while keeping only the
+        # current activation live. The previous independent-input formulation
+        # made Inductor retain 81 profile-sized outputs, emit 16-output Triton
+        # fan-out kernels, and DEVICE_LOST in pointwise autotuning before the
+        # collective-volume gate itself could run. Averaging after each sum
+        # keeps values bounded and introduces a true dependency between calls,
+        # like the layer math separating collectives in the real model.
+        result = input_
+        for _ in range(collective_count):
+            result = call(result) / world_size
         return result
 
     def expected_many(input_base: torch.Tensor, iteration: int) -> torch.Tensor:
-        result = torch.zeros_like(input_base)
-        for offset in range(collective_count):
-            collective_output = expected_output(input_base, world_size, iteration)
-            collective_output = collective_output + offset * world_size
-            result = result + collective_output
-        return result
+        # The first normalized all-reduce averages the rank-specific inputs.
+        # Every later rank receives that same value, so normalized reductions
+        # preserve it exactly.
+        return expected_output(input_base, world_size, iteration) / world_size
 
     compiled_many = torch.compile(many, fullgraph=True, dynamic=True)
     for warmup in range(2):
@@ -162,9 +164,10 @@ def validate_many_collectives(
     dist.barrier()
 
     # Reproduce the failing profile run's 81 compiled [8192,2048] BF16
-    # collective shapes and volume. This intentionally isolates the custom op
-    # under stock Dynamo/Inductor; it does not emulate VllmBackend partitioning
-    # or the model operations interleaved between the real collectives.
+    # collective shapes and volume as a sequential low-live-buffer chain. This
+    # intentionally isolates the custom op under stock Dynamo/Inductor; the
+    # normalization stands in for interleaved model math but does not emulate
+    # VllmBackend partitioning or the Qwen layer operations themselves.
     profile_rows = 8192
     profile_base = (
         torch.arange(
@@ -185,7 +188,7 @@ def validate_many_collectives(
     profile_input_ok = torch.equal(profile_input, profile_source)
     profile_alias = profile_output.data_ptr() == profile_input.data_ptr()
     profile_result = {
-        "name": "compiled_direct_81_collective_profile",
+        "name": "compiled_direct_81_collective_profile_chain",
         "shape": [profile_rows, int(base.shape[1])],
         "collectives": collective_count,
         "iterations": 1,
@@ -231,7 +234,7 @@ def validate_many_collectives(
                 }
 
     graph_result = {
-        "name": "compiled_graph_many",
+        "name": "compiled_graph_81_collective_chain",
         "collectives_per_replay": collective_count,
         "iterations": iterations,
         "mismatch_iterations": mismatches,

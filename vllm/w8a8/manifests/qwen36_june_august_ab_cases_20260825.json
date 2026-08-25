@@ -1,0 +1,66 @@
+{
+  "campaign": "Qwen3.6 June versus August XPU W8A8 kernels",
+  "date": "2026-08-25",
+  "seed": 20260825,
+  "order": ["june-a1", "august-b1", "august-b2", "june-a2"],
+  "gates": [
+    "identity",
+    "eager correctness",
+    "same-arm repeatability",
+    "XPUGraph capture and replay",
+    "synchronized wall-clock performance"
+  ],
+  "quant": {
+    "dtypes": ["float32", "float16", "bfloat16"],
+    "rows": [1, 2, 8192],
+    "widths": [256, 2048],
+    "inputs": ["deterministic random", "zero", "scale floor", "rounding ties"]
+  },
+  "dense": {
+    "M": [1, 2, 8192],
+    "shapes": [
+      {"label": "gdn_fused_projection", "K": 2048, "N": 6144},
+      {"label": "gdn_ba", "K": 2048, "N": 32},
+      {"label": "gdn_output", "K": 2048, "N": 2048},
+      {"label": "shared_gate_up", "K": 2048, "N": 512},
+      {"label": "shared_down", "K": 256, "N": 2048},
+      {"label": "attention_qkv", "K": 2048, "N": 4608},
+      {"label": "attention_output", "K": 2048, "N": 2048}
+    ],
+    "weight_layout": "checkpoint-transposed contiguous B[K,N]",
+    "out_dtype": "bfloat16",
+    "burst_depth": 16
+  },
+  "quant_dense": {
+    "required": true,
+    "reason": "tests producer-to-oneDNN stream dependencies"
+  },
+  "grouped_moe": {
+    "experts": 256,
+    "total_M": [8, 16],
+    "shapes": [
+      {"label": "gemm1", "K": 2048, "N": 512},
+      {"label": "gemm2", "K": 256, "N": 2048}
+    ],
+    "routing": [
+      "eight active experts with one row each",
+      "sixteen rows",
+      "heavy expert collision",
+      "skew",
+      "empty experts"
+    ],
+    "output_dtype": "bfloat16"
+  },
+  "optional_august_factors": [
+    "quant _out",
+    "dense _out",
+    "dense scratch ring size",
+    "VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY",
+    "VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER",
+    "grouped policy override",
+    "offsets grouped GEMM",
+    "active-offset grouped GEMM",
+    "mixed workspace and scratch reuse",
+    "sidecars or layerlets"
+  ]
+}

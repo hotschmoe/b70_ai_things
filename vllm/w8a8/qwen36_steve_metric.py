@@ -10,6 +10,7 @@ repository.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import time
@@ -204,6 +205,14 @@ def main() -> int:
                 before, after, "vllm:request_decode_time_seconds_sum"
             ),
         },
+        "text": str(result["text"]),
+        "text_sha256": hashlib.sha256(
+            str(result["text"]).encode("utf-8")
+        ).hexdigest(),
+        "output_token_ids": tokenizer.encode(
+            str(result["text"]), add_special_tokens=False
+        ),
+        "output_token_ids_source": "retokenized_text",
         "text_preview": str(result["text"])[:400],
         "printable_ascii_fraction": sum(
             character == "\n" or 32 <= ord(character) <= 126

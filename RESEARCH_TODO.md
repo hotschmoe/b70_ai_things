@@ -74,11 +74,14 @@
 > outer custom-op route bypasses its communicator patch, and Steve's two set
 > flags produced one active required inner clone. The prior DEVICE_LOST occurred
 > during compiled profile-run with graph mode NONE, before XPUGraph capture.
-> A function-level native audit then proved the pinned August `_xpu_C` already
-> retains June's activation quantizer, dense W8A8 GEMM, and base grouped-MoE
-> W8A8 implementation. The source rebuild is still required for ownership and
-> controlled A/Bs, but native June math is no longer the leading explanation
-> for the endpoint gap; vLLM dispatch and graph integration remain first.
+> Source comparison found June's activation quantizer, dense W8A8 GEMM, and
+> grouped-MoE W8A8 code in the later August source tree, but the installed
+> digest-pinned August `_xpu_C` does not register the grouped W8A8 operator.
+> The preserved 17.06 tok/s endpoint log selected dense INT8 but JIT-ran
+> Triton's `fused_moe_kernel`. It was therefore not a native grouped-MoE
+> control. The complete locally rebuilt June package is now part of the exact
+> control, and routed-MoE dispatch is a leading measured boundary until that
+> model transaction attributes its leverage.
 > The clone-correct vLLM custom-op oracle then passed exact runtime identities,
 > the local exported op route, eager/compiled decode shapes, compiled
 > `[8192,2048]`, and 256 single-op XPUGraph replays on both ranks with zero
@@ -91,7 +94,9 @@
 > Steve's unset/default IPC exchange, active container NIC, and fresh cache.
 > Correct the oracle to use a sequential low-live-buffer chain before reusing
 > its 81-op stress; do not claim that stage passed. Then -> DONE minimal June native 54 MB-class
-> B70-AOT build and off-device dispatch gate; GPU numeric/capture gate remains
+> B70-AOT build and complete-package off-device dispatch gate; the exact model
+> launcher now fails closed on the package hashes and quant, dense, grouped,
+> `_C`, and `_moe_C` schemas. GPU numeric/capture gate remains
 > -> June source-overlay bisect as indicated -> SGLang
 > adapter -> model/parallelism matrix.
 > The no-model oracle deliberately uses stock Dynamo/Inductor around vLLM's

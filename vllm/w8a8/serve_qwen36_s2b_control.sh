@@ -29,6 +29,7 @@ export PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}"
 export PUSH_AR_MAXB="${PUSH_AR_MAXB:-67108864}"
 export EXACT_STEVE_CC="${EXACT_STEVE_CC:-0}"
 export FORENSIC_VLLM_SRC="${FORENSIC_VLLM_SRC:-}"
+export XPU_KERNEL_RUNTIME_HOST="${XPU_KERNEL_RUNTIME_HOST:-}"
 export IN="${IN:-512}"
 export OUT="${OUT:-512}"
 export CONC="${CONC:-1}"
@@ -65,6 +66,7 @@ export SPEC=""
 MOUNTS=(
   -v "$SCRIPT_DIR/qwen36_s2b_probe.py:/opt/b70_qwen36_s2b_probe.py:ro"
   -v "$SCRIPT_DIR/qwen36_steve_metric.py:/opt/b70_qwen36_steve_metric.py:ro"
+  -v "$SCRIPT_DIR/qwen36_repeat_canary.py:/opt/b70_qwen36_repeat_canary.py:ro"
   -v "/mnt/vm_8tb/b70/results:/results"
 )
 DOCKER_ENV=(
@@ -115,6 +117,28 @@ else
   DOCKER_ENV+=( -e PYTHONPATH=/opt/b70_qwen36_site )
 fi
 
+if [ -n "$XPU_KERNEL_RUNTIME_HOST" ]; then
+  [ -z "$FORENSIC_VLLM_SRC" ] || {
+    echo "XPU_KERNEL_RUNTIME_HOST cannot be mixed with FORENSIC_VLLM_SRC" >&2
+    exit 1
+  }
+  for required in \
+    vllm_xpu_kernels/__init__.py \
+    vllm_xpu_kernels/_C.abi3.so \
+    vllm_xpu_kernels/_moe_C.abi3.so \
+    vllm_xpu_kernels/_xpu_C.abi3.so \
+    vllm_xpu_kernels/libgrouped_gemm_xe_2.so \
+    vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so \
+    vllm_xpu_kernels/fused_moe_interface.py; do
+    [ -f "$XPU_KERNEL_RUNTIME_HOST/$required" ] || {
+      echo "Incomplete XPU kernel runtime: missing $required" >&2
+      exit 1
+    }
+  done
+  MOUNTS+=( -v "$XPU_KERNEL_RUNTIME_HOST:/opt/june-runtime:ro" )
+  DOCKER_ENV+=( -e PYTHONPATH=/opt/june-runtime:/opt/b70_qwen36_site )
+fi
+
 EXACT_POST_ENV=()
 if [ "$EXACT_STEVE_CC" = 1 ]; then
   # lib.sh normally forces pidfd. Steve's accepted launcher deliberately
@@ -160,12 +184,18 @@ mkdir -p "$CACHE_DIR_HOST"
 b70_serve() {
   b70_build
   if [ "$EXACT_STEVE_CC" = 1 ]; then
+    local exact_cc_replaced=0
     for ((arg_i=0; arg_i<${#ARGS[@]}; arg_i++)); do
       if [ "${ARGS[$arg_i]}" = "--compilation-config" ]; then
         ARGS[$((arg_i + 1))]='{"cudagraph_mode":"PIECEWISE"}'
+        exact_cc_replaced=1
         break
       fi
     done
+    [ "$exact_cc_replaced" = 1 ] || {
+      echo "EXACT_STEVE_CC could not find --compilation-config" >&2
+      return 1
+    }
   fi
   docker rm -f "$NAME" 2>/dev/null || true
   echo "=== serve $SERVED  IMG=$IMG  TP=$TP PP=$PP  GRAPH=$GRAPH  port=$PORT ==="
@@ -189,15 +219,38 @@ b70_gen_probe() {
 }
 
 b70_bench() {
-  local stamp out
+  local stamp out out_dir json_out color_out
   stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-  out="/results/logs/qwen36_s2b_p2p${P2PACCESS}_steve_metric_${stamp}.json"
+  out_dir="/results/logs/$NAME"
+  out="$out_dir/steve_metric_${stamp}.json"
+  json_out="$out_dir/json_repeat16_${stamp}.json"
+  color_out="$out_dir/color_repeat16_${stamp}.json"
   echo "--- exact Steve-shaped natural-chat p512/o512 metric ---"
   docker exec "$NAME" python /opt/b70_qwen36_steve_metric.py \
     --base-url "http://127.0.0.1:$PORT" \
     --model "$SERVED" \
     --tokenizer "$CKPT" \
-    --out "$out"
+    --out "$out" || return $?
+  echo "--- Steve fixed-ChatML JSON repeat canary 16/16 ---"
+  docker exec "$NAME" python /opt/b70_qwen36_repeat_canary.py \
+    --base-url "http://127.0.0.1:$PORT" \
+    --model "$SERVED" \
+    --tokenizer "$CKPT" \
+    --case json \
+    --repeats 16 \
+    --stop-on-mismatch \
+    --output-json "$json_out" || return $?
+  echo "--- Steve fixed-ChatML color repeat canary 16/16 ---"
+  docker exec "$NAME" python /opt/b70_qwen36_repeat_canary.py \
+    --base-url "http://127.0.0.1:$PORT" \
+    --model "$SERVED" \
+    --tokenizer "$CKPT" \
+    --case color \
+    --repeats 16 \
+    --stop-on-mismatch \
+    --output-json "$color_out" || return $?
+  echo "host_json_canary=/mnt/vm_8tb/b70/results${json_out#/results}"
+  echo "host_color_canary=/mnt/vm_8tb/b70/results${color_out#/results}"
   echo "host_artifact=/mnt/vm_8tb/b70/results${out#/results}"
 }
 

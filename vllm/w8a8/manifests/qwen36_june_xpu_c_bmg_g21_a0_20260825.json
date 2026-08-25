@@ -130,6 +130,6 @@
     "The independent validation build used a no-hardlink local object mirror for the initial clone, then rewrote origin to official GitHub; the owned recipe fetches official GitHub directly.",
     "The runtime package is intentionally hybrid: _C, _moe_C, attention, and support files are inherited from the digest-pinned Intel image.",
     "The off-device census proves imports, schemas, and XPU registrations, not numerical execution.",
-    "Source comparison shows the pinned August runtime already contains the June base dense and grouped W8A8 kernels, so this artifact is an ownership/control milestone rather than the leading endpoint-speed hypothesis."
+    "Source comparison found June base dense and grouped W8A8 code in the later source tree, but an off-device census on 2026-08-25 proved the digest-pinned installed August _xpu_C does not register cutlass_grouped_gemm_w8a8_int8_interface. The prior 17 tok/s endpoint log JIT-ran Triton fused_moe_kernel. The complete June package is therefore required for the exact native-MoE control."
   ]
 }
