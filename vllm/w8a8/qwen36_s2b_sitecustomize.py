@@ -1,0 +1,244 @@
+"""Restore Steve's June XPU INT8 linear registration in the later S2B image.
+
+The pinned August image contains the native operators, but its vLLM snapshot
+no longer lists an XPU candidate in ``_POSSIBLE_INT8_KERNELS``. This adapter is
+limited to the registry class from Steve's first surviving June source
+checkpoint (e190923b3). It intentionally carries none of the Ornith ABI or PP
+patches.
+"""
+
+import os
+import sys
+import inspect
+
+import torch
+import torch.nn.functional as F
+
+
+def _patch_nospec_piecewise_decode_key() -> None:
+    """Add the decode descriptor omitted by the later S2B XPU graph filter."""
+    from vllm.forward_context import BatchDescriptor
+    from vllm.v1.cudagraph_dispatcher import CudagraphDispatcher
+
+    method_name = "_create_piecewise_uniform_batch_descriptor"
+    original = getattr(CudagraphDispatcher, method_name)
+
+    def compatible_descriptor(self, num_tokens, has_lora, num_active_loras=0):
+        descriptor = original(self, num_tokens, has_lora, num_active_loras)
+        if descriptor is not None or self.vllm_config.speculative_config is not None:
+            return descriptor
+        return BatchDescriptor(
+            num_tokens=self._bs_to_padded_graph_size[num_tokens],
+            num_reqs=None,
+            uniform=True,
+            has_lora=has_lora,
+            num_active_loras=num_active_loras,
+        )
+
+    setattr(CudagraphDispatcher, method_name, compatible_descriptor)
+    print(
+        "[qwen36-s2b] restored no-spec PIECEWISE decode capture descriptor",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
+def _patch_shared_expert_abi() -> None:
+    """Bridge the partial shared-expert runner merge in the August snapshot."""
+    from vllm.model_executor.layers.fused_moe.runner.moe_runner import MoERunner
+    from vllm.model_executor.layers.fused_moe.unquantized_fused_moe_method import (
+        UnquantizedFusedMoEMethod,
+    )
+    from vllm.model_executor.layers.quantization.quark.quark_moe import (
+        QuarkW8A8Int8MoEMethod,
+    )
+
+    original_init = MoERunner.__init__
+    if "shared_expert_gate" not in inspect.signature(original_init).parameters:
+
+        def compatible_init(self, *args, shared_expert_gate=None, **kwargs):
+            if shared_expert_gate is not None:
+                raise RuntimeError(
+                    "S2B MoERunner cannot consume a non-None shared_expert_gate"
+                )
+            return original_init(self, *args, **kwargs)
+
+        MoERunner.__init__ = compatible_init
+
+    for method_class in (QuarkW8A8Int8MoEMethod, UnquantizedFusedMoEMethod):
+        original_apply = method_class.apply
+        parameter = inspect.signature(original_apply).parameters.get("shared_experts")
+        if parameter is None or parameter.default is not inspect.Parameter.empty:
+            continue
+
+        def compatible_apply(
+            self,
+            layer,
+            x,
+            topk_weights,
+            topk_ids,
+            shared_experts_input=None,
+            shared_experts=None,
+            _original=original_apply,
+        ):
+            return _original(
+                self,
+                layer=layer,
+                x=x,
+                topk_weights=topk_weights,
+                topk_ids=topk_ids,
+                shared_experts=shared_experts,
+                shared_experts_input=shared_experts_input,
+            )
+
+        method_class.apply = compatible_apply
+
+    print(
+        "[qwen36-s2b] bridged August shared-expert runner ABI",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
+def _install() -> None:
+    import vllm_xpu_kernels._xpu_C  # noqa: F401
+    from vllm.model_executor.kernels.linear import _POSSIBLE_INT8_KERNELS
+    from vllm.model_executor.kernels.linear.scaled_mm.ScaledMMLinearKernel import (
+        Int8ScaledMMLinearKernel,
+        Int8ScaledMMLinearLayerConfig,
+    )
+    from vllm.model_executor.layers.quantization.utils.int8_utils import (
+        per_token_quant_int8,
+    )
+    from vllm.model_executor.utils import replace_parameter
+    from vllm.platforms import PlatformEnum, current_platform
+
+    def register_fake_once(op_name, implementation) -> None:
+        try:
+            torch.library.register_fake(op_name)(implementation)
+        except RuntimeError as exc:
+            message = str(exc)
+            if "already has" not in message and "already registered" not in message:
+                raise
+
+    def fake_int8_gemm(a, a_scale, b, b_scale, out_dtype, bias):
+        del a_scale, b_scale, bias
+        return torch.empty(
+            (a.shape[0], b.shape[1]),
+            device=a.device,
+            dtype=out_dtype or torch.bfloat16,
+        )
+
+    def fake_per_token_quant(x):
+        q = torch.empty_like(x, dtype=torch.int8)
+        scales = torch.empty(
+            (*x.shape[:-1], 1),
+            device=x.device,
+            dtype=torch.float32,
+        )
+        return q, scales
+
+    class XPUInt8ScaledMMLinearKernel(Int8ScaledMMLinearKernel):
+        """XPU W8A8 INT8 dense GEMM for dynamic symmetric activations."""
+
+        @staticmethod
+        def _has_op(name: str) -> bool:
+            try:
+                torch._C._dispatch_find_schema_or_throw(f"_xpu_C::{name}", "")
+                return True
+            except RuntimeError:
+                return False
+
+        @classmethod
+        def is_supported(cls, compute_capability=None):
+            del compute_capability
+            if not current_platform.is_xpu():
+                return False, "XPUInt8ScaledMM only supports XPU"
+            if not cls._has_op("int8_gemm_w8a8"):
+                return False, "vllm-xpu-kernels lacks int8_gemm_w8a8"
+            register_fake_once("_xpu_C::int8_gemm_w8a8", fake_int8_gemm)
+            return True, None
+
+        @classmethod
+        def can_implement(cls, config: Int8ScaledMMLinearLayerConfig):
+            if config.is_static_input_scheme:
+                return False, "only dynamic activation scales are supported"
+            if not config.input_symmetric:
+                return False, "only symmetric activation quantization is supported"
+            if not config.is_channelwise:
+                return False, "only per-channel weight scales are supported"
+            return True, None
+
+        def process_weights_after_loading(self, layer: torch.nn.Module) -> None:
+            weight_name, scale_name, input_scale_name, input_zp_name, azp_name = (
+                self.layer_param_names
+            )
+            weight = getattr(layer, weight_name)
+            if os.getenv("VLLM_XPU_INT8_LINEAR_BF16_FALLBACK", "0") == "1":
+                scale = getattr(layer, scale_name).data.to(torch.bfloat16)
+                while scale.ndim < weight.ndim:
+                    scale = scale.unsqueeze(-1)
+                replace_parameter(
+                    layer,
+                    weight_name,
+                    (weight.data.to(torch.bfloat16) * scale).contiguous(),
+                )
+                setattr(layer, input_scale_name, None)
+                setattr(layer, input_zp_name, None)
+                setattr(layer, azp_name, None)
+                layer.xpu_int8_linear_bf16_fallback = True
+                layer.xpu_native_int8_activation_quant = False
+                return
+
+            replace_parameter(layer, weight_name, weight.t().contiguous())
+            scale = getattr(layer, scale_name)
+            replace_parameter(layer, scale_name, scale.flatten().contiguous())
+            setattr(layer, input_scale_name, None)
+            setattr(layer, input_zp_name, None)
+            setattr(layer, azp_name, None)
+            layer.xpu_native_int8_activation_quant = self._has_op(
+                "per_token_quant_int8_xpu"
+            ) and os.getenv(
+                "VLLM_XPU_DISABLE_NATIVE_INT8_ACTIVATION_QUANT", "0"
+            ) != "1"
+            if layer.xpu_native_int8_activation_quant:
+                register_fake_once(
+                    "_xpu_C::per_token_quant_int8_xpu", fake_per_token_quant
+                )
+
+        def apply_weights(self, layer, x, bias=None):
+            weight, weight_scale, _, _, _ = self._get_layer_params(layer)
+            if getattr(layer, "xpu_int8_linear_bf16_fallback", False):
+                return F.linear(x, weight, bias)
+            x_2d = x.view(-1, x.shape[-1]).contiguous()
+            if getattr(layer, "xpu_native_int8_activation_quant", False):
+                x_q, x_scale = torch.ops._xpu_C.per_token_quant_int8_xpu(x_2d)
+            else:
+                x_q, x_scale = per_token_quant_int8(x_2d)
+            out = torch.ops._xpu_C.int8_gemm_w8a8(
+                x_q,
+                x_scale,
+                weight,
+                weight_scale,
+                x.dtype,
+                bias,
+            )
+            return out.view(*x.shape[:-1], weight.shape[1])
+
+    kernels = _POSSIBLE_INT8_KERNELS.setdefault(PlatformEnum.XPU, [])
+    kernels[:] = [
+        kernel
+        for kernel in kernels
+        if kernel.__name__ != "XPUInt8ScaledMMLinearKernel"
+    ]
+    kernels.insert(0, XPUInt8ScaledMMLinearKernel)
+    print(
+        "[qwen36-s2b] restored June XPU INT8 linear registry class",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
+_patch_nospec_piecewise_decode_key()
+_patch_shared_expert_abi()
+_install()

@@ -1,7 +1,68 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-08-24 (endpoint-down research campaign)
+**Created:** 2026-06-20 - **Status-synced:** 2026-08-25 (endpoint-down research campaign)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
+
+> ### [GIANT TODO 2026-08-25] -- FULLY OWN THE STEVE XPU SOFTWARE STACK
+> This is a top-level research program, not a launcher-copy task. Understand,
+> reproduce, and independently maintain every layer behind Steve Seguin's B70
+> Qwen3.6 Quark W8A8 result. Final serving and build paths must live entirely
+> in this repository and under `/mnt/vm_8tb/b70` runtime artifacts. They must
+> not import, mount, execute, or otherwise depend on Steve's checkout. Preserve
+> source-level attribution and licenses for any adapted work.
+>
+> Required workstreams and exit criteria:
+>
+> 1. **Provenance:** pin model revision, vLLM commit/tree hash, torch/IPEX,
+>    compute runtime, kernel source commit, compiler, image digest, every loaded
+>    SO hash, patch order, env, CLI, cache identity, and benchmark corpus. Build
+>    a clean-room manifest and verify it on a fresh cache.
+> 2. **`_xpu_C` from source to dispatch:** document Python import and shared-SO
+>    loading, `TORCH_LIBRARY` schema/implementation registration, fake/meta
+>    kernels used by Dynamo/AOT, XPU dispatch, weight layouts, scratch/workspace,
+>    Level Zero/oneDNN/oneCCL calls, and graph-capture lifetime. Rebuild the
+>    matching kernel set from `kernels/` per backend; never rely on his binary.
+> 3. **Overlay mechanics:** explain Steve's live-source overlay through
+>    `PYTHONPATH` and live-kernel overlay through `PYTHONPATH` plus
+>    `LD_LIBRARY_PATH`; inventory exactly which modules and SOs shadow the base
+>    environment. Replace that implicit overlay with explicit pinned patches,
+>    build recipes, ABI/hash preflight, and self-contained launchers here.
+> 4. **Accepted versus historical code:** reduce the 17K-line/84-file first
+>    surviving source checkpoint into a dependency graph. Label every feature
+>    accepted, required correctness fix, optional speed lever, rejected, stale,
+>    or inert. Reproduce each material lever with a one-factor A-B-B-A.
+> 5. **Graph/runtime ownership:** trace PIECEWISE partitioning, AOT compile,
+>    graph capture/replay, GDN prefill/decode boundaries, custom-op collectives,
+>    input cloning/alias contracts, scheduler behavior, and every host sync.
+>    Count graph pieces and host/device time per decode step.
+> 6. **Collective ownership:** reproduce Steve's custom collectives and our
+>    push all-reduce under one graph contract. Test safe P2P-off first, then one
+>    guarded kernel-7.1 direct-P2P transaction. Compare end-to-end step latency,
+>    not only microbench bandwidth.
+> 7. **Backend transfer:** determine what can be made backend-agnostic in
+>    `kernels/`; implement separate ABI-correct adapters for vLLM and sglang.
+>    Do not monkeypatch one backend with the other's compiled SO. Measure
+>    SGLang graph boundaries, collective hooks, GDN path, and W8A8 registry.
+> 8. **Model transfer:** test the complete stack first on Steve's exact Qwen3.6
+>    35B-A3B control, then Ornith 1.5 35B-A3B W8A8, Qwen3.8 27B W8A8, and one
+>    additional 27B compressed-tensors control. Record which wins are model-
+>    generic and which require Qwen3.5 GDN/MoE assumptions.
+> 9. **Parallelism matrix:** test TP=1, TP=2, PP=2, and DP=2 (two independent
+>    TP=1 replicas), with and without MTP where supported. For each, report c1,
+>    concurrent aggregate, TTFT, TPOT, prefix-cache behavior, capacity, graph
+>    coverage, collective count, coherence, and health. A TP=2 lever is not
+>    presumed useful for PP=2, DP=2, or single-card serving.
+> 10. **Reproduction gate:** exact fixed-output determinism, repeated JSON and
+>     color canaries, mixed prefill+decode, long soak, Pi/Terminal-Bench, model
+>     identity, source/SO hashes, and post-teardown XPU health. Only then create
+>     or change a shelf entry.
+>
+> The living design and evidence ledger is
+> `docs/20260825_steve_stack_reproduction_program.md`. Immediate order:
+> DONE coherent exact-Qwen P2P-off control and matched Steve metric (17.06
+> tok/s versus 85.87) -> capturable push all-reduce inside replay -> graph
+> boundary attribution -> native INT8/GDN/MoE attribution -> SGLang adapter ->
+> model/parallelism matrix -> guarded P2P=1 retest.
 
 > ### [DAILY DRIVER 2026-08-23] -- stock Qwen3.8 Q4_K_M
 > `rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`: TP=2, native 262144

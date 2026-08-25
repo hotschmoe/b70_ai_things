@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# Qwen3.6-35B-A3B Quark W8A8 on Steve's pinned S2B vLLM/XPU snapshot.
+# This is a research control, not a shelf entry. It intentionally mounts no
+# Ornith compatibility code. P2P defaults off under the repository safety rule.
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+export IMG="${IMG:-intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94}"
+export CKPT="${CKPT:-/models/qwen3.6-35b-a3b/quark-w8a8-int8}"
+export SERVED="${SERVED:-qwen36-35b-a3b-quark-w8a8-int8-s2b-control}"
+export NAME="${NAME:-qwen36_s2b_control}"
+export PORT="${PORT:-18080}"
+export QUANT="${QUANT:-quark}"
+export TP="${TP:-2}"
+export PP="${PP:-1}"
+export GRAPH="${GRAPH:-1}"
+export CGMODE="${CGMODE:-PIECEWISE}"
+export DTYPE="${DTYPE:-auto}"
+export UTIL="${UTIL:-0.90}"
+export MAXLEN="${MAXLEN:-8192}"
+export MAXSEQS="${MAXSEQS:-24}"
+export PREFIXCACHE="${PREFIXCACHE:-0}"
+export CAPSIZES="${CAPSIZES:-1,2}"
+export P2PACCESS="${P2PACCESS:-0}"
+export IPCX="${IPCX:-pidfd}"
+export IN="${IN:-512}"
+export OUT="${OUT:-512}"
+export CONC="${CONC:-1}"
+
+BASE_SPLITOPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
+if [ "$P2PACCESS" = 1 ]; then
+  # Steve's path keeps communication in the forced graph. This mode remains
+  # subject to the shared P2P wedge guard and is not the default.
+  export SPLITOPS="${SPLITOPS:-$BASE_SPLITOPS}"
+  export SYCLKERNELS="${SYCLKERNELS:-1}"
+else
+  # Host-staged oneCCL cannot be recorded by this stack. Preserve coherent
+  # graph pieces around explicit collective boundaries.
+  P2P0_SPLITOPS="$BASE_SPLITOPS,\"vllm::all_reduce\",\"vllm::all_gather\""
+  export SPLITOPS="${SPLITOPS:-$P2P0_SPLITOPS}"
+  export SYCLKERNELS="${SYCLKERNELS:-0}"
+fi
+
+export EXTRA_ARGS="${EXTRA_ARGS:---language-model-only --generation-config vllm --max-num-batched-tokens 8192 --uvicorn-log-level warning}"
+export MTPTOK=""
+export SPEC=""
+
+MOUNTS=(
+  -v "$SCRIPT_DIR/qwen36_s2b_probe.py:/opt/b70_qwen36_s2b_probe.py:ro"
+  -v "$SCRIPT_DIR/qwen36_steve_metric.py:/opt/b70_qwen36_steve_metric.py:ro"
+  -v "$SCRIPT_DIR/qwen36_s2b_sitecustomize.py:/opt/b70_qwen36_site/sitecustomize.py:ro"
+  -v "/mnt/vm_8tb/b70/results:/results"
+)
+DOCKER_ENV=(
+  -e PYTHONPATH=/opt/b70_qwen36_site
+  -e VLLM_USE_V1=1
+  -e XPU_GRAPH=1
+  -e VLLM_XPU_ENABLE_XPU_GRAPH=1
+  -e VLLM_XPU_FORCE_GRAPH_WITH_COMM=1
+  -e VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES=1
+  -e VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP=1
+  -e VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT=1
+  -e VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=1
+  -e VLLM_XPU_GDN_REUSE_QKVZ_BA_QUANT=clone
+  -e VLLM_XPU_GDN_NATIVE_FALLBACK=prefill
+  -e VLLM_XPU_GDN_PREFILL_RECURRENT_FALLBACK=1
+  -e VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY=1
+  -e VLLM_XPU_GREEDY_SAMPLE_TOPK_FALLBACK=1
+)
+
+if [ -n "${B70_EXTRA_ENV:-}" ]; then
+  for setting in ${B70_EXTRA_ENV}; do
+    DOCKER_ENV+=( -e "$setting" )
+  done
+fi
+
+source "$SCRIPT_DIR/../../rdy_to_serve/_common/lib.sh"
+
+b70_serve() {
+  b70_build
+  docker rm -f "$NAME" 2>/dev/null || true
+  echo "=== serve $SERVED  IMG=$IMG  TP=$TP PP=$PP  GRAPH=$GRAPH  port=$PORT ==="
+  echo "vllm ${ARGS[*]}"
+  docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
+    --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
+    --cap-add SYS_PTRACE --security-opt seccomp=unconfined \
+    -v "$MODELS_FILES:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$ROOT/vllm_cache:/vllm_cache" \
+    -v "$ROOT/tmp_ssd:/tmp_ssd" "${MOUNTS[@]+"${MOUNTS[@]}"}" \
+    -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
+    -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd -e VLLM_LOGGING_LEVEL=INFO \
+    "${DOCKER_ENV[@]+"${DOCKER_ENV[@]}"}" \
+    "${MGPU[@]}" "${GENV[@]}" --entrypoint vllm "$IMG" "${ARGS[@]}" >/dev/null
+}
+
+b70_gen_probe() {
+  echo "--- Qwen S2B semantic/repetition probe ---"
+  docker exec "$NAME" python /opt/b70_qwen36_s2b_probe.py \
+    --base-url "http://127.0.0.1:$PORT" --model "$SERVED"
+}
+
+b70_bench() {
+  local stamp out
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  out="/results/logs/qwen36_s2b_p2p${P2PACCESS}_steve_metric_${stamp}.json"
+  echo "--- exact Steve-shaped natural-chat p512/o512 metric ---"
+  docker exec "$NAME" python /opt/b70_qwen36_steve_metric.py \
+    --base-url "http://127.0.0.1:$PORT" \
+    --model "$SERVED" \
+    --tokenizer "$CKPT" \
+    --out "$out"
+  echo "host_artifact=/mnt/vm_8tb/b70/results${out#/results}"
+}
+
+b70_dispatch "$@"

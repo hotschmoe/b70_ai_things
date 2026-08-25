@@ -17948,3 +17948,37 @@ MTP1 graph capture with P2P off; if it cannot capture coherently, port this
 artifact to Steve's current vLLM Quark W8A8 piecewise-graph path. Then tune the
 missing MoE configs and attack the 2.8x rank collective asymmetry. Full report:
 `docs/20260824_ornith15_w8a8_profile.md`.
+
+### 2026-08-25a - Steve stack forensics and exact Qwen S2B P2P-off control
+
+CONFIG -> pinned S2B image
+`intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94`,
+exact Qwen3.6-35B-A3B Quark W8A8 checkpoint, TP=2, maxlen 8192, no MTP,
+PIECEWISE graph, explicit all-reduce/all-gather split boundaries, and
+`CCL_TOPO_P2P_ACCESS=0`. A Qwen-only local adapter restored the June XPU INT8
+linear candidate, bridged the later image's partial shared-expert API merge,
+and restored a no-spec uniform PIECEWISE descriptor. It imported no Ornith
+compatibility code. The metric exactly followed Steve's natural-chat protocol:
+requested p512, one o64 warmup, streaming o512 measurement, and ignore EOS.
+
+COMMAND -> `B70_LOGDIR=/mnt/vm_8tb/b70/results/logs ./bin/gpu-run bash
+vllm/w8a8/serve_qwen36_s2b_control.sh run`.
+
+RESULT -> the model loaded native Quark W8A8 INT8, compiled, captured, became
+healthy in 112 seconds from the warm cache, and passed both semantic canaries.
+The prompt tokenized to 498 tokens. The measured 512-token response was
+coherent ASCII with 624.292 ms client TTFT, 30.009976 s corrected decode time,
+17.055906 corrected output tok/s, and 16.740457 end-to-end output tok/s.
+Steve's accepted matched result was 85.869 tok/s and 5.96267 s decode. Artifact:
+`/mnt/vm_8tb/b70/results/logs/qwen36_s2b_p2p0_steve_metric_20260825T030225Z.json`.
+Both cards were healthy after teardown.
+
+VERDICT -> the clean native-INT8 and graph control is now coherent, but remains
+5.0x slower in decode than Steve's matched result. Steve's accepted path kept
+direct-P2P oneCCL communication inside the forced graph; the local safe
+P2P-off control splits at per-layer collectives. The next highest-information
+transaction is the existing capturable Level Zero IPC push all-reduce inside
+replay with P2P access still off, not another raw bandwidth microbenchmark.
+The full clean-room ownership program, including `_xpu_C`, overlay mechanics,
+SGLang transfer, 27B transfer, and TP/PP/DP/single-card coverage, is recorded in
+`docs/20260825_steve_stack_reproduction_program.md` and `RESEARCH_TODO.md`.
