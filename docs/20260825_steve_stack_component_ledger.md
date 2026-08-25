@@ -131,6 +131,23 @@ The patch families are:
 - vLLM linear, Quark MoE, and XPU expert registries: make the native operators
   reachable from the checkpoint.
 
+The June source also exposes two important differences from this repository's
+newer shared W8A8 kernel. The June dense oneDNN op keeps a thread-local
+scratchpad cache keyed by device and scratchpad size; the current shared
+`kernels/int8_gemm_w8a8.h` allocates a scratch tensor on every invocation.
+That is a concrete portability A/B after the exact control works, not yet a
+measured endpoint bottleneck. The quantizers are not numerically identical:
+June uses a fixed 256-lane row reduction, FP32 scales, `sycl::round`, and a
+`1e-10` absmax floor, while the newer shared kernel uses adaptive 32-512-lane
+groups, activation-dtype scales, `sycl::rint`, and a `1e-5` scale floor. Do not
+silently substitute one for the other in a reproduction or quality result.
+
+The exact independently stored reconstruction input is
+`kernels/steve_qwen36_quark_w8a8_20260609.patch`, SHA256
+`14c2e801da02a7b46e63940dbe41f5c0c45fabb98b3ee4c5bd03d7dc7d0b1266`.
+It applies cleanly to official `vllm-project/vllm-xpu-kernels` commit
+`28e1f5e74c15744b69cf3b760f6160ceabd15de0`; no Steve checkout is required.
+
 The current inspected native hashes are:
 
 ```text

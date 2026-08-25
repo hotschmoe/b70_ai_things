@@ -19,6 +19,14 @@ serving backend** because the prebuilt `.so` is ABI-locked to the torch it was b
   (`/mnt/vm_8tb/b70/vllm-xpu-kernels-w8a8`); `int8_gemm_kernel.patch` predates
   them and still needs regenerating to capture them (follow-up; see FUSEDQ_NOTES
   "Files changed" for the exact diff).
+- `steve_qwen36_quark_w8a8_20260609.patch` -- Steve Seguin's attributed
+  Apache-2.0 June Qwen3.6 W8A8 kernel delta, preserved byte-for-byte (SHA256
+  `14c2e801da02a7b46e63940dbe41f5c0c45fabb98b3ee4c5bd03d7dc7d0b1266`).
+  It applies to official `vllm-project/vllm-xpu-kernels` commit
+  `28e1f5e74c15744b69cf3b760f6160ceabd15de0` and adds per-token INT8
+  quantization, oneDNN dense W8A8, and native Xe2 grouped MoE W8A8. This is
+  the independently stored June reconstruction input; builds must not fetch
+  it from or mount Steve's repository.
 - `xpu_shard_top1.cpp` + `xpu_shard_top1_integration.patch` -- fused per-row
   bf16 logits-shard top-1 value/index reduction for the vLLM MTP local-argmax
   path. It is token-exact and 1.26-1.28x faster than argmax+indexed-gather at
