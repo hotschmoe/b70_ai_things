@@ -18100,3 +18100,53 @@ fixed. Once graph replay works, reconstruct and compare the June kernel build;
 it is a plausible residual speed lever, not the first explanation for the 5x
 gap. The separate August graph-safe FlashAttention build is later forensic
 material and must not enter the exact control.
+
+### 2026-08-25e - TP4 identity correction and oneCCL graph-oracle ownership
+
+CONFIG -> refreshed Steve's public lab from `c1cc2bf` to
+`523ca95b925308391707624530c29359edd05b6a`, inspected the supplied
+LocalMaxxing run `cmq9ifq0500b0r8012f27j1xl`, the Qwen35 TP2/TP4 family
+packets, and Steve's later public oneCCL direct/XPUGraph oracle and build
+recipe. Inspected the pinned image's oneCCL install, SPIR-V, package/runtime
+versions, and this host's CPU/PCIe topology. No GPU operation was run because
+the direct-P2P lane remains reboot-gated.
+
+COMMAND -> LocalMaxxing `/api/leaderboard?run=...&limit=1`; Steve lab source,
+result, launcher, and patch reads; pinned-image `find`, `sha256sum`, `readelf`,
+and no-device package imports; host `lscpu`, `lspci -tv`, `uname`, and package
+inventory. Added the attributed local
+`vllm/w8a8/qwen36_oneccl_graph_oracle.py` plus its guarded Docker wrapper.
+
+RESULT -> the supplied public result is TP4, not TP2: four B70s, exact model
+revision `cced5659`, PIECEWISE graph, no MTP, p512/o512, 32K context, and
+99.769699 tok/s. Steve's current-program values are 85.869114 for the TP2
+smoke and 93.550542 for strict TP4; older weak-gate values are about 91.35 TP2
+and 99.77 TP4.
+TP4 therefore adds about 9 percent, not the missing local 5x. Steve's later
+oneCCL artifact proves a stronger pre-model contract: public libccl
+`4ceafd15` passed 256/256 direct and 512/512 `[4,5120]` BF16 XPUGraph replays
+with `pidfd`. The pinned image has the same exact `kernels.spv` hash
+`0d549c35...`, but its 240177816-byte library hash `542142ac...` differs from
+Steve's oracle-validated `43d94d43...`. Source equality is therefore not yet
+binary or graph-correctness proof. The systems also share B70 GPUs but not the
+host: Steve's June Qwen35 host was EPYC 9015/PCIe 5, his later two-card oracle
+was Threadripper PRO 5955WX, and this host is Threadripper 1950X with the two
+cards below distinct PCI domains on a PCIe Gen3-era platform.
+
+The wider public-repository audit found no hidden second W8A8 implementation.
+Steve's current vLLM fork is later upstream drift; the accepted overlay remains
+the June lab source/patch chronology. The current XPU-kernel fork adds an FP8
+out-variant relative to the S2B tree, not a new Quark W8A8 route.
+`ml-bottleneck` is a calibrated explanatory model, and the community repo is
+deployment/topology guidance. The Intel llama.cpp branch contains useful B70
+MMVQ, activation-reuse, GDN-fusion, and poison-gate patterns, but they target
+GGML/SYCL rather than the vLLM Quark ABI.
+
+VERDICT -> retain 85.87 tok/s as the two-card coherent target and about 91.5
+tok/s as the older screen ceiling. TP4 is a modest later scaling option, not
+the current explanation. After reboot, run exactly one local direct-plus-graph
+oracle transaction with Steve's June unset/default IPC identity and record the
+loaded hashes. If it passes, reset before the clone-correct full-model arm. If
+it fails, rebuild Steve's pinned public oneCCL source and require the oracle to
+pass before another model load. This isolates collective graph correctness
+from vLLM graph ownership and avoids another blind 34 GiB model transaction.

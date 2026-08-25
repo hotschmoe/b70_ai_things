@@ -63,10 +63,15 @@
 > tok/s versus 85.87) -> DONE capturable push-all graph mechanics, blocked by
 > asymmetric loaded-process IPC import -> DONE current-snapshot oneCCL/XPU/GDN
 > binary provenance; June record's 67 MB `_xpu_C` remains to reconstruct -> IN
-> PROGRESS guarded direct-P2P reproduction. Reboot, then run
-> the restored June two-clone contract with Steve's unset/default IPC exchange,
-> the active container NIC, and a fresh cache -> June source-overlay bisect if
-> needed -> locally owned build -> SGLang adapter -> model/parallelism matrix.
+> PROGRESS guarded direct-P2P reproduction. The supplied LocalMaxxing row is
+> TP4 at 99.77 tok/s; the proper two-card target is Steve's coherent 85.87
+> tok/s, with older TP2 screens at 91.35-91.59. TP4 added about 9 percent and
+> does not explain our 17.06. Reboot, then run the locally owned exact
+> `[4,5120]` direct-plus-XPUGraph oneCCL oracle -> reset boundary -> restored
+> June two-clone model control with Steve's unset/default IPC exchange, active
+> container NIC, and fresh cache -> rebuild oracle-validated public oneCCL or
+> June source-overlay bisect as indicated -> locally owned build -> SGLang
+> adapter -> model/parallelism matrix.
 
 > ### [DAILY DRIVER 2026-08-23] -- stock Qwen3.8 Q4_K_M
 > `rdy_to_serve/llamacpp/qwen38-27b-q4km/serve.sh`: TP=2, native 262144

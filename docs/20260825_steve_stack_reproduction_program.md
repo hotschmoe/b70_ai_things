@@ -20,6 +20,11 @@ prebuilt binaries.
   64-token warmup, one 512-token measured generation, and ignored EOS.
   Older repetitive-prompt TP2 artifacts reached 91.35-91.59 tok/s under
   weaker gates.
+- The operator-supplied LocalMaxxing result `cmq9ifq0500b0r8012f27j1xl` is
+  TP4 at 99.77 tok/s. It is not the TP2 target. Steve's current-program TP4
+  strict/TP2 smoke values are 93.55/85.87 tok/s, and his older values are
+  99.77/about 91.35 tok/s. Four cards add about 9 percent, not the missing
+  local 5x.
 - The largest accepted lever was the usable PIECEWISE graph/correctness stack:
   about 12.83 to 76.48 tok/s. Disabling custom collectives reduced 76.48 to
   70.79 tok/s. A prefill-safe GDN configuration reached 93-95 tok/s before the
@@ -52,8 +57,8 @@ prebuilt binaries.
   graph splits locally. The capturable Level Zero push all-reduce is correct in
   its standalone graph harness but cannot import rank 0's IPC allocation from
   rank 1 inside the loaded vLLM process.
-- The pinned image contains Steve's currently preserved ARCB oneCCL, `_xpu_C`,
-  and GDN binaries byte for byte. This does not establish June-record identity:
+- The pinned image contains the current preserved `_xpu_C` and GDN binaries,
+  but this does not establish June-record identity:
   his accepted controls used a restored 67 MB `_xpu_C`, while the surviving
   extension is 116706992 bytes. The first guarded direct-P2P model run still
   failed on the first compiled all-reduce, but source comparison
@@ -61,6 +66,18 @@ prebuilt binaries.
   That clone is restored locally. The next run must also reproduce Steve's
   unset/default `CCL_ZE_IPC_EXCHANGE`; the repository helper had forced
   `pidfd` in the failed transaction.
+- Steve's later public oneCCL program supplies a deterministic pre-model
+  oracle for the exact Qwen verifier all-reduce shape. His source-pinned build
+  passed 256/256 direct and 512/512 XPUGraph checks. Our image matches its
+  `kernels.spv` hash but not its `libccl.so.1.0` hash, so we now gate the next
+  model attempt on the locally owned oracle rather than inferring correctness
+  from the source commit or a raw all-reduce microbenchmark.
+- The GPU model matches, but the host does not: Steve's June Qwen35 system was
+  an EPYC 9015 PCIe 5 host, while this system is a Threadripper 1950X with the
+  cards under separate PCI domains on a PCIe Gen3-era platform. Steve also
+  proved `pidfd` on a later Threadripper PRO 5955WX two-card oracle. Host
+  topology is therefore a live direct-P2P compatibility variable, not the
+  explanation for the graph/no-graph 5x.
 - The image warns that no tuned B70 INT8 MoE config exists for `E=256,N=256`.
   This is a later kernel lever, not the present request-time graph failure.
 
@@ -213,15 +230,18 @@ equivalence before performance tests.
 6. DONE: integrate and validate our push collective graph contract; loaded
    vLLM IPC import remains asymmetric and is not the exact-Steve route.
 7. IN PROGRESS: guarded kernel-7.1 direct-P2P reproduction. The first arm
-   exposed source and IPC-environment drift; reboot before the clone-correct,
-   unset-IPC rerun.
-8. Rebuild every native SO from local source and remove external mounts.
+   exposed source and IPC-environment drift. After reboot, run the exact local
+   direct-plus-XPUGraph oneCCL oracle before another full model load.
+8. If the oracle passes, observe the reset boundary and run the clone-correct,
+   unset-IPC exact model control. If it fails, rebuild Steve's pinned public
+   oneCCL source and validate the new binary with the oracle first.
+9. Rebuild every native SO from local source and remove external mounts.
    Reconstruct the June 67 MB `_xpu_C` as an explicit accepted-record variant;
    do not conflate it with the byte-matched current snapshot.
-9. Implement and gate the SGLang-native route.
-10. Execute the model and parallelism portability matrix.
-11. Transfer only proven wins to Ornith, then add MTP and prefix caching.
-12. Run Pi plus local Terminal-Bench and promote only a coherent winner.
+10. Implement and gate the SGLang-native route.
+11. Execute the model and parallelism portability matrix.
+12. Transfer only proven wins to Ornith, then add MTP and prefix caching.
+13. Run Pi plus local Terminal-Bench and promote only a coherent winner.
 
 ## Definition Of Done
 
@@ -240,5 +260,7 @@ equivalence before performance tests.
 - `docs/20260825_steve_qwen36_w8a8_forensics.md`
 - `docs/20260823_tp2_inference_profile.md`
 - `docs/20260823_tp2_optimization_campaign.md`
+- `vllm/w8a8/qwen36_oneccl_graph_oracle.py`
+- `vllm/w8a8/run_qwen36_oneccl_graph_oracle.sh`
 - `P2P_GPU.md`
 - `MTP_TODO.md`

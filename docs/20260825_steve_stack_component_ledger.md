@@ -13,7 +13,7 @@ Inspected repositories:
 
 | Repository | Frozen revision | Tracked files | Treatment |
 | --- | --- | ---: | --- |
-| `b70-optimization-lab` | `c1cc2bf68ced2fb82192fd0d1dcb9d266225af04` | 20,816 | Read all Qwen result packets, accepted launcher/config, relevant notes, scripts, and patches; bulk JSON/log evidence is path/hash inventoried. |
+| `b70-optimization-lab` | `523ca95b925308391707624530c29359edd05b6a` | 20,816+ | Refreshed through 2026-08-25. Read all Qwen result packets, accepted launcher/config, relevant notes, scripts, and patches; bulk JSON/log evidence is path/hash inventoried. The post-`c1cc2bf` delta is Qwen3.8 TP1/MTP work and does not alter the Qwen3.6 W8A8 control. |
 | `vllm` | `44fc8fde09fc311d3099dab10366b672d9142ea4` | 5,285 | Current source inspected; closest surviving post-record checkpoint is `e190923b32e1b87fe33d08264bff9215fb7770fc` from 2026-06-16. |
 | `vllm-xpu-kernels` | `2dd55f380df753a10a88fcd9e96192561066e713` | 312 | Operator bindings, dense INT8, grouped MoE, GDN, build, and Python interface are in scope. |
 
@@ -37,6 +37,16 @@ one run and 91.351052 tok/s across three runs. Those used a repetitive prompt
 and have weaker validity gates. The reproduction target is therefore 85.87
 tok/s minimum with natural-chat coherence, with about 91.5 tok/s as the older
 same-hardware ceiling to explain.
+
+The LocalMaxxing run `cmq9ifq0500b0r8012f27j1xl` supplied by the operator is
+a different topology: TP4, four B70s, p512/o512, 32K configured context, no
+MTP, PIECEWISE graph, and 99.769699 corrected output tok/s. Steve's stricter
+later TP4 program reached 93.550542 tok/s. The current-program TP2 smoke and
+TP4 strict values are 85.869114 and 93.550542 tok/s, so TP4 added about 8.9 percent. Older
+weaker-gate values show the same scale: about 91.35 TP2 versus 99.77 TP4, or
+about 9.2 percent. TP4 is a real but modest final lever; it does not explain
+the local 17.06 tok/s TP2 control. The proper two-card target remains at least
+85.87 tok/s.
 
 The launcher overlaid both source trees:
 
@@ -87,7 +97,7 @@ partitioning. The later launcher default made scheduling asynchronous because
 | Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config now compiles; P2P-off monolithic oneCCL capture stalls | Primary unresolved mechanism. |
 | Uniform no-spec descriptor | June Qwen decode capture descriptor | Yes | Restored by narrow adapter | Matched and required for capture. |
 | Custom collective wrapper | `vllm::all_reduce` custom op with two clone guards | Yes | August source silently removed the inner clone; local attributed op now restores it | Must retest after reboot; prior exact run was not source-equivalent. |
-| Collective binary | oneCCL 2022-era ARCB build, oneAPI 2025.3 | Yes | Pinned image `libccl.so.1.0` is byte-identical to Steve's preserved build | Current snapshot matched; June-record identity is not independently hashed. |
+| Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Source commit and `kernels.spv` match; pinned-image `libccl.so.1.0` hash differs from Steve's later oracle-validated build | Build parity is incomplete; run the exact graph oracle before another model serve. |
 | Collective transport | oneCCL/OFI direct P2P in graph | Yes | First direct test forced `pidfd`, unlike Steve's unset/default setting | Retest exact unset/default IPC after reboot. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |
 | Scheduler | V1 async scheduling | Yes | Live log confirms async | Matched. |
@@ -146,7 +156,79 @@ The preserved oneCCL cache used `CCL_ENABLE_ARCB=ON`, release mode, oneAPI
 2025.3 `icx`/`icpx`, and two local compile-compatibility edits that qualify the
 ESIMD barrier namespace in small all-gather and reduce-scatter. The Qwen TP
 graph mainly uses all-reduce, so those two dirty edits are build fixes rather
-than a decode lever.
+than a decode lever. A later Steve result provides a stronger artifact gate:
+the same public parent/libccl commits produced a graph-validated library hash
+`43d94d43506e30096dd099b9d53b54f932be964751e92ff0cbb8d3a37fad6700`
+and `kernels.spv` hash
+`0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e075290d314f0c9`.
+The pinned image has the exact SPIR-V hash but library hash `542142ac...`.
+Compiler paths and embedded build metadata can change a library hash, so this
+does not prove bad code; it does mean source-commit equality is not binary or
+graph-correctness proof.
+
+## Runtime And Image Bill Of Materials
+
+The pinned S2B image has digest
+`sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94`
+and label `4ceafd1+2dd55f38+44fc8fde0`. Its relevant runtime inventory is:
+
+| Layer | Pinned image identity |
+| --- | --- |
+| Base | Ubuntu 24.04, Python 3.12.3, glibc 2.39 |
+| Torch | 2.11.0+xpu |
+| vLLM package | 0.21.1.dev18+g8df6feb7d.xpu; source label `44fc8fde0` |
+| XPU kernels | package 0.1.8.2; source label `2dd55f38` |
+| Transformers | 5.8.0 |
+| compressed-tensors | 0.15.0.1 |
+| Triton XPU | 3.7.0 |
+| oneAPI compiler/runtime | compiler packages 2025.3.3; SYCL runtime 2025.3.2; oneDNN 2025.3.0 |
+| Container UMD | Intel Compute Runtime 26.14.37833.4; Level Zero loader 1.28.2 |
+| oneCCL | source label `4ceafd1`; `libccl.so.1.0` 240177816 bytes, hash `542142ac...` |
+| oneCCL device kernels | 5257304 bytes, exact validated hash `0d549c35...` |
+| Native ops | `_xpu_C` 116706992 bytes, hash `ae330aff...`; GDN hash `cf482fd...` |
+
+The container does not mount the host UMD libraries. It therefore runs its
+26.14 user-mode driver above this host's kernel 7.1 KMD, while the host package
+set is Compute Runtime 26.22.38646.4 and Level Zero loader 1.28.2. This mixed
+KMD/UMD identity is intentional in the exact image control and must remain
+explicit in any reproduced image manifest.
+
+## Hardware And Topology Boundary
+
+The systems share Arc Pro B70 GPUs, but not the same host platform:
+
+| System/evidence | CPU and PCIe topology | Runtime evidence |
+| --- | --- | --- |
+| Steve Qwen35 June host | AMD EPYC 9015; four B70s on separate PCIe 5.0 x16 root ports; pairs reported `NODE` | Ubuntu 24.04.4, kernel 6.17, UMD 26.14; direct P2P enabled |
+| Steve July two-card oneCCL oracle | Threadripper PRO 5955WX; two-card test | Public oneCCL direct 256/256 and XPUGraph 512/512 passed with `pidfd` |
+| This host | Threadripper 1950X; the B70s sit under distinct `0000:00` and `0000:40` root complexes through separate switches; host is PCIe Gen3 era | kernel 7.1, host UMD 26.22; measured H2D 12.82 GB/s, host-staged D2D 1.68 GB/s, Torch peer-access false |
+
+This makes the direct-P2P device loss a possible platform, mapping, or
+KMD/UMD interaction, even though the GPU models match. It is not evidence that
+PCIe bandwidth explains the 5x decode gap: the Qwen all-reduces are small and
+Steve's own graph/no-graph delta is much larger than his TP2/TP4 scaling.
+
+## Other Steve Repositories And Published Material
+
+The public account inventory was checked rather than assuming the optimization
+lab was the only source. The relevant repositories are:
+
+| Repository/revision | Relevant content | Transfer verdict |
+| --- | --- | --- |
+| `ml-bottleneck` `b5f7edbc` | Models weight/KV reads, fixed per-layer runtime, and collective latency separately; contains the 93.55 tok/s Qwen35 TP4 evidence anchor | Explanatory/calibration model only, not runtime code. Its own formulation reinforces fixed launch/coordination cost over payload bandwidth for small-active MoE decode. |
+| `Unofficial-Intel-XPU-Community` `4f5b2146` | Driver/container/topology checklists and the warning that host PCIe generation changed a MiniMax four-card result | Deployment discipline, no hidden W8A8 implementation. Its PCIe4 13.79 GB/s versus PCIe5-class 27.88 GB/s evidence makes host bandwidth a plausible residual after graph works. |
+| `vllm-xpu-kernels` `0fd18a7c` current versus S2B `2dd55f38` | Current fork tree differs from the S2B snapshot only in the new FP8 GEMM out-variant files; the June W8A8 kernel work is preserved in lab patches/dirty chronology | No newer hidden Quark W8A8 speed switch. Keep exact S2B control, then evaluate newer kernels separately. |
+| `vllm` `5df9999f` current versus S2B `44fc8fde`/June `e190923b` | Current fork tracks later upstream and has massive API/runtime drift; no private ahead commit carries the June accepted overlay | Do not copy current main for the control. The accepted implementation is the June source/patch family already under forensic comparison. |
+| `llama.cpp` Intel branch `4302fb59` | B70/Xe SYCL MMVQ routing, q8 activation reuse, GDN cross-op fusion, zero-copy/reorder experiments, and correctness poison gates | Valuable patterns for the UD-Q4_K_XL lane and generic launch/dataflow research, but not ABI-compatible with Quark W8A8 vLLM. |
+| `neural.download` `9411bfc2` | Published result catalog generated from the lab evidence | Result index, not an additional runtime implementation. |
+
+Steve's `ml-bottleneck` default B70 model assumes PCIe5/64 GB/s-class links
+and about 20 us exposed PCIe-collective latency. This host's measured oneCCL
+small-message floor is much higher, but even 81 Qwen graph collectives at
+roughly 80-111 us account for about 6.5-9.0 ms, not the local 58.6 ms/token.
+That estimate is directional because captured collectives and host-staged
+microbenchmarks are not identical. It still rules out payload bandwidth as the
+sole 5x cause and keeps graph/host boundary ownership first.
 
 ## Source Closure Audit
 
@@ -297,16 +379,25 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 
 ## Next Decisive Transactions
 
-1. After reboot, retest one guarded exact oneCCL P2P transaction with the
-   restored June two-clone contract, unset/default IPC exchange, explicit
-   container `eth0`, and a fresh compilation cache.
-2. If the narrow current-source repair does not reproduce, run the closest surviving 2026-06-16
-   vLLM snapshot as a forensic overlay with the same runtime binaries.
-3. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
+1. After reboot, run the locally owned exact `[4,5120]` BF16 oneCCL oracle:
+   256/256 direct collectives and 512/512 XPUGraph replays in one process-group
+   lifetime, with loaded library and SPIR-V hashes recorded. Start with Steve's
+   June unset/default IPC identity.
+2. If the oracle passes, observe the required reset boundary, then retest one
+   guarded exact model transaction with the restored June two-clone contract,
+   unset/default IPC exchange, explicit container `eth0`, and a fresh cache.
+3. If the oracle fails, rebuild the exact public oneCCL artifact with Steve's
+   recorded script and require the known `kernels.spv` hash plus a clean oracle
+   before loading the model. Screen `pidfd` only as a separate reboot-bounded
+   transaction.
+4. If the narrow current-source repair still does not reproduce, run the
+   closest surviving 2026-06-16 vLLM snapshot as a forensic overlay with the
+   same runtime binaries.
+5. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
    kernel source and patch chronology, then compare it one factor at a time.
-4. Convert the required delta into attributed local patches and a pinned image;
+6. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
-4. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
+7. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
    equivalence, graph replay, and hashes.
-5. Only after a healthy 80+ tok/s graph baseline, profile MoE, dense GEMM,
+8. Only after a healthy 80+ tok/s graph baseline, profile MoE, dense GEMM,
    GDN, sampler, and collectives under the actual endpoint step.
