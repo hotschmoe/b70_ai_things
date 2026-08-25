@@ -89,9 +89,15 @@
 > 81-profile-collective arm made Inductor emit five model-unrepresentative
 > 16-output pointwise fan-out kernels and rank 1 DEVICE_LOST while autotuning
 > the second fan-out, before the 81-collective graph stage. The immediate
-> failure was outside the custom op, so the next higher-information transaction
-> is, after an actual reboot, the corrected inner-clone exact model control with
-> Steve's unset/default IPC exchange, active container NIC, and fresh cache.
+> failure was outside the custom op. The first corrected exact-model transaction
+> then loaded the complete June native package and reached graph capture, but a
+> local August compatibility adapter incorrectly added ordinary no-spec uniform
+> PIECEWISE keys. Capture sizes 32/40/48 exceeded max_num_seqs=24 and failed the
+> dummy scheduler's token-sum assertion. June instead reused the relaxed general
+> PIECEWISE key. That local key is removed and an off-device contract now gates
+> all default sizes without narrowing Steve's minimal PIECEWISE configuration.
+> After another actual reboot, rerun the same exact model control with Steve's
+> unset/default IPC exchange, active container NIC, and a fresh cache.
 > Correct the oracle to use a sequential low-live-buffer chain before reusing
 > its 81-op stress; do not claim that stage passed. Then -> DONE minimal June native 54 MB-class
 > B70-AOT build and complete-package off-device dispatch gate; the exact model

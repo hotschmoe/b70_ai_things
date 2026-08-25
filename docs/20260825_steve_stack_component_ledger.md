@@ -94,8 +94,8 @@ partitioning. The later launcher default made scheduling asynchronous because
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config compiles and raw oneCCL XPUGraph passes; prior model failure was compiled profile-run before capture | Full model graph replay remains unproven, but it did not cause the observed failure. |
-| Uniform no-spec descriptor | June Qwen decode capture descriptor | Yes | Restored by narrow adapter | Matched and required for capture. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config and raw oneCCL XPUGraph pass; the June-package model reached capture before a local descriptor error | Full model graph replay remains unproven. |
+| Ordinary no-spec PIECEWISE key | Reuse relaxed general non-uniform key | Yes | Erroneous local uniform key removed; off-device default-size contract passes | June behavior matched; no special ordinary-decode key is required. |
 | Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | August source silently removed the inner clone; corrected local GroupCoordinator routing passed eager, compiled exact-shape, export, and single-op XPUGraph gates without mismatch, mutation, or alias | Cleared through the isolated custom-op/compiler layer; exact model interleaving remains the next gate. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
 | Collective transport | oneCCL/OFI direct P2P in graph | Yes | Unset/default IPC resolved to `pidfd`; 256 direct and 512 XPUGraph iterations passed on both ranks | Raw transport and graph replay are cleared; the remaining failure is in the full vLLM integration. |
@@ -509,6 +509,28 @@ pass. Replace its independent fan-out with a sequential low-live-buffer chain
 before reuse. After a real reboot, use the exact interleaved model as the next
 VllmBackend/PIECEWISE gate.
 
+### Exact June-package model transaction
+
+Config -> post-reboot healthy cards, exact model and complete June runtime
+hashes, TP2/PP1, minimal `{"cudagraph_mode":"PIECEWISE"}`, vLLM's default
+split operations and capture sizes through 48, maxseqs 24, direct P2P,
+unset/default IPC and worker count, active container `eth0`, and a fresh cache.
+
+Command -> `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`.
+
+Result -> both ranks initialized, loaded the model, selected dense native W8A8,
+and exposed the rebuilt June grouped W8A8/GDN package. Graph capture then hit
+the dummy scheduler token-sum assertion. No UR/device error occurred and both
+cards passed post-teardown health. Source comparison showed that the local
+adapter, not June, added ordinary uniform PIECEWISE descriptors. Sizes
+32/40/48 cannot be represented as one-token uniform schedules when maxseqs is
+24. June reused the relaxed general key, whose schedules remain valid.
+
+Verdict -> remove the non-June key, keep the exact default capture sizes, and
+rerun only after reboot. The repaired no-device contract passes all nine sizes;
+endpoint graph replay and performance remain open.
+
 ## Accepted And Rejected Mechanism Registry
 
 Accepted or required:
@@ -546,20 +568,23 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    generated 16-output Triton pointwise autotune, so the overall oracle and
    81-op graph stage did not pass. Replace that arm with a sequential
    low-live-buffer chain before reusing it.
-3. Observe an actual reboot boundary and run one guarded exact model
-   transaction with the restored June inner-clone contract, unset/default IPC
-   exchange, explicit container `eth0`, and a fresh cache. This is now the
-   highest-information VllmBackend/PIECEWISE and interleaved-layer gate.
-4. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
+3. PARTIAL: the guarded exact model transaction loaded the complete June
+   package and reached graph capture. It rejected a local non-June uniform-key
+   adapter at capture sizes 32/40/48; there was no device error and post-health
+   passed. The key is removed and its off-device contract passes.
+4. After an actual reboot, rerun the identical exact control with a new cache.
+   This remains the highest-information VllmBackend/PIECEWISE and
+   interleaved-layer gate.
+5. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
    Preserve rebuilding the public artifact as a later provenance task only.
-5. If the narrow current-source repair still does not reproduce, run the
+6. If the narrow current-source repair still does not reproduce, run the
    closest surviving 2026-06-16 vLLM snapshot as a forensic overlay with the
    same runtime binaries.
-6. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
+7. Once graph replay works, reconstruct Steve's June 67 MB `_xpu_C` from the
    kernel source and patch chronology, then compare it one factor at a time.
-7. Convert the required delta into attributed local patches and a pinned image;
+8. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
-8. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
+9. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
    equivalence, graph replay, and hashes.
-9. Only after a healthy 80+ tok/s graph baseline, profile MoE, dense GEMM,
+10. Only after a healthy 80+ tok/s graph baseline, profile MoE, dense GEMM,
    GDN, sampler, and collectives under the actual endpoint step.

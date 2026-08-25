@@ -15,34 +15,6 @@ import torch
 import torch.nn.functional as F
 
 
-def _patch_nospec_piecewise_decode_key() -> None:
-    """Add the decode descriptor omitted by the later S2B XPU graph filter."""
-    from vllm.forward_context import BatchDescriptor
-    from vllm.v1.cudagraph_dispatcher import CudagraphDispatcher
-
-    method_name = "_create_piecewise_uniform_batch_descriptor"
-    original = getattr(CudagraphDispatcher, method_name)
-
-    def compatible_descriptor(self, num_tokens, has_lora, num_active_loras=0):
-        descriptor = original(self, num_tokens, has_lora, num_active_loras)
-        if descriptor is not None or self.vllm_config.speculative_config is not None:
-            return descriptor
-        return BatchDescriptor(
-            num_tokens=self._bs_to_padded_graph_size[num_tokens],
-            num_reqs=None,
-            uniform=True,
-            has_lora=has_lora,
-            num_active_loras=num_active_loras,
-        )
-
-    setattr(CudagraphDispatcher, method_name, compatible_descriptor)
-    print(
-        "[qwen36-s2b] restored no-spec PIECEWISE decode capture descriptor",
-        file=sys.stderr,
-        flush=True,
-    )
-
-
 def _patch_shared_expert_abi() -> None:
     """Bridge the partial shared-expert runner merge in the August snapshot."""
     from vllm.model_executor.layers.fused_moe.runner.moe_runner import MoERunner
@@ -342,7 +314,6 @@ def _install() -> None:
     )
 
 
-_patch_nospec_piecewise_decode_key()
 _patch_shared_expert_abi()
 _patch_custom_allreduce_clone_contract()
 _install()

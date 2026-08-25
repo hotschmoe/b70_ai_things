@@ -43,10 +43,13 @@ prebuilt binaries.
 - The later image also has a partial shared-expert API merge: `FusedMoE` passes
   `shared_expert_gate`, while `MoERunner` does not accept it. A narrow adapter
   is required before model allocation.
-- A third narrow repair restores the no-spec uniform PIECEWISE decode
-  descriptor. With all three repairs, the Qwen model loads on TP=2, compiles,
-  captures, allocates 755,153 KV tokens at maxlen 8192, and passes semantic
-  canaries with native dense Quark W8A8 INT8 math.
+- An early adapter incorrectly added a no-spec uniform PIECEWISE decode key.
+  The coherent P2P-off control happened to use maxlen 8192 and smaller capture
+  sizes, so it did not expose the scheduling error. The exact 32K control used
+  vLLM's default sizes through 48 with maxseqs 24 and failed while capturing
+  sizes above 24. June ordinary decode used the relaxed general PIECEWISE key;
+  the extra local key is removed and an off-device contract now preserves that
+  behavior for every default size.
 - The matched P2P-off, split-collective control produced 17.06 corrected output
   tok/s: 498 actual prompt tokens, 512 output tokens, 624.29 ms client TTFT,
   and 30.010 s decode time. Steve's accepted run used the same request shape
@@ -182,11 +185,13 @@ Trace:
 - input clone and stable-address handoff;
 - async scheduling and host synchronization.
 
-The late-capture failure was caused by a missing no-spec uniform decode
-descriptor in the later snapshot and is repaired narrowly. The active target
-is now the 5.0x decode gap between the coherent split-collective control and
-Steve's graph-owned-communication result. Attribute the cost of every
-collective boundary before changing math kernels.
+The exact-control capture failure was caused by a locally added no-spec uniform
+decode descriptor, not a missing descriptor in the later snapshot. June
+ordinary decode reused the relaxed general PIECEWISE key. The local addition
+made capture sizes 32, 40, and 48 impossible to schedule with maxseqs 24. It is
+removed, and a no-device contract guards the June behavior without narrowing
+the default capture-size list. The active target remains the 5.0x decode gap
+between the coherent split-collective control and Steve's result.
 
 ### 6. Collective paths
 
@@ -249,10 +254,13 @@ equivalence before performance tests.
    artificial 16-output Triton autotune DEVICE_LOST, so the 81-op graph stage
    did not run. Replace this arm with a sequential low-live-buffer chain before
    treating the oracle as a complete volume gate.
-9. IN PROGRESS: after an actual reboot, run the corrected inner-clone,
-   unset/default-IPC, active-container-NIC exact model control from a fresh
-   cache with the complete June kernel package. This directly gates native
-   routed MoE, VllmBackend/PIECEWISE, and real layer interleaving together.
+9. IN PROGRESS: the first corrected inner-clone exact model control loaded the
+   complete June package and reached graph capture. A local no-spec uniform-key
+   adapter then failed the dummy scheduler at default sizes 32/40/48 over
+   maxseqs 24. That non-June key is removed and its off-device contract passes.
+   After another actual reboot, rerun the identical unset/default-IPC,
+   active-container-NIC control from a new cache. This remains the native
+   routed-MoE, VllmBackend/PIECEWISE, and real-layer interleaving gate.
 10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
    a 55,523,648-byte B70-AOT `_xpu_C`, both Xe2 siblings, and a complete
    pinned-image runtime package with all required XPU dispatch registrations.

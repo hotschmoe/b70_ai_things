@@ -137,6 +137,14 @@ docker run --rm --entrypoint python \
   --expected-package-root /opt/june-runtime/vllm_xpu_kernels \
   --expected-hashes "$JUNE_HASHES_JSON" \
   --output /opt/preflight-out/kernel_runtime_preflight.json
+docker run --rm --entrypoint python \
+  -e PYTHONPATH=/opt/june-runtime:/opt/b70_qwen36_site \
+  -v "$JUNE_RUNTIME:/opt/june-runtime:ro" \
+  -v "$SCRIPT_DIR/qwen36_s2b_sitecustomize.py:/opt/b70_qwen36_site/sitecustomize.py:ro" \
+  -v "$SCRIPT_DIR/qwen36_piecewise_capture_contract.py:/opt/piecewise_contract.py:ro" \
+  -v "$RESULT_DIR:/opt/preflight-out" \
+  "$IMG" /opt/piecewise_contract.py \
+  --output /opt/preflight-out/piecewise_capture_contract.json
 
 echo "config -> image=$IMG model_revision=$MODEL_REVISION model_config=$actual_config_sha256 model_index=$actual_index_sha256"
 echo "config -> TP=2 PP=1 graph=PIECEWISE splitops=default igp=false async=1 mtp=0 prefix_cache=0 maxlen=32768 maxseqs=24 util=0.90"
@@ -203,7 +211,7 @@ for required in \
   'kernel package=/opt/june-runtime/vllm_xpu_kernels/_xpu_C.abi3.so grouped_w8a8=_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface' \
   'Asynchronous scheduling is enabled' \
   'Graph capturing finished' \
-  "'splitting_ops': []" \
+  "'splitting_ops': ['vllm::unified_attention_with_output'" \
   "'use_inductor_graph_partition': False"; do
   rg -Fq "$required" "$SERVER_LOG" || {
     echo "Missing required server evidence: $required" >&2

@@ -18403,3 +18403,52 @@ After an actual reboot, run exactly one leased
 model, runtime, import, graph, metric, model-id, semantic-probe, JSON16/16,
 color16/16, and fatal-device evidence. Reboot again before any later P2P/TP2
 or kernel transaction. Do not promote a shelf entry from this forensic gate.
+
+### 2026-08-25l - Exact June-package model reaches graph capture; local key rejected
+
+CONFIG -> new boot ID `06b81fbb-bdef-456d-a6e9-185811c66792`; both cards
+healthy; exact Qwen revision `cced5659...`; complete rebuilt June package;
+TP=2, PP=1, PIECEWISE with vLLM's default split operations and default capture
+sizes `[1,2,4,8,16,24,32,40,48]`; maxseqs 24; async; no MTP or prefix cache;
+direct P2P; unset/default IPC exchange and worker count; container `eth0`; and
+fresh cache. The boot-started single-card daily container was stopped before
+the lease; it had P2P off and never joined this transaction.
+
+COMMAND -> exactly `./bin/gpu-run env I_KNOW_P2P_WEDGES=1 bash
+vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`. After source comparison,
+ran the no-device `qwen36_piecewise_capture_contract.py` against the pinned
+image and complete June package, then the launcher's full
+`PREFLIGHT_ONLY=1` identity gate. No second GPU transaction was run.
+
+RESULT -> all runtime/model hash gates passed. Both ranks initialized the
+process group, loaded 34.15 GiB total weights, selected native dense W8A8, and
+registered the June grouped W8A8 and GDN package. The engine then failed before
+endpoint health while capturing graphs, on both ranks, at
+`gpu_model_runner.py:12486`: `assert sum(num_scheduled_tokens_list) ==
+num_tokens`. There was no `DEVICE_LOST`, `OUT_OF_RESOURCES`, or other UR error,
+and both cards passed post-teardown health.
+
+Source comparison against June `e190923b` proved the failure was local adapter
+drift. June ordinary no-spec decode reused the relaxed non-uniform PIECEWISE
+key. The adapter instead added uniform keys for all sizes; at 32, 40, and 48
+tokens the one-token dummy schedule was capped at maxseqs 24 and could not sum
+to the capture size. The adapter key is removed. The off-device contract now
+proves zero ordinary-decode-specific descriptors and valid general schedules
+for all nine default sizes without narrowing Steve's minimal compilation
+config. The exact launcher's false `splitting_ops=[]` evidence check is also
+corrected to require the observed vLLM default list. The complete repaired
+CPU-only preflight passed. Primary evidence SHA256 values are committed ASCII
+server log `304cd943...` (raw pre-sanitization `d8fcdfb2...`; the four-line
+non-ASCII vLLM banner was replaced and CR progress formatting normalized), run
+log `55de77c5...`, kernel preflight
+`86a5c234...`, and
+PIECEWISE contract `a54ad767...` under
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T163105Z` and
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_20260825T164600Z_repairpreflight`.
+
+VERDICT -> the exact package and native-op path crossed model load and reached
+the remaining VllmBackend graph gate. This failure does not measure endpoint
+speed and does not implicate a GPU wedge or native math. Preserve the consumed
+direct-P2P boot boundary. After another actual reboot, rerun the same exact
+transaction with a new cache; do not pin smaller capture sizes or alter Steve's
+minimal PIECEWISE configuration.

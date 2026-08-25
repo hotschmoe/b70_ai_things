@@ -274,7 +274,15 @@ and isolated MoE workspace tuning are lower-order. PP=2 remains a useful safe
 baseline and concurrency lever, but it is not the direct route to Steve's
 target-only 85.87 TP=2 result.
 
-The immediate experiment is capturable push all-reduce with P2P access still
-off and all-reduce removed from the PIECEWISE split list. This tests the actual
-mechanism: whether graph-owned communication removes the per-layer host/runtime
-boundaries. A direct-P2P serve is deferred until the safe path is understood.
+The direct-P2P oneCCL and clone-correct custom-op mechanism gates now pass in
+isolation. The first exact June-package model transaction loaded both ranks and
+reached graph capture, then exposed an erroneous local no-spec uniform
+PIECEWISE key. June ordinary decode reused the relaxed general key. The local
+key is removed and an off-device contract passes the unchanged default sizes,
+including valid schedules for 32, 40, and 48 tokens over maxseqs 24.
+
+The immediate experiment, after an actual reboot, is the same guarded exact
+June-package model transaction from a new cache. Do not narrow the capture
+sizes or change Steve's minimal `{"cudagraph_mode":"PIECEWISE"}` config. It
+must first complete graph capture, endpoint identity, the exact 498/512 metric,
+and both 16/16 canaries before any transfer or speed claim.
