@@ -285,6 +285,20 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   **48.5315 tok/s**. This is +3.1666 tok/s over the August-adapter native control but still 37.3376 tok/s short of
   Steve. Steve's fresh-54/restored-67 MB `_xpu_C` pair differed by only ~3%, so binary size cannot explain the gap.
   Next: measure actual graph-piece/replay and full decode-step timing; use dense 27B as the MoE-free transfer control.
+- **[TIMING AND PROVENANCE CLOSURE 2026-08-26] graph topology matches; the live gap is native/runtime execution.**
+  Built-in replay tracing observed all piecewise indices 0..40 and reported `total_piecewise_compiles=41`, exactly
+  matching Steve's 41-piece timing packet. Under the same synchronized pure-decode timing method, local rank-0
+  model-forward is **22.6748 ms** versus Steve's **5.6946 ms** (**3.9818x**); GDN is 3.9278 vs 1.5846 ms, logits
+  1.5851 vs 0.2292 ms, and local argmax 1.1495 vs 0.0705 ms. The synchronized diagnostic endpoint falls to
+  35.4699 tok/s while Steve sustained 84.3075 tok/s, so this is real execution time, not a missing graph count.
+  Provenance also changed materially: the previously rebuilt package is the June-9 minimal patch over `28e1f5e`,
+  while exact recoverable checkpoint `122b698b` (2026-06-16, +5054/-169 across 24 files) precedes Steve's accepted
+  timing and adds native output-buffer variants for per-token quantization and fused SiLU/mul/quantization.
+  The scratch-aware Python route already probes these operators; the June-9 binary lacks them and allocates then
+  copies for two quantizations across each of 40 MoE layers (80 calls/step). Steve explicitly unset fused
+  SiLU+quant, so that sibling is not attributed to the accepted result. Next is a binary-only `122b698b` A/B.
+  Dense 27B must reuse the replay/timing method and separately test
+  reusable quant/output-buffer primitives through a dense-specific adapter; MoE layerlet/sidecar code is not transferable evidence.
 
 ## What does NOT work (yet) — save yourself the time
 - **Qwen3.6-27B W8A8 TP=2 + MTP + XPU graph-capture dies under sustained load -- ROOT-CAUSED + FIXED (2026-06-25).**

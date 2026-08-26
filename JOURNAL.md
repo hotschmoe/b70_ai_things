@@ -18817,3 +18817,75 @@ size is also lower priority. Next, instrument actual decode graph-piece replay
 and per-family host/device time. Transfer proven mechanisms separately to dense
 27B, whose lack of routed MoE removes this scratch/dispatcher confound, and
 derive its profile clone fence from its own collective shapes.
+
+### 2026-08-26a - Exact graph topology matches; synchronized decode is 3.982x slower
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision
+`cced56592e8c8935f8220836b4baa04dfd389118`; true-June vLLM source
+`e190923b`; June-9 minimal native package; recovered `2dd55f38`
+scratch-aware MoE dispatcher; TP=2/PP=1; direct P2P; clone-completion fence
+for profile tensors with at least 8192 rows; PIECEWISE 9-size capture; built-in
+device-synchronized decode timing on rank 0 after 32 skipped steps and every
+16th step; built-in graph replay trace capped at 4096 records; fresh compile
+cache. Steve comparison uses the committed rank-0 reference derived from
+timing-summary SHA256 `7e9d805a...` and run-summary SHA256 `6ab63849...`.
+
+COMMAND:
+
+```text
+./bin/gpu-run env \
+  STAMP=20260826T002000Z_june_synctiming SOURCE_STACK=june-e190 \
+  P2P_ACCESS=1 PROFILE_FENCE_MIN_ROWS=8192 STALL_TIMEOUT=300 \
+  DECODE_TIMING=1 DECODE_TIMING_SYNC=1 \
+  DECODE_TIMING_SKIP_FIRST=32 DECODE_TIMING_STEP_SKIP_FIRST=32 \
+  DECODE_TIMING_STEP_EVERY=16 \
+  CUDAGRAPH_REPLAY_TRACE=1 CUDAGRAPH_REPLAY_TRACE_MAX_LINES=4096 \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> fresh compile, 81/81 profile clone fences, native dense and routed
+MoE INT8 selection, 9/9 captures, semantic probes, and both 16/16 canaries
+passed. The synchronized diagnostic produced 35.469940 corrected output tok/s,
+508.363 ms client TTFT, and 14.433521 seconds server decode. Graceful teardown
+left both per-card probes and compiled-collective health green; exit was 0.
+The replay trace reported `total_piecewise_compiles=41` and observed every
+piece index 0..40. There were 369 capture starts/finishes, 492 direct
+starts/finishes, and 1187 replay starts/finishes before the configured trace
+cap. This exactly matches Steve's recorded 41-piece topology.
+
+RESULT -> 62 pure-decode timing steps put local rank-0 model-forward at
+22.674753 ms versus Steve's 5.694625 ms: +16.980128 ms and 3.9818x. Other
+matched nonexclusive labels were GDN 3.927777 versus 1.584578 ms (2.4788x),
+postprocess 1.903643 versus 0.312854 ms (6.0848x), logits 1.585079 versus
+0.229150 ms (6.9172x), local argmax 1.149508 versus 0.070528 ms (16.2986x),
+and sampler 0.663268 versus 0.144735 ms (4.5826x). Steve's synchronized
+endpoint was 84.307543 tok/s, so the timing gap is real endpoint execution,
+not only observer overhead. Evidence:
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_20260826T002000Z_june_synctiming`.
+Key SHA256 values: replay `1d031a65...`, timing summary `3c80aa75...`,
+comparison `1e89a7fa...`, metric `790e7145...`, JSON `b3787b35...`, color
+`2c6bff6e...`, and committed run log `0f70231e...`. The server log was
+mechanically made ASCII and trailing-whitespace-clean after capture: raw
+`58d42b6b...` -> committed `e527d1e5...`.
+
+SOURCE REVIEW -> the prior rebuilt package is the June-9 minimal patch over
+`28e1f5e`, not the native tree present for Steve's June-19 timing. The live
+kernel Git object database resolves exact checkpoint `122b698b` (June 16,
++5054/-169 across 24 files) and later child `3ed399a` (June 19 after the
+17:02 UTC timing run). Compared with the June-9 reconstruction, GDN executable
+source and grouped-GEMM Xe2 base tile/policy are unchanged. RMSNorm fusion is
+disabled, dense INT8 uses the same default-one scratch behavior, and the
+layerlet/sidecar arms are default-off. The active checkpoint delta is
+`_xpu_C::per_token_quant_int8_xpu_out`: mixed workspace performs GEMM1 and
+GEMM2 quantization in each of 40 MoE layers, or 80 calls/step. Without that
+schema, the scratch-aware dispatcher allocates temporary quant outputs then
+copies them into workspace buffers. Steve explicitly unset fused SiLU+quant.
+
+VERDICT -> graph count, piece selection, and broad June vLLM source are closed.
+The first controlled native A/B is exact `122b698b` siblings with the same
+vLLM source, Python dispatcher, graph, collective, and launch configuration.
+It tests native scratch-targeted quant output, not shared-object size or
+experimental layerlets. For dense 27B, repeat this replay/timing census and
+port only proven reusable quant/output primitives through a dense-specific
+adapter; derive its collective fence from its own profile shapes.

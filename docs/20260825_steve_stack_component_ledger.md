@@ -2,7 +2,7 @@
 
 Date: 2026-08-25
 
-## Latest Closure: True June Source Control
+## Latest Closure: Graph Timing And Native Checkpoint Recovery
 
 The closest surviving June vLLM source, commit
 `e190923b32e1b87fe33d08264bff9215fb7770fc`, now runs as a genuine full-source
@@ -23,13 +23,54 @@ tok/s, 10.548628 seconds server decode, and 311.856 ms client TTFT. That is
 only 56.52 percent of Steve's 85.869114 tok/s. The remaining gap is 37.337635
 tok/s, or 1.7693x.
 
-This changes the priority. A wholesale June source overlay is a confirmed
-single-digit lever, not the missing 1.77x. Steve previously measured only about
-a 3 percent difference between his fresh 54 MB and restored 67 MB `_xpu_C`
-classes, so shared-object size is not a performance identity and cannot explain
-the gap. The next decisive work is decode-step timing, graph-piece/replay
-attribution, and exact runtime-path census. Dense 27B is the clean transfer
-control because it removes routed-MoE and scratch-interface confounds.
+Built-in graph replay tracing now closes the topology question: the endpoint
+observed every piecewise index from 0 through 40 and reported 41 total pieces,
+matching Steve's packet exactly. Synchronized pure-decode timing instead puts
+the rank-0 local model-forward at 22.674753 ms versus Steve's 5.694625 ms, a
+3.9818x execution gap. The local synchronized diagnostic served at 35.469940
+tok/s versus Steve's synchronized 84.3075 tok/s. This is not an absent-graph
+explanation.
+
+The native provenance also requires a correction. The 55.5 MB package built on
+2026-08-25 is an exact reconstruction of the June-9 minimal patch over
+`28e1f5e`; it is not the full native source present when Steve recorded the
+accepted timing. Steve's object database contains exact checkpoint
+`122b698bc245d31668a7fe5f2ad5ce1d07ba08ca` from 2026-06-16 and its child
+`3ed399adc384385fed5663a27623f09ecf44e085` from 2026-06-19. The former adds
+5,054 lines across 24 files, including output-buffer variants for per-token
+quantization and fused SiLU/multiply/quantization. The current
+scratch-aware dispatcher conditionally calls these operators, but the June-9
+binary lacks them and falls back to allocation plus copy. An exact `122b698b`
+native-binary-only A/B is therefore the next decisive test. Dense 27B remains
+the transfer control: measure its graph/timing topology and test the dense
+quant/output-buffer primitives through a dense-specific adapter without
+importing MoE-only layerlet or sidecar conclusions.
+
+Reachability is specific, not hypothetical. Mixed workspace supplies
+`gemm1_a`, `gemm1_a_scales`, `gemm2_a`, and `gemm2_a_scales` persistent
+buffers. The scratch-aware dispatcher invokes `_per_token_quant_int8_out` for
+GEMM1 and GEMM2 in each of 40 MoE layers, or 80 calls per decode step. Without
+the native schema it calls the allocating operator, then `copy_` twice into
+the persistent outputs. With `122b698b`, the same Python branch dispatches
+directly to `_xpu_C::per_token_quant_int8_xpu_out`. Steve's accepted launcher
+explicitly unsets `VLLM_XPU_FUSED_MOE_FUSE_SILU_QUANT`, so the sibling fused
+SiLU/multiply/quant operator is not attributed to the 84.3075 timing control.
+
+### June-9 To `122b698b` Reachability Map
+
+| Native delta | Source comparison | Accepted-lane reachability | Treatment |
+| --- | --- | --- | --- |
+| Per-token INT8 quant `_out` | New schema and implementation in `int8_quant.cpp`, `ops.h`, and `torch_bindings.cpp` | Active through mixed-workspace GEMM1/GEMM2 quant, 80 calls/step | Primary binary-only A/B. |
+| Fused SiLU/multiply/quant and `_out` | New schema and implementation | Inactive; accepted launcher explicitly unsets its switch | Do not attribute to accepted speed. Test later as its own arm. |
+| Grouped-GEMM base Xe2 tile/policy | `gemm_xe2.hpp` and `gemm_xe2_policy.hpp` are byte-identical to the June-9 reconstruction | Active, but unchanged | Not the checkpoint lever. |
+| Grouped offsets, sidecar, and layerlets | Large new interfaces and default-off experimental entry points | Inactive in the 84.3075 control | Keep out of the first A/B. |
+| GDN sibling source | Three apparent differences are final-newline-only | Active, but executable source unchanged | A rebuilt hash may differ; no GDN code lever exists in this checkpoint. |
+| Dense oneDNN INT8 GEMM | Core matmul implementation is byte-identical; scratch cache becomes a configurable ring with default size 1 | Active, default behavior remains one scratch buffer | Not a claimed speed lever unless a later ring-size arm proves it. |
+| RMSNorm plus quant | Adds Qwen/Gemma BF16-input/FP32-weight handling and rounding corrections | Inactive because `pass_config.fuse_norm_quant=False` in the accepted/local exact lane | Correctness primitive for a future dense adapter, not this endpoint delta. |
+
+This reachability map is why the first `122b698b` transaction swaps native
+siblings only while preserving the `2dd55f38` scratch-aware Python dispatcher.
+It is an operator-presence A/B, not a wholesale experimental-layerlet test.
 
 ## Scope And Inventory Method
 
@@ -116,14 +157,14 @@ partitioning. The later launcher default made scheduling asynchronous because
 | --- | --- | --- | --- | --- |
 | Model and scales | Exact HF Quark W8A8 revision | Yes | Exact local revision and Quark loader verified | Matched. |
 | Dense activation quant | `_xpu_C::per_token_quant_int8_xpu` | Yes | Operator present and selected | Matched. |
-| Dense W8A8 GEMM | oneDNN `_xpu_C::int8_gemm_w8a8` | Yes | June registry restored; both controls select `XPUInt8ScaledMMLinearKernel` | Reachability and source ownership matched; accepted binary is unrecoverable and is a lower-order residual. |
-| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | August adapter and true June source both select `Using XPU Int8 MoE backend`; true June requires the recovered scratch-aware Python interface. | Native endpoint dispatch, coherence, and graph capture proven. |
+| Dense W8A8 GEMM | oneDNN `_xpu_C::int8_gemm_w8a8` | Yes | June-9 base op selects `XPUInt8ScaledMMLinearKernel`; unchanged in `122b698b` | Dense GEMM is not the direct checkpoint delta. The quantization output primitive may transfer to 27B only through a separately tested dense adapter. |
+| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | August adapter and June source select `Using XPU Int8 MoE backend`; scratch-aware Python uses the native quant `_out` variant when present, otherwise allocates and copies 80 times/step. | Endpoint dispatch, coherence, and graph capture proven; native scratch execution remains unmatched. Fused SiLU+quant is unset in the accepted lane. |
 | Mixed MoE workspace | BF16 and INT32 persistent scratch interface | Yes in safe TP2 label | Local env enabled | Steve measured a small full-model regression in an earlier arm; not the 5x explanation. |
 | Shared expert | Native dense W8A8 linears plus shared/routed combination | Yes | Later-image ABI mismatch bridged narrowly | Coherent; source snapshot comparison pending. |
-| GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode and prefill-safe settings active | Coherent; graph ownership and exact SO remain to prove. |
+| GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode active; checkpoint source is effectively unchanged from the June-9 reconstruction | Local synchronized GDN is 3.9278 ms versus Steve's 1.5846 ms; likely includes queue/backlog effects and needs native A/B retiming. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact minimal config, raw oneCCL XPUGraph, and all 9/9 full-model captures pass; true June endpoint reached 48.53 tok/s | Reachability matched; replay ownership and per-step overhead remain to attribute. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | All 9/9 full-model captures pass; replay trace observes pieces 0..40 with reported total 41 | Topology exactly matched. Synchronized model-forward remains 3.9818x slower, so execution inside/around replay is active. |
 | Ordinary no-spec PIECEWISE key | Reuse relaxed general non-uniform key | Yes | Erroneous local uniform key removed; off-device default-size contract passes | June behavior matched; no special ordinary-decode key is required. |
 | Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | Large profile clones require completion before oneCCL; clone-only profile fence passes all 81 calls while graph recording and decode remain unfenced | Cleared through exact model interleaving and post-health. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
@@ -235,20 +276,23 @@ The image label records
 respectively. The installed grouped sibling exists, but the installed
 `_xpu_C` does not register its W8A8 interface. Steve's June notes
 state that the accepted controls used a restored 67 MB `_xpu_C`; the surviving
-and pinned-image extension is 116706992 bytes. The June binary and its hash are
-not present in the refreshed lab. Its build must be reconstructed from the
-June kernel source and recorded patch chronology; the 54 MB-class
-reconstruction below establishes source ownership but cannot claim byte
-identity with the unrecoverable accepted 67 MB file.
+and pinned-image extension is 116706992 bytes. The accepted dirty binary and
+its hash are not present in the refreshed lab. The exact June-16 native source
+checkpoint is present, however, so source reconstruction is no longer limited
+to the June-9 patch. Rebuilt artifacts establish source ownership but cannot
+claim byte identity with the unavailable accepted 67 MB file.
 
 The reconstruction audit found that source recovery is substantially stronger
-than binary recovery. The public base is `28e1f5e74c15744b69cf3b760f6160ceabd15de0`;
-the private June sequence from `122b698bc245d31668a7fe5f2ad5ce1d07ba08ca`
-through `3b4effeeffd83f6ef4696bbe7e76d924a0e9d171` survives in Steve's
-recorded Git bundle, and the June 9 W8A8, June 14 layerlet/prefix, and exact
-SiLU patches survive separately. No 54 MB or 67 MB binary, hash, link command,
-Docker layer, ignored result, or cache copy survives. The exact binary is not
-recoverable; only an attributed source reconstruction is possible.
+than binary recovery. The public base is `28e1f5e74c15744b69cf3b760f6160ceabd15de0`.
+Steve's live Git object database directly resolves checkpoint
+`122b698bc245d31668a7fe5f2ad5ce1d07ba08ca`, parent `28e1f5e`, dated June 16,
+and child `3ed399adc384385fed5663a27623f09ecf44e085`, dated June 19. The first is the
+clean checkpoint before the accepted synchronized timing packet and contains
+the complete layerlet/output-buffer work; the second adds the routed-GEMM1
+B-layout fix and default-off experiments after that timing. June 9, June 14,
+and exact SiLU patches also survive separately. No accepted 54 MB or 67 MB
+binary, hash, or cache copy survives, so byte identity remains unavailable,
+but exact source identity for the next A/B is recovered.
 
 The build matrix must hold Python 3.12, torch 2.11 XPU, oneAPI 2025.3,
 Release/Ninja, XPU/SYCL TLA/Xe2, MoE and GDN enabled, and archive `_xpu_C` plus
@@ -265,9 +309,9 @@ Release/Ninja, and no GPU device. Its installed `_xpu_C` is 55,523,648 bytes
 with SHA256 `2d931484...`; GDN is 2,724,136 bytes (`366935b1...`) and grouped
 GEMM is 2,936,608 bytes (`f5ddc2ee...`). The extension's install RUNPATH is
 `$ORIGIN`, and every dependency resolved in the pinned image. This reproduces
-Steve's recorded 54 MB fresh-build class, not his unrecoverable accepted 67 MB
-binary, strengthening the inference that their difference is build/AOT
-coverage rather than a hidden second W8A8 source implementation.
+Steve's recorded 54 MB fresh-build class, not his unavailable accepted 67 MB
+binary. It does not represent the later `122b698b` native implementation and
+must not be used to dismiss that source delta as an AOT/file-size effect.
 
 The complete materialized runtime package inherits `_C`, `_moe_C`, attention,
 and support files from the digest-pinned Intel image, then replaces `_xpu_C`,
@@ -391,19 +435,21 @@ The separate August `fa-graphsafe` build specializes Qwen head-dimension-256
 FlashAttention kernels and does not match the June accepted binary. It is a
 later forensic artifact and must not be overlaid on the exact control.
 
-The same chronology makes the June native package a required path control and
-the 54 versus 67 MB binary difference a lower-priority residual variable. Steve
+The same chronology makes both the June-9 package and the recovered June-16
+checkpoint required path controls. The 54 versus 67 MB binary difference is a
+separate lower-priority residual variable. Steve
 measured 87.2888 tok/s with a newly rebuilt 54 MB extension,
 restored the 67 MB extension, then measured 89.9613 tok/s in a short clean
 control and 92.5220 tok/s in decisive timing. The exact model control must
 first establish the full June-package endpoint; only then can A/B work
 attribute the smaller accepted-binary residual.
 
-The exact model now establishes that endpoint at 48.5315 tok/s. The directly
-comparable 87.2888 versus 89.9613 historical pair is only a 3.06 percent
-difference. Neither the current 116706992-byte recovered build nor file size
-alone identifies Steve's accepted 67 MB binary. Do not promote a binary-size
-hunt ahead of full-step runtime attribution.
+The exact model now establishes the June-9 endpoint at 48.5315 tok/s. The
+directly comparable 87.2888 versus 89.9613 historical pair is only a 3.06
+percent file-class difference, but that does not compare June-9 source with
+checkpoint `122b698b`. Neither the current 116706992-byte build nor file size
+alone identifies Steve's accepted 67 MB binary. Test the recovered source and
+operator contract; do not substitute a binary-size hypothesis.
 
 ## Measured Lever Attribution
 
@@ -634,15 +680,16 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    broad source drift is not the missing 1.77x.
 5. Do not rebuild oneCCL yet: the installed binary passed its mechanism gate.
    Preserve rebuilding the public artifact as a later provenance task only.
-6. Instrument the true-June endpoint for per-step host/device time, graph-piece
-   selection/replay, GDN, MoE, dense GEMM, sampler, and collective time. Compare
-   counts and timings against Steve's preserved layer-timing packet.
-7. Treat the unrecoverable 67 MB `_xpu_C` only as a later residual. Steve's
-   fresh-54/restored-67 control differed by about 3 percent, not 1.77x.
+6. DONE: built-in replay tracing matched Steve's 41-piece topology. Under the
+   same synchronized protocol, rank-0 model-forward is 22.6748 ms versus
+   5.6946 ms, a 3.9818x execution gap.
+7. Build and test exact checkpoint `122b698b` as a native-binary-only A/B. Its
+   quantization output-buffer operators are absent from the June-9 package but consumed by
+   the already active scratch-aware Python dispatcher.
 8. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
-9. Rebuild `_xpu_C` and GDN from local source, then prove op schemas, numeric
-   equivalence, graph replay, and hashes.
+9. Promote recovered native changes into owned source only after schema,
+   numeric, graph replay, endpoint, and timing evidence.
 10. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
    time. Census its own profile collective shapes and derive its clone-fence
    threshold; do not copy Qwen35's 8192-row threshold.

@@ -1,6 +1,6 @@
 # RESEARCH_TODO.md -- compressed-tensors-first quant research
 
-**Created:** 2026-06-20 - **Status-synced:** 2026-08-25 (endpoint-down research campaign)
+**Created:** 2026-06-20 - **Status-synced:** 2026-08-26 (Steve runtime attribution campaign)
 **Status:** PLAN -- consolidates a strategy info-dump (deduped) + adds AutoRound (autoint) + Quark.
 
 > ### [INFRA FOLLOW-UP 2026-08-25] -- RESET AND SLOT TOPOLOGY
@@ -22,18 +22,23 @@
 > not import, mount, execute, or otherwise depend on Steve's checkout. Preserve
 > source-level attribution and licenses for any adapted work.
 >
-> **LATEST CLOSURE 2026-08-25:** the closest surviving June source
-> (`e190923b`) now runs with a 12-component source/hash contract and the
-> recovered scratch-aware fused-MoE interface. It passed 81/81 profile clone
-> fences per rank, 9/9 graph captures, the exact metric, both 16/16 canaries,
-> and both post-health layers at 48.5315 tok/s. This is +6.98% over the
-> 45.3649 August-adapter native control but still 1.7693x below Steve. The
-> initial source run concretely exposed the June `scratch` ABI seam; it was not
-> a device failure. Steve's fresh-54/restored-67 MB `_xpu_C` pair differed by
-> only about 3%, so do not chase SO size. NEXT: instrument the true-June
-> endpoint for graph-piece selection/replay plus GDN, MoE, dense, sampler, and
-> collective host/device time. Then transfer mechanisms one factor at a time
-> to dense 27B, with a model-specific profile collective census and fence.
+> **LATEST CLOSURE 2026-08-26:** the `e190923b` endpoint has the same graph
+> topology as Steve: all piecewise indices 0..40 and a reported total of 41.
+> Under the same synchronized pure-decode timing method, local rank-0
+> model-forward is 22.6748 ms versus Steve's 5.6946 ms (3.9818x), with broad
+> GDN, logits, argmax, and sampler inflation. The synchronized endpoint is
+> 35.4699 tok/s versus Steve's 84.3075 tok/s, so the gap is real execution
+> behavior, not missing graph pieces. A provenance correction is now central:
+> the prior rebuilt package is the June-9 minimal patch, not Steve's June-16
+> native checkpoint. Exact recoverable commit `122b698b` adds real quantization
+> output-buffer variants used conditionally by the scratch-aware dispatcher.
+> The accepted path needs the per-token quant `_out` primitive 80 times/step;
+> fused SiLU+quant was explicitly unset and is not part of this attribution.
+> NEXT: finish
+> the exact `122b698b` build and run a native-binary-only A/B, then repeat the
+> synchronized timing trace. Transfer only proven reusable quant/output behavior
+> to 27B; census its own graph pieces and profile collectives, and keep MoE
+> layerlet/sidecar code out of the dense conclusion.
 >
 > Required workstreams and exit criteria:
 >

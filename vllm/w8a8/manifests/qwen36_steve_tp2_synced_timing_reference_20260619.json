@@ -1,0 +1,124 @@
+{
+  "protocol": "steve-qwen36-tp2-synchronized-pure-decode-reference-v1",
+  "source_identity": {
+    "label": "qwen36-prefill-safe-int8-tp2-control-decisive-20260619a",
+    "timing_summary_sha256": "7e9d805acfd3e7b56e85a04902edc59b0681ed4315990174d062b5f5dba18541",
+    "run_summary_sha256": "6ab63849ce490425a9bc33ccaa29d6ebc922c1a85fe50956d9d0fd24ce0c8c98",
+    "created_at_utc": "2026-06-19T17:02:58Z"
+  },
+  "configuration": {
+    "model": "Qwen3.6-35B-A3B Quark W8A8",
+    "tensor_parallel_size": 2,
+    "cudagraph_mode": "PIECEWISE",
+    "mixed_workspace": true,
+    "fused_silu_quant": false,
+    "graph_piece_count": 41
+  },
+  "endpoint": {
+    "prompt_tokens": 498,
+    "output_tokens": 256,
+    "corrected_output_tok_s": 84.30754286685192
+  },
+  "timing_semantics": "synchronized device-completion diagnostic; nested labels are nonexclusive",
+  "step_summary_by_rank_label": [
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.forward_total",
+      "step_count": 16,
+      "mean_total_ms_per_step": 5.74788625,
+      "median_total_ms_per_step": 5.6341265,
+      "p90_total_ms_per_step": 6.467375499999999,
+      "max_total_ms_per_step": 6.515982
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.model_forward",
+      "step_count": 16,
+      "mean_total_ms_per_step": 5.6946250625,
+      "median_total_ms_per_step": 5.583266,
+      "p90_total_ms_per_step": 6.4069475,
+      "max_total_ms_per_step": 6.456621
+    },
+    {
+      "rank": "0",
+      "label": "gdn_attention_core_xpu.native",
+      "step_count": 16,
+      "mean_total_ms_per_step": 1.5845783125,
+      "median_total_ms_per_step": 1.5520275,
+      "p90_total_ms_per_step": 1.7760725,
+      "max_total_ms_per_step": 1.791242
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.postprocess_total",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.31285425,
+      "median_total_ms_per_step": 0.300334,
+      "p90_total_ms_per_step": 0.349897,
+      "max_total_ms_per_step": 0.357922
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.compute_logits",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.2291500625,
+      "median_total_ms_per_step": 0.2202335,
+      "p90_total_ms_per_step": 0.2552145,
+      "max_total_ms_per_step": 0.264857
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.sample_total",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.1654618125,
+      "median_total_ms_per_step": 0.156694,
+      "p90_total_ms_per_step": 0.2068085,
+      "max_total_ms_per_step": 0.214212
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.sampler",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.1447353125,
+      "median_total_ms_per_step": 0.1368665,
+      "p90_total_ms_per_step": 0.18134,
+      "max_total_ms_per_step": 0.18658
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.async_output_wrap",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.1099528125,
+      "median_total_ms_per_step": 0.1061095,
+      "p90_total_ms_per_step": 0.12371299999999999,
+      "max_total_ms_per_step": 0.127149
+    },
+    {
+      "rank": "0",
+      "label": "logits.local_argmax_lm_head",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.070528,
+      "median_total_ms_per_step": 0.06691549999999999,
+      "p90_total_ms_per_step": 0.078708,
+      "max_total_ms_per_step": 0.084709
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.select_sample_hidden",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.050766375,
+      "median_total_ms_per_step": 0.0491875,
+      "p90_total_ms_per_step": 0.056957,
+      "max_total_ms_per_step": 0.057538
+    },
+    {
+      "rank": "0",
+      "label": "gpu_model_runner.bookkeeping_sync",
+      "step_count": 16,
+      "mean_total_ms_per_step": 0.033320625,
+      "median_total_ms_per_step": 0.031438999999999995,
+      "p90_total_ms_per_step": 0.03725,
+      "max_total_ms_per_step": 0.044764
+    }
+  ]
+}

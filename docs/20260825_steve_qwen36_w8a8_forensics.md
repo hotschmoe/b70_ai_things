@@ -21,6 +21,14 @@ packet also says that the live source tree was dirty and must not be assumed to
 be a promoted patch set. Therefore the exact record source and binary identity
 are not fully reconstructible from the public packet alone.
 
+The accepted dirty binary is unavailable, but native source recovery is now
+stronger than the original audit stated. Steve's live object database contains
+exact June-16 checkpoint `122b698b`, parented directly on the public base, and
+June-19 child `3ed399a`. The former precedes the accepted synchronized timing
+packet and adds quantization output-buffer and scratch-aware native operators missing
+from the local June-9 reconstruction. It is a controlled source target, not a
+claim of byte identity with Steve's accepted binary.
+
 The current pinned S2B image is reproducible, but it is a later snapshot. Three
 source file hashes in the image exactly match the local detached vLLM source at
 commit `44fc8fde0`, dated 2026-08-18. That snapshot includes later speculative
@@ -311,12 +319,15 @@ gate rejected the run because request-time Triton `fused_moe_kernel` proved
 that the later Quark dispatcher still bypassed the registered June grouped
 operator.
 
-The native Quark repair and closest surviving June source transaction are now
-complete. The next experiment is instrumented true-June decode: count actual
-piece selection/replay and attribute host/device time across GDN, routed and
-shared MoE, dense GEMM, sampler, and all-reduce. Compare that breakdown with
-Steve's preserved timing packet before changing another mechanism. Do not
-prioritize `_xpu_C` by file size: Steve's fresh 54 MB versus restored 67 MB
-control differed by only about 3 percent. Transfer proven graph/runtime changes
-to dense 27B one factor at a time; census that model's profile collective
-shapes and derive its own clone-fence threshold.
+The native Quark repair, closest surviving June vLLM source transaction, and
+instrumented decode census are now complete. Replay tracing reports the same
+41 graph pieces as Steve. Under his synchronized pure-decode protocol, local
+rank-0 model-forward is 22.6748 ms versus 5.6946 ms, a 3.9818x execution gap.
+The next experiment swaps only native siblings rebuilt from exact checkpoint
+`122b698b`; its output-buffer operators are consumed conditionally by the
+already active scratch-aware dispatcher but absent from the June-9 package.
+The accepted path performs two scratch-targeted quantizations in each of 40
+MoE layers, or 80 calls/step; its fused SiLU+quant switch is explicitly unset.
+Transfer proven graph/runtime changes to dense 27B one factor at a time;
+census that model's graph pieces and profile collective shapes, derive its own
+clone-fence threshold, and exclude MoE-only layerlet/sidecar conclusions.

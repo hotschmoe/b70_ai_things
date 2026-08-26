@@ -25,6 +25,8 @@ EXPECTED_MQA_SHA256="e51af18e63cf3f888bcbf9d99f8207b2521ce3182121a9b3ea9a33b490c
 EXPECTED_ALLOCATOR_SHA256="76c1301123723f643e7eae6160b7c72adc3db9f76bdb51225c686578637be57a"
 EXPECTED_FUSED_MOE_SHA256="433ee08a80ab8e1c12d000e7d2a683c0e325c2971868ca31075075a863b7d81a"
 EXPECTED_CCL_KERNELS_SHA256="0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e075290d314f0c9"
+STEVE_TIMING_REFERENCE="$SCRIPT_DIR/manifests/qwen36_steve_tp2_synced_timing_reference_20260619.json"
+EXPECTED_STEVE_TIMING_REFERENCE_SHA256="bda64332cb8a9a70a9fd04536c3928931d904b25eb9368c177518bd7788efe28"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 P2P_ACCESS="${P2P_ACCESS:-1}"
 case "$P2P_ACCESS" in 0|1) ;; *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;; esac
@@ -65,12 +67,42 @@ STALL_TIMEOUT="${STALL_TIMEOUT:-180}"
 case "$STALL_TIMEOUT" in
   ''|*[!0-9]*) echo "STALL_TIMEOUT must be a non-negative integer" >&2; exit 2 ;;
 esac
+DECODE_TIMING="${DECODE_TIMING:-0}"
+DECODE_TIMING_SYNC="${DECODE_TIMING_SYNC:-$DECODE_TIMING}"
+CUDAGRAPH_REPLAY_TRACE="${CUDAGRAPH_REPLAY_TRACE:-0}"
+for binary_setting in DECODE_TIMING DECODE_TIMING_SYNC CUDAGRAPH_REPLAY_TRACE; do
+  case "${!binary_setting}" in
+    0|1) ;;
+    *) echo "$binary_setting must be 0 or 1" >&2; exit 2 ;;
+  esac
+done
+DECODE_TIMING_SKIP_FIRST="${DECODE_TIMING_SKIP_FIRST:-32}"
+DECODE_TIMING_STEP_SKIP_FIRST="${DECODE_TIMING_STEP_SKIP_FIRST:-32}"
+DECODE_TIMING_STEP_EVERY="${DECODE_TIMING_STEP_EVERY:-16}"
+CUDAGRAPH_REPLAY_TRACE_MAX_LINES="${CUDAGRAPH_REPLAY_TRACE_MAX_LINES:-4096}"
+for integer_setting in \
+  DECODE_TIMING_SKIP_FIRST \
+  DECODE_TIMING_STEP_SKIP_FIRST \
+  DECODE_TIMING_STEP_EVERY \
+  CUDAGRAPH_REPLAY_TRACE_MAX_LINES; do
+  case "${!integer_setting}" in
+    ''|*[!0-9]*) echo "$integer_setting must be a non-negative integer" >&2; exit 2 ;;
+  esac
+done
+[ "$DECODE_TIMING_STEP_EVERY" -gt 0 ] || {
+  echo "DECODE_TIMING_STEP_EVERY must be greater than zero" >&2
+  exit 2
+}
 source_suffix=""
 [ "$SOURCE_STACK" = june-e190 ] && source_suffix="_june_e190"
 NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
+REPLAY_TRACE_FILE_VALUE=""
+if [ "$CUDAGRAPH_REPLAY_TRACE" = 1 ]; then
+  REPLAY_TRACE_FILE_VALUE="/results/logs/$NAME/cudagraph_replay_rank{rank}.jsonl"
+fi
 RUN_LOG="$RESULT_DIR/run.log"
 SERVER_LOG="$RESULT_DIR/b70_${NAME}.log"
 HF_REF="/mnt/vm_8tb/b70/hf_cache/hub/models--nameistoken--Qwen3.6-35B-A3B-Quark-W8A8-INT8/refs/main"
@@ -114,6 +146,9 @@ if [ "$SOURCE_STACK" = june-e190 ]; then
 fi
 
 mkdir -p "$RESULT_DIR" "$(dirname "$CACHE_DIR")"
+if [ "$CUDAGRAPH_REPLAY_TRACE" = 1 ]; then
+  mkdir -p "/mnt/vm_8tb/b70/results/logs/$NAME"
+fi
 
 actual_config_sha256="$(sha256sum "$MODEL_HOST/config.json" | awk '{print $1}')"
 actual_index_sha256="$(sha256sum "$MODEL_HOST/model.safetensors.index.json" | awk '{print $1}')"
@@ -158,6 +193,11 @@ done
 [ "$(sha256sum "$JUNE_RUNTIME/vllm_xpu_kernels/libmqa_logits_kernels_xe_2.so" | awk '{print $1}')" = "$EXPECTED_MQA_SHA256" ]
 [ "$(sha256sum "$JUNE_RUNTIME/vllm_xpu_kernels/xpumem_allocator.abi3.so" | awk '{print $1}')" = "$EXPECTED_ALLOCATOR_SHA256" ]
 [ "$(sha256sum "$JUNE_RUNTIME/vllm_xpu_kernels/fused_moe_interface.py" | awk '{print $1}')" = "$EXPECTED_FUSED_MOE_SHA256" ]
+[ "$(sha256sum "$STEVE_TIMING_REFERENCE" | awk '{print $1}')" = \
+  "$EXPECTED_STEVE_TIMING_REFERENCE_SHA256" ] || {
+  echo "Steve timing reference identity mismatch" >&2
+  exit 1
+}
 
 # This preflight has no /dev/dri mount. It proves the pinned image artifacts
 # before the first actual GPU touch of the reboot-bounded transaction.
@@ -241,6 +281,7 @@ else
   echo "config -> native_moe=june-base moe_mixed_workspace=$MIXED_WORKSPACE call_abi=august-keywords-to-june-base"
 fi
 echo "config -> moe_trace=$MOE_TRACE allreduce_trace=$ALLREDUCE_TRACE allreduce_trace_sync=$ALLREDUCE_TRACE_SYNC allreduce_trace_max_calls=$ALLREDUCE_TRACE_MAX_CALLS profile_fence_min_rows=$PROFILE_FENCE_MIN_ROWS profile_fence_stages=$PROFILE_FENCE_STAGES cache_reuse=${ALLOW_EXISTING_CACHE:-0}"
+echo "config -> decode_timing=$DECODE_TIMING timing_sync=$DECODE_TIMING_SYNC timing_skip=$DECODE_TIMING_SKIP_FIRST timing_step_skip=$DECODE_TIMING_STEP_SKIP_FIRST timing_step_every=$DECODE_TIMING_STEP_EVERY replay_trace=$CUDAGRAPH_REPLAY_TRACE replay_trace_max_lines=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES"
 echo "config -> source_stack=$SOURCE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
 echo "config -> kernel_runtime=locally-rebuilt-June-complete-package xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
 echo "config -> selector=level_zero:0,1 affinity=0,1 inductor_cache=/vllm_cache/torchinductor"
@@ -271,7 +312,7 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   CACHE_DIR_HOST="$CACHE_DIR" \
   B70_LOGDIR="$RESULT_DIR" \
   HEALTH_STALL="$STALL_TIMEOUT" \
-  B70_EXTRA_ENV="ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=$MIXED_WORKSPACE B70_QWEN36_MOE_TRACE=$MOE_TRACE B70_QWEN36_ALLREDUCE_TRACE=$ALLREDUCE_TRACE B70_QWEN36_ALLREDUCE_TRACE_SYNC=$ALLREDUCE_TRACE_SYNC B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS=$ALLREDUCE_TRACE_MAX_CALLS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES=$PROFILE_FENCE_STAGES B70_QWEN36_JUNE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS" \
+  B70_EXTRA_ENV="ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=$MIXED_WORKSPACE B70_QWEN36_MOE_TRACE=$MOE_TRACE B70_QWEN36_ALLREDUCE_TRACE=$ALLREDUCE_TRACE B70_QWEN36_ALLREDUCE_TRACE_SYNC=$ALLREDUCE_TRACE_SYNC B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS=$ALLREDUCE_TRACE_MAX_CALLS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES=$PROFILE_FENCE_STAGES B70_QWEN36_JUNE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS VLLM_XPU_DECODE_TIMING_ALLOW=$DECODE_TIMING VLLM_XPU_DECODE_TIMING=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_SYNC=$DECODE_TIMING_SYNC VLLM_XPU_DECODE_TIMING_RANK=0 VLLM_XPU_DECODE_TIMING_SUMMARY=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_STEP_SUMMARY=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_SKIP_FIRST=$DECODE_TIMING_SKIP_FIRST VLLM_XPU_DECODE_TIMING_STEP_SKIP_FIRST=$DECODE_TIMING_STEP_SKIP_FIRST VLLM_XPU_DECODE_TIMING_STEP_EVERY=$DECODE_TIMING_STEP_EVERY VLLM_XPU_DECODE_TIMING_PRINT_EVERY=0 VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_FILE=$REPLAY_TRACE_FILE_VALUE VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_RANK=0 VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_MAX_LINES=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES" \
   I_KNOW_P2P_WEDGES=1 \
   bash "$SCRIPT_DIR/serve_qwen36_s2b_control.sh" run 2>&1 | tee "$RUN_LOG"
 serve_rc="${PIPESTATUS[0]}"
@@ -308,6 +349,14 @@ done
 cp "$metric_path" "$RESULT_DIR/steve_metric.json"
 cp "$json_canary_path" "$RESULT_DIR/json_repeat16.json"
 cp "$color_canary_path" "$RESULT_DIR/color_repeat16.json"
+if [ "$CUDAGRAPH_REPLAY_TRACE" = 1 ]; then
+  runtime_trace_dir="/mnt/vm_8tb/b70/results/logs/$NAME"
+  compgen -G "$runtime_trace_dir/cudagraph_replay_rank*.jsonl" >/dev/null || {
+    echo "CUDAGraph replay tracing produced no artifact" >&2
+    exit 1
+  }
+  cp "$runtime_trace_dir"/cudagraph_replay_rank*.jsonl "$RESULT_DIR/"
+fi
 
 if [ "$SOURCE_STACK" = june-e190 ]; then
   required_markers=(
@@ -355,6 +404,18 @@ rg -a -l -q "$collective_cache_pattern" "$CACHE_DIR/torch_compile_cache" || {
   echo "Persisted Inductor cache has no compiled collective evidence for $SOURCE_STACK" >&2
   exit 1
 }
+if [ "$DECODE_TIMING" = 1 ]; then
+  python3 "$SCRIPT_DIR/summarize_qwen36_decode_timing.py" \
+    --server-log "$SERVER_LOG" \
+    --timing-sync "$DECODE_TIMING_SYNC" \
+    --output "$RESULT_DIR/decode_timing_summary.json" \
+    "$RESULT_DIR"/cudagraph_replay_rank*.jsonl
+  python3 "$SCRIPT_DIR/compare_xpu_decode_timing.py" \
+    --candidate "$RESULT_DIR/decode_timing_summary.json" \
+    --reference "$STEVE_TIMING_REFERENCE" \
+    --rank 0 \
+    --output "$RESULT_DIR/decode_timing_vs_steve.json"
+fi
 
 python3 - \
   "$RESULT_DIR/steve_metric.json" \

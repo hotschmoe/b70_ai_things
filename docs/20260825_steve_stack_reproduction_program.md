@@ -123,10 +123,10 @@ prebuilt binaries.
   layers at 48.5315 tok/s. This is +6.98 percent over the August-adapter native
   control and leaves a 1.7693x gap. Full June source is not the missing lever.
 - Steve's directly comparable fresh-54/restored-67 `_xpu_C` results were
-  87.2888 and 89.9613 tok/s, about a 3 percent difference. File size and the
-  recovered 116706992-byte build do not identify the accepted binary or
-  explain a 1.77x endpoint gap. Decode-step runtime attribution is now ahead
-  of binary reconstruction.
+  87.2888 and 89.9613 tok/s, about a 3 percent file-class difference. This does
+  not compare the June-9 reconstruction with exact recovered June-16
+  checkpoint `122b698b`, which adds native quantization output-buffer operators. File size
+  is still not an identity; source/operator A/B is the required test.
 - The GPU model matches, but the host does not: Steve's June Qwen35 system was
   an EPYC 9015 PCIe 5 host, while this system is a Threadripper 1950X with the
   cards under separate PCI domains on a PCIe Gen3-era platform. Steve also
@@ -239,9 +239,11 @@ nine general captures while restoring the variable before runtime dispatch. A
 v2 no-device contract guards both halves. Direct P2P plus a profile-only clone
 completion fence now crosses the compiled collective boundary and captures all
 nine graphs. The true-June source control raises the stable endpoint to
-48.5315 tok/s. The active target is the remaining 1.7693x decode gap to Steve's
-85.8691 tok/s result. Instrument graph-piece selection/replay and per-family
-host/device time before another code toggle.
+48.5315 tok/s. Instrumented replay observes the same 41 graph pieces as Steve,
+while synchronized rank-0 model-forward is 22.6748 ms versus 5.6946 ms. The
+active target is therefore native/runtime execution inside the matched
+topology. The next controlled toggle is exact checkpoint `122b698b` native
+siblings.
 
 ### 6. Collective paths
 
@@ -312,18 +314,21 @@ equivalence before performance tests.
    per-step profile from this control; do not spend another transaction on the
    now-cleared compiled-collective boundary unless a different model shape
    needs a new fence threshold.
-10. IN PROGRESS: the locally owned minimal June 9 source reconstruction built
+10. DONE: the locally owned minimal June 9 source reconstruction built
    a 55,523,648-byte B70-AOT `_xpu_C`, both Xe2 siblings, and a complete
    pinned-image runtime package with all required XPU dispatch registrations.
-   This matches Steve's 54 MB fresh-build class, not the unrecoverable accepted
+   This matches Steve's 54 MB fresh-build class, not the unavailable accepted
    67 MB binary. The June/August quant and dense A-B-B-A harness is ready; the
    pinned August package cannot be the grouped arm because that schema is
-   absent. GPU numeric/capture gates and source ownership of inherited `_C`,
-   `_moe_C`, attention, and support components remain open.
-11. Implement and gate the SGLang-native route.
-12. Execute the model and parallelism portability matrix.
-13. Transfer only proven wins to Ornith, then add MTP and prefix caching.
-14. Run Pi plus local Terminal-Bench and promote only a coherent winner.
+   absent. It passed full-model dispatch/capture/coherence gates, but it lacks
+   the later quantization output-buffer schemas.
+11. IN PROGRESS: rebuild exact native checkpoint `122b698b`, then prove its
+   schema/import contract and run a native-binary-only endpoint/timing A/B.
+12. Implement and gate the SGLang-native route.
+13. Execute the model and parallelism portability matrix.
+14. Transfer only proven wins to Ornith and dense 27B, then add MTP and prefix
+   caching.
+15. Run Pi plus local Terminal-Bench and promote only a coherent winner.
 
 ## Definition Of Done
 
