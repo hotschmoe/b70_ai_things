@@ -80,15 +80,33 @@ def install():
     global _installed
     if _installed:
         return
-    from sglang.srt.layers.quantization import int8_kernel
-    int8_kernel.per_token_quant_int8 = per_token_quant_int8_xpu
-    # fused_moe_triton_kernels.py does `from ...int8_kernel import per_token_quant_int8` (by-name), so
-    # it holds its own reference -> patch that module attr too (this is the one the MoE kernel calls).
     try:
-        from sglang.srt.layers.moe.moe_runner.triton_utils import fused_moe_triton_kernels as _fk
-        if hasattr(_fk, "per_token_quant_int8"):
-            _fk.per_token_quant_int8 = per_token_quant_int8_xpu
-    except Exception as e:  # pragma: no cover
-        print(f"[int8_actquant_xpu] WARN: could not patch fused_moe_triton_kernels: {e}", flush=True)
+        from sglang.kernels.ops.quantization import int8_kernel
+    except ImportError:
+        # SGLang <=0.5.15 kept this kernel under the runtime quantization tree.
+        from sglang.srt.layers.quantization import int8_kernel
+    int8_kernel.per_token_quant_int8 = per_token_quant_int8_xpu
+    # fused_moe_triton_kernels.py imports the function by name, so patch its
+    # already-bound module global too. The module moved in current SGLang.
+    patched_fused_moe = False
+    import_errors = []
+    for module_name in (
+        "sglang.kernels.ops.moe.fused_moe_triton_kernels",
+        "sglang.srt.layers.moe.moe_runner.triton_utils.fused_moe_triton_kernels",
+    ):
+        try:
+            module = __import__(module_name, fromlist=["per_token_quant_int8"])
+            if hasattr(module, "per_token_quant_int8"):
+                module.per_token_quant_int8 = per_token_quant_int8_xpu
+                patched_fused_moe = True
+                break
+        except Exception as error:  # pragma: no cover
+            import_errors.append(f"{module_name}: {error}")
+    if not patched_fused_moe:
+        print(
+            "[int8_actquant_xpu] WARN: could not patch fused_moe_triton_kernels: "
+            + "; ".join(import_errors),
+            flush=True,
+        )
     _installed = True
     print("[int8_actquant_xpu] patched per_token_quant_int8 -> XPU-safe round (floor/ceil)", flush=True)

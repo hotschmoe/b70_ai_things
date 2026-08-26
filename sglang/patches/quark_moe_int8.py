@@ -251,12 +251,11 @@ def _make_int8_moe_method_cls():
 #    MORE accurate than the ckpt's W8A8, correctness-first). Mirrors vLLM QuarkW8A8Int8DequantXPU
 #    (rdy_to_serve/vllm/qwen36-35b-a3b-w8a8/patches/quark.py:109-178).
 #
-#    OPT-IN FAST PATH: set B70_XPU_W8A8_FUSED=1 (+ the built _xpu_C.so via B70_XPU_C_SO) to instead
-#    route these linears to the fused oneDNN ops (int8_gemm_w8a16 decode / int8_gemm_w8a8 prefill)
-#    exactly as sglang/patches/w8a8_shim.py does for the dense 27B model. Dequant stays the DEFAULT
-#    because on this MoE the linears are a minority and int8 linear was NOT a serve win (vLLM finding,
-#    rdy_to_serve/.../patches/quark.py:54-55). Keeping dequant default = fewer moving parts for the
-#    first green serve; flip to fused once Route-A MoE is proven.
+#    OPT-IN FAST PATH: set B70_QUARK_DENSE_NATIVE=1 with the refreshed native
+#    INT8 image to keep these weights INT8 and use per-token quantization plus
+#    int8_gemm_w8a8. Dequant stays the default because dense linears are a
+#    minority on this MoE and the matched graph serve found native dense INT8
+#    slightly slower.
 # --------------------------------------------------------------------------------------------------
 def _make_int8_dequant_linear_cls():
     from sglang.srt.layers.parameter import ChannelQuantScaleParameter, ModelWeightParameter
@@ -267,6 +266,7 @@ def _make_int8_dequant_linear_cls():
             self.quant_config = quant_config
             self.prefix = prefix
             self.out_dtype = torch.get_default_dtype()
+            self.use_native = os.environ.get("B70_QUARK_DENSE_NATIVE") == "1"
 
         def create_weights(
             self,
@@ -315,6 +315,22 @@ def _make_int8_dequant_linear_cls():
             layer.register_parameter("weight_scale", weight_scale)
 
         def process_weights_after_loading(self, layer: torch.nn.Module) -> None:
+            if self.use_native:
+                weight_nk = layer.weight.data.contiguous()
+                layer.b70_weight_nk = weight_nk
+                layer.b70_weight_nt = weight_nk.t()
+                if layer.b70_weight_nt.stride(0) != 1:
+                    raise RuntimeError("B70 Quark W8A8 weight is not NT-strided")
+                layer.b70_weight_scale = (
+                    layer.weight_scale.data.reshape(-1).to(torch.float32).contiguous()
+                )
+                layer.weight = torch.nn.Parameter(
+                    torch.empty(0, dtype=weight_nk.dtype, device=weight_nk.device),
+                    requires_grad=False,
+                )
+                delattr(layer, "weight_scale")
+                return
+
             # Dequant int8 [N,K] * per-channel scale[N,1] -> bf16, replace the int8 param. Compute
             # outside inference_mode so the dequant tensor carries a version counter (mirror
             # vLLM quark.py:159-173 -- avoids torch.compile functionalization tripping on it).
@@ -332,6 +348,19 @@ def _make_int8_dequant_linear_cls():
                 torch.xpu.empty_cache()
 
         def apply(self, layer: torch.nn.Module, x: torch.Tensor, bias: Optional[torch.Tensor] = None):
+            if self.use_native:
+                original_shape = x.shape
+                x_2d = x.reshape(-1, original_shape[-1]).contiguous()
+                x_int8, x_scale = torch.ops._xpu_C.per_token_quant_int8_xpu(x_2d)
+                output = torch.ops._xpu_C.int8_gemm_w8a8(
+                    x_int8,
+                    x_scale,
+                    layer.b70_weight_nt,
+                    layer.b70_weight_scale,
+                    x.dtype,
+                    bias,
+                )
+                return output.reshape(*original_shape[:-1], -1)
             if os.environ.get("B70_ORNITH_PROFILE_RANGES") == "1":
                 prefix = self.prefix.lower()
                 if "linear_attn" in prefix:
@@ -403,6 +432,15 @@ def install():
 
     _orig_get_quant_method = QuarkConfig.get_quant_method
 
+    def _record_quantized_layer(config, prefix):
+        # Current SGLang exposes a summary through the quantized_layers
+        # property and stores bookkeeping in _online_quantized_layers.
+        # SGLang 0.5.15 used _quantized_layers directly.
+        layers = getattr(config, "_online_quantized_layers", None)
+        if layers is None:
+            layers = config._quantized_layers
+        layers.add(prefix)
+
     def _patched_get_quant_method(self, layer: torch.nn.Module, prefix: str):
         # Excluded layers (visual.*, shared_expert_gate, lm_head per config.json) -> unquantized.
         if should_ignore_layer(prefix, ignore=self.exclude_layers, fused_mapping=self.packed_modules_mapping):
@@ -420,13 +458,13 @@ def install():
 
         if _is_int8_w8a8(weight_cfg, input_cfg):
             if isinstance(layer, FusedMoE):
-                self._quantized_layers.add(prefix)
+                _record_quantized_layer(self, prefix)
                 logger.info("quark_moe_int8: int8 MoE method -> %s", prefix)
                 return Int8MoEMethod(
                     self, weight_cfg=weight_cfg, input_cfg=input_cfg, prefix=prefix
                 )
             if isinstance(layer, LinearBase):
-                self._quantized_layers.add(prefix)
+                _record_quantized_layer(self, prefix)
                 return Int8DequantLinear(self, prefix=prefix)
 
         # Not int8 (fp8/mxfp4) or non-quantizable -> stock dispatch.
@@ -440,8 +478,20 @@ def install():
             ornith_profile_ranges.install()
         except Exception as e:
             print(f"[quark_moe_int8] WARN: semantic profiler install failed: {e}", flush=True)
-    logger.info("quark_moe_int8: patched QuarkConfig.get_quant_method (int8 MoE + dense dequant)")
-    print("[quark_moe_int8] installed: int8 Quark MoE loader + dense int8->bf16 dequant linear", flush=True)
+    dense_route = (
+        "native per-token quant plus oneDNN GEMM"
+        if os.environ.get("B70_QUARK_DENSE_NATIVE") == "1"
+        else "int8-to-bf16 load-time dequant"
+    )
+    logger.info(
+        "quark_moe_int8: patched QuarkConfig.get_quant_method "
+        "(int8 MoE + %s dense)",
+        dense_route,
+    )
+    print(
+        f"[quark_moe_int8] installed: int8 Quark MoE loader + {dense_route} dense",
+        flush=True,
+    )
 
 
 if os.environ.get("B70_QUARK_MOE_INT8_AUTOINSTALL") == "1":

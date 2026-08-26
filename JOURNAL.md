@@ -4167,3 +4167,83 @@ work. Reject s3 because exact target coherence fails before performance is
 considered. Do not claim sampled-serving correctness on the current XPU greedy
 verification fallback. Return to MTP only if a target-exact multi-step GDN
 state oracle or materially better draft acceptance changes this decision.
+
+### 2026-08-26x - Refreshed Ornith W8A8 graph gains 4.15x; MTP is not target-exact
+
+CONFIG -> exact refreshed SGLang runtime
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`,
+SGLang `bede6bc`, sgl-kernel `2d10888`, Torch 2.13.0+xpu, Triton XPU
+3.7.2, Compute Runtime 26.22, and vllm-xpu-kernels `2dd55f3`. The model was
+the local Ornith-1.5-35B-A3B Quark-compatible RTN W8A8 checkpoint with
+dynamic per-token INT8 activations and the BF16 Shisa MTP sidecar. All serves
+used TP=2, P2P disabled, 8192 context, overlap/radix off, and capture batch
+sizes 1, 2, and 4. Routed experts stayed on Triton W8A8. The control kept
+eligible dense/shared projections in the proven load-time BF16 dequant route.
+
+COMMAND -> exact-image per-card and compiled ten-iteration P2P-off collective
+health bracketed each risky phase. Serves used `./bin/gpu-run` with
+`sglang/w8a8/serve_ornith15_w8a8_refresh.sh`. The matched client protocol used
+the retained `phase_bench.py` source from the pre-cleanup commit through
+`git show`, one same-shape warmup, three unique entropy-prefix requests,
+approximately 4200 actual prompt tokens, 128 forced output tokens, and true
+client post-first timing. Separate c4 batches used the same prompt generator,
+SSE timing, and four simultaneous forced-length streams.
+
+RESULT -> current SGLang moved both the INT8 activation kernel and fused-MoE
+module and renamed Quark's online quantized-layer bookkeeping. Two bounded
+constructor-only failures exposed those API seams before weight load. The
+ported loader now supports both old and current module paths and bookkeeping
+names. Each failed TP2 attempt was torn down, followed by xe rebind recovery,
+exact-image per-card health, and compiled P2P-off collective health.
+
+RESULT -> eager no-MTP loaded 17.91 GB/rank and selected Triton INT8 W8A8 for
+all 40 routed-expert layers. Two greedy Rayleigh responses were byte-identical
+at SHA256 `1deaa216c21e626b549b9a6b4d8a05ef113761275a4196bfb2247b5bee3db3d9`;
+four simultaneous arithmetic canaries returned 42, 78, 93, and 189. The
+matched c1 median was 6.0923 post-first tok/s with 2.5948 s TTFT and 4219
+actual prompt tokens. Runtime log SHA256 is
+`07a4092b1087be6d45feb6416ebc000666103a7069a389c9b152199d33e19eca`.
+
+RESULT -> target-only breakable capture kept TP collectives eager and captured
+bs 4, 2, and 1 in 10.7 seconds. It returned the exact eager hash twice and
+passed the same c4 arithmetic gate. The matched c1 median was 25.2616
+post-first tok/s with 2.5644 s TTFT and 4218 prompt tokens: 4.15x the eager
+decode rate with unchanged prefill latency. Three timed c4 batches returned
+128 tokens on all 12 streams. Median per-stream post-first decode was 19.74
+tok/s, aggregate post-first throughput was 29.42 tok/s, aggregate including
+TTFT was 24.66 tok/s, and median TTFT was 6.853 s. This distinguishes c4
+per-request latency from server aggregate capacity. Runtime log SHA256 is
+`65b5ee45343e969b615c8b5fda3c39c52b1ea8ef91b1b8c6ee420b06e51f4555`.
+
+RESULT -> Shisa NEXTN s1 loaded another 1.75 GB/rank and captured target verify
+in 9.63 seconds plus draft extend in 2.33 seconds. It passed the four arithmetic
+canaries, but its two deterministic Rayleigh responses had SHA256
+`ecc5e331daf7886fe3831eef5a7de6722ef111f2edda75563dc51ff1dbe8c4dd`,
+not the exact target hash. It was rejected before speed measurement. Runtime
+log SHA256 is
+`f93b416dd559d9af188a156c55df1fd3d8d471cc5133d7ac4ee022cc44c10bf1`.
+
+RESULT -> an opt-in native dense route kept Quark dense/shared weights INT8 and
+used the already-qualified oneDNN per-token quant plus W8A8 GEMM. It was
+deterministic and passed c4 arithmetic, but changed the expected W8A16-fallback
+hash and measured only 24.5356 c1 post-first tok/s with 2.6074 s TTFT: 2.85
+percent slower than the matched breakable control. It remains default-off.
+Runtime log SHA256 is
+`04e48548042f82d2823a3c0d756ef228104105a7dd120a8631b98a1c2ffa3c39`.
+
+RESULT -> full target capture with P2P still disabled failed at its first
+in-graph embedding all-reduce because oneCCL could not export the allocation:
+`mem_to_ipc_handle: EXCEPTION: device_fd is invalid value`. No endpoint or
+speed result was produced. Runtime log SHA256 is
+`efc290c67354cc7a0c9b71fdafa7b8e171c7488acf5166820943d528f57286a1`.
+The required rebind recovery preserved the boot ID. Final exact-image per-card
+health and compiled ten-iteration P2P-off collective health passed, and no GPU
+server remains running.
+
+VERDICT -> retain target-only breakable graph with load-time BF16 dense dequant
+as the refreshed Ornith W8A8 research winner. It removes the dominant host
+launch floor without putting oneCCL inside the graph. Do not promote Shisa MTP
+until speculative greedy output is target-exact. Do not use the native dense
+route by default because it is slower, and do not retry full TP2 capture until
+the oneCCL graph IPC export has an isolated passing oracle. The missing B70
+`E=256,N=256` Triton MoE tuning files remain a smaller post-graph opportunity.
