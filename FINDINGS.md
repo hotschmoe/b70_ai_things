@@ -464,6 +464,16 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   wait and about 2 ms post-submit host work. Routed MoE and 81 all-reduces are
   now inside the opaque single graph. The next speed target is in-graph
   collective/MoE execution, not further graph-piece reduction.
+- **[2026-08-26 MoE backend attribution]** The June e190 CLI can request
+  `--moe-backend triton`, but its `TritonExperts` support gate admits INT8 only
+  on CUDA. A labeled intervention relaxed only the exact Quark W8A8 INT8 pair.
+  With the same `FULL_DECODE_ONLY` + `TRITON_ATTN` graph, Triton MoE measured
+  **64.9843 tok/s versus 61.5536 native (+5.57%)**, saving 0.4395 s of the
+  p498/o512 server decode. Semantic output, JSON 16/16, color 16/16, graceful
+  teardown, both cards, and compiled collective health passed. This reaches
+  75.68% of Steve and leaves 20.8848 tok/s. The recovered June122 native grouped
+  MoE path is therefore not the missing speed mechanism. Dense 27B should copy
+  the FULL graph/runtime method, not this MoE-only intervention.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

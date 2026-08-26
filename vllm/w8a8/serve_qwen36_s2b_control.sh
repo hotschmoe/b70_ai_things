@@ -17,6 +17,7 @@ export PP="${PP:-1}"
 export GRAPH="${GRAPH:-1}"
 export CGMODE="${CGMODE:-PIECEWISE}"
 export ATTN="${ATTN:-}"
+export MOE_BACKEND="${MOE_BACKEND:-auto}"
 export DTYPE="${DTYPE:-auto}"
 export UTIL="${UTIL:-0.90}"
 export MAXLEN="${MAXLEN:-8192}"
@@ -77,6 +78,11 @@ case "$ATTN" in
   *) echo "ATTN must be empty, TRITON_ATTN, or FLASH_ATTN" >&2; exit 1 ;;
 esac
 [ -z "$ATTN" ] || export EXTRA_ARGS="$EXTRA_ARGS --attention-backend $ATTN"
+case "$MOE_BACKEND" in
+  auto|xpu|triton) ;;
+  *) echo "MOE_BACKEND must be auto, xpu, or triton" >&2; exit 1 ;;
+esac
+[ "$MOE_BACKEND" = auto ] || export EXTRA_ARGS="$EXTRA_ARGS --moe-backend $MOE_BACKEND"
 export MTPTOK=""
 export SPEC=""
 

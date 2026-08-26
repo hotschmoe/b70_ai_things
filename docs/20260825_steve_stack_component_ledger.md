@@ -131,6 +131,16 @@ MoE and the 81 all-reduces remain opaque inside the single replay. The next
 attribution target is therefore in-graph collective and MoE execution, not
 piece-boundary reduction.
 
+A matched backend intervention now closes the MoE half of that attribution.
+June e190's explicit Triton selector is normally rejected because its generic
+expert support gate admits INT8 only on CUDA. Relaxing only the exact Quark
+W8A8 pair let both XPU workers load and select Triton W8A8 experts. Under the
+same FULL decode graph, Triton measured 64.984330 tok/s versus 61.553562 for
+the June122 native grouped path (+5.57 percent). All 81 profile collectives,
+six captures, semantic output, both 16/16 canaries, and both health layers
+passed. The native grouped path is therefore not the missing accepted speed
+lever; the next opaque target is the 81 in-graph collectives.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B
@@ -217,13 +227,13 @@ partitioning. The later launcher default made scheduling asynchronous because
 | Model and scales | Exact HF Quark W8A8 revision | Yes | Exact local revision and Quark loader verified | Matched. |
 | Dense activation quant | `_xpu_C::per_token_quant_int8_xpu` | Yes | Operator present and selected | Matched. |
 | Dense W8A8 GEMM | oneDNN `_xpu_C::int8_gemm_w8a8` | Yes | June-9 base op selects `XPUInt8ScaledMMLinearKernel`; unchanged in `122b698b` | Dense GEMM is not the direct checkpoint delta. The quantization output primitive may transfer to 27B only through a separately tested dense adapter. |
-| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | August adapter and June source select `Using XPU Int8 MoE backend`; scratch-aware Python uses the native quant `_out` variant when present, otherwise allocates and copies 80 times/step. | Endpoint dispatch, coherence, and graph capture proven; native scratch execution remains unmatched. Fused SiLU+quant is unset in the accepted lane. |
+| Routed MoE | Xe2 XMX INT8 grouped GEMM with per-row activation and per-channel weight scales | Yes | August adapter and June source select `Using XPU Int8 MoE backend`; scratch-aware Python uses the native quant `_out` variant when present, otherwise allocates and copies 80 times/step. | Endpoint dispatch, coherence, and graph capture proven. Matched FULL A/B finds Triton W8A8 5.57 percent faster than June122 native. Fused SiLU+quant is unset in the accepted lane. |
 | Mixed MoE workspace | BF16 and INT32 persistent scratch interface | Yes in safe TP2 label | Local env enabled | Steve measured a small full-model regression in an earlier arm; not the 5x explanation. |
 | Shared expert | Native dense W8A8 linears plus shared/routed combination | Yes | Later-image ABI mismatch bridged narrowly | Coherent; source snapshot comparison pending. |
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode active; checkpoint source is effectively unchanged from the June-9 reconstruction | Local synchronized GDN is 3.9278 ms versus Steve's 1.5846 ms; likely includes queue/backlog effects and needs native A/B retiming. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact PIECEWISE matches 41 pieces and profiles 41 fences/41 host waits/82 submits per token; separate no-MTP FULL_DECODE_ONLY+TRITON arm reaches 61.5536 tok/s (+22.20 percent) | PIECEWISE provenance topology is matched. Full decode is a proven local intervention, not Steve command identity; captured MoE and 81 all-reduces remain profiler-opaque. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact PIECEWISE matches 41 pieces and profiles 41 fences/41 host waits/82 submits per token; separate no-MTP FULL_DECODE_ONLY+TRITON attention arm reaches 61.5536 tok/s (+22.20 percent), and Triton MoE raises it to 64.9843 | PIECEWISE provenance topology is matched. Full decode and Triton MoE are labeled local interventions, not Steve command identity; 81 all-reduces remain profiler-opaque. |
 | Ordinary no-spec PIECEWISE key | Reuse relaxed general non-uniform key | Yes | Erroneous local uniform key removed; off-device default-size contract passes | June behavior matched; no special ordinary-decode key is required. |
 | Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | Large profile clones require completion before oneCCL; clone-only profile fence passes all 81 calls while graph recording and decode remain unfenced | Cleared through exact model interleaving and post-health. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
@@ -751,8 +761,10 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    82-submit structure but not the routed MoE or 81 replay-internal TP
    collectives. Split-die worker affinity is neutral. No-MTP FULL decode is a
    coherent +22.20 percent at 61.5536 tok/s. Profiling proves its 1-fence/2-
-   wait/2-submit boundary. Isolate the remaining collective and MoE cost inside
-   the single replay.
+   wait/2-submit boundary. A matched FULL backend intervention then measures
+   Triton W8A8 MoE at 64.9843 tok/s versus 61.5536 native (+5.57 percent), so
+   native grouped MoE is closed as the missing lever. Isolate the remaining 81
+   collectives inside the single replay.
 10. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
 11. Promote recovered native changes into owned source only after schema,

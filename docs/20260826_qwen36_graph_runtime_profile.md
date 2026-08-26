@@ -155,6 +155,59 @@ still treated as diagnostic because profiling was enabled, but the repeat
 agrees with the clean 61.553562 result to 0.01 percent. The remaining target is
 now explicitly in-graph MoE and collective execution, not replay-piece count.
 
+## MoE Backend Attribution
+
+SOURCE -> June e190 exposes `--moe-backend triton`, but
+`TritonExperts._supports_quant_scheme` admits INT8 only when the platform is
+CUDA. The underlying Triton expert implementation accepts W8A8 arguments and
+had already run on XPU through the older generic route. The adapter therefore
+relaxes only the exact `(kInt8StaticChannelSym, kInt8DynamicTokenSym)` pair
+when `B70_QWEN36_INT8_MOE_TRITON_INTERVENTION=1`. It prints an intervention
+marker, changes no other support decision, and leaves the default native route
+intact.
+
+CONFIG -> exact June source, June122 native package, TP=2 direct P2P,
+`FULL_DECODE_ONLY`, `TRITON_ATTN`, no MTP or prefix cache, explicit
+`--moe-backend triton`, and a fresh isolated compile cache. The native package
+remains mounted for dense W8A8, GDN, and collective identity; routed experts
+use Triton W8A8.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN=TRITON_ATTN MOE_BACKEND=triton P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T031500Z_full_decode_triton_moe_retry \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> both workers logged the labeled intervention and selected `Using
+TRITON Int8 MoE backend`. Model loading, all 81 profile clone fences per rank,
+and all six FULL decode captures completed. Capture took 38 seconds and 0.11
+GiB. The p498/o512 metric measured 64.984330 corrected output tok/s, 363.490 ms
+client TTFT, and 7.878107 seconds server decode. The matched native-MoE full
+control measured 61.553562 tok/s, 332.269 ms, and 8.317629 seconds. Triton gains
+3.430768 tok/s, or 5.57 percent, and saves 0.439522 seconds of decode while
+adding 31.221 ms TTFT in this one comparison. Semantic output, JSON 16/16,
+color 16/16, graceful teardown, both card probes, and compiled two-rank
+collective health all passed.
+
+The first launch did not enable the intervention because an over-escaped shell
+test emitted `0`. Both workers rejected Triton during model construction,
+before weight loading, profile execution, or graph capture. Both post-health
+layers passed. The scoped unbind/rebind reset then recovered under the same boot
+ID before the corrected retry. This is launcher-debug evidence, not a backend
+performance sample.
+
+VERDICT -> the June122 native grouped-MoE route is 5.57 percent slower than
+Triton inside the already collapsed full graph. Native dispatch is therefore
+not Steve's missing mechanism. The best local exact arm now reaches 75.68
+percent of Steve's 85.869114 tok/s and leaves 20.884784 tok/s. The next
+attribution target is the 81 in-graph TP collectives or another accepted
+runtime/kernel family, not more graph-boundary work or native-MoE restoration.
+
 ## Dense 27B Transfer Contract
 
 Dense 27B must reuse the method, not Qwen3.6-specific constants:
@@ -174,7 +227,8 @@ Dense 27B must reuse the method, not Qwen3.6-specific constants:
    opaque.
 7. Transfer dense quantization output buffers, oneDNN scratch reuse, graph
    runtime changes, and collective adapters one factor at a time. Do not carry
-   routed-MoE workspace, layerlet, sidecar, or expert-dispatch conclusions.
+   the Triton support intervention, routed-MoE workspace, expert layouts,
+   grouped GEMM, layerlet, sidecar, or expert-dispatch conclusions.
 8. Require fixed semantic output, JSON 16/16, color 16/16, graceful teardown,
    per-card health, and compiled two-rank collective health for every TP=2 arm.
 
@@ -183,3 +237,4 @@ Evidence and tools:
 - `vllm/w8a8/analyze_qwen36_xpu_trace.py`
 - `results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_xpu_profile_20260826T020000Z_june122_xpu_profile/`
 - `results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cpu_split_die_20260826T022000Z_cpu_split_die_fixed/`
+- `results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_attn_triton_attn_moe_triton_intervention_20260826T031500Z_full_decode_triton_moe_retry/`

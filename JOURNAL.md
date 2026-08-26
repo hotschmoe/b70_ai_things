@@ -19159,3 +19159,71 @@ is dominated by execution inside the opaque graph plus smaller host work. Next
 work must expose or optimize the 81 in-graph collectives and native MoE path;
 further piece-count reduction is closed. Dense 27B should reuse the same
 PIECEWISE-versus-FULL driver census and opacity guard.
+
+### 2026-08-26g - Triton W8A8 MoE beats June122 native by 5.57 percent
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision `cced5659`; pinned
+`f2e5a94e` image; true-June vLLM source `e190923b`; June122 native package;
+TP=2 direct P2P; no MTP or prefix cache; `FULL_DECODE_ONLY` plus
+`TRITON_ATTN`; fresh cache. June e190 exposes `--moe-backend triton` but its
+generic `TritonExperts` gate admits INT8 only on CUDA. The opt-in intervention
+relaxes only the exact per-channel-weight/dynamic-token Quark W8A8 pair and
+prints a marker in every process.
+
+COMMAND -> first propagation-debug attempt, then scoped reset and corrected
+transaction:
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN=TRITON_ATTN MOE_BACKEND=triton P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T031000Z_full_decode_triton_moe \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+
+./bin/xe-reset --method rebind
+
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN=TRITON_ATTN MOE_BACKEND=triton P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T031500Z_full_decode_triton_moe_retry \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> the first attempt over-escaped a shell comparison and propagated the
+intervention value as `0`. Both workers rejected Triton during model
+construction, before weight loading, profile execution, or graph capture.
+Per-card and compiled-collective post-health passed. The scoped unbind/rebind
+reset returned both endpoints, four xe auxiliary bindings, both card probes,
+and compiled collective health under the same boot ID.
+
+RESULT -> the corrected run emitted `triton_int8_intervention=1`; every process
+logged the intervention marker, and both workers selected `Using TRITON Int8
+MoE backend`. Model load completed, both ranks crossed all 81 profile clone
+fences, and six FULL decode graphs captured in 38 seconds using 0.11 GiB. The
+p498/o512 metric measured 64.984330 corrected output tok/s, 363.490 ms client
+TTFT, and 7.878107 seconds server decode. The matched native-MoE FULL control
+was 61.553562 tok/s, 332.269 ms, and 8.317629 seconds. Triton gains 3.430768
+tok/s (+5.57 percent) and saves 0.439522 seconds of server decode. Semantic
+output, JSON 16/16, color 16/16, graceful teardown, both card probes, and
+compiled two-rank collective health passed.
+
+EVIDENCE ->
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_attn_triton_attn_moe_triton_intervention_20260826T031500Z_full_decode_triton_moe_retry`.
+The constructor-debug attempt is preserved beside it with stamp
+`20260826T031000Z_full_decode_triton_moe`.
+
+COMMIT HYGIENE -> successful server/run logs were mechanically converted to
+ASCII and trailing-whitespace-clean from raw `445c28e4...`/`1e350d2d...` to
+committed `1122f05c...`/`446d7c78...`. The constructor-debug server/run logs
+changed from `734683d4...`/`27a2c68c...` to
+`5f477cf7...`/`35d5917a...`.
+
+VERDICT -> the recovered June122 native grouped-MoE path is slower, not the
+missing Steve mechanism. The best exact local arm now reaches 75.68 percent of
+Steve's 85.869114 tok/s and leaves 20.884784 tok/s. Next isolate or replace the
+81 TP collectives inside the opaque full graph, then inspect other accepted
+runtime/kernel families. Dense 27B must transfer the graph-first method and
+omit this MoE-only support gate, expert layout, grouped GEMM, layerlet, and
+sidecar code.

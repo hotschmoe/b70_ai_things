@@ -52,9 +52,14 @@
 > tok/s to Steve. Full-decode profiling confirms the mechanism: 41 fences/41
 > waits/82 submissions fall to 1/2/2 per token. Steady state overlaps about 9
 > ms host preparation with the preceding graph, then exposes 2.73-3.30 ms of
-> graph-tail wait and about 2 ms post-submit work. NEXT: expose or optimize the
-> remaining 81-collective and native-MoE cost inside the opaque single replay;
-> do not spend more cycles reducing graph-piece count. Keep the clean endpoint as the speed
+> graph-tail wait and about 2 ms post-submit work. A matched MoE intervention is
+> now complete: June e190's CUDA-only Triton INT8 support gate was relaxed only
+> for the exact Quark W8A8 pair. Under the same FULL boundary, Triton MoE
+> reaches 64.9843 tok/s versus 61.5536 native (+5.57 percent), with all
+> coherence and health gates green. Native grouped MoE is not the missing Steve
+> mechanism. NEXT: isolate or replace the 81 in-graph collectives, then inspect
+> other accepted runtime/kernel families; do not spend more cycles reducing
+> graph-piece count. Keep the clean endpoint as the speed
 > gate because profiler-enabled endpoint timing is perturbed. Transfer only proven reusable quant/output behavior
 > to 27B; census its own graph pieces and profile collectives, and keep MoE
 > layerlet/sidecar code out of the dense conclusion.

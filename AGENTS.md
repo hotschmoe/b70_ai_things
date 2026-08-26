@@ -93,6 +93,17 @@ Working notes for any agent on this repo. Keep this file short; details live in
   2 ms of post-submit work. The remaining MoE and 81 collectives are inside the
   opaque single graph. Future work should optimize or expose those in-graph
   operators, not keep reducing an already single replay boundary.
+- **Native grouped MoE is not the remaining Steve lever.** A narrow opt-in
+  intervention relaxed June e190's CUDA-only Triton INT8 support gate for only
+  the Quark W8A8 per-channel-weight/dynamic-token pair. Under the same
+  `FULL_DECODE_ONLY` boundary, Triton MoE measured 64.9843 tok/s versus
+  61.5536 for the June122 native grouped path (+5.57 percent), with semantic
+  output, both 16/16 canaries, graceful teardown, and both health layers green.
+  The native path is currently slower inside the collapsed graph. The remaining
+  20.8848 tok/s to Steve is not evidence for a missing native-MoE dispatch.
+  Next isolate the 81 in-graph collectives or another accepted runtime/kernel
+  family. For dense 27B, apply the graph-first method and omit every MoE support
+  gate, expert layout, grouped GEMM, layerlet, and sidecar change.
 
 ## Workflow
 
