@@ -4062,3 +4062,108 @@ most of that tax and leaves only the rank-coupled collectives eager. Keep FULL
 capture rejected on this stack because oneCCL graph IPC remains broken. The
 breakable route is qualified for bs <= 4 only and is not yet a shelf promotion;
 MTP and the remaining campaign still require separate matched qualification.
+
+### 2026-08-26w - Qwen3.8 NEXTN s1 is coherent but remains slower than target-only graph
+
+CONFIG -> exact refreshed SGLang and native INT8 stack from 2026-08-26v, with
+the final Python-only overlay image
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`.
+Dispatcher SHA256 is
+`e255ef23b507767bf4e26f607e253f0894f3f80c1be2d2cfbd72e4e896354b76`.
+Qwen3.8-27B compressed-tensors W8A8 GPTQ target plus the grafted official BF16
+`model-mtp.safetensors`; TP=2; NEXTN; topk=1; explicit unquantized speculative
+draft model; native oneDNN INT8 target linears; both dependency controls on;
+P2P off; source-default c10d; pidfd falling back to drmfd; radix and overlap
+disabled; 8K context; maximum batch four. The primary arm uses one speculative
+step and two verify tokens. Only greedy serving is in qualification scope
+because current SGLang deliberately sends XPU speculative verification through
+the greedy branch even for sampling requests.
+
+COMMAND -> launch eager NEXTN, close greedy identity/concurrency and matched
+p2048/o128 performance, then repeat with breakable target-verify and
+draft-extend capture. Run an s3/draft4 arm only as a coherence probe:
+
+```bash
+IMG=b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78 \
+  NATIVE=1 MTP=1 SPEC_STEPS=1 SPEC_DRAFT=2 \
+  SERVED=qwen3.8-27b-W8A8-gptq-nextn DECODE_GRAPH=breakable \
+  NAME=sglang_qwen38_w8a8_mtp_breakable PORT=18082 \
+  bash sglang/w8a8/serve_qwen38_w8a8.sh start
+
+./bin/gpu-run bash sglang/perf_regime.sh \
+  sglang_qwen38_w8a8_mtp_breakable 18082 \
+  qwen3.8-27b-W8A8-gptq-nextn /models/qwen3.8-27b/w8a8-gptq \
+  qwen38-w8a8-native-mtp-s1-breakable-tp2
+```
+
+RESULT -> current upstream already contains the XPU Triton tree builder, XPU
+greedy verifier, XPU cache-location assignment, native Qwen3.5 MTP model, and
+XPU draft graph runners. It still required four deliberate XPU source ports:
+speculative Mamba scratch allocations and MTP weight-sharing synchronization
+used CUDA explicitly; the XPU GDN wrapper omitted the kernel's
+`stride_h0_source`; two portable Triton state-commit wrappers rejected non-CUDA
+tensors; and the new fused multi-conv commit packed high XPU pointers into a
+signed int64 tensor and overflowed. The last route is disabled only under the
+XPU MTP gate in favor of the per-conv Triton loop. Exact source-pattern checks,
+a GDN launch-contract oracle, and state-allocation/commit code oracles passed.
+
+RESULT -> four bounded TP2 bring-up failures exposed those defects in order.
+No failed arm produced output or a speed claim. Each crashed TP2 arm was
+stopped, followed by xe rebind recovery and exact-image per-card plus compiled
+P2P-off collective health before retry. The final eager s1 arm loaded the
+target at 16.91 GB/rank and the BF16 MTP worker at an additional 2.64 GB/rank.
+The two 96-token non-thinking greedy Rayleigh runs were byte-identical at
+SHA256 `29d0e3f47e7937187acfaf6cdd0a8f67aed17f7781d530bc022b0f38f62993cb`.
+A fresh target-only server on the same overlay generation returned that same
+hash twice. Four simultaneous arithmetic requests returned exactly 45, 78,
+93, and 189. The eager startup log SHA256 is
+`01ab2f1266ec96fa03b80175607a6e86bfdfcb934c93e6317f710d7de8e28a8b`.
+
+RESULT -> eager s1 p2048/o128 measured c1 6.29 decode tok/s, 5.55 aggregate
+output tok/s, and 2228.19 ms TTFT. C4 measured 3.44 decode, 10.78 aggregate,
+and 3809.22 ms TTFT. Against the qualified target-only eager control
+6.04/5.25/2153.64 at c1 and 3.60/11.34/3498.44 at c4, s1 gained only 4.1
+percent c1 decode while losing 4.4 percent c4 decode and worsening TTFT.
+Observed accepted length was about 1.5 on the short prompt and usually 1.2-1.4
+in the long-prompt regime.
+
+RESULT -> the first breakable MTP capture was correctly rejected by the
+upstream assertion that XPU full attention does not support speculative graph
+metadata. The narrow port preserved that boundary by making speculative XPU
+full-attention metadata and forward calls eager graph breaks, while leaving GDN
+and surrounding dense INT8 computation capturable. Target verify then captured
+bs 4, 2, and 1 in 7.06 seconds and draft extend in 1.30 seconds. First replay
+exposed that the prior `LogitsProcessorOutput` adapter allocated one row per
+request instead of one per verify token. A direct bs4/draft2 oracle then proved
+all eight logits and hidden-state rows survive allocation, copy, and slice.
+The corrected arm returned the exact target/eager-MTP hash twice and passed the
+same c4 arithmetic test. Its startup log SHA256 is
+`a6008b5365b9bbf160092f7ca6ef5881fad95e7ea6e80d368ba6ae9c7c5df341`.
+
+RESULT -> breakable s1 p2048/o128 measured c1 12.01 decode tok/s, 9.23
+aggregate, and 2252.33 ms TTFT; c4 measured 5.23 decode, 14.95 aggregate, and
+3468.07 ms TTFT. This nearly doubled eager MTP, but remained below the qualified
+target-only breakable control: -12.0 percent c1 decode versus 13.65, -6.9
+percent c4 decode versus 5.62, and -7.0 percent c4 aggregate versus 16.08. The
+removed historical `sglang/soak_probe.py` failed as expected and is excluded;
+no long soak was justified for an arm already slower than the target-only
+control.
+
+RESULT -> s3/draft4 captured target verify, draft decode, and draft extend, but
+failed exact greedy coherence. Three repeats deterministically returned SHA256
+`4ff762ab129e74142980c1aa99a82f81bc7cec32133b8c7d01a51207c9701a24`
+instead of the exact target/s1 hash. Accepted length was only about 1.57 of four
+verify tokens. The arm was rejected without benchmarking. Startup log SHA256 is
+`0a992eb4940e6e1c7120be2bb13de703f58d6b713624680dcd28b686cec42e35`.
+
+RESULT -> all successful and rejected arms tore down. Final exact-image
+per-card health and the compiled ten-iteration P2P-off collective passed.
+
+VERDICT -> retain NEXTN s1 eager and breakable as coherent greedy research
+controls, not shelf or default serving configurations. S1 graph is materially
+faster than eager MTP but still loses to target-only breakable graph because
+acceptance is too low to repay remaining eager full-attention and state-commit
+work. Reject s3 because exact target coherence fails before performance is
+considered. Do not claim sampled-serving correctness on the current XPU greedy
+verification fallback. Return to MTP only if a target-exact multi-step GDN
+state oracle or materially better draft acceptance changes this decision.

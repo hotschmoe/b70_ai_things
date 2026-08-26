@@ -15,6 +15,9 @@ CTX="${CTX:-8192}"
 MEMFRAC="${MEMFRAC:-0.90}"
 MAXREQ="${MAXREQ:-4}"
 NATIVE="${NATIVE:-0}"
+MTP="${MTP:-0}"
+SPEC_STEPS="${SPEC_STEPS:-1}"
+SPEC_DRAFT="${SPEC_DRAFT:-2}"
 ONEDNN_INPUT_DEP="${ONEDNN_INPUT_DEP:-$NATIVE}"
 ONEDNN_BARRIER="${ONEDNN_BARRIER:-$NATIVE}"
 DECODE_GRAPH="${DECODE_GRAPH:-0}"
@@ -47,6 +50,32 @@ preflight() {
     0|1) ;;
     *) say "NATIVE must be 0 or 1, got $NATIVE"; return 1 ;;
   esac
+  case "$MTP" in
+    0|1) ;;
+    *) say "MTP must be 0 or 1, got $MTP"; return 1 ;;
+  esac
+  if [ "$MTP" = 1 ]; then
+    [ "$SPEC_STEPS" -ge 1 ] 2>/dev/null || {
+      say "SPEC_STEPS must be a positive integer, got $SPEC_STEPS"
+      return 1
+    }
+    [ "$SPEC_DRAFT" -ge 2 ] 2>/dev/null || {
+      say "SPEC_DRAFT must be an integer >= 2, got $SPEC_DRAFT"
+      return 1
+    }
+    [ "$SPEC_DRAFT" -eq $((SPEC_STEPS + 1)) ] || {
+      say "topk=1 NEXTN requires SPEC_DRAFT=SPEC_STEPS+1, got steps=$SPEC_STEPS draft=$SPEC_DRAFT"
+      return 1
+    }
+    case "$SERVED" in
+      *nextn*) ;;
+      *) say "MTP=1 requires a served ID containing nextn, got $SERVED"; return 1 ;;
+    esac
+    [ -f "$REPO/models/files/${CKPT#/models/}/model-mtp.safetensors" ] || {
+      say "MTP=1 but model-mtp.safetensors is missing from the checkpoint"
+      return 1
+    }
+  fi
   case "$ONEDNN_BARRIER" in
     0|1) ;;
     *) say "ONEDNN_BARRIER must be 0 or 1, got $ONEDNN_BARRIER"; return 1 ;;
@@ -75,6 +104,7 @@ start() {
   docker rm -f "$NAME" >/dev/null 2>&1 || true
 
   local graph_args
+  local spec_args=""
   local breakable_graph=0
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode 1 2 4"
@@ -84,8 +114,11 @@ start() {
   else
     graph_args="--cuda-graph-backend-decode disabled --cuda-graph-backend-prefill disabled"
   fi
+  if [ "$MTP" = 1 ]; then
+    spec_args="--speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --speculative-draft-model-quantization unquant"
+  fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE"
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     -p "$PORT:$PORT" \
@@ -98,6 +131,7 @@ start() {
     -e TRITON_CACHE_DIR=/sgl_cache/triton \
     -e B70_XPU_W8A8=1 \
     -e B70_XPU_W8A8_NATIVE="$NATIVE" \
+    -e B70_XPU_MTP="$MTP" \
     -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$ONEDNN_INPUT_DEP" \
     -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$ONEDNN_BARRIER" \
@@ -116,7 +150,7 @@ start() {
       --trust-remote-code --device xpu --dtype bfloat16 \
       --attention-backend intel_xpu --linear-attn-backend triton \
       --mamba-ssm-dtype float32 --grammar-backend none \
-      $graph_args \
+      $graph_args $spec_args \
       --disable-radix-cache --disable-overlap-schedule --skip-server-warmup \
       --disable-custom-all-reduce --reasoning-parser qwen3 --tp-size '$TP' \
       --context-length '$CTX' --mem-fraction-static '$MEMFRAC' \

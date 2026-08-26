@@ -1,9 +1,124 @@
 """Narrow compressed-tensors W8A8 INT8 enablement for SGLang on XPU."""
 
 import importlib
+import inspect
 import os
 import sys
+import textwrap
 from dataclasses import fields
+
+
+def _replace_method_source(method, replacements, namespace):
+    source = textwrap.dedent(inspect.getsource(method))
+    for old, new, expected in replacements:
+        count = source.count(old)
+        if count != expected:
+            raise RuntimeError(
+                f"upstream method changed while applying XPU MTP port: "
+                f"expected {expected} occurrences of {old!r}, found {count}"
+            )
+        source = source.replace(old, new)
+    exec(source, namespace)
+    return namespace[method.__name__]
+
+
+def _install_mtp_xpu() -> None:
+    """Port current speculative allocation and sharing helpers to XPU."""
+    import sglang.srt.mem_cache.memory_pool as memory_pool
+    import sglang.srt.models.qwen3_5_mtp as qwen3_5_mtp
+    import sglang.srt.hardware_backend.xpu.kernels.fla.fused_sigmoid_gating_recurrent as xpu_gdn
+    import sglang.kernels.ops.mamba.mamba_state_scatter_triton as state_scatter
+
+    mamba_pool = memory_pool.MambaPool
+    mamba_pool.__init__ = _replace_method_source(
+        mamba_pool.__init__,
+        [("device=\"cuda\"", "device=device", 2)],
+        dict(memory_pool.__dict__),
+    )
+    mamba_pool._allocate_deduplicated_conv_window = _replace_method_source(
+        mamba_pool._allocate_deduplicated_conv_window,
+        [
+            (
+                "device=\"cuda\"",
+                'device=f"xpu:{torch.xpu.current_device()}"',
+                1,
+            )
+        ],
+        dict(memory_pool.__dict__),
+    )
+
+    mtp_cls = qwen3_5_mtp.Qwen3_5ForCausalLMMTP
+    mtp_cls.set_embed_and_head = _replace_method_source(
+        mtp_cls.set_embed_and_head,
+        [("torch.cuda.", "torch.xpu.", 2)],
+        dict(qwen3_5_mtp.__dict__),
+    )
+
+    xpu_gdn.fused_sigmoid_gating_delta_rule_update = _replace_method_source(
+        xpu_gdn.fused_sigmoid_gating_delta_rule_update,
+        [
+            (
+                "h0_indices=initial_state_indices,",
+                "h0_indices=initial_state_indices,\n"
+                "        stride_h0_source=(\n"
+                "            initial_state_source.stride(0)\n"
+                "            if initial_state_source is not None\n"
+                "            else 0\n"
+                "        ),",
+                1,
+            )
+        ],
+        dict(xpu_gdn.__dict__),
+    )
+    for module_name in (
+        "sglang.srt.layers.attention.linear.kernels.gdn_triton",
+        "sglang.srt.layers.attention.linear.kernels.kda_triton",
+    ):
+        module = importlib.import_module(module_name)
+        module.fused_sigmoid_gating_delta_rule_update = (
+            xpu_gdn.fused_sigmoid_gating_delta_rule_update
+        )
+
+    cuda_only_state_guard = (
+        "    if not dst.is_cuda or not src.is_cuda:\n"
+        "        raise ValueError(\n"
+        '            "fused_mamba_state_scatter_with_mask only supports CUDA tensors."\n'
+        "        )\n"
+    )
+    state_scatter.fused_mamba_state_scatter_with_mask = _replace_method_source(
+        state_scatter.fused_mamba_state_scatter_with_mask,
+        [(cuda_only_state_guard, "", 1)],
+        dict(state_scatter.__dict__),
+    )
+    cuda_only_conv_guard = (
+        "    if not (dst.is_cuda and src.is_cuda and dst.device == src.device):\n"
+        "        raise ValueError(\n"
+        '            "fused_conv_window_scatter_with_mask requires dst and src to be CUDA "\n'
+        '            f"tensors on the same device ({dst.device=}, {src.device=})."\n'
+        "        )\n"
+    )
+    state_scatter.fused_conv_window_scatter_with_mask = _replace_method_source(
+        state_scatter.fused_conv_window_scatter_with_mask,
+        [
+            (
+                cuda_only_conv_guard,
+                "    if dst.device != src.device:\n"
+                "        raise ValueError(\n"
+                '            f"dst and src must be on the same device: "\n'
+                '            f"{dst.device=} {src.device=}"\n'
+                "        )\n",
+                1,
+            )
+        ],
+        dict(state_scatter.__dict__),
+    )
+    if not hasattr(state_scatter, "_conv_multi_eligible"):
+        raise RuntimeError("upstream XPU MTP commit helper no longer has multi eligibility")
+    state_scatter._conv_multi_eligible = lambda pairs: False
+    print(
+        "[b70-xpu-mtp] enabled XPU speculative state, sharing, GDN, and safe commit",
+        flush=True,
+    )
 
 
 def _install_breakable_graph() -> None:
@@ -34,20 +149,23 @@ def _install_breakable_graph() -> None:
 
     def output_rows(self, output, cap):
         if isinstance(output, LogitsProcessorOutput):
+            if torch.is_tensor(output.next_token_logits):
+                return output.next_token_logits.shape[0]
             rows = [
-                output_rows(self, getattr(output, field.name), cap)
+                output_rows(self, getattr(output, field.name), sys.maxsize)
                 for field in fields(output)
                 if getattr(output, field.name) is not None
             ]
-            return min([cap, *rows])
+            return min(rows) if rows else cap
         return original_output_rows(self, output, cap)
 
     def alloc_full_buffer(self, output, size):
         if isinstance(output, LogitsProcessorOutput):
+            output_size = output_rows(self, output, sys.maxsize)
             return LogitsProcessorOutput(
                 **{
                     field.name: alloc_full_buffer(
-                        self, getattr(output, field.name), size
+                        self, getattr(output, field.name), output_size
                     )
                     for field in fields(output)
                 }
@@ -138,6 +256,26 @@ def _install_breakable_graph() -> None:
     parallel_state.GroupCoordinator.all_gather = eager_on_graph(True)(
         parallel_state.GroupCoordinator.all_gather
     )
+    if os.environ.get("B70_XPU_MTP") == "1":
+        from sglang.srt.layers.attention.xpu_backend import XPUAttentionBackend
+
+        original_xpu_metadata = XPUAttentionBackend.init_forward_metadata_out_graph
+
+        def xpu_metadata_out_graph(self, forward_batch, in_capture=False):
+            if forward_batch.spec_info is not None:
+                return self.init_forward_metadata(forward_batch)
+            return original_xpu_metadata(
+                self, forward_batch, in_capture=in_capture
+            )
+
+        XPUAttentionBackend.init_forward_metadata_out_graph = xpu_metadata_out_graph
+        XPUAttentionBackend.forward_extend = eager_on_graph(True)(
+            XPUAttentionBackend.forward_extend
+        )
+        print(
+            "[b70-xpu-graph] keeping speculative XPU full attention eager",
+            flush=True,
+        )
     print(
         "[b70-xpu-graph] enabled breakable decode with eager TP collectives",
         flush=True,
@@ -277,6 +415,8 @@ def install() -> None:
         f"[b70-xpu-w8a8] installed compressed-tensors W8A8 via {route}",
         flush=True,
     )
+    if os.environ.get("B70_XPU_MTP") == "1":
+        _install_mtp_xpu()
     if os.environ.get("B70_XPU_BREAKABLE_GRAPH") == "1":
         _install_breakable_graph()
 
