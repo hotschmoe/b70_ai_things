@@ -1,5 +1,6 @@
 """Narrow compressed-tensors W8A8 INT8 enablement for SGLang on XPU."""
 
+import importlib
 import os
 
 
@@ -14,6 +15,29 @@ def install() -> None:
     config_cls = ct.CompressedTensorsConfig
     original_get_linear_scheme = config_cls.get_linear_scheme
     original_process = CompressedTensorsW8A8Int8.process_weights_after_loading
+    use_native = os.environ.get("B70_XPU_W8A8_NATIVE") == "1"
+
+    if use_native:
+        importlib.import_module("vllm_xpu_kernels._xpu_C")
+        expected_schemas = {
+            "int8_gemm_w8a8": (
+                "_xpu_C::int8_gemm_w8a8(Tensor A, Tensor A_scale, Tensor B, "
+                "Tensor B_scale, ScalarType? out_dtype, Tensor? bias) -> Tensor"
+            ),
+            "per_token_quant_int8_xpu": (
+                "_xpu_C::per_token_quant_int8_xpu(Tensor x) -> (Tensor, Tensor)"
+            ),
+        }
+        for op, expected in expected_schemas.items():
+            actual = str(
+                torch._C._dispatch_find_schema_or_throw(
+                    f"_xpu_C::{op}", ""
+                ).schema()
+            )
+            if actual != expected:
+                raise RuntimeError(
+                    f"B70 native XPU W8A8 schema mismatch for {op}: {actual}"
+                )
 
     def get_linear_scheme(self, *args, **kwargs):
         try:
@@ -48,16 +72,30 @@ def install() -> None:
     def process_weights_after_loading(self, layer) -> None:
         original_process(self, layer)
         weight = layer.weight.data
-        layer.b70_weight_t = weight.contiguous()
-        layer.b70_weight_scale = layer.weight_scale.data.reshape(1, -1).to(
-            torch.float32
-        )
+        if use_native:
+            if self.is_static_input_scheme or not self.input_symmetric:
+                raise RuntimeError(
+                    "B70 native XPU W8A8 requires dynamic symmetric activations"
+                )
+            weight_nk = weight.t().contiguous()
+            layer.b70_weight_nk = weight_nk
+            layer.b70_weight_nt = weight_nk.t()
+            if layer.b70_weight_nt.stride(0) != 1:
+                raise RuntimeError("B70 native XPU W8A8 weight is not NT-strided")
+            layer.b70_weight_scale = (
+                layer.weight_scale.data.reshape(-1).to(torch.float32).contiguous()
+            )
+        else:
+            layer.b70_weight_t = weight.contiguous()
+            layer.b70_weight_scale = layer.weight_scale.data.reshape(1, -1).to(
+                torch.float32
+            )
         layer.weight = torch.nn.Parameter(
             torch.empty(0, dtype=weight.dtype, device=weight.device),
             requires_grad=False,
         )
 
-    def apply_weights(self, layer, x, bias=None):
+    def apply_generic_weights(self, layer, x, bias=None):
         original_shape = x.shape
         x_2d = x.reshape(-1, original_shape[-1])
         absmax = x_2d.abs().amax(dim=-1, keepdim=True).clamp_min_(1e-5)
@@ -73,13 +111,30 @@ def install() -> None:
             output = output + bias
         return output.reshape(*original_shape[:-1], -1)
 
+    def apply_native_weights(self, layer, x, bias=None):
+        original_shape = x.shape
+        x_2d = x.reshape(-1, original_shape[-1]).contiguous()
+        x_int8, x_scale = torch.ops._xpu_C.per_token_quant_int8_xpu(x_2d)
+        output = torch.ops._xpu_C.int8_gemm_w8a8(
+            x_int8,
+            x_scale,
+            layer.b70_weight_nt,
+            layer.b70_weight_scale,
+            x.dtype,
+            bias,
+        )
+        return output.reshape(*original_shape[:-1], -1)
+
     config_cls.get_linear_scheme = get_linear_scheme
     CompressedTensorsW8A8Int8.process_weights_after_loading = (
         process_weights_after_loading
     )
-    CompressedTensorsW8A8Int8.apply_weights = apply_weights
+    CompressedTensorsW8A8Int8.apply_weights = (
+        apply_native_weights if use_native else apply_generic_weights
+    )
+    route = "native per-token quant plus oneDNN GEMM" if use_native else "torch._int_mm"
     print(
-        "[b70-xpu-w8a8] installed compressed-tensors W8A8 via torch._int_mm",
+        f"[b70-xpu-w8a8] installed compressed-tensors W8A8 via {route}",
         flush=True,
     )
 

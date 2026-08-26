@@ -3793,3 +3793,105 @@ coherent and stable denominator. Its 3.76 tok/s c1 decode is intentionally
 unoptimized and must not be promoted to the shelf. Profile the generic dynamic
 quantization/`torch._int_mm` path next, then port a fused dense INT8 kernel,
 graph capture, and MTP as separate matched arms.
+
+### 2026-08-26t - Native oneDNN W8A8 raises Qwen3.8 decode by 60.6 percent
+
+CONFIG -> exact qualified SGLang parent image `8678399d...`; retained clean
+`vllm-xpu-kernels` commit `2dd55f380df753a10a88fcd9e96192561066e713`
+and tree `2416da2ad02ff58717edb864fa839442a15ca3d2`; only `_xpu_C` enabled;
+TLA, basic, FA2, MoE, GDN, MQA logits, and XPU allocator extension families
+disabled. The native route uses the retained SYCL per-token symmetric INT8
+quantizer and oneDNN s8xs8 GEMM with FP32 activation and channel scales. The
+generic `torch._int_mm` route remains the default. The qualified TP=2 arm sets
+both asynchronous device dependencies:
+`VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY=1` and
+`VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1`. Every other serving, transport,
+model, context, and eager-scheduler setting matches 2026-08-26s.
+
+COMMAND ->
+
+```bash
+bash sglang/refresh/build_int8.sh
+bash sglang/refresh/build_int8_runtime.sh
+
+./bin/gpu-run --card 0 docker run --rm --device /dev/dri \
+  -v /dev/dri/by-path:/dev/dri/by-path --ipc=host \
+  -e ONEAPI_DEVICE_SELECTOR=level_zero:0 -e ZE_AFFINITY_MASK=0 \
+  -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY=1 \
+  -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER=1 \
+  -v "$PWD:/repo:ro" \
+  b70-sglang-xpu-int8-runtime@sha256:fd9c806d517c073336d63a35b03eb552452c4c63d60b16bf55ec322de37bbc7d \
+  bash -lc 'source /opt/intel/oneapi/setvars.sh --force >/dev/null && \
+    python /repo/sglang/refresh/w8a8_native_oracle.py'
+
+IMG=b70-sglang-xpu-int8-runtime@sha256:fd9c806d517c073336d63a35b03eb552452c4c63d60b16bf55ec322de37bbc7d \
+  NATIVE=1 ONEDNN_INPUT_DEP=1 ONEDNN_BARRIER=1 \
+  NAME=sglang_qwen38_w8a8_native PORT=18081 \
+  ./bin/gpu-run bash sglang/w8a8/serve_qwen38_w8a8.sh start
+
+./bin/gpu-run bash sglang/perf_regime.sh \
+  sglang_qwen38_w8a8_native 18081 qwen3.8-27b-W8A8-gptq \
+  /models/qwen3.8-27b/w8a8-gptq \
+  qwen38-w8a8-native-bothdeps-tp2-eager
+
+./bin/gpu-run python3 bin/serve-soak.py \
+  --base-url http://localhost:18081/v1 \
+  --model qwen3.8-27b-W8A8-gptq --concurrency 4 \
+  --duration 300 --max-tokens 128 --timeout 300
+```
+
+RESULT -> the selective wheel built in 20 minutes 33 seconds and has SHA256
+`06b949707d186bcba58fbc0f567f8db2cfc2836e0399ba9c01a365238e984cf3`.
+The ABI image digest is `aeb939fa...`. A separate tracked-Python overlay keeps
+route iteration out of that ABI layer; its final runtime image digest is
+`fd9c806d...`, and the installed dispatcher SHA256 is
+`4010ad0e011e8d1a13a43ed72fab9239db679e3eefdb828837226e2e8d34ac46`.
+Both exact operator schemas registered and `pip check` reported no broken
+requirements. No quarantined source or binary was restored.
+
+RESULT -> the card-0 oracle matched its host reference exactly: quantized
+bytes, FP32 scales, and BF16 GEMM output all had zero error. Sixteen repeated
+quantizer and GEMM calls were bit-identical. With both dependencies enabled,
+generic/native mean full-chain milliseconds were 0.4087/0.1867 at
+M1-K5120-N17408 (2.19x), 0.4085/0.1068 at M1-K8704-N5120 (3.83x),
+0.4233/0.2652 at M128-K5120-N17408 (1.60x), and 0.4114/0.1365 at
+M128-K8704-N5120 (3.01x).
+
+RESULT -> an initial extension image accidentally retained the old baseline
+Python shim. Its logs explicitly reported `torch._int_mm`, so two attempted
+TP arms were correctly rejected as generic controls and no native claim was
+made from them. The runtime overlay fixed that boundary; every actual native
+rank then logged `native per-token quant plus oneDNN GEMM`, and both dependency
+markers fired on both ranks. Each rank loaded 16.91 GB and retained 14.99 GB
+after load. `/v1/models` returned only `qwen3.8-27b-W8A8-gptq`.
+
+RESULT -> thinking-mode Rayleigh traces were not byte-identical under either
+the matched generic or native route, even with an explicit seed; one generic
+response also exhausted its cap. This was a probe-design confound, not native
+evidence. With Qwen thinking disabled, two native Rayleigh responses were
+byte-identical and exactly matched the generic control SHA256
+`a4dd7bbb7997619f22ca42e68d16a4ca4b10f56075d6c80af16b2ad28879966a`.
+Four concurrent distinct arithmetic requests returned exactly 45, 78, 93,
+and 189.
+
+RESULT -> matched p2048/o128 warm c1 measured 6.04 per-stream decode tok/s,
+5.25 aggregate output tok/s, and 2153.64 ms TTFT. Relative to the qualified
+generic result, decode improved 60.6 percent, aggregate improved 53.1 percent,
+and TTFT fell 7.9 percent. Warm c4 measured 3.60 per-stream decode tok/s,
+11.34 aggregate output tok/s, and 3498.44 ms TTFT: improvements of 31.9,
+29.7, and 14.7 percent respectively. The deleted historical soak probe again
+did not run and is not counted.
+
+RESULT -> the supported 300-second c4 soak completed 48/48 requests with zero
+degeneracy and zero errors at 20.4 aggregate output tok/s, 52.2 percent above
+the generic soak. Graceful teardown completed in 12 seconds. Exact-runtime
+per-card checks and the compiled ten-iteration P2P-off collective passed both
+before and after the successful native arm. The preserved startup log is
+`/mnt/vm_8tb/b70/sglang_qwen38_w8a8_native_bothdeps.log`, SHA256
+`aa64fd49350b0372ceb1357bb5970ede5de5b348262342ddf6c554e16d4e53e7`.
+
+VERDICT -> the refreshed native dense W8A8 route is a coherent, stable, and
+material full-model win over the generic denominator. Keep both device-side
+dependencies for the qualified control. Test input and completion dependency
+removal independently before graph or MTP work; do not promote to the shelf
+until those arms and the remaining campaign are complete.

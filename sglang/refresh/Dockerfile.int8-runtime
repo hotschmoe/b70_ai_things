@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1.7
+
+ARG BASE_IMAGE=b70-sglang-xpu-int8:20260826-2dd55f3
+FROM ${BASE_IMAGE}
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+LABEL org.opencontainers.image.title="B70 SGLang XPU native INT8 runtime"
+LABEL b70.int8.python-route="environment-gated"
+
+# The ABI-specific extension remains an exact, independently built image
+# layer. Overlay only the tracked Python dispatcher during route iteration.
+COPY --from=b70-refresh b70_xpu_w8a8.py \
+    /opt/venv/lib/python3.12/site-packages/b70_xpu_w8a8.py
+
+RUN python -m py_compile \
+        /opt/venv/lib/python3.12/site-packages/b70_xpu_w8a8.py && \
+    sha256sum /opt/venv/lib/python3.12/site-packages/b70_xpu_w8a8.py \
+        > /opt/b70-build-manifest/b70-xpu-w8a8-py-sha256.txt && \
+    python -m pip check

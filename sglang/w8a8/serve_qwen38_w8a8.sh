@@ -14,6 +14,9 @@ TP="${TP:-2}"
 CTX="${CTX:-8192}"
 MEMFRAC="${MEMFRAC:-0.90}"
 MAXREQ="${MAXREQ:-4}"
+NATIVE="${NATIVE:-0}"
+ONEDNN_INPUT_DEP="${ONEDNN_INPUT_DEP:-0}"
+ONEDNN_BARRIER="${ONEDNN_BARRIER:-0}"
 LOG="${LOG:-$ROOT/sglang_qwen38_w8a8_refresh.log}"
 
 say() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -31,6 +34,18 @@ preflight() {
     say "this checkpoint is qualified only with TP=2, got TP=$TP"
     return 1
   }
+  case "$NATIVE" in
+    0|1) ;;
+    *) say "NATIVE must be 0 or 1, got $NATIVE"; return 1 ;;
+  esac
+  case "$ONEDNN_BARRIER" in
+    0|1) ;;
+    *) say "ONEDNN_BARRIER must be 0 or 1, got $ONEDNN_BARRIER"; return 1 ;;
+  esac
+  case "$ONEDNN_INPUT_DEP" in
+    0|1) ;;
+    *) say "ONEDNN_INPUT_DEP must be 0 or 1, got $ONEDNN_INPUT_DEP"; return 1 ;;
+  esac
 }
 
 start() {
@@ -38,7 +53,7 @@ start() {
   mkdir -p "$ROOT/hf_cache" "$ROOT/sgl_cache/inductor" "$ROOT/sgl_cache/triton"
   docker rm -f "$NAME" >/dev/null 2>&1 || true
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER"
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     -p "$PORT:$PORT" \
@@ -50,6 +65,9 @@ start() {
     -e TORCHINDUCTOR_CACHE_DIR=/sgl_cache/inductor \
     -e TRITON_CACHE_DIR=/sgl_cache/triton \
     -e B70_XPU_W8A8=1 \
+    -e B70_XPU_W8A8_NATIVE="$NATIVE" \
+    -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$ONEDNN_INPUT_DEP" \
+    -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$ONEDNN_BARRIER" \
     -e CCL_ATL_TRANSPORT=ofi \
     -e CCL_ENABLE_SYCL_KERNELS=0 \
     -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 \
