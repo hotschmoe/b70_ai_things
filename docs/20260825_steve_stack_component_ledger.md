@@ -92,6 +92,17 @@ output matters but does not explain Steve's remaining endpoint gap. Next:
 repeat synchronized timing with `NATIVE_STACK=june122-checkpoint`, then measure
 integrated graph collective/runtime cost.
 
+The synchronized arm is complete. Across 62 pure-decode samples, rank-0
+model-forward is 21.994441 ms versus 22.674753 ms on the June-9 binary, a
+0.680311 ms or 3.00 percent reduction. The synchronized endpoint is 36.429308
+tok/s versus 35.469940 tok/s (+2.70 percent). GDN is 3.948703 versus 3.927777
+ms, logits 1.585771 versus 1.585079 ms, local argmax 1.151977 versus 1.149508
+ms, and sampler 0.677830 versus 0.663268 ms: these families are flat within
+run noise. The same graph indices 0..40 and total 41 pieces replayed. Steve's
+model-forward remains 5.694625 ms, leaving a 16.299816 ms integrated gap.
+Current nested Python timing cannot observe the 81 compiled TP collectives
+inside graph replay, so a device/runtime timeline is the next measurement.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B
@@ -706,12 +717,14 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 7. DONE: exact checkpoint `122b698b` native-binary-only A/B passed at 50.3706
    tok/s versus 48.5315 tok/s for June-9 (+3.79 percent), with all coherence and
    teardown-health gates green.
-8. Repeat synchronized timing on `122b698b`, then isolate integrated graph
-   collective/runtime cost from local model compute.
-9. Convert the required delta into attributed local patches and a pinned image;
+8. DONE: synchronized `122b698b` timing reduces model-forward by 3.00 percent
+   to 21.9944 ms; broad non-MoE labels are flat and Steve remains at 5.6946 ms.
+9. Isolate integrated graph collective/runtime cost from local model compute,
+   beginning with the 81 replay-internal TP collectives per decode step.
+10. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
-10. Promote recovered native changes into owned source only after schema,
+11. Promote recovered native changes into owned source only after schema,
    numeric, graph replay, endpoint, and timing evidence.
-11. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
+12. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
    time. Census its own profile collective shapes and derive its clone-fence
    threshold; do not copy Qwen35's 8192-row threshold.

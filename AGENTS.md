@@ -55,8 +55,12 @@ Working notes for any agent on this repo. Keep this file short; details live in
   Exact `122b698b` native binaries are now measured: 50.3706 tok/s versus the
   matched June-9 unsynchronized control at 48.5315 tok/s, a coherent +3.79
   percent with both 16/16 canaries and post-teardown health green. This proves
-  native scratch-targeted quant output is useful but not Steve's missing 1.7x;
-  synchronized timing on this binary is the next localization arm. Never
+  native scratch-targeted quant output is useful but not Steve's missing 1.7x.
+  Synchronized timing localizes the gain: model-forward is 21.9944 ms versus
+  22.6748 ms on June-9 (-3.00 percent), while GDN, logits, argmax, and sampler
+  are essentially unchanged. Steve remains at 5.6946 ms. The next localization
+  target is integrated cost from the 81 compiled TP collectives per step, which
+  current Python timing cannot see inside graph replay. Never
   compare the 50.3706 unsynchronized endpoint with the deliberately synchronized
   35.4699 diagnostic. For dense 27B, repeat the graph-piece and synchronized
   timing census, then transfer proven reusable quant/output-buffer primitives

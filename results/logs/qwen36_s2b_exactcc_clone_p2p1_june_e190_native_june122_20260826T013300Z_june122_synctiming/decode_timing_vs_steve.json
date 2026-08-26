@@ -1,0 +1,88 @@
+{
+  "candidate": "/mnt/vm_8tb/github/b70_ai_things/results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_20260826T013300Z_june122_synctiming/decode_timing_summary.json",
+  "candidate_timing_semantics": "synchronized device-completion diagnostic; endpoint throughput is perturbed",
+  "common_label_count": 11,
+  "comparison_requirement": "Both inputs must use the same synchronization and sampling protocol. Nested labels are nonexclusive.",
+  "comparisons_by_added_ms": [
+    {
+      "candidate_mean_total_ms_per_step": 22.205407806451614,
+      "candidate_minus_reference_ms": 16.457521556451614,
+      "candidate_over_reference": 3.863230210314551,
+      "label": "gpu_model_runner.forward_total",
+      "reference_mean_total_ms_per_step": 5.74788625
+    },
+    {
+      "candidate_mean_total_ms_per_step": 21.994441322580645,
+      "candidate_minus_reference_ms": 16.299816260080647,
+      "candidate_over_reference": 3.86231597009213,
+      "label": "gpu_model_runner.model_forward",
+      "reference_mean_total_ms_per_step": 5.6946250625
+    },
+    {
+      "candidate_mean_total_ms_per_step": 3.9487026774193548,
+      "candidate_minus_reference_ms": 2.3641243649193546,
+      "candidate_over_reference": 2.491958047305002,
+      "label": "gdn_attention_core_xpu.native",
+      "reference_mean_total_ms_per_step": 1.5845783125
+    },
+    {
+      "candidate_mean_total_ms_per_step": 1.9079097741935485,
+      "candidate_minus_reference_ms": 1.5950555241935485,
+      "candidate_over_reference": 6.0983981332954516,
+      "label": "gpu_model_runner.postprocess_total",
+      "reference_mean_total_ms_per_step": 0.31285425
+    },
+    {
+      "candidate_mean_total_ms_per_step": 1.5857709032258065,
+      "candidate_minus_reference_ms": 1.3566208407258065,
+      "candidate_over_reference": 6.92022897975778,
+      "label": "gpu_model_runner.compute_logits",
+      "reference_mean_total_ms_per_step": 0.2291500625
+    },
+    {
+      "candidate_mean_total_ms_per_step": 1.1519771774193548,
+      "candidate_minus_reference_ms": 1.0814491774193549,
+      "candidate_over_reference": 16.33361469798314,
+      "label": "logits.local_argmax_lm_head",
+      "reference_mean_total_ms_per_step": 0.070528
+    },
+    {
+      "candidate_mean_total_ms_per_step": 0.7856801451612904,
+      "candidate_minus_reference_ms": 0.6202183326612903,
+      "candidate_over_reference": 4.748407703809544,
+      "label": "gpu_model_runner.sample_total",
+      "reference_mean_total_ms_per_step": 0.1654618125
+    },
+    {
+      "candidate_mean_total_ms_per_step": 0.6778296129032257,
+      "candidate_minus_reference_ms": 0.5330943004032258,
+      "candidate_over_reference": 4.683235909710879,
+      "label": "gpu_model_runner.sampler",
+      "reference_mean_total_ms_per_step": 0.1447353125
+    },
+    {
+      "candidate_mean_total_ms_per_step": 0.23925825806451612,
+      "candidate_minus_reference_ms": 0.12930544556451612,
+      "candidate_over_reference": 2.176008531519065,
+      "label": "gpu_model_runner.async_output_wrap",
+      "reference_mean_total_ms_per_step": 0.1099528125
+    },
+    {
+      "candidate_mean_total_ms_per_step": 0.17148419354838712,
+      "candidate_minus_reference_ms": 0.12071781854838712,
+      "candidate_over_reference": 3.377908971211498,
+      "label": "gpu_model_runner.select_sample_hidden",
+      "reference_mean_total_ms_per_step": 0.050766375
+    },
+    {
+      "candidate_mean_total_ms_per_step": 0.11264422580645161,
+      "candidate_minus_reference_ms": 0.07932360080645162,
+      "candidate_over_reference": 3.3806156339039743,
+      "label": "gpu_model_runner.bookkeeping_sync",
+      "reference_mean_total_ms_per_step": 0.033320625
+    }
+  ],
+  "protocol": "xpu-pure-decode-timing-comparison-v1",
+  "rank": "0",
+  "reference": "/mnt/vm_8tb/github/b70_ai_things/vllm/w8a8/manifests/qwen36_steve_tp2_synced_timing_reference_20260619.json"
+}

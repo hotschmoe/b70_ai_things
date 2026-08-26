@@ -301,6 +301,11 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   16/16 canaries and post-teardown per-card plus compiled-collective health green. Native quant `_out` helps,
   but it is not the missing 1.7x. The 35.4699 result is a synchronized diagnostic and is not the endpoint
   baseline for this comparison. Next is synchronized `122b698b` timing and integrated graph-collective cost.
+  Matched synchronized timing is now also closed: model-forward improves from 22.6748 to 21.9944 ms (-3.00
+  percent), and the synchronized endpoint moves from 35.4699 to 36.4293 tok/s (+2.70 percent). GDN, logits,
+  argmax, and sampler are essentially flat. Steve remains at 5.6946 ms model-forward, leaving 16.2998 ms.
+  The next target is the integrated cost of 81 compiled TP collectives inside each graph-replayed decode step;
+  Python nested labels do not expose those replay-internal calls.
   Dense 27B must reuse the replay/timing method and separately test
   reusable quant/output-buffer primitives through a dense-specific adapter; MoE layerlet/sidecar code is not transferable evidence.
 

@@ -37,9 +37,11 @@
 > Exact `122b698b` is now built and passes the stricter native-output operator
 > census. Its matched unsynchronized endpoint is 50.3706 tok/s versus 48.5315
 > for June-9, a coherent +3.79 percent with both canaries and post-health green.
-> Do not compare it with the 35.4699 synchronized diagnostic. NEXT: repeat the
-> synchronized timing trace on `122b698b`, then isolate integrated graph
-> collective and runtime cost. Transfer only proven reusable quant/output behavior
+> Do not compare it with the 35.4699 synchronized diagnostic. Matched synchronized
+> timing is now complete: model-forward falls from 22.6748 to 21.9944 ms (-3.00
+> percent), while GDN/logits/argmax/sampler remain flat and Steve is 5.6946 ms.
+> NEXT: isolate integrated graph cost from the 81 compiled TP collectives per
+> step and the residual local runtime. Transfer only proven reusable quant/output behavior
 > to 27B; census its own graph pieces and profile collectives, and keep MoE
 > layerlet/sidecar code out of the dense conclusion.
 >

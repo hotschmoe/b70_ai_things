@@ -330,8 +330,12 @@ collective post-health passed. Its output-buffer operators are consumed
 conditionally by the already active scratch-aware dispatcher and are absent
 from the June-9 package. The gain is real but does not explain the missing
 1.7x; synchronized native-checkpoint timing and integrated collective cost are
-next. Do not compare this endpoint with the deliberately synchronized 35.4699
-tok/s diagnostic.
+next. Matched synchronized timing now shows model-forward at 21.9944 ms versus
+22.6748 ms for June-9 (-3.00 percent), with GDN/logits/argmax/sampler flat.
+Steve remains at 5.6946 ms. The next measurement must expose integrated device
+time from the 81 compiled TP collectives that Python timing cannot see inside
+graph replay. Do not compare the unsynchronized endpoint with the deliberately
+synchronized 35.4699 or 36.4293 tok/s diagnostics.
 The accepted path performs two scratch-targeted quantizations in each of 40
 MoE layers, or 80 calls/step; its fused SiLU+quant switch is explicitly unset.
 Transfer proven graph/runtime changes to dense 27B one factor at a time;

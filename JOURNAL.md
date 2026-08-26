@@ -18952,3 +18952,60 @@ Next: repeat synchronized timing on `NATIVE_STACK=june122-checkpoint`, then
 measure integrated graph collective/runtime cost. Dense 27B should inherit the
 operator-presence, graph-piece, timing, and correctness methodology, not the
 MoE-only workspace/layerlet code or the Qwen35-specific 8192-row fence.
+
+### 2026-08-26c - June-16 synchronized gain is 0.680 ms inside model-forward
+
+CONFIG -> same exact model, image, true-June source, scratch-aware dispatcher,
+`122b698b` native runtime, TP=2 direct-P2P collective, 8192-row profile clone
+fence, and 9-size PIECEWISE graph as 2026-08-26b. This arm enables rank-0
+device-synchronized decode timing after 32 skipped steps and every 16th step,
+plus the 4096-record graph replay trace. It uses a fresh compile cache. The
+matched June-9 reference is 2026-08-26a under the identical timing protocol.
+
+COMMAND:
+
+```text
+./bin/gpu-run env \
+  STAMP=20260826T013300Z_june122_synctiming SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint P2P_ACCESS=1 \
+  PROFILE_FENCE_MIN_ROWS=8192 STALL_TIMEOUT=300 \
+  DECODE_TIMING=1 DECODE_TIMING_SYNC=1 \
+  DECODE_TIMING_SKIP_FIRST=32 DECODE_TIMING_STEP_SKIP_FIRST=32 \
+  DECODE_TIMING_STEP_EVERY=16 \
+  CUDAGRAPH_REPLAY_TRACE=1 CUDAGRAPH_REPLAY_TRACE_MAX_LINES=4096 \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> 81/81 profile clone fences, model load, 9/9 graph captures,
+semantic probes, and both 16/16 canaries passed. The synchronized diagnostic
+measured 36.429308 corrected output tok/s, 503.144 ms client TTFT, and
+14.053663 seconds server decode. Both per-card probes and compiled-collective
+health passed after graceful teardown. The replay trace again observed every
+piece index 0..40 and reported 41 pieces.
+
+RESULT -> across 62 pure-decode samples, rank-0 model-forward is 21.994441 ms
+versus 22.674753 ms on June-9: -0.680311 ms, or -3.00 percent. The synchronized
+endpoint improves from 35.469940 to 36.429308 tok/s (+2.70 percent). GDN is
+3.948703 versus 3.927777 ms, postprocess 1.907910 versus 1.903643 ms, logits
+1.585771 versus 1.585079 ms, local argmax 1.151977 versus 1.149508 ms, and
+sampler 0.677830 versus 0.663268 ms. These broad families are unchanged within
+run noise. Steve's model-forward is 5.694625 ms, leaving 16.299816 ms and a
+3.8623x ratio.
+
+EVIDENCE ->
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_20260826T013300Z_june122_synctiming`.
+Key SHA256 values: timing summary `6f749cb0...`, Steve comparison
+`251a70ff...`, June-9 comparison `16eb883e...`, metric `cc8e4928...`, JSON
+`052e8470...`, and color `84056f8d...`. The server log was mechanically made
+ASCII and trailing-whitespace-clean from raw `5302c504...` to committed
+`2406da65...`; the run log was trailing-whitespace-cleaned from raw
+`650147b6...` to committed `64b17ed8...`.
+
+VERDICT -> the exact native quant output path is now fully localized: it saves
+about 0.68 ms in model-forward and does not change GDN or post-model runtime.
+It is not the remaining speed lever. The next target is integrated device and
+runtime time for the 81 compiled TP collectives inside each graph-replayed
+decode step; current nested Python labels only see direct/capture calls, not
+replay-internal collectives. Dense 27B must repeat this collective census on
+its own graph because its layer count, shapes, and communication schedule differ.
