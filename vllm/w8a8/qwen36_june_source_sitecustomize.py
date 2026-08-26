@@ -9,6 +9,7 @@ oneCCL consumes it. The row threshold excludes every recorded decode graph.
 import inspect
 import os
 import sys
+from contextlib import contextmanager
 
 import torch
 
@@ -45,6 +46,41 @@ def _profile_clone_complete_all_reduce(
 
 
 XpuCommunicator.all_reduce = _profile_clone_complete_all_reduce
+
+
+if os.environ.get("B70_QWEN36_WORKER_ONLY_NUMA_BIND", "0") == "1":
+    from vllm.utils import numa_utils
+
+    _original_configure_subprocess = numa_utils.configure_subprocess
+
+    @contextmanager
+    def _worker_only_configure_subprocess(
+        vllm_config,
+        local_rank,
+        dp_local_rank=None,
+        process_kind="worker",
+    ):
+        # e190 binds EngineCore with GPU index 0 before that process spawns
+        # both TP workers. Linux forbids worker 1 from expanding beyond the
+        # parent's CPU mask, so disjoint per-rank CPU lists otherwise fail.
+        if process_kind == "EngineCore":
+            yield
+            return
+        with _original_configure_subprocess(
+            vllm_config,
+            local_rank,
+            dp_local_rank,
+            process_kind,
+        ):
+            yield
+
+    numa_utils.configure_subprocess = _worker_only_configure_subprocess
+    print(
+        "[qwen36-june-source] NUMA binding leaves EngineCore unbound; "
+        "workers use explicit CPU lists",
+        file=sys.stderr,
+        flush=True,
+    )
 
 print(
     "[qwen36-june-source] source_stack=e190923b "

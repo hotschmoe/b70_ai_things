@@ -40,8 +40,15 @@
 > Do not compare it with the 35.4699 synchronized diagnostic. Matched synchronized
 > timing is now complete: model-forward falls from 22.6748 to 21.9944 ms (-3.00
 > percent), while GDN/logits/argmax/sampler remain flat and Steve is 5.6946 ms.
-> NEXT: isolate integrated graph cost from the 81 compiled TP collectives per
-> step and the residual local runtime. Transfer only proven reusable quant/output behavior
+> A bounded XPU profile now shows 41 fence resets, 41 host event waits, and 82
+> command-list submissions per token, exactly matching the 41 graph pieces.
+> Kineto sees only 1.67-2.17 ms of device work and hides routed MoE plus all 81
+> replay-internal all-reduces, so this is structural localization rather than a
+> complete device-time attribution. Split-die TP-worker affinity is neutral at
+> 50.4066 versus 50.3706 tok/s (+0.07 percent). NEXT: change one graph/runtime
+> boundary mechanism at a time, starting with piece-count/host-wait reduction
+> or a more transparent collective path; keep the clean endpoint as the speed
+> gate because profiler-enabled endpoint timing is perturbed. Transfer only proven reusable quant/output behavior
 > to 27B; census its own graph pieces and profile collectives, and keep MoE
 > layerlet/sidecar code out of the dense conclusion.
 >

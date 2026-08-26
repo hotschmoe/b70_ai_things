@@ -103,6 +103,17 @@ model-forward remains 5.694625 ms, leaving a 16.299816 ms integrated gap.
 Current nested Python timing cannot observe the 81 compiled TP collectives
 inside graph replay, so a device/runtime timeline is the next measurement.
 
+That bounded two-rank timeline is now complete. Each profiled token contains
+41 `zeFenceReset`, 41 `zeEventHostSynchronize`, and 82
+`zeCommandQueueExecuteCommandLists` calls, matching the 41 PIECEWISE graph
+pieces. Kineto exposes only 1.671066 ms on rank 0 and 2.170872 ms on rank 1;
+captured routed MoE and the 81 compiled all-reduces remain opaque. The visible
+device ledger is therefore incomplete. Split-die worker affinity is neutral:
+50.406626 tok/s versus 50.370643 unbound (+0.07 percent), with all coherence
+and post-health gates green. The next intervention must alter a graph/runtime
+boundary rather than revisit CPU pinning. Full details and the dense 27B
+transfer contract are in `docs/20260826_qwen36_graph_runtime_profile.md`.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B
@@ -195,7 +206,7 @@ partitioning. The later launcher default made scheduling asynchronous because
 | GDN decode | Native XPU GDN decode; recurrent fallback limited to prefill | Yes | Native decode active; checkpoint source is effectively unchanged from the June-9 reconstruction | Local synchronized GDN is 3.9278 ms versus Steve's 1.5846 ms; likely includes queue/backlog effects and needs native A/B retiming. |
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
-| Graph runtime | Forced-communication PIECEWISE replay | Yes | All 9/9 full-model captures pass; replay trace observes pieces 0..40 with reported total 41 | Topology exactly matched. Synchronized model-forward remains 3.9818x slower, so execution inside/around replay is active. |
+| Graph runtime | Forced-communication PIECEWISE replay | Yes | All 9/9 full-model captures pass; replay trace observes pieces 0..40 with reported total 41; bounded profiling sees 41 fence resets, 41 host waits, and 82 queue submissions/token | Topology exactly matched. Captured MoE and 81 all-reduces remain profiler-opaque; execution inside/around replay is active. |
 | Ordinary no-spec PIECEWISE key | Reuse relaxed general non-uniform key | Yes | Erroneous local uniform key removed; off-device default-size contract passes | June behavior matched; no special ordinary-decode key is required. |
 | Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | Large profile clones require completion before oneCCL; clone-only profile fence passes all 81 calls while graph recording and decode remain unfenced | Cleared through exact model interleaving and post-health. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
@@ -719,8 +730,10 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    teardown-health gates green.
 8. DONE: synchronized `122b698b` timing reduces model-forward by 3.00 percent
    to 21.9944 ms; broad non-MoE labels are flat and Steve remains at 5.6946 ms.
-9. Isolate integrated graph collective/runtime cost from local model compute,
-   beginning with the 81 replay-internal TP collectives per decode step.
+9. PARTIAL: bounded XPU profiling exposes the exact 41-fence/41-host-wait/
+   82-submit structure but not the routed MoE or 81 replay-internal TP
+   collectives. Split-die worker affinity is neutral. Change one graph/runtime
+   boundary mechanism at a time and use clean endpoint timing for attribution.
 10. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
 11. Promote recovered native changes into owned source only after schema,

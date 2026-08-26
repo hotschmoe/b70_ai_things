@@ -19009,3 +19009,66 @@ runtime time for the 81 compiled TP collectives inside each graph-replayed
 decode step; current nested Python labels only see direct/capture calls, not
 replay-internal collectives. Dense 27B must repeat this collective census on
 its own graph because its layer count, shapes, and communication schedule differ.
+
+### 2026-08-26d - Runtime profile exposes 41 host waits; CPU affinity is neutral
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision `cced5659`; pinned
+`f2e5a94e` image; true-June vLLM source `e190923b`; exact June-16 native
+checkpoint `122b698b`; TP=2 direct P2P; no MTP or prefix cache; 41-piece
+PIECEWISE graph; reused the already proven June-16 compile cache. The first arm
+enabled the e190 torch profiler for a separate p512/o512 request with two
+delay iterations and eight recorded iterations. The second clean arm pinned TP
+worker 0 to `0-7,16-23` and worker 1 to `8-15,24-31` while leaving EngineCore
+unbound. Both workers used memory node 0 because the 1950X exposes UMA.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint XPU_PROFILE=1 P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 ALLOW_EXISTING_CACHE=1 \
+  CACHE_DIR=/mnt/vm_8tb/b70/vllm_cache_qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_20260826T013300Z_june122_synctiming \
+  STAMP=20260826T020000Z_june122_xpu_profile \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CPU_BIND=split-die P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 ALLOW_EXISTING_CACHE=1 \
+  CACHE_DIR=/mnt/vm_8tb/b70/vllm_cache_qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_20260826T013300Z_june122_synctiming \
+  STAMP=20260826T022000Z_cpu_split_die_fixed \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> both profile ranks recorded eight decode iterations. Every token on
+both ranks had median counts of 41 `zeFenceReset`, 41
+`zeEventHostSynchronize`, 82 `zeCommandQueueExecuteCommandLists`, 123
+`zeCommandListAppendBarrier`, and 105 kernel launches. The 41/41/82 signature
+matches the 41 PIECEWISE graph boundaries. Visible device work averaged
+1.671066 ms on rank 0 and 2.170872 ms on rank 1. Rank 0 exposed 0.960325 ms
+GEMM, 0.367745 ms GDN, 0.222418 ms full attention, and 0.026757 ms collective
+per iteration. Rank 1 exposed a 0.525390 ms final all-gather. Captured routed
+MoE and the 81 TP all-reduces did not appear as individual Kineto device
+events. The profiler perturbed later runtime: the post-profile endpoint was
+38.389977 tok/s and profiled CPU iteration ranges were about 33.4 ms, so these
+are diagnostic-only timings.
+
+RESULT -> the first affinity attempt failed before worker initialization.
+e190 bound EngineCore to rank 0's CPU mask, then rank 1 could not expand beyond
+its parent's allowed CPUs and `numactl` rejected `8-15,24-31`. Both health
+layers remained green. The exact-source adapter was narrowed to leave
+EngineCore unbound and bind only worker subprocesses. The corrected arm logged
+both intended worker masks, loaded and captured in 101 seconds, passed the
+semantic probe and both 16/16 canaries, and measured 50.406626 tok/s, 306.627
+ms TTFT, and 10.155217 seconds server decode. The clean unbound endpoint was
+50.370643 tok/s, 307.853 ms, and 10.163436 seconds. Graceful teardown left both
+cards and the compiled two-rank collective healthy.
+
+VERDICT -> the local runtime crosses every graph-piece boundary each token;
+the leading residual is integrated XPUGraph, collective, and host coordination,
+not missing capture topology. Kineto's visible device total is incomplete and
+must not be subtracted from synchronized model-forward. Split-die worker
+affinity changes throughput by only +0.07 percent and is not a reason to move a
+card. Next, alter one graph/runtime boundary at a time and retain the clean
+endpoint plus coherence and health gates. Dense 27B must repeat its own graph
+piece, driver-call, collective-shape, and fence-threshold census. Full report:
+`docs/20260826_qwen36_graph_runtime_profile.md`.

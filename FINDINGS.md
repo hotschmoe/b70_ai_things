@@ -439,6 +439,15 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   bound. Unbind-first rebind, full xe unload/reload, and endpoint FLR all passed on one boot with per-card and
   compiled two-rank health. Use `bin/xe-reset`; reboot only if its ladder fails or unbind hangs. A same-root
   slot move remains a controlled topology A/B, not a link-width repair or guaranteed vLLM fix.
+- **[2026-08-26 exact Qwen runtime profile]** The coherent 50.3706 tok/s
+  June-16 control crosses all 41 PIECEWISE boundaries every token: 41 fence
+  resets, 41 host event waits, and 82 queue submissions. Kineto exposes only
+  1.67-2.17 ms/rank and hides routed MoE plus the 81 compiled all-reduces
+  inside XPUGraph, so visible device time is incomplete. Pinning TP workers to
+  opposite 1950X die CPU groups measured 50.4066 tok/s (+0.07 percent), which
+  closes CPU affinity as the missing lever and does not justify a slot move.
+  Dense 27B must repeat its own driver-call, graph-piece, and collective-shape
+  census; see `docs/20260826_qwen36_graph_runtime_profile.md`.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

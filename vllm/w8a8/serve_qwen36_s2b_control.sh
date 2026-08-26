@@ -32,6 +32,10 @@ export FORENSIC_VLLM_SRC="${FORENSIC_VLLM_SRC:-}"
 export FORENSIC_SITECUSTOMIZE_HOST="${FORENSIC_SITECUSTOMIZE_HOST:-}"
 export FORENSIC_FUSED_MOE_INTERFACE_HOST="${FORENSIC_FUSED_MOE_INTERFACE_HOST:-}"
 export XPU_KERNEL_RUNTIME_HOST="${XPU_KERNEL_RUNTIME_HOST:-}"
+export XPU_PROFILE="${XPU_PROFILE:-0}"
+export XPU_PROFILE_DIR_HOST="${XPU_PROFILE_DIR_HOST:-}"
+export NUMA_BIND="${NUMA_BIND:-0}"
+export NUMA_BIND_CPUS="${NUMA_BIND_CPUS:-0-7,16-23|8-15,24-31}"
 export IN="${IN:-512}"
 export OUT="${OUT:-512}"
 export CONC="${CONC:-1}"
@@ -71,6 +75,33 @@ MOUNTS=(
   -v "$SCRIPT_DIR/qwen36_repeat_canary.py:/opt/b70_qwen36_repeat_canary.py:ro"
   -v "/mnt/vm_8tb/b70/results:/results"
 )
+
+if [ "$XPU_PROFILE" = 1 ]; then
+  [ -n "$XPU_PROFILE_DIR_HOST" ] || {
+    echo "XPU_PROFILE=1 requires XPU_PROFILE_DIR_HOST" >&2
+    exit 1
+  }
+  mkdir -p "$XPU_PROFILE_DIR_HOST"
+  MOUNTS+=( -v "$XPU_PROFILE_DIR_HOST:/profiles" )
+  export EXTRA_ARGS="$EXTRA_ARGS --profiler-config {\"profiler\":\"torch\",\"torch_profiler_dir\":\"/profiles\",\"torch_profiler_with_stack\":false,\"torch_profiler_use_gzip\":true,\"torch_profiler_dump_cuda_time_total\":false,\"ignore_frontend\":true,\"delay_iterations\":2,\"max_iterations\":8}"
+elif [ "$XPU_PROFILE" != 0 ]; then
+  echo "XPU_PROFILE must be 0 or 1" >&2
+  exit 1
+fi
+
+NUMA_DOCKER_ARGS=()
+if [ "$NUMA_BIND" = 1 ]; then
+  IFS='|' read -r numa_rank0_cpus numa_rank1_cpus numa_extra <<< "$NUMA_BIND_CPUS"
+  [ -n "$numa_rank0_cpus" ] && [ -n "$numa_rank1_cpus" ] && [ -z "$numa_extra" ] || {
+    echo "NUMA_BIND_CPUS must contain exactly two CPU lists separated by |" >&2
+    exit 1
+  }
+  export EXTRA_ARGS="$EXTRA_ARGS --numa-bind --numa-bind-nodes 0 0 --numa-bind-cpus $numa_rank0_cpus $numa_rank1_cpus"
+  NUMA_DOCKER_ARGS+=( --cap-add SYS_NICE )
+elif [ "$NUMA_BIND" != 0 ]; then
+  echo "NUMA_BIND must be 0 or 1" >&2
+  exit 1
+fi
 DOCKER_ENV=(
   -e VLLM_USE_V1=1
   -e VLLM_TARGET_DEVICE=xpu
@@ -230,7 +261,8 @@ b70_serve() {
   echo "vllm ${ARGS[*]}"
   docker run -d --name "$NAME" --device /dev/dri -v /dev/dri/by-path:/dev/dri/by-path \
     --ipc=host --shm-size "$SHM" -p "${PORT}:${PORT}" "${GDOCK[@]}" \
-    --cap-add SYS_PTRACE --security-opt seccomp=unconfined \
+    --cap-add SYS_PTRACE "${NUMA_DOCKER_ARGS[@]+"${NUMA_DOCKER_ARGS[@]}"}" \
+    --security-opt seccomp=unconfined \
     -v "$MODELS_FILES:/models:ro" -v "$ROOT/hf_cache:/hf_cache" -v "$CACHE_DIR_HOST:/vllm_cache" \
     -v "$ROOT/tmp_ssd:/tmp_ssd" "${MOUNTS[@]+"${MOUNTS[@]}"}" \
     -e HF_HOME=/hf_cache -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
@@ -247,12 +279,30 @@ b70_gen_probe() {
 }
 
 b70_bench() {
-  local stamp out out_dir json_out color_out
+  local stamp out out_dir json_out color_out profile_out profile_rc
   stamp="$(date -u +%Y%m%dT%H%M%SZ)"
   out_dir="/results/logs/$NAME"
   out="$out_dir/steve_metric_${stamp}.json"
   json_out="$out_dir/json_repeat16_${stamp}.json"
   color_out="$out_dir/color_repeat16_${stamp}.json"
+  if [ "$XPU_PROFILE" = 1 ]; then
+    profile_out="$out_dir/xpu_profile_workload_${stamp}.json"
+    echo "--- bounded XPU profile: skip prefill, record eight decode iterations ---"
+    curl -sf -X POST "http://127.0.0.1:$PORT/start_profile" || return $?
+    docker exec "$NAME" python /opt/b70_qwen36_steve_metric.py \
+      --base-url "http://127.0.0.1:$PORT" \
+      --model "$SERVED" \
+      --tokenizer "$CKPT" \
+      --out "$profile_out"
+    profile_rc=$?
+    curl -sf -X POST "http://127.0.0.1:$PORT/stop_profile" || profile_rc=$?
+    [ "$profile_rc" = 0 ] || return "$profile_rc"
+    compgen -G "$XPU_PROFILE_DIR_HOST/*.json.gz" >/dev/null || {
+      echo "XPU profiler produced no trace" >&2
+      return 1
+    }
+    echo "host_profile_artifact=$ROOT/results/logs/$NAME/$(basename "$profile_out")"
+  fi
   echo "--- exact Steve-shaped natural-chat p512/o512 metric ---"
   docker exec "$NAME" python /opt/b70_qwen36_steve_metric.py \
     --base-url "http://127.0.0.1:$PORT" \

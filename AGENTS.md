@@ -67,6 +67,16 @@ Working notes for any agent on this repo. Keep this file short; details live in
   separately; do not copy MoE-only layerlet/sidecar code, Qwen35's mixed MoE
   workspace, or its 8192-row fence threshold. See JOURNAL 2026-08-26 and
   `docs/20260825_steve_stack_component_ledger.md`.
+- **The exact-control runtime boundary is now measured.** A bounded two-rank
+  XPU profile shows exactly 41 fence resets, 41 host event synchronizations,
+  and 82 command-list submissions per token, matching the 41 PIECEWISE graph
+  pieces. Kineto exposes only 1.67-2.17 ms of device work and hides routed MoE
+  plus the 81 compiled all-reduces inside XPUGraph, so visible kernels are a
+  lower bound, not a full device ledger. Split-die worker CPU pinning is neutral
+  at 50.4066 versus 50.3706 tok/s (+0.07 percent); it is not a reason to move
+  PCIe slots. For dense 27B, repeat the per-token driver-call census and derive
+  its collective fence from its own shapes. See
+  `docs/20260826_qwen36_graph_runtime_profile.md`.
 
 ## Workflow
 

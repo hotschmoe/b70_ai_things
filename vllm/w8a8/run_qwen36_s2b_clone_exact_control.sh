@@ -86,12 +86,31 @@ esac
 DECODE_TIMING="${DECODE_TIMING:-0}"
 DECODE_TIMING_SYNC="${DECODE_TIMING_SYNC:-$DECODE_TIMING}"
 CUDAGRAPH_REPLAY_TRACE="${CUDAGRAPH_REPLAY_TRACE:-0}"
-for binary_setting in DECODE_TIMING DECODE_TIMING_SYNC CUDAGRAPH_REPLAY_TRACE; do
+XPU_PROFILE="${XPU_PROFILE:-0}"
+for binary_setting in DECODE_TIMING DECODE_TIMING_SYNC CUDAGRAPH_REPLAY_TRACE XPU_PROFILE; do
   case "${!binary_setting}" in
     0|1) ;;
     *) echo "$binary_setting must be 0 or 1" >&2; exit 2 ;;
   esac
 done
+[ "$XPU_PROFILE" = 0 ] || [ "$SOURCE_STACK" = june-e190 ] || {
+  echo "XPU_PROFILE=1 requires SOURCE_STACK=june-e190" >&2
+  exit 2
+}
+CPU_BIND="${CPU_BIND:-none}"
+case "$CPU_BIND" in
+  none)
+    NUMA_BIND_VALUE=0
+    NUMA_BIND_CPUS_VALUE='0-7,16-23|8-15,24-31'
+    cpu_bind_suffix=""
+    ;;
+  split-die)
+    NUMA_BIND_VALUE=1
+    NUMA_BIND_CPUS_VALUE='0-7,16-23|8-15,24-31'
+    cpu_bind_suffix="_cpu_split_die"
+    ;;
+  *) echo "CPU_BIND must be none or split-die" >&2; exit 2 ;;
+esac
 DECODE_TIMING_SKIP_FIRST="${DECODE_TIMING_SKIP_FIRST:-32}"
 DECODE_TIMING_STEP_SKIP_FIRST="${DECODE_TIMING_STEP_SKIP_FIRST:-32}"
 DECODE_TIMING_STEP_EVERY="${DECODE_TIMING_STEP_EVERY:-16}"
@@ -111,7 +130,9 @@ done
 }
 source_suffix=""
 [ "$SOURCE_STACK" = june-e190 ] && source_suffix="_june_e190"
-NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}_${STAMP}"
+profile_suffix=""
+[ "$XPU_PROFILE" = 1 ] && profile_suffix="_xpu_profile"
+NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}${profile_suffix}${cpu_bind_suffix}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
@@ -162,6 +183,10 @@ if [ "$SOURCE_STACK" = june-e190 ]; then
 fi
 
 mkdir -p "$RESULT_DIR" "$(dirname "$CACHE_DIR")"
+XPU_PROFILE_DIR_HOST="$RESULT_DIR/xpu_profile"
+if [ "$XPU_PROFILE" = 1 ]; then
+  mkdir -p "$XPU_PROFILE_DIR_HOST"
+fi
 if [ "$CUDAGRAPH_REPLAY_TRACE" = 1 ]; then
   mkdir -p "/mnt/vm_8tb/b70/results/logs/$NAME"
 fi
@@ -298,6 +323,8 @@ else
 fi
 echo "config -> moe_trace=$MOE_TRACE allreduce_trace=$ALLREDUCE_TRACE allreduce_trace_sync=$ALLREDUCE_TRACE_SYNC allreduce_trace_max_calls=$ALLREDUCE_TRACE_MAX_CALLS profile_fence_min_rows=$PROFILE_FENCE_MIN_ROWS profile_fence_stages=$PROFILE_FENCE_STAGES cache_reuse=${ALLOW_EXISTING_CACHE:-0}"
 echo "config -> decode_timing=$DECODE_TIMING timing_sync=$DECODE_TIMING_SYNC timing_skip=$DECODE_TIMING_SKIP_FIRST timing_step_skip=$DECODE_TIMING_STEP_SKIP_FIRST timing_step_every=$DECODE_TIMING_STEP_EVERY replay_trace=$CUDAGRAPH_REPLAY_TRACE replay_trace_max_lines=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES"
+echo "config -> xpu_profile=$XPU_PROFILE profile_delay_iterations=2 profile_max_iterations=8 profile_dir=$XPU_PROFILE_DIR_HOST"
+echo "config -> cpu_bind=$CPU_BIND numa_bind=$NUMA_BIND_VALUE numa_bind_cpus=$NUMA_BIND_CPUS_VALUE numa_nodes=0,0"
 echo "config -> source_stack=$SOURCE_STACK native_stack=$NATIVE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
 echo "config -> kernel_runtime=locally-rebuilt-June-complete-package preflight_suite=$KERNEL_PREFLIGHT_SUITE xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
 echo "config -> selector=level_zero:0,1 affinity=0,1 inductor_cache=/vllm_cache/torchinductor"
@@ -325,10 +352,14 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   FORENSIC_SITECUSTOMIZE_HOST="$FORENSIC_SITECUSTOMIZE_VALUE" \
   FORENSIC_FUSED_MOE_INTERFACE_HOST="$FORENSIC_FUSED_MOE_INTERFACE_VALUE" \
   XPU_KERNEL_RUNTIME_HOST="$JUNE_RUNTIME" \
+  XPU_PROFILE="$XPU_PROFILE" \
+  XPU_PROFILE_DIR_HOST="$XPU_PROFILE_DIR_HOST" \
+  NUMA_BIND="$NUMA_BIND_VALUE" \
+  NUMA_BIND_CPUS="$NUMA_BIND_CPUS_VALUE" \
   CACHE_DIR_HOST="$CACHE_DIR" \
   B70_LOGDIR="$RESULT_DIR" \
   HEALTH_STALL="$STALL_TIMEOUT" \
-  B70_EXTRA_ENV="ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=$MIXED_WORKSPACE B70_QWEN36_MOE_TRACE=$MOE_TRACE B70_QWEN36_ALLREDUCE_TRACE=$ALLREDUCE_TRACE B70_QWEN36_ALLREDUCE_TRACE_SYNC=$ALLREDUCE_TRACE_SYNC B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS=$ALLREDUCE_TRACE_MAX_CALLS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES=$PROFILE_FENCE_STAGES B70_QWEN36_JUNE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS VLLM_XPU_DECODE_TIMING_ALLOW=$DECODE_TIMING VLLM_XPU_DECODE_TIMING=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_SYNC=$DECODE_TIMING_SYNC VLLM_XPU_DECODE_TIMING_RANK=0 VLLM_XPU_DECODE_TIMING_SUMMARY=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_STEP_SUMMARY=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_SKIP_FIRST=$DECODE_TIMING_SKIP_FIRST VLLM_XPU_DECODE_TIMING_STEP_SKIP_FIRST=$DECODE_TIMING_STEP_SKIP_FIRST VLLM_XPU_DECODE_TIMING_STEP_EVERY=$DECODE_TIMING_STEP_EVERY VLLM_XPU_DECODE_TIMING_PRINT_EVERY=0 VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_FILE=$REPLAY_TRACE_FILE_VALUE VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_RANK=0 VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_MAX_LINES=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES" \
+  B70_EXTRA_ENV="ONEAPI_DEVICE_SELECTOR=level_zero:0,1 ZE_AFFINITY_MASK=0,1 TORCHINDUCTOR_CACHE_DIR=/vllm_cache/torchinductor VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=$MIXED_WORKSPACE B70_QWEN36_MOE_TRACE=$MOE_TRACE B70_QWEN36_ALLREDUCE_TRACE=$ALLREDUCE_TRACE B70_QWEN36_ALLREDUCE_TRACE_SYNC=$ALLREDUCE_TRACE_SYNC B70_QWEN36_ALLREDUCE_TRACE_MAX_CALLS=$ALLREDUCE_TRACE_MAX_CALLS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_ALLREDUCE_PROFILE_FENCE_STAGES=$PROFILE_FENCE_STAGES B70_QWEN36_JUNE_PROFILE_FENCE_MIN_ROWS=$PROFILE_FENCE_MIN_ROWS B70_QWEN36_WORKER_ONLY_NUMA_BIND=$NUMA_BIND_VALUE VLLM_XPU_DECODE_TIMING_ALLOW=$DECODE_TIMING VLLM_XPU_DECODE_TIMING=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_SYNC=$DECODE_TIMING_SYNC VLLM_XPU_DECODE_TIMING_RANK=0 VLLM_XPU_DECODE_TIMING_SUMMARY=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_STEP_SUMMARY=$DECODE_TIMING VLLM_XPU_DECODE_TIMING_SKIP_FIRST=$DECODE_TIMING_SKIP_FIRST VLLM_XPU_DECODE_TIMING_STEP_SKIP_FIRST=$DECODE_TIMING_STEP_SKIP_FIRST VLLM_XPU_DECODE_TIMING_STEP_EVERY=$DECODE_TIMING_STEP_EVERY VLLM_XPU_DECODE_TIMING_PRINT_EVERY=0 VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_FILE=$REPLAY_TRACE_FILE_VALUE VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_RANK=0 VLLM_XPU_CUDAGRAPH_REPLAY_TRACE_MAX_LINES=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES" \
   I_KNOW_P2P_WEDGES=1 \
   bash "$SCRIPT_DIR/serve_qwen36_s2b_control.sh" run 2>&1 | tee "$RUN_LOG"
 serve_rc="${PIPESTATUS[0]}"
@@ -340,6 +371,7 @@ set -e
 metric_path="$(sed -n 's/^host_artifact=//p' "$RUN_LOG" | tail -n 1)"
 json_canary_path="$(sed -n 's/^host_json_canary=//p' "$RUN_LOG" | tail -n 1)"
 color_canary_path="$(sed -n 's/^host_color_canary=//p' "$RUN_LOG" | tail -n 1)"
+profile_metric_path="$(sed -n 's/^host_profile_artifact=//p' "$RUN_LOG" | tail -n 1)"
 [ "$serve_rc" = 0 ] || {
   echo "Exact control launcher returned $serve_rc" >&2
   exit "$serve_rc"
@@ -358,6 +390,20 @@ done
   echo "Exact control did not preserve its server log: $SERVER_LOG" >&2
   exit 1
 }
+if [ "$XPU_PROFILE" = 1 ]; then
+  [ -n "$profile_metric_path" ] && [ -f "$profile_metric_path" ] || {
+    echo "XPU profiler did not preserve its workload metric" >&2
+    exit 1
+  }
+  compgen -G "$XPU_PROFILE_DIR_HOST/*.json.gz" >/dev/null || {
+    echo "Exact control did not preserve both-rank XPU profile traces" >&2
+    exit 1
+  }
+  [ "$(find "$XPU_PROFILE_DIR_HOST" -maxdepth 1 -name '*.json.gz' -type f | wc -l)" = 2 ] || {
+    echo "Expected exactly two XPU profile traces" >&2
+    exit 1
+  }
+fi
 
 # Preserve completed client artifacts before inspecting server-side evidence.
 # A rejected route is still a useful measured control and must remain paired
@@ -365,6 +411,9 @@ done
 cp "$metric_path" "$RESULT_DIR/steve_metric.json"
 cp "$json_canary_path" "$RESULT_DIR/json_repeat16.json"
 cp "$color_canary_path" "$RESULT_DIR/color_repeat16.json"
+if [ "$XPU_PROFILE" = 1 ]; then
+  cp "$profile_metric_path" "$RESULT_DIR/xpu_profile_workload.json"
+fi
 if [ "$CUDAGRAPH_REPLAY_TRACE" = 1 ]; then
   runtime_trace_dir="/mnt/vm_8tb/b70/results/logs/$NAME"
   compgen -G "$runtime_trace_dir/cudagraph_replay_rank*.jsonl" >/dev/null || {

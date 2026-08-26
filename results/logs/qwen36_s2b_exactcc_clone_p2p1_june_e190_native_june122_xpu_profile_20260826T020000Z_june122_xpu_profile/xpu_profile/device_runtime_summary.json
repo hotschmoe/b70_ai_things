@@ -1,0 +1,1230 @@
+[
+  {
+    "protocol": "qwen36-e190-bounded-xpu-trace-v1",
+    "trace": "results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_xpu_profile_20260826T020000Z_june122_xpu_profile/xpu_profile/1787709456189643008-rank-0.1787709557078400172.pt.trace.json.gz",
+    "iteration_count": 8,
+    "iteration_cpu_range_us": {
+      "count": 8,
+      "mean": 33928.474375,
+      "median": 33404.871,
+      "min": 32688.585,
+      "max": 38069.435
+    },
+    "visible_device_us_per_iteration": {
+      "count": 8,
+      "mean": 1671.066,
+      "median": 1668.2040000000002,
+      "min": 1663.749,
+      "max": 1698.332
+    },
+    "structural_driver_calls_per_iteration": {
+      "zeCommandQueueExecuteCommandLists": {
+        "count": {
+          "count": 8,
+          "mean": 82.0,
+          "median": 82.0,
+          "min": 82.0,
+          "max": 82.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 510.43225,
+          "median": 510.22249999999997,
+          "min": 503.35699999999997,
+          "max": 516.234
+        }
+      },
+      "zeFenceReset": {
+        "count": {
+          "count": 8,
+          "mean": 41.0,
+          "median": 41.0,
+          "min": 41.0,
+          "max": 41.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 3.95125,
+          "median": 3.9364999999999997,
+          "min": 3.732,
+          "max": 4.185
+        }
+      },
+      "zeEventHostSynchronize": {
+        "count": {
+          "count": 8,
+          "mean": 41.0,
+          "median": 41.0,
+          "min": 41.0,
+          "max": 41.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 99.815875,
+          "median": 84.315,
+          "min": 82.135,
+          "max": 207.791
+        }
+      },
+      "zeCommandListAppendBarrier": {
+        "count": {
+          "count": 8,
+          "mean": 123.0,
+          "median": 123.0,
+          "min": 123.0,
+          "max": 123.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 1036.861625,
+          "median": 1031.416,
+          "min": 1012.106,
+          "max": 1085.606
+        }
+      },
+      "zeCommandListAppendLaunchKernel": {
+        "count": {
+          "count": 8,
+          "mean": 105.0,
+          "median": 105.0,
+          "min": 105.0,
+          "max": 105.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 1066.7497500000002,
+          "median": 1056.098,
+          "min": 1038.901,
+          "max": 1150.448
+        }
+      },
+      "urEnqueueKernelLaunch": {
+        "count": {
+          "count": 8,
+          "mean": 105.0,
+          "median": 105.0,
+          "min": 105.0,
+          "max": 105.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 7759.021625,
+          "median": 7707.581,
+          "min": 7296.177,
+          "max": 8488.304
+        }
+      }
+    },
+    "visible_device_buckets": [
+      {
+        "bucket": "gemm_visible",
+        "kernel_count": 8,
+        "device_total_us": 7682.601000000001,
+        "device_mean_us_per_iteration": 960.3251250000001
+      },
+      {
+        "bucket": "gdn_visible",
+        "kernel_count": 480,
+        "device_total_us": 2941.9639999999995,
+        "device_mean_us_per_iteration": 367.74549999999994
+      },
+      {
+        "bucket": "full_attention_visible",
+        "kernel_count": 80,
+        "device_total_us": 1779.3439999999998,
+        "device_mean_us_per_iteration": 222.41799999999998
+      },
+      {
+        "bucket": "other_visible",
+        "kernel_count": 184,
+        "device_total_us": 366.4910000000006,
+        "device_mean_us_per_iteration": 45.811375000000076
+      },
+      {
+        "bucket": "collective_visible",
+        "kernel_count": 8,
+        "device_total_us": 214.058,
+        "device_mean_us_per_iteration": 26.75725
+      },
+      {
+        "bucket": "memcpy_visible",
+        "kernel_count": 88,
+        "device_total_us": 193.18300000000008,
+        "device_mean_us_per_iteration": 24.14787500000001
+      },
+      {
+        "bucket": "kv_cache_visible",
+        "kernel_count": 80,
+        "device_total_us": 190.8870000000001,
+        "device_mean_us_per_iteration": 23.860875000000014
+      }
+    ],
+    "top_visible_kernels": [
+      {
+        "kernel": "gemm_kernel",
+        "count": 8,
+        "device_total_us": 7682.601000000001,
+        "device_mean_us_per_iteration": 960.3251250000001
+      },
+      {
+        "kernel": "_ZTSN6compat12experimental6detail13KernelFunctorIXadL_ZN7cutlass13device_kernelINS3_4fmha6kernel22XeFMHAFwdSplitKVKernelINS6_18DecodeProblemShapeILb1EEENS5_10collective17DecodeFwdMainloopINS5_9XeDefaultILi1EEELb1ELb0EN4cute8TiledMMAINSE_8MMA_AtomIJNSE_10XE_DPAS_TTILi8EfNS3_10bfloat16_tESI_fEEEEENSE_6LayoutINSE_5tupleIJNSE_1CILi1EEENSN_ILi4EEESO_EEENSM_IJNSN_ILi0EEESO_SR_EEEEEKNSM_IJNSL_INSN_ILi8EEESO_EENSL_INSN_ILi64EEESO_EESX_EEEEENSF_ISK_NSL_INSM_IJSO_SO_SP_EEENSM_IJSR_SR_SO_EEEEEKNSM_IJSV_NSL_INSN_ILi32EEESO_EESX_EEEEELi8ENSE_6TensorINSE_10ViewEngineINSE_8gmem_ptrIPSI_EEEENSL_INSM_IJiiiiEEENSM_IJiSO_iiEEEEEEES1I_NS19_IS1E_NSL_IS1F_NSM_IJSO_iiiEEEEEEEvvvLb0EEENSA_17DecodeFwdEpilogueIS1M_NSM_IJSU_NSN_ILi256EEEEEES1I_NS19_INS1A_INS1B_IPfEEEES1H_EEvLb0EEENS6_19DecodeTileSchedulerEEEEEvRKNT_6ParamsEEEN4sycl3_V18nd_rangeILi3EEENS22_3ext6oneapi12experimental10propertiesINS27_6detail20properties_type_listIJNS27_14property_valueINS27_18sub_group_size_keyEJSt17integral_constantIjLj16EEEEENS2B_INS25_5intel12experimental12grf_size_keyEJS2D_IjLj256EEEEEEEEEELb0EJNS1W_6ParamsEEEE",
+        "count": 80,
+        "device_total_us": 1779.3439999999998,
+        "device_mean_us_per_iteration": 222.41799999999998
+      },
+      {
+        "kernel": "gdn::causal_conv1d_kernel<sycl::_V1::ext::oneapi::bfloat16, 4, true>",
+        "count": 240,
+        "device_total_us": 1476.1499999999999,
+        "device_mean_us_per_iteration": 184.51874999999998
+      },
+      {
+        "kernel": "gdn::gated_delta_rule_kernel<sycl::_V1::ext::oneapi::bfloat16, float, 4>",
+        "count": 240,
+        "device_total_us": 1465.8139999999994,
+        "device_mean_us_per_iteration": 183.22674999999992
+      },
+      {
+        "kernel": "oneccl_allgatherv_pcie<sycl::_V1::ext::oneapi::bfloat16, Rt64_128_PCIE, false, 16>",
+        "count": 8,
+        "device_total_us": 214.058,
+        "device_mean_us_per_iteration": 26.75725
+      },
+      {
+        "kernel": "Memcpy H2D (HOST -> DEVICE)",
+        "count": 88,
+        "device_total_us": 193.18300000000008,
+        "device_mean_us_per_iteration": 24.14787500000001
+      },
+      {
+        "kernel": "vllm::reshape_and_cache_flash_kernel<c10::BFloat16, c10::BFloat16, (vllm::Fp8KVCacheDataType)0>",
+        "count": 80,
+        "device_total_us": 190.8870000000001,
+        "device_mean_us_per_iteration": 23.860875000000014
+      },
+      {
+        "kernel": "_compute_slot_mapping_kernel",
+        "count": 32,
+        "device_total_us": 129.56999999999996,
+        "device_mean_us_per_iteration": 16.196249999999996
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::CopyScalarFunc<int>, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >",
+        "count": 16,
+        "device_total_us": 48.42999999999999,
+        "device_mean_us_per_iteration": 6.053749999999999
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<4, at::native::xpu::BinaryFunctor<int, int, int, at::native::xpu::AddFunctor<int> >, at::detail::Array<char*, 3>, TrivialOffsetCalculator<2, unsigned int> >",
+        "count": 32,
+        "device_total_us": 32.27799999999999,
+        "device_mean_us_per_iteration": 4.034749999999999
+      },
+      {
+        "kernel": "at::native::xpu::IndexKernelFunctor<at::native::xpu::IndexFunctor<at::native::xpu::OpaqueType<2> >, char*, OffsetCalculator<3, unsigned int, false> >",
+        "count": 8,
+        "device_total_us": 28.122999999999998,
+        "device_mean_us_per_iteration": 3.5153749999999997
+      },
+      {
+        "kernel": "at::native::xpu::IndexKernelFunctor<at::native::xpu::IndexFunctor<at::native::xpu::OpaqueType<4> >, char*, OffsetCalculator<3, unsigned int, false> >",
+        "count": 8,
+        "device_total_us": 25.726000000000003,
+        "device_mean_us_per_iteration": 3.2157500000000003
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<4, at::native::xpu::CopyScalarFunc<int>, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int> >",
+        "count": 16,
+        "device_total_us": 21.035999999999998,
+        "device_mean_us_per_iteration": 2.6294999999999997
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::BinaryFunctor<int, int, int, at::native::xpu::AddFunctor<int> >, at::detail::Array<char*, 3>, TrivialOffsetCalculator<2, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>",
+        "count": 24,
+        "device_total_us": 20.09599999999999,
+        "device_mean_us_per_iteration": 2.5119999999999987
+      },
+      {
+        "kernel": "at::native::xpu::ElementwiseGlobalRangeKernel<at::native::xpu::LegacyKernelScalarFunctor<long, 2, OffsetCalculator<2, unsigned int, false>, at::native::xpu::CopyScalarFunc<long> > >",
+        "count": 8,
+        "device_total_us": 13.434,
+        "device_mean_us_per_iteration": 1.67925
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<4, at::native::xpu::FillFunctor<int>, at::detail::Array<char*, 1>, TrivialOffsetCalculator<0, unsigned int> >",
+        "count": 8,
+        "device_total_us": 12.706000000000001,
+        "device_mean_us_per_iteration": 1.5882500000000002
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<2, at::native::xpu::CopyScalarFunc<long>, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int> >",
+        "count": 8,
+        "device_total_us": 11.873999999999999,
+        "device_mean_us_per_iteration": 1.4842499999999998
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::BUnaryFunctor<int, int, int, at::native::xpu::AddFunctor<int> >, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>",
+        "count": 8,
+        "device_total_us": 8.953,
+        "device_mean_us_per_iteration": 1.119125
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<2, at::native::xpu::BinaryFunctor<long, long, long, at::native::xpu::AddFunctor<long> >, at::detail::Array<char*, 3>, TrivialOffsetCalculator<2, unsigned int> >",
+        "count": 8,
+        "device_total_us": 8.017000000000001,
+        "device_mean_us_per_iteration": 1.0021250000000002
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::FillFunctor<int>, at::detail::Array<char*, 1>, TrivialOffsetCalculator<0, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>",
+        "count": 8,
+        "device_total_us": 6.248,
+        "device_mean_us_per_iteration": 0.781
+      }
+    ],
+    "per_iteration": [
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 38069.435,
+        "visible_device_us": 1698.332,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 23.901000000000003,
+          "other_visible": 56.239,
+          "gdn_visible": 376.01399999999995,
+          "kv_cache_visible": 24.578,
+          "full_attention_visible": 224.57999999999998,
+          "gemm_visible": 966.25,
+          "collective_visible": 26.77
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 508.501
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.13
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 207.791
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1085.606
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1150.448
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7296.177
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33371.888,
+        "visible_device_us": 1669.112,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 23.223,
+          "other_visible": 45.718999999999994,
+          "gdn_visible": 366.74300000000005,
+          "kv_cache_visible": 23.64,
+          "full_attention_visible": 222.60000000000002,
+          "gemm_visible": 960.312,
+          "collective_visible": 26.875
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 511.944
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.058
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 82.135
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1063.75
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1071.2450000000001
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7313.984
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 32690.669,
+        "visible_device_us": 1669.372,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 25.044999999999995,
+          "other_visible": 45.61699999999998,
+          "gdn_visible": 366.32700000000006,
+          "kv_cache_visible": 23.64,
+          "full_attention_visible": 223.95300000000003,
+          "gemm_visible": 958.02,
+          "collective_visible": 26.77
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 516.234
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 3.732
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 84.239
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1034.1779999999999
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1076.929
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7480.493
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33437.854,
+        "visible_device_us": 1665.207,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.003999999999998,
+          "other_visible": 43.53399999999999,
+          "gdn_visible": 366.429,
+          "kv_cache_visible": 23.848,
+          "full_attention_visible": 221.45499999999998,
+          "gemm_visible": 959.375,
+          "collective_visible": 26.562
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 514.515
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 3.795
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 86.663
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1012.106
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1063.659
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 8082.878
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 32688.585,
+        "visible_device_us": 1663.749,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.316999999999997,
+          "other_visible": 43.11599999999999,
+          "gdn_visible": 365.59900000000005,
+          "kv_cache_visible": 23.846999999999998,
+          "full_attention_visible": 220.517,
+          "gemm_visible": 959.687,
+          "collective_visible": 26.666
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 508.161
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.185
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 84.202
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1021.108
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1048.537
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7434.298
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33343.384,
+        "visible_device_us": 1665.881,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.578,
+          "other_visible": 43.74099999999999,
+          "gdn_visible": 367.5750000000001,
+          "kv_cache_visible": 23.639,
+          "full_attention_visible": 221.03699999999998,
+          "gemm_visible": 958.645,
+          "collective_visible": 26.666
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 508.361
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 3.877
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 84.391
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1030.572
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1042.0720000000001
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 8041.37
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33477.069,
+        "visible_device_us": 1669.579,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.734,
+          "other_visible": 44.05399999999999,
+          "gdn_visible": 366.74,
+          "kv_cache_visible": 23.846999999999998,
+          "full_attention_visible": 222.49699999999999,
+          "gemm_visible": 960.937,
+          "collective_visible": 26.77
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 512.385
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 3.996
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 83.515
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1032.26
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1042.207
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7934.669
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 34348.911,
+        "visible_device_us": 1667.296,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 23.380999999999997,
+          "other_visible": 44.471,
+          "gdn_visible": 366.53700000000015,
+          "kv_cache_visible": 23.848,
+          "full_attention_visible": 222.705,
+          "gemm_visible": 959.375,
+          "collective_visible": 26.979
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 503.35699999999997
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 3.8369999999999997
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 85.591
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1015.313
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1038.901
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 8488.304
+          }
+        }
+      }
+    ],
+    "interpretation_guard": "Visible device time excludes kernels hidden inside XPUGraph replay; do not subtract it from synchronized model-forward time as if it were a complete device ledger."
+  },
+  {
+    "protocol": "qwen36-e190-bounded-xpu-trace-v1",
+    "trace": "results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_xpu_profile_20260826T020000Z_june122_xpu_profile/xpu_profile/1787709456189643008-rank-1.1787709557082903338.pt.trace.json.gz",
+    "iteration_count": 8,
+    "iteration_cpu_range_us": {
+      "count": 8,
+      "mean": 33828.51875,
+      "median": 33268.015,
+      "min": 32641.326,
+      "max": 37772.458
+    },
+    "visible_device_us_per_iteration": {
+      "count": 8,
+      "mean": 2170.872125,
+      "median": 2218.0969999999998,
+      "min": 1899.213,
+      "max": 2329.117
+    },
+    "structural_driver_calls_per_iteration": {
+      "zeCommandQueueExecuteCommandLists": {
+        "count": {
+          "count": 8,
+          "mean": 82.0,
+          "median": 82.0,
+          "min": 82.0,
+          "max": 82.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 507.30562499999996,
+          "median": 506.669,
+          "min": 502.678,
+          "max": 516.799
+        }
+      },
+      "zeFenceReset": {
+        "count": {
+          "count": 8,
+          "mean": 41.0,
+          "median": 41.0,
+          "min": 41.0,
+          "max": 41.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 4.17875,
+          "median": 4.1745,
+          "min": 3.935,
+          "max": 4.43
+        }
+      },
+      "zeEventHostSynchronize": {
+        "count": {
+          "count": 8,
+          "mean": 41.0,
+          "median": 41.0,
+          "min": 41.0,
+          "max": 41.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 94.31675,
+          "median": 77.42099999999999,
+          "min": 76.043,
+          "max": 209.59
+        }
+      },
+      "zeCommandListAppendBarrier": {
+        "count": {
+          "count": 8,
+          "mean": 123.0,
+          "median": 123.0,
+          "min": 123.0,
+          "max": 123.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 1051.23575,
+          "median": 1038.711,
+          "min": 1028.867,
+          "max": 1096.31
+        }
+      },
+      "zeCommandListAppendLaunchKernel": {
+        "count": {
+          "count": 8,
+          "mean": 105.0,
+          "median": 105.0,
+          "min": 105.0,
+          "max": 105.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 1069.0563750000001,
+          "median": 1067.526,
+          "min": 1046.789,
+          "max": 1106.615
+        }
+      },
+      "urEnqueueKernelLaunch": {
+        "count": {
+          "count": 8,
+          "mean": 105.0,
+          "median": 105.0,
+          "min": 105.0,
+          "max": 105.0
+        },
+        "cpu_total_us": {
+          "count": 8,
+          "mean": 7690.5035,
+          "median": 7770.211499999999,
+          "min": 7242.182,
+          "max": 8198.141
+        }
+      }
+    },
+    "visible_device_buckets": [
+      {
+        "bucket": "gemm_visible",
+        "kernel_count": 8,
+        "device_total_us": 7678.642,
+        "device_mean_us_per_iteration": 959.83025
+      },
+      {
+        "bucket": "collective_visible",
+        "kernel_count": 8,
+        "device_total_us": 4203.121,
+        "device_mean_us_per_iteration": 525.390125
+      },
+      {
+        "bucket": "gdn_visible",
+        "kernel_count": 480,
+        "device_total_us": 2961.142999999999,
+        "device_mean_us_per_iteration": 370.1428749999999
+      },
+      {
+        "bucket": "full_attention_visible",
+        "kernel_count": 80,
+        "device_total_us": 1772.9869999999994,
+        "device_mean_us_per_iteration": 221.62337499999992
+      },
+      {
+        "bucket": "other_visible",
+        "kernel_count": 184,
+        "device_total_us": 364.0970000000008,
+        "device_mean_us_per_iteration": 45.5121250000001
+      },
+      {
+        "bucket": "memcpy_visible",
+        "kernel_count": 88,
+        "device_total_us": 197.14500000000012,
+        "device_mean_us_per_iteration": 24.643125000000015
+      },
+      {
+        "bucket": "kv_cache_visible",
+        "kernel_count": 80,
+        "device_total_us": 189.84200000000016,
+        "device_mean_us_per_iteration": 23.73025000000002
+      }
+    ],
+    "top_visible_kernels": [
+      {
+        "kernel": "gemm_kernel",
+        "count": 8,
+        "device_total_us": 7678.642,
+        "device_mean_us_per_iteration": 959.83025
+      },
+      {
+        "kernel": "oneccl_allgatherv_pcie<sycl::_V1::ext::oneapi::bfloat16, Rt64_128_PCIE, false, 16>",
+        "count": 8,
+        "device_total_us": 4203.121,
+        "device_mean_us_per_iteration": 525.390125
+      },
+      {
+        "kernel": "_ZTSN6compat12experimental6detail13KernelFunctorIXadL_ZN7cutlass13device_kernelINS3_4fmha6kernel22XeFMHAFwdSplitKVKernelINS6_18DecodeProblemShapeILb1EEENS5_10collective17DecodeFwdMainloopINS5_9XeDefaultILi1EEELb1ELb0EN4cute8TiledMMAINSE_8MMA_AtomIJNSE_10XE_DPAS_TTILi8EfNS3_10bfloat16_tESI_fEEEEENSE_6LayoutINSE_5tupleIJNSE_1CILi1EEENSN_ILi4EEESO_EEENSM_IJNSN_ILi0EEESO_SR_EEEEEKNSM_IJNSL_INSN_ILi8EEESO_EENSL_INSN_ILi64EEESO_EESX_EEEEENSF_ISK_NSL_INSM_IJSO_SO_SP_EEENSM_IJSR_SR_SO_EEEEEKNSM_IJSV_NSL_INSN_ILi32EEESO_EESX_EEEEELi8ENSE_6TensorINSE_10ViewEngineINSE_8gmem_ptrIPSI_EEEENSL_INSM_IJiiiiEEENSM_IJiSO_iiEEEEEEES1I_NS19_IS1E_NSL_IS1F_NSM_IJSO_iiiEEEEEEEvvvLb0EEENSA_17DecodeFwdEpilogueIS1M_NSM_IJSU_NSN_ILi256EEEEEES1I_NS19_INS1A_INS1B_IPfEEEES1H_EEvLb0EEENS6_19DecodeTileSchedulerEEEEEvRKNT_6ParamsEEEN4sycl3_V18nd_rangeILi3EEENS22_3ext6oneapi12experimental10propertiesINS27_6detail20properties_type_listIJNS27_14property_valueINS27_18sub_group_size_keyEJSt17integral_constantIjLj16EEEEENS2B_INS25_5intel12experimental12grf_size_keyEJS2D_IjLj256EEEEEEEEEELb0EJNS1W_6ParamsEEEE",
+        "count": 80,
+        "device_total_us": 1772.9869999999994,
+        "device_mean_us_per_iteration": 221.62337499999992
+      },
+      {
+        "kernel": "gdn::gated_delta_rule_kernel<sycl::_V1::ext::oneapi::bfloat16, float, 4>",
+        "count": 240,
+        "device_total_us": 1481.654999999999,
+        "device_mean_us_per_iteration": 185.20687499999988
+      },
+      {
+        "kernel": "gdn::causal_conv1d_kernel<sycl::_V1::ext::oneapi::bfloat16, 4, true>",
+        "count": 240,
+        "device_total_us": 1479.488000000002,
+        "device_mean_us_per_iteration": 184.93600000000026
+      },
+      {
+        "kernel": "Memcpy H2D (HOST -> DEVICE)",
+        "count": 88,
+        "device_total_us": 197.14500000000012,
+        "device_mean_us_per_iteration": 24.643125000000015
+      },
+      {
+        "kernel": "vllm::reshape_and_cache_flash_kernel<c10::BFloat16, c10::BFloat16, (vllm::Fp8KVCacheDataType)0>",
+        "count": 80,
+        "device_total_us": 189.84200000000016,
+        "device_mean_us_per_iteration": 23.73025000000002
+      },
+      {
+        "kernel": "_compute_slot_mapping_kernel",
+        "count": 32,
+        "device_total_us": 129.57099999999997,
+        "device_mean_us_per_iteration": 16.196374999999996
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::CopyScalarFunc<int>, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >",
+        "count": 16,
+        "device_total_us": 48.95199999999999,
+        "device_mean_us_per_iteration": 6.118999999999999
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<4, at::native::xpu::BinaryFunctor<int, int, int, at::native::xpu::AddFunctor<int> >, at::detail::Array<char*, 3>, TrivialOffsetCalculator<2, unsigned int> >",
+        "count": 32,
+        "device_total_us": 31.75799999999999,
+        "device_mean_us_per_iteration": 3.9697499999999986
+      },
+      {
+        "kernel": "at::native::xpu::IndexKernelFunctor<at::native::xpu::IndexFunctor<at::native::xpu::OpaqueType<2> >, char*, OffsetCalculator<3, unsigned int, false> >",
+        "count": 8,
+        "device_total_us": 27.706000000000003,
+        "device_mean_us_per_iteration": 3.4632500000000004
+      },
+      {
+        "kernel": "at::native::xpu::IndexKernelFunctor<at::native::xpu::IndexFunctor<at::native::xpu::OpaqueType<4> >, char*, OffsetCalculator<3, unsigned int, false> >",
+        "count": 8,
+        "device_total_us": 24.268,
+        "device_mean_us_per_iteration": 3.0335
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<4, at::native::xpu::CopyScalarFunc<int>, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int> >",
+        "count": 16,
+        "device_total_us": 21.14,
+        "device_mean_us_per_iteration": 2.6425
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::BinaryFunctor<int, int, int, at::native::xpu::AddFunctor<int> >, at::detail::Array<char*, 3>, TrivialOffsetCalculator<2, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>",
+        "count": 24,
+        "device_total_us": 19.887999999999995,
+        "device_mean_us_per_iteration": 2.4859999999999993
+      },
+      {
+        "kernel": "at::native::xpu::ElementwiseGlobalRangeKernel<at::native::xpu::LegacyKernelScalarFunctor<long, 2, OffsetCalculator<2, unsigned int, false>, at::native::xpu::CopyScalarFunc<long> > >",
+        "count": 8,
+        "device_total_us": 13.642000000000001,
+        "device_mean_us_per_iteration": 1.7052500000000002
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<4, at::native::xpu::FillFunctor<int>, at::detail::Array<char*, 1>, TrivialOffsetCalculator<0, unsigned int> >",
+        "count": 8,
+        "device_total_us": 12.705,
+        "device_mean_us_per_iteration": 1.588125
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<2, at::native::xpu::CopyScalarFunc<long>, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int> >",
+        "count": 8,
+        "device_total_us": 12.393,
+        "device_mean_us_per_iteration": 1.549125
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::BUnaryFunctor<int, int, int, at::native::xpu::AddFunctor<int> >, at::detail::Array<char*, 2>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>",
+        "count": 8,
+        "device_total_us": 8.849,
+        "device_mean_us_per_iteration": 1.106125
+      },
+      {
+        "kernel": "at::native::xpu::VectorizedElementwiseKernel<2, at::native::xpu::BinaryFunctor<long, long, long, at::native::xpu::AddFunctor<long> >, at::detail::Array<char*, 3>, TrivialOffsetCalculator<2, unsigned int> >",
+        "count": 8,
+        "device_total_us": 7.497000000000002,
+        "device_mean_us_per_iteration": 0.9371250000000002
+      },
+      {
+        "kernel": "at::native::xpu::UnrolledElementwiseKernel<at::native::xpu::FillFunctor<int>, at::detail::Array<char*, 1>, TrivialOffsetCalculator<0, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithoutCast, at::native::memory::StoreWithoutCast>",
+        "count": 8,
+        "device_total_us": 5.728,
+        "device_mean_us_per_iteration": 0.716
+      }
+    ],
+    "per_iteration": [
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 37772.458,
+        "visible_device_us": 1965.939,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 25.776,
+          "other_visible": 57.07299999999998,
+          "gdn_visible": 377.26700000000005,
+          "kv_cache_visible": 24.785999999999998,
+          "full_attention_visible": 222.392,
+          "gemm_visible": 967.812,
+          "collective_visible": 290.833
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 507.859
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.282
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 209.59
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1096.31
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1106.615
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7242.182
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33034.304,
+        "visible_device_us": 2315.522,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.734,
+          "other_visible": 45.618,
+          "gdn_visible": 368.09800000000007,
+          "kv_cache_visible": 23.326,
+          "full_attention_visible": 220.414,
+          "gemm_visible": 960.937,
+          "collective_visible": 672.395
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 509.37
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 3.935
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 77.916
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1028.867
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1047.974
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7752.013
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33309.449,
+        "visible_device_us": 1899.213,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 23.849,
+          "other_visible": 44.573999999999984,
+          "gdn_visible": 372.57399999999996,
+          "kv_cache_visible": 23.950999999999997,
+          "full_attention_visible": 220.41199999999998,
+          "gemm_visible": 958.541,
+          "collective_visible": 255.312
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 504.736
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.063
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 76.926
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1031.975
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1081.814
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7803.886
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33268.01,
+        "visible_device_us": 2105.784,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.369999999999997,
+          "other_visible": 43.63699999999999,
+          "gdn_visible": 368.62200000000007,
+          "kv_cache_visible": 23.119,
+          "full_attention_visible": 222.912,
+          "gemm_visible": 957.812,
+          "collective_visible": 465.312
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 508.51099999999997
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.101
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 76.043
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1088.109
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1068.525
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7788.41
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 32641.326,
+        "visible_device_us": 2123.591,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 25.204,
+          "other_visible": 43.01099999999999,
+          "gdn_visible": 370.07600000000014,
+          "kv_cache_visible": 23.951999999999998,
+          "full_attention_visible": 221.87,
+          "gemm_visible": 957.812,
+          "collective_visible": 481.666
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 502.678
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.248
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 83.082
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1040.131
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1047.99
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7558.758
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33116.251,
+        "visible_device_us": 2312.603,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.211999999999996,
+          "other_visible": 43.11699999999999,
+          "gdn_visible": 367.05600000000015,
+          "kv_cache_visible": 23.430999999999997,
+          "full_attention_visible": 221.87100000000004,
+          "gemm_visible": 957.291,
+          "collective_visible": 675.625
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 505.479
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.041
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 76.182
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1034.313
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1066.527
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7841.505
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 33268.02,
+        "visible_device_us": 2315.208,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.317999999999998,
+          "other_visible": 43.53299999999999,
+          "gdn_visible": 367.2660000000002,
+          "kv_cache_visible": 23.637999999999998,
+          "full_attention_visible": 221.454,
+          "gemm_visible": 958.333,
+          "collective_visible": 676.666
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 516.799
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.33
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 78.128
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1037.291
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1086.217
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 7339.133
+          }
+        }
+      },
+      {
+        "annotation": "execute_context_0(0)_generation_1(1)",
+        "cpu_range_us": 34218.332,
+        "visible_device_us": 2329.117,
+        "visible_kernel_count": 116,
+        "visible_device_us_by_bucket": {
+          "memcpy_visible": 24.682,
+          "other_visible": 43.53399999999999,
+          "gdn_visible": 370.1840000000001,
+          "kv_cache_visible": 23.639000000000003,
+          "full_attention_visible": 221.662,
+          "gemm_visible": 960.104,
+          "collective_visible": 685.312
+        },
+        "structural_driver_calls": {
+          "zeCommandQueueExecuteCommandLists": {
+            "count": 82,
+            "cpu_total_us": 503.013
+          },
+          "zeFenceReset": {
+            "count": 41,
+            "cpu_total_us": 4.43
+          },
+          "zeEventHostSynchronize": {
+            "count": 41,
+            "cpu_total_us": 76.667
+          },
+          "zeCommandListAppendBarrier": {
+            "count": 123,
+            "cpu_total_us": 1052.89
+          },
+          "zeCommandListAppendLaunchKernel": {
+            "count": 105,
+            "cpu_total_us": 1046.789
+          },
+          "urEnqueueKernelLaunch": {
+            "count": 105,
+            "cpu_total_us": 8198.141
+          }
+        }
+      }
+    ],
+    "interpretation_guard": "Visible device time excludes kernels hidden inside XPUGraph replay; do not subtract it from synchronized model-forward time as if it were a complete device ledger."
+  }
+]
