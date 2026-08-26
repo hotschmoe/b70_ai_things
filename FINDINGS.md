@@ -522,6 +522,14 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   66.343778, a replicated +1.349335 tok/s or +2.08 percent c10d win. Every arm
   passed exact route, coherence, teardown, and health gates. The final
   66.432037 sample is the new best and reaches 77.36 percent of Steve.
+- **[2026-08-26 runtime identity correction]** The pinned exact-control image
+  already contains Intel Compute Runtime 26.14.37833.4 and Level Zero loader
+  1.28.2, matching Steve's user-mode generation. Its
+  `libze_intel_gpu.so.1.15.37833` SHA256 is `98605c30...`; the image declares no
+  host-library volume and the launcher mounts no host UMD path. The exact vLLM
+  process therefore uses container UMD 26.14 over fixed kernel 7.1. Host UMD
+  26.22 is not the missing process-runtime match; do not downgrade host
+  packages or kernel to chase it.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

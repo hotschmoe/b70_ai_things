@@ -226,6 +226,13 @@ kernel.** Any Steve-era comparison must be isolated to a versioned container or
 user-mode runtime and must preserve the host kernel, current recovery tools,
 and before/after health gates.
 
+**The exact pinned vLLM image already matches Steve's 26.14 user-mode driver.**
+Digest `f2e5a94e...` contains Intel Compute Runtime 26.14.37833.4 and Level Zero
+loader 1.28.2; `libze_intel_gpu.so` hashes to `98605c30...`. It does not mount
+the host UMD libraries. Exact Qwen controls therefore use container UMD 26.14
+over kernel 7.1, not host UMD 26.22. Do not change host packages to "match"
+Steve; that match already exists at the process layer.
+
 The P2P-in-vLLM-serve / chained-TP>1-worker-crash oneCCL wedge documented next is a SEPARATE software
 mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge. An early guarded exact
 Qwen TP2 retest on 2026-08-25 failed at a compiled `vllm::all_reduce`; later exact-stack repairs reached a

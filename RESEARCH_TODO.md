@@ -78,8 +78,10 @@
 > both canaries, and both health layers green. Fresh-cache C-S-C-S replication
 > measured custom 64.9843/65.0046 and source-default 66.2555/66.4320; means are
 > 64.9944 versus 66.3438, a replicated +2.08 percent c10d win. The 66.4320 best
-> reaches 77.36 percent of Steve. NEXT: inspect another accepted user-mode
-> runtime/kernel family; do not
+> reaches 77.36 percent of Steve. Runtime identity audit confirms the pinned
+> process already uses Steve-generation UMD 26.14 and Level Zero loader 1.28.2,
+> not the host's 26.22 libraries. NEXT: inspect another accepted source/native
+> kernel branch or a bounded hardware-topology mechanism; do not
 > alter or downgrade the fixed Linux 7.1 host kernel and do not spend more
 > cycles reducing
 > graph-piece count. Keep the clean endpoint as the speed

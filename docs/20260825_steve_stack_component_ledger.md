@@ -455,7 +455,7 @@ and label `4ceafd1+2dd55f38+44fc8fde0`. Its relevant runtime inventory is:
 | compressed-tensors | 0.15.0.1 |
 | Triton XPU | 3.7.0 |
 | oneAPI compiler/runtime | compiler packages 2025.3.3; SYCL runtime 2025.3.2; oneDNN 2025.3.0 |
-| Container UMD | Intel Compute Runtime 26.14.37833.4; Level Zero loader 1.28.2 |
+| Container UMD | Intel Compute Runtime 26.14.37833.4; Level Zero loader 1.28.2; `libze_intel_gpu.so` SHA256 `98605c30...`; loader SHA256 `0fe232b1...` |
 | oneCCL | source label `4ceafd1`; `libccl.so.1.0` 240177816 bytes, hash `542142ac...` |
 | oneCCL device kernels | 5257304 bytes, exact validated hash `0d549c35...` |
 | Native ops | `_xpu_C` 116706992 bytes, hash `ae330aff...`; GDN hash `cf482fd...` |
@@ -464,7 +464,11 @@ The container does not mount the host UMD libraries. It therefore runs its
 26.14 user-mode driver above this host's kernel 7.1 KMD, while the host package
 set is Compute Runtime 26.22.38646.4 and Level Zero loader 1.28.2. This mixed
 KMD/UMD identity is intentional in the exact image control and must remain
-explicit in any reproduced image manifest.
+explicit in any reproduced image manifest. Reverified off-device on 2026-08-26:
+the image declares no volume and its package database reports
+`intel-opencl-icd 26.14.37833.4-1~24.04~ppa1`. The serve launcher mounts model,
+cache, source, and native-package paths, not a host UMD directory. Host 26.22 is
+therefore not a process-runtime mismatch to repair.
 
 ## Hardware And Topology Boundary
 

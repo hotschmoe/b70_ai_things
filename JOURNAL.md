@@ -19487,3 +19487,37 @@ FULL control and retain the custom route only as accepted-provenance evidence.
 The new 66.432037 best reaches 77.36 percent of Steve's 85.869114 and leaves
 19.437077 tok/s. The next target is another accepted user-mode runtime/kernel
 family, with Linux 7.1 unchanged.
+
+### 2026-08-26m - Exact container already matches Steve-era UMD 26.14
+
+CONFIG -> read-only runtime identity audit of pinned exact-control image digest
+`f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94`;
+no GPU devices, host package changes, or container mounts.
+
+COMMAND ->
+
+```bash
+docker run --rm --entrypoint bash \
+  intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 \
+  -lc 'dpkg-query -W intel-opencl-icd level-zero; \
+       sha256sum /usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1.15.37833 \
+                 /usr/lib/x86_64-linux-gnu/libze_loader.so.1.28.2'
+
+docker image inspect \
+  intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 \
+  --format '{{json .Config.Volumes}}'
+```
+
+RESULT -> the container package is Intel Compute Runtime
+26.14.37833.4-1~24.04~ppa1 and Level Zero loader 1.28.2. SHA256 values are
+`98605c30dcf0d6a0636f23898470086c8545494e198a8f375519b60b5daf983a`
+for `libze_intel_gpu.so.1.15.37833` and
+`0fe232b18985ae078dd546b57bc6d11bacf1030834c0544f7e3feb53ed71c1d0`
+for `libze_loader.so.1.28.2`. Image volumes are null. The exact serve launcher
+mounts model, cache, source, and native-kernel paths, not host UMD libraries.
+
+VERDICT -> the exact vLLM process already uses Steve-generation UMD 26.14 over
+the fixed Linux 7.1 KMD. Host Compute Runtime 26.22 is not the process UMD and
+is not the missing reproduction lever. Do not downgrade kernel or host runtime
+packages. The remaining 19.437077 tok/s lies in source/native behavior or host
+hardware/topology, not an unperformed 26.14 user-mode match.
