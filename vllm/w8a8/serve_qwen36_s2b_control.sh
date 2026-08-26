@@ -29,6 +29,9 @@ export IPCX="${IPCX:-pidfd}"
 export PUSH_AR="${PUSH_AR:-0}"
 export PUSH_AR_GRAPH="${PUSH_AR_GRAPH:-1}"
 export PUSH_AR_MAXB="${PUSH_AR_MAXB:-67108864}"
+export PUSH_AR_PREINIT="${PUSH_AR_PREINIT:-1}"
+export PUSH_AR_PREINIT_STRICT="${PUSH_AR_PREINIT_STRICT:-1}"
+export PUSH_AR_GRAPH_INPLACE="${PUSH_AR_GRAPH_INPLACE:-0}"
 export EXACT_STEVE_CC="${EXACT_STEVE_CC:-0}"
 export FORENSIC_VLLM_SRC="${FORENSIC_VLLM_SRC:-}"
 export FORENSIC_SITECUSTOMIZE_HOST="${FORENSIC_SITECUSTOMIZE_HOST:-}"
@@ -150,10 +153,6 @@ if [ -n "$FORENSIC_VLLM_SRC" ]; then
     echo "FORENSIC_VLLM_SRC requires EXACT_STEVE_CC=1" >&2
     exit 1
   }
-  [ "$PUSH_AR" = 0 ] || {
-    echo "FORENSIC_VLLM_SRC is isolated from the local push-AR adapter" >&2
-    exit 1
-  }
   [ -f "$FORENSIC_VLLM_SRC/vllm/__init__.py" ] || {
     echo "Invalid FORENSIC_VLLM_SRC: $FORENSIC_VLLM_SRC" >&2
     exit 1
@@ -225,7 +224,7 @@ fi
 
 if [ "$PUSH_AR" = 1 ]; then
   PUSH_AR_DIR="$SCRIPT_DIR/../contrib/vllm_push_allreduce"
-  PUSH_AR_SO_HOST="$PUSH_AR_DIR/prebuilt/libxpu_push_ar_graph.so"
+  PUSH_AR_SO_HOST="${PUSH_AR_SO_HOST:-$PUSH_AR_DIR/prebuilt/libxpu_push_ar_graph.so}"
   [ "$TP" = 2 ] || { echo "PUSH_AR=1 requires TP=2" >&2; exit 1; }
   [ "$GRAPH" = 1 ] && [ "$PUSH_AR_GRAPH" = 1 ] || {
     echo "This control's PUSH_AR=1 arm requires GRAPH=1 PUSH_AR_GRAPH=1" >&2
@@ -235,15 +234,32 @@ if [ "$PUSH_AR" = 1 ]; then
     echo "Missing capturable push-AR SO: $PUSH_AR_SO_HOST" >&2
     exit 1
   }
-  MOUNTS+=( -v "$PUSH_AR_DIR:/opt/push_ar:ro" )
+  MOUNTS+=(
+    -v "$PUSH_AR_DIR:/opt/push_ar:ro"
+    -v "$PUSH_AR_SO_HOST:/opt/push_ar_runtime/libxpu_push_ar_graph.so:ro"
+  )
+  push_ar_pythonpath=/opt/push_ar
+  push_ar_chain=
+  if [ -n "$FORENSIC_VLLM_SRC" ]; then
+    push_ar_pythonpath="$push_ar_pythonpath:/opt/forensic_vllm"
+    [ -z "$FORENSIC_SITECUSTOMIZE_HOST" ] || \
+      push_ar_chain=/opt/forensic_site/sitecustomize.py
+  else
+    push_ar_chain=/opt/b70_qwen36_site/sitecustomize.py
+  fi
+  [ -z "$XPU_KERNEL_RUNTIME_HOST" ] || \
+    push_ar_pythonpath="$push_ar_pythonpath:/opt/june-runtime"
   DOCKER_ENV+=(
-    -e PYTHONPATH=/opt/push_ar
-    -e PUSH_AR_CHAIN_SITECUSTOMIZE=/opt/b70_qwen36_site/sitecustomize.py
-    -e PUSH_AR_SO=/opt/push_ar/prebuilt/libxpu_push_ar_graph.so
+    -e PYTHONPATH="$push_ar_pythonpath"
+    -e PUSH_AR_CHAIN_SITECUSTOMIZE="$push_ar_chain"
+    -e PUSH_AR_SO=/opt/push_ar_runtime/libxpu_push_ar_graph.so
     -e PUSH_AR_DISABLE=0
     -e PUSH_AR_GRAPH=1
     -e PUSH_AR_MIN_NUMEL=0
     -e PUSH_AR_MAXB="$PUSH_AR_MAXB"
+    -e PUSH_AR_PREINIT="$PUSH_AR_PREINIT"
+    -e PUSH_AR_PREINIT_STRICT="$PUSH_AR_PREINIT_STRICT"
+    -e PUSH_AR_GRAPH_INPLACE="$PUSH_AR_GRAPH_INPLACE"
   )
 fi
 

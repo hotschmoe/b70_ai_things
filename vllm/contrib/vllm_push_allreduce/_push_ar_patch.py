@@ -67,6 +67,14 @@ def _install():
     # all-reduces use the 11 GB/s push transport instead of falling back to oneCCL. Eager (prefill) still uses
     # the host-barrier ar_allreduce_ptr_dt. Default off -> byte-for-byte the proven J.21 prefill-only behavior.
     GRAPH = os.environ.get("PUSH_AR_GRAPH") == "1"
+    # Initialize the pairwise IPC allocation when vLLM constructs the TP
+    # communicator, before model weights consume most of each card.  The old
+    # first-all-reduce initialization could defer zeMemOpenIpcHandle until
+    # profile-run, where a loaded Qwen3.6 rank had already allocated 16.9 GiB.
+    # Keep this opt-in because the generic adapter is shared by several stacks.
+    PREINIT = os.environ.get("PUSH_AR_PREINIT") == "1"
+    PREINIT_STRICT = os.environ.get("PUSH_AR_PREINIT_STRICT") == "1"
+    GRAPH_INPLACE = os.environ.get("PUSH_AR_GRAPH_INPLACE") == "1"
     _is_capturing = getattr(torch.xpu, "is_current_stream_capturing", lambda: False)
     DT = {torch.float32: 0, torch.bfloat16: 1, torch.float16: 2}
 
@@ -112,7 +120,11 @@ def _install():
             # CAPTURED decode: device-side event sync -> records into torch's XPUGraph (K.6). Capture happens
             # on a dedicated stream, so pass THAT stream's queue (NOT the setup queue) per call.
             if GRAPH and hasattr(lib, "ar_allreduce_graph") and _is_capturing():
-                out = input_.clone()
+                # The exact June compiled custom-op route has already cloned
+                # before dispatching here.  Avoiding a third clone is opt-in;
+                # generic/eager callers retain the established out-of-place
+                # contract by default.
+                out = input_ if GRAPH_INPLACE else input_.clone()
                 q = torch.xpu.current_stream().sycl_queue
                 lib.ar_allreduce_graph(ctypes.c_ulonglong(q), ctypes.c_ulonglong(out.data_ptr()),
                                        out.numel() * out.element_size(), DT[input_.dtype])
@@ -126,6 +138,26 @@ def _install():
         return _orig_all_reduce(self, input_)
 
     XpuCommunicator.all_reduce = all_reduce
+    if PREINIT:
+        _orig_init = XpuCommunicator.__init__
+
+        def init_with_push_ar_preinit(self, *args, **kwargs):
+            _orig_init(self, *args, **kwargs)
+            unique_name = getattr(self, "unique_name", "")
+            if self.world_size != 2 or not unique_name.startswith("tp:"):
+                return
+            ok = _lazy_init(self)
+            print(
+                f"[push_ar] PREINIT group={unique_name} rank={self.rank} "
+                f"ready={int(ok)}",
+                flush=True,
+            )
+            if PREINIT_STRICT and not ok:
+                raise RuntimeError(
+                    f"push-AR TP communicator preinit failed on rank {self.rank}"
+                )
+
+        XpuCommunicator.__init__ = init_with_push_ar_preinit
     print(f"[push_ar] patched XpuCommunicator.all_reduce (so={so}, maxB={MAXB})", flush=True)
 
     # ---- ALL-GATHER push-AR redirect (additive, env-gated, DEFAULT OFF) --------------------------

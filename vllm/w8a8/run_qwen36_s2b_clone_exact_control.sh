@@ -46,6 +46,8 @@ esac
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 P2P_ACCESS="${P2P_ACCESS:-1}"
 case "$P2P_ACCESS" in 0|1) ;; *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;; esac
+PUSH_AR="${PUSH_AR:-0}"
+case "$PUSH_AR" in 0|1) ;; *) echo "PUSH_AR must be 0 or 1" >&2; exit 2 ;; esac
 SOURCE_STACK="${SOURCE_STACK:-august-adapter}"
 case "$SOURCE_STACK" in
   august-adapter|june-e190) ;;
@@ -159,9 +161,11 @@ done
 }
 source_suffix=""
 [ "$SOURCE_STACK" = june-e190 ] && source_suffix="_june_e190"
+push_ar_suffix=""
+[ "$PUSH_AR" = 0 ] || push_ar_suffix="_push_ar_preinit"
 profile_suffix=""
 [ "$XPU_PROFILE" = 1 ] && profile_suffix="_xpu_profile"
-NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}${profile_suffix}${cpu_bind_suffix}${graph_mode_suffix}${attention_suffix}${moe_backend_suffix}_${STAMP}"
+NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}${profile_suffix}${cpu_bind_suffix}${graph_mode_suffix}${attention_suffix}${moe_backend_suffix}${push_ar_suffix}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
@@ -177,6 +181,10 @@ if [ "$P2P_ACCESS" = 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
   echo "Refusing exact direct-P2P control without I_KNOW_P2P_WEDGES=1" >&2
   exit 2
 fi
+[ "$PUSH_AR" = 0 ] || [ "$SOURCE_STACK" = june-e190 ] || {
+  echo "PUSH_AR=1 exact intervention requires SOURCE_STACK=june-e190" >&2
+  exit 2
+}
 if [ -e "$CACHE_DIR" ] && [ "${ALLOW_EXISTING_CACHE:-0}" != 1 ]; then
   echo "Refusing non-fresh compilation cache: $CACHE_DIR" >&2
   exit 2
@@ -354,7 +362,7 @@ echo "config -> moe_trace=$MOE_TRACE allreduce_trace=$ALLREDUCE_TRACE allreduce_
 echo "config -> decode_timing=$DECODE_TIMING timing_sync=$DECODE_TIMING_SYNC timing_skip=$DECODE_TIMING_SKIP_FIRST timing_step_skip=$DECODE_TIMING_STEP_SKIP_FIRST timing_step_every=$DECODE_TIMING_STEP_EVERY replay_trace=$CUDAGRAPH_REPLAY_TRACE replay_trace_max_lines=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES"
 echo "config -> xpu_profile=$XPU_PROFILE profile_delay_iterations=2 profile_max_iterations=8 profile_dir=$XPU_PROFILE_DIR_HOST"
 echo "config -> cpu_bind=$CPU_BIND numa_bind=$NUMA_BIND_VALUE numa_bind_cpus=$NUMA_BIND_CPUS_VALUE numa_nodes=0,0"
-echo "config -> source_stack=$SOURCE_STACK native_stack=$NATIVE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
+echo "config -> source_stack=$SOURCE_STACK native_stack=$NATIVE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=$PUSH_AR push_ar_preinit=$PUSH_AR cache=$CACHE_DIR"
 echo "config -> kernel_runtime=locally-rebuilt-June-complete-package preflight_suite=$KERNEL_PREFLIGHT_SUITE xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
 echo "config -> selector=level_zero:0,1 affinity=0,1 inductor_cache=/vllm_cache/torchinductor"
 printf '%s\n' "${runtime_hashes[@]}"
@@ -371,7 +379,7 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   NAME="$NAME" \
   PORT="$PORT" \
   EXACT_STEVE_CC=1 \
-  PUSH_AR=0 \
+  PUSH_AR="$PUSH_AR" \
   P2PACCESS="$P2P_ACCESS" \
   MAXLEN=32768 \
   MAXSEQS=24 \

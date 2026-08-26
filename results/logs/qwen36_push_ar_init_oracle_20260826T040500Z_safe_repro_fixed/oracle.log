@@ -1,0 +1,37 @@
+/opt/forensic_vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+[push_ar] patched XpuCommunicator.all_reduce (so=/opt/push_ar_runtime/libxpu_push_ar_graph.so, maxB=67108864)
+/opt/forensic_vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+/opt/forensic_vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+/opt/forensic_vllm/vllm/__init__.py:7: RuntimeWarning: Failed to read commit hash:
+No module named 'vllm._version'
+  from .version import __version__, __version_tuple__  # isort:skip
+[push_ar] patched XpuCommunicator.all_reduce (so=/opt/push_ar_runtime/libxpu_push_ar_graph.so, maxB=67108864)
+[push_ar] patched XpuCommunicator.all_reduce (so=/opt/push_ar_runtime/libxpu_push_ar_graph.so, maxB=67108864)
+[push_ar] patched XpuCommunicator.all_reduce (so=/opt/push_ar_runtime/libxpu_push_ar_graph.so, maxB=67108864)
+INFO 08-26 04:04:57 [scheduler.py:239] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-26 04:04:57 [scheduler.py:239] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-26 04:04:57 [vllm.py:844] Asynchronous scheduling is enabled.
+INFO 08-26 04:04:57 [kernel.py:210] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+INFO 08-26 04:04:57 [vllm.py:844] Asynchronous scheduling is enabled.
+INFO 08-26 04:04:57 [kernel.py:210] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+WARNING 08-26 04:04:58 [xpu.py:203] XPU Graph doesn't support capture communication ops, disabling cudagraph_mode.
+INFO 08-26 04:04:58 [parallel_state.py:1542] world_size=2 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:29671 backend=xccl
+WARNING 08-26 04:04:58 [xpu.py:203] XPU Graph doesn't support capture communication ops, disabling cudagraph_mode.
+INFO 08-26 04:04:58 [parallel_state.py:1542] world_size=2 rank=1 local_rank=1 distributed_init_method=tcp://127.0.0.1:29671 backend=xccl
+[argraph r0] setup_torch OK
+[argraph r1] setup_torch OK
+[push_ar] ENGAGED: XpuCommunicator.all_reduce -> push collective (P2PACCESS-independent)
+[push_ar] PREINIT group=tp:0 rank=0 ready=1
+[argraph r0] exchange OK (scratch + shm barrier + IPC event pool)
+[push_ar] PREINIT group=tp:0 rank=1 ready=1
+[argraph r1] exchange OK (scratch + shm barrier + IPC event pool)
+[oracle r0] entering graph capture
+[oracle r1] entering graph capture
+[oracle r1] capturing=True
+[oracle r0] capturing=True

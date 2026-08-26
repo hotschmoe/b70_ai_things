@@ -104,6 +104,22 @@ Working notes for any agent on this repo. Keep this file short; details live in
   Next isolate the 81 in-graph collectives or another accepted runtime/kernel
   family. For dense 27B, apply the graph-first method and omit every MoE support
   gate, expert layout, grouped GEMM, layerlet, and sidecar change.
+- **Steve's exact 85.8691 TP2 arm used the June default FlashAttention path.**
+  The preserved command set async scheduling and prefill-only GDN fallback but
+  passed no attention override; `e190923b` selects `FLASH_ATTN` by default on
+  XPU. The 61.5536/64.9843 local FULL results explicitly use `TRITON_ATTN` and
+  are interventions, not exact attention reproduction. Keep default-attention
+  PIECEWISE as the provenance control and label every FULL/Triton result.
+- **Push-AR preinit fixes IPC import, not loaded graph submission.** On the
+  exact June source/runtime, initializing the TP push communicator before model
+  allocation made both ranks import scratch and the IPC event pool. Both then
+  entered XPUGraph capture and stalled inside the first native push graph call.
+  The timeout-safe oracle is
+  `vllm/w8a8/run_qwen36_push_ar_init_oracle.sh`; run it only under `gpu-run`
+  and reset after the expected stall. Do not launch a full model push arm until
+  this loaded-context oracle completes graph capture and replay. Standalone
+  torch graph success is insufficient. Dense 27B inherits the same gate, not
+  the experimental adapter or its binary.
 
 ## Workflow
 

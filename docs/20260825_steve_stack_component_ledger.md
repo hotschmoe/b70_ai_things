@@ -577,6 +577,14 @@ loaded-process Level Zero IPC visibility, not its arithmetic or standalone
 capture path. The standalone exact-image harness still passes 50/50 replay and
 multi-all-reduce at about 35.45 us for 10 KiB.
 
+Follow-up -> TP communicator preinitialization now makes both ranks exchange
+scratch and the IPC event pool successfully before model allocation. The
+loaded June vLLM/XCCL oracle reaches `capturing=True` on both ranks but stalls
+inside the first native push graph call, with or without the adapter's extra
+clone. The old asymmetric import is closed; loaded graph-context submission is
+the narrower remaining blocker. Full-model push remains prohibited until the
+oracle completes capture and replay.
+
 ### Guarded direct-P2P transaction on kernel 7.1
 
 Config -> exact minimal PIECEWISE graph, oneCCL/OFI direct P2P, later pinned
@@ -764,11 +772,17 @@ Rejected or diagnostic-only in Steve's Qwen lane:
    wait/2-submit boundary. A matched FULL backend intervention then measures
    Triton W8A8 MoE at 64.9843 tok/s versus 61.5536 native (+5.57 percent), so
    native grouped MoE is closed as the missing lever. Isolate the remaining 81
-   collectives inside the single replay.
-10. Convert the required delta into attributed local patches and a pinned image;
+   collectives inside the single replay. Steve's exact command used the June
+   default FlashAttention path; the FULL results explicitly force Triton and
+   remain labeled interventions.
+10. PARTIAL: push-AR preinitialization fixes asymmetric IPC import on both
+    ranks. The loaded June vLLM/XCCL oracle still stalls inside native graph
+    submission after both ranks enter capture. Clear that oracle before any
+    full-model push test; standalone torch graph replay is not sufficient.
+11. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
-11. Promote recovered native changes into owned source only after schema,
+12. Promote recovered native changes into owned source only after schema,
    numeric, graph replay, endpoint, and timing evidence.
-12. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
+13. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
    time. Census its own profile collective shapes and derive its clone-fence
    threshold; do not copy Qwen35's 8192-row threshold.

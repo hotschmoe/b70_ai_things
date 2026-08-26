@@ -97,6 +97,13 @@ bandwidth hypothesis.
 
 ## Full-Decode Boundary Intervention
 
+Steve's preserved 85.869114 command did not pass `--attention-backend`.
+The June `e190923b` XPU selector returns `FLASH_ATTN` when no backend is
+selected. It also used async scheduling and limited native GDN fallback to
+prefill. Therefore default-attention PIECEWISE is the exact provenance control.
+The full-decode arms below explicitly select `TRITON_ATTN` to cross the XPU
+graph scratch boundary; they are local graph/runtime interventions.
+
 CONFIG -> the same exact June source and June-16 native control, with
 `cudagraph_mode=FULL_DECODE_ONLY`, `TRITON_ATTN`, no MTP, no prefix cache, and
 a fresh compile cache. Mixed prefill remains outside full capture. Six decode
@@ -231,6 +238,9 @@ Dense 27B must reuse the method, not Qwen3.6-specific constants:
    grouped GEMM, layerlet, sidecar, or expert-dispatch conclusions.
 8. Require fixed semantic output, JSON 16/16, color 16/16, graceful teardown,
    per-card health, and compiled two-rank collective health for every TP=2 arm.
+9. Require a collective adapter to pass inside the loaded backend graph context,
+   not only a standalone torch graph harness. Early communicator IPC success is
+   necessary but does not prove native graph submission or replay.
 
 Evidence and tools:
 
@@ -238,3 +248,43 @@ Evidence and tools:
 - `results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_xpu_profile_20260826T020000Z_june122_xpu_profile/`
 - `results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cpu_split_die_20260826T022000Z_cpu_split_die_fixed/`
 - `results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_attn_triton_attn_moe_triton_intervention_20260826T031500Z_full_decode_triton_moe_retry/`
+
+## Push-Allreduce Loaded-Context Oracle
+
+CONFIG -> exact June `e190923b` vLLM source, June122 runtime package, the local
+Level Zero posted-write push library with SHA256
+`3ed15e33235d359e3cd696bf844cc8781da475a2d144f3e2b12d215feea3844d`,
+TP=2 XCCL group construction, strict push preinitialization, `[5120]` BF16 per
+rank, and XPUGraph capture. This is a bounded communicator oracle; it does not
+load model weights.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env STAMP=20260826T040500Z_safe_repro_fixed \
+  ORACLE_TIMEOUT=25 EXPECT_LOADED_GRAPH_STALL=1 \
+  bash vllm/w8a8/run_qwen36_push_ar_init_oracle.sh
+
+./bin/xe-reset --method rebind
+```
+
+RESULT -> both ranks completed native scratch allocation, shared barrier and
+IPC event-pool exchange. Both emitted `PREINIT group=tp:0 ... ready=1`, entered
+XPUGraph capture, and reported `capturing=True`. Neither returned from the first
+native push graph call before the bounded timeout. Making the graph operation
+in-place after June's existing outer custom-op clone produced the same stall.
+The wrapper removed the container and classified the known timeout. Scoped
+unbind/rebind recovered both endpoints on boot ID
+`e2d5777d-f6bb-4d92-a718-0fb07ae17919`; both card probes and the compiled TP=2
+collective probe passed.
+
+VERDICT -> preinitialization concretely repairs the previous asymmetric loaded
+IPC import. The remaining blocker is native push submission from the loaded
+June vLLM/XCCL graph context, not arithmetic, handle exchange, clone count, or
+rank skew. Do not run a full-model push arm until this oracle completes capture
+and replay. Standalone torch XPUGraph success does not clear this gate. Dense
+27B inherits the loaded-context gate but not the experimental adapter or SO.
+
+Evidence:
+
+- `results/logs/qwen36_push_ar_init_oracle_20260826T040500Z_safe_repro_fixed/oracle.log`

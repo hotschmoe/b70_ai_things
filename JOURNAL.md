@@ -19227,3 +19227,46 @@ Steve's 85.869114 tok/s and leaves 20.884784 tok/s. Next isolate or replace the
 runtime/kernel families. Dense 27B must transfer the graph-first method and
 omit this MoE-only support gate, expert layout, grouped GEMM, layerlet, and
 sidecar code.
+
+### 2026-08-26h - Push preinit closes IPC import; loaded graph submit stalls
+
+CONFIG -> exact June vLLM source `e190923b`; June122 native runtime; TP=2 XCCL
+group; local Level Zero push-allreduce SO
+`3ed15e33235d359e3cd696bf844cc8781da475a2d144f3e2b12d215feea3844d`;
+strict communicator preinitialization; `[5120]` BF16 per rank; XPUGraph native
+push capture; 25-second expected-stall timeout. The oracle does not load model
+weights. `PUSH_AR_GRAPH_INPLACE=1` removes only the adapter's graph-time clone;
+the June outer compiled custom op already owns its required clone.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env STAMP=20260826T040500Z_safe_repro_fixed \
+  ORACLE_TIMEOUT=25 EXPECT_LOADED_GRAPH_STALL=1 \
+  bash vllm/w8a8/run_qwen36_push_ar_init_oracle.sh
+
+./bin/xe-reset --method rebind
+```
+
+RESULT -> both ranks completed scratch, shared barrier, and IPC event-pool
+exchange before graph capture. Both logged `PREINIT group=tp:0 ... ready=1`,
+then `capturing=True`. Neither returned from the native push graph call before
+timeout. The same stall occurred with the extra graph clone retained and with
+it removed. The timeout-safe wrapper removed the container and reported the
+known blocker. Scoped unbind/rebind restored both endpoints on the same boot;
+both single-card probes and the compiled TP=2 collective probe passed.
+
+RESULT -> Steve's exact 85.869114 TP2 command was re-read from the retained
+artifact. It explicitly uses async scheduling and prefill-only GDN fallback,
+but no attention option. June `e190923b` therefore selects its XPU default
+FlashAttention backend. The local 61.553562/64.984330 FULL arms explicitly
+force Triton attention and remain labeled graph/runtime interventions.
+
+VERDICT -> early communicator creation concretely fixes the previous
+asymmetric Level Zero IPC import. The remaining push blocker is loaded June
+vLLM/XCCL native graph submission, not math, handle exchange, rank skew, or
+clone count. Do not attempt a full-model push run until this oracle completes
+capture and replay. Standalone torch XPUGraph success is insufficient. Dense
+27B must inherit this loaded-context gate, while omitting the experimental
+adapter and binary until they pass it. The next one-factor exact-stack test is
+the default-FlashAttention versus forced-Triton graph boundary.

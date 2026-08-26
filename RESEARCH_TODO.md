@@ -57,8 +57,16 @@
 > for the exact Quark W8A8 pair. Under the same FULL boundary, Triton MoE
 > reaches 64.9843 tok/s versus 61.5536 native (+5.57 percent), with all
 > coherence and health gates green. Native grouped MoE is not the missing Steve
-> mechanism. NEXT: isolate or replace the 81 in-graph collectives, then inspect
-> other accepted runtime/kernel families; do not spend more cycles reducing
+> mechanism. Push-AR TP preinitialization now fixes the asymmetric loaded-rank
+> IPC import: both ranks exchange scratch and IPC events before allocation.
+> The loaded June vLLM/XCCL oracle still stalls after both ranks enter graph
+> capture, inside the first native push graph submission. Do not attempt the
+> full model until that oracle completes capture and replay. Steve's exact
+> 85.8691 command also passed no attention override, so June selected its
+> default FlashAttention path; the local FULL results force Triton and remain
+> labeled interventions. NEXT: test the exact default-attention boundary, then
+> isolate or replace the 81 in-graph collectives or inspect other accepted
+> runtime/kernel families; do not spend more cycles reducing
 > graph-piece count. Keep the clean endpoint as the speed
 > gate because profiler-enabled endpoint timing is perturbed. Transfer only proven reusable quant/output behavior
 > to 27B; census its own graph pieces and profile collectives, and keep MoE

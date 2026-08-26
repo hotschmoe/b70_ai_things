@@ -474,6 +474,21 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   75.68% of Steve and leaves 20.8848 tok/s. The recovered June122 native grouped
   MoE path is therefore not the missing speed mechanism. Dense 27B should copy
   the FULL graph/runtime method, not this MoE-only intervention.
+- **[2026-08-26 push-AR loaded-context boundary]** The old asymmetric IPC
+  import is repaired by constructing push-AR during exact June TP communicator
+  initialization: rank 0 and rank 1 both report scratch/event-pool exchange and
+  `PREINIT ... ready=1` before model allocation. A direct loaded-context oracle
+  then reaches `capturing=True` on both ranks but stalls inside the first native
+  push graph submission. Removing the extra graph clone does not change it.
+  Arithmetic, IPC exchange, rank skew, and standalone XPUGraph replay are
+  cleared; June vLLM/XCCL loaded graph-context compatibility is the remaining
+  blocker. Do not run a full-model push intervention until the oracle completes
+  capture and replay. Dense 27B must use this loaded-context gate too.
+- **[2026-08-26 exact Steve attention identity]** The preserved 85.8691 TP2
+  command passes no attention option. June `e190923b` therefore selects its XPU
+  default `FLASH_ATTN`; it explicitly enables async scheduling and prefill-only
+  GDN fallback. Local 61.5536/64.9843 FULL arms force `TRITON_ATTN`, so they are
+  graph-speed interventions rather than exact command reproductions.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);
