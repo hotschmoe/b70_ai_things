@@ -19371,3 +19371,53 @@ exports, while the retained launcher was reconstructed after the June result;
 exact June-15 collective identity remains ambiguous. Preserve both labeled
 controls. Next compare route-specific FULL/Triton execution to isolate the 81
 in-graph collectives without changing the fixed host kernel.
+
+### 2026-08-26k - Source-default c10d sets a 66.2555 tok/s FULL best
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision `cced5659`; pinned
+`f2e5a94e` image; true-June vLLM source `e190923b`; June122 native package;
+TP=2 direct P2P; `FULL_DECODE_ONLY`; `TRITON_ATTN`; Triton W8A8 MoE
+intervention; no MTP or prefix cache; fresh cache. All four custom-collective
+switches remained at zero, so this changes only the collective route from the
+matched 64.984330 tok/s custom-op FULL control.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint COLLECTIVE_MODE=source-default \
+  CGMODE=FULL_DECODE_ONLY ATTN=TRITON_ATTN MOE_BACKEND=triton \
+  P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T045000Z_full_triton_source_default_collectives \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> endpoint health arrived in 326 seconds. All six FULL decode graphs
+captured. The p498/o512 metric measured 66.255519 corrected output tok/s,
+360.426 ms client TTFT, and 7.726791 seconds server decode. The matched custom
+control was 64.984330 tok/s, 363.490 ms, and 7.878107 seconds. Source-default
+c10d gains 1.271189 tok/s (+1.96 percent) and saves 0.151316 seconds decode.
+Semantic output, JSON 16/16, color 16/16, graceful teardown, both card probes,
+and compiled TP=2 collective health passed. Each persisted rank graph contains
+243 `_c10d_functional` all-reduce references and zero
+`torch.ops.vllm.all_reduce` references.
+
+EVIDENCE ->
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_attn_triton_attn_moe_triton_intervention_collectives_source_default_20260826T045000Z_full_triton_source_default_collectives`.
+`compiled_collective_route_evidence.txt` preserves both rank graph hashes and
+route counts. Mechanical ASCII/LF/trailing-space cleanup changed the server log
+from raw SHA256
+`62f077bb64c2561f98da8c004059ee7a4962db67d0081e86497fd4be137214cb`
+to committed
+`18edc162da160bbf08e13125b1c44e99effeb376814e77f5048ebc4a719b4fcd`,
+and the run log from raw
+`f2bf673d1391d9f4650a583193e063965b2cc8519948cb3046a6bf2fcc576bbb`
+to committed
+`762068f02790f276a3970daac832f21485a814b9b1a67a803429fcd8730bf484`.
+
+VERDICT -> source-default c10d is the current campaign best and reaches 77.16
+percent of Steve's 85.869114 tok/s. The custom `vllm.all_reduce` wrapper is not
+the missing accelerator on this full-graph stack. Because the route delta is
+only 1.96 percent and each arm currently has one matched sample, repeat before
+promoting the delta as stable. Linux 7.1 remains fixed; the remaining gap is in
+another user-mode runtime/kernel behavior, not host-kernel provenance.

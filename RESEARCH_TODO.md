@@ -73,8 +73,11 @@
 > coherently at 51.0916 tok/s versus the nearest custom control at 50.3706.
 > Treat the +1.43 percent as a single-run observation, not a speed win; preserve
 > both routes because Steve's exact June-15 child-launcher env is not immutable.
-> NEXT: isolate the 81 in-graph collective cost with route-specific FULL/Triton
-> controls, or inspect another accepted user-mode runtime/kernel family; do not
+> The matched FULL/Triton control is now complete: source-default c10d reaches
+> 66.2555 tok/s versus 64.9843 custom (+1.96 percent), with exact route evidence,
+> both canaries, and both health layers green. It is the campaign best at 77.16
+> percent of Steve. NEXT: repeat the small route delta before promoting it,
+> then inspect another accepted user-mode runtime/kernel family; do not
 > alter or downgrade the fixed Linux 7.1 host kernel and do not spend more
 > cycles reducing
 > graph-piece count. Keep the clean endpoint as the speed

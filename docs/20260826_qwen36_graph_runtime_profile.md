@@ -293,6 +293,16 @@ or 1.43 percent, above the nearest 50.370643 custom control. One sample does
 not establish a speed win. Preserve both labeled routes, and use a matched
 FULL/Triton A/B to localize the 81 in-graph collective cost.
 
+That matched FULL/Triton A/B is now measured. With Triton attention and Triton
+W8A8 MoE held fixed, source-default c10d captured all six FULL graphs and
+measured 66.255519 tok/s, 360.426 ms TTFT, and 7.726791 s server decode. The
+custom route's matched result is 64.984330 tok/s, 363.490 ms, and 7.878107 s.
+Source-default gains 1.271189 tok/s (+1.96 percent) and saves 0.151316 s decode.
+Both rank graphs again contain 243 c10d references and no custom-op reference;
+both 16/16 canaries and both health layers passed. This is the campaign best at
+77.16 percent of Steve. Repeat before treating the small delta as stable, but
+custom all-reduce is no longer a candidate explanation for the remaining gap.
+
 ## Dense 27B Transfer Contract
 
 Dense 27B must reuse the method, not Qwen3.6-specific constants:

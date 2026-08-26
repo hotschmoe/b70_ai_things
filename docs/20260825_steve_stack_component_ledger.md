@@ -163,6 +163,12 @@ claim. Both routes cross the exact PIECEWISE boundary and remain separately
 labeled until matched FULL/Triton timing or better primary evidence resolves
 the accepted route.
 
+Matched FULL/Triton timing now favors the source-default route in its first
+sample: 66.255519 tok/s versus 64.984330 custom, a 1.96 percent gain, while
+both compiled rank graphs prove c10d-only execution and all coherence/health
+gates pass. This is the current campaign best but requires a repeat because the
+delta is small. The custom wrapper is not the missing 20+ tok/s mechanism.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B

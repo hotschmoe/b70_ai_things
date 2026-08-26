@@ -1,0 +1,7 @@
+config -> source_stack=e190923b graph=FULL_DECODE_ONLY collective_mode=source-default rank_graphs=2
+command -> rg -a -c '_c10d_functional.*all_reduce' computation_graph.py
+command -> rg -a -c 'torch[.]ops[.]vllm[.]all_reduce' computation_graph.py
+result -> rank=0 c10d_all_reduce_references=243 vllm_all_reduce_references=0 sha256=6dfeb1a7c1fabf3b2e574d94863a611d839584308711fb72655bc26a748ceb36
+result -> rank=1 c10d_all_reduce_references=243 vllm_all_reduce_references=0 sha256=97a6ece67eefcd933ef6c6f462e2256436cf05715e3d9df55ea04ba93079f5a6
+representative -> torch.distributed._functional_collectives.py:173 in all_reduce: tensor = torch.ops._c10d_functional.all_reduce(self, reduceOp.lower(), group_name)
+verdict -> both compiled FULL rank graphs use the June source-default c10d functional collective route and exclude the vllm custom all-reduce route

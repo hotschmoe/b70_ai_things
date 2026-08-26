@@ -125,6 +125,11 @@ Working notes for any agent on this repo. Keep this file short; details live in
   Steve's live server flags because the recovered launcher exports them in a
   child process and was reconstructed in August. Exact June-15 flag identity
   remains ambiguous; maintain both labeled controls.
+  A matched `FULL_DECODE_ONLY` + `TRITON_ATTN` + Triton-MoE run then measured
+  66.2555 tok/s versus 64.9843 custom (+1.96 percent), with both canaries,
+  mutually exclusive compiled-route evidence, and both post-health layers
+  green. This is the current campaign best, but repeat it before promoting the
+  small route delta as stable.
 - **Push-AR preinit fixes IPC import, not loaded graph submission.** On the
   exact June source/runtime, initializing the TP push communicator before model
   allocation made both ranks import scratch and the IPC event pool. Both then
