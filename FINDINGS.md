@@ -448,6 +448,15 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   closes CPU affinity as the missing lever and does not justify a slot move.
   Dense 27B must repeat its own driver-call, graph-piece, and collective-shape
   census; see `docs/20260826_qwen36_graph_runtime_profile.md`.
+- **[2026-08-26 no-MTP FULL decode win]** On the exact June source/native
+  Qwen3.6 control, `FULL_DECODE_ONLY` plus `TRITON_ATTN` captured six full
+  decode graphs and measured **61.5536 tok/s versus 50.3706 PIECEWISE
+  (+22.20%)**. Semantic output, JSON 16/16, color 16/16, and both post-health
+  layers passed. This is a local-speed arm, not Steve's accepted PIECEWISE
+  identity, and it still leaves 24.3156 tok/s to his 85.8691. The old blanket
+  "FULL is blocked on B70" claim is retired for no-MTP exact-June serving;
+  stock/MTP GDN and SYCL-scratch failures remain separate scoped blockers.
+  Dense 27B should test its own no-MTP full-decode arm.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

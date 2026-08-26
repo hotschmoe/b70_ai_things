@@ -16,6 +16,7 @@ export TP="${TP:-2}"
 export PP="${PP:-1}"
 export GRAPH="${GRAPH:-1}"
 export CGMODE="${CGMODE:-PIECEWISE}"
+export ATTN="${ATTN:-}"
 export DTYPE="${DTYPE:-auto}"
 export UTIL="${UTIL:-0.90}"
 export MAXLEN="${MAXLEN:-8192}"
@@ -44,7 +45,8 @@ BASE_SPLITOPS='"vllm::unified_attention_with_output","vllm::unified_mla_attentio
 if [ "$EXACT_STEVE_CC" = 1 ]; then
   # Steve's accepted command supplied only cudagraph_mode=PIECEWISE. Let vLLM
   # choose its own default attention boundaries; do not inject our newer
-  # repository split policy into this source-reproduction arm.
+  # repository split policy into this source-reproduction arm. CGMODE remains
+  # parameterized for explicit boundary experiments; PIECEWISE is the control.
   export SPLITOPS=""
   export IGP=false
 elif [ "$P2PACCESS" = 1 ]; then
@@ -66,6 +68,15 @@ else
 fi
 
 export EXTRA_ARGS="${EXTRA_ARGS:---language-model-only --generation-config vllm --max-num-batched-tokens 8192 --uvicorn-log-level warning}"
+case "$CGMODE" in
+  PIECEWISE|FULL|FULL_DECODE_ONLY|FULL_AND_PIECEWISE) ;;
+  *) echo "CGMODE must be PIECEWISE, FULL, FULL_DECODE_ONLY, or FULL_AND_PIECEWISE" >&2; exit 1 ;;
+esac
+case "$ATTN" in
+  ''|TRITON_ATTN|FLASH_ATTN) ;;
+  *) echo "ATTN must be empty, TRITON_ATTN, or FLASH_ATTN" >&2; exit 1 ;;
+esac
+[ -z "$ATTN" ] || export EXTRA_ARGS="$EXTRA_ARGS --attention-backend $ATTN"
 export MTPTOK=""
 export SPEC=""
 
@@ -246,7 +257,7 @@ b70_serve() {
     local exact_cc_replaced=0
     for ((arg_i=0; arg_i<${#ARGS[@]}; arg_i++)); do
       if [ "${ARGS[$arg_i]}" = "--compilation-config" ]; then
-        ARGS[$((arg_i + 1))]='{"cudagraph_mode":"PIECEWISE"}'
+        ARGS[$((arg_i + 1))]="{\"cudagraph_mode\":\"$CGMODE\"}"
         exact_cc_replaced=1
         break
       fi

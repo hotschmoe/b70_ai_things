@@ -77,6 +77,15 @@ Working notes for any agent on this repo. Keep this file short; details live in
   PCIe slots. For dense 27B, repeat the per-token driver-call census and derive
   its collective fence from its own shapes. See
   `docs/20260826_qwen36_graph_runtime_profile.md`.
+- **No-MTP FULL decode is now a proven B70 lever on the exact June stack.**
+  `FULL_DECODE_ONLY` plus `TRITON_ATTN` captured six full decode graphs and
+  measured 61.5536 tok/s versus the exact PIECEWISE 50.3706 (+22.20 percent),
+  with semantic output, both 16/16 canaries, and both post-health layers green.
+  This is not Steve's accepted PIECEWISE reproduction, but it is the fastest
+  exact local arm and proves boundary reduction matters. Do not repeat the old
+  blanket "FULL is blocked" claim: the remaining block applies to particular
+  stock/MTP GDN or SYCL-scratch paths, not this no-MTP control. Dense 27B must
+  test its own no-MTP full-decode arm before rejecting FULL capture.
 
 ## Workflow
 

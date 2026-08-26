@@ -111,6 +111,22 @@ case "$CPU_BIND" in
     ;;
   *) echo "CPU_BIND must be none or split-die" >&2; exit 2 ;;
 esac
+CGMODE="${CGMODE:-PIECEWISE}"
+case "$CGMODE" in
+  PIECEWISE)
+    graph_mode_suffix=""
+    ;;
+  FULL|FULL_DECODE_ONLY|FULL_AND_PIECEWISE)
+    graph_mode_suffix="_cg_${CGMODE,,}"
+    ;;
+  *) echo "CGMODE must be PIECEWISE, FULL, FULL_DECODE_ONLY, or FULL_AND_PIECEWISE" >&2; exit 2 ;;
+esac
+ATTN="${ATTN:-}"
+case "$ATTN" in
+  '') attention_suffix="" ;;
+  TRITON_ATTN|FLASH_ATTN) attention_suffix="_attn_${ATTN,,}" ;;
+  *) echo "ATTN must be empty, TRITON_ATTN, or FLASH_ATTN" >&2; exit 2 ;;
+esac
 DECODE_TIMING_SKIP_FIRST="${DECODE_TIMING_SKIP_FIRST:-32}"
 DECODE_TIMING_STEP_SKIP_FIRST="${DECODE_TIMING_STEP_SKIP_FIRST:-32}"
 DECODE_TIMING_STEP_EVERY="${DECODE_TIMING_STEP_EVERY:-16}"
@@ -132,7 +148,7 @@ source_suffix=""
 [ "$SOURCE_STACK" = june-e190 ] && source_suffix="_june_e190"
 profile_suffix=""
 [ "$XPU_PROFILE" = 1 ] && profile_suffix="_xpu_profile"
-NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}${profile_suffix}${cpu_bind_suffix}_${STAMP}"
+NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}${profile_suffix}${cpu_bind_suffix}${graph_mode_suffix}${attention_suffix}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
@@ -315,7 +331,7 @@ if [ "$SOURCE_STACK" = june-e190 ]; then
 fi
 
 echo "config -> image=$IMG model_revision=$MODEL_REVISION model_config=$actual_config_sha256 model_index=$actual_index_sha256"
-echo "config -> TP=2 PP=1 graph=PIECEWISE splitops=default igp=false async=1 mtp=0 prefix_cache=0 maxlen=32768 maxseqs=24 util=0.90"
+echo "config -> TP=2 PP=1 graph=$CGMODE attention=${ATTN:-default} splitops=default igp=false async=1 mtp=0 prefix_cache=0 maxlen=32768 maxseqs=24 util=0.90"
 if [ "$SOURCE_STACK" = june-e190 ]; then
   echo "config -> native_moe=june-source moe_mixed_workspace=$MIXED_WORKSPACE call_abi=recovered-scratch-aware-june"
 else
@@ -356,6 +372,8 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   XPU_PROFILE_DIR_HOST="$XPU_PROFILE_DIR_HOST" \
   NUMA_BIND="$NUMA_BIND_VALUE" \
   NUMA_BIND_CPUS="$NUMA_BIND_CPUS_VALUE" \
+  CGMODE="$CGMODE" \
+  ATTN="$ATTN" \
   CACHE_DIR_HOST="$CACHE_DIR" \
   B70_LOGDIR="$RESULT_DIR" \
   HEALTH_STALL="$STALL_TIMEOUT" \

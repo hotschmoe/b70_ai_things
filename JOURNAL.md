@@ -19072,3 +19072,44 @@ card. Next, alter one graph/runtime boundary at a time and retain the clean
 endpoint plus coherence and health gates. Dense 27B must repeat its own graph
 piece, driver-call, collective-shape, and fence-threshold census. Full report:
 `docs/20260826_qwen36_graph_runtime_profile.md`.
+
+### 2026-08-26e - Full-decode capture gains 22.20 percent
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision `cced5659`; pinned
+`f2e5a94e` image; true-June vLLM source `e190923b`; exact June-16 native
+checkpoint `122b698b`; TP=2 direct P2P; no MTP; no prefix cache; fresh compile
+cache. This intervention changes the accepted PIECEWISE graph mode to
+`FULL_DECODE_ONLY` and selects `TRITON_ATTN`. Mixed prefill stays outside full
+capture. The health stall limit was raised to 600 seconds so a slow first
+capture would not be killed mid-initialization.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN=TRITON_ATTN P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1 \
+  STALL_TIMEOUT=600 STAMP=20260826T024000Z_full_decode_triton \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> the server became healthy in 259 seconds. Six decode FULL graphs
+captured in 26 seconds and consumed 0.11 GiB. The semantic probe passed. The
+p498/o512 metric measured 61.553562 corrected output tok/s, 332.269 ms client
+TTFT, and 8.317629 seconds server decode. The exact June-16 PIECEWISE control
+measured 50.370643 tok/s, 307.853 ms, and 10.163436 seconds. Full decode gains
+11.182920 tok/s, or 22.20 percent, and cuts server decode by 1.845808 seconds;
+TTFT rose 24.416 ms in this one comparison. JSON and color canaries both
+passed 16/16. Graceful teardown left both card probes and compiled two-rank
+collective health green.
+
+VERDICT -> replay-boundary reduction is the largest local lever measured after
+enabling graph capture itself. The arm reaches 71.68 percent of Steve's
+85.869114 tok/s and leaves 24.315552 tok/s. It does not reproduce Steve's
+accepted PIECEWISE command; PIECEWISE remains the provenance control. It does
+prove that FULL capture is viable for the exact no-MTP June stack and retires
+the blanket B70 FULL-blocked statement. The stock/MTP GDN speculative-shape
+and SYCL-scratch failures remain separate. Next, profile this full-decode arm
+to prove the expected fence/host-wait collapse, then isolate the remaining 81
+collectives and native MoE work inside its single replay. Dense 27B must test
+its own no-MTP full-decode arm rather than inherit the old MTP blocker.

@@ -95,6 +95,45 @@ do not move a card merely to repair CPU scheduling. A physical slot move is a
 separate topology A/B and should be justified by a specific collective or
 bandwidth hypothesis.
 
+## Full-Decode Boundary Intervention
+
+CONFIG -> the same exact June source and June-16 native control, with
+`cudagraph_mode=FULL_DECODE_ONLY`, `TRITON_ATTN`, no MTP, no prefix cache, and
+a fresh compile cache. Mixed prefill remains outside full capture. Six decode
+FULL graphs were captured in 26 seconds after model compilation and used only
+0.11 GiB of graph memory.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN=TRITON_ATTN P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1 \
+  STALL_TIMEOUT=600 STAMP=20260826T024000Z_full_decode_triton \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> server health completed in 259 seconds. The p498/o512 metric measured
+61.553562 corrected output tok/s, 332.269 ms client TTFT, and 8.317629 seconds
+server decode. The exact PIECEWISE control measured 50.370643 tok/s, 307.853
+ms, and 10.163436 seconds. Full decode therefore gains 11.182920 tok/s, or
+22.20 percent, while adding 24.416 ms TTFT in this one run. The semantic probe,
+JSON 16/16, color 16/16, graceful teardown, both card probes, and compiled
+two-rank collective health all passed.
+
+VERDICT -> reducing the decode replay boundary is the largest measured local
+lever after graph capture itself. It recovers 22.20 percent but reaches only
+71.68 percent of Steve's 85.869114 tok/s, leaving 24.315552 tok/s. The old
+blanket statement that FULL capture is blocked on B70 is incorrect for this
+exact no-MTP June stack. Stock v0.23 MTP full capture can still be blocked by
+the GDN speculative shape or SYCL scratch paths; do not generalize this result
+to MTP or another source/runtime without a fresh gate.
+
+This arm is a local-speed intervention, not a reproduction of Steve's accepted
+PIECEWISE command. PIECEWISE remains the provenance control. Next, profile the
+full-decode arm to verify the expected replay/host-wait collapse, then isolate
+the remaining 81-collective and native-MoE cost inside the single replay.
+
 ## Dense 27B Transfer Contract
 
 Dense 27B must reuse the method, not Qwen3.6-specific constants:
@@ -103,16 +142,19 @@ Dense 27B must reuse the method, not Qwen3.6-specific constants:
    cache identity before timing.
 2. Count its own graph pieces, compiled TP collectives, shapes, and per-token
    fence, host-wait, and queue-submit calls.
-3. Derive any clone-completion fence threshold from the dense model's actual
+3. Test no-MTP `FULL_DECODE_ONLY` plus a capturable attention backend as a
+   separate arm. Do not inherit an old blanket FULL-capture prohibition from
+   the stock v0.23 MTP path.
+4. Derive any clone-completion fence threshold from the dense model's actual
    profile tensors. Do not copy Qwen3.6's 8192-row threshold.
-4. Run synchronized timing only as a diagnostic and keep its endpoint separate
+5. Run synchronized timing only as a diagnostic and keep its endpoint separate
    from the clean unsynchronized metric.
-5. Treat Kineto-visible device kernels as a lower bound when XPUGraph replay is
+6. Treat Kineto-visible device kernels as a lower bound when XPUGraph replay is
    opaque.
-6. Transfer dense quantization output buffers, oneDNN scratch reuse, graph
+7. Transfer dense quantization output buffers, oneDNN scratch reuse, graph
    runtime changes, and collective adapters one factor at a time. Do not carry
    routed-MoE workspace, layerlet, sidecar, or expert-dispatch conclusions.
-7. Require fixed semantic output, JSON 16/16, color 16/16, graceful teardown,
+8. Require fixed semantic output, JSON 16/16, color 16/16, graceful teardown,
    per-card health, and compiled two-rank collective health for every TP=2 arm.
 
 Evidence and tools:

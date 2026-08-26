@@ -61,7 +61,9 @@ Perf (v0.24.0, IN=2048/OUT=128, warm; per-stream decode / aggregate-out):
 - **GRAPH=1** (PIECEWISE capture; default `WARMUP=1` warms the compile cache so c>1 does not stall):
   agg / per-stream-decode t/s = c1 20.0/25.9, c2 33.0/21.3, c4 **45.7**/17.5 -> **3.2-4.5x aggregate, ~4-5x
   decode** vs eager (single-stream decode varies ~25-41 t/s run-to-run). Cold start adds a ~6 min one-time
-  compile (cached in /vllm_cache). `CGMODE=FULL_DECODE_ONLY` is BLOCKED on stock v0230 (SYCL-Graph scratch).
+  compile (cached in /vllm_cache). `CGMODE=FULL_DECODE_ONLY` remains blocked on this stock/MTP-era path
+  (SYCL-Graph scratch), but that is not a universal B70 limit: the exact no-MTP June source/native control plus
+  `TRITON_ATTN` passed at 61.55 tok/s on 2026-08-26. See `docs/20260826_qwen36_graph_runtime_profile.md`.
 - Open levers (../../FINDINGS.md, docs/kernel/20, RESEARCH_TODO Track 9): a tuned `E=256,N=256` MoE config
   (XPU tuner needs porting); and true-int8 linear via the XMX/DPAS Triton kernel (B70_INT8_LINEAR=triton).
 
