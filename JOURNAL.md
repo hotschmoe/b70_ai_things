@@ -3953,3 +3953,112 @@ is noise-scale, while they encode the intended cross-stream producer/consumer
 ordering. `NATIVE=1` now defaults both dependency flags to 1; experiments may
 still override either explicitly. Dependency tuning is exhausted for this
 native dense route. Move to the next independent optimization lever.
+
+### 2026-08-26v - Breakable XPU graph more than doubles Qwen3.8 c1 decode
+
+CONFIG -> exact native INT8 ABI image `aeb939fa...` with a tracked Python-only
+overlay at image digest
+`f6aed4f45a922500ff286563e148bb5e13f05cd9c35d5177ba00204e18451770`;
+dispatcher SHA256 `128c636fc78f411e34808d3428312ecfd5eb8b652394b83ba743e1bd62458bb2`.
+Qwen3.8-27B compressed-tensors W8A8 GPTQ; TP=2; native per-token INT8 plus
+oneDNN GEMM; both stream dependencies enabled; BF16 residual, KV, and output;
+8K context; target only; no MTP, radix cache, overlap scheduler, or prefill
+graph. The qualified graph arm captures decode batch sizes 1, 2, and 4 with
+SGLang's segmented `breakable` backend. All TP all-reduces and all-gathers run
+eagerly between graph segments through source-default c10d, SYCL kernels off,
+P2P off, and the qualified pidfd-to-drmfd fallback transport profile.
+
+COMMAND -> build the Python overlay, run exact-image health, launch and qualify
+the graph arm, then run an identical-payload eager control:
+
+```bash
+TAG=b70-sglang-xpu-int8-runtime:20260826-breakable3 \
+  bash sglang/refresh/build_int8_runtime.sh
+
+./bin/gpu-run bash -lc '
+  img=b70-sglang-xpu-int8-runtime@sha256:f6aed4f45a922500ff286563e148bb5e13f05cd9c35d5177ba00204e18451770
+  ./bin/xpu-health --img "$img"
+  ./bin/xpu-collective-health --p2p 0 --img "$img"
+'
+
+IMG=b70-sglang-xpu-int8-runtime@sha256:f6aed4f45a922500ff286563e148bb5e13f05cd9c35d5177ba00204e18451770 \
+  NATIVE=1 DECODE_GRAPH=breakable \
+  NAME=sglang_qwen38_w8a8_breakable PORT=18081 \
+  LOG=/mnt/vm_8tb/b70/sglang_qwen38_w8a8_native_breakable3.log \
+  ./bin/gpu-run bash sglang/w8a8/serve_qwen38_w8a8.sh start
+
+./bin/gpu-run bash sglang/perf_regime.sh \
+  sglang_qwen38_w8a8_breakable 18081 qwen3.8-27b-W8A8-gptq \
+  /models/qwen3.8-27b/w8a8-gptq qwen38-w8a8-native-breakable-tp2
+
+./bin/gpu-run python3 bin/serve-soak.py \
+  --base-url http://localhost:18081/v1 \
+  --model qwen3.8-27b-W8A8-gptq --concurrency 4 \
+  --duration 300 --max-tokens 128 --timeout 300
+```
+
+RESULT -> a card-0 native-op XPUGraph oracle first proved that the exact
+quantizer plus oneDNN GEMM chain is capturable: 16 replays were bit-identical,
+with eager/graph medians of 0.076032/0.064169 ms for M1-K5120-N5120, a 15.6
+percent graph reduction. The oracle SHA256 is
+`4341f26dcc410158a93c71725c242c9c7bb02a8e3886c5ae3dfa18d1e905c8d1`.
+
+RESULT -> FULL TP=2 capture was rejected after three bounded arms. With oneCCL
+SYCL kernels off, capture rejected the first embedding all-reduce because
+scheduler algorithms do not support SYCL graph recording. With SYCL kernels
+on, both pidfd and drmfd failed before or during the first all-reduce with
+`mem_to_ipc_handle: device_fd is invalid value`. The sockets exchange passed an
+eager plus ten-iteration compiled two-rank collective preflight, but failed at
+the same device-fd boundary specifically during FULL graph recording. Every
+failed TP arm was followed by xe rebind recovery and exact-image per-card plus
+compiled collective health. No P2P arm was run.
+
+RESULT -> current SGLang already contains XPU-aware segmented graph primitives,
+but two conservative XPU gates reject the backend. The narrow overlay permits
+only explicitly selected XPU `breakable`, wraps the TP all-reduce and all-gather
+boundaries with `eager_on_graph`, and adds buffer allocation, row counting,
+slicing, and copying for `LogitsProcessorOutput`. A direct dataclass buffer
+oracle passed. No retained runtime binary, push-AR graph mode, or old backend
+patch was restored. One first attempt was correctly rejected because the
+platform gate silently disabled graph; a second reached capture and exposed
+the missing output buffer support. Neither produced a speed claim.
+
+RESULT -> the final arm loaded 16.91 GB per rank and retained 14.99 GB after
+load. It explicitly resolved decode backend `breakable`, captured bs 4, 2, and
+1 in 9.65 seconds, and reported nonzero decode graph startup time. `/v1/models`
+returned only `qwen3.8-27b-W8A8-gptq`. The startup log SHA256 is
+`9d198e8aff9f8233e4d57a3e50ddafae70d2595b2a1f23c44815112a901a29c9`.
+
+RESULT -> two non-thinking greedy Rayleigh responses were byte-identical at
+SHA256 `e6e39dc2bf6864a1fcb7c78e89dcb2b3defbadb0507f2ae17a4673269b0a9ece`.
+Four simultaneous arithmetic requests returned exactly 45, 78, 93, and 189.
+A fresh eager server from the same final image returned the same Rayleigh text
+and SHA256 twice under the identical payload, closing the graph/eager identity
+comparison without relying on the earlier incompletely recorded payload.
+
+RESULT -> matched p2048/o128 warm c1 measured 13.65 per-stream decode tok/s,
+10.02 aggregate output tok/s, and 2167.92 ms TTFT. Against the qualified native
+eager control at 6.04, 5.25, and 2153.64, decode improved 126.0 percent and
+aggregate output improved 90.9 percent while TTFT changed by only +0.7 percent.
+Warm c4 measured 5.62 per-stream decode tok/s, 16.08 aggregate output tok/s,
+and 3268.35 ms TTFT. Against eager 3.60, 11.34, and 3498.44, those are +56.1
+percent decode, +41.8 percent aggregate, and 6.6 percent lower TTFT. The deleted
+historical soak helper failed as expected and is excluded.
+
+RESULT -> the supported 300-second c4 soak completed 92/92 requests with zero
+degeneracy and zero errors at 37.6 aggregate output tok/s. The eager control was
+20.4 tok/s, so the graph arm improved soak throughput by 84.3 percent. Live
+scheduler logs repeatedly reported `cuda graph: True` throughout the soak and
+did not show the historical replay-degradation signature. Both graph and eager
+control servers shut down gracefully. Exact-final-image per-card checks and the
+compiled ten-iteration P2P-off collective passed before capture, after the graph
+arm, and after the eager identity control.
+
+VERDICT -> qualify the environment-gated XPU breakable decode graph as the new
+Qwen3.8 native W8A8 performance control. This directly answers why the earlier
+c4 soak looked strong while single-stream decode remained low: batching hid a
+per-token Python/launch and submission tax, while segmented capture removes
+most of that tax and leaves only the rank-coupled collectives eager. Keep FULL
+capture rejected on this stack because oneCCL graph IPC remains broken. The
+breakable route is qualified for bs <= 4 only and is not yet a shelf promotion;
+MTP and the remaining campaign still require separate matched qualification.

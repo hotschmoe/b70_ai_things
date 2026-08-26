@@ -17,6 +17,15 @@ MAXREQ="${MAXREQ:-4}"
 NATIVE="${NATIVE:-0}"
 ONEDNN_INPUT_DEP="${ONEDNN_INPUT_DEP:-$NATIVE}"
 ONEDNN_BARRIER="${ONEDNN_BARRIER:-$NATIVE}"
+DECODE_GRAPH="${DECODE_GRAPH:-0}"
+if [ -z "${SYCL_KERNELS+x}" ]; then
+  if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
+    SYCL_KERNELS=1
+  else
+    SYCL_KERNELS=0
+  fi
+fi
+IPC_EXCHANGE="${IPC_EXCHANGE:-pidfd}"
 LOG="${LOG:-$ROOT/sglang_qwen38_w8a8_refresh.log}"
 
 say() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -46,6 +55,18 @@ preflight() {
     0|1) ;;
     *) say "ONEDNN_INPUT_DEP must be 0 or 1, got $ONEDNN_INPUT_DEP"; return 1 ;;
   esac
+  case "$DECODE_GRAPH" in
+    0|1|full|breakable) ;;
+    *) say "DECODE_GRAPH must be 0, 1, full, or breakable, got $DECODE_GRAPH"; return 1 ;;
+  esac
+  case "$SYCL_KERNELS" in
+    0|1) ;;
+    *) say "SYCL_KERNELS must be 0 or 1, got $SYCL_KERNELS"; return 1 ;;
+  esac
+  case "$IPC_EXCHANGE" in
+    pidfd|drmfd|sockets) ;;
+    *) say "IPC_EXCHANGE must be pidfd, drmfd, or sockets, got $IPC_EXCHANGE"; return 1 ;;
+  esac
 }
 
 start() {
@@ -53,7 +74,18 @@ start() {
   mkdir -p "$ROOT/hf_cache" "$ROOT/sgl_cache/inductor" "$ROOT/sgl_cache/triton"
   docker rm -f "$NAME" >/dev/null 2>&1 || true
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER"
+  local graph_args
+  local breakable_graph=0
+  if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
+    graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode 1 2 4"
+  elif [ "$DECODE_GRAPH" = breakable ]; then
+    graph_args="--cuda-graph-backend-decode breakable --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode 1 2 4"
+    breakable_graph=1
+  else
+    graph_args="--cuda-graph-backend-decode disabled --cuda-graph-backend-prefill disabled"
+  fi
+
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE"
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     -p "$PORT:$PORT" \
@@ -66,13 +98,14 @@ start() {
     -e TRITON_CACHE_DIR=/sgl_cache/triton \
     -e B70_XPU_W8A8=1 \
     -e B70_XPU_W8A8_NATIVE="$NATIVE" \
+    -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$ONEDNN_INPUT_DEP" \
     -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$ONEDNN_BARRIER" \
     -e CCL_ATL_TRANSPORT=ofi \
-    -e CCL_ENABLE_SYCL_KERNELS=0 \
+    -e CCL_ENABLE_SYCL_KERNELS="$SYCL_KERNELS" \
     -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 \
     -e CCL_TOPO_P2P_ACCESS=0 \
-    -e CCL_ZE_IPC_EXCHANGE=pidfd \
+    -e CCL_ZE_IPC_EXCHANGE="$IPC_EXCHANGE" \
     -e FI_TCP_IFACE=eth0 \
     -e CCL_KVS_IFACE=eth0 \
     -e ONEAPI_DEVICE_SELECTOR=level_zero:0,1 \
@@ -83,8 +116,7 @@ start() {
       --trust-remote-code --device xpu --dtype bfloat16 \
       --attention-backend intel_xpu --linear-attn-backend triton \
       --mamba-ssm-dtype float32 --grammar-backend none \
-      --cuda-graph-backend-decode disabled \
-      --cuda-graph-backend-prefill disabled \
+      $graph_args \
       --disable-radix-cache --disable-overlap-schedule --skip-server-warmup \
       --disable-custom-all-reduce --reasoning-parser qwen3 --tp-size '$TP' \
       --context-length '$CTX' --mem-fraction-static '$MEMFRAC' \
