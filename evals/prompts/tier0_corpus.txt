@@ -1,6 +1,6 @@
 Passages for Tier 0 perplexity / token-agreement scoring. Self-authored (no copyright, no benchmark
 contamination). Passages are separated by a line containing only three dashes. Expand this file for a
-tighter perplexity estimate — more tokens = narrower confidence on the quant ranking. Keep it FIXED
+tighter perplexity estimate -- more tokens = narrower confidence on the quant ranking. Keep it FIXED
 once a campaign starts; changing the corpus invalidates cross-quant comparison.
 
 ---

@@ -1,8 +1,0 @@
-[PASS] paris sha256=a1b7eb2ee7a6aded reference_exact=True upstream=- text=The capital of France is Paris.
-[PASS] multiply sha256=a934c244755c66ae reference_exact=True upstream=- text=391
-[PASS] modular sha256=5feceb66ffc86f38 reference_exact=True upstream=- text=0
-[PASS] fibonacci sha256=596d8c5c82fbffae reference_exact=True upstream=- text=0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89
-[PASS] sort_unique sha256=f7365c246267aeb0 reference_exact=True upstream=- text=-2, 3, 9, 12, 17
-[FAIL] logic sha256=21dea262ab102ac0 reference_exact=False upstream=- text=No; since all zorps are blue and no blue thing is green, no zorp can be green.
-[PASS] squares_24 sha256=be8d07a94fc377d3 reference_exact=True upstream=- text=1: 1 2: 4 3: 9 4: 16 5: 25 6: 36 7: 49 8: 64 9: 81 10: 100 11: 121 12: 144 13: 169 14: 196 15: 225 16: 256 17: 289 18: 3
-[FAIL] wrote results/logs/qwen38_obliterated_q4km/nomtp_card1_vs_mtp3_quality.json

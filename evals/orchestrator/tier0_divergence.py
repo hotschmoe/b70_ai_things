@@ -1,4 +1,4 @@
-"""Tier 0 — the canary. Distribution divergence of a quant vs the bf16 reference.
+"""Tier 0 -- the canary. Distribution divergence of a quant vs the bf16 reference.
 
 Fully deterministic, no grader. For a FIXED corpus we score every token under both models and report:
   - ppl:            perplexity of this model on the corpus (lower = better LM)
@@ -12,7 +12,7 @@ disambiguate which dict key is the *actual* token by tokenizing the passage thro
 endpoint (same tokenizer as the model, so quant and reference align position-for-position).
 
 Caveats baked in: skip position 0 (BOS) for ppl/agreement; align by token IDs, not decoded strings
-(README §7). API top-k truncates the distribution, so nll_gap/agreement are exact for the actual &
+(README section 7). API top-k truncates the distribution, so nll_gap/agreement are exact for the actual &
 argmax tokens but a *full-vocab* KLD needs the offline forward-pass script (roadmap).
 """
 from __future__ import annotations

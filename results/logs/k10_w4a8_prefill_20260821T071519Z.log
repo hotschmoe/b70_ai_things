@@ -1,9 +1,0 @@
-model=qwen3.8-27b-W4A8-gptq-gdn lens=[2048, 8000] reps=3 max_tokens=1 (TTFT~prefill)
-  tgt~2048 rep=0 pt=2045 ct=1 wall=0.725s prefill=2821.9 tok/s text=' The'
-  tgt~2048 rep=1 pt=2045 ct=1 wall=0.707s prefill=2891.9 tok/s text=' The'
-  tgt~2048 rep=2 pt=2045 ct=1 wall=0.708s prefill=2889.2 tok/s text=' The'
-LEN~2048 actual_pt=2045 TTFT_avg=0.713s prefill_avg=2867.7 tok/s n=3
-  tgt~8000 rep=0 pt=7995 ct=1 wall=2.907s prefill=2750.0 tok/s text=' The'
-  tgt~8000 rep=1 pt=7995 ct=1 wall=2.906s prefill=2750.9 tok/s text=' The'
-  tgt~8000 rep=2 pt=7995 ct=1 wall=2.910s prefill=2747.8 tok/s text=' The'
-LEN~8000 actual_pt=7995 TTFT_avg=2.908s prefill_avg=2749.6 tok/s n=3

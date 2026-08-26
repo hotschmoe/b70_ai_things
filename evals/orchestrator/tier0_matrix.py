@@ -3,10 +3,10 @@
 
 Each `run_evals --tiers 0` writes a tier0_tokens.json (per-token argmax + actual logprob) and a
 tier0_divergence.json (standalone ppl). This tool collects them across all runs, picks an anchor
-(the highest-precision servable quant — bf16 > fp8 > w8a8 ...), and reports each quant's:
+(the highest-precision servable quant -- bf16 > fp8 > w8a8 ...), and reports each quant's:
   - ppl (absolute, lower=better)
   - top1_agreement vs anchor (fraction of positions with the same argmax token)
-  - nll_gap vs anchor (mean |Δ actual-token logprob|)
+  - nll_gap vs anchor (mean |delta actual-token logprob|)
 
 Usage:  tier0_matrix.py <results_dir> [anchor_quant]
 """
@@ -58,12 +58,12 @@ def main() -> int:
             agree, gap = "(anchor)", "(anchor)"
         else:
             c = tier0_divergence.compare(anchor_dump, runs[q]["dump"])
-            agree = f"{c['top1_agreement']:.4f}" if c["top1_agreement"] is not None else "—"
-            gap = f"{c['nll_gap_mean']:.4f}" if c["nll_gap_mean"] is not None else "—"
-        ppls = f"{ppl:.4f}" if isinstance(ppl, (int, float)) else "—"
+            agree = f"{c['top1_agreement']:.4f}" if c["top1_agreement"] is not None else "--"
+            gap = f"{c['nll_gap_mean']:.4f}" if c["nll_gap_mean"] is not None else "--"
+        ppls = f"{ppl:.4f}" if isinstance(ppl, (int, float)) else "--"
         print(f"| {q} | {ppls} | {agree} | {gap} |")
     print("\n> top1-agree = fraction of tokens where this quant's argmax matches the anchor's "
-          "(1.0 = identical next-token decisions). nll-gap = mean |Δ logprob| of the actual token.")
+          "(1.0 = identical next-token decisions). nll-gap = mean |delta logprob| of the actual token.")
     return 0
 
 

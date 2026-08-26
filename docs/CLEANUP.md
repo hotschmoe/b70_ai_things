@@ -1,56 +1,40 @@
-# Cleanup / Disk Hygiene Log
+# Cleanup Ledger
 
-Policy (user-approved 2026-06-17): prune unused backends/images/models freely to save
-space, BUT log every deletion here with date + reason, and never delete a fallback until
-its replacement is validated. Never touch the user's production images/containers
-(nextcloud, mariadb, syncthing, clamav, specula-*).
+## 2026-08-26 clean-slate pass
 
-## 2026-06-23 -- PURGED archive/ entirely (user-requested; PERMANENT, ~473G freed)
-`rm -rf models/archive && mkdir models/archive` (empty). btrfs, no snapshots -> space reclaimed:
-`/mnt/vm_8tb` 1.4T->877G used (12%, 6.5T free); models/ = 378G. Deleted all 21 parked dirs incl. RTN
-dups (W8A8-INT8-RTNtest, W4A8-rtn/q variants), the Qwable set (incl. the broken int4 + the 60G bf16 base),
-the non-prepacked W4A8 twins, 2 GGUFs, old OLMoE, and the 14B W8A8-gptq/gptq512/W8A16. **PERMANENT** (no
-longer reversible by `mv`). Notable: `Qwen3-14B-W8A8-gptq` was the MEASURED W8A8 winner (0.890/0.921) --
-its numbers persist in evals/results/SUMMARY.md; the checkpoint is gone (re-quantizable if ever needed).
-Live serves untouched (Lorbus 27B int4 daily driver, 35B int8/int4 MoE, the prepacked W4A8 twins).
+Config:
 
-## 2026-06-22 -- archival batch (user-requested; `mv` to models/archive/, reversible, ~243G)
-Moved out of the live `models/` top level (archive/ 184G -> 427G):
-- **All Qwable** (user doesn't need it): `DJLougen_Qwable-5-27B-Coder` (60G, bf16 base), `...-W8A8-sqgptq` (33G),
-  `...-W4A8-sqgptq` (33G), `...-W4A8-sqgptq-prepacked` (25G), `...-int4-AutoRound` (25G, the BROKEN XPU-calib quant).
-- **Non-prepacked twins** (kept the prepacked, which is the serve target): `Qwen3.6-27B-W4A8-sqgptq` (33G; kept
-  `...-prepacked` 25G), `Qwen3-14B-W4A8-gptq` (16G; kept `...-prepacked` 9.3G).
-- **GGUFs**: `unsloth_Qwen3.6-27B-GGUF` (16G), `bartowski_Qwen2.5-7B-Instruct-GGUF` (4.4G).
-Daily driver (Lorbus 27B int4) + the 35B int8/int4 MoE serves untouched. NOTE: the older "KEEP" rows below for the
-2 GGUFs are now superseded by this archival.
+- Retain Qwen3.8-27B BF16, NVFP4, and W8A8 GPTQ.
+- Retain Qwen3.6-27B NVIDIA NVFP4.
+- Retain the Ornith-1.5-35B-A3B model family.
+- Retain Steve reproduction trees and the newest topology/runtime findings.
+- Quarantine first; permanent deletion remains a separate decision.
 
-### 2026-06-22 (follow-up) -- archive 14B W8A8-gptq / W8A8-gptq512 / W8A16 (user call: done chasing W8A8)
-User: autoround supersedes the gptq W8A8 variants; not chasing W8A16 optimizations. Archived (+46G -> archive/ 473G):
-`Qwen3-14B-W8A8-gptq` (16G), `Qwen3-14B-W8A8-gptq512` (16G), `Qwen3-14B-W8A16` (16G). KEPT in 14B: `W8A8-autoround`,
-`W4A8-gptq-prepacked`, `W4A16-gptq`. **HONESTY NOTE:** by the repo's MEASURED leaderboard, `W8A8-gptq` is the validated
-W8A8 winner (HumanEval+ 0.890/0.921), while `W8A8-autoround` accuracy is unmeasured ("TBD == gptq kernel"). The measured
-numbers persist in evals/results/SUMMARY.md; the gptq files are archived (reversible) if the W8A8 chase reopens.
+Command:
 
-## Keep / remove decisions (live inventory)
+- Move retired weights, clones, caches, raw logs, histories, and stale backend
+  source under `archive/to-delete-20260826/`.
+- Export off-target Docker images to a compressed `docker save` archive.
+- Trim `JOURNAL.md` at a complete entry boundary.
 
-### Docker images
-| Image | Size | Status | Reason |
-|-------|------|--------|--------|
-| ghcr.io/ggml-org/llama.cpp:full-intel | 11.8 GB | KEEP | standard-model baseline (7B ~90 t/s) + DeltaNet-SYCL contribution (task #10) |
-| python:3.11 | 1.1 GB | KEEP | HF downloads |
-| intel/llm-scaler-vllm:0.14.0-b8.3 | 33.6 GB | REMOVE after b8.3.1 validated | superseded by b8.3.1 (had DeltaNet+FP8 init bug) |
-| intel/llm-scaler-vllm:0.14.0-b8.3.1 | ~33 GB | KEEP (active) | Intel-recommended for Qwen3.6-27B |
-| python:3.10 | 1.1 GB | DELETED | unused (kept 3.11) |
+Result:
 
-### Models (/mnt/vm_8tb/b70/models)
-| Model | Size | Status | Reason |
-|-------|------|--------|--------|
-| Qwen_Qwen3.6-27B-FP8 | 29 GB | KEEP | active 8-bit target (vLLM-XPU) |
-| bartowski_Qwen2.5-7B-Instruct-GGUF | 4.4 GB | KEEP | known-good reference; draft-model candidate; small |
-| unsloth_Qwen3.6-27B-GGUF (Q4_K_M) | 16 GB | KEEP (provisional) | crashes on llama.cpp SYCL (DeltaNet); works CPU; test artifact for DeltaNet-SYCL contribution. Remove if we abandon that path. |
+- Live model registry contains eight retained artifacts.
+- `JOURNAL.md` contains 3,478 lines; the full prior journal is quarantined.
+- Live runtime root contains only stable tools, health caches, monitoring data,
+  secrets, lease files, and the two Steve trees.
+- ZML, llama.cpp, old model families, stale shelves, historical script trees,
+  raw result trees, build trees, and backend clones are quarantined.
+- Docker now has 15 retained images, three monitoring/UI containers, and no
+  build cache; 23 experiment containers were removed after metadata capture.
+- The quarantine is about 1.3 TB. Disk space is reclaimed only when that
+  review buffer is permanently removed.
+- About 256 MB of August 23-26 raw evidence cited by current findings is kept in
+  a separate non-deletion archive and linked from ignored `results/` paths.
 
-## Deletion log
-- 2026-06-17: removed `python:3.10` image (~1.1 GB) — unused, kept 3.11.
-- 2026-06-17: `docker builder prune -f` — build cache (~734 MB).
-- 2026-06-17: removed `intel/llm-scaler-vllm:0.14.0-b8.3` (33.6 GB) — superseded by b8.3.1; both shared
-  the same DeltaNet+FP8 bugs so b8.3 was no longer a useful fallback. docker.img 103G->69G used.
+Verdict:
+
+- The active repo and runtime root now describe the current SGLang-first work.
+- Restore instructions and the keep set are recorded in the quarantine README.
+- Do not remove the quarantine until its manifest and compressed Docker archive
+  have been reviewed.

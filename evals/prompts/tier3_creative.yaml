@@ -1,4 +1,4 @@
-# Tier 3 — curated creative / visual coding suite.
+# Tier 3 -- curated creative / visual coding suite.
 #
 # These are TASTE-leaning (you'll glance at the renders), but we make them SEMI-objective:
 #   - objective sub-signal: each output is rendered in a headless browser; we record whether it
@@ -13,7 +13,7 @@
 #   - tags: for grouping in the report.
 #   - render: how the harness should capture it (headless screenshot delay, viewport).
 #
-# Keep prompts FIXED once a campaign starts — changing a prompt invalidates cross-quant comparison.
+# Keep prompts FIXED once a campaign starts -- changing a prompt invalidates cross-quant comparison.
 
 suite: tier3_creative_v1
 

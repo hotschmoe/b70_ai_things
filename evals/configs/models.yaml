@@ -1,137 +1,16 @@
-# Quant matrix for the eval campaign. The orchestrator reads this to know:
-#   - what served-model-id to send in API requests (vLLM's --served-model-name / model path)
-#   - which serve script + env brings each one up on the box (for optional auto-cycling)
-#   - which entry is the REFERENCE (the FP16/BF16 ceiling everything is scored against)
-#
-# IMPORTANT: confirm the served_model_id + serve flags against the box before a real run.
-# vLLM answers /v1/models with the id it was served under — query it to be sure:
-#   curl -s http://192.168.10.5:18080/v1/models | python3 -m json.tool
-#
-# ⚠️ RTN vs GPTQ MIX-UP GUARD: served_model_id MUST encode the calibration method (…-gptq / …-rtn),
-#   never a bare 'qwen3-14b-w8a8' that could be either. Two checkpoints differing only by calibration
-#   are a silent foot-gun -- serving the wrong one mislabels the result. This already bit the Tier-1
-#   HumanEval+ 'w8a8' run (it served the RTN dup, not GPTQ). Less-performant dups live in models/archive/.
-#
-# Fields marked TODO need a human/box confirmation (paths, served names, exact serve env).
+# Active evaluation identities after the 2026-08-26 cleanup.
+# Always confirm the live identity through /v1/models before scoring.
 
-endpoint: http://192.168.10.5:18080/v1   # default; override per-run with --endpoint
+endpoint: http://192.168.10.5:18080/v1
 
 defaults:
-  # Determinism knobs applied to every graded request (see README §5/§7).
   temperature: 0.0
   top_p: 1.0
   seed: 1234
   max_tokens: 2048
-  concurrency: 1        # eval at 1 for reproducibility; raise only for throughput, never for graded runs
+  concurrency: 1
 
-# The first campaign: Qwen3-14B across quants. 'reference: true' marks the ceiling.
-# Serve commands are what was ACTUALLY used (2026-06-19); all on vLLM 0.23.0-based images for parity.
-# One card -> one model at a time (each serve script evicts the others off port 18080).
 models:
-  - label: qwen36-27b-w8a8-sqgptq-mtp-sglang
-    served_model_id: qwen36-27b-w8a8-mtp
-    family: qwen3.6-27b
-    weights: int8
-    activations: int8-dynamic-per-token
-    calibration: sqgptq
-    serve_cmd: "RADIX=1 MAXLEN=131072 PORT=18080 rdy_to_serve/sglang/qwen36-27b-w8a8/serve.sh start"
-    notes: "Pi Terminal-Bench 3.0 arm. SGLang TP=2, fused B70 INT8 XMX,
-      NEXTN MTP10, and qualified extra-buffer radix cache. The public served id
-      predates the identity convention; the eval arm and output name must encode
-      W8A8-sqgptq."
-
-  - label: ornith15-35b-a3b-w8a8-rtn-mtp-shisa-sglang
-    served_model_id: ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa
-    family: ornith-1.5-35b-a3b
-    weights: int8
-    activations: int8-dynamic-per-token
-    calibration: rtn-per-output-channel
-    serve_cmd: "CTX=262144 RADIX=1 MTP=1 PORT=18080 sglang/w8a8/serve_ornith15_w8a8.sh start"
-    notes: "Pi Terminal-Bench 3.0 wildcard arm. XPU-quantized Quark-compatible
-      artifact with trained Shisa MTP head. Routed experts use SGLang's INT8
-      fused-MoE path; eligible dense weights use the BF16 compute fallback.
-      Trained MTP, 250K context, radix-cache reuse, tool calls, and concurrent
-      coherence passed qualification on 2026-08-24."
-
-  - label: bf16
-    reference: true
-    served_model_id: qwen3-14b
-    family: qwen3-14b
-    weights: bf16
-    activations: bf16
-    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=none SERVED=qwen3-14b IMG=vllm-xpu-env:v0230 EXTRA='--cpu-offload-gb 8' MAXLEN=4096"
-    notes: "REFERENCE ceiling, but ~29.6 GB BF16 does NOT fit one 32 GB card under the v1 engine
-      (No available memory for cache blocks). Needs --cpu-offload-gb (slow but ok for scoring) OR
-      compute the bf16 reference offline on CPU. Anchor on fp8 until then. src specula-build/models/Qwen3-14B."
-
-  - label: fp8
-    served_model_id: qwen3-14b-fp8
-    family: qwen3-14b
-    weights: fp8
-    activations: fp8
-    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=fp8 SERVED=qwen3-14b-fp8 IMG=vllm-xpu-env:v0230 MAXLEN=4096 MAXSEQS=4"
-    notes: "Online FP8 (upstream XPU FP8 kernel). ~15 GB, near-lossless. Practical high-precision anchor."
-
-  - label: w8a8
-    served_model_id: qwen3-14b-w8a8-gptq    # SmoothQuant+GPTQ@128 (calibrated winner). RTN dup is in models/archive/.
-    family: qwen3-14b
-    weights: int8
-    activations: int8-dynamic-per-token
-    calibration: smoothquant+gptq@128       # NOT rtn -> served from models/Qwen3-14B-W8A8-gptq
-    serve_cmd: "scripts/runremote.sh scripts/51_serve_int8_specdecode.sh IMG=vllm-xpu-env:int8 SPEC=0 GRAPH=0 MAXLEN=4096"
-    notes: "Our int8 kernel (Selected XPUInt8ScaledMMLinearKernel). FP8 KV. Plain eager for determinism.
-      ⚠️ The earlier Tier-1 HumanEval+ 'w8a8' result (served_model_id qwen3-14b-w8a8) was the RTN dup -- RE-RUN on this gptq id.
-      [2026-06-23] gptq CHECKPOINT purged from disk (archive cleared); the MEASURED 0.890/0.921 stays here + SUMMARY.md."
-
-  - label: w8a8-autoround
-    served_model_id: qwen3-14b-w8a8-autoround   # AutoRound-calibrated W8A8 -> models/Qwen3-14B-W8A8-autoround (compressed-tensors int-quantized)
-    family: qwen3-14b
-    weights: int8
-    activations: int8-dynamic-per-token
-    calibration: autoround                       # vs the gptq W8A8 0.890/0.921 bar (Track 3b: expected ~tie at int8)
-    serve_cmd: "gpu-run bash w8a8_eval_serve.sh  (host; 36_serve.sh QUANT=Qwen3-14B-W8A8-autoround IMG=vllm-xpu-env:int8 eager; held via docker wait)"
-    notes: "Track 3b / does AutoRound supersede GPTQ at W8A8? True W8A8 needs :int8 (v0.23 has no XPU int8 W8A8 linear kernel
-      -> would be W8A16). COHERENCE-CHECK the generated text first (Q8 lesson: a token-count bench masks `!` garbage). Eval:
-      run_evals.py --endpoint .../v1 --model qwen3-14b-w8a8-autoround --quant w8a8-autoround --tiers 1 --tier1-dataset humaneval."
-
-  # [ARCHIVED 2026-06-20] RTN W4A8 moved to models/archive/Qwen3-14B-W4A8-INT -- superseded by w4a8-gptq
-  # below (GPTQ beats RTN at every scheme). Kept here for the historical leaderboard row (0.860/0.817).
-  - label: w4a8
-    served_model_id: qwen3-14b-w4a8
-    family: qwen3-14b
-    weights: int4
-    activations: int8-dynamic-per-token
-    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=/models/archive/Qwen3-14B-W4A8-INT SERVED=qwen3-14b-w4a8 IMG=vllm-xpu-env:int8 MAXLEN=4096 MAXSEQS=4"
-    notes: "RTN (data-free), ARCHIVED. XPUW4A8IntLinearKernel. ~9.3 GB VRAM / 16 GB disk. HumanEval+ 0.860/0.817. Use w4a8-gptq."
-
-  - label: w4a8-gptq
-    served_model_id: qwen3-14b-w4a8-gptq    # SmoothQuant+GPTQ@128 -> models/Qwen3-14B-W4A8-gptq (NOT the RTN w4a8)
-    family: qwen3-14b
-    weights: int4
-    activations: int8-dynamic-per-token
-    calibration: smoothquant+gptq@128       # apples-to-apples w/ w4a16-gptq (the 0.848 plus bar)
-    serve_cmd: "scripts/runremote.sh scripts/36_serve.sh QUANT=/models/Qwen3-14B-W4A8-gptq SERVED=qwen3-14b-w4a8-gptq IMG=vllm-xpu-env:int8 MAXLEN=4096 MAXSEQS=4"
-    notes: "GPTQ-recovered W4A8. Tests whether int8-act closes the accuracy gap to w4a16-gptq (0.848+). Eval:
-      run_evals.py --endpoint http://192.168.10.5:18080/v1 --model qwen3-14b-w4a8-gptq --quant w4a8-gptq
-      --tiers 1 --tier1-dataset humaneval --limit 164 --allow-code-exec  (thinking-off, greedy, sandboxed)."
-
-  # --- created later this session with scripts/54 (the MISSING formats) ---
-  # w4a16 / w8a16: quantize with scripts/54 SCHEME=W4A16|W8A16, THEN test XPU serveability (kernel
-  # coverage unknown -> a finding either way). Do NOT relabel w4a8 as w4a16; they are different schemes.
-
-  # --- 2026-06-22: Q8 Qwable-5-27B-Coder int4-AutoRound (the QUANTS_TODO Q8 quant; VALIDATED serves 29.13 t/s) ---
-  - label: qwable-27b-int4
-    served_model_id: qwable-27b-int4         # -> models/Qwable-5-27B-Coder-int4-AutoRound (scripts/87-repaired config)
-    family: qwable-27b                        # NOTE: DIFFERENT base from qwen3-14b -- no apples-to-apples 14B reference
-    weights: int4
-    activations: bf16                         # W4A16 (int4 weights, bf16 acts) -- AutoRound, inc-servable
-    calibration: autoround@pile-10k           # iters=200, low_gpu_mem_usage, mtp.fc+visual+linear_attn kept bf16
-    serve_cmd: "gpu-run bash q8_eval_serve.sh  (on host /mnt/vm_8tb/b70; v0230 GRAPH=1 NOMM=1, persistent + docker wait)"
-    notes: "QUANTS Q8. CODER model -> HumanEval+ is the right eval. AutoRound int4 expectation ~0.927/0.963 (the leaderboard
-      #1 27B-int4). NO 14B-family bf16 reference -> report ABSOLUTE HumanEval+, not retention. Eval:
-      run_evals.py --endpoint http://192.168.10.5:18080/v1 --model qwable-27b-int4 --quant qwable-27b-int4
-      --tiers 1 --tier1-dataset humaneval --limit 164 --allow-code-exec  (greedy, sandboxed)."
-
   - label: qwen36-27b-nvfp4-modelopt
     served_model_id: qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5
     family: qwen3.6-27b
@@ -139,73 +18,16 @@ models:
     activations: bf16
     calibration: nvidia-modelopt
     serve_cmd: "rdy_to_serve/vllm/qwen36-27b-nvfp4/serve.sh"
-    notes: "Paused former daily driver. Single-card vLLM replica: fused oneDNN
-      f4_e2m1, PIECEWISE graph, MTP5, calibrated fp8 KV, and prefix cache. Its
-      former hotschmoe-dd alias was retired 2026-08-23; use the full served id."
+    notes: "Paused pre-refresh vLLM control; rebuild native libraries before use."
 
-  - label: qwen38-27b-ud-q4-k-xl-unsloth-mtp3
-    served_model_id: hotschmoe-dd
-    public_alias: hotschmoe-dd
+  - label: qwen38-27b-nvfp4-radixark
+    served_model_id: qwen3.8-27b-NVFP4-radixark
     family: qwen3.8-27b
-    weights: gguf-ud-q4-k-xl
-    activations: fp16
-    calibration: unsloth-dynamic-gguf
-    serve_cmd: "ENABLE_MTP=1 rdy_to_serve/llamacpp/qwen38-27b-ud-q4-k-xl/serve.sh"
-    notes: "XL embedded-MTP3 qualification target. Unsloth UD-Q4_K_XL,
-      llama.cpp SYCL TP=2, Q8_0 KV, ctx 262144. Artifact SHA
-      3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e.
-      The public API keeps hotschmoe-dd, so eval output directories must encode
-      ud-q4-k-xl-unsloth-tp2-mtp3. Shelf MTP remains off until this HE+ gate passes."
-
-  - label: qwen38-27b-nvfp4-modelopt
-    served_model_id: qwen3.8-27b-NVFP4-modelopt-graph-mtp3-pushargraph
-    family: qwen3.8-27b
-    weights: nvfp4-modelopt-w4a4
+    weights: nvfp4
     activations: bf16
-    calibration: inferact-modelopt
+    calibration: radixark
     serve_cmd: "rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh"
-    notes: "Inferact ModelOpt uniform NVFP4 (not 3.6 MIXED). 2026-08-15n gated
-      TP=2 fused GRAPH+MTP3+prefix @200k, 18/18, code c1 35.0. HumanEval+
-      2026-08-16. Not a DD. Encode method+scheme in the served id / out dir."
-
-  # --- 2026-08-18 LOOP 1: Qwen3.8 W8A8-gptq campaign ids (section 8 item 1 / A.1) ---
-  # Do NOT serve a bare qwen3.8-27b-w8a8. Method+scheme in the id. HE+ still unmeasured.
-  - label: qwen38-27b-w8a8-gptq
-    served_model_id: qwen3.8-27b-W8A8-gptq
-    family: qwen3.8-27b
-    weights: int8
-    activations: int8-dynamic-per-token
-    calibration: gptq
-    serve_cmd: "B70_NOMTP=1 TP=2 PORT=18080 NAME=qwen38_w8a8 MAXLEN=229376 SERVED=qwen3.8-27b-W8A8-gptq ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start"
-    notes: "On-box compressed-tensors W8A8-gptq (models/files/qwen3.8-27b/w8a8-gptq),
-      MTP-off default of vllm/w8a8/serve_qwen38_27b.sh. 2026-08-15b gate: Paris
-      exact, c1 18.45 @229k. Not a DD. Do not overwrite the ckpt dir."
-
-  - label: qwen38-27b-w8a8-gptq-mtp3
-    served_model_id: qwen3.8-27b-W8A8-gptq-mtp3
-    family: qwen3.8-27b
-    weights: int8
-    activations: int8-dynamic-per-token
-    calibration: gptq
-    serve_cmd: "B70_NOMTP=0 MTPTOK=3 GRAPH=1 MAXLEN=131072 UTIL=0.90 TP=2 PORT=18080 NAME=qwen38_w8a8 SERVED=qwen3.8-27b-W8A8-gptq-mtp3 ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start"
-    notes: "P0.1 identity. Same grafted W8A8-gptq + BF16 vision/MTP (JOURNAL
-      2026-08-15c): Paris, vision live, c1 26.62 @131k. HE+ 164 thinking-off
-      greedy is the next GPU pick. Query /v1/models before scoring.
-      evals/.venv/bin/python evals/orchestrator/run_evals.py
-      --endpoint http://192.168.10.5:18080/v1
-      --model qwen3.8-27b-W8A8-gptq-mtp3 --quant W8A8-gptq-mtp3
-      --tiers 1 --tier1-dataset humaneval --limit 164"
-
-  - label: qwen38-27b-w8a8-gptq-dspark7
-    served_model_id: qwen3.8-27b-W8A8-gptq-dspark7
-    family: qwen3.8-27b
-    weights: int8
-    activations: int8-dynamic-per-token
-    calibration: gptq
-    serve_cmd: "GRAPH=0 SPECTOK=7 MAXLEN=131072 PORT=18080 NAME=qwen38_w8a8_dspark ./bin/gpu-run bash vllm/dflash/serve_qwen38_w8a8_dspark.sh start"
-    notes: "P0.4 identity. W8A8-gptq + off-shelf DSpark k=7, method=dspark,
-      THINK_BUDGET=0, GRAPH=0. Draft models/files/qwen3.8-27b/dflash-drafter-fp8-b70
-      with v0260 Qwen3DSparkModel overlay. Do not score as MTP3 or hotschmoe-dd."
+    notes: "Pre-refresh vLLM control; rebuild native libraries before use."
 
   - label: qwen38-27b-w8a8-gptq-nextn
     served_model_id: qwen3.8-27b-W8A8-gptq-nextn
@@ -213,21 +35,51 @@ models:
     weights: int8
     activations: int8-dynamic-per-token
     calibration: gptq
-    serve_cmd: "PORT=18080 NAME=qwen38_w8a8_sglang MAXLEN=8192 SERVED=qwen3.8-27b-W8A8-gptq-nextn ./bin/gpu-run bash sglang/serve_qwen38_w8a8_0515.sh start"
-    notes: "P0.5 identity. Same grafted W8A8-gptq on sglang 0.5.15
-      (sglang-xpu:mtp-0515) + NEXTN steps=10. Do not score as vLLM
-      DSpark/MTP3 or hotschmoe-dd. Smoke = loads + Paris."
+    serve_cmd: "PORT=18080 NAME=qwen38_w8a8_sglang SERVED=qwen3.8-27b-W8A8-gptq-nextn sglang/serve_qwen38_w8a8_0515.sh start"
+    notes: "Retained research source; rebuild and requalify before promotion."
 
-  - label: qwen38-27b-w4a16-autoround-mtp5
-    served_model_id: qwen3.8-27b-W4A16-autoround-mtp5
+  - label: qwen38-27b-bf16-reference
+    reference: true
+    served_model_id: qwen3.8-27b-BF16-reference
     family: qwen3.8-27b
+    weights: bf16
+    activations: bf16
+    calibration: none
+    serve_cmd: ""
+    notes: "Weights retained as the quality ceiling; no current shelf entry."
+
+  - label: ornith15-35b-a3b-w8a8-rtn-mtp-shisa
+    served_model_id: ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    weights: int8
+    activations: int8-dynamic-per-token
+    calibration: rtn-per-output-channel
+    serve_cmd: "CTX=262144 RADIX=1 MTP=1 PORT=18080 sglang/w8a8/serve_ornith15_w8a8.sh start"
+    notes: "Retained SGLang W8A8 plus trained Shisa MTP path."
+
+  - label: ornith15-35b-a3b-bf16-mtp-shisa
+    served_model_id: ornith-1.5-35b-a3b-BF16-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    weights: bf16
+    activations: bf16
+    calibration: none
+    serve_cmd: ""
+    notes: "Reference weights retained; no current shelf entry."
+
+  - label: ornith15-35b-a3b-nvfp4-modelopt
+    served_model_id: ornith-1.5-35b-a3b-NVFP4-modelopt
+    family: ornith-1.5-35b-a3b
+    weights: nvfp4
+    activations: bf16
+    calibration: nvidia-modelopt
+    serve_cmd: ""
+    notes: "Retained research weights; requalify after backend refresh."
+
+  - label: ornith15-35b-a3b-gptq-int4-mixedcal-v2
+    served_model_id: ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2
+    family: ornith-1.5-35b-a3b
     weights: int4
-    activations: fp16
-    calibration: autoround
-    serve_cmd: "TP=2 PORT=18080 NAME=qwen38_int4ar MTPTOK=5 GRAPH=1 SERVED=qwen3.8-27b-W4A16-autoround-mtp5 ./bin/gpu-run bash vllm/w4a16/serve_qwen38_27b_int4ar.sh start"
-    notes: "S2 identity. Steve-lab pin
-      models/files/qwen3.8-27b/int4-autoround
-      (devan-carlin/Qwen3.8-27B-int4-AutoRound rev bce40cac).
-      Speed: try after-TTFT toward 101.922; also bench_code c1 vs W8A8 29.4.
-      Quality: HE+ 164 thinking-off greedy vs W8A8 0.957/0.927.
-      Do not score as W8A8 or SergiioB GPTQ-Int4."
+    activations: bf16
+    calibration: gptq-mixedcal-v2
+    serve_cmd: ""
+    notes: "Retained research weights; requalify after backend refresh."

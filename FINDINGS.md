@@ -1,686 +1,113 @@
-# Intel Arc Pro B70 — LLM Inference Findings (hobbyist field notes)
+# FINDINGS.md -- current evidence ledger
 
-What we've actually measured running LLMs on a single **Intel Arc Pro B70** (32 GB GDDR6,
-Battlemage/Xe2, ~$949), in Docker on an Unraid host. Goal: help fellow Team Blue tinkerers
-skip the dead-ends. Living doc — see [archive/RESULTS.md](archive/RESULTS.md) for older raw number
-tables (Qwen3-14B, superseded) and [JOURNAL.md](JOURNAL.md) for the blow-by-blow.
+Updated 2026-08-26. This file intentionally contains only findings that should
+survive the clean-stack refresh. Detailed commands and raw evidence are in the
+linked docs and the active JOURNAL.md window.
 
-## TL;DR
-- **Qwen3.8-27B stock Q4_K_M TP=2 (2026-08-23): current quality-first daily driver.**
-  Exact ggml-org SHA `31629f53...`, 262144 context, F16 KV, MTP off, and
-  unqualified fusion doors off. HumanEval+ 164 thinking-off greedy was
-  **0.970 base / 0.927 plus**, the highest observed Qwen3.8 4-bit coding score
-  on this box versus W4A16 0.963/0.915 and best NVFP4 0.939/0.915. Fresh live
-  coding smoke averaged 35.2 tok/s and Paris was coherent. TP=2 preserves the
-  exact coding-qualified topology; DP=2 remains an unqualified alternative.
-- **Qwen3.8-27B OBLITERATED V3 Q4_K_M DP=2 (2026-08-23): paused after user quality rejection.**
-  Exact fixed-merge GGUF SHA `c5e4fe70...`, not the deleted bad pre-V3 Q8.
-  Two one-card llama.cpp SYCL replicas expose one `hotschmoe-dd` endpoint at
-  245760 context each with Q8_0 KV. The embedded MTP head at draft max 3 raises
-  aggregate p512/g128 decode 47.69 -> **81.86 tok/s** (+71.7%). Deterministic
-  MTP/no-MTP outputs were exact on 6/7 and semantically identical on the seventh;
-  a c4 five-minute soak was 338/338 coherent with zero degeneracy/errors. A real
-  152289-token cold prompt completed coherently without shift or truncation.
-- **Qwen3.8-27B Unsloth NVFP4 (2026-08-15f): one-card COHERENT after channel-FP8 fix.**
-  Checkpoint was always fine (CPU dequant vs BF16: MLP 0.992, FP8 0.9996).
-  `nvfp4_gemm_w4a16` on Unsloth MLP is bit-exact (cos 1.000). The garbage was
-  `fp8_gemm_w8a16` treating Unsloth *per-channel* FP8 scales as one tensor
-  scale (matches mean-scale ref 0.9997; 3.6 per-tensor FP8 stays exact).
-  sitecustomize (1e) first tiled `f8*scale` F.linear (coherent, slow), then
-  (2026-08-15g) repacks channel-FP8 to s8 + per-out-channel scale and hits
-  `int8_gemm_w8a16` (B70 INT8 XMX; Xe2 has no FP8 XMX). Probe: cos 1.000,
-  M=1 56x vs tiled. Dual-card 2026-08-15h IN=2048: eager TG 8.56;
-  GRAPH PIECEWISE TG **23.54** (2.75x), both Paris 3/3. Compact
-  scales (15i) cut weights 24.7 -> 22.09 GiB and GRAPH KV 4k ->
-  **104k**. GRAPH+MTP3: TG **27.37**, accept ~2.2-2.6. Stay on
-  `int8g-v0260`. TP=2 bf16 @262k (15j): eager coherent, KV 402k;
-  GRAPH+push-AR-graph TP=2 was `!!!!` until int8 output clone
-  (15l): TG **24.86**, Paris 3/3. c4 soak not gated. Not a DD.
-- **Qwen3.8-27B on-box GPTQ W8A8 (2026-08-15): coherent INT8 XMX + grafted VLM/MTP.**
-  GPTQ-only compressed-tensors. Overnight save was text-only; CPU graft
-  restored 333 visual + 15 mtp from official BF16. TP=2 MTP3 @131k:
-  Paris exact; vision path live (landscape-vs-person correct). IN=2048
-  TTFT 924 / PP 2216 / TG **26.62** (was 18.45 MTP-off); c4 14.40 and
-  stayed up. Spec accept length ~2.1-2.6. Not a DD.
-- **Qwen3.8-27B Inferact ModelOpt NVFP4 (2026-08-15n / 16): MTP3 + HE+; not a DD.**
-  Uniform `quant_algo=NVFP4` on the 3.6 TP=2 recipe (fused GRAPH + prefix
-  + push-AR, bf16 KV, MAXLEN=200000). MTP3: code c1 **35.0** / c4 agg
-  93.3 / 18/18. HumanEval+ 164 thinking-off greedy sandboxed:
-  **0.939 / 0.915** vs 3.6 NVFP4 MTP3 **0.988 / 0.945** (MTP5 DD
-  0.976/0.939). 3-5 plus pts behind -- not a 3.8 quality win on
-  this bench. **Do not swap DD** (slower and not better). Default
-  MTPTOK=3.
-- **Prior 27B result (2026-07-28):** NVFP4 was the fastest coherent local path measured for
-  this workload. The daily driver is two vLLM 0.25.1 single-card replicas at 100,352 tokens, each at
-  64.6 code tok/s with calibrated fp8 KV and working prefix reuse. A vLLM 0.26.0 TP=2 shelf mode serves
-  one 200,000-token request and passed exact 190,048-token retrieval plus a 52K-token concurrent soak.
-  Its representative decode trace is 41.2% collectives, 36.0% GEMM, 9.7% GDN, and 6.3% attention;
-  the eager oneCCL full-vocab MTP gather alone is 39.0%. Stock XPU local-argmax compositions do not
-  convert that profile opportunity into a universal win. The custom fused top-1 op is token-exact
-  and raised c4 aggregate from 103.0 to 115.7 t/s, but cut c1 from 48.9 to 32.5. A dynamic M=1
-  fallback restored c1 to 48.6 but cut c4 to 93.4. A pure-fused trace proves 520/521 M=1
-  full-vocab messages are removed; the replacement's 865 compact device collectives total only
-  9.72 ms on representative rank 1, while synchronous host latency remains the c1 issue.
-  Lower depth did not solve it: MTP3 measured c1 37.2/c4 103.0 and MTP4 emitted visible
-  `!` garbage in 1/18 streams. Replicating the full packed drafter head cost 341 MiB/rank and
-  eliminated the draft gather, but cut c1 to 30.1 and produced 9/64 intermittent rank-1 mismatch
-  records despite byte-exact full-head hashes. All local-argmax/replicated-head paths remain
-  default-off; the shelf is unchanged.
-- **sglang 0.5.15 W8A8 reaches real 200K with BF16 KV when speculative state is right-sized.**
-  Auto sizing spent about 4.64 GiB/card on 13 active mamba plus 26 INT8 checkpoint slots, leaving
-  only 147,456 physical KV tokens behind an advertised 200,000 limit. `MAXREQ=1 MAMBA_CACHE=4`
-  raises the BF16 KV pool to 220,288 tokens at the same 0.90 memory fraction. Exact 190,048-token
-  retrieval passed cold/warm in 334.58s/3.54s with 189,952 cached tokens and 99.93% cache hit.
-  The matched 8K, radix-off shelf A/B passed 18/18 coherence on both versions but rejected 0.5.15:
-  versus 0.5.6 it was -6.1% native c1, -2.9% native c4 aggregate, -2.7% code c1, -2.5% code c4
-  aggregate, and -13.5% unique cold prefill. Keep 0.5.6 shelved; use 0.5.15 for research/200K.
-- **Large-only push all-reduce fixes sglang W8A8 long prefill without quantizing KV.** On the
-  0.5.6 shelf stack, the custom Level Zero IPC transport improved unique cold prefill 2.09-3.12x
-  at c1 across 512-32K and 3.12-3.17x at c4. sglang 0.5.15 moved all-reduce through
-  `GroupCoordinator._all_reduce_in_place`, bypassing the legacy hook; the version-compatible patch
-  now covers both routes. In the matched 200K/BF16-KV A/B, 2K/36K cold prefill rose
-  651/601 -> 1,643/1,548 tok/s and exact 190,048-token cold wall fell 525.00s -> 333.73s,
-  while warm reuse stayed about 3.5s at 99.93%. The final shelf gate is 1,048,576 elements:
-  large EXTEND uses push, while small decode/MTP collectives stay on oneCCL. Same-condition
-  shelf on/off showed neutral c1/soak, 2.96x faster c1 TTFT, and +43.8% c4 aggregate.
-- **The sglang 0.5.15 regression is collective/runtime-side, not an INT8-XMX or attention regression.**
-  Matched CPU+XPU stage traces show the same 264 prefill all-reduces on each version. Across ranks,
-  their device time rose from 299/664 ms on 0.5.6 to 615/970 ms on 0.5.15, while INT8 GEMM,
-  BF16 GEMM, activation quantization, copies, and FMHA were flat or faster. Ordinary GPU memcpy
-  was only about 0.1 ms, so the movement cost is asynchronous TP collectives rather than host/device
-  tensor copies. Upstream also disabled compile for two XPU speculative metadata helpers; an opt-in
-  recompile removed their extra eager kernels but regressed matched c4 aggregate 4.9%, cold prefill
-  2.6%, and code throughput 1.8-2.3%. Keep the override default-off. The large-prefill collective
-  loss is now recovered by the version-compatible push path; the residual short/decode gap does
-  not justify replacing the 0.5.6 shelf image.
-- **The B70 is a solid single-card inference GPU for ~14B-class models.** Qwen3-14B at **FP8**
-  does **~35 tok/s single-stream** and **~556 tok/s aggregate** at concurrency 64, near-lossless.
-  (Default `--max-num-seqs 16` caps you at ~330 — raise it for throughput.)
-- **Best backend: upstream vLLM-XPU built from source** (`Dockerfile.xpu`). It has the real XPU
-  FP8 matmul kernel and native model support. (llama.cpp SYCL also works well for standard models.)
-- **INT8 W8A8 now WORKS on Battlemage — we wrote the kernel.** Stock vLLM had no XPU int8 kernel (hard
-  `KeyError: PlatformEnum.XPU` at load). We added a native oneDNN `int8_gemm_w8a8` (s8s8s32) + a fused
-  per-token int8 quant + `XPUInt8ScaledMMLinearKernel` + the registry entry. W8A8 serves, beats FP8 ~1.6x in
-  prefill, ~matches decode, and composes with FP8 KV cache (2x context). FP8 still wins pure single-stream
-  decode; W8A8 wins prefill/large-batch — the long-context coding-server pick. docs/kernel/02 + `contrib/vllm_int8_xpu/`.
-- **PIECEWISE XPU graph capture = free +16.7% decode (2026-06-19).** vLLM 0.23.0 already wires XPU graph
-  capture (`VLLM_XPU_ENABLE_XPU_GRAPH=1`); adding `register_fake` meta kernels for our 2 custom int8 ops lets
-  dynamo trace through them. PIECEWISE mode (attention eager, linear/MLP captured) lifts 14B W8A8 decode
-  23.33 -> **27.23 t/s**. FULL capture is blocked by Intel's SYCL Graph ext (`work_group_scratch_memory`, via
-  flash-attn). Use image `vllm-xpu-env:int8g` + `cudagraph_mode=PIECEWISE`. (This w8a8 number predates the
-  compile-pass fix below and is being re-confirmed on the current image.)
-- **[BREAKTHROUGH 2026-06-20] PIECEWISE graph capture lifts W4A8 decode 16.79 -> 48.18 t/s (+187%, 2.87x).**
-  The biggest decode win on the B70 so far. W4A8 eager is severely dispatch-bound because its per-token
-  activation quant is the UNFUSED pure-PyTorch `dynamic_per_token_int8_quant_ref` (hundreds of tiny ops/token);
-  graph capture fuses the whole decode step, taking decode from ~26% to ~74% of the BW ceiling (9.3 GiB @
-  608 GB/s ~= 65 t/s). That is why W4A8 gains 2.87x where W8A8 (which uses a fused quant op) gained only 1.17x.
-  **The real headline (corrected after capturing the rivals too): graph capture roughly DOUBLES int4 decode on
-  the B70.** Apples-to-apples, PIECEWISE: **w4a16 28.04 -> 54.57 (+95%)**, w4a8 16.79 -> 48.18 (+187%), w8a8
-  23.62 -> 26.68 (+13%). So **w4a16 LEADS decode (54.57), w4a8 leads prefill/TTFT** (int8-XMX) -- both 9.3 GiB,
-  both ~2x'd by capture; w4a16's int4xfp16 GEMM is ~13% more BW-efficient at m=1 (no act-quant). w8a8 gains
-  little (already-fused quant). W4A8 is no longer "dominated" -- it co-leads with w4a16, split by decode-vs-
-  prefill. (Earlier note "w4a8 beats everything" was only true while the others were eager; corrected here.)
-  Two gotchas fixed (both in `w4a8/30_serve_w4a8_graph.sh`): (1) a vLLM XPU+compile crash
-  `NameError: MLARoPEKVCacheCatFusionPass` -- vLLM auto-enables CUDA-only inductor fusion passes under
-  torch.compile but XPU never imports them; disable the CUDA/ROCm-only fusion flags in the serve `pass_config`.
-  (2) the int4 `register_fake` is REDUNDANT -- vLLM already ships a native fake for `int4_gemm_w4a8`. Serve:
-  `w4a8/30_serve_w4a8_graph.sh GRAPH=1` (image `:int8g`, dtype float16); confirm via the
-  `Capturing CUDA graphs (PIECEWISE)` + `Graph capturing finished` log lines.
-- **Quant quality measured (2026-06-19): the int8 ACTIVATION quant is the quality cost, not int8 weights.**
-  First eval campaign, Qwen3-14B × 6 quants (see [evals/](evals/) + [evals/results/SUMMARY.md](evals/results/SUMMARY.md)):
-  ppl + top-1 token-agreement vs a CPU-scored bf16 anchor + gsm8k. **W8A16 (int8 w / fp16 a) is near-lossless**
-  (ppl 12.76 vs bf16 12.70, **0.981** agreement) but **has NO XPU kernel** (`XPUwNa16` is int4-only). Quantizing
-  activations to int8 (W8A16→**W8A8**) drops agreement 0.981→**0.881** — yet gsm8k barely moves (95.3% vs fp8 96.0%),
-  because it flips low-confidence tokens, not answers. **Weight bits dominate:** W8A8 > W4A16 on every metric.
-  **Kernel takeaway:** keep optimizing **W8A8** (only path that lights the INT8 systolic datapath; ≈fp8 task
-  quality, 15 GB); a W8A16 int8-weight kernel is the one gap but it's a fidelity/memory play (fp16 acts, no INT8
-  matmul), not a speed one. **W4A8** (0.822 agree, gsm8k 92.7%) only when memory-bound (9.3 GB).
+## Host and topology
 
-## What works (single B70, 32 GB)
-| Thing | Result |
-|---|---|
-| **Qwen3.6-27B (Gated-DeltaNet)** | **RUNS** via int4 AutoRound on vLLM **0.23.0** — 7.9 t/s, coherent. Only known single-card path. |
-| **Qwen3.6-35B-A3B (256-expert MoE)** | **RUNS** via int4 AutoRound (W4A16) on **0.23.0** + a 16-line INC-XPU MoE routing patch — loads 19.6 GiB, coherent, ~6 t/s eager. `contrib/vllm_moe_xpu/`. |
-| Qwen3-14B **FP8** (vLLM-XPU) | **35 t/s** single / **556 t/s** @ C64 (raise `--max-num-seqs`!), near-lossless |
-| Qwen3-14B **F16/BF16** | 18.7 t/s, but ~28 GB barely fits (tiny KV). FP8 is ~1.9x faster — just use FP8 |
-| Qwen2.5-7B **Q4_K_M** (llama.cpp SYCL) | ~90 t/s decode — llama.cpp SYCL is great for standard-attention models |
-| **torch.compile (inductor)** | cuts single-stream **TTFT ~6x** (1032->176 ms) + ~11% decode at low concurrency |
-| **Qwen3-14B W8A8 + PIECEWISE XPU graph** | **27.23 t/s** decode (+16.7% over eager 23.33) — image `:int8g`, `cudagraph_mode=PIECEWISE` |
-| **Qwen3-14B W4A8 + PIECEWISE XPU graph** | **48.18 t/s** decode (**+187% / 2.87x** over eager 16.79) — `:int8g` + `30_serve_w4a8_graph.sh GRAPH=1`. Best prefill/TTFT (int8-XMX). |
-| **Qwen3-14B W4A16 + PIECEWISE XPU graph** | **54.57 t/s** decode (**+95% / 1.95x** over eager 28.04) — fastest 14B decode; same 9.3 GiB; no act-quant tax. `GRAPH=1`. |
-| **Qwen3.6-27B int4 + PIECEWISE XPU graph** | **30.84 t/s** decode (**+293% / 3.93x** over eager 7.84) — flagship; ~89% of BW ceiling; erases the density tax. Image `:v0230` (needs GDN). |
-| **Qwen3.6-35B-A3B MoE int4 + PIECEWISE XPU graph** | **56.84 t/s** decode (**+617% / 7.17x** over eager 7.93) — **fastest config on the board**; A3B = ~3B active/tok; `:v0230moe`. |
+CONFIG -> Linux 7.1.0-070100, two Intel Arc Pro B70 cards on separate root
+complexes, host Intel Compute Runtime 26.22.38646.4.
 
-## Single-card concurrency (captured) — Qwen3.6-27B int4 (w4a16 AutoRound) [2026-06-21]
-Served `:v0230` GRAPH=1 PIECEWISE (capture sizes 1..64), NOMM=1, UTIL=0.92, MAXSEQS=64, **fp16 KV**;
-`vllm bench serve` random 512/128 `--ignore-eos`. C1 bench (30.9) == perf_probe 30.84 -> capture validated.
-Repro: `scripts/56_27b_conc_campaign.sh`. CSVs: `results/sweep_27b-w4a16-cap-*.csv`.
+RESULT -> Kernel 7.1 aligned the GuC firmware requirement and cured the former
+BCS copy-engine/device-lost hardware wedge. The cards are headless, no process
+holds /dev/dri for display, and both PCI functions plus xe auxiliary children
+can be unbound for non-reboot recovery.
 
-| C | aggregate out t/s | per-stream decode t/s | mean TTFT |
-|--:|--:|--:|--:|
-| 1  | 28.1  | 30.9 | 0.44 s |
-| 2  | 52.0  | 29.3 | 0.60 s |
-| 4  | 87.8  | 26.7 | 1.07 s |
-| 8  | 134.3 | 21.7 | 1.77 s |
-| 16 | 178.3 | 14.5 | 2.68 s |
-| 32 | 216.7 | 8.4  | 3.67 s |
-| 64 | **234.7** | 6.7  | 15.1 s |
+VERDICT -> Keep kernel 7.1 as the host baseline. Use bin/xe-reset before
+considering a reboot. The retired display-hold and GuC-pin theories must not be
+reintroduced.
 
-- **Aggregate max ~235 t/s @ C64**, but TTFT balloons to 15 s and per-stream collapses to 6.7 -> the
-  practical knee is **~217 t/s @ C32** (TTFT 3.7 s); for low latency stay at **C2-C4** (per-stream ~27-29,
-  near single-stream). GDN/linear-attn batches sublinearly (C1->C8 = 4.8x for 8x conc; C8->C32 only +1.6x).
-- **Context window is throughput-neutral.** Re-running the whole sweep at **128k ctx** (fp16 KV) gave
-  near-identical numbers (C2 51.3, C4 87.6, C32 215.6, C64 232.9) — the KV pool is sized by gpu-util, not
-  max-model-len; only a single very-long sequence would differ.
-- **256k ctx does NOT fit at fp16 KV on one card:** a 262144-tok seq needs 16.2 GiB KV vs 8.31 GiB available
-  (model 16.69 GiB @ UTIL 0.92) -> vLLM caps "estimated max model length 133120". **Max fp16-KV context ~133k;**
-  use `MAXLEN<=131072`, or `KVDTYPE=fp8_e5m2` to roughly double it. (Campaign auto-fell-back 256k -> 128k.)
+Evidence: docs/P2P_GPU.md and
+docs/20260825_xe_nonreboot_recovery_and_pcie_topology.md.
 
-## Multi-GPU (dual B70, TP=2) [2026-06-21 -- 2nd card just installed]
-Second B70 landed. Both cards are **compute-usable**, not just PCI-visible: inside `vllm-xpu-env:v0230`,
-`sycl-ls` enumerates `[level_zero:0]` + `[level_zero:1]` (both [0xe223]) and two OpenCL GPUs. TP=2 serves:
-0.6B sharded 0.57 GiB/card (half the single-card weight = real split), KV pool ~26.8 GiB, max concurrency
-122x (2x single-card), coherent output. `system_fingerprint: vllm-0.23.0-tp2`. Serve via `30_serve_w4a8_graph.sh
-TP=2` (captured) or `43_serve_multi.sh TP=2` (eager).
+## TP=2 software boundary
 
-**[KEY WIN] For models that fit one card, DATA-PARALLEL (2 independent replicas) is the dual-GPU answer -- not
-TP/PP.** Measured 2026-06-21 (`scripts/64_dataparallel_2rep.sh`): one captured 27B-int4 replica per card (card0
-:18080, card1 :18081, zero inter-GPU traffic). Aggregate out tok/s = sum of both, vs a fresh single-card solo
-baseline: **C1 56.3 (2.09x), C8 278.7 (2.11x), C32 456.9 (2.14x), C64 524.8 (2.03x)** -- ~linear, NO contention
-(each replica under concurrent load ran at full solo speed; host CPU/PCIe is not a bottleneck). Single-stream
-decode stays full single-card (~30.8 t/s/replica). So DP beats both model-parallel options on BOTH axes:
-throughput (~2x vs TP/PP's sublinear) AND latency (30.8 vs TP=2 4.18 / PP=2 6.11). DP's only limit: it cannot
-serve a model bigger than one card -- that's the ONLY case for PP=2 (or TP=2). Serve two replicas via the new
-`PORT`/`DEVICE` knobs on `30_serve_w4a8_graph.sh` (`DEVICE=0 PORT=18080` / `DEVICE=1 PORT=18081`) behind a
-round-robin proxy. Stack MTP per replica for the decode multiplier.
+CONFIG -> vLLM multiprocess TP=2, oneCCL, graph capture, direct P2P experiments.
 
-**The interconnect is the bottleneck FOR MODEL-PARALLEL (TP/PP). There is NO usable GPU P2P on B70** -- every TP all-reduce round-trips
-`GPU -> host RAM -> GPU over PCIe` (Unified Shared Memory; set `CCL_TOPO_P2P_ACCESS=0`). No XeLink/NVLink.
-PCIe topology: each card behind its own ON-CARD Intel switch (`08/42:00.0` upstream -> GPU `0a/44:00.0`);
-switch-to-CPU trained at **Gen3 x16 -- the real, healthy link (1950X platform max).** The "Gen1 x1" that lspci
-shows at the GPU endpoint is the documented Intel Arc reporting ARTIFACT (KB 000094587), NOT the real link --
-read the upstream bridge. Both cards `numa_node=-1` (single-NUMA 1950X) so host-staging does not cross a NUMA hop.
-So the comms cap is host-staging + no-P2P, **not** the PCIe gen.
+RESULT -> Raw peer DMA and standalone oneCCL P2P work. The dangerous failure is
+the vLLM process/queue handoff: repeated worker-init or graph-capture failures
+can poison later collectives and sometimes both cards. A clone-safe custom-op
+contract alone was insufficient; the cloned profile input also needed
+completion before another queue consumed it. The proven 8192-row fence was
+shape-specific.
 
-**Stability (vLLM #41663 is our exact hardware):** dual-B70 TP=2 GP-faults + Xe BCS engine resets at
-ProcessGroupXCCL init unless **`CCL_ENABLE_SYCL_KERNELS=0`** (the load-bearing fix; we set it). Full stable env:
-`CCL_ENABLE_SYCL_KERNELS=0 CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 SYCL_UR_USE_LEVEL_ZERO_V2=0
-CCL_ATL_TRANSPORT=ofi CCL_ZE_IPC_EXCHANGE=pidfd VLLM_WORKER_MULTIPROC_METHOD=spawn` + `--distributed-executor-backend mp`.
-NEVER `CCL_ALLREDUCE=ring` (collapses to ~0.5 tok/s).
+VERDICT -> Do not enable arbitrary P2P in vLLM serving. Measure each dense 27B
+profile shape and collective count, require matched rank evidence, and run
+per-card plus compiled collective health around risky attempts.
 
-**Expectation (from community data -- TP on Arc is a CAPACITY play, not a SPEED play):** TP=2 *hurts* single-stream
-decode (comms-bound: StorageReview B60 GPT-OSS-20B batch=1 went TP=1 49 -> TP=8 23 tok/s) and helps only
-aggregate throughput at concurrency / models too big for one card. [CORRECTED 2026-06-21: the previously-cited
-"dual-B70 TP=2 Qwen3.5-27B FP8 13.25/97.84" and "30B-A3B MoE FP8 912 t/s" are UNVERIFIED -- not in any public
-source. The "13.25/97.84" is actually Puget's 4xB70 TP=4 27B-DENSE FP16 (13.1/95.9); no source has "912".]
-**Verified public multi-Arc numbers:** Puget 4xB70 TP=4 FP16 35B-A3B MoE = 16.3 (C1) / 63.7 (C4) / 122 (C8);
-Puget 4xB70 TP=4 27B-dense = 13.1 (1u) / 95.9 (8u); StorageReview B60 GPT-OSS-20B TP=1 49 -> TP=8 23 single-stream
-(TP hurts single-stream, confirmed). No public clean TP=1-vs-TP=2 same-model decode comparison exists -> our
-own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate the real numbers.
+## Graph replay boundary
 
-**Our measured numbers (2026-06-21, dual B70):**
-- **[SUPERSEDED 2026-06-24] "Captured PIECEWISE TP=2 is BLOCKED"** -- the original claim below was wrong/incomplete.
-  Captured PIECEWISE TP=2 WORKS (W8A8 27B no-MTP captured = 18.10 t/s COHERENT; MTP spec5 captured = 26.10 t/s
-  COHERENT, 26% accept). See the "[BUG B] captured TP=2 garbage" entry just below for the full root cause + fix.
-  Original (kept for history): *oneCCL errors `sched algorithms do not support sycl_graph recording` -- stable init
-  needs `CCL_ENABLE_SYCL_KERNELS=0` but graph-recording an all-reduce needs `=1`. Eager-only at TP=2.* (The real
-  story: all_reduce/reduce_scatter DO record under `=1`; only oneCCL ALLGATHER can't, and that is now worked around
-  by an all-reduce-of-padded all_gather shim so even all_gather records -- nothing needs ejecting.)
-- **[BUG B -- captured TP=2 W8A8 garbage: ROOT CAUSE + FIX, 2026-06-24] (full log: JOURNAL 2026-06-23/24,
-  scripts/106-111).** Symptom: 27B W8A8 (16 full-attn int8 + 48 BF16 GDN) at TP=2 with PIECEWISE capture emitted
-  garbage (`!!!!`); eager was fine; single-card 14B/W4A8 captured fine. It was NOT a captured-int8-numerics bug.
-  - ROOT CAUSE: vLLM's piecewise `CUDAGraphWrapper` does a pure `replay()` with NO input copy -- every captured
-    piece's inputs MUST sit at the SAME device address on replay as at capture (it even asserts this in DEBUG). The
-    XPU TP collectives are all OUT-OF-PLACE (`all_reduce` returns `input_.clone()`; all_gather/reduce_scatter return
-    fresh `torch.empty()+.contiguous()`). Listing a collective in `splitting_ops` EJECTS it to eager at a piecewise
-    boundary; its fresh output does not reproduce the capture-time address on XPU -> the next captured piece reads
-    STALE data -> garbage. Eager has no graph (no contract); single-card has no collectives.
-  - FIX: eject NOTHING. Keep all collectives CAPTURED (`splitting_ops` = attention/GDN ops only), use `IGP=false`
-    (the inductor partitioner KeyErrors on the mixed W8A8+BF16-GDN region). all_reduce/reduce_scatter record fine.
-    For MTP, the spec-verify `all_gather` (which oneCCL 2021.17 cannot graph-record) is replaced by an
-    ALL-REDUCE-OF-PADDED all_gather (`rdy_to_serve/.../patches/sitecustomize.py`, = `scripts/110_csag_shim`) so it
-    too records and stays captured. SECOND FACET: merely ejecting only all_gather left the body coherent but the
-    captured spec-VERIFY gave ~0% accept (drafts rejected, MTP became pure overhead 9.63 t/s); capturing all_gather
-    correctly (plan B) restored accept to 26% -> 26.10 t/s.
-  - NUMBERS (coherence-gated, hard prompt, temp=0): eager-no-MTP ~4.1; captured-no-MTP 18.10; eager-MTP 10.43 @36%;
-    captured-MTP-eject-all_gather 9.63 @~0%; **captured-MTP plan-B 26.10 t/s @26% accept** = 1.44x vs captured-no-MTP,
-    2.5x vs eager-MTP, 6.4x vs eager-no-MTP. The old "63 t/s/3.4x" headline was benched on degenerate garbage.
-- **Eager TP=2 27B int4 decode: C1 4.18 t/s, C2 4.02 t/s/stream** -- vs **eager TP=1 single-card 7.84 -> 0.53x**.
-  TP=2 HALVES single-stream decode (collective-latency tax). Weights shard 8.42 GiB/card (half of 16.7 single).
-- **Cross-card all-reduce microbench** (`scripts/60_allreduce_bench.sh`, xccl): **latency floor ~0.29 ms** (small
-  msgs), **bandwidth ceiling ~0.70 GB/s busbw** (>=2 MB). That's ~17-70x below a healthy PCIe link (Gen3 x16
-  ~12 GB/s, Gen5 x16 ~50 GB/s), ~850x below NVLink. **The multi-GPU bottleneck is NO GPU P2P -> host-staged
-  all-reduce + oneCCL overhead (NOT the link, which is healthy Gen3 x16 -- see CORRECTED note just below).**
-- **[CORRECTED 2026-06-21] The "Gen1 x1 link" was a MISDIAGNOSIS -- it is an Intel Arc lspci reporting artifact.**
-  The real link is **Gen3 x16** (read at the on-card switch UPSTREAM bridge `08/42:00.0`; the GPU endpoint always
-  fakes 2.5 GT/s x1 per Intel KB 000094587). The earlier "200/200 samples x1 under load" polled the artifact node;
-  the "~220 MB/s weight-load" is a SATA-SSD/loader bottleneck (models on `/dev/sdd1`), not PCIe. Reseating/moving
-  the cards to other slots gains NOTHING -- they are already at full Gen3 x16 (the 1950X is a Gen3 host). The
-  ~0.7 GB/s all-reduce is REAL but caused by host-staged collectives (no GPU P2P) + oneCCL overhead, not the PCIe
-  gen. **TP=2 stays a CAPACITY tool** (bigger models/KV), not a single-stream speed tool -- but because of no-P2P,
-  not a fixable link. (Confirm with a clean H2D bw test: expect ~10-12 GB/s, not ~0.25 GB/s.)
-- **[NOVEL] AutoRound quantization runs across BOTH XPUs.** `device_map="0,1"` -> `xpu:0`+`xpu:1`; a full 0.6B
-  quant ran in 22 s with `peak_vram {'0':0.62GB,'1':0.51GB}` (both cards active), 196/197 layers quantized.
-  No public multi-XPU AutoRound precedent existed -- this rig does it. (`scripts/59_autoround_2xpu.sh`.)
-- **[KEY] Use PP=2, NOT TP=2, for dual-card serving on this rig.** Pipeline-parallel does ONE hidden-state
-  handoff/token (vs TP's ~128 all-reduces), so it dodges the host-staged all-reduce tax. Eager 27B int4 single-stream:
-  **PP=2 6.11 t/s (0.78x single-card) vs TP=2 4.18 (0.53x)** = PP +46%. PP=2 also gives a far bigger KV pool
-  (19.44 GiB/stage vs TP's tight split). TP only wins if a single layer can't fit one card (not our case).
-  Re-evaluate TP only if GPU P2P becomes achievable (the PCIe link is already full Gen3 x16 -- nothing to fix there).
-  (`scripts/62_pp2_27b.sh`.)
-- **[BOUNDARY FIX 2026-08-25] exact Qwen3.6-35B-A3B native W8A8 TP=2 now crosses vLLM's compiled collective.**
-  Per-rank tracing proved P2P-off deadlocks inside the first `[8192,2048]` BF16 oneCCL all-reduce after both
-  ranks enter. Direct P2P completed the entire profile when the cloned input was synchronized before oneCCL.
-  The minimal repair fences only clone completion for tensors with at least 8192 rows; it does not synchronize
-  graph-capture or decode shapes. The exact control captured 9/9 PIECEWISE graphs, passed semantic and both
-  16/16 repeat canaries, and tore down with per-card plus compiled collective health at **45.3649 tok/s**. This
-  closes the compiled TP=2 boundary but is only 52.83% of Steve's 85.8691 tok/s; the remaining gap is elsewhere.
-  See `JOURNAL.md` 2026-08-25p and `docs/P2P_GPU.md` J.23.
-- **[SOURCE CLOSURE 2026-08-25] true June vLLM is a +6.98% lever, not the missing 1.77x.**
-  The closest surviving source (`e190923b`) plus the same rebuilt June native package initially failed at the
-  fused-MoE ABI: June vLLM passes persistent `scratch`, while the reconstructed June-9 Python interface omits it.
-  The recovered scratch-aware interface from kernel commit `2dd55f38` closed the seam. The source-pinned run
-  completed 81/81 profile clone fences per rank, captured 9/9 graphs, selected native dense and routed-MoE INT8,
-  passed the exact p498/o512 metric and both 16/16 canaries, and passed per-card plus compiled-collective health at
-  **48.5315 tok/s**. This is +3.1666 tok/s over the August-adapter native control but still 37.3376 tok/s short of
-  Steve. Steve's fresh-54/restored-67 MB `_xpu_C` pair differed by only ~3%, so binary size cannot explain the gap.
-  Next: measure actual graph-piece/replay and full decode-step timing; use dense 27B as the MoE-free transfer control.
-- **[TIMING AND PROVENANCE CLOSURE 2026-08-26] graph topology matches; the live gap is native/runtime execution.**
-  Built-in replay tracing observed all piecewise indices 0..40 and reported `total_piecewise_compiles=41`, exactly
-  matching Steve's 41-piece timing packet. Under the same synchronized pure-decode timing method, local rank-0
-  model-forward is **22.6748 ms** versus Steve's **5.6946 ms** (**3.9818x**); GDN is 3.9278 vs 1.5846 ms, logits
-  1.5851 vs 0.2292 ms, and local argmax 1.1495 vs 0.0705 ms. The synchronized diagnostic endpoint falls to
-  35.4699 tok/s while Steve sustained 84.3075 tok/s, so this is real execution time, not a missing graph count.
-  Provenance also changed materially: the previously rebuilt package is the June-9 minimal patch over `28e1f5e`,
-  while exact recoverable checkpoint `122b698b` (2026-06-16, +5054/-169 across 24 files) precedes Steve's accepted
-  timing and adds native output-buffer variants for per-token quantization and fused SiLU/mul/quantization.
-  The scratch-aware Python route already probes these operators; the June-9 binary lacks them and allocates then
-  copies for two quantizations across each of 40 MoE layers (80 calls/step). Steve explicitly unset fused
-  SiLU+quant, so that sibling is not attributed to the accepted result. The exact binary-only `122b698b` A/B
-  is now complete: 50.3706 tok/s versus the matched June-9 endpoint at 48.5315 tok/s (+3.79 percent), with both
-  16/16 canaries and post-teardown per-card plus compiled-collective health green. Native quant `_out` helps,
-  but it is not the missing 1.7x. The 35.4699 result is a synchronized diagnostic and is not the endpoint
-  baseline for this comparison. Next is synchronized `122b698b` timing and integrated graph-collective cost.
-  Matched synchronized timing is now also closed: model-forward improves from 22.6748 to 21.9944 ms (-3.00
-  percent), and the synchronized endpoint moves from 35.4699 to 36.4293 tok/s (+2.70 percent). GDN, logits,
-  argmax, and sampler are essentially flat. Steve remains at 5.6946 ms model-forward, leaving 16.2998 ms.
-  The next target is the integrated cost of 81 compiled TP collectives inside each graph-replayed decode step;
-  Python nested labels do not expose those replay-internal calls.
-  Dense 27B must reuse the replay/timing method and separately test
-  reusable quant/output-buffer primitives through a dense-specific adapter; MoE layerlet/sidecar code is not transferable evidence.
+CONFIG -> Exact June Qwen3.6 W8A8 stack on the pinned vLLM image, matched
+PIECEWISE and no-MTP FULL-decode arms.
 
-## What does NOT work (yet) — save yourself the time
-- **Qwen3.6-27B W8A8 TP=2 + MTP + XPU graph-capture dies under sustained load -- ROOT-CAUSED + FIXED (2026-06-25).**
-  Symptom: serves HEALTHY/coherent, runs ~16-20 min (~20k cumulative gen tokens / ~5k spec-decode steps), then a
-  TP worker hard-dies and the engine reports `shm_broadcast RuntimeError("cancelled")` -> `EngineDeadError`
-  (graceful exit 0, NO GPU wedge; reproduced with purely-local load, so not network/harness).
-  ROOT CAUSE (caught via faulthandler / `PYTHONFAULTHANDLER=1`): SIGABRT from Intel NEO Level-Zero
-  `command_stream/linear_stream.h:84` during `torch.xpu` GRAPH REPLAY of the MTP drafter (`qwen3_5_mtp.py`
-  forward, spec-decode propose path). The MTP-drafter captured graph's command buffer accumulates across
-  replays until the NEO LinearStream overflows -> abort. It is the **MTP + XPU graph-capture combination**, an
-  upstream-untested config (vLLM #25368; Intel validates XPU spec-decode only with `--enforce-eager`,
-  EAGLE/ngram not MTP) -- NOT our PUSH_AR kernel (bisect: PUSH_AR_GRAPH=0 still crashes) and NOT MTP alone
-  (MTP-off survives 40min).
-  FIX: serve with **`--enforce-eager` (GRAPH=0)** -- removes the graph capture/replay, keeps MTP (~16 t/s,
-  ~90% accept). Survived 40min/37k tokens synthetic + completed a full aider+swe eval run with zero crashes.
-  Slower than the (crashing) captured ~25-34 t/s but stable; greedy scores identical. A true capture fix needs
-  an upstream torch-xpu/vLLM patch (bound/reset the drafter graph's command stream across replays). MTP-off
-  (captured) is the alternate stable config. (TP=1 int4, and TP=2 NO-MTP w8a8, are unaffected.)
-- **Prefix caching (`--enable-prefix-caching`) on Qwen3.6 HYBRID models -> CRASHES the engine (2026-06-25).**
-  Qwen3.6 (27B dense and 35B-A3B MoE) is a hybrid mamba/linear-attention model. With APC on, the FIRST real
-  multi-turn request triggers a mamba block-state copy in vLLM, and the source-pointer scratch buffer
-  (`mamba_utils.collect_mamba_copy_meta`, `src_ptrs.np`) is signed int64 -- an XPU device pointer with bit 63
-  set overflows C long: `OverflowError: Python int too large to convert to C long` -> `EngineDeadError`
-  (graceful exit, NO GPU wedge). Short health/coherence probes pass (single block, no copy); the first long
-  request dies. Isolated: with APC OFF the identical 3x36KB multi-turn workload runs clean (HTTP 200, no
-  overflow). **Serve these hybrids with APC OFF** until a vLLM fix makes the `src_ptrs`/`dst_ptrs` buffers
-  uint64. (agentic-eval defaults `EVAL_PREFIX_CACHE=0` for this reason; JOURNAL 2026-06-25.)
-- **INT8 W8A8:** stock vLLM has no XPU kernel -> hard-crashes at load (`KeyError: PlatformEnum.XPU`).
-  **We FIXED it (2026-06-18):** wrote a native `int8_gemm_w8a8` oneDNN kernel (s8xs8->s32) + the vLLM
-  `XPUInt8ScaledMMLinearKernel` + registry entry. The W8A8 checkpoint now SERVES on the B70 and selects our
-  kernel (`Selected XPUInt8ScaledMMLinearKernel`), coherent output. First INT8 W8A8 path on Battlemage. See
-  docs/kernel/01 + contrib/vllm_int8_xpu/. (Perf vs FP8 in prefill/large-batch = TODO; FP8 still wins decode.)
-- **W4A8-INT** (`XPUW4A8IntLinearKernel`, int4 weights + per-token int8 activations, oneDNN `int4_gemm_w4a8`):
-  **[SUPERSEDED 2026-06-20 -> now in "What works"]** the "decode ~16.6 t/s, half of FP8, FP8 stays the pick"
-  conclusion below was measured EAGER. With PIECEWISE graph capture W4A8 decode is **48.18 t/s** -- it now
-  BEATS fp8 single-stream and is the fastest decode config measured (see the breakthrough bullet in the TL;DR).
-  Original eager notes kept for the record: **Tested 2026-06-18 — it's the only path that lights the INT8-XMX
-  datapath, and it serves (9.3 GB, smallest footprint, 12x concurrency). BUT single-stream decode is ~16.6 t/s,
-  half of FP8** (the int4_gemm_w4a8 decode kernel is unoptimized). Head-to-head (identical harness): **FP8 wins
-  per-stream at every matched concurrency (~1.7-1.8x)**; W4A8's only real edge is VRAM (9.3 vs 15.2 GB). FP8
-  stays the pick. (Note from literature/06: FP8 is conversion-based on Xe2; INT is native systolic — so a real
-  INT8 W8A8 kernel could beat FP8 in *prefill/large-batch*. That kernel doesn't exist upstream yet = our top
-  contribution target.) [The eager-vs-capture gap was the real story: w4a8 was the most dispatch-bound config.]
-- **Dense W8A8 TRUE int8 on v0230 (2026-06-23): WORKS but is a PERF DEAD-END; keep `:int8`.** We made a dense
-  compressed-tensors W8A8 (14B) run true-int8 on `vllm-xpu-env:v0230` -- triton_scaled_mm (tl.dot int8->int32 -> Intel
-  DPAS/XMX), int8 weights stay int8 (15.3 GiB), via a sitecustomize hook that registers the kernel for the
-  `CompressedTensorsW8A8Int8` path + wraps it as an OPAQUE torch custom op so PIECEWISE graph capture succeeds
-  (contrib/vllm_int8_xpu/v0230/dense_test). Coherent. BUT decode = **~1.7 t/s vs `:int8` oneDNN ~23.5 (~13x slower)**:
-  the act-quant is un-fused plain torch on every one of ~280 dense linears (XPU has no `_C.scaled_int8_quant`) and the
-  opaque op is capturable-but-not-fusable. **`:int8` (our oneDNN s8s8s32 + fused per-token quant) stays the W8A8 perf
-  path; v0230-int8 is a correctness/portability fallback only.** Closing the gap needs a fused XPU int8 act-quant op +
-  an inductor-fusable GEMM (Track 1).
-- **Speculative decoding -- method/format-dependent (UPDATED 2026-06-23):** ngram (prompt-lookup) on 14B W8A8 is
-  net-NEGATIVE (eager 23.33->21.51 -7.8%; PIECEWISE 27.23->25.28 -7%; ~16% accept -- low acceptance on diverse text).
-  **BUT native MTP on the qwen3_5 27B is strongly POSITIVE on PIECEWISE: W4A16 + MTP spec=4 = 55.28 t/s vs 30.84
-  MTP-off = 1.79x (+79%), accept_len 3.25, Half-KV FREE.** The warmup-spoof PIECEWISE fix (910182c) captures the
-  spec-decode decode batch (1+spec), so the verify is no longer eager-attention-bound -- this REFUTES the old
-  "net-negative even with capture / -19%" (a stale pre-fix measurement). FULL capture would lift it further but is
-  **CONFIRMED KERNEL-GATED (2026-06-22):** porting vllm-ascend #7148's dispatcher fix (scripts/88) let capture proceed
-  past the Python dispatcher, then it crashed in the BAKED kernel -- `_xpu_C.gdn_attention -> spec_query_start_loc must
-  have size [num_spec_decodes + 1]`. So FULL needs an Intel vllm_xpu_kernels fix, not a vLLM-Python fix; TRITON_ATTN
-  doesn't dodge it (GDN decode core always uses the baked op). **PIECEWISE 1.79x is the single-card ceiling on stock
-  v0230** (issue draft docs/kernel/21). TP=2 MTP is DEAD (spec-allgather not graph-capturable); MoE MTP is FLAT (+3%,
-  sparse 3B-active). **MTP is a DENSE-model lever.** Full campaign: MTP_TODO.md (M0-M5).
-  **Ctx=2048 follow-ups (2026-06-23, `vllm bench serve`, random 2048/128, card1, golden
-  `rdy_to_serve/qwen36-27b-int4`):** MTP is a C1 latency/decode lever, not a C4 throughput lever on this workload.
-  `tg` = 1000/mean TPOT; `pp` ~= input_len * concurrency / TTFT. Full CSVs:
-  `results/mtp_table_qwen36-27b-int4_ctx2048_20260623.csv` and
-  `results/mtp_spec_sweep_qwen36-27b-int4_ctx2048_20260623.csv`.
+RESULT -> PIECEWISE has 41 graph pieces, 41 fence resets, 41 host event waits,
+and 82 command-list submissions per token. FULL decode with Triton attention
+has one fence, two waits, and two submissions. It measured 61.5536 tok/s versus
+50.3706 for the exact local PIECEWISE control, a 22.20 percent gain.
 
-  | config | C | pp tok/s | TTFT | tg tok/s | agg out tok/s | accept_len |
-  |---|---:|---:|---:|---:|---:|---:|
-  | no-MTP PIECEWISE | 1 | 1605.8 | 1.275 s | 29.78 | 23.10 | - |
-  | MTP spec=4 PIECEWISE | 1 | 1453.0 | 1.410 s | **46.69** | **30.99** | 2.92 |
-  | no-MTP PIECEWISE | 4 | **2410.9** | **3.398 s** | **19.54** | **51.69** | - |
-  | MTP spec=4 PIECEWISE | 4 | 1843.5 | 4.444 s | 16.09 | 40.56 | 2.41 |
+VERDICT -> Boundary collapse is a proven B70 lever. A refreshed dense 27B stack
+must test its own no-MTP FULL arm before rejecting FULL capture.
 
-  Single-stream spec sweep, C1 only, ctx=2048:
+Evidence: docs/20260826_qwen36_graph_runtime_profile.md.
 
-  | config | KV | pp tok/s | TTFT | tg tok/s | agg out tok/s | accept_len |
-  |---|---|---:|---:|---:|---:|---:|
-  | no-MTP PIECEWISE | fp16 | **1608.2** | **1.273 s** | 30.48 | 23.53 | - |
-  | MTP spec=3 PIECEWISE | fp16 | 1499.0 | 1.366 s | 57.24 | **35.70** | 3.15 |
-  | MTP spec=4 PIECEWISE | fp16 | 1472.4 | 1.391 s | **57.64** | 35.60 | 3.53 |
-  | MTP spec=5 PIECEWISE | fp16 | 1392.4 | 1.471 s | **57.64** | 34.83 | 3.86 |
-  | MTP spec=3 PIECEWISE | fp8_e4m3 | 1483.6 | 1.380 s | 52.99 | 33.89 | 3.12 |
-  | MTP spec=4 PIECEWISE | fp8_e4m3 | 1470.3 | 1.393 s | 55.74 | 34.87 | 3.60 |
-  | MTP spec=5 PIECEWISE | fp8_e4m3 | 1456.6 | 1.406 s | 55.31 | 34.57 | 3.88 |
+## Steve transfer
 
-  Verdict: for C1 ctx=2048, spec=4 fp16 KV is the best pure `tg` row, while spec=3 fp16 KV is the best
-  user-visible aggregate row and has lower TTFT. Half-KV is capacity/context headroom here, not a speed win:
-  it loses 1.9-4.3 tok/s of `tg` at ctx=2048. Keep `DD_MTP=1` for single interactive coding-agent streams; leave it OFF for C4+ batch/fan-out at
-  ctx=2048 unless a workload-specific bench proves otherwise. The older 55.28 t/s number remains the TTFT-cancelled
-  single-stream decode probe, not a concurrent `vllm bench serve` row.
-- **Qwen3.6 (Gated-DeltaNet) FP8/8-bit:** does NOT fit a single card (28.5 GiB, no KV room) and the FP8
-  DeltaNet kernel only exists in vLLM **0.23.0** (older images: ESIMD `.weight` bug / `scaled_mm` `KeyError(XPU)`).
-  BUT int4 (AutoRound) on 0.23.0 **does run** (see above) — just slow. 8-bit Qwen3.6 needs a 2nd card.
-- **torch.compile on vLLM 0.23.0:** broke (torch 2.11 + inductor). Run `--enforce-eager` on 0.23.0
-  (its eager TTFT is already ~7x better than 0.20.2 eager anyway).
-- **Gemma 4 12B:** the `gemma4_unified` multimodal checkpoint routes through vLLM's generic Transformers
-  fallback, which mis-reshapes its mixed head dims (256/512) and crashes. Needs a native-resolving checkpoint.
+CONFIG -> Exact source checkpoint e190923b, recovered June122 native source,
+pinned process UMD 26.14, synchronized and unsynchronized controls.
 
-## Practical gotchas
-- **Unraid `docker.img` is 50 GB by default** — multi-GB vLLM images overflow it. Grow it (we went to 200 GB
-  on the NVMe cache, non-destructively) or relocate Docker storage.
-- **Keep model weights + all caches on a fast SSD via bind-mounts**, never baked into image layers.
-- **Build vLLM from source** at a known-good commit (we used `c51df4300` = 0.20.2rc1.dev2) — pre-built XPU
-  images lag, and the Intel `llm-scaler` image wraps an *older* upstream for dense models.
-- It's a **memory-bandwidth game** at batch 1: decode t/s ≈ 608 GB/s ÷ model-bytes. Smaller quant = faster
-  decode; FP8 (~1 byte/wt) ≈ 2x BF16. Compute (XMX TOPS) only matters for prefill + big batches.
+RESULT -> June122 scratch-targeted quant output measured 50.3706 tok/s versus
+48.5315 for matched June9, a 3.79 percent gain. Synchronized model-forward
+improved 3.00 percent but remained 21.9944 ms versus Steve's 5.6946 ms. Native
+grouped MoE was not the missing lever: Triton W8A8 MoE under FULL reached
+64.9843 tok/s. Source-default c10d collectives replicated at a 66.3438 tok/s
+mean versus 64.9944 for the custom route.
 
-## Hardware
-Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.0 x16 (card spec).
-`xe` kernel driver. Pass into containers with `--device /dev/dri`.
-- **[!] The "Gen1 x1" reading is an Intel Arc lspci ARTIFACT, NOT a real link (corrected 2026-06-21).** Arc/
-  Battlemage cards put an on-card PCIe switch between the slot and the GPU die; the GPU-adjacent nodes (GPU
-  endpoint `0a/44:00.0` + switch downstream `09/43:01.0`) ALWAYS falsely report 2.5 GT/s x1 by design (Intel
-  KB 000094587). Read the REAL link at the card switch's UPSTREAM bridge (`08/42:00.0`): it shows **8 GT/s x16
-  = Gen3 x16**, the platform max (1950X is a Gen3 host; card silicon is Gen5-capable, LnkCap 32 GT/s x16). Both
-  cards confirmed D0/active under live load still read x1 at the endpoint = artifact, not power state. So the
-  PCIe link is FINE; there is nothing to fix by reseating/moving slots.
-- **The real multi-GPU bottleneck is NO GPU P2P** -> TP all-reduce round-trips GPU->host RAM->GPU (host-staged
-  oneCCL/xccl, ~0.7 GB/s measured). That is a software/architecture limit (no P2P + collective overhead), NOT the
-  PCIe gen -- a clean H2D copy should show ~10-12 GB/s. Two cards sit on SEPARATE CPU root complexes (`00:03.1`
-  die0, `40:03.1` die1) of the 2-die 1950X; single NUMA node (UMA mode), but cross-die for any P2P attempt.
-- **[CORRECTED 2026-08-25] xe is not display-held and reboot is not the first reset.** All 16 connectors are
-  disconnected/disabled, `/proc/fb` is empty, the VT uses the dummy device, and `/dev/dri` has no baseline
-  holder. The old unload failed because both B70 PCI endpoints and their four xe auxiliary children remained
-  bound. Unbind-first rebind, full xe unload/reload, and endpoint FLR all passed on one boot with per-card and
-  compiled two-rank health. Use `bin/xe-reset`; reboot only if its ladder fails or unbind hangs. A same-root
-  slot move remains a controlled topology A/B, not a link-width repair or guaranteed vLLM fix.
-- **[2026-08-26 exact Qwen runtime profile]** The coherent 50.3706 tok/s
-  June-16 control crosses all 41 PIECEWISE boundaries every token: 41 fence
-  resets, 41 host event waits, and 82 queue submissions. Kineto exposes only
-  1.67-2.17 ms/rank and hides routed MoE plus the 81 compiled all-reduces
-  inside XPUGraph, so visible device time is incomplete. Pinning TP workers to
-  opposite 1950X die CPU groups measured 50.4066 tok/s (+0.07 percent), which
-  closes CPU affinity as the missing lever and does not justify a slot move.
-  Dense 27B must repeat its own driver-call, graph-piece, and collective-shape
-  census; see `docs/20260826_qwen36_graph_runtime_profile.md`.
-- **[2026-08-26 no-MTP FULL decode win]** On the exact June source/native
-  Qwen3.6 control, `FULL_DECODE_ONLY` plus `TRITON_ATTN` captured six full
-  decode graphs and measured **61.5536 tok/s versus 50.3706 PIECEWISE
-  (+22.20%)**. Semantic output, JSON 16/16, color 16/16, and both post-health
-  layers passed. This is a local-speed arm, not Steve's accepted PIECEWISE
-  identity, and it still leaves 24.3156 tok/s to his 85.8691. The old blanket
-  "FULL is blocked on B70" claim is retired for no-MTP exact-June serving;
-  stock/MTP GDN and SYCL-scratch failures remain separate scoped blockers.
-  Dense 27B should test its own no-MTP full-decode arm.
-- **[2026-08-26 FULL replay mechanism]** Bounded profiling drops the exact
-  per-token driver signature from PIECEWISE 41 fences/41 waits/82 submissions
-  to FULL decode 1 fence/2 waits/2 submissions. About 9 ms of host preparation
-  overlaps the preceding graph, followed by a 2.73-3.30 ms exposed graph-tail
-  wait and about 2 ms post-submit host work. Routed MoE and 81 all-reduces are
-  now inside the opaque single graph. The next speed target is in-graph
-  collective/MoE execution, not further graph-piece reduction.
-- **[2026-08-26 MoE backend attribution]** The June e190 CLI can request
-  `--moe-backend triton`, but its `TritonExperts` support gate admits INT8 only
-  on CUDA. A labeled intervention relaxed only the exact Quark W8A8 INT8 pair.
-  With the same `FULL_DECODE_ONLY` + `TRITON_ATTN` graph, Triton MoE measured
-  **64.9843 tok/s versus 61.5536 native (+5.57%)**, saving 0.4395 s of the
-  p498/o512 server decode. Semantic output, JSON 16/16, color 16/16, graceful
-  teardown, both cards, and compiled collective health passed. This reaches
-  75.68% of Steve and leaves 20.8848 tok/s. The recovered June122 native grouped
-  MoE path is therefore not the missing speed mechanism. Dense 27B should copy
-  the FULL graph/runtime method, not this MoE-only intervention.
-- **[2026-08-26 push-AR loaded-context boundary]** The old asymmetric IPC
-  import is repaired by constructing push-AR during exact June TP communicator
-  initialization: rank 0 and rank 1 both report scratch/event-pool exchange and
-  `PREINIT ... ready=1` before model allocation. A direct loaded-context oracle
-  then reaches `capturing=True` on both ranks but stalls inside the first native
-  push graph submission. Removing the extra graph clone does not change it.
-  Arithmetic, IPC exchange, rank skew, and standalone XPUGraph replay are
-  cleared; June vLLM/XCCL loaded graph-context compatibility is the remaining
-  blocker. Do not run a full-model push intervention until the oracle completes
-  capture and replay. Dense 27B must use this loaded-context gate too.
-- **[2026-08-26 exact Steve attention identity]** The preserved 85.8691 TP2
-  command passes no attention option. June `e190923b` therefore selects its XPU
-  default `FLASH_ATTN`; it explicitly enables async scheduling and prefill-only
-  GDN fallback. Local 61.5536/64.9843 FULL arms force `TRITON_ATTN`, so they are
-  graph-speed interventions rather than exact command reproductions.
-- **[2026-08-26 default Flash FULL boundary]** A one-factor default-attention
-  `FULL_DECODE_ONLY` run loaded and compiled the exact model, crossed all 81
-  profile collectives on both ranks, then failed during the first of six full
-  decode captures. `_vllm_fa2_C.varlen_fwd` requires SYCL work-group scratch
-  memory, which the current SYCL Graph extension cannot capture. Both per-card
-  and compiled TP=2 post-health probes passed. Steve's default Flash identity
-  is therefore compatible with PIECEWISE, not with the local FULL speed arm;
-  Triton attention is a required current-runtime intervention for FULL.
-- **[2026-08-26 source-default collective control]** Setting
-  `VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES`,
-  `VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP`, graph clone, and outer clone to zero
-  still crossed exact June TP=2 PIECEWISE capture. Each compiled rank graph had
-  243 `_c10d_functional` all-reduce references and zero `vllm.all_reduce`
-  references. The endpoint measured 51.091606 tok/s, 315.694 ms TTFT, and
-  10.020679 s server decode with semantic output, JSON 16/16, color 16/16, and
-  both post-health layers green. This is +1.43 percent versus the nearest
-  50.370643 custom control, which is only a single-run observation. The public
-  parent summary's null env values do not resolve Steve's server route because
-  the recovered child launcher exports the custom flags and was reconstructed
-  after the June result. Preserve both labeled provenance controls.
-- **[2026-08-26 FULL source-default collective result]** Under the matched
-  fastest boundary (`FULL_DECODE_ONLY`, Triton attention, Triton W8A8 MoE),
-  source-default c10d measured 66.255519 tok/s versus 64.984330 for custom
-  `vllm.all_reduce`: +1.271189 tok/s or +1.96 percent. TTFT was 360.426 ms and
-  server decode was 7.726791 s. Both compiled rank graphs contained 243 c10d
-  all-reduce references and zero custom-op references; semantic output, both
-  16/16 canaries, graceful teardown, and both health layers passed. This is the
-  campaign best and reaches 77.16 percent of Steve's 85.869114 tok/s.
-  Fresh-cache C-S-C-S replication measured custom 64.984330/65.004555 and
-  source-default 66.255519/66.432037 tok/s. Route means are 64.994443 versus
-  66.343778, a replicated +1.349335 tok/s or +2.08 percent c10d win. Every arm
-  passed exact route, coherence, teardown, and health gates. The final
-  66.432037 sample is the new best and reaches 77.36 percent of Steve.
-- **[2026-08-26 runtime identity correction]** The pinned exact-control image
-  already contains Intel Compute Runtime 26.14.37833.4 and Level Zero loader
-  1.28.2, matching Steve's user-mode generation. Its
-  `libze_intel_gpu.so.1.15.37833` SHA256 is `98605c30...`; the image declares no
-  host-library volume and the launcher mounts no host UMD path. The exact vLLM
-  process therefore uses container UMD 26.14 over fixed kernel 7.1. Host UMD
-  26.22 is not the missing process-runtime match; do not downgrade host
-  packages or kernel to chase it.
+RESULT -> Steve's accepted 85.8691 arm used default FlashAttention with
+PIECEWISE capture. Default FlashAttention cannot enter FULL on this runtime
+because its SYCL work-group scratch is unavailable to the SYCL Graph
+extension. The exact pinned image already contains Steve-generation UMD 26.14;
+host UMD 26.22 is not the missing process-layer match.
 
-*Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
-to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);
-real 2-card AutoRound of a >32GB source (now proven viable); int8 MoE kernel for 35B-A3B (docs/kernel/18).*
+VERDICT -> Preserve Steve's trees and exact controls. After the stack refresh,
+localize integrated collective cost and other in-graph operators. Do not copy
+MoE-only layerlets into dense 27B work.
 
-================================================================================
-INT8 FAST-PATH QUANT CAMPAIGN -- BOTTOM LINE (2026-06-21/22)
-================================================================================
-Goal: quantize the qwen3.6 family to W8A8 (int8 wt + int8 act) and W4A8 (int4 wt + int8 act) and measure how far
-the B70's int8-XMX systolic path carries vs the int4-weight/fp16-act (W4A16) baselines. Full log: JOURNAL.md;
-queue+results: QUANTS_TODO.md sec 6; method bible: docs/kernel/15; microbench: docs/kernel/19.
+Evidence: docs/20260825_steve_qwen36_w8a8_forensics.md,
+docs/20260825_steve_stack_reproduction_program.md, and
+docs/20260825_steve_stack_component_ledger.md.
 
-THE HEADLINE (answers "where can int8-act beat w4a16"):
-- **W4A8 (int4 wt + int8 act) is the all-rounder and BEATS W4A16.** 14B ctx-2048 ladder (our int8 kernel, captured):
-    scheme           dec t/s (c1/c8)   TTFT(c1)   c8 aggregate
-    W4A16-gptq       52.5 / 22.2       571 ms     132.9 t/s
-    W4A8-gptq        49.3 / 25.5       405 ms     161.7 t/s   <- -29% TTFT, +22% c8 throughput vs W4A16
-    W8A8 (AR/gptq)   25.1 / 18.0       347 ms     125.0 t/s
-  W4A8 ties W4A16 decode (same int4-weight BW) AND wins prefill (int8-XMX) -> lower TTFT + higher concurrent tput.
-- **W8A8 is a prefill-latency / accuracy play, NOT a decode play.** Its decode is ~half the int4 schemes because
-  decode is weight-bandwidth-bound and int8 weights are 2x the bytes of int4. Best single-stream TTFT though.
-- **Decode ordering (bytes-bound):  W4A16 ~= W4A8  >  W8A8  >  bf16.   Prefill (compute-bound): int8-XMX ~1.6-2x bf16.**
+## Push all-reduce
 
-MICROBENCH (docs/kernel/19, real int8_gemm_w8a8 op, 341 rows): int8-vs-bf16 GEMM median 1.68x (peak 250.9 INT8
-TFLOP/s, grows with M); GEMV ~2x on large-N dense shapes (up to 433 GB/s) but only ~1.1x on small-N (35B MoE
-experts, KV-proj) which are overhead-bound -> reinforces W4A16-int4 for the 35B MoE decode.
+CONFIG -> TP push communicator initialized before model allocation on the exact
+June runtime.
 
-MTP RECEPTIVITY (docs/literature/09): with a BF16 draft head, body W8A8 vs W4A16 cause only SECOND-ORDER spec-
-decode acceptance differences (arXiv:2505.22179). So W8A8 is NOT a meaningful MTP unlock over W4A16 on our stack;
-our -19% MTP result is a graph-capture problem, not an acceptance problem. Ordering: BF16 >= W8A8 >= W4A16 >= W4A8.
+RESULT -> Both ranks imported scratch and IPC events, entered graph capture,
+then stalled at the first native push graph submission.
 
-CHECKPOINTS PRODUCED: 14B W8A8-autoround; 27B W8A8-sqgptq + W4A8-sqgptq(+prepacked); Qwable W4A8 (in progress).
-(W8A8-on-VLM uses GPTQ-selective-SQ: AutoRound's data-driven calib auto-routes VLMs to an MLLM path that needs an
-image processor -- breaks for text-only. Same int8 kernel/perf as AutoRound per the 14B.)
+VERDICT -> Preinit fixes IPC import, not loaded graph submission. Do not launch
+a full model push arm until the loaded-context oracle captures and replays.
 
-KNOWN SERVE LIMITS (B70, current vLLM-XPU build): single-card 27B int8 serve is fragile -- W8A8 27B (35GB) exceeds
-one card; W4A8 27B serve hit a chain of 5 fixable-but-stacked bugs (fp8-KV reject, 4304 vision-fc2 odd-dim ->
-graft-ignore fix, 28GB unpacked-int8 load transient -> prepack fix, prepack merged-column shape mismatch). 27B int8
-perf inferred from the 14B ladder + the existing 27B-W4A8-q-prepacked (20.9 t/s captured). 35B int8 MoE: produce-only
-(no XPU int8 fused-expert kernel; docs/kernel/18).
+## Ornith-1.5 W8A8
 
-TOP NEXT LEVERS: (1) col-reorder + dp4a int8 GEMV (docs/08/19) to lift the small-N decode GEMVs toward BW
-(W8A8 decode ~26->35-40 t/s); (2) align prepack tensor layout w/ vLLM merged-column loader to unblock 27B W4A8 serve;
-(3) int8 MoE fused-expert kernel for the 35B (docs/kernel/18 Track A) -- prefill/throughput win only.
+CONFIG -> Local per-output-channel symmetric INT8 RTN, retained Shisa trained
+MTP sidecar, sglang TP=2 qualification.
 
-================================================================================
-INT8 CAMPAIGN -- UPDATE 2 (2026-06-22): serving cracked, TP=2, P2P verdict, n-gram
-================================================================================
-Extends the bottom-line above. The "serve limits" caveat is now largely RESOLVED -- the 27B int8 models SERVE.
+RESULT -> The retained artifact contains INT8 routed experts and eligible text
+linears while vision, routers, GDN, lm_head, and the trained MTP sidecar remain
+BF16. The first profile was launch-bound and established a current integration
+baseline, not a final kernel endpoint.
 
-SERVED LADDERS (27B, ctx2048, our int8 kernel) -- the real numbers, not inferred:
-  scheme/TP            c1 dec   c1 TTFT   c8 dec   c8 agg
-  W4A8 TP=1 (1 card)   20.7     876ms     12.2     67.8     <- best for a fit-one-card model
-  W4A8 TP=2 (graph)    22.1     2858ms    6.3      34.3     <- +6.5% c1 dec, worse TTFT/conc (allreduce tax)
-  W8A8 TP=2 (graph)    17.5     2728ms    6.1      34.0     <- 35GB, TP=2-only; now servable
-  + n-gram spec (c1)   37.8 t/s decode (~1.8x the 20.7, workload-dependent; concurrency path WIP)
-The full 27B-W4A8 serve took fixing 6 stacked XPU-serve bugs (JOURNAL); the keystone was ignore-list 339->4-regex
-(explicit linear_attn names missed the DeltaNet FUSED projections -> packed-int4-vs-bf16 shape assert).
+VERDICT -> Ornith W8A8 remains a headline target on refreshed sglang. Rebuild
+backend/kernel binaries before requalification.
 
-TP=2 / multi-card (docs/P2P_GPU.md):
-- [unlock] **CCL_ENABLE_SYCL_KERNELS=1** makes the oneCCL allreduce GRAPH-CAPTURABLE -> TP=2 + PIECEWISE graph works
-  with NO vLLM source patch (Seguin needed a code patch). This is what made the 35GB W8A8 servable. Novel B70 result.
-- TP=2 LOSES for fit-one-card models on our Gen3 cross-die box (allreduce tax: 3.3x TTFT, 2x worse concurrency, vs a
-  +6.5% c1-decode edge). TP=2's job is fitting >32GB models, not speed.
-- [P2P verdict] B70<->B70 P2P is UNAVAILABLE on kernel 6.18: a raw 12-variation Level-Zero ctypes probe
-  (zeDeviceCanAccessPeer) returns False for EVERY env (debug keys, FLAT/COMPOSITE hierarchy, IPC drmfd/pidfd, ...);
-  vLLM P2PACCESS=1 fails worker-init. NO userspace spoof. Gated on a host reboot: iommu=off pre-test, then kernel 7.0+
-  (drm/xe P2P patch). Plan: P2P_GPU sec I. Host-staged (P2P off) is the only working TP=2 path today.
+Evidence: docs/20260824_ornith15_w8a8_profile.md.
 
-OPTIMIZATION LEVERS proven (no reboot):
-- n-gram speculative decode: TESTED, NOT a general win (logged negative). c1=37.8 t/s at OUT=128/k=3 was a short-output
-  artifact; at OUT=256/k=2 it is 17.9 < no-spec 20.7, and c>=2 fails (spec+concurrency broken on XPU). Niche-only
-  (highly-repetitive output). See JOURNAL 2026-06-22 correction.
-- (orthogonal, not yet done) Seguin's clone-safe + oproj-delay allreduce fusion patches to cut the host-staged
-  allreduce tax further.
+## Model and artifact policy
 
-35B int8 MoE (Q6/Q7): [SOLVED 2026-06-22] **Quark W8A8 INT8 35B-A3B SERVES + GENERATES on 2x B70 TP=2.** Not on the
-llm-scaler 0.14.1 image (no XPU MoE op suite -- `vllm._moe_C` unbuilt), but on **`vllm-xpu-env:v0230` (vLLM 0.23.0)**,
-which already ships `QuarkW8A8Int8MoEMethod` + the dynamic-per-token int8 linear dispatch AND routes the 256 int8 experts
-through the **Triton `fused_moe_kernel`** on XPU (same path as our int4 MoE). Only patch: one bind-mounted `quark.py`
-rerouting the int8 LINEAR layers to a weight-only int8->bf16 dequant GEMM (XPU has no int8 scaled-mm kernel; experts stay
-true int8). `scripts/76_quark35b_v0230.sh` (TP=2, #41663 env, enforce-eager). Verified: load 17.54 GiB/card, KV 10.2 GiB,
-conc 89x@8192, backend=xccl, gen "...Paris, a city renowned for its rich history...". **EAGER perf** (random 2048/128
-sweep): c1 agg 4.46 t/s (per-stream 4.80, TTFT 2233 ms), c2 agg 8.16 (per-stream 4.46), c4 agg 14.08 (per-stream 4.17,
-TTFT 5878 ms) -- aggregate scales ~3.15x at c4, per-stream holds ~4.2-4.8.
-**GRAPH CAPTURE perf** [2026-06-22] (PIECEWISE, SYCLKERNELS=1, CAPSIZES=1,2,4,8; rdy_to_serve serve.sh GRAPH=1):
-c1 = **41.02 t/s per-stream decode** (TPOT 208->24.4 ms, e2e out 27.85 t/s, TTFT 2233->1499 ms) = **8.5x the eager
-decode** -- same class of win as the int4 MoE's +617%. BUT c>=2 currently BREAKS: a new prefill batch shape at higher
-concurrency triggers a mid-serve torch.compile and the engine hangs on shm_broadcast (c2/c4 rows timed out to 0/NaN).
-The one-time captured-startup compile is ~6 min cold (267 s decode + 105 s prefill range), fast on a warm
-/vllm_cache/torch_compile_cache. **[2026-06-22] FULL_DECODE_ONLY is BLOCKED on stock v0230**: it uses the SYCL Graph
-extension for the decode capture and dies at KV-cache init with `RuntimeError: The sycl_ext_oneapi_work_group_scratch_memory
-feature is not yet available for use with the SYCL Graph extension` (confirms SERVING.md "FULL blocked by SYCL-Graph
-scratch"). The community 102 t/s run used FULL_DECODE_ONLY via a PATCHED/custom image -> that is the route (build our own
-image). **[FIXED 2026-06-22 -- warmup spoof] the PIECEWISE c>1 break was just the cold one-time torch.compile per batch
-shape that the bench did not wait for** (the server finishes the compile even after the client times out). A warmup
-sweep before the measured one (serve.sh WARMUP=1, default with GRAPH=1) warms /vllm_cache/torch_compile_cache -> the
-measured sweep works at ALL concurrencies on STOCK v0230, no patched image: PIECEWISE+warmup agg/per-stream-decode
-t/s = c1 20.04/25.85, c2 33.02/21.27, c4 45.73/17.46 -> **3.2-4.5x aggregate, ~4-5x decode vs eager**, ~46 agg @ c4
-(single-stream decode varies ~25-41 run-to-run). So FULL_DECODE_ONLY (patched image) is NOT needed for usable captured
-concurrency -- PIECEWISE+warmup suffices.
-**[2026-06-22] TRUE int8 linear kernel BUILT + works (task c).** `contrib/llm_scaler_quark_int8_moe/v0230/quark.py`
-registers `XPUInt8TritonScaledMMLinearKernel` into `_POSSIBLE_INT8_KERNELS[XPU]` (subclass of TritonInt8: cutlass
-weight-transpose + `triton_scaled_mm` whose `tl.dot` int8->int32 lowers to Intel **DPAS/XMX int8**); activations are
-quantized per-token in plain torch (XPU lacks `_C.scaled_int8_quant`). `B70_INT8_LINEAR=triton` (default) -> stock
-QuarkW8A8Int8 picks it ("Selected XPUInt8TritonScaledMMLinearKernel for QuarkW8A8Int8"); `=dequant` falls back.
-Result: serves + **generates coherently** (true W8A8 on the linear layers, experts already int8), and **load drops
-17.54 -> 16.88 GiB/card** (int8 weights stay int8, no bf16 blow-up). BUT EAGER perf is ~25% SLOWER than dequant
-(c1 3.36 vs 4.46 out t/s): the per-forward torch act-quant overhead on the MINORITY linear layers outweighs the int8
-GEMM win, while dequant's pre-dequantized bf16 F.linear is cheap. Captured int8-triton (act-quant fuses into the graph)
-measured: captured int8-triton DECODE c1 = 6.37 t/s (TPOT 157 ms) -- capture does NOT amortize the per-forward act-quant,
-so it stays ~eager and LOSES badly to dequant+capture (25.85). PREFILL (8192-in, eager, c1): int8-triton TTFT 9627 ms
-vs dequant 9626 ms -- **IDENTICAL** (~851 prefill tok/s both). **VERDICT: c = correctness + memory win (16.88 vs 17.54
-GiB/card), NOT a speed win.** Why no pp gain despite the int8 XMX/DPAS fastpath being a compute lever: the 256 MoE
-experts (the bulk of prefill compute) ALREADY run int8 via the Triton fused_moe_kernel in BOTH configs; c only swaps the
-MINORITY linear layers (linear_attn.*, shared_expert), so it can't move total prefill, and on decode the per-token
-act-quant overhead makes it slower. **Recommendation: keep the dequant linear path as the default** (simpler, faster
-decode, more accurate W8A16); B70_INT8_LINEAR=triton stays available for the memory win / true-W8A8 faithfulness. Open:
-verify whether triton_scaled_mm tl.dot actually emits DPAS (the identical pp suggests the linear fraction is just too
-small to tell); a real accuracy eval; bake an image if true-W8A8 is wanted standing.
-**[2026-06-22] Tuned MoE config = IMPRACTICAL via benchmark_moe.py on XPU.** Two blockers: (1) `--tune` does
-`ray.init()` -> `available_resources()["GPU"]` KeyError on XPU (bypassed with a sitecustomize `ray.init(num_gpus=1)`);
-(2) the benchmark worker is CUDA-centric -- `device="cuda"` + CUDA-graph timing (`torch.cuda.CUDAGraph()`,
-`torch.cuda.graph`) -> `AssertionError: Torch not compiled with CUDA enabled`. And it estimated ~1.5 h PER batch
-size (~6 h for 1,2,4,8). Not worth it for an fp16-PROXY config (`--dtype auto` -> the no-dtype filename int8 reads).
-Future option (TODO **RESEARCH_TODO.md Track 9**): patch device->xpu + replace the CUDA-graph timing with a
-synchronize loop (Ray bypass already proven via patches/sitecustomize.py), or hand-write a config.
-**Open (the real lever):** true-int8 linear kernel that hits the Intel XMX/DPAS int8 fastpath (drop the dequant;
-Full chain: kernel/20 sec 9, SERVING.md (WORKING recipe), contrib/llm_scaler_quark_int8_moe, rdy_to_serve/.
-(Supersedes the earlier "deferred / Steve serves at 99 on TP4" note.)
+RESULT -> Live weights are limited to eight manifest entries across Qwen3.8,
+NVIDIA Qwen3.6 NVFP4, and Ornith-1.5. Old ABI-specific builds and Docker images
+are quarantined.
 
-MTP: ~~not viable on B70~~ **VIABLE + POSITIVE as of 2026-06-22 (this note STALE)** -- the earlier "not viable / Seguin
-spec-decode VERIFIER bug" was a stack gap on the old image. On `vllm-xpu-env:v0230` (vLLM 0.23.0, #43565 native) MTP on
-the qwen3_5 27B is +79% (1.79x, PIECEWISE spec=4); see the "Speculative decoding" bullet above + MTP_TODO.md M0-M5. The
-remaining bug (the spec-op can't run in a FULL captured graph) only blocks the FULL-capture upside, not PIECEWISE MTP.
-
-
-## Cookbook public-image C1 baselines (2026-08-10)
-
-Public `vllm/vllm-openai-xpu` 0.26.1rc1 + GPTQ-INT4 MTP-preserved + BF16 draft patches
-(SergiioB cookbook port). Client post-first, n=3, 1x B70. Full writeup:
-`docs/COOKBOOK_CAMPAIGN.md`.
-
-| Model | Mode | p512 t/s | p2048 t/s | prefill proxy |
-|-------|------|---------:|----------:|--------------:|
-| 27B dense GPTQ | no-spec | 27.1 | 21.6 | ~1.87k |
-| 27B dense GPTQ | MTP4 | **52.1** | **43.7** | ~1.66k |
-| 35B MoE GPTQ | no-spec | 69.3 | 51.7 | ~6.8–7.6k |
-| 35B MoE GPTQ | MTP2 | **94.5** | **85.7** | ~5.7–7.6k |
-| 35B MoE GPTQ | MTP4 | 88.7 | 85.6 | ~5.5–7.5k |
-
-**M5 correction:** MoE MTP is NOT flat when the MTP draft is BF16-preserved (GPTQ
-path). Prior +3% was AutoRound with quantized MTP experts. Ceiling reference only
--- does not replace W8A8/NVFP4 daily driver.
+VERDICT -> Do not restore an old binary into updated PyTorch/backend ABIs.
+Rebuild from kernels/ and retained backend source, then requalify.

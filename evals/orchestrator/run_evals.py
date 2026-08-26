@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Quant eval orchestrator — single control point for one (model, quant) run.
+"""Quant eval orchestrator -- single control point for one (model, quant) run.
 
 Brings the tiers together with consistent provenance + output. The GPU box just serves vLLM
 (OpenAI API); this runs on the dev box and hits it over the LAN.
@@ -78,7 +78,7 @@ def main() -> int:
         print(f"FATAL: endpoint not reachable: {ep['error']}", file=sys.stderr)
         return 2
     if args.model not in ep["models"]:
-        print(f"WARNING: '{args.model}' not in served models {ep['models']} — check --model / served-name")
+        print(f"WARNING: '{args.model}' not in served models {ep['models']} -- check --model / served-name")
 
     ctx.write_config()
     print(f"== run {ctx.quant} -> {ctx.out_dir}")

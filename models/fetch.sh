@@ -3,11 +3,11 @@
 #
 #   bash models/fetch.sh            # download every source:hf entry into files/<id>
 #   bash models/fetch.sh --list     # just print what would be fetched/skipped
-#   ONLY=qwen3.6-27b/bf16 bash models/fetch.sh   # one model
+#   ONLY=qwen3.6-27b/nvfp4-modelopt bash models/fetch.sh   # one model
 #
 # source:hf  -> huggingface-cli download <repo> --local-dir files/<id>
-# source:custom -> quantized on the old box; NOT downloadable. Printed as a SKIP with the
-#                  derived_from base so you know what to rebuild (see manifest TODO).
+# source:custom -> quantized on this box; NOT downloadable. Printed as a SKIP with the
+#                  derived_from base so the missing artifact is explicit.
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFEST="$HERE/manifest.yaml"
@@ -64,7 +64,7 @@ for row in "${ROWS[@]}"; do
       huggingface-cli "${download_args[@]}" || { echo "FAILED: $id"; exit 1; }
     fi
   else
-    echo "-- $id  SKIP (source:custom, quantized-on-device; rebuild from ${derived:-?} -- see manifest TODO)"
+    echo "-- $id  SKIP (source:custom, quantized-on-device; rebuild from ${derived:-?})"
   fi
 done
-echo "done. custom quants (w4a16/w4a8) still need: bash models/graft_w4_complete.sh"
+echo "done. source:custom entries must be preserved or rebuilt separately."

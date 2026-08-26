@@ -1,2 +1,0 @@
-model=qwen36-27b-w8a8-gptq-mtp-push-abba conc=4 out=8 reps=5 (unique prompt/call = cold prefill)
-IN~2048 (real_ptoks=2255) c4: TTFT avg=3167ms best=3086ms | PP avg=716 best=731 tok/s

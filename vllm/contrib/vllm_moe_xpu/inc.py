@@ -678,14 +678,14 @@ class INCXPULinearMethod(INCXPULinearBase):
 
         # oneDNN int4 kernel requires strides[0]==1 ("NT format"), but GPTQ
         # checkpoint is [K_packed, N] contiguous with strides (N, 1).
-        # Two transposes are needed — neither alone can achieve this:
-        #   1. .t().contiguous() → [N, K_packed] contiguous in memory
-        #   2. .t()              → [K_packed, N] view with strides (1, K_packed)
+        # Two transposes are needed -- neither alone can achieve this:
+        #   1. .t().contiguous() -> [N, K_packed] contiguous in memory
+        #   2. .t()              -> [K_packed, N] view with strides (1, K_packed)
         # The result has the same logical shape but strides[0]==1 as required.
         qweight_ct = layer.qweight.data.t().contiguous()
         layer.qweight = Parameter(qweight_ct.t(), requires_grad=False)
 
-        # Scales: [num_groups, out] — no change needed
+        # Scales: [num_groups, out] -- no change needed
         layer.scales = Parameter(layer.scales.data, requires_grad=False)
 
         # Symmetric: GPTQ v1 stores qzeros=7, effective zp = 7+1 = 8
@@ -702,7 +702,7 @@ class INCXPULinearMethod(INCXPULinearBase):
         bias: torch.Tensor | None = None,
     ) -> torch.Tensor:
         # qweight is already in NT layout [K_packed, N] (strides (1, K_packed))
-        # from process_weights_after_loading — pass directly to kernel.
+        # from process_weights_after_loading -- pass directly to kernel.
         out_shape = x.shape[:-1] + (layer.qweight.shape[1],)
         reshaped_x = x.reshape(-1, x.shape[-1])
         out = torch.ops._xpu_C.int4_gemm_w4a16(

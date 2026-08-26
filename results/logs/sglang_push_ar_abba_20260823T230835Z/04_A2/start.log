@@ -1,9 +1,0 @@
-[00:21:28] pre-flight xpu-health
-  card 1: OK
-xpu-health: HEALTHY (cards 0 1)
-[00:21:56] serve W8A8 fused+MTP (steps=10) TP=2 -> qwen36-27b-w8a8-gptq-mtp-push-abba on :31003 (ctx=8192 radix=0 push_ar=1 tool=1 think=4096 metrics=1 img=sglang-xpu:mtp)
-[00:22:03] waiting for /health (load + spec JIT ~3-6min)...
-[00:25:15] /health 200 (~105s)
-COHERENCE OK: "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Question:** Why is the sky blue?\n   - **Constraint:** Two sentences.\n\n2.  **Identify Key Scientif"
-[00:26:23] push-AR engagement hits=1
-[00:26:23] healthy + coherent; serving qwen36-27b-w8a8-gptq-mtp-push-abba on :31003

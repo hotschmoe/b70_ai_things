@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Qwen3.8-27B NVFP4. Default is RadixArk ModelOpt MIXED (SGLang cookbook).
-# Unsloth CT-mixed is MODEL_REL=qwen3.8-27b/nvfp4-unsloth.
 # Thin wrapper over vllm/nvfp4/serve_nvfp4_27b.sh via MODEL_REL.
 #
 #   TP=2 ./bin/gpu-run bash serve.sh start     # RadixArk TP=2 GRAPH+MTP3 @262144
@@ -8,8 +7,6 @@
 #
 # Inferact uniform W4A4 was deleted 2026-08-17. Its gated numbers stay in
 # JOURNAL (MTP3 code 35.0 / HE+ 0.939/0.915, not a DD).
-# Unsloth one-card research: call serve_nvfp4_27b.sh DIRECTLY with MTPTOK=
-#   (this wrapper's TP=1 MTPTOK:-5 treats empty as 5).
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/../../.." && pwd)"

@@ -60,7 +60,7 @@ Runtime artifacts:
 
 ```text
 results/logs/ornith15_w8a8_profile_20260824T231106Z/
-/mnt/vm_8tb/b70/sgl_cache/ornith15_w8a8_profile_20260824T231106Z/
+../archive/research-evidence-20260823-26/runtime/sgl_cache/ornith15_w8a8_profile_20260824T231106Z/
 ```
 
 Both cards passed health probes before and after the run. The endpoint was

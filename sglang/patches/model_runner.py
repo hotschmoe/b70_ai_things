@@ -736,7 +736,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
         # determine the number of layers.
         # Some EAGLE3 drafts (e.g. nvidia/Kimi-K2.5-Thinking-Eagle3) carry the full DeepSeek-V3
         # config schema and explicitly set `num_nextn_predict_layers: 0`. Treat that the same as
-        # the field being absent — otherwise the draft worker takes the MTP branch below with
+        # the field being absent -- otherwise the draft worker takes the MTP branch below with
         # model_num_layers=0, sizing the draft KV pool to zero and producing an IndexError on
         # the first forward (`set_mla_kv_buffer` -> `self.kv_buffer[layer_id - self.start_layer]`).
         _nnpl = self.model_config.num_nextn_predict_layers
@@ -905,7 +905,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
 
         # The eager (no-cuda-graph) phase runner, built AFTER the attention
         # backend so its __init__ can warm up kernels (run-once) and allocate the
-        # fixed-max static buffer — both before the cuda-graph runners, so that
+        # fixed-max static buffer -- both before the cuda-graph runners, so that
         # buffer is canonical in the shared pool and the cg runners coalesce onto
         # it. Always built: it serves both the fully-disabled case (decode/prefill
         # runners point at it) and the eager fallback when a cg runner can't run a
@@ -932,7 +932,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
             self.decode_cuda_graph_runner = self.eager_runner
 
         # Register forward hooks AFTER cuda-graph capture so their tensor ops are
-        # not traced into any captured graph — capture stays hook-free and hooks
+        # not traced into any captured graph -- capture stays hook-free and hooks
         # fire only on the eager forward path (capture replay never runs Python
         # hooks anyway).
         if self.server_args.forward_hooks:
@@ -2823,7 +2823,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
 
         Runs the DP/MLP-sync padding, the attn-tp num_token_non_padded
         normalization, and the hisparse-coordinator refresh that the eager
-        forward path needs — the cuda-graph path does the equivalent inside the
+        forward path needs -- the cuda-graph path does the equivalent inside the
         runner's capture/replay, so this is skipped there.
         """
         # For MLP sync
@@ -2837,7 +2837,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
         # flavors already feed a zigzag-split rank-local layout whose token count
         # should not be further divided by attn_tp_size. MHA-arch prefill CP
         # (Qwen3/Qwen2 MoE) keeps the attn_tp-replicated layout and wants the
-        # adjustment to run — see docs/design/prefill-cp-mla.md §Phase 5.
+        # adjustment to run -- see docs/design/prefill-cp-mla.md section Phase 5.
         if (
             forward_batch.num_token_non_padded is not None
             and forward_batch.global_num_tokens_gpu is not None
@@ -2849,7 +2849,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
                 server_args=self.server_args,
             )
 
-        # Hisparse coordinator — backends now read it from self.model_runner.
+        # Hisparse coordinator -- backends now read it from self.model_runner.
         if self.hisparse_coordinator is not None:
             self.hisparse_coordinator.num_real_reqs.fill_(forward_batch.batch_size)
 
@@ -3048,7 +3048,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
             # DP / MLP-sync padding + attn-tp normalization. Only the decode
             # cuda-graph path above pre-pads its static buffers and returns
             # early; split prefill, the prefill cuda graph, and the eager
-            # forward all run the live batch and need this first — it sets
+            # forward all run the live batch and need this first -- it sets
             # global_dp_buffer_len / padded token counts that graph eligibility
             # and the collectives depend on.
             self._prepare_eager_forward_batch(forward_batch)
@@ -3074,7 +3074,7 @@ class ModelRunner(ModelRunnerKVCacheMixin):
                 )
                 # Prefill cuda graph (piecewise).
                 kwargs = self._extend_forward_kwargs(forward_batch, pp_proxy_tensors)
-                # TODO: device_timer.wrap is too broad here — it also includes
+                # TODO: device_timer.wrap is too broad here -- it also includes
                 # load_batch time. Move timing into the prefill cuda graph runner
                 # to capture only the model.forward part.
                 ctx = (

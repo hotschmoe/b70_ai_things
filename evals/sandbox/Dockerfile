@@ -1,6 +1,6 @@
 # Tier-1 code-execution sandbox (EvalPlus grader ONLY).
 #
-# The dangerous step of Tier 1 — EXECUTING model-generated code to grade pass@1 — runs in
+# The dangerous step of Tier 1 -- EXECUTING model-generated code to grade pass@1 -- runs in
 # THIS container, never on the dev box. The orchestrator invokes it with:
 #   --network none            (untrusted code gets no network)
 #   --user <uid>:<gid>        (non-root; output files owned by you, not root)

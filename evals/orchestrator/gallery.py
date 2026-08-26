@@ -43,14 +43,14 @@ def main() -> int:
         "img{width:320px;height:240px;object-fit:contain;border:1px solid #333;background:#fff}"
         "td{vertical-align:top;padding:8px}th{text-align:left;color:#aaa}.q{font-weight:bold;color:#6cf;margin-bottom:4px}"
         "h1{color:#fff}</style></head><body>"
-        "<h1>Tier-3 creative — Qwen3-14B quant comparison</h1>"
+        "<h1>Tier-3 creative -- Qwen3-14B quant comparison</h1>"
         "<p>Same prompt across quants. Click an image to open the live HTML. Screenshots captured @2.5s "
         "(animations may be mid-intro).</p><table>" + "".join(rows) + "</table></body></html>"
     )
     out = f"{results}/gallery.html"
     with open(out, "w") as f:
         f.write(doc)
-    print(f"wrote {out}  ({len(ids)} prompts × {len(runs)} quants: {list(runs)})")
+    print(f"wrote {out}  ({len(ids)} prompts x {len(runs)} quants: {list(runs)})")
     return 0
 
 

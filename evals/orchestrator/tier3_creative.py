@@ -1,12 +1,12 @@
-"""Tier 3 — curated creative/visual builds. Semi-objective.
+"""Tier 3 -- curated creative/visual builds. Semi-objective.
 
 For each prompt: generate one self-contained HTML file, render it headless, and record the OBJECTIVE
 sub-signal: did it load with zero console/page errors and a non-blank body ("renders_clean"). We also
 save the raw HTML + a screenshot so you (or a vision-LLM later) can do PAIRWISE A/B vs the bf16
-reference, position-swapped (README §3/§6).
+reference, position-swapped (README section 3/section 6).
 
 Generation uses the CHAT endpoint (creative front-end work is a chat task). Note: chat-template
-differences across quants must be held constant — they're served by the same vLLM, so the template is
+differences across quants must be held constant -- they're served by the same vLLM, so the template is
 identical here; the only variable is the weights. Keep it that way.
 """
 from __future__ import annotations

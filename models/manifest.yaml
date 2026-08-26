@@ -1,266 +1,52 @@
-# models/manifest.yaml -- registry of every model weight we keep.
-# fetch.sh reprovisions a fresh box from this file.
+# models/manifest.yaml -- registry of every model weight kept live.
+# fetch.sh reprovisions downloadable entries into models/files/.
 #
 # source.type:
-#   hf      -> downloadable: `huggingface-cli download <repo>` into files/<path>
-#   custom  -> quantized ON THIS BOX. NOT downloadable yet (see TODO). Kept on disk only.
+#   hf      -> downloadable from Hugging Face
+#   custom  -> built on this box; preserve until a rebuild recipe or upload exists
 #
-# Every entry under files/<path> is fully materialized: real files (no symlinks/hardlinks),
-# vision tower + MTP head intact where the flags say so. Headline targets: qwen3.6-27b and
-# qwen3.6-35b-a3b, across bf16 / fp8 / int4-autoround / w4a16 / w4a8 / w8a8.
-#
-# ---------------------------------------------------------------------------------------
-# TODO (reprovisioning the source:custom quants on a fresh machine -- pick one before migrating):
-#   (a) push them to HF under our namespace, then set source.type: hf + repo: <ours>, OR
-#   (b) add a `rebuild:` recipe (derived_from base + quant script) so fetch.sh regenerates
-#       them on-GPU.
-# For now they are flagged `custom` / quantized-on-device with no URL, and only live on disk.
-# ---------------------------------------------------------------------------------------
+# The 2026-08-26 cleanup narrowed the live registry to Qwen3.8-27B,
+# NVIDIA Qwen3.6-27B NVFP4, and Ornith-1.5-35B-A3B. The previous registry is
+# preserved locally at:
+# archive/to-delete-20260826/models/manifest.before-cleanup.yaml
 
 version: 1
-root: files                      # path is relative to this manifest; git-ignored
+root: files
 
 models:
-  # ===================== qwen3.6-27b (dense VLM) =====================
-  - id: qwen3.6-27b/bf16
-    family: qwen3.6-27b
-    scheme: bf16
-    vision: true
-    mtp: true
-    size_gb: 72
-    served_as: qwen36-27b (base/draft/graft source)
-    source: { type: hf, repo: Qwen/Qwen3.6-27B }
-    notes: dense 27B VLM reference. Tokenizer + bf16 visual source for every graft.
-
-  - id: qwen3.6-27b/fp8
-    family: qwen3.6-27b
-    scheme: fp8
-    vision: true
-    mtp: true
-    size_gb: 29
-    source: { type: hf, repo: Qwen/Qwen3.6-27B-FP8 }
-    notes: stock FP8.
-
+  # Qwen3.6-27B: NVIDIA NVFP4 only.
   - id: qwen3.6-27b/nvfp4-modelopt
     family: qwen3.6-27b
     scheme: nvfp4-modelopt-mixed
     vision: true
     mtp: true
-    size_gb: 22
+    size_gb: 21
     served_as: qwen3.6-27b-NVFP4-modelopt-fused-graph-mtp5
     source: { type: hf, repo: nvidia/Qwen3.6-27B-NVFP4 }
-    notes: ModelOpt MIXED_PRECISION checkpoint. MLP weights are group-16 NVFP4,
-           attention weights are FP8, and vision plus MTP are retained. Paused
-           former vLLM daily-driver baseline since 2026-08-23.
+    notes: ModelOpt MIXED_PRECISION checkpoint. MLP weights are group-16
+           NVFP4; attention weights are FP8; vision and MTP are retained.
 
-  - id: qwen3.6-27b/int4-autoround
-    family: qwen3.6-27b
-    scheme: int4-autoround
-    vision: true
-    mtp: true
-    size_gb: 19
-    served_as: qwen36-27b-int4 / -int4-mtp / -int4-graph
-    source: { type: hf, repo: Lorbus/Qwen3.6-27B-int4-AutoRound }
-    graft: { mtp: on-device }       # full NEXTN draft module grafted on top of the Lorbus base
-    notes: W4A16 AutoRound, mtp.fc kept BF16 by the creator; on-device MTP graft adds the
-           full NEXTN module so spec-decode drafts. Launches easily, vision retained.
-
-  - id: qwen3.6-27b/w4a16
-    family: qwen3.6-27b
-    scheme: w4a16
-    vision: true                    # restored by graft_w4_complete.sh
-    mtp: true                       # restored by graft_w4_complete.sh
-    size_gb: 27
-    source: { type: custom, origin: quantized-on-device }
-    derived_from: Qwen/Qwen3.6-27B
-    build: compressed-tensors W4A16 (gptq); vision+MTP grafted GPU-free (graft_w4_complete.sh)
-    notes: base quant dropped the 333 visual.* tensors; graft restores them + the MTP head.
-
-  - id: qwen3.6-27b/w4a8-sqgptq
-    family: qwen3.6-27b
-    scheme: w4a8-sqgptq
-    vision: true                    # restored by graft_w4_complete.sh
-    mtp: true                       # restored by graft_w4_complete.sh
-    size_gb: 27
-    source: { type: custom, origin: quantized-on-device }
-    derived_from: Qwen/Qwen3.6-27B
-    build: compressed-tensors W4A8 (sqgptq, prepacked); vision+MTP grafted GPU-free
-    notes: int8-activation W4A8 kernel path. Base quant was text-only; graft restores vision+MTP.
-
-  - id: qwen3.6-27b/w8a8-sqgptq
-    family: qwen3.6-27b
-    scheme: w8a8-sqgptq
-    vision: true
-    mtp: true
-    size_gb: 35
-    served_as: qwen36-27b-w8a8-mtp
-    source: { type: custom, origin: quantized-on-device }
-    derived_from: Qwen/Qwen3.6-27B
-    build: compressed-tensors W8A8 (sqgptq); vision+MTP already grafted (complete on disk)
-    notes: the int8 all-rounder. HumanEval+ 0.970/0.933, decode ~25 t/s TP=2. Complete build.
-
-  # ===================== qwen3.6-35b-a3b (MoE VLM) =====================
-  - id: qwen3.6-35b-a3b/bf16
-    family: qwen3.6-35b-a3b
-    scheme: bf16
-    vision: true
-    mtp: true
-    size_gb: 67
-    source: { type: hf, repo: Qwen/Qwen3.6-35B-A3B }
-    notes: MoE 35B-A3B reference. bf16 visual source for 35b grafts.
-
-  - id: qwen3.6-35b-a3b/int4-autoround
-    family: qwen3.6-35b-a3b
-    scheme: int4-autoround
-    vision: true
-    mtp: true
-    size_gb: 21
-    served_as: qwen36-35b-a3b-int4
-    source: { type: hf, repo: Intel/Qwen3.6-35B-A3B-int4-AutoRound }
-    notes: Intel AutoRound int4 MoE. Launches easily, vision + MTP retained.
-
-  # ===================== ornith-1.5-35b-a3b (MoE VLM) =====================
-  - id: ornith-1.5-35b-a3b/bf16-mtp-shisa
-    family: ornith-1.5-35b-a3b
-    scheme: bf16
-    vision: true
-    mtp: true
-    size_gb: 68
-    source:
-      type: hf
-      repo: shisa-ai/Ornith-1.5-35B-A3B-MTP
-      revision: 779a91ed5b7597bc6db383d9fffb4343b67892ea
-    notes: Official Ornith-1.5 BF16 target weights with the code-tuned Shisa BF16 MTP head.
-           The target shards are byte-identical to ornith-ai except the native untrained MTP
-           payload is removed; model-mtp.safetensors is the replacement 12K KL-distilled head.
-
-  - id: ornith-1.5-35b-a3b/w8a8-rtn-mtp-shisa
-    family: ornith-1.5-35b-a3b
-    scheme: quark-w8a8-int8-rtn
-    vision: true
-    mtp: true
-    size_gb: 37
-    served_as: ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa
-    source: { type: custom }
-    derived_from: ornith-1.5-35b-a3b/bf16-mtp-shisa
-    notes: Built on Arc XPU 0 in 426 seconds using per-output-channel symmetric INT8 RTN.
-           Routed experts and eligible text linears are stored INT8; experts use the SGLang fused
-           W8A8 path while dense text linears currently dequantize once for BF16 compute. Vision,
-           routers, GDN, lm_head, and the exact trained Shisa MTP sidecar stay BF16.
-
-  - id: ornith-1.5-35b-a3b/nvfp4-modelopt
-    family: ornith-1.5-35b-a3b
-    scheme: nvfp4-modelopt-mixed
-    vision: true
-    mtp: true
-    size_gb: 23
-    served_as: ornith-1.5-35b-A3B-NVFP4
-    source: { type: hf, repo: ornith-ai/Ornith-1.5-35B-A3B-NVFP4 }
-    notes: Official ModelOpt NVFP4 of Ornith-1.5-35B-A3B (qwen3_5_moe, ~3B active).
-           Attention 8-bit, experts 4-bit, MTP ignored in quant. Fits 1-2x 32GB.
-
-  - id: qwen3.6-35b-a3b/quark-w8a8-int8
-    family: qwen3.6-35b-a3b
-    scheme: quark-w8a8-int8
-    vision: true
-    mtp: false                      # creator build has no MTP head
-    size_gb: 35
-    served_as: qwen36-35b-a3b-quark-w8a8-int8
-    source: { type: hf, repo: nameistoken/Qwen3.6-35B-A3B-Quark-W8A8-INT8 }
-    notes: AMD Quark W8A8 INT8. Vision retained; no MTP head from the creator.
-
-  # ===================== nemotron-3-puzzle-75b-a9b (Nemotron-H hybrid MoE) =====================
-  - id: nemotron-3-puzzle-75b-a9b/nvfp4-modelopt
-    family: nemotron-3-puzzle-75b-a9b
-    scheme: nvfp4-modelopt
-    vision: false
-    mtp: true
-    size_gb: 54
-    served_as: nemotron-3-puzzle-75b-a9b-nvfp4   # NOT yet served/benched -- see RESEARCH_TODO 11j
-    source: { type: hf, repo: nvidia/NVIDIA-Nemotron-Labs-3-Puzzle-75B-A9B-NVFP4 }
-    notes: NVIDIA Nemotron-H "Puzzle" 75B total / 9B active hybrid (mamba2 + attention) MoE,
-           text-only (no vision tower). ModelOpt MIXED_PRECISION NVFP4 checkpoint -- NVFP4 experts
-           (group_size 16) + FP8 attention/shared-expert, same format family as nvidia/Qwen3.6-27B-NVFP4.
-           Ships an MTP head (mtp.safetensors). model_type=nemotron_h_puzzle with custom modeling code
-           (trust-remote-code). Downloaded via curl 2026-07-08; XPU serve + bench NOT yet done.
-
-  # ===================== qwen3.8-27b (dense VLM, released 2026-08-14) =====================
+  # Qwen3.8-27B: BF16 source, preferred NVFP4, and W8A8 research target.
   - id: qwen3.8-27b/bf16
     family: qwen3.8-27b
     scheme: bf16
     vision: true
     mtp: true
-    size_gb: 56
-    served_as: qwen38-27b (base / future W8A8 source)
+    size_gb: 52
+    served_as: qwen38-27b
     source: { type: hf, repo: Qwen/Qwen3.8-27B }
-    notes: official BF16. Same qwen3_5 hybrid GDN+attention as 3.6-27B (64 layers,
-           262144 native ctx, 1M YaRN). Source for on-box GPTQ W8A8 (2026-08-15).
+    notes: Official BF16 source for validation and local quantization.
 
-  - id: qwen3.8-27b/fp8
+  - id: qwen3.8-27b/nvfp4-radixark
     family: qwen3.8-27b
-    scheme: fp8
+    scheme: nvfp4-radixark-mixed
     vision: true
     mtp: true
-    size_gb: 29
-    served_as: qwen3.8-27b-fp8
-    source: { type: hf, repo: Qwen/Qwen3.8-27B-FP8 }
-    notes: official block FP8 e4m3 [128,128]. Target for the rmacy DSpark
-           stack (ghcr.io/rmacy/qwen38-fp8-dspark, intel/llm-scaler#620).
-
-  - id: qwen3.8-27b/q4km-ggml-org
-    family: qwen3.8-27b
-    scheme: q4-k-m
-    vision: false
-    mtp: false
-    size_gb: 19
-    served_as: hotschmoe-dd
-    source:
-      type: hf
-      repo: ggml-org/Qwen3.8-27B-GGUF
-      revision: 0669b98607d47046c7c2b3f801011d54a08cfccf
-      files: [Qwen3.8-27B-Q4_K_M.gguf]
-    notes: Stock text GGUF, SHA256 31629f53165ab6a7dad8c9847dcfd1fdf55829dac1e6e748f4a68581b0033d34.
-           HumanEval+ 164 thinking-off greedy 0.970 base / 0.927 plus, best measured Qwen3.8 4-bit coding score.
-
-  - id: qwen3.8-27b/ud-q4-k-xl-unsloth
-    family: qwen3.8-27b
-    scheme: ud-q4-k-xl
-    vision: false
-    mtp: true
-    size_gb: 18
-    source:
-      type: hf
-      repo: unsloth/Qwen3.8-27B-GGUF
-      revision: 4ca720788d1e01f1bff70c033e0d0028fd02e502
-      files: [Qwen3.8-27B-UD-Q4_K_XL.gguf]
-    notes: Unsloth dynamic text GGUF with one embedded NEXTN layer. Exact size
-           17559178144 bytes; SHA256/LFS oid
-           3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e.
-
-  - id: qwen3.8-27b/dflash-drafter-fp8-b70
-    family: qwen3.8-27b
-    scheme: dflash-drafter-fp8
-    vision: false
-    mtp: false
-    size_gb: 3
-    served_as: qwen3.8-27b-dflash-drafter (rmacy B70-tuned)
-    source: { type: hf, repo: rwmacy/qwen3.8-27b-dflash-drafter-fp8-b70 }
-    notes: 1.36B DSpark/DFlash drafter, warm-start from RadixArk then
-           fine-tuned on B70 FP8 hidden states (SpecForge#769). Needs the
-           vLLM dflash kernel readout fix (rmacy/vllm). Claimed isolated
-           C1 72.2 tok/s with the fp8 target on 2x B70 TP=2 k=4.
-
-  - id: qwen3.8-27b/dflash-drafter-radixark
-    family: qwen3.8-27b
-    scheme: dflash-drafter
-    vision: false
-    mtp: false
-    size_gb: 3
-    served_as: qwen3.8-27b-dflash-drafter (RadixArk cookbook)
-    source: { type: hf, repo: RadixArk/Qwen3.8-27B-DSpark }
-    notes: official 1.36B DSpark drafter for Qwen3.8-27B-FP8. v0.26
-           registry needs architectures remapped to Qwen3DSparkModel
-           (stock DSparkDraftModel routes to DeepSeek-V4).
+    size_gb: 21
+    served_as: qwen3.8-27b-NVFP4-radixark
+    source: { type: hf, repo: RadixArk/Qwen3.8-27B-NVFP4 }
+    notes: Preferred Qwen3.8 NVFP4. ModelOpt MIXED_PRECISION with group-16
+           NVFP4 MLP/lm_head, FP8 attention/GDN, and BF16 vision/MTP.
 
   - id: qwen3.8-27b/w8a8-gptq
     family: qwen3.8-27b
@@ -271,116 +57,49 @@ models:
     served_as: qwen3.8-27b-W8A8-gptq
     source: { type: custom, origin: quantized-on-device }
     derived_from: Qwen/Qwen3.8-27B
-    build: scripts/150 GPTQ W8A8 SMOOTHQUANT=0; vision+MTP grafted from bf16
-    notes: 2026-08-15. compressed-tensors. Overnight save was text-only;
-           graft_qwen38_w8a8.py restored 333 visual + 15 mtp. Paris exact.
-           MTP3 IN=2048 TG 26.62; vision landscape probe correct. Not shelved.
+    build: scripts/150 GPTQ W8A8 SMOOTHQUANT=0; vision and MTP grafted from bf16
+    notes: compressed-tensors W8A8 research checkpoint.
 
-  - id: qwen3.8-27b/nvfp4-radixark
-    family: qwen3.8-27b
-    scheme: nvfp4-radixark-mixed
+  # Ornith-1.5-35B-A3B: retain the complete local family.
+  - id: ornith-1.5-35b-a3b/bf16-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    scheme: bf16
     vision: true
     mtp: true
-    size_gb: 21
-    served_as: qwen3.8-27b-NVFP4-radixark
-    source: { type: hf, repo: RadixArk/Qwen3.8-27B-NVFP4 }
-    notes: >
-      SGLang cookbook NVFP4 (downloaded 2026-08-16). ModelOpt 0.47 MIXED_PRECISION:
-      193x NVFP4 g16 (MLP + lm_head) + 208x FP8 (attn/GDN). kv_cache_quant_algo=FP8
-      but no k/v scale tensors (producer used scale=1.0). 21G on disk, 333 visual
-      + 15 mtp (bf16). Preferred 3.8 NVFP4 (Inferact uniform W4A4 deleted 2026-08-17).
-      First serve 2026-08-17: TP=1 fused GRAPH MTP-off @8192, kv_gate 3/3 Paris.
-      Do not promote.
+    size_gb: 67
+    source:
+      type: hf
+      repo: shisa-ai/Ornith-1.5-35B-A3B-MTP
+      revision: 779a91ed5b7597bc6db383d9fffb4343b67892ea
+    notes: Official target weights with the code-tuned Shisa BF16 MTP head.
 
-  - id: qwen3.8-27b/nvfp4-unsloth
-    family: qwen3.8-27b
-    scheme: nvfp4-unsloth-mixed
+  - id: ornith-1.5-35b-a3b/w8a8-rtn-mtp-shisa
+    family: ornith-1.5-35b-a3b
+    scheme: quark-w8a8-int8-rtn
+    vision: true
+    mtp: true
+    size_gb: 37
+    served_as: ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa
+    source: { type: custom, origin: quantized-on-device }
+    derived_from: ornith-1.5-35b-a3b/bf16-mtp-shisa
+    notes: Per-output-channel symmetric INT8 RTN with the Shisa MTP sidecar.
+
+  - id: ornith-1.5-35b-a3b/nvfp4-modelopt
+    family: ornith-1.5-35b-a3b
+    scheme: nvfp4-modelopt-mixed
+    vision: true
+    mtp: true
+    size_gb: 22
+    served_as: ornith-1.5-35b-A3B-NVFP4
+    source: { type: hf, repo: ornith-ai/Ornith-1.5-35B-A3B-NVFP4 }
+    notes: Official mixed ModelOpt NVFP4 checkpoint.
+
+  - id: ornith-1.5-35b-a3b/gptq-int4-mixedcal-v2
+    family: ornith-1.5-35b-a3b
+    scheme: gptq-int4-mixedcal-v2
     vision: true
     mtp: true
     size_gb: 23
-    served_as: qwen3.8-27b-NVFP4-unsloth
-    source: { type: hf, repo: unsloth/Qwen3.8-27B-NVFP4 }
-    notes: Unsloth Dynamic NVFP4 compressed-tensors MIXED. MLP nvfp4-pack g16
-           (wgs/igs are CT divisors; invert to ModelOpt-scale); attn + last-8
-           MLP + lm_head are channel-FP8 (f8 * [N,1] scale); vision bf16; MTP
-           bf16 in model_mtp.safetensors. actorder:static but no g_idx -- CPU
-           dequant vs official BF16 is clean (MLP 0.992, FP8 0.9996). Served
-           2026-08-15f one-card COHERENT after sitecustomize (1e) tiled
-           f8*scale F.linear (fp8_gemm_w8a16 is per-tensor only). Slow.
-           Inferact was the first coherent 3.8 NVFP4; prefer nvfp4-radixark
-           for new serves. Do not promote.
-
-  - id: qwen3.8-27b/int4-autoround
-    family: qwen3.8-27b
-    scheme: int4-autoround
-    vision: true
-    mtp: true
-    size_gb: 19
-    served_as: qwen3.8-27b-W4A16-autoround / -mtp5
-    source:
-      type: hf
-      repo: devan-carlin/Qwen3.8-27B-int4-AutoRound
-      revision: bce40cacab0a4535b92fb3d57615c2bea9adf3d1
-    notes: >
-      Steve-lab 3.8 INT4-AR pin (2026-08-19). 19.02 GB, auto-round 4/128,
-      MTP tensors included. fetch.sh does not honor source.revision --
-      download with hf --revision. S2 speed+HE+ vs W8A8 0.957/0.927.
-      101.922 is his after-TTFT MTP5 on a pinned compile cache + unpublished
-      AOT FA -- do not expect that cell on int8g-v0260.
-
-  - id: community/qwen38-27b-gptq-mtp-preserved
-    family: qwen3.8-27b
-    scheme: gptq-int4-mtp-bf16
-    vision: false
-    mtp: true
-    size_gb: 20
-    served_as: qwen3.8-27b-GPTQ-Int4-mtp4
-    source:
-      type: hf
-      repo: SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16
-      revision: 9d189a60e4c0ad7f9f47cd94bfa393ca10b3924e
-    notes: >
-      SergiioB 3.8 cookbook GPTQ-Int4-sym-G128 + BF16-preserved MTP. Pin
-      rev 9d189a60. fetch.sh does not yet honor source.revision -- S1
-      smoke downloads with hf --revision. Image digest f01e24f6
-      (0.27.2rc1), not 3.6 2c427ef. Ceiling reference only; does not
-      demote W8A8.
-
-  - id: qwen3.8-27b/obliterated-q4km
-    family: qwen3.8-27b
-    scheme: gguf-q4_k_m
-    vision: false
-    mtp: true
-    size_gb: 17
-    served_as: hotschmoe-dd
-    source:
-      type: hf
-      repo: OBLITERATUS/Qwen3.8-27B-OBLITERATED
-      revision: 2648a6231b82328c601ba27b9ffd5029057d0e33
-      files:
-        - Qwen3.8-27B-OBLITERATED-Q4_K_M.gguf
-    notes: >
-      OBLITERATUS V3 fixed-merge Q4_K_M only. Exact file is 16810714400
-      bytes, SHA256 c5e4fe705883e244a468c9e445c8d6ba37fd310b0113e25d2b8a7f2d6f1243e8.
-      GGUF has 64 target blocks plus an embedded blk.64.nextn MTP head.
-      llama.cpp SYCL DP=2, Q8 KV, 245760 ctx per one-card replica behind
-      nginx. Recipe:
-      rdy_to_serve/llamacpp/qwen38-27b-obliterated-q4km/serve.sh.
-      Card: temp 0, repeat_penalty 1.15, thinking off. Weight-only, not W4A8.
-
-# ===================== DROPPED (not kept; recorded so the decision is auditable) =====================
-#   qwen3.8-27b/obliterated-q8 -- pre-V3 Q8_0 deleted 2026-08-23 at operator request;
-#     the old merge was bad and is not a fallback for the V3 fixed-merge Q4_K_M.
-#   qwen3.8-27b/nvfp4-modelopt (hf Inferact/Qwen3.8-27B-NVFP4) -- deleted 2026-08-17.
-#     Uniform W4A4, no KV scales. Gated 18/18 MTP3 code 35.0 / HE+ 0.939/0.915; not a DD.
-#     Replaced by qwen3.8-27b/nvfp4-radixark (cookbook MIXED_PRECISION).
-# Removed from disk by reorg.sh per the 2026-06-29 review (off-target or prior-gen scaffolding):
-#   google/gemma-4-12B-it            (hf) -- off-target, not Qwen3.6
-#   Qwen/Qwen3-0.6B                  (hf) -- tiny prior-gen, off-target
-#   deepreinforce-ai/Ornith-1.0-35B  (hf) -- 35B finetune, off-target
-#   Qwen3-14B-W4A16-gptq             (custom) -- prior-gen Qwen3 14B scaffold, NOT on HF
-#   Qwen3-14B-W4A8-gptq-prepacked    (custom) -- prior-gen Qwen3 14B scaffold, NOT on HF
-#   Qwen3-14B-W8A8-autoround         (custom) -- prior-gen Qwen3 14B scaffold, NOT on HF
-#   Qwen3.6-27B-W4A16-awq-repack     (custom) -- AWQ-probe experiment, superseded
-# The three Qwen3-14B quants and the awq-repack were quantized on-device and are NOT
-# recoverable once deleted. Listed here intentionally so that fact is on the record.
+    source: { type: custom, origin: quantized-on-device }
+    derived_from: ornith-ai/Ornith-1.5-35B-A3B
+    notes: Local GPTQModel 7.3.2 mixed-calibration INT4 checkpoint.

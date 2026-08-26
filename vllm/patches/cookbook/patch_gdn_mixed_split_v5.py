@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""XPU GDN mixed spec + non-spec split (v5) — causal_conv1d root cause.
+"""XPU GDN mixed spec + non-spec split (v5) -- causal_conv1d root cause.
 
 The fused ``torch.ops._xpu_C.gdn_attention`` host binding refuses a batch
 that mixes spec-decode tokens with non-spec (prefill + decode) tokens:
@@ -15,12 +15,12 @@ wrapper consumes exactly one 5-tensor group.
 CUDA already splits this in Python (``QwenGDNLinearAttention._forward_core``).
 This patch does the same at the XPU fused-op boundary:
 
-  * homogeneous batch → one fused call (unchanged C1 / no-spec path)
-  * mixed batch → compact each group with ``index_select``, one fused call
+  * homogeneous batch -> one fused call (unchanged C1 / no-spec path)
+  * mixed batch -> compact each group with ``index_select``, one fused call
     per group with ``num_actual_tokens = group_count`` and ``token_indx =
     arange``, then ``index_copy_`` both ``core_attn_out`` **and** ``z``
 
-v1–v4 failed the C++ size-sum / ``narrow`` contract (global indices into a
+v1-v4 failed the C++ size-sum / ``narrow`` contract (global indices into a
 compact buffer, or unused-side dummy tensors that still counted as tokens).
 v5 uses ``None`` for the idle optional side (binding is ``Tensor?``).
 

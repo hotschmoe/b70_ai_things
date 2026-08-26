@@ -1,315 +1,154 @@
-# AGENTS.md -- standing rules for the b70 project
+# AGENTS.md -- standing rules for the B70 project
 
-Working notes for any agent on this repo. Keep this file short; details live in
-`FINDINGS.md`, `JOURNAL.md`, `RESEARCH_TODO.md`, and `docs/`.
+Keep this file short. Detailed evidence lives in JOURNAL.md and the curated
+documents listed below.
 
-## Style
+## Style and evidence
 
-- ASCII only. No emoji, typographic arrows, or smart punctuation in files, commits,
-  code, or terminal output.
-- Keep status docs factual: config -> command -> result -> verdict.
+- ASCII only in repository files and terminal output.
+- Record experiments as CONFIG -> COMMAND -> RESULT -> VERDICT.
+- Append new JOURNAL.md entries at the bottom.
+- Do not claim speed or stability without matched configuration, coherence,
+  identity, health, and teardown evidence.
+- Preserve user changes in a dirty worktree.
 
-## Current Research Focus
+## Current scope
 
-- **W8A8 INT8 of ANY model is a standing target.** 8-bit weights are preferred over
-  4-bit (clearly better quality) and B70 has INT8 XMX fast paths to leverage. Every
-  headline model should get a W8A8 int8 serve path; prioritize building/keeping it.
-- **sglang is the primary serving backend; vLLM is paused.** vLLM batches concurrent
-  prefill+decode together and emits "!!!!" garbage under load; sglang does not. Keep the
-  vLLM shelf as a maintained paused baseline, but new serve work targets sglang.
-- **Use compressed-tensors as the research artifact format across models and schemes.**
-  This keeps W8A8, W4A8, W4A16, TP=2, PP=2, and custom kernel work comparable.
-- **W8A8 and W4A8 are the main kernel research paths.** They exercise int8
-  activations and are the paths that can use B70 INT8 XMX fast paths.
-- **GPTQ is the default calibration method for compressed-tensors runs today.**
-  It beat AutoRound on 14B W8A8 HumanEval+ by a small margin. Treat that as a
-  current working choice, not a final law; verify on harder evals, especially
-  before making W4A8 conclusions.
-- **AutoRound/INC int4 remains the proven W4A16 serve baseline.** Do not confuse
-  that with the research direction. Compressed-tensors W4A16 for 27B is still
-  worth fixing, but in a focused kernel/loader session.
-- **W4A4 is later frontier research.** Keep notes, but do not start W4A4 kernel
-  work until W8A8/W4A8 are robust.
-- **Carry the 2026-08-25 TP=2 lesson into every 27B dense experiment.** Steve's
-  clone-safe custom-op contract alone was insufficient on this runtime: the
-  cloned profile input also needed completion before oneCCL consumed it from
-  another queue. The exact Qwen35 control fixes only large profile tensors and
-  leaves graph capture/decode unfenced. For a 27B model, measure its real
-  profile shape and collective count; do not blindly copy the 8192-row
-  threshold. Require matched per-rank entry/return evidence plus per-card and
-  compiled collective post-health. This is especially valuable on dense 27B,
-  where MoE dispatch cannot confound the collective result. See JOURNAL
-  2026-08-25p and `docs/P2P_GPU.md` J.23.
-- **Steve timing and native-source closure is the active transfer map.** The
-  exact `e190923b` source plus scratch-aware MoE interface passed at 48.5315
-  tok/s. Synchronized pure-decode timing then proved the same 41-piece graph
-  topology as Steve, but rank-0 model-forward is 22.675 ms versus his 5.695 ms
-  (3.982x). The prior "June native" package is specifically a June-9 minimal
-  patch over `28e1f5e`, not Steve's later native tree. Exact checkpoint
-  `122b698b` is recoverable and adds real output-buffer variants for per-token
-  quantization and fused SiLU/multiply/quantization; the
-  current scratch-aware dispatcher probes for these ops but the June-9 binary
-  lacks them and falls back to allocate/copy. On the accepted path, fused
-  SiLU+quant is explicitly unset; the relevant delta is two scratch-targeted
-  per-token quantizations across each of 40 MoE layers, or 80 calls/step. Treat
-  Exact `122b698b` native binaries are now measured: 50.3706 tok/s versus the
-  matched June-9 unsynchronized control at 48.5315 tok/s, a coherent +3.79
-  percent with both 16/16 canaries and post-teardown health green. This proves
-  native scratch-targeted quant output is useful but not Steve's missing 1.7x.
-  Synchronized timing localizes the gain: model-forward is 21.9944 ms versus
-  22.6748 ms on June-9 (-3.00 percent), while GDN, logits, argmax, and sampler
-  are essentially unchanged. Steve remains at 5.6946 ms. The next localization
-  target is integrated cost from the 81 compiled TP collectives per step, which
-  current Python timing cannot see inside graph replay. Never
-  compare the 50.3706 unsynchronized endpoint with the deliberately synchronized
-  35.4699 diagnostic. For dense 27B, repeat the graph-piece and synchronized
-  timing census, then transfer proven reusable quant/output-buffer primitives
-  separately; do not copy MoE-only layerlet/sidecar code, Qwen35's mixed MoE
-  workspace, or its 8192-row fence threshold. See JOURNAL 2026-08-26 and
-  `docs/20260825_steve_stack_component_ledger.md`.
-- **The exact-control runtime boundary is now measured.** A bounded two-rank
-  XPU profile shows exactly 41 fence resets, 41 host event synchronizations,
-  and 82 command-list submissions per token, matching the 41 PIECEWISE graph
-  pieces. Kineto exposes only 1.67-2.17 ms of device work and hides routed MoE
-  plus the 81 compiled all-reduces inside XPUGraph, so visible kernels are a
-  lower bound, not a full device ledger. Split-die worker CPU pinning is neutral
-  at 50.4066 versus 50.3706 tok/s (+0.07 percent); it is not a reason to move
-  PCIe slots. For dense 27B, repeat the per-token driver-call census and derive
-  its collective fence from its own shapes. See
-  `docs/20260826_qwen36_graph_runtime_profile.md`.
-- **No-MTP FULL decode is now a proven B70 lever on the exact June stack.**
-  `FULL_DECODE_ONLY` plus `TRITON_ATTN` captured six full decode graphs and
-  measured 61.5536 tok/s versus the exact PIECEWISE 50.3706 (+22.20 percent),
-  with semantic output, both 16/16 canaries, and both post-health layers green.
-  This is not Steve's accepted PIECEWISE reproduction, but it is the fastest
-  exact local arm and proves boundary reduction matters. Do not repeat the old
-  blanket "FULL is blocked" claim: the remaining block applies to particular
-  stock/MTP GDN or SYCL-scratch paths, not this no-MTP control. Dense 27B must
-  test its own no-MTP full-decode arm before rejecting FULL capture.
-- **FULL-decode profiling closes the replay mechanism.** The exact full arm
-  drops PIECEWISE's 41 fences/41 waits/82 submissions to 1 fence/2 waits/2
-  submissions per token. Steady-state host preparation overlaps the preceding
-  graph for about 9 ms, then exposes a 2.73-3.30 ms graph-tail wait and about
-  2 ms of post-submit work. The remaining MoE and 81 collectives are inside the
-  opaque single graph. Future work should optimize or expose those in-graph
-  operators, not keep reducing an already single replay boundary.
-- **Native grouped MoE is not the remaining Steve lever.** A narrow opt-in
-  intervention relaxed June e190's CUDA-only Triton INT8 support gate for only
-  the Quark W8A8 per-channel-weight/dynamic-token pair. Under the same
-  `FULL_DECODE_ONLY` boundary, Triton MoE measured 64.9843 tok/s versus
-  61.5536 for the June122 native grouped path (+5.57 percent), with semantic
-  output, both 16/16 canaries, graceful teardown, and both health layers green.
-  The native path is currently slower inside the collapsed graph. The remaining
-  20.8848 tok/s to Steve is not evidence for a missing native-MoE dispatch.
-  Next isolate the 81 in-graph collectives or another accepted runtime/kernel
-  family. For dense 27B, apply the graph-first method and omit every MoE support
-  gate, expert layout, grouped GEMM, layerlet, and sidecar change.
-- **Steve's exact 85.8691 TP2 arm used the June default FlashAttention path,
-  but only with PIECEWISE capture.** The preserved command set async scheduling
-  and prefill-only GDN fallback but passed no attention override; `e190923b`
-  selects `FLASH_ATTN` by default on XPU. A measured default-Flash
-  `FULL_DECODE_ONLY` arm reaches its first full capture and fails in
-  `_vllm_fa2_C.varlen_fwd`: SYCL work-group scratch memory is unavailable to
-  the SYCL Graph extension. The 61.5536/64.9843 FULL results therefore must
-  force `TRITON_ATTN`; they are interventions, not exact attention
-  reproduction. Keep default-Flash PIECEWISE as the provenance control. Do not
-  retry Flash FULL on this runtime without a concrete kernel/runtime change.
-- **June source-default collectives also cross the exact PIECEWISE TP=2
-  boundary.** With all four recovered custom-collective switches set to their
-  June source defaults of zero, both rank graphs contained 243
-  `_c10d_functional` all-reduce references and no `vllm.all_reduce`; the run
-  measured 51.0916 tok/s, 315.69 ms TTFT, 10.0207 s server decode, both 16/16
-  canaries, and green card/compiled-collective post-health. The nearest custom
-  control is 50.3706 tok/s, but a single +1.43 percent observation is not a
-  speed claim. The parent result summary's null env fields cannot establish
-  Steve's live server flags because the recovered launcher exports them in a
-  child process and was reconstructed in August. Exact June-15 flag identity
-  remains ambiguous; maintain both labeled controls.
-  A matched `FULL_DECODE_ONLY` + `TRITON_ATTN` + Triton-MoE run then measured
-  66.2555 tok/s versus 64.9843 custom (+1.96 percent), with both canaries,
-  mutually exclusive compiled-route evidence, and both post-health layers
-  green. A fresh-cache C-S-C-S repeat then measured custom
-  64.9843/65.0046 versus source-default 66.2555/66.4320 tok/s. Means are
-  64.9944 versus 66.3438, a replicated +2.08 percent c10d win. Both repeats
-  passed all coherence, route, teardown, and health gates. Use source-default
-  for this fastest FULL control; retain custom only as provenance evidence.
-- **Push-AR preinit fixes IPC import, not loaded graph submission.** On the
-  exact June source/runtime, initializing the TP push communicator before model
-  allocation made both ranks import scratch and the IPC event pool. Both then
-  entered XPUGraph capture and stalled inside the first native push graph call.
-  The timeout-safe oracle is
-  `vllm/w8a8/run_qwen36_push_ar_init_oracle.sh`; run it only under `gpu-run`
-  and reset after the expected stall. Do not launch a full model push arm until
-  this loaded-context oracle completes graph capture and replay. Standalone
-  torch graph success is insufficient. Dense 27B inherits the same gate, not
-  the experimental adapter or its binary.
+Backends:
 
-## Workflow
+- sglang is the primary serving and new-development backend.
+- vLLM is a paused baseline plus the Steve transfer/control workspace.
+- llama.cpp and ZML were removed from the live tree on 2026-08-26.
+- Do not restore quarantined backend code or ABI-specific binaries into a new
+  PyTorch/backend stack. Port the relevant source or finding deliberately.
 
-- Maintain `JOURNAL.md` newest entry at the bottom. Every experiment needs:
-  config -> command -> result -> verdict.
-- Use `RESEARCH_TODO.md` for active research ordering. Use `docs/quant_methods.md`
-  for the method/scheme registry. Use `MTP_TODO.md` for all MTP planning.
-- Commit and push often when working on the host. Do not rewrite old numbered
-  experiment scripts; copy to a new number.
+Live model set:
 
-## Repo Layout Contract
+- Qwen3.8-27B: BF16, RadixArk NVFP4, and compressed-tensors W8A8 GPTQ.
+- Qwen3.6-27B: NVIDIA ModelOpt NVFP4 only.
+- Ornith-1.5-35B-A3B: BF16+Shisa MTP, W8A8 RTN+Shisa MTP, NVFP4, and local
+  GPTQ INT4 MixedCal-v2.
 
-The repo is split by serving backend. Backend-specific code lives under its backend
-root; shared, backend-agnostic tooling stays at the repo root.
+W8A8 INT8 remains the headline research target. Prefer compressed-tensors and
+GPTQ for new W8A8 artifacts unless a measured comparison changes that choice.
+W4A8 is secondary. Do not restart W4A4 work before W8A8 is robust.
 
-- `sglang/`, `vllm/`, `llamacpp/`, `zml/`: backend roots. Each holds that backend's
-  serve/bench/probe scripts, patches/shims, build recipes, images, and scheme research
-  (e.g. `sglang/w8a8/`, `vllm/w4a8/`). sglang = primary; vllm = paused baseline;
-  llamacpp (SYCL/GGML, weight-only GGUF) + zml (oneAPI PJRT, bf16/f16) added 2026-06-30 --
-  upstream sources cloned git-ignored under `/mnt/vm_8tb/b70/{llama.cpp,zml}`. See
-  `docs/intel_support_per_backend.md` for the per-backend Intel-Arc support comparison.
-- `kernels/`: SHARED custom-kernel SOURCE -- the oneDNN int8/int4 gemm ops, the
-  `int8_gemm_kernel.patch`, and the op headers. ONE source of truth, applied to
-  `vllm-xpu-kernels` and compiled PER BACKEND (ABI-incompatible: vLLM-torch ->
-  `:int8g` image; sglang torch 2.12 -> runtime `_xpu_C.abi3.so` + shim). The built
-  `.so` binaries are git-ignored runtime artifacts under `/mnt/vm_8tb/b70`, not repo content.
-- `rdy_to_serve/<backend>/<model-quant>/`: the verified shelf. `_common/lib.sh` is shared.
-- `bin/`: stable shared, backend-agnostic tools (gpu-run, serve-sweep, xpu-health, xe-reset).
-- `models/`: model registry (manifest + fetch + reorg); weights in `models/files/` (git-ignored).
-- `docs/`, `evals/`, `agentic-eval/`, `migration/`: shared.
-- `scripts/NN_*.sh`: append-only lab notebook (historical; do NOT rewrite -- copy to a
-  new number). NEW experiment scripts go under the relevant backend root.
+## Clean-slate boundary
 
-### Shelf rules (`rdy_to_serve/<backend>/<model-quant>/`)
+The 2026-08-26 cleanup moved old weights, repositories, caches, build trees,
+Docker images, raw results, and historical docs to the gitignored directory:
 
-- EXACTLY ONE self-contained best config per (backend, model, quant). NO variations --
-  no `-mtp`/`-graph`/`-sqgptq` sibling dirs. The most performant + coherent options
-  (MTP, fused kernels, graph capture) are baked in as settings, not separate entries.
-- "Best" = best behavior under CONCURRENT/serving load: coherent first, then fast. The
-  failure mode that matters is concurrent prefill+decode (vLLM's "!!!!").
-- NEVER update a shelf entry until the new settings are MEASURED both faster-or-equal
-  AND coherent (sweep-gated). An untested "improvement" does not land.
-- Any change to `bin/` or `rdy_to_serve/_common/` needs `bin/serve-sweep --smoke` green
-  across shelf models before commit.
+  archive/to-delete-20260826/
 
-## Model Identity
+Nothing there is part of the live source tree. It is a review buffer before
+permanent deletion, not a dependency. The only external research trees kept
+under /mnt/vm_8tb/b70 are steve-s2b and steve-repro.
 
-RTN, GPTQ, AutoRound, and quant scheme mixups have already corrupted results.
-Before trusting any eval or bench:
+When updating drivers, PyTorch, sglang, or vLLM:
 
-1. Query the live server: `curl -s http://192.168.10.5:18080/v1/models | python3 -m json.tool`.
-2. Cross-check the served id against `evals/configs/models.yaml`.
-3. Served ids and output dirs must encode method and scheme, for example
-   `...-W8A8-gptq`, `...-W8A8-autoround`, or `...-W4A8-sqgptq`.
-4. Do not serve a bare ambiguous id such as `qwen3-14b-w8a8`.
+1. Record host kernel, UMD, Level Zero, oneCCL, PyTorch, backend, and image
+   identity before changing anything.
+2. Change one layer at a time.
+3. Rebuild every ABI-specific extension from tracked source.
+4. Run per-card and compiled two-rank collective health before GPU serving.
+5. Requalify model identity, deterministic coherence, concurrent serving,
+   teardown, and post-health before shelf promotion.
 
-## GPU Discipline
+## Host and GPU discipline
 
-Use the shared lease for every real GPU touch:
+- Work locally as hotschmoe in
+  /mnt/vm_8tb/github/b70_ai_things.
+- Runtime root is /mnt/vm_8tb/b70. Model weights are in models/files/.
+- Use bin/gpu-run for every real GPU touch.
+- Use bin/gpu-run --card N for a one-card workload and pair it with the
+  workload's device pin.
+- Never bypass the lease for serving, benchmarking, profiling, compilation
+  that touches XPU, or quantization.
+- Kernel 7.1.0-070100 is the fixed host baseline. Do not downgrade it to
+  imitate an older result.
 
-- `gpu-run <cmd>` locks both cards. Use this for TP=2, PP=2, data parallel, or
-  anything that might touch both cards.
-- `gpu-run --card N <cmd>` locks one card. Pair with the workload's card pin.
-- `gpu-run --status` shows current holders.
+## Multi-GPU safety
 
-Editing and compiling can run in parallel. Serving, benchmarking, perf probes,
-and on-GPU quantization must not bypass the lease.
+Kernel 7.1 plus Compute Runtime 26.22 cured the former GuC/BCS hardware wedge.
+A separate vLLM multiprocess/oneCCL queue-handoff failure still exists.
 
-### STATUS 2026-07-02: kernel 7.1 CURED the TP=2 BCS/GuC hardware wedge
+- Do not run arbitrary CCL_TOPO_P2P_ACCESS=1 vLLM TP>1 serves.
+- The old scoped Qwen3.6 direct-P2P control is historical evidence, not a
+  production setting.
+- Repeated TP>1 worker-init or graph-capture crashes can poison later
+  collectives even with P2P disabled.
+- Run bin/xpu-health and bin/xpu-collective-health around risky TP>1 work.
+- Use bin/xe-reset after a failed/crashed TP>1 attempt. Reboot only if the
+  non-reboot ladder fails.
+- No card is display-held. Do not diagnose current reset failures using the
+  retired display theory.
 
-The box is now on **kernel 7.1.0-070100 + Intel Compute Runtime 26.22.38646.4** (was 7.0 + 26.05; runbook
-`docs/20260702_kernel71_upgrade_plan.md`, JOURNAL 2026-07-02). This CURED the TP=2 "device_lost" BCS
-copy-engine / GuC-firmware-skew wedge -- 7.1's KMD wants GuC 70.58.0 so there is no skew, and the 70.54.0
-pin is RETIRED (do NOT re-add it on 7.1). **w8a8 TP=2 (and DP=2) is the production daily driver and is STABLE:**
-a 12h+ run, millions of tokens, heavy cache-hit load ran clean even on 7.0+pin, then 5/5 back-to-back TP=2
-serve cycles ran clean on 7.1. **The old "w8a8 TP=2 = attended-only" caveat is RETIRED -- unattended TP=2
-serving is fine.**
+For dense 27B TP=2 experiments, measure the real profile shape and collective
+count. The prior 8192-row clone-completion fence was specific to one Qwen3.6
+control. Require matched per-rank entry/return evidence and post-health.
 
-**Kernel 7.1 is the fixed host baseline. Do not downgrade it to imitate Steve's
-kernel.** Any Steve-era comparison must be isolated to a versioned container or
-user-mode runtime and must preserve the host kernel, current recovery tools,
-and before/after health gates.
+## Current transfer findings
 
-**The exact pinned vLLM image already matches Steve's 26.14 user-mode driver.**
-Digest `f2e5a94e...` contains Intel Compute Runtime 26.14.37833.4 and Level Zero
-loader 1.28.2; `libze_intel_gpu.so` hashes to `98605c30...`. It does not mount
-the host UMD libraries. Exact Qwen controls therefore use container UMD 26.14
-over kernel 7.1, not host UMD 26.22. Do not change host packages to "match"
-Steve; that match already exists at the process layer.
+These findings survived cleanup and should guide the refreshed stack:
 
-The P2P-in-vLLM-serve / chained-TP>1-worker-crash oneCCL wedge documented next is a SEPARATE software
-mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge. An early guarded exact
-Qwen TP2 retest on 2026-08-25 failed at a compiled `vllm::all_reduce`; later exact-stack repairs reached a
-coherent direct-P2P endpoint on the same boot series. Direct P2P therefore remains guarded experimental work,
-not a production setting. Use both card-level and compiled two-rank collective health around each attempt.
+- Exact June Qwen3.6 PIECEWISE control: 41 graph pieces, 41 fence resets,
+  41 host event synchronizations, and 82 command-list submissions per token.
+- No-MTP FULL decode with Triton attention collapses that to one fence, two
+  waits, and two submissions and measured 61.5536 tok/s.
+- Triton W8A8 MoE under FULL measured 64.9843 tok/s; native grouped MoE was
+  slower on the local stack.
+- Source-default c10d collectives replicated at a 66.3438 tok/s mean versus
+  64.9944 for the custom route.
+- June122 native scratch-targeted quant output improved the matched June9
+  control by 3.79 percent but did not explain Steve's remaining gap.
+- Steve's accepted path remains PIECEWISE with default FlashAttention.
+  FlashAttention FULL capture fails because SYCL work-group scratch is not
+  available to the graph extension.
+- Push-AR preinit fixes IPC import but the loaded native push graph still
+  stalls at first submission. Do not run a full-model push arm until the
+  loaded-context oracle captures and replays.
+- The pinned exact vLLM image already contains Steve-generation UMD 26.14.
+  Host UMD changes are not required to reproduce that process boundary.
 
-### DANGER: P2P in vLLM serve wedges the multi-GPU state
+Primary evidence:
 
-Do NOT run arbitrary `CCL_TOPO_P2P_ACCESS=1` vLLM TP>1 serves. Stock and earlier
-custom paths crash at worker init or compiled profile all-reduce and can corrupt
-the cross-GPU oneCCL / Level-Zero state. The one scoped exception is
-`vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh`: its direct-P2P arm defaults
-to a clone-completion fence only for profile tensors with at least 8192 rows,
-requires `I_KNOW_P2P_WEDGES=1`, and passed its exact metric/canaries plus both
-post-health layers on 2026-08-25. It remains experimental, not a shelf setting.
-The raw mp.spawn allreduce microbench also works with P2P=1; this is a vLLM
-multiprocess/queue-handoff issue, not a peer-DMA hardware failure. See JOURNAL
-2026-08-25p and P2P_GPU.md J.23.
+- docs/P2P_GPU.md
+- docs/20260825_xe_nonreboot_recovery_and_pcie_topology.md
+- docs/20260825_steve_stack_component_ledger.md
+- docs/20260826_qwen36_graph_runtime_profile.md
 
-- GUARD (2026-06-24; reset correction 2026-08-25, P2P_GPU.md J.17/J.22): a layered wedge guard wraps the TP>1 serve path
-  (TP=1 unchanged). `bin/xpu-health` detects a wedged box (per-card matmul, timeout-wrapped);
-  `bin/xpu-collective-health` detects collective-only failure; `bin/xe-reset` runs rebind -> xe reload ->
-  endpoint FLR as a non-reboot recovery ladder. lib.sh runs a pre-flight
-  probe, graceful `docker stop` teardown, a stall-aware health wait, and a post-teardown verdict.
-  Set `B70_AUTO_RESET=1` to auto-recover. `CCL_TOPO_P2P_ACCESS=1` in a TP>1 serve is now refused
-  unless `I_KNOW_P2P_WEDGES=1`. xe-reset needs the scoped sudoers in `bin/xe-reset.sudoers`.
-- Recovery (CORRECTED 2026-08-25, P2P_GPU.md J.22): **the cards are not display-held.** All connectors are
-  disconnected/disabled, `/proc/fb` is empty, the VT uses the dummy console, and no process holds `/dev/dri`.
-  The old unload failed because both B70 PCI functions and their four xe auxiliary children were still bound.
-  Unbind both first: clean-state rebind, `xe` unload/reload, and endpoint FLR were all validated without reboot,
-  with the same boot ID and green per-card plus compiled two-rank health after each. Use `bin/xe-reset`; reboot
-  only if unbind hangs or the full ladder fails. Clearance of a future naturally occurring deep wedge remains
-  to be recorded, so retain the final reboot fallback.
-- If you must experiment with P2P-in-serve, run `bin/xe-reset` BETWEEN every attempt;
-  never chain two `P2PACCESS=1` serve tries without a reset in between.
-- ALSO (CONFIRMED 2026-06-24, P2P_GPU.md J.15): it is NOT only `P2PACCESS=1` that wedges
-  this state. A string of TP>1 WORKER-INIT CRASHES (e.g. repeated GRAPH=1 model-load
-  failures, or serves killed mid-init) corrupts the same cross-GPU oneCCL/L0 state, so
-  every later TP=2 serve then `UR_RESULT_ERROR_DEVICE_LOST`s at oneCCL warmup EVEN at
-  `P2PACCESS=0`. Do not chain crash-prone TP=2 starts; reset xe
-  (modprobe -r/-add or reboot) after a TP=2 worker-init crash before retrying.
-- CORRECTION (CONFIRMED 2026-06-24, P2P_GPU.md J.16): the wedge is NOT always spared on
-  single-GPU. A TP>1 serve whose workers are killed MID-GRAPH-CAPTURE (e.g. by the
-  `b70_wait_healthy` 15-min timeout) can degrade BOTH cards at the xe/driver level so that
-  even a TP=1 single-card op fails -- presenting as `UR_RESULT_ERROR_OUT_OF_RESOURCES`
-  (err 40, OOM-class) or a multi-minute hang, NOT only `DEVICE_LOST` (err 20). So "single-GPU
-  stays fine" from H.13/J.15 does NOT always hold. After ANY TP>1 teardown that threw
-  DEVICE_LOST in shutdown, verify health with a single-card matmul probe BEFORE the next
-  TP>1 start; if it hangs or OOMs, reset xe first.
+## Repository layout
 
-## Images And Serving
+- sglang/: retained W8A8 and NVFP4 work.
+- vllm/: retained W8A8/Steve controls, NVFP4, shared patches, and contributed
+  custom-op source.
+- kernels/: shared custom-kernel source of truth.
+- rdy_to_serve/<backend>/<model-quant>/: verified shelf only.
+- models/: manifest, fetch tooling, and gitignored weights.
+- bin/: shared lifecycle, health, lease, and recovery tools.
+- docs/: curated current evidence.
+- evals/: retained model-quality evaluation tooling.
+- archive/: ignored cleanup quarantine.
 
-- Default vLLM image: `vllm-xpu-env:v0230` unless a specific recipe says
-  otherwise.
-- INT8 W8A8 research image: `vllm-xpu-env:int8g`, which includes the custom
-  `XPUInt8ScaledMMLinearKernel` path and graph-capture fake registrations.
-- For shelved models, start from `rdy_to_serve/<backend>/<model>/serve.sh`. Do not
-  reconstruct a serve command from old journal entries.
+The retained pre-refresh shelf contains only Qwen3.6 NVFP4 and Qwen3.8 NVFP4
+configuration controls. Their old native runtime libraries are quarantined, so
+rebuild and requalify them before serving. Do not add a shelf entry without a
+measured concurrent coherence and speed qualification.
 
-## Host Paths
+## Model identity
 
-- **We run LOCALLY on the box now (since the 2026-06-23 migration), NOT over SSH.** The GPU host is a
-  local Ubuntu 26.04 machine (hostname `b70s4dayz`, kernel 7.1 since the 2026-07-02 upgrade that cured the TP=2
-wedge -- see `docs/20260702_kernel71_upgrade_plan.md`) and we act as user `hotschmoe` (uid 1000),
-  not root. The old `ssh root@192.168.10.5` remote-driver workflow is RETIRED -- run commands on the box
-  itself. Rollback/migration context lives in `MIGRATION.md` (section 13).
-- GPU host LAN address: `192.168.10.5` (still its IP; just no longer SSH'd into from a laptop).
-- **The git repo is now a SINGLE clone on the 8TB SSD: `/mnt/vm_8tb/github/b70_ai_things`**
-  (consolidated 2026-06-24; the old two-repo split -- `~/github` checkout vs a non-git flat
-  copy at `/mnt/vm_8tb/b70` -- is RETIRED). Work, commit, and push from there. `~/github/b70_ai_things`
-  no longer exists.
-- **Runtime data root: `/mnt/vm_8tb/b70/`** -- caches, kernel build artifacts, `gpu.lock*`. NOT a repo.
-  Recipes default `ROOT=/mnt/vm_8tb/b70` (lib.sh) to find caches and `35_sweep_bench.sh`.
-  `gpu-run` and `35_sweep_bench.sh` are kept at this root as symlinks into the clone's `bin/`.
-- **Model weights live in the repo (since the 2026-06-29 reorg): `models/files/<family>/<scheme>/`**
-  (git-ignored, de-rooted, no symlinks, complete with vision+MTP). lib.sh mounts
-  `models/files` -> `/models` in the container. The old `/mnt/vm_8tb/b70/models/` is RETIRED.
-  Reprovision a fresh box via `bash models/fetch.sh` (see `models/manifest.yaml`).
-- Run pattern from the clone: `cd /mnt/vm_8tb/github/b70_ai_things && ./bin/gpu-run bash scripts/NN_*.sh`
-  (or `/mnt/vm_8tb/b70/gpu-run`, the symlink). Tools live under `bin/`, experiments under `scripts/`.
+Before trusting an eval or benchmark:
+
+1. Query /v1/models on the live server.
+2. Cross-check the served ID against evals/configs/models.yaml.
+3. Encode model, method, and scheme in served IDs and output directories.
+4. Never use a bare ambiguous ID such as qwen3-27b-w8a8.
+
+## Git workflow
+
+- Commit from the single clone at /mnt/vm_8tb/github/b70_ai_things.
+- Commit and push coherent checkpoints often.
+- Do not rewrite old experiment evidence. New experiments belong under the
+  relevant backend root.
+- Changes to bin/ or rdy_to_serve/_common/ require the applicable live-shelf
+  smoke checks before commit.

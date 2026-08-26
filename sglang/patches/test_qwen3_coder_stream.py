@@ -104,7 +104,7 @@ T_MIXED = [mktool("cfg", {"name": {"type": "string"}, "count": {"type": "integer
 T_UNTYPED = [mktool("u", {})]  # no property types
 
 BIG = "\n".join('  <div class="r-%d" data-x=\'q\'>line %d & co</div>' % (i, i) for i in range(200))
-TRICKY = 'has "quotes", back\\slash, tab\there, unicode é☃\U0001f600, <html> & </html>, newline\nmid'
+TRICKY = 'has "quotes", back\\slash, tab\there, unicode \u00e9\u2603\U0001f600, <html> & </html>, newline\nmid'
 
 CASES = [
     ("single-large-string", T_WRITE, tc("write_file", [("path", "index.html"), ("content", BIG)])),

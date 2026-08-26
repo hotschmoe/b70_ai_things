@@ -66,7 +66,7 @@ CHAT = [
 ]
 MULTI = [
     "La inteligencia artificial esta transformando la manera en que trabajamos y vivimos.",
-    "人工知能は私たちの働き方を大きく変えています。以下にその理由を説明します。",
+    "\u4eba\u5de5\u77e5\u80fd\u306f\u79c1\u305f\u3061\u306e\u50cd\u304d\u65b9\u3092\u5927\u304d\u304f\u5909\u3048\u3066\u3044\u307e\u3059\u3002\u4ee5\u4e0b\u306b\u305d\u306e\u7406\u7531\u3092\u8aac\u660e\u3057\u307e\u3059\u3002",
     "Die kuenstliche Intelligenz veraendert die Art und Weise, wie wir arbeiten.",
     "L'intelligence artificielle transforme notre facon de travailler et de vivre.",
 ]

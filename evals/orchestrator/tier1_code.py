@@ -1,15 +1,15 @@
-"""Tier 1 — execution-graded code (HumanEval+ / MBPP+) via EvalPlus, sandboxed.
+"""Tier 1 -- execution-graded code (HumanEval+ / MBPP+) via EvalPlus, sandboxed.
 
 The pipeline is split so that the ONLY step which executes untrusted, model-generated code is
 isolated inside a throwaway Docker container:
 
-  1. GENERATE  (host, safe)  — our own OpenAI-client loop (reuses common.make_client), so Tier 1
+  1. GENERATE  (host, safe)  -- our own OpenAI-client loop (reuses common.make_client), so Tier 1
                                gets the SAME determinism + thinking discipline as tiers 2/3:
                                greedy (temperature 0), fixed seed, concurrency 1, enable_thinking
                                off by default. Writes raw `<dataset>_raw.jsonl`.
-  2. SANITIZE  (host, safe)  — `evalplus.sanitize` (tree-sitter text extraction, no code run) pulls
-                               the clean function out of each markdown response → `*_sanitized.jsonl`.
-  3. EVALUATE  (Docker)      — `evalplus.evaluate` RUNS the generated code against the +tests to get
+  2. SANITIZE  (host, safe)  -- `evalplus.sanitize` (tree-sitter text extraction, no code run) pulls
+                               the clean function out of each markdown response -> `*_sanitized.jsonl`.
+  3. EVALUATE  (Docker)      -- `evalplus.evaluate` RUNS the generated code against the +tests to get
                                pass@1. Sandboxed: --network none, non-root --user, a per-run throwaway
                                cache copy (can't poison ~/.cache/evalplus), memory/pids caps.
 
@@ -209,7 +209,7 @@ def _evaluate_docker(image: str, dataset: str, out_dir: Path, samples: Path, lim
 
     # Smoke/dev: --limit generated only a subset, but evaluate asserts FULL dataset coverage.
     # Trim the staged (throwaway) dataset to exactly the sampled task_ids so coverage matches.
-    # Only when limit is set — full runs stay unfiltered so the assertion still catches drops.
+    # Only when limit is set -- full runs stay unfiltered so the assertion still catches drops.
     if limit:
         _trim_staged_dataset(stage / "evalplus", dataset, samples)
 

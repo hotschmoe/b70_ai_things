@@ -1,5 +1,0 @@
-=== probe card 0 (img=vllm-xpu-env:int8g-v0251 timeout=60s) ===
-  card 0: OK
-=== probe card 1 (img=vllm-xpu-env:int8g-v0251 timeout=60s) ===
-  card 1: OK
-xpu-health: HEALTHY (cards 0 1)

@@ -125,7 +125,8 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
   15 distinct values ({0,+-1,+-2,+-3,+-4,+-6,+-8,+-12}) = 4 bits of real info in an
   8-bit byte, so it costs w8a8's VRAM for int4's precision. The ONLY viable FAST
   single-card path on the 27B is to keep the weights 4-bit resident and dequant on
-  the fly in-kernel (the fused E2M1 kernel; see INT4_SPOOF_EXPERIMENTS.md). int8xmx
+  the fly in-kernel (the fused E2M1 kernel; see the quarantined INT4 spoof
+  experiments). int8xmx
   stays the keeper for the DENSE 8B (where 2x of 4-bit still fits); it is a deadend
   for the 27B on one card.
 
@@ -224,7 +225,7 @@ per layer. TWO XPU blockers, both fixed in patches/sitecustomize.py:
       `[N]` scale and uses `int8_gemm_w8a16` (INT8 XMX). Probe cos 1.000,
       M=1 56x tiled. Stay on int8g-v0260 / torch 2.12.
 
-### Native int4 DPAS on B70 -- verdict (see INT4_DPAS_RESEARCH.md)
+### Native int4 DPAS on B70 -- verdict
 
 Xe2/Battlemage DPAS silicon HAS int4/int2 matrix modes (int4 = 4x bf16 rate), but
 NO software stack exposes a true int4xint4 GEMM: oneDNN s4/u4 is weight-decompression
@@ -237,7 +238,8 @@ the E2M1*2 int trick's +-12 overflows s4's [-8,7]. So a custom E2M1 LUT kernel i
 mandatory. fused 4-bit-in-VRAM (route b) = the decode win (what nvfp4_gemm_w4a16
 delivers); int8-XMX repack (route c) = prefill/dense-8B only.
 
-UPDATE (INT4_DPAS_PIONEER.md): "no SW stack exposes int4 DPAS" is true for the PORTABLE
+UPDATE (from the quarantined INT4 DPAS pioneer notes): "no SW stack exposes
+int4 DPAS" is true for the PORTABLE
 APIs (oneDNN/joint_matrix/Triton all floor at int8) but was REFUTED for hand-written SYCL
 ESIMD -- `dpas<s4,s4>` compiles, emits a native `dpas.s4.s4` encoding (disasm-proven),
 validates 0/128, and runs 2.0x the int8 MAC rate. So native int4 DPAS (route a) IS reachable
@@ -260,7 +262,7 @@ W4A16 serve. It is a future-kernel unlock, not a route-a win for NVFP4.
   new bf16_f4e2m1 joint dtype, no zp), codex-reviewed, bit-exact (3.7e-3) + 2.85x bf16.
   GDN-ON .so (both gdn + nvfp4 op) -> MODE=fused SERVES coherently 1x B70 @ 8.47 t/s
   (16x emul), 24.1GiB 4-bit resident. Native int4 DPAS separately PROVEN via ESIMD
-  (2x int8, INT4_DPAS_PIONEER.md). README perf table row added.
+  (2x int8; detailed pioneer notes are quarantined). README perf table row added.
 - 2026-07-04 16:5x M6: register_fake for nvfp4_gemm_w4a16 + GRAPH=1 knob in the serve
   script -> PIECEWISE capture first-try clean. 25.06 t/s c1 / 17.88 c4 (2.97x eager),
   coherent. README row updated. Next lever: NEXTN MTP (ckpt has all 15 bf16 mtp.*

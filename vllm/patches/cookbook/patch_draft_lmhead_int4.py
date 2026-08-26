@@ -5,10 +5,10 @@ El LM head fp16 compartido (5120x248320 = 2.54 GB) se lee 5x/paso MTP4
 (4 drafts + 1 target) = 12.7 GB/step a ~98% del pico de DRAM (21.3 ms,
 41% del tiempo de GEMM). Cuantizar SOLO la copia del draft a INT4 g128 sym
 (0.66 GB/paso incl. scales) reduce las 4 pasadas del draft a ~4x0.66 GB
-→ -7.6 GB/step ≈ -13 ms/step → objetivo ~108 tok/s.
+-> -7.6 GB/step ~ -13 ms/step -> objetivo ~108 tok/s.
 
 Lossless: el draft MTP usa SU PROPIO lm_head (DraftModelProposer._maybe_share
-_lm_head es no-op — no comparte el del target). Cuantizar la copia del draft
+_lm_head es no-op -- no comparte el del target). Cuantizar la copia del draft
 no toca el target de verificacion (fp16) y los tokens del draft se verifican
 contra el target: la secuencia emitida es identica a MTP4 baseline (greedy).
 

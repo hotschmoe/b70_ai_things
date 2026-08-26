@@ -6,10 +6,10 @@ precision scheme, and why* (forward plan, Tables A/B); (2) *which method have we
 model* (evidence ledger, Table C). Table D is the load-bearing part: the **XPU kernel gate** that decides what
 is even servable on the B70 -- because the 4-bit-activation methods below depend on kernels we have not written.
 
-**Authoritative numbers live in [`../evals/results/SUMMARY.md`](../evals/results/SUMMARY.md)** -- this doc is the
+**Authoritative current numbers live in `JOURNAL.md` and the dated evidence docs** -- this doc is the
 method-pivoted *index*, not a second source of truth for metrics.
 **Detailed per-scheme recipes** (the `scripts/49` knobs) live in [`../MTP_TODO.md`](../MTP_TODO.md) Playbook B and
-[`literature/07_w8a8_int8_recovery.md`](literature/07_w8a8_int8_recovery.md). **Action plan:** [`../RESEARCH_TODO.md`](../RESEARCH_TODO.md).
+The older literature survey is quarantined. **Action plan:** [`../RESEARCH_TODO.md`](../RESEARCH_TODO.md).
 
 ---
 
@@ -190,5 +190,5 @@ Qwen2.5 in FlatQuant's `model_tools`** to size the port before writing any kerne
 
 - **Picking a method for a new run:** Table A (intended stack) -> Table D (is it servable yet?) -> Table B (what it is).
 - **After a run:** add/flip a row in Table C (method + model + scheme + plus/agree + status), and mirror the headline
-  into `JOURNAL.md`. Keep full metrics in `evals/results/SUMMARY.md`; this table only tracks *coverage + the delta story*.
+  into `JOURNAL.md`. Keep compact result summaries under `results/`; this table only tracks *coverage + the delta story*.
 - **Boundary:** W4A8 rows are the `w4a8/` agent's -- update by cross-reading their results, don't fork their work.

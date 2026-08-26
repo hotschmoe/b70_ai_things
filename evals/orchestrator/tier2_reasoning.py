@@ -1,11 +1,11 @@
-"""Tier 2 — reasoning, exact-match (GSM8K). Self-contained grader (our harness, no lm-eval/torch).
+"""Tier 2 -- reasoning, exact-match (GSM8K). Self-contained grader (our harness, no lm-eval/torch).
 
 Long reasoning chains compound per-token quant error, so GSM8K is a sensitive quant-delta signal. We
 load GSM8K test via `datasets`, prompt the served model (chat, greedy, seed-pinned), extract the final
 number, and exact-match against the gold answer. Keeping it in-repo means we control the prompt + answer
-extraction (vs lm-eval's heavier, torch-pulling install) — better for ironing out OUR orchestrator.
+extraction (vs lm-eval's heavier, torch-pulling install) -- better for ironing out OUR orchestrator.
 
-(For the broader task zoo — MMLU-Pro, GPQA, etc. — lm-evaluation-harness with `--model
+(For the broader task zoo -- MMLU-Pro, GPQA, etc. -- lm-evaluation-harness with `--model
 local-completions` against this same endpoint is the drop-in heavier alternative; see evals/README.)
 """
 from __future__ import annotations

@@ -6,7 +6,7 @@ Usage:  report.py evals/results/  [> evals/results/SUMMARY.md]
 Finds every results/<stamp>__<model>__<quant>/summary.json, picks the run whose quant looks like the
 reference (label contains 'bf16' / 'fp16', or marked reference), and expresses each quant's headline
 metrics as a delta / % of that reference. Deltas SMALLER than your measured noise floor are not real
-(README §4) — this table doesn't know your noise floor, so eyeball it against the bf16-vs-bf16 run.
+(README section 4) -- this table doesn't know your noise floor, so eyeball it against the bf16-vs-bf16 run.
 """
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def main() -> int:
 
     print("# Quant retention vs reference\n")
     if ref:
-        print(f"Reference: **{ref.get('quant')}** ({ref.get('model')})  ·  ref ppl = {ref_ppl}\n")
+        print(f"Reference: **{ref.get('quant')}** ({ref.get('model')})  *  ref ppl = {ref_ppl}\n")
     print("| quant | tier0 ppl | top1-agree vs ref | nll-gap | tier1 pass@1(+) | tier2 score | tier3 renders-clean |")
     print("|---|---|---|---|---|---|---|")
     for r in sorted(runs, key=lambda x: x.get("quant", "")):
@@ -57,9 +57,9 @@ def main() -> int:
         t2 = _metric(r, "2", "score")
         t3 = _metric(r, "3", "renders_clean_rate")
         def fmt(x, n=4):
-            return f"{x:.{n}f}" if isinstance(x, (int, float)) else "—"
+            return f"{x:.{n}f}" if isinstance(x, (int, float)) else "--"
         print(f"| {r.get('quant')} | {fmt(ppl)} | {fmt(agree)} | {fmt(gap)} | {fmt(t1s)} | {fmt(t2)} | {fmt(t3)} |")
-    print("\n> Reminder: trust a delta only if it exceeds your bf16-vs-bf16 noise floor (README §4).")
+    print("\n> Reminder: trust a delta only if it exceeds your bf16-vs-bf16 noise floor (README section 4).")
     return 0
 
 

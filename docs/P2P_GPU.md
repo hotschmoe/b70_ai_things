@@ -6,8 +6,8 @@ tensor-parallel (TP) inference -- kernel P2P primitives, the vLLM/oneCCL softwar
 compiler-collective alternative, and speculative composable-fabric architectures. Goal of this
 project: not just consume the state of the art, but contribute and pioneer new methods for B70 TP.
 
-Cross-refs: [DUALCARD.md](../DUALCARD.md), [FINDINGS.md](../FINDINGS.md),
-[docs/literature/02_multigpu.md](literature/02_multigpu.md), [docs/SERVING.md](SERVING.md).
+Cross-refs: [FINDINGS.md](../FINDINGS.md), [docs/SERVING.md](SERVING.md), and
+[the current topology evidence](20260825_xe_nonreboot_recovery_and_pcie_topology.md).
 
 
 ## 0. Our box (measured 2026-06-22)
@@ -187,7 +187,8 @@ fabric** (his P2P-on result may flip on the older bus -- worth one run); leave d
 ## E. Speculative architectures -- composable fabric / SR-IOV relocation
 
 Expanded, with the bifurcation-vs-switch distinction and a full cheap->deluxe ladder, in
-[MOONSHOT_RESEARCH.md](../MOONSHOT_RESEARCH.md). Summary below.
+The historical topology survey is quarantined; its relevant conclusions are
+summarized below.
 
 Idea on the table (Isaac): relocate the GPUs off the bad cross-die topology onto a clean PCIe Gen5
 switch, and reach them from the host over a fast fabric, made transparent via SR-IOV:
@@ -385,7 +386,7 @@ NET for TP=2 today: host-staged (P2P off) is our only path; SYCLKERNELS=1 graph 
 
 ### H.10 [MEASURED 2026-06-24] the allreduce BW number that sizes the entire P2P prize -- 1.16 GB/s host-staged
 `scripts/allreduce_bench.py`, both cards, xccl, int8g image. THE number for the P2P decision (full per-step
-disassembly in [`27b_w8a8_research.md`](../27b_w8a8_research.md)):
+disassembly from the quarantined historical 27B W8A8 analysis):
 ```
   msg          SYCL_KERNELS=1 (captured serve)   eager (SYCL=0)
                lat        algbw=busbw            lat       algbw       use

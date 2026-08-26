@@ -1,6 +1,0 @@
-SOAK port=31003 served=qwen36-27b-w8a8-gptq-mtp-push-abba deltas=1605 completion_tokens=6400 tok/delta=3.99 ttft=245ms
-window        tok/s
-  [    0- 3190]   16.53
-  [ 3190- 6380]   16.07
-  [ 6380- 6396]   15.67
-OVERALL decode 16.30 t/s | first/last window ratio 1.05x (stable) | coherence OK | first 100 chars: "Here's a thinking thinking sequence\n\n1.  **Deconstruct and Analyze the Request:**\n    *   Topic: How"

@@ -1,10 +1,10 @@
-# Dev-box (ms-r1) orchestrator deps. The GPU box needs none of this — it only serves vLLM.
+# Dev-box (ms-r1) orchestrator deps. The GPU box needs none of this -- it only serves vLLM.
 openai>=1.40
 pyyaml>=6.0
 numpy>=1.26
-# Tier 2 (gsm8k etc.) — EleutherAI harness with the OpenAI-compatible API backend
+# Tier 2 (gsm8k etc.) -- EleutherAI harness with the OpenAI-compatible API backend
 lm_eval[api]>=0.4.5
-# Tier 1 (HumanEval+/MBPP+) — needed on the HOST for dataset prompts + sanitize (no code exec here).
+# Tier 1 (HumanEval+/MBPP+) -- needed on the HOST for dataset prompts + sanitize (no code exec here).
 # Code EXECUTION/grading runs in the Docker sandbox instead: build with evals/sandbox/build.sh.
 evalplus==0.3.1   # pinned: host sanitize + the sandbox image must match
 # Tier 3 (headless render of creative builds)

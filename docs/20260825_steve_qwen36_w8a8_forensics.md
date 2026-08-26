@@ -242,7 +242,7 @@ endpoint and an exact identity artifact.
 ### R0. Clean Qwen S2B control
 
 Status: complete for the coherent P2P-off split-collective graph arm. Artifact:
-`/mnt/vm_8tb/b70/results/logs/qwen36_s2b_p2p0_steve_metric_20260825T030225Z.json`.
+`../results/logs/qwen36_s2b_p2p0_steve_metric_20260825T030225Z.json`.
 
 - Add a Qwen-only launcher for image digest
   `f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94`.

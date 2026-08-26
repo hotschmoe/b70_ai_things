@@ -60,8 +60,8 @@ Primary artifacts:
 - `results/logs/20260823T215451Z_sglang_w8a8_decode_push_gate1m.log`
 - `results/logs/20260823T220620Z_sglang_w8a8_decode_push_all.log`
 - `results/logs/profile_sglang_w8a8_pushall_20260823_221727_parsed.log`
-- `/mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_ab_20260823_213607`
-- `/mnt/vm_8tb/b70/sgl_cache/profile_sglang_w8a8_pushall_20260823_221727`
+- `../archive/research-evidence-20260823-26/runtime/sgl_cache/profile_sglang_w8a8_ab_20260823_213607`
+- `../archive/research-evidence-20260823-26/runtime/sgl_cache/profile_sglang_w8a8_pushall_20260823_221727`
 
 ## Transport microbench
 
