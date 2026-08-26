@@ -18889,3 +18889,66 @@ It tests native scratch-targeted quant output, not shared-object size or
 experimental layerlets. For dense 27B, repeat this replay/timing census and
 port only proven reusable quant/output primitives through a dense-specific
 adapter; derive its collective fence from its own profile shapes.
+
+### 2026-08-26b - Exact June-16 native scratch output gains 3.79 percent
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision
+`cced56592e8c8935f8220836b4baa04dfd389118`; true-June vLLM source
+`e190923b`; scratch-aware MoE dispatcher from `2dd55f38`; exact clean native
+checkpoint `122b698bc245d31668a7fe5f2ad5ce1d07ba08ca`; pinned torch 2.11 image;
+oneAPI DPC++ 2025.3.3; Release; Xe2 `bmg-g21-a0` AOT; MoE and GDN enabled;
+TP=2/PP=1; direct P2P; clone-completion fence for profile tensors with at least
+8192 rows; PIECEWISE 9-size capture; fresh compile cache. The runtime package
+is a copy of the June-9 control with only `_xpu_C.abi3.so`,
+`libgrouped_gemm_xe_2.so`, and `libgdn_attn_kernels_xe_2.so` replaced. Installed
+`_xpu_C` RUNPATH is `$ORIGIN`. Native hashes are `631f7331...`, `7d38d160...`,
+and `ee0481c8...` respectively.
+
+COMMAND:
+
+```text
+docker run --rm --user 1000:1000 --entrypoint bash \
+  -v /mnt/vm_8tb/b70/steve-repro/june122-xpuc-regular-20260826:/repro \
+  intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94 \
+  -lc 'source /opt/intel/oneapi/setvars.sh --force >/dev/null; \
+       VLLM_XPU_AOT_DEVICES=bmg-g21-a0 \
+       VLLM_XPU_XE2_AOT_DEVICES=bmg-g21-a0 \
+       ninja -C /repro/build -j2 -v _xpu_C'
+
+./bin/gpu-run env \
+  STAMP=20260826T012300Z_june122_endpoint SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint P2P_ACCESS=1 \
+  PROFILE_FENCE_MIN_ROWS=8192 STALL_TIMEOUT=300 \
+  I_KNOW_P2P_WEDGES=1 \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> the first relocated binary import failed closed because the build
+RUNPATH still named `/repro/build`. `cmake --install --component _xpu_C`
+rewrote it to `$ORIGIN`. The new `native-out` preflight then proved exact
+schemas and XPU dispatch for `_xpu_C::per_token_quant_int8_xpu_out` and
+`_xpu_C::silu_and_mul_quant_int8_xpu_out`; the original June-9 `full` suite
+also remained green. No GPU was touched until both CPU-only lanes passed.
+
+RESULT -> model load, 81/81 profile clone fences, native dense and routed MoE
+INT8 selection, 9/9 graph captures, semantic probes, and both 16/16 canaries
+passed. The endpoint measured 50.370643 corrected output tok/s, 307.853 ms
+client TTFT, and 10.163436 seconds server decode. Graceful teardown left both
+per-card probes and compiled-collective health green; exit was 0. Evidence:
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_20260826T012300Z_june122_endpoint`.
+Key SHA256 values: metric `02c20e0c...`, JSON `3f3497de...`, color
+`ee7eafd9...`, preflight `38788447...`, run log `5d398df5...`, and committed
+server log `2713348e...`. The server log was mechanically made ASCII and
+trailing-whitespace-clean after capture: raw `cdf6a929...` -> committed
+`2713348e...`; the run log was trailing-whitespace-cleaned from raw
+`d81c7ae2...` to committed `5d398df5...`.
+
+VERDICT -> compare endpoint with endpoint: 50.370643 versus the matched
+June-9 true-source control at 48.531479 is +1.839164 tok/s, or +3.79 percent.
+The 35.469940 result is a deliberately synchronized diagnostic and is not an
+apples-to-apples baseline. Native scratch-targeted quant output is a real win,
+but it explains only a small part of Steve's remaining 85.869114 tok/s gap.
+Next: repeat synchronized timing on `NATIVE_STACK=june122-checkpoint`, then
+measure integrated graph collective/runtime cost. Dense 27B should inherit the
+operator-presence, graph-piece, timing, and correctness methodology, not the
+MoE-only workspace/layerlet code or the Qwen35-specific 8192-row fence.

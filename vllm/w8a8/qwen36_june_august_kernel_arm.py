@@ -40,6 +40,14 @@ COMMON_SCHEMAS = {
     "_xpu_C::per_token_quant_int8_xpu": (
         "_xpu_C::per_token_quant_int8_xpu(Tensor x) -> (Tensor, Tensor)"
     ),
+    "_xpu_C::per_token_quant_int8_xpu_out": (
+        "_xpu_C::per_token_quant_int8_xpu_out(Tensor x, "
+        "Tensor($0! -> ) q, Tensor($1! -> ) scales) -> (Tensor, Tensor)"
+    ),
+    "_xpu_C::silu_and_mul_quant_int8_xpu_out": (
+        "_xpu_C::silu_and_mul_quant_int8_xpu_out(Tensor x, "
+        "Tensor($0! -> ) q, Tensor($1! -> ) scales) -> (Tensor, Tensor)"
+    ),
     "_xpu_C::int8_gemm_w8a8": (
         "_xpu_C::int8_gemm_w8a8(Tensor A, Tensor A_scale, Tensor B, "
         "Tensor B_scale, ScalarType? out_dtype, Tensor? bias) -> Tensor"
@@ -173,7 +181,18 @@ def identify(args: argparse.Namespace) -> dict[str, Any]:
             "_xpu_C::int8_gemm_w8a8",
         },
         "grouped": {"_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface"},
-        "full": set(COMMON_SCHEMAS),
+        "full": set(COMMON_SCHEMAS)
+        - {
+            "_xpu_C::per_token_quant_int8_xpu_out",
+            "_xpu_C::silu_and_mul_quant_int8_xpu_out",
+        },
+        "native-out": {
+            "_xpu_C::per_token_quant_int8_xpu",
+            "_xpu_C::per_token_quant_int8_xpu_out",
+            "_xpu_C::silu_and_mul_quant_int8_xpu_out",
+            "_xpu_C::int8_gemm_w8a8",
+            "_xpu_C::cutlass_grouped_gemm_w8a8_int8_interface",
+        },
     }
     schemas: dict[str, Any] = {}
     for name, expected in COMMON_SCHEMAS.items():
@@ -567,6 +586,7 @@ def main() -> int:
             "dense",
             "quant-dense",
             "grouped",
+            "native-out",
         ),
         required=True,
     )

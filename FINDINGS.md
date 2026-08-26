@@ -296,7 +296,11 @@ own `scripts/58_tp2_campaign.sh` + `scripts/64_dataparallel_2rep.sh` generate th
   timing and adds native output-buffer variants for per-token quantization and fused SiLU/mul/quantization.
   The scratch-aware Python route already probes these operators; the June-9 binary lacks them and allocates then
   copies for two quantizations across each of 40 MoE layers (80 calls/step). Steve explicitly unset fused
-  SiLU+quant, so that sibling is not attributed to the accepted result. Next is a binary-only `122b698b` A/B.
+  SiLU+quant, so that sibling is not attributed to the accepted result. The exact binary-only `122b698b` A/B
+  is now complete: 50.3706 tok/s versus the matched June-9 endpoint at 48.5315 tok/s (+3.79 percent), with both
+  16/16 canaries and post-teardown per-card plus compiled-collective health green. Native quant `_out` helps,
+  but it is not the missing 1.7x. The 35.4699 result is a synchronized diagnostic and is not the endpoint
+  baseline for this comparison. Next is synchronized `122b698b` timing and integrated graph-collective cost.
   Dense 27B must reuse the replay/timing method and separately test
   reusable quant/output-buffer primitives through a dense-specific adapter; MoE layerlet/sidecar code is not transferable evidence.
 

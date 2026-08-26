@@ -72,6 +72,26 @@ This reachability map is why the first `122b698b` transaction swaps native
 siblings only while preserving the `2dd55f38` scratch-aware Python dispatcher.
 It is an operator-presence A/B, not a wholesale experimental-layerlet test.
 
+### Exact `122b698b` Native A/B Result
+
+The clean June-16 checkpoint was rebuilt with oneAPI DPC++ 2025.3.3, Release,
+Xe2, `bmg-g21-a0` AOT, MoE and GDN enabled, and the pinned torch 2.11 image.
+Only `_xpu_C.abi3.so`, `libgrouped_gemm_xe_2.so`, and
+`libgdn_attn_kernels_xe_2.so` were replaced in a copy of the June-9 runtime.
+The installed `_xpu_C` RUNPATH is `$ORIGIN`. The strict preflight proved both
+native quantization output schemas and XPU dispatch before any GPU touch.
+
+The matched unsynchronized endpoint measured 50.370643 tok/s, 307.853 ms
+client TTFT, and 10.163436 seconds server decode. The June-9 endpoint under the
+same June source was 48.531479 tok/s, so the exact native checkpoint gains
+1.839164 tok/s, or 3.79 percent. Both 16/16 repeat canaries passed, graph capture
+completed 9/9, and per-card plus compiled-collective health remained green
+after graceful teardown. This comparison must not use the 35.469940 tok/s
+synchronized diagnostic as its baseline. The result proves native scratch
+output matters but does not explain Steve's remaining endpoint gap. Next:
+repeat synchronized timing with `NATIVE_STACK=june122-checkpoint`, then measure
+integrated graph collective/runtime cost.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B
@@ -683,13 +703,15 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 6. DONE: built-in replay tracing matched Steve's 41-piece topology. Under the
    same synchronized protocol, rank-0 model-forward is 22.6748 ms versus
    5.6946 ms, a 3.9818x execution gap.
-7. Build and test exact checkpoint `122b698b` as a native-binary-only A/B. Its
-   quantization output-buffer operators are absent from the June-9 package but consumed by
-   the already active scratch-aware Python dispatcher.
-8. Convert the required delta into attributed local patches and a pinned image;
+7. DONE: exact checkpoint `122b698b` native-binary-only A/B passed at 50.3706
+   tok/s versus 48.5315 tok/s for June-9 (+3.79 percent), with all coherence and
+   teardown-health gates green.
+8. Repeat synchronized timing on `122b698b`, then isolate integrated graph
+   collective/runtime cost from local model compute.
+9. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
-9. Promote recovered native changes into owned source only after schema,
+10. Promote recovered native changes into owned source only after schema,
    numeric, graph replay, endpoint, and timing evidence.
-10. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
+11. Transfer each proven graph/runtime mechanism to dense 27B one factor at a
    time. Census its own profile collective shapes and derive its clone-fence
    threshold; do not copy Qwen35's 8192-row threshold.

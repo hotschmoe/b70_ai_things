@@ -323,9 +323,15 @@ The native Quark repair, closest surviving June vLLM source transaction, and
 instrumented decode census are now complete. Replay tracing reports the same
 41 graph pieces as Steve. Under his synchronized pure-decode protocol, local
 rank-0 model-forward is 22.6748 ms versus 5.6946 ms, a 3.9818x execution gap.
-The next experiment swaps only native siblings rebuilt from exact checkpoint
-`122b698b`; its output-buffer operators are consumed conditionally by the
-already active scratch-aware dispatcher but absent from the June-9 package.
+The exact native sibling swap from checkpoint `122b698b` is now measured at
+50.3706 tok/s versus the matched June-9 endpoint at 48.5315 tok/s (+3.79
+percent). Both 16/16 canaries, graph capture, per-card health, and compiled
+collective post-health passed. Its output-buffer operators are consumed
+conditionally by the already active scratch-aware dispatcher and are absent
+from the June-9 package. The gain is real but does not explain the missing
+1.7x; synchronized native-checkpoint timing and integrated collective cost are
+next. Do not compare this endpoint with the deliberately synchronized 35.4699
+tok/s diagnostic.
 The accepted path performs two scratch-targeted quantizations in each of 40
 MoE layers, or 80 calls/step; its fused SiLU+quant switch is explicitly unset.
 Transfer proven graph/runtime changes to dense 27B one factor at a time;

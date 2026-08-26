@@ -34,9 +34,12 @@
 > output-buffer variants used conditionally by the scratch-aware dispatcher.
 > The accepted path needs the per-token quant `_out` primitive 80 times/step;
 > fused SiLU+quant was explicitly unset and is not part of this attribution.
-> NEXT: finish
-> the exact `122b698b` build and run a native-binary-only A/B, then repeat the
-> synchronized timing trace. Transfer only proven reusable quant/output behavior
+> Exact `122b698b` is now built and passes the stricter native-output operator
+> census. Its matched unsynchronized endpoint is 50.3706 tok/s versus 48.5315
+> for June-9, a coherent +3.79 percent with both canaries and post-health green.
+> Do not compare it with the 35.4699 synchronized diagnostic. NEXT: repeat the
+> synchronized timing trace on `122b698b`, then isolate integrated graph
+> collective and runtime cost. Transfer only proven reusable quant/output behavior
 > to 27B; census its own graph pieces and profile collectives, and keep MoE
 > layerlet/sidecar code out of the dense conclusion.
 >

@@ -242,8 +242,11 @@ nine graphs. The true-June source control raises the stable endpoint to
 48.5315 tok/s. Instrumented replay observes the same 41 graph pieces as Steve,
 while synchronized rank-0 model-forward is 22.6748 ms versus 5.6946 ms. The
 active target is therefore native/runtime execution inside the matched
-topology. The next controlled toggle is exact checkpoint `122b698b` native
-siblings.
+topology. Exact checkpoint `122b698b` native siblings then measured 50.3706
+tok/s versus 48.5315 tok/s for the matched June-9 endpoint (+3.79 percent),
+with both canaries and post-health green. Native scratch output helps but is
+not the missing 1.7x. The next controlled toggle is synchronized timing on the
+same native checkpoint, followed by integrated graph-collective timing.
 
 ### 6. Collective paths
 
@@ -322,13 +325,16 @@ equivalence before performance tests.
    pinned August package cannot be the grouped arm because that schema is
    absent. It passed full-model dispatch/capture/coherence gates, but it lacks
    the later quantization output-buffer schemas.
-11. IN PROGRESS: rebuild exact native checkpoint `122b698b`, then prove its
-   schema/import contract and run a native-binary-only endpoint/timing A/B.
-12. Implement and gate the SGLang-native route.
-13. Execute the model and parallelism portability matrix.
-14. Transfer only proven wins to Ornith and dense 27B, then add MTP and prefix
+11. DONE: exact native checkpoint `122b698b` passes schema/import, endpoint,
+   coherence, graph-capture, and teardown-health gates at 50.3706 tok/s, a
+   matched +3.79 percent over June-9.
+12. IN PROGRESS: repeat synchronized timing on `122b698b`, then isolate
+   integrated graph collective/runtime cost.
+13. Implement and gate the SGLang-native route.
+14. Execute the model and parallelism portability matrix.
+15. Transfer only proven wins to Ornith and dense 27B, then add MTP and prefix
    caching.
-15. Run Pi plus local Terminal-Bench and promote only a coherent winner.
+16. Run Pi plus local Terminal-Bench and promote only a coherent winner.
 
 ## Definition Of Done
 

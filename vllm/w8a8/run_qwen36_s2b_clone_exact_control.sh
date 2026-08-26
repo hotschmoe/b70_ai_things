@@ -12,13 +12,9 @@ MODEL_REVISION="cced56592e8c8935f8220836b4baa04dfd389118"
 EXPECTED_CONFIG_SHA256="b2a92fb7dfea6bdd94572df58b198efe6a391c81dbc5b848b15a2c43d6f9abc0"
 EXPECTED_INDEX_SHA256="c973ada0f6042784fb2f8dbe53b81c6b8a78887ddc487bcf08f2c6d2d42f2f7a"
 EXPECTED_CCL_SHA256="542142aca8f3d318616eae0f300aaa47dc62b217831599cb1461212f8aa4dc76"
-JUNE_RUNTIME="/mnt/vm_8tb/b70/steve-repro/june-xpuc-bmg-g21-a0-20260825/runtime-candidate"
-EXPECTED_XPU_C_SHA256="2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d"
 EXPECTED_C_SHA256="5717476461048b5056a92926f2a52d73c121f69bdc75de22fd52720fb65b3007"
 EXPECTED_MOE_C_SHA256="ea4c20a8dff49fc07fd799d5a2a47e8b24266a256425b41e337f852492ee3c1b"
 EXPECTED_FA2_C_SHA256="b62f6f70e7c991ceffd3c326092b7c26e48dbe502e2a76535e0024d2d3f2fc5c"
-EXPECTED_GROUPED_SHA256="f5ddc2ee3c11dcede3a7190b69d6e0dd354bb0727be7519600abaebe9fc4cd2c"
-EXPECTED_GDN_SHA256="366935b172b5c9c3cb75bee5d7bfe0434f377a6317314a9a43c853b5d02fe83b"
 EXPECTED_ATTN_SHA256="773b5539b37abf163c59caebc9956390e7c9741a458c343046dcaf2178e7104f"
 EXPECTED_GROUPED_DEFAULT_SHA256="1f5ec0f22ec4e21ec59e3fc38b46818398e296db0a7e10a13163907422ac490a"
 EXPECTED_MQA_SHA256="e51af18e63cf3f888bcbf9d99f8207b2521ce3182121a9b3ea9a33b490c39ca5"
@@ -27,6 +23,26 @@ EXPECTED_FUSED_MOE_SHA256="433ee08a80ab8e1c12d000e7d2a683c0e325c2971868ca3107507
 EXPECTED_CCL_KERNELS_SHA256="0d549c35a558f1b216cb7d1efeaa9f86d7596ffc47b383644e075290d314f0c9"
 STEVE_TIMING_REFERENCE="$SCRIPT_DIR/manifests/qwen36_steve_tp2_synced_timing_reference_20260619.json"
 EXPECTED_STEVE_TIMING_REFERENCE_SHA256="bda64332cb8a9a70a9fd04536c3928931d904b25eb9368c177518bd7788efe28"
+NATIVE_STACK="${NATIVE_STACK:-june9-minimal}"
+case "$NATIVE_STACK" in
+  june9-minimal)
+    JUNE_RUNTIME="/mnt/vm_8tb/b70/steve-repro/june-xpuc-bmg-g21-a0-20260825/runtime-candidate"
+    EXPECTED_XPU_C_SHA256="2d931484ee0aadd4c9fb6abf494e147a5275210a216426a1eb56add0158bef0d"
+    EXPECTED_GROUPED_SHA256="f5ddc2ee3c11dcede3a7190b69d6e0dd354bb0727be7519600abaebe9fc4cd2c"
+    EXPECTED_GDN_SHA256="366935b172b5c9c3cb75bee5d7bfe0434f377a6317314a9a43c853b5d02fe83b"
+    KERNEL_PREFLIGHT_SUITE=full
+    native_suffix=""
+    ;;
+  june122-checkpoint)
+    JUNE_RUNTIME="/mnt/vm_8tb/b70/steve-repro/june122-xpuc-regular-20260826/runtime-candidate"
+    EXPECTED_XPU_C_SHA256="631f733119e33dfe37d0691e6520749b07d1417bd55f29bde2ed56ab49e586e8"
+    EXPECTED_GROUPED_SHA256="7d38d1603de9b703a2c0106a354d2d40ad449afe4f539e374b215f1895206aaa"
+    EXPECTED_GDN_SHA256="ee0481c8affca919371f740e847e4d5e6a84c1ee6a7c398437e13aff32238b02"
+    KERNEL_PREFLIGHT_SUITE=native-out
+    native_suffix="_native_june122"
+    ;;
+  *) echo "NATIVE_STACK must be june9-minimal or june122-checkpoint" >&2; exit 2 ;;
+esac
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 P2P_ACCESS="${P2P_ACCESS:-1}"
 case "$P2P_ACCESS" in 0|1) ;; *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;; esac
@@ -95,7 +111,7 @@ done
 }
 source_suffix=""
 [ "$SOURCE_STACK" = june-e190 ] && source_suffix="_june_e190"
-NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}_${STAMP}"
+NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
@@ -238,7 +254,7 @@ docker run --rm --entrypoint python \
   -v "$RESULT_DIR:/opt/preflight-out" \
   "$IMG" /opt/kernel_arm.py \
   --arm june-exact-control-preflight \
-  --suite full \
+  --suite "$KERNEL_PREFLIGHT_SUITE" \
   --offdevice \
   --expected-package-root /opt/june-runtime/vllm_xpu_kernels \
   --expected-hashes "$JUNE_HASHES_JSON" \
@@ -282,8 +298,8 @@ else
 fi
 echo "config -> moe_trace=$MOE_TRACE allreduce_trace=$ALLREDUCE_TRACE allreduce_trace_sync=$ALLREDUCE_TRACE_SYNC allreduce_trace_max_calls=$ALLREDUCE_TRACE_MAX_CALLS profile_fence_min_rows=$PROFILE_FENCE_MIN_ROWS profile_fence_stages=$PROFILE_FENCE_STAGES cache_reuse=${ALLOW_EXISTING_CACHE:-0}"
 echo "config -> decode_timing=$DECODE_TIMING timing_sync=$DECODE_TIMING_SYNC timing_skip=$DECODE_TIMING_SKIP_FIRST timing_step_skip=$DECODE_TIMING_STEP_SKIP_FIRST timing_step_every=$DECODE_TIMING_STEP_EVERY replay_trace=$CUDAGRAPH_REPLAY_TRACE replay_trace_max_lines=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES"
-echo "config -> source_stack=$SOURCE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
-echo "config -> kernel_runtime=locally-rebuilt-June-complete-package xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
+echo "config -> source_stack=$SOURCE_STACK native_stack=$NATIVE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=0 cache=$CACHE_DIR"
+echo "config -> kernel_runtime=locally-rebuilt-June-complete-package preflight_suite=$KERNEL_PREFLIGHT_SUITE xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
 echo "config -> selector=level_zero:0,1 affinity=0,1 inductor_cache=/vllm_cache/torchinductor"
 printf '%s\n' "${runtime_hashes[@]}"
 if [ "${PREFLIGHT_ONLY:-0}" = 1 ]; then

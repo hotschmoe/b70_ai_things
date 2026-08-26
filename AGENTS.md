@@ -52,12 +52,17 @@ Working notes for any agent on this repo. Keep this file short; details live in
   lacks them and falls back to allocate/copy. On the accepted path, fused
   SiLU+quant is explicitly unset; the relevant delta is two scratch-targeted
   per-token quantizations across each of 40 MoE layers, or 80 calls/step. Treat
-  `122b698b` native binaries
-  as the next controlled A/B, not as a file-size hypothesis. For dense 27B,
-  repeat the graph-piece and synchronized timing census, then transfer proven
-  reusable quant/output-buffer primitives separately; do not copy MoE-only
-  layerlet/sidecar code or Qwen35's 8192-row fence threshold. See JOURNAL
-  2026-08-26 and `docs/20260825_steve_stack_component_ledger.md`.
+  Exact `122b698b` native binaries are now measured: 50.3706 tok/s versus the
+  matched June-9 unsynchronized control at 48.5315 tok/s, a coherent +3.79
+  percent with both 16/16 canaries and post-teardown health green. This proves
+  native scratch-targeted quant output is useful but not Steve's missing 1.7x;
+  synchronized timing on this binary is the next localization arm. Never
+  compare the 50.3706 unsynchronized endpoint with the deliberately synchronized
+  35.4699 diagnostic. For dense 27B, repeat the graph-piece and synchronized
+  timing census, then transfer proven reusable quant/output-buffer primitives
+  separately; do not copy MoE-only layerlet/sidecar code, Qwen35's mixed MoE
+  workspace, or its 8192-row fence threshold. See JOURNAL 2026-08-26 and
+  `docs/20260825_steve_stack_component_ledger.md`.
 
 ## Workflow
 
