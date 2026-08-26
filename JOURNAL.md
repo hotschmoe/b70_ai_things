@@ -19113,3 +19113,49 @@ and SYCL-scratch failures remain separate. Next, profile this full-decode arm
 to prove the expected fence/host-wait collapse, then isolate the remaining 81
 collectives and native MoE work inside its single replay. Dense 27B must test
 its own no-MTP full-decode arm rather than inherit the old MTP blocker.
+
+### 2026-08-26f - Full-decode profile collapses replay to one fence
+
+CONFIG -> same exact `FULL_DECODE_ONLY` plus `TRITON_ATTN` no-MTP control as
+2026-08-26e, with the proven compile cache reused and a bounded torch XPU
+profile: two delayed iterations and eight recorded decode iterations per rank.
+The profile request was separate from the ordinary metric and repeat canaries.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN=TRITON_ATTN XPU_PROFILE=1 P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=600 ALLOW_EXISTING_CACHE=1 \
+  CACHE_DIR=/mnt/vm_8tb/b70/vllm_cache_qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_attn_triton_attn_20260826T024000Z_full_decode_triton \
+  STAMP=20260826T025000Z_full_decode_profile \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> both ranks recorded eight iterations. Median per-token driver counts
+fell from PIECEWISE's 41 `zeFenceReset`, 41 `zeEventHostSynchronize`, and 82
+`zeCommandQueueExecuteCommandLists` calls to FULL decode's 1, 2, and 2.
+Visible device work was only 1.077620 ms on rank 0 and 1.062816 ms on rank 1;
+GDN, full attention, routed MoE, and the 81 all-reduces are inside the opaque
+full graph and do not appear as individual device events.
+
+RESULT -> after skipping the first two profiled iterations, six steady-state
+rank-0 samples began the longest wait 9.215851 ms into the iteration, waited
+2.731938 ms, and had 2.163153 ms of host work after the next graph submission;
+mean iteration range was 14.429410 ms. Rank 1 measured 8.938722, 3.300870,
+1.962969, and 14.517247 ms. This wait is the exposed tail of the preceding
+asynchronous full graph after overlap with host input preparation, not the full
+graph duration.
+
+RESULT -> the profiled request measured 61.543223 tok/s and the ordinary
+request afterward measured 61.559842 tok/s, within 0.01 percent of the clean
+61.553562 result. Semantic output, both 16/16 canaries, graceful teardown, both
+card probes, and compiled two-rank collective health passed.
+
+VERDICT -> the 22.20 percent FULL win is exactly replay-boundary reduction,
+and that boundary is now one graph per token. The remaining 24.3156 tok/s gap
+is dominated by execution inside the opaque graph plus smaller host work. Next
+work must expose or optimize the 81 in-graph collectives and native MoE path;
+further piece-count reduction is closed. Dense 27B should reuse the same
+PIECEWISE-versus-FULL driver census and opacity guard.

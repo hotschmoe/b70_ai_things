@@ -1,0 +1,26 @@
+TRACE -> results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_xpu_profile_cg_full_decode_only_attn_triton_attn_20260826T025000Z_full_decode_profile/xpu_profile/1787712688382969197-rank-0.1787712793758375880.pt.trace.json.gz
+ITERATION -> count=8 cpu_median_ms=14.403522 visible_device_mean_ms=1.077620
+DRIVER -> zeCommandQueueExecuteCommandLists count_median=2.0 cpu_mean_us=50.319
+DRIVER -> zeFenceReset count_median=1.0 cpu_mean_us=0.229
+DRIVER -> zeEventHostSynchronize count_median=2.0 cpu_mean_us=2371.725
+DRIVER -> zeCommandListAppendBarrier count_median=3.0 cpu_mean_us=16.612
+DRIVER -> zeCommandListAppendLaunchKernel count_median=31.0 cpu_mean_us=308.742
+DRIVER -> urEnqueueKernelLaunch count_median=31.0 cpu_mean_us=4700.402
+DEVICE -> gemm_visible count=8 mean_ms_per_iteration=0.962187
+DEVICE -> other_visible count=232 mean_ms_per_iteration=0.053323
+DEVICE -> collective_visible count=8 mean_ms_per_iteration=0.040442
+DEVICE -> memcpy_visible count=88 mean_ms_per_iteration=0.021668
+FULL_REPLAY -> samples=6 pre_wait_mean_ms=9.215851 wait_mean_ms=2.731938 post_submit_tail_mean_ms=2.163153 iteration_mean_ms=14.429410
+TRACE -> results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_xpu_profile_cg_full_decode_only_attn_triton_attn_20260826T025000Z_full_decode_profile/xpu_profile/1787712688382969197-rank-1.1787712793758431576.pt.trace.json.gz
+ITERATION -> count=8 cpu_median_ms=14.460290 visible_device_mean_ms=1.062816
+DRIVER -> zeCommandQueueExecuteCommandLists count_median=2.0 cpu_mean_us=50.701
+DRIVER -> zeFenceReset count_median=1.0 cpu_mean_us=0.232
+DRIVER -> zeEventHostSynchronize count_median=2.0 cpu_mean_us=2862.821
+DRIVER -> zeCommandListAppendBarrier count_median=3.0 cpu_mean_us=24.847
+DRIVER -> zeCommandListAppendLaunchKernel count_median=31.0 cpu_mean_us=300.560
+DRIVER -> urEnqueueKernelLaunch count_median=31.0 cpu_mean_us=4615.637
+DEVICE -> gemm_visible count=8 mean_ms_per_iteration=0.961562
+DEVICE -> other_visible count=232 mean_ms_per_iteration=0.053141
+DEVICE -> collective_visible count=8 mean_ms_per_iteration=0.026718
+DEVICE -> memcpy_visible count=88 mean_ms_per_iteration=0.021395
+FULL_REPLAY -> samples=6 pre_wait_mean_ms=8.938722 wait_mean_ms=3.300870 post_submit_tail_mean_ms=1.962969 iteration_mean_ms=14.517247

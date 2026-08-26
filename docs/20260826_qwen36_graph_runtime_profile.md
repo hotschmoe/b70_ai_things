@@ -134,6 +134,27 @@ PIECEWISE command. PIECEWISE remains the provenance control. Next, profile the
 full-decode arm to verify the expected replay/host-wait collapse, then isolate
 the remaining 81-collective and native-MoE cost inside the single replay.
 
+The bounded full-decode profile confirms that collapse. Per-token medians fall
+from 41 to 1 fence reset and from 82 to 2 queue submissions. Host event waits
+fall from 41 to 2. GDN, full attention, routed MoE, and the 81 all-reduces move
+inside the opaque full graph; the remaining visible device work is only about
+1.08 ms/rank and is not a full graph ledger.
+
+Across six steady-state profiled iterations after skipping the first two,
+rank 0 begins its longest wait 9.215851 ms into the iteration, waits 2.731938
+ms for the preceding asynchronous graph tail, and has 2.163153 ms of host work
+after the next graph submissions. Rank 1 values are 8.938722, 3.300870, and
+1.962969 ms. Mean iteration ranges are 14.429410 and 14.517247 ms. The wait is
+only the exposed tail after host input preparation overlaps the preceding
+graph; it is not the full graph device duration.
+
+The profile arm itself measured 61.543223 tok/s, and the ordinary request after
+profiling measured 61.559842 tok/s. Unlike the PIECEWISE profiler process, this
+full-decode process did not show a large endpoint slowdown. Endpoint timing is
+still treated as diagnostic because profiling was enabled, but the repeat
+agrees with the clean 61.553562 result to 0.01 percent. The remaining target is
+now explicitly in-graph MoE and collective execution, not replay-piece count.
+
 ## Dense 27B Transfer Contract
 
 Dense 27B must reuse the method, not Qwen3.6-specific constants:

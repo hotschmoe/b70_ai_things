@@ -49,9 +49,12 @@
 > is a real win: no-MTP `FULL_DECODE_ONLY` plus `TRITON_ATTN` captured six full
 > decode graphs and reached 61.5536 tok/s versus 50.3706 PIECEWISE (+22.20
 > percent), with all coherence and health gates green. This leaves 24.3156
-> tok/s to Steve. NEXT: profile the full-decode arm to confirm replay/host-wait
-> collapse, then expose the remaining 81-collective and native-MoE cost inside
-> the single replay. Keep the clean endpoint as the speed
+> tok/s to Steve. Full-decode profiling confirms the mechanism: 41 fences/41
+> waits/82 submissions fall to 1/2/2 per token. Steady state overlaps about 9
+> ms host preparation with the preceding graph, then exposes 2.73-3.30 ms of
+> graph-tail wait and about 2 ms post-submit work. NEXT: expose or optimize the
+> remaining 81-collective and native-MoE cost inside the opaque single replay;
+> do not spend more cycles reducing graph-piece count. Keep the clean endpoint as the speed
 > gate because profiler-enabled endpoint timing is perturbed. Transfer only proven reusable quant/output behavior
 > to 27B; census its own graph pieces and profile collectives, and keep MoE
 > layerlet/sidecar code out of the dense conclusion.

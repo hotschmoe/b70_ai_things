@@ -457,6 +457,13 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   "FULL is blocked on B70" claim is retired for no-MTP exact-June serving;
   stock/MTP GDN and SYCL-scratch failures remain separate scoped blockers.
   Dense 27B should test its own no-MTP full-decode arm.
+- **[2026-08-26 FULL replay mechanism]** Bounded profiling drops the exact
+  per-token driver signature from PIECEWISE 41 fences/41 waits/82 submissions
+  to FULL decode 1 fence/2 waits/2 submissions. About 9 ms of host preparation
+  overlaps the preceding graph, followed by a 2.73-3.30 ms exposed graph-tail
+  wait and about 2 ms post-submit host work. Routed MoE and 81 all-reduces are
+  now inside the opaque single graph. The next speed target is in-graph
+  collective/MoE execution, not further graph-piece reduction.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

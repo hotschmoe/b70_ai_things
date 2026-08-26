@@ -86,6 +86,13 @@ Working notes for any agent on this repo. Keep this file short; details live in
   blanket "FULL is blocked" claim: the remaining block applies to particular
   stock/MTP GDN or SYCL-scratch paths, not this no-MTP control. Dense 27B must
   test its own no-MTP full-decode arm before rejecting FULL capture.
+- **FULL-decode profiling closes the replay mechanism.** The exact full arm
+  drops PIECEWISE's 41 fences/41 waits/82 submissions to 1 fence/2 waits/2
+  submissions per token. Steady-state host preparation overlaps the preceding
+  graph for about 9 ms, then exposes a 2.73-3.30 ms graph-tail wait and about
+  2 ms of post-submit work. The remaining MoE and 81 collectives are inside the
+  opaque single graph. Future work should optimize or expose those in-graph
+  operators, not keep reducing an already single replay boundary.
 
 ## Workflow
 

@@ -122,6 +122,15 @@ PIECEWISE command, but it proves local replay-boundary reduction is material
 and corrects the blanket claim that FULL capture is always blocked on B70.
 The remaining gap to Steve is 24.315552 tok/s.
 
+Bounded profiling proves the full-decode mechanism. The per-token driver
+signature falls from PIECEWISE's 41 fences/41 waits/82 submissions to one
+fence/two waits/two submissions. After host preparation overlaps the preceding
+graph for about 9 ms, the exposed graph-tail wait is 2.731938 ms on rank 0 and
+3.300870 ms on rank 1; about 2 ms of host work follows submission. Captured
+MoE and the 81 all-reduces remain opaque inside the single replay. The next
+attribution target is therefore in-graph collective and MoE execution, not
+piece-boundary reduction.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B
@@ -741,8 +750,9 @@ Rejected or diagnostic-only in Steve's Qwen lane:
 9. PARTIAL: bounded XPU profiling exposes the exact 41-fence/41-host-wait/
    82-submit structure but not the routed MoE or 81 replay-internal TP
    collectives. Split-die worker affinity is neutral. No-MTP FULL decode is a
-   coherent +22.20 percent at 61.5536 tok/s. Profile that arm, then isolate the
-   remaining collective and MoE cost inside its single replay.
+   coherent +22.20 percent at 61.5536 tok/s. Profiling proves its 1-fence/2-
+   wait/2-submit boundary. Isolate the remaining collective and MoE cost inside
+   the single replay.
 10. Convert the required delta into attributed local patches and a pinned image;
    do not retain a Steve checkout mount.
 11. Promote recovered native changes into owned source only after schema,

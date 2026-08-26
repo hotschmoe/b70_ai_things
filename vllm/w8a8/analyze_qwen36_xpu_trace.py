@@ -165,7 +165,7 @@ def analyze(path: Path) -> dict[str, Any]:
 
     cpu_range_values = [row["cpu_range_us"] for row in per_iteration]
     device_values = [row["visible_device_us"] for row in per_iteration]
-    return {
+    report = {
         "protocol": "qwen36-e190-bounded-xpu-trace-v1",
         "trace": str(path),
         "iteration_count": len(iterations),
@@ -208,6 +208,70 @@ def analyze(path: Path) -> dict[str, Any]:
         ),
     }
 
+    # FULL decode has one graph fence and two queue submissions per token.
+    # Report its steady-state host/replay boundary separately. The first two
+    # profiled iterations can lack a preceding graph or still fill the
+    # pipeline, so they are excluded when enough rows are available.
+    full_rows: list[dict[str, float]] = []
+    steady_iterations = iterations[2:] if len(iterations) >= 4 else iterations
+    for iteration in steady_iterations:
+        owned_driver = [
+            event
+            for event in events
+            if event.get("cat") == "xpu_driver"
+            and event.get("tid") == iteration.get("tid")
+            and contains(iteration, event)
+        ]
+        fences = [
+            event for event in owned_driver if event.get("name") == "zeFenceReset"
+        ]
+        submits = sorted(
+            [
+                event
+                for event in owned_driver
+                if event.get("name") == "zeCommandQueueExecuteCommandLists"
+            ],
+            key=lambda event: float(event["ts"]),
+        )
+        waits = [
+            event
+            for event in owned_driver
+            if event.get("name") == "zeEventHostSynchronize"
+        ]
+        if len(fences) != 1 or len(submits) != 2 or not waits:
+            continue
+        longest_wait = max(waits, key=lambda event: float(event.get("dur", 0.0)))
+        iteration_start = float(iteration["ts"])
+        iteration_end = iteration_start + float(iteration.get("dur", 0.0))
+        last_submit_end = float(submits[-1]["ts"]) + float(
+            submits[-1].get("dur", 0.0)
+        )
+        full_rows.append(
+            {
+                "pre_wait_start_us": float(longest_wait["ts"]) - iteration_start,
+                "longest_wait_us": float(longest_wait.get("dur", 0.0)),
+                "first_submit_us": float(submits[0]["ts"]) - iteration_start,
+                "last_submit_end_us": last_submit_end - iteration_start,
+                "post_submit_tail_us": iteration_end - last_submit_end,
+                "iteration_us": float(iteration.get("dur", 0.0)),
+            }
+        )
+    if full_rows:
+        report["full_replay_boundary_steady_state"] = {
+            "sample_count": len(full_rows),
+            "skip_profiled_iterations": 2 if len(iterations) >= 4 else 0,
+            **{
+                field: stats([row[field] for row in full_rows])
+                for field in full_rows[0]
+            },
+            "interpretation_guard": (
+                "The wait is the exposed tail of the preceding asynchronous "
+                "full graph after host input preparation; it is not the full "
+                "graph device duration."
+            ),
+        }
+    return report
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -238,6 +302,16 @@ def main() -> None:
                 f"{row['bucket']} count={row['kernel_count']} "
                 f"mean_ms_per_iteration="
                 f"{row['device_mean_us_per_iteration'] / 1000.0:.6f}"
+            )
+        boundary = report.get("full_replay_boundary_steady_state")
+        if boundary:
+            print(
+                "FULL_REPLAY -> "
+                f"samples={boundary['sample_count']} "
+                f"pre_wait_mean_ms={boundary['pre_wait_start_us']['mean'] / 1000.0:.6f} "
+                f"wait_mean_ms={boundary['longest_wait_us']['mean'] / 1000.0:.6f} "
+                f"post_submit_tail_mean_ms={boundary['post_submit_tail_us']['mean'] / 1000.0:.6f} "
+                f"iteration_mean_ms={boundary['iteration_us']['mean'] / 1000.0:.6f}"
             )
 
     if args.json_out:
