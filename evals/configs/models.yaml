@@ -29,14 +29,14 @@ models:
     serve_cmd: "rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh"
     notes: "Pre-refresh vLLM control; rebuild native libraries before use."
 
-  - label: qwen38-27b-w8a8-gptq-nextn
-    served_model_id: qwen3.8-27b-W8A8-gptq-nextn
+  - label: qwen38-27b-w8a8-gptq
+    served_model_id: qwen3.8-27b-W8A8-gptq
     family: qwen3.8-27b
     weights: int8
     activations: int8-dynamic-per-token
     calibration: gptq
-    serve_cmd: "PORT=18080 NAME=qwen38_w8a8_sglang SERVED=qwen3.8-27b-W8A8-gptq-nextn sglang/serve_qwen38_w8a8_0515.sh start"
-    notes: "Retained research source; rebuild and requalify before promotion."
+    serve_cmd: "NATIVE=1 MTP=0 DECODE_GRAPH=breakable PORT=18080 NAME=qwen38_w8a8_sglang SERVED=qwen3.8-27b-W8A8-gptq sglang/w8a8/serve_qwen38_w8a8.sh start"
+    notes: "Refreshed target-only breakable research winner; NEXTN s1 is coherent but slower. Not a shelf promotion."
 
   - label: qwen38-27b-bf16-reference
     reference: true
@@ -48,14 +48,14 @@ models:
     serve_cmd: ""
     notes: "Weights retained as the quality ceiling; no current shelf entry."
 
-  - label: ornith15-35b-a3b-w8a8-rtn-mtp-shisa
-    served_model_id: ornith-1.5-35b-a3b-W8A8-rtn-mtp-shisa
+  - label: ornith15-35b-a3b-w8a8-rtn-shisa-target
+    served_model_id: ornith-1.5-35b-a3b-W8A8-rtn-shisa-target
     family: ornith-1.5-35b-a3b
     weights: int8
     activations: int8-dynamic-per-token
     calibration: rtn-per-output-channel
-    serve_cmd: "CTX=262144 RADIX=1 MTP=1 PORT=18080 sglang/w8a8/serve_ornith15_w8a8.sh start"
-    notes: "Retained SGLang W8A8 plus trained Shisa MTP path."
+    serve_cmd: "MTP=0 DENSE_NATIVE=0 DECODE_GRAPH=breakable THINKCAP= PORT=18080 SERVED=ornith-1.5-35b-a3b-W8A8-rtn-shisa-target sglang/w8a8/serve_ornith15_w8a8_refresh.sh start"
+    notes: "Refreshed target-only short-context research winner. Breakable graph is disqualified for long agent trajectories; use DECODE_GRAPH=0 for that work."
 
   - label: ornith15-35b-a3b-bf16-mtp-shisa
     served_model_id: ornith-1.5-35b-a3b-BF16-mtp-shisa

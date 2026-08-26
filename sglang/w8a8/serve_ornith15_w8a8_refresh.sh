@@ -19,6 +19,8 @@ MTP="${MTP:-0}"
 SPEC_STEPS="${SPEC_STEPS:-1}"
 SPEC_DRAFT="${SPEC_DRAFT:-2}"
 DECODE_GRAPH="${DECODE_GRAPH:-breakable}"
+TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
+THINKCAP="${THINKCAP-4096}"
 if [ -z "${SYCL_KERNELS+x}" ]; then
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     SYCL_KERNELS=1
@@ -89,6 +91,14 @@ preflight() {
     pidfd|drmfd|sockets) ;;
     *) say "IPC_EXCHANGE must be pidfd, drmfd, or sockets"; return 1 ;;
   esac
+  case "$TOOLPARSER" in
+    qwen3_coder|none) ;;
+    *) say "TOOLPARSER must be qwen3_coder or none, got $TOOLPARSER"; return 1 ;;
+  esac
+  if [ -n "$THINKCAP" ] && ! { [ "$THINKCAP" -ge 1 ] 2>/dev/null; }; then
+    say "THINKCAP must be empty or a positive integer, got $THINKCAP"
+    return 1
+  fi
 }
 
 start() {
@@ -97,7 +107,10 @@ start() {
   docker rm -f "$NAME" >/dev/null 2>&1 || true
 
   local graph_args
+  local grammar_args="--grammar-backend none"
   local spec_args=""
+  local tool_args=""
+  local think_env=()
   local breakable_graph=0
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode 1 2 4"
@@ -110,8 +123,15 @@ start() {
   if [ "$MTP" = 1 ]; then
     spec_args="--speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --speculative-draft-model-quantization unquant"
   fi
+  if [ "$TOOLPARSER" != none ]; then
+    tool_args="--tool-call-parser $TOOLPARSER"
+  fi
+  if [ -n "$THINKCAP" ]; then
+    think_env=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
+    grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
+  fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX dense_native=$DENSE_NATIVE mtp=$MTP spec_steps=$SPEC_STEPS graph=$DECODE_GRAPH sycl_kernels=$SYCL_KERNELS"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX dense_native=$DENSE_NATIVE mtp=$MTP spec_steps=$SPEC_STEPS graph=$DECODE_GRAPH tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS"
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     -p "$PORT:$PORT" \
@@ -131,6 +151,7 @@ start() {
     -e B70_QUARK_DENSE_NATIVE="$DENSE_NATIVE" \
     -e B70_XPU_MTP="$MTP" \
     -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
+    "${think_env[@]}" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$DENSE_NATIVE" \
     -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$DENSE_NATIVE" \
     -e CCL_ATL_TRANSPORT=ofi \
@@ -147,8 +168,8 @@ start() {
       --model-path '$CKPT' --served-model-name '$SERVED' \
       --trust-remote-code --device xpu --dtype bfloat16 \
       --attention-backend intel_xpu --linear-attn-backend triton \
-      --mamba-ssm-dtype float32 --grammar-backend none \
-      $graph_args $spec_args \
+      --mamba-ssm-dtype float32 $grammar_args \
+      $graph_args $spec_args $tool_args \
       --disable-radix-cache --disable-overlap-schedule --skip-server-warmup \
       --disable-custom-all-reduce --reasoning-parser qwen3 --tp-size '$TP' \
       --context-length '$CTX' --mem-fraction-static '$MEMFRAC' \

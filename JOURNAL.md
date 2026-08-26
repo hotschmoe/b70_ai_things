@@ -4247,3 +4247,97 @@ until speculative greedy output is target-exact. Do not use the native dense
 route by default because it is slower, and do not retry full TP2 capture until
 the oneCCL graph IPC export has an isolated passing oracle. The missing B70
 `E=256,N=256` Triton MoE tuning files remain a smaller post-graph opportunity.
+
+### 2026-08-26y - Pi xhigh works; Ornith long-agent graph replay is not stable
+
+CONFIG -> exact refreshed SGLang image
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`
+and the target-only Ornith W8A8 route from 2026-08-26x. All model traffic was
+TP=2, P2P off, source-default c10d, one request maximum, 65,536 context,
+qwen3 reasoning parser, and qwen3_coder tool parser. Harbor 0.22.0 ran the
+official `terminal-bench/terminal-bench@3.0.0` `bun-sourcemap-leak` task with
+Pi 0.84.3. The dataset and job outputs remained outside git under
+`/mnt/vm_8tb/b70/evals`. Pi `xhigh` was mapped to Qwen chat-template native
+thinking; no unsupported OpenAI `reasoning_effort` field was sent.
+
+COMMAND -> install-only and payload oracles first proved the custom adapter,
+then run the official task through the exact local endpoint. The final safe
+arm used eager decode and the task-agnostic concise prompt:
+
+```bash
+PYTHONPATH=/mnt/vm_8tb/github/b70_ai_things \
+OPENAI_BASE_URL=http://192.168.10.5:18080/v1 OPENAI_API_KEY=EMPTY \
+harbor run -d terminal-bench/terminal-bench@3.0.0 \
+  -i terminal-bench/bun-sourcemap-leak -l 1 \
+  -a evals.terminalbench.harbor_pi:SglangReasoningPi \
+  -m openai/ornith-1.5-35b-a3b-W8A8-rtn-shisa-target-eager \
+  --ak model_api=openai-completions --ak thinking=xhigh \
+  --ak version=0.84.3 --ak context_window=65536 --ak max_tokens=16384 \
+  --ak prompt_template_path=/mnt/vm_8tb/github/b70_ai_things/evals/terminalbench/pi_concise_prompt.j2 \
+  --allow-agent-host 192.168.10.5 -n 1 -k 1 --yes
+```
+
+RESULT -> Harbor's stock custom-endpoint model description classified the
+local model as non-reasoning and silently reduced `--thinking xhigh` to off.
+The retained adapter fixes that metadata. A Pi-AI mock payload contained
+`chat_template_kwargs.enable_thinking=true` and `preserve_thinking=true`, kept
+the system role, and omitted `reasoning_effort`. The pinned Pi install smoke
+passed. A direct live request then returned `finish_reason=tool_calls`, bash
+arguments `{"command":"pwd"}`, separate reasoning content, and exact model
+identity.
+
+RESULT -> the first official arm lacked a tool parser. Ornith emitted the
+correct Qwen XML bash call as plain text, Pi could not execute it, and the
+official verifier scored 0.0. Adding qwen3_coder converted the same format to
+structured tool calls. The uncapped diagnostic completed 11/11 tool turns and
+reported 73,830 input plus 8,788 output tokens before cancellation; its largest
+completed turn was 5,715 output tokens. It was not scored.
+
+RESULT -> setting only `SGLANG_MAX_THINK_TOKENS=4096` did not enforce a cap
+because the launcher still selected grammar backend `none`. Source inspection
+showed that SGLang applies the token filter only with XGrammar strict thinking.
+The launcher now couples a nonempty `THINKCAP` to
+`--grammar-backend xgrammar --enable-strict-thinking`; empty `THINKCAP` keeps
+the prior no-grammar route. The official strict arm bounded its two long
+completed turns at 4,223 and 4,278 total output tokens including close and tool
+overhead, proving the private-thinking cap on real xhigh traffic.
+
+RESULT -> the strict 4,096 breakable arm made nine structured tool calls, then
+the TP scheduler aborted during `torch.xpu.graphs.replay` with the Intel runtime
+assertion `linear_stream.h:90` at about 17,664 live tokens. Pi saw the endpoint
+close and the official verifier returned 0.0 after 19m55s; this is a runtime
+failure, not a model-quality score. The server was not OOM-killed. Xe rebind,
+exact-image per-card health, and the compiled ten-iteration P2P-off collective
+all passed afterward.
+
+RESULT -> a matched strict 2,048 arm proved that the setting is not a hard
+completion ceiling. One turn returned at 2,135 total output tokens, but a later
+turn continued its plan as visible text after strict thinking closed. It was
+cancelled at a 16K live sequence to avoid the known replay boundary. SGLang did
+not stop the disconnected request; it continued server-side and later hit the
+same breakable replay assertion. A second xe rebind plus exact-image per-card
+and compiled collective checks passed. The concise breakable arm began while
+that disconnected request was still running and received no model tokens, so
+it is invalid rather than a scored result.
+
+RESULT -> the final eager arm removed the failing replay path and remained
+stable. Its first three tool turns used 65, 61, and 117 output tokens. A long
+turn returned a structured bash call at 2,198 output tokens, followed by a
+141-token tool turn. Eager scheduler decode stayed near 6 tok/s at these short
+contexts. A subsequent turn again spilled visible planning after the soft cap;
+the feasibility arm was cancelled after 13m45s with 18,027 input and 2,582
+completed output tokens because the remaining official 30-minute window could
+not cover implementation and verification. It is unscored. The eager server
+shut down gracefully, and final exact-image per-card plus compiled TP2
+collective health passed. No GPU server remains running.
+
+VERDICT -> the local Pi xhigh and structured-tool integration is valid, but
+Ornith is not qualified for TerminalBench 3.0.0. Disqualify breakable graph for
+long agent trajectories until an isolated replay/command-stream oracle passes;
+the short-context 25.2616 tok/s winner from 2026-08-26x remains valid only in
+its measured regime. Eager avoids the crash but is too slow when Ornith emits
+multi-thousand-token plans. `SGLANG_MAX_THINK_TOKENS` alone is not total-output
+control. The next agent-quality work should test a real per-request completion
+policy or a more tool-eager agent/model strategy on eager decode before any
+full dataset campaign. Do not spend time on a c=4 soak here: the observed low
+rate is a c=1 long-trajectory/eager problem, not a concurrency qualification.
