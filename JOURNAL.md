@@ -3895,3 +3895,61 @@ material full-model win over the generic denominator. Keep both device-side
 dependencies for the qualified control. Test input and completion dependency
 removal independently before graph or MTP work; do not promote to the shelf
 until those arms and the remaining campaign are complete.
+
+### 2026-08-26u - Native W8A8 dependency removal has no material speed win
+
+CONFIG -> exact runtime image `fd9c806d...`, Qwen3.8 W8A8 TP=2, and every
+setting from 2026-08-26t. Four one-variable dependency profiles were compared:
+both input and completion enabled, input only, completion only, and neither.
+Each arm used a fresh server. Both-off was tested only after each independent
+removal cleared correctness and health.
+
+COMMAND -> for each profile, set `ONEDNN_INPUT_DEP` and `ONEDNN_BARRIER` to
+the selected 0/1 pair, then run:
+
+```bash
+IMG=b70-sglang-xpu-int8-runtime@sha256:fd9c806d517c073336d63a35b03eb552452c4c63d60b16bf55ec322de37bbc7d \
+  NATIVE=1 ONEDNN_INPUT_DEP=<0-or-1> ONEDNN_BARRIER=<0-or-1> \
+  NAME=<profile-name> PORT=18081 \
+  ./bin/gpu-run bash sglang/w8a8/serve_qwen38_w8a8.sh start
+
+./bin/gpu-run bash sglang/perf_regime.sh \
+  <profile-name> 18081 qwen3.8-27b-W8A8-gptq \
+  /models/qwen3.8-27b/w8a8-gptq <profile-label>
+```
+
+RESULT -> all four profiles returned the exact non-thinking Rayleigh control
+SHA256 `a4dd7bbb...` twice and returned exact answers 45, 78, 93, and 189 under
+four concurrent requests. Logs confirmed only the selected dependency marker
+on each single-dependency arm and neither marker on both-off.
+
+RESULT -> the matched warm results were:
+
+```text
+profile          c1 decode  c1 agg  c1 TTFT    c4 decode  c4 agg  c4 TTFT
+both-on             6.04      5.25   2153.64       3.60    11.34   3498.44
+input-only          6.04      5.25   2182.22       3.66    11.37   3549.23
+completion-only     6.13      5.31   2137.97       3.63    11.41   3476.79
+both-off            6.13      5.30   2177.33       3.66    11.44   3502.95
+```
+
+The largest apparent decode difference from both-on was 1.7 percent, while
+TTFT moved in both directions. No removal profile showed a consistent material
+advantage across c1, c4, aggregate throughput, and TTFT. The deleted historical
+soak probe again did not run and is excluded.
+
+RESULT -> the least-conservative both-off arm completed the same supported
+300-second c4 soak at 48/48 requests, zero degeneracy, zero errors, and 20.3
+aggregate output tok/s. This is effectively the same as both-on's 20.4 tok/s,
+not a speed win. Every profile shut down gracefully. Exact-image per-card and
+compiled P2P-off collective checks passed between arms and after both-off.
+The input-only, completion-only, and both-off startup log SHA256 values are
+`3f24cd30bfee29128cad59ef57fb58380ce0a047dd58502ebc2360c1ceb134d1`,
+`7a43896b1ec227ddca3d06446b9022e20d86b3a6bba2f9ef09aa9b96f5f5d402`,
+and `08b22002bf23b3370051715fa181d4699fadcc69fd8148d2e1d1727e29f51a64`.
+
+VERDICT -> retain both asynchronous device dependencies. Their measured cost
+is noise-scale, while they encode the intended cross-stream producer/consumer
+ordering. `NATIVE=1` now defaults both dependency flags to 1; experiments may
+still override either explicitly. Dependency tuning is exhausted for this
+native dense route. Move to the next independent optimization lever.
