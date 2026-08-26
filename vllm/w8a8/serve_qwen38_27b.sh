@@ -1,43 +1,62 @@
 #!/usr/bin/env bash
-# Research serve for on-box Qwen3.8-27B W8A8-gptq (scripts/150).
-# NOT a shelf entry -- wraps the 3.6 W8A8 recipe with a 3.8 CKPT/SERVED.
-# First gate: MTP off. Promote only after measured coherent + faster-or-equal.
+# Refreshed vLLM control for the local Qwen3.8-27B compressed-tensors W8A8
+# GPTQ artifact. This is a research baseline, not a shelf entry.
 #
-#   B70_NOMTP=1 TP=2 PORT=18080 NAME=qwen38_w8a8 MAXLEN=262144 \
-#     ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh start
-#   bash vllm/w8a8/serve_qwen38_27b.sh stop
-set -uo pipefail
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# The default lane intentionally changes no graph, TP, MTP, prefix-cache, or
+# native-kernel factor: TP=2, eager target-only execution, short context. A
+# matched TP=1 attempt proved that the 35 GB artifact plus its BF16 LM head
+# cannot fit one 31.89 GiB card, so TP=2 is the minimum viable capacity lane.
+# The pinned official image contains vLLM ac7509e2b, torch 2.13.0+xpu, Triton
+# XPU 3.7.2, Compute Runtime 26.27.39122.11, and Level Zero 1.32.0.
+#
+#   ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh smoke
+#
+# Raise context, enable graph/TP, and add MTP only as separate qualified arms.
+set -euo pipefail
 
-ACTION="${1:-start}"
-if [ "$ACTION" = stop ]; then
-  NAME="${NAME:-qwen38_w8a8}"
-  docker rm -f "$NAME" >/dev/null 2>&1 && echo "stopped $NAME" || echo "$NAME not running"
-  exit 0
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+export IMG="${IMG:-vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f}"
 export CKPT="${CKPT:-/models/qwen3.8-27b/w8a8-gptq}"
 export SERVED="${SERVED:-qwen3.8-27b-W8A8-gptq}"
-export NAME="${NAME:-qwen38_w8a8}"
+export NAME="${NAME:-qwen38_w8a8_vllm_refresh}"
 export PORT="${PORT:-18080}"
 export TP="${TP:-2}"
-export IMG="${IMG:-vllm-xpu-env:int8g-v0260}"
-export B70_NOMTP="${B70_NOMTP:-1}"
-export MAXLEN="${MAXLEN:-229376}"
+export PP="${PP:-1}"
+export DEVICE="${DEVICE:-0}"
+export GRAPH="${GRAPH:-0}"
+export MAXLEN="${MAXLEN:-8192}"
+export MAXSEQS="${MAXSEQS:-4}"
 export UTIL="${UTIL:-0.90}"
-export GRAPH="${GRAPH:-1}"
-export PREFIXCACHE="${PREFIXCACHE:-1}"
-export KV_FP8="${KV_FP8:-0}"
-# B1 (LOOP 6 leftover): KV_FP8=1 -> fp8_e5m2 storage KV. Default 0 = bf16
-# (3.6 W8A8 serve.sh never mapped this env). Do not overwrite w8a8-gptq.
-if [ "$KV_FP8" = 1 ]; then
-  export KVDTYPE="${KVDTYPE:-fp8_e5m2}"
-  echo "=== KV_FP8=1 -> --kv-cache-dtype $KVDTYPE ===" >&2
-else
-  export KVDTYPE="${KVDTYPE:-}"
-fi
+export PREFIXCACHE="${PREFIXCACHE:-0}"
+export QUANT="${QUANT:-compressed-tensors}"
+export NOMM="${NOMM:-1}"
+export REASONPARSER="${REASONPARSER:-qwen3}"
+export IN="${IN:-512}"
+export OUT="${OUT:-512}"
+export CONC="${CONC:-1}"
+export EXTRA_ARGS="${EXTRA_ARGS:---language-model-only --generation-config vllm --no-async-scheduling --uvicorn-log-level warning}"
 
-HOST_CKPT="$REPO/models/files/${CKPT#/models/}"
-[ -d "$HOST_CKPT" ] || { echo "MISSING $HOST_CKPT"; exit 1; }
+HOST_CKPT="$(cd "$SCRIPT_DIR/../.." && pwd)/models/files/${CKPT#/models/}"
+[ -d "$HOST_CKPT" ] || {
+  echo "Missing checkpoint: $HOST_CKPT" >&2
+  exit 1
+}
 
-exec bash "$REPO/rdy_to_serve/vllm/qwen36-27b-w8a8/serve.sh" "$ACTION"
+MOUNTS=()
+DOCKER_ENV=()
+
+source "$SCRIPT_DIR/../../rdy_to_serve/_common/lib.sh"
+
+# The clean-slate runtime root intentionally no longer carries a duplicate of
+# the tracked benchmark driver. Keep generated CSVs under the runtime root,
+# but execute the source-of-truth script from this repository.
+b70_bench() {
+  local par="tp${TP}"
+  [ "${PP:-1}" -gt 1 ] && par="pp${PP}"
+  env NAME="$NAME" MODEL="$SERVED" LABEL="${SERVED}-${par}-eager" \
+    TOKPATH="$CKPT" PORT="$PORT" IN="$IN" OUT="$OUT" CONC="$CONC" \
+    bash "$SCRIPT_DIR/../../bin/35_sweep_bench.sh"
+}
+
+b70_dispatch "$@"

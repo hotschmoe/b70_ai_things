@@ -3476,3 +3476,118 @@ the fixed Linux 7.1 KMD. Host Compute Runtime 26.22 is not the process UMD and
 is not the missing reproduction lever. Do not downgrade kernel or host runtime
 packages. The remaining 19.437077 tok/s lies in source/native behavior or host
 hardware/topology, not an unperformed 26.14 user-mode match.
+
+### 2026-08-26n - Clean-stack identity freeze and upstream branch refresh
+
+CONFIG -> post-cleanup repository at `a045b98`; fixed Linux
+`7.1.0-070100-generic`; two B70 `8086:e223` cards; no live server. The
+existing dirty Ornith launchers, sitecustomize, and push-allreduce binary were
+reviewed and preserved as user work. No quarantined source or binary was
+restored.
+
+COMMAND ->
+
+```bash
+git status --short --branch
+git log --oneline --decorate -20
+./bin/gpu-run bash -lc './bin/xpu-health'
+./bin/gpu-run ./bin/xpu-collective-health --p2p 0 \
+  --img vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f
+
+git -C /mnt/vm_8tb/b70/steve-s2b/vllm fetch --all --prune --tags
+git -C /mnt/vm_8tb/b70/steve-s2b/vllm-xpu-kernels fetch --all --prune --tags
+git -C /mnt/vm_8tb/b70/steve-s2b/oneccl-src fetch --all --prune --tags
+```
+
+RESULT -> host Compute Runtime is `26.22.38646.4`, Level Zero loader is
+`1.28.2-2`, IGC is `2.36.3`, DMC is `2.6`, GuC is `70.58.0`, and HuC
+is `8.2.10` on both cards. All eight manifest artifacts are present. Both
+per-card probes passed. The exact-image compiled P2P-off two-rank probe passed
+ten functional all-reduces.
+
+RESULT -> the newer retained official vLLM image is
+`f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f`:
+vLLM `0.27.2rc1.dev77+gac7509e2b`, torch `2.13.0+xpu`, Compute Runtime
+`26.27.39122.11`, Level Zero `1.32.0`, and oneCCL library SHA256
+`3d6eb6672226592f59948ae82cb0ab961c2fe74e2234c9be1d0f2fdab2fed647`.
+The retained Sglang image is `0.5.15.post1` on torch `2.12.0+xpu`; current
+official Sglang release/head are `0.5.18`/`bede6bc37c5d`. Current official
+vLLM and XPU-kernel heads are `cde7ba92da0e` and `a397c58eb778`.
+
+RESULT -> Steve's fetched branch
+`research/qwen36-int4-exactness-20260818` remains exactly
+`44fc8fde09fc311d3099dab10366b672d9142ea4`; the June source remains
+`e190923b32e1b87fe33d08264bff9215fb7770fc`. Official XPU-kernels was added
+as a second remote and fetched without changing detached Steve work. Its
+`a397c58e` head includes newer fused Qwen RMSNorm and GDN/MTP fixes. Steve
+kernel fork main mixes about 19,000 inserted lines of production candidates
+and WIP, so it must not be merged wholesale. The exact Steve control image
+`f2e5a94e...` and every ABI-specific clean-stack extension are absent after
+cleanup. The automatic collective-health default still names that missing
+image and is therefore inconclusive unless `--img` is supplied.
+
+VERDICT -> the clean P0 identity and health boundary is frozen. P1 is not
+complete: Sglang, its XPU kernel, and every custom extension still require
+pinned refreshed builds. Use official current source as the base, then port
+Steve's dense INT8 output-buffer, scratch-ring, dependency, and quant-dedup
+changes one factor at a time. Current Sglang supports compressed-tensors FP8
+on XPU but still rejects compressed-tensors W8A8 INT8, so the local INT8 route
+remains a deliberate port rather than an upstream feature.
+
+### 2026-08-26o - Refreshed vLLM loads Qwen3.8 W8A8; eager TP2 is 3.53 tok/s
+
+CONFIG -> local `qwen3.8-27b/w8a8-gptq` compressed-tensors checkpoint;
+official vLLM image digest `f01e24f6...`; target only; text only; BF16 KV;
+8K context; prefix cache off; async scheduling off; graph and torch.compile
+off; source-default XCCL with P2P off; p512/o512 random benchmark. No custom
+source or native extension was mounted.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run --card 0 env DEVICE=0 \
+  bash vllm/w8a8/serve_qwen38_27b.sh smoke
+
+./bin/gpu-run bash -lc '
+  ./bin/xpu-collective-health --p2p 0 --img \
+    vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f
+  B70_COLLECTIVE_HEALTH=0 IN=512 OUT=512 CONC=1 \
+    bash vllm/w8a8/serve_qwen38_27b.sh run
+  ./bin/xpu-health --img \
+    vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f
+  ./bin/xpu-collective-health --p2p 0 --img \
+    vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f
+'
+```
+
+RESULT -> TP=1 selected `TritonInt8ScaledMMLinearKernel` for
+`CompressedTensorsW8A8Int8`, then failed the capacity gate while allocating
+the 2.37 GiB BF16 LM head: 30.45 GiB was already allocated on a 31.89 GiB
+card. Graceful teardown and the card-0 probe passed. This is a capacity result,
+not a loader or kernel failure.
+
+RESULT -> changing only the required capacity axis to TP=2 reached health in
+204 seconds on the first smoke and 117 seconds on the timed run.
+`/v1/models` returned `qwen3.8-27b-W8A8-gptq`; the deterministic probe
+completed coherently with `Paris`. Each rank used 16.52 GiB for model load
+and 17.13 GiB total consumed memory, leaving a 9.92 GiB KV cache and a
+245,760-token aggregate cache census at this 8K configuration.
+
+RESULT -> eight c1 p512/o512 requests measured 0.01 request/s, 3.53 aggregate
+output tok/s, 1829.03 ms mean TTFT, 280.15 ms mean TPOT, and 3.57 tok/s
+per-stream decode. The CSV is
+`/mnt/vm_8tb/b70/results/sweep_qwen3.8-27b-W8A8-gptq-tp2-eager_20260826_082437.csv`
+with SHA256
+`e0ea44e577c1ad9034e4d648ed0124253079a8c3fb5b4bf51a81a5c033709db6`.
+The preserved server log SHA256 is
+`9ba9bb110d7b6e39e454927dad8904c6a53e22868aa1ee6a6db8f0da4f651871`.
+Graceful teardown, both card probes, and the exact-image compiled two-rank
+P2P-off collective probe passed.
+
+VERDICT -> updated upstream vLLM now supplies a coherent true-INT8 loader and
+Triton W8A8 dense route for this Qwen3.8 artifact. The 3.53 tok/s result is an
+eager TP2 denominator, not an optimization or shelf qualification; concurrent
+coherence, long context, graph/compile, MTP, and repeated timing remain open.
+The next high-information vLLM arm is compile without graph, followed by a
+separately guarded graph policy. The primary backend track still needs the
+pinned Sglang 0.5.18/current-source build and deliberate W8A8 INT8 port.
