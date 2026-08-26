@@ -1,0 +1,6 @@
+config -> source_stack=e190923b graph=FULL_DECODE_ONLY collective_mode=clone-custom rank_graphs=2
+command -> rg -a -c '_c10d_functional.*all_reduce' computation_graph.py
+command -> rg -a -c 'torch[.]ops[.]vllm[.]all_reduce' computation_graph.py
+result -> rank=0 c10d_all_reduce_references=0 vllm_all_reduce_references=162 sha256=6f7dcf174adb8e71dbbcb53eb8dbf5d46a11bd4780fa90e7e0ee865a767823a1
+result -> rank=1 c10d_all_reduce_references=0 vllm_all_reduce_references=162 sha256=ecf151b7694f561afd568743c884244ab24e2e1405fb3a2645325b9a6d3fec7c
+verdict -> both compiled FULL rank graphs use the recovered vllm custom all-reduce route and exclude the c10d functional route

@@ -19421,3 +19421,69 @@ the missing accelerator on this full-graph stack. Because the route delta is
 only 1.96 percent and each arm currently has one matched sample, repeat before
 promoting the delta as stable. Linux 7.1 remains fixed; the remaining gap is in
 another user-mode runtime/kernel behavior, not host-kernel provenance.
+
+### 2026-08-26l - C-S-C-S replicates source-default c10d advantage
+
+CONFIG -> fresh-cache repeats of the exact FULL/Triton control from entry k.
+All model, source, native binary, TP=2 P2P, graph, attention, MoE, scheduling,
+request, and health settings remained fixed. The third arm restored all four
+custom-collective switches to one; the fourth returned all four to zero.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint COLLECTIVE_MODE=clone-custom \
+  CGMODE=FULL_DECODE_ONLY ATTN=TRITON_ATTN MOE_BACKEND=triton \
+  P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T050000Z_full_triton_custom_collectives_repeat \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint COLLECTIVE_MODE=source-default \
+  CGMODE=FULL_DECODE_ONLY ATTN=TRITON_ATTN MOE_BACKEND=triton \
+  P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T051500Z_full_triton_source_default_repeat \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> custom repeat measured 65.004555 tok/s, 361.244 ms TTFT, and
+7.875629 s server decode. Source-default repeat measured a new best of
+66.432037 tok/s, 360.671 ms, and 7.706482 s. Combined C-S-C-S samples are:
+
+```text
+custom:        64.984330  65.004555  mean=64.994443
+source-default: 66.255519  66.432037  mean=66.343778
+mean delta:                              +1.349335 tok/s (+2.08 percent)
+```
+
+The custom within-route spread is 0.031 percent; c10d spread is 0.266 percent.
+Both repeats passed semantic output, JSON 16/16, color 16/16, graceful
+teardown, both card probes, and compiled TP=2 collective health. Custom rank
+graphs each contain 162 `torch.ops.vllm.all_reduce` and zero c10d references;
+source-default graphs each contain 243 c10d and zero custom references.
+
+EVIDENCE -> the custom repeat is
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_attn_triton_attn_moe_triton_intervention_20260826T050000Z_full_triton_custom_collectives_repeat`;
+the source-default repeat is
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_attn_triton_attn_moe_triton_intervention_collectives_source_default_20260826T051500Z_full_triton_source_default_repeat`.
+Each contains compiled route evidence. Mechanical ASCII/LF/trailing-space
+cleanup changed custom server/run logs from raw
+`eef5ab9cb2dfb3cbd58883c159c93c050d2b7d4b13010385ab504990fda90a00`/
+`48f1a6ac20c6ca5283fedd6d80afb4adf413cacbb8c0f6f20b283acc0e063413`
+to committed
+`dc39fae51a1c984ab033a35b47e54ebf171fbde3a5db15b40a95ecd63dff5c91`/
+`bcc36ce0d0ff3de49175b5a6661dbfb49b9f4e5833fd476f0798ac9fddc0ca55`,
+and source-default server/run logs from raw
+`6cd6ed63088ea1b2de9d1a796d685210441a693f32a5f96ebeddf27f4c7c1cb5`/
+`d4bf576f94f6b83ddcb1dc03e297a8aea82db78c78b43d1d21bd2d87cf8eac33`
+to committed
+`00d5b2fba29e312611911e0100e1dc48c674eb046c35bfeb40feb1d59682308e`/
+`17d01ad19678749fc182d3981e23965b5509849843a924d8f40809a3da40767a`.
+
+VERDICT -> the approximately 2 percent source-default c10d advantage is
+replicated, not run noise. Use source-default for the fastest no-MTP/no-DFlash
+FULL control and retain the custom route only as accepted-provenance evidence.
+The new 66.432037 best reaches 77.36 percent of Steve's 85.869114 and leaves
+19.437077 tok/s. The next target is another accepted user-mode runtime/kernel
+family, with Linux 7.1 unchanged.

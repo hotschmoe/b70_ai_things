@@ -516,8 +516,12 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   server decode was 7.726791 s. Both compiled rank graphs contained 243 c10d
   all-reduce references and zero custom-op references; semantic output, both
   16/16 canaries, graceful teardown, and both health layers passed. This is the
-  campaign best and reaches 77.16 percent of Steve's 85.869114 tok/s. Repeat
-  before treating the small collective-route delta as stable.
+  campaign best and reaches 77.16 percent of Steve's 85.869114 tok/s.
+  Fresh-cache C-S-C-S replication measured custom 64.984330/65.004555 and
+  source-default 66.255519/66.432037 tok/s. Route means are 64.994443 versus
+  66.343778, a replicated +1.349335 tok/s or +2.08 percent c10d win. Every arm
+  passed exact route, coherence, teardown, and health gates. The final
+  66.432037 sample is the new best and reaches 77.36 percent of Steve.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

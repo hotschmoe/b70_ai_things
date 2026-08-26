@@ -128,8 +128,11 @@ Working notes for any agent on this repo. Keep this file short; details live in
   A matched `FULL_DECODE_ONLY` + `TRITON_ATTN` + Triton-MoE run then measured
   66.2555 tok/s versus 64.9843 custom (+1.96 percent), with both canaries,
   mutually exclusive compiled-route evidence, and both post-health layers
-  green. This is the current campaign best, but repeat it before promoting the
-  small route delta as stable.
+  green. A fresh-cache C-S-C-S repeat then measured custom
+  64.9843/65.0046 versus source-default 66.2555/66.4320 tok/s. Means are
+  64.9944 versus 66.3438, a replicated +2.08 percent c10d win. Both repeats
+  passed all coherence, route, teardown, and health gates. Use source-default
+  for this fastest FULL control; retain custom only as provenance evidence.
 - **Push-AR preinit fixes IPC import, not loaded graph submission.** On the
   exact June source/runtime, initializing the TP push communicator before model
   allocation made both ranks import scratch and the IPC event pool. Both then

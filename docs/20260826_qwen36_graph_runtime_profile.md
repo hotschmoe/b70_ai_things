@@ -300,8 +300,14 @@ custom route's matched result is 64.984330 tok/s, 363.490 ms, and 7.878107 s.
 Source-default gains 1.271189 tok/s (+1.96 percent) and saves 0.151316 s decode.
 Both rank graphs again contain 243 c10d references and no custom-op reference;
 both 16/16 canaries and both health layers passed. This is the campaign best at
-77.16 percent of Steve. Repeat before treating the small delta as stable, but
-custom all-reduce is no longer a candidate explanation for the remaining gap.
+77.16 percent of Steve. Fresh-cache C-S-C-S replication measured custom
+64.984330/65.004555 and source-default 66.255519/66.432037 tok/s. Route means
+are 64.994443 and 66.343778, so c10d gains 1.349335 tok/s or 2.08 percent.
+Within-route spreads are only 0.031 percent custom and 0.266 percent c10d.
+Every arm passed mutually exclusive route evidence, both canaries, graceful
+teardown, and both health layers. The 66.432037 best reaches 77.36 percent of
+Steve and leaves 19.437077 tok/s. Custom all-reduce is closed as a speed
+candidate for the remaining gap.
 
 ## Dense 27B Transfer Contract
 

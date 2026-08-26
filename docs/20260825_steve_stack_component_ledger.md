@@ -166,8 +166,11 @@ the accepted route.
 Matched FULL/Triton timing now favors the source-default route in its first
 sample: 66.255519 tok/s versus 64.984330 custom, a 1.96 percent gain, while
 both compiled rank graphs prove c10d-only execution and all coherence/health
-gates pass. This is the current campaign best but requires a repeat because the
-delta is small. The custom wrapper is not the missing 20+ tok/s mechanism.
+gates pass. Fresh-cache C-S-C-S replication measured custom
+64.984330/65.004555 and source-default 66.255519/66.432037 tok/s, for means of
+64.994443 and 66.343778. The c10d route wins by a replicated 2.08 percent; all
+four route/coherence/health transactions pass. The custom wrapper is not the
+missing 19.437077 tok/s mechanism.
 
 ## Scope And Inventory Method
 

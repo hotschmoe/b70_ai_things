@@ -75,9 +75,11 @@
 > both routes because Steve's exact June-15 child-launcher env is not immutable.
 > The matched FULL/Triton control is now complete: source-default c10d reaches
 > 66.2555 tok/s versus 64.9843 custom (+1.96 percent), with exact route evidence,
-> both canaries, and both health layers green. It is the campaign best at 77.16
-> percent of Steve. NEXT: repeat the small route delta before promoting it,
-> then inspect another accepted user-mode runtime/kernel family; do not
+> both canaries, and both health layers green. Fresh-cache C-S-C-S replication
+> measured custom 64.9843/65.0046 and source-default 66.2555/66.4320; means are
+> 64.9944 versus 66.3438, a replicated +2.08 percent c10d win. The 66.4320 best
+> reaches 77.36 percent of Steve. NEXT: inspect another accepted user-mode
+> runtime/kernel family; do not
 > alter or downgrade the fixed Linux 7.1 host kernel and do not spend more
 > cycles reducing
 > graph-piece count. Keep the clean endpoint as the speed
