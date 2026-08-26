@@ -19270,3 +19270,104 @@ capture and replay. Standalone torch XPUGraph success is insufficient. Dense
 27B must inherit this loaded-context gate, while omitting the experimental
 adapter and binary until they pass it. The next one-factor exact-stack test is
 the default-FlashAttention versus forced-Triton graph boundary.
+
+### 2026-08-26i - Default FlashAttention cannot enter FULL SYCL graph
+
+CONFIG -> exact Qwen3.6-35B-A3B Quark W8A8 revision `cced5659`; pinned
+`f2e5a94e` image; true-June vLLM source `e190923b`; June122 native package;
+TP=2 direct P2P; `FULL_DECODE_ONLY`; default attention; Triton MoE
+intervention; no MTP or prefix cache; fresh cache. This changes only attention
+from the successful 64.984330 tok/s FULL/Triton-attention/Triton-MoE arm.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN= MOE_BACKEND=triton P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T041000Z_full_default_attn_triton_moe \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> both workers selected Flash Attention and Triton MoE. Model load and
+compile completed, and both ranks crossed all 81 profile clone fences. The
+first of six FULL decode captures then failed in
+`vllm_xpu_kernels/flash_attn_interface.py` at `_vllm_fa2_C.varlen_fwd`:
+`sycl_ext_oneapi_work_group_scratch_memory` is not available through the SYCL
+Graph extension. No endpoint metric was produced. Teardown left both card
+probes and the compiled two-rank collective probe green.
+
+EVIDENCE ->
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_cg_full_decode_only_moe_triton_intervention_20260826T041000Z_full_default_attn_triton_moe`.
+The server log was mechanically converted to ASCII and LF from raw SHA256
+`c689c0bf4b485353c09c2a01db344ad6aeb5de9e3a14fcec67371eb8edc2f833`
+to committed SHA256
+`8a4c17acede89f268c7bf1c43ebc3316c0c1fbcb88a9f9b0579aa92bff6ab7c8`.
+Trailing-space cleanup changed the ASCII run log from raw
+`64cb238f6b5f545b3648b3aeda0be58ae406cbee7ea864f0ed054daa19fc2443`
+to committed
+`1c7bf118d8ef6d0faded776d33535a73b4aaf517256f2c820a79bc1e8b0f6452`.
+
+VERDICT -> Steve's no-override default FlashAttention identity works with his
+PIECEWISE graph policy, not with this local FULL speed boundary. Triton
+attention is a required and labeled current-runtime intervention for the
+61.553562/64.984330 FULL results. Do not retry default Flash FULL without a
+concrete Flash-kernel or isolated user-mode SYCL Graph change. Linux 7.1 stays
+fixed.
+
+### 2026-08-26j - June source-default c10d collectives cross PIECEWISE TP2
+
+CONFIG -> exact June source/native provenance control; Qwen3.6-35B-A3B Quark
+W8A8; TP=2 direct P2P; PIECEWISE; default Flash attention; native MoE; async
+scheduling; no MTP or prefix cache; fresh cache. All four recovered custom
+collective switches were changed together from one to their June source
+defaults of zero. A scoped PCI unbind/rebind first restored both endpoints,
+both card probes, and compiled TP=2 collective health on unchanged boot ID
+`e2d5777d-f6bb-4d92-a718-0fb07ae17919`.
+
+COMMAND ->
+
+```bash
+./bin/xe-reset --method rebind
+
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint COLLECTIVE_MODE=source-default \
+  CGMODE=PIECEWISE ATTN= MOE_BACKEND=auto \
+  P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T043000Z_collectives_source_default \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> the endpoint reached health in 320 seconds. The p498/o512 metric
+measured 51.091606 corrected output tok/s, 315.694 ms client TTFT, and
+10.020679 seconds server decode. Semantic output, JSON 16/16, color 16/16,
+graceful teardown, both card probes, and compiled TP=2 collective health all
+passed. Both persisted rank graphs contained 243 `_c10d_functional`
+all-reduce references and zero `torch.ops.vllm.all_reduce` references. The
+initial evidence gate rejected only the custom-route-specific `profile clone
+complete` marker after all workload and health gates passed; the corrected
+gate now requires mutually exclusive compiled graph identities per route.
+
+EVIDENCE ->
+`results/logs/qwen36_s2b_exactcc_clone_p2p1_june_e190_native_june122_collectives_source_default_20260826T043000Z_collectives_source_default`.
+`compiled_collective_route_evidence.txt` preserves both rank-graph hashes,
+route counts, and a representative c10d source line outside the runtime cache.
+The server log was mechanically converted to ASCII and LF from raw SHA256
+`6991f9542fc7a8f4b7db51b51af79d9b913e96a6e71f63bc18fd94ade3d0aa76`
+to committed SHA256
+`412de7d65a84ad816c59f7d98d23d73a040e4774a9150eb8730db61d4f6eb469`.
+Trailing-space cleanup changed the ASCII run log from raw
+`bec1953c3ade2f5d4694eb84f7c806af9374a8d532713ffc1037c16805684008`
+to committed
+`4fc85ba2a8e30d58e9e222911bafc1f0bc0be56c1897dc692ff59427ef1ef85b`.
+
+VERDICT -> June source-default c10d and the recovered custom `vllm.all_reduce`
+route both cross exact PIECEWISE TP=2 on kernel 7.1/runtime 26.22. The
+source-default observation is 0.720963 tok/s (+1.43 percent) above the nearest
+50.370643 custom control, but one sample is not a speed claim. The parent
+accepted-result summary's null env fields cannot observe child-launcher
+exports, while the retained launcher was reconstructed after the June result;
+exact June-15 collective identity remains ambiguous. Preserve both labeled
+controls. Next compare route-specific FULL/Triton execution to isolate the 81
+in-graph collectives without changing the fixed host kernel.

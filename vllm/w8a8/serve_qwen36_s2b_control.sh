@@ -32,6 +32,10 @@ export PUSH_AR_MAXB="${PUSH_AR_MAXB:-67108864}"
 export PUSH_AR_PREINIT="${PUSH_AR_PREINIT:-1}"
 export PUSH_AR_PREINIT_STRICT="${PUSH_AR_PREINIT_STRICT:-1}"
 export PUSH_AR_GRAPH_INPLACE="${PUSH_AR_GRAPH_INPLACE:-0}"
+export CUSTOM_COLLECTIVES="${CUSTOM_COLLECTIVES:-1}"
+export COMPILE_ALLREDUCE_CUSTOM="${COMPILE_ALLREDUCE_CUSTOM:-1}"
+export CUSTOM_AR_GRAPH_CLONE="${CUSTOM_AR_GRAPH_CLONE:-1}"
+export CUSTOM_AR_CLONE="${CUSTOM_AR_CLONE:-1}"
 export EXACT_STEVE_CC="${EXACT_STEVE_CC:-0}"
 export FORENSIC_VLLM_SRC="${FORENSIC_VLLM_SRC:-}"
 export FORENSIC_SITECUSTOMIZE_HOST="${FORENSIC_SITECUSTOMIZE_HOST:-}"
@@ -44,6 +48,17 @@ export NUMA_BIND_CPUS="${NUMA_BIND_CPUS:-0-7,16-23|8-15,24-31}"
 export IN="${IN:-512}"
 export OUT="${OUT:-512}"
 export CONC="${CONC:-1}"
+
+for binary_setting in \
+  CUSTOM_COLLECTIVES \
+  COMPILE_ALLREDUCE_CUSTOM \
+  CUSTOM_AR_GRAPH_CLONE \
+  CUSTOM_AR_CLONE; do
+  case "${!binary_setting}" in
+    0|1) ;;
+    *) echo "$binary_setting must be 0 or 1" >&2; exit 1 ;;
+  esac
+done
 
 BASE_SPLITOPS='"vllm::unified_attention_with_output","vllm::unified_mla_attention_with_output","vllm::mamba_mixer2","vllm::mamba_mixer","vllm::short_conv","vllm::linear_attention","vllm::plamo2_mamba_mixer","vllm::qwen_gdn_attention_core","vllm::gdn_attention_core_xpu","vllm::olmo_hybrid_gdn_full_forward","vllm::kda_attention","vllm::sparse_attn_indexer","vllm::rocm_aiter_sparse_attn_indexer","vllm::deepseek_v4_attention"'
 if [ "$EXACT_STEVE_CC" = 1 ]; then
@@ -130,10 +145,10 @@ DOCKER_ENV=(
   -e VLLM_XPU_ENABLE_XPU_GRAPH=1
   -e VLLM_XPU_FORCE_GRAPH_WITH_COMM=1
   -e VLLM_XPU_GRAPH_NOOP_COMM_CAPTURE=1
-  -e VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES=1
-  -e VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP=1
-  -e VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT=1
-  -e VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT=1
+  -e VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES="$CUSTOM_COLLECTIVES"
+  -e VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP="$COMPILE_ALLREDUCE_CUSTOM"
+  -e VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT="$CUSTOM_AR_GRAPH_CLONE"
+  -e VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT="$CUSTOM_AR_CLONE"
   -e VLLM_XPU_QUARK_W8A8_MOE=1
   -e VLLM_XPU_FORCE_QUARK_REPACK=0
   -e VLLM_XPU_INT8_MOE_MIXED_WORKSPACE=1

@@ -48,6 +48,24 @@ P2P_ACCESS="${P2P_ACCESS:-1}"
 case "$P2P_ACCESS" in 0|1) ;; *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;; esac
 PUSH_AR="${PUSH_AR:-0}"
 case "$PUSH_AR" in 0|1) ;; *) echo "PUSH_AR must be 0 or 1" >&2; exit 2 ;; esac
+COLLECTIVE_MODE="${COLLECTIVE_MODE:-clone-custom}"
+case "$COLLECTIVE_MODE" in
+  clone-custom)
+    CUSTOM_COLLECTIVES_VALUE=1
+    COMPILE_ALLREDUCE_CUSTOM_VALUE=1
+    CUSTOM_AR_GRAPH_CLONE_VALUE=1
+    CUSTOM_AR_CLONE_VALUE=1
+    collective_suffix=""
+    ;;
+  source-default)
+    CUSTOM_COLLECTIVES_VALUE=0
+    COMPILE_ALLREDUCE_CUSTOM_VALUE=0
+    CUSTOM_AR_GRAPH_CLONE_VALUE=0
+    CUSTOM_AR_CLONE_VALUE=0
+    collective_suffix="_collectives_source_default"
+    ;;
+  *) echo "COLLECTIVE_MODE must be clone-custom or source-default" >&2; exit 2 ;;
+esac
 SOURCE_STACK="${SOURCE_STACK:-august-adapter}"
 case "$SOURCE_STACK" in
   august-adapter|june-e190) ;;
@@ -165,7 +183,7 @@ push_ar_suffix=""
 [ "$PUSH_AR" = 0 ] || push_ar_suffix="_push_ar_preinit"
 profile_suffix=""
 [ "$XPU_PROFILE" = 1 ] && profile_suffix="_xpu_profile"
-NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}${profile_suffix}${cpu_bind_suffix}${graph_mode_suffix}${attention_suffix}${moe_backend_suffix}${push_ar_suffix}_${STAMP}"
+NAME="qwen36_s2b_exactcc_clone_p2p${P2P_ACCESS}${source_suffix}${native_suffix}${profile_suffix}${cpu_bind_suffix}${graph_mode_suffix}${attention_suffix}${moe_backend_suffix}${push_ar_suffix}${collective_suffix}_${STAMP}"
 PORT="${PORT:-18080}"
 RESULT_DIR="${RESULT_DIR:-$REPO_ROOT/results/logs/$NAME}"
 CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/vllm_cache_${NAME}}"
@@ -362,7 +380,7 @@ echo "config -> moe_trace=$MOE_TRACE allreduce_trace=$ALLREDUCE_TRACE allreduce_
 echo "config -> decode_timing=$DECODE_TIMING timing_sync=$DECODE_TIMING_SYNC timing_skip=$DECODE_TIMING_SKIP_FIRST timing_step_skip=$DECODE_TIMING_STEP_SKIP_FIRST timing_step_every=$DECODE_TIMING_STEP_EVERY replay_trace=$CUDAGRAPH_REPLAY_TRACE replay_trace_max_lines=$CUDAGRAPH_REPLAY_TRACE_MAX_LINES"
 echo "config -> xpu_profile=$XPU_PROFILE profile_delay_iterations=2 profile_max_iterations=8 profile_dir=$XPU_PROFILE_DIR_HOST"
 echo "config -> cpu_bind=$CPU_BIND numa_bind=$NUMA_BIND_VALUE numa_bind_cpus=$NUMA_BIND_CPUS_VALUE numa_nodes=0,0"
-echo "config -> source_stack=$SOURCE_STACK native_stack=$NATIVE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=$PUSH_AR push_ar_preinit=$PUSH_AR cache=$CACHE_DIR"
+echo "config -> source_stack=$SOURCE_STACK native_stack=$NATIVE_STACK p2p=$P2P_ACCESS ipc=unset/default worker_count=unset nic=eth0 push_ar=$PUSH_AR push_ar_preinit=$PUSH_AR collective_mode=$COLLECTIVE_MODE custom_collectives=$CUSTOM_COLLECTIVES_VALUE compile_allreduce_custom=$COMPILE_ALLREDUCE_CUSTOM_VALUE graph_clone=$CUSTOM_AR_GRAPH_CLONE_VALUE outer_clone=$CUSTOM_AR_CLONE_VALUE cache=$CACHE_DIR"
 echo "config -> kernel_runtime=locally-rebuilt-June-complete-package preflight_suite=$KERNEL_PREFLIGHT_SUITE xpu_c=$EXPECTED_XPU_C_SHA256 grouped=$EXPECTED_GROUPED_SHA256 gdn=$EXPECTED_GDN_SHA256"
 echo "config -> selector=level_zero:0,1 affinity=0,1 inductor_cache=/vllm_cache/torchinductor"
 printf '%s\n' "${runtime_hashes[@]}"
@@ -380,6 +398,10 @@ env -u CCL_ZE_IPC_EXCHANGE -u CCL_WORKER_COUNT \
   PORT="$PORT" \
   EXACT_STEVE_CC=1 \
   PUSH_AR="$PUSH_AR" \
+  CUSTOM_COLLECTIVES="$CUSTOM_COLLECTIVES_VALUE" \
+  COMPILE_ALLREDUCE_CUSTOM="$COMPILE_ALLREDUCE_CUSTOM_VALUE" \
+  CUSTOM_AR_GRAPH_CLONE="$CUSTOM_AR_GRAPH_CLONE_VALUE" \
+  CUSTOM_AR_CLONE="$CUSTOM_AR_CLONE_VALUE" \
   P2PACCESS="$P2P_ACCESS" \
   MAXLEN=32768 \
   MAXSEQS=24 \
@@ -466,7 +488,6 @@ fi
 if [ "$SOURCE_STACK" = june-e190 ]; then
   required_markers=(
     '[qwen36-june-source] source_stack=e190923b'
-    '[qwen36-june-source] profile clone complete'
     'Selected XPUInt8ScaledMMLinearKernel for QuarkW8A8Int8'
     'Using XPU Int8 MoE backend'
     'Asynchronous scheduling is enabled'
@@ -474,6 +495,11 @@ if [ "$SOURCE_STACK" = june-e190 ]; then
     "'splitting_ops': ['vllm::unified_attention_with_output'"
     "'use_inductor_graph_partition': False"
   )
+  if [ "$COLLECTIVE_MODE" = clone-custom ]; then
+    required_markers+=(
+      '[qwen36-june-source] profile clone complete'
+    )
+  fi
 else
   required_markers=(
     'restored June clone-safe custom all-reduce contract'
@@ -509,12 +535,37 @@ rg -Fq '"failures": []' "$RUN_LOG" || {
   echo "Semantic probe did not report an empty failure list" >&2
   exit 1
 }
-collective_cache_pattern='s2b_all_reduce_clone'
-[ "$SOURCE_STACK" = june-e190 ] && collective_cache_pattern='vllm.*all_reduce'
-rg -a -l -q "$collective_cache_pattern" "$CACHE_DIR/torch_compile_cache" || {
-  echo "Persisted Inductor cache has no compiled collective evidence for $SOURCE_STACK" >&2
-  exit 1
-}
+if [ "$SOURCE_STACK" = june-e190 ]; then
+  mapfile -t computation_graphs < <(
+    find "$CACHE_DIR/torch_compile_cache" -type f -name computation_graph.py
+  )
+  [ "${#computation_graphs[@]}" -ge 2 ] || {
+    echo "Persisted Inductor cache has fewer than two rank computation graphs" >&2
+    exit 1
+  }
+  if [ "$COLLECTIVE_MODE" = source-default ]; then
+    collective_cache_pattern='_c10d_functional.*all_reduce'
+    forbidden_collective_pattern='torch[.]ops[.]vllm[.]all_reduce'
+  else
+    collective_cache_pattern='torch[.]ops[.]vllm[.]all_reduce'
+    forbidden_collective_pattern='_c10d_functional.*all_reduce'
+  fi
+  for computation_graph in "${computation_graphs[@]}"; do
+    rg -a -q "$collective_cache_pattern" "$computation_graph" || {
+      echo "Rank graph lacks $COLLECTIVE_MODE collective evidence: $computation_graph" >&2
+      exit 1
+    }
+    if rg -a -q "$forbidden_collective_pattern" "$computation_graph"; then
+      echo "Rank graph contains the forbidden collective route: $computation_graph" >&2
+      exit 1
+    fi
+  done
+else
+  rg -a -l -q 's2b_all_reduce_clone' "$CACHE_DIR/torch_compile_cache" || {
+    echo "Persisted Inductor cache has no compiled collective evidence for $SOURCE_STACK" >&2
+    exit 1
+  }
+fi
 if [ "$DECODE_TIMING" = 1 ]; then
   python3 "$SCRIPT_DIR/summarize_qwen36_decode_timing.py" \
     --server-log "$SERVER_LOG" \

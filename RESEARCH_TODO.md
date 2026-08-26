@@ -63,10 +63,20 @@
 > capture, inside the first native push graph submission. Do not attempt the
 > full model until that oracle completes capture and replay. Steve's exact
 > 85.8691 command also passed no attention override, so June selected its
-> default FlashAttention path; the local FULL results force Triton and remain
-> labeled interventions. NEXT: test the exact default-attention boundary, then
-> isolate or replace the 81 in-graph collectives or inspect other accepted
-> runtime/kernel families; do not spend more cycles reducing
+> default FlashAttention path. The exact default-attention boundary is now
+> measured: model load and all 81 profile collectives pass, but the first FULL
+> capture fails because `_vllm_fa2_C.varlen_fwd` uses SYCL work-group scratch
+> memory that the SYCL Graph extension cannot capture. Triton attention is a
+> required current-runtime FULL intervention. A second provenance ambiguity is
+> also closed experimentally: all four June custom-collective flags at zero
+> produce `_c10d_functional` all-reduce in both compiled rank graphs and serve
+> coherently at 51.0916 tok/s versus the nearest custom control at 50.3706.
+> Treat the +1.43 percent as a single-run observation, not a speed win; preserve
+> both routes because Steve's exact June-15 child-launcher env is not immutable.
+> NEXT: isolate the 81 in-graph collective cost with route-specific FULL/Triton
+> controls, or inspect another accepted user-mode runtime/kernel family; do not
+> alter or downgrade the fixed Linux 7.1 host kernel and do not spend more
+> cycles reducing
 > graph-piece count. Keep the clean endpoint as the speed
 > gate because profiler-enabled endpoint timing is perturbed. Transfer only proven reusable quant/output behavior
 > to 27B; census its own graph pieces and profile collectives, and keep MoE

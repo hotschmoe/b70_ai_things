@@ -489,6 +489,26 @@ Intel Arc Pro B70: Xe2/Battlemage, 32 GB GDDR6, 608 GB/s, 367 INT8 TOPS, PCIe 5.
   default `FLASH_ATTN`; it explicitly enables async scheduling and prefill-only
   GDN fallback. Local 61.5536/64.9843 FULL arms force `TRITON_ATTN`, so they are
   graph-speed interventions rather than exact command reproductions.
+- **[2026-08-26 default Flash FULL boundary]** A one-factor default-attention
+  `FULL_DECODE_ONLY` run loaded and compiled the exact model, crossed all 81
+  profile collectives on both ranks, then failed during the first of six full
+  decode captures. `_vllm_fa2_C.varlen_fwd` requires SYCL work-group scratch
+  memory, which the current SYCL Graph extension cannot capture. Both per-card
+  and compiled TP=2 post-health probes passed. Steve's default Flash identity
+  is therefore compatible with PIECEWISE, not with the local FULL speed arm;
+  Triton attention is a required current-runtime intervention for FULL.
+- **[2026-08-26 source-default collective control]** Setting
+  `VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES`,
+  `VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP`, graph clone, and outer clone to zero
+  still crossed exact June TP=2 PIECEWISE capture. Each compiled rank graph had
+  243 `_c10d_functional` all-reduce references and zero `vllm.all_reduce`
+  references. The endpoint measured 51.091606 tok/s, 315.694 ms TTFT, and
+  10.020679 s server decode with semantic output, JSON 16/16, color 16/16, and
+  both post-health layers green. This is +1.43 percent versus the nearest
+  50.370643 custom control, which is only a single-run observation. The public
+  parent summary's null env values do not resolve Steve's server route because
+  the recovered child launcher exports the custom flags and was reconstructed
+  after the June result. Preserve both labeled provenance controls.
 
 *Next up: prefer PP=2 for dual-card serving (no-P2P makes TP comms-bound; link is already full Gen3 x16, nothing
 to fix); 27B W8A8 INT8 at TP=2/PP=2 (Phase C headline, needs the custom int8 kernel in a GDN-enabled image);

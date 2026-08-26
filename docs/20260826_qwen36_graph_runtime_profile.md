@@ -215,6 +215,84 @@ percent of Steve's 85.869114 tok/s and leaves 20.884784 tok/s. The next
 attribution target is the 81 in-graph TP collectives or another accepted
 runtime/kernel family, not more graph-boundary work or native-MoE restoration.
 
+## Default FlashAttention Full-Graph Boundary
+
+CONFIG -> exact June `e190923b` source, June122 native package, TP=2 direct
+P2P, `FULL_DECODE_ONLY`, default attention, Triton MoE, no MTP or prefix cache,
+and a fresh cache. This changes only attention from the successful
+64.984330 tok/s FULL/Triton-MoE arm.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint CGMODE=FULL_DECODE_ONLY \
+  ATTN= MOE_BACKEND=triton P2P_ACCESS=1 \
+  I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T041000Z_full_default_attn_triton_moe \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> both workers selected Flash Attention and Triton MoE. Model load,
+compile, and all 81 profile clone fences per rank passed. The first of six FULL
+decode captures then failed in `vllm_xpu_kernels/flash_attn_interface.py` at
+`_vllm_fa2_C.varlen_fwd` with: `The
+sycl_ext_oneapi_work_group_scratch_memory feature is not yet available for use
+with the SYCL Graph extension.` No endpoint metric was produced. Graceful
+teardown left both card probes and the compiled TP=2 collective probe green.
+
+VERDICT -> Steve's no-override attention identity is default Flash under
+PIECEWISE capture. On the current runtime, Flash cannot enter the local FULL
+speed boundary because of a concrete SYCL graph feature gap. `TRITON_ATTN` is
+therefore a required and labeled intervention for the 61.553562/64.984330 FULL
+results. Do not retry this arm without changing the Flash kernel or isolated
+user-mode graph runtime; Linux 7.1 remains fixed.
+
+## June Source-Default Collective Control
+
+SOURCE -> the June source defaults all four relevant flags to zero. The
+retained parent result summary also reports them as null, but that parent
+cannot observe exports made by the child launcher. The recovered launcher now
+sets them to one, but its tracked reconstruction dates from August rather than
+the June-15 record. The exact accepted server route is therefore ambiguous in
+the published artifact.
+
+CONFIG -> exact June source/native PIECEWISE provenance control, default Flash
+attention, native MoE, fresh cache, and all four collective flags set to zero:
+
+```text
+VLLM_XPU_USE_CUSTOM_OP_COLLECTIVES=0
+VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP=0
+VLLM_XPU_CUSTOM_ALLREDUCE_GRAPH_CLONE_INPUT=0
+VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT=0
+```
+
+COMMAND ->
+
+```bash
+./bin/gpu-run env SOURCE_STACK=june-e190 \
+  NATIVE_STACK=june122-checkpoint COLLECTIVE_MODE=source-default \
+  CGMODE=PIECEWISE ATTN= MOE_BACKEND=auto \
+  P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1 STALL_TIMEOUT=900 \
+  STAMP=20260826T043000Z_collectives_source_default \
+  bash vllm/w8a8/run_qwen36_s2b_clone_exact_control.sh
+```
+
+RESULT -> health arrived in 320 seconds. The exact p498/o512 metric measured
+51.091606 corrected output tok/s, 315.694 ms client TTFT, and 10.020679 seconds
+server decode. Semantic output, JSON 16/16, color 16/16, graceful teardown,
+both cards, and compiled two-rank collective health passed. Each persisted
+rank computation graph contained 243 `_c10d_functional` all-reduce references
+and zero `torch.ops.vllm.all_reduce` references. The runner's first evidence
+gate correctly exposed that `profile clone complete` is a custom-route marker;
+the route-specific gate now uses compiled graph identity instead.
+
+VERDICT -> source-default c10d and custom `vllm.all_reduce` both cross exact
+PIECEWISE TP=2 on this box. The source-default observation is 0.720963 tok/s,
+or 1.43 percent, above the nearest 50.370643 custom control. One sample does
+not establish a speed win. Preserve both labeled routes, and use a matched
+FULL/Triton A/B to localize the 81 in-graph collective cost.
+
 ## Dense 27B Transfer Contract
 
 Dense 27B must reuse the method, not Qwen3.6-specific constants:
@@ -225,9 +303,13 @@ Dense 27B must reuse the method, not Qwen3.6-specific constants:
    fence, host-wait, and queue-submit calls.
 3. Test no-MTP `FULL_DECODE_ONLY` plus a capturable attention backend as a
    separate arm. Do not inherit an old blanket FULL-capture prohibition from
-   the stock v0.23 MTP path.
+   the stock v0.23 MTP path. Default Flash currently fails FULL capture at its
+   SYCL work-group scratch requirement, so prove the dense model's attention
+   kernel independently rather than copying the MoE control's backend.
 4. Derive any clone-completion fence threshold from the dense model's actual
    profile tensors. Do not copy Qwen3.6's 8192-row threshold.
+5. Preserve both functional-c10d and custom-op collective controls until the
+   dense model's compiled rank graphs and matched timing establish its route.
 5. Run synchronized timing only as a diagnostic and keep its endpoint separate
    from the clean unsynchronized metric.
 6. Treat Kineto-visible device kernels as a lower bound when XPUGraph replay is

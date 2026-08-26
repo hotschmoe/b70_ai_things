@@ -1,0 +1,450 @@
+{
+  "protocol": "steve-fixed-chatml-repeat-canary",
+  "attribution": "Steve Seguin, b70-optimization-lab, Unlicense",
+  "base_url": "http://127.0.0.1:18080",
+  "model": "qwen36-35b-a3b-quark-w8a8-int8-s2b-control",
+  "server_model_record": {
+    "id": "qwen36-35b-a3b-quark-w8a8-int8-s2b-control",
+    "object": "model",
+    "created": 1787719065,
+    "owned_by": "vllm",
+    "root": "/models/qwen3.6-35b-a3b/quark-w8a8-int8",
+    "parent": null,
+    "max_model_len": 32768,
+    "permission": [
+      {
+        "id": "modelperm-ab861f67fd164811",
+        "object": "model_permission",
+        "created": 1787719065,
+        "allow_create_engine": false,
+        "allow_sampling": true,
+        "allow_logprobs": true,
+        "allow_search_indices": false,
+        "allow_view": true,
+        "allow_fine_tuning": false,
+        "organization": "*",
+        "group": null,
+        "is_blocking": false
+      }
+    ]
+  },
+  "tokenizer": "/models/qwen3.6-35b-a3b/quark-w8a8-int8",
+  "case": "color",
+  "user_prompt": "Give exactly four comma-separated lowercase color words, sorted alphabetically, with no extra text.",
+  "prompt": "<|im_start|>user\nGive exactly four comma-separated lowercase color words, sorted alphabetically, with no extra text.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+  "prompt_token_ids": [
+    248045,
+    846,
+    198,
+    33963,
+    6681,
+    2943,
+    30644,
+    70221,
+    40657,
+    1829,
+    4105,
+    11,
+    10300,
+    26887,
+    2586,
+    11,
+    440,
+    874,
+    4799,
+    1414,
+    13,
+    248046,
+    198,
+    248045,
+    74455,
+    198,
+    248068,
+    271,
+    248069,
+    271
+  ],
+  "max_tokens": 32,
+  "repeats_requested": 16,
+  "repeats_completed": 16,
+  "seed": 20260613,
+  "stop_on_mismatch": true,
+  "expected_normalized": "blue, green, orange, red",
+  "json_expected_fields": null,
+  "pass_all": true,
+  "mismatch_count": 0,
+  "mismatches": [],
+  "unique_normalized": [
+    "blue, green, orange, red"
+  ],
+  "rows": [
+    {
+      "index": 0,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.41007341200020164,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 1,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4049001989988028,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 2,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4065545240009669,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 3,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.40617146200384013,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 4,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.41332377000071574,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 5,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.40966453200235264,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 6,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.42471792400465347,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 7,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.39583131700055674,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 8,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4087954760034336,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 9,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.42265071199653903,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 10,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4077193740013172,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 11,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4140422189957462,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 12,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4279682620035601,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 13,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4172793910038308,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 14,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4173899720044574,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    },
+    {
+      "index": 15,
+      "text": "blue, green, orange, red",
+      "normalized": "blue, green, orange, red",
+      "token_ids": [
+        11855,
+        11,
+        5983,
+        11,
+        18016,
+        11,
+        2438
+      ],
+      "finish_reason": "stop",
+      "elapsed_s": 0.4204138770001009,
+      "usage": {
+        "prompt_tokens": 30,
+        "total_tokens": 38,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+      },
+      "pass": true
+    }
+  ]
+}

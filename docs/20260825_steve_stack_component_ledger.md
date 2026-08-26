@@ -141,6 +141,28 @@ six captures, semantic output, both 16/16 canaries, and both health layers
 passed. The native grouped path is therefore not the missing accepted speed
 lever; the next opaque target is the 81 in-graph collectives.
 
+Default-attention and collective-route controls now narrow that target. Steve's
+accepted command passes no attention override, so June selects FlashAttention.
+The matched local default-Flash FULL arm loads, compiles, and crosses all 81
+profile collectives on both ranks, then fails during its first full capture in
+`_vllm_fa2_C.varlen_fwd`. The Flash kernel requires SYCL work-group scratch
+memory, which is unavailable through the current SYCL Graph extension. Thus
+default Flash remains the exact PIECEWISE identity, while Triton attention is a
+required labeled FULL intervention.
+
+The custom-collective identity is less certain than the recovered launcher
+suggests. The parent accepted-result summary records the four custom flags as
+null, but cannot observe exports made by its child launcher. The current child
+launcher sets all four to one, yet that reconstruction was committed in August
+and is not an immutable June-15 server record. A direct control with all four
+June source defaults at zero compiled `_c10d_functional` all-reduce in both
+rank graphs, with 243 references per rank and no `vllm.all_reduce`, and served
+coherently at 51.091606 tok/s. The nearest custom control is 50.370643 tok/s.
+The +1.43 percent difference is a single-run observation, not a performance
+claim. Both routes cross the exact PIECEWISE boundary and remain separately
+labeled until matched FULL/Triton timing or better primary evidence resolves
+the accepted route.
+
 ## Scope And Inventory Method
 
 This ledger tracks every component relevant to Steve Seguin's Qwen3.6 35B-A3B
@@ -194,7 +216,8 @@ PYTHONPATH=/home/steve/src/vllm:/home/steve/src/vllm-xpu-kernels
 LD_LIBRARY_PATH=/home/steve/src/vllm-xpu-kernels/vllm_xpu_kernels:...
 ```
 
-Active graph/collective settings included:
+The recovered accepted launcher sets the following graph/collective values.
+This is the best surviving reconstruction, not an immutable June-15 env dump:
 
 ```text
 COMPILATION_CONFIG={"cudagraph_mode":"PIECEWISE"}
@@ -210,7 +233,7 @@ FI_TCP_IFACE=eth1
 CCL_KVS_IFACE=eth1
 ```
 
-The accepted launcher also explicitly unset `CCL_ZE_IPC_EXCHANGE` and
+The recovered launcher also explicitly unset `CCL_ZE_IPC_EXCHANGE` and
 `CCL_WORKER_COUNT`. Steve's `eth1` was his bare-metal interface. The equivalent
 interface inside this repository's Docker network is `eth0`; matching the
 semantic interface is correct, while copying the literal host name is not.
@@ -234,8 +257,9 @@ partitioning. The later launcher default made scheduling asynchronous because
 | GDN quant reuse | Clone-safe QKVZ/BA quant reuse | Yes | `clone` setting active | Small lever; view/partial-clone variants were rejected. |
 | Fresh GDN state | Zero newly allocated recurrent state | Yes, launcher default | Added to exact local env | Correctness identity; not a 5x speed lever. |
 | Graph runtime | Forced-communication PIECEWISE replay | Yes | Exact PIECEWISE matches 41 pieces and profiles 41 fences/41 host waits/82 submits per token; separate no-MTP FULL_DECODE_ONLY+TRITON attention arm reaches 61.5536 tok/s (+22.20 percent), and Triton MoE raises it to 64.9843 | PIECEWISE provenance topology is matched. Full decode and Triton MoE are labeled local interventions, not Steve command identity; 81 all-reduces remain profiler-opaque. |
+| Attention | Default FlashAttention; no CLI override | Yes | PIECEWISE works. FULL fails in `_vllm_fa2_C.varlen_fwd` because SYCL work-group scratch is unavailable to SYCL Graph; Triton attention enables FULL | Exact PIECEWISE identity is matched. Triton is a required current-runtime FULL intervention. |
 | Ordinary no-spec PIECEWISE key | Reuse relaxed general non-uniform key | Yes | Erroneous local uniform key removed; off-device default-size contract passes | June behavior matched; no special ordinary-decode key is required. |
-| Custom collective wrapper | functional `vllm::all_reduce` custom op with one active required inner clone; nominal graph-clone flag was inert on the accepted outer-op route | Yes | Large profile clones require completion before oneCCL; clone-only profile fence passes all 81 calls while graph recording and decode remain unfenced | Cleared through exact model interleaving and post-health. |
+| Custom collective wrapper | Recovered launcher uses functional `vllm::all_reduce` with one active required inner clone; exact June-15 child env is not immutable | Ambiguous | Custom route passes all 81 profile fences; source-default c10d also crosses PIECEWISE coherently at 51.0916 tok/s, with 243 c10d references/rank and no custom op | Maintain both labeled controls; a parent-summary null does not prove the child server flags were off. |
 | Collective binary | public oneCCL `4ceafd15`, ARCB, oneAPI 2025.3 | Yes | Pinned-image `542142ac...` library plus exact `0d549c35...` SPIR-V passed the local direct/graph oracle | Graph correctness is locally proven despite a non-semantic build-hash difference from Steve's later artifact. |
 | Collective transport | oneCCL/OFI direct P2P in graph | Yes | Unset/default IPC resolved to `pidfd`; 256 direct and 512 XPUGraph iterations passed on both ranks | Raw transport and graph replay are cleared; the remaining failure is in the full vLLM integration. |
 | Sampler | XPU greedy top-k fallback | Yes | Active | Not a 5x candidate; exact implementation comparison pending. |

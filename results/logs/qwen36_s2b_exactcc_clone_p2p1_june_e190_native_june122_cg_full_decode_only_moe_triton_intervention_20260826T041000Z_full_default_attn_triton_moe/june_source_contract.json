@@ -1,0 +1,102 @@
+{
+  "components": [
+    {
+      "module": "vllm._xpu_ops",
+      "path": "/opt/forensic_vllm/vllm/_xpu_ops.py",
+      "sha256": "679dd350927a794f418ccbee6b251ed477e9fbb09b4c168e911e6f1c01cdbf04"
+    },
+    {
+      "module": "vllm.compilation.cuda_graph",
+      "path": "/opt/forensic_vllm/vllm/compilation/cuda_graph.py",
+      "sha256": "cf83f7cb18570e91dd1a0d67c048e53b43e521f88480efb6a900d3c144ae5432"
+    },
+    {
+      "module": "vllm.compilation.piecewise_backend",
+      "path": "/opt/forensic_vllm/vllm/compilation/piecewise_backend.py",
+      "sha256": "6ea7766e3ddb466ebddb9341ec116a20e1978d374fe73b2ca5d3d5e01b633566"
+    },
+    {
+      "module": "vllm.distributed.parallel_state",
+      "path": "/opt/forensic_vllm/vllm/distributed/parallel_state.py",
+      "sha256": "d47456bf81d54e79de85a46468feb80842ecf4278429a31180101433ab65fd19"
+    },
+    {
+      "module": "vllm.distributed.device_communicators.xpu_communicator",
+      "path": "/opt/forensic_vllm/vllm/distributed/device_communicators/xpu_communicator.py",
+      "sha256": "af5aa20f02e1d1e5157784913eb9bb24755f939843326cc2e8839d388fc19cfb"
+    },
+    {
+      "module": "vllm.model_executor.layers.fused_moe.experts.xpu_moe",
+      "path": "/opt/forensic_vllm/vllm/model_executor/layers/fused_moe/experts/xpu_moe.py",
+      "sha256": "48052528618ea6a9bdd3ee9cdb1bf4dd6f65f7eb6366fd94ce104a7d504a7608"
+    },
+    {
+      "module": "vllm.model_executor.layers.mamba.gdn_linear_attn",
+      "path": "/opt/forensic_vllm/vllm/model_executor/layers/mamba/gdn_linear_attn.py",
+      "sha256": "7a1d0ea941d5ed0be975d3bed576962a2a04022fc15a02dfef688d985efb92e6"
+    },
+    {
+      "module": "vllm.model_executor.layers.quantization.quark.quark_moe",
+      "path": "/opt/forensic_vllm/vllm/model_executor/layers/quantization/quark/quark_moe.py",
+      "sha256": "4fd5b7f161bddd6db085290362e1cf72c0e48fe62eab04e51252e1ab1b7474e5"
+    },
+    {
+      "module": "vllm.v1.core.sched.scheduler",
+      "path": "/opt/forensic_vllm/vllm/v1/core/sched/scheduler.py",
+      "sha256": "259ecdc234ec8c21b6a24135fe894ac07a17f2181be47fd14528977e609e2a4f"
+    },
+    {
+      "module": "vllm.v1.sample.sampler",
+      "path": "/opt/forensic_vllm/vllm/v1/sample/sampler.py",
+      "sha256": "b8f33b6e0086f872609565a94f00ae797ef3bc5e21bc1f45fa51e047634f8b36"
+    },
+    {
+      "module": "vllm.v1.worker.gpu_model_runner",
+      "path": "/opt/forensic_vllm/vllm/v1/worker/gpu_model_runner.py",
+      "sha256": "186322e5973b72a65bfe22573160f71c5028c5051a14e94c1f6382031d9fa340"
+    },
+    {
+      "module": "vllm_xpu_kernels.fused_moe_interface",
+      "path": "/opt/june-runtime/vllm_xpu_kernels/fused_moe_interface.py",
+      "sha256": "dca1423d7346debbc9bbf33398c3364e2a911b751b9d94423ec28b2778015b34"
+    }
+  ],
+  "failures": [],
+  "missing_tokens": [],
+  "protocol": "qwen36-june-source-contract-v1",
+  "required_tokens": {
+    "vllm._xpu_ops": [
+      "VLLM_XPU_GDN_NATIVE_FALLBACK"
+    ],
+    "vllm.compilation.cuda_graph": [
+      "class CUDAGraphWrapper"
+    ],
+    "vllm.compilation.piecewise_backend": [
+      "class PiecewiseBackend"
+    ],
+    "vllm.distributed.device_communicators.xpu_communicator": [
+      "VLLM_XPU_COMPILE_ALLREDUCE_CUSTOM_OP"
+    ],
+    "vllm.distributed.parallel_state": [
+      "VLLM_XPU_CUSTOM_ALLREDUCE_CLONE_INPUT"
+    ],
+    "vllm.model_executor.layers.fused_moe.experts.xpu_moe": [
+      "VLLM_XPU_INT8_MOE_MIXED_WORKSPACE"
+    ],
+    "vllm.model_executor.layers.mamba.gdn_linear_attn": [
+      "VLLM_XPU_GDN_PREFILL_RECURRENT_FALLBACK"
+    ],
+    "vllm.model_executor.layers.quantization.quark.quark_moe": [
+      "class QuarkW8A8Int8MoEMethod"
+    ],
+    "vllm.v1.sample.sampler": [
+      "VLLM_XPU_GREEDY_SAMPLE_TOPK_FALLBACK"
+    ],
+    "vllm.v1.worker.gpu_model_runner": [
+      "VLLM_XPU_DISABLE_PREFILL_CUDAGRAPH_REPLAY"
+    ]
+  },
+  "source_stack": "e190923b32e1b87fe33d08264bff9215fb7770fc",
+  "verdict": "pass",
+  "xpu_fused_moe_signature": "(hidden_states, w13, w13_scales, w13_bias, w2, w2_scales, w2_bias, topk_weights, topk_ids, n_experts_per_token, activation, num_experts, ep_rank=0, ep_size=1, expert_map=None, output=None, is_fp8=False, is_int4=False, is_mxfp4=False, is_mxfp8=False, is_block_fp8=False, is_int8=False, scratch=None, diagnostic_context=None)"
+}

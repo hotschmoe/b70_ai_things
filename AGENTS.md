@@ -104,12 +104,27 @@ Working notes for any agent on this repo. Keep this file short; details live in
   Next isolate the 81 in-graph collectives or another accepted runtime/kernel
   family. For dense 27B, apply the graph-first method and omit every MoE support
   gate, expert layout, grouped GEMM, layerlet, and sidecar change.
-- **Steve's exact 85.8691 TP2 arm used the June default FlashAttention path.**
-  The preserved command set async scheduling and prefill-only GDN fallback but
-  passed no attention override; `e190923b` selects `FLASH_ATTN` by default on
-  XPU. The 61.5536/64.9843 local FULL results explicitly use `TRITON_ATTN` and
-  are interventions, not exact attention reproduction. Keep default-attention
-  PIECEWISE as the provenance control and label every FULL/Triton result.
+- **Steve's exact 85.8691 TP2 arm used the June default FlashAttention path,
+  but only with PIECEWISE capture.** The preserved command set async scheduling
+  and prefill-only GDN fallback but passed no attention override; `e190923b`
+  selects `FLASH_ATTN` by default on XPU. A measured default-Flash
+  `FULL_DECODE_ONLY` arm reaches its first full capture and fails in
+  `_vllm_fa2_C.varlen_fwd`: SYCL work-group scratch memory is unavailable to
+  the SYCL Graph extension. The 61.5536/64.9843 FULL results therefore must
+  force `TRITON_ATTN`; they are interventions, not exact attention
+  reproduction. Keep default-Flash PIECEWISE as the provenance control. Do not
+  retry Flash FULL on this runtime without a concrete kernel/runtime change.
+- **June source-default collectives also cross the exact PIECEWISE TP=2
+  boundary.** With all four recovered custom-collective switches set to their
+  June source defaults of zero, both rank graphs contained 243
+  `_c10d_functional` all-reduce references and no `vllm.all_reduce`; the run
+  measured 51.0916 tok/s, 315.69 ms TTFT, 10.0207 s server decode, both 16/16
+  canaries, and green card/compiled-collective post-health. The nearest custom
+  control is 50.3706 tok/s, but a single +1.43 percent observation is not a
+  speed claim. The parent result summary's null env fields cannot establish
+  Steve's live server flags because the recovered launcher exports them in a
+  child process and was reconstructed in August. Exact June-15 flag identity
+  remains ambiguous; maintain both labeled controls.
 - **Push-AR preinit fixes IPC import, not loaded graph submission.** On the
   exact June source/runtime, initializing the TP push communicator before model
   allocation made both ranks import scratch and the IPC event pool. Both then
@@ -197,6 +212,11 @@ pin is RETIRED (do NOT re-add it on 7.1). **w8a8 TP=2 (and DP=2) is the producti
 a 12h+ run, millions of tokens, heavy cache-hit load ran clean even on 7.0+pin, then 5/5 back-to-back TP=2
 serve cycles ran clean on 7.1. **The old "w8a8 TP=2 = attended-only" caveat is RETIRED -- unattended TP=2
 serving is fine.**
+
+**Kernel 7.1 is the fixed host baseline. Do not downgrade it to imitate Steve's
+kernel.** Any Steve-era comparison must be isolated to a versioned container or
+user-mode runtime and must preserve the host kernel, current recovery tools,
+and before/after health gates.
 
 The P2P-in-vLLM-serve / chained-TP>1-worker-crash oneCCL wedge documented next is a SEPARATE software
 mechanism (oneCCL <-> vLLM-multiproc collective state), NOT the GuC hardware wedge. An early guarded exact
