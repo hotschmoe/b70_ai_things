@@ -6,8 +6,9 @@
 # native-kernel factor: TP=2, eager target-only execution, short context. A
 # matched TP=1 attempt proved that the 35 GB artifact plus its BF16 LM head
 # cannot fit one 31.89 GiB card, so TP=2 is the minimum viable capacity lane.
-# The pinned official image contains vLLM ac7509e2b, torch 2.13.0+xpu, Triton
-# XPU 3.7.2, Compute Runtime 26.27.39122.11, and Level Zero 1.32.0.
+# The pinned official image contains vLLM 46638857f, torch 2.13.0+xpu, Triton
+# XPU 3.7.2, vllm-xpu-kernels 0.1.13.2, Compute Runtime 26.27.39122.11, and
+# Level Zero 1.32.0.
 #
 #   ./bin/gpu-run bash vllm/w8a8/serve_qwen38_27b.sh smoke
 #
@@ -16,7 +17,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-export IMG="${IMG:-vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f}"
+export IMG="${IMG:-vllm/vllm-openai-xpu@sha256:2ac07cf8fde4631de59912f2349729cf130947671b85c087550885cae8e65c46}"
 export CKPT="${CKPT:-/models/qwen3.8-27b/w8a8-gptq}"
 export SERVED="${SERVED:-qwen3.8-27b-W8A8-gptq}"
 export NAME="${NAME:-qwen38_w8a8_vllm_refresh}"

@@ -3591,3 +3591,205 @@ coherence, long context, graph/compile, MTP, and repeated timing remain open.
 The next high-information vLLM arm is compile without graph, followed by a
 separately guarded graph policy. The primary backend track still needs the
 pinned Sglang 0.5.18/current-source build and deliberate W8A8 INT8 port.
+
+### 2026-08-26p - Current vLLM nightly keeps the Qwen3.8 W8A8 eager control coherent
+
+CONFIG -> official XPU nightly digest `2ac07cf8...`; source commit
+`46638857fdbb`; torch `2.13.0+xpu` at `cf30153c...`; Triton XPU `3.7.2`;
+vllm-xpu-kernels `0.1.13.2`; Compute Runtime `26.27.39122.11`; Level Zero
+`1.32`; target only; TP=2; eager; 8K; P2P off; source-default XCCL. The vLLM
+source is five commits behind `cde7ba92d`; those five later commits do not
+touch the Qwen3.8, W8A8, XPU, compilation, or collective paths used here.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run bash -lc '
+  img=vllm/vllm-openai-xpu@sha256:2ac07cf8fde4631de59912f2349729cf130947671b85c087550885cae8e65c46
+  ./bin/xpu-collective-health --p2p 0 --img "$img"
+  IMG="$img" B70_COLLECTIVE_HEALTH=0 \
+    bash vllm/w8a8/serve_qwen38_27b.sh smoke
+  ./bin/xpu-health --img "$img"
+  ./bin/xpu-collective-health --p2p 0 --img "$img"
+'
+```
+
+RESULT -> the exact-image compiled P2P-off collective preflight passed. Each
+rank loaded 16.52 GiB and selected `TritonInt8ScaledMMLinearKernel` for
+`CompressedTensorsW8A8Int8`. `/v1/models` returned the unambiguous
+`qwen3.8-27b-W8A8-gptq` ID and the deterministic generation probe completed
+coherently with `Paris`. Graceful teardown, both per-card probes, and the
+exact-image compiled collective post-check passed. The preserved log is
+`/mnt/vm_8tb/b70/b70_qwen38_w8a8_vllm_refresh.log`, SHA256
+`415d2b0b37d9d866114581a350b7d2bb67c2ea6eff8ff81ed6ea08a8c2c4e857`.
+
+VERDICT -> advance the refreshed vLLM eager control to digest `2ac07cf8...`.
+This is an identity and coherence qualification, not a speed or shelf claim.
+A matched performance run remains required before comparing it with the
+earlier 3.53 tok/s denominator.
+
+### 2026-08-26q - Torch 2.13 TreeSpec blocks Qwen3.8 compile without graphs
+
+CONFIG -> the exact nightly configuration from 2026-08-26p; change only from
+eager to vLLM compile/Inductor with CUDAGraph mode NONE, compile size 1, SYCL
+collectives off, and P2P off. Both the legacy vLLM FX splitter
+(`use_inductor_graph_partition=false`) and current default partitioner
+(`true`) were tested. No graph capture occurred.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run bash -lc '
+  img=vllm/vllm-openai-xpu@sha256:2ac07cf8fde4631de59912f2349729cf130947671b85c087550885cae8e65c46
+  B70_COLLECTIVE_HEALTH=0 GRAPH=1 CGMODE=NONE COMPILESZ=1 \
+    SYCLKERNELS=0 P2PACCESS=0 IGP=false \
+    bash vllm/w8a8/serve_qwen38_27b.sh smoke
+  ./bin/xpu-health --img "$img"
+  ./bin/xpu-collective-health --p2p 0 --img "$img"
+'
+```
+
+RESULT -> both ranks loaded the correct INT8 scheme and weights, then Torch
+FX `split_module` failed before health while inspecting a cross-partition
+`example_value`: `free_symbols()` rejected the zero-leaf empty-arguments
+`TreeSpec`. The raw log is `/tmp/b70_qwen38_w8a8_vllm_compile_nograph.log`,
+SHA256 `d7f81c777d6db090a642e11432507a7c9f791015cf0b3e04d11d5d9d93ae3323`.
+The same assertion remains in current PyTorch main. The IGP=true arm failed at
+the same boundary; its log SHA256 is
+`b1e6cc3f35137a5278bea3ec41cd1783dea8f841104edc84736f5c0a96ada3ac`.
+
+RESULT -> a temporary exact-Torch-commit-guarded diagnostic treated only a
+zero-leaf `TreeSpec` as symbol-free. It cleared the first assertion, completed
+the 27.60-second Dynamo transform, and compiled several regions. It then
+proved the deeper incompatibility when AOTAutograd rejected that structural
+object as a flat partition input: `all flat_args must be KNOWN_TYPES or opaque
+types`. The diagnostic was removed rather than retained as a false fix. Its
+log SHA256 is
+`6cea642ed3083c1e2aca66184a64a8ce5eafae3b62f5ed9664a7b0d271b1e13b`.
+
+RESULT -> every failed arm shut both workers down gracefully. Both card
+probes and the exact-image compiled two-rank P2P-off collective post-check
+passed after every arm; the GPUs remained healthy and free.
+
+VERDICT -> reject compile-only Qwen3.8 on this Torch 2.13/vLLM bundle. This is
+an upstream graph-partition metadata incompatibility, not an INT8 kernel,
+capacity, graph-capture, or collective failure. Do not stack more TP2 retries
+on this boundary. Keep the vLLM lane eager and move primary effort to the
+exact SGLang/XPU-kernel build and narrow W8A8 port.
+
+### 2026-08-26r - Exact current-source SGLang XPU image is rebuilt cleanly
+
+CONFIG -> fixed Linux `7.1.0-070100-generic`; host-matched Compute Runtime
+`26.22.38646.4`, Level Zero `1.28.2`, IGC `2.36.3+21719`, and GMM `22.10.0`;
+exact SGLang commit `bede6bc37c5d9638099ebb948d93b9e2a7799f10` and tree
+`938cf2b1b71bbc60e5d18d8388f1388ca0eff5a7`; exact sgl-kernel-xpu commit
+`2d10888c069350ff20a192338d568dec945c9594` and tree
+`3f975153d4d430535c759e57cb176e141a1b25c8`; torch `2.13.0+xpu` at
+`cf30153c...`; Triton XPU `3.7.2`. All MoE, FMHA, and MLA kernel features were
+built from the exact tracked source with eight jobs. No quarantined binary or
+backend source was restored.
+
+COMMAND ->
+
+```bash
+BUILD_JOBS=8 bash sglang/refresh/build.sh
+
+docker run --rm --entrypoint bash \
+  b70-sglang-xpu@sha256:8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd \
+  -lc 'cat /opt/b70-build-manifest/wheel-sha256.txt; python -m pip check'
+
+./bin/gpu-run ./bin/xpu-health --img \
+  b70-sglang-xpu@sha256:8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd
+./bin/gpu-run ./bin/xpu-collective-health --p2p 0 --img \
+  b70-sglang-xpu@sha256:8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd
+```
+
+RESULT -> the complete native kernel wheel built in 2 hours 43 minutes. Its
+SHA256 is `f2dbd9a223056c530d0c8043d482d684e7dceb2f0778fb37ac351e6ea4736ffd`.
+The SGLang wheel is `0.5.19.dev443+gbede6bc37c`, SHA256
+`04909cc7d9241d3565f385e5e50f016344f6c9bb10f36005e9f8ec607315bbb4`.
+The final image digest is
+`8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd`.
+`pip check` reports no broken requirements. XGrammar `0.2.1` and TVM FFI
+`0.1.13.post3` import; the metadata-only `triton==3.7.2` alias leaves the
+actual `triton-xpu==3.7.2` module and files intact. Both per-card probes and
+the compiled ten-iteration TP=2 P2P-off collective probe passed.
+
+RESULT -> the environment-gated `B70_XPU_W8A8=1` port catches only the exact
+upstream XPU rejection for compressed-tensors W8A8 INT8. It retains the
+upstream load/requantization logic, stores the transposed INT8 weight and
+channel scales, releases the duplicate checkpoint weight, and applies dynamic
+per-token symmetric INT8 through `torch._int_mm`. A card-0 numerical oracle
+through the actual patched scheme returned
+`W8A8_NUMERICAL_OK shape=(3, 32) max_error=0.0 freed_weight=True`.
+
+VERDICT -> the refreshed SGLang and every ABI-specific native component now
+have an exact source and image identity. The W8A8 port is a deliberately
+narrow functional baseline, not yet a speed claim; optimize or replace its
+generic `torch._int_mm` path only after full-model coherence and teardown.
+
+### 2026-08-26s - Refreshed SGLang Qwen3.8 W8A8 TP2 baseline qualifies
+
+CONFIG -> image digest `8678399d...`; local Qwen3.8-27B compressed-tensors
+W8A8 GPTQ checkpoint; served ID `qwen3.8-27b-W8A8-gptq`; TP=2; BF16 residual
+and KV state; 8K context; target only; eager attention and linear attention;
+no graph, radix cache, overlap scheduler, or MTP; source-default c10d; oneCCL
+SYCL kernels and P2P off. The matched transport profile uses OFI, Level Zero
+v1, explicit two-card visibility, and pidfd IPC with oneCCL's observed drmfd
+fallback.
+
+COMMAND ->
+
+```bash
+./bin/gpu-run bash sglang/w8a8/serve_qwen38_w8a8.sh start
+
+./bin/gpu-run bash sglang/perf_regime.sh \
+  sglang_qwen38_w8a8_refresh 18080 qwen3.8-27b-W8A8-gptq \
+  /models/qwen3.8-27b/w8a8-gptq qwen38-w8a8-refresh-tp2-eager
+
+./bin/gpu-run python3 bin/serve-soak.py \
+  --base-url http://localhost:18080/v1 \
+  --model qwen3.8-27b-W8A8-gptq --concurrency 4 \
+  --duration 300 --max-tokens 128 --timeout 300
+
+./bin/gpu-run bash sglang/w8a8/serve_qwen38_w8a8.sh stop
+./bin/gpu-run ./bin/xpu-health --img \
+  b70-sglang-xpu@sha256:8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd
+./bin/gpu-run ./bin/xpu-collective-health --p2p 0 --img \
+  b70-sglang-xpu@sha256:8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd
+```
+
+RESULT -> the first launch with only `CCL_TOPO_P2P_ACCESS=0` loaded both
+ranks, then failed the first embedding all-reduce with
+`mem_to_ipc_handle: device_fd is invalid value`. The required xe rebind
+recovered both cards; exact-image per-card and compiled collective checks
+passed. Adding only the explicit retained multi-GPU transport profile cleared
+that boundary. oneCCL reported pidfd unavailable and fell back to drmfd.
+
+RESULT -> the successful arm reached health in 213 seconds, including about
+90 seconds of first-run Triton KDA compilation. Each rank loaded 16.90 GB and
+retained 14.99 GB free immediately after load; the final pool census reported
+3.24 GB available and 371,584 total tokens. `/v1/models` returned the exact
+served ID. Arithmetic returned exactly `42`; two independent temperature-zero
+Rayleigh answers were byte-identical and coherent. Four simultaneous distinct
+arithmetic requests all returned exact answers.
+
+RESULT -> the retained matched 2048-input/128-output regime measured warm c1
+at 3.76 per-stream decode tok/s, 3.43 aggregate output tok/s, and 2338.70 ms
+mean TTFT. Warm c4 measured 2.73 per-stream decode tok/s, 8.74 aggregate
+output tok/s, and 4100.56 ms mean TTFT. These figures are not directly matched
+to the earlier vLLM p512/o512 result. The regime's deleted historical
+`sglang/soak_probe.py` reference failed and is not counted as evidence.
+The live mixed-prefill c4 soak then completed 32/32 requests over 300 seconds
+with zero degeneracy and zero errors at 13.4 aggregate output tok/s.
+
+RESULT -> graceful TP teardown completed in 18 seconds. Both exact-image
+per-card probes and the compiled ten-iteration TP=2 P2P-off collective
+post-check passed. The image digest observed by the live container was exactly
+`8678399d...`; no scheduler exception occurred in the successful arm.
+
+VERDICT -> the current-source SGLang generic INT8 path is now the qualified
+coherent and stable denominator. Its 3.76 tok/s c1 decode is intentionally
+unoptimized and must not be promoted to the shelf. Profile the generic dynamic
+quantization/`torch._int_mm` path next, then port a fused dense INT8 kernel,
+graph capture, and MTP as separate matched arms.
