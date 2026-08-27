@@ -1,6 +1,6 @@
 # Serving index
 
-Updated 2026-08-26 after the clean-slate cleanup.
+Updated 2026-08-27 after current-stack speed qualification.
 
 ## Retained pre-refresh shelf
 
@@ -14,9 +14,11 @@ entries. The cleanup quarantined their ABI-specific native libraries. Rebuild
 against the refreshed stack and pass the full gate below before serving or
 calling either entry live.
 
-Qwen3.8 W8A8 and Ornith W8A8 are retained research artifacts, but neither has
-a newly sweep-qualified sglang shelf entry. Do not reconstruct a production
-serve from old journal entries.
+Qwen3.8 W8A8 and Ornith W8A8 now have current-stack research performance
+controls, but neither has a live-shelf entry. See
+`docs/20260827_current_stack_speed_targets.md` for the exact qualified regimes
+and boundaries. Do not reconstruct a production serve from old journal
+entries.
 
 ## Host paths
 

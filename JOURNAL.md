@@ -4519,3 +4519,90 @@ equivalence: measured 24/64-token continuations can diverge after coherent
 common prefixes. Reject TP2 eager-all-reduce graph as a performance route;
 although functionally correct and isolated-oracle clean, its many host
 collective boundaries retain cumulative slowdown.
+
+### 2026-08-27c - Ornith W8A8 graph reclaim sustains 87.80 tok/s at c4
+
+CONFIG -> exact refreshed SGLang runtime
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`,
+kernel 7.1.0-070100, SGLang `bede6bc`, sgl-kernel `2d10888`, Torch
+2.13.0+xpu, Triton XPU 3.7.2, Compute Runtime 26.22, and
+vllm-xpu-kernels `2dd55f3`. The model was the local
+Ornith-1.5-35B-A3B Quark-compatible RTN W8A8 checkpoint. All accepted arms
+used TP=2, P2P disabled, source-default eager oneCCL collectives, MTP off,
+load-time BF16 dense/shared dequant, Triton routed-expert W8A8, breakable
+decode graph sizes 1, 2, and 4, maximum concurrency 4, 8192 context, and no
+radix, overlap, tool parser, or strict-thinking grammar. The candidate mounted
+tracked overlay `sglang/refresh/b70_xpu_w8a8.py` SHA256
+`083aea56045cc91dc66dd01e561e3a3876ce86ab9d5dfba76277e14534e41f31`
+over the image copy and set graph reclaim to 500 replays per graph.
+
+COMMAND -> first screen configurable graph sizes 1, 2, 4, 8, and 16 with the
+current random-serving benchmark, then use
+`sglang/w8a8/bench_forced_concurrent.py` for exact served-ID validation,
+two repeated greedy Rayleigh responses, concurrent arithmetic/factual
+canaries, exact forced completion-token accounting, and true client
+post-first timing. The matched historical shape used 515 prompt tokens, 512
+forced output tokens, and c4. Every risky TP2 run was fully enclosed by
+`bin/gpu-run`, per-card health, and the exact-image compiled ten-iteration
+P2P-off collective probe.
+
+RESULT -> the variable-length screen measured 65.15 aggregate output tok/s at
+c8 and 71.36 at c16, but it is not an accepted speed claim because prompts
+averaged only about 1000 tokens and completions stopped at variable lengths.
+The strict 4172-prompt/128-output c8 arm passed all eight canaries, returned
+exactly 128 tokens on every stream, and produced byte-identical repeated greedy
+output at SHA256
+`c633eb39a51efdcb78f62e9db561cc4d157b64029369ee1097bc15beb0128c65`.
+Its three measured aggregate post-first rates were 39.5081, 39.2342, and
+38.9456 tok/s, so long prefill serialization does not meet the 65 tok/s
+capacity objective.
+
+RESULT -> the matched 515/512 arm initially looked successful. Three c4
+batches measured 85.2119, 81.8794, and 79.6712 aggregate post-first tok/s;
+c8 measured 87.1168, 83.6927, and 79.0298. C4 was the better serving point
+because it had lower latency for nearly the same aggregate capacity. The
+required 12-batch c4 control then exposed cumulative replay degradation:
+84.0771, 81.4030, 78.1459, 74.6536, 73.0380, 69.5854, 66.9912, 64.6683,
+62.7426, 60.2803, 58.3836, and 56.7261 tok/s. Its median was 68.2883, but the
+tail crossed below the objective and lost 32.5 percent from first to last.
+Control JSON SHA256 is
+`6986a8e6abc48a6f1957e8af14f4634a413c5e3b9df44988819023a73a4dfa99`;
+runtime log SHA256 is
+`b597b3bc483a88ef41d944631a0cdae19f32525a2f485f764503d2a20039a689`.
+
+COMMAND -> port the retained vLLM `B70_XPU_CG_RECLAIM` mechanism into the
+refreshed SGLang overlay. When enabled, each `torch.xpu.XPUGraph` retains its
+modifiable graph and calls `instantiate()` before every 500th replay, resetting
+the accumulating Level Zero executable command-list state without retracing.
+The launcher mounts the tracked overlay over the image copy, passes
+`B70_XPU_CG_RECLAIM`, and defaults the qualified breakable route to 500. Two
+setup-only attempts correctly stopped before traffic when the enable marker
+was absent: the first modified the unused legacy shim, and the second had not
+yet mounted the tracked refreshed overlay. Both tore down and passed card and
+compiled collective health; neither produced a speed result.
+
+RESULT -> the corrected candidate emitted the enable marker on both ranks and
+16 sampled live re-instantiation markers. The same 12 measured c4 batches
+returned 88.6186, 87.7131, 89.3556, 87.7184, 88.2516, 88.3519, 87.2723,
+87.8725, 87.7168, 87.2393, 86.8321, and 88.1472 aggregate post-first tok/s.
+Median was 87.7954, range was 86.8321-89.3556, aggregate including TTFT median
+was 86.1822, and the first-to-last delta was only -0.53 percent. All 48 streams
+returned exactly 512 tokens, for 24,576 measured output tokens. Repeated greedy
+output remained byte-identical at the control hash, all four concurrent
+arithmetic canaries passed, exact model identity passed, and no fatal runtime
+marker appeared. Candidate JSON SHA256 is
+`b8d58bd5c6e9ce9a3c60029c732dd4a9cb3c9949fba7bd2236d32c761d0166ba`;
+runtime log SHA256 is
+`399fddaaf7f3c437c9d6c1cf3c972eb2f3f8dd55f6201af83e0e2e93af3ff7a1`.
+The server stopped gracefully. Final per-card and compiled P2P-off collective
+health passed, no container remains, and both GPU leases are free.
+
+VERDICT -> qualify Ornith target-only breakable graph with reclaim500 as the
+current W8A8 MoE serving winner for the matched p515/o512 c4 regime. Its
+sustained 87.7954 tok/s median exceeds the 65 tok/s objective by 35.1 percent
+and removes the rejected control's cumulative slowdown. Keep MTP rejected
+because Shisa output is not target-exact, keep dense-native off because it is
+slower, and keep direct P2P and FULL TP2 capture rejected. Do not generalize
+the 87.80 number to long-prefill traffic: the separately measured p4172/o128
+c8 regime is 39.23 tok/s. This is a performance-control qualification, not a
+live-shelf promotion.

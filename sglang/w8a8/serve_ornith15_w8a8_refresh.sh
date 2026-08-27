@@ -14,6 +14,10 @@ TP="${TP:-2}"
 CTX="${CTX:-8192}"
 MEMFRAC="${MEMFRAC:-0.90}"
 MAXREQ="${MAXREQ:-4}"
+GRAPH_BS="${GRAPH_BS:-1 2 4}"
+# Bound the Level Zero command-list growth caused by repeated XPUGraph replay.
+# The matched 12-batch soak selected 500; set 0 only for the retained control.
+CG_RECLAIM="${CG_RECLAIM:-500}"
 DENSE_NATIVE="${DENSE_NATIVE:-0}"
 MTP="${MTP:-0}"
 SPEC_STEPS="${SPEC_STEPS:-1}"
@@ -33,6 +37,7 @@ LOG="${LOG:-$ROOT/sglang_ornith15_w8a8_refresh.log}"
 SP=/opt/venv/lib/python3.12/site-packages
 QUARK_PATCH="$REPO/sglang/patches/quark_moe_int8.py"
 ACTQ_PATCH="$REPO/sglang/patches/int8_actquant_xpu.py"
+W8A8_PATCH="$REPO/sglang/refresh/b70_xpu_w8a8.py"
 PTH="$REPO/sglang/refresh/b70_ornith_w8a8.pth"
 
 say() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -46,7 +51,7 @@ preflight() {
     say "missing checkpoint: $REPO/models/files/${CKPT#/models/}"
     return 1
   }
-  for path in "$QUARK_PATCH" "$ACTQ_PATCH" "$PTH"; do
+  for path in "$QUARK_PATCH" "$ACTQ_PATCH" "$W8A8_PATCH" "$PTH"; do
     [ -f "$path" ] || { say "missing patch: $path"; return 1; }
   done
   [ "$TP" = 2 ] || {
@@ -83,6 +88,17 @@ preflight() {
     0|1|full|breakable) ;;
     *) say "DECODE_GRAPH must be 0, 1, full, or breakable"; return 1 ;;
   esac
+  local graph_bs
+  for graph_bs in $GRAPH_BS; do
+    [ "$graph_bs" -ge 1 ] 2>/dev/null || {
+      say "GRAPH_BS must contain positive integers, got $GRAPH_BS"
+      return 1
+    }
+  done
+  [ "$CG_RECLAIM" -ge 0 ] 2>/dev/null || {
+    say "CG_RECLAIM must be a nonnegative integer, got $CG_RECLAIM"
+    return 1
+  }
   case "$SYCL_KERNELS" in
     0|1) ;;
     *) say "SYCL_KERNELS must be 0 or 1"; return 1 ;;
@@ -113,9 +129,9 @@ start() {
   local think_env=()
   local breakable_graph=0
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
-    graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode 1 2 4"
+    graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode $GRAPH_BS"
   elif [ "$DECODE_GRAPH" = breakable ]; then
-    graph_args="--cuda-graph-backend-decode breakable --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode 1 2 4"
+    graph_args="--cuda-graph-backend-decode breakable --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode $GRAPH_BS"
     breakable_graph=1
   else
     graph_args="--cuda-graph-backend-decode disabled --cuda-graph-backend-prefill disabled"
@@ -131,7 +147,7 @@ start() {
     grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
   fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX dense_native=$DENSE_NATIVE mtp=$MTP spec_steps=$SPEC_STEPS graph=$DECODE_GRAPH tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX dense_native=$DENSE_NATIVE mtp=$MTP spec_steps=$SPEC_STEPS graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM maxreq=$MAXREQ tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS"
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     -p "$PORT:$PORT" \
@@ -140,6 +156,7 @@ start() {
     -v "$ROOT/sgl_cache:/sgl_cache" \
     -v "$QUARK_PATCH:$SP/quark_moe_int8.py:ro" \
     -v "$ACTQ_PATCH:$SP/int8_actquant_xpu.py:ro" \
+    -v "$W8A8_PATCH:$SP/b70_xpu_w8a8.py:ro" \
     -v "$PTH:$SP/b70_ornith_w8a8.pth:ro" \
     -e HF_HOME=/hf_cache \
     -e XDG_CACHE_HOME=/sgl_cache \
@@ -151,6 +168,7 @@ start() {
     -e B70_QUARK_DENSE_NATIVE="$DENSE_NATIVE" \
     -e B70_XPU_MTP="$MTP" \
     -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
+    -e B70_XPU_CG_RECLAIM="$CG_RECLAIM" \
     "${think_env[@]}" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$DENSE_NATIVE" \
     -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$DENSE_NATIVE" \

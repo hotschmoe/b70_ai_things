@@ -142,6 +142,45 @@ def _install_breakable_graph() -> None:
     from sglang.srt.layers.logits_processor import LogitsProcessorOutput
     from sglang.srt.server_args import ServerArgs
 
+    reclaim_n = int(os.environ.get("B70_XPU_CG_RECLAIM", "0") or "0")
+    if reclaim_n > 0:
+        import torch.xpu.graphs as xpu_graphs
+
+        base_xpu_graph = torch.xpu.XPUGraph
+        original_replay = base_xpu_graph.replay
+        replay_counts = {}
+        reclaim_prints = [0]
+
+        class ReclaimingXPUGraph(base_xpu_graph):
+            def __new__(cls, *args, **kwargs):
+                return base_xpu_graph.__new__(cls, keep_graph=True)
+
+            def __init__(self, *args, **kwargs):
+                super().__init__(keep_graph=True)
+
+            def replay(self):
+                graph_id = id(self)
+                count = replay_counts.get(graph_id, 0) + 1
+                replay_counts[graph_id] = count
+                if count % reclaim_n == 0:
+                    self.instantiate()
+                    if reclaim_prints[0] < 8:
+                        reclaim_prints[0] += 1
+                        print(
+                            "[b70-xpu-graph] executable re-instantiated "
+                            f"graph={graph_id} replay={count}",
+                            flush=True,
+                        )
+                return original_replay(self)
+
+        torch.xpu.XPUGraph = ReclaimingXPUGraph
+        xpu_graphs.XPUGraph = ReclaimingXPUGraph
+        print(
+            "[b70-xpu-graph] reclaim enabled: "
+            f"re-instantiate every {reclaim_n} replays per graph",
+            flush=True,
+        )
+
     original_output_rows = BreakableCudaGraphBackend._output_rows
     original_alloc_full_buffer = BreakableCudaGraphBackend._alloc_full_buffer
     original_slice_output = BreakableCudaGraphBackend._slice_output
