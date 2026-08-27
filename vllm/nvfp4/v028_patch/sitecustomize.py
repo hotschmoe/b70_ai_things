@@ -118,3 +118,91 @@ if os.environ.get("B70_NVFP4_V028") == "1":
         file=sys.stderr,
         flush=True,
     )
+
+
+if os.environ.get("B70_BREAKABLE_EAGER_AR") == "1":
+    if os.environ.get("VLLM_USE_BREAKABLE_CUDAGRAPH") != "1":
+        raise RuntimeError(
+            "B70_BREAKABLE_EAGER_AR requires VLLM_USE_BREAKABLE_CUDAGRAPH=1"
+        )
+
+    import torch
+    import torch.distributed as dist
+
+    from vllm.compilation.breakable_cudagraph import (
+        eager_break_during_capture,
+        is_breakable_cudagraph_enabled,
+    )
+    from vllm.distributed.parallel_state import GroupCoordinator
+
+    _b70_eager_ar_calls = 0
+    _b70_eager_ar_debug_ptr: int | None = None
+
+    @eager_break_during_capture
+    def _b70_eager_all_reduce_in_place(
+        output: torch.Tensor, device_group: dist.ProcessGroup
+    ) -> None:
+        global _b70_eager_ar_calls, _b70_eager_ar_debug_ptr
+        debug = os.environ.get("B70_BREAKABLE_EAGER_AR_DEBUG") == "1"
+        if debug and torch.xpu.is_current_stream_capturing():
+            raise RuntimeError("eager all-reduce entered an XPU graph capture")
+        if debug:
+            pointer = output.data_ptr()
+            if _b70_eager_ar_debug_ptr is None:
+                _b70_eager_ar_debug_ptr = pointer
+            elif pointer != _b70_eager_ar_debug_ptr:
+                raise RuntimeError("eager all-reduce output address changed on replay")
+            print(
+                f"B70_EAGER_AR_ENTER rank={dist.get_rank()} "
+                f"call={_b70_eager_ar_calls + 1} ptr={pointer}",
+                file=sys.stderr,
+                flush=True,
+            )
+        dist.all_reduce(output, group=device_group)
+        _b70_eager_ar_calls += 1
+        if debug:
+            print(
+                f"B70_EAGER_AR_RETURN rank={dist.get_rank()} "
+                f"call={_b70_eager_ar_calls}",
+                file=sys.stderr,
+                flush=True,
+            )
+
+    if not hasattr(GroupCoordinator, "_b70_original_all_reduce"):
+        GroupCoordinator._b70_original_all_reduce = GroupCoordinator.all_reduce
+        GroupCoordinator._b70_original_all_gather = GroupCoordinator.all_gather
+
+        def _b70_all_reduce(
+            self: GroupCoordinator, input_: torch.Tensor
+        ) -> torch.Tensor:
+            if (
+                self.world_size == 1
+                or input_.device.type != "xpu"
+                or not is_breakable_cudagraph_enabled()
+            ):
+                return self._b70_original_all_reduce(input_)
+            output = input_.clone()
+            _b70_eager_all_reduce_in_place(output, self.device_group)
+            return output
+
+        def _b70_all_gather(
+            self: GroupCoordinator, input_: torch.Tensor, dim: int = -1
+        ) -> torch.Tensor:
+            if (
+                is_breakable_cudagraph_enabled()
+                and input_.device.type == "xpu"
+                and torch.xpu.is_current_stream_capturing()
+            ):
+                raise RuntimeError(
+                    "unexpected all-gather inside breakable XPU graph capture"
+                )
+            return self._b70_original_all_gather(input_, dim)
+
+        GroupCoordinator.all_reduce = _b70_all_reduce
+        GroupCoordinator.all_gather = _b70_all_gather
+
+    print(
+        "[b70-v028-graph] eager oneCCL all-reduce boundary enabled",
+        file=sys.stderr,
+        flush=True,
+    )

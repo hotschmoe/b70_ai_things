@@ -57,6 +57,13 @@ if [ "${BREAKABLE:-0}" = 1 ]; then
     -e VLLM_USE_AOT_COMPILE=0
   )
 fi
+if [ "${BREAKABLE_AR:-0}" = 1 ]; then
+  [ "${BREAKABLE:-0}" = 1 ] || {
+    echo "BREAKABLE_AR=1 requires BREAKABLE=1" >&2
+    exit 1
+  }
+  DOCKER_ENV+=( -e B70_BREAKABLE_EAGER_AR=1 )
+fi
 
 source "$REPO/rdy_to_serve/_common/lib.sh"
 

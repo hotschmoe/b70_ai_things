@@ -190,3 +190,18 @@ BF16 scales. Run the real-checkpoint layer oracle and TP=2 serve with:
 The release image's stock extension does not support NVFP4 and rejects the
 checkpoint before load. `vllm/nvfp4/serve_qwen38_v028.sh` retains that negative
 control. This v0.28 port is a research candidate, not a shelf artifact.
+
+### Breakable-graph capacity candidate
+
+`vllm/nvfp4/serve_qwen38_v028_nvfp4_graph.sh` selects the qualified TP=1,
+PIECEWISE breakable-graph descriptor with capture sizes 1, 2, and 4. At four
+simultaneous 512-input/512-output streams it measured 78.07 aggregate output
+tok/s and 20.33 tok/s per stream. Four concurrent 8-token factual canaries were
+byte-identical to their serial baselines. Longer deterministic equivalence is
+not qualified: one of four prompts diverged after a coherent common prefix at
+24 and 64 tokens.
+
+The opt-in `BREAKABLE_AR=1` route in the base launcher is TP=2 research only.
+Its eager in-place oneCCL boundary passed a 16-replay two-rank graph oracle and
+a coherent full-model smoke, but the matched TP2 c1 mean was only 5.06 tok/s
+and slowed across successive requests. Do not use it as the capacity route.

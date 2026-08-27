@@ -4435,3 +4435,87 @@ breakable path does not eject oneCCL collectives. First qualify an exact-image
 two-rank capture/replay oracle or implement a stable out-buffer eager
 collective boundary with P2P disabled. Keep FULL, MTP, and direct P2P out of
 the first TP2 graph arm.
+
+### 2026-08-27b - Qwen3.8 NVFP4 reaches 78.07 tok/s at TP1 c4
+
+CONFIG -> exact vLLM 0.28 XPU and Qwen3.8 NVFP4 identities from 2026-08-27a.
+The graph work used PIECEWISE breakable capture with AOT compilation disabled,
+P2P disabled, default Flash attention, Triton GDN, no MTP, and native E4M3
+NVFP4 scales through M=8. The TP2 oracle and model arms also disabled oneCCL
+SYCL kernels. Every GPU command used `bin/gpu-run` and exact-image health
+bracketing. No result was added to the live shelf.
+
+COMMAND -> add an opt-in Python boundary to the v0.28 compatibility layer.
+`GroupCoordinator.all_reduce` preserves the XPU communicator's out-of-place
+semantics by cloning inside the preceding graph segment, then a function
+decorated with `eager_break_during_capture` performs synchronous in-place
+oneCCL on that stable output buffer. Unexpected in-capture all-gather fails
+closed. Run `vllm/nvfp4/breakable_allreduce_oracle_v028.py` through exact-image
+torchrun at two ranks on a BF16 `[1,5120]` tensor.
+
+RESULT -> the first standalone oracle attempt stopped before graph capture
+because vLLM's CUDA-to-XPU graph wrapper was not installed. The second stopped
+before graph capture because TP group creation lacked a current `VllmConfig`.
+Both setup-only failures were followed by healthy per-card and compiled TP2
+collective probes. The corrected oracle used the canonical XPU wrapper and
+real vLLM TP group. It captured two graph segments around one eager break and
+passed 16 synchronized replays exactly. Each rank kept one fixed output
+address, inputs were unchanged, the helper ran outside graph capture, and its
+call count was exactly 17: capture plus 16 replays. Exact-image per-card and
+compiled P2P-off collective health passed afterward.
+
+COMMAND -> run the first full-model TP2 graph smoke with capture size 1,
+`BREAKABLE_AR=1`, one sequence maximum, 4096 context, and 0.85 memory
+utilization. Then run eight forced 512-input/512-output c1 requests with the
+same descriptor. Result CSV:
+`/mnt/vm_8tb/b70/results/sweep_qwen3.8-27b-NVFP4-radixark-vllm028-onednn-tp2-graph_20260827_094901.csv`.
+
+RESULT -> TP2 captured in 3 seconds using 0.67 GiB/rank, exposed exact model
+identity, produced the expected Paris/Berlin completion, and stopped
+gracefully. No all-gather guard fired. The matched c1 mean was 5.06 aggregate
+output tok/s, 195.90 ms mean TPOT, 5.10 per-stream tok/s, and 1134.50 ms mean
+TTFT. This is 17.4 percent above the matched eager TP2 4.31 tok/s result, but
+far below the objective. More importantly, live per-request decode declined
+from about 12 to about 3.1 tok/s across the serial sample while remaining
+coherent and responsive. Runtime log SHA256 is
+`ea03c13e2b0bcf65855b23fe22217d3c64fcdf28611f17a76d90e25b6c42fb17`.
+Per-card and compiled collective health passed after graceful teardown.
+
+COMMAND -> remove TP collectives by running the full model on card 0 with
+TP=1, breakable PIECEWISE capture sizes 1, 2, and 4, four sequences maximum,
+4096 context, and 0.92 memory utilization. Run 32 forced
+512-input/512-output requests at c4. Result CSV:
+`/mnt/vm_8tb/b70/results/sweep_qwen3.8-27b-NVFP4-radixark-vllm028-onednn-tp1-graph_20260827_100637.csv`.
+
+RESULT -> the TP1 c4 route exposed exact model identity, passed its coherent
+generation probe, completed all 32 requests, and measured 78.07 aggregate
+output tok/s, 49.18 ms mean TPOT, 20.33 per-stream tok/s, and 1103.08 ms mean
+TTFT. Runtime log SHA256 is
+`b1a24707a38eefdce242f610ef71bbd8ea626fd60e76b2a2dd7804fa8c8419ff`.
+The server stopped gracefully and card-0 health passed.
+
+COMMAND -> compare four serial deterministic factual completions against the
+same prompts issued concurrently at c4. An initial arithmetic gate was invalid
+because its regex was over-escaped and two prompts elicited poor continuations.
+Repeat with direct text comparison at 64, 24, and 8 forced tokens.
+
+RESULT -> at 64 tokens, three of four concurrent texts were byte-identical to
+their serial baselines; the fourth diverged after the shared coherent opening
+`four sides`. At 24 tokens, three of four were again exact; the Jupiter case
+shared the correct `Jupiter. It is a gas giant` prefix and then selected two
+different factual continuations. At 8 tokens all four concurrent results were
+byte-identical to their serial baselines with coherent France, gold, sequence,
+and Jupiter text. Canary runtime log SHA256 is
+`452809c6036c6905844937dbfe5f7a66bd04466435360b5ee8654a1923e74cbd`.
+Every gate shut down gracefully and card-0 health passed.
+
+VERDICT -> the qualified Qwen3.8 NVFP4 capacity candidate is TP1 breakable
+graph at c4, reproduced by
+`vllm/nvfp4/serve_qwen38_v028_nvfp4_graph.sh`. Its measured 78.07 aggregate
+tok/s exceeds the 40 tok/s objective with exact identity, coherent generation,
+32 completed benchmark requests, an exact four-stream 8-token canary,
+graceful teardown, and post-health. Do not claim long-horizon batch-exact greedy
+equivalence: measured 24/64-token continuations can diverge after coherent
+common prefixes. Reject TP2 eager-all-reduce graph as a performance route;
+although functionally correct and isolated-oracle clean, its many host
+collective boundaries retain cumulative slowdown.
