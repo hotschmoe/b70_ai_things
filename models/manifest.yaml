@@ -44,7 +44,10 @@ models:
     mtp: true
     size_gb: 21
     served_as: qwen3.8-27b-NVFP4-radixark
-    source: { type: hf, repo: RadixArk/Qwen3.8-27B-NVFP4 }
+    source:
+      type: hf
+      repo: RadixArk/Qwen3.8-27B-NVFP4
+      revision: 319f741cce68d7914884900c138a1fbb70a42f30
     notes: Preferred Qwen3.8 NVFP4. ModelOpt MIXED_PRECISION with group-16
            NVFP4 MLP/lm_head, FP8 attention/GDN, and BF16 vision/MTP.
 

@@ -4341,3 +4341,97 @@ control. The next agent-quality work should test a real per-request completion
 policy or a more tool-eager agent/model strategy on eager decode before any
 full dataset campaign. Do not spend time on a c=4 soak here: the observed low
 rate is a c=1 long-trajectory/eager problem, not a concurrency qualification.
+
+### 2026-08-27a - Qwen3.8 NVFP4 ported to vLLM 0.28; TP1 graph reaches 21.81 tok/s
+
+CONFIG -> official vLLM XPU image
+`vllm/vllm-openai-xpu@sha256:4756b66a077627133cee653b551f6f5eaa1b9a981b5eea13edd33fcd3b0d3ca3`,
+vLLM 0.28.0, Torch 2.13.0+xpu, vllm-xpu-kernels 0.1.13.2, Triton XPU
+3.7.2, Compute Runtime 26.27, Level Zero 1.32, and IGC 2.38.2. The model was
+RadixArk Qwen3.8-27B NVFP4 at pinned revision
+`319f741cce68d7914884900c138a1fbb70a42f30`. The source port used current
+`vllm-xpu-kernels` commit
+`a397c58eb7781e6fe0d6b3fb7c25d21b5f658784`. All TP2 work kept direct P2P
+disabled. No result was promoted to the live shelf.
+
+COMMAND -> inspect the exact release image and checkpoint identity, run a
+stock v0.28 Qwen3.8 W8A8 smoke, and run the unmodified release image against
+the NVFP4 checkpoint with `vllm/nvfp4/serve_qwen38_v028.sh`. Apply
+`kernels/nvfp4_v028_integration.patch` to a dedicated clean source tree and
+build with `vllm/nvfp4/build_nvfp4_v028.sh`. The build image was
+`b70-sglang-xpu:20260826-bede6bc-2d10888-torch213-umd2622`; SHA256 comparison
+first proved its Torch shared libraries byte-identical to the release image.
+The tracked build enables XPU-specific and GDN kernels only.
+
+RESULT -> stock v0.28 served the compressed-tensors W8A8 checkpoint coherently
+at TP2. The stock NVFP4 control rejected the model before weight load with
+`modelopt_mixed quantization is currently not supported in xpu`. vLLM's dSpark
+path is CUDA/ROCm-only in this release, so it is not an XPU control.
+
+RESULT -> the first source build exposed an upstream option-forwarding gap:
+requesting MHC off still produced an undefined MHC symbol. The integration
+patch now forwards the MHC option. An extension-only corrected build loaded
+the NVFP4 model but full generation then failed because replacing the release
+extension also removed its `gdn_attention` registration. The final build
+therefore includes an ABI-matched GDN sidecar. Its artifacts are
+`_xpu_C.abi3.so` SHA256
+`96e33b4e66f4eba6a2108c5a4f3aef5fba505f3696ba876e60b6ddeb08a87549`
+and `libgdn_attn_kernels_xe_2.so` SHA256
+`323547ed36f4821ccba6fbbc75ced8fd6e9837e268891d6488d62825002279a8`.
+
+COMMAND -> run `vllm/nvfp4/oracle_v028.py` on card 0 against the real layer-0
+gate projection, N=17408 and K=5120, under the exact release runtime. Then run
+`vllm/nvfp4/serve_qwen38_v028_nvfp4.sh smoke` at TP2. Exact-image per-card
+health and the compiled ten-iteration TP2 collective probe bracketed risky
+work.
+
+RESULT -> for M=1, folded-BF16 scales returned cosine 0.99999410, relative L2
+0.00365781, and max absolute error 0.015625 against explicit dequantization.
+Native E4M3 scales returned cosine 0.99999720, relative L2 0.00240853, and max
+absolute error 0.015625. For M=8, folded and native relative L2 were 0.00363943
+and 0.00240471. Repeated folded output was exact. The TP2 serve selected the
+custom NVFP4 W4A16 kernel, loaded about 10.69 GiB/rank, exposed exact ID
+`qwen3.8-27b-NVFP4-radixark-vllm028-onednn`, produced coherent Paris/Berlin
+text, and shut down gracefully. Per-card and compiled P2P-off collective
+health passed before and after.
+
+COMMAND -> with the same TP2 eager descriptor, run eight 512-input/512-output
+requests at c1 and 32 at c4 through `bin/35_sweep_bench.sh` under one
+`bin/gpu-run` lease. Result CSV:
+`/mnt/vm_8tb/b70/results/sweep_qwen3.8-27b-NVFP4-radixark-vllm028-onednn-tp2_20260827_083803.csv`.
+
+RESULT -> eager TP2 measured c1 4.31 aggregate output tok/s, 229.96 ms mean
+TPOT, 4.35 per-stream tok/s, and 1293.04 ms mean TTFT. At c4 it measured 16.32
+aggregate output tok/s, 238.81 ms mean TPOT, 4.19 per-stream tok/s, and 3462.77
+ms mean TTFT. All requests completed, the server stopped gracefully, and final
+exact-image per-card plus compiled TP2 collective health passed. The outer
+wrapper returned 1 only because a post-stop `35_sweep_bench.sh` health check
+reported `server not healthy`; the completed CSV, teardown, and separate
+post-health evidence remain valid.
+
+COMMAND -> on card 0, set `VLLM_USE_BREAKABLE_CUDAGRAPH=1`,
+`VLLM_USE_AOT_COMPILE=0`, TP=1, PIECEWISE, capture size 1, no compile sizes,
+Inductor graph partition disabled, one sequence maximum, and 4096 context. Run a
+coherence probe plus two identical 64-token deterministic requests, then a
+separate eight-request 512-input/512-output c1 benchmark. Result CSV:
+`/mnt/vm_8tb/b70/results/sweep_qwen3.8-27b-NVFP4-radixark-vllm028-onednn-tp1-graph_20260827_091920.csv`.
+
+RESULT -> breakable mode reported compilation mode NONE, kept Flash attention
+and Triton GDN outside graph segments, and captured size 1. The two replay
+texts were byte-identical with SHA256
+`6a19e3fd220b4de31e008acd8c95ac2ce72ea3ce07d34ba590327b5755894f7a`.
+The separate TP1 graph benchmark measured 21.81 aggregate output tok/s, 45.20
+ms mean TPOT, 22.12 per-stream tok/s, and 376.55 ms mean TTFT. Runtime log
+SHA256 is
+`5153f5afdc075b6fb77038d2a6ea743f7afc898690b497c06ae30cc9a3363e2e`.
+Both TP1 runs stopped gracefully and card-0 health passed before and after.
+
+VERDICT -> the v0.28 XPU NVFP4 kernel port is numerically and functionally
+valid, but eager TP2 is far below the 40 tok/s objective and is not shelf
+quality. The TP1 graph result is not a matched speedup comparison to TP2, but
+it proves substantial capture leverage on one card. Do not attempt a full TP2
+breakable model capture yet: v0.28 documents XPU graph as single-GPU and its
+breakable path does not eject oneCCL collectives. First qualify an exact-image
+two-rank capture/replay oracle or implement a stable out-buffer eager
+collective boundary with P2P disabled. Keep FULL, MTP, and direct P2P out of
+the first TP2 graph arm.

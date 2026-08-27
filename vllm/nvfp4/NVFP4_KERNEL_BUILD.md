@@ -155,3 +155,38 @@ drafter head also failed: 341 MiB extra/rank, c1 30.1/c4 113.5, and
 intermittent rank-1 shadow mismatches even though both ranks' gathered
 weight and scale hashes exactly matched the checkpoint. That flag remains
 default-off as a diagnostic only.
+
+## vLLM 0.28 XPU port (2026-08-27)
+
+The refreshed port is based on `vllm-xpu-kernels` commit
+`a397c58eb7781e6fe0d6b3fb7c25d21b5f658784` and the exact vLLM release image:
+
+    vllm/vllm-openai-xpu@sha256:4756b66a077627133cee653b551f6f5eaa1b9a981b5eea13edd33fcd3b0d3ca3
+
+Apply `kernels/nvfp4_v028_integration.patch` to a clean source tree. The patch
+adds both NVFP4 ops and forwards the MHC build option that this source revision
+otherwise omits. Build with:
+
+    bash vllm/nvfp4/build_nvfp4_v028.sh
+
+The build deliberately uses the tracked SGLang Torch 2.13 image after verifying
+that its Torch shared libraries are byte-identical to those in the vLLM 0.28
+image. It enables only XPU-specific and GDN kernels. The resulting serve pair is:
+
+    /mnt/vm_8tb/b70/nvfp4_kernel_v028/_xpu_C.abi3.so
+    SHA256 96e33b4e66f4eba6a2108c5a4f3aef5fba505f3696ba876e60b6ddeb08a87549
+    /mnt/vm_8tb/b70/nvfp4_kernel_v028/libgdn_attn_kernels_xe_2.so
+    SHA256 323547ed36f4821ccba6fbbc75ced8fd6e9837e268891d6488d62825002279a8
+
+`vllm/nvfp4/v028_patch/sitecustomize.py` adds `modelopt_mixed` to the XPU
+platform allowlist and registers a narrow v0.28 linear kernel. Packed E2M1
+weights remain resident. Decode rows at or below
+`B70_NVFP4_F8_SCALE_M_MAX=8` use native E4M3 scales; larger matrices use folded
+BF16 scales. Run the real-checkpoint layer oracle and TP=2 serve with:
+
+    bash vllm/nvfp4/build_nvfp4_v028.sh oracle
+    bash vllm/nvfp4/serve_qwen38_v028_nvfp4.sh smoke
+
+The release image's stock extension does not support NVFP4 and rejects the
+checkpoint before load. `vllm/nvfp4/serve_qwen38_v028.sh` retains that negative
+control. This v0.28 port is a research candidate, not a shelf artifact.
