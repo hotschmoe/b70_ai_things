@@ -17,6 +17,11 @@ post-run health inside one GPU lease. It supports these arms:
 - `qwen-gptq-int4`: Qwen3.8 GPTQ INT4, vLLM 0.27.2 TP1 MTP4.
 - `ornith-w8a8`: Ornith W8A8, SGLang TP2 breakable graph with reclaim500.
 
+The vLLM arm keeps a 65,536-token model window but compiles 16,384-token
+prefill chunks. Setting its batched-token limit to the full context forced a
+4.25 GiB compile allocation and failed before KV-cache sizing on the 32 GiB
+card. Override `PREFILL_WINDOW` only as a separately recorded configuration.
+
 Run the matched one-task pilot on each arm:
 
 ```bash
