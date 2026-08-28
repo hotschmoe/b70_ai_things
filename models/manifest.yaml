@@ -47,7 +47,7 @@ models:
     source:
       type: hf
       repo: RadixArk/Qwen3.8-27B-NVFP4
-      revision: 319f741cce68d7914884900c138a1fbb70a42f30
+      revision: 554ebba9b5f1b79dc11246341960360e6ef05ef4
     notes: Preferred Qwen3.8 NVFP4. ModelOpt MIXED_PRECISION with group-16
            NVFP4 MLP/lm_head, FP8 attention/GDN, and BF16 vision/MTP.
 

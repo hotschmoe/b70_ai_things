@@ -46,6 +46,12 @@ MOUNTS=(
   -v "$GDN_SO:/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so:ro"
   -v "$SCRIPT_DIR/v028_patch:/b70_nvfp4_v028_patch:ro"
 )
+# oneCCL's pidfd IPC exchange needs pidfd_getfd while FULL XPU graphs capture
+# collective-owned allocations. Keep the capability narrowly scoped to that
+# research route; eager and PIECEWISE serves retain the default sandbox.
+if [ "$TP" -gt 1 ] && [ "$GRAPH" = 1 ] && [ "${CGMODE:-PIECEWISE}" = FULL ]; then
+  MOUNTS+=(--cap-add SYS_PTRACE --security-opt seccomp=unconfined)
+fi
 DOCKER_ENV=(
   -e PYTHONPATH=/b70_nvfp4_v028_patch
   -e B70_NVFP4_V028=1

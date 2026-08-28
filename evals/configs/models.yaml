@@ -29,6 +29,15 @@ models:
     serve_cmd: "rdy_to_serve/vllm/qwen38-27b-nvfp4/serve.sh"
     notes: "Pre-refresh vLLM control; rebuild native libraries before use."
 
+  - label: qwen38-27b-nvfp4-radixark-sglang-w8a16-full-tp2
+    served_model_id: qwen3.8-27b-NVFP4-radixark-sglang-w8a16-full-tp2
+    family: qwen3.8-27b
+    weights: nvfp4-modelopt-mixed
+    activations: bf16-with-fp8-weight-only-decode-projections
+    calibration: radixark
+    serve_cmd: "FP8_W8A16_M_MAX=1 DECODE_GRAPH=full GRAPH_BS=1 MAXREQ=1 SERVED=qwen3.8-27b-NVFP4-radixark-sglang-w8a16-full-tp2 sglang/nvfp4/serve_qwen38_nvfp4_refresh.sh start"
+    notes: "Current TP2 single-stream research winner at 32.6206 tok/s for p879/o512. Below the 40 tok/s objective and not a shelf promotion."
+
   - label: qwen38-27b-w8a8-gptq
     served_model_id: qwen3.8-27b-W8A8-gptq
     family: qwen3.8-27b

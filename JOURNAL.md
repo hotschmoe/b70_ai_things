@@ -4606,3 +4606,127 @@ slower, and keep direct P2P and FULL TP2 capture rejected. Do not generalize
 the 87.80 number to long-prefill traffic: the separately measured p4172/o128
 c8 regime is 39.23 tok/s. This is a performance-control qualification, not a
 live-shelf promotion.
+
+### 2026-08-28a - SGLang FULL capture brings Qwen3.8 NVFP4 TP2 to 30.17 tok/s
+
+CONFIG -> kernel 7.1.0-070100, refreshed SGLang image
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`,
+Torch 2.13.0+xpu, SGLang `bede6bc`, sgl-kernel-xpu `2d10888`, Compute
+Runtime 26.22, and the local RadixArk cache revision
+`554ebba9b5f1b79dc11246341960360e6ef05ef4`. The source-built XPU operator
+SHA256 was
+`96e33b4e66f4eba6a2108c5a4f3aef5fba505f3696ba876e60b6ddeb08a87549`;
+its matching GDN sidecar SHA256 was
+`323547ed36f4821ccba6fbbc75ced8fd6e9837e268891d6488d62825002279a8`.
+The serve used TP=2, FULL decode graph at batch size one, prefill graph off,
+bf16 KV cache, chunked prefill 128, maximum one request, P2P disabled, pidfd
+IPC, SYCL collective kernels enabled, Triton linear attention, and a text-only
+runtime copy of the multimodal checkpoint config.
+
+COMMAND -> add `sglang/refresh/b70_xpu_nvfp4.py` and its `.pth` loader, mount
+the exact XPU operator pair through
+`sglang/nvfp4/serve_qwen38_nvfp4_refresh.sh`, and run every GPU action inside
+`bin/gpu-run`. The overlay admits the checkpoint's ModelOpt format, preserves
+packed E2M1 weights, folds or retains group-16 scales for the two current XPU
+operator paths, and narrowly enables quantized lm_head dispatch. Query
+`/v1/models`, run repeated greedy and arithmetic coherence gates, then run
+`sglang/w8a8/bench_forced_concurrent.py --concurrency 1 --prompt-repeat 35
+--output-tokens 512 --batches 3` for the tokenizer-derived p879/o512 shape.
+
+RESULT -> the first eager load exposed SGLang's raw-matmul fallback for the
+packed lm_head. The narrow runtime-state gate fixed that bug. The corrected
+eager route passed identity and coherent generation, and the FULL route served
+exact ID `qwen3.8-27b-NVFP4-radixark-sglang-full-tp2`. Its three post-first
+rates were 30.2751, 30.1665, and 30.0855 tok/s; median was 30.1665 tok/s and
+median including TTFT was 27.6079 tok/s. The result JSON SHA256 is
+`618e99288361be4dfa88119bc2ef4a71bac52fca1a3c38d1f31a9c2dddc7bece`;
+runtime log SHA256 is
+`e09f3995fcc289b8d98c7280b095d4e462342a07a972e3d280e49818932dc217`.
+The server stopped normally and post-card plus compiled P2P-off collective
+health passed.
+
+VERDICT -> qualify the refreshed SGLang FULL route as the first coherent TP2
+execution baseline for this NVFP4 checkpoint. It is 5.96x the retained vLLM
+0.28 TP2 graph result of 5.06 tok/s, but it remains 24.6 percent below the
+40 tok/s single-stream objective and is not a shelf promotion.
+
+### 2026-08-28b - XPU FP8 W8A16 decode raises matched NVFP4 speed by 8.14 percent
+
+CONFIG -> the exact 2026-08-28a stack and TP2 serve shape. Source accounting
+found, per rank and target token, 129 NVFP4 calls, 128 FP8 calls, 48 tiny bf16
+linear calls, 129 all-reduces, and one logits all-gather. Approximate compulsory
+weight and scale traffic was 8.197 GiB per token per rank. The stock FP8 route
+issued a static activation quantization plus `torch._scaled_mm` for each of
+the 128 FP8 projections.
+
+COMMAND -> use `sglang/refresh/bench_qwen38_decode_linears_xpu.py` under a
+one-card `bin/gpu-run` lease to compare real fused TP2 checkpoint shapes for
+stock scaled_mm, direct `_xpu_C.fp8_gemm`, and
+`_xpu_C.fp8_gemm_w8a16`. Test GDN qkvz M1x5120x8192, full-attention qkv
+M1x5120x7168, and common output M1x3072x5120. Validate numerical agreement,
+determinism, and XPUGraph replay before adding an environment-gated M<=1
+W8A16 branch to the SGLang overlay. Repeat the exact p879/o512 c1 three-batch
+serve with ID `qwen3.8-27b-NVFP4-radixark-sglang-w8a16-full-tp2`.
+
+RESULT -> direct W8A8 was bit-identical to stock. W8A16 versus dequantized
+weight references had cosine at least 0.9999965 and relative L2 at most
+0.00264, and its XPUGraph replay was bit-identical to eager. Representative
+W8A16 GEMM times were 0.0728 ms for GDN qkvz, 0.0616 ms for full-attention
+qkv, and 0.0320 ms for the common output projection. The matched end-to-end
+post-first rates were 32.7553, 32.6206, and 32.3642 tok/s; median was 32.6206
+tok/s and median including TTFT was 29.7873 tok/s. Exact identity, repeated
+greedy determinism, and the arithmetic canary passed. Result JSON SHA256 is
+`71b18391e8fe545b52c8f16a640fcb93888a88e32e16ebaa208ab856e8853a99`;
+runtime log SHA256 is
+`6cbb837e8c9e8b0fda5107e12ddb3800e688ee524f43d41ff258abfaaba1829d`.
+
+RESULT -> two setup attempts used prompt repeat 260 and correctly received an
+HTTP context-length error because the resulting 6049-token request exceeded
+the configured 4096 context. They are not performance results. The accepted
+run used the tokenizer-derived repeat 35. The runtime log's only traceback is
+SGLang's post-warmup self-call to `/freeze_gc` before its endpoint was
+reachable; the endpoint subsequently opened, served every gate and benchmark,
+and stopped normally. Kernel logs show no OOM, GPU hang, reset, fault, panic,
+or reboot. Final per-card and compiled P2P-off collective health passed.
+
+VERDICT -> make FP8 W8A16 at M<=1 the refreshed NVFP4 launcher's default. It
+removes 128 activation-quant kernels per token and improves the matched median
+by 8.14 percent. The result remains 18.4 percent below 40 tok/s, so retain it
+as the current single-stream research winner, not a live-shelf entry.
+
+### 2026-08-28c - M1 GEMV, native GDN, and direct P2P controls are rejected
+
+CONFIG -> exact Torch 2.13 XPU stack from 2026-08-28a. The ESIMD source was
+the retained M=1 prototype rebuilt against the current ABI; artifact SHA256
+was `f44197b4d3a40f363375fd60d65bf570fc763cb265aadd47d442979436a67a7d`.
+The native GDN arm changed only decode linear attention from Triton to
+`intel_xpu`. The collective A/B used the exact current oneCCL libraries,
+bf16 shape [1,5120], 64 direct iterations, 128 graph iterations, pidfd IPC,
+and otherwise matched P2P-off/P2P-on environments.
+
+COMMAND -> first compare ESIMD and current oneDNN NVFP4 output and timing on
+the exact TP2 gate/up, down, and lm_head M=1 shapes. Then start a W8A16 FULL
+serve with native decode GDN and require two byte-identical greedy responses
+before any timing. Finally run the retained Steve-derived two-rank collective
+oracle inside one outer `bin/gpu-run`, P2P off first and the explicit guarded
+P2P-on arm second, followed by per-card and compiled P2P-off health.
+
+RESULT -> ESIMD was correct and deterministic but slower: gate/up was 0.2605
+ms versus 0.0554 ms, down was 0.2545 ms versus 0.0531 ms, and lm_head was
+2.2596 ms versus 0.6340 ms. The native GDN endpoint exposed exact identity but
+the two greedy responses were not byte-identical, so it was stopped before a
+speed claim. Its runtime log SHA256 is
+`e9cf1e2ad652c9c932383844ed0731471715fb437a9b9d6820b835516f3ca261`.
+
+RESULT -> both collective arms were bit-exact with zero mismatches. P2P off
+measured 0.35118-0.35132 ms per graph iteration; P2P on measured
+0.36503-0.36531 ms, about 4 percent slower. P2P-off JSON SHA256 is
+`f1bdeb63163b46e9aea1a59573ea65f9a22379ca46cbfd39190cdb704f5fca40`;
+P2P-on JSON SHA256 is
+`a5fb6015c699ea5e9ece783bf8cbf18f1feb580dff013f6d8169d0ce79d1849b`.
+All post-run health passed.
+
+VERDICT -> reject the ESIMD M=1 kernel, native GDN backend, and direct P2P as
+current model optimizations. Keep oneDNN NVFP4, Triton GDN, and P2P disabled.
+The exact-shape P2P oracle removes any justification for risking a model-level
+P2P-on arm on this stack.

@@ -11,15 +11,17 @@
 #   xpu-collective-health --p2p 0|1
 #   xpu-collective-health --timeout SECONDS
 #   xpu-collective-health --img IMAGE
+#   xpu-collective-health --ccl-root DIRECTORY
 #
 # Exit: 0 healthy; 1 wedged/failed/hung; 2 probe infrastructure inconclusive.
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-IMG="${IMG:-intel/vllm@sha256:f2e5a94eb1dba7ac91f247a69a87a6b3caa4ca24b9bb5e62ceed1a8b9dbe5d94}"
+IMG="${IMG:-b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78}"
 TIMEOUT="${XPU_COLLECTIVE_HEALTH_TIMEOUT:-120}"
 P2P=0
 CACHE_DIR="${XPU_COLLECTIVE_HEALTH_CACHE:-/mnt/vm_8tb/b70/collective_health_cache}"
+CCL_ROOT="${XPU_COLLECTIVE_CCL_ROOT:-/opt/venv}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -29,6 +31,8 @@ while [ $# -gt 0 ]; do
     --timeout=*) TIMEOUT="${1#--timeout=}"; shift ;;
     --img) IMG="${2:-}"; shift 2 ;;
     --img=*) IMG="${1#--img=}"; shift ;;
+    --ccl-root) CCL_ROOT="${2:-}"; shift 2 ;;
+    --ccl-root=*) CCL_ROOT="${1#--ccl-root=}"; shift ;;
     -h|--help) awk 'NR>1 && /^#/ {sub(/^# ?/,""); print; next} NR>1 {exit}' "$0"; exit 0 ;;
     *) echo "xpu-collective-health: unknown argument '$1'" >&2; exit 2 ;;
   esac
@@ -58,15 +62,15 @@ out=$(timeout --signal=TERM --kill-after=10 "$TIMEOUT" \
     -e CCL_ATL_TRANSPORT=ofi \
     -e CCL_TOPO_P2P_ACCESS="$P2P" \
     -e CCL_LOG_LEVEL=warn \
-    -e CCL_KERNEL_PATH=/opt/ccl4ce/lib/ccl/kernels \
+    -e CCL_KERNEL_PATH="$CCL_ROOT/lib/ccl/kernels" \
     -e FI_TCP_IFACE=eth0 \
     -e CCL_KVS_IFACE=eth0 \
     -e ONEAPI_DEVICE_SELECTOR=level_zero:0,1 \
     -e ZE_AFFINITY_MASK=0,1 \
     -e TORCHINDUCTOR_CACHE_DIR=/collective-health-cache/torchinductor \
     -e TRITON_CACHE_DIR=/collective-health-cache/triton \
-    -e LD_PRELOAD=/opt/ccl4ce/lib/libccl.so.1.0 \
-    -e LD_LIBRARY_PATH=/opt/ccl4ce/lib:/opt/venv/lib:/opt/venv/lib/python3.12/site-packages/torch/lib \
+    -e LD_PRELOAD="$CCL_ROOT/lib/libccl.so.1.0" \
+    -e LD_LIBRARY_PATH="$CCL_ROOT/lib:/opt/venv/lib:/opt/venv/lib/python3.12/site-packages/torch/lib" \
     --entrypoint /opt/venv/bin/torchrun "$IMG" \
     --standalone --nproc-per-node=2 /opt/xpu-collective-health.py 2>&1)
 rc=$?

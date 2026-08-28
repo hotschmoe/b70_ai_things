@@ -7,6 +7,7 @@ import hashlib
 import json
 import statistics
 import time
+import urllib.error
 import urllib.request
 
 
@@ -16,8 +17,12 @@ def post_json(url, body, timeout=600):
         data=json.dumps(body).encode("ascii"),
         headers={"content-type": "application/json"},
     )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.load(response)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", "replace")
+        raise RuntimeError(f"HTTP {error.code} from {url}: {detail}") from error
 
 
 def get_json(url, timeout=30):
@@ -114,7 +119,12 @@ def stream_one(url, model, prompt, output_tokens):
     prompt_tokens = None
     finish_reason = None
     chunks = []
-    with urllib.request.urlopen(request, timeout=600) as response:
+    try:
+        response = urllib.request.urlopen(request, timeout=600)
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", "replace")
+        raise RuntimeError(f"HTTP {error.code} from {url}: {detail}") from error
+    with response:
         for raw in response:
             line = raw.decode("utf-8", "replace").strip()
             if not line.startswith("data:"):
@@ -218,6 +228,7 @@ def main():
     parser.add_argument("--output-tokens", type=int, default=128)
     parser.add_argument("--prompt-repeat", type=int, default=260)
     parser.add_argument("--batches", type=int, default=3)
+    parser.add_argument("--settle-seconds", type=float, default=0.0)
     parser.add_argument("--json-out")
     args = parser.parse_args()
     base = args.base.rstrip("/") + "/v1"
@@ -227,19 +238,24 @@ def main():
     print("IDENTITY -> " + json.dumps(model_ids))
     run_determinism(base + "/chat/completions", args.model)
     run_canaries(base + "/chat/completions", args.model, args.concurrency)
+    if args.settle_seconds:
+        time.sleep(args.settle_seconds)
     print("COMMAND -> same-shape warmup")
     run_batch(base, args.model, args.concurrency, args.output_tokens, args.prompt_repeat, -1)
-    metrics = [
-        run_batch(
-            base,
-            args.model,
-            args.concurrency,
-            args.output_tokens,
-            args.prompt_repeat,
-            batch,
+    metrics = []
+    for batch in range(args.batches):
+        if args.settle_seconds:
+            time.sleep(args.settle_seconds)
+        metrics.append(
+            run_batch(
+                base,
+                args.model,
+                args.concurrency,
+                args.output_tokens,
+                args.prompt_repeat,
+                batch,
+            )
         )
-        for batch in range(args.batches)
-    ]
     summary = {
         "model": args.model,
         "concurrency": args.concurrency,
