@@ -48,6 +48,14 @@ not because serving failed. Harbor wall was 34m34s and full server-start through
 post-health teardown was 38m39s. This qualifies the runtime fix but rejects the
 current Ornith Pi/xhigh policy as an efficient recipe for that task.
 
+The matched Qwen W8A8 pilot also scored 0.0. It completed 24 of 36 verifier
+tests, but its TP2 FULL-graph endpoint suffered CCS/BCS engine resets and GPU
+virtual-memory faults during the next response after a 17,309-token turn. Its
+Harbor wall was 18m23s and full server-start through post-health teardown was
+21m52s. Post-failure card and compiled collective health passed, as did the
+mandated xe rebind recovery. Treat this configuration as campaign-unstable;
+the score alone does not capture the endpoint failure.
+
 Do not raise the Ornith graph arm to `MEMFRAC=0.90`. That setting allocated
 about 58 GiB of shared GPU memory and triggered a global host OOM during graph
 capture, killing the user systemd/tmux session. The campaign uses 0.70, which

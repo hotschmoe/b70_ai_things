@@ -5217,3 +5217,60 @@ zero. Use memory fraction 0.70 for 65K TP2 agent work; 0.90 is host-unsafe.
 Retain Ornith as the fourth matched campaign arm, but pilot all four arms before
 committing multiple days to the full 74-task set. The new campaign driver and
 summarizer record score plus Harbor and full lifecycle wall time.
+
+### 2026-08-28n - Qwen W8A8 TB3 pilot faults at 17K context and scores zero
+
+CONFIG -> exact refreshed SGLang image
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`
+and Qwen3.8-27B compressed-tensors W8A8 GPTQ checkpoint. The matched campaign
+arm used TP2, P2P off, source-default eager collectives, FULL target decode
+graph at batch one, BF16 KV, qwen3 reasoning, qwen3_coder tools,
+strict-thinking cap 4096, maximum one request, 65,536 context, and memory
+fraction 0.70. Harbor 0.22.0 ran official Terminal-Bench 3.0.0 task
+`bun-sourcemap-leak` with Pi 0.84.3 at xhigh and the retained concise prompt.
+
+COMMAND -> run
+`INCLUDE_TASK=terminal-bench/bun-sourcemap-leak N_TASKS=1 STAMP=20260828-bun-pilot evals/terminalbench/run_arm.sh qwen-w8a8`
+inside the driver's whole-box lease. Require clean per-card and compiled
+two-rank P2P-off health before serving, exact `/v1/models` identity, Harbor
+completion even if the endpoint fails, teardown, and the same post-health.
+After any TP2 failure, run the non-reboot `bin/xe-reset` recovery ladder and
+repeat both health probes.
+
+RESULT -> startup took 140 seconds. Each rank allocated 253,696 BF16 KV tokens
+with 3.87 GiB K plus 3.87 GiB V and retained 9.68 GiB after graph capture. Pi
+read the app, produced a substantial release-script rewrite, caught and fixed
+its first template-string error, and passed the base runtime and provenance
+checks. The last completed model response reported 16,875 input plus 434
+output tokens. During the following response at 22:44:07 UTC, card
+`0000:0b:00.0` reset both CCS and BCS engines and reported two unsuccessful GPU
+virtual-memory faults. The SGLang container died, and Pi ended after three
+endpoint connection errors. This was not a host OOM and did not close the new
+tmux session.
+
+RESULT -> Harbor preserved and graded the edited task. It scored 0.0: 24 of 36
+tests passed, 10 failed, and two errored. The dynamic application variants
+exposed incorrect private-module stubbing and path handling, so the answer was
+not merely denied a score by the endpoint crash. Agent execution was 13m51s,
+Harbor wall was 18m23s, server-start through Harbor finish was 20m49s, and
+server-start through teardown plus post-health was 21m52s. The job used 114,413
+input and 11,801 output tokens across requests. Job result, trial result,
+trajectory, lifecycle, and server-log SHA256 values were
+`1303b93337ed0d5c40715b10368f8057c0dc5b3550fd2bab255eafa8582e4368`,
+`360c647988d1acc91c7c3b5b36a6ecbc113d0416b27fdf2097f809f6c619dfc5`,
+`03317a82c2dc22a58ba700f050d0259739a3b0b435bb03e3305bbaf895851714`,
+`d3170fb3529cce8cdbb107a1381c4757398da7fce85230e36d74c4ea4b0fb99a`,
+and `3fa7ce7e4f54d128a93b407d2f7db7b59a39801e643906bb8eb4b3a1e3acd7ec`.
+
+RESULT -> immediate teardown health passed on both cards and the compiled
+two-rank P2P-off collective. The mandated recovery then re-bound both xe
+endpoints without rebooting; both card probes and the compiled collective
+passed again under the unchanged boot ID
+`e2d5777d-f6bb-4d92-a718-0fb07ae17919`.
+
+VERDICT -> reject this Qwen W8A8 FULL-graph configuration for the 65K agent
+campaign. Its one-task score is zero and, independently, its endpoint is not
+stable through a roughly 17K-token tool conversation. Keep the result in the
+matched pilot table, retain BF16 KV and memory fraction 0.70, and proceed to
+the NVFP4 and GPTQ INT4 pilots before deciding whether a safer graph mode is
+worth a separate Qwen W8A8 diagnostic.
