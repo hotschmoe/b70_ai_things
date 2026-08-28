@@ -121,6 +121,51 @@ def _install_mtp_xpu() -> None:
     )
 
 
+def _install_graph_reclaim() -> None:
+    """Periodically rebuild any XPU graph executable when explicitly enabled."""
+    import torch
+
+    reclaim_n = int(os.environ.get("B70_XPU_CG_RECLAIM", "0") or "0")
+    if reclaim_n <= 0:
+        return
+    import torch.xpu.graphs as xpu_graphs
+
+    base_xpu_graph = torch.xpu.XPUGraph
+    original_replay = base_xpu_graph.replay
+    replay_counts = {}
+    reclaim_prints = [0]
+
+    class ReclaimingXPUGraph(base_xpu_graph):
+        def __new__(cls, *args, **kwargs):
+            return base_xpu_graph.__new__(cls, keep_graph=True)
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(keep_graph=True)
+
+        def replay(self):
+            graph_id = id(self)
+            count = replay_counts.get(graph_id, 0) + 1
+            replay_counts[graph_id] = count
+            if count % reclaim_n == 0:
+                self.instantiate()
+                if reclaim_prints[0] < 8:
+                    reclaim_prints[0] += 1
+                    print(
+                        "[b70-xpu-graph] executable re-instantiated "
+                        f"graph={graph_id} replay={count}",
+                        flush=True,
+                    )
+            return original_replay(self)
+
+    torch.xpu.XPUGraph = ReclaimingXPUGraph
+    xpu_graphs.XPUGraph = ReclaimingXPUGraph
+    print(
+        "[b70-xpu-graph] reclaim enabled: "
+        f"re-instantiate every {reclaim_n} replays per graph",
+        flush=True,
+    )
+
+
 def _install_breakable_graph() -> None:
     """Enable SGLang's existing segmented graph backend on XPU.
 
@@ -141,45 +186,6 @@ def _install_breakable_graph() -> None:
     import sglang.srt.model_executor.runner_backend.utils as backend_utils
     from sglang.srt.layers.logits_processor import LogitsProcessorOutput
     from sglang.srt.server_args import ServerArgs
-
-    reclaim_n = int(os.environ.get("B70_XPU_CG_RECLAIM", "0") or "0")
-    if reclaim_n > 0:
-        import torch.xpu.graphs as xpu_graphs
-
-        base_xpu_graph = torch.xpu.XPUGraph
-        original_replay = base_xpu_graph.replay
-        replay_counts = {}
-        reclaim_prints = [0]
-
-        class ReclaimingXPUGraph(base_xpu_graph):
-            def __new__(cls, *args, **kwargs):
-                return base_xpu_graph.__new__(cls, keep_graph=True)
-
-            def __init__(self, *args, **kwargs):
-                super().__init__(keep_graph=True)
-
-            def replay(self):
-                graph_id = id(self)
-                count = replay_counts.get(graph_id, 0) + 1
-                replay_counts[graph_id] = count
-                if count % reclaim_n == 0:
-                    self.instantiate()
-                    if reclaim_prints[0] < 8:
-                        reclaim_prints[0] += 1
-                        print(
-                            "[b70-xpu-graph] executable re-instantiated "
-                            f"graph={graph_id} replay={count}",
-                            flush=True,
-                        )
-                return original_replay(self)
-
-        torch.xpu.XPUGraph = ReclaimingXPUGraph
-        xpu_graphs.XPUGraph = ReclaimingXPUGraph
-        print(
-            "[b70-xpu-graph] reclaim enabled: "
-            f"re-instantiate every {reclaim_n} replays per graph",
-            flush=True,
-        )
 
     original_output_rows = BreakableCudaGraphBackend._output_rows
     original_alloc_full_buffer = BreakableCudaGraphBackend._alloc_full_buffer
@@ -325,14 +331,20 @@ def install() -> None:
     import torch
 
     import sglang.srt.layers.quantization.compressed_tensors.compressed_tensors as ct
+    from sglang.srt.layers.linear import LinearBase
     from sglang.srt.layers.quantization.compressed_tensors.schemes.compressed_tensors_w8a8_int8 import (
         CompressedTensorsW8A8Int8,
     )
+    from sglang.srt.layers.quantization.unquant import UnquantizedLinearMethod
 
     config_cls = ct.CompressedTensorsConfig
+    original_get_quant_method = config_cls.get_quant_method
     original_get_linear_scheme = config_cls.get_linear_scheme
     original_process = CompressedTensorsW8A8Int8.process_weights_after_loading
     use_native = os.environ.get("B70_XPU_W8A8_NATIVE") == "1"
+    use_gdn_rtn = os.environ.get("B70_XPU_GDN_W8A8") == "1"
+    if use_gdn_rtn and not use_native:
+        raise RuntimeError("B70_XPU_GDN_W8A8 requires B70_XPU_W8A8_NATIVE=1")
 
     if use_native:
         importlib.import_module("vllm_xpu_kernels._xpu_C")
@@ -385,6 +397,59 @@ def install() -> None:
                     f"{type(scheme).__name__}"
                 )
             return scheme
+
+    gdn_projection_counts = {"in_proj_qkvz": 0, "out_proj": 0}
+
+    class GdnW8A8LinearMethod(UnquantizedLinearMethod):
+        """Load an ignored BF16 GDN projection, then RTN-quantize it once."""
+
+        def __init__(self, prefix):
+            self.prefix = prefix
+
+        def process_weights_after_loading(self, layer) -> None:
+            weight = layer.weight.data
+            if weight.dtype != torch.bfloat16 or weight.ndim != 2:
+                raise RuntimeError(
+                    f"B70 GDN RTN expected a 2D BF16 weight for {self.prefix}, "
+                    f"got dtype={weight.dtype} shape={tuple(weight.shape)}"
+                )
+            weight_float = weight.to(torch.float32)
+            weight_scale = (
+                weight_float.abs().amax(dim=1).clamp_min(1.0e-10) / 127.0
+            )
+            weight_nk = torch.round(
+                weight_float / weight_scale.reshape(-1, 1)
+            ).clamp(-127, 127).to(torch.int8).contiguous()
+            layer.b70_weight_nk = weight_nk
+            layer.b70_weight_nt = weight_nk.t()
+            layer.b70_weight_scale = weight_scale.to(torch.float32).contiguous()
+            if layer.b70_weight_nt.stride(0) != 1:
+                raise RuntimeError(
+                    f"B70 GDN RTN weight is not NT-strided for {self.prefix}"
+                )
+            layer.weight = torch.nn.Parameter(
+                torch.empty(0, dtype=weight.dtype, device=weight.device),
+                requires_grad=False,
+            )
+            projection = self.prefix.rsplit(".", 1)[-1]
+            gdn_projection_counts[projection] += 1
+            if sum(gdn_projection_counts.values()) == 96:
+                print(
+                    "[b70-xpu-gdn-w8a8] converted 48 in_proj_qkvz and "
+                    "48 out_proj weights with per-output-channel RTN INT8",
+                    flush=True,
+                )
+
+        def apply(self, layer, x, bias=None):
+            return apply_native_weights(self, layer, x, bias)
+
+    def get_quant_method(self, layer, prefix):
+        if use_gdn_rtn and isinstance(layer, LinearBase) and (
+            prefix.endswith(".linear_attn.in_proj_qkvz")
+            or prefix.endswith(".linear_attn.out_proj")
+        ):
+            return GdnW8A8LinearMethod(prefix)
+        return original_get_quant_method(self, layer, prefix)
 
     def process_weights_after_loading(self, layer) -> None:
         original_process(self, layer)
@@ -442,6 +507,7 @@ def install() -> None:
         )
         return output.reshape(*original_shape[:-1], -1)
 
+    config_cls.get_quant_method = get_quant_method
     config_cls.get_linear_scheme = get_linear_scheme
     CompressedTensorsW8A8Int8.process_weights_after_loading = (
         process_weights_after_loading
@@ -450,12 +516,15 @@ def install() -> None:
         apply_native_weights if use_native else apply_generic_weights
     )
     route = "native per-token quant plus oneDNN GEMM" if use_native else "torch._int_mm"
+    if use_gdn_rtn:
+        route += " plus selective GDN RTN INT8"
     print(
         f"[b70-xpu-w8a8] installed compressed-tensors W8A8 via {route}",
         flush=True,
     )
     if os.environ.get("B70_XPU_MTP") == "1":
         _install_mtp_xpu()
+    _install_graph_reclaim()
     if os.environ.get("B70_XPU_BREAKABLE_GRAPH") == "1":
         _install_breakable_graph()
 

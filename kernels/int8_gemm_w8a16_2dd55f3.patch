@@ -1,0 +1,148 @@
+diff --git a/csrc/xpu/onednn/onednn_ext.h b/csrc/xpu/onednn/onednn_ext.h
+index afbcced..1448aa8 100644
+--- a/csrc/xpu/onednn/onednn_ext.h
++++ b/csrc/xpu/onednn/onednn_ext.h
+@@ -45,6 +45,8 @@ enum class joint_dtypes_t {
+   u8_int4,
+   s8_s8_f16,
+   s8_s8_bf16,
++  f16_int8,
++  bf16_int8,
+   f16_f8_e5m2,
+   bf16_f8_e5m2,
+   f16_f8_e4m3,
+@@ -122,6 +124,28 @@ struct onednn_types_mapper<joint_dtypes_t::s8_s8_bf16> {
+   }
+ };
+ 
++template <>
++struct onednn_types_mapper<joint_dtypes_t::f16_int8> {
++  static inline std::
++      tuple<memory::data_type, memory::data_type, memory::data_type>
++      get() {
++    return std::make_tuple(
++        memory::data_type::f16, memory::data_type::s8, memory::data_type::f16);
++  }
++};
++
++template <>
++struct onednn_types_mapper<joint_dtypes_t::bf16_int8> {
++  static inline std::
++      tuple<memory::data_type, memory::data_type, memory::data_type>
++      get() {
++    return std::make_tuple(
++        memory::data_type::bf16,
++        memory::data_type::s8,
++        memory::data_type::bf16);
++  }
++};
++
+ template <>
+ struct onednn_types_mapper<joint_dtypes_t::f16_f8_e5m2> {
+   static inline std::
+@@ -1070,6 +1094,36 @@ static inline primitive_ext& matmul_primitive_create_and_cache(
+           scale_group_size,
+           zp_group_size,
+           batch_dim);
++    case joint_dtypes_t::f16_int8:
++      return matmul_primitive_create_and_cache<joint_dtypes_t::f16_int8, F>(
++          Tt,
++          b_type,
++          m,
++          n,
++          k,
++          lda,
++          ldb,
++          ldc,
++          device_id,
++          attr,
++          scale_group_size,
++          zp_group_size,
++          batch_dim);
++    case joint_dtypes_t::bf16_int8:
++      return matmul_primitive_create_and_cache<joint_dtypes_t::bf16_int8, F>(
++          Tt,
++          b_type,
++          m,
++          n,
++          k,
++          lda,
++          ldb,
++          ldc,
++          device_id,
++          attr,
++          scale_group_size,
++          zp_group_size,
++          batch_dim);
+     case joint_dtypes_t::f16_f8_e5m2:
+       return matmul_primitive_create_and_cache<joint_dtypes_t::f16_f8_e5m2, F>(
+           Tt,
+diff --git a/csrc/xpu/onednn/onednn_matmul.cpp b/csrc/xpu/onednn/onednn_matmul.cpp
+index bc39bc8..efc3e4e 100644
+--- a/csrc/xpu/onednn/onednn_matmul.cpp
++++ b/csrc/xpu/onednn/onednn_matmul.cpp
+@@ -3,6 +3,7 @@
+ #include "fp8_gemm_w8a8.h"
+ #include "fp8_gemm_w8a16.h"
+ #include "int8_gemm_w8a8.h"
++#include "int8_gemm_w8a16.h"
+ #include "int4_gemm_w4a16.h"
+ #include "int4_gemm_w4a8.h"
+ 
+@@ -273,6 +274,23 @@ torch::Tensor int8_gemm_w8a8(
+   return result;
+ }
+ 
++torch::Tensor int8_gemm_w8a16(
++    const torch::Tensor& A,
++    const torch::Tensor& B,
++    const torch::Tensor& B_scale,
++    const std::optional<torch::Tensor>& bias_) {
++  const at::DeviceGuard device_guard(A.device());
++  TORCH_CHECK(
++      B_scale.is_contiguous(),
++      "B_scale must be contiguous for int8 W8A16 matmul");
++  torch::Tensor result =
++      check_and_create_output_tensor(A, B, A.scalar_type());
++  const bool is_nt = B.strides()[B.dim() - 2] == 1;
++  oneDNN::dnnl_matmul_w8a16_int8(
++      result, A, B, B_scale, is_nt, bias_);
++  return result;
++}
++
+ torch::Tensor int8_gemm_w8a8_out(
+     const torch::Tensor& A,
+     const torch::Tensor& A_scale,
+diff --git a/csrc/xpu/ops.h b/csrc/xpu/ops.h
+index dd44a65..8065d90 100644
+--- a/csrc/xpu/ops.h
++++ b/csrc/xpu/ops.h
+@@ -67,6 +67,12 @@ torch::Tensor int8_gemm_w8a8(
+     std::optional<c10::ScalarType> out_dtype,
+     const std::optional<torch::Tensor>& bias);
+ 
++torch::Tensor int8_gemm_w8a16(
++    const torch::Tensor& A,
++    const torch::Tensor& B,
++    const torch::Tensor& B_scale,
++    const std::optional<torch::Tensor>& bias);
++
+ torch::Tensor int8_gemm_w8a8_out(
+     const torch::Tensor& A,
+     const torch::Tensor& A_scale,
+diff --git a/csrc/xpu/torch_bindings.cpp b/csrc/xpu/torch_bindings.cpp
+index 3ffda54..3ed08d8 100644
+--- a/csrc/xpu/torch_bindings.cpp
++++ b/csrc/xpu/torch_bindings.cpp
+@@ -51,6 +51,11 @@ TORCH_LIBRARY_EXPAND(TORCH_EXTENSION_NAME, xpu_ops) {
+       "ScalarType? out_dtype, Tensor? bias) -> Tensor");
+   xpu_ops.impl("int8_gemm_w8a8", torch::kXPU, &int8_gemm_w8a8);
+ 
++  xpu_ops.def(
++      "int8_gemm_w8a16(Tensor A, Tensor B, Tensor B_scale, Tensor? bias) -> "
++      "Tensor");
++  xpu_ops.impl("int8_gemm_w8a16", torch::kXPU, &int8_gemm_w8a16);
++
+   xpu_ops.def(
+       "int8_gemm_w8a8_out(Tensor A, Tensor A_scale, Tensor B, Tensor B_scale, "
+       "Tensor! output, Tensor? bias) -> Tensor");

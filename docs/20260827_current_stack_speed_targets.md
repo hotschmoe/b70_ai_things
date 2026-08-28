@@ -22,12 +22,14 @@ speed ranking.
 
 | Model and scheme | Target | Current median | Matched request shape | Status |
 | --- | ---: | ---: | --- | --- |
-| Qwen3.8-27B W8A8 GPTQ | 25 tok/s | 22.4513 tok/s | p515/o512, c1 | 10.2% short |
+| Qwen3.8-27B W8A8 GPTQ plus selective GDN RTN INT8 | 25 tok/s | 24.5628 tok/s | p879/o512, c1 | 1.75% short |
 | Qwen3.8-27B RadixArk NVFP4 plus FP8 W8A16 decode | 40 tok/s | 32.6206 tok/s | p879/o512, c1 | 18.4% short |
 | Ornith-1.5-35B-A3B W8A8 RTN | 65 tok/s | 62.0426 tok/s | p837/o512, c1 | 4.5% short |
 
 The Qwen NVFP4 row is the current SGLang FULL-graph TP=2 winner. It improves
 the matched stock static-FP8 activation route from 30.1665 tok/s by 8.14%.
+The Qwen W8A8 row selectively RTN-quantizes the ignored BF16 GDN qkvz and
+output projections and improves its prior 22.4513 tok/s control by 9.40%.
 The Ornith row is the tuned-MoE arm; its 62.0426 tok/s median is statistically
 indistinguishable from the 61.9480 tok/s stock-MoE control. None of these
 single-stream rows meets its requested target yet.

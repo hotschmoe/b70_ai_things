@@ -4730,3 +4730,101 @@ VERDICT -> reject the ESIMD M=1 kernel, native GDN backend, and direct P2P as
 current model optimizations. Keep oneDNN NVFP4, Triton GDN, and P2P disabled.
 The exact-shape P2P oracle removes any justification for risking a model-level
 P2P-on arm on this stack.
+
+### 2026-08-28d - Current-stack oneDNN W8A16 dense route is rejected
+
+CONFIG -> exact SGLang runtime
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`,
+Torch 2.13.0+xpu, vllm-xpu-kernels source `2dd55f3`, and the real Qwen3.8
+W8A8 GPTQ TP2 rank shapes. The candidate adds a source-built oneDNN
+INT8-weight/BF16-activation operator. No quarantined binary or source was
+restored.
+
+COMMAND -> build `kernels/int8_gemm_w8a16_2dd55f3.patch` through
+`sglang/refresh/build_int8.sh`, then run
+`sglang/refresh/bench_qwen38_w8a8_linears_xpu.py` on card 0 through
+`bin/gpu-run`. Compare eager and graph execution for the real M1 gate/up,
+down, qkv, and output projections, and require numerical agreement and exact
+replay before any model integration.
+
+RESULT -> image
+`b70-sglang-xpu-int8-w8a16@sha256:91cc53fab0e683a27735667ff0802ee065d328ad66f1d0d2d6c7236d0e1475f3`
+built successfully. The patched tree was `a2559481686fcabeb95d5a315c73f87c3c4f5fe9`;
+wheel SHA256 was
+`4b62ca2bc19588dbe5b644260a33a8dbb1f2e26a75d1d304a067297ddbc60087`,
+and installed shared-object SHA256 was
+`1fd3cb680d46b50338bdb1ed71883ec73423183b55126011de99aa653ed2b3df`.
+Correctness and exact graph replay passed, but performance failed decisively.
+Gate/up graph time was 2.0775 ms versus 0.1911 ms for current W8A8, down was
+3.5929 versus 0.1111 ms, qkv was 2.0649 versus 0.08027 ms, and output was
+1.3099 versus 0.03346 ms. The 160-call weighted estimate was 416.899 ms
+versus 21.1619 ms, or only 0.05076x current speed. Result JSON SHA256 was
+`55fd3b4892fd4ca1ef45c083adc3ac42272624eab5b053a84c62525dbee26ba7`.
+Pre- and post-card health passed.
+
+VERDICT -> reject oneDNN W8A16 for Qwen3.8 dense decode before full-model
+integration. Retain the tracked source port and exact artifact identity as a
+negative control; do not use it as a speed route.
+
+### 2026-08-28e - Selective GDN INT8 reaches 24.56 tok/s after OOM recovery
+
+CONFIG -> exact runtime image `adc915d...`, Qwen3.8 W8A8 GPTQ, TP=2, FULL
+decode graph at batch size one, p879/o512, maximum one request, 4096 context,
+Triton GDN, source-default c10d, pidfd IPC, SYCL collective kernels, and P2P
+disabled. Only the 48 GDN `in_proj_qkvz` and 48 GDN `out_proj` weights per
+rank change from ignored BF16 to load-time per-output-channel RTN INT8; all
+checkpoint W8A8 projections retain the qualified native route.
+
+COMMAND -> first run `sglang/refresh/bench_qwen38_gdn_int8_xpu.py` under a
+card-0 lease on real BF16 checkpoint projections. Then launch the selective
+route through `sglang/w8a8/serve_qwen38_w8a8.sh`, require two conversion
+markers and exact `/v1/models` identity, and run
+`sglang/w8a8/bench_forced_concurrent.py --concurrency 1 --prompt-repeat 35
+--output-tokens 512 --batches 3`. Enclose every TP2 attempt in `bin/gpu-run`
+with teardown, per-card health, and compiled P2P-off collective health.
+
+RESULT -> the one-card gate passed correctness, determinism, and 16 exact
+graph replays. GDN qkvz improved from 0.154898 to 0.089870 ms and output from
+0.048875 to 0.028697 ms. The 48-plus-48 weighted estimate fell from 9.7811 to
+5.6912 ms per token per rank, a 1.7186x projection speedup. Cosine was at
+least 0.999911 and relative L2 at most 0.01334. Result JSON SHA256 was
+`82ac550616e73d524a797dafe0019728a5d273ef6461ee41dd64cecfc4c67817`.
+
+RESULT -> the first full-model arm used `mem-fraction-static=0.90`. Both
+ranks loaded and converted all 96 projections, then stalled for 7 hours 36
+minutes after Mamba-cache allocation while attempting a 462,976-token KV
+pool. At 09:21 the kernel reported a global OOM with about 59 GiB
+`gpu_active` and killed the user D-Bus service. At 16:57 another global OOM
+killed user systemd, closing tmux and Codex, and killed rank 1. The host did
+not reboot. The dead container reported `OOMKilled=true`; full log SHA256 was
+`accc095d3086fd2a0a811f15ceb3a6d27fb0638245e5de32cee14b31d7607cc0`.
+The orphan process was gone but left stale owner text in the unlocked lease
+files. The normal stop path preserved the log and removed the container.
+`bin/gpu-run bin/xe-reset` completed a non-reboot rebind; both card probes and
+the compiled ten-iteration P2P-off collective passed.
+
+RESULT -> the guarded launcher now defaults to `mem-fraction-static=0.75`,
+adds container OOM score adjustment 500, and the qualification command used a
+ten-minute startup ceiling. A first guarded attempt allocated 306,176 KV
+tokens, leaving 8.04 GB per rank, then exposed and cleanly rejected an
+argument-binding bug in the GDN adapter during graph capture. Fixing the
+adapter's call into the shared native helper produced a healthy endpoint in
+125 seconds. Both conversion markers and exact served ID
+`qwen3.8-27b-W8A8-gptq-gdn-rtn-full-tp2` passed. Repeated greedy output was
+byte-identical, the arithmetic canary returned exact answer 45, and all three
+measured streams completed 512 tokens. Post-first rates were 24.6409,
+24.5628, and 24.5433 tok/s; median was 24.5628 tok/s and median including
+TTFT was 23.0228 tok/s. This is 9.40 percent above the prior 22.4513 tok/s
+W8A8 FULL control and 1.75 percent below the 25 tok/s objective. Result JSON
+SHA256 was
+`85045f85825c0ef27975856eab315b5ffe269b1ebdc7ecceccab91185f34e7fb`;
+runtime log SHA256 was
+`1f1db8c0380472b852bfd493b45700e843119848b83d5c97b96eb35136a05f9e`.
+Graceful teardown, both card probes, and compiled P2P-off collective health
+passed; no container remains and both leases are free.
+
+VERDICT -> reject the 0.90 memory fraction as unsafe for this host-visible
+VRAM configuration. Retain the 0.75 OOM-guarded selective GDN route as the
+new coherent Qwen3.8 W8A8 single-stream winner. It is a material improvement,
+but the strict 25 tok/s objective remains narrowly unmet, so continue with the
+next measured bottleneck rather than promoting a shelf entry.

@@ -4,9 +4,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 KERNELS_SRC="${VLLM_XPU_KERNELS_SRC:-/mnt/vm_8tb/b70/steve-s2b/vllm-xpu-kernels}"
-TAG="${TAG:-b70-sglang-xpu-int8:20260826-2dd55f3}"
+TAG="${TAG:-b70-sglang-xpu-int8-w8a16:20260828-2dd55f3}"
 BUILD_JOBS="${BUILD_JOBS:-8}"
+W8A16_PATCH="$REPO/kernels/int8_gemm_w8a16_2dd55f3.patch"
+W8A16_HEADER="$REPO/kernels/int8_gemm_w8a16.h"
 
 KERNELS_COMMIT=2dd55f380df753a10a88fcd9e96192561066e713
 KERNELS_TREE=2416da2ad02ff58717edb864fa839442a15ca3d2
@@ -17,6 +20,9 @@ BASE_ID=sha256:8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd
   echo "Missing exact source tree: $KERNELS_SRC" >&2
   exit 1
 }
+for path in "$W8A16_PATCH" "$W8A16_HEADER"; do
+  [ -f "$path" ] || { echo "Missing W8A16 source input: $path" >&2; exit 1; }
+done
 [ -z "$(git -C "$KERNELS_SRC" status --porcelain)" ] || {
   echo "Refusing dirty source tree: $KERNELS_SRC" >&2
   exit 1
@@ -39,13 +45,27 @@ trap cleanup EXIT
 git clone --local --no-hardlinks "$KERNELS_SRC" \
   "$BUILD_ROOT/vllm-xpu-kernels"
 git -C "$BUILD_ROOT/vllm-xpu-kernels" checkout --detach "$KERNELS_COMMIT"
+git -C "$BUILD_ROOT/vllm-xpu-kernels" apply --check "$W8A16_PATCH"
+git -C "$BUILD_ROOT/vllm-xpu-kernels" apply "$W8A16_PATCH"
+cp -- "$W8A16_HEADER" \
+  "$BUILD_ROOT/vllm-xpu-kernels/csrc/xpu/onednn/int8_gemm_w8a16.h"
+git -C "$BUILD_ROOT/vllm-xpu-kernels" add -- \
+  csrc/xpu/onednn/int8_gemm_w8a16.h \
+  csrc/xpu/onednn/onednn_ext.h \
+  csrc/xpu/onednn/onednn_matmul.cpp \
+  csrc/xpu/ops.h \
+  csrc/xpu/torch_bindings.cpp
+PATCHED_TREE="$(git -C "$BUILD_ROOT/vllm-xpu-kernels" write-tree)"
+git -C "$BUILD_ROOT/vllm-xpu-kernels" diff --cached --check
 
 echo "Building $TAG"
 echo "Base $BASE_TAG at $BASE_ID"
 echo "vllm-xpu-kernels $KERNELS_COMMIT tree $KERNELS_TREE"
+echo "B70 W8A16 patched tree $PATCHED_TREE"
 
 docker build --progress=plain \
   --build-arg "BUILD_JOBS=$BUILD_JOBS" \
+  --build-arg "VLLM_XPU_KERNELS_PATCHED_TREE=$PATCHED_TREE" \
   --build-context "vllm-xpu-kernels=$BUILD_ROOT/vllm-xpu-kernels" \
   --tag "$TAG" \
   --file "$SCRIPT_DIR/Dockerfile.int8" \

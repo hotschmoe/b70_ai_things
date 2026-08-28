@@ -7,13 +7,15 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ARG VLLM_XPU_KERNELS_COMMIT=2dd55f380df753a10a88fcd9e96192561066e713
 ARG VLLM_XPU_KERNELS_TREE=2416da2ad02ff58717edb864fa839442a15ca3d2
+ARG VLLM_XPU_KERNELS_PATCHED_TREE
 ARG BUILD_JOBS=8
 
 LABEL org.opencontainers.image.title="B70 SGLang XPU native INT8 arm"
 LABEL b70.parent.image="sha256:8678399dce536377f67760868b166744eb149ff9146e344476bb124e0c5933cd"
 LABEL b70.vllm-xpu-kernels.commit="${VLLM_XPU_KERNELS_COMMIT}"
 LABEL b70.vllm-xpu-kernels.tree="${VLLM_XPU_KERNELS_TREE}"
-LABEL b70.vllm-xpu-kernels.profile="xpu-specific-only"
+LABEL b70.vllm-xpu-kernels.patched-tree="${VLLM_XPU_KERNELS_PATCHED_TREE}"
+LABEL b70.vllm-xpu-kernels.profile="xpu-specific-plus-int8-w8a16"
 
 COPY --from=vllm-xpu-kernels . /src/vllm-xpu-kernels
 
@@ -21,7 +23,9 @@ RUN test "$(git -C /src/vllm-xpu-kernels rev-parse HEAD)" = \
         "${VLLM_XPU_KERNELS_COMMIT}" && \
     test "$(git -C /src/vllm-xpu-kernels rev-parse HEAD^{tree})" = \
         "${VLLM_XPU_KERNELS_TREE}" && \
-    test -z "$(git -C /src/vllm-xpu-kernels status --porcelain)"
+    test "$(git -C /src/vllm-xpu-kernels write-tree)" = \
+        "${VLLM_XPU_KERNELS_PATCHED_TREE}" && \
+    git -C /src/vllm-xpu-kernels diff --cached --check
 
 # Build only the extension that owns the native XPU INT8 quantizer and oneDNN
 # W8A8 GEMM. Every unrelated extension family is disabled for this arm.
@@ -31,7 +35,7 @@ RUN python -m pip install --no-cache-dir setuptools==79.0.1 && \
     set -u && \
     MAX_JOBS="${BUILD_JOBS}" \
     CMAKE_BUILD_PARALLEL_LEVEL="${BUILD_JOBS}" \
-    VLLM_VERSION_OVERRIDE=0.0.0+b70.2dd55f3 \
+    VLLM_VERSION_OVERRIDE=0.0.0+b70.2dd55f3.w8a16 \
     BUILD_SYCL_TLA_KERNELS=OFF \
     VLLM_XPU_ENABLE_XE2=OFF \
     VLLM_XPU_ENABLE_XE_DEFAULT=OFF \
@@ -45,7 +49,7 @@ RUN python -m pip install --no-cache-dir setuptools==79.0.1 && \
     python -m pip wheel --no-build-isolation --no-deps \
         --wheel-dir /opt/wheels /src/vllm-xpu-kernels && \
     python -m pip install --no-cache-dir --no-deps \
-        /opt/wheels/vllm_xpu_kernels-0.0.0+b70.2dd55f3-*.whl
+        /opt/wheels/vllm_xpu_kernels-0.0.0+b70.2dd55f3.w8a16-*.whl
 
 RUN python - <<'PY'
 import importlib
@@ -58,6 +62,10 @@ expected = {
     "int8_gemm_w8a8": (
         "_xpu_C::int8_gemm_w8a8(Tensor A, Tensor A_scale, Tensor B, "
         "Tensor B_scale, ScalarType? out_dtype, Tensor? bias) -> Tensor"
+    ),
+    "int8_gemm_w8a16": (
+        "_xpu_C::int8_gemm_w8a16(Tensor A, Tensor B, Tensor B_scale, "
+        "Tensor? bias) -> Tensor"
     ),
     "per_token_quant_int8_xpu": (
         "_xpu_C::per_token_quant_int8_xpu(Tensor x) -> (Tensor, Tensor)"
