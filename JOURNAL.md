@@ -5329,3 +5329,62 @@ but still aborts well below the configured context and its agent policy spent
 most of the available time planning rather than implementing. Keep its zero
 score and full failure time in the matched comparison; continue with the TP1
 GPTQ INT4 arm, which avoids this TP2 SGLang FULL-replay path.
+
+### 2026-08-28p - Qwen GPTQ INT4 TB3 pilot aborts PIECEWISE and scores zero
+
+CONFIG -> pinned image
+`vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f`,
+vLLM `0.27.2rc1.dev77+gac7509e2b`, and the local Qwen3.8-27B GPTQ INT4
+group-128 checkpoint. The matched campaign arm used TP1 on card 0, PIECEWISE
+graph, MTP4 with the accepted draft-only LM-head INT4 patch, BF16 KV,
+qwen3 reasoning, qwen3_coder tools, maximum one request, and 65,536 context.
+Harbor 0.22.0 ran official Terminal-Bench 3.0.0 task `bun-sourcemap-leak`
+with Pi 0.84.3 at xhigh and the same concise prompt as every other arm.
+
+COMMAND -> start with the qualified short-context launcher's full 65,536-token
+batched-token limit, then change only the prefill compile window if compilation
+prevents startup. If BF16 KV still cannot fit the 65,536-token model window,
+raise only the vLLM memory-utilization bound. Require exact served identity,
+preserve Harbor grading after an endpoint failure, stop the container, and run
+card-0 plus compiled two-rank P2P-off post-health inside the whole-box lease.
+
+RESULT -> the first startup used 65,536 batched tokens and failed before KV
+sizing when compilation attempted a 4.25 GiB allocation. Server-log SHA256 was
+`1efaf70290b25378d6c964e80c63c84ca7becd2c662aedcf9a154ddb056c2f04`.
+Restricting the compile/prefill window to 16,384 tokens completed compilation,
+but memory utilization 0.75 left 1.0 GiB for KV while one 65,536-token request
+required 5.07 GiB; estimated maximum model length was only 2,496 tokens.
+Server-log SHA256 was
+`0fad376683170524c85cb9b8d0866d0107cb989c6f51a5bde3008bb76608aca6`.
+Both attempts failed closed before Harbor and their full lifecycle times were
+289 and 246 seconds. Card and compiled collective health passed after each.
+
+RESULT -> memory utilization 0.90 retained BF16 KV and made 6.44 GiB available
+for 82,965 tokens, or 1.27 times the configured 65,536-token request. Startup
+took 95 seconds and PIECEWISE graph capture used 0.91 GiB. The first substantive
+model response spent 9,067 output tokens on a plan before running the baseline
+release. It then inspected the leaking artifacts but made no edit. During the
+next model request, at about 28 percent KV-cache occupancy, Level Zero aborted
+at `linear_stream.h:90`; the engine core died and the API shut down cleanly.
+There was no kernel engine reset, GPU VM fault, or host OOM.
+
+RESULT -> Harbor preserved and graded the unchanged task. It scored 0.0 with
+17 of 36 tests passed and 19 failed. Agent execution ended with the server at
+7m57s; Harbor job wall was 12m25s, server-start through Harbor finish was
+14m04s, and server-start through teardown plus post-health was 15m00s. The job
+used 21,753 input and 9,459 output tokens.
+Job result, trial result, Pi transcript, lifecycle, and server-log SHA256 values
+were `c0a4f7bbbd0048584771f86a639711dd7a79088195904434f88a282bf240d51a`,
+`bd4ff88b0b98332de69510838371284b808935a6cf25253a5d929ab7610e336b`,
+`5901bd1ea7b2c6fe47a8c4e6cf3c3ee71554ccbc9c001f69c6d00a673e94ff3e`,
+`4f90a7de40b2bf461d0ca2ccff56ee69de6c869599aa9c16616cdefd52e970cb`,
+and `cf30912cf4d54629dcf38a5d3c2d9f529dbf2e255f87b68e0515688141badf48`.
+Card-0 and compiled two-rank P2P-off post-health passed.
+
+VERDICT -> reject the current GPTQ INT4 MTP4 PIECEWISE configuration for the
+65K agent campaign despite its qualified short and 2K-token serving results.
+Its official zero is an unchanged-baseline score caused by endpoint loss, and
+the same Level Zero command-stream failure class now spans both vLLM PIECEWISE
+and SGLang FULL long-agent runs. Keep BF16 KV, the 16K prefill window, and the
+0.90 fit result as controls, but require a graph-safe long-context recipe before
+running more official tasks.

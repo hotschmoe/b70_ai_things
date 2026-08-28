@@ -70,6 +70,29 @@ was 14m46s and full server-start through post-health teardown was 17m52s.
 Post-failure health and xe rebind recovery passed. This arm is also unsuitable
 for the full 65K-context campaign in its current graph mode.
 
+The matched Qwen GPTQ INT4 pilot also scored 0.0. A 16,384-token prefill window
+and memory utilization 0.90 were required to fit one 65,536-token BF16 KV
+request; the resulting cache held 82,965 tokens. Pi emitted a 9,067-token plan,
+inspected the baseline release, and made no edit before vLLM PIECEWISE aborted
+in Level Zero `linear_stream.h:90`. The unchanged baseline passed 17 of 36
+tests. Harbor wall was 12m25s and full server-start through post-health teardown
+was 15m00s. Card and compiled collective post-health passed. Treat the qualified
+short-context GPTQ recipe and this failed 65K agent recipe as separate results.
+
+The completed matched pilot is:
+
+| Arm | Score | Task evidence | Harbor wall | Total | Endpoint |
+| --- | ---: | --- | ---: | ---: | --- |
+| Qwen W8A8 | 0.0 | 24/36 passed | 18m23s | 21m52s | kernel fault at about 17K |
+| Qwen NVFP4 | 0.0 | 17/36 passed | 14m46s | 17m52s | graph abort at 19,328 |
+| Qwen GPTQ INT4 | 0.0 | 17/36 baseline | 12m25s | 15m00s | graph abort before edit |
+| Ornith W8A8 | 0.0 | agent timeout | 34m34s | 38m39s | stable through 42,112 |
+
+There is no score winner and no arm is ready for the 74-task campaign. The
+Qwen totals are times to failed completion, not successful speed results.
+Ornith is the only long-agent runtime survivor, but its current Pi/xhigh policy
+does not finish this task within the official budget.
+
 Do not raise the Ornith graph arm to `MEMFRAC=0.90`. That setting allocated
 about 58 GiB of shared GPU memory and triggered a global host OOM during graph
 capture, killing the user systemd/tmux session. The campaign uses 0.70, which
