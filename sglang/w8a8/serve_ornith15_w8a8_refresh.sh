@@ -15,6 +15,7 @@ CTX="${CTX:-8192}"
 MEMFRAC="${MEMFRAC:-0.90}"
 MAXREQ="${MAXREQ:-4}"
 GRAPH_BS="${GRAPH_BS:-1 2 4}"
+CHUNKED_PREFILL="${CHUNKED_PREFILL:-2048}"
 # Bound the Level Zero command-list growth caused by repeated XPUGraph replay.
 # The matched 12-batch soak selected 500; set 0 only for the retained control.
 CG_RECLAIM="${CG_RECLAIM:-500}"
@@ -95,6 +96,10 @@ preflight() {
       return 1
     }
   done
+  [ "$CHUNKED_PREFILL" -ge 1 ] 2>/dev/null || {
+    say "CHUNKED_PREFILL must be a positive integer, got $CHUNKED_PREFILL"
+    return 1
+  }
   [ "$CG_RECLAIM" -ge 0 ] 2>/dev/null || {
     say "CG_RECLAIM must be a nonnegative integer, got $CG_RECLAIM"
     return 1
@@ -123,6 +128,7 @@ start() {
   docker rm -f "$NAME" >/dev/null 2>&1 || true
 
   local graph_args
+  local security_args=()
   local grammar_args="--grammar-backend none"
   local spec_args=""
   local tool_args=""
@@ -130,6 +136,9 @@ start() {
   local breakable_graph=0
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode $GRAPH_BS"
+    # oneCCL needs pidfd_getfd for graph-owned allocations. Keep these
+    # permissions scoped to the FULL graph research route.
+    security_args=(--cap-add SYS_PTRACE --security-opt seccomp=unconfined)
   elif [ "$DECODE_GRAPH" = breakable ]; then
     graph_args="--cuda-graph-backend-decode breakable --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode $GRAPH_BS"
     breakable_graph=1
@@ -147,9 +156,10 @@ start() {
     grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
   fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX dense_native=$DENSE_NATIVE mtp=$MTP spec_steps=$SPEC_STEPS graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM maxreq=$MAXREQ tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX dense_native=$DENSE_NATIVE mtp=$MTP spec_steps=$SPEC_STEPS graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM chunked_prefill=$CHUNKED_PREFILL maxreq=$MAXREQ tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS"
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
+    "${security_args[@]}" \
     -p "$PORT:$PORT" \
     -v "$REPO/models/files:/models:ro" \
     -v "$ROOT/hf_cache:/hf_cache" \
@@ -189,6 +199,7 @@ start() {
       --mamba-ssm-dtype float32 $grammar_args \
       $graph_args $spec_args $tool_args \
       --disable-radix-cache --disable-overlap-schedule --skip-server-warmup \
+      --chunked-prefill-size '$CHUNKED_PREFILL' \
       --disable-custom-all-reduce --reasoning-parser qwen3 --tp-size '$TP' \
       --context-length '$CTX' --mem-fraction-static '$MEMFRAC' \
       --max-running-requests '$MAXREQ' --host 0.0.0.0 --port '$PORT'" \

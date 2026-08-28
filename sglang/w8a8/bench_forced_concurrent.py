@@ -35,7 +35,16 @@ def message_text(response):
     return (message.get("reasoning_content") or "") + (message.get("content") or "")
 
 
-def run_determinism(url, model):
+def request_controls(seed, disable_thinking):
+    controls = {}
+    if seed is not None:
+        controls["seed"] = seed
+    if disable_thinking:
+        controls["chat_template_kwargs"] = {"enable_thinking": False}
+    return controls
+
+
+def run_determinism(url, model, seed, disable_thinking):
     body = {
         "model": model,
         "messages": [
@@ -46,6 +55,7 @@ def run_determinism(url, model):
         ],
         "max_tokens": 96,
         "temperature": 0,
+        **request_controls(seed, disable_thinking),
     }
     texts = [message_text(post_json(url, body)) for _ in range(2)]
     if not texts[0] or texts[0] != texts[1]:
@@ -58,7 +68,7 @@ def run_determinism(url, model):
     )
 
 
-def run_canaries(url, model, concurrency):
+def run_canaries(url, model, concurrency, seed, disable_thinking):
     cases = [
         ("Reply with only the integer: 19 + 26.", "45"),
         ("Reply with only the integer: 34 + 44.", "78"),
@@ -79,6 +89,7 @@ def run_canaries(url, model, concurrency):
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 64,
                 "temperature": 0,
+                **request_controls(seed, disable_thinking),
             },
         )
         text = message_text(response)
@@ -97,7 +108,7 @@ def run_canaries(url, model, concurrency):
         raise RuntimeError("concurrent coherence canary failed")
 
 
-def stream_one(url, model, prompt, output_tokens):
+def stream_one(url, model, prompt, output_tokens, seed, disable_thinking):
     body = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
@@ -106,6 +117,7 @@ def stream_one(url, model, prompt, output_tokens):
         "ignore_eos": True,
         "stream": True,
         "stream_options": {"include_usage": True},
+        **request_controls(seed, disable_thinking),
     }
     request = urllib.request.Request(
         url,
@@ -167,7 +179,16 @@ def stream_one(url, model, prompt, output_tokens):
     }
 
 
-def run_batch(base, model, concurrency, output_tokens, prompt_repeat, batch):
+def run_batch(
+    base,
+    model,
+    concurrency,
+    output_tokens,
+    prompt_repeat,
+    batch,
+    seed,
+    disable_thinking,
+):
     paragraph = (
         "Modern accelerators combine memory hierarchies, matrix engines, collective "
         "communication, graph replay, and low precision arithmetic. "
@@ -181,7 +202,15 @@ def run_batch(base, model, concurrency, output_tokens, prompt_repeat, batch):
     url = base + "/chat/completions"
     with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as pool:
         futures = [
-            pool.submit(stream_one, url, model, prompt, output_tokens)
+            pool.submit(
+                stream_one,
+                url,
+                model,
+                prompt,
+                output_tokens,
+                seed,
+                disable_thinking,
+            )
             for prompt in prompts
         ]
         results = [future.result() for future in futures]
@@ -230,18 +259,37 @@ def main():
     parser.add_argument("--batches", type=int, default=3)
     parser.add_argument("--settle-seconds", type=float, default=0.0)
     parser.add_argument("--json-out")
+    parser.add_argument("--seed", type=int)
+    parser.add_argument("--disable-thinking", action="store_true")
     args = parser.parse_args()
     base = args.base.rstrip("/") + "/v1"
     model_ids = [item["id"] for item in get_json(base + "/models")["data"]]
     if model_ids != [args.model]:
         raise RuntimeError("served model identity mismatch: {}".format(model_ids))
     print("IDENTITY -> " + json.dumps(model_ids))
-    run_determinism(base + "/chat/completions", args.model)
-    run_canaries(base + "/chat/completions", args.model, args.concurrency)
+    run_determinism(
+        base + "/chat/completions", args.model, args.seed, args.disable_thinking
+    )
+    run_canaries(
+        base + "/chat/completions",
+        args.model,
+        args.concurrency,
+        args.seed,
+        args.disable_thinking,
+    )
     if args.settle_seconds:
         time.sleep(args.settle_seconds)
     print("COMMAND -> same-shape warmup")
-    run_batch(base, args.model, args.concurrency, args.output_tokens, args.prompt_repeat, -1)
+    run_batch(
+        base,
+        args.model,
+        args.concurrency,
+        args.output_tokens,
+        args.prompt_repeat,
+        -1,
+        args.seed,
+        args.disable_thinking,
+    )
     metrics = []
     for batch in range(args.batches):
         if args.settle_seconds:
@@ -254,6 +302,8 @@ def main():
                 args.output_tokens,
                 args.prompt_repeat,
                 batch,
+                args.seed,
+                args.disable_thinking,
             )
         )
     summary = {

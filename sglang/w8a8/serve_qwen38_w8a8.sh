@@ -21,6 +21,7 @@ GRAPH_BS="${GRAPH_BS:-1}"
 CHUNKED_PREFILL="${CHUNKED_PREFILL:-128}"
 NATIVE="${NATIVE:-1}"
 GDN_W8A8="${GDN_W8A8:-1}"
+LMHEAD_W8A8="${LMHEAD_W8A8:-0}"
 MTP="${MTP:-0}"
 SPEC_STEPS="${SPEC_STEPS:-1}"
 SPEC_DRAFT="${SPEC_DRAFT:-2}"
@@ -62,6 +63,24 @@ preflight() {
     0|1) ;;
     *) say "GDN_W8A8 must be 0 or 1, got $GDN_W8A8"; return 1 ;;
   esac
+  case "$LMHEAD_W8A8" in
+    0|1) ;;
+    *) say "LMHEAD_W8A8 must be 0 or 1, got $LMHEAD_W8A8"; return 1 ;;
+  esac
+  if [ "$LMHEAD_W8A8" = 1 ]; then
+    [ "$NATIVE" = 1 ] || {
+      say "LMHEAD_W8A8=1 requires NATIVE=1"
+      return 1
+    }
+    [ "$MTP" = 0 ] || {
+      say "LMHEAD_W8A8=1 is target-only until exactness passes"
+      return 1
+    }
+    case "$SERVED" in
+      *lmhead-rtn*) ;;
+      *) say "LMHEAD_W8A8=1 requires a served ID containing lmhead-rtn"; return 1 ;;
+    esac
+  fi
   if [ "$GDN_W8A8" = 1 ]; then
     [ "$NATIVE" = 1 ] || {
       say "GDN_W8A8=1 requires NATIVE=1"
@@ -159,7 +178,7 @@ start() {
     spec_args="--speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --speculative-draft-model-quantization unquant"
   fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS chunked_prefill=$CHUNKED_PREFILL sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS chunked_prefill=$CHUNKED_PREFILL sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
   docker run -d --name "$NAME" --oom-score-adj 500 --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     "${security_args[@]}" \
@@ -175,6 +194,7 @@ start() {
     -e B70_XPU_W8A8=1 \
     -e B70_XPU_W8A8_NATIVE="$NATIVE" \
     -e B70_XPU_GDN_W8A8="$GDN_W8A8" \
+    -e B70_XPU_LMHEAD_W8A8="$LMHEAD_W8A8" \
     -e B70_XPU_MTP="$MTP" \
     -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$ONEDNN_INPUT_DEP" \

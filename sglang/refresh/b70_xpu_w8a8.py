@@ -343,8 +343,13 @@ def install() -> None:
     original_process = CompressedTensorsW8A8Int8.process_weights_after_loading
     use_native = os.environ.get("B70_XPU_W8A8_NATIVE") == "1"
     use_gdn_rtn = os.environ.get("B70_XPU_GDN_W8A8") == "1"
+    use_lmhead_rtn = os.environ.get("B70_XPU_LMHEAD_W8A8") == "1"
     if use_gdn_rtn and not use_native:
         raise RuntimeError("B70_XPU_GDN_W8A8 requires B70_XPU_W8A8_NATIVE=1")
+    if use_lmhead_rtn and not use_native:
+        raise RuntimeError("B70_XPU_LMHEAD_W8A8 requires B70_XPU_W8A8_NATIVE=1")
+    if use_lmhead_rtn and os.environ.get("B70_XPU_MTP") == "1":
+        raise RuntimeError("B70_XPU_LMHEAD_W8A8 is target-only until exactness passes")
 
     if use_native:
         importlib.import_module("vllm_xpu_kernels._xpu_C")
@@ -507,6 +512,135 @@ def install() -> None:
         )
         return output.reshape(*original_shape[:-1], -1)
 
+    if use_lmhead_rtn:
+        from sglang.srt.layers.logits_processor import LogitsProcessor
+        from sglang.srt.layers.quantization.unquant import (
+            UnquantizedEmbeddingMethod,
+        )
+        from sglang.srt.layers.vocab_parallel_embedding import ParallelLMHead
+        from sglang.srt.model_executor.model_runner import ModelRunner
+        from sglang.srt.models.qwen3_5 import Qwen3_5ForConditionalGeneration
+
+        expected_shape = (124160, 5120)
+        original_load_model = ModelRunner.load_model
+        original_compute_lm_head = LogitsProcessor._compute_lm_head
+
+        def quantize_lm_head(weight):
+            chunk_rows = int(
+                os.environ.get("B70_XPU_LMHEAD_W8A8_CHUNK_ROWS", "4096")
+            )
+            if chunk_rows <= 0:
+                raise RuntimeError(
+                    "B70_XPU_LMHEAD_W8A8_CHUNK_ROWS must be positive"
+                )
+            quant_nk = torch.empty_like(weight, dtype=torch.int8)
+            weight_scale = torch.empty(
+                weight.shape[0], dtype=torch.float32, device=weight.device
+            )
+            for row0 in range(0, weight.shape[0], chunk_rows):
+                row1 = min(row0 + chunk_rows, weight.shape[0])
+                values = weight[row0:row1].to(torch.float32)
+                scales = (
+                    values.abs().amax(dim=1).clamp_min_(1.0e-10) / 127.0
+                )
+                quant_nk[row0:row1] = torch.round(
+                    values / scales.reshape(-1, 1)
+                ).clamp_(-127, 127).to(torch.int8)
+                weight_scale[row0:row1] = scales
+                del values, scales
+            return quant_nk, weight_scale
+
+        def load_model_with_lmhead_rtn(self):
+            original_load_model(self)
+            if self.is_draft_worker:
+                raise RuntimeError("B70 LM-head W8A8 does not support a draft worker")
+            if int(self.ps.tp_size) != 2 or int(self.ps.pp_size) != 1:
+                raise RuntimeError(
+                    "B70 LM-head W8A8 requires TP=2 PP=1, got "
+                    f"TP={self.ps.tp_size} PP={self.ps.pp_size}"
+                )
+            model = self.model
+            if type(model) is not Qwen3_5ForConditionalGeneration:
+                raise RuntimeError(
+                    "B70 LM-head W8A8 is scoped to Qwen3_5ForConditionalGeneration, "
+                    f"got {type(model).__module__}.{type(model).__name__}"
+                )
+            lm_head = getattr(model, "lm_head", None)
+            if not isinstance(lm_head, ParallelLMHead):
+                raise RuntimeError(
+                    "B70 LM-head W8A8 requires ParallelLMHead, got "
+                    f"{type(lm_head).__name__}"
+                )
+            if not isinstance(lm_head.quant_method, UnquantizedEmbeddingMethod):
+                raise RuntimeError(
+                    "B70 LM-head W8A8 requires an unquantized checkpoint head"
+                )
+            if getattr(model.config, "tie_word_embeddings", None) is not False:
+                raise RuntimeError("B70 LM-head W8A8 requires an untied head")
+            if lm_head.bias is not None:
+                raise RuntimeError("B70 LM-head W8A8 does not support bias")
+            weight = lm_head.weight.data
+            if tuple(weight.shape) != expected_shape or weight.dtype != torch.bfloat16:
+                raise RuntimeError(
+                    "B70 LM-head W8A8 expected rank-local BF16 shape "
+                    f"{expected_shape}, got {tuple(weight.shape)} {weight.dtype}"
+                )
+            quant_nk, weight_scale = quantize_lm_head(weight)
+            torch.xpu.synchronize()
+            lm_head.weight.data = quant_nk
+            lm_head.b70_weight_nk = lm_head.weight.data
+            lm_head.b70_weight_nt = lm_head.b70_weight_nk.t()
+            lm_head.b70_weight_scale = weight_scale
+            lm_head.b70_lmhead_w8a8 = True
+            if lm_head.b70_weight_nt.stride(0) != 1:
+                raise RuntimeError(
+                    "B70 LM-head W8A8 weight is not NT-strided: "
+                    f"{lm_head.b70_weight_nt.stride()}"
+                )
+            del weight, quant_nk
+            torch.xpu.empty_cache()
+            print(
+                "[b70-xpu-lmhead-w8a8] converted rank-local BF16 lm_head "
+                f"rank={self.ps.tp_rank} shape={expected_shape} with "
+                "per-output-channel RTN INT8; BF16 storage released",
+                flush=True,
+            )
+
+        def compute_lm_head_w8a8(
+            self, hidden_states, lm_head, embedding_bias=None
+        ):
+            if not getattr(lm_head, "b70_lmhead_w8a8", False):
+                return original_compute_lm_head(
+                    self, hidden_states, lm_head, embedding_bias
+                )
+            if embedding_bias is not None or self.use_fp32_lm_head:
+                raise RuntimeError(
+                    "B70 LM-head W8A8 does not support bias or FP32 logits"
+                )
+            if (
+                tuple(lm_head.weight.shape) != expected_shape
+                or lm_head.weight.dtype != torch.int8
+                or lm_head.weight.data_ptr() != lm_head.b70_weight_nk.data_ptr()
+            ):
+                raise RuntimeError("B70 LM-head W8A8 storage contract changed")
+            original_shape = hidden_states.shape
+            hidden_2d = hidden_states.reshape(-1, original_shape[-1]).contiguous()
+            hidden_int8, hidden_scale = (
+                torch.ops._xpu_C.per_token_quant_int8_xpu(hidden_2d)
+            )
+            output = torch.ops._xpu_C.int8_gemm_w8a8(
+                hidden_int8,
+                hidden_scale,
+                lm_head.b70_weight_nt,
+                lm_head.b70_weight_scale,
+                hidden_states.dtype,
+                None,
+            )
+            return output.reshape(*original_shape[:-1], expected_shape[0])
+
+        ModelRunner.load_model = load_model_with_lmhead_rtn
+        LogitsProcessor._compute_lm_head = compute_lm_head_w8a8
+
     config_cls.get_quant_method = get_quant_method
     config_cls.get_linear_scheme = get_linear_scheme
     CompressedTensorsW8A8Int8.process_weights_after_loading = (
@@ -518,6 +652,8 @@ def install() -> None:
     route = "native per-token quant plus oneDNN GEMM" if use_native else "torch._int_mm"
     if use_gdn_rtn:
         route += " plus selective GDN RTN INT8"
+    if use_lmhead_rtn:
+        route += " plus target-only LM-head RTN W8A8"
     print(
         f"[b70-xpu-w8a8] installed compressed-tensors W8A8 via {route}",
         flush=True,

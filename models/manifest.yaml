@@ -63,6 +63,20 @@ models:
     build: scripts/150 GPTQ W8A8 SMOOTHQUANT=0; vision and MTP grafted from bf16
     notes: compressed-tensors W8A8 research checkpoint.
 
+  - id: qwen3.8-27b/gptq-int4-mtp-bf16-9d189a60
+    family: qwen3.8-27b
+    scheme: gptq-int4-symmetric-g128
+    vision: false
+    mtp: true
+    size_gb: 19
+    served_as: qwen3.8-27b-GPTQ-INT4-g128-mtp-bf16
+    source:
+      type: hf
+      repo: SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16
+      revision: 9d189a60e4c0ad7f9f47cd94bfa393ca10b3924e
+    notes: XeCores recipe pin. Text-only GPTQ INT4 target with all 15 MTP
+           tensors preserved in BF16; exact five-shard contract verified.
+
   # Ornith-1.5-35B-A3B: retain the complete local family.
   - id: ornith-1.5-35b-a3b/bf16-mtp-shisa
     family: ornith-1.5-35b-a3b

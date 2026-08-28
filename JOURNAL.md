@@ -4828,3 +4828,112 @@ VRAM configuration. Retain the 0.75 OOM-guarded selective GDN route as the
 new coherent Qwen3.8 W8A8 single-stream winner. It is a material improvement,
 but the strict 25 tok/s objective remains narrowly unmet, so continue with the
 next measured bottleneck rather than promoting a shelf entry.
+
+### 2026-08-28f - Qwen W8A8 LM-head INT8 is fast in isolation but not target-exact
+
+CONFIG -> exact runtime image `adc915d...`, the qualified selective-GDN W8A8
+route, and the rank-local TP2 BF16 LM head shape [124160,5120]. The candidate
+used load-time per-output-channel RTN INT8 plus the existing dynamic
+activation-INT8 oneDNN operator. It was default-off, target-only, and scoped
+to the exact Qwen3.5 conditional-generation class, TP2/PP1, untied BF16 head,
+and normal SGLang logits gather path.
+
+COMMAND -> benchmark both real TP vocabulary shards on card 0 through
+`bin/gpu-run`, requiring finite output, cosine at least 0.999, relative L2 at
+most 0.02, local argmax equality, deterministic eager output, and 16 exact
+XPUGraph replays. Then capture an eight-prompt, twice-repeated, fixed-seed
+target corpus and compare the full candidate completions before any model
+speed benchmark.
+
+RESULT -> rank 0 reduced graph time from 2.14470 to 1.13681 ms and rank 1
+from 2.14010 to 1.12884 ms, saving about 1.01 ms/token/rank. Both local
+argmax checks and graph replay passed. Result SHA256 values were
+`d6b00e12502ae404d71705c43f2eef20fac77d425dcbecbdd4b0e40fcb53d945`
+and `a6277f303cd9d540e4a3b4a528ce45f6d625f4401a47bc1ef17a576f93b0801e`.
+The full candidate loaded and converted both ranks, but changed prompts 6 and
+7 of the eight-prompt target corpus. Reference and candidate JSON SHA256 were
+`b33d8afecade1ccd13afc6f330b58d16013ed57976730c8f365e2085ee888802`
+and `3a720e4adc6334d149c75cd7312ace49cc3835c938e4253f10e768b6eba89d67`.
+It was stopped before timing. The model A/B inadvertently omitted the outer
+`gpu-run` lease, although no other GPU work overlapped; therefore it is a
+screening rejection, not qualification evidence. Post-card and compiled
+P2P-off collective health passed.
+
+VERDICT -> reject activation-W8A8 for the output-sensitive LM head. Retain the
+default-off source and microbenchmark as a negative control. A future LM-head
+candidate must avoid dynamic activation quantization and still pass the full
+target corpus before performance measurement.
+
+### 2026-08-28g - New official Ornith MTP is verified but rejected on SGLang
+
+CONFIG -> the official `ornith-ai/Ornith-1.5-35B-A3B` repository remained at
+revision `10fbf86fed7ecee4a061f8b499a618f46001cac1`, updated 2026-08-23. No
+newer official release existed. Its 19 BF16 MTP tensors were already merged
+into the local W8A8 target as
+`w8a8-rtn-mtp-official-10fbf86`; contract SHA256 was
+`4e286e6f85e868f60f07b8b1cc4adcc4bd875fe274d8b43d658952f3308a7150`.
+The Shisa MTP-only repository remained the separate 2026-08-21 revision
+`2b19b31`. The serve used TP2, P2P off, breakable graph size one, reclaim500,
+4096 context, maximum one request, memory fraction 0.80, and no tool parser or
+thinking grammar.
+
+COMMAND -> hold both GPU leases for the full sequence, run per-card and
+compiled collective health, capture the official-checkpoint target-only
+eight-prompt corpus, tear down and recheck health, then start official MTP1
+and compare every completion hash before benchmarking.
+
+RESULT -> target-only was repeat-exact. Official MTP1 loaded, shared the
+head, captured its draft graphs, and reported acceptance lengths around
+1.70-1.98 with acceptance rates around 0.70-0.97. It nevertheless changed 7
+of 8 target completions: indices 0,2,3,4,5,6,7. Reference and candidate JSON
+SHA256 were
+`0adfb91ca9d3d4e4d3c98936c64c5600ba8781c6aa19b20b719694b4f6e47b8f`
+and `1a173a86c29d97b679c1526dce659bcfc3b1b60921f19bffab987f7821f66736`;
+runtime log SHA256 values were
+`261bcd81dd3f07041a9e96f9439854d461a6e9b59cf494b39a0f672a07307211`
+and `ea0f3caf8efd41b1ca16b31f44ebc886f052c09a306811a51ea8d2e113ebec1f`.
+No speed benchmark ran. Graceful cleanup and final card plus compiled
+collective health passed.
+
+VERDICT -> reject the official Ornith MTP head on the current SGLang
+speculative path. High draft acceptance does not compensate for target-output
+divergence. Retain target-only Ornith W8A8 as the coherent serving route.
+
+### 2026-08-28h - XeCores Qwen GPTQ INT4 BF16-MTP transfers to vLLM 0.28
+
+CONFIG -> exact vLLM 0.28 image
+`vllm/vllm-openai-xpu@sha256:4756b66a077627133cee653b551f6f5eaa1b9a981b5eea13edd33fcd3b0d3ca3`
+and XeCores recipe artifact
+`SergiioB/Qwen3.8-27B-GPTQ-Int4-sym-G128-MTP-BF16` revision
+`9d189a60e4c0ad7f9f47cd94bfa393ca10b3924e`. The exact 16-file tree was
+downloaded and verified: five shards totaling 19,559,450,216 bytes, 2,399
+tensors, GPTQ INT4 symmetric group 128 with desc_act false, 400 quantized
+weights, and all 15 MTP tensors BF16. The current vLLM dynamic exclusion
+already preserves MTP, so no legacy BF16-draft patch was used. All arms were
+TP1 eager on leased card 0, text-only, maximum one request, 4096 context,
+memory utilization 0.75, fixed seed 20260828, and thinking disabled.
+
+COMMAND -> create the dedicated current-stack launcher, capture the target
+eight-prompt reference, and run matched 839-prompt/512-output c1 tests. Then
+test BF16 MTP depths 1, 2, and 4 in sequence, requiring exact equality to the
+saved target corpus before speed measurement. Add optional fixed-seed and
+thinking-disabled controls to the serving benchmark without changing its
+historical defaults.
+
+RESULT -> target-only was repeat-exact and measured 7.9642, 7.9304, and
+7.8909 tok/s, median 7.9304. MTP1 was target-exact and measured 13.4763,
+13.8193, and 13.4805 tok/s, median 13.4805, 70.0 percent above target-only.
+MTP2 was target-exact. MTP4 was target-exact and measured 19.6595, 21.4223,
+and 20.3339 tok/s, median 20.3339, 2.56x target-only. MTP4 mean acceptance
+length varied about 2.65-4.29 and average draft acceptance about 41-82 percent.
+Target, MTP1, and MTP4 result SHA256 values were
+`df838a34667e2717d7ae4c7c00d7b98f6c169018974bbd6677d79a1c424b7e16`,
+`6c7739c5140aba5af02fcc269145db83900dbcbce77eb7c39d5545ebc8d2b50b`,
+and `d6cdc954866b9a927414fd8c3269ffca8e6aa024a0f0c91da5ab65532ae5d1da`.
+Every teardown and card-0 health check passed.
+
+VERDICT -> the pinned XeCores checkpoint and upstream vLLM 0.28 BF16-MTP
+handling transfer correctly. MTP4 is the coherent eager winner but remains
+49.2 percent below 40 tok/s. Proceed to the recipe's PIECEWISE/breakable graph
+arm with legacy partitioning before considering draft-side quantization or
+TP2.
