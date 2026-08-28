@@ -4937,3 +4937,49 @@ handling transfer correctly. MTP4 is the coherent eager winner but remains
 49.2 percent below 40 tok/s. Proceed to the recipe's PIECEWISE/breakable graph
 arm with legacy partitioning before considering draft-side quantization or
 TP2.
+
+### 2026-08-28i - vLLM graph is neutral; draft-only LM-head INT4 reaches 21.55 tok/s
+
+CONFIG -> the exact XeCores/vLLM 0.28 TP1 MTP4 setup from 2026-08-28h. The
+graph arm used PIECEWISE breakable capture, sizes 1,2,4, no compile-size
+padding, legacy partitioning, AOT disabled, and the normal BF16 MTP draft. The
+second arm returned to eager and changed only the separately loaded draft LM
+head from FP16 to load-time per-output-channel RTN GPTQ INT4 group 128. A
+v0.28-specific default-off overlay prevented later target-head sharing,
+installed a draft quant method before compilation, preserved normal
+LogitsProcessor and TP gather semantics, released only draft FP16 storage,
+and left the target head untouched.
+
+COMMAND -> require the eight-prompt target corpus before timing each arm. Run
+the matched 839-prompt/512-output c1 three-batch benchmark. For the draft-head
+arm require exact class, unquantized FP16 head, shape and group compatibility,
+NT packed layout, target/draft isolation markers, deterministic canary, and
+post-card health.
+
+RESULT -> PIECEWISE remained target-exact but measured 20.3793, 21.5927, and
+20.5439 tok/s, median 20.5439, only 1.03 percent above eager MTP4. It saved
+about 0.503 ms per emitted token. Source accounting explains the ceiling:
+breakable capture keeps all 48 GDN and 16 full-attention target cores eager,
+plus four eager MTP attention passes, while replaying many small graph
+segments around them. Graph corpus, result, and log SHA256 values were
+`879a2787bbf9b1b4ccd96b07d717e17c6d86c83bcead70ffcf64b288d44d6685`,
+`b9c69abf2d17557d67f4c9a94f725c74c600d228addc4209507661697072e932`,
+and `9647ce13db446f82a3b77822305ea9031626272e9e94a6d36849bbcac3c676eb`.
+
+RESULT -> the draft-head overlay packed [248320,5120] into 635,699,200
+qweight bytes plus 19,865,600 scale bytes, released the draft FP16 parameter,
+and emitted explicit target-untouched and no-share markers. It remained
+target-exact and measured 20.9408, 22.9737, and 21.5520 tok/s, median 21.5520,
+6.0 percent above BF16-head eager MTP4. Average draft acceptance remained
+about 43-83 percent, so the gain came without a material acceptance collapse.
+Corpus, result, and log SHA256 values were
+`4a16198e4c1bdd24fc19fc1c4738377d405c0b61b31f86a9a2b3725177daf109`,
+`12db1887cac4e9492936f3af56e2cfea96252817e4662e5e988061aad1c52618`,
+and `4081d7faf8793735eac19d831189a397c6eeb09d8f47da1fb55b536218d2491a`.
+Both arms stopped gracefully and card-0 health passed.
+
+VERDICT -> retain the draft-only LM-head INT4 overlay as the coherent TP1
+winner. Reject further PIECEWISE-only tuning: attention/GDN eager breaks cap
+its benefit near one percent. At 21.55 tok/s the strict 40 tok/s objective
+still requires a faster target path; advance to guarded P2P-off TP2 eager
+qualification before deeper draft quantization.
