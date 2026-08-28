@@ -28,6 +28,7 @@ export IN="${IN:-512}"
 export OUT="${OUT:-512}"
 export CONC="${CONC:-1}"
 DRAFT_LMHEAD_INT4="${DRAFT_LMHEAD_INT4:-0}"
+DRAFT_MTP_INT4="${DRAFT_MTP_INT4:-0}"
 
 HOST_CKPT="$REPO/models/files/${CKPT#/models/}"
 test -f "$HOST_CKPT/model.safetensors.index.json" || {
@@ -78,10 +79,24 @@ if [ "$DRAFT_LMHEAD_INT4" = 1 ]; then
     *) echo "Draft INT4 served ID must contain draft-lmhead-int4" >&2; exit 1 ;;
   esac
 fi
+case "$DRAFT_MTP_INT4" in
+  0|1) ;;
+  *) echo "DRAFT_MTP_INT4 must be 0 or 1" >&2; exit 1 ;;
+esac
+if [ "$DRAFT_MTP_INT4" = 1 ]; then
+  test -n "${MTPTOK:-}" || {
+    echo "DRAFT_MTP_INT4=1 requires MTPTOK" >&2
+    exit 1
+  }
+  case "$SERVED" in
+    *draft-mtp-int4*) ;;
+    *) echo "Draft MTP INT4 served ID must contain draft-mtp-int4" >&2; exit 1 ;;
+  esac
+fi
 
 MOUNTS=()
 DOCKER_ENV=()
-if [ "$DRAFT_LMHEAD_INT4" = 1 ]; then
+if [ "$DRAFT_LMHEAD_INT4" = 1 ] || [ "$DRAFT_MTP_INT4" = 1 ]; then
   PATCH_DIR="$SCRIPT_DIR/v028_draft_int4"
   test -f "$PATCH_DIR/sitecustomize.py" || {
     echo "Missing vLLM 0.28 draft overlay: $PATCH_DIR/sitecustomize.py" >&2
@@ -90,8 +105,10 @@ if [ "$DRAFT_LMHEAD_INT4" = 1 ]; then
   MOUNTS+=( -v "$PATCH_DIR:/b70_qwen38_gptq_v028:ro" )
   DOCKER_ENV+=(
     -e PYTHONPATH=/b70_qwen38_gptq_v028
-    -e B70_DRAFT_LMHEAD_INT4=1
+    -e B70_DRAFT_LMHEAD_INT4="$DRAFT_LMHEAD_INT4"
     -e B70_DRAFT_LMHEAD_INT4_CHUNK_ROWS="${DRAFT_LMHEAD_INT4_CHUNK_ROWS:-1024}"
+    -e B70_DRAFT_MTP_INT4="$DRAFT_MTP_INT4"
+    -e B70_DRAFT_MTP_INT4_CHUNK_ROWS="${DRAFT_MTP_INT4_CHUNK_ROWS:-1024}"
   )
 fi
 if [ "${BREAKABLE:-0}" = 1 ]; then

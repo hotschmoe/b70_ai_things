@@ -4983,3 +4983,178 @@ winner. Reject further PIECEWISE-only tuning: attention/GDN eager breaks cap
 its benefit near one percent. At 21.55 tok/s the strict 40 tok/s objective
 still requires a faster target path; advance to guarded P2P-off TP2 eager
 qualification before deeper draft quantization.
+
+### 2026-08-28j - GPTQ TP2 regresses and draft-MTP INT4 fails exactness
+
+CONFIG -> the exact XeCores artifact and vLLM 0.28 image from
+2026-08-28h. The topology arm used TP2 eager, the multiprocessing executor,
+pidfd IPC, SYCL collective kernels disabled, P2P disabled, maximum one
+request, 4096 context, and memory utilization 0.75. The draft arm returned to
+TP1 eager MTP4 and converted only the five separately loaded MTP linears to
+load-time symmetric INT4 group 128. Its v0.28 overlay accepted the runtime's
+FP16 or BF16 source weights, used direct final packing buffers, cast FP16 or
+BF16 activations to the W4A16 operator input, cast output back to the original
+dtype, and left the shared target head and target model untouched.
+
+COMMAND -> hold both GPU leases around the complete TP2 sequence; run card
+and compiled P2P-off collective health before and after serving; require
+exact equality to the saved TP1 target corpus before the matched
+839-prompt/512-output c1 benchmark. For draft-MTP INT4, first require exact
+class, five exact linears, unquantized source methods, shape and group
+compatibility, successful conversion markers, exact served identity,
+repeat-deterministic generation, and equality to the same target corpus.
+Stop before timing on any mismatch.
+
+RESULT -> TP2 target-only was repeat-exact and byte-identical to TP1 on all
+eight prompts, but measured only 4.4903, 4.5041, and 4.4768 tok/s; median was
+4.4903 tok/s, 43.4 percent below the 7.9304 tok/s TP1 target median. Corpus,
+result, and runtime-log SHA256 values were
+`9ace957f871a6d5726835399bb409610fdc4954c6cd2e1df6c92f2b2dbf7d70e`,
+`65eed9515f44a9eba2f9a29202c2cb29ddedb9cb4c1467438999944fe0ec2834`,
+and `16aba8cb32c1eff3bce8a06d5742069e9883f2879f39f29e72fec2170f3da43e`.
+The server stopped gracefully and post-card plus compiled collective health
+passed.
+
+RESULT -> the first draft-MTP setup attempt failed closed before inference
+because vLLM had materialized the nominal BF16 checkpoint tensors as FP16;
+its log SHA256 was
+`7ee42aab3079a1ed7511f8756c119fd4e09f2de9852a9dc55479fe361b0678cc`.
+After widening the strict source guard to FP16 or BF16, all five linears
+converted: 849,346,560 source bytes became 218,972,160 packed bytes. A
+separate healthy retry proved coherent generation but a host invocation
+mistake supplied `/v1` twice to the corpus tool and returned HTTP 404 before
+the corpus; its preserved runtime log SHA256 was
+`28b0b5f6937ac7220541bb247da70e13d9ceb04ec44e2c7653b4b5b88ca82181`.
+The corrected run was repeat-exact but changed target prompts 2, 5, and 6.
+Candidate corpus and runtime-log SHA256 values were
+`8b58ad3d9bae80cd870db54cc92dfc22cd008244ddcee89d797035b8099aee75`
+and `978cdf28686be07094eb28e7bea06395fec9df5d1580a92d9fb5c67d2b02248f`.
+It stopped before timing. Graceful cleanup and card-0 post-health passed.
+
+VERDICT -> reject TP2 for this GPTQ target: communication and duplicated
+small work overwhelm the split GEMMs even before MTP. Do not risk a TP2 MTP
+arm. Reject draft-MTP INT4 because it changes target output despite stable
+repetition and plausible acceptance. Retain the default-off implementation
+as a reproducible negative control, do not combine it with the accepted
+draft-head path, and continue from TP1 MTP4 plus draft-head INT4.
+
+### 2026-08-28k - BF16-KV vLLM 0.27.2 plus draft head clears 40 tok/s
+
+CONFIG -> the pinned XeCores image
+`vllm/vllm-openai-xpu@sha256:f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f`,
+vLLM `0.27.2rc1.dev77+gac7509e2b`, XPU graph enabled, PIECEWISE capture,
+TP1 on card 0, 4096 context, maximum one sequence, memory utilization 0.75,
+and the same GPTQ INT4 group-128 checkpoint. The published recipe used FP8
+KV. The qualified local route instead used BF16 KV, per the standing campaign
+preference. MTP4 kept all five draft linears BF16. Its final arm added only
+the default-off cookbook draft LM-head INT4 patch; target weights and target
+verification head remained unchanged.
+
+COMMAND -> first reproduce the published image with FP8 KV at target-only,
+requiring two identical greedy completions for every corpus prompt before
+MTP or speed. Repeat FP8 KV on current vLLM 0.28 eager plus the accepted
+draft-head route to isolate cache numerics from graph/runtime effects. Then
+return to the pinned 0.27.2 image with BF16 KV: capture its target corpus,
+benchmark target-only, require MTP4 equality to that target, benchmark MTP4,
+and finally require the draft-head candidate to equal the same target before
+the matched 839-prompt/512-output three-batch benchmark. Enclose every GPU
+operation in a card-0 lease with graceful teardown and card health.
+
+RESULT -> target-only FP8 KV on the published PIECEWISE recipe was not
+repeat-exact on prompt 6, so it stopped before MTP or speed. Runtime-log
+SHA256 was
+`320c56a7d5225f136f139c61e989b9462249a4ef77f6bdb334519654a89b4848`.
+Current vLLM 0.28 eager with FP8 KV independently failed repeat-exactness on
+the same prompt, proving that cache precision rather than the old graph was
+the common cause. Its log SHA256 was
+`105ba4eabf03e94183c11f43fc359b149fab05175e050e9c8b653a54ed68f65b`.
+Neither FP8 arm was timed.
+
+RESULT -> BF16 KV restored repeat-exact generation on vLLM 0.27.2. Its
+target corpus differed from the vLLM 0.28 target on prompts 2, 5, and 6,
+which is a runtime-stack numerical boundary rather than an MTP change.
+Target-only measured 14.5867, 12.8728, and 11.4988 tok/s; median was 12.8728
+tok/s, 62.3 percent above the vLLM 0.28 target median. MTP4 was exactly equal
+to its same-stack BF16 target and measured 39.2604, 41.4526, and 35.8199
+tok/s; median was 39.2604 tok/s. Target corpus, target result, MTP corpus,
+MTP result, target log, and MTP log SHA256 values were
+`42364f1e7a01b9298c40e21ac821924eb7796cfa2abf94f50405abe302077f7d`,
+`7e872623835cea154784dba76275bf466502519c4f29c8a32bff2e29208da35f`,
+`34a772ff156cda64c818f7dff1b303fabbf68bfc1747bf2faf2516cefb4dfc03`,
+`3bd5323d230a29b084171d2894449dec305809e6fefceba87d944d6a29d4d538`,
+`0541e8e93ba673edae25fc83f038369775650bc3e52f7d05da9d3a3529bf308c`,
+and `b705443edb765e8b7a5b90aebc24b6aa527788af03f0bdba553a43bbf695c6c8`.
+
+RESULT -> changing only the draft LM head to INT4 remained exactly equal to
+the vLLM 0.27.2 BF16 target corpus. It measured 45.7872, 48.0495, and
+42.2354 tok/s; median was 45.7872 tok/s, 16.6 percent above the same-stack
+BF16-head MTP4 median and 2.25x the current vLLM 0.28 eager BF16-draft MTP4
+median. Corpus, result, and runtime-log SHA256 values were
+`699818c8629c783a2cfd727f94a5c9529963a494532e0233459f9abdf6b2cfe4`,
+`dd81a07f01a8caada16121f01b0d9477d46fb8f1e9fd0214b7540d1bce6202c0`,
+and `b92f8368ce0e220ff39bc0a4bb5c99ff3e4d41179164fc1b166ab062e6ebe81e`.
+All three measured streams completed 512 tokens. Every teardown and card-0
+health probe passed.
+
+VERDICT -> the 40 tok/s Qwen 4-bit objective is achieved at a 45.7872 tok/s
+median with exact same-stack target output and BF16 KV. Retain vLLM 0.27.2 as
+the pinned qualified serving control while treating the 2.25x vLLM 0.28 gap
+as a regression to bisect. Permanently reject FP8 KV from the campaign path:
+it violates repeat determinism on both tested runtime stacks.
+
+### 2026-08-28l - Qwen 4-bit winner passes long C1 and C2; C4 aborts
+
+CONFIG -> the 2026-08-28k winner with BF16 KV, MTP4, draft-only LM-head
+INT4, and PIECEWISE graph on the pinned vLLM 0.27.2 image. The concurrency
+arm raised maximum sequences to four and applied the cookbook mixed
+speculative/non-speculative GDN split patch. The long arm returned to maximum
+one sequence and used 839 prompt tokens plus 2,048 output tokens.
+
+COMMAND -> on one card-0 lease, require the eight-prompt target corpus again,
+then run three matched C2 batches followed by three matched C4 batches, each
+request producing 512 tokens. Preserve the full runtime log if the engine
+fails. After cleanup and health, launch the C1 configuration separately and
+run one same-shape 2,048-token warmup plus two measured 2,048-token streams.
+
+RESULT -> the max-sequence-four server remained exactly equal to the BF16
+target corpus. C2 passed both arithmetic canaries and all six measured
+streams completed 512 tokens. Aggregate post-first rates were 42.3087,
+39.8084, and 33.9486 tok/s; median was 39.8084 tok/s. Median TTFT increased
+from 6.72 to 7.96 seconds across the three batches. Corpus and C2 result
+SHA256 values were
+`873c11fb6810181b0af3880d60c399b3f85d8181f3a77ba714a04eaca954c7d9`
+and `e5aa366ab290c9879f8624afb15e74e25bdae8a403ca04f5c9815e2eb3c55ca5`.
+
+RESULT -> C4 passed all four arithmetic canaries and its first eight measured
+streams completed, but the patched scheduler ran only one request while
+three waited. Aggregate post-first throughput fell from 25.8180 to 22.7985
+tok/s across the first two measured batches. During the third, the engine
+aborted in Level Zero `linear_stream.h:90`; the API returned an engine-dead
+stream without timing or usage fields. Runtime-log SHA256 was
+`c4a93aa1e96cf1f8cda2a70c9e7d925fcb010072a8aea59a6bae0cc4b540f438`.
+The container was removed and the card-0 health probe passed.
+
+RESULT -> the separate long C1 arm completed the 2,048-token warmup and both
+2,048-token measured streams. Measured post-first rates were 43.1751 and
+47.0693 tok/s; median was 45.1222 tok/s. Result and runtime-log SHA256 values
+were
+`7846bc1e09611178e77e27bf984432d6109fa3b02e7dcb2e15748e34d7dd49b5`
+and `9ff3180c108a884b4eeaf01f2915c9bbc85969904c517a72d0aeca0e00c9cd2c`.
+Graceful teardown and final card health passed.
+
+RESULT -> a dedicated pinned launcher was ported to
+`vllm/gptq_int4/serve_qwen38_gptq_int4_v0272.sh`. It defaults to the C1
+winner, refuses non-BF16 KV, requires the mixed-split patch above one maximum
+sequence, and records logs before graceful removal. Its first smoke failed
+closed at CLI parsing before model load because speculative JSON quoting was
+lost across the container shell. After correcting only that quoting, the
+launcher returned the exact served ID and the canary response `45`; graceful
+stop and card health passed. Corrected smoke-log SHA256 was
+`95d1e7801ab3c35e6aed529d46f029467a0b1bc1773f5bc824f688eb85df3359`.
+
+VERDICT -> qualify the BF16-KV winner for sustained C1 and bounded C2 use.
+Reject C4 and do not shelf-promote a max-sequence-four configuration: the
+mixed-batch patch serializes work and the old Level Zero command stream still
+aborts under repeated C4 load. The pinned launcher defaults to maximum one
+sequence, requires explicit mixed-split enablement above one, and refuses a
+non-BF16 KV override.
