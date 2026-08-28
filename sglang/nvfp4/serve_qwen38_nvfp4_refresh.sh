@@ -17,6 +17,8 @@ MAXREQ="${MAXREQ:-1}"
 GRAPH_BS="${GRAPH_BS:-1}"
 CHUNKED_PREFILL="${CHUNKED_PREFILL:-128}"
 DECODE_GRAPH="${DECODE_GRAPH:-full}"
+TOOLPARSER="${TOOLPARSER:-none}"
+THINKCAP="${THINKCAP-}"
 F8_SCALE_M_MAX="${F8_SCALE_M_MAX:-8}"
 FP8_W8A16_M_MAX="${FP8_W8A16_M_MAX:-1}"
 LINEAR_ATTN_BACKEND="${LINEAR_ATTN_BACKEND:-triton}"
@@ -77,6 +79,14 @@ preflight() {
     triton|intel_xpu) ;;
     *) say "LINEAR_ATTN_PREFILL_BACKEND must be triton or intel_xpu"; return 1 ;;
   esac
+  case "$TOOLPARSER" in
+    qwen3_coder|none) ;;
+    *) say "TOOLPARSER must be qwen3_coder or none, got $TOOLPARSER"; return 1 ;;
+  esac
+  if [ -n "$THINKCAP" ] && ! { [ "$THINKCAP" -ge 1 ] 2>/dev/null; }; then
+    say "THINKCAP must be empty or a positive integer, got $THINKCAP"
+    return 1
+  fi
   [ "$CHUNKED_PREFILL" -ge 1 ] 2>/dev/null || {
     say "CHUNKED_PREFILL must be positive"
     return 1
@@ -132,14 +142,24 @@ start() {
 
   local graph_args
   local security_args=()
+  local tool_args=""
+  local grammar_args="--grammar-backend none"
+  local think_env=()
   if [ "$DECODE_GRAPH" = full ]; then
     graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode $GRAPH_BS"
     security_args=(--cap-add SYS_PTRACE --security-opt seccomp=unconfined)
   else
     graph_args="--cuda-graph-backend-decode disabled --cuda-graph-backend-prefill disabled"
   fi
+  if [ "$TOOLPARSER" != none ]; then
+    tool_args="--tool-call-parser $TOOLPARSER"
+  fi
+  if [ -n "$THINKCAP" ]; then
+    think_env=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
+    grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
+  fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP graph=$DECODE_GRAPH graph_bs=$GRAPH_BS chunk=$CHUNKED_PREFILL maxreq=$MAXREQ f8_scale_m_max=$F8_SCALE_M_MAX fp8_w8a16_m_max=$FP8_W8A16_M_MAX linear_attn=$LINEAR_ATTN_BACKEND linear_attn_prefill=$LINEAR_ATTN_PREFILL_BACKEND p2p=0 ipc=$IPC_EXCHANGE sycl_kernels=$SYCL_KERNELS"
+  say "serve image=$IMG model=$SERVED tp=$TP graph=$DECODE_GRAPH graph_bs=$GRAPH_BS chunk=$CHUNKED_PREFILL maxreq=$MAXREQ f8_scale_m_max=$F8_SCALE_M_MAX fp8_w8a16_m_max=$FP8_W8A16_M_MAX linear_attn=$LINEAR_ATTN_BACKEND linear_attn_prefill=$LINEAR_ATTN_PREFILL_BACKEND tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} p2p=0 ipc=$IPC_EXCHANGE sycl_kernels=$SYCL_KERNELS"
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     "${security_args[@]}" \
@@ -160,6 +180,7 @@ start() {
     -e B70_XPU_NVFP4=1 \
     -e B70_NVFP4_F8_SCALE_M_MAX="$F8_SCALE_M_MAX" \
     -e B70_FP8_W8A16_M_MAX="$FP8_W8A16_M_MAX" \
+    "${think_env[@]}" \
     -e CCL_ATL_TRANSPORT=ofi \
     -e CCL_ENABLE_SYCL_KERNELS="$SYCL_KERNELS" \
     -e CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=0 \
@@ -177,8 +198,8 @@ start() {
       --attention-backend intel_xpu \
       --linear-attn-backend '$LINEAR_ATTN_BACKEND' \
       --linear-attn-prefill-backend '$LINEAR_ATTN_PREFILL_BACKEND' \
-      --mamba-ssm-dtype float32 --grammar-backend none \
-      $graph_args \
+      --mamba-ssm-dtype float32 $grammar_args \
+      $graph_args $tool_args \
       --disable-radix-cache --disable-overlap-schedule --skip-server-warmup \
       --chunked-prefill-size '$CHUNKED_PREFILL' \
       --disable-custom-all-reduce --reasoning-parser qwen3 --tp-size '$TP' \

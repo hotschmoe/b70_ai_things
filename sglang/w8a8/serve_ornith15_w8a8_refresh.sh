@@ -195,6 +195,7 @@ start() {
     "$IMG" bash -c "exec python -m sglang.launch_server \
       --model-path '$CKPT' --served-model-name '$SERVED' \
       --trust-remote-code --device xpu --dtype bfloat16 \
+      --kv-cache-dtype bfloat16 \
       --attention-backend intel_xpu --linear-attn-backend triton \
       --mamba-ssm-dtype float32 $grammar_args \
       $graph_args $spec_args $tool_args \

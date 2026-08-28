@@ -5158,3 +5158,62 @@ mixed-batch patch serializes work and the old Level Zero command stream still
 aborts under repeated C4 load. The pinned launcher defaults to maximum one
 sequence, requires explicit mixed-split enablement above one, and refuses a
 non-BF16 KV override.
+
+### 2026-08-28m - Ornith reclaim500 survives TB3 but Pi times out
+
+CONFIG -> exact refreshed SGLang image
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`
+and local Ornith W8A8 RTN checkpoint. The accepted retry used TP2, P2P off,
+source-default eager collectives, target-only decode, BF16 KV, breakable graph
+size one, graph re-instantiation every 500 replays, qwen3 reasoning,
+qwen3_coder tools, strict-thinking cap 4096, maximum one request, 65,536
+context, and memory fraction 0.70. Harbor 0.22.0 ran official
+`terminal-bench/terminal-bench@3.0.0` task `bun-sourcemap-leak` with Pi 0.84.3
+at xhigh and the retained concise prompt.
+
+COMMAND -> first retry the old failing task at memory fraction 0.90 inside a
+whole-box `bin/gpu-run` lease, then inspect the kernel and server evidence after
+the user tmux session disappeared. Recover with exact-image per-card and
+compiled two-rank P2P-off health. Retry at memory fraction 0.70, require exact
+served identity, and let Harbor run through its official 1,800-second agent
+budget and verifier. Record server-start, ready, Harbor-finish, and post-health
+teardown times. Preserve the server, Harbor, trial, and lifecycle results under
+`/mnt/vm_8tb/b70/evals`.
+
+RESULT -> the 0.90 attempt never reached Harbor. Each rank allocated 10.60 GiB
+of BF16 K/V cache for 1,112,192 tokens and left only 3.22 GiB/card before graph
+capture. Kernel evidence at 21:14:54 UTC reported about 58 GiB `gpu_active`,
+global OOM, and killed the user dbus, user systemd, and rank-1 SGLang scheduler.
+That is what closed the user's tmux session. Both card probes and the compiled
+collective passed immediately afterward without reset or reboot.
+
+RESULT -> memory fraction 0.70 allocated 443,392 BF16 KV tokens per rank, left
+9.67 GiB/card after graph capture, and became healthy with exact identity in
+165 seconds. Sixteen sampled replay-500 re-instantiation markers appeared. The
+server crossed the former approximately 17,664-token `linear_stream.h:90`
+failure and remained healthy through a maximum logged live sequence of 42,112
+tokens. There was no scheduler death, Level Zero assertion, abort, OOM, or
+engine-dead marker. Server-log SHA256 was
+`449d64fa9c67731fceba3885b59ecbed6734847951ae3da5998dbf2ce3941f36`.
+
+RESULT -> Pi performed many valid structured reads, edits, and bash calls but
+spent too long debugging source-map VLQ rewriting. Harbor stopped the agent at
+exactly 1,800 seconds with 712,735 input and 30,290 output tokens. The official
+reward was 0.0 with `AgentTimeoutError`. Harbor job wall was 2,074 seconds
+(34m34s), server-start through Harbor finish was 2,245 seconds (37m25s), and
+server-start through graceful teardown plus post-health was 2,319 seconds
+(38m39s). Harbor log, trial result, trajectory, and lifecycle SHA256 values
+were `c6df00e34a1b5dcb4679aee4ff1378ff24a0eb5ba65ed932cbd4a149ba6c9060`,
+`d07097f72f3d65b3a90f31669fb8b88774e86c19594f112db9656fa49e2ee615`,
+`b64c4921dcdcf98d1dc0d1e39eb7103af5998579499a3664dc2e59a0f7d31a9f`,
+and `b7ea7f360e208f8b6924766ca8ff21d8dc7ae72730a1ea56f0acb5c3bff82a91`.
+Graceful teardown, both card probes, and the compiled P2P-off collective passed;
+both leases are free and no GPU server remains.
+
+VERDICT -> qualify reclaim500 as the isolated fix for Ornith's prior long-agent
+graph replay failure, but reject the current Ornith Pi/xhigh recipe on this
+task because model verbosity consumed the official time budget and scored
+zero. Use memory fraction 0.70 for 65K TP2 agent work; 0.90 is host-unsafe.
+Retain Ornith as the fourth matched campaign arm, but pilot all four arms before
+committing multiple days to the full 74-task set. The new campaign driver and
+summarizer record score plus Harbor and full lifecycle wall time.

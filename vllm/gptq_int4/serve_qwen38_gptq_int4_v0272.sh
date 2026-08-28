@@ -21,11 +21,13 @@ DRAFT_LMHEAD_INT4="${DRAFT_LMHEAD_INT4:-1}"
 MIXED_SPLIT="${MIXED_SPLIT:-0}"
 NAME="${NAME:-qwen38_gptq_int4_v0272_tp1}"
 B70_LOGDIR="${B70_LOGDIR:-$ROOT}"
+TOOLPARSER="${TOOLPARSER:-none}"
 
 case "$DEVICE" in 0|1) ;; *) echo "DEVICE must be 0 or 1" >&2; exit 2 ;; esac
 case "$MTPTOK" in ""|4) ;; *) echo "MTPTOK must be empty or 4" >&2; exit 2 ;; esac
 case "$DRAFT_LMHEAD_INT4" in 0|1) ;; *) echo "DRAFT_LMHEAD_INT4 must be 0 or 1" >&2; exit 2 ;; esac
 case "$MIXED_SPLIT" in 0|1) ;; *) echo "MIXED_SPLIT must be 0 or 1" >&2; exit 2 ;; esac
+case "$TOOLPARSER" in qwen3_coder|none) ;; *) echo "TOOLPARSER must be qwen3_coder or none" >&2; exit 2 ;; esac
 if [ -n "${KVDTYPE:-}" ] && [ "${KVDTYPE:-}" != auto ] && [ "${KVDTYPE:-}" != bf16 ]; then
   echo "This qualified route requires BF16 KV; KVDTYPE=${KVDTYPE}" >&2
   exit 2
@@ -104,7 +106,7 @@ wait_healthy() {
 }
 
 start_server() {
-  local patch_cmd spec_text=""
+  local patch_cmd spec_text="" tool_text=""
   docker rm -f "$NAME" >/dev/null 2>&1 || true
   patch_cmd='python /patches/patch_mtp_nightly.py; python /patches/patch_mtp_boundary.py;'
   if [ "$DRAFT_LMHEAD_INT4" = 1 ]; then
@@ -115,6 +117,9 @@ start_server() {
   fi
   if [ -n "$MTPTOK" ]; then
     spec_text=" --speculative-config '{\"method\":\"mtp\",\"num_speculative_tokens\":$MTPTOK}'"
+  fi
+  if [ "$TOOLPARSER" != none ]; then
+    tool_text=" --enable-auto-tool-choice --tool-call-parser '$TOOLPARSER'"
   fi
   docker run -d --name "$NAME" --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
@@ -129,7 +134,7 @@ start_server() {
     -e VLLM_CACHE_ROOT=/vllm_cache -e XDG_CACHE_HOME=/vllm_cache \
     -e TRITON_CACHE_DIR=/vllm_cache/triton -e TMPDIR=/tmp_ssd \
     -e VLLM_LOGGING_LEVEL=INFO --entrypoint bash "$IMG" -lc \
-    "$patch_cmd exec vllm serve /model --host 0.0.0.0 --port 8000 --dtype float16 --max-model-len '$MAXLEN' --gpu-memory-utilization '$UTIL' --max-num-seqs '$MAXSEQS' --max-num-batched-tokens '$MAXBATCH' --served-model-name '$SERVED' --trust-remote-code --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}' --no-enable-prefix-caching --quantization gptq --language-model-only --generation-config vllm --reasoning-parser qwen3${spec_text}" >/dev/null
+    "$patch_cmd exec vllm serve /model --host 0.0.0.0 --port 8000 --dtype float16 --max-model-len '$MAXLEN' --gpu-memory-utilization '$UTIL' --max-num-seqs '$MAXSEQS' --max-num-batched-tokens '$MAXBATCH' --served-model-name '$SERVED' --trust-remote-code --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}' --no-enable-prefix-caching --quantization gptq --language-model-only --generation-config vllm --reasoning-parser qwen3${spec_text}${tool_text}" >/dev/null
   wait_healthy
   echo "Serving $SERVED on port $PORT. Stop inside the same GPU lease."
 }

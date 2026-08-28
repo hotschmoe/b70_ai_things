@@ -8,17 +8,57 @@ reasoning metadata, which causes Pi to clamp `--thinking xhigh` to off.
 `xhigh` to the model's native thinking mode. It deliberately does not send an
 unsupported OpenAI `reasoning_effort` field.
 
-For Ornith agent work, use eager decode. The refreshed breakable graph is the
-short-context performance winner, but two long agent trajectories aborted in
-`torch.xpu.graphs.replay` at about 17.7K live tokens. Do not use that graph path
-for a full TerminalBench run until the replay failure has an isolated fix.
+`run_arm.sh` is the campaign entry point. It keeps BF16 KV, one agent request at
+a time, the same Pi prompt and limits, server startup, Harbor, teardown, and
+post-run health inside one GPU lease. It supports these arms:
 
-Start the exact eager server under the GPU lease:
+- `qwen-w8a8`: Qwen3.8 W8A8 GPTQ, SGLang TP2 FULL graph.
+- `qwen-nvfp4`: Qwen3.8 RadixArk NVFP4, SGLang TP2 FULL graph.
+- `qwen-gptq-int4`: Qwen3.8 GPTQ INT4, vLLM 0.27.2 TP1 MTP4.
+- `ornith-w8a8`: Ornith W8A8, SGLang TP2 breakable graph with reclaim500.
+
+Run the matched one-task pilot on each arm:
+
+```bash
+for arm in qwen-w8a8 qwen-nvfp4 qwen-gptq-int4 ornith-w8a8; do
+  INCLUDE_TASK=terminal-bench/bun-sourcemap-leak N_TASKS=1 \
+    evals/terminalbench/run_arm.sh "$arm"
+done
+```
+
+Remove `INCLUDE_TASK` and `N_TASKS` to run all 74 tasks. Run arms sequentially;
+each endpoint is qualified for one request maximum and the goal is comparable
+whole-job wall time, not throughput from overlapping trials.
+
+Each job receives `b70_lifecycle.json`, which records server startup, Harbor,
+and end-to-end time through post-health teardown. Compare completed jobs with:
+
+```bash
+python3 evals/terminalbench/summarize.py \
+  /mnt/vm_8tb/b70/evals/harbor-jobs/tb3-qwen-w8a8-JOB \
+  /mnt/vm_8tb/b70/evals/harbor-jobs/tb3-qwen-nvfp4-JOB \
+  /mnt/vm_8tb/b70/evals/harbor-jobs/tb3-qwen-gptq-int4-JOB \
+  /mnt/vm_8tb/b70/evals/harbor-jobs/tb3-ornith-w8a8-JOB
+```
+
+On 2026-08-28 the reclaim500 Ornith arm crossed the old 17.7K replay failure
+and remained healthy through 42,112 live tokens. It scored 0.0 on
+`bun-sourcemap-leak` because Pi hit the official 1,800-second agent timeout,
+not because serving failed. Harbor wall was 34m34s and full server-start through
+post-health teardown was 38m39s. This qualifies the runtime fix but rejects the
+current Ornith Pi/xhigh policy as an efficient recipe for that task.
+
+Do not raise the Ornith graph arm to `MEMFRAC=0.90`. That setting allocated
+about 58 GiB of shared GPU memory and triggered a global host OOM during graph
+capture, killing the user systemd/tmux session. The campaign uses 0.70, which
+still provides 443,392 BF16 KV tokens per rank and leaves capture headroom.
+
+For a manual eager diagnostic, start the server under the GPU lease:
 
 ```bash
 ./bin/gpu-run bash
 NAME=sglang_ornith15_tb3 PORT=18080 CTX=65536 MAXREQ=1 \
-  MEMFRAC=0.90 MTP=0 DENSE_NATIVE=0 DECODE_GRAPH=0 \
+  MEMFRAC=0.70 MTP=0 DENSE_NATIVE=0 DECODE_GRAPH=0 \
   TOOLPARSER=qwen3_coder THINKCAP=2048 \
   SERVED=ornith-1.5-35b-a3b-W8A8-rtn-shisa-target-eager \
   bash sglang/w8a8/serve_ornith15_w8a8_refresh.sh start

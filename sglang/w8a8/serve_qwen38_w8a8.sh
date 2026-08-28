@@ -28,6 +28,8 @@ SPEC_DRAFT="${SPEC_DRAFT:-2}"
 ONEDNN_INPUT_DEP="${ONEDNN_INPUT_DEP:-$NATIVE}"
 ONEDNN_BARRIER="${ONEDNN_BARRIER:-$NATIVE}"
 DECODE_GRAPH="${DECODE_GRAPH:-full}"
+TOOLPARSER="${TOOLPARSER:-none}"
+THINKCAP="${THINKCAP-}"
 if [ -z "${SYCL_KERNELS+x}" ]; then
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     SYCL_KERNELS=1
@@ -152,6 +154,14 @@ preflight() {
     pidfd|drmfd|sockets) ;;
     *) say "IPC_EXCHANGE must be pidfd, drmfd, or sockets, got $IPC_EXCHANGE"; return 1 ;;
   esac
+  case "$TOOLPARSER" in
+    qwen3_coder|none) ;;
+    *) say "TOOLPARSER must be qwen3_coder or none, got $TOOLPARSER"; return 1 ;;
+  esac
+  if [ -n "$THINKCAP" ] && ! { [ "$THINKCAP" -ge 1 ] 2>/dev/null; }; then
+    say "THINKCAP must be empty or a positive integer, got $THINKCAP"
+    return 1
+  fi
 }
 
 start() {
@@ -162,6 +172,9 @@ start() {
   local graph_args
   local security_args=()
   local spec_args=""
+  local tool_args=""
+  local grammar_args="--grammar-backend none"
+  local think_env=()
   local breakable_graph=0
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode $GRAPH_BS"
@@ -177,8 +190,15 @@ start() {
   if [ "$MTP" = 1 ]; then
     spec_args="--speculative-algorithm NEXTN --speculative-num-steps $SPEC_STEPS --speculative-eagle-topk 1 --speculative-num-draft-tokens $SPEC_DRAFT --speculative-draft-attention-backend triton --speculative-draft-model-quantization unquant"
   fi
+  if [ "$TOOLPARSER" != none ]; then
+    tool_args="--tool-call-parser $TOOLPARSER"
+  fi
+  if [ -n "$THINKCAP" ]; then
+    think_env=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
+    grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
+  fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS chunked_prefill=$CHUNKED_PREFILL sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS chunked_prefill=$CHUNKED_PREFILL tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
   docker run -d --name "$NAME" --oom-score-adj 500 --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     "${security_args[@]}" \
@@ -197,6 +217,7 @@ start() {
     -e B70_XPU_LMHEAD_W8A8="$LMHEAD_W8A8" \
     -e B70_XPU_MTP="$MTP" \
     -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
+    "${think_env[@]}" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$ONEDNN_INPUT_DEP" \
     -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$ONEDNN_BARRIER" \
     -e CCL_ATL_TRANSPORT=ofi \
@@ -212,9 +233,10 @@ start() {
     "$IMG" bash -c "exec python -m sglang.launch_server \
       --model-path '$CKPT' --served-model-name '$SERVED' \
       --trust-remote-code --device xpu --dtype bfloat16 \
+      --kv-cache-dtype bfloat16 \
       --attention-backend intel_xpu --linear-attn-backend triton \
-      --mamba-ssm-dtype float32 --grammar-backend none \
-      $graph_args $spec_args \
+      --mamba-ssm-dtype float32 $grammar_args \
+      $graph_args $spec_args $tool_args \
       --disable-radix-cache --disable-overlap-schedule --skip-server-warmup \
       --chunked-prefill-size '$CHUNKED_PREFILL' \
       --disable-custom-all-reduce --reasoning-parser qwen3 --tp-size '$TP' \
