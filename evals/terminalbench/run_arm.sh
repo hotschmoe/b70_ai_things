@@ -29,9 +29,9 @@ else
 fi
 ARM="${1:-}"
 case "$ARM" in
-  qwen-w8a8|qwen-nvfp4|qwen-gptq-int4|ornith-w8a8) ;;
+  qwen-w8a8|qwen-w8a8-reclaim500|qwen-nvfp4|qwen-gptq-int4|ornith-w8a8) ;;
   *)
-    echo "usage: $0 {qwen-w8a8|qwen-nvfp4|qwen-gptq-int4|ornith-w8a8}" >&2
+    echo "usage: $0 {qwen-w8a8|qwen-w8a8-reclaim500|qwen-nvfp4|qwen-gptq-int4|ornith-w8a8}" >&2
     exit 2
     ;;
 esac
@@ -51,6 +51,17 @@ case "$ARM" in
       "MEMFRAC=0.70" "MAXREQ=1" "MTP=0" "DECODE_GRAPH=full"
       "GRAPH_BS=1" "TOOLPARSER=qwen3_coder" "THINKCAP=4096"
       "SERVED=$SERVED"
+    )
+    ;;
+  qwen-w8a8-reclaim500)
+    LAUNCHER="$REPO/sglang/w8a8/serve_qwen38_w8a8.sh"
+    CONTAINER="tb3_qwen38_w8a8_reclaim500"
+    SERVED="qwen3.8-27b-W8A8-gptq-gdn-rtn-breakable-reclaim500-tp2-bf16kv-tb3"
+    START_ENV=(
+      "NAME=$CONTAINER" "PORT=$PORT" "CTX=$CONTEXT_WINDOW"
+      "MEMFRAC=0.70" "MAXREQ=1" "MTP=0" "DECODE_GRAPH=breakable"
+      "GRAPH_BS=1" "CG_RECLAIM=500" "TOOLPARSER=qwen3_coder"
+      "THINKCAP=4096" "SERVED=$SERVED"
     )
     ;;
   qwen-nvfp4)

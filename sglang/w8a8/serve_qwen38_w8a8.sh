@@ -19,6 +19,9 @@ MEMFRAC="${MEMFRAC:-0.75}"
 MAXREQ="${MAXREQ:-1}"
 GRAPH_BS="${GRAPH_BS:-1}"
 CHUNKED_PREFILL="${CHUNKED_PREFILL:-128}"
+# Re-instantiate graph executables periodically to bound Level Zero command-list
+# accumulation. Keep zero as the historical FULL-graph control default.
+CG_RECLAIM="${CG_RECLAIM:-0}"
 NATIVE="${NATIVE:-1}"
 GDN_W8A8="${GDN_W8A8:-1}"
 LMHEAD_W8A8="${LMHEAD_W8A8:-0}"
@@ -146,6 +149,10 @@ preflight() {
     say "CHUNKED_PREFILL must be a positive integer, got $CHUNKED_PREFILL"
     return 1
   }
+  [ "$CG_RECLAIM" -ge 0 ] 2>/dev/null || {
+    say "CG_RECLAIM must be a nonnegative integer, got $CG_RECLAIM"
+    return 1
+  }
   case "$SYCL_KERNELS" in
     0|1) ;;
     *) say "SYCL_KERNELS must be 0 or 1, got $SYCL_KERNELS"; return 1 ;;
@@ -198,7 +205,7 @@ start() {
     grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
   fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS chunked_prefill=$CHUNKED_PREFILL tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM chunked_prefill=$CHUNKED_PREFILL tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
   docker run -d --name "$NAME" --oom-score-adj 500 --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     "${security_args[@]}" \
@@ -217,6 +224,7 @@ start() {
     -e B70_XPU_LMHEAD_W8A8="$LMHEAD_W8A8" \
     -e B70_XPU_MTP="$MTP" \
     -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
+    -e B70_XPU_CG_RECLAIM="$CG_RECLAIM" \
     "${think_env[@]}" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$ONEDNN_INPUT_DEP" \
     -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$ONEDNN_BARRIER" \

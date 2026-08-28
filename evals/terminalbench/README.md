@@ -13,6 +13,9 @@ a time, the same Pi prompt and limits, server startup, Harbor, teardown, and
 post-run health inside one GPU lease. It supports these arms:
 
 - `qwen-w8a8`: Qwen3.8 W8A8 GPTQ, SGLang TP2 FULL graph.
+- `qwen-w8a8-reclaim500`: Qwen3.8 W8A8 graph-safety diagnostic using the
+  previously qualified breakable backend and executable reclaim every 500
+  replays.
 - `qwen-nvfp4`: Qwen3.8 RadixArk NVFP4, SGLang TP2 FULL graph.
 - `qwen-gptq-int4`: Qwen3.8 GPTQ INT4, vLLM 0.27.2 TP1 MTP4.
 - `ornith-w8a8`: Ornith W8A8, SGLang TP2 breakable graph with reclaim500.
