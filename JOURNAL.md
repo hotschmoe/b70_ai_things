@@ -5274,3 +5274,58 @@ stable through a roughly 17K-token tool conversation. Keep the result in the
 matched pilot table, retain BF16 KV and memory fraction 0.70, and proceed to
 the NVFP4 and GPTQ INT4 pilots before deciding whether a safer graph mode is
 worth a separate Qwen W8A8 diagnostic.
+
+### 2026-08-28o - Qwen NVFP4 TB3 pilot aborts FULL replay at 19K context
+
+CONFIG -> exact refreshed SGLang image
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`
+and Qwen3.8-27B RadixArk NVFP4 checkpoint. The matched campaign arm used TP2,
+P2P off, source-default eager collectives, FULL target decode graph at batch
+one, BF16 KV, qwen3 reasoning, qwen3_coder tools, strict-thinking cap 4096,
+maximum one request, 65,536 context, and memory fraction 0.70. Harbor 0.22.0
+ran official Terminal-Bench 3.0.0 task `bun-sourcemap-leak` with Pi 0.84.3 at
+xhigh and the same concise prompt as every other arm.
+
+COMMAND -> run
+`INCLUDE_TASK=terminal-bench/bun-sourcemap-leak N_TASKS=1 STAMP=20260828-bun-pilot evals/terminalbench/run_arm.sh qwen-nvfp4`
+inside the driver's whole-box lease. Require clean per-card and compiled
+two-rank P2P-off health, exact served identity, Harbor completion after any
+endpoint failure, teardown, and matched post-health. Apply `bin/xe-reset` and
+repeat both probes after a failed TP2 serve.
+
+RESULT -> startup took 117 seconds. Each rank allocated 378,240 BF16 KV tokens
+with 5.77 GiB K plus 5.77 GiB V and retained 9.56 GiB after FULL graph capture.
+Pi used tools early but repeatedly generated multi-minute plans before simple
+build experiments. The 4,096-token strict-thinking cap was only soft: the model
+continued its analysis as visible text. Decode began around 30 tok/s and
+remained about 27 tok/s near the failure boundary.
+
+RESULT -> the endpoint crossed the W8A8 arm's approximately 17K-token failure
+boundary, but at 19,328 live tokens both ranks aborted at Level Zero
+`linear_stream.h:90` while replaying the XPU FULL graph. The scheduler processes
+exited with signal 6 and the SGLang parent shut down after its five-second crash
+diagnostic delay. There was no kernel engine reset, GPU VM fault, or host OOM.
+Pi ended after three connection errors without ever editing the task.
+
+RESULT -> Harbor graded the preserved baseline and scored 0.0: 17 of 36 tests
+passed and 19 failed. Agent execution was 10m15s, Harbor wall was 14m46s,
+server-start through Harbor finish was 16m48s, and server-start through teardown
+plus post-health was 17m52s. The job used 59,760 input and 9,497 output tokens.
+Job result, trial result, trajectory, lifecycle, and server-log SHA256 values
+were `d8d94bfb972d1589e29d0f13e47ef9c08640a9aadbf997ad68b868983dfdf63b`,
+`7ec7bd091c8890e0dafb52c1b726f3b164ebca7c5a15ea25ce6be4679d7406e6`,
+`480e091d3b08569ed2b786a7faa8c7f02c0c06eca2ad832a789de4def80e556d`,
+`fba21206504af31aacfc5d31ba87368012b083dedd403b4423350d4d0862db56`,
+and `1f71b02f53ca34a474187e7536875665df3cb78fc558609091ae16cc2e913b31`.
+
+RESULT -> immediate teardown health passed on both cards and the compiled
+two-rank P2P-off collective. The mandated recovery re-bound both xe endpoints
+without rebooting; both card probes and the compiled collective passed again
+under unchanged boot ID `e2d5777d-f6bb-4d92-a718-0fb07ae17919`.
+
+VERDICT -> reject this Qwen NVFP4 FULL-graph configuration for the 65K agent
+campaign. It is more graph-replay-stable than the W8A8 arm on this trajectory,
+but still aborts well below the configured context and its agent policy spent
+most of the available time planning rather than implementing. Keep its zero
+score and full failure time in the matched comparison; continue with the TP1
+GPTQ INT4 arm, which avoids this TP2 SGLang FULL-replay path.

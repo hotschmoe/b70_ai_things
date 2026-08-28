@@ -56,6 +56,13 @@ Harbor wall was 18m23s and full server-start through post-health teardown was
 mandated xe rebind recovery. Treat this configuration as campaign-unstable;
 the score alone does not capture the endpoint failure.
 
+The matched Qwen NVFP4 pilot scored 0.0 after its agent spent 10m15s planning
+and never edited the task. Its TP2 FULL-graph endpoint crossed 17K tokens but
+aborted in Level Zero `linear_stream.h:90` at 19,328 live tokens. Harbor wall
+was 14m46s and full server-start through post-health teardown was 17m52s.
+Post-failure health and xe rebind recovery passed. This arm is also unsuitable
+for the full 65K-context campaign in its current graph mode.
+
 Do not raise the Ornith graph arm to `MEMFRAC=0.90`. That setting allocated
 about 58 GiB of shared GPU memory and triggered a global host OOM during graph
 capture, killing the user systemd/tmux session. The campaign uses 0.70, which
