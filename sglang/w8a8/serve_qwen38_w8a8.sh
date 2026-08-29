@@ -32,7 +32,6 @@ ONEDNN_INPUT_DEP="${ONEDNN_INPUT_DEP:-$NATIVE}"
 ONEDNN_BARRIER="${ONEDNN_BARRIER:-$NATIVE}"
 DECODE_GRAPH="${DECODE_GRAPH:-full}"
 TOOLPARSER="${TOOLPARSER:-none}"
-GRAPH_CENSUS="${GRAPH_CENSUS:-0}"
 THINKCAP="${THINKCAP-}"
 if [ -z "${SYCL_KERNELS+x}" ]; then
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
@@ -44,7 +43,6 @@ fi
 IPC_EXCHANGE="${IPC_EXCHANGE:-pidfd}"
 LOG="${LOG:-$ROOT/sglang_qwen38_w8a8_gdn_rtn_full.log}"
 W8A8_PATCH="$REPO/sglang/refresh/b70_xpu_w8a8.py"
-GRAPH_CENSUS_PATCH="$REPO/sglang/refresh/b70_graph_census.py"
 SP=/opt/venv/lib/python3.12/site-packages
 
 say() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -102,16 +100,6 @@ preflight() {
     say "missing tracked W8A8 overlay: $W8A8_PATCH"
     return 1
   }
-  case "$GRAPH_CENSUS" in
-    0) ;;
-    1)
-      [ -f "$GRAPH_CENSUS_PATCH" ] || {
-        say "missing tracked graph census overlay: $GRAPH_CENSUS_PATCH"
-        return 1
-      }
-      ;;
-    *) say "GRAPH_CENSUS must be 0 or 1, got $GRAPH_CENSUS"; return 1 ;;
-  esac
   case "$MTP" in
     0|1) ;;
     *) say "MTP must be 0 or 1, got $MTP"; return 1 ;;
@@ -217,14 +205,13 @@ start() {
     grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
   fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM graph_census=$GRAPH_CENSUS chunked_prefill=$CHUNKED_PREFILL tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM chunked_prefill=$CHUNKED_PREFILL tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
   docker run -d --name "$NAME" --oom-score-adj 500 --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
     "${security_args[@]}" \
     -p "$PORT:$PORT" \
     -v "$REPO/models/files:/models:ro" \
     -v "$W8A8_PATCH:$SP/b70_xpu_w8a8.py:ro" \
-    -v "$GRAPH_CENSUS_PATCH:$SP/b70_graph_census.py:ro" \
     -v "$ROOT/hf_cache:/hf_cache" \
     -v "$ROOT/sgl_cache:/sgl_cache" \
     -e HF_HOME=/hf_cache \
@@ -238,7 +225,6 @@ start() {
     -e B70_XPU_MTP="$MTP" \
     -e B70_XPU_BREAKABLE_GRAPH="$breakable_graph" \
     -e B70_XPU_CG_RECLAIM="$CG_RECLAIM" \
-    -e B70_GRAPH_CENSUS="$GRAPH_CENSUS" \
     "${think_env[@]}" \
     -e VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$ONEDNN_INPUT_DEP" \
     -e VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$ONEDNN_BARRIER" \

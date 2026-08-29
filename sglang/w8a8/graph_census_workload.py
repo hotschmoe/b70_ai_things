@@ -23,6 +23,7 @@ def main() -> None:
     parser.add_argument("--nonce", required=True)
     parser.add_argument("--output-tokens", type=int, default=128)
     parser.add_argument("--json-out", type=Path, required=True)
+    parser.add_argument("--first-token-signal", type=Path)
     args = parser.parse_args()
     if args.output_tokens <= 1:
         parser.error("--output-tokens must exceed one")
@@ -92,6 +93,11 @@ def main() -> None:
             if piece:
                 if first is None:
                     first = time.perf_counter()
+                    if args.first_token_signal is not None:
+                        args.first_token_signal.parent.mkdir(
+                            parents=True, exist_ok=True
+                        )
+                        args.first_token_signal.write_text("first-token\n", encoding="ascii")
                 text.append(piece)
     end = time.perf_counter()
     if first is None or prompt_tokens is None or completion_tokens is None:

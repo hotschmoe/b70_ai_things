@@ -28,6 +28,7 @@ COLLECTIVE_ANNOTATION = re.compile(
     r"^b70::collective (?P<collective>[a-z_]+) "
     r"dtype=(?P<dtype>[A-Za-z0-9_.]+) shape=(?P<shape>[0-9x]+)$"
 )
+DECODE_STEP = re.compile(r"^step\[DECODE bs=[0-9]+\]$")
 
 
 def load_trace(path: Path) -> list[dict[str, Any]]:
@@ -62,7 +63,10 @@ def trace_census(path: Path, skip_iterations: int) -> dict[str, Any]:
             event
             for event in events
             if event.get("cat") == "user_annotation"
-            and str(event.get("name", "")).startswith("execute_context_")
+            and (
+                str(event.get("name", "")).startswith("execute_context_")
+                or DECODE_STEP.match(str(event.get("name", ""))) is not None
+            )
         ),
         key=lambda event: float(event["ts"]),
     )
@@ -96,12 +100,31 @@ def trace_census(path: Path, skip_iterations: int) -> dict[str, Any]:
             ):
                 continue
             match = COLLECTIVE_ANNOTATION.match(str(event.get("name", "")))
-            if match is None:
+            if match is not None:
+                shape = tuple(
+                    int(value) for value in match.group("shape").split("x")
+                )
+                collective_counts[
+                    (match.group("collective"), match.group("dtype"), shape)
+                ] += 1
                 continue
-            shape = tuple(int(value) for value in match.group("shape").split("x"))
-            collective_counts[
-                (match.group("collective"), match.group("dtype"), shape)
-            ] += 1
+            native_name = str(event.get("name", ""))
+            native_collective = {
+                "xccl:all_reduce": "all_reduce",
+                "xccl:_all_gather_base": "all_gather",
+            }.get(native_name)
+            if native_collective is None:
+                continue
+            arguments = event.get("args", {})
+            dimensions = arguments.get("Input Dims") or []
+            input_types = arguments.get("Input type") or []
+            if not dimensions or not input_types:
+                raise ValueError(
+                    f"{path}: {native_name} lacks recorded input shape or dtype"
+                )
+            shape = tuple(int(value) for value in dimensions[0])
+            dtype = str(input_types[0]).removeprefix("c10::").lower()
+            collective_counts[(native_collective, dtype, shape)] += 1
         collectives = [
             {
                 "collective": collective,

@@ -49,11 +49,15 @@ def make_trace(path: Path, *, submissions: int = 2) -> None:
             {
                 "ph": "X",
                 "cat": "user_annotation",
-                "name": "b70::collective all_reduce dtype=bfloat16 shape=1x5120",
+                "name": "xccl:all_reduce",
                 "pid": 7,
                 "tid": 9,
                 "ts": start + 10,
                 "dur": 2.0,
+                "args": {
+                    "Input Dims": [[1, 5120]],
+                    "Input type": ["c10::BFloat16"],
+                },
             }
         )
     path.write_text(json.dumps({"traceEvents": events}), encoding="ascii")

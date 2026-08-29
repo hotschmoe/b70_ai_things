@@ -16,7 +16,7 @@ CENSUS="$REPO/vllm/w8a8/graph_boundary_census.py"
 NAME="m04-qwen38-w8a8-$STAMP"
 SERVED="qwen3.8-27b-W8A8-gptq-gdn-rtn-m04-breakable-tp2"
 PORT="${PORT:-18080}"
-PROFILE_STEPS="${PROFILE_STEPS:-12}"
+PROFILE_STEPS="${PROFILE_STEPS:-4}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
 
 case "${1:-}" in
@@ -76,7 +76,7 @@ trap cleanup EXIT INT TERM
 "$REPO/bin/xpu-collective-health" --p2p 0 --timeout "$HEALTH_TIMEOUT" \
   | tee "$RESULT_DIR/health_pre_collective.log"
 
-GRAPH_CENSUS=1 DECODE_GRAPH=breakable GRAPH_BS=1 CG_RECLAIM=500 \
+DECODE_GRAPH=breakable GRAPH_BS=1 CG_RECLAIM=500 \
   CTX=4096 MEMFRAC=0.75 MAXREQ=1 MTP=0 TOOLPARSER=none \
   NAME="$NAME" PORT="$PORT" SERVED="$SERVED" LOG="$RESULT_DIR/server.log" \
   bash "$SERVE" start | tee "$RESULT_DIR/start.log"
@@ -86,7 +86,6 @@ curl -fsS --max-time 15 "http://127.0.0.1:$PORT/v1/models" \
   >"$RESULT_DIR/models.json"
 docker inspect "$NAME" --format '{{range .Config.Env}}{{println .}}{{end}}' \
   | sort >"$RESULT_DIR/container_env.txt"
-rg -q '^B70_GRAPH_CENSUS=1$' "$RESULT_DIR/container_env.txt"
 rg -q '^CCL_TOPO_P2P_ACCESS=0$' "$RESULT_DIR/container_env.txt"
 
 python3 "$WORKLOAD" --base "http://127.0.0.1:$PORT" --model "$SERVED" \
@@ -94,12 +93,27 @@ python3 "$WORKLOAD" --base "http://127.0.0.1:$PORT" --model "$SERVED" \
 python3 "$WORKLOAD" --base "http://127.0.0.1:$PORT" --model "$SERVED" \
   --nonce 100001 --output-tokens 128 --json-out "$RESULT_DIR/control_a.json"
 
+first_token_signal="$RESULT_DIR/profiled_first_token.signal"
+rm -f "$first_token_signal"
+python3 "$WORKLOAD" --base "http://127.0.0.1:$PORT" --model "$SERVED" \
+  --nonce 100002 --output-tokens 128 --json-out "$RESULT_DIR/profiled.json" \
+  --first-token-signal "$first_token_signal" &
+profiled_pid=$!
+signaled=0
+for _ in $(seq 1 600); do
+  if [ -f "$first_token_signal" ]; then
+    signaled=1
+    break
+  fi
+  kill -0 "$profiled_pid" 2>/dev/null || break
+  sleep 0.05
+done
+[ "$signaled" = 1 ]
 curl -fsS -X POST "http://127.0.0.1:$PORT/start_profile" \
   -H 'content-type: application/json' \
   -d "{\"output_dir\":\"$CONTAINER_PROFILE\",\"num_steps\":$PROFILE_STEPS,\"activities\":[\"CPU\",\"XPU\"],\"profile_by_stage\":true,\"record_shapes\":true,\"with_stack\":false,\"profile_prefix\":\"m04_qwen38\"}" \
   >"$RESULT_DIR/start_profile_response.txt"
-python3 "$WORKLOAD" --base "http://127.0.0.1:$PORT" --model "$SERVED" \
-  --nonce 100002 --output-tokens 128 --json-out "$RESULT_DIR/profiled.json"
+wait "$profiled_pid"
 
 found=0
 for _ in $(seq 1 90); do
@@ -122,15 +136,13 @@ control_value="$(jq -s '([.[0].post_first_tok_s, .[1].post_first_tok_s] | sort) 
 profiled_value="$(jq -r '.post_first_tok_s' "$RESULT_DIR/profiled.json")"
 python3 "$CENSUS" \
   --trace "0=${traces[0]}" --trace "1=${traces[1]}" \
-  --skip-iterations 2 \
+  --skip-iterations 0 \
   --control-value "$control_value" --profiled-value "$profiled_value" \
   --minimum-profiled-ratio 0.75 \
   --json-out "$RESULT_DIR/graph_boundary_census.json" \
   | tee "$RESULT_DIR/graph_boundary_census.log"
 
 docker logs "$NAME" >"$RESULT_DIR/server.log" 2>&1
-rg -Fq '[b70-graph-census] installed all-reduce annotations' \
-  "$RESULT_DIR/server.log"
 if rg -i 'device_lost|out_of_resources|ur_result_error|enginedead|gpu vm fault|(^|[^a-z])nan([^a-z]|$)' \
   "$RESULT_DIR/server.log"; then
   echo "fatal server marker" >&2
