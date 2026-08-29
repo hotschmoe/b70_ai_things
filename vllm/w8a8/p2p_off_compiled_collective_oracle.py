@@ -24,6 +24,27 @@ CONSUMER_MULTIPLIER = 2
 CONSUMER_OFFSET = 1
 
 
+@torch.library.custom_op("b70_m02::all_gather", mutates_args=())
+def opaque_all_gather(tensor: torch.Tensor) -> torch.Tensor:
+    """Keep direct oneCCL all-gather opaque to Inductor during graph capture."""
+    output = torch.empty(
+        (tensor.shape[0] * dist.get_world_size(), *tensor.shape[1:]),
+        dtype=tensor.dtype,
+        device=tensor.device,
+    )
+    dist.all_gather_into_tensor(output, tensor.contiguous())
+    return output
+
+
+@opaque_all_gather.register_fake
+def opaque_all_gather_fake(tensor: torch.Tensor) -> torch.Tensor:
+    return torch.empty(
+        (tensor.shape[0] * 2, *tensor.shape[1:]),
+        dtype=tensor.dtype,
+        device=tensor.device,
+    )
+
+
 class RankEventLog:
     """Line-buffered evidence for tested collective entry and return events."""
 
@@ -240,6 +261,7 @@ def validate_compiled_graph(
     world_size: int,
     base: torch.Tensor,
     compiled_call: Callable[[torch.Tensor], torch.Tensor],
+    route: str,
     logger: RankEventLog,
 ) -> dict[str, Any]:
     if not hasattr(torch.xpu, "XPUGraph") or not hasattr(torch.xpu, "graph"):
@@ -247,6 +269,7 @@ def validate_compiled_graph(
             "mode": "compiled_xpu_graph",
             "supported": False,
             "reason": "torch.xpu XPUGraph API is absent",
+            "route": route,
             "iterations": 0,
             "mismatch_iterations": 0,
         }
@@ -272,6 +295,7 @@ def validate_compiled_graph(
         return {
             "mode": "compiled_xpu_graph",
             "supported": True,
+            "route": route,
             "iterations": 0,
             "mismatch_iterations": 1,
             "first_mismatch": {"stage": "warmup", **(warmup_detail or {})},
@@ -321,6 +345,7 @@ def validate_compiled_graph(
     return {
         "mode": "compiled_xpu_graph",
         "supported": True,
+        "route": route,
         "iterations": iterations,
         "call_id_first": start_call_id,
         "call_id_last": logger.next_call_id - 1,
@@ -462,7 +487,20 @@ def main() -> int:
                 rank=rank,
                 world_size=world_size,
                 base=base,
-                compiled_call=compiled_call,
+                compiled_call=(
+                    torch.compile(
+                        lambda tensor: dependent_consumer(opaque_all_gather(tensor)),
+                        fullgraph=True,
+                        dynamic=False,
+                    )
+                    if collective == "all_gather"
+                    else compiled_call
+                ),
+                route=(
+                    "opaque_direct_all_gather_custom_op"
+                    if collective == "all_gather"
+                    else "functional_wait_tensor"
+                ),
                 logger=logger,
             )
             dist.barrier()
