@@ -157,3 +157,9 @@ INCLUDE_TASK=terminal-bench/bun-sourcemap-leak N_TASKS=1 \
 
 This is a new agent-policy arm, not a matched xhigh result. Run Ornith with the
 same three policy variables only if the Qwen pilot becomes task-effective.
+
+The first such pilot proved that 4,096 is too small. Thinking off reduced the
+first four inspection responses to 46-95 tokens, but the first implementation
+response hit the hard bound before issuing an edit. The unchanged baseline
+scored 0.0 at 17/36 tests in 10m51s Harbor wall and 14m19s total. Do not repeat
+this cap or transfer it to Ornith; test Qwen with `MAX_TOKENS=8192` next.

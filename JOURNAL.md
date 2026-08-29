@@ -5441,3 +5441,34 @@ the official budget through verbosity and scored zero. Do not interpret this
 38m17s timeout as successful task speed. Before expanding beyond one task,
 run a matched lower-thinking or hard-output-bound policy on the two stable
 SGLang arms and require a nonzero result.
+
+### 2026-08-29b - Qwen W8A8 no-thinking 4K cap ends before edit
+
+CONFIG -> the qualified Qwen W8A8 breakable-reclaim500 BF16-KV runtime from
+2026-08-29a. The new agent-policy arm changed Pi from xhigh to off, replaced
+the xhigh-specific prompt with a matched concise prompt, and limited each model
+response to 4,096 tokens. Model, quant, serving, task, and 65,536 context were
+otherwise unchanged.
+
+COMMAND -> run the same official `bun-sourcemap-leak` task under the whole-box
+lease, preserve Harbor grading, and require normal teardown plus card and
+compiled P2P-off collective post-health.
+
+RESULT -> the policy sharply reduced early overhead: four focused inspection
+tool calls completed before the first implementation response. That response
+then reached the 4,096-token output bound and Pi settled without issuing an
+edit. Harbor graded the unchanged baseline at 17 of 36 tests and reward 0.0.
+Agent time was 6m26s, Harbor wall 10m51s, and full server-start through
+post-health time 14m19s. The job used 15,480 input and 4,283 output tokens.
+Job result, trial result, Pi transcript, lifecycle, and server-log SHA256 values
+were `73cfe8d92fbf1061120b9544b4497d378ab8fd94569711d3d02180f7a021f4e4`,
+`f1111cd7896b9624024c84088cf476b865120933dbfab67ec5e3696a373b8492`,
+`905028b657def2b03667ffa5c1057ed19f82d3e15ea80d040aceb339ab85762d`,
+`bcd9047e3095d32aad81e970f561f6ef79cae642c5ce0e805d56ed4ea4620ffa`,
+and `cfc9929296d098dc870711e1e521beaf57d5116015152215d9b8e6f027e93d16`.
+The server stopped normally and card plus collective post-health passed.
+
+VERDICT -> reject the 4,096-token hard cap: it converts verbosity into premature
+agent termination rather than a completed task. Retain thinking off as a
+promising efficiency lever, but give the implementation turn 8,192 tokens in
+the next Qwen pilot. Do not spend an Ornith run on this rejected 4K policy.
