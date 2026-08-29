@@ -69,12 +69,43 @@ def complete(base: str, model: str, prompt: str, max_tokens: int) -> dict[str, A
     }
 
 
+def validate_reference_contract(
+    reference: dict[str, Any], model: str, max_tokens: int
+) -> dict[str, bool]:
+    expected_prompt_hashes = [
+        hashlib.sha256(prompt.encode("utf-8")).hexdigest() for prompt in PROMPTS
+    ]
+    reference_prompt_hashes = [
+        item.get("prompt_sha256") for item in reference.get("samples", [])
+    ]
+    contract = {
+        "model": reference.get("model") == model,
+        "max_tokens": reference.get("max_tokens") == max_tokens,
+        "repeat_exact": reference.get("repeat_exact") is True,
+        "sample_count": len(reference.get("samples", [])) == len(PROMPTS),
+        "prompt_hashes": reference_prompt_hashes == expected_prompt_hashes,
+    }
+    if not all(contract.values()):
+        raise RuntimeError(
+            "reference corpus contract mismatch: " + json.dumps(contract, sort_keys=True)
+        )
+    return contract
+
+
 def main() -> None:
     args = parse_args()
     base = args.base.rstrip("/") + "/v1"
     ids = [item["id"] for item in request_json(base + "/models")["data"]]
     if ids != [args.model]:
         raise RuntimeError(f"served model identity mismatch: {ids}")
+
+    reference = None
+    reference_contract = None
+    if args.reference is not None:
+        reference = json.loads(args.reference.read_text(encoding="ascii"))
+        reference_contract = validate_reference_contract(
+            reference, args.model, args.max_tokens
+        )
 
     samples = []
     for index, prompt in enumerate(PROMPTS):
@@ -100,11 +131,11 @@ def main() -> None:
         "repeat_exact": True,
         "samples": samples,
     }
-    if args.reference is not None:
-        reference = json.loads(args.reference.read_text(encoding="ascii"))
+    if reference is not None:
         reference_hashes = [item["text_sha256"] for item in reference["samples"]]
         candidate_hashes = [item["text_sha256"] for item in samples]
         result["reference"] = str(args.reference)
+        result["reference_contract"] = reference_contract
         result["target_exact"] = candidate_hashes == reference_hashes
         result["mismatched_indices"] = [
             index

@@ -167,13 +167,19 @@ from being the first test of a risky source transfer.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
-| W01 | P0 | TP2 | Reconfirm target-only breakable size 1 plus reclaim500, BF16 KV, memory fraction 0.70, max request 1 | Same-stack exact corpus, 50K forced-output replay, flat late throughput, clean teardown |
+| W01 | P0 | TP2 | Reconfirm target-only breakable size 1 plus reclaim500, BF16 KV, memory fraction 0.70, max request 1 | Two-fresh-server exact corpus, one 50K forced-output stream, final 5K/first 5K throughput >=0.80, clean teardown |
 | W02 | P0 | TP2 | Eager versus breakable versus breakable+reclaim500 | Match prompt/output and cache-off state; attribute speed to graph and stability to reclaim separately |
 | W03 | P1 | TP2 | Prefix/radix cache off versus on | Growing 8K -> 16K -> 32K tool-history trace; exact output/state, reported reuse, no replay fault |
 | W04 | P1 | TP2 | MBT 8192 versus 16384 | Same growing trace; compare TTFT, total trace time, KV pressure, and decode |
 | W05 | P1 | TP2 | Existing source-default c10d versus any M03-qualified completion route | Require coherence and at least 3 percent matched endpoint gain or a measured stability improvement |
 | W06 | P1 | TP2 | Target-only versus supported MTP1 | Run only after W01; exact target arrays and real Pi-shaped acceptance required |
 | W07 | P2 | TP1 | Capacity/fit screen at 32K then 65K BF16 KV | If it fits with safe headroom, qualify it as a single-stream recipe; otherwise record capacity failure without tuning around OOM |
+
+W01 uses one live sequence because many short requests do not reproduce the
+prior graph-executable failure boundary. The client requires exact native
+completion-token milestones, a length finish, the complete 50,000-token array,
+and the predeclared 5,000-token final/initial rate gate. The two fresh-server
+corpora must also be repeat-exact within each server and cross-server exact.
 
 ### Qwen3.8 RadixArk NVFP4, SGLang
 
