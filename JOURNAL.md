@@ -5736,3 +5736,43 @@ all-reduce is graph-safe, but all-gather graph replay requires an opaque direct
 boundary. Proceed to M03 blocking c10d versus `async_op=True` plus
 `Work.wait()` as an isolated P2P-off all-reduce A/B. Do not claim endpoint
 speed or accept a Steve model patch from this operator result alone.
+
+### 2026-08-29k - M03 explicit collective completion A/B
+
+CONFIG -> kernel 7.1.0, host Compute Runtime 26.22, pinned vLLM image
+`f01e24f6`, vLLM `ac7509e2b`, PyTorch 2.13.0+xpu, two B70 ranks, and
+`CCL_TOPO_P2P_ACCESS=0`. The exact BF16 shapes were `[1,5120]` and
+`[4,5120]`. Blocking `dist.all_reduce` was compared with `async_op=True` plus
+`Work.wait()` in balanced alternating order. Each result fed an immediate
+multiply-plus-add consumer before any post-collective XPU synchronize.
+
+COMMAND -> run two warmups and eight measured rounds per mode and shape in
+each of three fresh process-group/container lifetimes under one whole-box
+`bin/gpu-run` lease. Flush per-rank entry, completion, consumer, and validation
+events. Tear down every lifetime and run card plus compiled P2P-off collective
+health before, between, and after the matrix.
+
+RESULT -> the first attempt reached exact equality but the evidence-only
+fingerprint path failed while converting a nested byte list to `bytes()`. The
+container tore down and post-health passed. `bin/xe-reset --method rebind`
+completed on the same boot ID with clean card and collective health. Flattening
+the byte view fixed the harness without changing the collective path.
+
+RESULT -> three clean rerun lifetimes passed. Each rank completed 40 calls per
+lifetime. External validation covered 240 calls and 1,080 flushed events,
+strictly increasing per-rank monotonic times, exact blocking/async and
+cross-rank fingerprints, matched call signatures, and no unreturned call.
+All teardowns and pre/inter/final health gates passed. The sorted 15-file
+evidence manifest SHA256 was
+`dc19da09ffdcf2504775f574c54e1140616ae7dcc109fdebfd99b0c1c4d29210`.
+
+RESULT -> exploratory host-boundary medians across 48 measured calls per cell
+were 184.652 versus 239.362 us from entry through consumer return for blocking
+versus async/wait at `[1,5120]`, and 182.628 versus 240.504 us at `[4,5120]`.
+These are operator host timings, not device-kernel or endpoint measurements.
+
+VERDICT -> M03 passes as a correctness and completion-ownership oracle. Both
+routes safely support the immediate consumer with P2P disabled, but the
+explicit route supplies no speed claim or model-patch acceptance. Proceed to
+M04 graph-boundary census tooling before deciding whether a matched endpoint
+completion-route control is worth running.

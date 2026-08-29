@@ -189,5 +189,16 @@ criterion. It does not qualify or accept a port.
 M02 passed after this audit. The exact configuration, initial functional
 all-gather graph failure, opaque-direct repair, three fresh lifetime results,
 and health evidence are in
-`docs/20260829_m02_p2p_off_compiled_collective_oracle.md`. M03 remains the next
-gate; no Steve model patch has been accepted yet.
+`docs/20260829_m02_p2p_off_compiled_collective_oracle.md`. The subsequent M03
+closure is recorded below; no Steve model patch has been accepted yet.
+
+## M03 closure update
+
+M03 passed after this audit. Blocking c10d and `async_op=True` plus
+`Work.wait()` both produced exact results for immediate dependent consumers
+at BF16 `[1,5120]` and `[4,5120]` with P2P disabled. Three fresh lifetimes,
+matched rank event streams, teardown, and all health gates passed. The
+explicit route had higher exploratory host-boundary medians, so the result is
+a correctness qualification rather than a speed claim. Exact evidence is in
+`docs/20260829_m03_explicit_completion_ab.md`. M04 is next; no Steve model
+patch has been accepted.
