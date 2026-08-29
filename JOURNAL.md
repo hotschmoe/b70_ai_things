@@ -5472,3 +5472,46 @@ VERDICT -> reject the 4,096-token hard cap: it converts verbosity into premature
 agent termination rather than a completed task. Retain thinking off as a
 promising efficiency lever, but give the implementation turn 8,192 tokens in
 the next Qwen pilot. Do not spend an Ornith run on this rejected 4K policy.
+
+### 2026-08-29c - Terminal-Bench campaign audit finds two validity defects
+
+CONFIG -> read-only audit of Pi 0.84.3, the retained Terminal-Bench adapter and
+runner, all four arm launchers, preserved job transcripts and server logs, the
+74 task manifests, and the current campaign summary. No endpoint was started
+and no GPU was touched.
+
+COMMAND -> compare the adapter metadata with Pi 0.84.3's installed
+`getSupportedThinkingLevels`, `clampThinkingLevel`, and qwen-chat-template
+payload construction. Cross-check the GPTQ launch command and runtime-reported
+model and KV dtypes. Review stop-reason reporting, total-time boundaries,
+per-arm graph failures, task GPU requirements, and configured timeout sums.
+
+RESULT -> `thinkingLevelMap` set `off` to null. Pi treats a null mapping as
+unsupported, clamps the requested off state upward, and sends
+`chat_template_kwargs.enable_thinking=true`. The 2026-08-29b transcript's
+4,096-token thinking block confirms that the job was native thinking with a
+hard cap, not true thinking-off. Its conclusion about a true-off 4K policy is
+invalid and must not guide another run before a payload oracle passes.
+
+RESULT -> the Qwen GPTQ INT4 launcher hard-coded `--dtype float16` and left KV
+dtype on auto. Its preserved runtime log reported `dtype=torch.float16,
+kv_cache_dtype=auto`. The retained GPTQ fit, exactness, speed, and
+Terminal-Bench results were FP16-KV results despite BF16 served IDs and
+lifecycle metadata. Requalification must start at BF16 target-only, using
+`--dtype bfloat16` and a runtime assertion of the observed cache dtype.
+
+RESULT -> Qwen W8A8 and Ornith W8A8 have stable breakable-reclaim500 long-agent
+runtimes at BF16 KV and memory fraction 0.70, but need a real thinking-off
+policy qualification. Qwen NVFP4 FULL and Qwen GPTQ PIECEWISE remain rejected
+for long agents. Four tasks require H100 environments, so the B70-local scope
+is a labeled 70-task subset. Across all 74 manifests, agent timeout ceilings
+sum to 201.69 hours per arm; agent plus verifier ceilings sum to 226.17 hours.
+
+VERDICT -> block campaign relaunch until the Pi off/xhigh payload oracle,
+policy-dependent strict-thinking configuration, observed-KV reporting, final
+Pi stop-reason classification, endpoint-before-teardown health, and full
+pre-health-through-post-health timing are implemented. Then calibrate true off
+at 8,192 tokens on Qwen W8A8 breakable-reclaim500, transfer the matched policy
+to Ornith, port breakable-reclaim500 to NVFP4 with eager fallback, and qualify
+GPTQ BF16 target-only eager before reintroducing MTP. Use resumable matched
+shards and the reporting contract in `evals/terminalbench/CAMPAIGN_RELAUNCH.md`.

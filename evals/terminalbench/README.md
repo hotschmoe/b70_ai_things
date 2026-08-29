@@ -1,5 +1,16 @@
 # TerminalBench 3 with Pi and local SGLang
 
+Relaunch is currently blocked. Read
+[`CAMPAIGN_RELAUNCH.md`](CAMPAIGN_RELAUNCH.md) before changing the harness or
+starting another pilot. It records two campaign-validity corrections, the
+per-arm runtime plan, launch gates, timing requirements, and the local-70 versus
+official-74 boundary.
+
+In particular, the retained `thinking=off` 4K job did not actually disable
+thinking because Pi treats a null `off` mapping as unsupported. The retained
+vLLM GPTQ jobs also used FP16 KV (`--dtype float16`, KV auto), despite their
+BF16 labels. Do not use either label as current campaign evidence.
+
 This directory contains the Harbor adapter used to expose local Qwen-style
 reasoning models to Pi. Harbor's stock Pi adapter defines custom models without
 reasoning metadata, which causes Pi to clamp `--thinking xhigh` to off.
