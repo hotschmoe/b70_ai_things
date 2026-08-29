@@ -149,6 +149,8 @@ def trace_census(path: Path, skip_iterations: int) -> dict[str, Any]:
         )
 
     steady = rows[skip_iterations:]
+    if len(steady) < 2:
+        raise ValueError(f"{path}: at least two target-token iterations are required")
     numeric_fields = ("graph_pieces", *STRUCTURAL_EVENTS, "collective_calls")
     signatures = []
     for row in steady:

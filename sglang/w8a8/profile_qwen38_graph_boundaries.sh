@@ -16,7 +16,7 @@ CENSUS="$REPO/vllm/w8a8/graph_boundary_census.py"
 NAME="m04-qwen38-w8a8-$STAMP"
 SERVED="qwen3.8-27b-W8A8-gptq-gdn-rtn-m04-breakable-tp2"
 PORT="${PORT:-18080}"
-PROFILE_STEPS="${PROFILE_STEPS:-4}"
+PROFILE_STEPS="${PROFILE_STEPS:-2}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
 
 case "${1:-}" in
