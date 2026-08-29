@@ -5515,3 +5515,65 @@ at 8,192 tokens on Qwen W8A8 breakable-reclaim500, transfer the matched policy
 to Ornith, port breakable-reclaim500 to NVFP4 with eager fallback, and qualify
 GPTQ BF16 target-only eager before reintroducing MTP. Use resumable matched
 shards and the reporting contract in `evals/terminalbench/CAMPAIGN_RELAUNCH.md`.
+
+### 2026-08-29d - Neural.Download/XeCores audit and serving roadmap recorded
+
+CONFIG -> read-only synthesis of the current repository evidence, three
+independent audits of Neural.Download and XeCores plus their linked source and
+recipe repositories, the four-arm Terminal-Bench state, and the user's product
+requirement to compare TP1, TP2, and two independent TP1 replicas as DP2. No
+endpoint was started and no GPU was touched.
+
+COMMAND -> normalize external results by model, quant, backend, target/KV
+dtype, topology, graph mode, MTP depth, prompt shape, concurrency, and evidence
+quality. Cross-check the claimed mechanisms with the local graph/runtime,
+collective, recovery, and Terminal-Bench records. Write a dated evidence ledger
+and a separate dated, gate-driven experiment matrix without changing prior
+results.
+
+RESULT -> `docs/20260829_neural_xecores_deep_dive_and_campaign_state.md`
+records the complete literature synthesis and local campaign handoff. It
+distinguishes Steve's graph-enabled dense-Qwen TP scaling from his negative
+eager controls, records XeCores as measured TP1 evidence rather than TP2
+evidence, and captures draft S+M1, prefix reuse, true Pi thinking-off,
+model-specific MTP, collective completion, graph-boundary, topology, and
+evidence-quality findings. It also records the current stable and rejected
+states of the four Terminal-Bench arms and the invalid historical thinking/KV
+labels.
+
+RESULT -> `docs/20260829_local_serving_research_roadmap.md` defines harness,
+source-oracle, per-model, graph, cache, MTP, topology, long-context, and
+Terminal-Bench matrices. Every fitting one-card recipe receives TP1 and DP2
+qualification; matched TP1/TP2 cells isolate scaling; final Pi tournaments
+compare single-task time and two-user tasks per wall hour. The plan preserves
+BF16 KV, P2P-off production safety, identity, target-exactness, lifecycle,
+health, recovery, and local-70 reporting gates.
+
+VERDICT -> use the two dated documents as the next-session campaign handoff.
+Repair the harness and observed-dtype evidence before another official pilot,
+secure a score-completing long route for each model/quant, then let matched
+Terminal-Bench evidence select the TP1, TP2, or DP2 local-serving winner for
+each workload. Do not assume TP2 wins when TP1 fits twice, and do not call a
+DP2 product win a TP scaling result.
+
+### 2026-08-29e - Roadmap objective corrected to single-stream Terminal-Bench
+
+CONFIG -> user clarification after the first roadmap draft. TP1 and TP2 are
+both candidates, but the next campaign's objective is the best fast, robust,
+highest-scoring single Pi decode stream on Terminal-Bench 3.0.0. DP2 is only a
+possible later concurrency benefit if a winning recipe fits one card.
+
+COMMAND -> revise the dated evidence ledger and roadmap so TP1 and TP2 receive
+equal single-stream qualification, remove DP2 experiments and the two-user
+tournament from the active matrix, and preserve DP2 only as a deferred
+post-selection deployment note.
+
+RESULT -> the active matrix now ranks recipes by Terminal-Bench score and
+normal completion first, then uses total task and machine time to distinguish
+the speed of viable high-scoring routes. Server TTFT, prefill, decode, cache
+reuse, MTP acceptance, failures, and health remain explanatory evidence. No
+DP2 test consumes time before the single-stream recipe winner is selected.
+
+VERDICT -> run the next campaign as a C1 recipe tournament across TP1 and TP2.
+If the winner is TP1, evaluate DP2 separately afterward as a local-serving
+concurrency bonus, not as part of model/recipe selection.
