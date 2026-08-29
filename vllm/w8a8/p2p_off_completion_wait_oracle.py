@@ -132,7 +132,9 @@ def dependent_consumer(tensor: torch.Tensor) -> torch.Tensor:
 
 def tensor_sha256(tensor: torch.Tensor) -> str:
     # This runs after the validation synchronize and is excluded from latency.
-    raw = bytes(tensor.detach().cpu().contiguous().view(torch.uint8).tolist())
+    raw = bytes(
+        tensor.detach().cpu().contiguous().view(torch.uint8).reshape(-1).tolist()
+    )
     return hashlib.sha256(raw).hexdigest()
 
 
