@@ -33,6 +33,9 @@ ONEDNN_BARRIER="${ONEDNN_BARRIER:-$NATIVE}"
 DECODE_GRAPH="${DECODE_GRAPH:-full}"
 TOOLPARSER="${TOOLPARSER:-none}"
 THINKCAP="${THINKCAP-}"
+HOST_MEM_MIN_GIB="${HOST_MEM_MIN_GIB:-64}"
+HOST_SWAP_MAX_GIB="${HOST_SWAP_MAX_GIB:-2}"
+CONTAINER_MEMORY_LIMIT_GIB="${CONTAINER_MEMORY_LIMIT_GIB-}"
 if [ -z "${SYCL_KERNELS+x}" ]; then
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     SYCL_KERNELS=1
@@ -169,6 +172,33 @@ preflight() {
     say "THINKCAP must be empty or a positive integer, got $THINKCAP"
     return 1
   fi
+  [ "$HOST_MEM_MIN_GIB" -ge 1 ] 2>/dev/null || {
+    say "HOST_MEM_MIN_GIB must be a positive integer, got $HOST_MEM_MIN_GIB"
+    return 1
+  }
+  [ "$HOST_SWAP_MAX_GIB" -ge 0 ] 2>/dev/null || {
+    say "HOST_SWAP_MAX_GIB must be a nonnegative integer, got $HOST_SWAP_MAX_GIB"
+    return 1
+  }
+  if [ -n "$CONTAINER_MEMORY_LIMIT_GIB" ] &&
+    ! { [ "$CONTAINER_MEMORY_LIMIT_GIB" -ge 1 ] 2>/dev/null; }; then
+    say "CONTAINER_MEMORY_LIMIT_GIB must be empty or a positive integer, got $CONTAINER_MEMORY_LIMIT_GIB"
+    return 1
+  fi
+
+  local available_kib swap_total_kib swap_free_kib swap_used_kib
+  available_kib="$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)"
+  swap_total_kib="$(awk '/SwapTotal:/ {print $2}' /proc/meminfo)"
+  swap_free_kib="$(awk '/SwapFree:/ {print $2}' /proc/meminfo)"
+  swap_used_kib=$((swap_total_kib - swap_free_kib))
+  if [ "$available_kib" -lt $((HOST_MEM_MIN_GIB * 1024 * 1024)) ]; then
+    say "host memory gate failed: MemAvailable=$((available_kib / 1024 / 1024)) GiB minimum=$HOST_MEM_MIN_GIB GiB"
+    return 1
+  fi
+  if [ "$swap_used_kib" -gt $((HOST_SWAP_MAX_GIB * 1024 * 1024)) ]; then
+    say "host swap gate failed: SwapUsed=$((swap_used_kib / 1024 / 1024)) GiB maximum=$HOST_SWAP_MAX_GIB GiB"
+    return 1
+  fi
 }
 
 start() {
@@ -182,6 +212,7 @@ start() {
   local tool_args=""
   local grammar_args="--grammar-backend none"
   local think_env=()
+  local memory_args=()
   local breakable_graph=0
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     graph_args="--cuda-graph-backend-decode full --cuda-graph-backend-prefill disabled --cuda-graph-bs-decode $GRAPH_BS"
@@ -204,10 +235,17 @@ start() {
     think_env=(-e "SGLANG_MAX_THINK_TOKENS=$THINKCAP")
     grammar_args="--grammar-backend xgrammar --enable-strict-thinking"
   fi
+  if [ -n "$CONTAINER_MEMORY_LIMIT_GIB" ]; then
+    memory_args=(
+      --memory "${CONTAINER_MEMORY_LIMIT_GIB}g"
+      --memory-swap "${CONTAINER_MEMORY_LIMIT_GIB}g"
+    )
+  fi
 
-  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM chunked_prefill=$CHUNKED_PREFILL tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0"
+  say "serve image=$IMG model=$SERVED tp=$TP ctx=$CTX memfrac=$MEMFRAC native=$NATIVE gdn_w8a8=$GDN_W8A8 lmhead_w8a8=$LMHEAD_W8A8 mtp=$MTP spec_steps=$SPEC_STEPS spec_draft=$SPEC_DRAFT onednn_input_dep=$ONEDNN_INPUT_DEP onednn_barrier=$ONEDNN_BARRIER decode_graph=$DECODE_GRAPH graph_bs=$GRAPH_BS graph_reclaim=$CG_RECLAIM chunked_prefill=$CHUNKED_PREFILL tool_parser=$TOOLPARSER think_cap=${THINKCAP:-unlimited} sycl_kernels=$SYCL_KERNELS ipc_exchange=$IPC_EXCHANGE p2p=0 host_mem_min_gib=$HOST_MEM_MIN_GIB host_swap_max_gib=$HOST_SWAP_MAX_GIB container_memory_limit_gib=${CONTAINER_MEMORY_LIMIT_GIB:-unlimited}"
   docker run -d --name "$NAME" --oom-score-adj 500 --device /dev/dri \
     -v /dev/dri/by-path:/dev/dri/by-path --ipc=host --shm-size 32g \
+    "${memory_args[@]}" \
     "${security_args[@]}" \
     -p "$PORT:$PORT" \
     -v "$REPO/models/files:/models:ro" \

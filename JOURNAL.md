@@ -5776,3 +5776,40 @@ routes safely support the immediate consumer with P2P disabled, but the
 explicit route supplies no speed claim or model-patch acceptance. Proceed to
 M04 graph-boundary census tooling before deciding whether a matched endpoint
 completion-route control is worth running.
+
+### 2026-08-29l - M04 structural census and host-stall classification
+
+CONFIG -> Qwen3.8-27B compressed-tensors W8A8 GPTQ with GDN RTN, SGLang TP2,
+P2P off, BF16 target/KV, breakable batch-1 decode graph, reclaim500, 4,096
+context, memory fraction 0.75, radix cache off, MTP off, and native SGLang
+decode annotations. The accepted structural capture used four decode steps.
+
+COMMAND -> profile after first token, parse paired-rank native decode ranges,
+count graph pieces, fences, host waits, submissions, and shaped collectives,
+then compare post-first-token throughput with two unprofiled controls. Require
+exact rank agreement and a profiled/control ratio of at least 0.75.
+
+RESULT -> all four captured tokens on both ranks had the same signature: 131
+graph pieces, 131 fence resets, 131 host waits, 262 submissions, 129 BF16
+`[1,5120]` all-reduces, and one BF16 `[1,124160]` all-gather. The 10.1215
+profiled tok/s divided by the 14.4349 tok/s control mean was 0.701183, or 29.9
+percent loss, so the overhead gate failed. Teardown and card plus compiled
+P2P-off collective post-health passed. The census JSON SHA256 was
+`1ca603b54d1ce45a4e03ec385ab9a3e24ad1a29e88256ba3dee8ae56f41f7db7`.
+
+RESULT -> a third, two-step attempt started at 06:50:08 UTC during 3.71 GiB of
+swap use, active swap churn and reclaim, and a root-NVMe queue depth of 60.91
+with 58.87 ms await. It reached TP2 weight loading but never endpoint health or
+profiling. The host journal ended at 06:50:10 while the container log continued
+to 06:50:34. The same boot already contained a directly observed global-OOM
+episode that blocked root jbd2, journald, and Btrfs writeback for 122/245
+seconds with about 56.4 GiB `gpu_active`. No final OOM, GPU fault, or crash dump
+survived for the new incident.
+
+VERDICT -> retain the exact structural census but keep M04 open because the
+overhead gate did not pass. Reject the third attempt as experiment evidence.
+Classify the unresponsive host as a likely memory-reclaim/swap/root-journal
+stall, not a proven GPU wedge; the exact initiator remains unproven. Require
+96 GiB MemAvailable, at most 1 GiB used swap, a 64 GiB no-swap container
+ceiling, and persistent memory/PSI sampling before one bounded retry. Do not
+relax those safety bounds to make the profile run.

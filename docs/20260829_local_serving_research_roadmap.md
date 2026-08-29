@@ -3,7 +3,9 @@
 Date: 2026-08-29
 
 Status: execution underway. Phase 0 H01-H07 and Phase 1 M01-M03 passed on
-2026-08-29; M04 graph-boundary census tooling is next. This roadmap
+2026-08-29. M04 has an exact paired-rank structural census, but its first
+bounded overhead measurement failed and the safe two-step retry remains open.
+This roadmap
 supersedes no historical evidence. It incorporates the 2026-08-29
 Neural.Download and XeCores audit recorded in
 `docs/20260829_neural_xecores_deep_dive_and_campaign_state.md` and the current
@@ -26,7 +28,9 @@ M03 then proved exact immediate-consumer behavior for both blocking c10d and
 `async_op=True` plus `Work.wait()` across three fresh P2P-off lifetimes. Its
 event and exploratory host-timing evidence is in
 `docs/20260829_m03_explicit_completion_ab.md`; the explicit route is safe in
-the oracle but supplies no endpoint-speed claim.
+the oracle but supplies no endpoint-speed claim. M04's exact structural result,
+failed overhead gate, host-stall review, and new admission/cgroup safeguards
+are in `docs/20260829_m04_graph_census_and_host_stall.md`.
 
 ## Goal
 

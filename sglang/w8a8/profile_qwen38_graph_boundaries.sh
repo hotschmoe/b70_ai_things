@@ -18,6 +18,9 @@ SERVED="qwen3.8-27b-W8A8-gptq-gdn-rtn-m04-breakable-tp2"
 PORT="${PORT:-18080}"
 PROFILE_STEPS="${PROFILE_STEPS:-2}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
+HOST_MEM_MIN_GIB="${HOST_MEM_MIN_GIB:-96}"
+HOST_SWAP_MAX_GIB="${HOST_SWAP_MAX_GIB:-1}"
+CONTAINER_MEMORY_LIMIT_GIB="${CONTAINER_MEMORY_LIMIT_GIB:-64}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -30,9 +33,15 @@ esac
 
 mkdir -p "$RESULT_DIR" "$HOST_PROFILE"
 active=0
+gpu_touched=0
+monitor_pid=""
 cleanup() {
   local rc=$?
   trap - EXIT INT TERM
+  if [ -n "$monitor_pid" ]; then
+    kill "$monitor_pid" >/dev/null 2>&1 || true
+    wait "$monitor_pid" 2>/dev/null || true
+  fi
   if [ "$active" = 1 ]; then
     curl -fsS --max-time 15 "http://127.0.0.1:$PORT/health" \
       >"$RESULT_DIR/endpoint_before_teardown.txt" 2>&1 || rc=1
@@ -44,11 +53,13 @@ cleanup() {
       rc=1
     fi
   fi
-  "$REPO/bin/xpu-health" >"$RESULT_DIR/health_post_card.log" 2>&1 || rc=1
-  "$REPO/bin/xpu-collective-health" --p2p 0 --timeout "$HEALTH_TIMEOUT" \
-    >"$RESULT_DIR/health_post_collective.log" 2>&1 || rc=1
-  cat "$RESULT_DIR/health_post_card.log"
-  cat "$RESULT_DIR/health_post_collective.log"
+  if [ "$gpu_touched" = 1 ]; then
+    "$REPO/bin/xpu-health" >"$RESULT_DIR/health_post_card.log" 2>&1 || rc=1
+    "$REPO/bin/xpu-collective-health" --p2p 0 --timeout "$HEALTH_TIMEOUT" \
+      >"$RESULT_DIR/health_post_collective.log" 2>&1 || rc=1
+    cat "$RESULT_DIR/health_post_card.log"
+    cat "$RESULT_DIR/health_post_collective.log"
+  fi
   echo "VERDICT -> exit=$rc result_dir=$RESULT_DIR"
   exit "$rc"
 }
@@ -70,14 +81,52 @@ trap cleanup EXIT INT TERM
   echo "radix_cache=off"
   echo "profile_steps=$PROFILE_STEPS"
   echo "minimum_profiled_ratio=0.75"
+  echo "host_mem_min_gib=$HOST_MEM_MIN_GIB"
+  echo "host_swap_max_gib=$HOST_SWAP_MAX_GIB"
+  echo "container_memory_limit_gib=$CONTAINER_MEMORY_LIMIT_GIB"
 } >"$RESULT_DIR/config.txt"
 
+host_snapshot() {
+  local available_kib swap_total_kib swap_free_kib
+  available_kib="$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)"
+  swap_total_kib="$(awk '/SwapTotal:/ {print $2}' /proc/meminfo)"
+  swap_free_kib="$(awk '/SwapFree:/ {print $2}' /proc/meminfo)"
+  printf 'utc=%s mem_available_kib=%s swap_used_kib=%s\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$available_kib" \
+    "$((swap_total_kib - swap_free_kib))"
+}
+
+host_snapshot >"$RESULT_DIR/host_memory_preflight.log"
+available_kib="$(awk -F'[ =]' '{for (i=1; i<=NF; i++) if ($i == "mem_available_kib") print $(i+1)}' "$RESULT_DIR/host_memory_preflight.log")"
+swap_used_kib="$(awk -F'[ =]' '{for (i=1; i<=NF; i++) if ($i == "swap_used_kib") print $(i+1)}' "$RESULT_DIR/host_memory_preflight.log")"
+[ "$available_kib" -ge $((HOST_MEM_MIN_GIB * 1024 * 1024)) ] || {
+  echo "host memory gate failed before GPU work" >&2
+  exit 1
+}
+[ "$swap_used_kib" -le $((HOST_SWAP_MAX_GIB * 1024 * 1024)) ] || {
+  echo "host swap gate failed before GPU work" >&2
+  exit 1
+}
+
+(
+  while :; do
+    host_snapshot
+    awk '{print "memory_psi " $0}' /proc/pressure/memory
+    sleep 5
+  done
+) >"$RESULT_DIR/host_memory_monitor.log" &
+monitor_pid=$!
+
+gpu_touched=1
 "$REPO/bin/xpu-health" | tee "$RESULT_DIR/health_pre_card.log"
 "$REPO/bin/xpu-collective-health" --p2p 0 --timeout "$HEALTH_TIMEOUT" \
   | tee "$RESULT_DIR/health_pre_collective.log"
 
 DECODE_GRAPH=breakable GRAPH_BS=1 CG_RECLAIM=500 \
   CTX=4096 MEMFRAC=0.75 MAXREQ=1 MTP=0 TOOLPARSER=none \
+  HOST_MEM_MIN_GIB="$HOST_MEM_MIN_GIB" \
+  HOST_SWAP_MAX_GIB="$HOST_SWAP_MAX_GIB" \
+  CONTAINER_MEMORY_LIMIT_GIB="$CONTAINER_MEMORY_LIMIT_GIB" \
   NAME="$NAME" PORT="$PORT" SERVED="$SERVED" LOG="$RESULT_DIR/server.log" \
   bash "$SERVE" start | tee "$RESULT_DIR/start.log"
 active=1
