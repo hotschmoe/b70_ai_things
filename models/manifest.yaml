@@ -26,7 +26,7 @@ models:
     notes: ModelOpt MIXED_PRECISION checkpoint. MLP weights are group-16
            NVFP4; attention weights are FP8; vision and MTP are retained.
 
-  # Qwen3.8-27B: BF16 source, preferred NVFP4, and W8A8 research target.
+  # Qwen3.8-27B: BF16/FP8 sources, preferred NVFP4, and W8A8 research target.
   - id: qwen3.8-27b/bf16
     family: qwen3.8-27b
     scheme: bf16
@@ -50,6 +50,20 @@ models:
       revision: 554ebba9b5f1b79dc11246341960360e6ef05ef4
     notes: Preferred Qwen3.8 NVFP4. ModelOpt MIXED_PRECISION with group-16
            NVFP4 MLP/lm_head, FP8 attention/GDN, and BF16 vision/MTP.
+
+  - id: qwen3.8-27b/fp8-official
+    family: qwen3.8-27b
+    scheme: fp8-block-scaled-official
+    vision: true
+    mtp: true
+    size_gb: 31
+    served_as: qwen3.8-27b-FP8-official
+    source:
+      type: hf
+      repo: Qwen/Qwen3.8-27B-FP8
+      revision: 017b9c7af6b5689d5dd426a76e0bc077eb5ca20a
+    notes: Official block-scaled FP8 target and publisher MTP weights for the
+           tracked Neural.Download vLLM W8A16 reproduction lane.
 
   - id: qwen3.8-27b/w8a8-gptq
     family: qwen3.8-27b

@@ -6040,3 +6040,39 @@ exact for this native prompt. Cancel the conditional 50K no-reclaim canary and
 do not advance cache/MTP work on this graph route before a source-level
 numerical/state audit. Move next to the requested official-FP8 vLLM recipe port,
 starting with tracked source identities and a P2P-off MTP0 control.
+
+### 2026-08-29s - F01 Neural.Download official-FP8 port ledger
+
+CONFIG -> user-requested Neural.Download Qwen3.8-27B official-FP8 vLLM TP2
+candidate recipe, current host kernel 7.1, Compute Runtime 26.22, and the
+standing vLLM direct-P2P queue-handoff quarantine. No GPU workload was run.
+
+COMMAND -> resolve the reproduction and Hugging Face remote identities, create
+a sparse external checkout under the retained `steve-repro` root, inspect the
+MTP0/MTP1 build and launch wrappers, hash all correctness patches, verify the
+exact base image is installed, and add the pinned FP8 checkpoint to the live
+model manifest.
+
+RESULT -> reproduction source pinned to
+`0948f7c2c2e21f0e8fcc444e319e5e8f5b83d0e7`, vLLM source to
+`ac7509e2b1db40fec2f03dde1ed4e9dfdc2338c9`, model to
+`017b9c7af6b5689d5dd426a76e0bc077eb5ca20a`, and base image to
+`f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f`.
+The exact base image was already local. The W8A16, deterministic GDN,
+compiled-state/oneCCL-wait, and packed-RMS patch SHA256 values were
+`5db7f1af1156f3490ca91d0d74a07aa2d0909e175eeb1ae23f2074c55c44ff8a`,
+`cda7dd1e42a1e0fed2dd34f3936303cb038852a46d8d00786a1c2ebae326f8eb`,
+`8f8febcd0abc59bc9b69830827cd7607c00870414b17bd02cf32e2d879858ac8`,
+and `ff5b4f33f5596efbad75112bdbbca2bbf81b6c84688476bfa1c9ec9e546c78c4`.
+
+RESULT -> the recipe is not safe to execute verbatim. Its qualified MTP0
+command enables direct P2P, its strict MTP1 wrapper hardcodes direct P2P, and
+both launchers permit 3 GiB of container swap. The page also labels clean-host
+endpoint replay as missing. The local port must preserve source/compiler/model
+settings while using the lease, P2P off, no container swap, host admission and
+monitoring, and pre/post health.
+
+VERDICT -> F01 passes as a source/identity ledger, not as a runtime
+reproduction. Fetch and verify the exact 66-file, 30,866,866,928-byte model;
+then build the deterministic MTP0 overlay from tracked source and qualify a
+P2P-off graph-off target before MTP1 or any isolated direct-P2P oracle.
