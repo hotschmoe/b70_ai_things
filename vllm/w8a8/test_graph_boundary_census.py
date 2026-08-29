@@ -45,6 +45,17 @@ def make_trace(path: Path, *, submissions: int = 2) -> None:
                     "dur": 0.5,
                 }
             )
+        events.append(
+            {
+                "ph": "X",
+                "cat": "user_annotation",
+                "name": "b70::collective all_reduce dtype=bfloat16 shape=1x5120",
+                "pid": 7,
+                "tid": 9,
+                "ts": start + 10,
+                "dur": 2.0,
+            }
+        )
     path.write_text(json.dumps({"traceEvents": events}), encoding="ascii")
 
 
@@ -87,6 +98,15 @@ class CensusTests(unittest.TestCase):
                     "fences": 1,
                     "host_waits": 2,
                     "submissions": 2,
+                    "collective_calls": 1,
+                    "collectives": [
+                        {
+                            "collective": "all_reduce",
+                            "dtype": "bfloat16",
+                            "shape": [1, 5120],
+                            "count": 1,
+                        }
+                    ],
                 },
             )
             graph = report["compiled_graphs"]["0"]

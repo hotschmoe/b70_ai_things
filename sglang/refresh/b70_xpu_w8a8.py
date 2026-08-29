@@ -667,3 +667,7 @@ def install() -> None:
 
 if os.environ.get("B70_XPU_W8A8") == "1":
     install()
+    if os.environ.get("B70_GRAPH_CENSUS") == "1":
+        import b70_graph_census
+
+        b70_graph_census.install()

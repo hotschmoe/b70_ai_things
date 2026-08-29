@@ -24,6 +24,10 @@ GRAPH_CALL = re.compile(
     r"(?P<op>[A-Za-z0-9_.]+)"
 )
 TENSOR_TYPE = re.compile(r"^(?P<dtype>[A-Za-z0-9_]+)\[(?P<shape>[^]]+)\]$")
+COLLECTIVE_ANNOTATION = re.compile(
+    r"^b70::collective (?P<collective>[a-z_]+) "
+    r"dtype=(?P<dtype>[A-Za-z0-9_.]+) shape=(?P<shape>[0-9x]+)$"
+)
 
 
 def load_trace(path: Path) -> list[dict[str, Any]]:
@@ -81,6 +85,34 @@ def trace_census(path: Path, skip_iterations: int) -> dict[str, Any]:
             field: sum(event.get("name") == event_name for event in owned_driver)
             for field, event_name in STRUCTURAL_EVENTS.items()
         }
+        collective_counts: collections.Counter[
+            tuple[str, str, tuple[int, ...]]
+        ] = collections.Counter()
+        for event in events:
+            if (
+                event.get("cat") != "user_annotation"
+                or event.get("tid") != iteration.get("tid")
+                or not contains(iteration, event)
+            ):
+                continue
+            match = COLLECTIVE_ANNOTATION.match(str(event.get("name", "")))
+            if match is None:
+                continue
+            shape = tuple(int(value) for value in match.group("shape").split("x"))
+            collective_counts[
+                (match.group("collective"), match.group("dtype"), shape)
+            ] += 1
+        collectives = [
+            {
+                "collective": collective,
+                "dtype": dtype,
+                "shape": list(shape),
+                "count": count,
+            }
+            for (collective, dtype, shape), count in sorted(
+                collective_counts.items()
+            )
+        ]
         rows.append(
             {
                 "iteration_index": index,
@@ -88,18 +120,42 @@ def trace_census(path: Path, skip_iterations: int) -> dict[str, Any]:
                 "cpu_range_us": float(iteration.get("dur", 0.0)),
                 "graph_pieces": counts["fences"],
                 **counts,
+                "collective_calls": sum(collective_counts.values()),
+                "collectives": collectives,
             }
         )
 
     steady = rows[skip_iterations:]
-    signatures = [
-        tuple(row[field] for field in ("graph_pieces", *STRUCTURAL_EVENTS))
-        for row in steady
-    ]
+    numeric_fields = ("graph_pieces", *STRUCTURAL_EVENTS, "collective_calls")
+    signatures = []
+    for row in steady:
+        collective_signature = tuple(
+            (
+                item["collective"],
+                item["dtype"],
+                tuple(item["shape"]),
+                item["count"],
+            )
+            for item in row["collectives"]
+        )
+        signatures.append(
+            (*tuple(row[field] for field in numeric_fields), collective_signature)
+        )
     signature_counts = collections.Counter(signatures)
     signature, signature_occurrences = signature_counts.most_common(1)[0]
     stable = len(signature_counts) == 1
-    fields = ("graph_pieces", *STRUCTURAL_EVENTS)
+    numeric_signature = signature[:-1]
+    collective_signature = signature[-1]
+    per_target_token = dict(zip(numeric_fields, numeric_signature))
+    per_target_token["collectives"] = [
+        {
+            "collective": collective,
+            "dtype": dtype,
+            "shape": list(shape),
+            "count": count,
+        }
+        for collective, dtype, shape, count in collective_signature
+    ]
     return {
         "trace": str(path),
         "iterations_total": len(rows),
@@ -107,14 +163,26 @@ def trace_census(path: Path, skip_iterations: int) -> dict[str, Any]:
         "target_token_iterations": len(steady),
         "stable_signature": stable,
         "signature_occurrences": signature_occurrences,
-        "per_target_token": dict(zip(fields, signature)),
+        "per_target_token": per_target_token,
         "cpu_range_us": {
             "minimum": min(row["cpu_range_us"] for row in steady),
             "median": statistics.median(row["cpu_range_us"] for row in steady),
             "maximum": max(row["cpu_range_us"] for row in steady),
         },
         "observed_signatures": [
-            {**dict(zip(fields, observed)), "iterations": count}
+            {
+                **dict(zip(numeric_fields, observed[:-1])),
+                "collectives": [
+                    {
+                        "collective": collective,
+                        "dtype": dtype,
+                        "shape": list(shape),
+                        "count": collective_count,
+                    }
+                    for collective, dtype, shape, collective_count in observed[-1]
+                ],
+                "iterations": count,
+            }
             for observed, count in sorted(signature_counts.items())
         ],
         "per_iteration": rows,
@@ -182,7 +250,7 @@ def compact_collectives(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 def build_report(
     traces: dict[int, Path],
-    graphs: dict[int, Path],
+    graphs: dict[int, Path] | None,
     *,
     skip_iterations: int,
     decode_rows: int,
@@ -190,24 +258,51 @@ def build_report(
     profiled_value: float | None,
     minimum_profiled_ratio: float,
 ) -> dict[str, Any]:
-    if sorted(traces) != [0, 1] or sorted(graphs) != [0, 1]:
-        raise ValueError("exactly ranks 0 and 1 are required for traces and graphs")
+    if sorted(traces) != [0, 1]:
+        raise ValueError("exactly ranks 0 and 1 are required for traces")
+    if graphs is not None and sorted(graphs) != [0, 1]:
+        raise ValueError("exactly ranks 0 and 1 are required for compiled graphs")
     trace_reports = {
         rank: trace_census(path, skip_iterations) for rank, path in traces.items()
     }
-    graph_reports = {
-        rank: compiled_collective_census(path, decode_rows)
-        for rank, path in graphs.items()
-    }
+    graph_reports = (
+        {
+            rank: compiled_collective_census(path, decode_rows)
+            for rank, path in graphs.items()
+        }
+        if graphs is not None
+        else {}
+    )
     structural_agreement = (
         trace_reports[0]["stable_signature"]
         and trace_reports[1]["stable_signature"]
         and trace_reports[0]["per_target_token"]
         == trace_reports[1]["per_target_token"]
     )
-    collective_agreement = compact_collectives(
-        graph_reports[0]
-    ) == compact_collectives(graph_reports[1])
+    traced_collectives = {
+        rank: report["per_target_token"]["collectives"]
+        for rank, report in trace_reports.items()
+    }
+    traced_collective_available = bool(traced_collectives[0]) and bool(
+        traced_collectives[1]
+    )
+    traced_collective_agreement = (
+        traced_collective_available
+        and traced_collectives[0] == traced_collectives[1]
+    )
+    compiled_collective_agreement = (
+        bool(graph_reports)
+        and compact_collectives(graph_reports[0])
+        == compact_collectives(graph_reports[1])
+    )
+    if traced_collective_available and graph_reports:
+        collective_agreement = (
+            traced_collective_agreement and compiled_collective_agreement
+        )
+    elif traced_collective_available:
+        collective_agreement = traced_collective_agreement
+    else:
+        collective_agreement = compiled_collective_agreement
 
     overhead = None
     overhead_passed = True
@@ -233,6 +328,8 @@ def build_report(
         "passed": passed,
         "rank_structural_agreement": structural_agreement,
         "rank_collective_agreement": collective_agreement,
+        "traced_collective_agreement": traced_collective_agreement,
+        "compiled_collective_agreement": compiled_collective_agreement,
         "traces": {str(rank): report for rank, report in trace_reports.items()},
         "compiled_graphs": {
             str(rank): report for rank, report in graph_reports.items()
@@ -259,9 +356,7 @@ def unique_rank_paths(values: list[tuple[int, Path]], label: str) -> dict[int, P
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trace", action="append", type=parse_rank_path, required=True)
-    parser.add_argument(
-        "--compiled-graph", action="append", type=parse_rank_path, required=True
-    )
+    parser.add_argument("--compiled-graph", action="append", type=parse_rank_path)
     parser.add_argument("--skip-iterations", type=int, default=2)
     parser.add_argument("--decode-rows", type=int, default=1)
     parser.add_argument("--control-value", type=float)
@@ -279,7 +374,11 @@ def main() -> None:
     try:
         report = build_report(
             unique_rank_paths(args.trace, "trace"),
-            unique_rank_paths(args.compiled_graph, "compiled graph"),
+            (
+                unique_rank_paths(args.compiled_graph, "compiled graph")
+                if args.compiled_graph
+                else None
+            ),
             skip_iterations=args.skip_iterations,
             decode_rows=args.decode_rows,
             control_value=args.control_value,
@@ -293,12 +392,18 @@ def main() -> None:
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="ascii"
     )
     structural = report["traces"]["0"]["per_target_token"]
-    collectives = report["compiled_graphs"]["0"]
+    trace_collectives = report["traces"]["0"]["per_target_token"]
+    if report["compiled_graphs"]:
+        collective_count = report["compiled_graphs"]["0"][
+            "collective_calls_per_target_token"
+        ]
+    else:
+        collective_count = trace_collectives["collective_calls"]
     print(
         "CENSUS -> "
         f"pieces={structural['graph_pieces']} fences={structural['fences']} "
         f"waits={structural['host_waits']} submissions={structural['submissions']} "
-        f"collectives={collectives['collective_calls_per_target_token']}"
+        f"collectives={collective_count}"
     )
     print(
         "RANKS -> "
