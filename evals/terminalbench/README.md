@@ -1,8 +1,9 @@
 # TerminalBench 3 with Pi and local SGLang
 
-Relaunch remains blocked on Phase 0 gates H04-H07. H01-H03 passed locally on
-2026-08-29 with exact Pi 0.84.3 payload capture and a non-GPU launcher-policy
-oracle. Run `evals/terminalbench/phase0_preflight.sh` to repeat those checks.
+Phase 0 H01-H07 passed locally on 2026-08-29. The preflight covers exact Pi
+0.84.3 payloads, launcher policy, observed identity/dtype validation,
+trajectory classification, a mock-endpoint lifecycle, and the deterministic
+TB3-local-70 lock. Run `evals/terminalbench/phase0_preflight.sh` to repeat it.
 Read
 [`CAMPAIGN_RELAUNCH.md`](CAMPAIGN_RELAUNCH.md) before changing the harness or
 starting another pilot. It records two campaign-validity corrections, the
@@ -54,8 +55,11 @@ Remove `INCLUDE_TASK` and `N_TASKS` to run all 74 tasks. Run arms sequentially;
 each endpoint is qualified for one request maximum and the goal is comparable
 whole-job wall time, not throughput from overlapping trials.
 
-Each job receives `b70_lifecycle.json`, which records server startup, Harbor,
-and end-to-end time through post-health teardown. Compare completed jobs with:
+Each job receives `b70_identity.json`, `b70_models.json`, and
+`b70_lifecycle.json`. These record the exact endpoint identity, observed target
+and KV dtypes, endpoint health before teardown, fatal markers, and full machine
+time from pre-health through teardown and post-health. Compare completed jobs
+with:
 
 ```bash
 python3 evals/terminalbench/summarize.py \

@@ -96,9 +96,11 @@ Two historical labels were invalidated on 2026-08-29:
    on auto. Its runtime log reported FP16. Served IDs and lifecycle metadata
    that called it BF16 do not override observed runtime identity.
 
-No new scored campaign run is valid until the Pi payload oracle, observed KV
-dtype assertion, final stop-reason capture, endpoint-before-teardown health,
-and complete pre-health-through-post-health timing are automated.
+The H01-H07 harness gate passed on 2026-08-29. The exact Pi payload oracle,
+observed model/dtype assertion, final stop-reason and activity capture,
+endpoint-before-teardown health, complete pre-health-through-post-health
+clock, and deterministic local-70 lock are automated. This closes harness
+validity; it does not qualify the rejected NVFP4 FULL or GPTQ PIECEWISE routes.
 
 Terminal-Bench 3.0.0 contains 74 tasks, but four require an H100 task
 environment. Local B70 work is therefore a labeled `TB3-local-70` campaign;

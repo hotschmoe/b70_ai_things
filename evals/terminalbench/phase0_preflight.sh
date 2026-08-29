@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the non-GPU H01-H03 campaign preflight against exact Pi 0.84.3.
+# Run the complete non-GPU H01-H07 campaign preflight.
 set -euo pipefail
 
 REPO="${REPO:-/mnt/vm_8tb/github/b70_ai_things}"
@@ -18,3 +18,5 @@ PYTHONPATH="$REPO" "$HARBOR_PYTHON" -m unittest discover \
   -s "$REPO/evals/terminalbench/tests" -v
 PYTHONPATH="$REPO" "$HARBOR_PYTHON" \
   "$REPO/evals/terminalbench/pi_payload_oracle.py" --pi "$PI_BINARY"
+PYTHONPATH="$REPO" "$HARBOR_PYTHON" \
+  "$REPO/evals/terminalbench/local70_manifest.py"

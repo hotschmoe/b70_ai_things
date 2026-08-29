@@ -1,0 +1,454 @@
+{
+  "schema_version": 1,
+  "dataset": "terminal-bench/terminal-bench",
+  "dataset_version": "3.0.0",
+  "campaign": "TB3-local-70",
+  "hash_algorithm": "sha256",
+  "hash_scope": "task.toml bytes only",
+  "all_task_count": 74,
+  "local_task_count": 70,
+  "all_tasks_digest": "5d1e14cd37dc59635d9f6e7241379c69f8ffaebd3eb1d29c1eabda554a8b1b71",
+  "local_tasks_digest": "f42c7d0ac925d58d603dfd8f40ceebaac610d376ef1fa48bfe54f760a0970d3d",
+  "excluded_tasks": [
+    {
+      "name": "exam-pdf-eval",
+      "task_toml_sha256": "4c6a719b9cfd5a042e2745f23b4aed93e4dbc83ac0cbf136d969696472c7d0cf"
+    },
+    {
+      "name": "fp8-rmsnorm-gemm",
+      "task_toml_sha256": "52da669b5eede3f93050b12693156fa35e5d557a913e31f83246776cc6afe89a"
+    },
+    {
+      "name": "jax-speedrun-gpu",
+      "task_toml_sha256": "caa8ed64dfbb555eead7a5b884790ae9496c4d43e7589be86b9f0393aea833f2"
+    },
+    {
+      "name": "math-eval-grader",
+      "task_toml_sha256": "efd46699c7767a8e312cb7cbb3700f372d3995b3c04d1ce49af10e360645a1a8"
+    }
+  ],
+  "tasks": [
+    {
+      "name": "atrx-vep-crispr",
+      "task_toml_sha256": "4951a73fa554698d3575f98e0905585ce1fecb97825042c22d656d7e25ac3c3d"
+    },
+    {
+      "name": "batched-eval-parity",
+      "task_toml_sha256": "4b6825575bbebb11df11f9608597ce0941f2732cfb5716046bf2bd99317b48a0"
+    },
+    {
+      "name": "biped-contact-dynamics",
+      "task_toml_sha256": "4a64d48487278b457f69596ad2ac1b267767ebf638628cc70f52d9f3803d6f6d"
+    },
+    {
+      "name": "bun-sourcemap-leak",
+      "task_toml_sha256": "94aa694dbed255b3bba35f97d4adee34227a8346e643aa7637ebdcab4914784c"
+    },
+    {
+      "name": "cad-model",
+      "task_toml_sha256": "6545076b6faa7ac157fedd7fde7b4f31bc0de80757ece658db723d6302fdfe0d"
+    },
+    {
+      "name": "cargo-flight-dispatch",
+      "task_toml_sha256": "c49a1dbb911e00caad8b136a1761256d5637ab7cf010fcf3d861365ce20e561f"
+    },
+    {
+      "name": "cli-2ph-simplex",
+      "task_toml_sha256": "6db2ad834371b29367fca69a9c0bc62b29a8d9658d7fceac7083f6bdbbc6058f"
+    },
+    {
+      "name": "coq-block-bound",
+      "task_toml_sha256": "6d58c3746332f574b142a80ae795bedf9ea3cb7844cd1324e9ee1b8d3e529b27"
+    },
+    {
+      "name": "ctr-optimization",
+      "task_toml_sha256": "82f0b6ee8a706da66207f2a2a84fa7c62432335146f476c6ae9118ae52071af4"
+    },
+    {
+      "name": "cumulative-layout-shift",
+      "task_toml_sha256": "eacd325f23c67583ce71d66e54a6858ec9b974656ce9f26d8dcaa96f6979afbb"
+    },
+    {
+      "name": "data-anonymization",
+      "task_toml_sha256": "bbedd8a14c7ea8097f2f9a975c02d2868598e4ac249dddc14f138b2bb20476a5"
+    },
+    {
+      "name": "distributed-dedup",
+      "task_toml_sha256": "baf20c8c7f504e77dcd370b31851b2530540cb04a69c68db37e89afa5ee24678"
+    },
+    {
+      "name": "embedding-drift-monitor",
+      "task_toml_sha256": "5455ffde12eb668b0b93d82b861e808c2e52df611b50ad791d238d8bb4fc65dd"
+    },
+    {
+      "name": "erp-procurement-planning",
+      "task_toml_sha256": "6e613c1d1b0ce0f0664265acfc29226552e0ef3d66e7aad3d5a86fb8de024c72"
+    },
+    {
+      "name": "fin-saccr-rwa",
+      "task_toml_sha256": "7c4a5afd1b35defc14ec0c58b46b318de67aaff41c484376ccaf5cf151dbe290"
+    },
+    {
+      "name": "fix-uautomizer-soundness",
+      "task_toml_sha256": "fc6cb78fc201240427172323f4f52226331762a13c112c863aaa7406d1c2ccb1"
+    },
+    {
+      "name": "foodstuff-beta-activity",
+      "task_toml_sha256": "5090e2cf2308f9d0e516c785c106831f56e43c9c42e942d984dc00df81a4db24"
+    },
+    {
+      "name": "formal-crypto",
+      "task_toml_sha256": "805eb17e8003e9e649bb03044d0b202f8c3c54c18051461e83329f0a4ee4f270"
+    },
+    {
+      "name": "freecad-impeller",
+      "task_toml_sha256": "4f7aa37785e50aa3606a278cad5c51c9717eac79da4d40c139a9f1bef19e63c4"
+    },
+    {
+      "name": "freecad-platform-drawing",
+      "task_toml_sha256": "bff934db3ca1990a115582958fde848ddcf5f82af6173f9f2b181e1244990efc"
+    },
+    {
+      "name": "freecad-spring-clip",
+      "task_toml_sha256": "62188b90d5ef28f4a744b3033c024305a66585b4542fdeb54d8cf3ec1aa40fc9"
+    },
+    {
+      "name": "freight-dispatch-shift",
+      "task_toml_sha256": "e18ca53438b7575a5eec743f9172407b8f6309c0dc95d77898b64266d7659d27"
+    },
+    {
+      "name": "glycan-ms2-elucidation",
+      "task_toml_sha256": "4c14e8cb1f6949e7e61ddf3ce9814dba65e9f2987ac2ee1b5badadde0633578d"
+    },
+    {
+      "name": "gpt2-codegolf",
+      "task_toml_sha256": "250c961177044bf7e3b65099ffb7a7dc68f7c42b456f89108b95fb72c4c94098"
+    },
+    {
+      "name": "gsea-proteomics",
+      "task_toml_sha256": "745bbf10cac5ec8ca45434c7103de1a409eb5fb108912f89934372d7df13ddcc"
+    },
+    {
+      "name": "heat-pump-warranty",
+      "task_toml_sha256": "8e32c4e79da1157fdd2923220df2179896ceeac1faca8faa827e167ba3fec844"
+    },
+    {
+      "name": "hof-topology-interpenetration",
+      "task_toml_sha256": "2830514e0705e2bef1445061e27cdda0449d67998c4d08ae915b622529138c81"
+    },
+    {
+      "name": "html-js-filter",
+      "task_toml_sha256": "282df8b13d9d4b9748a6ed82770a9f2fafc7b618ea7cb6928dfd4eb2c504448b"
+    },
+    {
+      "name": "ico-path-patch",
+      "task_toml_sha256": "85a7cab0ed13ee6330225409dea2c3ee99b458832a80353bae4e319174f833c6"
+    },
+    {
+      "name": "interleaved-vigenere",
+      "task_toml_sha256": "f940d28febc8c90188e41db293c2ef3e0ac46ca9866147928252b7ebd240e57b"
+    },
+    {
+      "name": "intrastat-meldung",
+      "task_toml_sha256": "44a535d12789fd4443028b6ff30b76d0b5df54fab9447c8d1282e93bfbdfff93"
+    },
+    {
+      "name": "ks-solver-cpp",
+      "task_toml_sha256": "78a21bc365fa02c7e1efef24c161f753da543913718d09a72b6161b6cbd06a90"
+    },
+    {
+      "name": "kv-live-surgery",
+      "task_toml_sha256": "fe00f31bd9640a34e4ab8c0b69b06ac43b6915fb4456ca8ccdfce93686bbc57e"
+    },
+    {
+      "name": "lake-temp-glm",
+      "task_toml_sha256": "7628c008068e8f32bfc282dacaea2ba1db0d3fe93eef8a727b7f9ed45d334c20"
+    },
+    {
+      "name": "layout-config-recreation",
+      "task_toml_sha256": "8912b5135b29121992f900a9f7ef8355a681d2688f11946725d1ec32950be7f7"
+    },
+    {
+      "name": "layout-config-recreation2",
+      "task_toml_sha256": "99e6eb7e220c34bf733990e91e52079868790961caafda487510f276a76fd540"
+    },
+    {
+      "name": "lean-midpoint-proof",
+      "task_toml_sha256": "26bb6084fa21a3c03b787dfe9ddbeb46c177873fadc7f9fc07f204b0d32c8827"
+    },
+    {
+      "name": "legacy-utility-triage",
+      "task_toml_sha256": "4f9d5ca086ddb6a0d84763b22382efe29903ae4574d0907246c902c130fcab93"
+    },
+    {
+      "name": "live-database-cutover",
+      "task_toml_sha256": "64e42ddf6c55ca689b29e2289debcaf55a1ddbbe5ca19ea86449107a87dc9eb9"
+    },
+    {
+      "name": "medical-claims-processing",
+      "task_toml_sha256": "d16e416b0441aa281f959d21d1b532a43f4b4fbe1bb771b13a70cc812ccb85f8"
+    },
+    {
+      "name": "memcached-backdoor",
+      "task_toml_sha256": "2ec48271cd7b4d1d0ee85a2e59571d29611dc2c7363ef1576252e979b967af51"
+    },
+    {
+      "name": "mp-checkpoint-consolidation",
+      "task_toml_sha256": "af0a5c80363b2b95a09c8012d7d352288614a0d6ff67ec140b0d40249d1961d7"
+    },
+    {
+      "name": "music-harmony",
+      "task_toml_sha256": "4ef5c748cf657d5e912f6aa10bec57eda5c3027c4c98e447ebe846f44cdce893"
+    },
+    {
+      "name": "mvcc-lsm-compaction",
+      "task_toml_sha256": "d65047ebb41f7a21de9fd2c30cdf8961bc93c4543f74892c25c62d43c5b457ec"
+    },
+    {
+      "name": "nextjs-performance",
+      "task_toml_sha256": "d4e14c4ace124491cb9b610c1d2628b84f307744a78fb3b94704a8e308d3a88a"
+    },
+    {
+      "name": "ontology-kg-querying",
+      "task_toml_sha256": "2c0ddeb8448c3847c8353c9efa49fc302db72f2862698db2568642db04e648a3"
+    },
+    {
+      "name": "payments-pipeline-fix",
+      "task_toml_sha256": "5fa78662a591a9eb4f7ff71b7d1c5e53cc51f3f534855d8d63e643a398feaa42"
+    },
+    {
+      "name": "photonic-waveguide-routing",
+      "task_toml_sha256": "aefa7f1bc2a6925b1ee0f7d039e427d8d93f88cdde337ae44ad5aa2fc1f47818"
+    },
+    {
+      "name": "pretrain-shard-corruption",
+      "task_toml_sha256": "85dcbc56698952648aa9ed7db62abdc02cd270528c30c7ae425fbd4c9ff8cba7"
+    },
+    {
+      "name": "production-planning",
+      "task_toml_sha256": "3286e0f29a4fbdeab0a07e42c3cb6632505b9a55aa214c7faf97c690447b12a1"
+    },
+    {
+      "name": "protein-autointerp-disulfide",
+      "task_toml_sha256": "c718df46990727e16b55730bc399ef85d72755f7efa970023c024af2bee3bed4"
+    },
+    {
+      "name": "react-lead-form",
+      "task_toml_sha256": "35a8342cc46de99507d3436bfa4153238d9d5e4069b2524d1c6d7fafa4a4701a"
+    },
+    {
+      "name": "retro-console-soc",
+      "task_toml_sha256": "5b25736841b6e80aac761001ae6f4e1fbf351b76d40ab13b7be47a224f76e102"
+    },
+    {
+      "name": "risk-scorer-replay",
+      "task_toml_sha256": "8f25570f6689ca553521bc23bc0086c40b28e9ce7b40d57f5ceb9e51991ab532"
+    },
+    {
+      "name": "roy-polymorph-cn",
+      "task_toml_sha256": "46ddd38757451f6bc2ea6a799a3ca73ec591273c0b3d8476dc5add0aa366f044"
+    },
+    {
+      "name": "rs-archive-clone",
+      "task_toml_sha256": "7ac2f174616bb02ecbdf4ceed383e0b451d62a870f6cc5e60edb992a57d0191c"
+    },
+    {
+      "name": "satb-audio-transcription",
+      "task_toml_sha256": "d659b4879bc8e9f27da217177691f2845d2af0892b0800d869e57886e18fc42a"
+    },
+    {
+      "name": "session-window-debug",
+      "task_toml_sha256": "241f829bbbf5ee2fc31a26fea3116db93958baa7bf31111eb8986f9b39dd7e99"
+    },
+    {
+      "name": "sglang-qwen-burst",
+      "task_toml_sha256": "c0c5bce05dc047a5c227f690c45946daaaff12a41799c4b1c6b91e9fbffbfaea"
+    },
+    {
+      "name": "shadow-relay",
+      "task_toml_sha256": "984e1d5800ec2edc2bc6d53602444e5f03337bf92ed124586efb8d259fbcc2d6"
+    },
+    {
+      "name": "sound-change-cascade",
+      "task_toml_sha256": "d322822f48f346965269d3ec06e601a578036520912929d3f26231d85294ac57"
+    },
+    {
+      "name": "takens-embedding-lean",
+      "task_toml_sha256": "1a91bb7febcb8e256ec59397f34fad5c5172785ee1542a72cb3e0b1bd17c2e76"
+    },
+    {
+      "name": "telecom-entity-resolution",
+      "task_toml_sha256": "4a1716ddb6f9e9a5c626470062d30b985c057d9ee1f1fa4b4c45540db816ec27"
+    },
+    {
+      "name": "uefi-bootkit",
+      "task_toml_sha256": "5f7d6d811e47f5e9373c9b43981308a5081689eb82cbf7e967bcf36f793c52d4"
+    },
+    {
+      "name": "vba-userform-port",
+      "task_toml_sha256": "129ab8c1a8cb19c92c9c8f66b389dbb9fc3a4d481625e227514b8e70e4bf8631"
+    },
+    {
+      "name": "vf2-speedup-networkx",
+      "task_toml_sha256": "6410b31d9c4835b7da164d249b0e259066fb9e12284742614ba745df0f5c72e0"
+    },
+    {
+      "name": "vllm-deepseek-streaming",
+      "task_toml_sha256": "f5b48e53f4588a5def56e1fcfb6b083facd18d82565722075c3ac31a23a67a19"
+    },
+    {
+      "name": "vpp-loss-divergence",
+      "task_toml_sha256": "4cf4c3f25d83811f51b81088b96051c1bda786a51b63a7a937b05083df347177"
+    },
+    {
+      "name": "wal-recovery-ordering",
+      "task_toml_sha256": "90ece5ce99f3e878b8d375ca837f145ce00cc92f49b76837d98fa0564c374fa4"
+    },
+    {
+      "name": "wdm-design",
+      "task_toml_sha256": "f84e87bcfbc51885950952cee69469e2d275dc6b0211fa0c4adb84071f295b31"
+    }
+  ],
+  "shards": [
+    {
+      "id": "tb3-local-70-01",
+      "tasks": [
+        "atrx-vep-crispr",
+        "batched-eval-parity",
+        "biped-contact-dynamics",
+        "bun-sourcemap-leak",
+        "cad-model"
+      ]
+    },
+    {
+      "id": "tb3-local-70-02",
+      "tasks": [
+        "cargo-flight-dispatch",
+        "cli-2ph-simplex",
+        "coq-block-bound",
+        "ctr-optimization",
+        "cumulative-layout-shift"
+      ]
+    },
+    {
+      "id": "tb3-local-70-03",
+      "tasks": [
+        "data-anonymization",
+        "distributed-dedup",
+        "embedding-drift-monitor",
+        "erp-procurement-planning",
+        "fin-saccr-rwa"
+      ]
+    },
+    {
+      "id": "tb3-local-70-04",
+      "tasks": [
+        "fix-uautomizer-soundness",
+        "foodstuff-beta-activity",
+        "formal-crypto",
+        "freecad-impeller",
+        "freecad-platform-drawing"
+      ]
+    },
+    {
+      "id": "tb3-local-70-05",
+      "tasks": [
+        "freecad-spring-clip",
+        "freight-dispatch-shift",
+        "glycan-ms2-elucidation",
+        "gpt2-codegolf",
+        "gsea-proteomics"
+      ]
+    },
+    {
+      "id": "tb3-local-70-06",
+      "tasks": [
+        "heat-pump-warranty",
+        "hof-topology-interpenetration",
+        "html-js-filter",
+        "ico-path-patch",
+        "interleaved-vigenere"
+      ]
+    },
+    {
+      "id": "tb3-local-70-07",
+      "tasks": [
+        "intrastat-meldung",
+        "ks-solver-cpp",
+        "kv-live-surgery",
+        "lake-temp-glm",
+        "layout-config-recreation"
+      ]
+    },
+    {
+      "id": "tb3-local-70-08",
+      "tasks": [
+        "layout-config-recreation2",
+        "lean-midpoint-proof",
+        "legacy-utility-triage",
+        "live-database-cutover",
+        "medical-claims-processing"
+      ]
+    },
+    {
+      "id": "tb3-local-70-09",
+      "tasks": [
+        "memcached-backdoor",
+        "mp-checkpoint-consolidation",
+        "music-harmony",
+        "mvcc-lsm-compaction",
+        "nextjs-performance"
+      ]
+    },
+    {
+      "id": "tb3-local-70-10",
+      "tasks": [
+        "ontology-kg-querying",
+        "payments-pipeline-fix",
+        "photonic-waveguide-routing",
+        "pretrain-shard-corruption",
+        "production-planning"
+      ]
+    },
+    {
+      "id": "tb3-local-70-11",
+      "tasks": [
+        "protein-autointerp-disulfide",
+        "react-lead-form",
+        "retro-console-soc",
+        "risk-scorer-replay",
+        "roy-polymorph-cn"
+      ]
+    },
+    {
+      "id": "tb3-local-70-12",
+      "tasks": [
+        "rs-archive-clone",
+        "satb-audio-transcription",
+        "session-window-debug",
+        "sglang-qwen-burst",
+        "shadow-relay"
+      ]
+    },
+    {
+      "id": "tb3-local-70-13",
+      "tasks": [
+        "sound-change-cascade",
+        "takens-embedding-lean",
+        "telecom-entity-resolution",
+        "uefi-bootkit",
+        "vba-userform-port"
+      ]
+    },
+    {
+      "id": "tb3-local-70-14",
+      "tasks": [
+        "vf2-speedup-networkx",
+        "vllm-deepseek-streaming",
+        "vpp-loss-divergence",
+        "wal-recovery-ordering",
+        "wdm-design"
+      ]
+    }
+  ]
+}

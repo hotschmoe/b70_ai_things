@@ -1,6 +1,8 @@
 # Terminal-Bench 3 campaign relaunch plan
 
-Status: blocked on harness validity and two graph-safe runtime recipes.
+Status: H01-H07 harness validity passed on 2026-08-29. Relaunch remains blocked
+for the NVFP4 and GPTQ arms on graph-safe runtime recipes; the stable Qwen and
+Ornith W8A8 routes may proceed through the ordered one-task policy gate.
 
 Do not start another official pilot or a full campaign until the preflight
 checklist below passes. The historical jobs and README remain useful evidence,
@@ -36,9 +38,9 @@ result as an FP16-KV result. Requalify the route from target-only under
 
 ## Preflight work before any GPU pilot
 
-H01-H03 passed on 2026-08-29. The exact Pi 0.84.3 payload and launcher-policy
-oracles are automated by `evals/terminalbench/phase0_preflight.sh`. H04-H07
-remain blocking.
+H01-H07 passed on 2026-08-29. The exact Pi 0.84.3 payload, launcher policy,
+observed identity/dtype, trajectory replay, mock lifecycle, and local-70 lock
+are automated by `evals/terminalbench/phase0_preflight.sh`.
 
 1. Repair the Pi model metadata.
    - Make `off` a supported, non-null level.

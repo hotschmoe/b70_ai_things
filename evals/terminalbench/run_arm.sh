@@ -141,72 +141,117 @@ JOB_DIR="$JOBS_ROOT/$JOB_NAME"
 SERVER_LOG="$ROOT/evals/${JOB_NAME}-server.log"
 HARBOR_LOG="$ROOT/evals/${JOB_NAME}-harbor.log"
 TIMING_JSON="$JOB_DIR/b70_lifecycle.json"
-START_EPOCH=""
+IDENTITY_JSON="$JOB_DIR/b70_identity.json"
+MODELS_JSON="$JOB_DIR/b70_models.json"
+MACHINE_START_EPOCH="$(date +%s)"
+PREHEALTH_END_EPOCH=""
+SERVER_START_EPOCH=""
 READY_EPOCH=""
 HARBOR_END_EPOCH=""
+PRETEARDOWN_CHECK_EPOCH=""
+TEARDOWN_END_EPOCH=""
+PRE_CARD_HEALTH=false
+PRE_COLLECTIVE_HEALTH=false
 
 write_timing() {
-  local teardown_epoch="$1" exit_code="$2"
+  local posthealth_epoch="$1" exit_code="$2" post_card="$3" post_collective="$4"
+  local endpoint_healthy="$5" endpoint_down="$6" fatal_markers="$7"
   mkdir -p "$JOB_DIR"
-  python3 - "$TIMING_JSON" "$ARM" "$SERVED" "$START_EPOCH" \
-    "$READY_EPOCH" "$HARBOR_END_EPOCH" "$teardown_epoch" "$exit_code" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-path, arm, served, start, ready, harbor_end, teardown_end, exit_code = sys.argv[1:]
-
-def number(value):
-    return int(value) if value else None
-
-values = {
-    "server_start_epoch": number(start),
-    "server_ready_epoch": number(ready),
-    "harbor_end_epoch": number(harbor_end),
-    "teardown_end_epoch": number(teardown_end),
-}
-data = {
-    "arm": arm,
-    "served_model": served,
-    "bf16_kv": True,
-    "exit_code": int(exit_code),
-    **values,
-}
-if values["server_start_epoch"] is not None and values["server_ready_epoch"] is not None:
-    data["startup_seconds"] = values["server_ready_epoch"] - values["server_start_epoch"]
-if values["server_ready_epoch"] is not None and values["harbor_end_epoch"] is not None:
-    data["harbor_seconds"] = values["harbor_end_epoch"] - values["server_ready_epoch"]
-if values["server_start_epoch"] is not None and values["harbor_end_epoch"] is not None:
-    data["start_through_harbor_seconds"] = values["harbor_end_epoch"] - values["server_start_epoch"]
-if values["server_start_epoch"] is not None and values["teardown_end_epoch"] is not None:
-    data["end_to_end_seconds"] = values["teardown_end_epoch"] - values["server_start_epoch"]
-Path(path).write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="ascii")
-PY
+  PYTHONPATH="$REPO" python3 "$REPO/evals/terminalbench/campaign_evidence.py" \
+    lifecycle --output "$TIMING_JSON" --arm "$ARM" --served-model "$SERVED" \
+    --exit-code "$exit_code" --machine-start "$MACHINE_START_EPOCH" \
+    --prehealth-end "$PREHEALTH_END_EPOCH" --server-start "$SERVER_START_EPOCH" \
+    --server-ready "$READY_EPOCH" --harbor-end "$HARBOR_END_EPOCH" \
+    --preteardown-check "$PRETEARDOWN_CHECK_EPOCH" \
+    --teardown-end "$TEARDOWN_END_EPOCH" --posthealth-end "$posthealth_epoch" \
+    --endpoint-healthy-before-teardown "$endpoint_healthy" \
+    --endpoint-down-after-teardown "$endpoint_down" \
+    --pre-card-health "$PRE_CARD_HEALTH" \
+    --pre-collective-health "$PRE_COLLECTIVE_HEALTH" \
+    --post-card-health "$post_card" --post-collective-health "$post_collective" \
+    --fatal-server-markers "$fatal_markers"
 }
 
 cleanup() {
   local rc=$?
+  trap - EXIT
   set +e
-  [ -n "$HARBOR_END_EPOCH" ] || HARBOR_END_EPOCH="$(date +%s)"
+  local endpoint_healthy=null endpoint_down=null
+  local post_card=false post_collective=false
+  local fatal_markers='[]'
+  PRETEARDOWN_CHECK_EPOCH="$(date +%s)"
+  if [ -n "$READY_EPOCH" ]; then
+    if curl -fsS "http://localhost:$PORT/health" >/dev/null 2>&1; then
+      endpoint_healthy=true
+    else
+      endpoint_healthy=false
+      [ "$rc" -ne 0 ] || rc=1
+    fi
+  fi
   docker logs "$CONTAINER" >"$SERVER_LOG" 2>&1 || true
-  env "${START_ENV[@]}" bash "$LAUNCHER" stop || true
-  "$REPO/bin/xpu-health" || true
-  "$REPO/bin/xpu-collective-health" --p2p 0 --timeout 180 || true
-  write_timing "$(date +%s)" "$rc"
+  fatal_markers="$(python3 - "$SERVER_LOG" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace") if Path(sys.argv[1]).is_file() else ""
+patterns = (
+    r"ZE_RESULT_ERROR_DEVICE_LOST",
+    r"linear_stream\.h:90",
+    r"GPU (?:virtual-memory|VM) fault",
+    r"engine core[^\n]*(?:died|dead)",
+    r"(?:out of memory|Killed process|std::bad_alloc)",
+    r"\bNaN\b",
+)
+found = sorted({match.group(0)[:240] for pattern in patterns for match in re.finditer(pattern, text, re.IGNORECASE)})
+print(json.dumps(found, ensure_ascii=True))
+PY
+)"
+  [ "$fatal_markers" = '[]' ] || { [ "$rc" -ne 0 ] || rc=1; }
+  if [ -n "$SERVER_START_EPOCH" ]; then
+    env "${START_ENV[@]}" bash "$LAUNCHER" stop || { [ "$rc" -ne 0 ] || rc=1; }
+    TEARDOWN_END_EPOCH="$(date +%s)"
+    if curl -fsS "http://localhost:$PORT/health" >/dev/null 2>&1; then
+      endpoint_down=false
+      [ "$rc" -ne 0 ] || rc=1
+    else
+      endpoint_down=true
+    fi
+  fi
+  "$REPO/bin/xpu-health" && post_card=true || { [ "$rc" -ne 0 ] || rc=1; }
+  "$REPO/bin/xpu-collective-health" --p2p 0 --timeout 180 && post_collective=true || { [ "$rc" -ne 0 ] || rc=1; }
+  write_timing "$(date +%s)" "$rc" "$post_card" "$post_collective" \
+    "$endpoint_healthy" "$endpoint_down" "$fatal_markers" || { [ "$rc" -ne 0 ] || rc=1; }
   echo "lifecycle -> $TIMING_JSON"
-  return "$rc"
+  exit "$rc"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-mkdir -p "$ROOT/evals" "$JOBS_ROOT"
-"$REPO/bin/xpu-health"
-"$REPO/bin/xpu-collective-health" --p2p 0 --timeout 180
+mkdir -p "$ROOT/evals" "$JOBS_ROOT" "$JOB_DIR"
+if "$REPO/bin/xpu-health"; then
+  PRE_CARD_HEALTH=true
+else
+  exit 1
+fi
+if "$REPO/bin/xpu-collective-health" --p2p 0 --timeout 180; then
+  PRE_COLLECTIVE_HEALTH=true
+else
+  exit 1
+fi
+PREHEALTH_END_EPOCH="$(date +%s)"
 
-START_EPOCH="$(date +%s)"
+SERVER_START_EPOCH="$(date +%s)"
 env "${START_ENV[@]}" "LOG=$SERVER_LOG" bash "$LAUNCHER" start
 READY_EPOCH="$(date +%s)"
+docker logs "$CONTAINER" >"$SERVER_LOG" 2>&1
+curl -fsS "http://localhost:$PORT/v1/models" >"$MODELS_JSON"
+PYTHONPATH="$REPO" python3 "$REPO/evals/terminalbench/campaign_evidence.py" \
+  identity --models-json "$MODELS_JSON" --server-log "$SERVER_LOG" \
+  --expected-model "$SERVED" --expected-target-dtype bfloat16 \
+  --expected-kv-dtype bfloat16 --output "$IDENTITY_JSON"
 
 HARBOR_ARGS=(
   run -d terminal-bench/terminal-bench@3.0.0

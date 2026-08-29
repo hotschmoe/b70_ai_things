@@ -2,10 +2,17 @@
 
 Date: 2026-08-29
 
-Status: staged execution plan. This roadmap supersedes no historical evidence.
-It incorporates the 2026-08-29 Neural.Download and XeCores audit recorded in
+Status: execution underway. Phase 0 H01-H07 passed on 2026-08-29; Phase 1
+source and mechanism work is next. This roadmap supersedes no historical
+evidence. It incorporates the 2026-08-29 Neural.Download and XeCores audit recorded in
 `docs/20260829_neural_xecores_deep_dive_and_campaign_state.md` and the current
 Terminal-Bench relaunch contract in `evals/terminalbench/CAMPAIGN_RELAUNCH.md`.
+
+The Phase 0 preflight now proves the exact Pi 0.84.3 off/xhigh payloads,
+policy-dependent launcher state, observed model and dtype validation,
+trajectory classification, full lifecycle clock, and deterministic local-70
+manifest. The next source milestone is M01, followed by the P2P-off M02
+collective oracle before any Steve-derived port.
 
 ## Goal
 
@@ -234,13 +241,23 @@ or influence selection of the best one-stream Terminal-Bench recipe.
 | ID | Arm | Test | Pass gate |
 | --- | --- | --- | --- |
 | TB01 | Qwen W8A8 stable reclaim500 | True thinking off, 8,192 max output, `bun-sourcemap-leak` | Edit within about ten minutes, post-edit test, normal verifier, no length/timeout/endpoint loss, clean lifecycle |
-| TB02 | Qwen W8A8 | One 12,288-token retry only if TB01 ends on length before edit | Do not keep raising the cap against one task |
+| TB02A | Qwen W8A8 | One true-off 12,288-token retry only if TB01 ends on length before edit | Do not keep raising the cap against one task |
+| TB02B | Qwen W8A8 | One native-thinking comparator with 16,384 max output and an 8,192 private-thinking cap after TB01 completes normally | Compare edit latency, verifier result, and full machine time; do not infer benefit from a longer trace alone |
 | TB03 | Ornith W8A8 stable reclaim500 | Transfer the exact TB01/TB02 winning policy | Normal verifier and clean lifecycle; no model-specific policy drift |
 | TB04 | NVFP4 winning long route | Same policy and Bun task | No graph failure and normal verifier |
 | TB05 | GPTQ winning corrected BF16 route | Same policy and Bun task | No PIECEWISE failure and normal verifier |
 
 A normal zero reward is model-quality evidence. Zero caused by timeout, length,
 or infrastructure loss is not a successful task-time result.
+
+Qwen's official Qwen3.8-27B model card at revision
+`1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0` makes thinking the default, names
+xhigh as its deepest reasoning policy, and reports `max_tokens=32768` for its
+QwenSWEBench evaluation. That supports testing above the inherited 4,096
+private-thinking cap, but does not establish that a higher cap improves this
+1,800-second Terminal-Bench harness. The local Pi endpoint cannot safely send
+Qwen's official `reasoning_effort` field, so TB02B is labeled native thinking
+plus an explicit server cap, not an exact official-xhigh reproduction.
 
 ### Three-task expansion gate
 

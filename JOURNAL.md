@@ -5625,3 +5625,52 @@ evidence. Server-log and lifecycle SHA256 values were
 VERDICT -> reject the transaction as an experiment and retain only its cleanup
 evidence. The corrected non-GPU print path now exits before the lease. Do not
 use the incomplete job or its invalid lifecycle clock as campaign data.
+
+### 2026-08-29h - Terminal-Bench H04-H07 evidence contract closed
+
+CONFIG -> no model endpoint and no GPU. Harbor's Python environment, exact Pi
+0.84.3, the preserved Terminal-Bench 3.0.0 task tree and five retained Pi
+trajectories were used. Runtime identity fixtures were the accepted Qwen3.8
+W8A8 SGLang BF16 log and the historically mislabeled vLLM GPTQ FP16 log.
+
+COMMAND -> add fail-closed runtime identity and lifecycle parsers, replay the
+preserved Pi session JSONL, generate and validate the deterministic local-70
+manifest, and run `evals/terminalbench/phase0_preflight.sh`. Exercise lifecycle
+ordering against a real local mock HTTP health endpoint. Feed both retained
+runtime logs through the dtype validator and require the SGLang control to pass
+and the vLLM control to fail.
+
+RESULT -> 20 unit tests passed, the real Pi payload oracle passed for off and
+xhigh, and the direct local-70 validation passed. The preflight log SHA256 was
+`1acd9ed2d0758c6c398bf650dab486dd7b1816946ca530016f68656b3b872124`.
+The SGLang control recorded target and observed KV dtype as BF16. The vLLM
+control failed on target FP16 and missing observed BF16 KV evidence. The five
+trajectory replays distinguished normal stop, length, Harbor timeout, endpoint
+error, unique tool counts, confirmed source edits, and post-edit test state.
+
+RESULT -> the tracked manifest contains exactly 74 source tasks, excludes only
+`exam-pdf-eval`, `fp8-rmsnorm-gemm`, `jax-speedrun-gpu`, and
+`math-eval-grader`, and locks 70 local tasks into fourteen stable five-task
+shards. Its local-task digest is
+`f42c7d0ac925d58d603dfd8f40ceebaac610d376ef1fa48bfe54f760a0970d3d`
+and file SHA256 is
+`b67a6fd54c4e3db8020f54891966b460230baeb8feec324faef21786526f3196`.
+The runner now starts its clock before pre-health, validates `/v1/models` and
+observed dtype before Harbor, checks the live endpoint and fatal markers before
+teardown, requires endpoint disappearance, runs post-health, and closes the
+clock afterward.
+
+RESULT -> the official Qwen3.8-27B model card at revision
+`1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0` describes xhigh as the default
+deep policy and reports a 32,768-token ceiling for QwenSWEBench. This supports
+a bounded higher-cap experiment but does not prove a Terminal-Bench benefit.
+Local trajectories show that long native-thinking turns can also delay edits
+until the 1,800-second timeout. The roadmap therefore adds one 8,192 private-
+thinking-cap comparator instead of changing every launcher default.
+
+VERDICT -> H04, H05, H06, and H07 pass; together with 2026-08-29f, Phase 0
+H01-H07 is closed. Begin M01 source accounting and the isolated M02 P2P-off
+collective oracle before porting Steve mechanisms. Keep true off uncapped at
+the server, label local xhigh as native thinking because the endpoint does not
+accept Qwen's `reasoning_effort`, and change policy caps only through matched
+Terminal-Bench arms.
