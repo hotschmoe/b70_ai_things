@@ -15,6 +15,8 @@ Codex session without requiring the literature audit to be repeated.
 
 The companion execution plan is
 `docs/20260829_local_serving_research_roadmap.md`.
+The current line-level Steve transfer audit is
+`docs/20260829_steve_completion_state_port_ledger.md`.
 
 ## Audit method and source boundary
 

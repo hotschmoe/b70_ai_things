@@ -5674,3 +5674,29 @@ collective oracle before porting Steve mechanisms. Keep true off uncapped at
 the server, label local xhigh as native thinking because the endpoint does not
 accept Qwen's `reasoning_effort`, and change policy caps only through matched
 Terminal-Bench arms.
+
+### 2026-08-29i - M01 Steve completion and state source ledger
+
+CONFIG -> read-only comparison of Steve's qualified Qwen3.8 FP8 base at vLLM
+`ac7509e2b1db40fec2f03dde1ed4e9dfdc2338c9`, XPU kernels
+`1e90ffa672ba02f17a909da11838a4c55b199783`, retained current vLLM
+`44fc8fde09fc311d3099dab10366b672d9142ea4`, and the three published patch
+hashes. No GPU, binary import, archive dependency, or source mutation.
+
+COMMAND -> map explicit collective completion, GDN recurrent-state mutation,
+cache binding, deterministic 256-row B/A projection, exact two-row RMSNorm,
+and deterministic Inductor to retained line-level APIs. Classify every item as
+equivalent, missing, or requiring an API-aware port in
+`docs/20260829_steve_completion_state_port_ledger.md`.
+
+RESULT -> eager async all-reduce plus `Work.wait()` exists as an opt-in branch,
+but retained compiled paths bypass it. Compiler-visible recurrent state and
+the old cache-binding hook are absent, and the current cache API requires a
+deliberate port. The retained four-row B/A and RMSNorm diagnostics are not
+equivalent to Steve's fixed-256 B/A and exact two-row publisher-MTP1 repairs.
+No retained candidate launcher enables deterministic Inductor.
+
+VERDICT -> M01 passes as a source-accounting gate, not as acceptance of any
+patch. Close M02 and M03 on isolated BF16 P2P-off collectives first; then port
+state visibility/cache binding, fixed-256 B/A, and exact two-row RMSNorm as
+separate mechanisms before a combined target/MTP model qualification.

@@ -2,17 +2,22 @@
 
 Date: 2026-08-29
 
-Status: execution underway. Phase 0 H01-H07 passed on 2026-08-29; Phase 1
-source and mechanism work is next. This roadmap supersedes no historical
-evidence. It incorporates the 2026-08-29 Neural.Download and XeCores audit recorded in
+Status: execution underway. Phase 0 H01-H07 and Phase 1 source audit M01
+passed on 2026-08-29; the isolated M02 collective oracle is next. This roadmap
+supersedes no historical evidence. It incorporates the 2026-08-29
+Neural.Download and XeCores audit recorded in
 `docs/20260829_neural_xecores_deep_dive_and_campaign_state.md` and the current
 Terminal-Bench relaunch contract in `evals/terminalbench/CAMPAIGN_RELAUNCH.md`.
 
 The Phase 0 preflight now proves the exact Pi 0.84.3 off/xhigh payloads,
 policy-dependent launcher state, observed model and dtype validation,
 trajectory classification, full lifecycle clock, and deterministic local-70
-manifest. The next source milestone is M01, followed by the P2P-off M02
-collective oracle before any Steve-derived port.
+manifest. The M01 line-level ledger is
+`docs/20260829_steve_completion_state_port_ledger.md`. It found the eager
+async/wait concept present, but compiled completion ownership, compiler-visible
+GDN state, current-API cache binding, fixed-256 B/A, exact two-row RMSNorm, and
+the deterministic Inductor launch contract remain unported. M02 must pass
+before any Steve-derived source port.
 
 ## Goal
 
