@@ -3,7 +3,9 @@
 Date: 2026-08-29
 
 Status: execution underway. Phase 0 H01-H07, Phase 1 M01-M04, and Phase 2 W01
-passed on 2026-08-29. M04's contained two-step retry reproduced the exact
+passed on 2026-08-29. W02 then closed negatively because both breakable arms
+diverged from eager at output token 24, despite exact graph-arm agreement and
+healthy teardown. M04's contained two-step retry reproduced the exact
 paired-rank structural census and met the bounded-overhead gate. W01 then
 completed the corrected 50,000-token Qwen3.8 W8A8 baseline with 0.961298
 final/initial throughput retention, clean teardown, and post-health. This roadmap
@@ -34,7 +36,9 @@ initial failed overhead gate, passing contained retry, host-stall review, and
 new admission/cgroup safeguards are in
 `docs/20260829_m04_graph_census_and_host_stall.md`. W01's exact long-output,
 coherence, host-safety, and teardown evidence is in
-`docs/20260829_w01_qwen38_w8a8_long_baseline.md`.
+`docs/20260829_w01_qwen38_w8a8_long_baseline.md`. W02's graph target-divergence
+and reclaim-stability result is in
+`docs/20260829_w02_qwen38_graph_reclaim_negative.md`.
 
 ## Goal
 
@@ -172,7 +176,7 @@ from being the first test of a risky source transfer.
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
 | W01, passed | P0 | TP2 | Reconfirm target-only breakable size 1 plus reclaim500, BF16 KV, memory fraction 0.70, max request 1 | Two-fresh-server exact corpus, one 50K forced-output stream, final 5K/first 5K throughput 0.961298, clean teardown and post-health |
-| W02 | P0 | TP2 | Eager versus breakable versus breakable+reclaim500 | Match prompt/output and cache-off state; attribute speed to graph and stability to reclaim separately |
+| W02, closed negative | P0 | TP2 | Eager versus breakable versus breakable+reclaim500 | Graph arms diverged from eager at token 24; reclaim stabilized the graph trajectory but speed attribution was not target-exact |
 | W03 | P1 | TP2 | Prefix/radix cache off versus on | Growing 8K -> 16K -> 32K tool-history trace; exact output/state, reported reuse, no replay fault |
 | W04 | P1 | TP2 | MBT 8192 versus 16384 | Same growing trace; compare TTFT, total trace time, KV pressure, and decode |
 | W05 | P1 | TP2 | Existing source-default c10d versus any M03-qualified completion route | Require coherence and at least 3 percent matched endpoint gain or a measured stability improvement |
@@ -193,9 +197,11 @@ exact within and across arms; card and compiled P2P-off collective health must
 pass between lifetimes. A breakable/eager median ratio of at least 1.03 is a
 material graph gain. Reclaim overhead is considered negligible when the
 reclaim500/breakable ratio is at least 0.97. These are disposition thresholds,
-not correctness gates. If the short comparison remains coherent, run one
-50,000-token no-reclaim canary against the accepted W01 reclaim500 result to
-determine whether reclaim is necessary for this failure boundary.
+not correctness gates. The comparison was not coherent: both graph arms
+diverged from eager at token index 24, so the planned 50,000-token no-reclaim
+canary is canceled. Reclaim500 did prove exact against no-reclaim and removed
+its cross-request slowdown, but this is diagnostic evidence for the separate
+graph trajectory rather than a target-exact speed result.
 
 ### Qwen3.8 RadixArk NVFP4, SGLang
 
@@ -225,6 +231,23 @@ dtype gate passes again.
 | G08 | P1 | TP1 | vLLM 0.27.2 versus 0.28 regression bisection | One stack layer at a time; same corrected BF16 target configuration; rebuild ABI extensions |
 | G09 | P1 | TP2 | Critical Steve replication matrix: eager and PIECEWISE size 1, MTP0, BF16 KV, P2P off | Compare matched TP1/TP2; TP2 must be at least 1.25x TP1 with target equality or remain a negative control |
 | G10 | P2 | TP2 | Add the G04 winning MTP depth | Only after G09 passes topology and stability gates |
+
+### Qwen3.8 official FP8 plus W8A16, vLLM
+
+This lane deliberately ports the 2026-08-27 Neural.Download candidate recipe.
+Its published clean-host replay is incomplete and its fastest launch uses
+direct oneCCL P2P, so it is not copied directly onto this host. All ABI-specific
+layers are rebuilt from the tracked source and patches; the first live route is
+P2P off.
+
+| ID | Priority | Topology | Change under test | Required comparison and gate |
+| --- | --- | --- | --- | --- |
+| F01 | P0 | Off-device | Fetch exact model revision and reproduction source; ledger image, vLLM, Torch, kernel, GDN, RMSNorm, W8A16, MTP, and oneCCL patches | Exact source/patch/model manifests, clean dedicated build roots, no quarantined binary reuse |
+| F02 | P0 | TP2 | Graph-off W8A16 MTP0, FP16 target/KV, P2P off | Two fresh servers, exact natural corpus and raw token arrays, clean teardown and compiled collective health |
+| F03 | P0 | TP2 | Source-default completion versus recipe `Work.wait()` route, P2P off | Same target arrays and state; retain only a measured endpoint or stability benefit |
+| F04 | P0 | TP2 | Deterministic packed-RMS MTP1 recipe on the qualified F02 target | Exact MTP0 target arrays on two fresh empty-cache servers; record acceptance and decode |
+| F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |
+| F06 | P2 | Isolated oracle only | Recipe direct-P2P setting | Do not run a full server until a bounded loaded-context queue-handoff oracle passes and recovery is pre-positioned |
 
 ### Ornith-1.5-35B-A3B
 

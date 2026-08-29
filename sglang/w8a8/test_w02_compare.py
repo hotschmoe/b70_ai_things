@@ -35,8 +35,11 @@ class CompareTest(unittest.TestCase):
             directory.mkdir()
             for repeat in (1, 2, 3):
                 token_hash = "changed" if mismatch and arm == "reclaim500" else "tokens"
+                candidate = result(rates[arm], token_hash)
+                if mismatch and arm == "reclaim500":
+                    candidate["output_ids"][-1] = 7
                 (directory / f"measured_{repeat}.json").write_text(
-                    json.dumps(result(rates[arm], token_hash)), encoding="ascii"
+                    json.dumps(candidate), encoding="ascii"
                 )
 
     def test_summary_attributes_graph_and_reclaim(self):
@@ -57,8 +60,14 @@ class CompareTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.write_fixture(root, mismatch=True)
-            with self.assertRaisesRegex(RuntimeError, "output mismatch"):
-                summarize(root, 3)
+            summary = summarize(root, 3)
+            self.assertFalse(summary["passed"])
+            self.assertFalse(summary["cross_arm_exact"])
+            self.assertEqual(summary["arms"]["reclaim500"]["first_mismatch_index"], 5)
+            self.assertEqual(summary["arms"]["reclaim500"]["mismatch_count"], 1)
+            self.assertFalse(
+                summary["comparisons"]["performance_attribution_qualified"]
+            )
 
 
 if __name__ == "__main__":

@@ -5998,3 +5998,45 @@ eager arm ran. Retain its numbers as harness-debug evidence only. Build the
 measured-file list explicitly from repeat indices so partial checkpoints can
 never enter exactness comparison, then rerun all three fresh arms from the
 start.
+
+### 2026-08-29r - W02 graph comparison closes on target divergence
+
+CONFIG -> repair commit `7a3c2ac`; the matched W02 Qwen3.8 W8A8 TP2 protocol
+from 2026-08-29q with eager, breakable without reclaim, and breakable plus
+reclaim500 fresh-server arms. Result directory was
+`/mnt/vm_8tb/b70/results/w02_qwen38_w8a8/20260829T213708Z/`.
+
+COMMAND -> for each arm verify exact identity/runtime/dtypes/cgroup and P2P-off
+state, require the repeat-exact eight-prompt corpus and eager-reference hashes,
+then run one 768-token warmup and three 2,048-token native greedy measurements.
+Persist literal arrays, require within-arm repeat equality, compare every graph
+array to eager, and run card plus compiled collective health between arms and
+after final teardown.
+
+RESULT -> all three short corpora passed and every measured stream repeated
+exactly within its arm. The stronger native comparison failed at zero-based
+token index 24. Eager versus each graph arm differed at 2,011/2,048 positions;
+breakable and reclaim500 matched one another at all 2,048 positions. Eager's
+token SHA256 was
+`c64d070e5b79138c30386367506613066d38b9c9d3759207df71c57bfc021b0f`;
+both graph arms produced
+`a1856299df39da9652f45a05a9f51475cf28384db6d354756087efa49a71109b`.
+
+RESULT -> diagnostic medians were 6.0420 tok/s eager, 10.0590 tok/s
+no-reclaim breakable, and 14.8028 tok/s reclaim500. No-reclaim fell from
+11.7182 to 8.8579 tok/s across its three repeats, a repeat-3/repeat-1 ratio of
+0.7559. Reclaim500 measured 14.7893, 14.8028, and 14.8269 tok/s, a ratio of
+1.0025, while preserving the exact no-reclaim graph array. The analyzer marks
+all cross-mode performance attribution unqualified. Comparison JSON SHA256 was
+`736322d04b4044e584ddc1603caea372d02b188e40fb8b861005c4f02187ef23`.
+
+RESULT -> all 612 host samples used zero swap; minimum MemAvailable was
+62,545,508 KiB. Every inter-arm and final card plus compiled P2P-off collective
+health check passed. The kernel transaction had no configured fatal marker.
+
+VERDICT -> close W02 negatively at the target-exactness gate. Reclaim500 is a
+real graph replay-stability mechanism, but breakable graph is not eager-target
+exact for this native prompt. Cancel the conditional 50K no-reclaim canary and
+do not advance cache/MTP work on this graph route before a source-level
+numerical/state audit. Move next to the requested official-FP8 vLLM recipe port,
+starting with tracked source identities and a P2P-off MTP0 control.

@@ -22,9 +22,7 @@ def summarize(root: Path, repeats: int) -> dict[str, Any]:
         raise RuntimeError("at least two measured repeats are required")
 
     common_contract: dict[str, Any] | None = None
-    common_text_hash: str | None = None
-    common_token_hash: str | None = None
-    common_output_ids: list[Any] | None = None
+    eager_output_ids: list[Any] | None = None
     arms: dict[str, Any] = {}
     for arm in ARMS:
         results = []
@@ -52,18 +50,22 @@ def summarize(root: Path, repeats: int) -> dict[str, Any]:
                 raise RuntimeError(f"{arm} repeat {repeat}: output_ids missing")
             if len(output_ids) != result.get("completion_tokens"):
                 raise RuntimeError(f"{arm} repeat {repeat}: output_ids length mismatch")
-            if common_output_ids is None:
-                common_output_ids = output_ids
-            if output_ids != common_output_ids:
-                raise RuntimeError(f"{arm} repeat {repeat}: output array mismatch")
             text_hash = result.get("text_sha256")
             token_hash = result.get("output_ids_sha256")
-            if common_text_hash is None:
-                common_text_hash = text_hash
-                common_token_hash = token_hash
-            if text_hash != common_text_hash or token_hash != common_token_hash:
-                raise RuntimeError(f"{arm} repeat {repeat}: cross-arm output mismatch")
             results.append(result)
+
+        arm_output_ids = results[0]["output_ids"]
+        if any(item["output_ids"] != arm_output_ids for item in results[1:]):
+            raise RuntimeError(f"{arm}: measured repeats are not exact")
+        if eager_output_ids is None:
+            eager_output_ids = arm_output_ids
+        mismatch_indices = [
+            index
+            for index, (expected, actual) in enumerate(
+                zip(eager_output_ids, arm_output_ids, strict=True)
+            )
+            if expected != actual
+        ]
 
         rates = [float(item["post_first_tok_s"]) for item in results]
         ttfts = [float(item["ttft_ms"]) for item in results]
@@ -78,6 +80,11 @@ def summarize(root: Path, repeats: int) -> dict[str, Any]:
             "post_first_tok_s": rates,
             "ttft_ms": ttfts,
             "final_initial_ratios": flatness,
+            "text_sha256": results[0]["text_sha256"],
+            "output_ids_sha256": results[0]["output_ids_sha256"],
+            "target_exact_to_eager": not mismatch_indices,
+            "first_mismatch_index": mismatch_indices[0] if mismatch_indices else None,
+            "mismatch_count": len(mismatch_indices),
         }
 
     eager = float(arms["eager"]["median_post_first_tok_s"])
@@ -85,12 +92,13 @@ def summarize(root: Path, repeats: int) -> dict[str, Any]:
     reclaim = float(arms["reclaim500"]["median_post_first_tok_s"])
     graph_ratio = breakable / eager
     reclaim_ratio = reclaim / breakable
+    cross_arm_exact = all(
+        bool(arms[arm]["target_exact_to_eager"]) for arm in ARMS
+    )
     return {
         "protocol": "b70-w02-graph-reclaim-ab-v1",
         "contract": common_contract,
-        "cross_arm_exact": True,
-        "text_sha256": common_text_hash,
-        "output_ids_sha256": common_token_hash,
+        "cross_arm_exact": cross_arm_exact,
         "arms": arms,
         "comparisons": {
             "breakable_over_eager": graph_ratio,
@@ -99,8 +107,9 @@ def summarize(root: Path, repeats: int) -> dict[str, Any]:
             "reclaim500_delta_percent": (reclaim_ratio - 1.0) * 100.0,
             "graph_gain_at_least_3_percent": graph_ratio >= 1.03,
             "reclaim_within_3_percent": reclaim_ratio >= 0.97,
+            "performance_attribution_qualified": cross_arm_exact,
         },
-        "passed": True,
+        "passed": cross_arm_exact,
     }
 
 
@@ -115,6 +124,9 @@ def main() -> None:
         json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="ascii"
     )
     print("RESULT -> " + json.dumps(result["comparisons"], sort_keys=True))
+    if not result["passed"]:
+        print("VERDICT -> FAIL cross-arm output mismatch")
+        raise SystemExit(1)
     print("VERDICT -> PASS exact matched W02 short comparison")
 
 
