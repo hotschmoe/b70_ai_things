@@ -5926,9 +5926,9 @@ eight-prompt corpus twice per prompt. Stop A, repeat health and the host gate,
 then start fresh server B and require within-server and cross-server exact
 corpus hashes. Send one native greedy 50,000-token `/generate` stream with
 temperature zero, `ignore_eos=true`, and no unsupported seed. Preserve exact
-token milestones, the full token array, a length finish, and require final
-5K/first 5K throughput of at least 0.80. Stop B, scan server/kernel logs, and
-repeat card plus collective health.
+token milestones, validate the full token array and preserve its SHA256, require
+a length finish, and require final 5K/first 5K throughput of at least 0.80. Stop
+B, scan server/kernel logs, and repeat card plus collective health.
 
 RESULT -> both fresh-server corpora were repeat-exact and server B matched all
 eight server-A completion hashes. Exact served ID, BF16 target/KV, image,

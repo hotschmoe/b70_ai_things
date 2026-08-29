@@ -185,6 +185,18 @@ completion-token milestones, a length finish, the complete 50,000-token array,
 and the predeclared 5,000-token final/initial rate gate. The two fresh-server
 corpora must also be repeat-exact within each server and cross-server exact.
 
+W02 first uses three fresh arms in this order: eager, breakable without
+reclaim, and breakable plus reclaim500. Each arm uses the same served model ID,
+65,536 context, cache-off prompt, one 768-token warmup, and three measured
+2,048-token native greedy streams. All measured text and token arrays must be
+exact within and across arms; card and compiled P2P-off collective health must
+pass between lifetimes. A breakable/eager median ratio of at least 1.03 is a
+material graph gain. Reclaim overhead is considered negligible when the
+reclaim500/breakable ratio is at least 0.97. These are disposition thresholds,
+not correctness gates. If the short comparison remains coherent, run one
+50,000-token no-reclaim canary against the accepted W01 reclaim500 result to
+determine whether reclaim is necessary for this failure boundary.
+
 ### Qwen3.8 RadixArk NVFP4, SGLang
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |

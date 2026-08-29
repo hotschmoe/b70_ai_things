@@ -141,6 +141,7 @@ class WindowSummaryTest(unittest.TestCase):
             self.assertTrue(result["passed"])
             self.assertEqual(result["completion_tokens"], 30)
             self.assertEqual(result["finish_reason"], {"type": "length"})
+            self.assertEqual(result["output_ids"], list(range(30)))
             self.assertIsNone(result["seed"])
             self.assertEqual(len(result["stability"]["windows"]), 3)
             partial = output.with_name("result.partial.json")

@@ -227,6 +227,7 @@ def main() -> None:
         "total_s": end - start,
         "post_first_tok_s": (last_completion_tokens - 1) / (end - first),
         "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "output_ids": output_ids,
         "output_ids_sha256": hashlib.sha256(
             json.dumps(output_ids, separators=(",", ":")).encode("ascii")
         ).hexdigest(),

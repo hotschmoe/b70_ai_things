@@ -63,8 +63,9 @@ The replay JSON SHA256 is
 
 One native streaming request used temperature zero, `ignore_eos=true`, no
 seed field, and an exact 50,000-token output limit. The client preserved the
-complete output token array, reported a length finish, and wrote durable
-partial evidence at every 5,000-token boundary.
+SHA256 of the validated 50,000-entry output token array, reported a length
+finish, and wrote durable partial evidence at every 5,000-token boundary. That
+client revision did not serialize the literal array; future revisions do.
 
 | Metric | Result |
 | --- | ---: |
