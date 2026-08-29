@@ -5846,3 +5846,34 @@ shaped collective calls as the Qwen3.8 W8A8 breakable TP2 boundary baseline.
 Retain the host-safety gates for later Qwen3.8 work and proceed to the P0 W01
 corrected long-output baseline; M03 supplies no reason to spend W05 endpoint
 time on the explicit async/wait route before that baseline is stable.
+
+### 2026-08-29n - Rejected W01 teardown-harness attempt
+
+CONFIG -> committed W01 protocol `dadddf1`, Qwen3.8 W8A8 TP2,
+breakable-reclaim500, BF16 target/KV, 65,536 context, memory fraction 0.70,
+maximum one request, P2P off, and a 64 GiB no-swap container ceiling. Result
+directory was
+`/mnt/vm_8tb/b70/results/w01_qwen38_w8a8/20260829T193528Z/`.
+
+COMMAND -> start fresh server A, verify identity/runtime/cgroup configuration,
+capture the eight-prompt twice-per-prompt greedy corpus, then stop it before
+the inter-server health gate.
+
+RESULT -> server A and the corpus passed, but `stop_server` declared `label`
+and a log path referencing `label` in the same Bash `local` statement. Under
+`set -u`, expansion occurred before assignment and aborted both the normal stop
+and cleanup paths. No server B or long request started. The corpus SHA256 was
+`b5b01782764cc310f828e395e933471e555879cf317f85184915ae53d1fa47ff`.
+All 39 host samples used zero swap and the minimum MemAvailable was
+65,489,108 KiB.
+
+RESULT -> the first recovery command targeted a mistyped timestamped name and
+did not stop the real container. The actual container was then stopped and
+removed before the compiled collective began. A fresh post-stop transaction
+passed both card probes and the compiled P2P-off collective. The recovered
+server-log SHA256 was
+`ac1fe6a8eb6c8f341deadc3d63bfad887b6691ccf1d4d3d8ba44a487bd8cd8dc`.
+
+VERDICT -> reject the attempt as W01 evidence. Split the dependent local
+assignments into separate statements, retain the corpus only as harness-debug
+evidence, and rerun both fresh servers plus the full 50K gate from the start.

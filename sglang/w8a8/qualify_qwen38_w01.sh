@@ -100,7 +100,9 @@ scan_server_log() {
 }
 
 stop_server() {
-  local label="$1" rc=0 log="$RESULT_DIR/server_${label}.log"
+  local label="$1"
+  local rc=0
+  local log="$RESULT_DIR/server_${label}.log"
   curl -fsS --max-time 15 "http://127.0.0.1:$PORT/health" \
     >"$RESULT_DIR/endpoint_${label}_before_teardown.txt" 2>&1 || rc=1
   docker logs "$NAME" >"$log" 2>&1 || rc=1
