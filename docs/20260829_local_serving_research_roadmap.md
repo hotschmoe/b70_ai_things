@@ -240,6 +240,11 @@ direct oneCCL P2P, so it is not copied directly onto this host. All ABI-specific
 layers are rebuilt from the tracked source and patches; the first live route is
 P2P off.
 
+F01 completed on 2026-08-29: the exact checkpoint, source, base image, local
+deterministic overlay, and installed runtime hashes passed. F02 is the active
+live experiment; its tracked harness uses the complete publisher suite on two
+fresh P2P-off, no-swap server lifetimes.
+
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
 | F01 | P0 | Off-device | Fetch exact model revision and reproduction source; ledger image, vLLM, Torch, kernel, GDN, RMSNorm, W8A16, MTP, and oneCCL patches | Exact source/patch/model manifests, clean dedicated build roots, no quarantined binary reuse |

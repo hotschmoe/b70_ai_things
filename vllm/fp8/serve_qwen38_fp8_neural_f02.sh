@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# Local safety port of the Neural.Download deterministic Qwen3.8-27B-FP8
+# target-only launcher. Run only while bin/gpu-run holds both B70 leases.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+IMAGE="${IMAGE:-neural-download/vllm-openai-xpu:qwen38-fp8-collective-work-wait-r15}"
+EXPECTED_IMAGE_ID="${EXPECTED_IMAGE_ID:-sha256:dce80db0a1ad861145e88b1c565f29172641912dc75a3b50d08e370f7d58e291}"
+MODEL_DIR="${MODEL_DIR:-$REPO/models/files/qwen3.8-27b/fp8-official}"
+CACHE_DIR="${CACHE_DIR:-}"
+NAME="${NAME:-qwen38-fp8-neural-f02}"
+SERVED="${SERVED:-qwen3.8-27b-FP8-official-W8A16-mtp0-p2p0-fp16kv-f02}"
+PORT="${PORT:-18187}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-1024}"
+MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
+MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
+MEMORY_GIB="${MEMORY_GIB:-32}"
+
+EXPECTED_FILE_HASHES=(
+  "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
+  "5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d  /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py"
+  "7c36e4a8dab4bfc06b1d5be2d8466e8cdc94099dd5409424fecc6dd8ffc2c208  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu.py"
+  "7afb4de8b87d7f180d696f7cadad8b9d48d9ab7b706ae19616425c4f9456fb19  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py"
+)
+
+usage() {
+  echo "usage: $0 --print-config | --verify-image | run"
+}
+
+positive_integer() {
+  case "$2" in
+    ''|*[!0-9]*|0) echo "$1 must be a positive integer" >&2; exit 2 ;;
+  esac
+}
+
+verify_image() {
+  local actual line observed
+  actual="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
+  [ "$actual" = "$EXPECTED_IMAGE_ID" ] || {
+    echo "image ID mismatch: actual=$actual expected=$EXPECTED_IMAGE_ID" >&2
+    exit 1
+  }
+  observed="$(docker run --rm --entrypoint sha256sum "$IMAGE" \
+    /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py \
+    /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py \
+    /opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu.py \
+    /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py)"
+  for line in "${EXPECTED_FILE_HASHES[@]}"; do
+    printf '%s\n' "$observed" | grep -Fxq "$line" || {
+      echo "runtime file hash mismatch: expected=$line" >&2
+      exit 1
+    }
+  done
+  echo "image verification -> pass id=$actual files=4"
+}
+
+print_config() {
+  echo "image=$IMAGE"
+  echo "expected_image_id=$EXPECTED_IMAGE_ID"
+  echo "model_dir=$MODEL_DIR"
+  echo "served_model=$SERVED"
+  echo "container=$NAME"
+  echo "port=$PORT"
+  echo "tp=2"
+  echo "p2p=0"
+  echo "mtp=0"
+  echo "xpu_graph=0"
+  echo "inductor=1"
+  echo "dtype=float16"
+  echo "kv_cache_dtype=auto"
+  echo "quantization=fp8"
+  echo "gpu_memory_utilization=0.80"
+  echo "max_model_len=$MAX_MODEL_LEN"
+  echo "max_num_seqs=$MAX_NUM_SEQS"
+  echo "max_num_batched_tokens=$MAX_NUM_BATCHED_TOKENS"
+  echo "container_memory_gib=$MEMORY_GIB"
+  echo "container_swap_extra_gib=0"
+}
+
+case "${1:-}" in
+  --print-config) print_config; exit 0 ;;
+  --verify-image) verify_image; exit 0 ;;
+  run) ;;
+  -h|--help|'') usage; exit 2 ;;
+  *) usage >&2; exit 2 ;;
+esac
+
+for pair in \
+  "PORT:$PORT" \
+  "MAX_MODEL_LEN:$MAX_MODEL_LEN" \
+  "MAX_NUM_SEQS:$MAX_NUM_SEQS" \
+  "MAX_NUM_BATCHED_TOKENS:$MAX_NUM_BATCHED_TOKENS" \
+  "MEMORY_GIB:$MEMORY_GIB"; do
+  positive_integer "${pair%%:*}" "${pair#*:}"
+done
+command -v docker >/dev/null || { echo "docker is required" >&2; exit 2; }
+[ -d "$MODEL_DIR" ] || { echo "model directory is missing: $MODEL_DIR" >&2; exit 1; }
+[ -n "$CACHE_DIR" ] || { echo "set CACHE_DIR to a new writable directory" >&2; exit 2; }
+[ ! -e "$CACHE_DIR" ] || { echo "CACHE_DIR must be new: $CACHE_DIR" >&2; exit 1; }
+docker inspect "$NAME" >/dev/null 2>&1 && {
+  echo "container already exists: $NAME" >&2
+  exit 1
+}
+verify_image
+mkdir -p "$CACHE_DIR"
+
+memory_bytes=$((MEMORY_GIB * 1024 * 1024 * 1024))
+exec docker run --rm --name "$NAME" \
+  --ulimit core=0 \
+  --memory "$memory_bytes" --memory-swap "$memory_bytes" \
+  --oom-score-adj 500 \
+  --device /dev/dri:/dev/dri --group-add render \
+  --cap-add SYS_PTRACE --security-opt label=disable \
+  --ipc=host --shm-size=8g \
+  --publish "127.0.0.1:${PORT}:8000" \
+  --volume "$MODEL_DIR:/model:ro" \
+  --volume "$CACHE_DIR:/root/.cache/vllm" \
+  --env ZE_AFFINITY_MASK=0,1 \
+  --env ONEAPI_DEVICE_SELECTOR=level_zero:0,1 \
+  --env VLLM_TARGET_DEVICE=xpu \
+  --env VLLM_WORKER_MULTIPROC_METHOD=spawn \
+  --env VLLM_XPU_ENABLE_XPU_GRAPH=0 \
+  --env VLLM_XPU_GRAPH=0 \
+  --env TORCHINDUCTOR_DETERMINISTIC=1 \
+  --env VLLM_XPU_FP8_BLOCK_W8A16=1 \
+  --env VLLM_BATCH_INVARIANT=0 \
+  --env VLLM_XPU_QWEN_GEMMA_RMSNORM_BATCH_INVARIANT=0 \
+  --env VLLM_XPU_QWEN_GEMMA_RMSNORM_PACKED_SERIAL_EXACT=0 \
+  --env VLLM_XPU_GDN_NATIVE_SPEC_RECURRENT_SERIAL_EXACT=0 \
+  --env VLLM_XPU_GDN_SPEC_PERSISTENT_SCRATCH=0 \
+  --env VLLM_XPU_GDN_NATIVE_FALLBACK=1 \
+  --env PYTORCH_ALLOC_CONF=expandable_segments:True \
+  --env CCL_ATL_TRANSPORT=ofi \
+  --env FI_PROVIDER=tcp --env FI_TCP_IFACE=lo \
+  --env CCL_ZE_IPC_EXCHANGE=pidfd \
+  --env CCL_SEND=direct --env CCL_RECV=direct \
+  --env CCL_TOPO_P2P_ACCESS=0 \
+  --env CCL_SYCL_ALLREDUCE_SIMPLE_THRESHOLD=4294967296 \
+  --env CCL_SYCL_ALLGATHERV_SIMPLE_THRESHOLD=4294967296 \
+  --env CCL_SYCL_REDUCE_SCATTER_SIMPLE_THRESHOLD=4294967296 \
+  --entrypoint vllm "$IMAGE" \
+  serve /model \
+  --served-model-name "$SERVED" \
+  --host 0.0.0.0 --port 8000 \
+  --tensor-parallel-size 2 \
+  --dtype float16 --quantization fp8 --kv-cache-dtype auto \
+  --gpu-memory-utilization 0.80 \
+  --max-model-len "$MAX_MODEL_LEN" --block-size 64 \
+  --max-num-seqs "$MAX_NUM_SEQS" \
+  --max-num-batched-tokens "$MAX_NUM_BATCHED_TOKENS" \
+  --no-enable-prefix-caching --enable-prompt-tokens-details \
+  --language-model-only \
+  --compilation-config '{"cudagraph_mode":"PIECEWISE","cudagraph_capture_sizes":[1],"max_cudagraph_capture_size":1}'

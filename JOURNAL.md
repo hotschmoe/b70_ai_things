@@ -6076,3 +6076,47 @@ VERDICT -> F01 passes as a source/identity ledger, not as a runtime
 reproduction. Fetch and verify the exact 66-file, 30,866,866,928-byte model;
 then build the deterministic MTP0 overlay from tracked source and qualify a
 P2P-off graph-off target before MTP1 or any isolated direct-P2P oracle.
+
+### 2026-08-29t - F01 checkpoint, deterministic overlay, and F02 harness
+
+CONFIG -> Neural.Download Qwen3.8-27B official-FP8 reproduction source at
+`0948f7c2c2e21f0e8fcc444e319e5e8f5b83d0e7`, official model revision
+`017b9c7af6b5689d5dd426a76e0bc077eb5ca20a`, pinned vLLM source
+`ac7509e2b1db40fec2f03dde1ed4e9dfdc2338c9`, and pinned base image
+`f01e24f6c7ff01f1e0662234255a1372297d1dbd89d003cf13c8fad3eab1ba4f`.
+No GPU workload was run.
+
+COMMAND -> download the immutable official checkpoint, verify both direct and
+ordinary reads against the publisher manifest, build the deterministic MTP0
+overlay in a dedicated external source root, compare every installed overlay
+file to the patched checkout, trace the actual console-script import path, and
+implement the leased F02 P2P-off/no-swap qualification wrapper.
+
+RESULT -> all 66 Safetensors files and 30,866,866,928 bytes matched. The
+basename-sorted aggregate manifest SHA256 was
+`82fb8f84fa117c81c3e8639c4675709dfb667d70ddaa2fd097d35fc37d95453a`.
+The local overlay image ID was
+`dce80db0a1ad861145e88b1c565f29172641912dc75a3b50d08e370f7d58e291`,
+different from the publisher's metadata-sensitive `d19f802b...` ID. The four
+installed runtime files exactly matched the patched source, with SHA256 values
+`f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59`,
+`5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d`,
+`7c36e4a8dab4bfc06b1d5be2d8466e8cdc94099dd5409424fecc6dd8ffc2c208`,
+and `7afb4de8b87d7f180d696f7cadad8b9d48d9ab7b706ae19616425c4f9456fb19`.
+Import tracing confirmed that the real `vllm` console launcher selects the
+patched `site-packages` tree; an initial interactive-Python observation of the
+unpatched workspace tree did not describe the real launch path.
+
+RESULT -> the new F02 harness fixes TP2 P2P off, MTP0, XPU Graph off,
+deterministic Inductor, FP16 target/KV, official FP8 plus W8A16 runtime, one
+request, 1,024 context, and a 32 GiB no-swap cgroup. It requires the whole-box
+lease, 96 GiB host MemAvailable, direct model verification, continuous host
+memory/PSI evidence, two fresh servers and compile caches, complete 12-prompt
+raw-token equality, independent canaries, graceful teardown, and pre/post card
+plus compiled collective health. Static syntax, ASCII, image-ID, and all four
+runtime-file gates passed.
+
+VERDICT -> F01 is complete and F02 is ready for its first GPU transaction.
+The coming result is a deliberately different P2P-off safety port and cannot
+be labeled a reproduction of the publisher's P2P-on 34.031596 tok/s MTP0 or
+51.918757 tok/s MTP1 headline.
