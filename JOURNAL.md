@@ -5813,3 +5813,36 @@ stall, not a proven GPU wedge; the exact initiator remains unproven. Require
 96 GiB MemAvailable, at most 1 GiB used swap, a 64 GiB no-swap container
 ceiling, and persistent memory/PSI sampling before one bounded retry. Do not
 relax those safety bounds to make the profile run.
+
+### 2026-08-29m - M04 contained two-step pass
+
+CONFIG -> committed Git identity `b6cc036`, the same Qwen3.8 W8A8 TP2
+breakable-reclaim500 configuration, two profiled decode steps, 96 GiB minimum
+host MemAvailable, at most 1 GiB preexisting swap, a requested 64 GiB
+memory-plus-swap container ceiling, and five-second host memory/PSI sampling.
+
+COMMAND -> on rebooted boot ID `868bc48dece94aa78569d5b6f38da02b`, first
+pass both cards and the compiled P2P-off collective. Start one bounded server,
+verify exact model identity, run warmup, control A, the profiled request after
+first token, and control B, then require exact paired-rank census agreement and
+a profiled/control ratio of at least 0.75. Tear down and repeat card and
+collective health.
+
+RESULT -> both profiled tokens on both ranks reproduced 131 graph pieces, 131
+fence resets, 131 host waits, 262 submissions, 129 BF16 `[1,5120]`
+all-reduces, and one BF16 `[1,124160]` all-gather. Profiled throughput was
+12.6260 tok/s against a 14.6965 tok/s control mean. The ratio was 0.859115, or
+14.1 percent loss, and passed. The census JSON SHA256 was
+`41010eeb690c286b2629f2b46360b5c70d2715fa530728384e3c930c51abe144`.
+
+RESULT -> all 48 host samples recorded zero swap. MemAvailable ranged from
+123,996,420 to 61,283,424 KiB; memory PSI briefly reached 0.05 at 60 seconds,
+then returned to zero. Exact model identity, endpoint teardown, both cards,
+and the compiled P2P-off collective passed. The memory-monitor SHA256 was
+`a68ee108d0743d4b4012d282493ea0309afd9cdc7aa56c5284ccc8fdd1c68190`.
+
+VERDICT -> M04 passes. Use 131 pieces, 131 waits, 262 submissions, and 130
+shaped collective calls as the Qwen3.8 W8A8 breakable TP2 boundary baseline.
+Retain the host-safety gates for later Qwen3.8 work and proceed to the P0 W01
+corrected long-output baseline; M03 supplies no reason to spend W05 endpoint
+time on the explicit async/wait route before that baseline is stable.

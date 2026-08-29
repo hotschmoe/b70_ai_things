@@ -2,10 +2,11 @@
 
 Date: 2026-08-29
 
-Status: the paired-rank structural census is repeatable, but M04 has not yet
-passed its profiling-overhead gate. A third bounded retry is rejected as
-experiment evidence because the host stopped making observable progress while
-the replacement server was loading weights.
+Status: passed after a contained two-step retry. The paired-rank structural
+census is repeatable and the retry met the profiling-overhead gate. The
+overnight attempt remains rejected as experiment evidence because the host
+stopped making observable progress while the replacement server loaded
+weights.
 
 ## Matched configuration
 
@@ -53,6 +54,38 @@ The profiled request produced 10.1215 post-first-token tok/s versus a 14.4349
 tok/s mean for the two controls. The ratio was 0.701183, or 29.9 percent loss,
 so the predeclared maximum 25 percent instrumentation-loss gate failed.
 Teardown, per-card health, and compiled P2P-off collective health passed.
+
+## Passing contained retry
+
+The accepted M04 result is:
+
+`/mnt/vm_8tb/b70/results/m04_graph_census/20260829T182821Z/`
+
+It ran from committed Git identity
+`b6cc0362d975af031d5239383865d81fa82b8f4e` with two profiled decode steps,
+the 96 GiB available-memory admission gate, at most 1 GiB preexisting swap,
+and a requested 64 GiB memory-plus-swap container ceiling.
+
+Both tokens on both ranks reproduced the exact structural signature in the
+table above. The profiled request measured 12.6260 post-first-token tok/s
+versus a 14.6965 tok/s mean for the two controls. The 0.859115 ratio is a 14.1
+percent loss and passes the predeclared minimum 0.75 ratio.
+
+All 48 five-second host samples recorded zero swap use. MemAvailable ranged
+from 123,996,420 KiB before loading to a 61,283,424 KiB minimum while serving.
+Memory PSI briefly reached 0.05 at 60 seconds and returned to zero. After
+teardown, MemAvailable returned to about 123.9 million KiB with zero swap and
+zero current PSI. Card health and the compiled P2P-off collective passed both
+before and after serving, and the endpoint disappeared during teardown.
+
+The census JSON SHA256 is
+`41010eeb690c286b2629f2b46360b5c70d2715fa530728384e3c930c51abe144`.
+The memory-monitor SHA256 is
+`a68ee108d0743d4b4012d282493ea0309afd9cdc7aa56c5284ccc8fdd1c68190`.
+The rank trace SHA256 values are
+`8724e31a1bd84887dcd63034f0f2543b6e469451b2f656e3d555f10b54dc1ad8`
+and
+`94653427473c130d38e9dfacf7d9a0808e76f3a835d95c540b2e830acc65ec81`.
 
 ## Unresponsive-host incident
 
@@ -121,9 +154,9 @@ instead of consuming the host.
 
 ## Verdict
 
-Retain the exact 131/131/262 structural signature as M04 information, but do
-not mark M04 passed until a safe two-step capture meets the 0.75 throughput
-ratio and closes teardown plus post-health. Reject the 06:49 attempt entirely
-as an experiment. If the cgroup-limited loader cannot become healthy, record a
-capacity failure and proceed without further back-to-back retries; do not
-weaken the host-safety bounds to force the profile.
+M04 passes. Retain the exact 131/131/262 structural signature and the shaped
+130-collective census for later topology comparisons. The accepted two-step
+capture met the 0.75 throughput-ratio gate with exact rank agreement, bounded
+host pressure, clean teardown, and post-health. Reject the overnight attempt
+entirely as an experiment and retain the host admission, cgroup, and monitoring
+safeguards for subsequent Qwen3.8 work.
