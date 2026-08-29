@@ -165,6 +165,7 @@ trap cleanup EXIT INT TERM
   echo "mtp=0"
   echo "radix_cache=off"
   echo "output_tokens=$OUTPUT_TOKENS"
+  echo "long_replay_seed=none_native_greedy"
   echo "window_tokens=$WINDOW_TOKENS"
   echo "minimum_final_initial_ratio=$MIN_FINAL_INITIAL_RATIO"
   echo "host_mem_min_gib=$HOST_MEM_MIN_GIB"

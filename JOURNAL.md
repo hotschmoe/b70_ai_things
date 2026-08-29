@@ -5877,3 +5877,35 @@ server-log SHA256 was
 VERDICT -> reject the attempt as W01 evidence. Split the dependent local
 assignments into separate statements, retain the corpus only as harness-debug
 evidence, and rerun both fresh servers plus the full 50K gate from the start.
+
+### 2026-08-29o - Rejected W01 native-client parameter attempt
+
+CONFIG -> corrected cleanup at Git identity `56d958c`; otherwise the exact W01
+configuration and safety gates from 2026-08-29n. Result directory was
+`/mnt/vm_8tb/b70/results/w01_qwen38_w8a8/20260829T194241Z/`.
+
+COMMAND -> run the complete fresh server A corpus and teardown, inter-server
+card plus collective health, host recovery gate, then fresh server B and its
+cross-server corpus. Start the native `/generate` 50K stream only after those
+gates pass.
+
+RESULT -> both eight-prompt corpora were repeat-exact and server B matched all
+server A hashes with an exact reference contract. Server A tore down normally;
+inter-server and final card plus compiled P2P-off collective health passed.
+All 93 host samples used zero swap and MemAvailable stayed at or above
+65,320,196 KiB. Corpus A/B SHA256 values were
+`b5b01782764cc310f828e395e933471e555879cf317f85184915ae53d1fa47ff`
+and
+`9fd1f1526ea92da9a70fb38f80926985ee54aa8db19a6f829c68fb31c246061d`.
+
+RESULT -> the native request incorrectly included `seed` inside SGLang's
+`sampling_params`. The endpoint returned HTTP 200 before its streaming body
+raised `TypeError: Unexpected keyword argument 'seed'`; no model prefill,
+decode token, milestone, or 50K evidence was produced. Server B remained
+healthy, then tore down with no kernel fatal marker. Server B log SHA256 was
+`4e9ec2a31d36171b95e3ce1fe5ef76a4d81ee056dca52cb85e769a97ae461efc`.
+
+VERDICT -> reject the transaction as W01 evidence despite the useful corpus
+gate. Native SGLang greedy sampling has no seed field; record seed as none,
+retain `temperature=0`, remove the invalid parameter, cover its absence in the
+mock SSE test, and rerun the full transaction rather than resume at 50K.

@@ -100,8 +100,11 @@ class WindowSummaryTest(unittest.TestCase):
         events.append(b"data: [DONE]\n")
         responses = [FakeResponse(models), FakeResponse(lines=events)]
 
-        def fake_urlopen(_request, timeout=None):
+        def fake_urlopen(request, timeout=None):
             self.assertIsNotNone(timeout)
+            if hasattr(request, "data"):
+                payload = json.loads(request.data.decode("ascii"))
+                self.assertNotIn("seed", payload["sampling_params"])
             return responses.pop(0)
 
         with tempfile.TemporaryDirectory() as directory:
@@ -138,6 +141,7 @@ class WindowSummaryTest(unittest.TestCase):
             self.assertTrue(result["passed"])
             self.assertEqual(result["completion_tokens"], 30)
             self.assertEqual(result["finish_reason"], {"type": "length"})
+            self.assertIsNone(result["seed"])
             self.assertEqual(len(result["stability"]["windows"]), 3)
 
 

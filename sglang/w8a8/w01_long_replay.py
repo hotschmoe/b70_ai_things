@@ -73,7 +73,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--window-tokens", type=int, default=5_000)
     parser.add_argument("--stream-interval", type=int, default=100)
     parser.add_argument("--timeout", type=int, default=5_400)
-    parser.add_argument("--seed", type=int, default=20_260_828)
     parser.add_argument("--minimum-final-initial-ratio", type=float, default=0.80)
     return parser.parse_args()
 
@@ -98,7 +97,6 @@ def main() -> None:
             "temperature": 0,
             "max_new_tokens": args.output_tokens,
             "ignore_eos": True,
-            "seed": args.seed,
             "stream_interval": args.stream_interval,
         },
         "stream": True,
@@ -197,7 +195,8 @@ def main() -> None:
         "completion_tokens": last_completion_tokens,
         "finish_reason": finish_reason,
         "saw_done": saw_done,
-        "seed": args.seed,
+        "seed": None,
+        "sampling_contract": "native greedy temperature=0; seed unsupported",
         "stream_interval": args.stream_interval,
         "ttft_ms": (first - start) * 1000,
         "total_s": end - start,
