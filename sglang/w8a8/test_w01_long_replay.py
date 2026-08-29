@@ -143,6 +143,10 @@ class WindowSummaryTest(unittest.TestCase):
             self.assertEqual(result["finish_reason"], {"type": "length"})
             self.assertIsNone(result["seed"])
             self.assertEqual(len(result["stability"]["windows"]), 3)
+            partial = output.with_name("result.partial.json")
+            progress = json.loads(partial.read_text(encoding="ascii"))
+            self.assertEqual(progress["last_completion_tokens"], 30)
+            self.assertEqual(progress["status"], "running")
 
 
 if __name__ == "__main__":

@@ -112,6 +112,7 @@ def main() -> None:
     last_completion_tokens = 0
     next_milestone = args.window_tokens
     milestones: list[dict[str, float | int]] = []
+    partial_out = args.json_out.with_name(args.json_out.stem + ".partial.json")
     final_event: dict[str, Any] | None = None
     saw_done = False
     try:
@@ -145,12 +146,36 @@ def main() -> None:
                     {"completion_tokens": completion_tokens, "elapsed_s": 0.0}
                 )
             while completion_tokens >= next_milestone:
-                milestones.append(
-                    {
-                        "completion_tokens": completion_tokens,
-                        "elapsed_s": now - first,
-                        "target_completion_tokens": next_milestone,
-                    }
+                milestone = {
+                    "completion_tokens": completion_tokens,
+                    "elapsed_s": now - first,
+                    "target_completion_tokens": next_milestone,
+                }
+                milestones.append(milestone)
+                partial_out.write_text(
+                    json.dumps(
+                        {
+                            "protocol": "b70-w01-long-replay-v1",
+                            "status": "running",
+                            "model": args.model,
+                            "last_completion_tokens": completion_tokens,
+                            "milestones": milestones,
+                        },
+                        indent=2,
+                        sort_keys=True,
+                    )
+                    + "\n",
+                    encoding="ascii",
+                )
+                cumulative_rate = (completion_tokens - 1) / (now - first)
+                print(
+                    "MILESTONE -> target={} observed={} elapsed_s={:.3f} cumulative_tok_s={:.4f}".format(
+                        next_milestone,
+                        completion_tokens,
+                        now - first,
+                        cumulative_rate,
+                    ),
+                    flush=True,
                 )
                 next_milestone += args.window_tokens
             last_completion_tokens = completion_tokens
