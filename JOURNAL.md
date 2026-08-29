@@ -5700,3 +5700,39 @@ VERDICT -> M01 passes as a source-accounting gate, not as acceptance of any
 patch. Close M02 and M03 on isolated BF16 P2P-off collectives first; then port
 state visibility/cache binding, fixed-256 B/A, and exact two-row RMSNorm as
 separate mechanisms before a combined target/MTP model qualification.
+
+### 2026-08-29j - M02 P2P-off compiled collective boundary and pass
+
+CONFIG -> kernel 7.1.0, host Compute Runtime 26.22, pinned vLLM image
+`f01e24f6`, vLLM `ac7509e2b`, PyTorch 2.13.0+xpu, oneCCL `89438cc`, two B70
+ranks, and `CCL_TOPO_P2P_ACCESS=0`. Exact BF16 shapes were all-reduce
+`[1,5120]`, all-reduce `[4,5120]`, and all-gather input `[4,2560]`. Every
+collective fed an immediate multiply-plus-add consumer.
+
+COMMAND -> under one whole-box `bin/gpu-run` lease, run eager direct, compiled
+functional plus `wait_tensor`, and compiled XPUGraph replay. Flush per-rank
+entry/return JSONL with monotonic call IDs. Use three fresh containers and
+compile caches, tear down each, and run card plus compiled P2P-off collective
+health between lifetimes.
+
+RESULT -> the first functional all-gather graph capture failed on both ranks
+with `wait method cannot be used for an event associated with a command graph`.
+Both all-reduce shapes had already passed eager, compiled, and 16 graph
+replays; all-gather had passed eager and compiled execution. Teardown and
+post-health passed. The required non-reboot rebind reset then completed with
+clean card and collective health.
+
+RESULT -> keeping compiled all-gather opaque through a direct custom op removed
+the illegal Inductor event wait. Three fresh lifetimes passed. Each rank logged
+102 matched calls per lifetime, every numerical comparison after the consumer
+was exact, and no call remained open. All three teardowns and all intervening
+health checks passed. Combined lifetime result SHA256 values were
+`041b5d57729061b1650b8f36c6139488ff95edc01f4e50b45ff267485f26acf6`,
+`e74ac321adea9565217dd33b75d8db210993f200588ff02fe13f9f1b43746be8`,
+and `f3c59fbab483bffe1a364b9187358074ff08bed18e9216fde80b525e68dabe26`.
+
+VERDICT -> M02 passes, with a route-specific constraint: functional-wait
+all-reduce is graph-safe, but all-gather graph replay requires an opaque direct
+boundary. Proceed to M03 blocking c10d versus `async_op=True` plus
+`Work.wait()` as an isolated P2P-off all-reduce A/B. Do not claim endpoint
+speed or accept a Steve model patch from this operator result alone.

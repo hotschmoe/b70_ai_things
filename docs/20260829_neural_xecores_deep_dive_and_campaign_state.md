@@ -17,6 +17,8 @@ The companion execution plan is
 `docs/20260829_local_serving_research_roadmap.md`.
 The current line-level Steve transfer audit is
 `docs/20260829_steve_completion_state_port_ledger.md`.
+The first completed transfer mechanism oracle is
+`docs/20260829_m02_p2p_off_compiled_collective_oracle.md`.
 
 ## Audit method and source boundary
 

@@ -2,8 +2,8 @@
 
 Date: 2026-08-29
 
-Status: execution underway. Phase 0 H01-H07 and Phase 1 source audit M01
-passed on 2026-08-29; the isolated M02 collective oracle is next. This roadmap
+Status: execution underway. Phase 0 H01-H07 and Phase 1 M01-M02 passed on
+2026-08-29; the isolated M03 completion-ownership A/B is next. This roadmap
 supersedes no historical evidence. It incorporates the 2026-08-29
 Neural.Download and XeCores audit recorded in
 `docs/20260829_neural_xecores_deep_dive_and_campaign_state.md` and the current
@@ -16,8 +16,12 @@ manifest. The M01 line-level ledger is
 `docs/20260829_steve_completion_state_port_ledger.md`. It found the eager
 async/wait concept present, but compiled completion ownership, compiler-visible
 GDN state, current-API cache binding, fixed-256 B/A, exact two-row RMSNorm, and
-the deterministic Inductor launch contract remain unported. M02 must pass
-before any Steve-derived source port.
+the deterministic Inductor launch contract remain unported. M02 then proved
+the required BF16 P2P-off collectives across three fresh lifetimes. Its exact
+route boundary is recorded in
+`docs/20260829_m02_p2p_off_compiled_collective_oracle.md`: all-reduce supports
+functional-wait graph replay, while all-gather graph replay requires an opaque
+direct custom op because a functional event wait is illegal in XPUGraph.
 
 ## Goal
 

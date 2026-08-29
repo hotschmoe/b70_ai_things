@@ -183,3 +183,11 @@ criterion. It does not qualify or accept a port.
    and residual results.
 6. Combine the qualified mechanisms with deterministic Inductor in a fresh
    compile cache, then run target-only and MTP1 exactness before performance.
+
+## M02 closure update
+
+M02 passed after this audit. The exact configuration, initial functional
+all-gather graph failure, opaque-direct repair, three fresh lifetime results,
+and health evidence are in
+`docs/20260829_m02_p2p_off_compiled_collective_oracle.md`. M03 remains the next
+gate; no Steve model patch has been accepted yet.
