@@ -93,8 +93,19 @@ The completed matched pilot is:
 
 There is no score winner and no arm is ready for the 74-task campaign. The
 Qwen totals are times to failed completion, not successful speed results.
-Ornith is the only long-agent runtime survivor, but its current Pi/xhigh policy
-does not finish this task within the official budget.
+Among the original four arms, Ornith is the only long-agent runtime survivor,
+but its current Pi/xhigh policy does not finish this task within the official
+budget.
+
+A separate Qwen W8A8 graph-safety diagnostic replaced FULL with breakable
+decode plus reclaim500. It survived the complete 1,800-second agent phase and
+26,368 live tokens without an endpoint or kernel failure, then shut down with
+clean card and collective health. The agent made a late, unverified edit and
+timed out after its first test exposed a generated `Set.filter` bug. Official
+score remained 0.0; Harbor wall was 34m32s and total server-start through
+post-health time was 38m17s. This qualifies the runtime change but rejects the
+Pi/xhigh policy. The next score experiment should use a matched lower-thinking
+or hard-output-bound policy on the stable Qwen W8A8 and Ornith arms.
 
 Do not raise the Ornith graph arm to `MEMFRAC=0.90`. That setting allocated
 about 58 GiB of shared GPU memory and triggered a global host OOM during graph

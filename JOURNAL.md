@@ -5388,3 +5388,56 @@ the same Level Zero command-stream failure class now spans both vLLM PIECEWISE
 and SGLang FULL long-agent runs. Keep BF16 KV, the 16K prefill window, and the
 0.90 fit result as controls, but require a graph-safe long-context recipe before
 running more official tasks.
+
+### 2026-08-29a - Qwen W8A8 reclaim500 survives TB3 but xhigh times out
+
+CONFIG -> exact refreshed SGLang image
+`b70-sglang-xpu-int8-runtime@sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78`
+and Qwen3.8-27B compressed-tensors W8A8 GPTQ checkpoint. The diagnostic changed
+the rejected matched arm's FULL decode graph to the previously qualified TP2
+breakable backend and enabled executable re-instantiation every 500 replays.
+It retained P2P off, source-default eager collectives, target-only decode,
+BF16 KV, memory fraction 0.70, maximum one request, 65,536 context, qwen3
+reasoning, qwen3_coder tools, strict-thinking cap 4096, Pi 0.84.3 xhigh, and
+the same concise prompt and official `bun-sourcemap-leak` task.
+
+COMMAND -> add a separately named `qwen-w8a8-reclaim500` campaign arm without
+changing the historical FULL control. Run it inside a whole-box `bin/gpu-run`
+lease with exact identity, per-card and compiled two-rank P2P-off pre-health,
+Harbor through its terminal state, graceful teardown, and the same post-health.
+Watch the server and kernel for the old approximately 17K fault, Level Zero
+abort, replay-reset markers, throughput decay, OOM, or engine death.
+
+RESULT -> startup took 146 seconds. Each rank loaded 14.33 GiB of weights,
+completed breakable batch-one capture in 11.85 seconds, and retained 9.67 GiB.
+Both ranks logged graph reclaim activation; the bounded log contained sixteen
+first-500-replay re-instantiation markers across their graph segments. Decode
+continued around 13-14 tok/s after reclaim. The server crossed the original
+W8A8 hardware-fault boundary and the NVFP4 19,328-token abort boundary, then
+remained healthy through a maximum logged live sequence of 26,368 tokens when
+Harbor cancelled the final response. There was no Level Zero abort, scheduler
+death, kernel engine reset, GPU VM fault, or host OOM. Server-log SHA256 was
+`6804d13b8ce22a273940e32f1e77635b4bf2706934b65d75f54fe6406536d5df`.
+
+RESULT -> the runtime fix did not fix agent efficiency. Pi used eight inspection
+calls before editing, spent most of its budget on long plans, and finally wrote
+a 14,649-byte replacement release script. Its only post-edit test found a `TypeError`
+because the generated code called `.filter()` on a `Set`; the timeout arrived
+before repair. Harbor stopped agent execution at exactly 1,800 seconds and
+assigned official reward 0.0 with `AgentTimeoutError`. The job used 80,950
+input and 20,144 output tokens. Harbor wall was 34m32s, server-start through
+Harbor finish was 37m03s, and server-start through teardown plus post-health
+was 38m17s. Job result, trial result, Pi transcript, and lifecycle SHA256 values
+were `6432762b2f653b00ce6adde092a4da5cfc7e4d87aa7c477b74ac6af4d863aabe`,
+`d49828c36c0f5ff19af6e6f0636fb6a855d22c51245883a52ed5f0dc43067cb9`,
+`8da842a90d952c03439caf9f981dc4160382b591bf6dfbd2dc2ed55455b77ced`,
+and `49fc18a050f0777e81c81fec2e1e06d7ae91e944eaf9b524ec37ab2cd495dba6`.
+Graceful teardown, both card probes, and the compiled P2P-off collective passed.
+
+VERDICT -> qualify breakable plus reclaim500 as the isolated long-agent runtime
+fix for Qwen W8A8, replacing FULL for future 65K diagnostics. Reject the common
+Pi/xhigh policy for this task: Qwen and Ornith both survived it but exhausted
+the official budget through verbosity and scored zero. Do not interpret this
+38m17s timeout as successful task speed. Before expanding beyond one task,
+run a matched lower-thinking or hard-output-bound policy on the two stable
+SGLang arms and require a nonzero result.
