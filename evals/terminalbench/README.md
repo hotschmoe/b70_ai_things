@@ -144,3 +144,16 @@ harbor run -d terminal-bench/terminal-bench@3.0.0 \
 a hard completion limit. Ornith can continue planning as visible text after
 strict thinking closes. Treat the prompt template and thinking cap as explicit
 agent configuration, and keep scored results separate from unprompted arms.
+
+For the post-xhigh policy diagnostic, use the model's only other real thinking
+state and a hard response bound:
+
+```bash
+THINKING=off MAX_TOKENS=4096 \
+PROMPT_TEMPLATE_PATH="$PWD/evals/terminalbench/pi_concise_off_prompt.j2" \
+INCLUDE_TASK=terminal-bench/bun-sourcemap-leak N_TASKS=1 \
+  evals/terminalbench/run_arm.sh qwen-w8a8-reclaim500
+```
+
+This is a new agent-policy arm, not a matched xhigh result. Run Ornith with the
+same three policy variables only if the Qwen pilot becomes task-effective.

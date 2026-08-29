@@ -15,6 +15,7 @@ CONTEXT_WINDOW="${CONTEXT_WINDOW:-65536}"
 PREFILL_WINDOW="${PREFILL_WINDOW:-16384}"
 GPTQ_UTIL="${GPTQ_UTIL:-0.90}"
 MAX_TOKENS="${MAX_TOKENS:-16384}"
+PROMPT_TEMPLATE_PATH="${PROMPT_TEMPLATE_PATH:-$REPO/evals/terminalbench/pi_concise_prompt.j2}"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 
 if [ "$PREFILL_WINDOW" -gt "$CONTEXT_WINDOW" ]; then
@@ -177,7 +178,7 @@ HARBOR_ARGS=(
   --ak version=0.84.3
   --ak "context_window=$CONTEXT_WINDOW"
   --ak "max_tokens=$MAX_TOKENS"
-  --ak "prompt_template_path=$REPO/evals/terminalbench/pi_concise_prompt.j2"
+  --ak "prompt_template_path=$PROMPT_TEMPLATE_PATH"
   --allow-agent-host "$MODEL_HOST"
   -n "$N_CONCURRENT" -k 1
   -o "$JOBS_ROOT" --job-name "$JOB_NAME" --yes
