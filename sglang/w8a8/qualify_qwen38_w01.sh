@@ -187,7 +187,7 @@ trap cleanup EXIT INT TERM
 monitor_pid=$!
 
 gpu_touched=1
-"$REPO/bin/xpu-health" | tee "$RESULT_DIR/health_pre_card.log"
+"$REPO/bin/xpu-health" 2>&1 | tee "$RESULT_DIR/health_pre_card.log"
 "$REPO/bin/xpu-collective-health" --p2p 0 --timeout "$HEALTH_TIMEOUT" \
   | tee "$RESULT_DIR/health_pre_collective.log"
 
@@ -234,7 +234,7 @@ python3 "$CORPUS" --base "http://127.0.0.1:$PORT" --model "$SERVED" \
   --output "$RESULT_DIR/corpus_server_a.json"
 stop_server a
 
-"$REPO/bin/xpu-health" | tee "$RESULT_DIR/health_inter_card.log"
+"$REPO/bin/xpu-health" 2>&1 | tee "$RESULT_DIR/health_inter_card.log"
 "$REPO/bin/xpu-collective-health" --p2p 0 --timeout "$HEALTH_TIMEOUT" \
   | tee "$RESULT_DIR/health_inter_collective.log"
 wait_host_gate | tee "$RESULT_DIR/host_before_server_b.log"

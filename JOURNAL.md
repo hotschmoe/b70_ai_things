@@ -5909,3 +5909,55 @@ VERDICT -> reject the transaction as W01 evidence despite the useful corpus
 gate. Native SGLang greedy sampling has no seed field; record seed as none,
 retain `temperature=0`, remove the invalid parameter, cover its absence in the
 mock SSE test, and rerun the full transaction rather than resume at 50K.
+
+### 2026-08-29p - W01 corrected 50K baseline passes
+
+CONFIG -> Git identity `a17eb6a`, Qwen3.8-27B compressed-tensors W8A8 GPTQ
+with GDN RTN, pinned SGLang image digest `adc915d266e`, TP2, P2P off, BF16
+target/KV, 65,536 context, memory fraction 0.70, maximum one request,
+breakable batch-1 decode graph, reclaim500, radix off, and MTP off. The host
+gate required 96 GiB available and at most 1 GiB used swap; each server had a
+64 GiB no-swap container ceiling. Result directory was
+`/mnt/vm_8tb/b70/results/w01_qwen38_w8a8/20260829T195551Z/`.
+
+COMMAND -> pass per-card and compiled P2P-off collective health, start fresh
+server A, verify exact identity/runtime/dtypes/resources, and capture the
+eight-prompt corpus twice per prompt. Stop A, repeat health and the host gate,
+then start fresh server B and require within-server and cross-server exact
+corpus hashes. Send one native greedy 50,000-token `/generate` stream with
+temperature zero, `ignore_eos=true`, and no unsupported seed. Preserve exact
+token milestones, the full token array, a length finish, and require final
+5K/first 5K throughput of at least 0.80. Stop B, scan server/kernel logs, and
+repeat card plus collective health.
+
+RESULT -> both fresh-server corpora were repeat-exact and server B matched all
+eight server-A completion hashes. Exact served ID, BF16 target/KV, image,
+cgroup, P2P-off, breakable, and reclaim500 gates passed. Corpus A/B SHA256
+values were `b5b01782764cc310f828e395e933471e555879cf317f85184915ae53d1fa47ff`
+and `2740f737bf0e97b9900974e13f96ee69e67eb5fe75249ef9ead4ef4a9aba2163`.
+
+RESULT -> the native stream finished by length with exactly 50,000 completion
+tokens. TTFT was 323.074 ms, total response time 3,435.460 seconds, and
+post-first-token throughput was 14.5552 tok/s. The first and final 5K windows
+were 14.8396 and 14.2652 tok/s; the 0.961298 ratio passed. The full token-array
+SHA256 was `01d78ddc5700922abcebc4ef5298df5c98840915eda72dcc3454c014860ca3a1`;
+the replay JSON SHA256 was
+`4300568c7a2da2d731124bf65284c5f10e40b6dfeb0484011727c5122557e349`.
+The log crossed all prior graph-failure boundaries and contained 21 executable
+re-instantiation markers without a configured fatal server marker.
+
+RESULT -> all 775 host samples used zero swap. Minimum MemAvailable was
+65,245,888 KiB (62.223 GiB), and memory PSI `some`/`full` totals did not move.
+Both servers stopped and their endpoints disappeared. The kernel scan had no
+OOM, hung task, GPU VM fault, dead engine, wedge, or failed reset marker. Final
+card and compiled two-rank collective health passed; their SHA256 values were
+`e9f3293cbccc9b9d07d5f665e37f940b1ea0f23da34b50468c052d459b52eeff`
+and `93830e24e5201487f24df92401edb4e5054ec720ef64e6239a5d9e0325f5f614`.
+Pre/inter card commands also returned success under `pipefail`, but their tee
+files were empty because `xpu-health` wrote diagnostics to stderr; future
+harness runs now capture both streams.
+
+VERDICT -> W01 passes as a deterministic, contained single-stream long-output
+baseline. It does not establish concurrent shelf readiness or attribute speed
+to graph/reclaim. Proceed to matched W02 eager, breakable, and
+breakable-plus-reclaim500 controls before concurrency qualification.
