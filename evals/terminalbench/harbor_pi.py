@@ -12,6 +12,40 @@ from harbor.agents.installed.pi import Pi
 from harbor.agents.model_connection import ResolvedModelConnection
 
 
+def qwen_model_definition(
+    model_id: str,
+    *,
+    context_window: int,
+    max_tokens: int,
+) -> dict[str, Any]:
+    """Return the exact Pi metadata used by the campaign adapter."""
+    return {
+        "id": model_id,
+        "name": model_id,
+        "reasoning": True,
+        # Pi 0.84.3 treats null as unsupported. The Qwen template has only
+        # true off and native thinking, represented here by off and xhigh.
+        "thinkingLevelMap": {
+            "off": "none",
+            "minimal": None,
+            "low": None,
+            "medium": None,
+            "high": None,
+            "xhigh": "xhigh",
+            "max": None,
+        },
+        "input": ["text"],
+        "contextWindow": context_window,
+        "maxTokens": max_tokens,
+        "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+        },
+    }
+
+
 class SglangReasoningPi(Pi):
     """Pi configured for a Qwen-style SGLang chat-completions endpoint."""
 
@@ -52,23 +86,10 @@ class SglangReasoningPi(Pi):
             "supportsStrictMode": False,
         }
         provider["models"] = [
-            {
-                "id": model_id,
-                "name": model_id,
-                "reasoning": True,
-                # Pi exposes xhigh only when the model maps it explicitly. The
-                # Qwen chat template has an on/off control, so xhigh means the
-                # model's native thinking mode, not a server-side effort tier.
-                "thinkingLevelMap": {"off": None, "xhigh": "xhigh"},
-                "input": ["text"],
-                "contextWindow": self._context_window,
-                "maxTokens": self._max_tokens,
-                "cost": {
-                    "input": 0,
-                    "output": 0,
-                    "cacheRead": 0,
-                    "cacheWrite": 0,
-                },
-            }
+            qwen_model_definition(
+                model_id,
+                context_window=self._context_window,
+                max_tokens=self._max_tokens,
+            )
         ]
         return models_json

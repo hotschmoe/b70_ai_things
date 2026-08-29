@@ -1,6 +1,9 @@
 # TerminalBench 3 with Pi and local SGLang
 
-Relaunch is currently blocked. Read
+Relaunch remains blocked on Phase 0 gates H04-H07. H01-H03 passed locally on
+2026-08-29 with exact Pi 0.84.3 payload capture and a non-GPU launcher-policy
+oracle. Run `evals/terminalbench/phase0_preflight.sh` to repeat those checks.
+Read
 [`CAMPAIGN_RELAUNCH.md`](CAMPAIGN_RELAUNCH.md) before changing the harness or
 starting another pilot. It records two campaign-validity corrections, the
 per-arm runtime plan, launch gates, timing requirements, and the local-70 versus
@@ -15,9 +18,9 @@ This directory contains the Harbor adapter used to expose local Qwen-style
 reasoning models to Pi. Harbor's stock Pi adapter defines custom models without
 reasoning metadata, which causes Pi to clamp `--thinking xhigh` to off.
 
-`SglangReasoningPi` declares the Qwen chat-template thinking format and maps Pi
-`xhigh` to the model's native thinking mode. It deliberately does not send an
-unsupported OpenAI `reasoning_effort` field.
+`SglangReasoningPi` declares the Qwen chat-template thinking format, maps true
+off to Pi's supported `none` value, and maps `xhigh` to native thinking. It
+deliberately does not send an unsupported OpenAI `reasoning_effort` field.
 
 `run_arm.sh` is the campaign entry point. It keeps BF16 KV, one agent request at
 a time, the same Pi prompt and limits, server startup, Harbor, teardown, and

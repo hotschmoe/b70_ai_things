@@ -36,6 +36,10 @@ result as an FP16-KV result. Requalify the route from target-only under
 
 ## Preflight work before any GPU pilot
 
+H01-H03 passed on 2026-08-29. The exact Pi 0.84.3 payload and launcher-policy
+oracles are automated by `evals/terminalbench/phase0_preflight.sh`. H04-H07
+remain blocking.
+
 1. Repair the Pi model metadata.
    - Make `off` a supported, non-null level.
    - Null unsupported `minimal`, `low`, `medium`, `high`, and `max` levels.

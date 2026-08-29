@@ -25,7 +25,7 @@ SPEC_STEPS="${SPEC_STEPS:-1}"
 SPEC_DRAFT="${SPEC_DRAFT:-2}"
 DECODE_GRAPH="${DECODE_GRAPH:-breakable}"
 TOOLPARSER="${TOOLPARSER:-qwen3_coder}"
-THINKCAP="${THINKCAP-4096}"
+THINKCAP="${THINKCAP-}"
 if [ -z "${SYCL_KERNELS+x}" ]; then
   if [ "$DECODE_GRAPH" = 1 ] || [ "$DECODE_GRAPH" = full ]; then
     SYCL_KERNELS=1

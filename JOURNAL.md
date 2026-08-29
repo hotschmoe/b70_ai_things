@@ -5577,3 +5577,51 @@ DP2 test consumes time before the single-stream recipe winner is selected.
 VERDICT -> run the next campaign as a C1 recipe tournament across TP1 and TP2.
 If the winner is TP1, evaluate DP2 separately afterward as a local-serving
 concurrency bonus, not as part of model/recipe selection.
+
+### 2026-08-29f - Terminal-Bench H01-H03 policy contract repaired
+
+CONFIG -> Harbor 0.22.0 with exact Pi 0.84.3, the retained custom Qwen
+chat-template adapter, no model endpoint, and no intended GPU work. True off
+uses the concise-off prompt and an 8,192-token response cap. Xhigh retains the
+concise prompt, 16,384-token response cap, and recorded 4,096-token private
+thinking cap.
+
+COMMAND -> add a real Pi subprocess oracle backed by a local mock OpenAI SSE
+endpoint, add unit coverage for supported thinking levels and launcher policy,
+and run `PI_0843_BINARY=/tmp/b70-pi-runtime-0.84.3/node_modules/.bin/pi
+evals/terminalbench/phase0_preflight.sh`.
+
+RESULT -> all four metadata/policy tests passed. The captured off payload set
+`enable_thinking=false` and `preserve_thinking=true`; xhigh set the first value
+true and preserved thinking. Neither payload contained `reasoning_effort`.
+The launcher oracle resolved off to an empty `THINKCAP` and xhigh to 4096.
+Intermediate levels fail closed. The result log SHA256 was
+`d6ee63f433829770e43613a1a19583ec7db84f7092075a862f6f947ba5ac0e77`.
+
+VERDICT -> H01, H02, and H03 pass. Keep official GPU pilots blocked until
+H04-H07 also pass. The historical 4K job remains native-thinking evidence and
+is not reclassified.
+
+### 2026-08-29g - Aborted policy-oracle routing mistake
+
+CONFIG -> Qwen3.8 W8A8 TP2 breakable-reclaim500, BF16 target/KV, P2P off,
+65,536 context, memory fraction 0.70, target-only, and whole-box `bin/gpu-run`.
+This was not a planned model experiment: the first `--print-config` check
+incorrectly entered the normal lease path.
+
+COMMAND -> interrupt the transaction, allow graceful server teardown, run card
+and compiled P2P-off collective post-health, then terminate the accidentally
+started Harbor setup before agent execution. Fix print-config to bypass the
+lease and make INT/TERM exit through the cleanup trap instead of continuing.
+
+RESULT -> both initial card probes and the compiled collective passed. A server
+was briefly started, then stopped without a request or benchmark. Card and
+compiled collective post-health passed. Harbor created an incomplete 74-task
+job with zero completed trials before termination; it is not evaluation
+evidence. Server-log and lifecycle SHA256 values were
+`fac1e46095605f3b7a770546bdb9b3f2e716392717bfbd19c1e6bb5fa6e33b88` and
+`272e1c52a8918875b8be987a1348ee9096594e21dc060e46b0cad4f775d28b8d`.
+
+VERDICT -> reject the transaction as an experiment and retain only its cleanup
+evidence. The corrected non-GPU print path now exits before the lease. Do not
+use the incomplete job or its invalid lifecycle clock as campaign data.

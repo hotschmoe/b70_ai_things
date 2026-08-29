@@ -14,14 +14,37 @@ THINKING="${THINKING:-xhigh}"
 CONTEXT_WINDOW="${CONTEXT_WINDOW:-65536}"
 PREFILL_WINDOW="${PREFILL_WINDOW:-16384}"
 GPTQ_UTIL="${GPTQ_UTIL:-0.90}"
-MAX_TOKENS="${MAX_TOKENS:-16384}"
-PROMPT_TEMPLATE_PATH="${PROMPT_TEMPLATE_PATH:-$REPO/evals/terminalbench/pi_concise_prompt.j2}"
+MAX_TOKENS="${MAX_TOKENS-}"
+PROMPT_TEMPLATE_PATH="${PROMPT_TEMPLATE_PATH-}"
+XHIGH_THINKCAP="${XHIGH_THINKCAP:-4096}"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
+
+case "$THINKING" in
+  off)
+    MAX_TOKENS="${MAX_TOKENS:-8192}"
+    PROMPT_TEMPLATE_PATH="${PROMPT_TEMPLATE_PATH:-$REPO/evals/terminalbench/pi_concise_off_prompt.j2}"
+    POLICY_THINKCAP=""
+    ;;
+  xhigh)
+    MAX_TOKENS="${MAX_TOKENS:-16384}"
+    PROMPT_TEMPLATE_PATH="${PROMPT_TEMPLATE_PATH:-$REPO/evals/terminalbench/pi_concise_prompt.j2}"
+    POLICY_THINKCAP="$XHIGH_THINKCAP"
+    ;;
+  *)
+    echo "THINKING must be off or xhigh, got $THINKING" >&2
+    exit 2
+    ;;
+esac
 
 if [ "$PREFILL_WINDOW" -gt "$CONTEXT_WINDOW" ]; then
   PREFILL_WINDOW="$CONTEXT_WINDOW"
 fi
 
+MODE=run
+if [ "${1:-}" = --print-config ]; then
+  MODE=print-config
+  shift
+fi
 if [ "${1:-}" = --leased ]; then
   LEASED=1
   shift
@@ -37,7 +60,7 @@ case "$ARM" in
     ;;
 esac
 
-if [ "$LEASED" = 0 ]; then
+if [ "$MODE" = run ] && [ "$LEASED" = 0 ]; then
   exec env B70_AGENT="terminalbench-$ARM" "$REPO/bin/gpu-run" \
     bash "$0" --leased "$ARM"
 fi
@@ -50,7 +73,7 @@ case "$ARM" in
     START_ENV=(
       "NAME=$CONTAINER" "PORT=$PORT" "CTX=$CONTEXT_WINDOW"
       "MEMFRAC=0.70" "MAXREQ=1" "MTP=0" "DECODE_GRAPH=full"
-      "GRAPH_BS=1" "TOOLPARSER=qwen3_coder" "THINKCAP=4096"
+      "GRAPH_BS=1" "TOOLPARSER=qwen3_coder"
       "SERVED=$SERVED"
     )
     ;;
@@ -62,7 +85,7 @@ case "$ARM" in
       "NAME=$CONTAINER" "PORT=$PORT" "CTX=$CONTEXT_WINDOW"
       "MEMFRAC=0.70" "MAXREQ=1" "MTP=0" "DECODE_GRAPH=breakable"
       "GRAPH_BS=1" "CG_RECLAIM=500" "TOOLPARSER=qwen3_coder"
-      "THINKCAP=4096" "SERVED=$SERVED"
+      "SERVED=$SERVED"
     )
     ;;
   qwen-nvfp4)
@@ -72,7 +95,7 @@ case "$ARM" in
     START_ENV=(
       "NAME=$CONTAINER" "PORT=$PORT" "CTX=$CONTEXT_WINDOW"
       "MEMFRAC=0.70" "MAXREQ=1" "DECODE_GRAPH=full" "GRAPH_BS=1"
-      "TOOLPARSER=qwen3_coder" "THINKCAP=4096" "SERVED=$SERVED"
+      "TOOLPARSER=qwen3_coder" "SERVED=$SERVED"
     )
     ;;
   qwen-gptq-int4)
@@ -94,10 +117,24 @@ case "$ARM" in
       "NAME=$CONTAINER" "PORT=$PORT" "CTX=$CONTEXT_WINDOW"
       "MEMFRAC=0.70" "MAXREQ=1" "MTP=0" "DENSE_NATIVE=0"
       "DECODE_GRAPH=breakable" "GRAPH_BS=1" "CG_RECLAIM=500"
-      "TOOLPARSER=qwen3_coder" "THINKCAP=4096" "SERVED=$SERVED"
+      "TOOLPARSER=qwen3_coder" "SERVED=$SERVED"
     )
     ;;
 esac
+
+case "$ARM" in
+  qwen-w8a8|qwen-w8a8-reclaim500|qwen-nvfp4|ornith-w8a8)
+    START_ENV+=("THINKCAP=$POLICY_THINKCAP")
+    ;;
+esac
+
+if [ "$MODE" = print-config ]; then
+  printf 'arm=%s\nthinking=%s\nmax_tokens=%s\nprompt_template=%s\nthinkcap=%s\n' \
+    "$ARM" "$THINKING" "$MAX_TOKENS" "$PROMPT_TEMPLATE_PATH" \
+    "${POLICY_THINKCAP:-}"
+  printf 'start_env=%s\n' "${START_ENV[*]}"
+  exit 0
+fi
 
 JOB_NAME="${JOB_NAME:-tb3-${ARM}-${STAMP}}"
 JOB_DIR="$JOBS_ROOT/$JOB_NAME"
@@ -159,7 +196,9 @@ cleanup() {
   echo "lifecycle -> $TIMING_JSON"
   return "$rc"
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 mkdir -p "$ROOT/evals" "$JOBS_ROOT"
 "$REPO/bin/xpu-health"
