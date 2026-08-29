@@ -252,6 +252,7 @@ run_arm() {
   local graph="$2"
   local reclaim="$3"
   local arm_dir="$RESULT_DIR/$arm"
+  local measured_files=()
   local reference_args=()
   local repeat
 
@@ -272,9 +273,10 @@ run_arm() {
       --stream-interval 128 \
       --timeout 900 --json-out "$arm_dir/measured_${repeat}.json" \
       | tee "$arm_dir/measured_${repeat}.log"
+    measured_files+=("$arm_dir/measured_${repeat}.json")
   done
-  [ "$(jq -r '.output_ids_sha256' "$arm_dir"/measured_*.json | sort -u | wc -l)" -eq 1 ]
-  [ "$(jq -r '.text_sha256' "$arm_dir"/measured_*.json | sort -u | wc -l)" -eq 1 ]
+  [ "$(jq -r '.output_ids_sha256' "${measured_files[@]}" | sort -u | wc -l)" -eq 1 ]
+  [ "$(jq -r '.text_sha256' "${measured_files[@]}" | sort -u | wc -l)" -eq 1 ]
   docker logs "$NAME" >"$arm_dir/server.log" 2>&1
   if [ "$reclaim" -gt 0 ]; then
     [ "$(rg -c '\[b70-xpu-graph\] executable re-instantiated' "$arm_dir/server.log")" -ge 2 ]

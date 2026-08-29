@@ -5961,3 +5961,40 @@ VERDICT -> W01 passes as a deterministic, contained single-stream long-output
 baseline. It does not establish concurrent shelf readiness or attribute speed
 to graph/reclaim. Proceed to matched W02 eager, breakable, and
 breakable-plus-reclaim500 controls before concurrency qualification.
+
+### 2026-08-29q - Rejected W02 measured-file selection attempt
+
+CONFIG -> committed W02 protocol `ed33d07`, Qwen3.8 W8A8 TP2, P2P off, BF16
+target/KV, 65,536 context, memory fraction 0.70, maximum one request, MTP and
+radix off, and the 64 GiB no-swap container ceiling. The first arm was eager
+with graph and reclaim disabled. Result directory was
+`/mnt/vm_8tb/b70/results/w02_qwen38_w8a8/20260829T211047Z/`.
+
+COMMAND -> pass pre-card and compiled collective health, start the eager arm,
+verify exact identity/runtime/dtypes/resources, capture the eight-prompt corpus
+twice per prompt, then run one 768-token warmup and three exact 2,048-token
+native greedy measurements. Require identical text and output-token arrays
+before teardown, inter-arm health, and the breakable arms.
+
+RESULT -> eager corpus repeat exactness passed. The three measured streams all
+finished by length with 2,048 tokens and the same literal output array, token
+SHA256 `c64d070e5b79138c30386367506613066d38b9c9d3759207df71c57bfc021b0f`,
+and text SHA256
+`a59919ecafbb11ecd0c8fd2c2512fd3831dc4b3569461c70bb6130caf26d64a6`.
+Rates were 6.0708, 6.0763, and 6.0467 tok/s, for a 6.0708 tok/s median; all
+short flatness gates passed.
+
+RESULT -> the comparison glob `measured_*.json` also selected each
+`measured_*.partial.json` checkpoint. Those partial files have no final output
+hash, producing a second blank unique value and tripping the fail-closed
+within-arm hash count. Cleanup stopped the healthy eager server before either
+breakable arm. Final card and compiled P2P-off collective health passed and
+the kernel scan had no fatal marker. All 294 host samples used zero swap,
+minimum MemAvailable was 65,538,172 KiB, and memory PSI `some`/`full` totals
+increased by only 6 each.
+
+VERDICT -> reject the attempt as W02 comparison evidence because only the
+eager arm ran. Retain its numbers as harness-debug evidence only. Build the
+measured-file list explicitly from repeat indices so partial checkpoints can
+never enter exactness comparison, then rerun all three fresh arms from the
+start.
