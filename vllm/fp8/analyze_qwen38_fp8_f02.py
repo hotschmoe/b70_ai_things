@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""Persist the F02 two-lifetime exactness and diagnostic speed verdict."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import statistics
+from pathlib import Path
+from typing import Any
+
+
+def token_hash(values: list[int]) -> str:
+    payload = json.dumps(values, separators=(",", ":")).encode("ascii")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def compare_rows(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
+    left_ids = left["token_ids"]
+    right_ids = right["token_ids"]
+    first_mismatch = next(
+        (index for index, pair in enumerate(zip(left_ids, right_ids)) if pair[0] != pair[1]),
+        None,
+    )
+    if first_mismatch is None and len(left_ids) != len(right_ids):
+        first_mismatch = min(len(left_ids), len(right_ids))
+    mismatches = sum(a != b for a, b in zip(left_ids, right_ids))
+    mismatches += abs(len(left_ids) - len(right_ids))
+    return {
+        "prompt_id": left["prompt_id"],
+        "prompt_class": left["prompt_class"],
+        "exact": left_ids == right_ids,
+        "first_mismatch_zero_based": first_mismatch,
+        "mismatch_count": mismatches,
+        "left_token_count": len(left_ids),
+        "right_token_count": len(right_ids),
+        "left_token_sha256": token_hash(left_ids),
+        "right_token_sha256": token_hash(right_ids),
+        "left_text_sha256": left["sha256"],
+        "right_text_sha256": right["sha256"],
+    }
+
+
+def load_attempt(root: Path, index: int, served: str) -> dict[str, Any]:
+    attempt = root / f"attempt-{index}"
+    performance = json.loads((attempt / "performance.json").read_text(encoding="ascii"))
+    canary = json.loads((attempt / "canaries.json").read_text(encoding="ascii"))
+    models = json.loads((attempt / "models.json").read_text(encoding="ascii"))
+    model_ids = [item["id"] for item in models["data"]]
+    if model_ids != [served]:
+        raise ValueError(f"attempt {index} model identity mismatch: {model_ids}")
+    gate = performance["realistic_final_gate"]
+    fresh = performance["fresh_response_validity"]
+    if not gate["passed"] or not fresh["performance_gate_eligible"]:
+        raise ValueError(f"attempt {index} performance workload gate failed")
+    if not gate["cached_tokens_all_zero"]:
+        raise ValueError(f"attempt {index} used cached prompt tokens")
+    if len(performance["rows"]) != 12:
+        raise ValueError(f"attempt {index} did not complete 12 prompts")
+    if not canary["pass_all"]:
+        raise ValueError(f"attempt {index} independent canary gate failed")
+    if not all(row["token_ids"] for row in performance["rows"]):
+        raise ValueError(f"attempt {index} omitted native output token arrays")
+    return performance
+
+
+def publisher_comparisons(
+    attempts: list[dict[str, Any]], publisher_paths: list[Path]
+) -> list[dict[str, Any]]:
+    results = []
+    for publisher_path in publisher_paths:
+        publisher = json.loads(publisher_path.read_text(encoding="ascii"))
+        if len(publisher["rows"]) != 12:
+            raise ValueError(f"publisher reference does not have 12 rows: {publisher_path}")
+        for index, attempt in enumerate(attempts, start=1):
+            comparisons = [
+                compare_rows(left, right)
+                for left, right in zip(attempt["rows"], publisher["rows"])
+            ]
+            results.append(
+                {
+                    "attempt": index,
+                    "publisher_path": str(publisher_path),
+                    "exact_prompts": sum(item["exact"] for item in comparisons),
+                    "total_prompts": len(comparisons),
+                    "prompt_comparisons": comparisons,
+                }
+            )
+    return results
+
+
+def analyze(
+    root: Path,
+    attempt_count: int,
+    served: str,
+    publisher_paths: list[Path],
+) -> dict[str, Any]:
+    attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
+    reference = attempts[0]
+    pair_comparisons = []
+    all_exact = True
+    minimum_exact = 12
+    for index, candidate in enumerate(attempts[1:], start=2):
+        prompts = [
+            compare_rows(left, right)
+            for left, right in zip(reference["rows"], candidate["rows"])
+        ]
+        exact = sum(item["exact"] for item in prompts)
+        all_exact = all_exact and exact == len(prompts)
+        minimum_exact = min(minimum_exact, exact)
+        pair_comparisons.append(
+            {
+                "left_attempt": 1,
+                "right_attempt": index,
+                "exact_prompts": exact,
+                "total_prompts": len(prompts),
+                "prompt_comparisons": prompts,
+            }
+        )
+
+    rates = [
+        attempt["summary"]["class_balanced_tok_s_1_100_intervals_after_ttft"]["median"]
+        for attempt in attempts
+    ]
+    verdict = "passed" if all_exact else "failed_cross_server_token_exactness"
+    blockers = ["long-agent and concurrent qualification not yet run"]
+    if not all_exact:
+        blockers.insert(0, "fresh P2P-off server lifetimes changed raw output token arrays")
+    blockers.append("local P2P-off safety port is not the publisher P2P-on profile")
+    return {
+        "schema": "b70.qwen38-fp8-neural-f02.v2",
+        "verdict": verdict,
+        "served_model": served,
+        "attempts": attempt_count,
+        "tp": 2,
+        "p2p": 0,
+        "mtp": 0,
+        "xpu_graph": False,
+        "inductor": True,
+        "quantization": "fp8-block-weights-w8a16-runtime",
+        "dtype": "float16",
+        "kv_cache_dtype": "auto-observed-float16-target",
+        "complete_token_arrays_exact": all_exact,
+        "exact_prompts_minimum_pair": minimum_exact,
+        "total_prompts": 12,
+        "cached_tokens_all_zero": True,
+        "independent_canaries_passed": True,
+        "class_balanced_tok_s_attempts": rates,
+        "class_balanced_tok_s_median_diagnostic": statistics.median(rates),
+        "performance_attribution_qualified": all_exact,
+        "pair_comparisons": pair_comparisons,
+        "publisher_comparisons": publisher_comparisons(attempts, publisher_paths),
+        "promotion_authorized": False,
+        "promotion_blockers": blockers,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--result-dir", type=Path, required=True)
+    parser.add_argument("--attempts", type=int, default=2)
+    parser.add_argument("--served-model", required=True)
+    parser.add_argument("--publisher-attempt", action="append", type=Path, default=[])
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    if args.attempts < 2:
+        parser.error("--attempts must be at least 2")
+    summary = analyze(
+        args.result_dir, args.attempts, args.served_model, args.publisher_attempt
+    )
+    output = args.output or args.result_dir / "summary.json"
+    output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0 if summary["complete_token_arrays_exact"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

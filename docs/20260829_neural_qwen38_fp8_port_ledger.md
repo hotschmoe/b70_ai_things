@@ -2,10 +2,10 @@
 
 Date: 2026-08-29
 
-Status: F01 source, checkpoint, and image preflight passed. The F02 leased,
-P2P-off, no-swap qualification harness is ready for its first live run. The
-recipe is reproducible from tracked source on this host, but it is not safe to
-run verbatim.
+Status: F01 source, checkpoint, and image preflight passed. F02 ran safely but
+failed cross-server raw-token exactness, matching only 7/12 prompts. The recipe
+is reproducible from tracked source on this host, but the P2P-off safety port
+is neither a qualified target nor a reproduction of the published speed.
 
 ## Requested source
 
@@ -142,6 +142,7 @@ plus compiled P2P-off collective health.
 
 F01 passes completely. Exact source, model, image, patch, and weight identities
 are present; the deterministic MTP0 overlay has been rebuilt and its effective
-runtime files verified. Proceed with F02 using the tracked leased P2P-off
-launcher. F02 is a local safety-port qualification, not a direct reproduction
-of the publisher's P2P-on headline.
+runtime files verified. F02 subsequently failed cross-server token exactness;
+it was a local safety-port qualification, not a direct reproduction of the
+publisher's P2P-on headline. The completed result is documented in
+`docs/20260829_f02_qwen38_fp8_p2p_off_negative.md`.

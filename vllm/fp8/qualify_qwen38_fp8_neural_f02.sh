@@ -15,6 +15,8 @@ SUITE="$SOURCE/repro/qwen36-27b-autoround-int4-b70/realistic-suite-v1.json"
 SUITE_SHA256="df03f49d36c36d2b8ac4cd117b7cb2e42c74878af1f6926690ebb89eeccd47ac"
 BENCH="$SOURCE/scripts/bench-openai-realistic-suite.py"
 CANARIES="$SOURCE/scripts/neural-download-canaries.py"
+PUBLISHER_A="$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15a/performance.json"
+PUBLISHER_B="$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15b/performance.json"
 LAUNCHER="$SCRIPT_DIR/serve_qwen38_fp8_neural_f02.sh"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 RESULT_DIR="${RESULT_DIR:-$ROOT/results/f02_qwen38_fp8_neural/$STAMP}"
@@ -65,7 +67,7 @@ done
   exit 1
 }
 for required in "$MODEL_DIR" "$MODEL_MANIFEST" "$MODEL_VERIFY" "$SUITE" \
-  "$BENCH" "$CANARIES" "$LAUNCHER"; do
+  "$BENCH" "$CANARIES" "$PUBLISHER_A" "$PUBLISHER_B" "$LAUNCHER"; do
   [ -e "$required" ] || { echo "missing input: $required" >&2; exit 1; }
 done
 [ "$(sha256sum "$SUITE" | awk '{print $1}')" = "$SUITE_SHA256" ] || {
@@ -285,75 +287,14 @@ stop_monitor
 memory_snapshot post | tee "$RESULT_DIR/memory-post.txt"
 journalctl -k --since "@${journal_start}" --no-pager >"$RESULT_DIR/kernel-journal.log"
 
-python3 - "$RESULT_DIR" "$ATTEMPTS" "$SERVED" <<'PY'
-import hashlib
-import json
-import statistics
-import sys
-from pathlib import Path
-
-root = Path(sys.argv[1])
-count = int(sys.argv[2])
-served = sys.argv[3]
-documents = []
-canaries = []
-for index in range(1, count + 1):
-    attempt = root / f"attempt-{index}"
-    performance = json.loads((attempt / "performance.json").read_text(encoding="ascii"))
-    canary = json.loads((attempt / "canaries.json").read_text(encoding="ascii"))
-    models = json.loads((attempt / "models.json").read_text(encoding="ascii"))
-    assert [item["id"] for item in models["data"]] == [served]
-    assert performance["realistic_final_gate"]["passed"] is True
-    assert performance["realistic_final_gate"]["cached_tokens_all_zero"] is True
-    assert performance["fresh_response_validity"]["performance_gate_eligible"] is True
-    assert len(performance["rows"]) == 12
-    assert canary["pass_all"] is True
-    documents.append(performance)
-    canaries.append(canary)
-
-reference_arrays = [row["token_ids"] for row in documents[0]["rows"]]
-assert all(reference_arrays), "native output token arrays were not returned"
-for document in documents[1:]:
-    assert [row["token_ids"] for row in document["rows"]] == reference_arrays
-
-rates = [
-    document["summary"]["class_balanced_tok_s_1_100_intervals_after_ttft"]["median"]
-    for document in documents
-]
-array_hash = hashlib.sha256(
-    json.dumps(reference_arrays, separators=(",", ":")).encode("ascii")
-).hexdigest()
-summary = {
-    "schema": "b70.qwen38-fp8-neural-f02.v1",
-    "verdict": "passed",
-    "served_model": served,
-    "attempts": count,
-    "tp": 2,
-    "p2p": 0,
-    "mtp": 0,
-    "xpu_graph": False,
-    "inductor": True,
-    "quantization": "fp8-block-weights-w8a16-runtime",
-    "dtype": "float16",
-    "kv_cache_dtype": "auto",
-    "complete_token_arrays_exact": True,
-    "exact_prompts": 12,
-    "token_array_sha256": array_hash,
-    "cached_tokens_all_zero": True,
-    "independent_canaries_passed": True,
-    "class_balanced_tok_s_attempts": rates,
-    "class_balanced_tok_s_median": statistics.median(rates),
-    "promotion_authorized": False,
-    "promotion_blockers": [
-        "local P2P-off safety port is not the publisher P2P-on profile",
-        "long-agent and concurrent qualification not yet run",
-    ],
-}
-(root / "summary.json").write_text(
-    json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii"
-)
-print(json.dumps(summary, indent=2, sort_keys=True))
-PY
+set +e
+python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
+  --result-dir "$RESULT_DIR" --attempts "$ATTEMPTS" \
+  --served-model "$SERVED" \
+  --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
+  --output "$RESULT_DIR/summary.json"
+analysis_rc=$?
+set -e
 
 if grep -Eqi 'xe 0000:(43|47):00\.0.*(reset|fault|timeout|timed out|fatal|wedged|failed)' \
   "$RESULT_DIR/kernel-journal.log"; then
@@ -371,7 +312,12 @@ echo "RESULT"
 cat "$RESULT_DIR/summary.json"
 echo "max_host_swap_used_kib=$max_swap_kib"
 echo "VERDICT"
-echo "F02 passed under the local P2P-off no-swap safety port."
+if [ "$analysis_rc" -eq 0 ]; then
+  echo "F02 passed under the local P2P-off no-swap safety port."
+else
+  echo "F02 failed cross-server raw-token exactness."
+fi
 echo "result_dir=$RESULT_DIR"
-echo 0 >"$RESULT_DIR/qualifier.rc"
+echo "$analysis_rc" >"$RESULT_DIR/qualifier.rc"
 trap - EXIT INT TERM HUP
+exit "$analysis_rc"

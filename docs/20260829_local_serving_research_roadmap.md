@@ -241,14 +241,17 @@ layers are rebuilt from the tracked source and patches; the first live route is
 P2P off.
 
 F01 completed on 2026-08-29: the exact checkpoint, source, base image, local
-deterministic overlay, and installed runtime hashes passed. F02 is the active
-live experiment; its tracked harness uses the complete publisher suite on two
-fresh P2P-off, no-swap server lifetimes.
+deterministic overlay, and installed runtime hashes passed. F02 then closed
+negatively: only 7/12 natural-prompt arrays matched across fresh P2P-off
+lifetimes and its 11.372225 tok/s diagnostic median was about one third of the
+publisher's P2P-on MTP0 rate. F02a is the active bounded diagnostic; F04 and
+later qualification remain blocked on a deterministic target.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
 | F01 | P0 | Off-device | Fetch exact model revision and reproduction source; ledger image, vLLM, Torch, kernel, GDN, RMSNorm, W8A16, MTP, and oneCCL patches | Exact source/patch/model manifests, clean dedicated build roots, no quarantined binary reuse |
 | F02 | P0 | TP2 | Graph-off W8A16 MTP0, FP16 target/KV, P2P off | Two fresh servers, exact natural corpus and raw token arrays, clean teardown and compiled collective health |
+| F02a | P0 | TP2 | Repeat the five F02 mismatch prompts twice inside one fresh P2P-off lifetime | Classify request-local versus server-lifetime instability; diagnostic only, with no speed claim |
 | F03 | P0 | TP2 | Source-default completion versus recipe `Work.wait()` route, P2P off | Same target arrays and state; retain only a measured endpoint or stability benefit |
 | F04 | P0 | TP2 | Deterministic packed-RMS MTP1 recipe on the qualified F02 target | Exact MTP0 target arrays on two fresh empty-cache servers; record acceptance and decode |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |

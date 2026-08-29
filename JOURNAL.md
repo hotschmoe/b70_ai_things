@@ -6120,3 +6120,48 @@ VERDICT -> F01 is complete and F02 is ready for its first GPU transaction.
 The coming result is a deliberately different P2P-off safety port and cannot
 be labeled a reproduction of the publisher's P2P-on 34.031596 tok/s MTP0 or
 51.918757 tok/s MTP1 headline.
+
+### 2026-08-29u - F02 official-FP8 P2P-off target closes negatively
+
+CONFIG -> harness commit `7ccff19`; official Qwen3.8-27B-FP8 revision
+`017b9c7`, local deterministic overlay `dce80db0`, vLLM `ac7509e2`, TP2,
+P2P off, MTP0, XPU Graph off, deterministic Inductor, FP16 target and automatic
+KV dtype, W8A16 runtime dispatch, one request, 1,024 context, prefix caching
+off, fresh compiler cache per server, and a 32 GiB no-swap cgroup. Result root
+was `/mnt/vm_8tb/b70/results/f02_qwen38_fp8_neural/20260829T231100Z/`.
+
+COMMAND -> under the whole-box lease, verify all 66 model files through direct
+and ordinary reads, pass card and compiled P2P-off collective health, run the
+complete fixed 12-prompt natural suite plus independent canaries on two fresh
+servers, stop each gracefully, repeat health, then compare every raw streamed
+output-token array across lifetimes and against both publisher MTP0 references.
+
+RESULT -> both cold performance workloads and both independent canary sets
+passed. Diagnostic class-balanced rates were 11.351052 and 11.393397 tok/s,
+with an 11.372225 median and 0.373% attempt spread. This is 33.42% of the
+publisher's 34.031596 tok/s P2P-on MTP0 median. The performance result is not
+qualified because only 7/12 complete arrays matched across the local fresh
+servers.
+
+RESULT -> mismatches began at zero-based token 392 for
+`incident-retrospective`, 303 for `code-review`, 124 for `customer-email`, 169
+for `performance-hypotheses`, and 77 for `decision-memo`. Against either
+mutually exact publisher reference, local attempts matched 6/12 and 8/12.
+Two locally repeat-exact prompts still differed from the publisher at tokens
+341 and 160, showing a stable P2P-off route change in addition to the
+fresh-lifetime instability. Both canary files had SHA256
+`f234e605954b061e7f902eb92dd96739722df5437cadd9b2aceed79b976e45f8`.
+
+RESULT -> both server lifetimes tore down cleanly and every card plus compiled
+collective check passed. Across 300 host samples, swap stayed zero, minimum
+MemAvailable was 113,409,448 KiB, and memory PSI `some`/`full` totals did not
+move. Serving containers used about 7.7 to 8.1 GiB of host RAM. The kernel scan
+had no configured OOM, hang, GPU fault, or wedge marker. Persisted negative
+summary SHA256 was
+`b5b522a45ea7b1b89663f87c9b1388a70300c794ac8762214835d5af563fe0b2`.
+
+VERDICT -> F02 fails at target exactness despite clean infrastructure and
+stable diagnostic speed. Do not advance to MTP1, long-agent, concurrency, or
+shelf work. Run F02a as a bounded within-lifetime repeat of the five sensitive
+prompts before considering the source-default completion diagnostic; keep
+direct-P2P full serving quarantined.
