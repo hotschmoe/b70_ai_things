@@ -6357,3 +6357,37 @@ autotune selection is now the leading local target-instability mechanism.
 Proceed to F02b with XPU combo-kernel benchmarking disabled and separate fresh
 MTP0 caches. Keep P2P-on full serving, long, concurrent, and shelf work
 blocked.
+
+### 2026-08-30f - F02b combo-off leaves lower-level autotune drift
+
+CONFIG -> harness commit `e1221c1`; official FP8 W8A16, r15 Work.wait image,
+TP2, P2P off, MTP0, FP16 target/KV, graph off, deterministic Inductor, and two
+separate empty caches. Inductor `combo_kernels` and
+`benchmark_combo_kernel` were false. Result root was
+`/mnt/vm_8tb/b70/results/f02b_qwen38_fp8_neural/20260830T024100Z/`.
+
+COMMAND -> under the whole-box lease, pass model/image/runtime identity and
+pre-health; independently compile and run two 12-prompt plus canary server
+lifetimes; tear down and pass card plus compiled P2P-off collective health
+after each process; require cross-process and publisher token exactness.
+
+RESULT -> clean negative. The attempts matched only 7/12 arrays. Attempt 1
+matched the publisher 10/12; attempt 2 matched 6/12. Diagnostic rates were
+11.465029 and 11.419766 tok/s, median 11.442398. Compilation took 105.74 and
+105.87 seconds. Both canaries, all health gates, and teardown passed. Host RAM
+peaked at 7.793 GiB, minimum MemAvailable was 113,617,324 KiB, and swap was
+zero.
+
+RESULT -> combo-off reduced `.best_config` sites from 78 to 44, but 22/44
+common sites still selected different semantic block, reduction, or warp
+configs. Twenty-one differed only in metadata and one was exact. All four
+rank AOT model hashes differed across attempts. Cache-comparison summary
+SHA256 was
+`aa731b5a29e9b03b646c42746a8a67560caa26d9a9081421e73dae3a2f3db812`;
+primary summary SHA256 was
+`57500b75993cfe554cef6fb87214b77447de8c513923ce5b41544efaa77b3a7a`.
+
+VERDICT -> combo benchmarking is not causal. F02c should retain combo-off and
+also disable vLLM's default Inductor max-autotune and coordinate-descent
+tuning, using separate fresh caches. Keep P2P-on full serving, long,
+concurrent, and shelf work blocked.

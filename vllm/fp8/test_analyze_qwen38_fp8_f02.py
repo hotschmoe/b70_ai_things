@@ -52,6 +52,8 @@ class AnalyzerTests(unittest.TestCase):
             self.assertTrue(summary["performance_attribution_qualified"])
             self.assertTrue(summary["inductor_combo_kernels"])
             self.assertTrue(summary["inductor_benchmark_combo_kernel"])
+            self.assertTrue(summary["inductor_max_autotune"])
+            self.assertTrue(summary["inductor_coordinate_descent_tuning"])
 
     def test_combo_kernel_metadata_can_be_disabled(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -66,9 +68,13 @@ class AnalyzerTests(unittest.TestCase):
                 [],
                 inductor_combo_kernels=False,
                 inductor_benchmark_combo_kernel=False,
+                inductor_max_autotune=False,
+                inductor_coordinate_descent_tuning=False,
             )
             self.assertFalse(summary["inductor_combo_kernels"])
             self.assertFalse(summary["inductor_benchmark_combo_kernel"])
+            self.assertFalse(summary["inductor_max_autotune"])
+            self.assertFalse(summary["inductor_coordinate_descent_tuning"])
 
     def test_mismatch_is_persisted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

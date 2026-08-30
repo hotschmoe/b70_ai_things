@@ -254,7 +254,9 @@ across shared-cache restarts and had an 18.243500 tok/s diagnostic median, but
 matched only 5/12 frozen F03a MTP0 arrays. F04a then forced all drafts to reject
 while directly loading the exact F04 target/draft artifacts and still matched
 normal F04 12/12. Acceptance is innocent; fresh autotune selection remains the
-problem. F02b is the active no-combo-benchmark MTP0 discriminator.
+problem. F02b showed that combo-off still changes 22/44 semantic Triton
+configs and only matched 7/12 across fresh processes. F02c is the active
+no-Inductor-autotune MTP0 discriminator.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
@@ -263,7 +265,8 @@ problem. F02b is the active no-combo-benchmark MTP0 discriminator.
 | F02a | P0 | TP2 | Repeat the five F02 mismatch prompts twice inside one fresh P2P-off lifetime | Complete: 5/5 within-lifetime exact; instability is selected at fresh initialization and is prompt-specific |
 | F03 | P0 | TP2 | Source-default completion versus recipe `Work.wait()` route, P2P off | Closed negative: source-default also matched only 7/12 arrays and added unstable prompts |
 | F03a | P0 | TP2 | Two fresh Work.wait servers reuse the compiler cache produced by lifetime 1 | Complete: 12/12 exact; direct AOT reuse localizes target selection to fresh compilation |
-| F02b | P0 | TP2 | Disable XPU combo-kernel benchmarking on two separate fresh MTP0 caches | Require cross-compile exactness and compare all arrays with publisher MTP0 |
+| F02b | P0 | TP2 | Disable XPU combo kernels and benchmarking on two separate fresh MTP0 caches | Closed negative: 7/12 exact; 22/44 remaining autotune sites selected different semantic configs |
+| F02c | P0 | TP2 | Also disable Inductor max-autotune and coordinate descent on separate fresh MTP0 caches | Require cross-compile exactness, no residual best-config selection, and compare all arrays with publisher MTP0 |
 | F04 | P0 | TP2 | Deterministic packed-RMS MTP1 recipe on the frozen F03a target | Closed negative: shared-cache MTP1 was 12/12 restart-exact but only 5/12 exact versus MTP0 |
 | F04a | P0 | TP2 | Force every MTP1 draft to reject while reusing an exact copy of the F04 cache | Complete: same target/draft AOT keys and 12/12 exact versus normal F04; acceptance is not causal |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |

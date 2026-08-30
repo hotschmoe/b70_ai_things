@@ -101,6 +101,8 @@ def analyze(
     mtp: int = 0,
     inductor_combo_kernels: bool = True,
     inductor_benchmark_combo_kernel: bool = True,
+    inductor_max_autotune: bool = True,
+    inductor_coordinate_descent_tuning: bool = True,
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -158,6 +160,8 @@ def analyze(
         "inductor": True,
         "inductor_combo_kernels": inductor_combo_kernels,
         "inductor_benchmark_combo_kernel": inductor_benchmark_combo_kernel,
+        "inductor_max_autotune": inductor_max_autotune,
+        "inductor_coordinate_descent_tuning": inductor_coordinate_descent_tuning,
         "completion_route": completion_route,
         "quantization": "fp8-block-weights-w8a16-runtime",
         "dtype": "float16",
@@ -193,6 +197,10 @@ def main() -> int:
     parser.add_argument(
         "--inductor-benchmark-combo-kernel", type=int, choices=(0, 1), default=1
     )
+    parser.add_argument("--inductor-max-autotune", type=int, choices=(0, 1), default=1)
+    parser.add_argument(
+        "--inductor-coordinate-descent-tuning", type=int, choices=(0, 1), default=1
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.attempts < 2:
@@ -208,6 +216,8 @@ def main() -> int:
         args.mtp,
         bool(args.inductor_combo_kernels),
         bool(args.inductor_benchmark_combo_kernel),
+        bool(args.inductor_max_autotune),
+        bool(args.inductor_coordinate_descent_tuning),
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")
