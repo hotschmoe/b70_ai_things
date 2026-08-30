@@ -92,6 +92,7 @@ stability benefit. Retain the recipe Work.wait image as the control and do not
 advance either route to MTP, long context, concurrency, direct-P2P serving, or
 the shelf.
 
-Proceed to F03a: two fresh Work.wait server processes reuse one compiler cache
-created by the first lifetime. Exact arrays would implicate fresh compilation;
-continued divergence would move the search to process/native-runtime state.
+F03a subsequently reused one Work.wait compiler cache across two fresh server
+processes and matched all 12/12 arrays. Lifetime 2 directly loaded both rank
+AOT models in 1.98 seconds. Fresh compilation is therefore the target-selection
+locus. Use that pinned artifact as the MTP0 control for F04.

@@ -6242,3 +6242,41 @@ caches had identical primary AOTAutograd graph keys but different secondary
 artifact keys. Run F03a with two fresh Work.wait processes sharing the cache
 created by lifetime 1 to discriminate compilation from later process/runtime
 state. Keep all promotion work blocked.
+
+### 2026-08-30c - F03a pins FP8 target selection to compiled artifacts
+
+CONFIG -> harness commit `f33b223`; unchanged official-FP8 W8A16 TP2,
+P2P-off, MTP0, graph-off, deterministic-Inductor, FP16 target/automatic-KV
+Work.wait route. Lifetime 1 created one cache and lifetime 2 reused it after
+clean teardown and inter-process health. Result root was
+`/mnt/vm_8tb/b70/results/f03a_qwen38_fp8_neural/20260830T005000Z/`.
+
+COMMAND -> under the whole-box lease, verify model and runtime identity, run
+the full 12-prompt raw-token suite plus independent canaries in two fresh
+processes sharing one compiler cache, and require card plus compiled P2P-off
+collective health before, between, and after the servers.
+
+RESULT -> all 12/12 complete arrays were exact across processes. Lifetime 1
+reported 137.22 seconds in `torch.compile`. Lifetime 2 reconstructed 21
+standalone artifacts and 65 submodules per rank, directly loaded both rank AOT
+models, and reported 1.98 seconds total compile time. This is actual artifact
+reuse, not a nominally shared directory followed by recompilation.
+
+RESULT -> diagnostic rates were 11.303540 and 12.081169 tok/s, median
+11.692355 tok/s. The 6.651 percent spread blocks a stable-speed headline even
+though target coherence passed. Both canaries and all health checks passed.
+Across 271 host samples, swap stayed zero, minimum MemAvailable was
+113,127,392 KiB, container host-RAM use peaked near 7.718 GiB, and memory PSI
+`some`/`full` totals moved by only 34.646/34.576 milliseconds. No configured
+fatal marker appeared.
+
+RESULT -> the 302 MiB, 2,250-file cache manifest SHA256 was
+`ec1af4f6a06cc860da03e3bf7b359714efe6612e2b07d9083cb4cd30de19d64a`;
+summary SHA256 was
+`362c5b3ca2f5efaf53933cbf1e1f1723e1094b7de6c416907c6046af8024eabc`.
+
+VERDICT -> F03a passes and localizes target selection to fresh compilation.
+Treat the pinned cache as the deterministic MTP0 control; any fresh cache is a
+new target. Proceed to the P2P-off packed-RMS MTP1 F04 comparison with shared-
+cache discipline. Shelf, direct-P2P, long-context, concurrency, and stable-
+speed claims remain blocked.
