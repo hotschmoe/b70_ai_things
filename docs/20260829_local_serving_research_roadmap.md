@@ -263,8 +263,9 @@ with deterministic metadata true, zero best-config sites, an identical AOT
 key, and exact smokes across empty caches. F02f extended that result to the
 full suite: two empty-cache compiles were 12/12 exact, but both matched the
 publisher target only 8/12. Explicit determinism creates a stable local target
-instead of reproducing the publisher's autotuned target mosaic. F02g is the
-active MTP0 bridge through the MTP-capable packed-RMS image.
+instead of reproducing the publisher's autotuned target mosaic. F02g then
+passed 12/12 across two empty caches and against F02f in the MTP-capable
+packed-RMS image. F04b is the active MTP1 gate on that frozen local target.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
@@ -278,9 +279,10 @@ active MTP0 bridge through the MTP-capable packed-RMS image.
 | F02d | P0 | TP2 | Compile-only oracle with PyTorch `triton.autotune_pointwise=false` and two empty caches | Closed negative: 5/16 reduction configs still varied between R0 block 2048 and 8192 |
 | F02e | P0 | TP2 | Add explicit `inductor_compile_config.deterministic=true` to the bounded F02d oracle | Complete positive: deterministic metadata true, zero best-config sites, same AOT key, exact smokes, health, and teardown |
 | F02f | P0 | TP2 | Full 12-prompt run with F02e compiler controls and two separate empty caches | Closed split result: 12/12 cross-process exact, 8/12 versus publisher; local deterministic target only |
-| F02g | P0 | TP2 | MTP0 packed-RMS image bridge with F02f compiler controls | Require two fresh caches to match one another and the frozen F02f local target before adding MTP |
+| F02g | P0 | TP2 | MTP0 packed-RMS image bridge with F02f compiler controls | Complete: two fresh caches and both F02f references were mutually 12/12 exact |
 | F04 | P0 | TP2 | Deterministic packed-RMS MTP1 recipe on the frozen F03a target | Closed negative: shared-cache MTP1 was 12/12 restart-exact but only 5/12 exact versus MTP0 |
 | F04a | P0 | TP2 | Force every MTP1 draft to reject while reusing an exact copy of the F04 cache | Complete: same target/draft AOT keys and 12/12 exact versus normal F04; acceptance is not causal |
+| F04b | P0 | TP2 | MTP1 packed-RMS route with F02g compiler controls and two empty caches | Require cross-process and frozen F02g MTP0 raw-token exactness before speed attribution |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |
 | F06 | P2 | Isolated oracle only | Recipe direct-P2P setting | Do not run a full server until a bounded loaded-context queue-handoff oracle passes and recovery is pre-positioned |
 

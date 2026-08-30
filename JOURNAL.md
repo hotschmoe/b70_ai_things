@@ -6515,3 +6515,34 @@ local deterministic oracle. Run F02g as an MTP0 bridge through the
 MTP-capable packed-RMS image, requiring two empty caches to match F02f. Do not
 add MTP1 until the bridge passes. Keep long, concurrent, P2P-on, speed
 attribution, and shelf work blocked.
+
+### 2026-08-30k - F02g passes the packed-RMS MTP0 bridge
+
+CONFIG -> harness commit `58baa4e`; official FP8 W8A16, MTP-capable local
+image, TP2, P2P off, MTP0, packed serial RMSNorm, FP16 target/KV, graph off,
+and two empty caches. F02f's explicit deterministic compiler controls were
+retained and both F02f attempts were frozen references. Result root was
+`/mnt/vm_8tb/b70/results/f02g_qwen38_fp8_neural/20260830T050400Z/`.
+
+COMMAND -> under the whole-box lease, independently compile and run two full
+12-prompt lifetimes in the MTP-capable image; require cross-process and F02f
+raw-token exactness; run canaries, graceful teardown, card health, and compiled
+P2P-off collective health after each.
+
+RESULT -> pass. The attempts matched one another 12/12 and each matched both
+F02f references 12/12. Both used target AOT key `5001f6c4...`, compiled in
+95.41 and 95.84 seconds, and left 621-file caches with zero `.best_config`
+files. Packed serial RMSNorm and the MTP-capable image preserve the local
+explicit-deterministic target.
+
+RESULT -> diagnostic rates were 11.503855 and 11.434064 tok/s, median
+11.468959 and 0.609 percent spread. The 1.499 percent difference from F02f is
+below the attribution threshold. All canaries, teardowns, and health gates
+passed. Host RAM peaked at 7.708 GiB, minimum MemAvailable was 113,609,756
+KiB, and swap stayed zero. Summary SHA256 was
+`a378bf0d71b9b4fd9ec9a62b89d460f87b0afb79cac4907661acabc1c56ef3bf`.
+
+VERDICT -> F02g authorizes F04b: add MTP1 with the same image and compiler
+controls, use two empty caches, and require exactness to frozen F02g MTP0
+arrays before speed attribution. Keep long, concurrent, P2P-on, and shelf
+work blocked.
