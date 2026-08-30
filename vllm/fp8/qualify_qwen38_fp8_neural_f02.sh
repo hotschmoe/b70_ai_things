@@ -47,6 +47,7 @@ INDUCTOR_AUTOTUNE_POINTWISE="${INDUCTOR_AUTOTUNE_POINTWISE:-1}"
 INDUCTOR_DETERMINISTIC_CONFIG="${INDUCTOR_DETERMINISTIC_CONFIG:-0}"
 COMPILE_ORACLE="${COMPILE_ORACLE:-0}"
 CACHE_ANALYZER="$SCRIPT_DIR/analyze_qwen38_fp8_compile_oracle.py"
+EXTRA_WORKLOAD="${EXTRA_WORKLOAD:-}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -60,6 +61,10 @@ case "${1:-}" in
     echo "attempts=$ATTEMPTS"
     echo "campaign_id=$CAMPAIGN_ID"
     echo "completion_route=$COMPLETION_ROUTE"
+    echo "extra_workload=${EXTRA_WORKLOAD:-none}"
+    if [ -n "$EXTRA_WORKLOAD" ]; then
+      echo "extra_workload_sha256=$(sha256sum "$EXTRA_WORKLOAD" | awk '{print $1}')"
+    fi
     echo "compile_oracle=$COMPILE_ORACLE"
     echo "shared_cache=$SHARED_CACHE"
     echo "require_reference_exact=$REQUIRE_REFERENCE_EXACT"
@@ -120,6 +125,10 @@ done
 }
 [ -n "$SEED_CACHE_FROM" ] || [ -z "$SEED_CACHE_MANIFEST" ] || {
   echo "SEED_CACHE_MANIFEST requires SEED_CACHE_FROM" >&2
+  exit 1
+}
+[ -z "$EXTRA_WORKLOAD" ] || [ -x "$EXTRA_WORKLOAD" ] || {
+  echo "EXTRA_WORKLOAD is not executable: $EXTRA_WORKLOAD" >&2
   exit 1
 }
 [ "$(git -C "$SOURCE" rev-parse HEAD)" = "$SOURCE_COMMIT" ] || {
@@ -383,6 +392,19 @@ PY
     python3 "$CANARIES" \
       --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
       --out "$attempt_dir/canaries.json" >"$attempt_dir/canaries.stdout"
+    if [ -n "$EXTRA_WORKLOAD" ]; then
+      extra_reference=()
+      if [ "$attempt" -gt 1 ]; then
+        extra_reference=(
+          --reference "$RESULT_DIR/attempt-1/long-context.json"
+        )
+      fi
+      "$EXTRA_WORKLOAD" \
+        --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
+        --bench "$BENCH" --attempt-dir "$attempt_dir" \
+        "${extra_reference[@]}" \
+        >"$attempt_dir/long-context.stdout"
+    fi
   fi
 
   curl -fsS --max-time 15 "http://127.0.0.1:${PORT}/health" \

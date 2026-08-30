@@ -6546,3 +6546,38 @@ VERDICT -> F02g authorizes F04b: add MTP1 with the same image and compiler
 controls, use two empty caches, and require exactness to frozen F02g MTP0
 arrays before speed attribution. Keep long, concurrent, P2P-on, and shelf
 work blocked.
+
+### 2026-08-30l - F04b qualifies deterministic MTP1 at 17.65 tok/s
+
+CONFIG -> harness commit `59f72c0`; official FP8 W8A16, TP2, P2P off, MTP1,
+packed serial RMSNorm, persistent GDN scratch, FP16 target/KV, graph off, and
+two empty caches. Explicit deterministic compiler controls were retained and
+both F02g MTP0 attempts were frozen references. Result root was
+`/mnt/vm_8tb/b70/results/f04b_qwen38_fp8_neural/20260830T053900Z/`.
+
+COMMAND -> under the whole-box lease, compile and run two independent MTP1
+lifetimes through the full 12-prompt suite and canaries; require cross-process
+and F02g raw-token exactness; gracefully tear down and pass card plus compiled
+P2P-off collective health after each.
+
+RESULT -> pass. Both MTP1 attempts matched one another and both F02g MTP0
+references 12/12. Target key `57e8f544...` and draft key `fe3112d...` repeated
+across caches. Target compilation took 96.08/96.28 seconds and draft
+compilation 9.67/9.55 seconds. Both 976-file caches had zero `.best_config`
+files.
+
+RESULT -> class-balanced rates were 17.648289 and 17.650913 tok/s, median
+17.649601 with 0.015 percent spread. This is a qualified 53.890 percent gain
+over F02g's matched 11.468959 tok/s MTP0 median. Acceptance commonly ranged
+from about 65 to 93 percent in ten-second windows.
+
+RESULT -> all canaries, teardowns, and health gates passed. Host RAM peaked at
+8.399 GiB, minimum MemAvailable was 112,819,476 KiB, and swap stayed zero.
+Device accounting reported 14.59 GiB weights plus non-Torch, 1.20 GiB peak
+activation, and 8.45 GiB KV per card. Summary SHA256 was
+`4c7a689698e32bd3865f6e3147637ada3eb8a040556c9ed2706a0c6cdaa8963e`.
+
+VERDICT -> F04b is research-qualified for bounded 1K single-stream serving.
+Proceed to F05a with a 32K-configured server, real growing prompts, forced 4K
+decode, restart exactness, bounded memory, and full health. Long, concurrent,
+P2P-on, agent, and shelf qualification remain blocked until their own gates.
