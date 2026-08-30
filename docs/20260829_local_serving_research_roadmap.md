@@ -267,7 +267,8 @@ instead of reproducing the publisher's autotuned target mosaic. F02g then
 passed 12/12 across two empty caches and against F02f in the MTP-capable
 packed-RMS image. F04b then passed 12/12 across two empty caches and against
 F02g MTP0 while improving the matched median by 53.890 percent to 17.649601
-tok/s. F05a is the active 32K long-context and forced-output gate.
+tok/s. F05a passed restart-exact actual prompts through 30,023 tokens and a
+restart-exact 4,096-token forced decode. F05b is the active concurrency gate.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
@@ -285,7 +286,8 @@ tok/s. F05a is the active 32K long-context and forced-output gate.
 | F04 | P0 | TP2 | Deterministic packed-RMS MTP1 recipe on the frozen F03a target | Closed negative: shared-cache MTP1 was 12/12 restart-exact but only 5/12 exact versus MTP0 |
 | F04a | P0 | TP2 | Force every MTP1 draft to reject while reusing an exact copy of the F04 cache | Complete: same target/draft AOT keys and 12/12 exact versus normal F04; acceptance is not causal |
 | F04b | P0 | TP2 | MTP1 packed-RMS route with F02g compiler controls and two empty caches | Complete: 12/12 exact to F02g; 17.649601 tok/s, 53.890 percent over matched MTP0 |
-| F05a | P1 | TP2 | 32K-configured F04b route with actual 2K, 8K, 16K, and 30K prompts plus forced 4K decode | Require short-target and long raw-token restart exactness, bounded memory, teardown, and health |
+| F05a | P1 | TP2 | 32K-configured F04b route with actual 2K, 8K, 16K, and 30K prompts plus forced 4K decode | Complete: short and long raw-token restart exactness, bounded memory, teardown, and health passed |
+| F05b | P1 | TP2 | 32K F05a route at concurrent batch shapes | Require coherent complete streams, serial/concurrent target comparison, restart evidence, bounded memory, teardown, and health |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |
 | F06 | P2 | Isolated oracle only | Recipe direct-P2P setting | Do not run a full server until a bounded loaded-context queue-handoff oracle passes and recovery is pre-positioned |
 

@@ -6581,3 +6581,39 @@ VERDICT -> F04b is research-qualified for bounded 1K single-stream serving.
 Proceed to F05a with a 32K-configured server, real growing prompts, forced 4K
 decode, restart exactness, bounded memory, and full health. Long, concurrent,
 P2P-on, agent, and shelf qualification remain blocked until their own gates.
+
+### 2026-08-30m - F05a passes 30K context and 4K forced output
+
+CONFIG -> harness commit `cbb24dc`; F04b MTP1 route at 32,768 model and batch
+limits, one sequence, TP2, P2P off, FP16 KV, graph off, prefix cache off, and
+two empty caches. Each lifetime ran the bounded target, actual growing context
+points, and a forced 4,096-token output. Result root was
+`/mnt/vm_8tb/b70/results/f05a_qwen38_fp8_neural/20260830T061000Z/`.
+
+COMMAND -> under the whole-box lease, independently compile two 32K servers;
+require 12-prompt exactness to one another and both F04b references; run cold
+2K/8K/16K/30K prompts with 128 forced outputs and a 2K-prompt plus 4K forced
+decode; compare all long raw-token arrays across restarts; tear down and pass
+card plus compiled collective health after each lifetime.
+
+RESULT -> the bounded target passed 12/12 everywhere at 17.746417 and
+17.743088 tok/s, median 17.744753 and 0.019 percent spread. Actual context
+counts were 2,070, 8,214, 16,407, and 30,023 tokens. All four 128-token arrays
+were restart-exact. TTFT reached 40.151 and 40.101 seconds at 30,023 tokens;
+decode remained 17.15 to 18.34 tok/s.
+
+RESULT -> both 2,070-prompt plus 4,096-output runs were raw-token exact and
+measured 19.186696 and 19.101269 tok/s after TTFT. Target key `80de0121...`
+and draft key `be175b50...` repeated; compile times were 95.31/95.54 and
+45.07/45.11 seconds. Both 976-file caches had zero `.best_config` files.
+
+RESULT -> all canaries, teardowns, and health gates passed. Host RAM peaked at
+9.663 GiB, minimum MemAvailable was 111,723,052 KiB, and swap stayed zero.
+Device accounting reported 15.47 GiB weights plus non-Torch, 2.91 GiB peak
+activation, and 5.86-5.87 GiB KV per card. Primary summary SHA256 was
+`014fd18be7c66bda43b0d83e11c371c5bbe5c8837948297a1b249b36ee1c194d`.
+
+VERDICT -> F05a passes synthetic C1 long-context and forced-output gates. Run
+F05b for concurrent batch-shape coherence before shelf work, then the
+higher-thinkcap growing-agent quality ladder. P2P-on full serving remains
+blocked.
