@@ -8,6 +8,7 @@ ROOT="${ROOT:-/mnt/vm_8tb/b70}"
 SOURCE="${SOURCE:-$ROOT/steve-repro/qwen38-fp8-neural-20260829/source}"
 IMAGE="${IMAGE:-neural-download/vllm-openai-xpu:qwen38-fp8-mtp1-rms-mixed-gdn-f05c-local}"
 EXPECTED_IMAGE_ID="${EXPECTED_IMAGE_ID:-sha256:8e0e3deb0dbddfc7b2ca24cc06f5077a61d3b00c059d3bd0b963685acbd91b81}"
+EXPECTED_LAYERNORM_SHA256="${EXPECTED_LAYERNORM_SHA256:-50cf5f4f9c72f679e4318cd3e3e021a844f59ac188a891d9a4f9638188f4bce8}"
 MODEL_DIR="${MODEL_DIR:-$REPO/models/files/qwen3.8-27b/fp8-official}"
 SEED_CACHE="${SEED_CACHE:-$ROOT/cache/f05d_qwen38_fp8_neural/20260830T075200Z/attempt-1}"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
@@ -24,9 +25,19 @@ MAX_MODEL_LEN="${MAX_MODEL_LEN:-1024}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
 MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
 EXTRA_SMOKE="${EXTRA_SMOKE:-}"
+PERFORMANCE_SCREEN_PROMPT="${PERFORMANCE_SCREEN_PROMPT:-}"
+COMPILATION_PROFILE="${COMPILATION_PROFILE:-explicit}"
+GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.80}"
+XPU_GRAPH="${XPU_GRAPH:-0}"
+CUDAGRAPH_MODE="${CUDAGRAPH_MODE:-PIECEWISE}"
+ATTENTION_BACKEND="${ATTENTION_BACKEND:-}"
+DRAFT_ATTENTION_BACKEND="${DRAFT_ATTENTION_BACKEND:-}"
+FORCE_GRAPH_WITH_COMM="${FORCE_GRAPH_WITH_COMM:-0}"
 LAUNCHER="$SCRIPT_DIR/serve_qwen38_fp8_neural_f02.sh"
 MODEL_MANIFEST="$SOURCE/repro/qwen38-27b-fp8-vllm-tp2-asrock-b70/model-direct.json"
 MODEL_VERIFY="$SOURCE/repro/qwen38-27b-autoround-int4-b70/scripts/verify-model-direct.py"
+BENCH="$SOURCE/scripts/bench-openai-realistic-suite.py"
+SUITE="$SOURCE/repro/qwen36-27b-autoround-int4-b70/realistic-suite-v1.json"
 
 if [ "${1:-}" != --leased ]; then
   exec "$REPO/bin/gpu-run" env \
@@ -43,7 +54,8 @@ fi
 case "$SPECULATIVE_TOKENS" in
   ''|*[!0-9]*) echo "SPECULATIVE_TOKENS must be a nonnegative integer" >&2; exit 2 ;;
 esac
-for required in "$MODEL_DIR" "$SEED_CACHE" "$LAUNCHER" "$MODEL_MANIFEST" "$MODEL_VERIFY"; do
+for required in "$MODEL_DIR" "$SEED_CACHE" "$LAUNCHER" "$MODEL_MANIFEST" \
+  "$MODEL_VERIFY" "$BENCH" "$SUITE"; do
   [ -e "$required" ] || { echo "missing input: $required" >&2; exit 1; }
 done
 [ -z "$EXTRA_SMOKE" ] || [ -f "$EXTRA_SMOKE" ] || {
@@ -125,12 +137,16 @@ docker run --rm --volume "$SEED_CACHE:/seed:ro" --volume "$CACHE_DIR:/dest" \
 {
   echo "CONFIG -> image=$IMAGE"
   echo "CONFIG -> image_id=$actual_image_id"
+  echo "CONFIG -> layernorm_sha256=$EXPECTED_LAYERNORM_SHA256"
   echo "CONFIG -> kernel=$(uname -r)"
   echo "CONFIG -> model=$MODEL_DIR"
   echo "CONFIG -> served=$SERVED"
-  echo "CONFIG -> tp=2 p2p=1 mtp=$SPECULATIVE_TOKENS xpu_graph=0 compilation=PIECEWISE"
+  echo "CONFIG -> tp=2 p2p=1 mtp=$SPECULATIVE_TOKENS xpu_graph=$XPU_GRAPH compilation=$CUDAGRAPH_MODE"
+  echo "CONFIG -> compilation_profile=$COMPILATION_PROFILE attention_backend=${ATTENTION_BACKEND:-default} draft_attention_backend=${DRAFT_ATTENTION_BACKEND:-auto} force_graph_with_comm=$FORCE_GRAPH_WITH_COMM"
+  echo "CONFIG -> gpu_memory_utilization=$GPU_MEMORY_UTILIZATION"
   echo "CONFIG -> max_model_len=$MAX_MODEL_LEN max_num_seqs=$MAX_NUM_SEQS max_num_batched_tokens=$MAX_NUM_BATCHED_TOKENS"
   echo "CONFIG -> extra_smoke=${EXTRA_SMOKE:-none}"
+  echo "CONFIG -> performance_screen_prompt=${PERFORMANCE_SCREEN_PROMPT:-none}"
   echo "CONFIG -> dtype=float16 quantization=fp8 kv_cache_dtype=auto"
   echo "CONFIG -> container_memory_gib=32 container_swap_extra_gib=0"
   echo "CONFIG -> seed_cache=$SEED_CACHE"
@@ -157,12 +173,16 @@ journal_start="$(date +%s)"
 echo "COMMAND -> start exact MTP${SPECULATIVE_TOKENS} model with guarded direct P2P" | tee -a "$RESULT_DIR/commands.txt"
 env I_KNOW_P2P_WEDGES=1 P2P_ACCESS=1 \
   IMAGE="$IMAGE" EXPECTED_IMAGE_ID="$EXPECTED_IMAGE_ID" \
-  LAYERNORM_SHA256=50cf5f4f9c72f679e4318cd3e3e021a844f59ac188a891d9a4f9638188f4bce8 \
+  LAYERNORM_SHA256="$EXPECTED_LAYERNORM_SHA256" \
   MODEL_DIR="$MODEL_DIR" CACHE_DIR="$CACHE_DIR" ALLOW_EXISTING_CACHE=1 \
   NAME="$NAME" SERVED="$SERVED" PORT="$PORT" \
   MAX_MODEL_LEN="$MAX_MODEL_LEN" MAX_NUM_SEQS="$MAX_NUM_SEQS" \
   MAX_NUM_BATCHED_TOKENS="$MAX_NUM_BATCHED_TOKENS" \
   SPECULATIVE_TOKENS="$SPECULATIVE_TOKENS" RMS_PACKED_SERIAL_EXACT=1 GDN_PERSISTENT_SCRATCH=1 \
+  COMPILATION_PROFILE="$COMPILATION_PROFILE" GPU_MEMORY_UTILIZATION="$GPU_MEMORY_UTILIZATION" \
+  XPU_GRAPH="$XPU_GRAPH" CUDAGRAPH_MODE="$CUDAGRAPH_MODE" \
+  ATTENTION_BACKEND="$ATTENTION_BACKEND" DRAFT_ATTENTION_BACKEND="$DRAFT_ATTENTION_BACKEND" \
+  FORCE_GRAPH_WITH_COMM="$FORCE_GRAPH_WITH_COMM" \
   INDUCTOR_COMBO_KERNELS=0 INDUCTOR_BENCHMARK_COMBO_KERNEL=0 \
   INDUCTOR_MAX_AUTOTUNE=0 INDUCTOR_COORDINATE_DESCENT_TUNING=0 \
   INDUCTOR_AUTOTUNE_POINTWISE=0 INDUCTOR_DETERMINISTIC_CONFIG=1 \
@@ -202,6 +222,23 @@ assert data["pass_all"] is True, data
 assert data["total_requests"] == 32, data
 PY
     fi
+  fi
+  if [ "$transaction_rc" -eq 0 ] && [ -n "$PERFORMANCE_SCREEN_PROMPT" ]; then
+    performance_scope_args=(--allow-screening)
+    if [ "$PERFORMANCE_SCREEN_PROMPT" = ALL ]; then
+      performance_scope_args=()
+    else
+      performance_scope_args=(--prompt-id "$PERFORMANCE_SCREEN_PROMPT" --allow-screening)
+    fi
+    python3 "$BENCH" \
+      --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
+      --api-mode completions --suite "$SUITE" \
+      --max-tokens 512 --metric-tokens 100 --seed 42 --timeout 900 \
+      --return-token-ids --require-natural-eos \
+      "${performance_scope_args[@]}" \
+      --request-extra-json '{"temperature":0,"top_p":1}' \
+      --out "$RESULT_DIR/performance-screen.json" \
+      >"$RESULT_DIR/performance-screen.stdout" 2>&1 || transaction_rc=$?
   fi
   if [ "$transaction_rc" -eq 0 ]; then
     python3 - "$PORT" "$SERVED" "$RESULT_DIR/smoke.json" <<'PY' || transaction_rc=$?

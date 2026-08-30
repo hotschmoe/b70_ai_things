@@ -6906,3 +6906,88 @@ publisher and F06f process/profile, collective-count, target/drafter, and
 kernel-selection evidence to locate the remaining speed gap. Keep push-AR as
 a separate arm until its loaded-context first-submission oracle returns, and
 keep long growing-agent/thinking-cap quality as a separate campaign gate.
+
+### 2026-08-30v - Qwen3.8 FP8 FULL graph exceeds 45 tok/s twice
+
+CONFIG -> corrected neural.download Qwen3.8-27B official FP8 W8A16 image ID
+`8e0e3deb...`, TP2, FP16 model and KV, MTP1, deterministic Inductor, packed
+serial RMSNorm, persistent GDN scratch, one slot, 1,024-token envelope, prefix
+cache off, direct oneCCL P2P, explicit Triton target and draft attention,
+`FULL_DECODE_ONLY`, and forced graph capture with communication. Kernel was
+7.1.0-070100 and every GPU touch used `bin/gpu-run`.
+
+COMMAND -> first reproduce the publisher graph-off compiler/service envelope
+twice in F07a; then screen PIECEWISE, no-MTP FULL, MTP1 FULL with auto draft,
+and MTP1 FULL with explicit Triton draft. Promote the last arm to two fresh
+F07f complete fixed 12-prompt strict suites. Add the 32-request, eight-round
+four-client exact-answer/isolation canary to the confirmation lifetime. Run
+card and compiled P2P-off collective health before and after every risky TP2
+transaction.
+
+RESULT -> F07a remained at 17.488233 and 17.259319 tok/s despite matching the
+publisher target and draft AOT keys. PIECEWISE was slower. No-MTP FULL reached
+30.838216 full post-TTFT tok/s. MTP1 FULL with auto draft reached 40.341043,
+and explicitly selecting Triton for the independently configured draft raised
+the bounded full-stream screen to 42.034140.
+
+RESULT -> the two F07f strict class-balanced first-100 rates were 46.721530
+and 47.170372 tok/s, averaging 46.945951. Both workload gates passed with all
+cached-token counts zero. Complete token arrays matched 12/12 across fresh
+lifetimes. The confirmation canary passed 32/32 requests. Both teardowns,
+card checks, and compiled TP2 collectives passed. The two performance SHA256
+values were `058c26b9...` and `c9c5ce67...`; concurrent-quality was
+`1d551218...`.
+
+RESULT -> F07f matches only 7/12 publisher r32a and 7/12 r32b token arrays.
+It is deterministic locally but is not an exact publisher-output route. The
+two-run primary mean is 170.21 percent above the F07a graph-off center and
+9.58 percent below the 51.918757 tok/s publisher headline.
+
+VERDICT -> the 45 tok/s single-stream goal is met and reproduced. FULL decode
+capture, rather than P2P alone or publisher compile-envelope matching, removes
+the dominant local host-submission bottleneck. Qualify F07f as a local FULL
+graph route with explicit Triton target/draft attention, one-slot scope, and
+the existing P2P risk guard. Do not call it an exact publisher reproduction or
+place it on the serving shelf until packaging and serving-policy review.
+
+### 2026-08-30w - source-only MTP8 matches the publisher speed range
+
+CONFIG -> qualified F07f base image and settings, plus only the 103-line
+MTP1/MTP8 packed-serial RMSNorm Python-source change from pinned vLLM commit
+`ac7509e2b...` and publisher patch SHA256 `98c26561...`. The derived image was
+`b70-local/vllm-openai-xpu:qwen38-fp8-mtp8-rms-f08a`, image ID `9ae697d4...`,
+with installed layernorm SHA256 `d911627c...`. No quarantined wheel, shared
+object, or other ABI-specific binary was restored. Runtime was official FP8
+W8A16, TP2, FP16 KV, MTP8, one slot, 1,024 tokens, direct oneCCL P2P, explicit
+Triton target/draft attention, and forced `FULL_DECODE_ONLY` graph capture.
+
+COMMAND -> build the source overlay using
+`vllm/fp8/build_qwen38_fp8_mtp8_rms_overlay.sh`; run the bounded F08a screen;
+then run two fresh complete fixed 12-prompt F08b strict suites with
+`vllm/fp8/run_qwen38_fp8_f08b_full_decode_triton_mtp8_strict_suite.sh`. Add
+the 32-request, eight-round, four-client isolation canary to the confirmation
+lifetime. Run card and compiled P2P-off collective health before and after
+each direct-P2P model transaction.
+
+RESULT -> the F08a cold screen measured 29.140815 tok/s on the first-100
+metric and 44.262562 tok/s across the full completion while paying five first
+inference Triton JITs. The two complete F08b lifetimes measured 64.965356 and
+67.404052 tok/s primary, averaging 66.184704. This is inside the publisher's
+later MTP8 range of 62.432362 to 68.049727 tok/s and 27.48 percent above the
+public 51.918757 tok/s MTP1 headline. Full-response post-TTFT medians were
+46.874718 and 47.519518 tok/s, averaging 47.197118.
+
+RESULT -> both strict gates passed with zero cached tokens. All 12 complete
+token arrays matched across local fresh lifetimes, and the confirmation
+canary passed 32/32 requests. Local arrays matched 8/12 publisher MTP8 r1a
+and 9/12 r1b arrays, so publisher process identity remains false. Both
+teardowns, all card checks, and all compiled TP2 collective checks passed.
+Performance SHA256 values were `100da68c...` and `21cbc97a...`; confirmation
+concurrent-quality was `db19b6d1...`.
+
+VERDICT -> qualify F08b as the local single-stream performance winner. It
+reproduces the publisher MTP8 speed band and clears 45 tok/s even on the
+full-response median, while F07f remains the simpler MTP1 control. Do not call
+F08b the public graph-off MTP1 recipe or publisher-byte-identical. Keep the
+one-slot scope and P2P risk guard; defer shelf promotion until max-concurrency
+policy and packaging are explicitly qualified.

@@ -17,6 +17,7 @@ MAX_MODEL_LEN="${MAX_MODEL_LEN:-1024}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
 MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
 MEMORY_GIB="${MEMORY_GIB:-32}"
+GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.80}"
 ALLOW_EXISTING_CACHE="${ALLOW_EXISTING_CACHE:-0}"
 COMMUNICATOR_SHA256="${COMMUNICATOR_SHA256:-5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d}"
 LAYERNORM_SHA256="${LAYERNORM_SHA256:-}"
@@ -30,6 +31,12 @@ INDUCTOR_MAX_AUTOTUNE="${INDUCTOR_MAX_AUTOTUNE:-1}"
 INDUCTOR_COORDINATE_DESCENT_TUNING="${INDUCTOR_COORDINATE_DESCENT_TUNING:-1}"
 INDUCTOR_AUTOTUNE_POINTWISE="${INDUCTOR_AUTOTUNE_POINTWISE:-1}"
 INDUCTOR_DETERMINISTIC_CONFIG="${INDUCTOR_DETERMINISTIC_CONFIG:-0}"
+COMPILATION_PROFILE="${COMPILATION_PROFILE:-explicit}"
+XPU_GRAPH="${XPU_GRAPH:-0}"
+CUDAGRAPH_MODE="${CUDAGRAPH_MODE:-PIECEWISE}"
+ATTENTION_BACKEND="${ATTENTION_BACKEND:-}"
+DRAFT_ATTENTION_BACKEND="${DRAFT_ATTENTION_BACKEND:-}"
+FORCE_GRAPH_WITH_COMM="${FORCE_GRAPH_WITH_COMM:-0}"
 P2P_ACCESS="${P2P_ACCESS:-0}"
 
 EXPECTED_FILE_HASHES=(
@@ -96,7 +103,6 @@ print_config() {
   echo "speculative_force_reject=$SPECULATIVE_FORCE_REJECT"
   echo "rms_packed_serial_exact=$RMS_PACKED_SERIAL_EXACT"
   echo "gdn_persistent_scratch=$GDN_PERSISTENT_SCRATCH"
-  echo "xpu_graph=0"
   echo "inductor=1"
   echo "inductor_combo_kernels=$INDUCTOR_COMBO_KERNELS"
   echo "inductor_benchmark_combo_kernel=$INDUCTOR_BENCHMARK_COMBO_KERNEL"
@@ -104,10 +110,16 @@ print_config() {
   echo "inductor_coordinate_descent_tuning=$INDUCTOR_COORDINATE_DESCENT_TUNING"
   echo "inductor_autotune_pointwise=$INDUCTOR_AUTOTUNE_POINTWISE"
   echo "inductor_deterministic_config=$INDUCTOR_DETERMINISTIC_CONFIG"
+  echo "compilation_profile=$COMPILATION_PROFILE"
+  echo "xpu_graph=$XPU_GRAPH"
+  echo "cudagraph_mode=$CUDAGRAPH_MODE"
+  echo "attention_backend=${ATTENTION_BACKEND:-default}"
+  echo "draft_attention_backend=${DRAFT_ATTENTION_BACKEND:-auto}"
+  echo "force_graph_with_comm=$FORCE_GRAPH_WITH_COMM"
   echo "dtype=float16"
   echo "kv_cache_dtype=auto"
   echo "quantization=fp8"
-  echo "gpu_memory_utilization=0.80"
+  echo "gpu_memory_utilization=$GPU_MEMORY_UTILIZATION"
   echo "max_model_len=$MAX_MODEL_LEN"
   echo "max_num_seqs=$MAX_NUM_SEQS"
   echo "max_num_batched_tokens=$MAX_NUM_BATCHED_TOKENS"
@@ -140,6 +152,35 @@ esac
 case "$P2P_ACCESS" in
   0|1) ;;
   *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;;
+esac
+case "$COMPILATION_PROFILE" in
+  explicit|publisher) ;;
+  *) echo "COMPILATION_PROFILE must be explicit or publisher" >&2; exit 2 ;;
+esac
+case "$XPU_GRAPH:$FORCE_GRAPH_WITH_COMM" in
+  0:0|0:1|1:0|1:1) ;;
+  *) echo "XPU_GRAPH and FORCE_GRAPH_WITH_COMM must be 0 or 1" >&2; exit 2 ;;
+esac
+case "$CUDAGRAPH_MODE" in
+  PIECEWISE|FULL|FULL_DECODE_ONLY|FULL_AND_PIECEWISE) ;;
+  *) echo "unsupported CUDAGRAPH_MODE: $CUDAGRAPH_MODE" >&2; exit 2 ;;
+esac
+case "$ATTENTION_BACKEND" in
+  ''|TRITON_ATTN|FLASH_ATTN) ;;
+  *) echo "ATTENTION_BACKEND must be empty, TRITON_ATTN, or FLASH_ATTN" >&2; exit 2 ;;
+esac
+case "$DRAFT_ATTENTION_BACKEND" in
+  ''|TRITON_ATTN|FLASH_ATTN) ;;
+  *) echo "DRAFT_ATTENTION_BACKEND must be empty, TRITON_ATTN, or FLASH_ATTN" >&2; exit 2 ;;
+esac
+[ -z "$DRAFT_ATTENTION_BACKEND" ] || [ "$SPECULATIVE_TOKENS" -gt 0 ] || {
+  echo "DRAFT_ATTENTION_BACKEND requires SPECULATIVE_TOKENS > 0" >&2
+  exit 2
+}
+case "$GPU_MEMORY_UTILIZATION" in
+  0.0|0.00) echo "GPU_MEMORY_UTILIZATION must be greater than zero" >&2; exit 2 ;;
+  0.[0-9]|0.[0-9][0-9]|1.0|1.00) ;;
+  *) echo "GPU_MEMORY_UTILIZATION must be a decimal in (0, 1]" >&2; exit 2 ;;
 esac
 if [ "$P2P_ACCESS" -eq 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
   echo "Refusing direct P2P without I_KNOW_P2P_WEDGES=1" >&2
@@ -196,13 +237,37 @@ deterministic_config_json=false
 [ "$INDUCTOR_BENCHMARK_COMBO_KERNEL" -eq 0 ] || benchmark_combo_kernel_json=true
 [ "$INDUCTOR_AUTOTUNE_POINTWISE" -eq 0 ] || autotune_pointwise_json=true
 [ "$INDUCTOR_DETERMINISTIC_CONFIG" -eq 0 ] || deterministic_config_json=true
-compilation_config="{\"cudagraph_mode\":\"PIECEWISE\",\"cudagraph_capture_sizes\":[1],\"max_cudagraph_capture_size\":1,\"inductor_compile_config\":{\"combo_kernels\":$combo_kernels_json,\"benchmark_combo_kernel\":$benchmark_combo_kernel_json,\"triton.autotune_pointwise\":$autotune_pointwise_json,\"deterministic\":$deterministic_config_json}}"
+compiler_env_args=()
+case "$COMPILATION_PROFILE" in
+  publisher)
+    if [ "$CUDAGRAPH_MODE" = PIECEWISE ]; then
+      compilation_config='{"cudagraph_mode":"PIECEWISE","cudagraph_capture_sizes":[1],"max_cudagraph_capture_size":1}'
+    else
+      compilation_config="{\"cudagraph_mode\":\"$CUDAGRAPH_MODE\"}"
+    fi
+    ;;
+  explicit)
+    compilation_config="{\"cudagraph_mode\":\"$CUDAGRAPH_MODE\",\"cudagraph_capture_sizes\":[1],\"max_cudagraph_capture_size\":1,\"inductor_compile_config\":{\"combo_kernels\":$combo_kernels_json,\"benchmark_combo_kernel\":$benchmark_combo_kernel_json,\"triton.autotune_pointwise\":$autotune_pointwise_json,\"deterministic\":$deterministic_config_json}}"
+    compiler_env_args=(
+      --env VLLM_ENABLE_INDUCTOR_MAX_AUTOTUNE="$INDUCTOR_MAX_AUTOTUNE"
+      --env VLLM_ENABLE_INDUCTOR_COORDINATE_DESCENT_TUNING="$INDUCTOR_COORDINATE_DESCENT_TUNING"
+    )
+    ;;
+esac
+attention_args=()
+if [ -n "$ATTENTION_BACKEND" ]; then
+  attention_args=(--attention-backend "$ATTENTION_BACKEND")
+fi
 speculative_args=()
 if [ "$SPECULATIVE_TOKENS" -gt 0 ]; then
-  speculative_config="{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS}"
-  if [ "$SPECULATIVE_FORCE_REJECT" -eq 1 ]; then
-    speculative_config="{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS,\"rejection_sample_method\":\"synthetic\",\"synthetic_acceptance_rates\":[0.0]}"
+  speculative_config="{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS"
+  if [ -n "$DRAFT_ATTENTION_BACKEND" ]; then
+    speculative_config+=",\"attention_backend\":\"$DRAFT_ATTENTION_BACKEND\""
   fi
+  if [ "$SPECULATIVE_FORCE_REJECT" -eq 1 ]; then
+    speculative_config+=",\"rejection_sample_method\":\"synthetic\",\"synthetic_acceptance_rates\":[0.0]"
+  fi
+  speculative_config+="}"
   speculative_args=(
     --speculative-config
     "$speculative_config"
@@ -222,11 +287,11 @@ exec docker run --rm --name "$NAME" \
   --env ONEAPI_DEVICE_SELECTOR=level_zero:0,1 \
   --env VLLM_TARGET_DEVICE=xpu \
   --env VLLM_WORKER_MULTIPROC_METHOD=spawn \
-  --env VLLM_XPU_ENABLE_XPU_GRAPH=0 \
+  --env VLLM_XPU_ENABLE_XPU_GRAPH="$XPU_GRAPH" \
   --env VLLM_XPU_GRAPH=0 \
+  --env VLLM_XPU_FORCE_GRAPH_WITH_COMM="$FORCE_GRAPH_WITH_COMM" \
   --env TORCHINDUCTOR_DETERMINISTIC=1 \
-  --env VLLM_ENABLE_INDUCTOR_MAX_AUTOTUNE="$INDUCTOR_MAX_AUTOTUNE" \
-  --env VLLM_ENABLE_INDUCTOR_COORDINATE_DESCENT_TUNING="$INDUCTOR_COORDINATE_DESCENT_TUNING" \
+  "${compiler_env_args[@]}" \
   --env VLLM_XPU_FP8_BLOCK_W8A16=1 \
   --env VLLM_BATCH_INVARIANT=0 \
   --env VLLM_XPU_QWEN_GEMMA_RMSNORM_BATCH_INVARIANT=0 \
@@ -251,11 +316,12 @@ exec docker run --rm --name "$NAME" \
   --host 0.0.0.0 --port 8000 \
   --tensor-parallel-size 2 \
   --dtype float16 --quantization fp8 --kv-cache-dtype auto \
-  --gpu-memory-utilization 0.80 \
+  --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION" \
   --max-model-len "$MAX_MODEL_LEN" --block-size 64 \
   --max-num-seqs "$MAX_NUM_SEQS" \
   --max-num-batched-tokens "$MAX_NUM_BATCHED_TOKENS" \
   --no-enable-prefix-caching --enable-prompt-tokens-details \
   --language-model-only \
+  "${attention_args[@]}" \
   "${speculative_args[@]}" \
   --compilation-config "$compilation_config"

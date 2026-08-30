@@ -1,0 +1,19 @@
+ARG BASE_IMAGE=neural-download/vllm-openai-xpu:qwen38-fp8-mtp1-rms-mixed-gdn-f05c-local
+FROM ${BASE_IMAGE}
+
+ARG LAYERNORM_SHA256
+ARG SOURCE_COMMIT
+ARG SOURCE_PATCH_SHA256
+
+COPY vllm/model_executor/layers/layernorm.py \
+  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py
+COPY vllm/model_executor/layers/layernorm.py \
+  /workspace/vllm/vllm/model_executor/layers/layernorm.py
+
+RUN test "$(sha256sum /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py | awk '{print $1}')" = "${LAYERNORM_SHA256}" \
+    && /opt/venv/bin/python -m py_compile \
+      /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py
+
+LABEL b70.overlay="Qwen3.8 MTP1/MTP8 packed serial RMSNorm source overlay" \
+      b70.overlay.source.commit="${SOURCE_COMMIT}" \
+      b70.overlay.source.patch.sha256="${SOURCE_PATCH_SHA256}"
