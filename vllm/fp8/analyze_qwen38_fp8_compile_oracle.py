@@ -34,6 +34,8 @@ def analyze(
     served_model: str,
     schema: str,
     completion_route: str,
+    inductor_autotune_pointwise: bool = True,
+    inductor_deterministic_config: bool = False,
 ) -> dict[str, Any]:
     caches = [cache_data(cache_root, index) for index in range(1, attempts + 1)]
     aot_keys = [item["aot_key"] for item in caches]
@@ -103,6 +105,8 @@ def analyze(
         "xpu_graph": False,
         "compile_oracle": True,
         "completion_route": completion_route,
+        "inductor_autotune_pointwise": inductor_autotune_pointwise,
+        "inductor_deterministic_config": inductor_deterministic_config,
         "aot_keys": aot_keys,
         "aot_key_exact": len(set(aot_keys)) == 1,
         "best_config_counts": [len(item["configs"]) for item in caches],
@@ -124,6 +128,12 @@ def main() -> int:
     parser.add_argument("--served-model", required=True)
     parser.add_argument("--schema", required=True)
     parser.add_argument("--completion-route", required=True)
+    parser.add_argument(
+        "--inductor-autotune-pointwise", type=int, choices=(0, 1), required=True
+    )
+    parser.add_argument(
+        "--inductor-deterministic-config", type=int, choices=(0, 1), required=True
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     summary = analyze(
@@ -133,6 +143,8 @@ def main() -> int:
         args.served_model,
         args.schema,
         args.completion_route,
+        bool(args.inductor_autotune_pointwise),
+        bool(args.inductor_deterministic_config),
     )
     args.output.write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii"

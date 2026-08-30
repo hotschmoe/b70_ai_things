@@ -6424,3 +6424,33 @@ pointwise configurations. Run a bounded F02d two-cache compile oracle with
 that control false and only proceed to a full suite if semantic cache
 selection is exact. Keep P2P-on full serving, long, concurrent, and shelf work
 blocked.
+
+### 2026-08-30h - F02d isolates five variable reduction schedules
+
+CONFIG -> harness commit `fae7351`; F02c controls plus
+`triton.autotune_pointwise=false`, two empty caches, and a compile-only
+16-token deterministic smoke per server. Result root was
+`/mnt/vm_8tb/b70/results/f02d_qwen38_fp8_neural/20260830T035700Z/`.
+
+COMMAND -> under the whole-box lease, independently compile two TP2 P2P-off
+servers, verify model identity and short smoke coherence, tear each down, and
+pass card plus compiled collective health. Compare every common
+`.best_config` semantically and refuse the full suite on any difference.
+
+RESULT -> pointwise-off reduced 44 sites to 16. Both attempts had the same
+AOT key and exact smoke text, but five sites still differed semantically.
+Every difference was `R0_BLOCK=2048` versus `8192` with XBLOCK, warps, and
+stages otherwise equal. Compilation was 96.25 and 96.33 seconds. All health,
+teardown, and zero-swap gates passed; host RAM peaked at 7.668 GiB and minimum
+MemAvailable was 113,721,668 KiB.
+
+RESULT -> generated kernel source recorded `deterministic: False` despite the
+launcher environment `TORCHINDUCTOR_DETERMINISTIC=1`. The environment setting
+did not survive into the AOT compilation patch. Summary SHA256 was
+`135f482a392bb4367fafa25873e8bb1bfba33931167c02ab1e2c815e46357f58`.
+
+VERDICT -> F02d correctly blocks a full run and narrows the target to five
+reduction schedules. F02e should explicitly pass
+`inductor_compile_config.deterministic=true`, invoking PyTorch's existing
+deterministic reduction filter. Keep P2P-on full serving, long, concurrent,
+and shelf work blocked.

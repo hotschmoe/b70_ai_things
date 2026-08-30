@@ -104,6 +104,7 @@ def analyze(
     inductor_max_autotune: bool = True,
     inductor_coordinate_descent_tuning: bool = True,
     inductor_autotune_pointwise: bool = True,
+    inductor_deterministic_config: bool = False,
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -164,6 +165,7 @@ def analyze(
         "inductor_max_autotune": inductor_max_autotune,
         "inductor_coordinate_descent_tuning": inductor_coordinate_descent_tuning,
         "inductor_autotune_pointwise": inductor_autotune_pointwise,
+        "inductor_deterministic_config": inductor_deterministic_config,
         "completion_route": completion_route,
         "quantization": "fp8-block-weights-w8a16-runtime",
         "dtype": "float16",
@@ -206,6 +208,9 @@ def main() -> int:
     parser.add_argument(
         "--inductor-autotune-pointwise", type=int, choices=(0, 1), default=1
     )
+    parser.add_argument(
+        "--inductor-deterministic-config", type=int, choices=(0, 1), default=0
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.attempts < 2:
@@ -224,6 +229,7 @@ def main() -> int:
         bool(args.inductor_max_autotune),
         bool(args.inductor_coordinate_descent_tuning),
         bool(args.inductor_autotune_pointwise),
+        bool(args.inductor_deterministic_config),
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")

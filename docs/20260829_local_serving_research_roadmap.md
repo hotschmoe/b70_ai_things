@@ -257,7 +257,9 @@ normal F04 12/12. Acceptance is innocent; fresh autotune selection remains the
 problem. F02b showed that combo-off still changes 22/44 semantic Triton
 configs and only matched 7/12 across fresh processes. F02c changed vLLM's
 max-autotune controls but left the same 22/44 semantic differences and matched
-8/12. F02d is the active no-pointwise-autotune compile oracle.
+8/12. F02d reduced the surface to 16 sites but left five variable reduction
+schedules because AOT metadata recorded deterministic false. F02e is the
+active explicit-deterministic compile oracle.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
@@ -268,7 +270,8 @@ max-autotune controls but left the same 22/44 semantic differences and matched
 | F03a | P0 | TP2 | Two fresh Work.wait servers reuse the compiler cache produced by lifetime 1 | Complete: 12/12 exact; direct AOT reuse localizes target selection to fresh compilation |
 | F02b | P0 | TP2 | Disable XPU combo kernels and benchmarking on two separate fresh MTP0 caches | Closed negative: 7/12 exact; 22/44 remaining autotune sites selected different semantic configs |
 | F02c | P0 | TP2 | Also disable vLLM Inductor max-autotune and coordinate descent on separate fresh MTP0 caches | Closed negative: 8/12 exact and the same 22/44 semantic tuner differences |
-| F02d | P0 | TP2 | Compile-only oracle with PyTorch `triton.autotune_pointwise=false` and two empty caches | Require identical AOT key, no semantic best-config differences, smoke exactness, health, and teardown before a full suite |
+| F02d | P0 | TP2 | Compile-only oracle with PyTorch `triton.autotune_pointwise=false` and two empty caches | Closed negative: 5/16 reduction configs still varied between R0 block 2048 and 8192 |
+| F02e | P0 | TP2 | Add explicit `inductor_compile_config.deterministic=true` to the bounded F02d oracle | Require generated reduction metadata deterministic true, identical AOT key, no semantic differences, smoke exactness, health, and teardown |
 | F04 | P0 | TP2 | Deterministic packed-RMS MTP1 recipe on the frozen F03a target | Closed negative: shared-cache MTP1 was 12/12 restart-exact but only 5/12 exact versus MTP0 |
 | F04a | P0 | TP2 | Force every MTP1 draft to reject while reusing an exact copy of the F04 cache | Complete: same target/draft AOT keys and 12/12 exact versus normal F04; acceptance is not causal |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |
