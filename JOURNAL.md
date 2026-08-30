@@ -6477,3 +6477,41 @@ VERDICT -> F02e passes its compile-selection discriminator. Proceed to F02f
 with the full 12-prompt two-empty-cache target gate and identical compiler
 controls. Require both cross-process and publisher raw-token exactness; keep
 P2P-on full serving, long, concurrent, and shelf work blocked.
+
+### 2026-08-30j - F02f creates a reproducible local target, not the publisher target
+
+CONFIG -> harness commit `eb14d56`; official FP8 W8A16 r15 `Work.wait()`
+image, TP2, P2P off, MTP0, FP16 target/KV, graph off, and two independent
+empty caches. Combo tuning, vLLM max autotune, coordinate descent, and Triton
+pointwise autotune were disabled; deterministic true was passed explicitly in
+the Inductor compile config. Result root was
+`/mnt/vm_8tb/b70/results/f02f_qwen38_fp8_neural/20260830T042700Z/`.
+
+COMMAND -> under the whole-box lease, verify image, model, and served identity;
+run two fresh compiles through the complete fixed 12-prompt 512-token-cap
+suite and independent canaries; tear down and pass card plus compiled P2P-off
+collective health after each; require cross-process and publisher raw-token
+exactness.
+
+RESULT -> local fresh-cache exactness passed 12/12. Both attempts used AOT key
+`5001f6c4...`, took 92.19 and 92.38 seconds to compile, and left 621-file
+caches with zero `.best_config` files. Diagnostic class-balanced rates were
+11.637675 and 11.649289 tok/s, median 11.643482 and 0.100 percent spread.
+
+RESULT -> the external target gate failed: both attempts matched only 8/12
+arrays against each of the two mutually exact publisher references. Fresh
+schedule selection caused prior local restart drift, but the publisher target
+is a different autotuned compilation mosaic. Eleven suite prompts reached the
+512-token cap, so this is not a high-thinkcap quality qualification.
+
+RESULT -> all canaries, teardowns, card health, and compiled collectives
+passed. Host RAM peaked at 7.696 GiB, minimum MemAvailable was 113,710,852
+KiB, and swap stayed zero. Device accounting reported 14.24 GiB weights plus
+non-Torch, 1.19 GiB peak activation, and 8.8 GiB KV per card. Summary SHA256
+was `fc73b5bea7bb0e9c98361cd66e965591292c437fd8cee790a98e19c613703934`.
+
+VERDICT -> close F02f negatively versus the publisher but positively as a
+local deterministic oracle. Run F02g as an MTP0 bridge through the
+MTP-capable packed-RMS image, requiring two empty caches to match F02f. Do not
+add MTP1 until the bridge passes. Keep long, concurrent, P2P-on, speed
+attribution, and shelf work blocked.
