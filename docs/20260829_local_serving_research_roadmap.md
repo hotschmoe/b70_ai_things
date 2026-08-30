@@ -366,6 +366,24 @@ or influence selection of the best one-stream Terminal-Bench recipe.
 A normal zero reward is model-quality evidence. Zero caused by timeout, length,
 or infrastructure loss is not a successful task-time result.
 
+TB01 ran on 2026-08-30 and failed its policy gate through an exact 1,800-second
+`AgentTimeoutError`. The model edited within about eight minutes and ran
+post-edit tests, but remained in a repair loop and did not finish. The verifier
+scored the captured final state zero because `bun run release` still rejected
+private server identifiers. Identity, endpoint, teardown, per-card health, and
+the compiled P2P-off collective all passed. This is a true-off agent-policy
+failure, not a serving or machine failure. TB02A does not apply because the run
+did not stop on response length before editing. TB02B remains blocked because
+TB01 did not complete normally.
+
+One separately labeled TB02X rescue diagnostic is allowed before abandoning
+this task: use the intended TB02B native-thinking configuration (16,384 maximum
+output tokens and an 8,192 private-thinking cap) under the same 1,800-second
+agent timeout. It is unranked because TB01 is time-censored. A normal completion
+can justify a fresh matched policy calibration; another timeout rejects this
+native-thinking policy for the 30-minute Bun harness. Do not report TB02X as a
+matched speed or quality improvement over TB01.
+
 Qwen's official Qwen3.8-27B model card at revision
 `1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0` makes thinking the default, names
 xhigh as its deepest reasoning policy, and reports `max_tokens=32768` for its

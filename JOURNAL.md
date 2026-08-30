@@ -6727,3 +6727,44 @@ VERDICT -> the corrected GDN kernel, not MTP acceptance, causes the stable
 two-prompt target shift. Treat F05d as the corrected-kernel MTP1 target and
 concurrent qualification. Keep shelf promotion blocked on the growing-agent
 gate; direct-P2P full serving remains blocked on its loaded-context oracle.
+
+### 2026-08-30r - TB01 true-off policy times out with a healthy machine
+
+CONFIG -> Qwen3.8-27B compressed-tensors W8A8 GPTQ under the stable SGLang
+reclaim500 route, TP2, P2P off, target-only decode, breakable graph at batch
+one, BF16 target and KV, 65,536 context, memory fraction 0.70, and one running
+request. Pi 0.84.3 used the payload-verified true thinking-off policy, the
+concise off prompt, 8,192 maximum output tokens, and the 1,800-second official
+agent timeout on `terminal-bench/bun-sourcemap-leak`. Host admission required
+96 GiB available and at most 1 GiB swap; the server container was limited to
+64 GiB with no swap. Result root was
+`/mnt/vm_8tb/b70/evals/harbor-jobs/tb3-qwen-w8a8-reclaim500-20260830T090700Z/`.
+
+COMMAND -> under `bin/gpu-run`, pass card and compiled P2P-off collective
+health, launch one fresh server, require exact `/v1/models` identity and
+observed BF16 KV, run the one-task Harbor job, check the endpoint before
+teardown, stop the server, and repeat card plus compiled collective health.
+
+RESULT -> the agent edited after about 7 minutes 35 seconds and ran relevant
+post-edit tests, but used 23 tool calls and remained in an iterative repair
+loop. Harbor terminated it at exactly 1,800 seconds with
+`AgentTimeoutError`. Pi recorded 235,752 input and 10,965 output tokens. The
+separate verifier ran and returned zero; its captured state still made
+`bun run release` reject private server identifiers. This is not a normal
+zero-score completion.
+
+RESULT -> exact model identity, configured and observed BF16 KV, endpoint
+health before teardown, endpoint shutdown, both post-teardown cards, and the
+compiled two-rank P2P-off collective all passed. There were no fatal server
+markers. Full machine occupation was 2,311 seconds. Host spot checks retained
+about 60 GiB available and only the pre-existing roughly 32 MiB swap usage.
+Result, lifecycle, trajectory, and verifier-log SHA256 values were respectively
+`ebe73b8d...`, `ed22d3ed...`, `6547c864...`, and `3a9ec0e9...`.
+
+VERDICT -> TB01 fails the true-off policy gate through model-agent timeout,
+not infrastructure, VRAM spill, or host exhaustion. TB02A does not apply and
+accepted TB02B remains blocked because the baseline was not a normal
+completion. Predeclare one unranked TB02X rescue diagnostic at the same
+1,800-second timeout with native thinking, 16,384 maximum output tokens, and
+an 8,192 private-thinking cap. It may diagnose completion rescue but cannot be
+reported as a matched win over the censored TB01 baseline.
