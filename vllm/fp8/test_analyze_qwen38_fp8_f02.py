@@ -67,6 +67,30 @@ class AnalyzerTests(unittest.TestCase):
             self.assertEqual(mismatch["first_mismatch_zero_based"], 1)
             self.assertFalse(summary["performance_attribution_qualified"])
 
+    def test_required_reference_mismatch_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            arrays = [[index, index + 1] for index in range(12)]
+            write_attempt(root, 1, arrays)
+            write_attempt(root, 2, arrays)
+            reference = json.loads(
+                (root / "attempt-1" / "performance.json").read_text(encoding="ascii")
+            )
+            reference["rows"][5]["token_ids"][0] = 999
+            reference_path = root / "reference.json"
+            reference_path.write_text(json.dumps(reference), encoding="ascii")
+            summary = analyze(
+                root,
+                2,
+                SERVED,
+                [reference_path],
+                require_reference_exact=True,
+            )
+            self.assertEqual(summary["verdict"], "failed_reference_token_exactness")
+            self.assertTrue(summary["complete_token_arrays_exact"])
+            self.assertFalse(summary["reference_token_arrays_exact"])
+            self.assertFalse(summary["performance_attribution_qualified"])
+
 
 if __name__ == "__main__":
     unittest.main()

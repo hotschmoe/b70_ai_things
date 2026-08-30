@@ -35,6 +35,7 @@ MIN_AVAILABLE_GIB="${MIN_AVAILABLE_GIB:-96}"
 MAX_SWAP_USED_MIB="${MAX_SWAP_USED_MIB:-1024}"
 ATTEMPTS="${ATTEMPTS:-2}"
 SHARED_CACHE="${SHARED_CACHE:-0}"
+REQUIRE_REFERENCE_EXACT="${REQUIRE_REFERENCE_EXACT:-0}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -49,6 +50,7 @@ case "${1:-}" in
     echo "campaign_id=$CAMPAIGN_ID"
     echo "completion_route=$COMPLETION_ROUTE"
     echo "shared_cache=$SHARED_CACHE"
+    echo "require_reference_exact=$REQUIRE_REFERENCE_EXACT"
     echo "container_prefix=$CONTAINER_PREFIX"
     echo "p2p=0"
     echo "swap_extra=0"
@@ -74,6 +76,10 @@ done
 case "$SHARED_CACHE" in
   0|1) ;;
   *) echo "SHARED_CACHE must be 0 or 1" >&2; exit 2 ;;
+esac
+case "$REQUIRE_REFERENCE_EXACT" in
+  0|1) ;;
+  *) echo "REQUIRE_REFERENCE_EXACT must be 0 or 1" >&2; exit 2 ;;
 esac
 [ ! -e "$RESULT_DIR" ] || { echo "RESULT_DIR must be new: $RESULT_DIR" >&2; exit 1; }
 [ ! -e "$CACHE_ROOT" ] || { echo "CACHE_ROOT must be new: $CACHE_ROOT" >&2; exit 1; }
@@ -308,11 +314,16 @@ memory_snapshot post | tee "$RESULT_DIR/memory-post.txt"
 journalctl -k --since "@${journal_start}" --no-pager >"$RESULT_DIR/kernel-journal.log"
 
 set +e
+reference_gate_args=()
+if [ "$REQUIRE_REFERENCE_EXACT" -eq 1 ]; then
+  reference_gate_args=(--require-reference-exact)
+fi
 python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
   --result-dir "$RESULT_DIR" --attempts "$ATTEMPTS" \
   --served-model "$SERVED" \
   --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
   --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
+  "${reference_gate_args[@]}" \
   --output "$RESULT_DIR/summary.json"
 analysis_rc=$?
 set -e

@@ -19,6 +19,10 @@ MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
 MEMORY_GIB="${MEMORY_GIB:-32}"
 ALLOW_EXISTING_CACHE="${ALLOW_EXISTING_CACHE:-0}"
 COMMUNICATOR_SHA256="${COMMUNICATOR_SHA256:-5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d}"
+LAYERNORM_SHA256="${LAYERNORM_SHA256:-}"
+SPECULATIVE_TOKENS="${SPECULATIVE_TOKENS:-0}"
+RMS_PACKED_SERIAL_EXACT="${RMS_PACKED_SERIAL_EXACT:-0}"
+GDN_PERSISTENT_SCRATCH="${GDN_PERSISTENT_SCRATCH:-0}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
@@ -26,6 +30,22 @@ EXPECTED_FILE_HASHES=(
   "7c36e4a8dab4bfc06b1d5be2d8466e8cdc94099dd5409424fecc6dd8ffc2c208  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu.py"
   "7afb4de8b87d7f180d696f7cadad8b9d48d9ab7b706ae19616425c4f9456fb19  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py"
 )
+RUNTIME_FILES=(
+  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py
+  /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py
+  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu.py
+  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
+)
+if [ -n "$LAYERNORM_SHA256" ]; then
+  EXPECTED_FILE_HASHES+=(
+    "$LAYERNORM_SHA256  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py"
+    "$LAYERNORM_SHA256  /workspace/vllm/vllm/model_executor/layers/layernorm.py"
+  )
+  RUNTIME_FILES+=(
+    /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/layernorm.py
+    /workspace/vllm/vllm/model_executor/layers/layernorm.py
+  )
+fi
 
 usage() {
   echo "usage: $0 --print-config | --verify-image | run"
@@ -44,18 +64,14 @@ verify_image() {
     echo "image ID mismatch: actual=$actual expected=$EXPECTED_IMAGE_ID" >&2
     exit 1
   }
-  observed="$(docker run --rm --entrypoint sha256sum "$IMAGE" \
-    /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py \
-    /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py \
-    /opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu.py \
-    /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py)"
+  observed="$(docker run --rm --entrypoint sha256sum "$IMAGE" "${RUNTIME_FILES[@]}")"
   for line in "${EXPECTED_FILE_HASHES[@]}"; do
     printf '%s\n' "$observed" | grep -Fxq "$line" || {
       echo "runtime file hash mismatch: expected=$line" >&2
       exit 1
     }
   done
-  echo "image verification -> pass id=$actual files=4"
+  echo "image verification -> pass id=$actual files=${#EXPECTED_FILE_HASHES[@]}"
 }
 
 print_config() {
@@ -68,7 +84,9 @@ print_config() {
   echo "port=$PORT"
   echo "tp=2"
   echo "p2p=0"
-  echo "mtp=0"
+  echo "mtp=$SPECULATIVE_TOKENS"
+  echo "rms_packed_serial_exact=$RMS_PACKED_SERIAL_EXACT"
+  echo "gdn_persistent_scratch=$GDN_PERSISTENT_SCRATCH"
   echo "xpu_graph=0"
   echo "inductor=1"
   echo "dtype=float16"
@@ -104,6 +122,17 @@ case "$ALLOW_EXISTING_CACHE" in
   0|1) ;;
   *) echo "ALLOW_EXISTING_CACHE must be 0 or 1" >&2; exit 2 ;;
 esac
+case "$SPECULATIVE_TOKENS" in
+  ''|*[!0-9]*) echo "SPECULATIVE_TOKENS must be a nonnegative integer" >&2; exit 2 ;;
+esac
+for pair in \
+  "RMS_PACKED_SERIAL_EXACT:$RMS_PACKED_SERIAL_EXACT" \
+  "GDN_PERSISTENT_SCRATCH:$GDN_PERSISTENT_SCRATCH"; do
+  case "${pair#*:}" in
+    0|1) ;;
+    *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
+  esac
+done
 [ -d "$MODEL_DIR" ] || { echo "model directory is missing: $MODEL_DIR" >&2; exit 1; }
 [ -n "$CACHE_DIR" ] || { echo "set CACHE_DIR to a new writable directory" >&2; exit 2; }
 if [ "$ALLOW_EXISTING_CACHE" -eq 0 ]; then
@@ -122,6 +151,13 @@ verify_image
 mkdir -p "$CACHE_DIR"
 
 memory_bytes=$((MEMORY_GIB * 1024 * 1024 * 1024))
+speculative_args=()
+if [ "$SPECULATIVE_TOKENS" -gt 0 ]; then
+  speculative_args=(
+    --speculative-config
+    "{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS}"
+  )
+fi
 exec docker run --rm --name "$NAME" \
   --ulimit core=0 \
   --memory "$memory_bytes" --memory-swap "$memory_bytes" \
@@ -142,10 +178,12 @@ exec docker run --rm --name "$NAME" \
   --env VLLM_XPU_FP8_BLOCK_W8A16=1 \
   --env VLLM_BATCH_INVARIANT=0 \
   --env VLLM_XPU_QWEN_GEMMA_RMSNORM_BATCH_INVARIANT=0 \
-  --env VLLM_XPU_QWEN_GEMMA_RMSNORM_PACKED_SERIAL_EXACT=0 \
+  --env VLLM_XPU_QWEN_GEMMA_RMSNORM_PACKED_SERIAL_EXACT="$RMS_PACKED_SERIAL_EXACT" \
   --env VLLM_XPU_GDN_NATIVE_SPEC_RECURRENT_SERIAL_EXACT=0 \
-  --env VLLM_XPU_GDN_SPEC_PERSISTENT_SCRATCH=0 \
+  --env VLLM_XPU_GDN_SPEC_PERSISTENT_SCRATCH="$GDN_PERSISTENT_SCRATCH" \
   --env VLLM_XPU_GDN_NATIVE_FALLBACK=1 \
+  --env VLLM_XPU_MTP_SUPPRESS_BONUS_TOKEN=0 \
+  --env VLLM_XPU_MTP_DRAFT_EAGER=0 \
   --env PYTORCH_ALLOC_CONF=expandable_segments:True \
   --env CCL_ATL_TRANSPORT=ofi \
   --env FI_PROVIDER=tcp --env FI_TCP_IFACE=lo \
@@ -167,4 +205,5 @@ exec docker run --rm --name "$NAME" \
   --max-num-batched-tokens "$MAX_NUM_BATCHED_TOKENS" \
   --no-enable-prefix-caching --enable-prompt-tokens-details \
   --language-model-only \
+  "${speculative_args[@]}" \
   --compilation-config '{"cudagraph_mode":"PIECEWISE","cudagraph_capture_sizes":[1],"max_cudagraph_capture_size":1}'

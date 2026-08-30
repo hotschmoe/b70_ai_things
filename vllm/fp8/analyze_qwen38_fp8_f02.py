@@ -97,6 +97,7 @@ def analyze(
     publisher_paths: list[Path],
     schema: str = "b70.qwen38-fp8-neural-f02.v2",
     completion_route: str = "explicit-work-wait",
+    require_reference_exact: bool = False,
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -125,10 +126,22 @@ def analyze(
         attempt["summary"]["class_balanced_tok_s_1_100_intervals_after_ttft"]["median"]
         for attempt in attempts
     ]
-    verdict = "passed" if all_exact else "failed_cross_server_token_exactness"
+    reference_results = publisher_comparisons(attempts, publisher_paths)
+    reference_exact = all(
+        item["exact_prompts"] == item["total_prompts"] for item in reference_results
+    )
+    qualified = all_exact and (reference_exact or not require_reference_exact)
+    if not all_exact:
+        verdict = "failed_cross_server_token_exactness"
+    elif require_reference_exact and not reference_exact:
+        verdict = "failed_reference_token_exactness"
+    else:
+        verdict = "passed"
     blockers = ["long-agent and concurrent qualification not yet run"]
     if not all_exact:
         blockers.insert(0, "fresh P2P-off server lifetimes changed raw output token arrays")
+    if require_reference_exact and not reference_exact:
+        blockers.insert(0, "output arrays changed from the required target reference")
     blockers.append("local P2P-off safety port is not the publisher P2P-on profile")
     return {
         "schema": schema,
@@ -145,15 +158,17 @@ def analyze(
         "dtype": "float16",
         "kv_cache_dtype": "auto-observed-float16-target",
         "complete_token_arrays_exact": all_exact,
+        "reference_token_arrays_exact": reference_exact,
+        "reference_exactness_required": require_reference_exact,
         "exact_prompts_minimum_pair": minimum_exact,
         "total_prompts": 12,
         "cached_tokens_all_zero": True,
         "independent_canaries_passed": True,
         "class_balanced_tok_s_attempts": rates,
         "class_balanced_tok_s_median_diagnostic": statistics.median(rates),
-        "performance_attribution_qualified": all_exact,
+        "performance_attribution_qualified": qualified,
         "pair_comparisons": pair_comparisons,
-        "publisher_comparisons": publisher_comparisons(attempts, publisher_paths),
+        "publisher_comparisons": reference_results,
         "promotion_authorized": False,
         "promotion_blockers": blockers,
     }
@@ -167,6 +182,7 @@ def main() -> int:
     parser.add_argument("--publisher-attempt", action="append", type=Path, default=[])
     parser.add_argument("--schema", default="b70.qwen38-fp8-neural-f02.v2")
     parser.add_argument("--completion-route", default="explicit-work-wait")
+    parser.add_argument("--require-reference-exact", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.attempts < 2:
@@ -178,11 +194,12 @@ def main() -> int:
         args.publisher_attempt,
         args.schema,
         args.completion_route,
+        args.require_reference_exact,
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")
     print(json.dumps(summary, indent=2, sort_keys=True))
-    return 0 if summary["complete_token_arrays_exact"] else 1
+    return 0 if summary["verdict"] == "passed" else 1
 
 
 if __name__ == "__main__":
