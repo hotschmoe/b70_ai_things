@@ -104,8 +104,10 @@ lifetimes and its diagnostic speed is roughly one third of the publisher's
 P2P-on MTP0 result. Do not advance this target to packed-RMS MTP1, long-agent,
 concurrency, or the shelf.
 
-The next bounded diagnostic is F02a: repeat only the five sensitive natural
-prompts twice within one fresh P2P-off lifetime. That distinguishes
-request/state nondeterminism from compiler/server-lifetime selection before a
-source-default completion comparison. Direct-P2P full serving remains
-quarantined.
+F02a subsequently repeated the five sensitive prompts twice inside a third
+fresh lifetime. All 5/5 were exact within that lifetime, while the third
+lifetime selected three outputs from F02 attempt 1 and two from attempt 2.
+The instability is therefore selected at fresh compile/server initialization,
+not by ordinary request-state drift, and is prompt-specific rather than a
+simple whole-server A/B route. Continue with the bounded F03 source-default
+completion comparison. Direct-P2P full serving remains quarantined.

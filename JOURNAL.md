@@ -6165,3 +6165,39 @@ stable diagnostic speed. Do not advance to MTP1, long-agent, concurrency, or
 shelf work. Run F02a as a bounded within-lifetime repeat of the five sensitive
 prompts before considering the source-default completion diagnostic; keep
 direct-P2P full serving quarantined.
+
+### 2026-08-30a - F02a localizes FP8 instability to fresh initialization
+
+CONFIG -> harness commit `e6e3ee9`; the unchanged F02 official-FP8 W8A16 TP2,
+P2P-off, MTP0, graph-off, deterministic-Inductor, FP16 target/automatic-KV
+route; one fresh compiler cache and server; and the five natural prompts that
+diverged across the two F02 lifetimes. Result root was
+`/mnt/vm_8tb/b70/results/f02a_qwen38_fp8_neural/20260829T235100Z/`.
+
+COMMAND -> under the whole-box lease, pass card and compiled P2P-off
+collective health, run the five prompts twice with raw streamed output IDs and
+zero cached prompt tokens in the same server lifetime, compare complete
+arrays against one another and both F02 lifetimes, gracefully tear down, and
+repeat card plus compiled collective health.
+
+RESULT -> all 5/5 prompt arrays were exact within the third lifetime. The two
+diagnostic rates were 11.224449 and 11.095187 tok/s, with an 11.159818 tok/s
+median. The third lifetime matched F02 attempt 1 for
+`incident-retrospective`, `code-review`, and `customer-email`, but matched F02
+attempt 2 for `performance-hypotheses` and `decision-memo`. Both repeats had
+the same mosaic. The choice is therefore made at fresh compile/server
+initialization and is prompt-specific, not a request-order drift or simple
+whole-server A/B route.
+
+RESULT -> all pre/post health passed. Across 149 host samples, swap stayed
+zero, minimum MemAvailable was 113,335,124 KiB, and memory PSI `some`/`full`
+totals did not move. Container host-RAM use peaked near 7.717 GiB under the
+32 GiB no-swap limit. No configured kernel or server fatal marker appeared.
+Summary SHA256 was
+`a451ab90693be76eaab82bd44812721a24d0ff0edd9638c6e14ae58e1c79d404`.
+
+VERDICT -> F02a passes its diagnostic gate but does not repair F02 or qualify
+performance. Continue to F03: hold the P2P-off runtime fixed and compare the
+source-default collective-completion route against explicit `Work.wait()`.
+MTP, long-context, concurrency, direct-P2P serving, and shelf work remain
+blocked.
