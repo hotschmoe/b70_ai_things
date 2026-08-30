@@ -6454,3 +6454,26 @@ reduction schedules. F02e should explicitly pass
 `inductor_compile_config.deterministic=true`, invoking PyTorch's existing
 deterministic reduction filter. Keep P2P-on full serving, long, concurrent,
 and shelf work blocked.
+
+### 2026-08-30i - F02e collapses fresh compiler selection
+
+CONFIG -> harness commit `d8f4170`; F02d compile oracle plus explicit
+`inductor_compile_config.deterministic=true`, with two separate empty caches.
+Result root was
+`/mnt/vm_8tb/b70/results/f02e_qwen38_fp8_neural/20260830T041300Z/`.
+
+COMMAND -> under the whole-box lease, independently compile two TP2 P2P-off
+servers, verify model identity and a 16-token smoke, tear down, pass card and
+compiled collective health, and require semantic cache-selection exactness.
+
+RESULT -> pass. Both fresh compiles used AOT key `5001f6c4...`; generated
+reduction metadata recorded deterministic true; both final caches contained
+zero `.best_config` files; smoke text was exact. Compilation took 92.11 and
+90.91 seconds. All health and teardown passed. Host RAM peaked at 7.651 GiB,
+minimum MemAvailable was 113,822,200 KiB, and swap stayed zero. Summary SHA256
+was `47c53fe1719f8a83515027f7f26d3de21c2de4480378e56194e441b690147f23`.
+
+VERDICT -> F02e passes its compile-selection discriminator. Proceed to F02f
+with the full 12-prompt two-empty-cache target gate and identical compiler
+controls. Require both cross-process and publisher raw-token exactness; keep
+P2P-on full serving, long, concurrent, and shelf work blocked.
