@@ -22,6 +22,7 @@ ALLOW_EXISTING_CACHE="${ALLOW_EXISTING_CACHE:-0}"
 COMMUNICATOR_SHA256="${COMMUNICATOR_SHA256:-5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d}"
 LAYERNORM_SHA256="${LAYERNORM_SHA256:-}"
 SPECULATIVE_TOKENS="${SPECULATIVE_TOKENS:-0}"
+SPECULATIVE_TOKENS_PER_BATCH_SIZE="${SPECULATIVE_TOKENS_PER_BATCH_SIZE:-}"
 SPECULATIVE_FORCE_REJECT="${SPECULATIVE_FORCE_REJECT:-0}"
 RMS_PACKED_SERIAL_EXACT="${RMS_PACKED_SERIAL_EXACT:-0}"
 GDN_PERSISTENT_SCRATCH="${GDN_PERSISTENT_SCRATCH:-0}"
@@ -37,7 +38,9 @@ CUDAGRAPH_MODE="${CUDAGRAPH_MODE:-PIECEWISE}"
 ATTENTION_BACKEND="${ATTENTION_BACKEND:-}"
 DRAFT_ATTENTION_BACKEND="${DRAFT_ATTENTION_BACKEND:-}"
 FORCE_GRAPH_WITH_COMM="${FORCE_GRAPH_WITH_COMM:-0}"
+USE_V2_MODEL_RUNNER="${USE_V2_MODEL_RUNNER:-0}"
 P2P_ACCESS="${P2P_ACCESS:-0}"
+EXECUTE_MODEL_TIMEOUT_SECONDS="${EXECUTE_MODEL_TIMEOUT_SECONDS:-300}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
@@ -100,6 +103,7 @@ print_config() {
   echo "tp=2"
   echo "p2p=$P2P_ACCESS"
   echo "mtp=$SPECULATIVE_TOKENS"
+  echo "speculative_tokens_per_batch_size=${SPECULATIVE_TOKENS_PER_BATCH_SIZE:-fixed}"
   echo "speculative_force_reject=$SPECULATIVE_FORCE_REJECT"
   echo "rms_packed_serial_exact=$RMS_PACKED_SERIAL_EXACT"
   echo "gdn_persistent_scratch=$GDN_PERSISTENT_SCRATCH"
@@ -116,6 +120,8 @@ print_config() {
   echo "attention_backend=${ATTENTION_BACKEND:-default}"
   echo "draft_attention_backend=${DRAFT_ATTENTION_BACKEND:-auto}"
   echo "force_graph_with_comm=$FORCE_GRAPH_WITH_COMM"
+  echo "use_v2_model_runner=$USE_V2_MODEL_RUNNER"
+  echo "execute_model_timeout_seconds=$EXECUTE_MODEL_TIMEOUT_SECONDS"
   echo "dtype=float16"
   echo "kv_cache_dtype=auto"
   echo "quantization=fp8"
@@ -141,7 +147,8 @@ for pair in \
   "MAX_MODEL_LEN:$MAX_MODEL_LEN" \
   "MAX_NUM_SEQS:$MAX_NUM_SEQS" \
   "MAX_NUM_BATCHED_TOKENS:$MAX_NUM_BATCHED_TOKENS" \
-  "MEMORY_GIB:$MEMORY_GIB"; do
+  "MEMORY_GIB:$MEMORY_GIB" \
+  "EXECUTE_MODEL_TIMEOUT_SECONDS:$EXECUTE_MODEL_TIMEOUT_SECONDS"; do
   positive_integer "${pair%%:*}" "${pair#*:}"
 done
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 2; }
@@ -161,6 +168,10 @@ case "$XPU_GRAPH:$FORCE_GRAPH_WITH_COMM" in
   0:0|0:1|1:0|1:1) ;;
   *) echo "XPU_GRAPH and FORCE_GRAPH_WITH_COMM must be 0 or 1" >&2; exit 2 ;;
 esac
+case "$USE_V2_MODEL_RUNNER" in
+  0|1) ;;
+  *) echo "USE_V2_MODEL_RUNNER must be 0 or 1" >&2; exit 2 ;;
+esac
 case "$CUDAGRAPH_MODE" in
   PIECEWISE|FULL|FULL_DECODE_ONLY|FULL_AND_PIECEWISE) ;;
   *) echo "unsupported CUDAGRAPH_MODE: $CUDAGRAPH_MODE" >&2; exit 2 ;;
@@ -177,6 +188,28 @@ esac
   echo "DRAFT_ATTENTION_BACKEND requires SPECULATIVE_TOKENS > 0" >&2
   exit 2
 }
+[ -z "$SPECULATIVE_TOKENS_PER_BATCH_SIZE" ] || [ "$SPECULATIVE_TOKENS" -gt 0 ] || {
+  echo "SPECULATIVE_TOKENS_PER_BATCH_SIZE requires SPECULATIVE_TOKENS > 0" >&2
+  exit 2
+}
+if [ -n "$SPECULATIVE_TOKENS_PER_BATCH_SIZE" ]; then
+  python3 - "$SPECULATIVE_TOKENS_PER_BATCH_SIZE" "$SPECULATIVE_TOKENS" <<'PY'
+import json
+import sys
+
+schedule = json.loads(sys.argv[1])
+maximum = int(sys.argv[2])
+assert isinstance(schedule, list) and schedule, schedule
+previous_end = 0
+for row in schedule:
+    assert isinstance(row, list) and len(row) == 3, row
+    start, end, tokens = row
+    assert all(isinstance(value, int) for value in row), row
+    assert start == previous_end + 1 and start <= end, row
+    assert 0 <= tokens <= maximum, row
+    previous_end = end
+PY
+fi
 case "$GPU_MEMORY_UTILIZATION" in
   0.0|0.00) echo "GPU_MEMORY_UTILIZATION must be greater than zero" >&2; exit 2 ;;
   0.[0-9]|0.[0-9][0-9]|1.0|1.00) ;;
@@ -264,6 +297,9 @@ if [ "$SPECULATIVE_TOKENS" -gt 0 ]; then
   if [ -n "$DRAFT_ATTENTION_BACKEND" ]; then
     speculative_config+=",\"attention_backend\":\"$DRAFT_ATTENTION_BACKEND\""
   fi
+  if [ -n "$SPECULATIVE_TOKENS_PER_BATCH_SIZE" ]; then
+    speculative_config+=",\"num_speculative_tokens_per_batch_size\":$SPECULATIVE_TOKENS_PER_BATCH_SIZE"
+  fi
   if [ "$SPECULATIVE_FORCE_REJECT" -eq 1 ]; then
     speculative_config+=",\"rejection_sample_method\":\"synthetic\",\"synthetic_acceptance_rates\":[0.0]"
   fi
@@ -290,6 +326,8 @@ exec docker run --rm --name "$NAME" \
   --env VLLM_XPU_ENABLE_XPU_GRAPH="$XPU_GRAPH" \
   --env VLLM_XPU_GRAPH=0 \
   --env VLLM_XPU_FORCE_GRAPH_WITH_COMM="$FORCE_GRAPH_WITH_COMM" \
+  --env VLLM_USE_V2_MODEL_RUNNER="$USE_V2_MODEL_RUNNER" \
+  --env VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS="$EXECUTE_MODEL_TIMEOUT_SECONDS" \
   --env TORCHINDUCTOR_DETERMINISTIC=1 \
   "${compiler_env_args[@]}" \
   --env VLLM_XPU_FP8_BLOCK_W8A16=1 \

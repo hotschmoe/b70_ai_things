@@ -32,12 +32,18 @@ XPU_GRAPH="${XPU_GRAPH:-0}"
 CUDAGRAPH_MODE="${CUDAGRAPH_MODE:-PIECEWISE}"
 ATTENTION_BACKEND="${ATTENTION_BACKEND:-}"
 DRAFT_ATTENTION_BACKEND="${DRAFT_ATTENTION_BACKEND:-}"
+SPECULATIVE_TOKENS_PER_BATCH_SIZE="${SPECULATIVE_TOKENS_PER_BATCH_SIZE:-}"
 FORCE_GRAPH_WITH_COMM="${FORCE_GRAPH_WITH_COMM:-0}"
+USE_V2_MODEL_RUNNER="${USE_V2_MODEL_RUNNER:-0}"
+CONCURRENT_PROBE_LEVELS="${CONCURRENT_PROBE_LEVELS:-}"
+CONCURRENT_PROBE_BATCHES="${CONCURRENT_PROBE_BATCHES:-2}"
+CONCURRENT_PROBE_OUTPUT_TOKENS="${CONCURRENT_PROBE_OUTPUT_TOKENS:-512}"
 LAUNCHER="$SCRIPT_DIR/serve_qwen38_fp8_neural_f02.sh"
 MODEL_MANIFEST="$SOURCE/repro/qwen38-27b-fp8-vllm-tp2-asrock-b70/model-direct.json"
 MODEL_VERIFY="$SOURCE/repro/qwen38-27b-autoround-int4-b70/scripts/verify-model-direct.py"
 BENCH="$SOURCE/scripts/bench-openai-realistic-suite.py"
 SUITE="$SOURCE/repro/qwen36-27b-autoround-int4-b70/realistic-suite-v1.json"
+CONCURRENT_PROBE="$SCRIPT_DIR/probe_qwen38_fp8_concurrent.py"
 
 if [ "${1:-}" != --leased ]; then
   exec "$REPO/bin/gpu-run" env \
@@ -58,6 +64,10 @@ for required in "$MODEL_DIR" "$SEED_CACHE" "$LAUNCHER" "$MODEL_MANIFEST" \
   "$MODEL_VERIFY" "$BENCH" "$SUITE"; do
   [ -e "$required" ] || { echo "missing input: $required" >&2; exit 1; }
 done
+[ -z "$CONCURRENT_PROBE_LEVELS" ] || [ -x "$CONCURRENT_PROBE" ] || {
+  echo "concurrent probe is not executable: $CONCURRENT_PROBE" >&2
+  exit 1
+}
 [ -z "$EXTRA_SMOKE" ] || [ -f "$EXTRA_SMOKE" ] || {
   echo "EXTRA_SMOKE is not a file: $EXTRA_SMOKE" >&2
   exit 1
@@ -143,10 +153,13 @@ docker run --rm --volume "$SEED_CACHE:/seed:ro" --volume "$CACHE_DIR:/dest" \
   echo "CONFIG -> served=$SERVED"
   echo "CONFIG -> tp=2 p2p=1 mtp=$SPECULATIVE_TOKENS xpu_graph=$XPU_GRAPH compilation=$CUDAGRAPH_MODE"
   echo "CONFIG -> compilation_profile=$COMPILATION_PROFILE attention_backend=${ATTENTION_BACKEND:-default} draft_attention_backend=${DRAFT_ATTENTION_BACKEND:-auto} force_graph_with_comm=$FORCE_GRAPH_WITH_COMM"
+  echo "CONFIG -> speculative_tokens_per_batch_size=${SPECULATIVE_TOKENS_PER_BATCH_SIZE:-fixed}"
+  echo "CONFIG -> use_v2_model_runner=$USE_V2_MODEL_RUNNER"
   echo "CONFIG -> gpu_memory_utilization=$GPU_MEMORY_UTILIZATION"
   echo "CONFIG -> max_model_len=$MAX_MODEL_LEN max_num_seqs=$MAX_NUM_SEQS max_num_batched_tokens=$MAX_NUM_BATCHED_TOKENS"
   echo "CONFIG -> extra_smoke=${EXTRA_SMOKE:-none}"
   echo "CONFIG -> performance_screen_prompt=${PERFORMANCE_SCREEN_PROMPT:-none}"
+  echo "CONFIG -> concurrent_probe_levels=${CONCURRENT_PROBE_LEVELS:-none} batches=$CONCURRENT_PROBE_BATCHES output_tokens=$CONCURRENT_PROBE_OUTPUT_TOKENS"
   echo "CONFIG -> dtype=float16 quantization=fp8 kv_cache_dtype=auto"
   echo "CONFIG -> container_memory_gib=32 container_swap_extra_gib=0"
   echo "CONFIG -> seed_cache=$SEED_CACHE"
@@ -182,7 +195,9 @@ env I_KNOW_P2P_WEDGES=1 P2P_ACCESS=1 \
   COMPILATION_PROFILE="$COMPILATION_PROFILE" GPU_MEMORY_UTILIZATION="$GPU_MEMORY_UTILIZATION" \
   XPU_GRAPH="$XPU_GRAPH" CUDAGRAPH_MODE="$CUDAGRAPH_MODE" \
   ATTENTION_BACKEND="$ATTENTION_BACKEND" DRAFT_ATTENTION_BACKEND="$DRAFT_ATTENTION_BACKEND" \
+  SPECULATIVE_TOKENS_PER_BATCH_SIZE="$SPECULATIVE_TOKENS_PER_BATCH_SIZE" \
   FORCE_GRAPH_WITH_COMM="$FORCE_GRAPH_WITH_COMM" \
+  USE_V2_MODEL_RUNNER="$USE_V2_MODEL_RUNNER" \
   INDUCTOR_COMBO_KERNELS=0 INDUCTOR_BENCHMARK_COMBO_KERNEL=0 \
   INDUCTOR_MAX_AUTOTUNE=0 INDUCTOR_COORDINATE_DESCENT_TUNING=0 \
   INDUCTOR_AUTOTUNE_POINTWISE=0 INDUCTOR_DETERMINISTIC_CONFIG=1 \
@@ -239,6 +254,25 @@ PY
       --request-extra-json '{"temperature":0,"top_p":1}' \
       --out "$RESULT_DIR/performance-screen.json" \
       >"$RESULT_DIR/performance-screen.stdout" 2>&1 || transaction_rc=$?
+  fi
+  if [ "$transaction_rc" -eq 0 ] && [ -n "$CONCURRENT_PROBE_LEVELS" ]; then
+    for concurrency in $CONCURRENT_PROBE_LEVELS; do
+      case "$concurrency" in
+        ''|*[!0-9]*|0) echo "invalid concurrent probe level: $concurrency" >&2; transaction_rc=2; break ;;
+      esac
+      probe_dir="$RESULT_DIR/concurrency-c$concurrency"
+      env F05B_CONCURRENCY="$concurrency" \
+        F05B_OUTPUT_TOKENS="$CONCURRENT_PROBE_OUTPUT_TOKENS" \
+        F05B_BATCHES="$CONCURRENT_PROBE_BATCHES" \
+        F05B_REQUIRE_SERIAL_EXACT=0 F05B_REQUIRE_RESTART_EXACT=0 \
+        python3 "$CONCURRENT_PROBE" \
+          --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
+          --bench "$BENCH" --attempt-dir "$probe_dir" \
+          >"$RESULT_DIR/concurrency-c$concurrency.stdout" 2>&1 || {
+            transaction_rc=$?
+            break
+          }
+    done
   fi
   if [ "$transaction_rc" -eq 0 ]; then
     python3 - "$PORT" "$SERVED" "$RESULT_DIR/smoke.json" <<'PY' || transaction_rc=$?

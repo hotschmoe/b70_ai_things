@@ -107,6 +107,8 @@ def analyze(
     inductor_deterministic_config: bool = False,
     p2p: int = 0,
     concurrent_qualified: bool = False,
+    long_agent_qualified: bool = False,
+    xpu_graph: bool = False,
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -146,11 +148,11 @@ def analyze(
         verdict = "failed_reference_token_exactness"
     else:
         verdict = "passed"
-    blockers = [
-        "long-agent qualification not yet run"
-        if concurrent_qualified
-        else "long-agent and concurrent qualification not yet run"
-    ]
+    blockers = []
+    if not concurrent_qualified:
+        blockers.append("concurrent qualification not yet run")
+    if not long_agent_qualified:
+        blockers.append("long-agent qualification not yet run")
     if not all_exact:
         blockers.insert(
             0, f"fresh P2P-{p2p} server lifetimes changed raw output token arrays"
@@ -167,7 +169,7 @@ def analyze(
         "tp": 2,
         "p2p": p2p,
         "mtp": mtp,
-        "xpu_graph": False,
+        "xpu_graph": xpu_graph,
         "inductor": True,
         "inductor_combo_kernels": inductor_combo_kernels,
         "inductor_benchmark_combo_kernel": inductor_benchmark_combo_kernel,
@@ -187,12 +189,16 @@ def analyze(
         "cached_tokens_all_zero": True,
         "independent_canaries_passed": True,
         "concurrent_qualified": concurrent_qualified,
+        "long_agent_qualified": long_agent_qualified,
         "class_balanced_tok_s_attempts": rates,
         "class_balanced_tok_s_median_diagnostic": statistics.median(rates),
         "performance_attribution_qualified": qualified,
         "pair_comparisons": pair_comparisons,
         "publisher_comparisons": reference_results,
-        "promotion_authorized": False,
+        "promotion_authorized": qualified
+        and concurrent_qualified
+        and long_agent_qualified
+        and not blockers,
         "promotion_blockers": blockers,
     }
 
@@ -209,6 +215,8 @@ def main() -> int:
     parser.add_argument("--mtp", type=int, default=0)
     parser.add_argument("--p2p", type=int, choices=(0, 1), default=0)
     parser.add_argument("--concurrent-qualified", action="store_true")
+    parser.add_argument("--long-agent-qualified", action="store_true")
+    parser.add_argument("--xpu-graph", action="store_true")
     parser.add_argument("--inductor-combo-kernels", type=int, choices=(0, 1), default=1)
     parser.add_argument(
         "--inductor-benchmark-combo-kernel", type=int, choices=(0, 1), default=1
@@ -244,6 +252,8 @@ def main() -> int:
         bool(args.inductor_deterministic_config),
         args.p2p,
         args.concurrent_qualified,
+        args.long_agent_qualified,
+        args.xpu_graph,
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")

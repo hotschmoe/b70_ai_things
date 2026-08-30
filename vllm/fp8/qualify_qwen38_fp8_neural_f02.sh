@@ -52,6 +52,7 @@ EXTRA_WORKLOAD="${EXTRA_WORKLOAD:-}"
 EXTRA_WORKLOAD_RESULT="${EXTRA_WORKLOAD_RESULT:-long-context.json}"
 P2P_ACCESS="${P2P_ACCESS:-0}"
 CONCURRENT_QUALIFIED="${CONCURRENT_QUALIFIED:-0}"
+LONG_AGENT_QUALIFIED="${LONG_AGENT_QUALIFIED:-0}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -68,6 +69,7 @@ case "${1:-}" in
     echo "extra_workload=${EXTRA_WORKLOAD:-none}"
     echo "extra_workload_result=$EXTRA_WORKLOAD_RESULT"
     echo "concurrent_qualified=$CONCURRENT_QUALIFIED"
+    echo "long_agent_qualified=$LONG_AGENT_QUALIFIED"
     if [ -n "$EXTRA_WORKLOAD" ]; then
       echo "extra_workload_sha256=$(sha256sum "$EXTRA_WORKLOAD" | awk '{print $1}')"
     fi
@@ -122,7 +124,8 @@ for pair in \
   "INDUCTOR_AUTOTUNE_POINTWISE:$INDUCTOR_AUTOTUNE_POINTWISE" \
   "INDUCTOR_DETERMINISTIC_CONFIG:$INDUCTOR_DETERMINISTIC_CONFIG" \
   "COMPILE_ORACLE:$COMPILE_ORACLE" \
-  "CONCURRENT_QUALIFIED:$CONCURRENT_QUALIFIED"; do
+  "CONCURRENT_QUALIFIED:$CONCURRENT_QUALIFIED" \
+  "LONG_AGENT_QUALIFIED:$LONG_AGENT_QUALIFIED"; do
   case "${pair#*:}" in
     0|1) ;;
     *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
@@ -484,11 +487,19 @@ if [ "$COMPILE_ORACLE" -eq 1 ]; then
 else
   reference_gate_args=()
   concurrent_gate_args=()
+  long_agent_gate_args=()
+  xpu_graph_args=()
   if [ "$REQUIRE_REFERENCE_EXACT" -eq 1 ]; then
     reference_gate_args=(--require-reference-exact)
   fi
   if [ "$CONCURRENT_QUALIFIED" -eq 1 ]; then
     concurrent_gate_args=(--concurrent-qualified)
+  fi
+  if [ "$LONG_AGENT_QUALIFIED" -eq 1 ]; then
+    long_agent_gate_args=(--long-agent-qualified)
+  fi
+  if [ "${XPU_GRAPH:-0}" -eq 1 ]; then
+    xpu_graph_args=(--xpu-graph)
   fi
   python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
     --result-dir "$RESULT_DIR" --attempts "$ATTEMPTS" \
@@ -504,6 +515,8 @@ else
     --inductor-deterministic-config "$INDUCTOR_DETERMINISTIC_CONFIG" \
     "${reference_gate_args[@]}" \
     "${concurrent_gate_args[@]}" \
+    "${long_agent_gate_args[@]}" \
+    "${xpu_graph_args[@]}" \
     --output "$RESULT_DIR/summary.json"
 fi
 analysis_rc=$?

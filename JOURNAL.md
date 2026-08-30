@@ -6991,3 +6991,63 @@ full-response median, while F07f remains the simpler MTP1 control. Do not call
 F08b the public graph-off MTP1 recipe or publisher-byte-identical. Keep the
 one-slot scope and P2P risk guard; defer shelf promotion until max-concurrency
 policy and packaging are explicitly qualified.
+
+### 2026-08-30x - Qwen3.8 FP8 MTP1 daily-driver promotion and envelope limit
+
+CONFIG -> derived image `b70-local/vllm-openai-xpu:qwen38-fp8-mtp8-rms-f08a`
+ID `9ae697d4...`, official Qwen3.8-27B FP8 W8A16, TP2, FP16 KV, direct P2P,
+FULL decode graph, explicit Triton target/draft attention, deterministic
+compiler settings, four slots, 262,144 model length, 32,768 batched tokens,
+0.96 utilization, prefix cache off, and fixed MTP1 or MTP8. No host swap
+allowance or model/KV offload was used.
+
+COMMAND -> screen MTP1 and MTP8 at c1/c2/c4; probe V1 dynamic MTP and V2 FULL;
+run a 30,037-token semantic needle under the exact large envelope; then run
+two fresh MTP1 F09f qualification lifetimes with full 12-prompt token arrays,
+canaries, c2/c4 completion probes, 32-request concurrent quality per lifetime,
+teardown, card health, and compiled TP2 collective health. Probe 260K once as
+a bounded negative and use Xe rebind after its abort.
+
+RESULT -> V1 dynamic MTP forced PIECEWISE and measured 27.642081 tok/s strict.
+V2 retained FULL but failed the native GDN speculative-token graph invariant.
+Fixed MTP1 exposed 323,202 aggregate KV tokens; fixed MTP8 exposed 303,414.
+One full 262K request fits in VRAM, while four full requests do not.
+
+RESULT -> MTP8 screens measured about 59 to 64 tok/s aggregate at c2 and 101
+to 102 at c4, plus 61.485779 strict c1 in the 262K envelope. MTP1 F09f strict
+rates were 46.610781 and 46.597152; c2 was 45.708003 and 48.045488; c4 was
+89.094019 and 88.830444. Complete 12-prompt arrays matched 12/12 across MTP1
+lifetimes and both 32-request concurrent quality gates passed.
+
+RESULT -> fresh 30K TTFT was effectively independent of MTP depth: 221.968 s
+at MTP8 versus 221.961 and 221.837 s at MTP1. The older 32K-envelope MTP1
+route needed only about 40.1 s at 30K. A 260K request held its first 32,768
+worker submission for more than ten minutes and was aborted. All recovery,
+card health, and compiled-collective checks passed. The long-prefill regression
+belongs to the large service/prefill shape, not MTP8 specifically.
+
+RESULT -> F09f summary verdict and promotion authorization are true, strict
+median is 46.603967 tok/s, long-agent token arrays match, and summary SHA256 is
+`44da0a2d...`. Evidence root is
+`/mnt/vm_8tb/b70/results/f09f_qwen38_fp8_mtp1_daily/20260830T230000Z/`.
+
+VERDICT -> promote MTP1 as the conservative shelf default and retain MTP8 as
+the explicit faster decode profile. Label 262K as a measured capacity ceiling,
+not qualified near-window prefill throughput. Prefix caching is still off;
+large-envelope prefill and prefix-cache qualification are the next campaign.
+
+### 2026-08-30y - promoted FP8 shelf live smoke
+
+CONFIG -> promoted `rdy_to_serve/vllm/qwen38-27b-fp8/serve.sh`, default MTP1
+profile, separate seeded daily cache, otherwise exact F09f 262K/c4 runtime.
+
+COMMAND -> run `vllm/fp8/smoke_qwen38_fp8_f09g_shelf.sh` through the whole-box
+`bin/gpu-run` lease with card and compiled collective health before and after.
+
+RESULT -> exact served ID passed, the completion endpoint returned output,
+the container and listener tore down, and both card and compiled TP2
+collective post-health passed. Evidence root is
+`/mnt/vm_8tb/b70/results/f09g_qwen38_fp8_shelf_smoke/20260830T233000Z/`.
+
+VERDICT -> F09g PASS. The new FP8 MTP1 shelf default is live; MTP8 remains the
+explicit `PROFILE=fast` option.

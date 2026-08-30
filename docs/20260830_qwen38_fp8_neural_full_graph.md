@@ -128,3 +128,76 @@ completed.
 
 Publisher reference:
 https://neural.download/models/qwen38-27b-fp8-vllm-tp2-asrock-b70.html
+
+## Daily-driver and long-envelope qualification
+
+CONFIG -> retain the F08 derived image and exact runtime hashes, official FP8
+W8A16 weights, TP2, FP16 KV, direct P2P, FULL decode graph, Triton target and
+draft attention, deterministic compiler settings, and prefix cache off. Raise
+the service envelope to 262,144 tokens, four sequences, 32,768 batched tokens,
+and 0.96 GPU memory utilization. Compare fixed MTP1 and MTP8 with identical
+single-stream, c2, c4, quality, teardown, and health probes.
+
+COMMAND -> run F09d and F09e as matched one-lifetime MTP1/MTP8 screens. Run
+the 30,037-token semantic needle under the large envelope. Promote MTP1 to two
+fresh F09f lifetimes using
+`vllm/fp8/qualify_qwen38_fp8_f09f_mtp1_daily_driver.sh`. Every real GPU touch
+ran through the whole-box `bin/gpu-run` lease and every risky P2P transaction
+was surrounded by card and compiled P2P-off collective health.
+
+RESULT -> MTP1 exposed 323,202 aggregate GPU KV tokens, or 1.23 full 262,144
+windows. MTP8 exposed 303,414, or 1.16 windows. One full agent fits entirely
+in VRAM under either profile; four full agents do not. Four equal active
+requests share roughly 75K to 80K tokens each, subject to scheduler details.
+
+RESULT -> MTP8 remained the speed winner. Its matched screen measured 59.07
+tok/s aggregate at c2 and 101.54 at c4. A later fresh lifetime measured 61.49
+tok/s strict c1, 58.44 c2, and 102.21 c4. MTP1 F09f measured strict rates of
+46.610781 and 46.597152 tok/s; c2 was 45.708003 and 48.045488; c4 was
+89.094019 and 88.830444. MTP1 c4 streams centered near 25 tok/s. Both MTP1
+lifetimes passed 32/32 concurrent exact-answer requests.
+
+RESULT -> the 30,037-token fresh ingest took 221.968 seconds with MTP8 and
+221.961/221.837 seconds with MTP1 under the 262K envelope. The nearly identical
+TTFT proves speculative depth is not the cause of the long-prefill collapse.
+For comparison, the prior 32K-envelope MTP1 qualification processed 30,023
+tokens in about 40.1 seconds. The regression is tied to the large configured
+service/prefill shape. A 260K probe held its first 32,768-token worker
+submission for more than ten minutes; it was aborted, Xe was rebound, and
+card plus compiled collective health passed. Do not claim qualified near-full
+prefill throughput.
+
+RESULT -> F09f passed two-lifetime model identity, complete 12-prompt token
+arrays 12/12, independent canaries, c2/c4 serving, 64/64 concurrent quality
+requests, and identical 30K semantic-needle token arrays. Both lifetimes tore
+down cleanly and passed post-health. No extra swap was allowed. The summary
+SHA256 is `44da0a2d...`; daily-driver gate SHA256 values are `0ede55df...` and
+`a998cfc2...`. Evidence root:
+`/mnt/vm_8tb/b70/results/f09f_qwen38_fp8_mtp1_daily/20260830T230000Z/`.
+
+RESULT -> V1 dynamic MTP accepted the publisher schedule but downgraded FULL
+capture to PIECEWISE and fell to 27.64 tok/s strict. V2 retained FULL but
+failed native GDN graph warmup because its speculative-token shape violated
+the runner invariant. Keep fixed MTP profiles. Prefix caching remains disabled
+in the qualified route, so repeated growing-agent cache reuse is not yet a
+performance claim.
+
+VERDICT -> promote the exact MTP1 F09f route as the conservative shelf default
+at a reproducible 46.604 tok/s strict median, with MTP8 as an explicit faster
+decode profile. The configured 262K window is a capacity ceiling, not a
+near-window prefill-speed qualification. The next campaign should isolate the
+large-envelope prefill regression and then enable and qualify prefix caching.
+
+CONFIG -> F09g used the promoted
+`rdy_to_serve/vllm/qwen38-27b-fp8/serve.sh` default profile with its separate
+daily cache and otherwise exact F09f runtime.
+
+COMMAND -> run `vllm/fp8/smoke_qwen38_fp8_f09g_shelf.sh` under `bin/gpu-run`.
+
+RESULT -> the shelf wrapper returned the exact served ID, completed a live
+request, removed its container and listener, and passed post-run card and
+compiled TP2 collective health. Evidence root:
+`/mnt/vm_8tb/b70/results/f09g_qwen38_fp8_shelf_smoke/20260830T233000Z/`.
+
+VERDICT -> the promoted MTP1 shelf wrapper is live. `PROFILE=fast` selects
+the measured MTP8 decode profile without changing directories.
