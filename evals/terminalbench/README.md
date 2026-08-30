@@ -185,9 +185,10 @@ this cap or transfer it to Ornith; test Qwen with `MAX_TOKENS=8192` next.
 The corrected true-off 8,192-output pilot later edited but timed out after
 1,800 seconds. A separately labeled native-thinking rescue with a 16,384 total
 response ceiling and 8,192 private-thinking cap completed normally in 26m13s
-of agent time and passed 25/36 tests, but scored zero. It first wrote at about
-11m59s and first tested after the edit at about 19m07s, so 8K is too expensive
-for the 30-minute interactive budget even though it improved the trajectory.
+of agent time and passed 25/36 tests, but scored zero. Its first write turn
+began around 11m59s but did not execute until about 15m56s; its first post-edit
+test was issued around 19m07s. Thus 8K is too expensive for the 30-minute
+interactive budget even though it improved the trajectory.
 
 One final cap calibration uses native thinking with `MAX_TOKENS=16384` and
 `XHIGH_THINKCAP=4096`. This is not a repeat of the historical failure: the old
@@ -195,3 +196,11 @@ run incorrectly combined native thinking with a 4,096 total response ceiling,
 leaving no room after reasoning. Keep every other server, task, and timeout
 variable matched. Stop this Bun cap search if the corrected 4K run times out or
 falls below 25/36 verifier tests.
+
+That corrected 4K run timed out at 1,800 seconds without a post-edit test and
+regressed to 21/36 tests. Its write turn began around 6m46s but continued
+generating until the write executed around 15m54s. This proves the private cap
+does not hard-bound the full agent turn and that lower thinkcap alone does not
+fix action latency. Stop tuning thinkcap on this Bun task. Future work should
+test explicit per-turn output control or a different agent policy on a fresh
+calibration task, rather than searching more caps against the hidden verifier.
