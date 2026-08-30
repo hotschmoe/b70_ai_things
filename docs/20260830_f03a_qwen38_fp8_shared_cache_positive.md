@@ -85,3 +85,8 @@ This does not authorize shelf promotion or direct-P2P serving. Proceed to F04
 with the packed-RMS MTP1 overlay under P2P off, compare every speculative
 output to this pinned MTP0 target, and apply the same shared-cache discipline.
 Long-context, concurrency, and stable-speed gates remain open.
+
+F04 later showed why this boundary matters: its newly compiled two-row MTP1
+target was exact across shared-cache restarts but matched only 5/12 arrays from
+this MTP0 target. That failure does not weaken F03a's cache-reuse result, and
+it does not by itself identify speculative acceptance as the cause.

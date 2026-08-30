@@ -98,6 +98,7 @@ def analyze(
     schema: str = "b70.qwen38-fp8-neural-f02.v2",
     completion_route: str = "explicit-work-wait",
     require_reference_exact: bool = False,
+    mtp: int = 0,
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -150,7 +151,7 @@ def analyze(
         "attempts": attempt_count,
         "tp": 2,
         "p2p": 0,
-        "mtp": 0,
+        "mtp": mtp,
         "xpu_graph": False,
         "inductor": True,
         "completion_route": completion_route,
@@ -183,6 +184,7 @@ def main() -> int:
     parser.add_argument("--schema", default="b70.qwen38-fp8-neural-f02.v2")
     parser.add_argument("--completion-route", default="explicit-work-wait")
     parser.add_argument("--require-reference-exact", action="store_true")
+    parser.add_argument("--mtp", type=int, default=0)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.attempts < 2:
@@ -195,6 +197,7 @@ def main() -> int:
         args.schema,
         args.completion_route,
         args.require_reference_exact,
+        args.mtp,
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")

@@ -21,6 +21,7 @@ ALLOW_EXISTING_CACHE="${ALLOW_EXISTING_CACHE:-0}"
 COMMUNICATOR_SHA256="${COMMUNICATOR_SHA256:-5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d}"
 LAYERNORM_SHA256="${LAYERNORM_SHA256:-}"
 SPECULATIVE_TOKENS="${SPECULATIVE_TOKENS:-0}"
+SPECULATIVE_FORCE_REJECT="${SPECULATIVE_FORCE_REJECT:-0}"
 RMS_PACKED_SERIAL_EXACT="${RMS_PACKED_SERIAL_EXACT:-0}"
 GDN_PERSISTENT_SCRATCH="${GDN_PERSISTENT_SCRATCH:-0}"
 
@@ -85,6 +86,7 @@ print_config() {
   echo "tp=2"
   echo "p2p=0"
   echo "mtp=$SPECULATIVE_TOKENS"
+  echo "speculative_force_reject=$SPECULATIVE_FORCE_REJECT"
   echo "rms_packed_serial_exact=$RMS_PACKED_SERIAL_EXACT"
   echo "gdn_persistent_scratch=$GDN_PERSISTENT_SCRATCH"
   echo "xpu_graph=0"
@@ -125,6 +127,14 @@ esac
 case "$SPECULATIVE_TOKENS" in
   ''|*[!0-9]*) echo "SPECULATIVE_TOKENS must be a nonnegative integer" >&2; exit 2 ;;
 esac
+case "$SPECULATIVE_FORCE_REJECT" in
+  0|1) ;;
+  *) echo "SPECULATIVE_FORCE_REJECT must be 0 or 1" >&2; exit 2 ;;
+esac
+[ "$SPECULATIVE_FORCE_REJECT" -eq 0 ] || [ "$SPECULATIVE_TOKENS" -gt 0 ] || {
+  echo "SPECULATIVE_FORCE_REJECT requires SPECULATIVE_TOKENS > 0" >&2
+  exit 2
+}
 for pair in \
   "RMS_PACKED_SERIAL_EXACT:$RMS_PACKED_SERIAL_EXACT" \
   "GDN_PERSISTENT_SCRATCH:$GDN_PERSISTENT_SCRATCH"; do
@@ -153,9 +163,13 @@ mkdir -p "$CACHE_DIR"
 memory_bytes=$((MEMORY_GIB * 1024 * 1024 * 1024))
 speculative_args=()
 if [ "$SPECULATIVE_TOKENS" -gt 0 ]; then
+  speculative_config="{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS}"
+  if [ "$SPECULATIVE_FORCE_REJECT" -eq 1 ]; then
+    speculative_config="{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS,\"rejection_sample_method\":\"synthetic\",\"synthetic_acceptance_rates\":[0.0]}"
+  fi
   speculative_args=(
     --speculative-config
-    "{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS}"
+    "$speculative_config"
   )
 fi
 exec docker run --rm --name "$NAME" \

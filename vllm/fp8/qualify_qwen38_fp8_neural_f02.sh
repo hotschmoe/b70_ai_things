@@ -18,6 +18,7 @@ CANARIES="$SOURCE/scripts/neural-download-canaries.py"
 PUBLISHER_A="${PUBLISHER_A:-$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15a/performance.json}"
 PUBLISHER_B="${PUBLISHER_B:-$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15b/performance.json}"
 LAUNCHER="$SCRIPT_DIR/serve_qwen38_fp8_neural_f02.sh"
+IMAGE="${IMAGE:-neural-download/vllm-openai-xpu:qwen38-fp8-collective-work-wait-r15}"
 CAMPAIGN_ID="${CAMPAIGN_ID:-f02}"
 CAMPAIGN_LABEL="${CAMPAIGN_LABEL:-F02}"
 CONTAINER_PREFIX="${CONTAINER_PREFIX:-qwen38-fp8-neural-f02}"
@@ -36,6 +37,8 @@ MAX_SWAP_USED_MIB="${MAX_SWAP_USED_MIB:-1024}"
 ATTEMPTS="${ATTEMPTS:-2}"
 SHARED_CACHE="${SHARED_CACHE:-0}"
 REQUIRE_REFERENCE_EXACT="${REQUIRE_REFERENCE_EXACT:-0}"
+SEED_CACHE_FROM="${SEED_CACHE_FROM:-}"
+SEED_CACHE_MANIFEST="${SEED_CACHE_MANIFEST:-}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -51,6 +54,8 @@ case "${1:-}" in
     echo "completion_route=$COMPLETION_ROUTE"
     echo "shared_cache=$SHARED_CACHE"
     echo "require_reference_exact=$REQUIRE_REFERENCE_EXACT"
+    echo "seed_cache_from=${SEED_CACHE_FROM:-none}"
+    echo "seed_cache_manifest=${SEED_CACHE_MANIFEST:-none}"
     echo "container_prefix=$CONTAINER_PREFIX"
     echo "p2p=0"
     echo "swap_extra=0"
@@ -83,6 +88,18 @@ case "$REQUIRE_REFERENCE_EXACT" in
 esac
 [ ! -e "$RESULT_DIR" ] || { echo "RESULT_DIR must be new: $RESULT_DIR" >&2; exit 1; }
 [ ! -e "$CACHE_ROOT" ] || { echo "CACHE_ROOT must be new: $CACHE_ROOT" >&2; exit 1; }
+[ -z "$SEED_CACHE_FROM" ] || [ -d "$SEED_CACHE_FROM" ] || {
+  echo "SEED_CACHE_FROM is not a directory: $SEED_CACHE_FROM" >&2
+  exit 1
+}
+[ -z "$SEED_CACHE_MANIFEST" ] || [ -f "$SEED_CACHE_MANIFEST" ] || {
+  echo "SEED_CACHE_MANIFEST is not a file: $SEED_CACHE_MANIFEST" >&2
+  exit 1
+}
+[ -n "$SEED_CACHE_FROM" ] || [ -z "$SEED_CACHE_MANIFEST" ] || {
+  echo "SEED_CACHE_MANIFEST requires SEED_CACHE_FROM" >&2
+  exit 1
+}
 [ "$(git -C "$SOURCE" rev-parse HEAD)" = "$SOURCE_COMMIT" ] || {
   echo "source checkout is not at $SOURCE_COMMIT" >&2
   exit 1
@@ -97,6 +114,24 @@ done
 }
 
 mkdir -p "$RESULT_DIR" "$CACHE_ROOT"
+if [ -n "$SEED_CACHE_FROM" ]; then
+  seed_dest="$CACHE_ROOT"
+  if [ "$SHARED_CACHE" -eq 1 ]; then
+    seed_dest="$CACHE_ROOT/shared"
+    mkdir -p "$seed_dest"
+  fi
+  if [ -n "$SEED_CACHE_MANIFEST" ]; then
+    docker run --rm \
+      --volume "$SEED_CACHE_FROM:/seed:ro" \
+      --volume "$(dirname "$SEED_CACHE_MANIFEST"):/evidence:ro" \
+      --entrypoint bash "$IMAGE" -lc \
+      "cd /seed && sha256sum --quiet -c /evidence/$(basename "$SEED_CACHE_MANIFEST")"
+  fi
+  docker run --rm \
+    --volume "$SEED_CACHE_FROM:/seed:ro" \
+    --volume "$seed_dest:/dest" \
+    --entrypoint cp "$IMAGE" -a /seed/. /dest/
+fi
 journal_start="$(date +%s)"
 current_name=""
 server_pid=""
@@ -228,7 +263,7 @@ echo "model direct-and-ordinary identity -> pass files=66 bytes=30866866928"
 
 uname -a >"$RESULT_DIR/uname.txt"
 dpkg-query -W intel-opencl-icd libze1 2>/dev/null >"$RESULT_DIR/host-packages.txt" || true
-docker image inspect neural-download/vllm-openai-xpu:qwen38-fp8-collective-work-wait-r15 \
+docker image inspect "$IMAGE" \
   >"$RESULT_DIR/image-inspect.json"
 
 echo "COMMAND"
@@ -323,6 +358,7 @@ python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
   --served-model "$SERVED" \
   --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
   --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
+  --mtp "${SPECULATIVE_TOKENS:-0}" \
   "${reference_gate_args[@]}" \
   --output "$RESULT_DIR/summary.json"
 analysis_rc=$?
@@ -344,10 +380,11 @@ echo "RESULT"
 cat "$RESULT_DIR/summary.json"
 echo "max_host_swap_used_kib=$max_swap_kib"
 echo "VERDICT"
+verdict="$(jq -r '.verdict' "$RESULT_DIR/summary.json")"
 if [ "$analysis_rc" -eq 0 ]; then
   echo "$CAMPAIGN_LABEL passed cross-server exactness under the local P2P-off no-swap safety port."
 else
-  echo "$CAMPAIGN_LABEL failed cross-server raw-token exactness."
+  echo "$CAMPAIGN_LABEL failed: $verdict"
 fi
 echo "result_dir=$RESULT_DIR"
 echo "$analysis_rc" >"$RESULT_DIR/qualifier.rc"

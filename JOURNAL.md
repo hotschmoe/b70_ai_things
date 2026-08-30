@@ -6280,3 +6280,40 @@ Treat the pinned cache as the deterministic MTP0 control; any fresh cache is a
 new target. Proceed to the P2P-off packed-RMS MTP1 F04 comparison with shared-
 cache discipline. Shelf, direct-P2P, long-context, concurrency, and stable-
 speed claims remain blocked.
+
+### 2026-08-30d - F04 MTP1 is restart-exact but misses the frozen target
+
+CONFIG -> harness commit `dfe7ffd`; official Qwen3.8 FP8 W8A16, TP2, P2P
+off, MTP1, graph off, deterministic Inductor, FP16 target/automatic-KV,
+packed serial RMSNorm, persistent GDN scratch, and one shared fresh cache
+across two server processes. Result root was
+`/mnt/vm_8tb/b70/results/f04_qwen38_fp8_neural/20260830T012500Z/`.
+
+COMMAND -> under the whole-box lease, verify all model/image/runtime bytes,
+pass card and compiled P2P-off collective health, run the complete 12-prompt
+raw-token suite plus canaries in two MTP1 processes sharing one cache, compare
+both to the mutually exact frozen F03a MTP0 attempts, gracefully tear down,
+and repeat health between and after servers.
+
+RESULT -> the MTP1 lifetimes were 12/12 exact with one another. Lifetime 1
+compiled the target in 141.48 seconds; lifetime 2 reconstructed 21 target
+artifacts and 65 submodules per rank, directly loaded AOT key `ed4b9708...`,
+and reported 1.92 seconds. Both attempts matched only 5/12 frozen MTP0 arrays.
+The diagnostic rates were 18.076070 and 18.410930 tok/s, median 18.243500 and
+1.836 percent spread. The apparent 56.029 percent gain over F03a is not
+qualified because target identity failed.
+
+RESULT -> canaries, all health, and teardown passed. Swap stayed zero,
+minimum MemAvailable was 112,478,424 KiB, host-RAM use was 8.325 to 8.514
+GiB, and the kernel/server scan had no configured fault marker. Runtime
+accounting reported about 14.59 GiB model/non-Torch plus 8.3 GiB KV per card.
+The 367 MiB, 3,081-file cache manifest SHA256 was
+`8d85d9cc5e9f5d271048c0bd32863a489fe2e20c55dfd2e3d6f97c6a8a417e3f`;
+the corrected summary SHA256 was
+`4a0a2b38cd04691690729e71cb5fe1c2b7201fe02c3a57f49f540330065b042c`.
+
+VERDICT -> close F04 negatively at target exactness. Do not attribute its
+speed signal to MTP yet. Run F04a with an exact copy of F04's cache and a
+synthetic zero-acceptance sampler, retaining MTP1 target verification while
+forcing every draft rejection. Require reuse of target AOT key `ed4b9708...`;
+keep long, concurrent, P2P-on, and shelf work blocked.
