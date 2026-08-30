@@ -48,6 +48,7 @@ INDUCTOR_DETERMINISTIC_CONFIG="${INDUCTOR_DETERMINISTIC_CONFIG:-0}"
 COMPILE_ORACLE="${COMPILE_ORACLE:-0}"
 CACHE_ANALYZER="$SCRIPT_DIR/analyze_qwen38_fp8_compile_oracle.py"
 EXTRA_WORKLOAD="${EXTRA_WORKLOAD:-}"
+EXTRA_WORKLOAD_RESULT="${EXTRA_WORKLOAD_RESULT:-long-context.json}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -62,6 +63,7 @@ case "${1:-}" in
     echo "campaign_id=$CAMPAIGN_ID"
     echo "completion_route=$COMPLETION_ROUTE"
     echo "extra_workload=${EXTRA_WORKLOAD:-none}"
+    echo "extra_workload_result=$EXTRA_WORKLOAD_RESULT"
     if [ -n "$EXTRA_WORKLOAD" ]; then
       echo "extra_workload_sha256=$(sha256sum "$EXTRA_WORKLOAD" | awk '{print $1}')"
     fi
@@ -168,6 +170,7 @@ journal_start="$(date +%s)"
 current_name=""
 server_pid=""
 monitor_pid=""
+gpu_touched=0
 
 stop_server() {
   if [ -n "$current_name" ]; then
@@ -194,6 +197,9 @@ cleanup() {
   set +e
   stop_server
   stop_monitor
+  if [ "$gpu_touched" -eq 1 ]; then
+    run_health failure-post >"$RESULT_DIR/failure-post-health.log" 2>&1 || rc=1
+  fi
   journalctl -k --since "@${journal_start}" --no-pager \
     >"$RESULT_DIR/kernel-journal.log" 2>"$RESULT_DIR/kernel-journal.err"
   echo "$rc" >"$RESULT_DIR/qualifier.rc"
@@ -301,6 +307,7 @@ docker image inspect "$IMAGE" \
 echo "COMMAND"
 echo "bin/gpu-run bash vllm/fp8/qualify_qwen38_fp8_neural_f02.sh --leased"
 echo "pre-health -> begin"
+gpu_touched=1
 run_health pre
 echo "pre-health -> pass"
 
@@ -396,7 +403,7 @@ PY
       extra_reference=()
       if [ "$attempt" -gt 1 ]; then
         extra_reference=(
-          --reference "$RESULT_DIR/attempt-1/long-context.json"
+          --reference "$RESULT_DIR/attempt-1/$EXTRA_WORKLOAD_RESULT"
         )
       fi
       "$EXTRA_WORKLOAD" \
