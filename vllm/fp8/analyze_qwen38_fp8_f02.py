@@ -105,6 +105,8 @@ def analyze(
     inductor_coordinate_descent_tuning: bool = True,
     inductor_autotune_pointwise: bool = True,
     inductor_deterministic_config: bool = False,
+    p2p: int = 0,
+    concurrent_qualified: bool = False,
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -144,19 +146,26 @@ def analyze(
         verdict = "failed_reference_token_exactness"
     else:
         verdict = "passed"
-    blockers = ["long-agent and concurrent qualification not yet run"]
+    blockers = [
+        "long-agent qualification not yet run"
+        if concurrent_qualified
+        else "long-agent and concurrent qualification not yet run"
+    ]
     if not all_exact:
-        blockers.insert(0, "fresh P2P-off server lifetimes changed raw output token arrays")
+        blockers.insert(
+            0, f"fresh P2P-{p2p} server lifetimes changed raw output token arrays"
+        )
     if require_reference_exact and not reference_exact:
         blockers.insert(0, "output arrays changed from the required target reference")
-    blockers.append("local P2P-off safety port is not the publisher P2P-on profile")
+    if p2p == 0:
+        blockers.append("local P2P-off safety port is not the publisher P2P-on profile")
     return {
         "schema": schema,
         "verdict": verdict,
         "served_model": served,
         "attempts": attempt_count,
         "tp": 2,
-        "p2p": 0,
+        "p2p": p2p,
         "mtp": mtp,
         "xpu_graph": False,
         "inductor": True,
@@ -177,6 +186,7 @@ def analyze(
         "total_prompts": 12,
         "cached_tokens_all_zero": True,
         "independent_canaries_passed": True,
+        "concurrent_qualified": concurrent_qualified,
         "class_balanced_tok_s_attempts": rates,
         "class_balanced_tok_s_median_diagnostic": statistics.median(rates),
         "performance_attribution_qualified": qualified,
@@ -197,6 +207,8 @@ def main() -> int:
     parser.add_argument("--completion-route", default="explicit-work-wait")
     parser.add_argument("--require-reference-exact", action="store_true")
     parser.add_argument("--mtp", type=int, default=0)
+    parser.add_argument("--p2p", type=int, choices=(0, 1), default=0)
+    parser.add_argument("--concurrent-qualified", action="store_true")
     parser.add_argument("--inductor-combo-kernels", type=int, choices=(0, 1), default=1)
     parser.add_argument(
         "--inductor-benchmark-combo-kernel", type=int, choices=(0, 1), default=1
@@ -230,6 +242,8 @@ def main() -> int:
         bool(args.inductor_coordinate_descent_tuning),
         bool(args.inductor_autotune_pointwise),
         bool(args.inductor_deterministic_config),
+        args.p2p,
+        args.concurrent_qualified,
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")

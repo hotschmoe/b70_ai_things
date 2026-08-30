@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Two-fresh-server F02 qualification of the Neural.Download Qwen3.8 FP8 MTP0
-# path under the local P2P-off and no-swap safety policy.
+# Two-fresh-server qualification of the Neural.Download Qwen3.8 FP8 path.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,6 +48,8 @@ COMPILE_ORACLE="${COMPILE_ORACLE:-0}"
 CACHE_ANALYZER="$SCRIPT_DIR/analyze_qwen38_fp8_compile_oracle.py"
 EXTRA_WORKLOAD="${EXTRA_WORKLOAD:-}"
 EXTRA_WORKLOAD_RESULT="${EXTRA_WORKLOAD_RESULT:-long-context.json}"
+P2P_ACCESS="${P2P_ACCESS:-0}"
+CONCURRENT_QUALIFIED="${CONCURRENT_QUALIFIED:-0}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -64,6 +65,7 @@ case "${1:-}" in
     echo "completion_route=$COMPLETION_ROUTE"
     echo "extra_workload=${EXTRA_WORKLOAD:-none}"
     echo "extra_workload_result=$EXTRA_WORKLOAD_RESULT"
+    echo "concurrent_qualified=$CONCURRENT_QUALIFIED"
     if [ -n "$EXTRA_WORKLOAD" ]; then
       echo "extra_workload_sha256=$(sha256sum "$EXTRA_WORKLOAD" | awk '{print $1}')"
     fi
@@ -73,7 +75,7 @@ case "${1:-}" in
     echo "seed_cache_from=${SEED_CACHE_FROM:-none}"
     echo "seed_cache_manifest=${SEED_CACHE_MANIFEST:-none}"
     echo "container_prefix=$CONTAINER_PREFIX"
-    echo "p2p=0"
+    echo "p2p=$P2P_ACCESS"
     echo "swap_extra=0"
     env NAME="${CONTAINER_PREFIX}-${STAMP}-attempt-N" \
       ALLOW_EXISTING_CACHE="$SHARED_CACHE" "$LAUNCHER" --print-config
@@ -102,6 +104,14 @@ case "$REQUIRE_REFERENCE_EXACT" in
   0|1) ;;
   *) echo "REQUIRE_REFERENCE_EXACT must be 0 or 1" >&2; exit 2 ;;
 esac
+case "$P2P_ACCESS" in
+  0|1) ;;
+  *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;;
+esac
+if [ "$P2P_ACCESS" -eq 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
+  echo "Refusing direct P2P qualification without I_KNOW_P2P_WEDGES=1" >&2
+  exit 2
+fi
 for pair in \
   "INDUCTOR_COMBO_KERNELS:$INDUCTOR_COMBO_KERNELS" \
   "INDUCTOR_BENCHMARK_COMBO_KERNEL:$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
@@ -109,7 +119,8 @@ for pair in \
   "INDUCTOR_COORDINATE_DESCENT_TUNING:$INDUCTOR_COORDINATE_DESCENT_TUNING" \
   "INDUCTOR_AUTOTUNE_POINTWISE:$INDUCTOR_AUTOTUNE_POINTWISE" \
   "INDUCTOR_DETERMINISTIC_CONFIG:$INDUCTOR_DETERMINISTIC_CONFIG" \
-  "COMPILE_ORACLE:$COMPILE_ORACLE"; do
+  "COMPILE_ORACLE:$COMPILE_ORACLE" \
+  "CONCURRENT_QUALIFIED:$CONCURRENT_QUALIFIED"; do
   case "${pair#*:}" in
     0|1) ;;
     *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
@@ -198,6 +209,10 @@ cleanup() {
   stop_server
   stop_monitor
   if [ "$gpu_touched" -eq 1 ]; then
+    if [ "$rc" -ne 0 ] && [ "$P2P_ACCESS" -eq 1 ]; then
+      "$REPO/bin/xe-reset" --method rebind \
+        >"$RESULT_DIR/failure-recovery.log" 2>&1 || rc=1
+    fi
     run_health failure-post >"$RESULT_DIR/failure-post-health.log" 2>&1 || rc=1
   fi
   journalctl -k --since "@${journal_start}" --no-pager \
@@ -235,8 +250,10 @@ host_gate() {
 
 run_health() {
   local label="$1"
-  "$REPO/bin/xpu-health" 2>&1 | tee "$RESULT_DIR/${label}-card-health.log"
-  "$REPO/bin/xpu-collective-health" --p2p 0 --timeout "$HEALTH_TIMEOUT" \
+  "$REPO/bin/xpu-health" --img "$IMAGE" \
+    2>&1 | tee "$RESULT_DIR/${label}-card-health.log"
+  env IMG="$IMAGE" "$REPO/bin/xpu-collective-health" \
+    --p2p 0 --timeout "$HEALTH_TIMEOUT" \
     2>&1 | tee "$RESULT_DIR/${label}-collective-health.log"
 }
 
@@ -326,6 +343,7 @@ for attempt in $(seq 1 "$ATTEMPTS"); do
   mkdir -p "$attempt_dir"
   echo "attempt=$attempt server -> start"
   env MODEL_DIR="$MODEL_DIR" CACHE_DIR="$cache_dir" NAME="$current_name" \
+    I_KNOW_P2P_WEDGES="${I_KNOW_P2P_WEDGES:-0}" P2P_ACCESS="$P2P_ACCESS" \
     ALLOW_EXISTING_CACHE="$SHARED_CACHE" \
     INDUCTOR_COMBO_KERNELS="$INDUCTOR_COMBO_KERNELS" \
     INDUCTOR_BENCHMARK_COMBO_KERNEL="$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
@@ -461,15 +479,19 @@ if [ "$COMPILE_ORACLE" -eq 1 ]; then
     --output "$RESULT_DIR/summary.json"
 else
   reference_gate_args=()
+  concurrent_gate_args=()
   if [ "$REQUIRE_REFERENCE_EXACT" -eq 1 ]; then
     reference_gate_args=(--require-reference-exact)
+  fi
+  if [ "$CONCURRENT_QUALIFIED" -eq 1 ]; then
+    concurrent_gate_args=(--concurrent-qualified)
   fi
   python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
     --result-dir "$RESULT_DIR" --attempts "$ATTEMPTS" \
     --served-model "$SERVED" \
     --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
     --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
-    --mtp "${SPECULATIVE_TOKENS:-0}" \
+    --mtp "${SPECULATIVE_TOKENS:-0}" --p2p "$P2P_ACCESS" \
     --inductor-combo-kernels "$INDUCTOR_COMBO_KERNELS" \
     --inductor-benchmark-combo-kernel "$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
     --inductor-max-autotune "$INDUCTOR_MAX_AUTOTUNE" \
@@ -477,6 +499,7 @@ else
     --inductor-autotune-pointwise "$INDUCTOR_AUTOTUNE_POINTWISE" \
     --inductor-deterministic-config "$INDUCTOR_DETERMINISTIC_CONFIG" \
     "${reference_gate_args[@]}" \
+    "${concurrent_gate_args[@]}" \
     --output "$RESULT_DIR/summary.json"
 fi
 analysis_rc=$?
@@ -501,9 +524,9 @@ echo "VERDICT"
 verdict="$(jq -r '.verdict' "$RESULT_DIR/summary.json")"
 if [ "$analysis_rc" -eq 0 ]; then
   if [ "$COMPILE_ORACLE" -eq 1 ]; then
-    echo "$CAMPAIGN_LABEL passed compile-selection exactness under the local P2P-off no-swap safety port."
+    echo "$CAMPAIGN_LABEL passed compile-selection exactness under P2P=$P2P_ACCESS with no extra swap."
   else
-    echo "$CAMPAIGN_LABEL passed cross-server exactness under the local P2P-off no-swap safety port."
+    echo "$CAMPAIGN_LABEL passed cross-server exactness under P2P=$P2P_ACCESS with no extra swap."
   fi
 else
   echo "$CAMPAIGN_LABEL failed: $verdict"

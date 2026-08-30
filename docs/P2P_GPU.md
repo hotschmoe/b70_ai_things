@@ -1419,3 +1419,25 @@ not fix the vLLM hang.
 
 Production stays `P2PACCESS=0` + PUSH_AR (already 11 GB/s posted-write). Turning vLLM P2P on
 would not beat that number even if it booted.
+
+### K.11 [QUALIFIED 2026-08-30] exact Qwen3.8 FP8 vLLM direct P2P now serves
+
+The exact Neural.Download Qwen3.8-27B official-FP8 route was re-tested on
+kernel 7.1 plus Compute Runtime 26.22 using the corrected mixed-path GDN image.
+A staged F06a-F06f ladder passed raw compiled oneCCL, vLLM `XpuCommunicator`,
+MTP0 full weights, MTP1 full weights, short C4 isolation, and two complete
+32K/C4 server lifetimes. The historical loaded-vLLM queue-handoff stall did
+not reproduce. Every teardown, per-card check, and compiled P2P-off
+collective check passed.
+
+Matched F06f P2P1 serial rates were 18.297860 and 18.377703 tok/s versus
+F05d P2P0 rates of 17.574570 and 17.503311 tok/s: +4.554670 percent by the
+two-run centers. C4 aggregate rates were 71.223289, 70.946863, 70.647401,
+and 66.240527 tok/s, about +19.25 percent by mean versus F05d P2P0. Both
+lifetimes and all corrected P2P0 references matched 12/12, all 64 concurrent
+quality requests passed, and host RAM/swap stayed bounded.
+
+This supersedes K.10 only for the pinned Qwen3.8 FP8 image and route. It does
+not make arbitrary vLLM P2P1 safe. Launcher default remains P2P off and P2P1
+requires the explicit risk guard. Full evidence is in
+`docs/20260830_qwen38_fp8_direct_p2p_qualification.md`.

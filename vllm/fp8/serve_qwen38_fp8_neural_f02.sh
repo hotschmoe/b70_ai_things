@@ -30,6 +30,7 @@ INDUCTOR_MAX_AUTOTUNE="${INDUCTOR_MAX_AUTOTUNE:-1}"
 INDUCTOR_COORDINATE_DESCENT_TUNING="${INDUCTOR_COORDINATE_DESCENT_TUNING:-1}"
 INDUCTOR_AUTOTUNE_POINTWISE="${INDUCTOR_AUTOTUNE_POINTWISE:-1}"
 INDUCTOR_DETERMINISTIC_CONFIG="${INDUCTOR_DETERMINISTIC_CONFIG:-0}"
+P2P_ACCESS="${P2P_ACCESS:-0}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
@@ -90,7 +91,7 @@ print_config() {
   echo "container=$NAME"
   echo "port=$PORT"
   echo "tp=2"
-  echo "p2p=0"
+  echo "p2p=$P2P_ACCESS"
   echo "mtp=$SPECULATIVE_TOKENS"
   echo "speculative_force_reject=$SPECULATIVE_FORCE_REJECT"
   echo "rms_packed_serial_exact=$RMS_PACKED_SERIAL_EXACT"
@@ -136,6 +137,14 @@ case "$ALLOW_EXISTING_CACHE" in
   0|1) ;;
   *) echo "ALLOW_EXISTING_CACHE must be 0 or 1" >&2; exit 2 ;;
 esac
+case "$P2P_ACCESS" in
+  0|1) ;;
+  *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;;
+esac
+if [ "$P2P_ACCESS" -eq 1 ] && [ "${I_KNOW_P2P_WEDGES:-0}" != 1 ]; then
+  echo "Refusing direct P2P without I_KNOW_P2P_WEDGES=1" >&2
+  exit 2
+fi
 case "$SPECULATIVE_TOKENS" in
   ''|*[!0-9]*) echo "SPECULATIVE_TOKENS must be a nonnegative integer" >&2; exit 2 ;;
 esac
@@ -232,7 +241,7 @@ exec docker run --rm --name "$NAME" \
   --env FI_PROVIDER=tcp --env FI_TCP_IFACE=lo \
   --env CCL_ZE_IPC_EXCHANGE=pidfd \
   --env CCL_SEND=direct --env CCL_RECV=direct \
-  --env CCL_TOPO_P2P_ACCESS=0 \
+  --env CCL_TOPO_P2P_ACCESS="$P2P_ACCESS" \
   --env CCL_SYCL_ALLREDUCE_SIMPLE_THRESHOLD=4294967296 \
   --env CCL_SYCL_ALLGATHERV_SIMPLE_THRESHOLD=4294967296 \
   --env CCL_SYCL_REDUCE_SCATTER_SIMPLE_THRESHOLD=4294967296 \

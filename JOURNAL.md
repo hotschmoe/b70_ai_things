@@ -6854,3 +6854,55 @@ thinkcap search. The private-thinking cap is a soft segment bound, not a hard
 agent-turn bound, and cap size did not dominate trajectory quality. Among the
 tested policies only 8K completed normally, but none scored; do not promote
 off, 4K, or 8K as a task-effective default from this single task.
+
+### 2026-08-30u - exact Qwen3.8 FP8 direct P2P passes through full C4 qualification
+
+CONFIG -> pinned corrected Qwen3.8-27B official-FP8 image ID `8e0e3deb...`,
+TP2, FP16 target and KV, packed serial RMSNorm, persistent mixed-path GDN,
+deterministic Inductor, FlashAttention, graph off, MTP0 then MTP1, and the
+publisher direct route: localhost TCP OFI, pidfd IPC exchange, direct
+send/receive, `CCL_TOPO_P2P_ACCESS=1`, and simple thresholds at 4294967296.
+Kernel was 7.1.0-070100 and all GPU touches used `bin/gpu-run`.
+
+COMMAND -> advance only after each bounded gate and P2P-off post-health:
+F06a compiled raw oneCCL; F06b vLLM `XpuCommunicator` with eager/custom-op and
+40 compiled calls from 1 to 2,048 rows; F06c full-weight MTP0; F06d MTP1;
+F06e 32 short C4 quality requests; and F06f two fresh 32K/C4 full lifetimes.
+F06f result root was
+`/mnt/vm_8tb/b70/results/f06f_qwen38_fp8_neural_p2p/20260830T130000Z/`.
+
+RESULT -> every staged gate passed. F06b returned both ranks from every
+entry/return pair with zero numerical error. F06c and F06d returned `READY`.
+F06e passed all 32 exact-answer/isolation requests. The historical loaded
+vLLM queue-handoff stall did not reproduce, including the real 32,768-size
+F06f warmup in two fresh server processes.
+
+RESULT -> F06f serial rates were 18.297860 and 18.377703 tok/s, centered at
+18.337782 versus F05d P2P-off's 17.538941: +4.554670 percent. Direct C4
+aggregate rates were 71.223289, 70.946863, 70.647401, and 66.240527 tok/s;
+their mean improved 19.254966 percent and median improved 20.756433 percent
+over F05d P2P off. Direct P2P is a material concurrency/prefill lever but
+does not explain the publisher's 51.918757 tok/s single-stream headline.
+
+RESULT -> both direct lifetimes matched one another and both corrected P2P0
+references 12/12. Both independent canary sets, all 16 complete long C4
+streams, and all 64 concurrent quality requests passed. Both teardowns and
+all card/compiled-collective checks passed with no matching Xe fault. Peak
+container RAM was 8.591 GiB, minimum host MemAvailable was 110,729,476 KiB,
+and global swap peaked at the pre-existing 340,152 KiB. Summary SHA256 was
+`a838f76e750b822b3f80b306559fca8f80e60f28771d688edfe950edc5f82c69`.
+
+RESULT -> one aborted F06d preflight at `20260830T122300Z` mistakenly entered
+card health without a lease and then interrupted the following P2P-off
+collective. No model or P2P1 server started. It is labeled ABORTED and excluded
+from results. The process was stopped, Xe rebind was run under `bin/gpu-run`,
+and both cards plus the compiled P2P-off collective recovered without reboot.
+The harness signal trap was fixed before the accepted F06d run.
+
+VERDICT -> direct oneCCL P2P is qualified for this exact Qwen3.8 FP8,
+corrected-kernel, MTP1, graph-off route. Keep P2P off as the generic launcher
+default and require the explicit risk guard for this opt-in. Next compare
+publisher and F06f process/profile, collective-count, target/drafter, and
+kernel-selection evidence to locate the remaining speed gap. Keep push-AR as
+a separate arm until its loaded-context first-submission oracle returns, and
+keep long growing-agent/thinking-cap quality as a separate campaign gate.
