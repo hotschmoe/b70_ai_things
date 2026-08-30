@@ -28,6 +28,7 @@ INDUCTOR_COMBO_KERNELS="${INDUCTOR_COMBO_KERNELS:-1}"
 INDUCTOR_BENCHMARK_COMBO_KERNEL="${INDUCTOR_BENCHMARK_COMBO_KERNEL:-1}"
 INDUCTOR_MAX_AUTOTUNE="${INDUCTOR_MAX_AUTOTUNE:-1}"
 INDUCTOR_COORDINATE_DESCENT_TUNING="${INDUCTOR_COORDINATE_DESCENT_TUNING:-1}"
+INDUCTOR_AUTOTUNE_POINTWISE="${INDUCTOR_AUTOTUNE_POINTWISE:-1}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
@@ -99,6 +100,7 @@ print_config() {
   echo "inductor_benchmark_combo_kernel=$INDUCTOR_BENCHMARK_COMBO_KERNEL"
   echo "inductor_max_autotune=$INDUCTOR_MAX_AUTOTUNE"
   echo "inductor_coordinate_descent_tuning=$INDUCTOR_COORDINATE_DESCENT_TUNING"
+  echo "inductor_autotune_pointwise=$INDUCTOR_AUTOTUNE_POINTWISE"
   echo "dtype=float16"
   echo "kv_cache_dtype=auto"
   echo "quantization=fp8"
@@ -149,7 +151,8 @@ for pair in \
   "INDUCTOR_COMBO_KERNELS:$INDUCTOR_COMBO_KERNELS" \
   "INDUCTOR_BENCHMARK_COMBO_KERNEL:$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
   "INDUCTOR_MAX_AUTOTUNE:$INDUCTOR_MAX_AUTOTUNE" \
-  "INDUCTOR_COORDINATE_DESCENT_TUNING:$INDUCTOR_COORDINATE_DESCENT_TUNING"; do
+  "INDUCTOR_COORDINATE_DESCENT_TUNING:$INDUCTOR_COORDINATE_DESCENT_TUNING" \
+  "INDUCTOR_AUTOTUNE_POINTWISE:$INDUCTOR_AUTOTUNE_POINTWISE"; do
   case "${pair#*:}" in
     0|1) ;;
     *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
@@ -175,9 +178,11 @@ mkdir -p "$CACHE_DIR"
 memory_bytes=$((MEMORY_GIB * 1024 * 1024 * 1024))
 combo_kernels_json=false
 benchmark_combo_kernel_json=false
+autotune_pointwise_json=false
 [ "$INDUCTOR_COMBO_KERNELS" -eq 0 ] || combo_kernels_json=true
 [ "$INDUCTOR_BENCHMARK_COMBO_KERNEL" -eq 0 ] || benchmark_combo_kernel_json=true
-compilation_config="{\"cudagraph_mode\":\"PIECEWISE\",\"cudagraph_capture_sizes\":[1],\"max_cudagraph_capture_size\":1,\"inductor_compile_config\":{\"combo_kernels\":$combo_kernels_json,\"benchmark_combo_kernel\":$benchmark_combo_kernel_json}}"
+[ "$INDUCTOR_AUTOTUNE_POINTWISE" -eq 0 ] || autotune_pointwise_json=true
+compilation_config="{\"cudagraph_mode\":\"PIECEWISE\",\"cudagraph_capture_sizes\":[1],\"max_cudagraph_capture_size\":1,\"inductor_compile_config\":{\"combo_kernels\":$combo_kernels_json,\"benchmark_combo_kernel\":$benchmark_combo_kernel_json,\"triton.autotune_pointwise\":$autotune_pointwise_json}}"
 speculative_args=()
 if [ "$SPECULATIVE_TOKENS" -gt 0 ]; then
   speculative_config="{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":$SPECULATIVE_TOKENS}"

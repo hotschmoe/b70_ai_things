@@ -6391,3 +6391,36 @@ VERDICT -> combo benchmarking is not causal. F02c should retain combo-off and
 also disable vLLM's default Inductor max-autotune and coordinate-descent
 tuning, using separate fresh caches. Keep P2P-on full serving, long,
 concurrent, and shelf work blocked.
+
+### 2026-08-30g - F02c vLLM autotune flags do not control XPU tuning
+
+CONFIG -> harness commit `8f9e9e5`; F02b configuration plus
+`VLLM_ENABLE_INDUCTOR_MAX_AUTOTUNE=0` and
+`VLLM_ENABLE_INDUCTOR_COORDINATE_DESCENT_TUNING=0`, with two separate empty
+caches. Result root was
+`/mnt/vm_8tb/b70/results/f02c_qwen38_fp8_neural/20260830T031700Z/`.
+
+COMMAND -> under the whole-box lease, run the full two-lifetime identity,
+12-prompt, canary, teardown, card-health, and compiled P2P-off collective
+transaction. Require cross-process and publisher raw-token exactness.
+
+RESULT -> clean negative: 8/12 cross-process exact and 5/12 versus each
+publisher reference for both attempts. Diagnostic rates were 11.577039 and
+11.346567 tok/s, median 11.461803. Canaries, teardown, and all health passed;
+host RAM peaked at 7.789 GiB, minimum MemAvailable was 113,556,788 KiB, and
+swap stayed zero.
+
+RESULT -> both caches retained 44 common `.best_config` paths and exactly
+22 semantic selection differences, unchanged from F02b. The vLLM flags
+changed the AOT key to `eb5b1c57...` but not the XPU tuner. Cache-comparison
+summary SHA256 was
+`86134865a45f6d83ff006da881d68dac1dfd07f8e1dcaee51b9759b1beec2d63`;
+primary summary SHA256 was
+`d4eef66a854bba1482461e62aef11b2293adbb0ef147d369eb7c89f84e0998d1`.
+
+VERDICT -> F02c is negative. PyTorch source shows
+`triton.autotune_pointwise=True` independently creates multiple XPU
+pointwise configurations. Run a bounded F02d two-cache compile oracle with
+that control false and only proceed to a full suite if semantic cache
+selection is exact. Keep P2P-on full serving, long, concurrent, and shelf work
+blocked.

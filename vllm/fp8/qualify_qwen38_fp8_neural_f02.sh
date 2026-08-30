@@ -43,6 +43,9 @@ INDUCTOR_COMBO_KERNELS="${INDUCTOR_COMBO_KERNELS:-1}"
 INDUCTOR_BENCHMARK_COMBO_KERNEL="${INDUCTOR_BENCHMARK_COMBO_KERNEL:-1}"
 INDUCTOR_MAX_AUTOTUNE="${INDUCTOR_MAX_AUTOTUNE:-1}"
 INDUCTOR_COORDINATE_DESCENT_TUNING="${INDUCTOR_COORDINATE_DESCENT_TUNING:-1}"
+INDUCTOR_AUTOTUNE_POINTWISE="${INDUCTOR_AUTOTUNE_POINTWISE:-1}"
+COMPILE_ORACLE="${COMPILE_ORACLE:-0}"
+CACHE_ANALYZER="$SCRIPT_DIR/analyze_qwen38_fp8_compile_oracle.py"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -56,6 +59,7 @@ case "${1:-}" in
     echo "attempts=$ATTEMPTS"
     echo "campaign_id=$CAMPAIGN_ID"
     echo "completion_route=$COMPLETION_ROUTE"
+    echo "compile_oracle=$COMPILE_ORACLE"
     echo "shared_cache=$SHARED_CACHE"
     echo "require_reference_exact=$REQUIRE_REFERENCE_EXACT"
     echo "seed_cache_from=${SEED_CACHE_FROM:-none}"
@@ -94,7 +98,9 @@ for pair in \
   "INDUCTOR_COMBO_KERNELS:$INDUCTOR_COMBO_KERNELS" \
   "INDUCTOR_BENCHMARK_COMBO_KERNEL:$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
   "INDUCTOR_MAX_AUTOTUNE:$INDUCTOR_MAX_AUTOTUNE" \
-  "INDUCTOR_COORDINATE_DESCENT_TUNING:$INDUCTOR_COORDINATE_DESCENT_TUNING"; do
+  "INDUCTOR_COORDINATE_DESCENT_TUNING:$INDUCTOR_COORDINATE_DESCENT_TUNING" \
+  "INDUCTOR_AUTOTUNE_POINTWISE:$INDUCTOR_AUTOTUNE_POINTWISE" \
+  "COMPILE_ORACLE:$COMPILE_ORACLE"; do
   case "${pair#*:}" in
     0|1) ;;
     *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
@@ -119,7 +125,8 @@ done
   exit 1
 }
 for required in "$MODEL_DIR" "$MODEL_MANIFEST" "$MODEL_VERIFY" "$SUITE" \
-  "$BENCH" "$CANARIES" "$PUBLISHER_A" "$PUBLISHER_B" "$LAUNCHER"; do
+  "$BENCH" "$CANARIES" "$PUBLISHER_A" "$PUBLISHER_B" "$LAUNCHER" \
+  "$CACHE_ANALYZER"; do
   [ -e "$required" ] || { echo "missing input: $required" >&2; exit 1; }
 done
 [ "$(sha256sum "$SUITE" | awk '{print $1}')" = "$SUITE_SHA256" ] || {
@@ -306,6 +313,7 @@ for attempt in $(seq 1 "$ATTEMPTS"); do
     INDUCTOR_BENCHMARK_COMBO_KERNEL="$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
     INDUCTOR_MAX_AUTOTUNE="$INDUCTOR_MAX_AUTOTUNE" \
     INDUCTOR_COORDINATE_DESCENT_TUNING="$INDUCTOR_COORDINATE_DESCENT_TUNING" \
+    INDUCTOR_AUTOTUNE_POINTWISE="$INDUCTOR_AUTOTUNE_POINTWISE" \
     SERVED="$SERVED" PORT="$PORT" "$LAUNCHER" run \
     >"$attempt_dir/server.log" 2>&1 &
   server_pid=$!
@@ -331,17 +339,48 @@ PY
   docker stats --no-stream --format '{{json .}}' "$current_name" \
     >"$attempt_dir/docker-stats-before.json"
 
-  python3 "$BENCH" \
-    --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
-    --api-mode completions --suite "$SUITE" \
-    --max-tokens 512 --metric-tokens 100 --seed 42 --timeout 900 \
-    --return-token-ids --require-natural-eos \
-    --request-extra-json '{"temperature":0,"top_p":1}' \
-    --out "$attempt_dir/performance.json" \
-    >"$attempt_dir/performance.stdout"
-  python3 "$CANARIES" \
-    --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
-    --out "$attempt_dir/canaries.json" >"$attempt_dir/canaries.stdout"
+  if [ "$COMPILE_ORACLE" -eq 1 ]; then
+    python3 - "$PORT" "$SERVED" "$attempt_dir/smoke.json" <<'PY'
+import json
+import sys
+import urllib.request
+
+port, served, output = sys.argv[1:]
+payload = json.dumps(
+    {
+        "model": served,
+        "prompt": "Write exactly the word READY and nothing else.",
+        "max_tokens": 16,
+        "temperature": 0,
+        "top_p": 1,
+    }
+).encode("ascii")
+request = urllib.request.Request(
+    f"http://127.0.0.1:{port}/v1/completions",
+    data=payload,
+    headers={"Content-Type": "application/json"},
+)
+with urllib.request.urlopen(request, timeout=120) as response:
+    data = json.load(response)
+assert data["model"] == served, data.get("model")
+assert len(data["choices"]) == 1 and data["choices"][0]["text"], data
+with open(output, "w", encoding="ascii") as handle:
+    json.dump(data, handle, indent=2, ensure_ascii=True, sort_keys=True)
+    handle.write("\n")
+PY
+  else
+    python3 "$BENCH" \
+      --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
+      --api-mode completions --suite "$SUITE" \
+      --max-tokens 512 --metric-tokens 100 --seed 42 --timeout 900 \
+      --return-token-ids --require-natural-eos \
+      --request-extra-json '{"temperature":0,"top_p":1}' \
+      --out "$attempt_dir/performance.json" \
+      >"$attempt_dir/performance.stdout"
+    python3 "$CANARIES" \
+      --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
+      --out "$attempt_dir/canaries.json" >"$attempt_dir/canaries.stdout"
+  fi
 
   curl -fsS --max-time 15 "http://127.0.0.1:${PORT}/health" \
     >"$attempt_dir/endpoint-post-health.json"
@@ -367,22 +406,31 @@ memory_snapshot post | tee "$RESULT_DIR/memory-post.txt"
 journalctl -k --since "@${journal_start}" --no-pager >"$RESULT_DIR/kernel-journal.log"
 
 set +e
-reference_gate_args=()
-if [ "$REQUIRE_REFERENCE_EXACT" -eq 1 ]; then
-  reference_gate_args=(--require-reference-exact)
+if [ "$COMPILE_ORACLE" -eq 1 ]; then
+  python3 "$CACHE_ANALYZER" \
+    --result-dir "$RESULT_DIR" --cache-root "$CACHE_ROOT" \
+    --attempts "$ATTEMPTS" --served-model "$SERVED" \
+    --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
+    --output "$RESULT_DIR/summary.json"
+else
+  reference_gate_args=()
+  if [ "$REQUIRE_REFERENCE_EXACT" -eq 1 ]; then
+    reference_gate_args=(--require-reference-exact)
+  fi
+  python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
+    --result-dir "$RESULT_DIR" --attempts "$ATTEMPTS" \
+    --served-model "$SERVED" \
+    --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
+    --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
+    --mtp "${SPECULATIVE_TOKENS:-0}" \
+    --inductor-combo-kernels "$INDUCTOR_COMBO_KERNELS" \
+    --inductor-benchmark-combo-kernel "$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
+    --inductor-max-autotune "$INDUCTOR_MAX_AUTOTUNE" \
+    --inductor-coordinate-descent-tuning "$INDUCTOR_COORDINATE_DESCENT_TUNING" \
+    --inductor-autotune-pointwise "$INDUCTOR_AUTOTUNE_POINTWISE" \
+    "${reference_gate_args[@]}" \
+    --output "$RESULT_DIR/summary.json"
 fi
-python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
-  --result-dir "$RESULT_DIR" --attempts "$ATTEMPTS" \
-  --served-model "$SERVED" \
-  --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
-  --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
-  --mtp "${SPECULATIVE_TOKENS:-0}" \
-  --inductor-combo-kernels "$INDUCTOR_COMBO_KERNELS" \
-  --inductor-benchmark-combo-kernel "$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
-  --inductor-max-autotune "$INDUCTOR_MAX_AUTOTUNE" \
-  --inductor-coordinate-descent-tuning "$INDUCTOR_COORDINATE_DESCENT_TUNING" \
-  "${reference_gate_args[@]}" \
-  --output "$RESULT_DIR/summary.json"
 analysis_rc=$?
 set -e
 
@@ -404,7 +452,11 @@ echo "max_host_swap_used_kib=$max_swap_kib"
 echo "VERDICT"
 verdict="$(jq -r '.verdict' "$RESULT_DIR/summary.json")"
 if [ "$analysis_rc" -eq 0 ]; then
-  echo "$CAMPAIGN_LABEL passed cross-server exactness under the local P2P-off no-swap safety port."
+  if [ "$COMPILE_ORACLE" -eq 1 ]; then
+    echo "$CAMPAIGN_LABEL passed compile-selection exactness under the local P2P-off no-swap safety port."
+  else
+    echo "$CAMPAIGN_LABEL passed cross-server exactness under the local P2P-off no-swap safety port."
+  fi
 else
   echo "$CAMPAIGN_LABEL failed: $verdict"
 fi
