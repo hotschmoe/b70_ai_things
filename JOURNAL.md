@@ -6665,3 +6665,65 @@ VERDICT -> the pinned kernel fixes concurrent engine survival. Reject the old
 asynchronous C4 byte-exact contract; run F05d with complete 512-token streams,
 the fixed target suite, and concurrent exact-answer/isolation semantics before
 shelf work. Direct-P2P full serving remains blocked.
+
+### 2026-08-30p - F05d qualifies corrected-kernel C4 and finds a new target
+
+CONFIG -> official FP8 W8A16, corrected 1e90 GDN kernel, TP2, P2P off, MTP1,
+graph off, deterministic Inductor, packed serial RMSNorm, FP16 KV, 32K
+capacity, and C4. Result root was
+`/mnt/vm_8tb/b70/results/f05d_qwen38_fp8_neural/20260830T075200Z/`.
+
+COMMAND -> under the whole-box lease, compile two empty caches; in each fresh
+lifetime run the 12-prompt C1 suite, canaries, two C4 batches of four
+2K-prompt/512-output streams, and 32 concurrent exact-answer/isolation
+requests; then teardown and run card plus compiled collective health.
+
+RESULT -> both attempts matched one another 12/12 at 17.574570 and 17.503311
+tok/s, median 17.538941. All 16 long concurrent streams completed and all 64
+semantic requests passed. C4 batch aggregates were 66.376149, 50.879935,
+67.294763, and 49.450377 tok/s. Target/draft keys `80de0121...`/`be175b50...`
+repeated with zero `.best_config` files.
+
+RESULT -> both attempts matched old-kernel F05a only 10/12. Stable changes
+were `customer-email` at token 124 and `technical-guide` at token 160. All
+teardowns and health passed. Peak container RAM was 9.088 GiB, minimum host
+MemAvailable was 111,507,896 KiB, and global swap stayed at its preexisting
+28,652 KiB baseline. Summary SHA256 was
+`373f32462f63db25a540c60e1e54afface84cece11585180358cfb0c4ef10f76`.
+
+VERDICT -> corrected-kernel C4 engine survival, complete long streams, and
+semantic isolation pass. Old-target promotion correctly fails. Run an MTP0
+control against both corrected MTP1 references to determine whether the
+target shift is caused by the kernel or speculative decoding.
+
+### 2026-08-30q - F05e proves the target shift belongs to the corrected kernel
+
+CONFIG -> exact F05d corrected-kernel image and deterministic P2P-off 32K
+route, with only MTP changed from one to zero and maximum sequences reduced
+to one. Two fresh server processes shared the newly compiled MTP0 cache and
+used both F05d MTP1 performance files as required references. Result root was
+`/mnt/vm_8tb/b70/results/f05e_qwen38_fp8_neural/20260830T083000Z/`.
+
+COMMAND -> under `bin/gpu-run`, run the 12-prompt suite and independent
+canaries twice; require cross-process and both-reference raw-token exactness;
+gracefully tear down and run card plus compiled P2P-off collective health
+after each lifetime.
+
+RESULT -> pass. Both MTP0 attempts matched one another and both corrected
+MTP1 references 12/12. They retained F05d's stable 10/12 relation to the old
+F05a kernel target, including `customer-email` at token 124 and
+`technical-guide` at token 160. Rates were 11.327250 and 11.742236 tok/s,
+median 11.534743. Attempt 1 compiled target key `560096c7...` in 97.66
+seconds; attempt 2 loaded it directly. The 1,747-file cache had zero
+`.best_config` files.
+
+RESULT -> canaries, both teardowns, and all card/collective checks passed.
+Peak container RAM was 7.755 GiB, minimum host MemAvailable was 112,371,368
+KiB, and all 291 host samples retained the preexisting 28,652 KiB swap
+baseline. Summary SHA256 was
+`a7385835dad957e386203465add4550ea4f5d57cd5f7af4972600bf1e62c9fe7`.
+
+VERDICT -> the corrected GDN kernel, not MTP acceptance, causes the stable
+two-prompt target shift. Treat F05d as the corrected-kernel MTP1 target and
+concurrent qualification. Keep shelf promotion blocked on the growing-agent
+gate; direct-P2P full serving remains blocked on its loaded-context oracle.

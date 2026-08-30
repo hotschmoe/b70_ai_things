@@ -271,7 +271,12 @@ tok/s. F05a passed restart-exact actual prompts through 30,023 tokens and a
 restart-exact 4,096-token forced decode. F05b reproduced the old-kernel mixed
 spec/non-spec GDN abort. F05c proved that the pinned 1e90 kernel closes the
 abort, while also confirming that asynchronous C4 raw arrays are batch-history
-dependent. F05d is the active completion and concurrent-semantic gate.
+dependent. F05d then completed all 16 long C4 streams and passed all 64
+concurrent semantic canaries across two fresh lifetimes, while selecting a
+stable corrected-kernel target that matched the old kernel only 10/12. F05e
+then matched the corrected MTP1 target 12/12 with MTP disabled, proving that
+the target shift belongs to the corrected kernel rather than speculative
+acceptance. The lane now advances to the growing-agent policy gate.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
@@ -292,7 +297,8 @@ dependent. F05d is the active completion and concurrent-semantic gate.
 | F05a | P1 | TP2 | 32K-configured F04b route with actual 2K, 8K, 16K, and 30K prompts plus forced 4K decode | Complete: short and long raw-token restart exactness, bounded memory, teardown, and health passed |
 | F05b | P1 | TP2 | 32K F05a route at concurrent batch shapes with the inherited 0.1.12.3 XPU kernel | Closed negative: first C4 batch killed the engine at mixed MTP decode plus new prefill; recovery health passed |
 | F05c | P1 | TP2 | Add the recipe's pinned 1e90 mixed spec/non-spec GDN kernel and rerun a bounded C4 oracle | Closed split result: 16/16 streams complete and health clean; serial exact, asynchronous C4 token arrays batch-history dependent |
-| F05d | P1 | TP2 | Full 512-token C4 completion plus concurrent exact-answer/isolation quality on the corrected kernel | Active: two fresh servers, F05a target parity, complete streams, 32 semantic C4 requests per attempt, bounded memory, teardown, and health |
+| F05d | P1 | TP2 | Full 512-token C4 completion plus concurrent exact-answer/isolation quality on the corrected kernel | Closed split: all 16 long streams and 64 semantic canaries passed; attempts were 12/12 exact to one another but 10/12 versus the old-kernel target |
+| F05e | P1 | TP2 | Corrected-kernel MTP0 control against both F05d MTP1 references | Complete: two fresh MTP0 servers were 12/12 exact to one another and both MTP1 references; the target shift belongs to the kernel |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |
 | F06 | P2 | Isolated oracle only | Recipe direct-P2P setting | Do not run a full server until a bounded loaded-context queue-handoff oracle passes and recovery is pre-positioned |
 
