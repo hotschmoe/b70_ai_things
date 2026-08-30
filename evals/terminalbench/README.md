@@ -181,3 +181,17 @@ first four inspection responses to 46-95 tokens, but the first implementation
 response hit the hard bound before issuing an edit. The unchanged baseline
 scored 0.0 at 17/36 tests in 10m51s Harbor wall and 14m19s total. Do not repeat
 this cap or transfer it to Ornith; test Qwen with `MAX_TOKENS=8192` next.
+
+The corrected true-off 8,192-output pilot later edited but timed out after
+1,800 seconds. A separately labeled native-thinking rescue with a 16,384 total
+response ceiling and 8,192 private-thinking cap completed normally in 26m13s
+of agent time and passed 25/36 tests, but scored zero. It first wrote at about
+11m59s and first tested after the edit at about 19m07s, so 8K is too expensive
+for the 30-minute interactive budget even though it improved the trajectory.
+
+One final cap calibration uses native thinking with `MAX_TOKENS=16384` and
+`XHIGH_THINKCAP=4096`. This is not a repeat of the historical failure: the old
+run incorrectly combined native thinking with a 4,096 total response ceiling,
+leaving no room after reasoning. Keep every other server, task, and timeout
+variable matched. Stop this Bun cap search if the corrected 4K run times out or
+falls below 25/36 verifier tests.
