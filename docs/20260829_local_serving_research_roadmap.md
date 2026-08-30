@@ -268,7 +268,10 @@ passed 12/12 across two empty caches and against F02f in the MTP-capable
 packed-RMS image. F04b then passed 12/12 across two empty caches and against
 F02g MTP0 while improving the matched median by 53.890 percent to 17.649601
 tok/s. F05a passed restart-exact actual prompts through 30,023 tokens and a
-restart-exact 4,096-token forced decode. F05b is the active concurrency gate.
+restart-exact 4,096-token forced decode. F05b reproduced the old-kernel mixed
+spec/non-spec GDN abort. F05c proved that the pinned 1e90 kernel closes the
+abort, while also confirming that asynchronous C4 raw arrays are batch-history
+dependent. F05d is the active completion and concurrent-semantic gate.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
@@ -287,7 +290,9 @@ restart-exact 4,096-token forced decode. F05b is the active concurrency gate.
 | F04a | P0 | TP2 | Force every MTP1 draft to reject while reusing an exact copy of the F04 cache | Complete: same target/draft AOT keys and 12/12 exact versus normal F04; acceptance is not causal |
 | F04b | P0 | TP2 | MTP1 packed-RMS route with F02g compiler controls and two empty caches | Complete: 12/12 exact to F02g; 17.649601 tok/s, 53.890 percent over matched MTP0 |
 | F05a | P1 | TP2 | 32K-configured F04b route with actual 2K, 8K, 16K, and 30K prompts plus forced 4K decode | Complete: short and long raw-token restart exactness, bounded memory, teardown, and health passed |
-| F05b | P1 | TP2 | 32K F05a route at concurrent batch shapes | Require coherent complete streams, serial/concurrent target comparison, restart evidence, bounded memory, teardown, and health |
+| F05b | P1 | TP2 | 32K F05a route at concurrent batch shapes with the inherited 0.1.12.3 XPU kernel | Closed negative: first C4 batch killed the engine at mixed MTP decode plus new prefill; recovery health passed |
+| F05c | P1 | TP2 | Add the recipe's pinned 1e90 mixed spec/non-spec GDN kernel and rerun a bounded C4 oracle | Closed split result: 16/16 streams complete and health clean; serial exact, asynchronous C4 token arrays batch-history dependent |
+| F05d | P1 | TP2 | Full 512-token C4 completion plus concurrent exact-answer/isolation quality on the corrected kernel | Active: two fresh servers, F05a target parity, complete streams, 32 semantic C4 requests per attempt, bounded memory, teardown, and health |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |
 | F06 | P2 | Isolated oracle only | Recipe direct-P2P setting | Do not run a full server until a bounded loaded-context queue-handoff oracle passes and recovery is pre-positioned |
 

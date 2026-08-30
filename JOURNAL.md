@@ -6617,3 +6617,51 @@ VERDICT -> F05a passes synthetic C1 long-context and forced-output gates. Run
 F05b for concurrent batch-shape coherence before shelf work, then the
 higher-thinkcap growing-agent quality ladder. P2P-on full serving remains
 blocked.
+
+### 2026-08-30n - F05b reproduces the old GDN mixed-batch abort
+
+CONFIG -> F05a's 32K deterministic MTP1 path with four service slots, P2P
+off, graph off, and the inherited vllm-xpu-kernels 0.1.12.3. Result root was
+`/mnt/vm_8tb/b70/results/f05b_qwen38_fp8_neural/20260830T065500Z/`.
+
+COMMAND -> Run the normal target and canary gates, four serial 2K/512
+controls, then synchronized C4 completion requests under the whole-box lease.
+On failure, tear down and run card plus compiled P2P-off collective health.
+
+RESULT -> the normal suite retained the target at 17.511970 tok/s. The first
+C4 batch mixed active MTP decode and a new prefill, and both workers raised the
+kernel's explicit `causal_conv1d does not support spec-decode and non-spec`
+error. The engine stopped. Both cards and the compiled collective passed after
+cleanup.
+
+VERDICT -> F05b is a software-path negative, not a host wedge or RAM-spill
+event. Concurrent MTP1 is blocked on the recipe's corrected mixed-path kernel.
+
+### 2026-08-30o - F05c closes the engine abort and corrects the quality gate
+
+CONFIG -> overlay the exact recipe wheel at XPU kernel commit `1e90ffa672`,
+SHA256 `f3d999060c11ad6db5b4033d50d19c6b665492380075480d041ec4ee58fdfeb6`,
+onto the qualified F04b/F05a image. Composite image ID was `8e0e3deb...`.
+Keep TP2 P2P off, MTP1, graph off, deterministic Inductor, 32K capacity, and
+C4. Result root was
+`/mnt/vm_8tb/b70/results/f05c_qwen38_fp8_neural/20260830T073000Z/`.
+
+COMMAND -> compile two empty caches and run serial plus synchronized C4 2K
+prompts with 64 forced output tokens, teardown, and health around each server.
+
+RESULT -> all 8 serial and all 8 concurrent streams completed. The fatal GDN
+exception disappeared. Target/draft AOT keys `80de0121...`/`be175b50...`
+repeated with zero `.best_config` files. Both teardowns and all card/collective
+checks passed. Diagnostic C4 aggregate rates were 18.334303/18.192014 tok/s.
+
+RESULT -> all four serial arrays were restart-exact. Two of four C4 arrays
+changed across restarts because asynchronous arrival changed batch history;
+the publisher discloses the same batch-shape dependence. Peak container RAM
+was 9.816 GiB and minimum host MemAvailable was 111,388,204 KiB. The container
+had no swap allowance. Global host swap rose to 28,652 KiB without OOM or a
+GPU kernel fault.
+
+VERDICT -> the pinned kernel fixes concurrent engine survival. Reject the old
+asynchronous C4 byte-exact contract; run F05d with complete 512-token streams,
+the fixed target suite, and concurrent exact-answer/isolation semantics before
+shelf work. Direct-P2P full serving remains blocked.

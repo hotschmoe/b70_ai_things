@@ -1,0 +1,16 @@
+ARG BASE_IMAGE=neural-download/vllm-openai-xpu:qwen38-fp8-mtp1-rms-serial-f04-local
+FROM ${BASE_IMAGE}
+
+ARG KERNEL_WHEEL=vllm_xpu_kernels-0.1.dev1+g1e90ffa67-cp38-abi3-manylinux_2_28_x86_64.whl
+ARG KERNEL_WHEEL_SHA256=f3d999060c11ad6db5b4033d50d19c6b665492380075480d041ec4ee58fdfeb6
+
+COPY ${KERNEL_WHEEL} /tmp/${KERNEL_WHEEL}
+RUN test "$(sha256sum /tmp/${KERNEL_WHEEL} | awk '{print $1}')" = "${KERNEL_WHEEL_SHA256}" \
+    && uv pip install --python /opt/venv/bin/python --no-deps --reinstall /tmp/${KERNEL_WHEEL} \
+    && rm -f /tmp/${KERNEL_WHEEL} \
+    && /opt/venv/bin/python -c 'from importlib.metadata import version; import torch, vllm_xpu_kernels._xpu_C; assert version("vllm-xpu-kernels") == "0.1.dev1+g1e90ffa67"; assert hasattr(torch.ops._xpu_C, "gdn_attention")'
+
+LABEL b70.base.image.id="sha256:338ef5e2c956471a195a0644e2acb38288ac6837ebf5282671794be5329a7e2b" \
+      b70.kernel.head="1e90ffa672ba02f17a909da11838a4c55b199783" \
+      b70.kernel.wheel.sha256="f3d999060c11ad6db5b4033d50d19c6b665492380075480d041ec4ee58fdfeb6" \
+      b70.kernel.purpose="mixed-spec-non-spec-gdn"

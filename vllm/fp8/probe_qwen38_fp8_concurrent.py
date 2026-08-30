@@ -8,14 +8,17 @@ import concurrent.futures
 import hashlib
 import importlib.util
 import json
+import os
 import statistics
 from pathlib import Path
 from typing import Any, Callable
 
 
-CONCURRENCY = 4
-OUTPUT_TOKENS = 512
-BATCHES = 2
+CONCURRENCY = int(os.environ.get("F05B_CONCURRENCY", "4"))
+OUTPUT_TOKENS = int(os.environ.get("F05B_OUTPUT_TOKENS", "512"))
+BATCHES = int(os.environ.get("F05B_BATCHES", "2"))
+REQUIRE_SERIAL_EXACT = os.environ.get("F05B_REQUIRE_SERIAL_EXACT", "1") == "1"
+REQUIRE_RESTART_EXACT = os.environ.get("F05B_REQUIRE_RESTART_EXACT", "1") == "1"
 
 
 def load_post_stream(bench: Path) -> Callable[..., dict[str, Any]]:
@@ -41,7 +44,10 @@ def make_prompts() -> list[str]:
 def validate(row: dict[str, Any], label: str) -> None:
     token_ids = row.get("token_ids")
     if row.get("completion_tokens") != OUTPUT_TOKENS:
-        raise RuntimeError(f"{label} did not return {OUTPUT_TOKENS} tokens")
+        raise RuntimeError(
+            f"{label} returned {row.get('completion_tokens')} of "
+            f"{OUTPUT_TOKENS} tokens; error={row.get('client_error')}"
+        )
     if not isinstance(token_ids, list) or len(token_ids) != OUTPUT_TOKENS:
         raise RuntimeError(f"{label} omitted its complete raw-token array")
     if row.get("finish_reasons") != ["length"]:
@@ -84,7 +90,6 @@ def call_one(
         system_prompt=None,
         request_id=request_id,
     )
-    validate(row, request_id)
     return row
 
 
@@ -107,7 +112,37 @@ def concurrent_batch(
             )
             for index, prompt in enumerate(prompts)
         ]
-        return [future.result() for future in futures]
+        rows = []
+        for future in futures:
+            try:
+                rows.append(future.result())
+            except Exception as error:
+                rows.append(
+                    {
+                        "client_error": repr(error),
+                        "completion_tokens": 0,
+                        "finish_reasons": [],
+                        "token_ids": [],
+                    }
+                )
+        return rows
+
+
+def write_raw(
+    path: Path,
+    serial: list[dict[str, Any]],
+    batches: list[list[dict[str, Any]]],
+) -> None:
+    path.write_text(
+        json.dumps(
+            {"serial": serial, "batches": batches},
+            indent=2,
+            ensure_ascii=True,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="ascii",
+    )
 
 
 def compare_rows(
@@ -120,6 +155,16 @@ def compare_rows(
             raise RuntimeError(f"{label} prompt-token mismatch at stream {index}")
         if left["token_ids"] != right["token_ids"]:
             raise RuntimeError(f"{label} output-token mismatch at stream {index}")
+
+
+def rows_exact(
+    expected: list[dict[str, Any]], observed: list[dict[str, Any]]
+) -> bool:
+    return len(expected) == len(observed) and all(
+        left.get("prompt_tokens") == right.get("prompt_tokens")
+        and left.get("token_ids") == right.get("token_ids")
+        for left, right in zip(expected, observed, strict=True)
+    )
 
 
 def batch_metric(rows: list[dict[str, Any]], batch: int) -> dict[str, Any]:
@@ -161,22 +206,26 @@ def main() -> int:
         )
         for index, prompt in enumerate(prompts)
     ]
+    partial_path = args.attempt_dir / "concurrent-raw.partial.json"
+    write_raw(partial_path, serial, [])
+    for index, row in enumerate(serial):
+        validate(row, f"f05b-serial-stream-{index}")
     batches = []
     raw_batches = []
     for batch in range(BATCHES):
         rows = concurrent_batch(
             post_stream, args.base_url, args.model, prompts, batch
         )
-        compare_rows(serial, rows, f"serial-concurrent-batch-{batch}")
-        batches.append(batch_metric(rows, batch))
         raw_batches.append(rows)
+        write_raw(partial_path, serial, raw_batches)
+        for index, row in enumerate(rows):
+            validate(row, f"f05b-batch-{batch}-stream-{index}")
+        if REQUIRE_SERIAL_EXACT:
+            compare_rows(serial, rows, f"serial-concurrent-batch-{batch}")
+        batches.append(batch_metric(rows, batch))
 
-    raw = {"serial": serial, "batches": raw_batches}
     raw_path = args.attempt_dir / "concurrent-raw.json"
-    raw_path.write_text(
-        json.dumps(raw, indent=2, ensure_ascii=True, sort_keys=True) + "\n",
-        encoding="ascii",
-    )
+    write_raw(raw_path, serial, raw_batches)
 
     reference_exact = None
     if args.reference:
@@ -184,10 +233,18 @@ def main() -> int:
         prior_raw = json.loads(
             Path(prior_summary["raw_artifact"]).read_text(encoding="ascii")
         )
-        compare_rows(prior_raw["serial"], serial, "restart-serial")
-        for batch, rows in enumerate(raw_batches):
-            compare_rows(prior_raw["batches"][batch], rows, f"restart-batch-{batch}")
-        reference_exact = True
+        reference_exact = rows_exact(prior_raw["serial"], serial) and all(
+            rows_exact(prior_raw["batches"][batch], rows)
+            for batch, rows in enumerate(raw_batches)
+        )
+        if REQUIRE_RESTART_EXACT:
+            compare_rows(prior_raw["serial"], serial, "restart-serial")
+            for batch, rows in enumerate(raw_batches):
+                compare_rows(
+                    prior_raw["batches"][batch],
+                    rows,
+                    f"restart-batch-{batch}",
+                )
 
     summary = {
         "schema": "b70.qwen38-fp8-concurrent.v1",
@@ -202,7 +259,11 @@ def main() -> int:
         "raw_artifact": str(raw_path),
         "reference": str(args.reference) if args.reference else None,
         "reference_token_arrays_exact": reference_exact,
-        "serial_concurrent_token_arrays_exact": True,
+        "restart_exact_required": REQUIRE_RESTART_EXACT,
+        "serial_concurrent_token_arrays_exact": all(
+            rows_exact(serial, rows) for rows in raw_batches
+        ),
+        "serial_concurrent_exact_required": REQUIRE_SERIAL_EXACT,
         "verdict": "passed",
     }
     summary_path = args.attempt_dir / "concurrent.json"

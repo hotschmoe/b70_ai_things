@@ -387,6 +387,19 @@ with open(output, "w", encoding="ascii") as handle:
     json.dump(data, handle, indent=2, ensure_ascii=True, sort_keys=True)
     handle.write("\n")
 PY
+    if [ -n "$EXTRA_WORKLOAD" ]; then
+      extra_reference=()
+      if [ "$attempt" -gt 1 ]; then
+        extra_reference=(
+          --reference "$RESULT_DIR/attempt-1/$EXTRA_WORKLOAD_RESULT"
+        )
+      fi
+      "$EXTRA_WORKLOAD" \
+        --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
+        --bench "$BENCH" --attempt-dir "$attempt_dir" \
+        "${extra_reference[@]}" \
+        >"$attempt_dir/extra-workload.stdout"
+    fi
   else
     python3 "$BENCH" \
       --base-url "http://127.0.0.1:${PORT}" --model "$SERVED" \
