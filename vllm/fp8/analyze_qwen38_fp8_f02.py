@@ -95,6 +95,8 @@ def analyze(
     attempt_count: int,
     served: str,
     publisher_paths: list[Path],
+    schema: str = "b70.qwen38-fp8-neural-f02.v2",
+    completion_route: str = "explicit-work-wait",
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -129,7 +131,7 @@ def analyze(
         blockers.insert(0, "fresh P2P-off server lifetimes changed raw output token arrays")
     blockers.append("local P2P-off safety port is not the publisher P2P-on profile")
     return {
-        "schema": "b70.qwen38-fp8-neural-f02.v2",
+        "schema": schema,
         "verdict": verdict,
         "served_model": served,
         "attempts": attempt_count,
@@ -138,6 +140,7 @@ def analyze(
         "mtp": 0,
         "xpu_graph": False,
         "inductor": True,
+        "completion_route": completion_route,
         "quantization": "fp8-block-weights-w8a16-runtime",
         "dtype": "float16",
         "kv_cache_dtype": "auto-observed-float16-target",
@@ -162,12 +165,19 @@ def main() -> int:
     parser.add_argument("--attempts", type=int, default=2)
     parser.add_argument("--served-model", required=True)
     parser.add_argument("--publisher-attempt", action="append", type=Path, default=[])
+    parser.add_argument("--schema", default="b70.qwen38-fp8-neural-f02.v2")
+    parser.add_argument("--completion-route", default="explicit-work-wait")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.attempts < 2:
         parser.error("--attempts must be at least 2")
     summary = analyze(
-        args.result_dir, args.attempts, args.served_model, args.publisher_attempt
+        args.result_dir,
+        args.attempts,
+        args.served_model,
+        args.publisher_attempt,
+        args.schema,
+        args.completion_route,
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")

@@ -1,0 +1,6 @@
+ARG BASE_IMAGE=neural-download/vllm-openai-xpu:qwen38-fp8-collective-work-wait-r15@sha256:dce80db0a1ad861145e88b1c565f29172641912dc75a3b50d08e370f7d58e291
+FROM ${BASE_IMAGE}
+
+# Restore only the pinned vLLM source-default synchronous all-reduce route.
+COPY vllm/distributed/device_communicators/xpu_communicator.py \
+  /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py

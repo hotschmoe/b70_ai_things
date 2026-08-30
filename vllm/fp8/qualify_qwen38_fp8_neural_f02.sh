@@ -15,13 +15,18 @@ SUITE="$SOURCE/repro/qwen36-27b-autoround-int4-b70/realistic-suite-v1.json"
 SUITE_SHA256="df03f49d36c36d2b8ac4cd117b7cb2e42c74878af1f6926690ebb89eeccd47ac"
 BENCH="$SOURCE/scripts/bench-openai-realistic-suite.py"
 CANARIES="$SOURCE/scripts/neural-download-canaries.py"
-PUBLISHER_A="$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15a/performance.json"
-PUBLISHER_B="$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15b/performance.json"
+PUBLISHER_A="${PUBLISHER_A:-$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15a/performance.json}"
+PUBLISHER_B="${PUBLISHER_B:-$SOURCE/experiments/qwen38-27b-b70/data/qwen38-fp8-deterministic-compiled-workwait-20260828-r15b/performance.json}"
 LAUNCHER="$SCRIPT_DIR/serve_qwen38_fp8_neural_f02.sh"
+CAMPAIGN_ID="${CAMPAIGN_ID:-f02}"
+CAMPAIGN_LABEL="${CAMPAIGN_LABEL:-F02}"
+CONTAINER_PREFIX="${CONTAINER_PREFIX:-qwen38-fp8-neural-f02}"
+ANALYZER_SCHEMA="${ANALYZER_SCHEMA:-b70.qwen38-fp8-neural-f02.v2}"
+COMPLETION_ROUTE="${COMPLETION_ROUTE:-explicit-work-wait}"
 STAMP="${STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 RESULT_DIR="${RESULT_DIR:-$ROOT/results/f02_qwen38_fp8_neural/$STAMP}"
 CACHE_ROOT="${CACHE_ROOT:-$ROOT/cache/f02_qwen38_fp8_neural/$STAMP}"
-SERVED="qwen3.8-27b-FP8-official-W8A16-mtp0-p2p0-fp16kv-f02"
+SERVED="${SERVED:-qwen3.8-27b-FP8-official-W8A16-mtp0-p2p0-fp16kv-f02}"
 PORT="${PORT:-18187}"
 READY_TIMEOUT="${READY_TIMEOUT:-1200}"
 READY_STALL="${READY_STALL:-360}"
@@ -40,13 +45,16 @@ case "${1:-}" in
     echo "result_dir=$RESULT_DIR"
     echo "cache_root=$CACHE_ROOT"
     echo "attempts=$ATTEMPTS"
+    echo "campaign_id=$CAMPAIGN_ID"
+    echo "completion_route=$COMPLETION_ROUTE"
+    echo "container_prefix=$CONTAINER_PREFIX"
     echo "p2p=0"
     echo "swap_extra=0"
-    "$LAUNCHER" --print-config
+    env NAME="${CONTAINER_PREFIX}-${STAMP}-attempt-N" "$LAUNCHER" --print-config
     exit 0
     ;;
   '')
-    exec env B70_AGENT=f02-qwen38-fp8-neural \
+    exec env B70_AGENT="${CAMPAIGN_ID}-qwen38-fp8-neural" \
       "$REPO/bin/gpu-run" bash "$0" --leased
     ;;
   *) echo "usage: $0 [--print-config]" >&2; exit 2 ;;
@@ -152,7 +160,7 @@ monitor_host() {
     local running_name
     memory_snapshot sample
     cat /proc/pressure/memory
-    running_name="$(docker ps --filter 'name=qwen38-fp8-neural-f02-' --format '{{.Names}}' | head -1)"
+    running_name="$(docker ps --filter "name=${CONTAINER_PREFIX}-" --format '{{.Names}}' | head -1)"
     if [ -n "$running_name" ]; then
       docker stats --no-stream --format \
         'docker name={{.Name}} mem={{.MemUsage}} mem_percent={{.MemPerc}} pids={{.PIDs}}' \
@@ -223,7 +231,7 @@ for attempt in $(seq 1 "$ATTEMPTS"); do
   host_gate
   attempt_dir="$RESULT_DIR/attempt-$attempt"
   cache_dir="$CACHE_ROOT/attempt-$attempt"
-  current_name="qwen38-fp8-neural-f02-${STAMP}-${attempt}"
+  current_name="${CONTAINER_PREFIX}-${STAMP}-${attempt}"
   mkdir -p "$attempt_dir"
   echo "attempt=$attempt server -> start"
   env MODEL_DIR="$MODEL_DIR" CACHE_DIR="$cache_dir" NAME="$current_name" \
@@ -292,6 +300,7 @@ python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
   --result-dir "$RESULT_DIR" --attempts "$ATTEMPTS" \
   --served-model "$SERVED" \
   --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
+  --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
   --output "$RESULT_DIR/summary.json"
 analysis_rc=$?
 set -e
@@ -313,9 +322,9 @@ cat "$RESULT_DIR/summary.json"
 echo "max_host_swap_used_kib=$max_swap_kib"
 echo "VERDICT"
 if [ "$analysis_rc" -eq 0 ]; then
-  echo "F02 passed under the local P2P-off no-swap safety port."
+  echo "$CAMPAIGN_LABEL passed cross-server exactness under the local P2P-off no-swap safety port."
 else
-  echo "F02 failed cross-server raw-token exactness."
+  echo "$CAMPAIGN_LABEL failed cross-server raw-token exactness."
 fi
 echo "result_dir=$RESULT_DIR"
 echo "$analysis_rc" >"$RESULT_DIR/qualifier.rc"

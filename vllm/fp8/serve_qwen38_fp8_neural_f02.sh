@@ -17,10 +17,11 @@ MAX_MODEL_LEN="${MAX_MODEL_LEN:-1024}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
 MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
 MEMORY_GIB="${MEMORY_GIB:-32}"
+COMMUNICATOR_SHA256="${COMMUNICATOR_SHA256:-5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
-  "5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d  /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py"
+  "$COMMUNICATOR_SHA256  /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py"
   "7c36e4a8dab4bfc06b1d5be2d8466e8cdc94099dd5409424fecc6dd8ffc2c208  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/kernels/linear/scaled_mm/xpu.py"
   "7afb4de8b87d7f180d696f7cadad8b9d48d9ab7b706ae19616425c4f9456fb19  /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py"
 )
@@ -59,6 +60,7 @@ verify_image() {
 print_config() {
   echo "image=$IMAGE"
   echo "expected_image_id=$EXPECTED_IMAGE_ID"
+  echo "communicator_sha256=$COMMUNICATOR_SHA256"
   echo "model_dir=$MODEL_DIR"
   echo "served_model=$SERVED"
   echo "container=$NAME"
