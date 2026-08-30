@@ -6317,3 +6317,43 @@ speed signal to MTP yet. Run F04a with an exact copy of F04's cache and a
 synthetic zero-acceptance sampler, retaining MTP1 target verification while
 forcing every draft rejection. Require reuse of target AOT key `ed4b9708...`;
 keep long, concurrent, P2P-on, and shelf work blocked.
+
+### 2026-08-30e - F04a clears MTP acceptance and implicates autotune selection
+
+CONFIG -> harness commit `f59c6d9`; exact copy of F04's verified cache and
+unchanged F04 MTP1 target/draft route, except synthetic acceptance was fixed at
+zero. Result root was
+`/mnt/vm_8tb/b70/results/f04a_qwen38_fp8_neural/20260830T020500Z/`.
+
+COMMAND -> under the whole-box lease, verify the copied 3,081-file cache and
+all model/image/runtime bytes; run two fresh server processes; require direct
+loads of the same target and draft AOT artifacts; execute the full 12-prompt
+suite and canaries at zero accepted drafts; gracefully tear down; and pass
+card plus compiled P2P-off collective health between and after processes.
+
+RESULT -> both processes directly loaded target key `ed4b9708...` and draft
+key `aa87ccb...` on both ranks. Acceptance was exactly zero, yet both attempts
+matched normal F04 12/12 and one another 12/12. Forced-rejection diagnostic
+rates were 10.159880 and 10.178679 tok/s, median 10.169280 and 0.185 percent
+spread. Normal F04's speed signal comes from accepted work, but its external
+target gate remains failed.
+
+RESULT -> F04a matched both local F03a MTP0 references 5/12, both publisher
+MTP0 references 8/12, and both publisher MTP1 references 8/12. The publisher
+MTP0/MTP1 references are mutually exact. Canaries, teardown, and every health
+check passed; host RAM was 8.336 to 8.442 GiB, swap stayed zero, and minimum
+MemAvailable was 112,926,784 KiB. The 3,131-file final cache manifest SHA256
+was `ecf1d795d43494631134f8bbf943d42b5e2d91a5a68b1e257f96d75dab254a6c`;
+summary SHA256 was
+`911199dbce6e42cccd2ec7ba03e2fc7067ed0e045d3e4c82c6884d0880e7694b`.
+
+RESULT -> read-only F02 cache comparison found the same primary graph key and
+78 common Triton `.best_config` sites. Thirty-seven selected different block,
+reduction, or warp configurations across fresh compiles; 41 differed only in
+tuning time. The resulting rank AOT model binaries also differed.
+
+VERDICT -> F04a passes and closes draft acceptance as a cause. Fresh compiler
+autotune selection is now the leading local target-instability mechanism.
+Proceed to F02b with XPU combo-kernel benchmarking disabled and separate fresh
+MTP0 caches. Keep P2P-on full serving, long, concurrent, and shelf work
+blocked.

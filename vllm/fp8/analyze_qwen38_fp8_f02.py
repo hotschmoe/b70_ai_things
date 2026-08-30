@@ -99,6 +99,8 @@ def analyze(
     completion_route: str = "explicit-work-wait",
     require_reference_exact: bool = False,
     mtp: int = 0,
+    inductor_combo_kernels: bool = True,
+    inductor_benchmark_combo_kernel: bool = True,
 ) -> dict[str, Any]:
     attempts = [load_attempt(root, index, served) for index in range(1, attempt_count + 1)]
     reference = attempts[0]
@@ -154,6 +156,8 @@ def analyze(
         "mtp": mtp,
         "xpu_graph": False,
         "inductor": True,
+        "inductor_combo_kernels": inductor_combo_kernels,
+        "inductor_benchmark_combo_kernel": inductor_benchmark_combo_kernel,
         "completion_route": completion_route,
         "quantization": "fp8-block-weights-w8a16-runtime",
         "dtype": "float16",
@@ -185,6 +189,10 @@ def main() -> int:
     parser.add_argument("--completion-route", default="explicit-work-wait")
     parser.add_argument("--require-reference-exact", action="store_true")
     parser.add_argument("--mtp", type=int, default=0)
+    parser.add_argument("--inductor-combo-kernels", type=int, choices=(0, 1), default=1)
+    parser.add_argument(
+        "--inductor-benchmark-combo-kernel", type=int, choices=(0, 1), default=1
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.attempts < 2:
@@ -198,6 +206,8 @@ def main() -> int:
         args.completion_route,
         args.require_reference_exact,
         args.mtp,
+        bool(args.inductor_combo_kernels),
+        bool(args.inductor_benchmark_combo_kernel),
     )
     output = args.output or args.result_dir / "summary.json"
     output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")

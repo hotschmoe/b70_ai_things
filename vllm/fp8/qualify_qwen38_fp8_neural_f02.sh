@@ -39,6 +39,8 @@ SHARED_CACHE="${SHARED_CACHE:-0}"
 REQUIRE_REFERENCE_EXACT="${REQUIRE_REFERENCE_EXACT:-0}"
 SEED_CACHE_FROM="${SEED_CACHE_FROM:-}"
 SEED_CACHE_MANIFEST="${SEED_CACHE_MANIFEST:-}"
+INDUCTOR_COMBO_KERNELS="${INDUCTOR_COMBO_KERNELS:-1}"
+INDUCTOR_BENCHMARK_COMBO_KERNEL="${INDUCTOR_BENCHMARK_COMBO_KERNEL:-1}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -86,6 +88,14 @@ case "$REQUIRE_REFERENCE_EXACT" in
   0|1) ;;
   *) echo "REQUIRE_REFERENCE_EXACT must be 0 or 1" >&2; exit 2 ;;
 esac
+for pair in \
+  "INDUCTOR_COMBO_KERNELS:$INDUCTOR_COMBO_KERNELS" \
+  "INDUCTOR_BENCHMARK_COMBO_KERNEL:$INDUCTOR_BENCHMARK_COMBO_KERNEL"; do
+  case "${pair#*:}" in
+    0|1) ;;
+    *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
+  esac
+done
 [ ! -e "$RESULT_DIR" ] || { echo "RESULT_DIR must be new: $RESULT_DIR" >&2; exit 1; }
 [ ! -e "$CACHE_ROOT" ] || { echo "CACHE_ROOT must be new: $CACHE_ROOT" >&2; exit 1; }
 [ -z "$SEED_CACHE_FROM" ] || [ -d "$SEED_CACHE_FROM" ] || {
@@ -288,6 +298,8 @@ for attempt in $(seq 1 "$ATTEMPTS"); do
   echo "attempt=$attempt server -> start"
   env MODEL_DIR="$MODEL_DIR" CACHE_DIR="$cache_dir" NAME="$current_name" \
     ALLOW_EXISTING_CACHE="$SHARED_CACHE" \
+    INDUCTOR_COMBO_KERNELS="$INDUCTOR_COMBO_KERNELS" \
+    INDUCTOR_BENCHMARK_COMBO_KERNEL="$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
     SERVED="$SERVED" PORT="$PORT" "$LAUNCHER" run \
     >"$attempt_dir/server.log" 2>&1 &
   server_pid=$!
@@ -359,6 +371,8 @@ python3 "$SCRIPT_DIR/analyze_qwen38_fp8_f02.py" \
   --publisher-attempt "$PUBLISHER_A" --publisher-attempt "$PUBLISHER_B" \
   --schema "$ANALYZER_SCHEMA" --completion-route "$COMPLETION_ROUTE" \
   --mtp "${SPECULATIVE_TOKENS:-0}" \
+  --inductor-combo-kernels "$INDUCTOR_COMBO_KERNELS" \
+  --inductor-benchmark-combo-kernel "$INDUCTOR_BENCHMARK_COMBO_KERNEL" \
   "${reference_gate_args[@]}" \
   --output "$RESULT_DIR/summary.json"
 analysis_rc=$?

@@ -50,6 +50,25 @@ class AnalyzerTests(unittest.TestCase):
             self.assertEqual(summary["verdict"], "passed")
             self.assertEqual(summary["exact_prompts_minimum_pair"], 12)
             self.assertTrue(summary["performance_attribution_qualified"])
+            self.assertTrue(summary["inductor_combo_kernels"])
+            self.assertTrue(summary["inductor_benchmark_combo_kernel"])
+
+    def test_combo_kernel_metadata_can_be_disabled(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            arrays = [[index, index + 1] for index in range(12)]
+            write_attempt(root, 1, arrays)
+            write_attempt(root, 2, arrays)
+            summary = analyze(
+                root,
+                2,
+                SERVED,
+                [],
+                inductor_combo_kernels=False,
+                inductor_benchmark_combo_kernel=False,
+            )
+            self.assertFalse(summary["inductor_combo_kernels"])
+            self.assertFalse(summary["inductor_benchmark_combo_kernel"])
 
     def test_mismatch_is_persisted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
