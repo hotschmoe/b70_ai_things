@@ -246,15 +246,18 @@ negatively: only 7/12 natural-prompt arrays matched across fresh P2P-off
 lifetimes and its 11.372225 tok/s diagnostic median was about one third of the
 publisher's P2P-on MTP0 rate. F02a found 5/5 exact repeats inside one lifetime,
 but its third fresh server selected a prompt-specific mosaic of the two F02
-outputs. F03 is now the active bounded diagnostic; F04 and later qualification
-remain blocked on a deterministic target.
+outputs. F03 also matched only 7/12 arrays after restoring source-default
+completion, so explicit `Work.wait()` is not causal. F03a is now the active
+shared-compiler-cache discriminator; F04 and later qualification remain
+blocked on a deterministic target.
 
 | ID | Priority | Topology | Change under test | Required comparison and gate |
 | --- | --- | --- | --- | --- |
 | F01 | P0 | Off-device | Fetch exact model revision and reproduction source; ledger image, vLLM, Torch, kernel, GDN, RMSNorm, W8A16, MTP, and oneCCL patches | Exact source/patch/model manifests, clean dedicated build roots, no quarantined binary reuse |
 | F02 | P0 | TP2 | Graph-off W8A16 MTP0, FP16 target/KV, P2P off | Two fresh servers, exact natural corpus and raw token arrays, clean teardown and compiled collective health |
 | F02a | P0 | TP2 | Repeat the five F02 mismatch prompts twice inside one fresh P2P-off lifetime | Complete: 5/5 within-lifetime exact; instability is selected at fresh initialization and is prompt-specific |
-| F03 | P0 | TP2 | Source-default completion versus recipe `Work.wait()` route, P2P off | Same target arrays and state; retain only a measured endpoint or stability benefit |
+| F03 | P0 | TP2 | Source-default completion versus recipe `Work.wait()` route, P2P off | Closed negative: source-default also matched only 7/12 arrays and added unstable prompts |
+| F03a | P0 | TP2 | Two fresh Work.wait servers reuse the compiler cache produced by lifetime 1 | Exact arrays implicate fresh compile artifacts; divergence moves the search to process/native-runtime state |
 | F04 | P0 | TP2 | Deterministic packed-RMS MTP1 recipe on the qualified F02 target | Exact MTP0 target arrays on two fresh empty-cache servers; record acceptance and decode |
 | F05 | P1 | TP2 | P2P-off 2K through 32K context and long-output qualification | Exact prompt usage, target identity, bounded host memory, no graph/collective fault, teardown health |
 | F06 | P2 | Isolated oracle only | Recipe direct-P2P setting | Do not run a full server until a bounded loaded-context queue-handoff oracle passes and recovery is pre-positioned |

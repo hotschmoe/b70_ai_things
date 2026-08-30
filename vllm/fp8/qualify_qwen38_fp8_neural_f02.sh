@@ -34,6 +34,7 @@ HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
 MIN_AVAILABLE_GIB="${MIN_AVAILABLE_GIB:-96}"
 MAX_SWAP_USED_MIB="${MAX_SWAP_USED_MIB:-1024}"
 ATTEMPTS="${ATTEMPTS:-2}"
+SHARED_CACHE="${SHARED_CACHE:-0}"
 
 case "${1:-}" in
   --leased) shift ;;
@@ -47,10 +48,12 @@ case "${1:-}" in
     echo "attempts=$ATTEMPTS"
     echo "campaign_id=$CAMPAIGN_ID"
     echo "completion_route=$COMPLETION_ROUTE"
+    echo "shared_cache=$SHARED_CACHE"
     echo "container_prefix=$CONTAINER_PREFIX"
     echo "p2p=0"
     echo "swap_extra=0"
-    env NAME="${CONTAINER_PREFIX}-${STAMP}-attempt-N" "$LAUNCHER" --print-config
+    env NAME="${CONTAINER_PREFIX}-${STAMP}-attempt-N" \
+      ALLOW_EXISTING_CACHE="$SHARED_CACHE" "$LAUNCHER" --print-config
     exit 0
     ;;
   '')
@@ -68,6 +71,10 @@ for pair in \
   case "$value" in ''|*[!0-9]*|0) echo "${pair%%:*} must be positive" >&2; exit 2 ;; esac
 done
 [ "$ATTEMPTS" -ge 2 ] || { echo "ATTEMPTS must be at least 2" >&2; exit 2; }
+case "$SHARED_CACHE" in
+  0|1) ;;
+  *) echo "SHARED_CACHE must be 0 or 1" >&2; exit 2 ;;
+esac
 [ ! -e "$RESULT_DIR" ] || { echo "RESULT_DIR must be new: $RESULT_DIR" >&2; exit 1; }
 [ ! -e "$CACHE_ROOT" ] || { echo "CACHE_ROOT must be new: $CACHE_ROOT" >&2; exit 1; }
 [ "$(git -C "$SOURCE" rev-parse HEAD)" = "$SOURCE_COMMIT" ] || {
@@ -230,11 +237,16 @@ monitor_pid=$!
 for attempt in $(seq 1 "$ATTEMPTS"); do
   host_gate
   attempt_dir="$RESULT_DIR/attempt-$attempt"
-  cache_dir="$CACHE_ROOT/attempt-$attempt"
+  if [ "$SHARED_CACHE" -eq 1 ]; then
+    cache_dir="$CACHE_ROOT/shared"
+  else
+    cache_dir="$CACHE_ROOT/attempt-$attempt"
+  fi
   current_name="${CONTAINER_PREFIX}-${STAMP}-${attempt}"
   mkdir -p "$attempt_dir"
   echo "attempt=$attempt server -> start"
   env MODEL_DIR="$MODEL_DIR" CACHE_DIR="$cache_dir" NAME="$current_name" \
+    ALLOW_EXISTING_CACHE="$SHARED_CACHE" \
     SERVED="$SERVED" PORT="$PORT" "$LAUNCHER" run \
     >"$attempt_dir/server.log" 2>&1 &
   server_pid=$!

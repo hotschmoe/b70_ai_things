@@ -6201,3 +6201,44 @@ performance. Continue to F03: hold the P2P-off runtime fixed and compare the
 source-default collective-completion route against explicit `Work.wait()`.
 MTP, long-context, concurrency, direct-P2P serving, and shelf work remain
 blocked.
+
+### 2026-08-30b - F03 source-default completion also changes target
+
+CONFIG -> harness commit `30888bc`; official Qwen3.8 FP8 plus W8A16 TP2,
+P2P-off, MTP0, graph-off, deterministic-Inductor, FP16 target/automatic-KV
+route; and a one-file image overlay restoring pinned vLLM source-default
+synchronous all-reduce. Image ID was `c4fc0d65`; source-default communicator
+SHA256 was `527cbfb250760abc62096ee7cd612307b821f21b72dee1687ad866620ec89b6d`.
+Result root was
+`/mnt/vm_8tb/b70/results/f03_qwen38_fp8_neural/20260830T004500Z/`.
+
+COMMAND -> under the whole-box lease, verify all model and runtime bytes, pass
+card and compiled P2P-off collective health, then run the complete 12-prompt
+natural suite and independent canaries in two fresh servers with separate
+empty compiler caches. Gracefully tear down and repeat health after each
+lifetime; compare raw arrays against one another and both local F02 Work.wait
+lifetimes.
+
+RESULT -> source-default completion also matched only 7/12 arrays across its
+fresh lifetimes. Mismatches began at tokens 392 for
+`incident-retrospective`, 303 for `code-review`, 7 for
+`architecture-tradeoff`, 127 for `risk-register`, and 479 for
+`performance-hypotheses`. The latter two newly unstable prompts were exact in
+both F02 Work.wait lifetimes. Across all four F02/F03 lifetimes, seven prompts
+had two or three unique outputs and only five were invariant.
+
+RESULT -> diagnostic rates were 11.722245 and 11.577714 tok/s, median
+11.649980 tok/s. The apparent 2.442 percent increase over Work.wait is not
+qualified because target arrays diverged. Both canaries passed. All pre/inter/
+post card and compiled collective health passed. Across 293 host samples,
+swap stayed zero, minimum MemAvailable was 113,374,204 KiB, and memory PSI
+totals did not move. Container host-RAM use peaked near 7.716 GiB, with no
+configured kernel or server fatal marker. Summary SHA256 was
+`c7e542cafc6f095dbd9c39975a6f18e79aa9f51a988799f65cf2fc3a917debed`.
+
+VERDICT -> close F03 negatively. Explicit `Work.wait()` is not the root cause,
+and source-default completion has no qualified benefit. The separate compiler
+caches had identical primary AOTAutograd graph keys but different secondary
+artifact keys. Run F03a with two fresh Work.wait processes sharing the cache
+created by lifetime 1 to discriminate compilation from later process/runtime
+state. Keep all promotion work blocked.

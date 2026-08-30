@@ -77,7 +77,9 @@ F02a passes its diagnostic gate: this route is deterministic within one
 server lifetime. It does not repair F02 or qualify the target for MTP, long
 context, concurrency, performance attribution, or shelf promotion.
 
-Proceed to F03 as a bounded P2P-off comparison of source-default collective
-completion against the recipe's explicit `Work.wait()` route. Hold all other
-runtime files, model bytes, compiler settings, prompts, and health gates fixed.
-Direct-P2P full serving remains quarantined.
+F03 subsequently restored source-default synchronous completion while holding
+the remaining runtime fixed. It still matched only 7/12 arrays across two
+fresh lifetimes and introduced instability on two prompts that were stable in
+F02. Explicit `Work.wait()` is therefore not the root cause. Proceed to the
+shared-compiler-cache F03a discriminator. Direct-P2P full serving remains
+quarantined.

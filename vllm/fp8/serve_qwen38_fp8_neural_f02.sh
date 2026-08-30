@@ -17,6 +17,7 @@ MAX_MODEL_LEN="${MAX_MODEL_LEN:-1024}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
 MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
 MEMORY_GIB="${MEMORY_GIB:-32}"
+ALLOW_EXISTING_CACHE="${ALLOW_EXISTING_CACHE:-0}"
 COMMUNICATOR_SHA256="${COMMUNICATOR_SHA256:-5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d}"
 
 EXPECTED_FILE_HASHES=(
@@ -79,6 +80,7 @@ print_config() {
   echo "max_num_batched_tokens=$MAX_NUM_BATCHED_TOKENS"
   echo "container_memory_gib=$MEMORY_GIB"
   echo "container_swap_extra_gib=0"
+  echo "allow_existing_cache=$ALLOW_EXISTING_CACHE"
 }
 
 case "${1:-}" in
@@ -98,9 +100,20 @@ for pair in \
   positive_integer "${pair%%:*}" "${pair#*:}"
 done
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 2; }
+case "$ALLOW_EXISTING_CACHE" in
+  0|1) ;;
+  *) echo "ALLOW_EXISTING_CACHE must be 0 or 1" >&2; exit 2 ;;
+esac
 [ -d "$MODEL_DIR" ] || { echo "model directory is missing: $MODEL_DIR" >&2; exit 1; }
 [ -n "$CACHE_DIR" ] || { echo "set CACHE_DIR to a new writable directory" >&2; exit 2; }
-[ ! -e "$CACHE_DIR" ] || { echo "CACHE_DIR must be new: $CACHE_DIR" >&2; exit 1; }
+if [ "$ALLOW_EXISTING_CACHE" -eq 0 ]; then
+  [ ! -e "$CACHE_DIR" ] || { echo "CACHE_DIR must be new: $CACHE_DIR" >&2; exit 1; }
+else
+  [ ! -e "$CACHE_DIR" ] || [ -d "$CACHE_DIR" ] || {
+    echo "CACHE_DIR exists but is not a directory: $CACHE_DIR" >&2
+    exit 1
+  }
+fi
 docker inspect "$NAME" >/dev/null 2>&1 && {
   echo "container already exists: $NAME" >&2
   exit 1
