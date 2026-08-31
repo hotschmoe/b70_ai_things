@@ -7127,3 +7127,42 @@ not yet a runtime speed qualification or a byte-identical publisher OCI
 reproduction. The reusable mechanisms and missing publisher evidence are
 recorded in
 `docs/20260831_neural_r31_image_provenance_and_transfer_ledger.md`.
+
+### 2026-08-31b - Qwen3.8 native W8A8 INT8 closes behind FP8
+
+CONFIG -> Qwen3.8-27B compressed-tensors W8A8 GPTQ, FP16 activations, BF16
+KV, TP2, direct oneCCL P2P, FULL decode graph, maximum four sequences,
+237,568 context, and image `5dad53a3...`. The tracked source adds a native
+oneDNN/XMX `s8 x s8` GEMM, cached scratchpad, optional input dependency, and
+an opt-in native per-token INT8 quantizer to `vllm-xpu-kernels` commit
+`1e90ffa672ba`.
+
+COMMAND -> pass real-shape FP16 M=1/M=4 numerical and latency oracles, run a
+complete 12-prompt MTP1 performance suite and concurrent quality canary, run
+bounded target-only Triton-quant and native-quant FULL screens, and attempt a
+matched stock Triton FULL control. Inspect speculative metrics and the MTP
+safetensor, then tear down and require card plus compiled collective health.
+
+RESULT -> the native GEMM cosine was at least 0.99999988 and all tested FP16
+M=1 native quant bytes matched Triton. MTP1 measured 22.7345 tok/s strict and
+22.5071 tok/s class-balanced intervals, but accepted 0/6,076 draft tokens and
+passed only 24/32 quality requests. Target-only measured 26.5623 tok/s strict
+in a one-prompt screen and passed 32/32 quality requests. Native activation
+quantization measured 26.0765 tok/s in the same bounded screen and did not
+win. The stock Triton INT8 path failed before service at the known Torch FX
+empty-`TreeSpec` partition boundary; the custom op is what makes FULL capture
+possible. All final card and collective health checks passed.
+
+RESULT -> exact 262,144 MTP1 with FP16 KV failed only the capacity gate:
+8.69 GiB was required and 7.90 GiB was available, for an estimated 237,952
+token maximum. The loaded MTP artifact is unquantized and incompatible with
+useful speculation against this quantized target. The W8A8 model dynamically
+quantizes activations before about 160 linears per token, while FP8 W8A16
+retains FP16 activations and avoids that repeated reduction/quantization work.
+
+VERDICT -> preserve native INT8 as a research control but do not promote it.
+Remove MTP1 from the default route, retain target-only FULL as the best INT8
+diagnostic, and return daily-driver work to the qualified FP8 W8A16 MTP1
+route. Resume INT8 only around fused norm/quant or quant deduplication plus a
+matching quantized MTP artifact. Full evidence is in
+`docs/20260831_qwen38_w8a8_native_int8_result.md`.

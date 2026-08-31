@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdlib>
 
 #include <c10/xpu/XPUStream.h>
@@ -10,6 +11,63 @@
 #include "onednn_runtime.h"
 
 namespace oneDNN {
+
+struct int8_gemm_scratchpad_ring_t {
+  std::vector<torch::Tensor> tensors;
+  int next = 0;
+};
+
+static inline int get_int8_gemm_scratchpad_ring_size() {
+  static const int ring_size = []() {
+    const char* env = std::getenv("VLLM_XPU_INT8_GEMM_SCRATCHPAD_RING_SIZE");
+    if (env == nullptr || env[0] == '\0') {
+      return 1;
+    }
+    int parsed = std::atoi(env);
+    if (parsed < 1) {
+      parsed = 1;
+    }
+    if (parsed > 16) {
+      parsed = 16;
+    }
+    return parsed;
+  }();
+  return ring_size;
+}
+
+static inline torch::Tensor& get_int8_gemm_scratchpad_cache(
+    const int device_id,
+    const int scratchpad_size,
+    const torch::TensorOptions& options) {
+  static thread_local std::array<
+      ska::flat_hash_map<int, int8_gemm_scratchpad_ring_t>,
+      16>
+      scratchpads;
+
+  auto& device_scratchpads = scratchpads[device_id];
+  auto& entry = device_scratchpads[scratchpad_size];
+  const int ring_size = get_int8_gemm_scratchpad_ring_size();
+  if (static_cast<int>(entry.tensors.size()) != ring_size) {
+    entry.tensors.clear();
+    entry.tensors.reserve(ring_size);
+    for (int i = 0; i < ring_size; ++i) {
+      entry.tensors.push_back(
+          at::empty({scratchpad_size}, options.dtype(at::kByte), c10::nullopt));
+    }
+    entry.next = 0;
+  } else {
+    for (int i = 0; i < ring_size; ++i) {
+      if (!entry.tensors[i].defined()) {
+        entry.tensors[i] = at::empty(
+            {scratchpad_size}, options.dtype(at::kByte), c10::nullopt);
+      }
+    }
+  }
+
+  torch::Tensor& tensor = entry.tensors[entry.next % ring_size];
+  entry.next = (entry.next + 1) % ring_size;
+  return tensor;
+}
 
 // per-token dynamic-int8 activations x per-channel int8 weights -> f16/bf16
 //
@@ -151,13 +209,23 @@ static inline void dnnl_matmul_w8a8_int8(
     arg_handles.emplace_back(DNNL_ARG_BIAS, bias.value().data_ptr());
   }
   int scratchpad_size = matmul_ext.get_scratchpad_size();
-  torch::Tensor scratchpad_tensor = at::empty(
-      {scratchpad_size}, mat1.options().dtype(at::kByte), c10::nullopt);
+  torch::Tensor& scratchpad_tensor =
+      get_int8_gemm_scratchpad_cache(dev_id, scratchpad_size, mat1.options());
   arg_handles.emplace_back(DNNL_ARG_SCRATCHPAD, scratchpad_tensor.data_ptr());
 
   auto& strm = GpuStreamManager::Instance().get_stream();
-  auto done =
-      matmul_ext.execute(strm, engine, std::move(arg_handles), arg_off);
+  if (const char* dependency =
+          std::getenv("VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY");
+      dependency != nullptr && dependency[0] == '1' &&
+      dependency[1] == '\0') {
+    // This oneDNN stream wraps PyTorch's current in-order XPU queue. Put an
+    // explicit queue tail between activation quantization and primitive
+    // submission without relying on the newer execute(deps) overload.
+    auto& queue = c10::xpu::getCurrentXPUStream().queue();
+    queue.ext_oneapi_submit_barrier();
+    TORCH_WARN_ONCE("VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY reached");
+  }
+  auto done = matmul_ext.execute(strm, engine, std::move(arg_handles), arg_off);
   // D9/K1: publish oneDNN completion onto the PyTorch XPU stream so a TP
   // collective cannot consume logits on oneCCL's stream first. Async device
   // dependency, not a host wait. Default off.

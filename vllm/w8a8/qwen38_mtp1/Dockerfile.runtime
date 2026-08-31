@@ -1,0 +1,77 @@
+# syntax=docker/dockerfile:1.7
+
+ARG BASE_IMAGE=b70-local/vllm-openai-xpu:qwen38-fp8-mtp8-rms-f08a
+FROM ${BASE_IMAGE}
+
+ARG BASE_IMAGE_ID
+ARG KERNEL_SOURCE_COMMIT
+ARG KERNEL_PATCH_SHA256
+ARG KERNEL_PATCHED_TREE
+ARG XPU_C_SHA256
+ARG RUNTIME_LIBS_SHA256
+ARG SITE_CUSTOMIZE_SHA256
+
+COPY --from=int8-artifacts _xpu_C.abi3.so \
+  /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/_xpu_C.abi3.so
+COPY --from=int8-artifacts libgdn_attn_kernels_xe_2.so \
+  /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so
+COPY --from=int8-artifacts libgrouped_gemm_xe_2.so \
+  /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libgrouped_gemm_xe_2.so
+COPY --from=int8-artifacts libgrouped_gemm_xe_default.so \
+  /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libgrouped_gemm_xe_default.so
+COPY --from=int8-artifacts libmhc_kernels_xe_2.so \
+  /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libmhc_kernels_xe_2.so
+COPY --from=int8-artifacts libmqa_logits_kernels_xe_2.so \
+  /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libmqa_logits_kernels_xe_2.so
+COPY sitecustomize.py /opt/b70-qwen38-w8a8/sitecustomize.py
+
+RUN test "$(sha256sum /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/_xpu_C.abi3.so | awk '{print $1}')" = "${XPU_C_SHA256}" && \
+    test "$(sha256sum /opt/b70-qwen38-w8a8/sitecustomize.py | awk '{print $1}')" = "${SITE_CUSTOMIZE_SHA256}" && \
+    test "$(sha256sum \
+      /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so \
+      /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libgrouped_gemm_xe_2.so \
+      /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libgrouped_gemm_xe_default.so \
+      /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libmhc_kernels_xe_2.so \
+      /opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/libmqa_logits_kernels_xe_2.so | \
+      awk '{print $1}' | sha256sum | awk '{print $1}')" = "${RUNTIME_LIBS_SHA256}" && \
+    PYTHONPATH=/opt/b70-qwen38-w8a8 /opt/venv/bin/python - <<'PY'
+import torch
+import vllm_xpu_kernels._xpu_C
+
+expected = {
+    "int8_gemm_w8a8": (
+        "_xpu_C::int8_gemm_w8a8(Tensor A, Tensor A_scale, Tensor B, "
+        "Tensor B_scale, ScalarType? out_dtype, Tensor? bias) -> Tensor"
+    ),
+    "per_token_quant_int8_xpu": (
+        "_xpu_C::per_token_quant_int8_xpu(Tensor x) -> (Tensor, Tensor)"
+    ),
+    "per_token_quant_int8_xpu_out": (
+        "_xpu_C::per_token_quant_int8_xpu_out(Tensor x, Tensor(a!) q, "
+        "Tensor(b!) scales) -> (Tensor(a!), Tensor(b!))"
+    ),
+}
+for name, schema in expected.items():
+    actual = str(
+        torch._C._dispatch_find_schema_or_throw(f"_xpu_C::{name}", "").schema()
+    )
+    if actual != schema:
+        raise RuntimeError(f"unexpected {name} schema: {actual}")
+
+for inherited in (
+    "fp8_gemm_out",
+    "gdn_attention",
+    "causal_conv1d_spec",
+    "gated_delta_rule_spec",
+):
+    torch._C._dispatch_find_schema_or_throw(f"_xpu_C::{inherited}", "")
+PY
+
+LABEL b70.parent.image.id="${BASE_IMAGE_ID}" \
+      b70.vllm-xpu-kernels.commit="${KERNEL_SOURCE_COMMIT}" \
+      b70.vllm-xpu-kernels.patch.sha256="${KERNEL_PATCH_SHA256}" \
+      b70.vllm-xpu-kernels.patched-tree="${KERNEL_PATCHED_TREE}" \
+      b70.vllm-xpu-kernels.xpu-c.sha256="${XPU_C_SHA256}" \
+      b70.vllm-xpu-kernels.runtime-libs-manifest.sha256="${RUNTIME_LIBS_SHA256}" \
+      b70.sitecustomize.sha256="${SITE_CUSTOMIZE_SHA256}" \
+      b70.profile="qwen38-w8a8-native-int8-mtp1"

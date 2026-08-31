@@ -42,6 +42,14 @@ FORCE_GRAPH_WITH_COMM="${FORCE_GRAPH_WITH_COMM:-0}"
 USE_V2_MODEL_RUNNER="${USE_V2_MODEL_RUNNER:-0}"
 P2P_ACCESS="${P2P_ACCESS:-0}"
 EXECUTE_MODEL_TIMEOUT_SECONDS="${EXECUTE_MODEL_TIMEOUT_SECONDS:-300}"
+QUANTIZATION="${QUANTIZATION:-fp8}"
+PYTHONPATH_OVERLAY="${PYTHONPATH_OVERLAY:-}"
+FP8_BLOCK_W8A16="${FP8_BLOCK_W8A16:-1}"
+INT8_INPUT_DEPENDENCY="${INT8_INPUT_DEPENDENCY:-0}"
+INT8_COMPLETION_BARRIER="${INT8_COMPLETION_BARRIER:-0}"
+INT8_SCRATCHPAD_RING_SIZE="${INT8_SCRATCHPAD_RING_SIZE:-1}"
+INT8_QUANT_MAX_LOCAL="${INT8_QUANT_MAX_LOCAL:-256}"
+INT8_NATIVE_QUANT="${INT8_NATIVE_QUANT:-0}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
@@ -125,7 +133,14 @@ print_config() {
   echo "execute_model_timeout_seconds=$EXECUTE_MODEL_TIMEOUT_SECONDS"
   echo "dtype=float16"
   echo "kv_cache_dtype=auto"
-  echo "quantization=fp8"
+  echo "quantization=$QUANTIZATION"
+  echo "pythonpath_overlay=${PYTHONPATH_OVERLAY:-none}"
+  echo "fp8_block_w8a16=$FP8_BLOCK_W8A16"
+  echo "int8_input_dependency=$INT8_INPUT_DEPENDENCY"
+  echo "int8_completion_barrier=$INT8_COMPLETION_BARRIER"
+  echo "int8_scratchpad_ring_size=$INT8_SCRATCHPAD_RING_SIZE"
+  echo "int8_quant_max_local=$INT8_QUANT_MAX_LOCAL"
+  echo "int8_native_quant=$INT8_NATIVE_QUANT"
   echo "gpu_memory_utilization=$GPU_MEMORY_UTILIZATION"
   echo "max_model_len=$MAX_MODEL_LEN"
   echo "max_num_seqs=$MAX_NUM_SEQS"
@@ -166,6 +181,32 @@ esac
 case "$P2P_ACCESS" in
   0|1) ;;
   *) echo "P2P_ACCESS must be 0 or 1" >&2; exit 2 ;;
+esac
+case "$QUANTIZATION" in
+  fp8|compressed-tensors) ;;
+  *) echo "QUANTIZATION must be fp8 or compressed-tensors" >&2; exit 2 ;;
+esac
+for pair in \
+  "FP8_BLOCK_W8A16:$FP8_BLOCK_W8A16" \
+  "INT8_INPUT_DEPENDENCY:$INT8_INPUT_DEPENDENCY" \
+  "INT8_COMPLETION_BARRIER:$INT8_COMPLETION_BARRIER" \
+  "INT8_NATIVE_QUANT:$INT8_NATIVE_QUANT"; do
+  case "${pair#*:}" in
+    0|1) ;;
+    *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
+  esac
+done
+case "$INT8_SCRATCHPAD_RING_SIZE" in
+  ''|*[!0-9]*) echo "INT8_SCRATCHPAD_RING_SIZE must be 1 through 16" >&2; exit 2 ;;
+esac
+[ "$INT8_SCRATCHPAD_RING_SIZE" -ge 1 ] && \
+  [ "$INT8_SCRATCHPAD_RING_SIZE" -le 16 ] || {
+  echo "INT8_SCRATCHPAD_RING_SIZE must be 1 through 16" >&2
+  exit 2
+}
+case "$INT8_QUANT_MAX_LOCAL" in
+  32|64|128|256|512) ;;
+  *) echo "INT8_QUANT_MAX_LOCAL must be 32, 64, 128, 256, or 512" >&2; exit 2 ;;
 esac
 case "$COMPILATION_PROFILE" in
   explicit|publisher) ;;
@@ -279,6 +320,8 @@ deterministic_config_json=false
 [ "$INDUCTOR_AUTOTUNE_POINTWISE" -eq 0 ] || autotune_pointwise_json=true
 [ "$INDUCTOR_DETERMINISTIC_CONFIG" -eq 0 ] || deterministic_config_json=true
 compiler_env_args=()
+overlay_env_args=()
+[ -z "$PYTHONPATH_OVERLAY" ] || overlay_env_args=(--env PYTHONPATH="$PYTHONPATH_OVERLAY")
 case "$COMPILATION_PROFILE" in
   publisher)
     if [ "$CUDAGRAPH_MODE" = PIECEWISE ]; then
@@ -338,7 +381,13 @@ exec docker run --rm --name "$NAME" \
   --env VLLM_EXECUTE_MODEL_TIMEOUT_SECONDS="$EXECUTE_MODEL_TIMEOUT_SECONDS" \
   --env TORCHINDUCTOR_DETERMINISTIC=1 \
   "${compiler_env_args[@]}" \
-  --env VLLM_XPU_FP8_BLOCK_W8A16=1 \
+  "${overlay_env_args[@]}" \
+  --env VLLM_XPU_FP8_BLOCK_W8A16="$FP8_BLOCK_W8A16" \
+  --env VLLM_XPU_ONEDNN_INT8_INPUT_DEPENDENCY="$INT8_INPUT_DEPENDENCY" \
+  --env VLLM_XPU_ONEDNN_INT8_COMPLETION_BARRIER="$INT8_COMPLETION_BARRIER" \
+  --env VLLM_XPU_INT8_GEMM_SCRATCHPAD_RING_SIZE="$INT8_SCRATCHPAD_RING_SIZE" \
+  --env B70_XPU_INT8_QUANT_MAX_LOCAL="$INT8_QUANT_MAX_LOCAL" \
+  --env B70_XPU_NATIVE_INT8_QUANT="$INT8_NATIVE_QUANT" \
   --env VLLM_BATCH_INVARIANT=0 \
   --env VLLM_XPU_QWEN_GEMMA_RMSNORM_BATCH_INVARIANT=0 \
   --env VLLM_XPU_QWEN_GEMMA_RMSNORM_PACKED_SERIAL_EXACT="$RMS_PACKED_SERIAL_EXACT" \
@@ -361,7 +410,7 @@ exec docker run --rm --name "$NAME" \
   --served-model-name "$SERVED" \
   --host 0.0.0.0 --port 8000 \
   --tensor-parallel-size 2 \
-  --dtype float16 --quantization fp8 --kv-cache-dtype auto \
+  --dtype float16 --quantization "$QUANTIZATION" --kv-cache-dtype auto \
   --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION" \
   --max-model-len "$MAX_MODEL_LEN" --block-size 64 \
   --max-num-seqs "$MAX_NUM_SEQS" \
