@@ -201,3 +201,67 @@ compiled TP2 collective health. Evidence root:
 
 VERDICT -> the promoted MTP1 shelf wrapper is live. `PROFILE=fast` selects
 the measured MTP8 decode profile without changing directories.
+
+## Publisher graph-off and c64 profile correction
+
+Steve's 1,091.642460 tok/s c64 result is not the graph-off r32 profile. It is
+an older high-concurrency service with XPU Graph enabled, PIECEWISE mode, and
+only batch size one captured. Its service envelope is 256 model tokens, 128
+sequences, and 512 batched tokens. At c64 it measures 17.056913 tok/s per
+stream. The scheduler can still batch 64 requests; batch shapes above the
+single captured size have no configured batch-64 graph. The qualified r32
+51.918757 tok/s result is the separate graph-off, one-sequence, 1,024-token
+strict profile.
+
+Graph capture is therefore not the reason the c64 service accepts high
+concurrency. Its local advantages are reduced host submission overhead and
+faster single-stream decode. Its costs include capture startup and cache
+complexity, static-shape coverage and fallbacks, replay memory, harder
+distributed ordering and debugging, and kernel compatibility limits. On this
+stack FULL capture cannot contain the default FlashAttention scratch path, so
+the qualified local FULL route uses Triton target and draft attention. Dynamic
+MTP also either downgraded to PIECEWISE or failed a graph shape invariant.
+Steve's qualification note shows why r32 stayed graph off: earlier fast paths
+failed complete-output repeatability, while two deterministic r32 servers and
+both MTP0 references finally matched 12/12. That is an exactness decision, not
+a concurrency requirement.
+
+CONFIG -> F10a matched the runnable r32 mechanisms and service envelope:
+official FP8 W8A16, TP2, FP16 KV, MTP1, direct oneCCL P2P, graph disabled,
+default FlashAttention v2, deterministic Inductor, packed serial RMSNorm,
+persistent GDN scratch, publisher compilation JSON, one slot, 1,024 model and
+batched tokens, 0.96 GPU-memory utilization, two empty compile caches, and the
+publisher's 9 GiB memory plus 12 GiB memory-and-swap cgroup. The local image
+was `8e0e3deb...` with the pinned `1e90ffa672` kernel and verified runtime-file
+hashes. The documented publisher image `ba42e928...` and its `r31` tag were not
+locally present and were not pullable from a public registry, so F10a is the
+closest source-and-launch reproduction, not byte-identical OCI evidence.
+
+COMMAND -> run
+`I_KNOW_P2P_WEDGES=1
+vllm/fp8/qualify_qwen38_fp8_neural_f10a_publisher_cgroup.sh` through the
+whole-box `bin/gpu-run` lease. The qualifier ran two independent fresh servers,
+the fixed 12-prompt suite, model and endpoint identity, canaries, teardown,
+per-card health, and compiled TP2 collective health.
+
+RESULT -> class-balanced first-100 rates were 17.716072 and 17.381759 tok/s;
+their center was 17.548916 tok/s. This is 33.80 percent of Steve's 51.918757
+tok/s result, or 66.20 percent slower, and only 1.01 percent above the earlier
+F07a graph-off center. The local pair matched 9/12 complete token arrays and
+each matched 7/12 against the publisher. Peak container RAM was 8.581 GiB.
+Host swap did not grow above its pre-run value. Both servers tore down and all
+card and compiled-collective checks passed; the kernel journal had no new Xe
+fault signature.
+
+RESULT -> evidence root is
+`/mnt/vm_8tb/b70/results/f10a_qwen38_fp8_neural_publisher_cgroup/20260831T173435Z/`.
+Summary SHA256 is `86bfdf34...`; attempt performance SHA256 values are
+`13439b5d...` and `5317abc6...`.
+
+VERDICT -> matching the published flags and cgroup does not put graph-off
+decode within 10 percent on this host. The missing publisher OCI identity and
+unpublished host CPU/runtime boundary remain material variables. Locally,
+FULL graph capture is the measured intervention that removes the dominant
+host-submission cost: the promoted MTP1 route is 46.603967 tok/s, 165.57
+percent above F10a. Keep graph capture enabled for the local daily driver; do
+not substitute the c64 service numbers for single-user or 262K evidence.

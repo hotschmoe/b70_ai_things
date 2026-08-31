@@ -7051,3 +7051,45 @@ collective post-health passed. Evidence root is
 
 VERDICT -> F09g PASS. The new FP8 MTP1 shelf default is live; MTP8 remains the
 explicit `PROFILE=fast` option.
+
+### 2026-08-31a - graph-off publisher cgroup match remains at 17.55 tok/s
+
+CONFIG -> closest runnable Steve r32 reproduction using local image ID
+`8e0e3deb...`, verified packed-RMS and GDN runtime files, XPU kernel
+`1e90ffa672`, official Qwen3.8 FP8 W8A16, TP2, FP16 KV, MTP1, direct P2P,
+graph disabled, default FlashAttention v2, deterministic Inductor, publisher
+compilation JSON, one slot, 1,024 model and batched tokens, 0.96 GPU memory,
+fresh compile cache per server, and the publisher 9 GiB memory / 12 GiB
+memory-and-swap cgroup. The publisher `r31` tag and image ID `ba42e928...`
+were not locally present or publicly pullable, so byte-identical OCI identity
+was unavailable.
+
+COMMAND -> add an explicit memory-and-swap limit to the retained launcher and
+run `I_KNOW_P2P_WEDGES=1
+vllm/fp8/qualify_qwen38_fp8_neural_f10a_publisher_cgroup.sh` under
+`bin/gpu-run`. Execute two independent fresh servers, the fixed 12-prompt
+strict suite, canaries, teardown, card health, and compiled P2P-off collective
+health.
+
+RESULT -> class-balanced first-100 rates were 17.716072 and 17.381759 tok/s;
+the center was 17.548916. That is 33.80 percent of Steve's graph-off r32
+51.918757 tok/s and only 1.01 percent above local F07a. Cross-server complete
+arrays matched 9/12; each local attempt matched 7/12 publisher arrays. Peak
+container RAM was 8.581 GiB and host swap never rose above its pre-run value.
+Both server teardowns, all per-card probes, and all compiled collectives passed
+with no new Xe fault signature. Evidence root is
+`/mnt/vm_8tb/b70/results/f10a_qwen38_fp8_neural_publisher_cgroup/20260831T173435Z/`;
+summary SHA256 is `86bfdf34...`.
+
+RESULT -> the 1,091.642460 tok/s c64 result belongs to a different older
+profile: graph enabled with only size one captured, a 256-token model limit,
+128 slots, and 512 batched tokens. It delivered 17.056913 tok/s per stream.
+Graph capture did not prevent the scheduler from serving c64, and graph-off
+did not create that aggregate result.
+
+VERDICT -> published launch flags and cgroup are insufficient for a 10-percent
+graph-off reproduction on this host. The unavailable publisher OCI and
+unpublished host CPU/runtime boundary remain uncontrolled. The local MTP1
+FULL graph route at 46.603967 tok/s is 165.57 percent faster than F10a and
+remains the daily-driver choice. Do not mix the c64 short-service aggregate
+with the strict c1 or 262K profiles.

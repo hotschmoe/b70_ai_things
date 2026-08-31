@@ -80,7 +80,6 @@ case "${1:-}" in
     echo "seed_cache_manifest=${SEED_CACHE_MANIFEST:-none}"
     echo "container_prefix=$CONTAINER_PREFIX"
     echo "p2p=$P2P_ACCESS"
-    echo "swap_extra=0"
     env NAME="${CONTAINER_PREFIX}-${STAMP}-attempt-N" \
       ALLOW_EXISTING_CACHE="$SHARED_CACHE" "$LAUNCHER" --print-config
     exit 0
@@ -541,9 +540,9 @@ echo "VERDICT"
 verdict="$(jq -r '.verdict' "$RESULT_DIR/summary.json")"
 if [ "$analysis_rc" -eq 0 ]; then
   if [ "$COMPILE_ORACLE" -eq 1 ]; then
-    echo "$CAMPAIGN_LABEL passed compile-selection exactness under P2P=$P2P_ACCESS with no extra swap."
+    echo "$CAMPAIGN_LABEL passed compile-selection exactness under P2P=$P2P_ACCESS."
   else
-    echo "$CAMPAIGN_LABEL passed cross-server exactness under P2P=$P2P_ACCESS with no extra swap."
+    echo "$CAMPAIGN_LABEL passed cross-server exactness under P2P=$P2P_ACCESS."
   fi
 else
   echo "$CAMPAIGN_LABEL failed: $verdict"

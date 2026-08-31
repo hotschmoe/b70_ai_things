@@ -17,6 +17,7 @@ MAX_MODEL_LEN="${MAX_MODEL_LEN:-1024}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
 MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
 MEMORY_GIB="${MEMORY_GIB:-32}"
+MEMORY_SWAP_GIB="${MEMORY_SWAP_GIB:-$MEMORY_GIB}"
 GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.80}"
 ALLOW_EXISTING_CACHE="${ALLOW_EXISTING_CACHE:-0}"
 COMMUNICATOR_SHA256="${COMMUNICATOR_SHA256:-5ab2ea5d9e049e6b53e2d56d1e3419ce01d1988e8be5295bab1f912a7fdbf74d}"
@@ -130,7 +131,8 @@ print_config() {
   echo "max_num_seqs=$MAX_NUM_SEQS"
   echo "max_num_batched_tokens=$MAX_NUM_BATCHED_TOKENS"
   echo "container_memory_gib=$MEMORY_GIB"
-  echo "container_swap_extra_gib=0"
+  echo "container_memory_swap_gib=$MEMORY_SWAP_GIB"
+  echo "container_swap_extra_gib=$((MEMORY_SWAP_GIB - MEMORY_GIB))"
   echo "allow_existing_cache=$ALLOW_EXISTING_CACHE"
 }
 
@@ -148,9 +150,14 @@ for pair in \
   "MAX_NUM_SEQS:$MAX_NUM_SEQS" \
   "MAX_NUM_BATCHED_TOKENS:$MAX_NUM_BATCHED_TOKENS" \
   "MEMORY_GIB:$MEMORY_GIB" \
+  "MEMORY_SWAP_GIB:$MEMORY_SWAP_GIB" \
   "EXECUTE_MODEL_TIMEOUT_SECONDS:$EXECUTE_MODEL_TIMEOUT_SECONDS"; do
   positive_integer "${pair%%:*}" "${pair#*:}"
 done
+[ "$MEMORY_SWAP_GIB" -ge "$MEMORY_GIB" ] || {
+  echo "MEMORY_SWAP_GIB must be at least MEMORY_GIB" >&2
+  exit 2
+}
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 2; }
 case "$ALLOW_EXISTING_CACHE" in
   0|1) ;;
@@ -262,6 +269,7 @@ verify_image
 mkdir -p "$CACHE_DIR"
 
 memory_bytes=$((MEMORY_GIB * 1024 * 1024 * 1024))
+memory_swap_bytes=$((MEMORY_SWAP_GIB * 1024 * 1024 * 1024))
 combo_kernels_json=false
 benchmark_combo_kernel_json=false
 autotune_pointwise_json=false
@@ -311,7 +319,7 @@ if [ "$SPECULATIVE_TOKENS" -gt 0 ]; then
 fi
 exec docker run --rm --name "$NAME" \
   --ulimit core=0 \
-  --memory "$memory_bytes" --memory-swap "$memory_bytes" \
+  --memory "$memory_bytes" --memory-swap "$memory_swap_bytes" \
   --oom-score-adj 500 \
   --device /dev/dri:/dev/dri --group-add render \
   --cap-add SYS_PTRACE --security-opt label=disable \
