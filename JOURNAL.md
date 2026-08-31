@@ -7093,3 +7093,37 @@ unpublished host CPU/runtime boundary remain uncontrolled. The local MTP1
 FULL graph route at 46.603967 tok/s is 165.57 percent faster than F10a and
 remains the daily-driver choice. Do not mix the c64 short-service aggregate
 with the strict c1 or 262K profiles.
+### 2026-08-31a - Neural.Download r31 lineage correction and ordered rebuild
+
+CONFIG -> Steve packet commit `6aab301f30912c87bfcc7b7982f2fab27eb1eca5`
+present in preserved checkout `0948f7c2`; official vLLM XPU base
+`f01e24f6c7ff`; kernel commit `1e90ffa672ba`; kernel wheel SHA256
+`f3d999060c11`; vLLM source `ac7509e2b1db`; deterministic r15 four-file
+overlay; packed-two-row MTP1 RMSNorm r31 overlay. This was a no-GPU image
+construction and inspection transaction.
+
+COMMAND -> inspect the public build scripts, Dockerfiles, patches, qualified
+result, and raw r32-A container inspection; compare inherited image labels to
+the nominal build defaults; verify the upstream kernel Actions artifact and
+retained wheel; implement
+`vllm/fp8/build_qwen38_fp8_r31_ordered_repro.sh`; then rebuild the lineage as
+official f01e -> kernel r13 -> deterministic r15 -> RMSNorm r31 and verify the
+seven known final runtime files.
+
+RESULT -> the raw r31 labels prove that the publisher r15 inherited the
+`1e90ffa` kernel wheel, while `build-deterministic-compiled-image.sh` defaults
+directly to official f01e. The public displayed recipe therefore requires an
+unstated caller `BASE_IMAGE` override. The ordered local kernel, r15, and r31
+image IDs are respectively `90746d6d1f11`, `82cac0986b54`, and
+`3e29569b6d15`. The final runtime manifest passed for the four r15 Python
+files, both r31 layernorm copies, and `_xpu_C.abi3.so`. The publisher r31 OCI
+ID remains `ba42e928e69c`, but its archive, image history, layer descriptors,
+and complete build metadata are not public, so metadata-sensitive image-ID
+equality is not attainable from the published inputs alone.
+
+VERDICT -> the known executable lineage and layer order are reconstructed and
+content-verified. This corrects the earlier direct-f01e r15 assumption. It is
+not yet a runtime speed qualification or a byte-identical publisher OCI
+reproduction. The reusable mechanisms and missing publisher evidence are
+recorded in
+`docs/20260831_neural_r31_image_provenance_and_transfer_ledger.md`.
