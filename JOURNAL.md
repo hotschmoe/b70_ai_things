@@ -7262,3 +7262,41 @@ VERDICT -> GO for Open WebUI and local Pi agent use. The previous auto-tool
 error is fixed at the vLLM boundary, xhigh is the server and Pi default, and
 per-request lower effort or thinking-off overrides remain available. This is
 an agentic compatibility qualification, not a new throughput measurement.
+
+### 2026-09-01d - Authenticated LAN daily driver live
+
+CONFIG -> the Qwen3.8 FP8 MTP1 `hotschmoe-dd` shelf, host address
+`192.168.10.5/24`, port 18080, existing off-repository daily-driver API key,
+and the stale installed `b70-daily-driver.service` that still named the
+retired Qwen3.6 NVFP4 route and was enabled but failed.
+
+COMMAND -> make the shared FP8 launcher publish address configurable while
+preserving its loopback default; set the daily shelf to `0.0.0.0`; inject the
+API key from a read-only mounted secret through a wrapper so neither the key
+nor its value appears in Docker image configuration or host command
+arguments; add a tracked Qwen3.8 systemd service and pre-health startup
+wrapper. Stop the loopback-only server, treat its forced in-flight TP2 drain
+as risky, require both per-card checks and the compiled P2P-disabled TP2
+collective, then launch the secured LAN route and probe public health,
+unauthenticated rejection, authenticated identity and generation, Open
+WebUI, and Pi.
+
+RESULT -> both card probes and the ten-iteration compiled `4x5120` collective
+passed after teardown. The first authenticated process environment caused a
+one-time AOT cache miss; target and draft compilation took about 129 and 27
+seconds and saved new artifacts. The server then retained 323,202 KV tokens
+and listened on `0.0.0.0:18080`. Health returned HTTP 200 through both
+loopback and `192.168.10.5`; unauthenticated LAN `/v1/models` returned 401,
+while the same request with the daily-driver key returned 200 and exact model
+ID `hotschmoe-dd`. Authenticated LAN generation returned exactly `LAN READY`.
+Open WebUI retained model discovery, and Pi completed an authenticated exact
+reply with no error or stderr. Repeated health requests from LAN host
+`192.168.10.50` reached vLLM. The secret value is absent from Docker image
+configuration.
+
+VERDICT -> GO for authenticated LAN clients at
+`http://192.168.10.5:18080/v1`. The tracked replacement systemd unit passes
+`systemd-analyze verify`, but it is staged rather than installed because the
+current user has no non-interactive sudo and the installed unit is root-owned.
+The live server is running through the same tracked startup wrapper; install
+the replacement unit before relying on reboot persistence.

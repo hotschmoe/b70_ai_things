@@ -32,6 +32,16 @@ The live Pi files are `~/.pi/agent/models.json` and
 `defaultThinkingLevel: "xhigh"`. No Pi thinking-token budget is imposed, so
 xhigh is an effort instruction rather than a forced token cap.
 
+The daily shelf publishes port 18080 on `0.0.0.0` and requires the API key in
+`/mnt/vm_8tb/b70/secrets/dd_api_key`. Local clients may use
+`http://127.0.0.1:18080/v1`; LAN clients use
+`http://192.168.10.5:18080/v1` with the same key. The tracked systemd unit is
+`b70-daily-driver.service` in this directory. Install it as root at
+`/etc/systemd/system/b70-daily-driver.service`, reload systemd, and restart
+the service after stopping any manually launched `hotschmoe-dd` process.
+The unit deliberately does not auto-restart after a TP2 failure; run the
+documented health and reset ladder before starting it again.
+
 The default `PROFILE=daily` uses MTP1. F09f qualified it across two fresh
 server lifetimes at a 46.604 tok/s median strict rate, 45.71 to 48.05 tok/s
 aggregate at c2, and 88.83 to 89.09 tok/s aggregate at c4. Complete outputs

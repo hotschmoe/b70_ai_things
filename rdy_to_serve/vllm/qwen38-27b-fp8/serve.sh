@@ -40,6 +40,8 @@ export LAYERNORM_SHA256="${LAYERNORM_SHA256:-d911627c6c8f16fc11e02846286c3782201
 export MODEL_DIR="${MODEL_DIR:-$REPO/models/files/qwen3.8-27b/fp8-official}"
 export CACHE_DIR="${CACHE_DIR:-/mnt/vm_8tb/b70/cache/qwen38-fp8-daily-${PROFILE_ID}}"
 export NAME PORT="${PORT:-8078}"
+export PUBLISH_HOST="${PUBLISH_HOST:-0.0.0.0}"
+export API_KEY_FILE="${API_KEY_FILE:-/mnt/vm_8tb/b70/secrets/dd_api_key}"
 export SERVED="${SERVED:-qwen3.8-27b-FP8-official-W8A16-${PROFILE_ID}-p2p1-fp16kv-daily}"
 export P2P_ACCESS=1 I_KNOW_P2P_WEDGES=1
 export SPECULATIVE_TOKENS="$MTPTOK"

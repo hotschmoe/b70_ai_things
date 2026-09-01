@@ -1,0 +1,20 @@
+[Unit]
+Description=B70 Qwen3.8-27B FP8 MTP1 agentic daily driver
+After=docker.service network-online.target mnt-vm_8tb.mount
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hotschmoe
+Group=hotschmoe
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+ExecStart=/mnt/vm_8tb/github/b70_ai_things/rdy_to_serve/vllm/qwen38-27b-fp8/systemd-start.sh
+ExecStartPost=/bin/bash -lc 'for i in $(seq 1 240); do curl -fsS --max-time 3 http://127.0.0.1:18080/health >/dev/null 2>&1 && exit 0; docker inspect -f "{{.State.Status}}" hotschmoe-dd 2>/dev/null | grep -q exited && exit 1; sleep 2; done; echo "daily-driver health wait timed out" >&2; exit 1'
+ExecStop=/bin/bash -lc 'docker rm -f hotschmoe-dd >/dev/null 2>&1 || true'
+Restart=no
+TimeoutStartSec=900
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

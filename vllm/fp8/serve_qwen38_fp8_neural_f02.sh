@@ -13,6 +13,7 @@ CACHE_DIR="${CACHE_DIR:-}"
 NAME="${NAME:-qwen38-fp8-neural-f02}"
 SERVED="${SERVED:-qwen3.8-27b-FP8-official-W8A16-mtp0-p2p0-fp16kv-f02}"
 PORT="${PORT:-18187}"
+PUBLISH_HOST="${PUBLISH_HOST:-127.0.0.1}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-1024}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
 MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-1024}"
@@ -54,6 +55,7 @@ AUTO_TOOL_CHOICE="${AUTO_TOOL_CHOICE:-0}"
 TOOL_CALL_PARSER="${TOOL_CALL_PARSER:-}"
 REASONING_PARSER="${REASONING_PARSER:-}"
 DEFAULT_REASONING_EFFORT="${DEFAULT_REASONING_EFFORT:-}"
+API_KEY_FILE="${API_KEY_FILE:-}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
@@ -113,6 +115,7 @@ print_config() {
   echo "served_model=$SERVED"
   echo "container=$NAME"
   echo "port=$PORT"
+  echo "publish_host=$PUBLISH_HOST"
   echo "tp=2"
   echo "p2p=$P2P_ACCESS"
   echo "mtp=$SPECULATIVE_TOKENS"
@@ -149,6 +152,7 @@ print_config() {
   echo "tool_call_parser=${TOOL_CALL_PARSER:-none}"
   echo "reasoning_parser=${REASONING_PARSER:-none}"
   echo "default_reasoning_effort=${DEFAULT_REASONING_EFFORT:-model-default}"
+  echo "api_key_auth=$([ -n "$API_KEY_FILE" ] && echo enabled || echo disabled)"
   echo "gpu_memory_utilization=$GPU_MEMORY_UTILIZATION"
   echo "max_model_len=$MAX_MODEL_LEN"
   echo "max_num_seqs=$MAX_NUM_SEQS"
@@ -310,6 +314,10 @@ for pair in \
   esac
 done
 [ -d "$MODEL_DIR" ] || { echo "model directory is missing: $MODEL_DIR" >&2; exit 1; }
+[ -z "$API_KEY_FILE" ] || [ -s "$API_KEY_FILE" ] || {
+  echo "API_KEY_FILE must name a readable nonempty file" >&2
+  exit 2
+}
 [ -n "$CACHE_DIR" ] || { echo "set CACHE_DIR to a new writable directory" >&2; exit 2; }
 if [ "$ALLOW_EXISTING_CACHE" -eq 0 ]; then
   [ ! -e "$CACHE_DIR" ] || { echo "CACHE_DIR must be new: $CACHE_DIR" >&2; exit 1; }
@@ -390,6 +398,15 @@ if [ -n "$DEFAULT_REASONING_EFFORT" ]; then
     "{\"enable_thinking\":true,\"reasoning_effort\":\"$DEFAULT_REASONING_EFFORT\"}"
   )
 fi
+entrypoint_args=(--entrypoint vllm)
+if [ -n "$API_KEY_FILE" ]; then
+  entrypoint_args=(
+    --volume "$SCRIPT_DIR/vllm_serve_with_secret.sh:/opt/b70/vllm-serve-with-secret:ro"
+    --volume "$API_KEY_FILE:/run/secrets/vllm_api_key:ro"
+    --env VLLM_API_KEY_FILE=/run/secrets/vllm_api_key
+    --entrypoint /opt/b70/vllm-serve-with-secret
+  )
+fi
 exec docker run --rm --name "$NAME" \
   --ulimit core=0 \
   --memory "$memory_bytes" --memory-swap "$memory_swap_bytes" \
@@ -397,7 +414,7 @@ exec docker run --rm --name "$NAME" \
   --device /dev/dri:/dev/dri --group-add render \
   --cap-add SYS_PTRACE --security-opt label=disable \
   --ipc=host --shm-size=8g \
-  --publish "127.0.0.1:${PORT}:8000" \
+  --publish "${PUBLISH_HOST}:${PORT}:8000" \
   --volume "$MODEL_DIR:/model:ro" \
   --volume "$CACHE_DIR:/root/.cache/vllm" \
   --env ZE_AFFINITY_MASK=0,1 \
@@ -435,7 +452,7 @@ exec docker run --rm --name "$NAME" \
   --env CCL_SYCL_ALLREDUCE_SIMPLE_THRESHOLD=4294967296 \
   --env CCL_SYCL_ALLGATHERV_SIMPLE_THRESHOLD=4294967296 \
   --env CCL_SYCL_REDUCE_SCATTER_SIMPLE_THRESHOLD=4294967296 \
-  --entrypoint vllm "$IMAGE" \
+  "${entrypoint_args[@]}" "$IMAGE" \
   serve /model \
   --served-model-name "$SERVED" \
   --host 0.0.0.0 --port 8000 \
