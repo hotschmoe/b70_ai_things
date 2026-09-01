@@ -7166,3 +7166,35 @@ diagnostic, and return daily-driver work to the qualified FP8 W8A16 MTP1
 route. Resume INT8 only around fused norm/quant or quant deduplication plus a
 matching quantized MTP artifact. Full evidence is in
 `docs/20260831_qwen38_w8a8_native_int8_result.md`.
+
+### 2026-09-01a - FP8 daily driver and Open WebUI v0.11.1 live
+
+CONFIG -> promoted Qwen3.8-27B official FP8 W8A16 shelf, TP2, direct P2P,
+FP16 KV, FULL decode graph, fixed MTP1, four slots, 32,768 batched tokens,
+262,144 model length, and exact served/container ID `hotschmoe-dd`. Open
+WebUI was updated from the stopped June `main` image to official stable
+v0.11.1, image ID `6bb1fbe8...`, with the existing `open-webui` data volume,
+auth and Ollama disabled, and telemetry disabled.
+
+COMMAND -> verify the pinned vLLM image and launch the promoted shelf through
+the whole-box `bin/gpu-run` lease on loopback port 18080. Require per-card and
+compiled TP2 collective pre-health, exact `/v1/models` identity, and a
+thinking-off deterministic completion. Pull Open WebUI v0.11.1, recreate only
+its disposable container on host networking at port 3000 so it can reach the
+loopback-only vLLM endpoint, then require Docker health, `/api/config`, and a
+backend model census from inside the WebUI container.
+
+RESULT -> both card probes and the compiled collective passed before serving.
+The model loaded 14.07 GiB per rank, restored both AOT caches, captured three
+FULL decode graphs in four seconds, and exposed 323,202 KV tokens, or 1.23
+times one full 262,144-token request. `/v1/models` returned only
+`hotschmoe-dd`; the deterministic gate returned exactly `DAILY DRIVER READY`.
+Open WebUI reports version 0.11.1, auth false, healthy status, and sees only
+`hotschmoe-dd` through its configured backend. A consistent post-migration
+volume copy is under
+`/mnt/vm_8tb/b70/backups/open-webui-20260901T151600Z/`.
+
+VERDICT -> GO live. The FP8 MTP1 full-context daily driver remains running
+under its GPU lease at `127.0.0.1:18080`; Open WebUI is healthy at port 3000.
+The WebUI volume was preserved. The backup was taken after v0.11.1 migration
+and is not a pre-migration rollback image.
