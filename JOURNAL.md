@@ -7300,3 +7300,30 @@ VERDICT -> GO for authenticated LAN clients at
 current user has no non-interactive sudo and the installed unit is root-owned.
 The live server is running through the same tracked startup wrapper; install
 the replacement unit before relying on reboot persistence.
+
+### 2026-09-01e - Grafana and Prometheus restored beside Open WebUI
+
+CONFIG -> live authenticated `hotschmoe-dd` on port 18080, healthy Open WebUI
+v0.11.1 on LAN port 3000, stopped `b70_grafana` and `b70_prometheus`
+containers, persistent monitoring data under `/mnt/vm_8tb/b70`, and the
+tracked anonymous-viewer Grafana provisioning for both vLLM and SGLang.
+
+COMMAND -> run `bin/monitoring/up.sh`, retain host networking and persistent
+data, wait through the fresh Grafana 13.1.0 SQLite migration, probe Grafana
+and Open WebUI through `192.168.10.5`, verify Prometheus health, target state,
+and `up` query, enumerate provisioned Grafana datasources and dashboards, and
+set the existing Open WebUI container restart policy to `unless-stopped`.
+
+RESULT -> Grafana completed its first database migration in about nine
+minutes and returned HTTP 200 through loopback and LAN port 3001. Prometheus
+returned HTTP 200, scraped `http://127.0.0.1:18080/metrics` without error, and
+reported `up{job="b70_daily"}=1`. Grafana provisioned the default Prometheus
+datasource plus the vLLM and SGLang dashboards. Open WebUI remained healthy
+and returned HTTP 200 through LAN port 3000. All three UI/monitoring
+containers now use Docker `unless-stopped` restart policy.
+
+VERDICT -> GO. Open WebUI is live at `http://192.168.10.5:3000`; Grafana is
+live at `http://192.168.10.5:3001`; and the current vLLM metrics path is
+healthy end to end. The fresh Grafana 13 migration took longer than the old
+four-minute launcher note, so the operator message now allows roughly ten
+minutes for a new database.

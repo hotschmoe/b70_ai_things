@@ -43,7 +43,7 @@ docker run -d --name b70_grafana --restart unless-stopped --network host --user 
   -v "$M/grafana/dashboards/json:/var/lib/grafana/dashboards" \
   -v "$M/grafana/dashboards/config:/etc/grafana/provisioning/dashboards" \
   -v "$M/grafana/datasources:/etc/grafana/provisioning/datasources" \
-  grafana/grafana:latest cfg:server.http_port=3001 >/dev/null && echo "  grafana up -> http://<box>:3001 (first start ~4 min: db migration)"
+  grafana/grafana:latest cfg:server.http_port=3001 >/dev/null && echo "  grafana starting -> http://<box>:3001 (a fresh Grafana 13 db can take ~10 min to migrate)"
 
 echo "=== verify (give it ~15s to scrape) ==="
 echo "  targets:  curl -s http://localhost:9090/api/v1/targets | grep -o '\"health\":\"[a-z]*\"'"
