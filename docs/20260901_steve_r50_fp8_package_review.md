@@ -132,9 +132,10 @@ comparison.
 
 VERDICT -> Do not claim that Steve has already solved exact scaled MTP1
 concurrency. Reproduce c1 first, then run c2 and c4 against frozen sequential
-oracles. If MTP1 differs, retain MTP0 as the concurrency fallback while the
-GDN metadata/state mapping is repaired. Do not spend time on c64 before c2 and
-c4 are exact.
+oracles. Test same-image MTP0 as a possible operational fallback while the GDN
+metadata/state mapping is repaired, but do not assume it is exact: Steve's
+older MTP0 aggregate profile also discloses batch-shape-dependent greedy
+output. Do not spend time on c64 before c2 and c4 are exact.
 
 ## Proposed qualification order
 

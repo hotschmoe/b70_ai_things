@@ -7353,8 +7353,9 @@ mismatches beginning at c2; R77 localizes the first meaningful difference to
 layer-1 GDN, and the latest R81 repair remains negative.
 
 VERDICT -> choose graph-off R50 FP8 W8A16 MTP1 as the primary campaign, with
-same-image MTP0 as control and concurrency fallback. Reproduce c1 and the
-natural 2K-32K matrix first, extend the 30 tok/s decode floor through 262K,
+same-image MTP0 as control and a separately gated fallback candidate.
+Reproduce c1 and the natural 2K-32K matrix first, extend the 30 tok/s decode
+floor through 262K,
 then qualify cache-on `align` mode and exact c2/c4 sequential-oracle parity.
 The older 1,091 tok/s aggregate curve and local semantic canaries are not
 sufficient output-identity evidence. Full review and gates are recorded in
