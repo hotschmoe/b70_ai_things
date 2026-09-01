@@ -7327,3 +7327,35 @@ live at `http://192.168.10.5:3001`; and the current vLLM metrics path is
 healthy end to end. The fresh Grafana 13 migration took longer than the old
 four-minute launcher note, so the operator message now allows roughly ten
 minutes for a new database.
+
+### 2026-09-01f - Steve R50 FP8 package closes the public source gap
+
+CONFIG -> stopped local `hotschmoe-dd`, Steve's September 1
+`b70-optimization-lab` commit `6adab048...`, the new
+`packages/qwen38-27b-fp8-tp2-b70` entrypoint, its R50 reproduction chain, and
+the local requirement for cache-on long-agent use plus exact c2/c4 scaling.
+
+COMMAND -> fetch the external source without changing its preserved detached
+worktree; inspect the package README and package JSON, final builders and
+launchers, R54-R63 qualification evidence, R77-R82 concurrency localization,
+and the pinned/current vLLM Qwen3Next prefix-cache source. Do not touch either
+GPU.
+
+RESULT -> the package now publishes the complete R13 -> R15 -> R31 -> R49 ->
+R50 source build and content-verification chain. A clean source rebuild
+measured 51.579521 tok/s and matched 12/12 outputs against MTP1 and MTP0. The
+stronger unrepeated-content R56 diagnostic kept MTP1 at 49.990-53.134 tok/s
+through 32K and matched 18/18 target arrays. All publisher performance runs
+still force cache zero. The pinned vLLM can enable Qwen3Next hybrid prefix
+caching in block-aligned `align` mode, but that route has no publisher
+qualification. The newer c2/c4/c64 audit also shows sequential-oracle
+mismatches beginning at c2; R77 localizes the first meaningful difference to
+layer-1 GDN, and the latest R81 repair remains negative.
+
+VERDICT -> choose graph-off R50 FP8 W8A16 MTP1 as the primary campaign, with
+same-image MTP0 as control and concurrency fallback. Reproduce c1 and the
+natural 2K-32K matrix first, extend the 30 tok/s decode floor through 262K,
+then qualify cache-on `align` mode and exact c2/c4 sequential-oracle parity.
+The older 1,091 tok/s aggregate curve and local semantic canaries are not
+sufficient output-identity evidence. Full review and gates are recorded in
+`docs/20260901_steve_r50_fp8_package_review.md`.
