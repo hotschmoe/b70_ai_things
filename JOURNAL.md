@@ -7198,3 +7198,30 @@ VERDICT -> GO live. The FP8 MTP1 full-context daily driver remains running
 under its GPU lease at `127.0.0.1:18080`; Open WebUI is healthy at port 3000.
 The WebUI volume was preserved. The backup was taken after v0.11.1 migration
 and is not a pre-migration rollback image.
+
+### 2026-09-01b - Open WebUI persisted backend correction
+
+CONFIG -> the live `hotschmoe-dd` FP8 MTP1 server on loopback port 18080 and
+Open WebUI v0.11.1 on host networking at port 3000. The preserved WebUI
+database still contained its pre-relaunch OpenAI base URL despite the new
+container environment.
+
+COMMAND -> probe vLLM health, identity, and a real deterministic completion;
+inspect WebUI connection errors and the redacted persistent OpenAI settings;
+make a SQLite-consistent database backup; update only
+`openai.api_base_urls` to `http://127.0.0.1:18080/v1`; restart WebUI; then
+query `/api/models` with an in-container authenticated admin probe without
+printing the token or secret.
+
+RESULT -> vLLM never exited: `/health` and `/v1/models` returned HTTP 200,
+the served identity remained `hotschmoe-dd` with model length 262,144, and a
+generation returned exactly `OK`. WebUI logs instead showed connection
+refusals to the stale persisted `192.168.10.5:18080` address. After the
+single-key correction, WebUI became healthy and its authenticated model list
+returned HTTP 200 with `hotschmoe-dd` present. No post-fix connection error
+was logged. The immediate pre-fix database backup is at
+`/mnt/vm_8tb/b70/backups/open-webui-20260901T155600Z-url-fix/webui.db`.
+
+VERDICT -> the apparent backend outage was a WebUI persistent-configuration
+override, not a vLLM or GPU-serving failure. The WebUI connection is repaired
+without changing chats, users, other settings, or the running GPU server.
