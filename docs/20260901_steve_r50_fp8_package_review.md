@@ -167,3 +167,17 @@ during this review.
 - https://github.com/steveseguin/b70-optimization-lab/blob/main/packages/qwen38-27b-fp8-tp2-b70/package.json
 - https://github.com/steveseguin/b70-optimization-lab/blob/main/repro/qwen38-27b-fp8-vllm-tp2-asrock-b70/README.md
 - https://neural.download/models/qwen38-27b-fp8-vllm-tp2-asrock-b70.html
+
+## Independent replay correction
+
+The later independent replay against latest public main supersedes this
+review's preliminary conclusion that the package closed the public source
+gap. The source-closure checker accepts the tracked R50 patch with SHA-256
+`08a3de4f...`, while the advertised final builder, qualified image labels,
+and clean R55C result require a different, unpublished `40ca8c3f...` patch.
+The unchanged public builder therefore stops at its patch digest gate on a
+pristine checkout. A local build from the tracked patch matched the six
+published host `.text`, `.rodata`, and `.data` section hashes but not the
+complete libraries, and its exact strict live replay measured only 17.203380
+tok/s. See `docs/20260901_steve_r50_reproduction_gap_ledger.md` for the
+verified missing inputs and artifact request.

@@ -7360,3 +7360,47 @@ then qualify cache-on `align` mode and exact c2/c4 sequential-oracle parity.
 The older 1,091 tok/s aggregate curve and local semantic canaries are not
 sufficient output-identity evidence. Full review and gates are recorded in
 `docs/20260901_steve_r50_fp8_package_review.md`.
+
+### 2026-09-01g - Steve R50 independent replay blocked by artifact identity
+
+CONFIG -> latest public `b70-optimization-lab` main at
+`0e8c4c577d40674f0aceb3c5005c24f3d305f951`, the complete public R13 -> R15
+-> R31 -> R49 -> R50 build chain, exact Qwen3.8-27B model revision, Steve's
+graph-off FlashAttention FP8 W8A16 MTP1 strict c1 launch and benchmark, and
+the project two-card lease and health gates.
+
+COMMAND -> run Steve's source-closure verifier and unchanged final-builder
+preflight in a pristine detached worktree; inspect patch history, GitHub code
+and release assets, and documented registry tags; build a clearly local
+candidate from the tracked patch; compare complete and per-section ELF
+hashes; compare its container arguments, 31 strict environment values, and
+cgroup limits with the clean R55C result; then run the strict 12-prompt suite
+with model verification, cache-zero and canary gates, teardown, post-health,
+and recovery after the failed speed assertion.
+
+RESULT -> public source closure passed, but the unchanged final builder
+stopped before compilation because the tracked R50 patch hashes to
+`08a3de4f...` while the builder, qualified image labels, and R55C result
+require an unavailable `40ca8c3f...` patch. No final R50/R55C image, wheel,
+or library pair was present in public releases, and both documented registry
+tags required authentication. The tracked-patch build matched all six
+published host `.text`, `.rodata`, and `.data` hashes but not the published
+whole-library hashes; the public evidence omits hashes for the
+`OFFLOAD_DEVICE_CODE` sections that hold the SYCL device images. The live
+launch differed from R55C only in served-model display name, had zero changes
+across the selected environment values and identical 9 GiB/12 GiB cgroup
+bounds, and passed exact model identity, workload shape, all canaries,
+cache-zero, teardown, and post-health. It measured a class-balanced median of
+17.203380 tok/s versus Steve's 51.808087 tok/s and the 46.627278 10-percent
+floor. The speed failure triggered the documented rebind recovery; both card
+and compiled P2P-disabled collective health passed afterward and both leases
+were free.
+
+VERDICT -> NO-GO for the locally rebuilt candidate and defer prefix-cache,
+long-context, and c2/c4 qualification. The exact missing publication input is
+the R50 `40ca8c3f...` patch or, preferably, the clean R55C OCI/library
+artifact. Device-code hashes and a complete build receipt are additionally
+needed if source-only reproduction is intended. Launch flags, model files,
+base sources, benchmark harness, and serving bounds are not missing. The
+verified request and DM draft are in
+`docs/20260901_steve_r50_reproduction_gap_ledger.md`.
