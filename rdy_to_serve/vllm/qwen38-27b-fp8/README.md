@@ -4,6 +4,34 @@ This shelf entry serves the official Qwen3.8-27B FP8 checkpoint as W8A16 on
 both B70 cards with vLLM TP2, FP16 KV, direct oneCCL P2P, Triton target and
 draft attention, and FULL decode graph capture.
 
+The shelf enables vLLM automatic tool choice with the `qwen3_coder` parser
+and separates reasoning with the `qwen3` parser. The server default is
+thinking enabled at `xhigh`; request-level `reasoning_effort` or
+`chat_template_kwargs` can still override that default. These agentic flags
+are required for Open WebUI and OpenAI-compatible coding agents that send
+`tool_choice: "auto"`.
+
+The local Pi 0.84.3 installation uses provider `hotschmoe-local`, API type
+`openai-completions`, base URL `http://127.0.0.1:18080/v1`, and model ID
+`hotschmoe-dd`. Its compatibility settings disable the unsupported developer
+role, enable `reasoning_effort`, select the `reasoning_effort` thinking
+format, use `max_completion_tokens`, and disable strict-tool decoration. The
+model advertises 262,144 context tokens and 32,768 maximum output tokens.
+Pi's reasoning levels map as follows:
+
+    off -> none
+    minimal -> low
+    low -> low
+    medium -> medium
+    high -> xhigh
+    xhigh -> xhigh
+    max -> unsupported
+
+The live Pi files are `~/.pi/agent/models.json` and
+`~/.pi/agent/settings.json`; the latter selects this provider/model and
+`defaultThinkingLevel: "xhigh"`. No Pi thinking-token budget is imposed, so
+xhigh is an effort instruction rather than a forced token cap.
+
 The default `PROFILE=daily` uses MTP1. F09f qualified it across two fresh
 server lifetimes at a 46.604 tok/s median strict rate, 45.71 to 48.05 tok/s
 aggregate at c2, and 88.83 to 89.09 tok/s aggregate at c4. Complete outputs

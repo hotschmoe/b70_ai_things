@@ -7225,3 +7225,40 @@ was logged. The immediate pre-fix database backup is at
 VERDICT -> the apparent backend outage was a WebUI persistent-configuration
 override, not a vLLM or GPU-serving failure. The WebUI connection is repaired
 without changing chats, users, other settings, or the running GPU server.
+
+### 2026-09-01c - FP8 daily-driver agentic serving enabled
+
+CONFIG -> the promoted `hotschmoe-dd` Qwen3.8-27B FP8 W8A16 MTP1 shelf at
+262,144 context, vLLM `0.27.2rc1.dev77+gac7509e2b`, Open WebUI v0.11.1, and
+local Pi 0.84.3. The checkpoint chat template supports low, medium, and xhigh
+reasoning effort and defaults to xhigh.
+
+COMMAND -> add configurable agentic arguments to the shared Qwen3.8 FP8
+launcher; enable `--enable-auto-tool-choice --tool-call-parser qwen3_coder`,
+`--reasoning-parser qwen3`, and explicit xhigh default chat-template kwargs in
+the shelf. Configure Pi's local OpenAI-completions provider, exact model
+identity, 262,144/32,768 context/output limits, reasoning-level mapping, and
+xhigh default. Stop only the old vLLM container, require both per-card probes
+and the compiled P2P-disabled TP2 collective probe, relaunch through
+`bin/gpu-run`, and exercise render, non-streaming tools, streaming tools,
+reasoning override, authenticated WebUI discovery, and a real Pi read-tool
+loop.
+
+RESULT -> both card probes and the compiled ten-iteration `4x5120` collective
+passed before launch. The server restored its AOT caches, captured three FULL
+decode graphs, retained 323,202 KV tokens, and logged that auto tool choice
+was enabled. Non-streaming and streaming `tool_choice: "auto"` requests both
+returned `finish_reason=tool_calls`, the requested function name, and valid
+city arguments without an error. A default rendered prompt contained the
+xhigh instruction and `<think>` opener; a normal default request returned
+separate reasoning and content without raw think tags. An explicit
+`reasoning_effort: "none"` produced zero reasoning characters and the exact
+requested answer. Open WebUI's authenticated model list contained
+`hotschmoe-dd`. Pi loaded the configured model, completed a read-only tool
+round trip with one tool execution, 63 valid JSON events, no error event, and
+no stderr; its settings loader resolved xhigh as the default.
+
+VERDICT -> GO for Open WebUI and local Pi agent use. The previous auto-tool
+error is fixed at the vLLM boundary, xhigh is the server and Pi default, and
+per-request lower effort or thinking-off overrides remain available. This is
+an agentic compatibility qualification, not a new throughput measurement.

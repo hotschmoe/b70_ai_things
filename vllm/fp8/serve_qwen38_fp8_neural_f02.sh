@@ -50,6 +50,10 @@ INT8_COMPLETION_BARRIER="${INT8_COMPLETION_BARRIER:-0}"
 INT8_SCRATCHPAD_RING_SIZE="${INT8_SCRATCHPAD_RING_SIZE:-1}"
 INT8_QUANT_MAX_LOCAL="${INT8_QUANT_MAX_LOCAL:-256}"
 INT8_NATIVE_QUANT="${INT8_NATIVE_QUANT:-0}"
+AUTO_TOOL_CHOICE="${AUTO_TOOL_CHOICE:-0}"
+TOOL_CALL_PARSER="${TOOL_CALL_PARSER:-}"
+REASONING_PARSER="${REASONING_PARSER:-}"
+DEFAULT_REASONING_EFFORT="${DEFAULT_REASONING_EFFORT:-}"
 
 EXPECTED_FILE_HASHES=(
   "f3273ccfb41be44c3c02080c26df10e8b200060366b900d940803f4221224c59  /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py"
@@ -141,6 +145,10 @@ print_config() {
   echo "int8_scratchpad_ring_size=$INT8_SCRATCHPAD_RING_SIZE"
   echo "int8_quant_max_local=$INT8_QUANT_MAX_LOCAL"
   echo "int8_native_quant=$INT8_NATIVE_QUANT"
+  echo "auto_tool_choice=$AUTO_TOOL_CHOICE"
+  echo "tool_call_parser=${TOOL_CALL_PARSER:-none}"
+  echo "reasoning_parser=${REASONING_PARSER:-none}"
+  echo "default_reasoning_effort=${DEFAULT_REASONING_EFFORT:-model-default}"
   echo "gpu_memory_utilization=$GPU_MEMORY_UTILIZATION"
   echo "max_model_len=$MAX_MODEL_LEN"
   echo "max_num_seqs=$MAX_NUM_SEQS"
@@ -190,12 +198,21 @@ for pair in \
   "FP8_BLOCK_W8A16:$FP8_BLOCK_W8A16" \
   "INT8_INPUT_DEPENDENCY:$INT8_INPUT_DEPENDENCY" \
   "INT8_COMPLETION_BARRIER:$INT8_COMPLETION_BARRIER" \
-  "INT8_NATIVE_QUANT:$INT8_NATIVE_QUANT"; do
+  "INT8_NATIVE_QUANT:$INT8_NATIVE_QUANT" \
+  "AUTO_TOOL_CHOICE:$AUTO_TOOL_CHOICE"; do
   case "${pair#*:}" in
     0|1) ;;
     *) echo "${pair%%:*} must be 0 or 1" >&2; exit 2 ;;
   esac
 done
+[ "$AUTO_TOOL_CHOICE" -eq 0 ] || [ -n "$TOOL_CALL_PARSER" ] || {
+  echo "AUTO_TOOL_CHOICE=1 requires TOOL_CALL_PARSER" >&2
+  exit 2
+}
+case "$DEFAULT_REASONING_EFFORT" in
+  ''|low|medium|xhigh) ;;
+  *) echo "DEFAULT_REASONING_EFFORT must be empty, low, medium, or xhigh" >&2; exit 2 ;;
+esac
 case "$INT8_SCRATCHPAD_RING_SIZE" in
   ''|*[!0-9]*) echo "INT8_SCRATCHPAD_RING_SIZE must be 1 through 16" >&2; exit 2 ;;
 esac
@@ -360,6 +377,19 @@ if [ "$SPECULATIVE_TOKENS" -gt 0 ]; then
     "$speculative_config"
   )
 fi
+agentic_args=()
+if [ "$AUTO_TOOL_CHOICE" -eq 1 ]; then
+  agentic_args+=(--enable-auto-tool-choice --tool-call-parser "$TOOL_CALL_PARSER")
+fi
+if [ -n "$REASONING_PARSER" ]; then
+  agentic_args+=(--reasoning-parser "$REASONING_PARSER")
+fi
+if [ -n "$DEFAULT_REASONING_EFFORT" ]; then
+  agentic_args+=(
+    --default-chat-template-kwargs
+    "{\"enable_thinking\":true,\"reasoning_effort\":\"$DEFAULT_REASONING_EFFORT\"}"
+  )
+fi
 exec docker run --rm --name "$NAME" \
   --ulimit core=0 \
   --memory "$memory_bytes" --memory-swap "$memory_swap_bytes" \
@@ -417,6 +447,7 @@ exec docker run --rm --name "$NAME" \
   --max-num-batched-tokens "$MAX_NUM_BATCHED_TOKENS" \
   --no-enable-prefix-caching --enable-prompt-tokens-details \
   --language-model-only \
+  "${agentic_args[@]}" \
   "${attention_args[@]}" \
   "${speculative_args[@]}" \
   --compilation-config "$compilation_config"
