@@ -7460,3 +7460,28 @@ promotion or a controlled speed claim. The requested MTP1 graph comparison
 changes both MTP depth and Inductor split policy; run and repeat same-depth
 graph-off/on controls before promotion. Evidence is appended to
 `docs/20260904_steve_r187_independent_replay.md`.
+
+### 2026-09-04c - R187 MTP5 daily envelope is live with real cache hits
+
+CONFIG -> R187 whole-graph FP8 W8A16 MTP5 XPU graph, 237,568 context, four
+request slots, 32,768 scheduler budget, FP16 KV, 0.96 GPU utilization,
+`align` prefix caching, graph sizes 1 through 24, agentic parsers, and an
+explicit served model ID on loopback port 18080.
+
+COMMAND -> add a tracked foreground daily launcher that holds both
+`bin/gpu-run` leases, verifies image/model identity, and brackets the server
+with card and compiled P2P-off collective health. Start it durably, verify the
+live config and model ID, then run exact short-chat and repeated 3,098-token
+cache smokes.
+
+RESULT -> pre-health passed; the server allocated 290,188 KV tokens, captured
+four c1-c4 graph descriptors in 3 seconds, and returned exactly `DAILY READY`.
+The repeated long prompt returned identical output and changed from zero to
+1,664 cached tokens; engine metrics agree. The server remains live with both
+leases held. No matching Xe fault appeared before handoff. Post-health is
+pending teardown.
+
+VERDICT -> READY for the planned quality test, not qualified for speed,
+stability, or shelf promotion. Use the tracked stop action so teardown and
+post-health run. Full configuration and evidence are in
+`docs/20260904_steve_r187_independent_replay.md`.

@@ -95,6 +95,38 @@ controlled speed claim until same-depth graph-off/on arms are run and
 repeated. The direct speed comparison requested is valid as an observed
 result, not as a controlled single-variable claim.
 
+## Live long-context cache-on candidate
+
+CONFIG -> Same R187 whole-graph MTP5 arithmetic path, FP16 KV and target
+verifier, draft-only INT4 head, TP2 direct P2P, and XPU graph. Change the
+serving envelope to 237,568 maximum context, four request slots, 32,768
+maximum batched tokens, 0.96 GPU memory utilization, Qwen hybrid `align`
+prefix caching, and capture sizes 1 through 24 for the four MTP5 decode
+descriptors. Enable the `qwen3_coder` tool parser and `qwen3` reasoning parser;
+bind loopback port 18080 with an explicit served ID.
+
+COMMAND -> Start
+`vllm/fp8/serve_qwen38_fp8_steve_r187_mtp5_daily.sh` inside a durable tmux
+session. Keep the `bin/gpu-run` two-card lease for the entire server lifetime;
+require image/model verification and pre-card/compiled-collective health.
+Probe explicit model identity, a short chat completion, and a repeated prefix
+longer than the 832-token hybrid alignment page.
+
+RESULT -> The server allocated 290,188 aggregate KV tokens, enough for 1.22
+full 237,568-token requests, and captured all four c1-c4 descriptors in 3
+seconds using 0.12 GiB per card. `/v1/models` reports only
+`qwen3.8-27b-FP8-official-W8A16-mtp5-r187-xpugraph-cacheon-ctx237568-daily`.
+The chat smoke returned exactly `DAILY READY`. Two identical 3,098-token
+prompts returned identical `CACHE LONG READY` output; the first reported zero
+cached tokens and the second reported 1,664. Engine counters independently
+reported 1,664 local prefix-cache-hit tokens. The earlier 128-token repeat
+was below one 832-token align page and correctly produced no reusable block.
+
+VERDICT -> READY for a quality test while the server remains live on
+`127.0.0.1:18080`; not qualified for speed, stability, or shelf promotion.
+Post-health remains pending until teardown. Stop through the tracked script so
+the held lease performs teardown, kernel capture, and post-health.
+
 ## Exact identities
 
 - Host: Ubuntu 26.04.1, kernel `7.1.0-070100-generic`, Threadripper 1950X.
@@ -135,6 +167,9 @@ the newly corrected release-binary route.
   `e56ca1451a62d48a07d6050b0ef7b8e49d9fd3332226c7831841390291cd879c`.
 - Same-R187 whole-graph MTP1 graph-off-versus-MTP5 graph comparison SHA-256:
   `1d77ae38a4c2be00337b904d0d922aa7d198429d03942b5e4d803db46ee3dbc1`.
+- Live long-context readiness receipt:
+  `/mnt/vm_8tb/b70/results/qwen38_fp8_steve_mtp5_daily_r187/20260904T230830Z/live-ready.json`,
+  SHA-256 `741234e6d9671225d74d9bff63bc0af1cdd171fd5400338c5631a9065f25a595`.
 
 Primary publication sources:
 
