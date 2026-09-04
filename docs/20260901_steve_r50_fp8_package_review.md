@@ -181,3 +181,7 @@ published host `.text`, `.rodata`, and `.data` section hashes but not the
 complete libraries, and its exact strict live replay measured only 17.203380
 tok/s. See `docs/20260901_steve_r50_reproduction_gap_ledger.md` for the
 verified missing inputs and artifact request.
+
+The 2026-09-04 publication update resolved this gap. A fresh full-history
+clone, remote asset validation, no-compiler R156 build, and matched graph A/B
+now pass locally; see `docs/20260904_steve_r187_independent_replay.md`.

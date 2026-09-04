@@ -7404,3 +7404,32 @@ needed if source-only reproduction is intended. Launch flags, model files,
 base sources, benchmark harness, and serving bounds are not missing. The
 verified request and DM draft are in
 `docs/20260901_steve_r50_reproduction_gap_ledger.md`.
+
+### 2026-09-04a - corrected Steve FP8 recipe reproduces with graph recovery
+
+CONFIG -> fresh full-history Steve source at `8319e096...`, corrected public
+release assets, official Qwen3.8 FP8 weights, local no-compiler R156 image,
+TP2 MTP1 c1, empty caches, and the exact strict natural-512 workload.
+
+COMMAND -> validate public source and remote asset closure; build R55C, R62,
+R139, and R156; verify image/model identities; run leased host and collective
+probes; then run R187 graph-off, matched R156 graph-off, and R156
+`FULL_DECODE_ONLY` sizes `[1,2]` graph-on with pre/post card and compiled
+two-rank health. Compare complete strict token arrays.
+
+RESULT -> closure and every content contract pass. The local host measured
+`9.2399 us` async launch, `52.1136 us` launch+sync, `200.1721 us` RMSNorm,
+and `74.6 us` two-row all-reduce. R187 graph-off measured `17.917452 tok/s`;
+matched R156 graph-off measured `16.845797`; graph-on measured `49.675873`,
+or `2.948858x` and `90.976%` of Steve's R156 MTP1 center. The matched R156
+pair passed 12/12 complete token arrays; R187 versus R156 graph-on was 9/12
+because that comparison also changes the Inductor split policy. All workload,
+cache-zero, canary, identity, teardown, card-health, and compiled-collective
+gates passed. No reset or reboot was needed.
+
+VERDICT -> GO for continued local c1 work on the documented graph variant;
+the former public artifact blocker is closed and the remaining graph-off
+speed gap is explained by measured host submission/collective latency. Do not
+shelf-promote yet: a second matched pair, concurrency, long-context, and
+cache-on qualification remain open. Full evidence is in
+`docs/20260904_steve_r187_independent_replay.md`.

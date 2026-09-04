@@ -197,3 +197,14 @@ boundary. Thanks!
 - https://github.com/steveseguin/b70-optimization-lab/blob/main/repro/qwen38-27b-fp8-vllm-tp2-asrock-b70/build-mtp1-rebuilt-gdn-image.sh
 - https://github.com/steveseguin/b70-optimization-lab/blob/main/repro/qwen38-27b-fp8-vllm-tp2-asrock-b70/verify-public-source-closure.sh
 - https://github.com/steveseguin/b70-optimization-lab/blob/main/experiments/qwen38-27b-b70/data/2026-09-01-qwen38-fp8-clean-rebuild-r55c-result.json
+
+## Resolution on 2026-09-04
+
+Steve published the corrected `40ca8c3f...` patch, exact R55C libraries,
+R139 extension and section hashes, and remote-bound manifests. A fresh
+full-history clone now passes public source and remote-asset closure, and the
+no-compiler chain builds through R156. The matched local R156 graph-off and
+sizes `[1,2]` graph-on strict pair passed 12/12 complete arrays at 16.845797
+and 49.675873 tok/s. The publication gap in this ledger is closed; see
+`docs/20260904_steve_r187_independent_replay.md` for current evidence and
+remaining qualification scope.
