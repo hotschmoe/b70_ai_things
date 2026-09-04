@@ -19,6 +19,9 @@ RESULT_DIR="${RESULT_DIR:-$ROOT/results/qwen38_fp8_steve_mtp5_daily_r187/$STAMP}
 NAME="${NAME:-qwen38-fp8-steve-mtp5-daily-r187}"
 SERVED="${SERVED:-qwen3.8-27b-FP8-official-W8A16-mtp5-r187-xpugraph-cacheon-ctx237568-daily}"
 PORT="${PORT:-18080}"
+BACKEND_PORT="${BACKEND_PORT:-18124}"
+API_KEY_FILE="${API_KEY_FILE:-$ROOT/secrets/dd_api_key}"
+FRONTDOOR="$SCRIPT_DIR/openai_key_frontdoor.py"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-237568}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-4}"
 MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-32768}"
@@ -37,7 +40,9 @@ print_config() {
     "result_dir=$RESULT_DIR" \
     "container=$NAME" \
     "served_model=$SERVED" \
-    "listen=127.0.0.1:$PORT" \
+    "listen=0.0.0.0:$PORT" \
+    "backend=127.0.0.1:$BACKEND_PORT" \
+    "api_key_auth=enabled" \
     "max_model_len=$MAX_MODEL_LEN" \
     "max_num_seqs=$MAX_NUM_SEQS" \
     "max_num_batched_tokens=$MAX_NUM_BATCHED_TOKENS" \
@@ -63,6 +68,7 @@ case "${1:-start}" in
     ;;
   status)
     docker ps --filter "name=^/${NAME}$" --format '{{.Names}} {{.Status}} {{.Ports}}'
+    ss -ltn "( sport = :$PORT )"
     exit 0
     ;;
   stop)
@@ -81,7 +87,8 @@ case "${1:-start}" in
     ;;
 esac
 
-for pair in "PORT:$PORT" "MAX_MODEL_LEN:$MAX_MODEL_LEN" \
+for pair in "PORT:$PORT" "BACKEND_PORT:$BACKEND_PORT" \
+  "MAX_MODEL_LEN:$MAX_MODEL_LEN" \
   "MAX_NUM_SEQS:$MAX_NUM_SEQS" \
   "MAX_NUM_BATCHED_TOKENS:$MAX_NUM_BATCHED_TOKENS" \
   "HEALTH_TIMEOUT:$HEALTH_TIMEOUT"; do
@@ -95,8 +102,12 @@ done
   printf 'source checkout is not at %s\n' "$SOURCE_COMMIT" >&2
   exit 1
 }
-[[ -e "$MODEL_DIR" && -x "$LAUNCHER" ]] || {
-  printf 'model or launcher input is missing\n' >&2
+[[ -e "$MODEL_DIR" && -x "$LAUNCHER" && -x "$FRONTDOOR" ]] || {
+  printf 'model, launcher, or frontdoor input is missing\n' >&2
+  exit 1
+}
+[[ -s "$API_KEY_FILE" ]] || {
+  printf 'API key file is missing or empty: %s\n' "$API_KEY_FILE" >&2
   exit 1
 }
 [[ "$(docker image inspect "$IMAGE" --format '{{.Id}}')" == "$IMAGE_ID" ]] || {
@@ -114,11 +125,20 @@ done
 
 mkdir -p "$RESULT_DIR" "$CACHE_DIR"
 journal_start="$(date +%s)"
+frontdoor_pid=""
+server_pid=""
 
 cleanup() {
   local rc=$? health_rc
   set +e
+  if [[ -n "$frontdoor_pid" ]]; then
+    kill "$frontdoor_pid" >/dev/null 2>&1
+    wait "$frontdoor_pid" 2>/dev/null
+  fi
   docker rm -f "$NAME" >/dev/null 2>&1
+  if [[ -n "$server_pid" ]]; then
+    wait "$server_pid" 2>/dev/null
+  fi
   journalctl -k --since "@$journal_start" --no-pager \
     >"$RESULT_DIR/kernel-journal.log" 2>"$RESULT_DIR/kernel-journal.err"
   if [[ "$rc" -ne 0 ]]; then
@@ -146,9 +166,19 @@ env \
 run_health pre
 
 env \
+  FRONTDOOR_HOST=0.0.0.0 \
+  FRONTDOOR_PORT="$PORT" \
+  FRONTDOOR_BACKEND_URL="http://127.0.0.1:$BACKEND_PORT" \
+  FRONTDOOR_API_KEY_FILE="$API_KEY_FILE" \
+  python3 "$FRONTDOOR" >"$RESULT_DIR/frontdoor.log" 2>&1 &
+frontdoor_pid=$!
+sleep 1
+kill -0 "$frontdoor_pid"
+
+env \
   IMAGE="$IMAGE" EXPECTED_IMAGE_ID="$IMAGE_ID" \
   MODEL_DIR="$MODEL_DIR" VLLM_CACHE_DIR="$CACHE_DIR" \
-  CONTAINER_NAME="$NAME" PORT="$PORT" SERVED_MODEL_NAME="$SERVED" \
+  CONTAINER_NAME="$NAME" PORT="$BACKEND_PORT" SERVED_MODEL_NAME="$SERVED" \
   MAX_MODEL_LEN="$MAX_MODEL_LEN" MAX_NUM_SEQS="$MAX_NUM_SEQS" \
   MAX_NUM_BATCHED_TOKENS="$MAX_NUM_BATCHED_TOKENS" \
   GPU_MEMORY_UTILIZATION=0.96 \
@@ -164,4 +194,15 @@ env \
   SPECULATIVE_CONFIG='{"method":"qwen3_next_mtp","num_speculative_tokens":5}' \
   COMPILATION_CONFIG="$COMPILATION_CONFIG" \
   EXTRA_SERVE_ARGS="$EXTRA_SERVE_ARGS" \
-  bash "$LAUNCHER" 2>&1 | tee "$RESULT_DIR/server.log"
+  bash "$LAUNCHER" >"$RESULT_DIR/server.log" 2>&1 &
+server_pid=$!
+
+set +e
+wait -n "$server_pid" "$frontdoor_pid"
+rc=$?
+set -e
+if kill -0 "$server_pid" >/dev/null 2>&1 && \
+  ! kill -0 "$frontdoor_pid" >/dev/null 2>&1; then
+  [[ "$rc" -ne 0 ]] || rc=1
+fi
+exit "$rc"

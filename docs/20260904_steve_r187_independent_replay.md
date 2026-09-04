@@ -103,14 +103,20 @@ serving envelope to 237,568 maximum context, four request slots, 32,768
 maximum batched tokens, 0.96 GPU memory utilization, Qwen hybrid `align`
 prefix caching, and capture sizes 1 through 24 for the four MTP5 decode
 descriptors. Enable the `qwen3_coder` tool parser and `qwen3` reasoning parser;
-bind loopback port 18080 with an explicit served ID.
+keep the vLLM backend on `127.0.0.1:18124`, and expose an API-key frontdoor on
+`0.0.0.0:18080` with the existing off-repository daily-driver key. Use an
+explicit served ID.
 
 COMMAND -> Start
 `vllm/fp8/serve_qwen38_fp8_steve_r187_mtp5_daily.sh` inside a durable tmux
 session. Keep the `bin/gpu-run` two-card lease for the entire server lifetime;
 require image/model verification and pre-card/compiled-collective health.
 Probe explicit model identity, a short chat completion, and a repeated prefix
-longer than the 832-token hybrid alignment page.
+longer than the 832-token hybrid alignment page. For the LAN change, drain the
+loopback lifecycle, recover and recheck the cards if its TP2 trap fails, then
+start a fresh lifecycle and require public health, unauthenticated rejection,
+authenticated model identity, chat, and streaming gates through
+`192.168.10.5:18080`.
 
 RESULT -> The server allocated 290,188 aggregate KV tokens, enough for 1.22
 full 237,568-token requests, and captured all four c1-c4 descriptors in 3
@@ -122,9 +128,23 @@ cached tokens and the second reported 1,664. Engine counters independently
 reported 1,664 local prefix-cache-hit tokens. The earlier 128-token repeat
 was below one 832-token align page and correctly produced no reusable block.
 
-VERDICT -> READY for a quality test while the server remains live on
-`127.0.0.1:18080`; not qualified for speed, stability, or shelf promotion.
-Post-health remains pending until teardown. Stop through the tracked script so
+The controlled restart exposed one launcher live-edit edge case: the old Bash
+process read the newly edited cleanup body with variables absent from its
+resident pre-edit state. The model workers drained cleanly, but the lifecycle
+returned 1. Fail-closed cleanup ran `xe-reset --method rebind`; both card and
+compiled P2P-disabled collective post-health passed and both leases were
+released. A fresh lifecycle then passed pre-health and reused the compiled
+graph target. The authenticated frontdoor now listens on `0.0.0.0:18080`,
+while Docker publishes vLLM only on `127.0.0.1:18124`. Direct LAN probes
+returned HTTP 200 for health, HTTP 401 for unauthenticated `/v1/models`, and
+HTTP 200 with the exact served ID when authenticated. Authenticated chat
+returned exactly `LAN READY`, streaming reached `[DONE]`, and no API key is
+present in process arguments. No matching Xe fault was present at handoff.
+
+VERDICT -> READY for a quality test at
+`http://192.168.10.5:18080/v1` using the existing daily-driver API key; not
+qualified for speed, stability, or shelf promotion. The current lifecycle's
+post-health remains pending until teardown. Stop through the tracked script so
 the held lease performs teardown, kernel capture, and post-health.
 
 ## Exact identities
@@ -170,6 +190,16 @@ the newly corrected release-binary route.
 - Live long-context readiness receipt:
   `/mnt/vm_8tb/b70/results/qwen38_fp8_steve_mtp5_daily_r187/20260904T230830Z/live-ready.json`,
   SHA-256 `741234e6d9671225d74d9bff63bc0af1cdd171fd5400338c5631a9065f25a595`.
+- Controlled-restart recovery:
+  `/mnt/vm_8tb/b70/results/qwen38_fp8_steve_mtp5_daily_r187/20260904T230830Z/recovery.log`,
+  SHA-256 `bb0d3d6ed7dca056800384f3232211f5fac26d05b09f6c83fcdfa34b6e3c69d9`;
+  card and collective post-health SHA-256
+  `7b157e3555a8aa1d188b7377745332cbd9244e5d27c084713ecfa3124fae8718`
+  and `2f3e94bca6d706216bd9c0059e2e835e5eda803e3c4db154fea86c7bcbe66d61`.
+- Fresh secured LAN lifecycle:
+  `/mnt/vm_8tb/b70/results/qwen38_fp8_steve_mtp5_daily_r187/20260904T232952Z/`;
+  LAN receipt SHA-256
+  `a2e12fbdbee37b90fd2f0f570abe0451d2eb302d68905027ae717b62740b2c0c`.
 
 Primary publication sources:
 

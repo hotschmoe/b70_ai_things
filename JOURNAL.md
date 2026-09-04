@@ -7485,3 +7485,37 @@ VERDICT -> READY for the planned quality test, not qualified for speed,
 stability, or shelf promotion. Use the tracked stop action so teardown and
 post-health run. Full configuration and evidence are in
 `docs/20260904_steve_r187_independent_replay.md`.
+
+### 2026-09-04d - MTP5 daily candidate exposed through secured LAN frontdoor
+
+CONFIG -> Keep the live R187 whole-graph FP8 W8A16 MTP5 server at 237,568
+context with cache enabled. Move its Docker-published vLLM endpoint to
+`127.0.0.1:18124`; expose an API-key frontdoor on `0.0.0.0:18080` using the
+existing off-repository daily-driver key and the exact served model ID
+`qwen3.8-27b-FP8-official-W8A16-mtp5-r187-xpugraph-cacheon-ctx237568-daily`.
+
+COMMAND -> Add the tracked key-checking streaming proxy to the foreground
+leased launcher; preflight it against the old loopback server; perform a
+controlled stop; then launch a fresh two-card lifecycle with image/model
+verification and pre-card/compiled-collective health. Probe health, auth
+rejection, authenticated identity, exact chat, and streaming through the
+host LAN address without putting the key in command arguments.
+
+RESULT -> Proxy preflight passed. During the controlled stop, the old resident
+Bash process read the newly edited cleanup body and lacked its new variables;
+model workers drained cleanly, but the lifecycle returned 1. Fail-closed
+cleanup ran rebind recovery, passed card and compiled P2P-disabled collective
+post-health, and released both leases. The fresh lifecycle passed pre-health,
+loaded the compiled graph target, retained 290,188 KV tokens, and listened as
+intended: frontdoor `0.0.0.0:18080`, backend `127.0.0.1:18124`. Through
+`192.168.10.5`, health returned 200, unauthenticated `/v1/models` returned
+401, authenticated identity returned 200 with the exact ID, chat returned
+exactly `LAN READY`, and streaming reached `[DONE]`. No key appears in process
+arguments and no matching Xe fault was present. The server remains live with
+both leases held. The LAN receipt SHA-256 is
+`a2e12fbdbee37b90fd2f0f570abe0451d2eb302d68905027ae717b62740b2c0c`.
+
+VERDICT -> READY for LAN quality testing at
+`http://192.168.10.5:18080/v1` with the existing daily-driver API key. This is
+not a speed, stability, or shelf claim. Post-health for the current lifecycle
+remains pending until its tracked teardown.
