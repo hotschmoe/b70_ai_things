@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Reproduce Steve Seguin's R187 graph-off profile or documented slow-host
-# XPU-graph variant with local lease, identity, health, and teardown gates.
+# Reproduce Steve Seguin's R187 graph-off profiles or slow-host XPU-graph
+# variants with local lease, identity, health, and teardown gates.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,6 +21,7 @@ READY_TIMEOUT="${READY_TIMEOUT:-1200}"
 READY_STALL="${READY_STALL:-360}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
 MIN_AVAILABLE_GIB="${MIN_AVAILABLE_GIB:-64}"
+profile_env=()
 
 case "$PROFILE" in
   r156)
@@ -38,8 +39,17 @@ case "$PROFILE" in
     SERVED="qwen38-fp8-block-w8a16-mtp1-xpugraph-r156-local"
     PROFILE_LABEL="mtp1-xpugraph-r156-local"
     ;;
+  mtp5-xpugraph-r187)
+    LAUNCHER="$SOURCE/experiments/qwen38-27b-b70/scripts/run-20260903-qwen38-fp8-mtp5-whole-graph-r187-server.sh"
+    SERVED="qwen38-fp8-block-w8a16-mtp5-whole-graph-xpugraph-r187-local"
+    PROFILE_LABEL="mtp5-whole-graph-xpugraph-r187-local"
+    profile_env=(
+      VLLM_XPU_ENABLE_XPU_GRAPH=1
+      'COMPILATION_CONFIG={"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,3,4,5,6],"max_cudagraph_capture_size":6,"splitting_ops":[],"inductor_compile_config":{"combo_kernels":false,"benchmark_combo_kernel":false,"deterministic":true,"triton.autotune_pointwise":false,"benchmark_epilogue_fusion":false}}'
+    )
+    ;;
   *)
-    printf 'PROFILE must be r156, r187, or xpugraph-r156\n' >&2
+    printf 'PROFILE must be r156, r187, xpugraph-r156, or mtp5-xpugraph-r187\n' >&2
     exit 2
     ;;
 esac
@@ -213,9 +223,18 @@ env \
   VLLM_XPU_DRAFT_LM_HEAD_INT4_GROUP_SIZE=128 \
   VLLM_XPU_DRAFT_LM_HEAD_INT4_SCALE_DTYPE=bf16 \
   VLLM_XPU_DRAFT_LM_HEAD_INT4_CHUNK_ROWS=2048 \
+  "${profile_env[@]}" \
   bash "$LAUNCHER" >"$RESULT_DIR/server.log" 2>&1 &
 server_pid=$!
 wait_ready
+
+if [[ "$PROFILE" == mtp5-xpugraph-r187 ]]; then
+  grep -Fq "num_speculative_tokens': 5" "$RESULT_DIR/server.log"
+  grep -Fq "cudagraph_mode': <CUDAGraphMode.FULL_DECODE_ONLY" "$RESULT_DIR/server.log"
+  grep -Fq "cudagraph_capture_sizes': [1, 2, 3, 4, 5, 6]" "$RESULT_DIR/server.log"
+  grep -Fq "splitting_ops': []" "$RESULT_DIR/server.log"
+  grep -Fq 'Graph capturing finished' "$RESULT_DIR/server.log"
+fi
 
 curl -fsS --max-time 15 "http://127.0.0.1:$PORT/v1/models" >"$RESULT_DIR/models.json"
 python3 - "$RESULT_DIR/models.json" "$SERVED" <<'PY'

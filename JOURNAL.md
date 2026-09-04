@@ -7433,3 +7433,30 @@ speed gap is explained by measured host submission/collective latency. Do not
 shelf-promote yet: a second matched pair, concurrency, long-context, and
 cache-on qualification remain open. Full evidence is in
 `docs/20260904_steve_r187_independent_replay.md`.
+
+### 2026-09-04b - R187 MTP5 XPU graph reaches 72.245 tok/s
+
+CONFIG -> corrected Steve R156 image and official Qwen3.8 FP8 weights, R187
+whole-graph compile, TP2 MTP5 c1, `FULL_DECODE_ONLY` XPU graph capture sizes
+`[1,2,3,4,5,6]`, empty cache, 1K allocation, and the strict natural-512
+suite.
+
+COMMAND -> extend the fail-closed Steve replay harness with an experimental
+MTP5 graph profile; run it through the two-card lease, image/model identity,
+exact graph-config assertions, pre/post card and compiled P2P-off collective
+health, cache-zero and canary gates, teardown, and kernel-journal check; then
+compare complete token arrays with the prior R156 MTP1 graph attempt.
+
+RESULT -> MTP5 graph measured `72.245076 tok/s`, `1.454329x` or `45.433%`
+above MTP1 graph's `49.675873 tok/s`. All workload, cache-zero, canary,
+served-ID, health, teardown, and kernel gates passed; swap remained at
+`646792 KiB`. Outputs were 12/12 exact against the same-image, same-whole-
+graph R187 MTP1 graph-off reference. They were 9/12 against R156 MTP1
+graph-on, with the same three late divergences already observed between R187
+whole-graph and R156 piecewise profiles.
+
+VERDICT -> GO as a coherent experimental c1 speed lead, not for shelf
+promotion or a controlled speed claim. The requested MTP1 graph comparison
+changes both MTP depth and Inductor split policy; run and repeat same-depth
+graph-off/on controls before promotion. Evidence is appended to
+`docs/20260904_steve_r187_independent_replay.md`.

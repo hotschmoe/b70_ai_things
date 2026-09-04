@@ -36,6 +36,7 @@ hosts and predicts a graph-off miss.
 | R187 whole graph, XPU graph off | 17.917452 | pass | 9/12 vs R156 graph-on; three late divergences |
 | R156 piecewise, XPU graph off | 16.845797 | pass | 12/12 vs matched R156 graph-on |
 | R156 `FULL_DECODE_ONLY`, sizes `[1,2]` | 49.675873 | pass | 12/12 vs matched R156 graph-off |
+| R187 MTP5 whole graph, `FULL_DECODE_ONLY`, sizes `[1,2,3,4,5,6]` | 72.245076 | pass | 12/12 vs R187 MTP1 graph-off; 9/12 vs R156 MTP1 graph-on |
 
 The matched graph-on arm is `2.948858x` the R156 graph-off rate and reaches
 `90.976%` of Steve's `54.603244 tok/s` R156 MTP1 center. It also reaches
@@ -52,9 +53,47 @@ fault event was found. No reset or reboot was needed.
 VERDICT -> The corrected public no-compiler recipe is independently runnable
 on this machine. Select the documented sizes `[1,2]` XPU-graph variant for
 local MTP1 c1 use; graph-off is submission-bound on this host. This is a
-single matched strict pair, not shelf qualification. Keep MTP2-MTP5, c2/c4,
-long context, cache-on, and a second fresh matched pair open. Do not promote
-R187 or the graph variant to `rdy_to_serve` yet.
+single matched strict pair, not shelf qualification. The experimental R187
+MTP5 graph arm is faster at c1 and matches the R187 MTP1 graph-off output, but
+it is not a single-variable performance pair. Keep same-depth graph-off and
+same-depth graph-on repeats, c2/c4, long context, cache-on, and a second fresh
+matched pair open. Do not promote R187 or either graph variant to
+`rdy_to_serve` yet.
+
+## MTP5 XPU-graph follow-up
+
+CONFIG -> Same source, image, weights, TP2 cards, 1K allocation, FP16 KV and
+target verifier, draft-only INT4 head, and strict suite; R187 whole-graph
+compile with MTP depth 5 and `FULL_DECODE_ONLY` capture sizes
+`[1,2,3,4,5,6]`. The capture set follows Steve's R198 depth-3 precedent of
+including each possible target-plus-draft row count.
+
+COMMAND -> Run `PROFILE=mtp5-xpugraph-r187 bash
+vllm/fp8/qualify_qwen38_fp8_steve_r187_strict.sh` under the two-card lease,
+then compare its complete strict token arrays with the earlier R156 MTP1
+XPU-graph attempt.
+
+RESULT -> The server log confirms MTP5, empty `splitting_ops`, the exact six
+capture sizes, and successful graph capture in 2 seconds using about 0.08 GiB
+per card. The class-balanced median was `72.245076 tok/s`, `1.454329x` or
+`45.433%` above the R156 MTP1 graph result, and `83.829%` of Steve's
+`86.181722 tok/s` MTP5 graph-off center. The strict workload, cache-zero,
+repeat/copy/arithmetic/JSON canaries, served-model identity, teardown, both
+card checks, and compiled P2P-off post-collective health passed. Swap never
+exceeded `646792 KiB`, and the kernel journal had no matching new Xe fault.
+
+The new arm matched the same-image, same-whole-graph R187 MTP1 graph-off
+reference 12/12 complete token arrays. It matched the requested R156 MTP1
+graph-on comparison 9/12: divergence began at token 303 for `code-review`,
+392 for `incident-retrospective`, and 127 for `risk-register`. Those are
+exactly the three late divergences in the earlier R187 whole-graph versus R156
+piecewise comparison, so the 9/12 cross-profile result is attributable to a
+known split-policy confound rather than specifically to MTP5 graph replay.
+
+VERDICT -> GO as a coherent experimental c1 speed arm; NO-GO for a shelf or
+controlled speed claim until same-depth graph-off/on arms are run and
+repeated. The direct speed comparison requested is valid as an observed
+result, not as a controlled single-variable claim.
 
 ## Exact identities
 
@@ -86,10 +125,16 @@ the newly corrected release-binary route.
   `/mnt/vm_8tb/b70/results/qwen38_fp8_steve_r156/20260904T220842Z/`.
 - R156 graph-on attempt:
   `/mnt/vm_8tb/b70/results/qwen38_fp8_steve_xpugraph-r156/20260904T215712Z/`.
+- R187 MTP5 graph-on attempt:
+  `/mnt/vm_8tb/b70/results/qwen38_fp8_steve_mtp5-xpugraph-r187/20260904T224821Z/`.
 - Matched comparison SHA-256:
   `db8e4fc388961f9790e2feb6561afdb5ba4e1a87a4694c99372ba9a4659b3a47`.
 - Unmatched R187-versus-R156 graph comparison SHA-256:
   `de0140d490a62221901c5d6f1967eab306a9ba24f838ee18f931b27777d6e4c5`.
+- Unmatched R156 MTP1 graph-versus-R187 MTP5 graph comparison SHA-256:
+  `e56ca1451a62d48a07d6050b0ef7b8e49d9fd3332226c7831841390291cd879c`.
+- Same-R187 whole-graph MTP1 graph-off-versus-MTP5 graph comparison SHA-256:
+  `1d77ae38a4c2be00337b904d0d922aa7d198429d03942b5e4d803db46ee3dbc1`.
 
 Primary publication sources:
 
