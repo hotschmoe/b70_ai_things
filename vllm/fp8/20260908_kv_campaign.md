@@ -329,3 +329,29 @@ control is pending to separate graph replay from hybrid state behavior.
 Upstream reports describe related hybrid/speculative prefix-cache failures,
 but do not establish the cause of this exact local boundary failure:
 https://github.com/vllm-project/vllm/issues/53912
+
+## FP8 follow-up and scope decision
+
+CONFIG -> Same calibrated artifact, MTP3, CPU tier off. B0eager_boundary
+uses eager execution with prefix caching; B0graph_prefixoff uses production
+graphs with prefix caching disabled. These are diagnostics, not candidates.
+
+COMMAND -> Repeated greedy 2048-token LRU guide; clean stop and per-card
+plus compiled collective post-health in each lifecycle.
+
+RESULT -> Eager with prefix caching also failed: first response coherent,
+second ended with repetition and an unclosed code fence (1722 tokens).
+Repeat identity failed. Disabling prefix caching passed three coherent,
+byte-identical 2048-token responses (6144 tokens total, 107.884 s).
+Both lifecycle exit codes are zero with post-health passing; that does not
+turn the eager quality failure into a pass. Raw evidence is under
+b0eager_boundary/ and b0graph_prefixoff/ in the campaign results root.
+
+VERDICT -> The observed failure is not graph-only. Prefix caching affects
+this reproduction, but the underlying hybrid/MTP/cache-state cause is not
+established. On user direction, stop the FP8 KV promotion campaign now.
+Retain the frozen scales and negative evidence for future work. Continue
+RAM-offload qualification using the existing auto/FP16 KV baseline, keeping
+prefix caching and MTP3. The user's preference for BF16 refers to avoiding
+FP8 here; the actual preserved endpoint uses FP16 KV, so no unmeasured
+FP16-to-BF16 change is introduced. Public serving defaults remain unchanged.
