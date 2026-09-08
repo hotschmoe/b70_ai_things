@@ -97,7 +97,7 @@ def main():
         jobs = [(name, job) for name, job in jobs if name not in ('07-pressure', '08-postpressure')]
         for name, job in jobs:
             if name in ('04-tools', '09-evict-tools'):
-                job['command'] += ['--stream', '--bang-retries', '3', '--salt', '-recovery-daily']
+                job['command'] += ['--stream', '--bang-retries', '3', '--salt=-recovery-daily']
             if name == '09-evict-tools':
                 job['command'] += ['--turns', '1']
     cmd = ['python3', str(repo / 'vllm/fp8/kv_campaign_server.py'),
@@ -205,7 +205,7 @@ def main():
                     'interpretation': 'Reviewed guide variation; byte-exact repeat claim remains false.'}
                 (args.out / 'guide-review.json').write_text(json.dumps(reviewed[name], indent=2) + '\n')
                 if allowed:
-                    print('REVIEWED noncritical guide tail variation', flush=True)
+                    print('REVIEWED coherent guide variation; byte-repeat remains false', flush=True)
                     continue
             if results[name]:
                 break

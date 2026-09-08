@@ -296,3 +296,26 @@ qualification if correct responses are recomputing. A new raw bang-rate
 audit separates workload families, retries and natural incidents; CPU tests
 verify the denominator and32-bang detection. It makes no long-run rarity or
 independence claim and excludes injected Pi failures and intentional cancels.
+
+### 2026-09-08 -32K batching restores the MTP2 tool-history reuse check
+
+CONFIG -> Original R276 MTP2, FP16 KV, GPU prefix on,200K/c4,batch32768,
+util0.96,cgroup64GiB,CPU tier0; profiler configured but inactive during tests.
+Nominal KV pool456916 tokens (15.62GiB per rank), versus536758 at4K.
+COMMAND -> stock-mtp2-b32768-daily/00b-strict and00a2-tool-boundary:
+four concurrent88314-token histories, one tool call and answer each.
+RESULT -> Author metric83.150939 tok/s with all canaries and zero cache-hit
+checks passing; complete outputs12/12 token-exact against the4K MTP2 screen.
+Boundary test8/8 correct,8 attempts,0 bang incidents,194.231s total. Cold tool
+calls189.405-192.061s; all four followup answers reused87360/88380 tokens and
+finished1.602-2.473s. The4K control's two completed followups had zero cached
+tokens despite a full88314-token common prefix. Three long guides remain
+coherent but not byte-identical; six Python blocks pass18000 reference ops.
+Initial00a attempt failed in argparse before inference because a single-dash
+salt looked like an option. Raw rc2 preserved;00a2 uses explicit --salt=value.
+Queued legacy salt arguments now parse literally; CPU parser check passes.
+VERDICT ->32K is the selected batching candidate on direct measured reuse
+benefit, with slower cold concurrent first responses as the known tradeoff.
+Do not claim the internal cause or that eight clean requests establish the
+under1 percent long-run target. Full quality, eviction, recovery, teardown
+and fresh public-serving qualification remain in progress.

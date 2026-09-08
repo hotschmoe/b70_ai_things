@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 import re
+import sys
 import time
 import urllib.request
 from kv_campaign_probe import request
@@ -86,7 +87,14 @@ def main():
                    help='Diagnostic retry emulation, not the Pi extension: cancel at32 bangs, rotate salt')
     p.add_argument('--salt', default='', help='Independent workload namespace')
     p.add_argument('--turns', type=int, default=4, choices=range(1, 5))
-    args = p.parse_args()
+    argv = sys.argv[1:]
+    # A namespace may begin with a single dash. Preserve it as literal data,
+    # including jobs already queued with separate --salt/value arguments.
+    if '--salt' in argv:
+        i = argv.index('--salt')
+        if i + 1 < len(argv) and argv[i + 1].startswith('-') and not argv[i + 1].startswith('--'):
+            argv[i:i + 2] = ['--salt=' + argv[i + 1]]
+    args = p.parse_args(argv)
     if args.bang_retries < 0 or args.bang_retries > 3:
         p.error('--bang-retries must be between0 and3')
     if args.bang_retries and (not args.stream or args.shared_cache):
