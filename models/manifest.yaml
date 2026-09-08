@@ -134,3 +134,25 @@ models:
     source: { type: custom, origin: quantized-on-device }
     derived_from: ornith-ai/Ornith-1.5-35B-A3B
     notes: Local GPTQModel 7.3.2 mixed-calibration INT4 checkpoint.
+
+  - id: qwen3.8-27b/int4-autoround-bce40cac
+    family: qwen3.8-27b
+    scheme: autoround-int4-w4a16-g128
+    vision: true
+    mtp: true
+    size_gb: 19.02
+    source:
+      type: hf
+      repo: devan-carlin/Qwen3.8-27B-int4-AutoRound
+      revision: bce40cacab0a4535b92fb3d57615c2bea9adf3d1
+    notes: 20260908 neural.download replica intake; direct and cached reads match publisher manifest.
+
+  - id: qwen3.8-27b/int4-autoround-gptq-relabel-r212
+    family: qwen3.8-27b
+    scheme: autoround-int4-w4a16-g128-gptq-relabel
+    vision: true
+    mtp: true
+    size_gb: 19.02
+    source: { type: custom, origin: neural-download-r212-config-relabel }
+    derived_from: qwen3.8-27b/int4-autoround-bce40cac
+    notes: Identical hard-linked tensors; config-only GPTQ routing for fixed-K oneDNN. Not re-quantized or promoted.

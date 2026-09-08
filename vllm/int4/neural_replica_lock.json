@@ -1,0 +1,251 @@
+{
+  "author": "Steve Seguin / neural.download",
+  "source_repository": "https://github.com/steveseguin/b70-optimization-lab",
+  "source_commit": "54aefaf067b422d507f51f1e362efeecc58668ba",
+  "recipe_url": "https://neural.download/models/qwen38-27b-autoround-int4-b70.html",
+  "recipe_html_sha256": "f7f60f9105bf9508f065404e4365cba18ff5df37e4ef37a1f6024c16a743d8de",
+  "image": "ghcr.io/steveseguin/vllm-openai-xpu-qwen38-int4@sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad",
+  "model": {
+    "repository": "devan-carlin/Qwen3.8-27B-int4-AutoRound",
+    "revision": "bce40cacab0a4535b92fb3d57615c2bea9adf3d1",
+    "revision_url": "https://huggingface.co/devan-carlin/Qwen3.8-27B-int4-AutoRound/tree/bce40cacab0a4535b92fb3d57615c2bea9adf3d1",
+    "revision_note": "The Hugging Face model API resolved this exact revision on 2026-08-18. Its LFS SHA-256 values, byte sizes, and small-file identities match both the original /mnt/usb-models copy and the independently downloaded /mnt/fast-ai copy.",
+    "base_model": "Qwen/Qwen3.8-27B",
+    "total_bytes_reported_by_hugging_face": 19016930167,
+    "identity": {
+      "quantization": "AutoRound INT4 W4A16",
+      "bits": 4,
+      "group_size": 128,
+      "sym": true,
+      "packing_format": "auto_round:auto_gptq",
+      "autoround_version": "0.14.2",
+      "mtp_capable": true,
+      "mtp_fc_dtype": "bf16",
+      "architecture": "Qwen3_5ForConditionalGeneration / qwen3_5_text",
+      "num_hidden_layers": 64,
+      "hidden_size": 5120,
+      "vocab_size": 248320,
+      "full_attention_interval": 4,
+      "mtp_num_hidden_layers": 1,
+      "note": "architecturally identical to the Qwen3.6 27B INT4 lane; same INC quantization path"
+    },
+    "lfs_files": [
+      {
+        "path": "model-00001-of-00007.safetensors",
+        "bytes": 3216489680,
+        "sha256": "976029a597b0d353a543fd4241156add520e41dccce29b2363b8d7a08e218091"
+      },
+      {
+        "path": "model-00002-of-00007.safetensors",
+        "bytes": 3190151576,
+        "sha256": "e4ac4e0b6f7101cbfb1f019c46b4cfd4f4ca4d90d92760fb8f6e515f33418b37"
+      },
+      {
+        "path": "model-00003-of-00007.safetensors",
+        "bytes": 3219130488,
+        "sha256": "989ee77e68979ee955d9aacf4281bb0a6bed1a311373b2b66188079edf27b8a0"
+      },
+      {
+        "path": "model-00004-of-00007.safetensors",
+        "bytes": 3216860120,
+        "sha256": "76caf31fb8259bec7cbc9c4b8fd26c8fe4fe6460ccd65dfbcc53c1295b831eb6"
+      },
+      {
+        "path": "model-00005-of-00007.safetensors",
+        "bytes": 770164464,
+        "sha256": "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276"
+      },
+      {
+        "path": "model-00006-of-00007.safetensors",
+        "bytes": 2542807272,
+        "sha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0"
+      },
+      {
+        "path": "model-00007-of-00007.safetensors",
+        "bytes": 2542796896,
+        "sha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733"
+      },
+      {
+        "path": "model_extra_tensors.safetensors",
+        "bytes": 298305576,
+        "sha256": "94102b67c6b84e65dbb9bae37c00bd88ac1a43ff577ce65fd8842d231c7e89de"
+      }
+    ],
+    "small_files": [
+      {
+        "path": ".gitattributes",
+        "bytes": 1570,
+        "git_blob": "52373fe24473b1aa44333d318f578ae6bf04b49b"
+      },
+      {
+        "path": "README.md",
+        "bytes": 2117,
+        "git_blob": "09d733db5da711ab8009f2bcd4fad7a1ae0d7eab"
+      },
+      {
+        "path": "chat_template.jinja",
+        "bytes": 8952,
+        "git_blob": "c0c686f9c38d70d179fb7b5f5aa7530bc913dda3"
+      },
+      {
+        "path": "config.json",
+        "bytes": 15786,
+        "git_blob": "3da56412a4569e7c63a2dffe7db5d3f92d33270f"
+      },
+      {
+        "path": "generation_config.json",
+        "bytes": 214,
+        "git_blob": "0bc3addd19dc59c5c8899fc1fb887d50b592e7c3"
+      },
+      {
+        "path": "model.safetensors.index.json",
+        "bytes": 192181,
+        "git_blob": "41cb335983bf0f9ce2ce528ecbab010a0089f491"
+      },
+      {
+        "path": "preprocessor_config.json",
+        "bytes": 443,
+        "git_blob": "8ed39680d90d989c35a3e308338a24875bafbc42"
+      },
+      {
+        "path": "processor_config.json",
+        "bytes": 1191,
+        "git_blob": "33818c7f9e991ad735fd240209f4fa73e6c28c50"
+      },
+      {
+        "path": "quantization_config.json",
+        "bytes": 11151,
+        "git_blob": "d210731a86b27f72914ae37c749ccf0484c6e374"
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 19989325,
+        "git_blob": "d5967dbafffa6c5b250a02b35723f53e702d0d62"
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 1165,
+        "git_blob": "1d134cd298be1e3be25db393d93a1cefe80e3214"
+      }
+    ]
+  },
+  "relabel_manifest_sha256": "9452940dfba238c08eaa6c430310ad73c16e86afbed60400f1bd4e76fc904547",
+  "artifact_acquisition": {
+    "manifest_sha256": "ef855b66d986a22f1c3bf0d1f80cbe9b9cc533331709be9c955671b28eaf2fd3",
+    "artifacts": [
+      {
+        "name": "_xpu_C.abi3.so",
+        "kind": "xpu-extension",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/_xpu_C.abi3.so",
+        "sha256": "271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f",
+        "size": 61898352,
+        "local": "release/_xpu_C.abi3.so",
+        "actual_sha256": "271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f",
+        "actual_bytes": 61898352
+      },
+      {
+        "name": "libgdn_attn_kernels_xe_2.so",
+        "kind": "gdn-library",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/libgdn_attn_kernels_xe_2.so",
+        "sha256": "2c343620d689409bfa371a8b4c3db680e4786f23bc092411e7d03140f1b2a355",
+        "size": 5914352,
+        "local": "release/libgdn_attn_kernels_xe_2.so",
+        "actual_sha256": "2c343620d689409bfa371a8b4c3db680e4786f23bc092411e7d03140f1b2a355",
+        "actual_bytes": 5914352
+      },
+      {
+        "name": "_xpu_ops.py",
+        "kind": "runtime-overlay",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/_xpu_ops.py",
+        "sha256": "c91d6b0d56a68b179a0fb3124ffc2c77082248600b6ad98fa5b5220ae233d4f1",
+        "size": 50075,
+        "local": "release/_xpu_ops.py",
+        "actual_sha256": "c91d6b0d56a68b179a0fb3124ffc2c77082248600b6ad98fa5b5220ae233d4f1",
+        "actual_bytes": 50075
+      },
+      {
+        "name": "r220-clean-build.log",
+        "kind": "historical-build-log",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/r220-clean-build.log",
+        "sha256": "d4b7b37fff5d9b035cd0096b5e838cb87645ca3ad9a8ae60082a9dfab1f70fb6",
+        "size": 103179,
+        "local": "release/r220-clean-build.log",
+        "actual_sha256": "d4b7b37fff5d9b035cd0096b5e838cb87645ca3ad9a8ae60082a9dfab1f70fb6",
+        "actual_bytes": 103179
+      },
+      {
+        "name": "r221-incremental-rebuild.log",
+        "kind": "build-log",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/r221-incremental-rebuild.log",
+        "sha256": "e38a426026173ccc7392593090bee875f102adeb95912312369ad795baccf5a2",
+        "size": 12018,
+        "local": "release/r221-incremental-rebuild.log",
+        "actual_sha256": "e38a426026173ccc7392593090bee875f102adeb95912312369ad795baccf5a2",
+        "actual_bytes": 12018
+      },
+      {
+        "name": "r221-oneapi-packages.txt",
+        "kind": "toolchain-inventory",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/r221-oneapi-packages.txt",
+        "sha256": "9a6edaebc69c2636858c9ce0e564999c1622b3ecf1a6f18758f3d7b317f66006",
+        "size": 4323,
+        "local": "release/r221-oneapi-packages.txt",
+        "actual_sha256": "9a6edaebc69c2636858c9ce0e564999c1622b3ecf1a6f18758f3d7b317f66006",
+        "actual_bytes": 4323
+      },
+      {
+        "name": "r256-runtime-packages.txt",
+        "kind": "runtime-inventory",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/r256-runtime-packages.txt",
+        "sha256": "d178d2bc7916c47b26e8892f4e1a27e13068bc0b22554518bfd32c28e326fe52",
+        "size": 5511,
+        "local": "release/r256-runtime-packages.txt",
+        "actual_sha256": "d178d2bc7916c47b26e8892f4e1a27e13068bc0b22554518bfd32c28e326fe52",
+        "actual_bytes": 5511
+      },
+      {
+        "name": "SHA256SUMS",
+        "kind": "checksum-manifest",
+        "url": "https://github.com/steveseguin/b70-optimization-lab/releases/download/qwen38-int4-fixed-k-r221-20260906/SHA256SUMS",
+        "sha256": "bfc2682755928ee2ec3f6af2d1ad1b4d5396310f3beb8ea30afc4a0f9cdc6102",
+        "size": 618,
+        "local": "release/SHA256SUMS",
+        "actual_sha256": "bfc2682755928ee2ec3f6af2d1ad1b4d5396310f3beb8ea30afc4a0f9cdc6102",
+        "actual_bytes": 618
+      },
+      {
+        "url": "https://codeload.github.com/vllm-project/vllm/tar.gz/ac7509e2b1db40fec2f03dde1ed4e9dfdc2338c9",
+        "local": "source/vllm-ac7509e2b1db40fec2f03dde1ed4e9dfdc2338c9.tar.gz",
+        "commit": "ac7509e2b1db40fec2f03dde1ed4e9dfdc2338c9",
+        "kind": "source-archive",
+        "actual_sha256": "2e030ea21bfe574129de5889c51588a069b9ae4e07a35ee66525f8b28c95c863",
+        "actual_bytes": 39807101
+      },
+      {
+        "url": "https://codeload.github.com/vllm-project/vllm-xpu-kernels/tar.gz/1e90ffa672ba02f17a909da11838a4c55b199783",
+        "local": "source/vllm-xpu-kernels-1e90ffa672ba02f17a909da11838a4c55b199783.tar.gz",
+        "commit": "1e90ffa672ba02f17a909da11838a4c55b199783",
+        "kind": "source-archive",
+        "actual_sha256": "a9841debe170623456e1eb0cbc86afd288f1a6195856ff6f93f336d48f3408f0",
+        "actual_bytes": 608226
+      },
+      {
+        "url": "https://codeload.github.com/uxlfoundation/oneDNN/tar.gz/0e2a5bfeef1bfbffc3137464606540233086ce9b",
+        "local": "source/oneDNN-0e2a5bfeef1bfbffc3137464606540233086ce9b.tar.gz",
+        "commit": "0e2a5bfeef1bfbffc3137464606540233086ce9b",
+        "kind": "source-archive",
+        "actual_sha256": "0433dd1521baedea0bb8da2746ef02aef66040b7487fe67dcd8343f8d9775678",
+        "actual_bytes": 14259403
+      },
+      {
+        "url": "https://codeload.github.com/intel/sycl-tla/tar.gz/cd763790ad2f74d7294435ecf77682bac0062c3a",
+        "local": "source/sycl-tla-cd763790ad2f74d7294435ecf77682bac0062c3a.tar.gz",
+        "commit": "cd763790ad2f74d7294435ecf77682bac0062c3a",
+        "kind": "source-archive",
+        "actual_sha256": "7ef74954ef6dfd49bd30e9e38f1d0bfa81940704712a47c43c19e395e1a45066",
+        "actual_bytes": 30940897
+      }
+    ]
+  },
+  "validation": "acquisition verified; GPU recipe qualification pending"
+}

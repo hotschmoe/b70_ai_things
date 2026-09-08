@@ -69,3 +69,34 @@ W4A16 GEMM (R220/R221), FP16 row chunks (R224), grouped GDN (R228/R276),
 size-independent Inductor reductions, graph capture and draft-only INT4
 lm_head. Source details and all immutable inputs are in its pinned
 publication-manifest.json. No local speed or quality result yet.
+
+## Acquisition complete
+
+CONFIG -> Frozen R276 GHCR digest and bce40cac AutoRound checkpoint.
+COMMAND -> Download the model; verify every listed file with both O_DIRECT
+and ordinary cached reads; run the author's R212 hard-link/config relabel
+and verify its separate manifest. Fetch eight release assets and four
+revision-pinned source archives; verify published hashes and byte counts.
+RESULT -> Original and relabelled model identity checks passed. R212 has
+99 dynamic exclusions and unchanged tensor payloads. All 12 release/source
+artifacts downloaded (153604055 bytes). R276 installed _xpu_C is
+271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f;
+_xpu_ops.py is 6ee6b8db18759873246aca28e85ca6d2ba177eb08bfd3b9b0f0feea168cee9b3;
+layernorm.py is 50cf5f4f9c72f679e4318cd3e3e021a844f59ac188a891d9a4f9638188f4bce8.
+All three match the recipe. The three core PyTorch native library hashes
+match the current FP8 image. Runtime: torch 2.13.0+xpu, vLLM
+0.27.2rc1.dev77+gac7509e2b.xpu, kernels 1e90ffa67, oneCCL 2022.0,
+image UMD 26.27.39122.11-0 and Level Zero loader 1.32.0. The first inventory
+attempt used an absent distribution name; the complete corrected inventory
+is runtime-r276-v2.txt. No runtime was modified by inventory collection.
+VERDICT -> Exact published artifacts are available locally. No local GPU
+speed/quality claim yet. Acquisition identities are tracked in
+neural_replica_lock.json. prepare_replica.py extracts the published
+standalone invocation without executing shell text; strict config has no
+model/runtime parameter overrides beyond local paths, port and served ID.
+run_strict_replica.py owns the four fresh leased lifecycles and stops on
+health, workload, canary or token-parity failure.
+
+Lowest-priority follow-up: the user permits one bounded FP8 KV retest after
+all FP16 offload, INT4 and serving-restoration work. The earlier package-path
+mismatch makes a corrected retest useful, but it must not delay those tasks.

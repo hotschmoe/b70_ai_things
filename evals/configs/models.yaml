@@ -148,3 +148,39 @@ models:
     kv_calibration_artifact: vllm/fp8/kv_scales/qwen38_official_fp8_kv_e4m3_cal20260908_h110.json
     serve_cmd: ""
     notes: "20260908 campaign identity; R187/MTP3 TP2, KV fp8_e4m3, native CPU tier 32 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-strict
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-strict
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-daily
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp0-fp16kv-daily
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-strict
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-strict
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV. Tensor-identical R212 relabel."
