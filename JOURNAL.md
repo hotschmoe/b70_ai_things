@@ -7725,3 +7725,24 @@ raw symbol-loop audits and reject corruption even if sanitized code passes.
 compare_code.py refuses a corrupted baseline or candidate. The daily INT4
 coordinator can select the clean coding baseline independently of its
 unchanged workload templates. All earlier raw grades/reports are preserved.
+
+
+### 2026-09-08 - A0b teardown and matched forced-growth comparison
+
+CONFIG -> Same 64 GiB cgroup, installed R187 package, FP16 KV, MTP3;
+A0b has no connector, A1pack1 has the rejected partial repair and CPU32.
+COMMAND -> Matched two-request 132071-token prompts plus 8192 forced output
+tokens each; then 180K recall and leased teardown/health.
+RESULT -> A0b forced growth completed 16384 output tokens in 467.463 s,
+with 147 preemptions and no CPU loads. A1pack1 completed in 335.196 s,
+with two preemptions and 5122293760 CPU-to-GPU loaded bytes. The external
+prefix-hit counter did not increase in this pressure case; actual transfer
+bytes establish reload activity. A0b 180K recall passed. A0b clean shutdown,
+per-card and compiled two-rank post-health passed (exit.rc=0). Raw paired
+summary: matched-forced-growth-summary.json; original response/metric files
+remain under each arm. A1merged has acquired the lease and begun startup.
+VERDICT -> This forced-length workload is a pressure diagnostic, not a
+useful-output throughput or coherence claim. It demonstrates a substantial
+recompute/preemption difference but cannot override either arm's recorded
+quality failures. Both main reuse and active-growth benefits require a
+candidate that passes the correctness gates and a second clean lifecycle.
