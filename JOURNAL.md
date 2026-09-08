@@ -8007,3 +8007,21 @@ installed Mamba manager ignoring drop_eagle_block using a Python-only
 backport of upstream PR48375, with CPU regression and exact native-hash
 comparison before GPU retest. This is a candidate, not a proven root cause.
 Public serving has not been promoted; restoration remains required.
+
+### 2026-09-08 - Native-preserving Mamba boundary candidate starts
+
+CONFIG -> PR48375 aligned Mamba lookup backport into the installed R276
+Python module only. Base image521eb277..., derived image43e77a22...;
+source hash1a0dedb7 -> a3ab3679. No PYTHONPATH or entrypoint override.
+COMMAND -> build_mamba_eagle_image.py; test_mamba_eagle_drop.py in CPU-only
+base and candidate containers; run_prefix_campaign.py --churn-first --profile.
+RESULT -> Base regression confirms Mamba retains80 tokens where full
+attention drops to64. Candidate matches64, including zero/one-block and
+no-drop controls. Six native/core routing file hashes match exactly.
+Stock-b final warm profile has948 completed c10d calls per rank plus948
+wrappers (not1896 independent collectives), matched shapes/counts; cached
+prefill1137 rows, decode1/5 rows. Both stock-b teardown health gates pass.
+VERDICT -> CPU bug is confirmed and patched; GPU root cause and serving
+correctness remain unproven. Candidate must pass large-history churn on a
+fresh process and again after pressure, plus existing reuse/quality/lifecycle
+gates. Do not promote based solely on the CPU regression.

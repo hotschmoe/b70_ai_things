@@ -19,6 +19,8 @@ def main():
     p.add_argument('--image', default=IMAGE)
     p.add_argument('--mtp', type=int, default=4)
     p.add_argument('--profile', action='store_true')
+    p.add_argument('--churn-first', action='store_true',
+                   help='Retest the known 132K history failure before broader qualification')
     args = p.parse_args()
     deadline = time.monotonic() + 1800
     while not (args.wait_for / 'exit.rc').exists():
@@ -40,6 +42,7 @@ def main():
     add('03-reuse', probe, ['--mode', 'reuse', '--tokens', '150000',
                           '--reuse-sequence', '0,0,1,2,3,0,0'])
     add('04-tools', agent, ['--records', '8000', '--timeout', '600'])
+    add('04b-shared-tools', agent, ['--records', '2000', '--timeout', '600', '--shared-cache'])
     add('05-cancel', probe, ['--mode', 'cancel'])
     add('06-thinking', probe, ['--thinking', '--reasoning-effort', 'xhigh',
                              '--concurrency', '4'])
@@ -59,6 +62,13 @@ def main():
     add('12-long', probe, ['--mode', 'long', '--tokens', '199000', '--rounds', '1', '--concurrency', '1'])
     if args.profile:
         add('98-profile', repo / 'vllm/int4/profile_replica.py', ['--warm'], 900)
+    if args.churn_first:
+        # Retest immediately on a fresh process, then repeat in the original
+        # postpressure position. A fresh pass alone does not clear the failure.
+        churn = next(job for name, job in jobs if name == '09-evict-tools')
+        early = dict(churn, command=[s.replace(str(args.out / '09-evict-tools'),
+                       str(args.out / '00-evict-tools')) for s in churn['command']])
+        jobs.insert(0, ('00-evict-tools', early))
     cmd = ['python3', str(repo / 'vllm/fp8/kv_campaign_server.py'),
            '--preservation', str(args.config), '--out', str(args.out),
            '--image', args.image, '--served-model', model, '--mtp', str(args.mtp),

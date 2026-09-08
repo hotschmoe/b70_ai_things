@@ -39,8 +39,9 @@ def main():
         followups = [row for session in data for row in session['rows']
                      if row['phase'] != 'tool' or row['turn'] != 0]
         fractions = [cached(row['response']) / row['response']['usage']['prompt_tokens']
-                     for row in followups]
+                     for row in followups if row.get('response')]
         groups[name] = {'sessions_passed': all(s['passed'] for s in data),
+                        'missing_responses': sum(not row.get('response') for row in followups),
                         'followup_cached_fractions': fractions,
                         'followups_with_cache': sum(f > 0 for f in fractions)}
     guides = rows(r / '02-guides/responses.jsonl')

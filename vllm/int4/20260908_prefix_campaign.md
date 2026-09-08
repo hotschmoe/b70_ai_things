@@ -73,3 +73,50 @@ between turns while history remains cached. Cancellation, tighter growth
 pressure, larger eviction tool histories, poststress coding/profile and
 post-health are still running; no serving promotion yet. The reviewed
 zero-hit guide-tail divergence remains recorded separately.
+
+
+### 2026-09-08 - Reject stock INT4 prefix under oversized tool-history churn
+
+CONFIG -> stock-mtp4-b; exact R276 image, MTP4, FP16 KV, prefix enabled,
+446332 nominal GPU KV tokens, four admitted sequences, no RAM offload.
+COMMAND -> run_prefix_campaign.py followed by manually queued postfailure
+coding, coherence, 199K recall and warm collective-profile diagnostics.
+RESULT -> Normal four88K growing histories passed32/32; an additional unsalted
+(shared-cache) four2000-record control passed32/32 in32.292s. Four110071-token
+prompts plus8192 output tokens each finished in519.040s but scheduler
+preemption delta was0: this did not force active-sequence preemption.
+The larger four132K-history run failed:23 checks in1378.876s, one session's
+first answer timed out after900.009s (no response captured), and another
+session's third tool request returned512 exclamation marks, finish=length,
+prompt132502, cached_tokens0, created_cache_tokens131456. Two sessions
+completed8/8. This is actual corruption under cache churn, not merely slow
+queueing, and not proof that the bad request itself reused a corrupt hit.
+Subsequent coding completed without symbol loops (157 base/149 plus of164),
+short C4 coherence and199K recall passed. Lifecycle/profile evidence pending
+when this entry was written. Raw evidence: results/int4_prefix_20260908/
+stock-mtp4-b under the runtime root; manual-diagnostics.json records a paused
+coordinator so the leased runner could finish postfailure diagnostics.
+VERDICT -> Reject stock MTP4+prefix for daily promotion. Investigate the
+installed Mamba manager ignoring drop_eagle_block using a Python-only
+backport of upstream PR48375, with CPU regression and exact native-hash
+comparison before GPU retest. This is a candidate, not a proven root cause.
+Public serving has not been promoted; restoration remains required.
+
+
+### 2026-09-08 - Native-preserving Mamba boundary candidate starts
+
+CONFIG -> PR48375 aligned Mamba lookup backport into the installed R276
+Python module only. Base image521eb277..., derived image43e77a22...;
+source hash1a0dedb7 -> a3ab3679. No PYTHONPATH or entrypoint override.
+COMMAND -> build_mamba_eagle_image.py; test_mamba_eagle_drop.py in CPU-only
+base and candidate containers; run_prefix_campaign.py --churn-first --profile.
+RESULT -> Base regression confirms Mamba retains80 tokens where full
+attention drops to64. Candidate matches64, including zero/one-block and
+no-drop controls. Six native/core routing file hashes match exactly.
+Stock-b final warm profile has948 completed c10d calls per rank plus948
+wrappers (not1896 independent collectives), matched shapes/counts; cached
+prefill1137 rows, decode1/5 rows. Both stock-b teardown health gates pass.
+VERDICT -> CPU bug is confirmed and patched; GPU root cause and serving
+correctness remain unproven. Candidate must pass large-history churn on a
+fresh process and again after pressure, plus existing reuse/quality/lifecycle
+gates. Do not promote based solely on the CPU regression.
