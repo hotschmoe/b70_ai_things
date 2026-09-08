@@ -46,7 +46,7 @@ def main():
     if profile not in ('daily', 'daily-prefix-off'):
         raise RuntimeError('not a daily serving qualification')
     mtp = qualification.get('mtp', 4)
-    if type(mtp) is not int or mtp not in (0, 4):
+    if type(mtp) is not int or mtp not in (0, 2, 3, 4):
         raise RuntimeError('unsupported qualified speculative depth')
     prefill_batch = qualification.get('prefill_batch', 32768)
     if type(prefill_batch) is not int or prefill_batch not in (4096, 8192, 32768):

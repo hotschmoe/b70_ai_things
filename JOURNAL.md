@@ -8149,3 +8149,28 @@ incidents, retry outcomes and clusters separately. Guard emulation in the
 Python history probe is explicitly not execution of the Pi/OMP extension.
 The new live Pi probe executes the actual pinned extension. No guard source
 or client installation was changed.
+
+### 2026-09-08 - MTP3 speed screen and functional guide review
+
+CONFIG -> Original R276 image, MTP3, FP16 KV, GPU prefix on,200K/c4,
+batch4096,util0.96,cgroup64GiB,CPU tier0. Pool530468 tokens.
+COMMAND -> stock-mtp3-b4096-screen; author's fixed12-prompt benchmark,
+actual Pi injected-failure/live-recovery probe, concurrent canaries and
+three2048-token LRU guides. Review guide code in the pinned CPU grader
+container with no network, devices, writable root or extra capabilities.
+RESULT -> Author metric95.363772 tok/s (class-balanced first99 intervals),
+zero prompt-cache hits and all canaries pass. Complete token arrays12/12
+match the earlier strict MTP0 control; this cross-shape comparison alone is
+not a fresh matched restart qualification. Actual Pi recovery into the live
+88K-history model passes after the explicitly injected initial failure.
+All3 guides coherent, but raw exact-repeat gate fails: generated custom LRU
+variants differ in implementation, not only prose. All6 extracted complete
+Python blocks pass18000 operations against an OrderedDict reference. Raw
+failure remains preserved. Runner stopped before growing-history screens;
+normal teardown and post-health exit0. MTP2 matched screen is running.
+VERDICT -> Functional guide variation is reviewed, with no byte-exact claim.
+MTP3 cache qualification remains incomplete. User-scoped final campaign now
+keeps prefix reuse/eviction, bounded132K concurrent histories with separately
+counted bang retries, coding, cancellation and health; it omits the previous
+forced32K-output offload-pressure workload. Launcher accepts qualified MTP2
+or MTP3 manifests, but the promotion manifest remains unchanged.

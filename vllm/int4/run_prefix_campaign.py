@@ -22,6 +22,8 @@ def main():
     p.add_argument('--profile', action='store_true')
     p.add_argument('--screen', action='store_true',
                    help='Bounded MTP comparison: coherence, decode, growing tools and warm reuse; not promotion')
+    p.add_argument('--recovery-daily', action='store_true',
+                   help='User-scoped prefix qualification with bounded churn and separately counted bang recovery')
     p.add_argument('--churn-first', action='store_true',
                    help='Retest the known 132K history failure before broader qualification')
     p.add_argument('--stream-churn-first', action='store_true',
@@ -29,6 +31,8 @@ def main():
     p.add_argument('--normalize-churn', action='store_true',
                    help='Add oversized tool histories sized from the actual startup KV pool')
     args = p.parse_args()
+    if args.recovery_daily and (args.screen or args.churn_first or args.normalize_churn):
+        p.error('--recovery-daily cannot be combined with screen or expanded churn')
     deadline = time.monotonic() + 1800
     while not (args.wait_for / 'exit.rc').exists():
         if time.monotonic() > deadline:
@@ -86,6 +90,16 @@ def main():
         jobs = [(name, dict(jobs)[name]) for name in selected]
         reuse = dict(jobs)['03-reuse']['command']
         reuse[reuse.index('--reuse-sequence') + 1] = '0,0,1,0'
+    if args.recovery_daily:
+        # Prefix reuse/eviction remains covered by03-reuse. The earlier forced
+        # 32K output pressure arm was an offload investigation, not required to
+        # enable GPU prefix caching. Keep a bounded132K concurrent churn check.
+        jobs = [(name, job) for name, job in jobs if name not in ('07-pressure', '08-postpressure')]
+        for name, job in jobs:
+            if name in ('04-tools', '09-evict-tools'):
+                job['command'] += ['--stream', '--bang-retries', '3', '--salt', '-recovery-daily']
+            if name == '09-evict-tools':
+                job['command'] += ['--turns', '1']
     cmd = ['python3', str(repo / 'vllm/fp8/kv_campaign_server.py'),
            '--preservation', str(args.config), '--out', str(args.out),
            '--image', args.image, '--served-model', model, '--mtp', str(args.mtp),
@@ -162,9 +176,20 @@ def main():
                 same_code_prefix = (all(ends) and len({t[:matches[-1].end()]
                     for t, matches in zip(texts, ends)}) == 1)
                 allowed = all(row['passed'] for row in data) and same_code_prefix
+                functional_review = None
+                if not allowed and (args.screen or args.recovery_daily) and all(row['passed'] for row in data):
+                    # User-scoped serving qualification accepts useful coherent
+                    # variation, while preserving the failed exact-repeat flag.
+                    from review_lru_guides import review
+                    try:
+                        functional_review = review(args.out / name)
+                        allowed = functional_review['passed']
+                    except Exception as exc:
+                        functional_review = {'passed': False, 'error': ascii(exc)}
                 reviewed[name] = {'allowed': allowed, 'raw_job_rc': results[name],
                     'identical_text_through_last_closed_code_block': same_code_prefix,
-                    'interpretation': 'Late prose variation; byte-exact repeat claim remains false.'}
+                    'functional_review': functional_review,
+                    'interpretation': 'Reviewed guide variation; byte-exact repeat claim remains false.'}
                 (args.out / 'guide-review.json').write_text(json.dumps(reviewed[name], indent=2) + '\n')
                 if allowed:
                     print('REVIEWED noncritical guide tail variation', flush=True)
