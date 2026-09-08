@@ -319,3 +319,19 @@ benefit, with slower cold concurrent first responses as the known tradeoff.
 Do not claim the internal cause or that eight clean requests establish the
 under1 percent long-run target. Full quality, eviction, recovery, teardown
 and fresh public-serving qualification remain in progress.
+
+### 2026-09-08 - MTP2 prefix reuse survives eviction and growing tools
+
+CONFIG -> stock-mtp2-b32768-daily, original R276, FP16 KV, GPU prefix on,
+MTP2,200K/c4,batch32768,CPU tier0; same candidate as preceding entry.
+COMMAND ->03-reuse:150K A/A/B/C/D/A/A;04-tools:four88K histories with four
+tool/answer turns each, streaming evidence and optional bang retry detection.
+RESULT -> Reuse7/7 correct and exact. Cold TTFT93.648s, warm1.668s with
+148928/150045 cached tokens. Four distinct histories exceed the456916-token
+pool; revisiting evicted A cached0 and took93.881s, then next A hit148928 and
+TTFT1.675s. Growing tool histories32/32 checks,32 attempts,0 bang incidents,
+218.761s total; all28 followups reused98.5315-98.8459 percent of prompt tokens.
+VERDICT -> GPU prefix reuse and correct recomputation after eviction are
+measured on this candidate. Larger-context churn, shared-prefix clients,
+cancellation, coding quality, final health and fresh public deployment remain
+in progress. No long-run under1 percent incident-rate claim is made.
