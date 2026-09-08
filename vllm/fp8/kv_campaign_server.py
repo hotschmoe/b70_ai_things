@@ -15,6 +15,10 @@ REPO = Path(__file__).resolve().parents[2]
 IMAGE = 'sha256:f46780e1a72c506248e3240eae1b470b39743dffbc17524c7248b9b3f63fb152'
 
 
+class PreflightInfrastructureError(RuntimeError):
+    """A probe could not run; this is not evidence of a hardware failure."""
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--preservation', type=Path, required=True)
@@ -71,8 +75,15 @@ def main():
         if args.health_p2p_check and stage == 'pre':
             checks.append(('xpu-collective-health', ['--p2p', '1', '--timeout', '180'], '-p2p1'))
         for tool, extra, suffix in checks:
-            if run([str(REPO / 'bin' / tool), '--img', args.image, *extra], stage + '-' + tool + suffix + '.log'):
-                raise RuntimeError(stage + ' ' + tool + ' failed')
+            command = [str(REPO / 'bin' / tool), '--img', args.image, *extra]
+            if suffix == '-p2p1':
+                # Explicitly requested, scoped recipe preflight, after P2P-off
+                # health. Do not export the risk opt-in to unrelated workloads.
+                command = ['env', 'I_KNOW_P2P_WEDGES=1', *command]
+            rc = run(command, stage + '-' + tool + suffix + '.log')
+            if rc:
+                error = PreflightInfrastructureError if stage == 'pre' and rc == 2 else RuntimeError
+                raise error(stage + ' ' + tool + suffix + ' failed rc=' + str(rc))
     cfg = json.loads((args.preservation / 'Config.json').read_text())
     mounts = json.loads((args.preservation / 'Mounts.json').read_text())
     cmd = cfg['Cmd'][:]
@@ -148,6 +159,7 @@ def main():
     (args.out / 'manifest.json').write_text(json.dumps(manifest, default=str, indent=2) + '\n')
     server = None
     failed = False
+    needs_recovery = False
     def stop_signal(*_):
         (args.out / 'STOP').touch()
     signal.signal(signal.SIGTERM, stop_signal)
@@ -192,6 +204,7 @@ def main():
                 time.sleep(1)
     except Exception as exc:
         failed = True
+        needs_recovery = server is not None or not isinstance(exc, PreflightInfrastructureError)
         (args.out / 'failure.txt').write_text(ascii(exc) + '\n')
         print(ascii(exc), flush=True)
     finally:
@@ -202,8 +215,9 @@ def main():
                 server.wait(timeout=90)
             except subprocess.TimeoutExpired:
                 failed = True
+                needs_recovery = True
                 run(['docker', 'rm', '-f', args.name], 'force-remove.log', 30)
-        if failed:
+        if needs_recovery:
             # Explicit post-health below uses the campaign image, not a retired default.
             run(['env', 'B70_XE_RESET_UNDER_LEASE=1', str(REPO / 'bin/xe-reset'), '--method', 'rebind', '--no-probe'], 'recovery.log', 180)
         try:

@@ -167,3 +167,34 @@ VERDICT -> This ordering follows the request to validate the plain recipe
 before applying cache/offload changes and the prior local MTP/prefix-cache
 concern. The production launcher pins whichever daily profile is actually
 qualified; no qualification manifest or systemd cutover has been created.
+
+
+### 2026-09-08 - Clean FP16-cache reference and INT4 preflight correction
+
+CONFIG -> A0clean: original FP8 weights/R187 native image, FP16 KV, MTP3,
+200K/c4 shape, 64 GiB cgroup, prefix caching disabled; coding before long
+stress. This is a clean quality control, not an FP8 KV experiment.
+COMMAND -> C1/C4, all164 HumanEval+, three2048-token guides, clean teardown.
+RESULT -> Every job and post-health passed, exit.rc=0. Coding157/164base,
+152/164plus, no raw symbol loops; generation529.6s and grading53.0s.
+Guides repeated byte-exactly in75.597s total. This control changes both
+cache mode and preceding workload history, so it does not isolate the
+baseline corruption's root cause. It supplies the coherent coding reference
+for INT4: retain the frozen <=2 net additional failure limit and review
+all newly failed tasks, with unconditional rejection of raw corruption.
+
+CONFIG -> First INT4 strict preflight, exact published R276 image.
+COMMAND -> Per-card health and compiled two-rank P2P0/P2P1 controls.
+RESULT -> Original attempt strict/mtp0-a passed per-card/P2P0, then the
+P2P1 shell guard refused to run because I_KNOW_P2P_WEDGES=1 was missing.
+No model serving or P2P1 collective ran in that attempt. The generic error
+path unnecessarily performed a non-reboot reset; recovery and post-health
+passed. Preserve exit.rc=1 as an infrastructure failure, not hardware or
+model evidence. The runner now supplies the opt-in only to the explicitly
+requested scoped P2P1 preflight, after P2P0, and distinguishes probe rc2
+from hardware failure. Two CPU lifecycle regressions pass. No bin/ changes.
+The fresh strict-retry1/mtp0-a has now passed all three real preflights,
+including P2P1, and is starting the model. Published serving settings and
+12GiB/16GiB cgroup/swap limits are unchanged.
+VERDICT -> Coherent reference accepted for bounded coding comparison.
+INT4 model speed, parity, quality and serving qualification remain pending.
