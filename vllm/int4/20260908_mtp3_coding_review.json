@@ -1,0 +1,50 @@
+{
+  "baseline": "/mnt/vm_8tb/b70/results/kv_campaign_20260908/a0clean/10-code",
+  "candidate": "/mnt/vm_8tb/b70/results/int4_prefix_20260908/stock-mtp3-b32768-daily/10-code",
+  "counts": {
+    "baseline_base": 157,
+    "candidate_base": 157,
+    "baseline_plus": 152,
+    "candidate_plus": 149,
+    "total": 164
+  },
+  "score_gate_passed": false,
+  "user_acceptance": "User: the coding eval for INT4 vs FP8 is fine for now; move forward with INT4.",
+  "new_failures": [
+    {
+      "task": "HumanEval/91",
+      "metric": "base (both already fail plus)",
+      "finding": "INT4 startswith(\"I\") counts Is/In as the word I; FP8 checks the first whitespace-delimited word. Genuine word-boundary regression."
+    },
+    {
+      "task": "HumanEval/97",
+      "metric": "plus",
+      "finding": "INT4 uses signed Python modulo without abs. On (-6,-9), returns 4 instead of 54. Genuine negative-input code regression; both pass the separate direct arithmetic/runtime canaries."
+    },
+    {
+      "task": "HumanEval/125",
+      "metric": "plus",
+      "finding": "INT4 split(\" \") preserves empty fields on repeated spaces and checks only literal spaces. FP8 split() collapses whitespace. Genuine string edge-case regression."
+    },
+    {
+      "task": "HumanEval/151",
+      "metric": "plus",
+      "finding": "INT4 explicitly excludes bool while the oracle and FP8 include Python bool as int. Type/specification interpretation difference; retained as a failed test with no rescoring."
+    },
+    {
+      "task": "HumanEval/154",
+      "metric": "plus",
+      "finding": "INT4 omits empty-b special case; zero rotations returns False for (\"\", \"\"). FP8 returns True. Genuine empty-input regression."
+    }
+  ],
+  "recovered": [
+    {
+      "task": "HumanEval/33",
+      "finding": "INT4 indexes the sorted every-third subset correctly. FP8 indexes it with the full-list index and fails."
+    }
+  ],
+  "versus_previous_int4": "Only additional failed task is HumanEval/132: output cap exhausted in comments. Raw outputs for33,91,97,125,151,154 are byte-identical to prior INT4.",
+  "raw_symbol_corruption": [],
+  "scope": "Thinking-off HumanEval+ only, temperature0 seed42 max2048. No score substitution or quality-parity claim.",
+  "larger_budget_diagnostic": "Generated separate4096-token task132 response. Single-task grading rejected missing problems; inconclusive, excluded from primary score."
+}

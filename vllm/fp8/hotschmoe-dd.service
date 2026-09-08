@@ -1,5 +1,5 @@
 [Unit]
-Description=hotschmoe-dd - Qwen3.8 AutoRound INT4 R276 MTP4 TP2 FP16 KV
+Description=hotschmoe-dd - Qwen3.8 AutoRound INT4 R276 MTP3 TP2 FP16 KV prefix cache
 Requires=docker.service
 Wants=network-online.target
 After=docker.service network-online.target

@@ -100,7 +100,7 @@ models:
     activations: float16
     calibration: publisher-AutoRound
     serve_cmd: "python3 vllm/int4/serve_qwen38_autoround_r276_daily.py start"
-    notes: "20260908 R276 image521eb277/source54aefaf0, MTP4 TP2, FP16 KV, prefix off, CPU tier off, 200K/c4. Qualified daily configuration; authenticated startup/stop and post-health passed. Stable public alias; immutable physical pins in vllm/int4/r276_daily_qualification.json."
+    notes: "20260908 R276 image521eb277/source54aefaf0, MTP3 TP2, FP16 KV, prefix on, CPU tier off, 200K/c4, batch32768. Candidate health and prefix qualification passed; coding tradeoff accepted by user. Known recoverable tool-history bangs; use client bang-guard. Stable public alias; immutable physical pins and limits in vllm/int4/r276_daily_qualification.json."
 
   - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign
     served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign

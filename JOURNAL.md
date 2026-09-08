@@ -8353,3 +8353,41 @@ value observation must avoid changing the timing enough to hide the bug.
 Do not claim NaNs, a particular kernel, or global persistent poisoning on
 R276 from the older stack's evidence. Continue coding/churn/health and fresh
 public MTP3 deployment under the user's under5 percent observed tolerance.
+
+### 2026-09-08 - Promote user-accepted INT4 MTP3 prefix candidate
+
+CONFIG -> R276 base image521eb277/source54aefaf0, AutoRound W4A16 g128,
+MTP3, FP16 KV, GPU prefix on, CPU tier0,200K/c4,batch32768. User explicitly
+accepts current INT4-vs-FP8 coding results and directs moving forward.
+COMMAND -> Complete stock-mtp3-b32768-daily; analyze_prefix_campaign.py,
+compare_code.py against both baselines, audit_bang_rate.py, paired profile,
+normal teardown and per-card/two-rank post-health. Prepare qualification,
+registry and systemd unit; start fresh leased public lifecycle20260908T220558Z.
+RESULT -> Candidate WORKLOADS_PASSED and exit0; both GPU and collective
+post-health pass. Pool451562 tokens. Four88K histories32/32 correct in217.876s,
+all28 followups98.53-98.85 percent cached. Cancellation112.712s with exact
+repeats and warm TTFT1.62-1.65s. xhigh24/24 and199K recall pass. Actual Pi
+injected-failure recovery passes on MTP3/32K; no user client config changed.
+Oversubscribed four132K histories:8/8 correct after9 attempts,1 bang recovered,
+645.822s; all four final answers cached0, no active preemptions, capacity queue
+observed. Its1/9 raw fraction exceeds5 percent in this small stress sample;
+do not dilute it with easy requests. Fixed shared soak remains4/132=3.0303
+percent. Known concurrency-sensitive tool-history bug is NOT fixed.
+Coding164 raw outputs contain no bangs. Base/plus157/149 versus FP8 157/152,
+previous INT4 158/150. Only additional failed task versus previous INT4 is132,
+truncated at2048 tokens in comments. The raw outputs for33,91,97,125,151,154
+are byte-identical to previous INT4. Original <=2-net-loss score gate stays
+false; user's explicit acceptance is recorded separately, not a rescoring.
+Extra task132/4096 diagnostic generated output but its one-task grading hit
+missing-problems assertion; excluded and inconclusive, no additional GPU work.
+Warm profile paired1666 completed CPU collective events each (833 c10d plus
+833 wrappers), equal shapes/counts:525 all-reduces,308 all-gathers per rank,
+1137-token cached prefill and1/4 decode rows; host event waits477/433. Captured
+internals may be opaque; no one-fence/per-token claim.
+VERDICT -> Promote the user-preferred guarded conversational recipe with
+explicit quality/rate/oversubscription limitations. Public alias hotschmoe-dd
+unchanged. Fresh startup/authentication, concurrent canaries,150K warm reuse
+and strict restart parity queued under the serving lease. Startup pending;
+boot unit prepared and statically verified, host systemd installation still
+requires the documented user sudo command. Do not claim all clients have
+bang-guard or that the server itself retries natural loops.
