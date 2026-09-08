@@ -42,6 +42,9 @@ def main():
     if (qualification.get('qualified') is not True or qualification['image'] != IMAGE
             or qualification['source_commit'] != SOURCE_COMMIT):
         raise RuntimeError('R276 daily profile has not been qualified')
+    profile = qualification['profile']
+    if profile not in ('daily', 'daily-prefix-off'):
+        raise RuntimeError('not a daily serving qualification')
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, 'start', '--leased'])
     key = ROOT / 'secrets/dd_api_key'
@@ -53,7 +56,7 @@ def main():
     source = ROOT / 'steve-repro/qwen38-int4-neural-20260908'
     model = REPO / 'models/files/qwen3.8-27b/int4-autoround-gptq-relabel-r212'
     subprocess.run([sys.executable, str(Path(__file__).with_name('prepare_replica.py')),
-                    '--source', str(source), '--model', str(model), '--profile', 'daily',
+                    '--source', str(source), '--model', str(model), '--profile', profile,
                     '--out', str(result / 'config')], check=True,
                    stdout=(result / 'prepare.log').open('w'))
     config_hash = hashlib.sha256((result / 'config/Config.json').read_bytes()).hexdigest()

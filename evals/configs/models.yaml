@@ -194,3 +194,13 @@ models:
     serve_cmd: ""
     notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 32 GiB; merged scheduler PRs 52771/52807/54288. Experimental, not promoted. Stable public alias maps to preserved manifest."
 
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily-prefixoff
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp4-fp16kv-daily-prefixoff
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 R276 replica; experimental, not promoted. FP16 KV, prefix caching disabled. Tensor-identical R212 relabel."
+

@@ -16,7 +16,7 @@ def main():
     p.add_argument('--source', type=Path, required=True)
     p.add_argument('--model', type=Path, required=True)
     p.add_argument('--out', type=Path, required=True)
-    p.add_argument('--profile', choices=['strict', 'depth', 'daily'], default='strict')
+    p.add_argument('--profile', choices=['strict', 'depth', 'daily', 'daily-prefix-off'], default='strict')
     args = p.parse_args()
     commit = subprocess.check_output(['git', '-C', str(args.source), 'rev-parse', 'HEAD'], text=True).strip()
     assert commit == SOURCE_COMMIT, commit
@@ -38,13 +38,14 @@ def main():
     if args.profile == 'depth':
         setarg('--max-model-len', 33024)
         setarg('--max-num-batched-tokens', 4096)
-    elif args.profile == 'daily':
+    elif args.profile in ('daily', 'daily-prefix-off'):
         setarg('--max-model-len', 200000)
         setarg('--max-num-seqs', 4)
         setarg('--max-num-batched-tokens', 32768)
         setarg('--gpu-memory-utilization', .96)
-        cmd[cmd.index('--no-enable-prefix-caching')] = '--enable-prefix-caching'
-        changes['prefix-cache'] = {'published': False, 'local': True}
+        if args.profile == 'daily':
+            cmd[cmd.index('--no-enable-prefix-caching')] = '--enable-prefix-caching'
+            changes['prefix-cache'] = {'published': False, 'local': True}
         cmd += ['--enable-auto-tool-choice', '--tool-call-parser', 'qwen3_coder',
                 '--reasoning-parser', 'qwen3', '--default-chat-template-kwargs',
                 '{"enable_thinking":true,"reasoning_effort":"xhigh"}']

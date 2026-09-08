@@ -142,3 +142,28 @@ VERDICT -> Prepared only. Live startup/stop and API smoke remain mandatory
 before selecting this recipe. The strict four-lifecycle coordinator is
 queued after the merged offload candidate's healthy exit; a health failure
 prevents automatic continuation.
+
+## Plain daily extension before cache experiments
+
+CONFIG -> Add daily-prefix-off as a separate profile, retaining the author's
+prefix-cache-off setting while increasing context to 200000, sequences to
+four, batch tokens to 32768 and utilization to 0.96. Add daily tool/reasoning
+parsers and xhigh thinking default. The previously prepared prefix-on profile
+is preserved as a later experimental arm, not the first plain qualification.
+COMMAND -> run_daily_replica.py requires strict PASSED plus the frozen >=95
+mean speed gate. Reuse A0b's exact C1/C4, guides, 8000-record tool histories,
+164 HumanEval+, cancellation, xhigh thinking and long recall prompts. One
+150K history trace is sufficient for plain-cache-off correctness; the three
+trace latency repetitions remain part of the separate offload comparison.
+Add 199K recall and increase forced-growth diagnostic concurrency to four,
+since two 132K prompts may fit in INT4's larger GPU pool. Capture actual
+capacity/preemption metrics; do not call that diagnostic matched throughput.
+Profile once after all timing and quality work, then teardown and post-health.
+RESULT -> Config and coordinator prepared and syntax checked; no INT4 GPU
+measurement yet. Coding score comparison and every newly failed task still
+require review, regardless of the aggregate score. The coordinator stops
+on a critical workload or coding-score failure, retaining all raw evidence.
+VERDICT -> This ordering follows the request to validate the plain recipe
+before applying cache/offload changes and the prior local MTP/prefix-cache
+concern. The production launcher pins whichever daily profile is actually
+qualified; no qualification manifest or systemd cutover has been created.
