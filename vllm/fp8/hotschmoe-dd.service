@@ -1,0 +1,27 @@
+[Unit]
+Description=hotschmoe-dd - Qwen3.8 AutoRound INT4 R276 MTP4 TP2 FP16 KV
+Requires=docker.service
+Wants=network-online.target
+After=docker.service network-online.target
+RequiresMountsFor=/mnt/vm_8tb/github/b70_ai_things /mnt/vm_8tb/b70
+
+[Service]
+Type=simple
+User=hotschmoe
+Group=hotschmoe
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+Environment=NAME=hotschmoe-dd
+# Keep this client-facing name stable when replacing the backend launcher/model.
+Environment=SERVED=hotschmoe-dd
+ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/int4/serve_qwen38_autoround_r276_daily.py start
+ExecStartPost=/bin/bash /mnt/vm_8tb/github/b70_ai_things/vllm/fp8/hotschmoe-dd-systemd.sh ready
+ExecStop=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/int4/serve_qwen38_autoround_r276_daily.py stop
+# The launcher owns GPU leases and runs teardown health before exiting.
+KillMode=mixed
+TimeoutStartSec=1200
+TimeoutStopSec=900
+# A failed TP2 lifecycle requires diagnosis/recovery, not a restart loop.
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

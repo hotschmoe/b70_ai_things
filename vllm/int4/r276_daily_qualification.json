@@ -14,5 +14,6 @@
   "strict_mtp4_pair_mean_tok_s": 100.21427938352497,
   "coding_review": "vllm/int4/20260908_coding_failure_review.json",
   "quality_limit": "Thinking-off HumanEval+ 158/150 vs FP8 157/152 out of164: bounded tradeoff, not no-loss or Terminal-Bench parity.",
-  "deployment_state": "benchmark-qualified; fresh authenticated startup/stop qualification pending"
+  "deployment_state": "fresh authenticated startup, repeatable coherence, tool calls, stop and post-health qualified",
+  "serving_lifecycle_evidence": "/mnt/vm_8tb/b70/results/qwen38_int4_r276_daily/20260908T104540Z"
 }

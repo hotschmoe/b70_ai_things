@@ -289,3 +289,31 @@ VERDICT -> Daily benchmark qualification accepted with the documented
 separate negative campaign; no FP8 KV test. Write pinned qualification
 manifest and start a fresh authenticated hotschmoe-dd launcher lifecycle.
 Startup/stop validation and final serving restoration remain in progress.
+
+
+### 2026-09-08 - hotschmoe-dd restored on qualified INT4; startup unit ready
+
+CONFIG -> Guarded R276 INT4/MTP4 daily-prefix-off launcher, pinned image,
+source/model/config, FP16 KV, no CPU offload, 200K/c4, xhigh default,
+API-key frontdoor18080/backend18124, stable alias hotschmoe-dd.
+COMMAND -> Fresh production lifecycle20260908T104540Z: actual systemd
+readiness helper, missing/wrong/valid API-key checks, four concurrent
+answers, three2048-token guides,32 tool checks, exact new ExecStop command.
+RESULT -> All pass. Guides match the previous daily lifecycle byte-for-byte
+and repeat exactly,44.420s total. Stop retains the lease through clean
+teardown/per-card/compiled P2P0 health; parent and server exit.rc0.
+Then launch final detached session20260908T105516Z (parent PID189318).
+Final readiness/auth/concurrent answers and24 xhigh checks pass. Immutable
+image521eb277 verified running, /health successful, no exit marker.
+Raw final-serving-validation.json records current identity and unit hash.
+VERDICT -> hotschmoe-dd restored on INT4, retaining the documented two-net
+extended-coding-test tradeoff. No RAM offload or FP8 KV promotion. The repo
+systemd unit now uses the tested INT4 start/stop commands; model registry
+maps the public alias to the physical INT4 identity. Unit verification and
+shell syntax pass. Installed unit remains unchanged/inactive because sudo
+needs the user's password. The installer backs up/enables boot configuration
+without interrupting the manual instance. Actual systemd boot untested.
+User command: sudo bash
+/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/install-hotschmoe-dd-systemd.sh
+Handoff: vllm/int4/20260908_hotschmoe_dd_handoff.md. Preserve unrelated dirty
+user files and earlier uncommitted journal entries. FP8 KV remains deferred.

@@ -96,11 +96,11 @@ models:
   - label: hotschmoe-dd
     served_model_id: hotschmoe-dd
     family: qwen3.8-27b
-    weights: fp8-official-W8A16
+    weights: AutoRound-INT4-W4A16-g128
     activations: float16
-    calibration: publisher-weights
-    serve_cmd: ""
-    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 0 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+    calibration: publisher-AutoRound
+    serve_cmd: "python3 vllm/int4/serve_qwen38_autoround_r276_daily.py start"
+    notes: "20260908 R276 image521eb277/source54aefaf0, MTP4 TP2, FP16 KV, prefix off, CPU tier off, 200K/c4. Qualified daily configuration; authenticated startup/stop and post-health passed. Stable public alias; immutable physical pins in vllm/int4/r276_daily_qualification.json."
 
   - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign
     served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign
