@@ -269,3 +269,27 @@ VERDICT -> Fresh model-specific static scales are frozen before held-out
 evaluation. No FP8 model-quality or performance conclusion yet. First test
 calibrated E4M3 eagerly, then qualify the production graph configuration if
 the mechanical and coherence gates pass. Original service defaults remain.
+
+## Calibrated E4M3 eager model gate
+
+CONFIG -> B0eager: frozen e552af52da60 scales, E4M3 KV, FP16 queries,
+unchanged FP32 SSM cache, MTP3 TP2, eager, prefix cache on, CPU tier off.
+
+COMMAND -> Audit both rank load records; C1/C4 deterministic checks;
+32K retrieval; four short interleaved tool sessions; STOP and post-health.
+
+RESULT -> Both ranks loaded all 17 layers with the expected artifact hash,
+FlashAttentionImpl and query_quantized=false. All 48 deterministic checks
+passed with exact repeats; 32K retrieval and 32 tool-history checks passed.
+Attention block size is 1600, Mamba page padding 0.25%. The eager profiler
+allocated 9.31 GiB/rank and reported 511428 tokens, versus 271936 tokens for
+the FP16 eager collector at the same profiled budget. The collector had
+prefix caching off and recording enabled, so it is not a timing baseline.
+Peak cgroup 11371433984 bytes; no OOM/max events. Clean teardown, per-card
+and compiled collective post-health passed; b0eager/exit.rc=0.
+
+VERDICT -> Mechanical scaled-KV loading and stated eager coherence gates
+passed. Production graph capture, held-out coding, default thinking,
+cancellation, longer contexts and matched pressure tests remain. The reuse
+probe now accepts an explicit sequence so FP8's larger pool can be forced
+to evict, rather than accidentally testing only resident GPU prefixes.

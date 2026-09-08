@@ -105,9 +105,15 @@ def main():
     p.add_argument('--reasoning-effort', choices=['low', 'medium', 'high', 'xhigh'], default='xhigh')
     p.add_argument('--salt', default='')
     p.add_argument('--force-length', action='store_true')
+    p.add_argument('--reuse-sequence', default='0,1,2,0')
     args = p.parse_args()
     if args.thinking and args.mode != 'quality':
         p.error('--thinking currently applies only to the quality probe')
+    try:
+        reuse_sequence = [int(i) for i in args.reuse_sequence.split(',')]
+        assert 2 <= len(reuse_sequence) <= 32 and all(0 <= i <= 99 for i in reuse_sequence)
+    except (ValueError, AssertionError):
+        p.error('--reuse-sequence needs 2-32 comma-separated indices in 0..99')
     args.out.mkdir(parents=True, exist_ok=False)
     identity = json.loads(request(args.base, '/v1/models'))
     assert any(d['id'] == args.model for d in identity['data']), identity
@@ -151,7 +157,7 @@ def main():
                        passed=expected in row['text'] and row['error'] is None)
             save(row)
     elif args.mode == 'reuse':
-        for i in [0, 1, 2, 0]:
+        for i in reuse_sequence:
             prompt, expected = long_prompt(args.tokens, i)
             row = stream(args.base, args.model, prompt, 64, salt='reuse-v1' + args.salt, timeout=args.timeout)
             row.update(task=i, repeat=len(rows), expected=expected, passed=row['text'].strip() == expected and row['error'] is None)
