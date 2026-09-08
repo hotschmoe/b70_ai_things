@@ -109,3 +109,11 @@ before generation, and records the actual client/harness source hashes.
 compare_code.py requires matched sampling/data/grader identity and reports
 new failures and recovered tasks individually. Its score gate alone never
 marks a serving configuration qualified.
+
+Before INT4 GPU measurement, interpret the user's approximate 100 tok/s
+target as at least 95 tok/s for the mean of the two strict class-balanced
+decode medians (five percent tolerance). Report both runs and the natural
+completion/wall metrics rather than selecting the better run. This speed
+target does not waive token parity, coding quality, intended-context,
+concurrency, teardown or post-health gates. A slower but healthy INT4 recipe
+can be documented as a replica result without replacing the daily driver.
