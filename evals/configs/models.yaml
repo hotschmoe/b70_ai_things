@@ -232,3 +232,21 @@ models:
     calibration: devan-carlin-bce40cac
     serve_cmd: ""
     notes: "20260908 GPU prefix campaign; FP16 KV, CPU tier off, experimental until qualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp2-fp16kv-prefix
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp2-fp16kv-prefix
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 GPU prefix campaign; FP16 KV, CPU tier off, experimental until qualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp16kv-prefix
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp16kv-prefix
+    family: qwen3.8-27b
+    weights: autoround-int4-W4A16-g128-gptq-relabel
+    activations: float16
+    calibration: devan-carlin-bce40cac
+    serve_cmd: ""
+    notes: "20260908 GPU prefix campaign; FP16 KV, CPU tier off, experimental until qualified."

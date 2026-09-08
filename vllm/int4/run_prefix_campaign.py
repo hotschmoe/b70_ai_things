@@ -20,6 +20,8 @@ def main():
     p.add_argument('--image', default=IMAGE)
     p.add_argument('--mtp', type=int, default=4)
     p.add_argument('--profile', action='store_true')
+    p.add_argument('--screen', action='store_true',
+                   help='Bounded MTP comparison: coherence, decode, growing tools and warm reuse; not promotion')
     p.add_argument('--churn-first', action='store_true',
                    help='Retest the known 132K history failure before broader qualification')
     p.add_argument('--stream-churn-first', action='store_true',
@@ -76,6 +78,14 @@ def main():
         if args.stream_churn_first:
             early['command'].append('--stream')
         jobs.insert(0, ('00-evict-tools', early))
+    if args.screen:
+        if args.churn_first or args.normalize_churn or args.profile:
+            p.error('--screen cannot be combined with churn, normalization or profiling')
+        selected = ['01-quality', '02-guides', '04-tools', '04b-shared-tools',
+                    '06-thinking', '03-reuse']
+        jobs = [(name, dict(jobs)[name]) for name in selected]
+        reuse = dict(jobs)['03-reuse']['command']
+        reuse[reuse.index('--reuse-sequence') + 1] = '0,0,1,0'
     cmd = ['python3', str(repo / 'vllm/fp8/kv_campaign_server.py'),
            '--preservation', str(args.config), '--out', str(args.out),
            '--image', args.image, '--served-model', model, '--mtp', str(args.mtp),
@@ -170,7 +180,7 @@ def main():
         raise RuntimeError('lifecycle health failed')
     if len(results) == len(jobs) and all(value == 0 or reviewed.get(name, {}).get('allowed')
                                        for name, value in results.items()):
-        (args.out / 'WORKLOADS_PASSED').touch()
+        (args.out / ('SCREEN_PASSED' if args.screen else 'WORKLOADS_PASSED')).touch()
     print('Require cache-hit/latency audit, paired output review and fresh lifecycle before promotion.')
 
 

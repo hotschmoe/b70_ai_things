@@ -8102,3 +8102,29 @@ appropriate total job duration without weakening the900s request gate.
 The launcher now pins the qualified prefill budget as well as MTP depth;
 its existing qualification is unchanged. Also clarify the preceding profile
 entry:129 is a collective-call count per forward-shape set, not129 layers.
+
+### 2026-09-08 - Retarget prefix serving to MTP2/MTP3
+
+CONFIG -> User prioritizes MTP2/MTP3 toward >80 tok/s and permits rare
+punctuation loops with bang-guard recovery. FP16 KV and GPU prefix caching
+remain required; CPU offload stays disabled. Keep4096 prefill budget fixed
+for the first depth comparison.
+COMMAND -> End stock-mtp0-b4096 control through STOP and client SIGTERM;
+run_prefix_campaign.py --mtp3 --screen on the original pinned R276 image.
+Inspect installed engine/arg_utils.py and hotschmoe/bang-guard source.
+RESULT -> Incomplete MTP0 control recorded12/12 correct completed checks;
+normal teardown and post-health exit0. No full qualification claimed.
+Installed R276 API-server batch default for32GiB cards is2048; the prior
+FP8 and INT4 daily32768 setting was explicit. Chunked prefill permits
+prompts larger than the scheduler token budget. Bang-guard detects32
+consecutive exclamation marks, excludes the failed attempt, rotates cache
+salt and permits up to3 consecutive retries by default. Its own README
+explicitly leaves real vLLM recovery unverified. MTP3 screen is running.
+VERDICT -> Replace zero-loop promotion preference with measured raw loop
+frequency and recovery evidence per user instruction. Do not infer rarity
+from a small sample or silently count recovered attempts as clean. A screen
+is only a bounded comparison (coherence, decode, growing tools, shared cache,
+thinking and150K warm reuse), not a shelf qualification. Preserve all earlier
+failures. Source/default evidence and incomplete-control record are under
+/mnt/vm_8tb/b70/results/int4_prefix_20260908/.
+
