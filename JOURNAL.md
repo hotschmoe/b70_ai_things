@@ -7961,3 +7961,22 @@ the cache tests; retain all raw flags plus guide-review.json for any accepted
 exception. No image or native-code change. Add one final cached-request
 profile on this prefix-enabled graph to measure its actual collective shape
 and paired rank entry/return counts; profiler inactive during timing tests.
+
+### 2026-09-08 - Stock INT4 GPU prefix reuse works on long histories
+
+CONFIG -> stock-mtp4-b, same R276 image/weights/MTP4/FP16 KV, prefix on,
+446332-token pool, CPU tier0. Profiler configured but inactive during tests.
+COMMAND -> 150K A/A/B/C/D/A/A and four8000-record growing tool histories.
+RESULT -> All seven recall responses exact/correct. First cold A TTFT94.203s;
+immediate repeat1.648s with148928/150045 cached prompt tokens. After four
+distinct histories, A reports0 cached and93.756s (evicted); its next repeat
+again hits148928 tokens and takes1.635s. No CPU reload involved.
+Four growing tool histories pass32/32 checks in218.022s versus1521.243s
+for cache-off INT4. All28 followups reuse98.53-98.85% of prompt tokens;
+followup wall latency1.200-19.825s (initial concurrent prefills overlap).
+VERDICT -> Actual GPU prefix reuse and post-eviction repopulation measured,
+with correct answers/tool state so far. This addresses full recomputation
+between turns while history remains cached. Cancellation, tighter growth
+pressure, larger eviction tool histories, poststress coding/profile and
+post-health are still running; no serving promotion yet. The reviewed
+zero-hit guide-tail divergence remains recorded separately.
