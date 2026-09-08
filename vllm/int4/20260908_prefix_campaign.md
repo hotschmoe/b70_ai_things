@@ -269,3 +269,30 @@ keeps prefix reuse/eviction, bounded132K concurrent histories with separately
 counted bang retries, coding, cancellation and health; it omits the previous
 forced32K-output offload-pressure workload. Launcher accepts qualified MTP2
 or MTP3 manifests, but the promotion manifest remains unchanged.
+
+### 2026-09-08 - MTP2 meets speed target;4K history reuse is incomplete
+
+CONFIG -> Original R276 MTP2, FP16 KV, GPU prefix on,200K/c4,batch4096,
+util0.96,cgroup64GiB,CPU tier0. Nominal pool536758 tokens.
+COMMAND -> stock-mtp2-b4096-screen fixed author benchmark, concurrent
+canaries, four88K tool histories, isolated150K A/A/B/A reuse, xhigh canaries,
+guide functional review and CPU /tokenize prefix comparison.
+RESULT -> Author metric84.557267 tok/s; all12 complete token arrays match
+strict MTP0 control. Initial and xhigh concurrent canaries pass. Incomplete
+history control6/6 completed checks correct, but both completed followups
+report zero cached tokens. Cancelled the remaining history requests and
+pending4K promotion; no corruption claim. CPU tokenizer counts match actual
+usage88314 ->88380, with all88314 initial tokens preserved as a prefix.
+Isolated150K A/A/B/A answers4/4 correct: TTFT95.260,1.671,95.176,1.687s;
+cache hits0,148928,0,148928. Thus GPU caching is functional for these repeated
+prompts, but normal growing-history reuse was not established. All3 guides
+coherent but non-identical; all6 Python blocks pass18000 reference operations.
+Normal teardown and post-health exit0. MTP2/batch32768 direct comparison is
+running, with an early8-check88K history arm before full qualification.
+VERDICT -> Do not promote4K batching based on nominal capacity or isolated
+reuse alone. The explicit old32K budget remains a candidate; do not infer
+that smaller is always better. Add an early warm-hit/latency gate to stop
+qualification if correct responses are recomputing. A new raw bang-rate
+audit separates workload families, retries and natural incidents; CPU tests
+verify the denominator and32-bang detection. It makes no long-run rarity or
+independence claim and excludes injected Pi failures and intentional cancels.

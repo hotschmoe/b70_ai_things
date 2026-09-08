@@ -109,6 +109,7 @@ def main():
     server = subprocess.Popen(cmd)
     results = {}
     reviewed = {}
+    cache_reuse_passed = True
     try:
         deadline = time.monotonic() + 1200
         while not (args.out / 'jobs').is_dir():
@@ -163,6 +164,18 @@ def main():
                 time.sleep(2)
             results[name] = int(done.read_text())
             print(name, results[name], flush=True)
+            if name == '03-reuse' and results[name] == 0:
+                reuse_rows = [json.loads(s) for s in (args.out / name / 'responses.jsonl').read_text().splitlines()]
+                warm = reuse_rows[1]
+                fraction = warm['usage']['prompt_tokens_details']['cached_tokens'] / warm['usage']['prompt_tokens']
+                ratio = warm['ttft_s'] / reuse_rows[0]['ttft_s']
+                cache_gate = {'cached_fraction': fraction, 'warm_to_cold_ttft_ratio': ratio,
+                              'passed': fraction >= .9 and ratio <= .25}
+                cache_reuse_passed = cache_gate['passed']
+                (args.out / 'cache-hit-gate.json').write_text(json.dumps(cache_gate, indent=2) + '\n')
+                if not cache_gate['passed']:
+                    print('CACHE REUSE FAILED despite correct output; do not continue qualification', flush=True)
+                    break
             if name == '02-guides' and results[name]:
                 # Preserve the failed byte-repeat flag. Only allow late prose
                 # variation after identical, closed code blocks and a full
@@ -203,7 +216,7 @@ def main():
     (args.out / 'prefix-job-results.json').write_text(json.dumps(results, indent=2) + '\n')
     if rc:
         raise RuntimeError('lifecycle health failed')
-    if len(results) == len(jobs) and all(value == 0 or reviewed.get(name, {}).get('allowed')
+    if cache_reuse_passed and len(results) == len(jobs) and all(value == 0 or reviewed.get(name, {}).get('allowed')
                                        for name, value in results.items()):
         (args.out / ('SCREEN_PASSED' if args.screen else 'WORKLOADS_PASSED')).touch()
     print('Require cache-hit/latency audit, paired output review and fresh lifecycle before promotion.')
