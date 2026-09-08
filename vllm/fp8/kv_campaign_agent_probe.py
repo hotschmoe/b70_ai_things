@@ -96,6 +96,7 @@ def main():
     p.add_argument('--bang-retries', type=int, default=0,
                    help='Diagnostic retry emulation, not the Pi extension: cancel at32 bangs, rotate salt')
     p.add_argument('--salt', default='', help='Independent workload namespace')
+    p.add_argument('--logprobs', action='store_true', help='Retain top5 token logprobs in raw SSE for failure diagnosis')
     p.add_argument('--session-order', default='0,1,2,3',
                    help='Logical session IDs in submission order; singleton isolates concurrency')
     p.add_argument('--turns', type=int, default=4, choices=range(1, 5))
@@ -188,6 +189,8 @@ def main():
             payload = {'model': args.model, 'messages': history, 'temperature': 0, 'seed': 42, 'max_tokens': 512,
                        'tools': [{'type': 'function', 'function': {'name': 'lookup_stock', 'description': 'Get stock count for a SKU', 'parameters': {'type': 'object', 'properties': {'sku': {'type': 'string'}}, 'required': ['sku']}}}],
                        'tool_choice': 'auto', 'chat_template_kwargs': {'enable_thinking': False}, 'cache_salt': 'agent-v1-' + str(index)}
+            if args.logprobs:
+                payload.update(logprobs=True, top_logprobs=5)
             if args.shared_cache:
                 payload.pop('cache_salt')
             response, elapsed = invoke(payload, 'tool', turn)

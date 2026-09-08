@@ -391,3 +391,34 @@ small correlated sample is not proof of a long-run below5 percent rate.
 A shared-cache-only explanation is insufficient; root cause is unproven.
 Finish matched MTP3 speed, coding and lifecycle qualification before public
 promotion. Retain all prior failures and report workload-specific fractions.
+
+### 2026-09-08 - MTP3 preferred; historical mixed-batch NaN lead recovered
+
+CONFIG -> User leans toward INT4/MTP3/GPU prefix;32K prefill and FP16 KV.
+Current stock-mtp3-b32768-daily retains base R276 identity and451562 KV tokens.
+COMMAND -> Fixed128 shared checks; strict suite; reversed/shifted logical
+submission IDs, singleton, private salts, and logprobs; inspect archived
+June26-27 journal read-only and git commit ca762fa. No old runtime restored.
+RESULT -> MTP3 fixed soak128/128 correct after132 attempts,4 bangs=3.0303
+percent, recovered. Strict94.82656tok/s and12/12 complete output token arrays
+exact against MTP3/4K. Three2048-token guides byte-exact,6144/49.98355=
+122.9204tok/s full wall. Current150K cold prefill93.6631s (~1602tok/s) versus
+valid installed FP8 a0b/04-reuse93.2081s (~1610tok/s), both32K budgets.
+This isolated difference is about0.5 percent; not a meaningful prefill win.
+Reverse3,2,1,0:32/33 attempts, one bang on session3 answer0. Shift1,2,3,4:
+32/33, one bang on session1 answer0. Singleton0:8/8, no bang. Four private
+salts:32/33, one bang on session0 answer2. Each bad answer's first bang
+preceded the other three answers' first deltas while their requests were
+outstanding (bang-timeline.json). This supports order/overlap sensitivity,
+not a unique session0 prompt or a requirement for cross-session cache hits.
+Logprobs arm32/32, no bangs,2112 finite logprob values;113.386s including
+initial latency. Its different timing/path means no current NaN confirmation.
+Historical June26-27 Qwen3.6/vLLM0.23 evidence (ca762fa) reported clean isolated
+replay and homogeneous prefill, reproducible mixed-load degeneration, NaN
+JSON errors with logprobs, and eventual persistent failure cleared by restart.
+That older finding is a lead, not proof that R276 has the same defect.
+VERDICT -> Continue full MTP3 qualification. Direct cold-prefill-over-active-
+decode probes queued with and without logprobs; client overlap is measurable
+but does not prove backend co-batching. Broader coding and lifecycle gates
+remain required before promotion. Cache-salt recovery is mitigation, not a
+root-cause fix; no new FP8 KV work or native/driver changes.
