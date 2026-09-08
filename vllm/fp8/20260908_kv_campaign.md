@@ -513,3 +513,30 @@ thinking, coding, pressure, 180K and guide probes follow. A0b also fails
 strict guide byte-repeat while passing coherence, so that variation is
 not specific to the CPU connector. Critical tool corruption remains an
 unconditional rejection, independent of whether the baseline also has it.
+
+
+### 2026-09-08 - Matched reuse benefit and baseline overload deadline failure
+
+CONFIG -> A0b original R187, FP16 KV, no offload, cgroup 64 GiB; same
+12-job matrix as A1pack1. Tool test: four distinct 8000-record histories,
+about 88K tokens each, four tool/answer turns, 600 s per-request deadline.
+COMMAND -> Three A/B/C/A reuse repetitions, cancellation, xhigh thinking,
+then oversized tools. Continue the queued coding/pressure/long-context
+controls and clean teardown; they are still in progress at this entry.
+RESULT -> Baseline reuse 373.923/374.079/374.203 s versus rejected A1pack1
+290.815/283.134/283.286 s: 23.612 percent lower mean trace time. All recall
+answers passed. A1pack1 peak cgroup 37050257408 bytes, no OOM/max events.
+Baseline cancellation passed in 115.158 s and xhigh checks in 9.231 s.
+Baseline tools failed a 600 s timeout awaiting a tool-call response header;
+seven preemptions were already visible in the progress metrics snapshot.
+The original probe's pool.map exception prevented writing its aggregate
+response JSON. Do not claim baseline punctuation corruption or attribute
+A1pack1's corruption to offload from this incomplete coherence control.
+VERDICT -> RAM reload benefit is measured on the stated histories, but
+A1pack1 remains rejected for corruption. The baseline also fails the
+bounded overload responsiveness gate. Updated probe preserves each session
+row immediately and records timeout/schema failures independently, without
+changing valid requests, prompts or deadlines. Two CPU regression cases
+confirm that one failed session preserves the other 24 successful checks.
+Future probe runs record their changed source SHA. A1merged remains next;
+INT4 follows its healthy teardown. No FP8 KV retest has been started.
