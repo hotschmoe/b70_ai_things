@@ -421,3 +421,24 @@ and were not a CPU reload test. Capture before/after connector metrics to
 check whether tool-history reuse actually exercises the CPU tier; do not
 infer that solely from aggregate context size. The baseline matrix uses
 the same 8000-record setting. The coding matrix is all 164 HumanEval+ tasks.
+
+## First corrected packaged offload trace (qualification still open)
+
+CONFIG -> A1pack1, installed R187 package, derived Python-only repair image,
+FP16 KV, prefix cache on, MTP3, CPU tier 32 GiB, cgroup 64 GiB.
+COMMAND -> C1/C4, three long guides, then 150K A/B/C/A with actual eviction.
+RESULT -> Original 10.13 GiB/rank / 292968-token pool restored. C1/C4 passed
+48 exact checks in 9.068/7.487 s. Three guides were coherent at
+25.495/25.437/25.448 s; late comment/table wording varied, so their strict
+repeat_exact gate failed. This requires the matched baseline, not waiver.
+The first reuse trace passed all four exact-answer checks in 290.815 s;
+TTFT 93.177/93.211/93.257/10.466 s. Metrics confirm 148928 external tokens
+and 10527047680 loaded bytes across two rank transfers. A0's same trace
+was 373.418 s with no external hits. New candidate repeats and the clean
+A0b comparison are pending; no promotion or stability verdict yet.
+VERDICT -> Correcting package identity restored cold-prefill/decode behavior
+while retaining functional CPU history reload. kv_campaign_repeat.py queues
+a clean baseline with the executed candidate job matrix after candidate
+teardown/health succeeds; it records quality job failures separately from
+lifecycle health. The full matrix includes three distinct-salt reuse traces,
+oversized tool histories, cancellation, thinking, coding and forced growth.
