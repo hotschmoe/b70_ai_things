@@ -45,6 +45,9 @@ def main():
     profile = qualification['profile']
     if profile not in ('daily', 'daily-prefix-off'):
         raise RuntimeError('not a daily serving qualification')
+    mtp = qualification.get('mtp', 4)
+    if type(mtp) is not int or mtp not in (0, 4):
+        raise RuntimeError('unsupported qualified speculative depth')
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, 'start', '--leased'])
     key = ROOT / 'secrets/dd_api_key'
@@ -71,7 +74,7 @@ def main():
     command = [sys.executable, str(REPO / 'vllm/fp8/kv_campaign_server.py'),
                '--preservation', str(result / 'config'), '--out', str(result / 'server'),
                '--name', 'hotschmoe-dd', '--image', IMAGE, '--served-model', 'hotschmoe-dd',
-               '--mtp', '4', '--memory-gib', str(qualification['memory_gib']),
+               '--mtp', str(mtp), '--memory-gib', str(qualification['memory_gib']),
                '--port', '18124', '--health-p2p-check', '--leased']
     server = None
     frontdoor = None

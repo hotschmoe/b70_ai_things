@@ -144,3 +144,32 @@ output; fragmented tool arguments, final usage and incomplete-stream
 retention passed CPU checks. The first MTP0 churn diagnostic uses streaming;
 its final postpressure churn remains the original nonstreaming API path.
 Raw roots: results/int4_prefix_20260908/mamba-eagle-mtp4 and stock-mtp0.
+
+### 2026-09-08 - Diagnose mixed-prefill blocking; prepare 4K-batch candidate
+
+CONFIG -> Stock R276 MTP0 with prefix caching, FP16 KV,200K/c4,32768
+prefill budget. Nominal pool535222 tokens, versus446332 with MTP4.
+COMMAND -> Streaming four132K tool histories, then profile_mixed_prefill.py
+with one cold132K recall and three short128-token guides, under the same
+owned lease. Pause coordinator only while the diagnostic queue completes.
+RESULT -> Captured10/10 completed tool/answer checks before deliberately
+cancelling this incomplete campaign. One otherwise correct tool-call stream
+had about17-second fragment gaps. No MTP0 corruption was observed, but this
+is NOT a completed correctness qualification. Planned154K oversubscription
+extra was cancelled, not run. DRM fdinfo snapshot did not establish a
+residency shortfall. All four mixed-profile responses pass: long recall
+TTFT76.62s, subsequent max gap0.04s; short-guide TTFT0.32-0.65s and max
+chunk gap23.17s. These are profiled diagnostic timings, not a speed result.
+Both ranks match2324 completed CPU collective events (1162 c10d calls plus
+wrappers); actual allreduce rows include32451 four times per129-layer-call
+set, plus1667/30/594/61. The large prefill chunks support head-of-line
+blocking as a cause of long gaps; they do not explain the original stock
+punctuation corruption on their own. Coordinator resumed for normal health.
+VERDICT -> Do not promote or call MTP0 failed for corruption. Next candidate
+retains the scoped Mamba backoff image43e77a22 and MTP4, changes only
+--max-num-batched-tokens32768 ->4096 in Config.json (Env identical), and
+keeps200K/c4/FP16 KV/no CPU tier. Normalize extra churn workloads from the
+measured new pool, since lower prefill budget may grow KV capacity. Require
+both original132K case and capacity-normalized churn, before and after
+pressure. Prepared authenticated150K cold/warm public-frontdoor smoke for
+final serving validation; it is not yet run. Daily qualification unchanged.

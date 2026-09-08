@@ -10,11 +10,11 @@ import urllib.request
 from kv_campaign_probe import request
 
 
-def stream_request(base, payload, timeout, trace):
+def stream_request(base, payload, timeout, trace, headers=None):
     """Retain tool deltas and partial text if a long request times out."""
     body = dict(payload, stream=True, stream_options={'include_usage': True})
     req = urllib.request.Request(base + '/v1/chat/completions',
-        data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
+        data=json.dumps(body).encode(), headers={'Content-Type': 'application/json', **(headers or {})})
     message = {'role': 'assistant', 'content': None}
     response = {'choices': [{'index': 0, 'message': message, 'finish_reason': None}]}
     calls = {}

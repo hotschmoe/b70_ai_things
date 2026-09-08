@@ -2,6 +2,7 @@
 """Qualify GPU prefix reuse, independent of CPU offload and KV quantization."""
 import argparse
 import json
+import math
 from pathlib import Path
 import re
 import subprocess
@@ -23,6 +24,8 @@ def main():
                    help='Retest the known 132K history failure before broader qualification')
     p.add_argument('--stream-churn-first', action='store_true',
                    help='Capture partial output in the first churn diagnostic; final churn stays nonstreaming')
+    p.add_argument('--normalize-churn', action='store_true',
+                   help='Add oversized tool histories sized from the actual startup KV pool')
     args = p.parse_args()
     deadline = time.monotonic() + 1800
     while not (args.wait_for / 'exit.rc').exists():
@@ -88,6 +91,35 @@ def main():
             if server.poll() is not None or time.monotonic() > deadline:
                 raise RuntimeError('runner did not create queue')
             time.sleep(1)
+        if args.normalize_churn:
+            while not (args.out / 'READY').exists():
+                if server.poll() is not None or time.monotonic() > deadline:
+                    raise RuntimeError('server not ready for cache-capacity normalization')
+                time.sleep(2)
+            pool = int(re.search(r'GPU KV cache size: ([\d,]+) tokens',
+                       (args.out / 'server.log').read_text()).group(1).replace(',', ''))
+            # The fixed tool template measured314 tokens plus11 per record.
+            # Actual usage is still audited; this only sizes the workload.
+            records = max(12000, math.ceil(((pool + 83000) / 4 - 314) / 11))
+            records = min(records, 18000)
+            assert 4 * (records * 11 + 314) > pool
+            original = next(job for name, job in jobs if name == '09-evict-tools')
+            for after, name, streaming in [('00-evict-tools', '00b-normalized-tools', True),
+                                           ('09-evict-tools', '09b-normalized-tools', False)]:
+                if not any(n == after for n, _ in jobs):
+                    continue
+                cmd2 = [s.replace(str(args.out / '09-evict-tools'), str(args.out / name))
+                        for s in original['command']]
+                cmd2[cmd2.index('--records') + 1] = str(records)
+                if streaming:
+                    cmd2.append('--stream')
+                index = next(i for i, (n, _) in enumerate(jobs) if n == after)
+                jobs.insert(index + 1, (name, dict(original, command=cmd2)))
+            (args.out / 'churn-normalization.json').write_text(json.dumps({
+                'gpu_pool_tokens': pool, 'records': records,
+                'estimated_prompt_tokens_each': records * 11 + 314,
+                'estimated_excess_tokens': 4 * (records * 11 + 314) - pool,
+                'scope': 'Capacity sizing, not proof of actual eviction or active preemption.'}, indent=2) + '\n')
         (args.out / 'prefix-plan.json').write_text(json.dumps(dict(jobs), indent=2) + '\n')
         for name, job in jobs:
             (args.out / 'jobs' / (name + '.json')).write_text(json.dumps(job) + '\n')
