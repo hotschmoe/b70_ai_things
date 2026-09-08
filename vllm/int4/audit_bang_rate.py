@@ -69,7 +69,7 @@ def audit(root):
     failures = sum(g['bang_requests'] for g in groups.values())
     return {'root': str(root), 'groups': groups, 'requests': total, 'bang_requests': failures,
         'observed_fraction': failures / total if total else None, 'incidents': incidents,
-        'target_fraction': .01,
+        'target_fraction': .05,
         'scope': 'Observed test mix only. Injected Pi failures and intentional cancellations excluded. Not a representative long-run rate or independence assumption; inspect each workload and temporal clusters.'}
 
 

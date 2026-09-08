@@ -360,3 +360,34 @@ separate. It resumes after the prior measured prefix/eviction/growing-tool
 checks, retains all old failures, and has its own continuation marker rather
 than falsely marking the prior campaign fully passed. Actual Pi recovery is
 also queued for MTP2; its initial failure is explicitly injected.
+
+### 2026-09-08 - Compare MTP decode and accept user under5 percent tolerance
+
+CONFIG -> User accepts an observed bang fraction below5 percent and asks
+for reproducible diagnosis. This supersedes the earlier under1 percent target
+for current acceptance, without rewriting earlier failed gates. FP16 KV and
+GPU prefix caching remain required; CPU offload remains disabled.
+COMMAND -> Review fixed12-prompt strict results and matched2048-token guide
+workload, audit fixed128-check MTP2 shared recovery soak, and continue MTP3
+qualification under --bang-fraction .05. Reattach only the coordinator to the
+same leased server PID272967; no GPU process restart or runtime change.
+RESULT -> INT4 strict MTP2=83.15094tok/s at32K prefill and84.55727 at4K;
+MTP3=95.36377 at4K. Prefix-off MTP4 two-fresh mean100.21428 has a different
+profile and is not a fully controlled MTP comparison. Clean-package FP8 MTP3
+guide result a0clean/03-decode=6144/75.59694=81.273tok/s, exact repeats.
+INT4 guide MTP2/4K=98.24 and MTP3/4K=123.75tok/s, coherent but variable
+outputs; do not compare these full-output rates to strict first100 timing.
+MTP2/32K has456916 shared KV tokens; current MTP3/32K reports451562,
+versus old FP8 daily292968. All use FP16 KV. Completed INT4 prefix-off
+HumanEval base/plus158/150 versus clean FP8 157/152; MTP2/3 quality pending.
+MTP2 fixed soak:128 correct checks after134 raw attempts,6 bangs (4.4776
+percent), all recovered. Every incident is logical session0; two occur after
+private-salt rotation. MTP3 already reproduces session0 bangs. Add full raw
+request capture and logical session-order controls to distinguish content,
+submission order and concurrency. Thread submission order is not proof of
+actual backend batch-row order. Queue reverse/shift/singleton/isolated arms.
+VERDICT -> MTP2 observed rate is within the newly accepted tolerance. This
+small correlated sample is not proof of a long-run below5 percent rate.
+A shared-cache-only explanation is insufficient; root cause is unproven.
+Finish matched MTP3 speed, coding and lifecycle qualification before public
+promotion. Retain all prior failures and report workload-specific fractions.

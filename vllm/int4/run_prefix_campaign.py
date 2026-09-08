@@ -26,6 +26,11 @@ def main():
                    help='User-scoped prefix qualification with bounded churn and separately counted bang recovery')
     p.add_argument('--continuation-of', type=Path,
                    help='Continue a healthy prior daily lifecycle after its shared-prefix incident; add fixed128-check recovery soak')
+    p.add_argument('--shared-soak-first', action='store_true',
+                   help='Require raw bang attempts below the configured fraction in a fixed128-check shared workload')
+    p.add_argument('--bang-fraction', type=float, default=.05)
+    p.add_argument('--attach-server-pid', type=int,
+                   help='Resume this coordinator against its existing leased server; preserve completed jobs')
     p.add_argument('--churn-first', action='store_true',
                    help='Retest the known 132K history failure before broader qualification')
     p.add_argument('--stream-churn-first', action='store_true',
@@ -33,10 +38,14 @@ def main():
     p.add_argument('--normalize-churn', action='store_true',
                    help='Add oversized tool histories sized from the actual startup KV pool')
     args = p.parse_args()
+    if not 0 < args.bang_fraction < 1:
+        p.error('--bang-fraction must be between0 and1')
     if args.recovery_daily and (args.screen or args.churn_first or args.normalize_churn):
         p.error('--recovery-daily cannot be combined with screen or expanded churn')
     if args.continuation_of and not args.recovery_daily:
         p.error('--continuation-of requires --recovery-daily')
+    if args.shared_soak_first and not args.recovery_daily:
+        p.error('--shared-soak-first requires --recovery-daily')
     deadline = time.monotonic() + 1800
     while not (args.wait_for / 'exit.rc').exists():
         if time.monotonic() > deadline:
@@ -100,7 +109,7 @@ def main():
         # enable GPU prefix caching. Keep a bounded132K concurrent churn check.
         jobs = [(name, job) for name, job in jobs if name not in ('07-pressure', '08-postpressure')]
         for name, job in jobs:
-            if name in ('04-tools', '09-evict-tools'):
+            if name in ('04-tools', '04b-shared-tools', '09-evict-tools'):
                 job['command'] += ['--stream', '--bang-retries', '3', '--salt=-recovery-daily']
             if name == '09-evict-tools':
                 job['command'] += ['--turns', '1']
@@ -113,6 +122,7 @@ def main():
         assert json.loads((prior / '04-tools/summary.json').read_text())['passed']
         assert json.loads((prior / 'cache-hit-gate.json').read_text())['passed']
         jobs = [(name, job) for name, job in jobs if name >= '05-']
+    if args.continuation_of or args.shared_soak_first:
         soak = []
         for i in range(4):
             name = f'00-shared-guard-{i}'
@@ -127,10 +137,35 @@ def main():
            '--memory-gib', '64', '--health-p2p-check']
     if args.profile:
         cmd.append('--profile')
-    server = subprocess.Popen(cmd)
+    if args.attach_server_pid:
+        import os
+        manifest = json.loads((args.out / 'manifest.json').read_text())['args']
+        assert manifest['mtp'] == args.mtp and manifest['image'] == args.image
+        assert Path(manifest['preservation']).resolve() == args.config.resolve()
+        process_cmd = Path(f'/proc/{args.attach_server_pid}/cmdline').read_bytes().split(b'\0')
+        assert str(args.out).encode() in process_cmd and b'--leased' in process_cmd
+        assert not (args.out / 'STOP').exists()
+        class AttachedServer:
+            def poll(self):
+                result = args.out / 'exit.rc'
+                if result.exists():
+                    return int(result.read_text())
+                try:
+                    os.kill(args.attach_server_pid, 0)
+                except ProcessLookupError:
+                    raise RuntimeError('attached server disappeared without lifecycle result')
+                return None
+            def wait(self):
+                while self.poll() is None:
+                    time.sleep(2)
+                return self.poll()
+        server = AttachedServer()
+    else:
+        server = subprocess.Popen(cmd)
     results = {}
     reviewed = {}
     cache_reuse_passed = True
+    soak_passed = True
     try:
         deadline = time.monotonic() + 1200
         while not (args.out / 'jobs').is_dir():
@@ -180,7 +215,8 @@ def main():
                 'prior': str(args.continuation_of), 'fixed_shared_checks': 128,
                 'scope': 'Retain prior failures; fresh lifecycle continuation, not recovery in the stopped process.'}, indent=2) + '\n')
         for name, job in jobs:
-            (args.out / 'jobs' / (name + '.json')).write_text(json.dumps(job) + '\n')
+            if not any((args.out / 'jobs' / (name + suffix)).exists() for suffix in ('.running', '.done')):
+                (args.out / 'jobs' / (name + '.json')).write_text(json.dumps(job) + '\n')
             deadline = time.monotonic() + job['timeout'] + 1800
             done = args.out / 'jobs' / (name + '.done')
             while not done.exists():
@@ -189,6 +225,19 @@ def main():
                 time.sleep(2)
             results[name] = int(done.read_text())
             print(name, results[name], flush=True)
+            if name == '00-shared-guard-3' and results[name] == 0:
+                summaries = [json.loads((args.out / f'00-shared-guard-{i}' / 'summary.json').read_text()) for i in range(4)]
+                checks = sum(s['checks'] for s in summaries)
+                attempts = sum(s['attempts'] for s in summaries)
+                bangs = sum(s['bang_attempts'] for s in summaries)
+                soak_passed = checks == 128 and all(s['passed'] for s in summaries) and bangs / attempts < args.bang_fraction
+                (args.out / 'shared-soak-gate.json').write_text(json.dumps({
+                    'checks': checks, 'attempts': attempts, 'bangs': bangs,
+                    'observed_fraction': bangs / attempts, 'target_fraction': args.bang_fraction, 'passed': soak_passed,
+                    'scope': 'Fixed shared workload; not a long-run rate or independence claim.'}, indent=2) + '\n')
+                if not soak_passed:
+                    print('SHARED SOAK RATE FAILED; stop before expensive qualification', flush=True)
+                    break
             if name == '03-reuse' and results[name] == 0:
                 reuse_rows = [json.loads(s) for s in (args.out / name / 'responses.jsonl').read_text().splitlines()]
                 warm = reuse_rows[1]
@@ -241,7 +290,7 @@ def main():
     (args.out / 'prefix-job-results.json').write_text(json.dumps(results, indent=2) + '\n')
     if rc:
         raise RuntimeError('lifecycle health failed')
-    if cache_reuse_passed and len(results) == len(jobs) and all(value == 0 or reviewed.get(name, {}).get('allowed')
+    if soak_passed and cache_reuse_passed and len(results) == len(jobs) and all(value == 0 or reviewed.get(name, {}).get('allowed')
                                        for name, value in results.items()):
         marker = 'SCREEN_PASSED' if args.screen else ('CONTINUATION_PASSED' if args.continuation_of else 'WORKLOADS_PASSED')
         (args.out / marker).touch()

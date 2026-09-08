@@ -36,7 +36,10 @@ class EvidenceTest(unittest.TestCase):
             self.assertEqual(len(rows), 4)
             self.assertEqual([r['passed'] for r in rows], [True, True, False, True])
             self.assertEqual(len(rows[2]['rows']), 1)
-            saved = [json.loads(line) for p in out.glob('session-*.jsonl') for line in p.read_text().splitlines()]
+            saved = [json.loads(line) for p in out.glob('session-[0-9].jsonl') for line in p.read_text().splitlines()]
+            requests = [json.loads(line) for p in out.glob('session-*-requests.jsonl') for line in p.read_text().splitlines()]
+            self.assertEqual(len(requests), 25)
+            self.assertTrue(all(r['payload']['model'] == 'test-model' for r in requests))
             self.assertEqual(len(saved), 25)
             self.assertEqual(sum(r['passed'] for r in saved), 24)
             if failure == 'timeout':

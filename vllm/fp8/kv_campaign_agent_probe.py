@@ -96,6 +96,8 @@ def main():
     p.add_argument('--bang-retries', type=int, default=0,
                    help='Diagnostic retry emulation, not the Pi extension: cancel at32 bangs, rotate salt')
     p.add_argument('--salt', default='', help='Independent workload namespace')
+    p.add_argument('--session-order', default='0,1,2,3',
+                   help='Logical session IDs in submission order; singleton isolates concurrency')
     p.add_argument('--turns', type=int, default=4, choices=range(1, 5))
     argv = sys.argv[1:]
     # A namespace may begin with a single dash. Preserve it as literal data,
@@ -109,6 +111,9 @@ def main():
         p.error('--bang-retries must be between0 and3')
     if args.bang_retries and not args.stream:
         p.error('bang recovery requires --stream')
+    session_order = [int(v) for v in args.session_order.split(',')]
+    if not session_order or len(session_order) > 4 or len(set(session_order)) != len(session_order):
+        p.error('--session-order requires one to four unique integer IDs')
     args.out.mkdir(parents=True, exist_ok=False)
     config = dict(vars(args), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     (args.out / 'config.json').write_text(json.dumps(config, default=str, indent=2) + '\n')
@@ -137,6 +142,9 @@ def main():
                             payload['cache_salt'] = salt
                         else:
                             payload.pop('cache_salt', None)
+                        with (args.out / f'session-{index}-requests.jsonl').open('a') as f:
+                            f.write(json.dumps({'phase': phase, 'turn': turn, 'attempt': attempt,
+                                'started_at': attempt_started, 'payload': payload}, ensure_ascii=True) + '\n')
                         if args.stream:
                             suffix = f'-retry{attempt}' if attempt else ''
                             response = stream_request(args.base, payload, args.timeout,
@@ -209,8 +217,8 @@ def main():
                 break
         return {'session': index, 'rows': rows, 'attempts': attempts,
                 'passed': len(rows) == args.turns * 2 and all(r['passed'] for r in rows)}
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        results = list(pool.map(session, range(4)))
+    with ThreadPoolExecutor(max_workers=len(session_order)) as pool:
+        results = list(pool.map(session, session_order))
     (args.out / 'results.json').write_text(json.dumps(results, ensure_ascii=True, indent=2) + '\n')
     passed = all(r['passed'] for r in results)
     try:
