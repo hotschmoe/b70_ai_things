@@ -18,6 +18,7 @@ def main():
     p.add_argument('--candidate-image', help='replace repeat image with a native Python backport; no hooks')
     p.add_argument('--wait-for', type=Path, help='additional lifecycle that must finish healthy first')
     p.add_argument('--fail-fast', action='store_true', help='queue sequentially and stop on a failed job')
+    p.add_argument('--prefix-off', action='store_true', help='fresh prefix-disabled control')
     args = p.parse_args()
     if args.candidate_image and args.kind != 'repeat':
         p.error('candidate image requires repeat mode')
@@ -49,8 +50,6 @@ def main():
                '--preservation', cfg['preservation'], '--out', str(args.out), '--image', image,
                '--mtp', str(cfg['mtp']), '--kv-dtype', cfg['kv_dtype'],
                '--memory-gib', str(cfg['memory_gib']), '--offload-gib', str(offload)]
-    if args.candidate_image:
-        command += ['--served-model', model]
     if args.kind == 'repeat' and not args.candidate_image:
         for flag in ('offload_group_fix', 'packaged_hooks', 'trace_offload'):
             if cfg.get(flag):
@@ -58,8 +57,12 @@ def main():
         if cfg.get('offload_group_fix'):
             model += '-gdnfix'
     for flag in ('eager', 'prefix_off'):
-        if cfg.get(flag):
+        if cfg.get(flag) or (flag == 'prefix_off' and args.prefix_off):
             command.append('--' + flag.replace('_', '-'))
+    if args.prefix_off:
+        model += '-prefixoff'
+    if args.candidate_image or args.prefix_off:
+        command += ['--served-model', model]
     selected = set(args.jobs.split(',')) if args.jobs else None
     jobs = []
     for path in sorted((args.reference / 'jobs').glob('*.running')):

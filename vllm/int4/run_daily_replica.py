@@ -15,6 +15,7 @@ def main():
     p.add_argument('--reference', type=Path, required=True)
     p.add_argument('--config', type=Path, required=True)
     p.add_argument('--out', type=Path, required=True)
+    p.add_argument('--coding-baseline', type=Path, help='clean coding reference, separate from workload templates')
     args = p.parse_args()
     if not (args.strict / 'PASSED').exists():
         raise RuntimeError('strict replica has not passed')
@@ -72,7 +73,7 @@ def main():
             if name == '10-code':
                 comparison = args.out / 'paired-code.json'
                 subprocess.run(['python3', str(repo / 'vllm/int4/compare_code.py'),
-                                '--baseline', str(args.reference / '10-code'),
+                                '--baseline', str(args.coding_baseline or args.reference / '10-code'),
                                 '--candidate', str(args.out / '10-code'), '--out', str(comparison)], check=True)
                 if not json.loads(comparison.read_text())['score_gate_passed']:
                     break

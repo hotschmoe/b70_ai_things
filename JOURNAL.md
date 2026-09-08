@@ -7699,3 +7699,29 @@ changing valid requests, prompts or deadlines. Two CPU regression cases
 confirm that one failed session preserves the other 24 successful checks.
 Future probe runs record their changed source SHA. A1merged remains next;
 INT4 follows its healthy teardown. No FP8 KV retest has been started.
+
+
+### 2026-09-08 - Baseline raw coding outputs confirm corruption with FP16 KV
+
+CONFIG -> A0b original FP8-weight R187 recipe, FP16 KV, prefix cache on,
+no CPU connector; coding follows the timed-out oversized tool workload.
+COMMAND -> Grade all 164 HumanEval+ tasks, then compare raw solutions with
+A1pack1 and scan for long repeated punctuation before trusting sanitized code.
+RESULT -> A0b scored 152/164 base and 147/164 plus, versus A1pack1's
+157/164 and 151/164. Raw solutions are byte-identical on 152/164 tasks.
+Five baseline outputs contain 1383-1658 consecutive exclamation marks:
+HumanEval/81, /129, /130, /132 and /147. Their raw SHA/offsets are recorded
+in a0b/10-code/raw-corruption-audit.json. A1pack1's coding outputs contain
+no such runs. Sanitization can discard corrupted tails, so aggregate pass@1
+alone is insufficient. Baseline coding corruption is now directly observed;
+the prior tool timeout's missing responses still cannot establish tool
+corruption. Causation by prior overload, prefix reuse or another state path
+is not established by this ordering alone.
+VERDICT -> A0b is invalid as a clean quantization-quality reference. Add one
+fresh prefix-cache-off FP8-weight/FP16-KV coding control, before any long
+stress, after A1merged's teardown. This is NOT an FP8 KV retest. INT4 strict
+qualification is resequenced behind that reference. New code probes retain
+raw symbol-loop audits and reject corruption even if sanitized code passes.
+compare_code.py refuses a corrupted baseline or candidate. The daily INT4
+coordinator can select the clean coding baseline independently of its
+unchanged workload templates. All earlier raw grades/reports are preserved.

@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import subprocess
 from types import SimpleNamespace
+import audit_code_outputs
 
 
 def main():
@@ -38,12 +39,14 @@ def main():
                       'sampling': sampling, 'limit': args.limit, 'dataset': 'humaneval',
                       'dataset_sha256': dataset_sha, 'grader_image': grader_image,
                       'source_sha256': {str(p.relative_to(repo)): hashlib.sha256(p.read_bytes()).hexdigest()
-                                        for p in [Path(__file__).resolve(), Path(common.__file__), Path(tier1_code.__file__)]},
+                                        for p in [Path(__file__).resolve(), Path(common.__file__), Path(tier1_code.__file__), Path(audit_code_outputs.__file__)]},
                       'thinking': False, 'git': common.get_git_sha()})
     result = tier1_code.run(ctx, limit=args.limit)
+    if result.get('raw_samples'):
+        result['symbol_corruption'] = audit_code_outputs.inspect_samples(result['raw_samples'])
     common.write_json(args.out / 'summary.json', result)
     print(json.dumps(result), flush=True)
-    return int(bool(result.get('error') or result.get('skipped')))
+    return int(bool(result.get('error') or result.get('skipped') or result.get('symbol_corruption')))
 
 
 if __name__ == '__main__':

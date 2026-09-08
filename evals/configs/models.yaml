@@ -204,3 +204,13 @@ models:
     serve_cmd: ""
     notes: "20260908 R276 replica; experimental, not promoted. FP16 KV, prefix caching disabled. Tensor-identical R212 relabel."
 
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign-prefixoff
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign-prefixoff
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 0 GiB. Prefix caching disabled. Experimental, not promoted. Stable public alias maps to preserved manifest."
+

@@ -3,6 +3,10 @@
 import argparse
 import json
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'fp8'))
+from audit_code_outputs import inspect_samples
 
 
 def main():
@@ -15,6 +19,8 @@ def main():
         config = json.loads((root / 'config.json').read_text())
         summary = json.loads((root / 'summary.json').read_text())
         assert not summary.get('error') and not summary.get('skipped'), summary
+        corruption = inspect_samples(summary['raw_samples'])
+        assert not corruption, ('raw output corruption invalidates quality comparison', str(root), corruption)
         result = json.loads(Path(summary['eval_results']).read_text())
         return config, result
     bc, b = load(args.baseline); cc, c = load(args.candidate)
