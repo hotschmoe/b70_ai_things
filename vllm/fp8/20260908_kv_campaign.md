@@ -293,3 +293,39 @@ passed. Production graph capture, held-out coding, default thinking,
 cancellation, longer contexts and matched pressure tests remain. The reuse
 probe now accepts an explicit sequence so FP8's larger pool can be forced
 to evict, rather than accidentally testing only resident GPU prefixes.
+
+## Calibrated FP8 graph boundary corruption: disqualified
+
+CONFIG -> B0graph, calibrated E4M3, MTP3, prefix cache on, CPU tier off,
+original FULL_DECODE_ONLY graph configuration. 548571-token profiled pool.
+
+COMMAND -> Short C1/C4, repeated greedy 2048-token LRU guide; CPU tokenizer
+localization; native cache oracles at length1603/block1600 on each card,
+including interleaved hybrid K/V views and four-query speculative decode.
+
+RESULT -> Graph capture and all 48 short checks passed. Long generations
+corrupted: repeated malformed Python in one response, garbage/EOS in the
+other. The common textual prefix retokenizes to 1550 generated tokens;
+adding the 51-token prompt gives 1601, at the first 1600-token block handoff.
+One output reached 2048 tokens in 35.887 s; the other stopped at 1564 tokens
+in 28.875 s. No matched speed claim is made from corrupted output.
+
+The original guide probe only checked single-character loops and did not
+make repeat_exact=false fail the job. Its raw summary is preserved; the
+separate coherence audit disqualifies it. The improved gate detects both
+observed failures, accepts the original FP16 guides, and passes four CPU
+regression tests (including normal rulers and budget-truncated code fences).
+
+Native contiguous/interleaved multi-block and q_len4 read/write oracles
+passed on both cards: attention relative L2 about 0.00024 against the
+actually dequantized causal reference. These isolate eager kernel mechanics,
+not full-model graph/state handoff. Extra oracle sources/hashes are retained
+under b0graph/extra-source/; original frozen sources were not overwritten.
+Clean teardown, per-card and compiled collective post-health passed;
+b0graph/exit.rc=0. That lifecycle health result does not override bad output.
+
+VERDICT -> Do not promote this FP8 graph candidate. Eager long-generation
+control is pending to separate graph replay from hybrid state behavior.
+Upstream reports describe related hybrid/speculative prefix-cache failures,
+but do not establish the cause of this exact local boundary failure:
+https://github.com/vllm-project/vllm/issues/53912

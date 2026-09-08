@@ -77,6 +77,30 @@ TASKS = [
 ]
 
 
+def generation_issue(row):
+    text = row['text']
+    if row['error']:
+        return 'request error'
+    if len(text) <= 100:
+        return 'unexpectedly short guide'
+    if re.search(r'([!?.A-Za-z0-9])\1{50}', text):
+        return 'single-character loop'
+    previous = None
+    streak = 0
+    for line in text.splitlines():
+        line = line.strip()
+        if len(line) < 12:
+            previous = None; streak = 0
+            continue
+        streak = streak + 1 if line == previous else 1
+        previous = line
+        if streak >= 6:
+            return 'repeated-line loop'
+    if row.get('finish_reason') == 'stop' and text.count('```') % 2:
+        return 'unclosed code fence at EOS'
+    return None
+
+
 def long_prompt(tokens, index=0):
     # Distinct first tokens prevent accidental sharing between pressure streams.
     secret = f'B70-{index:02d}-ORANGE-4917'
@@ -181,12 +205,15 @@ def main():
         for repeat in range(args.rounds):
             with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
                 for i, row in enumerate(pool.map(lambda i: stream(args.base, args.model, f'Task {i}. '+prompt, 2048, salt=f'decode-v1-{repeat}', timeout=args.timeout), range(args.concurrency))):
-                    # Code/Markdown commonly contains long hyphen/equals rulers.
-                    row.update(task=i, repeat=repeat, passed=row['error'] is None and len(row['text']) > 100 and not re.search(r'([!?.A-Za-z0-9])\1{50}', row['text']))
+                    issue = generation_issue(row)
+                    row.update(task=i, repeat=repeat, passed=issue is None, coherence_issue=issue)
                     save(row)
     (args.out / 'metrics-after.txt').write_text(request(args.base, '/metrics'))
     repeat_exact = all(len({r['text_sha256'] for r in rows if r['task'] == i}) == 1 for i in {r['task'] for r in rows})
-    summary = {'mode': args.mode, 'passed': all(r['passed'] for r in rows), 'repeat_exact': repeat_exact,
+    rows_passed = all(r['passed'] for r in rows)
+    repeat_required = args.mode in ('quality', 'decode', 'reuse', 'cancel')
+    summary = {'mode': args.mode, 'passed': rows_passed and (repeat_exact or not repeat_required),
+               'rows_passed': rows_passed, 'repeat_exact': repeat_exact,
                'rows': len(rows), 'elapsed_s': time.monotonic()-all_start,
                'completion_tokens': sum(r['usage'].get('completion_tokens', 0) for r in rows),
                'prompt_tokens': [r['usage'].get('prompt_tokens') for r in rows],
