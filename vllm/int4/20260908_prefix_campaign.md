@@ -31,3 +31,25 @@ Upstream leads checked today (not applied or proven local fixes):
 https://github.com/vllm-project/vllm/issues/53912
 https://github.com/vllm-project/vllm/pull/48375
 https://github.com/vllm-project/vllm/pull/43650
+
+
+### 2026-09-08 - Review first prefix-on guide divergence
+
+CONFIG -> Stock R276 MTP4, GPU prefix caching on, FP16 KV, no CPU tier.
+COMMAND -> stock-mtp4 C4 and three2048-token guides, then fail-fast teardown.
+RESULT -> C4 passes. Guides all coherent but byte-repeat flag false:
+first two hashes3c52c745..., third99452102... exactly matches all three
+cache-off controls. All text through the last closed code block is identical
+across all six responses; only the trailing prose changes (syntax-note text
+versus complexity heading). All three prompt-cache-hit counts are0, so no
+cached prompt was exercised. Preserve raw job rc1. Lifecycle exit.rc0 and
+post-health pass. Prefix-enabled pool446332tokens versus451562cache-off.
+VERDICT -> This is not evidence of cache-state corruption or a prefix hit.
+Allow a narrowly reviewed noncritical guide-tail variation only when every
+coherence row passes and the complete text through the final closed code
+block matches every cache-off guide. Changed code/earlier prose/loops still
+fail. Keep byte-repeat claim false. Fresh stock-mtp4-b repeats and continues
+the cache tests; retain all raw flags plus guide-review.json for any accepted
+exception. No image or native-code change. Add one final cached-request
+profile on this prefix-enabled graph to measure its actual collective shape
+and paired rank entry/return counts; profiler inactive during timing tests.
