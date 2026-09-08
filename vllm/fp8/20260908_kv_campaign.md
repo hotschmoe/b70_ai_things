@@ -176,3 +176,34 @@ freeze and grader-control logs are retained in the campaign root.
 
 VERDICT -> Grader control passed. This is not a model coding-quality result;
 matched model generations remain pending.
+
+## Hybrid repair: real history reload, not yet promotion timing
+
+CONFIG -> A1fix2, original image, auto KV, MTP3, native CPU32, guarded
+Mamba fallback repair and read-only lookup tracing. Early sitecustomize
+imports were used in this diagnostic. Profiling allocated 9.97 GiB/rank
+and 288281 tokens versus A1's 10.13 GiB/rank and 292968 tokens.
+
+COMMAND -> Short C1/C4; two concurrent 32K needles; identical 150K A/B/C/A.
+
+RESULT -> Short 48/48 checks repeated exactly. Both 32K needles passed;
+their C2 timings are not comparable with the earlier C1 probe. All four
+150K answers matched exactly. TTFT: 135.476/135.683/135.820/8.857 s.
+The final A request restored 148928 tokens and recomputed only the 1117-token
+tail. Trace shows the three Mamba groups have sparse ready checkpoints
+38/77/116/155/178, while attention has ready chunks 0-179. Clearing only
+the Mamba EAGLE flags permits the real lookup. Native load metrics sum
+10.527 GB and 13.488 s across two rank transfers; this sum is not wall time.
+
+VERDICT -> Full-model retrieval validates the sparse-checkpoint diagnosis.
+The 8.857 s restored TTFT is promising, but total makespan 416.849 s is
+worse than the stock trace due to slower cold prefill. No performance
+promotion claim. A follow-up loader defers hooks until normal vLLM module
+imports; whether early imports caused the difference remains unproven.
+Long interleaved tool-history and later matched lifecycle checks are pending.
+
+Related upstream correctness report, a different stack/draft method:
+https://github.com/vllm-project/vllm/issues/53505
+It motivates interleaved hybrid-history checks, but does not establish that
+this image has the reported corruption. The issue body is retained under
+source/issue53505.json in raw campaign evidence.
