@@ -117,3 +117,12 @@ completion/wall metrics rather than selecting the better run. This speed
 target does not waive token parity, coding quality, intended-context,
 concurrency, teardown or post-health gates. A slower but healthy INT4 recipe
 can be documented as a replica result without replacing the daily driver.
+
+A single bounded torch profile is prepared for the end of a future INT4
+qualification lifecycle, after timing and quality requests. It records real
+prefill/collective tensor shapes and completed entry/return events on both
+ranks; captured graph internals may remain opaque. Compare paired rank
+counts and require clean teardown/post-health. Do not import the former
+8192-row fence assumption, infer invisible graph collective counts, or use
+profiled request timing as a speed result. Enable the profiler only once in
+that lifecycle; the known repeated profiler start/stop path is avoided.

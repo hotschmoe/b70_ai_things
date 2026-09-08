@@ -24,6 +24,7 @@ def main():
     p.add_argument('--packaged-hooks', action='store_true')
     p.add_argument('--served-model')
     p.add_argument('--health-p2p-check', action='store_true')
+    p.add_argument('--profile', action='store_true')
     p.add_argument('--offload-gib', type=int, default=0)
     p.add_argument('--kv-dtype', default='auto', choices=['auto', 'fp8_e4m3'])
     p.add_argument('--eager', action='store_true')
@@ -96,6 +97,10 @@ def main():
         cmd.append('--no-enable-prefix-caching')
     if args.offload_gib:
         cmd += ['--kv-transfer-config', json.dumps({'kv_connector': 'OffloadingConnector', 'kv_role': 'kv_both', 'kv_connector_extra_config': {'cpu_bytes_to_use': args.offload_gib * 2**30, 'blocks_per_chunk': 1}})]
+    if args.profile:
+        cmd += ['--profiler-config', json.dumps({'profiler': 'torch',
+                'torch_profiler_dir': '/kv-campaign/profile', 'torch_profiler_record_shapes': True,
+                'torch_profiler_with_stack': False, 'torch_profiler_with_memory': False})]
     env = dict(v.split('=', 1) for v in cfg['Env'])
     if args.eager:
         env['VLLM_XPU_ENABLE_XPU_GRAPH'] = '0'
