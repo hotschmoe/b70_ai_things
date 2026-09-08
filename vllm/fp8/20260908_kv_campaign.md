@@ -379,3 +379,37 @@ VERDICT -> Packaging is prepared, not promoted. Qualify the actual packaged
 image in a second lifecycle if A1fix3 passes. Expand the held-out coding
 comparison to all 164 HumanEval+ problems for the separate weight-quant
 choice. INT4 recipe evidence and acquisition belong under vllm/int4/.
+
+## Python package identity defect: prior hook arms are not baseline-matched
+
+CONFIG -> Hook arms used PYTHONPATH=/kv-source/kv_hooks: with a trailing
+empty component. The image WORKDIR is /workspace/vllm, containing a source
+checkout in addition to the installed serving package.
+
+COMMAND -> CPU-only import-path probes with and without the trailing empty
+component; compare both _xpu_ops.py files in the immutable image.
+
+RESULT -> The old path resolves vllm to /workspace/vllm/vllm/__init__.py;
+the corrected path resolves /opt/venv/lib/python3.12/site-packages/vllm/.
+The source _xpu_ops.py hash is 47080ce161348db461ac6777f818742a067ef6db5cb64a67165864fbad21d3e1;
+the intended installed overlay is 6a7761930cd8b9e3f67902648ba5aaaf708567cebf70fcedda595d698f26b064.
+The GPU runner file itself matches, but that does not restore package identity.
+Raw probes are package-path-{shadowed,corrected}.json in the results root.
+
+VERDICT -> A0 and stock A1 retain their installed-package identity. All
+Python-hook arms through A1fix3, including calibration and B0 FP8 controls,
+are disqualified as matched tests of the preserved serving package. Their
+observations remain valid only for the accidentally shadowed package.
+Do not attribute their slower cold prefill or FP8 corruption to the installed
+production overlay. The frozen scale artifact is research-only and requires
+fresh collection/qualification on a verified package before any future use.
+FP8 work remains deferred on user direction; no new FP8 run is authorized
+by this correction. Offload's successful history reload remains functional
+evidence on the shadowed package and must be repeated on the real candidate.
+
+The runner now removes empty search-path components, and its custom entry
+fails closed unless vllm resolves to the installed purelib directory. The
+packaged offload image already uses a nonempty-only PYTHONPATH and the
+original console entrypoint. Its fresh A1pack1 lifecycle is next. Remaining
+A1fix3 quality jobs were deferred after discovery; finish the in-flight reuse
+trace and clean post-health. All prior raw records are preserved unchanged.

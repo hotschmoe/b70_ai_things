@@ -22,12 +22,15 @@ def main():
     p.add_argument('--name', default='b70-kv-campaign')
     p.add_argument('--image', default=IMAGE)
     p.add_argument('--packaged-hooks', action='store_true')
+    p.add_argument('--served-model')
+    p.add_argument('--health-p2p-check', action='store_true')
     p.add_argument('--offload-gib', type=int, default=0)
     p.add_argument('--kv-dtype', default='auto', choices=['auto', 'fp8_e4m3'])
     p.add_argument('--eager', action='store_true')
     p.add_argument('--prefix-off', action='store_true')
     p.add_argument('--mtp', type=int, default=3)
     p.add_argument('--memory-gib', type=int, default=64)
+    p.add_argument('--memory-swap-gib', type=int)
     p.add_argument('--port', type=int, default=18125)
     p.add_argument('--hook', choices=['none', 'record', 'load'], default='none')
     p.add_argument('--scales', type=Path)
@@ -56,15 +59,18 @@ def main():
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
     args.out.mkdir(parents=True, exist_ok=False)
     started_epoch = int(time.time())
-    if args.memory_gib < args.offload_gib + 24:
+    if args.offload_gib and args.memory_gib < args.offload_gib + 24:
         raise ValueError('container needs CPU tier plus 24 GiB runtime/headroom')
     (args.out / 'jobs').mkdir()
     def run(cmd, filename, timeout=300):
         with (args.out / filename).open('w') as f:
             return subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=timeout).returncode
     def health(stage):
-        for tool, extra in [('xpu-health', []), ('xpu-collective-health', ['--p2p', '0', '--timeout', '180'])]:
-            if run([str(REPO / 'bin' / tool), '--img', args.image, *extra], stage + '-' + tool + '.log'):
+        checks = [('xpu-health', [], ''), ('xpu-collective-health', ['--p2p', '0', '--timeout', '180'], '')]
+        if args.health_p2p_check and stage == 'pre':
+            checks.append(('xpu-collective-health', ['--p2p', '1', '--timeout', '180'], '-p2p1'))
+        for tool, extra, suffix in checks:
+            if run([str(REPO / 'bin' / tool), '--img', args.image, *extra], stage + '-' + tool + suffix + '.log'):
                 raise RuntimeError(stage + ' ' + tool + ' failed')
     cfg = json.loads((args.preservation / 'Config.json').read_text())
     mounts = json.loads((args.preservation / 'Mounts.json').read_text())
@@ -74,6 +80,8 @@ def main():
     model = 'qwen3.8-27b-FP8-official-W8A16-mtp%d-%skv-cpu%dg-kvcampaign' % (args.mtp, args.kv_dtype, args.offload_gib)
     if args.offload_group_fix:
         model += '-gdnfix'
+    if args.served_model:
+        model = args.served_model
     setarg('--served-model-name', model)
     setarg('--kv-cache-dtype', args.kv_dtype)
     if args.mtp == 0:
@@ -101,7 +109,7 @@ def main():
                     ignore=shutil.ignore_patterns('__pycache__'))
     source_hashes = {str(path.relative_to(source)): hashlib.sha256(path.read_bytes()).hexdigest()
                      for path in source.rglob('*.py')}
-    docker = ['docker', 'run', '--rm', '--name', args.name, '--ulimit', 'core=0', '--memory', f'{args.memory_gib}g', '--memory-swap', f'{args.memory_gib}g', '--device', '/dev/dri:/dev/dri', '--group-add', 'render', '--cap-add', 'SYS_PTRACE', '--security-opt', 'label=disable', '--ipc=host', '--shm-size=8g', '-p', f'127.0.0.1:{args.port}:8000']
+    docker = ['docker', 'run', '--rm', '--name', args.name, '--ulimit', 'core=0', '--memory', f'{args.memory_gib}g', '--memory-swap', f'{args.memory_swap_gib or args.memory_gib}g', '--device', '/dev/dri:/dev/dri', '--group-add', 'render', '--cap-add', 'SYS_PTRACE', '--security-opt', 'label=disable', '--ipc=host', '--shm-size=8g', '-p', f'127.0.0.1:{args.port}:8000']
     for m in mounts:
         src = str(cache) if m['Destination'] == '/root/.cache/vllm' else m['Source']
         docker += ['-v', src + ':' + m['Destination'] + ('' if m['RW'] else ':ro')]
@@ -111,7 +119,9 @@ def main():
         for key in ('PYTHONPATH', 'B70_OFFLOAD_GROUP_FIX', 'B70_KV_MODE', 'B70_OFFLOAD_TRACE'):
             env.pop(key, None)
     if use_entry:
-        env['PYTHONPATH'] = '/kv-source/kv_hooks:' + env.get('PYTHONPATH', '')
+        # An empty PYTHONPATH component adds the image WORKDIR, whose source
+        # checkout can shadow the installed, patched serving package.
+        env['PYTHONPATH'] = ':'.join(['/kv-source/kv_hooks', *filter(None, env.get('PYTHONPATH', '').split(':'))])
         env['B70_KV_MODE'] = args.hook
         env['B70_KV_OUT'] = '/kv-campaign'
         if args.trace_offload:
