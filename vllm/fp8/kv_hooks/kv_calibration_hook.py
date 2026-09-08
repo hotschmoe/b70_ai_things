@@ -33,7 +33,7 @@ def install():
             if context.attn_metadata is not None and key is not None and value is not None:
                 name = self.layer_name
                 from vllm.distributed import get_tensor_model_parallel_rank
-                rec = records.setdefault(name, {'rank': get_tensor_model_parallel_rank(), 'n': 0, 'tokens': 0, 'kv_dtype': self.kv_cache_dtype, 'q_amax': 0., 'k_amax': 0., 'v_amax': 0.})
+                rec = records.setdefault(name, {'rank': get_tensor_model_parallel_rank(), 'n': 0, 'tokens': 0, 'kv_dtype': self.kv_cache_dtype, 'q_dtype': str(query.dtype), 'k_dtype': str(key.dtype), 'v_dtype': str(value.dtype), 'q_amax': 0., 'k_amax': 0., 'v_amax': 0.})
                 for label, tensor in [('q', query), ('k', key), ('v', value)]:
                     maximum = float(tensor.detach().abs().amax().item())
                     if not math.isfinite(maximum):

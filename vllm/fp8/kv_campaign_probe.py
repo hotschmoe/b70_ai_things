@@ -96,6 +96,7 @@ def main():
     p.add_argument('--rounds', type=int, default=2)
     p.add_argument('--timeout', type=int, default=600)
     p.add_argument('--output-tokens', type=int, default=1024)
+    p.add_argument('--salt', default='')
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     identity = json.loads(request(args.base, '/v1/models'))
@@ -111,7 +112,7 @@ def main():
         for repeat in range(args.rounds):
             def task(item):
                 i, (prompt, expected) = item
-                row = stream(args.base, args.model, prompt, salt='quality-v1', timeout=args.timeout)
+                row = stream(args.base, args.model, prompt, salt='quality-v1' + args.salt, timeout=args.timeout)
                 row.update(task=i, repeat=repeat, expected=expected, passed=expected.lower() in row['text'].lower() and row['error'] is None)
                 if i == 3:
                     try:
@@ -125,7 +126,7 @@ def main():
     elif args.mode == 'reuse':
         for i in [0, 1, 2, 0]:
             prompt, expected = long_prompt(args.tokens, i)
-            row = stream(args.base, args.model, prompt, 64, salt='reuse-v1', timeout=args.timeout)
+            row = stream(args.base, args.model, prompt, 64, salt='reuse-v1' + args.salt, timeout=args.timeout)
             row.update(task=i, repeat=len(rows), expected=expected, passed=row['text'].strip() == expected and row['error'] is None)
             save(row)
             (args.out / f'metrics-step-{len(rows)}.txt').write_text(request(args.base, '/metrics'))
@@ -135,7 +136,7 @@ def main():
                 prompt, expected = long_prompt(args.tokens, i)
                 if args.mode == 'pressure':
                     prompt += '\nAfter the code, write a detailed guide to testing a Python dictionary-backed LRU cache, with code examples and edge cases.'
-                row = stream(args.base, args.model, prompt, args.output_tokens if args.mode == 'pressure' else 64, salt=f'long-v1-{repeat}', timeout=args.timeout)
+                row = stream(args.base, args.model, prompt, args.output_tokens if args.mode == 'pressure' else 64, salt=f'long-v1-{repeat}' + args.salt, timeout=args.timeout)
                 row.update(task=i, repeat=repeat, expected=expected, passed=(expected in row['text'] if args.mode == 'pressure' else row['text'].strip() == expected) and row['error'] is None)
                 return row
             with ThreadPoolExecutor(max_workers=args.concurrency) as pool:

@@ -82,3 +82,24 @@ VERDICT -> Baseline controls and DMA primitive passed the stated checks;
 no active preemption recovery result yet. The growth case remains pending.
 A1 adds only a 32 GiB native CPU tier, larger than the approximately 20.3 GiB
 GPU pool, with the same 64 GiB cgroup. No service promotion.
+
+## Installed FP8 scale oracle
+
+CONFIG -> Same image on each card independently while the campaign owns
+both leases; no model configuration change. FP16 queries, E4M3 K/V storage,
+12 query heads / 2 KV heads / head dimension 256 per rank, 31 cached tokens.
+
+COMMAND -> Write K/V with non-unit scales through reshape_and_cache_flash;
+read with the installed XPU flash_attn_varlen_func; compare against attention
+on the actually dequantized cache. Double V read scale and perturb K read
+scale to prove the kernel consumes both.
+
+RESULT -> Both cards passed. K/V write relative L2 errors were 0.026386 and
+0.026646, consistent with quantized storage. Native attention relative L2
+error against the dequantized reference was 0.000241. Doubling V descale
+doubled attention output; changing K descale changed attention weights.
+The experiment is in a1/03-fp8-scale-oracle.log.
+
+VERDICT -> This exact image mechanically supports scaled E4M3 KV writes and
+reads with FP16 queries. This is not model-quality evidence. Fresh Qwen3.8
+calibration and full-model qualification are still required.
