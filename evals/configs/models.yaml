@@ -92,3 +92,48 @@ models:
     calibration: gptq-mixedcal-v2
     serve_cmd: ""
     notes: "Retained research weights; requalify after backend refresh."
+
+  - label: hotschmoe-dd
+    served_model_id: hotschmoe-dd
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 0 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu0g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 0 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-autokv-cpu32g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: publisher-weights
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV auto, native CPU tier 32 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu0g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu0g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: pending-model-specific-kv
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV fp8_e4m3, native CPU tier 0 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
+
+  - label: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu32g-kvcampaign
+    served_model_id: qwen3.8-27b-FP8-official-W8A16-mtp3-fp8_e4m3kv-cpu32g-kvcampaign
+    family: qwen3.8-27b
+    weights: fp8-official-W8A16
+    activations: float16
+    calibration: pending-model-specific-kv
+    serve_cmd: ""
+    notes: "20260908 campaign identity; R187/MTP3 TP2, KV fp8_e4m3, native CPU tier 32 GiB. Experimental, not promoted. Stable public alias maps to preserved manifest."
