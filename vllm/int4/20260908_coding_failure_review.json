@@ -1,0 +1,57 @@
+{
+  "baseline": "a0clean: official FP8 weights, MTP3, FP16 KV, prefix off",
+  "candidate": "daily-prefix-off: R276 AutoRound INT4, MTP4, FP16 KV, prefix off",
+  "dataset_sha256": "b52c70fb955ba9c1139174f56d58b0c2804558acf7513553d4edb08ab5df818f",
+  "sampling": "temperature 0, seed 42, thinking off, max_tokens 2048",
+  "counts": {
+    "baseline_base": 157,
+    "candidate_base": 158,
+    "baseline_plus": 152,
+    "candidate_plus": 150,
+    "total": 164
+  },
+  "new_failures": [
+    {
+      "task": "HumanEval/91",
+      "metric": "base (both already fail plus)",
+      "finding": "INT4 startswith(\"I\") counts Is/In as the word I; FP8 checks the first whitespace-delimited word. Genuine word-boundary regression."
+    },
+    {
+      "task": "HumanEval/97",
+      "metric": "plus",
+      "finding": "INT4 uses signed Python modulo without abs. On (-6,-9), returns 4 instead of 54. Genuine negative-input code regression; both pass the separate direct arithmetic/runtime canaries."
+    },
+    {
+      "task": "HumanEval/125",
+      "metric": "plus",
+      "finding": "INT4 split(\" \") preserves empty fields on repeated spaces and checks only literal spaces. FP8 split() collapses whitespace. Genuine string edge-case regression."
+    },
+    {
+      "task": "HumanEval/151",
+      "metric": "plus",
+      "finding": "INT4 explicitly excludes bool while the oracle and FP8 include Python bool as int. Type/specification interpretation difference; retained as a failed test with no rescoring."
+    },
+    {
+      "task": "HumanEval/154",
+      "metric": "plus",
+      "finding": "INT4 omits empty-b special case; zero rotations returns False for (\"\", \"\"). FP8 returns True. Genuine empty-input regression."
+    }
+  ],
+  "recovered": [
+    {
+      "task": "HumanEval/33",
+      "finding": "INT4 indexes the sorted every-third subset correctly. FP8 indexes it with the full-list index and fails."
+    },
+    {
+      "task": "HumanEval/132",
+      "finding": "INT4 completes executable nested-bracket code. FP8 spends the 2048-token cap in comments and has no executable implementation after sanitization."
+    }
+  ],
+  "raw_symbol_corruption": {
+    "baseline": [],
+    "candidate": []
+  },
+  "review_verdict": "Meets frozen <=2 net additional failures in base and plus, exactly at the plus boundary. No runtime/tool/state corruption found in reviewed outputs. Acceptable bounded coding tradeoff for continued qualification; not no-loss quality parity and not a Terminal-Bench result. Other serving gates remain required.",
+  "raw_root": "/mnt/vm_8tb/b70/results/int4_replica_20260908/daily-prefix-off",
+  "baseline_raw_root": "/mnt/vm_8tb/b70/results/kv_campaign_20260908/a0clean/10-code"
+}

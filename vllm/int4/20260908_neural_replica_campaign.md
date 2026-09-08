@@ -230,3 +230,28 @@ Not yet a daily-driver qualification. The separately pinned 200K/c4 plain
 prefix-off profile has started, with clean A0clean coding reference,
 FP16 KV and no CPU offload. FP8 KV remains deferred. Prepared authenticated
 frontdoor smoke is syntax-checked only; no public endpoint promotion yet.
+
+
+### 2026-09-08 - INT4 daily coding and long tool review
+
+CONFIG -> R276 AutoRound INT4/MTP4, FP16 KV, prefix-off 200K/c4 daily
+profile, util0.96, batch32768, 64GiB cgroup. No CPU offload.
+COMMAND -> run_daily_replica.py with strict-retry1 gate, A0b workload
+prompts and clean A0clean/10-code coding comparator; raw root
+/mnt/vm_8tb/b70/results/int4_replica_20260908/daily-prefix-off.
+RESULT -> C1/C4 exact-answer checks pass; three2048-token guides pass
+byte-exact repeat in44.362s total. Actual reported KV15.62GiB/rank,
+451562tokens versus FP8 control10.13GiB/292968tokens. Four concurrent
+8000-record (~88K-token) tool histories pass32/32 checks in1521.243s.
+All164 coding outputs generated in339.0s, graded in49.2s, no raw symbol
+corruption. INT4 scores158base/150plus versus clean FP8 157base/152plus.
+Paired review in20260908_coding_failure_review.json: new base91 and
+new plus97/125/151/154; recover33/132 in both metrics. Negative-modulo,
+word-boundary, whitespace and empty-string mistakes are real regressions;
+bool interpretation remains scored as a failure. Do not rescore or claim
+no-loss parity. The FP8 task132 was incomplete at the shared2048 cap.
+VERDICT -> Within frozen <=2 net additional failures, exactly on plus
+boundary. Manual review accepts this bounded coding tradeoff for continued
+qualification; no critical runtime/tool corruption found. This is not a
+Terminal-Bench ranking. Reuse, cancellation, thinking,180K/199K,pressure,
+profile,teardown/post-health and fresh serving lifecycle remain pending.
