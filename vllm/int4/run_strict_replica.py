@@ -14,7 +14,16 @@ def main():
     p.add_argument('--source', type=Path, required=True)
     p.add_argument('--config', type=Path, required=True)
     p.add_argument('--out', type=Path, required=True)
+    p.add_argument('--wait-for', type=Path, help='start only after this lifecycle finishes healthy')
     args = p.parse_args()
+    if args.wait_for:
+        deadline = time.monotonic() + 14400
+        while not (args.wait_for / 'exit.rc').exists():
+            if time.monotonic() > deadline:
+                raise RuntimeError('preceding lifecycle did not finish')
+            time.sleep(5)
+        if (args.wait_for / 'exit.rc').read_text().strip() != '0':
+            raise RuntimeError('preceding lifecycle health failed')
     assert subprocess.check_output(['git', '-C', str(args.source), 'rev-parse', 'HEAD'], text=True).strip() == SOURCE_COMMIT
     args.out.mkdir(parents=True, exist_ok=False)
     repo = Path(__file__).resolve().parents[2]

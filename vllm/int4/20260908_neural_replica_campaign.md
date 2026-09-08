@@ -126,3 +126,19 @@ counts and require clean teardown/post-health. Do not import the former
 8192-row fence assumption, infer invisible graph collective counts, or use
 profiled request timing as a speed result. Enable the profiler only once in
 that lifecycle; the known repeated profiler start/stop path is avoided.
+
+## Prepared daily startup (not activated)
+
+CONFIG -> Pinned R276 image/source and the separately generated 200K/c4
+prefix-on daily configuration, retaining FP16 KV. No CPU connector yet.
+COMMAND -> serve_qwen38_autoround_r276_daily.py reuses the leased lifecycle
+runner and existing API-key frontdoor at 18080/18124, alias hotschmoe-dd.
+RESULT -> Python syntax checked. Startup requires an explicit successful
+r276_daily_qualification.json, exact image/source pins and configuration
+SHA; that qualification file has not been written. Stop requests use the
+runner's STOP marker and wait for teardown health while the parent retains
+the GPU lease. The existing systemd recipe remains unchanged.
+VERDICT -> Prepared only. Live startup/stop and API smoke remain mandatory
+before selecting this recipe. The strict four-lifecycle coordinator is
+queued after the merged offload candidate's healthy exit; a health failure
+prevents automatic continuation.
