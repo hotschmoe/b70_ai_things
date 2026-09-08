@@ -17,10 +17,10 @@ def request(base, route, body=None, timeout=10):
         return r.read().decode()
 
 
-def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thinking=False, force_length=False, cancel_after_chunks=None):
+def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thinking=False, force_length=False, cancel_after_chunks=None, reasoning_effort='low'):
     body = {'model': model, 'messages': [{'role': 'user', 'content': prompt}],
             'temperature': 0, 'top_p': 1, 'seed': 42, 'max_tokens': limit,
-            'chat_template_kwargs': ({'enable_thinking': True, 'reasoning_effort': 'low'} if thinking else {'enable_thinking': False}),
+            'chat_template_kwargs': ({'enable_thinking': True, 'reasoning_effort': reasoning_effort} if thinking else {'enable_thinking': False}),
             'stream': True, 'stream_options': {'include_usage': True}, 'cache_salt': salt}
     if force_length:
         body['ignore_eos'] = True
@@ -101,9 +101,13 @@ def main():
     p.add_argument('--rounds', type=int, default=2)
     p.add_argument('--timeout', type=int, default=600)
     p.add_argument('--output-tokens', type=int, default=1024)
+    p.add_argument('--thinking', action='store_true')
+    p.add_argument('--reasoning-effort', choices=['low', 'medium', 'high', 'xhigh'], default='xhigh')
     p.add_argument('--salt', default='')
     p.add_argument('--force-length', action='store_true')
     args = p.parse_args()
+    if args.thinking and args.mode != 'quality':
+        p.error('--thinking currently applies only to the quality probe')
     args.out.mkdir(parents=True, exist_ok=False)
     identity = json.loads(request(args.base, '/v1/models'))
     assert any(d['id'] == args.model for d in identity['data']), identity
@@ -118,7 +122,10 @@ def main():
         for repeat in range(args.rounds):
             def task(item):
                 i, (prompt, expected) = item
-                row = stream(args.base, args.model, prompt, salt='quality-v1' + args.salt, timeout=args.timeout)
+                row = stream(args.base, args.model, prompt,
+                             args.output_tokens if args.thinking else 256,
+                             salt='quality-v1' + args.salt, timeout=args.timeout,
+                             thinking=args.thinking, reasoning_effort=args.reasoning_effort)
                 row.update(task=i, repeat=repeat, expected=expected, passed=expected.lower() in row['text'].lower() and row['error'] is None)
                 if i == 3:
                     try:

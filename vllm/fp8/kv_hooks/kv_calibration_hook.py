@@ -50,6 +50,13 @@ def install():
     else:
         artifact_bytes = Path(os.environ['B70_KV_SCALES']).read_bytes()
         artifact = json.loads(artifact_bytes)
+        if (artifact.get('weights') != 'qwen3.8-27b/fp8-official'
+                or artifact.get('schema') != 'b70.qwen38-official-fp8-kv-scales.v1'):
+            raise RuntimeError('unexpected calibration model identity')
+        expected_config = artifact.get('model_config_sha256')
+        actual_config = hashlib.sha256((Path(os.environ.get('B70_KV_MODEL_ROOT', '/model')) / 'config.json').read_bytes()).hexdigest()
+        if not expected_config or expected_config != actual_config:
+            raise RuntimeError('calibration model configuration fingerprint mismatch')
         scales = artifact['layers']
         original = Attention.process_weights_after_loading
         def process(self, *args, **kwargs):

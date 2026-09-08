@@ -240,3 +240,32 @@ max amax across TP ranks times 1.10 / 448, floored at 1e-6. Q observations
 are retained, but the XPU query path remains FP16. Frozen artifacts must
 include observed counts and source hashes. This is synthetic text calibration;
 it does not establish image/audio or arbitrary out-of-distribution quality.
+
+## Frozen calibrated KV artifact
+
+CONFIG -> Calibration protocol above, source snapshots in calibration/source/.
+
+COMMAND -> Merge kv-record-479.json and kv-record-530.json with
+kv_campaign_calibrate.py --headroom 1.1 --model-config
+models/files/qwen3.8-27b/fp8-official/config.json --provenance
+<raw-root>/calibration-provenance.json after clean shutdown/post-health.
+
+RESULT -> Main corpus: 262/262 requests, 472317 input tokens and 20540
+generated tokens. Plus eight functional requests. Both continuations reached
+4096 tokens; contexts through 180K completed. Both ranks captured 17 layers,
+7260-21780 forwards per layer and 500653-515173 token rows. These are actual
+periodic snapshot counts, not a claim that every final decode step flushed.
+Peak cgroup usage 23043252224 bytes, no OOM/max events. Clean teardown,
+per-card and compiled collective post-health passed; calibration/exit.rc=0.
+
+Artifact: kv_scales/qwen38_official_fp8_kv_e4m3_cal20260908_h110.json.
+SHA256: e552af52da60cf3a35f5a981ee2ff89c11e144a020693cbfab1ca98b3da69bfc.
+K scales span 0.030519-0.056550; V scales 0.020449-0.346205. The artifact
+includes exact model-file, corpus, response, native-image and source evidence.
+The loader rejects a mismatched model config fingerprint/schema and records
+the actual query-quantization flag and attention implementation on each rank.
+
+VERDICT -> Fresh model-specific static scales are frozen before held-out
+evaluation. No FP8 model-quality or performance conclusion yet. First test
+calibrated E4M3 eagerly, then qualify the production graph configuration if
+the mechanical and coherence gates pass. Original service defaults remain.
