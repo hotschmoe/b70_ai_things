@@ -48,6 +48,9 @@ def main():
     mtp = qualification.get('mtp', 4)
     if type(mtp) is not int or mtp not in (0, 4):
         raise RuntimeError('unsupported qualified speculative depth')
+    prefill_batch = qualification.get('prefill_batch', 32768)
+    if type(prefill_batch) is not int or prefill_batch not in (4096, 8192, 32768):
+        raise RuntimeError('unsupported qualified prefill budget')
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, 'start', '--leased'])
     key = ROOT / 'secrets/dd_api_key'
@@ -60,6 +63,7 @@ def main():
     model = REPO / 'models/files/qwen3.8-27b/int4-autoround-gptq-relabel-r212'
     subprocess.run([sys.executable, str(Path(__file__).with_name('prepare_replica.py')),
                     '--source', str(source), '--model', str(model), '--profile', profile,
+                    '--prefill-batch', str(prefill_batch),
                     '--out', str(result / 'config')], check=True,
                    stdout=(result / 'prepare.log').open('w'))
     config_hash = hashlib.sha256((result / 'config/Config.json').read_bytes()).hexdigest()

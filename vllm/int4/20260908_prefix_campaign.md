@@ -173,3 +173,27 @@ measured new pool, since lower prefill budget may grow KV capacity. Require
 both original132K case and capacity-normalized churn, before and after
 pressure. Prepared authenticated150K cold/warm public-frontdoor smoke for
 final serving validation; it is not yet run. Daily qualification unchanged.
+
+### 2026-09-08 - MTP4 still corrupts with the backoff fix and 4K prefill
+
+CONFIG -> mamba-eagle-mtp4-b4096, image43e77a22, MTP4, FP16 KV,
+200K/c4,4096 prefill budget. Nominal GPU pool524324. Prepared normalized
+four151839-token histories (13775 records, estimated83032-token excess).
+COMMAND -> First streaming four132K tool histories, before any broader
+campaign. Inspect per-session SSE rather than waiting for a900s timeout.
+RESULT -> Four complete checks correct, then session3's initial tool request
+streamed396 exclamation marks before cancellation. This is actual corruption,
+not just slow queueing. It was the first request for that session's unique
+cache salt; final usage was not received, so do not invent a cached-token
+counter for the cancelled response. Preserve full SSE and manual-failure.json.
+Client SIGTERM and runner STOP ended the failed workload; normal teardown,
+per-card and compiled two-rank post-health passed, exit.rc0. Normalized
+extra was not reached. Small-batch MTP4 plus the backoff patch is rejected.
+VERDICT -> Prefill blocking explains long gaps but not this correctness
+failure. Next is original-image MTP0 with4096 prefill and prefix enabled;
+no patch-image promotion. Dynamically grow both tool-churn sizes and the
+number of distinct150K reuse histories from the measured pool, and allow
+appropriate total job duration without weakening the900s request gate.
+The launcher now pins the qualified prefill budget as well as MTP depth;
+its existing qualification is unchanged. Also clarify the preceding profile
+entry:129 is a collective-call count per forward-shape set, not129 layers.

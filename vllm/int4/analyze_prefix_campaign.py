@@ -22,9 +22,10 @@ def main():
     args = p.parse_args()
     r = args.root
     reuse = rows(r / '03-reuse/responses.jsonl')
-    assert len(reuse) == 7 and [row['task'] for row in reuse] == [0, 0, 1, 2, 3, 0, 0]
+    distinct = len(reuse) - 3
+    assert distinct >= 4 and [row['task'] for row in reuse] == [0, 0, *range(1, distinct), 0, 0]
     warm = []
-    for index in (1, 6):
+    for index in (1, len(reuse) - 1):
         row = reuse[index]
         fraction = cached(row) / row['usage']['prompt_tokens']
         ratio = row['ttft_s'] / reuse[0]['ttft_s']
@@ -34,12 +35,14 @@ def main():
                      'ttft_vs_initial_cold': ratio,
                      'passed': fraction >= .9 and ratio <= .25 and row['passed']})
     groups = {}
-    for name in ('04-tools', '09-evict-tools'):
+    for name in ('04-tools', '04b-shared-tools', '00b-normalized-tools', '09-evict-tools', '09b-normalized-tools'):
+        if not (r / name / 'results.json').exists():
+            continue
         data = json.loads((r / name / 'results.json').read_text())
         followups = [row for session in data for row in session['rows']
                      if row['phase'] != 'tool' or row['turn'] != 0]
         fractions = [cached(row['response']) / row['response']['usage']['prompt_tokens']
-                     for row in followups if row.get('response')]
+                     for row in followups if (row.get('response') or {}).get('usage', {}).get('prompt_tokens_details')]
         groups[name] = {'sessions_passed': all(s['passed'] for s in data),
                         'missing_responses': sum(not row.get('response') for row in followups),
                         'followup_cached_fractions': fractions,
@@ -50,10 +53,11 @@ def main():
                         (r / 'server.log').read_text()).group(1).replace(',', ''))
     report = {'root': str(r), 'baseline': str(args.baseline), 'gpu_pool_tokens': pool,
               'cold_ttft_s': reuse[0]['ttft_s'], 'warm': warm,
-              'revisit_after_four_histories': {'cached_tokens': cached(reuse[5]),
-                  'ttft_s': reuse[5]['ttft_s'], 'correct': reuse[5]['passed'],
+              'revisit_after_distinct_histories': {'histories': distinct,
+                  'cached_tokens': cached(reuse[-2]),
+                  'ttft_s': reuse[-2]['ttft_s'], 'correct': reuse[-2]['passed'],
                   'distinct_prompt_tokens': sum(reuse[i]['usage']['prompt_tokens']
-                                                for i in (0, 2, 3, 4))},
+                                                for i in [0, *range(2, distinct + 1)])},
               'tools': groups,
               'guides_exact_against_prefix_off': [x['text_sha256'] for x in guides]
                   == [x['text_sha256'] for x in base_guides],
@@ -62,6 +66,8 @@ def main():
               'promotion_qualified': False,
               'remaining_review': 'Paired coding/raw output review and fresh serving lifecycle.'}
     report['reuse_gate_passed'] = all(w['passed'] for w in warm) and all(x['passed'] for x in reuse)
+    report['eviction_observed'] = cached(reuse[-2]) == 0
+    report['tool_correctness_passed'] = all(g['sessions_passed'] for g in groups.values())
     report['growing_history_reuse_passed'] = (groups['04-tools']['sessions_passed']
         and all(f >= .8 for f in groups['04-tools']['followup_cached_fractions']))
     args.out.write_text(json.dumps(report, indent=2) + '\n')

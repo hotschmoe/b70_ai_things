@@ -103,6 +103,10 @@ def main():
             records = max(12000, math.ceil(((pool + 83000) / 4 - 314) / 11))
             records = min(records, 18000)
             assert 4 * (records * 11 + 314) > pool
+            distinct = max(4, math.ceil(pool / 150045) + 1)
+            reuse = next(job for name, job in jobs if name == '03-reuse')
+            reuse['command'][reuse['command'].index('--reuse-sequence') + 1] = ','.join(
+                str(i) for i in [0, 0, *range(1, distinct), 0, 0])
             original = next(job for name, job in jobs if name == '09-evict-tools')
             for after, name, streaming in [('00-evict-tools', '00b-normalized-tools', True),
                                            ('09-evict-tools', '09b-normalized-tools', False)]:
@@ -114,11 +118,15 @@ def main():
                 if streaming:
                     cmd2.append('--stream')
                 index = next(i for i, (n, _) in enumerate(jobs) if n == after)
-                jobs.insert(index + 1, (name, dict(original, command=cmd2)))
+                # Budget for all32 cold requests at a conservative1000 prompt
+                # tokens/s. Per-request timeout stays900s and is still a gate.
+                timeout = max(original['timeout'], math.ceil(32 * (records * 11 + 314) / 1000) + 600)
+                jobs.insert(index + 1, (name, dict(original, command=cmd2, timeout=timeout)))
             (args.out / 'churn-normalization.json').write_text(json.dumps({
                 'gpu_pool_tokens': pool, 'records': records,
                 'estimated_prompt_tokens_each': records * 11 + 314,
                 'estimated_excess_tokens': 4 * (records * 11 + 314) - pool,
+                'reuse_distinct_histories': distinct,
                 'scope': 'Capacity sizing, not proof of actual eviction or active preemption.'}, indent=2) + '\n')
         (args.out / 'prefix-plan.json').write_text(json.dumps(dict(jobs), indent=2) + '\n')
         for name, job in jobs:
