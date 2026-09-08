@@ -484,3 +484,32 @@ https://github.com/vllm-project/vllm/pull/54288,
 https://github.com/vllm-project/vllm/pull/52771. API metadata and diffs are
 archived under the campaign source directory. User now permits a bounded
 FP8 KV retest only AFTER the other tasks; none has been started.
+
+## Merged scheduler backport: CPU qualification and queued GPU gate
+
+CONFIG -> Derived image
+sha256:eb852f45140db6f812dfda8867d59795a91a831266dedf37c8a666bf7b200f4f,
+base f46780e1a72c, native bytes unchanged. Only installed scheduler.py is
+replaced: 616e7fd4cb0d09064cbc4d5735f607b37964c6be3b81e26de00d5913e0a9a3e3
+becomes 0d2fd9a20e02e2b1560d757658ded738ae6c5d7cc292bf75d20c49636f6338b0.
+No PYTHONPATH hook or custom entrypoint is used.
+COMMAND -> Port the image's scheduler test suite plus merged-PR regressions;
+run Docker without GPU devices, then run the targeted tests against stock
+as a negative control. test_merged_offload_image.py reproduces extraction,
+strict source-hash checks and the tracked regression-port JSON.
+RESULT -> 124/124 scheduler tests pass (23.47 s). The nine-test negative
+control on stock fails seven and passes two, covering the missing sparse
+load boundary, terminal-slot watermark, shared-MTP annotations and widened
+lookup boundary. Initial fixture attempts failed before exercising these
+paths; raw logs are retained. The final fixture only mocks platform hybrid
+capability for CPU scheduling, uses the pinned partial_tail_offloads API,
+and preserves the existing block-hash setter. No scheduler method is mocked.
+Raw evidence: upstream-cpu-tests/pytest-v3.log and negative-control.log.
+VERDICT -> CPU-qualified for one bounded GPU attempt, not serving-qualified.
+A1merged waits for A0b's healthy teardown, then runs C1/C4 and oversized
+tool histories first. Any failed gate stops further workload submission and
+still performs teardown/health. If those pass, the remaining reuse, cancel,
+thinking, coding, pressure, 180K and guide probes follow. A0b also fails
+strict guide byte-repeat while passing coherence, so that variation is
+not specific to the CPU connector. Critical tool corruption remains an
+unconditional rejection, independent of whether the baseline also has it.
