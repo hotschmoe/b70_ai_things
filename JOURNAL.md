@@ -8240,3 +8240,28 @@ VERDICT -> GPU prefix reuse and correct recomputation after eviction are
 measured on this candidate. Larger-context churn, shared-prefix clients,
 cancellation, coding quality, final health and fresh public deployment remain
 in progress. No long-run under1 percent incident-rate claim is made.
+
+### 2026-09-08 - One unsalted shared-prefix bang; continue with measured recovery
+
+CONFIG -> Same MTP2/batch32768 candidate;04b-shared-tools omits cache_salt,
+four22K histories and32 tool/answer checks. This arm did not enable retries.
+COMMAND -> Inspect raw session0 turn3 answer and audit_bang_rate.py. Continue
+on a fresh matched lifecycle with a fixed128-check shared-prefix recovery
+soak, then the still-outstanding cancellation/churn/coding/profile checks.
+RESULT ->31/32 shared checks correct; final session0 answer is512 bangs,
+finish=length,21632/22662 prompt tokens cached. No timeout or hardware fault.
+Normal teardown and post-health exit0. Independent raw audit counts1/106
+across completed test mix (0.9434 percent), but1/32 shared (3.125 percent).
+Old summary bang_attempts=0 reflected disabled live detection, not absence
+of raw corruption; new summaries also scan completed unguarded responses.
+CPU tests pass for32-bang detection and four concurrent shared requests that
+switch to private salts on an injected failure, preserve clean histories and
+count raw retries. No natural recovery was observed in the stopped process.
+VERDICT -> Per user's rare-loop tolerance, one incident is not automatic
+rejection. Do not use the aggregate to establish a long-run under1 percent
+rate or hide the shared-workload result. Fresh continuation fixes the soak
+size at128 checks in advance; natural failures and successful recovery remain
+separate. It resumes after the prior measured prefix/eviction/growing-tool
+checks, retains all old failures, and has its own continuation marker rather
+than falsely marking the prior campaign fully passed. Actual Pi recovery is
+also queued for MTP2; its initial failure is explicitly injected.

@@ -17,6 +17,16 @@ class BangLoopError(RuntimeError):
     pass
 
 
+def contains_bang(value):
+    if isinstance(value, str):
+        return '!' * 32 in re.sub(r'\\u0021', '!', value, flags=re.I)
+    if isinstance(value, dict):
+        return any(contains_bang(v) for v in value.values())
+    if isinstance(value, list):
+        return any(contains_bang(v) for v in value)
+    return False
+
+
 def stream_request(base, payload, timeout, trace, headers=None, bang_limit=None):
     """Retain tool deltas and partial text if a long request times out."""
     body = dict(payload, stream=True, stream_options={'include_usage': True})
@@ -97,8 +107,8 @@ def main():
     args = p.parse_args(argv)
     if args.bang_retries < 0 or args.bang_retries > 3:
         p.error('--bang-retries must be between0 and3')
-    if args.bang_retries and (not args.stream or args.shared_cache):
-        p.error('bang recovery requires --stream and per-session cache isolation')
+    if args.bang_retries and not args.stream:
+        p.error('bang recovery requires --stream')
     args.out.mkdir(parents=True, exist_ok=False)
     config = dict(vars(args), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     (args.out / 'config.json').write_text(json.dumps(config, default=str, indent=2) + '\n')
@@ -108,6 +118,7 @@ def main():
     def session(index):
         rows = []
         salt = 'agent-v1-' + str(index) + args.salt
+        isolation_active = not args.shared_cache
         attempts = []
         def record(row):
             row['recorded_at'] = datetime.now(timezone.utc).isoformat()
@@ -115,15 +126,17 @@ def main():
             with (args.out / f'session-{index}.jsonl').open('a') as f:
                 f.write(json.dumps(row, ensure_ascii=True) + '\n')
         def invoke(payload, phase, turn):
-            nonlocal salt
+            nonlocal salt, isolation_active
             began = time.monotonic()
             response = None
             try:
                 for attempt in range(args.bang_retries + 1):
                     attempt_started = datetime.now(timezone.utc).isoformat()
                     try:
-                        if not args.shared_cache:
+                        if isolation_active:
                             payload['cache_salt'] = salt
+                        else:
+                            payload.pop('cache_salt', None)
                         if args.stream:
                             suffix = f'-retry{attempt}' if attempt else ''
                             response = stream_request(args.base, payload, args.timeout,
@@ -131,19 +144,22 @@ def main():
                                 bang_limit=32 if args.bang_retries else None)
                         else:
                             response = json.loads(request(args.base, '/v1/chat/completions', payload, timeout=args.timeout))
-                        attempts.append({'phase': phase, 'turn': turn, 'attempt': attempt, 'bang': False,
+                        attempts.append({'phase': phase, 'turn': turn, 'attempt': attempt,
+                                         'bang': contains_bang(response['choices'][0]['message']),
                                          'started_at': attempt_started})
                         break
                     except BangLoopError as exc:
                         row = {'phase': phase, 'turn': turn, 'attempt': attempt, 'bang': True,
                                'started_at': attempt_started,
-                               'partial_response': exc.partial_response, 'cache_salt': salt}
+                               'detected_at': datetime.now(timezone.utc).isoformat(),
+                               'partial_response': exc.partial_response, 'cache_salt': payload.get('cache_salt')}
                         attempts.append(row)
                         with (args.out / f'session-{index}-bangs.jsonl').open('a') as f:
                             f.write(json.dumps(row) + '\n')
                         if attempt == args.bang_retries:
                             raise
                         salt += f'-recovery-{turn}-{phase}-{attempt}'
+                        isolation_active = True
                 if not isinstance(response['choices'][0]['message'], dict):
                     raise ValueError('missing response message')
                 return response, time.monotonic() - began

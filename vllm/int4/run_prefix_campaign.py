@@ -24,6 +24,8 @@ def main():
                    help='Bounded MTP comparison: coherence, decode, growing tools and warm reuse; not promotion')
     p.add_argument('--recovery-daily', action='store_true',
                    help='User-scoped prefix qualification with bounded churn and separately counted bang recovery')
+    p.add_argument('--continuation-of', type=Path,
+                   help='Continue a healthy prior daily lifecycle after its shared-prefix incident; add fixed128-check recovery soak')
     p.add_argument('--churn-first', action='store_true',
                    help='Retest the known 132K history failure before broader qualification')
     p.add_argument('--stream-churn-first', action='store_true',
@@ -33,6 +35,8 @@ def main():
     args = p.parse_args()
     if args.recovery_daily and (args.screen or args.churn_first or args.normalize_churn):
         p.error('--recovery-daily cannot be combined with screen or expanded churn')
+    if args.continuation_of and not args.recovery_daily:
+        p.error('--continuation-of requires --recovery-daily')
     deadline = time.monotonic() + 1800
     while not (args.wait_for / 'exit.rc').exists():
         if time.monotonic() > deadline:
@@ -100,6 +104,23 @@ def main():
                 job['command'] += ['--stream', '--bang-retries', '3', '--salt=-recovery-daily']
             if name == '09-evict-tools':
                 job['command'] += ['--turns', '1']
+    if args.continuation_of:
+        prior = args.continuation_of
+        assert (prior / 'exit.rc').read_text().strip() == '0'
+        manifest = json.loads((prior / 'manifest.json').read_text())
+        assert manifest['args']['mtp'] == args.mtp and manifest['args']['image'] == args.image
+        assert Path(manifest['args']['preservation']).resolve() == args.config.resolve()
+        assert json.loads((prior / '04-tools/summary.json').read_text())['passed']
+        assert json.loads((prior / 'cache-hit-gate.json').read_text())['passed']
+        jobs = [(name, job) for name, job in jobs if name >= '05-']
+        soak = []
+        for i in range(4):
+            name = f'00-shared-guard-{i}'
+            soak.append((name, {'command': ['python3', str(agent), '--model', model,
+                '--out', str(args.out / name), '--records', '2000', '--timeout', '600',
+                '--shared-cache', '--stream', '--bang-retries', '3', f'--salt=-fixed-soak-{i}'],
+                'timeout': 1800}))
+        jobs = soak + jobs
     cmd = ['python3', str(repo / 'vllm/fp8/kv_campaign_server.py'),
            '--preservation', str(args.config), '--out', str(args.out),
            '--image', args.image, '--served-model', model, '--mtp', str(args.mtp),
@@ -154,6 +175,10 @@ def main():
                 'reuse_distinct_histories': distinct,
                 'scope': 'Capacity sizing, not proof of actual eviction or active preemption.'}, indent=2) + '\n')
         (args.out / 'prefix-plan.json').write_text(json.dumps(dict(jobs), indent=2) + '\n')
+        if args.continuation_of:
+            (args.out / 'continuation.json').write_text(json.dumps({
+                'prior': str(args.continuation_of), 'fixed_shared_checks': 128,
+                'scope': 'Retain prior failures; fresh lifecycle continuation, not recovery in the stopped process.'}, indent=2) + '\n')
         for name, job in jobs:
             (args.out / 'jobs' / (name + '.json')).write_text(json.dumps(job) + '\n')
             deadline = time.monotonic() + job['timeout'] + 1800
@@ -218,7 +243,8 @@ def main():
         raise RuntimeError('lifecycle health failed')
     if cache_reuse_passed and len(results) == len(jobs) and all(value == 0 or reviewed.get(name, {}).get('allowed')
                                        for name, value in results.items()):
-        (args.out / ('SCREEN_PASSED' if args.screen else 'WORKLOADS_PASSED')).touch()
+        marker = 'SCREEN_PASSED' if args.screen else ('CONTINUATION_PASSED' if args.continuation_of else 'WORKLOADS_PASSED')
+        (args.out / marker).touch()
     print('Require cache-hit/latency audit, paired output review and fresh lifecycle before promotion.')
 
 
