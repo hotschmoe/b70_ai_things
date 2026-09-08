@@ -198,3 +198,10 @@ including P2P1, and is starting the model. Published serving settings and
 12GiB/16GiB cgroup/swap limits are unchanged.
 VERDICT -> Coherent reference accepted for bounded coding comparison.
 INT4 model speed, parity, quality and serving qualification remain pending.
+
+Preflight classification is deliberately conservative: rc=2 alone does not
+prove that a GPU attempt never ran. Only the known opt-in refusal text with
+no collective-probe start marker skips recovery. An inconclusive worker or
+compiler failure after device setup still triggers the reset ladder. Three
+CPU lifecycle regressions cover refusal, actual failure and inconclusive
+device execution. This changes health handling only, not model/image flags.

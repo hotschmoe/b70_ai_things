@@ -10,7 +10,7 @@ import kv_campaign_server as server
 
 
 class PreflightTest(unittest.TestCase):
-    def exercise(self, first_collective_rc):
+    def exercise(self, first_collective_rc, guard_refusal=False):
         commands = []
         collective_count = 0
         def run(command, **kwargs):
@@ -19,6 +19,9 @@ class PreflightTest(unittest.TestCase):
             if Path(command[0]).name == 'xpu-collective-health':
                 collective_count += 1
                 if collective_count == 1:
+                    message = ('xpu-collective-health: refusing P2P=1 without I_KNOW_P2P_WEDGES=1\n'
+                               if guard_refusal else '=== collective probe\nworker failed after device setup\n')
+                    kwargs['stdout'].write(message)
                     return SimpleNamespace(returncode=first_collective_rc)
             return SimpleNamespace(returncode=0)
         with tempfile.TemporaryDirectory() as temp:
@@ -34,15 +37,18 @@ class PreflightTest(unittest.TestCase):
                 self.assertEqual(server.main(), 1)
                 popen.assert_not_called()
             resets = [cmd for cmd in commands if any(Path(word).name == 'xe-reset' for word in cmd)]
-            self.assertEqual(len(resets), int(first_collective_rc != 2))
+            self.assertEqual(len(resets), int(not guard_refusal))
             self.assertEqual(collective_count, 2)  # pre plus mandatory post
             self.assertEqual((root / 'result/exit.rc').read_text().strip(), '1')
 
     def test_refusal_does_not_reset_healthy_hardware(self):
-        self.exercise(2)
+        self.exercise(2, guard_refusal=True)
 
     def test_actual_failure_still_resets_before_post_health(self):
         self.exercise(1)
+
+    def test_inconclusive_device_attempt_still_requires_recovery(self):
+        self.exercise(2)
 
 
 if __name__ == '__main__':

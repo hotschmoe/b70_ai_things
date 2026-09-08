@@ -82,7 +82,14 @@ def main():
                 command = ['env', 'I_KNOW_P2P_WEDGES=1', *command]
             rc = run(command, stage + '-' + tool + suffix + '.log')
             if rc:
-                error = PreflightInfrastructureError if stage == 'pre' and rc == 2 else RuntimeError
+                log = (args.out / (stage + '-' + tool + suffix + '.log')).read_text()
+                # rc=2 can also mean a compiler/worker error after device work.
+                # Only this known pre-execution guard proves no GPU attempt ran.
+                refused_before_execution = (
+                    rc == 2 and 'refusing P2P=1 without I_KNOW_P2P_WEDGES=1' in log
+                    and '=== collective probe' not in log
+                )
+                error = PreflightInfrastructureError if stage == 'pre' and refused_before_execution else RuntimeError
                 raise error(stage + ' ' + tool + suffix + ' failed rc=' + str(rc))
     cfg = json.loads((args.preservation / 'Config.json').read_text())
     mounts = json.loads((args.preservation / 'Mounts.json').read_text())
