@@ -7519,3 +7519,156 @@ VERDICT -> READY for LAN quality testing at
 `http://192.168.10.5:18080/v1` with the existing daily-driver API key. This is
 not a speed, stability, or shelf claim. Post-health for the current lifecycle
 remains pending until its tracked teardown.
+
+## 2026-09-08 -- Deferred R187 KV offload and calibrated FP8 research
+
+CONFIG -> User requests research/plan only while hotschmoe-dd is in use.
+Current R187/MTP3 TP2 official Qwen3.8 FP8 W8A16 uses FP16 KV and a
+292968-token shared pool; container memory limit is 32 GiB.
+
+COMMAND -> Read launchers, installed container Python source with shell
+tools only, Docker memory/image metadata, /v1/models, host RAM, retained
+calibration code, July archival evidence, and upstream vLLM documentation.
+
+RESULT -> Native OffloadingConnector has XPU/HMA/Mamba/preemption source
+paths. Fresh model-specific calibration is required; old Qwen3.6 scales
+are not transferable. July follow-up revised the early claim that
+uncalibrated KV alone caused repetition. Wrote the deferred test matrix,
+capacity/cgroup budgeting, calibration procedure, quality/performance gates
+and rollback in vllm/fp8/20260908_kv_offload_calibrated_fp8_plan.md.
+
+VERDICT -> Plan only; no inference, GPU workload, restart, runtime edit or
+calibration. Execute only in a later maintenance window. Source support
+is not qualification of the current hybrid/MTP3/graph combination.
+
+
+## 2026-09-08 -- KV campaign started; baseline and DMA milestone
+
+CONFIG -> Authorized R187/MTP3 TP2 official FP8 W8A16 cache campaign.
+COMMAND -> Preserve service/runtime identity; stop original service through
+its cleanup; run isolated FP16 baseline under bin/gpu-run and native DMA
+oracles. Implementation/evidence in vllm/fp8/20260908_kv_campaign.md.
+RESULT -> 48 short checks, 32 tool-history checks, 32K and four 150K retrievals
+passed. Four evicted-history requests required 373.418 s total with no cache
+hits. Two simultaneous 150K requests completed in 219.141 s but serialized
+without preemptions. Native 4 MiB host round trips were exact on both cards.
+A harness queue-file race ended the lifecycle before the new growth case;
+model shutdown was clean and per-card/compiled two-rank post-health passed.
+VERDICT -> Baseline/DMA checkpoint only; active recovery and offload still
+unqualified. A1 adds a 32 GiB CPU tier with the same 64 GiB cgroup.
+Commits a3f2e23, f926343, 66370ab preserve implementation and evidence.
+
+## 2026-09-08 KV campaign: native offload and fresh calibration
+
+CONFIG -> Pinned R187 image f46780e1a72c, Qwen3.8 official FP8 W8A16,
+MTP3 TP2, auto KV, native CPU32, 64 GiB cgroup. Isolated campaign endpoint.
+COMMAND -> vllm/fp8/kv_campaign_server.py with queued bounded probes;
+raw root /mnt/vm_8tb/b70/results/kv_campaign_20260908/.
+RESULT -> Stock A1 had no 150K A/B/C/A history hits. Forced 132K growth
+completed 16384 output tokens in 394.110 s with six preemptions and two
+native loads. A guarded Mamba draft-group fallback repair restored 148928
+of 150045 tokens correctly; final revisit TTFT 8.857 s. Cold prefills were
+slower in the early-import diagnostic, so it is not a promoted timing arm.
+A1fix2 passed 48 short checks and 32 interleaved 44K tool-history checks;
+clean teardown plus per-card and compiled collective post-health passed.
+Fresh eager/no-prefix calibration passed 256 short samples and contexts
+through 180K; sustained continuations are still running. Both ranks show
+all 17 attention layers with finite observations. Scale rule frozen before
+held-out eval: 1.10 * max observed amax across ranks / 448, floor 1e-6.
+VERDICT -> Functional native history reload established; performance and
+calibrated-FP8 qualification remain in progress. Daily-driver defaults have
+not been promoted. Details: vllm/fp8/20260908_kv_campaign.md. Existing user
+JOURNAL changes are preserved; milestone evidence is committed separately.
+
+2026-09-08 KV campaign scope: FP8 deferred on user direction.
+CONFIG -> Frozen calibrated E4M3 artifact, MTP3, prefix on/off controls.
+COMMAND -> Eager repeat and graph/prefix-off repeat; clean post-health.
+RESULT -> Eager/prefix-on corrupted one long response; graph/prefix-off
+passed three exact 2048-token responses. Both post-health runs passed.
+VERDICT -> No FP8 KV promotion. Preserve evidence, continue RAM offload with
+existing auto/FP16 KV. See vllm/fp8/20260908_kv_campaign.md.
+
+2026-09-08 KV campaign identity correction.
+CONFIG -> Hook launcher included an empty trailing PYTHONPATH component.
+COMMAND -> CPU import-origin probes and source/installed _xpu_ops.py hashes.
+RESULT -> Hook arms selected the image's /workspace/vllm source checkout,
+not the installed patched serving package. A0 and stock A1 were unaffected.
+VERDICT -> Withdraw baseline-matched conclusions for all prior hook arms,
+including FP8 diagnostics/calibration. Fix search path; qualify packaged
+FP16 offload on the installed package. FP8 remains deferred. Full evidence:
+vllm/fp8/20260908_kv_campaign.md.
+
+### 2026-09-08 - Corrected-package offload candidate rejected
+
+## Corrected offload candidate A1pack1: rejected on oversized tool history
+
+CONFIG -> Installed R187 package, Python-only partial group repair, MTP3,
+FP16 KV, 32 GiB CPU tier, 64 GiB cgroup. Raw evidence is
+/mnt/vm_8tb/b70/results/kv_campaign_20260908/a1pack1/.
+COMMAND -> Complete 12-job matrix, including three fresh-salt 150K A/B/C/A
+traces, four concurrent 8000-record tool histories, full 164 HumanEval+,
+forced 132K+8192 growth, 180K recall, clean teardown and post-health.
+RESULT -> Reuse traces passed in 290.815/283.134/283.286 s, with confirmed
+CPU loads and warm TTFT 10.466/2.570/about 2.6 s. Cancellation and xhigh
+thinking checks passed. Oversized tool histories failed: session 1's first
+tool turn emitted 512 literal exclamation marks and no tool call; only
+25 checks passed. That workload recorded two preemptions and CPU reloads.
+A zero cached_tokens field does not exclude a reload after preemption.
+HumanEval+ scored 157/164 base and 151/164 plus. Forced growth completed
+in 335.196 s and 180K recall passed in 106.705 s. Neither diagnostic
+throughput nor independent coding success repairs the tool corruption.
+Teardown and per-card/compiled two-rank post-health passed (exit.rc=0).
+VERDICT -> Not promotable. A0b replays all 12 jobs on the frozen original
+image with the same 64 GiB limit; it must classify the baseline behavior.
+The three guide outputs have identical parsed Python ASTs but differ in
+comments/explanation, so their strict byte-repeat gate remains failed.
+
+## Next bounded candidate: merged upstream scheduler fixes
+
+CONFIG -> Preserve the original native image; deliberately port scheduler
+source changes from merged PRs 52807, 54288, and 52771. These correct the
+fresh load-region scan, final committed-token store watermark, and shared
+MTP group/tail handling respectively. This replaces the partial hook.
+COMMAND -> build_merged_offload_image.py and the tracked three-PR patch;
+CPU regression qualification precedes another leased GPU attempt.
+RESULT -> Source hunks match the installed scheduler after mapping the
+new upstream use_eagle_block_drop name onto this pinned package's existing
+use_eagle predicate. No speculative capability refactor is included.
+VERDICT -> Prepared, not GPU-qualified. Open PR 54165 is DFlash-specific;
+open superseded draft 53479 is not an accepted patch source.
+Primary sources: https://github.com/vllm-project/vllm/pull/52807,
+https://github.com/vllm-project/vllm/pull/54288,
+https://github.com/vllm-project/vllm/pull/52771. API metadata and diffs are
+archived under the campaign source directory. User now permits a bounded
+FP8 KV retest only AFTER the other tasks; none has been started.
+
+### 2026-09-08 - Merged scheduler CPU regression qualification
+
+## Merged scheduler backport: CPU qualification and queued GPU gate
+
+CONFIG -> Derived image
+sha256:eb852f45140db6f812dfda8867d59795a91a831266dedf37c8a666bf7b200f4f,
+base f46780e1a72c, native bytes unchanged. Only installed scheduler.py is
+replaced: 616e7fd4cb0d09064cbc4d5735f607b37964c6be3b81e26de00d5913e0a9a3e3
+becomes 0d2fd9a20e02e2b1560d757658ded738ae6c5d7cc292bf75d20c49636f6338b0.
+No PYTHONPATH hook or custom entrypoint is used.
+COMMAND -> Port the image's scheduler test suite plus merged-PR regressions;
+run Docker without GPU devices, then run the targeted tests against stock
+as a negative control. test_merged_offload_image.py reproduces extraction,
+strict source-hash checks and the tracked regression-port JSON.
+RESULT -> 124/124 scheduler tests pass (23.47 s). The nine-test negative
+control on stock fails seven and passes two, covering the missing sparse
+load boundary, terminal-slot watermark, shared-MTP annotations and widened
+lookup boundary. Initial fixture attempts failed before exercising these
+paths; raw logs are retained. The final fixture only mocks platform hybrid
+capability for CPU scheduling, uses the pinned partial_tail_offloads API,
+and preserves the existing block-hash setter. No scheduler method is mocked.
+Raw evidence: upstream-cpu-tests/pytest-v3.log and negative-control.log.
+VERDICT -> CPU-qualified for one bounded GPU attempt, not serving-qualified.
+A1merged waits for A0b's healthy teardown, then runs C1/C4 and oversized
+tool histories first. Any failed gate stops further workload submission and
+still performs teardown/health. If those pass, the remaining reuse, cancel,
+thinking, coding, pressure, 180K and guide probes follow. A0b also fails
+strict guide byte-repeat while passing coherence, so that variation is
+not specific to the CPU connector. Critical tool corruption remains an
+unconditional rejection, independent of whether the baseline also has it.
