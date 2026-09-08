@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Run one frozen R187 cache experiment and queued probes inside gpu-run."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import time
 import urllib.request
@@ -27,6 +29,9 @@ def main():
     p.add_argument('--port', type=int, default=18125)
     p.add_argument('--hook', choices=['none', 'record', 'load'], default='none')
     p.add_argument('--scales', type=Path)
+    p.add_argument('--trace-offload', action='store_true')
+    p.add_argument('--offload-group-fix', action='store_true')
+    p.add_argument('--cache-seed', type=Path)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
     if not args.leased:
@@ -50,6 +55,8 @@ def main():
     def setarg(key, value):
         cmd[cmd.index(key) + 1] = str(value)
     model = 'qwen3.8-27b-FP8-official-W8A16-mtp%d-%skv-cpu%dg-kvcampaign' % (args.mtp, args.kv_dtype, args.offload_gib)
+    if args.offload_group_fix:
+        model += '-gdnfix'
     setarg('--served-model-name', model)
     setarg('--kv-cache-dtype', args.kv_dtype)
     if args.mtp == 0:
@@ -61,21 +68,36 @@ def main():
         cmd.append('--enforce-eager')
     if args.prefix_off:
         cmd = [v for v in cmd if v != '--enable-prefix-caching']
+        cmd.append('--no-enable-prefix-caching')
     if args.offload_gib:
         cmd += ['--kv-transfer-config', json.dumps({'kv_connector': 'OffloadingConnector', 'kv_role': 'kv_both', 'kv_connector_extra_config': {'cpu_bytes_to_use': args.offload_gib * 2**30, 'blocks_per_chunk': 1}})]
     env = dict(v.split('=', 1) for v in cfg['Env'])
     if args.eager:
         env['VLLM_XPU_ENABLE_XPU_GRAPH'] = '0'
     cache = args.out / 'cache'; cache.mkdir()
+    if args.cache_seed:
+        shutil.copytree(args.cache_seed, cache, dirs_exist_ok=True, symlinks=True)
+    source = args.out / 'source'; source.mkdir()
+    for path in (REPO / 'vllm/fp8').glob('*kv*.py'):
+        shutil.copy2(path, source / path.name)
+    shutil.copytree(REPO / 'vllm/fp8/kv_hooks', source / 'kv_hooks',
+                    ignore=shutil.ignore_patterns('__pycache__'))
+    source_hashes = {str(path.relative_to(source)): hashlib.sha256(path.read_bytes()).hexdigest()
+                     for path in source.rglob('*.py')}
     docker = ['docker', 'run', '--rm', '--name', args.name, '--ulimit', 'core=0', '--memory', f'{args.memory_gib}g', '--memory-swap', f'{args.memory_gib}g', '--device', '/dev/dri:/dev/dri', '--group-add', 'render', '--cap-add', 'SYS_PTRACE', '--security-opt', 'label=disable', '--ipc=host', '--shm-size=8g', '-p', f'127.0.0.1:{args.port}:8000']
     for m in mounts:
         src = str(cache) if m['Destination'] == '/root/.cache/vllm' else m['Source']
         docker += ['-v', src + ':' + m['Destination'] + ('' if m['RW'] else ':ro')]
-    docker += ['-v', str(args.out.resolve()) + ':/kv-campaign', '-v', str(REPO / 'vllm/fp8') + ':/kv-source:ro']
-    if args.hook != 'none':
+    docker += ['-v', str(args.out.resolve()) + ':/kv-campaign', '-v', str(source.resolve()) + ':/kv-source:ro']
+    use_entry = args.hook != 'none' or args.trace_offload or args.offload_group_fix
+    if use_entry:
         env['PYTHONPATH'] = '/kv-source/kv_hooks:' + env.get('PYTHONPATH', '')
         env['B70_KV_MODE'] = args.hook
         env['B70_KV_OUT'] = '/kv-campaign'
+        if args.trace_offload:
+            env['B70_OFFLOAD_TRACE'] = '1'
+        if args.offload_group_fix:
+            env['B70_OFFLOAD_GROUP_FIX'] = '1'
         if args.scales:
             docker += ['-v', str(args.scales.resolve()) + ':/kv-scales.json:ro']
             env['B70_KV_SCALES'] = '/kv-scales.json'
@@ -83,10 +105,11 @@ def main():
     for k, v in env.items():
         docker += ['-e', k + '=' + v]
     docker += [IMAGE]
-    if args.hook != 'none':
+    if use_entry:
         docker += ['/kv-source/kv_campaign_entry.py']
     docker += cmd
-    manifest = {'model': model, 'image': IMAGE, 'args': vars(args), 'command': docker}
+    manifest = {'model': model, 'image': IMAGE, 'args': vars(args), 'command': docker,
+                'source_sha256': source_hashes}
     (args.out / 'manifest.json').write_text(json.dumps(manifest, default=str, indent=2) + '\n')
     server = None
     failed = False

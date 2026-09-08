@@ -17,11 +17,13 @@ def request(base, route, body=None, timeout=10):
         return r.read().decode()
 
 
-def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thinking=False):
+def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thinking=False, force_length=False):
     body = {'model': model, 'messages': [{'role': 'user', 'content': prompt}],
             'temperature': 0, 'top_p': 1, 'seed': 42, 'max_tokens': limit,
             'chat_template_kwargs': ({'enable_thinking': True, 'reasoning_effort': 'low'} if thinking else {'enable_thinking': False}),
             'stream': True, 'stream_options': {'include_usage': True}, 'cache_salt': salt}
+    if force_length:
+        body['ignore_eos'] = True
     req = urllib.request.Request(base + '/v1/chat/completions', data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
     start = time.monotonic(); times = []; parts = []; reasoning = []; usage = {}; finish = None
     try:
@@ -97,6 +99,7 @@ def main():
     p.add_argument('--timeout', type=int, default=600)
     p.add_argument('--output-tokens', type=int, default=1024)
     p.add_argument('--salt', default='')
+    p.add_argument('--force-length', action='store_true')
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     identity = json.loads(request(args.base, '/v1/models'))
@@ -136,7 +139,8 @@ def main():
                 prompt, expected = long_prompt(args.tokens, i)
                 if args.mode == 'pressure':
                     prompt += '\nAfter the code, write a detailed guide to testing a Python dictionary-backed LRU cache, with code examples and edge cases.'
-                row = stream(args.base, args.model, prompt, args.output_tokens if args.mode == 'pressure' else 64, salt=f'long-v1-{repeat}' + args.salt, timeout=args.timeout)
+                row = stream(args.base, args.model, prompt, args.output_tokens if args.mode == 'pressure' else 64, salt=f'long-v1-{repeat}' + args.salt, timeout=args.timeout, force_length=args.force_length)
+                row['forced_length_diagnostic'] = args.force_length
                 row.update(task=i, repeat=repeat, expected=expected, passed=(expected in row['text'] if args.mode == 'pressure' else row['text'].strip() == expected) and row['error'] is None)
                 return row
             with ThreadPoolExecutor(max_workers=args.concurrency) as pool:

@@ -103,3 +103,36 @@ The experiment is in a1/03-fp8-scale-oracle.log.
 VERDICT -> This exact image mechanically supports scaled E4M3 KV writes and
 reads with FP16 queries. This is not model-quality evidence. Fresh Qwen3.8
 calibration and full-model qualification are still required.
+
+## Stock offload and hybrid lookup diagnosis (in progress)
+
+CONFIG -> A1 retains the A0 image, MTP3, graphs, cache allocation and 64 GiB
+cgroup; adds 32 GiB through OffloadingConnector. The installed default is
+prompt-only storage. Raw evidence is under the campaign root a1/.
+
+COMMAND -> Repeat short C1/C4, tool-history, 32K retrieval, 150K A/B/C/A,
+two concurrent 150K prompts with 1024 output tokens, and longer generation.
+Run the installed scheduler lookup on synthetic sparse Mamba checkpoints.
+
+RESULT -> Short checks 48/48 and tool-history checks 32/32 passed. All four
+150K retrievals were correct but reported zero external hits and zero cached
+tokens: 372.320 s total versus A0 373.418 s. Concurrent 150K requests took
+218.827 s versus A0 219.141 s; neither arm preempted on that trace. Natural
+132K growth also did not preempt. Two 2048-token outputs repeated exactly
+within A1; A0 versus A1 differed in a late code comment, so cross-lifecycle
+long-output byte identity is not claimed.
+
+The installed scheduler's unannotated EAGLE fallback marks all four cache
+groups as draft groups, including three target Mamba groups. Its extra
+checkpoint requirement rejects isolated Mamba checkpoints. With identical
+synthetic saved keys, the installed lookup returns zero tokens with all
+groups marked EAGLE and 129792 tokens with only attention marked EAGLE.
+The oracle is a1/08a-lookup-oracle.log. This is scheduler evidence, not yet
+full-model evidence for the opt-in repair.
+
+VERDICT -> Stock offload has not improved evicted-history reuse. A separate
+forced-length stress trace has triggered preemptions and native loads; its
+completion and matched no-offload comparison are pending. The experimental
+repair changes only the unannotated hybrid fallback and requires prompt-only
+storage. Explicit draft annotations and the attention safety margin remain.
+No service promotion has been made.
