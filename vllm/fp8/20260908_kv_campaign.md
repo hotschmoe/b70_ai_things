@@ -136,3 +136,43 @@ completion and matched no-offload comparison are pending. The experimental
 repair changes only the unannotated hybrid fallback and requires prompt-only
 storage. Explicit draft annotations and the attention safety margin remain.
 No service promotion has been made.
+
+## A1 completed pressure and teardown
+
+CONFIG -> Same A1 lifecycle. Two independent 132071-token prompts with
+ignore_eos=true and 8192 output tokens each; bounded 900-second request
+deadline. This is a forced-length diagnostic, not a useful-output score.
+
+COMMAND -> a1/11-forced-growth132k; then STOP and the runner's per-card and
+compiled two-rank post-health. Repair CPU tests: a1/12-fix-unit.log.
+
+RESULT -> Both requests completed at the length limit: 16384 tokens in
+394.110 s; six preemptions; 2.416 GB loaded in two transfers, 2.284 s total
+recorded transfer time. Maximum streaming gaps were 34.677 and 36.273 s.
+Peak cgroup usage 11888189440 bytes, no OOM/max events. Clean shutdown,
+per-card health and compiled collective health passed; a1/exit.rc=0.
+All four guarded-repair CPU tests passed.
+
+VERDICT -> Active preemption can load some native cached blocks, unlike
+the zero-hit A/B/C/A history trace. Matched no-offload forced growth remains
+required before claiming a benefit. A1fix cache seeding failed on unreadable
+container-created files before health or serving; a1fix2 uses a fresh cache
+and a frozen, hashed experiment-source snapshot.
+
+## Held-out coding evaluator preparation
+
+CONFIG -> Repository evals/orchestrator/tier1_code.py, EvalPlus 0.3.1,
+HumanEval tasks 0-31, greedy seed42, thinking off, 2048 output-token cap.
+Independent CPU Python 3.11.15 environment under the raw campaign root.
+Sandbox image c0522083adc7557aab54abff248a4a4a9f7c32b4d9d66ddf9af05200ae5a3339.
+
+COMMAND -> Freeze heldout-humaneval32.json; run canonical solutions through
+the existing Docker grader before model-generated evaluation.
+
+RESULT -> Dataset SHA256
+45cdd6b24ffd395d415147ee95616cbebf70e909dd92a97ee767f0ccef48a414.
+Canonical solutions passed all 32 base and extra-test cases. Dependency
+freeze and grader-control logs are retained in the campaign root.
+
+VERDICT -> Grader control passed. This is not a model coding-quality result;
+matched model generations remain pending.
