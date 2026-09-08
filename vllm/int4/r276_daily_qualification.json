@@ -1,0 +1,18 @@
+{
+  "qualified": true,
+  "image": "sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad",
+  "source_commit": "54aefaf067b422d507f51f1e362efeecc58668ba",
+  "profile": "daily-prefix-off",
+  "config_sha256": "dd35960039ba873cefcbe2bc1d817d17ccaa9fa6dba74a95ec61415453281fa5",
+  "memory_gib": 64,
+  "model_revision": "bce40cacab0a4535b92fb3d57615c2bea9adf3d1",
+  "kv_dtype": "float16 (auto with float16 model dtype)",
+  "prefix_caching": false,
+  "cpu_offload_gib": 0,
+  "strict_evidence": "/mnt/vm_8tb/b70/results/int4_replica_20260908/strict-retry1",
+  "daily_evidence": "/mnt/vm_8tb/b70/results/int4_replica_20260908/daily-prefix-off",
+  "strict_mtp4_pair_mean_tok_s": 100.21427938352497,
+  "coding_review": "vllm/int4/20260908_coding_failure_review.json",
+  "quality_limit": "Thinking-off HumanEval+ 158/150 vs FP8 157/152 out of164: bounded tradeoff, not no-loss or Terminal-Bench parity.",
+  "deployment_state": "benchmark-qualified; fresh authenticated startup/stop qualification pending"
+}

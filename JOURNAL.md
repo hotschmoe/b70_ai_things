@@ -7848,3 +7848,36 @@ boundary. Manual review accepts this bounded coding tradeoff for continued
 qualification; no critical runtime/tool corruption found. This is not a
 Terminal-Bench ranking. Reuse, cancellation, thinking,180K/199K,pressure,
 profile,teardown/post-health and fresh serving lifecycle remain pending.
+
+### 2026-09-08 - INT4 daily workload and profile qualification completes
+
+CONFIG -> R276 INT4/MTP4, 200K/c4/batch32768/util0.96, FP16 KV,
+prefix caching off, no CPU connector,64GiB cgroup; same daily-prefix-off
+lifecycle as the coding/tool milestone.
+COMMAND -> Complete planned long/reuse/cancellation/thinking/pressure and
+single-profile jobs. After pressure, add95-postpressure-c4 and
+96-postpressure-tools in the existing leased queue before98-profile.
+RESULT -> All12 planned jobs pass. 150045-token A/B/C/A recall passes in
+374.775s, TTFT93.25/93.61/93.70/93.72s; no cache reuse claimed.
+Cancellation plus two exact repeated followups pass297.475s. Default
+xhigh concurrent checks pass.180K and199037-token recall pass (199K
+140.055s,139.887s TTFT). Four132071-token prompts forced to8192 outputs
+each complete in639.777s (32768 output tokens), TTFT92.102/171.822/
+539.101/239.155s. Actual preemption delta0: scheduler queued the fourth
+request until capacity freed. This is overload/queueing evidence, NOT an
+INT4 eviction/reload validation or matched FP8-C2 throughput result.
+After pressure,24/24 C4 answers and32/32 short tool checks pass.
+Single32753-token profile returns correct recall; both ranks have matching
+948 c10d collective CPU calls plus948 enclosing vLLM wrappers each.
+Per rank:597 allreduce calls (132 at[32753,5120],351 at[1,5120],114 at
+[5,5120]);351 allgather calls including one[32753,2560] input. All have
+completed CPU entry/return durations. Do not double-count the wrappers or
+infer hidden graph device-collective counts. Observed host-event waits
+382/343 differ; the trace does not establish a one-fence-per-token claim.
+Peak cgroup14751510528bytes, no max/OOM events. Clean teardown, per-card
+and compiled TP2 P2P0 post-health pass; exit.rc0, WORKLOADS_PASSED present.
+VERDICT -> Daily benchmark qualification accepted with the documented
+158/150 vs157/152 coding tradeoff. Keep RAM offload disabled after the
+separate negative campaign; no FP8 KV test. Write pinned qualification
+manifest and start a fresh authenticated hotschmoe-dd launcher lifecycle.
+Startup/stop validation and final serving restoration remain in progress.
