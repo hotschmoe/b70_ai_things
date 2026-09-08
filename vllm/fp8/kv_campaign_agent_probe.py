@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Repeated tool-call/history correctness gate, no external tool execution."""
 import argparse
+import hashlib
 from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
@@ -16,8 +17,10 @@ def main():
     p.add_argument('--timeout', type=int, default=180)
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
-    (args.out / 'config.json').write_text(json.dumps(vars(args), default=str, indent=2) + '\n')
+    config = dict(vars(args), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+    (args.out / 'config.json').write_text(json.dumps(config, default=str, indent=2) + '\n')
     assert args.model in [m['id'] for m in json.loads(request(args.base, '/v1/models'))['data']]
+    (args.out / 'metrics-before.txt').write_text(request(args.base, '/metrics'))
     def session(index):
         rows = []
         history = [{'role': 'system', 'content': 'You are testing a warehouse tool. Always use lookup_stock to look up stock. After receiving its result, report only its count as an integer. Background records:\n' + ('The warehouse stores parts and maintains an inventory ledger.\n' * args.records)}]
@@ -49,6 +52,7 @@ def main():
         return {'session': index, 'rows': rows, 'passed': len(rows) == 8 and all(r['passed'] for r in rows)}
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(session, range(4)))
+    (args.out / 'metrics-after.txt').write_text(request(args.base, '/metrics'))
     (args.out / 'results.json').write_text(json.dumps(results, ensure_ascii=True, indent=2) + '\n')
     passed = all(r['passed'] for r in results)
     print(json.dumps({'passed': passed, 'checks': sum(len(r['rows']) for r in results)}))

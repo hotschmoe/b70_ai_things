@@ -413,3 +413,11 @@ packaged offload image already uses a nonempty-only PYTHONPATH and the
 original console entrypoint. Its fresh A1pack1 lifecycle is next. Remaining
 A1fix3 quality jobs were deferred after discovery; finish the in-flight reuse
 trace and clean post-health. All prior raw records are preserved unchanged.
+
+The matched FP16 offload agent-history gate is increased before execution
+to four 8000-record sessions (about 88K tokens each), exceeding the 292968
+GPU-token pool collectively. The earlier four 44K sessions fit in GPU KV
+and were not a CPU reload test. Capture before/after connector metrics to
+check whether tool-history reuse actually exercises the CPU tier; do not
+infer that solely from aggregate context size. The baseline matrix uses
+the same 8000-record setting. The coding matrix is all 164 HumanEval+ tasks.
