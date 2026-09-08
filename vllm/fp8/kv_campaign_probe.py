@@ -17,10 +17,10 @@ def request(base, route, body=None, timeout=10):
         return r.read().decode()
 
 
-def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600):
+def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thinking=False):
     body = {'model': model, 'messages': [{'role': 'user', 'content': prompt}],
             'temperature': 0, 'top_p': 1, 'seed': 42, 'max_tokens': limit,
-            'chat_template_kwargs': {'enable_thinking': False},
+            'chat_template_kwargs': ({'enable_thinking': True, 'reasoning_effort': 'low'} if thinking else {'enable_thinking': False}),
             'stream': True, 'stream_options': {'include_usage': True}, 'cache_salt': salt}
     req = urllib.request.Request(base + '/v1/chat/completions', data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
     start = time.monotonic(); times = []; parts = []; reasoning = []; usage = {}; finish = None
@@ -145,7 +145,8 @@ def main():
         for repeat in range(args.rounds):
             with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
                 for i, row in enumerate(pool.map(lambda i: stream(args.base, args.model, f'Task {i}. '+prompt, 2048, salt=f'decode-v1-{repeat}', timeout=args.timeout), range(args.concurrency))):
-                    row.update(task=i, repeat=repeat, passed=row['error'] is None and len(row['text']) > 100 and not re.search(r'(.)\1{50}', row['text']))
+                    # Code/Markdown commonly contains long hyphen/equals rulers.
+                    row.update(task=i, repeat=repeat, passed=row['error'] is None and len(row['text']) > 100 and not re.search(r'([!?.A-Za-z0-9])\1{50}', row['text']))
                     save(row)
     (args.out / 'metrics-after.txt').write_text(request(args.base, '/metrics'))
     repeat_exact = all(len({r['text_sha256'] for r in rows if r['task'] == i}) == 1 for i in {r['task'] for r in rows})

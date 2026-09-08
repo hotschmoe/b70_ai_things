@@ -27,3 +27,25 @@ No shelf or service default changed. Interactive root authentication remains
 necessary for systemd administrative updates; experiments use the authorized
 Docker lifecycle and GPU lease. Retain the original installed boot config
 until qualification finishes.
+
+## Calibration and probe implementation checks
+
+CONFIG -> Same preserved image; fresh model-specific per-tensor E4M3 scales
+are planned. No quantized cache enabled yet.
+
+COMMAND -> Implement a 256-sample synthetic code/math/chat/tool-oriented
+corpus with reasoning enabled on a quarter of samples, additional long
+prompts and continuations, cross-rank amax merging, and native DMA oracle.
+Run Python compilation checks and four scale-merging unit tests.
+
+RESULT -> Checks passed. The merger rejects missing ranks, mismatched layer
+coverage and nonfinite observations, uses conservative cross-rank maxima,
+and floors zero scales. The baseline passed 24/24 C1 and 24/24 C4 short
+checks with exact repeats, plus 32K retrieval. The initial long-generation
+regex incorrectly flagged a code-comment hyphen ruler; manual inspection
+identified this false positive. The detector now excludes formatting rulers.
+Original responses and the original failed automatic result remain intact.
+
+VERDICT -> Pure-Python implementation checks passed; scale collection/loading
+and offload are still unqualified. This is not a coding benchmark or a claim
+that the current model is free of repetition. Larger-context probes continue.
