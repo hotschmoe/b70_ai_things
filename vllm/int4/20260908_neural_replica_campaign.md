@@ -100,3 +100,12 @@ health, workload, canary or token-parity failure.
 Lowest-priority follow-up: the user permits one bounded FP8 KV retest after
 all FP16 offload, INT4 and serving-restoration work. The earlier package-path
 mismatch makes a corrected retest useful, but it must not delay those tasks.
+
+The full 164-task held-out data is frozen before model scoring at SHA-256
+b52c70fb955ba9c1139174f56d58b0c2804558acf7513553d4edb08ab5df818f.
+The coding client now verifies this hash and the exact sandbox image
+c0522083adc7557aab54abff248a4a4a9f7c32b4d9d66ddf9af05200ae5a3339
+before generation, and records the actual client/harness source hashes.
+compare_code.py requires matched sampling/data/grader identity and reports
+new failures and recovered tasks individually. Its score gate alone never
+marks a serving configuration qualified.
