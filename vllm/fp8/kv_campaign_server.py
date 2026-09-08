@@ -33,6 +33,9 @@ def main():
         import sys
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
     args.out.mkdir(parents=True, exist_ok=False)
+    started_epoch = int(time.time())
+    if args.memory_gib < args.offload_gib + 24:
+        raise ValueError('container needs CPU tier plus 24 GiB runtime/headroom')
     (args.out / 'jobs').mkdir()
     def run(cmd, filename, timeout=300):
         with (args.out / filename).open('w') as f:
@@ -114,9 +117,13 @@ def main():
             while not (args.out / 'STOP').exists():
                 if server.poll() is not None:
                     raise RuntimeError('server exited while ready')
-                for job in sorted((args.out / 'jobs').glob('*.json')):
-                    spec = json.loads(job.read_text())
-                    job.rename(job.with_suffix('.running'))
+                for job in sorted((args.out / 'jobs').glob('*.json'))[:1]:
+                    try:
+                        raw = job.read_text()
+                        job.rename(job.with_suffix('.running'))
+                    except FileNotFoundError:
+                        continue
+                    spec = json.loads(raw)
                     try:
                         rc = run(spec['command'], job.stem + '.log', spec.get('timeout', 1800))
                     except subprocess.TimeoutExpired:
@@ -131,6 +138,7 @@ def main():
         print(ascii(exc), flush=True)
     finally:
         if server is not None:
+            run(['docker', 'exec', args.name, 'sh', '-c', 'cat /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.peak /sys/fs/cgroup/memory.events'], 'memory-final.log', 20)
             run(['docker', 'stop', '-t', '60', args.name], 'stop.log', 90)
             try:
                 server.wait(timeout=90)
@@ -138,12 +146,14 @@ def main():
                 failed = True
                 run(['docker', 'rm', '-f', args.name], 'force-remove.log', 30)
         if failed:
-            run([str(REPO / 'bin/xe-reset'), '--method', 'rebind'], 'recovery.log', 180)
+            # Explicit post-health below uses the campaign image, not a retired default.
+            run(['env', 'B70_XE_RESET_UNDER_LEASE=1', str(REPO / 'bin/xe-reset'), '--method', 'rebind', '--no-probe'], 'recovery.log', 180)
         try:
             health('post')
         except Exception as exc:
             failed = True
             (args.out / 'post-failure.txt').write_text(ascii(exc) + '\n')
+        run(['journalctl', '-k', '--since', '@' + str(started_epoch), '--no-pager'], 'kernel-journal.log', 20)
         (args.out / 'exit.rc').write_text(str(int(failed)) + '\n')
     return int(failed)
 
