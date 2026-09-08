@@ -442,3 +442,45 @@ a clean baseline with the executed candidate job matrix after candidate
 teardown/health succeeds; it records quality job failures separately from
 lifecycle health. The full matrix includes three distinct-salt reuse traces,
 oversized tool histories, cancellation, thinking, coding and forced growth.
+
+## Corrected offload candidate A1pack1: rejected on oversized tool history
+
+CONFIG -> Installed R187 package, Python-only partial group repair, MTP3,
+FP16 KV, 32 GiB CPU tier, 64 GiB cgroup. Raw evidence is
+/mnt/vm_8tb/b70/results/kv_campaign_20260908/a1pack1/.
+COMMAND -> Complete 12-job matrix, including three fresh-salt 150K A/B/C/A
+traces, four concurrent 8000-record tool histories, full 164 HumanEval+,
+forced 132K+8192 growth, 180K recall, clean teardown and post-health.
+RESULT -> Reuse traces passed in 290.815/283.134/283.286 s, with confirmed
+CPU loads and warm TTFT 10.466/2.570/about 2.6 s. Cancellation and xhigh
+thinking checks passed. Oversized tool histories failed: session 1's first
+tool turn emitted 512 literal exclamation marks and no tool call; only
+25 checks passed. That workload recorded two preemptions and CPU reloads.
+A zero cached_tokens field does not exclude a reload after preemption.
+HumanEval+ scored 157/164 base and 151/164 plus. Forced growth completed
+in 335.196 s and 180K recall passed in 106.705 s. Neither diagnostic
+throughput nor independent coding success repairs the tool corruption.
+Teardown and per-card/compiled two-rank post-health passed (exit.rc=0).
+VERDICT -> Not promotable. A0b replays all 12 jobs on the frozen original
+image with the same 64 GiB limit; it must classify the baseline behavior.
+The three guide outputs have identical parsed Python ASTs but differ in
+comments/explanation, so their strict byte-repeat gate remains failed.
+
+## Next bounded candidate: merged upstream scheduler fixes
+
+CONFIG -> Preserve the original native image; deliberately port scheduler
+source changes from merged PRs 52807, 54288, and 52771. These correct the
+fresh load-region scan, final committed-token store watermark, and shared
+MTP group/tail handling respectively. This replaces the partial hook.
+COMMAND -> build_merged_offload_image.py and the tracked three-PR patch;
+CPU regression qualification precedes another leased GPU attempt.
+RESULT -> Source hunks match the installed scheduler after mapping the
+new upstream use_eagle_block_drop name onto this pinned package's existing
+use_eagle predicate. No speculative capability refactor is included.
+VERDICT -> Prepared, not GPU-qualified. Open PR 54165 is DFlash-specific;
+open superseded draft 53479 is not an accepted patch source.
+Primary sources: https://github.com/vllm-project/vllm/pull/52807,
+https://github.com/vllm-project/vllm/pull/54288,
+https://github.com/vllm-project/vllm/pull/52771. API metadata and diffs are
+archived under the campaign source directory. User now permits a bounded
+FP8 KV retest only AFTER the other tasks; none has been started.
