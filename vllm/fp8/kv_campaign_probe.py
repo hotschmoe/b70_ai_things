@@ -17,7 +17,7 @@ def request(base, route, body=None, timeout=10):
         return r.read().decode()
 
 
-def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thinking=False, force_length=False):
+def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thinking=False, force_length=False, cancel_after_chunks=None):
     body = {'model': model, 'messages': [{'role': 'user', 'content': prompt}],
             'temperature': 0, 'top_p': 1, 'seed': 42, 'max_tokens': limit,
             'chat_template_kwargs': ({'enable_thinking': True, 'reasoning_effort': 'low'} if thinking else {'enable_thinking': False}),
@@ -25,7 +25,7 @@ def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thin
     if force_length:
         body['ignore_eos'] = True
     req = urllib.request.Request(base + '/v1/chat/completions', data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
-    start = time.monotonic(); times = []; parts = []; reasoning = []; usage = {}; finish = None
+    start = time.monotonic(); times = []; parts = []; reasoning = []; usage = {}; finish = None; cancelled = False
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             for line in r:
@@ -46,6 +46,9 @@ def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thin
                     if delta.get('reasoning') or delta.get('reasoning_content'):
                         reasoning.append(delta.get('reasoning') or delta['reasoning_content'])
                     finish = choice.get('finish_reason') or finish
+                if cancel_after_chunks is not None and len(parts) >= cancel_after_chunks:
+                    cancelled = True
+                    break
         error = None
     except Exception as exc:
         error = ascii(exc)
@@ -55,7 +58,7 @@ def stream(base, model, prompt, limit=256, salt='kv-campaign', timeout=600, thin
             'reasoning': ''.join(reasoning), 'text_sha256': hashlib.sha256(text.encode()).hexdigest(),
             'usage': usage, 'elapsed_s': elapsed, 'ttft_s': times[0] if times else None,
             'chunk_times_s': times, 'max_chunk_gap_s': max([b-a for a,b in zip(times,times[1:])], default=0),
-            'finish_reason': finish, 'error': error}
+            'finish_reason': finish, 'error': error, 'client_cancelled': cancelled}
 
 
 TASKS = [
@@ -92,7 +95,7 @@ def main():
     p.add_argument('--base', default='http://127.0.0.1:18125')
     p.add_argument('--model', required=True)
     p.add_argument('--out', type=Path, required=True)
-    p.add_argument('--mode', choices=['quality', 'long', 'pressure', 'decode', 'reuse'], default='quality')
+    p.add_argument('--mode', choices=['quality', 'long', 'pressure', 'decode', 'reuse', 'cancel'], default='quality')
     p.add_argument('--tokens', type=int, default=150000)
     p.add_argument('--concurrency', type=int, default=2)
     p.add_argument('--rounds', type=int, default=2)
@@ -126,6 +129,20 @@ def main():
             with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
                 for row in pool.map(task, enumerate(TASKS)):
                     save(row)
+    elif args.mode == 'cancel':
+        prompt, expected = long_prompt(args.tokens, 91)
+        prompt += '\nAfter the code, explain how to test a cache, with detailed Python examples.'
+        row = stream(args.base, args.model, prompt, 1024, salt='cancel-v1' + args.salt,
+                     timeout=args.timeout, cancel_after_chunks=2)
+        row.update(task='cancel', passed=row['client_cancelled'] and row['error'] is None)
+        save(row)
+        # Closing the HTTP stream requests cancellation; allow scheduler cleanup.
+        time.sleep(2)
+        for repeat in range(2):
+            row = stream(args.base, args.model, prompt, 512, salt='cancel-v1' + args.salt, timeout=args.timeout)
+            row.update(task='resume', repeat=repeat, expected=expected,
+                       passed=expected in row['text'] and row['error'] is None)
+            save(row)
     elif args.mode == 'reuse':
         for i in [0, 1, 2, 0]:
             prompt, expected = long_prompt(args.tokens, i)

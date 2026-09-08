@@ -207,3 +207,36 @@ https://github.com/vllm-project/vllm/issues/53505
 It motivates interleaved hybrid-history checks, but does not establish that
 this image has the reported corruption. The issue body is retained under
 source/issue53505.json in raw campaign evidence.
+
+## Repair lifecycle close and calibration protocol
+
+CONFIG -> A1fix2 tool history: four interleaved sessions, four tool/result
+turns each, 4000 background records, 44314-44662 prompt tokens.
+
+COMMAND -> a1fix2/05-agent-long; STOP; per-card and compiled post-health.
+
+RESULT -> All 32 checks passed. Peak cgroup usage 13203070976 bytes, no
+OOM/max events. Teardown and both post-health types passed; exit.rc=0.
+
+VERDICT -> Stated functional gates passed for this diagnostic. Cold-prefill
+regression and broader matched pressure/quality qualification remain open.
+
+CONFIG -> Calibration uses auto/FP16 KV, eager execution, prefix caching
+explicitly off, MTP3 and the same publisher weights/native image. A COLLECT
+sentinel arms recording only after readiness, excluding startup profiling.
+The eight-sample functional pass recorded all 17 layers on both ranks with
+finite values. The main corpus has 256 diverse synthetic short requests,
+32K/96K/150K/180K contexts and two long continuations. Model file hashes
+cover 81 files, 30890049597 bytes, under preservation/model-files-sha256.json.
+
+COMMAND -> kv_campaign_calibrate.py --samples 256 --long --record-root ...
+with per-layer eager Attention.forward activation collection.
+
+RESULT -> Functional eight-sample pass succeeded; full collection in progress.
+Installed fa_utils.py explicitly disables quantized query input on XPU.
+
+VERDICT -> Before held-out evaluation, fix the artifact rule to per-layer
+max amax across TP ranks times 1.10 / 448, floored at 1e-6. Q observations
+are retained, but the XPU query path remains FP16. Frozen artifacts must
+include observed counts and source hashes. This is synthetic text calibration;
+it does not establish image/audio or arbitrary out-of-distribution quality.

@@ -63,13 +63,18 @@ def main():
     p.add_argument('--headroom', type=float, default=1.)
     p.add_argument('--samples', type=int, default=256)
     p.add_argument('--long', action='store_true')
+    p.add_argument('--record-root', type=Path)
     args = p.parse_args()
     if args.merge:
         artifact = merge(args.merge, args.out, args.headroom)
         print('Merged %d layers on both ranks' % len(artifact['layers']))
         return
+    if not args.record_root:
+        p.error('--record-root is required to arm the activation recorder')
     assert args.model in [m['id'] for m in json.loads(request(args.base, '/v1/models'))['data']]
     args.out.mkdir(parents=True, exist_ok=False)
+    if args.record_root:
+        (args.record_root / 'COLLECT').touch()
     corpus = []
     for i in range(args.samples):
         topic = TOPICS[i % len(TOPICS)]

@@ -30,7 +30,8 @@ def install():
         def forward(self, query, key, value, *args, **kwargs):
             context = get_forward_context()
             # Skip dummy profiling/graph warmups, which may use synthetic state.
-            if context.attn_metadata is not None and key is not None and value is not None:
+            if ((out / 'COLLECT').exists() and context.attn_metadata is not None
+                    and key is not None and value is not None):
                 name = self.layer_name
                 from vllm.distributed import get_tensor_model_parallel_rank
                 rec = records.setdefault(name, {'rank': get_tensor_model_parallel_rank(), 'n': 0, 'tokens': 0, 'kv_dtype': self.kv_cache_dtype, 'q_dtype': str(query.dtype), 'k_dtype': str(key.dtype), 'v_dtype': str(value.dtype), 'q_amax': 0., 'k_amax': 0., 'v_amax': 0.})
@@ -70,6 +71,8 @@ def install():
                     mirror.fill_(scale)
             from vllm.distributed import get_tensor_model_parallel_rank
             records[name] = {'rank': get_tensor_model_parallel_rank(), 'kv_dtype': self.kv_cache_dtype, **rec,
+                             'query_quantized': self.query_quant is not None,
+                             'attention_impl': type(self.impl).__name__,
                              'artifact_sha256': hashlib.sha256(artifact_bytes).hexdigest()}
             dump()
             print('B70_KV_SCALE_LOADED ' + name + ' ' + json.dumps(records[name]), flush=True)
