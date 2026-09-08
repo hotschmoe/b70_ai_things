@@ -56,6 +56,10 @@ def audit(root):
                     continue
                 counts.append(bang([row.get('text'), row.get('reasoning')]))
                 errors += bool(row.get('error'))
+        elif (directory / 'responses.json').exists():
+            for row in json.loads((directory / 'responses.json').read_text()):
+                counts.append(bang(row.get('text')))
+                errors += bool(row.get('error'))
         elif directory.name == '10-code' and (directory / 'summary.json').exists():
             summary = json.loads((directory / 'summary.json').read_text())
             for line in Path(summary['raw_samples']).read_text().splitlines():

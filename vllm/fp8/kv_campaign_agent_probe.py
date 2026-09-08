@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Repeated tool-call/history correctness gate, no external tool execution."""
 import argparse
+from contextlib import nullcontext
+from threading import Lock
 from datetime import datetime, timezone
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
@@ -96,6 +98,7 @@ def main():
     p.add_argument('--bang-retries', type=int, default=0,
                    help='Diagnostic retry emulation, not the Pi extension: cancel at32 bangs, rotate salt')
     p.add_argument('--salt', default='', help='Independent workload namespace')
+    p.add_argument('--serial-requests', action='store_true', help='Keep multiple histories but allow only one active HTTP request')
     p.add_argument('--logprobs', action='store_true', help='Retain top5 token logprobs in raw SSE for failure diagnosis')
     p.add_argument('--session-order', default='0,1,2,3',
                    help='Logical session IDs in submission order; singleton isolates concurrency')
@@ -121,6 +124,7 @@ def main():
     assert args.model in [m['id'] for m in json.loads(request(args.base, '/v1/models'))['data']]
     (args.out / 'metrics-before.txt').write_text(request(args.base, '/metrics'))
     started = time.monotonic()
+    request_lock = Lock()
     def session(index):
         rows = []
         salt = 'agent-v1-' + str(index) + args.salt
@@ -131,7 +135,7 @@ def main():
             rows.append(row)
             with (args.out / f'session-{index}.jsonl').open('a') as f:
                 f.write(json.dumps(row, ensure_ascii=True) + '\n')
-        def invoke(payload, phase, turn):
+        def invoke_impl(payload, phase, turn):
             nonlocal salt, isolation_active
             began = time.monotonic()
             response = None
@@ -181,6 +185,9 @@ def main():
                         'elapsed_s': time.monotonic() - began, 'error': ascii(exc),
                         'response': response})
                 return None, None
+        def invoke(payload, phase, turn):
+            with request_lock if args.serial_requests else nullcontext():
+                return invoke_impl(payload, phase, turn)
         history = [{'role': 'system', 'content': 'You are testing a warehouse tool. Always use lookup_stock to look up stock. After receiving its result, report only its count as an integer. Background records:\n' + ('The warehouse stores parts and maintains an inventory ledger.\n' * args.records)}]
         for turn in range(args.turns):
             sku = f'part-{index}-{turn}'

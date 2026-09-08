@@ -8327,3 +8327,29 @@ decode probes queued with and without logprobs; client overlap is measurable
 but does not prove backend co-batching. Broader coding and lifecycle gates
 remain required before promotion. Cache-salt recovery is mitigation, not a
 root-cause fix; no new FP8 KV work or native/driver changes.
+
+### 2026-09-08 - Bound the current overlap trigger without reviving old fixes
+
+CONFIG -> Same R276 MTP3/32K prefix candidate. Installed _xpu_ops.py already
+has VLLM_XPU_GDN_SPLIT_MIXED=1; server log confirms split-mixed execution.
+This is not an absent-old-flag diagnosis. No runtime changes in these arms.
+COMMAND -> probe_mixed_decode.py with and without --logprobs: two waves per
+arm, each one2048-token anchor plus three cold32K recalls, prefills submitted
+after an actual anchor text delta. Also32 shared tool checks with
+--serial-requests and four logical histories; preserve SSE and raw requests.
+RESULT -> Both direct mixed arms8/8 correct,0 bangs,6/6 client-observed
+overlaps; logprob arm25116 finite values,0 nonfinite. The serialized four-
+history control32/32 correct,0 bangs; timestamp audit confirms maximum one
+observed active stream. Earlier concurrent counterpart was32/33 with one
+bang. These are bounded controls, not representative long-run rate tests.
+Current03-reuse completes7/7 correct; warm fraction0.9925556 and TTFT ratio
+0.0173275. Existing prefix cache works while the growing-tool trigger remains.
+VERDICT -> Generic cold-prefill/long-decode overlap alone is insufficient to
+reproduce current bangs. Concurrency plus cached growing tool conversations
+is the stronger reproducer. Next instrumentation should correlate actual
+scheduler request/row order, cache hit length, accepted speculative tokens,
+and recurrent state indices at the first bad step, on both ranks. Finite-
+value observation must avoid changing the timing enough to hide the bug.
+Do not claim NaNs, a particular kernel, or global persistent poisoning on
+R276 from the older stack's evidence. Continue coding/churn/health and fresh
+public MTP3 deployment under the user's under5 percent observed tolerance.
