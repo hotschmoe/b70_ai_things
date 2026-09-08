@@ -13,8 +13,8 @@
   "daily_evidence": "/mnt/vm_8tb/b70/results/int4_prefix_20260908/stock-mtp3-b32768-daily",
   "coding_review": "vllm/int4/20260908_mtp3_coding_review.json",
   "quality_limit": "Thinking-off HumanEval+157/149 versus FP8 157/152 out of164. User explicitly accepts this coding tradeoff for INT4. Original <=2-net-loss gate remains false; no no-loss or Terminal-Bench claim.",
-  "deployment_state": "Candidate lifecycle, prefix reuse, concurrent coherence, guarded recovery, coding review and post-health complete; fresh public startup pending.",
-  "serving_lifecycle_evidence": null,
+  "deployment_state": "Fresh authenticated startup, C4 canaries, public150K prefix reuse and12/12 strict output parity passed; left running. Candidate teardown and post-health passed.",
+  "serving_lifecycle_evidence": "/mnt/vm_8tb/b70/results/qwen38_int4_r276_daily/20260908T220558Z",
   "mtp": 3,
   "prefill_batch": 32768,
   "gpu_pool_tokens": 451562,
@@ -33,5 +33,7 @@
       "fraction": 0.1111111111111111
     }
   },
-  "stability_limit": "No long-run rate claim. Oversubscribed stress sample exceeds5 percent, all checks recovered; four132K histories required cold followup recomputation. Concurrency-sensitive tool-history bug is reproducible and unresolved."
+  "stability_limit": "No long-run rate claim. Oversubscribed stress sample exceeds5 percent, all checks recovered; four132K histories required cold followup recomputation. Concurrency-sensitive tool-history bug is reproducible and unresolved.",
+  "fresh_public_strict_tok_s": 94.43162141048809,
+  "public_validation": "/mnt/vm_8tb/b70/results/qwen38_int4_r276_daily/20260908T220558Z/public-validation.json"
 }

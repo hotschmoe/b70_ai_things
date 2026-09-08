@@ -486,3 +486,39 @@ and strict restart parity queued under the serving lease. Startup pending;
 boot unit prepared and statically verified, host systemd installation still
 requires the documented user sudo command. Do not claim all clients have
 bang-guard or that the server itself retries natural loops.
+
+### 2026-09-08 - hotschmoe-dd restored on INT4 MTP3 with GPU prefix caching
+
+CONFIG -> Fresh public lifecycle20260908T220558Z, same qualified R276 image,
+AutoRound INT4/MTP3/FP16 KV/GPU prefix on/CPU tier0/200K/c4/batch32768.
+Stable public alias hotschmoe-dd, authenticated port18080, backend18124.
+COMMAND -> Leased launcher start; ready helper; smoke_daily_frontdoor.py;
+smoke_prefix_frontdoor.py through the authenticated public API; author's
+fixed12-prompt strict suite and compare-strict-attempt-outputs.py against the
+qualified MTP3 candidate. No driver/image/native changes. Leave serve running.
+RESULT -> All four leased validation jobs exit0. Missing/wrong keys return401;
+authenticated identity and C4 arithmetic pass. Fresh pool451562 tokens.
+150K public recall correct twice: cold TTFT94.10277s, warm1.622735s,
+99.2542 percent cached. Fresh strict94.43162tok/s versus candidate94.82656;
+all12 complete output token arrays exact. Candidate had clean teardown and
+per-card/compiled two-rank post-health; fresh startup pre-health passes.
+Public evidence: runtime root/public-validation.json. No STOP or exit marker
+in the active lifecycle. Qualification and registry now reference live proof.
+VERDICT -> Requested conversational prefix-serving outcome is live. Bang
+bug remains unresolved: client recovery is validated; shared-soak4/132 and
+oversubscribed1/9 raw incidents remain explicit, with no long-run below5
+percent guarantee. User accepts coding157/149 versus FP8 157/152; primary
+score and failed conservative score gate remain unchanged. CPU RAM offload
+and FP8 KV remain disabled. This is not a no-loss or global-stability claim.
+
+Boot configuration is prepared and statically verified; host systemd unit
+installation was not performed. User command (does not interrupt this serve):
+
+```bash
+sudo bash /mnt/vm_8tb/github/b70_ai_things/vllm/fp8/install-hotschmoe-dd-systemd.sh
+```
+
+The installer backs up units, installs/enables the new launcher and disables
+the retired boot recipe. Current manual serving continues; subsequent
+service ownership changes require draining/stopping it and waiting for the
+owned teardown, as the installer explains. User worktree changes preserved.
