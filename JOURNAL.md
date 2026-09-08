@@ -7800,3 +7800,27 @@ including P2P1, and is starting the model. Published serving settings and
 12GiB/16GiB cgroup/swap limits are unchanged.
 VERDICT -> Coherent reference accepted for bounded coding comparison.
 INT4 model speed, parity, quality and serving qualification remain pending.
+
+### 2026-09-08 - R276 INT4 strict replica qualifies at 100.21 tok/s
+
+CONFIG -> Published R276 image521eb277/source54aefaf0, AutoRound INT4
+bce40cac tensors with R212 GPTQ routing, TP2, FP16 KV, prefix caching off,
+1024 context/seq1/batch1024/util0.95, published 12GiB/16GiB cgroup/swap.
+COMMAND -> run_strict_replica.py --out
+/mnt/vm_8tb/b70/results/int4_replica_20260908/strict-retry1; two fresh MTP0
+and two fresh MTP4 lifecycles, scoped per-card/P2P0/P2P1 preflight and
+teardown/per-card/P2P0 post-health for each. Author 12-prompt/six-class
+suite, temperature0/seed42, natural EOS policy with 512-token cap.
+RESULT -> All four workload/canary/cache-identity and lifecycle gates pass.
+MTP0 pair, each MTP4 against MTP0, and MTP4 pair all match 12/12 complete
+token arrays. No cache hits. Class-balanced first99-interval rates:
+MTP0 47.08406/47.09156; MTP4 100.53594/99.89262 tok/s, pair mean100.21428.
+MTP4 full-output decode medians96.73944/96.45728 and wall-throughput
+medians93.99733/94.15117 tok/s; median TTFT154.00/141.62ms. These metrics
+are different aggregations, not interchangeable. All exit.rc=0; PASSED
+written only after the final health and token comparison.
+VERDICT -> Exact short-context replica meets frozen >=95tok/s target.
+Not yet a daily-driver qualification. The separately pinned 200K/c4 plain
+prefix-off profile has started, with clean A0clean coding reference,
+FP16 KV and no CPU offload. FP8 KV remains deferred. Prepared authenticated
+frontdoor smoke is syntax-checked only; no public endpoint promotion yet.
