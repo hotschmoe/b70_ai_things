@@ -8427,3 +8427,36 @@ The installer backs up units, installs/enables the new launcher and disables
 the retired boot recipe. Current manual serving continues; subsequent
 service ownership changes require draining/stopping it and waiting for the
 owned teardown, as the installer explains. User worktree changes preserved.
+
+### 2026-09-08 - Manual serving lost on user-session shutdown; system start required
+
+CONFIG -> Previously validated INT4/MTP3/FP16 KV/prefix recipe unchanged.
+COMMAND -> Check public health, backend models/metrics, Docker, installed
+system unit, user journal and previous lifecycle. Run bin/xe-reset through
+its GPU lease; try systemctl --no-ask-password --no-block start hotschmoe-dd.
+RESULT -> Ports18080/18124 refuse connections; no serving container. Grafana
+and Prometheus containers remain up; Prometheus b70_daily reports connection
+refused at18080/metrics. Manual launcher exit.rc=-1 denotes runner SIGHUP;
+its server/exit.rc is absent. At22:23:55 UTC the user manager stopped the
+tmux scope; the API subsequently performed SIGTERM shutdown. This supports
+session-lifetime termination, not a demonstrated bang/GPU crash. The correct
+MTP3 system unit is installed/enabled but inactive, with no service start log.
+Recovery rebind completed, both card probes and compiled two-rank collective
+health passed, exit0; no reboot. System service start was denied because
+interactive authentication is required. No privilege bypass attempted.
+Add SIGHUP to the runner's existing SIGTERM/SIGINT graceful-stop handler;
+Python compilation passes. This repairs cleanup but is not a substitute for
+system-service ownership. Historical performance/quality proof is retained;
+deployment state now explicitly records the outage instead of claiming live.
+VERDICT -> Endpoint is currently down. The earlier detached manual process
+was still tied to the user-session scope; enabling the boot unit did not
+transfer ownership of that process. User must start the installed service:
+
+```bash
+sudo systemctl start hotschmoe-dd.service
+```
+
+The service owns both GPU leases and repeats matched startup health before
+serving. It is already enabled for boot. Verify API and Prometheus scrape
+recovery after it becomes ready. Recovery evidence:
+/mnt/vm_8tb/b70/results/int4_prefix_20260908/20260908-hangup-recovery.log.

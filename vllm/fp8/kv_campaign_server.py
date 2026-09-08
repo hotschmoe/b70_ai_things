@@ -171,6 +171,7 @@ def main():
         (args.out / 'STOP').touch()
     signal.signal(signal.SIGTERM, stop_signal)
     signal.signal(signal.SIGINT, stop_signal)
+    signal.signal(signal.SIGHUP, stop_signal)
     try:
         health('pre')
         with (args.out / 'server.log').open('w') as log:

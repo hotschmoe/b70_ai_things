@@ -13,7 +13,7 @@
   "daily_evidence": "/mnt/vm_8tb/b70/results/int4_prefix_20260908/stock-mtp3-b32768-daily",
   "coding_review": "vllm/int4/20260908_mtp3_coding_review.json",
   "quality_limit": "Thinking-off HumanEval+157/149 versus FP8 157/152 out of164. User explicitly accepts this coding tradeoff for INT4. Original <=2-net-loss gate remains false; no no-loss or Terminal-Bench claim.",
-  "deployment_state": "Fresh authenticated startup, C4 canaries, public150K prefix reuse and12/12 strict output parity passed; left running. Candidate teardown and post-health passed.",
+  "deployment_state": "Recipe and fresh validation remain qualified. Manual lifecycle20260908T220558Z ended on SIGHUP at2026-09-08T22:23:55Z during user-session shutdown. GPU rebind/health passed; installed/enabled system service is inactive and requires user-authenticated start.",
   "serving_lifecycle_evidence": "/mnt/vm_8tb/b70/results/qwen38_int4_r276_daily/20260908T220558Z",
   "mtp": 3,
   "prefill_batch": 32768,
