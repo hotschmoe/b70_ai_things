@@ -587,3 +587,26 @@ useful-output throughput or coherence claim. It demonstrates a substantial
 recompute/preemption difference but cannot override either arm's recorded
 quality failures. Both main reuse and active-growth benefits require a
 candidate that passes the correctness gates and a second clean lifecycle.
+
+
+### 2026-09-08 - Merged offload candidate rejected; bounded RAM campaign concluded
+
+CONFIG -> A1merged: frozen native R187 stack plus merged scheduler fixes
+52771/52807/54288, FP16 KV, MTP3, CPU32, cgroup64, prefix cache on. Same
+10.13 GiB/rank and 292968 GPU-token capacity. No custom Python entrypoint.
+COMMAND -> C1/C4, then four 8000-record tool histories with per-session
+response preservation; fail-fast on correctness, clean stop and post-health.
+RESULT -> C1/C4 passed in 9.058/7.467 s. Tool test failed after 239.608 s:
+27 checks passed and one failed. Session0's second answer emitted 512
+exclamation marks rather than 731. Prompt88474, reported cached87360,
+37.054 s response latency. All three other sessions passed eight checks
+each. metrics-before/after and metric-delta.json preserve transfer evidence.
+Remaining long benchmarks were not submitted after rejection. Teardown and
+per-card/compiled two-rank post-health passed, exit.rc=0.
+VERDICT -> Merged scheduler fixes enable functional RAM reuse but do not
+qualify this MTP/prefix-cache recipe. Do not promote either offload image.
+Stop further RAM patch arms in this campaign and proceed to the clean coding
+reference and exact INT4 recipe. This is not a claim that RAM offload is
+universally broken; it is a rejection of the tested local serving combination.
+The existing upstream Mamba prefix-state issue remains an unproven causal
+lead. Keep FP16 KV. No FP8 KV retest has been started.
