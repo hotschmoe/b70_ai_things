@@ -355,3 +355,27 @@ RAM-offload qualification using the existing auto/FP16 KV baseline, keeping
 prefix caching and MTP3. The user's preference for BF16 refers to avoiding
 FP8 here; the actual preserved endpoint uses FP16 KV, so no unmeasured
 FP16-to-BF16 change is introduced. Public serving defaults remain unchanged.
+
+## Overnight continuation and deployable offload packaging
+
+CONFIG -> User requests FP16 KV only; RAM offload first, then independent
+replication of neural.download's fixed-K AutoRound INT4 recipe, quality
+comparison against the official FP8-weight baseline, and final daily-driver
+restoration. Systemctl activation command will be provided for local use.
+
+COMMAND -> A1fix3 uses deferred Python hook loading on the original image.
+Build a derived image with only sitecustomize and the guarded scheduler
+repair; compare all six preserved native library hashes. Run scheduler
+unit tests in the derived image without GPU device mounts.
+
+RESULT -> Derived image 03bbc387e328c21d3ec8eaa8d944b6131db72e7b0e4aa4018f91964bde1fa982
+contains the same six native library bytes and passes four scheduler tests.
+An initial BuildKit FROM-image-ID attempt failed before building; the builder
+now creates and verifies a local alias for the immutable base. Host-only
+unittest discovery cannot import installed vLLM; its eight stdlib tests
+passed and the four backend-dependent tests passed in the pinned container.
+
+VERDICT -> Packaging is prepared, not promoted. Qualify the actual packaged
+image in a second lifecycle if A1fix3 passes. Expand the held-out coding
+comparison to all 164 HumanEval+ problems for the separate weight-quant
+choice. INT4 recipe evidence and acquisition belong under vllm/int4/.

@@ -20,6 +20,8 @@ def main():
     p.add_argument('--preservation', type=Path, required=True)
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--name', default='b70-kv-campaign')
+    p.add_argument('--image', default=IMAGE)
+    p.add_argument('--packaged-hooks', action='store_true')
     p.add_argument('--offload-gib', type=int, default=0)
     p.add_argument('--kv-dtype', default='auto', choices=['auto', 'fp8_e4m3'])
     p.add_argument('--eager', action='store_true')
@@ -34,6 +36,21 @@ def main():
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
+    if not args.image.startswith('sha256:') or len(args.image) != 71:
+        p.error('--image must be an immutable local image ID')
+    if args.packaged_hooks:
+        if not args.offload_group_fix or not args.offload_gib or args.hook != 'none' or args.trace_offload:
+            p.error('packaged hooks require only the offload group repair and a CPU tier')
+        image_config = json.loads(subprocess.check_output(
+            ['docker', 'image', 'inspect', args.image], text=True))[0]['Config']
+        image_env = dict(v.split('=', 1) for v in image_config['Env'])
+        hashes = {name: hashlib.sha256((REPO / 'vllm/fp8/kv_hooks' / name).read_bytes()).hexdigest()
+                  for name in ('sitecustomize.py', 'kv_offload_group_fix.py')}
+        fingerprint = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()
+        if (image_env.get('B70_OFFLOAD_GROUP_FIX') != '1'
+                or image_env.get('PYTHONPATH') != '/opt/b70-kv/hooks'
+                or (image_config.get('Labels') or {}).get('b70.kv-offload-hooks-sha256') != fingerprint):
+            p.error('packaged image does not match the tracked offload hooks')
     if not args.leased:
         import sys
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
@@ -47,7 +64,7 @@ def main():
             return subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=timeout).returncode
     def health(stage):
         for tool, extra in [('xpu-health', []), ('xpu-collective-health', ['--p2p', '0', '--timeout', '180'])]:
-            if run([str(REPO / 'bin' / tool), '--img', IMAGE, *extra], stage + '-' + tool + '.log'):
+            if run([str(REPO / 'bin' / tool), '--img', args.image, *extra], stage + '-' + tool + '.log'):
                 raise RuntimeError(stage + ' ' + tool + ' failed')
     cfg = json.loads((args.preservation / 'Config.json').read_text())
     mounts = json.loads((args.preservation / 'Mounts.json').read_text())
@@ -89,7 +106,10 @@ def main():
         src = str(cache) if m['Destination'] == '/root/.cache/vllm' else m['Source']
         docker += ['-v', src + ':' + m['Destination'] + ('' if m['RW'] else ':ro')]
     docker += ['-v', str(args.out.resolve()) + ':/kv-campaign', '-v', str(source.resolve()) + ':/kv-source:ro']
-    use_entry = args.hook != 'none' or args.trace_offload or args.offload_group_fix
+    use_entry = not args.packaged_hooks and (args.hook != 'none' or args.trace_offload or args.offload_group_fix)
+    if args.packaged_hooks:
+        for key in ('PYTHONPATH', 'B70_OFFLOAD_GROUP_FIX', 'B70_KV_MODE', 'B70_OFFLOAD_TRACE'):
+            env.pop(key, None)
     if use_entry:
         env['PYTHONPATH'] = '/kv-source/kv_hooks:' + env.get('PYTHONPATH', '')
         env['B70_KV_MODE'] = args.hook
@@ -104,11 +124,11 @@ def main():
         docker += ['--entrypoint', '/opt/venv/bin/python']
     for k, v in env.items():
         docker += ['-e', k + '=' + v]
-    docker += [IMAGE]
+    docker += [args.image]
     if use_entry:
         docker += ['/kv-source/kv_campaign_entry.py']
     docker += cmd
-    manifest = {'model': model, 'image': IMAGE, 'args': vars(args), 'command': docker,
+    manifest = {'model': model, 'image': args.image, 'args': vars(args), 'command': docker,
                 'source_sha256': source_hashes}
     (args.out / 'manifest.json').write_text(json.dumps(manifest, default=str, indent=2) + '\n')
     server = None
