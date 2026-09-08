@@ -7980,3 +7980,30 @@ between turns while history remains cached. Cancellation, tighter growth
 pressure, larger eviction tool histories, poststress coding/profile and
 post-health are still running; no serving promotion yet. The reviewed
 zero-hit guide-tail divergence remains recorded separately.
+
+### 2026-09-08 - Reject stock INT4 prefix under oversized tool-history churn
+
+CONFIG -> stock-mtp4-b; exact R276 image, MTP4, FP16 KV, prefix enabled,
+446332 nominal GPU KV tokens, four admitted sequences, no RAM offload.
+COMMAND -> run_prefix_campaign.py followed by manually queued postfailure
+coding, coherence, 199K recall and warm collective-profile diagnostics.
+RESULT -> Normal four88K growing histories passed32/32; an additional unsalted
+(shared-cache) four2000-record control passed32/32 in32.292s. Four110071-token
+prompts plus8192 output tokens each finished in519.040s but scheduler
+preemption delta was0: this did not force active-sequence preemption.
+The larger four132K-history run failed:23 checks in1378.876s, one session's
+first answer timed out after900.009s (no response captured), and another
+session's third tool request returned512 exclamation marks, finish=length,
+prompt132502, cached_tokens0, created_cache_tokens131456. Two sessions
+completed8/8. This is actual corruption under cache churn, not merely slow
+queueing, and not proof that the bad request itself reused a corrupt hit.
+Subsequent coding completed without symbol loops (157 base/149 plus of164),
+short C4 coherence and199K recall passed. Lifecycle/profile evidence pending
+when this entry was written. Raw evidence: results/int4_prefix_20260908/
+stock-mtp4-b under the runtime root; manual-diagnostics.json records a paused
+coordinator so the leased runner could finish postfailure diagnostics.
+VERDICT -> Reject stock MTP4+prefix for daily promotion. Investigate the
+installed Mamba manager ignoring drop_eagle_block using a Python-only
+backport of upstream PR48375, with CPU regression and exact native-hash
+comparison before GPU retest. This is a candidate, not a proven root cause.
+Public serving has not been promoted; restoration remains required.

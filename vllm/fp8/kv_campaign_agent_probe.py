@@ -16,6 +16,7 @@ def main():
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--records', type=int, default=180)
     p.add_argument('--timeout', type=int, default=180)
+    p.add_argument('--shared-cache', action='store_true', help='omit cache_salt, matching ordinary clients')
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     config = dict(vars(args), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
@@ -50,6 +51,8 @@ def main():
             payload = {'model': args.model, 'messages': history, 'temperature': 0, 'seed': 42, 'max_tokens': 512,
                        'tools': [{'type': 'function', 'function': {'name': 'lookup_stock', 'description': 'Get stock count for a SKU', 'parameters': {'type': 'object', 'properties': {'sku': {'type': 'string'}}, 'required': ['sku']}}}],
                        'tool_choice': 'auto', 'chat_template_kwargs': {'enable_thinking': False}, 'cache_salt': 'agent-v1-' + str(index)}
+            if args.shared_cache:
+                payload.pop('cache_salt')
             response, elapsed = invoke(payload, 'tool', turn)
             if response is None:
                 break
