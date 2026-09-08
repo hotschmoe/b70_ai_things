@@ -21,6 +21,8 @@ def main():
     p.add_argument('--profile', action='store_true')
     p.add_argument('--churn-first', action='store_true',
                    help='Retest the known 132K history failure before broader qualification')
+    p.add_argument('--stream-churn-first', action='store_true',
+                   help='Capture partial output in the first churn diagnostic; final churn stays nonstreaming')
     args = p.parse_args()
     deadline = time.monotonic() + 1800
     while not (args.wait_for / 'exit.rc').exists():
@@ -68,6 +70,8 @@ def main():
         churn = next(job for name, job in jobs if name == '09-evict-tools')
         early = dict(churn, command=[s.replace(str(args.out / '09-evict-tools'),
                        str(args.out / '00-evict-tools')) for s in churn['command']])
+        if args.stream_churn_first:
+            early['command'].append('--stream')
         jobs.insert(0, ('00-evict-tools', early))
     cmd = ['python3', str(repo / 'vllm/fp8/kv_campaign_server.py'),
            '--preservation', str(args.config), '--out', str(args.out),

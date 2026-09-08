@@ -6,7 +6,56 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 import time
+import urllib.request
 from kv_campaign_probe import request
+
+
+def stream_request(base, payload, timeout, trace):
+    """Retain tool deltas and partial text if a long request times out."""
+    body = dict(payload, stream=True, stream_options={'include_usage': True})
+    req = urllib.request.Request(base + '/v1/chat/completions',
+        data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
+    message = {'role': 'assistant', 'content': None}
+    response = {'choices': [{'index': 0, 'message': message, 'finish_reason': None}]}
+    calls = {}
+    started = time.monotonic()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as stream, trace.open('w') as log:
+            for line in stream:
+                if time.monotonic() - started > timeout:
+                    raise TimeoutError('total request deadline exceeded')
+                if not line.startswith(b'data: '):
+                    continue
+                raw = line[6:].strip()
+                if raw == b'[DONE]':
+                    break
+                event = json.loads(raw)
+                log.write(json.dumps({'elapsed_s': time.monotonic() - started, 'event': event}) + '\n')
+                log.flush()
+                for key in ('id', 'model', 'created', 'usage'):
+                    if event.get(key) is not None:
+                        response[key] = event[key]
+                for choice in event.get('choices', []):
+                    assert choice['index'] == 0
+                    delta = choice.get('delta', {})
+                    if delta.get('content'):
+                        message['content'] = (message['content'] or '') + delta['content']
+                    for item in delta.get('tool_calls', []):
+                        call = calls.setdefault(item['index'], {'id': '', 'type': 'function',
+                                                    'function': {'name': '', 'arguments': ''}})
+                        if item.get('id'):
+                            call['id'] = item['id']
+                        for key in ('name', 'arguments'):
+                            call['function'][key] += item.get('function', {}).get(key) or ''
+                        message['tool_calls'] = [calls[i] for i in sorted(calls)]
+                    if choice.get('finish_reason'):
+                        response['choices'][0]['finish_reason'] = choice['finish_reason']
+            if not response['choices'][0]['finish_reason'] or 'usage' not in response:
+                raise RuntimeError('incomplete streaming response')
+        return response
+    except Exception as exc:
+        exc.partial_response = response
+        raise
 
 
 def main():
@@ -17,6 +66,7 @@ def main():
     p.add_argument('--records', type=int, default=180)
     p.add_argument('--timeout', type=int, default=180)
     p.add_argument('--shared-cache', action='store_true', help='omit cache_salt, matching ordinary clients')
+    p.add_argument('--stream', action='store_true', help='retain incremental tool/text output including partial failures')
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     config = dict(vars(args), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
@@ -34,11 +84,16 @@ def main():
             began = time.monotonic()
             response = None
             try:
-                response = json.loads(request(args.base, '/v1/chat/completions', payload, timeout=args.timeout))
+                if args.stream:
+                    response = stream_request(args.base, payload, args.timeout,
+                        args.out / f'session-{index}-{turn}-{phase}-sse.jsonl')
+                else:
+                    response = json.loads(request(args.base, '/v1/chat/completions', payload, timeout=args.timeout))
                 if not isinstance(response['choices'][0]['message'], dict):
                     raise ValueError('missing response message')
                 return response, time.monotonic() - began
             except Exception as exc:
+                response = getattr(exc, 'partial_response', response)
                 record({'phase': phase, 'turn': turn, 'passed': False,
                         'elapsed_s': time.monotonic() - began, 'error': ascii(exc),
                         'response': response})

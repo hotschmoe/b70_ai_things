@@ -8025,3 +8025,27 @@ VERDICT -> CPU bug is confirmed and patched; GPU root cause and serving
 correctness remain unproven. Candidate must pass large-history churn on a
 fresh process and again after pressure, plus existing reuse/quality/lifecycle
 gates. Do not promote based solely on the CPU regression.
+
+### 2026-09-08 - Mamba drop backport does not clear oversized-history gate
+
+CONFIG -> Derived image43e77a22 from exact R276 image521eb277, MTP4,
+FP16 KV, prefix on,200K/c4, no CPU tier; unchanged native hashes.
+COMMAND -> mamba-eagle-mtp4, --churn-first. Coordinator CPU checks also
+exercise the installed HybridKVCacheCoordinator: eagle groups0/1, aligned
+832-token blocks, partial-hash path false. Base hit3328, patched2496.
+RESULT -> First four132K histories captured14 checks:13 correct, session3's
+first answer timed out at900.017s with responseNone. No partial output was
+captured for that request, so do not label this timeout a punctuation loop.
+The original stock-b run remains the actual512-exclamation corruption proof.
+SIGTERM cancelled the client after this decisive failed gate; raw remaining
+sessions are incomplete, job rc=-15, manual-failure.json records the action.
+Normal server teardown/post-health is underway, followed only on exit.rc0
+by stock MTP0+prefix control. No serving promotion and no root-cause claim.
+VERDICT -> Reject this backport as a sufficient daily fix. Retain the proven
+CPU regression separately from unsuccessful GPU qualification. Next test
+changes only speculative decoding from MTP4 to0 on the original image.
+Add optional SSE capture to the tool probe to preserve partial timeout
+output; fragmented tool arguments, final usage and incomplete-stream
+retention passed CPU checks. The first MTP0 churn diagnostic uses streaming;
+its final postpressure churn remains the original nonstreaming API path.
+Raw roots: results/int4_prefix_20260908/mamba-eagle-mtp4 and stock-mtp0.
