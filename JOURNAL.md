@@ -8128,3 +8128,24 @@ thinking and150K warm reuse), not a shelf qualification. Preserve all earlier
 failures. Source/default evidence and incomplete-control record are under
 /mnt/vm_8tb/b70/results/int4_prefix_20260908/.
 
+### 2026-09-08 - Measure rare loops and recovery separately
+
+CONFIG -> User target is under1 percent raw bang-loop requests. User reports
+old FP8 incidents clustered into about30 minutes between long clean periods;
+this is an anecdote to guide testing, not proof of poisoned cache state.
+COMMAND -> Inspect bang-guard d341fe6c9a3b53061e9936b0cb78b6f08e6f6438;
+run its real Pi CLI offline integration with installed Pi0.84.3. Add bounded
+live-model recovery probe and optional diagnostic tool-probe cancellation,
+salt rotation, timestamped attempts and up to3 retries.
+RESULT -> Offline actual Pi test passes: stream cancelled, corrupt context
+excluded, salt rotated, recovered answer returned. CPU diagnostic checks
+pass across stream chunks, reasoning, escaped tool JSON, and four concurrent
+sessions with injected failures; raw failures remain separate from successful
+checks. Live Pi probe is queued under the MTP3 server lease: first response is
+explicitly injected; subsequent response goes to the actual88K-history model.
+VERDICT -> Neither an injected recovery nor a small clean sample establishes
+natural fault recovery or an under1 percent long-run rate. Measure natural
+incidents, retry outcomes and clusters separately. Guard emulation in the
+Python history probe is explicitly not execution of the Pi/OMP extension.
+The new live Pi probe executes the actual pinned extension. No guard source
+or client installation was changed.

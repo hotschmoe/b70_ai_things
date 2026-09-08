@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """Repeated tool-call/history correctness gate, no external tool execution."""
 import argparse
+from datetime import datetime, timezone
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
+import re
 import time
 import urllib.request
 from kv_campaign_probe import request
 
 
-def stream_request(base, payload, timeout, trace, headers=None):
+class BangLoopError(RuntimeError):
+    pass
+
+
+def stream_request(base, payload, timeout, trace, headers=None, bang_limit=None):
     """Retain tool deltas and partial text if a long request times out."""
     body = dict(payload, stream=True, stream_options={'include_usage': True})
     req = urllib.request.Request(base + '/v1/chat/completions',
@@ -40,6 +46,9 @@ def stream_request(base, payload, timeout, trace, headers=None):
                     delta = choice.get('delta', {})
                     if delta.get('content'):
                         message['content'] = (message['content'] or '') + delta['content']
+                    for key in ('reasoning', 'reasoning_content'):
+                        if delta.get(key):
+                            message[key] = message.get(key, '') + delta[key]
                     for item in delta.get('tool_calls', []):
                         call = calls.setdefault(item['index'], {'id': '', 'type': 'function',
                                                     'function': {'name': '', 'arguments': ''}})
@@ -48,6 +57,12 @@ def stream_request(base, payload, timeout, trace, headers=None):
                         for key in ('name', 'arguments'):
                             call['function'][key] += item.get('function', {}).get(key) or ''
                         message['tool_calls'] = [calls[i] for i in sorted(calls)]
+                    if bang_limit:
+                        fields = [message.get(k) or '' for k in ('content', 'reasoning', 'reasoning_content')]
+                        fields += [c['function']['arguments'] for c in calls.values()]
+                        if any('!' * bang_limit in re.sub(r'\\u0021', '!', value, flags=re.I)
+                               for value in fields):
+                            raise BangLoopError('32 consecutive bangs; cancel and isolate retry cache')
                     if choice.get('finish_reason'):
                         response['choices'][0]['finish_reason'] = choice['finish_reason']
             if not response['choices'][0]['finish_reason'] or 'usage' not in response:
@@ -67,7 +82,15 @@ def main():
     p.add_argument('--timeout', type=int, default=180)
     p.add_argument('--shared-cache', action='store_true', help='omit cache_salt, matching ordinary clients')
     p.add_argument('--stream', action='store_true', help='retain incremental tool/text output including partial failures')
+    p.add_argument('--bang-retries', type=int, default=0,
+                   help='Diagnostic retry emulation, not the Pi extension: cancel at32 bangs, rotate salt')
+    p.add_argument('--salt', default='', help='Independent workload namespace')
+    p.add_argument('--turns', type=int, default=4, choices=range(1, 5))
     args = p.parse_args()
+    if args.bang_retries < 0 or args.bang_retries > 3:
+        p.error('--bang-retries must be between0 and3')
+    if args.bang_retries and (not args.stream or args.shared_cache):
+        p.error('bang recovery requires --stream and per-session cache isolation')
     args.out.mkdir(parents=True, exist_ok=False)
     config = dict(vars(args), source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     (args.out / 'config.json').write_text(json.dumps(config, default=str, indent=2) + '\n')
@@ -76,30 +99,57 @@ def main():
     started = time.monotonic()
     def session(index):
         rows = []
+        salt = 'agent-v1-' + str(index) + args.salt
+        attempts = []
         def record(row):
+            row['recorded_at'] = datetime.now(timezone.utc).isoformat()
             rows.append(row)
             with (args.out / f'session-{index}.jsonl').open('a') as f:
                 f.write(json.dumps(row, ensure_ascii=True) + '\n')
         def invoke(payload, phase, turn):
+            nonlocal salt
             began = time.monotonic()
             response = None
             try:
-                if args.stream:
-                    response = stream_request(args.base, payload, args.timeout,
-                        args.out / f'session-{index}-{turn}-{phase}-sse.jsonl')
-                else:
-                    response = json.loads(request(args.base, '/v1/chat/completions', payload, timeout=args.timeout))
+                for attempt in range(args.bang_retries + 1):
+                    attempt_started = datetime.now(timezone.utc).isoformat()
+                    try:
+                        if not args.shared_cache:
+                            payload['cache_salt'] = salt
+                        if args.stream:
+                            suffix = f'-retry{attempt}' if attempt else ''
+                            response = stream_request(args.base, payload, args.timeout,
+                                args.out / f'session-{index}-{turn}-{phase}{suffix}-sse.jsonl',
+                                bang_limit=32 if args.bang_retries else None)
+                        else:
+                            response = json.loads(request(args.base, '/v1/chat/completions', payload, timeout=args.timeout))
+                        attempts.append({'phase': phase, 'turn': turn, 'attempt': attempt, 'bang': False,
+                                         'started_at': attempt_started})
+                        break
+                    except BangLoopError as exc:
+                        row = {'phase': phase, 'turn': turn, 'attempt': attempt, 'bang': True,
+                               'started_at': attempt_started,
+                               'partial_response': exc.partial_response, 'cache_salt': salt}
+                        attempts.append(row)
+                        with (args.out / f'session-{index}-bangs.jsonl').open('a') as f:
+                            f.write(json.dumps(row) + '\n')
+                        if attempt == args.bang_retries:
+                            raise
+                        salt += f'-recovery-{turn}-{phase}-{attempt}'
                 if not isinstance(response['choices'][0]['message'], dict):
                     raise ValueError('missing response message')
                 return response, time.monotonic() - began
             except Exception as exc:
+                if not isinstance(exc, BangLoopError):
+                    attempts.append({'phase': phase, 'turn': turn, 'attempt': attempt,
+                                     'bang': False, 'error': ascii(exc), 'started_at': attempt_started})
                 response = getattr(exc, 'partial_response', response)
                 record({'phase': phase, 'turn': turn, 'passed': False,
                         'elapsed_s': time.monotonic() - began, 'error': ascii(exc),
                         'response': response})
                 return None, None
         history = [{'role': 'system', 'content': 'You are testing a warehouse tool. Always use lookup_stock to look up stock. After receiving its result, report only its count as an integer. Background records:\n' + ('The warehouse stores parts and maintains an inventory ledger.\n' * args.records)}]
-        for turn in range(4):
+        for turn in range(args.turns):
             sku = f'part-{index}-{turn}'
             count = 730 + index * 10 + turn
             history.append({'role': 'user', 'content': 'Look up stock for SKU ' + sku + '.'})
@@ -133,7 +183,8 @@ def main():
             history.append({'role': 'assistant', 'content': msg.get('content')})
             if not good:
                 break
-        return {'session': index, 'rows': rows, 'passed': len(rows) == 8 and all(r['passed'] for r in rows)}
+        return {'session': index, 'rows': rows, 'attempts': attempts,
+                'passed': len(rows) == args.turns * 2 and all(r['passed'] for r in rows)}
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(session, range(4)))
     (args.out / 'results.json').write_text(json.dumps(results, ensure_ascii=True, indent=2) + '\n')
@@ -144,6 +195,9 @@ def main():
         passed = False
         (args.out / 'metrics-error.txt').write_text(ascii(exc) + '\n')
     summary = {'passed': passed, 'checks': sum(len(r['rows']) for r in results),
+               'attempts': sum(len(r['attempts']) for r in results),
+               'bang_attempts': sum(a['bang'] for r in results for a in r['attempts']),
+               'recovery_scope': 'Diagnostic cancellation/salt rotation; not actual Pi/OMP extension execution',
                'elapsed_s': time.monotonic() - started}
     (args.out / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
     print(json.dumps(summary))
