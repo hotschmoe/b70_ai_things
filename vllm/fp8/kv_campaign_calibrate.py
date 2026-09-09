@@ -28,7 +28,7 @@ TOPICS = [
 ]
 
 
-def merge(files, out, headroom):
+def merge(files, out, headroom, expected_layers=17, weights='qwen3.8-27b/fp8-official'):
     if not math.isfinite(headroom) or headroom < 1:
         raise ValueError('headroom must be finite and >= 1')
     ranks = {}; hashes = {}
@@ -46,10 +46,10 @@ def merge(files, out, headroom):
             ranks[rank][layer] = rec
     if set(ranks) != {0, 1} or set(ranks[0]) != set(ranks[1]):
         raise ValueError('missing or mismatched TP layer coverage')
-    if len(ranks[0]) != 17:
-        raise ValueError('expected 16 full-attention target layers plus 1 MTP layer')
+    if len(ranks[0]) != expected_layers:
+        raise ValueError('unexpected attention layer count: expected ' + str(expected_layers))
     layers = {name: {k + '_scale': max(max(ranks[r][name][k + '_amax'] for r in (0, 1)) / 448 * headroom, 1e-6) for k in ('q', 'k', 'v')} for name in ranks[0]}
-    artifact = {'schema': 'b70.qwen38-official-fp8-kv-scales.v1', 'weights': 'qwen3.8-27b/fp8-official', 'headroom': headroom, 'sources': hashes, 'observations': ranks, 'layers': layers}
+    artifact = {'schema': 'b70.qwen38-official-fp8-kv-scales.v1' if weights == 'qwen3.8-27b/fp8-official' else 'b70.qwen38-kv-scales.v2', 'weights': weights, 'expected_layers': expected_layers, 'headroom': headroom, 'sources': hashes, 'observations': ranks, 'layers': layers}
     out.write_text(json.dumps(artifact, indent=2, sort_keys=True) + '\n')
     return artifact
 
@@ -63,16 +63,24 @@ def main():
     p.add_argument('--headroom', type=float, default=1.)
     p.add_argument('--samples', type=int, default=256)
     p.add_argument('--long', action='store_true')
+    p.add_argument('--long-lengths', default='32000,96000,150000,180000')
     p.add_argument('--record-root', type=Path)
     p.add_argument('--model-config', type=Path)
     p.add_argument('--provenance', type=Path)
+    p.add_argument('--weights', default='qwen3.8-27b/fp8-official')
+    p.add_argument('--mtp', type=int, default=3)
     args = p.parse_args()
     if args.merge:
         if not args.model_config:
             p.error('--model-config is required when freezing scales')
         config_hash = hashlib.sha256(args.model_config.read_bytes()).hexdigest()
         provenance = json.loads(args.provenance.read_text()) if args.provenance else {}
-        artifact = merge(args.merge, args.out, args.headroom)
+        model_config = json.loads(args.model_config.read_text())
+        text_config = model_config.get('text_config', model_config)
+        expected_layers = text_config['layer_types'].count('full_attention')
+        if args.mtp:
+            expected_layers += text_config.get('mtp_num_hidden_layers', 1)
+        artifact = merge(args.merge, args.out, args.headroom, expected_layers, args.weights)
         artifact['model_config_sha256'] = config_hash
         artifact['provenance'] = provenance
         args.out.write_text(json.dumps(artifact, indent=2, sort_keys=True) + '\n')
@@ -90,7 +98,7 @@ def main():
         style = ['Give a concrete worked example.', 'Find a subtle bug and correct it.', 'Explain the tradeoffs.', 'Return structured JSON with examples.', 'Write a concise implementation.', 'Write tests and explain edge cases.', 'Give a step-by-step derivation.', 'Simulate a user/assistant discussion.'][i // len(TOPICS) % 8]
         corpus.append({'id': i, 'prompt': f'Case {i}: {topic}. {style} Use the numbers {i+11} and {i+29} when an example needs numbers.', 'limit': 48})
     if args.long:
-        for tokens in [32000, 96000, 150000, 180000]:
+        for tokens in [int(x) for x in args.long_lengths.split(',')]:
             prompt, _ = long_prompt(tokens, 77)
             corpus.append({'id': 'long' + str(tokens), 'prompt': prompt, 'limit': 32})
         for topic in TOPICS[:2]:

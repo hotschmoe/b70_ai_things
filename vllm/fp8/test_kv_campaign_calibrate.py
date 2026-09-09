@@ -43,6 +43,19 @@ class ScaleMergeTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 merge(files, root / 'out.json', 1.)
 
+    def test_target_only_int4_has_sixteen_layers_and_new_identity(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); files = self.inputs(root)
+            for path in files:
+                data = json.loads(path.read_text()); del data['layer16']
+                path.write_text(json.dumps(data))
+            result = merge(files, root / 'out.json', 1.1, 16,
+                           'qwen3.8-27b/int4-autoround-gptq-relabel-r212')
+            self.assertEqual(len(result['layers']), 16)
+            self.assertEqual(result['schema'], 'b70.qwen38-kv-scales.v2')
+            with self.assertRaises(ValueError):
+                merge(files, root / 'wrong.json', 1.1, 17)
+
 
 if __name__ == '__main__':
     unittest.main()

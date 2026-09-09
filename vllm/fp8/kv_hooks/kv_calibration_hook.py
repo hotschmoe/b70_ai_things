@@ -50,9 +50,22 @@ def install():
     else:
         artifact_bytes = Path(os.environ['B70_KV_SCALES']).read_bytes()
         artifact = json.loads(artifact_bytes)
-        if (artifact.get('weights') != 'qwen3.8-27b/fp8-official'
-                or artifact.get('schema') != 'b70.qwen38-official-fp8-kv-scales.v1'):
+        legacy = (artifact.get('weights') == 'qwen3.8-27b/fp8-official'
+                  and artifact.get('schema') == 'b70.qwen38-official-fp8-kv-scales.v1')
+        current = (artifact.get('schema') == 'b70.qwen38-kv-scales.v2'
+                   and artifact.get('weights') == 'qwen3.8-27b/int4-autoround-gptq-relabel-r212')
+        if not (legacy or current):
             raise RuntimeError('unexpected calibration model identity')
+        if current:
+            import vllm
+            import sysconfig
+            package = Path(vllm.__file__).resolve().parent
+            if package != Path(sysconfig.get_path('purelib')) / 'vllm':
+                raise RuntimeError('calibration requires installed vLLM package')
+            expected_ops = artifact.get('provenance', {}).get('xpu_ops_sha256')
+            actual_ops = hashlib.sha256((package / '_xpu_ops.py').read_bytes()).hexdigest()
+            if not expected_ops or expected_ops != actual_ops:
+                raise RuntimeError('calibration XPU routing fingerprint mismatch')
         expected_config = artifact.get('model_config_sha256')
         actual_config = hashlib.sha256((Path(os.environ.get('B70_KV_MODEL_ROOT', '/model')) / 'config.json').read_bytes()).hexdigest()
         if not expected_config or expected_config != actual_config:
