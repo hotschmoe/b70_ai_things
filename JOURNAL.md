@@ -8768,3 +8768,34 @@ compare fresh-process versus loaded-context behavior before another full arm.
 Preserve P2P-off and bounded leased recovery. SGLang long context and four
 active 200K FP8 contexts remain unqualified; prefix/MTP/graphs and actual RAM
 reload pending. No campaign test running; timer enabled; production offline.
+
+## 2026-09-09 20:22 UTC review: collective environment and source audit
+
+CONFIG -> S0f stopped rc1, unit MainPID=0; no campaign coordinator/server or
+GPU container alive. Both card rebinds and per-card/compiled P2P-off post-health
+passed. Exact adc915d266 image, unchanged source/native stack.
+COMMAND -> CPU-only Docker imports with serving versus health environment,
+network disabled, no devices, 2 CPUs/2 GiB, 60-second subprocess bounds.
+Export three installed SGLang sources and hash libraries mapped after Torch
+import. Compare health source against measured S0f 2048x5120 FP16 reduction.
+RESULT -> Both CPU containers exit0; source hashes and mapped-library SHA256
+multisets match (libccl.so.1, libccl.so.2, libsycl and UR loader). Eight relevant
+environment differences remain: SYCL kernels, kernel path, logging, topology
+vertex override, pidfd IPC, LD_LIBRARY_PATH, LD_PRELOAD and Level Zero V2.
+Serving explicitly sets topology-check=0, pidfd and V2=0; health does not.
+Health uses WORLD with 4x5120 BF16 and compiled functional reductions;
+SGLang fallback reduces in place on device_group created by new_group.
+Embedding producer can select fused Triton or gather plus masked_fill;
+existing shape/fence traces do not identify which branch actually executed.
+VERDICT -> Bounded CPU diagnosis complete. Matching CPU-loaded hashes does
+not establish GPU-loaded identity or rule out environment/queue differences.
+Raw commands, source exports, hashes, assertions and comparison are under
+collective-env-diagnosis-2023/ (label only; actual audit 20:20-20:22 UTC).
+Next implement/CPU-test a fresh-process 2048x5120 FP16 subgroup control using
+the recorded serving environment, with bounded leased lifecycle/recovery.
+Record actual embedding branch/allocation and GPU-loaded library identity
+before treating a later loaded-context comparison as matched. Keep health
+unchanged; vary environment factors individually only after that control.
+No GPU work or unchanged full-model retry this tick. No test running; timer
+enabled, production offline. SGLang long context, four active 200K FP8,
+prefix/MTP/graphs and real RAM reload remain unqualified; no input needed.
