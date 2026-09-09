@@ -137,6 +137,11 @@ measured concurrent coherence and speed qualification.
 
 ## Model identity
 
+- The permanent primary client-facing served model name is `hotschmoe-dd`.
+  Keep it first in `--served-model-name` across all model/backend updates.
+  Retain the detailed model/method/scheme ID as a secondary research alias
+  and in experiment records; never replace the stable client name with it.
+
 Before trusting an eval or benchmark:
 
 1. Query /v1/models on the live server.

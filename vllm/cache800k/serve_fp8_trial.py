@@ -13,6 +13,7 @@ import time
 IMAGE = 'sha256:521eb277c0733f8c2ce47aea1bb98ed576c6f1ad63bf5baf22d38fc07abf54ad'
 CAMPAIGN = Path('/mnt/vm_8tb/b70/results/cache800k_20260909')
 MODEL_ID = 'qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-mtp3-fp8-e4m3-calkv-cache800k'
+PUBLIC_MODEL_ID = 'hotschmoe-dd'
 
 REPO = Path(__file__).resolve().parents[2]
 ROOT = Path('/mnt/vm_8tb/b70')
@@ -63,7 +64,7 @@ def main():
     shutil.copy2(REPO / 'vllm/cache800k/full_feature_validate.py', validation_source)
     prior_validation = os.environ.get('B70_PRIOR_VALIDATION')
     (result / 'trial.json').write_text(json.dumps(dict(
-        model=MODEL_ID, alias='hotschmoe-dd', image=IMAGE, scales_sha256=scale_sha,
+        model=MODEL_ID, served_model=PUBLIC_MODEL_ID, alias=PUBLIC_MODEL_ID, image=IMAGE, scales_sha256=scale_sha,
         mode='user-authorized real-workload trial', production_qualified=False,
         mtp=3, prefix=True, eager=False, ram_offload=False,
         prior_evidence=str(evidence),
@@ -75,8 +76,8 @@ def main():
     replacement.replace(CURRENT)
     command = [sys.executable, str(REPO / 'vllm/fp8/kv_campaign_server.py'),
                '--preservation', str(result / 'config'), '--out', str(result / 'server'),
-               '--name', 'hotschmoe-dd', '--image', IMAGE, '--served-model', MODEL_ID,
-               '--served-alias', 'hotschmoe-dd', '--mtp', '3', '--memory-gib', '64',
+               '--name', 'hotschmoe-dd', '--image', IMAGE, '--served-model', PUBLIC_MODEL_ID,
+               '--served-alias', MODEL_ID, '--mtp', '3', '--memory-gib', '64',
                '--hook', 'load', '--kv-dtype', 'fp8_e4m3',
                '--scales', str(result / 'scales.json'),
                '--port', '18124', '--health-p2p-check', '--leased']
@@ -105,7 +106,7 @@ def main():
         validation_extra = ['--prior-validation', prior_validation] if prior_validation else []
         job.write_text(json.dumps(dict(command=['env', 'B70_REPO=' + str(REPO), sys.executable,
             str(validation_source),
-            '--server-root', str(result / 'server'), '--model', MODEL_ID, *validation_extra], timeout=8100)) + '\n')
+            '--server-root', str(result / 'server'), '--model', PUBLIC_MODEL_ID, *validation_extra], timeout=8100)) + '\n')
         deadline = time.monotonic() + 8200
         while not job.with_suffix('.done').exists():
             if stopping or server.poll() is not None or time.monotonic() > deadline:

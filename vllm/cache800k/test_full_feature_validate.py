@@ -1,8 +1,15 @@
 import unittest
-from full_feature_validate import check_features, counter
+from full_feature_validate import check_features, counter, served_names
 
 
 class FullFeatureGate(unittest.TestCase):
+    def test_alias_reordering_retains_exact_identity(self):
+        def manifest(*names):
+            return {'command': ['--served-model-name', *names, '--dtype', 'float16']}
+        before = served_names(manifest('physical-model-A', 'hotschmoe-dd'))
+        self.assertEqual(before, served_names(manifest('hotschmoe-dd', 'physical-model-A')))
+        self.assertNotEqual(before, served_names(manifest('hotschmoe-dd', 'physical-model-B')))
+
     def test_refuses_feature_disabled(self):
         args = dict(mtp=3, eager=False, prefix_off=False, kv_dtype='fp8_e4m3', offload_gib=0)
         m = dict(args=args, command=['VLLM_XPU_ENABLE_XPU_GRAPH=1', '--compilation-config',

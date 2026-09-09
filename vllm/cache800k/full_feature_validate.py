@@ -34,6 +34,16 @@ def counter(text, metric):
     return sum(float(v) for v in rows)
 
 
+def served_names(manifest):
+    command = manifest['command']
+    names = []
+    for value in command[command.index('--served-model-name') + 1:]:
+        if value.startswith('--'):
+            break
+        names.append(value)
+    return set(names)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--server-root', type=Path, required=True)
@@ -62,7 +72,9 @@ def main():
         prior = args.prior_validation
         old = json.loads((prior / 'manifest.json').read_text())
         check_features(old)
-        assert old['image'] == manifest['image'] and old['model'] == manifest['model']
+        assert old['image'] == manifest['image']
+        # Only alias ordering may change; retain the exact physical-model ID.
+        assert served_names(old) == served_names(manifest)
         assert old['source_sha256'] == manifest['source_sha256']
         assert (prior / 'exit.rc').read_text().strip() == '0'
         for flag in ('--compilation-config', '--max-model-len', '--max-num-seqs',
