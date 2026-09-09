@@ -140,6 +140,9 @@ def main():
         src = str(cache) if m['Destination'] == '/root/.cache/vllm' else m['Source']
         docker += ['-v', src + ':' + m['Destination'] + ('' if m['RW'] else ':ro')]
     docker += ['-v', str(args.out.resolve()) + ':/kv-campaign', '-v', str(source.resolve()) + ':/kv-source:ro']
+    # Python -m model-inspection subprocesses prepend cwd independently of
+    # PYTHONPATH. The image's source checkout must not shadow the wheel.
+    docker += ['--workdir', '/tmp']
     use_entry = not args.packaged_hooks and (args.hook != 'none' or args.trace_offload or args.offload_group_fix)
     if args.packaged_hooks:
         for key in ('PYTHONPATH', 'B70_OFFLOAD_GROUP_FIX', 'B70_KV_MODE', 'B70_OFFLOAD_TRACE'):
