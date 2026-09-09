@@ -36,7 +36,8 @@ def main():
     weights = json.loads((args.preservation / 'model-files.json').read_text())
     config_sha = weights['config.json']['sha256']
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    artifact = merge(sorted(root.glob('kv-record-*.json')), args.out, 1.1,
+    temporary = args.out.with_suffix('.building')
+    artifact = merge(sorted(root.glob('kv-record-*.json')), temporary, 1.1,
                      17 if args.mtp else 16,
                      'qwen3.8-27b/int4-autoround-gptq-relabel-r212')
     artifact['model_config_sha256'] = config_sha
@@ -48,7 +49,8 @@ def main():
         requests=len(rows), prompt_tokens=sum(r['usage'].get('prompt_tokens', 0) for r in rows),
         completion_tokens=sum(r['usage'].get('completion_tokens', 0) for r in rows),
         note='Synthetic text calibration. Periodic activation snapshots; not exhaustive final-step counts.')
-    args.out.write_text(json.dumps(artifact, indent=2, sort_keys=True) + '\n')
+    temporary.write_text(json.dumps(artifact, indent=2, sort_keys=True) + '\n')
+    temporary.replace(args.out)
     print(json.dumps(dict(path=str(args.out), sha256=hashlib.sha256(args.out.read_bytes()).hexdigest(),
                           layers=len(artifact['layers']), requests=len(rows)), indent=2))
 

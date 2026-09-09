@@ -19,6 +19,10 @@ class PreflightInfrastructureError(RuntimeError):
     """A probe could not run; this is not evidence of a hardware failure."""
 
 
+class RequestedStop(Exception):
+    """Normal stop during preflight or startup; still run owned cleanup."""
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--preservation', type=Path, required=True)
@@ -27,6 +31,7 @@ def main():
     p.add_argument('--image', default=IMAGE)
     p.add_argument('--packaged-hooks', action='store_true')
     p.add_argument('--served-model')
+    p.add_argument('--served-alias', action='append', default=[])
     p.add_argument('--health-p2p-check', action='store_true')
     p.add_argument('--profile', action='store_true')
     p.add_argument('--offload-gib', type=int, default=0)
@@ -105,6 +110,8 @@ def main():
     if args.served_model:
         model = args.served_model
     setarg('--served-model-name', model)
+    i = cmd.index('--served-model-name') + 2
+    cmd[i:i] = args.served_alias
     setarg('--kv-cache-dtype', args.kv_dtype)
     if args.mtp == 0:
         i = cmd.index('--speculative-config'); del cmd[i:i+2]
@@ -182,12 +189,16 @@ def main():
     signal.signal(signal.SIGHUP, stop_signal)
     try:
         health('pre')
+        if (args.out / 'STOP').exists():
+            raise RequestedStop()
         with (args.out / 'server.log').open('w') as log:
             server = subprocess.Popen(docker, stdout=log, stderr=subprocess.STDOUT)
             deadline = time.monotonic() + 1200
             while time.monotonic() < deadline:
                 if server.poll() is not None:
                     raise RuntimeError('server exited during startup')
+                if (args.out / 'STOP').exists():
+                    raise RequestedStop()
                 try:
                     with urllib.request.urlopen(f'http://127.0.0.1:{args.port}/v1/models', timeout=3) as r:
                         identity = json.load(r)
@@ -218,6 +229,8 @@ def main():
                     if rc:
                         print('JOB FAILED ' + job.stem + ' rc=' + str(rc), flush=True)
                 time.sleep(1)
+    except RequestedStop:
+        pass
     except Exception as exc:
         failed = True
         needs_recovery = server is not None or not isinstance(exc, PreflightInfrastructureError)
