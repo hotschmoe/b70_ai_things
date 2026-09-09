@@ -8595,3 +8595,32 @@ offline; no campaign test running and no input needed.
 Source preservation note: files listed in source-encoding.json use ASCII
 JSON strings (.py.json) to preserve upstream non-ASCII comments losslessly;
 decode JSON before checking their original source SHA256.
+
+## 2026-09-09 19:04 UTC review: embedding trace prepared on CPU
+
+CONFIG -> No campaign coordinator, serving container or GPU process alive.
+S0d lifecycle rc=1, short/guides pass, long32k rc=1 preserved. Rebind and
+both-card/compiled P2P-off post-health logs pass; unit MainPID=0/status1.
+COMMAND -> Inspect processes, containers, systemd and actual lifecycle logs.
+Prepare exact-source-hash-guarded embedding trace overlay; run CPU lifecycle,
+trace and AST-extracted patched-forward tests against the exported image source.
+RESULT -> Nine tests pass, including eight actual forward branch/rank cases.
+Trace emits producer host return and TP-wrapper entry/return with TP rank,
+PID, monotonic timestamp, sequence, shape, stride, dtype, device and bytes.
+No tensor reads or device synchronization. Return is explicitly NOT device
+completion; scope is embedding wrappers, not every model collective.
+Source review caught nonexistent self.tp_rank in the first undeployed overlay;
+corrected to installed get_tp_group().rank_in_group. Initial mock-only results
+and overlay retained but superseded by overlay-v2 and cpu-tests-v2.log.
+Both versions were CPU-only; no GPU deployment or image/native change.
+VERDICT -> Bounded tested instrumentation preparation complete. Authoritative
+raw overlay and hashes: s0e-trace-preparation-1904/overlay-v2/ under campaign
+root. Next tick integrate this read-only overlay and helper into the campaign
+container with recorded mount/import identity, CPU-test launcher command, and
+prepare a fresh bounded arm through run_arm.py and one named systemd user
+coordinator. A 2048-row prefill budget versus S0d's 8192 is a possible single
+configuration control; record tracing as an additional timing perturbation.
+Do not launch an unchanged uninstrumented S0d or infer a root cause from host
+return records. SGLang long context, four-active-200K FP8, prefix/MTP/graphs
+and RAM reload remain unqualified. No test running; timer enabled, production
+offline. No user input needed.
