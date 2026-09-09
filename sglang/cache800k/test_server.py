@@ -56,6 +56,11 @@ class LifecycleTest(unittest.TestCase):
             self.assertEqual(command[command.index('--chunked-prefill-size') + 1], '2048' if overlay else '8192')
             if overlay:
                 self.assertEqual(len(manifest['trace']['targets']), 2)
+                helper = (overlay / 'b70_embedding_trace.py').read_text()
+                completion = 'torch.xpu.synchronize' in helper
+                self.assertEqual(manifest['trace']['completion_control'], completion)
+                self.assertEqual(manifest['trace']['timing_perturbation'], completion)
+                self.assertFalse(manifest['trace']['device_completion_observed'])
                 for name, target in manifest['trace']['targets'].items():
                     self.assertIn(str(overlay / name) + ':' + target + ':ro', command)
             self.assertEqual(result, int(failed))

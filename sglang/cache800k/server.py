@@ -25,6 +25,9 @@ def trace_mounts(directory, image):
         'vocab_parallel_embedding.py': '1afd4ee93b7173ed221e3ed88d6a296039889583641bec8ce6c1b7e97a75c726',
         'b70_embedding_trace.py': 'ae6047be2bc44b49c620702992ef224b045a23cdd488dddbe6e516e21c732357',
     }
+    completion_control = manifest['files'].get('b70_embedding_trace.py') == 'eb732b739ff7e594d6707294aa902291fe841d844a475d0fcd6209f0f648b494'
+    if completion_control:
+        expected['b70_embedding_trace.py'] = 'eb732b739ff7e594d6707294aa902291fe841d844a475d0fcd6209f0f648b494'
     if manifest['files'] != expected:
         raise ValueError('trace manifest differs from reviewed overlay')
     site = '/opt/venv/lib/python3.12/site-packages/'
@@ -36,7 +39,11 @@ def trace_mounts(directory, image):
             raise ValueError('trace file hash mismatch: ' + name)
         mounts += ['-v', str(directory / name) + ':' + targets[name] + ':ro']
     return mounts, dict(directory=str(directory), files=expected, targets=targets,
-                        device_completion_observed=False)
+                        device_completion_observed=False,
+                        completion_control=completion_control,
+                        completion_scope=('successful device-wide pre/post synchronize returns only'
+                                          if completion_control else 'host boundaries only'),
+                        timing_perturbation=completion_control)
 
 
 def main():
