@@ -39,11 +39,14 @@ def main():
     p.add_argument('--port', type=int, default=18125)
     p.add_argument('--hook', choices=['none', 'record', 'load'], default='none')
     p.add_argument('--scales', type=Path)
+    p.add_argument('--scale-audit', action='store_true')
     p.add_argument('--trace-offload', action='store_true')
     p.add_argument('--offload-group-fix', action='store_true')
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
+    if args.scale_audit and args.hook != 'load':
+        p.error('--scale-audit requires --hook load')
     if not args.image.startswith('sha256:') or len(args.image) != 71:
         p.error('--image must be an immutable local image ID')
     if args.packaged_hooks:
@@ -147,6 +150,8 @@ def main():
         env['PYTHONPATH'] = ':'.join(['/kv-source/kv_hooks', *filter(None, env.get('PYTHONPATH', '').split(':'))])
         env['B70_KV_MODE'] = args.hook
         env['B70_KV_OUT'] = '/kv-campaign'
+        if args.scale_audit:
+            env['B70_KV_AUDIT'] = '1'
         if args.trace_offload:
             env['B70_OFFLOAD_TRACE'] = '1'
         if args.offload_group_fix:

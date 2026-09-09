@@ -1,12 +1,13 @@
 # Next serving campaign: 800K resident context and correct recovery
 
-Date: 2026-09-09. Status: planning only; no maintenance window started.
+Date: 2026-09-09. Status: maintenance authorized and campaign started.
 
-The user reports that the current vLLM endpoint is in use. This instruction
-supersedes stale deployment-status notes for the purpose of this plan.
-Writing this plan does not authorize stopping, restarting, probing with
-benchmark traffic, or changing the production endpoint. GPU execution begins
-only when the user explicitly chooses a maintenance window.
+The user subsequently explicitly authorized bringing down vLLM and starting
+this campaign. Normal owning-lifecycle shutdown and post-health completed.
+Execution evidence is appended in
+[the campaign log](../vllm/cache800k/20260909_campaign.md).
+The phase descriptions below remain the test protocol; the user's explicit
+authorization satisfies the maintenance-window prerequisite.
 
 ## Objectives and priority
 

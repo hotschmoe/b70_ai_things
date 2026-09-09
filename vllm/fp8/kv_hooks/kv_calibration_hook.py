@@ -1,4 +1,4 @@
-"""Model-specific static KV scale collection/loading for the pinned R187 ABI.
+"""Model-specific static KV scale collection/loading for R187/R276 research.
 
 Source port of the retained NVFP4 block-10 idea. No old scale artifacts used.
 """
@@ -98,3 +98,34 @@ def install():
             print('B70_KV_SCALE_LOADED ' + name + ' ' + json.dumps(records[name]), flush=True)
             return result
         Attention.process_weights_after_loading = process
+        if os.environ.get('B70_KV_AUDIT') == '1':
+            audit = {}
+            def dump_audit():
+                path = out / ('kv-audit-' + str(os.getpid()) + '.json')
+                temp = path.with_suffix('.tmp')
+                temp.write_text(json.dumps(audit, indent=2, sort_keys=True) + '\n')
+                temp.replace(path)
+            atexit.register(dump_audit)
+            original_forward = Attention.forward
+            def audit_forward(self, query, key, value, *args, **kwargs):
+                if ((out / 'AUDIT').exists() and key is not None and value is not None
+                        and get_forward_context().attn_metadata is not None):
+                    name = self.layer_name
+                    from vllm.distributed import get_tensor_model_parallel_rank
+                    rec = audit.setdefault(name, {'rank': get_tensor_model_parallel_rank(),
+                        'forwards': 0, 'k_values': 0, 'v_values': 0,
+                        'k_clipped': 0, 'v_clipped': 0, 'k_amax': 0., 'v_amax': 0.})
+                    for label, tensor in [('k', key), ('v', value)]:
+                        bound = 448. * scales[name][label + '_scale']
+                        absolute = tensor.detach().abs()
+                        maximum = float(absolute.amax().item())
+                        if not math.isfinite(maximum):
+                            raise RuntimeError('nonfinite held-out KV activation: ' + name)
+                        rec[label + '_amax'] = max(rec[label + '_amax'], maximum)
+                        rec[label + '_values'] += tensor.numel()
+                        rec[label + '_clipped'] += int((absolute > bound).sum().item())
+                    rec['forwards'] += 1
+                    if rec['forwards'] == 1 or rec['forwards'] % 20 == 0:
+                        dump_audit()
+                return original_forward(self, query, key, value, *args, **kwargs)
+            Attention.forward = audit_forward
