@@ -1,0 +1,27 @@
+[Unit]
+Description=hotschmoe-dd - Qwen3.8 INT4 calibrated FP8 KV XPU graphs MTP3 prefix cache
+Requires=docker.service
+Wants=network-online.target
+After=docker.service network-online.target
+RequiresMountsFor=/mnt/vm_8tb/github/b70_ai_things /mnt/vm_8tb/b70
+
+[Service]
+Type=simple
+User=hotschmoe
+Group=hotschmoe
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+Environment=PATH=/home/hotschmoe/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=SERVED=hotschmoe-dd
+# Retain matched long-workload evidence; rerun quality and prefix reuse at startup.
+Environment=B70_PRIOR_VALIDATION=/mnt/vm_8tb/b70/results/qwen38_int4_fp8kv_trial/20260909T214020Z/server
+ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/serve_fp8_trial.py start
+ExecStartPost=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/trial_ready.py ${MAINPID}
+ExecStop=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/serve_fp8_trial.py stop
+KillMode=mixed
+TimeoutStartSec=9000
+TimeoutStopSec=900
+# Failed TP2 lifecycles require diagnosis, not an automatic restart loop.
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
