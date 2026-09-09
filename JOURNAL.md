@@ -8460,3 +8460,17 @@ The service owns both GPU leases and repeats matched startup health before
 serving. It is already enabled for boot. Verify API and Prometheus scrape
 recovery after it becomes ready. Recovery evidence:
 /mnt/vm_8tb/b70/results/int4_prefix_20260908/20260908-hangup-recovery.log.
+
+### 2026-09-09 17:59 UTC - Scheduled S0c CPU diagnosis
+
+CONFIG -> Same-image SGLang FP16 INT4 control crashed on both TP2 ranks;
+no test or coordinator remains running. COMMAND -> Inspect lifecycle/logs;
+export hashed installed source and test dtype selection without GPU devices.
+RESULT -> Default BF16 convolution state conflicts with FP16 input in the
+Triton branch merge. Explicit float16 conv selects FP16 while temporal state
+stays FP32 in the CPU helper test. Teardown and both post-health probes
+completed, but STOP-after-job races crash detection and skipped xe-reset.
+VERDICT -> No GPU retry this review. Repair/test lifecycle detection, complete
+leased crash recovery/health, then qualify an explicit FP16-conv S0d arm.
+Full evidence: vllm/cache800k/20260909_campaign.md and raw
+/mnt/vm_8tb/b70/results/cache800k_20260909/s0c-cpu-diagnosis-1758/.
