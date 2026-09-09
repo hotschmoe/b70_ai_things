@@ -8552,3 +8552,46 @@ Next tick verify final per-card/compiled collective post-health, lifecycle rc
 and teardown first. Then inspect the long-prefill collective shape/source
 before designing a changed bounded control. Four-active-200K FP8, prefix,
 MTP, graphs and RAM reload remain pending. Timer stays enabled.
+
+## 2026-09-09 18:52 UTC review: S0d teardown verified and collective source traced
+
+CONFIG -> Exact SGLang adc915d266, S0d INT4/FP16 model and KV/FP16 conv/
+FP32 temporal state, TP2 P2P-off, eager, radix-off, chunked prefill 8192.
+No campaign coordinator, serving container or health process remains alive.
+COMMAND -> Inspect actual processes, systemd state, arm and recovery logs.
+Export seven installed Python source files CPU-only with no device mounts,
+network disabled, 2 CPUs/2 GiB; preserve relative paths and SHA256 hashes.
+Trace embedding, scheduler chunk budget and distributed all-reduce source.
+RESULT -> S0d unit failed with MainPID=0 and ExecMainStatus=1; lifecycle rc=1.
+Short quality and guides rc=0; long32k rc=1. Owned rebind recovered both cards;
+both per-card probes and compiled P2P-off collective completed successfully
+at 18:41. The prior continuation JSON was stale, not an active test.
+Embedding gathers and masks local-shard output before TP reduction. The XPU
+branch enters inplace_all_reduce, then _all_reduce_in_place falls through to
+torch.distributed.all_reduce(device_group), matching both crash stacks.
+There is no clone or explicit producer synchronization in that inspected path.
+Scheduler source truncates oversized input to the remaining chunk budget.
+With hidden_size=5120, a configured 8192-row FP16 embedding would be
+83886080 bytes (80 MiB) per rank. This is an inferred candidate shape, NOT
+measured per-rank entry evidence; no successful long-prefill batch log or
+collective entry/return trace establishes actual rows, strides or call count.
+Passing collective health uses 4x5120 BF16 (40960 bytes), with different
+runtime environment/preload settings; it is recovery evidence, not matched
+large-prefill qualification. Device loss may surface after earlier queued
+work; neither the traceback nor this source inspection isolates its cause.
+VERDICT -> Bounded CPU source diagnosis complete; no GPU touch or runtime
+change this review. Raw snapshot/source hashes: s0d-collective-diagnosis-1852/
+under the campaign root. Next prepare a CPU-tested source-only trace of
+per-rank embedding producer and collective entry/return (shape, dtype,
+stride, bytes, sequence number), hash the overlay, and use one bounded fresh
+leased arm via a named systemd coordinator. Record asynchronous return versus
+completion distinctly. A smaller-prefill-budget control is a possible next
+single-factor intervention; do not copy the historical Qwen3.6 clone fence
+or repeat S0d unchanged. Failure stops and recovers before any subsequent arm.
+SGLang long-context baseline remains unqualified. Four-active-200K vLLM FP8,
+prefix/MTP/graphs and RAM reload remain pending. Timer enabled; production
+offline; no campaign test running and no input needed.
+
+Source preservation note: files listed in source-encoding.json use ASCII
+JSON strings (.py.json) to preserve upstream non-ASCII comments losslessly;
+decode JSON before checking their original source SHA256.
