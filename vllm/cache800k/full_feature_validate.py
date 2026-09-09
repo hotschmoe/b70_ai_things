@@ -41,6 +41,13 @@ def main():
     args = p.parse_args()
     root = args.server_root
     check_features(json.loads((root / 'manifest.json').read_text()))
+    startup = (root / 'server.log').read_text()
+    if 'Graph capturing finished' not in startup:
+        raise RuntimeError('no completed graph capture recorded')
+    sizes = re.findall(r'GPU KV cache size: ([0-9,]+) tokens', startup)
+    if not sizes or int(sizes[-1].replace(',', '')) < 800000:
+        raise RuntimeError('actual logical KV pool is below the requested 800K')
+    capacity = int(sizes[-1].replace(',', ''))
     loaded = [r for path in root.glob('kv-load-*.json')
               for r in json.loads(path.read_text()).values()]
     if len(loaded) != 34 or any(r['query_quantized'] for r in loaded):
@@ -82,11 +89,15 @@ def main():
     (out / 'metrics-after.txt').write_text(after)
     preemptions = counter(after, 'vllm:num_preemptions_total') - counter(before, 'vllm:num_preemptions_total')
     hits = counter(after, 'vllm:prefix_cache_hits_total') - counter(before, 'vllm:prefix_cache_hits_total')
+    accepted = counter(after, 'vllm:spec_decode_num_accepted_tokens_total') - counter(before, 'vllm:spec_decode_num_accepted_tokens_total')
     if preemptions != 0 or hits <= 0:
         raise RuntimeError('unexpected preemption or no observed prefix reuse')
+    if accepted <= 0:
+        raise RuntimeError('no accepted MTP draft tokens observed')
     (out / 'PASSED.json').write_text(json.dumps(dict(
         user_trial=True, production_qualified=False, preemptions=preemptions,
-        prefix_hit_tokens=hits, calibrated_rank_layers=len(loaded),
+        prefix_hit_tokens=hits, accepted_mtp_tokens=accepted,
+        calibrated_rank_layers=len(loaded), logical_kv_tokens=capacity,
         manifest_sha256=hashlib.sha256((root / 'manifest.json').read_bytes()).hexdigest(),
         note='Bounded startup gate; four long retrievals, not four sustained 8K continuations.'), indent=2) + '\n')
 
