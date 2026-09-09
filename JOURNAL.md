@@ -8474,3 +8474,26 @@ VERDICT -> No GPU retry this review. Repair/test lifecycle detection, complete
 leased crash recovery/health, then qualify an explicit FP16-conv S0d arm.
 Full evidence: vllm/cache800k/20260909_campaign.md and raw
 /mnt/vm_8tb/b70/results/cache800k_20260909/s0c-cpu-diagnosis-1758/.
+
+## 2026-09-09 18:11 UTC review: S0c lifecycle repair
+
+CONFIG -> No campaign coordinator, server process or serving container alive.
+S0c retains quality rc=1, both-rank dtype crash and false lifecycle exit0.
+Actual prior post-health logs pass both cards and compiled P2P-off collective;
+no crash recovery log exists. Production remains intentionally offline.
+COMMAND -> Repair sglang/cache800k/server.py and run CPU-only mocked lifecycle
+regressions plus existing cache800k coordinator tests. No GPU commands run.
+RESULT -> Failed or timed-out jobs now raise after preserving their done rc,
+triggering failure accounting, owned teardown, reset and post-health. Check
+server exit before honoring STOP and again before intentional Docker stop.
+Five lifecycle tests pass (crash/STOP race, failed probe before server exit,
+timeout, startup exit/STOP, clean stop); three coordinator tests pass.
+Source hashes and test logs: results/cache800k_20260909/
+s0c-lifecycle-repair-1811/ under /mnt/vm_8tb/b70. git diff --check passes.
+VERDICT -> Bounded tested lifecycle repair complete, not GPU qualification.
+Next tick must perform leased xe-reset and per-card/compiled collective health
+for the prior crash, explicitly set and CPU-test FP16 convolution state with
+FP32 temporal state, then run a fresh S0d via one named systemd user coordinator.
+No new image/native bytes, dtype setting, serve or GPU recovery in this review.
+Four-active-200K FP8, prefix, MTP, graphs and real RAM recovery remain pending.
+Timer remains enabled; no campaign test is currently running.

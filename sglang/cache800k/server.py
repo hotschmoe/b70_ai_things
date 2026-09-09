@@ -95,9 +95,11 @@ def main():
             except (OSError, AssertionError):
                 time.sleep(2)
         (args.out / 'READY').touch()
-        while not (args.out / 'STOP').exists():
+        while True:
             if server.poll() is not None:
                 raise RuntimeError('server exited while ready')
+            if (args.out / 'STOP').exists():
+                break
             for job in sorted((args.out / 'jobs').glob('*.json'))[:1]:
                 spec = json.loads(job.read_text()); job.rename(job.with_suffix('.running'))
                 try:
@@ -105,12 +107,20 @@ def main():
                 except subprocess.TimeoutExpired:
                     rc = 124
                 job.with_suffix('.done').write_text(str(rc) + '\n')
+                if rc:
+                    raise RuntimeError('failed job: ' + job.stem + ' rc=' + str(rc))
             time.sleep(1)
     except Exception as exc:
         failed = True
         (args.out / 'failure.txt').write_text(ascii(exc) + '\n')
     finally:
         if server is not None:
+            # Detect an exit before our intentional stop, including the STOP race.
+            if server.poll() is not None:
+                failed = True
+                failure = args.out / 'failure.txt'
+                if not failure.exists():
+                    failure.write_text('server exited before owned teardown\n')
             run(['docker', 'stop', '-t', '60', name], 'stop.log', 90)
             try:
                 server.wait(timeout=90)
