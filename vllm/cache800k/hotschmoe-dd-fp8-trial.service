@@ -8,7 +8,7 @@ WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
 Environment=PATH=/home/hotschmoe/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=SERVED=hotschmoe-dd
 ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/serve_fp8_trial.py start
-ExecStartPost=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/trial_ready.py
+ExecStartPost=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/trial_ready.py ${MAINPID}
 ExecStop=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/serve_fp8_trial.py stop
 KillMode=mixed
 TimeoutStartSec=9000

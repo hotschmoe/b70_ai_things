@@ -3,12 +3,13 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
 import sys
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(os.environ.get('B70_REPO', Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(REPO / 'vllm/fp8'))
 from kv_campaign_probe import request
 

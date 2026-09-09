@@ -59,12 +59,15 @@ def main():
     import shutil
     shutil.copytree(CAMPAIGN / 'preservation/config', result / 'config')
     shutil.copy2(scales, result / 'scales.json')
+    validation_source = result / 'full_feature_validate.py'
+    shutil.copy2(REPO / 'vllm/cache800k/full_feature_validate.py', validation_source)
     prior_validation = os.environ.get('B70_PRIOR_VALIDATION')
     (result / 'trial.json').write_text(json.dumps(dict(
         model=MODEL_ID, alias='hotschmoe-dd', image=IMAGE, scales_sha256=scale_sha,
         mode='user-authorized real-workload trial', production_qualified=False,
         mtp=3, prefix=True, eager=False, ram_offload=False,
-        prior_evidence=str(evidence)), indent=2) + '\n')
+        prior_evidence=str(evidence),
+        validation_source_sha256=hashlib.sha256(validation_source.read_bytes()).hexdigest()), indent=2) + '\n')
     CURRENT.parent.mkdir(parents=True, exist_ok=True)
     replacement = CURRENT.with_name(CURRENT.name + '.new')
     replacement.unlink(missing_ok=True)
@@ -77,8 +80,6 @@ def main():
                '--hook', 'load', '--kv-dtype', 'fp8_e4m3',
                '--scales', str(result / 'scales.json'),
                '--port', '18124', '--health-p2p-check', '--leased']
-    if prior_validation:
-        command += ['--cache-seed', str(Path(prior_validation) / 'cache')]
     server = None
     frontdoor = None
     stopping = False
@@ -102,8 +103,8 @@ def main():
         # The leased server executes this gate before the public frontdoor.
         job = result / 'server/jobs/01-full-feature.json'
         validation_extra = ['--prior-validation', prior_validation] if prior_validation else []
-        job.write_text(json.dumps(dict(command=[sys.executable,
-            str(REPO / 'vllm/cache800k/full_feature_validate.py'),
+        job.write_text(json.dumps(dict(command=['env', 'B70_REPO=' + str(REPO), sys.executable,
+            str(validation_source),
             '--server-root', str(result / 'server'), '--model', MODEL_ID, *validation_extra], timeout=8100)) + '\n')
         deadline = time.monotonic() + 8200
         while not job.with_suffix('.done').exists():
