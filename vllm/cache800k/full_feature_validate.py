@@ -38,9 +38,11 @@ def main():
     p.add_argument('--server-root', type=Path, required=True)
     p.add_argument('--model', required=True)
     p.add_argument('--base', default='http://127.0.0.1:18124')
+    p.add_argument('--prior-validation', type=Path)
     args = p.parse_args()
     root = args.server_root
-    check_features(json.loads((root / 'manifest.json').read_text()))
+    manifest = json.loads((root / 'manifest.json').read_text())
+    check_features(manifest)
     startup = (root / 'server.log').read_text()
     if 'Graph capturing finished' not in startup:
         raise RuntimeError('no completed graph capture recorded')
@@ -55,6 +57,29 @@ def main():
     out = root / 'trial-validation'
     out.mkdir(exist_ok=False)
     results = {}
+    if args.prior_validation:
+        prior = args.prior_validation
+        old = json.loads((prior / 'manifest.json').read_text())
+        check_features(old)
+        assert old['image'] == manifest['image'] and old['model'] == manifest['model']
+        assert old['source_sha256'] == manifest['source_sha256']
+        assert (prior / 'exit.rc').read_text().strip() == '0'
+        for flag in ('--compilation-config', '--max-model-len', '--max-num-seqs',
+                     '--max-num-batched-tokens', '--gpu-memory-utilization', '--dtype',
+                     '--tensor-parallel-size', '--quantization', '--speculative-config'):
+            assert old['command'][old['command'].index(flag) + 1] == manifest['command'][manifest['command'].index(flag) + 1]
+        old_loaded = [r for path in prior.glob('kv-load-*.json') for r in json.loads(path.read_text()).values()]
+        assert {r['artifact_sha256'] for r in old_loaded} == {r['artifact_sha256'] for r in loaded}
+        old_results = json.loads((prior / 'trial-validation/results.json').read_text())
+        assert all(old_results[name]['rc'] == 0 for name in ('01-quality', '03-tools', '04-long4'))
+        assert old_results['02-guides']['trial_coherence_gate']
+        for name in ('01-quality', '04-long4'):
+            assert json.loads((prior / 'trial-validation' / name / 'summary.json').read_text())['passed']
+        old_before = (prior / 'trial-validation/metrics-before.txt').read_text()
+        old_after = (prior / 'trial-validation/metrics-after.txt').read_text()
+        assert counter(old_after, 'vllm:num_preemptions_total') == counter(old_before, 'vllm:num_preemptions_total')
+        results['prior_validation'] = dict(root=str(prior), checks=old_results,
+            note='Same image, sources, scales and serving configuration; prior workload evidence retained.')
     def run(name, script, flags, timeout, guide=False):
         dest = out / name
         cmd = ['python3', str(REPO / 'vllm/fp8' / script), '--base', args.base,
@@ -77,13 +102,16 @@ def main():
             raise RuntimeError('trial validation failed: ' + name)
     before = request(args.base, '/metrics')
     run('01-quality', 'kv_campaign_probe.py', ['--concurrency', '4'], 900)
-    run('02-guides', 'kv_campaign_probe.py',
-        ['--mode', 'decode', '--rounds', '2', '--concurrency', '1'], 1500, guide=True)
-    run('03-tools', 'kv_campaign_agent_probe.py',
-        ['--shared-cache', '--stream', '--turns', '4', '--records', '180'], 1800)
-    run('04-long4', 'kv_campaign_probe.py',
-        ['--mode', 'long', '--tokens', '196000', '--rounds', '1',
-         '--concurrency', '4', '--timeout', '1800'], 2000)
+    if not args.prior_validation:
+        run('02-guides', 'kv_campaign_probe.py',
+            ['--mode', 'decode', '--rounds', '2', '--concurrency', '1'], 1500, guide=True)
+        run('03-tools', 'kv_campaign_agent_probe.py',
+            ['--shared-cache', '--stream', '--turns', '4', '--records', '180'], 1800)
+        run('04-long4', 'kv_campaign_probe.py',
+            ['--mode', 'long', '--tokens', '196000', '--rounds', '1',
+             '--concurrency', '4', '--timeout', '1800'], 2000)
+    run('05-prefix-reuse', 'kv_campaign_probe.py',
+        ['--mode', 'reuse', '--tokens', '32000', '--reuse-sequence', '0,1,0'], 1800)
     after = request(args.base, '/metrics')
     (out / 'metrics-before.txt').write_text(before)
     (out / 'metrics-after.txt').write_text(after)

@@ -59,6 +59,7 @@ def main():
     import shutil
     shutil.copytree(CAMPAIGN / 'preservation/config', result / 'config')
     shutil.copy2(scales, result / 'scales.json')
+    prior_validation = os.environ.get('B70_PRIOR_VALIDATION')
     (result / 'trial.json').write_text(json.dumps(dict(
         model=MODEL_ID, alias='hotschmoe-dd', image=IMAGE, scales_sha256=scale_sha,
         mode='user-authorized real-workload trial', production_qualified=False,
@@ -76,6 +77,8 @@ def main():
                '--hook', 'load', '--kv-dtype', 'fp8_e4m3',
                '--scales', str(result / 'scales.json'),
                '--port', '18124', '--health-p2p-check', '--leased']
+    if prior_validation:
+        command += ['--cache-seed', str(Path(prior_validation) / 'cache')]
     server = None
     frontdoor = None
     stopping = False
@@ -98,10 +101,11 @@ def main():
             time.sleep(1)
         # The leased server executes this gate before the public frontdoor.
         job = result / 'server/jobs/01-full-feature.json'
+        validation_extra = ['--prior-validation', prior_validation] if prior_validation else []
         job.write_text(json.dumps(dict(command=[sys.executable,
             str(REPO / 'vllm/cache800k/full_feature_validate.py'),
-            '--server-root', str(result / 'server'), '--model', MODEL_ID], timeout=6300)) + '\n')
-        deadline = time.monotonic() + 6400
+            '--server-root', str(result / 'server'), '--model', MODEL_ID, *validation_extra], timeout=8100)) + '\n')
+        deadline = time.monotonic() + 8200
         while not job.with_suffix('.done').exists():
             if stopping or server.poll() is not None or time.monotonic() > deadline:
                 raise RuntimeError('full-feature validation interrupted')
