@@ -56,7 +56,7 @@ def main():
                 '--quantization', 'gptq', '--attention-backend', args.attention,
                 '--linear-attn-backend', 'triton', '--mamba-ssm-dtype', 'float32',
                 '--disable-cuda-graph', '--disable-overlap-schedule',
-                '--skip-server-warmup', '--disable-custom-all-reduce', '--tp-size', '2',
+                '--skip-server-warmup', '--enable-metrics', '--disable-custom-all-reduce', '--tp-size', '2',
                 '--chunked-prefill-size', '8192', '--context-length', str(args.context),
                 '--max-running-requests', '4', '--mem-fraction-static', str(args.memory_fraction),
                 '--reasoning-parser', 'qwen3', '--tool-call-parser', 'qwen3_coder',
