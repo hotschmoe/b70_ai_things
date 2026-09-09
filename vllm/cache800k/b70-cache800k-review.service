@@ -1,0 +1,10 @@
+[Unit]
+Description=Review and advance the authorized B70 cache800K campaign
+
+[Service]
+Type=oneshot
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+Environment=PATH=/home/hotschmoe/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/monitor.py
+TimeoutStartSec=infinity
+Nice=10

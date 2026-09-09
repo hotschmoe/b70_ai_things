@@ -1,0 +1,11 @@
+[Unit]
+Description=Check the B70 cache800K campaign every ten minutes
+
+[Timer]
+OnCalendar=*-*-* *:00/10:00 UTC
+AccuracySec=1s
+Persistent=false
+Unit=b70-cache800k-review.service
+
+[Install]
+WantedBy=timers.target
