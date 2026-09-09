@@ -8654,3 +8654,31 @@ the campaign root. Coordinator log: s0e-sglang-fp16-conv16-trace-p2048.plan.log;
 server/job logs: s0e-sglang-fp16-conv16-trace-p2048/. Four-active-200K FP8,
 prefix/MTP/graphs and RAM reload remain pending. Timer enabled; production
 offline; no user input needed.
+
+## 2026-09-09 19:31 UTC review: S0e measured embedding collective stall
+
+CONFIG -> S0e same-weight SGLang FP16 KV/conv, FP32 temporal state,
+TP2 P2P-off, eager, radix-off, traced prefill2048. Single coordinator
+b70-cache800k-s0e.service PID 697856; leased server PID 697881.
+COMMAND -> Inspect live processes, completed jobs, watchdog stacks, rank
+traces and kernel journal. Preserve raw snapshot and SHA256 manifest in
+/mnt/vm_8tb/b70/results/cache800k_20260909/s0e-watchdog-review-1931/.
+RESULT -> Short quality passed 24/24 exactly; both 2048-token guides passed
+and repeated exactly. Long32k/c2 began 19:24:43 and has no completed result.
+Both ranks enter embedding collective sequence 4274 with shape 2048x5120,
+stride 5120x1, FP16, 20971520 bytes each; neither records host return.
+Previous sequence 4273 returned on both ranks. Both watchdogs time out at
+19:29:49 after 300 seconds, with stacks inside c10d all_reduce and Level Zero
+queue synchronization. No kernel timeout/reset/fault matches since arm start
+at inspection. Watchdog announces a 60-second coredump wait before exit;
+coordinator, leased server and probe remain alive, with no final lifecycle
+or recovery marker yet. Per-card and compiled collective pre-health passed.
+VERDICT -> Bounded read-only diagnosis complete. Smaller prefill plus tracing
+did not avoid the long-prefill stall. Measured host entry localizes the wait,
+but does not prove producer completion or establish initiating root cause.
+Allow the existing bounded lifecycle to account for failure, tear down,
+recover and run post-health; launch no competing workload or unchanged retry.
+Next tick verify actual exit/recovery/post-health first, then design a focused
+CPU-tested producer/collective completion control using this measured shape.
+SGLang long context and four-active-200K FP8 remain unqualified; prefix, MTP,
+graphs and RAM reload pending. Timer enabled; production offline.
