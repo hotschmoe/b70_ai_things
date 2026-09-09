@@ -8526,3 +8526,29 @@ Coordinator log: s0d-sglang-fp16-conv16.plan.log; server and job logs are under
 s0d-sglang-fp16-conv16/. No new image/native bytes or production restart.
 Four simultaneously progressing 200K FP8 contexts, prefix/MTP/graphs and real
 RAM reload remain pending. Review timer remains enabled.
+
+## 2026-09-09 18:41 UTC review: S0d long-prefill device loss
+
+CONFIG -> Same S0d FP16 convolution/FP16 KV/FP32 temporal-state arm,
+INT4/MTP0/eager/radix-off, TP2 P2P disabled. Single systemd coordinator
+b70-cache800k-s0d.service PID 674545, leased server PID 674570.
+COMMAND -> Read actual processes, job summaries, scheduler traces and kernel
+journal; preserve timestamped raw snapshots and SHA256 hashes in
+s0d-failure-review-1840/ under the campaign raw root. No new GPU workload.
+RESULT -> Short quality passed 24/24 with exact repetition. Both 2048-token
+guides passed and repeated exactly (4096 completion tokens). The 32K/c2 job
+started at 18:34:56 but has no passing retrieval result. Kernel records
+0b:00.0 queue timeout/reset at 18:35:01-02, blocked TTM fence waits, then
+44:00.0 timeout/reset at 18:39:34. Both schedulers report DEVICE_LOST at
+18:39:35 in embedding all-reduce during extend. This is the observed error
+site, not established initiating cause. Job rc=1 and failure.txt preserved;
+final metrics connection reset masks request detail in the probe traceback.
+Owned lifecycle performed rebind recovery successfully under its existing
+lease. At 18:41 post-health is running; final lifecycle rc remains pending.
+VERDICT -> FP16 conv change passes short/guides but SGLang baseline is not
+qualified: long-prefill execution failed. Bounded read-only failure diagnosis
+complete; no unchanged retry, source/image change or production restart.
+Next tick verify final per-card/compiled collective post-health, lifecycle rc
+and teardown first. Then inspect the long-prefill collective shape/source
+before designing a changed bounded control. Four-active-200K FP8, prefix,
+MTP, graphs and RAM reload remain pending. Timer stays enabled.
