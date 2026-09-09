@@ -8855,3 +8855,27 @@ fresh group history differ from loaded SGLang; even a pass cannot establish
 loaded-context correctness or isolate root cause. No native/image changes,
 production restart or promotion. Timer enabled. SGLang long context, four
 active 200K FP8 contexts, prefix/MTP/graphs and RAM reload remain pending.
+
+## 2026-09-09 20:52 UTC review: fresh subgroup stalls without model load
+
+CONFIG -> C0 exact adc915d266 image and serving environment, P2P off,
+synthetic contiguous FP16 tensors, XCCL new_group([0,1]), 240-second bound.
+COMMAND -> Inspect lifecycle, per-rank stages, source, kernel log, removal,
+rebind and post-health; CPU-parse/assert both rank traces.
+RESULT -> 4x5120 SUM passes on both ranks. First 2048x5120 reduction
+(20 MiB/rank) completes both producer pre-fences, then both ranks enter
+all-reduce without host return. Outer timeout rc124; the 45-second group
+bound did not end the call. GPU-mapped library dictionaries match ranks.
+Container absence verified; rebind, both cards and compiled P2P-off
+post-health pass. Unit failed, MainPID=0, lifecycle rc1; no workload remains.
+Raw assertions/snapshots: c0-failure-diagnosis-2052/. Initial line JSON parse
+failed on concatenated rank records; stream parsing succeeds, raw preserved.
+VERDICT -> Bounded CPU diagnosis complete. Fresh synthetic work stalls
+without loaded-model history; same root cause as S0f is not established.
+Next CPU-validate one C0 environment change: topology recognition enabled
+(CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK=1), retaining P2P=0 and exact
+source/image/shape/group/other environment. Use a new directory and one
+named leased coordinator with bounded recovery and health. The topology
+override is a candidate, not a diagnosed cause. No GPU attempt this review.
+SGLang long context, four-active-200K FP8, prefix/MTP/graphs and RAM reload
+remain pending. Timer enabled; production offline; no input required.
