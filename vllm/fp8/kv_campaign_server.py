@@ -238,6 +238,11 @@ def main():
         print(ascii(exc), flush=True)
     finally:
         if server is not None:
+            # A failed probe can race with STOP from its coordinator. Detect
+            # an already-dead backend before intentional shutdown either way.
+            if server.poll() is not None:
+                failed = True
+                needs_recovery = True
             run(['docker', 'exec', args.name, 'sh', '-c', 'cat /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.peak /sys/fs/cgroup/memory.events'], 'memory-final.log', 20)
             run(['docker', 'stop', '-t', '60', args.name], 'stop.log', 90)
             try:

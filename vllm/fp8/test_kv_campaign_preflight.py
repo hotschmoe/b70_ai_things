@@ -1,5 +1,6 @@
 """CPU-only lifecycle tests: distinguish probe refusal from hardware failure."""
 import json
+import io
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -68,6 +69,29 @@ class PreflightTest(unittest.TestCase):
             self.assertEqual(sum(Path(c[0]).name == 'xpu-health' for c in commands), 2)
             self.assertEqual(sum(Path(c[0]).name == 'xpu-collective-health' for c in commands), 2)
             self.assertFalse(any('xe-reset' in word for c in commands for word in c))
+
+    def test_backend_death_racing_stop_still_recovers(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); cfg = root / 'config'; cfg.mkdir()
+            (cfg / 'Config.json').write_text(json.dumps({'Env': [], 'Cmd': [
+                '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
+            (cfg / 'Mounts.json').write_text('[]')
+            commands = []; state = {'dead': False}
+            child = SimpleNamespace(poll=lambda: 1 if state['dead'] else None, wait=lambda **_: 1)
+            def run(command, **kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=0)
+            def ready(*args, **kwargs):
+                state['dead'] = True
+                (root / 'result/STOP').touch()
+                return io.BytesIO(b'{"data":[{"id":"test"}]}')
+            with patch.object(server.subprocess, 'run', run), patch.object(server.subprocess, 'Popen', return_value=child), \
+                    patch.object(server.urllib.request, 'urlopen', ready), \
+                    patch('sys.argv', ['server', '--preservation', str(cfg), '--out', str(root / 'result'),
+                                       '--served-model', 'test', '--leased']):
+                self.assertEqual(server.main(), 1)
+            self.assertEqual(sum(any(Path(w).name == 'xe-reset' for w in c) for c in commands), 1)
+            self.assertEqual(sum(Path(c[0]).name == 'xpu-health' for c in commands), 2)
 
 
 if __name__ == '__main__':
