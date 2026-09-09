@@ -46,6 +46,8 @@ def main():
            'FI_TCP_IFACE': 'eth0', 'CCL_KVS_IFACE': 'eth0',
            'ONEAPI_DEVICE_SELECTOR': 'level_zero:0,1', 'ZE_AFFINITY_MASK': '0,1',
            'SYCL_UR_USE_LEVEL_ZERO_V2': '0', 'OMP_NUM_THREADS': '1',
+           # Conv state must match FP16 inputs; temporal state stays FP32.
+           'SGLANG_MAMBA_CONV_DTYPE': 'float16',
            'HF_HOME': '/cache/hf', 'XDG_CACHE_HOME': '/cache',
            'TRITON_CACHE_DIR': '/cache/triton', 'TORCHINDUCTOR_CACHE_DIR': '/cache/inductor'}
     for key, value in env.items():

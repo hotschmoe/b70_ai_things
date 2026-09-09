@@ -8497,3 +8497,32 @@ FP32 temporal state, then run a fresh S0d via one named systemd user coordinator
 No new image/native bytes, dtype setting, serve or GPU recovery in this review.
 Four-active-200K FP8, prefix, MTP, graphs and real RAM recovery remain pending.
 Timer remains enabled; no campaign test is currently running.
+
+## 2026-09-09 18:23 UTC review: S0d FP16 convolution-state qualification started
+
+CONFIG -> No live campaign coordinator/server at entry. S0c quality rc=1,
+prior scheduler dtype failure and false lifecycle exit0 preserved. Exact
+SGLang adc915d266 image and same INT4 tensor path. FP16 model/KV, MTP0,
+eager, radix-off; change convolution storage BF16 to FP16 explicitly with
+SGLANG_MAMBA_CONV_DTYPE=float16; retain FP32 temporal state.
+COMMAND -> Add launcher environment and manifest assertions. Run eight CPU
+lifecycle/coordinator tests and the installed dtype helper in a CPU-only
+container without GPU mounts. Run bin/gpu-run python3 recover.py, serial
+rebind reset, both-card health and compiled TP2 P2P-off collective. Start
+run_arm.py with fresh s0d-sglang-fp16-conv16.plan.json via named systemd user
+unit b70-cache800k-s0d.service, coordinator PID 674545, lease owner 674562.
+RESULT -> Eight CPU tests pass; installed helper confirms FP16 conv/FP32
+state. Initial unittest invocation had two import-path errors; original log
+and corrected PYTHONPATH passing run both preserved. Recovery and both health
+checks exit0; compiled collective world_size=2, shape=4x5120, 10 iterations.
+Single coordinator confirmed active; server holds both leases and begins its
+own pre-health. No inference result yet. Raw hashes, source snapshots, CPU
+logs and recovery: s0d-preparation-1822/ under the campaign raw root.
+VERDICT -> Configuration repair is CPU-tested, not numerically qualified.
+Fresh bounded arm runs c4 short quality, two c1 guides, then 32K/c2 retrieval;
+failed jobs must stop and recover through the repaired lifecycle. Next tick
+inspect actual processes, jobs, scheduler logs, teardown and post-health.
+Coordinator log: s0d-sglang-fp16-conv16.plan.log; server and job logs are under
+s0d-sglang-fp16-conv16/. No new image/native bytes or production restart.
+Four simultaneously progressing 200K FP8 contexts, prefix/MTP/graphs and real
+RAM reload remain pending. Review timer remains enabled.

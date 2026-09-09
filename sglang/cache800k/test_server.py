@@ -45,6 +45,11 @@ class LifecycleTest(unittest.TestCase):
             with patch('sys.argv', argv), patch.object(server.subprocess, 'run', run), patch.object(server.subprocess, 'Popen', start), patch.object(server.urllib.request, 'urlopen', return_value=io.BytesIO(b'{"data":[{"id":"test-int4-fp16"}]}')), patch.object(server.time, 'sleep'), patch.object(server.signal, 'signal'):
                 result = server.main()
             failed = mode != 'success'
+            manifest = json.loads((out / 'manifest.json').read_text())
+            command = manifest['command']
+            self.assertIn('SGLANG_MAMBA_CONV_DTYPE=float16', command)
+            self.assertEqual(command[command.index('--mamba-ssm-dtype') + 1], 'float32')
+            self.assertEqual(command[command.index('--dtype') + 1], 'float16')
             self.assertEqual(result, int(failed))
             self.assertEqual((out / 'exit.rc').read_text(), str(int(failed)) + '\n')
             self.assertEqual((out / 'failure.txt').exists(), failed)
