@@ -8740,3 +8740,31 @@ covers all preceding device work; collective host return alone is not device
 completion. Neither pass nor stall alone identifies embedding root cause.
 SGLang long context, four-active-200K FP8, prefix/MTP/graphs and RAM reload
 remain unqualified. No native/image change or production restart. Timer enabled.
+
+## 2026-09-09 20:11 UTC review: S0f pre-fences pass; collective still stalls
+
+CONFIG -> S0f exact SGLang INT4/FP16 KV/FP16 conv/FP32 temporal state,
+TP2 P2P-off, eager, radix-off, prefill2048, device-wide embedding pre/post
+fences. At entry its coordinator remained alive performing owned post-health.
+COMMAND -> Inspect live processes, job results, both-rank completion traces,
+watchdog stacks and recovery logs. Preserve raw snapshot and hashes under
+s0f-completion-diagnosis-2011/ in the campaign root. CPU-parse final sequences
+and assert the matching rank/stage/shape records. No new GPU workload.
+RESULT -> Short quality 24/24 and both 2048-token guides pass exactly.
+Long32k/c2 fails rc1. At sequence 4274 both ranks record successful pre-fence
+return (0.530201 ms rank0, 0.662844 ms rank1), then collective host entry
+for contiguous 2048x5120 FP16, 20971520 bytes each, without host return.
+Both ranks completed post-fences at sequence 4273. Watchdogs time out at
+20:08:26 inside c10d all_reduce/Level Zero queue synchronization. Recovery
+rebound both cards; both card probes and compiled P2P-off collective pass.
+Lifecycle exit.rc=1; unit failed with MainPID=0/ExecMainStatus=1 by snapshot.
+VERDICT -> Device-wide producer completion before this collective does not
+avoid the observed stall. This narrows the diagnostic but does not establish
+the initiating root cause or qualify large collectives from small health
+probes. Bounded CPU trace diagnosis complete; no unchanged retry or runtime
+change. Next prepare a CPU-reviewed matched 2048x5120 FP16 collective control
+with exact serving process environment and allocation/producer provenance;
+compare fresh-process versus loaded-context behavior before another full arm.
+Preserve P2P-off and bounded leased recovery. SGLang long context and four
+active 200K FP8 contexts remain unqualified; prefix/MTP/graphs and actual RAM
+reload pending. No campaign test running; timer enabled; production offline.
