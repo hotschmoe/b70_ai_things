@@ -20,7 +20,8 @@ def main():
     p.add_argument('--served-model', required=True)
     p.add_argument('--image', default=IMAGE)
     p.add_argument('--attention', choices=['intel_xpu', 'triton'], default='intel_xpu')
-    p.add_argument('--kv-dtype', choices=['float16', 'fp8_e4m3'], default='float16')
+    # SGLang uses auto to inherit the explicit float16 model dtype.
+    p.add_argument('--kv-dtype', choices=['auto', 'fp8_e4m3'], default='auto')
     p.add_argument('--prefix', action='store_true')
     p.add_argument('--context', type=int, default=200000)
     p.add_argument('--memory-fraction', type=float, default=.90)
