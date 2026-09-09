@@ -50,6 +50,25 @@ class PreflightTest(unittest.TestCase):
     def test_inconclusive_device_attempt_still_requires_recovery(self):
         self.exercise(2)
 
+    def test_stop_during_preflight_does_not_launch_and_still_checks_health(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); cfg = root / 'config'; cfg.mkdir()
+            (cfg / 'Config.json').write_text(json.dumps({'Env': [], 'Cmd': [
+                '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
+            (cfg / 'Mounts.json').write_text('[]')
+            commands = []
+            def run(command, **kwargs):
+                commands.append(command)
+                (root / 'result/STOP').touch()
+                return SimpleNamespace(returncode=0)
+            with patch.object(server.subprocess, 'run', run), patch.object(server.subprocess, 'Popen') as popen, \
+                    patch('sys.argv', ['server', '--preservation', str(cfg), '--out', str(root / 'result'), '--leased']):
+                self.assertEqual(server.main(), 0)
+                popen.assert_not_called()
+            self.assertEqual(sum(Path(c[0]).name == 'xpu-health' for c in commands), 2)
+            self.assertEqual(sum(Path(c[0]).name == 'xpu-collective-health' for c in commands), 2)
+            self.assertFalse(any('xe-reset' in word for c in commands for word in c))
+
 
 if __name__ == '__main__':
     unittest.main()
