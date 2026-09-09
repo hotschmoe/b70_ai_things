@@ -8682,3 +8682,33 @@ Next tick verify actual exit/recovery/post-health first, then design a focused
 CPU-tested producer/collective completion control using this measured shape.
 SGLang long context and four-active-200K FP8 remain unqualified; prefix, MTP,
 graphs and RAM reload pending. Timer enabled; production offline.
+
+## 2026-09-09 19:42 UTC review: S0e teardown verified; completion control prepared
+
+CONFIG -> S0e traced prefill2048 SGLang INT4/FP16 KV/FP16 conv/FP32 state,
+TP2 P2P-off, eager, radix-off. No campaign process or serving container alive;
+unit failed, MainPID=0, ExecMainStatus=1. Prior running JSON was stale.
+COMMAND -> Inspect actual processes, results, failure/recovery and post-health
+logs. Prepare a separate source-only completion trace helper and exact-source
+hashed overlay; run CPU trace, lifecycle and coordinator regressions.
+RESULT -> S0e lifecycle rc=1; quality/guides rc=0, long32k rc=1. Owned rebind
+recovered both cards; both per-card and compiled 4x5120 P2P-off collective
+post-health pass. Sixteen CPU tests pass, including pre-fence failure stopping
+collective submission, collective failure stopping post-fence, and post-fence
+failure never claiming completion. Initial run skipped one mount test; full
+run supplies the existing overlay and has no skips. New overlay adds device-
+wide XPU synchronize before/after embedding reduction, with distinct entry
+and successful-return records. Collective host return remains explicitly
+not device completion. No GPU touch, image/native change or deployment.
+VERDICT -> Bounded CPU diagnostic preparation complete, not a serving repair
+or numerical qualification. Raw source snapshots, hashes and tests under
+s0f-completion-preparation-1943/ in the campaign root (directory label only;
+actual preparation was 19:41-19:42 UTC). New helper hash eb732b739ff7e594d6707294aa902291fe841d844a475d0fcd6209f0f648b494.
+Next tick integrate this exact helper hash and completion metadata into the
+launcher, CPU-test mounts/import identity, then one fresh bounded S0f p2048
+arm via run_arm.py and a named systemd coordinator. Current launcher correctly
+rejects the new helper until explicitly integrated. Fences include all prior
+device work and perturb timing; neither a fence stall nor a pass alone proves
+an embedding root cause. Keep all failed-arm accounting. SGLang long context,
+four-active-200K FP8, prefix/MTP/graphs and RAM reload remain unqualified.
+No test running; review timer enabled, production offline, no input needed.

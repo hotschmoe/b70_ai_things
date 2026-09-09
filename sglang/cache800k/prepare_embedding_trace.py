@@ -34,16 +34,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--completion-control', action='store_true')
     args = parser.parse_args()
     patched = patch(args.source.read_bytes())
-    helper = Path(__file__).with_name('embedding_trace.py').read_bytes()
+    helper_name = 'embedding_completion_trace.py' if args.completion_control else 'embedding_trace.py'
+    helper = Path(__file__).with_name(helper_name).read_bytes()
     args.out.mkdir(parents=True, exist_ok=False)
     files = {'vocab_parallel_embedding.py': patched, 'b70_embedding_trace.py': helper}
     for name, data in files.items():
         (args.out / name).write_bytes(data)
     manifest = dict(base_sha256=BASE_SHA256,
                     files={name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
-                    completion='Host call boundaries only; no synchronization or device completion evidence',
+                    completion=('Device-wide fences before and after embedding reduction; timing perturbation'
+                                if args.completion_control else
+                                'Host call boundaries only; no synchronization or device completion evidence'),
                     scope='Embedding producer and TP wrapper only; not all model collectives',
                     deployed=False)
     (args.out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
