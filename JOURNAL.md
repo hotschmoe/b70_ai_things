@@ -8799,3 +8799,30 @@ unchanged; vary environment factors individually only after that control.
 No GPU work or unchanged full-model retry this tick. No test running; timer
 enabled, production offline. SGLang long context, four active 200K FP8,
 prefix/MTP/graphs and real RAM reload remain unqualified; no input needed.
+
+## 2026-09-09 20:33 UTC review: fresh-process subgroup control prepared
+
+CONFIG -> No campaign coordinator, serving container or GPU workload alive.
+S0f rc1 and long32k failure preserved; owned rebind, both per-card probes
+and compiled P2P-off post-health passed. Exact SGLang adc915d266 image.
+COMMAND -> Prepare collective_control.py and run its four CPU tests inside
+that image, serving environment, network disabled, no devices, 2 CPUs/2 GiB,
+90-second outer bound. Preserve command, source hashes and lifecycle snapshot
+under collective-control-preparation-2034/ in the campaign raw root.
+RESULT -> Four tests pass, including full 2048x5120 FP16 CPU SUM arithmetic
+and deliberate output corruption detection, environment mismatch rejection,
+subgroup forwarding and pre-fence/reduction/post-fence failure accounting.
+Control uses XCCL new_group([0,1]), contiguous FP16 4x5120 then three
+2048x5120 reductions, 45-second process-group bounds, explicit completion
+stages and mapped native-library hashes from the future GPU process.
+VERDICT -> CPU-tested diagnostic source prepared; no GPU execution or image
+change. Synthetic arange/add allocation is explicit and does not reproduce
+loaded embedding provenance, group creation history or earlier model work.
+Next integrate this control into a bounded leased lifecycle with serving
+environment reference and exact image/source hashes, pre/post-health and
+crash recovery; use one named coordinator and a new output directory.
+The outer lifecycle timeout is required; group timeout alone is insufficient.
+After fresh-process evidence, compare loaded-context behavior and capture its
+actual producer branch/allocation before claiming a matched reproduction.
+No campaign test running; timer enabled; production offline. SGLang long
+context, four-active-200K FP8, prefix/MTP/graphs and RAM reload remain pending.
