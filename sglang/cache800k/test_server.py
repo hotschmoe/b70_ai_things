@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import tempfile
+import shutil
 import unittest
 from unittest.mock import patch
 
@@ -14,7 +15,7 @@ spec.loader.exec_module(server)
 
 
 class LifecycleTest(unittest.TestCase):
-    def exercise(self, mode):
+    def exercise(self, mode, overlay=None):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory) / 'arm'
             commands = []
@@ -42,6 +43,8 @@ class LifecycleTest(unittest.TestCase):
                     (out / 'STOP').touch()
                 return process
             argv = ['server', '--out', str(out), '--served-model', 'test-int4-fp16', '--leased']
+            if overlay:
+                argv += ['--embedding-trace', str(overlay), '--prefill-size', '2048']
             with patch('sys.argv', argv), patch.object(server.subprocess, 'run', run), patch.object(server.subprocess, 'Popen', start), patch.object(server.urllib.request, 'urlopen', return_value=io.BytesIO(b'{"data":[{"id":"test-int4-fp16"}]}')), patch.object(server.time, 'sleep'), patch.object(server.signal, 'signal'):
                 result = server.main()
             failed = mode != 'success'
@@ -50,6 +53,11 @@ class LifecycleTest(unittest.TestCase):
             self.assertIn('SGLANG_MAMBA_CONV_DTYPE=float16', command)
             self.assertEqual(command[command.index('--mamba-ssm-dtype') + 1], 'float32')
             self.assertEqual(command[command.index('--dtype') + 1], 'float16')
+            self.assertEqual(command[command.index('--chunked-prefill-size') + 1], '2048' if overlay else '8192')
+            if overlay:
+                self.assertEqual(len(manifest['trace']['targets']), 2)
+                for name, target in manifest['trace']['targets'].items():
+                    self.assertIn(str(overlay / name) + ':' + target + ':ro', command)
             self.assertEqual(result, int(failed))
             self.assertEqual((out / 'exit.rc').read_text(), str(int(failed)) + '\n')
             self.assertEqual((out / 'failure.txt').exists(), failed)
@@ -78,6 +86,20 @@ class LifecycleTest(unittest.TestCase):
 
     def test_successful_probe_and_owned_stop(self):
         self.exercise('success')
+
+    @unittest.skipUnless(__import__('os').environ.get('B70_TRACE_OVERLAY'), 'requires reviewed overlay')
+    def test_reviewed_trace_mounts_and_tamper_rejection(self):
+        import os
+        overlay = Path(os.environ['B70_TRACE_OVERLAY']).resolve()
+        self.exercise('success', overlay)
+        with self.assertRaisesRegex(ValueError, 'exact inspected image'):
+            server.trace_mounts(overlay, 'other-image')
+        with tempfile.TemporaryDirectory() as directory:
+            copied = Path(directory) / 'overlay'
+            shutil.copytree(overlay, copied)
+            (copied / 'b70_embedding_trace.py').write_text('modified')
+            with self.assertRaisesRegex(ValueError, 'hash mismatch'):
+                server.trace_mounts(copied, server.IMAGE)
 
 
 if __name__ == '__main__':

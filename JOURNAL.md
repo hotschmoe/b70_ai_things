@@ -8624,3 +8624,33 @@ Do not launch an unchanged uninstrumented S0d or infer a root cause from host
 return records. SGLang long context, four-active-200K FP8, prefix/MTP/graphs
 and RAM reload remain unqualified. No test running; timer enabled, production
 offline. No user input needed.
+
+## 2026-09-09 19:13 UTC review: S0e traced prefill2048 control launched
+
+CONFIG -> S0d stopped with lifecycle rc=1 after long32k failure; no active
+campaign server/coordinator at entry. Its owned rebind and both per-card and
+compiled P2P-off collective post-health passed. Exact adc915d266 SGLang,
+same INT4/FP16 KV/FP16 conv/FP32 temporal state, MTP0/eager/radix-off/TP2.
+COMMAND -> Integrate reviewed overlay-v2 with exact-image and two-file hash
+guards, read-only mounts and recorded target paths. Run ten CPU tests,
+including actual patched-forward branches, mounts, tamper rejection and
+lifecycle failures. Verify base source hash and mounted helper import/path
+and source hashes in CPU-only containers without GPU devices. Start fresh
+s0e-sglang-fp16-conv16-trace-p2048.plan.json through run_arm.py in named user
+unit b70-cache800k-s0e.service, coordinator PID 697856, lease wrapper 697873,
+server PID 697881. All GPU health/serving remains under the server's lease.
+RESULT -> Ten CPU tests pass; exact base and overlay source identities pass.
+One coordinator active and both card leases acquired; pre-health underway.
+No new inference result yet. Prefill budget changes 8192 to 2048; tracing is
+an additional timing perturbation, not a synchronization fix. Plan preserves
+c4 short quality, two exact guides and 32K/c2 retrieval, with failure-stop,
+owned teardown/recovery and post-health. No image/native bytes changed.
+VERDICT -> Changed bounded diagnostic arm launched, not SGLang long-context
+qualification. Next tick inspect actual jobs, both-rank trace shapes and
+entry/return sequence, scheduler errors and lifecycle health. Host return
+records do not establish device completion or total model collective count.
+Raw CPU tests/source hashes/container commands: s0e-integration-1914/ under
+the campaign root. Coordinator log: s0e-sglang-fp16-conv16-trace-p2048.plan.log;
+server/job logs: s0e-sglang-fp16-conv16-trace-p2048/. Four-active-200K FP8,
+prefix/MTP/graphs and RAM reload remain pending. Timer enabled; production
+offline; no user input needed.

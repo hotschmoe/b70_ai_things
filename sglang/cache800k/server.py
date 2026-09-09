@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Leased, bounded SGLang INT4 cache campaign server with queued probes."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -12,6 +13,30 @@ import urllib.request
 
 REPO = Path(__file__).resolve().parents[2]
 IMAGE = 'sha256:adc915d266eaa74f7bea164d97cb7870b04dd7eb4c613952c56f4fbff1584a78'
+
+
+def trace_mounts(directory, image):
+    """Only mount the reviewed overlay into its exact installed image."""
+    if image != IMAGE:
+        raise ValueError('trace requires the exact inspected image')
+    directory = directory.resolve()
+    manifest = json.loads((directory / 'manifest.json').read_text())
+    expected = {
+        'vocab_parallel_embedding.py': '1afd4ee93b7173ed221e3ed88d6a296039889583641bec8ce6c1b7e97a75c726',
+        'b70_embedding_trace.py': 'ae6047be2bc44b49c620702992ef224b045a23cdd488dddbe6e516e21c732357',
+    }
+    if manifest['files'] != expected:
+        raise ValueError('trace manifest differs from reviewed overlay')
+    site = '/opt/venv/lib/python3.12/site-packages/'
+    targets = {'vocab_parallel_embedding.py': site + 'sglang/srt/layers/vocab_parallel_embedding.py',
+               'b70_embedding_trace.py': site + 'b70_embedding_trace.py'}
+    mounts = []
+    for name, digest in expected.items():
+        if hashlib.sha256((directory / name).read_bytes()).hexdigest() != digest:
+            raise ValueError('trace file hash mismatch: ' + name)
+        mounts += ['-v', str(directory / name) + ':' + targets[name] + ':ro']
+    return mounts, dict(directory=str(directory), files=expected, targets=targets,
+                        device_completion_observed=False)
 
 
 def main():
@@ -26,8 +51,13 @@ def main():
     p.add_argument('--context', type=int, default=200000)
     p.add_argument('--memory-fraction', type=float, default=.90)
     p.add_argument('--port', type=int, default=18125)
+    p.add_argument('--prefill-size', type=int, default=8192)
+    p.add_argument('--embedding-trace', type=Path)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
+    if args.prefill_size <= 0:
+        p.error('--prefill-size must be positive')
+    mounts, trace_identity = trace_mounts(args.embedding_trace, args.image) if args.embedding_trace else ([], None)
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
     args.out.mkdir(parents=True, exist_ok=False)
@@ -40,6 +70,7 @@ def main():
                '--ipc=host', '--cap-add', 'SYS_PTRACE', '--security-opt', 'label=disable',
                '-p', f'127.0.0.1:{args.port}:8000', '-v', str(model) + ':/model:ro',
                '-v', str(cache) + ':/cache', '--entrypoint', 'python3']
+    command += mounts
     env = {'CCL_ATL_TRANSPORT': 'ofi', 'CCL_ENABLE_SYCL_KERNELS': '1',
            'CCL_TOPO_P2P_ACCESS': '0', 'CCL_ZE_IPC_EXCHANGE': 'pidfd',
            'CCL_TOPO_FABRIC_VERTEX_CONNECTION_CHECK': '0',
@@ -59,13 +90,13 @@ def main():
                 '--linear-attn-backend', 'triton', '--mamba-ssm-dtype', 'float32',
                 '--disable-cuda-graph', '--disable-overlap-schedule',
                 '--skip-server-warmup', '--enable-metrics', '--disable-custom-all-reduce', '--tp-size', '2',
-                '--chunked-prefill-size', '8192', '--context-length', str(args.context),
+                '--chunked-prefill-size', str(args.prefill_size), '--context-length', str(args.context),
                 '--max-running-requests', '4', '--mem-fraction-static', str(args.memory_fraction),
                 '--reasoning-parser', 'qwen3', '--tool-call-parser', 'qwen3_coder',
                 '--host', '0.0.0.0', '--port', '8000']
     if not args.prefix:
         command.append('--disable-radix-cache')
-    (args.out / 'manifest.json').write_text(json.dumps(dict(args=vars(args), command=command), default=str, indent=2) + '\n')
+    (args.out / 'manifest.json').write_text(json.dumps(dict(args=vars(args), command=command, trace=trace_identity), default=str, indent=2) + '\n')
     def run(cmd, file, timeout=300):
         with (args.out / file).open('w') as log:
             return subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, timeout=timeout).returncode
