@@ -396,3 +396,63 @@ VERDICT -> FP8 is not necessary for this same premature-stop pattern. The
 context-cap change is explicit; this is not a matched precision performance
 comparison. A same65536 eager FP16 control is now starting to test graph
 necessity. No model/quantization cause has been established.
+
+
+## 2026-09-10: completed native model and corrected eager early-stop controls
+
+CONFIG -> Native-only imaged55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067
+on card0, TP1/MTP3, fresh-be02 FP8 KV, prefix caching and FULL decode,
+context100000/c4/batch32768. The Python adapter is absent. This completes the
+previously pending V2 model run; historical pending statements remain intact.
+
+COMMAND -> Run the frozen boundary10, exact serial-session0 pair and ample4
+jobs, collect all outcomes, then normal STOP and strict selected-card
+post-health. Raw: bang_recurrence_testing_20260910/
+native5802-model-card0-plan-v2/run/.
+
+RESULT -> Boundary10 passes10/10 and ample4 passes4/4. Independent CPU review
+parses every successful output as the exact consecutive integer array;
+all repeated cases report1600 cached tokens. Boundary outputs complete256
+integers; ample outputs complete256/512 integers at1173/2453 tokens for the
+spaced format. The separate serial pair fails2/2: prompt4045, completion2055,
+finish_reason=stop, ending after432 plus a partial '4'. Both outputs are
+invalid JSON; cache gates pass with cold0/reuse1600. Job returns are0/1/0,
+so lifecycleexit0 is not an overall workload pass. Normal resource teardown
+completes, strict selected pre/post-health passes, and no EngineCore forced
+kill is recorded.
+
+VERDICT -> The native source repair passes these former boundary/length
+failures in the model as well as the earlier unchanged native math/publication
+oracles. It does not resolve the separate premature-stop payload. This is
+bounded TP1 evidence, not production, concurrent or actual TP2 qualification.
+
+CONFIG -> Original7b on card1, TP1/MTP0, FP16 KV, prefix caching,
+context65536/c4/batch32768, eager mode (compilation0/cudagraphNONE and
+XPU graphs disabled). Exact session0 payload uses max_tokens4096.
+
+COMMAND -> Preserve the initial240-second deadline attempt. After that
+inadequate deadline and interruption of the unfinished pair, issue one
+corrected600-second-deadline request in a fresh cache namespace, then normal
+STOP and strict selected-card post-health. Raw:
+bang_recurrence_testing_20260910/
+tp1-card1-mtp0-fp16kv-eager-serial-session0-ctx65536/.
+
+RESULT -> The initial first request hits the client total deadline at240.024
+seconds, without final usage or finish reason; the pair job is interrupted
+with return-15 and does not complete two results. This is an infrastructure
+limit, not a completed model outcome. The corrected single600 request
+completes in253.777 seconds, prompt4045/completion2058/total6103,
+finish_reason=stop, cached0/created3328. It stops after433 and a comma,
+invalid JSON, and returns semanticfailure1. This is a natural stop despite
+4096-token allowance, not the earlier timeout. Lifecycleexit0, completed
+normal teardown and strict selected pre/post-health all pass.
+
+VERDICT -> Graph execution is not necessary for this premature-stop pattern:
+it persists in eager MTP0/FP16 serving. Together with the prior serial/MTP0
+and FP16 controls, neither concurrency, MTP nor FP8 KV is necessary for this
+specific residual pattern. Its cause remains unresolved; model or
+quantization attribution has not been established. One corrected eager
+request is not a completed two-request cache-reuse qualification.
+
+Evidence review: native-eager-completed-outcome-review.json records independent
+array checks and hashes of the retained results and lifecycle evidence.
