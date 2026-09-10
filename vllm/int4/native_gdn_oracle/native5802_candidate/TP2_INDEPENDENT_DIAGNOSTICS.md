@@ -54,3 +54,17 @@ WORKLOADS_PASSED or promotion. End with STOP, verified owned-container teardown,
 strict both-card and compiled P2P0 post-health. The existing pair lifecycle's
 reset-on-crash path and parent recovery review remain required. Keep profile
 shapes/counts and capacity evidence; no speed or full100K qualification claim.
+
+
+CONFIG -> Independent TP2 diagnostic arm, original prepared concurrent16 job.
+COMMAND -> Parent queued the frozen concurrent probe; subsequent CPU audit ran
+only --help for all ten prepared job commands and compared supported options.
+RESULT -> Original concurrent job exited2 before HTTP or output creation because
+its frozen parser lacks --alias. Parent preserved that failure, separately
+verified both served IDs/health, and queued01b with only unsupported --alias
+removed and a fresh output. concurrent-parser-correction.json records it. The
+remaining CLI audit found no other unsupported flags; every help command exited0.
+VERDICT -> This was diagnostic preparation infrastructure failure, not a model
+inference result. Original frozen plans remain unchanged; do not reuse their
+concurrent --alias unchanged. Corrected inference results require separate
+review. Raw remaining-cli-audit.json is in the independent diagnostic plan root.

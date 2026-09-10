@@ -59,3 +59,29 @@ model correctness. A string stop indicates detokenizer policy. Missing IDs or
 conflicting terminal metadata is inconclusive and motivates a narrower server
 trace. ignore_eos would be a separate intervention after this unchanged-policy
 observation, not a replacement for the strict early-stop failure.
+
+
+## Observed native TP2 session0 terminal token
+
+CONFIG -> Native d55637b3353e / 6717e3ec7fe3, TP2 MTP3 FP8/be02,
+FULL_DECODE_ONLY, prefixON100K. Exact namespace-adjusted session0 wire request,
+temperature0, seed42, thinkingOFF, max_tokens4096, no requested stop strings or
+stop-token IDs. Only diagnostic field added: return_token_ids=true.
+COMMAND -> Parent ran the separately queued raw stop-token diagnostic on the
+owned independent TP2 server. CPU review verified request equality against the
+frozen wire payload after removing only return_token_ids.
+RESULT -> Response chatcmpl-86760a94858fab8c completed with [DONE], no stream
+errors, finish_reason=stop, stop_reason=null. It returned4045 prompt IDs and2058
+output IDs, exactly matching usage prompt4045/completion2058/total6103. The final
+chunk contains token248046, the tokenizer's special <|im_end|> EOS. Visible text
+ends with 431, 432, 433, and lacks the remaining requested numbers and closing
+bracket. Cached_tokens=0; created_cache_tokens=1600. Raw IDs and terminal empty
+text delta are retained. The native backend selected a terminating EOS; the API
+omitted it from visible text as the reviewed detokenizer specifies.
+VERDICT -> This occurrence is not Pi or gateway/parser truncation and not the
+4096-token request limit. Greedy backend EOS selection ended an incomplete
+answer. Whether that premature selection reflects ordinary model behavior or
+a remaining model/kernel/runtime numerical defect is unresolved. Diagnostic
+completion is not semantic success, full100K qualification, or promotion.
+Raw evidence:
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-tp2-independent-diagnostics-plan/run/stop-token-observation/
