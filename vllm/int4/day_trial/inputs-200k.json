@@ -1,0 +1,40 @@
+{
+  "user_authorized_day_trial": true,
+  "production_qualified": false,
+  "max_model_len": 200000,
+  "plan": "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/day_trial/plan-200k.json",
+  "prerequisite": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-clean100k/run",
+  "tiny_job": {
+    "name": "02-tiny24",
+    "command": [
+      "python3",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-clean100k/source/tiny.py",
+      "--base-url",
+      "http://127.0.0.1:18125",
+      "--model",
+      "hotschmoe-dd",
+      "--out",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-clean100k/run/tiny-prefill.json",
+      "--timeout",
+      "90"
+    ],
+    "timeout": 900
+  },
+  "sha256": {
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/run_arm.py": "247ddcaf58f9e49591c871626ce2eb5d5504655714e7cab842669880ae2a9bb0",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_campaign_server.py": "dc5d657190e88ad5bc4e29637f71450f9b30ddd4ad410eb2aed89eb28fd7f4a8",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/diagnostics/xpu_health_strict.sh": "2a1488deeda1ede12dd1494fe3990a6104a584dadb6a7a1ba33815624911e9ba",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_hooks/b70_tp_host_trace.py": "e32f74cf4b8c5af8493ac162c0edf711c6c8dfff8c297bb8e02f3fef96c02286",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_hooks/kv_calibration_hook.py": "5c22a1e161e30dc937a24b670b53980a73af8c1fe10ee1e7d290782ab2fc5185",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_hooks/kv_offload_group_fix.py": "f6786b66470454d911ca97d76530126d23ea18f14b88648f29f7106499463556",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_hooks/kv_offload_trace.py": "1c5991eed076d4d34ca51cb32419ac32c05b0ce9aae44bb46c8476443ca36216",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_hooks/sitecustomize.py": "9d92b4903e47a959a418b255160ea4cd0efa49dc9ff75ae597309ca1e26c49e9",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/day_trial/plan-200k.json": "4cf4a2c4faca5d55cfd8d3d83aaf46b675c2d343e51a274666da65cf35886a27",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-long200k/config/Config.json": "b8f24880aab5fbace2d5d1ad1b9c26d5db9882ada30b8573afd2a816f00e66ca",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-long200k/config/Mounts.json": "eb77ca2e3f4d4f7e618cd3cb3868839bfb5391e87c689228c23acd3e19326f17",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-long200k/fresh-scales.json": "be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/day_trial/serve.py": "09837cf18b7f94658640e693c696a0ee428bff27217e5e356fdf140b88a5aa8d",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-clean100k/source/tiny.py": "c229fd1f22a7af56e69f91c9274c62e14c74a65ef17f5c1a76b2318d451d48ba",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/openai_key_frontdoor.py": "8890dc900760cf33b3122b8eba7b04b171072ee9039d776a51aa932907e2b431"
+  }
+}

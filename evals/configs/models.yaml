@@ -538,3 +538,21 @@ models:
     calibration: fresh-be02d915-fp8kv
     serve_cmd: ""
     notes: "Prepared TP1 MRV1 control, agent2 warm+target2, FP8 freshcal MTP3 cache/graphs100K; primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Explicit user-authorized day trial, full qualification incomplete; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx200k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx200k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Explicit user-authorized day trial, full qualification incomplete; stable primary hotschmoe-dd."
