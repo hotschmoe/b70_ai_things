@@ -1,0 +1,18 @@
+{
+  "image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+  "native_sha256": "6717e3ec7fe3e7cdc26cd66b84aabdd076f211e5bed62b8711b7377fca8668d9",
+  "base_image": "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+  "native_files_total": 2106,
+  "unchanged_native_files": 2105,
+  "changed_native_files": [
+    "/opt/venv/lib/python3.12/site-packages/vllm_xpu_kernels/_xpu_C.abi3.so"
+  ],
+  "all_packages_equal": true,
+  "all_vllm_python_sources_equal": true,
+  "vllm_python_files": 2227,
+  "cpu_import_pass": true,
+  "schema": "_xpu_C::gdn_attention(Tensor($0! -> ) core_attn_out, Tensor($1! -> ) z, Tensor projected_states_qkvz, Tensor projected_states_ba, int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim, Tensor($2! -> ) conv_state, Tensor($3! -> ) ssm_state, Tensor conv_weights, Tensor? conv_bias, str activation, Tensor A_log, Tensor dt_bias, int num_prefills, int num_decodes, int num_spec_decodes, Tensor? has_initial_state, Tensor? non_spec_query_start_loc, Tensor? non_spec_token_indx, Tensor? non_spec_state_indices_tensor, Tensor? spec_query_start_loc, Tensor? spec_token_indx, Tensor? spec_state_indices_tensor, Tensor? num_accepted_tokens, int num_actual_tokens, int tp_size, bool reorder_input) -> ()",
+  "build_exit_rc": 0,
+  "patch_sha256": "93a27111f21136ce391f855360e2670a0e082da3e05749fe84e9b0dd10b315e6",
+  "no_gpu_qualification": true
+}

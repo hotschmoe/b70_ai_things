@@ -1,0 +1,25 @@
+{
+  "_xpu_C.abi3.so": {
+    "exports_equal": false,
+    "export_removals": 0,
+    "export_additions": [
+      "_ZN3c106detail17torchCheckMsgImplIJA31_clA41_clEEEDaPKcDpRKT_"
+    ],
+    "needed_soname_equal": true,
+    "retained_original_in_image": false
+  },
+  "libgdn_attn_kernels_xe_2.so": {
+    "exports_equal": true,
+    "export_removals": 0,
+    "export_additions": [],
+    "needed_soname_equal": true,
+    "retained_original_in_image": true
+  },
+  "libmhc_kernels_xe_2.so": {
+    "exports_equal": true,
+    "export_removals": 0,
+    "export_additions": [],
+    "needed_soname_equal": true,
+    "retained_original_in_image": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "raw_root": "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native-contract-provenance",
+  "source_manifest_sha256": "cf8f9e5de069aabc5784d1fcab0b111091db3c9f9072d49e29ed82fead4ebdcb",
+  "source_file_count": 10696,
+  "toolchain_amd64_index_sha256": "dcb9d8c09c677f480a012201e9e8088cc9aa5223caf2f5fd41049493417b96bf",
+  "toolchain_all_index_sha256": "e23c6eee6d918a53a00a6dbcc02a082f933e6ee29ffae2febde1fdb70e437364",
+  "official_index_urls": [
+    "https://apt.repos.intel.com/oneapi/dists/all/main/binary-amd64/Packages.gz",
+    "https://apt.repos.intel.com/oneapi/dists/all/main/binary-all/Packages.gz"
+  ],
+  "build_status": "CPU_READY_NOT_GPU_QUALIFIED",
+  "compiler_version": "Intel(R) oneAPI DPC++/C++ Compiler 2026.1.1 (2026.1.1.20260724)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/intel/oneapi/compiler/2026.1/bin/compiler\nConfiguration file: /opt/intel/oneapi/compiler/2026.1/bin/compiler/../icpx.cfg\ncmake version 4.4.2\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n1.13.0.git.kitware.jobserver-pipe-1\n",
+  "native_sha256": "6717e3ec7fe3e7cdc26cd66b84aabdd076f211e5bed62b8711b7377fca8668d9",
+  "build_log_sha256": "510cd22e84a0af28825f96bd85bae680bce7976219b84db60a84d74573558a09",
+  "build_rc": 0,
+  "image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+  "cpu_import_rc": 0,
+  "cpu_native_inventory_rc": 0,
+  "cpu_source_inventory_rc": 0
+}

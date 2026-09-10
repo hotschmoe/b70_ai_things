@@ -1,0 +1,12 @@
+{
+  "time_utc": "2026-09-10T20:51:40.771003+00:00",
+  "container": "0ea31cba9c973626b13ae9717d168e5e21dc160fd91940736349603303e42fe4",
+  "old_cpus": 4,
+  "new_cpus": 8,
+  "old_jobs": 4,
+  "new_jobs": 8,
+  "old_memory_gib": 24,
+  "new_memory_gib": 40,
+  "source_toolchain_native_flags_unchanged": true,
+  "incremental_objects_preserved": true
+}

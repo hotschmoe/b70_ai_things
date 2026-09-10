@@ -1,0 +1,7 @@
+{
+  "object": "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native-contract-provenance/compile/build/CMakeFiles/_xpu_C.dir/csrc/xpu/gdn_attn/gdn_attn_interface.cpp.o",
+  "sha256": "9eb9d6a63a95759eab9928776ca8278d280c4ac036d285f2e637419d7f05ac2f",
+  "bytes": 3211424,
+  "new_interface_guard_literal_present": true,
+  "translation_unit_in_xpu_C_link_rule": true
+}

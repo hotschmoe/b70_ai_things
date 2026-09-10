@@ -1,0 +1,8 @@
+{
+  "frozen_patch_sha256": "93a27111f21136ce391f855360e2670a0e082da3e05749fe84e9b0dd10b315e6",
+  "candidate_sources": {
+    "causal_conv1d.hpp": "36931daf466b8c7eb646f240d8d6880794126b3928d7c771fc7ec10d06c70063",
+    "gdn_attn_interface.cpp": "ba115bfe6edf8025e1328fcbbd892ee7aaa2579f91664da0ea5484e3a87fc42e"
+  },
+  "source_build_uses_same_candidates": true
+}

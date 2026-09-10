@@ -1,0 +1,7 @@
+{
+  "vllm-xpu-kernels-qwen38-dynamic-active-width-serial-gdn-r35-20260828.patch": "ad583014c92b8611a9e4e87868a3d492c3b6802ee557814b9ec794f147cd973e",
+  "vllm-xpu-kernels-qwen38-gdn-split-serial-gates-r50-20260901.patch": "40ca8c3fc15fea1b7dda8d268761f0b1339eb821f5d8357b3da7600585fe750f",
+  "onednn-qwen38-w8a16-fixed-k-align16-r137a-20260902.patch": "5d2a93f0a36fa89f0ef13cf21ed5332a72491dd5856519bbe2eb21414112464f",
+  "onednn-qwen38-w8a16-c-default-align-r137b-20260902.patch": "feb4f125f69b36dbc3f579ad93743abe655678b7540ba2743fcff797fe35ebd9",
+  "onednn-qwen38-w4a16-fixed-k-two-tier-r221-20260905.patch": "180112219b5b8d2f44eae5e32134fe3b80e50b75f332c000a37eec17c7557e13"
+}
