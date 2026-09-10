@@ -1,0 +1,284 @@
+{
+  "status": "PREPARED_NOT_RUN",
+  "cases": [
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 0,
+      "dst": 7,
+      "bias": 0,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          10223616,
+          13631488,
+          122880
+        ],
+        [
+          10346496,
+          13754368,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 0,
+      "dst": 7,
+      "bias": 1,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          10244096,
+          13631488,
+          102400
+        ],
+        [
+          17162240,
+          13754368,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 0,
+      "dst": 7,
+      "bias": 3,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          10285056,
+          13631488,
+          61440
+        ],
+        [
+          20570112,
+          13754368,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 4,
+      "dst": 0,
+      "bias": 0,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          6815744,
+          10223616,
+          122880
+        ],
+        [
+          6938624,
+          10346496,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 4,
+      "dst": 0,
+      "bias": 1,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          6836224,
+          10223616,
+          102400
+        ],
+        [
+          23977984,
+          10346496,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 4,
+      "dst": 0,
+      "bias": 3,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          6877184,
+          10223616,
+          61440
+        ],
+        [
+          13754368,
+          10346496,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": -1,
+      "dst": 7,
+      "bias": 0,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": []
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 0,
+      "dst": 0,
+      "bias": 0,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": []
+    },
+    {
+      "mtp": 0,
+      "history": 3,
+      "src": 0,
+      "dst": 7,
+      "bias": 0,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 61440,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          10223616,
+          13631488,
+          61440
+        ],
+        [
+          10285056,
+          13692928,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 0,
+      "history": 3,
+      "src": 4,
+      "dst": 0,
+      "bias": 0,
+      "padded": true,
+      "geometry": {
+        "conv_bytes": 61440,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3407872
+      },
+      "regions": [
+        [
+          6815744,
+          10223616,
+          61440
+        ],
+        [
+          6877184,
+          10285056,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 0,
+      "history": 3,
+      "src": 0,
+      "dst": 7,
+      "bias": 0,
+      "padded": false,
+      "geometry": {
+        "conv_bytes": 61440,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3207168
+      },
+      "regions": [
+        [
+          9621504,
+          12828672,
+          61440
+        ],
+        [
+          9682944,
+          12890112,
+          3145728
+        ]
+      ]
+    },
+    {
+      "mtp": 3,
+      "history": 6,
+      "src": 0,
+      "dst": 7,
+      "bias": 0,
+      "padded": false,
+      "geometry": {
+        "conv_bytes": 122880,
+        "temporal_bytes": 3145728,
+        "page_bytes": 3268608
+      },
+      "regions": [
+        [
+          9805824,
+          13074432,
+          122880
+        ],
+        [
+          9928704,
+          13197312,
+          3145728
+        ]
+      ]
+    }
+  ],
+  "requirement": "External gpu-run --card N lifecycle, device pin, strict pre/post health, bounded container; no single-lease reset"
+}
