@@ -325,3 +325,17 @@ VERDICT -> Current-main CPU candidate passed; GPU preflight is prepared and
 unrun. It requires explicit Triton attention and cannot execute native Intel
 FMHA or vision FMHA. Earlier TP1/prefix passes belong only to the older
 source-port image and do not transfer automatically to this native refresh.
+
+CONFIG -> First current-main bdc51 TP1 model attempt used Triton text attention
+but left automatic VLM startup warmup enabled.
+
+COMMAND -> Coordinator's preserved `sglang-main-tp1-fp16-triton-card1` arm.
+
+RESULT -> GPTQ weights, FP16 KV and page1 initialized. Built-in image warmup
+selected native xpu_attn and failed on the deliberately absent FMHA fwd op.
+Owned stop and strict card1 post-health passed. This exposes a startup recipe
+requirement; CPU package imports alone did not exercise the vision path.
+
+VERDICT -> Separate text-only retry adds supported --skip-server-warmup and
+retains the mandatory 26 real text requests, a fresh cache and original image.
+CPU source/argv checks pass; no retry result or vision qualification is claimed.

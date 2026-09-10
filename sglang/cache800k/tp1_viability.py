@@ -50,6 +50,8 @@ def command(args, name):
                   '--mem-fraction-static', '0.90', '--enable-metrics',
                   '--reasoning-parser', 'qwen3', '--tool-call-parser', 'qwen3_coder',
                   '--host', '0.0.0.0', '--port', '8000']
+    if getattr(args, 'skip_server_warmup', False):
+        launch.append('--skip-server-warmup')
     if args.prefix_cache:
         launch.remove('--disable-radix-cache')
         launch += ['--mamba-radix-cache-strategy', 'extra_buffer']
@@ -84,6 +86,7 @@ def main():
     p.add_argument('--health-probe', type=Path, default=REPO / 'bin/xpu-health')
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--prefix-cache', action='store_true', help='Enable radix cache for a separate feature qualification arm')
+    p.add_argument('--skip-server-warmup', action='store_true', help='Skip automatic image warmup for the bounded text-only diagnostic arm')
     p.add_argument('--decode-graph', action='store_true', help='Current-main Triton decode FULL graph only; prefill remains eager')
     p.add_argument('--mtp-steps', type=int, choices=[0, 1, 3], default=0, help='Separate greedy NEXTN feature arm; draft tokens are steps+1')
     p.add_argument('--job', type=Path, help='JSON {command: [...], timeout: seconds}')

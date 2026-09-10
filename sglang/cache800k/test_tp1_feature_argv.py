@@ -15,7 +15,7 @@ plan = json.loads((HERE.parent / 'refresh/20260910_main/tp1_baseline_plan.json')
 def build(**changes):
     values = dict(out=Path('/tmp/cpu-only-argv-no-create'), card=1, port=18137,
         image=plan['command'][plan['command'].index('--image') + 1],
-        attention_backend='triton', prefix_cache=False, decode_graph=False, mtp_steps=0)
+        attention_backend='triton', prefix_cache=False, decode_graph=False, mtp_steps=0, skip_server_warmup=False)
     values.update(changes)
     command = module.command(SimpleNamespace(**values), 'cpu-only-no-container')
     return command[command.index('sglang.launch_server') + 1:]
@@ -27,6 +27,8 @@ def value(argv, flag):
 
 baseline = build()
 assert baseline == plan['server_argv'], 'Default server argv changed from reviewed baseline'
+text_only = build(skip_server_warmup=True)
+assert text_only == baseline + ['--skip-server-warmup']
 for steps in (1, 3):
     argv = build(mtp_steps=steps)
     assert value(argv, '--speculative-num-steps') == str(steps)

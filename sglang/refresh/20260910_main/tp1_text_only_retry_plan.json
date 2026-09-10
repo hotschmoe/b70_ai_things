@@ -1,0 +1,46 @@
+{
+  "command": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py",
+    "--card",
+    "1",
+    "--port",
+    "18138",
+    "--image",
+    "sha256:bdc51c5f083fdcbacd59a74bfeb8389fa6d62c8478e066ed5c62f9bffcfaa4cf",
+    "--attention-backend",
+    "triton",
+    "--health-probe",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+    "--out",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-tp1-fp16-triton-card1-skip-warmup",
+    "--job",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-refresh/tp1-text-only-retry-plan/job.json",
+    "--startup-timeout",
+    "1200",
+    "--skip-server-warmup"
+  ],
+  "launch_status": "prepared not launched",
+  "http_request_timeout": 300,
+  "baseline_case_count": 26,
+  "new_cache": true,
+  "pair_preflight_prerequisite": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-fp8-oracle-campaign/OUTCOME.json",
+  "probe_sha256": "58fd315c576e27903a5584df4f4a534305fdf683902211f66b8e4b9de7d28532",
+  "job": {
+    "command": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/probe_backend_viability.py",
+      "--base",
+      "http://127.0.0.1:18138",
+      "--model",
+      "hotschmoe-dd",
+      "--out",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-tp1-fp16-triton-card1-skip-warmup/viability",
+      "--timeout",
+      "300"
+    ],
+    "timeout": 1500
+  },
+  "cache": "new empty cache, no seed",
+  "reason": "Avoid automatic VLM image warmup invoking deliberately excluded native FMHA; 26 real text checks retained"
+}

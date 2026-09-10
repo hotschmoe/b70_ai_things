@@ -118,3 +118,41 @@ collective counts, per-rank entry/return and graph boundaries before expanding
 the loaded-context oracle. Include any newly observed larger profile shape.
 Only then attempt a bounded TP2 eager/MTP0 control; add prefix, graph and MTP
 incrementally. No P2P1 full-model arm is proposed.
+
+## First model attempt and bounded text-only retry
+
+CONFIG -> Coordinator ran the baseline above with default server warmup.
+
+COMMAND -> Original output is preserved under
+`sglang-main-tp1-fp16-triton-card1/` in the raw experiment root.
+
+RESULT -> Weights loaded successfully as Qwen3_5ForConditionalGeneration/GPTQ,
+FP16 KV and page1. Startup then issued the built-in image warmup; its vision
+path selected default xpu_attn and called absent `sgl_kernel.fwd`. The process
+failed before baseline qualification. Coordinator verified owned stop and
+strict card1 post-health PASS.
+
+VERDICT -> Native vision FMHA was deliberately excluded from this build, but
+the default VLM warmup still exercises it even for a text-only client workload.
+`http_server.py:_execute_server_warmup` branches on has_image_understanding and
+builds an embedded-PNG request with the text "Describe the image.". The observed
+/model_info call, get_image_feature stack and missing fwd match this path.
+
+CONFIG -> Separate retry adds only opt-in `--skip-server-warmup`, uses port18138
+and a new empty cache, and retains all 26 external text checks and deadlines.
+No image, model, text attention or optional vision backend changes.
+
+COMMAND -> Concrete launch/job are in `tp1_text_only_retry_plan.json` and raw
+`sglang-main-refresh/tp1-text-only-retry-plan/`. Retry output is
+`sglang-main-tp1-fp16-triton-card1-skip-warmup/`.
+
+RESULT -> CPU command checks pass. Executing the actual pinned
+_wait_and_warmup AST proves the enabled branch calls warmup, while the skip
+branch bypasses it and marks the server Up. Real-request qualification still
+comes from the mandatory diagnostic job. No retry outcome is claimed here.
+
+VERDICT -> Minimal text-only retry is ready. Actual image requests remain
+unsupported by the default native vision backend in this reduced recipe.
+Official `--mm-attention-backend sdpa` is a separate possible vision fallback;
+its GPU correctness/performance is not qualified and it was not added to this
+retry. No language-model-only architecture remapping is used.
