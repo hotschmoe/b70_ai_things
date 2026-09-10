@@ -502,3 +502,12 @@ models:
     calibration: fresh-be02d915-fp8kv
     serve_cmd: ""
     notes: "Unqualified calibrated FP8 reuse control, records360 TP1 MTP3 FULL_DECODE_ONLY c4 ctx8192; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-qualify-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-qualify-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified MRV1 TP2 P2P0 MTP3 FP8 freshcal 100K FULL/prefix control, startup host trace, records360; stable primary hotschmoe-dd. Prepared only."
