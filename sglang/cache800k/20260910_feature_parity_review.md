@@ -279,3 +279,27 @@ for the running cache-coherence test. Raw checks:
 The coordinator launched the corrected, separately named
 `sglang-tp1-nightly-card1-prefix-tools-extra-buffer` arm on port 18208. Its
 result is pending here; neither prefix correctness nor stability is claimed.
+
+## Completed bounded prefix/tool-history qualification
+
+CONFIG -> Same immutable pointer/device image, card 1, FP16 KV, eager, MTP0,
+INT4 artifact and context/chunk/concurrency limits as above. Enable prefix
+cache with explicit `extra_buffer`; retain native Intel attention at page128
+and Triton GDN. The source/ABI image is unchanged.
+
+COMMAND -> Coordinator ran four concurrent histories, four turns each, with
+tool-call and tool-answer checks, under the owned lifecycle. Raw root:
+`/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-tp1-nightly-card1-prefix-tools-extra-buffer/`.
+
+RESULT -> 32/32 checks passed in 32 attempts, with zero bang attempts and no
+retries. Server logs reached four running requests. Final metrics report
+65536 device-cached tokens and a cache hit-rate gauge of 0.8947368421052632.
+Identity was captured; job/lifecycle exited 0, owned teardown completed, and
+strict card-1 post-health passed.
+
+VERDICT -> Bounded concurrent prefix-cache/tool-history qualification passed
+for this FP16-KV/eager/MTP0 configuration. Cache reuse is measured, not inferred
+from a flag. This is a diagnostic harness rather than actual Pi/OMP extension
+execution. It does not qualify TP2, MTP, graphs, FP8 KV, long-run stability or
+matched throughput. The current-main native build remains a separate ongoing
+CPU experiment; these results belong to the Sept3 source-port image only.
