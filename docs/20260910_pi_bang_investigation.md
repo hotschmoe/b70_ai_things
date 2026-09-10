@@ -7,7 +7,7 @@ Two reproduced mechanisms are now separated: the GDN phase guard fixes a
 fresh singleton initialization defect; a second accepted-count ordering patch
 passes concurrent cache/MTP fixtures that still bang with the phase guard alone.
 The second split occurs with FP16 and fresh calibrated FP8 KV at TP1. The FP8
-card crossover and repaired TP2 qualification remain in progress.
+card crossover repeats the split; repaired TP2 qualification is in progress.
 
 ## Answer to the GDN and TP questions
 
@@ -114,8 +114,12 @@ arms. Both lifecycles exit0 and strict selected-card post-health passes; both
 require force-killing a remaining EngineCore after requested shutdown.
 VERDICT -> The earlier no-hit FP8 pass was insufficient. This bounded result
 supports accepted-count ordering as a second corruption mechanism with actual
-FP8 reuse. A card crossover is running before attributing the split solely to
-the patch. Raw: tp1-fp8-reuse-controls/initial-pair-outcome-review.json.
+FP8 reuse. The card crossover repeats the split: phase-only fails the same request,
+while the repaired build again passes32/32. All27 phase-only normalized
+request/choice arrays match across cards, including the failure; all32 repaired
+arrays also match exactly. All four arms have positive1600-token reuse in
+every session, lifecycle exit0 and strict selected-card post-health passes.
+Raw: tp1-fp8-reuse-controls/{initial-pair,crossover}-outcome-review.json.
 
 The selected affected bundle contains 41 bangs among 317 non-429 messages; this
 is not an unbiased production rate. All 36 recorded bang-recovery messages
