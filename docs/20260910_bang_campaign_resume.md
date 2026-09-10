@@ -4,6 +4,11 @@ Written after the user paused testing and authorized the 2026-09-10 day trial.
 Read this file first in the next session, then AGENTS.md and the linked evidence.
 This is a backlog and operational handoff, not authorization to interrupt service.
 
+Update: the new 17:23 UTC citizen capture confirms corruption on the patched
+day trial. Read [recurrence findings](20260910_pi_bang_recurrence.md) before
+resuming the checklist. Prioritize its earliest failure and interruption/reuse
+controls; the earlier synthetic passes did not establish Pi correctness.
+
 ## Live service boundary
 
 - hotschmoe-dd.service is serving the user-authorized 200K day trial. Primary

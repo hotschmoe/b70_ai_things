@@ -1,0 +1,381 @@
+{
+  "schema": "b70.pi-recurrence.replay-cases.metadata.v1",
+  "status": "METADATA_ONLY_NO_INFERENCE",
+  "cases": [
+    {
+      "case_id": "agent1_incomplete_stream",
+      "source_path": "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/bundle/citizen-pi-sessions-20260910T172335Z/current-world-5/agent_1/sessions/2026-09-10T07-40-06-829Z_01a08a42-772c-755f-b0a1-f3ced851f7c7.jsonl",
+      "source_relative": "current-world-5/agent_1/sessions/2026-09-10T07-40-06-829Z_01a08a42-772c-755f-b0a1-f3ced851f7c7.jsonl",
+      "source_sha256": "5908a358f185c2ad7d7bac95ec00fd0df73135517fd61007f8a37f575be6a909",
+      "record_line_1based": 7,
+      "record_sha256": "76c2d66b55b619d52309e9fad24feed8f7e3991b3b4ccf823f9a9db9354cd520",
+      "record_id": "43e5b657",
+      "parent_id": "21fb2b59",
+      "response_id": "chatcmpl-aw-c8e555fd5002947404b397e5",
+      "timestamp_ms": 1789026009791,
+      "timestamp_utc": "2026-09-10T07:40:09.791000+00:00",
+      "stop_reason": "error",
+      "raw_stop_reason": null,
+      "usage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 0,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "error": "Stream ended without finish_reason",
+      "history_cutoff": {
+        "rule": "SOURCE RECORDS STRICTLY BEFORE failure; not outgoing wire reconstruction",
+        "last_line_inclusive": 6,
+        "exclude_failed_and_subsequent": true,
+        "raw_prefix_sha256": "678f558ac9146d669a13cf5d7b8ef3b0c2a18e99ea3d728fc1ffedb41c016ce5",
+        "role_counts": {
+          "user": 1,
+          "assistant": 1,
+          "toolResult": 1
+        }
+      },
+      "prior_anomaly_limitations": [
+        "No earlier observed assistant corruption; previous request completed. Failure contains partial tool calls and no finish_reason."
+      ],
+      "available_metadata": {
+        "model": "hotschmoe-dd",
+        "provider": "world",
+        "api": "openai-completions",
+        "last_model_selection": {
+          "type": "model_change",
+          "id": "c0348957",
+          "parentId": null,
+          "timestamp": "2026-09-10T07:40:07.039Z",
+          "provider": "world",
+          "modelId": "hotschmoe-dd"
+        },
+        "thinking_level": "medium",
+        "content": "Stored user/assistant including thinking+toolCall/toolResult"
+      },
+      "missing_wire_fields": [
+        "Exact forwarded request body",
+        "Exact system prompt",
+        "Complete tool schemas/template parameters",
+        "Actual forwarded temperature/top_p/seed/max_tokens",
+        "Actual cache_salt",
+        "Token IDs/exact upstream tokenized prompt",
+        "Upstream vLLM response/request ID",
+        "Extension context filtering/retry payload transformations"
+      ]
+    },
+    {
+      "case_id": "agent1_earliest_garble",
+      "source_path": "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/bundle/citizen-pi-sessions-20260910T172335Z/current-world-5/agent_1/sessions/2026-09-10T07-40-06-829Z_01a08a42-772c-755f-b0a1-f3ced851f7c7.jsonl",
+      "source_relative": "current-world-5/agent_1/sessions/2026-09-10T07-40-06-829Z_01a08a42-772c-755f-b0a1-f3ced851f7c7.jsonl",
+      "source_sha256": "5908a358f185c2ad7d7bac95ec00fd0df73135517fd61007f8a37f575be6a909",
+      "record_line_1based": 22,
+      "record_sha256": "c31424465941f316af3c55e07d971fd0f0c1c16b418dce2ca71e7cd01d81c62e",
+      "record_id": "339ac4f7",
+      "parent_id": "9a3d0cbb",
+      "response_id": "chatcmpl-aw-c5b6a71c2829ae886e2769e4",
+      "timestamp_ms": 1789026251734,
+      "timestamp_utc": "2026-09-10T07:44:11.734000+00:00",
+      "stop_reason": "stop",
+      "raw_stop_reason": "stop",
+      "usage": {
+        "input": 3144,
+        "output": 75,
+        "cacheRead": 6400,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 9619,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "error": null,
+      "history_cutoff": {
+        "rule": "SOURCE RECORDS STRICTLY BEFORE failure; not outgoing wire reconstruction",
+        "last_line_inclusive": 21,
+        "exclude_failed_and_subsequent": true,
+        "raw_prefix_sha256": "b0430257e3827a3c1264a00af1b4bc9d3754c9652922f7c86f26d06e08f5db87",
+        "role_counts": {
+          "user": 1,
+          "assistant": 9,
+          "toolResult": 8
+        }
+      },
+      "prior_anomaly_limitations": [
+        "Earlier line7/id43e5b657 incomplete-stream error, followed by coherent completed retries.",
+        "No prior completed-output garble found by bounded manual review; not exhaustive semantic proof."
+      ],
+      "available_metadata": {
+        "model": "hotschmoe-dd",
+        "provider": "world",
+        "api": "openai-completions",
+        "last_model_selection": {
+          "type": "model_change",
+          "id": "c0348957",
+          "parentId": null,
+          "timestamp": "2026-09-10T07:40:07.039Z",
+          "provider": "world",
+          "modelId": "hotschmoe-dd"
+        },
+        "thinking_level": "medium",
+        "content": "Stored user/assistant including thinking+toolCall/toolResult"
+      },
+      "missing_wire_fields": [
+        "Exact forwarded request body",
+        "Exact system prompt",
+        "Complete tool schemas/template parameters",
+        "Actual forwarded temperature/top_p/seed/max_tokens",
+        "Actual cache_salt",
+        "Token IDs/exact upstream tokenized prompt",
+        "Upstream vLLM response/request ID",
+        "Extension context filtering/retry payload transformations"
+      ]
+    },
+    {
+      "case_id": "agent2_first_bang",
+      "source_path": "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/bundle/citizen-pi-sessions-20260910T172335Z/current-world-5/agent_2/sessions/2026-09-10T08-10-07-075Z_01a08a5d-ef62-7430-b66c-46c255632efc.jsonl",
+      "source_relative": "current-world-5/agent_2/sessions/2026-09-10T08-10-07-075Z_01a08a5d-ef62-7430-b66c-46c255632efc.jsonl",
+      "source_sha256": "431c560a0549ab807aad26f922e858d234744a6e41bf8b5a9914695de686e522",
+      "record_line_1based": 71,
+      "record_sha256": "933270db28e69d243da3ad02d4db64397d457325ce98c2e0d5999dbdf2a44bee",
+      "record_id": "43ba437e",
+      "parent_id": "355ecf71",
+      "response_id": "chatcmpl-aw-6f24e162e1dcf235f2a28419",
+      "timestamp_ms": 1789028914846,
+      "timestamp_utc": "2026-09-10T08:28:34.846000+00:00",
+      "stop_reason": "aborted",
+      "raw_stop_reason": null,
+      "usage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 0,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "error": "Request was aborted",
+      "history_cutoff": {
+        "rule": "SOURCE RECORDS STRICTLY BEFORE failure; not outgoing wire reconstruction",
+        "last_line_inclusive": 70,
+        "exclude_failed_and_subsequent": true,
+        "raw_prefix_sha256": "d6087cf9d06a3be2803df5156dd7e5fdac960ba4d87c28b71b58c75da754a107",
+        "role_counts": {
+          "user": 9,
+          "assistant": 41,
+          "toolResult": 17
+        }
+      },
+      "prior_anomaly_limitations": [
+        "Earlier line12/idd4e05d13 short garbled text; further prior thinking/command garbling.",
+        "Earlier local429/incomplete-stream anomalies. Not a clean first-failure history."
+      ],
+      "available_metadata": {
+        "model": "hotschmoe-dd",
+        "provider": "world",
+        "api": "openai-completions",
+        "last_model_selection": {
+          "type": "model_change",
+          "id": "6a8313be",
+          "parentId": null,
+          "timestamp": "2026-09-10T08:10:07.279Z",
+          "provider": "world",
+          "modelId": "hotschmoe-dd"
+        },
+        "thinking_level": "medium",
+        "content": "Stored user/assistant including thinking+toolCall/toolResult"
+      },
+      "missing_wire_fields": [
+        "Exact forwarded request body",
+        "Exact system prompt",
+        "Complete tool schemas/template parameters",
+        "Actual forwarded temperature/top_p/seed/max_tokens",
+        "Actual cache_salt",
+        "Token IDs/exact upstream tokenized prompt",
+        "Upstream vLLM response/request ID",
+        "Extension context filtering/retry payload transformations"
+      ]
+    },
+    {
+      "case_id": "agent3_early_garble",
+      "source_path": "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/bundle/citizen-pi-sessions-20260910T172335Z/current-world-5/agent_3/sessions/2026-09-10T08-40-08-057Z_01a08a79-6a78-7689-98b6-ea0af6973847.jsonl",
+      "source_relative": "current-world-5/agent_3/sessions/2026-09-10T08-40-08-057Z_01a08a79-6a78-7689-98b6-ea0af6973847.jsonl",
+      "source_sha256": "a37c06f706d3650d4ea47b35f887ff90477dd1885eb1c58e26b01838ac324282",
+      "record_line_1based": 22,
+      "record_sha256": "0c9d9f964cfaa832d31eccb14c0af0dda6760aae90c25d1a2007b6d3bf26b782",
+      "record_id": "a43bf13f",
+      "parent_id": "fa044f3c",
+      "response_id": "chatcmpl-aw-be896cc6f423d2c984f7cb7b",
+      "timestamp_ms": 1789029676199,
+      "timestamp_utc": "2026-09-10T08:41:16.199000+00:00",
+      "stop_reason": "stop",
+      "raw_stop_reason": "stop",
+      "usage": {
+        "input": 6146,
+        "output": 308,
+        "cacheRead": 9600,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 16054,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "error": null,
+      "history_cutoff": {
+        "rule": "SOURCE RECORDS STRICTLY BEFORE failure; not outgoing wire reconstruction",
+        "last_line_inclusive": 21,
+        "exclude_failed_and_subsequent": true,
+        "raw_prefix_sha256": "25960a19b97bac34614b71042a1a7878c53d426a55b2d5ddcba2f0b00277ece8",
+        "role_counts": {
+          "user": 1,
+          "assistant": 5,
+          "toolResult": 12
+        }
+      },
+      "prior_anomaly_limitations": [
+        "Preceding completed assistant responses appear coherent in bounded manual review.",
+        "Tool results include earlier citizens files/posts; not all quoted material is certified clean."
+      ],
+      "available_metadata": {
+        "model": "hotschmoe-dd",
+        "provider": "world",
+        "api": "openai-completions",
+        "last_model_selection": {
+          "type": "model_change",
+          "id": "e3be1072",
+          "parentId": null,
+          "timestamp": "2026-09-10T08:40:08.263Z",
+          "provider": "world",
+          "modelId": "hotschmoe-dd"
+        },
+        "thinking_level": "medium",
+        "content": "Stored user/assistant including thinking+toolCall/toolResult"
+      },
+      "missing_wire_fields": [
+        "Exact forwarded request body",
+        "Exact system prompt",
+        "Complete tool schemas/template parameters",
+        "Actual forwarded temperature/top_p/seed/max_tokens",
+        "Actual cache_salt",
+        "Token IDs/exact upstream tokenized prompt",
+        "Upstream vLLM response/request ID",
+        "Extension context filtering/retry payload transformations"
+      ]
+    },
+    {
+      "case_id": "agent3_first_bang",
+      "source_path": "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/bundle/citizen-pi-sessions-20260910T172335Z/current-world-5/agent_3/sessions/2026-09-10T08-40-08-057Z_01a08a79-6a78-7689-98b6-ea0af6973847.jsonl",
+      "source_relative": "current-world-5/agent_3/sessions/2026-09-10T08-40-08-057Z_01a08a79-6a78-7689-98b6-ea0af6973847.jsonl",
+      "source_sha256": "a37c06f706d3650d4ea47b35f887ff90477dd1885eb1c58e26b01838ac324282",
+      "record_line_1based": 24,
+      "record_sha256": "7c7c50504a23a2cb7496143af2bf4eda6fc6d288e10a447974257f95d473995a",
+      "record_id": "35f26d26",
+      "parent_id": "369dd5d5",
+      "response_id": "chatcmpl-aw-7764163f49e3081bba7d8d86",
+      "timestamp_ms": 1789029752579,
+      "timestamp_utc": "2026-09-10T08:42:32.579000+00:00",
+      "stop_reason": "aborted",
+      "raw_stop_reason": null,
+      "usage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 0,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "error": "Request was aborted",
+      "history_cutoff": {
+        "rule": "SOURCE RECORDS STRICTLY BEFORE failure; not outgoing wire reconstruction",
+        "last_line_inclusive": 23,
+        "exclude_failed_and_subsequent": true,
+        "raw_prefix_sha256": "80a0a7b0b0f8b2241b04ba159ad94d783697472bd0a5164c3ee49ad7dd9791cc",
+        "role_counts": {
+          "user": 2,
+          "assistant": 6,
+          "toolResult": 12
+        }
+      },
+      "prior_anomaly_limitations": [
+        "Immediately preceding line22/ida43bf13f has garbled thinking. Not a clean-history firstbang."
+      ],
+      "available_metadata": {
+        "model": "hotschmoe-dd",
+        "provider": "world",
+        "api": "openai-completions",
+        "last_model_selection": {
+          "type": "model_change",
+          "id": "e3be1072",
+          "parentId": null,
+          "timestamp": "2026-09-10T08:40:08.263Z",
+          "provider": "world",
+          "modelId": "hotschmoe-dd"
+        },
+        "thinking_level": "medium",
+        "content": "Stored user/assistant including thinking+toolCall/toolResult"
+      },
+      "missing_wire_fields": [
+        "Exact forwarded request body",
+        "Exact system prompt",
+        "Complete tool schemas/template parameters",
+        "Actual forwarded temperature/top_p/seed/max_tokens",
+        "Actual cache_salt",
+        "Token IDs/exact upstream tokenized prompt",
+        "Upstream vLLM response/request ID",
+        "Extension context filtering/retry payload transformations"
+      ]
+    }
+  ],
+  "earliest_agent1_origin_review": {
+    "case_id": "agent1_earliest_garble",
+    "checked_source_lines": "1-21 inclusive, failure22 excluded",
+    "exact_garbled_fragments_in_prehistory": {
+      "let?_?:": false,
+      "mustF": false,
+      "the is is...>": false
+    },
+    "prior_tool_result_count": 8,
+    "tool_result_topics": [
+      "directory listings/identity",
+      "board/runtime and empty initial board",
+      "posting/chat helpers",
+      "tool versions/local metadata",
+      "world config, credentials redacted",
+      "board/source/site pages"
+    ],
+    "finding": "No exact garbled fragment appears in prior records or quoted tool output. Prehistory concerns orientation and posting an introduction; no instruction requests this garble. Failure begins coherently then breaks into new malformed prose. Absence of exact copying does not locate the backend cause."
+  },
+  "limitations": [
+    "Cutoffs describe stored records only; no exact replay claim without missing body/system/tools.",
+    "Raw prefix hashes include metadata/transport failures, not hashes of model prompts.",
+    "Timestamps are request/message starts, not completion or abort arrival.",
+    "Gateway maps chatcmpl-aw IDs to aw IDs; upstream IDs absent."
+  ]
+}

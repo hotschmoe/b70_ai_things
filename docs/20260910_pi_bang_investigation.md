@@ -317,3 +317,13 @@ remaining tests and the unresolved diagnostic Pi tool suffix resume at next
 downtime. Do not stop the live service or launch competing GPU work without
 new downtime direction. The prior test arm ended with lifecycle0 and strict
 per-card/compiled-pair post-health; it remains an interrupted qualification.
+
+## New citizen capture, 17:23 UTC
+
+The patched live day trial still produces corruption: 188 generated bang
+aborts in current-world-5, plus non-bang garbling and separate transport/429
+failures. The earliest clear garble inspected has a 9544-token prompt with
+6400 cache-read tokens. Inside-container source hashes confirm both repairs
+were loaded. See [recurrence investigation](20260910_pi_bang_recurrence.md)
+for exact evidence, interpretation limits and revised isolation priorities.
+Service was preserved during the read-only investigation.
