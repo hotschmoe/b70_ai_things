@@ -1,0 +1,14 @@
+# Optional user-manager unit; do not install alongside the system service.
+[Unit]
+Description=hotschmoe-dd native5802 monitored 200K trial (not long-context qualified)
+[Service]
+Type=simple
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+UnsetEnvironment=B70_PRIOR_VALIDATION
+ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/int4/native5802_trial/serve.py start
+ExecStartPost=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/int4/native5802_trial/serve.py ready --pid ${MAINPID}
+ExecStop=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/vllm/int4/native5802_trial/serve.py stop
+TimeoutStartSec=12000
+TimeoutStopSec=900
+KillMode=mixed
+Restart=no

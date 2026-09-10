@@ -7,7 +7,7 @@ ID and the finalized200K research alias remains second. Existing key-file path
 and frontdoor authentication semantics are retained. No secret was read.
 
 COMMAND -> python3 -m unittest discover -s vllm/int4/native5802_service -p test_serve.py
-RESULT -> Eleven CPU tests pass using temporary files and mocked processes:
+RESULT -> Fourteen CPU tests pass using temporary files and mocked processes:
 feature/image/legacy-adapter rejection, old trial/incomplete evidence refusal,
 exact command adaptation, unique34rank-layer scale coverage, actual receipt
 file semantic failure, quality-limitation retention, PID/socket readiness,
@@ -55,3 +55,20 @@ post-health while retaining leases. Restart=no is preserved.
 Pending: final200K plan and reviewed inputs, completed100K/200K evidence,
 independent final source review and eventual parent-controlled installation.
 No production or full model-quality qualification is claimed by these tests.
+
+
+Independent review follow-up: exact context-specific job sets and trace outputs
+are enforced (100K:99-startup-host-trace-review/startup-host-trace-review.json;
+200K:06-startup-host-boundaries/tp-host-review.json). Five long-workload summaries
+and cancellation-drain must pass. A direct --leased invocation now requires
+inherited FD8/FD9 to match both lock-file inodes and show active FLOCK WRITE;
+missing/wrong/unlocked descriptors fail. A real bin/gpu-run test uses temporary
+CPU-only lock files. Missing Docker socket errors do not count as container
+absence. The exact current200K template passes the config/scope test.
+
+Current native5802-backend100k-v2 output schema was read without running the
+auditor: tiny passed/request_count24; early strict gate passed/requests3/flagged0;
+actual image/config/model-ID fields match. The currentd556 eight-prompt200K
+CPU tokenizer receipt is also bound by finalized inputs, with matching185K
+counts and tokenizer/model hashes. This is preparation evidence, not completion
+of either backend arm. Independent source recheck found no concrete blocker.

@@ -346,3 +346,60 @@ native5802-backend200k-tokenizer-v1/{result,ledger}.json under the rawroot.
 Original100K-v2 and200K template hashes were not changed; every template-input
 hash was rechecked successfully. These are CPU counts; live server count and
 long-context quality gates still apply after the prerequisite is satisfied.
+
+
+## 2026-09-10 23:18 UTC: user pauses200K qualification for monitored endpoint trial
+
+CONFIG -> Repaired native d556/native6717 with existing GDN-phase/MRV1 fixes,
+freshbe02 calibrated FP8 KV, TP2/P2P0 MTP3 cache/FULL graph configuration.
+Permanent primary alias hotschmoe-dd. User explicitly requested pausing tests
+and using the repaired endpoint for a monitored few hours; full200K scope was
+reported incomplete. The new native trial is separate from completed
+qualification and from the original7b day trial.
+
+COMMAND -> Full native5802-backend100k-v2 completed first. Its reviewed receipt
+SHA16a0b1f2ccd5f725e5a6802fb5603deeeb3a2f07de959f1f551cc9ed603b9c2d
+binds actual model/source/native/scales/workload/health evidence. Independently
+rechecked every evidence hash. At2026-09-10T23:18:49Z parent sent SIGTERM to the
+exact200K coordinator and in-flight CPU HTTP probe and set owned STOP; existing
+leased lifecycle owns normal server teardown and strict post-health.
+
+RESULT -> New100K-v2 PASSED its bounded backend scope:192/192 strict tool checks
+(three deterministic and three sampled rounds),24tiny,3early, actual prefix
+reuse, startup trace, identity/scales and strict pre/post health plus lifecycle.
+Known array512 premature EOS remains an independently explained quality
+negative, explicitly known_numeric_array_quality_passed=false. Model versus
+quantization cause remains unresolved. The new200K attempt is USER_PAUSED,
+qualification_passed=false/full_200k_qualification_complete=false, recorded in
+native5802-backend200k/user-pause.json. At this append normal teardown/post-health
+were still pending, so no healthy completion or trial startup is claimed yet.
+
+VERDICT -> A user-authorized monitored200K trial is not full200K qualification.
+Preserve this interrupted run, original incomplete/failed checks, and all prior
+negative evidence. Resume long-context retrieval/reuse/guide/cancel/recovery in
+a fresh reviewed plan and output directory at the next testing window; do not
+write a pass marker into the paused run or reuse its output as a completed gate.
+The new native5802_trial source is being prepared independently, keeping exact
+features, stable alias and existing authentication; no service installation or
+start was performed by this documentation/review task. Final live identity,
+strict startup/health and owned readiness remain required before reporting the
+endpoint restored. Raw roots are under
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910.
+
+
+Paused200K teardown follow-up: plan.lifecycle-rc=0 and run/exit.rc=0;
+strict both-card post-health HEALTHY and compiled two-rank10-iteration P2P0
+collective post-health HEALTHY (23:20:10 UTC). This records successful cleanup
+of the user-interrupted attempt, not a passed200K workload qualification.
+
+
+Paused200K shutdown clarification: lifecycle0 and passing health do not mean
+an entirely graceful drain. The actual server log records shutdown signal at
+23:18:51, EngineCore drain beginning23:19:09, and forced EngineCore kill at
+23:19:21 after the MPClient30-second budget. Preserve this forced process stop
+alongside successful post-health; it followed user interruption and is not by
+itself evidence of a bang or new coherence failure. Parent started a separate
+lease-protected rebind plus strict both-card/compiled-pair recovery under
+native5802-userpause-recovery. The monitored trial must require its successful
+receipt, not relabel the interrupted run normal_stop. Recovery was pending at
+this clarification; no trial startup is claimed here.
