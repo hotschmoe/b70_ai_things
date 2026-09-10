@@ -68,7 +68,36 @@ resolved block sizes are FP16=832 and FP8=1600. For the 2360-token answer,
 the full-attention hit finder can retain two 832-token blocks then drop one
 for MTP, leaving832; one1600-token block is dropped to zero. Cache reuse is
 therefore a concrete lead. Separate per-card prefix-on/off controls are being
-prepared; no cache or MTP root-cause attribution is made yet.
+run; no cache or MTP root-cause attribution is made yet.
+
+The first TP1 pair reproduces a second full-feature bang with prefix caching
+on (26/27 completed checks pass) while prefix off passes32/32. The failed
+request is session2 turn1 tool selection, with2388 prompt tokens and832 cached;
+it emits512 bangs immediately. The cache-off counterpart is identical after
+tool-call ID normalization and returns the expected lookup_stock call. This
+confirms TP2 is not required for the concurrent failure. The crossover repeats
+the split: prefix on again fails1/27, prefix off again passes32/32. Cache-off
+normalized request/choice arrays match exactly across cards. The cache-on
+failure moves from session2 to session0, both at turn1 tool selection with832
+cached tokens. All selected-card post-health checks pass. Requested teardown
+can force-kill a remaining engine process; EngineDead appears only after
+shutdown starts in the reviewed cache-off arm. This is not a quiet-clean
+teardown or production stability claim.
+
+MTP0 with caching on and an isolated MRV1 accepted-count repair with MTP3 each
+pass32/32, with actual cache hits in every session. The repaired MTP3 arm
+retains832-token hits and correctly answers both previously failing payloads;
+MTP0 reuses1664 tokens initially. All32 normalized choices match between those
+controls. Both lifecycles and strict selected-card post-health pass. The repair
+moves the existing D2H wait before request-row movement and removes a redundant
+second permutation. CPU source/AST and new-image per-card/compiled pair health
+also pass. This supports the accepted-count explanation within the bounded
+fixture; full production qualification remains outstanding.
+
+Fresh calibrated FP8 controls are now using360 records (4274 prompt tokens),
+so the1600-token cache layout can retain a prefix after the MTP margin. Their
+review requires positive cache hits in every session. The earlier180-record
+FP8 fixture did not exercise this reuse path despite caching being enabled.
 
 The selected affected bundle contains 41 bangs among 317 non-429 messages; this
 is not an unbiased production rate. All 36 recorded bang-recovery messages
