@@ -1,0 +1,105 @@
+--- a/python/sglang/kernels/ops/attention/decode_attention.py
++++ b/python/sglang/kernels/ops/attention/decode_attention.py
+@@ -546,6 +546,7 @@
+     HAS_MLA: tl.constexpr = False,
+     USE_PDL: tl.constexpr = False,
+     IS_GFX1250: tl.constexpr = False,
++    XPU_FP8_CACHE_HALF_COMPUTE: tl.constexpr = False,
+     PAGE_SIZE: tl.constexpr = 1,
+     SCORE_MOD: tl.constexpr = None,
+     Aux0=None,
+@@ -627,7 +628,7 @@
+         # bf16 cache. (Do NOT "optimize" this back to q.to(fp8) on gfx1250.)
+         # On all other platforms keep the original downcast of q to the KV dtype.
+         # TODO: remove this branch once the gfx1250 fp8 tl.dot issue is resolved.
+-        if IS_GFX1250:
++        if IS_GFX1250 or XPU_FP8_CACHE_HALF_COMPUTE:
+             q_k = q
+         else:
+             q_k = q.to(K_Buffer.dtype.element_ty)
+@@ -658,7 +659,7 @@
+                 mask=(offs_n[None, :] < split_kv_end) & (mask_d[:, None]),
+                 other=0.0,
+             )
+-            if IS_GFX1250:
++            if IS_GFX1250 or XPU_FP8_CACHE_HALF_COMPUTE:
+                 qk = tl.dot(q_k, k.to(q_k.dtype))
+             else:
+                 qk = tl.dot(q_k, k)
+@@ -728,7 +729,9 @@
+             # fp32 SDPA reference (recovers gfx1250 R1 GSM8K ~0.82 -> ~0.92 with
+             # attention idealized). On other platforms restore the p.to(v.dtype) cast.
+             # TODO: remove this branch once the gfx1250 bf16 P·V issue is resolved.
+-            if IS_GFX1250:
++            if XPU_FP8_CACHE_HALF_COMPUTE:
++                acc += tl.dot(p.to(q.dtype), v.to(q.dtype))
++            elif IS_GFX1250:
+                 acc += tl.dot(p, v.to(tl.float32), out_dtype=tl.float32)
+             else:
+                 acc += tl.dot(p.to(v.dtype), v)
+@@ -888,6 +891,7 @@
+         HAS_MLA=has_mla,
+         USE_PDL=use_pdl,
+         IS_GFX1250=_is_gfx1250,
++        XPU_FP8_CACHE_HALF_COMPUTE=(q.device.type == "xpu" and q.dtype == torch.float16 and k_buffer.dtype == torch.float8_e4m3fn and v_buffer.dtype == torch.float8_e4m3fn and not has_mla),
+         PAGE_SIZE=page_size,
+         SCORE_MOD=score_mod,
+         Aux0=aux0,
+--- a/python/sglang/kernels/ops/attention/extend_attention.py
++++ b/python/sglang/kernels/ops/attention/extend_attention.py
+@@ -388,6 +388,7 @@
+     USE_FP8_EXTEND: tl.constexpr,
+     FP8_MAX: tl.constexpr,
+     IS_GFX1250: tl.constexpr = False,
++    XPU_FP8_CACHE_HALF_COMPUTE: tl.constexpr = False,
+     PAGE_SIZE: tl.constexpr = 1,
+     IDENTITY_KV_INDICES: tl.constexpr = False,
+     SCORE_MOD: tl.constexpr = None,
+@@ -563,7 +564,7 @@
+             # downcasting q to fp8. No-op for a bf16 cache. (Do NOT revert to q.to(fp8).)
+             # On all other platforms keep the original q.to(k.dtype) downcast.
+             # TODO: remove this branch once the gfx1250 fp8 tl.dot issue is resolved.
+-            if IS_GFX1250:
++            if IS_GFX1250 or XPU_FP8_CACHE_HALF_COMPUTE:
+                 qk = tl.dot(q, k.to(q.dtype))
+             else:
+                 qk = tl.dot(q.to(k.dtype), k)
+@@ -586,7 +587,7 @@
+                     mask=mask_n[None, :],
+                     other=0.0,
+                 )
+-                if IS_GFX1250:
++                if IS_GFX1250 or XPU_FP8_CACHE_HALF_COMPUTE:
+                     qk += tl.dot(qpe, kpe.to(qpe.dtype))
+                 else:
+                     qk += tl.dot(qpe.to(kpe.dtype), kpe)
+@@ -656,7 +657,9 @@
+                 # keep softmax weights p in fp32 for the P·V dot (do not downcast to bf16)
+                 # on gfx1250; on other platforms restore the original p.to(v.dtype) cast.
+                 # TODO: remove this branch once the gfx1250 bf16 P·V issue is resolved.
+-                if IS_GFX1250:
++                if XPU_FP8_CACHE_HALF_COMPUTE:
++                    dot = tl.dot(p.to(q.dtype), v.to(q.dtype))
++                elif IS_GFX1250:
+                     dot = tl.dot(p, v.to(tl.float32), out_dtype=tl.float32)
+                 else:
+                     dot = tl.dot(p.to(v.dtype), v)
+@@ -794,7 +797,9 @@
+                 # keep softmax weights p in fp32 for the P·V dot (do not downcast to bf16)
+                 # on gfx1250; on other platforms restore the original p.to(v.dtype) cast.
+                 # TODO: remove this branch once the gfx1250 bf16 P·V issue is resolved.
+-                if IS_GFX1250:
++                if XPU_FP8_CACHE_HALF_COMPUTE:
++                    dot = tl.dot(p.to(q.dtype), v.to(q.dtype))
++                elif IS_GFX1250:
+                     dot = tl.dot(p, v.to(tl.float32), out_dtype=tl.float32)
+                 else:
+                     dot = tl.dot(p.to(v.dtype), v)
+@@ -1081,6 +1086,7 @@
+         SKIP_EXTEND=skip_extend,
+         HAS_SINK=HAS_SINK,
+         IS_GFX1250=_is_gfx1250,
++        XPU_FP8_CACHE_HALF_COMPUTE=(q_extend.device.type == "xpu" and q_extend.dtype == torch.float16 and k_buffer.dtype == torch.float8_e4m3fn and v_buffer.dtype == torch.float8_e4m3fn),
+         STORE_TRANSPOSE=_is_hip,
+         USE_COMPACT_TILE_GRID=use_compact_tile_grid,
+         USE_EXP2=USE_EXP2,

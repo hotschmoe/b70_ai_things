@@ -86,6 +86,31 @@ def install_fixture_scales(loader_root,device):
     return model.attn
 
 
+def normalized_reference(value, scale, device):
+    # Measured XPU TensorIterator device-scalar semantics: the zero-dimensional
+    # FP32 scale is converted to the input dtype before division. CPU div_ has
+    # different scalar handling. Use FP64 arithmetic to make the reference
+    # independent of either device's division kernel, then round the result.
+    effective = float(torch.tensor(scale, dtype=value.dtype)) if device == 'xpu' else scale
+    assert math.isfinite(effective) and effective > 0
+    return (value.double() / effective).to(value.dtype)
+
+
+def exact_power2_store(source, device, layer, k, v, loc, loc_cpu, slots, heads, dim):
+    pool = pool_fixture(source, device, slots, heads, dim)
+    a, b = k.clone(), v.clone()
+    pool.set_kv_buffer(layer, loc, a, b,
+                      torch.tensor(.125, device=device), torch.tensor(.25, device=device))
+    for name, actual, original, normalized, scale, sentinel in (
+        ('K', pool.k_buffer[0].cpu(), k.cpu(), a.cpu(), .125, 0x35),
+        ('V', pool.v_buffer[0].cpu(), v.cpu(), b.cpu(), .25, 0x39)):
+        expected_half = (original.double() / scale).half()
+        assert torch.equal(normalized, expected_half), name + ' power2 normalization mismatch'
+        assert torch.equal(actual[loc_cpu], expected_half.to(torch.float8_e4m3fn).view(torch.uint8)), name + ' power2 bytes mismatch'
+        untouched = torch.ones(slots, dtype=torch.bool); untouched[loc_cpu] = False
+        assert actual[untouched].eq(sentinel).all(), name + ' power2 untouched slots changed'
+
+
 def run(args):
     torch.set_num_threads(2)
     backend_path=args.source/'python/sglang/srt/layers/attention/triton_backend.py'
@@ -108,27 +133,41 @@ def run(args):
     pool=pool_fixture(args.source,device,slots,h,d)
     k,v=k0.to(device),v0.to(device)
     loc=loc_cpu.to(device)
+    exact_power2_store(args.source,device,layer,k,v,loc,loc_cpu,slots,h,d)
     pool.set_kv_buffer(layer,loc,k.clone(),v.clone(),layer.k_scale,layer.v_scale)
     kb=pool.k_buffer[0].cpu();vb=pool.v_buffer[0].cpu()
-    # Exact actual cast order: FP16 in-place divide then FP8 conversion.
-    ek=(k0.clone().div_(torch.tensor(ks))).to(torch.float8_e4m3fn)
-    ev=(v0.clone().div_(torch.tensor(vs))).to(torch.float8_e4m3fn)
-    assert torch.equal(kb[loc_cpu],ek.view(torch.uint8)),'K bytes differ from FP16-intermediate reference'
-    assert torch.equal(vb[loc_cpu],ev.view(torch.uint8)),'V bytes differ from FP16-intermediate reference'
+    # XPU measured device-scalar conversion, FP16 division result, FP8 cast.
+    nk=normalized_reference(k0,ks,device)
+    nv=normalized_reference(v0,vs,device)
+    ek=nk.to(torch.float8_e4m3fn)
+    ev=nv.to(torch.float8_e4m3fn)
+    original_nk=k0.clone().div_(torch.tensor(ks))
+    original_nv=v0.clone().div_(torch.tensor(vs))
+    assert torch.equal(kb[loc_cpu],ek.view(torch.uint8)),'K bytes differ from explicit scalar-promotion reference'
+    assert torch.equal(vb[loc_cpu],ev.view(torch.uint8)),'V bytes differ from explicit scalar-promotion reference'
     untouched=torch.ones(slots,dtype=torch.bool);untouched[loc_cpu]=False
     assert kb[untouched].eq(0x35).all() and vb[untouched].eq(0x39).all()
     assert torch.equal(k.cpu(),k0) and torch.equal(v.cpu(),v0),'caller clone protection failed'
     # The pool API itself mutates FP16 K/V; extend's clone protection is required.
     direct_input_k=k.clone();direct_input_v=v.clone()
     pool.set_kv_buffer(layer,loc,direct_input_k,direct_input_v,layer.k_scale,layer.v_scale)
-    assert torch.equal(direct_input_k.cpu(),k0.clone().div_(torch.tensor(ks)))
-    assert torch.equal(direct_input_v.cpu(),v0.clone().div_(torch.tensor(vs)))
+    assert torch.equal(direct_input_k.cpu(),nk)
+    assert torch.equal(direct_input_v.cpu(),nv)
     assert not torch.equal(direct_input_k.cpu(),k0)
     directk=(k0.float()/ks).to(torch.float8_e4m3fn).view(torch.uint8)
     directv=(v0.float()/vs).to(torch.float8_e4m3fn).view(torch.uint8)
     result={'device':device,'torch_version':torch.__version__,'shape':{'sequence':n,'q_heads':qh,'kv_heads':h,'head_dim':d},
             'scale_fixture':{'k':ks,'v':vs,'identity':'numeric fixture only, no calibrated model claim'},
-            'bytes':'pass','untouched_slots':'pass','cloned_inputs':'pass',
+            'bytes':'pass','power2_exact_store':'pass','untouched_slots':'pass','cloned_inputs':'pass',
+            'write_scalar_semantics':'scale rounded to FP16 before division' if device=='xpu' else 'CPU FP32 scalar division',
+            'effective_write_scales':{'k':float(torch.tensor(ks).half()) if device=='xpu' else ks,
+                                      'v':float(torch.tensor(vs).half()) if device=='xpu' else vs},
+            'read_scales':{'k':ks,'v':vs},
+            'original_fp32_scalar_reference_differences':{
+                'k_half':int((nk.view(torch.int16)!=original_nk.view(torch.int16)).sum()),
+                'v_half':int((nv.view(torch.int16)!=original_nv.view(torch.int16)).sum()),
+                'k_fp8_bytes':int((ek.view(torch.uint8)!=original_nk.to(torch.float8_e4m3fn).view(torch.uint8)).sum()),
+                'v_fp8_bytes':int((ev.view(torch.uint8)!=original_nv.to(torch.float8_e4m3fn).view(torch.uint8)).sum())},
             'direct_pool_input_mutation':'confirmed FP16 normalized values','actual_extend_clone_source':'pass',
             'fp16_intermediate_vs_fp32_direct_byte_differences':{
                 'k':int((ek.view(torch.uint8)!=directk).sum()),
@@ -183,12 +222,19 @@ def run(args):
                     actual=out.cpu().float()
                     row.update(max_abs_error=float((actual-expected).abs().max()),
                                rmse=float((actual-expected).square().mean().sqrt()))
-                    torch.testing.assert_close(actual,expected,rtol=.03,atol=.015)
+                    # Retain every case for diagnosis without weakening the gate.
+                    row['close_mismatched_elements']=int((~torch.isclose(actual,expected,rtol=.03,atol=.015)).sum())
+                    try:
+                        torch.testing.assert_close(actual,expected,rtol=.03,atol=.015)
+                        row['close_gate']='pass'
+                    except AssertionError as exc:
+                        row['close_gate']='fail'
+                        row['close_error']=str(exc)
                     if label=='correct':
                         actual_baseline=actual
                     else:
                         row['actual_scale_sensitivity_l2']=float((actual-actual_baseline).norm())
-                        assert row['actual_scale_sensitivity_l2']>1e-3
+                        row['scale_sensitivity_gate']='pass' if row['actual_scale_sensitivity_l2']>1e-3 else 'fail'
                 result['attention'].append(row)
     result['attention_execution']='CPU reference only' if device=='cpu' else 'actual Triton kernels'
     result['source_hashes']={p:hashlib.sha256((args.source/p).read_bytes()).hexdigest() for p in (
@@ -197,6 +243,7 @@ def run(args):
         'python/sglang/kernels/ops/attention/decode_attention.py',
         'python/sglang/kernels/ops/attention/extend_attention.py')}
     result['loader_source_sha256']=hashlib.sha256((args.loader_root/'scale_loader.py').read_bytes()).hexdigest()
+    result['attention_gate']='fail' if any(r.get('close_gate')=='fail' or r.get('scale_sensitivity_gate')=='fail' for r in result['attention']) else 'pass'
     return result
 
 if __name__=='__main__':
@@ -204,4 +251,6 @@ if __name__=='__main__':
     parser.add_argument('--device',choices=['cpu','xpu'],default='cpu')
     parser.add_argument('--source',type=Path,required=True)
     parser.add_argument('--loader-root',type=Path,required=True)
-    print(json.dumps(run(parser.parse_args()),indent=2))
+    result=run(parser.parse_args())
+    print(json.dumps(result,indent=2),flush=True)
+    raise SystemExit(1 if result['attention_gate']=='fail' else 0)
