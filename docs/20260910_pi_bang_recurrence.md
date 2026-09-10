@@ -192,6 +192,9 @@ response IDs. Equal aggregate counts alone do not establish all 19 pairings.
 No new GPU jobs, endpoint restart, live patches or guard installation were
 performed. The user-authorized day trial remains serving; quality qualification
 is contradicted by these failures and no shelf promotion is warranted.
+The user explicitly requires notification of the concrete proposed patch/test
+or backend change, followed by confirmation that clients are paused, BEFORE
+taking down the vLLM endpoint. Read-only preparation may continue meanwhile.
 The earlier [campaign handoff](20260910_bang_campaign_resume.md) retains exact
 prepared commands and health/lease requirements; prioritize these recurrence
 cases before completing the older synthetic qualification checklist.
