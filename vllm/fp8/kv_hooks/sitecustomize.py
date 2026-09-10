@@ -6,6 +6,8 @@ import os
 import sys
 
 TARGETS = {}
+if os.environ.get('B70_TP_HOST_TRACE_DIR'):
+    TARGETS['vllm.v1.worker.gpu_model_runner'] = ['b70_tp_host_trace']
 if os.environ.get('B70_KV_MODE') in ('record', 'load'):
     TARGETS['vllm.model_executor.layers.attention.attention'] = ['kv_calibration_hook']
 modules = []

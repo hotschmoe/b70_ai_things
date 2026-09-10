@@ -23,42 +23,39 @@ provides observed profile shapes and per-rank Python collective entry/return
 counts, not an inference from requested batch limits. Instrumented timing must
 not be presented as uninstrumented performance.
 
-## Next-arm integration, not applied by this change
+## Next-arm integration
 
-The server already copies the complete `vllm/fp8/kv_hooks` directory into its
-new readonly source snapshot. In that directory's `sitecustomize.py`, add this
-opt-in target after `TARGETS = {}`:
+`kv_campaign_server.py` now accepts `--tp-host-trace phase` or
+`--tp-host-trace phase-mrv1`, plus `--tp-host-trace-max-events` (default100000).
+Tracing requires TP2 and explicit `--p2p 0`; TP1, P2P1, omitted P2P, packaged
+hooks and nonpositive event caps are rejected before lease or subprocess work.
+Select the immutable image matching the explicit source profile below.
 
-```python
-if os.environ.get('B70_TP_HOST_TRACE_DIR'):
-    TARGETS['vllm.v1.worker.gpu_model_runner'] = ['b70_tp_host_trace']
+The server copies the complete hook directory into each new readonly source
+snapshot. Tracing forces the existing entrypoint/PYTHONPATH path even with
+`--hook none`, preserving the installed-package guard and `/tmp` workdir.
+It explicitly forwards the output directory `/kv-campaign/tp-host-trace`,
+profile selector and event cap into Docker. A host shell export alone is not
+an activation mechanism. `sitecustomize.py` adds its target only when that
+forwarded directory is present; existing calibration/offload targets coexist.
+The existing HookLoader invokes `install()` after normal runner import and
+fails closed on installation or source mismatch. Spawned workers inherit this
+Python startup behavior. No eager runner import or model/Dynamo wrapper is added.
+
+Before the next TP2 run, freeze a new plan and output directory with the chosen
+trace flags, image and source hashes. Never modify active snapshots. Retain the
+existing both-card lease, P2P0, strict per-card/compiled-pair health, verified
+teardown and post-health. No lifecycle bypass or extra GPU waits are added.
+
+Four CPU integration tests check both selectors and forwarded argv, actual
+opt-in import-target registration, pre-lease refusals, hook coexistence and
+byte-identical default Docker argv against pre-change fixtures (`none`/`load`).
+Run these and the existing campaign lifecycle checks with:
+
+```sh
+python3 -m unittest discover -s vllm/fp8 -p test_kv_campaign_tp_host_trace.py -v
+python3 -m unittest discover -s vllm/fp8 -p test_kv_campaign_preflight.py -v
 ```
-
-The existing HookLoader calls `install()` only after the runner's normal module
-import completes, and fails closed if installation/source verification fails.
-It propagates to spawned worker interpreters through their Python startup.
-Do not import the runner eagerly from an unrelated entrypoint or wrap model
-forward/Dynamo tracing functions.
-
-Add a deliberate server/plan flag for this diagnostic. Its integration must:
-
-- Force the existing `use_entry` path and prepend `/kv-source/kv_hooks` to
-  PYTHONPATH, including when `--hook none` is selected. Keep the installed
-  package identity guard and `/tmp` workdir.
-- Forward `B70_TP_HOST_TRACE_DIR=/kv-campaign/tp-host-trace` and optionally
-  `B70_TP_HOST_TRACE_MAX_EVENTS=100000` into the container. Merely exporting
-  variables in the host shell does not forward them through the current
-  explicit Docker environment list.
-- Reject combining this copied-source hook with packaged-hooks mode unless
-  that mode has separately reviewed integration.
-- Record the helper, sitecustomize, server, exact image, plan and runtime source
-  hashes before launch; create a new output/snapshot. Never edit active inputs.
-- Retain the existing both-card lease, P2P0, strict per-card/compiled-pair health,
-  verified teardown and post-health. This change adds no lifecycle bypass.
-
-No lifecycle or sitecustomize edits are included here. A raw example patch and
-independent review live in
-`/mnt/vm_8tb/b70/results/bang_isolation_20260910/collective-host-trace/`.
 
 ## Evidence interpretation
 

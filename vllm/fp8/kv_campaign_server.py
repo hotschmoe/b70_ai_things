@@ -51,10 +51,20 @@ def main():
     p.add_argument('--scales', type=Path)
     p.add_argument('--scale-audit', action='store_true')
     p.add_argument('--trace-offload', action='store_true')
+    p.add_argument('--tp-host-trace', choices=['phase', 'phase-mrv1'],
+                   help='Source-pinned TP2 startup host collective diagnostics')
+    p.add_argument('--tp-host-trace-max-events', type=int, default=100000)
     p.add_argument('--offload-group-fix', action='store_true')
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
+    if args.tp_host_trace:
+        if args.tensor_parallel_size != 2 or args.p2p != 0:
+            p.error('--tp-host-trace requires TP2 and explicit --p2p 0')
+        if args.packaged_hooks:
+            p.error('--tp-host-trace does not support --packaged-hooks')
+        if args.tp_host_trace_max_events < 1:
+            p.error('--tp-host-trace-max-events must be positive')
     if args.tensor_parallel_size == 1 and args.health_p2p_check:
         p.error('single-card workload cannot run two-card health under its lease')
     if args.scale_audit and args.hook != 'load':
@@ -168,7 +178,7 @@ def main():
     # Python -m model-inspection subprocesses prepend cwd independently of
     # PYTHONPATH. The image's source checkout must not shadow the wheel.
     docker += ['--workdir', '/tmp']
-    use_entry = not args.packaged_hooks and (args.hook != 'none' or args.trace_offload or args.offload_group_fix)
+    use_entry = not args.packaged_hooks and (args.hook != 'none' or args.trace_offload or args.offload_group_fix or args.tp_host_trace)
     if args.packaged_hooks:
         for key in ('PYTHONPATH', 'B70_OFFLOAD_GROUP_FIX', 'B70_KV_MODE', 'B70_OFFLOAD_TRACE'):
             env.pop(key, None)
@@ -178,6 +188,10 @@ def main():
         env['PYTHONPATH'] = ':'.join(['/kv-source/kv_hooks', *filter(None, env.get('PYTHONPATH', '').split(':'))])
         env['B70_KV_MODE'] = args.hook
         env['B70_KV_OUT'] = '/kv-campaign'
+        if args.tp_host_trace:
+            env['B70_TP_HOST_TRACE_DIR'] = '/kv-campaign/tp-host-trace'
+            env['B70_TP_HOST_TRACE_PROFILE'] = args.tp_host_trace
+            env['B70_TP_HOST_TRACE_MAX_EVENTS'] = str(args.tp_host_trace_max_events)
         if args.scale_audit:
             env['B70_KV_AUDIT'] = '1'
         if args.trace_offload:
