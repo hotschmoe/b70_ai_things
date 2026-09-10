@@ -456,3 +456,28 @@ request is not a completed two-request cache-reuse qualification.
 
 Evidence review: native-eager-completed-outcome-review.json records independent
 array checks and hashes of the retained results and lifecycle evidence.
+
+
+## 2026-09-10: native repair actual TP2 outcome
+
+CONFIG -> Native-only d55637b3353e / native6717e3ec7fe3, preserved TP2
+MTP3/FP8 be02/prefixON/FULL_DECODE_ONLY100K, c4/batch32768, P2P0.
+hotschmoe-dd remains first served ID. No Python layout adapter.
+COMMAND -> Run native5802-tp2-100k-plan with strict startup trace, boundary10
+and serial2 gates, then automatic STOP after the first failed job.
+RESULT -> Startup trace passes matched per-rank138 all-reduce entry/returns
+at FP16[32768,5120] and3 all-gather entry/returns at FP16[32768,2560].
+These are host boundaries, not device completion or replay counts. Both ranks
+load17 calibrated attention scales each, all34 matching be02. Resolved hybrid
+block1600, KV budget15.65GiB and reported logical capacity773076 tokens.
+Graph capture completes. Boundary10 passes exact content/cache10/10. Serial2
+fails content2/2, with normal stop below4096 output allowance; cache gates pass.
+The strict parent exits1, while normal server lifecycle and strict both-card
+and compiled pair post-health exit0. Owned serving container is absent. No
+WORKLOADS_PASSED marker exists; later concurrent/tool rounds were not reached.
+VERDICT -> The native correction repairs the targeted corruption cases in
+actual TP2 as well as TP1. The separate early-stop counterexample prevents an
+overall qualification pass. No200K, speed or production promotion is implied.
+A separately frozen independent diagnostic arm will retain the strict failure
+and collect stop-token/concurrent/tool evidence without a qualification marker.
+Raw: bang_recurrence_testing_20260910/native5802-tp2-100k-plan/.
