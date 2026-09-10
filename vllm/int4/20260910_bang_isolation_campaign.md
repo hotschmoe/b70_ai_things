@@ -271,3 +271,23 @@ quality is not fully clean. Nine temperature0.7 reconstructions do not prove
 causality or stability; exact upstream Pi bodies remain unavailable. Do not
 attribute all improvement to one patch without tracing/matched repetition.
 TP2 phase comparison and clean concurrent qualification remain pending.
+
+## Phase-patched TP2 full-feature bounded qualification
+
+CONFIG -> Same R276 phase-only image, TP2/P2P0,100K/c4/batch32768,
+MTP3, FP8 KV with preserved scales, prefix cache and FULL_DECODE_ONLY.
+COMMAND -> Frozen TP2 phase plan:9 Pi reconstructions,24 tiny-prefill
+requests,3 early clean agent2 requests,32 concurrent tool-history checks.
+RESULT -> All four workload stages pass. Pi9 and early3 have no bang or
+broad repetition/JSON flags; this is not a full semantic certificate.
+Tiny24 passes; all4 sequential repeat pairs and16 mixed-versus-sequential
+comparisons are exact. Concurrent tools32/32,32attempts,0bangs/retries;
+server logs confirm up to4running requests. KV capacity773076 exactly
+matches the stock100K TP2 control; graph capture completes. Normal teardown,
+strict per-card post-health and compiled P2P0 pair post-health pass; lifecycle0.
+VERDICT -> The phase patch operates through this bounded full-feature TP2
+suite. No production/200K/long-soak promotion follows from it. Exact original
+Pi trigger remains uncorrelated. A separate historical calibration manifest
+has one incorrect/unexplained shard hash; current cached/direct reads match
+the pinned publisher, but the old calibration identity is not established.
+Fresh numerical oracle/calibration work follows without rewriting that artifact.

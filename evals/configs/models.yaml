@@ -403,3 +403,30 @@ models:
     calibration: preserved-tp2-fp8kv-scales
     serve_cmd: ""
     notes: "Unqualified TP1 phase-only all-feature100K control, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp16kv-freshcal-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp16kv-freshcal-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified fresh calibration investigation, verified publisher weights, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-auto-freshcal-qualify-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-auto-freshcal-qualify-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified fresh calibration investigation, verified publisher weights, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp8_e4m3-freshcal-qualify-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp2-mtp3-fp8_e4m3-freshcal-qualify-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-pending-fp8kv
+    serve_cmd: ""
+    notes: "Unqualified fresh calibration investigation, verified publisher weights, stable primary hotschmoe-dd."
