@@ -197,3 +197,49 @@ VERDICT -> No copy-kernel numerical verdict from this attempt. The allocator
 mismatch is a testable infrastructure explanation, not yet verified. The old
 oracle only covers PREcopy, so a separate actual POSTcopy oracle is being
 prepared for positive-bias self-copy and backward boundary publication.
+
+
+## Crossover and native state contract localization
+
+CONFIG -> Same repaired 7b image, TP1, MTP3, FP8 KV, FULL graph. Compare
+prefixOFF on card0 against prefixON on card1; keep the earlier independent
+MTP0 results. Numerical probes use the exact installed native library,
+SHA256 271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f.
+
+COMMAND -> Run the focused array256 cold/repeated pair on both controls;
+then the eight-request padding boundary matrix on card1. Run actual PREcopy
+with the production allocator, actual POSTcopy, and native publication/read
+probes through their owned, leased lifecycles.
+
+RESULT -> PrefixOFF card0 passes both focused requests with zero cache hits.
+PrefixON card1 initially passes both focused requests, then fails four of
+its eight boundary requests (padding0 and256, cold/reused); padding128 and512
+pass. All model arms stop normally and pass strict selected-card post-health.
+The defect is therefore not exclusive to card0 or TP2, and its occurrence
+depends on state history as well as boundary crossing.
+
+With the serving allocator, all twelve actual PREcopy cases pass byte-exactly.
+All twelve actual POSTcopy cases also pass, including positive-bias self-copy
+and accepted-count reset. These kernels correctly implement their copy rules.
+
+The actual native GDN producer implements different rules: it publishes a
+three-row convolution history in each speculative column and reads column
+accepted-1. The worker expects a six-row rolling history in column0 and copies
+starting at row accepted-1. For accepted counts2-4, a boundary copy can therefore
+combine correct temporal state with stale convolution history. All four native
+prefix checkpoints match their independent numerical reference exactly; their
+trailing three rows remain untouched. Subsequent native calls match the
+per-prefix reference and diverge strongly from the worker rolling reference.
+All numerical probe teardown and strict health checks pass. The original
+rolling-contract oracle fails as expected and remains preserved unchanged.
+
+VERDICT -> Confirmed native/worker state representation mismatch, with a
+concrete corruption mechanism matching direct model failures at cache block
+boundaries. This is a third issue beyond the earlier phase initialization and
+accepted-count reorder patches. Updating Pi alone cannot repair this backend
+defect. It does not establish the cause of every historical client error.
+See [the numerical evidence](../vllm/int4/native_gdn_oracle/RESULT.md)
+for complete measured evidence. Upstream native commit
+5802a414d47855b01b63121bce3655795ef8dfa8 repairs this representation; an exact-stack
+source rebuild and a narrowly gated Python copy adapter are under test.
+Neither candidate is qualified for serving yet.

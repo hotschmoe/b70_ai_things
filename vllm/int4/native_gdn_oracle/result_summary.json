@@ -1,0 +1,145 @@
+{
+  "image": "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+  "native_sha256": "271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f",
+  "publication": {
+    "each_prefix_first3": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "each_prefix_tail3_untouched": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "rolling_column0_exact": false,
+    "noncolumn0_conv_untouched": false,
+    "ssm_prefix_error": {
+      "max_abs": 1.012580469250679e-06,
+      "relative_l2": 4.19719100364091e-07,
+      "within_frozen_math_gate": true
+    },
+    "output_error": {
+      "max_abs": 4.76837158203125e-07,
+      "relative_l2": 7.943458513182122e-06,
+      "within_frozen_math_gate": true
+    },
+    "z_exact": true,
+    "page_padding_exact": true
+  },
+  "reads": [
+    {
+      "accepted": 1,
+      "physical_source_column": 7,
+      "rolling_output": {
+        "max_abs": 4.76837158203125e-07,
+        "relative_l2": 1.4606724107579794e-05,
+        "within_frozen_math_gate": true
+      },
+      "per_prefix_output": {
+        "max_abs": 4.76837158203125e-07,
+        "relative_l2": 1.4606724107579794e-05,
+        "within_frozen_math_gate": true
+      },
+      "rolling_ssm": {
+        "max_abs": 2.514803782105446e-06,
+        "relative_l2": 2.5524452667013975e-06,
+        "within_frozen_math_gate": true
+      },
+      "per_prefix_ssm": {
+        "max_abs": 2.514803782105446e-06,
+        "relative_l2": 2.5524452667013975e-06,
+        "within_frozen_math_gate": true
+      },
+      "outputs_finite": true,
+      "expected_hypotheses_differ": false
+    },
+    {
+      "accepted": 2,
+      "physical_source_column": 3,
+      "rolling_output": {
+        "max_abs": 0.0013167858123779297,
+        "relative_l2": 0.7219663262367249,
+        "within_frozen_math_gate": false
+      },
+      "per_prefix_output": {
+        "max_abs": 4.76837158203125e-07,
+        "relative_l2": 3.200393621227704e-05,
+        "within_frozen_math_gate": true
+      },
+      "rolling_ssm": {
+        "max_abs": 0.02157488465309143,
+        "relative_l2": 0.27444031834602356,
+        "within_frozen_math_gate": false
+      },
+      "per_prefix_ssm": {
+        "max_abs": 4.854053258895874e-06,
+        "relative_l2": 4.983364306099247e-06,
+        "within_frozen_math_gate": true
+      },
+      "outputs_finite": true,
+      "expected_hypotheses_differ": true
+    },
+    {
+      "accepted": 3,
+      "physical_source_column": 9,
+      "rolling_output": {
+        "max_abs": 0.0015082359313964844,
+        "relative_l2": 0.9423274993896484,
+        "within_frozen_math_gate": false
+      },
+      "per_prefix_output": {
+        "max_abs": 1.1920928955078125e-07,
+        "relative_l2": 5.855691597389523e-06,
+        "within_frozen_math_gate": true
+      },
+      "rolling_ssm": {
+        "max_abs": 0.022088780999183655,
+        "relative_l2": 0.4199517071247101,
+        "within_frozen_math_gate": false
+      },
+      "per_prefix_ssm": {
+        "max_abs": 5.587935447692871e-09,
+        "relative_l2": 1.126767088521774e-07,
+        "within_frozen_math_gate": true
+      },
+      "outputs_finite": true,
+      "expected_hypotheses_differ": true
+    },
+    {
+      "accepted": 4,
+      "physical_source_column": 2,
+      "rolling_output": {
+        "max_abs": 0.0015320777893066406,
+        "relative_l2": 1.065170168876648,
+        "within_frozen_math_gate": false
+      },
+      "per_prefix_output": {
+        "max_abs": 4.76837158203125e-07,
+        "relative_l2": 3.089625170105137e-05,
+        "within_frozen_math_gate": true
+      },
+      "rolling_ssm": {
+        "max_abs": 0.025402799248695374,
+        "relative_l2": 0.5237630605697632,
+        "within_frozen_math_gate": false
+      },
+      "per_prefix_ssm": {
+        "max_abs": 5.559995770454407e-06,
+        "relative_l2": 1.0081786058435682e-05,
+        "within_frozen_math_gate": true
+      },
+      "outputs_finite": true,
+      "expected_hypotheses_differ": true
+    }
+  ],
+  "evidence_sha256": {
+    "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/native-gdn-publication-card0/oracle-result.json": "f03c261091413680650f364601b8ae3b5eaad18beeb2282ce07decc6bfe75d8c",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/native-gdn-publication-card0/OUTCOME.json": "676a3feb01c60d282da7570f9a467908da6039f68de63737d7812f0ad8fa0ee5",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/native-gdn-tp1-fp8-card0/oracle-result.json": "e68b60e50e4d89f111d97730f669f34a2822a8fca37ba46844d30d4272016062",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_20260910T172335Z/native-gdn-tp1-fp8-card0/OUTCOME.json": "f020284cb101f5a5a8533cad17460ec79a9a5c81e122ee9685261b80c4ce1493"
+  },
+  "verdict": "Confirmed incompatible native per-prefix and worker rolling-window conv-state contracts; no fix qualified"
+}

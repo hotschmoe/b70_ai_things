@@ -1,0 +1,453 @@
+{
+  "upstream_commit": "5802a414d47855b01b63121bce3655795ef8dfa8",
+  "candidate_sha256": {
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native-contract-provenance/candidate-source/csrc/xpu/gdn_attn/causal_conv1d.hpp": "36931daf466b8c7eb646f240d8d6880794126b3928d7c771fc7ec10d06c70063",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native-contract-provenance/candidate-source/csrc/xpu/gdn_attn/gdn_attn_interface.cpp": "ba115bfe6edf8025e1328fcbbd892ee7aaa2579f91664da0ea5484e3a87fc42e",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native-contract-provenance/r276-upstream5802-conv-contract.patch": "93a27111f21136ce391f855360e2670a0e082da3e05749fe84e9b0dd10b315e6"
+  },
+  "header_difference_from_upstream": "--- upstream5802\n+++ candidate\n@@ -1036,7 +1036,14 @@\n   if (is_spec) {\n     TORCH_CHECK(cache_indices->dim() == 2);\n     TORCH_CHECK(cache_indices->size(0) == num_spec_decodes);\n-    num_spec_tokens = cache_indices->size(1);\n+    // Dynamic speculative scheduling keeps the state-index tensor at the\n+    // configured maximum width while emitting fewer active tokens. Derive the\n+    // active width from the compact output/token-index buffers and retain the\n+    // original row stride for state lookup.\n+    TORCH_CHECK(num_spec_decodes > 0);\n+    TORCH_CHECK(num_virtual_tokens % num_spec_decodes == 0);\n+    num_spec_tokens = num_virtual_tokens / num_spec_decodes;\n+    TORCH_CHECK(num_spec_tokens <= cache_indices->size(1));\n     cache_indices_stride_0 = cache_indices->stride(0);\n     TORCH_CHECK(num_accepted_tokens->size(0) == num_spec_decodes);\n   }\n",
+  "window_cases": [
+    {
+      "active_width": 1,
+      "previous_accepted": 1,
+      "next_accepted": 1,
+      "new_written_rows": 3,
+      "next_window": [
+        "h0",
+        "x1",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 1,
+      "previous_accepted": 2,
+      "next_accepted": 1,
+      "new_written_rows": 3,
+      "next_window": [
+        "x1",
+        "x2",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 1,
+      "previous_accepted": 3,
+      "next_accepted": 1,
+      "new_written_rows": 3,
+      "next_window": [
+        "x2",
+        "x3",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 1,
+      "previous_accepted": 4,
+      "next_accepted": 1,
+      "new_written_rows": 3,
+      "next_window": [
+        "x3",
+        "x4",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 1,
+      "next_accepted": 1,
+      "new_written_rows": 4,
+      "next_window": [
+        "h0",
+        "x1",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 1,
+      "next_accepted": 2,
+      "new_written_rows": 4,
+      "next_window": [
+        "x1",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 2,
+      "next_accepted": 1,
+      "new_written_rows": 4,
+      "next_window": [
+        "x1",
+        "x2",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 2,
+      "next_accepted": 2,
+      "new_written_rows": 4,
+      "next_window": [
+        "x2",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 3,
+      "next_accepted": 1,
+      "new_written_rows": 4,
+      "next_window": [
+        "x2",
+        "x3",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 3,
+      "next_accepted": 2,
+      "new_written_rows": 4,
+      "next_window": [
+        "x3",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 4,
+      "next_accepted": 1,
+      "new_written_rows": 4,
+      "next_window": [
+        "x3",
+        "x4",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 2,
+      "previous_accepted": 4,
+      "next_accepted": 2,
+      "new_written_rows": 4,
+      "next_window": [
+        "x4",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 1,
+      "next_accepted": 1,
+      "new_written_rows": 5,
+      "next_window": [
+        "h0",
+        "x1",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 1,
+      "next_accepted": 2,
+      "new_written_rows": 5,
+      "next_window": [
+        "x1",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 1,
+      "next_accepted": 3,
+      "new_written_rows": 5,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 2,
+      "next_accepted": 1,
+      "new_written_rows": 5,
+      "next_window": [
+        "x1",
+        "x2",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 2,
+      "next_accepted": 2,
+      "new_written_rows": 5,
+      "next_window": [
+        "x2",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 2,
+      "next_accepted": 3,
+      "new_written_rows": 5,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 3,
+      "next_accepted": 1,
+      "new_written_rows": 5,
+      "next_window": [
+        "x2",
+        "x3",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 3,
+      "next_accepted": 2,
+      "new_written_rows": 5,
+      "next_window": [
+        "x3",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 3,
+      "next_accepted": 3,
+      "new_written_rows": 5,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 4,
+      "next_accepted": 1,
+      "new_written_rows": 5,
+      "next_window": [
+        "x3",
+        "x4",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 4,
+      "next_accepted": 2,
+      "new_written_rows": 5,
+      "next_window": [
+        "x4",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 3,
+      "previous_accepted": 4,
+      "next_accepted": 3,
+      "new_written_rows": 5,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 1,
+      "next_accepted": 1,
+      "new_written_rows": 6,
+      "next_window": [
+        "h0",
+        "x1",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 1,
+      "next_accepted": 2,
+      "new_written_rows": 6,
+      "next_window": [
+        "x1",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 1,
+      "next_accepted": 3,
+      "new_written_rows": 6,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 1,
+      "next_accepted": 4,
+      "new_written_rows": 6,
+      "next_window": [
+        "y2",
+        "y3",
+        "y4"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 2,
+      "next_accepted": 1,
+      "new_written_rows": 6,
+      "next_window": [
+        "x1",
+        "x2",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 2,
+      "next_accepted": 2,
+      "new_written_rows": 6,
+      "next_window": [
+        "x2",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 2,
+      "next_accepted": 3,
+      "new_written_rows": 6,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 2,
+      "next_accepted": 4,
+      "new_written_rows": 6,
+      "next_window": [
+        "y2",
+        "y3",
+        "y4"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 3,
+      "next_accepted": 1,
+      "new_written_rows": 6,
+      "next_window": [
+        "x2",
+        "x3",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 3,
+      "next_accepted": 2,
+      "new_written_rows": 6,
+      "next_window": [
+        "x3",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 3,
+      "next_accepted": 3,
+      "new_written_rows": 6,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 3,
+      "next_accepted": 4,
+      "new_written_rows": 6,
+      "next_window": [
+        "y2",
+        "y3",
+        "y4"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 4,
+      "next_accepted": 1,
+      "new_written_rows": 6,
+      "next_window": [
+        "x3",
+        "x4",
+        "y1"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 4,
+      "next_accepted": 2,
+      "new_written_rows": 6,
+      "next_window": [
+        "x4",
+        "y1",
+        "y2"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 4,
+      "next_accepted": 3,
+      "new_written_rows": 6,
+      "next_window": [
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    {
+      "active_width": 4,
+      "previous_accepted": 4,
+      "next_accepted": 4,
+      "new_written_rows": 6,
+      "next_window": [
+        "y2",
+        "y3",
+        "y4"
+      ]
+    }
+  ],
+  "count": 40,
+  "verdict": "PASS bounded CPU/source review; correct production6row activewidth guard and window algebra; no native build/GPU qualification"
+}
