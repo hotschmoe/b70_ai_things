@@ -1,5 +1,6 @@
 """CPU-only lifecycle tests: distinguish probe refusal from hardware failure."""
 import json
+import hashlib
 import io
 from pathlib import Path
 import tempfile
@@ -88,6 +89,8 @@ class PreflightTest(unittest.TestCase):
     def test_stop_during_preflight_does_not_launch_and_still_checks_health(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); cfg = root / 'config'; cfg.mkdir()
+            probe = root / 'strict-health'
+            probe.write_text('# CPU mock probe identity\n')
             (cfg / 'Config.json').write_text(json.dumps({'Env': [], 'Cmd': [
                 '--tensor-parallel-size', '2', '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
             (cfg / 'Mounts.json').write_text('[]')
@@ -97,10 +100,14 @@ class PreflightTest(unittest.TestCase):
                 (root / 'result/STOP').touch()
                 return SimpleNamespace(returncode=0)
             with patch.object(server.subprocess, 'run', run), patch.object(server.subprocess, 'Popen') as popen, \
-                    patch('sys.argv', ['server', '--preservation', str(cfg), '--out', str(root / 'result'), '--leased']):
+                    patch('sys.argv', ['server', '--preservation', str(cfg), '--out', str(root / 'result'),
+                                       '--health-probe', str(probe), '--leased']):
                 self.assertEqual(server.main(), 0)
                 popen.assert_not_called()
-            self.assertEqual(sum(Path(c[0]).name == 'xpu-health' for c in commands), 2)
+            self.assertEqual(sum(c[0] == str(probe) for c in commands), 2)
+            self.assertFalse(any(Path(c[0]).name == 'xpu-health' for c in commands))
+            manifest = json.loads((root / 'result/manifest.json').read_text())
+            self.assertEqual(manifest['health_probe_sha256'], hashlib.sha256(probe.read_bytes()).hexdigest())
             self.assertEqual(sum(Path(c[0]).name == 'xpu-collective-health' for c in commands), 2)
             self.assertFalse(any('xe-reset' in word for c in commands for word in c))
 

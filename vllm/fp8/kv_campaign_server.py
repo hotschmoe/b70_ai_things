@@ -33,6 +33,8 @@ def main():
     p.add_argument('--served-model')
     p.add_argument('--served-alias', action='append', default=[])
     p.add_argument('--health-p2p-check', action='store_true')
+    p.add_argument('--health-probe', type=Path,
+                   help='Experimental per-card probe override; does not replace shared shelf tooling')
     p.add_argument('--profile', action='store_true')
     p.add_argument('--offload-gib', type=int, default=0)
     p.add_argument('--kv-dtype', default='auto', choices=['auto', 'fp8_e4m3'])
@@ -91,7 +93,8 @@ def main():
         if args.health_p2p_check and stage == 'pre':
             checks.append(('xpu-collective-health', ['--p2p', '1', '--timeout', '180'], '-p2p1'))
         for tool, extra, suffix in checks:
-            command = [str(REPO / 'bin' / tool), '--img', args.image, *extra]
+            probe = (getattr(args, 'health_probe', None) if tool == 'xpu-health' else None)
+            command = [str(probe or REPO / 'bin' / tool), '--img', args.image, *extra]
             if suffix == '-p2p1':
                 # Explicitly requested, scoped recipe preflight, after P2P-off
                 # health. Do not export the risk opt-in to unrelated workloads.
@@ -193,6 +196,8 @@ def main():
     docker += cmd
     manifest = {'model': model, 'image': args.image, 'args': vars(args), 'command': docker,
                 'source_sha256': source_hashes}
+    if getattr(args, 'health_probe', None):
+        manifest['health_probe_sha256'] = hashlib.sha256(args.health_probe.read_bytes()).hexdigest()
     (args.out / 'manifest.json').write_text(json.dumps(manifest, default=str, indent=2) + '\n')
     server = None
     failed = False

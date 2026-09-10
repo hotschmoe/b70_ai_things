@@ -376,3 +376,30 @@ models:
     calibration: none-fp16kv
     serve_cmd: ""
     notes: "Unqualified isolated GDN tiny-prefill screen,8K/c4/batch512,TP1/P2P0,eager,MTP0,prefixoff. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-stock-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-stock-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Current-upstream XPU TP1 viability,8K/c1/batch8192,eager,MTP0,prefixoff,FP16KV. Stable primary hotschmoe-dd. Unqualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-gdnphase-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-v029-gdnphase-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Current-upstream XPU TP1 viability,8K/c1/batch8192,eager,MTP0,prefixoff,FP16KV. Stable primary hotschmoe-dd. Unqualified."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: preserved-tp2-fp8kv-scales
+    serve_cmd: ""
+    notes: "Unqualified TP1 phase-only all-feature100K control, stable primary hotschmoe-dd."

@@ -193,3 +193,61 @@ CPU-only image discovery/extraction overlapped part of this arm at the
 user's request. Docker operations were delayed briefly during simultaneous
 layer extraction; both pulls completed before post-health. No speed claim
 or matched host-load claim is made. No host driver/kernel changes occurred.
+
+## GDN phase-only TP1 crossover confirms the local mechanism
+
+CONFIG -> Exact R276 versus one-call-site phase candidate0328900c, native
+libraries unchanged. TP1,8K/c4/batch512,FP16 KV,eager,MTP0,prefixoff,P2P0.
+Run stock/card0 and patched/card1 concurrently, then swap images between
+cards after both first-pair lifecycles and per-card post-health complete.
+COMMAND -> Same pinned24-case tiny-prefill screen; full text/token arrays;
+independent card leases/device pins and private localhost ports.
+RESULT -> Each stock run has2/24 bang failures (one-token cases), on each
+physical card. Each patched run passes24/24 with zero bangs. All24 patched
+complete token arrays match between cards. On each card, all22 nonfailed
+stock arrays match the corresponding patched arrays. All four lifecycles
+exit0 and their selected-card post-health completes. Raw comparison:
+gdn-tiny-crossover-comparison.json.
+VERDICT -> The phase-only change fixes this bounded local bang mechanism
+on both cards. TP2,FP8 KV,MTP,prefix caching and graphs are NOT prerequisites.
+This is not a full semantic suite, long soak, or proof of the original Pi
+trigger. The corresponding source fault also exists in current official
+vLLM0.29; its separately pinned candidate is CPU-checked, not GPU-tested yet.
+
+Host-only request/phase tracing is prepared separately under diagnostics/.
+It links effective one-token target prefills to request IDs without prompt
+logging or additional GPU synchronization. No trace image is live yet.
+
+## Current official vLLM and strict experimental health
+
+CONFIG -> Official0.29 XPU stock1db27a8b versus phase-only29f480e9,
+TP1/card0,8K/c1/batch8192,eager,MTP0,prefixoff,FP16KV.
+COMMAND -> Same pinned24-case tiny-prefill screen, selected-card lease,
+strict experimental pre/post-health with finite outputs and exact sentinel.
+RESULT -> Stock fails all six one-token cases: one repeats token17 and
+five repeat token1023,64 times each. Candidate passes24/24; every complete
+candidate token array matches both R276 patched card runs. Both lifecycles
+exit0 and strict selected-card post-health passes.
+VERDICT -> Updating to current official0.29 alone does not remove this
+mechanism; the isolated phase guard does. Max-num-seqs1 does not qualify
+concurrent batch execution. Full-feature and original-Pi causality remain
+open. Detailed immutable identities are in20260910_runtime_freshness.md.
+
+CONFIG -> Experimental strict health candidate, shared bin unchanged.
+COMMAND -> diagnostics/check_xpu_health_strict.py; lifecycle preflight tests.
+RESULT ->12 CPU finite/sentinel/cleanup checks and7 lifecycle tests pass.
+Both new images additionally passed per-card and compiled two-rank P2P0
+preflight under both leases. Earlier reported shared-health passes used
+its old permissive sentinel; they are not equivalent to this stricter gate.
+VERDICT -> Use recorded strict probe override for new experiments; no
+unqualified change to shared shelf lifecycle or promotion claim.
+
+CONFIG -> R276 phase-only TP1 all-feature100K control, card0, in parallel
+with SGLang FP16-KV/eager/MTP0 viability on card1; CPU current-main build.
+COMMAND -> Frozen vllm-tp1-fp8kv-mtp3-prefix-graph-ctx100k-gdnphase plan.
+RESULT -> Launched04:16UTC; results pending. SGLang retry preserves compiled
+cache bytes with corrected experiment-cache ownership and300s HTTP bound.
+Unsupported optional language-model-only flag rejected Qwen during retry-v2
+argument resolution, before serving; strict post-health passed. Retry-v3
+had an invalid health path before GPU touch; corrected retry-v4 is running.
+VERDICT -> These are unqualified candidates; production remains offline.
