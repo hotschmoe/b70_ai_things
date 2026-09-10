@@ -157,6 +157,36 @@ def service_command(plan, out):
     return cmd
 
 
+def startup_jobs(inputs, out, namespace):
+    """Use only pinned clean100K fixture jobs; full evidence remains prerequisite."""
+    clean = read(inputs['plan100k'])
+    names = ['02-tiny24', '04-deterministic-round1',
+             '04-deterministic-round1-quality', '04-sampled-round1',
+             '04-sampled-round1-quality']
+    by_name = {j['name']: j for j in clean['jobs']}
+    jobs = []
+    for name in names:
+        require(name in by_name, 'required startup fixture missing: ' + name)
+        job = copy.deepcopy(by_name[name])
+        cmd = [x.replace(clean['out'], str(out)).replace(
+            'http://127.0.0.1:18125', 'http://127.0.0.1:18124')
+            for x in job['command']]
+        if name in ['04-deterministic-round1', '04-sampled-round1']:
+            require(value(cmd, '--records') == '360' and value(cmd, '--turns') == '4'
+                    and '--stream' in cmd and '--shared-cache' in cmd,
+                    'startup fixture scope changed')
+            expected = '0' if name == '04-deterministic-round1' else '0.7'
+            require(value(cmd, '--temperature') == expected, 'startup temperature changed')
+            cmd[cmd.index('--cache-namespace') + 1] = namespace + '-' + name
+            if '--base' in cmd:
+                cmd[cmd.index('--base') + 1] = 'http://127.0.0.1:18124'
+            else:
+                cmd += ['--base', 'http://127.0.0.1:18124']
+        job['command'] = cmd
+        jobs.append(job)
+    return jobs
+
+
 def owns_frontdoor(pid):
     sockets = set()
     for fd in (Path('/proc') / str(pid) / 'fd').iterdir():
@@ -256,12 +286,11 @@ def main():
         # Verify all calibrated layers before running the startup workloads.
         loaded = [v for path in (result / 'server').glob('kv-load-*.json') for v in read(path).values()]
         require(len(loaded) == 34 and all(v['artifact_sha256'] == SCALE and not v['query_quantized'] for v in loaded), 'startup calibration mismatch')
-        # Replay the exact qualified200K jobs at startup, before public access.
-        for job in plan['jobs']:
+        # Bounded restart check; full clean100K/200K evidence was required above.
+        jobs = startup_jobs(inputs, result / 'server', result.name)
+        (result / 'startup-plan.json').write_text(json.dumps(jobs, indent=2) + '\n')
+        for job in jobs:
             frozen = copy.deepcopy(job)
-            frozen['command'] = [s.replace(plan['out'], str(result / 'server')).replace('http://127.0.0.1:18125', 'http://127.0.0.1:18124') for s in job['command']]
-            if '--base' not in frozen['command'] and 'probe.py' in ' '.join(frozen['command']):
-                frozen['command'] += ['--base', 'http://127.0.0.1:18124']
             path = result / 'server/jobs' / (job['name'] + '.json')
             temp = path.with_suffix('.tmp')
             temp.write_text(json.dumps(frozen) + '\n'); temp.replace(path)

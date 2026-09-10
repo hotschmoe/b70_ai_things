@@ -48,6 +48,24 @@ class Gates(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'wrong candidate flag'):
                 serve.verify_inputs(inputs)
 
+    def test_bounded_startup_scope_and_namespaces(self):
+        inputs = serve.read(serve.INPUTS)
+        jobs = serve.startup_jobs(inputs, Path('/fresh/server'), 'fresh-run')
+        self.assertEqual(len(jobs), 5)
+        self.assertEqual(jobs[0]['name'], '02-tiny24')
+        rounds = [j for j in jobs if '--temperature' in j['command']]
+        self.assertEqual([serve.value(j['command'], '--temperature') for j in rounds], ['0', '0.7'])
+        self.assertEqual(len({serve.value(j['command'], '--cache-namespace') for j in rounds}), 2)
+        for j in rounds:
+            self.assertEqual(serve.value(j['command'], '--records'), '360')
+            self.assertEqual(serve.value(j['command'], '--base'), 'http://127.0.0.1:18124')
+        self.assertTrue(all('/fresh/server' in str(j['command']) for j in jobs))
+        self.assertTrue(all('long_context_qualification' not in str(j['command']) for j in jobs))
+        clean = serve.read(inputs['plan100k'])
+        for j in jobs:
+            original = next(x for x in clean['jobs'] if x['name'] == j['name'])
+            self.assertEqual(j['command'][1], original['command'][1])
+
     def test_unowned_frontdoor_refused(self):
         with patch.object(serve.Path, 'iterdir', return_value=iter([])), patch.object(serve.Path, 'read_text', return_value='header\n 0: 00000000:46A0 00000000:0000 0A 0:0 00:0 0 0 0 12345\n'):
             self.assertFalse(serve.owns_frontdoor(123))
