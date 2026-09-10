@@ -3,6 +3,10 @@
 Status: investigation active; production hotschmoe-dd remains offline.
 No shelf promotion or production stability claim has been made.
 
+New counterexample: the phase-patched TP2/MTP3/graph/prefix-on FP16-KV
+control produces a concurrent tool-answer bang. The phase guard fixes the
+isolated initialization defect, but is not a complete full-feature remedy.
+
 ## Answer to the GDN and TP questions
 
 Steve's GDN phase finding explains a reproduced local bang mechanism. The
@@ -50,6 +54,21 @@ and 32 concurrent tool checks. Tiny-prefill sequential and mixed token arrays
 match exactly; server logs confirm four simultaneous requests. Teardown,
 strict per-card health and compiled pair post-health pass. This is a bounded
 100K-context qualification, not production promotion or a long soak.
+
+The later matched FP16-KV arm passes nine Pi reconstructions, 24 tiny cases
+and three clean-history requests, but fails one of 26 completed concurrent
+tool checks. Session0's first answer emits 512 bangs from its first output
+token instead of the known stock count730. Both its tool-call request and
+answer request match the earlier passing FP8 arm after normalizing generated
+tool-call IDs. The FP16 answer reports 832 cached tokens; the FP8 counterpart
+reports zero. Teardown and strict per-card/compiled pair post-health pass.
+
+This difference activates a cache path rather than isolating storage dtype:
+resolved block sizes are FP16=832 and FP8=1600. For the 2360-token answer,
+the full-attention hit finder can retain two 832-token blocks then drop one
+for MTP, leaving832; one1600-token block is dropped to zero. Cache reuse is
+therefore a concrete lead. Separate per-card prefix-on/off controls are being
+prepared; no cache or MTP root-cause attribution is made yet.
 
 The selected affected bundle contains 41 bangs among 317 non-429 messages; this
 is not an unbiased production rate. All 36 recorded bang-recovery messages
