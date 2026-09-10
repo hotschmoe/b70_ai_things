@@ -42,6 +42,9 @@ def main():
     p.add_argument('--memory-gib', type=int, default=64)
     p.add_argument('--memory-swap-gib', type=int)
     p.add_argument('--port', type=int, default=18125)
+    p.add_argument('--tensor-parallel-size', type=int, choices=[1, 2], default=2)
+    p.add_argument('--card', type=int, choices=[0, 1], default=0)
+    p.add_argument('--p2p', type=int, choices=[0, 1])
     p.add_argument('--hook', choices=['none', 'record', 'load'], default='none')
     p.add_argument('--scales', type=Path)
     p.add_argument('--scale-audit', action='store_true')
@@ -50,6 +53,8 @@ def main():
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
+    if args.tensor_parallel_size == 1 and args.health_p2p_check:
+        p.error('single-card workload cannot run two-card health under its lease')
     if args.scale_audit and args.hook != 'load':
         p.error('--scale-audit requires --hook load')
     if not args.image.startswith('sha256:') or len(args.image) != 71:
@@ -69,7 +74,8 @@ def main():
             p.error('packaged image does not match the tracked offload hooks')
     if not args.leased:
         import sys
-        os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
+        card_args = ['--card', str(args.card)] if args.tensor_parallel_size == 1 else []
+        os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', *card_args, sys.executable, __file__, *sys.argv[1:], '--leased'])
     args.out.mkdir(parents=True, exist_ok=False)
     started_epoch = int(time.time())
     if args.offload_gib and args.memory_gib < args.offload_gib + 24:
@@ -80,6 +86,8 @@ def main():
             return subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=timeout).returncode
     def health(stage):
         checks = [('xpu-health', [], ''), ('xpu-collective-health', ['--p2p', '0', '--timeout', '180'], '')]
+        if args.tensor_parallel_size == 1:
+            checks = [('xpu-health', ['--card', str(args.card)], '')]
         if args.health_p2p_check and stage == 'pre':
             checks.append(('xpu-collective-health', ['--p2p', '1', '--timeout', '180'], '-p2p1'))
         for tool, extra, suffix in checks:
@@ -110,6 +118,7 @@ def main():
     if args.served_model:
         model = args.served_model
     setarg('--served-model-name', model)
+    setarg('--tensor-parallel-size', args.tensor_parallel_size)
     i = cmd.index('--served-model-name') + 2
     cmd[i:i] = args.served_alias
     setarg('--kv-cache-dtype', args.kv_dtype)
@@ -130,6 +139,12 @@ def main():
                 'torch_profiler_dir': '/kv-campaign/profile', 'torch_profiler_record_shapes': True,
                 'torch_profiler_with_stack': False, 'torch_profiler_with_memory': False})]
     env = dict(v.split('=', 1) for v in cfg['Env'])
+    if args.p2p is not None:
+        env['CCL_TOPO_P2P_ACCESS'] = str(args.p2p)
+    if args.tensor_parallel_size == 1:
+        env['ZE_AFFINITY_MASK'] = str(args.card)
+        env['ONEAPI_DEVICE_SELECTOR'] = 'level_zero:gpu'
+        env['CCL_TOPO_P2P_ACCESS'] = '0'
     if args.eager:
         env['VLLM_XPU_ENABLE_XPU_GRAPH'] = '0'
     cache = args.out / 'cache'; cache.mkdir()
@@ -251,7 +266,11 @@ def main():
                 failed = True
                 needs_recovery = True
                 run(['docker', 'rm', '-f', args.name], 'force-remove.log', 30)
-        if needs_recovery:
+        if needs_recovery and args.tensor_parallel_size == 1:
+            # xe-reset is a two-card operation. Release this single-card lease
+            # first; the coordinator/operator must acquire both for recovery.
+            (args.out / 'recovery-required.txt').write_text('Acquire both leases and run xe-reset before further GPU work.\n')
+        elif needs_recovery:
             # Explicit post-health below uses the campaign image, not a retired default.
             run(['env', 'B70_XE_RESET_UNDER_LEASE=1', str(REPO / 'bin/xe-reset'), '--method', 'rebind', '--no-probe'], 'recovery.log', 180)
         try:

@@ -295,3 +295,39 @@ models:
     calibration: cache800k-20260909-research
     serve_cmd: ""
     notes: "Unqualified campaign identity; exact flags in arm manifest. Not a serving promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified TP isolation: MTP3, FP8 KV, prefix and graphs on, P2P off. Stable primary alias hotschmoe-dd. No shelf promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified TP isolation: MTP3, FP8 KV, prefix and graphs on, P2P off. Stable primary alias hotschmoe-dd. No shelf promotion."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp1-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified matched TP isolation at100K; FP8 KV, MTP3, prefix/graphs on, P2P off. Capacity control, not a200K shelf recipe."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified matched TP isolation at100K; FP8 KV, MTP3, prefix/graphs on, P2P off. Capacity control, not a200K shelf recipe."

@@ -11,6 +11,40 @@ import kv_campaign_server as server
 
 
 class PreflightTest(unittest.TestCase):
+    def test_single_card_failure_never_touches_other_card_or_resets_pair(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); cfg = root / 'config'; cfg.mkdir()
+            (cfg / 'Config.json').write_text(json.dumps({'Env': [], 'Cmd': [
+                '--tensor-parallel-size', '2', '--served-model-name', 'test',
+                '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
+            (cfg / 'Mounts.json').write_text('[]')
+            commands = []
+            def run(command, **kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=1 if Path(command[0]).name == 'xpu-health' else 0)
+            with patch.object(server.subprocess, 'run', run), patch.object(server.subprocess, 'Popen') as popen, \
+                    patch('sys.argv', ['server', '--preservation', str(cfg), '--out', str(root / 'result'),
+                                       '--tensor-parallel-size', '1', '--card', '1', '--leased']):
+                self.assertEqual(server.main(), 1)
+                popen.assert_not_called()
+            health = [c for c in commands if Path(c[0]).name == 'xpu-health']
+            self.assertEqual(len(health), 2)
+            self.assertTrue(all(c[c.index('--card') + 1] == '1' for c in health))
+            self.assertFalse(any('xe-reset' in w or 'collective-health' in w for c in commands for w in c))
+            self.assertTrue((root / 'result/recovery-required.txt').exists())
+            command = json.loads((root / 'result/manifest.json').read_text())['command']
+            self.assertIn('ZE_AFFINITY_MASK=1', command)
+            self.assertIn('ONEAPI_DEVICE_SELECTOR=level_zero:gpu', command)
+            self.assertEqual(command[command.index('--tensor-parallel-size') + 1], '1')
+
+    def test_single_card_lease_is_scoped_before_any_device_work(self):
+        with patch('sys.argv', ['server', '--preservation', '/unused', '--out', '/unused',
+                               '--tensor-parallel-size', '1', '--card', '1']), \
+                patch.object(server.os, 'execv', side_effect=RuntimeError('exec intercepted')) as execute:
+            with self.assertRaisesRegex(RuntimeError, 'exec intercepted'):
+                server.main()
+            self.assertEqual(execute.call_args.args[1][1:3], ['--card', '1'])
+
     def exercise(self, first_collective_rc, guard_refusal=False):
         commands = []
         collective_count = 0
@@ -30,7 +64,7 @@ class PreflightTest(unittest.TestCase):
             cfg = root / 'config'
             cfg.mkdir()
             (cfg / 'Config.json').write_text(json.dumps({'Env': [], 'Cmd': [
-                '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
+                '--tensor-parallel-size', '2', '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
             (cfg / 'Mounts.json').write_text('[]')
             # Every subprocess is mocked; no lease or device operation occurs.
             with patch.object(server.subprocess, 'run', run), patch.object(server.subprocess, 'Popen') as popen, patch('sys.argv', [
@@ -55,7 +89,7 @@ class PreflightTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); cfg = root / 'config'; cfg.mkdir()
             (cfg / 'Config.json').write_text(json.dumps({'Env': [], 'Cmd': [
-                '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
+                '--tensor-parallel-size', '2', '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
             (cfg / 'Mounts.json').write_text('[]')
             commands = []
             def run(command, **kwargs):
@@ -74,7 +108,7 @@ class PreflightTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); cfg = root / 'config'; cfg.mkdir()
             (cfg / 'Config.json').write_text(json.dumps({'Env': [], 'Cmd': [
-                '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
+                '--tensor-parallel-size', '2', '--served-model-name', 'test', '--kv-cache-dtype', 'auto', '--speculative-config', '{}']}))
             (cfg / 'Mounts.json').write_text('[]')
             commands = []; state = {'dead': False}
             child = SimpleNamespace(poll=lambda: 1 if state['dead'] else None, wait=lambda **_: 1)
