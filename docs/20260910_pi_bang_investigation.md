@@ -13,6 +13,14 @@ phase-only candidates pass on both cards in a crossover. Native libraries
 are unchanged. This does not establish that the original long Pi requests
 hit the same internal phase; their exact upstream bodies are absent.
 
+CPU execution of the actual scheduler further narrows that connection: a
+cached or chunked one-token suffix normally has positive computed context
+and existing recurrent state. In aligned mode, a fresh long prompt clipped
+to a one-token first chunk is deferred at the reviewed block/budget settings.
+Long history plus a singleton suffix therefore does not prove the reproduced
+zero-state initialization defect occurred. Request-level trace correlation
+or independent invalid-cache evidence is still needed.
+
 CONFIG -> R276 stock versus phase-only, TP1 on both cards,8K/c4/batch512,
 eager, MTP0, prefix off, FP16 KV. COMMAND ->24-case pinned tiny-prefill screen,
 then swap the images between cards. RESULT -> Each stock run2 bangs / 24;
@@ -64,8 +72,8 @@ explicit BMG, and Triton attention. Unused native FMHA/MoE/MLA kernels are
 excluded; this is not a native vision-FMHA recipe. No quarantined binary is
 copied into the stack. The CPU installed/API gate passes: all 63 installed
 native artifacts match the rebuilt wheels and the held PyTorch/UMD/oneCCL
-identities are unchanged. The current-source image has not yet passed GPU
-health or model serving; the earlier serving results belong to the published
+identities are unchanged. The current-source image passes strict per-card and
+compiled pair health; model serving is being tested. The earlier serving results belong to the published
 baseline plus its small source port.
 
 Two material parity gaps need qualification: native Intel attention prefill
@@ -87,12 +95,21 @@ The old freeze utility copied an existing manifest without rehashing weights.
 This does not establish why its recorded shard 2 hash differs, or which bytes
 the old calibration actually loaded. The old artifact is preserved unchanged.
 
-The new loader refuses the mismatch. Fresh calibration is running against a
-verified complete manifest: 256 short cases and four long prompts through
-96K tokens are collected; continuation and lifecycle checks remain pending.
+The new loader refuses the mismatch. Fresh calibration completed against a
+verified complete manifest: 256 short cases, four long prompts through 96K
+tokens and two 4096-token continuations. All 17 model-file hashes and stat
+identities match before and after collection. Teardown, strict per-card and
+compiled pair post-health pass. The fresh 17-layer artifact is frozen with
+SHA256 be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062.
 The recorder requires eager/prefixoff; graph and prefix-on FP16-versus-FP8
 qualification must be separate. Current collection is limited to a 100K
 configuration and does not qualify the previous 200K configuration.
+
+The 256 shared short cases have 247 exact text-plus-reasoning matches with the
+old collection; nine differences are ordinary wording/formatting changes.
+Twenty-five of 34 K/V scales are exactly equal; remaining fresh/old ratios
+range from 0.95085 to 1.01898. Calibration configuration and long prompts
+differ, so these comparisons do not resolve the historical weight identity.
 
 CONFIG -> Phase-only vLLM R276, synthetic distinct K/V scales, 67 tokens,
 permuted 64-token cache blocks, each physical card. COMMAND -> Actual cache
@@ -101,7 +118,10 @@ untouched slots. RESULT -> Both cards pass; attention relative L2 is below
 0.000227 against the dequantized CPU reference. Strict per-card and compiled
 pair pre/post-health pass, with owned containers removed. VERDICT -> This
 bounded numeric test validates scale consumption, not full-model FP8 quality.
-The corresponding actual-Triton SGLang oracle is prepared but not GPU-run.
+The corresponding SGLang oracle fails its first exact-byte comparison on card
+0, before attention-read checks. Strict per-card and compiled pair post-health
+pass. CPU/XPU intermediate division and FP8 conversion are being isolated;
+this is an unresolved numeric test failure, not a passing FP8 qualification.
 
 ## Evidence and reproducible sources
 
