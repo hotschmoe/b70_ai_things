@@ -520,3 +520,21 @@ models:
     calibration: fresh-be02d915-fp8kv
     serve_cmd: ""
     notes: "Prepared only: MRV1 TP2 P2P0 MTP3 FP8 cache/graphs context200K, four185K retrieval/guide streams. Calibration <=96K; long-context validation pending. Primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Prepared TP1 phase-only control, agent2 warm+target2, FP8 freshcal MTP3 cache/graphs100K; primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp8kv-freshcal-agent2-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-be02d915-fp8kv
+    serve_cmd: ""
+    notes: "Prepared TP1 MRV1 control, agent2 warm+target2, FP8 freshcal MTP3 cache/graphs100K; primary hotschmoe-dd."
