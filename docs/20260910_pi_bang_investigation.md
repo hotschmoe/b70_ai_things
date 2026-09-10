@@ -1,8 +1,9 @@
 # Pi bang investigation, 2026-09-10
 
-Status: testing paused at user request. User authorized a200K day trial of
-the patched vLLM image; service preparation/restart is in progress. No shelf
-promotion, completed200K qualification or production stability claim is made.
+Status: testing paused at user request. The authorized200K day trial is LIVE
+as hotschmoe-dd on the existing authenticated endpoint. Systemd is active/running;
+startup tiny24 and one authenticated streaming smoke pass. No shelf promotion,
+completed200K qualification or production stability claim is made.
 
 Two reproduced mechanisms are now separated: the GDN phase guard fixes a
 fresh singleton initialization defect; a second accepted-count ordering patch
@@ -285,3 +286,31 @@ Prepared work for the next downtime, not launched:
 
 The original Pi wire payloads and LAN-installed guard/gateway source identity
 remain unavailable. All replay conclusions must retain that limitation.
+
+## Live day-trial checkpoint, 07:32 UTC
+
+CONFIG -> User-authorized200K day trial, image7b107d0e phase+MRV1 fix, fresh
+be02 FP8 scales, TP2/P2P0, MTP3, prefix on and FULL_DECODE_ONLY graphs. The
+first served model name is hotschmoe-dd; the detailed secondary alias is
+qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp2-mtp3-fp8kv-freshcal-daytrial-ctx200k.
+
+COMMAND -> User installed the reviewed root-owned day-trial systemd override,
+reloaded systemd and started hotschmoe-dd.service. The wrapper owns both GPU
+leases, runs strict per-card/compiled-pair pre-health, verifies34fresh scale
+receipts and runs only tiny24 before opening the authenticated frontdoor.
+One public authenticated streaming arithmetic request verified client access.
+
+RESULT -> Service active/running, stable primary name first in /v1/models,
+max_model_len200000, unauthenticated /v1/models returns401, authenticated stream
+returns42 with finish_reason stop. Tiny24 passes with no sequential drift;
+strict pre-health passes. Public port18080 and loopback backend18124 and the
+existing credential file remain unchanged. No full qualification marker was
+created. Runtime root:
+/mnt/vm_8tb/b70/results/qwen38_mrv1fix_day_trial/20260910T072531Z.
+Its public-client-smoke.json and trial.json retain the exact outcome/scope.
+
+VERDICT -> Serving for the day as explicitly requested. Research is paused;
+remaining tests and the unresolved diagnostic Pi tool suffix resume at next
+downtime. Do not stop the live service or launch competing GPU work without
+new downtime direction. The prior test arm ended with lifecycle0 and strict
+per-card/compiled-pair post-health; it remains an interrupted qualification.
