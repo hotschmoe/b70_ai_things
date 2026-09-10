@@ -561,3 +561,17 @@ that specific failure solely to contaminated Pi history, while not proving
 all histories safe. Final paired trace passes. Normal STOP requested; strict
 post-health/teardown still pending at this entry. No qualification marker.
 Raw: native5802-tp2-independent-diagnostics-plan/run/agent2-counterexample/.
+
+
+CONFIG -> Completed native5802 TP2 independent diagnostic arm.
+COMMAND -> Final paired host-trace review, normal STOP, owned-container removal,
+strict both-card and compiled P2P0 post-health.
+RESULT -> Trace0, server lifecycle0, owned container absent, both strict card
+probes pass and10 compiled pair all-reduces pass. The retained job exits include
+concurrent infrastructure2 and corrected semantic1; these are not converted
+to success. All other queued diagnostic/quality jobs return0. No whole-arm
+qualification marker exists. Parent-final-outcome.json records all job statuses.
+VERDICT -> Teardown and post-health close this diagnostic arm successfully.
+The native corruption repair has bounded positive model/agent evidence, while
+separate EOS and200K qualification questions remain. Public endpoint stays
+inactive; card1 is allocated to the reviewed independent SGLang control.
