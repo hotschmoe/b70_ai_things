@@ -78,9 +78,9 @@ def prepare(bundle, output, agents):
                               original_failed_timestamp_ms=stamp, messages=len(messages)))
     result = dict(cases=cases, limitations=[
         'Reconstructed system prompt and minimal tool schemas; not exact Pi payload.',
-        'Past thinking omitted; recorded successful tool results retained without execution.',
+        'Past thinking omitted; recorded tool results (including errors) retained without execution.',
         'Manifest per-agent seed used for control; original forwarded seed unverified.',
-        'First corrupted response and all subsequent history excluded.'])
+        'First bang response and all subsequent history excluded; earlier non-bang degeneration may remain.'])
     (output / 'manifest.json').write_text(json.dumps(result, indent=2) + '\n')
     return result
 
