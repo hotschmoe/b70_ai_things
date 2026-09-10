@@ -268,3 +268,81 @@ those changes with appended campaign entries and has intentionally not been
 staged. Preserve all unrelated dirty files; never git add all. Commit/push only
 coherent owned checkpoints from this clone. The uncommitted guard draft is the
 one known unfinished campaign source artifact; its explicit TODO is above.
+
+## Native5802 continuation checkpoint (2026-09-10, appended)
+
+CONFIG -> Native replacement d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067
+contains rebuilt _xpu_C SHA6717e3ec7fe3e7cdc26cd66b84aabdd076f211e5bed62b8711b7377fca8668d9.
+Exact shipped R221/R276 native source/toolchain retained except deliberate
+upstream5802 rolling convolution-state contract and stride guard port. Existing
+Python GDN-phase and MRV1 accepted-count fixes remain. Calibration is freshbe02.
+No changes to current host driver/kernel. Primary served ID remains hotschmoe-dd.
+
+COMMAND -> Source/build ledger and reviewed source patch are in
+vllm/int4/native_gdn_oracle/native5802_build; raw evidence is under
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native-contract-provenance.
+Native actual rolling-state/math oracles and model regressions were run only
+by parent-owned GPU lifecycle plans. CPU reference and token-prefix controls
+are under reference-feasibility and token-prefix-card0-plan in the same rawroot.
+
+RESULT -> Native rolling contract repairs the confirmed producer/consumer
+mismatch. Native model boundary10 and ample4 pass, but array512 serial output
+still stops at432/433. This negative is preserved. Independent same-AutoRound
+CPU teacher forcing (all64 finite,17file pre/post hashes/stats match) and native
+FP16/eager/MTP0 fresh-prefill GPU both prefer EOS after433-comma: EOS margin over
+required space is0.274689 CPU vs0.265625 GPU. At preceding432-partial4 prefix,
+required digit3 beats EOS by0.190731 CPU vs0.1875 GPU. Exact token-ID/zero-cache
+GPU checks and selected post-health pass. This supports a quality limitation
+of this quantized artifact; original model versus quantization cause remains
+unresolved. Close local score agreement is not full backend equivalence.
+
+The new native5802-backend100k original preparation failed before lease/GPU:
+unsupported redundant wrapper --shutdown-timeout30 (backend Config already
+contained it). Preserve that failure. Parent created and launched NEW
+native5802-backend100k-v2 with only redundant wrapper flag removed plus fresh
+paths/namespaces. Actual wrapper and all16 job parsers were subsequently
+validated with their full argv. At this append, v2 READY exists, tiny24 and
+early3 plus early quality gate have done0; six tool rounds and final teardown
+remain pending. No full100K pass or receipt exists yet.
+
+VERDICT -> Resume the new v2 scope, not an old partial/failed marker. Required:
+three deterministic32 and three sampled32 (seeds42/43/44), exact tool semantics,
+per-session actual prefix hits, startup trace,34scale-load/identity/native/config
+receipts, lifecycle0, strict both-card plus compiled P2P0 pre/post health and
+owned container absence. Known array512 quality failure remains a sidecar; it
+is not waived into a positive test or used to excuse new bang/tool garble.
+
+Remaining work:
+
+- Complete native5802-backend100k-v2 and audit it using the new service
+  audit100k producer. No receipt can be emitted from partial progress.
+- native5802-backend200k currently holds plan.template.json only, copied exact
+  original eight near185K tokenized inputs and unchanged retrieval/reuse/
+  guide/cancel/recovery thresholds. No runnable plan/prerequisite/pass marker.
+  CPU exact d556 tokenizer verification is a separate preparation receipt;
+  preserve old copied tokenizer provenance and runtime count gates.
+- After actual successful v2 receipt, freeze200k.py binds its reviewed SHA and
+  backing evidence; launch200k.py revalidates before existing leased lifecycle.
+  Then measure200K and strict teardown/health. Missing prerequisites fail closed.
+- native5802_service is a separate prepared service migration, not live. Require
+  complete new100K+200K evidence, native/scales/model identity and current frozen
+  configuration. Preserve public18080/private18124 authorization and aliases;
+  no old7b day-trial marker is a native5802 qualification. Root/user controls
+  installation and start; no public service change occurred in this checkpoint.
+- SGLang remains separate experimental work owned by its agent; inspect its
+  latest raw lifecycle before allocating cards. Do not infer readiness from
+  source patches or isolated numeric passes.
+
+This entry supersedes the earlier statement that the guard draft was the only
+unfinished artifact: native backend qualification and service migration are
+now also pending. Do not alter the older historical statements in place.
+
+CPU tokenizer follow-up: exact d556/no-device/no-network container,2CPU/4GiB,
+exit0 and verified removal. All eight runtime-image tokenizer counts match
+copied expectations exactly: retrieval185011/185012/185007/185005;
+guide185065/185066/185061/185059. Tokenizer/config hashes match the old identity;
+new input-ID hashes and image receipt are preserved separately at
+native5802-backend200k-tokenizer-v1/{result,ledger}.json under the rawroot.
+Original100K-v2 and200K template hashes were not changed; every template-input
+hash was rechecked successfully. These are CPU counts; live server count and
+long-context quality gates still apply after the prerequisite is satisfied.
