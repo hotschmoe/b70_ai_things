@@ -49,3 +49,29 @@ fail the oracle source-identity contract. Numerical oracle fixtures remain
 independent of full-model calibration validation.
 
 Raw evidence: /mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-image
+
+## Paired per-card all-nine comparison prepared
+
+paired_oracle_plans.json records separate frozen plans for upstream bdc on
+card0 and read-policy14ee on card1. per_card_oracle.py prints its plan by default;
+--run requires the selected inherited gpu-run lease and the preceding14ee pair
+preflight PASS. Each arm then runs strict selected-card pre-health, the full
+unchanged nine-case oracle in an8GiB container bounded420s, and strict selected
+post-health. Owned timeout/group teardown and labeled Docker cleanup reuse the
+reviewed preflight helper. No reset occurs under one card lease; recovery is
+deferred to the parent. The two plans may run concurrently after pair health.
+
+The same updated tracked oracle and fixture-loader files were copied into
+separate frozen input directories. Four exact source files read by the oracle
+are independently snapshotted from each matching tree; runtime methods still
+come from that immutable image and their bytes must match. Hashes also cover
+the runner and reused helpers. Caches and output directories are fresh.
+The baseline is expected to fail numerically; all nine JSON rows are preserved
+and exit1 remains failure. The candidate must pass all existing gates, including
+both scale-sensitivity controls for every query shape. No threshold was changed.
+
+CPU lifecycle fixtures pass expected failure retention, candidate pass, crash
+post-health and selected-card-only health. Both unleased launches fail before
+GPU work; frozen input/command identities and isolation checks pass. These are
+prepared synthetic attention controls only, with no GPU result, model, Mamba
+state-copy, graph, MTP or TP2 qualification implied.
