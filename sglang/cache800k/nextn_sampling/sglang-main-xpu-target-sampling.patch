@@ -1,0 +1,47 @@
+--- a/python/sglang/srt/speculative/eagle_utils.py
++++ b/python/sglang/srt/speculative/eagle_utils.py
+@@ -739,6 +739,17 @@
+ 
+     bs = len(batch.seq_lens)
+     sampling_info = batch.sampling_info
++    if _is_xpu and not sampling_info.is_all_greedy:
++        from sglang.srt.speculative.xpu_target_sampling import validate_target_only
++        validate_target_only(
++            sampling_info, tree_topk=verify_input.tree_topk,
++            rejection_sampling=get_spec().speculative_use_rejection_sampling,
++            simulate_acc_len=SIMULATE_ACC_LEN,
++            return_logprob=batch.return_logprob,
++            request_has_seed=any(
++                req.sampling_params.sampling_seed is not None for req in batch.reqs
++            ),
++        )
+     next_token_logits = logits_output.next_token_logits
+ 
+     sanitize_nan_logits(next_token_logits, "verify: target model logits")
+@@ -782,8 +793,15 @@
+     # Sample tokens
+     target_predict = None
+     if sampling_info.is_all_greedy or _is_cpu or _is_hip or _is_xpu:
+-        target_predict = torch.argmax(next_token_logits, dim=-1)
+-        target_predict = target_predict.reshape(bs, verify_input.draft_token_num)
++        if _is_xpu and not sampling_info.is_all_greedy:
++            from sglang.srt.speculative.xpu_target_sampling import sample_target_ids
++            target_predict = sample_target_ids(
++                next_token_logits, sampling_info, batch_size=bs,
++                verify_width=verify_input.draft_token_num,
++            )
++        else:
++            target_predict = torch.argmax(next_token_logits, dim=-1)
++            target_predict = target_predict.reshape(bs, verify_input.draft_token_num)
+         predict, accept_index, num_correct_drafts = verify_tree_greedy_func(
+             predicts=predict,  # mutable
+             accept_index=accept_index,  # mutable
+@@ -796,7 +814,7 @@
+             topk=verify_input.tree_topk,
+         )
+ 
+-        if _is_hip:
++        if _is_hip or (_is_xpu and not sampling_info.is_all_greedy):
+             # On ROCm, the per-rank draft tokens can differ, so ranks accept a
+             # different number of drafts, desynchronize the committed seq_lens, and
+             # deadlock the next TP collective. Broadcast from rank 0 to ensure
