@@ -8,6 +8,10 @@ Update: the new 17:23 UTC citizen capture confirms corruption on the patched
 day trial. Read [recurrence findings](20260910_pi_bang_recurrence.md) before
 resuming the checklist. Prioritize its earliest failure and interruption/reuse
 controls; the earlier synthetic passes did not establish Pi correctness.
+Later update: user authorized downtime; the endpoint was stopped with verified
+health and new tests are active. Read [downtime testing](20260910_pi_recurrence_testing.md)
+for current state. The live-service description below is the earlier handoff,
+not a claim that the public service remains running.
 
 ## Live service boundary
 

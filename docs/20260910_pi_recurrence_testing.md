@@ -96,3 +96,104 @@ No SGLang feature-parity conclusion follows from these tests. Retain the
 [recurrence evidence](20260910_pi_bang_recurrence.md) for backend alternatives
 and remaining controls. Append measured outcomes below without rewriting
 failed or incomplete raw experiments.
+
+## First direct-server failure, initial budget-limited corpus
+
+CONFIG -> Initial pair above, direct loopback API client (Pi and agent-world
+gateway bypassed), clean array tasks, thinking off, temperature0/seed42.
+
+COMMAND -> Collect all eleven initial requests; inspect raw SSE and content,
+finish reasons and actual usage rather than treating failed gates uniformly.
+
+RESULT -> Both arms' three reconstructed Pi requests have no bangs or malformed
+tool JSON. Manual review finds broadly coherent introductions, with ordinary
+unsupported details in one MTP3 response; no exact replay or full semantic
+qualification is claimed. Actual target prompt7855 differs from original9544;
+target hits4800 with MTP3 versus6400 with MTP0. Same-arm target repeats differ
+in wording despite temperature0, so deterministic identity is not established.
+
+The clean request for integers1..256 produced a more useful failure: MTP3
+stopped after769 output tokens, with the correct sequence through174 followed
+by the malformed tail "174, 1,1ic ". Cold and reused responses match exactly.
+MTP0 continued correctly past174 to a partial227, then exhausted its1024-token
+budget. This is directly generated malformed output without Pi involvement.
+
+The longer1..512 case also exposes an inadequate initial test budget: the
+2048-token cap cannot contain the observed output formatting (MTP3 reaches a
+partial432). Preserve these length failures as budget-limited checks, not
+proof of degeneration. A new frozen corpus with identical prompts and ample
+2048/4096 output caps is required before interpreting the complete comparison.
+Do not edit the initial corpus, responses or failure statuses in place.
+
+VERDICT -> A direct MTP-enabled garble has been reproduced, but device and
+speculative behavior are still confounded. Repeat with adequate output budget,
+then cross over cards if the split persists. Pi/gateway updates may address
+their own errors, but cannot by themselves explain this direct-server failure.
+
+## Ample budgets and moving-boundary reproduction
+
+CONFIG -> Same running pair, same array256/512 prompts; new corpus-v2-length
+increases only output caps to2048/4096. SHA256
+05c08fae544111f8c64bb7dce77591c2f29709621be66028065633a503a59992.
+Then corpus-boundary-v1, SHA256
+16417345be341caae08f6efddbac3268c68f6c0e61ca212ff96130dc9191756d,
+adds exactly0/128/256/512 neutral input tokens to array256, cold and reused.
+
+COMMAND -> Queue separate immutable jobs02 and03 under each leased server.
+Use the exact image's CPU tokenizer to verify prompts and re-encode the clean
+output prefix before its first divergence/bang. Retain all raw SSE and errors.
+
+RESULT -> With ample budgets, MTP3 array256 still stops at769 tokens on both
+requests, now with whitespace after "174, 1". MTP0 completes both correctly
+in1173 tokens. MTP3 cold array512 completes correctly in2453 tokens, but its
+reused request bangs after the exact correct prefix through partial495.
+MTP0 completes both array512 requests correctly. Thus crossing a boundary
+does not fail universally; acceptance/state history can matter.
+
+| Prompt tokens | Tokens before next block | MTP3 cold/reused | MTP0 cold/reused | First bang absolute position |
+| ---: | ---: | --- | --- | ---: |
+| 4035 | 765 | Both fail | Both exact pass | 4800 |
+| 4163 | 637 | Both fail | Both exact pass | 4801 |
+| 4291 | 509 | Both fail | Both exact pass | 4801 |
+| 4547 | 253 | Both fail | Both exact pass | 4801 |
+
+All eight boundary MTP3 requests bang; all eight MTP0 requests pass. MTP0
+cold requests report zero cache hits, reused requests3200. Padding changes
+output formatting, but the first bang remains at4800/4801. Positions are
+derived from exact-tokenizer clean prefixes, not SSE chunk counts. Bang runs
+can merge under retokenization; total decoded length is not claimed to equal
+the unavailable runtime token count on aborted responses. Raw SSE matches
+the parser's partial result without duplicated chunks.
+
+The initial MTP3 array256 first wrong token also lands exactly at4800.
+Original Pi examples are consistent with a nearby boundary, but removed
+thinking/tool delimiters prevent an exact original generation offset claim.
+See token-boundary-audit/REPORT.md and BOUNDARY_REVIEW.md in the raw root.
+
+VERDICT -> Strong, repeatable localization to MTP-enabled cache-boundary
+handling on this configuration. It is not Pi-specific or inherently TP2.
+The failing arm remains card0 versus passing card1 until crossover completes.
+Both initial model arms were stopped normally, exited0, and passed strict
+selected-card post-health. Next: MTP3/prefixON on card1 and MTP3/prefixOFF on
+card0, with focused identical array256 requests and independent zero-hit gate.
+
+## Numeric copy probe: first attempt blocked before kernel execution
+
+CONFIG -> Existing twelve-case actual PREcopy oracle, repaired7b, leasedcard0,
+after the first MTP3 arm's verified teardown; card1 controls continued.
+
+COMMAND -> bin/gpu-run --card 0 python3 vllm/int4/mamba_copy_oracle/lifecycle.py
+with mamba-copy-lifecycle-plans/card0/plan.json and --run.
+
+RESULT -> Strict pre/post health both pass and owned container cleanup is
+verified, but actual initializer raises an unsigned-pointer-to-int64 overflow
+before any copy kernel. Original raw result is preserved under
+bang_isolation_20260910/mamba-copy-actual-card0. The standalone oracle omitted
+the serving allocator setting PYTORCH_ALLOC_CONF=expandable_segments:True.
+A new adapter matches that setting and records pointer ranges before the
+unchanged initializer. It does not cast pointers or patch production source.
+
+VERDICT -> No copy-kernel numerical verdict from this attempt. The allocator
+mismatch is a testable infrastructure explanation, not yet verified. The old
+oracle only covers PREcopy, so a separate actual POSTcopy oracle is being
+prepared for positive-bias self-copy and backward boundary publication.

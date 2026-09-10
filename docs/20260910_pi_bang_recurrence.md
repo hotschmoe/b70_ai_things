@@ -7,6 +7,11 @@ overall corruption repair. This is new workload evidence, not a replay of the
 original world's bang messages. No service changes or GPU experiments were
 performed during this read-only investigation.
 
+Subsequently the user authorized downtime. The public endpoint was stopped and
+[controlled testing](20260910_pi_recurrence_testing.md) reproduced direct-server
+bangs at cache-block boundaries with MTP enabled. Read that newer report for
+active runtime state; this document preserves the earlier read-only findings.
+
 ## Evidence and scope
 
 CONFIG -> User-supplied archive:
