@@ -280,7 +280,9 @@ def main():
         while not owns_frontdoor(front.pid):
             require(not stopping and front.poll() is None and backend.poll() is None and time.monotonic() < deadline, 'frontdoor failed to bind owned socket')
             time.sleep(0.1)
-        (result / 'READY.json').write_text(json.dumps({'owner_pid': os.getpid(), 'frontdoor_pid': front.pid, 'backend_pid': backend.pid}) + '\n')
+        ready_tmp = result / 'READY.json.tmp'
+        ready_tmp.write_text(json.dumps({'owner_pid': os.getpid(), 'frontdoor_pid': front.pid, 'backend_pid': backend.pid}) + '\n')
+        ready_tmp.replace(result / 'READY.json')
         while not stopping:
             require(backend.poll() is None and front.poll() is None, 'service component exited')
             time.sleep(1)

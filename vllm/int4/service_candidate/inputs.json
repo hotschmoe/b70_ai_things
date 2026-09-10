@@ -33,7 +33,7 @@
     "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-tp2-fp8-clean100k/manifest.json": "71995f2782e7dee940fcfb722cae471be28c093cf5ca19cfeb0ed30964c84ee3",
     "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-calibrated-kv/current-verified-model-files.json": "f0f3c197466b8cc5206cf5cc005fc73e1bbcad28539aeb5f9dd378a2310d898d",
     "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/openai_key_frontdoor.py": "8890dc900760cf33b3122b8eba7b04b171072ee9039d776a51aa932907e2b431",
-    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/service_candidate/serve.py": "8888bbf39fec8cb5f6c00063962962c89b1bd7c45ea2b1012e5f01c71bd7f139"
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/service_candidate/serve.py": "655a8514c332d5c83a7b99a46ca4fbf06e1e63ad93904a00ffc00ae44b743482"
   },
   "limits": "Original100K fullPi strict gate failed garbled invalidJSON; clean100K and200K required, no fullPi or production certification."
 }
