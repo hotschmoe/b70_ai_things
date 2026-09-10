@@ -1,0 +1,16 @@
+{
+  "image": "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+  "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-preflight",
+  "oracle_source": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-image/oracle-source",
+  "command": [
+    "bin/gpu-run",
+    "/usr/bin/python3",
+    "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/preflight_plan.py",
+    "--run"
+  ],
+  "stages": [
+    "strict per-card health",
+    "compiled pair P2P=0 health"
+  ],
+  "scope": "health only; no serving or attention oracle executed"
+}

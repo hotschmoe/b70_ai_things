@@ -1,0 +1,47 @@
+{
+  "base_image": "sha256:f82a10b2c3d04f10b230ba299dced23455366f307d96bdce54a7143264b41a99",
+  "source_pin": "2f7393f0d245bfaa8ebe0b9d0533432e6b3bd9ed",
+  "patch_sha256": "b8c18ec17d7d8f59a73b2399e764d82e0db247e0eecd1cad8c6d475db15e9dd3",
+  "attention_source_identity": {
+    "decode_attention.py": {
+      "base_sha256": "34ca0066e2716e1ffad048ec7cbb3a25af13eeb61e99034a663fed6277bf691a",
+      "candidate_sha256": "42c5628e9922c2e27523d13a23cc36d0ab527d44ae241751252987484ecc4fd7"
+    },
+    "extend_attention.py": {
+      "base_sha256": "f061599bb2c9243d50b565281c47de077ccc90135b9b1e5320a07425bedac112",
+      "candidate_sha256": "a9c629a29ae340ee14ba3a6a9ef3f4ca4c78d06a2451883280e3889d427c5f80"
+    }
+  },
+  "oracle_source": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-image/oracle-source",
+  "loader_overlay_manifest_sha256": "364ec08210bdf8c347c90e5d74a89044835b31a6f09ea939399a2dfd994c5afa",
+  "scope": "Source-only XPU FP16 query/e4m3fn KV read compute policy; no GPU qualification",
+  "image": "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+  "source_check": {
+    "pass_check": true,
+    "changed_sources": [
+      "kernels/ops/attention/decode_attention.py",
+      "kernels/ops/attention/extend_attention.py"
+    ],
+    "unchanged_packages": 239,
+    "python_files": 3772,
+    "base_layers": 17,
+    "candidate_layers": 19
+  },
+  "native_check": {
+    "pass_check": true,
+    "native_files": 3088,
+    "base_sha256": "fd40e73e08da60332ac004baebef96d34f6f8256b6851959bf9dcfac4233b9a3",
+    "candidate_sha256": "fd40e73e08da60332ac004baebef96d34f6f8256b6851959bf9dcfac4233b9a3",
+    "packages": {
+      "intel-ccl-lib-rt": null,
+      "intel-sycl-rt": "2026.0.0",
+      "sglang": "0.5.19.dev0+g2f7393f0d",
+      "sglang-kernel-xpu": "0.2.0",
+      "torch": "2.13.0+xpu",
+      "torch-memory-saver": "0.0.10b2",
+      "triton-xpu": "3.7.2"
+    }
+  },
+  "raw": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-image",
+  "gpu_qualification": "NOT RUN by this build task"
+}
