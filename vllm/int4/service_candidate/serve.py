@@ -47,6 +47,13 @@ def value(command, flag):
 def verify_inputs(inputs):
     for name, digest in inputs['sha256'].items():
         require(sha(name) == digest, 'candidate input changed: ' + name)
+    for key in ['plan100k', 'plan200k']:
+        root = Path(inputs[key]).parent
+        nested = read(root / 'manifest.json')
+        dependencies = {str(root / name): digest for name, digest in nested['files'].items()}
+        dependencies.update(nested['external'])
+        for name, digest in dependencies.items():
+            require(sha(name) == digest, 'nested qualification input changed: ' + name)
     plan = read(inputs['plan200k'])
     s = plan['server']
     for k, v in {'--image': IMAGE, '--served-model': 'hotschmoe-dd',
@@ -98,7 +105,14 @@ def evidence(plan_path):
     require(len(loaded) == 34 and all(x['artifact_sha256'] == SCALE and not x['query_quantized'] for x in loaded), 'scale load coverage/hash mismatch')
     paths = [root / f for f in ['manifest.json', 'models.json', 'arm-results.json', 'server.log', 'exit.rc',
              'pre-xpu-health.log', 'post-xpu-health.log', 'pre-xpu-collective-health.log', 'post-xpu-collective-health.log']]
-    paths += list((root / 'jobs').glob('*.done')) + list(root.glob('kv-load-*.json'))
+    # Bind actual gate decisions and their backing output/SSE records, not only exit markers.
+    for directory, dirs, names in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in ['cache', 'source', '__pycache__']]
+        for name in names:
+            path = Path(directory) / name
+            if path.suffix in ['.json', '.jsonl', '.log', '.txt', '.done']:
+                paths.append(path)
+    paths = sorted(set(paths))
     return {str(p): sha(p) for p in paths}
 
 
@@ -143,6 +157,20 @@ def service_command(plan, out):
     return cmd
 
 
+def owns_frontdoor(pid):
+    sockets = set()
+    for fd in (Path('/proc') / str(pid) / 'fd').iterdir():
+        try:
+            sockets.add(os.readlink(fd))
+        except FileNotFoundError:
+            pass
+    for row in Path('/proc/net/tcp').read_text().splitlines()[1:]:
+        fields = row.split()
+        if fields[1].split(':')[1] == format(18080, '04X') and fields[3] == '0A' and 'socket:[' + fields[9] + ']' in sockets:
+            return True
+    return False
+
+
 def stop_result(result):
     require(result.is_relative_to(RESULTS), 'invalid service pointer')
     (result / 'server/STOP').touch()
@@ -163,10 +191,15 @@ def main():
         while time.monotonic() < deadline:
             require(not poll.poll(0), 'candidate exited before readiness')
             try:
+                result = CURRENT.resolve(strict=True)
+                require(result.is_relative_to(RESULTS), 'invalid readiness pointer')
+                marker = read(result / 'READY.json')
+                if marker['owner_pid'] != args.pid or not owns_frontdoor(marker['frontdoor_pid']):
+                    raise OSError('candidate readiness not yet owned')
                 with urllib.request.urlopen('http://127.0.0.1:18080/health', timeout=3) as response:
                     if response.status == 200:
                         return
-            except OSError:
+            except (OSError, FileNotFoundError):
                 pass
             time.sleep(2)
         raise RuntimeError('candidate readiness timeout')
@@ -243,6 +276,11 @@ def main():
         env = dict(os.environ, FRONTDOOR_HOST='0.0.0.0', FRONTDOOR_PORT='18080', FRONTDOOR_BACKEND_URL='http://127.0.0.1:18124', FRONTDOOR_API_KEY_FILE=str(key))
         env.pop('B70_PRIOR_VALIDATION', None)
         front = subprocess.Popen([sys.executable, str(REPO / 'vllm/fp8/openai_key_frontdoor.py')], env=env, stdout=(result / 'frontdoor.log').open('w'), stderr=subprocess.STDOUT)
+        deadline = time.monotonic() + 30
+        while not owns_frontdoor(front.pid):
+            require(not stopping and front.poll() is None and backend.poll() is None and time.monotonic() < deadline, 'frontdoor failed to bind owned socket')
+            time.sleep(0.1)
+        (result / 'READY.json').write_text(json.dumps({'owner_pid': os.getpid(), 'frontdoor_pid': front.pid, 'backend_pid': backend.pid}) + '\n')
         while not stopping:
             require(backend.poll() is None and front.poll() is None, 'service component exited')
             time.sleep(1)

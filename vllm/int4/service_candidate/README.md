@@ -2,7 +2,7 @@
 
 CONFIG -> Image7b107d0e phase+MRV1 fix, freshbe02 scales, exact prepared200K TP2/P2P0/MTP3/FP8/FULL_DECODE_ONLY/prefix configuration. The registered research alias is taken unchanged from the long200K plan; hotschmoe-dd stays primary. Original full Pi100K review failed malformed/garbled tool arguments; it is preserved and is not counted as a quality pass.
 COMMAND -> python3 -m unittest discover -s vllm/int4/service_candidate -p test_serve.py
-RESULT -> Six CPU tests pass: unqualified/missing workload/changed source/wrong image/unsafe pointer refusals and exact200K server-command equivalence except name, output and loopback port. No GPU or systemd actions run. inputs.json freezes source/config/scales/model-manifest hashes and the replacement clean100K prerequisite. qualification.json deliberately does not exist.
+RESULT -> Seven CPU tests pass: unqualified/missing workload/changed source/wrong image/unsafe pointer and unowned frontdoor refusals, plus exact200K server-command equivalence except name, output and loopback port. No GPU or systemd actions run. inputs.json freezes source/config/scales/model-manifest hashes and the replacement clean100K prerequisite. qualification.json deliberately does not exist.
 VERDICT -> Reviewable implementation only. Successful clean100K and200K evidence, checked startup/recovery behavior and final review remain prerequisites. Frozen criteria provide bounded qualification, not a claim that the original Pi replay or all production workloads are correct.
 
 The wrapper holds both leases through existing strict preflight, serving, shutdown and post-health. It verifies model content against the current publisher-verified17-file manifest, hashes source/config/scales, and requires actual executed plan/config/image,34 calibrated attention records, every planned job, lifecycle0, per-card health, compiled pair health and no remaining-EngineCore force-kill in both qualification runs. It refuses old trial calibration and the stale prior-validation shortcut.
@@ -26,3 +26,5 @@ sudo systemctl start hotschmoe-dd.service
 ```
 
 NOT EXECUTED. The root-owned unit directory requires sudo; model/source preparation does not. No automatic restart loop is configured. A failed candidate must remain stopped with its teardown evidence retained; rollback must not automatically restart the known-defective old baseline. The old service remains enabled/inactive until an explicit switch is performed.
+
+Independent source review tightened three gates: both nested qualification manifests now validate every file/external dependency; evidence hashes include actual decision/summary/results/SSE files; readiness requires the current main PID and the frontdoor child owning the listening18080 socket. A pre-existing unrelated health endpoint cannot satisfy readiness.

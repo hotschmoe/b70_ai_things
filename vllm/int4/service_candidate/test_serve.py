@@ -48,6 +48,10 @@ class Gates(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'wrong candidate flag'):
                 serve.verify_inputs(inputs)
 
+    def test_unowned_frontdoor_refused(self):
+        with patch.object(serve.Path, 'iterdir', return_value=iter([])), patch.object(serve.Path, 'read_text', return_value='header\n 0: 00000000:46A0 00000000:0000 0A 0:0 00:0 0 0 0 12345\n'):
+            self.assertFalse(serve.owns_frontdoor(123))
+
     def test_pointer_escape_refused(self):
         with self.assertRaisesRegex(RuntimeError, 'invalid service pointer'):
             serve.stop_result(Path('/tmp/unrelated'))
