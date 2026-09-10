@@ -1,0 +1,60 @@
+{
+  "out": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-tp1-controls/card1-prefixon-mtp3",
+  "server": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_campaign_server.py",
+    "--preservation",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-tp1-controls/card1-prefixon-mtp3-config",
+    "--out",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-tp1-controls/card1-prefixon-mtp3",
+    "--image",
+    "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+    "--name",
+    "b70-tp1-mrv1-counts-prefixon-card1",
+    "--served-model",
+    "hotschmoe-dd",
+    "--served-alias",
+    "qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-tp1-mtp3-fp16kv-prefixon-c4-ctx8192",
+    "--tensor-parallel-size",
+    "1",
+    "--card",
+    "1",
+    "--port",
+    "18146",
+    "--p2p",
+    "0",
+    "--mtp",
+    "3",
+    "--kv-dtype",
+    "auto",
+    "--hook",
+    "none",
+    "--health-probe",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/diagnostics/xpu_health_strict.sh"
+  ],
+  "jobs": [
+    {
+      "name": "01-concurrent-tools",
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/kv_campaign_agent_probe.py",
+        "--base",
+        "http://127.0.0.1:18146",
+        "--model",
+        "hotschmoe-dd",
+        "--out",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-tp1-controls/card1-prefixon-mtp3/concurrent-tools",
+        "--records",
+        "180",
+        "--stream",
+        "--shared-cache",
+        "--turns",
+        "4",
+        "--timeout",
+        "180"
+      ],
+      "timeout": 1500
+    }
+  ],
+  "notes": "Prepared only. Phase+MRV1 count fix versus original TP1 prefixON/MTP3 control; same FP16 KV, FULL_DECODE_ONLY, c4, ctx/batch8192 and fixture. New card1, port18146, alias and fresh config/cache/output. Require new-image strict pair preflight before launch. No hook or sampling overlay. Cache geometry and row transitions remain required for interpretation."
+}

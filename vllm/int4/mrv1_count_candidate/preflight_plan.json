@@ -1,0 +1,15 @@
+{
+  "image": "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+  "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-phase-preflight",
+  "command": [
+    "bin/gpu-run",
+    "/usr/bin/python3",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/mrv1_count_candidate/preflight_plan.py",
+    "--run"
+  ],
+  "stages": [
+    "strict per-card health",
+    "compiled pair P2P=0 health"
+  ],
+  "scope": "health only; no serving or attention oracle executed"
+}

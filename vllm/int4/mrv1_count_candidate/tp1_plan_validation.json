@@ -1,0 +1,22 @@
+{
+  "status": "CPU_PLAN_MATCH_PASS_NOT_LAUNCHED",
+  "changed_server_options": [
+    "--card",
+    "--image",
+    "--name",
+    "--out",
+    "--port",
+    "--preservation",
+    "--served-alias"
+  ],
+  "preservation_bytes_equal": true,
+  "job_commands_equal_except_endpoint_output": true,
+  "fresh_output_and_cache": true,
+  "plan_sha256": "2df287d46bb1de0da85453f85021b696c759aa4ce61f7b0b8ee2c3903d808880",
+  "command": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/cache800k/run_arm.py",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-tp1-controls/card1-prefixon-mtp3.plan.json"
+  ],
+  "prerequisite": "mrv1-counts-phase-preflight/PASS"
+}

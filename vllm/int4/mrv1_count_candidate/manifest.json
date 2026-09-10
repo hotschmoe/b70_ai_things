@@ -1,0 +1,101 @@
+{
+  "base_image": "sha256:0328900cf1f8f29f5a8e76ed21a3eff71ef54d0abf495a88fdb86e93e880b077",
+  "candidate_image": "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+  "runner_before_sha256": "4e0e1aee778bb1f690b393061fc36736f390c7519dc93f41c776f154b25e8261",
+  "runner_candidate_sha256": "7299b4cfabc447b15b66a5fcaf5bb858a0783fc46340d561f292f5f96e99e789",
+  "patch_sha256": "aa7eb92934d0d485753a0165a82284e62d635be601047a3fc35bd4e6b635b7e5",
+  "native_files": 2106,
+  "native_identity_sha256": "35b962e943fb12508af5379bd41a5c460144a76925031ac640ab820d2ecfe8b1",
+  "native_identical": true,
+  "source_check": {
+    "passed": true,
+    "changed_sources": [
+      "v1/worker/gpu_model_runner.py"
+    ],
+    "python_files": 2227,
+    "packages": 282,
+    "base_layers": 54,
+    "candidate_layers": 55,
+    "preserved_gdn_sha256": "a646a6750f16b961d0fa8eb6d7e00b46b4ea4e6992b1cf620cb5eb01b02d6b38"
+  },
+  "candidate_ast": {
+    "candidate_sha256": "7299b4cfabc447b15b66a5fcaf5bb858a0783fc46340d561f292f5f96e99e789",
+    "early_wait_line": 1556,
+    "row_moves": {
+      "condense": [
+        1566
+      ],
+      "_may_reorder_batch": [
+        1568
+      ],
+      "add_request": [
+        1562
+      ]
+    },
+    "actual_candidate_gather_cases": [
+      {
+        "current_counts": [
+          4,
+          1
+        ],
+        "old_positions": [
+          1,
+          0
+        ],
+        "result": [
+          4,
+          1,
+          1,
+          1
+        ],
+        "events": [
+          "wait",
+          "copy"
+        ]
+      },
+      {
+        "current_counts": [
+          2,
+          4
+        ],
+        "old_positions": [
+          1,
+          2
+        ],
+        "result": [
+          2,
+          4,
+          1,
+          1
+        ],
+        "events": [
+          "wait",
+          "copy"
+        ]
+      },
+      {
+        "current_counts": [
+          1,
+          4
+        ],
+        "old_positions": [
+          -1,
+          1
+        ],
+        "result": [
+          1,
+          4,
+          1,
+          1
+        ],
+        "events": [
+          "wait",
+          "copy"
+        ]
+      }
+    ],
+    "result": "PASS; CPU contract only, no async GPU race qualification"
+  },
+  "raw": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-phase-image",
+  "gpu_qualification": "NOT RUN; no attribution to Pi failure"
+}
