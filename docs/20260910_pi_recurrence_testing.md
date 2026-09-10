@@ -327,3 +327,72 @@ then stops normally with lifecycle0; strict post-health passes.
 VERDICT -> Concurrency and cache misses are not necessary for this remaining
 early-stop failure. Compare the same payload under MTP0 and rebuilt native
 before attributing it to another kernel bug or ordinary model behavior.
+
+
+CONFIG -> Same physicalcard0 crossover, image09fc, adapterON. Config differs
+from prior card0 OFF only by B70_XPU_GDN_PREFIX_CONV_COPY=1; paths/port/name
+are fresh, while source, corpus, scales and serving settings match.
+COMMAND -> Execute the same ten focused/boundary cases, then normal STOP and
+strict selected-card post-health.
+RESULT -> All10 responses pass exact content and required cache checks, versus
+6/10 under OFF on the same card. Lifecycle0 and post-health0; output is
+same-card tp1-card0-mtp3-conv-adapter1-crossover-ctx100k.
+VERDICT -> Same-card evidence confirms the adapter corrects the reproduced
+boundary cases. Remaining serial early stops are a separate unresolved
+qualification finding; MTP0 and source-rebuilt native comparisons are next.
+
+
+CONFIG -> Original repaired7b, same physicalcard1, MTP0/FP8/FULL/prefixON100K,
+exact serial session0 prompt and4096 output cap. Adapter is absent.
+COMMAND -> Run tp1-card1-mtp0-serial-session0-ctx100k's two frozen requests,
+then normal STOP and strict selected-card post-health.
+RESULT -> Both requests stop prematurely at2055 output tokens, with the same
+partial433 prefix. Cold cached0 and reused cached3200; content0/2 and cache2/2.
+Lifecycle0 and strict post-health0. No bangs observed in this counterexample.
+VERDICT -> Speculative decoding is also not necessary for this remaining
+premature-stop behavior. The native GDN contract correction remains supported
+by distinct numerical and same-card boundary evidence. An explicit65536-context
+FP16 KV diagnostic is prepared because100K FP16 capacity is not established;
+if it passes, a matched65536 FP8 comparison is required before attributing the
+difference to KV precision.
+
+
+## Source-rebuilt native correction: numerical qualification
+
+CONFIG -> Native-only image d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067
+contains new_xpu_C SHA6717e3ec7fe3e7cdc26cd66b84aabdd076f211e5bed62b8711b7377fca8668d9.
+All other2105 native files, packages and2227 vLLM Python files match7b.
+Upstream5802 was ported to pinned1e90 plus original Steve patches and rebuilt
+with exact Intel2026.1.1. Source/recipe/ABI receipts are tracked under
+vllm/int4/native_gdn_oracle/native5802_build/. The Python adapter stays absent.
+
+COMMAND -> Run strict both-card and compiled pair P2P0 preflight. Deliberately
+repin only image/native identity in the original rolling-history oracle;
+AST equality preserves every numerical and state-layout expectation. Run
+128steps/all12gates on card0 TP1 geometry, then card1 local TP2 geometry.
+
+RESULT -> Candidate pair health passes. Both numerical runs complete128steps
+and all12gates at each step; strict pre/post health and owned cleanup pass.
+The original deployed native failed this same rolling contract at step0.
+Card1 uses localK8/V24, hybrid1638400-byte and packed1634304-byte pages; this
+is not a two-rank serve or collective performance result.
+
+The first full-model launcher accidentally acquired an already-owned lease.
+It was stopped by terminating only its verified flock waiter before any GPU
+work or output directory creation; rc124 and evidence are retained. V2 checks
+the inherited selected FD and passes --leased once. Its CPU test exercises
+the actual server lease branch. V2 is now serving the prepared native-only
+boundary10/serial2/ample4 jobs. No model qualification is claimed yet.
+
+VERDICT -> The source repair passes the unchanged failing native contract and
+math oracle in both local geometries. Full-model/graph, actual TP2 serving,
+concurrency, long-context and teardown qualification remain separate.
+
+CONFIG -> FP16KV/MTP0/FULL at65536 context, exact same early-stop serial pair.
+COMMAND -> Execute the two frozen requests, normal STOP, strict post-health.
+RESULT -> Both stop at2058 tokens after433 plus comma, with cached0/3328;
+content0/2, cache2/2. Lifecycle0 and post-health0.
+VERDICT -> FP8 is not necessary for this same premature-stop pattern. The
+context-cap change is explicit; this is not a matched precision performance
+comparison. A same65536 eager FP16 control is now starting to test graph
+necessity. No model/quantization cause has been established.
