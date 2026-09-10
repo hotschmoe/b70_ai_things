@@ -1,6 +1,56 @@
 {
   "schema": 1,
-  "inputs_finalized": false,
+  "inputs_finalized": true,
   "scope": "native5802 TP2 backend100K+200K; known numeric EOS limitation retained",
-  "pending": "New backend200K plan and actual completed100K/200K qualification evidence are required. No qualification marker exists."
+  "image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+  "native_sha256": "6717e3ec7fe3e7cdc26cd66b84aabdd076f211e5bed62b8711b7377fca8668d9",
+  "plan100k": "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend100k-v2/plan.json",
+  "plan200k": "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend200k/plan.json",
+  "native_receipt": "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/native_gdn_oracle/native5802_build/image-receipt.json",
+  "model_manifest": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-calibrated-kv/current-verified-model-files.json",
+  "model_root": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-27b/int4-autoround-gptq-relabel-r212",
+  "known_quality_negative": "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend100k-v2/known-quality-negative.json",
+  "tokenizer200k_receipt": "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend200k-tokenizer-v1/result.json",
+  "mtp_scale_layer": "mtp.layers.0.self_attn.attn",
+  "required_jobs": {
+    "plan100k": [
+      "02-tiny24",
+      "03-early-history",
+      "03-early-history-quality",
+      "04-deterministic-round1",
+      "04-deterministic-round1-quality",
+      "04-deterministic-round2",
+      "04-deterministic-round2-quality",
+      "04-deterministic-round3",
+      "04-deterministic-round3-quality",
+      "04-sampled-round1",
+      "04-sampled-round1-quality",
+      "04-sampled-round2",
+      "04-sampled-round2-quality",
+      "04-sampled-round3",
+      "04-sampled-round3-quality",
+      "99-startup-host-trace-review"
+    ],
+    "plan200k": [
+      "01-retrieval",
+      "02-reuse",
+      "03-guide",
+      "04-cancel",
+      "05-recovery",
+      "06-startup-host-boundaries"
+    ]
+  },
+  "sha256": {
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/native5802_service/serve.py": "3f07e01d521434747e02366d0152c108a4499685a96b0b33ca5d54645e0a4f88",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/native5802_service/prepare_inputs.py": "197a5d9a02ba2bd4206e20f88efdab182a071727ae363821e58bd213e90812eb",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/native_gdn_oracle/native5802_build/image-receipt.json": "10939c6d2e62762bc11b0100701034fe9d1257594368ff1bb9205b12dc628c8f",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-calibrated-kv/current-verified-model-files.json": "f0f3c197466b8cc5206cf5cc005fc73e1bbcad28539aeb5f9dd378a2310d898d",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend100k-v2/known-quality-negative.json": "88888e502c819c3f1509930746c8c9e0b09b0d2e4c844690a4b23ddae772167b",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend200k-tokenizer-v1/result.json": "674cb338c19fba82f2d2f590f82e574cb16d1df7315c5b9303786a3ffa020895",
+    "/mnt/vm_8tb/github/b70_ai_things/vllm/fp8/openai_key_frontdoor.py": "8890dc900760cf33b3122b8eba7b04b171072ee9039d776a51aa932907e2b431",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend100k-v2/plan.json": "d119296ea28191c20e82091e96262823fd28cdbf49966a143031ffac6121de52",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend100k-v2/frozen.json": "7ee2652427b95c9a54c88bfee8e3463e84c25179946fc62c9e8e8a9394601805",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend200k/plan.json": "14140c6d72ce1b238a3c45972d90dff83b4f3d16614206c71f8ef0e94a8d2ac3",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend200k/frozen.json": "d9a7ae089291e1c9dcca3788443c96d18da4c01f658404cd1b8a68b95b98f5ab"
+  }
 }

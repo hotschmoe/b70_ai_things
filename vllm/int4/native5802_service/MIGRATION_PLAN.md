@@ -138,3 +138,25 @@ SHA256:50d977c22663f5139dd397832cd4adbc985021ef940f486effeddc2645faf7d8.
 It has16 jobs covering24tiny,3early,192strict tool checks and final host trace.
 Its frozen.json and known-quality-negative.json belong in the eventual service
 inputs/evidence gate. Preparation is not execution success;200K remains pending.
+
+
+2026-09-10 IMPLEMENTATION AND PLAN CORRECTION
+
+CONFIG -> The original native5802-backend100k plan failed argument parsing
+before any GPU work because it redundantly passed a backend shutdown option
+to the wrapper. Its failure remains recorded. The reviewed replacement is
+native5802-backend100k-v2/plan.json; Config.json already supplies shutdown30.
+All qualification consumers now require this v2 root exclusively. References
+to the original root above describe the earlier preparation, not a valid gate.
+
+COMMAND -> Independent source review and 14 CPU service tests, plus three
+200K prerequisite refusal tests. Exact d556 CPU tokenizer verification of all
+eight long-context payloads reproduced token counts and token-ID hashes.
+
+RESULT -> Service source and repo-only override are implemented. Exact
+context-specific mandatory jobs/trace outputs and inherited pair-lease checks
+are enforced. The v2 100K GPU arm is running; new200K remains a template.
+
+VERDICT -> No service qualification or installed override yet. Complete v2
+100K and new200K evidence, healthy teardown, finalized inputs and freeze/check
+are still required. The source checkpoint does not qualify the endpoint.

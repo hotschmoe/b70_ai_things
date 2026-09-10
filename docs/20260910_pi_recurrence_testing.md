@@ -685,3 +685,34 @@ semantic success, graph/MTP/TP2/long-context feature parity, speed or promotion.
 Cross-backend exact EOS output is evidence separating the early-stop case from
 the repaired vLLM native cache-contract corruption. Raw output:
 /mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1-v3/
+
+
+## 2026-09-10 23:03 UTC - Complete native5802 backend100K-v2 qualification
+
+CONFIG -> Image d55637/native6717, TP2/P2P0/MTP3, be02 FP8 KV,
+prefix ON, FULL_DECODE_ONLY, context100000, concurrency4, batch32768.
+Stable primary hotschmoe-dd and registered native5802 backend100K alias.
+
+COMMAND -> Existing leased run_arm lifecycle with the new immutable
+native5802-backend100k-v2/plan.json, followed by native5802_service/serve.py
+audit100k after the run and full teardown completed.
+
+RESULT -> All16 jobs exit0: tiny24, three clean Pi-history replays plus quality
+gate, three deterministic32 and three sampled32 rounds (seeds42/43/44), and
+matched startup host trace. All192 strict tool/answer/cache checks pass.
+Both ranks loaded17 expected be02 scale records each. Actual startup profile
+matches138 all-reduce and3 all-gather entry/return pairs per rank at32768rows.
+Graph capture succeeds. Server and parent lifecycle exit0; strict per-card
+and compiled pair pre/post health pass. Owned container absent. The auditor
+checks371 backing hashes and emits qualification-receipt.json with SHA256
+16a0b1f2ccd5f725e5a6802fb5603deeeb3a2f07de959f1f551cc9ed603b9c2d.
+
+VERDICT -> Exact backend100K workload scope qualified. Known numeric-array
+quality failure remains false in the receipt; old failures/markers unchanged.
+This is not unrestricted model-quality or200K qualification. A new200K plan
+was frozen only after this complete receipt passed its prerequisite check.
+Its exact d556 CPU tokenizer check matches all eight original near185K
+payloads. The separate200K run has now started; public service remains down.
+
+Raw: /mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend100k-v2/
+New arm: /mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/native5802-backend200k/
