@@ -256,6 +256,9 @@ leases with matching pins and P2P0. Failed lifecycles retain their evidence.
 
 ## User pause and next downtime
 
+For the standalone ordered backlog, exact launch commands and prerequisites,
+read [the campaign resume handoff](20260910_bang_campaign_resume.md).
+
 The user requested pausing tests and serving the patched vLLM endpoint for the
 day, explicitly retaining200K context. The clean100K arm had passed tiny24,
 earlier clean history3, three deterministic32-check rounds, and one sampled
