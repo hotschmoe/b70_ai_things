@@ -59,16 +59,23 @@ growing histories, with four requests running and measured cache reuse.
 Both lifecycles exit0 and strict selected-card post-health passes.
 These results use TP1, FP16 KV, eager mode and MTP0.
 
-Current pinned SGLang source is being rebuilt from source with GPTQ and GDN,
+Current pinned SGLang source has been rebuilt from source with GPTQ and GDN,
 explicit BMG, and Triton attention. Unused native FMHA/MoE/MLA kernels are
 excluded; this is not a native vision-FMHA recipe. No quarantined binary is
-copied into the stack. CPU installed/API and GPU health gates remain required.
+copied into the stack. The CPU installed/API gate passes: all 63 installed
+native artifacts match the rebuilt wheels and the held PyTorch/UMD/oneCCL
+identities are unchanged. The current-source image has not yet passed GPU
+health or model serving; the earlier serving results belong to the published
+baseline plus its small source port.
 
 Two material parity gaps need qualification: native Intel attention prefill
 omits FP8 descales, and Qwen lacks the required calibrated-scale loader. A
 strict source-only loader and mapping are prepared for Triton. In addition,
-current XPU MTP verification selects greedy tokens even for temperature 0.7;
-a sampling-preserving path is under source review. Graph/MTP/FP8/TP2 parity
+current XPU MTP verification selects greedy tokens even for temperature 0.7.
+A bounded unseeded sampling candidate passes CPU checks but is not activated.
+Seeded sampling needs a shared ordinary/speculative mapping; the optional
+FP32 prototype changes the legacy seed mapping and is not a drop-in parity
+fix. Graph/MTP/FP8/TP2 parity
 has not been demonstrated by the simpler passing screens.
 
 ## Calibration identity finding
@@ -80,10 +87,21 @@ The old freeze utility copied an existing manifest without rehashing weights.
 This does not establish why its recorded shard 2 hash differs, or which bytes
 the old calibration actually loaded. The old artifact is preserved unchanged.
 
-The new loader refuses the mismatch. Fresh calibration is prepared against a
-verified complete manifest. The recorder requires eager/prefixoff; graph and
-prefix-on FP16-versus-FP8 qualification must be separate. Existing numeric
-cache oracles will be reused, with an exact-byte/untouched-slot check added.
+The new loader refuses the mismatch. Fresh calibration is running against a
+verified complete manifest: 256 short cases and four long prompts through
+96K tokens are collected; continuation and lifecycle checks remain pending.
+The recorder requires eager/prefixoff; graph and prefix-on FP16-versus-FP8
+qualification must be separate. Current collection is limited to a 100K
+configuration and does not qualify the previous 200K configuration.
+
+CONFIG -> Phase-only vLLM R276, synthetic distinct K/V scales, 67 tokens,
+permuted 64-token cache blocks, each physical card. COMMAND -> Actual cache
+write and attention-read oracle, including exact representable bytes and
+untouched slots. RESULT -> Both cards pass; attention relative L2 is below
+0.000227 against the dequantized CPU reference. Strict per-card and compiled
+pair pre/post-health pass, with owned containers removed. VERDICT -> This
+bounded numeric test validates scale consumption, not full-model FP8 quality.
+The corresponding actual-Triton SGLang oracle is prepared but not GPU-run.
 
 ## Evidence and reproducible sources
 
