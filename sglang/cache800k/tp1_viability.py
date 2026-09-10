@@ -52,6 +52,7 @@ def command(args, name):
                   '--host', '0.0.0.0', '--port', '8000']
     if args.prefix_cache:
         launch.remove('--disable-radix-cache')
+        launch += ['--mamba-radix-cache-strategy', 'extra_buffer']
     return launch
 
 

@@ -251,3 +251,23 @@ Unsupported optional language-model-only flag rejected Qwen during retry-v2
 argument resolution, before serving; strict post-health passed. Retry-v3
 had an invalid health path before GPU touch; corrected retry-v4 is running.
 VERDICT -> These are unqualified candidates; production remains offline.
+
+## Phase-patched TP1 with full serving features
+
+CONFIG -> R276 phase-only0328900c, TP1/card0,P2P0,100K/c4/batch32768,
+MTP3, calibrated FP8 KV, prefix cache and FULL_DECODE_ONLY graphs enabled.
+COMMAND -> Frozen vllm-tp1-fp8kv-mtp3-prefix-graph-ctx100k-gdnphase plan,
+same nine reconstructed Pi requests; broad replay-quality audit afterward.
+RESULT -> Identity matches stable and detailed registry aliases. All17 KV
+scale loads match d53fb656 artifact;103846 KV tokens, graph capture complete.
+Nine requests finish without bangs; two agent2 responses are flagged: warm
+repeats the two-character unit backtick+B584times and target0 has invalid
+JSON tool arguments. This input
+already contains pre-bang corruption. Agent1 target outputs417/407tokens
+avoid the earlier stock TP1 loop flags; largest observed SSE gap0.215s.
+Normal teardown and strict selected-card post-health pass, lifecycle0.
+VERDICT -> Phase patch works through this full-feature TP1 workload but
+quality is not fully clean. Nine temperature0.7 reconstructions do not prove
+causality or stability; exact upstream Pi bodies remain unavailable. Do not
+attribute all improvement to one patch without tracing/matched repetition.
+TP2 phase comparison and clean concurrent qualification remain pending.

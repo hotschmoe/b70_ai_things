@@ -251,3 +251,31 @@ VERDICT -> The 128 log count is page-rounded accounting, not evidence that
 CPU/source checks do not instrument physical GPU tensor shapes; internal
 kernel tiling/padding remains distinct from logical query length. Do not
 claim an identical vLLM kernel path, only the same one-token client input.
+
+## Prefix-cache configuration failure and corrected retry
+
+CONFIG -> Same pointer/device image and TP1 viability settings, now prefix
+cache enabled. First prefix arm left Mamba cache strategy at automatic.
+
+COMMAND -> Coordinator launched `sglang-tp1-nightly-card1-prefix-tools`.
+
+RESULT -> Weights and pools loaded, then scheduler initialization refused
+`no_buffer` with page size 128. No inference qualification resulted. The
+coordinator completed cleanup and strict post-health before a new arm.
+Exact installed-source CPU checks explain the mismatch: with overlap disabled
+and page size unresolved, automatic Mamba strategy selects `no_buffer`.
+Intel attention later forces page size 128. Its supported non-MLA page sizes
+are 64/128, so forcing page size 1 alone would be changed back to 128.
+
+VERDICT -> Use the minimal explicit companion option
+`--mamba-radix-cache-strategy extra_buffer` when enabling prefix cache on this
+Intel-attention/Triton-GDN configuration. Exact source marks this Qwen
+architecture and Triton linear backend supported, and the extra-buffer
+validator permits XPU. CPU checks exercise the actual resolver, support
+predicate and validator with page128/track256/chunk512; they do not substitute
+for the running cache-coherence test. Raw checks:
+`sglang-freshness/prefix-config/{manifest.json,check.py,result.json}`.
+
+The coordinator launched the corrected, separately named
+`sglang-tp1-nightly-card1-prefix-tools-extra-buffer` arm on port 18208. Its
+result is pending here; neither prefix correctness nor stability is claimed.
