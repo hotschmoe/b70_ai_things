@@ -3,9 +3,11 @@
 Status: investigation active; production hotschmoe-dd remains offline.
 No shelf promotion or production stability claim has been made.
 
-New counterexample: the phase-patched TP2/MTP3/graph/prefix-on FP16-KV
-control produces a concurrent tool-answer bang. The phase guard fixes the
-isolated initialization defect, but is not a complete full-feature remedy.
+Two reproduced mechanisms are now separated: the GDN phase guard fixes a
+fresh singleton initialization defect; a second accepted-count ordering patch
+passes concurrent cache/MTP fixtures that still bang with the phase guard alone.
+The second split occurs with FP16 and fresh calibrated FP8 KV at TP1. The FP8
+card crossover and repaired TP2 qualification remain in progress.
 
 ## Answer to the GDN and TP questions
 
@@ -67,8 +69,8 @@ This difference activates a cache path rather than isolating storage dtype:
 resolved block sizes are FP16=832 and FP8=1600. For the 2360-token answer,
 the full-attention hit finder can retain two 832-token blocks then drop one
 for MTP, leaving832; one1600-token block is dropped to zero. Cache reuse is
-therefore a concrete lead. Separate per-card prefix-on/off controls are being
-run; no cache or MTP root-cause attribution is made yet.
+therefore a concrete lead. The subsequent prefix-on/off and accepted-count
+controls below isolate that path further.
 
 The first TP1 pair reproduces a second full-feature bang with prefix caching
 on (26/27 completed checks pass) while prefix off passes32/32. The failed
@@ -98,6 +100,22 @@ Fresh calibrated FP8 controls are now using360 records (4274 prompt tokens),
 so the1600-token cache layout can retain a prefix after the MTP margin. Their
 review requires positive cache hits in every session. The earlier180-record
 FP8 fixture did not exercise this reuse path despite caching being enabled.
+
+
+CONFIG -> Phase-only versus phase plus MRV1 accepted-count fix, TP1/MTP3,
+FULL decode graphs, prefix on, fresh calibrated FP8 KV, context/batch8192,
+four concurrent sessions, records360. COMMAND ->32-check streamed tool fixture
+and per-session positive-cache gate, first pair on cards0 and1 respectively.
+RESULT -> Phase-only passes26/27 completed checks and fails session2 turn1
+TOOL with512 bangs, prompt4368/cached1600. The fixed build passes32/32 and
+returns lookup_stock(part-2-1) for the identical normalized failed payload,
+with the same1600-token cache hit. Every session has positive reuse in BOTH
+arms. Both lifecycles exit0 and strict selected-card post-health passes; both
+require force-killing a remaining EngineCore after requested shutdown.
+VERDICT -> The earlier no-hit FP8 pass was insufficient. This bounded result
+supports accepted-count ordering as a second corruption mechanism with actual
+FP8 reuse. A card crossover is running before attributing the split solely to
+the patch. Raw: tp1-fp8-reuse-controls/initial-pair-outcome-review.json.
 
 The selected affected bundle contains 41 bangs among 317 non-429 messages; this
 is not an unbiased production rate. All 36 recorded bang-recovery messages
