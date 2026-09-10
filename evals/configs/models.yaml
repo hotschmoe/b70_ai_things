@@ -448,3 +448,30 @@ models:
     calibration: none-fp16kv
     serve_cmd: ""
     notes: "Unqualified TP1 prefixoff control, MTP3 FULL_DECODE_ONLY c4 ctx8192, fresh cache, stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp0-fp16kv-prefixon-c4-ctx8192
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp0-fp16kv-prefixon-c4-ctx8192
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixon MTP0 control, FULL_DECODE_ONLY c4 ctx8192, fresh cache; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixon-c4-ctx8192-crossover
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixon-c4-ctx8192-crossover
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixon MTP3 control, FULL_DECODE_ONLY c4 ctx8192, fresh cache; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixoff-c4-ctx8192-crossover
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-tp1-mtp3-fp16kv-prefixoff-c4-ctx8192-crossover
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified TP1 prefixoff MTP3 control, FULL_DECODE_ONLY c4 ctx8192, fresh cache; stable primary hotschmoe-dd."
