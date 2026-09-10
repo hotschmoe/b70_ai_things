@@ -602,3 +602,86 @@ No further full CPU inference was run. Raw root:
 /mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/reference-feasibility/
 Result: full-reference-v1/result/result.json; audit: full-reference-v1-review.json;
 cleanup correction: full-plan-v1/execution/parent-cleanup-verification.json.
+
+
+## 2026-09-10: Independent CPU and fresh-prefill GPU agree on the early EOS
+
+CONFIG -> Same AutoRound GPTQ INT4 artifact. Independent streamed CPU reference
+uses reviewed FP16-rounded effective weights (A_log retained FP32), FP32
+activations/accumulation, all64 layers and actual observed6102-token prefix.
+GPU control uses native d556 TP1/card0, FP16 KV, MTP0, eager, context65536,
+prefix enabled but distinct fresh salts and observed zero hits. Primary alias
+hotschmoe-dd retained. GPU settings are cloned from the earlier FP16 eager
+control; fresh prefill differs from the original incremental decode trajectory.
+
+COMMAND -> CPU frozen full-plan-v1/inputs/plan.json and launch_reference.py;
+GPU vllm/cache800k/run_arm.py with token-prefix-card0-plan/plan.json. Two raw
+/v1/completions token-ID prompts6099 and6102, temperature0 seed42 max_tokens2,
+logprobs20, retained token IDs. No rendering or tool execution. Independently
+compare raw request/response IDs and first-token logprob differences to CPU
+logit differences; audit token-prefix-independent-audit.json under
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910.
+
+RESULT -> CPU all64 layers finite, full17 model-file pre/post hashes and stats
+match,22.44 minutes and4.88GiB peak RSS (not a serving speed claim). At prefix6099
+ending432-partial4, expected digit3/token18 beats EOS248046 by0.1907310486 CPU
+and0.1875 GPU. GPU returns[18,18], finish length at max2. At prefix6102 ending
+433-comma, EOS248046 beats required space/token220 by0.2746887207 CPU and
+0.265625 GPU; GPU returns[248046], finish stop. Absolute margin differences are
+0.0032310486 and0.0090637207. EOS248044 is much lower in both comparisons.
+Both GPU responses retain exact supplied prompt IDs and report cached_tokens0.
+GPU lifecycleexit0, strict selected-card pre/post HEALTHY, normal engine drain
+and teardown22:28:46-22:28:50 UTC with no EngineCore forcekill observed.
+
+VERDICT -> The same quantized artifact independently prefers this premature EOS
+at433-comma. The synthetic array remains an actual invalid/truncated answer;
+this evidence supports a model/quantized-artifact quality limitation instead
+of requiring a new backend defect to explain this specific stop. It does not
+separate original model behavior from quantization effects. Fresh prefill and
+CPU teacher forcing are not the original incremental trajectory, and nearby
+logit agreement is not full backend equivalence. Original bang/state-contract
+failures and their repairs remain separate measured findings. Do not change
+prior failed array/qualification markers or claim the model passes this task.
+
+
+CONFIG -> Prior SGLang14ee v2 selected card1 attempt used extra_buffer.
+COMMAND -> Ran the frozen v2 feature plan after valid old numeric/health gates.
+RESULT -> Current-main XPU explicitly rejects extra_buffer before model loading.
+Owned cleanup and strict selected-card post-health passed; lifecycle rc1.
+VERDICT -> Preserve the configuration failure, not a model/kernel failure.
+The v3 opt-in no_buffer/page1 change leaves default launcher argv identical;
+actual-source CPU test_no_buffer_cpu.py verifies XPU policy, valid page1 and
+rejection of page128/overlap. Existing features and strict tests are unchanged.
+
+
+## Measured v3 FP8/cache and independent serial outcomes
+
+CONFIG -> Same14ee TP1/card1 FP8/be02/Triton/eager/MTP0; explicit no_buffer
+and required page1, overlap disabled. V2 extra_buffer failure stays preserved.
+COMMAND -> Root allocated card1 after prior TP2 teardown/strict health. Ran
+exact frozen plan-v3 through feature_gate; no outer lease and no public serve.
+RESULT -> Strict pre-health passed. Startup resolved the supported policy and
+loaded target16-layer calibrated scales. Cold compilation completed. All26 text
+checks and32 concurrent tool checks passed,32 attempts, zero bangs/retries.
+The strict cache counter increased6 ->126304 (delta126298); live c4 observed.
+This is the gate's aggregate metric delta, not an independent unique-token count.
+
+Both separate session0 serial requests returned prompt4045/completion2058,
+finish stop, raw matched_stop248046, text ending433comma. Their visible output
+is byte-identical to each other and the vLLM raw EOS diagnostic, SHA256
+4d85ef8116e01fee788f0acaaac2506029606c51820f781742a95fd39dc72311.
+Raw durations200.735s/196.316s are observation bounds, not matched speed claims.
+SGLang usage returned prompt_tokens_details=null; the unchanged serial client
+raised AttributeError while reading cache fields. Preserve its rc1 and missing
+metadata separately from actual cache reuse. The incomplete array is also a
+real independent semantic negative; raw matching EOS remains available.
+
+Normal cleanup completed, owned container absent, strict card1 post-health
+passed. Parent/lifecycle/job rc1 reflect the separate serial diagnostic failure;
+fp8-cache-stage-outcome.json remains strict26+32 PASS. No reset or further GPU
+retry occurred. Card1 was returned to parent allocation.
+VERDICT -> Bounded full-model FP8/no_buffer cache gate passes, but not whole-job
+semantic success, graph/MTP/TP2/long-context feature parity, speed or promotion.
+Cross-backend exact EOS output is evidence separating the early-stop case from
+the repaired vLLM native cache-contract corruption. Raw output:
+/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1-v3/

@@ -60,7 +60,12 @@ def command(args, name):
         launch.append('--skip-server-warmup')
     if args.prefix_cache:
         launch.remove('--disable-radix-cache')
-        launch += ['--mamba-radix-cache-strategy', 'extra_buffer']
+        strategy = getattr(args, 'mamba_cache_strategy', 'extra_buffer')
+        launch += ['--mamba-radix-cache-strategy', strategy]
+        if strategy == 'no_buffer':
+            if args.attention_backend != 'triton':
+                raise ValueError('Reviewed no_buffer arm requires Triton and page_size1')
+            launch += ['--page-size', '1']
     decode_graph = getattr(args, 'decode_graph', False)
     mtp_steps = getattr(args, 'mtp_steps', 0)
     if (decode_graph or mtp_steps) and args.attention_backend != 'triton':
@@ -94,6 +99,7 @@ def main():
     p.add_argument('--health-probe', type=Path, default=REPO / 'bin/xpu-health')
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--prefix-cache', action='store_true', help='Enable radix cache for a separate feature qualification arm')
+    p.add_argument('--mamba-cache-strategy', choices=['extra_buffer', 'no_buffer'], default='extra_buffer', help='Separate current-main XPU cache arm; no_buffer requires page_size1')
     p.add_argument('--skip-server-warmup', action='store_true', help='Skip automatic image warmup for the bounded text-only diagnostic arm')
     p.add_argument('--decode-graph', action='store_true', help='Current-main Triton decode FULL graph only; prefill remains eager')
     p.add_argument('--mtp-steps', type=int, choices=[0, 1, 3], default=0, help='Separate greedy NEXTN feature arm; draft tokens are steps+1')

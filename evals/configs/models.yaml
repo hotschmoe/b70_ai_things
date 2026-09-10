@@ -610,3 +610,21 @@ models:
     calibration: none-fp16kv
     serve_cmd: ""
     notes: "Unqualified early-EOS eager control; MTP0 FP16KV prefixON context65536; stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-fp8-kv-be02d915
+    serve_cmd: ""
+    notes: "PREPARED backend100K scope, native5802; known array512 earlyEOS quality failure retained. Primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx200k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx200k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: fresh-fp8-kv-be02d915
+    serve_cmd: ""
+    notes: "TEMPLATE ONLY native5802 backend200K; requires complete new100K and own200K qualification. Known arrayEOS quality limitation retained."
