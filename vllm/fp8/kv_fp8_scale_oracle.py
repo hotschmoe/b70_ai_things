@@ -7,7 +7,23 @@ from vllm import _custom_ops as ops
 from vllm.v1.attention.backends.fa_utils import flash_attn_varlen_func
 
 
+def verify_exact_cache_bytes(kc, vc, k, v, slots, block_size, k_scale, v_scale):
+    """Require exact active bytes and unchanged zero-valued unused cache slots.
+
+    Intended for representable E4M3FN values and power-of-two scales; no
+    ambiguity from FP16 versus FP32 division or midpoint rounding is introduced.
+    """
+    loc = slots.cpu()
+    for label, actual, values, scale in [('k', kc, k, k_scale), ('v', vc, v, v_scale)]:
+        observed = actual.cpu()
+        expected = torch.zeros_like(observed)
+        encoded = (values.float().cpu() / scale).to(torch.float8_e4m3fn).view(torch.uint8)
+        expected[loc // block_size, loc % block_size] = encoded
+        assert torch.equal(observed, expected), label + ' exact bytes or untouched slots mismatch'
+
+
 p = argparse.ArgumentParser()
+p.add_argument('--exact-write', action='store_true', help='Additional exact representable-grid write and untouched-slot oracle')
 p.add_argument('--length', type=int, default=31)
 p.add_argument('--block-size', type=int, default=64)
 p.add_argument('--permute', action='store_true')
@@ -36,6 +52,23 @@ for card in range(torch.xpu.device_count()):
     ks = torch.tensor(.08, device=device); vs = torch.tensor(.06, device=device)
     positions = torch.arange(length, device=device)
     slots = torch.tensor(table, device=device)[positions // args.block_size] * args.block_size + positions % args.block_size
+    if args.exact_write:
+        grid = torch.tensor([-448., -416., -240., -1.125, -1., -.5, -.015625,
+                             -.00390625, -.001953125, 0., .001953125, .00390625,
+                             .015625, .5, 1., 1.125, 240., 416., 448.])
+        count = length * kvheads * dim
+        quantized_k = grid.repeat((count + grid.numel() - 1) // grid.numel())[:count].reshape(length, kvheads, dim)
+        quantized_v = quantized_k.flip(-1)
+        exact_k = (quantized_k * .125).half().to(device)
+        exact_v = (quantized_v * .25).half().to(device)
+        exact_ks = torch.tensor(.125, device=device)
+        exact_vs = torch.tensor(.25, device=device)
+        ops.reshape_and_cache_flash(exact_k, exact_v, kc, vc, slots, 'fp8_e4m3', exact_ks, exact_vs)
+        torch.xpu.synchronize()
+        verify_exact_cache_bytes(kc, vc, exact_k, exact_v, slots, args.block_size, .125, .25)
+        print(json.dumps(dict(card=card, exact_representable_write=True, untouched_slots=True,
+                              distinct_kv_scales=True)), flush=True)
+        kc.zero_(); vc.zero_()
     ops.reshape_and_cache_flash(k, v, kc, vc, slots, 'fp8_e4m3', ks, vs)
     torch.xpu.synchronize()
     dk = kc.view(torch.float8_e4m3fn).float().cpu()[table].reshape(-1, kvheads, dim)[:length] * ks.cpu()
