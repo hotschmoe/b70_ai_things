@@ -339,3 +339,41 @@ requirement; CPU package imports alone did not exercise the vision path.
 VERDICT -> Separate text-only retry adds supported --skip-server-warmup and
 retains the mandatory 26 real text requests, a fresh cache and original image.
 CPU source/argv checks pass; no retry result or vision qualification is claimed.
+
+## Fresh calibration and loader-only CPU candidate
+
+CONFIG -> Use the freshly verified vLLM calibration artifact with current-main
+SGLang triton-dense base
+`sha256:bdc51c5f083fdcbacd59a74bfeb8389fa6d62c8478e066ed5c62f9bffcfaa4cf`.
+Calibration completed 262 cases, including four long contexts and two
+4096-token continuations, with all 17 model files matching their reviewed
+pre/post hashes and stat identity. Strict per-card/compiled-pair post-health
+and normal teardown passed, lifecycle 0. No sampling overlay is included.
+
+COMMAND -> Independently review the frozen corpus/provenance/finite-coverage
+bindings, then build the separate Python-only loader context and run installed
+CPU digest/order/buffer gates plus complete native identity comparison.
+Recipe and evidence: `sglang/cache800k/loader_overlay/` and
+`/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-loader-fresh-overlay-v2/`.
+
+RESULT -> The NEW artifact SHA256 is
+`be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062`.
+Its 25/34 merged K/V scalar values exactly match the old artifact; fresh/old
+ratios span 0.9508474576271186 to 1.018976897689769. The old artifact's
+unresolved provenance is not repaired by that similarity.
+
+Loader-only image:
+`sha256:f82a10b2c3d04f10b230ba299dced23455366f307d96bdce54a7143264b41a99`.
+All 3,088 native ELF/archive paths and recorded package versions equal the
+base exactly; its 15 base layers are unchanged, with two COPY layers added.
+Only the common model runner, loader Python package, and embedded reviewed
+JSON change. The installed loader rejects the old digest, recognizes the new
+one, has source ordering before precompilation, and passes six CPU target/MTP TP/rank plans
+with persistent scalar FP32 buffers and matching Python float mirrors.
+The artifact is at `/opt/b70/calibrated-kv/fresh-scales.json` inside the image.
+
+VERDICT -> Fresh artifact review and loader image CPU/native gates pass.
+This is not a GPU loader pass, FP8 numeric qualification, or feature-parity
+claim. The separate XPU write/read investigation and leased health/serving
+qualification remain required. Sampling behavior is unchanged; this image
+does not activate the experimental non-greedy NEXTN sampler.

@@ -308,3 +308,38 @@ VERDICT -> Bounded numerical write/read path passes; this does not validate
 historical calibration identity, all model activations, or SGLang Triton.
 Fresh262-case eager/prefixoff calibration is now running with verified hashes;
 subsequent serving qualification restores graphs and prefix caching.
+
+## Completed fresh calibration with current model provenance
+
+CONFIG -> Phase-fixed R276 image
+`sha256:0328900cf1f8f29f5a8e76ed21a3eff71ef54d0abf495a88fdb86e93e880b077`,
+TP2/P2P0, MTP3, FP16 KV, eager, prefix cache off, 100K context. Bind the
+current publisher-matching model files rather than reuse the old preservation
+manifest with its unexplained shard2 hash.
+
+COMMAND -> Run the 262-case collection, complete owned shutdown and strict
+post-health, then `fresh-calibration-plan/verify_and_freeze.py freeze` and the
+independent `sglang/cache800k/loader_overlay/review_fresh.py` acceptance gate.
+Raw root: `/mnt/vm_8tb/b70/results/bang_isolation_20260910/fresh-calibration-plan/`.
+
+RESULT -> All 262 requests completed: 256 core cases, four long contexts
+(32K/64K/80K/96K), and two 4096-token continuations. Exact corpus/response
+IDs, prompt and text hashes, usage, finish reasons and non-cancellation gates
+pass. Both continuations reached 4096 tokens. All 17 model files match their
+reviewed SHA256 values and retain identical pre/post device/inode/size/mtime/
+ctime identity. Complete finite positive target/MTP observations cover all
+17 attention layers on both ranks. Normal teardown, strict per-card and
+compiled P2P0 pair post-health pass; lifecycle exit is 0.
+
+The NEW frozen artifact is `fresh-scales.json`, SHA256
+`be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062`.
+Of its 34 merged K/V scalar values, 25 are exactly equal to the old artifact;
+fresh/old ratios range from 0.9508474576271186 to 1.018976897689769. These
+ratios describe scalar differences, not model-quality or runtime stability.
+
+VERDICT -> Fresh calibration provenance and bounded collection gates pass.
+Use this new artifact for subsequent numerical/serving qualification. The old
+artifact remains unchanged; numerical similarity does not authenticate the
+old calibration's model bytes or resolve the historical shard2 discrepancy.
+Periodic activation snapshots still do not provide exhaustive final-step
+coverage. No calibrated FP8 serving promotion follows from collection alone.
