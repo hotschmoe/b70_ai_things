@@ -521,3 +521,43 @@ VERDICT -> This was diagnostic preparation infrastructure failure, not a model
 inference result. Original frozen plans remain unchanged; do not reuse their
 concurrent --alias unchanged. Corrected inference results require separate
 review. Raw remaining-cli-audit.json is in the independent diagnostic plan root.
+
+
+CONFIG -> Independent native5802 TP2 diagnostic arm, same100K/MTP3/FP8/be02/
+prefix/FULL_DECODE_ONLY configuration. Semantic negatives do not erase other
+independent observations; this arm creates no qualification marker.
+COMMAND -> Run corrected concurrent16, tiny24, earlyhistory3 plus quality,
+deterministic32 plus quality, and sampled32 T0.7/seed42 plus quality.
+RESULT -> Concurrent semantic14/16, cache16/16, zero detected text bangs. Both
+content negatives are non-thinking session0 early stops (cold2038 tokens after
+429comma, reuse2055 after432partial4); all8 reused requests hit1600 tokens.
+Tiny24 passes with no sequential-repeat drift. Earlyhistory3 passes heuristic
+review; independent manual review finds one coherent, valid bash tool call in
+each, with identical normalized content/reasoning/function hashes and6400-token
+reuse. Generated tools were never executed. Deterministic32 and sampled32 each
+pass their strict tool/answer/cache quality checks across four sessions.
+VERDICT -> This broadens the native repair evidence to concurrent and agent
+workloads, including sampled decoding. The retained exact-array negative is
+unresolved; whole100K/200K promotion and speed qualification are not claimed.
+Teardown/post-health for this still-running diagnostic arm remain pending.
+Raw: native5802-tp2-independent-diagnostics-plan/run/.
+
+
+CONFIG -> Same native5802 TP2 independent server. Original agent2 warm and
+target payloads retained byte-for-byte (ba90fc63807b/08fe725e90f6); T0.7,
+seed1160881401, thinkingmedium, outputcap8192. Warm1 followed by target2.
+Only a separate cache-salt literal and result path distinguish the replay
+client from the retained original control; reconstructed-input limits remain.
+COMMAND -> Run native5802-agent2-counterexample-plan/job.json, strict quality
+gate and manual inspection of every actual tool argument JSON.
+RESULT -> All3 have no bang/error/quality flags. Warm prompt22930/output771;
+targets prompt23240/output1102 each, both cached20800. Warm emits one write
+call; targets emit two valid bash calls with identical function hashes. The
+prior malformed second-tool suffix is absent. Tool commands were never
+executed; their functional correctness is not established by this review.
+VERDICT -> The native correction also clears the retained original malformed-
+tool reproduction with its input unchanged. This argues against attributing
+that specific failure solely to contaminated Pi history, while not proving
+all histories safe. Final paired trace passes. Normal STOP requested; strict
+post-health/teardown still pending at this entry. No qualification marker.
+Raw: native5802-tp2-independent-diagnostics-plan/run/agent2-counterexample/.
