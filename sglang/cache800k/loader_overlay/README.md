@@ -129,3 +129,23 @@ CPU-device refusal, and all six target/MTP TP/rank buffer plans pass.
 VERDICT -> CPU/native identity gates pass; candidate is ready for parent-managed
 leased health/serving qualification. This does not resolve the separate XPU
 FP8 write/read numeric investigation or establish full sampling parity.
+
+## Prepared pair preflight (not launched)
+
+`preflight_plan.py` defaults to printing a plan only. It pins the already-reviewed
+strict owned preflight helper SHA256
+85e23da18f6922af3366f83028439fd14eb629843bb13edd52e38ae8ccdd739c.
+Under --run it delegates to that helper with the exact f82a image and a separate
+output root; it preserves both inherited leases, owned-container cleanup,
+signal handling, strict per-card checks, compiled P2P0 collective health, and the
+helper's guarded recovery. The planned parent launch is:
+
+```text
+bin/gpu-run python3 sglang/cache800k/loader_overlay/preflight_plan.py --run
+```
+
+Only the default plan command and Python compilation were executed here. Raw
+plan: bang_isolation_20260910/sglang-loader-fresh-preflight.plan.json. The SGLang
+runner owner is adding the separate minimal --kv-cache-dtype fp8_e4m3 and
+--quantization-param-path /opt/b70/calibrated-kv/fresh-scales.json options for the
+later FP8 arm; current defaults and sampling behavior remain separate controls.
