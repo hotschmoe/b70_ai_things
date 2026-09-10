@@ -53,6 +53,24 @@ def command(args, name):
     if args.prefix_cache:
         launch.remove('--disable-radix-cache')
         launch += ['--mamba-radix-cache-strategy', 'extra_buffer']
+    decode_graph = getattr(args, 'decode_graph', False)
+    mtp_steps = getattr(args, 'mtp_steps', 0)
+    if (decode_graph or mtp_steps) and args.attention_backend != 'triton':
+        raise ValueError('Reviewed graph/MTP arms require explicit Triton attention')
+    if mtp_steps not in (0, 1, 3):
+        raise ValueError('Reviewed MTP steps are 0, 1 or 3')
+    if decode_graph:
+        launch.remove('--disable-cuda-graph')
+        launch += ['--cuda-graph-backend-decode', 'full',
+                   '--cuda-graph-backend-prefill', 'disabled',
+                   '--cuda-graph-bs-decode', '1', '2', '4']
+    if mtp_steps:
+        launch += ['--speculative-algorithm', 'NEXTN',
+                   '--speculative-num-steps', str(mtp_steps),
+                   '--speculative-eagle-topk', '1',
+                   '--speculative-num-draft-tokens', str(mtp_steps + 1),
+                   '--speculative-draft-model-path', '/model',
+                   '--speculative-draft-attention-backend', 'triton']
     return launch
 
 
@@ -66,12 +84,16 @@ def main():
     p.add_argument('--health-probe', type=Path, default=REPO / 'bin/xpu-health')
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--prefix-cache', action='store_true', help='Enable radix cache for a separate feature qualification arm')
+    p.add_argument('--decode-graph', action='store_true', help='Current-main Triton decode FULL graph only; prefill remains eager')
+    p.add_argument('--mtp-steps', type=int, choices=[0, 1, 3], default=0, help='Separate greedy NEXTN feature arm; draft tokens are steps+1')
     p.add_argument('--job', type=Path, help='JSON {command: [...], timeout: seconds}')
     p.add_argument('--startup-timeout', type=int, default=1200)
     p.add_argument('--ready-timeout', type=int, default=900)
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
+    if (args.decode_graph or args.mtp_steps) and args.attention_backend != 'triton':
+        p.error('reviewed graph/MTP arms require --attention-backend triton')
     args.out = args.out.resolve()
     args.health_probe = args.health_probe.resolve()
     cache_seed_identity = None
@@ -111,7 +133,9 @@ def main():
         dict(args=vars(args), command=cmd, primary_alias='hotschmoe-dd',
              health_probe_sha256=hashlib.sha256(args.health_probe.read_bytes()).hexdigest(),
              cache_seed=cache_seed_identity,
-             research_identity='qwen3.8-27b-AutoRound-INT4-W4A16-g128-sglang-tp1-fp16kv-mtp0-eager-prefixoff-ctx8192'),
+             research_identity=('qwen3.8-27b-AutoRound-INT4-W4A16-g128-sglang-tp1-fp16kv-mtp'
+                 + str(args.mtp_steps) + ('-decodefull' if args.decode_graph else '-eager')
+                 + ('-prefixon' if args.prefix_cache else '-prefixoff') + '-ctx8192')),
         default=str, indent=2) + '\n')
     docker = shutil.which('docker')
     health_label = 'b70.tp1-health=' + name
