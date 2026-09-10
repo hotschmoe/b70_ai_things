@@ -1,0 +1,26 @@
+{
+  "sglang": {
+    "repo": "sgl-project/sglang",
+    "commit": "2f7393f0d245bfaa8ebe0b9d0533432e6b3bd9ed",
+    "archive_sha256": "c6ae336bf4d1024a131ab24ab005f1c6ca6aedada247fd870759c54b8084c51a",
+    "bytes": 31919088
+  },
+  "sgl-kernel-xpu": {
+    "repo": "sgl-project/sgl-kernel-xpu",
+    "commit": "3802d7d87829073535fe5f84d3aef4ed76e7ef90",
+    "archive_sha256": "cd6a97a6bd2c33f296f6f109a0e3cc96431d47bc0152c5b7635ae7168bd762ba",
+    "bytes": 1101455
+  },
+  "torch_memory_saver": {
+    "repo": "fzyzcjy/torch_memory_saver",
+    "commit": "a5c99f11b18ebb8e9fda71a68812e476ae49e417",
+    "archive_sha256": "d8103bea66fb7beb5e3bc685c98469134f922cb66a116c4d2dd5ac484b72c0a1",
+    "bytes": 88462
+  },
+  "sycl-tla": {
+    "repo": "intel/sycl-tla",
+    "commit": "87f6850680a580654b9ea2c80dbc01aeb36ad231",
+    "archive_sha256": "274a4497a331d59a2751b16de6841e8c61e3ebf8d6d68edce9ab1561963cad93",
+    "bytes": 31156385
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "passed": true,
+  "image": "sha256:bdc51c5f083fdcbacd59a74bfeb8389fa6d62c8478e066ed5c62f9bffcfaa4cf",
+  "held_runtime_equal": true,
+  "rebuilt_native_count": 63,
+  "loaded_kernel_count": 57,
+  "old_distribution_absent": true,
+  "untracked_native_absent": true,
+  "fwd_absent": true,
+  "gdn_and_aten_gptq_xpu_dispatch": true,
+  "rust_extensions_imported": 4,
+  "pip_check_same_as_base": true,
+  "device_exposed": false,
+  "wheels_and_native_payload": {
+    "build_attempt": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-refresh/triton-dense2",
+    "wheels": {
+      "sglang_kernel_xpu-0.2.0-cp310-abi3-linux_x86_64.whl": "48517402c4d38274e333f3b8b3a8d2eb531ebaf9c2981aaa258a76434565c3d3",
+      "torch_memory_saver-0.0.10b2-cp312-cp312-linux_x86_64.whl": "4805561b1cb42daa8c1c1fabf567d291e20836845f911f1c6fb41f580600d117",
+      "sglang-0.5.19.dev0+g2f7393f0d-cp312-cp312-linux_x86_64.whl": "b33568062bbca34a69eaadb4d89b716aedb091b9e4c67e7d29849841e170931b"
+    },
+    "native_hashes": {
+      "sgl_kernel/common_ops.abi3.so": "7560e2a2c8a827ea9fead0bfd951dddc756ec876d0b7f296280da097159e1cde",
+      "sgl_kernel/libsgl-ops-sycl-BiasedTopK.so": "1f05422e8ba151f208f18106a3f44d569374261db10b16f26087e292741f4eba",
+      "sgl_kernel/libsgl-ops-sycl-CompressPlan.so": "cf0dbe98e6cf3c17cfd600e356502d96282aa7b68a9c94e4381d0959a0730125",
+      "sgl_kernel/libsgl-ops-sycl-Device.so": "d45e71e73c268e71c21474b4a2756a6121fcb35f8ac31d06670771c3f8d1bf14",
+      "sgl_kernel/libsgl-ops-sycl-EmbeddingLoraAFwd.so": "d27b6a2438e97db4053ca2a2d383ee6603a533939b4aa246c8757ca1aef5ea80",
+      "sgl_kernel/libsgl-ops-sycl-FlashCompress128.so": "41463c0e80147627281b78940ab48403cd2e6e0afc4e8e4dd7bfbdff703d8351",
+      "sgl_kernel/libsgl-ops-sycl-FlashCompress4.so": "a675063294371045afa37c724150cf2c116edaaa5661ecc84c5e975221f4d423",
+      "sgl_kernel/libsgl-ops-sycl-Fp8MqaLogitsXe20.so": "4d96f302f6d8da379fd9e2dff2dabf587e365a27888ff6fbe9a32ae9af4f0d76",
+      "sgl_kernel/libsgl-ops-sycl-FusedNormRopeStore.so": "9c6bf45932fcc3d0083be60afa121537bddc6f735e03050254b93497ff45bf5d",
+      "sgl_kernel/libsgl-ops-sycl-FusedQIndexerRopeHadamardQuant.so": "8f3469c2776e28e8db4a1d9e6df710a8344cdbc6860bb01c081e0bad86530b06",
+      "sgl_kernel/libsgl-ops-sycl-FusedQKNormRope.so": "472b3ce60d49f93e9aa09a17025b61522ec35a2cb791ad9d5b6c055be875ef35",
+      "sgl_kernel/libsgl-ops-sycl-FusedQKRope.so": "60da82fbebd573d184ffea9c9429e95e59362bc007ce6443c157368350a83b7a",
+      "sgl_kernel/libsgl-ops-sycl-HCHead.so": "953493a30738593a165851a97f76ac9dbe723241cb3351f6e435c93e3e211c4e",
+      "sgl_kernel/libsgl-ops-sycl-HCPost.so": "aa1dc66454b2484052b13e0b2709b4aa3dc460a0ddf9266e169240e25456d0e7",
+      "sgl_kernel/libsgl-ops-sycl-HCPreFuse.so": "25dac34eee19fa079ff2fc8fa554a23277a18c08b7e3653cb99c731b692d15cb",
+      "sgl_kernel/libsgl-ops-sycl-HCPreGemmSqrSum.so": "5eba6d003fc8548edd8af2ba4db3c15aa598eec6e0b13b6a9fced99bd90bd97c",
+      "sgl_kernel/libsgl-ops-sycl-HCSplitSinkhorn.so": "1f03284dd2c410ef3bb042579b4a7d4bfe52d6b3e7e72155b4cea87f74fa5a9f",
+      "sgl_kernel/libsgl-ops-sycl-Hadamard.so": "9861844bdd87bee32603fa92a15cfc3a0df7cae06a93d1101c5f50fd3f235dfb",
+      "sgl_kernel/libsgl-ops-sycl-HashTopK.so": "c7c53dcfbdd856e12947a8fb2ba2d4882e52ecfd49b81807a1f729a5602336eb",
+      "sgl_kernel/libsgl-ops-sycl-HiSparse.so": "0d31c81c2c9a37b23dadded4499cf3ee47c9671e0616ef9e4e6e3dd2672a0d80",
+      "sgl_kernel/libsgl-ops-sycl-InklingAttnPrologue.so": "3bf6dfd5fb246c6b5e32adce48bcf9610401430e9b8d41f8e7e2f21913b54391",
+      "sgl_kernel/libsgl-ops-sycl-InklingSconv.so": "c40300759c3c01d1b3103096eba50f27cb2ee9b551ba3f68707e8758839ba9df",
+      "sgl_kernel/libsgl-ops-sycl-KVCache.so": "396f08a111536de67de0625708cbdc73389d0f5f0ea93a0f691825dc8eadaa54",
+      "sgl_kernel/libsgl-ops-sycl-KVCacheIO.so": "6d82757e645ca64b6dddec696adb421d16632008cc69034598b00e579d8e5f1b",
+      "sgl_kernel/libsgl-ops-sycl-MHCFusedPostPre.so": "3908785e62e391d7359ad284dc45f462959a08cc7f3f486df78c9c334ab6e0ab",
+      "sgl_kernel/libsgl-ops-sycl-MRope.so": "7b4436b61696146e039c30e2f0fc7a5fca6a446ae373fb238ac3246a795dd94d",
+      "sgl_kernel/libsgl-ops-sycl-MinPSamplingFromProbs.so": "b52b6ac7a0e18487f3907b94fba587ea3bec19f35eb40e24ba5a01d7c2001d45",
+      "sgl_kernel/libsgl-ops-sycl-MinimaxDecodeTopK.so": "f286f8ab9690b322e50be6313222a581d4875198322d40268b87974973b26817",
+      "sgl_kernel/libsgl-ops-sycl-QKVLoraBFwd.so": "91278b1ed6071162d22a46820ea044a6b0df76146fd63587eb337517012633a9",
+      "sgl_kernel/libsgl-ops-sycl-RMSNorm.so": "dd791254850c59a53afcf823ae4f1cd4c5faccff56a278a2e949d3dee5a02e82",
+      "sgl_kernel/libsgl-ops-sycl-Rope.so": "65485bd134e5350daa5e69c8237f2486454e848ba697740e1429523ae33a7d78",
+      "sgl_kernel/libsgl-ops-sycl-SGEMMLoraAFwd.so": "ba3ccc96f13f312d8f35428a6d29ae6d60993b3e0743b0a3ec380b801a5395c1",
+      "sgl_kernel/libsgl-ops-sycl-SGEMMLoraBFwd.so": "40ced73f3586e796ae8066c8a025fff51d38d12e3b999457bf10c3ffe1d141e9",
+      "sgl_kernel/libsgl-ops-sycl-SiluAndMulClamp.so": "013f6f1e99b50f6844b5f56ea402bea6e3ae26dbe40dc44c96c40b1ba07639a3",
+      "sgl_kernel/libsgl-ops-sycl-SwigluAlphaLimit.so": "435da861fcbfe6a213e93daa756d12e5470309b49b5702f52c2b73a589ef1937",
+      "sgl_kernel/libsgl-ops-sycl-TopKRenormProbs.so": "cffcaec088ec15e75746e35c6a34e81ad66db4ac4a5a50286a66d265f9c8a76e",
+      "sgl_kernel/libsgl-ops-sycl-TopKSigMoid.so": "451250684356d143ed5f3bda7670297673b99e6ecf302796b3d1b967a60d6d77",
+      "sgl_kernel/libsgl-ops-sycl-TopKSoftMax.so": "2b86efd115b3ba5c5c408273ee5269d4b8f4866c549e9b1c53c2318d3bdd1db8",
+      "sgl_kernel/libsgl-ops-sycl-TopKTopPSamplingFromProbs.so": "82b5d9b1d2680020b4674812cb102de31ad335ed4bdf9b4f4421b6fc7ec75f60",
+      "sgl_kernel/libsgl-ops-sycl-TopKTransform.so": "bcc926c62557396ab0d93ec8669977a5b27d7399cd7474d43d8c5acc1cb95ef3",
+      "sgl_kernel/libsgl-ops-sycl-TopPRenormProbs.so": "7687934b947df8bdbaa1b39a2d4128dcc79aa4376f9d057563a29a93c93f9a80",
+      "sgl_kernel/libsgl-ops-sycl-TripleOps.so": "614e2f683f92be9b9ba0e27ccef721660eab56ffe7f15c0186d4cb6d61c4acb3",
+      "sgl_kernel/libsgl-ops-sycl-awq_dequantize.so": "366c4dd49e4e637c87a439a832e5dfe4e7e603f4db74d33aeda772b67daac2de",
+      "sgl_kernel/libsgl-ops-sycl-causal_conv1d.so": "ff7a0ff04d4a156ff9fdc652f2fc126280ac792a6a37b2865cfe92cf04b2b719",
+      "sgl_kernel/libsgl-ops-sycl-chunk_gated_delta_rule.so": "151b77181854d81d7c12d6159dfeac7818dbf29edc4263bb67234c2551bf90c7",
+      "sgl_kernel/libsgl-ops-sycl-gdn_attention_Xe20.so": "9e40e131d84c3fc72b30ce4f32aa908884c9be4fbffbc054c2c7a6960b9dceee",
+      "sgl_kernel/libsgl-ops-sycl-gdn_attn_workspace.so": "568da0be8458f30a0c5cf43f2d6db27cb5b534c0c8000ab44d1b03f0b3a4d86a",
+      "sgl_kernel/libsgl-ops-sycl-merge_states.so": "fabcd9a484ded8a46118fa68308bcc70e7d59f05dcb4fac9ee94227b5f1aed46",
+      "sgl_kernel/libsgl-ops-sycl-mla_sparse_prefill.so": "bcf250be62f2910fb5d646de3855812be67e3b6359e316e9761dbeb5f7f0ac3d",
+      "sgl_kernel/libsgl-ops-sycl-per_tensor_quant_fp8.so": "d86abe409138419c20f8d204b8359eca333152df89a24f40c29fa0c849cad3a5",
+      "sgl_kernel/libsgl-ops-sycl-per_token_group_quant_8bit.so": "1219dc8559a26f153e52e2bb62993c8b6916274b3cb4822f547a7c530ba73f52",
+      "sgl_kernel/libsgl-ops-sycl-per_token_group_quant_8bit_v2.so": "ad0c907ea72773d3b609764175ce2231a6f1bb2b46140b7ec4812b6d7609e4e9",
+      "sgl_kernel/libsgl-ops-sycl-per_token_group_quant_fp4.so": "8ec5911d80cc4bb1d7a512f6a62168eaa1463bbc57a49f38524711afb104abe1",
+      "sgl_kernel/libsgl-ops-sycl-per_token_quant_fp8.so": "494336018665e33e70ac5d5b100cf153cadeee1e5c270c2e3e35861f619d0371",
+      "sgl_kernel/libsgl-ops-sycl-qkv_lora_b_fwd_kernel_bf16_tall.so": "bba3dd25ca8d6e1f6ae556c145fa17bf07d5073d3d44e6e7e19ba7018642c410",
+      "sgl_kernel/libsgl-ops-sycl-qkv_lora_b_fwd_kernel_half_tall.so": "45166d57104d326daa9e4e06c9de90731c86eb3b0c41b6ac5e607032e9940781",
+      "sgl_kernel/libsgl-ops-sycl-sgemm_lora_a_fwd_kernel.so": "9703359894a16ce3221b9d9bc76110a4c291063ef07ee2fbededca5ce0519c4c",
+      "sgl_kernel/libsgl-ops-sycl-sgemm_lora_b_fwd_kernel.so": "fa63a7e48bafc696f0d1d4dee56fd99edbf6e283d20be9eae34e7904360ce1e3",
+      "torch_memory_saver_hook_mode_torch.abi3.so": "5715ec8747f53bf757f4b4883d574550fecc3150d1304901b1ac5a2f430ac395",
+      "sglang/srt/mem_cache/rust_tree_core/mem_cache.cpython-312-x86_64-linux-gnu.so": "4156289c53aa2b621418968d455f25341d8fd08780d49ae0dae138bb8578100d",
+      "sglang/srt/rust_extensions/_grpc.cpython-312-x86_64-linux-gnu.so": "dcde065acdff4c307d873321ace075a0200deabbafca3dd42aeaf1775fd461ec",
+      "sglang/srt/rust_extensions/_multimodal.cpython-312-x86_64-linux-gnu.so": "3dba48aa2fcb6fb0288c6ddd91e81924b2bbf5cec48ef2c5c6c9b8e41099a365",
+      "sglang/srt/rust_extensions/_server.cpython-312-x86_64-linux-gnu.so": "a1277922fc2e9036b7611db18e50847631d0b1d612164fd99861ab64e0460e71"
+    },
+    "profile": "triton-dense"
+  },
+  "held_runtime": {
+    "held_packages": {
+      "torch": "2.13.0+xpu",
+      "triton-xpu": "3.7.2",
+      "intel-sycl-rt": "2026.0.0",
+      "intel-ccl-lib-rt": null
+    },
+    "held_files": {
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libtorch_xpu.so": "cf9c6037c6a90ec27cd010680770c4181c4943a55ceca8e9645188e6a22694e4",
+      "/opt/venv/lib/python3.12/site-packages/torch/lib/libc10_xpu.so": "2ded5a1955074652305f649e065af0daeb751e09cd72d77529dbde6d1b0d6a82",
+      "/opt/venv/lib/libccl.so.1.0": "733980ab6a6eb15d2d3da0649b92052c64a9597ced48fe9188434face5298b35",
+      "/usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1": "26fa68779adb03b200a8c3001cf81e59fc9a3d63e0f38627ec0005ffce574e7a",
+      "/usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1.15.38308": "26fa68779adb03b200a8c3001cf81e59fc9a3d63e0f38627ec0005ffce574e7a"
+    },
+    "driver_packages": "libze-intel-gpu1\t26.18.38308.1-0\nlibze1:amd64\t1.32.0-1~24.04~ppa1\n",
+    "kernel": "7.1.0-070100-generic"
+  },
+  "python_source_checks": {
+    "sglang_kernel_xpu-0.2.0-cp310-abi3-linux_x86_64.whl": {
+      "matched_source_files": 43,
+      "generated_files": [],
+      "mismatch": []
+    },
+    "torch_memory_saver-0.0.10b2-cp312-cp312-linux_x86_64.whl": {
+      "matched_source_files": 9,
+      "generated_files": [],
+      "mismatch": []
+    },
+    "sglang-0.5.19.dev0+g2f7393f0d-cp312-cp312-linux_x86_64.whl": {
+      "matched_source_files": 3768,
+      "generated_files": [
+        "sglang/_version.py"
+      ],
+      "mismatch": []
+    }
+  },
+  "raw_root": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-refresh",
+  "preflight_template_sha256": "8722802c8205a312061c2d574db2ab9136816d9164e6998df110630e00f3e7ec",
+  "gpu_qualification": "not run"
+}

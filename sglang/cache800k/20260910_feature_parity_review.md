@@ -303,3 +303,25 @@ from a flag. This is a diagnostic harness rather than actual Pi/OMP extension
 execution. It does not qualify TP2, MTP, graphs, FP8 KV, long-run stability or
 matched throughput. The current-main native build remains a separate ongoing
 CPU experiment; these results belong to the Sept3 source-port image only.
+
+## Current-main reduced native candidate completed on CPU
+
+CONFIG -> Pin SGLang `2f7393f0d245bfaa8ebe0b9d0533432e6b3bd9ed`, matching
+kernel/memory-saver source and explicit BMG. Hold official-image torch/UMD/CCL.
+Select dense text Triton attention: FMHA/MoE/MLA off, GDN on, SYCL JIT off.
+
+COMMAND -> CPU-only native build, thin wheel packaging, then actual installed
+imports, dispatch registration, source/payload and held-runtime checks.
+
+RESULT -> Immutable runnable candidate
+`sha256:bdc51c5f083fdcbacd59a74bfeb8389fa6d62c8478e066ed5c62f9bffcfaa4cf`.
+All 63 rebuilt native files match installed payload; old kernel distribution
+and stray libraries are absent. Four Rust extensions import. Native GDN and
+held aten GPTQ XPU dispatch are present; FMHA is deliberately absent. Held
+runtime hashes are unchanged. Recipe, failed/deferred attempt boundaries,
+source pins and full manifest are in `sglang/refresh/20260910_main/`.
+
+VERDICT -> Current-main CPU candidate passed; GPU preflight is prepared and
+unrun. It requires explicit Triton attention and cannot execute native Intel
+FMHA or vision FMHA. Earlier TP1/prefix passes belong only to the older
+source-port image and do not transfer automatically to this native refresh.
