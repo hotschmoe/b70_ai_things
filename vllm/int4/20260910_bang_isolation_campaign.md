@@ -117,3 +117,34 @@ already-reordered counts[4,1] become[1,4]; proposed direct copy keeps[4,1].
 VERDICT -> Candidate prepared, no GPU repair claim. Counter test is not an
 actual asynchronous D2H race reproduction. The phase patch is a deliberate
 port of Steve's134322d9 finding; no upstream checkout was moved.
+
+## TP1/100K replay: no bangs is not coherence
+
+CONFIG -> Matched100K TP1 control described above, same nine reconstructed
+requests at temperature0.7, MTP3/FP8/prefix/graphs on, P2P0.
+COMMAND -> Leased replay_pi_history.py run; normal STOP; offline
+ audit_replay_quality.py against preserved responses and raw SSE.
+RESULT -> Nine completed HTTP requests, zero32-bang trips; lifecycle exit0,
+card0 post-health passed. Three visibly degenerate responses: agent2 warm
+has repeated tool XML; agent1 target0 repeats literal escaped-newline/dash
+404 times and has invalid JSON arguments; target1 repeats escaped-newline/
+semicolon225 times consecutively, consumes8192 output tokens, and has a
+95.166-second SSE gap before termination. No generated tool was executed.
+VERDICT -> Coherence failure on TP1. The raw OUTCOME/WORKLOADS_PASSED markers
+only reflect the original bang/transport gate and remain preserved; they
+are explicitly superseded for quality assessment by replay-quality-review-v2.
+The review is heuristic, not proof that unflagged responses are correct.
+This does not prove that the original bang mode itself is TP-independent.
+Matched TP2 is running; MTP0 is prepared as the next single-feature ablation.
+
+CONFIG -> Offline audit of input histories before attributing output failure.
+COMMAND -> Scan all assistant inputs for repetition; manually inspect matches.
+RESULT -> Agent2 already contains1509 zeroes at message18 and long corrupted
+\nIn/\n2 tool arguments at55, before its first recorded bang. Agent1's
+matched input repetitions are ordinary single-line comment separators;
+agent3 has no matches. Prepare a separate agent2 history truncated BEFORE
+message18 under early-clean-history-payloads, with original source hash.
+VERDICT -> Agent2's new XML failure is contaminated-context evidence, not a
+clean-input runtime reproduction. Agent1's two new repeated-line failures
+remain useful. Original nine-request TP pair remains unchanged. A separate
+early-history case will check degeneration without known contaminated input.
