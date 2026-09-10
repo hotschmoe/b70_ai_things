@@ -73,8 +73,12 @@ excluded; this is not a native vision-FMHA recipe. No quarantined binary is
 copied into the stack. The CPU installed/API gate passes: all 63 installed
 native artifacts match the rebuilt wheels and the held PyTorch/UMD/oneCCL
 identities are unchanged. The current-source image passes strict per-card and
-compiled pair health; model serving is being tested. The earlier serving results belong to the published
-baseline plus its small source port.
+compiled pair health. Its first serve failed when automatic image warmup
+called the deliberately excluded native vision FMHA. A text-only retry using
+the supported skip-server-warmup flag passes all 26 real text checks,
+including four-request mixed batches, with normal teardown and strict card1
+post-health. This is TP1/FP16 KV/eager/MTP0/prefix-off only. Image requests are
+not supported by this reduced recipe's default vision backend.
 
 Two material parity gaps need qualification: native Intel attention prefill
 omits FP8 descales, and Qwen lacks the required calibrated-scale loader. A
@@ -118,10 +122,16 @@ untouched slots. RESULT -> Both cards pass; attention relative L2 is below
 0.000227 against the dequantized CPU reference. Strict per-card and compiled
 pair pre/post-health pass, with owned containers removed. VERDICT -> This
 bounded numeric test validates scale consumption, not full-model FP8 quality.
-The corresponding SGLang oracle fails its first exact-byte comparison on card
-0, before attention-read checks. Strict per-card and compiled pair post-health
-pass. CPU/XPU intermediate division and FP8 conversion are being isolated;
-this is an unresolved numeric test failure, not a passing FP8 qualification.
+The corresponding SGLang oracle initially fails its exact-byte comparison on
+card0. A diagnostic isolates all differences to XPU's scalar divisor being
+rounded to FP16 before division: 156 K bytes differ from the original CPU
+reference; identical-input casts and scatter agree exactly. Independent
+power-of-two stores pass. A revised independent reference preserves this
+distinction, matches all bytes, then reaches a failing attention comparison
+(48/6144 elements outside the unchanged tolerance). Grouped decode source
+also quantizes Q and softmax P to FP8, beyond cache quantization. That compute
+policy is being isolated; no FP8 attention pass is claimed. Both failed
+lifecycles preserve logs and pass the applicable strict post-health checks.
 
 ## Evidence and reproducible sources
 
