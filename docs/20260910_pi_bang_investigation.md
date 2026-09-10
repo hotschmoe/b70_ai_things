@@ -121,6 +121,23 @@ arrays also match exactly. All four arms have positive1600-token reuse in
 every session, lifecycle exit0 and strict selected-card post-health passes.
 Raw: tp1-fp8-reuse-controls/{initial-pair,crossover}-outcome-review.json.
 
+The first repaired TP2/100K replay arm has zero bangs in all9 reconstructed
+requests, but fails its strict quality gate: both agent2 target continuations
+produce malformed second tool arguments, including a gibberish suffix. These
+inputs already contain corrupted history, but that does not prove the history
+alone caused this output. The run stops before tiny/clean/concurrent stages;
+it is not a passed qualification. A separate clean-workload plan retains the
+failed diagnostics and tests tiny cases, earlier clean history and six
+concurrent rounds. Original Pi semantic correctness remains unresolved.
+
+Its startup trace records matching per-rank profile boundaries:138 all-reduces
+on FP16[32768,5120] and3 all-gathers on FP16[32768,2560], with paired returns.
+These are actual Python host boundaries, not independent device completion
+or graph-replay operation counts. Strict per-card and compiled-pair post-health
+pass. The scoped30second internal shutdown grace allows workers and engine
+to exit without the earlier forced kill; this single TP2 lifecycle does not
+establish the same result for TP1 or all shutdown paths.
+
 The selected affected bundle contains 41 bangs among 317 non-429 messages; this
 is not an unbiased production rate. All 36 recorded bang-recovery messages
 immediately hit the harness's per-agent429 admission guard, 0-3 ms after the
