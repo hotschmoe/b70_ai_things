@@ -1,0 +1,52 @@
+{
+  "config": {
+    "image": "sha256:09fc6b75041566c9248d76b985f2a30a4d32e5a847389f637d2a6043436f3bce",
+    "card": 0,
+    "tp": 1,
+    "layout": "FP8 hybrid-page stride, FP16 conv and FP32 SSM",
+    "native_sha256": "271db0d4882124e21ac6a4d080bfeab303fbb08b9ec10e11f21d10fb0723998f",
+    "worker_sha256": "318d958ed133dbe82081ea188721d14f7be1a9c1d40b1b05f393df5a8309c372",
+    "model_sha256": "25062fb6166498d77ec0e4efc0df5952e6384d16b3c0fdd8bcc2113448bb4fb5",
+    "source_sha256": "c53c3bb7fb2c3ed93585c2a7b316cf4c109d304706abef03c57af75a5bc14ce1"
+  },
+  "command": "Parent launched selected-card composed-boundary-plan-card0/plan.json through existing gpu-run lifecycle. No GPU execution by source reviewer.",
+  "result": {
+    "cases": 10,
+    "all_passed": true,
+    "synced_unsynced_all_exact": true,
+    "nomove_native_all_exact": true,
+    "metadata_receipt": {
+      "copy_functions": [
+        "get_xpu_gdn_conv_copy_spec",
+        "get_temporal_copy_spec"
+      ],
+      "conv_widths": [
+        0,
+        0
+      ],
+      "inner_sizes": [
+        30720,
+        786432
+      ],
+      "block_strides": [
+        3276800,
+        3276800
+      ]
+    },
+    "max_absolute_math_error": 4.535075277090073e-06,
+    "pre_health_rc": 0,
+    "post_health_rc": 0,
+    "oracle_rc": 0,
+    "owned_cleanup_verified": true
+  },
+  "verdict": "PASS bounded composed native/adapter POST/PRE/native state contract. Does not qualify scheduler concurrency, graph replay, long context, cancellation or full-model serving. Model comparison and same-card crossover are separately recorded.",
+  "raw_root": "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/composed-boundary-adapter-card0",
+  "evidence_sha256": {
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/composed-boundary-adapter-card0/oracle-result.json": "213bf1b168f59be6a2d05c8a94e2d36afbead67097dd979951d70774734ab3e3",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/composed-boundary-adapter-card0/OUTCOME.json": "2024925f5bff733eb3f144ecd1b442c64eaab424a20960b416c877c948bce95b",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/composed-boundary-adapter-card0/plan.json": "5cd1373c300b6778c8009fc51aa96bec3e8876637a0309ac19b57c74487c0750",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/composed-boundary-adapter-card0/pre-health.cleanup.json": "a45a240638340d1101698893c3cce76df99b7809058b5c79d60967c4886fbd9b",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/composed-boundary-adapter-card0/oracle.cleanup.json": "70d014b9580aa5b0d8adbd173f32fcbf0452c9a781f001deba5f1eea8711e1e9",
+    "/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/composed-boundary-adapter-card0/post-health.cleanup.json": "a45a240638340d1101698893c3cce76df99b7809058b5c79d60967c4886fbd9b"
+  }
+}

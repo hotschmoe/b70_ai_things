@@ -272,3 +272,58 @@ is explicit; the earlier prefixON crossover already reproduced the defect on
 card1. The rebuilt upstream native correction remains a separate candidate.
 Raw plans/results are under bang_recurrence_testing_20260910, including
 conv-adapter-first-comparison.json and tp1-card*-mtp3-conv-adapter*-ctx100k/.
+
+
+## Adapter numerical composition and extended controls
+
+CONFIG -> Same09fc adapterON image, unchanged FP8 scales and model settings.
+Card0 runs the actual native -> POSTcopy -> PREcopy -> native composition;
+card1 retains the running model for long output, cancellation and concurrency.
+
+COMMAND -> Execute the frozen composed-boundary-plan-card0 through its selected
+lease lifecycle. Run four ample-budget array cases, five cancellation/recovery
+steps, sixteen four-client requests, and three existing Pi reconstructions.
+The first concurrency launcher fails argument parsing before requests because
+--alias is unsupported; preserve rc2 and use a separate identity wrapper for
+the unchanged client in the replacement job03b.
+
+RESULT -> All ten composed cases pass. Synchronized and unsynchronized results
+are exact, as are the no-move native controls. Explicit metadata selects the
+new copy function, conv widths[0,0], inner sizes[30720,786432], and hybrid page
+strides3276800. Second-output max absolute reference error is4.76837e-7;
+maximum checked state error is4.53508e-6. Oracle, strict pre/post health and
+owned cleanup all pass. This validates composition, not full-model graph
+execution or concurrent serving.
+
+The model passes all four ample-budget requests and all five cancellation,
+idle-drain, restart and follow-up steps. The three reconstructed Pi requests
+pass the existing checks; these are not exact captured wire replays or full
+semantic qualification.
+
+Concurrency does not qualify: only8/16 pass the combined content/cache gate.
+Two session0 thinkingOFF responses stop early despite max_tokens4096, with
+2058 and2055 output tokens, at complete433 plus comma and partial433 respectively.
+Raw SSE joins match the parser and finish_reason is stop. Reuse has cached0
+on7/8 requests, a separate gate failure that masks one of the two content
+failures. Cache pressure reached75-80%; misses must not automatically be
+called kernel corruption. Independent content review and a same-payload
+serial control are pending. No bangs were observed in these two truncations.
+
+VERDICT -> The adapter fixes the reproduced boundary cases and passes composed
+numerics, but the extended model qualification remains incomplete/failed.
+Do not promote it. Continue a same-card ON crossover and the source-rebuilt
+native correction, with serial/concurrent comparisons for the new truncation.
+
+
+CONFIG -> Exact failing concurrent session0 payload, cap4096, now alone on
+unchanged adapterON card1. Fresh serial cache namespace; content and cache
+checks are independent.
+COMMAND -> Run frozen card1-serial-session0.job.json after all prior jobs.
+RESULT -> Both serial requests also stop early: cold2055 output tokens and
+reused2058, ending around433 as before. Cold cached0 and reused cached1600;
+both cache gates pass, both content gates fail. Final concurrent audit is
+14/16 content passes,9/16 cache passes,8/16 combined passes. Corrected card1
+then stops normally with lifecycle0; strict post-health passes.
+VERDICT -> Concurrency and cache misses are not necessary for this remaining
+early-stop failure. Compare the same payload under MTP0 and rebuilt native
+before attributing it to another kernel bug or ordinary model behavior.

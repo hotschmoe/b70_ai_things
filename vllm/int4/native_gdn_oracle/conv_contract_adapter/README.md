@@ -5,7 +5,8 @@ Only native271db0d4 with XPU and SD conv layout may opt in using
 B70_XPU_GDN_PREFIX_CONV_COPY=1. Default0 retains the original copy functions.
 The actual native publication/read probe confirmed this three-row per-prefix
 contract. The two-file adapter is built in candidate image09fc6b750415; model
-and composed-kernel GPU qualification remain pending.
+qualification remains pending; composed native/copy GPU contracts passed10/10
+with strict health and cleanup, recorded in ../composed_boundary/20260910_result.json.
 
 COMMAND -> prepare.py takes exact --model-source, --worker-source and fresh
 --out, emits two candidate Python sources and a unified patch. test_candidate.py
@@ -26,8 +27,8 @@ VERDICT -> Built diagnostic fallback, not a production-qualified fix. Actual nat
 publication/read observations reject the standalone rolling6
 reference while output/SSM math passes. Retained old source reads and writes
 three-row conv history per speculative column; the worker copies row offsets
-inside column0. This adapter reconciles the confirmed copy contracts; its composed and model
-behavior still require GPU qualification. It does not change native arithmetic, accepted-count resets,
+inside column0. This adapter reconciles the confirmed copy contracts; its bounded composed behavior passed GPU qualification while model
+qualification and same-card controls are separately pending. It does not change native arithmetic, accepted-count resets,
 block allocation, scheduler policy, graph execution or other Mamba/CUDA copy
 functions. Native upstream5802a414 is being evaluated independently as the
 preferred producer-side repair; do not enable this legacy adapter on a rebuilt

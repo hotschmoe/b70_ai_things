@@ -26,11 +26,19 @@ provides an exact logical-state comparator. Mocked lifecycle tests preserve all
 ten cases after a numerical failure and run selected post-health after crashes;
 failed post-health cannot mask a numerical failure or yield success.
 
-VERDICT -> CPU-reviewed and frozen, GPU qualification pending. Independent
+RESULT -> Parent-owned card0 GPU execution passed10/10cases. Synced and
+unsynced raw-state/output fingerprints matched, and all logical no-move native
+comparisons were exact. Maximum independent math error was4.5351e-6. Actual
+ON metadata receipt was conv_widths[0,0], inner_sizes[30720,786432] and page
+strides[3276800,3276800]. Strictpre/posthealth and oracle exitcodes were0;
+all three owned-container cleanup records verified absence. Full pinned
+evidence and hashes are recorded in20260910_result.json.
+
+VERDICT -> PASS bounded composed native/copy contract. Independent
 source review found no blocker for this bounded contract. The direct native
-operator and copy helper results must agree with independent CPU arithmetic,
+operator and copy helper results agreed with independent CPU arithmetic,
 valid three-row conv prefixes, unused storage, accepted counts and logical
-no-move state. Explicit synced/unsynced raw-state fingerprints must match.
+no-move state. Explicit synced/unsynced raw-state fingerprints matched.
 This does not qualify scheduler queues, graph replay, multi-request prefix
 reuse or end-to-end model behavior. The initial adapter image has no positive
 runtime model-server metadata log; its direct composition receipt verifies
