@@ -148,3 +148,48 @@ VERDICT -> Agent2's new XML failure is contaminated-context evidence, not a
 clean-input runtime reproduction. Agent1's two new repeated-line failures
 remain useful. Original nine-request TP pair remains unchanged. A separate
 early-history case will check degeneration without known contaminated input.
+
+## TP2/100K matched replay
+
+CONFIG -> Same100K feature/sampling/payload/scale/image control as TP1,
+change topology to TP2, retaining P2P0 and both leases.
+COMMAND -> Nine reconstructed requests, same order; normal STOP and both
+per-card plus compiled collective post-health; offline quality review.
+RESULT -> Zero bangs/HTTP errors;9 completed. Agent1 target repeats each
+use178 tokens and produce structurally valid short tool calls, without
+TP1's new loops. Agent2 warm reasoning ends in malformed prose after1093
+tokens, but this input already contains known corruption. Heuristic review
+flags0 requests and misses that semantic failure, confirming its limitation.
+Both per-card and compiled P2P0 post-health pass; lifecycle exit0.
+VERDICT -> This bounded pair does not support TP2-alone causality. It also
+does not establish stability or prove P2P0 repairs the original endpoint:
+production used P2P1,200K, a different pool capacity and actual Pi payloads.
+No unsafe P2P1 serve attempted. TP2/MTP0 with other features retained is
+running, followed by the isolated GDN candidate if health permits.
+
+## MTP0 local one-token bang reproduction
+
+CONFIG -> R276 TP2/P2P0,100K context, calibrated FP8 KV/prefix/graphs on,
+MTP disabled. Same nine Pi reconstruction requests, then pinned Steve
+134322d9 tiny-prefill24-case source screen, temperature0/seed42/output64.
+COMMAND -> Leased run; retain all completion text/token IDs. The screen
+uses one-token[17],two-token[17,18],arithmetic and operations prompts:
+two serial rounds per prompt plus four c4 mixed rounds. No tools executed.
+RESULT -> Pi replay9 completes without bangs or heuristic flags. Tiny
+screen FAILS: five of six one-token prompts return exactly64 exclamation
+marks and token ID0 throughout; the first one-token response is also
+visibly garbled. Other18 prompts avoid the extreme-repetition gate.
+Early-history job is NOT RUN because the tiny gate fails. Normal teardown
+completes; per-card and compiled P2P0 collective post-health pass; lifecycle0.
+VERDICT -> Local bang reproduction without MTP, matching Steve's short-
+prefill symptom. This does not establish that long Pi histories reached
+the same trigger. The probe's false sequential_repeat_drift field excludes
+failed response pairs and is NOT an exact-output match assertion. A GDN-
+only patch comparison is now required. Independent TP1 stock/card0 and
+phase-patched/card1 tiny screens are launched with eager/MTP0/prefixoff/
+FP16KV/8K/c4/batch512; cross-card findings require same-card crossover.
+
+CPU-only image discovery/extraction overlapped part of this arm at the
+user's request. Docker operations were delayed briefly during simultaneous
+layer extraction; both pulls completed before post-health. No speed claim
+or matched host-load claim is made. No host driver/kernel changes occurred.

@@ -1,0 +1,43 @@
+--- a/vllm/v1/worker/gpu_model_runner.py
++++ b/vllm/v1/worker/gpu_model_runner.py
+@@ -1551,6 +1551,11 @@
+                 if orig != req_state.prev_num_draft_len:
+                     req_state.prev_num_draft_len = orig
+ 
++        # Complete the prior D2H before add_request/condense/reordering
++        # modify accepted counts in the pinned host buffer (vLLM PR 53919).
++        if self.num_accepted_tokens_event is not None:
++            self.num_accepted_tokens_event.synchronize()
++
+         # Add the new or resumed requests to the persistent batch.
+         # The smaller empty indices are filled first.
+         for request in reqs_to_add:
+@@ -2160,24 +2165,10 @@
+         if needs_cpu_accepted_counts:
+             assert self.num_accepted_tokens_event is not None
+             self.num_accepted_tokens_event.synchronize()
+-            # Async mode: condense() reordered indices, use prev_positions mapping
+-            if self.use_async_scheduling and prev_req_id_to_index:
+-                prev_idx = self.prev_positions.np[:num_reqs]
+-                new_mask = prev_idx < 0
+-                self.num_accepted_tokens.np[:num_reqs] = (
+-                    self.input_batch.num_accepted_tokens_cpu[
+-                        np.where(new_mask, 0, prev_idx)
+-                    ]
+-                )
+-                self.num_accepted_tokens.np[:num_reqs][new_mask] = 1
+-                self.input_batch.num_accepted_tokens_cpu[:num_reqs] = (
+-                    self.num_accepted_tokens.np[:num_reqs]
+-                )
+-            else:
+-                # Non-async mode: use values directly
+-                self.num_accepted_tokens.np[:num_reqs] = (
+-                    self.input_batch.num_accepted_tokens_cpu[:num_reqs]
+-                )
++            # Counts already follow current rows after the earlier wait.
++            self.num_accepted_tokens.np[:num_reqs] = (
++                self.input_batch.num_accepted_tokens_cpu[:num_reqs]
++            )
+             self.num_accepted_tokens.np[num_reqs:].fill(1)
+             self.num_accepted_tokens.copy_to_gpu()
+         else:

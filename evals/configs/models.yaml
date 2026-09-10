@@ -340,3 +340,39 @@ models:
     calibration: cache800k-20260909-research
     serve_cmd: ""
     notes: "Unqualified MTP0 ablation at100K, TP2/P2P0; calibrated FP8 KV, prefix and graphs on. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp3-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified one-call-site GDN phase candidate. TP2/P2P0, MTP3, FP8 KV, prefix/graphs on,100K. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp0-fp8-e4m3-calkv-bang-isolation-ctx100k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-gdnphase-tp2-mtp0-fp8-e4m3-calkv-bang-isolation-ctx100k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: cache800k-20260909-research
+    serve_cmd: ""
+    notes: "Unqualified GDN-only delta versus matched TP2/MTP0 control. P2P0, FP8 KV, prefix/graphs on,100K. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-stock-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-stock-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified isolated GDN tiny-prefill screen,8K/c4/batch512,TP1/P2P0,eager,MTP0,prefixoff. Stable primary hotschmoe-dd."
+
+  - label: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-patched-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    served_model_id: qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276-patched-gdn-tp1-mtp0-fp16kv-eager-prefixoff-ctx8k
+    family: qwen3.8-27b
+    weights: AutoRound-INT4-W4A16-g128
+    activations: float16
+    calibration: none-fp16kv
+    serve_cmd: ""
+    notes: "Unqualified isolated GDN tiny-prefill screen,8K/c4/batch512,TP1/P2P0,eager,MTP0,prefixoff. Stable primary hotschmoe-dd."
