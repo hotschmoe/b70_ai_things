@@ -243,3 +243,32 @@ for complete measured evidence. Upstream native commit
 5802a414d47855b01b63121bce3655795ef8dfa8 repairs this representation; an exact-stack
 source rebuild and a narrowly gated Python copy adapter are under test.
 Neither candidate is qualified for serving yet.
+
+
+## First matched convolution adapter model comparison
+
+CONFIG -> Candidate image09fc6b75041566c9248d76b985f2a30a4d32e5a847389f637d2a6043436f3bce
+changes only the two approved Python copy-selection/metadata files from7b.
+All2106 native files and282 packages are unchanged. Same candidate image on
+both cards, TP1/MTP3/FP8/FULL/prefixON/100K; explicit adapter0 on card0 and
+adapter1 on card1. Stable served name hotschmoe-dd remains first, with the
+registered detailed research alias second. Corpus and client are hash-frozen.
+
+COMMAND -> Strict both-card health and compiled pair P2P0, ten iterations at
+4x5120, pass before serving. Run focused array256 cold/reused followed by the
+eight-request boundary matrix on each card. Query live model identity in each
+job. Compare exact generated arrays and actual cache reuse, not HTTP status.
+
+RESULT -> AdapterOFF passes6/10 and corrupts padding0 and256 cold/reused;
+adapterON passes10/10 exactly. Both focused requests pass even on OFF, showing
+why short isolated successes are insufficient. OFF then stops normally with
+lifecycle0 and strict selected-card post-health0. ON remains running for
+longer output, concurrent, cancellation/recovery and reconstructed Pi tests.
+The actual composed native/PRE/POST numerical oracle is running separately.
+
+VERDICT -> Initial causal model evidence supports the contract correction.
+This is not final stability, TP2, 200K, or speed qualification. Card assignment
+is explicit; the earlier prefixON crossover already reproduced the defect on
+card1. The rebuilt upstream native correction remains a separate candidate.
+Raw plans/results are under bang_recurrence_testing_20260910, including
+conv-adapter-first-comparison.json and tp1-card*-mtp3-conv-adapter*-ctx100k/.
