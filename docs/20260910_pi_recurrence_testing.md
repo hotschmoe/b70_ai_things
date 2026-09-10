@@ -575,3 +575,30 @@ VERDICT -> Teardown and post-health close this diagnostic arm successfully.
 The native corruption repair has bounded positive model/agent evidence, while
 separate EOS and200K qualification questions remain. Public endpoint stays
 inactive; card1 is allocated to the reviewed independent SGLang control.
+
+
+CONFIG -> Independent same-AutoRound CPU teacher-forced reference, exact captured
+4045 prompt IDs plus2057 visible output IDs, terminalEOS248046 excluded. Frozen
+full-plan-v1 image d55637, explicit Torch fallbacks, FP16-rounded weights except
+FP32 A_log, FP32 activations/accumulation,8CPU/12GiB, no devices/network.
+COMMAND -> Parent-authorized layer-streamed64-layer run with final RMSNorm and
+last8 causal-position logits, full17-file pre/post hashes/stats, actual image
+inspect,3600-second wrapper deadline and owned-container cleanup.
+RESULT -> Computation exit0, all64 layers finite, full provenance checks pass,
+22.44minutes, peak4.88GiB. At zero-based input position6101 (prefix length6102,
+after433comma), EOS248046 ranks1 and exceeds expected space220 by0.27469 logits.
+At position6098 (prefix6099, after432partial4), expected digit3 ranks1 and exceeds
+EOS by0.19073 logits. Exact input IDs match the GPU token capture. Original
+wrapper exit1/container_removed=false is preserved: Docker absence output was
+lowercase, while the frozen check expected uppercase. Parent exact-ID absence
+verification confirms removal; live future wrapper now checks case-insensitively.
+Two host-only cleanup tests pass, including daemon-error negative cases.
+VERDICT -> A separate CPU implementation with the same quantized weights also
+prefers EOS at the observed433comma boundary. This supports a narrow model/quant
+ranking explanation for this residual early stop, independent of the vLLM/XPU
+model kernels. It does not distinguish original-model from quantization effects,
+prove endpointFP16 equivalence, or qualify the whole serving configuration.
+No further full CPU inference was run. Raw root:
+/mnt/vm_8tb/b70/results/bang_recurrence_testing_20260910/reference-feasibility/
+Result: full-reference-v1/result/result.json; audit: full-reference-v1-review.json;
+cleanup correction: full-plan-v1/execution/parent-cleanup-verification.json.

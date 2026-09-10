@@ -12,6 +12,11 @@ def command(argv,**kwargs):
     return subprocess.run(argv,text=True,capture_output=True,check=True,timeout=60,**kwargs).stdout
 
 
+def is_missing_container(returncode, stderr):
+    message = stderr.lower()
+    return returncode != 0 and any(text in message for text in ('no such object:', 'no such container:'))
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--directory',required=True);p.add_argument('--execute',action='store_true');a=p.parse_args()
     root=Path(a.directory).resolve();launch=json.loads((root/'launch.json').read_text())
@@ -51,7 +56,7 @@ def main():
     finally:
         subprocess.run(['docker','rm','-f',cid],capture_output=True,text=True,timeout=60)
         check=subprocess.run(['docker','inspect',cid],capture_output=True,text=True,timeout=60)
-        cleanup=check.returncode!=0 and 'No such' in check.stderr
+        cleanup=is_missing_container(check.returncode, check.stderr)
         (evidence/'lifecycle.json').write_text(json.dumps({'exit_code':rc,'timed_out':timed_out,'container_removed':cleanup,'container_id':cid,'finished':time.time()},indent=2)+'\n')
     result=output/'result/result.json'
     if rc!=0 or timed_out or not cleanup or not result.exists() or json.loads(result.read_text()).get('passed') is not True:

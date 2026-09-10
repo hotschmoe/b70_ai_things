@@ -105,3 +105,31 @@ RESULT -> Actual image/isolation inspect passes; initial sequential layer
 progress is recorded under full-reference-v1/result/layers.jsonl.
 VERDICT -> Full comparison is now running, not completed. Preserve the earlier
 preparation evidence above; no EOS or whole-model verdict follows yet.
+
+## Completed independent reference
+
+CONFIG -> COMMAND -> RESULT -> VERDICT:
+
+Parent authorized exact full-plan-v1 -> owned CPU wrapper ran the64-layer
+teacher-forced reference -> all layers finite, full17-file pre/post hashes and
+stats match, computation exit0,22.44minutes, peak4.88GiB -> independent numerical
+result available; this is not endpoint or model-quality qualification.
+
+At captured input length6102, immediately after `433,`, EOS248046 ranks first:
+logit27.20612 versus expected space220 at26.93143, a0.27469-logit margin.
+At length6099, after `432, 4`, expected digit3 ranks first, with EOS second and
+only0.19073 logits behind. Thus this same-quant FP32 CPU implementation also
+prefers stopping at the433-comma boundary, without executing vLLM or XPU model
+kernels. Earlier stop-position differences are consistent with a narrow ranking
+margin, but their precise numerical cause is not established. This result does
+not distinguish original-model behavior from quantization effects.
+
+Raw result: reference-feasibility/full-reference-v1/result/result.json.
+Compact audit: reference-feasibility/full-reference-v1-review.json.
+The original lifecycle receipt reported container_removed=false because the
+frozen wrapper searched for uppercase `No such` while Docker returned lowercase
+`no such object`. Independent exact-ID inspect verifies absence; correction is
+recorded separately in full-reference-v1-independent-cleanup.json. Original
+frozen sources and receipts remain unchanged. The tracked future wrapper now
+uses a case-insensitive check; missing-container and daemon-error negative
+fixtures pass. No extra model inference was performed for this correction.
