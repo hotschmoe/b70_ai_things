@@ -1,0 +1,48 @@
+--- a/python/sglang/srt/model_executor/model_runner.py
++++ b/python/sglang/srt/model_executor/model_runner.py
+@@ -1203,6 +1203,29 @@
+         if not self.is_draft_worker:
+             get_offloader().post_init()
+ 
++        b70_scales_loaded = False
++        if get_model().quantization_param_path is not None:
++            from sglang.srt.model_executor.b70_calibrated_kv.scale_loader import try_load
++
++            resolved_kv_backend = resolve_attention_backend_strs(model_runner=self)
++            b70_scales_loaded = try_load(
++                model=self.model,
++                scale_path=get_model().quantization_param_path,
++                model_root=self.model_config.model_path,
++                kv_dtype=get_model().kv_cache_dtype,
++                is_draft_worker=self.is_draft_worker,
++                tp_rank=get_parallel().attn_tp_rank,
++                tp_size=get_parallel().attn_tp_size,
++                pp_size=self.ps.pp_size,
++                dcp_size=get_parallel().attn_dcp_size,
++                dp_attention=get_parallel().enable_dp_attention,
++                prefill_backend=resolved_kv_backend.prefill,
++                decode_backend=resolved_kv_backend.decode,
++                device=self.device,
++                gpu_id=self.gpu_id,
++                model_dtype=self.model_config.dtype,
++            )
++
+         self.maybe_precompile_model_kernels_after_loading()
+ 
+         # Register model for layerwise NVTX profiling if enabled
+@@ -1214,10 +1237,11 @@
+         # record, so the FP8 gate and the pool cannot disagree after an
+         # override. (The runner's own stamp is not set yet -- load_model runs
+         # before configure_kv_cache_dtype.)
+-        load_kv_cache_scales(
+-            model=self.model,
+-            kv_cache_dtype=get_model().kv_cache_dtype,
+-        )
++        if not b70_scales_loaded:
++            load_kv_cache_scales(
++                model=self.model,
++                kv_cache_dtype=get_model().kv_cache_dtype,
++            )
+ 
+         self.sliding_window_size = resolve_sliding_window_size(
+             self.model, self.model_config

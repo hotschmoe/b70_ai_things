@@ -53,7 +53,7 @@ def make_plan(artifact_bytes, config_bytes, *, role, tp_rank, tp_size,
             amax=[]
             for rank in ('0','1'):
                 value=observations[rank][name][label+'_amax']
-                if not isinstance(value,(int,float)) or not math.isfinite(value) or value<0:
+                if not isinstance(value,(int,float)) or isinstance(value,bool) or not math.isfinite(value) or value<0:
                     raise ValueError('invalid observation')
                 amax.append(value)
             expected=max(amax)*headroom/448.0
@@ -66,7 +66,14 @@ def make_plan(artifact_bytes, config_bytes, *, role, tp_rank, tp_size,
     for path,index in paths.items():
         name=f'language_model.model.layers.{index}.self_attn.attn' if role=='target' else DRAFT
         rec=artifact['layers'][name]
-        def f32(value):return struct.unpack('f',struct.pack('f',value))[0]
+        def f32(value):
+            try:
+                result=struct.unpack('f',struct.pack('f',value))[0]
+            except OverflowError as exc:
+                raise ValueError('scale overflows float32') from exc
+            if not math.isfinite(result) or result<=0:
+                raise ValueError('scale not positive finite after float32 conversion')
+            return result
         rows.append(dict(module_path=path,layer_id=index,source_layer=name,
                          k_scale=f32(rec['k_scale']),v_scale=f32(rec['v_scale']),
                          source_q_scale=rec['q_scale'],query_scale_applied=False))

@@ -41,6 +41,17 @@ class ScalePlanTests(unittest.TestCase):
             a=copy.deepcopy(self.artifact);a['layers'][next(iter(NAMES))]['k_scale']=value
             with self.assertRaises(ValueError):self.plan(a)
 
+    def test_float32_underflow_and_boolean_observation_rejected(self):
+        a=copy.deepcopy(self.artifact)
+        for name in NAMES:
+            for rank in ['0','1']:
+                a['observations'][rank][name]['k_amax']=1e-80
+            a['layers'][name]['k_scale']=1e-80*1.1/448
+        with self.assertRaises(ValueError):self.plan(a)
+        a=copy.deepcopy(self.artifact)
+        a['observations']['0'][next(iter(NAMES))]['k_amax']=True
+        with self.assertRaises(ValueError):self.plan(a)
+
     def test_missing_rank_rejected(self):
         a=copy.deepcopy(self.artifact);del a['observations']['1']
         with self.assertRaises(ValueError):self.plan(a)

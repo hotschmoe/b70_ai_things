@@ -116,3 +116,70 @@ performed by this mapper task.
 
 Raw CPU plans and tests:
 /mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-calibrated-kv/
+
+## Implemented source-only loader candidate
+
+CONFIG -> Pinned SGLang2f7393f0d245bfaa8ebe0b9d0533432e6b3bd9ed, separate source
+candidate. The completed upstream image and active serves are unchanged.
+COMMAND -> Add scale_loader.py plus scale_plan.py as package
+sglang.srt.model_executor.b70_calibrated_kv with an empty __init__.py; apply
+sglang-main-scale-loader.patch to the exact model_runner.py source hash recorded
+in raw loader-source-manifest.json. Rebuild an independently identified image
+only after the parent baseline build finishes.
+RESULT -> The explicit v2 schema path executes after weights load and before
+maybe_precompile_model_kernels_after_loading. It resolves target/draft attention
+backends separately, requires BOTH prefill and decode Triton, and rejects
+non-XPU, non-FP16, DP attention, unmapped TP/PP/DCP, wrong model role/class,
+existing scale fields and query scaling. Runtime accepts ONLY the reviewed
+artifact digest d53fb6565c485658b345d0b48aaf3ea4f5e0a48748e09a24bc6a29234c026a82.
+All manifest model files are SHA256 checked; the weight index and every referenced
+shard must be covered, the on-disk safetensors set must exactly match, and
+alternate indexes/weight formats are rejected. Fifteen CPU tests pass, including
+float32 underflow, partial provenance, allocation failure without model mutation,
+persistent buffer registration and matching float mirrors. Exact source hash,
+patch application and loader-before-precompile placement checks pass.
+VERDICT -> Loader implementation is ready as a reviewed source candidate, not
+GPU-qualified. All device tensor allocations are staged before any layer is
+modified; scales are persistent FP32 buffers and float32-identical Python
+mirrors. The generic existing loader remains the path for absent/different
+artifact schemas. No default-unit-scale substitution occurs for this schema.
+
+The full checkpoint hash runs once per worker/role at startup and can add disk
+and CPU cost. Do not suppress it silently to reduce startup time; a future
+preverified immutable-model ledger would require its own review. No graph or
+model benchmark includes this CPU-only validation work.
+
+## Blocking historical calibration provenance finding
+
+CONFIG -> Full real-model hash verification by the strict loader, followed by
+an independent agent's two ordinary sha256sum passes and pinned publisher LFS
+comparison. No weights were changed.
+COMMAND -> Hash all17 model files against the frozen artifact provenance;
+compare all8 safetensors against the HuggingFace bce40cac tree metadata.
+RESULT -> Sixteen files match, including config/index. Only main shard2 differs:
+old frozen/preservation SHA4946a0483f7e2b492ad2d3aa44a4e6712779ddaaa971339e6475b7a6a0d9cb2b,
+current SHAe4ac4e0b6f7101cbfb1f019c46b4cfd4f4ca4d90d92760fb8f6e515f33418b37.
+All8 current safetensors match the pinned publisher LFS hashes. Shard2 is the
+same inode in original bce40cac and relabel-r212 directories; its Sep8 mtime and
+ctime precede Sep9 calibration. freeze_scales.py copied preservation/model-files.json
+into the artifact without rehashing the calibration mount. The origin of the
+incorrect historical shard2 hash remains unexplained.
+VERDICT -> The strict loader correctly refuses the old artifact against current
+weights. Correct current publisher identity does not retroactively prove which
+bytes the old calibration process read. Do not rewrite old provenance or relax
+the loader to make it pass. A fresh calibration on pre/post verified current
+weights is being prepared separately by the parent team; its new digest would
+need a reviewed update in this source candidate. Current matched GDN A/B
+screens remain measurements on the same current weights, not certified
+old-calibration identity.
+
+The additional strict O_DIRECT preadv read (no fallback) also returns the
+publisher-matching shard2 hash e4ac4e0b..., with unchanged mtime/ctime before and
+after. Current disk and ordinary cached reads agree. An older Steve report of
+same-shard FUSE/NTFS page-cache corruption is a research lead only: this host
+uses btrfs and does not reproduce that discrepancy now.
+
+Independent review also passed actual PyTorch CPU nn.Module tests on all16
+real target scale pairs plus the MTP pair: persistent scalarfloat32 buffers,
+state_dict coverage, finitepositive values and exact float mirrors. Evidence:
+raw independent-review/torch-buffers.json and REPORT.md. NoGPU was used.
