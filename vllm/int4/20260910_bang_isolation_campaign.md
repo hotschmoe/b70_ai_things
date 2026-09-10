@@ -291,3 +291,20 @@ Pi trigger remains uncorrelated. A separate historical calibration manifest
 has one incorrect/unexplained shard hash; current cached/direct reads match
 the pinned publisher, but the old calibration identity is not established.
 Fresh numerical oracle/calibration work follows without rewriting that artifact.
+
+## Fresh numerical FP8 cache oracle
+
+CONFIG -> Phase0328900c, both visible cards under both leases, length67,
+block64, permuted block table[3,2], hybrid strided cache, query lengths1/4.
+COMMAND -> Fresh self-leased scale-oracle runner with tracked --exact-write;
+8GiB host container bound; strict per-card and compiled P2P0 pre/post-health.
+RESULT -> Both query shapes pass on both cards. Representable K/V bytes
+match exactly with distinct scales; untouched slots remain exact. Actual
+attention consumes independent K/V read scales; relative L2 versus dequantized
+reference is0.0002264(query1) and0.0002230(query4). Random cache-write error
+is about0.0265-0.0267, within the existing oracle bound. Owned containers
+removed, strict/pair post-health passes, lifecycle0. Raw fresh-scale-oracle/.
+VERDICT -> Bounded numerical write/read path passes; this does not validate
+historical calibration identity, all model activations, or SGLang Triton.
+Fresh262-case eager/prefixoff calibration is now running with verified hashes;
+subsequent serving qualification restores graphs and prefix caching.

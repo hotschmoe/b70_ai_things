@@ -41,7 +41,7 @@ def command(args, name):
     launch = cmd + [args.image, '-m', 'sglang.launch_server', '--model-path', '/model',
                   '--served-model-name', 'hotschmoe-dd', '--device', 'xpu',
                   '--dtype', 'float16', '--kv-cache-dtype', 'auto',
-                  '--quantization', 'gptq', '--attention-backend', 'intel_xpu',
+                  '--quantization', 'gptq', '--attention-backend', args.attention_backend,
                   '--linear-attn-backend', 'triton', '--mamba-ssm-dtype', 'float32',
                   '--disable-cuda-graph', '--disable-overlap-schedule',
                   '--disable-radix-cache', '--disable-custom-all-reduce',
@@ -62,6 +62,7 @@ def main():
     p.add_argument('--card', type=int, choices=[0, 1], required=True)
     p.add_argument('--port', type=int, default=18127)
     p.add_argument('--image', default=IMAGE)
+    p.add_argument('--attention-backend', choices=['intel_xpu', 'triton'], default='intel_xpu')
     p.add_argument('--health-probe', type=Path, default=REPO / 'bin/xpu-health')
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--prefix-cache', action='store_true', help='Enable radix cache for a separate feature qualification arm')
