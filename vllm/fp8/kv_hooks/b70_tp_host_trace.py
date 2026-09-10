@@ -28,10 +28,28 @@ def emit(event):
     if _events > limit:
         return
     if _fd is None:
+        uid = os.environ.get('B70_TP_HOST_TRACE_UID')
+        gid = os.environ.get('B70_TP_HOST_TRACE_GID')
+        owner = None
+        if uid is not None or gid is not None:
+            if uid is None or gid is None:
+                raise ValueError('TP trace ownership requires both UID and GID')
+            owner = (int(uid), int(gid))
+            if any(value < 0 or value >= 2**32 - 1 for value in owner):
+                raise ValueError('TP trace ownership IDs are out of range')
         directory = Path(os.environ['B70_TP_HOST_TRACE_DIR'])
         directory.mkdir(mode=0o700, parents=True, exist_ok=True)
-        _fd = os.open(str(directory / ('host-%d.jsonl' % os.getpid())),
-                      os.O_CREAT | os.O_WRONLY | os.O_APPEND, 0o600)
+        if owner is not None:
+            os.chown(directory, *owner)
+        fd = os.open(str(directory / ('host-%d.jsonl' % os.getpid())),
+                     os.O_CREAT | os.O_WRONLY | os.O_APPEND, 0o600)
+        try:
+            if owner is not None:
+                os.fchown(fd, *owner)
+        except BaseException:
+            os.close(fd)
+            raise
+        _fd = fd
     if _events == limit:
         event = {'event': 'truncated', 'limit': limit, 'counts_incomplete': True}
     _events += 1

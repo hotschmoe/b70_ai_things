@@ -192,6 +192,8 @@ def main():
             env['B70_TP_HOST_TRACE_DIR'] = '/kv-campaign/tp-host-trace'
             env['B70_TP_HOST_TRACE_PROFILE'] = args.tp_host_trace
             env['B70_TP_HOST_TRACE_MAX_EVENTS'] = str(args.tp_host_trace_max_events)
+            env['B70_TP_HOST_TRACE_UID'] = str(os.getuid())
+            env['B70_TP_HOST_TRACE_GID'] = str(os.getgid())
         if args.scale_audit:
             env['B70_KV_AUDIT'] = '1'
         if args.trace_offload:

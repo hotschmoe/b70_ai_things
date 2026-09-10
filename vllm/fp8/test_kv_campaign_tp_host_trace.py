@@ -56,6 +56,8 @@ class TPHostTraceIntegrationTests(unittest.TestCase):
             self.assertIn('B70_TP_HOST_TRACE_DIR=/kv-campaign/tp-host-trace', command)
             self.assertIn('B70_TP_HOST_TRACE_PROFILE=' + profile, command)
             self.assertIn('B70_TP_HOST_TRACE_MAX_EVENTS=321', command)
+            self.assertIn('B70_TP_HOST_TRACE_UID=' + str(os.getuid()), command)
+            self.assertIn('B70_TP_HOST_TRACE_GID=' + str(os.getgid()), command)
             self.assertIn('KEEP_FIXTURE=1', command)
 
     def test_guards_refuse_before_lease_or_subprocess(self):
