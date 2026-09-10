@@ -168,3 +168,36 @@ P2P=0, CCL root `/opt/venv`, and bounded owned cleanup. Only after it passes may
 a separate card lease run FP16-KV/eager/MTP0 viability with explicit
 `--attention-backend triton --linear-attn-backend triton`. Calibrated FP8,
 graphs, MTP, cache qualification and TP2 serving remain separate gates.
+
+## Combined stack-health and two-card FP8 oracle plan
+
+CONFIG -> Same immutable current-main Triton-dense image. Acquire both leases
+once, with no model or server. Each sequential oracle container is pinned to
+one physical card and bounded to four CPUs, 8 GiB RAM/no extra swap and 420
+seconds. Exact pinned SGLang source and a hashed snapshot of the oracle/loader
+are mounted read-only. Per-card compiler caches remain separate.
+
+COMMAND -> `oracle_campaign.py` prints the plan without touching GPUs by default.
+Coordinator launch, only after the currently scheduled work releases both cards:
+
+```text
+B70_AGENT=sglang-main-fp8-oracle bin/gpu-run \
+  python3 sglang/refresh/20260910_main/oracle_campaign.py --run
+```
+
+RESULT -> Prepared, not launched. Root is the non-overwriting
+`/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-fp8-oracle-campaign/`.
+The reviewed preflight runs strict per-card and compiled P2P=0 pair health once;
+then card0 and card1 run actual FP8 store/decode/extend oracles. Strict per-card
+and compiled pair post-health follow, reusing only this image's health cache.
+Every child retires its launcher group and verifies owned-container removal
+before advancing. Oracle failure stops later oracle work but still runs
+post-health; health failure triggers pair recovery after verified cleanup.
+The baseline recovery image uses a separate compiled cache to prevent sharing
+ABI-specific artifacts across images, including in the standalone preflight.
+CPU tests cover command pins/memory bounds, stage order, oracle-failure
+post-health, preflight-failure stop and the inherited ownership/timeout guards.
+
+VERDICT -> Launch preparation and CPU lifecycle tests passed. This plan tests
+synthetic FP8 bytes and attention read-scale behavior only. It does not qualify
+model identity, calibrated model quality, graphs, MTP, TP2 or serving speed.

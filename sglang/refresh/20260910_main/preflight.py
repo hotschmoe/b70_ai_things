@@ -164,13 +164,14 @@ def main():
                     (out / 'FAIL.json').write_text(json.dumps(dict(tool=tool, rc=rc,
                         recovery=recovery, posthealth='skipped: reset failed')) + '\n')
                     return 1
+                recovery_env = dict(env, XPU_COLLECTIVE_HEALTH_CACHE=str(out / 'baseline-recovery-compiled-cache'))
                 health = run([str(ROOT.parent / 'health-repair/xpu-health'), '--img', BASELINE],
-                             out / 'post-recovery-health.log', 200, env, owned=True)
+                             out / 'post-recovery-health.log', 200, recovery_env, owned=True)
                 collective = 'skipped: per-card health failed'
                 if not health:
                     collective = run([str(REPO / 'bin/xpu-collective-health'), '--img', BASELINE,
                                       '--p2p', '0', '--timeout', '180'],
-                                     out / 'post-recovery-collective.log', 240, env, owned=True)
+                                     out / 'post-recovery-collective.log', 240, recovery_env, owned=True)
                 (out / 'FAIL.json').write_text(json.dumps(dict(tool=tool, rc=rc,
                     recovery=recovery, posthealth=health, postcollective=collective)) + '\n')
                 return 1
