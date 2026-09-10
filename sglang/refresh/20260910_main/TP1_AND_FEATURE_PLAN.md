@@ -156,3 +156,21 @@ unsupported by the default native vision backend in this reduced recipe.
 Official `--mm-attention-backend sdpa` is a separate possible vision fallback;
 its GPU correctness/performance is not qualified and it was not added to this
 retry. No language-model-only architecture remapping is used.
+
+CONFIG -> Separate calibrated-FP8 loader-image arm, prepared by the runtime
+agent. The TP1 lifecycle now accepts `--kv-cache-dtype fp8_e4m3` and
+`--quantization-param-path /opt/b70/calibrated-kv/fresh-scales.json`. The JSON
+must already be present inside the selected immutable candidate image.
+
+COMMAND -> Add those two flags to a separately named, explicitly Triton,
+text-only lifecycle arm after that image's own pair health passes. Defaults
+remain auto/FP16 with no scale file. No sampling overlay is enabled.
+
+RESULT -> CPU argv checks confirm exact scale-path forwarding, FP8 dtype,
+unchanged default argv, and continued eager/MTP0/prefix-off isolation. FP8
+with native Intel attention is rejected before acquiring a lease. Manifest
+research identity records the selected KV dtype.
+
+VERDICT -> CLI preparation only. Loader-image identity, scale/model provenance,
+numeric-oracle results and model serving quality remain separate gates. The
+lifecycle does not infer calibration validity from the presence of a flag.

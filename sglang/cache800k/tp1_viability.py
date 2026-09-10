@@ -40,7 +40,7 @@ def command(args, name):
         cmd += ['-e', key + '=' + value]
     launch = cmd + [args.image, '-m', 'sglang.launch_server', '--model-path', '/model',
                   '--served-model-name', 'hotschmoe-dd', '--device', 'xpu',
-                  '--dtype', 'float16', '--kv-cache-dtype', 'auto',
+                  '--dtype', 'float16', '--kv-cache-dtype', getattr(args, 'kv_cache_dtype', 'auto'),
                   '--quantization', 'gptq', '--attention-backend', args.attention_backend,
                   '--linear-attn-backend', 'triton', '--mamba-ssm-dtype', 'float32',
                   '--disable-cuda-graph', '--disable-overlap-schedule',
@@ -50,6 +50,12 @@ def command(args, name):
                   '--mem-fraction-static', '0.90', '--enable-metrics',
                   '--reasoning-parser', 'qwen3', '--tool-call-parser', 'qwen3_coder',
                   '--host', '0.0.0.0', '--port', '8000']
+    kv_dtype = getattr(args, 'kv_cache_dtype', 'auto')
+    scale_path = getattr(args, 'quantization_param_path', None)
+    if kv_dtype == 'fp8_e4m3' and args.attention_backend != 'triton':
+        raise ValueError('Reviewed FP8 KV arm requires explicit Triton attention')
+    if scale_path:
+        launch += ['--quantization-param-path', str(scale_path)]
     if getattr(args, 'skip_server_warmup', False):
         launch.append('--skip-server-warmup')
     if args.prefix_cache:
@@ -83,6 +89,8 @@ def main():
     p.add_argument('--port', type=int, default=18127)
     p.add_argument('--image', default=IMAGE)
     p.add_argument('--attention-backend', choices=['intel_xpu', 'triton'], default='intel_xpu')
+    p.add_argument('--kv-cache-dtype', choices=['auto', 'fp8_e4m3'], default='auto')
+    p.add_argument('--quantization-param-path', help='Scale JSON path already available inside the selected candidate image')
     p.add_argument('--health-probe', type=Path, default=REPO / 'bin/xpu-health')
     p.add_argument('--cache-seed', type=Path)
     p.add_argument('--prefix-cache', action='store_true', help='Enable radix cache for a separate feature qualification arm')
@@ -95,8 +103,8 @@ def main():
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
-    if (args.decode_graph or args.mtp_steps) and args.attention_backend != 'triton':
-        p.error('reviewed graph/MTP arms require --attention-backend triton')
+    if (args.decode_graph or args.mtp_steps or args.kv_cache_dtype == 'fp8_e4m3') and args.attention_backend != 'triton':
+        p.error('reviewed graph/MTP/FP8 arms require --attention-backend triton')
     args.out = args.out.resolve()
     args.health_probe = args.health_probe.resolve()
     cache_seed_identity = None
@@ -136,8 +144,9 @@ def main():
         dict(args=vars(args), command=cmd, primary_alias='hotschmoe-dd',
              health_probe_sha256=hashlib.sha256(args.health_probe.read_bytes()).hexdigest(),
              cache_seed=cache_seed_identity,
-             research_identity=('qwen3.8-27b-AutoRound-INT4-W4A16-g128-sglang-tp1-fp16kv-mtp'
-                 + str(args.mtp_steps) + ('-decodefull' if args.decode_graph else '-eager')
+             research_identity=('qwen3.8-27b-AutoRound-INT4-W4A16-g128-sglang-tp1-'
+                 + ('fp16kv' if args.kv_cache_dtype == 'auto' else args.kv_cache_dtype + 'kv')
+                 + '-mtp' + str(args.mtp_steps) + ('-decodefull' if args.decode_graph else '-eager')
                  + ('-prefixon' if args.prefix_cache else '-prefixoff') + '-ctx8192')),
         default=str, indent=2) + '\n')
     docker = shutil.which('docker')

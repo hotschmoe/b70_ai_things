@@ -15,7 +15,7 @@ plan = json.loads((HERE.parent / 'refresh/20260910_main/tp1_baseline_plan.json')
 def build(**changes):
     values = dict(out=Path('/tmp/cpu-only-argv-no-create'), card=1, port=18137,
         image=plan['command'][plan['command'].index('--image') + 1],
-        attention_backend='triton', prefix_cache=False, decode_graph=False, mtp_steps=0, skip_server_warmup=False)
+        attention_backend='triton', prefix_cache=False, decode_graph=False, mtp_steps=0, skip_server_warmup=False, kv_cache_dtype='auto', quantization_param_path=None)
     values.update(changes)
     command = module.command(SimpleNamespace(**values), 'cpu-only-no-container')
     return command[command.index('sglang.launch_server') + 1:]
@@ -45,12 +45,17 @@ assert value(graph, '--cuda-graph-backend-decode') == 'full'
 assert value(graph, '--cuda-graph-backend-prefill') == 'disabled'
 assert graph[-4:] == ['--cuda-graph-bs-decode', '1', '2', '4']
 assert '--speculative-algorithm' not in graph and '--disable-radix-cache' in graph
+fp8 = build(kv_cache_dtype='fp8_e4m3', quantization_param_path='/opt/b70/calibrated-kv/fresh-scales.json')
+assert value(fp8, '--kv-cache-dtype') == 'fp8_e4m3'
+assert value(fp8, '--quantization-param-path') == '/opt/b70/calibrated-kv/fresh-scales.json'
+assert '--disable-cuda-graph' in fp8 and '--disable-radix-cache' in fp8
+assert '--speculative-algorithm' not in fp8
 both = build(prefix_cache=True, decode_graph=True, mtp_steps=3)
 assert value(both, '--mamba-radix-cache-strategy') == 'extra_buffer'
 assert '--disable-radix-cache' not in both and '--disable-cuda-graph' not in both
 assert value(both, '--served-model-name') == 'hotschmoe-dd'
 assert value(both, '--quantization') == 'gptq' and value(both, '--tp-size') == '1'
-for change in [dict(mtp_steps=2), dict(mtp_steps=1, attention_backend='intel_xpu'),
+for change in [dict(kv_cache_dtype='fp8_e4m3', attention_backend='intel_xpu'), dict(mtp_steps=2), dict(mtp_steps=1, attention_backend='intel_xpu'),
                dict(decode_graph=True, attention_backend='intel_xpu')]:
     try:
         build(**change)
