@@ -1,7 +1,8 @@
 # Pi bang investigation, 2026-09-10
 
-Status: investigation active; production hotschmoe-dd remains offline.
-No shelf promotion or production stability claim has been made.
+Status: testing paused at user request. User authorized a200K day trial of
+the patched vLLM image; service preparation/restart is in progress. No shelf
+promotion, completed200K qualification or production stability claim is made.
 
 Two reproduced mechanisms are now separated: the GDN phase guard fixes a
 fresh singleton initialization defect; a second accepted-count ordering patch
@@ -251,3 +252,36 @@ health results are under /mnt/vm_8tb/b70/results/bang_isolation_20260910.
 The extracted redacted bundle is under results/bang_investigation_20260910.
 Host kernel/drivers are unchanged. Experiments use per-card or paired gpu-run
 leases with matching pins and P2P0. Failed lifecycles retain their evidence.
+
+## User pause and next downtime
+
+The user requested pausing tests and serving the patched vLLM endpoint for the
+day, explicitly retaining200K context. The clean100K arm had passed tiny24,
+earlier clean history3, three deterministic32-check rounds, and one sampled
+32-check round (128 concurrent checks total with strict semantics and positive
+reuse). The three deterministic response-choice arrays match exactly after
+normalizing only generated tool-call IDs. The arm was stopped at user request;
+its in-flight sampled round was allowed to drain. Do not mark the whole arm
+qualified or substitute it for the unrun200K long-context plan.
+
+The day trial is a separate user-authorized scope, retaining MTP3, full decode
+graphs, prefix cache, fresh calibrated FP8 KV and P2P0. The fresh calibration
+still covers <=96K;200K is an explicitly accepted trial limit. The regular full
+qualification gate remains separate and unchanged. Preserve authenticated
+frontdoor18080, loopback backend18124 and primary model name hotschmoe-dd.
+
+Prepared work for the next downtime, not launched:
+
+- pi-agent2-freshscale-paired/{phase,phase-mrv1fix}/plan.json: matched diagnostic
+  for the new garbled tool suffix, with identical fresh scales and requests.
+- mrv1-tp2-fp8-long200k/plan.json:185K concurrent retrieval, reuse, generation,
+  cancellation and recovery. Its full clean100K prerequisite remains unmet.
+- sglang14ee-fp8-cache-plan/plan.json: full-model FP8 cache qualification after
+  the passing9-case numeric patch; graph/MTP/sampling parity remains incomplete.
+- vllm-fp8-geometry-plans/{q1,q4}/plan.json: actual23240-token/1600-block oracle.
+- mamba-copy-lifecycle-plans/card{0,1}/plan.json: actual padded state-copy checks.
+- Optional non-bang extreme-repetition guard artifact remains uninstalled;
+  it does not classify arbitrary gibberish or fix the separate gateway429 race.
+
+The original Pi wire payloads and LAN-installed guard/gateway source identity
+remain unavailable. All replay conclusions must retain that limitation.
