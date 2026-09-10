@@ -1,0 +1,111 @@
+{
+  "status": "CPU_PREPARED_NOT_RUN",
+  "image": "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+  "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1",
+  "command": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py",
+    "--card",
+    "1",
+    "--port",
+    "18235",
+    "--image",
+    "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+    "--attention-backend",
+    "triton",
+    "--kv-cache-dtype",
+    "fp8_e4m3",
+    "--quantization-param-path",
+    "/opt/b70/calibrated-kv/fresh-scales.json",
+    "--prefix-cache",
+    "--skip-server-warmup",
+    "--health-probe",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+    "--out",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1",
+    "--job",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/job.json",
+    "--startup-timeout",
+    "1200"
+  ],
+  "job": {
+    "command": [
+      "python3",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/fp8_cache_stage.py",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/stages.json"
+    ],
+    "timeout": 3300
+  },
+  "stages": {
+    "server_output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1",
+    "artifact_sha256": "be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062",
+    "stages": [
+      {
+        "name": "tiny-text",
+        "timeout": 1500,
+        "command": [
+          "python3",
+          "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/probe_backend_viability.py",
+          "--base",
+          "http://127.0.0.1:18235",
+          "--model",
+          "hotschmoe-dd",
+          "--out",
+          "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1/viability",
+          "--timeout",
+          "300"
+        ]
+      },
+      {
+        "name": "concurrent-cache",
+        "timeout": 1500,
+        "command": [
+          "python3",
+          "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/kv_campaign_agent_probe.py",
+          "--base",
+          "http://127.0.0.1:18235",
+          "--model",
+          "hotschmoe-dd",
+          "--out",
+          "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-prefix-eager-mtp0-card1/tools",
+          "--records",
+          "360",
+          "--stream",
+          "--shared-cache",
+          "--turns",
+          "4",
+          "--timeout",
+          "300"
+        ]
+      }
+    ]
+  },
+  "prefix_cache": true,
+  "mamba_cache_strategy": "extra_buffer",
+  "mtp_steps": 0,
+  "decode_graph": false,
+  "kv_dtype": "fp8_e4m3",
+  "artifact_sha256": "be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062",
+  "prior_viability_outputs": [
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-tp1-fp16-triton-card1-skip-warmup"
+  ],
+  "pair_preflight_pass": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-preflight/PASS",
+  "read_policy_numeric_outcome": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-allnine-read-policy-14ee-card1/OUTCOME.json",
+  "frozen_files": {
+    "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py": "686421cb1138ccc9f4119e3daef917fe6f1ba769072c787e520d95cf6874003b",
+    "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py": "b3c146fb9ffbd6fb5a4e658c97301419fd2cf76afeacda5f56971d126477090f",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-loader-fresh-overlay-v2/fresh-scales.json": "be02d915a8ac188341870cc9f642d77665b744235e142330a7a37b8f4c711062",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/fp8_cache_stage.py": "6f05a0b6e987654570c0dfb57ba50714432cbf2b101bfcb8236feacdb8300aa3",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/probe_backend_viability.py": "58fd315c576e27903a5584df4f4a534305fdf683902211f66b8e4b9de7d28532",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/kv_campaign_agent_probe.py": "6ab24e09ae550c6456fea28a8d1c09c101e160e88b4ba514b3eeaa3c1fbd7dd8",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/stages.json": "2cecf27760c3eef3eb827f5580b9011c5920035d563166c560eae863b4b30818",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/job.json": "2a92d8f0e8210464cbe9b0f21e99f0cf28cc9b750b2302d4217edf937d1ca7ba"
+  },
+  "launch": [
+    "python3",
+    "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py",
+    "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp8-cache-plan/plan.json",
+    "--run"
+  ],
+  "scope": "One full-model FP8 cache candidate, current Qwen GPTQ, eager MTP0; positive360-record concurrent cache delta after26 text cases. No graph/MTP/sampling/fullparity claim."
+}
