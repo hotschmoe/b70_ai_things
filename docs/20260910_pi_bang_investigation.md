@@ -130,6 +130,15 @@ it is not a passed qualification. A separate clean-workload plan retains the
 failed diagnostics and tests tiny cases, earlier clean history and six
 concurrent rounds. Original Pi semantic correctness remains unresolved.
 
+An independent comparison finds the exact agent2 target request dictionaries
+also produced valid tool JSON in four earlier configurations: phase/old-FP8,
+stock/old-FP8 with MTP3, stock/old-FP8 with MTP0, and phase/FP16. The new
+"b:,.: the/python:" suffix is absent from the request and present in raw SSE.
+Thus history contamination is not an established explanation. Fresh scales,
+runner repair, TP/configuration and runtime state still need matched controls;
+a fresh-scale TP1 phase-versus-MRV1 pair is prepared. The known row-permutation
+mechanism alone does not predict corruption for an unchanged serial row0.
+
 Its startup trace records matching per-rank profile boundaries:138 all-reduces
 on FP16[32768,5120] and3 all-gathers on FP16[32768,2560], with paired returns.
 These are actual Python host boundaries, not independent device completion
@@ -217,8 +226,16 @@ power-of-two stores pass. A revised independent reference preserves this
 distinction, matches all bytes, then reaches a failing attention comparison
 (48/6144 elements outside the unchanged tolerance). Grouped decode source
 also quantizes Q and softmax P to FP8, beyond cache quantization. That compute
-policy is being isolated; no FP8 attention pass is claimed. Both failed
-lifecycles preserve logs and pass the applicable strict post-health checks.
+policy was isolated with an independent CPU prediction and a source-only
+read patch that retains FP8 cache storage while using FP16 attention operands.
+The paired actual-Triton oracle now retains all9 checks: upstream fails9/9,
+patched passes9/9 with zero out-of-tolerance elements. Worst maximum absolute
+error is0.137542 upstream versus0.000921488 patched. Both exact byte/untouched
+slot checks pass. The patched image passes strict per-card/compiled pair
+preflight; both oracles pass selected-card post-health and verified cleanup.
+This is a numeric fixture, not full-model FP8/graph/MTP/TP2 qualification.
+Different cards were used without a numeric crossover; the result agrees
+with the prior CPU policy prediction. A full-model FP8 cache test is prepared.
 
 ## Evidence and reproducible sources
 
