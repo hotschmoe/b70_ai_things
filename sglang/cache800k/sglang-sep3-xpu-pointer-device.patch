@@ -1,0 +1,78 @@
+--- a/kernels/ops/mamba/mamba_state_scatter_triton.py
++++ b/kernels/ops/mamba/mamba_state_scatter_triton.py
+@@ -9,6 +9,8 @@
+ import torch
+ import triton
+ import triton.language as tl
++
++from sglang.kernels.ops.memory.ptr_table import make_ptr_table
+ 
+ 
+ def _require_entry_contiguous_dst(
+@@ -578,7 +580,7 @@
+             ]
+         )
+         block_start += triton.cdiv(elem, block_size)
+-    meta = torch.tensor(rows, dtype=torch.int64, device=pairs[0][0].device)
++    meta = make_ptr_table(rows, device=pairs[0][0].device)
+     return meta, block_start
+ 
+ 
+--- a/srt/mem_cache/mamba_slot_fused.py
++++ b/srt/mem_cache/mamba_slot_fused.py
+@@ -23,6 +23,8 @@
+ import torch
+ import triton
+ import triton.language as tl
++
++from sglang.kernels.ops.memory.ptr_table import make_ptr_table
+ 
+ _BLOCK = 1024
+ 
+@@ -116,7 +118,7 @@
+         max_feat = max(max_feat, t[0, 0].numel())
+     to_i64 = lambda xs: torch.tensor(xs, dtype=torch.int64, device=device)
+     return ConvSlotDescriptor(
+-        ptr=to_i64(ptr),
++        ptr=make_ptr_table(ptr, device=device),
+         feat=to_i64(feat),
+         layer_stride=to_i64(layer_stride),
+         slot_stride=to_i64(slot_stride),
+--- a/srt/mem_cache/memory_pool.py
++++ b/srt/mem_cache/memory_pool.py
+@@ -476,7 +476,7 @@
+                 *physical_conv_shape,
+             ),
+             dtype=conv_dtype,
+-            device="cuda",
++            device=self.device,
+         )
+         physical_conv_strides = phys.stride()[2:]
+         window_stride = physical_conv_strides[window_axis]
+@@ -748,7 +748,7 @@
+                             temporal_state_shape[2],
+                         ),
+                         dtype=ssm_dtype,
+-                        device="cuda",
++                        device=device,
+                     )
+                 # Cache intermediate conv windows (last K-1 inputs) per draft token
+                 # during target verify.
+@@ -816,7 +816,7 @@
+                                 conv_shape[1],
+                             ),
+                             dtype=conv_dtype,
+-                            device="cuda",
++                            device=device,
+                         )
+                         for conv_shape in dense_conv_shapes
+                     ]
+--- /dev/null
++++ b/kernels/ops/memory/ptr_table.py
+@@ -0,0 +1,6 @@
++"""Build XPU device-pointer tables without signed integer unpack overflow."""
++import torch
++
++
++def make_ptr_table(rows, device):
++    return torch.tensor(rows, dtype=torch.uint64, device=device).view(torch.int64)
