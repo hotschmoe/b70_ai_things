@@ -1,6 +1,10 @@
 import json
 from pathlib import Path
 import unittest
+import subprocess
+import tempfile
+import os
+import sys
 from unittest.mock import patch
 import serve
 
@@ -27,6 +31,21 @@ class Trial(unittest.TestCase):
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]['name'], '02-tiny24')
         self.assertEqual(serve.value(jobs[0]['command'], '--base-url'), 'http://127.0.0.1:18124')
+
+    def test_real_cpu_gpu_run_parent_relationship(self):
+        with tempfile.TemporaryDirectory() as directory:
+            env = dict(os.environ, B70_GPU_LOCK=str(Path(directory) / 'cpu-only-lock'))
+            script = 'import os,json,sys; print(json.dumps(dict(owner_pid=os.getpid(),lease_owner_pid=os.getppid())),flush=True); sys.stdin.readline()'
+            proc = subprocess.Popen([str(serve.REPO / 'bin/gpu-run'), sys.executable, '-c', script], env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                marker = json.loads(proc.stdout.readline())
+                self.assertNotEqual(marker['owner_pid'], proc.pid)
+                self.assertEqual(marker['lease_owner_pid'], proc.pid)
+                self.assertTrue(serve.readiness_owner(marker, proc.pid))
+                self.assertFalse(serve.readiness_owner(marker, proc.pid + 1))
+            finally:
+                proc.communicate('done\n', timeout=10)
+            self.assertEqual(proc.returncode, 0)
 
     def test_missing_partial_evidence_refused(self):
         with patch.object(serve, 'read', return_value={}):

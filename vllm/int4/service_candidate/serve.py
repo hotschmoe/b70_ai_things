@@ -187,6 +187,17 @@ def startup_jobs(inputs, out, namespace):
     return jobs
 
 
+def readiness_owner(marker, main_pid):
+    if marker.get('lease_owner_pid') != main_pid:
+        return False
+    try:
+        status = (Path('/proc') / str(marker['owner_pid']) / 'status').read_text()
+        parent = next(int(line.split()[1]) for line in status.splitlines() if line.startswith('PPid:'))
+        return parent == main_pid
+    except (OSError, KeyError, StopIteration, ValueError):
+        return False
+
+
 def owns_frontdoor(pid):
     sockets = set()
     for fd in (Path('/proc') / str(pid) / 'fd').iterdir():
@@ -224,7 +235,7 @@ def main():
                 result = CURRENT.resolve(strict=True)
                 require(result.is_relative_to(RESULTS), 'invalid readiness pointer')
                 marker = read(result / 'READY.json')
-                if marker['owner_pid'] != args.pid or not owns_frontdoor(marker['frontdoor_pid']):
+                if not readiness_owner(marker, args.pid) or not owns_frontdoor(marker['frontdoor_pid']):
                     raise OSError('candidate readiness not yet owned')
                 with urllib.request.urlopen('http://127.0.0.1:18080/health', timeout=3) as response:
                     if response.status == 200:
@@ -310,7 +321,7 @@ def main():
             require(not stopping and front.poll() is None and backend.poll() is None and time.monotonic() < deadline, 'frontdoor failed to bind owned socket')
             time.sleep(0.1)
         ready_tmp = result / 'READY.json.tmp'
-        ready_tmp.write_text(json.dumps({'owner_pid': os.getpid(), 'frontdoor_pid': front.pid, 'backend_pid': backend.pid}) + '\n')
+        ready_tmp.write_text(json.dumps({'owner_pid': os.getpid(), 'lease_owner_pid': os.getppid(), 'frontdoor_pid': front.pid, 'backend_pid': backend.pid}) + '\n')
         ready_tmp.replace(result / 'READY.json')
         while not stopping:
             require(backend.poll() is None and front.poll() is None, 'service component exited')
