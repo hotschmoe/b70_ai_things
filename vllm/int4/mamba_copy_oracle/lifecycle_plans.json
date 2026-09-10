@@ -1,0 +1,338 @@
+[
+  {
+    "card": 0,
+    "image": "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+    "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-actual-card0",
+    "pair_preflight_pass": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-phase-preflight/PASS",
+    "frozen_files": {
+      "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/mamba_copy_oracle/lifecycle.py": "8d4aa4b99234c0d08a3ea8d2901f14855a2e398127a0cdc563ba64a9f371fcab",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_main/preflight.py": "85e23da18f6922af3366f83028439fd14eb629843bb13edd52e38ae8ccdd739c",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card0/inputs/oracle.py": "0942bd24eac48ccf64a4f842deae27e9ba0fef477f6ffb70ce2ac3b484fea642",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card0/source/worker_mamba_utils.py": "936d65f7e9e85e0c67ada8210ce26108cf7868c4f991f76d0ad3bc125c07dc3a",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card0/source/model_mamba_utils.py": "fb15e26fcfe4f7ab72a61a64fee8b8ea0c49b7f28a23b6a9dede099e41489231"
+    },
+    "health_probe": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+    "health_sha256": "2a1488deeda1ede12dd1494fe3990a6104a584dadb6a7a1ba33815624911e9ba",
+    "worker_source_sha256": "936d65f7e9e85e0c67ada8210ce26108cf7868c4f991f76d0ad3bc125c07dc3a",
+    "model_source_sha256": "fb15e26fcfe4f7ab72a61a64fee8b8ea0c49b7f28a23b6a9dede099e41489231",
+    "cases": [
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 1,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 3,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 4,
+        "dst": 0,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 4,
+        "dst": 0,
+        "bias": 1,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 4,
+        "dst": 0,
+        "bias": 3,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": -1,
+        "dst": 7,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 0,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 0,
+        "history": 3,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 0,
+        "history": 3,
+        "src": 4,
+        "dst": 0,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 0,
+        "history": 3,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": false
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": false
+      }
+    ],
+    "oracle_command": [
+      "docker",
+      "run",
+      "--name",
+      "b70-mamba-copy-oracle-card0",
+      "--network",
+      "none",
+      "--device",
+      "/dev/dri",
+      "--cpus",
+      "4",
+      "--memory",
+      "8g",
+      "--memory-swap",
+      "8g",
+      "--ulimit",
+      "core=0",
+      "-v",
+      "/dev/dri/by-path:/dev/dri/by-path:ro",
+      "-v",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card0/inputs:/candidate:ro",
+      "-v",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card0/source:/source:ro",
+      "-v",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-actual-card0/card0/cache:/cache",
+      "-e",
+      "ZE_AFFINITY_MASK=0",
+      "-e",
+      "ONEAPI_DEVICE_SELECTOR=level_zero:gpu",
+      "-e",
+      "CCL_TOPO_P2P_ACCESS=0",
+      "-e",
+      "TRITON_CACHE_DIR=/cache/triton",
+      "-e",
+      "TORCHINDUCTOR_CACHE_DIR=/cache/torchinductor",
+      "-e",
+      "NEO_CACHE_DIR=/cache/neo",
+      "--entrypoint",
+      "python3",
+      "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+      "/candidate/oracle.py",
+      "--run-xpu"
+    ],
+    "launch": [
+      "bin/gpu-run",
+      "--card",
+      "0",
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/mamba_copy_oracle/lifecycle.py",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card0/plan.json",
+      "--run"
+    ],
+    "status": "PREPARED_NOT_RUN; choose a card after allocation; strict selected pre/post; no pair reset"
+  },
+  {
+    "card": 1,
+    "image": "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+    "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-actual-card1",
+    "pair_preflight_pass": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mrv1-counts-phase-preflight/PASS",
+    "frozen_files": {
+      "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/mamba_copy_oracle/lifecycle.py": "8d4aa4b99234c0d08a3ea8d2901f14855a2e398127a0cdc563ba64a9f371fcab",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_main/preflight.py": "85e23da18f6922af3366f83028439fd14eb629843bb13edd52e38ae8ccdd739c",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card1/inputs/oracle.py": "0942bd24eac48ccf64a4f842deae27e9ba0fef477f6ffb70ce2ac3b484fea642",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card1/source/worker_mamba_utils.py": "936d65f7e9e85e0c67ada8210ce26108cf7868c4f991f76d0ad3bc125c07dc3a",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card1/source/model_mamba_utils.py": "fb15e26fcfe4f7ab72a61a64fee8b8ea0c49b7f28a23b6a9dede099e41489231"
+    },
+    "health_probe": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+    "health_sha256": "2a1488deeda1ede12dd1494fe3990a6104a584dadb6a7a1ba33815624911e9ba",
+    "worker_source_sha256": "936d65f7e9e85e0c67ada8210ce26108cf7868c4f991f76d0ad3bc125c07dc3a",
+    "model_source_sha256": "fb15e26fcfe4f7ab72a61a64fee8b8ea0c49b7f28a23b6a9dede099e41489231",
+    "cases": [
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 1,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 3,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 4,
+        "dst": 0,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 4,
+        "dst": 0,
+        "bias": 1,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 4,
+        "dst": 0,
+        "bias": 3,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": -1,
+        "dst": 7,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 0,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 0,
+        "history": 3,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 0,
+        "history": 3,
+        "src": 4,
+        "dst": 0,
+        "bias": 0,
+        "padded": true
+      },
+      {
+        "mtp": 0,
+        "history": 3,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": false
+      },
+      {
+        "mtp": 3,
+        "history": 6,
+        "src": 0,
+        "dst": 7,
+        "bias": 0,
+        "padded": false
+      }
+    ],
+    "oracle_command": [
+      "docker",
+      "run",
+      "--name",
+      "b70-mamba-copy-oracle-card1",
+      "--network",
+      "none",
+      "--device",
+      "/dev/dri",
+      "--cpus",
+      "4",
+      "--memory",
+      "8g",
+      "--memory-swap",
+      "8g",
+      "--ulimit",
+      "core=0",
+      "-v",
+      "/dev/dri/by-path:/dev/dri/by-path:ro",
+      "-v",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card1/inputs:/candidate:ro",
+      "-v",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card1/source:/source:ro",
+      "-v",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-actual-card1/card1/cache:/cache",
+      "-e",
+      "ZE_AFFINITY_MASK=1",
+      "-e",
+      "ONEAPI_DEVICE_SELECTOR=level_zero:gpu",
+      "-e",
+      "CCL_TOPO_P2P_ACCESS=0",
+      "-e",
+      "TRITON_CACHE_DIR=/cache/triton",
+      "-e",
+      "TORCHINDUCTOR_CACHE_DIR=/cache/torchinductor",
+      "-e",
+      "NEO_CACHE_DIR=/cache/neo",
+      "--entrypoint",
+      "python3",
+      "sha256:7b107d0e675390fedbbdbe743f104c08072b6175ce8ccbbfdad64dc82bf90ad1",
+      "/candidate/oracle.py",
+      "--run-xpu"
+    ],
+    "launch": [
+      "bin/gpu-run",
+      "--card",
+      "1",
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/vllm/int4/mamba_copy_oracle/lifecycle.py",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-lifecycle-plans/card1/plan.json",
+      "--run"
+    ],
+    "status": "PREPARED_NOT_RUN; choose a card after allocation; strict selected pre/post; no pair reset"
+  }
+]

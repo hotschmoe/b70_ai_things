@@ -1,0 +1,276 @@
+[
+  {
+    "status": "PREPARED_NOT_RUN",
+    "label": "graph-only",
+    "image": "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+    "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-only-card1",
+    "command": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py",
+      "--card",
+      "1",
+      "--port",
+      "18231",
+      "--image",
+      "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+      "--attention-backend",
+      "triton",
+      "--health-probe",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+      "--out",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-only-card1",
+      "--job",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-only/job.json",
+      "--startup-timeout",
+      "1200",
+      "--skip-server-warmup",
+      "--decode-graph"
+    ],
+    "job": {
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-only/probe_backend_viability.py",
+        "--base",
+        "http://127.0.0.1:18231",
+        "--model",
+        "hotschmoe-dd",
+        "--out",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-only-card1/viability",
+        "--timeout",
+        "300"
+      ],
+      "timeout": 1500
+    },
+    "decode_graph": true,
+    "mtp_steps": 0,
+    "prefix_cache": false,
+    "kv_dtype": "auto resolves FP16",
+    "temperature": 0,
+    "requests": 26,
+    "prior_viability_outputs": [
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-tp1-fp16-triton-card1-skip-warmup"
+    ],
+    "pair_preflight_pass": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-preflight/PASS",
+    "read_policy_numeric_outcome": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-allnine-read-policy-14ee-card1/OUTCOME.json",
+    "frozen_files": {
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py": "686421cb1138ccc9f4119e3daef917fe6f1ba769072c787e520d95cf6874003b",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-only/probe_backend_viability.py": "58fd315c576e27903a5584df4f4a534305fdf683902211f66b8e4b9de7d28532",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-only/job.json": "fa01a1e3f916f5e3118c86844fb0d42f1567f26b5e5455bbdd880087ac622dde",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py": "b3c146fb9ffbd6fb5a4e658c97301419fd2cf76afeacda5f56971d126477090f"
+    },
+    "limitation": "Greedy text-only; startup1200s, requests300s/job1500s. Prefixoff, FP16KV, no calibration or sampling overlay. MTP1 does not exercise iterative draft decode graph; steps3 remains later arm. Require observed capture/replay/acceptance; CLI or coherence pass alone not proof.",
+    "launch": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-only/plan.json",
+      "--run"
+    ]
+  },
+  {
+    "status": "PREPARED_NOT_RUN",
+    "label": "mtp1-eager",
+    "image": "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+    "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-mtp1-eager-card1",
+    "command": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py",
+      "--card",
+      "1",
+      "--port",
+      "18232",
+      "--image",
+      "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+      "--attention-backend",
+      "triton",
+      "--health-probe",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+      "--out",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-mtp1-eager-card1",
+      "--job",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/mtp1-eager/job.json",
+      "--startup-timeout",
+      "1200",
+      "--skip-server-warmup",
+      "--mtp-steps",
+      "1"
+    ],
+    "job": {
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/mtp1-eager/probe_backend_viability.py",
+        "--base",
+        "http://127.0.0.1:18232",
+        "--model",
+        "hotschmoe-dd",
+        "--out",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-mtp1-eager-card1/viability",
+        "--timeout",
+        "300"
+      ],
+      "timeout": 1500
+    },
+    "decode_graph": false,
+    "mtp_steps": 1,
+    "prefix_cache": false,
+    "kv_dtype": "auto resolves FP16",
+    "temperature": 0,
+    "requests": 26,
+    "prior_viability_outputs": [
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-main-tp1-fp16-triton-card1-skip-warmup"
+    ],
+    "pair_preflight_pass": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-preflight/PASS",
+    "read_policy_numeric_outcome": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-allnine-read-policy-14ee-card1/OUTCOME.json",
+    "frozen_files": {
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py": "686421cb1138ccc9f4119e3daef917fe6f1ba769072c787e520d95cf6874003b",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/mtp1-eager/probe_backend_viability.py": "58fd315c576e27903a5584df4f4a534305fdf683902211f66b8e4b9de7d28532",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/mtp1-eager/job.json": "5c518a9ee29b1e369560438fefa263e2ab0294cc6a14c93df60e4030fa7001cc",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py": "b3c146fb9ffbd6fb5a4e658c97301419fd2cf76afeacda5f56971d126477090f"
+    },
+    "limitation": "Greedy text-only; startup1200s, requests300s/job1500s. Prefixoff, FP16KV, no calibration or sampling overlay. MTP1 does not exercise iterative draft decode graph; steps3 remains later arm. Require observed capture/replay/acceptance; CLI or coherence pass alone not proof.",
+    "launch": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/mtp1-eager/plan.json",
+      "--run"
+    ]
+  },
+  {
+    "status": "PREPARED_NOT_RUN",
+    "label": "graph-mtp1",
+    "image": "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+    "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-mtp1-card1",
+    "command": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py",
+      "--card",
+      "1",
+      "--port",
+      "18233",
+      "--image",
+      "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+      "--attention-backend",
+      "triton",
+      "--health-probe",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+      "--out",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-mtp1-card1",
+      "--job",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp1/job.json",
+      "--startup-timeout",
+      "1200",
+      "--skip-server-warmup",
+      "--decode-graph",
+      "--mtp-steps",
+      "1"
+    ],
+    "job": {
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp1/probe_backend_viability.py",
+        "--base",
+        "http://127.0.0.1:18233",
+        "--model",
+        "hotschmoe-dd",
+        "--out",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-mtp1-card1/viability",
+        "--timeout",
+        "300"
+      ],
+      "timeout": 1500
+    },
+    "decode_graph": true,
+    "mtp_steps": 1,
+    "prefix_cache": false,
+    "kv_dtype": "auto resolves FP16",
+    "temperature": 0,
+    "requests": 26,
+    "prior_viability_outputs": [
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-only-card1",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-mtp1-eager-card1"
+    ],
+    "pair_preflight_pass": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-preflight/PASS",
+    "read_policy_numeric_outcome": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-allnine-read-policy-14ee-card1/OUTCOME.json",
+    "frozen_files": {
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py": "686421cb1138ccc9f4119e3daef917fe6f1ba769072c787e520d95cf6874003b",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp1/probe_backend_viability.py": "58fd315c576e27903a5584df4f4a534305fdf683902211f66b8e4b9de7d28532",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp1/job.json": "741663397e745957f7cb80fa21f3c6a439d545ba75d47fd5d38f6a8d41836560",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py": "b3c146fb9ffbd6fb5a4e658c97301419fd2cf76afeacda5f56971d126477090f"
+    },
+    "limitation": "Greedy text-only; startup1200s, requests300s/job1500s. Prefixoff, FP16KV, no calibration or sampling overlay. MTP1 does not exercise iterative draft decode graph; steps3 remains later arm. Require observed capture/replay/acceptance; CLI or coherence pass alone not proof.",
+    "launch": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp1/plan.json",
+      "--run"
+    ]
+  },
+  {
+    "status": "PREPARED_NOT_RUN",
+    "label": "graph-mtp3",
+    "image": "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+    "output": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-mtp3-card1",
+    "command": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py",
+      "--card",
+      "1",
+      "--port",
+      "18234",
+      "--image",
+      "sha256:14ee7d0112b4e321ea7618a2b6c6f351b7428c2efe43deb3c2e51d128c7dd57d",
+      "--attention-backend",
+      "triton",
+      "--health-probe",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/health-repair/xpu-health",
+      "--out",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-mtp3-card1",
+      "--job",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp3/job.json",
+      "--startup-timeout",
+      "1200",
+      "--skip-server-warmup",
+      "--decode-graph",
+      "--mtp-steps",
+      "3"
+    ],
+    "job": {
+      "command": [
+        "python3",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp3/probe_backend_viability.py",
+        "--base",
+        "http://127.0.0.1:18234",
+        "--model",
+        "hotschmoe-dd",
+        "--out",
+        "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-mtp3-card1/viability",
+        "--timeout",
+        "300"
+      ],
+      "timeout": 1500
+    },
+    "decode_graph": true,
+    "mtp_steps": 3,
+    "prefix_cache": false,
+    "kv_dtype": "auto resolves FP16",
+    "temperature": 0,
+    "requests": 26,
+    "prior_viability_outputs": [
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-graph-mtp1-card1"
+    ],
+    "pair_preflight_pass": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-read-policy-preflight/PASS",
+    "read_policy_numeric_outcome": "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang-fp8-allnine-read-policy-14ee-card1/OUTCOME.json",
+    "frozen_files": {
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/cache800k/tp1_viability.py": "686421cb1138ccc9f4119e3daef917fe6f1ba769072c787e520d95cf6874003b",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp3/probe_backend_viability.py": "58fd315c576e27903a5584df4f4a534305fdf683902211f66b8e4b9de7d28532",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp3/job.json": "956a282cc7e6f59ed71af28919f69f1b28992744727640629f68d9fe2c2e96b8",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py": "b3c146fb9ffbd6fb5a4e658c97301419fd2cf76afeacda5f56971d126477090f"
+    },
+    "limitation": "Greedy text-only; startup1200s, requests300s/job1500s. Prefixoff, FP16KV, no calibration or sampling overlay. MTP1 does not exercise iterative draft decode graph; steps3 remains later arm. Require observed capture/replay/acceptance; CLI or coherence pass alone not proof.",
+    "launch": [
+      "python3",
+      "/mnt/vm_8tb/github/b70_ai_things/sglang/refresh/20260910_fp8_read_policy/feature_gate.py",
+      "/mnt/vm_8tb/b70/results/bang_isolation_20260910/sglang14ee-fp16-feature-plans/graph-mtp3/plan.json",
+      "--run"
+    ]
+  }
+]

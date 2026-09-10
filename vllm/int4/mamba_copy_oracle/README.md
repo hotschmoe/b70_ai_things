@@ -52,3 +52,26 @@ This single-layer/group fixture does not verify multiple-group pointer mapping,
 publication timing, accepted-row correctness, graph replay or model quality.
 
 Raw: /mnt/vm_8tb/b70/results/bang_isolation_20260910/mamba-copy-oracle
+
+## Owned per-card lifecycle prepared
+
+lifecycle_plans.json records separate card0/card1 choices using the exact
+7b107d phase+MRV1 image. No launch occurred. lifecycle.py defaults to printing
+the chosen frozen plan. Its explicit --run requires the selected inherited
+lease descriptor and the existing image pair-preflight PASS, verifies every
+snapshot/helper hash and image ID, then runs strict selected-card pre-health,
+the twelve-case oracle and strict selected-card post-health.
+
+Each oracle uses8GiB/4CPU, a420s bound, explicit physical device pin, separate
+fresh cache/output and read-only fixture/source snapshots. The common reviewed
+preflight helper owns process-group termination and labeled Docker cleanup;
+uncertain cleanup retains the lease until absence is verified. No reset occurs
+under a single-card lease. Failed health defers recovery to the parent.
+Full JSON is retained on numerical exit1; malformed/crashed runs still reach
+post-health after cleanup. Health success cannot mask an oracle failure.
+
+CPU lifecycle tests cover numeric failure retention, crash post-health and
+failed post-health blocking success without reset. Both prepared unleased
+commands fail before GPU work, and frozen identities/device/resource pins pass.
+The exact launch argv are in lifecycle_plans.json. Select a card only after
+parent scheduling; these plans have not qualified the kernels on hardware.
