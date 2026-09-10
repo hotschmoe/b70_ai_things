@@ -773,3 +773,27 @@ lease-protected rebind plus strict both-card/compiled-pair recovery under
 native5802-userpause-recovery. The monitored trial must require its successful
 receipt, not relabel the interrupted run normal_stop. Recovery was pending at
 this clarification; no trial startup is claimed here.
+
+
+## 2026-09-10 - Monitored native5802 endpoint started
+
+CONFIG -> User-authorized monitored200K trial; d556/native6717, TP2/P2P0,
+MTP3, be02 FP8 KV, prefix ON and FULL_DECODE_ONLY. Primary hotschmoe-dd,
+registered native5802 200K secondary alias, existing authenticated18080 frontdoor.
+
+COMMAND -> User installed90-native5802-monitored-trial.conf, reloaded systemd
+and started the existing hotschmoe-dd.service. Parent monitored startup and
+queued the final frontdoor smoke inside the existing serving lease.
+
+RESULT -> Service active/running. Both-card and compiled-pair pre-health pass;
+model load/compilation/graph capture complete. All88 startup checks pass.
+Nine final frontdoor checks pass: missing/wrong credentials401, Bearer and
+X-API-Key authorized identity/context200000, and four exact concurrent answers.
+No live key logged. Evidence and deployment-receipt.json are in:
+/mnt/vm_8tb/b70/results/qwen38_native5802_monitored_trial/20260910T232908Z/
+
+VERDICT -> Endpoint open for user-monitored use; campaign remains paused.
+This is not full long200K qualification or an unrestricted stability claim.
+The interrupted near185K campaign, forced drain/recovery and known numeric EOS
+quality failure remain recorded. Service is running; teardown/post-health will
+belong to the next actual downtime.
