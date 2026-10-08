@@ -8879,3 +8879,41 @@ named leased coordinator with bounded recovery and health. The topology
 override is a candidate, not a diagnosed cause. No GPU attempt this review.
 SGLang long context, four-active-200K FP8, prefix/MTP/graphs and RAM reload
 remain pending. Timer enabled; production offline; no input required.
+
+
+## 2026-10-08 - Flash-Next Unsloth Q4 campaign authorized and prepared
+
+CONFIG -> User selected Unsloth UD-Q4_K_XL for the dual-B70 plus host-RAM
+campaign, authorized current GPU-service downtime and any backend/kernel/profile
+work. Target revision766911a6b7369840a91dbcd95f9f997acaab6cd6; four target
+shards111334654784 bytes. Publisher MTP Q4_K_M and BF16 vision sidecars retained.
+Host kernel7.1 and UMD26.22 unchanged; old native5802 image/config retained.
+
+COMMAND -> Audit current Steve/Sergio/Strata evidence and neural.download
+methodology; fetch current Strata and fresh llama.cpp sources; snapshot live
+stack/model identities; start bounded hash-verified intake; stop native5802 via
+its owned leased STOP lifecycle; prepare/start pinned oneAPI2026.1 build.
+Write docs/20261008_flashnext_udq4xl_campaign.md, exact model/backend locks,
+header-only inventory tooling and a lease-enforced current llama.cpp build.
+
+RESULT -> Strata fb58e0d and llama.cpp de7fa0a pinned. Current llama.cpp has
+layer-split GPU MoE cache over host experts, so it is now a primary candidate
+as well as fidelity reference. Strata needs native-Q8 hyper-connection fidelity
+and potentially per-stage host mirrors. Current vLLM0.31.0 and SGLang0.5.21
+source audits show blockers for this exact GGUF/XPU combination. The old
+service/backend exited0; per-card and compiled two-rank10-iteration P2P0
+post-health passed. Worker XPU shutdown completed; executor sent SIGTERM after
+its worker grace period. Service inactive; original lease released.
+
+CPU validation: manifest/lock agreement, syntax/ASCII/whitespace checks,
+verified-byte acceptance and same-size corruption rejection, bounded GGUF
+header parsing with complete/incomplete split and truncation checks. The first
+target shard is metadata-only; the downloaded MTP header has34 tensors. Model
+intake and compiler build remain running under separate user units; no complete
+model hash verification, new-backend GPU qualification or serving pass claimed.
+Raw receipts/logs: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/.
+
+VERDICT -> Research plan and reproducible preparation established. Next gates
+are completed intake/build, actual tensor memory map, primitive/runtime health
+and deterministic no-MTP dual-card baseline. No shelf promotion. Historical
+Steve FP8 and Sergio different-checkpoint speeds are not this model's results.

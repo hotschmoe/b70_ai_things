@@ -14,6 +14,32 @@ version: 1
 root: files
 
 models:
+  # User-selected Flash-Next campaign, 2026-10-08. Not shelf qualified.
+  - id: qwen3.8-flash-next/unsloth-ud-q4-k-xl
+    family: qwen3.8-flash-next
+    scheme: unsloth-ud-q4-k-xl-mixed-gguf
+    vision: true
+    mtp: true
+    size_gb: 115.03
+    served_as: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL
+    source:
+      type: hf
+      repo: unsloth/Qwen3.8-Flash-Next-GGUF
+      revision: 766911a6b7369840a91dbcd95f9f997acaab6cd6
+      files:
+        - UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf
+        - UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf
+        - UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf
+        - UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf
+        - MTP/mtp-Qwen3.8-Flash-Next-Q4_K_M.gguf
+        - mmproj-BF16.gguf
+        - README.md
+        - MTP/README.md
+    notes: Four target GGUF shards plus publisher MTP and vision sidecars.
+           Capability flags describe included artifacts, not engine qualification.
+           Primary client name remains hotschmoe-dd. Hash lock and verifier are
+           in strata/flash-next/. No pruning or re-quantization authorized by this entry.
+
   # Qwen3.6-27B: NVIDIA NVFP4 only.
   - id: qwen3.6-27b/nvfp4-modelopt
     family: qwen3.6-27b

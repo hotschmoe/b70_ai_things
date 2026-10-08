@@ -14,6 +14,13 @@ documents listed below.
 
 ## Current scope
 
+Active user-authorized campaign (2026-10-08): Qwen3.8-Flash-Next Unsloth
+UD-Q4_K_XL on two B70s plus host RAM. See
+docs/20261008_flashnext_udq4xl_campaign.md. Fresh llama.cpp and Strata source,
+other backends, custom kernels, profiling and GPU-service downtime are in scope.
+This deliberately expands the older backend/model scope below; archive rules,
+GPU leases, identity and qualification gates still apply.
+
 Backends:
 
 - sglang is the primary serving and new-development backend.

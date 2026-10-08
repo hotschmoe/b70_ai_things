@@ -1,0 +1,33 @@
+{
+  "checked_utc": "2026-10-08",
+  "policy": "Resolve newest source at campaign start; freeze identities for matched comparisons. Refresh as a new generation.",
+  "sources": {
+    "strata": {
+      "url": "https://github.com/Niko1221/Strata",
+      "revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "local": "/mnt/vm_8tb/github/strata",
+      "status": "source-only; no local qualification"
+    },
+    "llama.cpp": {
+      "url": "https://github.com/ggml-org/llama.cpp",
+      "revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+      "local": "/mnt/vm_8tb/github/llama.cpp-flashnext",
+      "status": "source-only; primary control and candidate"
+    },
+    "vllm": {
+      "url": "https://github.com/vllm-project/vllm",
+      "revision": "ab905a885dfbfc60a2c02286cc9c608c93884de3",
+      "release": "v0.31.0",
+      "status": "not installed for campaign; qwen4exp XPU guard and GGUF-XPU execution blockers"
+    },
+    "sglang": {
+      "url": "https://github.com/sgl-project/sglang",
+      "revision": "71584b62c0f6c9f1a8dbad1b0a9191f775c0bcd8",
+      "release": "v0.5.21",
+      "status": "not installed for campaign; GGUF XPU execution unavailable"
+    }
+  },
+  "build_base": "intel/oneapi:2026.1.0-devel-ubuntu24.04@sha256:e9db518398753434ee5aab9740a25f1d3134396a30be1569cfad8f8b0d90740c",
+  "build_status": "base pull started; derived image not built",
+  "rollback_image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067"
+}
