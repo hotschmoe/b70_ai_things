@@ -10527,3 +10527,20 @@ NewgenuineC1generation8 onecardpreparation running.
 VERDICT -> Scopedsource/lifecycleproof; ordinarypayload/nativefullmath/slots/
 cache/concurrency/latency/shelf remainunqualified. See integrated29sourceupload
 qualification doc. Earlierfailedruns unchanged.
+
+
+## 2026-10-09 - Actual33 conditionaloriginalHC/GDN one/pair PASS
+
+CONFIG -> Explicit33 admission/frozenHC/GDN scalar consumers, completedV8
+one/pair31source2DERIVED, original13roles/no guessed nativecontract.
+
+COMMAND -> New20CPU controls andactualone/pair checkers afternew390/CPUprep
+terminal; noGPU arithmeticchecker. Thennew29 C18 APIone parent41425started.
+
+RESULT -> PASS60each =32HC+28GDN/fourprefixes, worstNMSE3.018986267244434e-14
+maxnormalized3.5706573414878165e-7, limits1e-6/1e-4 unchanged. All33source
+bindings/actualproofchain andtwo nativepacketcontracts admitteddirectly.
+
+VERDICT -> Conditionalcapturedincomingstate/activation consumers only. No
+filtered26admission/ownprefix/upstream/full48/lifetime/cache/speed inference.
+See docs/20261009_flashnext_original33_conditional_hc_gdn.md.

@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source only",
+  "files": {
+    "verify_layer0_hc_gdn_original33_v1.py": "b2d4157e863dc202a009bac24bc86fc311e0a6ff75cfb5f863019f13da2b4447",
+    "test_verify_layer0_hc_gdn_original33_v1.py": "7093f865857f122c7798da260dd8a8abcd41a01487d5f2c7083238a6334ad389",
+    "conditional-hc-gdn-original33-v1.md": "b1c3d24cfc72f9f4b5d0511c9fc25a5567c39215e8229f60fa8b99ec45f1cc1a"
+  },
+  "frozen_dependencies": {
+    "audit_layer0_capture_lifecycle_v2.py": "cd5441854c7bf11250080c7b109564e91f204422c4b790623132999641a7abfe",
+    "independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "layer0_numerical_contract_v1.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "verify_layer0_ffn_original_v1.py": "3f433f105c260e5760d54942c6c9e8f46f6ff97793238e310754ffd55ebf8d70",
+    "verify_layer0_gdn_original_v1.py": "c96ef510fd23b50956e22675ac36c3050c4f4fe6a4362c444f67819311c3b9fa",
+    "verify_layer0_hc_original_v1.py": "8f11969cd1f43bc29b8369446a975d77a00ad5fc9a08ba0182938d32617eb059",
+    "verify_layer0_packets_v3.py": "620f18e8aed625bb3c40f451d94ed66a8b1aa6aa247ec7638423426f38e9b329"
+  },
+  "cpu_tests": 20,
+  "existing_gdn_cpu_tests": 18,
+  "source_value_fields": 31,
+  "derived_fields": 2,
+  "observed_layout_fields": 33,
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "original_selected_roles": 13,
+  "thresholds": {
+    "nmse": 1e-06,
+    "max_normalized": 0.0001,
+    "normalizer_floor": 1e-06
+  },
+  "admission": "Genuine33 parser plus actual completed parent/child/engine/plan/postidentity bindings; original frozen publisher/source provider",
+  "scoped_conditioning": [
+    "captured incoming recurrent state",
+    "captured convolution history",
+    "captured activation/residual/block output",
+    "captured normalized qkv and decay/beta/z"
+  ],
+  "actual_runs": [
+    "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f11-20261009/layer0-numerical-onecard-v8",
+    "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f11-20261009/layer0-numerical-twocard-v8"
+  ],
+  "actual_original_payload_reads": 0,
+  "actual_capture_binary_reads": 0,
+  "GPU_work": false,
+  "actual_original_consumer_verdict": false,
+  "original_own_state_reference_qualified": false,
+  "complete_layer_math_qualified": false,
+  "full_model_math_qualified": false,
+  "source_or_capture_lifecycle_qualified": false,
+  "old26_consumers_modified": false
+}
