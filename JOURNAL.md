@@ -9780,3 +9780,15 @@ Real_live pairchildnumerical+teardownPASS genuine51reused/28evaluated vs79
 fresh, exactgeneratedassistant/template/tokenprefix; parentfinalgates pending.
 VERDICT -> Internal observer/topology and record provenance, not independent
 math/concurrency/cleanlatency. See combined20 qualification doc.
+
+## 2026-10-09 Real generated continuation with actual live cache
+
+CONFIG -> Frozen20/V6 pair, exactoriginaltemplate/tokenizer, four-requestroster.
+COMMAND -> Parent real_live; F07/serial-real-live-twocard-v6-v1.
+RESULT -> FinalPASS320s, seednatural42/newreply2; actualcommitted51IDs exactly
+renderedprefixof79, live51reused/28evaluated. Fullhead/all48residuals bitwise
+matchfresh with IDs/LP20/naturalEOS; strong4-record/stage/sourceaudit and
+teardown/health/kernel/NEW4publisherhashes pass. Decodecancel isolationstarted
+atF07/serial-cancel-decode-twocard-v6-v1 underpairlease; no resultyet.
+VERDICT -> Bounded real-live continuation, not fullmath/hiddenstate/API/session/
+concurrency/latency. Source/template/tokens not changed toforcehit.

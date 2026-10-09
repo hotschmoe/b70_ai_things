@@ -143,3 +143,31 @@ seed prefix without rewrites. Nonfresh selects live51reuse/28eval vsfresh79.
 Cached/fresh fullhead/all48residuals bitwise match; exact4-record external
 source/roster/stage/request audit passes. Parent health/hash gates pending.
 VERDICT -> NOTFINALIZED yet; no final live-continuation claim before parent gates.
+
+## Finalized generated assistant/new-user live continuation
+
+CONFIG -> Frozen20/V6 two-card2048/64/65536 pilot, four exact real_live requests
+with parking disabled. Actual natural seed output42; newuser asks a useful
+continuation and model naturally returns2. Exact pinned template/tokenizer used.
+COMMAND -> Parent V6 --group real_live;
+F07/serial-real-live-twocard-v6-v1.
+RESULT -> Final parent/childPASS320s. Actual seed input49 plus consumed generated
+IDs forms51-token committed prefix. Fresh continuation79 tokens matches that
+prefix exactly; repeatedseed outputs/committedIDs equal. Nonfresh continuation
+actually selects live51 reused/28 evaluated versus79 fresh. Cached/fresh IDs,
+LP20, natural EOS, full248320 firsthead and all48 residuals bitwise equal.
+External exact4-record/source-chain/continuation-token and two-stage entry/return
+request-binding audit passes. No template rewriting or manufactured token prefix.
+Native exits0/removal, strict+compiled P2P0 pre/post health, kernel gate and NEW
+all4 publisher hashes pass.
+VERDICT -> PASS bounded actual generated multi-turn live continuation and
+observable state reuse. Independent persistent-state bytes/full-model math,
+API session/concurrent isolation, cancellation/eviction and clean latency remain
+separate required work.
+
+## Decode cancellation isolation started
+
+COMMAND -> Parent V6 --group cancel_decode with finalized basic prerequisites.
+RESULT -> F07/serial-cancel-decode-twocard-v6-v1 acquired pairlease; pending.
+VERDICT -> Requires actual decode cancellation then nonfresh same/unrelated
+replays against fresh references; reset-only recovery cannot qualify it.
