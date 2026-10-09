@@ -9817,3 +9817,16 @@ bitwise, IDs/LP20/naturalstop equal. Strong6-recordaudit, teardown/health/kernel
 and NEW4publisherhashes pass. ExactV6evictionstarted7136 pairlease; no resultyet.
 VERDICT -> Bounded actualprefill cancellation isolation, not reset-onlypass or
 fullmath/persistent-state/concurrency/latency qualification.
+
+## 2026-10-09 Exact snapshot admission/victim and cold reconstruction
+
+CONFIG -> Frozen20/V6 pair,512MiB/one-entry cache, six-requestroster.
+COMMAND -> Parent eviction F07/serial-eviction-twocard-v6-v1.
+RESULT -> FinalPASS312s; targetinstance2 admittedrequest2 andsameinstance/
+source/semantic hashes evictedrequest3 acrossbothstages beforecoldrequest5.
+Snapshot356867440 bytes, allobservedheld+retained<=536870912/entries<=1.
+Cold0reuse/55eval matchesfresh fullhead/all48residuals bitwise, IDs/LP20/EOS;
+external6/source/stageaudit, teardown/health/kernel/NEW4publisherhashes pass.
+New20V6pin191/209 started underpairlease atF07/serial-pin-twocard-v6-v1.
+VERDICT -> Actualidentity/coldobservable consistency, logicalbudgets only;
+fullmath/rawstate/OSpeak/concurrency/latency remain open.

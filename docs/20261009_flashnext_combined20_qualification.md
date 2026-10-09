@@ -224,3 +224,31 @@ RESULT -> Pairlease acquired. Requires actual target admission and same observed
 snapshot instance/metadata victim before cold replay, plus512MiB/one-entry
 observed budgets.
 VERDICT -> RUNNING; global eviction count alone is insufficient.
+
+## Finalized exact admitted-snapshot eviction
+
+CONFIG -> Frozen20/V6 pair,512MiB/one-entry parking, exact six-request
+eviction roster.
+COMMAND -> Parent V6 --group eviction; F07/serial-eviction-twocard-v6-v1.
+RESULT -> Final parent/childPASS312s. TargetB committed57-token sourceSHA
+a0726f42a0e0f3ba2e16a97a52a7bcec005c74556c91e3525a761f5da5986abd
+is ADMITTEDrequest2 as observedinstance2,356867440 bytes, then EVICTEDrequest3
+as SAMEinstance2 with same source and semanticmetadataSHA
+7dede8dcc3c1885804888c5ea0c4fc55747e561e7591dd0b475d800e5f0b55bf.
+Both records bind ownerbounds0:32 and32:48. Target replayrequest5 is nonfresh,
+zero reused/55 evaluated. Reference/cold/freshfinal full248320head/all48
+residuals bitwise equal in two pairs, IDs/LP20/naturalstop equal.
+All observed retained+held bytes stay<=536870912/entries<=1; maximum356867440.
+This is logical accounting, not total OS/transient peak memory. Exact6-record
+source/request/stage/owner audit passes. Native exits0/removal, strict+compiled
+P2P0 pre/post health, kernel gate and NEWall4 publisher hashes pass.
+VERDICT -> PASS actualtarget admission/victim identity, bounded observed cache
+accounting and cold reconstruction. No rawstate/fullmath/API/concurrent or
+cleanlatency/shelf qualification.
+
+## New20 V6 long pinned-prefix path started
+
+COMMAND -> Parent V6 --group pin,191-token sharedprefix/209-token inputs;
+F07/serial-pin-twocard-v6-v1.
+RESULT -> Pairlease acquired; stronger stage/source telemetry pending.
+VERDICT -> Old18/V5 pin evidence preserved; new20/V6 path requires its own result.
