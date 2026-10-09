@@ -9595,3 +9595,17 @@ all4 publisher hashes pass. Parked snapshot suite numerical childPASS actual
 ram_snapshot/42reuse twice; parent healthPASS but hash/finalization pending.
 VERDICT -> Bounded pin/prefill seam observable consistency, not independent
 whole-state/complete-cache/concurrency/latency qualification. See serial doc.
+
+## 2026-10-09 Finalized two-card parked conversation restore
+
+CONFIG -> Frozen0018/V5 two-card32/16 pilot,512MiB/one-slot parking.
+COMMAND -> Parent --group parked at F06/serial-parked-twocard-v1.
+RESULT -> Final PASS exit0,467s; two actual ram_snapshot hits reuse42/evaluate7
+vs49 fresh. Both pairs match full logits/all48residuals bitwise (96pairedrows),
+IDs/LP20/natural EOS. Logical selected/finished cache bytes peak356658400/one
+entry, restored0entries/1361344retainedbytes; not total transient memory. Native
+exit/removal, pre/post strict+compiled P2P0 health, kernel gate and NEWall4
+publisher hashes pass. Bounded eviction suite started under pair lease at
+F06/serial-eviction-twocard-v1; no result.
+VERDICT -> Bounded actual two-stage snapshot restore observable consistency,
+not raw persistent-state/complete-cache/API/concurrency/latency qualification.

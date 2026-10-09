@@ -196,3 +196,38 @@ RESULT -> Numerical/teardown child PASS: both restorations select ram_snapshot
 and42 reused tokens. Parent post-health passes; NEW source hashes still running.
 VERDICT -> NOT FINALIZED; no complete snapshot qualification until parent gates
 finish. Exact victim/admission and total-memory coverage remain V6 work.
+
+## Finalized two-card parked conversation restoration
+
+CONFIG -> Frozen0018/V5/parent, same two-card32/16 pilot. Parked budget512MiB,
+one entry. Repeated B-reference / independent A / B-restoration roster; requests
+remain serial native GEN branches, not independent HTTP sessions.
+COMMAND -> Parent wrapper --group parked; F06/serial-parked-twocard-v1.
+RESULT -> Final parent/child PASS, exit0,467s including lifecycle and fresh
+hashes. Both restorations MUST and DO select ram_snapshot with42 tokens
+actually reused and7 newly evaluated, versus49 in fresh references. Both
+cached/fresh comparisons match exact IDs, LP20, natural EOS, full248320 first
+logits and all48 first-window residuals bitwise (96 paired residual rows,
+max_abs0/RMSE0). No prefill residual claim for these short prompts.
+
+Observed logical cache bytes at selection/finish peak356,658,400 with one entry,
+below512MiB. After take/restore, reported entries0 but bytes1,361,344 account
+retained reuse buffers. These boundary observations are not total host/cgroup
+peak memory or exact mutation/admission/victim ownership evidence.
+
+Native engine exits0/container removed. Strict per-card and compiled two-rank
+P2P0 health pass before/after; kernel and owned-container gates pass. NEW
+post-terminal/post-health full buffered publisher hashes match all4 shards
+with unchanged stats and intact sentinel; no source repair/runtime change.
+VERDICT -> PASS bounded actual two-stage RAM snapshot restore/output equivalence.
+Independent raw persistent-state equality, exact victim/admission and total cache
+cost, API session/concurrent isolation and clean cache-hit latency remain open.
+
+## Bounded two-card eviction suite started
+
+CONFIG -> Same frozen pilot,512MiB/one-slot parking and six-request eviction
+roster. V5 tests global eviction growth, cold reconstruction and numerical
+equality; exact target admission/victim and every-mutation budgets require V6.
+COMMAND -> Parent wrapper --group eviction; F06/serial-eviction-twocard-v1.
+RESULT -> Both leases acquired and pre-health started.
+VERDICT -> RUNNING; do not infer exact victim ownership from the V5 counter gate.
