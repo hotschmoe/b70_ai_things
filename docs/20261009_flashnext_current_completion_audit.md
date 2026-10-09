@@ -39,3 +39,10 @@ math, complete cache, concurrency, interactive latency and shelf remain unproven
 Checkpoint6b49054 is pushed; subsequent runtime evidence is indexed in
 docs/20261009_flashnext_source33_resume.md. Historical restriction paragraphs
 above describe the previous restricted session and no longer block new work.
+
+Corrected onecard C111 now passes bounded API identity/coherence/tokenconsumption/
+repeat plus teardown/posthealth/newfourhash gates. The source33 V5 concurrency
+lane admits the actual onecard SDK/C111 chain, but has no actual batch runtime
+proof. P30V2 current-PLE input capture and original48 exploration are the next
+fidelity gates. No fullmodel/completecache/pairconcurrency/latency/shelf proof
+has been substituted by the bounded C111 screen.

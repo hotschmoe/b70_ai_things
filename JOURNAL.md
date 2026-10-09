@@ -10735,3 +10735,28 @@ qualification. C111/runtime/P30V2/actualoriginalinput/nativefidelity then
 cache/concurrency/latency/shelf stillrequired. Source32-only batchV4 needs
 new source33/C111 V5 admission; no silent priorproof transfer.
 See docs/20261009_flashnext_source33_resume.md.
+
+
+## 2026-10-09 - Corrected source33 onecard C111 PASS; P30V2 live
+
+CONFIG -> New source33/native SDK and exact C111onecard-segmented2048/64,
+all new cache/observer flagsOFF; originalmodel/stack/clientname unchanged.
+
+COMMAND -> Pair-owned C111parent62244, fresh terminal/posthealth/full4
+then actual publicproof validation. Prepare4203 and launch P30V2parent12328.
+V5 concurrency source-only port on source33/C111 with17CPU tests,37hash closure
+and root actual onecard baseline admission.
+
+RESULT -> C111PASS508s/APIidentity/coherence/tokenconsumption/repeats/exit0/
+removed/strict+compiledposthealth/NEWfourpublisherhashes. QualificationSHA
+80d33583efac5ed1562ec0dbf58316ecf009b8ae61c8224c34f399075708f288;
+parentSHA05aec7d374fa2b7a1dcceece1b020886b8b18abb2fff4f0219ed4d10f60c1696.
+P30V2onecard12328 live with hostinput33 ONbotharms/P30onlyOFF-ON toggle.
+V5CPU17/37closurePASS and actual SDK/C111admissionPASS; no batch runtime.
+V5 rejects EAGER presence0 (native getenv presence enableseager), keeps
+input33/P30OFF; source32/V4 evidence unchanged.12experimental aliases added.
+
+VERDICT -> Bounded correctedonecard service/lifecycle/sourceproof, not native
+originalmodel math or speed. P30 actualcurrentinput/original48 then corrected
+pair/cache/concurrency/fairness/latency/shelf remainrequired.
+See docs/20261009_flashnext_source33_resume.md.

@@ -1,0 +1,80 @@
+{
+  "schema": 5,
+  "status": "READY CPU source only; genuine source33/C111 batch runtime unobserved",
+  "source_sha256": {
+    "strata/flash-next/batch_numerical_proofs_v5.py": "e9677d9681ba9d01be9cb5f9a71afdcbaaa37e25cc1ba8dcd3b6a72d9e6508e7",
+    "strata/flash-next/batch_numerical_execution_v5.py": "de1816027517cf0c181097b12105b08cd0b5c8fa10184a97b067566e83e01b37",
+    "strata/flash-next/qualify_batch_numerical_v5.py": "08f97f1c600a5fd72f788b1e397623fa67e021c7d211b55e1779e99568f74e3f",
+    "strata/flash-next/audit_batch_numerical_suite_v5.py": "53bad9f04838c617160777d8cb874f9b13a542973a2b2fc8cac5345e30ed3d5b",
+    "strata/flash-next/run_batch_numerical_pilot_v5.py": "fcaf88648fc5e53db13af7d25bedb2865c1c3d59c89289043a6528592a7aea7d",
+    "strata/flash-next/run_batch_api_controls_v5.py": "e67627b1c5efdb5b616cf5a2985875de31564d639458623dbca204eaca8af190",
+    "strata/flash-next/run_batch_serial_controls_v5.py": "b6a2faa39bc2dd86b17f8ba6e090207678b2e7106d2af76383c5801851a3d346",
+    "strata/flash-next/test_batch_current_source33_cpu_v5.py": "86d586cd7aa1b7b631f3d754de3eb68a72d10de282dff365bc2067152c6a41bb",
+    "strata/flash-next/batch-numerical-model-registry-proposal-v5.yaml": "1cceac2f7ae05eb00788b62905655620a034e039ed62b8b6d4514fb394db7b33",
+    "strata/flash-next/batch-numerical-harness-design-v5.md": "221879994940e5d46281e36fe88bfd45fef0fc60e261e8ffd1fdc8bcb936b4ca",
+    "strata/flash-next/batch-numerical-case2-source33-v1.json": "6f78edbab9d11a4453acd725a322c3c77fe79954d3f55636cfb81447d0ca548c",
+    "strata/flash-next/batch-numerical-case4-source33-v1.json": "e11064ed59052f831b187bd97a3efb9cf23b40eebbf286c76baa1c779081faf6",
+    "strata/flash-next/batch-numerical-case6-source33-v1.json": "cadaaf4b8283e386ae6d6bb6e604e8fe04598acb5235c57b420b08d2eb60650b"
+  },
+  "immutable_dependency_sha256": {
+    "strata/flash-next/parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "strata/flash-next/audit_fidelity_observer_coverage.py": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47",
+    "strata/flash-next/collect_fidelity_observer.py": "5c29e5925682d4cd5b075b549b8b12dd42ed995109f0d86675bb2e59a6c3889b",
+    "strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "strata/flash-next/batch_numerical_prefixes_v2.py": "bccdbe9d9c0c8e50d2e059877cf9d4648e2ab8c1a533451ac56d5d18adca1dc5",
+    "strata/flash-next/batch_api_trace_v2.py": "4f0aff752836e7ee0a647a4b1dc701c703967ab36038d49076a55407bfd54257",
+    "strata/flash-next/batch_api_client_v2.py": "baf544e3b908680d305efcdcd4f74865c9b31facb94c29238593d0f720991d7a",
+    "strata/flash-next/batch_api_prefixes_v2.py": "b51471d4b08be9ec4cae440409eafc40d3aacbf96b50ab06ba754327cabb8058",
+    "strata/flash-next/audit_batch_capture_lifecycle_v2.py": "12db0d48b684ababfead2a3ead48410979e6706359522909c02a8b0ca6af2bba",
+    "strata/flash-next/audit_slot_owner_trace_v1.py": "8b4fdb4da2ff758cc625b33e24077e9f2f97c0ca0111428a1f8b8f5be279bf43",
+    "strata/flash-next/audit_batch_fidelity_coverage_v2.py": "2d3719ad4f020811462e5a5e8f2d93da950658d9a901e9aaa9777d2e4439e24a",
+    "strata/flash-next/audit_batch_fidelity_coverage_v4.py": "a2814f92378f93d4e9cea946ba67b4304affc57d21fa4f00c6fa87253a4655df",
+    "strata/flash-next/audit_stage_mirror_owner_trace_v1.py": "4ec214482c0bf330cb96d5d7d0c091381ff9c295487bcf3482b79282f8f0c9bd",
+    "strata/flash-next/merged_numerical_protocol_v2.py": "6f3e5194f175987f974cf8715ccaf5315877a9dba791a4b56fdb68cd63dc9a9c",
+    "strata/flash-next/serial_prefix_qualification_v6.py": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c",
+    "strata/flash-next/layer0_numerical_qualification_v9.py": "2252f24be9a3511bcb40d5e623caa75259112b9cd07f3d55944f67c67d2a084c",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/c1_trace_contract.py": "ee557bb1e9eb6a31b67714c93034461aa24572f20781cfcb9a858c25dd825e20",
+    "strata/flash-next/current-ple-input33-engine-build-plan-v1.json": "81798dff3fd012f7b95984403ea1088a1f157d37ee2d2e6e1b612711052cd34c",
+    "strata/flash-next/c1_serve_controller_combined_v11.py": "bb629910af8296c4016affa79be023af3d9c126a1c58e523363452b5a6931ade",
+    "strata/flash-next/qualify_c1_serving_combined_v11.py": "c819df2d1dae0ae31cd14a0a64766d99b3dec4c8edd4741c090a1f9b96929c49",
+    "strata/flash-next/c1-combined-v11-source-plan.json": "45a54458f5a50384cd44a02c7b8df46e455e4367404ec00e9a0f53cafefbf9c8",
+    "strata/flash-next/c1-combined-v11-parent-source-plan.json": "4a04447a81d81debc5956a63910cf8b79b0631e15e47ed9c5e90fdecbd1b1453",
+    "strata/flash-next/batch-numerical-harness-source-plan-v4.json": "0c4cb4965de4e4cfdb6a20d3133a956976d248dec7b9fd70653876a819a146e7"
+  },
+  "only_permitted_lane": {
+    "source33": {
+      "plan": "strata/flash-next/current-ple-input33-engine-build-plan-v1.json",
+      "sha256": "81798dff3fd012f7b95984403ea1088a1f157d37ee2d2e6e1b612711052cd34c",
+      "source_files": 63,
+      "headers": 27,
+      "patches": 33,
+      "generation": 11,
+      "fresh_ABI_targets": 8,
+      "runtime_Python_sources": 6,
+      "controller_sha256": "bb629910af8296c4016affa79be023af3d9c126a1c58e523363452b5a6931ade",
+      "parent_sha256": "c819df2d1dae0ae31cd14a0a64766d99b3dec4c8edd4741c090a1f9b96929c49"
+    }
+  },
+  "cpu_command": "python3 -m unittest discover -s strata/flash-next -p 'test_batch_current_source33_cpu_v5.py'",
+  "cpu_tests": 17,
+  "source_observer_flags_OFF": [
+    "STRATA_PLE_INPUT33",
+    "STRATA_PREFIX30"
+  ],
+  "EAGER_must_be_absent_including0": true,
+  "counter_contract": {
+    "reused": 0,
+    "read_from": 0,
+    "reread_to": -1,
+    "checkpoint_reread_env": "absent including0"
+  },
+  "V4_preserved": true,
+  "actual_GPU_Docker_runtime_or_original_payload_execution": false,
+  "actual_genuine_preparation": false,
+  "actual_runtime_qualified": false,
+  "full_model_math_qualified": false,
+  "cache_history_isolation_fairness_qualified": false,
+  "OFF_batch_raw49_equality": "UNOBSERVED",
+  "latency_qualified": false
+}

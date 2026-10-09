@@ -71,3 +71,19 @@ yet. See strata/flash-next/full48-original-prefix1-p30-source-plan-v2.json.
 It compares144 actual P30 phase vectors and the full SFD head to independently
 owned original-state computation. Old explorerV1 remains bound to source29.
 Source32-only batchV4 needs a new source33/C111 V5 generation before use.
+
+Corrected onecard C111 final -> PASS508s, API identity/coherence/repeat/consumption
+plus native/serverexit0/removal/strict+compiledposthealth/NEWpublisherhashes4.
+Qualification SHA80d33583efac5ed1562ec0dbf58316ecf009b8ae61c8224c34f399075708f288.
+Public C111 sourceproof validation alsoPASS. This is bounded service evidence,
+not original all48/native operator mathematical qualification.
+
+P30V2 onecard preparation PASS; parent exec session12328 is live, run directory
+p30v2-onecard-run under the evidence root. Check its actual terminal/proof state
+on continuation. Hostinput33 is ONbotharms; P30 is the OFF/ON toggle.
+
+New V5 concurrency harness source33/C111 passed17 CPU tests/37hash closure and
+root actual onecard baseline admission.12 experimental aliases registered.
+No batch GPU execution yet. V5 rejects EAGER whenever present, including0,
+matching actual native getenv semantics; input33/P30 stayOFF for that lane.
+Earlier V4 remains frozen and cannot qualify source33.
