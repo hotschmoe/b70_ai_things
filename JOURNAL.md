@@ -10614,3 +10614,20 @@ SHA324d88f4fc4d50617af55957cde88100c2fe10794c0e1f056e256b815e29abde.
 VERDICT -> BoundedAPI/coherence/lifecycle/sourceproof. 8192/128 vsone2048/64
 isnotmatchedspeedcontrol. Nativefullmath/completecache/concurrency/fairness/
 latency/shelf required. NewV9oneprepare58354 nowlive; failedunseg retained.
+
+
+## 2026-10-09 - Integrated29 actualone numericalV9 PASS
+
+CONFIG -> Fresh29SDK/source390/completedC18, explicitfrozen21 reference;
+serial1/2/4/8/context2048/prefill64,31source+2DERIVED, newcache/slotflagsOFF.
+
+COMMAND -> GenuineV9 preparation thenparent2681, actualcard0/pairhealthlease.
+
+RESULT -> PASS753s eightfullheads/384residual comparisons bitwise, allthree
+exit0/removed, four33frames/20packet-array pairs/7023304B logicalowner/free
+andpreposthealth/kernel/knownpages/NEWallfourpublisherhashesPASS.
+
+VERDICT -> Boundedserialsource/numerical/lifecycle proof; rawhidden/ownedfullmath/
+cache/concurrency/latency/shelf incomplete. Neworiginalconditional consumersnot
+yetexecuted. Pairedparent7497 nowlive usingthisactualone childreport.
+See docs/20261009_flashnext_integrated29_numerical_onecard_v9.md.
