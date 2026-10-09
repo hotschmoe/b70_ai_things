@@ -43,6 +43,7 @@ def main():
     parser.add_argument('--cpu-profile', action='store_true', help='Separate instrumented run with software CPU sampling')
     parser.add_argument('--init', action='store_true', help='Use Docker init to supervise the server child')
     parser.add_argument('--sycl-opt', type=int, choices=[0, 1], default=1)
+    parser.add_argument('--ctx-checkpoints', type=int, choices=[0], help='Diagnostic: disable checkpoint creation and its prompt split')
     parser.add_argument('--profile-suite', type=Path)
     parser.add_argument('--diagnostic-on-screen-failure', action='store_true', help='Preserve failed screen and continue only a labeled diagnostic capture')
     parser.add_argument('--primitive-receipt', required=True, type=Path)
@@ -141,6 +142,9 @@ def main():
             alias += '-warmup1'
         if args.sycl_opt == 0:
             alias += '-opt0'
+        if args.ctx_checkpoints is not None:
+            alias += '-ctxcp' + str(args.ctx_checkpoints)
+        receipt['context_checkpoints_override'] = args.ctx_checkpoints
         receipt['sycl_optimization'] = args.sycl_opt
         receipt['warmup'] = args.warmup
         receipt['research_alias'] = alias
@@ -181,6 +185,8 @@ def main():
                        '-c', '8192', '-b', '512', '-ub', '256', '-np', '1', '-t', '16', '-lv', str(args.log_verbosity)]
         if args.warmup == 'off':
             server_args += ['--no-warmup']
+        if args.ctx_checkpoints is not None:
+            server_args += ['--ctx-checkpoints', str(args.ctx_checkpoints)]
         if args.placement == 'static':
             server_args += ['-ot', r'per_layer_token_embd=CPU,blk\.([0-7]|4[0-7])\.ffn_(up|gate|down)_exps\.weight=CPU']
         else:

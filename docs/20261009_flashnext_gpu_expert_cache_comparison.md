@@ -254,3 +254,54 @@ initializes before gathering on the same in-order SYCL queue. SCALE uses
 ordinary multiplication, which would not sanitize earlier nonfinite values;
 initial allocation is explicitly zeroed. No nonfinite value, missing barrier,
 or stale mapping is established. These are diagnostic hypotheses only.
+
+## Optimization-on static history follow-up
+
+CONFIG -> Same static placement/model/server/runtime and warmup as F01,
+optimization on; detailed logging verbosity5 and native top-five diagnostic
+capture. F01 logging was lower, so this is not a completely identical
+execution environment to the earlier accepted bounded screen.
+
+COMMAND -> static-opt1-history-control; analyze_history.py offline.
+
+RESULT -> Strict prose repetition fails. Native first/immediate repeat shares
+35 IDs; after JSON diverges at output token22. Shared-prefix maximum top-five
+logprob deltas are0.654507 (first/repeat),0.444743 (first/after JSON),0.616843
+(repeat/after JSON). Normal stop/removal and both-card plus compiled P2P0
+post-health pass; no GPU fault signature.
+
+VERDICT -> Cache and optimization-off are not necessary for the observed
+history dependence. Earlier F01 evidence is retained as a bounded pass, not
+a general repeatability or stability authority. Static OPT1 with only
+--ctx-checkpoints 0 added is running next. This removes checkpoint creation
+and its prompt splitting; do not attribute any improvement solely to state
+serialization without another discriminating control.
+
+## Checkpoint-disabled static control
+
+CONFIG -> Same static OPT1 history control, only --ctx-checkpoints 0 added.
+
+COMMAND -> static-opt1-checkpoint0-history-control; analyze_history.py offline.
+
+RESULT -> Native prompt progress changes from[0,31,35] to[0,35]. All three
+native prose outputs share35 IDs, but top-five probabilities still differ
+from token0. Maximum shared logprob deltas are0.703054 (first/repeat),0.691006
+(first/after JSON),0.390645 (repeat/after JSON). Strict twelve-case screening
+still fails prose repetition. Final teardown/post-health pending at entry.
+
+VERDICT -> Checkpoint-off does not establish repeatability. Native output
+identity in this sequence is insufficient when strict screen and probability
+consistency remain unresolved. The shape change may select tiled convolution
+at32 tokens or eligible oneDNN attention at32; their execution is not proven
+solely from source eligibility. A future checkpoint-off microbatch31 arm must
+verify actual[31,4] batches to separate snapshot work from dispatch changes.
+
+Next source-supported controls, isolated rather than bundled: fusion disabled,
+CPU thread-count isolation, and instrumentation of initial recurrent-state
+mapping/finite/zero values. Quantized expert slot/refill fixtures alone cannot
+qualify recurrent request-state correctness. No cache performance conclusion
+or shelf promotion follows these diagnostics.
+
+Checkpoint-disabled lifecycle follow-up: normal stop/removal, full diagnostic
+capture, per-card and compiled P2P0 collective post-health pass. No GPU fault
+signature. Failed strict screen remains failed.

@@ -8987,3 +8987,24 @@ VERDICT -> Bounded cache layout/refill prerequisites pass; release cache
 correctness does not. Static OPT0 result prevents attributing drift solely to
 cache. Static OPT1 history comparison is the next matched control. Keep failed
 receipts and diagnostic timing separate from performance claims.
+
+## 2026-10-09 FlashNext static OPT1 and checkpoint exclusion
+
+CONFIG -> Same pinned model/runtime/server and static layer placement, warmup
+on, OPT1, detailed logging5. Second arm adds only --ctx-checkpoints 0.
+
+COMMAND -> run_control.py static-opt1-history-control and
+static-opt1-checkpoint0-history-control, followed by offline analyze_history.py.
+
+RESULT -> Both strict twelve-case screens fail prose repetition. OPT1 native
+history diverges after JSON at output22; checkpoint-off native history shares
+35 IDs but probability drift remains. Progress changes31+4 to35. Both runs
+stop/remove normally, pass per-card/compiled P2P0 post-health, no GPUfault.
+Default-off cache byte verifier now has CPU ASan/UBSan self-tests and syntax
+checks, not GPU qualification; independent builder prepared but not executed.
+
+VERDICT -> Earlier F01 bounded pass does not establish general repeatability.
+Cache is unnecessary for this failure; checkpoint-off alone does not fix it.
+Shape-dependent dispatch is a confound. Preserve failed evidence and investigate
+shared request state/kernel paths before any speed or shelf claim. Detailed
+records: docs/20261009_flashnext_gpu_expert_cache_comparison.md.
