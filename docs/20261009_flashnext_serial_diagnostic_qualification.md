@@ -116,3 +116,45 @@ COMMAND -> Parent wrapper --group root with both prerequisite child receipts.
 RESULT -> Acquired both leases and began pre-health. Result directory:
 F06/serial-root-twocard-v1.
 VERDICT -> RUNNING; cached-versus-fresh and actual reuse are not yet qualified.
+
+## Finalized two-card shared-root prefix reuse
+
+CONFIG -> Same frozen0018 engine/V5/parent and two-card32/16 pilot, with
+conversation parking disabled to isolate the intended root checkpoint. Exact
+A/B input IDs share21 system-prefix tokens, then diverge in their user suffix.
+COMMAND -> Parent wrapper --group root with finalized one-card and two-card
+basic receipts; F06/serial-root-twocard-v1.
+RESULT -> Final parent/child PASS, exit0,388s including health and fresh hashes.
+Six armed requests form two matched triples: fresh B reference, fresh A
+establishment, nonfresh B hit. Both hits select exactly21 reused tokens and
+complete only28 newly evaluated prompt rows, versus49 in each fresh request.
+Parking remains0 bytes/0 entries; the selected route is the targeted root
+checkpoint rather than an unrelated full conversation image.
+
+Both cached/fresh comparisons and fresh-reference repeat match output IDs, LP20,
+natural EOS, full248320 first logits and all48 first-window residuals bitwise.
+There are3 full comparisons/144 residual rows with max_abs0 and RMSE0. All6
+noncancelled requests have mandatory source token/position/stage/head coverage.
+No standalone prefill residual claim applies to these49-token prompts.
+
+Native engine exits0 and its container is removed. Per-card strict and compiled
+pair P2P0 pre/post health, kernel-fault and owned-container gates pass. NEW
+post-terminal/post-health full buffered hashes match all four publisher shards
+with unchanged stat records; no source repair or runtime change. Evidence:
+F06/serial-root-twocard-v1/{parent-qualification.json,child/report.json,
+child/root/requests.json,child/root/result.json,post-health.json,
+post-model-identity.json}.
+VERDICT -> PASS bounded two-card root reuse and cached/fresh observable output
+equivalence. Persistent state is not independently dumped/compared; actual
+per-stage row counts are still topology-derived in V5. Main checkpoint memory,
+real continuation, exact eviction/cancellation/session isolation, concurrency,
+independent mathematics and clean cache-hit latency remain unqualified.
+
+## Two-card191-token pinned-prefix suite started
+
+CONFIG -> Same two-card pilot,209-token exact inputs with191-token shared pin;
+this crosses the64-token prefill chunk seam and exercises a longer state prefix.
+COMMAND -> Parent wrapper --group pin with both finalized basic prerequisites.
+RESULT -> Acquired both leases and started pre-health;
+F06/serial-pin-twocard-v1.
+VERDICT -> RUNNING; no pinned-prefix numerical or prefill-seam result yet.

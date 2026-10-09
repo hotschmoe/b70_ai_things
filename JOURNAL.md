@@ -9542,3 +9542,18 @@ pair lease at F06/serial-root-twocard-v1; no prefix result yet.
 VERDICT -> Topology/observer consistency, not independent full-model math or
 complete-state prefix/concurrency/latency/shelf qualification. See
 docs/20261009_flashnext_serial_diagnostic_qualification.md.
+
+## 2026-10-09 Finalized two-card root cache reuse
+
+CONFIG -> Frozen0018/V5/parent,32/16 two-card2048/64 pilot, parking disabled.
+COMMAND -> --group root at F06/serial-root-twocard-v1.
+RESULT -> Final PASS exit0,388s including native teardown, strict+compiled
+P2P0 pre/post health, kernel gate and NEW complete all4 publisher hashes.
+Both matched cache hits reuse21 tokens and evaluate28 rather than49 rows.
+Two cached/fresh pairs plus fresh-repeat match IDs/LP20/natural EOS, full248320
+first logits and all48 residuals bitwise (144pairedrows max_abs0/RMSE0).
+Two-card191-token pin/209-token-input suite started at
+F06/serial-pin-twocard-v1 under pair lease; no result yet.
+VERDICT -> Bounded actual root reuse; independent whole-state proof, stage
+measurement, main cache bytes, real continuation/eviction/cancel/API isolation,
+concurrency and clean latency remain open. See serial diagnostic qualification doc.
