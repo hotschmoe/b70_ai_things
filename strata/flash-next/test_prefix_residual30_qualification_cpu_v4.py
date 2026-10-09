@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""Synthetic/tiny P30 runtime-gate controls; no Docker, weights, GPU or runtime writes."""
+import copy,json,tempfile,unittest,ast,shutil
+from pathlib import Path
+from unittest.mock import patch
+import numpy as np
+import test_ple_prompt35_cpu_v1 as prompt35
+import prefix_residual30_qualification_v4 as q
+import qualify_prefix_residual30_v4 as parent
+from audit_prefix30_lifecycle_v1 import audit_text
+
+class MappingTests(unittest.TestCase):
+ def setUp(self):
+  self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name);self.rows=[];self.frames=[]
+  for request,n in enumerate(q.PREFIXES,1):
+   ids=list(range(100,100+n));vectors=[];fields=[]
+   for layer in range(48):
+    raw=np.full(10240,np.float32(layer+n)).tobytes();a=self.root/f'p30-{n}-{layer}.f32';b=self.root/f'sfd-{n}-{layer}.f32';a.write_bytes(raw);b.write_bytes(raw)
+    vectors.append({'pid':'9','request':str(request),'stage':'0','layer':str(layer),'pos':str(n-1),'token':str(ids[-1]),'bytes':'40960','path':str(b),'sha256':q.sha(b)})
+    fields.append({'phase':'ffn','layer':layer,'bytes':40960,'path':str(a),'sha256':q.sha(a)})
+   self.rows.append({'prefix':n,'meta':{'logits':[{'pid':'9','request':str(request)}],'residuals':vectors}});self.frames.append({'binding':{'route':'verifier','gen_ids':ids,'pid':9,'request':request,'stage':0,'first_position':n-1},'fields':fields})
+  self.capture={'frames':self.frames}
+ def test_all192_bitwise_actual_raw_pair_positive(self):self.assertEqual(len(q.cross_sfd(self.capture,self.rows)['pairs']),192)
+ def test_samebinary49_fullvectors_control(self):
+  head=self.root/'head.f32';head.write_bytes(np.zeros(248320,dtype='<f4').tobytes());vectors=self.rows[0]['meta']['residuals'];meta={'logits':[{'path':str(head),'sha256':q.sha(head)}],'residuals':vectors};raw={'ids':[100],'fresh':1,'output_ids':[101],'LP':['LP fixture'],'done':'DONE 0 0 0 0 length'}
+  row={'raw':raw,'meta':meta};result=q.numeric.compare_numeric(row,copy.deepcopy(row));self.assertTrue(result['head']['bitwise_equal']);self.assertEqual(result['head']['floats'],248320);self.assertEqual(len(result['residuals']),48)
+  changed=copy.deepcopy(row);changed['meta']['residuals'].pop()
+  with self.assertRaises(ValueError):q.numeric.compare_numeric(row,changed)
+ def test_dynamic_row_offset_even_valid_nonce_cannot_pass(self):
+  field=self.frames[-1]['fields'][-1];p=Path(field['path']);raw=np.full(10240,np.float32(999)).tobytes();p.write_bytes(raw);field['sha256']=q.sha(p)
+  with self.assertRaises(ValueError):q.cross_sfd(self.capture,self.rows)
+ def test_missing_layer_rejected(self):
+  self.frames[0]['fields'].pop()
+  with self.assertRaises(ValueError):q.cross_sfd(self.capture,self.rows)
+ def test_duplicate_layer_rejected(self):
+  self.frames[0]['fields'].append(self.frames[0]['fields'][0])
+  with self.assertRaises(ValueError):q.cross_sfd(self.capture,self.rows)
+ def test_changed_file_with_stale_sha_rejected(self):
+  Path(self.frames[0]['fields'][0]['path']).write_bytes(bytes(40960))
+  with self.assertRaises(ValueError):q.cross_sfd(self.capture,self.rows)
+ def test_wrong_stage_request_position_rejected(self):
+  for key,value in [('stage',1),('request',99),('first_position',99)]:
+   capture=copy.deepcopy(self.capture);capture['frames'][0]['binding'][key]=value
+   with self.assertRaises(ValueError):q.cross_sfd(capture,self.rows)
+
+class LifeTests(unittest.TestCase):
+ def fixture(self,on=True):
+  self.rows=[];ptr=0x1000;self.targets=[]
+  for stage,(lb,le) in {0:(0,32),1:(32,48)}.items():
+   ctx=hex(0x10+stage);device=hex(0x20+stage)
+   for kind in (['SFD','SFD','P30','P30'] if on else ['SFD','SFD']):
+    if kind=='SFD':head=(len([t for t in self.targets if t['stage']==stage and t['kind']=='SFD'])==0 and le==48);size=(le-lb)*40960+int(head)*248320*4
+    else:size=(le-lb)*3*8*40960+16
+    ptr+=0x100;pointer=hex(ptr);self.rows.append(f'<--- urUSMDeviceAlloc(.hContext = {ctx}, .hDevice = {device}, .size = {size}, .ppMem = 0xf ({pointer})) -> UR_RESULT_SUCCESS;')
+    marker=f'{kind} allocation '+(f'pid=9 ' if kind=='P30' else '')+f'stage={stage} lb={lb} le={le} '+(f'pointer={pointer} ' if kind=='P30' else '')+f'bytes={size}'+(f' residuals1 logits{int(head)}' if kind=='SFD' else '')
+    self.rows.append(marker);self.targets.append(dict(kind=kind,pointer=pointer,stage=stage,ctx=ctx,size=size))
+  for t in self.targets:
+   if t['kind']=='P30':self.rows.append(f'P30 release_begin pid=9 stage={t["stage"]} pointer={t["pointer"]} bytes={t["size"]}')
+   self.rows.append(f'<--- urUSMFree(.hContext = {t["ctx"]}, .pMem = {t["pointer"]}) -> UR_RESULT_SUCCESS;')
+   if t['kind']=='P30':self.rows.append(f'P30 release_returned pid=9 stage={t["stage"]}')
+  return '\n'.join(self.rows)
+ def audit(self,text,on=True):return audit_text(text,{0:(0,32),1:(32,48)},on)
+ def test_both_sourceowner_sets_budget_contexts_frees_positive(self):
+  result=self.audit(self.fixture());self.assertTrue(result['passed'],result['errors']);self.assertEqual(len(result['owners']),8);self.assertEqual(result['aggregate_peak_bytes'],99297344);self.assertFalse(result['graph_retirement_runtime_handle_association_observed'])
+ def test_off_requires_noP30_withSFDowners_positive(self):self.assertTrue(self.audit(self.fixture(False),False)['passed'])
+ def test_missing_free_and_double_free_rejected(self):
+  self.fixture();i=next(i for i,x in enumerate(self.rows) if '<--- urUSMFree' in x)
+  self.assertFalse(self.audit('\n'.join(self.rows[:i]+self.rows[i+1:]))['passed']);self.assertFalse(self.audit('\n'.join(self.rows[:i+1]+[self.rows[i]]+self.rows[i+1:]))['passed'])
+ def test_failed_contextwrong_free_rejected(self):
+  text=self.fixture();i=next(i for i,x in enumerate(self.rows) if '<--- urUSMFree' in x)
+  for value in [self.rows[i].replace('UR_RESULT_SUCCESS','UR_RESULT_ERROR_UNKNOWN'),self.rows[i].replace('0x10','0x99')]:
+   rows=self.rows[:];rows[i]=value;self.assertFalse(self.audit('\n'.join(rows))['passed'])
+ def test_missing_owner_stage_or_returned_rejected(self):
+  text=self.fixture()
+  for prefix in ['P30 allocation','P30 release_begin','P30 release_returned']:
+   rows=self.rows[:];i=next(i for i,x in enumerate(rows) if x.startswith(prefix));rows.pop(i);self.assertFalse(self.audit('\n'.join(rows))['passed'])
+ def test_unexpected_on_in_off_rejected(self):self.assertFalse(self.audit(self.fixture(),False)['passed'])
+ def test_missing_device_roster_rejected(self):self.assertFalse(self.audit(self.fixture().replace('.hDevice = 0x21','.hDevice = 0x20'))['passed'])
+ def test_aggregatebudget_source_extent_cannot_be_forged(self):
+  text=self.fixture().replace('bytes=31457296','bytes=131457296')
+  self.assertFalse(self.audit(text)['passed'])
+ def test_head_owner_census_rejected(self):
+  self.assertFalse(self.audit(self.fixture().replace('logits1','logits0'))['passed'])
+ def test_empty_cannot_qualify(self):self.assertFalse(self.audit('')['passed'])
+
+class AdmissionTests(unittest.TestCase):
+ def test_oldsource33_or_missing34_marker_rejected_before_payload(self):
+  for generation,prepared in [({}, {'final_window_PLE_observer_fix34':True}),({'prompt_verifier_P30_capture35':True,'final_window_PLE_observer_fix34':True},{}),({'final_window_PLE_observer_fix34':False},{'final_window_PLE_observer_fix34':True})]:
+   with patch.object(q.c1,'combined_generation_gate',return_value=generation),patch.object(q,'read',return_value={'combined_generation':prepared}),patch.object(q.c1,'metadata_admission_gate',side_effect=AssertionError('No model/page admission')):
+    with self.assertRaisesRegex(ValueError,'capture35/C113'):q.candidate_binding({'engine_root':'/tmp/CPU_only','prepared':'/tmp/CPU_only'})
+ def test_frozen_C113_providers_and_new34_recipe(self):
+  self.assertEqual(q.sha(Path(q.c1.__file__)),'f2057108c8ed7992ddbb71facdc81f78302ccf142090f4d73b3a5063c6d8c149')
+  import qualify_c1_serving_combined_v13 as c112parent
+  self.assertEqual(q.sha(Path(c112parent.__file__)),'7400b7a73499f93645e17047ceb5b5da64017796e88ff9a7d05c4742a0ff3bb2')
+  plan=q.read(q.ROOT/q.PLAN_SOURCE);self.assertEqual(len(plan['patches']),35);self.assertEqual(len(plan['expected_patched_source_sha256']),63);self.assertEqual(len(plan['added_header_payloads']),27)
+ def test_V2_math_mapping_original_input_helpers_unchanged(self):
+  def functions(path):return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(path.read_text()).body if isinstance(n,ast.FunctionDef)}
+  old=functions(Path(q.__file__).with_name('prefix_residual30_qualification_v3.py'));new=functions(Path(q.__file__))
+  for name in ('cross_sfd','run_process','validate_original_input33','finalize'):self.assertEqual(old[name],new[name],name)
+ def test_V2_parent_health_source4_and_terminal_helpers_unchanged(self):
+  def functions(path):return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(path.read_text()).body if isinstance(n,ast.FunctionDef)}
+  old=functions(Path(parent.__file__).with_name('qualify_prefix_residual30_v3.py'));new=functions(Path(parent.__file__))
+  for name in ('stat_signature','full_buffered_identity','finalizable'):self.assertEqual(old[name],new[name],name)
+ def test_missing_actualnewSDK_stops_before_model_read(self):
+  with patch.object(q.c1,'combined_generation_gate',side_effect=ValueError('SDK absent')),patch.object(q.c1,'validate_prepared',side_effect=AssertionError('No model reads')):
+   with self.assertRaises(ValueError):q.candidate_binding({'engine_root':'/tmp/CPU_missing','prepared':'/tmp/CPU_missing'})
+ def test_manifest_driver_rejected_before_candidate(self):
+  with patch.object(q,'candidate_binding',side_effect=AssertionError('No candidate access')):
+   with self.assertRaises(ValueError):q.manifest_binding({'driver_sha256':'wrong','source_plan_sha256':q.PLAN_SOURCE_SHA})
+ def test_original_input_gate_actual_tiny_synthetic_positive_and_changed_proof(self):
+  import test_ple_input33_cpu_v1 as f33
+  fixture=f33.Fixture('test_complete_actual_raw_and_chronology_synthetic_positive');fixture.setUp();self.addCleanup(fixture.doCleanups)
+  with tempfile.TemporaryDirectory() as name:
+   root=Path(name);identity=root/'identity.json';identity.write_text('CPU identity fixture only');arms={}
+   for arm in ('p30_off','p30_on'):
+    directory=root/arm;directory.mkdir();shutil.copytree(fixture.root,directory/'ple-input');shutil.copy2(fixture.log,directory/'engine.combined.log');requests=[{'raw':{'ids':ids},'meta':{'logits':[{'request':str(request)}]}} for request,ids in fixture.requests.items()];q.write(directory/'requests.json',requests);q.write(directory/'input33-requests.json',fixture.requests)
+    proof=q.collect_input33(directory/'ple-input',fixture.requests,fixture.binding,directory/'engine.combined.log',(0,32));q.write(directory/'input33-proof.json',proof)
+    import verify_ple_input33_original_v1 as original
+    provider=type('CPUProvider',(),{'rows':lambda self,role,ids:np.repeat(np.asarray(ids,dtype='<f4')[:,None],160,axis=1)})();result=original.verify(proof,provider);result.update(proof_sha256=q.sha(directory/'input33-proof.json'),model_identity_sha256=q.sha(identity),collector_sha256=q.sha(Path(original.__file__).with_name('collect_ple_input33_v1.py')),checker_sha256=q.sha(Path(original.__file__)),producer_log_sha256=q.sha(directory/'engine.combined.log'),requests_sha256=q.sha(directory/'input33-requests.json'));arms[arm]=result
+   receipt=root/'input-proof.json';q.write(receipt,{'passed':True,'plan_sha256':fixture.binding,'arms':arms});plan={'args':['--layer-split','32','--split-device','1']};self.assertTrue(q.validate_original_input33(receipt,root,plan,fixture.binding,identity)['passed'])
+   arms['p30_on']['results'].pop();q.write(receipt,{'passed':True,'plan_sha256':fixture.binding,'arms':arms})
+   with self.assertRaises(ValueError):q.validate_original_input33(receipt,root,plan,fixture.binding,identity)
+ def test_original_input_receipt_missing_cannot_pass(self):
+  with self.assertRaises(ValueError):q.validate_original_input33(None,Path('/tmp/CPU_only'),{},'a'*64,Path('/tmp/CPU_identity'))
+ def test_original_input_wrong_source_or_arm_roster_rejected(self):
+  for inputs in [{'passed':True,'plan_sha256':'old','arms':{}},{'passed':True,'plan_sha256':'a'*64,'arms':{'p30_on':{}}}]:
+   with patch.object(q,'read',return_value=inputs),patch.object(q,'collect_input33',side_effect=AssertionError('No rawpayload before source/roster rejection')):
+    with self.assertRaises(ValueError):q.validate_original_input33(Path('/tmp/CPU_fake_receipt'),Path('/tmp/CPU_output'),{},'a'*64,Path('/tmp/CPU_identity'))
+ def test_exact_source33_C111_and_twoarm_observation_contract(self):
+  self.assertEqual(q.c1.COMBINED_PLAN_SHA,q.PLAN_SOURCE_SHA);self.assertIn('STRATA_PLE_INPUT33',q.OFF)
+  source=Path(q.__file__).read_text();self.assertIn("'STRATA_PLE_INPUT33':'1'",source);self.assertIn('validate_original_input33(a.input_receipt',source)
+  parent_source=Path(parent.__file__).read_text();self.assertLess(parent_source.index('identity=full_buffered_identity'),parent_source.index('verify_ple_input33_original_v1.py'));self.assertIn('inputs and finalizable',parent_source)
+ def test_parent_retains_proven_health_cleanup_hash_helpers(self):
+  a=ast.parse(Path(parent.__file__).read_text());b=ast.parse(Path(parent.__file__).with_name('qualify_layer0_numerical_v9.py').read_text());functions=lambda t:{n.name:ast.dump(n,include_attributes=False) for n in t.body if isinstance(n,ast.FunctionDef)}
+  for name in ('stat_signature','full_buffered_identity','finalizable'):self.assertEqual(functions(a)[name],functions(b)[name])
+ def test_newproof_before_payload_validator_and_prepare(self):
+  source=Path(q.__file__).read_text();candidate=source[source.index('def candidate_binding'):source.index('def manifest_binding')];self.assertLess(candidate.index('validate_final_source_proof'),candidate.index('c1.validate_prepared'))
+  prepare=source[source.index('def prepare'):source.index('def cross_sfd')];self.assertLess(prepare.index('candidate_binding'),prepare.index('subprocess.check_output'));self.assertLess(prepare.index('candidate_binding'),prepare.index('verify_model_identity'))
+ def test_parent_holdlease_passfds_two_page_posthash_and_cleanup_hooks(self):
+  source=Path(parent.__file__).read_text()
+  for text in ['pass_fds=(8,9)','ctrl.c1.leased([0,1])','preserve_source_pages','full_buffered_identity','post-health','owned_containers_terminal','prefix30-logical-lifecycle.json']:self.assertIn(text,source)
+class PromptVerifierCollectorControls(prompt35.CollectorTests):
+ def test_T1_T2_and_final_nonce_collect_and_only_final_crossSFD(self):
+  proof=self.collect();routes=[frame['binding']['route'] for frame in proof['frames']]
+  self.assertEqual(routes.count('prompt_verifier'),4);self.assertEqual(routes.count('verifier'),2)
+  rows=[];vectors=[]
+  for frame in proof['frames']:
+   d=frame['binding']
+   self.assertEqual(d['schema'],2)
+   self.assertEqual(d['nonce'],prompt35.collector.window_nonce(d['pid'],d['request'],d['first_position'],d['rows'],d['route']))
+   if d['route']!='verifier':continue
+   for field in frame['fields']:
+    if field['phase']=='ffn':vectors.append({'pid':str(d['pid']),'request':str(d['request']),'stage':str(d['stage']),'layer':str(field['layer']),'pos':str(d['first_position']),'token':str(d['gen_ids'][-1]),'bytes':'40960','path':field['path'],'sha256':field['sha256']})
+  rows=[{'prefix':4,'meta':{'logits':[{'pid':'9','request':'1'}],'residuals':vectors}}]
+  with patch.object(q,'PREFIXES',[4]):self.assertEqual(len(q.cross_sfd(proof,rows)['pairs']),48)
+ def test_missing_prompt35_binding_rejected_before_metadata(self):
+  for marker in (None,False):
+   gen={'prompt_verifier_P30_capture35':marker,'final_window_PLE_observer_fix34':True}
+   with patch.object(q.c1,'combined_generation_gate',return_value=gen),patch.object(q,'read',return_value={'combined_generation':gen}),patch.object(q.c1,'metadata_admission_gate',side_effect=AssertionError('No payload')):
+    with self.assertRaisesRegex(ValueError,'capture35/C113'):q.candidate_binding({'engine_root':'/tmp/mock35','prepared':'/tmp/mock35'})
+
+if __name__=='__main__':unittest.main()

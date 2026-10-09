@@ -54,3 +54,12 @@ now compiles all8 ABI targets, with actual C112 source admission and new390 link
 PASS. New source34upload/C112/P30V3 replay is required; old33 proofs do not
 transfer. This observer fix preserves source32 every-window staging and model
 math. Complete originalfidelity/cache/concurrency/latency/shelf remain unproven.
+
+Source34 C112one andpair now pass boundedAPI/coherence/repeat/consumption/
+identity/teardown/posthealth/newfull4; no actualsource34 P30V3 positive exists.
+Source audit found missing earlierprompt_verify rowcapture. Newsource35 now
+compiles all8 ABI and passes actualC113 sourceadmission/new390link; newupload
+islive. Fullrow source35/C113/P30V4 replay and originalprefix1V4 are required.
+Rough paired short-screen engine decode13.1-18.4 tok/s is not a matched/clean
+performance or originalfidelity qualification. Originalfullmodel math, allstate
+cache, concurrent fairness/latency and shelf remain unproven.

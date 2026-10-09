@@ -1,0 +1,221 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -385,6 +385,8 @@
+     commit_bm_.clear();
+     for(auto& graph:layer0_exec_) { if(graph)delete graph;graph=nullptr; }
+     for(auto& graph:fidelity_exec_) { if(graph) delete graph; graph=nullptr; }
++    for(auto& mode:prefix30_prompt_exec_)for(auto& graph:mode){if(graph)delete graph;graph=nullptr;}
++    prefix30_prompt_=false;
+     prefix30_snapshot_.reset(); // Only retired serialfidelity/combined graphs reference P30.
+     release_batch_observer();
+     layer0_snapshot_.reset();layer0_first_=false;
+@@ -418,6 +420,8 @@
+         if (kv.second) delete (kv.second);
+     for (auto& kv : commit_bm_)
+         if (kv.second) delete (kv.second);
++    for(auto& mode:prefix30_prompt_exec_)for(auto& graph:mode){if(graph)delete graph;graph=nullptr;}
++    prefix30_prompt_=false;
+     prefix30_snapshot_.reset(); // All serial graphs retired; owning queue still alive.
+     if (arena_b_) sycl::free(arena_b_, dpct::get_in_order_queue());
+     if (h_commitb_) sycl::free(h_commitb_, dpct::get_in_order_queue());
+@@ -888,6 +892,7 @@
+     auto pre = [&](int64_t l, int grp) -> bool {
+         if(fidelity_first_ && prefix30_snapshot_ && T==1 && grp==0)prefix30_snapshot_->copy("input",int(l),Rt(0),1,*cs);
+         const int tb = tb_[grp], te = te_[grp], n = te - tb;
++        if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->copy_rows("input",int(l),Rt(tb),n,tb,T,*cs);
+         stamp(l, 0, grp);
+         const LayerView v(wt, l);
+         const char* pfx[2] = {"hc_attn_", "hc_ffn_"};
+@@ -986,6 +991,7 @@
+                         native_gr_ok=false; return false;
+                     }
+                     if(fidelity_first_ && prefix30_snapshot_ && T==1 && grp==0 && half==1)prefix30_snapshot_->copy("attention",int(l),Rt(0),1,*cs);
++                    if(prefix30_prompt_ && prefix30_snapshot_ && half==1)prefix30_snapshot_->copy_rows("attention",int(l),Rt(t),1,t,T,*cs);
+                     if(l0_capture && half==1)layer0_snapshot_->copy("residual_after_attn",Rt(0),40960,*cs);
+                     HcNativeArgs a; a.eps=EPS;
+                     if (!native_hc_bind(wn[half],wd[half],wu[half],wi[half],a,err)) { native_gr_ok=false; return false; }
+@@ -1616,6 +1622,7 @@
+             if (!post(l, grp)) return false;
+             if(layer0_first_ && layer0_snapshot_ && T==1 && l==0 && grp==0)
+                 {layer0_snapshot_->copy("residual_after_ffn",Rt(0),40960,*cs);layer0_snapshot_->stamp(*cs);}
++            if(prefix30_prompt_ && prefix30_snapshot_){const int tb=tb_[grp],n=te_[grp]-tb;prefix30_snapshot_->copy_rows("ffn",int(l),Rt(tb),n,tb,T,*cs);}
+             if(fidelity_first_ && prefix30_snapshot_ && T==1 && grp==0)prefix30_snapshot_->copy("ffn",int(l),Rt(0),1,*cs);
+             if (fidelity_first_ && fidelity_snapshot_ && T==1 && grp==0) fidelity_snapshot_->layer(int(l),Rt(0),*cs);
+             if(batch_observe_ && batch_snapshot_ && grp==0)batch_snapshot_->layer(int(l),Rt(0),T,*cs);
+@@ -1625,6 +1632,7 @@
+             }
+             if (l + 1 < le_ && !pre(l + 1, grp)) return false;
+         }
++    if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->stamp_rows(T,*cs);
+     if(fidelity_first_ && prefix30_snapshot_ && T==1)prefix30_snapshot_->stamp(*cs);
+     if (le_ < g.n_layers) {   // a layer split's earlier stage: hand the residual on, no head
+         float* hout = hand_out_ + (size_t) hrow0 * HB;
+@@ -1783,8 +1791,9 @@
+ bool Verifier::capture(int T, std::string &err) try {
+     const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &exec_t =
+-        batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]));
++        prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])));
+     if (exec_t != nullptr) return true;
++    if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->begin_rows(T);
+     if (std::getenv("STRATA_VERIFY_EAGER") != nullptr) return true;   // SYCL port: no graph, run() replays the body
+     if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->begin_roster(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0),*cs_);
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+@@ -2049,6 +2058,11 @@
+     using namespace strata::kernels;
+     const OnDevice on_device(device_);
+     last_batch_ = false;
++    if(prefix30_prompt_){
++        const auto&r=fidelity_diag::current();
++        if(!prefix_residual30::eligible()||r.ordinal!=prefix30_prompt_request_||T!=prefix30_prompt_rows_||pos0!=prefix30_prompt_pos_||!tokens||pos0<0||pos0+T>int64_t(r.ids.size())-1){err="P30 prompt verifier actual run shape/source mismatch";return false;}
++        for(int row=0;row<T;++row)if(tokens[row]!=prefix30_prompt_tokens_[row]||tokens[row]!=r.ids[size_t(pos0+row)]){err="P30 prompt verifier actual run token mismatch";return false;}
++    }
+     if(batch_observe_ && batch_admission_ && (T!=1 || !tokens || !batch_identities_ || (*batch_identities_)[0].pos!=pos0 || (*batch_identities_)[0].token!=tokens[0])){err="batch observer actual admission token/position mismatch";return false;}
+     if (T < 1 || T > max_t_) { err = "verify: window size out of range"; return false; }
+     const ModelGeometry& g = *g_;
+@@ -2121,7 +2135,7 @@
+     ple_input33::submit_begin(ple_input_publication);
+     const dpct::err0 le = (std::getenv("STRATA_VERIFY_EAGER") != nullptr)
+                               ? (record_window(T, cs_, err) ? 0 : 1)   // SYCL port: eager replay of the window body
+-                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])))));
++                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]))))));
+     /*
+     DPCT1009: SYCL reports errors using exceptions and does not use error
+     codes. Please replace the "get_error_string_dummy(...)" with a real
+@@ -3549,9 +3563,35 @@
+         for(auto& graph:fidelity_exec_) { if(graph)delete graph;graph=nullptr; }
+         fidelity_snapshot_->release();fidelity_snapshot_.reset();fidelity_first_=false;
+     }
++    for(auto& mode:prefix30_prompt_exec_)for(auto& graph:mode){if(graph)delete graph;graph=nullptr;}
++    prefix30_prompt_=false;
+     if(prefix30_snapshot_){prefix30_snapshot_->release();prefix30_snapshot_.reset();}
+     if(next_)next_->release_fidelity_observer();
+ }
++
++bool Verifier::select_prefix30_prompt(int rows,int64_t pos,const int32_t*tokens,std::string&err) {
++    prefix30_prompt_=false;
++    if(!prefix_residual30::eligible()){if(next_)next_->clear_prefix30_prompt();return true;}
++    const auto&r=fidelity_diag::current();
++    if(!prefix30_snapshot_||rows<1||rows>2||pos<0||pos+rows>int64_t(r.ids.size())-1||!tokens||fidelity_first_||layer0_first_||batch_observe_||std::getenv("STRATA_VERIFY_EAGER")||!native_hc_requested()){err="P30 unsupported actual prompt verifier selection";return false;}
++    for(int row=0;row<rows;++row){if(tokens[row]!=r.ids[size_t(pos+row)]){err="P30 prompt verifier accepted token mismatch";return false;}prefix30_prompt_tokens_[row]=tokens[row];}
++    if(!prefix30_snapshot_->begin("prompt_verifier",pos,rows,err))return false;
++    prefix30_prompt_request_=r.ordinal;prefix30_prompt_rows_=rows;prefix30_prompt_pos_=pos;prefix30_prompt_=true;
++    std::fprintf(stderr,"P30 prompt_select pid=%ld request=%u stage=%d pos=%lld T=%d ids=",long(getpid()),r.ordinal,device_,(long long)pos,rows);
++    for(int row=0;row<rows;++row)std::fprintf(stderr,"%s%d",row?",":"",tokens[row]);std::fprintf(stderr,"\n");std::fflush(stderr);
++    if(next_&&!next_->select_prefix30_prompt(rows,pos,tokens,err)){clear_prefix30_prompt();return false;}
++    return true;
++}
++void Verifier::clear_prefix30_prompt(){prefix30_prompt_=false;if(next_)next_->clear_prefix30_prompt();}
++bool Verifier::dump_prefix30_prompt(std::string&err) try {
++    if(!prefix30_prompt_)return true;
++    const auto&r=fidelity_diag::current();
++    if(!prefix_residual30::eligible()||r.ordinal!=prefix30_prompt_request_||last_t_!=prefix30_prompt_rows_||last_pos0_!=prefix30_prompt_pos_||prefix30_prompt_pos_+last_t_>int64_t(r.ids.size())-1){err="P30 prompt verifier returned shape/source mismatch";return false;}
++    for(int row=0;row<last_t_;++row)if(last_tokens_[row]!=prefix30_prompt_tokens_[row]||last_tokens_[row]!=r.ids[size_t(last_pos0_+row)]){err="P30 prompt verifier returned token mismatch";return false;}
++    std::fprintf(stderr,"P30 prompt_returned pid=%ld request=%u stage=%d pos=%lld T=%d rc=0\n",long(getpid()),r.ordinal,device_,(long long)last_pos0_,last_t_);std::fflush(stderr);
++    if(!prefix30_snapshot_->dump(err))return false;
++    return next_==nullptr||next_->dump_prefix30_prompt(err);
++} catch(const std::exception&e){err=std::string("P30 prompt verifier dump: ")+e.what();return false;}
+ 
+ void Verifier::select_fidelity_first(bool on) {
+     fidelity_first_=on && fidelity_snapshot_!=nullptr;
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -102,6 +102,9 @@
+     bool dump_batch_observation(std::string& err);
+     bool batch_observed(int row)const{return row>=0 && row<6 && (batch_published_rows_&(1u<<row));}
+     void release_batch_observer();
++    bool select_prefix30_prompt(int rows,int64_t pos,const int32_t*tokens,std::string&err);
++    bool dump_prefix30_prompt(std::string&err);
++    void clear_prefix30_prompt();
+     void select_fidelity_first(bool on);
+     void release_fidelity_observer();
+     void select_layer0_first(bool on);
+@@ -474,6 +477,9 @@
+     std::shared_ptr<prefix_residual30::snapshot> prefix30_snapshot_;
+     std::shared_ptr<fidelity_diag::snapshot> fidelity_snapshot_;
+     bool fidelity_first_=false;
++    bool prefix30_prompt_=false;int prefix30_prompt_rows_=0;int64_t prefix30_prompt_pos_=0;
++    std::array<int32_t,2> prefix30_prompt_tokens_{};unsigned prefix30_prompt_request_=0;
++    dpct::experimental::command_graph_exec_ptr prefix30_prompt_exec_[2][3]={};
+     std::shared_ptr<batch_fidelity::snapshot> batch_snapshot_;
+     bool batch_observe_=false,batch_admission_=false;int batch_phase_=0;
+     unsigned batch_published_rows_=0;
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -10255,10 +10255,14 @@
+                     drive.d.layers = 0;
+                     drive.d.experts = 0;
+                     drive.d.failed = false;
++                    if(!ver.select_prefix30_prompt(T,q,win.data(),e))return false;
+                     if (!ver.run(T, win.data(), q, win_pool_fn, win_pool_user, outw.data(), e) || drive.d.failed) {
++                        ver.clear_prefix30_prompt();
+                         if (drive.d.failed && drive.d.fail) e = drive.d.fail;
+                         return false;
+                     }
++                    if(!ver.dump_prefix30_prompt(e)){ver.clear_prefix30_prompt();return false;}
++                    ver.clear_prefix30_prompt();
+                     // STRATA_LOGPOS=<path>: the teacher-forced log-probability of every token read here (every
+                     // token is committed and nxt[t] is the prompt's own next token), appended to <path>; the last
+                     // column is the log-probability of STRATA_LOGPOS_EXTRA (default 248046, <|im_end|>), so the
+--- a/sycl/include/strata/core/prefix_residual_capture.hpp
++++ b/sycl/include/strata/core/prefix_residual_capture.hpp
+@@ -24,12 +24,13 @@
+  }}
+ };
+ inline const config& settings(){static const config value;return value;}
+-inline bool eligible(){const auto&r=fidelity_diag::current();return settings().enabled&&r.active&&r.resume==0&&r.ordinal<=4&&r.ids.size()>=1&&r.ids.size()<=8;}
++inline bool eligible(){const auto&r=fidelity_diag::current();return settings().enabled&&r.active&&r.resume==0&&r.ordinal>=1&&r.ordinal<=4&&(r.ids.size()==1||r.ids.size()==2||r.ids.size()==4||r.ids.size()==8);}
+ class snapshot {
+  sycl::queue&q_;int stage_,lb_,le_;std::uint8_t*data_=nullptr;std::size_t bytes_;std::vector<bool>roster_;std::uint64_t nonce_=0,zero_=0;int rows_=0;std::int64_t p0_=0;std::string route_;
++ std::vector<bool> row_roster_;int recording_rows_=0;bool sealed_rows_[3]={};
+  std::size_t offset(int layer,int phase)const{return (std::size_t(phase)*(le_-lb_)+std::size_t(layer-lb_))*max_rows*row_floats*4;}
+  public:
+- snapshot(sycl::queue&q,int stage,int lb,int le):q_(q),stage_(stage),lb_(lb),le_(le),bytes_(stage_bytes(lb,le)),roster_(bytes_/(max_rows*row_floats*4),false){
++ snapshot(sycl::queue&q,int stage,int lb,int le):q_(q),stage_(stage),lb_(lb),le_(le),bytes_(stage_bytes(lb,le)),roster_(bytes_/(max_rows*row_floats*4),false),row_roster_(std::size_t(le-lb)*phases*max_rows,false){
+   if(lb<0||lb>=le||le>layers)throw std::invalid_argument("P30 stagebounds");
+   data_=static_cast<std::uint8_t*>(sycl::malloc_device(bytes_+16,q_));if(!data_)throw std::bad_alloc();
+   std::fprintf(stderr,"P30 allocation pid=%ld stage=%d lb=%d le=%d pointer=%p bytes=%zu\n",long(getpid()),stage_,lb_,le_,(void*)data_,bytes_+16);
+@@ -38,8 +39,8 @@
+  void release(){if(!data_)return;q_.wait_and_throw();std::fprintf(stderr,"P30 release_begin pid=%ld stage=%d pointer=%p bytes=%zu\n",long(getpid()),stage_,(void*)data_,bytes_+16);sycl::free(data_,q_);data_=nullptr;std::fprintf(stderr,"P30 release_returned pid=%ld stage=%d\n",long(getpid()),stage_);}
+  bool begin(const char*route,std::int64_t p0,int rows,std::string&err){
+   if(!eligible())return false;const auto&r=fidelity_diag::current();
+-  if(!route||(std::strcmp(route,"prefill")&&std::strcmp(route,"verifier"))||rows<1||rows>8||p0<0||p0+rows>std::int64_t(r.ids.size())||(std::strcmp(route,"verifier")==0&&(rows!=1||p0!=std::int64_t(r.ids.size())-1))){err="P30 source token/matrix boundary";return false;}
+-  route_=route;p0_=p0;rows_=rows;nonce_=(std::uint64_t(std::uint32_t(getpid()))<<32)|r.ordinal;
++  if(!route||(std::strcmp(route,"prefill")&&std::strcmp(route,"verifier")&&std::strcmp(route,"prompt_verifier"))||rows<1||rows>8||p0<0||p0+rows>std::int64_t(r.ids.size())||(std::strcmp(route,"verifier")==0&&(rows!=1||p0!=std::int64_t(r.ids.size())-1))||(std::strcmp(route,"prompt_verifier")==0&&(rows>2||p0+rows>std::int64_t(r.ids.size())-1))){err="P30 source token/matrix boundary";return false;}
++  route_=route;p0_=p0;rows_=rows;nonce_=(std::uint64_t(std::uint32_t(getpid()))<<32)|(std::uint64_t(r.ordinal)<<24)|(std::uint64_t(p0)<<16)|(std::uint64_t(rows)<<8)|(route_=="prefill"?1:route_=="prompt_verifier"?2:3);
+   if(route_=="prefill")std::fill(roster_.begin(),roster_.end(),false);
+   q_.memcpy(data_+bytes_,&nonce_,8);q_.memcpy(data_+bytes_+8,&zero_,8);return true;
+  }
+@@ -47,13 +48,30 @@
+   const int index=phase_index(phase);if(layer<lb_||layer>=le_||!source||&q!=&q_)throw std::invalid_argument("P30 source/stagequeue mismatch");
+   roster_[std::size_t(index)*(le_-lb_)+std::size_t(layer-lb_)]=true;q.memcpy(data_+offset(layer,index),source,extent(rows));
+  }
++ void begin_rows(int rows){
++  if(rows<1||rows>2)throw std::invalid_argument("P30 prompt verifier record rows1/2");
++  recording_rows_=rows;sealed_rows_[rows]=false;std::fill(row_roster_.begin(),row_roster_.end(),false);
++ }
++ void copy_rows(const char*phase,int layer,const float*source,int rows,int first,int total,sycl::queue&q){
++  const int index=phase_index(phase);
++  if(layer<lb_||layer>=le_||!source||&q!=&q_||total!=recording_rows_||total<1||total>2||rows<1||first<0||first+rows>total)throw std::invalid_argument("P30 prompt verifier source/queue/row slice mismatch");
++  const std::size_t base=(std::size_t(index)*(le_-lb_)+std::size_t(layer-lb_))*max_rows;
++  for(int row=first;row<first+rows;++row){if(row_roster_[base+row])throw std::invalid_argument("P30 duplicate prompt verifier row slice");row_roster_[base+row]=true;}
++  q.memcpy(data_+offset(layer,index)+std::size_t(first)*row_floats*4,source,extent(rows));
++ }
++ void stamp_rows(int rows,sycl::queue&q){
++  if(&q!=&q_||rows!=recording_rows_||rows<1||rows>2)throw std::invalid_argument("P30 prompt verifier stamp shape/queue mismatch");
++  for(std::size_t field=0;field<roster_.size();++field)for(int row=0;row<rows;++row)if(!row_roster_[field*max_rows+row])throw std::invalid_argument("P30 incomplete prompt verifier phase/layer/row roster");
++  sealed_rows_[rows]=true;q.memcpy(data_+bytes_+8,data_+bytes_,8);
++ }
+  void stamp(sycl::queue&q){if(&q!=&q_||std::find(roster_.begin(),roster_.end(),false)!=roster_.end())throw std::invalid_argument("P30 incomplete original3phase roster");q.memcpy(data_+bytes_+8,data_+bytes_,8);}
+  bool dump(std::string&err){
++  if(route_=="prompt_verifier"&&(rows_<1||rows_>2||!sealed_rows_[rows_])){err="P30 prompt verifier graph row roster not sealed";return false;}
+   q_.wait_and_throw();std::uint64_t marker=0;q_.memcpy(&marker,data_+bytes_+8,8).wait_and_throw();if(marker!=nonce_||!nonce_){err="P30 current replay marker absent";return false;}
+   const auto&r=fidelity_diag::current();char stem[256];std::snprintf(stem,sizeof stem,"p30-%ld-r%u-s%d-%s-p%lld-n%d",long(getpid()),r.ordinal,stage_,route_.c_str(),(long long)p0_,rows_);std::string base=std::string(settings().dir)+"/"+stem;
+   int mfd=::open((base+".json").c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(mfd<0){err="P30 metadata exclusiveopen";return false;}FILE*meta=::fdopen(mfd,"w");if(!meta){::close(mfd);err="P30 metadata fdopen";return false;}
+-  std::fprintf(meta,"{\"schema\":1,\"pid\":%ld,\"request\":%u,\"stage\":%d,\"lb\":%d,\"le\":%d,\"route\":\"%s\",\"native_hc_source\":true,\"first_position\":%lld,\"rows\":%d,\"row_floats\":10240,\"source_extent_bytes\":%zu,\"nonce\":%llu,\"binding_sha256\":\"%s\",\"gen_ids\":[",long(getpid()),r.ordinal,stage_,lb_,le_,route_.c_str(),(long long)p0_,rows_,extent(rows_),(unsigned long long)marker,settings().binding);
+-  for(std::size_t i=0;i<r.ids.size();++i)std::fprintf(meta,"%s%lld",i?",":"",(long long)r.ids[i]);std::fprintf(meta,"],\"fields\":[");bool ok=true;int count=0;const char*names[]={"input","attention","ffn"};
++  std::fprintf(meta,"{\"schema\":2,\"pid\":%ld,\"request\":%u,\"stage\":%d,\"lb\":%d,\"le\":%d,\"route\":\"%s\",\"native_hc_source\":true,\"first_position\":%lld,\"rows\":%d,\"row_floats\":10240,\"source_extent_bytes\":%zu,\"nonce\":%llu,\"binding_sha256\":\"%s\",\"gen_ids\":[",long(getpid()),r.ordinal,stage_,lb_,le_,route_.c_str(),(long long)p0_,rows_,extent(rows_),(unsigned long long)marker,settings().binding);
++  for(std::size_t i=0;i<r.ids.size();++i)std::fprintf(meta,"%s%lld",i?",":"",(long long)r.ids[i]);std::fprintf(meta,"],\"normal_dispatch\":\"%s\",\"row_coverage_complete\":true,\"fields\":[",route_=="prompt_verifier"?"prompt_verify":route_=="prefill"?"prefill":"target_verify");bool ok=true;int count=0;const char*names[]={"input","attention","ffn"};
+   for(int phase=0;phase<3&&ok;++phase)for(int layer=lb_;layer<le_;++layer){std::vector<std::uint8_t>raw(extent(rows_));q_.memcpy(raw.data(),data_+offset(layer,phase),raw.size()).wait_and_throw();std::string path=base+"-l"+std::to_string(layer)+"-"+names[phase]+".f32";int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(fd<0){ok=false;break;}std::size_t done=0;while(done<raw.size()){ssize_t n=::write(fd,raw.data()+done,raw.size()-done);if(n>0)done+=std::size_t(n);else if(n<0&&errno==EINTR)continue;else{ok=false;break;}}if(::close(fd))ok=false;std::fprintf(meta,"%s{\"layer\":%d,\"phase\":\"%s\",\"bytes\":%zu,\"file\":\"%s\",\"encoding\":\"LE_F32[rows,4,2560]\"}",count++?",":"",layer,names[phase],raw.size(),path.c_str());}
+   std::fprintf(meta,"],\"full_model_math_qualified\":false}\n");if(::fclose(meta))ok=false;if(!ok){err="P30 fieldpublication failed";return false;}std::fprintf(stderr,"P30 frame pid=%ld request=%u stage=%d route=%s rows=%d p0=%lld metadata=%s.json\n",long(getpid()),r.ordinal,stage_,route_.c_str(),rows_,(long long)p0_,base.c_str());return true;
+  }

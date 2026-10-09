@@ -10786,3 +10786,33 @@ input/owned48/futurepair/cache/concurrency/latency/shelf remainrequired.
 No old33compiled/upload/runtimeproof transfer to34. No reset needed on
 healthy singlecardfailure; no driver/kernel/sourceweight change made.
 See docs/20261009_flashnext_source33_multiverifier_observer_failure_and34_fix.md.
+
+
+## 2026-10-09 - Source34 one/pair C112 PASS, rough decode and source35 build
+
+CONFIG -> Exact source34/Unsloth UD-Q4_K_XL, batch0/MTP0, FP16 KV,
+segmented static experts, observers/cacheOFF. One2048/64/PLE65536; pair
+8192/128/PLE1048576/split32-16. Geometry differs; no scaling-speed comparison.
+
+COMMAND -> Source34upload43045; C112one48168/pair3339 with new source4/
+health/ownedteardown; actual V12 publicproof validators. Read engine timing
+logs. Source-audit normal short_read64/P30 earlierrows; new35 SDK17447 and
+new source390link52494, upload6067 nowlive. Independent newCPU183/closures.
+
+RESULT -> UploadPASS276s/allfive/newsource4. C112onePASS479s/pairPASS320s,
+identity/coherence/repeats/consumption/cleanexit0/removed/posthealth/full4PASS.
+Pair short warm2-9token screens13.1-18.4 tok/s; final repeats16.3/18.4.
+One warm5.9-10.7/final9.8/10.7; earlier C1118.1-10.7. No clean/100token metric.
+P30source34 guaranteed missing earlierprompt_verify rows; new35 preserves
+normalT1/T2 math and adds actualrow/group observer graphs/schema2 nonce/collector.
+SDK35PASS302s/eightABI/actualC11363/27/35 admissionPASS, engineSHA
+7e3e4c1e61bcee7bc0ea1a15c0b2d8347bfdbd0c8f9fb16296476625bff58c12.
+Newsource390linkPASS46s; upload6067 live. CPU183/sourceclosuresPASS.
+Q5K200tiny algebra/projector+5existing controls show no wrong storedS/dFloat
+reference term; no kernel/reference replacement justified.
+
+VERDICT -> Real paired boundedservice/source proof and rough Strata decode
+readings, not fullfidelity or matched performance. New35/C113/P30V4 original
+inputs/owned48 then completecache/concurrency/fairness/profiling/latency/shelf
+required. C112/P30V3 remain frozen; no new math or sourceweight change.
+See docs/20261009_flashnext_strata_decode_readings_and_prompt_capture35.md.

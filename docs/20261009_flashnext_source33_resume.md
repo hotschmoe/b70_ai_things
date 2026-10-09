@@ -113,3 +113,27 @@ explore_full48_original_prefix1_v3.py for the actual new34/C112 lineage.
 BatchV5 remains source33-bound; source34 needs its own future concurrency lane.
 Original wholemodel math, completecache, pairconcurrency/fairness/cleanlatency
 and shelf are still unqualified; original campaign remains active.
+
+Source34 upload final -> PASS276s/allfive/terminal/posthealth/newfull4.
+C112onecard PASS479s and paired PASS320s; actualpublic V12proof PASS.
+Pair warm short2-9token engine decode13.1-18.4 tok/s, final repeats16.3/18.4;
+Strata plus RAM. No fullfidelity or matched/clean speed claim.
+See docs/20261009_flashnext_strata_decode_readings_and_prompt_capture35.md.
+
+Normal short_read64 routes earlier1/2/4/8 pilot rows through prompt_verify;
+source34 P30 onlycaptures finalverifier oractualPrefill and misses these rows.
+Newsource35 captures real T1/T2 prompt windows without changing routing/math.
+Source35 SDK nowPASS302s/eightABI/actualC113admission, root
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/
+receiptSHA7e3e4c1e61bcee7bc0ea1a15c0b2d8347bfdbd0c8f9fb16296476625bff58c12.
+Source390newlinkPASS46s, oracle /mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-ijom56cj/.
+NEW source35uploadV2 execsession6067 currentlylive underpairlease, output
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/source-upload-source35-strict-v2/.
+Poll actualhandle/process and completed gates before source35 C113 prepare.
+Use freshsource35 SDK/neworacle/newupload with unchanged package-only
+Python runtime-c111/receipt.json; then actual C113onecard-segmented baseline
+and P30V4 with collectorV2/schema2/originalIQ4 proofs. New183CPUcontrols/
+sourceclosuresPASS;4C113experimentalaliasesregistered. C112/P30V3 proofs
+cannot qualify newsource35/C113/P30V4. Originalprefix1explorerV4 remains
+independent own-zero state; larger prefixes need truthful verifier route math.
+Originalmodel fidelity/cache/concurrency/latency/shelf remain unqualified.
