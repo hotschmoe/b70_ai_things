@@ -9427,3 +9427,22 @@ rerunsession23893live. PriorfailedC1/sourceidentityevent remainsunchanged.
 VERDICT -> Currentidentityrestored, originunresolved, strictguardsretained;
 wholemodelcorrectedone/twocard/state/logit/cache/concurrent/latency/shelf open.
 Actualprogress ratherthanblockedimpasse; goal remainsfullandactive.
+
+## 2026-10-09 Corrected full-model serving passes one and two B70s
+
+CONFIG -> Exactartifact/0013..18engine/FP16KV/MTP0; identityrecovered andfull
+source32_16/captureownershipgates passed. ScopeC1boundedAPI, notshelf.
+COMMAND -> C1onecard-corrected-streams-prepared-v2 followedmatchedtwo-card-v2;
+postonecardall4wholehashes; actualV4serialprepare attemptedbeforeGPU.
+RESULT -> Both6requestAPI screenspass rendered/submittedIDs, consumedcounts,
+modelIDaliases, constrainedanswers andgreedyrepeatIDs. Bothstages captureT2
+andT1; previousGPU1ownershipguardfailureabsent. Actual2GPUcoverage17041VRAM
+experts+7535RAM stage0=23557120000B, stage1all8192resident. Native+supervisor
+exit0/normalremoval/fullstrict+compiledP2P0preposthealth/sentinelexact. Fresh
+postonecard4hashes publisherexact/statinclctime unchanged. ActualV4prefix
+prepare fails tuplekey17_18 inengine_identity beforeGPU; failurepreserved.
+SeparateV5single17lookup+separate18guard usesgenuinepositiveengineidentity
+andone/twocardCPUprepare, samegeometry/prompts/tolerances. NoV5GPUresults yet.
+VERDICT -> Fullmodel2B70tieredserving passesboundedcoherence/lifecycle. No
+fullstate/logit/prefix/concurrency/matchedlatency qualificationorproduction
+claim. Cachedbitcorruptionorigin stillunresolved; guardsretained. Goalactive.

@@ -51,3 +51,25 @@ Evidence:
 - F06/model-full-identity-after-twocard-fail-v1/receipt.json
 
 F06 is /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f06-20261009/.
+
+## Corrected full-model serving screens
+
+CONFIG -> Same0018 engine and actual32/16 two-card configuration; preserved
+cached-source recurrence recovered and all four buffered hashes reverified.
+COMMAND -> C1onecard-corrected-streams-prepared-v2 then matched
+C1twocard-corrected-streams-prepared-v2.
+RESULT -> Both bounded six-request API screens pass exact rendered/submitted
+IDs, consumed/generated counts, model aliases, constrained answers and greedy
+repeat IDs. Two-card T2 and T1 windows both capture on both stages without the
+previous ownership guard failure. Every overflow expert is covered; stage0 has
+7535 RAM experts/23,557,120,000B and stage1 none missing, with17041 total resident
+experts. Native engine and launch supervisor exit0, owned removal and strict
+per-card/compiled P2P0 pre/post-health pass; known source sentinel remains exact.
+New post-one-card independent whole4-shard hashes match the publisher.
+VERDICT -> Actual corrected full-model two-card serving passes this bounded
+coherence/identity/lifecycle scope, beyond control-only capture. Full raw logits,
+state isolation/prefix reuse, concurrent fairness and matched latency remain
+unqualified; both receipts explicitly prohibit shelf promotion.
+
+Full-model records: F06/c1-onecard-corrected-streams-prepared-v2/qualification.json
+and c1-twocard-corrected-streams-prepared-v2/qualification.json.
