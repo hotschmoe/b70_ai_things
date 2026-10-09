@@ -9493,3 +9493,20 @@ final health/hash gates remain pending, so this is not a finalized GPU pass.
 VERDICT -> Preserve V5 as bounded internal-consistency evidence. Complete-state
 prefix, API session isolation, concurrency and independent mathematics remain
 open; new coverage must be separately versioned and qualified.
+
+## 2026-10-09 Finalized one-card full-logit observer equivalence
+
+CONFIG -> Frozen corrected0018 engine/V5/parent, exact original model,
+card0 all48 layers, context2048/prefill64/PLE65536 FP16KV MTP0.
+COMMAND -> Parent qualify_serial_prefix.py --group basic; result directory
+F06/serial-basic-onecard-v1.
+RESULT -> Parent and child finalized PASS, exit0, 837s. A/B/C IDs and LP20
+match diagnostics-off/on; full248320 first logits are bitwise identical with
+activations0/1. All48 first-window residuals per probe have required coverage,
+but activations-off residuals are unobserved and provide no reference comparison.
+All native exits0/removals, pre/post strict+compiled P2P0 health, kernel gate,
+and new complete four-shard publisher hashes pass. Matching two-card basic
+suite acquired both leases and started; no result yet.
+VERDICT -> Bounded observer consistency/lifecycle only. Independent mathematics,
+complete-state prefix/cache/API/concurrency, clean latency and shelf remain open.
+See docs/20261009_flashnext_serial_diagnostic_qualification.md.
