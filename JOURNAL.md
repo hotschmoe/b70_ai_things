@@ -10080,3 +10080,30 @@ No cross-topology result is claimed before pair termination.
 VERDICT -> Commit comparator before actual pair comparison. Exact diagnostic
 self-consistency cannot qualify independent own-state/model math, concurrency,
 API behavior or clean latency.
+
+
+## 2026-10-09 - Pair source failure and new cached-page discriminator
+
+CONFIG -> Exact frozen21 pair numerical-v2,32/16 split and matched one-card
+geometry. Full source identity remains independent of numeric/health gates.
+
+COMMAND -> Pair parent terminal; preserve failed all4hash receipt. New read-only
+audit_shard_cached_direct_v1.py hashes every49376141504B buffered and initialized
+aligned direct view, saving differing pages. Independent initialized C readers
+repeat6 page views. After evidence, target only4096B DONTNEED and rehash all4.
+
+RESULT -> Pair FAILED604s solely full buffered shard3 hashb9351423... !=56758f40...;
+other3 pass. Eight heads/384 residuals,26field frames/12packets, owner/context/free,
+pre/post health, fault gate and owned normal teardown pass. Whole direct hash
+matches publisher; exactly one cached page differs at39437303808, byte2796
+absolute39437306604, cached0xfb/direct0xdb XOR0x20; source stat unchanged. Original
+inventory maps blk.35.ffn_down_exps.weight Q5_1. Independent C readers confirm.
+Same byte-within-page andbit as prior different source page; cause unknown.
+Targeted reload restores original page; NEW all4 buffered hashes PASS.
+CPU-only own-prefix storage estimate9controls and source/dependency pins PASS;
+realprefill2/4/8 rejected, native reducers/exp unimplemented, no payload read.
+
+VERDICT -> Preserve pair FAILED; current source recovered, no retrospective
+qualification. Expanded two-page guards and full hashes mandatory. Combined
+SDK rebuild may proceed without devices/modelweights; serving qualification
+remains open. See docs/20261009_flashnext_capture21_pair_source_failure.md.

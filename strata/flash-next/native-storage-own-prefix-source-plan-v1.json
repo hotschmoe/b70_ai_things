@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "scope": "CPU source/storage estimate only; native own-state arithmetic unqualified",
+  "source_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T130403Z-8b4zuyvp/source",
+  "source_sha256": {
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "tools/iq_pack.py": "81b59dd1d71484106cddec9418ef933a2e55a1fd28a57b955715cf0e2e9e4878",
+    "sycl/src/kernels/cuda/native_bf16.dp.cpp": "f850713172f1e534ab0332b959ad85cd8b62b894a906f69064133a708b3d8242",
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "bf87197ea14da23c278e1e174d575503ec9f933e58c2fa267f919f5cdda8fe14",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "8f1cc0e8a521766bbb6dbc99e0fb6b602c9de18b913734b5a5ef80a6965ecf9d",
+    "sycl/src/kernels/hc_native_projection.cpp": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025",
+    "sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "sycl/src/kernels/cuda/native_gdn_preprocess.dp.cpp": "f618623173b3a6dce49e38ba02df84a2f5efe61455e8e7781d946f95bd1bd3df",
+    "sycl/src/kernels/cuda/native_moe.dp.cpp": "644ad4023b6ec0e588daf1ab42bbe1f2d7cb448a4d369094b4e335a748795c84",
+    "sycl/src/prefill/prefill.cpp": "6b3c2a5318bc747b032c291be8704c2fbd3419eafb236a9209235789efb96be3",
+    "sycl/src/prefill/gemm.dp.cpp": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584"
+  },
+  "implementation_sha256": {
+    "native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "test_native_storage_first_gdn_estimate_v1.py": "d0185ab853185b72cafc7b41766ba74f7775b754e67ddd3c49a406c2f65270d5",
+    "native-storage-own-prefix-source-audit-v1.md": "e3a18db9857cbff57b4a6c0afac57e1c8425e9e7b3ef04aa29f51bfd6f408649"
+  },
+  "frozen_dependency_sha256": {
+    "original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9"
+  },
+  "operator_lane": "native_storage_estimate_unqualified",
+  "native_exp_emulated": false,
+  "native_reduction_emulated": false,
+  "actual_original_payload_reads": 0,
+  "actual_own_prefix_checks": "UNOBSERVED",
+  "cpu_tests": 9,
+  "full_model_math_qualified": false,
+  "original_own_state_reference_qualified": false,
+  "tolerance_gate": null,
+  "actual_prefill_history_supported": false,
+  "default_supported_capture_prefixes": [
+    1
+  ],
+  "decode_surrogate_comparison_admissible": false
+}
