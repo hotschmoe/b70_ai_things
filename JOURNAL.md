@@ -10292,3 +10292,25 @@ VERDICT -> Bounded single-cardAPI/source/lifecycle passed, notwholemodel math,
 prefix/concurrency/clean latency/stability/shelf. PriorAPI5 andpairV2failures
 remainfailed; sourcecauseunknown. Matchedpair actualqualification next.
 See docs/20261009_flashnext_import28_c1_onecard_qualification.md.
+
+
+## 2026-10-09 - Original conditional FFN checker CPU/source checkpoint
+
+CONFIG -> Newimmutablechecker for source23 all33fields, originalselectedQ8_0/
+Q4_K/Q5_1 consumers plus explicitF32toBF16-RNE router/sharedgate seams. Use
+suppliedquantizedinputs/HQ/routerweights; rawhidden andindividualdown outputs
+remainUNOBSERVED. PreservefrozenFP64/GDN/packet/reference sources.
+
+COMMAND -> Independently run test_verify_layer0_ffn_original_v1.py andvalidate
+allimplementation/dependency/consumedsource hashes. Require actualfuture33
+field/source/nonce/rank/tier/liveowner bindings before anyweightverification.
+
+RESULT -> PASS19 CPUcontrols. 27conditional originalweight checks perprefix
+areprepared, notexecutedonactualweights. Selectedaffine minima use d*codesum,
+storedsumunused onlyforadmittedformats. Aggregatechecks canmaskdown cancellation;
+noindividualdownclaim, nativeFMA/exp/reducer/topktiesunsupported. Existing
+NMSE1e-6/max-normalized1e-4 limitsunchanged. Zeroactualweights/GPUbyagent.
+
+VERDICT -> Sourcecheckpointbeforeactualconditionalverification. Ownstate/full
+layer/model/math/lifecycle/concurrency remainunqualified; actual33capture
+qualification andtrueprefill-ownedhistory stillrequired.

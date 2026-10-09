@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "scope": "Synthetic/source-only conditional FFN preparation; actual33/original payload checks UNOBSERVED",
+  "source_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T161219Z-n_v8o9lp/source",
+  "source_sha256": {
+    "sycl/src/core/verify.cpp": "4f70cde7b9d4d5be262b4dc251afe0cddf91fccf8dfd2de0add7d76d1a3bebec",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "18f032f269591db168625f80c6dbe8d08dc36d2a6fd5982c56723862713d7f4a",
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "bf87197ea14da23c278e1e174d575503ec9f933e58c2fa267f919f5cdda8fe14",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": "678885803460aafbb2e42caab39a7a397becdaab9c88f9b56db6259f02c50e3c",
+    "sycl/src/kernels/cuda/native_bf16.dp.cpp": "f850713172f1e534ab0332b959ad85cd8b62b894a906f69064133a708b3d8242",
+    "sycl/src/kernels/cuda/native_router.dp.cpp": "a2c0f3c7055fc46388afb1d82d070352baab6dcbb3f8b5ba35818796a12ec140",
+    "sycl/src/kernels/cuda/native_moe.dp.cpp": "644ad4023b6ec0e588daf1ab42bbe1f2d7cb448a4d369094b4e335a748795c84",
+    "tools/iq_pack.py": "81b59dd1d71484106cddec9418ef933a2e55a1fd28a57b955715cf0e2e9e4878",
+    "sycl/include/strata/core/layer0_numerical_contract.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481"
+  },
+  "files": {
+    "verify_layer0_ffn_original_v1.py": "3f433f105c260e5760d54942c6c9e8f46f6ff97793238e310754ffd55ebf8d70",
+    "test_verify_layer0_ffn_original_v1.py": "9fa01a7cc57a0f2c2e2db2a4e123e4d960922ae29d44d612350b528407803d11",
+    "layer0-conditional-ffn-original-v1.md": "11bac9b4d129cde45de1c9f22aa6285f5396405c883a4527a4bb27e42a045b93"
+  },
+  "frozen_dependency_sha256": {
+    "original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "audit_layer0_capture_lifecycle_v2.py": "cd5441854c7bf11250080c7b109564e91f204422c4b790623132999641a7abfe",
+    "parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "layer0_numerical_contract_v1.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "verify_layer0_packets_v3.py": "620f18e8aed625bb3c40f451d94ed66a8b1aa6aa247ec7638423426f38e9b329"
+  },
+  "cpu_tests": 19,
+  "conditional_original_weight_checks_per_prefix": 27,
+  "thresholds": {
+    "nmse": 1e-06,
+    "max_normalized": 0.0001,
+    "normalizer_floor": 1e-06
+  },
+  "actual_original_model_payload_reads": 0,
+  "actual_conditional_checks_qualified": false,
+  "raw_fused_hidden_observed": false,
+  "individual_expert_down_observed": false,
+  "original_own_state_reference_qualified": false,
+  "complete_layer_math_qualified": false,
+  "full_model_math_qualified": false
+}
