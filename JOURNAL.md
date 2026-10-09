@@ -9900,3 +9900,13 @@ logicalfree/context/negative gates, nativeexits/removals/strict+compiled
 pre/posthealth pass. Ordinary300payload/readback andmodelmath false.
 VERDICT -> New21sourceupload/lifetime only. Genuine21C1/identity/observer
 off-on/packet/state/math andfullconcurrentlatency gates remainopen.
+
+## 2026-10-09 Capture21 genuine manifests and onecardAPI screen
+
+CONFIG -> Actual21/newsource390/Pythonruntime chain, diagnosticflagoff.
+COMMAND -> GenuineC1CPUfullhashprepares; parentonecardAPI qualification.
+RESULT -> OnecardfinalPASS279s identity/coherence/repeat/consumption/normal
+teardown/posthealth. Bothfresh21one/pair manifests launchallowed; pairAPI
+screen14312running withactualonecardprerequisite. No old20sourcegate transfer.
+VERDICT -> Boundedactual21API only. Numericalequality/actualframe/packet/state/
+nonce/lifecycle, independentmath, concurrency and cleanlatency remain required.

@@ -42,3 +42,25 @@ VERDICT -> Genuine new21source/ABI/lifetime qualification, not observer/frame/
 packet/state/modelmath equivalence. CPUgenuine21C1/fullshardidentity preparations
 authorized; actualmodel screens and20vs21off/same21off-on remainpending.
 Existing20 model/cache receipts cannot replace actual21 execution.
+
+## Genuine capture21 manifests and one-card API screen
+
+CONFIG -> Actual21engine48a677e7, genuinecompletednew21full390/chhk0m3k oracle,
+unchangedderivedPythonruntime002f80/model/tokenizer/template. Diagnostic flag off.
+COMMAND -> Frozen C1 prepare with freshcomplete four-shard verification for
+onecard2048/64/65536 and pair8192/128/1048576; parentonecard qualification.
+RESULT -> Both authenticmanifests launch_allowed=true, no old20sourcegate
+substitution. Onecardparent/controller finalizedPASS279s, live /v1/models and
+registry identity/hotschmoe-dd first, six boundedcoherence/repeat/consumption
+answers, normal API/native/supervisor exit/removal and post-health.
+F08/c1-onecard-capture21-prepared-v1 and c1-twocard-capture21-prepared-v1.
+VERDICT -> Bounded actualnew21 onecardAPI screen only. PairAPI screenstarted
+underpairlease, pending; no modelmath/capture/nonce/concurrency/latency claim.
+
+Numerical driver preparation remains separately reviewed. It will compare
+actual20 with21off and same21off/on using matchingrawprefix1/2/4/8/fullhead/all48
+residuals and declaredconditionalpacket/state captures. Missing7producer fields,
+all-token nativeprecision propagation and independentwholemodel remain explicit.
+Runtime targetobserver allocation is7023104B including56nonce/control/key bytes;
+logicalfree/owner proof is separate from physical release or unobservedgraph
+retirement. No empty/partial/staleframe may provide mathematical evidence.
