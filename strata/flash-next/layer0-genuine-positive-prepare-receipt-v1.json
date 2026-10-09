@@ -1,0 +1,45 @@
+{
+  "CONFIG": "genuine actual21 SDK/full390/C1/full4source preparations with actual qualified20 matched references",
+  "COMMAND": "actual numerical prepare and separateparent prepared_chain_binding for one/pair",
+  "RESULT": [
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f08-20261009/layer0-numerical-onecard-prepared-v1/plan.json",
+      "sha256": "192c94d0a67ca626c0c8e87ef4ceac3d2bd72e0124896fd63d62dbc6566d3577",
+      "cards": [
+        0
+      ],
+      "binding": {
+        "candidate": {
+          "source_plan_sha256": "5367d37727a4e3df8c53288ad96cdf22660cab4c448845a818cdd70a3197e016",
+          "engine_receipt_sha256": "48a677e70c58686ba68299d2607b7c37d41f1774fdb9eb811ab6a3d6f8771de7",
+          "executable_sha256": "f787183727a39189c48d516e7665862911a1a6d2c1ed3c44fb3d56df91c29795",
+          "prepared_sha256": "f6528b8c7e9ef56318f76ac163e2694528a1de599ea252a1ad456ff0b23e62e2",
+          "source_gate": "genuine matching actual21 C1/full390; original20 upload not transferable"
+        },
+        "reference_engine_receipt_sha256": "1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00",
+        "reference_qualification_sha256": "b38e53dd8abcaa1b0144f6e750751ed16dd742e83c51208ee2c9cefdb84335b5"
+      }
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f08-20261009/layer0-numerical-twocard-prepared-v1/plan.json",
+      "sha256": "16a74d3e0fcb0d20e0cf84bfa3c714c85963e1b42b27c13ddc6c5e577e029a72",
+      "cards": [
+        0,
+        1
+      ],
+      "binding": {
+        "candidate": {
+          "source_plan_sha256": "5367d37727a4e3df8c53288ad96cdf22660cab4c448845a818cdd70a3197e016",
+          "engine_receipt_sha256": "48a677e70c58686ba68299d2607b7c37d41f1774fdb9eb811ab6a3d6f8771de7",
+          "executable_sha256": "f787183727a39189c48d516e7665862911a1a6d2c1ed3c44fb3d56df91c29795",
+          "prepared_sha256": "12840088f293c01348f539191fa65a360d338d98a1c0a945d5e3d2976e68cb36",
+          "source_gate": "genuine matching actual21 C1/full390; original20 upload not transferable"
+        },
+        "reference_engine_receipt_sha256": "1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00",
+        "reference_qualification_sha256": "6d21bdd673a12507694c219e6d1478d1538a5402bae4621dff16929408f1dd76"
+      }
+    }
+  ],
+  "VERDICT": "PASS real CPU/source prerequisite chain only; no raw numerical/model/GPU byagent",
+  "full_model_math_qualified": false
+}

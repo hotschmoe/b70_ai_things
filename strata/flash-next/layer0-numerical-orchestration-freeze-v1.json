@@ -1,0 +1,24 @@
+{
+  "status": "READY frozen genuine CPU/source prepared numerical controls; actual numerical/graph/packet/state hardware qualification absent",
+  "files": {
+    "layer0_numerical_qualification_v1.py": "9fd3b713d66336ec6ea928e20fb828a94e792a447dad467866cd26e672dc9a0b",
+    "qualify_layer0_numerical_v1.py": "7a3c2098c3dff0eac99257ee06e6c5c4b4af372ce743c1be702d2ec09266a828",
+    "audit_layer0_capture_lifecycle_v1.py": "29966c131420f0782e66619260dda6016d944bf674f7f5e26188f626c375d0f7",
+    "hash_capture21_preparation_identity_v1.py": "2c1b1f1fe5142b46041f0cb324aa7ca82883d68d8eb539e8ba694292334b0f11",
+    "verify_layer0_packets_v1.py": "64cefed45e6f77010385fb405337a84bd7b7f4a406aeab21fee8260abf783429",
+    "test_layer0_numerical_qualification_cpu_v1.py": "a3555e52a2b75975531f404b3c56919f487f51010e999ce395aa419c22d1fae0",
+    "test_layer0_packet_orchestration_cpu_v1.py": "79da7e89807dc2b696deabf3fc0b027474ab21ba18aed31dc4d9a072be94f427",
+    "test_qualify_layer0_numerical_cpu_v1.py": "12c65025206d6bc2ffb81eb0d9840b59a7acdb7758949f80ab837733ca3f6982",
+    "layer0-numerical-orchestration-cpu-receipt-v1.json": "21272aa3b0b5a2cb0c200df55d9f903df6dcd3047bb393b16e7dde38efa1d374",
+    "layer0-packet-orchestration-cpu-receipt-v1.json": "bbde975330805234374586821683a6e9a3b9e2b7ed87d66232588f8105f36d21",
+    "layer0-parent-orchestration-cpu-receipt-v1.json": "cd87179a0987ac00f79624f363dc8c18dd9ff7eab8a1a0f62ec235200350602f",
+    "layer0-genuine-positive-prepare-receipt-v1.json": "8b97174eb7ff2799cce598dff25d35a5c410689d02702bbfbab2aac3032da429",
+    "layer0-numerical-orchestration-v1.md": "c363e2305047972dd0211233690317501a6c8ef33d91a609265a6dd771e091da"
+  },
+  "source21_engine_plan_sha256": "5367d37727a4e3df8c53288ad96cdf22660cab4c448845a818cdd70a3197e016",
+  "full_model_math_qualified": false,
+  "observed_fields": 26,
+  "layout_fields": 33,
+  "graph_retirement_runtime_handle_association_observed": false,
+  "no_agent_gpu_or_model_launch": true
+}
