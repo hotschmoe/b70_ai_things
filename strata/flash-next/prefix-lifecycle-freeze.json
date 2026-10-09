@@ -1,0 +1,24 @@
+{
+  "status": "READY frozen CPU/source draft; no SYCL compile/full390/GPU qualification",
+  "files": {
+    "patches/0019-sycl-prefix-cache-lifecycle-telemetry.patch": "8df06808183e60e56a94212f8b6e7c73899accec29cbc08e09823ab8fa5c5b63",
+    "prefix_lifecycle_observer.hpp": "ada5a81bb765d995e6a6183bbe200e11903e9d6987a7209ee18e9d35142a3409",
+    "prefix-lifecycle-source-plan.json": "65254837eb6e4dcbf60ffec3affa6fad3608e9d7493d898809ffb0634614f6de",
+    "prefix-lifecycle-engine-build-plan-v1.json": "634a5f5297a7a324177588ac40ebd4f53c5d068f77fab0318fd8ef45a037bfd3",
+    "serial_prefix_qualification_v6.py": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c",
+    "serial_prefix_prompt_fixture_v6.py": "a682d5ef1bfa4cc8d5702448fe20b27953df0644cffa515d6468e6cb92aa7c6d",
+    "test_prefix_lifecycle_cpu.py": "5caf80c5bf2153bf9c94344dcc7284a316081329e391ff325493ae78abb9501f",
+    "test_serial_prefix_qualification_v6_cpu.py": "4a206c947ff9a5bc2519b38a73843245c1927e2425901d105e07a66c408b0714",
+    "prefix-lifecycle-cpu-receipt.json": "54b0a6914a6c9f255a74f7a34e201d73669e7bc0cd625b923000fe65a7b0219c",
+    "serial-prefix-v6-cpu-receipt.json": "dd60d503d56573aa80c5596dd9cb43e4308f70a1784f9e2d66b7eb05d7ecd3d3",
+    "serial-prefix-qualification-v6.md": "3e0e82014779e75145c7f039e82514e4ce8fb910432c35389be1541f78602e3a"
+  },
+  "old_v5_preserved_sha256": "46b15abba3fd60d432968420113a6f643a9e29a837f533ba5272d0481c91d253",
+  "next_required": [
+    "actual consumed SYCL TUs/full link",
+    "new exact390 source gate",
+    "fresh four-shard identity",
+    "same-version off/on numerical+lifecycle",
+    "V6 actual generated continuation/cache groups"
+  ]
+}

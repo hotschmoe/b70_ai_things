@@ -1,0 +1,251 @@
+--- a/include/strata/core/layer.hpp
++++ b/include/strata/core/layer.hpp
+@@ -271,6 +271,8 @@
+     /// copy and give back the overlap the doorbell protocol exists for.
+     int32_t* host_step = nullptr;    ///< (kStepCount + 1,) pinned; final element is attention status
+     int32_t* host_pos = nullptr;     ///< (n_head,) pinned
++    void* owned_host_kv = nullptr;  // allocation base, never an interior typed pool
++    uint64_t owned_host_kv_bytes = 0;
+ };
+ 
+ /// Plan v0.3 P7: the RoPE cos/sin table (max_cells x n_rot/2 x 2 floats, 64 MiB at 262K) is identical in every
+@@ -323,6 +325,10 @@
+     if (st.kv_hybrid) return strata::kernels::kKvHybrid;   // K8V4: its own three runs (kv_stream.cu)
+     return st.kv_q4 ? strata::kernels::kKvQ4 : st.kv_int8 ? strata::kernels::kKvInt8 : strata::kernels::kKvF16;
+ }
++// SYCL owning-slot cleanup; the caller drains the owning queue first.
++void qsa_state_release_owned_host(QsaState& st, void* stream = nullptr);
++void qsa_state_register_existing_rope(const QsaState& st, const ModelGeometry& g);
++
+ uint64_t qsa_state_init(const ModelGeometry& g, int64_t max_cells, void* base, QsaState& st,
+                         const QsaState* share_rope = nullptr, int64_t ring_cells = 0);
+ /// KV streaming: the pools a reader sees (the VRAM slots) and, when streamed, make the selection's blocks resident.
+--- a/sycl/src/core/layer.cpp
++++ b/sycl/src/core/layer.cpp
+@@ -884,7 +884,7 @@
+     if (DPCT_CHECK_ERROR(
+             st.host_step = (int32_t *)sycl::malloc_host(
+                 strata::kernels::qsa_step_bytes() + sizeof(int32_t),
+-                dpct::get_in_order_queue())) != 0 ||
++                dpct::get_in_order_queue())) != 0 || st.host_step == nullptr ||
+         /*
+         DPCT1048: The original value cudaHostAllocMapped is not meaningful in
+         the migrated code and was removed or replaced with 0. You may need to
+@@ -897,7 +897,7 @@
+         */
+         DPCT_CHECK_ERROR(
+             st.host_pos = (int32_t *)sycl::malloc_host(
+-                (size_t)s.n_head * 4, dpct::get_in_order_queue())) != 0) {
++                (size_t)s.n_head * 4, dpct::get_in_order_queue())) != 0 || st.host_pos == nullptr) {
+         return 0;   // the caller sees a zero byte count; a half-built state is worse than none
+     }
+     st.host_step[strata::kernels::kStepCount] = 0;
+@@ -919,7 +919,7 @@
+         check the migrated code.
+         */
+         if (DPCT_CHECK_ERROR(h = (uint8_t *)sycl::malloc_host(
+-                                 bytes, dpct::get_in_order_queue())) != 0 ||
++                                 bytes, dpct::get_in_order_queue())) != 0 || h == nullptr ||
+             DPCT_CHECK_ERROR(*(void **)&d = (uint8_t *)h) != 0) {
+             // under WSL the NVIDIA driver pins only ~1 GiB in all, which is less than 128K of 8-bit KV needs
+             if (p.mode == 1) std::fprintf(stderr, "strata: KV streaming: cannot pin %.2f GiB of RAM for a layer's KV copy "
+@@ -928,6 +928,7 @@
+                                  (double) g_kv_host_bytes / 1073741824.0);
+             return 0;
+         }
++        st.owned_host_kv=h;st.owned_host_kv_bytes=bytes;
+         g_kv_host_bytes += bytes;
+         Cursor hc{d};
+         if (st.kv_hybrid) {
+@@ -980,6 +981,23 @@
+     }
+     dpct::get_current_device().queues_wait_and_throw();
+     return c.used;
++}
++
++void qsa_state_register_existing_rope(const QsaState& st,const ModelGeometry& g) {
++    if(st.owns_rope && qsa_shapes(g).n_rot==64)
++        strata::kernels::rope_table_set(st.cos_tab,st.sin_tab,(int)st.max_cells,strata::kernels::rope_scaling());
++}
++
++void qsa_state_release_owned_host(QsaState& st,void* stream) {
++    auto* queue=strata::q_of(stream);
++    if(st.owns_rope){strata::kernels::rope_table_release(st.cos_tab);st.owns_rope=false;}
++    if(st.host_step){sycl::free(st.host_step,*queue);st.host_step=nullptr;}
++    if(st.host_pos){sycl::free(st.host_pos,*queue);st.host_pos=nullptr;}
++    if(st.owned_host_kv){
++        sycl::free(st.owned_host_kv,*queue);st.owned_host_kv=nullptr;
++        g_kv_host_bytes-=st.owned_host_kv_bytes;st.owned_host_kv_bytes=0;
++        st.host=strata::kernels::KvHostPools{};
++    }
+ }
+ 
+ void qsa_state_zero(const QsaState& st, const ModelGeometry& g, void* stream) {
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -77,6 +77,7 @@
+ #include "strata/core/native_dense.hpp"
+ #include "strata/program/logits_selection.hpp"
+ #include "strata/program/conv_cache.hpp"
++#include "strata/core/slot_session_arena.hpp"
+ #include "strata/program/prefix_diagnostic.hpp"
+ #include "strata/program/message_boundary.hpp"
+ #include "strata/spec/draft_policy.hpp"
+@@ -3815,7 +3816,7 @@
+             batch_mtp = false;
+         }
+     }
+-    std::vector<std::vector<std::unique_ptr<strata::core::SessionState>>> bslot_ss;
++    std::vector<std::vector<std::unique_ptr<strata::core::SlotSessionArena>>> bslot_ss;
+     if (o.batch != 0) {
+         const int cap = strata::kernels::kVerifyMaxT;
+         const char* off = !o.serve ? "it needs --serve" : o.batch < 2 ? "it needs 2 or more slots"
+@@ -3835,6 +3836,7 @@
+         o.batch_groups = 1;
+     }
+     if (o.batch > 0) {
++        if(strata::core::qsa_kv_elastic()){std::fprintf(stderr,"strata batch: slot arenas require non-elastic KV ownership\n");return 1;}
+         bslot_ss.resize(1 + stages.size());
+         int fit = o.batch;   // the slots every stage could carve
+         uint64_t bytes0 = 0;
+@@ -3846,19 +3848,10 @@
+             const uint64_t bytes = strata::core::session_bytes(g, o.max_context, K, lo, hi);
+             if (k == 0) bytes0 = bytes;
+             for (int b = 0; b < fit; ++b) {
+-                auto u = std::make_unique<strata::core::SessionState>();
+-                void* buf = nullptr;
+-                if (DPCT_CHECK_ERROR(buf = (void *)sycl::malloc_device(
+-                                         bytes, dpct::get_in_order_queue())) !=
+-                        0 ||
+-                    strata::core::session_init(g, o.max_context, K, buf, *u, lo,
+-                                               hi) == 0) {
+-                    /*
+-                    DPCT1026: The call to cudaGetLastError was removed
+-                    because this functionality is redundant in SYCL.
+-                    */
+-                    if (buf != nullptr)
+-                        sycl::free(buf, dpct::get_in_order_queue());
++                auto u = std::make_unique<strata::core::SlotSessionArena>(dev);
++                std::string slot_error;
++                if(!u->initialize(g,o.max_context,K,lo,hi,bytes,slot_error)) {
++                    std::fprintf(stderr,"strata batch: slot %d device %d initialization: %s\n",b,dev,slot_error.c_str());
+                     size_t fb = 0, tb = 0;
+                     /*
+                     DPCT1106: 'cudaMemGetInfo' was migrated with the Intel
+@@ -3900,6 +3893,14 @@
+             std::fprintf(stderr, "strata generate: --batch %d: the slot sessions take %.2f GiB of VRAM on CUDA0 that the "
+                                  "expert cache would otherwise hold\n", o.batch,
+                          (double) bytes0 * o.batch / 1073741824.0);
++        }
++        // Shrink cleanup may unregister the last allocated table. Rebind an
++        // identical surviving session table before any graph captures/replays.
++        for(size_t k=0;k<=stages.size();++k) {
++            const strata::core::OnDevice owner(k==0?0:stages[k-1]->dev);
++            const strata::core::SessionState& kept=o.batch>0?*bslot_ss[k].back():(k==0?ss:stages[k-1]->ss);
++            if(kept.qsa_states && kept.qsa_alloc>0)
++                strata::core::qsa_state_register_existing_rope(kept.qsa_states[kept.qsa_ord0],g);
+         }
+     }
+ 
+@@ -11723,12 +11724,17 @@
+                     stage->ver.release_stage_mirror_graphs(); stage->ver_b.release_stage_mirror_graphs();
+                     stage->expert_mirror.reset();
+                 }
++                bslot_ss.clear(); // all batch graph references retired; owning-context frees
+                 vh.stage_mirror.reset(); first_stage_mirror.reset();
+                 // Drop source aliases before checked release; no graph or source
+                 // may retain a usable table after the owning allocations free.
+                 gguf_src.close();
+                 for (auto& owner:retiring) owner->release();
+-            } else gguf_src.close();
++            } else {
++                ver.release_slot_graphs();
++                for(auto& stage:stages){const strata::core::OnDevice on(stage->dev);stage->ver.release_slot_graphs();}
++                bslot_ss.clear();gguf_src.close();
++            }
+         } catch (const std::exception& e) {
+             std::fprintf(stderr, "strata shutdown: mirror release failed: %s\n", e.what());
+             std::fflush(stderr);
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -81,6 +81,7 @@
+     bool release_gpu_waits(int timeout_ms);
+     // Retire graph references only after the owning queues drain.
+     void release_stage_mirror_graphs();
++    void release_slot_graphs(); // drain then retire every graph referring to slot state
+ 
+     /// `max_t` <= kVerifyMaxT.  `head` may be null (the canonical head is then run per token).
+     bool init(const WeightTable& wt, const ModelGeometry& g, SessionState& ss, const VerifyHits& hits,
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -354,6 +354,14 @@
+                     "served %u, plan (A) %u, copies (B) %u\n", current ? "" : " (last window, not the current stage)",
+                  last_t_, (long long) last_pos0_, cur_layer_ + 1, rd(h_seq_), rd(h_flag_), rd(h_flagA_), rd(h_flagB_));
+     trace_dump(f);   // #649: STRATA_VERIFY_TRACE=1 only
++}
++
++void Verifier::release_slot_graphs() {
++    const OnDevice owner(device_);
++    if(cs_)cs_->wait_and_throw();if(sh_cs_)sh_cs_->wait_and_throw();if(copy_)copy_->wait_and_throw();
++    for(auto& graph:exec_bm_)if(graph.second)delete graph.second;exec_bm_.clear();
++    for(auto& graph:commit_bm_)if(graph.second)delete graph.second;commit_bm_.clear();
++    bm_used_.clear();slots_.clear();last_batch_=false;
+ }
+ 
+ void Verifier::release_stage_mirror_graphs() {
+--- /dev/null
++++ b/sycl/include/strata/core/slot_session_arena.hpp
+@@ -0,0 +1,53 @@
++// Stage-owned batch session allocation; no inference math or cache policy.
++#pragma once
++#include "strata/core/session.hpp"
++#include "strata/core/on_device.hpp"
++#include <dpct/dpct.hpp>
++#include <sycl/sycl.hpp>
++#include <cstdio>
++#include <cstdlib>
++#include <string>
++namespace strata::core {
++class SlotSessionArena final : public SessionState {
++public:
++    explicit SlotSessionArena(int device):device_(device),queue_(owner_queue(device)) {}
++    SlotSessionArena(const SlotSessionArena&)=delete;
++    SlotSessionArena& operator=(const SlotSessionArena&)=delete;
++    ~SlotSessionArena() noexcept {
++        try { release(); } catch(const std::exception& e) {
++            std::fprintf(stderr,"strata slot owner: device %d release failed: %s\n",device_,e.what());
++            std::fflush(stderr);std::_Exit(1);
++        }
++    }
++    bool initialize(const ModelGeometry& geometry,int64_t cells,int64_t experts,int64_t lo,int64_t hi,
++                    uint64_t bytes,std::string& error) {
++        if(base_ || qsa_states){error="slot owner already initialized";return false;}
++        if(qsa_kv_elastic()){error="slot owner does not own elastic KV registry allocations";return false;}
++        geometry_=geometry;
++        const OnDevice owner(device_);
++        try {
++            base_=sycl::malloc_device(bytes,queue_);bytes_=bytes;
++            if(!base_){bytes_=0;error="slot arena malloc_device returned null";return false;}
++            if(session_init(geometry_,cells,experts,base_,*this,lo,hi)==0) {
++                error="slot session_init returned zero";release();return false;
++            }
++            return true;
++        } catch(const std::exception& e){error=e.what();release();return false;}
++    }
++    void release() {
++        if(!base_ && !qsa_states)return;
++        const OnDevice owner(device_);queue_.wait_and_throw();
++        for(int64_t j=0;qsa_states && j<qsa_alloc;++j)
++            qsa_state_release_owned_host(qsa_states[qsa_ord0+j],(void*)&queue_);
++        delete[] qsa_states;qsa_states=nullptr;
++        if(base_){sycl::free(base_,queue_);base_=nullptr;}
++        bytes_=0;
++    }
++    void* base()const{return base_;}
++    uint64_t allocation_bytes()const{return bytes_;}
++    int device()const{return device_;}
++private:
++    static sycl::queue owner_queue(int device){const OnDevice owner(device);return dpct::get_in_order_queue();}
++    int device_;sycl::queue queue_;ModelGeometry geometry_{};void* base_=nullptr;uint64_t bytes_=0;
++};
++}

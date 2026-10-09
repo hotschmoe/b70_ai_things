@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "status": "CPU source preparation only; no compilation/GPU execution",
+  "oracle_source": "strata/flash-next/stage_slot_owner_gpu_oracle.cpp",
+  "oracle_source_sha256": "9b12c0c603569babbe882925242fde2f382beae924f69526950904a10d9a7cfa",
+  "engine_plan": "strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json",
+  "engine_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+  "required_patch20_sha256": "695689b799a4f8fb340a21340db78ece349844642f1a82e91c845ab1a0361ed5",
+  "required_owner_header_sha256": "48e1e2beef589dd50ed0a07ccd01e66174aeb06b682aa7cf0e3343a6ec45ac8c",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "runtime_environment": {
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:gpu",
+    "SYCL_CACHE_PERSISTENT": "0",
+    "UR_ENABLE_LAYERS": "UR_LAYER_TRACING",
+    "UR_LOG_TRACING": "level:info;flush:info;output:stderr"
+  },
+  "cases": [
+    {
+      "id": "owner_card0",
+      "mask": "0",
+      "stages": [
+        "0:48:0"
+      ]
+    },
+    {
+      "id": "owner_card1",
+      "mask": "1",
+      "stages": [
+        "0:48:0"
+      ]
+    },
+    {
+      "id": "owner_pair32_16",
+      "mask": "0,1",
+      "stages": [
+        "0:32:0",
+        "32:48:1"
+      ]
+    }
+  ],
+  "bounds": {
+    "cells": 64,
+    "cell_max": 256,
+    "slots_per_stage": 3,
+    "live_device_arena_bytes_max": 1073741824,
+    "weights_loaded": false
+  },
+  "source_seams": "TU-only macro interposition of two calls in actual owner header; normal allocations/init delegate unchanged to real SYCL/session_init; null and valid partial-init zero/throw deterministic and bounded; production source unchanged",
+  "required_build_identity": "Actual fully compiled20 engine receipt/plan/headers/library hashes; no18/19 reference-only association",
+  "link_recipe": "Pinned-image icpx with actual engine defines/includes/SYCL flags; source overlay consumed20 headers; link exact build.ninja strata LINK_LIBRARIES (engine/prefill/spec/kernels/core/CPU/ggml/ze/MKL), rehash unchanged engine/libs after oracle compile",
+  "logical_free_parser": "strata/flash-next/parse_usm_logical_free_trace.py",
+  "logical_free_parser_sha256": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+  "required_gates": [
+    "Pair lease and both per-card+compiled health",
+    "live device/host type and context ownership",
+    "private GDN sentinel bytes across3 arenas, shifted QSA ordinal onstage1",
+    "null noinit; actual partial zero/throw owning rollback",
+    "resize destructor registrations; fresh probe",
+    "chronologicalUR Device/Host alloc/free context ledger covers every owner and ends0live",
+    "missing/double/failedfree negatives",
+    "teardown/posthealth; no postfree UNKNOWN requirement"
+  ],
+  "unqualified": [
+    "No model weights/math/prefix/concurrent inference or actual batch graph retirement tested"
+  ],
+  "expected_owner_registrations": {
+    "owner_card0": 82,
+    "owner_card1": 82,
+    "owner_pair32_16": 92
+  }
+}

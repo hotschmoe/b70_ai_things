@@ -1,0 +1,17 @@
+{
+  "CONFIG": "real frozenV6/combined20 source hashes plus fully mocked external lifecycle boundaries and tiny synthetic all4 shards",
+  "COMMAND": "python3 strata/flash-next/test_qualify_serial_prefix_v6_cpu.py",
+  "RESULT": {
+    "combined_plan_patches_exact": true,
+    "old_actual0018_rejected": true,
+    "control_helpers_unchanged_ast": true,
+    "main_mocked_success_and_child_failure": true,
+    "fd8_9_sourcewatch_ownership_full4hash_posthealth_retained": true
+  },
+  "VERDICT": "PASS source/CPU contracts only; no devices, actual V6 positive preparation/full390/build/model qualification claimed",
+  "real_new_engine_prepared_gate_exists": false,
+  "wrapper_sha256": "470fb38ecf4efb753c43e857ca68104e5286a30bae093e4ef0338d8c102898e8",
+  "controller_sha256": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c",
+  "engine_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+  "old_wrapper_sha256": "6f2a28ec6aadbce4989a10ed25048f57fd84b9694fd37cea4af1ca21a1c350f6"
+}

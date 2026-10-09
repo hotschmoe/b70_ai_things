@@ -1,0 +1,51 @@
+{
+  "base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source",
+  "patch": "strata/flash-next/patches/0020-sycl-stage-slot-session-arena-ownership.patch",
+  "patch_sha256": "695689b799a4f8fb340a21340db78ece349844642f1a82e91c845ab1a0361ed5",
+  "base_files": {
+    "include/strata/core/layer.hpp": "5c99650fb98c1e8fe9b26d5750d392ced56693e709d9ed7b01d090a2ba86a35b",
+    "sycl/src/core/layer.cpp": "711c0dfe09f6daee77cc1750f1e57a6f4ec600beaaa60ec0577e601d140ff73a",
+    "sycl/src/program/generate.cpp": "c98a6af356ded6f7212626158d724f7c378988bbef52ef3ac7cac9acba64d37c",
+    "sycl/include/strata/core/verify.hpp": "d97c8e95244e9f2b49f7fad1723e86820215b0ed355b01f72f9ee5520f8b0176",
+    "sycl/src/core/verify.cpp": "f567f6178eada58265f07589740145cb385ea3e69a52fd4f24f549087ecc51be"
+  },
+  "overlay_files": [
+    "include/strata/core/layer.hpp",
+    "sycl/src/core/layer.cpp",
+    "sycl/src/program/generate.cpp",
+    "sycl/include/strata/core/verify.hpp",
+    "sycl/src/core/verify.cpp",
+    "sycl/include/strata/core/slot_session_arena.hpp"
+  ],
+  "scope": "CPU draft; no GPU/SYCL compilation or execution",
+  "schema": 1,
+  "status": "CPU DRAFT review-ready; no real SYCL compile/GPU execution",
+  "CPU_controls": "PASS host-only ASan/UBSan actual owner header and extracted release/rebind; explicit mocks",
+  "test": "strata/flash-next/test_stage_slot_owner_cpu.py",
+  "test_sha256": "abb6019151bb7af8406dba3c9c6ab4673e7dd283807ae8e2cc3b82617f31a643",
+  "patched_file_sha256": {
+    "include/strata/core/layer.hpp": "a923519eb67dc5b08183a23b2953cfd495b34052bc85919abcf331d275f17952",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "sycl/src/program/generate.cpp": "a2295ba9598c2977aee7da45781e8d84d0551929fd807baad930abae4c9e0b87",
+    "sycl/include/strata/core/verify.hpp": "8f1ddbe1e2afa3b2ae36106e8f179822344af5e8d90f79f50e2f128ce11a3028",
+    "sycl/src/core/verify.cpp": "5927c3424510da077152d040a9a5ff4583da9e145df8afe1809888069f2909a8",
+    "sycl/include/strata/core/slot_session_arena.hpp": "48e1e2beef589dd50ed0a07ccd01e66174aeb06b682aa7cf0e3343a6ec45ac8c"
+  },
+  "combined_apply_receipt": "/mnt/vm_8tb/b70/build/strata-slot-owner-combined-v2-20261009/apply-receipt.json",
+  "document": "strata/flash-next/stage-slot-owner-draft.md",
+  "GPU_executed": false,
+  "real_device_code_compiled": false,
+  "required_followups": [
+    "actual complete source compilation",
+    "bounded real one/pair allocation/partial/resize/free oracle",
+    "new full390 source/identity gate as required by new generation",
+    "per-slot full state/logits/work counters before serving qualification"
+  ],
+  "combined_apply_receipt_sha256": "271623e1e813f4b96a451bf95430e45e059f3eb154dad0dcf55490f2526e6e16",
+  "test_source_binding": {
+    "combined_plan": "strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json",
+    "plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+    "method": "Fresh temporary clean pinnedfb58 clone, all20 tracked patch hashes/check/apply, pristine ledger and all38 expected patched hashes verified before actualheader/extractedhelpers host mock compilation",
+    "untracked_overlay_used": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "CPU source audit and implementation plan only; no source edits or GPU",
+  "engine_source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source",
+  "source_sha256": {
+    "sycl/src/program/generate.cpp": "c98a6af356ded6f7212626158d724f7c378988bbef52ef3ac7cac9acba64d37c",
+    "sycl/src/core/verify.cpp": "f567f6178eada58265f07589740145cb385ea3e69a52fd4f24f549087ecc51be",
+    "sycl/src/core/session.cpp": "0b3127b430156138fc251427bbc7ecf2c7a4ad1a1294879e2daf6eddefbb70fb",
+    "include/strata/core/session.hpp": "ffe954333948aee170399252afaad2e8b2b1e81fb31ed9c4358597eba4ca2e3b",
+    "serve/server.py": "1e095954f894d862edd1d688dfb3e66c6bf10790be9f2c103c581c76aac11273",
+    "serve/artifact_identity.py": "d48bf26e4db57e88b88a2368c40f759e5ef748f4a05a2bc368fd53c0d39dec97"
+  },
+  "slots": [
+    1,
+    2,
+    4,
+    6
+  ],
+  "single_stream_engine_batch": 0,
+  "initial_concurrent_batch_groups": 1,
+  "scope": "exact selected nativeHC/PLE/segmented mirrors, same two-device split",
+  "required_before_concurrent_claim": [
+    "RAII slot and fallback ownership/null guards",
+    "request-slot generation identities and per-request timing/counters",
+    "bounded complete-stage pin/fresh/cache chains",
+    "mandatory full per-slot logits and48-layer observed coverage",
+    "exact actual slot capacity and HTTP overlap/isolation",
+    "pair lease, terminal proof, health, full post-run hashes"
+  ],
+  "unsafe_unsupported_initial_requests": [
+    "MTP",
+    "pipeline windows or pipelined batch groups",
+    "image requests",
+    "mixed control-vector mode",
+    "penalties without per-slot implementation"
+  ],
+  "profiles": {
+    "matched_pilot": {
+      "context": 2048,
+      "prefill": 64,
+      "ple_rows": 65536
+    },
+    "production_remaining": {
+      "context": 8192,
+      "prefill": 128,
+      "long_prefill": true,
+      "concurrency": true
+    }
+  },
+  "document": "strata/flash-next/concurrent-full-state-source-plan.md",
+  "coordinate_after": "new serial0019 lifecycle telemetry; coordinator assigns later patch numbers",
+  "GPU_executed": false
+}

@@ -1,0 +1,323 @@
+--- a/include/strata/core/conversation_cache.hpp
++++ b/include/strata/core/conversation_cache.hpp
+@@ -1,10 +1,11 @@
+ // CPU-only ownership and matching policy for --serve's parked conversations.
+ // Token equality, image identity, and steering mode are all required for reuse.
+ #pragma once
+ 
+ #include "strata/core/conversation_buffer.hpp"
++#include "strata/core/prefix_lifecycle.hpp"
+ 
+ #include <algorithm>
+ #include <array>
+ #include <cstddef>
+ #include <cstdint>
+@@ -247,13 +248,17 @@
+         }
+         return best;
+     }
+ 
+     SavedConversation take(size_t index) {
++        const auto diagnostic = prefix_lifecycle::describe(entries_.at(index));
++        const auto registry_before = prefix_lifecycle::capture_instances(entries_);
+         SavedConversation out = std::move(entries_.at(index));
+         bytes_ -= out.bytes();
+         entries_.erase(entries_.begin() + (std::ptrdiff_t) index);
++        prefix_lifecycle::rebind_after_erase(entries_,index,registry_before);
++        if (prefix_lifecycle::active()) prefix_lifecycle::cache("take",diagnostic,bytes(),size(),budget_,slots_,out.bytes());
+         return out;
+     }
+ 
+     // Reserve before allocating a snapshot. held is an incoming image removed
+     // with take() but still alive during the exchange; count it against RAM too.
+@@ -275,13 +280,18 @@
+     // to the kernel at once - the next admission check reads it back from /proc/meminfo.
+     // False when none can go (empty, or only entries that hold a pinned shared prefix are left).
+     bool evict_oldest() {
+         auto victim = std::find_if(entries_.begin(), entries_.end(), [](const SavedConversation& e) { return !e.pinned(); });
+         if (victim == entries_.end()) return false;
++        const auto diagnostic = prefix_lifecycle::describe(*victim);
+         bytes_ -= victim->bytes();
++        const auto registry_before = prefix_lifecycle::capture_instances(entries_);
++        const size_t removed = size_t(victim-entries_.begin());
+         entries_.erase(victim);
++        prefix_lifecycle::rebind_after_erase(entries_,removed,registry_before);
+         ++evictions_;
++        if (prefix_lifecycle::active()) prefix_lifecycle::cache("evict",diagnostic,bytes(),size(),budget_,slots_);
+         return true;
+     }
+ 
+     // The slot count, so a caller that evicts in a loop has a bound it did not invent.
+     size_t slots() const { return slots_; }
+@@ -306,12 +316,16 @@
+             const auto& e = entries_[i];
+             const ConversationCheckpoint* deepest = nullptr;
+             for (const auto& c : e.checkpoints)
+                 if (!deepest || c.ids.size() > deepest->ids.size()) deepest = &c;
+             if (e.cvec == cvec && deepest && !deepest->ids.empty() && held(*deepest)) {
++                const auto diagnostic = prefix_lifecycle::describe(e);
+                 bytes_ -= e.bytes();
++                const auto registry_before = prefix_lifecycle::capture_instances(entries_);
+                 entries_.erase(entries_.begin() + (std::ptrdiff_t) i);
++                prefix_lifecycle::rebind_after_erase(entries_,i,registry_before);
++                if (prefix_lifecycle::active()) prefix_lifecycle::cache("superseded",diagnostic,bytes(),size(),budget_,slots_);
+                 ++dropped;
+                 continue;
+             }
+             ++i;
+         }
+@@ -320,15 +334,24 @@
+     }
+     size_t superseded() const { return superseded_; }
+ 
+     bool put(SavedConversation&& image, size_t held = 0) {
+         const size_t n = image.bytes();
+-        if (!enabled() || held > budget_ || n > budget_ - held) return false;   // make_room's refusal, first
++        auto diagnostic = prefix_lifecycle::describe(image);
++        if (!enabled() || held > budget_ || n > budget_ - held) {
++            if (prefix_lifecycle::active()) prefix_lifecycle::cache("refused_budget",diagnostic,bytes(),size(),budget_,slots_,held);
++            return false;
++        }   // make_room's refusal, first
+         drop_superseded(image.live.ids, image.live.imgs, image.checkpoints, image.cvec);
+-        if (!make_room(n, held)) return false;
++        if (!make_room(n, held)) {
++            if (prefix_lifecycle::active()) prefix_lifecycle::cache("refused_room",diagnostic,bytes(),size(),budget_,slots_,held);
++            return false;
++        }
+         entries_.push_back(std::move(image));
+         bytes_ += n;
++        if (prefix_lifecycle::active()) diagnostic.instance=prefix_lifecycle::admit_instance(&entries_.back());
++        if (prefix_lifecycle::active()) prefix_lifecycle::cache("admit",diagnostic,bytes(),size(),budget_,slots_,held);
+         return true;
+     }
+ 
+ private:
+     size_t budget_ = 0, slots_ = 0, bytes_ = 0, evictions_ = 0, superseded_ = 0;
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,5 +1,6 @@
++#include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/api_state_identity.hpp"
+ #include "strata/core/stage_mirror_budget.hpp"
+ #include "strata/core/native_hc_policy.hpp"
+ #define DPCT_COMPAT_RT_VERSION 12080
+@@ -7524,10 +7525,14 @@
+             // way, and put()'s accounting still bounds the budget. The with-reuse
+             // estimate must stay uncapped: it counts the retained buffers'
+             // capacity and directories, and put() charges that same true size -
+             // a capped figure would under-evict and overfill the budget.
+             if (!conversations.make_room(estimate, held)) {
++                if (strata::core::prefix_lifecycle::active()) {
++                    strata::core::prefix_lifecycle::Snapshot d;strata::core::prefix_lifecycle::token_digest(live,d.live_key);d.tokens=live.size();d.bytes=estimate;
++                    strata::core::prefix_lifecycle::cache("skip_estimated_budget",d,conversations.bytes(),conversations.size(),size_t(o.conversation_cache_mib)<<20,size_t(o.conversation_cache_slots),held);
++                }
+                 std::fprintf(stderr, "strata serve: conversation cache: skip parking (snapshot %zu MiB exceeds available budget)\n",
+                              estimate >> 20);
+                 return true;
+             }
+             const auto t0 = Clock::now();
+@@ -7535,10 +7540,14 @@
+                 const uint64_t floor = (uint64_t) o.conversation_cache_min_free_mib * 1024 * 1024;
+                 const size_t retained = reuse.bytes() + stage_retained;
+                 const size_t additional = estimate > retained ? estimate - retained : 0;
+                 if (!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(),
+                         additional, floor)) {
++                    if (strata::core::prefix_lifecycle::active()) {
++                        strata::core::prefix_lifecycle::Snapshot d;strata::core::prefix_lifecycle::token_digest(live,d.live_key);d.tokens=live.size();d.bytes=estimate;
++                        strata::core::prefix_lifecycle::cache("skip_pre_ram",d,conversations.bytes(),conversations.size(),size_t(o.conversation_cache_mib)<<20,size_t(o.conversation_cache_slots),held);
++                    }
+                     std::fprintf(stderr, "strata serve: conversation cache: skip parking (physical RAM admission; need %zu MiB plus %lld MiB floor, or telemetry unavailable)\n",
+                                  additional >> 20, (long long) o.conversation_cache_min_free_mib);
+                     return true;
+                 }
+                 strata::core::SavedConversation image;
+@@ -7558,10 +7567,11 @@
+                             std::move(stage_reuse[k]), &reused_bytes))
+                         return false;
+                     image.stage_images.push_back(std::move(part));
+                 }
+                 if (!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(), 0, floor)) {
++                    if (strata::core::prefix_lifecycle::active()) strata::core::prefix_lifecycle::cache("skip_post_ram",strata::core::prefix_lifecycle::describe(image),conversations.bytes(),conversations.size(),size_t(o.conversation_cache_mib)<<20,size_t(o.conversation_cache_slots),held);
+                     std::fprintf(stderr, "strata serve: conversation cache: skip parking (physical RAM floor after capture, or telemetry unavailable)\n");
+                     return true;
+                 }
+                 const size_t snapshot_bytes = image.bytes();
+                 const bool stored = conversations.put(std::move(image), held);
+@@ -9595,10 +9605,11 @@
+                 wait_before[(size_t) r] = remote_experts[(size_t) r].ms_wait();
+             }
+             cur = ids;
+             strata::program::PrefixDiagnostic prefix_diag;
+             prefix_diag.begin(ids,int64_t(stages.size()+1));
++            strata::core::prefix_lifecycle::begin(ids,prefix_diag.active && o.batch==0 && !use_mtp && o.pipeline_windows==0 && !geni);
+             if(prefix_diag.active && (o.batch>0 || use_mtp || o.pipeline_windows>0)) { std::printf("ERR prefix diagnostic supports serial no-MTP non-pipelined requests only\n");return 1;}
+             const Clock::time_point r0 = Clock::now();
+             // ---- where this request starts reading: the live session, or a checkpoint, whose tokens AND pictures are
+             // exactly the start of this prompt - at most n - 1 of them, the last token is always the first window
+             auto starts_with = [&](const std::vector<int32_t>& pre, const std::vector<ImgKey>& pre_imgs) -> bool {
+@@ -11396,10 +11407,11 @@
+                 // (the checkpoints taken while reading it are still good)
+                 live.swap(consumed);
+                 live_imgs = imgs_below(req_imgs, (int64_t) live.size());
+                 live_ok = o.prompt_cache > 0 && req_ckpt;   // ckpt=0: nothing to continue or park (#830)
+             }
++            strata::core::prefix_lifecycle::state("committed_live",live,!cancelled,live_ok,cancelled?"prefill":std::strcmp(finish,"cancel")==0?"decode":"complete",finish);
+             static const bool state_hash = std::getenv("STRATA_STATE_HASH") != nullptr;
+             if (state_hash && !cancelled && o.prompt_cache > 0) {   // every finished request, ckpt=0 too (parity gates)
+                 // DEBUG: a fingerprint of every part of the session over the positions it holds ([0, L)), and
+                 // separately of what lies past them in the last KV page (stale cells, fine unless something reads them)
+                 if (DPCT_CHECK_ERROR(
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,5 +1,6 @@
++#include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/stage_expert_mirror.hpp"
+ #include "strata/core/verifier_stream_contract.hpp"
+ #include "strata/kernels/resident_plan_mirror.hpp"
+ #include "strata/core/native_hc_dispatch.hpp"
+@@ -1956,10 +1957,11 @@
+     if (T < 1 || T > max_t_) { err = "verify: window size out of range"; return false; }
+     const ModelGeometry& g = *g_;
+     SessionState& ss = *ss_;
+     if (released_.load()) { err = "verify: an earlier window never finished on the GPU (#267); restart the engine"; return false; }
+     if (pos0 + T > ss.qsa_states[ss.qsa_primary()].max_cells) { err = "verify: the window runs past the context"; return false; }
++    prefix_lifecycle::stage("verify_body",device_,lb_,le_,pos0,pos0+T,false);
+     refresh_ar();
+     if (!capture(T, err) || !capture_commit(err)) return false;
+     VDBG("captured; staging\n");
+     const Clock::time_point t0 = Clock::now();
+     if (!staged_) stage_inputs(T, tokens, pos0);
+@@ -2240,10 +2242,11 @@
+     }
+     // ---- a sampled or penalized request: the head's sampling again, host-side so its parameters are this call's
+     // own (a captured kernel would replay the same draws forever).  Row t's draw is Philox(seed, pos0 + t): tied to
+     // the POSITION it samples, not to how the text was cut into windows, so a seed replays the same text whatever
+     // the drafts were. Exact: a rejected row's draw is discarded, and no kept decision depends on a reused draw.
++    prefix_lifecycle::stage("verify_body",device_,lb_,le_,pos0,pos0+T,true);
+     if (le_ < g.n_layers) {   // a layer split's earlier stage: the hand-off is written (synced above)
+         ++windows;
+         return next_ == nullptr || next_->run(T, tokens, pos0, pool, next_user_, out, err);
+     }
+     const bool sampled = !sampling_.greedy && sampling_.temperature > 0.0f;
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -1,5 +1,6 @@
++#include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+ #include <climits>
+ #include "strata/core/native_hc_dispatch.hpp"
+ // src/prefill/prefill.cpp - see include/strata/prefill/prefill.hpp.
+ #define DPCT_PROFILING_ENABLED
+@@ -2089,10 +2090,12 @@
+     const core::OnDevice on_device(m.device);
+     const core::ModelGeometry& g = *m.g;
+     core::SessionState& ss = *m.ss;
+     const auto t_start = Clock::now();
+     const int64_t LB = stage_lb_, LE = stage_le_;
++    int64_t lifecycle_completed_rows=0;
++    core::prefix_lifecycle::stage("prefill_body",m.device,LB,LE,pos0,pos0+n,false);
+     // The direct successor's future lives on the Prefill object. Intermediate
+     // stages therefore do not drain the complete remaining GPU chain here.
+     double host_sync_ms = 0, host_chunk_ms = 0, host_setup_ms = 0;   // STRATA_PREFILL_TIMING: the host's share
+     double grp_wait_ms = 0, grp_cpu_ms = 0;   // the per-layer grouping: the drain wait, the host's loops
+     strata::kernels::QsaShapes s = strata::kernels::qsa_real_shapes();
+@@ -4301,10 +4304,11 @@
+         }
+         if (fidelity_chunk && m.fidelity_snapshot) {
+             const int64_t at=p0+T-1;const auto& ids=core::fidelity_diag::current().ids;
+             if (at>=0 && at<int64_t(ids.size()) && !m.fidelity_snapshot->dump("prefill_last_residual",at,int(ids[size_t(at)]),false,err))return false;
+         }
++        lifecycle_completed_rows+=T;
+         stats_.tokens += T;
+         core::progress_at("reading the prompt (batched): finishing the chunk from token", p0);
+         pt.mark(kPfStart, cs);
+         if (next_ != nullptr) {
+             // The current hand-off slot was used two chunks ago.
+@@ -4553,10 +4557,11 @@
+             std::snprintf(h, sizeof(h), "%04llx ", (unsigned long long) (x & 0xffff));
+             line += h;
+         }
+         std::fprintf(stderr, "strata prefill: GDN_HASH %s\n", line.c_str());
+     }
++    core::prefix_lifecycle::stage("prefill_body",m.device,LB,LE,pos0,pos0+lifecycle_completed_rows,lifecycle_completed_rows==n);
+     return true;
+ }
+ catch (sycl::exception const &exc) {
+   std::cerr << exc.what() << "Exception caught at file:" << __FILE__
+             << ", line:" << __LINE__ << std::endl;
+--- /dev/null
++++ b/include/strata/core/prefix_lifecycle.hpp
+@@ -0,0 +1,71 @@
++// Payload for draft0019: bounded host-only observations, never cache policy.
++#pragma once
++#include <array>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <mutex>
++#include <vector>
++#include <sys/stat.h>
++#include <unistd.h>
++namespace strata::core::prefix_lifecycle {
++class Sha256 {
++    uint32_t h_[8]={0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19};
++    uint8_t block_[64]{};size_t used_=0;uint64_t bytes_=0;
++    static uint32_t rotr(uint32_t x,unsigned n){return (x>>n)|(x<<(32-n));}
++    void compress(){
++        static constexpr uint32_t k[64]={0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
++            0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
++            0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
++            0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
++            0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
++            0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
++            0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
++            0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2};
++        uint32_t w[64];for(unsigned i=0;i<16;++i)w[i]=(uint32_t(block_[4*i])<<24)|(uint32_t(block_[4*i+1])<<16)|(uint32_t(block_[4*i+2])<<8)|block_[4*i+3];
++        for(unsigned i=16;i<64;++i){uint32_t x=w[i-15],y=w[i-2];w[i]=w[i-16]+(rotr(x,7)^rotr(x,18)^(x>>3))+w[i-7]+(rotr(y,17)^rotr(y,19)^(y>>10));}
++        uint32_t a=h_[0],b=h_[1],c=h_[2],d=h_[3],e=h_[4],f=h_[5],g=h_[6],h=h_[7];
++        for(unsigned i=0;i<64;++i){uint32_t t1=h+(rotr(e,6)^rotr(e,11)^rotr(e,25))+((e&f)^(~e&g))+k[i]+w[i];uint32_t t2=(rotr(a,2)^rotr(a,13)^rotr(a,22))+((a&b)^(a&c)^(b&c));h=g;g=f;f=e;e=d+t1;d=c;c=b;b=a;a=t1+t2;}
++        const uint32_t v[8]={a,b,c,d,e,f,g,h};for(unsigned i=0;i<8;++i)h_[i]+=v[i];
++    }
++public:
++    void update(const uint8_t* p,size_t n){bytes_+=n;for(size_t i=0;i<n;++i){block_[used_++]=p[i];if(used_==64){compress();used_=0;}}}
++    void finish(char out[65]){uint64_t bits=bytes_*8;block_[used_++]=0x80;if(used_>56){while(used_<64)block_[used_++]=0;compress();used_=0;}while(used_<56)block_[used_++]=0;for(int i=7;i>=0;--i)block_[used_++]=uint8_t(bits>>(i*8));compress();for(unsigned i=0;i<8;++i)std::snprintf(out+8*i,9,"%08x",h_[i]);out[64]=0;}
++};
++template<class Token>inline void token_digest(const std::vector<Token>& ids,char out[65]){Sha256 s;for(auto id:ids){uint32_t t=uint32_t(id);uint8_t b[4]={uint8_t(t),uint8_t(t>>8),uint8_t(t>>16),uint8_t(t>>24)};s.update(b,4);}s.finish(out);}
++struct Context {bool active=false;uint64_t request=0,sequence=0;size_t events=0;char input_sha[65]{};};
++inline Context& context(){static Context c;return c;}
++inline std::mutex& mutex(){static std::mutex m;return m;}
++inline bool enabled(){static const bool on=[] {const char* p=std::getenv("STRATA_PREFIX_LIFECYCLE_DIAG");return p&&!std::strcmp(p,"1");}();return on;}
++inline bool active(){return enabled()&&context().active;}
++inline bool acquire(){auto& c=context();if(!c.active)return false;if(c.events++<4096)return true;if(c.events==4097)std::fprintf(stderr,"PCL {\"event\":\"skip\",\"pid\":%ld,\"request\":%llu,\"reason\":\"event_quota\"}\n",long(getpid()),(unsigned long long)c.request);return false;}
++inline void begin(const std::vector<int64_t>& ids,bool supported){if(!enabled())return;std::lock_guard<std::mutex> lock(mutex());auto& c=context();c.active=false;c.events=0;const char* arm=std::getenv("STRATA_PREFIX_DIAG_ARM");struct stat st;if(!arm||stat(arm,&st)||!S_ISREG(st.st_mode))return;if(!supported||ids.empty()||ids.size()>8192||++c.sequence>64)return;c.active=true;c.request=c.sequence;token_digest(ids,c.input_sha);std::fprintf(stderr,"PCL {\"event\":\"begin\",\"pid\":%ld,\"request\":%llu,\"input_sha256_le32\":\"%s\",\"tokens\":%zu,\"scope\":\"serial_text\"}\n",long(getpid()),(unsigned long long)c.request,c.input_sha,ids.size());}
++struct Registry {std::array<const void*,256> pointers{};std::array<uint64_t,256> ids{};uint64_t next=0;};
++inline Registry& registry(){static Registry r;return r;}
++inline uint64_t instance(const void* p){if(!active())return 0;auto& r=registry();for(size_t i=0;i<r.pointers.size();++i)if(r.pointers[i]==p)return r.ids[i];return 0;}
++inline uint64_t admit_instance(const void* p){if(!active())return 0;auto& r=registry();for(size_t i=0;i<r.pointers.size();++i)if(r.pointers[i]==p||!r.pointers[i]){r.pointers[i]=p;return r.ids[i]=++r.next;}return 0;}
++inline void forget_instance(const void* p){if(!active())return;auto& r=registry();for(size_t i=0;i<r.pointers.size();++i)if(r.pointers[i]==p){r.pointers[i]=nullptr;r.ids[i]=0;return;}}
++struct RegistryCapture {std::array<const void*,256> pointers{};std::array<uint64_t,256> ids{};size_t count=0;};
++template<class Entries>inline RegistryCapture capture_instances(const Entries& entries){RegistryCapture out;if(!active())return out;out.count=entries.size()<256?entries.size():256;for(size_t i=0;i<out.count;++i){out.pointers[i]=&entries[i];out.ids[i]=instance(out.pointers[i]);}return out;}
++inline void restore_instance(const void* p,uint64_t id){if(!active()||!id)return;auto& r=registry();for(size_t i=0;i<r.pointers.size();++i)if(r.pointers[i]==p||!r.pointers[i]){r.pointers[i]=p;r.ids[i]=id;return;}}
++template<class Entries>inline void rebind_after_erase(const Entries& entries,size_t removed,const RegistryCapture& before){if(!active())return;for(size_t i=0;i<before.count;++i)forget_instance(before.pointers[i]);for(size_t i=0;i<entries.size()&&i<255;++i){size_t old=i<removed?i:i+1;if(old<before.count)restore_instance(&entries[i],before.ids[old]);}}
++inline void number(Sha256& s,uint64_t n){uint8_t b[8];for(unsigned i=0;i<8;++i)b[i]=uint8_t(n>>(8*i));s.update(b,8);}
++template<class Token>inline void digest_tokens(Sha256& s,const std::vector<Token>& ids){number(s,ids.size());for(auto id:ids)number(s,uint32_t(id));}
++template<class Image>inline void digest_image(Sha256& s,const Image& image){for(auto value:image.geometry)number(s,uint64_t(value));number(s,image.layer_lo);number(s,image.layer_hi);number(s,image.cvec);digest_tokens(s,image.live.ids);number(s,image.live.imgs.size());for(const auto& im:image.live.imgs){number(s,im.start);number(s,im.hash);}number(s,image.checkpoints.size());for(const auto& cp:image.checkpoints){digest_tokens(s,cp.ids);number(s,cp.pinned);number(s,cp.imgs.size());for(const auto& im:cp.imgs){number(s,im.start);number(s,im.hash);}}number(s,image.stage_images.size());for(const auto& stage:image.stage_images)digest_image(s,stage);}
++struct Snapshot {char key[65]{},live_key[65]{};uint64_t instance=0;size_t tokens=0,bytes=0,stages=0,checkpoints=0;bool pinned=false;std::array<int64_t,16> bounds{};};
++template<class Image>inline Snapshot describe(const Image& image){Snapshot d;if(!active())return d;Sha256 hash;digest_image(hash,image);hash.finish(d.key);d.instance=instance(&image);const auto* ids=&image.live.ids;if(ids->empty())for(const auto& cp:image.checkpoints)if(cp.ids.size()>ids->size())ids=&cp.ids;token_digest(*ids,d.live_key);d.tokens=ids->size();d.bytes=image.bytes();d.pinned=image.pinned();d.checkpoints=image.checkpoints.size();d.stages=image.stage_images.size()+1;d.bounds[0]=image.layer_lo;d.bounds[1]=image.layer_hi;for(size_t i=0;i<image.stage_images.size()&&i<7;++i){d.bounds[2*i+2]=image.stage_images[i].layer_lo;d.bounds[2*i+3]=image.stage_images[i].layer_hi;}return d;}
++inline void cache(const char* action,const Snapshot& d,size_t bytes,size_t entries,size_t budget,size_t slots,size_t held=0){
++    if(!active())return;std::lock_guard<std::mutex> lock(mutex());if(!acquire())return;const auto& c=context();
++    std::fprintf(stderr,"PCL {\"event\":\"cache\",\"pid\":%ld,\"request\":%llu,\"action\":\"%s\",\"snapshot_metadata_sha256\":\"%s\",\"snapshot_instance\":%llu,\"identity_observed\":%s,\"source_tokens_sha256_le32\":\"%s\",\"snapshot_tokens\":%zu,\"snapshot_bytes\":%zu,\"pinned\":%s,\"checkpoints\":%zu,\"retained_bytes\":%zu,\"entries\":%zu,\"budget\":%zu,\"slots\":%zu,\"held\":%zu,\"stage_ranges\":[",long(getpid()),(unsigned long long)c.request,action,d.key,(unsigned long long)d.instance,d.instance?"true":"false",d.live_key,d.tokens,d.bytes,d.pinned?"true":"false",d.checkpoints,bytes,entries,budget,slots,held);
++    for(size_t i=0;i<d.stages&&i<8;++i)std::fprintf(stderr,"%s[%lld,%lld]",i?",":"",(long long)d.bounds[2*i],(long long)d.bounds[2*i+1]);
++    std::fprintf(stderr,"],\"stage_descriptor_truncated\":%s}\n",d.stages>8?"true":"false");
++}
++template<class Token>inline void state(const char* event,const std::vector<Token>& ids,bool updated,bool reusable,const char* phase,const char* finish){
++    if(!active())return;std::lock_guard<std::mutex> lock(mutex());if(!acquire())return;char key[65];token_digest(ids,key);const auto& c=context();
++    std::fprintf(stderr,"PCL {\"event\":\"%s\",\"pid\":%ld,\"request\":%llu,\"phase\":\"%s\",\"finish\":\"%s\",\"published\":%s,\"chain_updated\":%s,\"live_reusable\":%s,\"tokens\":%zu,\"sha256_le32\":\"%s\",\"ids\":[",event,long(getpid()),(unsigned long long)c.request,phase,finish,(updated&&reusable)?"true":"false",updated?"true":"false",reusable?"true":"false",ids.size(),key);
++    if(ids.size()<=8192)for(size_t i=0;i<ids.size();++i)std::fprintf(stderr,"%s%lld",i?",":"",(long long)ids[i]);
++    std::fprintf(stderr,"],\"ids_truncated\":%s}\n",ids.size()>8192?"true":"false");
++}
++inline void stage(const char* phase,int device,int64_t lb,int64_t le,int64_t lo,int64_t hi,bool complete){if(!active())return;std::lock_guard<std::mutex> lock(mutex());if(!acquire())return;const auto& c=context();std::fprintf(stderr,"PCL {\"event\":\"stage_span\",\"pid\":%ld,\"request\":%llu,\"phase\":\"%s\",\"device\":%d,\"lb\":%lld,\"le\":%lld,\"lo\":%lld,\"hi\":%lld,\"complete\":%s,\"commit_proven\":false}\n",long(getpid()),(unsigned long long)c.request,phase,device,(long long)lb,(long long)le,(long long)lo,(long long)hi,complete?"true":"false");}
++}

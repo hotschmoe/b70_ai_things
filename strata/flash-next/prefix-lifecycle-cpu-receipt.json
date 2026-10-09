@@ -1,0 +1,16 @@
+{
+  "CONFIG": "actual portable ConversationCache and draft0019 header; pinned GCC CPU container, no devices",
+  "COMMAND": "python3 strata/flash-next/test_prefix_lifecycle_cpu.py",
+  "RESULT": {
+    "source_binding": true,
+    "canonical_sha256": true,
+    "actual_instance_victim_and_take": true,
+    "middle_erase_identity_preserved": true,
+    "pin_policy_unchanged": true,
+    "updated_not_reusable_not_published": true,
+    "off_on_cpu_policy_outputs_equal": true,
+    "cpu_log": "DIGEST 5b10ce92f0bb26735e806acca27751e9cf0a7859c9d0fcdbd4011c0c5e60c8c9\nLONGDIGEST c57265a1c4b342afeeb4bafbf72f55c8c36babde6096310351d5516e35af014e\nPASS actual portable cache ownership/budget/pin policy and lifecycle SHA256\nDIGEST 5b10ce92f0bb26735e806acca27751e9cf0a7859c9d0fcdbd4011c0c5e60c8c9\nLONGDIGEST c57265a1c4b342afeeb4bafbf72f55c8c36babde6096310351d5516e35af014e\nPASS actual portable cache ownership/budget/pin policy and lifecycle SHA256\n"
+  },
+  "VERDICT": "PASS portable CPU owner/telemetry; actual SYCL TU compilation/GPU model/lifecycle unqualified",
+  "source_plan_sha256": "65254837eb6e4dcbf60ffec3affa6fad3608e9d7493d898809ffb0634614f6de"
+}

@@ -1,0 +1,15 @@
+{
+  "CONFIG": "CPU synthetic raw/lifecycle/receipt controls and actual tokenizer/template runtime, no devices/model",
+  "COMMAND": "python3 strata/flash-next/test_serial_prefix_qualification_v6_cpu.py",
+  "RESULT": {
+    "strict_raw_and_lifecycle_positive": true,
+    "missing_wrong_phase_stage_digest_budget_victim_rejected": true,
+    "new_source_positive_mock_engine_identity": true,
+    "old0018_generation_rejected": true,
+    "actual_tokenizer_template_synthetic_continuation": true,
+    "wrong_committed_prefix_rejected": true
+  },
+  "VERDICT": "PASS CPU contracts only;0019 compilation/full390/GPU/real generated continuation remain unqualified",
+  "synthetic_engine_receipt_explicit": true,
+  "frozen_v5_sha256": "46b15abba3fd60d432968420113a6f643a9e29a837f533ba5272d0481c91d253"
+}

@@ -1,0 +1,23 @@
+{
+  "scope": "source preparation only; no GPU/compiler/runtime; partial admission provenance explicitly unobserved",
+  "base_source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source",
+  "overlay": "/mnt/vm_8tb/b70/build/strata-prefix-lifecycle0019-ygf1m0bn/source",
+  "patch": "strata/flash-next/patches/0019-sycl-prefix-cache-lifecycle-telemetry.patch",
+  "patch_sha256": "8df06808183e60e56a94212f8b6e7c73899accec29cbc08e09823ab8fa5c5b63",
+  "base_files": {
+    "include/strata/core/conversation_cache.hpp": "4b1c39308844c371c463d3f04388b7d088938ad97facb3b13ae4c2d393cdf52f",
+    "sycl/src/program/generate.cpp": "c98a6af356ded6f7212626158d724f7c378988bbef52ef3ac7cac9acba64d37c",
+    "sycl/src/core/verify.cpp": "f567f6178eada58265f07589740145cb385ea3e69a52fd4f24f549087ecc51be",
+    "sycl/src/prefill/prefill.cpp": "7fb52155a58d43fb054ff9311bca08bb1d05ece8ff66e9e41532f18f44ee3c9f"
+  },
+  "patched_files": {
+    "include/strata/core/conversation_cache.hpp": "b1a652d34597ca1b1232e9f29ccd16c75ec539b05fdcd53dae62b6ee1bdae898",
+    "sycl/src/program/generate.cpp": "222dc59fa25e026ab0ece0cc42143299fe7201a53e07c281e9cdbeaa85fd271c",
+    "sycl/src/core/verify.cpp": "eaf036da77475a54bf62a882344942a7ceb4f80588bba68b64f54f2dc9d42771",
+    "sycl/src/prefill/prefill.cpp": "6b3c2a5318bc747b032c291be8704c2fbd3419eafb236a9209235789efb96be3",
+    "include/strata/core/prefix_lifecycle.hpp": "ada5a81bb765d995e6a6183bbe200e11903e9d6987a7209ee18e9d35142a3409"
+  },
+  "state_proof": false,
+  "all_admission_refusals_observed": false,
+  "stage_completion": "body completion after existing source waits, not commit/partial-work proof"
+}

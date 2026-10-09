@@ -1,0 +1,12 @@
+{
+  "CONFIG": "CPU mock test reconstructs pinned pristine source plus20 tracked patches; no devices",
+  "COMMAND": "python3 strata/flash-next/test_stage_slot_owner_cpu.py",
+  "RESULT": {
+    "return_code": 0,
+    "consumed_source_hashes_checked": 38,
+    "untracked_overlay_used": false,
+    "actual_header_and_extracted_release_rebind_mocked": true,
+    "asan_ubsan_passed": true
+  },
+  "VERDICT": "CPU source/ownership contracts only; no real SYCL/device/GPU qualification"
+}

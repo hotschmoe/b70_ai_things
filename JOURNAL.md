@@ -9609,3 +9609,22 @@ publisher hashes pass. Bounded eviction suite started under pair lease at
 F06/serial-eviction-twocard-v1; no result.
 VERDICT -> Bounded actual two-stage snapshot restore observable consistency,
 not raw persistent-state/complete-cache/API/concurrency/latency qualification.
+
+## 2026-10-09 Cache lifecycle and stage slot ownership source checkpoint
+
+CONFIG -> Separate0019/0020 source plus V6 controller/fixture/parent; original
+fb58/GGML3cf/image39992 unchanged. Combined engine plan SHA
+05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c.
+COMMAND -> Parent CPU tests: prefix_lifecycle, serial_prefix_qualification_v6,
+stage_slot_owner and qualify_serial_prefix_v6 (test_*.py).
+RESULT -> PASS actual portable cache/header ASan/UBSan; V6 fullraw/phase/stage/
+budget/victim negatives and tokenizer synthetic continuation; pristine+20-patch
+reconstruction/all38 consumed hashes and actual owner-header/release/rebind
+mocked allocator controls; V6 parent success/failure/old18 rejection.
+Default-off lifecycle metadata adds observed snapshot instances, live chain and
+completed stage spans. Slot owner adds null/partial cleanup, resize/fallback
+frees, shifted QSA ordinal release and identical RoPE rebind.
+VERDICT -> CPU/source checkpoint only. Full SYCL build, real one/pair ownership
+oracle, NEW full390/prepared source gate, observer off/on model qualification
+and actual V6 cache tests remain required. Existing V5 receipts do not qualify
+this new generation or concurrent serving.
