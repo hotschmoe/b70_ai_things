@@ -10057,3 +10057,26 @@ VERDICT -> Immutable combined plan source checkpoint before full pinned rebuild.
 Compilation, new source390/upload identity, numerical off/on, real2/4/6 capacity
 and per-request coherence/lifecycle remain required. Earlier runtime receipts
 cannot qualify new combined artifacts; full-model math and concurrency false.
+
+
+## 2026-10-09 - Strict capture21 cross-topology comparator source
+
+CONFIG -> Actual finalized one-card numerical-v2 receipt; pair numerical-v2
+still live. Compare identical2048/64/65536 native serial geometry and exact
+prefix1/2/4/8, allowing only declared32/16 split device and weight trim options.
+
+COMMAND -> Review compare_layer0_topologies_v1.py; reconstruct all26 source
+field records from actual one-card metadata/log/frame and saved hashes.
+Check wrong physical card roster, unfinalized pair and4 malformed topology
+controls. Initial pending-run check read child report before parent gate; move
+parent finalized check before dependent file reads and rerun all controls.
+
+RESULT -> Actual finalized one-card provenance PASS; wrong cards, pending pair
+and4 topology controls reject. Comparator requires finalized parent/child,
+health/fault/source/lifecycle/packet and canonical log hashes, matching source
+engine and non-topology args, fullhead/all48 residual equality and26 field hashes.
+No cross-topology result is claimed before pair termination.
+
+VERDICT -> Commit comparator before actual pair comparison. Exact diagnostic
+self-consistency cannot qualify independent own-state/model math, concurrency,
+API behavior or clean latency.
