@@ -10436,3 +10436,23 @@ GPU/SDKbyagents. No nativeintrinsic/topk/FMA exactness ornewtolerance inferred.
 VERDICT -> Sourcecheckpoint only. IntegratedfreshSDK/source390/C1/2/4/6 cache/
 freshpin/migration andfulloriginalmodelmath remainrequired. Actualpaired33
 numerical8 GPU25190currentlylive; no prooftransfer or shelfpromotion.
+
+
+## 2026-10-09 - Paired33 numerical and cross-topology PASS
+
+CONFIG -> Import28 pinned SDK/C1/source390; matched serial1/2/4/8 context2048
+prefill64, pair32/16 split,31source+2DERIVED fields.
+
+COMMAND -> Actualpaired numericalV8 parent; originalconditionalFFN checker;
+new read-only all33 cross-topology comparator andfour rejection controls.
+
+RESULT -> PairPASS658s, eightheads/384residual comparisons bitwise, allthree
+processesexit0/removed,7023304B logicalowner/free, packets/sourcebindings and
+pre/posthealth plusNEWallfour fullpublisherhashesPASS. ConditionalFFN108PASS
+worstNMSE3.1926730082874146e-14/maxnormalized3.5706573414878165e-7.
+Cross-topology fourheads/192residuals/132fields bitwisePASS. Initialobsolete
+armdirectory invocationfailedbeforeoutput; correctedsource/newreceiptPASS.
+
+VERDICT -> Scopedserialequivalence/conditionalconsumers; fullownedmodelmath/
+cache/concurrency/latency/shelf unqualified. FrozenfailedpairremainsFAILED.
+See docs/20261009_flashnext_import28_numerical_pair_v8.md.
