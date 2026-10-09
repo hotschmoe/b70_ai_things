@@ -1,0 +1,13 @@
+{
+  "status": "READY frozen CPU/source wrapper; no real new-engine prepare/GPU claim",
+  "files": {
+    "qualify_serial_prefix_v6.py": "470fb38ecf4efb753c43e857ca68104e5286a30bae093e4ef0338d8c102898e8",
+    "test_qualify_serial_prefix_v6_cpu.py": "430a14a5dbefd71c6a1e836f0bf3b4be9daa65f93f36b1621ff3000d31343819",
+    "qualify-serial-prefix-v6-cpu-receipt.json": "9e99fec2885d342a1e4f9cd121ae6d876a67d0cf32892087fe164e830838a7ff",
+    "qualify-serial-prefix-v6.md": "6284ca3f54e2aaac29d821b4809c51c59d01b758be9f2792df622c8cc58c9eec"
+  },
+  "controller_sha256": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c",
+  "engine_source_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+  "old_wrapper_sha256": "6f2a28ec6aadbce4989a10ed25048f57fd84b9694fd37cea4af1ca21a1c350f6",
+  "actual_new_positive_prepare_completed": false
+}
