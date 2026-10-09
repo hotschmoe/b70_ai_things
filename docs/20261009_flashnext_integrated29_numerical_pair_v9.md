@@ -17,7 +17,8 @@ FFN108 checksPASS onEACH newrun. WorstNMSE3.1926730082874146e-14 andnormalized
 
 VERDICT -> Boundedserial equivalence/lifecycle andconditionalselectedoriginal
 consumers. Capturedincomingstate/activation supplied; nooriginalownedfull48
-math/rawfusedhidden/per-expertdown/no-cancellation-error proof. Completecache,
+math or raw fused hidden/per-expert down observations. Aggregate cancellation
+can mask individual down errors. Completecache,
 actual2/4/6/APIfairness/cleanlatency/shelf remainrequired. New30+31 sourcebuild
 requires itsownruntime qualification; these29results do nottransfer.
 
