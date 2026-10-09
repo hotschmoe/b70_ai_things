@@ -10495,3 +10495,18 @@ order/input negatives; tablehas90paddingrows, convoriginalF32 despite oldlabels.
 VERDICT -> CPU/sourcecheckpoint; genuineC1/newSDK/upload/runtime stillpending.
 PLE suppliedlayerresidual, nativecontracts/GPUcheckpoint/full48math unqualified.
 No newtolerance or shelf/speedclaim. SDKparent79123 stilllive.
+
+
+## 2026-10-09 - Actual integrated29 fresh SDK and oracle link PASS
+
+CONFIG -> Pinned integrated29 plan94aef305, newsource60/24headers/sixPython/
+eighttargets, unchanged39992image/fb58/3cf03257, inheritedpairlease noGPUdevice.
+
+COMMAND -> Fullnativeengine buildjobs4 thenfreshsource390oracle link fullv6.
+
+RESULT -> SDKPASS337s receiptbd17b41b0074b816ab88d3804af78727480291f96d2510e5759b9788091b3c2d;
+eightactualABI targets/external/snapshotpass. C1generation8 actualsourcegatePASS.
+OraclefreshlinkPASS46s; librarypins unchanged. Newstrictsourceupload running.
+
+VERDICT -> Compiler/sourcecheckpoint, no modelruntime/slotcache qualification.
+See docs/20261009_flashnext_integrated29_sdk_checkpoint.md.
