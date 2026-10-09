@@ -10456,3 +10456,23 @@ armdirectory invocationfailedbeforeoutput; correctedsource/newreceiptPASS.
 VERDICT -> Scopedserialequivalence/conditionalconsumers; fullownedmodelmath/
 cache/concurrency/latency/shelf unqualified. FrozenfailedpairremainsFAILED.
 See docs/20261009_flashnext_import28_numerical_pair_v8.md.
+
+
+## 2026-10-09 - Default-off slot ownership source and fresh ABI build
+
+CONFIG -> Frozen29 patch on integrated cache/migration/public fresh/pin source;
+newplan94aef305dbc6a31f023afa55573d52a9ce6af9443cfc0182eb7c324255159094.
+No source/model/image replacement; inherited pair lease for isolatedSDK build.
+
+COMMAND -> Independently run actualarena ASan/UBSan hostmock lifetimecontrols
+andpristinefb58 reconstruction ofall29 patches/60source/24headers/sixPython/
+eighttargets. Start build_native_hc_engine.py withnewplan/exactcleanGGML.
+
+RESULT -> Both CPUcontrol suites PASS. Defaultoff zeroextraGPU alloc/copy/
+wait/nativecontextquery; enabled authoritativePID/stage/slot/device/allocation
+generation/context/pointer/extent plusactualgraphretirement/release markers.
+FreshSDK build currentlylive; no runtimeGPU/model/source390 qualificationyet.
+
+VERDICT -> Source checkpoint only; no old28 qualificationtransfer. NewSDK,
+source390, genuineC1 andactual2/4/6 slot-owner/completecache/migration/API/full
+math/fairness remainrequired. Unrelated userchanges preserved.

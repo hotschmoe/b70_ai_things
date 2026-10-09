@@ -41,4 +41,3 @@ layer0-numerical-twocard-v8/post-model-identity.json SHA256 ee76946d39de5599b7de
 layer0-conditional-ffn-twocard-v8/receipt.json SHA256 bb22b9701c4c4e685f13e3ccb349accf90caca776431694cfe9004d7e48a30eb.
 
 new33-cross-topology-v2/receipt.json SHA256 334e72a551b0c5aa3a4c5450498dbbcb9f65a85f8a5895902906fc6d2a9cdd58.
-

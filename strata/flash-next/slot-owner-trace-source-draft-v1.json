@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "status": "CPU source draft; no GPU/SDK/model qualification",
+  "base": "/mnt/vm_8tb/b70/build/strata-integrated25-28-source-pcamxyy5/source",
+  "overlay": "/mnt/vm_8tb/b70/build/strata-slot-trace29-3_jbzry9",
+  "base_plan": "strata/flash-next/integrated-batch-public-prefix-engine-build-plan-v1.json",
+  "base_plan_sha256": "b4a7d4baa7ae654b3888354240cc541290a218caa82c3b62d7bcf74f1ec5bd42",
+  "patch": "strata/flash-next/patches/0029-sycl-default-off-slot-owner-trace-draft.patch",
+  "patch_sha256": "cb02ee4bc9e4b375cf31a693be2475d3099159197bb36c489d092fecb7cff239",
+  "base_source_sha256": {
+    "sycl/include/strata/core/slot_session_arena.hpp": "48e1e2beef589dd50ed0a07ccd01e66174aeb06b682aa7cf0e3343a6ec45ac8c",
+    "sycl/src/program/generate.cpp": "ae1ad7fa150a1fc21231e06b24a37eeec94d9ab2733baaba83939caf65f9bb46"
+  },
+  "expected_source_sha256": {
+    "sycl/include/strata/core/slot_session_arena.hpp": "03d729da9033170dce9ff933fe66768177bee8ce2ff67b5032eb9595d7381db2",
+    "sycl/src/program/generate.cpp": "f0a361ac80ce02b8834fdfe12874e3b197259af0a55c5b16154c05e6bb0ce2aa"
+  }
+}

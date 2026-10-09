@@ -1,0 +1,11 @@
+{
+  "CONFIG": "pristinefb58 + integrated60/29 source patch/header/ABI recipe only",
+  "COMMAND": "python3 strata/flash-next/test_slot_owner_engine_plan_cpu_v1.py",
+  "RESULT": {
+    "all29_patches": true,
+    "final60_source_hashes": true,
+    "header_payload24_closure": true,
+    "all8_SDK_targets_recipe": true
+  },
+  "VERDICT": "PASS CPU source reconstruction only; SDK/GPU/slots/source/model/concurrency unqualified"
+}

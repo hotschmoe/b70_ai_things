@@ -1,0 +1,108 @@
+diff --git a/sycl/include/strata/core/slot_session_arena.hpp b/sycl/include/strata/core/slot_session_arena.hpp
+index 6e69f27..3e45cec 100644
+--- a/sycl/include/strata/core/slot_session_arena.hpp
++++ b/sycl/include/strata/core/slot_session_arena.hpp
+@@ -4,13 +4,19 @@
+ #include "strata/core/on_device.hpp"
+ #include <dpct/dpct.hpp>
+ #include <sycl/sycl.hpp>
++#include <sycl/ext/oneapi/backend/level_zero.hpp>
++#include "strata/kernels/qsa.hpp"
++#include <array>
++#include <atomic>
++#include <cstring>
++#include <unistd.h>
+ #include <cstdio>
+ #include <cstdlib>
+ #include <string>
+ namespace strata::core {
+ class SlotSessionArena final : public SessionState {
+ public:
+-    explicit SlotSessionArena(int device):device_(device),queue_(owner_queue(device)) {}
++    explicit SlotSessionArena(int device,int stage=-1,int slot=-1):device_(device),queue_(owner_queue(device)),stage_(stage),slot_(slot) {}
+     SlotSessionArena(const SlotSessionArena&)=delete;
+     SlotSessionArena& operator=(const SlotSessionArena&)=delete;
+     ~SlotSessionArena() noexcept {
+@@ -26,28 +32,39 @@ public:
+         geometry_=geometry;
+         const OnDevice owner(device_);
+         try {
+-            base_=sycl::malloc_device(bytes,queue_);bytes_=bytes;
+-            if(!base_){bytes_=0;error="slot arena malloc_device returned null";return false;}
++            trace_attempt();base_=sycl::malloc_device(bytes,queue_);bytes_=bytes;
++            if(!base_){trace_event("allocation_null",bytes);bytes_=0;error="slot arena malloc_device returned null";return false;}
++            trace_register(base_,bytes_,"slot_arena");
+             if(session_init(geometry_,cells,experts,base_,*this,lo,hi)==0) {
+                 error="slot session_init returned zero";release();return false;
+             }
+-            return true;
++            trace_side_owners();return true;
+         } catch(const std::exception& e){error=e.what();release();return false;}
+     }
+     void release() {
+         if(!base_ && !qsa_states)return;
+-        const OnDevice owner(device_);queue_.wait_and_throw();
++        const OnDevice owner(device_);queue_.wait_and_throw();trace_side_owners();trace_event("release_begin",bytes_);
+         for(int64_t j=0;qsa_states && j<qsa_alloc;++j)
+             qsa_state_release_owned_host(qsa_states[qsa_ord0+j],(void*)&queue_);
+         delete[] qsa_states;qsa_states=nullptr;
+         if(base_){sycl::free(base_,queue_);base_=nullptr;}
+-        bytes_=0;
++        bytes_=0;trace_event("release_returned",0);
+     }
++    void trace_graphs_bound(){if(!trace_enabled())return;graphs_bound_=true;graphs_retired_=false;trace_event("graphs_bound",bytes_);}
++    void trace_graphs_retired(){if(!trace_enabled())return;graphs_retired_=true;trace_event("graphs_retired",bytes_);}
+     void* base()const{return base_;}
+     uint64_t allocation_bytes()const{return bytes_;}
+     int device()const{return device_;}
+ private:
+     static sycl::queue owner_queue(int device){const OnDevice owner(device);return dpct::get_in_order_queue();}
+-    int device_;sycl::queue queue_;ModelGeometry geometry_{};void* base_=nullptr;uint64_t bytes_=0;
++    static bool trace_enabled(){static const bool enabled=[](){const char* p=std::getenv("STRATA_SLOT_OWNER_TRACE");if(!p||!*p||!std::strcmp(p,"0"))return false;if(std::strcmp(p,"1"))throw std::invalid_argument("STRATA_SLOT_OWNER_TRACE=0|1");return true;}();return enabled;}
++    void trace_attempt(){if(!trace_enabled())return;if(stage_<0||slot_<0||slot_>=8)throw std::invalid_argument("slot owner trace stage/slot missing");static std::atomic<uint64_t> next{0};generation_=++next;registered_count_=0;graphs_bound_=false;graphs_retired_=true;}
++    void trace_event(const char* event,uint64_t bytes){if(!trace_enabled()||!generation_)return;std::fprintf(stderr,"SLOT_USM {\"event\":\"%s\",\"pid\":%ld,\"stage\":%d,\"slot\":%d,\"device\":%d,\"generation\":%llu,\"bytes\":%llu,\"registered_owners\":%u,\"graphs_bound\":%s,\"graphs_retired\":%s}\n",event,long(getpid()),stage_,slot_,device_,(unsigned long long)generation_,(unsigned long long)bytes,registered_count_,graphs_bound_?"true":"false",graphs_retired_?"true":"false");std::fflush(stderr);}
++    void trace_register(const void* p,uint64_t bytes,const char* role){if(!trace_enabled()||!p)return;if(!bytes)throw std::invalid_argument("slot trace zero owner extent");for(unsigned i=0;i<registered_count_;++i)if(registered_[i]==p)return;if(registered_count_>=registered_.size())throw std::invalid_argument("slot trace owner descriptor bound");
++        const auto context=sycl::get_native<sycl::backend::ext_oneapi_level_zero>(queue_.get_context());registered_[registered_count_++]=p;
++        std::fprintf(stderr,"SLOT_USM {\"event\":\"owner_register\",\"pid\":%ld,\"stage\":%d,\"slot\":%d,\"device\":%d,\"generation\":%llu,\"pointer\":\"%p\",\"bytes\":%llu,\"ze_context\":\"%p\",\"role\":\"%s\"}\n",long(getpid()),stage_,slot_,device_,(unsigned long long)generation_,p,(unsigned long long)bytes,(void*)context,role);std::fflush(stderr);
++    }
++    void trace_side_owners(){if(!trace_enabled()||!base_)return;for(int64_t j=0;qsa_states&&j<qsa_alloc;++j){const auto& q=qsa_states[qsa_ord0+j];trace_register(q.host_step,strata::kernels::qsa_step_bytes()+sizeof(int32_t),"host_step");trace_register(q.host_pos,uint64_t(geometry_.n_head)*sizeof(int32_t),"host_pos");trace_register(q.owned_host_kv,q.owned_host_kv_bytes,"owned_host_kv");}}
++    int device_;sycl::queue queue_;int stage_,slot_;uint64_t generation_=0;std::array<const void*,64> registered_{};unsigned registered_count_=0;bool graphs_bound_=false,graphs_retired_=true;ModelGeometry geometry_{};void* base_=nullptr;uint64_t bytes_=0;
+ };
+ }
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index bf5b328..6cea3a3 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -3882,7 +3882,7 @@ int main(int argc, char **argv) try {
+             const uint64_t bytes = strata::core::session_bytes(g, o.max_context, K, lo, hi);
+             if (k == 0) bytes0 = bytes;
+             for (int b = 0; b < fit; ++b) {
+-                auto u = std::make_unique<strata::core::SlotSessionArena>(dev);
++                auto u = std::make_unique<strata::core::SlotSessionArena>(dev,int(k),b);
+                 std::string slot_error;
+                 if(!u->initialize(g,o.max_context,K,lo,hi,bytes,slot_error)) {
+                     std::fprintf(stderr,"strata batch: slot %d device %d initialization: %s\n",b,dev,slot_error.c_str());
+@@ -7251,6 +7251,7 @@ int main(int argc, char **argv) try {
+                     std::fprintf(stderr, "strata serve: --batch, stage %zu: %s\n", k + 1, err.c_str());
+                     return 1;
+                 }
++                for(auto& owner:bslot_ss[k])owner->trace_graphs_bound();
+             }
+         }
+         for (int st = 0; st < n_stages && n_stages > 1; ++st) {
+@@ -11943,6 +11944,7 @@ int main(int argc, char **argv) try {
+                     stage->ver.release_stage_mirror_graphs(); stage->ver_b.release_stage_mirror_graphs();
+                     stage->expert_mirror.reset();
+                 }
++                for(auto& stage_owners:bslot_ss)for(auto& owner:stage_owners)owner->trace_graphs_retired();
+                 bslot_ss.clear(); // all batch graph references retired; owning-context frees
+                 vh.stage_mirror.reset(); first_stage_mirror.reset();
+                 // Drop source aliases before checked release; no graph or source
+@@ -11952,6 +11954,7 @@ int main(int argc, char **argv) try {
+             } else {
+                 ver.release_slot_graphs();
+                 for(auto& stage:stages){const strata::core::OnDevice on(stage->dev);stage->ver.release_slot_graphs();}
++                for(auto& stage_owners:bslot_ss)for(auto& owner:stage_owners)owner->trace_graphs_retired();
+                 bslot_ss.clear();gguf_src.close();
+             }
+         } catch (const std::exception& e) {

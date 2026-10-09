@@ -1,0 +1,13 @@
+{
+  "CONFIG": "actual new arena header/initialize/release with host ASanUBSan mocks and raw UR logical traces; no SYCL/SDK/devices/weights",
+  "COMMAND": "python3 strata/flash-next/test_slot_owner_trace_cpu_v1.py",
+  "RESULT": {
+    "off_existing_alloc_free_wait_counts_unchanged_no_nativecontext_queries": true,
+    "normal_four_unique_owners_and_alias_not_double_registered": true,
+    "partial_zero_throw_cleanup": true,
+    "null_not_qualified_as_owned_success": true,
+    "stale_missing_wrongcontext_doublefree_controls": 9,
+    "patch_sha256": "cb02ee4bc9e4b375cf31a693be2475d3099159197bb36c489d092fecb7cff239"
+  },
+  "VERDICT": "PASS CPU owned marker/control source only; actual slots/graph retirement/allocator/source/serving unqualified"
+}

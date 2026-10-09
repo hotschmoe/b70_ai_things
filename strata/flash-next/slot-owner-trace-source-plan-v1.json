@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "status": "READY CPU source marker/parser/plan; actual SDK/GPU/model/source qualification absent",
+  "files": {
+    "strata/flash-next/patches/0029-sycl-default-off-slot-owner-trace-draft.patch": "cb02ee4bc9e4b375cf31a693be2475d3099159197bb36c489d092fecb7cff239",
+    "strata/flash-next/slot-owner-trace-source-draft-v1.json": "1cc79e1e913daebc01f9b3d426e0ea3862f1f5dc61d15f933247f550191e1cc5",
+    "strata/flash-next/prepare_slot_owner_trace_overlay_v1.py": "634c5cc4f7cd2a36cc0e9390e6a9c5a0706f3ba7b07f4f96531ca554ea7abcfb",
+    "strata/flash-next/audit_slot_owner_trace_v1.py": "8b4fdb4da2ff758cc625b33e24077e9f2f97c0ca0111428a1f8b8f5be279bf43",
+    "strata/flash-next/test_slot_owner_trace_cpu_v1.py": "6dfc257ddfab910408347aada702dca7198c5c4febec9ef200b78d98c9cdca09",
+    "strata/flash-next/slot-owner-trace-cpu-receipt-v1.json": "66bfba9e13dd3a595e22f92d9c8f41cab246cfb21c796981ecaf3d1e3f46c0cd",
+    "strata/flash-next/slot-owner-trace-design-v1.md": "a016abfb30bb39cd7bd83391220cc5929a43c55f86ac687a879d742df0c4b1c6",
+    "strata/flash-next/integrated-slot-owner-trace-engine-build-plan-v1.json": "94aef305dbc6a31f023afa55573d52a9ce6af9443cfc0182eb7c324255159094",
+    "strata/flash-next/test_slot_owner_engine_plan_cpu_v1.py": "6f805c4991dcc5f2c9ae3741c95f099e57c755ed234d87483de63a5c056ddb42",
+    "strata/flash-next/slot-owner-engine-plan-cpu-receipt-v1.json": "ed405339bc37f8ab988e989cdd5339f58eb51159a921cd91484a87aa10ec4dea"
+  },
+  "base_engine_plan_sha256": "b4a7d4baa7ae654b3888354240cc541290a218caa82c3b62d7bcf74f1ec5bd42",
+  "new_engine_plan_sha256": "94aef305dbc6a31f023afa55573d52a9ce6af9443cfc0182eb7c324255159094",
+  "patch_sha256": "cb02ee4bc9e4b375cf31a693be2475d3099159197bb36c489d092fecb7cff239",
+  "expected_source_sha256": {
+    "sycl/include/strata/core/slot_session_arena.hpp": "03d729da9033170dce9ff933fe66768177bee8ce2ff67b5032eb9595d7381db2",
+    "sycl/src/program/generate.cpp": "f0a361ac80ce02b8834fdfe12874e3b197259af0a55c5b16154c05e6bb0ce2aa"
+  },
+  "flag": "STRATA_SLOT_OWNER_TRACE=1",
+  "off_extra_GPU_alloc_copy_wait_nativecontext_queries": 0,
+  "allocation_roles": [
+    "slot_arena",
+    "host_step",
+    "host_pos",
+    "owned_host_kv"
+  ],
+  "borrowed_alias_registration": false,
+  "postfree_pointer_type_gate": false,
+  "actual_model_payload_read_or_GPU_or_SDK_execution": false,
+  "actual_owning_slots_qualified": false,
+  "full_model_math_qualified": false,
+  "cpu_pristine29_full60_header24_recipe_passed": true,
+  "cpu_commands": [
+    "python3 strata/flash-next/test_slot_owner_trace_cpu_v1.py",
+    "python3 strata/flash-next/test_slot_owner_engine_plan_cpu_v1.py"
+  ]
+}
