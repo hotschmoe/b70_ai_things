@@ -29,12 +29,15 @@ def load_case(root, name):
     finals = [e for e in events if e.get('stop') is True]
     if len(finals) != 1:
         raise ValueError(name + ': exactly one terminal event required')
+    evidence_path = root / (name + '.input-tokens.json')
+    input_evidence = json.loads(evidence_path.read_text()) if evidence_path.exists() else None
     return {'name': name, 'prompt': request['prompt'], 'prompt_sha256': digest(request['prompt']),
             'request_except_prompt': {k: v for k, v in request.items() if k != 'prompt'},
             'progress': progress, 'progress_processed': [x['processed'] for x in progress],
             'tokens': [s['id'] for s in steps], 'steps': steps,
             'final_timings': finals[0].get('timings'), 'final_prompt_equal': finals[0].get('prompt') == request['prompt'],
-            'input_token_ids': request['prompt'] if isinstance(request['prompt'], list) else None}
+            'input_token_ids': request['prompt'] if isinstance(request['prompt'], list) else (input_evidence['token_ids'] if input_evidence else None),
+            'input_token_evidence': input_evidence}
 
 
 def compare(a, b):
@@ -65,6 +68,9 @@ def compare(a, b):
     changed = [r for r in rows if r['a_top'] != r['b_top']]
     return {'a': a['name'], 'b': b['name'], 'prompt_exact_equal': same_prompt,
             'request_parameters_equal': a['request_except_prompt'] == b['request_except_prompt'],
+            'input_token_ids_known': a['input_token_ids'] is not None and b['input_token_ids'] is not None,
+            'input_token_ids_equal': (a['input_token_ids'] == b['input_token_ids']
+                                      if a['input_token_ids'] is not None and b['input_token_ids'] is not None else None),
             'progress_processed_equal': a['progress_processed'] == b['progress_processed'],
             'output_token_ids_equal': a['tokens'] == b['tokens'], 'common_output_prefix_tokens': common,
             'first_output_divergence_position': None if a['tokens'] == b['tokens'] else common,
@@ -82,7 +88,7 @@ def main():
     report = {'scope': 'offline_history_diagnostic', 'promoted': False,
               'limitations': ['Top-five probabilities cannot reconstruct full logits or full-distribution distances',
                               'Prompt progress is not proof of every internal kernel batch shape',
-                              'String prompts do not independently prove input token IDs; no tokenizer endpoint called',
+                              'Optional tokenizer evidence does not independently observe IDs consumed inside model evaluation',
                               'No speed or correctness pass verdict'],
               'cases': cases, 'pairs': [compare(a, b) for a, b in itertools.combinations(cases, 2)]}
     with args.output.open('x', encoding='ascii') as out:

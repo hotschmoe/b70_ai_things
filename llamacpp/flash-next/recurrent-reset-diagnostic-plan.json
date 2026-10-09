@@ -1,0 +1,108 @@
+{
+  "status": "PROPOSED ONLY: no instrumentation implemented, built, or executed",
+  "source": {
+    "root": "/mnt/vm_8tb/github/llama.cpp-flashnext",
+    "revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+    "clean_at_inspection": true,
+    "sha256": {
+      "src/llama-memory-recurrent.cpp": "51172be188d0eece2267c9105dc5a8d2c3ef7ebd58e88a6f562ac6ee36326f98",
+      "src/llama-memory-hybrid-idx.cpp": "4660d879295fc812b5d334be625d429d5859695204df8978c771ab38ee84aed5",
+      "src/llama-kv-cache.cpp": "4ac534956aa0b384a9a707c778527a4e7cd4ebfbea9c895e531b0935485de3c8",
+      "src/llama-graph.cpp": "06e4e4f7500ec1e87a0cde124a2568f77e4c6c3d54b4a047a2415cd4efeae7d8",
+      "src/llama-context.cpp": "578e4b2cdcf3c2230bc6081bbe33f18a935c277903675c2f81efc6145c2dc61c",
+      "src/models/qwen4exp.cpp": "c30ef376bd19ea19fcd8c360ec94adb18fa6f7912911fdd4389c91c9af8606f6",
+      "ggml/src/ggml-sycl/ggml-sycl.cpp": "e9e16080447fe292428445cbfb1bcecb999462b301555d86ca84be2d499b63d9",
+      "ggml/src/ggml-sycl/common.hpp": "57996971b0e058104a268b497a2814c775d0a6dcbc99b1f905c44e93e59d59ef",
+      "ggml/src/ggml-sycl/dpct/helper.hpp": "86dfd3a9e83cddbb37983d5f8b34c3ed6ca0e2cd797a94fb9cfdf4e4ae61c368",
+      "ggml/src/ggml-backend.cpp": "9a1e17bb2ff6089e597a9bb487f004863e2ac486c1289a444058783a070e10ac",
+      "tools/server/server-context.cpp": "ed89eee1b5eeee82953e3d422cc640e686f674210609154291ec9a151dc2a06d"
+    }
+  },
+  "purpose": "Distinguish recurrent reset metadata errors, nonfinite state surviving SCALE(0), and later arithmetic divergence in matched immediate repeated requests.",
+  "configuration": {
+    "enable": "Proposed FLASHNEXT_RESET_DIAG=1; absent or 0 must allocate no diagnostic buffers, issue no extra copies/waits, and emit no diagnostic logs. Read environment once.",
+    "default": "off",
+    "selection": "Single slot, no concurrency, no speculation. Preserve current model, image, OPT, fusion, checkpoint, batch and request settings. Keep SYCL_CACHE_PERSISTENT=0.",
+    "arming": "Explicit diagnostic arm file created after model readiness and screening, before the matched request sequence; log arm receipt and request ordinal. No controller modification proposed here.",
+    "bounds": {
+      "requests": 3,
+      "first_ubatches_per_request": 2,
+      "recurrent_layers": 1,
+      "state_families": [
+        "R convolution",
+        "S delta state",
+        "P PLE convolution if present on selected layer"
+      ],
+      "max_bytes_per_row": 16777216,
+      "max_total_capture_bytes": 268435456
+    },
+    "overflow": "Emit skipped/limit reason, never truncate while claiming full-row validation. Stop capturing at bound; keep inference semantics unchanged."
+  },
+  "patch_plan": [
+    {
+      "location": "tools/server/server-context.cpp:3663,3801,3831",
+      "change": "Diagnostic-only request/reset ordinal and record seq_rm return value, slot, requested p0/p1, n_past, prompt hash/token count and sequence pos_min/max before/after. Keep original call count exactly one. Record failure explicitly; do not silently force a reset.",
+      "invariant": "With cache_prompt=false, n_past=0 and reset range [0,end) must succeed before first prompt batch."
+    },
+    {
+      "location": "src/llama-memory-recurrent.cpp:168-259,690-718,1368-1390",
+      "change": "Log post-removal metadata and selected active cell mapping after find_slot. In s_copy, record existing local rollback idx before its existing single-use reset, src0, computed row index, cell ID, seq ID, head, n, rs_z and batch ordinal. Do not call s_copy an extra time; it consumes rs_idx.",
+      "invariant": "Fresh sequence has rollback idx0 and new cell src0==rs_z>=0. Continuation ubatch is not expected to reset; distinguish it by positions."
+    },
+    {
+      "location": "src/llama-graph.cpp:3635-3677",
+      "change": "When diagnostic is armed, label only selected reset SCALE node with state family/layer/base row identity and emit tensor shape/type/strides/offset metadata. Follow view_src to named cache_r_lN/cache_s_lN/cache_ple_r_lN. Handle zero-sized no-op without reading. Names alone must not set OUTPUT flags, add graph nodes or alter fusion policy.",
+      "invariant": "Capture exact row view of state_size elements; do not read entire recurrent allocation or unrelated rollback snapshots."
+    },
+    {
+      "location": "ggml/src/ggml-sycl/ggml-sycl.cpp:3430-3444,2402-2411",
+      "change": "Preferred narrow GPU observation is inside ggml_sycl_op_scale only for diagnostic-selected reset nodes with scale0,bias0,F32 contiguous. Queue pre-copy of exact view to owned host vector, wait_and_throw, execute existing scale_f32_sycl once, queue post-copy and wait_and_throw, then compute host summaries. Use ctx.stream() for both copies. Keep buffers alive through waits. Do not invoke a backend sync that recurses from backend compute.",
+      "summary": [
+        "byte SHA256 in offline collector over bounded raw captures",
+        "nan_count",
+        "positive_inf_count",
+        "negative_inf_count",
+        "finite_nonzero_count",
+        "positive_zero_count",
+        "negative_zero_count",
+        "max_abs_finite",
+        "first bounded nonzero/nonfinite indices and raw float bits"
+      ],
+      "invariant": "Post-row all values numerically zero and finite; signed zero reported separately. SCALE uses scale*x+bias, so NaN/Inf before operation can survive. Do not change SCALE to memset in a diagnostic arm."
+    },
+    {
+      "location": "src/llama-context.cpp:1431-1477 and src/llama-graph.cpp input setters",
+      "change": "Attach monotonic decode/ubatch ordinal, token-position bounds and stable token-byte hash to metadata to associate repeated graphs and GPU captures. Graph reuse must be represented; graph construction count is not decode count."
+    },
+    {
+      "location": "src/models/qwen4exp.cpp:495-535",
+      "change": "Optional SECOND diagnostic arm: capture actual l_last layer0 output and result_output logits using existing eval callback plumbing. Select actual tensor names from callback, record type/shape/strides and token positions. For a tiny activation capture read one complete logical vector for the last token of each selected prompt ubatch; explicitly handle HC dimensions/strides. For first sampled-token logits capture full vocabulary vector already copied to host when possible; checksum only after existing completion synchronization. Compute SHA256 offline over canonical raw little-endian F32 bytes; preserve NaN and signed-zero bits.",
+      "limit": "Maximum two activation vectors and one full logits vector per request. Sampled activation checksum is not a full-layer checksum. Full-vocabulary copy must respect byte bound."
+    }
+  ],
+  "ordering_evidence": [
+    "llama-graph.cpp:3653 expands SCALE before gather at3661.",
+    "ggml-sycl.cpp:3433 uses ctx.stream(); common.hpp:411 uses dpct default_queue; helper.hpp:731,794 selects in-order queue.",
+    "Backend-local pre-copy/wait, existing SCALE, post-copy/wait is ordered on that queue. Added waits may hide an existing race; passing diagnostic cannot prove production ordering correct.",
+    "ggml-backend.cpp:1890-1923 eval callbacks split graph and synchronize backend before data callback. This can prevent cross-boundary fusions. Use activation callback only as a separate arm, never conflate it with metadata-only or reset-only evidence."
+  ],
+  "known_contracts": [
+    "Recurrent allocation zeros buffers at llama-memory-recurrent.cpp:117-123. Uninitialized initial state is not established.",
+    "seq_rm clears metadata rather than all physical bytes. Fresh state is zeroed lazily through graph SCALE. Prior nonfinite contamination is a hypothesis only.",
+    "Qwen4exp build_rs covers S state at1069 and convolution state at1313, including PLE via1421.",
+    "Attention seq_rm removes cell memberships (llama-kv-cache.cpp:400); mask rejects empty/other-sequence rows (1659+). Hybrid index reset invalidates pools from0 (hybrid-idx.cpp:185-197,673+). Recurrent-only instrumentation cannot rule out QSA/attention issues.",
+    "cache_prompt=false bypasses checkpoint restoration, but checkpoint creation and artificial tail splits remain enabled. --ctx-checkpoints0 is an independent control that changes both snapshots and batch shape."
+  ],
+  "experiment_record": {
+    "CONFIG": "Record binary/image/source/patch hashes, model manifest, env, requests, context/batch/checkpoints/cache flags, selected layers and capture bounds.",
+    "COMMAND": "Parent-owned leased launch only after source review; no commands executed by this plan. Run identical request sequence with diagnostic off, metadata only, then bounded reset observation. Optional activation callback is a separate later arm.",
+    "RESULT": "Per-request token IDs/logprobs plus ordinal-linked metadata and raw capture hashes, resets observed/skipped counts, state summaries, health and teardown evidence. Never infer zero from a skipped row.",
+    "VERDICT": "Mapping failure localizes metadata; nonfinite pre/post demonstrates SCALE cannot sanitize that row but does not locate first corruption; finite nonzero post suggests execution/selection issue; clean reset with divergent logits shifts investigation downstream. Any behavior change only under diagnostic waits is timing-sensitive, not a fix."
+  },
+  "limitations": [
+    "No GPU validation or kernel patch performed.",
+    "First selected recurrent layer coverage does not exclude later-layer corruption. Layer0 activation may precede or follow a recurrent layer according to actual model metadata; record both indices.",
+    "Byte checksum detects identity, not acceptable numerical tolerance or quality.",
+    "No broad full-tensor dump, model-weight dump, new compiler/toolchain, source refresh, or controller change proposed."
+  ]
+}

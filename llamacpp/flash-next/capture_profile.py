@@ -148,12 +148,33 @@ def main():
         for case in suite["cases"]:
             template = request_json(base, "/apply-template", {"messages": [{"role": "user", "content": case["prompt"]}],
                                      "chat_template_kwargs": {"enable_thinking": False}}, out, case["id"] + ".template", args.timeout)
+            tokenization = request_json(base, "/tokenize", {"content": template["prompt"],
+                                        "add_special": True, "parse_special": True, "with_pieces": False},
+                                        out, case["id"] + ".tokenize", args.timeout)
+            input_ids = tokenization.get("tokens")
+            if not isinstance(input_ids, list) or not all(type(t) is int for t in input_ids):
+                raise ValueError("Tokenizer did not return integer token IDs")
+            input_evidence = {"prompt_utf8_sha256": sha(template["prompt"].encode("utf-8")),
+                              "token_ids": input_ids, "token_count": len(input_ids),
+                              "token_ids_sha256": sha(json.dumps(input_ids).encode("ascii")),
+                              "add_special": True, "parse_special": True,
+                              "scope": "Server tokenizer evidence, not independently observed model input"}
+            save(out / (case["id"] + ".input-tokens.json"), input_evidence)
             payload = {"prompt": template["prompt"], "stream": True, "temperature": 0, "seed": 42,
                        "n_predict": suite["max_tokens"], "ignore_eos": False, "cache_prompt": False,
                        "return_tokens": True, "n_probs": 5, "post_sampling_probs": False,
                        "timings_per_token": True, "return_progress": True, "reasoning_budget_tokens": 0}
             row = stream(base, payload, out, case["id"], args.timeout)
-            result["cases"].append({"id": case["id"], "capture_complete": row["capture_complete"]})
+            timings = row["final"].get("timings", {})
+            reported_input_count = (timings.get("prompt_n", 0) + timings.get("cache_n", 0)
+                                    if "prompt_n" in timings else None)
+            input_evidence["reported_input_count"] = reported_input_count
+            input_evidence["reported_count_equal"] = (reported_input_count == len(input_ids)
+                                                       if reported_input_count is not None else None)
+            save(out / (case["id"] + ".input-tokens.json"), input_evidence)
+            result["cases"].append({"id": case["id"], "capture_complete": row["capture_complete"],
+                                    "input_token_ids_sha256": input_evidence["token_ids_sha256"],
+                                    "reported_input_count_equal": input_evidence["reported_count_equal"]})
             save(out / "profile-result.json", result)
         after = request_json(base, "/v1/models", None, out, "models-after", args.timeout)
         if [x["id"] for x in after.get("data", [])] != ids:

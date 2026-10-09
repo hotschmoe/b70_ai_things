@@ -45,6 +45,7 @@ def main():
     p.add_argument('--persistent-cache', type=int, choices=[0, 1], default=0)
     p.add_argument('--extra-plan', type=Path, action='append', default=[])
     p.add_argument('--sycl-opt', type=int, choices=[0, 1], default=1)
+    p.add_argument('--sycl-fusion', type=int, choices=[0, 1], default=1)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
     if not args.leased:
@@ -73,7 +74,7 @@ def main():
               'controller_sha256': digest(Path(__file__)), 'groups_used': [g['name'] for g in groups],
               'coverage_complete': args.groups is None and not args.debugger,
               'debugger': args.debugger, 'persistent_device_code_cache': args.persistent_cache,
-              'sycl_optimization': args.sycl_opt,
+              'sycl_optimization': args.sycl_opt, 'sycl_fusion': args.sycl_fusion,
               'plan_sha256': [digest(path) for path in plan_paths], 'started_epoch': started, 'cards': [], 'passed': False, 'post_health_passed': False}
     active = None
     stopped = False
@@ -158,6 +159,7 @@ def main():
                        '-e', 'ZE_AFFINITY_MASK=' + str(card), '-e', 'ONEAPI_DEVICE_SELECTOR=level_zero:gpu',
                        '-e', 'GGML_SYCL_ENABLE_GRAPH=0', '-e', 'SYCL_CACHE_PERSISTENT=' + str(args.persistent_cache), '-e', 'SYCL_CACHE_DIR=/cache/sycl',
                        '-e', 'GGML_SYCL_ENABLE_OPT=' + str(args.sycl_opt),
+                       '-e', 'GGML_SYCL_ENABLE_FUSION=' + str(args.sycl_fusion),
                        '-e', 'XDG_CACHE_HOME=/cache']
             if args.debugger:
                 command += ['--cap-add', 'SYS_PTRACE', '--security-opt', 'seccomp=unconfined', '-e', 'INTELGT_AUTO_ATTACH_DISABLE=1']

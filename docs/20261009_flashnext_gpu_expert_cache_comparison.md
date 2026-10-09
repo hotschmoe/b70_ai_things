@@ -305,3 +305,60 @@ or shelf promotion follows these diagnostics.
 Checkpoint-disabled lifecycle follow-up: normal stop/removal, full diagnostic
 capture, per-card and compiled P2P0 collective post-health pass. No GPU fault
 signature. Failed strict screen remains failed.
+
+## Next control: operation fusion disabled
+
+CONFIG -> Pinned static OPT1 with original checkpointing, ubatch256, logging5,
+warmup on. Change only GGML_SYCL_ENABLE_FUSION from1 to0. No cache, MTP,
+precision, model, binary, or placement change.
+
+COMMAND -> Full primitive fixture plan under fusion0, then run_control.py
+--sycl-fusion 0 with the same P/P/JSON/P diagnostic after the preserved strict
+screen. Controller requires a matching fusion-mode primitive receipt.
+
+RESULT -> Pending. Primitives remain isolated operation tests; they do not
+exercise every fused graph sequence. Native input-token evidence and a
+recurrent-reset invariant plan are being prepared in parallel without GPUs.
+
+VERDICT -> Preregistered exclusion arm. A failed screen stays failed. If
+probabilities or output IDs remain history-sensitive, move to state/activation
+instrumentation rather than stacking unrelated toggles. A pass would isolate
+a fusion-sensitive path but still require clean restarts and a source-level
+explanation. Performance profiling follows correctness.
+
+## Storage and engine direction
+
+CONFIG -> Read-only host storage audit, 2026-10-09.
+
+COMMAND -> df/findmnt/lsblk for model filesystem and both NVMe devices.
+
+RESULT -> /mnt/vm_8tb is Samsung SATA SSD /dev/sdc1, approximately5.0TiB free.
+/mnt/cache is NVMe /dev/nvme1n1p1, approximately671GiB free; root NVMe has
+approximately385GiB free. Model files remain on the8TB filesystem. No data
+relocation or storage performance experiment performed.
+
+VERDICT -> Capacity does not block this campaign. User permits NVMe placement
+when it increases performance. First measure residency, faults and storage
+waits; mmap page-cache hits are RAM accesses, so drive relocation alone is
+not evidence of improved decode. Choose and size an NVMe tier only from a
+matched cold/warm profile.
+
+Keep llama.cpp as the working exact-GGUF reference while localizing its
+repeatability failure. In parallel, review fresh Strata source for native Q8
+hyper-connection fidelity and stage1 RAM expert mirror support. Do not assume
+a backend switch clears shared model/kernel/request-state problems. Strata
+comparison needs its own artifact identity, primitive, coherence, teardown
+and health gates.
+
+Fusion0 prerequisite follow-up:47/47 comparisons and40 mutation phases on
+each card; normal removal, per-card and compiled P2P0 collective post-health
+pass, no GPU fault signature. The fusion0 model history control is running.
+
+Native diagnostic client now records /tokenize IDs with add_special=true and
+parse_special=true, matching the native completion tokenizer call. It stores
+IDs/hash/count and compares count against terminal prompt/cache counters.
+This independently records server tokenizer output, not the actual internal
+IDs consumed by model kernels. Generation payload and strict-screen harness
+are unchanged; extra tokenizer calls can change diagnostic execution timing.
+The offline history analyzer supports new evidence and retains unknown/null
+for older captures, verified by replaying the prior OPT1 capture.

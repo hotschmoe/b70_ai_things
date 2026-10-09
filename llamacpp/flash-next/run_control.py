@@ -43,6 +43,7 @@ def main():
     parser.add_argument('--cpu-profile', action='store_true', help='Separate instrumented run with software CPU sampling')
     parser.add_argument('--init', action='store_true', help='Use Docker init to supervise the server child')
     parser.add_argument('--sycl-opt', type=int, choices=[0, 1], default=1)
+    parser.add_argument('--sycl-fusion', type=int, choices=[0, 1], default=1)
     parser.add_argument('--ctx-checkpoints', type=int, choices=[0], help='Diagnostic: disable checkpoint creation and its prompt split')
     parser.add_argument('--profile-suite', type=Path)
     parser.add_argument('--diagnostic-on-screen-failure', action='store_true', help='Preserve failed screen and continue only a labeled diagnostic capture')
@@ -114,6 +115,8 @@ def main():
             raise RuntimeError('Primitive binary identity changed')
         if primitives.get('sycl_optimization', 1) != args.sycl_opt:
             raise RuntimeError('Primitive optimization mode differs from the candidate')
+        if primitives.get('sycl_fusion', 1) != args.sycl_fusion:
+            raise RuntimeError('Primitive fusion mode differs from the candidate')
         if args.placement == 'cache':
             required = {'slotmap_n1', 'slotmap_n2', 'slotmap_n32'} | {
                 'bank_' + kind + '_n' + str(n) for kind in ['q4_K', 'q5_K', 'q5_1', 'q8_0'] for n in [1, 2]}
@@ -144,6 +147,9 @@ def main():
             alias += '-opt0'
         if args.ctx_checkpoints is not None:
             alias += '-ctxcp' + str(args.ctx_checkpoints)
+        if args.sycl_fusion == 0:
+            alias += '-fusion0'
+        receipt['sycl_fusion'] = args.sycl_fusion
         receipt['context_checkpoints_override'] = args.ctx_checkpoints
         receipt['sycl_optimization'] = args.sycl_opt
         receipt['warmup'] = args.warmup
@@ -198,7 +204,8 @@ def main():
                    '-v', str(model_dir) + ':/model:ro', '-e', 'ONEAPI_DEVICE_SELECTOR=level_zero:0,1',
                    '-e', 'ZE_AFFINITY_MASK=0,1', '-e', 'GGML_SYCL_ENABLE_GRAPH=0', '-e', 'ZES_ENABLE_SYSMAN=1',
                    '-e', 'SYCL_CACHE_PERSISTENT=0']
-        command += ['-e', 'GGML_SYCL_ENABLE_OPT=' + str(args.sycl_opt)]
+        command += ['-e', 'GGML_SYCL_ENABLE_OPT=' + str(args.sycl_opt),
+                    '-e', 'GGML_SYCL_ENABLE_FUSION=' + str(args.sycl_fusion)]
         if args.init or args.cpu_profile:
             command += ['--init']
         if args.cpu_profile:

@@ -9027,3 +9027,25 @@ substituted INT8 PLE from another source; exact PLE identity unverified.
 VERDICT -> Promising alternative for future measured offload lane, not a
 requested format switch or ready TP2 deployment. Primary evidence and quality
 limitations: docs/20261009_flashnext_autoround_int4_sources.md.
+
+## 2026-10-09 FlashNext F03 fusion exclusion prerequisites and engine direction
+
+CONFIG -> User retains UD-Q4_K_XL and permits NVMe placement only for measured
+performance benefit. Static OPT1 original checkpoint/ubatch settings; only
+SYCL fusion disabled. Exact runtime/model/server remain pinned.
+
+COMMAND -> run_primitives.py --sycl-fusion 0, all four primitive plans, through
+pair lease; token-evidence client/source audit and Strata source review CPU-only.
+Host storage audit uses df/findmnt/lsblk.
+
+RESULT ->47/47 plus40 cache mutation phases/card pass, per-card and compiled
+P2P0 post-health pass. Model history control running; no correctness verdict.
+Tokenizer IDs now captured for native diagnostics. Recurrent-reset diagnostic
+plan prepared only. Strata tips unchanged; Q8 HC execution and stage1 mirrors
+still missing. SATA8TB has5TB free; /mnt/cache NVMe has671GiB free.
+
+VERDICT -> Continue llama correctness lane with parallel Strata fidelity/source
+planning. No drive relocation, new model download, performance or shelf claim.
+Evidence: docs/20261009_flashnext_gpu_expert_cache_comparison.md,
+docs/20261009_flashnext_strata_next_steps.md, and
+llamacpp/flash-next/recurrent-reset-diagnostic-plan.json.
