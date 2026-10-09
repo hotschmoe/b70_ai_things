@@ -10597,3 +10597,20 @@ SHAd8f43a305f188ebaa340be3a7c73799aa76d3d803bc189977eb2f2a420f307d1.
 VERDICT -> BoundedAPI/coherence/lifecycle/sourceproof; fullmath/cache/2/4/6/
 latency/shelf stillunqualified. Failedunsegmentedretained. Pairseg genuineprep
 99606live; context8192/128 notmatchedspeedcontrol. See integrated29C1one doc.
+
+
+## 2026-10-09 - Integrated29 segmented APIpair actualPASS
+
+CONFIG -> GenuineC18/source390/new29SDK,32/16 split8192/128/1GiBmirrors,
+completednewonecardcontrol, batch0/featuresOFF/exactprimaryhotschmoe-dd alias.
+
+COMMAND -> Genuinepairprepare andparent77204; independentpublicsourceproof8.
+
+RESULT -> PASS383s sixboundedresponses/actualconsumption/EOS/repeats/LP20/
+APIidentity. Native/APIcleanexit0/noOOM/removed/health/kernel/twopages andNEW
+allfourpublisherhashesPASS. Independentproof8PASS; qualification
+SHA324d88f4fc4d50617af55957cde88100c2fe10794c0e1f056e256b815e29abde.
+
+VERDICT -> BoundedAPI/coherence/lifecycle/sourceproof. 8192/128 vsone2048/64
+isnotmatchedspeedcontrol. Nativefullmath/completecache/concurrency/fairness/
+latency/shelf required. NewV9oneprepare58354 nowlive; failedunseg retained.
