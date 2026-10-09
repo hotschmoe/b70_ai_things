@@ -1,0 +1,12 @@
+{
+  "CONFIG": "actual genuine21 onecard preparation/source binding; retained parent gates pure CPU/source checks",
+  "COMMAND": "python3 strata/flash-next/test_qualify_layer0_numerical_cpu_v1.py",
+  "RESULT": {
+    "actual21_and_matched20_identity_chain": true,
+    "old_parent_control_helpers_ast_equal": true,
+    "all_parent_negative_finalization_gates": true,
+    "fd8_9_packet_lifecycle_manifest_guards": true
+  },
+  "VERDICT": "PASS CPU source/parent invariants; real numerical GPU/lifecycle/packet evidence absent",
+  "full_model_math_qualified": false
+}

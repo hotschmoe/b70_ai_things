@@ -1,0 +1,11 @@
+{
+  "CONFIG": "synthetic supplied F32 native packets, four-prefix12packet lane; no GPU/model",
+  "COMMAND": "python3 strata/flash-next/test_layer0_packet_orchestration_cpu_v1.py",
+  "RESULT": {
+    "exact12packet_inputs": true,
+    "packet_code_corruption_even_rehashed_rejected": true,
+    "numpy": "2.5.0"
+  },
+  "VERDICT": "PASS conditional source-packet checker controls only; actual21 packets and own-state math unqualified",
+  "full_model_math_qualified": false
+}

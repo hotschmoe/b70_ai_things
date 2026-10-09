@@ -1,0 +1,13 @@
+{
+  "CONFIG": "actual21 linked source hashes readonly, old20 C1 rejection, synthetic partialframes/UR chronology",
+  "COMMAND": "python3 strata/flash-next/test_layer0_numerical_qualification_cpu_v1.py",
+  "RESULT": {
+    "actual21_engine_source_identity": true,
+    "old20_upload_C1_rejected": true,
+    "exact26of33_layout_and_nonce_control_negatives": true,
+    "all7023104B_including56_control_keys_owner_context_frees": true,
+    "logical_negative_controls": true
+  },
+  "VERDICT": "PASS CPU/source contracts; synthetic frames not model outputs; no GPU/full-math/actual21 numerical qualification",
+  "full_model_math_qualified": false
+}
