@@ -10314,3 +10314,23 @@ NMSE1e-6/max-normalized1e-4 limitsunchanged. Zeroactualweights/GPUbyagent.
 VERDICT -> Sourcecheckpointbeforeactualconditionalverification. Ownstate/full
 layer/model/math/lifecycle/concurrency remainunqualified; actual33capture
 qualification andtrueprefill-ownedhistory stillrequired.
+
+
+## 2026-10-09 - Import28 actual paired C1 API/source qualification PASS
+
+CONFIG -> GenuineC1V6 paired32/16/card0+1 context8192/prefill128 FP16KV/MTP0,
+exactnewSDK/source390/import28 sixPython fingerprint/primaryhotschmoe-dd.
+Matchedactualonecardqualification/sourceproof is prerequisite.
+
+COMMAND -> ParentV6 --prepared paired --one-card-receipt actualonequalification;
+inspectAPI IDs, sixcoherentresponses/repeats/consumption/EOS andownedstop.
+Independently validate publicfinalsourceproof afterfresh all4hashes/health.
+
+RESULT -> ParentPASS327s; allAPI/trace/coherence/repeat gatesPASS, native/API
+exit0/noOOM/removed, pre/posthealth andNEWpostterminal/posthealth all4publisher
+hashesPASS. Publicstrongproof verifiesactualartifact crossbindings.
+
+VERDICT -> BoundedpairedAPI/source/lifecycle only, notmodelmath/completecache/
+concurrency/fairness/clean latency/shelf. One/pairC1geometrydiffers; no speedclaim.
+Oldfailedrunsstayfailed. Numericcomparison harnessreference selectorfix next.
+See docs/20261009_flashnext_import28_c1_pair_qualification.md.
