@@ -1,0 +1,290 @@
+--- a/sycl/include/strata/core/gguf_expert_source.hpp
++++ b/sycl/include/strata/core/gguf_expert_source.hpp
+@@ -60,7 +60,7 @@
+     // pairs must already exclude every cached expert. Source bytes stay original.
+     std::shared_ptr<StageExpertMirror> mirror_stage(const std::vector<std::pair<int64_t,int64_t>>& pairs,
+         uint64_t cap,int threads,int64_t lb,int64_t le,const sycl::queue& queue,std::string& err,
+-        uint64_t segment_bytes=0);
++        uint64_t segment_bytes=0,int trace_stage=-1,int trace_device=-1);
+     uint64_t storage_reads() const { return storage_reads_.load(); }
+     uint64_t mirror_host_reads() const { return mirror_host_reads_.load(); }
+ 
+--- a/sycl/include/strata/core/stage_expert_mirror.hpp
++++ b/sycl/include/strata/core/stage_expert_mirror.hpp
+@@ -5,6 +5,14 @@
+ #include <vector>
+ #include <string>
+ #include <mutex>
++#include <array>
++#include <atomic>
++#include <cstring>
++#include <cstdlib>
++#include <cstdio>
++#include <stdexcept>
++#include <unistd.h>
++#include <sycl/ext/oneapi/backend/level_zero.hpp>
+ namespace strata::core {
+ struct StageExpertMirror {
+     explicit StageExpertMirror(const sycl::queue& queue):q(queue) {}
+@@ -19,15 +27,114 @@
+         // Called only after all graph references retire. The retained queue owns
+         // the original context regardless of the current device at teardown.
+         q.wait_and_throw();
+-        if (table) { sycl::free(table,q); table=nullptr; }
+-        if (host) { sycl::free(host,q); host=nullptr; }
++        trace_release_begin();
++        if (table) { traced_free(table); table=nullptr; }
++        if (host) { traced_free(host); host=nullptr; }
+         // Clear each pointer only after its owning-context free returns. A failed
+         // explicit release can retry without double-freeing completed segments.
+         for (auto& segment:segments) if(segment.base) {
+-            sycl::free(segment.base,q);segment.base=nullptr;
++            traced_free(segment.base);segment.base=nullptr;
+         }
+         segments.clear();
++        trace_release_returned();
+     }
++
++    // Source-bound logical ownership only; no physical slab reclamation claim.
++    // OFF does not query native handles, allocate memory, wait or copy data.
++    static bool trace_enabled() {
++        static const bool enabled=[] {const char* p=std::getenv("STRATA_MIRROR_OWNER_TRACE");
++            if(!p||!*p||!std::strcmp(p,"0"))return false;
++            if(std::strcmp(p,"1"))throw std::invalid_argument("STRATA_MIRROR_OWNER_TRACE=0|1");return true;}();
++        return enabled;
++    }
++    void trace_begin(int stage,int device) {
++        if(!trace_enabled())return;
++        const std::lock_guard<std::mutex> lock(trace_mu_);
++        if(stage<0||device<0||lb<0||lb>=le||le>n_layers)throw std::invalid_argument("mirror trace stage/device/range missing");
++        static std::atomic<uint64_t> next{0};trace_generation_=++next;trace_stage_=stage;trace_device_=device;
++        trace_context_=(void*)sycl::get_native<sycl::backend::ext_oneapi_level_zero>(q.get_context());
++        trace_native_device_=(void*)sycl::get_native<sycl::backend::ext_oneapi_level_zero>(q.get_device());
++        trace_event("owner_begin");
++    }
++    void trace_allocation_preflight(size_t count)const {
++        if(trace_enabled()&&trace_generation_&&count>trace_records_.size())throw std::invalid_argument("mirror trace allocation descriptor quota");
++    }
++    void trace_register(const void* pointer,uint64_t extent,const char* role,int segment) {
++        if(!trace_enabled()||!trace_generation_)return;
++        const std::lock_guard<std::mutex> lock(trace_mu_);
++        if(!pointer||!extent||trace_count_==trace_records_.size())throw std::invalid_argument("mirror trace owner extent/quota");
++        for(size_t i=0;i<trace_count_;++i)if(trace_records_[i].pointer==pointer)throw std::invalid_argument("mirror trace duplicate owned pointer");
++        static std::atomic<uint64_t> next{0};auto& record=trace_records_[trace_count_++];
++        record={pointer,extent,++next,role,segment,false,false};trace_event("owner_register",&record);
++    }
++    void trace_graphs_bound(const char* kind,const void* consumer) {
++        if(!trace_enabled()||!trace_generation_)return;
++        const std::lock_guard<std::mutex> lock(trace_mu_);
++        if(!consumer)throw std::invalid_argument("mirror trace graph consumer missing");
++        for(size_t i=0;i<trace_consumers_count_;++i)if(trace_consumers_[i].pointer==consumer&&!std::strcmp(trace_consumers_[i].kind,kind)) {
++            if(!trace_consumers_[i].retired)return;
++            trace_consumers_[i].retired=false;trace_event("graphs_bound",nullptr,kind,consumer);return;
++        }
++        if(trace_consumers_count_==trace_consumers_.size())throw std::invalid_argument("mirror trace graph consumer quota");
++        trace_consumers_[trace_consumers_count_++]={consumer,kind,false};trace_event("graphs_bound",nullptr,kind,consumer);
++    }
++    void trace_graphs_retired(const char* kind,const void* consumer) {
++        if(!trace_enabled()||!trace_generation_)return;
++        const std::lock_guard<std::mutex> lock(trace_mu_);
++        for(size_t i=0;i<trace_consumers_count_;++i)if(trace_consumers_[i].pointer==consumer&&!std::strcmp(trace_consumers_[i].kind,kind)) {
++            if(trace_consumers_[i].retired)throw std::invalid_argument("mirror trace duplicate graph retirement");
++            trace_consumers_[i].retired=true;trace_event("graphs_retired",nullptr,kind,consumer);return;
++        }
++        throw std::invalid_argument("mirror trace foreign graph retirement");
++    }
++    void trace_serving_bound(){if(!trace_enabled()||!trace_generation_)return;const std::lock_guard<std::mutex> lock(trace_mu_);trace_serving_=true;trace_event("serving_bound");}
++    void trace_serving_graphs_retired(){if(!trace_enabled()||!trace_generation_)return;
++        const std::lock_guard<std::mutex> lock(trace_mu_);
++        if(!trace_serving_||trace_serving_retired_)throw std::invalid_argument("mirror trace serving retirement association");
++        for(size_t i=0;i<trace_consumers_count_;++i)if(std::strcmp(trace_consumers_[i].kind,"source_aliases")&&!trace_consumers_[i].retired)
++            throw std::invalid_argument("mirror trace live verifier graph at serving retirement");
++        trace_serving_retired_=true;trace_event("serving_graphs_retired");
++    }
++private:
++    struct TraceRecord {const void* pointer=nullptr;uint64_t bytes=0,generation=0;const char* role=nullptr;int segment=-1;bool free_started=false,freed=false;};
++    struct TraceConsumer {const void* pointer=nullptr;const char* kind=nullptr;bool retired=false;};
++    mutable std::mutex trace_mu_;
++    uint64_t trace_generation_=0;int trace_stage_=-1,trace_device_=-1;void* trace_context_=nullptr;void* trace_native_device_=nullptr;
++    std::array<TraceRecord,256> trace_records_{};size_t trace_count_=0;
++    std::array<TraceConsumer,16> trace_consumers_{};size_t trace_consumers_count_=0;
++    bool trace_serving_=false,trace_serving_retired_=false,trace_release_=false,trace_released_=false;
++    void trace_event(const char* event,const TraceRecord* record=nullptr,const char* consumer_kind="",const void* consumer=nullptr)const {
++        std::fprintf(stderr,"MIRROR_USM {\"event\":\"%s\",\"pid\":%ld,\"stage\":%d,\"device\":%d,\"owner_generation\":%llu,\"layer_begin\":%lld,\"layer_end\":%lld,\"n_layers\":%lld,\"n_expert\":%lld,\"payload_bytes\":%llu,\"ze_context\":\"%p\",\"ze_device\":\"%p\",\"pointer\":\"%p\",\"bytes\":%llu,\"allocation_generation\":%llu,\"role\":\"%s\",\"segment\":%d,\"registered_owners\":%zu,\"consumer_kind\":\"%s\",\"consumer\":\"%p\",\"serving_bound\":%s,\"serving_graphs_retired\":%s}\n",
++            event,long(getpid()),trace_stage_,trace_device_,(unsigned long long)trace_generation_,(long long)lb,(long long)le,(long long)n_layers,(long long)n_expert,(unsigned long long)bytes,trace_context_,trace_native_device_,record?record->pointer:nullptr,(unsigned long long)(record?record->bytes:0),(unsigned long long)(record?record->generation:0),record?record->role:"",record?record->segment:-1,trace_count_,consumer_kind,consumer,trace_serving_?"true":"false",trace_serving_retired_?"true":"false");std::fflush(stderr);
++    }
++    void trace_release_begin() {
++        if(!trace_enabled()||!trace_generation_)return;
++        const std::lock_guard<std::mutex> lock(trace_mu_);
++        if(trace_released_)return;
++        if(trace_serving_&&!trace_serving_retired_)trace_event("release_unretired_serving_graphs");
++        for(size_t i=0;i<trace_consumers_count_;++i)if(!trace_consumers_[i].retired)trace_event("release_unretired_graph_or_alias",nullptr,trace_consumers_[i].kind,trace_consumers_[i].pointer);
++        if(!trace_release_){trace_release_=true;trace_event("release_begin");}
++    }
++    void traced_free(void* pointer) {
++        TraceRecord* record=nullptr;
++        std::unique_lock<std::mutex> lock(trace_mu_,std::defer_lock);
++        if(trace_enabled()&&trace_generation_) {
++            lock.lock();
++            for(size_t i=0;i<trace_count_;++i)if(trace_records_[i].pointer==pointer)record=&trace_records_[i];
++            if(!record||record->freed||!trace_release_)throw std::invalid_argument("mirror trace foreign/double/unordered free");
++            if(!record->free_started){record->free_started=true;trace_event("free_begin",record);}
++        }
++        sycl::free(pointer,q);
++        if(record){record->freed=true;trace_event("free_returned",record);}
++    }
++    void trace_release_returned() {
++        if(!trace_enabled()||!trace_generation_)return;
++        const std::lock_guard<std::mutex> lock(trace_mu_);
++        if(trace_released_)return;
++        for(size_t i=0;i<trace_count_;++i)if(!trace_records_[i].freed)throw std::invalid_argument("mirror trace missing returned owning free");
++        trace_released_=true;trace_event("release_returned");
++    }
++public:
+     sycl::queue q;
+     uint8_t* host=nullptr; // disabled segmented mode: original contiguous owner
+     struct Segment { uint8_t* base=nullptr; uint64_t bytes=0; };
+--- a/sycl/src/core/gguf_expert_source.cpp
++++ b/sycl/src/core/gguf_expert_source.cpp
+@@ -23,7 +23,9 @@
+ void GgufExpertSource::close() {
+     if (mirror_) { sycl::free(mirror_, dpct::get_in_order_queue()); mirror_ = nullptr; }
+     mirror_bytes_ = 0; mirror_off_.clear(); layer_first_.clear();
+-    stage_alias_.clear(); stage_mirrors_.clear(); stage_bytes_=0;
++    stage_alias_.clear();
++    for(auto& owner:stage_mirrors_)owner->trace_graphs_retired("source_aliases",this);
++    stage_mirrors_.clear(); stage_bytes_=0;
+     for (int fd : fds_) if (fd >= 0) ::close(fd);
+     fds_.clear(); names_.clear(); layer_fd_.clear(); ring_.clear(); ring_key_.clear(); where_.clear();
+     ring_next_ = 0;
+@@ -176,7 +178,7 @@
+ 
+ std::shared_ptr<StageExpertMirror> GgufExpertSource::mirror_stage(
+     const std::vector<std::pair<int64_t,int64_t>>& pairs,uint64_t cap,int threads,
+-    int64_t lb,int64_t le,const sycl::queue& queue,std::string& err,uint64_t segment_bytes) try {
++    int64_t lb,int64_t le,const sycl::queue& queue,std::string& err,uint64_t segment_bytes,int trace_stage,int trace_device) try {
+     if (mirror_ || lb<0 || lb>=le || le>n_layers_ || !queue.has_property<sycl::property::queue::in_order>()) {
+         err="stage mirror: invalid range,queue or legacy mirror present"; return {};
+     }
+@@ -201,6 +203,7 @@
+     }
+     auto owner=std::make_shared<StageExpertMirror>(queue);
+     owner->lb=lb; owner->le=le; owner->n_layers=n_layers_; owner->n_expert=n_expert_; owner->bytes=bytes;
++    owner->trace_begin(trace_stage,trace_device);
+     owner->source_fnv64.assign(size_t(n_layers_*n_expert_),0);
+     std::vector<uint8_t*> destinations(take.size(),nullptr);
+     if(segment_bytes) {
+@@ -210,11 +213,13 @@
+         if(!StageMirrorSegmentPlan::make(padded,segment_bytes,plan,err) || plan.bytes!=bytes) {
+             if(err.empty()) err="stage mirror: segment plan byte accounting mismatch";return {};
+         }
++        owner->trace_allocation_preflight(plan.sizes.size()+1);
+         owner->segments.reserve(plan.sizes.size());
+         for(size_t i=0;i<plan.sizes.size();++i) {
+             uint8_t* pointer=sycl::malloc_host<uint8_t>(size_t(plan.sizes[i]),owner->q);
+             if(!pointer) {err="stage mirror: segment"+std::to_string(i)+" pinned allocation failed for"+std::to_string(plan.sizes[i])+" bytes";return {};}
+             owner->segments.push_back({pointer,plan.sizes[i]});
++            owner->trace_register(pointer,plan.sizes[i],"segment",int(i));
+             if(sycl::get_pointer_type(pointer,owner->q.get_context())!=sycl::usm::alloc::host) {
+                 err="stage mirror: segment is not host USM in owning context";return {};
+             }
+@@ -223,7 +228,9 @@
+         }
+         for(size_t j=0;j<take.size();++j) destinations[j]=owner->segments[plan.locations[j].segment].base+plan.locations[j].offset;
+     } else {
++        owner->trace_allocation_preflight(bytes?2:1);
+         if(bytes) {owner->host=sycl::malloc_host<uint8_t>(size_t(bytes),owner->q);if(!owner->host) {err="stage mirror: pinned allocation failed";return {};}}
++        if(owner->host)owner->trace_register(owner->host,bytes,"contiguous_host",-1);
+         for(size_t j=0;j<take.size();++j) destinations[j]=owner->host+offsets[j];
+     }
+     std::atomic<size_t> next{0}; std::atomic<bool> bad{false};
+@@ -246,6 +253,7 @@
+     }
+     owner->table=sycl::malloc_device<unsigned long long>(table.size(),owner->q);
+     if (!owner->table) { err="stage mirror: address table allocation failed"; return {}; }
++    owner->trace_register(owner->table,table.size()*sizeof(table[0]),"device_table",-1);
+     owner->q.memcpy(owner->table,table.data(),table.size()*sizeof(table[0])).wait_and_throw();
+     // Publish immutable addresses only after source read and table upload finish.
+     if(bytes>UINT64_MAX-stage_bytes_) {err="stage mirror: published byte accounting overflow";return {};}
+@@ -257,6 +265,7 @@
+         const auto [l,e]=take[j]; stage_alias_[size_t(l*n_expert_+e)]=destinations[j];
+     }
+     stage_bytes_+=bytes;
++    owner->trace_graphs_bound("source_aliases",this);
+     return owner;
+ } catch (const std::exception& ex) { err=std::string("stage mirror: ")+ex.what(); return {}; }
+ 
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -387,6 +387,7 @@
+     release_batch_observer();
+     layer0_snapshot_.reset();layer0_first_=false;
+     fidelity_snapshot_.reset();
++    hits_.stage_mirror->trace_graphs_retired("verifier",this);
+     hits_.stage_mirror.reset();
+ }
+ 
+@@ -475,6 +476,7 @@
+     ss_ = &ss;
+     if (hits.stage_mirror && !hits.stage_mirror->bind(hits.d_res,g.n_layers,g.n_expert,*cs_,err)) return false;
+     hits_ = hits;
++    if(hits_.stage_mirror)hits_.stage_mirror->trace_graphs_bound("verifier",this);
+     head_ = head;
+     max_t_ = max_t;
+     sampling_.greedy = true;      // a fresh verifier samples greedily until set_sampling says otherwise
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -4755,6 +4755,9 @@
+         std::fprintf(stderr,"stage mirror: STRATA_STAGE_MIRRORS must be 0 or 1\n"); return 2;
+     }
+     const bool stage_mirrors=stage_flag && std::strcmp(stage_flag,"1")==0;
++    if(strata::core::StageExpertMirror::trace_enabled()&&!stage_mirrors) {
++        std::fprintf(stderr,"STRATA_MIRROR_OWNER_TRACE requires stage-owned mirrors\n");return 2;
++    }
+     uint64_t stage_segment_bytes=0;
+     if(!strata::core::stage_mirror_mib(std::getenv("STRATA_STAGE_MIRROR_SEGMENT_MIB"),0,stage_segment_bytes,err) ||
+         stage_segment_bytes>(1ull<<30) || (stage_segment_bytes && !stage_mirrors)) {
+@@ -4953,7 +4956,7 @@
+         }
+         auto build_stage=[&](strata::core::ExpertCache& cache,const std::vector<std::pair<int32_t,int32_t>>& ranked,
+             int64_t lb,int64_t le,const sycl::queue& queue,size_t remaining_stages,
+-            std::shared_ptr<strata::core::StageExpertMirror>& owner) {
++            std::shared_ptr<strata::core::StageExpertMirror>& owner,int trace_stage,int trace_device) {
+             std::vector<std::pair<int64_t,int64_t>> missing;
+             std::vector<uint8_t> seen(size_t(g.n_layers*g.n_expert),0);
+             auto add=[&](int64_t l,int64_t e) {
+@@ -4966,8 +4969,9 @@
+             // Segmented mode preflight covers all stages under one cap. The
+             // disabled path retains its original fair-share policy.
+             owner=gguf_src.mirror_stage(missing,stage_segment_bytes?budget.remaining():budget.remaining()/remaining_stages,
+-                8,lb,le,queue,err,stage_segment_bytes);
++                8,lb,le,queue,err,stage_segment_bytes,trace_stage,trace_device);
+             if (!owner || !budget.commit(owner->bytes)) return false;
++            owner->trace_serving_bound();
+             size_t covered=0;
+             for (const auto& pair:missing) covered+=gguf_src.pinned(pair.first,pair.second);
+             unmirrored_misses+=int64_t(missing.size()-covered);
+@@ -4977,10 +4981,10 @@
+             return true;
+         };
+         if (!build_stage(xcache,profile,0,stages.empty()?g.n_layers:split_at[0],dpct::get_in_order_queue(),
+-                         stages.size()+1,first_stage_mirror)) { std::fprintf(stderr,"%s\n",err.c_str()); return 1; }
++                         stages.size()+1,first_stage_mirror,0,dpct::get_current_device_id())) { std::fprintf(stderr,"%s\n",err.c_str()); return 1; }
+         for (size_t i=0;i<stages.size();++i) {
+             auto& stage=*stages[i]; const strata::core::OnDevice on(stage.dev);
+-            if (!build_stage(stage.cache,stage.profile,stage.lb,stage.le,*stage.stream,stages.size()-i,stage.expert_mirror)) {
++            if (!build_stage(stage.cache,stage.profile,stage.lb,stage.le,*stage.stream,stages.size()-i,stage.expert_mirror,int(i)+1,stage.dev)) {
+                 std::fprintf(stderr,"%s\n",err.c_str()); return 1;
+             }
+         }
+@@ -11949,6 +11953,10 @@
+                 vh.stage_mirror.reset(); first_stage_mirror.reset();
+                 // Drop source aliases before checked release; no graph or source
+                 // may retain a usable table after the owning allocations free.
++                // These events follow actual global token/session and all
++                // stage verifier/batch graph destruction above; source aliases
++                // are separately retired inside close() before owning release.
++                for(auto& owner:retiring)owner->trace_serving_graphs_retired();
+                 gguf_src.close();
+                 for (auto& owner:retiring) owner->release();
+             } else {

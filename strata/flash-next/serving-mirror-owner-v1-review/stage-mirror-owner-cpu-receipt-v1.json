@@ -1,0 +1,51 @@
+{
+  "CONFIG": "Pristine fb58 +29+31 tracked source/60 ledger/24 headers; real mirror header and extracted actual factory; mock CPU queues/allocators/source bytes only",
+  "COMMAND": [
+    "g++",
+    "-std=c++17",
+    "-O1",
+    "-g",
+    "-pthread",
+    "-fno-omit-frame-pointer",
+    "-fsanitize=address,undefined",
+    "-fno-pie",
+    "-no-pie",
+    "-I/tmp/strata-mirror31-cpu-2awmh1px/mock",
+    "-I/tmp/strata-mirror31-cpu-2awmh1px/source/sycl/include",
+    "-I/tmp/strata-mirror31-cpu-2awmh1px/source/include",
+    "/tmp/strata-mirror31-cpu-2awmh1px/fixture.cpp",
+    "-o",
+    "/tmp/strata-mirror31-cpu-2awmh1px/fixture"
+  ],
+  "RESULT": {
+    "off": "CPU_MIRROR_BODY_PASS allocations=8 frees=8 native_queries=0 enabled=0",
+    "on": "CPU_MIRROR_BODY_PASS allocations=8 frees=8 native_queries=10 enabled=1",
+    "negative_controls": {
+      "missing_free": true,
+      "double_free": true,
+      "failed_free": true,
+      "missing_graphs_retired": true,
+      "missing_serving_graphs_retired": true,
+      "missing_release_begin": true,
+      "missing_free_begin": true,
+      "missing_free_returned": true,
+      "missing_release_returned": true,
+      "wrong_device": true,
+      "wrong_stage": true,
+      "wrong_allocation_generation": true,
+      "wrong_bytes": true,
+      "wrong_role": true,
+      "wrong_ze_context": true,
+      "wrong_segment": true,
+      "no_verifier_bindings": true,
+      "empty": true
+    },
+    "source_plan_sha256": "bb73ef5e81263c3ab39e4d4897ba8516254b79223b77a4a45341958a4fcdf104",
+    "source_body_sha256": "46ed79cd56f0b46d046d369b13ab592d47b0fc417cbcb6c78b1bac4ae9f139d7",
+    "source_close_body_sha256": "8fa7654931c38612943bd01a31c68aac83116f46177d96d50a775b0af89f588f",
+    "ASAN_UBSAN": true,
+    "owner_count": 5
+  },
+  "VERDICT": "PASS CPU source-body ownership only; no SDK/GPU/model/physicalreclamation qualification",
+  "actual_gpu_lifecycle_qualified": false
+}

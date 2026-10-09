@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source only",
+  "base_plan": "integrated-slot-owner-trace-engine-build-plan-v1.json",
+  "base_plan_sha256": "94aef305dbc6a31f023afa55573d52a9ce6af9443cfc0182eb7c324255159094",
+  "engine_plan": "serving-mirror-owner-engine-build-plan-v1.json",
+  "engine_plan_sha256": "bb73ef5e81263c3ab39e4d4897ba8516254b79223b77a4a45341958a4fcdf104",
+  "files": {
+    "patches/0031-sycl-serving-stage-mirror-owner-trace.patch": "4b32f5a8d16cbc58de74bdd4bfe9c385c71a389a6e019e0e79d9e98d9acdb07c",
+    "audit_stage_mirror_owner_trace_v1.py": "f302ec8c9b7dd49e0b059e55c782032398815976b7b97c13d8d95c3688883cb1",
+    "test_stage_mirror_owner_cpu_v1.py": "37bb8c2ba8de9fc22e49b62cd0d0c880bdb6b9b8cb6f60d01cfc0c14423b6bce",
+    "stage-mirror-owner-cpu-receipt-v1.json": "6fb9d7521a4083b449d668317c9eac5f0157ee18aaddaaee1eae6025d669c048",
+    "serving-stage-mirror-owner-trace-v1.md": "8a485b30bacd44a6b35ed2a430ebc7d70943350a5f2a7ae43b5723e00c9ef13b",
+    "serving-mirror-owner-engine-build-plan-v1.json": "bb73ef5e81263c3ab39e4d4897ba8516254b79223b77a4a45341958a4fcdf104"
+  },
+  "source_files_changed": {
+    "sycl/src/core/gguf_expert_source.cpp": {
+      "before": "15f299782eaa199c37bbf1ac2f27d4ec4be4c6516e28916a62710fa666fedf52",
+      "after": "8aa515675de91cee119631dd5c0ed8ed5b5904e4cdd031b10bbf82c07b5be191"
+    },
+    "sycl/src/core/verify.cpp": {
+      "before": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+      "after": "5bed5ffb517f1ddf49f48a4a6815fe1ae8000b7fb81fec281f8a0fd8ab10d468"
+    },
+    "sycl/src/program/generate.cpp": {
+      "before": "f0a361ac80ce02b8834fdfe12874e3b197259af0a55c5b16154c05e6bb0ce2aa",
+      "after": "f084499d6ac50d1f4288f326be256961340dc573fcce95c7613ed7ba87fea480"
+    },
+    "sycl/include/strata/core/stage_expert_mirror.hpp": {
+      "before": "7db4640bd965ece6fee4175024076d03feb5b81bada1081b7055d6798c7287de",
+      "after": "b7cc1a9c2c9da8f7cb3b6f6c9a39c21b7f32b7b461d375deb6d91ed196dc69e2"
+    },
+    "sycl/include/strata/core/gguf_expert_source.hpp": {
+      "before": "a93bbc186a6f50b5678b6a92a53ad98b84f693abbc0dcab2733168a9f1423a9d",
+      "after": "580f89e865aeba0b8f675c3d8047ae590a329b1dea707a068258be150405b4d9"
+    }
+  },
+  "complete_source_files": 60,
+  "consumed_headers": 24,
+  "fresh_ABI_targets": 8,
+  "Python_files": 6,
+  "runtime_flag": "STRATA_MIRROR_OWNER_TRACE=1",
+  "default": "OFF/unset/0",
+  "cpu_negative_controls": 18,
+  "CPU_ASAN_UBSAN": true,
+  "actual_model_payload_reads": 0,
+  "actual_SDK_compilation": false,
+  "actual_GPU_work": false,
+  "actual_serving_mirror_lifecycle_qualified": false,
+  "borrowed_aliases_registered": false,
+  "separate_process_upload_proof_transferred": false,
+  "physical_reclamation_qualified": false,
+  "whole_engine_allocation_retirement_qualified": false,
+  "independent30_source_compatibility": "pending HC30 READY; do not assume source composition",
+  "initial_overlay_for_review_only": "/mnt/vm_8tb/b70/build/strata-mirror31-z6tcpmo5/source",
+  "CPU_validation_input": "fresh pristine checkout + tracked29+31 patches and all60 final hashes; untracked staging overlay not used",
+  "parser_expected_roster": "mandatory actualsameprocess stage/logicaldevice/layer ranges"
+}

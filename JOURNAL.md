@@ -10631,3 +10631,25 @@ VERDICT -> Boundedserialsource/numerical/lifecycle proof; rawhidden/ownedfullmat
 cache/concurrency/latency/shelf incomplete. Neworiginalconditional consumersnot
 yetexecuted. Pairedparent7497 nowlive usingthisactualone childreport.
 See docs/20261009_flashnext_integrated29_numerical_onecard_v9.md.
+
+
+## 2026-10-09 - Serving mirror ownership source and preserved CPU receipts
+
+CONFIG -> NewdefaultOFF31 source onfrozen29; actualserving mirror table/host
+segments/contiguous payload owners, stage/device/context/pointer/generation.
+
+COMMAND -> Independent actualheader/factory ASAN/UBSAN sourcebody controls50130;
+new explicitnonoverwriting --output controls14484 andexistingoutput rejection.
+Verifyfinalsourceplan/frozenpatch/parser/recipe andinitialreview snapshots.
+
+RESULT -> PASS CPUactualsource/lifetime/rollback/quota/defaultOFF0nativequeries,
+exactcallerdeclared verifier roster includingmissingone ofmultiplepairs rejection.
+Twentytrace negatives; owncontext actualUR frees andorderedgraph/source retirement.
+RootnewoutputSHAced515e5ecdcee009ecd2f77fcda170e5bd11ebbf2425bbec1bfc1bd73aafe7d
+preservedbyteexact onrejectedrerun. EarliermutableCPUtest regeneratedanuncommitted
+receipt; finalmanifest transparentlyreboundto retainedreceipt, initialreview intact.
+
+VERDICT -> Source/CPUcheckpoint only. No servingmirror/runtime/source390proof
+transfer/wholeengine/physicalreclamation claim. Need exact30+31 composition,
+freshABI andactualcontext/owner/free qualification. Pairednumerical9 parent7497
+remainslive; noGPU/modelpayload reads byresearchagents.
