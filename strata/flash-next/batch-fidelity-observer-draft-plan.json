@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "status": "DRAFT tracked source/header ASan/UBSan mocks and strict synthetic coverage positives/negatives PASS; no replay-nonce/graph-roster proof or full TU build/runtime qualification",
+  "base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source",
+  "base_plan": "strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json",
+  "base_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+  "patches": [
+    {
+      "path": "strata/flash-next/patches/0021-sycl-bounded-layer0-numerical-capture.patch",
+      "sha256": "3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081"
+    },
+    {
+      "path": "strata/flash-next/patches/0022-sycl-strict-batch-request-identity-v2.patch",
+      "sha256": "1c7e7352d25358ac8421c404c0ba898b562b67bbe4cce51526bcb9545c452fce"
+    },
+    {
+      "path": "strata/flash-next/patches/0024-sycl-bounded-batch-fidelity-observer-draft.patch",
+      "sha256": "1da9dad84d5a3e31ade1e1112fb318a1f4901743d463cb3adefefd77e9cead96"
+    }
+  ],
+  "source_sha256": {
+    "sycl/include/strata/core/batch_fidelity_contract.hpp": "a6c18961821dd5570e4faf97874d22de62c678e301c05fa7d1fe49e6a7860618",
+    "sycl/include/strata/core/batch_fidelity_observer.hpp": "6726865ceac9c159cfd05424425d07c8ca238b9453dd7115e65847c198287508",
+    "sycl/include/strata/core/verify.hpp": "b0a0f9587ea886dc3e4db9494e3c6733fa40466cdf9a2ab8eaf026b255c9e1ee",
+    "sycl/src/core/verify.cpp": "06d897ee11d5fa934e3bdda1cc223fe23caeac61c3abbefb3beddc1d61e8701b",
+    "sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde",
+    "sycl/src/program/generate.cpp": "dac96dcd432f78eb388363367a35857da8024747fd724bb355ff2123f96e3dd8"
+  },
+  "final21_22_apply_receipt": "/mnt/vm_8tb/b70/build/strata21final22v2-bpjdjsxg/apply-receipt.json",
+  "overlay": "/mnt/vm_8tb/b70/build/strata-batch-observer24-mqslqenv",
+  "bounds": {
+    "requests": 6,
+    "samples_per_request": 2,
+    "layers": 48,
+    "residual_floats": 10240,
+    "logits_floats": 248320,
+    "output_bytes_max": 67108864,
+    "actual_full_6_request_bytes": 35512320,
+    "device_snapshot_bytes_all48": 17756160,
+    "span_events": 8192
+  },
+  "test": "strata/flash-next/test_batch_fidelity_observer_cpu.py",
+  "test_sha256": "c51d65005f90cf7b882d00e70aba349526a23cfa4b200745090e36a7e7dfacb9",
+  "required_followups": [
+    "explicit replay nonce + layer/head capture roster proof and host graph-record/replay controls before READY",
+    "full SYCL source compilation",
+    "actual2/4/6 API/native transport and numerical capture with exact source390 + model + pre/post health",
+    "strict collector head/stage48 quotas and full prompt/verify stage spans",
+    "automatic root/pin/leaf fullchain increment remains separate"
+  ],
+  "observer23_compatibility": "not yet applied;23 agent reserved numericalproducer/layer0 regions independent of24 batch/head/residual hooks",
+  "coverage_auditor": "strata/flash-next/audit_batch_fidelity_coverage.py",
+  "coverage_auditor_sha256": "46292222c27ac42646f5a63ee4dea5cb163ed152c29c64683722f95fcda048ae"
+}

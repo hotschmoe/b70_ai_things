@@ -1,0 +1,425 @@
+--- a/sycl/include/strata/core/layer0_numerical_observer.hpp
++++ b/sycl/include/strata/core/layer0_numerical_observer.hpp
+@@ -2,6 +2,7 @@
+ #pragma once
+ #include "strata/core/layer0_numerical_contract.hpp"
+ #include <sycl/sycl.hpp>
++#include "strata/kernels/layer0_producer_hooks.hpp"
+ #include <cstdio>
+ #include <cstdlib>
+ #include <cstring>
+@@ -39,24 +40,71 @@
+  std::uint64_t nonce_=0,zero_=0,published_=0,invalid_=~std::uint64_t(0);std::array<std::uint64_t,4>keys_{{0,1,2,3}};unsigned armed_request_=0;std::int64_t armed_pos_=-1;int armed_token_=-1;
+  void affinity(sycl::queue&q){if(q.get_context()!=q_.get_context()||q.get_device()!=q_.get_device())throw std::invalid_argument("Layer0 snapshot queue context/device changed");}
+ public:
+- snapshot(const sycl::queue&q,int stage):q_(q),stage_(stage){if(!settings().enabled)return;validate_config();if(!q_.has_property<sycl::property::queue::in_order>())throw std::invalid_argument("Layer0 snapshot queue must be in order");data_=sycl::malloc_device<std::uint8_t>(frame_bytes()+56,q_);if(!data_)throw std::bad_alloc();
+-  std::fprintf(stderr,"L0Q8 allocation stage=%d pointer=%p bytes=%zu owner_queue=verifier_cs\n",stage_,(void*)data_,frame_bytes()+56);try{q_.memcpy(data_+frame_bytes()+24,keys_.data(),32).wait_and_throw();}catch(...){sycl::free(data_,q_);data_=nullptr;throw;}}
++ snapshot(const sycl::queue&q,int stage):q_(q),stage_(stage){if(!settings().enabled)return;validate_config();if(!q_.has_property<sycl::property::queue::in_order>())throw std::invalid_argument("Layer0 snapshot queue must be in order");data_=sycl::malloc_device<std::uint8_t>(frame_bytes()+256,q_);if(!data_)throw std::bad_alloc();
++  std::fprintf(stderr,"L0Q8 allocation stage=%d pointer=%p bytes=%zu owner_queue=verifier_cs\n",stage_,(void*)data_,frame_bytes()+256);try{q_.memcpy(data_+frame_bytes()+24,keys_.data(),32).wait_and_throw();}catch(...){sycl::free(data_,q_);data_=nullptr;throw;}}
+  ~snapshot(){try{release();}catch(...) {}}
+- void release(){if(!data_)return;q_.wait_and_throw();std::fprintf(stderr,"L0Q8 release_begin stage=%d pointer=%p bytes=%zu\n",stage_,(void*)data_,frame_bytes()+56);sycl::free(data_,q_);data_=nullptr;std::fprintf(stderr,"L0Q8 release_returned stage=%d\n",stage_);}
++ void release(){if(!data_)return;q_.wait_and_throw();std::fprintf(stderr,"L0Q8 release_begin stage=%d pointer=%p bytes=%zu\n",stage_,(void*)data_,frame_bytes()+256);sycl::free(data_,q_);data_=nullptr;std::fprintf(stderr,"L0Q8 release_returned stage=%d\n",stage_);}
++
++ void observe_shared_gu(const float*gate,const float*up,int rows,int ffn,sycl::queue&q){
++  if(rows!=1||ffn!=640||!gate||!up)throw std::invalid_argument("Layer0 shared producer shape differs");
++  pair("shared_gate_up",gate,up,2560,q);auto field=index("shared_hidden_DERIVED");affinity(q);if(building_<0)throw std::invalid_argument("Layer0 producer outside construction");rosters_[building_][field]=true;
++  float*derived=reinterpret_cast<float*>(data_+offset(field));auto*err=reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+56);auto*mask=reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+100);
++  q.single_task([=](){
++#pragma clang fp contract(off)
++if(*mask&1)*err|=1;*mask|=1;for(int j=0;j<640;++j){float g=gate[j];derived[j]=(g/(1.0f+sycl::native::exp(-g)))*up[j];}});
++ }
++ void observe_shared_hq(const void*hq,int rows,int ffn,sycl::queue&q){
++  if(rows!=1||ffn!=640)throw std::invalid_argument("Layer0 shared HQ shape differs");copy("shared_hq81",hq,720,q);
++  auto*err=reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+56);auto*mask=reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+100);
++  q.single_task([=](){if(*mask&2)*err|=2;*mask|=2;});
++ }
++ void observe_expert(const strata::kernels::numerical_diag::expert_view&view,const strata::kernels::numerical_diag::entry_binding&binding,bool hq_phase,sycl::queue&q){
++  using strata::kernels::numerical_diag::selected_entry;
++  if(view.capacity!=10||view.ffn!=640||!view.gate||!view.up||!view.hq||!view.group_ptr||!view.group_start||!view.groups||!view.entry_destination||!view.entry_token||!binding.router_ids||!binding.residency||binding.slots<=0)throw std::invalid_argument("Layer0 expert producer descriptor differs");
++  affinity(q);if(building_<0)throw std::invalid_argument("Layer0 producer outside construction");
++  for(auto name:{"expert_entry_map","expert_gate_up","expert_hidden_DERIVED","expert_hq81"})rosters_[building_][index(name)]=true;
++  auto*map=reinterpret_cast<std::int32_t*>(data_+offset(index("expert_entry_map")));
++  auto*gu=reinterpret_cast<float*>(data_+offset(index("expert_gate_up")));auto*hidden=reinterpret_cast<float*>(data_+offset(index("expert_hidden_DERIVED")));
++  auto*packets=data_+offset(index("expert_hq81"));auto*err=reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+56);auto*masks=reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+60);
++  auto*blobs=reinterpret_cast<std::uint64_t*>(data_+frame_bytes()+104);auto*tiers=reinterpret_cast<std::uint32_t*>(data_+frame_bytes()+184);
++  q.single_task([=](){
++#pragma clang fp contract(off)
++
++   int ng=*view.groups;if(ng<0||ng>10){*err|=4;return;}if(!ng)return;
++   int lo=view.group_start[0],hi=view.group_start[ng];if(lo<0||hi<lo||hi>10){*err|=8;return;}
++   for(int group=0;group<ng;++group){int a=view.group_start[group],b=view.group_start[group+1];if(a<lo||b<a||b>hi){*err|=16;return;}
++    for(int entry=a;entry<b;++entry){int dst=view.entry_destination[entry],token=view.entry_token[entry];if(dst<0||dst>=10){*err|=32;continue;}
++     int expert=binding.router_ids[dst];if(!selected_entry(token,dst,expert)){*err|=64;continue;}
++     int slot=binding.residency[expert];std::uint64_t expected=0;std::uint32_t tier=0;
++     if(slot>=0){if(slot>=binding.slots||!binding.cache_base){*err|=128;continue;}expected=reinterpret_cast<std::uint64_t>(binding.cache_base)+(binding.slot_offsets?binding.slot_offsets[slot]:std::uint64_t(slot)*binding.uniform_blob_bytes);tier=1;}
++     else{if(!binding.mirror_table||!binding.mirror_table[expert]){*err|=256;continue;}expected=binding.mirror_table[expert];tier=2;}
++     if(view.group_ptr[group]!=expected){*err|=512;continue;}
++     const std::uint32_t bit=hq_phase?2:1;if(masks[dst]&bit){*err|=1024;continue;}masks[dst]|=bit;
++     map[3*dst]=expert;map[3*dst+1]=token;map[3*dst+2]=dst;blobs[dst]=view.group_ptr[group];tiers[dst]=tier;
++     if(hq_phase){const auto*source=static_cast<const std::uint8_t*>(view.hq)+entry*720;for(int j=0;j<720;++j)packets[dst*720+j]=source[j];}
++     else for(int j=0;j<640;++j){float g=view.gate[entry*640+j],u=view.up[entry*640+j];gu[(dst*2)*640+j]=g;gu[(dst*2+1)*640+j]=u;hidden[dst*640+j]=(g/(1.0f+sycl::native::exp(-g)))*u;}
++    }
++   }
++  });
++ }
++
+  void begin_roster(int key){if(key<0||key>=4)throw std::invalid_argument("Layer0 graph key invalid");building_=key;rosters_[key].fill(false);sealed_[key]=false;}
+- void seal_roster(int key){if(key!=building_||key<0||key>=4)throw std::invalid_argument("Layer0 graph construction mismatch");for(std::size_t i=0;i<fields.size();++i)if(rosters_[key][i]!=(i<24||i>=31))throw std::invalid_argument("Layer0 graph does not contain exact26 producer hooks");sealed_[key]=true;building_=-1;}
++ void seal_roster(int key){if(key!=building_||key<0||key>=4)throw std::invalid_argument("Layer0 graph construction mismatch");for(std::size_t i=0;i<fields.size();++i)if(!rosters_[key][i])throw std::invalid_argument("Layer0 graph does not contain exact33 producer hooks");sealed_[key]=true;building_=-1;}
+  void arm(int key,int rows,std::int64_t pos,int token,sycl::queue&q){affinity(q);const auto&r=current();if(!r.active||r.reused!=0||!first_position(r.ids.size(),rows,pos,token,r.ids)||key<0||key>=4||!sealed_[key])throw std::invalid_argument("Layer0 current frame/graph not qualified for replay");
+   armed_key_=key;armed_request_=r.ordinal;armed_pos_=pos;armed_token_=token;nonce_=(std::uint64_t(std::uint32_t(getpid()))<<32)|r.ordinal;
+   // Persistent member backing survives until run completes or owning release drains q.
+-  q.memcpy(data_+frame_bytes()+8,&nonce_,8);q.memcpy(data_+frame_bytes(),&zero_,8);q.memcpy(data_+frame_bytes()+16,&invalid_,8);
++  q.memcpy(data_+frame_bytes()+8,&nonce_,8);q.memcpy(data_+frame_bytes(),&zero_,8);q.memcpy(data_+frame_bytes()+16,&invalid_,8);q.memset(data_+frame_bytes()+56,0,168);
+  }
+- void stamp(sycl::queue&q){affinity(q);if(building_<0)throw std::invalid_argument("Layer0 stamp outside graph construction");for(std::size_t i=0;i<fields.size();++i)if(rosters_[building_][i]!=(i<24||i>=31))throw std::invalid_argument("Layer0 stamp before exact26 producer copies");q.memcpy(data_+frame_bytes(),data_+frame_bytes()+8,8);q.memcpy(data_+frame_bytes()+16,data_+frame_bytes()+24+building_*8,8);}
++ void stamp(sycl::queue&q){affinity(q);if(building_<0)throw std::invalid_argument("Layer0 stamp outside graph construction");for(std::size_t i=0;i<fields.size();++i)if(!rosters_[building_][i])throw std::invalid_argument("Layer0 stamp before exact33 producer copies");q.memcpy(data_+frame_bytes(),data_+frame_bytes()+8,8);q.memcpy(data_+frame_bytes()+16,data_+frame_bytes()+24+building_*8,8);}
+  void copy(const char*name,const void*src,std::size_t bytes,sycl::queue&q){if(!settings().enabled)return;auto i=index(name);copy_extent(i,bytes);affinity(q);if(!data_||!src)throw std::invalid_argument("Layer0 null copy descriptor");if(building_<0)throw std::invalid_argument("Layer0 copy outside graph construction");q.memcpy(data_+offset(i),src,bytes);rosters_[building_][i]=true;}
+  void pair(const char*name,const void*a,const void*b,std::size_t bytes,sycl::queue&q){if(!settings().enabled)return;auto i=index(name);copy_extent(i,bytes*2);affinity(q);if(!data_||!a||!b)throw std::invalid_argument("Layer0 null pair descriptor");if(building_<0)throw std::invalid_argument("Layer0 copy outside graph construction");q.memcpy(data_+offset(i),a,bytes);q.memcpy(data_+offset(i)+bytes,b,bytes);rosters_[building_][i]=true;}
+  bool dump(int key,int rows,std::int64_t pos,int token,std::string&err){const auto&r=current();if(!r.active)return true;
+   if(r.reused!=0||!first_position(r.ids.size(),rows,pos,token,r.ids)){skip("wrong_token_position_or_state_boundary");return true;}
+   if(key!=armed_key_||armed_request_!=r.ordinal||pos!=armed_pos_||token!=armed_token_||key<0||key>=4||!sealed_[key]||published_==nonce_){err="Layer0 stale/unarmed/duplicate frame";return false;}
+   std::array<std::uint64_t,3>marker{};q_.memcpy(marker.data(),data_+frame_bytes(),24).wait_and_throw();const auto completed=marker[0];if(completed!=nonce_||marker[1]!=nonce_||marker[2]!=std::uint64_t(key)){err="Layer0 current graph replay marker absent; no fields publish";return false;}
++  std::array<std::uint32_t,12>coverage{};q_.memcpy(coverage.data(),data_+frame_bytes()+56,48).wait_and_throw();
++  if(coverage[0]||coverage[11]!=3||std::any_of(coverage.begin()+1,coverage.begin()+11,[](std::uint32_t m){return m!=3;})){err="Layer0 actual shared/expert mapping or producer coverage invalid";return false;}
++  std::array<std::uint64_t,10>blobs{};std::array<std::uint32_t,10>tiers{};q_.memcpy(blobs.data(),data_+frame_bytes()+104,80).wait_and_throw();q_.memcpy(tiers.data(),data_+frame_bytes()+184,40).wait_and_throw();
+   const std::uint16_t endian=1;if(!*reinterpret_cast<const std::uint8_t*>(&endian)){err="Layer0 requires little-endian raw source runtime";return false;}
+   const std::string stem=std::string(settings().dir)+"/l0q8-"+std::to_string(long(getpid()))+"-r"+std::to_string(r.ordinal)+"-s"+std::to_string(stage_);
+   const int meta=::open((stem+".json").c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(meta<0){err="Layer0 metadata open failed";return false;}
+@@ -64,11 +112,13 @@
+   std::unique_ptr<FILE,int(*)(FILE*)>close_meta(out,&std::fclose);
+   std::fprintf(out,"{\"schema\":1,\"pid\":%ld,\"request\":%u,\"stage\":%d,\"layer\":0,\"rows\":1,\"position\":%lld,\"token\":%d,\"reused\":%lld,\"binding_sha256\":\"%s\",\"gen_ids\":[",long(getpid()),r.ordinal,stage_,(long long)pos,token,(long long)r.reused,settings().binding);
+   for(std::size_t j=0;j<r.ids.size();++j)std::fprintf(out,"%s%lld",j?",":"",(long long)r.ids[j]);
+-  std::fprintf(out,"],\"graph_key\":%d,\"completed_nonce\":%llu,\"request_replay_marker_verified\":true,",key,(unsigned long long)completed);
+-  std::fprintf(out,"\"raw_fused_hidden_observed\":false,\"complete_preregistered_layout\":false,\"full_model_math_qualified\":false,\"fields\":[");bool ok=true;
++  std::fprintf(out," ],\"graph_key\":%d,\"completed_nonce\":%llu,\"request_replay_marker_verified\":true,",key,(unsigned long long)completed);
++  std::fprintf(out,"\"expert_blob_addresses\":[");for(int j=0;j<10;++j)std::fprintf(out,"%s%llu",j?",":"",(unsigned long long)blobs[j]);
++  std::fprintf(out,"],\"expert_tiers\":[");for(int j=0;j<10;++j)std::fprintf(out,"%s%u",j?",":"",tiers[j]);std::fprintf(out,"],\"producer_mapping_verified\":true,");
++  std::fprintf(out,"\"raw_fused_hidden_observed\":false,\"complete_preregistered_layout\":true,\"full_model_math_qualified\":false,\"fields\":[");bool ok=true;
+   for(std::size_t i=0;i<fields.size();++i){std::string path=stem+"-"+fields[i].name+".bin";
+    if(rosters_[key][i]){std::vector<std::uint8_t>raw(fields[i].bytes);q_.memcpy(raw.data(),data_+offset(i),raw.size()).wait_and_throw();int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(fd<0){ok=false;break;}std::size_t done=0;while(done<raw.size()){ssize_t n=::write(fd,raw.data()+done,raw.size()-done);if(n>0)done+=std::size_t(n);else if(n<0&&errno==EINTR)continue;else{ok=false;break;}}if(::close(fd))ok=false;if(!ok)break;}
+-   std::fprintf(out,"%s{\"name\":\"%s\",\"encoding\":\"%s\",\"bytes\":%zu,\"observed\":%s,\"file\":\"%s\",\"provenance\":\"%s\"}",i?",":"",fields[i].name,fields[i].encoding,fields[i].bytes,rosters_[key][i]?"true":"false",rosters_[key][i]?path.c_str():"",rosters_[key][i]?"actual_buffer":"UNOBSERVED_no_producer_hook");
++   std::fprintf(out,"%s{\"name\":\"%s\",\"encoding\":\"%s\",\"bytes\":%zu,\"observed\":%s,\"file\":\"%s\",\"provenance\":\"%s\"}",i?",":"",fields[i].name,fields[i].encoding,fields[i].bytes,rosters_[key][i]?"true":"false",rosters_[key][i]?path.c_str():"",rosters_[key][i]?(i==25||i==29?"DERIVED_gpu_native_exp_from_actual_gate_up":"actual_buffer"):"UNOBSERVED_no_producer_hook");
+   }
+   std::fprintf(out,"]}\n");if(std::fclose(close_meta.release()))ok=false;if(!ok){err="Layer0 diagnostic output incomplete; preserve partial evidence";return false;}
+   published_=nonce_;
+--- a/sycl/src/kernels/cuda/shared_expert.dp.cpp
++++ b/sycl/src/kernels/cuda/shared_expert.dp.cpp
+@@ -312,7 +312,7 @@
+ 
+ void shared_expert_multi(int n_tok, const float* x, const uint16_t* x_bf16, const NativeSharedWeights& nw,
+                          const uint16_t* gate_inp_bf16, float* gate, float* up, float* g, float* out, int64_t n_embd,
+-                         int64_t n_ff, void* stream, const void* x_q8_1_ready, int lfuse) {
++                         int64_t n_ff, void* stream, const void* x_q8_1_ready, int lfuse, const numerical_diag::hooks* observer) {
+     const bool gate_deferred = (lfuse & 1) != 0, pair = (lfuse & 2) != 0;
+     if (n_tok < 1 || n_tok > 8 || !nw.q8_1 || !nw.gate_data || !nw.up_data || !nw.down_data || !stream)
+         throw std::invalid_argument("shared_expert_multi: needs 1..8 tokens, native weights, scratch and a stream");
+@@ -329,6 +329,7 @@
+         native_mmvq(nw.gate_type, nw.gate_data, x_q8_1, gate, (int) n_embd, (int) n_ff, n_tok, stream);
+         native_mmvq(nw.up_type, nw.up_data, x_q8_1, up, (int) n_embd, (int) n_ff, n_tok, stream);
+     }
++    if(observer && observer->shared_gu)observer->shared_gu(observer->user,gate,up,n_tok,int(n_ff),stream);
+     const int n = (int) (n_ff * n_tok);
+     if (fused_swiglu_q81_enabled()) {
+         native_swiglu_quantize_q8_1(gate, up, nw.q8_1, (int) n_ff, n_tok, stream);
+@@ -349,6 +350,7 @@
+         }
+         native_quantize_q8_1(gate, nw.q8_1, (int) n_ff, n_tok, stream);
+     }
++    if(observer && observer->shared_hq)observer->shared_hq(observer->user,nw.q8_1,n_tok,int(n_ff),stream);
+     native_mmvq(nw.down_type, nw.down_data, nw.q8_1, out, (int) n_ff, (int) n_embd, n_tok, stream);
+     if (gate_deferred) {   // the caller computed g (raw) with the router and scales `out` in the combine
+         /*
+--- a/sycl/src/kernels/cuda/iq_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/iq_kernels.dp.cpp
+@@ -5005,7 +5005,8 @@
+ void native_expert_grouped(const NativeExpertLayout& L, const unsigned long long* grp_ptr, const int32_t* grp_start,
+                            const int32_t* n_groups, const int32_t* ent_dst, const int32_t* ent_tok, int64_t cap_groups,
+                            int64_t cap_entries, const void* x_q8_1, void* scratch, float* out, void* stream,
+-                           int64_t grid_groups) {
++                           int64_t grid_groups, const numerical_diag::hooks* observer) {
++    if(observer && g_exp_phase!=0)throw std::invalid_argument("Layer0 producer bench phase is unsupported");
+     if (cap_groups <= 0 || cap_entries <= 0) return;
+     if (L.n_ff % 32 != 0) { std::fprintf(stderr, "native_expert_grouped: n_ff %lld\n", (long long) L.n_ff); std::exit(1); }
+     dpct::queue_ptr s = strata::q_of(stream);
+@@ -5090,6 +5091,8 @@
+     }
+ #endif
+     check("native_expert_grouped/gu");
++    numerical_diag::expert_view observed{gate,up,hq,grp_ptr,grp_start,n_groups,ent_dst,ent_tok,cap_entries,L.n_ff};
++    if(observer && observer->expert_gu)observer->expert_gu(observer->user,observed,stream);
+     const long long nh = (long long) cap_entries * L.n_ff;
+ #if defined(STRATA_HIP_GFX906)
+     // gfx906: the separate SwiGLU and q8_1 passes stay the default (the A/B baseline); the RDNA one-pass
+@@ -5150,6 +5153,7 @@
+                     });
+     }
+     check("native_expert_grouped/swiglu");
++    if(observer && observer->expert_hq)observer->expert_hq(observer->user,observed,stream);
+     }
+     if (g_exp_phase == 1) return;
+     const int d_rows = (!g_old_kernels && !g_no_sub16_gu && L.n_ff == 640) ? (L.d_type == 20 ? 32 : (L.d_type == 42 ? 16 : 8)) : 8;
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1434,10 +1434,16 @@
+                 else for (int t = tb; t < te; ++t) f32_to_bf16_bulk(mixed_ + t * N, sh_bf16_ + t * N, N, sh_stream);
+             }
+             try {
++                numerical_diag::hooks shared_hooks;
++                if(l0_capture) {
++                    shared_hooks.user=layer0_snapshot_.get();
++                    shared_hooks.shared_gu=[](void*user,const float*g,const float*u,int rows,int ffn,void*stream){static_cast<layer0_diag::snapshot*>(user)->observe_shared_gu(g,u,rows,ffn,*strata::q_of(stream));};
++                    shared_hooks.shared_hq=[](void*user,const void*hq,int rows,int ffn,void*stream){static_cast<layer0_diag::snapshot*>(user)->observe_shared_hq(hq,rows,ffn,*strata::q_of(stream));};
++                }
+                 shared_expert_multi(n, xm, sh_bf16_ + tb * N, nsw, (const uint16_t*) wgi->data, sh_gate_ + (size_t) tb * g.n_ff,
+                                     sh_up_ + (size_t) tb * g.n_ff, sh_g_ + tb, shared_ + tb * N, N, g.n_ff, sh_stream,
+                                     qdedup ? (const void*) (nat_xq_ + (size_t) tb * (N / 32) * 36) : nullptr,
+-                                    (sg_ready ? 1 : 0) | (lfuse_on(n) && g_lfuse_pair() ? 2 : 0));
++                                    (sg_ready ? 1 : 0) | (lfuse_on(n) && g_lfuse_pair() ? 2 : 0),l0_capture?&shared_hooks:nullptr);
+                 sg_gated_[grp] = sg_ready;
+             } catch (const std::exception& e) {
+                 err = std::string("verify shared expert: ") + e.what();
+@@ -1485,8 +1491,18 @@
+                 // the layer's GGUF formats (i-quant gate/up, Q2_0 / IQ4_NL down)
+                 const auto& f = lay.fmt[(size_t) l];
+                 const NativeExpertLayout L = native_expert_layout(f.gu_type, f.d_type, f.n_embd, f.n_ff);
++                struct ProducerContext {layer0_diag::snapshot* snapshot; numerical_diag::entry_binding binding;};
++                ProducerContext context{};numerical_diag::hooks expert_hooks;
++                const bool l0_producer=layer0_first_&&layer0_snapshot_&&T==1&&l==0&&grp==0;
++                if(l0_producer) {
++                    context.snapshot=layer0_snapshot_.get();
++                    context.binding={ids_,hits_.d_res+l*g.n_expert,hits_.stage_mirror?hits_.stage_mirror->layer_table(l):nullptr,slot_off_d_,hits_.cache_base,hits_.n_slots,hits_.blob};
++                    expert_hooks.user=&context;
++                    expert_hooks.expert_gu=[](void*user,const numerical_diag::expert_view&view,void*stream){auto&c=*static_cast<ProducerContext*>(user);c.snapshot->observe_expert(view,c.binding,false,*strata::q_of(stream));};
++                    expert_hooks.expert_hq=[](void*user,const numerical_diag::expert_view&view,void*stream){auto&c=*static_cast<ProducerContext*>(user);c.snapshot->observe_expert(view,c.binding,true,*strata::q_of(stream));};
++                }
+                 native_expert_grouped(L, gp, gs, gn, p_dst, p_tok, cap, cap,
+-                                      nat_xq_ + (size_t) tb * (N / 32) * 36, hit_scratch_, dst_buf, cs, gy);
++                                      nat_xq_ + (size_t) tb * (N / 32) * 36, hit_scratch_, dst_buf, cs, gy,l0_producer?&expert_hooks:nullptr);
+             } else {
+                 moe_grouped_s2(gp, gs, gn, p_dst, p_tok, cap, cap, hit_xq_ + (size_t) tb * (N / 32) * 34,
+                                hit_xs_ + (size_t) tb * (N / 32), hit_scratch_, dst_buf, cs);
+--- /dev/null
++++ b/sycl/include/strata/kernels/layer0_producer_hooks.hpp
+@@ -0,0 +1,26 @@
++// Optional host producer callbacks for SYCL numerical diagnostics; no GPU types.
++#pragma once
++#include <cstdint>
++namespace strata::kernels::numerical_diag {
++struct expert_view {
++ const float* gate=nullptr;const float* up=nullptr;const void* hq=nullptr;
++ const unsigned long long* group_ptr=nullptr;const std::int32_t* group_start=nullptr;
++ const std::int32_t* groups=nullptr;const std::int32_t* entry_destination=nullptr;const std::int32_t* entry_token=nullptr;
++ std::int64_t capacity=0,ffn=0;
++};
++struct hooks {
++ void* user=nullptr;
++ void (*shared_gu)(void*,const float*,const float*,int,int,void*)=nullptr;
++ void (*shared_hq)(void*,const void*,int,int,void*)=nullptr;
++ void (*expert_gu)(void*,const expert_view&,void*)=nullptr;
++ void (*expert_hq)(void*,const expert_view&,void*)=nullptr;
++};
++struct entry_binding {
++ const std::int32_t* router_ids=nullptr;const std::int32_t* residency=nullptr;
++ const unsigned long long* mirror_table=nullptr;const unsigned long long* slot_offsets=nullptr;
++ const std::uint8_t* cache_base=nullptr;std::int64_t slots=0,uniform_blob_bytes=0;
++};
++// One GPU work item per bounded diagnostic call: error / coverage updates are
++// serialized on the source queue. Existing shared join protects final readout.
++inline bool selected_entry(int token,int destination,int expert){return token==0&&destination>=0&&destination<10&&expert>=0&&expert<512;}
++}
+--- /dev/null
++++ b/sycl/include/strata/kernels/shared_expert.hpp
+@@ -0,0 +1,108 @@
++// include/strata/kernels/shared_expert.hpp - the shared expert, host-callable (P2.S2).
++//
++//     h = silu(x @ gate_shexp.T) * (x @ up_shexp.T)      <- SILU ON GATE
++//     h = h @ down_shexp.T
++//     g = sigmoid(x @ gate_inp_shexp)                     one SCALAR per token
++//     return h * g[:, None]
++//
++// The result is ADDED to the routed output, not weighted against it.  Shape note: `n_ff` for the shared expert
++// matches the routed experts' width (640) in this artifact.
++//
++// The SForm arguments describe canonical planes for the three expert projections and their historical
++// CPU-derived activation images (Q8_0 or Q8_K). The default scalar gate separately consumes BF16 activations.
++// The opt-in native BF16 gate instead consumes the original F32 activation and uses the pinned CUDA MMVF
++// contract. Optional native projection weights select the pinned CUDA Q8_1 MMVQ contract independently.
++#pragma once
++#include "strata/kernels/layer0_producer_hooks.hpp"
++
++#include <cstdint>
++
++#include "strata/kernels/s_gemv.hpp"
++
++namespace strata::kernels {
++
++/// Opt in to pinned CUDA BF16/F32 MMVF and FP32 sigmoid for the shared scalar gate (default false).
++/// Configure before session capture; captured graphs retain their selected kernels.
++/// In this mode shared_expert requires its optional unrounded x_f32 input.
++void shared_expert_set_native_bf16(bool enabled);
++bool shared_expert_native_bf16_enabled();
++
++/// Optional native GGUF projections. Each supported type with nonnull data
++/// replaces only that canonical projection; absent or unsupported entries fall
++/// back independently. Any active entry selects pinned FP32 SwiGLU arithmetic.
++/// Caller owns device weights and Q8_1 scratch for the largest active input
++/// (n_embd for gate/up, n_ff for down), sized by native_q8_1_bytes. All storage
++/// must survive graph execution; use one ordered nonnull stream with no overlap.
++struct NativeSharedWeights {
++    int gate_type = -1, up_type = -1, down_type = -1;
++    const void* gate_data = nullptr;
++    const void* up_data = nullptr;
++    const void* down_data = nullptr;
++    void* q8_1 = nullptr;
++    const void* x_q8_1 = nullptr;   // optional pre-quantized Q8_1 input for gate/up in shared_expert_multi
++};
++
++/// Bytes of caller-owned scratch `shared_expert` needs.  **THE KERNEL USED TO `cudaMalloc` FOUR BUFFERS ON
++/// EVERY CALL**, which is two separate violations in one line: `cudaMalloc` is ILLEGAL INSIDE A CAPTURE
++/// (`cudaErrorStreamCaptureUnsupported`), so the MoE - and therefore the whole per-layer graph - could not be
++/// captured at all; and P2.T10 requires ZERO token-path allocations, which this was.  Neither is visible in a
++/// test that only checks the output, and the capture test found it in one run.
++uint64_t shared_expert_scratch_bytes(int64_t n_ff);
++
++/// `x_q8_0` and `x_q8k` are the TWO QUANTIZED IMAGES of the same activation, and which one a projection uses is
++/// decided per weight by its `SForm::act_kind`.  There is no fp16 activation here any more.
++///
++/// **THE fp16 PATH WAS A REAL ERROR AND IT WAS DESCRIBED WRONG FOR SEVERAL ROUNDS.**  This header used to say
++/// the weights "are Q3_K / IQ4_XS / Q5_0 whose `vec_dot_type` is Q8_K, which is not implemented".  In fact
++/// `ffn_down_shexp` is IQ4_NL/Q4_0/Q5_0/Q8_0/Q2_0 in every layer - **no K-quant at all** - so its contract is
++/// Q8_0; and its `n_in` is 640, which is not a multiple of 256, so **Q8_K is structurally impossible for it**.
++/// The gate/up weights are Q2_0 on 21 and 13 layers (Q8_0 again) and K-quants on the rest.
++///
++/// x_f32 is required for the native BF16 gate or native gate/up projections.
++/// Native down reads the unrounded F32 SwiGLU intermediate directly. No allocation occurs.
++///
++/// Measured cost of the wrong choice: 0.66-1.41% per GEMV.  `s_gemv_q8_0_split` was written for the Q8_0 half
++/// (LEDGER L55) and `s2_gemv_q8` already served the Q2_0 half.
++void shared_expert(const uint8_t* x_q8_0, const uint8_t* x_q8k, const uint16_t* x_bf16, const SForm& gate_form,
++                   const uint8_t* gate_codes, const float* gate_scales, const float* gate_off,
++                   const SForm& up_form, const uint8_t* up_codes, const float* up_scales, const float* up_off,
++                   const SForm& down_form, const uint8_t* down_codes, const float* down_scales,
++                   const float* down_off, const uint16_t* gate_inp_bf16, float* scratch, float* out,
++                   int64_t n_embd, int64_t n_ff, int tpr, void* stream, const float* x_f32 = nullptr,
++                   const NativeSharedWeights* native = nullptr);
++
++/// Plan v0.3 P6: the shared expert for `n_tok` <= 8 tokens (a verify window) with all three projections native:
++/// multi-column MMVQ, so the weights are read once; every token is bitwise `shared_expert` on that token.
++/// `x` (n_tok, n_embd) f32, `x_bf16` the same rounded (only read when the native BF16 gate is off), `gate`/`up`
++/// (n_tok, n_ff) scratch, `g` n_tok floats, `out` (n_tok, n_embd).  `nw.q8_1` must hold n_tok columns of n_embd.
++/// x_q8_1_ready: the q8_1 image of x (n_tok rows), already quantized by the caller with the same quantizer (the
++/// same bytes native_quantize_q8_1 writes): its gate/up read it and x is not quantized again, and the SwiGLU and
++/// its q8_1 run as one launch (same values). Null: the separate launches.
++void shared_expert_multi(int n_tok, const float* x, const uint16_t* x_bf16, const NativeSharedWeights& nw,
++                         const uint16_t* gate_inp_bf16, float* gate, float* up, float* g, float* out, int64_t n_embd,
++                         int64_t n_ff, void* stream, const void* x_q8_1_ready = nullptr,
++                         int lfuse = 0, const numerical_diag::hooks* observer = nullptr);   // S26 STRATA_LFUSE: bit 0 gate computed + applied by the caller, bit 1 gate/up pair
++
++/// The MoE block's final combination, `ref/moe.py::moe` L156:
++///
++///     y = sum over the k routed experts of  w[k] * parts[k]  +  shared
++///
++/// `parts` is (k, n_embd) contiguous - one row per SELECTED expert, in the router's own order - and `shared`
++/// may be null for a layer with no shared expert.
++///
++/// TWO THINGS A READER GETS WRONG HERE, and they are why this is not inlined at the call site:
++///
++///   * The ROUTED outputs are router-WEIGHTED; the SHARED output is ADDED PLAIN.  `ref/moe.py` L116 says so
++///     outright - "router-weighted, not renormalised against it" - and weighting the shared term too is a
++///     one-line change that produces a plausible number.
++///   * The weights come from `router_top10` ALREADY renormalised (they sum to 1 over the selected experts).
++///     Normalising again here would be a second, different normalisation, and it is invisible whenever the
++///     router's weights happen to sum near 1 anyway.
++///
++/// One thread per output element, k accumulations each; k is 10 at the real geometry.  This is where the CPU
++/// expert pool's outputs are summed: `ExpertPool` carries a `weight` per job and deliberately does NOT apply
++/// it, because the sum has to happen once over all k and not once per worker.
++void moe_combine(const float* parts, const float* weights, const float* shared, float* y, int64_t n_embd,
++                 int64_t k, void* stream);
++
++}  // namespace strata::kernels
+--- /dev/null
++++ b/sycl/include/strata/kernels/iq_kernels.hpp
+@@ -0,0 +1,81 @@
++// include/strata/kernels/iq_kernels.hpp - the i-quant formats (IQ1_M, IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
++// IQ4_NL) and Q2_0 on the GPU for the IQ2_XS / IQ3_XXS model files, and Q4_K / Q5_K / Q5_1 / Q8_0 for Unsloth's
++// UD-Q4_K_XL (gate/up Q4_K or Q5_K, down Q5_1 or Q8_0, a Q8_0 embedding).
++//
++// The block layouts, codebook grids and dot products are llama.cpp's (ggml-common.h, ggml-cuda/vecdotq.cuh,
++// ggml-cuda/dequantize.cuh; MIT, see third_party/ggml/LICENSE and VERSION.txt), so a weight means exactly what it
++// means in llama.cpp.  Activations are q8_1 (32 values, fp16 scale and fp16 sum), the llama.cpp CUDA contract.
++#pragma once
++#include "strata/kernels/layer0_producer_hooks.hpp"
++
++#include <cstddef>
++#include <cstdint>
++
++namespace strata::kernels {
++
++/// ggml type ids handled here.
++bool iq_supported(int ggml_type) noexcept;
++/// The token-embedding types iq_embed_rows and iq_dequant_f32 read: the i-quants above and BF16 (30).
++bool embed_type_supported(int ggml_type) noexcept;
++/// Bytes of one row of `n` values of `ggml_type` (n a multiple of the type's block).
++size_t iq_row_bytes(int ggml_type, int64_t n) noexcept;
++
++/// q8_1 blocks for `n_rows` rows of `n_cols` floats (n_cols a multiple of 32): y is n_rows * n_cols/32 blocks.
++void quantize_q8_1_rows(const float* x, int64_t n_rows, int64_t n_cols, void* y, void* stream);
++
++/// y[c][r] = W[r] . x[c] for `ncols` columns of q8_1 activations (x stride n_in/32 blocks per column).
++void iq_mmvq(int ggml_type, const void* w, const void* x_q8_1, float* y, int n_in, int n_out, int ncols, void* stream);
++
++/// Dequantize `n` contiguous values (n a multiple of 256) to fp16 / fp32.
++void iq_dequant_f16(int ggml_type, const void* src, int64_t n, uint16_t* dst, void* stream);
++void iq_dequant_f32(int ggml_type, const void* src, int64_t n, float* dst, void* stream);
++/// Rows `tokens[0..n_tok)` (device ids) of a GGUF embedding table (`row_bytes` per row; the table may be mapped
++/// host memory) dequantized to fp32, `n_embd` per row (a multiple of 256).
++void iq_embed_rows(int ggml_type, const void* table, size_t row_bytes, const int32_t* tokens, int64_t n_tok,
++                   int64_t n_embd, float* out, void* stream);
++/// One expert's gate and up matrices (n_ff rows of n_embd each) into the interleaved fp16 layout the prompt path
++/// uses: row 2r = gate row r, row 2r+1 = up row r.
++void iq_dequant_gu_f16(int ggml_type, const void* gate, const void* up, int64_t n_ff, int64_t n_embd, uint16_t* dst,
++                       void* stream);
++
++/// The layout of one native expert blob: [gate rows | up rows | down rows], raw GGUF blocks.
++struct NativeExpertLayout {
++    int gu_type = -1, d_type = -1;
++    int64_t n_embd = 0, n_ff = 0;
++    size_t gu_row = 0, d_row = 0;       // bytes per row
++    size_t up_off = 0, down_off = 0;    // byte offsets inside the blob
++    size_t bytes = 0;                   // the whole blob
++};
++NativeExpertLayout native_expert_layout(int gu_type, int d_type, int64_t n_embd, int64_t n_ff);
++/// Whether `native_expert_grouped` has kernels for this gate/up and down type pair at these dimensions, and the
++/// prompt path's dequantizer takes both (checked for every layer at startup, before anything is allocated).
++bool native_expert_supported(int gu_type, int d_type, int64_t n_embd, int64_t n_ff) noexcept;
++
++/// Bytes of scratch `native_expert_grouped` needs for `cap_entries` entries.
++size_t native_expert_scratch_bytes(int64_t cap_entries, int64_t n_ff);
++
++/// Grouped experts in the native format: group g's blob at device address grp_ptr[g]; its entries
++/// [grp_start[g], grp_start[g+1]) read token ent_tok[e]'s q8_1 activation (n_embd/32 blocks per token in x_q8_1)
++/// and write row ent_dst[e] of `out` (n_embd floats).  Counts are read on the device.
++/// `grid_groups` (1 .. cap_groups; 0 = cap_groups) groups run side by side, a block row each striding over the rest:
++/// a call that usually has few groups or none (the verify window's PCIe share) launches less for the ones it does
++/// not have.  The results do not depend on it.
++void native_expert_grouped(const NativeExpertLayout& L, const unsigned long long* grp_ptr, const int32_t* grp_start,
++                           const int32_t* n_groups, const int32_t* ent_dst, const int32_t* ent_tok, int64_t cap_groups,
++                           int64_t cap_entries, const void* x_q8_1, void* scratch, float* out, void* stream,
++                           int64_t grid_groups = 0, const numerical_diag::hooks* observer = nullptr);
++/// true: `native_expert_grouped`'s launches before the group stride (STRATA_GROUPED_V1=1 at startup) - a block row
++/// per possible group, SwiGLU and the q8_1 quantization as two kernels over all cap_entries.  Bitwise the same results
++/// (native_grouped_parity checks it); kept for A/B timing.  Set before graph capture; captured graphs keep theirs.
++void native_grouped_set_v1(bool v1);
++
++/// The bench only: the AMD kernel layout (STRATA_EXP_MODE values; -1 = the environment's) and the phase
++/// (0 all, 1 gate/up + SwiGLU + quantize, 2 down).
++void native_expert_set_mode(int mode, int phase);
++/// `iq_mmvq` and `native_expert_grouped` decode each weight part once and apply it to every column / entry;
++/// true selects the older kernels that decode it again per column (STRATA_OLD_IQ_MMVQ=1 at startup).  Both give
++/// bitwise the same results.  Set before graph capture; captured graphs keep the kernels they captured.
++void iq_set_old_kernels(bool old);
++bool iq_old_kernels();
++
++}  // namespace strata::kernels

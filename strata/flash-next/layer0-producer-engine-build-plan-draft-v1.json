@@ -1,0 +1,455 @@
+{
+  "schema": 1,
+  "status": "CPU source reconstruction/mock33 producer fields PASS; draft no actual SYCL TU/link/GPU/first-layer mathematical qualification",
+  "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "source_root": "/mnt/vm_8tb/github/strata",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "ggml": {
+    "url": "https://github.com/ggml-org/llama.cpp.git",
+    "revision": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
+    "reason": "SYCL CMake explicit dependency pin; needs full ggml source, not existing22 headers"
+  },
+  "patches": [
+    {
+      "path": "strata/flash-next/patches/0001-sycl-native-q8-hc-projection-primitives.patch",
+      "sha256": "7edd863134d9a660d21fc28e4b061dd2568e6013fc58a67a529a0dc686263efb"
+    },
+    {
+      "path": "strata/flash-next/patches/0002-sycl-native-hc-composition.patch",
+      "sha256": "bde6376706e3cda1cd2c5b74d0e4f18aa7aa948233436b9530294a95bfd5910b"
+    },
+    {
+      "path": "strata/flash-next/patches/0003-sycl-native-hc-source-owner-decode.patch",
+      "sha256": "207642b5ed8d7c6a90d4b4783b46aa4f189a98cee84f3454635a3ca2d3d7f57d"
+    },
+    {
+      "path": "strata/flash-next/patches/0004-sycl-native-hc-prefill-verifier-routes.patch",
+      "sha256": "abc9772abf3c363a57a1a1a040f9ffff45d5dc964cd7fd09782ad3ec8690dfd5"
+    },
+    {
+      "path": "strata/flash-next/patches/0005-sycl-stage-owned-expert-mirrors.patch",
+      "sha256": "22abe038d2ffdc7ac98049af9955442979ed7e55461275f0a2faa8c27917071f"
+    },
+    {
+      "path": "strata/flash-next/patches/0006-sycl-source-preserving-ple.patch",
+      "sha256": "fa8cbb3d9341ee903708de2c674e127fb197241f6893b045e90334adcd915247"
+    },
+    {
+      "path": "strata/flash-next/patches/0008-sycl-native-ple-span-size.patch",
+      "sha256": "f43196e645ca86ba0f5aed654b1e4259a82eae4cf04bab6fbd6b8ad2586f1762"
+    },
+    {
+      "path": "strata/flash-next/patches/0009-sycl-verifier-stage-mirror-declarations.patch",
+      "sha256": "93c7f51209cd5795a6ad604675c79d73e8b204eef7564b60da3576be222a219b"
+    },
+    {
+      "path": "strata/flash-next/patches/0007-sycl-exact-artifact-api-cache-identity.patch",
+      "sha256": "161bd77aa52aca33205f7879559bbc72d7e6ee863ae6cc3db03c3485344228b4"
+    },
+    {
+      "path": "strata/flash-next/patches/0010-sycl-native-ple-allocation-accounting.patch",
+      "sha256": "7c293830e0254b980d5de3d62a6136bfd6c8583a82a6064dcef9d9e29ba8f44e"
+    },
+    {
+      "path": "strata/flash-next/patches/0011-sycl-strict-native-omit-legacy-ple-key.patch",
+      "sha256": "4219c7fd206bb2667f2ffb0e130c9adcea80c1b01a0bd361c5fc4d6c82a4b06c"
+    },
+    {
+      "path": "strata/flash-next/patches/0012-sycl-segmented-stage-expert-mirrors.patch",
+      "sha256": "e620578b9de2b5ba6cc2826375f2e9d8505066859f159f422aad8b17c3e56b23"
+    },
+    {
+      "path": "strata/flash-next/patches/0013-sycl-bounded-full-model-fidelity-observer.patch",
+      "sha256": "5589910ef51d0e665f95e34f8f56ef26b021b0a724c95e0b2d173342d8894116"
+    },
+    {
+      "path": "strata/flash-next/patches/0014-sycl-prefix-work-telemetry.patch",
+      "sha256": "938579ac62bd8e9ef92704b32472c87ad69af0a62a3775001456df090fdd7a8a"
+    },
+    {
+      "path": "strata/flash-next/patches/0015-sycl-explicit-full-state-prefix-pin.patch",
+      "sha256": "30f5fb84cb5fa7b60ad2d4609cd55e6108de75242f95c612dff819efe5d19d43"
+    },
+    {
+      "path": "strata/flash-next/patches/0016-sycl-explicit-all-stage-fresh-request.patch",
+      "sha256": "d54fb5860514f488f4f9992a9b9a1abe7d20c9ee3a07a42f51f86ce796eccc96"
+    },
+    {
+      "path": "strata/flash-next/patches/0017-sycl-prefill-fidelity-impl-owner.patch",
+      "sha256": "f92143d988517cc32ac60e32d864d9816186d82a46515a25bf3455d3822ba6b8"
+    },
+    {
+      "path": "strata/flash-next/patches/0018-sycl-verifier-init-owned-streams.patch",
+      "sha256": "a9f382a8861132746475b34b738b723d281f44dc33e83aa8828ae849a87987a3"
+    },
+    {
+      "path": "strata/flash-next/patches/0019-sycl-prefix-cache-lifecycle-telemetry.patch",
+      "sha256": "8df06808183e60e56a94212f8b6e7c73899accec29cbc08e09823ab8fa5c5b63"
+    },
+    {
+      "path": "strata/flash-next/patches/0020-sycl-stage-slot-session-arena-ownership.patch",
+      "sha256": "695689b799a4f8fb340a21340db78ece349844642f1a82e91c845ab1a0361ed5"
+    },
+    {
+      "path": "strata/flash-next/patches/0021-sycl-bounded-layer0-numerical-capture.patch",
+      "sha256": "3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081"
+    },
+    {
+      "path": "strata/flash-next/patches/0023-sycl-layer0-numerical-producer-hooks-draft.patch",
+      "sha256": "d86af122c4b841ae7cac89aaeed1f34dc0ad32c5cc9a29f57422fc5c4e89ccb9"
+    }
+  ],
+  "source_file_sha256": {
+    "include/strata/core/layer.hpp": "b273603e633e63f93c877b278dd7f21dd4bb2909b4e94d8f174d84b2a975bfa2",
+    "include/strata/core/verify.hpp": "81e7b9c5eb7686f1c16d3a89ffd1b497443401d12cbc7a685b0f378e35be70d2",
+    "include/strata/core/weights.hpp": "071d07c9f15d122265d7b1b90ff96125559a7d6ebbd8ec3f3a2b6e94dc17aef1",
+    "include/strata/kernels/ple.hpp": "d044c70b3cc5044ee379d1d817c41c6fce7b0c0db18a1ce6274af3e62629255f",
+    "sycl/CMakeLists.txt": "c21adf3ba2982914bcc3cd1eb567695afc85714c63e0559903f30803772f0c7c",
+    "sycl/include/strata/core/gguf_expert_source.hpp": "f8f5c2109400b2fe5980451d05cf86a55b8b05e2e28d5783f22a0cc1d9e6bb4d",
+    "sycl/include/strata/kernels/resident_plan_mirror.hpp": "02704f127abdea21e2da6fbbbdbc764da940cf390f94874735c5ea72c48d1ecb",
+    "sycl/src/core/gguf_expert_source.cpp": "cb37b9457f5d1f065f5ed1d685b9da6c1554ae8ca5055becfbbe72c724bc8da6",
+    "sycl/src/core/layer.cpp": "4c7ffa37a36d2370882cb961b4fd09aeb0f4228c97b6d9d1d9ed2d1856488d94",
+    "sycl/src/core/mtp.cpp": "ac7e6b0b183a93e32aaada308b437e4ce9153c0bc7fbb93999ce3595ae9dd261",
+    "sycl/src/core/native_dense.cpp": "43168a833d0ce0be9c529f3895ccfd4fdc575dc53f71932bc2a423e7173a152f",
+    "sycl/src/core/verify.cpp": "fadbf789353c67e9efb18eb7d37940ec12c2a4fd0ea067e290b531f152f6c6b0",
+    "sycl/src/kernels/cuda/native_ple_postops.dp.cpp": "e5b568486c577fe8a52b870ab067333b27bab9876fc6ef336cfac628626072d1",
+    "sycl/src/kernels/cuda/ple.dp.cpp": "811a03ecd3e46cf4e322c6e33e0be0261c6e9ade69db9d3627941e6bc3e71959",
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp": "a2e8e6bbc0c3f4ce566dbbb8df2f8bb45dcdfa6df91b002bb84bd10797dd27d2",
+    "sycl/src/prefill/prefill.cpp": "890e964f5583211fef89a4fabf030f75e230f6785584a1f0d37a3d8b471839f3",
+    "sycl/src/program/generate.cpp": "ac294c880aaa3641c7df815855b5e4df1123a9cfe6c2c36dedeb998621188141",
+    "sycl/include/strata/core/verify.hpp": "3e81fd399c28f204272e5aae1c21a570c387fb5e7b12ef57c08431825c1d8299",
+    "serve/server.py": "017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5",
+    "tools/strata_tokenizer.py": "9b0327e25aa62754406a924db6cc137e6edb1d93c7af76a4f3d14a8920ea72c8",
+    "src/core/conversation_file.cpp": "afc7041504adf9e5297fa21f17c8e697389092da6352ffb9814ec2c35b900642",
+    "include/strata/prefill/prefill.hpp": "d8454abafdba372270897c799229baf4c5798fc03d9be60ec5f1a3f753f4d0dc",
+    "include/strata/core/conversation_cache.hpp": "4b1c39308844c371c463d3f04388b7d088938ad97facb3b13ae4c2d393cdf52f",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "8f1cc0e8a521766bbb6dbc99e0fb6b602c9de18b913734b5a5ef80a6965ecf9d"
+  },
+  "overlay_files": [
+    "include/strata/core/conversation_cache.hpp",
+    "include/strata/core/layer.hpp",
+    "include/strata/core/prefix_lifecycle.hpp",
+    "include/strata/core/verify.hpp",
+    "include/strata/core/weights.hpp",
+    "include/strata/kernels/ple.hpp",
+    "serve/artifact_identity.py",
+    "serve/server.py",
+    "src/core/conversation_file.cpp",
+    "sycl/CMakeLists.txt",
+    "sycl/include/strata/core/api_state_identity.hpp",
+    "sycl/include/strata/core/gguf_expert_source.hpp",
+    "sycl/include/strata/core/layer0_numerical_contract.hpp",
+    "sycl/include/strata/core/layer0_numerical_observer.hpp",
+    "sycl/include/strata/core/native_hc_dispatch.hpp",
+    "sycl/include/strata/core/native_hc_policy.hpp",
+    "sycl/include/strata/core/native_hc_source.hpp",
+    "sycl/include/strata/core/slot_session_arena.hpp",
+    "sycl/include/strata/core/stage_expert_mirror.hpp",
+    "sycl/include/strata/core/stage_mirror_budget.hpp",
+    "sycl/include/strata/core/stage_mirror_segments.hpp",
+    "sycl/include/strata/core/verifier_stream_contract.hpp",
+    "sycl/include/strata/core/verify.hpp",
+    "sycl/include/strata/kernels/hc_native_composition.hpp",
+    "sycl/include/strata/kernels/hc_native_projection.hpp",
+    "sycl/include/strata/kernels/iq_kernels.hpp",
+    "sycl/include/strata/kernels/layer0_producer_hooks.hpp",
+    "sycl/include/strata/kernels/resident_plan_mirror.hpp",
+    "sycl/include/strata/kernels/shared_expert.hpp",
+    "sycl/include/strata/program/prefix_diagnostic.hpp",
+    "sycl/src/core/gguf_expert_source.cpp",
+    "sycl/src/core/layer.cpp",
+    "sycl/src/core/mtp.cpp",
+    "sycl/src/core/native_dense.cpp",
+    "sycl/src/core/verify.cpp",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+    "sycl/src/kernels/cuda/native_ple_postops.dp.cpp",
+    "sycl/src/kernels/cuda/ple.dp.cpp",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp",
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+    "sycl/src/kernels/hc_native_composition.cpp",
+    "sycl/src/kernels/hc_native_projection.cpp",
+    "sycl/src/prefill/prefill.cpp",
+    "sycl/src/program/generate.cpp",
+    "tools/strata_tokenizer.py"
+  ],
+  "cmake_flags": {
+    "CMAKE_BUILD_TYPE": "Release",
+    "CMAKE_C_COMPILER": "/opt/intel/oneapi/compiler/2026.1/bin/icx",
+    "CMAKE_CXX_COMPILER": "/opt/intel/oneapi/compiler/2026.1/bin/icpx",
+    "STRATA_NATIVE_EXPERTS": "ON",
+    "STRATA_GGML_DIR": "/ggml",
+    "STRATA_SYCL_Q8_HC_PRIMITIVES": "ON",
+    "STRATA_SYCL_PARITY": "ON",
+    "STRATA_SYCL_AOT": ""
+  },
+  "build_targets": [
+    "strata",
+    "native_expert_parity",
+    "conversation_snapshot_test"
+  ],
+  "runtime_native_flag": "STRATA_SYCL_NATIVE_HC=1",
+  "required_before_model_run": [
+    "Actual387 HC source uploads read back and compared with original selected GGUF; norms/injections rank2 exceptions per artifact descriptors",
+    "Full-source PLE valueQ8 and convolutionF32 patch plus upload/primitive/route qualification;0001..0004 alone remain incomplete",
+    "Exact packed conversion census: every inexact active compatibility tensor must have audited native override; no silent conversion widening tolerance",
+    "One-card and same-device split state/logit parity before real two-card handoff; health and teardown evidence",
+    "No native-HC MTP; explicit spec2 verifier capacity with suffix-draft0/lookup-chain0 and no --mtp path",
+    "All forty expected patched source hashes and two0021 consumed header payloads match reconstructed generation",
+    "Actual SYCL affected TU/full link and exact new-engine source390/lifecycle gates",
+    "New21 flag-off vs immutable20 matched outputs/logits/state/identities/health; same21 off/on and0013 coexistence plus actual current GPU nonce/key proof",
+    "Seven shared/expert fields unobserved; no complete layer/model math qualification from residual alone",
+    "All SYCL callers and libraries rebuilt for optional observer parameter ABI; no old native oracle binary reuse",
+    "Actual33 GPU producer mapping/coverage, DERIVED native-exp/rawHQ packet validation and21vs23off +same23off/on equivalence",
+    "Complete33field presence is observation only; independent packet/operator and original own-state/router source-math checks required"
+  ],
+  "limits": [
+    "Build script only builds; no model, parity execution, or server startup chained",
+    "Native HC kernel option defaultOFF in source; this build deliberatelyON; runtime native flag remains defaultOFF",
+    "Pinned39992d70 oneAPI image used unchanged; no driver/toolchain upgrade",
+    "GGML compiledCPU only: CMake explicitly GGML_SYCL OFF and GGML_CUDA OFF; Strata itself remains SYCL",
+    "Future PLE/mirror patches require a new immutable build plan generation rather than editing this live plan"
+  ],
+  "model_use_gate": "Not qualified by compilation. Original HC/PLE upload, source bytes, math, state, split and host-mirror lifecycle must pass before full serving promotion.",
+  "segmented_stage_mirror_contract": {
+    "default": "OFF; unset or STRATA_STAGE_MIRROR_SEGMENT_MIB=0",
+    "required_environment": {
+      "STRATA_STAGE_MIRRORS": "1",
+      "STRATA_STAGE_MIRROR_SEGMENT_MIB": "1024",
+      "STRATA_VERIFY_DEVICE_PLAN": "1",
+      "STRATA_VERIFY_NO_HOST": "1"
+    },
+    "required_args": [
+      "--adapt-every",
+      "0",
+      "--no-prefill-borrow"
+    ],
+    "budget": "Existing global StageMirrorBudget; preflight all actual stage misses, no fair-share truncation when segmented; no legacy mirror fallback",
+    "segment_max_bytes": 1073741824,
+    "source_bytes_unchanged": true,
+    "qualification": "Parent allocation probe is limited interface evidence; original expert bytes/pointer-table consumption/both-stage coverage/graph lifecycle/health still required"
+  },
+  "generation": "combined20+0021+0023-layer0-numerical-producer-draft",
+  "fidelity_diagnostic_source": {
+    "scope": "CPU source preparation only; no GPU/build/model qualification",
+    "base_source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T065210Z-e6m4q9uo/source",
+    "base_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "patch": "strata/flash-next/patches/0013-sycl-bounded-full-model-fidelity-observer.patch",
+    "patch_sha256": "5589910ef51d0e665f95e34f8f56ef26b021b0a724c95e0b2d173342d8894116",
+    "base_files": {
+      "sycl/src/program/generate.cpp": "29ade6b5325e8d12d85111ed636c05570d95da6b5d8c0951f34ee8cb9524d34d",
+      "sycl/src/core/verify.cpp": "b65522915ab44d6ae3b054e6c8db3247c63e23db8dc1676449eae0356a1c16fa",
+      "sycl/include/strata/core/verify.hpp": "84134a345dec907741bfdd54eee5109571f93d96d84d79db5e873d02dffc8df1",
+      "sycl/src/prefill/prefill.cpp": "458e2da40c7d8fe8a7f991277c99962c8f5a2155b876c78528652ab684bfc03a",
+      "include/strata/prefill/prefill.hpp": "d8454abafdba372270897c799229baf4c5798fc03d9be60ec5f1a3f753f4d0dc"
+    },
+    "source_files_added": [
+      "sycl/include/strata/core/fidelity_observer_contract.hpp",
+      "sycl/include/strata/core/fidelity_observer.hpp"
+    ],
+    "runtime_env": {
+      "STRATA_FIDELITY_DIAG": "1",
+      "STRATA_FIDELITY_DIAG_ARM": "REPLACE_NEW_ARM_AFTER_READINESS",
+      "STRATA_FIDELITY_DIAG_DIR": "REPLACE_NEW_ABSOLUTE_WRITABLE_DIRECTORY",
+      "STRATA_FIDELITY_DIAG_ACTIVATIONS": "1"
+    },
+    "bounds": {
+      "requests": 6,
+      "prefill_chunks_per_request_per_stage": 2,
+      "window_rows": 1,
+      "raw_residual_floats": 10240,
+      "raw_first_vocabulary_floats": 248320,
+      "reserved_raw_bytes_per_process": 67108864
+    },
+    "required_gates": [
+      "Independent immutable source overlay/build; keep actual baseline artifacts unchanged",
+      "Same-version flag0/flag1 and activations0/1 outputs/full raw logit equivalence",
+      "Actual stage/layer coverage; actual token/resume/evaluated counts",
+      "Health, teardown and post-health; no production latency from diagnostic runs"
+    ],
+    "unobserved": [
+      "Persistent GDN/PLE/QSA buffers not captured in this first localization increment",
+      "F16/quantized KV/indexer state metadata only, not a full state proof",
+      "Batch/pipeline/speculative/vision requests unsupported; explicit skips"
+    ]
+  },
+  "prefix_contract": {
+    "plan": "strata/flash-next/prefix-full-state-source-plan.json",
+    "scope": "serial complete all-stage checkpoint pin and request fresh reset; no GPU correctness claim",
+    "runtime_env": {
+      "STRATA_PREFIX_DIAG": "1",
+      "STRATA_PREFIX_DIAG_ARM": "CREATE_ONLY_AFTER_READINESS"
+    },
+    "request_keys": [
+      "pin=N",
+      "fresh=0|1"
+    ],
+    "no_default_math_changes": true
+  },
+  "previous_plan_identity": {
+    "path": "strata/flash-next/prefix-full-state-engine-build-plan.json",
+    "sha256": "d3cb801821eba2e1badfeee29376b06e15ac1a7c9437d9e7f3b830aa376a9ff7",
+    "first_build_attempt": "Stopped at pristine source identity validation before build directory/container/GPU exposure"
+  },
+  "source_identity_note": "source_file_sha256 binds existing pristine clean external source only; patch-created headers are overlay payloads. expected_patched_source_sha256 is separate CPU reconstruction evidence, not a fabricated build receipt.",
+  "prior_failed_build": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T075303Z-3vcjlgw9/receipt.json",
+  "ownership_correction": {
+    "base_prefill_sha256": "2a85142b51030e05c36cc808557f67c5117683ea72ea444a4007b9234d1f885a",
+    "new_prefill_sha256": "7fb52155a58d43fb054ff9311bca08bb1d05ece8ff66e9e41532f18f44ee3c9f",
+    "new_owner": "Prefill::Impl, anchored on struct and Gemm member",
+    "removed_owner": "PeerPrefill unused fields"
+  },
+  "derived_from_plan": {
+    "path": "strata/flash-next/layer0-numerical-engine-build-plan-v1.json",
+    "sha256": "5367d37727a4e3df8c53288ad96cdf22660cab4c448845a818cdd70a3197e016"
+  },
+  "expected_patched_source_sha256": {
+    "include/strata/core/layer.hpp": "a923519eb67dc5b08183a23b2953cfd495b34052bc85919abcf331d275f17952",
+    "include/strata/core/verify.hpp": "a4e71f4c9534fa2a19525d3f5b7332939f8fd356862cbdeaf272b03678d170ae",
+    "include/strata/core/weights.hpp": "e5d142dd7c680c1098c5fe31377b904e5430c6ef16a28c51903d85427c4d442c",
+    "include/strata/kernels/ple.hpp": "d1909627c3d988b99d3e440a48a814e3138e2946915d3da433e8f1d290fe7179",
+    "serve/artifact_identity.py": "d48bf26e4db57e88b88a2368c40f759e5ef748f4a05a2bc368fd53c0d39dec97",
+    "serve/server.py": "1e095954f894d862edd1d688dfb3e66c6bf10790be9f2c103c581c76aac11273",
+    "src/core/conversation_file.cpp": "38f1114a1899089d481286c9250df23e843310f22b47fff421d04565da6b1dce",
+    "sycl/CMakeLists.txt": "a6abe5536b185cb20d2d8c7fbb6b7c6f43dc087267b26db325f891aa55da2846",
+    "sycl/include/strata/core/api_state_identity.hpp": "f67f3ea626db10973c1c7823adbca703ca9a123b92a6d5d3007efe7dfa1e7fd7",
+    "sycl/include/strata/core/gguf_expert_source.hpp": "a93bbc186a6f50b5678b6a92a53ad98b84f693abbc0dcab2733168a9f1423a9d",
+    "sycl/include/strata/core/native_hc_dispatch.hpp": "e6ebfc7da2e4e66af349413e50acc134463f02488ed156b1ada9b5ac47d047ef",
+    "sycl/include/strata/core/native_hc_policy.hpp": "1e42315e0c02793f908b21e7a158a0a576b3cf63e08b724c04be3428d4e288e1",
+    "sycl/include/strata/core/native_hc_source.hpp": "34af97a3f18c0e6f59bd7b6869c9cfd929d8a8719d1f08751e738c5fe2931c23",
+    "sycl/include/strata/core/stage_expert_mirror.hpp": "7db4640bd965ece6fee4175024076d03feb5b81bada1081b7055d6798c7287de",
+    "sycl/include/strata/core/stage_mirror_budget.hpp": "4cd693b3f0cb0075a7aa8e6b91b859dc93e51f3be183c1b7d32b4c926294f37b",
+    "sycl/include/strata/core/stage_mirror_segments.hpp": "de870c95632e6bc2ee0540896523228691af930570692a24d5a3cadb38937b69",
+    "sycl/include/strata/core/verifier_stream_contract.hpp": "613f09c46db0366ddbb4a77166e26ac1581d99194c4045e24e43872e55eea5f7",
+    "sycl/include/strata/core/verify.hpp": "80280c2664a1cdb16c218a6f2913279a3130bbf295b7f2a1d23f0922aa64dd22",
+    "sycl/include/strata/kernels/hc_native_composition.hpp": "4706658cea7273adf76995d9cffb2eb9ce22b07a3d7255f62351e0eb65fd2b6e",
+    "sycl/include/strata/kernels/hc_native_projection.hpp": "4a9cf6735a9ee5b607d45a30302503d2ca57c2dffca8602df24c321dd79fda86",
+    "sycl/include/strata/kernels/resident_plan_mirror.hpp": "e8384815a023865c8fe156dc935ad39ec19b0949413221cc7e11779f01530fbc",
+    "sycl/include/strata/program/prefix_diagnostic.hpp": "9c0265d571ffabde04b43b53808eef729e0bc7f4c63db28a39e0c7ed9869cb05",
+    "sycl/src/core/gguf_expert_source.cpp": "15f299782eaa199c37bbf1ac2f27d4ec4be4c6516e28916a62710fa666fedf52",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "sycl/src/core/mtp.cpp": "0eaf4815cb4699b5f63ea9bc88fa35367643aa909ea6f430a45722813f292666",
+    "sycl/src/core/native_dense.cpp": "e2b0dcd452cece8bf41fd8911982356498a11d672713672abb4a1ecb4e4a282f",
+    "sycl/src/core/verify.cpp": "3ddbe86441986d4d6c2e253cf5255b6481d946c58ad33d193029976e356f041d",
+    "sycl/src/kernels/cuda/native_ple_postops.dp.cpp": "c4ac3b5a7fae2f0d908748f8b1f55a2bfc2a477698b98906475d8e4b65ce02e1",
+    "sycl/src/kernels/cuda/ple.dp.cpp": "78649a3335f74d9f2509e29cd766ac4d2155553fb95e01ebe4f660125d12686f",
+    "sycl/src/kernels/cuda/verify_kernels.dp.cpp": "1617c1322a1fe7aced3d37cab01a7c46b8f68f8ed07cefc3ab8dd0257bf64a66",
+    "sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "sycl/src/kernels/hc_native_projection.cpp": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025",
+    "sycl/src/prefill/prefill.cpp": "6b3c2a5318bc747b032c291be8704c2fbd3419eafb236a9209235789efb96be3",
+    "sycl/src/program/generate.cpp": "2c4dd705560964bf13e0e28adaf262045e7db81c655e6062533bbfc2157660b0",
+    "tools/strata_tokenizer.py": "d2fdcd2e55b4bc47c3ee6a10a0a7efa2029128cc229fb1de18da6e22d3606ff2",
+    "include/strata/core/conversation_cache.hpp": "b1a652d34597ca1b1232e9f29ccd16c75ec539b05fdcd53dae62b6ee1bdae898",
+    "include/strata/core/prefix_lifecycle.hpp": "ada5a81bb765d995e6a6183bbe200e11903e9d6987a7209ee18e9d35142a3409",
+    "sycl/include/strata/core/slot_session_arena.hpp": "48e1e2beef589dd50ed0a07ccd01e66174aeb06b682aa7cf0e3343a6ec45ac8c",
+    "sycl/include/strata/core/layer0_numerical_contract.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": "678885803460aafbb2e42caab39a7a397becdaab9c88f9b56db6259f02c50e3c",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "18f032f269591db168625f80c6dbe8d08dc36d2a6fd5982c56723862713d7f4a",
+    "sycl/include/strata/kernels/layer0_producer_hooks.hpp": "59b55563d791f80ecc30d524b8d6f3e3471e3f89fa13804802662512e124fb15",
+    "sycl/include/strata/kernels/shared_expert.hpp": "96e150c8a8264dbf99b45b913586b2f514029476914ac917e5e026a68d29ccb5",
+    "sycl/include/strata/kernels/iq_kernels.hpp": "fe200be5b4c3aa200a3edabe9cd112c0db9fa08d62b6c41e015d36b3e56a3bde"
+  },
+  "added_header_payloads": [
+    {
+      "path": "include/strata/core/prefix_lifecycle.hpp",
+      "sha256": "ada5a81bb765d995e6a6183bbe200e11903e9d6987a7209ee18e9d35142a3409",
+      "consumed_include": "strata/core/prefix_lifecycle.hpp",
+      "resolution": "shared include (no SYCL shadow)"
+    },
+    {
+      "path": "sycl/include/strata/core/slot_session_arena.hpp",
+      "sha256": "48e1e2beef589dd50ed0a07ccd01e66174aeb06b682aa7cf0e3343a6ec45ac8c",
+      "consumed_include": "strata/core/slot_session_arena.hpp",
+      "resolution": "SYCL include first; no shared shadow"
+    },
+    {
+      "path": "sycl/include/strata/core/layer0_numerical_contract.hpp",
+      "sha256": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+      "consumed_include": "strata/core/layer0_numerical_contract.hpp",
+      "resolution": "SYCL include first; no shared shadow"
+    },
+    {
+      "path": "sycl/include/strata/core/layer0_numerical_observer.hpp",
+      "sha256": "55db0accf63982572a34d10655bb81ffc5d783fe77cf6b76da855776cf64996e",
+      "consumed_include": "strata/core/layer0_numerical_observer.hpp",
+      "resolution": "SYCL include first; no shared shadow"
+    },
+    {
+      "path": "sycl/include/strata/kernels/layer0_producer_hooks.hpp",
+      "sha256": "59b55563d791f80ecc30d524b8d6f3e3471e3f89fa13804802662512e124fb15",
+      "consumed_include": "strata/kernels/layer0_producer_hooks.hpp",
+      "resolution": "NEW SYCL shadow first; shared/CUDA untouched"
+    },
+    {
+      "path": "sycl/include/strata/kernels/shared_expert.hpp",
+      "sha256": "96e150c8a8264dbf99b45b913586b2f514029476914ac917e5e026a68d29ccb5",
+      "consumed_include": "strata/kernels/shared_expert.hpp",
+      "resolution": "NEW SYCL shadow first; shared/CUDA untouched"
+    },
+    {
+      "path": "sycl/include/strata/kernels/iq_kernels.hpp",
+      "sha256": "fe200be5b4c3aa200a3edabe9cd112c0db9fa08d62b6c41e015d36b3e56a3bde",
+      "consumed_include": "strata/kernels/iq_kernels.hpp",
+      "resolution": "NEW SYCL shadow first; shared/CUDA untouched"
+    }
+  ],
+  "new_source_contracts": {
+    "0019": {
+      "scope": "default-off host-only serial cache lifecycle/committed-prefix/stop/span telemetry",
+      "sha256": "8df06808183e60e56a94212f8b6e7c73899accec29cbc08e09823ab8fa5c5b63"
+    },
+    "0020": {
+      "scope": "stage slot arena/host allocation/null/partial-fit cleanup and shutdown; inference math/cache/scheduling policy unchanged; non-elastic KV slot ownership",
+      "sha256": "695689b799a4f8fb340a21340db78ece349844642f1a82e91c845ab1a0361ed5"
+    },
+    "source_gate": "actual full linked generation + matching exact390 upload/C1 gate before V6 preparation; no old reference-only receipt reuse",
+    "concurrency": "not qualified by slot ownership patch; require actual per-slot full logits/state/counters and exact requested INFO capacity",
+    "0021": {
+      "sha256": "3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081",
+      "scope": "default-off partial26of33 global-layer0 T1 fields; own queue/context, four combined0013 graph keys, exact26 per-key producer roster, request+GPU replay nonce/key, explicit7UNOBSERVED",
+      "actual_gpu_qualified": false,
+      "model_math_qualified": false
+    },
+    "0023": {
+      "sha256": "d86af122c4b841ae7cac89aaeed1f34dc0ad32c5cc9a29f57422fc5c4e89ccb9",
+      "scope": "optional SYCL producer callbacks, actualGU/HQ, boundedrank/cachedblob/owningmirror mapping+coverage, DERIVED native-exp hidden, rawhiddenUNOBSERVED",
+      "abi_changed": true,
+      "full_SYCL_rebuild_required": true,
+      "gpu_qualified": false,
+      "full_model_math_qualified": false
+    }
+  },
+  "layer0_capture_contract": {
+    "enabled_flag": "STRATA_LAYER0_Q8_DIAG=1",
+    "arm": "STRATA_LAYER0_Q8_DIAG_ARM",
+    "dir": "STRATA_LAYER0_Q8_DIAG_DIR",
+    "external_binding_tag": "STRATA_LAYER0_Q8_DIAG_BINDING_SHA256",
+    "prefixes": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "global_layer": 0,
+    "rows": 1,
+    "max_requests": 4,
+    "fields": 33,
+    "observed_fields": 33,
+    "unobserved_fields": 0,
+    "snapshot_allocation_bytes": 7023304,
+    "raw_frame_bytes": 7023048,
+    "max_raw_bytes": 28092192,
+    "required_existing_flags": {
+      "STRATA_QFUSE": "0",
+      "STRATA_ONE_TOKEN_COMMIT": "default1 or1",
+      "STRATA_VERIFY_EAGER": "absent"
+    },
+    "scope": "serial non-GENI no MTP/pipeline and reused0; actual normal math/cache/flags unchanged",
+    "default_off_allocations_and_copy_nodes": 0,
+    "full_model_math_qualified": false,
+    "raw_fused_hidden_observed": false,
+    "derived_hidden_fields": 2,
+    "mapping_coverage_gate": "actualall10rankGU+HQ+sharedcoverage and exactlivecache/mirrorpointerbinding, currentGPU nonce/key"
+  }
+}

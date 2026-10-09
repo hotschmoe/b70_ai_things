@@ -1,0 +1,27 @@
+{
+  "mode": "CPU_MOCK_PRODUCER_MAPPING_ONLY",
+  "passed": true,
+  "patch_sha256": "d86af122c4b841ae7cac89aaeed1f34dc0ad32c5cc9a29f57422fc5c4e89ccb9",
+  "source_reconstruction_exact": true,
+  "consumed_source_sha256": {
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": "678885803460aafbb2e42caab39a7a397becdaab9c88f9b56db6259f02c50e3c",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "18f032f269591db168625f80c6dbe8d08dc36d2a6fd5982c56723862713d7f4a",
+    "sycl/src/core/verify.cpp": "3ddbe86441986d4d6c2e253cf5255b6481d946c58ad33d193029976e356f041d",
+    "sycl/include/strata/kernels/layer0_producer_hooks.hpp": "59b55563d791f80ecc30d524b8d6f3e3471e3f89fa13804802662512e124fb15",
+    "sycl/include/strata/kernels/shared_expert.hpp": "96e150c8a8264dbf99b45b913586b2f514029476914ac917e5e026a68d29ccb5",
+    "sycl/include/strata/kernels/iq_kernels.hpp": "fe200be5b4c3aa200a3edabe9cd112c0db9fa08d62b6c41e015d36b3e56a3bde"
+  },
+  "mock_result": "ON_PASS mapping_rejections=11 fields=33 raw_hidden_unobserved=1",
+  "off_zero_allocations_copies": true,
+  "actual_entry_slot_mapping_checked": true,
+  "resident_and_mirror_pointer_binding_checked": true,
+  "scratch_overwrite_boundary_checked": true,
+  "observed_fields": 33,
+  "raw_hidden_observed": false,
+  "derived_hidden": true,
+  "devices_exposed": false,
+  "actual_sycl_tu_compiled": false,
+  "gpu_executed": false,
+  "full_model_math_qualified": false
+}

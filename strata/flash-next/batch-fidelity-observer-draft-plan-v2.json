@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "status": "CPU source READY/frozen: tracked source, actual headers ASan/UBSan graph-record/replay21 controls and strict complete-row raw coverage17 negatives PASS; no full SYCL TU/SDK/GPU/runtime qualification",
+  "base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source",
+  "base_plan": "strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json",
+  "base_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+  "patches": [
+    {
+      "path": "strata/flash-next/patches/0021-sycl-bounded-layer0-numerical-capture.patch",
+      "sha256": "3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081"
+    },
+    {
+      "path": "strata/flash-next/patches/0022-sycl-strict-batch-request-identity-v2.patch",
+      "sha256": "1c7e7352d25358ac8421c404c0ba898b562b67bbe4cce51526bcb9545c452fce"
+    },
+    {
+      "path": "strata/flash-next/patches/0024-sycl-bounded-batch-fidelity-observer-draft-v2.patch",
+      "sha256": "00d9cbfd507fffdf6da151148fa41354a9ef36e0f5f906853e61f42e440232cf"
+    }
+  ],
+  "source_sha256": {
+    "sycl/include/strata/core/batch_fidelity_contract.hpp": "3b71def6ed7a71ffddf93b50d66bba82711e8413cdbe5311bb487bc2d9ce0f5c",
+    "sycl/include/strata/core/batch_fidelity_observer.hpp": "14b9b0e213f1c424998941db914029b8b1cc0ea04d340939325abae22ba03dac",
+    "sycl/include/strata/core/verify.hpp": "7fb627a32a3d9d25d3a680ac7739db6873f8c38034f6f6ac4a5865d1b00aad5b",
+    "sycl/src/core/verify.cpp": "c7273e4c1f24853cb487ea32839e3506861a74dea78f37c2151f87c71157d052",
+    "sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde",
+    "sycl/src/program/generate.cpp": "d2ff2b5d817c89020ed733599e7adce8d2ce49aba95cd588fddce5b09f13fe11"
+  },
+  "final21_22_apply_receipt": "/mnt/vm_8tb/b70/build/strata21final22v2-bpjdjsxg/apply-receipt.json",
+  "overlay": "/mnt/vm_8tb/b70/build/strata-batch-observer24v2-ozauc3tl",
+  "bounds": {
+    "requests": 6,
+    "samples_per_request": 2,
+    "layers": 48,
+    "residual_floats": 10240,
+    "logits_floats": 248320,
+    "output_bytes_max": 67108864,
+    "actual_full_6_request_bytes": 35512320,
+    "device_snapshot_bytes_all48": 17756160,
+    "span_events": 8192,
+    "metadata_device_bytes_per_stage": 4736,
+    "device_snapshot_bytes_two_stages": 17765632,
+    "immutable_graph_rosters_per_stage": 16,
+    "device_raw_copy_bytes_max": 124293120
+  },
+  "test": "strata/flash-next/test_batch_fidelity_observer_v2_cpu.py",
+  "test_sha256": "927cc6c40ee33a64d60860b6a6ecf446998e75bf8029002e9ffe895cd7356edd",
+  "required_followups": [
+    "pinned full-source compile/link including final23 changed SYCL ABI; all objects/oracles must rebuild",
+    "full SYCL source compilation",
+    "actual2/4/6 API/native transport and numerical capture with exact source390 + model + pre/post health",
+    "strict collector head/stage48 quotas and full prompt/verify stage spans",
+    "automatic root/pin/leaf fullchain increment remains separate"
+  ],
+  "observer23_compatibility": {
+    "status": "PASS CPU fresh final21 + final23 +22v2 +24v2",
+    "patch_sha256": "d86af122c4b841ae7cac89aaeed1f34dc0ad32c5cc9a29f57422fc5c4e89ccb9",
+    "receipt": "/mnt/vm_8tb/b70/build/strata21-23final-22-24v2-dry-v1rp14tx/apply-receipt.json"
+  },
+  "coverage_auditor": "strata/flash-next/audit_batch_fidelity_coverage_v2.py",
+  "coverage_auditor_sha256": "2d3719ad4f020811462e5a5e8f2d93da950658d9a901e9aaa9777d2e4439e24a",
+  "previous_draft": {
+    "plan_path": "strata/flash-next/batch-fidelity-observer-draft-plan.json",
+    "plan_sha256": "ef510b3c69e8b57c3d3c37eb73bfba7cda0a39f66cac127647eae7d3a155a29c",
+    "patch_sha256": "1da9dad84d5a3e31ade1e1112fb318a1f4901743d463cb3adefefd77e9cead96"
+  },
+  "replay_contract": {
+    "immutable_rosters": 16,
+    "engine_generation": "native first observer-use monotonic sample plus PID, stable per-process; API22 engine_generation stays transport-local",
+    "markers": "persistent input frame, output frame, immutable graph layout and6x49 per-producer epochs; all copied on same in-order owning queue",
+    "frame_poison_on_failure": true,
+    "actual_event": "later batch_step counter/rows/mask after actual native run; >=2 active rows required",
+    "observed_completion": "only verified published rows on every linked stage",
+    "default_off": "zero additional diagnostic allocations/copies/waits",
+    "full_first_and_later_raw": "all48 residuals10240 F32 + head248320 F32 per RID for admission and actual later batch event",
+    "collector": "exact per-active-row GPU-verified proof + per-vector epoch/graph/RID/enginegen/requestgen/slotgen/token/position binding"
+  },
+  "documentation": "strata/flash-next/batch-fidelity-observer-v2.md",
+  "documentation_sha256": "a3dd9a44cf1d2ba6c9c70a3ac8e69c1ef971c891453a7f207f78d79c9eba87f1"
+}

@@ -1,0 +1,27 @@
+{
+  "mode": "CPU_0023_MANIFEST_CORRECTION_ONLY",
+  "passed": true,
+  "positive": {
+    "manifest_consistent": true,
+    "source_value_fields": 31,
+    "derived_value_fields": 2,
+    "observed_fields": 33,
+    "raw_fused_hidden_observed": false,
+    "full_model_math_qualified": false
+  },
+  "negative_controls": [
+    "frozen_v1_consumed_header_mismatch",
+    "bad_final_header",
+    "duplicate_header",
+    "false_raw_33",
+    "hidden_marked_raw",
+    "false_math_qualified"
+  ],
+  "frozen_v1_engine_plan_sha256": "e418f95e021d10ca972d1024bca3bbadfe2f73bd2dd708d09d57315ad47bb269",
+  "corrected_v2_engine_plan_sha256": "d0b3b993cb56e6d0248c0f20e3e876f062f35fbb06debbbaf513fa285b532aa1",
+  "corrected_v2_source_plan_sha256": "d6e2dc3efc25f1383d3478695760a2c89c232b4f1431d28e52aa9329a004974f",
+  "patch_unchanged": true,
+  "gpu_executed": false,
+  "source_sdk_compiled": false,
+  "full_model_math_qualified": false
+}

@@ -9970,3 +9970,25 @@ Parent audits the canonical stream. No GPU run by these CPU checks.
 
 VERDICT -> Commit reviewed collector before new one-card GPU rerun. Failed v1
 remains failed; full-model math, concurrent serving and shelf remain unqualified.
+
+
+## 2026-10-09 - Producer and batch capture source checkpoint
+
+CONFIG -> Preserve frozen21 runtime and active numerical-v2 run. New0023
+producer callbacks and0024-v2 batch observer remain CPU/source only. All SYCL
+ABI callers must rebuild before runtime use. Preserve earlier draft plans.
+
+COMMAND -> Independently run producer capture mock, batch observer v2 CPU
+ASan/UBSan graph controls and strict coverage collector; verify frozen hashes.
+Review producer scratch boundaries, actual entry mapping and source coverage.
+Run new producer manifest v2 positive and six rejection controls.
+
+RESULT -> Producer mock PASS eleven controls; batch graph mocks PASS21 controls
+and strict synthetic196-vector/six-replay coverage PASS with17 negatives.
+Root found old observer header payload hash in v1 manifest; corrected immutable
+v2 agrees with final source hash. Manifest positive and six negatives PASS.
+Coverage is31 source values plus2 DERIVED values; raw fused hidden is unobserved.
+
+VERDICT -> Source checkpoint ready for full pinned SDK rebuild and actual
+source390, off/on, numerical and lifecycle gates. CPU fixtures establish no real
+2/4/6 concurrency, full-model math, latency improvement or shelf qualification.

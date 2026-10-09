@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "mode": "CPU_SOURCE_AND_MOCK_ONLY_0023_DRAFT",
+  "patch": "strata/flash-next/patches/0023-sycl-layer0-numerical-producer-hooks-draft.patch",
+  "patch_sha256": "d86af122c4b841ae7cac89aaeed1f34dc0ad32c5cc9a29f57422fc5c4e89ccb9",
+  "base21_plan_sha256": "5367d37727a4e3df8c53288ad96cdf22660cab4c448845a818cdd70a3197e016",
+  "sources": {
+    "strata/flash-next/layer0_producer_hooks_v1.hpp": "59b55563d791f80ecc30d524b8d6f3e3471e3f89fa13804802662512e124fb15",
+    "strata/flash-next/layer0_shared_expert_shadow_v1.hpp": "96e150c8a8264dbf99b45b913586b2f514029476914ac917e5e026a68d29ccb5",
+    "strata/flash-next/layer0_iq_kernels_shadow_v1.hpp": "fe200be5b4c3aa200a3edabe9cd112c0db9fa08d62b6c41e015d36b3e56a3bde",
+    "strata/flash-next/layer0_numerical_observer_v2.hpp": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481",
+    "strata/flash-next/prepare_layer0_producer_patch_v1.py": "46376fb74ed19b31c68d44cd41f93a75591d31312097f019c76c9efdeb5764e1",
+    "strata/flash-next/test_layer0_producer_capture_cpu_v1.py": "ad42fac4251bb4783febdaa00b8dd8d2d8c6fceb8e368fa0b0d1e7ae49b757ad",
+    "strata/flash-next/layer0-producer-hooks-design-v1.md": "77521043ffd11ea9c8a88877fc1cd66fcf13b315cf55253792962a48af73ef2c"
+  },
+  "base_source_sha256": {
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "55db0accf63982572a34d10655bb81ffc5d783fe77cf6b76da855776cf64996e",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "8f1cc0e8a521766bbb6dbc99e0fb6b602c9de18b913734b5a5ef80a6965ecf9d",
+    "sycl/src/core/verify.cpp": "5af5ed919e08d0162010421fcd279f158f8aa6f8f1a10589d0bba571b87dc7e6"
+  },
+  "expected_source_sha256": {
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481",
+    "sycl/src/kernels/cuda/shared_expert.dp.cpp": "678885803460aafbb2e42caab39a7a397becdaab9c88f9b56db6259f02c50e3c",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "18f032f269591db168625f80c6dbe8d08dc36d2a6fd5982c56723862713d7f4a",
+    "sycl/src/core/verify.cpp": "3ddbe86441986d4d6c2e253cf5255b6481d946c58ad33d193029976e356f041d",
+    "sycl/include/strata/kernels/layer0_producer_hooks.hpp": "59b55563d791f80ecc30d524b8d6f3e3471e3f89fa13804802662512e124fb15",
+    "sycl/include/strata/kernels/shared_expert.hpp": "96e150c8a8264dbf99b45b913586b2f514029476914ac917e5e026a68d29ccb5",
+    "sycl/include/strata/kernels/iq_kernels.hpp": "fe200be5b4c3aa200a3edabe9cd112c0db9fa08d62b6c41e015d36b3e56a3bde"
+  },
+  "engine_plan": "strata/flash-next/layer0-producer-engine-build-plan-draft-v2.json",
+  "engine_plan_sha256": "d0b3b993cb56e6d0248c0f20e3e876f062f35fbb06debbbaf513fa285b532aa1",
+  "cpu_receipt": "strata/flash-next/layer0-producer-capture-cpu-receipt-v1.json",
+  "cpu_receipt_sha256": "8224101d03e65b3114f269657c7478deb5cebde582b38d25b4b5add8acbcb7ea",
+  "actual_sycl_tu_compiled": false,
+  "gpu_executed": false,
+  "raw_hidden_observed": false,
+  "derived_hidden": true,
+  "full_model_math_qualified": false,
+  "derived_from_source_plan": {
+    "path": "strata/flash-next/layer0-producer-source-plan-draft-v1.json",
+    "sha256": "f8884aff123b639277ae26768c25e5a8c22f83f736f889c4ccbed889609a2ef8"
+  },
+  "field_provenance_counts": {
+    "source_values": 31,
+    "derived_hidden": 2,
+    "observed_layout_total": 33,
+    "raw_fused_hidden_observed": false,
+    "full_model_math_qualified": false
+  },
+  "manifest_correction": {
+    "path": "sycl/include/strata/core/layer0_numerical_observer.hpp",
+    "prior_header_payload_sha256": "55db0accf63982572a34d10655bb81ffc5d783fe77cf6b76da855776cf64996e",
+    "final_header_payload_sha256": "d6c3661f24928c2dab3da6878b0a8b2829ece952b6b45b7f4482dde6d1c78481",
+    "patch_source_unchanged": true,
+    "builder_current_behavior": "validates pristine source and patch SHA, records final overlay SHA; ignores added_header_payloads and expected_patched_source_sha256. These remain independently enforced manifest requirements."
+  }
+}

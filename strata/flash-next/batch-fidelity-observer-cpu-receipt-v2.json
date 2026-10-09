@@ -1,0 +1,39 @@
+{
+  "schema": 2,
+  "status": "CPU source READY; not full source compiled or runtime qualified",
+  "recorded_utc": "2026-10-09T13:59:02.093542+00:00",
+  "config": {
+    "base": "actual compiled20 pinned38-file source ledger + frozen21/frozen22v2 +0024v2",
+    "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+    "compiler": "ordinary g++ C++17 ASan/UBSan against queue graph mocks; no SYCL flags/SDK/devices/runtime libraries"
+  },
+  "command": "python3 strata/flash-next/test_batch_fidelity_observer_v2_cpu.py",
+  "result": {
+    "tracked_source_reconstruction": "PASS",
+    "actual_new_headers_graph_record_replay_mock": "PASS",
+    "graph_controls_rejected": 21,
+    "successful_process_raw_vectors": 196,
+    "successful_process_stage_replay_proofs": 6,
+    "successful_process_completed_batch_event_fixture": 1,
+    "strict_collector_negatives": 17,
+    "default_disabled_and_enabled_unarmed": {
+      "extra_device_allocations": 0,
+      "copies": 0,
+      "queue_waits": 0
+    },
+    "final23_compatibility_receipt": "/mnt/vm_8tb/b70/build/strata21-23final-22-24v2-dry-v1rp14tx/apply-receipt.json"
+  },
+  "verdict": "CPU source/helper READY; full ABI compiler/link + source390 + model identity + actual device numerical/concurrency/cache/fairness and lifecycle gates remain required",
+  "hashes": {
+    "strata/flash-next/patches/0024-sycl-bounded-batch-fidelity-observer-draft-v2.patch": "00d9cbfd507fffdf6da151148fa41354a9ef36e0f5f906853e61f42e440232cf",
+    "strata/flash-next/batch-fidelity-observer-draft-plan-v2.json": "98f530b2fc5f97c0c6d0f05da8dcba107927891193850b69625772a2f48c1546",
+    "strata/flash-next/batch-fidelity-observer-v2.md": "a3dd9a44cf1d2ba6c9c70a3ac8e69c1ef971c891453a7f207f78d79c9eba87f1",
+    "strata/flash-next/test_batch_fidelity_observer_v2_cpu.py": "927cc6c40ee33a64d60860b6a6ecf446998e75bf8029002e9ffe895cd7356edd",
+    "strata/flash-next/audit_batch_fidelity_coverage_v2.py": "2d3719ad4f020811462e5a5e8f2d93da950658d9a901e9aaa9777d2e4439e24a"
+  },
+  "runtime_qualified": false,
+  "old_draft_preserved": {
+    "patch_sha256": "1da9dad84d5a3e31ade1e1112fb318a1f4901743d463cb3adefefd77e9cead96",
+    "cpu_receipt": "/mnt/vm_8tb/b70/results/strata-prefix-harness-cpu-20261009/batch-fidelity-observer-0024-cpu-draft.json"
+  }
+}
