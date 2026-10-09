@@ -9072,3 +9072,28 @@ are the development target, startingnativeQ8HCfidelity then2slot/2group and
 stage1mirrors. Profile latency/criticalpath, not bandwidth saturation. User's
 newer llama.cppHexagonrepo is required methodology source; Speculais old and
 not accepted as its substitute. Awaiting correctrepo while otherworkcontinues.
+
+## 2026-10-09 Hexagon latency method and first Strata Q8 source increment
+
+CONFIG -> User identifies newer profiling reference as hotschmoe/x2-nvfp4-lab.
+Pinned e0756d2115dd22af0b7399515de41d9390004422, CPU-only clone/read. Strata
+fb58e0d primitive-only nativeQ8HC/F32injection patch, defaultOFF and no model
+callsites connected. Selected UD-Q4_K_XL unchanged.
+
+COMMAND -> Read current Hexagon timing/negative-control/ABBA evidence; adapt
+latency methodology. test_native_q8_hc_cpu.py; parent-leased icpx2026.1 -fsycl
+-O2 object compilation in39992d70 image with no GPU devices exposed.
+
+RESULT -> Current7edd8631 patch passes SYCL object compile. CPU tests pass12
+production descriptors,10reject cases,63488 finiteFP16scale fixtures and F32
+injection preservation. Earlier426bc4ac object receipt remains prior-snapshot
+evidence only. No device arithmetic or fullmodel integration qualified.
+Latency plan uses criticalpath attribution, trace output equivalence, negative
+controls, interleaved clean measurements and1/2/4/6stream latency/fairness gates.
+
+VERDICT -> Concrete Strata fidelity source increment is reviewable; GPU
+primitives and composed HC integration are next. Strata-style tiers/concurrent
+slots are the development target; llama remains diagnostic reference. No final
+engine winner or speed claim. Evidence in docs/20261009_flashnext_latency_methodology.md
+and strata/flash-next/native-q8-hc-design.md; finalcompile receipt under
+/mnt/vm_8tb/b70/build/strata-q8-hc-final-20261009-tc6wgt0y/.

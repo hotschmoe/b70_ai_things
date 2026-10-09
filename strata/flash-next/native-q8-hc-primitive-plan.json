@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "patch": "strata/flash-next/patches/0001-sycl-native-q8-hc-projection-primitives.patch",
+  "patch_sha256": "7edd863134d9a660d21fc28e4b061dd2568e6013fc58a67a529a0dc686263efb",
+  "source_file_sha256": {
+    "sycl/CMakeLists.txt": "c21adf3ba2982914bcc3cd1eb567695afc85714c63e0559903f30803772f0c7c"
+  },
+  "reviewed_integration_source_sha256": {
+    "sycl/src/core/native_dense.cpp": "43168a833d0ce0be9c529f3895ccfd4fdc575dc53f71932bc2a423e7173a152f",
+    "sycl/src/core/layer.cpp": "4c7ffa37a36d2370882cb961b4fd09aeb0f4228c97b6d9d1d9ed2d1856488d94",
+    "sycl/src/core/verify.cpp": "fadbf789353c67e9efb18eb7d37940ec12c2a4fd0ea067e290b531f152f6c6b0",
+    "sycl/src/kernels/cuda/fused_gr.dp.cpp": "0b6272f7b9d54dc7889ab162a5d36c4b7fe95b14968d254e6d0567ad540073cf",
+    "include/strata/core/weights.hpp": "071d07c9f15d122265d7b1b90ff96125559a7d6ebbd8ec3f3a2b6e94dc17aef1",
+    "include/strata/kernels/fused_gr.hpp": "e8055ea3311bfc0c49ef464141713842da5fdad1e5cddf6a2f573fbf5353ab3a",
+    "sycl/src/prefill/prefill.cpp": "890e964f5583211fef89a4fabf030f75e230f6785584a1f0d37a3d8b471839f3"
+  },
+  "status": "PARTIAL primitive-only; CPU descriptor/dequant tests and current SYCL object compilation pass. GPU numerical qualification and model callsites remain outstanding.",
+  "build_option": "-DSTRATA_SYCL_Q8_HC_PRIMITIVES=ON",
+  "default": "OFF; existing model path unchanged",
+  "model_use_gate": "Do not enable native HC model serving from this patch. Prompt/decode/final mixer wiring and composed-math oracles remain required.",
+  "fixtures": [
+    {
+      "role": "down",
+      "type": "Q8_0",
+      "k": 10240,
+      "m": 320,
+      "tokens": 1
+    },
+    {
+      "role": "down",
+      "type": "Q8_0",
+      "k": 10240,
+      "m": 320,
+      "tokens": 2
+    },
+    {
+      "role": "down",
+      "type": "Q8_0",
+      "k": 10240,
+      "m": 320,
+      "tokens": 4
+    },
+    {
+      "role": "down",
+      "type": "Q8_0",
+      "k": 10240,
+      "m": 320,
+      "tokens": 8
+    },
+    {
+      "role": "up",
+      "type": "Q8_0",
+      "k": 320,
+      "m": 10240,
+      "tokens": 1
+    },
+    {
+      "role": "up",
+      "type": "Q8_0",
+      "k": 320,
+      "m": 10240,
+      "tokens": 2
+    },
+    {
+      "role": "up",
+      "type": "Q8_0",
+      "k": 320,
+      "m": 10240,
+      "tokens": 4
+    },
+    {
+      "role": "up",
+      "type": "Q8_0",
+      "k": 320,
+      "m": 10240,
+      "tokens": 8
+    },
+    {
+      "role": "injection",
+      "type": "F32",
+      "k": 10240,
+      "m": 4,
+      "tokens": 1
+    },
+    {
+      "role": "injection",
+      "type": "F32",
+      "k": 10240,
+      "m": 4,
+      "tokens": 2
+    },
+    {
+      "role": "injection",
+      "type": "F32",
+      "k": 10240,
+      "m": 4,
+      "tokens": 4
+    },
+    {
+      "role": "injection",
+      "type": "F32",
+      "k": 10240,
+      "m": 4,
+      "tokens": 8
+    }
+  ],
+  "numeric_gate": {
+    "nmse_max": 1e-06,
+    "normalized_linf_max": 0.0001,
+    "normalized_linf_definition": "max_abs_error / max(1e-6,max_abs_reference)",
+    "reference": "CPU FP64 accumulation of exact FP16-scale times signed-int8 source dequantization and original F32 activations; F32 injection uses original F32 weights",
+    "repeat": "identical GPU output bytes for identical inputs; n-token results equal concatenated one-token GPU calls",
+    "edge_cases": [
+      "zero/negative/positive scales; finite min-normal and representative subnormal FP16 scales",
+      "all codes -128 and127, alternating signs, impulse activation, cancellation",
+      "F32 injection values intentionally not exactly representable in BF16",
+      "input/output guard regions, unchanged weight bytes, alternating independent call buffers",
+      "reject malformed K, invalid token count, insufficient lengths, null pointers before submission"
+    ],
+    "scope_note": "thresholds are preregistered proposals; no observed pass yet"
+  },
+  "memory_bound": "largest production Q8 matrix3,481,600B; F32 reference expansion13,107,200B; token8 input/output each at most327,680B; no expert bank",
+  "required_later_gates": [
+    "CPU descriptor/dequant tests",
+    "leased per-card kernel tests and repeat/guard checks",
+    "composed RMS/down/SiLU/up/mix/injection parity for both HC halves and final mixer",
+    "same one-token and multi-token behavior; prompt/decode/verify full call-site coverage",
+    "history/reset and1/2/4sequence state isolation",
+    "two-device split after one-card correctness"
+  ],
+  "source_compile": {
+    "receipt": "/mnt/vm_8tb/b70/build/strata-q8-hc-final-20261009-tc6wgt0y/compile-receipt.json",
+    "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+    "object_sha256": "73fd46db9da40592237bb600b87efa7e64171ee7027ecb2328a01135a1daaa8d",
+    "patch_sha256": "7edd863134d9a660d21fc28e4b061dd2568e6013fc58a67a529a0dc686263efb",
+    "result": "PASS current-snapshot SYCL object compilation; no devices or GPU execution"
+  },
+  "expected_shape_cases": 12,
+  "cpu_validation": {
+    "command": "python3 strata/flash-next/test_native_q8_hc_cpu.py",
+    "actual_descriptor_helper": "PASS 12 production shapes and10 rejection cases under ASan+UBSan",
+    "fixture_reference": "PASS all63488 finite FP16 scales with signed-code extremes; originalF32 injection differs fromBF16-truncated control",
+    "limitations": "No GPU arithmetic, pointer-accessibility, queue, or model integration qualification"
+  },
+  "null_stream_contract": "Null stream is valid and selects the default in-order queue; null weights/input/output are rejected.",
+  "validation": "git apply check PASS; CPU descriptor/fixture tests PASS; compile status must match current patch hash; no GPU execution"
+}

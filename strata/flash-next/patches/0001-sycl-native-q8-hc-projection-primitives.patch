@@ -1,0 +1,119 @@
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -193,6 +193,11 @@
+ endforeach()
+ strata_resolve(_kernels ${_kernel_files} src/kernels/ngram.cpp src/ngram/ple_reader.cpp src/platform/direct_file.cpp)
+ list(APPEND _kernels ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/cuda/qsa_prompt_attn_xmx.dp.cpp)   # port-only: the XMX prompt attention
++# Primitive qualification only: does not wire any model HC call site.
++option(STRATA_SYCL_Q8_HC_PRIMITIVES "Build experimental source-preserving HC projections" OFF)
++if(STRATA_SYCL_Q8_HC_PRIMITIVES)
++  list(APPEND _kernels ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/hc_native_projection.cpp)
++endif()
+ add_library(strata_kernels STATIC ${_kernels})
+ target_include_directories(strata_kernels PRIVATE ${STRATA_ROOT}/third_party/ggml)
+ target_link_libraries(strata_kernels PUBLIC strata_core)
+--- /dev/null
++++ b/sycl/include/strata/kernels/hc_native_projection.hpp
+@@ -0,0 +1,25 @@
++// Experimental primitives only. No model path calls these until separately qualified.
++#pragma once
++#include <cstddef>
++#include <cstdint>
++namespace strata::kernels {
++namespace hc_projection_detail {
++// CPU-testable shape contract; bounded products avoid overflow in the launchers.
++inline bool shape_ok(int k, int m, int tokens, size_t inputs, size_t outputs) {
++    return k > 0 && k <= 10240 && k % 32 == 0 && m > 0 && m <= 10240 &&
++           tokens >= 1 && tokens <= 8 && inputs >= size_t(k)*tokens && outputs >= size_t(m)*tokens;
++}
++}
++// Row-major weights [m,k], activations [tokens,k], output [tokens,m].
++// Q8_0 uses exact GGUF blocks: little-endian FP16 scale + 32 signed int8 codes.
++// F32 is for source F32 injection matrices; it never passes through BF16/Q8.
++// Caller owns device-accessible, non-overlapping storage and an in-order stream.
++// No allocation, synchronization, activation quantization or weight mutation.
++// False means invalid descriptor/queue and NO kernel was submitted.
++bool hc_q8_0_project_f32(const uint8_t * weights, size_t weight_bytes,
++        const float * input, size_t input_floats, float * output, size_t output_floats,
++        int k, int m, int tokens, void * stream);
++bool hc_f32_project_f32(const float * weights, size_t weight_floats,
++        const float * input, size_t input_floats, float * output, size_t output_floats,
++        int k, int m, int tokens, void * stream);
++}
+--- /dev/null
++++ b/sycl/src/kernels/hc_native_projection.cpp
+@@ -0,0 +1,74 @@
++// Qualification-first native hyper-connection projections. Not a fused HC implementation.
++#include "strata/kernels/hc_native_projection.hpp"
++#include "strata/sycl_queue.hpp"
++#include <sycl/sycl.hpp>
++
++namespace strata::kernels {
++namespace {
++// Fixed subgroup reduction tree: reproducible within this kernel, not bitwise CPU-serial summation.
++float sum32(sycl::sub_group group, float value) {
++    for (unsigned mask = 16; mask; mask >>= 1) {
++        value += sycl::permute_group_by_xor(group, value, mask);
++    }
++    return value;
++}
++
++template<bool Q8> class HcProjectionKernel;
++template<bool Q8>
++void launch(sycl::queue & queue, const void * weights, const float * input, float * output,
++            int k, int m, int tokens) {
++    // One 32-lane subgroup per output row; no shared memory, atomics, or global scratch.
++    const size_t rows = size_t(m)*tokens;
++    queue.parallel_for<HcProjectionKernel<Q8>>(
++        sycl::nd_range<1>(sycl::range<1>(rows*32), sycl::range<1>(32)),
++        [=](sycl::nd_item<1> item) [[sycl::reqd_sub_group_size(32)]] {
++            const size_t row_token = item.get_group_linear_id();
++            const int row = int(row_token % size_t(m));
++            const int token = int(row_token / size_t(m));
++            const unsigned lane = item.get_local_linear_id();
++            const float * x = input + size_t(token)*k;
++            float acc = 0.0f;
++            for (int column = int(lane); column < k; column += 32) {
++                float weight;
++                if constexpr (Q8) {
++                    const auto * blocks = static_cast<const uint8_t *>(weights);
++                    const size_t offset = (size_t(row)*(k/32) + column/32)*34;
++                    const uint16_t bits = uint16_t(blocks[offset]) | (uint16_t(blocks[offset+1]) << 8);
++                    const float scale = float(sycl::bit_cast<sycl::half>(bits));
++                    // Decode signed codes without relying on implementation-defined unsigned->int8 conversion.
++                    const unsigned raw = blocks[offset+2+column%32];
++                    const int code = raw < 128 ? int(raw) : int(raw)-256;
++                    weight = scale*float(code);
++                } else {
++                    weight = static_cast<const float *>(weights)[size_t(row)*k+column];
++                }
++                acc = sycl::fma(weight, x[column], acc);
++            }
++            const float result = sum32(item.get_sub_group(), acc);
++            if (lane == 0) { output[row_token] = result; }
++        });
++}
++}
++
++bool hc_q8_0_project_f32(const uint8_t * weights, size_t weight_bytes,
++        const float * input, size_t input_floats, float * output, size_t output_floats,
++        int k, int m, int tokens, void * stream) {
++    if (!weights || !input || !output || !hc_projection_detail::shape_ok(k,m,tokens,input_floats,output_floats) ||
++        weight_bytes < size_t(m)*(k/32)*34) { return false; }
++    auto * queue = strata::q_of(stream);
++    if (!queue->has_property<sycl::property::queue::in_order>()) { return false; }
++    launch<true>(*queue,weights,input,output,k,m,tokens);
++    return true;
++}
++
++bool hc_f32_project_f32(const float * weights, size_t weight_floats,
++        const float * input, size_t input_floats, float * output, size_t output_floats,
++        int k, int m, int tokens, void * stream) {
++    if (!weights || !input || !output || !hc_projection_detail::shape_ok(k,m,tokens,input_floats,output_floats) ||
++        weight_floats < size_t(m)*k) { return false; }
++    auto * queue = strata::q_of(stream);
++    if (!queue->has_property<sycl::property::queue::in_order>()) { return false; }
++    launch<false>(*queue,weights,input,output,k,m,tokens);
++    return true;
++}
++}
