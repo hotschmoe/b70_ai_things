@@ -1,0 +1,29 @@
+--- a/sycl/src/core/native_dense.cpp
++++ b/sycl/src/core/native_dense.cpp
+@@ -169,7 +169,7 @@
+         std::vector<Pending> pending;
+         std::set<std::string> seen;
+         int max_in = 0;
+-        uint64_t total = 0, hc_q8_bytes = 0, native_hc_bytes = 0;
++        uint64_t total = 0, hc_q8_bytes = 0, native_hc_bytes = 0, native_ple_bytes = 0;
+         // Table metadata spans the full model even when this stage owns a subset.
+         int last_layer=-1;
+         for (const auto& [name,ref] : table.table_) if (name.rfind("blk.",0)==0)
+@@ -404,7 +404,7 @@
+                 ref.ple_source_offset=gguf.data_start()+tensor.offset;ref.ple_source_fnv64=digest;ref.ple_source_shard=path;
+                 if(type==8) ref.ple_source_q8=static_cast<const uint8_t*>(p.get());
+                 else ref.ple_source_f32=static_cast<const float*>(p.get());
+-                weights_.push_back(p.release());
++                weights_.push_back(p.release()); native_ple_bytes+=bytes;
+                 std::fprintf(stderr,"native PLE source: %s type%d shape[%llu,%llu] bytes%llu offset%llu fnv64%016llx shard%s\n",
+                     tensor.name.c_str(),type,(unsigned long long)K,(unsigned long long)M,(unsigned long long)bytes,
+                     (unsigned long long)ref.ple_source_offset,(unsigned long long)digest,path.c_str());
+@@ -516,7 +516,7 @@
+             std::fprintf(stderr, "native dense: STRATA_Q8_PACKED=1 packed %zu Q8_0 matrices for decode (+%.1f MiB)\n",
+                          packed_count, packed_bytes / 1048576.0);
+         scratch_ = scratch.release();
+-        bytes_ = total + hc_q8_bytes + native_hc_bytes;
++        bytes_ = total + hc_q8_bytes + native_hc_bytes + native_ple_bytes;
+         if (hc_q8_requested())
+             std::fprintf(stderr, "strata: STRATA_HC_Q8=1: %.2f GiB of Q8_0 hyper-connection projections for the verify read\n",
+                          (double) hc_q8_bytes / 1073741824.0);

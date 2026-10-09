@@ -29,8 +29,10 @@ def main():
     p.add_argument('--ggml-source',required=True,type=Path)
     p.add_argument('--pack',required=True,type=Path,help='New pack for --prepare; existing complete pack otherwise')
     p.add_argument('--prepare',action='store_true',help='Explicit CPU-only compatibility materialization, all conversions audited')
+    p.add_argument('--finish-tokenizer',action='store_true',help='Finish tokenizer export in an existing partial pack; dense artifacts are preserved')
     p.add_argument('--receipt',required=True,type=Path)
     a=p.parse_args()
+    if a.prepare and a.finish_tokenizer:p.error('Choose preparation or tokenizer completion')
     if a.receipt.exists():p.error('New receipt path required')
     lock_path=REPO/'strata/flash-next/model-lock.json';lock=json.loads(lock_path.read_text());model=REPO/lock['destination']
     shard=model/'UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf'
@@ -50,7 +52,20 @@ def main():
     if a.prepare:
         if a.pack.exists():p.error('--prepare requires a new pack directory')
         env=dict(os.environ,STRATA_GGUF_PY=str(a.ggml_source/'gguf-py'))
-        subprocess.run(command,env=env,check=True)
+        try:
+            subprocess.run(command,env=env,check=True)
+        except Exception as error:
+            a.receipt.parent.mkdir(parents=True,exist_ok=True)
+            a.receipt.write_text(json.dumps({'CONFIG':'CPU pack preparation; no GPU/model execution',
+                'COMMAND':command,'RESULT':{'error':str(error),'pack':str(a.pack.resolve())},
+                'VERDICT':'FAILED; partial artifacts retained; not a complete pack or fidelity qualification',
+                'full_source_fidelity_qualified':False},indent=2)+'\n',encoding='ascii')
+            raise
+    if a.finish_tokenizer:
+        for name in ['index.txt','dense.bin','native_experts.txt','conversions.json','compat-bf16.json']:
+            if not (a.pack/name).is_file():raise RuntimeError('Partial dense pack incomplete: '+name)
+        command=[sys.executable,str(a.source/'tools/strata_tokenizer.py'),'--gguf',str(shard),'--out',str(a.pack)]
+        subprocess.run(command,env=dict(os.environ,STRATA_GGUF_PY=str(a.ggml_source/'gguf-py')),check=True)
     required=['index.txt','dense.bin','native_experts.txt','conversions.json','compat-bf16.json','tokenizer/vocab.json','tokenizer/chat_template.jinja']
     for name in required:
         if not (a.pack/name).is_file():raise RuntimeError('Incomplete pack: '+name)
@@ -64,7 +79,7 @@ def main():
         if role:overrides.append(dict(row,required_override=role,compatibility_bytes_allowed_as_native_input=False))
         else:unexpected.append(row)
     files={str(path.relative_to(a.pack)):dict(bytes=path.stat().st_size,sha256=sha(path)) for path in a.pack.rglob('*') if path.is_file()}
-    receipt={'CONFIG':'Pinned selected UD-Q4_K_XL and CPU-only explicit compatibility pack; no engine execution','COMMAND':command if a.prepare else ['audit',str(a.pack)],'RESULT':{'model_revision':lock['revision'],'model_lock_sha256':sha(lock_path),'intake_sha256':sha(intake_path),'pack':str(a.pack.resolve()),'source':str(a.source.resolve()),'packer_sha256':sha(a.source/'tools/iq_pack.py'),'ggml_revision':GGML_REV,'files':files,'exact_conversions':exact,'inexact_compatibility_copies_requiring_native_override':overrides,'unexpected_inexact_conversions':unexpected},'VERDICT':'BLOCKED full-source fidelity until every original HC/PLE override has model upload and route evidence; compatibility pack creation alone never qualifies serving','full_source_fidelity_qualified':False,'metadata_complete':not unexpected,'engine_launch_authorized_by_this_receipt':False}
+    receipt={'CONFIG':'Pinned selected UD-Q4_K_XL and CPU-only explicit compatibility pack; no engine execution','COMMAND':command if a.prepare or a.finish_tokenizer else ['audit',str(a.pack)],'RESULT':{'model_revision':lock['revision'],'model_lock_sha256':sha(lock_path),'intake_sha256':sha(intake_path),'pack':str(a.pack.resolve()),'source':str(a.source.resolve()),'packer_sha256':sha(a.source/'tools/iq_pack.py'),'ggml_revision':GGML_REV,'files':files,'exact_conversions':exact,'inexact_compatibility_copies_requiring_native_override':overrides,'unexpected_inexact_conversions':unexpected},'VERDICT':'BLOCKED full-source fidelity until every original HC/PLE override has model upload and route evidence; compatibility pack creation alone never qualifies serving','full_source_fidelity_qualified':False,'metadata_complete':not unexpected,'engine_launch_authorized_by_this_receipt':False}
     a.receipt.parent.mkdir(parents=True,exist_ok=True);a.receipt.write_text(json.dumps(receipt,indent=2)+'\n',encoding='ascii')
     print(json.dumps({'metadata_complete':not unexpected,'full_source_fidelity_qualified':False,'receipt':str(a.receipt)}))
     return 0 if not unexpected else 2

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "Current default build recipe; numbered plans and raw receipts remain immutable",
+  "status": "Fifth immutable native source generation: includes exact PLE owner allocation accounting; model execution unqualified",
   "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
   "source_root": "/mnt/vm_8tb/github/strata",
   "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",

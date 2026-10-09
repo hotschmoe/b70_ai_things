@@ -9185,3 +9185,28 @@ previous off arm strict screen failed/after-JSON diverged22. Clean post-health.
 VERDICT -> No history correctness fix established. Selected state rows can now
 be observed directly in numeric arm; layer1 PLE and later layers remain outside
 this observer. Full Strata model/tier/prefix/concurrency/latency/shelf gates open.
+
+## 2026-10-09 Actual reset rows and original-source upload gate
+
+CONFIG -> Same pinned model/runtime; reset observer numeric arm and original
+Strata source upload oracle. Fifth engine source generation adds strict API
+identity and complete PLE allocation accounting. User changes preserved.
+COMMAND -> reset-numeric-history-v1 plus independent raw bit/history analysis;
+full native-source engine v5 build; compatibility metadata/tokenizer pack with
+explicit conversion audit; actual source-upload-v1 first-card narrow owners.
+RESULT -> Numeric arm selected6 paired layer0R/S rows have finite/nonzero pre
+state and all positive-zero post state;12 raw files independently verified.
+Native three-prose outputs share35 IDs but probability drift remains from0.
+Normal teardown/post-health passes. PLE/later layers/fourth request unobserved.
+Full engine v5 builds including0010 accounting. CPU pack host regex missing and
+container NumPy missing failures preserved; isolated host dependency path makes
+intake-v4 complete, exact GGUF tokenizer preqwen35/special IDs retained. All
+196 rounded compatibility copies are explicitly marked as requiring native
+source overrides; expert and PLE table bytes unchanged. Not fidelity authority.
+Actual card0 upload oracle verifies27HC+3PLE source images against preregistered
+SHA256/raw bytes, stage ownership and allocation accounting. It then fails
+freed-pointer type-registration check; normal process removal/full post-health
+pass. Pooling versus leak is being localized, not waived or labelled solved.
+VERDICT -> First-layer reset hypothesis narrowed; history drift remains.
+Actual source upload bytes pass first-card scope, lifecycle oracle unqualified;
+second-card/pair and model/tier/prefix/concurrent/latency/shelf gates remain open.
