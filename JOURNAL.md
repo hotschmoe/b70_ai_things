@@ -10375,3 +10375,23 @@ VERDICT -> Commit beforeactualnew33numerics. Observer26/cache25/public27 require
 integratedfullSDK/actual2/4/6/state/cache gates. Prefillreference owns history but
 exactdevicearithmetic/runtimebranch/fullmath unqualified; no actualweightsread
 byagents. Modelmath/concurrency/latency/shelf false.
+
+
+## 2026-10-09 - Integrated fullcache/fresh/pin/migration SDK source plan
+
+CONFIG -> Actual28baseline plusimmutable25completechains/26migrationobserver/
+27publicfreshpin, allfeatureflagsdefaultOFF. Originalmodelbytes andmath/
+sampling settings retained; reset/cache/diagnosticpaths separatelyscoped.
+
+COMMAND -> Independently run test_integrated_batch_prefix_source_cpu_v1.py;
+reconstructpinned pristinefb58 andapplyall28patches incheckedorder, compare
+all60 finalsource/24headers andsixPython-source closure/eightABI recipes.
+
+RESULT -> Independentpristine reconstructionPASS. All source/header hashes
+match; no missinghelper/fallback slot/context/budget guards. No SDK/GPU/model
+payload byagent or thisCPUtest. PlanSHA b4a7d4baa7ae654b3888354240cc541290a218caa82c3b62d7bcf74f1ec5bd42.
+
+VERDICT -> Immutableintegrated sourcecheckpointbeforefreshSDK. Existing28
+source390/C1/num proofs cannotqualifynew60-source artifacts. Actualactivated
+fullcache/fresh/pin/cancellation/migration/private1/2/4/6/rawmath/fairness/latency
+gates remainrequired. Parent ownsGPU/lifecycle; numeric8onecurrentlylive.
