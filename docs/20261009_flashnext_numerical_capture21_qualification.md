@@ -64,3 +64,16 @@ all-token nativeprecision propagation and independentwholemodel remain explicit.
 Runtime targetobserver allocation is7023104B including56nonce/control/key bytes;
 logicalfree/owner proof is separate from physical release or unobservedgraph
 retirement. No empty/partial/staleframe may provide mathematical evidence.
+
+## Finalized capture21 two-card API screen
+
+CONFIG -> Actualcapture21, API8192/128/1048576,32/16 split, finalizedsame21
+onecard prerequisite; newsource/full390/runtime/model identity unchanged.
+COMMAND -> Parent qualify_c1_serving.py pairprepared with actualonecardreceipt.
+RESULT -> F08/c1-twocard-capture21-prepared-v1 finalizedPASS229s; live /v1/models
+plus registry identity/hotschmoe-dd first, sixboundedcoherence/repeat/consumption
+answers, normal API/native/supervisor exit/removal and post-health.
+VERDICT -> Boundedtwo-cardAPI screen only. Numericalcapture qualification is
+separate: actual20vs21off andsame21off/on matchedrawprefixes/fullhead/all48
+residuals/nonce/source/allobserver controlbytes/lifetimes beforepacket/state
+math. Rawhidden and seven producerfields remain unobserved at21.

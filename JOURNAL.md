@@ -9910,3 +9910,12 @@ teardown/posthealth. Bothfresh21one/pair manifests launchallowed; pairAPI
 screen14312running withactualonecardprerequisite. No old20sourcegate transfer.
 VERDICT -> Boundedactual21API only. Numericalequality/actualframe/packet/state/
 nonce/lifecycle, independentmath, concurrency and cleanlatency remain required.
+
+## 2026-10-09 Capture21 two-card API qualification
+
+CONFIG -> Actual21/newsource390/Pythonruntime/model chain,32/16API8192 pilot.
+COMMAND -> Parent two-cardC1 screen withactual21onecardprerequisite.
+RESULT -> FinalPASS229s, live/registry identity/hotschmoe-dd first, coherence/
+repeat/consumption, normalAPI/native/supervisor teardown and post-health.
+VERDICT -> BoundedAPI only; newnumerical20vs21off/same21off-on/source/nonce/
+state/packet/owner checks next, fullmath/concurrency/latency stillunqualified.
