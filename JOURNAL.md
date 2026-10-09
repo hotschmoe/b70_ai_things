@@ -9680,3 +9680,19 @@ compilation started under lease, not runtime-qualified.
 VERDICT -> V5 bounded cold reconstruction, not exact target admission/victim
 proof. New20 requires independent ownership/full390/C1/V6 qualification; old
 receipts cannot establish it. See serial diagnostic qualification doc.
+
+## 2026-10-09 New20 whole390 source-upload gate and owner runtime supervisor
+
+CONFIG -> Actual combined20 receipt1647fdb0; full upload oracle
+/mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-tkbp0s5d/receipt.json;
+actual32/16 source plan and unchanged pinned model/source/runtime.
+COMMAND -> run_source_upload_oracle_full.py under pair lease; result
+F07/source-upload-combined20-v1. Parent CPU test_run_stage_slot_owner_oracle_cpu.py.
+RESULT -> Source-upload parentPASS208s, all5 cases exit0 with original387 HC/
+3 PLE payload readback, logical frees/negative controls, context bounds and
+strict+compiled pre/post health. Ordinary300 payload readback and model math
+remain false. New owner runtime supervisor genuine actual20/oracle source/ABI
+checks and mocked3case success/failure/cleanup/health/fd8_9 controls pass.
+VERDICT -> New20 source upload/lifetime qualification only. Commit runtime
+supervisor before actual no-weight card0/card1/pair ownership execution; no
+slot runtime/concurrent/model-math result from CPU mocks or compilation.
