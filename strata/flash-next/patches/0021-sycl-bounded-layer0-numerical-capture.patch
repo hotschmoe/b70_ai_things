@@ -1,0 +1,443 @@
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -43,6 +43,7 @@
+ 
+ class NativeHead;
+ namespace fidelity_diag { class snapshot; }
++namespace layer0_diag { class snapshot; }
+ struct StageExpertMirror;
+ class RemoteExpertOpt;
+ 
+@@ -96,6 +97,9 @@
+     bool dump_fidelity_first(int rows,int64_t pos,int token,std::string& err);
+     void select_fidelity_first(bool on);
+     void release_fidelity_observer();
++    void select_layer0_first(bool on);
++    bool dump_layer0_first(int rows,int64_t pos,int token,std::string& err);
++    void release_layer0_observer();
+     int64_t vocab() const { return next_ ? next_->vocab() : n_vocab_; }
+     /// The sampling the verify window's head applies (temperature / top_p / top_k / seed).  Set per
+     /// request; greedy by default.  The sampling itself runs OUTSIDE the captured graph - its
+@@ -462,6 +466,9 @@
+     float *head_mixed_ = nullptr, *head_inj_ = nullptr, *head_logits_ = nullptr;
+     std::shared_ptr<fidelity_diag::snapshot> fidelity_snapshot_;
+     bool fidelity_first_=false;
++    std::shared_ptr<layer0_diag::snapshot> layer0_snapshot_;
++    bool layer0_first_=false;
++    dpct::experimental::command_graph_exec_ptr layer0_exec_[4] = {};
+     dpct::experimental::command_graph_exec_ptr fidelity_exec_[2] = {};
+     uint16_t* sh_bf16_ = nullptr;
+     uint8_t* arg_scratch_ = nullptr;   ///< argmax_rows' partials and counters
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,5 +1,6 @@
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
++#include "strata/core/layer0_numerical_observer.hpp"
+ #include "strata/core/stage_expert_mirror.hpp"
+ #include "strata/core/verifier_stream_contract.hpp"
+ #include "strata/kernels/resident_plan_mirror.hpp"
+@@ -379,7 +380,9 @@
+     exec_bm_.clear();
+     for (auto& kv:commit_bm_) if (kv.second) delete kv.second;
+     commit_bm_.clear();
++    for(auto& graph:layer0_exec_) { if(graph)delete graph;graph=nullptr; }
+     for(auto& graph:fidelity_exec_) { if(graph) delete graph; graph=nullptr; }
++    layer0_snapshot_.reset();layer0_first_=false;
+     fidelity_snapshot_.reset();
+     hits_.stage_mirror.reset();
+ }
+@@ -396,6 +399,8 @@
+     }
+     if (cs_) cs_->wait();
+     if (sh_cs_) sh_cs_->wait();
++    for(auto& graph:layer0_exec_) { if(graph)delete graph;graph=nullptr; }
++    layer0_snapshot_.reset();
+     for(auto& graph:fidelity_exec_) { if(graph) delete graph; graph=nullptr; }
+     for (auto& e : exec_)
+         if (e) delete (e);
+@@ -731,6 +736,13 @@
+         */
+         if (!ok2) {; all_resident_ = false; device_plan_ = false; }
+     }
++    if (layer0_diag::settings().enabled && lb_==0 && le_>0) {
++        if (!native_hc_requested() || g.n_embd!=2560 || g.hc!=4 || g.n_layers!=48 ||
++            g.ssm_state_size!=128 || g.ssm_k_heads!=16 || g.ssm_v_heads!=48 || g_qfuse() || !strata::kernels::cpu::expert_layout().native || !one_token_self_commit() || std::getenv("STRATA_VERIFY_EAGER")) {
++            err="layer0 diagnostic: unsupported geometry/native/QFUSE/selfcommit/eager contract";return false;
++        }
++        layer0_snapshot_=std::make_shared<layer0_diag::snapshot>(*cs_,device_);
++    }
+     if (fidelity_diag::settings().enabled) {
+         if (!fidelity_diag::geometry(int(g.n_embd),int(g.hc),int(g.n_layers),int(n_vocab_))) { err="fidelity diagnostic: unsupported model geometry"; return false; }
+         fidelity_snapshot_=std::make_shared<fidelity_diag::snapshot>(*cs_,device_,int(lb_),int(le_),le_==g.n_layers);
+@@ -950,6 +962,8 @@
+             }
+             pending = false;
+         }
++        const bool l0_capture=layer0_first_ && layer0_snapshot_ && T==1 && l==0 && grp==0;
++        if(l0_capture)layer0_snapshot_->copy("residual_input",Rt(0),40960,*cs);
+         bool native_gr_ok=true;
+         auto gr_read_group = [&](int half, bool apply, float* inj_prev, float* inj_out) {
+             if (native_hc_requested()) {
+@@ -959,6 +973,7 @@
+                     if (apply && !native_hc_write_rows(Rt(t),bo_+t*N,inj_prev+t*HC,1,cs,err)) {
+                         native_gr_ok=false; return false;
+                     }
++                    if(l0_capture && half==1)layer0_snapshot_->copy("residual_after_attn",Rt(0),40960,*cs);
+                     HcNativeArgs a; a.eps=EPS;
+                     if (!native_hc_bind(wn[half],wd[half],wu[half],wi[half],a,err)) { native_gr_ok=false; return false; }
+                     a.R=Rt(t); a.R_floats=size_t(HC*N);
+@@ -971,6 +986,14 @@
+                     a.mixed=mixed_+t*N; a.mixed_floats=size_t(N);
+                     a.inject_out=inj_out+t*HC; a.inject_out_floats=size_t(HC);
+                     if (!native_hc_submit(a,cs,err)) { native_gr_ok=false; return false; }
++                    if(l0_capture && half==0) {
++                        layer0_snapshot_->copy("attn_hc_normalized",a.xn,40960,*cs);
++                        layer0_snapshot_->copy("attn_hc_low",a.lo,1280,*cs);
++                        layer0_snapshot_->copy("attn_hc_gate",a.gate,40960,*cs);
++                        layer0_snapshot_->copy("attn_hc_inject",a.inject_out,16,*cs);
++                        layer0_snapshot_->copy("attn_mixed",a.mixed,10240,*cs);
++                    }
++                    if(l0_capture && half==1)layer0_snapshot_->copy("ffn_mixed",a.mixed,10240,*cs);
+                 }
+                 return false; // Native HC deliberately does not produce qfuse images.
+             }
+@@ -1013,11 +1036,16 @@
+                 const int64_t gi = gdn_idx[(size_t) l];
+                 float* state = ss.gdn_state + (size_t) (gi - ss.gdn_ord0) * gdn_floats;
+                 float* conv = state + (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
++                if(l0_capture) {
++                    layer0_snapshot_->copy("gdn_state_before",state,3145728,*cs);
++                    layer0_snapshot_->copy("gdn_conv_before",conv,122880,*cs);
++                }
+                 float* qkv = qkv_L_ + (size_t) gi * MT * C;
+                 float* hb = h_L_ + (size_t) gi * MT * C;
+                 float* gate = gate_L_ + (size_t) gi * MT * HV;
+                 float* beta = beta_L_ + (size_t) gi * MT * HV;
+                 if (!q8_attn) native_quantize_q8_1(xm, xq_, (int) N, n, cs);
++                if(l0_capture)layer0_snapshot_->copy("attn_input_q81",xq_,2880,*cs);
+                 native_mmvq(wqkv->native_type, wqkv->native_data, xq_, qkv + (size_t) tb * C, (int) N, (int) C, n, cs);
+                 stamp(l, 2, grp);
+                 if (batch_rec_) {   // contiguous rows may be proposals for the same slot
+@@ -1058,7 +1086,18 @@
+                                     (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr);
+                 stamp(l, 6, grp);
+                 if (!g_qfuse()) native_quantize_q8_1(y_ + (size_t) tb * ZV, xq_, (int) ZV, n, cs);   // STRATA_QFUSE: done above
++                if(l0_capture) {
++                    layer0_snapshot_->copy("gdn_qkv",qkv,40960,*cs);
++                    layer0_snapshot_->copy("gdn_z",z_,24576,*cs);
++                    layer0_snapshot_->pair("gdn_decay_beta",gate,beta,192,*cs);
++                    layer0_snapshot_->copy("gdn_normalized_qkv",hb,40960,*cs);
++                    layer0_snapshot_->copy("gdn_output_gated",y_,24576,*cs);
++                    layer0_snapshot_->copy("gdn_output_q81",xq_,6912,*cs);
++                    layer0_snapshot_->copy("gdn_state_after",state,3145728,*cs);
++                    layer0_snapshot_->copy("gdn_conv_after",conv,122880,*cs);
++                }
+                 native_mmvq(wout->native_type, wout->native_data, xq_, bo_ + tb * N, (int) ZV, (int) N, n, cs);
++                if(l0_capture)layer0_snapshot_->copy("gdn_block_output",bo_,10240,*cs);
+             } else {
+                 // ======================= QSA =======================
+                 const int64_t qi = qsa_idx[(size_t) l];
+@@ -1328,6 +1367,11 @@
+             mb.logits = logits_ + t * NE; mb.ids = ids_ + t * K; mb.weights = w_ + t * K;
+             if (!moe_route(wt, g, l, K, mb, mixed_ + t * N, cs, err, nullptr)) return false;
+         }
++        if(l0_capture) {
++            layer0_snapshot_->copy("router_logits",logits_,2048,*cs);
++            layer0_snapshot_->copy("router_ids",ids_,40,*cs);
++            layer0_snapshot_->copy("router_weights",w_,40,*cs);
++        }
+         auto make_plan=[&](uint32_t* skip,uint32_t ring,uint32_t* plan_err) {
+             const auto* res=hits_.d_res+l*g.n_expert;
+             if (hits_.stage_mirror) {
+@@ -1406,6 +1450,7 @@
+                 if (!q8_ffn) quantize_q8_1_rows(xm, n, N, nat_xq_ + (size_t) tb * (N / 32) * 36, cs);
+         } else
+             quantize_q8_0_scaled(xm, hit_xq_ + (size_t) tb * (N / 32) * 34, hit_xs_ + (size_t) tb * (N / 32), (int64_t) n * N, cs);
++        if(l0_capture)layer0_snapshot_->copy("ffn_input_q81",nat_xq_,2880,*cs);
+         stamp(l, 18, grp);
+         return true;
+     };
+@@ -1516,6 +1561,8 @@
+         }
+         if (remote_opt_) remote_opt_->combine(bo_ + tb * N, y_dummy_ + tb * N, tb, n,
+                               device_plan_ ? skip_ + grp : nullptr, ring, cs);
++        if(layer0_first_ && layer0_snapshot_ && T==1 && l==0 && grp==0)
++            layer0_snapshot_->copy("ffn_block_output",bo_,10240,*cs);
+         stamp(l, 24, grp);
+         if (native_hc_requested()) {
+             for (int t=tb;t<te;++t)
+@@ -1538,6 +1585,8 @@
+     for (int64_t l = lb_; l < le_; ++l)
+         for (int grp = 0; grp < G; ++grp) {
+             if (!post(l, grp)) return false;
++            if(layer0_first_ && layer0_snapshot_ && T==1 && l==0 && grp==0)
++                {layer0_snapshot_->copy("residual_after_ffn",Rt(0),40960,*cs);layer0_snapshot_->stamp(*cs);}
+             if (fidelity_first_ && fidelity_snapshot_ && T==1 && grp==0) fidelity_snapshot_->layer(int(l),Rt(0),*cs);
+             if (dbgR_ && grp == 0) {   // recorded into the window graph as memcpy nodes
+                 cs->memcpy(dbgR_ + (size_t) l * N, Rt(0), (size_t) N * 4);
+@@ -1700,7 +1749,7 @@
+ bool Verifier::capture(int T, std::string &err) try {
+     const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &exec_t =
+-        fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]);
++        layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]));
+     if (exec_t != nullptr) return true;
+     if (std::getenv("STRATA_VERIFY_EAGER") != nullptr) return true;   // SYCL port: no graph, run() replays the body
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+@@ -1708,6 +1757,7 @@
+         return false;
+     }
+     std::string rerr;
++    if(layer0_first_&&layer0_snapshot_&&T==1)layer0_snapshot_->begin_roster((ar_off_?1:0)+(fidelity_first_?2:0));
+     const bool ok = record_window(T, cs_, rerr);
+     dpct::experimental::command_graph_ptr graph = nullptr;
+     const dpct::err0 ce =
+@@ -1758,6 +1808,7 @@
+         for (size_t i = 0; i < v.size() && i < 40; ++i) std::fprintf(stderr, " %d x %.60s;", v[i].first, v[i].second.c_str());
+         std::fprintf(stderr, "\n");
+     }
++    if(layer0_first_&&layer0_snapshot_&&T==1)layer0_snapshot_->seal_roster((ar_off_?1:0)+(fidelity_first_?2:0));
+     const dpct::err0 ie = DPCT_CHECK_ERROR(
+         exec_t = new sycl::ext::oneapi::experimental::command_graph<
+             sycl::ext::oneapi::experimental::graph_state::executable>(
+@@ -1974,6 +2025,7 @@
+     const Clock::time_point t0 = Clock::now();
+     if (!staged_) stage_inputs(T, tokens, pos0);
+     staged_ = false;
++    if(layer0_first_&&layer0_snapshot_&&T==1)layer0_snapshot_->arm((ar_off_?1:0)+(fidelity_first_?2:0),T,pos0,tokens[0],*cs_);
+     const bool do_ple = ss.ple.ready() && ple_stage();
+     uint32_t ple_rows[kVerifyMaxT * PLE_N_HEADS];
+     if (do_ple) {
+@@ -2005,7 +2057,7 @@
+     }
+     const dpct::err0 le = (std::getenv("STRATA_VERIFY_EAGER") != nullptr)
+                               ? (record_window(T, cs_, err) ? 0 : 1)   // SYCL port: eager replay of the window body
+-                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]))));
++                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])))));
+     /*
+     DPCT1009: SYCL reports errors using exceptions and does not use error
+     codes. Please replace the "get_error_string_dummy(...)" with a real
+@@ -3372,7 +3424,26 @@
+   std::exit(1);
+ }
+ 
++void Verifier::select_layer0_first(bool on) {
++    layer0_first_=on && layer0_snapshot_!=nullptr;
++    if(next_)next_->select_layer0_first(on);
++}
++bool Verifier::dump_layer0_first(int rows,int64_t pos,int token,std::string& err) try {
++    if(layer0_snapshot_ && !layer0_snapshot_->dump((ar_off_?1:0)+(fidelity_first_?2:0),rows,pos,token,err))return false;
++    return next_==nullptr || next_->dump_layer0_first(rows,pos,token,err);
++} catch(const std::exception& e){err=std::string("layer0 diagnostic: ")+e.what();return false;}
++void Verifier::release_layer0_observer() {
++    const OnDevice on_device(device_);
++    if(layer0_snapshot_) {
++        cs_->wait_and_throw();
++        for(auto& graph:layer0_exec_) { if(graph)delete graph;graph=nullptr; }
++        layer0_snapshot_->release();layer0_snapshot_.reset();layer0_first_=false;
++    }
++    if(next_)next_->release_layer0_observer();
++}
++
+ void Verifier::release_fidelity_observer() {
++    if(layer0_snapshot_)release_layer0_observer(); // Combined graphs retire before old snapshot storage.
+     if(fidelity_snapshot_) {
+         cs_->wait_and_throw();
+         for(auto& graph:fidelity_exec_) { if(graph)delete graph;graph=nullptr; }
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,5 +1,6 @@
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
++#include "strata/core/layer0_numerical_observer.hpp"
+ #include "strata/core/api_state_identity.hpp"
+ #include "strata/core/stage_mirror_budget.hpp"
+ #include "strata/core/native_hc_policy.hpp"
+@@ -9590,6 +9591,7 @@
+             for (int64_t t : ids) bad = bad || t < 0 || t >= n_vocab;
+             if (bad) { std::printf("ERR a token id is outside the vocabulary\n"); continue; }
+             strata::core::fidelity_diag::begin(ids,!geni && o.batch<=1 && o.pipeline_windows==0 && o.mtp.empty());
++            strata::core::layer0_diag::begin(ids,!geni && o.batch<=1 && o.pipeline_windows==0 && o.mtp.empty());
+             std::array<int64_t, 3> remote_before{};
+             std::array<int64_t, 3> launches_before{};
+             std::array<uint64_t, 3> compact_before{}, full_before{};
+@@ -9905,6 +9907,7 @@
+                 std::fill(part_next.begin(), part_next.end(), pp_next_check);
+             }
+             strata::core::fidelity_diag::resumed(resume);
++            strata::core::layer0_diag::resumed(resume);
+             std::printf("RESUME %lld\n", (long long) resume);   // before reading: this many prompt tokens are reused
+             strata::core::progress_at("reading the prompt, from token", read_from);
+             std::fflush(stdout);
+@@ -11279,11 +11282,14 @@
+                 tr("window", p, T);
+                 const Clock::time_point tw0 = Clock::now();
+                 ver.select_fidelity_first(produced_n==0 && strata::core::fidelity_diag::current().active && T==1);
++                ver.select_layer0_first(produced_n==0 && strata::core::layer0_diag::current().active && T==1 && strata::core::layer0_diag::current().reused==0 && strata::core::layer0_diag::first_position(strata::core::layer0_diag::current().ids.size(),T,p,window[0],strata::core::layer0_diag::current().ids));
+                 if (!ver.run(T, window.data(), p, win_pool_fn, win_pool_user, outv.data(), err) || drive.d.failed) {
+                     std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail : err.c_str());
+                     return 1;
+                 }
+                 if (produced_n==0 && !ver.dump_fidelity_first(T,p,window[0],err)) { std::printf("ERR %s\n",err.c_str());return 1; }
++                if(produced_n==0 && !ver.dump_layer0_first(T,p,window[0],err)) { std::printf("ERR %s\n",err.c_str());return 1; }
++                ver.select_layer0_first(false);
+                 ver.select_fidelity_first(false);
+                 int a = 0;
+                 while (a < T - 1 && window[(size_t) a + 1] == outv[(size_t) a]) ++a;
+@@ -11711,6 +11717,7 @@
+         // reclaims them). Their destructors ran against a runtime already shutting down and aborted (exit 139).
+         try {
+             dpct::get_current_device().queues_wait_and_throw();
++            if(strata::core::layer0_diag::settings().enabled)ver.release_layer0_observer();
+             if (strata::core::fidelity_diag::settings().enabled) {
+                 ver.release_fidelity_observer();sp.release_fidelity_observer();
+                 for(auto& stage:stages) {
+--- /dev/null
++++ b/sycl/include/strata/core/layer0_numerical_contract.hpp
+@@ -0,0 +1,64 @@
++// 0021 bounded numerical snapshot contract; no GPU dependencies.
++#pragma once
++#include <array>
++#include <cstddef>
++#include <stdexcept>
++#include <string>
++#include <vector>
++#include <cstdint>
++namespace strata::core::layer0_diag {
++struct Field { const char* name; const char* encoding; std::size_t bytes; };
++inline constexpr std::size_t maximum_frames=4, byte_cap=64u*1024u*1024u;
++// One final T1 verifier row per raw GEN prefix1/2/4/8. Source state is physical
++// [i,head,j] and convolution is [channel,history]. No raw fused hidden invented.
++inline constexpr std::array<Field,33> fields{{
++ {"residual_input","LE_F32[4,2560]",40960},
++ {"attn_hc_normalized","LE_F32[4,2560]",40960},
++ {"attn_hc_low","LE_F32[320]",1280},
++ {"attn_hc_gate","LE_F32[4,2560]",40960},
++ {"attn_hc_inject","LE_F32[4]",16},
++ {"attn_mixed","LE_F32[2560]",10240},
++ {"attn_input_q81","Q8_1_LE[80,36]",2880},
++ {"gdn_state_before","LE_F32[128,48,128]",3145728},
++ {"gdn_conv_before","LE_F32[10240,3]",122880},
++ {"gdn_qkv","LE_F32[10240]",40960},
++ {"gdn_z","LE_F32[6144]",24576},
++ {"gdn_decay_beta","LE_F32[2,48]",384},
++ {"gdn_normalized_qkv","LE_F32[10240]",40960},
++ {"gdn_output_gated","LE_F32[6144]",24576},
++ {"gdn_output_q81","Q8_1_LE[192,36]",6912},
++ {"gdn_block_output","LE_F32[2560]",10240},
++ {"gdn_state_after","LE_F32[128,48,128]",3145728},
++ {"gdn_conv_after","LE_F32[10240,3]",122880},
++ {"residual_after_attn","LE_F32[4,2560]",40960},
++ {"ffn_mixed","LE_F32[2560]",10240},
++ {"ffn_input_q81","Q8_1_LE[80,36]",2880},
++ {"router_logits","LE_F32[512]",2048},
++ {"router_ids","LE_I32[10]",40},
++ {"router_weights","LE_F32[10]",40},
++ {"shared_gate_up","LE_F32[2,640]",5120},
++ {"shared_hidden_DERIVED","LE_F32[640]",2560},
++ {"shared_hq81","Q8_1_LE[20,36]",720},
++ {"expert_entry_map","LE_I32[10,3]",120},
++ {"expert_gate_up","LE_F32[10,2,640]",51200},
++ {"expert_hidden_DERIVED","LE_F32[10,640]",25600},
++ {"expert_hq81","Q8_1_LE[10,20,36]",7200},
++ {"ffn_block_output","LE_F32[2560]",10240},
++ {"residual_after_ffn","LE_F32[4,2560]",40960}
++}};
++constexpr std::size_t frame_bytes(){std::size_t n=0;for(auto f:fields)n+=f.bytes;return n;}
++static_assert(frame_bytes()*maximum_frames<=byte_cap,"Bounded layer0 capture overflow");
++// Seven shared/expert fields remain explicitly UNOBSERVED in initial0021.
++inline void require_enabled_geometry(bool enabled,int global_layer,int rows,int prefix_tokens){
++ if(!enabled)return;
++ if(global_layer!=0 || rows!=1 || !(prefix_tokens==1||prefix_tokens==2||prefix_tokens==4||prefix_tokens==8))
++  throw std::runtime_error("Layer0 draft capture shape/position scope differs");
++}
++} // namespace strata::core::layer0_diag
++
++namespace strata::core::layer0_diag {
++inline std::size_t index(const char* name){for(std::size_t i=0;i<fields.size();++i)if(std::string(fields[i].name)==name)return i;throw std::invalid_argument("Unknown layer0 field");}
++inline std::size_t offset(std::size_t field){if(field>=fields.size())throw std::invalid_argument("Layer0 field outside layout");std::size_t n=0;for(std::size_t i=0;i<field;++i)n+=fields[i].bytes;return n;}
++inline void copy_extent(std::size_t field,std::size_t bytes){if(field>=fields.size()||bytes!=fields[field].bytes)throw std::invalid_argument("Layer0 copy extent differs");}
++inline bool first_position(std::size_t tokens,int rows,std::int64_t position,int token,const std::vector<std::int64_t>& ids){return rows==1&&tokens==ids.size()&&(tokens==1||tokens==2||tokens==4||tokens==8)&&position==std::int64_t(tokens)-1&&token==ids.back();}
++}
+--- /dev/null
++++ b/sycl/include/strata/core/layer0_numerical_observer.hpp
+@@ -0,0 +1,78 @@
++// 0021 default-off bounded numerical observer. No model corrections or RNG.
++#pragma once
++#include "strata/core/layer0_numerical_contract.hpp"
++#include <sycl/sycl.hpp>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <cerrno>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/stat.h>
++#include <algorithm>
++#include <memory>
++namespace strata::core::layer0_diag {
++struct config {
++ bool enabled=false;const char* arm=nullptr;const char* dir=nullptr;const char* binding=nullptr;
++ config(){const char*p=std::getenv("STRATA_LAYER0_Q8_DIAG");enabled=p&&!std::strcmp(p,"1");if(enabled){
++  arm=std::getenv("STRATA_LAYER0_Q8_DIAG_ARM");dir=std::getenv("STRATA_LAYER0_Q8_DIAG_DIR");binding=std::getenv("STRATA_LAYER0_Q8_DIAG_BINDING_SHA256");}}
++};
++inline const config& settings(){static const config c;return c;}
++struct request {bool active=false;unsigned ordinal=0;std::vector<std::int64_t> ids;std::int64_t reused=-1;};
++inline request& current(){static request r;return r;}
++inline void skip(const char* reason){if(settings().enabled)std::fprintf(stderr,"L0Q8 skip pid=%ld request=%u reason=%s math_qualified=0\n",long(getpid()),current().ordinal,reason);}
++inline void validate_config(){const auto&c=settings();if(!c.enabled)return;
++ if(!c.dir||c.dir[0]!='/'||!c.arm||!c.binding||std::strlen(c.binding)!=64)throw std::invalid_argument("Layer0 diagnostic path/binding missing");
++ for(const char*p=c.dir;*p;++p)if(!((*p>='a'&&*p<='z')||(*p>='A'&&*p<='Z')||(*p>='0'&&*p<='9')||std::strchr("/._-",*p)))throw std::invalid_argument("Layer0 diagnostic path characters invalid");
++ for(const char*p=c.binding;*p;++p)if(!((*p>='0'&&*p<='9')||(*p>='a'&&*p<='f')))throw std::invalid_argument("Layer0 diagnostic binding is not lowercase SHA256");
++ struct stat d;if(stat(c.dir,&d)||!S_ISDIR(d.st_mode))throw std::invalid_argument("Layer0 diagnostic directory missing");}
++inline void begin(const std::vector<std::int64_t>&ids,bool supported){if(!settings().enabled)return;auto&r=current();r.active=false;
++ struct stat a;if(!settings().arm||stat(settings().arm,&a)||!S_ISREG(a.st_mode))return;validate_config();++r.ordinal;r.reused=-1;
++ if(!supported||r.ordinal>maximum_frames||!(ids.size()==1||ids.size()==2||ids.size()==4||ids.size()==8)){skip("unsupported_mode_prefix_or_quota");return;}
++ if(std::any_of(ids.begin(),ids.end(),[](std::int64_t id){return id<0||id>=248320;})){skip("invalid_GEN_token");return;}
++ r.ids=ids;r.active=true;std::fprintf(stderr,"L0Q8 request pid=%ld request=%u ids=",long(getpid()),r.ordinal);
++ for(std::size_t i=0;i<ids.size();++i)std::fprintf(stderr,"%s%lld",i?",":"",(long long)ids[i]);std::fprintf(stderr," prefix=%zu layer=0 first_window_T1=1 full_model_math_qualified=0\n",ids.size());}
++inline void resumed(std::int64_t count){if(!settings().enabled||!current().active)return;current().reused=count;if(count!=0){current().active=false;skip("reused_prefix_not_empty_baseline");}}
++class snapshot {
++ sycl::queue q_;int stage_;std::uint8_t*data_=nullptr;
++ std::array<std::array<bool,fields.size()>,4>rosters_{};std::array<bool,4>sealed_{};int building_=-1,armed_key_=-1;
++ std::uint64_t nonce_=0,zero_=0,published_=0,invalid_=~std::uint64_t(0);std::array<std::uint64_t,4>keys_{{0,1,2,3}};unsigned armed_request_=0;std::int64_t armed_pos_=-1;int armed_token_=-1;
++ void affinity(sycl::queue&q){if(q.get_context()!=q_.get_context()||q.get_device()!=q_.get_device())throw std::invalid_argument("Layer0 snapshot queue context/device changed");}
++public:
++ snapshot(const sycl::queue&q,int stage):q_(q),stage_(stage){if(!settings().enabled)return;validate_config();if(!q_.has_property<sycl::property::queue::in_order>())throw std::invalid_argument("Layer0 snapshot queue must be in order");data_=sycl::malloc_device<std::uint8_t>(frame_bytes()+56,q_);if(!data_)throw std::bad_alloc();
++  std::fprintf(stderr,"L0Q8 allocation stage=%d pointer=%p bytes=%zu owner_queue=verifier_cs\n",stage_,(void*)data_,frame_bytes()+56);try{q_.memcpy(data_+frame_bytes()+24,keys_.data(),32).wait_and_throw();}catch(...){sycl::free(data_,q_);data_=nullptr;throw;}}
++ ~snapshot(){try{release();}catch(...) {}}
++ void release(){if(!data_)return;q_.wait_and_throw();std::fprintf(stderr,"L0Q8 release_begin stage=%d pointer=%p bytes=%zu\n",stage_,(void*)data_,frame_bytes()+56);sycl::free(data_,q_);data_=nullptr;std::fprintf(stderr,"L0Q8 release_returned stage=%d\n",stage_);}
++ void begin_roster(int key){if(key<0||key>=4)throw std::invalid_argument("Layer0 graph key invalid");building_=key;rosters_[key].fill(false);sealed_[key]=false;}
++ void seal_roster(int key){if(key!=building_||key<0||key>=4)throw std::invalid_argument("Layer0 graph construction mismatch");for(std::size_t i=0;i<fields.size();++i)if(rosters_[key][i]!=(i<24||i>=31))throw std::invalid_argument("Layer0 graph does not contain exact26 producer hooks");sealed_[key]=true;building_=-1;}
++ void arm(int key,int rows,std::int64_t pos,int token,sycl::queue&q){affinity(q);const auto&r=current();if(!r.active||r.reused!=0||!first_position(r.ids.size(),rows,pos,token,r.ids)||key<0||key>=4||!sealed_[key])throw std::invalid_argument("Layer0 current frame/graph not qualified for replay");
++  armed_key_=key;armed_request_=r.ordinal;armed_pos_=pos;armed_token_=token;nonce_=(std::uint64_t(std::uint32_t(getpid()))<<32)|r.ordinal;
++  // Persistent member backing survives until run completes or owning release drains q.
++  q.memcpy(data_+frame_bytes()+8,&nonce_,8);q.memcpy(data_+frame_bytes(),&zero_,8);q.memcpy(data_+frame_bytes()+16,&invalid_,8);
++ }
++ void stamp(sycl::queue&q){affinity(q);if(building_<0)throw std::invalid_argument("Layer0 stamp outside graph construction");for(std::size_t i=0;i<fields.size();++i)if(rosters_[building_][i]!=(i<24||i>=31))throw std::invalid_argument("Layer0 stamp before exact26 producer copies");q.memcpy(data_+frame_bytes(),data_+frame_bytes()+8,8);q.memcpy(data_+frame_bytes()+16,data_+frame_bytes()+24+building_*8,8);}
++ void copy(const char*name,const void*src,std::size_t bytes,sycl::queue&q){if(!settings().enabled)return;auto i=index(name);copy_extent(i,bytes);affinity(q);if(!data_||!src)throw std::invalid_argument("Layer0 null copy descriptor");if(building_<0)throw std::invalid_argument("Layer0 copy outside graph construction");q.memcpy(data_+offset(i),src,bytes);rosters_[building_][i]=true;}
++ void pair(const char*name,const void*a,const void*b,std::size_t bytes,sycl::queue&q){if(!settings().enabled)return;auto i=index(name);copy_extent(i,bytes*2);affinity(q);if(!data_||!a||!b)throw std::invalid_argument("Layer0 null pair descriptor");if(building_<0)throw std::invalid_argument("Layer0 copy outside graph construction");q.memcpy(data_+offset(i),a,bytes);q.memcpy(data_+offset(i)+bytes,b,bytes);rosters_[building_][i]=true;}
++ bool dump(int key,int rows,std::int64_t pos,int token,std::string&err){const auto&r=current();if(!r.active)return true;
++  if(r.reused!=0||!first_position(r.ids.size(),rows,pos,token,r.ids)){skip("wrong_token_position_or_state_boundary");return true;}
++  if(key!=armed_key_||armed_request_!=r.ordinal||pos!=armed_pos_||token!=armed_token_||key<0||key>=4||!sealed_[key]||published_==nonce_){err="Layer0 stale/unarmed/duplicate frame";return false;}
++  std::array<std::uint64_t,3>marker{};q_.memcpy(marker.data(),data_+frame_bytes(),24).wait_and_throw();const auto completed=marker[0];if(completed!=nonce_||marker[1]!=nonce_||marker[2]!=std::uint64_t(key)){err="Layer0 current graph replay marker absent; no fields publish";return false;}
++  const std::uint16_t endian=1;if(!*reinterpret_cast<const std::uint8_t*>(&endian)){err="Layer0 requires little-endian raw source runtime";return false;}
++  const std::string stem=std::string(settings().dir)+"/l0q8-"+std::to_string(long(getpid()))+"-r"+std::to_string(r.ordinal)+"-s"+std::to_string(stage_);
++  const int meta=::open((stem+".json").c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(meta<0){err="Layer0 metadata open failed";return false;}
++  FILE*out=fdopen(meta,"w");if(!out){::close(meta);err="Layer0 metadata stream failed";return false;}
++  std::unique_ptr<FILE,int(*)(FILE*)>close_meta(out,&std::fclose);
++  std::fprintf(out,"{\"schema\":1,\"pid\":%ld,\"request\":%u,\"stage\":%d,\"layer\":0,\"rows\":1,\"position\":%lld,\"token\":%d,\"reused\":%lld,\"binding_sha256\":\"%s\",\"gen_ids\":[",long(getpid()),r.ordinal,stage_,(long long)pos,token,(long long)r.reused,settings().binding);
++  for(std::size_t j=0;j<r.ids.size();++j)std::fprintf(out,"%s%lld",j?",":"",(long long)r.ids[j]);
++  std::fprintf(out,"],\"graph_key\":%d,\"completed_nonce\":%llu,\"request_replay_marker_verified\":true,",key,(unsigned long long)completed);
++  std::fprintf(out,"\"raw_fused_hidden_observed\":false,\"complete_preregistered_layout\":false,\"full_model_math_qualified\":false,\"fields\":[");bool ok=true;
++  for(std::size_t i=0;i<fields.size();++i){std::string path=stem+"-"+fields[i].name+".bin";
++   if(rosters_[key][i]){std::vector<std::uint8_t>raw(fields[i].bytes);q_.memcpy(raw.data(),data_+offset(i),raw.size()).wait_and_throw();int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(fd<0){ok=false;break;}std::size_t done=0;while(done<raw.size()){ssize_t n=::write(fd,raw.data()+done,raw.size()-done);if(n>0)done+=std::size_t(n);else if(n<0&&errno==EINTR)continue;else{ok=false;break;}}if(::close(fd))ok=false;if(!ok)break;}
++   std::fprintf(out,"%s{\"name\":\"%s\",\"encoding\":\"%s\",\"bytes\":%zu,\"observed\":%s,\"file\":\"%s\",\"provenance\":\"%s\"}",i?",":"",fields[i].name,fields[i].encoding,fields[i].bytes,rosters_[key][i]?"true":"false",rosters_[key][i]?path.c_str():"",rosters_[key][i]?"actual_buffer":"UNOBSERVED_no_producer_hook");
++  }
++  std::fprintf(out,"]}\n");if(std::fclose(close_meta.release()))ok=false;if(!ok){err="Layer0 diagnostic output incomplete; preserve partial evidence";return false;}
++  published_=nonce_;
++  std::fprintf(stderr,"L0Q8 frame pid=%ld request=%u stage=%d layer=0 position=%lld token=%d metadata=%s.json math_qualified=0\n",long(getpid()),r.ordinal,stage_,(long long)pos,token,stem.c_str());return true;
++ }
++};
++}

@@ -9830,3 +9830,19 @@ external6/source/stageaudit, teardown/health/kernel/NEW4publisherhashes pass.
 New20V6pin191/209 started underpairlease atF07/serial-pin-twocard-v6-v1.
 VERDICT -> Actualidentity/coldobservable consistency, logicalbudgets only;
 fullmath/rawstate/OSpeak/concurrency/latency remain open.
+
+## 2026-10-09 Layer0 numerical capture21 source checkpoint
+
+CONFIG -> Separate0021 on frozen20; standalone21 engineplan SHA
+5367d37727a4e3df8c53288ad96cdf22660cab4c448845a818cdd70a3197e016.
+PatchSHA3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081.
+COMMAND -> Parent test_layer0_numerical_capture_cpu_v1.py.
+RESULT -> PASS exact reconstruction and actualhelper under mockSYCL: defaultoff
+zeroalloc/copies/frees,14 stale/partial/nonce/context/extent/quota negatives,
+three frames26observed/7UNOBSERVED. Persistentnoncebacking/4sealedgraphkeys/
+exactactualreplay nonce+keystamp gate; incoming/outgoingstate requires existing
+T1selfcommit, refuses unsupportedflag ratherthan togglingmath.
+VERDICT -> CPU/source only; fullSDKbuild/newsource390/off-on/output/state/owner
+GPUqualification required. Shared/expert7producerfields remainunobserved;
+partial26fieldcapture cannotqualify fullfirstlayer/wholemodel equations.
+Frozen20/V6/reference/packet contracts preserved.

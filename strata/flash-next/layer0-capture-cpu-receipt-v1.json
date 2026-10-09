@@ -1,0 +1,24 @@
+{
+  "mode": "CPU_MOCK_SYCL_LAYER0_CAPTURE_ONLY",
+  "passed": true,
+  "patch_sha256": "3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081",
+  "source_reconstruction_exact": true,
+  "consumed_source_sha256": {
+    "sycl/include/strata/core/verify.hpp": "80280c2664a1cdb16c218a6f2913279a3130bbf295b7f2a1d23f0922aa64dd22",
+    "sycl/src/core/verify.cpp": "5af5ed919e08d0162010421fcd279f158f8aa6f8f1a10589d0bba571b87dc7e6",
+    "sycl/src/program/generate.cpp": "2c4dd705560964bf13e0e28adaf262045e7db81c655e6062533bbfc2157660b0",
+    "sycl/include/strata/core/layer0_numerical_contract.hpp": "86a83df856829674f03b9eb6c80bac0817cb2cdfa4459b3186f5480600e8dfdd",
+    "sycl/include/strata/core/layer0_numerical_observer.hpp": "55db0accf63982572a34d10655bb81ffc5d783fe77cf6b76da855776cf64996e"
+  },
+  "default_off_zero_allocations_copies_frees": true,
+  "mock_result": "ON_PASS rejected=14 fields=26 unobserved=7",
+  "successful_frames": 3,
+  "observed_fields": 26,
+  "unobserved_fields": 7,
+  "nonce_and_graph_key_replay_guard": true,
+  "cpu_compile_image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "devices_exposed": false,
+  "actual_sycl_tu_compiled": false,
+  "gpu_executed": false,
+  "full_model_math_qualified": false
+}
