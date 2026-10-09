@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "status": "Prepared new0011 source increment; actual object compilation pending; noGPU/model execution",
+  "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "base_generation": "NativeHC/PLE/API/0010 fullv5; existing generation receipts remain unchanged",
+  "patch": "strata/flash-next/patches/0011-sycl-strict-native-omit-legacy-ple-key.patch",
+  "patch_sha256": "4219c7fd206bb2667f2ffb0e130c9adcea80c1b01a0bd361c5fc4d6c82a4b06c",
+  "default": "Unchanged when STRATA_SYCL_NATIVE_HC unset/0; old ordinary PLE key remains uploaded and checked",
+  "strict_source_changes": [
+    "Skip blk.1.ple_key.weight only in NativeDense ordinary pending-upload loop under native_hc_requested",
+    "Keep eligible/served_names unchanged so canonical quantized metadata-only row remains skipped by pack-loader",
+    "Skip only generate.cpp legacy native_data/q8scratch key bootstrap requirement under sameflag; original PLE type/shape/byte source guards stillmandatory",
+    "Strict scalarPLE source_exact bypasses key_native_data, converts noembQ8_1/F16, uses original ple_source_q8 key",
+    "Strict verifier batchedlegacy key/value paths and prefill batchedlegacy key/value path gated off by source_exact; existing scalar history loop uses exact-sourcePLE",
+    "PLE ready uses ple_exact_sources_ok when source_exact; all key/value/F32conv source pointers/lengths validated"
+  ],
+  "consumers_audited": [
+    "sycl/src/program/generate.cpp PLE legacy bootstrap and exact source binding",
+    "include/strata/core/layer.hpp PleBlock.ready source_exact branch",
+    "sycl/src/core/verify.cpp ple_batch_kv/batched legacy switches",
+    "sycl/src/prefill/prefill.cpp ple_batch legacy switch",
+    "sycl/src/kernels/cuda/ple.dp.cpp source_exact before pre_key/key_bf16/key_native/s2 paths and directoriginalF32emb Q8 projections"
+  ],
+  "expected_strict_upload_delta": {
+    "ordinary_images_before": 301,
+    "ordinary_images_after": 300,
+    "removed_ordinary_key_bytes": 27852800,
+    "HC_images_unchanged": 387,
+    "PLE_source_images_unchanged": 3,
+    "ordinary_native_bytes_after": 3091660800,
+    "all_native_image_bytes_after": 3821772160,
+    "all_native_image_gib_after": 3.5593026876449585,
+    "full_owned_trace_markers_after": 691,
+    "full_owned_image_markers": 690,
+    "scratch_markers": 1,
+    "split_static0_key_ordinary_images": 0,
+    "split_static1_key_ordinary_images": 0
+  },
+  "required_next_gates": [
+    "Source patch applies to separate new build plan/clone; never edit pinnedexisting0006/0010/fullv5 plan",
+    "Actual ordinary image omission/correct sourcePLE bind in full390 onecard explicit then modelstatic24/24 source-owner oracle",
+    "Expected budgets/ordinarycounts compared from actual receipts; originalHC387+PLE3 roster hashes unchanged",
+    "Chronological UR logical alloc/free trace still retires every actual HC/PLE/ordinary/scratch pointer",
+    "Actual model strictstartup must pass exact sourcePLE checks withoutlegacykey pointer; no readonlycanonical fallback",
+    "Non-native legacy build/source regression gate confirms existing upload/bootstrap branch remains unaffected"
+  ]
+}

@@ -1,0 +1,26 @@
+--- a/sycl/src/core/native_dense.cpp
++++ b/sycl/src/core/native_dense.cpp
+@@ -253,6 +253,10 @@
+             }
+             for (const auto& tensor : gguf.tensors()) {
+                 if (!eligible(tensor, include_ple_key) || outside(tensor.name)) continue;
++                // Strict original-source PLE has its own Q8 key image below. Keep served_names()
++                // unchanged so a native-pack key row remains metadata-only, but do not upload
++                // this unused legacy MMVQ image on either the PLE owner or another stage.
++                if (native_hc_requested() && tensor.name == "blk.1.ple_key.weight") continue;
+                 if (!in_range(tensor.name) && tensor.name.find("ple") == std::string::npos) continue;
+                 if (!seen.insert(tensor.name).second) {
+                     err = "native dense: duplicate tensor " + tensor.name; return false;
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -2992,7 +2992,9 @@
+             ss.ple.w.key_codes = (const uint8_t*) wk->data;
+             ss.ple.w.key_scales = (const float*) ((const uint8_t*) wk->data + wk->codes_bytes);
+         }
+-        if (o.native_ple_key && wk->quantized()) {
++        // Strict mode binds and validates ple_source_* below; it must not require the
++        // omitted legacy key_native_data/scratch before installing those exact sources.
++        if (!strata::core::native_hc_requested() && o.native_ple_key && wk->quantized()) {
+             if (!wk->native_data || (wk->native_type != 42 && wk->native_type != 18 && wk->native_type != 23 &&
+                                      wk->native_type != 8) || !wk->native_q8_1) {
+                 std::fprintf(stderr, "strata generate: native PLE key is absent or incompatible\n");

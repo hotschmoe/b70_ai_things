@@ -1,0 +1,246 @@
+--- a/sycl/include/strata/core/api_state_identity.hpp
++++ b/sycl/include/strata/core/api_state_identity.hpp
+@@ -21,7 +21,7 @@
+     }
+     for (const char* name : {"STRATA_SYCL_NATIVE_HC","STRATA_HC_Q8","STRATA_HC_Q8_INJECT","STRATA_GR_V3",
+         "STRATA_QFUSE","STRATA_GR_UNFUSED","STRATA_PF_HCDOWN","STRATA_HCD_EXACT","STRATA_HC_UPMIX",
+-        "STRATA_STAGE_MIRRORS","SYCL_PROGRAM_COMPILE_OPTIONS"}) {
++        "STRATA_STAGE_MIRRORS","STRATA_STAGE_MIRROR_SEGMENT_MIB","SYCL_PROGRAM_COMPILE_OPTIONS"}) {
+         const char* value=std::getenv(name);
+         const std::string text=value?value:"<unset>";
+         out+="|";out+=name;out+="=";out+=std::to_string(text.size());out+=":";out+=text;
+--- a/sycl/include/strata/core/gguf_expert_source.hpp
++++ b/sycl/include/strata/core/gguf_expert_source.hpp
+@@ -59,7 +59,8 @@
+     // Called once per disjoint stage, after its VRAM cache is populated. Input
+     // pairs must already exclude every cached expert. Source bytes stay original.
+     std::shared_ptr<StageExpertMirror> mirror_stage(const std::vector<std::pair<int64_t,int64_t>>& pairs,
+-        uint64_t cap,int threads,int64_t lb,int64_t le,const sycl::queue& queue,std::string& err);
++        uint64_t cap,int threads,int64_t lb,int64_t le,const sycl::queue& queue,std::string& err,
++        uint64_t segment_bytes=0);
+     uint64_t storage_reads() const { return storage_reads_.load(); }
+     uint64_t mirror_host_reads() const { return mirror_host_reads_.load(); }
+ 
+--- a/sycl/include/strata/core/stage_expert_mirror.hpp
++++ b/sycl/include/strata/core/stage_expert_mirror.hpp
+@@ -21,9 +21,17 @@
+         q.wait_and_throw();
+         if (table) { sycl::free(table,q); table=nullptr; }
+         if (host) { sycl::free(host,q); host=nullptr; }
++        // Clear each pointer only after its owning-context free returns. A failed
++        // explicit release can retry without double-freeing completed segments.
++        for (auto& segment:segments) if(segment.base) {
++            sycl::free(segment.base,q);segment.base=nullptr;
++        }
++        segments.clear();
+     }
+     sycl::queue q;
+-    uint8_t* host=nullptr;
++    uint8_t* host=nullptr; // disabled segmented mode: original contiguous owner
++    struct Segment { uint8_t* base=nullptr; uint64_t bytes=0; };
++    std::vector<Segment> segments; // exact byte budget, no expert crosses a segment
+     unsigned long long* table=nullptr;
+     uint64_t bytes=0;
+     int64_t lb=0,le=0,n_layers=0,n_expert=0;
+--- a/sycl/include/strata/core/stage_mirror_budget.hpp
++++ b/sycl/include/strata/core/stage_mirror_budget.hpp
+@@ -6,6 +6,7 @@
+ #include <cstdlib>
+ #include <cerrno>
+ #include <string>
++#include <vector>
+ namespace strata::core {
+ inline bool stage_mirror_mib(const char* value,uint64_t fallback,uint64_t& out,std::string& err) {
+     if (!value) { out=fallback; return true; }
+@@ -27,6 +28,14 @@
+         const uint64_t room=available>keep?available-keep:0;
+         out.cap=requested<room?requested:room; out.used=0; return true;
+     }
++    bool covers_all(const std::vector<uint64_t>& stages) const {
++        uint64_t needed=0;
++        for(uint64_t n:stages) {
++            if(n>remaining()-needed) return false;
++            needed+=n;
++        }
++        return true;
++    }
+     uint64_t remaining() const { return cap-used; }
+     bool commit(uint64_t bytes) { if (bytes>remaining()) return false; used+=bytes; return true; }
+ };
+--- /dev/null
++++ b/sycl/include/strata/core/stage_mirror_segments.hpp
+@@ -0,0 +1,32 @@
++// CPU-testable expert-preserving segment plan. No allocation or source conversion.
++#pragma once
++#include <cstdint>
++#include <cstddef>
++#include <utility>
++#include <vector>
++#include <string>
++#include <limits>
++namespace strata::core {
++struct StageMirrorLocation { size_t segment=0; uint64_t offset=0; };
++struct StageMirrorSegmentPlan {
++    std::vector<uint64_t> sizes;
++    std::vector<StageMirrorLocation> locations;
++    uint64_t bytes=0;
++    static bool make(const std::vector<uint64_t>& padded,uint64_t limit,
++                     StageMirrorSegmentPlan& out,std::string& error) {
++        if (!limit || limit>(uint64_t(1)<<30) || limit%256) {
++            error="stage mirror: segment limit must be aligned and at most1GiB";return false;
++        }
++        StageMirrorSegmentPlan plan;
++        for(uint64_t n:padded) {
++            if(!n || n%256 || n>limit || n>std::numeric_limits<uint64_t>::max()-plan.bytes) {
++                error="stage mirror: invalid padded expert extent or segment/total overflow";return false;
++            }
++            if(plan.sizes.empty() || n>limit-plan.sizes.back()) plan.sizes.push_back(0);
++            plan.locations.push_back({plan.sizes.size()-1,plan.sizes.back()});
++            plan.sizes.back()+=n;plan.bytes+=n;
++        }
++        out=std::move(plan);return true;
++    }
++};
++}
+--- a/sycl/src/core/gguf_expert_source.cpp
++++ b/sycl/src/core/gguf_expert_source.cpp
+@@ -1,5 +1,7 @@
+ // src/core/gguf_expert_source.cpp - see the header. Plain C++, no device code.
+ #include "strata/core/gguf_expert_source.hpp"
++#include "strata/core/stage_mirror_segments.hpp"
++#include <cstdio>
+ #include "strata/kernels/cpu/expert_layout.hpp"
+ 
+ #include <cstring>
+@@ -174,7 +176,7 @@
+ 
+ std::shared_ptr<StageExpertMirror> GgufExpertSource::mirror_stage(
+     const std::vector<std::pair<int64_t,int64_t>>& pairs,uint64_t cap,int threads,
+-    int64_t lb,int64_t le,const sycl::queue& queue,std::string& err) try {
++    int64_t lb,int64_t le,const sycl::queue& queue,std::string& err,uint64_t segment_bytes) try {
+     if (mirror_ || lb<0 || lb>=le || le>n_layers_ || !queue.has_property<sycl::property::queue::in_order>()) {
+         err="stage mirror: invalid range,queue or legacy mirror present"; return {};
+     }
+@@ -200,13 +202,36 @@
+     auto owner=std::make_shared<StageExpertMirror>(queue);
+     owner->lb=lb; owner->le=le; owner->n_layers=n_layers_; owner->n_expert=n_expert_; owner->bytes=bytes;
+     owner->source_fnv64.assign(size_t(n_layers_*n_expert_),0);
+-    if (bytes) { owner->host=sycl::malloc_host<uint8_t>(size_t(bytes),owner->q); if (!owner->host) { err="stage mirror: pinned allocation failed"; return {}; } }
++    std::vector<uint8_t*> destinations(take.size(),nullptr);
++    if(segment_bytes) {
++        std::vector<uint64_t> padded;padded.reserve(take.size());
++        for(const auto& pair:take) padded.push_back((lay.bytes[size_t(pair.first)]+255)/256*256);
++        StageMirrorSegmentPlan plan;
++        if(!StageMirrorSegmentPlan::make(padded,segment_bytes,plan,err) || plan.bytes!=bytes) {
++            if(err.empty()) err="stage mirror: segment plan byte accounting mismatch";return {};
++        }
++        owner->segments.reserve(plan.sizes.size());
++        for(size_t i=0;i<plan.sizes.size();++i) {
++            uint8_t* pointer=sycl::malloc_host<uint8_t>(size_t(plan.sizes[i]),owner->q);
++            if(!pointer) {err="stage mirror: segment"+std::to_string(i)+" pinned allocation failed for"+std::to_string(plan.sizes[i])+" bytes";return {};}
++            owner->segments.push_back({pointer,plan.sizes[i]});
++            if(sycl::get_pointer_type(pointer,owner->q.get_context())!=sycl::usm::alloc::host) {
++                err="stage mirror: segment is not host USM in owning context";return {};
++            }
++            std::fprintf(stderr,"stage mirror segment: layers%lld-%lld index%zu bytes%llu pointer%p\n",
++                (long long)lb,(long long)(le-1),i,(unsigned long long)plan.sizes[i],(void*)pointer);
++        }
++        for(size_t j=0;j<take.size();++j) destinations[j]=owner->segments[plan.locations[j].segment].base+plan.locations[j].offset;
++    } else {
++        if(bytes) {owner->host=sycl::malloc_host<uint8_t>(size_t(bytes),owner->q);if(!owner->host) {err="stage mirror: pinned allocation failed";return {};}}
++        for(size_t j=0;j<take.size();++j) destinations[j]=owner->host+offsets[j];
++    }
+     std::atomic<size_t> next{0}; std::atomic<bool> bad{false};
+     std::vector<std::thread> ts;
+     try { for (int worker=0;worker<std::max(1,threads);++worker) ts.emplace_back([&] {
+         for (size_t j;(j=next.fetch_add(1))<take.size() && !bad.load();) {
+             const auto [l,e]=take[j]; const size_t n=size_t(lay.bytes[size_t(l)]);
+-            uint8_t* dst=owner->host+offsets[j];
++            uint8_t* dst=destinations[j];
+             if (!read_into(l,e,dst,n)) { bad=true; continue; }
+             uint64_t digest=14695981039346656037ull;
+             for (size_t i=0;i<n;++i) { digest^=dst[i]; digest*=1099511628211ull; }
+@@ -217,17 +242,21 @@
+     if (bad) { err="stage mirror: original GGUF gather failed"; return {}; }
+     std::vector<unsigned long long> table(size_t(n_layers_*n_expert_),0);
+     for (size_t j=0;j<take.size();++j) {
+-        const auto [l,e]=take[j]; table[size_t(l*n_expert_+e)]=(unsigned long long)(owner->host+offsets[j]);
++        const auto [l,e]=take[j]; table[size_t(l*n_expert_+e)]=(unsigned long long)(destinations[j]);
+     }
+     owner->table=sycl::malloc_device<unsigned long long>(table.size(),owner->q);
+     if (!owner->table) { err="stage mirror: address table allocation failed"; return {}; }
+     owner->q.memcpy(owner->table,table.data(),table.size()*sizeof(table[0])).wait_and_throw();
+     // Publish immutable addresses only after source read and table upload finish.
++    if(bytes>UINT64_MAX-stage_bytes_) {err="stage mirror: published byte accounting overflow";return {};}
+     if (stage_alias_.empty()) stage_alias_.assign(table.size(),nullptr);
++    // Commit shared ownership before publishing any aliases/counters. A vector
++    // allocation failure leaves the prior source view unchanged.
++    stage_mirrors_.push_back(owner);
+     for (size_t j=0;j<take.size();++j) {
+-        const auto [l,e]=take[j]; stage_alias_[size_t(l*n_expert_+e)]=owner->host+offsets[j];
+-    }
+-    stage_bytes_+=bytes; stage_mirrors_.push_back(owner);
++        const auto [l,e]=take[j]; stage_alias_[size_t(l*n_expert_+e)]=destinations[j];
++    }
++    stage_bytes_+=bytes;
+     return owner;
+ } catch (const std::exception& ex) { err=std::string("stage mirror: ")+ex.what(); return {}; }
+ 
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -4713,6 +4713,11 @@
+         std::fprintf(stderr,"stage mirror: STRATA_STAGE_MIRRORS must be 0 or 1\n"); return 2;
+     }
+     const bool stage_mirrors=stage_flag && std::strcmp(stage_flag,"1")==0;
++    uint64_t stage_segment_bytes=0;
++    if(!strata::core::stage_mirror_mib(std::getenv("STRATA_STAGE_MIRROR_SEGMENT_MIB"),0,stage_segment_bytes,err) ||
++        stage_segment_bytes>(1ull<<30) || (stage_segment_bytes && !stage_mirrors)) {
++        std::fprintf(stderr,"stage mirror: segment MiB must be0(off)..1024 with STRATA_STAGE_MIRRORS=1: %s\n",err.c_str());return 2;
++    }
+     if (stage_mirrors && (!o.stream_experts || srcp!=&gguf_src || o.expert_cache<=0 ||
+         o.adapt_every!=0 || o.adapt_async || !o.no_prefill_borrow || o.peer_device>=0 ||
+         o.resident_cpu_experts || remote_caches || split_same || o.pipeline_windows>0 || !o.mtp.empty())) {
+@@ -4880,6 +4885,30 @@
+         std::fprintf(stderr,"stage mirror global budget: available%llu cap%llu reserves%llu,%llu,%llu,%llu metadata%llu bytes\n",
+             (unsigned long long)available,(unsigned long long)budget.cap,(unsigned long long)reserve[0],
+             (unsigned long long)reserve[1],(unsigned long long)reserve[2],(unsigned long long)reserve[3],(unsigned long long)metadata);
++        if(stage_segment_bytes) {
++            // All stage caches are populated already. Preflight complete required
++            // coverage globally, without fair-share truncation of a larger stage.
++            const auto& layout=strata::kernels::cpu::expert_layout();
++            std::vector<uint64_t> requirements;
++            auto required=[&](strata::core::ExpertCache& cache,int64_t lb,int64_t le) {
++                uint64_t total=0;
++                for(int64_t l=lb;l<le;++l) {
++                    uint64_t raw=layout.bytes[size_t(l)];
++                    if(!raw || raw>UINT64_MAX-255) {err="stage mirror: required blob extent overflow";return false;}
++                    const uint64_t padded=(raw+255)/256*256;
++                    if(padded>stage_segment_bytes) {err="stage mirror: expert larger than configured segment";return false;}
++                    for(int64_t e=0;e<g.n_expert;++e) if(cache.slot_of(l,e)==strata::core::kNotResident) {
++                        if(padded>UINT64_MAX-total) {err="stage mirror: required total overflow";return false;}total+=padded;
++                    }
++                }
++                requirements.push_back(total);return true;
++            };
++            if(!required(xcache,0,stages.empty()?g.n_layers:split_at[0])) {std::fprintf(stderr,"%s\n",err.c_str());return 2;}
++            for(auto& stage:stages) if(!required(stage->cache,stage->lb,stage->le)) {std::fprintf(stderr,"%s\n",err.c_str());return 2;}
++            if(!budget.covers_all(requirements)) {std::fprintf(stderr,"stage mirror: complete segmented coverage exceeds global RAM budget\n");return 2;}
++            for(size_t i=0;i<requirements.size();++i) std::fprintf(stderr,"stage mirror required: stage%zu bytes%llu global_cap%llu segment_cap%llu\n",
++                i,(unsigned long long)requirements[i],(unsigned long long)budget.cap,(unsigned long long)stage_segment_bytes);
++        }
+         auto build_stage=[&](strata::core::ExpertCache& cache,const std::vector<std::pair<int32_t,int32_t>>& ranked,
+             int64_t lb,int64_t le,const sycl::queue& queue,size_t remaining_stages,
+             std::shared_ptr<strata::core::StageExpertMirror>& owner) {
+@@ -4892,8 +4921,10 @@
+             };
+             for (const auto& pair:ranked) add(pair.first,pair.second);
+             for (int64_t l=lb;l<le;++l) for (int64_t e=0;e<g.n_expert;++e) add(l,e);
+-            // Fair initial share leaves RAM available for second-stage coverage.
+-            owner=gguf_src.mirror_stage(missing,budget.remaining()/remaining_stages,8,lb,le,queue,err);
++            // Segmented mode preflight covers all stages under one cap. The
++            // disabled path retains its original fair-share policy.
++            owner=gguf_src.mirror_stage(missing,stage_segment_bytes?budget.remaining():budget.remaining()/remaining_stages,
++                8,lb,le,queue,err,stage_segment_bytes);
+             if (!owner || !budget.commit(owner->bytes)) return false;
+             size_t covered=0;
+             for (const auto& pair:missing) covered+=gguf_src.pinned(pair.first,pair.second);
