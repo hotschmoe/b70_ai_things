@@ -231,3 +231,33 @@ equality; exact target admission/victim and every-mutation budgets require V6.
 COMMAND -> Parent wrapper --group eviction; F06/serial-eviction-twocard-v1.
 RESULT -> Both leases acquired and pre-health started.
 VERDICT -> RUNNING; do not infer exact victim ownership from the V5 counter gate.
+
+## Finalized bounded two-card eviction/cold reconstruction
+
+CONFIG -> Frozen0018/V5 two-card pilot,512MiB/one-slot parking. Six requests:
+fresh target B, independent A/C/D, nonfresh B, fresh final B.
+COMMAND -> Parent --group eviction; F06/serial-eviction-twocard-v1.
+RESULT -> Final parent/child PASS, exit0,387s including lifecycle and fresh
+hashes. Global eviction counter2 at reference grows to6 at target replay;
+nonfresh target selects zero reused rows and evaluates all55 prompt tokens.
+Original reference, cold reconstruction and fresh final agree in IDs/LP20/
+natural EOS, full first logits and all48 residuals bitwise in the two pairs
+(96 paired residual rows, max_abs0/RMSE0). All native teardown/health/kernel
+and NEW four-shard publisher-hash gates pass.
+VERDICT -> PASS V5's bounded churn/cold reconstruction gate. It does not prove
+the target was admitted or identify its exact eviction victim. V6 keyed
+admission/victim/every-mutation budgets and broader cache isolation remain open.
+
+## Combined20 source rebuild completed
+
+CONFIG -> New separately pinned host-lifecycle telemetry0019 and stage slot
+ownership0020, unchanged sourcefb58/GGML3cf/image39992. V5 and old18 sources
+remain preserved.
+COMMAND -> build_native_hc_engine.py with
+serial-lifecycle-slot-owner-engine-build-plan-v1.json under pair lease.
+RESULT -> Full build PASS exit0,284s. All38 consumed patched file hashes match
+expected ledger; all3 required executables built; source/plan unchanged. Receipt:
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/receipt.json.
+VERDICT -> Compilation only. New engine is NOT qualified by old18 model/cache
+receipts. Real slot ownership/free oracle, NEW390 source upload, C1 identity and
+V6 model/cache observer off/on tests are mandatory before use/promotion.

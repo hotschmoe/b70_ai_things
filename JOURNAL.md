@@ -9667,3 +9667,16 @@ failed-free/empty/wrong-roster negatives pass. Owner oracle not compiled/run.
 VERDICT -> ABI/source build only. Real one/pair slot ownership, new full390
 source upload and model/API/V6 qualification remain open. Old18 cache receipts
 are not new20 qualification. Compile frozen owner oracle next under lease.
+
+## 2026-10-09 Finalized bounded eviction reconstruction and combined20 build
+
+CONFIG -> Old18 V5 eviction pilot remains separate from newly compiled20.
+COMMAND -> Parent --group eviction; F06/serial-eviction-twocard-v1.
+RESULT -> Final PASS exit0,387s; counter2-to6, target0reuse/55eval. Two full
+head/all48residual comparisons bitwise equal, IDs/LP20/natural EOS equal;
+health/teardown/kernel/NEWall4 publisher hashes pass. Combined20 full build
+then PASS284s with38 expected source hashes and3 executables; owner oracle
+compilation started under lease, not runtime-qualified.
+VERDICT -> V5 bounded cold reconstruction, not exact target admission/victim
+proof. New20 requires independent ownership/full390/C1/V6 qualification; old
+receipts cannot establish it. See serial diagnostic qualification doc.
