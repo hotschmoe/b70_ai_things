@@ -9446,3 +9446,19 @@ andone/twocardCPUprepare, samegeometry/prompts/tolerances. NoV5GPUresults yet.
 VERDICT -> Fullmodel2B70tieredserving passesboundedcoherence/lifecycle. No
 fullstate/logit/prefix/concurrency/matchedlatency qualificationorproduction
 claim. Cachedbitcorruptionorigin stillunresolved; guardsretained. Goalactive.
+
+## 2026-10-09 Frozen serial-prefix parent lifecycle wrapper
+
+CONFIG -> Exact corrected0018 engine and V5 serial controller; parent wrapper
+SHA256 6f2a28ec6aadbce4989a10ed25048f57fd84b9694fd37cea4af1ca21a1c350f6.
+COMMAND -> python3 strata/flash-next/test_qualify_serial_prefix_cpu.py; Python
+compilation; actual prepared-plan identity validation recorded in the CPU receipt.
+RESULT -> CPU tests pass for success and failed-child paths, inherited lease
+descriptors, stdout forwarding, owned teardown, post-health retention, fresh
+four-shard buffered hashes, and terminal-time/finalization negative controls.
+The first actual one-card basic suite is running under the parent-owned pair
+lease at f06-20261009/serial-basic-onecard-v1; no numerical result is claimed.
+VERDICT -> Wrapper source checkpoint only. Full model mathematics, complete-state
+prefix reuse, concurrency, clean latency, and shelf promotion remain unqualified.
+Evidence: strata/flash-next/qualify-serial-prefix.md and external CPU receipt
+/mnt/vm_8tb/b70/results/strata-prefix-harness-cpu-20261009/parent-wrapper-receipt.json.
