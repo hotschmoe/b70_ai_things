@@ -10035,3 +10035,25 @@ VERDICT -> Bounded one-card capture diagnostic qualified; conditional supplied
 state math is not independent own-state/full-model qualification. Actual pair,
 remaining producer coverage, real2/4/6 concurrency and matched latency still
 required. See docs/20261009_flashnext_capture21_numerical_v2.md for receipt hashes.
+
+
+## 2026-10-09 - Combined numerical and batch full rebuild plan
+
+CONFIG -> Fresh pinned pristine Strata source plus reviewed20/21/23/22-v2/24-v2
+patch chain. Preserve active frozen21 pair numerical run and prior artifacts.
+Full ABI rebuild includes8 executable targets and transitive kernel libraries.
+
+COMMAND -> Independently reconstruct pristine files with git-show, validate all
+patch SHA values, apply/check all24 patches and compare every51 final source and
+22 consumed-header hash. Run combined manifest CPU positive plus6 negatives.
+Review CMake definitions for required engine, grouped/native/shared/verify and
+conversation parity callers.
+
+RESULT -> All independent reconstruction hashes and six rejection controls PASS.
+API fingerprint binds batch_request_identity.py. Runtime/source expected ledger
+includes previously omitted prefill/fidelity headers. No SDK or GPU build yet.
+
+VERDICT -> Immutable combined plan source checkpoint before full pinned rebuild.
+Compilation, new source390/upload identity, numerical off/on, real2/4/6 capacity
+and per-request coherence/lifecycle remain required. Earlier runtime receipts
+cannot qualify new combined artifacts; full-model math and concurrency false.

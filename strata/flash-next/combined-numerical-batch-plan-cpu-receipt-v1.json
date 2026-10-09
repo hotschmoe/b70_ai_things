@@ -1,0 +1,21 @@
+{
+  "mode": "CPU_COMBINED_MANIFEST_ONLY",
+  "passed": true,
+  "plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a",
+  "reconstruction_receipt_sha256": "44ab0785f38907dd2cc0aa8f75d556bcbe751ce7fbb52c69dcbdf3de2c222172",
+  "final_files": 51,
+  "pristine_files": 25,
+  "consumed_header_payloads": 22,
+  "negative_controls": [
+    "missing_final_path",
+    "old21_observer_payload",
+    "missing_api_helper",
+    "missing_abi_caller",
+    "false_concurrency_claim",
+    "false_model_math_claim"
+  ],
+  "sdk_compiled": false,
+  "gpu_executed": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false
+}
