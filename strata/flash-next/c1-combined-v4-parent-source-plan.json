@@ -1,0 +1,26 @@
+{
+  "schema": 4,
+  "scope": "CPU source-only parent final C1 source/lifecycle proof; no actual payload/runtime/GPU",
+  "files": {
+    "qualify_c1_serving_combined_v4.py": "b25768e50ef88eb2d3c6d9a0e584d115f159687d01739be91b266ad227f36fd3",
+    "test_qualify_c1_serving_combined_v4.py": "97d4e8d53ce1af7044b9b572da9a4792e20ab6bf1b6e06127d62185c881476c8",
+    "c1-combined-v4-parent-qualification.md": "1ae1eb462c18f04918df31840302bb9a8076adc4e11c1a611034d1e215760ece",
+    "c1_serve_controller_combined_v4.py": "94b9cdfa161113c6fa7678d7e4230b5e1a3a642fe6bd431b554c4bbbd5581f43",
+    "c1-combined-v4-source-plan.json": "a440d5f8888e9b98765a93d3c427b2d7c08c7aae1ffbd68ac7d54bf5c0188d8c",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source-upload-runner-v2-source-plan.json": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "preserved_parent_sha256": "ba018012cbc048b77afea1e4224e21d2a30bc86c1381d7db361bb437fae7957e",
+  "cpu_tests": 18,
+  "proof_helper": "qualify_c1_serving_combined_v4.validate_final_source_proof(directory,prepared)",
+  "final_receipt": "qualification.json",
+  "parent_receipt": "parent-qualification.json",
+  "source_proof": "c1-source-identity-proof-v4.json",
+  "post_identity": "c1-post-model-identity-v4.json",
+  "mandatory_new_post_terminal_post_health_full4": true,
+  "actual_model_payload_reads": 0,
+  "actual_c1_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false
+}

@@ -1,0 +1,29 @@
+{
+  "schema": 5,
+  "scope": "CPU source canonical-list5 schema fix; no actual preparation/runtime/model payload reads",
+  "engine_plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a",
+  "files": {
+    "c1_serve_controller_combined_v5.py": "256b517151b2f0b39aa8874d701897c9f0a454e79c776310583d2f571141fad0",
+    "test_c1_serve_controller_combined_v5.py": "a07799d43cec7676802c2d2cd66998e185c07711d070c2c31a8a9420c207eca6",
+    "c1-combined-v5-stat-schema-fix.md": "90dd1a99618bf5c28a49f24969dd99b4b06b285e56a9ff69c6798d097b122ed3",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source-upload-runner-v2-source-plan.json": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "preserved_controller_v4_sha256": "94b9cdfa161113c6fa7678d7e4230b5e1a3a642fe6bd431b554c4bbbd5581f43",
+  "preserved_source_plan_v4_sha256": "a440d5f8888e9b98765a93d3c427b2d7c08c7aae1ffbd68ac7d54bf5c0188d8c",
+  "cpu_tests": 31,
+  "canonical_source_stat": [
+    "st_dev",
+    "st_ino",
+    "st_size",
+    "st_mtime_ns",
+    "st_ctime_ns"
+  ],
+  "stat_format": "list5; ctime retained",
+  "actual_four_tiny_file_producer_consumer_tests": true,
+  "actual_model_payload_reads": 0,
+  "actual_preparation_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false
+}

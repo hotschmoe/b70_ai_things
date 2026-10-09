@@ -10160,3 +10160,31 @@ PFNs/fullhost/driver stability unqualified and source cause unknown. Strict
 newsource upload GPU qualification may now start with fresh identity; no model
 math, actual2/4/6/cache/fairness or shelf qualification follows from CPU gates.
 See docs/20261009_flashnext_cpu_ram_discriminator.md and source plans.
+
+
+## 2026-10-09 - Strict new source390 PASS and genuine C1 schema integration
+
+CONFIG -> Combined24 actualSDK8targets/51sources, rebuiltsourceoracle and strict
+uploadV2. New sourceproof parent4/numeric5 prototypes preserved, canonicalstat
+C1V5/parent5 andnumeric6 use list5 withctime. Cache25 remainsCPU source only.
+
+COMMAND -> Actual sourceuploadV2 all5cases plus ownertraces, pre/posthealth and
+NEWpostterminal/posthealth full4 hash. GenuineC1V4prepare attempted with actual
+newSDK/upload/oracle/runtime. After refusal, test actual tinyfile uploadproducer
+to new strictC1/parent consumers withctime negative. Independently run C1V5
+31controls/parent5 20controls and numericalV5/V6 tests. Run cache25 actual-body
+ASan/UBSan controls and7config negatives; verify allsource freezes.
+
+RESULT -> Actualsource390 PASS284s; eachcase387HC+3PLE, ordinary300 allocations
+counted notpayload-qualified. Five cases/preposthealth/ownedterminal/twopages/
+NEWall4publisher hashes PASS. C1V4refused beforepayload/output: list5stat producer
+versusdict4 consumer despite equal physicalvalues. C1V5canonical5 withctime
+producer-consumer PASS, physicalctime changed/restoredmtime rejects; allCPU
+controls PASS. Cache25 old spare999/1999 vs corrected111/211, active checkpoint
+donor, idleparking and22transfer controls+7config negatives PASS.
+
+VERDICT -> Source390 qualified; preserve failedC1V4attempt and prototypes.
+Corrected strict5workflow may perform genuine preparation next. Cache25 needs
+full SDK/device/complete cache tests; publicfresh/pin and observer26 remain
+required. Fullmodel math, actual2/4/6 serving and matchedlatency/shelf false.
+See docs/20261009_flashnext_combined24_source_upload_strict_v2.md.

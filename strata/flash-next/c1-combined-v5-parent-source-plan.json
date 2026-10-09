@@ -1,0 +1,32 @@
+{
+  "schema": 5,
+  "scope": "CPU source parent canonical-list5 correction; no genuine qualification",
+  "files": {
+    "qualify_c1_serving_combined_v5.py": "d3af8d46ec1038d5aa021f13115cb0ae02e1e6e67098508099705675a72b7149",
+    "test_qualify_c1_serving_combined_v5.py": "3d46adfdd3067503ad06bda309a6875744b11b6d0fd65f3813e336e325c2dc26",
+    "test_c1_serve_controller_combined_v5.py": "a07799d43cec7676802c2d2cd66998e185c07711d070c2c31a8a9420c207eca6",
+    "c1-combined-v5-stat-schema-fix.md": "90dd1a99618bf5c28a49f24969dd99b4b06b285e56a9ff69c6798d097b122ed3",
+    "c1_serve_controller_combined_v5.py": "256b517151b2f0b39aa8874d701897c9f0a454e79c776310583d2f571141fad0",
+    "c1-combined-v5-source-plan.json": "da875fd3a5f11ea7d3dc3619965665b5a0202f2587cba9a3d309ebb8754d23ea",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source-upload-runner-v2-source-plan.json": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "preserved_parent_v4_sha256": "b25768e50ef88eb2d3c6d9a0e584d115f159687d01739be91b266ad227f36fd3",
+  "preserved_parent_source_plan_v4_sha256": "b7c0cb2d30f231544d980b2340222e425044e0e12d35df590ecfdb0d2c91bb20",
+  "cpu_tests": 20,
+  "proof_helper": "qualify_c1_serving_combined_v5.validate_final_source_proof(directory,prepared)",
+  "canonical_source_stat": [
+    "st_dev",
+    "st_ino",
+    "st_size",
+    "st_mtime_ns",
+    "st_ctime_ns"
+  ],
+  "source_proof": "c1-source-identity-proof-v5.json",
+  "post_identity": "c1-post-model-identity-v5.json",
+  "actual_model_payload_reads": 0,
+  "actual_c1_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false
+}

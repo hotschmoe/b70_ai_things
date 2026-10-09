@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "status": "CPU source READY: tracked reconstruction, actual policy/extracted startup/transfer/park/restore host ASan/UBSan controls PASS; no full TU/SDK/GPU/model qualification",
+  "compiled20_base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source",
+  "compiled20_plan": "strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json",
+  "compiled20_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+  "patches": [
+    {
+      "path": "strata/flash-next/patches/0021-sycl-bounded-layer0-numerical-capture.patch",
+      "sha256": "3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081"
+    },
+    {
+      "path": "strata/flash-next/patches/0022-sycl-strict-batch-request-identity-v2.patch",
+      "sha256": "1c7e7352d25358ac8421c404c0ba898b562b67bbe4cce51526bcb9545c452fce"
+    },
+    {
+      "path": "strata/flash-next/patches/0024-sycl-bounded-batch-fidelity-observer-draft-v2.patch",
+      "sha256": "00d9cbfd507fffdf6da151148fa41354a9ef36e0f5f906853e61f42e440232cf"
+    },
+    {
+      "path": "strata/flash-next/patches/0025-sycl-bounded-complete-batch-prefix-chain-draft.patch",
+      "sha256": "1467ec41c41a63f2d109ea4cb2a329cb0e0b1ed9c1a403140b5f11a05e8515af"
+    }
+  ],
+  "overlay": "/mnt/vm_8tb/b70/build/strata-batch-chain25-v1-4esgco4x",
+  "source_sha256": {
+    "sycl/src/program/generate.cpp": "62d19e1c0847e5ef3b2dd5604e958cf8c70bafa5f2082a6abf70da1420ea8413",
+    "sycl/include/strata/core/batch_prefix_chain.hpp": "12ba3f429a8fdef867fdc0b9e77a0078fd323e14a599b2d906c2d73d74180b98",
+    "sycl/src/core/conversation_state.cpp": "95e8faff15f3f36d3db0caf1e1a08f28302dc449286b6c2a93896466934cfbab",
+    "sycl/src/core/conversation_snapshot.cpp": "8aad8aa2615b28b8f579ef725f99c79cf994ffd95dc7fd931dec300082d745a5",
+    "include/strata/core/conversation_cache.hpp": "b1a652d34597ca1b1232e9f29ccd16c75ec539b05fdcd53dae62b6ee1bdae898",
+    "include/strata/core/conversation_buffer.hpp": "12f1abac2ec75cc71e8cf308a5a691923d8b617317560e009a41f713809f49d4",
+    "include/strata/program/conv_cache.hpp": "83717540db5efafd7d84e809e5f19638a4548aa07671400bdecb483d3279810a"
+  },
+  "test": "strata/flash-next/test_batch_full_state_chain_cpu_v1.py",
+  "test_sha256": "a333173c1501d99c15f690e1f19b24ee8ca7e30c43cf8e126d26a81c1d8cc93a",
+  "public_pin_fresh_batch": "original reject guards unchanged",
+  "runtime_required_env": {
+    "STRATA_BATCH_FULL_STATE_CHAIN": "1",
+    "STRATA_BATCH_CHAIN_MIB": "8192",
+    "STRATA_BATCH_TRANSFER_MIB": "512"
+  },
+  "scope": "exact strict native2/4/6 text; noMTP/group1/static/no-prefill-borrow/fixedKV; complete source387HC3PLE identity gate plus checkpoint/source/kernel/math/cache/lifecycle gates still required",
+  "required_followups": [
+    "fresh25+26 observer scope/migration source reconstruction",
+    "full SDK ABI rebuild and newsource390 qualification whenmodelidentity restored",
+    "actual repeat/sharedprefix/divergentsuffix/turn/eviction/cancel/raw-head+48residual+span comparisons",
+    "validated same-process batchfullfresh and publicpin source extension; guards currentlystay",
+    "actual1/2/4/6 concurrent coherence/fairness/capacity/teardown"
+  ],
+  "independent_final23_apply_receipt": "/mnt/vm_8tb/b70/build/strata21-23-22-24-25-dry-lrbciiz6/apply-receipt.json",
+  "limits": {
+    "checkpoint_count_min": 2,
+    "checkpoint_count_max": 8,
+    "host_chain_mib_default": 8192,
+    "host_chain_mib_max": 16384,
+    "per_KV_image_mib_default": 512,
+    "per_KV_image_mib_max": 1024,
+    "transient_stage_point_directories": 3,
+    "startup_point_allowances": "(requested_slots+3)*checkpoint_cap+3; doubled real stage serialized point and ID/metadata bound",
+    "original_slot_count_unchanged": true
+  },
+  "cpu_results": {
+    "transfer_policy_controls": 22,
+    "malformed_config_negatives": 7,
+    "source_startup_scope_capacity_controls": "pass",
+    "old_moving_spare": [
+      999,
+      1999
+    ],
+    "new_moving_spare": [
+      111,
+      211
+    ],
+    "active_live_recurrence_saved": 0,
+    "partial_transfer_chain_publication": false,
+    "idle_slot_full_staged_parking": "pass"
+  },
+  "documentation": "strata/flash-next/batch-full-state-chain-design-v1.md",
+  "documentation_sha256": "00efb67c58a427d8421f54f859dec8ac590ba9598e760fd5dfb64aa0f326a473",
+  "audit": "strata/flash-next/batch-full-state-chain-source-audit-v1.md",
+  "audit_sha256": "570dcf9ad7d0965acbd91c9eb11ec0b1f4c478f55223477127990b81cbb47197"
+}

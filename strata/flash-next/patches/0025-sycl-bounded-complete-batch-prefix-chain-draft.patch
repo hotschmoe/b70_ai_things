@@ -1,0 +1,363 @@
+diff --git a/sycl/include/strata/core/batch_prefix_chain.hpp b/sycl/include/strata/core/batch_prefix_chain.hpp
+new file mode 100644
+--- /dev/null
++++ b/sycl/include/strata/core/batch_prefix_chain.hpp
+@@ -0,0 +1,38 @@
++// 0025 opt-in complete batch prefix ownership policy. No device/math implementation.
++#pragma once
++#include "strata/core/conversation_cache.hpp"
++#include <cerrno>
++#include <cstdlib>
++#include <cstring>
++#include <limits>
++#include <stdexcept>
++#include <string>
++namespace strata::core::batch_prefix {
++inline size_t add(size_t a,size_t b){if(b>std::numeric_limits<size_t>::max()-a)throw std::overflow_error("batch chain bytes overflow");return a+b;}
++inline size_t mul(size_t a,size_t b){if(a && b>std::numeric_limits<size_t>::max()/a)throw std::overflow_error("batch chain bytes overflow");return a*b;}
++inline size_t mib(const char* name,size_t fallback,size_t max){const char* p=std::getenv(name);if(!p||!*p)return fallback<<20;char* end=nullptr;errno=0;const auto n=std::strtoull(p,&end,10);if(*p<'0'||*p>'9'||errno||end==p||*end||n==0||n>max)throw std::invalid_argument(std::string(name)+" requires bounded positive decimal MiB");return mul(size_t(n),size_t(1)<<20);}
++struct config {bool enabled=false;size_t chain_bytes=0,transfer_bytes=0;
++ config(){const char* p=std::getenv("STRATA_BATCH_FULL_STATE_CHAIN");if(!p||!*p||!std::strcmp(p,"0"))return;if(std::strcmp(p,"1"))throw std::invalid_argument("STRATA_BATCH_FULL_STATE_CHAIN=0|1");enabled=true;chain_bytes=mib("STRATA_BATCH_CHAIN_MIB",8192,16384);transfer_bytes=mib("STRATA_BATCH_TRANSFER_MIB",512,1024);}
++};
++inline const config& settings(){static const config c;return c;}
++inline size_t point_bytes(const ConversationCheckpoint& c){size_t n=0;for(size_t b:{mul(c.ids.capacity(),sizeof(int32_t)),mul(c.imgs.capacity(),sizeof(ConversationImageKey)),c.gdn.capacity(),c.ple.capacity(),c.tails.capacity(),c.dead.capacity(),c.block_pos.capacity(),mul(c.stage_parts.capacity(),sizeof(ConversationCheckpoint))})n=add(n,b);for(const auto& p:c.stage_parts)n=add(n,point_bytes(p));return n;}
++inline size_t chain_bytes(const std::vector<ConversationCheckpoint>& chain){size_t n=mul(chain.capacity(),sizeof(ConversationCheckpoint));for(const auto& c:chain)n=add(n,point_bytes(c));return n;}
++inline size_t startup_bytes(size_t point_bound,int slots,int cap){if((slots!=2&&slots!=4&&slots!=6)||cap<2||cap>8||!point_bound)throw std::invalid_argument("batch full chain requires exact2/4/6 slots and cache2..8");return mul(point_bound,add(mul(size_t(slots+3),size_t(cap)),3));}
++template<class Token>inline bool prefix(const std::vector<int32_t>& a,const std::vector<Token>& b){return !a.empty()&&a.size()<=b.size()&&std::equal(a.begin(),a.end(),b.begin());}
++inline bool complete(const ConversationCheckpoint& c,const std::vector<int32_t>& live,size_t stage_parts,std::string& error){
++ if(!c.imgs.empty()||!prefix(c.ids,live)||c.stage_parts.size()!=stage_parts){error="batch chain checkpoint token/stage identity mismatch";return false;}
++ for(const auto& p:c.stage_parts)if(p.ids!=c.ids||!p.imgs.empty()||!p.stage_parts.empty()){error="batch chain foreign/nested stage checkpoint";return false;}return true;
++}
++// Deep immutable ownership for a bounded donor prefix. Never dedupe states by token equality alone.
++inline bool clone(std::vector<ConversationCheckpoint>& out,const std::vector<ConversationCheckpoint>& donor,const std::vector<int32_t>& live,int64_t upto,size_t stage_parts,int cap,size_t used,size_t budget,std::string& error){
++ out.clear();if(upto<0||size_t(upto)>live.size()||cap<2||cap>8){error="batch chain clone bounds";return false;}size_t estimate=0,count=0;
++ for(const auto& c:donor){if(!complete(c,live,stage_parts,error))return false;if(c.ids.size()<=size_t(upto)){estimate=add(estimate,point_bytes(c));++count;}}
++ estimate=add(estimate,mul(count,sizeof(ConversationCheckpoint)));if(count>size_t(cap)||used>budget||estimate>budget-used){error="batch chain clone exceeds host byte/count budget";return false;}
++ std::vector<ConversationCheckpoint> candidate;candidate.reserve(count);for(const auto& c:donor)if(c.ids.size()<=size_t(upto))candidate.push_back(c);
++ std::sort(candidate.begin(),candidate.end(),[](const auto& a,const auto& b){return a.ids.size()<b.ids.size();});for(size_t i=1;i<candidate.size();++i)if(candidate[i-1].ids.size()==candidate[i].ids.size()){error="batch chain duplicate boundary";return false;}
++ if(chain_bytes(candidate)>budget-used){error="batch chain true capacity exceeds host budget";return false;}out=std::move(candidate);return true;
++}
++struct donor {uint64_t rid=0,generation=0;bool active=false,cached=false,partial=false;};
++inline bool eligible(const donor& d,bool checkpoint){return d.rid&&d.generation&&(checkpoint?(d.active||d.cached):(!d.active&&d.cached));}
++inline bool unchanged(const donor& a,const donor& b){return a.rid==b.rid&&a.generation==b.generation&&a.active==b.active&&a.cached==b.cached&&a.partial==b.partial;}
++}
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,6 +1,7 @@
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/batch_fidelity_observer.hpp"
++#include "strata/core/batch_prefix_chain.hpp"
+ #include "strata/core/layer0_numerical_observer.hpp"
+ #include "strata/core/api_state_identity.hpp"
+ #include "strata/core/stage_mirror_budget.hpp"
+@@ -3826,6 +3827,26 @@
+             o.batch_groups!=1 || batch_mtp || !o.mtp.empty() || o.pipeline_windows>0)) {
+         std::fprintf(stderr,"strict native batch requires exact2/4/6 slots, group1, text greedy no-MTP/non-pipelined scope\n");return 2;
+     }
++    const bool batch_chain_enabled=strata::core::batch_prefix::settings().enabled;
++    size_t batch_chain_point_bound=0;
++    if(batch_chain_enabled) {
++        if(!strict_batch_identity || !o.serve || split_same || stages.size()>1 || o.prompt_cache<2 || o.prompt_cache>8 ||
++                o.adapt_every!=0 || o.adapt_async || !o.no_prefill_borrow || o.kv_grow || (std::getenv("STRATA_KV_GROW") && std::getenv("STRATA_KV_GROW")[0] && std::strcmp(std::getenv("STRATA_KV_GROW"),"0")) || std::getenv("STRATA_CKPT_REREAD")) {
++            std::fprintf(stderr,"full batch chain requires strict native2/4/6 text, cache2..8, static no-borrow, fixedKV, no reread scope\n");return 2;
++        }
++        for(size_t k=0;k<=stages.size();++k){const auto& state=k==0?ss:stages[k-1]->ss;strata::core::ConversationStateSizes z;
++            if(!strata::core::conversation_session_sizes(g,state,z,err)){std::fprintf(stderr,"batch chain geometry: %s\n",err.c_str());return 2;}
++            size_t b=strata::core::batch_prefix::add(z.gdn,state.ple_hist?z.ple:0);b=strata::core::batch_prefix::add(b,strata::core::batch_prefix::mul(size_t(state.qsa_alloc),strata::core::batch_prefix::add(strata::core::batch_prefix::add(z.tail,z.dead),z.block_pos)));
++            b=strata::core::batch_prefix::add(b,strata::core::batch_prefix::mul(size_t(o.max_context),8));
++            batch_chain_point_bound=strata::core::batch_prefix::add(batch_chain_point_bound,strata::core::batch_prefix::add(b,2*sizeof(strata::core::ConversationCheckpoint)));
++            for(int64_t j=0;j<state.qsa_alloc;++j){const size_t bytes=strata::core::conversation_kv_bytes(state.qsa_states[state.qsa_ord0+j],g,o.max_context,true);if(!bytes || bytes>strata::core::batch_prefix::settings().transfer_bytes){std::fprintf(stderr,"batch chain KV image exceeds transfer byte bound\n");return 2;}}
++        }
++        // Conservative capacity slack, all slot/main chains and copies plus bounded stage-part transients.
++        batch_chain_point_bound=strata::core::batch_prefix::mul(batch_chain_point_bound,2);
++        const size_t required=strata::core::batch_prefix::startup_bytes(batch_chain_point_bound,requested_batch,int(o.prompt_cache));
++        if(required>strata::core::batch_prefix::settings().chain_bytes){std::fprintf(stderr,"batch chain required%zu configured%zu bytes; requested slots/checkpoint count unchanged\n",required,strata::core::batch_prefix::settings().chain_bytes);return 2;}
++        std::fprintf(stderr,"BCHAIN startup slots=%d cap=%d point_bound=%zu required=%zu chain_limit=%zu transfer_limit=%zu public_pin_fresh=unsupported\n",requested_batch,int(o.prompt_cache),batch_chain_point_bound,required,strata::core::batch_prefix::settings().chain_bytes,strata::core::batch_prefix::settings().transfer_bytes);
++    }
+     std::vector<std::vector<std::unique_ptr<strata::core::SlotSessionArena>>> bslot_ss;
+     if (o.batch != 0) {
+         const int cap = strata::kernels::kVerifyMaxT;
+@@ -7385,6 +7406,13 @@
+         std::vector<ImgKey> live_imgs, req_imgs;
+         bool live_ok = false;
+         std::vector<ConvCheckpoint> checks;
++        std::function<size_t()> batch_slot_chain_bytes=[](){return size_t(0);};
++        auto batch_chain_room=[&](size_t extra)->bool{
++            if(!batch_chain_enabled)return true;const size_t used=strata::core::batch_prefix::add(strata::core::batch_prefix::chain_bytes(checks),batch_slot_chain_bytes());
++            const size_t budget=strata::core::batch_prefix::settings().chain_bytes;
++            if(used>budget || extra>budget-used){err="batch checkpoint host byte capacity";return false;}
++            if(!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(),extra,uint64_t(o.conversation_cache_min_free_mib)<<20)){err="batch checkpoint physical RAM admission";return false;}return true;
++        };
+         uint64_t check_clock = 0;   // the checkpoints' LRU clock; creation and every use advance it
+         int64_t tail_ckpt_len = -1;   // --prompt-cache-tail: the length of the one tail checkpoint alive (-1 = none)
+         bool cvec_cached = true;   // the control vector's state the live session and the checkpoints were read with
+@@ -7662,6 +7690,7 @@
+                     if (!as_tail && L == tail_ckpt_len) tail_ckpt_len = -1;   // a periodic one lands here: a normal item now
+                     return true;
+                 }
++            if(batch_chain_enabled && !batch_chain_room(batch_chain_point_bound)){ckpt_why=": "+err;return false;}
+             ConvCheckpoint c;
+             c.ids.assign(cur.begin(), cur.begin() + L);
+             c.imgs = imgs_below(req_imgs, L);
+@@ -7694,6 +7723,7 @@
+             } else if (L == tail_ckpt_len) {
+                 tail_ckpt_len = -1;   // the flagged tail was dropped and a normal checkpoint takes its length
+             }
++            if(batch_chain_enabled && strata::core::batch_prefix::point_bytes(c)>batch_chain_point_bound){ckpt_why=": checkpoint true capacity exceeds preflight";return false;}
+             checks.push_back(std::move(c));
+             while ((int) checks.size() > o.prompt_cache) {
+                 std::vector<uint64_t> stamps;
+@@ -7772,6 +7802,7 @@
+                 stage_sp.on_stage_chunk = [&, i](int64_t done, std::string& e) -> bool {
+                     if (o.prompt_cache <= 0 || o.prompt_cache_every <= 0 || done < part_next[i]) return true;
+                     part_next[i] = done + o.prompt_cache_every;
++                    if(batch_chain_enabled){std::lock_guard<std::mutex> lock(part_mu);if(part_at.find(done)==part_at.end() && part_at.size()>=3){e="batch checkpoint transient stage-point bound";return false;}}
+                     ConvCheckpoint part;   // this stage's state at `done` (its stream is synchronized)
+                     part.ids.assign(cur.begin(), cur.begin() + done);
+                     if (!checkpoint_save(part, stage_ss, g)) { e = "saving a checkpoint part failed"; return false; }
+@@ -8715,6 +8746,7 @@
+             bool partial = false, partial_from0 = false;
+         };
+         std::vector<BSlot> bs((size_t) std::max(o.batch, 0));
++        batch_slot_chain_bytes=[&](){size_t bytes=0;for(const auto& slot:bs)bytes=strata::core::batch_prefix::add(bytes,strata::core::batch_prefix::chain_bytes(slot.checks));return bytes;};
+         // timing of the batch windows since the slots were last all idle (one stderr line then)
+         double bt_run = 0, bt_commit = 0, bt_emit = 0;
+         double bt_wait0 = 0, bt_pool0 = 0;
+@@ -8751,11 +8783,51 @@
+             in_lines.pop_front();
+             return true;
+         };
++        auto donor_identity=[&](int b){const auto& slot=bs.at(size_t(b));return strata::core::batch_prefix::donor{slot.request_id,slot.generation,slot.active,slot.cached,slot.partial};};
++        auto chain_clone=[&](std::vector<ConvCheckpoint>& target,const std::vector<ConvCheckpoint>& source,const std::vector<int32_t>& tokens,int64_t upto,std::string& e)->bool{
++            size_t estimate=strata::core::batch_prefix::chain_bytes(source);if(!batch_chain_room(estimate)){e=err;return false;}
++            const size_t used=strata::core::batch_prefix::add(strata::core::batch_prefix::chain_bytes(checks),batch_slot_chain_bytes());
++            return strata::core::batch_prefix::clone(target,source,tokens,upto,stages.size(),int(o.prompt_cache),used,strata::core::batch_prefix::settings().chain_bytes,e);
++        };
++        auto staged_checkpoint_valid=[&](const ConvCheckpoint& cp,int b,bool slot_is_source,std::string& e)->bool{
++            if(cp.stage_parts.size()!=stages.size()){e="batch checkpoint incomplete stage roster";return false;}
++            for(size_t k=0;k<bslot_ss.size();++k){const auto& from=slot_is_source?*bslot_ss[k][size_t(b)]:(k==0?ss:stages[k-1]->ss);const auto& to=slot_is_source?(k==0?ss:stages[k-1]->ss):*bslot_ss[k][size_t(b)];const auto& part=k==0?cp:cp.stage_parts[k-1];
++                if(part.ids!=cp.ids || from.layer_lo!=to.layer_lo || from.layer_hi!=to.layer_hi || from.qsa_ord0!=to.qsa_ord0 || from.qsa_alloc!=to.qsa_alloc || from.gdn_ord0!=to.gdn_ord0 || from.gdn_alloc!=to.gdn_alloc ||
++                        !strata::core::conversation_checkpoint_validate(part,from,g,e)||!strata::core::conversation_checkpoint_validate(part,to,g,e)){if(e.empty())e="batch checkpoint source/target carve mismatch";return false;}
++            }return true;
++        };
++        auto transfer_admit=[&](const strata::core::SessionState& from,const strata::core::SessionState& to,int64_t upto,std::string& e)->bool{
++            if(from.layer_lo!=to.layer_lo||from.layer_hi!=to.layer_hi||from.qsa_ord0!=to.qsa_ord0||from.qsa_alloc!=to.qsa_alloc||from.gdn_ord0!=to.gdn_ord0||from.gdn_alloc!=to.gdn_alloc||upto<0||upto>from.max_cells||upto>to.max_cells){e="batch transfer source/target stage carve";return false;}
++            for(int64_t j=0;j<from.qsa_alloc;++j){const auto& a=from.qsa_states[from.qsa_ord0+j];const auto& z=to.qsa_states[to.qsa_ord0+j];
++                if(a.kv_mode!=z.kv_mode||a.kv_q4!=z.kv_q4||a.kv_int8!=z.kv_int8||a.kv_hybrid!=z.kv_hybrid||a.kv_rot!=z.kv_rot){e="batch transfer source/target KV format";return false;}
++                const size_t bytes=strata::core::batch_prefix::add(strata::core::batch_prefix::mul(strata::core::conversation_kv_bytes(a,g,upto,true),2),65536);if(bytes==65536||bytes>strata::core::batch_prefix::settings().transfer_bytes || !strata::core::conversation_memory_admit(strata::core::conversation_available_memory(),bytes,uint64_t(o.conversation_cache_min_free_mib)<<20)){e="batch KV transfer byte/physical RAM admission";return false;}
++            }return true;
++        };
++        // An idle slot's complete branch is parked before its private positional cells are overwritten.
++        auto park_slot=[&](int b,std::string& e)->bool{
++            const auto& slot=bs.at(size_t(b));if(!batch_chain_enabled||!slot.cached||slot.active||slot.img||slot.ids.empty()||!conversations.enabled())return true;
++            const auto identity=donor_identity(b);if(!strata::core::batch_prefix::eligible(identity,false)){e="batch parked slot identity invalid";return false;}std::vector<ConvCheckpoint> local;if(!chain_clone(local,slot.checks,slot.ids,int64_t(slot.ids.size()),e))return false;
++            auto split=strata::core::conversation_checkpoints_split(std::move(local),stages.size());const std::vector<ImgKey> no_images;size_t estimate=0;
++            for(size_t k=0;k<bslot_ss.size();++k){const auto& state=*bslot_ss[k][size_t(b)];const auto& chain=k==0?split.stage0:split.parts[k-1];const strata::core::ConversationView view{slot.ids,no_images,chain,slot.cvec};size_t bytes=0;
++                if(!strata::core::conversation_snapshot_bytes(view,state,g,(const strata::core::QsaState*)nullptr,bytes,e))return false;estimate=strata::core::batch_prefix::add(estimate,bytes);}
++            if(!conversations.make_room(estimate)||!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(),estimate,uint64_t(o.conversation_cache_min_free_mib)<<20)){
++                std::fprintf(stderr,"BCHAIN park_slot_refused slot=%d rid=%llu slotgen=%llu estimate=%zu cache_bytes=%zu cache_slots=%zu\n",b,(unsigned long long)identity.rid,(unsigned long long)identity.generation,estimate,conversations.bytes(),conversations.size());return true;}
++            strata::core::SavedConversation image;
++            for(size_t k=0;k<bslot_ss.size();++k){const strata::core::OnDevice on(k==0?0:stages[k-1]->dev);dpct::get_current_device().queues_wait_and_throw();const auto& state=*bslot_ss[k][size_t(b)];const auto& chain=k==0?split.stage0:split.parts[k-1];const strata::core::ConversationView view{slot.ids,no_images,chain,slot.cvec};
++                if(k==0){if(!strata::core::conversation_snapshot_save(image,view,state,g,(const strata::core::QsaState*)nullptr,e))return false;}else{strata::core::SavedConversation part;if(!strata::core::conversation_snapshot_save(part,view,state,g,(const strata::core::QsaState*)nullptr,e))return false;image.stage_images.push_back(std::move(part));}}
++            if(!strata::core::batch_prefix::unchanged(identity,donor_identity(b))){e="batch slot identity changed during park";return false;}
++            if(!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(),0,uint64_t(o.conversation_cache_min_free_mib)<<20)){std::fprintf(stderr,"BCHAIN park_slot_refused_after_capture slot=%d\n",b);return true;}
++            const size_t bytes=image.bytes();const bool stored=conversations.put(std::move(image));std::fprintf(stderr,"BCHAIN park_slot slot=%d rid=%llu slotgen=%llu stored=%d bytes=%zu cache_bytes=%zu cache_slots=%zu evictions=%zu\n",b,(unsigned long long)identity.rid,(unsigned long long)identity.generation,stored,bytes,conversations.bytes(),conversations.size(),conversations.evictions());return true;
++        };
+         // the session a request just left behind (its prompt) -> slot b's sessions, on every stage
+         auto copy_to_slot = [&](int b, const std::vector<int32_t> &ids,
+                                 std::string &e) -> bool {
+             try {
+         const int64_t upto = (int64_t)ids.size();
++            if(batch_chain_enabled){if(!strata::core::batch_prefix::prefix(ids,cur)){e="batch admission ids differ from accepted GEN prefix";return false;}if(b<0||b>=int(bs.size())||bs[size_t(b)].active){e="batch admission target is not idle";return false;}if(!ver.wait_commit(e))return false;
++                for(size_t k=0;k<bslot_ss.size();++k){const strata::core::OnDevice on(k==0?0:stages[k-1]->dev);dpct::get_current_device().queues_wait_and_throw();const auto& from=k==0?ss:stages[k-1]->ss;if(!transfer_admit(from,*bslot_ss[k][size_t(b)],upto,e))return false;}
++                for(const auto& cp:checks)if(!staged_checkpoint_valid(cp,b,false,e))return false;if(!park_slot(b,e))return false;
++            }
+             for (size_t k = 0; k < bslot_ss.size(); ++k) {
+                 strata::core::SessionState& from = k == 0 ? ss : stages[k - 1]->ss;
+                 strata::core::SessionState& to = *bslot_ss[k][(size_t) b];
+@@ -8768,12 +8840,13 @@
+                 strata::core::ConversationCheckpoint ck;
+                 ck.ids = ids;
+                 if (!strata::core::conversation_checkpoint_save(ck, from, g, e) ||
+-                    !strata::core::conversation_checkpoint_restore(ck, to, g, e))
++                    (!batch_chain_enabled && !strata::core::conversation_checkpoint_restore(ck, to, g, e)))
+                     return false;
+                 for (int64_t j = 0; j < from.qsa_alloc; ++j) {
+                     strata::core::ConversationKv img;
+                     if (!strata::core::conversation_kv_save(img, from.qsa_states[from.qsa_ord0 + j], g, upto, true, e))
+                         return false;
++                    if(batch_chain_enabled && img.bytes()>strata::core::batch_prefix::settings().transfer_bytes){e="batch KV image true capacity exceeds transfer budget";return false;}
+                     if (DPCT_CHECK_ERROR(dpct::get_current_device()
+                                              .queues_wait_and_throw()) != 0) {
+                         e = "batch admission: device sync failed"; return false;
+@@ -8781,6 +8854,7 @@
+                     if (!strata::core::conversation_kv_restore(img, to.qsa_states[to.qsa_ord0 + j], g, upto, true, e))
+                         return false;
+                 }
++                if(batch_chain_enabled && !strata::core::conversation_checkpoint_restore(ck,to,g,e))return false;
+                 if (DPCT_CHECK_ERROR(
+                         dpct::get_current_device().queues_wait_and_throw()) !=
+                     0) {
+@@ -8815,10 +8889,20 @@
+         // conversation an idle slot holds reads on from there.  Every stage, the same calls.
+         // `at`: one of the slot's checkpoints - only the K/V up to it is copied and its state restored instead
+         auto copy_from_slot = [&](int b, const ConvCheckpoint *at,
+-                                  std::string &e) -> bool {
++                                  std::string &e,uint64_t expected_rid=0,uint64_t expected_gen=0) -> bool {
+             try {
++        if(batch_chain_enabled && (b<0 || b>=int(bs.size()))){e="batch donor slot out of range";return false;}
++        if(batch_chain_enabled && (!expected_rid || !expected_gen || bs[size_t(b)].request_id!=expected_rid || bs[size_t(b)].generation!=expected_gen)){e="batch donor selection identity is stale";return false;}
+         const int64_t upto = at != nullptr ? (int64_t)at->ids.size()
+                                            : (int64_t)bs[(size_t)b].ids.size();
++            const auto source_identity=donor_identity(b);std::vector<ConvCheckpoint> owned_chain;
++            if(batch_chain_enabled && (upto<1 || size_t(upto)>=cur.size() || !strata::core::batch_prefix::prefix(at?at->ids:bs[size_t(b)].ids,cur))){e="batch donor token identity is not a strict accepted GEN prefix";return false;}
++            if(batch_chain_enabled){if(at && std::none_of(bs[size_t(b)].checks.begin(),bs[size_t(b)].checks.end(),[&](const auto& cp){return &cp==at;})){e="batch checkpoint pointer is not owned by donor slot";return false;}if(!strata::core::batch_prefix::eligible(source_identity,at!=nullptr)){e="batch source is not an immutable checkpoint or idle live image";return false;}if(!ver.wait_commit(e))return false;
++                if(!chain_clone(owned_chain,bs[size_t(b)].checks,bs[size_t(b)].ids,upto,e))return false;for(const auto& cp:owned_chain)if(!staged_checkpoint_valid(cp,b,true,e))return false;
++                if(at!=nullptr){if(owned_chain.empty()||owned_chain.back().ids!=at->ids){e="batch selected checkpoint absent from complete owned chain";return false;}at=&owned_chain.back();if(!staged_checkpoint_valid(*at,b,true,e))return false;}
++                for(size_t k=0;k<bslot_ss.size();++k){const strata::core::OnDevice on(k==0?0:stages[k-1]->dev);dpct::get_current_device().queues_wait_and_throw();if(!transfer_admit(*bslot_ss[k][size_t(b)],k==0?ss:stages[k-1]->ss,upto,e))return false;}
++                if(!strata::core::batch_prefix::unchanged(source_identity,donor_identity(b))){e="batch source changed before state transfer";return false;}
++            }
+             if (at != nullptr && at->stage_parts.size() != stages.size()) { e = "a checkpoint without its stage parts"; return false; }
+             for (size_t k = 0; k < bslot_ss.size(); ++k) {
+                 strata::core::SessionState& from = *bslot_ss[k][(size_t) b];
+@@ -8829,10 +8913,12 @@
+                     0) {
+                     e = "batch slot restore: device sync failed"; return false;
+                 }
+-                if (at != nullptr) {
++                strata::core::ConversationCheckpoint running;
++                if(batch_chain_enabled && at==nullptr){running.ids=bs[size_t(b)].ids;if(!strata::core::conversation_checkpoint_save(running,from,g,e)||!strata::core::conversation_checkpoint_validate(running,to,g,e))return false;}
++                if (at != nullptr && !batch_chain_enabled) {
+                     if (!strata::core::conversation_checkpoint_restore(k == 0 ? *at : at->stage_parts[k - 1], to, g, e))
+                         return false;
+-                } else {
++                } else if(!batch_chain_enabled) {
+                     strata::core::ConversationCheckpoint ck;
+                     ck.ids = bs[(size_t) b].ids;
+                     if (!strata::core::conversation_checkpoint_save(ck, from, g, e) ||
+@@ -8843,6 +8929,7 @@
+                     strata::core::ConversationKv img;
+                     if (!strata::core::conversation_kv_save(img, from.qsa_states[from.qsa_ord0 + j], g, upto, true, e))
+                         return false;
++                    if(batch_chain_enabled && img.bytes()>strata::core::batch_prefix::settings().transfer_bytes){e="batch KV image true capacity exceeds transfer budget";return false;}
+                     if (DPCT_CHECK_ERROR(dpct::get_current_device()
+                                              .queues_wait_and_throw()) != 0) {
+                         e = "batch slot restore: device sync failed";
+@@ -8851,12 +8938,14 @@
+                     if (!strata::core::conversation_kv_restore(img, to.qsa_states[to.qsa_ord0 + j], g, upto, true, e))
+                         return false;
+                 }
++                if(batch_chain_enabled && !strata::core::conversation_checkpoint_restore(at?(k==0?*at:at->stage_parts[k-1]):running,to,g,e))return false;
+                 if (DPCT_CHECK_ERROR(
+                         dpct::get_current_device().queues_wait_and_throw()) !=
+                     0) {
+                     e = "batch slot restore: device sync failed"; return false;
+                 }
+             }
++            if(batch_chain_enabled){if(!strata::core::batch_prefix::unchanged(source_identity,donor_identity(b))){e="batch source changed during complete-stage transfer";return false;}checks=std::move(owned_chain);std::fprintf(stderr,"BCHAIN restored slot=%d rid=%llu slotgen=%llu active_checkpoint=%d tokens=%lld points=%zu host_bytes=%zu\n",b,(unsigned long long)source_identity.rid,(unsigned long long)source_identity.generation,source_identity.active,(long long)upto,checks.size(),strata::core::batch_prefix::chain_bytes(checks));}
+             if (batch_mtp) {
+                 // A returning solo request resumes from its slot's draft KV.
+                 strata::core::ConversationKv image;
+@@ -9713,21 +9802,22 @@
+             // --batch: an idle slot that holds the start of this prompt (the conversation it served last) is a
+             // source too - its sessions are copied back below, so only the new part is read
+             int slot_source = -1;
++            uint64_t slot_source_rid=0,slot_source_gen=0;
+             int64_t slot_tokens = 0;
+             bool resumed_from0 = false;   // a prompt read parked in a slot (BYIELD) that had started at token 0
+             const ConvCheckpoint* slot_ck = nullptr;   // the slot's checkpoint the prompt continues from (else its end)
+             if (!req_fresh && o.prompt_cache > 0 && req_imgs.empty())
+                 for (int b = 0; b < (int) bs.size(); ++b) {
+                     const BSlot& sl = bs[(size_t) b];
+-                    if (sl.active || !sl.cached || sl.cvec != want_cvec) continue;
+-                    if ((int64_t) sl.ids.size() > std::max(resume, slot_tokens) && starts_with(sl.ids, {})) {
+-                        slot_source = b;
++                    if ((batch_chain_enabled?(!sl.active && !sl.cached):(sl.active || !sl.cached)) || sl.cvec != want_cvec || sl.img) continue;
++                    if (!sl.active && (int64_t) sl.ids.size() > std::max(resume, slot_tokens) && starts_with(sl.ids, {})) {
++                        slot_source = b;slot_source_rid=sl.request_id;slot_source_gen=sl.generation;
+                         slot_tokens = (int64_t) sl.ids.size();
+                         slot_ck = nullptr;
+                     }
+                     for (const ConvCheckpoint& c : sl.checks)
+                         if ((int64_t) c.ids.size() > std::max(resume, slot_tokens) && starts_with(c.ids, c.imgs)) {
+-                            slot_source = b;
++                            slot_source = b;slot_source_rid=sl.request_id;slot_source_gen=sl.generation;
+                             slot_tokens = (int64_t) c.ids.size();
+                             slot_ck = &c;
+                         }
+@@ -9767,7 +9857,8 @@
+             }
+             if (slot_source >= 0) {
+                 const auto t0 = Clock::now();
+-                if (!copy_from_slot(slot_source, slot_ck, err)) {
++                if (!copy_from_slot(slot_source, slot_ck, err,slot_source_rid,slot_source_gen)) {
++                    if(batch_chain_enabled){std::printf("ERR full batch chain transfer: %s\n",err.c_str());return 1;}
+                     // the main session may be half written: read this prompt from the start
+                     std::fprintf(stderr, "strata batch: restoring slot %d failed (%s); reading the prompt\n",
+                                  slot_source, err.c_str());
+@@ -9778,18 +9869,18 @@
+                     resume = 0;
+                     from_live = false;
+                 } else {
+-                    checks.clear();   // the main session's checkpoints were of the conversation it held before
++                    if(!batch_chain_enabled)checks.clear();   // new mode imported its complete donor prefix already
+                     // a read that gave way, the same request again (into its own slot): on with it - its segments and
+                     // checkpoints as if it had not stopped
+                     if (slot_ck == nullptr && bs[(size_t) slot_source].partial && admit_slot == slot_source) {
+                         resumed_from0 = bs[(size_t) slot_source].partial_from0;
+-                        for (const ConvCheckpoint& c : bs[(size_t) slot_source].checks) checks.push_back(c);
++                        if(!batch_chain_enabled)for (const ConvCheckpoint& c : bs[(size_t) slot_source].checks) checks.push_back(c);
+                         bs[(size_t) slot_source].partial = false;
+                     }
+                     if (slot_ck != nullptr) {
+                         live = slot_ck->ids;
+-                        checks.push_back(*slot_ck);   // the main session's chain has it now
+-                        checks.back().used = ++check_clock;
++                        if(!batch_chain_enabled)checks.push_back(*slot_ck);
++                        for(auto& cp:checks)if(cp.ids==slot_ck->ids)cp.used=++check_clock;
+                     } else {
+                         live = bs[(size_t) slot_source].ids;
+                     }
+@@ -10336,7 +10427,8 @@
+                             sl.partial = true;
+                             sl.partial_from0 = read_from == 0 || resumed_from0;
+                             sl.cvec = cvec_cached;
+-                            for (const ConvCheckpoint& c : checks)   // the root / periodic checkpoints of this read
++                            if(batch_chain_enabled){if(!chain_clone(sl.checks,checks,sl.ids,q,e))return false;}
++                            else for (const ConvCheckpoint& c : checks)   // the root / periodic checkpoints of this read
+                                 if ((int64_t) c.ids.size() <= q && std::equal(c.ids.begin(), c.ids.end(), ids.begin(),
+                                         [](int32_t x, int64_t y) { return (int64_t) x == y; }))
+                                     sl.checks.push_back(c);
+@@ -10506,6 +10598,7 @@
+                     std::fprintf(stderr, "strata serve: message boundary checkpoint: %lld tokens, %lld tail\n",
+                                  (long long) message_at, (long long) (turn_at - message_at));
+             }
++            if(batch_chain_enabled && !cancelled && yielded_at<0 && req_ckpt && n>1 && !checkpoint_at(n-1)){std::printf("ERR saving complete batch prompt leaf%s\n",ckpt_why.c_str());return 1;}
+             if (!refill(err)) {
+                 std::printf("ERR refilling a lent slot failed: %s\n", err.c_str());
+                 return 1;
+@@ -11638,9 +11731,12 @@
+                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, "length") == 0 &&
+                             (int64_t) live.size() == p;
+                 const auto tc0 = Clock::now();
++                std::vector<ConvCheckpoint> admitted_chain;
++                if(cont && batch_chain_enabled && !chain_clone(admitted_chain,checks,live,int64_t(live.size()),err)){std::printf("ERR batch chain admission: %s\n",err.c_str());return 1;}
+                 if (cont && !copy_to_slot(admit_slot, live, err)) {
+                     std::fprintf(stderr, "strata serve: batch admission failed: %s\n", err.c_str());
+                     bs[(size_t) admit_slot].cached = false;   // its sessions may be half written
++                    if(batch_chain_enabled){std::printf("ERR partial batch admission: %s\n",err.c_str());return 1;}
+                     cont = false;
+                 }
+                 if (cont) {
+@@ -11671,7 +11767,8 @@
+                         if (c.ids.size() < live.size() && (best == nullptr || c.ids.size() > best->ids.size()) &&
+                             std::equal(c.ids.begin(), c.ids.end(), live.begin()))
+                             best = &c;
+-                    if (best != nullptr && !sl.img) sl.checks.push_back(*best);
++                    if(batch_chain_enabled){sl.checks=std::move(admitted_chain);std::fprintf(stderr,"BCHAIN admitted slot=%d rid=%llu slotgen=%llu tokens=%zu points=%zu stages=%zu host_bytes=%zu\n",admit_slot,(unsigned long long)sl.request_id,(unsigned long long)sl.generation,sl.ids.size(),sl.checks.size(),stages.size()+1,strata::core::batch_prefix::chain_bytes(sl.checks));}
++                    else if (best != nullptr && !sl.img) sl.checks.push_back(*best);
+                     std::fprintf(stderr, "strata batch: slot %d takes %lld tokens (copied in %.1f ms)\n", admit_slot,
+                                  (long long) live.size(), std::chrono::duration<double, std::milli>(Clock::now() - tc0).count());
+                 }

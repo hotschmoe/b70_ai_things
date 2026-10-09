@@ -1,0 +1,89 @@
+{
+  "schema": 6,
+  "status": "READY frozen CPU consumer; strict C1parent5 complete final source proof/canonical5stat; no actual preparation",
+  "engine_source_plan": "strata/flash-next/combined-numerical-batch-engine-build-plan-v1.json",
+  "engine_source_plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a",
+  "source_sha256": {
+    "strata/flash-next/layer0_numerical_qualification_v6.py": "d967f41c7a23f16b53d213da5d9eb71c3325c041f024f8243f783e6dda94dd9c",
+    "strata/flash-next/qualify_layer0_numerical_v6.py": "5faa8d703e5c2bc7747a0a152439df946c0104754df6e7dafe392b01141acca5",
+    "strata/flash-next/test_layer0_numerical_qualification_cpu_v6.py": "44dc50c1ba3494e77743ce1c41a49b9913ce0c12cedf6acf83631798a23ab5ce",
+    "strata/flash-next/test_qualify_layer0_numerical_cpu_v6.py": "76db52d71806275ed4a94e9cc61b53e2a716e12cc0d28c3c10ff9ed5dc2a0f66",
+    "strata/flash-next/layer0-numerical-orchestration-design-v6.md": "57ebd0d7bb4225f4bcc4406959b6162cffda4be4d80f003696de4b468ae77f32",
+    "strata/flash-next/layer0-numerical-orchestration-cpu-receipt-v6.json": "7177a7d23e5460c824aa4a4db1b60f417480f263b12005bd2d6006361c39f23b",
+    "strata/flash-next/layer0-parent-orchestration-cpu-receipt-v6.json": "ec75bc7a8b09438f16c2f8609d5e134442a9d5f04d5e58857a9bba4fe3e0085c"
+  },
+  "candidate_c1_source": "strata/flash-next/c1_serve_controller_combined_v5.py",
+  "candidate_c1_source_sha256": "256b517151b2f0b39aa8874d701897c9f0a454e79c776310583d2f571141fad0",
+  "candidate_c1_source_plan_sha256": "da875fd3a5f11ea7d3dc3619965665b5a0202f2587cba9a3d309ebb8754d23ea",
+  "reference": "frozen21 V2 finalized child PLUS parent fullhash/health/owned teardown success, identical placement/geometry/input positions",
+  "genuine_prepare_required": [
+    "actual combined SDK all8 ELF binaries and complete51 source ledger",
+    "strict uploadv2 actual producer/watchdog hashes+all5 full390 cases+owner/free/account+bothpages+independent full4hash after actual terminal and posthealth",
+    "completed strict C1parent5 public2arg finalsourceproof: parent/controller/finalqualification +postfull4/health/ownedterminal/bothpages +exact sourcechain",
+    "six source API22 runtime fingerprint and actual admitted registry profile",
+    "fresh all4 publisher fullhash with current stat and BOTH source-qualified knownpages"
+  ],
+  "observed_layout_fields": 33,
+  "source_value_fields": 31,
+  "derived_fields": 2,
+  "raw_fused_hidden_observed": false,
+  "observer_bytes": 7023304,
+  "control_bytes": 256,
+  "packet_pairs_per_prefix": 5,
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "packet_gate": "exact independent native Q8_1 raw bytes; intrinsic rounding mismatches FAIL, no relaxed tolerance",
+  "derived_hidden_fp64_gate": {
+    "nmse": 1e-06,
+    "max_normalized": 0.0001,
+    "raw_original_hidden_proven": false
+  },
+  "source_pages": {
+    "shard": 3,
+    "page_bytes": 4096,
+    "pages": [
+      {
+        "offset": 3857879040,
+        "sha256": "2780fef9ce50fa1acbd4bdbf6c311b847395571fcc5e6ddb55898841fbcee90e"
+      },
+      {
+        "offset": 39437303808,
+        "sha256": "d69f7ffbfaab20277926926a4e542ce906b7fe9f4a4791dc7c46e945f0b1bced"
+      }
+    ],
+    "failure": "preserve both buffered views; owned stop; FAIL; no cache invalidation/write/repair"
+  },
+  "full_model_math_qualified": false,
+  "original_weight_consumer_qualified": false,
+  "actual_execution_performed": false,
+  "cpu_commands": [
+    "python3 strata/flash-next/test_layer0_numerical_qualification_cpu_v6.py",
+    "python3 strata/flash-next/test_qualify_layer0_numerical_cpu_v6.py"
+  ],
+  "strict_source_upload_runner": "strata/flash-next/run_source_upload_oracle_full_v2.py",
+  "strict_source_upload_runner_sha256": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+  "strict_source_upload_runner_plan_sha256": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+  "preserved_v3_source_plan_sha256": "3f91f9725dce73e3dd85d383d84a1eb3d968f739a70db8bc40cc7ffb2736355d",
+  "shared_immutable_source_sha256": {
+    "strata/flash-next/audit_layer0_capture_lifecycle_v2.py": "cd5441854c7bf11250080c7b109564e91f204422c4b790623132999641a7abfe",
+    "strata/flash-next/verify_layer0_packets_v3.py": "620f18e8aed625bb3c40f451d94ed66a8b1aa6aa247ec7638423426f38e9b329",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "concurrent_serving_2_4_6_qualified": false,
+  "c1_final_source_proof_helper": "strata/flash-next/qualify_c1_serving_combined_v5.py",
+  "c1_final_source_proof_helper_sha256": "d3af8d46ec1038d5aa021f13115cb0ae02e1e6e67098508099705675a72b7149",
+  "c1_final_source_proof_plan_sha256": "2ff94a1bb3c1fa0f64c5b9b4b9afee21d9879dea35b66cd5fa37c1769d92dc5f",
+  "preserved_v4_source_plan_sha256": "b7b9cefdf3299beb6289de80564e5e6a88174fa6cd44db5100c1e1351bd953ce",
+  "preserved_v5_source_plan_sha256": "fb7cec8d4c65abb0740cd42d233c3e7fcad710b83e2b4b961b2bbb244a7e018c",
+  "canonical_stat_fields": [
+    "st_dev",
+    "st_ino",
+    "st_size",
+    "st_mtime_ns",
+    "st_ctime_ns"
+  ]
+}
