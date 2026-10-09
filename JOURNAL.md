@@ -10580,3 +10580,20 @@ proof rejects before modelaccess, frozen21 dispatch preserved. No GPU/modelreads
 VERDICT -> Sourceplan/controls only; no faithfuloriginalownedfullmodel composition
 ornewactualnumerical proof. C18segmentedone parent97548 live. New bounded
 allprefill-row capture/sourceadapter work assigned; concurrentharness inprogress.
+
+
+## 2026-10-09 - Integrated29 segmented APIone actualPASS
+
+CONFIG -> GenuineC18/source390/new29SDK, one-card-segmented2048/64,1GiB mirror
+segments/adapt0/no-borrow, batch0/featuresOFF, exactprimaryhotschmoe-dd/alias.
+
+COMMAND -> Freshsegmentedprepare andparent97548; independentlypublicproof8.
+
+RESULT -> PASS490s sixboundedresponses/actualconsumption/EOS/repeats/LP20/API
+identity/oneengine. API/nativecleanexit0/noOOM/removed/preposthealth/kernel/
+twopages/NEWallfourpublisherhashesPASS. Independentproof8PASS. Qualification
+SHAd8f43a305f188ebaa340be3a7c73799aa76d3d803bc189977eb2f2a420f307d1.
+
+VERDICT -> BoundedAPI/coherence/lifecycle/sourceproof; fullmath/cache/2/4/6/
+latency/shelf stillunqualified. Failedunsegmentedretained. Pairseg genuineprep
+99606live; context8192/128 notmatchedspeedcontrol. See integrated29C1one doc.
