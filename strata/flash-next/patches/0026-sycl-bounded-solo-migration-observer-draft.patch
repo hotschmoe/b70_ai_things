@@ -1,0 +1,261 @@
+diff --git a/sycl/include/strata/core/batch_fidelity_contract.hpp b/sycl/include/strata/core/batch_fidelity_contract.hpp
+index 8e8e292..9b0cdb3 100644
+--- a/sycl/include/strata/core/batch_fidelity_contract.hpp
++++ b/sycl/include/strata/core/batch_fidelity_contract.hpp
+@@ -7,32 +7,35 @@
+ namespace strata::core::batch_fidelity {
+ constexpr int REQUESTS=6, ROWS=6, LAYERS=48, D=10240, VOCAB=248320;
+ constexpr size_t BYTE_LIMIT=64*1024*1024;
+-struct identity { uint64_t rid=0,generation=0,slotgen=0;int slot=-1;int64_t prompt=0,pos=0;int token=0;int row=0,batchrows=1;uint64_t enginegen=0,event=0; };
++struct identity { uint64_t rid=0,generation=0,slotgen=0;int slot=-1;int64_t prompt=0,pos=0;int token=0;int row=0,batchrows=1;uint64_t enginegen=0,event=0;int phase=0,source_slot=-1;uint64_t source_slotgen=0; };
+ struct graph_layout {
+  // n,admission,ar_off,hbase,then6 graph-consumed slot rows. Admission always consumes main row0.
+  std::array<uint64_t,10> words{};
+- static graph_layout make(const int* slots,int n,bool admission,int ar_off=0,int hbase=0){
+-  if(n<1||n>ROWS || hbase!=0 || (ar_off!=0&&ar_off!=1) || (admission&&n!=1))throw std::invalid_argument("batch graph layout geometry");
+-  graph_layout d;d.words.fill(~uint64_t(0));d.words[0]=uint64_t(n);d.words[1]=admission;d.words[2]=uint64_t(ar_off);d.words[3]=uint64_t(hbase);
+-  unsigned mask=0;for(int t=0;t<n;++t){int slot=admission?ROWS:(slots?slots[t]:-1);if(!admission&&(slot<0||slot>=ROWS||(mask&(1u<<slot))))throw std::invalid_argument("batch graph duplicate/invalid actual row");if(!admission)mask|=1u<<slot;d.words[4+t]=uint64_t(slot);}return d;
++ static graph_layout make(const int* slots,int n,int phase,int ar_off=0,int hbase=0){
++  if(n<1||n>ROWS || hbase!=0 || (ar_off!=0&&ar_off!=1) || (phase!=0&&n!=1) || phase<0 || phase>2)throw std::invalid_argument("batch graph layout geometry");
++  graph_layout d;d.words.fill(~uint64_t(0));d.words[0]=uint64_t(n);d.words[1]=uint64_t(phase);d.words[2]=uint64_t(ar_off);d.words[3]=uint64_t(hbase);
++  unsigned mask=0;for(int t=0;t<n;++t){int slot=phase?ROWS:(slots?slots[t]:-1);if(!phase&&(slot<0||slot>=ROWS||(mask&(1u<<slot))))throw std::invalid_argument("batch graph duplicate/invalid actual row");if(!phase)mask|=1u<<slot;d.words[4+t]=uint64_t(slot);}return d;
+  }
+  bool operator==(const graph_layout& other)const{return words==other.words;}
+ };
+-struct entry {identity id;bool admission=false,later=false;};
++struct entry {identity id;bool admission=false,later=false,migration=false,closed_cancel=false;};
+ struct ledger {
+  std::array<entry,REQUESTS> requests{};unsigned count=0;
+  entry* find(uint64_t rid){for(unsigned i=0;i<count;++i)if(requests[i].id.rid==rid)return &requests[i];return nullptr;}
+  identity begin(uint64_t rid,uint64_t slotgen,int slot,int64_t prompt,uint64_t enginegen=1){
+   if(!enginegen || !rid || !slotgen || slot<0 || slot>=ROWS || prompt<1)throw std::invalid_argument("batch observer admission identity");
+-  if(auto* e=find(rid)){if(enginegen!=e->id.enginegen || slotgen<e->id.slotgen || (slot!=e->id.slot && slotgen==e->id.slotgen))throw std::invalid_argument("batch observer stale migration");e->id.slot=slot;e->id.slotgen=slotgen;return e->id;}
+-  if(count>=REQUESTS)return {};auto& e=requests[count++];e.id={rid,count,slotgen,slot,prompt,0,0};e.id.enginegen=enginegen;return e.id;
++  if(auto* e=find(rid)){if(enginegen!=e->id.enginegen || slotgen<e->id.slotgen || (slot!=e->id.slot && slotgen==e->id.slotgen))throw std::invalid_argument("batch observer stale migration");e->id.slot=slot;e->id.slotgen=slotgen;e->id.phase=1;return e->id;}
++  if(count>=REQUESTS)return {};auto& e=requests[count++];e.id={rid,count,slotgen,slot,prompt,0,0};e.id.enginegen=enginegen;e.id.phase=1;return e.id;
+  }
+- bool select(const identity& id,bool admission){auto* e=find(id.rid);if(!e)return false;
+-  if(id.enginegen!=e->id.enginegen || id.generation!=e->id.generation || id.slotgen!=e->id.slotgen || id.slot!=e->id.slot || !id.slotgen || id.slot<0 || id.slot>=ROWS)throw std::invalid_argument("batch observer stale identity");
+-  if(admission)return !e->admission;return e->admission && !e->later;
+- }
+- void complete(const identity& id,bool admission){auto* e=find(id.rid);if(!e || !select(id,admission))throw std::invalid_argument("batch observer invalid completion");
+-  if(admission)e->admission=true;else e->later=true;
++ void closed(uint64_t rid,uint64_t slotgen,int slot,bool cancelled){auto* e=find(rid);if(!e)return;if(e->id.slot!=slot||e->id.slotgen!=slotgen)throw std::invalid_argument("batch observer stale slot close");e->closed_cancel=cancelled;}
++ identity solo(uint64_t rid,int64_t prompt,uint64_t enginegen){auto* e=find(rid);if(!e)return {};if(e->migration)return {};if(!e->admission||!e->later||!e->closed_cancel||e->id.enginegen!=enginegen||prompt<=e->id.prompt)throw std::invalid_argument("batch observer solo migration prerequisite");
++  auto id=e->id;id.source_slot=id.slot;id.source_slotgen=id.slotgen;id.slot=ROWS;id.phase=2;id.prompt=prompt;id.event=id.generation;return id;}
++ bool select(const identity& id,int phase){auto* e=find(id.rid);if(!e)return false;
++  if(id.enginegen!=e->id.enginegen||id.generation!=e->id.generation||id.slotgen!=e->id.slotgen)throw std::invalid_argument("batch observer stale identity");
++  if(phase==2){if(id.phase!=2||id.slot!=ROWS||id.source_slot!=e->id.slot||id.source_slotgen!=e->id.slotgen||!e->closed_cancel||!e->admission||!e->later||id.prompt<=e->id.prompt||id.event!=id.generation)throw std::invalid_argument("batch observer stale solo identity");return !e->migration;}
++  if(id.slot!=e->id.slot||!id.slotgen||id.slot<0||id.slot>=ROWS)throw std::invalid_argument("batch observer stale actual slot identity");if(e->migration)return false;
++  if(phase==1)return !e->admission;if(phase==0)return e->admission&&!e->later;throw std::invalid_argument("batch observer phase");
+  }
++ void complete(const identity& id,int phase){auto* e=find(id.rid);if(!e||!select(id,phase))throw std::invalid_argument("batch observer invalid completion");if(phase==1)e->admission=true;else if(phase==0)e->later=true;else e->migration=true;}
+ };
+ }
+diff --git a/sycl/include/strata/core/batch_fidelity_observer.hpp b/sycl/include/strata/core/batch_fidelity_observer.hpp
+index 097ada9..379dae2 100644
+--- a/sycl/include/strata/core/batch_fidelity_observer.hpp
++++ b/sycl/include/strata/core/batch_fidelity_observer.hpp
+@@ -25,10 +25,11 @@ inline bool armed(){if(!settings().enabled)return false;struct stat a,d;return s
+ inline ledger& records(){static ledger l;return l;}
+ inline identity& admitting(){static identity id;return id;}
+ inline std::mutex& log_lock(){static std::mutex m;return m;}
+-inline identity begin(uint64_t rid,uint64_t slotgen,int slot,int64_t prompt){if(!armed()||!rid||!slotgen||slot<0)return {};auto id=records().begin(rid,slotgen,slot,prompt,engine_generation());admitting()=id;
++inline identity begin(uint64_t rid,uint64_t slotgen,int slot,int64_t prompt){admitting()={};if(!armed()||!rid)return {};if(slot<0){auto id=records().solo(rid,prompt,engine_generation());admitting()=id;if(id.rid)std::fprintf(stderr,"SBF migration_begin pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=6 slotgen=%llu source_slot=%d source_slotgen=%llu prompt=%lld event=%llu main_session=1\n",long(getpid()),(unsigned long long)id.rid,(unsigned long long)id.enginegen,(unsigned long long)id.generation,(unsigned long long)id.slotgen,id.source_slot,(unsigned long long)id.source_slotgen,(long long)prompt,(unsigned long long)id.event);return id;}if(!slotgen)return {};auto id=records().begin(rid,slotgen,slot,prompt,engine_generation());admitting()=id;
+  if(id.rid)std::fprintf(stderr,"SBF request pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=%d slotgen=%llu prompt=%lld engine_generation=native_pid observed_only=1\n",long(getpid()),(unsigned long long)id.rid,(unsigned long long)id.enginegen,(unsigned long long)id.generation,id.slot,(unsigned long long)id.slotgen,(long long)prompt);return id;}
++inline void close_slot(uint64_t rid,uint64_t slotgen,int slot,bool cancelled){if(!armed())return;auto* e=records().find(rid);if(!e)return;records().closed(rid,slotgen,slot,cancelled);std::fprintf(stderr,"SBF slot_closed pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=%d slotgen=%llu cancelled=%d completed=1\n",long(getpid()),(unsigned long long)rid,(unsigned long long)e->id.enginegen,(unsigned long long)e->id.generation,slot,(unsigned long long)slotgen,cancelled);}
+ inline identity mapped(uint64_t rid,uint64_t slotgen,int slot,int64_t pos,int token,uint64_t event=1){if(!settings().enabled)return {};auto* e=records().find(rid);identity id=e?e->id:identity{};id.rid=rid;id.slot=slot;id.slotgen=slotgen;id.pos=pos;id.token=token;id.enginegen=engine_generation();id.event=event;return id;}
+-inline void span(const identity& id,int stage,int lb,int le,int64_t a,int64_t b,const char* phase){if(!settings().enabled||!id.rid)return;
++inline void span(const identity& id,int stage,int lb,int le,int64_t a,int64_t b,const char* phase){if(!armed()||!id.rid)return;if(std::strncmp(phase,"batch_",6)!=0 && (id.rid!=admitting().rid || id.generation!=admitting().generation || id.slot!=admitting().slot || id.slotgen!=admitting().slotgen))return;
+  const std::lock_guard<std::mutex> lock(log_lock());static unsigned events=0;if(++events>8192){if(events==8193)std::fprintf(stderr,"SBF bound span_events=8192 exceeded=1\n");return;}std::fprintf(stderr,"SBF span pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=%d slotgen=%llu stage=%d lb=%d le=%d begin=%lld end=%lld phase=%s completed=1 observed_only=1\n",long(getpid()),(unsigned long long)id.rid,(unsigned long long)id.enginegen,(unsigned long long)id.generation,id.slot,(unsigned long long)id.slotgen,stage,lb,le,(long long)a,(long long)b,phase);}
+ inline bool store(const identity& id,int stage,int lb,int le,int layer,const char* phase,const std::vector<float>& raw,std::string& err,uint64_t epoch=0,int graph=-1){
+  static size_t total=0;static unsigned serial=0;const std::lock_guard<std::mutex> lock(log_lock());const size_t bytes=raw.size()*4;
+@@ -47,21 +48,21 @@ class snapshot {
+  sycl::queue q_;int stage_,lb_,le_;bool head_;size_t stride_,raw_bytes_,bytes_;uint8_t* data_=nullptr;
+  std::array<graph_roster,GRAPH_LIMIT> graphs_{};int graph_count_=0,building_=-1,armed_graph_=-1;
+  bool failed_=false;uint64_t sequence_=0,published_=0;frame input_{},zero_frame_{};graph_layout zero_layout_{};std::array<uint64_t,EPOCHS> zero_epochs_{};
+- std::array<identity,ROWS> armed_ids_{};std::array<bool,ROWS> armed_selected_{};int armed_n_=0;bool armed_admission_=false;
++ std::array<identity,ROWS> armed_ids_{};std::array<bool,ROWS> armed_selected_{};int armed_n_=0;int armed_phase_=0;
+  size_t input_offset()const{return raw_bytes_;}size_t output_offset()const{return input_offset()+sizeof(frame);}
+  size_t layout_offset()const{return output_offset()+sizeof(frame);}size_t constant_offset(int i)const{return layout_offset()+sizeof(graph_layout)+size_t(i)*sizeof(graph_layout);}
+  size_t epochs_offset()const{return constant_offset(GRAPH_LIMIT);}
+  void affinity(const sycl::queue& q)const{if(q.get_context()!=q_.get_context()||q.get_device()!=q_.get_device())throw std::invalid_argument("batch observer queue/device/context changed");}
+  int graph_index(const graph_layout& layout)const{for(int i=0;i<graph_count_;++i)if(graphs_[i].layout==layout)return i;return -1;}
+- frame describe(const identity* ids,const bool* selected,int n,bool admission,uint64_t epoch,int graph)const{
++ frame describe(const identity* ids,const bool* selected,int n,int phase,uint64_t epoch,int graph)const{
+   if(!ids||!selected||n<1||n>ROWS||graph<0||graph>=graph_count_||!graphs_[graph].sealed)throw std::invalid_argument("batch observer frame graph/row descriptor");
+-  frame f{};f[0]=epoch;f[1]=uint64_t(graph);f[2]=uint64_t(stage_);f[3]=uint64_t(lb_);f[4]=uint64_t(le_);f[5]=uint64_t(n);f[6]=admission;f[9]=D;f[10]=VOCAB;f[11]=LAYERS;
+-  unsigned mask=0,chosen=0;for(int t=0;t<n;++t){const auto& id=ids[t];if(t && id.event!=ids[0].event)throw std::invalid_argument("batch observer mixed native batch events");if(id.slot<0||id.slot>=ROWS||(mask&(1u<<id.slot))||id.pos<0||id.token<0||id.token>=VOCAB||id.enginegen!=engine_generation())throw std::invalid_argument("batch observer actual row/engine/position invalid");mask|=1u<<id.slot;
+-   if(selected[t]){if(!id.rid||!records().select(id,admission)||(admission?(n!=1||id.pos!=id.prompt-1||id.event!=0):(n<2||id.pos<id.prompt||id.event==0)))throw std::invalid_argument("batch observer stale/current request boundary invalid");chosen|=1u<<t;}
++  frame f{};f[0]=epoch;f[1]=uint64_t(graph);f[2]=uint64_t(stage_);f[3]=uint64_t(lb_);f[4]=uint64_t(le_);f[5]=uint64_t(n);f[6]=uint64_t(phase);f[9]=D;f[10]=VOCAB;f[11]=LAYERS;
++  unsigned mask=0,chosen=0;for(int t=0;t<n;++t){const auto& id=ids[t];if(t && id.event!=ids[0].event)throw std::invalid_argument("batch observer mixed native batch events");if(id.slot<0||id.slot>=(phase==2?ROWS+1:ROWS)||(mask&(1u<<id.slot))||id.pos<0||id.token<0||id.token>=VOCAB||id.enginegen!=engine_generation())throw std::invalid_argument("batch observer actual row/engine/position invalid");mask|=1u<<id.slot;
++   if(selected[t]){if(!id.rid||!records().select(id,phase)||(phase?(n!=1||id.pos!=id.prompt-1||(phase==1?id.event!=0:id.event==0)):(n<2||id.pos<id.prompt||id.event==0)))throw std::invalid_argument("batch observer stale/current request boundary invalid");chosen|=1u<<t;}
+    const size_t k=12+size_t(t)*8;f[k]=id.rid;f[k+1]=id.enginegen;f[k+2]=id.generation;f[k+3]=id.slotgen;f[k+4]=uint64_t(id.slot);f[k+5]=uint64_t(id.pos);f[k+6]=uint64_t(id.token);f[k+7]=id.event;
+-   if(!admission&&graphs_[graph].layout.words[4+t]!=uint64_t(id.slot))throw std::invalid_argument("batch observer actual graph row layout changed");
++   if(!phase&&graphs_[graph].layout.words[4+t]!=uint64_t(id.slot))throw std::invalid_argument("batch observer actual graph row layout changed");
+   }if(!chosen)throw std::invalid_argument("batch observer no selected request");f[7]=mask;f[8]=chosen;
+-  if(graphs_[graph].layout.words[0]!=uint64_t(n)||graphs_[graph].layout.words[1]!=uint64_t(admission))throw std::invalid_argument("batch observer graph phase/rows mismatch");return f;
++  if(graphs_[graph].layout.words[0]!=uint64_t(n)||graphs_[graph].layout.words[1]!=uint64_t(phase))throw std::invalid_argument("batch observer graph phase/rows mismatch");if(phase==2){f[60]=uint64_t(ids[0].source_slot);f[61]=ids[0].source_slotgen;}return f;
+  }
+ public:
+  snapshot(const sycl::queue& q,int stage,int lb,int le,bool head):q_(q),stage_(stage),lb_(lb),le_(le),head_(head),stride_(size_t(le-lb)*D+(head?VOCAB:0)),raw_bytes_(ROWS*stride_*4),bytes_(raw_bytes_+2*sizeof(frame)+(GRAPH_LIMIT+1)*sizeof(graph_layout)+EPOCHS*8){
+@@ -88,23 +89,23 @@ public:
+  void stamp(sycl::queue& q){affinity(q);if(building_<0||graphs_[building_].stamped)throw std::invalid_argument("batch observer stamp outside/duplicate graph construction");for(int l=0;l<=LAYERS;++l)if(graphs_[building_].copied[size_t(l)]!=(l>=lb_&&l<le_ || (l==LAYERS&&head_)))throw std::invalid_argument("batch observer stamp before exact stage producers");
+   q.memcpy(data_+output_offset(),data_+input_offset(),sizeof(frame));q.memcpy(data_+layout_offset(),data_+constant_offset(building_),sizeof(graph_layout));graphs_[building_].stamped=true;
+  }
+- void arm(const graph_layout& layout,const identity* ids,const bool* selected,int n,bool admission,sycl::queue& q){affinity(q);if(building_>=0||(armed_graph_>=0&&published_!=input_[0]))throw std::invalid_argument("batch observer previous frame still unretired");int graph=graph_index(layout);if(graph<0||!graphs_[graph].sealed)throw std::invalid_argument("batch observer unknown/unsealed graph");
+-  const uint64_t epoch=(uint64_t(uint32_t(getpid()))<<32)|++sequence_;input_=describe(ids,selected,n,admission,epoch,graph);armed_graph_=graph;failed_=false;armed_n_=n;armed_admission_=admission;
++ void arm(const graph_layout& layout,const identity* ids,const bool* selected,int n,int phase,sycl::queue& q){affinity(q);if(building_>=0||(armed_graph_>=0&&published_!=input_[0]))throw std::invalid_argument("batch observer previous frame still unretired");int graph=graph_index(layout);if(graph<0||!graphs_[graph].sealed)throw std::invalid_argument("batch observer unknown/unsealed graph");
++  const uint64_t epoch=(uint64_t(uint32_t(getpid()))<<32)|++sequence_;input_=describe(ids,selected,n,phase,epoch,graph);armed_graph_=graph;failed_=false;armed_n_=n;armed_phase_=phase;
+   for(int t=0;t<n;++t){armed_ids_[size_t(t)]=ids[t];armed_selected_[size_t(t)]=selected[t];}
+   // All host sources below are persistent members. Re-arm requires a previously completed dump/queue drain.
+   q.memcpy(data_+input_offset(),input_.data(),sizeof(frame));q.memcpy(data_+output_offset(),zero_frame_.data(),sizeof(frame));q.memcpy(data_+layout_offset(),&zero_layout_,sizeof(graph_layout));q.memcpy(data_+epochs_offset(),zero_epochs_.data(),sizeof(zero_epochs_));
+  }
+- bool dump(const identity* ids,const bool* selected,int n,bool admission,std::string& err){
+-  if(failed_||armed_graph_<0||published_==input_[0]){err="batch observer failed/unarmed/duplicate frame";return false;}
++ bool dump(const identity* ids,const bool* selected,int n,int phase,std::string& err){
++  if(!armed()){failed_=true;err="batch observer ARM lost during frame";return false;}if(failed_||armed_graph_<0||published_==input_[0]){err="batch observer failed/unarmed/duplicate frame";return false;}
+   bool completed=false;struct failure_guard{bool& failed;bool& completed;~failure_guard(){if(!completed)failed=true;}}guard{failed_,completed};
+-  try{if(describe(ids,selected,n,admission,input_[0],armed_graph_)!=input_){err="batch observer changed RID/enginegen/slotgen/row/position frame";return false;}}catch(const std::exception& e){err=e.what();return false;}
++  try{if(describe(ids,selected,n,phase,input_[0],armed_graph_)!=input_){err="batch observer changed RID/enginegen/slotgen/row/position frame";return false;}}catch(const std::exception& e){err=e.what();return false;}
+   frame output{};graph_layout actual;std::array<uint64_t,EPOCHS> epochs{};q_.memcpy(output.data(),data_+output_offset(),sizeof(frame));q_.memcpy(&actual,data_+layout_offset(),sizeof(actual));q_.memcpy(epochs.data(),data_+epochs_offset(),sizeof(epochs)).wait_and_throw();
+   if(output!=input_ || !(actual==graphs_[armed_graph_].layout)){err="batch observer missing/stale/wrong-layout graph replay marker";return false;}
+   for(int t=0;t<ROWS;++t)for(int l=0;l<=LAYERS;++l){const bool expected=t<n&&(l>=lb_&&l<le_ || (l==LAYERS&&head_));if(epochs[size_t(t)*(LAYERS+1)+size_t(l)]!=(expected?input_[0]:0)){err="batch observer partial/foreign producer row/layer/head epoch";return false;}}
+-  std::fprintf(stderr,"SBF replay pid=%ld enginegen=%llu stage=%d lb=%d le=%d epoch=%llu graph=%d event=%llu rows=%d admission=%d active_mask=%llu selected_mask=%llu full_roster=1 input_output_verified=1 stage_context_verified=1 geometry=48x4x2560x248320\n",long(getpid()),(unsigned long long)engine_generation(),stage_,lb_,le_,(unsigned long long)input_[0],armed_graph_,(unsigned long long)armed_ids_[0].event,n,admission,(unsigned long long)input_[7],(unsigned long long)input_[8]);
+-  for(int t=0;t<n;++t){const auto& id=ids[t];std::fprintf(stderr,"SBF row pid=%ld enginegen=%llu stage=%d lb=%d le=%d epoch=%llu graph=%d event=%llu admission=%d rid=%llu requestgen=%llu slot=%d slotgen=%llu pos=%lld token=%d row=%d batchrows=%d selected=%d\n",long(getpid()),(unsigned long long)id.enginegen,stage_,lb_,le_,(unsigned long long)input_[0],armed_graph_,(unsigned long long)id.event,admission,(unsigned long long)id.rid,(unsigned long long)id.generation,id.slot,(unsigned long long)id.slotgen,(long long)id.pos,id.token,t,n,selected[t]);}
+-  for(int t=0;t<n;++t)if(selected[t]){for(int l=lb_;l<le_;++l){std::vector<float> raw(D);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(l-lb_)*D)*4,D*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,l,admission?"admission_residual":"batch_step_residual",raw,err,input_[0],armed_graph_))return false;}
+-   if(head_){std::vector<float> raw(VOCAB);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(le_-lb_)*D)*4,VOCAB*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,-1,admission?"admission_logits_before_sampler":"batch_step_logits_before_sampler",raw,err,input_[0],armed_graph_))return false;}}
++  std::fprintf(stderr,"SBF replay pid=%ld enginegen=%llu stage=%d lb=%d le=%d epoch=%llu graph=%d event=%llu rows=%d admission=%d active_mask=%llu selected_mask=%llu full_roster=1 input_output_verified=1 stage_context_verified=1 geometry=48x4x2560x248320\n",long(getpid()),(unsigned long long)engine_generation(),stage_,lb_,le_,(unsigned long long)input_[0],armed_graph_,(unsigned long long)armed_ids_[0].event,n,phase,(unsigned long long)input_[7],(unsigned long long)input_[8]);
++  for(int t=0;t<n;++t){const auto& id=ids[t];std::fprintf(stderr,"SBF row pid=%ld enginegen=%llu stage=%d lb=%d le=%d epoch=%llu graph=%d event=%llu admission=%d rid=%llu requestgen=%llu slot=%d slotgen=%llu pos=%lld token=%d row=%d batchrows=%d selected=%d\n",long(getpid()),(unsigned long long)id.enginegen,stage_,lb_,le_,(unsigned long long)input_[0],armed_graph_,(unsigned long long)id.event,phase,(unsigned long long)id.rid,(unsigned long long)id.generation,id.slot,(unsigned long long)id.slotgen,(long long)id.pos,id.token,t,n,selected[t]);}
++  for(int t=0;t<n;++t)if(selected[t]){for(int l=lb_;l<le_;++l){std::vector<float> raw(D);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(l-lb_)*D)*4,D*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,l,phase==2?"solo_migration_residual":phase==1?"admission_residual":"batch_step_residual",raw,err,input_[0],armed_graph_))return false;}
++   if(head_){std::vector<float> raw(VOCAB);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(le_-lb_)*D)*4,VOCAB*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,-1,phase==2?"solo_migration_logits_before_sampler":phase==1?"admission_logits_before_sampler":"batch_step_logits_before_sampler",raw,err,input_[0],armed_graph_))return false;}}
+   published_=input_[0];completed=true;return true;
+  }
+  // A cancelled/unpublished frame retires only after the owning queue drains; no vectors or ledger completion.
+diff --git a/sycl/include/strata/core/verify.hpp b/sycl/include/strata/core/verify.hpp
+index f8f28ee..7a5aab7 100644
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -473,12 +473,12 @@ private:
+     std::shared_ptr<fidelity_diag::snapshot> fidelity_snapshot_;
+     bool fidelity_first_=false;
+     std::shared_ptr<batch_fidelity::snapshot> batch_snapshot_;
+-    bool batch_observe_=false,batch_admission_=false;
++    bool batch_observe_=false,batch_admission_=false;int batch_phase_=0;
+     unsigned batch_published_rows_=0;
+     int batch_observe_rows_=0;
+     std::array<batch_fidelity::identity,6>* batch_identities_=nullptr;
+     bool batch_selected_[6]={};
+-    dpct::experimental::command_graph_exec_ptr batch_admission_exec_[2]={};
++    dpct::experimental::command_graph_exec_ptr batch_admission_exec_[2]={},batch_migration_exec_[2]={};
+     std::map<std::vector<int>,dpct::experimental::command_graph_exec_ptr> batch_observe_exec_;
+     std::shared_ptr<layer0_diag::snapshot> layer0_snapshot_;
+     bool layer0_first_=false;
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+index b031b13..0ee36a3 100644
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1772,10 +1772,10 @@ void Verifier::refresh_ar() {
+ bool Verifier::capture(int T, std::string &err) try {
+     const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &exec_t =
+-        batch_observe_ && batch_admission_ && T==1 ? batch_admission_exec_[ar_off_?1:0] : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]));
++        batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]));
+     if (exec_t != nullptr) return true;
+     if (std::getenv("STRATA_VERIFY_EAGER") != nullptr) return true;   // SYCL port: no graph, run() replays the body
+-    if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->begin_roster(batch_fidelity::graph_layout::make(nullptr,1,true,ar_off_?1:0),*cs_);
++    if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->begin_roster(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0),*cs_);
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+         err = "verify: begin capture failed";
+         return false;
+@@ -1833,7 +1833,7 @@ bool Verifier::capture(int T, std::string &err) try {
+         std::fprintf(stderr, "\n");
+     }
+     if(layer0_first_&&layer0_snapshot_&&T==1)layer0_snapshot_->seal_roster((ar_off_?1:0)+(fidelity_first_?2:0));
+-    if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->seal_roster(batch_fidelity::graph_layout::make(nullptr,1,true,ar_off_?1:0));
++    if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->seal_roster(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0));
+     const dpct::err0 ie = DPCT_CHECK_ERROR(
+         exec_t = new sycl::ext::oneapi::experimental::command_graph<
+             sycl::ext::oneapi::experimental::graph_state::executable>(
+@@ -2051,7 +2051,7 @@ bool Verifier::run(int T, const int32_t *tokens, int64_t pos0, PoolMultiFn pool,
+     const Clock::time_point t0 = Clock::now();
+     if (!staged_) stage_inputs(T, tokens, pos0);
+     staged_ = false;
+-    if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->arm(batch_fidelity::graph_layout::make(nullptr,1,true,ar_off_?1:0),batch_identities_->data(),batch_selected_,1,true,*cs_);
++    if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->arm(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0),batch_identities_->data(),batch_selected_,1,batch_phase_,*cs_);
+     if(layer0_first_&&layer0_snapshot_&&T==1)layer0_snapshot_->arm((ar_off_?1:0)+(fidelity_first_?2:0),T,pos0,tokens[0],*cs_);
+     const bool do_ple = ss.ple.ready() && ple_stage();
+     uint32_t ple_rows[kVerifyMaxT * PLE_N_HEADS];
+@@ -2084,7 +2084,7 @@ bool Verifier::run(int T, const int32_t *tokens, int64_t pos0, PoolMultiFn pool,
+     }
+     const dpct::err0 le = (std::getenv("STRATA_VERIFY_EAGER") != nullptr)
+                               ? (record_window(T, cs_, err) ? 0 : 1)   // SYCL port: eager replay of the window body
+-                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(batch_observe_ && batch_admission_ && T==1 ? batch_admission_exec_[ar_off_?1:0] : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])))));
++                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])))));
+     /*
+     DPCT1009: SYCL reports errors using exceptions and does not use error
+     codes. Please replace the "get_error_string_dummy(...)" with a real
+@@ -2332,7 +2332,7 @@ bool Verifier::run(int T, const int32_t *tokens, int64_t pos0, PoolMultiFn pool,
+     // the POSITION it samples, not to how the text was cut into windows, so a seed replays the same text whatever
+     // the drafts were. Exact: a rejected row's draw is discarded, and no kept decision depends on a reused draw.
+     prefix_lifecycle::stage("verify_body",device_,lb_,le_,pos0,pos0+T,true);
+-    batch_fidelity::span(batch_fidelity::admitting(),device_,int(lb_),int(le_),pos0,pos0+T,"admission_target_verify");
++    batch_fidelity::span(batch_fidelity::admitting(),device_,int(lb_),int(le_),pos0,pos0+T,batch_phase_==2?"solo_migration_target_verify":"admission_target_verify");
+     if (le_ < g.n_layers) {   // a layer split's earlier stage: the hand-off is written (synced above)
+         ++windows;
+         return next_ == nullptr || next_->run(T, tokens, pos0, pool, next_user_, out, err);
+@@ -3462,11 +3462,11 @@ catch (sycl::exception const &exc) {
+ bool Verifier::select_batch_observation(const batch_fidelity::identity* ids,int n,bool admission,std::string& err) try {
+  const OnDevice on_device(device_);batch_observe_=false;batch_observe_rows_=0;batch_published_rows_=0;
+  if(batch_identities_)batch_identities_->fill(batch_fidelity::identity{});
+- if(!batch_fidelity::armed())return true;
++ if(!batch_fidelity::armed())return next_==nullptr||next_->select_batch_observation(ids,n,admission,err);
+  if(n<1||n>6||!ids||std::getenv("STRATA_VERIFY_EAGER")){err="batch observer row bound or unsupported eager";return false;}
+  if(!batch_identities_)batch_identities_=new std::array<batch_fidelity::identity,6>();
+- batch_admission_=admission;batch_observe_rows_=n;
+- for(int t=0;t<n;++t){(*batch_identities_)[size_t(t)]=ids[t];(*batch_identities_)[size_t(t)].row=t;(*batch_identities_)[size_t(t)].batchrows=n;batch_selected_[t]=(admission || n>=2) && ids[t].rid && batch_fidelity::records().select(ids[t],admission);batch_observe_|=batch_selected_[t];}
++ batch_phase_=(n==1&&ids[0].phase==2)?2:(admission?1:0);batch_admission_=batch_phase_!=0;batch_observe_rows_=n;
++ for(int t=0;t<n;++t){(*batch_identities_)[size_t(t)]=ids[t];(*batch_identities_)[size_t(t)].row=t;(*batch_identities_)[size_t(t)].batchrows=n;batch_selected_[t]=(admission || n>=2) && ids[t].rid && batch_fidelity::records().select(ids[t],batch_phase_);batch_observe_|=batch_selected_[t];}
+  if(batch_observe_&&!batch_snapshot_) {
+   if(g_->n_embd!=2560||g_->hc!=4||g_->n_layers!=48||n_vocab_!=248320){err="batch observer unsupported geometry";return false;}
+   batch_snapshot_=std::make_shared<batch_fidelity::snapshot>(*cs_,device_,int(lb_),int(le_),le_==g_->n_layers);
+@@ -3474,7 +3474,7 @@ bool Verifier::select_batch_observation(const batch_fidelity::identity* ids,int
+  return next_==nullptr||next_->select_batch_observation(ids,n,admission,err);
+ } catch(const std::exception& e){err=std::string("batch observer: ")+e.what();return false;}
+ bool Verifier::dump_batch_observation(std::string& err) try {
+- if(batch_observe_&&batch_snapshot_ && !batch_snapshot_->dump(batch_identities_->data(),batch_selected_,batch_observe_rows_,batch_admission_,err))return false;
++ if(batch_observe_&&batch_snapshot_ && !batch_snapshot_->dump(batch_identities_->data(),batch_selected_,batch_observe_rows_,batch_phase_,err))return false;
+  if(next_&&!next_->dump_batch_observation(err))return false;
+  if(batch_observe_)for(int t=0;t<batch_observe_rows_;++t)if(batch_selected_[t]){if(next_&&!next_->batch_observed(t)){err="batch observer incomplete linked-stage publication";return false;}batch_published_rows_|=1u<<t;}
+  batch_observe_=false;return true;
+@@ -3482,7 +3482,7 @@ bool Verifier::dump_batch_observation(std::string& err) try {
+ void Verifier::release_batch_observer() {
+  if(!batch_snapshot_&&!batch_identities_&&batch_observe_exec_.empty())return;
+  const OnDevice on_device(device_);
+- if(batch_snapshot_){cs_->wait_and_throw();for(auto& p:batch_admission_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_observe_exec_)if(p.second)delete p.second;batch_observe_exec_.clear();batch_snapshot_->release();batch_snapshot_.reset();}
++ if(batch_snapshot_){cs_->wait_and_throw();for(auto& p:batch_admission_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_migration_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_observe_exec_)if(p.second)delete p.second;batch_observe_exec_.clear();batch_snapshot_->release();batch_snapshot_.reset();}
+  delete batch_identities_;batch_identities_=nullptr;batch_observe_=false;batch_published_rows_=0;
+  // Each stage owns its resources; the existing stage teardown iterates all owners.
+ }
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+index 33f219b..129f666 100644
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -8973,6 +8973,7 @@ int main(int argc, char **argv) try {
+                     if (fin != nullptr) {
+                         const double ms = std::chrono::duration<double, std::milli>(Clock::now() - sl.t0).count();
+                         std::printf("BDONE %d %lld %s %.1f%s\n", b,(long long)sl.produced,fin,ms,strict_batch_identity?(" rid="+std::to_string(sl.request_id)+" slotgen="+std::to_string(sl.generation)).c_str():"");
++                        if(strata::core::batch_fidelity::settings().enabled)strata::core::batch_fidelity::close_slot(sl.request_id,sl.generation,b,sl.stop && !eos);
+                         sl.active = false;
+                         sl.cached = o.prompt_cache > 0 && !sl.img;
+                         break;
+@@ -11344,7 +11345,8 @@ int main(int argc, char **argv) try {
+                     return 1;
+                 }
+                 if(!ver.dump_batch_observation(err)){std::printf("ERR %s\n",err.c_str());return 1;}
+-                if(produced_n==0 && ver.batch_observed(0) && admission_observed_id.rid && strata::core::batch_fidelity::records().select(admission_observed_id,true))strata::core::batch_fidelity::records().complete(admission_observed_id,true);
++                if(produced_n==0 && ver.batch_observed(0) && admission_observed_id.rid && strata::core::batch_fidelity::records().select(admission_observed_id,admission_observed_id.phase==2?2:1))strata::core::batch_fidelity::records().complete(admission_observed_id,admission_observed_id.phase==2?2:1);
++                if(produced_n==0 && ver.batch_observed(0) && admission_observed_id.phase==2)std::fprintf(stderr,"SBF solo_event pid=%ld rid=%llu enginegen=%llu requestgen=%llu event=%llu pos=%lld token=%d rows=1 main_session=1 completed=1\n",long(getpid()),(unsigned long long)admission_observed_id.rid,(unsigned long long)admission_observed_id.enginegen,(unsigned long long)admission_observed_id.generation,(unsigned long long)admission_observed_id.event,(long long)p,window[0]);
+                 if (produced_n==0 && !ver.dump_fidelity_first(T,p,window[0],err)) { std::printf("ERR %s\n",err.c_str());return 1; }
+                 if(produced_n==0 && !ver.dump_layer0_first(T,p,window[0],err)) { std::printf("ERR %s\n",err.c_str());return 1; }
+                 ver.select_layer0_first(false);

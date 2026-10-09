@@ -1,0 +1,15 @@
+{
+  "CONFIG": "exact new source5files/actualheaders hostASanUBSan graphmocks; no SDK/GPU/model",
+  "COMMAND": "python3 strata/flash-next/test_solo_migration_observer_cpu_v1.py",
+  "RESULT": {
+    "defaultoff_unarmed_zero_alloc_copy_wait": true,
+    "actual_begin_unknown_solo_and_ARMloss_clear_current": true,
+    "stale_priorRID_span_suppressed": true,
+    "ARMloss_poison_after_reappearance": true,
+    "two_RID_three_samples_two_stages_raw_vectors": 294,
+    "synthetic_output_observed": true,
+    "patch_sha256": "16953e056e7ecbc5e8c513bf0c03f025716a1953c5b5c992d6af53b81a7058a5"
+  },
+  "VERDICT": "PASS CPU diagnostic source controls only; actual migration/body/source/math/cache qualification absent",
+  "full_model_math_qualified": false
+}

@@ -1,0 +1,13 @@
+{
+  "CONFIG": "synthetic actual-header raw callbacks294 vectors/2RID/2stage/3samples, no model/GPU",
+  "COMMAND": "python3 strata/flash-next/test_solo_migration_collector_cpu_v1.py (after header mock test)",
+  "RESULT": {
+    "initial_vectors": 196,
+    "solo_migration_vectors": 98,
+    "total_bytes": 17756160,
+    "negative_controls": 22,
+    "raw_full48_head_after_completed_solo_body": true
+  },
+  "VERDICT": "PASS CPU supplied synthetic collection only; native GPU/serial/original math, actual slot transfer/source/lifecycle/cache unqualified",
+  "full_model_math_qualified": false
+}

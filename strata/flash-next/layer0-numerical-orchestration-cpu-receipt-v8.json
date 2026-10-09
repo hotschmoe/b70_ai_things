@@ -1,0 +1,14 @@
+{
+  "CONFIG": "synthetic33fields/31source2DERIVED,10tier pointers,20packets,two temporarypages; no model payload/GPU/SDK",
+  "COMMAND": "python3 strata/flash-next/test_layer0_numerical_qualification_cpu_v8.py",
+  "RESULT": {
+    "negative_controls": 34,
+    "five_packet_seams_four_prefixes": true,
+    "intrinsic_rounding_exact_packet_failure": true,
+    "complete7023304_owner_extent": true,
+    "both_known_page_controls": true,
+    "numpy": "2.5.0"
+  },
+  "VERDICT": "PASS CPU contracts only; actual combined SDK/C1/preparation/packet/operator/source/current page qualification absent",
+  "full_model_math_qualified": false
+}

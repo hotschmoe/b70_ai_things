@@ -1,0 +1,22 @@
+{
+  "CONFIG": "pure CPU AST source/lifecycle negatives; no current model payload or runtime accesses",
+  "COMMAND": "python3 strata/flash-next/test_qualify_layer0_numerical_cpu_v8.py",
+  "RESULT": {
+    "retained_parent_helper_ast_equal": [
+      "stat_signature",
+      "full_buffered_identity",
+      "finalizable",
+      "command",
+      "health",
+      "faults",
+      "containers",
+      "stop",
+      "save"
+    ],
+    "finalization_negative_controls": 10,
+    "new_two_page_preservation_hook": true,
+    "same_merged_producer_stream": true
+  },
+  "VERDICT": "PASS CPU parent contracts only; genuine combined SDK/C1/full390 preparation and actual GPU numerical evidence absent",
+  "full_model_math_qualified": false
+}

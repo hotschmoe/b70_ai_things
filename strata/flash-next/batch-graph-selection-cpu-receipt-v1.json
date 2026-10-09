@@ -1,0 +1,13 @@
+{
+  "CONFIG": "verbatim actual capture/capture_batch selection prefixes and bkey; host mocks/no SYCL/GPU/SDK",
+  "COMMAND": "python3 strata/flash-next/test_batch_graph_selection_cpu_v1.py",
+  "RESULT": {
+    "unarmed_cached_normal_not_armed_observer_graph": true,
+    "admission_vs_solo_migration_graph_rosters_distinct": true,
+    "cached_observer_does_not_reseal": true,
+    "row_order_and_AR_variants_distinct": true,
+    "ARMoff_returns_normal_map": true,
+    "patch_sha256": "16953e056e7ecbc5e8c513bf0c03f025716a1953c5b5c992d6af53b81a7058a5"
+  },
+  "VERDICT": "PASS CPU selection source branches only; actual warm->ARM replay/context/producer/math requires GPU qualification"
+}

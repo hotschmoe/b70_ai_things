@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "scope": "CPU source draft only; no SDK/GPU/model payloads",
+  "base_source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T144515Z-k4gb2xtx/source",
+  "overlay": "/mnt/vm_8tb/b70/build/strata-observer26-5etqd23w",
+  "patch": "strata/flash-next/patches/0026-sycl-bounded-solo-migration-observer-draft.patch",
+  "patch_sha256": "16953e056e7ecbc5e8c513bf0c03f025716a1953c5b5c992d6af53b81a7058a5",
+  "base_source_sha256": {
+    "sycl/include/strata/core/batch_fidelity_contract.hpp": "3b71def6ed7a71ffddf93b50d66bba82711e8413cdbe5311bb487bc2d9ce0f5c",
+    "sycl/include/strata/core/batch_fidelity_observer.hpp": "14b9b0e213f1c424998941db914029b8b1cc0ea04d340939325abae22ba03dac",
+    "sycl/include/strata/core/verify.hpp": "7fb627a32a3d9d25d3a680ac7739db6873f8c38034f6f6ac4a5865d1b00aad5b",
+    "sycl/src/core/verify.cpp": "4f70cde7b9d4d5be262b4dc251afe0cddf91fccf8dfd2de0add7d76d1a3bebec",
+    "sycl/src/program/generate.cpp": "d2ff2b5d817c89020ed733599e7adce8d2ce49aba95cd588fddce5b09f13fe11"
+  },
+  "expected_source_sha256": {
+    "sycl/include/strata/core/batch_fidelity_contract.hpp": "68119cc9d3efabbfb96a70c5a38931e8a5dca8a56e4510142389eac6a4f17fd3",
+    "sycl/include/strata/core/batch_fidelity_observer.hpp": "ddd2475f38f42e731a99ff52678cda9e742b20c75ead38383a735ca0add9db39",
+    "sycl/include/strata/core/verify.hpp": "6081d029231ef7da74641d2ec0cf880b3cfecd573f1a235391fa3836b48f5d16",
+    "sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "sycl/src/program/generate.cpp": "d415f7f0bd0b5ecba24d5110ad568b264c85c134c52eb28a13a2123f7e7e27fb"
+  },
+  "raw_quota": {
+    "requests": 6,
+    "samples_per_request": 3,
+    "total_bytes": 53268480,
+    "cap_bytes": 67108864
+  },
+  "full_model_math_qualified": false,
+  "unchanged_source_sha256": {
+    "include/strata/core/verify.hpp": "a4e71f4c9534fa2a19525d3f5b7332939f8fd356862cbdeaf272b03678d170ae"
+  },
+  "base_engine_plan": "strata/flash-next/combined-numerical-batch-engine-build-plan-v1.json",
+  "base_engine_plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a"
+}

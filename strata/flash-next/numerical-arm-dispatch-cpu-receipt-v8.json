@@ -1,0 +1,17 @@
+{
+  "CONFIG": "actual frozen21 one V2 prepared/engine/source/qualified child+parent; actual import28 one C1parent6 strong final proof; all model/pack opens denied",
+  "COMMAND": "python3 strata/flash-next/test_numerical_arm_dispatch_cpu_v8.py",
+  "RESULT": {
+    "actual_reference21_metadata_verified": true,
+    "actual_candidate_C1parent6_proof_verified": true,
+    "wrong_lane_negative_controls": 9,
+    "model_payload_read_attempts": 0,
+    "reference_plan_sha256": "88d3f7cb3bbb3f88a78bf445456ca552ff6e538e1dfd99427b078fd0f2b082e7",
+    "reference_child_sha256": "c2718589f63f221164dca96cc0bf990d92591a00a98e2b870d69aecc20c13f39",
+    "reference_parent_sha256": "ffb3b00f91f7de069aac007da8edfbbacdaa3dcd04ca5e9ee341d31f785a7984",
+    "candidate_prepared_sha256": "e5e132888b686dd65fe7d48eb990f33462f991a10ea19ea689aeebb6c3f74b51",
+    "candidate_final_qualification_sha256": "a49b65f2fba030bd572312afe627a35f0a726f1e4c13d41f01622b0a68b277d9"
+  },
+  "VERDICT": "PASS CPU actual metadata/dispatch proof only; no numerical preparation/execution/GPU/model payload reads; failed21 pair remains inadmissible",
+  "full_model_math_qualified": false
+}

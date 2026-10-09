@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "scope": "CPU synthetic/source-only owned earlier-prefill plus last-verifier mathematical storage lane",
+  "source_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T161219Z-n_v8o9lp/source",
+  "source_sha256": {
+    "sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde",
+    "sycl/src/prefill/gemm.dp.cpp": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584",
+    "sycl/src/prefill/kernels.dp.cpp": "e24493d4df90660234cdd44bd48c659e7b8cebd5842a036872e0a24b09c7160a",
+    "sycl/src/kernels/cuda/dequant_bf16.dp.cpp": "d038d9df5599614ee1fdee5dbabccaca2df7201ca492424a141722e7165551ca",
+    "sycl/src/kernels/hc_native_composition.cpp": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+    "sycl/src/kernels/hc_native_projection.cpp": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025",
+    "sycl/src/kernels/cuda/native_gdn_preprocess.dp.cpp": "f618623173b3a6dce49e38ba02df84a2f5efe61455e8e7781d946f95bd1bd3df",
+    "tools/iq_pack.py": "81b59dd1d71484106cddec9418ef933a2e55a1fd28a57b955715cf0e2e9e4878"
+  },
+  "files": {
+    "prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "test_prefill_first_gdn_owned_storage_v1.py": "64b7731114d97689a7d3e854f443963eaeb695692613012a96a8dc6b91983e5f",
+    "prefill-first-gdn-owned-storage-v1.md": "0b07f0c362a337d6c233547c5f1033be84b8e9c136c69413f82b00ed4984132c"
+  },
+  "frozen_dependency_sha256": {
+    "original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "test_native_storage_first_gdn_estimate_v1.py": "d0185ab853185b72cafc7b41766ba74f7775b754e67ddd3c49a406c2f65270d5"
+  },
+  "cpu_tests": 12,
+  "earlier_row_storage": "Q8_0 weights dequant F32 then F16, F16 operands; original F32 alpha/beta -> BF16-RNE weights and BF16 inputs",
+  "last_row_storage": "original Q8_0 plus own native Q8_1 packet; BF16 small weights/F32 input",
+  "default_prefill_y_buffer": "scaled core F32, normalized gated y16 only",
+  "actual_model_payload_reads": 0,
+  "captured_inputs_used": false,
+  "actual_owned_prefix_runs": "UNOBSERVED",
+  "native_exp_or_reductions_or_GEMM_emulated": false,
+  "actual_BF16_GEMM_device_branch_observed": false,
+  "original_own_state_reference_qualified": false,
+  "complete_layer_math_qualified": false,
+  "full_model_math_qualified": false,
+  "tolerance_gate": null
+}

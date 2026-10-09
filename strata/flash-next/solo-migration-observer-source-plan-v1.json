@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source observer26 increment; full SDK/GPU/native cache/migration/serving qualification absent",
+  "files": {
+    "strata/flash-next/patches/0026-sycl-bounded-solo-migration-observer-draft.patch": "16953e056e7ecbc5e8c513bf0c03f025716a1953c5b5c992d6af53b81a7058a5",
+    "strata/flash-next/solo-migration-observer-source-draft-v1.json": "7da26d2a69f8eedeb72448d158118f394a6170209c803d8a95d759e62597e2fa",
+    "strata/flash-next/prepare_solo_migration_observer_overlay_v1.py": "f86cc66f34aa746744d9db06cfd08a1b6e0e7f0fb9476dd2e652051adbaa5727",
+    "strata/flash-next/test_solo_migration_observer_cpu_v1.py": "a4d88125e1b2f2a84a6e43893d76d3a40ddf96570f6df68a2fc24ab1378d74e6",
+    "strata/flash-next/test_solo_migration_collector_cpu_v1.py": "b41e5d51a935b972bc152d27d515fb8e03333fbd45e2efe5f5754397a287a3d0",
+    "strata/flash-next/test_batch_graph_selection_cpu_v1.py": "08fea2388cfa5e0c217b69711f70cdeff5486c310c0b562b268b8876747011f3",
+    "strata/flash-next/audit_batch_fidelity_coverage_v3.py": "9df78463660f3d12ad793967a66fa391543a5678aceb83e28132e80c62dc76d3",
+    "strata/flash-next/solo-migration-observer-design-v1.md": "7b0db2b8e76aec681fcaf33abad673a20aa6ba1f5327c936f98321dd389b390d",
+    "strata/flash-next/solo-migration-observer-cpu-receipt-v1.json": "87a35d40a2a799e131ea2d8bfa15dad389d04d6e33b9cae10ed6c315e39a2f8c",
+    "strata/flash-next/solo-migration-collector-cpu-receipt-v1.json": "3b6864a7fa18d0b62eebd290ff36103e97d9eed0360dfaf2e097efd810fb28db",
+    "strata/flash-next/batch-graph-selection-cpu-receipt-v1.json": "698e15434d634f692e69aeb04f89bbfae1cf54393a2700535442f93367eaa396"
+  },
+  "base_engine_plan": "strata/flash-next/combined-numerical-batch-engine-build-plan-v1.json",
+  "base_engine_plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a",
+  "patch": "strata/flash-next/patches/0026-sycl-bounded-solo-migration-observer-draft.patch",
+  "patch_sha256": "16953e056e7ecbc5e8c513bf0c03f025716a1953c5b5c992d6af53b81a7058a5",
+  "base_source_sha256": {
+    "sycl/include/strata/core/batch_fidelity_contract.hpp": "3b71def6ed7a71ffddf93b50d66bba82711e8413cdbe5311bb487bc2d9ce0f5c",
+    "sycl/include/strata/core/batch_fidelity_observer.hpp": "14b9b0e213f1c424998941db914029b8b1cc0ea04d340939325abae22ba03dac",
+    "sycl/include/strata/core/verify.hpp": "7fb627a32a3d9d25d3a680ac7739db6873f8c38034f6f6ac4a5865d1b00aad5b",
+    "sycl/src/core/verify.cpp": "4f70cde7b9d4d5be262b4dc251afe0cddf91fccf8dfd2de0add7d76d1a3bebec",
+    "sycl/src/program/generate.cpp": "d2ff2b5d817c89020ed733599e7adce8d2ce49aba95cd588fddce5b09f13fe11"
+  },
+  "expected_source_sha256": {
+    "sycl/include/strata/core/batch_fidelity_contract.hpp": "68119cc9d3efabbfb96a70c5a38931e8a5dca8a56e4510142389eac6a4f17fd3",
+    "sycl/include/strata/core/batch_fidelity_observer.hpp": "ddd2475f38f42e731a99ff52678cda9e742b20c75ead38383a735ca0add9db39",
+    "sycl/include/strata/core/verify.hpp": "6081d029231ef7da74641d2ec0cf880b3cfecd573f1a235391fa3836b48f5d16",
+    "sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "sycl/src/program/generate.cpp": "d415f7f0bd0b5ecba24d5110ad568b264c85c134c52eb28a13a2123f7e7e27fb"
+  },
+  "unchanged_source_sha256": {
+    "include/strata/core/verify.hpp": "a4e71f4c9534fa2a19525d3f5b7332939f8fd356862cbdeaf272b03678d170ae"
+  },
+  "source_overlay_reconstruct_command": "python3 strata/flash-next/prepare_solo_migration_observer_overlay_v1.py",
+  "cpu_commands": [
+    "python3 strata/flash-next/test_solo_migration_observer_cpu_v1.py",
+    "python3 strata/flash-next/test_solo_migration_collector_cpu_v1.py",
+    "python3 strata/flash-next/test_batch_graph_selection_cpu_v1.py"
+  ],
+  "cpu_overlay_override": "STRATA_OBSERVER26_CPU_OVERLAY=/fresh/reconstructed/source",
+  "descriptor_bytes": {
+    "frame": 512,
+    "graph_layout": 80,
+    "stage_metadata": 4736
+  },
+  "raw_quota": {
+    "requests": 6,
+    "samples_per_request": 3,
+    "total_bytes": 53268480,
+    "cap_bytes": 67108864
+  },
+  "phases": {
+    "0": "actual later private-slot multi-row body, rows>=2",
+    "1": "BGEN actual main-session admission T1 prompt-1",
+    "2": "actual main-session solo-migration T1 after sameRID cancelled slot-close; source_slot/gen carried GPUmarker footer"
+  },
+  "phase2_main_slot_sentinel": 6,
+  "phase2_active_mask": 64,
+  "phase2_selected_mask": 1,
+  "phase2_rows": 1,
+  "raw_source_fields": "full48 residuals10240 F32 each + full248320 head before sampler at every selected phase",
+  "ARM_loss_scope": "clear current admitting and linked host selectors; suppress stale spans; poison pending dump even if ARM reappears; discard owning drain before fresh arm",
+  "defaultoff_unarmed_explicit_alloc_copy_wait": 0,
+  "warm_graph_scope": "separate normal/observer/admission/migration maps and immutable phase/row/AR roster; actual sameprocess warm->ARM proof still required",
+  "ABI_rebuild_required": [
+    "strata",
+    "native_expert_parity",
+    "conversation_snapshot_test",
+    "iq_multi_parity",
+    "native_grouped_parity",
+    "native_multi_parity",
+    "shared_expert_parity",
+    "verify_parity"
+  ],
+  "compatibility": {
+    "25_26_27_28_cpu_fresh_apply_passed": true,
+    "independent_receipt": "/mnt/vm_8tb/b70/build/strata21-28-prefix-dry-h51cewv7/apply-receipt.json",
+    "independent_receipt_sha256": "7372f4a2cfd7e5a9a4abd1afbf3236f035cab441dea6a41b308b4a42c6976c4e"
+  },
+  "actual_model_payload_reads": false,
+  "actual_GPU_or_SDK_execution": false,
+  "full_model_math_qualified": false,
+  "actual_cache_or_migration_qualified": false,
+  "actual_concurrent_2_4_6_qualified": false
+}

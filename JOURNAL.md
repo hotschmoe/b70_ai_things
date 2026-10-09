@@ -10352,3 +10352,26 @@ identical; no GPUexecution ornewreferencepositive yet.
 VERDICT -> Commitparentbeforeactualpairedreference rerun; fullmatched heads/
 48residuals/packet/owner/health/teardown/NEWall4hash gates mandatory. Candidate
 comparison must notusefailedoldreference orwrongnewmanifest validator.
+
+
+## 2026-10-09 - Guardedreference PASS and numerical8/observer26/prefill source
+
+CONFIG -> Frozen21 control/frozen20 baseline, matchedpair nativegeometry with
+newtwo-page parent3. Newcandidate33captures needstrictnewC1validator; old21
+references explicitlyusefrozenoldvalidator/fullqualified chain, notnewmanifest.
+
+COMMAND -> Actualguardedpairedreference withfreshsource; inspectactualparent/
+child/lifecycle/packet/health/full4. StrictcrossTopology comparison toqualified
+onecard. IndependentCPUtests V8 threecommands, observer26 actualheaders/mock/
+collector/graphmap tests, prefillownedstorage12controls andsourcefreeze checks.
+
+RESULT -> Actualreference PASS433s/NEWall4publisher hashes. CrossTopology full
+heads/all48 and104fields bitwiseequal; priorfailedpairstaysfailed. CPUtests PASS:
+actualold/newmetadata/wrongvalidator/failurelanes;26 synthetic294vector22negative
+producer/ARMloss/solo/warmmap controls;12trueprefillstorage seam/history controls.
+GenuineV8onecardpreparation passed usingnewC1/source andactualqualified reference.
+
+VERDICT -> Commit beforeactualnew33numerics. Observer26/cache25/public27 require
+integratedfullSDK/actual2/4/6/state/cache gates. Prefillreference owns history but
+exactdevicearithmetic/runtimebranch/fullmath unqualified; no actualweightsread
+byagents. Modelmath/concurrency/latency/shelf false.
