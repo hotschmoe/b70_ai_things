@@ -1,0 +1,175 @@
+--- /dev/null
++++ b/src/llama-moe-cache-verify.h
+@@ -0,0 +1,67 @@
++// Diagnostic only: exact selected-weight checks before compute; default off.
++#pragma once
++#include "ggml-backend.h"
++#include "llama-impl.h"
++#include <algorithm>
++#include <cstdlib>
++#include <cstring>
++#include <vector>
++
++static inline bool llama_moe_verify_enabled() {
++    static const bool enabled = []() {
++        const char * value = std::getenv("LLAMA_MOE_VERIFY_BYTES");
++        return value && std::strcmp(value, "1") == 0;
++    }();
++    return enabled;
++}
++
++static inline void llama_moe_verify_layout(const ggml_tensor * source, const ggml_tensor * destination) {
++    GGML_ASSERT(source->type == destination->type);
++    GGML_ASSERT(source->ne[0] == destination->ne[0] && source->ne[1] == destination->ne[1]);
++    GGML_ASSERT(source->nb[2] == destination->nb[2]);
++}
++
++struct llama_moe_verify_counters {
++    size_t calls[5] = {};
++    size_t bytes[5] = {};
++};
++inline llama_moe_verify_counters & llama_moe_verify_counts() {
++    static llama_moe_verify_counters counts;
++    return counts;
++}
++static inline int llama_moe_verify_stage(const char * stage) {
++    const char * names[] = {"slotmap", "selected-bank", "hit-bank", "hit-dst", "staged-selected"};
++    for (int i = 0; i < 5; ++i) { if (std::strcmp(stage, names[i]) == 0) { return i; } }
++    GGML_ABORT("MOE_VERIFY unknown stage");
++}
++static inline void llama_moe_verify_coverage() {
++    const auto & c = llama_moe_verify_counts();
++    LLAMA_LOG_INFO("MOE_VERIFY COVERAGE slotmap=%zu selected-bank=%zu hit-bank=%zu hit-dst=%zu staged-selected=%zu bytes=%zu\n",
++        c.calls[0], c.calls[1], c.calls[2], c.calls[3], c.calls[4],
++        c.bytes[0]+c.bytes[1]+c.bytes[2]+c.bytes[3]+c.bytes[4]);
++}
++
++// Caller synchronizes its backend before readback. Memory is bounded to 4 MiB.
++// expected must point at immutable model bytes, never another GPU readback.
++static inline size_t llama_moe_verify_range(const char * stage, const ggml_tensor * tensor,
++        size_t offset, const void * expected, size_t size, int64_t expert, int64_t slot) {
++    GGML_ASSERT(offset <= ggml_nbytes(tensor) && size <= ggml_nbytes(tensor) - offset);
++    std::vector<uint8_t> readback(std::min<size_t>(size, 4*1024*1024));
++    for (size_t done = 0; done < size;) {
++        const size_t count = std::min(readback.size(), size-done);
++        ggml_backend_tensor_get(tensor, readback.data(), offset+done, count);
++        const auto * want = static_cast<const uint8_t *>(expected)+done;
++        if (std::memcmp(readback.data(), want, count) != 0) {
++            size_t byte = 0;
++            while (byte < count && readback[byte] == want[byte]) { ++byte; }
++            GGML_ABORT("MOE_VERIFY FAIL stage=%s tensor=%s expert=%lld slot=%lld offset=%zu got=%u expected=%u gpu=%p host=%p",
++                stage, tensor->name, (long long) expert, (long long) slot, offset+done+byte,
++                unsigned(readback[byte]), unsigned(want[byte]), tensor->data, expected);
++        }
++        done += count;
++    }
++    const int index = llama_moe_verify_stage(stage);
++    ++llama_moe_verify_counts().calls[index];
++    llama_moe_verify_counts().bytes[index] += size;
++    return size;
++}
+--- a/src/llama-moe-cache.cpp
++++ b/src/llama-moe-cache.cpp
+@@ -1,4 +1,5 @@
+ #include "llama-moe-cache.h"
++#include "llama-moe-cache-verify.h"
+ 
+ #include "llama-impl.h"
+ #include "llama-model.h"
+@@ -506,6 +507,19 @@
+         ggml_backend_view_init(dst_view);
+         ggml_backend_tensor_copy_async(backend, backend, src_view, dst_view);
+ 
++        if (llama_moe_verify_enabled()) {
++            ggml_backend_synchronize(backend);
++            llama_moe_verify_layout(w, bank);
++            llama_moe_verify_layout(w, dst);
++            const size_t count = n*w->nb[2];
++            const auto * host = static_cast<const uint8_t *>(w->data)+e*w->nb[2];
++            llama_moe_verify_range("hit-bank", bank, slots[e]*bank->nb[2], host, count, e, slots[e]);
++            llama_moe_verify_range("hit-dst", dst, e*dst->nb[2], host, count, e, slots[e]);
++            LLAMA_LOG_INFO("MOE_VERIFY PASS stage=hit-copy layer=%d tensor=%s first=%lld slot=%d experts=%lld bytes=%zu src=%p dst=%p\n",
++                b.il, w->name, (long long) e, slots[e], (long long) n, count, bank->data, dst->data);
++            llama_moe_verify_coverage();
++        }
++
+         stats_copy.hits  += n;
+         stats_copy.bytes += ggml_nbytes(src_view);
+ 
+@@ -579,6 +593,32 @@
+         // the next copy synchronizes the backend before it changes the slot map again
+         ggml_backend_tensor_set_async(backend, dst, src->data, 0, ggml_nbytes(src));
+ 
++        if (llama_moe_verify_enabled()) {
++            ggml_backend_synchronize(backend);
++            llama_moe_verify_range("slotmap", dst, 0, src->data, ggml_nbytes(src), -1, -1);
++            std::vector<int32_t> selected(ids);
++            std::sort(selected.begin(), selected.end());
++            selected.erase(std::unique(selected.begin(), selected.end()), selected.end());
++            size_t checked = 0;
++            for (const int32_t expert : selected) {
++                const int32_t slot = g.lru.slot_map[il][expert];
++                GGML_ASSERT(slot >= 0 && slot < g.n_slots);
++                GGML_ASSERT(g.lru.key_of[slot] == il*g.lru.n_expert + expert);
++                for (size_t ip = 0; ip < l.experts.size(); ++ip) {
++                    const ggml_tensor * w = l.experts[ip];
++                    const ggml_tensor * cached = bindings.at(w).cached;
++                    llama_moe_verify_layout(w, g.banks[ip]);
++                    llama_moe_verify_layout(w, cached);
++                    GGML_ASSERT(cached->extra == nullptr && cached->ne[2] == g.n_slots);
++                    checked += llama_moe_verify_range("selected-bank", g.banks[ip], slot*w->nb[2],
++                        static_cast<const uint8_t *>(w->data)+expert*w->nb[2], w->nb[2], expert, slot);
++                }
++            }
++            LLAMA_LOG_INFO("MOE_VERIFY PASS stage=selected-bank layer=%d ids=%zu experts=%zu hits=%zu fills=%zu bytes=%zu\n",
++                il, ids.size(), selected.size(), n_hit, fills.size(), checked);
++            llama_moe_verify_coverage();
++        }
++
+         return true;
+     }
+ 
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -10,6 +10,7 @@
+ #include "llama-mmap.h"
+ #include "llama-model.h"
+ #include "llama-moe-cache.h"
++#include "llama-moe-cache-verify.h"
+ #include "llama-ext.h"
+ #include "llama-sampler.h"
+ #include "llama.h"
+@@ -2731,6 +2732,33 @@
+         }
+ 
+         first = last + 1;
++    }
++
++    if (llama_moe_verify_enabled()) {
++        ggml_backend_synchronize(backend);
++        llama_moe_verify_layout(src, dst);
++        std::vector<int32_t> verify_ids(ggml_nbytes(ids)/sizeof(int32_t));
++        ggml_backend_tensor_get(ids, verify_ids.data(), 0, ggml_nbytes(ids));
++        std::vector<bool> verify_used(n_expert, false);
++        for (int64_t i1 = 0; i1 < ids->ne[1]; ++i1) {
++            for (int64_t i0 = 0; i0 < ids->ne[0]; ++i0) {
++                const int32_t expert = verify_ids[i1*ids->nb[1]/sizeof(int32_t)+i0*ids->nb[0]/sizeof(int32_t)];
++                GGML_ASSERT(expert >= 0 && expert < n_expert);
++                verify_used[expert] = true;
++            }
++        }
++        GGML_ASSERT(verify_used == st.used);
++        size_t checked = 0;
++        size_t selected = 0;
++        for (int64_t expert = 0; expert < n_expert; ++expert) {
++            if (!st.used[expert]) { continue; }
++            checked += llama_moe_verify_range("staged-selected", dst, expert*expert_size,
++                static_cast<const uint8_t *>(src->data)+expert*expert_size, expert_size, expert, -1);
++            ++selected;
++        }
++        LLAMA_LOG_INFO("MOE_VERIFY PASS stage=staged-selected tensor=%s ids=%lld experts=%zu bytes=%zu dst=%p extra=%p\n",
++            src->name, (long long) ggml_nelements(ids), selected, checked, dst->data, dst->extra);
++        llama_moe_verify_coverage();
+     }
+ 
+     return true;

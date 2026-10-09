@@ -225,3 +225,32 @@ Static optimization-off lifecycle follow-up: normal stop/removal, diagnostic
 capture completion, both-card and compiled P2P0 post-health all pass. No GPU
 fault signature. The failed screen remains failed. An optimization-on static
 history comparison is now running under the same owned lifecycle.
+
+## Cache byte-verifier preparation and reset source audit
+
+CONFIG -> Default-off patch004, independent source-copy builder; no baseline
+server or external checkout changes. Five stages have separate coverage
+counters; actual request deltas are required, warmup-only and zero-hit stages
+remain unexercised.
+
+COMMAND -> test_cache_byte_invariants.py, CPU-only fake readback backend under
+ASan/UBSan; both changed translation units checked with pinned-image g++
+-fsyntax-only. No GPU devices exposed.
+
+RESULT -> Positive/chunked copies, first/last corruption, bounds rejection,
+type/dimension/stride failures, default-off path and cross-translation-unit
+counter merge pass. Builder prepared but not executed. Instrumented SYCL
+verification still untested.
+
+VERDICT -> Diagnostic verifier self-tests pass within CPU scope. Additive
+synchronization remains unsuitable as evidence that an async race is absent.
+
+Source audit confirms native diagnostic cache_prompt=false already bypasses
+prompt-prefix reuse/restoration. Checkpoint creation remains enabled;
+--ctx-checkpoints 0 is a future single-change checkpoint/batch-shape control.
+Recurrent removal invalidates metadata rather than clearing all physical
+bytes. The next sequence maps to a zero state that the graph SCALE(0) node
+initializes before gathering on the same in-order SYCL queue. SCALE uses
+ordinary multiplication, which would not sanitize earlier nonfinite values;
+initial allocation is explicitly zeroed. No nonfinite value, missing barrier,
+or stale mapping is established. These are diagnostic hypotheses only.

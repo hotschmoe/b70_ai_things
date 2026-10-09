@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "source_revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+  "patch": "llamacpp/flash-next/patches/0004-flashnext-cache-byte-invariants.patch",
+  "patch_sha256": "8705c6248d9b3f8340f6163509fc0bfa6202d10f43157ba14c339e459164b406",
+  "enable_env": {
+    "LLAMA_MOE_VERIFY_BYTES": "1"
+  },
+  "default": "disabled; no additional synchronization or GPU readback",
+  "status": "CPU source preparation only; no live execution",
+  "checks": [
+    "Selected cached expert bytes versus immutable host; all selected experts and all component tensors",
+    "GPU slotmap bytes versus CPU slotmap; LRU slot ownership consistency",
+    "Hit source bank and hit-copy staging destination versus immutable host",
+    "All selected staging experts after mixed host/device copies complete",
+    "Explicit type/ne0/ne1/nb2 equivalence for host-bank-view and host-staging",
+    "Process-wide cumulative per-stage verification call and byte counters shared across translation units"
+  ],
+  "readback_buffer_max_bytes": 4194304,
+  "limitations": [
+    "Adds synchronization and large D2H traffic; diagnostic timing cannot be compared with baseline",
+    "Pass does not rule out original async race because checks synchronize",
+    "Does not verify router math, activations, recurrent state, or KV state",
+    "Checks happen before weight kernels; does not detect later compute corruption until next use",
+    "Selected-bank check asserts extra-null views; use the already qualified opt0 lane",
+    "Potential tens of GiB readback per prefill; begin with one prompt and one generated token, then P/P/JSON/P only if bounded controller allows"
+  ],
+  "expected_logging": "MOE_VERIFY PASS per cached layer callback, hit range, or staged tensor; abort at first byte mismatch; require actual nonzero stage coverage",
+  "build_targets": [
+    "llama",
+    "llama-server"
+  ],
+  "overlay_files": [
+    "src/llama-moe-cache-verify.h",
+    "src/llama-moe-cache.cpp",
+    "src/llama-context.cpp"
+  ],
+  "source_file_sha256": {
+    "src/llama-moe-cache.cpp": "9304802f6a3e5824504476fe94440a9e39727889bec40dc89a5bacf437e0429b",
+    "src/llama-context.cpp": "578e4b2cdcf3c2230bc6081bbe33f18a935c277903675c2f81efc6145c2dc61c"
+  },
+  "cpu_syntax_validation": "PASS actual g++ -std=c++17 -fsyntax-only for both changed translation units, pinned image, no devices",
+  "cpu_helper_tests": "PASS actual helper with fake readback backend under AddressSanitizer and UBSan: positive/chunking/first-last mismatches/bounds/type-ne0-ne1-nb2 layout/default-off/cross-translation-unit coverage",
+  "cpu_test_command": "python3 llamacpp/flash-next/test_cache_byte_invariants.py",
+  "coverage_gate": {
+    "required_positive_request_deltas": [
+      "slotmap",
+      "selected-bank",
+      "hit-bank",
+      "hit-dst",
+      "staged-selected"
+    ],
+    "zero_means": "unexercised; warmup-only coverage does not qualify request path"
+  },
+  "smallest_request_plan": {
+    "request_sequence": [
+      "P",
+      "P"
+    ],
+    "prompt": "exact existing 35-token prose fixture",
+    "max_tokens": 2,
+    "temperature": 0,
+    "cache_prompt": false,
+    "parallel_slots": 1,
+    "reason": "Two generated tokens force at least one decode after prefill; second prompt probes cache-hit staging. Require actual per-request stage counters; zero-hit is unexercised.",
+    "deadline": "Use bounded controller deadline; diagnostic copies may be far slower than baseline.",
+    "next_if_pass": "Only then run existing P/P/JSON/P history sequence under the same instrumentation."
+  }
+}
