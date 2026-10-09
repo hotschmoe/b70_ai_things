@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "mode": "CPU_ONLY_PACKET_REFERENCE_AND_UNINTEGRATED_CAPTURE_DRAFT",
+  "sources": {
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/official_q8_1_cpu_probe_v1.cpp": "7d8ab77c632c6af2aca42cefdb6818f4529521db6548848f3de5049971566171",
+    "strata/flash-next/test_independent_q8_1_activation_cpu_v1.py": "027d5adb7c414e98c9b23a83d69cb0d9bb2f8ef5d03f87e140bb2638226ecc8e",
+    "strata/flash-next/layer0_capture_layout_draft_v1.hpp": "1d2966ba4b5aaad066c91b7955cff64c6b6f7e8acfde6fa93cea96216cdd9515",
+    "strata/flash-next/independent-q8-1-contract-and-layer0-capture-v1.md": "9e8b6465a16f6509767ada54043f39668499eb135b04a475586207f58eea7e6a"
+  },
+  "packer_generations": [
+    {
+      "relative_source": "sycl/include/strata/kernels/q8_1_finite.hpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/include/strata/kernels/q8_1_finite.hpp",
+      "frozen18_sha256": "6a3c49cabd87bf2b0b2f163c03986066f13c708c96adc34a83ad0234918e115b",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/include/strata/kernels/q8_1_finite.hpp",
+      "combined20_sha256": "6a3c49cabd87bf2b0b2f163c03986066f13c708c96adc34a83ad0234918e115b",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "frozen18_sha256": "bf87197ea14da23c278e1e174d575503ec9f933e58c2fa267f919f5cdda8fe14",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/kernels/cuda/native_mmvq.dp.cpp",
+      "combined20_sha256": "bf87197ea14da23c278e1e174d575503ec9f933e58c2fa267f919f5cdda8fe14",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+      "frozen18_sha256": "8f1cc0e8a521766bbb6dbc99e0fb6b602c9de18b913734b5a5ef80a6965ecf9d",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/kernels/cuda/iq_kernels.dp.cpp",
+      "combined20_sha256": "8f1cc0e8a521766bbb6dbc99e0fb6b602c9de18b913734b5a5ef80a6965ecf9d",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/kernels/cuda/shared_expert.dp.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/cuda/shared_expert.dp.cpp",
+      "frozen18_sha256": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/kernels/cuda/shared_expert.dp.cpp",
+      "combined20_sha256": "c0ed885fbfa1f89b0136d8a5c3f7b8dae7ebcff3c8d1fd2bf06e4df4f7e5430d",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+      "frozen18_sha256": "1617c1322a1fe7aced3d37cab01a7c46b8f68f8ed07cefc3ab8dd0257bf64a66",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+      "combined20_sha256": "1617c1322a1fe7aced3d37cab01a7c46b8f68f8ed07cefc3ab8dd0257bf64a66",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/kernels/cuda/fused_gr.dp.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/cuda/fused_gr.dp.cpp",
+      "frozen18_sha256": "0b6272f7b9d54dc7889ab162a5d36c4b7fe95b14968d254e6d0567ad540073cf",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/kernels/cuda/fused_gr.dp.cpp",
+      "combined20_sha256": "0b6272f7b9d54dc7889ab162a5d36c4b7fe95b14968d254e6d0567ad540073cf",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/kernels/hc_native_projection.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/hc_native_projection.cpp",
+      "frozen18_sha256": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/kernels/hc_native_projection.cpp",
+      "combined20_sha256": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/kernels/hc_native_composition.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/hc_native_composition.cpp",
+      "frozen18_sha256": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/kernels/hc_native_composition.cpp",
+      "combined20_sha256": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f",
+      "whole_file_equal": true
+    },
+    {
+      "relative_source": "sycl/src/core/verify.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/core/verify.cpp",
+      "frozen18_sha256": "f567f6178eada58265f07589740145cb385ea3e69a52fd4f24f549087ecc51be",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/core/verify.cpp",
+      "combined20_sha256": "f45f1ba5fe1af9dfbb6b8664440fd5f88e1a4a4d7d0c254733b5d52d5155448f",
+      "whole_file_equal": false
+    },
+    {
+      "relative_source": "sycl/src/prefill/prefill.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/prefill/prefill.cpp",
+      "frozen18_sha256": "7fb52155a58d43fb054ff9311bca08bb1d05ece8ff66e9e41532f18f44ee3c9f",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/prefill/prefill.cpp",
+      "combined20_sha256": "6b3c2a5318bc747b032c291be8704c2fbd3419eafb236a9209235789efb96be3",
+      "whole_file_equal": false
+    },
+    {
+      "relative_source": "sycl/src/prefill/gemm.dp.cpp",
+      "frozen18_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/prefill/gemm.dp.cpp",
+      "frozen18_sha256": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584",
+      "combined20_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source/sycl/src/prefill/gemm.dp.cpp",
+      "combined20_sha256": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584",
+      "whole_file_equal": true
+    }
+  ],
+  "combined20_receipt": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/receipt.json",
+  "combined20_receipt_sha256": "1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00",
+  "native_contract": "raw_F32_XOR_sum_F32_division_half_away_finite_clamped",
+  "official_ggml_contract": "integer_code_sum_times_scale_F32_reciprocal_half_away_unclamped",
+  "gdn_qfuse_contract": "raw_F32_sum_division_unclamped_EXCLUDED_current_QFUSE0",
+  "required_flags": {
+    "STRATA_QFUSE": "0"
+  },
+  "packet_gate": "every byte exact from independently supplied LE_F32 input; fused hidden DERIVED and raw hidden UNOBSERVED",
+  "quantization_cost": "reported-only; excludes stored-sum affine vec-dot corrections",
+  "operator_gates": {
+    "nmse": 1e-06,
+    "max_normalized": 0.0001
+  },
+  "layout_fields": 33,
+  "frame_bytes": 7023048,
+  "max_frames": 4,
+  "total_capture_bytes": 28092192,
+  "capture_cap_bytes": 67108864,
+  "capture_hook_integrated": false,
+  "actual_model_payloads_read": false,
+  "gpu_executed": false,
+  "full_model_math_qualified": false,
+  "cpu_receipt": "strata/flash-next/independent-q8-1-activation-cpu-receipt-v1.json",
+  "cpu_receipt_sha256": "13f9d456a783379885c59a61408882e8af9efd05cd04dc015d4d76fcd38fcbd3"
+}

@@ -9696,3 +9696,18 @@ checks and mocked3case success/failure/cleanup/health/fd8_9 controls pass.
 VERDICT -> New20 source upload/lifetime qualification only. Commit runtime
 supervisor before actual no-weight card0/card1/pair ownership execution; no
 slot runtime/concurrent/model-math result from CPU mocks or compilation.
+
+## 2026-10-09 Independent activation packet and prefill storage contracts
+
+CONFIG -> New CPU-only Q8_1 references; frozen18/20 consumed sources pinned.
+COMMAND -> Parent python3 strata/flash-next/test_independent_q8_1_activation_cpu_v1.py.
+RESULT -> PASS28 native profile/shape cases vs independent scalar,21 official
+compiled GGML variant cases,16 rival/rejection controls. Native F32 division
+plus raw XOR-tree sum differs from official reciprocal multiplication/code-sum
+(witness native16 versus official15). QFUSE unclamped fields are separate and
+excluded by current QFUSE0. Native HC uses directF32. Ordinary prefill narrows
+both dequantized weights and activations toF16, with distinctBF16 projection
+seams; these arithmetic storage costs are separate from decode packet identity.
+VERDICT -> CPU packet contracts and bounded33-field/28MiB capture layout only.
+No GPU packets, raw fused hidden, actual model payloads or full math qualified.
+New default-off layer0 hook0021 requires later source/build/off-on/context gates.

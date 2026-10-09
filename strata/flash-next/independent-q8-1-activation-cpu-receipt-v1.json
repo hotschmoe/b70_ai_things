@@ -1,0 +1,405 @@
+{
+  "mode": "CPU_INDEPENDENT_Q8_1_PACKET_CONTRACT_ONLY",
+  "passed": true,
+  "cases": [
+    {
+      "profile": "zero",
+      "rows": 1,
+      "cols": 640,
+      "packet_bytes": 720,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.0,
+        "max_normalized": 0.0,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "zero",
+      "rows": 2,
+      "cols": 2560,
+      "packet_bytes": 5760,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.0,
+        "max_normalized": 0.0,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "zero",
+      "rows": 4,
+      "cols": 6144,
+      "packet_bytes": 27648,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.0,
+        "max_normalized": 0.0,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "zero",
+      "rows": 8,
+      "cols": 2560,
+      "packet_bytes": 23040,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.0,
+        "max_normalized": 0.0,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "ties",
+      "rows": 1,
+      "cols": 640,
+      "packet_bytes": 720,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 6.198090987975704e-05,
+        "max_normalized": 0.003937007874015748,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "ties",
+      "rows": 2,
+      "cols": 2560,
+      "packet_bytes": 5760,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 6.198090987975704e-05,
+        "max_normalized": 0.003937007874015748,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "ties",
+      "rows": 4,
+      "cols": 6144,
+      "packet_bytes": 27648,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 6.198090987975704e-05,
+        "max_normalized": 0.003937007874015748,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "ties",
+      "rows": 8,
+      "cols": 2560,
+      "packet_bytes": 23040,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 6.198090987975704e-05,
+        "max_normalized": 0.003937007874015748,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "cancel",
+      "rows": 1,
+      "cols": 640,
+      "packet_bytes": 720,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.5625024999998492e-08,
+        "max_normalized": 0.000125,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "cancel",
+      "rows": 2,
+      "cols": 2560,
+      "packet_bytes": 5760,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.5625024999998492e-08,
+        "max_normalized": 0.000125,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "cancel",
+      "rows": 4,
+      "cols": 6144,
+      "packet_bytes": 27648,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.562502499999849e-08,
+        "max_normalized": 0.000125,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "cancel",
+      "rows": 8,
+      "cols": 2560,
+      "packet_bytes": 23040,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.5625024999998492e-08,
+        "max_normalized": 0.000125,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "random",
+      "rows": 1,
+      "cols": 640,
+      "packet_bytes": 720,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.563277712948782e-05,
+        "max_normalized": 0.0038286394855985948,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "random",
+      "rows": 2,
+      "cols": 2560,
+      "packet_bytes": 5760,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.563277712948782e-05,
+        "max_normalized": 0.0038286394855985948,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "random",
+      "rows": 4,
+      "cols": 6144,
+      "packet_bytes": 27648,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.563277712948782e-05,
+        "max_normalized": 0.0038286394855985948,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "random",
+      "rows": 8,
+      "cols": 2560,
+      "packet_bytes": 23040,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.563277712948782e-05,
+        "max_normalized": 0.0038286394855985948,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "scale_clamp",
+      "rows": 1,
+      "cols": 640,
+      "packet_bytes": 720,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.983431189894104,
+        "max_normalized": 0.991680992,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "scale_clamp",
+      "rows": 2,
+      "cols": 2560,
+      "packet_bytes": 5760,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.983431189894104,
+        "max_normalized": 0.991680992,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "scale_clamp",
+      "rows": 4,
+      "cols": 6144,
+      "packet_bytes": 27648,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.983431189894104,
+        "max_normalized": 0.991680992,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "scale_clamp",
+      "rows": 8,
+      "cols": 2560,
+      "packet_bytes": 23040,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 0.983431189894104,
+        "max_normalized": 0.991680992,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "sum_clamp",
+      "rows": 1,
+      "cols": 640,
+      "packet_bytes": 720,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 3.725290298461914e-09,
+        "max_normalized": 6.103515625e-05,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "sum_clamp",
+      "rows": 2,
+      "cols": 2560,
+      "packet_bytes": 5760,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 3.725290298461914e-09,
+        "max_normalized": 6.103515625e-05,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "sum_clamp",
+      "rows": 4,
+      "cols": 6144,
+      "packet_bytes": 27648,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 3.725290298461914e-09,
+        "max_normalized": 6.103515625e-05,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "sum_clamp",
+      "rows": 8,
+      "cols": 2560,
+      "packet_bytes": 23040,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 3.725290298461914e-09,
+        "max_normalized": 6.103515625e-05,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "small_normal",
+      "rows": 1,
+      "cols": 640,
+      "packet_bytes": 720,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 3.143903660196333e-08,
+        "max_normalized": 1.3891144525809898e-14,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "small_normal",
+      "rows": 2,
+      "cols": 2560,
+      "packet_bytes": 5760,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 2.5151229281570666e-07,
+        "max_normalized": 1.3891144525809898e-14,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "small_normal",
+      "rows": 4,
+      "cols": 6144,
+      "packet_bytes": 27648,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.207259005515392e-06,
+        "max_normalized": 1.3891144525809898e-14,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    },
+    {
+      "profile": "small_normal",
+      "rows": 8,
+      "cols": 2560,
+      "packet_bytes": 23040,
+      "exact_independent_scalar": true,
+      "quantization_cost": {
+        "nmse": 1.0060491712628266e-06,
+        "max_normalized": 1.3891144525809898e-14,
+        "scope": "activation reconstruction only; stored-sum-dependent vec-dot corrections excluded",
+        "implementation_error_measured": false
+      }
+    }
+  ],
+  "case_count": 28,
+  "official_cpu_variant_cases": 21,
+  "negative_and_rival_controls": [
+    "half_away_not_even",
+    "official_integer_sum_not_native_raw_sum",
+    "division_vs_reciprocal_code_witness",
+    "qfuse_matches_only_finite_unclamped_range",
+    "qfuse_unclamped_sum_is_distinct",
+    "codes_use_f32_scale_not_stored_half",
+    "xor_tree_not_sequential_sum",
+    "altered_packet",
+    "short_extent",
+    "wrong_shape",
+    "nonfinite_input",
+    "nan_reduction_from_finite_input",
+    "nonzero_scale_underflow",
+    "altered_scale",
+    "altered_sum",
+    "swapped_row_packets"
+  ],
+  "division_witness": {
+    "amax": 31.68769645690918,
+    "x": 3.867396116256714,
+    "native_code": 16,
+    "official_code": 15
+  },
+  "source_sha256": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+  "official_scalar_library_sha256": "740671c09f5d7c4197e2a57ccee70d076e92b2719053972a25286bbdd26efea2",
+  "compile_devices_exposed": false,
+  "compile_image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "official_probe_binary_sha256": "ac9e2c9a96d934d7fba039a49d93be64816d26135537613f41ac3af7a90e39c7",
+  "actual_model_payloads_read": false,
+  "gpu_executed": false,
+  "raw_fused_hidden_observed": false,
+  "full_model_math_qualified": false
+}
