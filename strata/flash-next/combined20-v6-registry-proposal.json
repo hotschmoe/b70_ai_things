@@ -1,0 +1,67 @@
+{
+  "status": "PROPOSED native-GEN research aliases only; no HTTP served/query claim or registry mutation",
+  "primary_client_model_name": "hotschmoe-dd",
+  "rows": [
+    {
+      "primary_model_name": "hotschmoe-dd",
+      "secondary_research_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-fp16kv-pilotctx2048-pf64-ple65536-seg1024-adapt0-borrow0-prefix-diag0013-19-nativeGEN-v6-cards0-layers0_48-lifecycle0019-v6",
+      "source_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+      "engine_receipt_sha256": "1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00",
+      "cards": [
+        0
+      ],
+      "geometry": {
+        "id": "serial-pilot-ctx2048-prefill64-ple65536-v1",
+        "values": {
+          "--max-context": "2048",
+          "--prefill": "64",
+          "--ple-row-cache": "65536",
+          "--kv": "fp16",
+          "--prompt-cache": "3",
+          "--prompt-cache-root": "1",
+          "--prompt-cache-every": "1000000000",
+          "--batch": "0",
+          "--suffix-draft": "0",
+          "--lookup-chain": "0",
+          "--adapt-swaps": "0",
+          "--adapt-every": "0"
+        },
+        "no_prefill_borrow": true,
+        "production8192_qualified": false
+      },
+      "scope": "native GEN pilot, not served over HTTP; detailed C1 basealias remains unchanged",
+      "base_c1_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0"
+    },
+    {
+      "primary_model_name": "hotschmoe-dd",
+      "secondary_research_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-fp16kv-pilotctx2048-pf64-ple65536-seg1024-adapt0-borrow0-prefix-diag0013-19-nativeGEN-v6-cards0_1-layers0_32_48-lifecycle0019-v6",
+      "source_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+      "engine_receipt_sha256": "1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00",
+      "cards": [
+        0,
+        1
+      ],
+      "geometry": {
+        "id": "serial-pilot-ctx2048-prefill64-ple65536-v1",
+        "values": {
+          "--max-context": "2048",
+          "--prefill": "64",
+          "--ple-row-cache": "65536",
+          "--kv": "fp16",
+          "--prompt-cache": "3",
+          "--prompt-cache-root": "1",
+          "--prompt-cache-every": "1000000000",
+          "--batch": "0",
+          "--suffix-draft": "0",
+          "--lookup-chain": "0",
+          "--adapt-swaps": "0",
+          "--adapt-every": "0"
+        },
+        "no_prefill_borrow": true,
+        "production8192_qualified": false
+      },
+      "scope": "native GEN pilot, not served over HTTP; detailed C1 basealias remains unchanged",
+      "base_c1_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0"
+    }
+  ]
+}

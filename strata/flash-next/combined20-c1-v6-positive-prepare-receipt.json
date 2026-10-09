@@ -1,0 +1,246 @@
+{
+  "CONFIG": "genuine actual combined20 build and completed newfull390, new one/pair C1 full-shard CPU preparations; no model launch",
+  "COMMAND": "actual C1 prepare and V6 prepare followed by qualify_serial_prefix_v6.prepared_chain_binding on both actual plans",
+  "RESULT": [
+    {
+      "plan": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f07-20261009/serial-prefix-onecard-v6-prepared-v1/plan.json",
+      "plan_sha256": "d9c078895a8df6f575d19e22dd55c9146fa843e466b52f409f0fdfc4f2b85195",
+      "cards": [
+        0
+      ],
+      "matched_geometry": {
+        "id": "serial-pilot-ctx2048-prefill64-ple65536-v1",
+        "values": {
+          "--max-context": "2048",
+          "--prefill": "64",
+          "--ple-row-cache": "65536",
+          "--kv": "fp16",
+          "--prompt-cache": "3",
+          "--prompt-cache-root": "1",
+          "--prompt-cache-every": "1000000000",
+          "--batch": "0",
+          "--suffix-draft": "0",
+          "--lookup-chain": "0",
+          "--adapt-swaps": "0",
+          "--adapt-every": "0"
+        },
+        "no_prefill_borrow": true,
+        "production8192_qualified": false
+      },
+      "primary": "hotschmoe-dd",
+      "native_research_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-fp16kv-pilotctx2048-pf64-ple65536-seg1024-adapt0-borrow0-prefix-diag0013-19-nativeGEN-v6-cards0-layers0_48-lifecycle0019-v6",
+      "base_c1_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0",
+      "authentic_prepared_chain": {
+        "engine_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+        "engine_receipt_sha256": "1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00",
+        "prepared_sha256": "23f3a12b08f3767a1203570ee560e57ad9313ac972007512cce3bb3bfbf174e1",
+        "executable_sha256": "a038979a26e5bd1b1fdeb66485d62748fbd525564fcc220c04c64e0d00f2f230",
+        "actual_new_full390_required": true,
+        "source_patches": [
+          [
+            "0001-sycl-native-q8-hc-projection-primitives.patch",
+            "7edd863134d9a660d21fc28e4b061dd2568e6013fc58a67a529a0dc686263efb"
+          ],
+          [
+            "0002-sycl-native-hc-composition.patch",
+            "bde6376706e3cda1cd2c5b74d0e4f18aa7aa948233436b9530294a95bfd5910b"
+          ],
+          [
+            "0003-sycl-native-hc-source-owner-decode.patch",
+            "207642b5ed8d7c6a90d4b4783b46aa4f189a98cee84f3454635a3ca2d3d7f57d"
+          ],
+          [
+            "0004-sycl-native-hc-prefill-verifier-routes.patch",
+            "abc9772abf3c363a57a1a1a040f9ffff45d5dc964cd7fd09782ad3ec8690dfd5"
+          ],
+          [
+            "0005-sycl-stage-owned-expert-mirrors.patch",
+            "22abe038d2ffdc7ac98049af9955442979ed7e55461275f0a2faa8c27917071f"
+          ],
+          [
+            "0006-sycl-source-preserving-ple.patch",
+            "fa8cbb3d9341ee903708de2c674e127fb197241f6893b045e90334adcd915247"
+          ],
+          [
+            "0008-sycl-native-ple-span-size.patch",
+            "f43196e645ca86ba0f5aed654b1e4259a82eae4cf04bab6fbd6b8ad2586f1762"
+          ],
+          [
+            "0009-sycl-verifier-stage-mirror-declarations.patch",
+            "93c7f51209cd5795a6ad604675c79d73e8b204eef7564b60da3576be222a219b"
+          ],
+          [
+            "0007-sycl-exact-artifact-api-cache-identity.patch",
+            "161bd77aa52aca33205f7879559bbc72d7e6ee863ae6cc3db03c3485344228b4"
+          ],
+          [
+            "0010-sycl-native-ple-allocation-accounting.patch",
+            "7c293830e0254b980d5de3d62a6136bfd6c8583a82a6064dcef9d9e29ba8f44e"
+          ],
+          [
+            "0011-sycl-strict-native-omit-legacy-ple-key.patch",
+            "4219c7fd206bb2667f2ffb0e130c9adcea80c1b01a0bd361c5fc4d6c82a4b06c"
+          ],
+          [
+            "0012-sycl-segmented-stage-expert-mirrors.patch",
+            "e620578b9de2b5ba6cc2826375f2e9d8505066859f159f422aad8b17c3e56b23"
+          ],
+          [
+            "0013-sycl-bounded-full-model-fidelity-observer.patch",
+            "5589910ef51d0e665f95e34f8f56ef26b021b0a724c95e0b2d173342d8894116"
+          ],
+          [
+            "0014-sycl-prefix-work-telemetry.patch",
+            "938579ac62bd8e9ef92704b32472c87ad69af0a62a3775001456df090fdd7a8a"
+          ],
+          [
+            "0015-sycl-explicit-full-state-prefix-pin.patch",
+            "30f5fb84cb5fa7b60ad2d4609cd55e6108de75242f95c612dff819efe5d19d43"
+          ],
+          [
+            "0016-sycl-explicit-all-stage-fresh-request.patch",
+            "d54fb5860514f488f4f9992a9b9a1abe7d20c9ee3a07a42f51f86ce796eccc96"
+          ],
+          [
+            "0017-sycl-prefill-fidelity-impl-owner.patch",
+            "f92143d988517cc32ac60e32d864d9816186d82a46515a25bf3455d3822ba6b8"
+          ],
+          [
+            "0018-sycl-verifier-init-owned-streams.patch",
+            "a9f382a8861132746475b34b738b723d281f44dc33e83aa8828ae849a87987a3"
+          ],
+          [
+            "0019-sycl-prefix-cache-lifecycle-telemetry.patch",
+            "8df06808183e60e56a94212f8b6e7c73899accec29cbc08e09823ab8fa5c5b63"
+          ],
+          [
+            "0020-sycl-stage-slot-session-arena-ownership.patch",
+            "695689b799a4f8fb340a21340db78ece349844642f1a82e91c845ab1a0361ed5"
+          ]
+        ]
+      }
+    },
+    {
+      "plan": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f07-20261009/serial-prefix-twocard-v6-prepared-v1/plan.json",
+      "plan_sha256": "2eadea269c987784e890a8719fe37f700e6d6e46759f0319c3a17ed00db0e9f7",
+      "cards": [
+        0,
+        1
+      ],
+      "matched_geometry": {
+        "id": "serial-pilot-ctx2048-prefill64-ple65536-v1",
+        "values": {
+          "--max-context": "2048",
+          "--prefill": "64",
+          "--ple-row-cache": "65536",
+          "--kv": "fp16",
+          "--prompt-cache": "3",
+          "--prompt-cache-root": "1",
+          "--prompt-cache-every": "1000000000",
+          "--batch": "0",
+          "--suffix-draft": "0",
+          "--lookup-chain": "0",
+          "--adapt-swaps": "0",
+          "--adapt-every": "0"
+        },
+        "no_prefill_borrow": true,
+        "production8192_qualified": false
+      },
+      "primary": "hotschmoe-dd",
+      "native_research_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-fp16kv-pilotctx2048-pf64-ple65536-seg1024-adapt0-borrow0-prefix-diag0013-19-nativeGEN-v6-cards0_1-layers0_32_48-lifecycle0019-v6",
+      "base_c1_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0",
+      "authentic_prepared_chain": {
+        "engine_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+        "engine_receipt_sha256": "1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00",
+        "prepared_sha256": "8bf0955716cc47855359cc0bba087ef60213508e77caf0030b98a281cc87c634",
+        "executable_sha256": "a038979a26e5bd1b1fdeb66485d62748fbd525564fcc220c04c64e0d00f2f230",
+        "actual_new_full390_required": true,
+        "source_patches": [
+          [
+            "0001-sycl-native-q8-hc-projection-primitives.patch",
+            "7edd863134d9a660d21fc28e4b061dd2568e6013fc58a67a529a0dc686263efb"
+          ],
+          [
+            "0002-sycl-native-hc-composition.patch",
+            "bde6376706e3cda1cd2c5b74d0e4f18aa7aa948233436b9530294a95bfd5910b"
+          ],
+          [
+            "0003-sycl-native-hc-source-owner-decode.patch",
+            "207642b5ed8d7c6a90d4b4783b46aa4f189a98cee84f3454635a3ca2d3d7f57d"
+          ],
+          [
+            "0004-sycl-native-hc-prefill-verifier-routes.patch",
+            "abc9772abf3c363a57a1a1a040f9ffff45d5dc964cd7fd09782ad3ec8690dfd5"
+          ],
+          [
+            "0005-sycl-stage-owned-expert-mirrors.patch",
+            "22abe038d2ffdc7ac98049af9955442979ed7e55461275f0a2faa8c27917071f"
+          ],
+          [
+            "0006-sycl-source-preserving-ple.patch",
+            "fa8cbb3d9341ee903708de2c674e127fb197241f6893b045e90334adcd915247"
+          ],
+          [
+            "0008-sycl-native-ple-span-size.patch",
+            "f43196e645ca86ba0f5aed654b1e4259a82eae4cf04bab6fbd6b8ad2586f1762"
+          ],
+          [
+            "0009-sycl-verifier-stage-mirror-declarations.patch",
+            "93c7f51209cd5795a6ad604675c79d73e8b204eef7564b60da3576be222a219b"
+          ],
+          [
+            "0007-sycl-exact-artifact-api-cache-identity.patch",
+            "161bd77aa52aca33205f7879559bbc72d7e6ee863ae6cc3db03c3485344228b4"
+          ],
+          [
+            "0010-sycl-native-ple-allocation-accounting.patch",
+            "7c293830e0254b980d5de3d62a6136bfd6c8583a82a6064dcef9d9e29ba8f44e"
+          ],
+          [
+            "0011-sycl-strict-native-omit-legacy-ple-key.patch",
+            "4219c7fd206bb2667f2ffb0e130c9adcea80c1b01a0bd361c5fc4d6c82a4b06c"
+          ],
+          [
+            "0012-sycl-segmented-stage-expert-mirrors.patch",
+            "e620578b9de2b5ba6cc2826375f2e9d8505066859f159f422aad8b17c3e56b23"
+          ],
+          [
+            "0013-sycl-bounded-full-model-fidelity-observer.patch",
+            "5589910ef51d0e665f95e34f8f56ef26b021b0a724c95e0b2d173342d8894116"
+          ],
+          [
+            "0014-sycl-prefix-work-telemetry.patch",
+            "938579ac62bd8e9ef92704b32472c87ad69af0a62a3775001456df090fdd7a8a"
+          ],
+          [
+            "0015-sycl-explicit-full-state-prefix-pin.patch",
+            "30f5fb84cb5fa7b60ad2d4609cd55e6108de75242f95c612dff819efe5d19d43"
+          ],
+          [
+            "0016-sycl-explicit-all-stage-fresh-request.patch",
+            "d54fb5860514f488f4f9992a9b9a1abe7d20c9ee3a07a42f51f86ce796eccc96"
+          ],
+          [
+            "0017-sycl-prefill-fidelity-impl-owner.patch",
+            "f92143d988517cc32ac60e32d864d9816186d82a46515a25bf3455d3822ba6b8"
+          ],
+          [
+            "0018-sycl-verifier-init-owned-streams.patch",
+            "a9f382a8861132746475b34b738b723d281f44dc33e83aa8828ae849a87987a3"
+          ],
+          [
+            "0019-sycl-prefix-cache-lifecycle-telemetry.patch",
+            "8df06808183e60e56a94212f8b6e7c73899accec29cbc08e09823ab8fa5c5b63"
+          ],
+          [
+            "0020-sycl-stage-slot-session-arena-ownership.patch",
+            "695689b799a4f8fb340a21340db78ece349844642f1a82e91c845ab1a0361ed5"
+          ]
+        ]
+      }
+    }
+  ],
+  "VERDICT": "PASS genuine positive CPU/source preparation; owner GPU/model/basic/API/prefix/lifecycle remain parent gates",
+  "no_gpu_by_agent": true,
+  "independent_model_identity": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f07-20261009/model-full-identity-combined20-preparation-v1/receipt.json"
+}

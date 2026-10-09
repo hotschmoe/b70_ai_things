@@ -9711,3 +9711,19 @@ seams; these arithmetic storage costs are separate from decode packet identity.
 VERDICT -> CPU packet contracts and bounded33-field/28MiB capture layout only.
 No GPU packets, raw fused hidden, actual model payloads or full math qualified.
 New default-off layer0 hook0021 requires later source/build/off-on/context gates.
+
+## 2026-10-09 New20 real slot ownership and one-card API screen
+
+CONFIG -> Actual new20 build1647fdb0/source38 ledger, unchangedmodel/runtime.
+COMMAND -> Parent no-weight owner oracle; genuinefresh-hash C1/V6 preparations;
+parent onecard C1 screen.
+RESULT -> F07/stage-slot-owner-gpu-v1 finalizedPASS178s,82/82/92 owners on
+card0/card1/pair, actualisolation/rollback/resize/freshprobe, chronologicalfree
+contexts, negative controls, exits/removals/health/kernel/sentinels pass.
+F07/c1-onecard-combined20-prepared-v1 API screenPASS381s identity/coherence/
+repeat/consumption/teardown/posthealth. Genuine new20 one/pairCPU and V6
+source-chain preparations pass with independentfreshall4 hashes. Pair API
+screen now running; no result claimed.
+VERDICT -> Ownership and bounded onecard API qualification only. New20 V6
+cache/model off/on math, full independentfidelity, batchgraphs/concurrency,
+physical backing release and clean latency remain open. See combined20 doc.
