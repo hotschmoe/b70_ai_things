@@ -10510,3 +10510,20 @@ OraclefreshlinkPASS46s; librarypins unchanged. Newstrictsourceupload running.
 
 VERDICT -> Compiler/sourcecheckpoint, no modelruntime/slotcache qualification.
 See docs/20261009_flashnext_integrated29_sdk_checkpoint.md.
+
+
+## 2026-10-09 - Integrated29 actual whole390 strict upload PASS
+
+CONFIG -> Fresh29 SDK/oracle, fixedmodel/images, bothknownpageguard/newpost4.
+
+COMMAND -> SourceuploadV2 fivecases innewF12, inheritedpairlease strict/compiled
+P2P0 health andactualownedterminal thenindependentfull4hash.
+
+RESULT -> PASS276s; caseHC387+PLE3 payloadcoverage, ordinary300 accounting;
+exit0/removed/context/URlogicalfree, preposthealth/knownpages/newall4 PASS.
+ReceiptSHA9f4f52a3b057ffcd0728fafc4ac4ef89a11e063728b6b7e577c6d29bbc72e0fc.
+NewgenuineC1generation8 onecardpreparation running.
+
+VERDICT -> Scopedsource/lifecycleproof; ordinarypayload/nativefullmath/slots/
+cache/concurrency/latency/shelf remainunqualified. See integrated29sourceupload
+qualification doc. Earlierfailedruns unchanged.
