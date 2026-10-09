@@ -1,0 +1,23 @@
+{
+  "mode": "CPU_SCALAR_EQUATION_PROPERTIES_ONLY",
+  "passed": true,
+  "controls": [
+    "gdn_modulo_pairing",
+    "gdn_decay_before_update",
+    "conv_oldest_first",
+    "ple_9_rows_dilation3",
+    "qsa_relu_per_head",
+    "qsa_selected_only",
+    "qsa_division_pairing_modulo_rival",
+    "separate_storage_difference",
+    "duplicate_selected_rejection"
+  ],
+  "qsa_declared_storage_vs_original_math": {
+    "nmse": 1.192361510961799e-07,
+    "max_normalized": 0.0004224666626803015
+  },
+  "gpu_executed": false,
+  "full_model_math_qualified": false,
+  "gpu_native_arithmetic_emulated": false,
+  "reference_source_sha256": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7"
+}

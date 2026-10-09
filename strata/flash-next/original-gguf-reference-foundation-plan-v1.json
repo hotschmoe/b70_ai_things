@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "scope": "CPU bounded lazy original-GGUF foundations; no full model numerical qualification",
+  "inventory": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/current-gguf-inventory.json",
+  "inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+  "lock": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/model-lock.json",
+  "lock_sha256": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b",
+  "geometry": {
+    "general.architecture": "qwen4exp",
+    "qwen4exp.block_count": 48,
+    "qwen4exp.embedding_length": 2560,
+    "qwen4exp.expert_count": 512,
+    "qwen4exp.expert_used_count": 10,
+    "qwen4exp.hyper_connection.count": 4,
+    "qwen4exp.hyper_connection.low_rank": 320,
+    "qwen4exp.ssm.state_size": 128,
+    "qwen4exp.ssm.group_count": 16,
+    "qwen4exp.ssm.time_step_rank": 48,
+    "qwen4exp.attention.head_count": 24,
+    "qwen4exp.attention.head_count_kv": 2,
+    "qwen4exp.attention.key_length": 256,
+    "qwen4exp.attention.indexer.head_count": 4,
+    "qwen4exp.attention.indexer.key_length": 128,
+    "qwen4exp.ple.layers": [
+      1
+    ],
+    "qwen4exp.ple.ngram_size": 3,
+    "qwen4exp.ple.conv_kernel": 4
+  },
+  "tensor_count": 1224,
+  "tensor_role_sha256": "a7bd22825ca325ef0c653c621b4cb238a17fdf34969cb825eacc56db612c5063",
+  "actual_formats": [
+    "BF16",
+    "F32",
+    "IQ4_NL",
+    "Q4_K",
+    "Q5_1",
+    "Q5_K",
+    "Q8_0"
+  ],
+  "official_gguf_py": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/gguf-py",
+  "official_sources": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/gguf-py/gguf/quants.py": "2c927a1b3d9f0920dcf4007fb686e1b0999333e9f65ce43dcc689900c0beae8b",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/ggml/src/ggml-quants.c": "07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/ggml/src/ggml-common.h": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/src/models/qwen4exp.cpp": "863b5df1a53dd132ff994f1b44dcd1c88a2eecd4ad4e031817104c67c03139ac"
+  },
+  "max_decoded_or_read_bytes_per_call": 67108864,
+  "official_cpu_scalar_library": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/build/ggml/src/libggml-base.a",
+  "official_cpu_scalar_library_sha256": "740671c09f5d7c4197e2a57ccee70d076e92b2719053972a25286bbdd26efea2",
+  "foundation_sources": {
+    "strata/flash-next/original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "strata/flash-next/original_ggml_decode_probe.cpp": "d0619903a73f7724f2aa87e3c0cb3c40cd9d05611ed7a76bcf192506dfa7511d",
+    "strata/flash-next/test_original_gguf_reference_cpu.py": "612fed316ff24c8c5f0698578165d3846e7d3089df00f117125cad9ed805c14f",
+    "strata/flash-next/original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "strata/flash-next/test_original_math_scalar_cpu.py": "86f903d0b31c3734510734ce650a44c1c13c674d43e8ceb1dd2525ed7e1ab5a2",
+    "strata/flash-next/test_original_reader_admission_cpu.py": "d6c3bc7a39ed0ef0e89d25b951b08bf53e82e03dd8f8559e98737412aa6587c5"
+  },
+  "qsa_map_contract": "division h/(n_head/n_head_kv),24heads/2KV=12queryheads perKV; modulo rival rejected",
+  "semantic_source_sha256": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/qsa_parity.cpp": "6226e8c3f7e5c1b6f99aa4bab9f72f68dc78b3c2052eaa2359e1961cacf678d2",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/ggml/src/ggml-cpu/ops.cpp": "3ad6c159f0e9c2e8cef589be2f41f8ca7221a4e465488ad13ae5bff55669158c",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/include/strata/kernels/ngram.hpp": "edc6d36eaf6062e8c377577de787ed9e5576ede19e04c5964dc7e6b83b8d01ac",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/cuda/native_ple_postops.dp.cpp": "c4ac3b5a7fae2f0d908748f8b1f55a2bfc2a477698b98906475d8e4b65ce02e1"
+  }
+}

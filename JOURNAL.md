@@ -9557,3 +9557,26 @@ F06/serial-pin-twocard-v1 under pair lease; no result yet.
 VERDICT -> Bounded actual root reuse; independent whole-state proof, stage
 measurement, main cache bytes, real continuation/eviction/cancel/API isolation,
 concurrency and clean latency remain open. See serial diagnostic qualification doc.
+
+## 2026-10-09 Independent exact-GGUF CPU decoder and scalar foundations
+
+CONFIG -> New bounded original-GGUF reference files, pinned original1224-role
+inventory/lock and official GGML3cf03257 source/library; no model payload reads
+or GPU devices. Independent expectation lanes retain original-FP64 values and
+explicit F32 dequant storage separately.
+COMMAND -> python3 strata/flash-next/test_original_gguf_reference_cpu.py and
+python3 strata/flash-next/test_original_math_scalar_cpu.py.
+RESULT -> Parent rerun PASS:84 synthetic blocks across7 actual formats match
+official gguf-py;60 quantized blocks match compiled official C decoder;15 rival/
+role/MTP controls and13 synthetic reader admission controls pass. Nine scalar
+properties pass, including labelled GDN modulo and QSA division head mappings.
+The parent initially misread QSA's conditional without its default; source
+Alt::kv_divide=true and consumed h/G confirm existing reference division, and
+modulo is rejected as rival. No production math was changed. Prior PLE57-row
+wording corrected by appended evidence: retained history9, dilation3;57 was
+cumulative fixture token updates.
+VERDICT -> CPU reference groundwork, not actual original model/operator/full
+forward qualification. No native Q8_1 reduction emulation or full accumulated
+error contract yet. Actual math requires current parent full-hash/sentinel
+admission because receipt/stat alone cannot rule out cached-byte changes.
+See strata/flash-next/original-gguf-reference-foundations-v1.md.

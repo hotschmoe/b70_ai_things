@@ -110,3 +110,20 @@ independent first-GDN/layer1-PLE/first-QSA replay, then empty-state48-layer CPU
 forward. Existing C1 and self-consistency evidence do not yet establish complete
 original-GGUF mathematical fidelity. Full concurrent/history/prefix lifecycle
 and speed qualification remain separate. No new numerical result is claimed.
+
+## PLE history geometry correction
+
+The earlier table's "57-row incoming/outgoing history" was an audit wording
+error, retained above as historical text. The actual retained PLE state has
+9 rows, dilation3, and a four-tap kernel reading9/6/3 tokens back plus current.
+Source anchors: frozen source/include/strata/kernels/ngram.hpp:40 sets
+NG_HIST=(PLE_CONV_KERNEL-1)*NGRAM_SIZE=9; the consumed
+source/sycl/src/kernels/cuda/native_ple_postops.dp.cpp:222-243 uses
+p=t-9+3*k and row-fastest history[channel*9+row]. The qualified fixture's HH=9;
+its summary history_rows=57 counts cumulative exercised token updates across
+its seven test shapes, not the size of retained state.
+
+New original_math_scalar.py consequently exposes logical history[9,10240],
+explicitly mapped from row-fastest source storage. Its CPU property test labels
+the9 rows and requires taps0/3/6/current plus shift/append. This supersedes the
+earlier57-state-row wording without changing any frozen fixture or engine.

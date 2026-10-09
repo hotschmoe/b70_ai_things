@@ -1,0 +1,95 @@
+{
+  "mode": "CPU_REFERENCE_FOUNDATION_ONLY",
+  "passed": true,
+  "formats": [
+    {
+      "format": "F32",
+      "official_python_decoder_byte_equivalent_f32": true,
+      "blocks": 12,
+      "official_c_scalar_checked": false
+    },
+    {
+      "format": "BF16",
+      "official_python_decoder_byte_equivalent_f32": true,
+      "blocks": 12,
+      "official_c_scalar_checked": false
+    },
+    {
+      "format": "Q8_0",
+      "official_python_decoder_byte_equivalent_f32": true,
+      "blocks": 12,
+      "official_c_scalar_checked": true
+    },
+    {
+      "format": "Q5_1",
+      "official_python_decoder_byte_equivalent_f32": true,
+      "blocks": 12,
+      "official_c_scalar_checked": true
+    },
+    {
+      "format": "Q4_K",
+      "official_python_decoder_byte_equivalent_f32": true,
+      "blocks": 12,
+      "official_c_scalar_checked": true
+    },
+    {
+      "format": "Q5_K",
+      "official_python_decoder_byte_equivalent_f32": true,
+      "blocks": 12,
+      "official_c_scalar_checked": true
+    },
+    {
+      "format": "IQ4_NL",
+      "official_python_decoder_byte_equivalent_f32": true,
+      "blocks": 12,
+      "official_c_scalar_checked": true
+    }
+  ],
+  "decoder_blocks": 84,
+  "official_c_scalar_blocks": 60,
+  "cpu_probe_binary_sha256": "f3e443622b0bcc1b31e2e4bb459543d7d2b0b43ca95c8c04af75266de03f2497",
+  "official_scalar_library_sha256": "740671c09f5d7c4197e2a57ccee70d076e92b2719053972a25286bbdd26efea2",
+  "negative_controls": [
+    "q5_1_half_order",
+    "q5_1_minimum_omitted",
+    "q8_signedness",
+    "iq4_nonlinear_table",
+    "q4_k_split_scale_bits",
+    "q5_k_high_bit_group",
+    "original_dequant_vs_f32_storage",
+    "partial_blocks_all_formats",
+    "missing_role",
+    "wrong_shape",
+    "wrong_type",
+    "wrong_architecture",
+    "mtp_extra_Q4_K",
+    "mtp_extra_Q5_0",
+    "mtp_extra_Q6_K"
+  ],
+  "tensor_role_count": 1224,
+  "gpu_executed": false,
+  "actual_payloads_read": false,
+  "cpu_compile_image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "compile_devices_exposed": false,
+  "decoder_source_sha256": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+  "cpu_probe_source_sha256": "d0619903a73f7724f2aa87e3c0cb3c40cd9d05611ed7a76bcf192506dfa7511d",
+  "full_model_math_qualified": false,
+  "synthetic_reader_controls": [
+    "caller_cap_override",
+    "caller_cap_nonpositive",
+    "decoded_extent_exceeds_cap_packed_fits",
+    "row_outside_extent",
+    "missing_receipt_row",
+    "missing_receipt_pass",
+    "bad_publisher_sha",
+    "changed_stat",
+    "wrong_lock_binding",
+    "header_hash_mismatch",
+    "tensor_offset_outside_file",
+    "unknown_source_format",
+    "source_change_before_row_read"
+  ],
+  "synthetic_reader_positive": true,
+  "actual_model_reads": false,
+  "role_validation_separately_tested": true
+}
