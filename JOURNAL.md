@@ -9510,3 +9510,19 @@ suite acquired both leases and started; no result yet.
 VERDICT -> Bounded observer consistency/lifecycle only. Independent mathematics,
 complete-state prefix/cache/API/concurrency, clean latency and shelf remain open.
 See docs/20261009_flashnext_serial_diagnostic_qualification.md.
+
+## 2026-10-09 Independent original-GGUF mathematical reference gap audit
+
+CONFIG -> Frozen corrected0018 source and embedded GGML3cf03257, exact selected
+original four shards, qwen4exp architecture.
+COMMAND -> CPU source census and independent-reference route audit; all eight
+recorded source/receipt hashes rechecked.
+RESULT -> Missing ref/model.py, gdn.py and qsa.py; existing ref/load.py omits
+actual Q5_1 expert-down decoder. Full390 readback proves HC/PLE source ownership,
+not ordinary dense/head/router/GDN/QSA or end-to-end mathematics. Recorded
+bounded lazy original-GGUF reference plan with separate original-FP64 and actual
+Q8_1/storage contract lanes; conditional replay cannot prove upstream state.
+VERDICT -> Independent math remains open. Prepare a separate lazy exact-artifact
+reference; do not treat same-engine topology/cache equality or fresh llama prose
+as an authoritative mathematical oracle. See
+strata/flash-next/independent-math-reference-route-v1.md.

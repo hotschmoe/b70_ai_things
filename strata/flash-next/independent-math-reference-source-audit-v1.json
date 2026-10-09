@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "mode": "CPU_SOURCE_FIDELITY_REFERENCE_AUDIT",
+  "engine_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf+0001..0018",
+  "ggml_revision": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
+  "sources": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/receipt.json",
+      "sha256": "00aa6fa32dbcee86dffc35e170cfd9ea58bdf10bdc3845fc10b06f4bef687593"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/ref/load.py",
+      "sha256": "e03580c1a0a26b41ba39776af19041679c255eb57820f92115ba7d61fc916364"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/core/verify.cpp",
+      "sha256": "f567f6178eada58265f07589740145cb385ea3e69a52fd4f24f549087ecc51be"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/prefill/prefill.cpp",
+      "sha256": "7fb52155a58d43fb054ff9311bca08bb1d05ece8ff66e9e41532f18f44ee3c9f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/gdn_parity.cpp",
+      "sha256": "b05764f9cfef0ab45ca104173954d5120dd0ad856ff5a9a422e6155d1cc3dc4b"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/source/sycl/src/kernels/qsa_parity.cpp",
+      "sha256": "6226e8c3f7e5c1b6f99aa4bab9f72f68dc78b3c2052eaa2359e1961cacf678d2"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/src/models/qwen4exp.cpp",
+      "sha256": "863b5df1a53dd132ff994f1b44dcd1c88a2eecd4ad4e031817104c67c03139ac"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/ggml/src/ggml-quants.c",
+      "sha256": "07143d7068936ae46b3c528b2f3d4bbb666e74d88992165716174d243573965d"
+    }
+  ],
+  "missing_frozen_reference_files": [
+    "ref/model.py",
+    "ref/gdn.py",
+    "ref/qsa.py"
+  ],
+  "existing_loader_Q5_1_supported": false,
+  "gpu_executed": false,
+  "full_model_math_qualified": false,
+  "source_modified": false
+}
