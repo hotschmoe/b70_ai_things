@@ -9846,3 +9846,20 @@ VERDICT -> CPU/source only; fullSDKbuild/newsource390/off-on/output/state/owner
 GPUqualification required. Shared/expert7producerfields remainunobserved;
 partial26fieldcapture cannotqualify fullfirstlayer/wholemodel equations.
 Frozen20/V6/reference/packet contracts preserved.
+
+## 2026-10-09 Versioned batch identity22-v2 CPU source checkpoint
+
+CONFIG -> Separate22-v2 on frozen20; first22 review retained. Identity-only
+strict requested2/4/6 capacities, request/engine/slot generation metadata,
+existinglastTLS extended with per-requestprogress/reuse/segments; no source
+math/cache/scheduling policy changes claimed.
+COMMAND -> Parent test_batch_request_identity_v2_cpu.py and
+test_batch_identity_transport_v2_cpu.py.
+RESULT -> PASS trackedsource reconstruction/hashes; actualAPI AST threadedTLS/
+socket/pump/control, restart/BYIELD/solo migration/detached-drain; native
+capacity/RID/BSTOP blocks hostg++ASan/UBSan and malformed/overflow/stale peer
+cancellation negatives. ExistinglastTLS correction appendedsourceaudit.
+VERDICT -> CPU/transportsource only. FullC++/ABI build and actual simultaneous
+2/4/6 model/state/rawhead/spans/cache/fairness/teardown remain required. Source
+pin/fresh guards remain; cannot qualifyconcurrency from metadata orcapacity.
+Future concurrent artifact/controller mustfingerprint newPythonhelper.

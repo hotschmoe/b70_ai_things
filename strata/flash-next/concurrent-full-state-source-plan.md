@@ -194,3 +194,10 @@ control vectors are not required campaign features. Explicit unsupported errors
 are acceptable for those requests in the declared text scope. Automatic shared/
 repeated prefix continuity is required. Explicit pin is one implementation tool,
 not a substitute for automatic cache reuse when the caller supplies no pin key.
+
+Source correction (later consumed-source review): server.py:589 already defined
+thread-local engine.last for batch mode. The earlier blanket statement of global
+last attribution was too broad. Actual remaining gaps are shared progress/reused,
+explicit per-request/engine/slot-generation identity and reset, and segment/slot
+attribution proofs. Extend the existing TLS last path rather than duplicating it.
+This correction does not retroactively qualify concurrent serving.

@@ -1,0 +1,40 @@
+{
+  "base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source",
+  "patch": "strata/flash-next/patches/0022-sycl-strict-batch-request-identity-v2.patch",
+  "patch_sha256": "1c7e7352d25358ac8421c404c0ba898b562b67bbe4cce51526bcb9545c452fce",
+  "base_files": {
+    "sycl/src/program/generate.cpp": "a3cae5b41d0b365a4239d069e0086d69ae19cd8110bc9b8804e293ead7ce08c7",
+    "serve/server.py": "1e095954f894d862edd1d688dfb3e66c6bf10790be9f2c103c581c76aac11273",
+    "serve/artifact_identity.py": "d48bf26e4db57e88b88a2368c40f759e5ef748f4a05a2bc368fd53c0d39dec97"
+  },
+  "overlays": {
+    "sycl/src/program/generate.cpp": "cfdea8a971ebc98229edafe639602ef7b6bf8dbefb20f469433c43f59c56f9f0",
+    "serve/batch_request_identity.py": "2f0149108f97d31ab510cca36d7b62338f1f899e5b4ce5414a90d61e0e38b14f",
+    "serve/server.py": "b11880b1abeba42a57bd7dbf87780eace5e6446567c4ec1833b17d2529fd24de",
+    "serve/artifact_identity.py": "47619fcd5def60d13861773b359e9bab35499212f858ba649ce6462feb15027f"
+  },
+  "scope": "CPU source-only draft; no compiler/GPU, raw logits/pin/fresh/spans still future work",
+  "schema": 1,
+  "status": "CPU identity source READY for full-source review/build; exact native guards host compiled, actual API socket and migration/BYIELD/drain/restart fixtures pass; no GPU/concurrency numerical qualification",
+  "number": 22,
+  "required_source_generation": "actualcompiled20",
+  "source_contract_new_helper": "serve/batch_request_identity.py must join runtime Python source fingerprint manifest",
+  "followups": [
+    "full source syntax/link compilation",
+    "identity protocol API/native CPU transport fixtures",
+    "actual2/4/6 per-slot numerical observation and automatic fullstate cache increments",
+    "new exactgeneration source390/model/health gate"
+  ],
+  "test": "strata/flash-next/test_batch_request_identity_v2_cpu.py",
+  "test_sha256": "c3f8bf122c44dfd4d2fb3650c6a156120808cf5896de34e65e803324d7be9db8",
+  "documentation": "strata/flash-next/batch-request-identity-draft.md",
+  "combined21_then22_apply_receipt": "/mnt/vm_8tb/b70/build/strata21-22-dry-n0ce326m/apply-receipt.json",
+  "combined21_then22_apply": "PASS currentdraft21 independently with22; final21SHA must be pinned later",
+  "review_status": "CPU draft saved; Python syntax/AST/threading/application passes; fullC++/native transport/async lifecycle still required",
+  "previous_review_patch": "strata/flash-next/patches/0022-sycl-strict-batch-request-identity.patch",
+  "previous_review_patch_sha256": "ea36f0f487b82bb7816161ee45d67276be819981b11e905c9121cff299c20c74",
+  "transport_test": "strata/flash-next/test_batch_identity_transport_v2_cpu.py",
+  "version_note": "Control queue+engine generation retained across restart; YIELDED identity validated; original review evidence preserved",
+  "transport_test_sha256": "ef0b0c868a711b6ae721d140f4f7b0742305c263824148064eafcaa2464809b2",
+  "compiler_scope": "host-only extracted exact native capacity/RID/BSTOP blocks with explicit mocks, ASan/UBSan, noSYCL/XPU"
+}

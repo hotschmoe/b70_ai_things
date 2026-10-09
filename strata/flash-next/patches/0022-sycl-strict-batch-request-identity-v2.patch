@@ -1,0 +1,453 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -3817,6 +3817,12 @@
+             batch_mtp = false;
+         }
+     }
++    const int requested_batch=o.batch;
++    const bool strict_batch_identity=strata::core::native_hc_requested() && requested_batch>0;
++    if(strict_batch_identity && ((requested_batch!=2 && requested_batch!=4 && requested_batch!=6) ||
++            o.batch_groups!=1 || batch_mtp || !o.mtp.empty() || o.pipeline_windows>0)) {
++        std::fprintf(stderr,"strict native batch requires exact2/4/6 slots, group1, text greedy no-MTP/non-pipelined scope\n");return 2;
++    }
+     std::vector<std::vector<std::unique_ptr<strata::core::SlotSessionArena>>> bslot_ss;
+     if (o.batch != 0) {
+         const int cap = strata::kernels::kVerifyMaxT;
+@@ -3880,6 +3886,9 @@
+             dpct::get_current_device().get_memory_info(fb, tb);
+             std::fprintf(stderr, "strata generate: --batch: %d slot sessions on CUDA%d (%.2f GiB each); %.2f GiB free\n",
+                          (int) bslot_ss[k].size(), dev, (double) bytes / 1073741824.0, (double) fb / 1073741824.0);
++        }
++        if(strict_batch_identity && fit!=requested_batch) {
++            std::fprintf(stderr,"strict native batch: requested%d slots but only%d fit; refusing fallback\n",requested_batch,fit);return 2;
+         }
+         for (auto& v : bslot_ss) if ((int) v.size() > fit) v.resize((size_t) fit);   // the same count on every stage
+         if (fit < 2) {
+@@ -8476,7 +8485,8 @@
+                         o.spec_min_p, (long long) o.conversation_cache_mib, o.conversation_cache_slots,
+                         (long long) o.conversation_cache_min_free_mib, (long long) o.tail_role_token, xcache.segmented() ? 1 : 0,
+                         o.batch > 0 ? (" batch_slots=" + std::to_string(o.batch) +
+-                                       " slot_cache=" + std::to_string(o.prompt_cache > 0 ? 1 : 0)).c_str() : "");
++                                       " slot_cache=" + std::to_string(o.prompt_cache > 0 ? 1 : 0) +
++                                       (strict_batch_identity?" batch_protocol=2 batch_requested="+std::to_string(requested_batch):"")).c_str() : "");
+         }
+         // issue #29: a request whose heartbeat (tokens, prompt chunks, verify windows) stops for this long is stuck on
+         // a flag nobody will raise - end the engine with where it was, so the server starts it again instead of the
+@@ -8679,6 +8689,7 @@
+         // ---- --batch: the slots of the batch windows
+         struct BSlot {
+             bool active = false, stop = false;
++            uint64_t request_id=0,generation=0; // identity only; no state/sampling selection
+             int32_t x = 0;                 ///< the token the next window feeds (not yet in the slot's state)
+             std::array<int32_t, strata::kernels::kVerifyMaxT> draft{}; ///< the slot's next MTP proposal
+             bool draft_ready = false;
+@@ -8709,6 +8720,26 @@
+         Clock::time_point bt_start = Clock::now();
+         int admit_slot = -1;               ///< the slot the request being read will continue in (BGEN)
+         long long admit_max_new = 0;
++        std::vector<uint64_t> slot_generations(bs.size(),0);
++        auto slot_stop = [&](const std::string& text) {
++            const int b=std::atoi(text.c_str()+6);
++            if(b<0 || b>=(int)bs.size())return;
++            if(strict_batch_identity) {
++                const auto rid_at=text.find(" rid="),gen_at=text.find(" slotgen=");
++                auto same_tag=[&](size_t at,size_t width,uint64_t expected) {
++                    if(at==std::string::npos || expected==0)return false;
++                    const char* start=text.c_str()+at+width;char* end=nullptr;errno=0;
++                    const auto value=std::strtoull(start,&end,10);
++                    return start[0]>='0' && start[0]<='9' && errno==0 && end!=start &&
++                        (*end==' ' || *end=='\0') && value==expected;
++                };
++                if(!same_tag(rid_at,5,bs[(size_t)b].request_id) ||
++                    !same_tag(gen_at,9,bs[(size_t)b].generation)) {
++                    std::fprintf(stderr,"strata batch: stale/unidentified BSTOP%d rejected\n",b);return;
++                }
++            }
++            bs[(size_t)b].stop=true;
++        };
+         auto batch_on = [&] { for (const BSlot& b : bs) if (b.active) return true; return false; };
+         auto try_next_line = [&](std::string& out) -> bool {
+             std::lock_guard<std::mutex> lk(in_mu);
+@@ -8923,14 +8954,14 @@
+                 for (int j = 0; j < keep[b]; ++j) {
+                     const int32_t y = outb[first[t] + j];
+                     sl.ids.push_back(tok[first[t] + j]);
+-                    std::printf("BT %d %d\n", b, (int) y);
++                    std::printf("BT %d %d%s\n", b, (int)y,strict_batch_identity?(" rid="+std::to_string(sl.request_id)+" slotgen="+std::to_string(sl.generation)).c_str():"");
+                     ++sl.produced;
+                     const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) y) != o.eos_ids.end();
+                     const char* fin = eos ? "stop" : sl.stop ? "cancel" : sl.produced >= sl.max_new ? "length"
+                                     : sl.p + 2 > o.max_context ? "length" : nullptr;
+                     if (fin != nullptr) {
+                         const double ms = std::chrono::duration<double, std::milli>(Clock::now() - sl.t0).count();
+-                        std::printf("BDONE %d %lld %s %.1f\n", b, (long long) sl.produced, fin, ms);
++                        std::printf("BDONE %d %lld %s %.1f%s\n", b,(long long)sl.produced,fin,ms,strict_batch_identity?(" rid="+std::to_string(sl.request_id)+" slotgen="+std::to_string(sl.generation)).c_str():"");
+                         sl.active = false;
+                         sl.cached = o.prompt_cache > 0 && !sl.img;
+                         break;
+@@ -9113,8 +9144,7 @@
+             // --batch: BSTOP <slot> ends that slot at its next batch window; BGEN <slot> <max_new> ... reads the
+             // request's prompt and first token as a GEN 1, then continues it in that slot
+             if (line.rfind("BSTOP ", 0) == 0) {
+-                const int b = std::atoi(line.c_str() + 6);
+-                if (b >= 0 && b < (int) bs.size()) bs[(size_t) b].stop = true;
++                slot_stop(line);
+                 continue;
+             }
+             if (line.rfind("BYIELD", 0) == 0) continue;   // for a prompt read that has ended meanwhile
+@@ -9402,6 +9432,7 @@
+             // (so no split there) nor every --prompt-cache-every tokens, and its session is neither continued nor
+             // parked after it.  It still resumes from a checkpoint it matches, and still saves the system-prompt root
+             // when that reaches --prompt-cache-root.  Absent = checkpointed as before.
++            uint64_t req_rid=0,req_slot_generation=0;bool req_rid_bad=false;
+             int req_ckpt = 1;
+             int64_t req_pin = 0;
+             bool req_pin_bad = false;
+@@ -9422,7 +9453,13 @@
+                     if (eq == std::string::npos) { endp = const_cast<char*>(start); break; }
+                     const std::string key = tok.substr(0, eq);
+                     const float fv = std::strtof(tok.c_str() + eq + 1, nullptr);
+-                    if (key == "cvec") req_cvec = std::atoi(tok.c_str() + eq + 1);
++                    if(key=="rid") {
++                        const char* value=tok.c_str()+eq+1;char* stop=nullptr;errno=0;
++                        const auto parsed=std::strtoull(value,&stop,10);
++                        req_rid_bad=errno!=0 || stop==value || *stop!='\0' || value[0]=='-' || parsed==0;
++                        req_rid=parsed;
++                    }
++                    else if (key == "cvec") req_cvec = std::atoi(tok.c_str() + eq + 1);
+                     else if (key == "ckpt") req_ckpt = std::atoi(tok.c_str() + eq + 1) != 0;
+                     else if (key == "pin") {
+                         const char* value=tok.c_str()+eq+1; char* stop=nullptr;
+@@ -9473,6 +9510,11 @@
+                 std::printf("ERR fresh=0|1 requires serial text no-MTP non-pipelined requests\n");
+                 continue;
+             }
++            if(strict_batch_identity && (req_rid_bad || req_rid==0 || geni || req_temperature!=0 || req_cvec!=1 ||
++                    req_penalty_last_n!=0 || req_penalty_repeat!=1 || req_penalty_freq!=0 || req_penalty_present!=0 || req_logprobs>=0)) {
++                std::printf("ERR strict native batch needs positive rid and greedy text; penalties/images/control-vector changes/logprobs unsupported\n");continue;
++            }
++            if(strict_batch_identity && admit_slot>=0)req_slot_generation=++slot_generations[(size_t)admit_slot];
+             req_imgs.clear();
+             if (geni && !o.vision) { std::printf("ERR this engine was started without --vision\n"); continue; }
+             if (geni || !mrope_identity) {
+@@ -10251,8 +10293,7 @@
+                         std::lock_guard<std::mutex> lk(in_mu);
+                         for (auto it = in_lines.begin(); it != in_lines.end();) {
+                             if (it->rfind("BSTOP ", 0) == 0) {
+-                                const int b = std::atoi(it->c_str() + 6);
+-                                if (b >= 0 && b < (int) bs.size()) bs[(size_t) b].stop = true;
++                                slot_stop(*it);
+                                 it = in_lines.erase(it);
+                             } else if (it->rfind("BYIELD ", 0) == 0) {
+                                 ys = std::atoi(it->c_str() + 7);
+@@ -10276,6 +10317,7 @@
+                             sl = BSlot{};
+                             sl.ids = std::move(pre);
+                             sl.cached = true;
++                            sl.request_id=req_rid;sl.generation=++slot_generations[(size_t)ys];
+                             sl.partial = true;
+                             sl.partial_from0 = read_from == 0 || resumed_from0;
+                             sl.cvec = cvec_cached;
+@@ -11312,7 +11354,7 @@
+                 first_window = false;
+                 bool eos = false;
+                 for (int i = 0; i <= a && produced_n < max_new && !eos; ++i) {
+-                    std::printf("T %d\n", (int) outv[(size_t) i]);
++                    std::printf("T %d%s\n",(int)outv[(size_t)i],strict_batch_identity?(" rid="+std::to_string(req_rid)+" slotgen="+std::to_string(req_slot_generation)).c_str():"");
+                     if (req_logprobs >= 0) {   // row i of this window's head logits is the distribution token i came from
+                         static std::vector<float> lrow;
+                         static std::vector<int32_t> lord;
+@@ -11558,14 +11600,17 @@
+             if (o.lookup_chain > 0)
+                 std::snprintf(chain_txt, sizeof(chain_txt), " %lld %lld %lld %lld %lld", (long long) chain_ok,
+                               (long long) chain_drafts, (long long) sfx_ok, (long long) sfx_drafts, (long long) dec_windows);
+-            if (yielded_at >= 0) std::printf("YIELDED %d %lld\n", yielded_slot, (long long) yielded_at);
+-            std::printf("DONE %lld %lld %.1f %.1f %s %lld %lld %lld %lld %lld %lld %lld %.1f %lld %lld%s\n",
++            const std::string request_identity_tail=strict_batch_identity?
++                " rid="+std::to_string(req_rid)+" slotgen="+std::to_string(req_slot_generation):"";
++            if(yielded_at>=0)std::printf("YIELDED %d %lld%s\n",yielded_slot,(long long)yielded_at,
++                strict_batch_identity?(" rid="+std::to_string(req_rid)+" slotgen="+std::to_string(bs[(size_t)yielded_slot].generation)).c_str():"");
++            std::printf("DONE %lld %lld %.1f %.1f %s %lld %lld %lld %lld %lld %lld %lld %.1f %lld %lld%s%s\n",
+                         (long long) produced_n,
+                         (long long) n, prompt_ms, decode_ms, finish, (long long) draft_accepted, (long long) draft_offered,
+                         (long long) resume, (long long) req_hits, (long long) req_look,
+                         (long long) (src.ram_reads() - ram0), (long long) (src.file_reads() - files0),
+                         (double) (src.file_read_bytes() - file_bytes0) / 1e6, (long long) read_n,
+-                        (long long) req_offload, chain_txt);
++                        (long long) req_offload, chain_txt,request_identity_tail.c_str());
+             std::fflush(stdout);
+             if (admit_slot >= 0) {   // --batch: BADM <slot> <1 = continues in the batch windows | 0 = done>
+                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, "length") == 0 &&
+@@ -11580,6 +11625,7 @@
+                     ver.set_slot_sampling(admit_slot, req_sp);   // the request's own sampling, row by row
+                     BSlot& sl = bs[(size_t) admit_slot];
+                     sl = BSlot{};
++                    sl.request_id=req_rid;sl.generation=req_slot_generation;
+                     sl.active = true;
+                     sl.x = x;
+                     sl.p = p;
+@@ -11607,7 +11653,7 @@
+                     std::fprintf(stderr, "strata batch: slot %d takes %lld tokens (copied in %.1f ms)\n", admit_slot,
+                                  (long long) live.size(), std::chrono::duration<double, std::milli>(Clock::now() - tc0).count());
+                 }
+-                std::printf("BADM %d %d\n", admit_slot, cont ? 1 : 0);
++                std::printf("BADM %d %d%s\n",admit_slot,cont?1:0,strict_batch_identity?(" rid="+std::to_string(req_rid)+" slotgen="+std::to_string(req_slot_generation)).c_str():"");
+                 std::fflush(stdout);
+                 admit_slot = -1;
+             }
+--- /dev/null
++++ b/serve/batch_request_identity.py
+@@ -0,0 +1,27 @@
++# Host-only request/slot wire identity; no sampling/state/scheduler policy.
++import threading
++class RequestField:
++    def __init__(self,name,default):self.name=name;self.default=default
++    def __get__(self,engine,kind=None):
++        if engine is None:return self
++        if engine.batch:
++            tl=engine.__dict__.setdefault('_tl',threading.local())
++            return getattr(tl,self.name,self.default)
++        return engine.__dict__.get('_request_'+self.name,self.default)
++    def __set__(self,engine,value):
++        engine.__dict__['_request_'+self.name]=value
++        if engine.batch:setattr(engine.__dict__.setdefault('_tl',threading.local()),self.name,value)
++def tags(line,rid,generation=None):
++    values=dict(token.split('=',1) for token in line.split() if '=' in token)
++    if not {'rid','slotgen'}<=values.keys():raise ValueError('missing native request identity')
++    if not values['rid'].isdigit() or not values['slotgen'].isdigit():raise ValueError('invalid native request identity')
++    actual=(int(values['rid']),int(values['slotgen']))
++    if actual[0]!=rid or generation is not None and actual[1]!=generation:raise ValueError('stale/wrong native request-slot generation')
++    return actual
++def strict_request(sampling,embeddings):
++    sampling=sampling or {}
++    if embeddings:raise ValueError('strict batch supports text only')
++    for key,default in [('temperature',0),('repetition_penalty',1),('frequency_penalty',0),('presence_penalty',0)]:
++        if sampling.get(key,default)!=default:raise ValueError('strict batch unsupported '+key)
++    if sampling.get('experimental_speed_projection',True) is not True:raise ValueError('strict batch control-vector changes unsupported')
++    if sampling.get('logprobs') or sampling.get('top_logprobs'):raise ValueError('strict batch logprobs unsupported')
+--- a/serve/server.py
++++ b/serve/server.py
+@@ -42,6 +42,7 @@
+ import sys
+ import tempfile
+ import threading
++from batch_request_identity import RequestField, tags as batch_identity_tags, strict_request as strict_batch_request
+ import time
+ import urllib.request
+ import uuid
+@@ -585,6 +586,33 @@
+ 
+     # `last`: the figures of the engine's last DONE line.  With batch slots several requests run at once, each on its
+     # own thread, so each one reads its own request's figures (Service.run records them); one at a time, the one dict.
++    progress=RequestField('progress',None)
++    progress_ms=RequestField('progress_ms',0)
++    reused=RequestField('reused',0)
++    prefill_tok_s_mean=RequestField('prefill_tok_s_mean',None)
++    _last_done=RequestField('last_done',None)
++
++    def _begin_request_identity(self):
++        if not getattr(self,'strict_batch_identity',False):return
++        tl=self.__dict__.setdefault('_tl',threading.local())
++        with self._request_identity_lock:
++            self._request_identity_counter+=1;tl.rid=self._request_identity_counter
++        self.last={'request_id':tl.rid,'engine_generation':self.gen,'segments':[]}
++        tl.segments=[]
++
++    def _stop_slot_identity(self,slot):
++        identity=self.slot_identity[slot]
++        tail=''
++        if getattr(self,'strict_batch_identity',False):
++            if identity is None or identity[0]!=self.gen:raise EngineDied('stale native slot stop identity')
++            tail=' rid='+str(identity[1])+' slotgen='+str(identity[2])
++        self._send(f'BSTOP {slot}'+tail)
++
++    def _request_keys(self,sampling):
++        keys=self.sampling_keys(sampling)
++        if getattr(self,'strict_batch_identity',False):keys+=' rid='+str(self._tl.rid)
++        return keys
++
+     @property
+     def last(self):
+         if self.batch:
+@@ -707,6 +735,11 @@
+         # it runs (INFO batch_slots=N: it may have fewer than asked, or none, when they do not fit)
+         asked = next((int(args[args.index(k) + 1]) for k in ("--batch", "--slots") if k in args), 0)
+         self.batch = int(self.info.get("batch_slots") or 0)
++        self.strict_batch_identity=int(self.info.get('batch_protocol') or 0)==2
++        if self.strict_batch_identity and self.batch!=asked:raise ValueError('exact native batch capacity unavailable')
++        if '_request_identity_lock' not in self.__dict__:
++            self._request_identity_lock=threading.Lock();self._request_identity_counter=0
++        self.slot_identity=[None]*self.batch
+         if asked and self.batch != asked:
+             print(f"[strata] parallel requests: {asked} asked, the engine runs {self.batch or 'one at a time'} "
+                   "(its log says why)", flush=True)
+@@ -880,6 +913,8 @@
+ 
+     def _parse_done(self, line):
+         f = line.split()
++        identity=None
++        if getattr(self,'strict_batch_identity',False):identity=batch_identity_tags(line,self._tl.rid)
+         self.last = {"generated": int(f[1]), "prompt_tokens": int(f[2]), "prompt_ms": float(f[3]),
+                      "decode_ms": float(f[4]), "finish": f[5]}
+         if len(f) >= 9:                                   # the conversation cache's fields (engine 0.1.3+)
+@@ -892,6 +927,10 @@
+             self.last.update(prompt_read=int(f[14]))
+         if len(f) >= 16:                                  # #588 (engine 0.1.39+): routed experts read over PCIe
+             self.last.update(offloaded=int(f[15]))
++        if identity is not None:
++            self.last.update(request_id=identity[0],engine_generation=self.gen,slot_generation=identity[1])
++            self._tl.segments.append(dict(self.last))
++            self.last['segments']=list(self._tl.segments)
+ 
+     def vram(self, reserve_mib: int | None, timeout: float = 120.0) -> dict:
+         """#533: `VRAM <reserve_mib>` between requests (the caller holds the service's FIFO): the engine shrinks its
+@@ -1003,12 +1042,14 @@
+         for each `T`; returns ("done", None) at DONE, or ("badm", continues) at BADM (after DONE).  `stop_when()`
+         true sends STOP once (the request is then read to its DONE)."""
+         stopped = False
++        born=self.gen;lines=self.lines
+         beat = time.monotonic()
+         while True:
++            if self.gen!=born:raise EngineDied('native control reader belongs to an earlier engine generation')
+             try:
+                 # A client can leave before the first PP/token.  Poll its Event as often as _take_control does;
+                 # the ten-second HTTP heartbeat is independent of how promptly STOP reaches the engine.
+-                line = self.lines.get(timeout=0.5)
++                line = lines.get(timeout=0.5)
+             except queue.Empty:
+                 if cancel.is_set() and not stopped:
+                     self._send("STOP")
+@@ -1023,11 +1064,14 @@
+             if not line.startswith(("PP ", "INFO")):
+                 btrace("ctl<", self._ctl_mode, line.strip()[:60])
+             if line.startswith("T "):
+-                on_token(int(line[2:]))
++                if getattr(self,'strict_batch_identity',False):batch_identity_tags(line,self._tl.rid)
++                on_token(int(line.split()[1]))
+                 if not stopped and (cancel.is_set() or (stop_when is not None and stop_when())):
+                     self._send("STOP")
+                     stopped = True
+                 yield False                              # a token is pending (not a heartbeat)
++            elif line.startswith('RESUME '):
++                self.reused=int(line.split()[1])
+             elif line.startswith("PP "):
+                 f = line.split()
+                 if len(f) >= 3 and f[1].isdigit() and f[2].isdigit():
+@@ -1045,10 +1089,14 @@
+                 self._last_done = line
+             elif line.startswith("BADM "):
+                 f = line.split()
++                if getattr(self,'strict_batch_identity',False):
++                    rid,generation=batch_identity_tags(line,self._tl.rid)
++                    if f[2]=='1':self.slot_identity[int(f[1])]=(self.gen,rid,generation)
+                 self._ctl_result = ("badm", len(f) >= 3 and f[2] == "1")
+                 return
+             elif line.startswith("YIELDED "):            # the read gave way (BYIELD): <slot> <tokens read>
+                 f = line.split()
++                if getattr(self,'strict_batch_identity',False):batch_identity_tags(line,self._tl.rid)
+                 if len(f) >= 3 and f[1].lstrip("-").isdigit() and f[2].isdigit():
+                     self._yielded = (int(f[1]), int(f[2]))
+             elif line.startswith("ERR"):
+@@ -1087,9 +1135,10 @@
+         if slot >= len(self.slot_q):                    # the engine restarted with fewer slots: this one is gone
+             return
+         try:
+-            self._send(f"BSTOP {slot}")
++            self._stop_slot_identity(slot)
+         except EngineDied:
+             pass
++        stopped_identity=self.slot_identity[slot] if getattr(self,'strict_batch_identity',False) else None
+         q, busy, held = self.slot_q[slot], self.slot_busy, self.slot_held   # this process's: restart() replaces them
+ 
+         def wait():
+@@ -1103,6 +1152,9 @@
+                 if line is None:
+                     tail = []
+                     break
++                if stopped_identity is not None and line.startswith(('BT ','BDONE ')):
++                    try:batch_identity_tags(line,stopped_identity[1],stopped_identity[2])
++                    except ValueError:continue # stale packet cannot retire another request's slot
+                 if line.startswith("BT "):
+                     try:
+                         tail.append(int(line.split()[2]))
+@@ -1189,7 +1241,7 @@
+             raise EngineDied("the engine is unavailable; this request was not sent")
+         self.progress, self.progress_ms, self.reused = None, 0, 0
+         born = self.gen                                 # the engine process this request is sent to
+-        keys = self.sampling_keys(sampling or {})
++        keys = self._request_keys(sampling or {})
+         out: list[int] = []
+         pending: list[int] = []
+         prompt, left = list(ids), int(max_new)
+@@ -1338,32 +1390,36 @@
+                         line = self.slot_q[slot].get(timeout=10.0)
+                     except queue.Empty:
+                         if cancel.is_set() and not stop_sent:
+-                            self._send(f"BSTOP {slot}")
++                            self._stop_slot_identity(slot)
+                             stop_sent = True
+                         yield None
+                         continue
+                     if line is None:
+                         phase = "none"
+                         raise EngineDied(f"the engine stopped unexpectedly (exit code {self.exit_code()})")
++                    if line.startswith(('BT ','BDONE ')) and getattr(self,'strict_batch_identity',False):
++                        expected=self.slot_identity[slot]
++                        if expected is None or expected[0]!=born:raise EngineDied('stale native slot engine generation')
++                        batch_identity_tags(line,self._tl.rid,expected[2])
+                     if line.startswith("BT "):
+                         t = int(line.split()[2])
+                         out.append(t)
+                         live["generated"] = len(out)
+                         if cancel.is_set():
+                             if not stop_sent:
+-                                self._send(f"BSTOP {slot}")
++                                self._stop_slot_identity(slot)
+                                 stop_sent = True
+                             continue
+                         yield t
+                         if not going_solo and not stop_sent and self._may_go_solo(int(max_new) - len(out), solo_again,
+                                                                                   embeddings):
+-                            self._send(f"BSTOP {slot}")         # alone now: on with the drafts (below)
++                            self._stop_slot_identity(slot)         # alone now: on with the drafts (below)
+                             going_solo = True
+                     elif line.startswith("BDONE "):
+                         phase = "none"
+                         f = line.split()
+                         if len(f) >= 5 and isinstance(self.last, dict):
+-                            self.last = {**self.last, "finish": f[3], "decode_ms": float(f[4]),
++                            self.last = {**self.last,"slot":slot,"slot_generation":self.slot_identity[slot][2] if self.slot_identity[slot] else None, "finish": f[3], "decode_ms": float(f[4]),
+                                          "generated": int(f[2]) if f[2].isdigit() else self.last.get("generated")}
+                         # what the slot's sessions hold now: the prompt and every token fed (all but the last one)
+                         self.slot_held[slot] = list(prompt) + out[gen0:-1] if len(out) > gen0 else []
+@@ -1478,6 +1534,8 @@
+         if not self.alive():
+             raise EngineDied("the engine is unavailable; this request was not sent")
+         if getattr(self, "batch", 0):
++            if getattr(self,'strict_batch_identity',False):
++                strict_batch_request(sampling,embeddings);self._begin_request_identity()
+             yield from self.generate_batched(ids, max_new, sampling, cancel, embeddings)
+             return
+         self.progress, self.progress_ms, self.reused = None, 0, 0
+@@ -2206,6 +2264,10 @@
+     (--batch N); more wait their turn.  1 or absent: one request at a time, as before.  A value the engine cannot use
+     is said and passed on: the engine warns and adjusts (recommend, never force)."""
+     if "--batch" in args or "--slots" in args:
++        flag='--batch' if '--batch' in args else '--slots'
++        requested=cfg.get('parallel')
++        if isinstance(requested,int) and not isinstance(requested,bool) and requested>=1 and int(args[args.index(flag)+1])!=(0 if requested==1 else requested):
++            raise ValueError('parallel config conflicts with explicit batch/slots; refusing silent serialization')
+         return []
+     n = cfg.get("parallel")
+     if n is None or n is False:
+--- a/serve/artifact_identity.py
++++ b/serve/artifact_identity.py
+@@ -13,7 +13,7 @@
+ FILES=("vocab.json","merges.txt","token_type.json","tokenizer.json","chat_template.jinja")
+ ENV_PREFIXES=("STRATA_","SYCL_","ONEAPI_")
+ IDENTITY_ENV="STRATA_ARTIFACT_IDENTITY_SHA256"
+-PYTHON_SOURCES=("serve/server.py","serve/frontend.py","serve/artifact_identity.py","tools/strata_tokenizer.py","tools/gguf_reader.py")
++PYTHON_SOURCES=("serve/batch_request_identity.py","serve/server.py","serve/frontend.py","serve/artifact_identity.py","tools/strata_tokenizer.py","tools/gguf_reader.py")
+ 
+ 
+ def python_contract():
