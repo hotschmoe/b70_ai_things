@@ -1,0 +1,26 @@
+{
+  "scope": "Immutable v1 source/contract/build recipe archive before v2; failed historical run retained",
+  "files": [
+    {
+      "original": "strata/flash-next/native_source_upload_gpu_oracle.cpp",
+      "archived": "strata/flash-next/source-upload-v1-archive/native_source_upload_gpu_oracle.cpp",
+      "sha256": "68191b9de9347398a20280faf3b2388db40e0cedb917b73448834ecb158f7908"
+    },
+    {
+      "original": "strata/flash-next/native-source-upload-plan.json",
+      "archived": "strata/flash-next/source-upload-v1-archive/native-source-upload-plan.json",
+      "sha256": "0738a86f8c6669b4ee93ad68376f12fbdc7c04580c62f3e82284934ac0606872"
+    },
+    {
+      "original": "strata/flash-next/build_source_upload_oracle.py",
+      "archived": "strata/flash-next/source-upload-v1-archive/build_source_upload_oracle.py",
+      "sha256": "0c8551593914e21b3f03cdc66c25bbc845342f9bd0484080b025e408e5287f90"
+    },
+    {
+      "original": "strata/flash-next/native-source-upload-oracle.md",
+      "archived": "strata/flash-next/source-upload-v1-archive/native-source-upload-oracle.md",
+      "sha256": "9dbbc185a62bb055b80ca09d653bbf6dca18b1e315432193234e6e218f2e8819"
+    }
+  ],
+  "failure_receipt": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/source-upload-v1/receipt.json"
+}

@@ -1,0 +1,124 @@
+{
+  "schema": 2,
+  "status": "Narrow v2 source/contract prepared; actual trace smoke parser qualified; coupled upload/free run pending",
+  "oracle_source": "strata/flash-next/native_source_upload_gpu_oracle_v2.cpp",
+  "oracle_source_sha256": "17dd634bd83704e3dcf8bf06ebea0bbdad5aa3e7cbded7d60f2dd2b7c9a83e7a",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "model_lock": "strata/flash-next/model-lock.json",
+  "model_revision": "766911a6b7369840a91dbcd95f9f997acaab6cd6",
+  "inventory": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/current-gguf-inventory.json",
+  "inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+  "HC_source_receipt": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/native-hc-source-tensors.json",
+  "HC_source_receipt_sha256": "4d461e36e7e787e7bd440a344e4ad66e0df912465bb51973d40264ac6a9d99a0",
+  "load_path": "Actual packed WeightTable.load with all canonical rows skipped then actual linked NativeDense original4-GGUF loader; no synthetic weights or alternate math",
+  "ordinary_weight_scope": "NativeDense ordinary projection images are allocated and independently counted by native metadata; their GPU payloads not read back in this narrow HC/PLE oracle",
+  "limits": {
+    "stages": 3,
+    "max_layers_per_stage": 2,
+    "max_source_image_bytes": 33554432,
+    "readback_buffer_bytes": 4194304,
+    "max_total_enumerated_native_image_bytes": 536870912,
+    "HC_expected_counts": {
+      "layer0": 8,
+      "layer1": 8,
+      "layer47_plus_final_mixer": 11
+    },
+    "PLE_expected_counts": {
+      "layer0": 0,
+      "layer1": 3,
+      "layer47_plus_final_mixer": 0
+    }
+  },
+  "cases": [
+    {
+      "id": "card0_three_narrow_owners",
+      "lease": "--card0 plus physical ZE_AFFINITY_MASK0",
+      "argv_stages": [
+        "0:1:0",
+        "1:2:0",
+        "47:48:0"
+      ]
+    },
+    {
+      "id": "card1_three_narrow_owners",
+      "lease": "--card1 plus physical ZE_AFFINITY_MASK1; runtime device0",
+      "argv_stages": [
+        "0:1:0",
+        "1:2:0",
+        "47:48:0"
+      ]
+    },
+    {
+      "id": "two_device_live_owners",
+      "lease": "pair plus physical ZE_AFFINITY_MASK0,1",
+      "argv_stages": [
+        "0:1:0",
+        "1:2:1",
+        "47:48:1"
+      ]
+    }
+  ],
+  "runtime_environment": {
+    "STRATA_SYCL_NATIVE_HC": "1",
+    "STRATA_HC_Q8": "0",
+    "STRATA_HC_Q8_INJECT": "0",
+    "STRATA_QFUSE": "0",
+    "STRATA_GR_V3": "0",
+    "STRATA_Q8_PACKED": "0",
+    "SYCL_CACHE_PERSISTENT": "0",
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:gpu",
+    "UR_ENABLE_LAYERS": "UR_LAYER_TRACING",
+    "UR_LOG_TRACING": "level:info;flush:info;output:stderr"
+  },
+  "acceptance": [
+    "AllHC/PLE consumed typed pointers USM device allocations with queried device matching exact owner queue/context",
+    "Actual shared native_hc_bind selects uploaded original pointers and rejects wrong source dtype; actual ple_exact_sources_ok rejects wrong value extent; no math submission",
+    "HC/PLE raw full source images byte-identical in every4MiB chunk to original GGUF; source dtype/shape/offset/name/shard/FNV receipt agree",
+    "Allforeign layer/head/PLE source images and typed pointers absent; exact27HC+3PLE images across each three-range case",
+    "Unique allocated image/scratch pointer identity within each default device context across simultaneously live stage owners; different device contexts may reuse virtual addresses",
+    "Independent sum ordinary native+HC+PLE image bytes equals owner.weight_bytes; known omitted PLE accounting is failure, not waived",
+    "Legacy tensor_count recorded separately; do not conflate ordinary projection count with source-image count",
+    "Allowners synchronized and destructor returns under owning device context; successful traced UR logical-free for every owned image+scratch inside matching destructor; postfree metadata observation and fresh64KiB samequeue allocation/write/read/free succeeds",
+    "Normal process exit, ownedcontainer removal, strictpercard and compiledP2P0 pre/post health and faultaudit",
+    "Negative host-byte perturbation detected for each captured image; outputreceipt passed only after teardown",
+    "Two-device foreign pointer metadata preflight rejects wrong owning queue without invalid GPU dereference",
+    "Streaming GPU readback SHA256 equals preregistered30-image roster; metadata byte comparison alone cannot substitute identity"
+  ],
+  "negative_fixture_controls": [
+    "Changed source-offset/type/shape metadata; wrongpointerdevice; foreignstage/head source entries; missing expected HC/PLE image; missingPLE allocationaccounting; orphanregisteredpointer after destructor must fail",
+    "No deliberate foreign-device GPU read or invalid address submission: ownership negatives use metadata preflight only"
+  ],
+  "interpretation": [
+    "No whole103GB scan: GGUF headers plus selected HC/PLE/ordinary narrowstage allocations; only HC/PLE GPU bytes read back",
+    "Expected hash receipts bind original pinned shards via existing fullintake; this does not freshly rehash all large shard files",
+    "WeightTable allskip still allocates transient bounded staging buffers internally; count those separately from model-native images",
+    "Explicitstage range path tested first; static-bound callsite default and full realmodel split need later independent qualification",
+    "No expert bank, PLEtable, recurrent/KV state, headlogits, kernel arithmetic, prefix, inference or speed qualification",
+    "Destructor USM registration and smallmemory probe are narrow lifecycle evidence, not a replacement for parentGPUhealth/teardown",
+    "Source upload uses original library loader; new0010 accounting fix must be included before calling this fullypassing"
+  ],
+  "source_roster": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext-reset-diag-source-20261009/source-upload-roster.tsv",
+    "sha256": "674958050e51860c48ecd37c94ef34d68f4bb06295021d9c9b584e6581efdd1e",
+    "receipt": "/mnt/vm_8tb/b70/results/flashnext-reset-diag-source-20261009/source-upload-roster-receipt.json",
+    "receipt_sha256": "8b258942aa47a842c0fa064d5647543d028af3d528f712a76fa42bffcb73a4cf",
+    "required_cli": "--source-roster mounted immutable TSV"
+  },
+  "previous_v1_plan_sha256": "0738a86f8c6669b4ee93ad68376f12fbdc7c04580c62f3e82284934ac0606872",
+  "logical_free_contract": {
+    "required_parser": "strata/flash-next/parse_usm_logical_free_trace.py",
+    "key": "chronological UR context+pointer+allocation generation bridged to owner nativeZe context",
+    "required_owner_roles": [
+      "HC",
+      "PLE",
+      "ordinary",
+      "scratch"
+    ],
+    "reject": [
+      "missing/freefailure/doublefree/unknownfree/duplicatealivealloc/missingowner/contextambiguity/extentmismatch/freeoutsidedestructor/openledger"
+    ],
+    "raw_cpp_receipt": "source_and_probe_passed only; passedfalse until independenttrace+health+lifecycle gates; never infer physicalrelease from querytype",
+    "local_controls": "F05/usm-free-control-v1 + usm-free-trace-v1; bothcards42cases control +60alloc/60free traced; rawZe propertytype remainsdevice while rangeinvalid"
+  }
+}

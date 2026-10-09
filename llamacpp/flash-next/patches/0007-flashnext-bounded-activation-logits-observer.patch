@@ -1,0 +1,330 @@
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -1,4 +1,6 @@
+ #include "llama-context.h"
++#include "llama-flashnext-diag.h"
++#include "flashnext-activation-diag.h"
+ #include "flashnext-reset-diag.h"
+ 
+ #include "ggml.h"
+@@ -964,6 +966,7 @@
+         }
+ 
+         const int64_t j = output_resolve_row(i);
++        flashnext_activation_diag::host_logits(this,logits.data+j*model.vocab.n_tokens(),model.vocab.n_tokens(),i,j);
+         return logits.data + j*model.vocab.n_tokens();
+     } catch (const std::exception & err) {
+         LLAMA_LOG_ERROR("%s: invalid logits id %d, reason: %s\n", __func__, i, err.what());
+@@ -1413,6 +1416,9 @@
+ }
+ 
+ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, llm_graph_type gtype, llama_memory_context_i * mctx, ggml_status & ret) {
++    flashnext_activation_diag::begin(this,ubatch.n_tokens,ubatch.token,ubatch.pos,ubatch.n_seqs_unq,ubatch.n_pos,
++        ubatch.seq_id_unq,ubatch.data && ubatch.data->batch_idxs.size()==ubatch.n_tokens ? ubatch.data->batch_idxs.data():nullptr,
++        ubatch.output,n_outputs,gtype!=LLM_GRAPH_TYPE_ENCODER && gtype!=LLM_GRAPH_TYPE_DECODER_MTP);
+     flashnext_reset_diag::begin(this, ubatch.n_tokens, ubatch.token, ubatch.pos, ubatch.n_seqs_unq, ubatch.seq_id_unq);
+     if (mctx && !mctx->apply()) {
+         LLAMA_LOG_ERROR("%s: failed to apply memory context\n", __func__);
+@@ -1478,7 +1484,9 @@
+     }
+ 
+     flashnext_reset_diag::graph(res->get_gf(), fnreset_reused);
++    flashnext_activation_diag::callback_guard fnact_callback(sched.get(),cparams.cb_eval,cparams.cb_eval_user_data);
+     const auto status = graph_compute(res->get_gf(), ubatch.n_tokens > 1);
++    flashnext_activation_diag::end(int(status));
+     if (status != GGML_STATUS_SUCCESS) {
+         LLAMA_LOG_ERROR("%s: failed to compute graph, compute status: %d\n", __func__, status);
+         ret = status;
+@@ -1884,6 +1892,7 @@
+         llama_sampler_backend_begin(entry.second);
+     }
+ 
++    flashnext_activation_diag::decode(this);
+     int64_t n_outputs_prev = 0;
+     int64_t n_tokens_prev  = 0;
+ 
+@@ -1941,6 +1950,7 @@
+             }
+         }
+ 
++        flashnext_activation_diag::outputs(this);
+         // plot the computation graph in dot format (for debugging purposes)
+         //if (n_past%100 == 0) {
+         //    ggml_graph_dump_dot(gf, NULL, "llama.dot");
+@@ -4608,3 +4618,10 @@
+ llama_context * llama_get_ctx_other(struct llama_context * ctx) {
+     return ctx->get_cparams().ctx_other;
+ }
++
++void llama_flashnext_diag_sample_begin(llama_context* ctx,int32_t index,int64_t generated,int64_t task,int32_t slot) {
++    flashnext_activation_diag::sample_begin(ctx,index,generated,task,slot);
++}
++void llama_flashnext_diag_sample_end(llama_context* ctx,llama_token token) {
++    flashnext_activation_diag::sample_end(ctx,token);
++}
+--- a/tools/server/server-context.cpp
++++ b/tools/server/server-context.cpp
+@@ -12,6 +12,7 @@
+ #include "common.h"
+ #include "fit.h"
+ #include "llama.h"
++#include "llama-flashnext-diag.h"
+ #include "log.h"
+ #include "sampling.h"
+ #include "speculative.h"
+@@ -4347,7 +4348,9 @@
+             llama_token id;
+             {
+                 scoped_timer timer(t_sampl, n_sampl);
++                llama_flashnext_diag_sample_begin(slot.ctx_tgt,tok_idx,slot.stats.n_gen,slot.task->id,slot.id);
+                 id = common_sampler_sample(slot.smpl.get(), slot.ctx_tgt, tok_idx);
++                llama_flashnext_diag_sample_end(slot.ctx_tgt,id);
+             }
+ 
+             slot.i_batch = -1;
+--- /dev/null
++++ b/include/llama-flashnext-diag.h
+@@ -0,0 +1,11 @@
++// Narrow default-off diagnostic markers; no serving/model semantics.
++#pragma once
++#include "llama.h"
++#ifdef __cplusplus
++extern "C" {
++#endif
++LLAMA_API void llama_flashnext_diag_sample_begin(struct llama_context* ctx,int32_t index,int64_t generated,int64_t task,int32_t slot);
++LLAMA_API void llama_flashnext_diag_sample_end(struct llama_context* ctx,llama_token token);
++#ifdef __cplusplus
++}
++#endif
+--- /dev/null
++++ b/ggml/include/flashnext-activation-diag.h
+@@ -0,0 +1,229 @@
++// Bounded observation only: existing eval callback can split/fence graphs.
++#pragma once
++#include "ggml.h"
++#include "ggml-backend.h"
++#include <array>
++#include <atomic>
++#include <chrono>
++#include <cinttypes>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <limits>
++#include <cerrno>
++#include <vector>
++#include <string>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/stat.h>
++namespace flashnext_activation_diag {
++constexpr size_t MAX_VECTOR=16u<<20,MAX_TOTAL=128u<<20;
++constexpr unsigned MAX_REQUESTS=3,MAX_UBATCH_ACTIVATIONS=2,MAX_OUTPUT_ROWS=4096,MAX_CANDIDATES=8;
++struct config {
++    bool enabled=false,vectors=true,logit_node=true;
++    const char* arm=nullptr;const char* dir=nullptr;
++    config() {
++        const char* value=std::getenv("FLASHNEXT_ACTIVATION_DIAG");
++        enabled=value && !std::strcmp(value,"1");
++        if (enabled) {
++            arm=std::getenv("FLASHNEXT_ACTIVATION_DIAG_ARM");dir=std::getenv("FLASHNEXT_ACTIVATION_DIAG_DIR");
++            value=std::getenv("FLASHNEXT_ACTIVATION_DIAG_VECTORS");vectors=!(value && !std::strcmp(value,"0"));
++            value=std::getenv("FLASHNEXT_ACTIVATION_DIAG_LOGIT_NODE");logit_node=!(value && !std::strcmp(value,"0"));
++        }
++    }
++};
++inline const config& settings() { static const config c;return c; }
++struct correlation {uint64_t decode=0,ordinal=0;unsigned request=0,ubatch=0;int batch=-1,token=0,pos=-1;};
++struct candidate {int batch=-1;correlation at;std::string file;};
++struct scope {
++    bool armed=false,valid=false,activations=false,logit=false,sample=false,first_done=false;
++    const void* ctx=nullptr;uint64_t decode=0,ordinal=0;unsigned request=0,ubatch=0,serial=0;
++    int tokens=0,outputs=0,seq=-1,lo=-1,hi=-1,wanted=-1;int64_t task=-1;int slot=-1;
++    std::array<unsigned,7> seen{},observed{};
++    std::vector<int32_t> ids,pos,batch;std::vector<int8_t> out;
++    std::array<correlation,MAX_OUTPUT_ROWS> rows{};unsigned nrows=0;
++    std::array<candidate,MAX_CANDIDATES> candidates{};unsigned ncandidates=0;
++};
++inline scope& current() {static thread_local scope s;return s;}
++inline std::atomic<size_t>& used() {static std::atomic<size_t> bytes{0};return bytes;}
++inline uint64_t now_ns() {return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();}
++inline void skip(const char* reason,const char* point="none") {
++    auto& s=current();std::fprintf(stderr,"FNACT skip request=%u ubatch=%u decode=%" PRIu64 " ordinal=%" PRIu64 " point=%s reason=%s observed_only=1\n",
++        s.request,s.ubatch,s.decode,s.ordinal,point,reason);
++}
++inline bool armed(const void* ctx) {
++    if (!settings().enabled) return false;
++    auto& s=current();if (s.armed) return s.ctx==ctx;
++    struct stat a,d;
++    if (!settings().arm || !settings().dir || stat(settings().arm,&a) || !S_ISREG(a.st_mode) ||
++        stat(settings().dir,&d) || !S_ISDIR(d.st_mode)) return false;
++    s.armed=true;s.ctx=ctx;
++    std::fprintf(stderr,"FNACT armed ctx=%p requests3 activation_ubatches2 max_vector%zu max_total%zu vectors%d logit_node%d\n",
++        ctx,MAX_VECTOR,MAX_TOTAL,settings().vectors,settings().logit_node);
++    return true;
++}
++inline void decode(const void* ctx) {
++    if (!armed(ctx)) return;auto& s=current();++s.decode;s.nrows=0;
++}
++inline void begin(const void* ctx,unsigned n,const int32_t* ids,const int32_t* pos,unsigned nseq,unsigned npos,
++                  const int32_t* seq,const int32_t* batch,const int8_t* out,int outputs,bool normal) {
++    if (!armed(ctx)) return;auto& s=current();s.valid=false;s.activations=false;s.logit=false;++s.ordinal;s.seen={};s.observed={};
++    if (s.ctx!=ctx || nseq!=1 || npos!=1 || !normal || !n || n>4096 || !ids || !pos || !seq || !batch || !out) {
++        skip("unsupported_context_sequence_positions_batch_or_graph");return;
++    }
++    int lo=pos[0],hi=pos[0];for(unsigned i=1;i<n;++i){if(pos[i]<lo)lo=pos[i];if(pos[i]>hi)hi=pos[i];}
++    if (lo==0) {++s.request;s.ubatch=0;s.first_done=false;s.ncandidates=0;}
++    ++s.ubatch;
++    if (!s.request || s.request>MAX_REQUESTS) {skip("request_limit_or_no_position_zero_start");return;}
++    s.valid=true;s.tokens=int(n);s.outputs=outputs;s.seq=seq[0];s.lo=lo;s.hi=hi;
++    s.ids.assign(ids,ids+n);s.pos.assign(pos,pos+n);s.batch.assign(batch,batch+n);s.out.assign(out,out+n);
++    s.activations=settings().vectors && s.ubatch<=MAX_UBATCH_ACTIVATIONS;
++    s.logit=settings().logit_node && !s.first_done && outputs>0 && s.ncandidates<MAX_CANDIDATES;
++    std::fprintf(stderr,"FNACT ubatch ctx=%p request=%u ubatch=%u decode=%" PRIu64 " ordinal=%" PRIu64 " seq=%d tokens=%u pos_min=%d pos_max=%d outputs=%d activations%d logit%d ids=",
++        ctx,s.request,s.ubatch,s.decode,s.ordinal,s.seq,n,lo,hi,outputs,s.activations,s.logit);
++    for(unsigned i=0;i<n;++i)std::fprintf(stderr,"%s%d:%d:%d",i?",":"",ids[i],pos[i],batch[i]);std::fputc('\n',stderr);
++}
++inline correlation corr(unsigned token) {auto& s=current();return {s.decode,s.ordinal,s.request,s.ubatch,s.batch[token],s.ids[token],s.pos[token]};}
++inline void outputs(const void* ctx) {
++    if (!settings().enabled) return;auto& s=current();if(!s.valid || s.ctx!=ctx)return;
++    for(int i=0;i<s.tokens;++i)if(s.outputs==s.tokens || s.out[size_t(i)]) {
++        if(s.nrows==MAX_OUTPUT_ROWS){skip("output_mapping_limit");break;}s.rows[s.nrows++]=corr(unsigned(i));
++    }
++}
++inline bool reserve(size_t bytes) {
++    size_t old=used().load();while(bytes<=MAX_TOTAL-old)if(used().compare_exchange_weak(old,old+bytes))return true;return false;
++}
++inline std::string write(const char* point,const std::vector<uint8_t>& raw,const correlation& at,
++                         const ggml_tensor* tensor,int sampled_index=-1,bool reserved=false) {
++    auto& s=current();if(raw.empty() || raw.size()>MAX_VECTOR || (!reserved && !reserve(raw.size()))){skip("byte_limit",point);return {};}
++    char leaf[192];std::snprintf(leaf,sizeof leaf,"fnact-%ld-r%u-d%" PRIu64 "-u%u-o%" PRIu64 "-s%u-%s.f32",
++        long(getpid()),at.request,at.decode,at.ubatch,at.ordinal,++s.serial,point);
++    std::string path=std::string(settings().dir)+"/"+leaf;
++    const int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);
++    if(fd<0){skip("capture_file_open",point);return {};}
++    // LE32 encoding preserves signed zero/NaN payload bits without float math.
++    const uint16_t endian=1;const auto* native=reinterpret_cast<const uint8_t*>(&endian);
++    std::vector<uint8_t> encoded;const uint8_t* data=raw.data();
++    if(!native[0]) {encoded=raw;for(size_t i=0;i<encoded.size();i+=4){std::swap(encoded[i],encoded[i+3]);std::swap(encoded[i+1],encoded[i+2]);}data=encoded.data();}
++    bool ok=true;size_t done=0;while(done<raw.size()) {
++        const ssize_t n=::write(fd,data+done,raw.size()-done);
++        if(n>0)done+=size_t(n);else if(n<0 && errno==EINTR)continue;else {ok=false;break;}
++    }
++    if(::close(fd))ok=false;
++    if(!ok){::unlink(path.c_str());skip("capture_file_write",point);return {};}
++    std::fprintf(stderr,"FNACT vector ctx=%p request=%u ubatch=%u decode=%" PRIu64 " ordinal=%" PRIu64 " point=%s batch=%d token=%d pos=%d bytes=%zu file=%s canonical=le_f32 sampled_index=%d host_ns=%" PRIu64 " observed_only=1",
++        s.ctx,at.request,at.ubatch,at.decode,at.ordinal,point,at.batch,at.token,at.pos,raw.size(),path.c_str(),sampled_index,now_ns());
++    if(tensor)std::fprintf(stderr," type=%d op=%d ne=%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 " nb=%zu,%zu,%zu,%zu buffer=%p",
++        int(tensor->type),int(tensor->op),tensor->ne[0],tensor->ne[1],tensor->ne[2],tensor->ne[3],tensor->nb[0],tensor->nb[1],tensor->nb[2],tensor->nb[3],(void*)tensor->buffer);
++    std::fputc('\n',stderr);return path;
++}
++enum point {NONE=-1,HC_INPUT=0,HC_OUTPUT=1,PLE_GATED=2,PLE_CONV=3,STATE_R=4,STATE_P=5,STATE_S=6,LOGITS=7};
++inline const char* label(point p) {switch(p){case HC_INPUT:return "hc_input0";case HC_OUTPUT:return "hc_output0";case PLE_GATED:return "ple_gated1";case PLE_CONV:return "ple_conv1";case STATE_R:return "state_r1_gather";case STATE_P:return "state_p1_gather";case STATE_S:return "state_s1_gather";case LOGITS:return "logits_candidate";default:return "none";}}
++inline const ggml_tensor* ancestry(const ggml_tensor* t,const char* name) {
++    for(unsigned depth=0;t && depth<64;++depth) {if(!std::strcmp(t->name,name))return t;t=t->view_src?t->view_src:t->src[0];}return nullptr;
++}
++inline point select(const ggml_tensor* t) {
++    auto& s=current();if(!s.valid || !t)return NONE;
++    if(s.logit && !std::strcmp(t->name,"result_output"))return LOGITS;
++    if(!s.activations)return NONE;
++    if(!std::strcmp(t->name,"hc_init"))return HC_INPUT;
++    if(!std::strcmp(t->name,"l_last-0"))return HC_OUTPUT;
++    if(!std::strcmp(t->name,"ple_gated_value-1"))return PLE_GATED;
++    if(!std::strcmp(t->name,"ple_conv_out-1"))return PLE_CONV;
++    if(!std::strcmp(t->name,"state_predelta-1"))return STATE_S;
++    if(!std::strcmp(t->name,"conv_state_at-1")) {
++        if(ancestry(t,"cache_ple_r_l1"))return STATE_P;
++        if(ancestry(t,"cache_r_l1"))return STATE_R;
++        skip("state_family_ancestry_unresolved","conv_state_at-1");
++    }
++    return NONE;
++}
++struct read_plan {size_t offset=0,bytes=0;bool whole=false;};
++inline bool layout(const ggml_tensor* t,point p,int tokens,int outputs,read_plan& plan) {
++    plan={};
++    if(!t || t->type!=GGML_TYPE_F32 || (t->flags&GGML_TENSOR_FLAG_PARAM) || t->nb[0]!=4)return false;
++    for(int i=0;i<4;++i)if(t->ne[i]<1)return false;
++    if(p==HC_INPUT || p==HC_OUTPUT || p==PLE_GATED || p==PLE_CONV) {
++        if(t->ne[0]!=2560 || t->ne[1]!=4 || t->ne[2]!=tokens || t->ne[3]!=1 || t->nb[1]!=2560*4)return false;
++        if(size_t(tokens-1) && t->nb[2]>std::numeric_limits<size_t>::max()/size_t(tokens-1))return false;
++        plan.offset=size_t(tokens-1)*t->nb[2];plan.bytes=10240*4;
++    } else if(p==LOGITS) {
++        if(t->ne[0]!=248320 || t->ne[1]!=outputs || t->ne[2]!=1 || t->ne[3]!=1 || outputs<1)return false;
++        if(size_t(outputs-1) && t->nb[1]>std::numeric_limits<size_t>::max()/size_t(outputs-1))return false;
++        plan.offset=size_t(outputs-1)*t->nb[1];plan.bytes=248320*4;
++    } else if(p==STATE_R || p==STATE_P || p==STATE_S) {
++        if(!ggml_is_contiguous(t))return false;
++        size_t elements=1;for(int d=0;d<4;++d){if(size_t(t->ne[d])>MAX_VECTOR/4/elements)return false;elements*=size_t(t->ne[d]);}
++        // Existing model callbacks expose one sequence's gathered state, not the
++        // entire physical cache or rollback rows. Reject an extra sequence axis.
++        if((p==STATE_S && (t->ne[0]!=128 || t->ne[1]!=128 || t->ne[2]!=48 || t->ne[3]!=1)) ||
++           (p!=STATE_S && (t->ne[1]!=10240 || t->ne[2]!=1 || t->ne[3]!=1)))return false;
++        plan.bytes=elements*4;plan.whole=true;
++    } else return false;
++    const size_t total=ggml_nbytes(t);
++    return plan.bytes && plan.bytes<=MAX_VECTOR && plan.offset<=total && plan.bytes<=total-plan.offset;
++}
++inline void capture(ggml_tensor* t) {
++    auto& s=current();const point p=select(t);if(p==NONE)return;
++    if(p!=LOGITS && s.seen[size_t(p)]++){skip("duplicate_named_point",label(p));return;}
++    read_plan plan;if(!layout(t,p,s.tokens,s.outputs,plan)){skip("unsupported_type_shape_stride_or_parameter",label(p));return;}
++    if(!t->buffer || !t->data){skip("unallocated_tensor",label(p));return;}
++    if(!reserve(plan.bytes)){skip("byte_limit_before_copy",label(p));return;}
++    std::vector<uint8_t> data(plan.bytes);
++    // Eval data callback follows the scheduler's existing selected-backend sync.
++    const uint64_t before=now_ns();ggml_backend_tensor_get(t,data.data(),plan.offset,plan.bytes);const uint64_t after=now_ns();
++    unsigned token=unsigned(s.tokens-1);
++    if(p==LOGITS && s.outputs!=s.tokens) {while(token && !s.out[token])--token;if(!s.out[token]){skip("logit_flag_mapping_missing",label(p));return;}}
++    correlation at=corr(token);
++    const auto file=write(label(p),data,at,t,-1,true);
++    if(!file.empty())std::fprintf(stderr,"FNACT copy point=%s begin_ns=%" PRIu64 " end_ns=%" PRIu64 " domain=host_steady includes_backend_transfer=1\n",label(p),before,after);
++    if(p==LOGITS && !file.empty() && s.ncandidates<MAX_CANDIDATES) s.candidates[s.ncandidates++]={at.batch,at,file};
++    else if(p!=LOGITS && !file.empty())s.observed[size_t(p)]=1;
++}
++struct callback_guard {
++    ggml_backend_sched_t sched;ggml_backend_sched_eval_callback original;void* original_data;bool active=false,original_wants=false;
++    callback_guard(ggml_backend_sched_t scheduler,ggml_backend_sched_eval_callback cb,void* data):sched(scheduler),original(cb),original_data(data) {
++        if(settings().enabled && current().valid && (current().activations || current().logit)) {
++            active=true;ggml_backend_sched_set_eval_callback(sched,&callback_guard::eval,this);
++        }
++    }
++    ~callback_guard(){if(active)ggml_backend_sched_set_eval_callback(sched,original,original_data);}
++    static bool eval(ggml_tensor* t,bool ask,void* user) {
++        auto& guard=*static_cast<callback_guard*>(user);
++        if(ask){guard.original_wants=guard.original && guard.original(t,true,guard.original_data);return guard.original_wants || select(t)!=NONE;}
++        try{capture(t);}catch(const std::exception&){skip("capture_exception",t?t->name:"none");}
++        return !guard.original_wants || guard.original(t,false,guard.original_data);
++    }
++};
++inline void end(int status) {
++    if(!settings().enabled)return;auto& s=current();if(!s.valid)return;
++    std::fprintf(stderr,"FNACT graph_end request=%u ubatch=%u ordinal=%" PRIu64 " status=%d captured_hc_input%d captured_hc_output%d captured_ple_gated%d captured_ple_conv%d captured_R%d captured_P%d captured_S%d candidates%u observed_only=1\n",
++        s.request,s.ubatch,s.ordinal,status,s.observed[0]!=0,s.observed[1]!=0,s.observed[2]!=0,s.observed[3]!=0,s.observed[4]!=0,s.observed[5]!=0,s.observed[6]!=0,s.ncandidates);
++}
++inline void sample_begin(const void* ctx,int index,int64_t generated,int64_t task,int slot) {
++    if(!settings().enabled)return;auto& s=current();s.sample=false;
++    if(!s.armed || s.ctx!=ctx || generated || s.request>MAX_REQUESTS || s.first_done)return;
++    s.sample=true;s.wanted=index;s.task=task;s.slot=slot;
++    for(unsigned i=0;i<s.ncandidates;++i)if(s.candidates[i].batch==index) {
++        s.first_done=true;std::fprintf(stderr,"FNACT first_logits request=%u task=%" PRId64 " slot=%d batch=%d file=%s source=existing_graph_result_output observed_only=1\n",
++            s.request,task,slot,index,s.candidates[i].file.c_str());break;
++    }
++}
++inline void host_logits(const void* ctx,const float* data,unsigned vocab,int index,int64_t resolved) {
++    if(!settings().enabled)return;auto& s=current();if(!s.sample || s.first_done || s.ctx!=ctx || index!=s.wanted)return;
++    if(!data || vocab!=248320){skip("full_host_logits_unavailable","first_logits");return;}
++    const correlation* at=nullptr;for(unsigned i=0;i<s.nrows;++i)if(s.rows[i].batch==index){at=&s.rows[i];break;}
++    if(!at){skip("logit_output_mapping_missing","first_logits");return;}
++    const size_t bytes=size_t(vocab)*4;if(!reserve(bytes)){skip("byte_limit_before_copy","first_logits");return;}
++    std::vector<uint8_t> raw(bytes);std::memcpy(raw.data(),data,raw.size());
++    const auto file=write("first_logits",raw,*at,nullptr,index,true);if(!file.empty()) {
++        s.first_done=true;std::fprintf(stderr,"FNACT first_logits request=%u task=%" PRId64 " slot=%d batch=%d resolved=%" PRId64 " file=%s source=original_host_accessor observed_only=1\n",
++            s.request,s.task,s.slot,index,resolved,file.c_str());
++    }
++}
++inline void sample_end(const void* ctx,int token) {
++    if(!settings().enabled)return;auto& s=current();if(!s.sample || s.ctx!=ctx)return;
++    std::fprintf(stderr,"FNACT sampled request=%u task=%" PRId64 " slot=%d batch=%d token=%d full_logits_observed=%d\n",s.request,s.task,s.slot,s.wanted,token,s.first_done);
++    if(!s.first_done)skip("no_original_full_host_logits_or_candidate","first_logits");s.sample=false;
++}
++} // namespace flashnext_activation_diag

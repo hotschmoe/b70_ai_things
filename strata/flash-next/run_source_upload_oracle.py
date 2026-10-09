@@ -31,6 +31,7 @@ def main():
     p.add_argument('--oracle-receipt', type=Path, required=True)
     p.add_argument('--pack-receipt', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--oracle-plan', type=Path, default=REPO / 'strata/flash-next/native-source-upload-plan.json')
     p.add_argument('--leased', action='store_true')
     a = p.parse_args()
     if not a.leased:
@@ -94,7 +95,8 @@ def main():
         assert oracle['passed'] and oracle['libraries_unchanged'] and oracle['image'] == IMAGE
         binary = a.oracle_receipt.parent / 'source-upload-oracle'
         assert sha(binary) == oracle['binary_sha256']
-        plan = json.loads((REPO / 'strata/flash-next/native-source-upload-plan.json').read_text())
+        plan = json.loads(a.oracle_plan.read_text())
+        version2 = plan['schema'] == 2
         assert sha(REPO / plan['oracle_source']) == oracle['oracle_source_sha256'] == plan['oracle_source_sha256']
         engine = json.loads(Path(oracle['engine_receipt']).read_text())
         assert sha(Path(oracle['engine_receipt'])) == oracle['engine_receipt_sha256']
@@ -112,7 +114,8 @@ def main():
         shards = [REPO / lock['destination'] / row['path'] for row in lock['files'] if row['path'].startswith('UD-Q4_K_XL/')]
         assert len(shards) == 4
         receipt.update(oracle_receipt_sha256=sha(a.oracle_receipt), pack_receipt_sha256=sha(a.pack_receipt),
-                       source_roster_sha256=sha(roster), image=IMAGE, controller_sha256=sha(Path(__file__)))
+                       source_roster_sha256=sha(roster), image=IMAGE, controller_sha256=sha(Path(__file__)),
+                       oracle_plan_sha256=sha(a.oracle_plan), oracle_schema=plan['schema'])
         (out / 'controller.py').write_bytes(Path(__file__).read_bytes())
         health('pre')
         for label, mask, stages in [('card0', '0', ['0:1:0', '1:2:0', '47:48:0']),
@@ -136,6 +139,14 @@ def main():
                    '-e', 'STRATA_SYCL_NATIVE_HC=1', '-v', str(a.oracle_receipt.parent.resolve()) + ':/oracle:ro',
                    '-v', str(out) + ':/results', '-v', str(REPO) + ':' + str(REPO) + ':ro',
                    '-v', '/mnt/vm_8tb/b70:/mnt/vm_8tb/b70:ro', IMAGE, 'exec ' + shlex.join(args)]
+            if version2:
+                at = cmd.index(IMAGE)
+                environment = plan['runtime_environment']
+                extras = []
+                for key, value in environment.items():
+                    if key not in ['STRATA_SYCL_NATIVE_HC', 'ONEAPI_DEVICE_SELECTOR', 'SYCL_CACHE_PERSISTENT']:
+                        extras += ['-e', key + '=' + value]
+                cmd[at:at] = extras
             run(cmd, label + '-launch.log')
             deadline = time.monotonic() + 300
             while True:
@@ -148,8 +159,20 @@ def main():
                 time.sleep(2)
             run(['docker', 'logs', active], label + '.log')
             report = json.loads((out / (label + '.json')).read_text())
-            assert state['ExitCode'] == 0 and not state.get('OOMKilled') and report['passed']
-            assert report['hc_images'] == 27 and report['ple_images'] == 3 and report['all_owners_destroyed']
+            assert state['ExitCode'] == 0 and not state.get('OOMKilled')
+            if version2:
+                from parse_usm_logical_free_trace import parse_trace, negative_controls
+                text = (out / (label + '.log')).read_text()
+                trace = parse_trace(text)
+                assert trace['passed'], trace['errors']
+                trace['negative_controls'] = negative_controls(text, True)
+                assert all(trace['negative_controls'].values())
+                assert report['source_and_probe_passed'] and report['all_owners_destructor_returned']
+                assert trace['counts']['owners'] == sum(s['unique_allocations'] + 1 for s in report['stages'])
+                (out / (label + '-logical-free.json')).write_text(json.dumps(trace, indent=2) + '\n')
+            else:
+                assert report['passed'] and report['all_owners_destroyed']
+            assert report['hc_images'] == 27 and report['ple_images'] == 3
             receipt['cases'].append(dict(case=label, state=state, report=report))
             save()
             cleanup()

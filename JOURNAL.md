@@ -9229,3 +9229,32 @@ VERDICT -> Source-upload-v1 remains failed. Its pointer-type teardown gate is
 not a valid logical-live test on this installed runtime. New owner-specific
 matched-free/byte/lifecycle oracle required, not a silent gate waiver. Model,
 full390source coverage, tier/prefix/concurrent/latency/shelf gates remain open.
+
+## 2026-10-09 Logical source frees, cached-page recovery and first full serve
+
+CONFIG -> Exact selectedGGUF/Stratafb58e0d/runtime39992d70, sourceenginev5,
+strict source/lifecycle oraclev2 and bounded C1 diagnostic. Goal remains full
+twoGPU/prefix/concurrent/latency qualification. Prior status-only turn classified
+no progress; terminal84809 revalidated before continuing. User dirt preserved.
+COMMAND -> F06/source-upload-v2; independent full buffered/direct shard3 hashes
+and full49GB comparison; targeted onepage reload then all4full hash C1prepare;
+qualify_c1_serving.py firstonecard; host-alloc-limit-v1; immutableenginev6build.
+RESULT -> Source30-image owner lifecycle passes card0/card1/pair, exact27HC3PLE
+readback/accounting and62alloc/free pairs,53owners,3contextbridges with negatives.
+Full strict/compiledP2P0 pre/posthealth and normalremoval. Not full390/modelmath.
+Buffered shard3 differed from publisher despite unchangedinode; directfullhash
+matched. Full comparison finds onecachedpage/onebit at3857881836,0x65/0x45,
+Q4_K blk13up expert79. Captures retained; targeted4KB invalidation reload and
+fullbufferedhash match, then all4fullhashes pass. Cause unknown/no historylink.
+Firstmodel loaded691native images3671.29MiB and8083expert slots23.59GiB, then
+one49293MiB host allocation failed; strict coverage refused serving. No ready
+or inference. Normalremoval/posthealth; changedpage sentinel remains exact.
+Independent untouched hostalloc1MiB/1GiB/8GiB succeeds,48GiB returnsNULL under
+8MiBmemlock; device maxalloc32530182144. Normalexit/removal/percard/compiled
+posthealth, nofaultsignatures. Initialmissingheader/nestedshell failures retained.
+CPU segmented plan preserves16493expert extents51688243200B in49segments, source
+bytes/globalbudget/lifetime/context/free-retry checks pass. New0011/0012engine
+build launched; fullbuild/GPUmirror/source390/model qualification still pending.
+VERDICT -> Logicalfree gate localized and newlimitedscope passes. Wholeartifact
+identity restored withoutweightwrites, corruptionorigin unproven. Allocation
+evidence supports boundedsegments, not serving stability. Fullgoal staysactive.
