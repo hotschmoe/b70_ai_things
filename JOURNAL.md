@@ -9049,3 +9049,26 @@ planning. No drive relocation, new model download, performance or shelf claim.
 Evidence: docs/20261009_flashnext_gpu_expert_cache_comparison.md,
 docs/20261009_flashnext_strata_next_steps.md, and
 llamacpp/flash-next/recurrent-reset-diagnostic-plan.json.
+
+## 2026-10-09 FlashNext fusion exclusion result and latency priorities
+
+CONFIG -> Static UD-Q4_K_XL OPT1, checkpoint-on, ubatch256, warmup, logging5;
+only SYCL fusion disabled. Native diagnostic adds tokenizer evidence without
+changing generation payload. Current user priority1/2streams, rare4, max4-6.
+
+COMMAND -> static-fusion0-history-control via pairlease and offline history
+analysis, following94fixture/80mutation-phase prerequisite pass.
+
+RESULT -> Strict screen fails prose repeat. Native three-prose outputs share35
+IDs but probability drift persists. Exact tokenizer IDs/counts and progress
+match. Normal removal, per-card and compiled P2P0 post-health pass; no GPUfault.
+Source audit finds graph-reuse rs_z/head/count safeguards and owned probability
+snapshots; neither proposed source bug is established. Strata has genuine
+batched slots and cross-GPU groups but fairness/residency needqualification.
+
+VERDICT -> Fusionoff is not a correctness fix. Stop toggle stacking and use
+bounded reset/activation instrumentation for the reference. Strata-style tiers
+are the development target, startingnativeQ8HCfidelity then2slot/2group and
+stage1mirrors. Profile latency/criticalpath, not bandwidth saturation. User's
+newer llama.cppHexagonrepo is required methodology source; Speculais old and
+not accepted as its substitute. Awaiting correctrepo while otherworkcontinues.

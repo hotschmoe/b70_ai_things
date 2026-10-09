@@ -97,3 +97,57 @@ more invasive than the Q8 dispatch port. Neither effort has a measured speed
 or completion-time promise. GPU gates must use bin/gpu-run, matched identity,
 health, coherence, teardown, and post-health; source preparation can proceed
 in parallel without sharing live GPU execution.
+
+## Concurrency follow-up: one user, usually one or two streams
+
+CONFIG -> Target normal concurrency is 1-2, occasional 4, and at most 4-6.
+This makes latency and preserving the one-stream expert cache more important
+than maximizing large-batch throughput.
+
+COMMAND -> Inspect serve/server.py, serve/test_parallel.py, docs/BATCHING.md,
+and the actual pinned SYCL generate.cpp slot allocation/admission/pipeline.
+
+RESULT -> Strata is serial by default, but it already has real opt-in
+multi-sequence decoding. `server.py:3466` holds the FIFO only without batch
+slots. With slots, `generate_batched:1176` serializes prompt admission on a
+control lock, then releases it at line 1326 while each active request consumes
+its own token queue. Requests share one model/engine and expert cache, not
+separate complete model instances. Each slot has its own recurrent, KV,
+indexer, and PLE state on every GPU stage (`generate.cpp:3811`). It can move a
+solo request into a batch slot when another arrives. The Python parallel tests
+use a fake engine; they are not GPU or model-fidelity evidence.
+[Server](https://github.com/Niko1221/Strata/blob/fb58e0dbc8399662c0e47c76578c6e878b14f6cf/serve/server.py),
+[batching documentation](https://github.com/Niko1221/Strata/blob/fb58e0dbc8399662c0e47c76578c6e878b14f6cf/docs/BATCHING.md).
+
+The SYCL engine also implements cross-stage conversation-group pipelining:
+`generate.cpp:8828` has per-group token/position state, one in-flight group per
+stage, and a pump that starts groups on free stages. This permits GPU0 and
+GPU1 to work on different conversations. It is incremental admission and
+multi-sequence decode, but its scheduling contract is not identical to
+llama-server's continuous batching. Two concrete differences require tests:
+
+- SYCL defaults `batch_groups=1` and parses the argument with atoi (lines 594,
+  1788). Generic docs describing automatic groups are ahead of this path.
+  Use explicit `--batch 2 --batch-groups 1` as the first concurrency control,
+  then compare `--batch-groups 2`; for four slots compare groups 1 and 2.
+- The SYCL prompt routine at line 10046 returns directly into the ordinary
+  prompt pipeline when `piped` is true. That bypasses its explicit
+  between-chunk batch-decode routine. Therefore long-prompt fairness with
+  pipelined groups must be measured, not inferred from generic documentation.
+
+Allocation can reduce the slot count or disable batching if fewer than two
+slots fit. Assert the actual INFO batch_slots and server concurrency.serving,
+not just command-line intent. Slot state comes out of VRAM otherwise available
+to experts; exact cost depends on context and KV configuration.
+
+VERDICT -> Supporting 2/4 streams does not require writing a new Strata request
+scheduler. It does require qualifying existing SYCL slot state, admission,
+cancellation, request reset, model fidelity, and pipeline synchronization,
+plus the previously identified Q8/mirror work. Target two slots first and keep
+four as an explicit capacity profile; leave six unprovisioned unless a real
+need appears. Compare with llama-server at matching total/per-request context
+and actual active slots, using 1/2/4 concurrent clients. Include a late short
+request during a long prefill, cancellation/reuse, and return from two streams
+to one. Measure per-stream latency, TTFT, inter-token stalls, memory and expert
+hit rates, not only aggregate tokens/second. Until those gates pass, Strata is
+a development candidate for tiered memory serving, not the declared winner.

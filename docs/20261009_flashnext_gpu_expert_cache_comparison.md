@@ -362,3 +362,32 @@ IDs consumed by model kernels. Generation payload and strict-screen harness
 are unchanged; extra tokenizer calls can change diagnostic execution timing.
 The offline history analyzer supports new evidence and retains unknown/null
 for older captures, verified by replaying the prior OPT1 capture.
+
+## Fusion-disabled model result
+
+CONFIG -> Static OPT1, original checkpoints/batching, warmup, logging5;
+SYCL fusion0. Same model/server/runtime. Native diagnostic additionally
+records tokenizer IDs, without changing generation requests.
+
+COMMAND -> static-fusion0-history-control after full fusion0 prerequisites;
+analyze_history.py offline, F03 evidence directory.
+
+RESULT -> Strict screen still fails prose repetition. Later native three-prose
+sequence shares35 output IDs but top-five probabilities differ from token0.
+Server tokenizer IDs match exactly on all three, counts agree with terminal
+input counters, and progress remains[0,31,35]. Normal stop/removal, complete
+capture, per-card and compiled P2P0 post-health all pass, no GPU fault signature.
+
+VERDICT -> Fusion-off does not establish repeatability; new tokenizer evidence
+narrows input ambiguity but does not observe internal kernel inputs. Stop
+stacking switches: next reference diagnosis is bounded state/activation capture.
+This is a reference lane, not a commitment to llama.cpp as the final engine.
+
+User's workload is normally1 or2 streams, rarely4, at most4-6. Optimize
+latency and fairness first, not aggregate bandwidth or high-concurrency
+throughput. Strata-style shared weights/expert tiers are the development target:
+qualify nativeQ8HC, two-slot/two-group layer-pipelined serving, then dual-stage
+RAM coverage. Actual Strata slots/groups already exist, but SYCL fairness and
+resource provisioning must be measured; request slotcount can be reduced.
+N-gram/PLE NVMe with RAM cache is a candidate layout, not an assumed win over
+RAM residency. Adopt the user's Hexagon latency methodology after source audit.
