@@ -198,3 +198,29 @@ F07/serial-cancel-prefill-twocard-v6-v1.
 RESULT -> Pairlease acquired. Actual phase must be prefill, followed by nonfresh
 same and unrelated replays; pending.
 VERDICT -> No prefill-cancel isolation result yet.
+
+## Finalized prefill cancellation and nonfresh isolation
+
+CONFIG -> Frozen20/V6 pair2048/64/65536; six-request cancel_prefill_isolation
+roster, longer209-token same prompt and45-token unrelated prompt.
+COMMAND -> Parent V6 --group cancel_prefill_isolation;
+F07/serial-cancel-prefill-twocard-v6-v1.
+RESULT -> Final parent/childPASS321s. STOP sent; actualPCLphase prefill, DONEcancel
+with zero generatedtokens. Completed prompt spans establish21-row LOWER BOUND;
+partial/inflight work/state remains unobserved, not zero. Nonfresh same prompt
+reuses21/evaluates188 versus209 fresh; unrelated reuses21/evaluates24 versus45
+fresh. Three comparisons match IDs/LP20/naturalstop/full248320head/all48residuals
+bitwise (144 pairedrows max_abs0/RMSE0). Strong external exact6-record/actual
+source/request/stage/phase and terminal child audit passes.
+Native exits0/removal, strict+compiled P2P0 pre/post health, kernel gate and NEW
+all4 publisher hashes pass. No reset-only recovery substitutes for nonfresh tests.
+VERDICT -> PASS bounded real-prefill cancellation and same/unrelated observable
+cache isolation. Not whole persistent-state/fullmodel/API/concurrent/latency proof.
+
+## Exact admitted-snapshot eviction started
+
+COMMAND -> Parent V6 --group eviction; F07/serial-eviction-twocard-v6-v1.
+RESULT -> Pairlease acquired. Requires actual target admission and same observed
+snapshot instance/metadata victim before cold replay, plus512MiB/one-entry
+observed budgets.
+VERDICT -> RUNNING; global eviction count alone is insufficient.

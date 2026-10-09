@@ -9805,3 +9805,15 @@ Cancelledpartialwork/stateunobserved, not zero. Prefill isolationstarted under
 pairlease atF07/serial-cancel-prefill-twocard-v6-v1; no resultyet.
 VERDICT -> Bounded actualdecode-cancel nonfresh isolation, not reset-onlypass
 or fullmath/completecache/concurrency/latency qualification.
+
+## 2026-10-09 Prefill cancellation with same/unrelated nonfresh replay
+
+CONFIG -> Frozen20/V6 pair,209/45-token isolation prompts.
+COMMAND -> Parent cancel_prefill_isolation F07/serial-cancel-prefill-twocard-v6-v1.
+RESULT -> FinalPASS321s; actualprefill STOP/DONEcancel zerooutputs;21completed
+rows lowerbound, in-flightwork/stateunobserved. Nonfreshsame21reuse/188eval
+vs209fresh; unrelated21reuse/24eval vs45fresh. Three fullheads/all48residuals
+bitwise, IDs/LP20/naturalstop equal. Strong6-recordaudit, teardown/health/kernel
+and NEW4publisherhashes pass. ExactV6evictionstarted7136 pairlease; no resultyet.
+VERDICT -> Bounded actualprefill cancellation isolation, not reset-onlypass or
+fullmath/persistent-state/concurrency/latency qualification.
