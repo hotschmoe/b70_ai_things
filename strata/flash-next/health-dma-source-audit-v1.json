@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "CONFIG": "CPU-only audit of preserved source-page recurrence, actual health commands, immutable health/model image package/library identities; no GPU/device exposure",
+  "COMMAND": [
+    "Read F06/shard3-cache-recurrence-v1 preserved pages/receipts and corrected-C1 preparation/health/launch logs",
+    "Read strict per-card/collective health scripts and exact image PyTorch allocator headers/symbols; CPU containers with networknone and no devices",
+    "Docker event metadata for09:14:00..09:17:40UTC; current/proc FD metadata scan; read-only filesystem/extent metadata"
+  ],
+  "RESULT": {
+    "source_page": {
+      "file_device": 51,
+      "file_inode": 15212298,
+      "offset": 3857879040,
+      "in_page_offset": 2796,
+      "prior_direct_byte": 69,
+      "current_cached_byte": 101,
+      "current_direct_byte": 101,
+      "xor": 32,
+      "prior_direct_sha256": "2780fef9ce50fa1acbd4bdbf6c311b847395571fcc5e6ddb55898841fbcee90e",
+      "current_cached_direct_sha256": "6128219c4ced7dc7852371b3b0153c34b0df0529e2b1a8d6b07ba08da764fece",
+      "size_mtime_ctime_unchanged_per_parent_receipt": true
+    },
+    "interval": {
+      "prepared_good_by_UTC": "2026-10-09T09:14:39.019903Z",
+      "pre_health_finished_UTC": "2026-10-09T09:16:21.968219Z",
+      "launch_refused_UTC": "2026-10-09T09:16:22.102904Z",
+      "model_container_created": false,
+      "actual_docker_events_only_health_containers_in_interval": true
+    },
+    "health_image": {
+      "image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+      "torch": "2.13.0+xpu",
+      "torch_git": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+      "neo": "26.27.39122.11-0",
+      "igc": "2.38.2",
+      "level_zero_loader": "1.32.0",
+      "gpu_library_sha256": {
+        "/usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1": "0759d9a4beb9746f8a49c3e8f9b98376b49d04508b26827b46c0c5d40b030eb0",
+        "/usr/local/lib/libigc.so.2": "ff0cc269af1b2f843521b9207c54370fddab25caa404b1322cbdb4598452da33",
+        "/usr/local/lib/libiga64.so.2": "7ba9425b6d2138c4693e90f6b5f64eec95fe0cc861b0621b8f38e5dd658a99e6",
+        "/usr/local/lib/libigdfcl.so.2": "edd0cc3c73fee76ce156b8a8281d5a747f2634bc81a95da0ca1af9e72abd8de2"
+      },
+      "torch_ccl_sha256": {
+        "libc10_xpu.so": "2ded5a1955074652305f649e065af0daeb751e09cd72d77529dbde6d1b0d6a82",
+        "libtorch_xpu.so": "cf9c6037c6a90ec27cd010680770c4181c4943a55ceca8e9645188e6a22694e4",
+        "libccl.so.1.0": "733980ab6a6eb15d2d3da0649b92052c64a9597ced48fe9188434face5298b35"
+      },
+      "source_headers_sha256": {
+        "XPUCachingAllocator.h": "13d02fbaeceee3b9bb726442860cc4001c3d2fe67fb244d83c6089220c07c10a",
+        "PinnedMemoryAllocator.h": "a50ed829cb3960a284c2219fe7251044e5a32a3e565edb7618eb3e7598359c80"
+      },
+      "intended_model_path_mounted": false,
+      "default_image_volumes": null
+    },
+    "model_image": {
+      "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+      "neo": "26.22.38646.4-0",
+      "igc": "2.36.3",
+      "level_zero_loader": "1.28.2-1~24.04~ppa1",
+      "gpu_library_sha256": {
+        "/usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1": "8ec69150e5cb61677232aaf388a7de2e792a550b1ceefb4d3e6ff4e3f0f53a8c",
+        "/usr/local/lib/libigc.so.2": "aebe3597ade3ede16ba59d0522085579f1e70fa4f3ffd07a2a0dbbf1d2197269",
+        "/usr/local/lib/libiga64.so.2": "a0280784bb9b8fccf55357d22eab63bfa3273abcf718be9ae16455a3e0380881",
+        "/usr/local/lib/libigdfcl.so.2": "e962be41ce5ee1560064e4f3987f3def2340c1e85d8aa43b83804570fa2bc402"
+      }
+    },
+    "allocation_dma_interface_evidence": [
+      "Device caching allocator imports aligned_alloc_device, physical_mem/map, free and queue memcpy",
+      "XPU host caching allocator exposes allocate/record_event/empty_cache",
+      "libtorch_xpu imports malloc_host and queue/handler memcpy",
+      "Loaded libCCL imports malloc_device/free/queueMemcpy and exposes typed/byte memcpy kernels"
+    ],
+    "actual_allocation_dma_trace_in_interval": false,
+    "current_file_fd_scan": {
+      "accessible_matching_fds": 0,
+      "denied_entries": 656,
+      "vanished_entries": 1,
+      "historical_fds_verified": false
+    },
+    "filesystem": {
+      "mount": "/mnt/vm_8tb",
+      "source": "/dev/sdc1",
+      "type": "btrfs",
+      "options": "rw,noatime,ssd,discard=async,space_cache=v2,subvolid=5,subvol=/",
+      "file_attributes": "none reported",
+      "compression_property": "unset/no output",
+      "target_FIEMAP_extent": "41: logical930127..1057455 physical2337807616..2337934944 length127329; no encoded flag reported",
+      "scope_limit": "Metadata and read return evidence do not prove corruption origin or physical-media bypass"
+    }
+  },
+  "VERDICT": "Current source fidelity INVALID. Health/model process UMD identities differ; only health GPU workloads occurred in the bounded failed-launch interval. Intended scripts expose no model FD/write path, but source/symbol audits do not rule out allocator/driver/DMA/filesystem/storage/CPU faults. Preserve all views; no cause identified or recovery performed.",
+  "cause_proven": false,
+  "gpu_launched_by_this_audit": false,
+  "source_or_cache_modified": false
+}

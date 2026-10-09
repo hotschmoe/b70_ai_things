@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "status": "CPU/source preparation only; artifact identity currently INVALID; no GPU execution or health image/driver changes",
+  "sycl_control": {
+    "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+    "neo": "26.22.38646.4-0",
+    "igc": "2.36.3",
+    "level_zero_loader": "1.28.2-1~24.04~ppa1",
+    "source": "strata/flash-next/matched_sycl_health_control.cpp",
+    "builder": "strata/flash-next/build_matched_sycl_health.py",
+    "shape_default": 256,
+    "shape_optional_matching_torch_health": 2048,
+    "device_pattern_bytes": 16777216,
+    "device_allocation_upper_bound_bytes": 67108864,
+    "operations": "GPU deterministic exactpattern fill/copy/readback then tiledF32 A@A; finitealloutputs and9 exactrationalFP64 reference samples; normal frees",
+    "scope": "Same model process runtime, distinct pureSYCL workload; not a Torch/CCL-equivalent workload or causal UMD isolation",
+    "source_sha256": "cba921631ff1ab4aed1ee35bc80e2c8d7385b4820bc681a2ee4601f9eafc5d80",
+    "builder_sha256": "9b66d5111eec0351a538f66d70cab9c3dd08fe8a1db86df137255fea6865a47c"
+  },
+  "collective_option": {
+    "base_health_image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
+    "existing_health_neo": "26.27.39122.11-0",
+    "existing_torch": "2.13.0+xpu",
+    "source_only_recipe": "strata/flash-next/matched_health_runtime/Dockerfile",
+    "required_bundle": "Published checksum-pinned official26.22 NEO+2.36.3IGC+22.10.0GMM packages; exact matching model loader package/provenance remains unresolved",
+    "only_layer_allowed_to_change": "GPU runtime package layer; preserve Python/Torch/oneCCL/SYCL and all non-GPU package/library hashes",
+    "preflight": "Inspect local base tagID equals pinnedhealthSHA; newderived image gets separateSHA/receipt; CPU dpkg dependency and library census first; do not replace existingimage",
+    "compatibility": "UNPROVEN older GPU runtime with currentTorch/SYCL/CCL; compiled/eager two-rank health must qualify underparentlease before considering it equivalent",
+    "scope": "Potential sameTorch/CCL workload with changedGPU-runtime layer, not a demonstrated safe replacement",
+    "official_package_manifest": "strata/flash-next/matched_health_runtime/official-driver-packages-v1.json",
+    "loader_scope": "Firstcandidate preserves existinghealthloader1.32.0 (model1.28.2 differs); cannot call completeprocessruntimematched"
+  },
+  "controlled_page_observations": {
+    "required_before_any_GPU": "Preservealloldviews; parent-approved reload/recovery plusfreshprefaultedfullO_DIRECT publisherhash and matchingbufferedhash; sourcefidelity stillgated untilproven",
+    "page_offset": 3857879040,
+    "page_bytes": 4096,
+    "expected_original_page_sha256": "2780fef9ce50fa1acbd4bdbf6c311b847395571fcc5e6ddb55898841fbcee90e",
+    "expected_byte2796": 69,
+    "record_at_each_boundary": "Freshindependentbuffered+O_DIRECT pageviews, filedev/inode/size/mtime/ctime, actualcommand/image/package/library IDs and devicelease, monotonic/UTC timestamps; no implicitinvalidation or write",
+    "workload_boundaries": [
+      "CPU-only idle/control-read baseline",
+      "card0 isolated pureSYCL26.22 control",
+      "card1 isolated pureSYCL26.22 control",
+      "existing26.27 health eachcard separately, onlyifparentauthorizes controlled exposure",
+      "existingcompiled two-rank26.27 collective separately",
+      "candidate26.22 compiled collective onlyafterbuild/compatibilityqualification"
+    ],
+    "negative_controls": "CPU scanner rejects preserved0x65page, onebit-mutatedgoodpage, shortread, wrongoffset/expectedhash, inconsistentstat and staleprovenance; do not submitinvalidGPUaddresses",
+    "on_change": "Immediatelygateallmodel/GPUexperiments, preservebothviews/receipts/trace; do not renamefailurepassed orrepairautomatically",
+    "admission_contract": "strata/flash-next/health_page_control_contract.py",
+    "admission_contract_sha256": "592dd7406c6c4d8ac7c9ea32dd388ff157d7992c72bb86e28f8428ae0e083a54"
+  },
+  "cause_proven": false
+}

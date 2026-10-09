@@ -9462,3 +9462,18 @@ VERDICT -> Wrapper source checkpoint only. Full model mathematics, complete-stat
 prefix reuse, concurrency, clean latency, and shelf promotion remain unqualified.
 Evidence: strata/flash-next/qualify-serial-prefix.md and external CPU receipt
 /mnt/vm_8tb/b70/results/strata-prefix-harness-cpu-20261009/parent-wrapper-receipt.json.
+
+## 2026-10-09 Optional health-runtime source audit and preparation
+
+CONFIG -> Preserved 09:14..09:16 cached-source incident; health image NEO26.27 /
+IGC2.38.2 / loader1.32.0 versus model image NEO26.22 / IGC2.36.3 / loader1.28.2.
+COMMAND -> CPU source/image metadata review and
+python3 strata/flash-next/test_health_page_control_cpu.py.
+RESULT -> ASCII/syntax/JSON/source bindings pass; eight preserved-page negative
+controls pass. Historical invalid-source prose is retained with later restored
+four-shard and corrected C1 receipt identities appended. Optional pure-SYCL source
+and official-package derived-image recipe are prepared only; neither was built
+or run. Loader provenance, IGC byte match and Torch/CCL compatibility remain open.
+VERDICT -> No cause inference, stack replacement or matched-health qualification.
+Keep current guards and current images; optional controls remain separate source
+preparation. See strata/flash-next/health-source-preparation-review-v1.md.
