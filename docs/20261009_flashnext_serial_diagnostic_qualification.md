@@ -67,3 +67,52 @@ RESULT -> Parent acquired both leases and started pre-strict health. Output:
 /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f06-20261009/serial-basic-twocard-v1.
 VERDICT -> RUNNING; no two-card numerical result or cross-topology equivalence
 is claimed.
+
+## Finalized two-card basic and cross-topology comparison
+
+CONFIG -> Same frozen engine/V5/wrapper and exact original model, matched
+context2048/prefill64/PLE65536 FP16KV pilot. Actual physical-card split is
+card0 layers0-31, card1 layers32-47. Unlike the older8192-context C1 screen,
+this pilot reserves fewer buffers: stage0 has8897 resident and7487 RAM-mirrored
+experts,23,402,803,200 mirrored bytes; stage1 has all8192 experts resident and
+no missing experts. Placement counts are configuration-specific.
+
+COMMAND -> qualify_serial_prefix.py with two-card V5 prepared plan, --group basic
+and finalized one-card receipt; then:
+
+```bash
+python3 strata/flash-next/serial_prefix_qualification_v5.py compare-topologies \
+  --one-card /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f06-20261009/serial-basic-onecard-v1/child/report.json \
+  --two-card /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f06-20261009/serial-basic-twocard-v1/child/report.json \
+  --output /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f06-20261009/serial-basic-cross-topology-v1.json
+```
+
+RESULT -> Two-card parent/child finalized PASS, exit0,498s including lifecycle
+and fresh hashing. Three native processes exit0 and are removed. Observer
+off/on IDs and LP20 match; activation0/1 full first logits match bitwise for
+A/B/C. All48 finite first-window residuals per probe pass required32/16 stage
+coverage. Pre/post per-card strict and compiled pair P2P0 health, kernel-fault
+and owned-container gates pass. A NEW full buffered scan after child terminal
+and post-health matches all four publisher shards with unchanged stat records.
+
+CPU compare-topologies PASS across all9 process/probe pairs, enforcing matched
+source/controller/tokens/geometry/math environments. Output IDs, LP20 and natural
+finish match on every pair. Full248320 first logits are bitwise identical for
+the6 observed pairs. The3 layers-enabled pairs have all48 residuals bitwise
+identical:144 paired rows, max_abs0 and RMSE0. This is the first actual observed
+whole-layer topology comparison; activations-off residuals remain unobserved.
+
+Evidence: F06/serial-basic-twocard-v1 and
+F06/serial-basic-cross-topology-v1.json under the campaign results root.
+VERDICT -> PASS bounded two-card observer equivalence, healthy lifecycle and
+matched one/two topology internal consistency. Independent model equations,
+complete persistent-state proof, prefix-cache/concurrent/API/production capacity
+and clean latency/shelf qualification remain open.
+
+## Two-card shared-root prefix suite started
+
+CONFIG -> Same frozen two-card pilot, finalized basic/one-card prerequisites.
+COMMAND -> Parent wrapper --group root with both prerequisite child receipts.
+RESULT -> Acquired both leases and began pre-health. Result directory:
+F06/serial-root-twocard-v1.
+VERDICT -> RUNNING; cached-versus-fresh and actual reuse are not yet qualified.

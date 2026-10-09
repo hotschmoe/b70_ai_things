@@ -9526,3 +9526,19 @@ VERDICT -> Independent math remains open. Prepare a separate lazy exact-artifact
 reference; do not treat same-engine topology/cache equality or fresh llama prose
 as an authoritative mathematical oracle. See
 strata/flash-next/independent-math-reference-route-v1.md.
+
+## 2026-10-09 Finalized two-card diagnostics and whole-layer topology parity
+
+CONFIG -> Frozen corrected0018/V5, matching2048/64/65536 pilot, actual32/16
+physical split; stage0 resident8897/RAM7487, stage1 all8192 resident.
+COMMAND -> Parent two-card basic qualification, then V5 compare-topologies
+against finalized one-card report.
+RESULT -> Two-card parent+child PASS exit0,498s with all native removals, strict
+and compiled P2P0 pre/post health, kernel gate, and fresh all4 publisher hashes.
+CPU comparison PASS all9pairs: exact IDs/LP20/natural stops;6 observed full
+first-logit pairs bitwise equal;3 layers-enabled pairs all48 rows bitwise equal
+(144paired residuals, max_abs0/RMSE0). Two-card root prefix suite started under
+pair lease at F06/serial-root-twocard-v1; no prefix result yet.
+VERDICT -> Topology/observer consistency, not independent full-model math or
+complete-state prefix/concurrency/latency/shelf qualification. See
+docs/20261009_flashnext_serial_diagnostic_qualification.md.
