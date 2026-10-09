@@ -9008,3 +9008,22 @@ Cache is unnecessary for this failure; checkpoint-off alone does not fix it.
 Shape-dependent dispatch is a confound. Preserve failed evidence and investigate
 shared request state/kernel paths before any speed or shelf claim. Detailed
 records: docs/20261009_flashnext_gpu_expert_cache_comparison.md.
+
+## 2026-10-09 FlashNext Intel AutoRound INT4 source investigation
+
+CONFIG -> User requested a curiosity/research lane; UD-Q4_K_XL remains selected.
+CPU-only HF metadata/header and primary-source review; no model download or GPU
+work. Agents reviewed Intel artifact and Lumnus four-B70 implementation.
+
+COMMAND -> HF Intel/Qwen3.8-Flash-Next-W4A16-AutoRound model card/config/API,
+64KiB bounded safetensors header; Lumnus/b70-flash-next source/docs at b103e0f.
+
+RESULT -> Official Intel W4A16 tuning release exists. Reported four-task average
+BF16 0.8362 vs INT4 0.8332; no local reproduction or UD-Q4 comparison. Full
+17-shard artifact168.75193GiB includes95.36789GiB BF16 PLE tensors. Remaining
+files exceed paired VRAM before workspace. Lumnus uses4B70/256GiB RAM and
+substituted INT8 PLE from another source; exact PLE identity unverified.
+
+VERDICT -> Promising alternative for future measured offload lane, not a
+requested format switch or ready TP2 deployment. Primary evidence and quality
+limitations: docs/20261009_flashnext_autoround_int4_sources.md.
