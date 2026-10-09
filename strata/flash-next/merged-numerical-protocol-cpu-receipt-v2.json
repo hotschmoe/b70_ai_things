@@ -1,0 +1,12 @@
+{
+  "CONFIG": "actual bounded Python producer duplicates stderr FD tostdout before output; real oneOSpipe reader; synthetic UR only",
+  "COMMAND": "python3 strata/flash-next/test_merged_numerical_protocol_cpu_v2.py",
+  "RESULT": {
+    "actual_opposite_write_channels_preserved_order": true,
+    "READY_GEN_DONE_protocol_classification": true,
+    "all_request_diagnostic_classes_retained": true,
+    "canonical_single_log_owner_context_free_pass": true,
+    "reversed_and_missingfree_rejected": true
+  },
+  "VERDICT": "PASS realOSpipe transport/chronology fixture only; no GPU/lifecycle model claim"
+}

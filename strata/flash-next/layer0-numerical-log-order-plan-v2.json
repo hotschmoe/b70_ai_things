@@ -1,0 +1,23 @@
+{
+  "status": "READY frozen CPU/source v2 producerFDmerge only; actualnewGPUchronology mandatory",
+  "source_engine_plan_sha256": "5367d37727a4e3df8c53288ad96cdf22660cab4c448845a818cdd70a3197e016",
+  "files": {
+    "merged_numerical_protocol_v2.py": "6f3e5194f175987f974cf8715ccaf5315877a9dba791a4b56fdb68cd63dc9a9c",
+    "layer0_numerical_qualification_v2.py": "c9e554922cb0a3f465c68834b10d7fa2de546b3aec34eb621510909688d02654",
+    "qualify_layer0_numerical_v2.py": "8a60c351021bcce665374a5beaf6e225b923145b3a62cda4cf7124bcb4d282cc",
+    "test_merged_numerical_protocol_cpu_v2.py": "f87cf149505686e56aa9868fd0e72d8b81b1726fca44fa2132891a2a83b57b29",
+    "test_layer0_numerical_qualification_cpu_v2.py": "8740e89c7915b0382605c3f4ad29612403850385970c93562e808c5845f3e880",
+    "test_qualify_layer0_numerical_cpu_v2.py": "f9d0625e48a855dd8616f1e6b22850e1f808396c493c8da13a3fb56a97de7aa4",
+    "merged-numerical-protocol-cpu-receipt-v2.json": "063a3998a0f3b9fc457a31ee62cbc5c7a7396b45e850b27add8dd80be72e9f62",
+    "layer0-numerical-orchestration-cpu-receipt-v2.json": "5a1a41440c411587d09e7062e451eda167f548aa4ac7af5bf0f9e550651a38ed",
+    "layer0-parent-orchestration-cpu-receipt-v2.json": "1034c9c99052416a7636df7dae8904a949a28bdf7db9c19cac54a36423c61b75",
+    "layer0-log-order-genuine-positive-prepare-v2.json": "fdf995f5e2fb0e85d9e19b0f2791a3a2359bd966a5d76d4966a4747469058ce5",
+    "layer0-numerical-log-order-v2.md": "a029f331baddfad291b831e912ecd93a6dfcff18689da60fd386a44d0c69a700"
+  },
+  "producer_merge_before_any_emit": "container exec2>&1 before engineexec; host stderrSTDOUT onepipe/reader",
+  "canonical_log": "engine.combined.log",
+  "old_v1_frozen_unchanged": true,
+  "failed_actual_v1_run_preserved": "F08/layer0-numerical-onecard-v1",
+  "full_model_math_qualified": false,
+  "no_gpu_by_agent": true
+}

@@ -9951,3 +9951,22 @@ NMSE3.018986267244434e-14/maxnorm3.5706573414878165e-7, unchangedlimits.
 VERDICT -> Preservefailure andvalidboundedmath, not overallqualification.
 Newversion collector orderedproducer stream required; no mathflag/tolerance
 changes. Raw7producerfields/fullGDN/MoE/ownstate/fullmodel remainopen.
+
+
+## 2026-10-09 - Ordered numerical collector v2 checkpoint
+
+CONFIG -> Keep frozen20/21 engines, original model shards, math flags and failed
+v1 numerical evidence. Change host collection only: producer FD2 joins FD1
+before engine startup, one reader saves canonical engine.combined.log.
+
+COMMAND -> Independently run test_merged_numerical_protocol_cpu_v2.py,
+test_layer0_numerical_qualification_cpu_v2.py and
+test_qualify_layer0_numerical_cpu_v2.py; verify all11 source freeze hashes and
+genuine one/pair v2 plan hashes; review actual launch and parent audit paths.
+
+RESULT -> All3 CPU checks PASS, freeze/plan hashes PASS. Real OS producer fixture
+preserves allocation/owner/free order; reversed order and missing free reject.
+Parent audits the canonical stream. No GPU run by these CPU checks.
+
+VERDICT -> Commit reviewed collector before new one-card GPU rerun. Failed v1
+remains failed; full-model math, concurrent serving and shelf remain unqualified.
