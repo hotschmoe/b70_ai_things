@@ -28,6 +28,7 @@ def record_supervisor_exit(out, result, code):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--prepared', type=Path, required=True)
+    p.add_argument('--one-card-receipt', type=Path, help='Matched completed one-card qualification for two-card launch')
     p.add_argument('--leased', action='store_true')
     a = p.parse_args()
     if not a.leased:
@@ -75,8 +76,11 @@ def main():
     try:
         pre = health('pre')
         with (out / 'launch-supervisor.log').open('w') as log:
-            child = subprocess.Popen([sys.executable, str(ctrl), 'launch', '--prepared', str(out), '--pre-health', str(pre),
-                                      '--ready-deadline', '600', '--max-runtime', '1000'], stdout=log, stderr=subprocess.STDOUT, pass_fds=(8, 9))
+            launch_cmd = [sys.executable, str(ctrl), 'launch', '--prepared', str(out), '--pre-health', str(pre),
+                          '--ready-deadline', '600', '--max-runtime', '1000']
+            if a.one_card_receipt:
+                launch_cmd += ['--one-card-receipt', str(a.one_card_receipt.resolve())]
+            child = subprocess.Popen(launch_cmd, stdout=log, stderr=subprocess.STDOUT, pass_fds=(8, 9))
             deadline = time.monotonic() + 620
             while True:
                 faults()

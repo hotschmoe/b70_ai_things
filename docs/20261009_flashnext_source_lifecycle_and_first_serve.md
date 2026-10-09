@@ -137,3 +137,41 @@ VERDICT -> Full segmented host capacity/readiness and constrained answers are
 observed, beyond primitive-only results. Corrected tracing and serialized stop
 need a fresh bounded qualification. No raw full-logit/state or prefix/concurrent
 qualification exists yet, and no shelf or production latency claim follows.
+
+## Corrected one-card screen and first two-card placement
+
+CONFIG -> Same generation6/model/runtime, corrected EOS tracing and serialized
+stop; new prepared directories preserve the failed earlier screen.
+COMMAND -> C1onecardsegv2 then C1twocardsegv1 with its matched one-card receipt.
+RESULT -> One-card API identity/rendered IDs/consumed counts/greedy output repeats
+and all six constrained answers pass. Native engine and launch supervisor both
+exit0; removal and strict/compiled P2P0 post-health pass. The qualification
+explicitly leaves full model fidelity/concurrency/shelf false.
+
+Two-card layer32 split reaches readiness and complete placement:17041 resident
+experts,7535 stage0 RAM experts in23,557,120,000B, and zero missing stage1 experts.
+Stage0 owns layers0..31 and stage1 layers32..47. The first request fails before
+qualified responses: stage1's verifier mirror binding rejects its queue/residency
+association after stage0's two-token capture. Exception unwinding also reports
+UR_RESULT_ERROR_UNINITIALIZED37. Containers are removed, strict per-card and
+compiled P2P0 post-health pass; no hardware wedge is inferred.
+
+Source audit localizes a construction-time default queue pointer in the SYCL
+Verifier explicit-stream field. GpuStage's verifier is constructed under GPU0,
+then initialized under GPU1; the old pointer is mistaken for an explicitly
+supplied GPU0 stream. The ownership guard rejects it correctly. The planned fix
+retains that guard and makes default-stream selection depend on init ownership.
+Full source correction/capture/lifecycle and two-card inference remain unproven.
+
+After the crashed multi-GPU attempt, bin/xe-reset rebinds both endpoints without
+reboot, followed by explicit pinned strict health and compiled P2P0 health.
+Both pass and kernel7.1.0-070100-generic is unchanged. Reset's built-in health is
+skipped because this workflow runs the pinned probes explicitly under the same
+pair lease; recovery does not repair the source queue binding.
+
+VERDICT -> Bounded one-card screen/lifecycle passes; two-card placement loads but
+serving fails its ownership gate. Source queue correction is required before a
+retry. Full logits/state/prefix/concurrency/latency/shelf requirements stay open.
+Raw records: F06/c1-onecard-segmented-prepared-v2/qualification.json,
+c1-twocard-segmented-prepared-v1/parent-qualification.json and
+twocard-crash-rebind-v1/receipt.json.

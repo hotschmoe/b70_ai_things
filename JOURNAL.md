@@ -9356,3 +9356,27 @@ CPU16negative/race casespass. Newpreparedv2 launched; actualrerunpending.
 VERDICT -> Fullnewsourcegenerationbuilds; originalartifact identitystillvalid.
 Actualfullmodelstate/logit/cache/concurrent/latency/shelf qualificationspending.
 PriorfailedC1 remainsfailed, notretroactivelypromoted. Goalactive.
+
+## 2026-10-09 Bounded one-card C1 passes; two-card stream ownership localized
+
+CONFIG -> Exactmodel/sourceenginev6; correctedtracer/serializedstop; two-card
+layer32split followsmatchedonecardqualification. No driver/kernelchange.
+COMMAND -> C1onecardsegv2, C1twocardsegv1 withmatchedreceipt, bin/xe-resetrebind
+underpairlease plusexplicitpinnedstrict/compiledP2P0health.
+RESULT -> Correctedonecard screen passes all6answers/transport/counts/repeatIDs,
+native+supervisorexit0/removal/health; explicitlynotfullfidelityorconcurrency.
+Twocardcompleteplacementloads:17041resident+7535RAM experts23557120000B in
+stage0,layers0..31; stage1layers32..47all8192resident/missing0. Readybutfirst
+requestfailsmirrorqueue/residencyguard afterstage0T2capture; unwindingUR37.
+Poststrict/compiledhealthpass,nofaultsignature; processremoved. Sourceaudit
+finds SYCLVerifierext_stream_ storesGPU0defaultqueue atconstruction, thenGPU1
+initmistakesitfor explicitsuppliedqueue. Guardretaintoexposecontext/ownership
+errors. New0018sourcefix+capturequalificationpending, nofullmodelresponses.
+Rebindbothendpoints/explicitpinnedhealth passeswithoutreboot,kernel7.1same.
+Combinedobserver/prefixenginev3alreadybuildspass; itsfull390oraclelinkedpass,
+GPUupload/newfullstatebasicyetpending. Serialharnessv2requires0017+matching
+newenginegate; trackedpromptfixture replacesgitignore-hiddenfilename with
+identicalbytes. OnecardpostGPUall4hashrefreshpreviouslymatchespublisher.
+VERDICT -> Onecardscreenqualifiedonlyboundedscope; realtwoGPUsourcebugnow
+localized. Recoveryhealthdoesnotfixsource. Fullgoalactive, allremainingmodel/
+cache/concurrent/latency/shelf gatesopen, userdirty1043journallinespreserved.
