@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "scope": "Frozen sources used by actual firstservable v6 C1 run; preserve EOS-tracer and owned-stop race failures",
+  "files": {
+    "c1_serve_controller.py": "ecda7eaeb33651dff486116b22ab8c4fc9166690d28a985adfd956b9247368aa",
+    "c1_api_trace.py": "85e8dc9dbce08d00aab3092125318d39d45010babc80f2a56c418f08de783703",
+    "qualify_c1_serving.py": "cc3cbdd42e76bdce374d8a9e8308ac0c7ed497ce300a13a1fba9eead76088ad1",
+    "native-c1-serving-controller.md": "a24cf5b8fca3bdf77db27c1736a8653f1a636b481ce917e9e8c5f280dc3ed251",
+    "test_c1_controller_cpu.py": "1dcc0c561c52bc04833db057255fc69038cd512d9fa7deb9ae40c3dcdf491d98"
+  },
+  "actual_run": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f06-20261009/c1-onecard-segmented-prepared-v1",
+  "actual_receipts_rewritten": false
+}

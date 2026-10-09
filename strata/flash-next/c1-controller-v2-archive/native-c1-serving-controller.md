@@ -87,39 +87,3 @@ standalone --tokens/--max-new1/--dump-logits route for separate matched teacher
 forcing; do not claim HTTP text as full-logit/state parity. Concurrent serving,
 complete model fidelity, long-context behavior and shelf promotion remain later
 gates, regardless of a passing C1 screen and healthy lifecycle.
-
-The first actual segmented v6 model run reached readiness with49 host segments,
-16484 missing experts mirrored in51660083200 bytes, and8092 resident experts.
-All six constrained replies were correct and repeated raw IDs matched; native
-engine_close exit0 and parent pre/post-health passed. Its screen remains failed:
-the former tracer classified normal EOS GeneratorExit as an error, and its
-launch supervisor raced explicit container removal. Those receipts are preserved.
-Source snapshots used by that run are frozen in c1-controller-v2-archive.
-
-The next controller generation derives EOS only from the pinned tokenizer export,
-verifies its artifact hash, and records each actual _parse_done observation with
-a per-request sequence. Closing the outer generator explicitly drains the real
-iterator before completion accounting. GeneratorExit counts as normal only with
-fresh current-call DONE, full consumed prompt, matching generated count, no
-cancellation, finish=stop and the final pinned EOS with no earlier EOS. Missing or
-stale DONE, truncation, unknown stop tokens, length-driven close, cancellation and
-reader/drain failures still fail. Natural exhaustion also requires fresh complete
-DONE. These checks alter tracing only, not model tokens, sampling or state.
-
-Stop requests, inspection, terminal-state capture, removal and receipt publication
-now share a per-prepared-run fcntl lock. The supervisor reads under that same lock,
-so it cannot confuse removal-in-progress with unexpected disappearance. A stop
-request alone proves no termination: cleanup must complete and the actual native
-child must exit0. The parent qualifier records launch-supervisor-exit.json from
-Popen.wait and rejects every nonzero/unknown supervisor exit. Finalize requires
-that independent exit record, the supervisor success receipt, clean native/API
-exit, removal and post-health. Forced or missing native exit cannot qualify.
-
-A new prepared manifest is mandatory after these source changes. It binds the
-controller/tracer plus c1_trace_contract.py, mounted read-only beside the tracer.
-CPU tests exercised the actual wrapper with protocol stubs (nine EOS/completion
-cases), the exact removal-before-publication race with two stoppers and a
-supervisor, native exit failures and raw supervisor exit controls. All16 checks
-passed; the existing full390/segmented-profile CPU suite also passed. This is
-controller validation only. A fresh actual C1 rerun must establish corrected
-screen/lifecycle success; earlier failed receipts are not reclassified as passing.

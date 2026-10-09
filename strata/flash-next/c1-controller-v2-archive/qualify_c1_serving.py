@@ -15,16 +15,6 @@ ROOT = Path(__file__).resolve().parents[2]
 HEALTH = 'sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067'
 
 
-
-def record_supervisor_exit(out, result, code):
-    receipt = {'schema': 1, 'return_code': code, 'observed_epoch': time.time(),
-        'parent_pid': os.getpid(), 'passed': type(code) is int and code == 0}
-    (out / 'launch-supervisor-exit.json').write_text(json.dumps(receipt, indent=2) + '\n')
-    result['launch_supervisor_exit_code'] = code
-    if not receipt['passed']:
-        result['supervisor_error'] = 'Launch supervisor exited unexpectedly: ' + str(code)
-    return receipt
-
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--prepared', type=Path, required=True)
@@ -100,12 +90,10 @@ def main():
         if child is not None:
             try:
                 child.wait(timeout=120)
-                record_supervisor_exit(out, result, child.returncode)
             except subprocess.TimeoutExpired:
                 # Keep lease while the owned serving supervisor/container is live.
                 child.terminate()
                 child.wait()
-                record_supervisor_exit(out, result, child.returncode)
                 result['supervisor_error'] = 'Supervisor needed termination'
         if (out / 'launch.json').exists():
             name = json.loads((out / 'launch.json').read_text())['container']

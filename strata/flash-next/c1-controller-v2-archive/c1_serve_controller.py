@@ -5,8 +5,6 @@ The parent owns leases, pre/post-health and recovery. Launch stays foreground
 until the owned container has stopped and been removed. No shelf promotion.
 """
 import argparse
-import contextlib
-import fcntl
 import hashlib
 import json
 import os
@@ -19,7 +17,6 @@ import subprocess
 import sys
 import time
 import urllib.request
-from c1_trace_contract import trace_end_accepted
 
 REPO = Path(__file__).resolve().parents[2]
 BASE_IMAGE = 'sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7'
@@ -295,7 +292,7 @@ def prepare(a):
         'runtime_receipt_sha256': sha(a.runtime_receipt) if a.runtime_receipt else None, 'runtime': runtime_receipt,
         'upload_lifecycle': lifecycle, 'registry_sha256': sha(registry), 'alias': profile['alias'], 'port': a.port,
         'artifact_manifest_sha256': sha(a.output / 'artifact-identity.json'), 'config_sha256': sha(a.output / 'server-config.json'),
-        'trace_contract_sha256': sha(REPO / 'strata/flash-next/c1_trace_contract.py'), 'controller_sha256': sha(Path(__file__)), 'trace_sha256': sha(REPO / 'strata/flash-next/c1_api_trace.py'),
+        'controller_sha256': sha(Path(__file__)), 'trace_sha256': sha(REPO / 'strata/flash-next/c1_api_trace.py'),
         'full_logits_supported_over_http': False, 'state_hash_enabled': False, 'prefix_state_qualified': False,
         'one_card_required_before_pair': True}
     write(a.output / 'prepared.json', report)
@@ -305,7 +302,6 @@ def prepare(a):
 def validate_prepared(directory):
     m = read(directory / 'prepared.json')
     require(m['launch_allowed'], 'Preparation has unresolved runtime/model/upload lifecycle gates')
-    require(m.get('trace_contract_sha256') == sha(REPO / 'strata/flash-next/c1_trace_contract.py'), 'C1 completion contract changed or older prepared generation')
     require(m['controller_sha256'] == sha(Path(__file__)) and m['trace_sha256'] == sha(REPO / 'strata/flash-next/c1_api_trace.py'), 'Qualification controller/tracer changed')
     require(sha(m['engine_receipt']) == m['engine_receipt_sha256'] and sha(m['executable']) == m['executable_sha256'], 'Engine build generation changed')
     require(sha(m['pack_receipt']) == m['pack_receipt_sha256'], 'Pack receipt changed')
@@ -337,95 +333,25 @@ def inspected(name):
     return json.loads(subprocess.check_output(['docker', 'inspect', name], text=True, timeout=20))[0]
 
 
-@contextlib.contextmanager
-def stop_lock(directory, timeout=120):
-    # The same prepared-run inode lock covers request publication, inspection,
-    # stop, terminal state, removal and receipt publication across processes.
-    with (directory / 'stop.lock').open('a') as lock:
-        deadline = time.monotonic() + timeout
-        while True:
-            try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                require(time.monotonic() < deadline, 'Prepared-run stop lock deadline exceeded')
-                time.sleep(0.05)
-        try:
-            yield
-        finally:
-            fcntl.flock(lock, fcntl.LOCK_UN)
-
-
-def absent(name):
-    return not subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'name=^/' + name + '$'], timeout=20).strip()
-
-
-def native_close_proven(directory):
-    path = directory / 'engine-token-trace.jsonl'
-    if not path.is_file():
-        return False
-    rows = [json.loads(line) for line in path.read_text().splitlines()]
-    begins = {row['engine_pid'] for row in rows if row['kind'] == 'engine_begin'}
-    closes = [row for row in rows if row['kind'] == 'engine_close']
-    # A ready engine may be stopped before its first GEN. Its actual traced
-    # child close can prove teardown, while a missing screen still cannot
-    # qualify serving. A null/unloaded child is never sufficient evidence.
-    pids = begins or {row['engine_pid'] for row in closes if type(row.get('engine_pid')) is int and row['engine_pid'] > 0}
-    return bool(pids) and all(any(row['engine_pid'] == pid and row.get('clean_exit') is True and row.get('exit_code') == 0 and row.get('error') is None for row in closes) for pid in pids)
-
-
-def stop_receipt_checked(directory):
-    prior = read(directory / 'stop.json')
-    launch_state = read(directory / 'launch.json')
-    require(prior['container'] == launch_state['container'] and prior['prepared_sha256'] == launch_state['prepared_sha256'], 'Stop receipt belongs to another run')
-    require(prior['removed'] and absent(prior['container']), 'Previously removed container is live again')
-    return prior
-
-
-def poll_owned_run(directory):
-    with stop_lock(directory):
-        if (directory / 'stop.json').exists():
-            return {'stopped': True, 'receipt': stop_receipt_checked(directory)}
-        if (directory / 'stop-request.json').exists():
-            # A request alone is not proof of termination. The caller must
-            # resume bounded cleanup and obtain actual terminal/native evidence.
-            return {'stop_requested': True}
-        state = read(directory / 'launch.json')
-        info = inspected(state['container'])
-        require(info['Config']['Labels'].get('b70.c1.prepared') == state['prepared_sha256'], 'Owned container label changed')
-        return {'state': info['State']}
-
-
 def owned_stop(directory, grace=75):
-    with stop_lock(directory):
-        if (directory / 'stop.json').exists():
-            return stop_receipt_checked(directory)
-        state = read(directory / 'launch.json')
-        name = state['container']
-        info = inspected(name)
-        require(info['Config']['Labels'].get('b70.c1.prepared') == state['prepared_sha256'], 'Refusing to stop a container not owned by this prepared run')
-        write(directory / 'stop-request.json', {'container': name, 'prepared_sha256': state['prepared_sha256'],
-            'requested_epoch': time.time(), 'requester_pid': os.getpid()})
-        if info['State']['Running']:
-            run(['docker', 'stop', '--time', str(grace), name], timeout=grace+30, stdout=subprocess.DEVNULL)
-        terminal = inspected(name)['State']
-        require(not terminal['Running'], 'Owned container remained live after bounded stop')
-        with (directory / 'server-container.log').open('w') as log:
-            run(['docker', 'logs', name], stdout=log, stderr=subprocess.STDOUT)
-        native_error = None
-        try:
-            native_clean = native_close_proven(directory)
-        except (OSError, ValueError, KeyError) as error:
-            native_clean = False
-            native_error = str(error)
-        run(['docker', 'rm', name], stdout=subprocess.DEVNULL)
-        require(absent(name), 'Container removal could not be verified')
-        result = {'container': name, 'prepared_sha256': state['prepared_sha256'], 'terminal': terminal,
-            'removed': True, 'finished_epoch': time.time(),
-            'clean_exit': terminal['ExitCode'] == 0 and not terminal.get('OOMKilled'),
-            'engine_clean_exit_proven': native_clean, 'engine_close_trace_error': native_error, 'post_health_proven': False}
-        write(directory / 'stop.json', result)
-        return result
+    if (directory / 'stop.json').exists():
+        prior = read(directory / 'stop.json')
+        require(prior['removed'] and not subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'name=^/' + prior['container'] + '$'], timeout=20).strip(), 'Previously removed container is live again')
+        return
+    state = read(directory / 'launch.json')
+    name = state['container']
+    info = inspected(name)
+    require(info['Config']['Labels'].get('b70.c1.prepared') == state['prepared_sha256'], 'Refusing to stop a container not owned by this prepared run')
+    if info['State']['Running']:
+        run(['docker', 'stop', '--time', str(grace), name], timeout=grace+30, stdout=subprocess.DEVNULL)
+    terminal = inspected(name)['State']
+    require(not terminal['Running'], 'Owned container remained live after bounded stop')
+    with (directory / 'server-container.log').open('w') as log:
+        run(['docker', 'logs', name], stdout=log, stderr=subprocess.STDOUT)
+    run(['docker', 'rm', name], stdout=subprocess.DEVNULL)
+    require(not subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'name=^/' + name + '$'], timeout=20).strip(), 'Container removal could not be verified')
+    write(directory / 'stop.json', {'container': name, 'terminal': terminal, 'removed': True, 'finished_epoch': time.time(),
+        'clean_exit': terminal['ExitCode'] == 0 and not terminal.get('OOMKilled'), 'engine_clean_exit_proven': False, 'post_health_proven': False})
 
 
 def launch(a):
@@ -451,8 +377,7 @@ def launch(a):
         '-e', 'B70_C1_TRACE=/results/engine-token-trace.jsonl', '-v', str(Path(m['executable']).parent) + ':/build:ro',
         '-v', m['source'] + ':/src:ro', '-v', m['pack'] + ':/pack:ro',
         '-v', str(REPO / read(REPO / 'strata/flash-next/model-lock.json')['destination']) + ':/model:ro',
-        '-v', str(directory) + ':/results', '-v', str(REPO / 'strata/flash-next/c1_api_trace.py') + ':/controller/trace.py:ro',
-        '-v', str(REPO / 'strata/flash-next/c1_trace_contract.py') + ':/controller/c1_trace_contract.py:ro']
+        '-v', str(directory) + ':/results', '-v', str(REPO / 'strata/flash-next/c1_api_trace.py') + ':/controller/trace.py:ro']
     command += [m['runtime']['image'], 'source /opt/intel/oneapi/setvars.sh >/dev/null 2>&1; exec /opt/b70-c1-python/bin/python /controller/trace.py --engine strata --config /results/server-config.json --host 127.0.0.1 --port ' + str(m['port'])]
     write(directory / 'launch.command.json', command)
     require(not (directory / 'launch.json').exists(), 'Prepared run was already launched; create a new result directory')
@@ -469,14 +394,9 @@ def launch(a):
         ready = False
         while not stopping and time.monotonic()-start < a.max_runtime:
             original_page_sentinel(m['model_shards'])
-            observation = poll_owned_run(directory)
-            if observation.get('stop_requested'):
-                owned_stop(directory)
-                observation = poll_owned_run(directory)
-            if observation.get('stopped'):
-                require(observation['receipt']['clean_exit'] and observation['receipt']['engine_clean_exit_proven'], 'Externally requested stop lacked clean API/native termination')
+            if (directory / 'stop.json').exists():
                 break
-            state = observation['state']
+            state = inspected(name)['State']
             require(state['Running'] and not state.get('OOMKilled'), 'Serving container exited or was OOM killed')
             if not ready:
                 require(time.monotonic()-start <= a.ready_deadline, 'Engine/API readiness deadline exceeded')
@@ -492,11 +412,9 @@ def launch(a):
             time.sleep(1)
         require(ready, 'Serving run ended before readiness')
     finally:
-        # Always enter the serialized stop path. An unlocked absence check can
-        # observe removal before another stopper publishes its terminal receipt.
-        stopped_run = owned_stop(directory)
-        require(stopped_run['clean_exit'] and stopped_run['engine_clean_exit_proven'], 'Serving cleanup lacked clean API/native exit')
-    write(directory / 'launch-supervisor.json', {'passed': True, 'container': name, 'actual_native_exit_checked': True, 'finished_epoch': time.time()})
+        found = subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'name=^/' + name + '$'], timeout=20).strip()
+        if found:
+            owned_stop(directory)
     print(json.dumps({'run': str(directory), 'stopped': True, 'parent_post_health_required': True}))
 
 
@@ -545,7 +463,7 @@ def screen(a):
     ends = [r for r in trace if r['kind'] == 'engine_end']
     transport = len(begins) == len(ends) == 6 and {r['call'] for r in begins} == {r['call'] for r in ends}
     transport = transport and all(r['rendered_matches_submitted'] and r['embeddings'] is None for r in begins)
-    transport = transport and all(trace_end_accepted(r) for r in ends)
+    transport = transport and all(r['full_prompt_consumed'] and not r['cancelled'] and r['error'] is None and r['generated_ids'] for r in ends)
     one_engine = len({r['engine_pid'] for r in begins + ends}) == 1
     repeat = transport and begins[0]['submitted_ids'] == begins[4]['submitted_ids'] and begins[2]['submitted_ids'] == begins[5]['submitted_ids'] and ends[0]['generated_ids'] == ends[4]['generated_ids'] and ends[2]['generated_ids'] == ends[5]['generated_ids']
     for first, again in [(0, 4), (2, 5)]:
@@ -566,10 +484,7 @@ def finalize(a):
     directory = a.prepared.resolve()
     m, test, stop, health = read(directory / 'prepared.json'), read(directory / 'screen.json'), read(directory / 'stop.json'), read(a.post_health)
     require(original_page_sentinel(m['model_shards']) == m['source_page_sentinel'], 'Known source page sentinel changed after teardown')
-    supervisor = read(directory / 'launch-supervisor-exit.json')
-    require(type(supervisor.get('return_code')) is int and supervisor['return_code'] == 0 and supervisor.get('passed') is True, 'Parent did not observe a zero-exit launch supervisor')
-    require(read(directory / 'launch-supervisor.json').get('passed') is True, 'Launch supervisor did not publish successful owned-stop evidence')
-    require(stop.get('removed') and stop.get('clean_exit') and stop.get('engine_clean_exit_proven'), 'Server/container did not stop cleanly')
+    require(stop.get('removed') and stop.get('clean_exit'), 'Server/container did not stop cleanly')
     require(health.get('passed') is True and set(m['cards']) <= set(health.get('cards', [])) and health.get('finished_epoch', 0) >= stop['finished_epoch'], 'Matched post-health is absent or predates teardown')
     require(health.get('files'), 'Post-health has no command/log artifacts')
     for row in health['files']:
@@ -584,7 +499,7 @@ def finalize(a):
     report = {'scope': 'Completed C1 screen and lifecycle; full model numerical/state/concurrent qualification outstanding',
         'profile': m['profile'], 'engine_receipt_sha256': m['engine_receipt_sha256'],
         'screen_sha256': sha(directory / 'screen.json'), 'stop_sha256': sha(directory / 'stop.json'),
-        'launch_supervisor_exit_sha256': sha(directory / 'launch-supervisor-exit.json'), 'post_health_sha256': sha(a.post_health), 'teardown_passed': destroyed, 'post_health_passed': True,
+        'post_health_sha256': sha(a.post_health), 'teardown_passed': destroyed, 'post_health_passed': True,
         'passed': bool(test['passed'] and destroyed), 'full_model_fidelity_qualified': False,
         'concurrent_serving_qualified': False, 'shelf_promotion_allowed': False}
     write(directory / 'qualification.json', report)
@@ -611,9 +526,7 @@ def main():
     elif a.action == 'launch':launch(a)
     elif a.action == 'screen':screen(a)
     elif a.action == 'finalize':finalize(a)
-    else:
-        stopped_run = owned_stop(a.prepared.resolve())
-        require(stopped_run['clean_exit'] and stopped_run['engine_clean_exit_proven'], 'Owned stop completed without a clean actual native/API exit')
+    else:owned_stop(a.prepared.resolve())
 
 
 if __name__ == '__main__':
