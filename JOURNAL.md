@@ -10415,3 +10415,24 @@ VERDICT -> Scopedonecardcapture/equivalence/conditionalconsumer proof only;
 rawhidden/individualdown/ownstate/fullmodelmath/cache/concurrency/latency/shelf
 unqualified. GenuineV8pairprepPASS; pairexecutionnext withmatchedone receipt.
 See docs/20261009_flashnext_import28_numerical_onecard_v8.md.
+
+
+## 2026-10-09 - Integrated serving gates and owned local QSA source
+
+CONFIG -> Newintegrated60/24headers/eighttargets/sixPython C1controller/parent7
+withcanonical5stats/uploadV2/finalpost4/twopages/strongsourceproof, default
+batch0/cacheflagsOFF. IndependentQSA lane suppliedlayerinput butownedhistory.
+
+COMMAND -> Independently run combinedV7 CPU61controls andQSA15synthetic tests;
+verifysource/headerinventory/frozenreference/implementation SHA receipts.
+
+RESULT -> CPUcontrols PASS. Newserving generation rejectsoldSDK/proof before
+modelscan; no genuinepreparation/runtime. QSA ownFP16KV/4cellpool/tail/dead/
+spare/blkpos/RoPE/causal2051selection/headdivision andcheckpoint replay/order
+negativecontrols pass;64/65 history boundary isnotpool64. Existingsource
+resetidxmetadata omission explicitlyretained, notmasked. Noactualweights/
+GPU/SDKbyagents. No nativeintrinsic/topk/FMA exactness ornewtolerance inferred.
+
+VERDICT -> Sourcecheckpoint only. IntegratedfreshSDK/source390/C1/2/4/6 cache/
+freshpin/migration andfulloriginalmodelmath remainrequired. Actualpaired33
+numerical8 GPU25190currentlylive; no prooftransfer or shelfpromotion.

@@ -1,0 +1,1318 @@
+{
+  "schema": 1,
+  "scope": "CPU source/synthetic conditional owned QSA history/selection; no original weights/runtime",
+  "files": {
+    "qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "test_qsa_owned_state_storage_v1.py": "72d96bfbbd8f0f58ed77ccf7f3a668777eb33ddb1081ed19f0adb16ca34c9edf",
+    "qsa-owned-state-storage-v1.md": "c23abd2b11b00719a949ef4602079450cfb92be23f60d38f84320fdb3c98596f"
+  },
+  "frozen_dependency_sha256": {
+    "original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714"
+  },
+  "source_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T161219Z-n_v8o9lp/source",
+  "source_sha256": {
+    "include/strata/kernels/qsa.hpp": "87c02222284f842fcecb46a422b119af769c72c3914edc8da5b2ee782456dc74",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "sycl/src/core/conversation_state.cpp": "95e8faff15f3f36d3db0caf1e1a08f28302dc449286b6c2a93896466934cfbab",
+    "sycl/src/core/session.cpp": "0b3127b430156138fc251427bbc7ecf2c7a4ad1a1294879e2daf6eddefbb70fb",
+    "sycl/src/kernels/cuda/qsa.dp.cpp": "86a7f5499ba249d526d8b14158626cc9c9ce32d1a4b9bfb8716192bebd8b17ca",
+    "sycl/src/kernels/cuda/qsa_select.dp.cpp": "7e6b4fc21cc37c4bd6f7a24dee6572423917658812fe4f6856565f95993287e1",
+    "sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp": "39185e707d42c844880488aa6e6c5e9ceafaeb0feef7f6b50fd4c7fa8517da36",
+    "sycl/src/kernels/cuda/native_qsa_score.dp.cpp": "b86744e4b11f47d064ae7a51925a6ae547cc3622f40e7a911965628f2bd6c1cf",
+    "sycl/src/kernels/cuda/native_rope.dp.cpp": "009092009b6e880f332151606de1ba27fb69e370abcc4c6dd36011d01cebc38c",
+    "sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7",
+    "sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde",
+    "sycl/src/prefill/gemm.dp.cpp": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584"
+  },
+  "inventory": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/current-gguf-inventory.json",
+  "inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+  "header_only_roles": [
+    {
+      "name": "blk.3.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 35645282208,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.3.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 35646674848,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.3.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 35646675872,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.3.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 35663387552,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.3.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 35696810912,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.3.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 35696811936,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.3.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 37295880096,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.3.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 37295880608,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.3.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 37296535968,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.3.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 37296536480,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.7.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 42541600288,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.7.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 42542992928,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.7.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 42542993952,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.7.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 42559705632,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.7.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 42593128992,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.7.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 42593130016,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.7.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 44192198176,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.7.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 44192198688,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.7.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 44192854048,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.7.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 44192854560,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.11.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 49175774368,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.11.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 49177167008,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.11.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 49177168032,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.11.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 49193879712,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.11.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 49227303072,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.11.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "absolute_offset": 49227304096,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.11.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 966837184,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.11.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 966837696,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.11.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 967493056,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.11.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 967493568,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.15.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 5950413376,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.15.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 5951806016,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.15.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 5951807040,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.15.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 5968518720,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.15.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 6001942080,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.15.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 6001943104,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.15.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 7601011264,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.15.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 7601011776,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.15.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 7601667136,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.15.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 7601667648,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.19.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 12584587456,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.19.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 12585980096,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.19.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 12585981120,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.19.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 12602692800,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.19.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 12636116160,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.19.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 12636117184,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.19.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 14235185344,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.19.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 14235185856,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.19.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 14235841216,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.19.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 14235841728,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.23.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 19218761536,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.23.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 19220154176,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.23.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 19220155200,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.23.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 19236866880,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.23.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 19270290240,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.23.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 19270291264,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.23.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 20869359424,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.23.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 20869359936,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.23.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 20870015296,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.23.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 20870015808,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.27.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 25852935616,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.27.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 25854328256,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.27.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 25854329280,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.27.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 25871040960,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.27.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 25904464320,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.27.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 25904465344,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.27.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 27503533504,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.27.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 27503534016,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.27.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 27504189376,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.27.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 27504189888,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.31.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 32749253696,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.31.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 32750646336,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.31.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 32750647360,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.31.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 32767359040,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.31.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 32800782400,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.31.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 32800783424,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.31.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 34399851584,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.31.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 34399852096,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.31.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 34400507456,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.31.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 34400507968,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.35.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 39383427776,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.35.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 39384820416,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.35.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 39384821440,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.35.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 39401533120,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.35.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 39434956480,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.35.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 39434957504,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.35.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 41034025664,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.35.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 41034026176,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.35.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 41034681536,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.35.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 41034682048,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.39.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 46017601856,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.39.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 46018994496,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.39.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 46018995520,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.39.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 46035707200,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.39.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 46069130560,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.39.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 46069131584,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.39.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 47668199744,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.39.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 47668200256,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.39.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 47668855616,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.39.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "absolute_offset": 47668856128,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.43.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 3275645728,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.43.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 3277038368,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.43.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 3277039392,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.43.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 3293751072,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.43.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 3327174432,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.43.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 3327175456,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.43.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 4926243616,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.43.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 4926244128,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.43.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 4926899488,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.43.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 4926900000,
+      "packed_bytes": 2621440
+    },
+    {
+      "name": "blk.47.attn_k.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 10171963808,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.47.attn_k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 10173356448,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.47.attn_output.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        6144,
+        2560
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 10173357472,
+      "packed_bytes": 16711680
+    },
+    {
+      "name": "blk.47.attn_q.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        12288
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 10190069152,
+      "packed_bytes": 33423360
+    },
+    {
+      "name": "blk.47.attn_q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        256
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 10223492512,
+      "packed_bytes": 1024
+    },
+    {
+      "name": "blk.47.attn_v.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 10223493536,
+      "packed_bytes": 1392640
+    },
+    {
+      "name": "blk.47.indexer.k_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 12084705696,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.47.indexer.k_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 12084706208,
+      "packed_bytes": 655360
+    },
+    {
+      "name": "blk.47.indexer.q_norm.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        128
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 12085361568,
+      "packed_bytes": 512
+    },
+    {
+      "name": "blk.47.indexer.q_proj.weight",
+      "type": "BF16",
+      "shape_ggml_order": [
+        2560,
+        512
+      ],
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "absolute_offset": 12085362080,
+      "packed_bytes": 2621440
+    }
+  ],
+  "cpu_tests": 15,
+  "indexer_block": 4,
+  "resident_KV_page": 4,
+  "selection_budget_cells": 2048,
+  "selection_width_max": 2051,
+  "conditional_on_supplied_layer_inputs": true,
+  "captured_selected_ids_used": false,
+  "actual_model_payload_reads": 0,
+  "actual_main_slot_checkpoint_qualified": false,
+  "native_intrinsics_or_reductions_emulated": false,
+  "full_model_math_qualified": false,
+  "tolerance_gate": null
+}
