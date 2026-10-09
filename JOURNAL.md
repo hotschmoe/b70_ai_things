@@ -9936,3 +9936,18 @@ VERDICT -> CPU/source/preparation only. Nextactual20vs21off and21off/on raw
 prefix1/2/4/8 comparisons, fields/nonce/packet/owner plus pre/posthealth/NEW4
 hashes. No natural/API/latency claim; fullmath false and7fields unobserved.
 Runtime graph-handle retirement remains explicitlyunobserved.
+
+## 2026-10-09 Capture21 numerical observation with failed lifetime collection
+
+CONFIG -> Frozen21/20/raw1,2,4,8 onecard,26/33scope.
+COMMAND -> Parentnumericalrun F08/layer0-numerical-onecard-v1, readonlypacket
+checks and conditionaloriginalHC checker.
+RESULT -> ParentFAILED724s: URIstdout/observermarkersstderr split means target
+allocation/context/free chronology unproven; no posthocmerge. Childall3exit0/
+removed and4fullheads/all48residual comparisons bitwise pass,12actualpackets
+exact,26fieldnonce/source checks valid. Health/kernel/NEW4publisherhashes pass.
+Conditionaloriginal HCweights+suppliedinput/blockoutputs32checksPASS worst
+NMSE3.018986267244434e-14/maxnorm3.5706573414878165e-7, unchangedlimits.
+VERDICT -> Preservefailure andvalidboundedmath, not overallqualification.
+Newversion collector orderedproducer stream required; no mathflag/tolerance
+changes. Raw7producerfields/fullGDN/MoE/ownstate/fullmodel remainopen.
