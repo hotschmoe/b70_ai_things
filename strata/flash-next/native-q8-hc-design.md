@@ -108,3 +108,25 @@ the header for CPU testing. Earlier426bc4ac receipt covers its preceding
 snapshot only. Current snapshot icpx SYCL object compile passes, no devices;
 receipt: /mnt/vm_8tb/b70/build/strata-q8-hc-final-20261009-tc6wgt0y/compile-receipt.json.
 GPU numerical/model qualification remains outstanding.
+
+## Leased GPU projection follow-up, 2026-10-09
+
+CONFIG -> Same pinned patch7edd8631, source fb58e0d and runtime39992d70.
+Synthetic original-layout Q8/F32 fixtures; no full-model calls or expert banks.
+COMMAND -> run_native_q8_hc_gpu.py with the final overlay and F04 native-q8-hc-v2
+output. The controller rebuilds tracked source, verifies overlay/patch identity,
+owns both leases, and pins each separate process with ZE_AFFINITY_MASK.
+RESULT ->72/72 cases per card,12 production shapes with6 input profiles each;
+22 invalid descriptor/queue cases per card;72 numeric negative controls and
+one guard-corruption negative control per card. Exact repeat after independent
+buffers, concatenated single versus multi-token bytes,128-byte guards and
+unchanged weight/input bytes all pass. Worst NMSE3.0529638501619164e-10;
+normalized maximum error1.747273261445363e-5, under frozen1e-6/1e-4 gates.
+Normal process exit/removal, strict per-card and compiled two-rank P2P0 pre/post
+health pass; kernel journal has no selected fault signature. Initial v1 failed
+GPU discovery because the nonroot container lacked DRM groups; no HC kernels
+executed and post-health passed. v2 adds existing device group IDs. Preserve v1.
+VERDICT -> Projection primitives are qualified for these synthetic per-card
+fixtures. This does not qualify actual-model tensors, composed HC, routing,
+prefill/decode/verifier transitions, concurrent state, two-stage handoff or speed.
+Raw receipts: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/.

@@ -9097,3 +9097,35 @@ slots are the development target; llama remains diagnostic reference. No final
 engine winner or speed claim. Evidence in docs/20261009_flashnext_latency_methodology.md
 and strata/flash-next/native-q8-hc-design.md; finalcompile receipt under
 /mnt/vm_8tb/b70/build/strata-q8-hc-final-20261009-tc6wgt0y/.
+
+## 2026-10-09 Native Q8 HC GPU primitives and alternative source audit
+
+CONFIG -> Continue saved full FlashNext goal; preserve unrelated dirty changes.
+Pinned UD-Q4_K_XL, Strata fb58e0d, patch7edd8631 and runtime39992d70; synthetic
+native Q8/F32 projection fixtures. Parent owns GPU execution; agents prepare
+source/audits. Previous saved source/CPU/object work is verified progress.
+
+COMMAND -> test_native_q8_hc_cpu.py; run_native_q8_hc_gpu.py native-q8-hc-v1/v2;
+CPU source audit of mature GGUF/Intel/tier/prefix alternatives; prepare default-off
+composition patch and FP64 intermediate fixtures. GPU runs use pair lease with
+per-process card pin, strict per-card and compiled P2P0 pre/post health.
+
+RESULT -> CPU descriptors/dequant pass again. v1 device discovery fails because
+nonroot Docker process lacks DRM groups; no HC kernels execute, post-health passes.
+v2 adds actual device group IDs:72/72 fixtures and22 rejection cases per card,
+72 numeric negative controls/card, guard corruption control; exact repeat/batch
+bytes,128-byte guards and source/input immutability pass. Worst NMSE3.05296e-10
+and normalized maximum error1.74727e-5 are below frozen1e-6/1e-4 gates. Both
+normal exits/removals and full post-health pass; no selected kernel fault signature.
+Composed patch0002 passes CPU32 valid/1120 invalid preflights;48-case/344-stage
+fixture reference construction passes, GPU composition qualification in progress.
+Source audit confirms Strata per-stage in-memory prefix snapshots exist; disk
+sessions and extra message-boundary checkpoints have distinct split restrictions.
+Current vLLM/SGLang exact GGUF-XPU blockers remain; Kobold batching rejects smartcache.
+
+VERDICT -> Native projection device arithmetic passes bounded synthetic gates,
+not full-model fidelity or speed. Strata stays a development candidate and llama
+an unqualified history-drift diagnostic reference. Full route wiring, composed
+math, dual-stage RAM tiers, prefix/concurrency/fairness and shelf gates remain.
+No promotion. Raw F04 receipts under results/flashnext_udq4xl_20261008/f04-20261009;
+source audit in docs/20261009_flashnext_backend_source_audit.md.

@@ -1,0 +1,132 @@
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -197,6 +197,7 @@
+ option(STRATA_SYCL_Q8_HC_PRIMITIVES "Build experimental source-preserving HC projections" OFF)
+ if(STRATA_SYCL_Q8_HC_PRIMITIVES)
+   list(APPEND _kernels ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/hc_native_projection.cpp)
++  list(APPEND _kernels ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/hc_native_composition.cpp)
+ endif()
+ add_library(strata_kernels STATIC ${_kernels})
+ target_include_directories(strata_kernels PRIVATE ${STRATA_ROOT}/third_party/ggml)
+--- /dev/null
++++ b/sycl/include/strata/kernels/hc_native_composition.hpp
+@@ -0,0 +1,59 @@
++// Experimental composition only: callers must qualify and wire every model route.
++#pragma once
++#include <cstddef>
++#include <cstdint>
++#include <cmath>
++namespace strata::kernels {
++// Exact source types: Q8_0 down/up, original F32 norm and injection.
++// Row-major GGUF [M,K]; contiguous token-major activations. No reinterpretation
++// of WeightRef::hc_q8, BF16 compatibility storage or Q8 injection conversion.
++struct HcNativeWeights {
++    const float *norm = nullptr; size_t norm_floats = 0;
++    const uint8_t *down = nullptr; size_t down_bytes = 0;
++    const uint8_t *up = nullptr; size_t up_bytes = 0;
++    const float *inject = nullptr; size_t inject_floats = 0;
++};
++struct HcNativeArgs {
++    HcNativeWeights w;
++    int n_embd = 2560, hc = 4, lr = 320, tokens = 1;
++    float eps = 1e-6f;
++    const float *R = nullptr; size_t R_floats = 0;
++    bool apply = false;
++    const float *bo_prev = nullptr; size_t bo_floats = 0;
++    const float *inj_prev = nullptr; size_t prev_floats = 0;
++    float *R_out = nullptr; size_t R_out_floats = 0;
++    // All workspace/output arrays are owned by the active stage/session.
++    float *xn = nullptr; size_t xn_floats = 0;
++    float *lo = nullptr; size_t lo_floats = 0;
++    float *gate = nullptr; size_t gate_floats = 0;
++    float *rs = nullptr; size_t rs_floats = 0;
++    float *mixed = nullptr; size_t mixed_floats = 0;
++    float *inject_out = nullptr; size_t inject_out_floats = 0;
++};
++// Validate the complete descriptor before any submission. Only this selected
++// model geometry and 1..8 rows are supported; callers must chunk larger prompts.
++// USM accessibility, context ownership and nonoverlap are caller contracts.
++// Only R_out==R is permitted to overlap. No hidden allocations or global state.
++inline bool hc_native_descriptor_ok(const HcNativeArgs& a) {
++    if (a.n_embd != 2560 || a.hc != 4 || a.lr != 320 || a.tokens < 1 || a.tokens > 8 ||
++        !(a.eps > 0) || !std::isfinite(a.eps)) return false;
++    const size_t D = 10240, T = size_t(a.tokens), N = 2560, H = 4, L = 320;
++    if (!a.w.norm || a.w.norm_floats < D || !a.w.down || a.w.down_bytes < L*(D/32)*34 ||
++        !a.w.up || a.w.up_bytes < D*(L/32)*34 ||
++        !a.R || a.R_floats < T*D || !a.xn || a.xn_floats < T*D ||
++        !a.lo || a.lo_floats < T*L || !a.gate || a.gate_floats < T*D ||
++        !a.rs || a.rs_floats < T*H || !a.mixed || a.mixed_floats < T*N) return false;
++    if (a.w.inject) {
++        if (a.w.inject_floats < H*D || !a.inject_out || a.inject_out_floats < T*H) return false;
++    } else if (a.w.inject_floats || a.inject_out || a.inject_out_floats) return false;
++    if (a.apply) {
++        if (!a.bo_prev || a.bo_floats < T*N || !a.inj_prev || a.prev_floats < T*H ||
++            !a.R_out || a.R_out_floats < T*D) return false;
++    } else if (a.bo_prev || a.bo_floats || a.inj_prev || a.prev_floats || a.R_out || a.R_out_floats) return false;
++    return true;
++}
++// False: descriptor or queue rejected, zero kernels submitted.
++// SYCL submission/execution exceptions propagate: caller must abort the request;
++// no compatibility fallback or retry on partly written state is permitted.
++bool hc_native_read_f32(const HcNativeArgs& a, void *stream);
++}
+--- /dev/null
++++ b/sycl/src/kernels/hc_native_composition.cpp
+@@ -0,0 +1,57 @@
++// F32 contract composition over exact-source projection primitives.
++#include "strata/kernels/hc_native_composition.hpp"
++#include "strata/kernels/hc_native_projection.hpp"
++#include "strata/sycl_queue.hpp"
++#include <stdexcept>
++namespace strata::kernels {
++namespace {
++float reduce32(sycl::sub_group group, float x) {
++    for (unsigned mask=16; mask; mask>>=1) x += sycl::permute_group_by_xor(group,x,mask);
++    return x;
++}
++float sigmoid(float x) { return 1.0f/(1.0f+sycl::exp(-x)); }
++class HcPending; class HcNorm; class HcSilu; class HcMix;
++}
++bool hc_native_read_f32(const HcNativeArgs& a, void *stream) {
++    if (!hc_native_descriptor_ok(a)) return false;
++    auto& q = *strata::q_of(stream);
++    if (!q.has_property<sycl::property::queue::in_order>()) return false;
++    constexpr size_t D=10240,N=2560,H=4,L=320;
++    const size_t T=size_t(a.tokens);
++    // Separate write avoids reading partially updated residuals during RMS.
++    // FMA matches the pending-write reference. R_out may equal R exactly.
++    if (a.apply) q.parallel_for<HcPending>(sycl::range<1>(T*D), [=](sycl::id<1> index) {
++        const size_t i=index[0],t=i/D,c=(i%D)/N,d=i%N;
++        const float w=2.0f*sigmoid(a.inj_prev[t*H+c]/float(H));
++        a.R_out[i]=sycl::fma(a.bo_prev[t*N+d],w,a.R[i]);
++    });
++    const float *R=a.apply?a.R_out:a.R;
++    q.parallel_for<HcNorm>(sycl::nd_range<1>(sycl::range<1>(T*H*32),sycl::range<1>(32)),
++        [=](sycl::nd_item<1> item) [[sycl::reqd_sub_group_size(32)]] {
++        const size_t tc=item.get_group_linear_id(),t=tc/H,c=tc%H,lane=item.get_local_linear_id();
++        float sum=0;
++        for (size_t d=lane;d<N;d+=32) { const float r=R[t*D+c*N+d]; sum=sycl::fma(r,r,sum); }
++        const float rs=sycl::rsqrt(reduce32(item.get_sub_group(),sum)/float(N)+a.eps);
++        if (!lane) a.rs[tc]=rs;
++        for (size_t d=lane;d<N;d+=32) { const size_t i=c*N+d; a.xn[t*D+i]=(R[t*D+i]*a.w.norm[i])*rs; }
++    });
++    // All projection descriptors are implied by the complete preflight above.
++    if (!hc_q8_0_project_f32(a.w.down,a.w.down_bytes,a.xn,T*D,a.lo,T*L,D,L,a.tokens,stream))
++        throw std::logic_error("native HC down rejected after descriptor preflight");
++    q.parallel_for<HcSilu>(sycl::range<1>(T*L), [=](sycl::id<1> i) {
++        const float x=a.lo[i[0]]/float(H); a.lo[i[0]]=x*sigmoid(x);
++    });
++    if (!hc_q8_0_project_f32(a.w.up,a.w.up_bytes,a.lo,T*L,a.gate,T*D,L,D,a.tokens,stream))
++        throw std::logic_error("native HC up rejected after descriptor preflight");
++    if (a.w.inject && !hc_f32_project_f32(a.w.inject,a.w.inject_floats,a.xn,T*D,
++            a.inject_out,T*H,D,H,a.tokens,stream))
++        throw std::logic_error("native HC injection rejected after descriptor preflight");
++    q.parallel_for<HcMix>(sycl::range<1>(T*N), [=](sycl::id<1> index) {
++        const size_t td=index[0],t=td/N,d=td%N;
++        float sum=0;
++        for (size_t c=0;c<H;++c) { const size_t i=t*D+c*N+d; sum+=a.xn[i]*sigmoid(a.gate[i]); }
++        a.mixed[td]=sum/float(H);
++    });
++    return true;
++}
++}

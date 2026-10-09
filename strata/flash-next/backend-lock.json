@@ -6,13 +6,13 @@
       "url": "https://github.com/Niko1221/Strata",
       "revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
       "local": "/mnt/vm_8tb/github/strata",
-      "status": "source-only; no local qualification"
+      "status": "Development candidate; native HC projection synthetic GPU gates pass; composed math and complete route/dual-stage RAM qualification pending"
     },
     "llama.cpp": {
       "url": "https://github.com/ggml-org/llama.cpp",
       "revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
       "local": "/mnt/vm_8tb/github/llama.cpp-flashnext",
-      "status": "source-only; primary control and candidate"
+      "status": "Pinned diagnostic reference, exact GGUF executes, history-dependent output/probability drift unresolved; not qualified full-model authority"
     },
     "vllm": {
       "url": "https://github.com/vllm-project/vllm",
@@ -28,7 +28,7 @@
     }
   },
   "build_base": "intel/oneapi:2026.1.0-devel-ubuntu24.04@sha256:e9db518398753434ee5aab9740a25f1d3134396a30be1569cfad8f8b0d90740c",
-  "build_status": "Build/runtime prepared;72 primitive comparisons pass; C1 static warmup screen passes24 checks across two independent starts; performance/concurrency pending",
+  "build_status": "Pinned runtime/build available. Earlier bounded C1 screen passes remain historical; broader repeated/history screens fail. No full-model fidelity, performance, prefix, concurrent or shelf qualification.",
   "rollback_image": "sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067",
   "compiler_image": "sha256:64284c46a66e82463a49929fd0cbfca218c2aab7f9f409087f46a60304adce8a",
   "runtime_image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",

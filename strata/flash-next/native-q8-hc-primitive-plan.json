@@ -15,7 +15,7 @@
     "include/strata/kernels/fused_gr.hpp": "e8055ea3311bfc0c49ef464141713842da5fdad1e5cddf6a2f573fbf5353ab3a",
     "sycl/src/prefill/prefill.cpp": "890e964f5583211fef89a4fabf030f75e230f6785584a1f0d37a3d8b471839f3"
   },
-  "status": "PARTIAL primitive-only; CPU descriptor/dequant tests and current SYCL object compilation pass. GPU numerical qualification and model callsites remain outstanding.",
+  "status": "Primitive-only: CPU contracts, source build and leased per-card GPU numerical/repeat/guard gates PASS. Full model integration and composed HC qualification remain outstanding.",
   "build_option": "-DSTRATA_SYCL_Q8_HC_PRIMITIVES=ON",
   "default": "OFF; existing model path unchanged",
   "model_use_gate": "Do not enable native HC model serving from this patch. Prompt/decode/final mixer wiring and composed-math oracles remain required.",
@@ -118,7 +118,7 @@
       "input/output guard regions, unchanged weight bytes, alternating independent call buffers",
       "reject malformed K, invalid token count, insufficient lengths, null pointers before submission"
     ],
-    "scope_note": "thresholds are preregistered proposals; no observed pass yet"
+    "scope_note": "Preregistered gates pass on synthetic per-card GPU primitive fixtures; they do not qualify composed or full-model execution."
   },
   "memory_bound": "largest production Q8 matrix3,481,600B; F32 reference expansion13,107,200B; token8 input/output each at most327,680B; no expert bank",
   "required_later_gates": [
@@ -144,5 +144,19 @@
     "limitations": "No GPU arithmetic, pointer-accessibility, queue, or model integration qualification"
   },
   "null_stream_contract": "Null stream is valid and selects the default in-order queue; null weights/input/output are rejected.",
-  "validation": "git apply check PASS; CPU descriptor/fixture tests PASS; compile status must match current patch hash; no GPU execution"
+  "validation": "CPU contracts PASS; current source compilation PASS; leased GPU primitives PASS; model integration unqualified",
+  "gpu_validation": {
+    "receipt": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/native-q8-hc-v2/receipt.json",
+    "cases_per_card": 72,
+    "shape_cases": 12,
+    "profiles_per_shape": 6,
+    "rejection_cases_per_card": 22,
+    "numeric_negative_controls_per_card": 72,
+    "max_nmse": 3.0529638501619164e-10,
+    "max_normalized_linf": 1.747273261445363e-05,
+    "repeat_and_batch_single_bytes": "PASS each fixture on each card",
+    "guards_and_source_immutability": "PASS",
+    "teardown_and_post_health": "PASS both cards and compiled two-rank P2P0",
+    "scope": "Synthetic bounded primitive fixtures, not source model tensors or full HC/model fidelity"
+  }
 }
