@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "mode": "CPU_SOURCE_ONLY_FIRST_LAYER_NUMERICAL_CAPTURE_PREPARATION",
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "original_reference_layers": [
+    0
+  ],
+  "native_forward_layers": 48,
+  "actual_execution_allowed": false,
+  "native_packet_reference_implemented": false,
+  "new_capture_source_implemented": false,
+  "native_storage_qualified": false,
+  "full_model_math_qualified": false,
+  "capture_raw_byte_cap": 67108864,
+  "decoded_source_tile_cap": 67108864,
+  "conditional_operator_gates": {
+    "nmse_max": 1e-06,
+    "max_normalized_max": 0.0001,
+    "normalizer_floor": 1e-06
+  },
+  "activation_quantization_cost": "reported separately; not an implementation-error pass or accumulated full-layer acceptance threshold",
+  "sources": {
+    "strata/flash-next/prepare_first_gdn_numeric_probe_v1.py": "97056c67d13ad4294a1a033245b3338af8748a609ba7b7e1239939a375668085",
+    "strata/flash-next/test_first_gdn_numeric_probe_cpu_v1.py": "64d64ca23a31eb06742b514472175bb6596bfcc02d39ca458352265968f52de5",
+    "strata/flash-next/first-gdn-numerical-probe-plan-v1.md": "08b375634a7d74a246433b348956681585a16f791dbafad21cc5155bb4dff5b4"
+  },
+  "first_layer_reference_plan": "strata/flash-next/original-first-gdn-layer-reference-plan-v1.json",
+  "first_layer_reference_plan_sha256": "57ee7b8f84ceac3840c168585b100fe4190f136859eed64992c5fcbdab06884b",
+  "required_source_identity": "current parent pre/post full4publisherhash +knownpage guard; oldstat is not media-integrity proof"
+}

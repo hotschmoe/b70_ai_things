@@ -1,0 +1,23 @@
+{
+  "mode": "CPU_VECTOR_DECODER_TRIANGULATION_ONLY",
+  "passed": true,
+  "formats": [
+    "F32",
+    "BF16",
+    "Q8_0",
+    "Q5_1",
+    "Q4_K",
+    "Q5_K",
+    "IQ4_NL"
+  ],
+  "blocks": 112,
+  "lanes": [
+    "original_fp64",
+    "ggml_f32"
+  ],
+  "official_python_and_frozen_scalar_equal": true,
+  "reference_source_sha256": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+  "actual_model_payloads_read": false,
+  "gpu_executed": false,
+  "full_model_math_qualified": false
+}

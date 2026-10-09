@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "mode": "CPU_SOURCE_PREPARATION_SYNTHETIC_REFERENCE_ONLY",
+  "operator_lane": "original_fp64",
+  "actual_model_payload_execution_authorized_by_this_plan": false,
+  "gpu_execution": false,
+  "max_decoded_or_packed_tile_bytes": 67108864,
+  "token_bound": 8,
+  "computed_layers": [
+    0
+  ],
+  "full_model_math_qualified": false,
+  "native_storage_qualified": false,
+  "sources": {
+    "strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/test_original_first_gdn_layer_cpu_v1.py": "99d5d8b08151e7c1a7dea6900dcf55c4b0bf63c977372bced4f89d48453aa81c",
+    "strata/flash-next/test_original_vector_decoder_cpu_v2.py": "63ac1a90741ece57d1b66f4c7fe033e5afd086d8d2f251ccbdfa3ebe2b8bc9aa"
+  },
+  "frozen_foundation_pins": {
+    "strata/flash-next/original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "strata/flash-next/original-gguf-reference-foundation-plan-v1.json": "7d5217d844b411b427e4c6c6df2b4837b66970937c044389b40270346804bd2b",
+    "strata/flash-next/original-gguf-reference-foundation-cpu-receipt-v1.json": "9e9728f9c24c47ff6698645c0e2ddb013d8efbe47016b81c4ef977820c656cad"
+  },
+  "official_semantic_sources": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/src/models/qwen4exp.cpp": "863b5df1a53dd132ff994f1b44dcd1c88a2eecd4ad4e031817104c67c03139ac",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/src/models/delta-net-base.cpp": "5e3b318953f854b3825dd7cfe4b483ca7935cd5f6680438a3ece4be9b4d5428f",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/src/models/models.h": "d239ec2d363a5f2618eb91d486a3f53d9bf07b96be49b6d25b6c6688600d50a6",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/src/llama-hparams.h": "33ccb968c5c4489b4e87535d4bd67934e6609cc5799bf989b6dda892888ea408",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T085407Z-pzbw4jgp/ggml-source/src/llama-graph.cpp": "90f5c6f082790599124630680ba1293d702b369e9ce9088680d210b69905c8d3"
+  },
+  "cpu_tests": [
+    "python3 strata/flash-next/test_original_vector_decoder_cpu_v2.py",
+    "python3 strata/flash-next/test_original_first_gdn_layer_cpu_v1.py"
+  ],
+  "gdn_l2_contract": "sum(q_squared)+original_F32_eps, models.h rms_norm(x,eps/n)/sqrt(n); no max-floor claim",
+  "expert_scale_contract": "hparam zero sentinel or literal1 gives effective1; nonidentity override rejected"
+}

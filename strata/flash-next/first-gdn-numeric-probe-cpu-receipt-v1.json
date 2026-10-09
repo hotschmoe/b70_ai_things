@@ -1,0 +1,35 @@
+{
+  "mode": "CPU_NUMERICAL_PROBE_METADATA_ONLY",
+  "passed": true,
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "negative_controls": [
+    "wrong_token",
+    "wrong_position",
+    "wrong_layer",
+    "wrong_residual_phase",
+    "missing_packet_prereq",
+    "missing_operation_contract",
+    "stale_state",
+    "wrong_state_layout",
+    "changed_sentinel",
+    "model_lock_sha256",
+    "inventory_sha256",
+    "tokenizer_metadata_sha256",
+    "chat_template_sha256",
+    "engine_receipt_sha256",
+    "capture_binary_sha256",
+    "runtime_image",
+    "source_identity_before_sha256",
+    "source_identity_after_sha256"
+  ],
+  "driver_source_sha256": "97056c67d13ad4294a1a033245b3338af8748a609ba7b7e1239939a375668085",
+  "actual_payloads_read": false,
+  "gpu_executed": false,
+  "operator_math_pass": false,
+  "full_model_math_qualified": false
+}

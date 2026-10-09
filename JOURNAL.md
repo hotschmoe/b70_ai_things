@@ -9628,3 +9628,23 @@ VERDICT -> CPU/source checkpoint only. Full SYCL build, real one/pair ownership
 oracle, NEW full390/prepared source gate, observer off/on model qualification
 and actual V6 cache tests remain required. Existing V5 receipts do not qualify
 this new generation or concurrent serving.
+
+## 2026-10-09 Independent original first-GDN layer source preparation
+
+CONFIG -> NEW source versions, immutable decoder/scalar foundations retained.
+Original-FP64 first-layer composition owns embeddings/routing/expert selection
+and temporal state; native-storage emulation remains unsupported.
+COMMAND -> Parent test_original_vector_decoder_cpu_v2.py,
+test_original_first_gdn_layer_cpu_v1.py and test_first_gdn_numeric_probe_cpu_v1.py.
+RESULT -> PASS112 vector decoder blocks across both lanes vs frozen scalar and
+official Python;17 asymmetric first-layer composition controls;18 source/position/
+state/packet/identity metadata rejections for1/2/4/8-token numerical probe plans.
+L2 uses sum(q*q)+eps, not RMS or floor; qwen4exp output uses sigmoid, not SiLU.
+Expert scale absent tag is literal0 sentinel/effective1, nonidentity rejected.
+All projection tiles bounded; actual model source payloads were not read and
+actual original forward/GPU comparisons were not executed.
+VERDICT -> Source and synthetic equations only. Production Q8_1 packets, native
+F32 reductions/routing precision, captured outgoing state and remaining PLE/QSA/
+48-layer/head independent mathematics remain prerequisites. Preregistered
+conditional implementation-error limits stay separate from reported activation
+quantization cost. No model/latency/natural API completion qualification.

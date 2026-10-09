@@ -1,0 +1,39 @@
+{
+  "mode": "CPU_SYNTHETIC_FIRST_GDN_LAYER_EQUATIONS",
+  "passed": true,
+  "tokens": 3,
+  "controls": [
+    "all_decoded_source_tiles_bounded",
+    "row_tiling_matches_untiled_equations",
+    "own_temporal_recurrence_not_reset_each_token",
+    "independent_empty_state_replay",
+    "own_routing_expert_offsets_weighted_sum",
+    "selected_expert_softmax_renormalization",
+    "router_tie_lower_id",
+    "hc_stream_mean_not_squared_norm",
+    "hc_write_injection_divided_by_streams",
+    "gdn_l2_sum_plus_eps_not_rms",
+    "gdn_output_scale_inverse_sqrt_state",
+    "gdn_output_sigmoid_not_silu",
+    "unsupported_native_lane",
+    "wrong_layer",
+    "oversized_tile",
+    "bad_token_roster",
+    "nonidentity_expert_scale_rejected"
+  ],
+  "max_decoded_tile_bytes": 128,
+  "reference_source_sha256": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+  "operator_lane": "original_fp64",
+  "own_embedding_routing_state": true,
+  "actual_model_payloads_read": false,
+  "gpu_executed": false,
+  "native_storage_qualified": false,
+  "full_model_math_qualified": false,
+  "todo_native_contracts": [
+    "ordinary Q8_1 activation encoder",
+    "shared/expert hidden Q8_1 encoder",
+    "native F32 reductions/FMA/native exp",
+    "prefill F16/BF16 precision seam",
+    "production route rounding/ties"
+  ]
+}
