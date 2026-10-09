@@ -9738,3 +9738,17 @@ basic suite started under pairlease at F07/serial-basic-onecard-v6-v1 with
 matched2048/64/65536 native geometry; no numerical result yet.
 VERDICT -> Bounded API screen only. V6 observer/caches, independent wholemodel
 math, batch/concurrency and clean latency remain open. See combined20 doc.
+
+## 2026-10-09 New20 V6 one-card basic and stricter record validation
+
+CONFIG -> Frozen20/V6, card0 native2048/64/65536 pilot.
+COMMAND -> Parent basic suite and external actual-record auditor.
+RESULT -> FinalPASS724s, exact IDs/LP20/natural stops/full first logits off/on,
+all48 residual coverage, teardown/health/kernel/NEWall4 hashes. Stronger final
+auditPASS exact9 roster, cross PREFIX/PCL/SFD identities and exactstage
+entry/return coverage; auxiliary unbound descriptions explicit. Initial external
+auditorv1 falsefailure preserved (missing PID on descriptive reset event),
+not a runtime/source violation. Matchingtwo-cardV6basic started, cleanPASS
+remainingarms/finalgates pending.
+VERDICT -> Bounded diagnostic and observedwork provenance; independentmodel
+math/completecache/concurrency/latency remain open. See combined20 doc.

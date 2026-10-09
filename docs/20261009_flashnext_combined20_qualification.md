@@ -72,3 +72,43 @@ RESULT -> Pair lease acquired; F07/serial-basic-onecard-v6-v1 underway. Both
 V6 native plans use matched2048/64/65536 geometry; old18/V5 remains preserved.
 VERDICT -> Running observer off/on and exact stage/cache telemetry checks; no
 new20 full-logit/cache numerical qualification is claimed yet.
+
+## Finalized new20 one-card V6 basic and strengthened record audit
+
+CONFIG -> Genuine compiled20/V6/parent source-chain preparation, native
+card0 layers0-48, matched2048/64/65536 pilot. Model/runtime/source unchanged.
+COMMAND -> qualify_serial_prefix_v6.py --group basic;
+F07/serial-basic-onecard-v6-v1. Separate read-only actual-record audit:
+audit_v6_actual_request_records.py --root RUN/child --output EXTERNAL_RECEIPT.
+RESULT -> Final parent/childPASS724s, all3 native processes exit0/removals.
+A/B/C exact IDs/LP20/natural stop off/on, full248320 first logits bitwise equal
+with activations0/1, all48 first-window residuals per layers probe have mandatory
+coverage. Residuals are not compared to activations-off's unobserved buffers.
+Pre/post strict+compiled P2P0 health, kernel/ownership gates and NEW all4
+publisher hashes pass.
+
+F07/serial-basic-onecard-v6-strengthened-final-v1/receipt.json independently
+passes exact9-record final roster, no pending/incomplete/errors. Six diagnostic
+requests have EXACT stage entry/return balance, once-only prompt coverage, and
+cross PREFIX_DIAG/PCL/SFD PID/request/token-position/FNV/SHA identities.
+Committed IDs equal input plus consumed outputs (final EOS not consumed).
+The three flag0 requests explicitly lack raw/lifecycle coverage.
+
+This auditor closes two V6 acceptance gaps for observed completed records: V6
+only requires returned<=entered, and does not cross-bind PCL begin to PREFIX/SFD.
+Descriptive fresh_all_stage_reset/pin_saved events have no PID/request fields
+and remain unbound auxiliary observations. Initial externalv1 audit wrongly
+required PID on those descriptions; its failure is preserved separately and
+v2/final declare that scope rather than fabricating identity. Missing whole
+process/partial rosters cannot prove complete qualification; parent separately
+requires completed numerical reports and the final expected roster.
+VERDICT -> PASS bounded new20 observer equivalence and strengthened stage/request
+record evidence. Full raw persistent-state/independent math, all cache cases,
+concurrency, production capacity and clean latency remain unqualified.
+
+## Matching new20 two-card V6 basic started
+
+COMMAND -> Same V6 parent, matched two-card plan and finalized one-card receipt.
+RESULT -> F07/serial-basic-twocard-v6-v1 running; clean processPASS, remaining
+logits/layers and parent health/hash gates pending.
+VERDICT -> No finalized new20 two-card V6 numerical/cache result yet.
