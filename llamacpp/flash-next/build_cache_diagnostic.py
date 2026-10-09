@@ -51,6 +51,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', default=IMAGE, help='Exact previously pinned build image ID')
     parser.add_argument('--jobs', type=int, choices=range(1, 9), default=4)
+    parser.add_argument('--plan', type=Path, default=REPO / 'llamacpp/flash-next/cache-byte-invariant-plan.json')
     parser.add_argument('--leased', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
     if not args.leased:
@@ -62,11 +63,15 @@ def main():
             raise RuntimeError('Missing inherited whole-host GPU lease')
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-    plan_path = REPO / 'llamacpp/flash-next/cache-byte-invariant-plan.json'
+    plan_path = args.plan.resolve()
     plan = json.loads(plan_path.read_text())
-    patch = REPO / plan['patch']
-    if sha(patch) != plan['patch_sha256']:
-        raise RuntimeError('Diagnostic patch hash mismatch')
+    patch_specs = plan.get('patches')
+    if patch_specs is None:
+        patch_specs = [{'path': plan['patch'], 'sha256': plan['patch_sha256']}]
+    patches = [REPO / spec['path'] for spec in patch_specs]
+    for spec, patch in zip(patch_specs, patches):
+        if sha(patch) != spec['sha256']:
+            raise RuntimeError('Diagnostic patch hash mismatch: ' + str(patch))
     revision = output(['git', '-C', str(SOURCE), 'rev-parse', 'HEAD'])
     if revision != plan['source_revision'] or output(['git', '-C', str(SOURCE), 'status', '--porcelain']):
         raise RuntimeError('Source must be clean at the reviewed revision')
@@ -95,7 +100,7 @@ def main():
     for key in ('CMAKE_C_FLAGS', 'CMAKE_CXX_FLAGS', 'CMAKE_C_FLAGS_RELEASE', 'CMAKE_CXX_FLAGS_RELEASE'):
         flags[key] = cache[key][1]
 
-    directory = Path(tempfile.mkdtemp(prefix='flashnext-cache-diagnostic-' +
+    directory = Path(tempfile.mkdtemp(prefix=plan.get('build_prefix', 'flashnext-cache-diagnostic-') +
                          time.strftime('%Y%m%dT%H%M%SZ', time.gmtime()) + '-', dir=BUILD_ROOT))
     source_copy = directory / 'source'
     build = directory / 'build'
@@ -103,11 +108,17 @@ def main():
     before = baseline_artifacts()
     receipt = {'schema': 1, 'source_revision': revision, 'source_tree': str(SOURCE),
                'source_copy': str(source_copy), 'build': str(build), 'image': IMAGE,
-               'plan_sha256': sha(plan_path), 'patch_sha256': sha(patch),
+               'plan_sha256': sha(plan_path), 'patches': patch_specs,
                'builder_sha256': sha(Path(__file__)), 'cmake_flags': flags,
                'baseline_artifacts_before': before, 'devices_exposed': False,
-               'runtime_required_env': {'GGML_SYCL_ENABLE_OPT': '0', 'LLAMA_MOE_VERIFY_BYTES': '1'},
+               'runtime_required_env': plan.get('runtime_required_env', {'GGML_SYCL_ENABLE_OPT': '0', 'LLAMA_MOE_VERIFY_BYTES': '1'}),
                'status': 'preparing', 'build_rc': None}
+    if len(patch_specs) == 1:
+        receipt['patch_sha256'] = patch_specs[0]['sha256']
+    targets = plan.get('build_targets', ['llama-server'])
+    if not targets or any(not re.fullmatch(r'[A-Za-z0-9_-]+', t) for t in targets):
+        raise RuntimeError('Invalid build target list')
+    receipt['build_targets'] = targets
     (directory / 'image-inspect.json').write_text(json.dumps(image, indent=2) + '\n')
     (directory / 'baseline-CMakeCache.txt').write_bytes((BASELINE / 'CMakeCache.txt').read_bytes())
     print('CONFIG diagnostic=' + str(directory), flush=True)
@@ -120,8 +131,9 @@ def main():
             # Independent git objects preserve build identity without writing to the baseline repository.
             run(['git', 'clone', '--local', '--no-hardlinks', '--no-checkout', str(SOURCE), str(source_copy)])
             run(['git', '-C', str(source_copy), 'checkout', '--detach', revision])
-            run(['git', '-C', str(source_copy), 'apply', '--check', str(patch)])
-            run(['git', '-C', str(source_copy), 'apply', str(patch)])
+            for patch in patches:
+                run(['git', '-C', str(source_copy), 'apply', '--check', str(patch)])
+                run(['git', '-C', str(source_copy), 'apply', str(patch)])
             receipt['patched_source_sha256'] = {name: sha(source_copy / name) for name in plan['overlay_files']}
             receipt['source_copy_status'] = output(['git', '-C', str(source_copy), 'status', '--porcelain'])
             configure = ['cmake', '-S', '/src', '-B', '/build', '-G', 'Ninja']
@@ -133,7 +145,7 @@ def main():
                 'icpx --version > /build/compiler-version.txt',
                 'dpkg-query -W > /build/packages.txt',
                 shlex.join(configure),
-                'cmake --build /build --target llama-server -j ' + str(args.jobs),
+                'cmake --build /build --target ' + shlex.join(targets) + ' -j ' + str(args.jobs),
             ])
             receipt['container_script'] = script
             run(['docker', 'run', '--rm', '--network', 'none', '--user', str(os.getuid()) + ':' + str(os.getgid()),
@@ -147,7 +159,7 @@ def main():
         artifacts = [build / 'bin/llama-server', *sorted((build / 'bin').glob('lib*.so*'))]
         receipt['binary_sha256'] = {str(path): sha(path) for path in artifacts if path.is_file()}
         receipt['cmake_cache_sha256'] = sha(build / 'CMakeCache.txt')
-        receipt['status'] = 'built; GPU compatibility and byte invariants unqualified'
+        receipt['status'] = plan.get('built_status', 'built; GPU compatibility and byte invariants unqualified')
         rc = 0
     except Exception as error:
         receipt['status'] = 'failed'

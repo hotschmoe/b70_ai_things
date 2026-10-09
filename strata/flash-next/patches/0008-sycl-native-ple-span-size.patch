@@ -1,0 +1,10 @@
+--- a/sycl/src/kernels/cuda/native_ple_postops.dp.cpp
++++ b/sycl/src/kernels/cuda/native_ple_postops.dp.cpp
+@@ -324,6 +324,6 @@
+     const Span inputs[] = {{projected_key,D*4,4}, {hidden,D*4,4}, {value,N*4,4},
+         {history,HISTORY*D*4,4}, {w.norm_key,D*4,4}, {w.norm_query,D*4,4},
+-        {w.norm_conv,D*4,4}, {w.source_exact ? static_cast<const void*>(w.conv_source_f32) : static_cast<const void*>(w.conv1d_f16),w.source_exact ? 4*D*4 : 4*D*2,w.source_exact ? size_t(4):size_t(2)}};
++        {w.norm_conv,D*4,4}, {w.source_exact ? static_cast<const void*>(w.conv_source_f32) : static_cast<const void*>(w.conv1d_f16),w.source_exact ? size_t(4*D*4) : size_t(4*D*2),w.source_exact ? size_t(4):size_t(2)}};
+     const Span outputs[] = {{b.key,D*4,4}, {b.query,D*4,4}, {b.gate,H*4,4},
+         {b.gated,D*4,4}, {b.normalized,D*4,4}, {b.conv,D*4,4}, {b.result,D*4,4}};
+     for (const auto& span : inputs) validate(span);

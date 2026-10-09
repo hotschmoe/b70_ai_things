@@ -30,9 +30,56 @@ def save(path, value):
     temporary.replace(path)
 
 
+
+def reset_capture_evidence(capture_dir, mode, diagnostic_log):
+    """Count only observed bounded rows; numerical reset correctness is a separate verdict."""
+    records = [line for line in diagnostic_log.splitlines() if line.startswith('FNRESET ')]
+    files = sorted(capture_dir.glob('*.f32'))
+    manifest = [{'name': path.name, 'bytes': path.stat().st_size, 'sha256': sha(path)} for path in files]
+    evidence = {'reset_diagnostic_records': len(records), 'reset_numeric_files': len(files)}
+    if mode == 'off':
+        if records or files:
+            raise RuntimeError('Default-off reset observer unexpectedly produced evidence')
+        evidence['reset_numeric_coverage'] = 'off; no observation expected'
+    else:
+        if not all(any(line.startswith(prefix) for line in records)
+                   for prefix in ['FNRESET arm ', 'FNRESET ubatch ', 'FNRESET scale_meta ']):
+            raise RuntimeError('Armed reset metadata path was unexercised')
+        if mode == 'metadata':
+            if files or any(line.startswith('FNRESET summary ') for line in records):
+                raise RuntimeError('Metadata-only lane unexpectedly captured numerical rows')
+            evidence['reset_numeric_coverage'] = 'metadata only; no numerical observation'
+        elif mode == 'numeric':
+            pre = {path.name[:-8]: path for path in files if path.name.endswith('.pre.f32')}
+            post = {path.name[:-9]: path for path in files if path.name.endswith('.post.f32')}
+            if (not pre or set(pre) != set(post) or len(files) != len(pre)*2
+                    or len(pre) > 18 or sum(row['bytes'] for row in manifest) > 268435456
+                    or 'complete_file=0' in diagnostic_log):
+                raise RuntimeError('Bounded numeric reset capture missing, incomplete or unmatched')
+            for label in pre:
+                size = pre[label].stat().st_size
+                if (not label.startswith('FNRESET_') or size != post[label].stat().st_size
+                        or not 0 < size <= 16777216 or size % 4):
+                    raise RuntimeError('Numeric reset row byte bounds or pair size mismatch')
+                for phase in ['pre', 'post']:
+                    summaries = [line for line in records
+                                 if line.startswith('FNRESET summary label=' + label + ' phase=' + phase + ' ')]
+                    if (len(summaries) != 1 or 'complete_file=1 ' not in summaries[0]
+                            or re.search(r' count=(\d+) ', summaries[0]) is None
+                            or int(re.search(r' count=(\d+) ', summaries[0]).group(1))*4 != size):
+                        raise RuntimeError('Numeric reset raw row missing complete full-row summary evidence')
+            evidence['reset_numeric_coverage'] = 'observed bounded rows only; later layers and state families require explicit coverage review'
+        else:
+            raise ValueError('Unknown reset diagnostic mode')
+    return manifest, evidence
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', required=True, help='Immutable locally resolved runtime image ID')
+    parser.add_argument('--build', type=Path, help='Isolated reset diagnostic build; baseline remains default')
+    parser.add_argument('--build-receipt', type=Path, help='Supplemental qualification receipt; defaults to build parent receipt.json')
+    parser.add_argument('--reset-diagnostic', choices=['off', 'metadata', 'numeric'], help='Explicit isolated-build reset diagnostic lane; absent preserves baseline')
     parser.add_argument('--output', required=True, type=Path, help='New evidence directory')
     parser.add_argument('--placement', choices=['static', 'cache'], default='static')
     parser.add_argument('--moe-cache-mib', type=int, default=32768)
@@ -50,8 +97,21 @@ def main():
     parser.add_argument('--primitive-receipt', required=True, type=Path)
     parser.add_argument('--leased', action='store_true')
     args = parser.parse_args()
+    if args.build_receipt is not None and args.build is None:
+        parser.error('--build-receipt requires --build')
     if args.cpu_profile and not args.capture_profile:
         parser.error('--cpu-profile requires --capture-profile')
+    if args.reset_diagnostic is not None:
+        if (args.build is None or args.build.resolve() == BUILD.resolve() or not args.capture_profile
+                or args.placement != 'static' or args.warmup != 'on' or args.cpu_profile
+                or args.ctx_checkpoints is not None or args.sycl_fusion != 1):
+            parser.error('Reset diagnostics require isolated --build, --capture-profile, static placement, warmup on, default checkpoints/fusion and no CPU profiler')
+        history_suite = REPO / 'llamacpp/flash-next/cache_history_suite.json'
+        if args.profile_suite is not None and args.profile_suite.resolve() != history_suite:
+            parser.error('Reset diagnostics require the frozen cache history suite')
+        args.profile_suite = history_suite
+    elif args.build is not None and args.build.resolve() != BUILD.resolve():
+        parser.error('Isolated --build requires an explicit --reset-diagnostic mode')
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
     for fd, card in [(8, 0), (9, 1)]:
@@ -63,6 +123,11 @@ def main():
         parser.error('Invalid port or cache budget')
     args.output.mkdir(parents=True, exist_ok=False)
     out = args.output
+    build = args.build.resolve() if args.build is not None else BUILD
+    capture_dir = out.resolve() / 'reset-capture' if args.reset_diagnostic is not None else None
+    arm_file = capture_dir / 'ARM' if capture_dir is not None else None
+    if capture_dir is not None:
+        capture_dir.mkdir(exist_ok=False)
     (out / 'controller.py').write_bytes(CONTROLLER_SOURCE)
     started = int(time.time())
     name = 'flashnext-control-' + str(os.getpid()) + '-' + str(started)
@@ -108,11 +173,26 @@ def main():
         signal.signal(sig, interrupted)
     exists = False
     try:
+        import run_primitives as primitive_validator
+        build_identity = primitive_validator.validate_candidate_build(build, args.build_receipt)
+        if args.reset_diagnostic is not None and build_identity is None:
+            raise RuntimeError('Isolated reset diagnostic build identity required')
+        receipt.update({'build': str(build), 'build_identity': build_identity,
+                        'reset_diagnostic_mode': args.reset_diagnostic})
         primitives = json.loads(args.primitive_receipt.read_text())
         if not primitives.get('passed') or not primitives.get('coverage_complete') or primitives.get('image') != args.image or not primitives.get('post_health_passed'):
             raise RuntimeError('Passing same-runtime primitive receipt required')
-        if primitives.get('binary_sha256') != sha(BUILD / 'bin/test-backend-ops'):
+        if primitives.get('binary_sha256') != sha(build / 'bin/test-backend-ops'):
             raise RuntimeError('Primitive binary identity changed')
+        receipt['build_validator_sha256'] = sha(Path(primitive_validator.__file__))
+        if build_identity is not None:
+            if primitives.get('controller_sha256') != receipt['build_validator_sha256']:
+                raise RuntimeError('Primitive validator/controller source changed')
+            if primitives.get('build_identity') != build_identity or primitives.get('build') != str(build):
+                raise RuntimeError('Passing primitive receipt from this exact isolated build required')
+            libraries = {str(path): sha(path) for path in sorted((build / 'bin').glob('lib*.so*'))}
+            if primitives.get('runtime_library_sha256') != libraries:
+                raise RuntimeError('Primitive runtime library identity changed')
         if primitives.get('sycl_optimization', 1) != args.sycl_opt:
             raise RuntimeError('Primitive optimization mode differs from the candidate')
         if primitives.get('sycl_fusion', 1) != args.sycl_fusion:
@@ -138,7 +218,7 @@ def main():
             if path.is_symlink() or path.stat().st_size != entry['size'] or verified[entry['path']]['digest'] != entry.get('sha256', entry.get('git_blob')):
                 raise RuntimeError('Model intake identity mismatch: ' + entry['path'])
         receipt.update({'model_lock_sha256': sha(lock_path), 'intake_sha256': sha(intake_path),
-                        'model_revision': lock['revision'], 'server_sha256': sha(BUILD / 'bin/llama-server')})
+                        'model_revision': lock['revision'], 'server_sha256': sha(build / 'bin/llama-server')})
         method = args.placement if args.placement == 'static' else 'cache' + str(args.moe_cache_mib)
         alias = lock['research_alias'] + '-llamacpp-layer2-' + method + '-fp16kv-mtp0-ctx8192'
         if args.warmup == 'on':
@@ -149,6 +229,8 @@ def main():
             alias += '-ctxcp' + str(args.ctx_checkpoints)
         if args.sycl_fusion == 0:
             alias += '-fusion0'
+        if args.reset_diagnostic is not None:
+            alias += '-resetdiag-' + args.reset_diagnostic
         receipt['sycl_fusion'] = args.sycl_fusion
         receipt['context_checkpoints_override'] = args.ctx_checkpoints
         receipt['sycl_optimization'] = args.sycl_opt
@@ -200,12 +282,22 @@ def main():
         command = ['docker', 'run', '-d', '--name', name, '--label', 'b70.flashnext.owner=' + str(os.getpid()),
                    '--memory', '110g', '--memory-swap', '110g', '--ulimit', 'core=0', '--device', '/dev/dri',
                    '--group-add', str(Path('/dev/dri/renderD128').stat().st_gid), '--ipc', 'host', '-p', '127.0.0.1:' + str(args.port) + ':8080',
-                   '-v', '/dev/dri/by-path:/dev/dri/by-path:ro', '-v', str(BUILD) + ':/build:ro',
+                   '-v', '/dev/dri/by-path:/dev/dri/by-path:ro', '-v', str(build) + ':/build:ro',
                    '-v', str(model_dir) + ':/model:ro', '-e', 'ONEAPI_DEVICE_SELECTOR=level_zero:0,1',
                    '-e', 'ZE_AFFINITY_MASK=0,1', '-e', 'GGML_SYCL_ENABLE_GRAPH=0', '-e', 'ZES_ENABLE_SYSMAN=1',
                    '-e', 'SYCL_CACHE_PERSISTENT=0']
         command += ['-e', 'GGML_SYCL_ENABLE_OPT=' + str(args.sycl_opt),
                     '-e', 'GGML_SYCL_ENABLE_FUSION=' + str(args.sycl_fusion)]
+        if args.reset_diagnostic is not None:
+            reset_env = {'FLASHNEXT_RESET_DIAG': '0' if args.reset_diagnostic == 'off' else '1',
+                         'FLASHNEXT_RESET_DIAG_NUMERIC': '1' if args.reset_diagnostic == 'numeric' else '0',
+                         'FLASHNEXT_RESET_DIAG_ARM': '/reset-capture/ARM',
+                         'FLASHNEXT_RESET_DIAG_DIR': '/reset-capture'}
+            command += ['-v', str(capture_dir) + ':/reset-capture']
+            for key, value in reset_env.items():
+                command += ['-e', key + '=' + value]
+            receipt.update({'reset_diagnostic_environment': reset_env, 'reset_capture_directory': str(capture_dir),
+                            'reset_diagnostic_armed': False, 'reset_numeric_coverage': 'unexercised'})
         if args.init or args.cpu_profile:
             command += ['--init']
         if args.cpu_profile:
@@ -287,6 +379,18 @@ def main():
                     time.sleep(1)
                 if not profiler.ready():
                     raise RuntimeError('Software profiler attachment deadline')
+            if arm_file is not None:
+                if stopped or not inspect()['Running']:
+                    raise RuntimeError('Cannot arm reset diagnostic after interruption or server exit')
+                # New directory and exclusive create prevent stale startup/screen arming.
+                with arm_file.open('x', encoding='ascii') as handle:
+                    json.dump({'armed_epoch': time.time(), 'screen_passed': receipt['screen_passed'],
+                               'mode': args.reset_diagnostic, 'research_alias': alias}, handle, ensure_ascii=True)
+                    handle.write('\n')
+                receipt['reset_diagnostic_armed'] = True
+                receipt['reset_arm_sha256'] = sha(arm_file)
+                receipt['reset_arm_epoch'] = time.time()
+                save(out / 'runtime-receipt.json', receipt)
             profile_log = (out / 'profile-client.log').open('w')
             profile_command = [sys.executable, str(REPO / 'llamacpp/flash-next/capture_profile.py'),
                                        '--endpoint', endpoint, '--output', str(out / 'profile-requests'),
@@ -310,6 +414,13 @@ def main():
             if client.returncode:
                 raise RuntimeError('Diagnostic capture incomplete')
             receipt['diagnostic_capture_complete'] = True
+            if args.reset_diagnostic is not None:
+                run(['docker', 'logs', name], 'reset-diagnostic.log', 30)
+                diagnostic_log = (out / 'reset-diagnostic.log').read_text(errors='replace')
+                manifest, evidence = reset_capture_evidence(capture_dir, args.reset_diagnostic, diagnostic_log)
+                save(out / 'reset-capture-manifest.json', manifest)
+                receipt.update(evidence)
+                receipt['reset_capture_manifest_sha256'] = sha(out / 'reset-capture-manifest.json')
             if profiler is not None:
                 profiler.stop()
                 if not inspect()['Running']:

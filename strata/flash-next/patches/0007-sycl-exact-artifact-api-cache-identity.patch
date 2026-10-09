@@ -1,0 +1,302 @@
+--- a/serve/server.py
++++ b/serve/server.py
+@@ -58,6 +58,7 @@
+                             forced_call, images_of, literal_tags, mark_think_literals, openai_to_messages,
+                             tool_choice_of, unmark_think_literals)
+ from serve.mcp import McpCancelled, hub_from_config  # noqa: E402
++from serve import artifact_identity as artifact_identity_api
+ from serve import runconfig  # noqa: E402
+ from serve.winjob import contain  # noqa: E402
+ from serve.structured import StructuredOutputError, prepare_format, validated_json  # noqa: E402
+@@ -601,8 +602,8 @@
+             tl.last = value
+ 
+     def __init__(self, exe: str, args: list[str], cwd: str | None = None, log: str | None = None,
+-                 env: dict | None = None, lazy: bool = False):
+-        self.spawn = (exe, list(args), cwd, log, env)   # to start it again after it died (issue #27)
++                 env: dict | None = None, lazy: bool = False, identity_guard=None):
++        self.spawn = (exe, list(args), cwd, log, env, False, identity_guard)   # to start it again after it died (issue #27)
+         paths = {k: v for k, v in zip(args, args[1:]) if k in ("--native", "--pack")}
+         self.model_path = paths.get("--native") or paths.get("--pack", "pack/full")
+         self.log_path = log
+@@ -624,6 +625,8 @@
+             self.info["version"] = None
+         if lazy:
+             return
++        if identity_guard is not None:
++            identity_guard(exe,list(args),env or {})
+         self.unloaded = False            # `ended` stays True until READY (below): not alive while starting (#344)
+         self.log = open(log, "a", encoding="utf-8") if log else subprocess.DEVNULL
+         loading = threading.Event()                     # set once READY: the narrator below stops
+@@ -2594,6 +2597,7 @@
+         self.engine, self.tok, self.template, self.model, self.vision = engine, tokenizer, template, model_name, vision
+         self.literals = literal_tags(getattr(tokenizer, "control_tokens", ()))   # texts that stay text inside a message
+         self.fit_max_tokens = fit_max_tokens          # --fit-max-tokens: clamp the output cap instead of 400
++        self.artifact_identity = None                 # optional exact artifact/cache contract
+         self.aliases: list[str] = []                  # #297: other names of the model (the config's `aliases`)
+         self.reasoning_close_retry = False            # #1053 (opt-in): close the thinking once when a reply ends inside it
+         self.codex_compaction_cache = False           # #924 (opt-in): a Codex compaction is rendered with its conversation's tools
+@@ -3210,6 +3214,8 @@
+         """-> (ids, thinking, max_new). An unset or non-positive max_new (some clients send -1) means "unlimited":
+         the rest of the context.  `force` (forced_call): without thinking the reply starts with it, so it ends the
+         prompt; with thinking, Service.run writes it once the thinking is over."""
++        if self.artifact_identity and isinstance(req,dict) and req.get("model") is not None and req.get("model") not in self.model_names():
++            raise ValueError("model is not one of the exact artifact's served IDs")
+         fetched = self._note_unreadable_tool_images(messages)
+         ids = self.encode_prompt(messages, tools, kwargs)
+         if force and kwargs.get("enable_thinking", True) is False:
+@@ -4556,6 +4562,8 @@
+                     if not loaded and (svc.idle_unload_s or getattr(svc.engine, "unloaded", False)):
+                         model["status"] = {"value": "unloaded"}   # like llama-server's router: listed, loads on use
+                         loaded = True
++                    if svc.artifact_identity:
++                        model["meta"]["artifact_identity"] = dict(svc.artifact_identity)
+                     if svc.aliases:                       # #297: the aliases, and each one listed under its own id
+                         model["aliases"] = list(svc.aliases)
+                     data = [model, *({**model, "id": x, "alias_of": svc.model} for x in svc.aliases)]
+@@ -5663,6 +5671,10 @@
+         a.tokenizer = cfg["tokenizer"]
+     tok = ByteTokenizer()
+     tpath = Path(a.tokenizer)
++    try:
++        identity = artifact_identity_api.load_identity(cfg,tpath)
++    except (OSError,KeyError,ValueError) as e:
++        ap.error(str(e))
+     if a.engine == "strata" and not (tpath / "vocab.json").exists():
+         ap.error(f"the model's tokenizer is missing ({tpath / 'vocab.json'}); run setup again")
+     if (tpath / "vocab.json").exists():
+@@ -5673,7 +5685,8 @@
+             tokens[i] = t
+         merges = (tpath / "merges.txt").read_text(encoding="utf-8").split("\n")
+         types = json.loads((tpath / "token_type.json").read_text())
+-        tok = ST.Tokenizer(tokens, merges, types)
++        tok_cfg = json.loads((tpath / "tokenizer.json").read_text(encoding="utf-8")) if (tpath / "tokenizer.json").exists() else {}
++        tok = ST.Tokenizer(tokens, merges, types, tok_cfg.get("pre","qwen35"), tok_cfg.get("special_ids"))
+     hub = hub_from_config(cfg, a.mcp_config)            # before the minutes of loading: a bad entry stops here
+     if a.engine == "strata":
+         if not cfg:
+@@ -5717,8 +5730,17 @@
+             effort_end = effort_end_args(cfg, exe, tok)  # #458
+         except ValueError as e:
+             raise SystemExit(f"[strata] config {e}")
+-        engine = StrataEngine(exe, engine_args(cfg) + (effort_end or []), cwd=cfg.get("cwd"), log=cfg.get("log"),
+-                              env=env, lazy=lazy)
++        launch_args=engine_args(cfg)+(effort_end or [])
++        def identity_guard(target=exe,target_args=launch_args,target_env=env):
++            artifact_identity_api.validate_runtime(identity,target,target_args,target_env)
++        try:
++            identity_guard()                       # before any engine process is started
++        except (OSError,KeyError,ValueError) as e:
++            ap.error(str(e))
++        if identity:
++            env[artifact_identity_api.IDENTITY_ENV]=identity["sha256"]
++        engine = StrataEngine(exe,launch_args,cwd=cfg.get("cwd"),log=cfg.get("log"),
++                              env=env,lazy=lazy,identity_guard=identity_guard if identity else None)
+         engine.silence_s = silence                      # an attribute of its own: restart() keeps it
+         warn_tight_ram(engine.info.get("arena_mib"))
+         note = desktop_vram_note(cfg.get("backend"), engine.info.get("vram_free_mib"), engine.spawn[1],
+@@ -5735,6 +5757,7 @@
+                   model_name=cfg.get("model_name", "qwen3.8-flash-next"), vision=vision,
+                   sampling_defaults=sampling_defaults,
+                   fit_max_tokens=a.fit_max_tokens or cfg.get("fit_max_tokens") is True)
++    svc.artifact_identity = identity["metadata"] if identity else None
+     svc.reasoning_close_retry = cfg.get("reasoning_close_retry") is True    # #1053: opt-in, off by default
+     svc.codex_thread_titles = cfg.get("codex_thread_titles") is True    # #923: opt-in, off by default
+     svc.codex_compaction_cache = cfg.get("codex_compaction_cache") is True   # #924: opt-in, off by default
+--- a/tools/strata_tokenizer.py
++++ b/tools/strata_tokenizer.py
+@@ -302,8 +302,9 @@
+         "pre_pattern_source": ".ref/llama.cpp src/llama-vocab.cpp L396 (LLAMA_VOCAB_PRE_TYPE_QWEN35)",
+     }
+     (out / "vocab.json").write_text(json.dumps(tk.ids, ensure_ascii=False), encoding="utf-8")
+-    (out / "merges.txt").write_text("\n".join("%s %s" % k for k, _ in
+-                                              sorted(tk.ranks.items(), key=lambda kv: kv[1])), encoding="utf-8")
++    from gguf_reader import GGUFFile
++    source_md=GGUFFile(pathlib.Path(gguf_path)).metadata
++    (out / "merges.txt").write_text("\n".join(source_md["tokenizer.ggml.merges"]), encoding="utf-8")
+     (out / "token_type.json").write_text(json.dumps(tk.token_types), encoding="utf-8")
+     (out / "tokenizer.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=1), encoding="utf-8")
+     # the model's own chat template: fine-tunes change it (Swift 1.5 differs from Qwen3.8-Flash-Next's)
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/api_state_identity.hpp"
+ #include "strata/core/stage_mirror_budget.hpp"
+ #include "strata/core/native_hc_policy.hpp"
+ #define DPCT_COMPAT_RT_VERSION 12080
+@@ -7383,12 +7384,10 @@
+             }
+             if (!config_fp) {
+                 strata::core::SessionConfig c;
+-                c.engine_version = STRATA_VERSION;
+-#if defined(STRATA_USE_HIP)
+-                c.backend = "hip";
+-#else
+-                c.backend = "cuda";
+-#endif
++                std::string state_contract;
++                if (!strata::core::sycl_api_state_identity(state_contract,e)) return false;
++                c.engine_version = std::string(STRATA_VERSION)+"|"+state_contract;
++                c.backend = "sycl";
+                 c.kv = o.kv;
+                 c.max_context = o.max_context;
+                 c.kv_resident = o.kv_resident;
+--- a/src/core/conversation_file.cpp
++++ b/src/core/conversation_file.cpp
+@@ -825,6 +825,8 @@
+ }
+ 
+ void SessionHasher::update(const void* data, size_t n) {
++    // Empty vectors may have null data(); a zero-byte update is a no-op.
++    if (n==0) return;
+     const uint8_t* p = static_cast<const uint8_t*>(data);
+     total_ += n;
+     if (npending_) {
+--- /dev/null
++++ b/serve/artifact_identity.py
+@@ -0,0 +1,111 @@
++"""Optional strict GGUF/API identity. No generic tokenizer/template fallback in this mode."""
++from pathlib import Path
++import hashlib
++import json
++import sys
++import platform
++from importlib.metadata import version as package_version
++
++PRIMARY="hotschmoe-dd"
++SOURCE_REPO="unsloth/Qwen3.8-Flash-Next-GGUF"
++SOURCE_REVISION="766911a6b7369840a91dbcd95f9f997acaab6cd6"
++TOKENIZER_GGUF_SHA256="4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082"
++FILES=("vocab.json","merges.txt","token_type.json","tokenizer.json","chat_template.jinja")
++ENV_PREFIXES=("STRATA_","SYCL_","ONEAPI_")
++IDENTITY_ENV="STRATA_ARTIFACT_IDENTITY_SHA256"
++PYTHON_SOURCES=("serve/server.py","serve/frontend.py","serve/artifact_identity.py","tools/strata_tokenizer.py","tools/gguf_reader.py")
++
++
++def python_contract():
++    return {"python":platform.python_version(),**{name:package_version(name) for name in ("regex","jinja2","markupsafe")}}
++
++
++def source_contract():
++    root=Path(__file__).resolve().parents[1]
++    return {name:sha256_file(root/name) for name in PYTHON_SOURCES}
++
++
++def sha256_file(path):
++    h=hashlib.sha256()
++    with Path(path).open("rb") as source:
++        for block in iter(lambda:source.read(1024*1024),b""): h.update(block)
++    return h.hexdigest()
++
++
++def runtime_environment(env):
++    return {k:str(v) for k,v in sorted(env.items()) if k.startswith(ENV_PREFIXES) and k!=IDENTITY_ENV}
++
++
++def load_identity(cfg,tpath):
++    name=cfg.get("artifact_identity_manifest")
++    if not name: return None
++    path=Path(name)
++    if not path.is_absolute(): path=Path(cfg.get("cwd") or ".")/path
++    raw=path.read_bytes(); manifest=json.loads(raw)
++    if manifest.get("schema")!=1 or manifest.get("primary_model_name")!=PRIMARY:
++        raise ValueError("artifact identity: unsupported schema or primary model name")
++    alias=manifest.get("research_alias")
++    if not isinstance(alias,str) or not alias.strip() or alias==PRIMARY:
++        raise ValueError("artifact identity: detailed research alias missing")
++    if cfg.get("model_name",PRIMARY)!=PRIMARY:
++        raise ValueError("artifact identity: model_name must be hotschmoe-dd")
++    supplied=cfg.get("aliases",[alias])
++    if isinstance(supplied,str): supplied=[x.strip() for x in supplied.split(",") if x.strip()]
++    if supplied!=[alias]: raise ValueError("artifact identity: aliases differ from exact artifact contract")
++    cfg["model_name"]=PRIMARY;cfg["aliases"]=[alias]
++    expected=manifest.get("tokenizer_files")
++    if not isinstance(expected,dict) or set(expected)!=set(FILES):
++        raise ValueError("artifact identity: all five tokenizer/template file hashes are required")
++    for file in FILES:
++        if sha256_file(Path(tpath)/file)!=expected[file]:
++            raise ValueError("artifact identity: changed tokenizer/template file "+file)
++    model=manifest["model"]
++    if (model.get("repo")!=SOURCE_REPO or model.get("revision")!=SOURCE_REVISION or
++        model.get("artifact")!="UD-Q4_K_XL" or model.get("tokenizer_gguf_sha256")!=TOKENIZER_GGUF_SHA256):
++        raise ValueError("artifact identity: selected pinned GGUF identity differs")
++    source=Path(model["tokenizer_gguf"])
++    if not source.is_absolute(): source=Path(cfg.get("cwd") or ".")/source
++    if sha256_file(source)!=model["tokenizer_gguf_sha256"]:
++        raise ValueError("artifact identity: tokenizer GGUF source differs")
++    # Validate actual consumed export arrays against original GGUF metadata, not
++    # just an internally consistent collection of hashes in a manifest.
++    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"tools"))
++    from gguf_reader import GGUFFile
++    md=GGUFFile(source).metadata
++    if md.get("tokenizer.ggml.model")!="gpt2" or md.get("tokenizer.ggml.pre")!="qwen35":
++        raise ValueError("artifact identity: unsupported tokenizer model/pre")
++    vocab=json.loads((Path(tpath)/"vocab.json").read_text(encoding="utf-8"))
++    tokens=md["tokenizer.ggml.tokens"]
++    if len(vocab)!=len(tokens) or any(vocab.get(token)!=i for i,token in enumerate(tokens)):
++        raise ValueError("artifact identity: token IDs differ from GGUF")
++    if (Path(tpath)/"merges.txt").read_text(encoding="utf-8").split("\n")!=md["tokenizer.ggml.merges"]:
++        raise ValueError("artifact identity: merge order differs from GGUF")
++    types=json.loads((Path(tpath)/"token_type.json").read_text(encoding="utf-8"))
++    if types!=md["tokenizer.ggml.token_type"]: raise ValueError("artifact identity: token types differ from GGUF")
++    settings=json.loads((Path(tpath)/"tokenizer.json").read_text(encoding="utf-8"))
++    special={k:int(v) for k,v in md.items() if k.startswith("tokenizer.ggml.") and k.endswith("_token_id")}
++    if settings.get("pre")!=md["tokenizer.ggml.pre"] or settings.get("special_ids")!=special:
++        raise ValueError("artifact identity: exported pre/special IDs differ from GGUF")
++    if md.get("tokenizer.ggml.add_bos_token",False) or settings.get("add_bos_token") is not False:
++        raise ValueError("artifact identity: BOS insertion is unsupported")
++    original=md.get("tokenizer.chat_template")
++    if not isinstance(original,str) or (Path(tpath)/"chat_template.jinja").read_bytes()!=original.encode("utf-8"):
++        raise ValueError("artifact identity: chat template differs from GGUF")
++    return {"manifest":manifest,"sha256":hashlib.sha256(raw).hexdigest(),"tokenizer_path":str(tpath),
++            "metadata":{"artifact_identity_sha256":hashlib.sha256(raw).hexdigest(),
++                        "source_revision":model["revision"],"scheme":model["artifact"],
++                        "tokenizer_gguf_sha256":model["tokenizer_gguf_sha256"],
++                        "chat_template_sha256":expected["chat_template.jinja"]}}
++
++
++def validate_runtime(identity,exe,args,env):
++    if identity is None: return
++    runtime=identity["manifest"]["runtime"]
++    if sha256_file(exe)!=runtime["exe_sha256"]: raise ValueError("artifact identity: engine executable differs")
++    if list(args)!=runtime["args"]: raise ValueError("artifact identity: engine arguments differ")
++    if runtime_environment(env)!=runtime["env"]: raise ValueError("artifact identity: engine environment differs")
++    if python_contract()!=runtime["python_versions"]: raise ValueError("artifact identity: Python/tokenizer/template dependency versions differ")
++    if source_contract()!=runtime["python_sources"]: raise ValueError("artifact identity: API/tokenizer/renderer source differs")
++    for name in FILES:
++        if sha256_file(Path(identity["tokenizer_path"])/name)!=identity["manifest"]["tokenizer_files"][name]:
++            raise ValueError("artifact identity: tokenizer/template changed before engine reload")
+--- /dev/null
++++ b/sycl/include/strata/core/api_state_identity.hpp
+@@ -0,0 +1,31 @@
++// CPU-testable disk-session math contract for the SYCL source route.
++#pragma once
++#include <cstdlib>
++#include <cstring>
++#include <string>
++#include <initializer_list>
++namespace strata::core {
++inline bool sycl_api_state_identity(std::string& out,std::string& error) {
++    out="sycl-state-contract-v7";
++    const char* digest=std::getenv("STRATA_ARTIFACT_IDENTITY_SHA256");
++    if (digest) {
++        if (std::strlen(digest)!=64) { error="session identity: artifact digest length"; return false; }
++        for (const char* p=digest;*p;++p) if (!(*p>='0' && *p<='9') && !(*p>='a' && *p<='f')) {
++            error="session identity: artifact digest encoding"; return false;
++        }
++        out+="|artifact=";out+=digest;
++    }
++    const char* native=std::getenv("STRATA_SYCL_NATIVE_HC");
++    if (native && std::strcmp(native,"1")==0 && !digest) {
++        error="session identity: native HC disk sessions require artifact identity manifest"; return false;
++    }
++    for (const char* name : {"STRATA_SYCL_NATIVE_HC","STRATA_HC_Q8","STRATA_HC_Q8_INJECT","STRATA_GR_V3",
++        "STRATA_QFUSE","STRATA_GR_UNFUSED","STRATA_PF_HCDOWN","STRATA_HCD_EXACT","STRATA_HC_UPMIX",
++        "STRATA_STAGE_MIRRORS","SYCL_PROGRAM_COMPILE_OPTIONS"}) {
++        const char* value=std::getenv(name);
++        const std::string text=value?value:"<unset>";
++        out+="|";out+=name;out+="=";out+=std::to_string(text.size());out+=":";out+=text;
++    }
++    return true;
++}
++}

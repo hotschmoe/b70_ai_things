@@ -701,3 +701,90 @@ models:
     scheme: UD-Q4_K_XL
     backend: llamacpp
     status: unqualified_fusion_history_diagnostic
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-resetdiag-off
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_off_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic off --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-resetdiag-metadata
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_metadata_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic metadata --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-resetdiag-numeric
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_numeric_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic numeric --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0-resetdiag-off
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_off_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic off --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0-resetdiag-metadata
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_metadata_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic metadata --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.
+
+  - served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0-resetdiag-numeric
+    family: qwen3.8-flash-next
+    method: Unsloth
+    scheme: UD-Q4_K_XL
+    backend: llamacpp
+    status: unqualified_reset_numeric_diagnostic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --build RESET_DIAGNOSTIC_BUILD --build-receipt QUALIFIED_BUILD_RECEIPT
+      --reset-diagnostic numeric --capture-profile
+      --image IMAGE_ID --primitive-receipt SAME_BUILD_PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
+      Metadata does not inspect numerical state; numeric waits may hide races.
+      Failed strict screens remain failed and prohibit shelf promotion.

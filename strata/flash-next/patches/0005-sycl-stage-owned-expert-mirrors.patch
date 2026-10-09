@@ -1,0 +1,608 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,3 +1,5 @@
++#include "strata/core/stage_expert_mirror.hpp"
++#include "strata/kernels/resident_plan_mirror.hpp"
+ #include "strata/core/native_hc_dispatch.hpp"
+ // src/core/verify.cpp - see include/strata/core/verify.hpp.
+ #define DPCT_PROFILING_ENABLED
+@@ -352,6 +354,22 @@
+     trace_dump(f);   // #649: STRATA_VERIFY_TRACE=1 only
+ }
+ 
++void Verifier::release_stage_mirror_graphs() {
++    if (!hits_.stage_mirror) return;
++    released_.store(true);
++    if (cs_) cs_->wait_and_throw();
++    if (sh_cs_) sh_cs_->wait_and_throw();
++    if (copy_) copy_->wait_and_throw();
++    for (auto& e:exec_) { if (e) delete e; e=nullptr; }
++    for (auto& e:exec_nr_) { if (e) delete e; e=nullptr; }
++    if (commit_exec_) { delete commit_exec_; commit_exec_=nullptr; }
++    for (auto& kv:exec_bm_) if (kv.second) delete kv.second;
++    exec_bm_.clear();
++    for (auto& kv:commit_bm_) if (kv.second) delete kv.second;
++    commit_bm_.clear();
++    hits_.stage_mirror.reset();
++}
++
+ Verifier::~Verifier() try {
+     // SYCL port: at process exit the Level Zero context can already be gone (serve mode's end), and a destructor
+     // that throws aborts the process (exit 139); the waits and frees below are best-effort then.
+@@ -412,6 +430,7 @@
+     wt_ = &wt;
+     g_ = &g;
+     ss_ = &ss;
++    if (hits.stage_mirror && !hits.stage_mirror->bind(hits.d_res,g.n_layers,g.n_expert,dpct::get_in_order_queue(),err)) return false;
+     hits_ = hits;
+     head_ = head;
+     max_t_ = max_t;
+@@ -439,6 +458,9 @@
+         return false;
+     }
+     if (le_ < 0) le_ = g.n_layers;
++    if (hits.stage_mirror && (hits.stage_mirror->lb!=lb_ || hits.stage_mirror->le!=le_)) {
++        err="stage mirror: verifier range differs from immutable owner"; return false;
++    }
+     if (lb_ < 0 || lb_ >= le_ || le_ > g.n_layers || (lb_ > 0 && hand_in_ == nullptr) ||
+         (le_ < g.n_layers && hand_out_ == nullptr)) {
+         err = "verify: the stage's layer range or its hand-off buffers are wrong";
+@@ -657,7 +679,8 @@
+     {
+         const char* v = std::getenv("STRATA_VERIFY_DEVICE_PLAN");
+         // (not with set_always_publish: the device table may lag the host's while windows are in flight)
+-        device_plan_ = !all_resident_ && !always_publish_ && (v != nullptr && std::atoi(v) != 0);
++        if (hits.stage_mirror && always_publish_) { err="stage mirror: always-publish overlap is unqualified"; return false; }
++        device_plan_ = !all_resident_ && !always_publish_ && (hits.stage_mirror || (v != nullptr && std::atoi(v) != 0));
+     }
+     // (halo's STRATA_VERIFY_RESIDENT=1 is this window's all_resident_ graph above, which 0.1.39 has on by default)
+     if (g_qfuse()) {   // S26: the HC read's q8_1 group counters, zeroed once (each launch leaves them zero)
+@@ -748,6 +771,9 @@
+     const int64_t HS = (int64_t) NG_HIST * NG_HC_DIM;
+     const int64_t TS = (s.idx_block - 1) * ID;
+     const bool ple_on = ss.ple.ready() && ple_stage();
++    if (hits_.stage_mirror && !hits_.stage_mirror->matches(hits_.d_res,g.n_layers,g.n_expert,*cs)) {
++        err="stage mirror: verifier queue/residency changed after binding"; return false;
++    }
+     auto Rt = [&](int t) { return R_ + (size_t) t * HC * N; };
+     const int G = (split_ && T >= 2 && !batch_rec_) ? 2 : 1;   // a batch window is one group
+     const bool self_commit = T == 1 && !batch_rec_ && !g_qfuse() && one_token_self_commit();   // see Verifier::commit
+@@ -1286,16 +1312,23 @@
+             mb.logits = logits_ + t * NE; mb.ids = ids_ + t * K; mb.weights = w_ + t * K;
+             if (!moe_route(wt, g, l, K, mb, mixed_ + t * N, cs, err, nullptr)) return false;
+         }
++        auto make_plan=[&](uint32_t* skip,uint32_t ring,uint32_t* plan_err) {
++            const auto* res=hits_.d_res+l*g.n_expert;
++            if (hits_.stage_mirror) {
++                const auto* table=hits_.stage_mirror->layer_table(l);
++                if (!table) { err="stage mirror: verifier layer outside its owner"; return false; }
++                resident_plan_bound(ids_+tb*K,n*int(K),int(K),res,int(g.n_expert),hits_.cache_base,
++                    slot_off_d_,(long long)hits_.blob,plan_+size_t(grp)*size_t(plan_i32_+16),
++                    (long long)max_t_*K,skip,ring,cs,table,plan_err);
++            } else resident_plan(ids_+tb*K,n*int(K),int(K),res,int(g.n_expert),hits_.cache_base,
++                    slot_off_d_,(long long)hits_.blob,plan_+size_t(grp)*size_t(plan_i32_+16),
++                    (long long)max_t_*K,skip,ring,cs,plan_err);
++            return true;
++        };
+         if (ar_on()) {
+-            resident_plan(ids_ + tb * K, n * (int) K, (int) K, hits_.d_res + l * g.n_expert, (int) g.n_expert,
+-                          hits_.cache_base, slot_off_d_, (long long) hits_.blob,
+-                          plan_ + (size_t) grp * (size_t) (plan_i32_ + 16), (long long) max_t_ * K, nullptr, 0, cs, m_plan_err_);
++            if (!make_plan(nullptr,0,m_plan_err_)) return false;
+         } else {
+-            if (device_plan_)   // E-6: every routed expert resident: this group's plan without the host
+-                resident_plan(ids_ + tb * K, n * (int) K, (int) K, hits_.d_res + l * g.n_expert, (int) g.n_expert,
+-                              hits_.cache_base, slot_off_d_, (long long) hits_.blob,
+-                              plan_ + (size_t) grp * (size_t) (plan_i32_ + 16), (long long) max_t_ * K, skip_ + grp,
+-                              (uint32_t) ((l - lb_) * G + grp + 1), cs);
++            if (device_plan_ && !make_plan(skip_+grp,(uint32_t)((l-lb_)*G+grp+1),nullptr)) return false;
+ #if defined(STRATA_USE_HIP)
+             if (g_doorbell_store)   // #649 A/B: the step's ring stored, not incremented over PCIe
+                 doorbell_publish_value(xm, ids_ + tb * K, w_ + tb * K, (int64_t) n * N, (int64_t) n * K, m_x_ + tb * N,
+--- a/sycl/include/strata/core/gguf_expert_source.hpp
++++ b/sycl/include/strata/core/gguf_expert_source.hpp
+@@ -15,6 +15,9 @@
+ #include "strata/core/expert_source.hpp"
+ 
+ #include <cstdint>
++#include <memory>
++#include <atomic>
++#include "strata/core/stage_expert_mirror.hpp"
+ #include <mutex>
+ #include <string>
+ #include <unordered_map>
+@@ -52,7 +55,13 @@
+     /// unmirrored one answers that layer's first mirrored blob: the verify plan asks `device_alias(layer, 0)` only as
+     /// "does this source have device-readable experts", and dereferences an alias only for `pinned()` experts.
+     const uint8_t* device_alias(int64_t layer, int64_t expert) const override;
+-    uint64_t mirrored_bytes() const { return mirror_bytes_; }
++    uint64_t mirrored_bytes() const { return mirror_bytes_+stage_bytes_; }
++    // Called once per disjoint stage, after its VRAM cache is populated. Input
++    // pairs must already exclude every cached expert. Source bytes stay original.
++    std::shared_ptr<StageExpertMirror> mirror_stage(const std::vector<std::pair<int64_t,int64_t>>& pairs,
++        uint64_t cap,int threads,int64_t lb,int64_t le,const sycl::queue& queue,std::string& err);
++    uint64_t storage_reads() const { return storage_reads_.load(); }
++    uint64_t mirror_host_reads() const { return mirror_host_reads_.load(); }
+ 
+ private:
+     int fd_of(int64_t layer, int role, std::string& err);
+@@ -69,6 +78,10 @@
+     std::mutex mu_;
+     int64_t n_layers_ = 0, n_expert_ = 0;
+     int64_t reads_ = 0;
++    std::vector<std::shared_ptr<StageExpertMirror>> stage_mirrors_;
++    std::vector<const uint8_t*> stage_alias_; // exact expert pointers;null absent
++    uint64_t stage_bytes_=0;
++    mutable std::atomic<uint64_t> storage_reads_{0},mirror_host_reads_{0};
+     uint8_t* mirror_ = nullptr;                    ///< USM host (pinned, device-readable)
+     uint64_t mirror_bytes_ = 0;
+     std::vector<int64_t> mirror_off_;              ///< per (layer, expert): offset in mirror_, -1 = not mirrored
+--- a/sycl/src/core/gguf_expert_source.cpp
++++ b/sycl/src/core/gguf_expert_source.cpp
+@@ -21,6 +21,7 @@
+ void GgufExpertSource::close() {
+     if (mirror_) { sycl::free(mirror_, dpct::get_in_order_queue()); mirror_ = nullptr; }
+     mirror_bytes_ = 0; mirror_off_.clear(); layer_first_.clear();
++    stage_alias_.clear(); stage_mirrors_.clear(); stage_bytes_=0;
+     for (int fd : fds_) if (fd >= 0) ::close(fd);
+     fds_.clear(); names_.clear(); layer_fd_.clear(); ring_.clear(); ring_key_.clear(); where_.clear();
+     ring_next_ = 0;
+@@ -75,6 +76,10 @@
+ 
+ const uint8_t* GgufExpertSource::blob(int64_t layer, int64_t expert) {
+     if (layer < 0 || layer >= n_layers_ || expert < 0 || expert >= n_expert_ || ring_.empty()) return nullptr;
++    if (!stage_alias_.empty()) {
++        const auto* p=stage_alias_[size_t(layer*n_expert_+expert)];
++        if (p) { ++mirror_host_reads_; return p; }
++    }
+     if (mirror_ != nullptr) {
+         const int64_t o = mirror_off_[(size_t) (layer * n_expert_ + expert)];
+         if (o >= 0) return mirror_ + o;
+@@ -108,7 +113,7 @@
+             done += (uint64_t) n;
+         }
+     }
+-    ++reads_;
++    ++reads_; ++storage_reads_;
+     return buf.data();
+ }
+ 
+@@ -166,13 +171,82 @@
+     return (int64_t) take.size();
+ }
+ 
++
++std::shared_ptr<StageExpertMirror> GgufExpertSource::mirror_stage(
++    const std::vector<std::pair<int64_t,int64_t>>& pairs,uint64_t cap,int threads,
++    int64_t lb,int64_t le,const sycl::queue& queue,std::string& err) try {
++    if (mirror_ || lb<0 || lb>=le || le>n_layers_ || !queue.has_property<sycl::property::queue::in_order>()) {
++        err="stage mirror: invalid range,queue or legacy mirror present"; return {};
++    }
++    for (const auto& old:stage_mirrors_) if (lb<old->le && old->lb<le) {
++        err="stage mirror: overlapping immutable stage range"; return {};
++    }
++    const auto& lay=strata::kernels::cpu::expert_layout();
++    std::vector<std::pair<int64_t,int64_t>> take;
++    std::vector<uint64_t> offsets;
++    std::vector<uint8_t> seen(size_t(n_layers_*n_expert_),0);
++    uint64_t bytes=0;
++    for (const auto& [l,e]:pairs) {
++        if (l<lb || l>=le || e<0 || e>=n_expert_) { err="stage mirror: out-of-stage pair"; return {}; }
++        const size_t key=size_t(l*n_expert_+e);
++        if (seen[key]) continue;
++        seen[key]=1;
++        const uint64_t raw=lay.bytes[size_t(l)];
++        if (!raw || raw>UINT64_MAX-255) { err="stage mirror: invalid source blob size"; return {}; }
++        const uint64_t b=(raw+255)/256*256;
++        if (b>cap-bytes) continue; // bounded selection, smaller later blobs may fit
++        offsets.push_back(bytes); take.push_back({l,e}); bytes+=b;
++    }
++    auto owner=std::make_shared<StageExpertMirror>(queue);
++    owner->lb=lb; owner->le=le; owner->n_layers=n_layers_; owner->n_expert=n_expert_; owner->bytes=bytes;
++    owner->source_fnv64.assign(size_t(n_layers_*n_expert_),0);
++    if (bytes) { owner->host=sycl::malloc_host<uint8_t>(size_t(bytes),owner->q); if (!owner->host) { err="stage mirror: pinned allocation failed"; return {}; } }
++    std::atomic<size_t> next{0}; std::atomic<bool> bad{false};
++    std::vector<std::thread> ts;
++    try { for (int worker=0;worker<std::max(1,threads);++worker) ts.emplace_back([&] {
++        for (size_t j;(j=next.fetch_add(1))<take.size() && !bad.load();) {
++            const auto [l,e]=take[j]; const size_t n=size_t(lay.bytes[size_t(l)]);
++            uint8_t* dst=owner->host+offsets[j];
++            if (!read_into(l,e,dst,n)) { bad=true; continue; }
++            uint64_t digest=14695981039346656037ull;
++            for (size_t i=0;i<n;++i) { digest^=dst[i]; digest*=1099511628211ull; }
++            owner->source_fnv64[size_t(l*n_expert_+e)]=digest;
++        }
++    }); } catch (...) { bad=true; for (auto& thread:ts) thread.join(); throw; }
++    for (auto& thread:ts) thread.join();
++    if (bad) { err="stage mirror: original GGUF gather failed"; return {}; }
++    std::vector<unsigned long long> table(size_t(n_layers_*n_expert_),0);
++    for (size_t j=0;j<take.size();++j) {
++        const auto [l,e]=take[j]; table[size_t(l*n_expert_+e)]=(unsigned long long)(owner->host+offsets[j]);
++    }
++    owner->table=sycl::malloc_device<unsigned long long>(table.size(),owner->q);
++    if (!owner->table) { err="stage mirror: address table allocation failed"; return {}; }
++    owner->q.memcpy(owner->table,table.data(),table.size()*sizeof(table[0])).wait_and_throw();
++    // Publish immutable addresses only after source read and table upload finish.
++    if (stage_alias_.empty()) stage_alias_.assign(table.size(),nullptr);
++    for (size_t j=0;j<take.size();++j) {
++        const auto [l,e]=take[j]; stage_alias_[size_t(l*n_expert_+e)]=owner->host+offsets[j];
++    }
++    stage_bytes_+=bytes; stage_mirrors_.push_back(owner);
++    return owner;
++} catch (const std::exception& ex) { err=std::string("stage mirror: ")+ex.what(); return {}; }
++
+ bool GgufExpertSource::pinned(int64_t layer, int64_t expert) const {
+-    if (mirror_ == nullptr || layer < 0 || layer >= n_layers_ || expert < 0 || expert >= n_expert_) return false;
++    if (layer < 0 || layer >= n_layers_ || expert < 0 || expert >= n_expert_) return false;
++    if (!stage_alias_.empty() && stage_alias_[size_t(layer*n_expert_+expert)]) return true;
++    if (mirror_ == nullptr) return false;
+     return mirror_off_[(size_t) (layer * n_expert_ + expert)] >= 0;
+ }
+ 
+ const uint8_t* GgufExpertSource::device_alias(int64_t layer, int64_t expert) const {
+-    if (mirror_ == nullptr || layer < 0 || layer >= n_layers_) return nullptr;
++    if (layer < 0 || layer >= n_layers_) return nullptr;
++    if (!stage_alias_.empty()) {
++        if (expert>=0 && expert<n_expert_ && stage_alias_[size_t(layer*n_expert_+expert)])
++            return stage_alias_[size_t(layer*n_expert_+expert)];
++        for (int64_t e=0;e<n_expert_;++e) if (stage_alias_[size_t(layer*n_expert_+e)])
++            return stage_alias_[size_t(layer*n_expert_+e)];
++    }
++    if (mirror_ == nullptr) return nullptr;
+     if (expert >= 0 && expert < n_expert_) {
+         const int64_t o = mirror_off_[(size_t) (layer * n_expert_ + expert)];
+         if (o >= 0) return mirror_ + o;
+@@ -184,6 +258,11 @@
+ bool GgufExpertSource::read_into(int64_t layer, int64_t expert, uint8_t* dst, size_t bytes) const {
+     if (layer < 0 || layer >= n_layers_ || expert < 0 || expert >= n_expert_ || dst == nullptr) return false;
+     const auto& lay = strata::kernels::cpu::expert_layout();
++    if (bytes<lay.bytes[size_t(layer)]) return false;
++    if (!stage_alias_.empty() && stage_alias_[size_t(layer*n_expert_+expert)]) {
++        std::memcpy(dst,stage_alias_[size_t(layer*n_expert_+expert)],size_t(lay.bytes[size_t(layer)]));
++        ++mirror_host_reads_; return true;
++    }
+     const auto& fm = lay.fmt[(size_t) layer];
+     const uint64_t blob = lay.bytes[(size_t) layer];
+     if (bytes < blob) return false;
+@@ -199,6 +278,7 @@
+             done += (uint64_t) n;
+         }
+     }
++    ++storage_reads_;
+     return true;
+ }
+ 
+--- a/include/strata/core/verify.hpp
++++ b/include/strata/core/verify.hpp
+@@ -33,6 +33,7 @@
+ #include <atomic>
+ #include <chrono>
+ #include <map>
++#include <memory>
+ #include <cstdint>
+ #include <string>
+ #include <vector>
+@@ -40,6 +41,7 @@
+ namespace strata::core {
+ 
+ class NativeHead;
++struct StageExpertMirror;
+ class RemoteExpertOpt;
+ 
+ /// The CPU pool for a window: x_f (n_tok, n_embd), ids (n_tok, k) -> out (n_tok * k, n_embd), hit rows zeroed.
+@@ -53,6 +55,7 @@
+     const uint64_t* slot_off = nullptr;   ///< E-6: host per-slot offsets when slots differ in size (null: slot * blob)
+     int64_t n_slots = 0;                  ///< E-6: how many (for the device copy)
+     int64_t blob = 0;
++    std::shared_ptr<StageExpertMirror> stage_mirror; // immutable SYCL table+host owner retained by captured graphs
+ };
+ 
+ class Verifier {
+@@ -74,6 +77,8 @@
+     /// paths that give up on the engine (a timed-out window, the serve watchdog): the window then ran on whatever
+     /// the flags guarded, so this verifier refuses every later window.  True when the streams finished.
+     bool release_gpu_waits(int timeout_ms);
++    // Normal stage-mirror shutdown only, after queues drain. Permanently retires this verifier.
++    void release_stage_mirror_graphs();
+ 
+     /// `max_t` <= kVerifyMaxT.  `head` may be null (the canonical head is then run per token).
+     bool init(const WeightTable& wt, const ModelGeometry& g, SessionState& ss, const VerifyHits& hits,
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/stage_mirror_budget.hpp"
+ #include "strata/core/native_hc_policy.hpp"
+ #define DPCT_COMPAT_RT_VERSION 12080
+ // src/program/generate.cpp - P2.S6: `strata generate`.
+@@ -1060,6 +1061,7 @@
+     strata::core::SessionState ss;
+     dpct::queue_ptr stream = &dpct::get_in_order_queue();
+     strata::core::ExpertCache cache;
++    std::shared_ptr<strata::core::StageExpertMirror> expert_mirror;
+     std::vector<std::pair<int32_t, int32_t>> profile;   ///< its layers' share of the profile, hottest first
+     int32_t* d_res = nullptr;                            ///< the residency table on its device
+     strata::core::Verifier ver;
+@@ -4690,9 +4692,21 @@
+     // SYCL port, plan item 2: the experts that did not fit VRAM, mirrored once in pinned host memory the GPU reads
+     // over PCIe (--stream-experts has no host copy otherwise: each routed miss was an SSD read). The share of misses
+     // the GPU takes is --pcie-frac; STRATA_MIRROR_MIB caps the mirror (default: MemAvailable less 4 GiB), 0 = off.
++    const char* stage_flag=std::getenv("STRATA_STAGE_MIRRORS");
++    if (stage_flag && std::strcmp(stage_flag,"0") && std::strcmp(stage_flag,"1")) {
++        std::fprintf(stderr,"stage mirror: STRATA_STAGE_MIRRORS must be 0 or 1\n"); return 2;
++    }
++    const bool stage_mirrors=stage_flag && std::strcmp(stage_flag,"1")==0;
++    if (stage_mirrors && (!o.stream_experts || srcp!=&gguf_src || o.expert_cache<=0 ||
++        o.adapt_every!=0 || o.adapt_async || !o.no_prefill_borrow || o.peer_device>=0 ||
++        o.resident_cpu_experts || remote_caches || split_same || o.pipeline_windows>0 || !o.mtp.empty())) {
++        std::fprintf(stderr,"stage mirror: requires streamed native experts, populated cache, --adapt-every 0, "
++                            "--no-prefill-borrow and no peer/remote/resident CPU tier, MTP, pipeline windows or same-device split\n"); return 2;
++    }
++    std::shared_ptr<strata::core::StageExpertMirror> first_stage_mirror;
+     unsigned long long* mirror_table_d = nullptr;   // [n_layers][n_expert] device-readable mirror addresses (0 = none)
+     int64_t unmirrored_misses = 0;
+-    if (o.stream_experts && srcp == &gguf_src && o.expert_cache > 0) {
++    if (!stage_mirrors && o.stream_experts && srcp == &gguf_src && o.expert_cache > 0) {
+         // #1054, #1440: with a layer split the mirror holds only the first GPU's layers. The pinned memory belongs to
+         // this GPU's context, and the later stages' caches do not exist yet (every later-stage expert would count as a
+         // miss: 20 GiB of RAM for experts the other card then holds, or one 39 GiB pinned allocation that fails).
+@@ -4823,6 +4837,70 @@
+                              "(%.2f GiB), %lld of its %zu profiled pairs; slot 0 verified\n",
+                      st.dev, (long long) st.lb, (long long) (st.le - 1), (long long) st.cache.slots(), st.cache.gib(),
+                      (long long) filled, st.profile.size());
++    }
++    if (stage_mirrors) {
++        uint64_t available=0;
++        if (FILE* info=std::fopen("/proc/meminfo","r")) {
++            char key[64]; unsigned long long kb;
++            while (std::fscanf(info,"%63s %llu kB",key,&kb)==2)
++                if (!std::strcmp(key,"MemAvailable:")) { available=uint64_t(kb)<<10; break; }
++            std::fclose(info);
++        }
++        uint64_t reserve[4],requested;
++        const char* names[]={"STRATA_STAGE_MIRROR_OS_MIB","STRATA_STAGE_MIRROR_PLE_MIB",
++            "STRATA_STAGE_MIRROR_PROMPT_MIB","STRATA_STAGE_MIRROR_WORKSPACE_MIB"};
++        for (int i=0;i<4;++i) if (!strata::core::stage_mirror_mib(std::getenv(names[i]),8ull<<30,reserve[i],err)) {
++            std::fprintf(stderr,"%s: %s\n",names[i],err.c_str()); return 2;
++        }
++        if (!strata::core::stage_mirror_mib(std::getenv("STRATA_MIRROR_MIB"),UINT64_MAX,requested,err)) {
++            std::fprintf(stderr,"%s\n",err.c_str()); return 2;
++        }
++        strata::core::StageMirrorBudget budget;
++        // Host checksum/address maps + source alias map, reserved once globally.
++        const uint64_t metadata=uint64_t(g.n_layers)*uint64_t(g.n_expert)*8*(2*(stages.size()+1)+1);
++        if (!available || !strata::core::StageMirrorBudget::make(available,requested,reserve,4,metadata,budget)) {
++            std::fprintf(stderr,"stage mirror: unavailable MemAvailable or reserve overflow\n"); return 2;
++        }
++        std::fprintf(stderr,"stage mirror global budget: available%llu cap%llu reserves%llu,%llu,%llu,%llu metadata%llu bytes\n",
++            (unsigned long long)available,(unsigned long long)budget.cap,(unsigned long long)reserve[0],
++            (unsigned long long)reserve[1],(unsigned long long)reserve[2],(unsigned long long)reserve[3],(unsigned long long)metadata);
++        auto build_stage=[&](strata::core::ExpertCache& cache,const std::vector<std::pair<int32_t,int32_t>>& ranked,
++            int64_t lb,int64_t le,const sycl::queue& queue,size_t remaining_stages,
++            std::shared_ptr<strata::core::StageExpertMirror>& owner) {
++            std::vector<std::pair<int64_t,int64_t>> missing;
++            std::vector<uint8_t> seen(size_t(g.n_layers*g.n_expert),0);
++            auto add=[&](int64_t l,int64_t e) {
++                if (l<lb || l>=le || e<0 || e>=g.n_expert) return;
++                const size_t key=size_t(l*g.n_expert+e);
++                if (!seen[key] && cache.slot_of(l,e)==strata::core::kNotResident) { seen[key]=1; missing.push_back({l,e}); }
++            };
++            for (const auto& pair:ranked) add(pair.first,pair.second);
++            for (int64_t l=lb;l<le;++l) for (int64_t e=0;e<g.n_expert;++e) add(l,e);
++            // Fair initial share leaves RAM available for second-stage coverage.
++            owner=gguf_src.mirror_stage(missing,budget.remaining()/remaining_stages,8,lb,le,queue,err);
++            if (!owner || !budget.commit(owner->bytes)) return false;
++            size_t covered=0;
++            for (const auto& pair:missing) covered+=gguf_src.pinned(pair.first,pair.second);
++            unmirrored_misses+=int64_t(missing.size()-covered);
++            std::fprintf(stderr,"stage mirror: layers%lld-%lld missing%zu mirrored%zu bytes%llu global_used%llu remaining%llu\n",
++                (long long)lb,(long long)(le-1),missing.size(),covered,(unsigned long long)owner->bytes,
++                (unsigned long long)budget.used,(unsigned long long)budget.remaining());
++            return true;
++        };
++        if (!build_stage(xcache,profile,0,stages.empty()?g.n_layers:split_at[0],dpct::get_in_order_queue(),
++                         stages.size()+1,first_stage_mirror)) { std::fprintf(stderr,"%s\n",err.c_str()); return 1; }
++        for (size_t i=0;i<stages.size();++i) {
++            auto& stage=*stages[i]; const strata::core::OnDevice on(stage.dev);
++            if (!build_stage(stage.cache,stage.profile,stage.lb,stage.le,*stage.stream,stages.size()-i,stage.expert_mirror)) {
++                std::fprintf(stderr,"%s\n",err.c_str()); return 1;
++            }
++        }
++        if (unmirrored_misses>0) {
++            const char* no_host=std::getenv("STRATA_VERIFY_NO_HOST");
++            if (no_host && *no_host && std::strcmp(no_host,"0")) {
++                std::fprintf(stderr,"stage mirror: %lld uncached/unmirrored experts require host fallback\n",(long long)unmirrored_misses); return 2;
++            }
++        }
+     }
+     if (multi_gpu)
+         std::fprintf(stderr, "strata generate: layer split: CUDA0 runs layers 0-%lld\n", (long long) (split_at[0] - 1));
+@@ -6783,7 +6861,7 @@
+         }
+         // a layer split: a one-chunk prompt runs the stages one after the other, so each stage's prompt path gets the
+         // next stage's GPU (the last one the first's) to stream and compute a share of its experts meanwhile
+-        if (multi_gpu && !stages.empty()) {
++        if (!stage_mirrors && multi_gpu && !stages.empty()) {
+             std::vector<std::pair<strata::prefill::Prefill*, int>> paths{{&sp, 0}};
+             for (const auto& st : stages) paths.emplace_back(&st->sp, st->dev);
+             for (size_t i = 0; i < paths.size(); ++i) {
+@@ -6852,6 +6930,7 @@
+         strata::core::Verifier ver;
+         strata::core::VerifyHits vh;
+         vh.d_res = thits.d_res;
++        vh.stage_mirror=first_stage_mirror;
+         if (mirror_table_d) strata::kernels::resident_plan_set_mirror(thits.d_res, mirror_table_d);
+         vh.h_res = host_res.empty() ? nullptr : host_res.data();
+         vh.cache_base = thits.cache_base;
+@@ -6951,6 +7030,7 @@
+                     const strata::core::OnDevice on(gs.dev);
+                     strata::core::VerifyHits vs;
+                     vs.d_res = gs.d_res;
++                    vs.stage_mirror=gs.expert_mirror;
+                     vs.h_res = host_res.empty() ? nullptr : host_res.data();
+                     vs.cache_base = gs.cache.device_slot(0);
+                     vs.blob = thits.blob;
+@@ -7005,6 +7085,7 @@
+                 const strata::core::OnDevice on(gs.dev);
+                 strata::core::VerifyHits vs;
+                 vs.d_res = gs.d_res;
++                vs.stage_mirror=gs.expert_mirror;
+                 vs.h_res = host_res.empty() ? nullptr : host_res.data();
+                 vs.cache_base = gs.cache.device_slot(0);
+                 vs.blob = thits.blob;
+@@ -11500,8 +11581,29 @@
+         // reclaims them). Their destructors ran against a runtime already shutting down and aborted (exit 139).
+         try {
+             dpct::get_current_device().queues_wait_and_throw();
+-            // Release the direct-access USM host mirror before process teardown.
+-            gguf_src.close();
++            if (stage_mirrors) {
++                // Drain every stage context while it is live, then destroy graph
++                // references before dropping tables and their host allocations.
++                // Retire ordinary token/session graphs too, before source aliases
++                // or any mirror allocation can be dropped.
++                strata::core::token_graph_free(tgraph);
++                strata::core::session_graphs_free(gr);
++                std::vector<std::shared_ptr<strata::core::StageExpertMirror>> retiring;
++                if (first_stage_mirror) retiring.push_back(first_stage_mirror);
++                ver.release_stage_mirror_graphs(); ver_b.release_stage_mirror_graphs();
++                for (auto& stage:stages) {
++                    if (stage->expert_mirror) retiring.push_back(stage->expert_mirror);
++                    const strata::core::OnDevice on(stage->dev);
++                    dpct::get_current_device().queues_wait_and_throw();
++                    stage->ver.release_stage_mirror_graphs(); stage->ver_b.release_stage_mirror_graphs();
++                    stage->expert_mirror.reset();
++                }
++                vh.stage_mirror.reset(); first_stage_mirror.reset();
++                // Drop source aliases before checked release; no graph or source
++                // may retain a usable table after the owning allocations free.
++                gguf_src.close();
++                for (auto& owner:retiring) owner->release();
++            } else gguf_src.close();
+         } catch (const std::exception& e) {
+             std::fprintf(stderr, "strata shutdown: mirror release failed: %s\n", e.what());
+             std::fflush(stderr);
+@@ -11951,6 +12053,7 @@
+         strata::core::Verifier ver;
+         strata::core::VerifyHits vh;
+         vh.d_res = thits.d_res;
++        vh.stage_mirror=first_stage_mirror;
+         if (mirror_table_d) strata::kernels::resident_plan_set_mirror(thits.d_res, mirror_table_d);
+         vh.h_res = host_res.empty() ? nullptr : host_res.data();
+         vh.cache_base = thits.cache_base;
+--- a/sycl/include/strata/kernels/resident_plan_mirror.hpp
++++ b/sycl/include/strata/kernels/resident_plan_mirror.hpp
+@@ -7,4 +7,10 @@
+ /// addresses, 0 = none) as planned: the expert kernels read it from that address, over PCIe. `d_res` is the residency
+ /// table whose per-layer slices resident_plan receives, so the layer of a call is found from its pointer.
+ void resident_plan_set_mirror(const int32_t* d_res, const unsigned long long* mirror_table);
++// Explicit stage/device binding. No global pointer lookup or cross-allocation subtraction.
++void resident_plan_bound(const int32_t* ids,int n_entries,int k,const int32_t* res_layer,int n_expert,
++    const uint8_t* cache_base,const unsigned long long* slot_off,long long blob,int32_t* plan,
++    long long capx,uint32_t* skip,uint32_t ring,void* stream,
++    const unsigned long long* mirror_layer,uint32_t* plan_err=nullptr);
++
+ }
+--- a/sycl/src/kernels/cuda/verify_kernels.dp.cpp
++++ b/sycl/src/kernels/cuda/verify_kernels.dp.cpp
+@@ -2364,6 +2364,12 @@
+     const unsigned long long* mir = nullptr;   // SYCL port: the layer's slice of the host-mirror table, if any
+     if (g_mirror_table != nullptr && g_mirror_res != nullptr && res_layer >= g_mirror_res)
+         mir = g_mirror_table + (res_layer - g_mirror_res);
++    resident_plan_bound(ids,n_entries,k,res_layer,n_expert,cache_base,slot_off,blob,plan,capx,skip,ring,stream,mir,plan_err);
++}
++void resident_plan_bound(const int32_t* ids,int n_entries,int k,const int32_t* res_layer,int n_expert,
++    const uint8_t* cache_base,const unsigned long long* slot_off,long long blob,int32_t* plan,
++    long long capx,uint32_t* skip,uint32_t ring,void* stream,
++    const unsigned long long* mir,uint32_t* plan_err) {
+     {
+         auto exp_props = sycl::ext::oneapi::experimental::properties{
+             sycl::ext::oneapi::experimental::use_root_sync};
+--- /dev/null
++++ b/sycl/include/strata/core/stage_mirror_budget.hpp
+@@ -0,0 +1,33 @@
++// CPU-testable process-wide host budget: one snapshot, all stages share remaining().
++#pragma once
++#include <cstdint>
++#include <cstddef>
++#include <limits>
++#include <cstdlib>
++#include <cerrno>
++#include <string>
++namespace strata::core {
++inline bool stage_mirror_mib(const char* value,uint64_t fallback,uint64_t& out,std::string& err) {
++    if (!value) { out=fallback; return true; }
++    if (!*value) { err="stage mirror: empty MiB budget"; return false; }
++    for (const char* p=value;*p;++p) if (*p<'0' || *p>'9') { err="stage mirror: invalid MiB budget"; return false; }
++    errno=0; char* end=nullptr; const unsigned long long n=std::strtoull(value,&end,10);
++    if (errno || *end || n>(std::numeric_limits<uint64_t>::max()>>20)) { err="stage mirror: MiB budget overflow"; return false; }
++    out=uint64_t(n)<<20; return true;
++}
++struct StageMirrorBudget {
++    uint64_t cap=0,used=0;
++    static bool make(uint64_t available,uint64_t requested,const uint64_t* reserves,size_t n,
++                     uint64_t metadata,StageMirrorBudget& out) {
++        uint64_t keep=metadata;
++        for (size_t i=0;i<n;++i) {
++            if (reserves[i]>std::numeric_limits<uint64_t>::max()-keep) return false;
++            keep+=reserves[i];
++        }
++        const uint64_t room=available>keep?available-keep:0;
++        out.cap=requested<room?requested:room; out.used=0; return true;
++    }
++    uint64_t remaining() const { return cap-used; }
++    bool commit(uint64_t bytes) { if (bytes>remaining()) return false; used+=bytes; return true; }
++};
++}
+--- /dev/null
++++ b/sycl/include/strata/core/stage_expert_mirror.hpp
+@@ -0,0 +1,50 @@
++// Immutable stage/device mirror owner. Graphs retain shared ownership through VerifyHits.
++#pragma once
++#include <sycl/sycl.hpp>
++#include <cstdint>
++#include <vector>
++#include <string>
++#include <mutex>
++namespace strata::core {
++struct StageExpertMirror {
++    explicit StageExpertMirror(const sycl::queue& queue):q(queue) {}
++    StageExpertMirror(const StageExpertMirror&)=delete;
++    StageExpertMirror& operator=(const StageExpertMirror&)=delete;
++    ~StageExpertMirror() {
++        // Explicit normal shutdown calls release() and propagates failures.
++        // Destruction is a failure-path fallback and must not throw.
++        try { release(); } catch (...) {}
++    }
++    void release() {
++        // Called only after all graph references retire. The retained queue owns
++        // the original context regardless of the current device at teardown.
++        q.wait_and_throw();
++        if (table) { sycl::free(table,q); table=nullptr; }
++        if (host) { sycl::free(host,q); host=nullptr; }
++    }
++    sycl::queue q;
++    uint8_t* host=nullptr;
++    unsigned long long* table=nullptr;
++    uint64_t bytes=0;
++    int64_t lb=0,le=0,n_layers=0,n_expert=0;
++    const int32_t* residency=nullptr;
++    mutable std::mutex association_mu;
++    std::vector<uint64_t> source_fnv64; // full [layer,expert] original blob checksums;0 absent
++    bool bind(const int32_t* res,int64_t layers,int64_t experts,const sycl::queue& queue,std::string& err) {
++        const std::lock_guard<std::mutex> lock(association_mu);
++        if (!res || layers!=n_layers || experts!=n_expert || queue.get_context()!=q.get_context() ||
++            queue.get_device()!=q.get_device() || (residency && residency!=res)) {
++            err="stage mirror: residency/device/context association mismatch"; return false;
++        }
++        residency=res; return true;
++    }
++    bool matches(const int32_t* res,int64_t layers,int64_t experts,const sycl::queue& queue) const {
++        const std::lock_guard<std::mutex> lock(association_mu);
++        return residency && residency==res && layers==n_layers && experts==n_expert &&
++            queue.get_context()==q.get_context() && queue.get_device()==q.get_device();
++    }
++    const unsigned long long* layer_table(int64_t layer) const {
++        return table && layer>=lb && layer<le ? table+size_t(layer)*size_t(n_expert):nullptr;
++    }
++};
++}

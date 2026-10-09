@@ -1,0 +1,195 @@
+{
+  "schema": 1,
+  "status": "UNEXECUTED proposed diagnostic launch profiles; launch_allowed=false until gates; no stock wrapper auto-setup/MTP",
+  "launch_allowed": false,
+  "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "model_lock": "strata/flash-next/model-lock.json",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "container_mounts": [
+    "BUILD:/build:ro",
+    "ISOLATED_STRATA_SOURCE:/src:ro",
+    "PACK:/pack:ro",
+    "SELECTED_MODEL_DIRECTORY:/model:ro",
+    "NEW_RESULTS:/results"
+  ],
+  "engine_arguments_common": [
+    "--pack",
+    "/pack",
+    "--native",
+    "/model/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+    "--ple-gguf",
+    "/model/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+    "--expert-profile",
+    "/src/data/expert-profile.bin",
+    "--expert-cache",
+    "auto",
+    "--stream-experts",
+    "--prefill",
+    "128",
+    "--spec",
+    "2",
+    "--suffix-draft",
+    "0",
+    "--lookup-chain",
+    "0",
+    "--max-context",
+    "8192",
+    "--kv",
+    "fp16",
+    "--ple-io",
+    "mmap",
+    "--ple-row-cache",
+    "1048576",
+    "--pcie-frac",
+    "1",
+    "--vram-reserve-mib",
+    "2048",
+    "--prompt-cache",
+    "0",
+    "--adapt-swaps",
+    "0",
+    "--batch",
+    "0"
+  ],
+  "runtime_environment_common": {
+    "STRATA_SYCL_NATIVE_HC": "1",
+    "STRATA_HC_Q8": "0",
+    "STRATA_HC_Q8_INJECT": "0",
+    "STRATA_QFUSE": "0",
+    "STRATA_GR_V3": "0",
+    "SYCL_CACHE_PERSISTENT": "0",
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:gpu",
+    "STRATA_VERIFY_DEVICE_PLAN": "1",
+    "STRATA_VERIFY_NO_HOST": "1",
+    "STRATA_MIRROR_MIB": "65536"
+  },
+  "profiles": [
+    {
+      "name": "one-card",
+      "physical_card": 0,
+      "device_environment": {
+        "ZE_AFFINITY_MASK": "0"
+      },
+      "extra_engine_args": []
+    },
+    {
+      "name": "same-device-layer-split",
+      "physical_card": 0,
+      "device_environment": {
+        "ZE_AFFINITY_MASK": "0"
+      },
+      "extra_engine_args": [
+        "--layer-split",
+        "32",
+        "--split-device",
+        "0",
+        "--trim-stage-weights"
+      ]
+    },
+    {
+      "name": "two-card-layer-split",
+      "device_environment": {
+        "ZE_AFFINITY_MASK": "0,1"
+      },
+      "extra_engine_args": [
+        "--layer-split",
+        "32",
+        "--split-device",
+        "1",
+        "--trim-stage-weights"
+      ]
+    }
+  ],
+  "server_config_template": {
+    "exe": "/build/strata",
+    "args": [
+      "--pack",
+      "/pack",
+      "--native",
+      "/model/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+      "--ple-gguf",
+      "/model/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "--expert-profile",
+      "/src/data/expert-profile.bin",
+      "--expert-cache",
+      "auto",
+      "--stream-experts",
+      "--prefill",
+      "128",
+      "--spec",
+      "2",
+      "--suffix-draft",
+      "0",
+      "--lookup-chain",
+      "0",
+      "--max-context",
+      "8192",
+      "--kv",
+      "fp16",
+      "--ple-io",
+      "mmap",
+      "--ple-row-cache",
+      "1048576",
+      "--pcie-frac",
+      "1",
+      "--vram-reserve-mib",
+      "2048",
+      "--prompt-cache",
+      "0",
+      "--adapt-swaps",
+      "0",
+      "--batch",
+      "0"
+    ],
+    "cwd": "/src",
+    "tokenizer": "/pack/tokenizer",
+    "model_name": "hotschmoe-dd",
+    "aliases": [
+      "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192"
+    ],
+    "host": "127.0.0.1",
+    "port": 18082,
+    "env": {
+      "STRATA_SYCL_NATIVE_HC": "1",
+      "STRATA_HC_Q8": "0",
+      "STRATA_HC_Q8_INJECT": "0",
+      "STRATA_QFUSE": "0",
+      "STRATA_GR_V3": "0",
+      "SYCL_CACHE_PERSISTENT": "0",
+      "ONEAPI_DEVICE_SELECTOR": "level_zero:gpu",
+      "STRATA_VERIFY_DEVICE_PLAN": "1",
+      "STRATA_VERIFY_NO_HOST": "1",
+      "STRATA_MIRROR_MIB": "65536"
+    },
+    "log": "/results/server-engine.log"
+  },
+  "required_gates": [
+    "Full linked source/build receipt and original GGUF/model/tokenizer/template identities",
+    "Exact native387 HC upload byte readback; exact PLE Q8key/value and F32conv upload+route gate after future0006",
+    "Non-HC exact pack conversions verified; compatibility HC/PLE copies unused in strict mode",
+    "Stage-effective layer range fixed in actual NativeDense load model calls before split qualification",
+    "Existing primitive+source math and healthy lifecycle gates, then one-card wholemodel teacher forced/coherence/repeats",
+    "Before each split model run prove every stage expert in VRAM or stage-correct mirror; no unmirrored source read fallback with VERIFY_NO_HOST",
+    "For stock0001..0004 secondstage allresident placement receipt required; add stage-owned mirror0005 only as a new qualified generation",
+    "Validate actual token prefix/state reset and perstage streams before cached/concurrent configurations"
+  ],
+  "memory_contract": {
+    "host_usable_gib": 121,
+    "minimum_host_headroom_gib": 16,
+    "mirror_cap_mib_global_target": 65536,
+    "ple_cache_rows": 1048576,
+    "ple_cache_raw_bytes_upper_bound": 94371840,
+    "ple_table_residency": "originalIQ4_NL mmap plus bounded row cache; no ram mode or NVMe move assumed beneficial",
+    "vram_reserve_mib_per_stage": 2048,
+    "prefill_chunk": 128,
+    "layer_boundary32": "sizing hypothesis only; must match real padded native expert slot budget, canonical+native dense/session/head/workspace allocation; not guaranteed to fit"
+  },
+  "notes": [
+    "--spec2 is verifier capacity required by native pack; no --mtp and suffix/lookup0 yields plain target decode, not draft artifact substitution",
+    "Graph source defaults retained: no --no-token-graph, no graph-only/full-graph experiment; report actual successful graph captures and no-host device plan",
+    "Same-device split may fit only with bounded later-stage cache plus stage-owned mirrors; stock global mirrors do not guarantee two-stage coverage",
+    "--native auto-discovers all four GGUF shards and enables native dense/key/head; explicit originalPLE shard prevents replacement tables",
+    "Server supplies --serve protocol internally; do not add MTP via setup.py or stock JSON examples",
+    "Python server dependencies use isolatedvenv and pinned requirements.txt; requirement/API install is separate CPU intake, not host replacement"
+  ]
+}

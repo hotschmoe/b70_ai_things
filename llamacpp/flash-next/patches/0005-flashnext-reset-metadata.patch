@@ -1,0 +1,189 @@
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -1,4 +1,5 @@
+ #include "llama-context.h"
++#include "flashnext-reset-diag.h"
+ 
+ #include "ggml.h"
+ #include "llama-arch.h"
+@@ -1412,6 +1413,7 @@
+ }
+ 
+ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, llm_graph_type gtype, llama_memory_context_i * mctx, ggml_status & ret) {
++    flashnext_reset_diag::begin(this, ubatch.n_tokens, ubatch.token, ubatch.pos, ubatch.n_seqs_unq, ubatch.seq_id_unq);
+     if (mctx && !mctx->apply()) {
+         LLAMA_LOG_ERROR("%s: failed to apply memory context\n", __func__);
+         ret = GGML_STATUS_FAILED;
+@@ -1425,7 +1427,8 @@
+     // in order to correctly reuse a graph, it's full topology has to be uniquely determined by these parameters
+     const auto gparams = graph_params(res, ubatch, mctx, gtype);
+ 
+-    if (!graph_reuse_disable && gf_res_prev_active == res && res->can_reuse(gparams)) {
++    const bool fnreset_reused = !graph_reuse_disable && gf_res_prev_active == res && res->can_reuse(gparams);
++    if (fnreset_reused) {
+         //LLAMA_LOG_DEBUG("%s: reusing previous graph\n", __func__);
+ 
+         // with pipeline parallelism, the previous graph_compute_async may still be running
+@@ -1474,6 +1477,7 @@
+         //LLAMA_LOG_INFO("graph set inputs time: %.3f ms\n", (ggml_time_us() - t_start_us)/1000.0);
+     }
+ 
++    flashnext_reset_diag::graph(res->get_gf(), fnreset_reused);
+     const auto status = graph_compute(res->get_gf(), ubatch.n_tokens > 1);
+     if (status != GGML_STATUS_SUCCESS) {
+         LLAMA_LOG_ERROR("%s: failed to compute graph, compute status: %d\n", __func__, status);
+--- a/src/llama-memory-recurrent.cpp
++++ b/src/llama-memory-recurrent.cpp
+@@ -1,4 +1,5 @@
+ #include "llama-memory-recurrent.h"
++#include "flashnext-reset-diag.h"
+ 
+ #include "ggml-backend.h"
+ #include "llama-impl.h"
+@@ -1370,6 +1371,7 @@
+     const int32_t  src0     = mem->cells[cell_idx].src0;
+ 
+     if (mem->n_rs_seq == 0) {
++        flashnext_reset_diag::mapping(cell_idx, mem->cells[cell_idx].seq_id.empty() ? -1 : *mem->cells[cell_idx].seq_id.begin(), src0, 0, src0, mem->head, mem->n, mem->rs_z);
+         return src0;
+     }
+ 
+@@ -1382,5 +1384,7 @@
+             mem->rs_idx[seq] = 0;
+         }
+     }
+-    return (int32_t)(idx * mem->size) + src0;
+-}
++    const int32_t row = (int32_t)(idx * mem->size) + src0;
++    flashnext_reset_diag::mapping(cell_idx, mem->cells[cell_idx].seq_id.empty() ? -1 : *mem->cells[cell_idx].seq_id.begin(), src0, idx, row, mem->head, mem->n, mem->rs_z);
++    return row;
++}
+--- /dev/null
++++ b/ggml/include/flashnext-reset-diag.h
+@@ -0,0 +1,126 @@
++// B70 default-off bounded recurrent reset metadata. Diagnostic only.
++#pragma once
++#include "ggml.h"
++#include <cinttypes>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <sys/stat.h>
++namespace flashnext_reset_diag {
++struct config {
++    bool enabled = false;
++    bool numeric = false;
++    const char * arm = nullptr;
++    config() {
++        const char * e = std::getenv("FLASHNEXT_RESET_DIAG");
++        enabled = e && std::strcmp(e, "1") == 0;
++        if (enabled) {
++            arm = std::getenv("FLASHNEXT_RESET_DIAG_ARM");
++            const char * n = std::getenv("FLASHNEXT_RESET_DIAG_NUMERIC");
++            numeric = n && std::strcmp(n, "1") == 0;
++        }
++    }
++};
++inline const config & settings() { static const config c; return c; }
++struct scope {
++    bool armed = false, active = false, limited = false;
++    const void * ctx = nullptr;
++    uint64_t ordinal = 0;
++    unsigned request = 0, ubatch = 0, maps = 0;
++    int layer = -1;
++};
++inline scope & current() { static thread_local scope s; return s; }
++inline void begin(const void * ctx, uint32_t n, const int32_t * tok,
++                  const int32_t * pos, uint32_t nseq, const int32_t * seq) {
++    if (!settings().enabled) return;
++    auto & s = current(); s.active = false; s.maps = 0;
++    if (!s.armed) {
++        struct stat st;
++        if (!settings().arm || stat(settings().arm, &st) != 0 || !S_ISREG(st.st_mode)) return;
++        s.armed = true; s.ctx = ctx;
++        std::fprintf(stderr, "FNRESET arm ctx=%p file=%s mode=%s bounds=requests3,ubatches2,layer1\n",
++                     ctx, settings().arm, settings().numeric ? "numeric" : "metadata");
++    }
++    ++s.ordinal;
++    if (s.ctx != ctx || nseq != 1 || !n || !pos || !seq) {
++        std::fprintf(stderr, "FNRESET skip ordinal=%" PRIu64 " reason=context_or_multisequence_or_missing_position\n", s.ordinal);
++        return;
++    }
++    int32_t lo = pos[0], hi = pos[0];
++    uint64_t hash = UINT64_C(14695981039346656037);
++    for (uint32_t i = 0; i < n; ++i) {
++        if (pos[i] < lo) lo = pos[i]; if (pos[i] > hi) hi = pos[i];
++        if (tok) for (unsigned b = 0; b < 4; ++b) {
++            hash ^= (uint32_t(tok[i]) >> (8*b)) & 255; hash *= UINT64_C(1099511628211);
++        }
++    }
++    // Single-slot cache_prompt=false diagnostic: position-zero starts are request boundaries.
++    if (lo == 0) { ++s.request; s.ubatch = 0; }
++    ++s.ubatch;
++    s.active = s.request >= 1 && s.request <= 3 && s.ubatch <= 2;
++    if (!s.active) {
++        if (!s.limited) std::fprintf(stderr, "FNRESET skip reason=capture_bounds_or_no_position_zero_start\n");
++        s.limited = true; return;
++    }
++    std::fprintf(stderr, "FNRESET ubatch ctx=%p request=%u ubatch=%u ordinal=%" PRIu64
++                 " seq=%d tokens=%u pos_min=%d pos_max=%d token_fnv1a_le32=%016" PRIx64 " token_present=%d\n",
++                 ctx, s.request, s.ubatch, s.ordinal, seq[0], n, lo, hi, hash, tok != nullptr);
++}
++inline void mapping(uint32_t cell, int32_t seq, int32_t src0, uint32_t rollback,
++                    int32_t row, uint32_t head, uint32_t count, int32_t zero) {
++    if (!settings().enabled) return;
++    auto & s = current(); if (!s.active || s.maps++ >= 64) return;
++    std::fprintf(stderr, "FNRESET mapping ctx=%p request=%u ubatch=%u cell=%u seq=%d src0=%d rollback=%u row=%d head=%u n=%u rs_z=%d\n",
++                 s.ctx, s.request, s.ubatch, cell, seq, src0, rollback, row, head, count, zero);
++}
++inline const ggml_tensor * base(const ggml_tensor * t, size_t & offset) {
++    offset = 0;
++    for (unsigned depth = 0; t->view_src && depth < 32; ++depth) { offset += t->view_offs; t = t->view_src; }
++    return t;
++}
++inline int cache_layer(const char * name, char & family) {
++    int l = -1;
++    if (std::sscanf(name, "cache_s_l%d", &l) == 1) family = 'S';
++    else if (std::sscanf(name, "cache_r_l%d", &l) == 1) family = 'R';
++    else if (std::sscanf(name, "cache_ple_r_l%d", &l) == 1) family = 'P';
++    return l;
++}
++inline bool reset_node(const ggml_tensor * t) {
++    if (t->op != GGML_OP_SCALE || !t->src[0]) return false;
++    float p[2]; std::memcpy(p, t->op_params, sizeof(p));
++    return p[0] == 0.0f && p[1] == 0.0f;
++}
++inline void graph(ggml_cgraph * gf, bool reused) {
++    if (!settings().enabled) return;
++    auto & s = current(); if (!s.active) return;
++    const int count = ggml_graph_n_nodes(gf);
++    // Select first actual R/S layer, not an earlier attention-only PLE layer.
++    if (s.layer < 0) for (int i = 0; i < count; ++i) {
++        auto * t = ggml_graph_node(gf, i); if (!reset_node(t)) continue;
++        size_t off; char f = '?'; auto * b = base(t->src[0], off);
++        int l = cache_layer(ggml_get_name(b), f);
++        if (l >= 0 && f != 'P') { s.layer = l; break; }
++    }
++    unsigned selected = 0;
++    for (int i = 0; i < count; ++i) {
++        auto * t = ggml_graph_node(gf, i); if (!reset_node(t)) continue;
++        size_t off; char f = '?'; auto * b = base(t->src[0], off);
++        const int l = cache_layer(ggml_get_name(b), f);
++        if (l != s.layer || l < 0) continue;
++        ++selected;
++        std::fprintf(stderr, "FNRESET scale_meta ctx=%p request=%u ubatch=%u reuse=%d node=%d layer=%d family=%c base=%s offset=%zu type=%d ne=%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64
++                     " nb=%zu,%zu,%zu,%zu bytes=%zu row=%zu zero_sized=%d\n",
++                     s.ctx, s.request, s.ubatch, reused, i, l, f, ggml_get_name(b), off, int(t->src[0]->type),
++                     t->src[0]->ne[0], t->src[0]->ne[1], t->src[0]->ne[2], t->src[0]->ne[3],
++                     t->src[0]->nb[0], t->src[0]->nb[1], t->src[0]->nb[2], t->src[0]->nb[3],
++                     ggml_nbytes(t->src[0]), b->nb[1] ? off/b->nb[1] : 0, ggml_nelements(t->src[0]) == 0);
++        if (settings().numeric) {
++            char label[GGML_MAX_NAME];
++            std::snprintf(label, sizeof(label), "FNRESET_%u_%u_%d_%c_%d_%p", s.request, s.ubatch, l, f, i, s.ctx);
++            ggml_set_name(t, label);
++        }
++    }
++    std::fprintf(stderr, "FNRESET graph ctx=%p request=%u ubatch=%u reuse=%d selected_layer=%d reset_nodes=%u\n",
++                 s.ctx, s.request, s.ubatch, reused, s.layer, selected);
++}
++} // namespace flashnext_reset_diag

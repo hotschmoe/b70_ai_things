@@ -58,3 +58,17 @@ request-state isolation, two-device behavior, or serving qualification is proven
 A GPU pass must report GPU_COMPOSITION_NUMERICAL,48 cases,344 stages, zero failed
 cases and344 numeric negative controls. Parent receipt validation must confirm
 complete unique case/stage coverage and every numerical/repeat/guard/source gate.
+
+## Parent GPU follow-up
+
+CONFIG -> Patches0001+0002, same pinned source/runtime; synthetic fixtures,
+no model routes. COMMAND -> run_native_q8_hc_gpu.py --composition, after
+passing projection receipt. RESULT ->48/48 cases and344/344 intermediate and
+negative-control checks per card pass; exact repeat/batch bytes, guards and
+unchanged sources pass. Worst NMSE2.8520817958328582e-11 and normalized maximum
+error3.533520650739953e-5, under frozen1e-6/1e-4 gates. Normal exit/removal,
+strict per-card and compiled P2P0 pre/post-health pass; no selected GPU faults.
+VERDICT -> Synthetic composed math qualified on each card; model source
+upload, complete routes, shared write, history, split/concurrency/latency remain
+unqualified. Receipt:
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/native-hc-composition-v1/receipt.json.

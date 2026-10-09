@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "source_revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+  "patches": [
+    {
+      "path": "llamacpp/flash-next/patches/0005-flashnext-reset-metadata.patch",
+      "sha256": "873b9ebda6e512c8438faea52957f978e7cf3954469925922fd6924c13f49f40"
+    },
+    {
+      "path": "llamacpp/flash-next/patches/0006-flashnext-reset-row-capture.patch",
+      "sha256": "2ddee9389481476fa1346532a6599b3d62fba3a2ac8697fac31272e97f3bf8bc"
+    }
+  ],
+  "build_prefix": "flashnext-reset-diagnostic-",
+  "built_status": "built; GPU reset observation and output equivalence unqualified",
+  "source_file_sha256": {
+    "src/llama-context.cpp": "578e4b2cdcf3c2230bc6081bbe33f18a935c277903675c2f81efc6145c2dc61c",
+    "src/llama-memory-recurrent.cpp": "51172be188d0eece2267c9105dc5a8d2c3ef7ebd58e88a6f562ac6ee36326f98",
+    "ggml/src/ggml-sycl/ggml-sycl.cpp": "e9e16080447fe292428445cbfb1bcecb999462b301555d86ca84be2d499b63d9"
+  },
+  "overlay_files": [
+    "src/llama-context.cpp",
+    "src/llama-memory-recurrent.cpp",
+    "ggml/src/ggml-sycl/ggml-sycl.cpp",
+    "ggml/include/flashnext-reset-diag.h",
+    "ggml/include/flashnext-reset-capture.h"
+  ],
+  "build_targets": [
+    "llama",
+    "llama-server"
+  ],
+  "default": "disabled; no diagnostic buffers, tensor name changes, copies or waits",
+  "runtime_required_env": {
+    "FLASHNEXT_RESET_DIAG": "1",
+    "FLASHNEXT_RESET_DIAG_ARM": "REPLACE_WITH_NEW_ABSOLUTE_ARM_FILE_AFTER_READINESS",
+    "FLASHNEXT_RESET_DIAG_NUMERIC": "1",
+    "FLASHNEXT_RESET_DIAG_DIR": "REPLACE_WITH_NEW_WRITABLE_ABSOLUTE_CAPTURE_DIRECTORY"
+  },
+  "runtime_notes": [
+    "Metadata-only arm uses FLASHNEXT_RESET_DIAG=1 and ARM, leaves NUMERIC unset or 0.",
+    "Controller must substitute ARM/DIR values; placeholders are not valid launch settings.",
+    "Create regular ARM file only after readiness and screen; do not inherit a stale file.",
+    "Keep all existing OPT, fusion, checkpoint, batch, thread, precision, serving and SYCL_CACHE_PERSISTENT settings matched; do not enable a new optimization.",
+    "Require one slot, cache_prompt=false, no MTP/speculation, and position-zero prompt starts.",
+    "Numeric lane changes waits and diagnostic names; metadata lane changes only host logging.",
+    "Clean uninstrumented, metadata and numeric arms are separate observations, not latency comparisons."
+  ],
+  "bounds": {
+    "position_zero_starts": 3,
+    "ubatches_per_start": 2,
+    "recurrent_layers": 1,
+    "mapping_lines_per_ubatch": 64,
+    "max_row_bytes": 16777216,
+    "max_capture_bytes_pre_plus_post": 268435456,
+    "max_unique_numeric_nodes": 18
+  },
+  "coverage_gate": [
+    "Require FNRESET arm and ubatch correlation with ctx/seq/position/token hash.",
+    "Require scale_meta source cache, family, selected layer, exact view shape/strides/offset; no zero-sized row interpreted as tested.",
+    "Require pre and post raw file complete_file=1 and expected byte length, SHA256 offline.",
+    "Require one numeric summary pair for every claimed family/ubatch; no observation means unexercised.",
+    "Require matched emitted token IDs and logprobs; retain any diagnostic-dependent behavior as timing-sensitive evidence."
+  ],
+  "limitations": [
+    "Request ordinals are inferred from position-zero ubatches, not HTTP task IDs; unsuitable for prefix-hit or concurrent request experiments.",
+    "Only first actual recurrent R/S reset layer is selected; PLE-only earlier layers and all later layers remain unobserved.",
+    "First two prompt ubatches only; natural completion logits may occur later.",
+    "s_copy logging observes existing single-use rollback index, without calling s_copy again; it does not log seq_rm success.",
+    "Numeric captures are exact contiguous F32 selected SCALE0 views on the existing queue; no attention/QSA state or full-layer activations are captured.",
+    "SCALE0 executes unchanged once; diagnostic waits may hide existing races.",
+    "Stale repeated numeric labels are captured at most once; exclusive-create files refuse overwrite.",
+    "Default-off code is source-reviewed; full-server binary and trace-off/trace-on GPU equivalence remain unqualified."
+  ],
+  "cpu_validation": {
+    "source_syntax": "PASS actual icpx -std=c++17 -fsyntax-only final patched llama-context.cpp and llama-memory-recurrent.cpp, no-device compiler container; exit 0; cpu-syntax-final.log empty",
+    "sycl_object": "PASS actual icpx -O1 -fsycl -c full ggml-sycl.cpp translation unit; no devices exposed; not a Release full-server build",
+    "sycl_object_sha256": "90127baccc16b2221851372f627511a21f87c5e6b2fa7f4f53d8f7a4cbf302ad",
+    "numeric_fixture": "PASS actual helper summaries on 7 values with NaN payload, +/-Inf, +/-zero and +/-1; byte preservation; second write complete_file=0, originals unchanged",
+    "fixture_sha256": {
+      "fixture.pre.f32": "da6637787ca0b585f08a5292a21a71a114a1fcd1ed92cce8c650b7b5a8a0f0db",
+      "fixture.post.f32": "cf8b0d65f160abd08d26117406d055923fc2eb35f3a68a180748d95c10be894e"
+    },
+    "results_root": "/mnt/vm_8tb/b70/results/flashnext-reset-diag-source-20261009",
+    "patch_apply": "PASS git apply --check both patches against untouched pinned external source",
+    "sycl_object_bytes": 1390648,
+    "compiler_image": "sha256:64284c46a66e82463a49929fd0cbfca218c2aab7f9f409087f46a60304adce8a",
+    "compiler_image_note": "Validation used resolved current build tag; coordinator full build must retain its own pinned baseline compiler image/config and record that independent identity."
+  },
+  "status": "CPU source preparation and validation complete; full-server build and GPU execution pending",
+  "experiment_records": [
+    {
+      "CONFIG": "Pinned de7fa0 source exported to isolated results overlay; patches0005+0006; compiler image64284c46; network disabled, no GPU devices.",
+      "COMMAND": "icpx -std=c++17 -fsyntax-only -I/src/src -I/src/include -I/src/ggml/include /src/src/llama-context.cpp /src/src/llama-memory-recurrent.cpp",
+      "RESULT": "Exit0, final compiler log empty. Both patches apply --check on clean pinned external source.",
+      "VERDICT": "Source syntax qualified only; no full link or device execution."
+    },
+    {
+      "CONFIG": "Same overlay/compiler; existing SYCL definitions/includes from baseline ninja rule; O1 object compile, not Release linked binary.",
+      "COMMAND": "icpx -O1 -DNDEBUG -std=gnu++17 -fPIC -fsycl -DMKL_ILP64 with baseline SYCL definitions/includes -c /src/ggml/src/ggml-sycl/ggml-sycl.cpp -o /out/ggml-sycl-reset-diag.o",
+      "RESULT": "Exit0, object1390648 bytes SHA25690127baccc16b2221851372f627511a21f87c5e6b2fa7f4f53d8f7a4cbf302ad.",
+      "VERDICT": "Actual full SYCL translation unit compiles, GPU runtime/numerical qualification remains pending."
+    },
+    {
+      "CONFIG": "CPU-only numeric-helper fixture, no diagnostic env; linked baseline libggml-base, no device initialization.",
+      "COMMAND": "Compile capture-fixture.cpp; run twice to same fixture directory; compare raw pre bytes with known F32 bit patterns.",
+      "RESULT": "Default-off prepare(nullptr) returned inactive. Correct NaN/Inf/nonzero/signed-zero counts; raw NaN payload and negative zero retained. Second run reported complete_file0, did not overwrite.",
+      "VERDICT": "Host summary/file preservation behavior qualified; no GPU copies, bounds/dispatch or inference equivalence qualification."
+    }
+  ]
+}

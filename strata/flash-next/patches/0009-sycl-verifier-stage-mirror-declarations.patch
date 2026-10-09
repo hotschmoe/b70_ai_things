@@ -1,0 +1,35 @@
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -33,6 +33,7 @@
+ #include <atomic>
+ #include <chrono>
+ #include <map>
++#include <memory>
+ #include <cstdint>
+ #include <chrono>
+ #include <string>
+@@ -41,6 +42,7 @@
+ namespace strata::core {
+ 
+ class NativeHead;
++struct StageExpertMirror;
+ class RemoteExpertOpt;
+ 
+ /// The CPU pool for a window: x_f (n_tok, n_embd), ids (n_tok, k) -> out (n_tok * k, n_embd), hit rows zeroed.
+@@ -54,6 +56,7 @@
+     const uint64_t* slot_off = nullptr;   ///< E-6: host per-slot offsets when slots differ in size (null: slot * blob)
+     int64_t n_slots = 0;                  ///< E-6: how many (for the device copy)
+     int64_t blob = 0;
++    std::shared_ptr<StageExpertMirror> stage_mirror; // stage table/host owner retained by captured graphs
+ };
+ 
+ class Verifier {
+@@ -75,6 +78,8 @@
+     /// paths that give up on the engine (a timed-out window, the serve watchdog): the window then ran on whatever
+     /// the flags guarded, so this verifier refuses every later window.  True when the streams finished.
+     bool release_gpu_waits(int timeout_ms);
++    // Retire graph references only after the owning queues drain.
++    void release_stage_mirror_graphs();
+ 
+     /// `max_t` <= kVerifyMaxT.  `head` may be null (the canonical head is then run per token).
+     bool init(const WeightTable& wt, const ModelGeometry& g, SessionState& ss, const VerifyHits& hits,

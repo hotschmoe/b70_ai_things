@@ -15,7 +15,7 @@
     "include/strata/kernels/fused_gr.hpp": "e8055ea3311bfc0c49ef464141713842da5fdad1e5cddf6a2f573fbf5353ab3a",
     "sycl/src/prefill/prefill.cpp": "890e964f5583211fef89a4fabf030f75e230f6785584a1f0d37a3d8b471839f3"
   },
-  "status": "Primitive-only: CPU contracts, source build and leased per-card GPU numerical/repeat/guard gates PASS. Full model integration and composed HC qualification remain outstanding.",
+  "status": "Primitive-only projection and composition synthetic per-card GPU gates PASS. Complete source route patches are prepared but model integration and upload/state fidelity remain unqualified.",
   "build_option": "-DSTRATA_SYCL_Q8_HC_PRIMITIVES=ON",
   "default": "OFF; existing model path unchanged",
   "model_use_gate": "Do not enable native HC model serving from this patch. Prompt/decode/final mixer wiring and composed-math oracles remain required.",
@@ -158,5 +158,32 @@
     "guards_and_source_immutability": "PASS",
     "teardown_and_post_health": "PASS both cards and compiled two-rank P2P0",
     "scope": "Synthetic bounded primitive fixtures, not source model tensors or full HC/model fidelity"
+  },
+  "gpu_composition_validation": {
+    "receipt": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/native-hc-composition-v1/receipt.json",
+    "cases_per_card": 48,
+    "stages_per_card": 344,
+    "numeric_negative_controls_per_card": 344,
+    "max_nmse": 2.8520817958328582e-11,
+    "max_normalized_linf": 3.533520650739953e-05,
+    "repeat_guard_source_and_post_health": "PASS",
+    "scope": "Synthetic composed math, not source-model upload, full routes or two-device split"
+  },
+  "gpu_write_validation": {
+    "receipt": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/native-hc-write-v1/receipt.json",
+    "cases_per_card": 21,
+    "rows": [
+      1,
+      2,
+      4,
+      8,
+      9,
+      16,
+      17
+    ],
+    "rejection_cases_per_card": 15,
+    "max_nmse": 6.25260364053364e-16,
+    "max_normalized_linf": 6.158421892255321e-08,
+    "scope": "Synthetic standalone/pending/chunk write parity; not model integration"
   }
 }

@@ -1,0 +1,377 @@
+--- a/sycl/src/core/layer.cpp
++++ b/sycl/src/core/layer.cpp
+@@ -5,7 +5,7 @@
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/core/layer.hpp"
+-#include "strata/core/native_hc_policy.hpp"
++#include "strata/core/native_hc_dispatch.hpp"
+ #include "strata/kernels/hc_native_composition.hpp"
+ #include "strata/core/native_head.hpp"
+ #include "strata/kernels/bf16_bits.hpp"
+@@ -1449,41 +1449,23 @@
+ }
+ 
+ namespace {
+-class NativeHcWrite;
+ bool native_hc_write(const ModelGeometry& g,const BlockBuffers& bb,const float* inject,void* stream,std::string& err) {
+-    if (!native_hc_policy(err)) return false;
+-    if (g.n_embd!=2560 || g.hc!=4 || !bb.R || !bb.block_out || !inject) {
+-        err="native HC: residual write descriptor rejected"; return false;
+-    }
+-    auto& q=*strata::q_of(stream);
+-    if (!q.has_property<sycl::property::queue::in_order>()) { err="native HC: residual write needs in-order queue"; return false; }
+-    float* R=bb.R; const float* bo=bb.block_out;
+-    q.parallel_for<NativeHcWrite>(sycl::range<1>(10240),[=](sycl::id<1> index) {
+-        const size_t i=index[0],c=i/2560,d=i%2560;
+-        const float w=2.0f/(1.0f+sycl::exp(-inject[c]/4.0f));
+-        R[i]=sycl::fma(bo[d],w,R[i]);
+-    });
+-    return true;
++    if (g.n_embd!=2560 || g.hc!=4) { err="native HC: residual write geometry"; return false; }
++    return native_hc_write_rows(bb.R,bb.block_out,inject,1,stream,err);
+ }
+ bool native_hc_read(const WeightRef* wn,const WeightRef* wd,const WeightRef* wu,const WeightRef* wi,
+                     const ModelGeometry& g,const BlockBuffers& bb,float* injection,void* stream,std::string& err) {
+     if (!native_hc_policy(err)) return false;
+ #ifdef STRATA_SYCL_Q8_HC_BUILT
+     using namespace strata::kernels;
+-    if (!wn || !wd || !wu || wn->hc_source_type!=0 || wd->hc_source_type!=8 || wu->hc_source_type!=8 ||
+-        (wi && wi->hc_source_type!=0)) { err="native HC: missing exact source view"; return false; }
+     HcNativeArgs a; a.n_embd=int(g.n_embd); a.hc=int(g.hc); a.lr=int(g.hc_lr); a.eps=RMS_EPS;
+-    a.w.norm=wn->hc_source_f32; a.w.norm_floats=wn->hc_source_bytes/4;
+-    a.w.down=wd->hc_source_q8; a.w.down_bytes=wd->hc_source_bytes;
+-    a.w.up=wu->hc_source_q8; a.w.up_bytes=wu->hc_source_bytes;
+-    if (wi) { a.w.inject=wi->hc_source_f32; a.w.inject_floats=wi->hc_source_bytes/4;
+-        a.inject_out=injection; a.inject_out_floats=size_t(g.hc); }
++    if (!native_hc_bind(wn,wd,wu,wi,a,err)) return false;
++    if (wi) { a.inject_out=injection; a.inject_out_floats=size_t(g.hc); }
+     const size_t D=size_t(g.hc*g.n_embd);
+     a.R=bb.R; a.R_floats=D; a.xn=bb.gr.xn; a.xn_floats=D;
+     a.lo=bb.gr.lo; a.lo_floats=size_t(g.hc_lr); a.gate=bb.gr.gated; a.gate_floats=D;
+     a.rs=bb.gr_rs; a.rs_floats=size_t(g.hc); a.mixed=bb.mixed; a.mixed_floats=size_t(g.n_embd);
+-    if (!hc_native_read_f32(a,stream)) { err="native HC: composed read rejected"; return false; }
+-    return true;
++    return native_hc_submit(a,stream,err);
+ #else
+     err="native HC: kernel build disabled"; return false;
+ #endif
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,4 +1,4 @@
+-#include "strata/core/native_hc_policy.hpp"
++#include "strata/core/native_hc_dispatch.hpp"
+ // src/core/verify.cpp - see include/strata/core/verify.hpp.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+@@ -398,7 +398,6 @@
+                     SessionState &ss, const VerifyHits &hits,
+                     const NativeHead *head, int max_t, std::string &err) try {
+     if (!strata::core::native_hc_policy(err)) return false;
+-    if (strata::core::native_hc_requested()) { err="native HC: verifier route is not integrated"; return false; }
+     g_diag_verifier.store(this);
+     diag_verify_fn().store(&diag_active_verifier);
+     for (auto& slot : g_live) {
+@@ -731,6 +730,10 @@
+ // while the GPU combines A and runs A's layer l+1.  B's mixer only needs A's mixer of the same layer (K/V, GDN
+ // state), never A's experts, so nothing waits that did not wait before.  Every token's arithmetic is unchanged.
+ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
++    if (!native_hc_policy(err)) return false;
++    if (native_hc_requested() && (!R_ || !xn_ || !lo_ || !rs_ || !mixed_ || !ss_->block.gr.gated || T<1 || T>max_t_)) {
++        err="native HC verifier: unsupported contiguous workspace"; return false;
++    }
+     using namespace strata::kernels;
+     const ModelGeometry& g = *g_;
+     const WeightTable& wt = *wt_;
+@@ -832,7 +835,7 @@
+         }
+         // the previous layer's FFN write, folded into this layer's first read (a control vector after it has
+         // already applied it)
+-        bool pending = l > 0 && !cvec().covers(l - 1);
++        bool pending = !native_hc_requested() && l > 0 && !cvec().covers(l - 1);
+         if (l == 1 && ple_on) {
+             if (grp == 0) {
+                 if (ar_on()) wait_flag_ge(m_flag_, 1, cs);
+@@ -880,11 +883,11 @@
+                 }
+             }
+             // #783 PR-g (stuchapin909): the window's residual writes in one launch (STRATA_NO_MULTI_GR=1: per token)
+-            const bool multi_write = dec_batch && !g_no_multi_gr && n > 1;
++            const bool multi_write = !native_hc_requested() && dec_batch && !g_no_multi_gr && n > 1;
+             if (multi_write) gr_write_multi(Rt(tb), bo_ + tb * N, inj2_ + tb * HC, gs, Rt(tb), n, cs);
+             for (int t = tb; t < te; ++t) {
+                 if (batched) { pw.pre_key = ple_key_ + (size_t) t * NG_HC_DIM; pw.pre_value = ple_val_ + t * N; }
+-                if (!multi_write) gr_write(Rt(t), bo_ + t * N, inj2_ + t * HC, gs, Rt(t), cs);
++                if (!native_hc_requested() && !multi_write) gr_write(Rt(t), bo_ + t * N, inj2_ + t * HC, gs, Rt(t), cs);
+                 PleOut po;
+                 po.normalized = normalized;
+                 po.result = Rt(t);
+@@ -905,7 +908,30 @@
+             }
+             pending = false;
+         }
++        bool native_gr_ok=true;
+         auto gr_read_group = [&](int half, bool apply, float* inj_prev, float* inj_out) {
++            if (native_hc_requested()) {
++                // Rt(t) is explicitly R_+t*HC*N. One-row calls avoid interpreting
++                // recurrent slot pointers or grouped pointer arrays as matrices.
++                for (int t=tb;t<te;++t) {
++                    if (apply && !native_hc_write_rows(Rt(t),bo_+t*N,inj_prev+t*HC,1,cs,err)) {
++                        native_gr_ok=false; return false;
++                    }
++                    HcNativeArgs a; a.eps=EPS;
++                    if (!native_hc_bind(wn[half],wd[half],wu[half],wi[half],a,err)) { native_gr_ok=false; return false; }
++                    a.R=Rt(t); a.R_floats=size_t(HC*N);
++                    a.xn=xn_+size_t(t)*HC*N; a.xn_floats=size_t(HC*N);
++                    a.lo=lo_+t*g.hc_lr; a.lo_floats=size_t(g.hc_lr);
++                    // Gate scratch belongs to this session; reads are serialized
++                    // on cs and finish mixing before the next row reuses it.
++                    a.gate=ss.block.gr.gated; a.gate_floats=size_t(HC*N);
++                    a.rs=rs_+t*HC; a.rs_floats=size_t(HC);
++                    a.mixed=mixed_+t*N; a.mixed_floats=size_t(N);
++                    a.inject_out=inj_out+t*HC; a.inject_out_floats=size_t(HC);
++                    if (!native_hc_submit(a,cs,err)) { native_gr_ok=false; return false; }
++                }
++                return false; // Native HC deliberately does not produce qfuse images.
++            }
+             FusedGrArgs fa[kFusedGrMaxT];
+             for (int t = tb; t < te; ++t) {
+                 FusedGrArgs& a = fa[t - tb];
+@@ -926,7 +952,8 @@
+             return fused_gr_read_multi(fa, n, xn_ + (size_t) tb * HC * N, cs, (prof_on_ && grp == 0) ? prof_ : nullptr,
+                                 (int) (l * kProfPer + (half == 0 ? 27 : 30)));
+         };
+-        const bool q8_attn = gr_read_group(0, pending, inj2_, inj_);   // true: xq_ holds mixed's q8_1 (STRATA_QFUSE)
++        const bool q8_attn = gr_read_group(0, pending, inj2_, inj_);
++        if (!native_gr_ok) return false;   // true: xq_ holds mixed's q8_1 (STRATA_QFUSE)
+         stamp(l, 1, grp);
+         float* xm = mixed_ + tb * N;
+         try {
+@@ -1209,7 +1236,8 @@
+             return false;
+         }
+         stamp(l, 16, grp);
+-        const bool q8_ffn = gr_read_group(1, true, inj_, inj2_);   // true: nat_xq_ holds the MoE input's q8_1 (STRATA_QFUSE)
++        const bool q8_ffn = gr_read_group(1, true, inj_, inj2_);
++        if (!native_gr_ok) return false;   // true: nat_xq_ holds the MoE input's q8_1 (STRATA_QFUSE)
+         // with CPU experts in the window the shared expert forks off once the doorbell is published (it no longer
+         // competes with it for the GPU's first microseconds); STRATA_SH_FORK_LATE=0 forks at the top as before
+         static const bool sh_fork_late_env = [] {
+@@ -1338,7 +1366,7 @@
+         const char* e = std::getenv("STRATA_FUSE_HEAD_GR");
+         return e && e[0] == '1';
+     }();
+-    const bool fuse_head_gr = fuse_head_gr_env && (le_ == g.n_layers) && (head_ != nullptr && head_->loaded()) &&
++    const bool fuse_head_gr = !native_hc_requested() && fuse_head_gr_env && (le_ == g.n_layers) && (head_ != nullptr && head_->loaded()) &&
+                               !cvec().covers(g.n_layers - 1);
+     auto post = [&](int64_t l, int grp) -> bool {
+         const int tb = tb_[grp], te = te_[grp], n = te - tb;
+@@ -1440,7 +1468,11 @@
+         if (remote_opt_) remote_opt_->combine(bo_ + tb * N, y_dummy_ + tb * N, tb, n,
+                               device_plan_ ? skip_ + grp : nullptr, ring, cs);
+         stamp(l, 24, grp);
+-        if (l == g.n_layers - 1) {
++        if (native_hc_requested()) {
++            for (int t=tb;t<te;++t)
++                if (!native_hc_write_rows(Rt(t),bo_+t*N,inj2_+t*HC,1,cs,err)) return false;
++            if (cvec().covers(l)) cvec_apply(Rt(tb),l,n,HC*N,nullptr,0,nullptr,0,false,cs);
++        } else if (l == g.n_layers - 1) {
+             if (!fuse_head_gr) {
+                 if (dec_batch && !g_no_multi_gr) gr_write_multi(Rt(tb), bo_ + tb * N, inj2_ + tb * HC, gs, Rt(tb), n, cs);
+                 else for (int t = tb; t < te; ++t) gr_write(Rt(t), bo_ + t * N, inj2_ + t * HC, gs, Rt(t), cs);
+@@ -1480,7 +1512,14 @@
+         // S25 (STRATA_HC_Q8=1): the final mixer from the GGUF's Q8_0 projections too, through the same multi read
+         // (no pending write, no inject)
+         const bool mix_q8 = hd->hc_q8 != nullptr && hu->hc_q8 != nullptr && head_ != nullptr && head_->loaded();
+-        if (mix_q8) {
++        if (native_hc_requested()) {
++            for (int t=0;t<T;++t) {
++                BlockBuffers bb=ss.block; bb.R=Rt(t); bb.mixed=head_mixed_+t*N;
++                if (head_ && head_->loaded()) {
++                    if (!lm_head_mix(wt,g,bb,cs,err)) return false;
++                } else if (!lm_head(wt,g,bb,head_logits_+size_t(t)*n_vocab_,cs,err)) return false;
++            }
++        } else if (mix_q8) {
+             FusedGrArgs fa[kFusedGrMaxT];
+             for (int t = 0; t < T; ++t) {
+                 FusedGrArgs& a = fa[t];
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -1,4 +1,5 @@
+-#include "strata/core/native_hc_policy.hpp"
++#include <climits>
++#include "strata/core/native_hc_dispatch.hpp"
+ // src/prefill/prefill.cpp - see include/strata/prefill/prefill.hpp.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+@@ -289,7 +290,7 @@
+ // F-1: STRATA_GR_UNFUSED=1 keeps the FP32 copy of the normalized rows (gr_norm + gr_mix), the A/B arm
+ inline bool gr_unfused() {
+     static const bool v = [] { const char* e = std::getenv("STRATA_GR_UNFUSED"); return e && e[0] == '1'; }();
+-    return v;
++    return strata::core::native_hc_requested() || v;
+ }
+ 
+ double ms_since(Clock::time_point t) { return std::chrono::duration<double, std::milli>(Clock::now() - t).count(); }
+@@ -914,7 +915,6 @@
+                    int64_t chunk, void *stream, std::string &err, void *borrow,
+                    uint64_t borrow_bytes) try {
+     if (!strata::core::native_hc_policy(err)) return false;
+-    if (strata::core::native_hc_requested()) { err="native HC: prefill route is not integrated"; return false; }
+     Impl& m = *impl_;
+     m.wt = &wt; m.g = &g; m.ss = &ss; m.src = src; m.cache = cache; m.host_res = host_res;
+     m.T = chunk; m.cs = strata::q_of(stream); m.stats = &stats_;
+@@ -1279,6 +1279,7 @@
+ 
+ bool Prefill::draft_kv(core::MtpDrafter& mtp, const float* R_rows, const int32_t* next_tokens, int64_t n, int64_t cell0,
+                        std::string& err) {
++    if (core::native_hc_requested()) { err="native HC: MTP prefill route is not integrated"; return false; }
+     Impl& m = *impl_;
+     static const bool off = [] { const char* v = std::getenv("STRATA_MTP_BATCH"); return v != nullptr && v[0] == '0'; }();
+     // A ring (KV streaming: the drafter's window, page p in slot p % n_slots over a host copy) takes the same appends
+@@ -2783,6 +2784,28 @@
+                 // the xn16 token stride of this chunk (the writers of both halves and of the fused write-backs use it)
+                 const int64_t ldx = hc_pad() && T >= std::max<int64_t>(pf_switch_min_t(), 64) && !gr_unfused() &&
+                                             !m.xn16_lo ? D + XN_PAD : D;
++                if (core::native_hc_requested()) {
++                    if (!m.xn || !m.gated || !m.lo || !m.grs || T<1 || T>INT_MAX) {
++                        err="native HC prefill: unsupported workspace/layout"; return false;
++                    }
++                    for (int64_t tb=0;tb<T;tb+=8) {
++                        const int n=int(std::min<int64_t>(8,T-tb));
++                        strata::kernels::HcNativeArgs a; a.tokens=n; a.eps=EPS;
++                        if (!core::native_hc_bind(wn,wd,wu,wi,a,err)) return false;
++                        a.R=m.R+tb*D; a.R_floats=size_t(n)*D;
++                        a.xn=m.xn+tb*D; a.xn_floats=size_t(n)*D;
++                        a.lo=m.lo+tb*LR; a.lo_floats=size_t(n)*LR;
++                        a.gate=m.gated+tb*D; a.gate_floats=size_t(n)*D;
++                        a.rs=m.grs+tb*HC; a.rs_floats=size_t(n)*HC;
++                        a.mixed=m.mixed+tb*N; a.mixed_floats=size_t(n)*N;
++                        a.inject_out=m.inj+tb*HC; a.inject_out_floats=size_t(n)*HC;
++                        if (!core::native_hc_submit(a,m.cs,err)) return false;
++                    }
++                    // Precision views only at the downstream operator boundary.
++                    to_f16(m.mixed,m.mixed_h,T*N,m.cs);
++                    to_bf16(m.mixed,m.mixed_bf,T*N,m.cs,m.mixed_bf_lo);
++                    normed=false;
++                } else {
+                 if (gr_unfused()) gr_norm(m.R, (const float*) wn->data, EPS, m.xn, m.xn16, T, m.cs, m.xn16_lo);
+                 else if (!normed) gr_norm_rs(m.R, (const float*) wn->data, EPS, m.grs, m.xn16, T, m.cs, m.xn16_lo, ldx);
+                 normed = false;
+@@ -2852,6 +2875,7 @@
+                 } else {
+                     gr_mix_r(m.R, m.grs, (const float*) wn->data, m.gated, m.mixed, m.mixed_bf, T, m.cs, m.mixed_h,
+                              m.mixed_bf_lo);
++                }
+                 }
+ 
+                 if (half == 0 && !core::is_qsa_layer(g, l)) {
+@@ -4240,7 +4264,9 @@
+                                      m.xn16_lo, ldx);
+                     normed = true;
+                 } else {
+-                    gr_write(m.R, m.bo, m.inj, HC, T, m.cs);
++                    if (core::native_hc_requested()) {
++                        if (T>INT_MAX || !core::native_hc_write_rows(m.R,m.bo,m.inj,int(T),m.cs,err)) return false;
++                    } else gr_write(m.R, m.bo, m.inj, HC, T, m.cs);
+                 }
+                 if (steered && !cv_fused)   // --control-vector-scaled
+                     strata::kernels::cvec_apply(m.R, l, T, D, nullptr, 0, nullptr, 0, false, m.cs);
+--- a/sycl/include/strata/kernels/hc_native_composition.hpp
++++ b/sycl/include/strata/kernels/hc_native_composition.hpp
+@@ -56,4 +56,12 @@
+ // SYCL submission/execution exceptions propagate: caller must abort the request;
+ // no compatibility fallback or retry on partly written state is permitted.
+ bool hc_native_read_f32(const HcNativeArgs& a, void *stream);
++// Contiguous token-major residual write, same FMA/sigmoid math as pending read.
++// Invalid pointer/capacity/row count or queue returns false before submission.
++inline bool hc_native_write_shape_ok(size_t R,size_t bo,size_t inject,int tokens) {
++    return tokens>=1 && tokens<=8 && R>=size_t(tokens)*10240 &&
++        bo>=size_t(tokens)*2560 && inject>=size_t(tokens)*4;
+ }
++bool hc_native_write_f32(float* R,size_t R_floats,const float* bo,size_t bo_floats,
++                        const float* inject,size_t inject_floats,int tokens,void* stream);
++}
+--- a/sycl/src/kernels/hc_native_composition.cpp
++++ b/sycl/src/kernels/hc_native_composition.cpp
+@@ -10,7 +10,7 @@
+     return x;
+ }
+ float sigmoid(float x) { return 1.0f/(1.0f+sycl::exp(-x)); }
+-class HcPending; class HcNorm; class HcSilu; class HcMix;
++class HcPending; class HcNorm; class HcSilu; class HcMix; class HcStandaloneWrite;
+ }
+ bool hc_native_read_f32(const HcNativeArgs& a, void *stream) {
+     if (!hc_native_descriptor_ok(a)) return false;
+@@ -54,4 +54,19 @@
+     });
+     return true;
+ }
++bool hc_native_write_f32(float* R,size_t R_floats,const float* bo,size_t bo_floats,
++                        const float* inject,size_t inject_floats,int tokens,void* stream) {
++    if (!R || !bo || !inject || !hc_native_write_shape_ok(R_floats,bo_floats,inject_floats,tokens)) return false;
++    auto& q=*strata::q_of(stream);
++    if (!q.has_property<sycl::property::queue::in_order>()) return false;
++    // Same kernel name/body as the pending-write launch cannot be reused with
++    // another lambda; a separate type keeps SYCL kernel identity unambiguous.
++    q.parallel_for<HcStandaloneWrite>(sycl::range<1>(size_t(tokens)*10240),[=](sycl::id<1> index) {
++        const size_t i=index[0],t=i/10240,c=(i%10240)/2560,d=i%2560;
++        const float w=2.0f*sigmoid(inject[t*4+c]/4.0f);
++        R[i]=sycl::fma(bo[t*2560+d],w,R[i]);
++    });
++    return true;
+ }
++
++}
+--- /dev/null
++++ b/sycl/include/strata/core/native_hc_dispatch.hpp
+@@ -0,0 +1,49 @@
++// Shared exact-source dispatch: ordinary decode, prompt chunks and verifier rows.
++#pragma once
++#include "strata/core/weights.hpp"
++#include "strata/core/native_hc_policy.hpp"
++#include "strata/kernels/hc_native_composition.hpp"
++namespace strata::core {
++inline bool native_hc_bind(const WeightRef* wn,const WeightRef* wd,const WeightRef* wu,const WeightRef* wi,
++                           strata::kernels::HcNativeArgs& a,std::string& err) {
++    if (!native_hc_policy(err)) return false;
++    if (!wn || !wd || !wu || wn->hc_source_type!=0 || wd->hc_source_type!=8 || wu->hc_source_type!=8 ||
++        wn->hc_source_ne0!=10240 || wn->hc_source_ne1!=1 || wn->hc_source_rank!=1 ||
++        wd->hc_source_ne0!=10240 || wd->hc_source_ne1!=320 || wd->hc_source_rank!=2 ||
++        wu->hc_source_ne0!=320 || wu->hc_source_ne1!=10240 || wu->hc_source_rank!=2 ||
++        (wi && (wi->hc_source_type!=0 || wi->hc_source_ne0!=10240 || wi->hc_source_ne1!=4 || wi->hc_source_rank!=2))) {
++        err="native HC: missing or incompatible exact-source view"; return false;
++    }
++    a.w={};
++    a.w.norm=wn->hc_source_f32; a.w.norm_floats=wn->hc_source_bytes/4;
++    a.w.down=wd->hc_source_q8; a.w.down_bytes=wd->hc_source_bytes;
++    a.w.up=wu->hc_source_q8; a.w.up_bytes=wu->hc_source_bytes;
++    if (wi) { a.w.inject=wi->hc_source_f32; a.w.inject_floats=wi->hc_source_bytes/4; }
++    return true;
++}
++inline bool native_hc_submit(const strata::kernels::HcNativeArgs& a,void* stream,std::string& err) {
++#ifdef STRATA_SYCL_Q8_HC_BUILT
++    if (!strata::kernels::hc_native_read_f32(a,stream)) { err="native HC: composed read rejected"; return false; }
++    return true;
++#else
++    err="native HC: kernel build disabled"; return false;
++#endif
++}
++inline bool native_hc_write_rows(float* R,const float* bo,const float* injection,int rows,void* stream,std::string& err) {
++#ifdef STRATA_SYCL_Q8_HC_BUILT
++    // Model owners establish contiguous buffers. This helper chunks only known
++    // contiguous token-major arrays, never pointer arrays or inferred strides.
++    if (rows<1 || !R || !bo || !injection) { err="native HC: empty or null residual write"; return false; }
++    for (int t=0;t<rows;t+=8) {
++        const int n=rows-t<8?rows-t:8;
++        if (!strata::kernels::hc_native_write_f32(R+size_t(t)*10240,size_t(n)*10240,
++            bo+size_t(t)*2560,size_t(n)*2560,injection+size_t(t)*4,size_t(n)*4,n,stream)) {
++            err="native HC: residual write rejected"; return false;
++        }
++    }
++    return true;
++#else
++    err="native HC: kernel build disabled"; return false;
++#endif
++}
++}

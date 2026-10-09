@@ -1,0 +1,183 @@
+{
+  "scope": "CPU actual GGUF export/renderer/API/GEN transport to protocol-only child; no model inference/GPU",
+  "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "patch_sha256": {
+    "0001-sycl-native-q8-hc-projection-primitives.patch": "7edd863134d9a660d21fc28e4b061dd2568e6013fc58a67a529a0dc686263efb",
+    "0002-sycl-native-hc-composition.patch": "bde6376706e3cda1cd2c5b74d0e4f18aa7aa948233436b9530294a95bfd5910b",
+    "0003-sycl-native-hc-source-owner-decode.patch": "207642b5ed8d7c6a90d4b4783b46aa4f189a98cee84f3454635a3ca2d3d7f57d",
+    "0004-sycl-native-hc-prefill-verifier-routes.patch": "abc9772abf3c363a57a1a1a040f9ffff45d5dc964cd7fd09782ad3ec8690dfd5",
+    "0005-sycl-stage-owned-expert-mirrors.patch": "22abe038d2ffdc7ac98049af9955442979ed7e55461275f0a2faa8c27917071f",
+    "0006-sycl-source-preserving-ple.patch": "fa8cbb3d9341ee903708de2c674e127fb197241f6893b045e90334adcd915247",
+    "0007-sycl-exact-artifact-api-cache-identity.patch": "161bd77aa52aca33205f7879559bbc72d7e6ee863ae6cc3db03c3485344228b4",
+    "0008-sycl-native-ple-span-size.patch": "f43196e645ca86ba0f5aed654b1e4259a82eae4cf04bab6fbd6b8ad2586f1762",
+    "0009-sycl-verifier-stage-mirror-declarations.patch": "93c7f51209cd5795a6ad604675c79d73e8b204eef7564b60da3576be222a219b"
+  },
+  "tokenizer_gguf_sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+  "model_revision": "766911a6b7369840a91dbcd95f9f997acaab6cd6",
+  "manifest_sha256": "dd0b8eab73412a1a5617abeb96f9fa7da502d752ce08d128bd6dee76db07436c",
+  "tokenizer_files": {
+    "vocab.json": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+    "merges.txt": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+    "token_type.json": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b",
+    "tokenizer.json": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf",
+    "chat_template.jinja": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+  },
+  "model_list": {
+    "object": "list",
+    "data": [
+      {
+        "id": "hotschmoe-dd",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 8192,
+          "artifact_identity": {
+            "artifact_identity_sha256": "dd0b8eab73412a1a5617abeb96f9fa7da502d752ce08d128bd6dee76db07436c",
+            "source_revision": "766911a6b7369840a91dbcd95f9f997acaab6cd6",
+            "scheme": "UD-Q4_K_XL",
+            "tokenizer_gguf_sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+            "chat_template_sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+          }
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "aliases": [
+          "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-Strata-SYCL-nativeHC-v1"
+        ]
+      },
+      {
+        "id": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-Strata-SYCL-nativeHC-v1",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 8192,
+          "artifact_identity": {
+            "artifact_identity_sha256": "dd0b8eab73412a1a5617abeb96f9fa7da502d752ce08d128bd6dee76db07436c",
+            "source_revision": "766911a6b7369840a91dbcd95f9f997acaab6cd6",
+            "scheme": "UD-Q4_K_XL",
+            "tokenizer_gguf_sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+            "chat_template_sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+          }
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "aliases": [
+          "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-Strata-SYCL-nativeHC-v1"
+        ],
+        "alias_of": "hotschmoe-dd"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "served_id": "hotschmoe-dd",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Reply briefly: 2 + 2."
+        }
+      ],
+      "token_ids": [
+        248045,
+        846,
+        198,
+        20206,
+        25899,
+        25,
+        220,
+        17,
+        478,
+        220,
+        17,
+        13,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        248068,
+        271,
+        248069,
+        271
+      ],
+      "prompt_sha256": "a92c8555b18d3f468b02575f5e8224006ff0ef7b01aefc330e733bad338fe8ae",
+      "transport_ids_equal": true
+    },
+    {
+      "served_id": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-Strata-SYCL-nativeHC-v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Unicode: \u65e5\u672c\u8a9e, caf\u00e9, \u0627\u0644\u0639\u0631\u0628\u064a\u0629."
+        }
+      ],
+      "token_ids": [
+        248045,
+        846,
+        198,
+        32798,
+        25,
+        220,
+        247359,
+        11,
+        50203,
+        11,
+        171405,
+        13,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        248068,
+        271,
+        248069,
+        271
+      ],
+      "prompt_sha256": "9ae869534de2d8ae7ca993010a85756caa174b3f9487f360aa6d831da98fcf35",
+      "transport_ids_equal": true
+    }
+  ],
+  "negative_cases": [
+    "wrong primary",
+    "wrong alias",
+    "changed launch arguments",
+    "changed math environment",
+    "changed executable before reload",
+    "changed template before reload",
+    "missing template cannot fall back"
+  ],
+  "actual_session_file_stale_identity_refused": true,
+  "host_sanitizers_clean": true,
+  "python_versions": {
+    "python": "3.12.13",
+    "regex": "2026.9.10",
+    "jinja2": "3.1.6",
+    "markupsafe": "3.0.3"
+  },
+  "python_sources": {
+    "serve/server.py": "1e095954f894d862edd1d688dfb3e66c6bf10790be9f2c103c581c76aac11273",
+    "serve/frontend.py": "095bbac7d49b19d815d2634457d14d216ba9bd4e98998a4e3b4288f20a25e923",
+    "serve/artifact_identity.py": "d48bf26e4db57e88b88a2368c40f759e5ef748f4a05a2bc368fd53c0d39dec97",
+    "tools/strata_tokenizer.py": "d2fdcd2e55b4bc47c3ee6a10a0a7efa2029128cc229fb1de18da6e22d3606ff2",
+    "tools/gguf_reader.py": "5ecf739bb3c2f07bc7f889f7f3a455e3dfdb40068409e10781a1a9b2be289b5e"
+  },
+  "gpu_model_consumption_verified": false,
+  "prefix_state_fidelity_verified": false
+}

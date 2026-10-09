@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "CONFIG": "Preserve completed original build receipt and current initial/qualified plans; recover exact initial bytes from known metadata-only edit",
+  "COMMAND": "Remove only experiment_records from current initial plan, encode with original json.dumps(indent=2) plus newline, compare SHA256 against completed original build receipt",
+  "RESULT": {
+    "original_build_receipt_path": "/mnt/vm_8tb/b70/build/flashnext-reset-diagnostic-20261009T041404Z-r7n1s5jz/receipt.json",
+    "original_build_receipt_sha256": "4140bff60cb5dedaab155248d08c6299e92eb79bc425c23313a5cbadcf07fa7a",
+    "original_plan_snapshot_path": "llamacpp/flash-next/reset-diagnostic-initial-build-plan-snapshot.json",
+    "original_plan_sha256": "dcc818f9b86c05d91e3c8d94f2b7539fd077a5060d09da14ed9c7d50a509a7c7",
+    "current_initial_plan_path": "llamacpp/flash-next/reset-diagnostic-build-plan.json",
+    "current_initial_plan_sha256": "fcb01c762cbc2e01cea9e0b54bfa8017bee3a86b982e9a4e1dec8287feab1c5a",
+    "exact_removed_keys": [
+      "experiment_records"
+    ],
+    "source_patches_runtime_config_unchanged": true
+  },
+  "VERDICT": "Exact bytes match the original build receipt SHA256. Later experiment records changed metadata only. Preserve both identities; source/binary/config and primitive gates remain mandatory."
+}

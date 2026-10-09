@@ -9129,3 +9129,59 @@ an unqualified history-drift diagnostic reference. Full route wiring, composed
 math, dual-stage RAM tiers, prefix/concurrency/fairness and shelf gates remain.
 No promotion. Raw F04 receipts under results/flashnext_udq4xl_20261008/f04-20261009;
 source audit in docs/20261009_flashnext_backend_source_audit.md.
+
+## 2026-10-09 Native HC composition/write, exact source contracts and full engine
+
+CONFIG -> Pinned model/source/runtime; native source patches default off.
+Parent GPU ownership and preserved dirty worktree. CPU source agents prepare
+HC/PLE/mirror/API changes; no Strata full-model or shelf claim.
+
+COMMAND -> Leased composed48-case/344-stage and shared-write21-case GPU gates
+on each card; fresh header + actual HC tensor byte audit; CPU artifact-derived
+contract tests; source route TUs and full CMake engine builds. Build independent
+llama reset observer, add test-only production fixtures preserving all serving
+binaries, qualify same-build primitives, run diagnostic-off history control.
+
+RESULT -> Composed and shared-write GPU gates pass frozen1e-6/1e-4 thresholds,
+exact repeat/chunk/single/pending bytes, guards, immutable inputs and negatives;
+normal teardown/per-card/compiled P2P0 post-health pass. Shared-write worst
+NMSE6.25260e-16/maxnorm6.15842e-8. Actual387 HC source descriptors/tensorSHA256
+verified; original norm rank1[10240] corrects a loader/binding assumption. Actual
+96 injection tensors are BF16-exact, while some97 F32norms are not. Stage range
+ownership correction prevents duplicated HC/head uploads. Full engine v1 fails
+PLE size_t initializer, v2 fails shadowed SYCL verifier header; separate0008/0009
+fixes make v3 full engine/native-expert/snapshot binaries build successfully.
+Original PLEQ8value/F32conv compatibility rounding is identified; native source
+key/value/conv patch and device fixture prepared, GPU PLE not yet qualified.
+
+Reset observer full server build and same-build36/36 primitives/card pass.
+Original build plan exact bytes recovered by removing only later experiment
+metadata, hash matches receipt; pinned snapshot/provenance preserved. Test-only
+augmentation keeps all serving libraries/server hashes. Diagnostic-off strict
+screen still fails; native P/P/JSON/P immediate prose shares35 IDs, after-JSON
+prose diverges at22, probability drift starts0. Normal teardown/post-health pass.
+Metadata-only arm is running next, not yet a numerical reset verdict.
+
+VERDICT -> Concrete native math/source/build progress, no full serving winner,
+quality, prefix, tier, concurrency, latency or shelf qualification. Strata is
+primary serving-development lane; llama remains unresolved divergence control.
+New raw evidence F04 and docs/20261009_flashnext_native_hc_gpu_qualification.md.
+
+## 2026-10-09 PLE GPU math and first reset mapping evidence
+
+CONFIG -> Same pinned source/model/runtime. Native PLE production-shape fixtures;
+llama same-build static OPT1/warmup/history observer metadata lane.
+COMMAND -> Leased native-ple-v1; offline reset-metadata-history-v1 history/mapping
+analysis after independent diagnostic-off control. Numeric readback arm follows.
+RESULT -> PLE7cases/70stages/57historyrows per card pass frozen1e-6/1e-4 gates,
+repeat/chunk bytes, guards, source/input immutability and negative controls;
+worst NMSE1.22648e-13/maxnorm4.55320e-7. Clean teardown and full post-health pass.
+Metadata lane records32 FNRESET entries, actual prompt31+4 token hashes match
+immediate repeats. First layer0 R/S mapping has rollback0/src0=rs_z=0 on fresh
+request; continuation has rs_z=-1 and zero-sized reset views. This proves
+selection/mapping, not numeric clearing. Metadata strict screen passes in this
+one launch but native probability drift begins0 despite shared35 output IDs;
+previous off arm strict screen failed/after-JSON diverged22. Clean post-health.
+VERDICT -> No history correctness fix established. Selected state rows can now
+be observed directly in numeric arm; layer1 PLE and later layers remain outside
+this observer. Full Strata model/tier/prefix/concurrency/latency/shelf gates open.

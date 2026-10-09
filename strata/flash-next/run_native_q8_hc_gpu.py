@@ -28,11 +28,20 @@ def main():
     parser.add_argument('--overlay', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--composition', action='store_true')
+    parser.add_argument('--write', action='store_true')
+    parser.add_argument('--ple', action='store_true')
     parser.add_argument('--projection-receipt', type=Path)
+    parser.add_argument('--composition-receipt', type=Path)
+    parser.add_argument('--native-build-receipt', type=Path)
     parser.add_argument('--leased', action='store_true')
     args = parser.parse_args()
-    if args.composition and args.projection_receipt is None:
-        parser.error('--composition requires --projection-receipt')
+    extended = args.composition or args.write or args.ple
+    if extended and args.projection_receipt is None:
+        parser.error('Composed/write gates require --projection-receipt')
+    if args.write and (args.composition or args.composition_receipt is None or args.native_build_receipt is None):
+        parser.error('--write requires composition/native build receipts and excludes --composition')
+    if args.ple and (args.write or args.composition or args.native_build_receipt is None):
+        parser.error('--ple requires a successful full native build receipt and excludes other modes')
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
     for fd, card in [(8, 0), (9, 1)]:
@@ -40,8 +49,10 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     out = args.output.resolve()
     overlay = args.overlay.resolve()
-    fixture = REPO / ('strata/flash-next/native_hc_composition_gpu_fixture.cpp' if args.composition
-                      else 'strata/flash-next/native_q8_hc_gpu_fixture.cpp')
+    fixture = REPO / ('strata/flash-next/native_ple_source_gpu_fixture.cpp' if args.ple else
+                      'strata/flash-next/native_hc_write_gpu_fixture.cpp' if args.write else
+                      'strata/flash-next/native_hc_composition_gpu_fixture.cpp' if args.composition else
+                      'strata/flash-next/native_q8_hc_gpu_fixture.cpp')
     primitive = overlay / 'sycl/src/kernels/hc_native_projection.cpp'
     header = overlay / 'sycl/include/strata/kernels/hc_native_projection.hpp'
     result = dict(image=IMAGE, health_image=HEALTH, started_epoch=int(time.time()),
@@ -51,7 +62,9 @@ def main():
     (out / 'controller-source.py').write_bytes(Path(__file__).read_bytes())
     (out / 'fixture-source.cpp').write_bytes(fixture.read_bytes())
     result['composition'] = args.composition
-    if args.composition:
+    result['standalone_write'] = args.write
+    result['ple'] = args.ple
+    if extended:
         result['projection_fixture_sha256'] = sha(REPO / 'strata/flash-next/native_q8_hc_gpu_fixture.cpp')
         (out / 'projection-fixture-source.cpp').write_bytes((REPO / 'strata/flash-next/native_q8_hc_gpu_fixture.cpp').read_bytes())
     active = None
@@ -112,19 +125,41 @@ def main():
 
     save()
     try:
-        if args.composition:
+        if extended:
             prerequisite = json.loads(args.projection_receipt.read_text())
             assert prerequisite['passed'] and prerequisite['post_health_passed']
             assert prerequisite['image'] == IMAGE and len(prerequisite['cards']) == 2
             assert prerequisite['fixture_sha256'] == result['projection_fixture_sha256']
             result['projection_receipt'] = str(args.projection_receipt.resolve())
             result['projection_receipt_sha256'] = sha(args.projection_receipt)
+        if args.write:
+            composed = json.loads(args.composition_receipt.read_text())
+            built = json.loads(args.native_build_receipt.read_text())
+            assert composed['passed'] and composed['composition'] and composed['image'] == IMAGE
+            assert built['passed'] and built['image'] == IMAGE and built['devices_exposed'] is False
+            assert len(built['objects']) == 14
+            for rel, expected_hash in built['source_hashes'].items():
+                assert sha(overlay / rel) == expected_hash
+            result['native_build_receipt_sha256'] = sha(args.native_build_receipt)
+            result['composition_receipt_sha256'] = sha(args.composition_receipt)
+        if args.ple:
+            built = json.loads(args.native_build_receipt.read_text())
+            assert built['build_rc'] == 0 and built['image'] == IMAGE and built['devices_exposed'] is False
+            assert built['external_source_unchanged'] and built['plan_snapshot_unchanged']
+            assert Path(built['source_copy']).resolve() == overlay
+            assert subprocess.check_output(['git', '-C', str(overlay), 'status', '--porcelain'], text=True).strip() == built['source_copy_status']
+            for rel, expected_hash in built['patched_source_sha256'].items():
+                assert sha(overlay / rel) == expected_hash
+            result['native_build_receipt_sha256'] = sha(args.native_build_receipt)
+            rel = 'sycl/src/kernels/cuda/native_gr_norm.dp.cpp'
+            assert sha(overlay / rel) == sha(SOURCE / rel)
+            result['native_gr_norm_source_sha256'] = sha(overlay / rel)
         result['source_revision'] = subprocess.check_output(['git', '-C', str(SOURCE), 'rev-parse', 'HEAD'], text=True).strip()
         assert result['source_revision'] == 'fb58e0dbc8399662c0e47c76578c6e878b14f6cf'
         plan = json.loads((REPO / 'strata/flash-next/native-q8-hc-primitive-plan.json').read_text())
         result['patch_sha256'] = sha(REPO / plan['patch'])
         assert result['patch_sha256'] == plan['patch_sha256']
-        if not args.composition:
+        if not extended:
             compile_receipt = json.loads((overlay / 'compile-receipt.json').read_text())
             assert compile_receipt['patch_sha256'] == result['patch_sha256']
         expected = out / 'expected-overlay'
@@ -135,10 +170,21 @@ def main():
         subprocess.run(['git', 'apply', str(REPO / plan['patch'])], cwd=expected, check=True)
         assert sha(expected / primitive.relative_to(overlay)) == sha(primitive)
         assert sha(expected / header.relative_to(overlay)) == sha(header)
-        if args.composition:
+        if extended:
             patch2 = REPO / 'strata/flash-next/patches/0002-sycl-native-hc-composition.patch'
             result['composition_patch_sha256'] = sha(patch2)
             subprocess.run(['git', 'apply', str(patch2)], cwd=expected, check=True)
+            if args.write or args.ple:
+                patches = [REPO / p['path'] for p in built['patches'][2:]] if args.ple else [
+                    REPO / 'strata/flash-next/patches' / n for n in ['0003-sycl-native-hc-source-owner-decode.patch', '0004-sycl-native-hc-prefill-verifier-routes.patch']]
+                for patch in patches:
+                    for rel in re.findall(r'^\+\+\+ b/(.+)$', patch.read_text(), re.M):
+                        path = expected / rel
+                        if not path.exists() and (SOURCE / rel).exists():
+                            path.parent.mkdir(parents=True, exist_ok=True)
+                            path.write_bytes((SOURCE / rel).read_bytes())
+                    assert any(p['sha256'] == sha(patch) for p in built['patches'])
+                    subprocess.run(['git', 'apply', str(patch)], cwd=expected, check=True)
             for rel in ['sycl/src/kernels/hc_native_composition.cpp', 'sycl/include/strata/kernels/hc_native_composition.hpp']:
                 assert sha(expected / rel) == sha(overlay / rel)
         # Compile from tracked primitive source, not the previously generated object.
@@ -147,8 +193,17 @@ def main():
                     '/overlay/sycl/src/kernels/hc_native_projection.cpp',
                     '-I/overlay/sycl/include', '-I/src/sycl/include', '-I/src/include',
                     '-o', '/out/native-q8-hc-fixture']
-        if args.composition:
+        if extended:
             compiler.insert(7, '/overlay/sycl/src/kernels/hc_native_composition.cpp')
+        if args.write:
+            compiler[2] = '-std=c++20'
+            compiler.insert(4, '-DSTRATA_SYCL_Q8_HC_BUILT=1')
+            compiler.insert(4, '-I/overlay/include')
+        if args.ple:
+            compiler[2] = '-std=c++20'
+            compiler.insert(4, '-I/overlay/include')
+            compiler.insert(4, '/overlay/sycl/src/kernels/cuda/native_ple_postops.dp.cpp')
+            compiler.insert(4, '/overlay/sycl/src/kernels/cuda/native_gr_norm.dp.cpp')
         mounts = ['-v', str(REPO) + ':/repo:ro', '-v', str(SOURCE) + ':/src:ro',
                   '-v', str(overlay) + ':/overlay:ro', '-v', str(out) + ':/out']
         run(['docker', 'run', '--rm', '--network', 'none', '--user', f'{os.getuid()}:{os.getgid()}',
@@ -230,6 +285,38 @@ def main():
                 for r in cases:
                     valid = valid and all(r.get(k) for k in ['pass', 'exact_repeat', 'exact_batch_vs_single',
                                                             'guards', 'unchanged_weights_input'])
+                for r in stages:
+                    valid = valid and r.get('pass') and r.get('finite')
+                    valid = valid and isinstance(r.get('nmse'), (float, int)) and 0 <= r['nmse'] <= 1e-6
+                    valid = valid and isinstance(r.get('normalized_linf'), (float, int)) and 0 <= r['normalized_linf'] <= 1e-4
+            if args.write:
+                wanted = {(t, profile) for t in [1, 2, 4, 8, 9, 16, 17] for profile in ['tiny', 'mixed', 'saturated']}
+                valid = (summary.get('mode') == 'GPU_WRITE_NUMERICAL' and summary.get('pass')
+                         and summary.get('cases') == 21 and summary.get('failed') == 0
+                         and summary.get('rejection_cases') == 15 and summary.get('numeric_negative_controls') == 21
+                         and summary.get('guard_negative_control') is True and len(cases) == 21
+                         and {(r.get('rows'), r.get('profile')) for r in cases} == wanted)
+                for r in cases:
+                    valid = valid and all(r.get(k) for k in ['pass', 'finite', 'exact_repeat', 'exact_batch_vs_single',
+                        'exact_shared_wrapper', 'exact_pending_write', 'guards', 'unchanged_inputs', 'numeric_negative_control'])
+                    valid = valid and isinstance(r.get('nmse'), (float, int)) and 0 <= r['nmse'] <= 1e-6
+                    valid = valid and isinstance(r.get('normalized_linf'), (float, int)) and 0 <= r['normalized_linf'] <= 1e-4
+            if args.ple:
+                wanted_rows = {1, 2, 4, 8, 9, 16, 17}
+                names = {'key_raw', 'value_raw', 'key_norm', 'query_norm', 'gate', 'gated', 'norm_conv',
+                         'conv_silu', 'result', 'history_snapshots'}
+                stages = [r for r in rows if r.get('kind') == 'stage']
+                valid = (summary.get('mode') == 'GPU_PLE_SOURCE_NUMERICAL' and summary.get('pass')
+                         and summary.get('cases') == 7 and summary.get('failed') == 0
+                         and summary.get('stages') == 70 and summary.get('history_rows') == 57
+                         and summary.get('numeric_negative_controls') == 70 and summary.get('guard_negative_control') is True
+                         and len(cases) == 7 and {r.get('rows') for r in cases} == wanted_rows and len(stages) == 70
+                         and {(r['rows'], r['stage']) for r in stages} == {(t, n) for t in wanted_rows for n in names})
+                for r in cases:
+                    valid = valid and all(r.get(k) for k in ['pass', 'exact_repeat', 'exact_chunk_vs_single',
+                                                            'guards', 'unchanged_weights_input'])
+                    valid = valid and all(r.get(k, 0) > 0 for k in ['bf16_value_reference_difference',
+                        'f16_activation_reference_difference', 'q8_activation_reference_difference', 'f16_conv_reference_difference'])
                 for r in stages:
                     valid = valid and r.get('pass') and r.get('finite')
                     valid = valid and isinstance(r.get('nmse'), (float, int)) and 0 <= r['nmse'] <= 1e-6

@@ -6,7 +6,7 @@
       "url": "https://github.com/Niko1221/Strata",
       "revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
       "local": "/mnt/vm_8tb/github/strata",
-      "status": "Development candidate; native HC projection synthetic GPU gates pass; composed math and complete route/dual-stage RAM qualification pending"
+      "status": "Primary serving-development lane: synthetic HC projection/composition/write and PLE GPU math gates PASS; full HC/PLE/mirror source engine builds; actual model upload/state/tier/prefix/concurrency/latency unqualified"
     },
     "llama.cpp": {
       "url": "https://github.com/ggml-org/llama.cpp",
@@ -41,5 +41,6 @@
   "runtime_workaround": {
     "SYCL_CACHE_PERSISTENT": "0",
     "reason": "Cache-enabled crash in getSortedImages matches upstream fix49dc9346; cache-disabled full36/card comparisons pass"
-  }
+  },
+  "strata_full_build_receipt": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T050248Z-5ucibsj0/receipt.json"
 }

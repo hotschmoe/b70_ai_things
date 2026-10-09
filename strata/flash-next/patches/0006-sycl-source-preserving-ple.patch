@@ -1,0 +1,337 @@
+--- a/include/strata/core/layer.hpp
++++ b/include/strata/core/layer.hpp
+@@ -573,11 +573,10 @@
+     bool ready() const {
+         return table != nullptr && table->is_open() && hist != nullptr && emb_dev != nullptr &&
+                emb_host != nullptr && scratch != nullptr && token != nullptr && prev != nullptr &&
+-               ((w.key_codes != nullptr && w.key_scales != nullptr) || w.key_bf16 != nullptr ||
+-                w.key_native_data != nullptr) &&
+-               w.value_bf16 != nullptr &&
+-               w.norm_key != nullptr && w.norm_query != nullptr && w.norm_conv != nullptr &&
+-               w.conv1d_f16 != nullptr;
++               (w.source_exact ? strata::kernels::ple_exact_sources_ok(w) :
++                (((w.key_codes != nullptr && w.key_scales != nullptr) || w.key_bf16 != nullptr ||
++                  w.key_native_data != nullptr) && w.value_bf16 != nullptr && w.conv1d_f16 != nullptr)) &&
++               w.norm_key != nullptr && w.norm_query != nullptr && w.norm_conv != nullptr;
+     }
+ };
+ 
+--- a/include/strata/core/weights.hpp
++++ b/include/strata/core/weights.hpp
+@@ -94,6 +94,13 @@
+     /// NativeDense, for the verify window's read (every other path keeps the pack's BF16 `data`)
+     const void* hc_q8 = nullptr;
+     // SYCL native HC exact-source view, allocations owned by this stage's NativeDense.
++    // Original selected-model PLE images. Owned by the stage NativeDense.
++    const uint8_t* ple_source_q8 = nullptr;
++    const float* ple_source_f32 = nullptr;
++    uint64_t ple_source_bytes = 0, ple_source_fnv64 = 0, ple_source_offset = 0;
++    uint64_t ple_source_ne0 = 0, ple_source_ne1 = 0;
++    int ple_source_type = -1;
++    std::string ple_source_shard;
+     const float* hc_source_f32 = nullptr;
+     const uint8_t* hc_source_q8 = nullptr;
+     uint64_t hc_source_bytes = 0, hc_source_offset = 0, hc_source_fnv64 = 0;
+--- a/include/strata/kernels/ple.hpp
++++ b/include/strata/kernels/ple.hpp
+@@ -52,6 +52,13 @@
+ ///   norm_key/query/conv      F32 [hc_dim], NO (1+w) folding - `ref/gdn.py` records the same for `ssm_norm`
+ ///   conv1d_f16               `ple_conv1d.weight` F16, GGML-NATIVE `kW[k + kern*c]`
+ struct PleWeights {
++    // Strict default-off exact-source path. Set only after native-model intake.
++    // Original Q8_0 [2560,10240] key/[2560,2560] value and F32 [4,10240] conv.
++    // The compatibility pointers below remain solely for the disabled path.
++    bool source_exact = false;
++    const uint8_t* key_source_q8 = nullptr; uint64_t key_source_bytes = 0;
++    const uint8_t* value_source_q8 = nullptr; uint64_t value_source_bytes = 0;
++    const float* conv_source_f32 = nullptr; uint64_t conv_source_floats = 0;
+     const uint8_t* key_codes = nullptr;    // hc_dim * (n_embd/4) bytes
+     const float* key_scales = nullptr;     // hc_dim * (n_embd/64) floats
+     const uint16_t* value_bf16 = nullptr;  // n_embd * n_embd
+@@ -77,6 +84,11 @@
+     const float* pre_key = nullptr;
+     const float* pre_value = nullptr;
+ };
++inline bool ple_exact_sources_ok(const PleWeights& w) {
++    return w.source_exact && w.key_source_q8 && w.key_source_bytes==27852800 &&
++        w.value_source_q8 && w.value_source_bytes==6963200 &&
++        w.conv_source_f32 && w.conv_source_floats==40960;
++}
+ 
+ /// Everything the block produces, in the order `ple_layer_xcheck`'s oracle writes it.  Any pointer may be
+ /// null; the caller that only wants the result passes nothing else.  Having the intermediates is what makes
+--- a/sycl/src/core/native_dense.cpp
++++ b/sycl/src/core/native_dense.cpp
+@@ -370,6 +370,35 @@
+                     (unsigned long long)bytes,(unsigned long long)ref.hc_source_offset,
+                     (unsigned long long)digest,path.c_str());
+             }
++            if (native_hc_requested()) for (const auto& tensor : gguf.tensors()) {
++                const int role=tensor.name=="blk.1.ple_key.weight"?0:
++                    tensor.name=="blk.1.ple_value.weight"?1:tensor.name=="blk.1.ple_conv1d.weight"?2:-1;
++                if (role<0 || outside(tensor.name) || !in_range(tensor.name)) continue;
++                auto found=table.table_.find(tensor.name);
++                if (found==table.table_.end()) { err="native PLE: missing metadata "+tensor.name; return false; }
++                auto& ref=found->second;
++                const uint64_t K=role==2?4:2560, M=role==1?2560:10240;
++                const int type=role==2?0:8;
++                const uint64_t bytes=role==2?K*M*4:K*M/32*34;
++                if (tensor.type!=uint32_t(type) || tensor.shape!=std::vector<uint64_t>{K,M} || ref.ple_source_type!=-1 ||
++                    !native_hc_source_bounds(gguf.data_start(),tensor.offset,bytes,gguf.file_size())) {
++                    err="native PLE: wrong source dtype/shape, bounds or duplicate "+tensor.name; return false;
++                }
++                const auto* source=gguf.tensor_data(tensor);
++                DevicePtr p(strata::malloc_device_guarded(bytes,dpct::get_in_order_queue(),"native PLE"));
++                if (!p) { err="native PLE: allocation "+tensor.name; return false; }
++                dpct::get_in_order_queue().memcpy(p.get(),source,bytes).wait_and_throw();
++                uint64_t digest=14695981039346656037ull;
++                for(uint64_t i=0;i<bytes;++i) {digest^=source[i];digest*=1099511628211ull;}
++                ref.ple_source_type=type;ref.ple_source_bytes=bytes;ref.ple_source_ne0=K;ref.ple_source_ne1=M;
++                ref.ple_source_offset=gguf.data_start()+tensor.offset;ref.ple_source_fnv64=digest;ref.ple_source_shard=path;
++                if(type==8) ref.ple_source_q8=static_cast<const uint8_t*>(p.get());
++                else ref.ple_source_f32=static_cast<const float*>(p.get());
++                weights_.push_back(p.release());
++                std::fprintf(stderr,"native PLE source: %s type%d shape[%llu,%llu] bytes%llu offset%llu fnv64%016llx shard%s\n",
++                    tensor.name.c_str(),type,(unsigned long long)K,(unsigned long long)M,(unsigned long long)bytes,
++                    (unsigned long long)ref.ple_source_offset,(unsigned long long)digest,path.c_str());
++            }
+             if (hc_q8_requested())
+                 for (const auto& tensor : gguf.tensors()) {
+                     // S25: the F32 inject rows hold BF16-exact values: the read takes the pack's BF16 rows unless
+@@ -421,6 +450,13 @@
+                 for (const char* half : {"hc_attn_","hc_ffn_"})
+                     for (const char* role : {"norm","down","up","inject"})
+                         if (!require("blk."+std::to_string(l)+"."+half+role+".weight")) return false;
++            if (!outside("blk.1.ple_key.weight") && in_range("blk.1.ple_key.weight")) for(const char* role:{"key","value","conv1d"}) {
++                const std::string name="blk.1.ple_"+std::string(role)+".weight";
++                auto it=table.table_.find(name);
++                if(it==table.table_.end() || it->second.ple_source_type<0) {
++                    err="native PLE: incomplete original-source set "+name;return false;
++                }
++            }
+             if (owns_head) for (const char* role : {"norm","down","up"})
+                 if (!require(std::string("output_hc_")+role+".weight")) return false;
+         }
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -846,7 +846,7 @@
+                 const char* e = std::getenv("STRATA_PLE_BATCH");
+                 return !e || e[0] != '0';
+             }();
+-            const bool ple_batch_kv = ple_batch_env && dec_batch && n > 1 && ss.ple.w.key_bf16 != nullptr &&
++            const bool ple_batch_kv = !ss.ple.w.source_exact && ple_batch_env && dec_batch && n > 1 && ss.ple.w.key_bf16 != nullptr &&
+                                       ss.ple.w.value_bf16 != nullptr && ple_native_bf16_enabled() &&
+                                       ple_native_postops_enabled();
+             // S25 (STRATA_PLE_BATCH=1): the key and value projections depend only on each row's n-gram embedding, so
+@@ -855,7 +855,7 @@
+             static const bool ple_batch = [] { const char* e = std::getenv("STRATA_PLE_BATCH"); return e && e[0] == '1'; }();
+             PleWeights pw = ss.ple.w;
+             const bool nkey = pw.key_native_data != nullptr && pw.key_bf16 == nullptr;
+-            const bool batched = !ple_batch_kv && ple_batch && n > 1 && (pw.key_bf16 != nullptr || nkey) && ple_native_bf16_enabled();
++            const bool batched = !pw.source_exact && !ple_batch_kv && ple_batch && n > 1 && (pw.key_bf16 != nullptr || nkey) && ple_native_bf16_enabled();
+             if (ple_batch_kv) {
+                 try {
+                     bf16_gemv_fp32_mmvf_multi(ple_ + (size_t) tb * N, N, ss.ple.w.key_bf16,
+--- a/sycl/src/kernels/cuda/native_ple_postops.dp.cpp
++++ b/sycl/src/kernels/cuda/native_ple_postops.dp.cpp
+@@ -115,7 +115,7 @@
+ }
+ __dpct_inline__ void
+ conv_residual_kernel(const float *history, const float *normalized,
+-                     const uint16_t *weights, const float *hidden,
++                     const uint16_t *weights, const float *exact_weights, const float *hidden,
+                      const float *gated, float *conv, float *result) {
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+     const int c = item_ct1.get_group(2) * item_ct1.get_local_range(2) +
+@@ -125,7 +125,7 @@
+ #pragma unroll
+     for (int k = 0; k < 4; ++k) {
+         const float x = k == 3 ? normalized[c] : history[c * HISTORY + 3 * k];
+-        const float w =
++        const float w = exact_weights ? exact_weights[c*4+k] :
+             sycl::vec<sycl::half, 1>(
+                 sycl::bit_cast<sycl::half, unsigned short>(weights[c * 4 + k]))
+                 .convert<float, sycl::rounding_mode::automatic>()[0];
+@@ -223,7 +223,7 @@
+ __dpct_inline__ void conv_residual_batch_kernel(const float *history,
+                                                 const float *normalized,
+                                                 const uint16_t *weights,
+-                                                float *hidden,
++                                                const float *exact_weights, float *hidden,
+                                                 const float *gated, int T) {
+     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+     const size_t i =
+@@ -236,7 +236,7 @@
+     for (int k = 0; k < 4; ++k) {
+         const int p = t - 9 + 3 * k;             // the token this tap reads (k == 3: this one)
+         const float x = p >= 0 ? normalized[size_t(p) * D + c] : history[size_t(c) * HISTORY + (9 + p)];
+-        const float wk =
++        const float wk = exact_weights ? exact_weights[c*4+k] :
+             sycl::vec<sycl::half, 1>(
+                 sycl::bit_cast<sycl::half, unsigned short>(weights[c * 4 + k]))
+                 .convert<float, sycl::rounding_mode::automatic>()[0];
+@@ -320,9 +320,11 @@
+                         const float* value, const float* history,
+                         const PleWeights& w, const NativePlePostopsBuffers& b, void* stream) {
+     if (!stream) throw std::invalid_argument("native PLE postops require an explicit stream");
++    if (w.source_exact && (!w.conv_source_f32 || w.conv_source_floats!=4*D))
++        throw std::invalid_argument("native PLE postops require original F32 convolution");
+     const Span inputs[] = {{projected_key,D*4,4}, {hidden,D*4,4}, {value,N*4,4},
+         {history,HISTORY*D*4,4}, {w.norm_key,D*4,4}, {w.norm_query,D*4,4},
+-        {w.norm_conv,D*4,4}, {w.conv1d_f16,4*D*2,2}};
++        {w.norm_conv,D*4,4}, {w.source_exact ? static_cast<const void*>(w.conv_source_f32) : static_cast<const void*>(w.conv1d_f16),w.source_exact ? 4*D*4 : 4*D*2,w.source_exact ? size_t(4):size_t(2)}};
+     const Span outputs[] = {{b.key,D*4,4}, {b.query,D*4,4}, {b.gate,H*4,4},
+         {b.gated,D*4,4}, {b.normalized,D*4,4}, {b.conv,D*4,4}, {b.result,D*4,4}};
+     for (const auto& span : inputs) validate(span);
+@@ -384,7 +386,7 @@
+                                   sycl::range(1, 1, 256),
+                               sycl::range(1, 1, 256)),
+             exp_props, [=](sycl::nd_item<3> item_ct1) {
+-                conv_residual_kernel(history, b.normalized, w.conv1d_f16,
++                conv_residual_kernel(history, b.normalized, w.conv1d_f16, w.source_exact ? w.conv_source_f32:nullptr,
+                                      hidden, b.gated, b.conv, b.result);
+             });
+     }
+@@ -395,6 +397,8 @@
+                               float* query_norm, float* gated, float* gate, int T, void* stream) {
+     if (!stream || T <= 0 || !key || !hidden || !value || !history || !query_norm || !gated || !gate)
+         throw std::invalid_argument("native PLE postops batch: null input or empty batch");
++    if (w.source_exact && (!w.conv_source_f32 || w.conv_source_floats!=4*D))
++        throw std::invalid_argument("native PLE batch requires original F32 convolution");
+     auto st = strata::q_of(stream);
+     const unsigned rows = unsigned(T) * H;
+     const unsigned blocks = unsigned((size_t(T) * D + 255) / 256);
+@@ -495,7 +499,7 @@
+                                   sycl::range(1, 1, 256),
+                               sycl::range(1, 1, 256)),
+             exp_props, [=](sycl::nd_item<3> item_ct1) {
+-                conv_residual_batch_kernel(history, query_norm, w.conv1d_f16,
++                conv_residual_batch_kernel(history, query_norm, w.conv1d_f16, w.source_exact ? w.conv_source_f32:nullptr,
+                                            hidden, gated, T);
+             });
+     }
+--- a/sycl/src/kernels/cuda/ple.dp.cpp
++++ b/sycl/src/kernels/cuda/ple.dp.cpp
+@@ -25,6 +25,7 @@
+ #include "strata/kernels/s2_gemv_q8.hpp"
+ #include "strata/kernels/native_mmvq.hpp"
+ #include "strata/kernels/native_ple_postops.hpp"
++#include "strata/kernels/hc_native_projection.hpp"
+ 
+ #include <cmath>
+ #include <cstdio>
+@@ -335,7 +336,12 @@
+ 
+ void ple_block(const float* emb, const float* hidden, const float* hist_rows, const PleWeights& w,
+                PleOut& out, void* scratch, void* stream) {
+-    const bool native_key = w.key_native_data != nullptr && w.key_bf16 == nullptr;
++    const bool postops = native_postops || w.source_exact;
++    if (w.source_exact && (!emb || !hidden || !hist_rows || !out.result || !scratch || !stream ||
++        !ple_exact_sources_ok(w) || !w.norm_key || !w.norm_query || !w.norm_conv ||
++        w.pre_key || w.pre_value || !strata::q_of(stream)->has_property<sycl::property::queue::in_order>()))
++        throw std::invalid_argument("native PLE: incomplete original tensors or unsupported preprojected route");
++    const bool native_key = !w.source_exact && w.key_native_data != nullptr && w.key_bf16 == nullptr;
+     if (native_key && (!emb || !hidden || !hist_rows || !out.result || !scratch || !stream ||
+                        !w.key_native_q8_1 ||
+                        (w.key_native_type != 42 && w.key_native_type != 18 && w.key_native_type != 23 &&
+@@ -412,7 +418,14 @@
+ 
+     // ---- key = grouped_norm(ple_key @ emb). The optional native projection
+     // follows pinned CUDA Q8_1 MMVQ; the default retains its canonical Q8_0 path.
+-    if (w.pre_key != nullptr) {
++    if (w.source_exact) {
++#ifdef STRATA_SYCL_Q8_HC_BUILT
++        if (!hc_q8_0_project_f32(w.key_source_q8,w.key_source_bytes,emb,n_embd,d_key,hc_dim,n_embd,hc_dim,1,stream))
++            throw std::invalid_argument("native PLE: original Q8/F32 key projection rejected");
++#else
++        throw std::invalid_argument("native PLE: exact-source primitives not built");
++#endif
++    } else if (w.pre_key != nullptr) {
+         /*
+         DPCT1124: cudaMemcpyAsync is migrated to asynchronous memcpy API.
+         While the origin API might be synchronous, it depends on the type of
+@@ -430,7 +443,7 @@
+         quantize_q8_0(emb, d_act, n_embd, st);
+         s2_gemv_q8(d_act, w.key_codes, w.key_scales, d_key, n_embd, hc_dim, 8, st);
+     }
+-    if (!native_postops) {
++    if (!postops) {
+         {
+             auto exp_props = sycl::ext::oneapi::experimental::properties{
+                 sycl::ext::oneapi::experimental::use_root_sync};
+@@ -476,7 +489,14 @@
+     }
+ 
+     // The value projection's independent option leaves the nonlinear PLE operations unchanged.
+-    if (w.pre_value != nullptr) {
++    if (w.source_exact) {
++#ifdef STRATA_SYCL_Q8_HC_BUILT
++        if (!hc_q8_0_project_f32(w.value_source_q8,w.value_source_bytes,emb,n_embd,d_value,n_embd,n_embd,n_embd,1,stream))
++            throw std::invalid_argument("native PLE: original Q8/F32 value projection rejected");
++#else
++        throw std::invalid_argument("native PLE: exact-source primitives not built");
++#endif
++    } else if (w.pre_value != nullptr) {
+         /*
+         DPCT1124: cudaMemcpyAsync is migrated to asynchronous memcpy API.
+         While the origin API might be synchronous, it depends on the type of
+@@ -519,7 +539,7 @@
+     }
+ 
+     const float* normalized_key = d_key;
+-    if (native_postops) {
++    if (postops) {
+         // The key norm has a distinct destination; temporary query storage can
+         // be reused for normalized gated values after the gate consumes it.
+         NativePlePostopsBuffers buffers{d_query,d_norm,d_gate,d_gated,d_norm,d_conv,out.result};
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -2153,7 +2153,7 @@
+         const char* v = std::getenv("STRATA_PLE_BATCH");
+         return v == nullptr || std::atoi(v) != 0;
+     }();
+-    const bool ple_batch = ple_on && ple_batch_env && strata::kernels::ple_native_postops_enabled() &&
++    const bool ple_batch = !ss.ple.w.source_exact && ple_on && ple_batch_env && strata::kernels::ple_native_postops_enabled() &&
+                            (ss.ple.w.key_bf16 != nullptr || ss.ple.w.key_native_data != nullptr) &&
+                            m.region_bytes / ((uint64_t) (3 * strata::kernels::NG_HC_DIM + N + 4) * 4 + (uint64_t) N * 2 + 4096) >= 64;
+     const int32_t prev0[2] = {prev[0], prev[1]};
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -25,6 +25,7 @@
+ #include <sycl/sycl.hpp>
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
++#include "strata/core/native_hc_policy.hpp"
+ #include "strata/core/arch_defaults.hpp"
+ #include "strata/core/dma_batch.hpp"
+ #include "strata/core/device.hpp"
+@@ -3004,7 +3005,7 @@
+         // (verbatim 2-byte F16) in the canonical Q2_0 pack; BF16 (kind 4) has the same size and is not F16.
+         const bool f16 = wc->kind == strata::core::WeightKind::F16InF32 ||
+                          (wc->kind == strata::core::WeightKind::Verbatim && wc->code_bits == 0);
+-        if (!f16 || wc->bytes != (uint64_t) wc->elements * 2) {
++        if (!strata::core::native_hc_requested() && (!f16 || wc->bytes != (uint64_t) wc->elements * 2)) {
+             std::fprintf(stderr, "strata generate: blk.1.ple_conv1d.weight is not stored as F16 (pack index kind %d, "
+                                  "%llu B for %lld values); the PLE conv1d kernel reads F16 - repack with "
+                                  "tools/iq_pack.py\n",
+@@ -3012,6 +3013,20 @@
+             return 1;
+         }
+         ss.ple.w.conv1d_f16 = (const uint16_t*) wc->data;
++        if (strata::core::native_hc_requested()) {
++            if (wk->ple_source_type!=8 || wk->ple_source_ne0!=2560 || wk->ple_source_ne1!=10240 ||
++                !wk->ple_source_q8 || wk->ple_source_bytes!=27852800 ||
++                wv->ple_source_type!=8 || wv->ple_source_ne0!=2560 || wv->ple_source_ne1!=2560 ||
++                !wv->ple_source_q8 || wv->ple_source_bytes!=6963200 ||
++                wc->ple_source_type!=0 || wc->ple_source_ne0!=4 || wc->ple_source_ne1!=10240 ||
++                !wc->ple_source_f32 || wc->ple_source_bytes!=163840) {
++                std::fprintf(stderr,"native PLE: exact original key/value/conv views missing or incompatible\n");return 1;
++            }
++            ss.ple.w.source_exact=true;
++            ss.ple.w.key_source_q8=wk->ple_source_q8;ss.ple.w.key_source_bytes=wk->ple_source_bytes;
++            ss.ple.w.value_source_q8=wv->ple_source_q8;ss.ple.w.value_source_bytes=wv->ple_source_bytes;
++            ss.ple.w.conv_source_f32=wc->ple_source_f32;ss.ple.w.conv_source_floats=wc->ple_source_bytes/4;
++        }
+         ss.ple.consts = strata::kernels::ple_artifact_consts();
+         if (o.ple_delay_us > 0) ple_table.set_injected_delay_us(o.ple_delay_us);
+         ss.ple.table = &ple_table;

@@ -22,6 +22,101 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+
+def resolve_initial_reset_plan(expected_sha256):
+    """Resolve the exact build-time plan; permit only documented later experiment records."""
+    path = REPO / 'llamacpp/flash-next/reset-diagnostic-build-plan.json'
+    current = json.loads(path.read_text())
+    if digest(path) == expected_sha256:
+        return current, {'path': str(path), 'sha256': expected_sha256, 'metadata_delta': []}
+    snapshot = REPO / 'llamacpp/flash-next/reset-diagnostic-initial-build-plan-snapshot.json'
+    if digest(snapshot) != expected_sha256:
+        raise RuntimeError('Exact original reset build plan snapshot unavailable')
+    original = json.loads(snapshot.read_text())
+    if original != {key: value for key, value in current.items() if key != 'experiment_records'}:
+        raise RuntimeError('Initial reset plan changed beyond documented experiment metadata')
+    return original, {'path': str(snapshot), 'sha256': expected_sha256,
+                      'current_plan_sha256': digest(path), 'metadata_delta': ['experiment_records']}
+
+
+def validate_candidate_build(build, receipt_path=None):
+    """Verify an isolated reset build and all mounted runtime artifact identities."""
+    build = build.resolve()
+    if build == BUILD.resolve():
+        if receipt_path is not None:
+            raise RuntimeError('Explicit diagnostic receipt cannot qualify the baseline build')
+        return None
+    receipt_path = receipt_path.resolve() if receipt_path is not None else build.parent / 'receipt.json'
+    receipt = json.loads(receipt_path.read_text())
+    initial_plan = REPO / 'llamacpp/flash-next/reset-diagnostic-build-plan.json'
+    qualified_plan = REPO / 'llamacpp/flash-next/reset-diagnostic-qualified-build-plan.json'
+    plan_path = Path(receipt.get('plan_path', str(initial_plan))).resolve()
+    if plan_path not in [initial_plan, qualified_plan]:
+        raise RuntimeError('Unknown reset diagnostic source plan')
+    plan = json.loads(plan_path.read_text())
+    if (receipt.get('build_rc') != 0 or not receipt.get('status', '').startswith('built;')
+            or not receipt.get('baseline_unchanged') or not receipt.get('external_source_unchanged')
+            or receipt.get('devices_exposed') is not False or receipt.get('cmake_mismatches') != {}
+            or Path(receipt.get('build', '')).resolve() != build
+            or receipt.get('source_revision') != plan['source_revision']
+            or receipt.get('plan_sha256') != digest(plan_path)
+            or receipt.get('patches') != plan['patches']):
+        raise RuntimeError('Complete matching isolated reset diagnostic build receipt required')
+    original_plan_identity = None
+    if plan_path == qualified_plan:
+        original_path = Path(receipt['original_build_receipt_path']).resolve()
+        if digest(original_path) != receipt.get('original_build_receipt_sha256'):
+            raise RuntimeError('Initial build receipt changed')
+        original = json.loads(original_path.read_text())
+        original_plan, original_plan_identity = resolve_initial_reset_plan(original.get('plan_sha256'))
+        if (original.get('build_rc') != 0 or not original.get('status', '').startswith('built;')
+                or not original.get('baseline_unchanged') or not original.get('external_source_unchanged')
+                or original.get('devices_exposed') is not False or original.get('cmake_mismatches') != {}
+                or Path(original.get('build', '')).resolve() != build
+                or original.get('source_revision') != plan['source_revision']
+                or original.get('patches') != original_plan['patches']
+                or original.get('cmake_cache_sha256') != receipt.get('cmake_cache_sha256')):
+            raise RuntimeError('Initial isolated server build provenance incomplete or changed')
+        previous = original.get('binary_sha256', {})
+        if not previous or receipt.get('preserved_original_binary_sha256') != previous:
+            raise RuntimeError('Original runtime preservation proof required')
+        for filename, expected in previous.items():
+            path = Path(filename)
+            if path.parent != build / 'bin' or digest(path) != expected:
+                raise RuntimeError('Initial server/runtime artifact changed during primitive qualification')
+        for filename, expected in original.get('patched_source_sha256', {}).items():
+            if receipt.get('patched_source_sha256', {}).get(filename) != expected:
+                raise RuntimeError('Initial runtime source changed during test-only qualification')
+    for patch in plan['patches']:
+        if digest(REPO / patch['path']) != patch['sha256']:
+            raise RuntimeError('Diagnostic patch changed after build')
+    source = Path(receipt['source_copy']).resolve()
+    if set(receipt.get('patched_source_sha256', {})) != set(plan['overlay_files']):
+        raise RuntimeError('Incomplete patched source identity')
+    for filename, expected in receipt['patched_source_sha256'].items():
+        if digest(source / filename) != expected:
+            raise RuntimeError('Patched source changed: ' + filename)
+    status = subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'], text=True).strip()
+    revision = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+    if status != receipt.get('source_copy_status') or revision != plan['source_revision']:
+        raise RuntimeError('Diagnostic source checkout identity changed')
+    artifacts = [build / 'bin/llama-server', build / 'bin/test-backend-ops',
+                 *sorted((build / 'bin').glob('lib*.so*'))]
+    expected_hashes = receipt.get('binary_sha256', {})
+    if not artifacts[0].is_file() or not artifacts[1].is_file() or len(artifacts) <= 2:
+        raise RuntimeError('Diagnostic server, primitive binary and runtime libraries required')
+    for path in artifacts:
+        if expected_hashes.get(str(path)) != digest(path):
+            raise RuntimeError('Diagnostic runtime artifact identity changed: ' + str(path))
+    if receipt.get('cmake_cache_sha256') != digest(build / 'CMakeCache.txt'):
+        raise RuntimeError('Diagnostic CMake configuration changed')
+    return {'receipt_path': str(receipt_path), 'receipt_sha256': digest(receipt_path),
+            'plan_path': str(plan_path), 'plan_sha256': digest(plan_path), 'source_revision': plan['source_revision'],
+            'patches': plan['patches'], 'patched_source_sha256': receipt['patched_source_sha256'],
+            'runtime_binary_sha256': {str(path): digest(path) for path in artifacts},
+            'original_plan_identity': original_plan_identity}
+
+
 def analyze(log, groups):
     clean = ANSI.sub('', log)
     summaries = [(int(a), int(b)) for a, b in re.findall(r'^\s+(\d+)/(\d+) tests passed$', clean, re.M)]
@@ -39,6 +134,8 @@ def analyze(log, groups):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--image', required=True)
+    p.add_argument('--build', type=Path, help='Isolated reset diagnostic build; default is the unchanged baseline')
+    p.add_argument('--build-receipt', type=Path, help='Supplemental qualification receipt; defaults to build parent receipt.json')
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--groups', nargs='+', help='Diagnostic subset; cannot qualify a model launch')
     p.add_argument('--debugger', action='store_true', help='Capture CPU crash stack; diagnostic only')
@@ -48,11 +145,15 @@ def main():
     p.add_argument('--sycl-fusion', type=int, choices=[0, 1], default=1)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
+    if args.build_receipt is not None and args.build is None:
+        p.error('--build-receipt requires --build')
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
     for fd, card in [(8, 0), (9, 1)]:
         assert os.path.samefile('/proc/self/fd/' + str(fd), '/mnt/vm_8tb/b70/gpu.lock.' + str(card))
     assert re.fullmatch(r'sha256:[0-9a-f]{64}', args.image)
+    build = args.build.resolve() if args.build is not None else BUILD
+    build_identity = validate_candidate_build(build, args.build_receipt)
     args.output.mkdir(parents=True, exist_ok=False)
     out = args.output
     plan_paths = [REPO / 'llamacpp/flash-next/primitive-plan.json', REPO / 'llamacpp/flash-next/primitive-extra-plan.json', *args.extra_plan]
@@ -70,7 +171,9 @@ def main():
     cache = Path('/mnt/vm_8tb/b70/cache/flashnext-neo26.22')
     cache.mkdir(parents=True, exist_ok=True)
     started = int(time.time())
-    result = {'image': args.image, 'source_revision': plans[0]['source_revision'], 'binary_sha256': digest(BUILD / 'bin/test-backend-ops'),
+    result = {'image': args.image, 'source_revision': plans[0]['source_revision'], 'binary_sha256': digest(build / 'bin/test-backend-ops'),
+              'build': str(build), 'build_identity': build_identity,
+              'runtime_library_sha256': {str(path): digest(path) for path in sorted((build / 'bin').glob('lib*.so*'))},
               'controller_sha256': digest(Path(__file__)), 'groups_used': [g['name'] for g in groups],
               'coverage_complete': args.groups is None and not args.debugger,
               'debugger': args.debugger, 'persistent_device_code_cache': args.persistent_cache,
@@ -155,12 +258,14 @@ def main():
                             '-ex', 'x/16gx $rsp', '-ex', 'info sharedlibrary', '--args', *workload]
             command = ['docker', 'run', '-d', '--name', active, '--label', 'b70.flashnext.primitive-owner=' + str(os.getpid()),
                        '--device', '/dev/dri', '--memory', '24g', '--memory-swap', '24g', '--ulimit', 'core=0',
-                       '-v', '/dev/dri/by-path:/dev/dri/by-path:ro', '-v', str(BUILD) + ':/build:ro', '-v', str(cache) + ':/cache',
+                       '-v', '/dev/dri/by-path:/dev/dri/by-path:ro', '-v', str(build) + ':/build:ro', '-v', str(cache) + ':/cache',
                        '-e', 'ZE_AFFINITY_MASK=' + str(card), '-e', 'ONEAPI_DEVICE_SELECTOR=level_zero:gpu',
                        '-e', 'GGML_SYCL_ENABLE_GRAPH=0', '-e', 'SYCL_CACHE_PERSISTENT=' + str(args.persistent_cache), '-e', 'SYCL_CACHE_DIR=/cache/sycl',
                        '-e', 'GGML_SYCL_ENABLE_OPT=' + str(args.sycl_opt),
                        '-e', 'GGML_SYCL_ENABLE_FUSION=' + str(args.sycl_fusion),
                        '-e', 'XDG_CACHE_HOME=/cache']
+            if build_identity is not None:
+                command += ['-e', 'FLASHNEXT_RESET_DIAG=0', '-e', 'FLASHNEXT_RESET_DIAG_NUMERIC=0']
             if args.debugger:
                 command += ['--cap-add', 'SYS_PTRACE', '--security-opt', 'seccomp=unconfined', '-e', 'INTELGT_AUTO_ATTACH_DISABLE=1']
             command += [args.image, 'exec ' + ' '.join(__import__('shlex').quote(s) for s in workload)]

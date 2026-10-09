@@ -1,0 +1,416 @@
+--- a/sycl/CMakeLists.txt
++++ b/sycl/CMakeLists.txt
+@@ -196,6 +196,7 @@
+ # Primitive qualification only: does not wire any model HC call site.
+ option(STRATA_SYCL_Q8_HC_PRIMITIVES "Build experimental source-preserving HC projections" OFF)
+ if(STRATA_SYCL_Q8_HC_PRIMITIVES)
++  target_compile_definitions(strata_includes INTERFACE STRATA_SYCL_Q8_HC_BUILT=1)
+   list(APPEND _kernels ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/hc_native_projection.cpp)
+   list(APPEND _kernels ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/hc_native_composition.cpp)
+ endif()
+--- a/include/strata/core/weights.hpp
++++ b/include/strata/core/weights.hpp
+@@ -93,6 +93,14 @@
+     /// S23 experiment (STRATA_HC_Q8=1): a hyper-connection projection's Q8_0 bytes as the GGUF stores them, owned by
+     /// NativeDense, for the verify window's read (every other path keeps the pack's BF16 `data`)
+     const void* hc_q8 = nullptr;
++    // SYCL native HC exact-source view, allocations owned by this stage's NativeDense.
++    const float* hc_source_f32 = nullptr;
++    const uint8_t* hc_source_q8 = nullptr;
++    uint64_t hc_source_bytes = 0, hc_source_offset = 0, hc_source_fnv64 = 0;
++    uint64_t hc_source_ne0 = 0, hc_source_ne1 = 0;
++    uint32_t hc_source_rank = 0;
++    int hc_source_type = -1;
++    std::string hc_source_shard;
+     /// Plan v0.3 P1: false when the loader SKIPPED this tensor's canonical bytes because another form serves it
+     /// (native GGUF projections, the native head).  The metadata above stays valid; `data` is null.
+     bool resident = true;
+--- a/sycl/src/core/native_dense.cpp
++++ b/sycl/src/core/native_dense.cpp
+@@ -3,6 +3,8 @@
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/core/native_dense.hpp"
++#include "strata/core/native_hc_policy.hpp"
++#include "strata/core/native_hc_source.hpp"
+ #include <cstdlib>
+ #include "strata/core/weights.hpp"
+ #include "strata/artifact/gguf_reader.hpp"
+@@ -146,18 +148,45 @@
+                        WeightTable &table, std::string &err,
+                        bool include_ple_key, int64_t layer_lo,
+                        int64_t layer_hi) try {
++    int64_t hc_layer_lo=0,hc_layer_hi=-1;
++    if (!native_hc_effective_bounds(layer_lo,layer_hi,g_layer_lb,g_layer_le,hc_layer_lo,hc_layer_hi)) {
++        err="native HC: invalid effective stage bounds"; return false;
++    }
++    auto hc_outside=[&](const std::string& name) {
++        if (hc_layer_hi<0 || name.rfind("blk.",0)!=0) return false;
++        const long l=std::strtol(name.c_str()+4,nullptr,10);
++        return l<hc_layer_lo || l>=hc_layer_hi;
++    };
+     auto outside = [&](const std::string& name) {   // a blk.<l>. tensor of another stage's layers
+         if (layer_hi < 0 || name.rfind("blk.", 0) != 0) return false;
+         const long l = std::strtol(name.c_str() + 4, nullptr, 10);
+         return l < layer_lo || l >= layer_hi;
+     };
++    if (!native_hc_policy(err)) return false;
+     if (scratch_ || !weights_.empty()) { err = "native dense: already loaded"; return false; }
+     if (shards.empty()) { err = "native dense: at least one GGUF shard is required"; return false; }
+     try {
+         std::vector<Pending> pending;
+         std::set<std::string> seen;
+         int max_in = 0;
+-        uint64_t total = 0, hc_q8_bytes = 0;
++        uint64_t total = 0, hc_q8_bytes = 0, native_hc_bytes = 0;
++        // Table metadata spans the full model even when this stage owns a subset.
++        int last_layer=-1;
++        for (const auto& [name,ref] : table.table_) if (name.rfind("blk.",0)==0)
++            last_layer=std::max(last_layer,std::atoi(name.c_str()+4));
++        if (native_hc_requested() && hc_layer_hi>last_layer+1) { err="native HC: stage bounds exceed model"; return false; }
++        const bool owns_head=hc_layer_hi<0 || hc_layer_hi==last_layer+1;
++        auto hc_role=[](const std::string& name)->int {
++            const bool head=name.rfind("output_hc_",0)==0;
++            const bool block=name.rfind("blk.",0)==0 &&
++                (name.find(".hc_attn_")!=std::string::npos || name.find(".hc_ffn_")!=std::string::npos);
++            if (!head && !block) return -1;
++            if (name.ends_with("norm.weight")) return 0;
++            if (name.ends_with("down.weight")) return 1;
++            if (name.ends_with("up.weight")) return 2;
++            if (!head && name.ends_with("inject.weight")) return 3;
++            return -1;
++        };
+         uint64_t split_count = 0, split_tensors = 0;
+         std::set<uint64_t> split_numbers;
+         bool have_architecture = false;
+@@ -315,6 +344,42 @@
+                 }
+                 pending.push_back(Pending{&ref, (int) tensor.type, bytes, std::move(data), std::move(packed)});
+             }
++            if (native_hc_requested()) for (const auto& tensor : gguf.tensors()) {
++                const int role=hc_role(tensor.name);
++                if (role<0 || hc_outside(tensor.name) || (!owns_head && tensor.name.rfind("output_hc_",0)==0)) continue;
++                auto found=table.table_.find(tensor.name);
++                if (found==table.table_.end()) { err="native HC: missing canonical metadata "+tensor.name; return false; }
++                auto& ref=found->second;
++                const uint64_t K=role==2?320:10240;
++                const uint64_t M=role==0?1:role==1?320:role==2?10240:4;
++                const int type=(role==1 || role==2)?8:0;
++                if (!native_hc_source_shape(role,tensor.type,tensor.shape) || ref.hc_source_type!=-1) {
++                    err="native HC: wrong source dtype/shape or duplicate "+tensor.name; return false;
++                }
++                const uint64_t bytes=native_hc_source_bytes(role);
++                if (!native_hc_source_bounds(gguf.data_start(),tensor.offset,bytes,gguf.file_size())) {
++                    err="native HC: source bounds "+tensor.name; return false;
++                }
++                const auto* source=gguf.tensor_data(tensor);
++                DevicePtr p(strata::malloc_device_guarded(bytes,dpct::get_in_order_queue(),"native HC"));
++                if (!p) { err="native HC: allocation "+tensor.name; return false; }
++                dpct::get_in_order_queue().memcpy(p.get(),source,bytes).wait_and_throw();
++                uint64_t digest=14695981039346656037ull;
++                for (uint64_t i=0;i<bytes;++i) { digest^=source[i]; digest*=1099511628211ull; }
++                // Publish only after a complete upload. NativeDense owns the device image.
++                ref.hc_source_type=type; ref.hc_source_bytes=bytes;
++                ref.hc_source_ne0=K; ref.hc_source_ne1=M; ref.hc_source_rank=uint32_t(tensor.shape.size());
++                ref.hc_source_offset=gguf.data_start()+tensor.offset;
++                ref.hc_source_shard=path; ref.hc_source_fnv64=digest;
++                if (type==8) ref.hc_source_q8=static_cast<const uint8_t*>(p.get());
++                else ref.hc_source_f32=static_cast<const float*>(p.get());
++                weights_.push_back(p.release()); native_hc_bytes+=bytes;
++                std::fprintf(stderr,"native HC source: %s type%d rank%u shape[%s] view[%llu,%llu] bytes%llu offset%llu fnv64%016llx shard%s\n",
++                    tensor.name.c_str(),type,ref.hc_source_rank,
++                    (role==0?std::to_string(K):std::to_string(K)+","+std::to_string(M)).c_str(),(unsigned long long)K,(unsigned long long)M,
++                    (unsigned long long)bytes,(unsigned long long)ref.hc_source_offset,
++                    (unsigned long long)digest,path.c_str());
++            }
+             if (hc_q8_requested())
+                 for (const auto& tensor : gguf.tensors()) {
+                     // S25: the F32 inject rows hold BF16-exact values: the read takes the pack's BF16 rows unless
+@@ -353,6 +418,21 @@
+                     weights_.push_back(p);
+                     hc_q8_bytes += bytes;
+                 }
++        }
++        if (native_hc_requested()) {
++            auto require=[&](const std::string& name) {
++                const auto it=table.table_.find(name);
++                if (it==table.table_.end() || it->second.hc_source_type<0) {
++                    err="native HC: incomplete stage source set "+name; return false;
++                }
++                return true;
++            };
++            for (int64_t l=hc_layer_hi<0?0:hc_layer_lo; l<(hc_layer_hi<0?last_layer+1:hc_layer_hi); ++l)
++                for (const char* half : {"hc_attn_","hc_ffn_"})
++                    for (const char* role : {"norm","down","up","inject"})
++                        if (!require("blk."+std::to_string(l)+"."+half+role+".weight")) return false;
++            if (owns_head) for (const char* role : {"norm","down","up"})
++                if (!require(std::string("output_hc_")+role+".weight")) return false;
+         }
+         if (pending.empty()) { err = "native dense: no supported GDN/QSA matrices in supplied shards"; return false; }
+         void* allocation = nullptr;
+@@ -400,7 +480,7 @@
+             std::fprintf(stderr, "native dense: STRATA_Q8_PACKED=1 packed %zu Q8_0 matrices for decode (+%.1f MiB)\n",
+                          packed_count, packed_bytes / 1048576.0);
+         scratch_ = scratch.release();
+-        bytes_ = total + hc_q8_bytes;
++        bytes_ = total + hc_q8_bytes + native_hc_bytes;
+         if (hc_q8_requested())
+             std::fprintf(stderr, "strata: STRATA_HC_Q8=1: %.2f GiB of Q8_0 hyper-connection projections for the verify read\n",
+                          (double) hc_q8_bytes / 1073741824.0);
+--- a/sycl/src/core/layer.cpp
++++ b/sycl/src/core/layer.cpp
+@@ -5,6 +5,8 @@
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/core/layer.hpp"
++#include "strata/core/native_hc_policy.hpp"
++#include "strata/kernels/hc_native_composition.hpp"
+ #include "strata/core/native_head.hpp"
+ #include "strata/kernels/bf16_bits.hpp"
+ #include "strata/kernels/bf16_gemv.hpp"
+@@ -1445,6 +1447,49 @@
+                                        w->code_bits, w->code_bias, w->group_elems, out_dev, stream);
+     return true;
+ }
++
++namespace {
++class NativeHcWrite;
++bool native_hc_write(const ModelGeometry& g,const BlockBuffers& bb,const float* inject,void* stream,std::string& err) {
++    if (!native_hc_policy(err)) return false;
++    if (g.n_embd!=2560 || g.hc!=4 || !bb.R || !bb.block_out || !inject) {
++        err="native HC: residual write descriptor rejected"; return false;
++    }
++    auto& q=*strata::q_of(stream);
++    if (!q.has_property<sycl::property::queue::in_order>()) { err="native HC: residual write needs in-order queue"; return false; }
++    float* R=bb.R; const float* bo=bb.block_out;
++    q.parallel_for<NativeHcWrite>(sycl::range<1>(10240),[=](sycl::id<1> index) {
++        const size_t i=index[0],c=i/2560,d=i%2560;
++        const float w=2.0f/(1.0f+sycl::exp(-inject[c]/4.0f));
++        R[i]=sycl::fma(bo[d],w,R[i]);
++    });
++    return true;
++}
++bool native_hc_read(const WeightRef* wn,const WeightRef* wd,const WeightRef* wu,const WeightRef* wi,
++                    const ModelGeometry& g,const BlockBuffers& bb,float* injection,void* stream,std::string& err) {
++    if (!native_hc_policy(err)) return false;
++#ifdef STRATA_SYCL_Q8_HC_BUILT
++    using namespace strata::kernels;
++    if (!wn || !wd || !wu || wn->hc_source_type!=0 || wd->hc_source_type!=8 || wu->hc_source_type!=8 ||
++        (wi && wi->hc_source_type!=0)) { err="native HC: missing exact source view"; return false; }
++    HcNativeArgs a; a.n_embd=int(g.n_embd); a.hc=int(g.hc); a.lr=int(g.hc_lr); a.eps=RMS_EPS;
++    a.w.norm=wn->hc_source_f32; a.w.norm_floats=wn->hc_source_bytes/4;
++    a.w.down=wd->hc_source_q8; a.w.down_bytes=wd->hc_source_bytes;
++    a.w.up=wu->hc_source_q8; a.w.up_bytes=wu->hc_source_bytes;
++    if (wi) { a.w.inject=wi->hc_source_f32; a.w.inject_floats=wi->hc_source_bytes/4;
++        a.inject_out=injection; a.inject_out_floats=size_t(g.hc); }
++    const size_t D=size_t(g.hc*g.n_embd);
++    a.R=bb.R; a.R_floats=D; a.xn=bb.gr.xn; a.xn_floats=D;
++    a.lo=bb.gr.lo; a.lo_floats=size_t(g.hc_lr); a.gate=bb.gr.gated; a.gate_floats=D;
++    a.rs=bb.gr_rs; a.rs_floats=size_t(g.hc); a.mixed=bb.mixed; a.mixed_floats=size_t(g.n_embd);
++    if (!hc_native_read_f32(a,stream)) { err="native HC: composed read rejected"; return false; }
++    return true;
++#else
++    err="native HC: kernel build disabled"; return false;
++#endif
++}
++}
++
+ bool lm_head_mix(const WeightTable& tables, const ModelGeometry& g, const BlockBuffers& bb,
+                  void* stream, std::string& err) {
+     const WeightRef* wn = tables.find("output_hc_norm.weight");
+@@ -1454,6 +1499,7 @@
+         err = "lm_head: an output_hc_* weight is missing";
+         return false;
+     }
++    if (native_hc_requested()) return native_hc_read(wn,wd,wu,nullptr,g,bb,nullptr,stream,err);
+     if (wn->kind != WeightKind::F32 || wd->kind != WeightKind::Bf16InF32 ||
+         wu->kind != WeightKind::Bf16InF32) {
+         err = "lm_head: the output_hc_* weights have the wrong engine forms";
+@@ -1557,7 +1603,8 @@
+     //
+     // So the driver calls `ple_stage_token` once per token, BEFORE the graphs, and what is captured here is only
+     // the device half: `ple_block` reading `emb_dev`, and the history shift.
+-    const bool fused = g_fused_gr && stage_prefix == 0 && half == 0 &&
++    if (!native_hc_policy(err)) return false;
++    const bool fused = !native_hc_requested() && g_fused_gr && stage_prefix == 0 && half == 0 &&
+                        strata::kernels::fused_gr_supported(g.n_embd, g.hc, g.hc_lr);
+     // layer-1's FFN write has not been applied to R yet - unless a control vector follows it, which needs R
+     bool pending_ffn = fused && layer > 0 && !strata::kernels::cvec().covers(layer - 1);
+@@ -1608,7 +1655,7 @@
+ const char* pre[2] = {"hc_attn_", "hc_ffn_"};    const WeightRef* w_norm[2];    const WeightRef* w_down[2];    const WeightRef* w_up[2];    const WeightRef* w_inject[2];    for (int h = 0; h < 2; ++h) {        const std::string a = std::string(pre[h]) + "norm.weight";        const std::string d = std::string(pre[h]) + "down.weight";        const std::string u = std::string(pre[h]) + "up.weight";        const std::string i = std::string(pre[h]) + "inject.weight";        w_norm[h] = v.get(a.c_str());        w_down[h] = v.get(d.c_str());        w_up[h] = v.get(u.c_str());        w_inject[h] = v.get(i.c_str());        if (!w_norm[h] || !w_down[h] || !w_up[h] || !w_inject[h]) {            err = v.name((std::string(pre[h]) + "{norm,down,up,inject}.weight").c_str()) + " is missing";            return false;        }
+ // The GR weights are BF16 and the arena holds them re-rounded to 2 B/elem.  `gr_read` wants exactly
+ // that; handing it f32 bytes would walk 2x the tensor inside the arena without faulting.
+-if (w_down[h]->kind != WeightKind::Bf16InF32 || w_up[h]->kind != WeightKind::Bf16InF32 ||            w_inject[h]->kind != WeightKind::Bf16InF32 || w_norm[h]->kind != WeightKind::F32) {            err = v.name(pre[h]) + "has the wrong engine forms (norm must be F32, the other three bf16)";            return false;        }    }
++if (!native_hc_requested() && (w_down[h]->kind != WeightKind::Bf16InF32 || w_up[h]->kind != WeightKind::Bf16InF32 ||            w_inject[h]->kind != WeightKind::Bf16InF32 || w_norm[h]->kind != WeightKind::F32)) {            err = v.name(pre[h]) + "has the wrong engine forms (norm must be F32, the other three bf16)";            return false;        }    }
+ // ---- half 1: the mixer
+ float* R = bb.R;
+     // R0.11: WHICH STAGES TO RUN.  `stage_prefix == 0` means "as `half` says", so every caller that predates
+@@ -1621,7 +1668,9 @@
+     // and 0 is what every caller before this used.
+     if (run0) {
+ st_begin(layer, 0, stream);
+-    if (fused) {
++    if (native_hc_requested()) {
++        if (!native_hc_read(w_norm[0],w_down[0],w_up[0],w_inject[0],g,bb,bb.inject,stream,err)) return false;
++    } else if (fused) {
+         strata::kernels::FusedGrArgs fa;
+         fa.R = R; fa.R_out = R; fa.apply = pending_ffn; fa.bo_prev = bb.block_out; fa.inj_prev = bb.inject2;
+         fa.w_norm = (const float*) w_norm[0]->data; fa.w_down = (const uint16_t*) w_down[0]->data;
+@@ -1635,7 +1684,9 @@
+     if (run1) {
+     st_begin(layer, 1, stream);    if (qsa) {        if (!qsa_layer(tables, g, layer, pos, pos_base, qst, qb, bb.mixed, bb.block_out, stream, err,                            bb.dump))            return false;    } else {        if (!gdn_layer(tables, g, layer, gb, bb.mixed, bb.block_out, stream, err)) return false;    }    st_end(layer, 1, stream);    dump_half(bb, g, layer, bb.block_out, 0, g.n_embd, stream);        }
+     if (run2) {
+-    st_begin(layer, 2, stream);    if (!fused) gr_write(R, bb.block_out, bb.inject, gs, R, stream);    st_end(layer, 2, stream);
++    st_begin(layer, 2, stream);
++    if (native_hc_requested()) { if (!native_hc_write(g,bb,bb.inject,stream,err)) return false; }
++    else if (!fused) gr_write(R, bb.block_out, bb.inject, gs, R, stream);    st_end(layer, 2, stream);
+ // ---- half 2, UP TO AND INCLUDING THE ROUTER.  `gr_read` leaves the normed activation in `bb.mixed` and
+ // the per-stream injection in `bb.inject`, and BOTH must survive until `block_layer_post` runs - which is
+ // the contract the two functions have with each other and with the host loop's ordering.
+@@ -1644,7 +1695,9 @@
+     // the same contract `block_layer_post` has, and the reason the two are only meaningful in order.
+     if (run3) {
+ st_begin(layer, 3, stream);
+-    if (fused) {
++    if (native_hc_requested()) {
++        if (!native_hc_read(w_norm[1],w_down[1],w_up[1],w_inject[1],g,bb,bb.inject,stream,err)) return false;
++    } else if (fused) {
+         strata::kernels::FusedGrArgs fa;
+         fa.R = R; fa.R_out = R; fa.apply = true; fa.bo_prev = bb.block_out; fa.inj_prev = bb.inject;
+         fa.w_norm = (const float*) w_norm[1]->data; fa.w_down = (const uint16_t*) w_down[1]->data;
+@@ -1719,7 +1772,10 @@
+     st_end(layer, 5, stream);    dump_half(bb, g, layer, bb.block_out, (uint64_t) g.n_embd, g.n_embd, stream);    dump_half(bb, g, layer, bb.inject, (uint64_t) 2 * g.n_embd + g.hc, g.hc, stream);    st_begin(layer, 6, stream);
+     const bool steer = strata::kernels::cvec().covers(layer);   // --control-vector-scaled: after this write
+     try {
+-        if (!(g_fused_gr && strata::kernels::fused_gr_supported(g.n_embd, g.hc, g.hc_lr))) {
++        if (native_hc_requested()) {
++            if (!native_hc_write(g,bb,bb.inject,stream,err)) return false;
++            if (steer) strata::kernels::cvec_apply(bb.R,layer,1,g.hc*g.n_embd,nullptr,0,nullptr,0,false,stream);
++        } else if (!(g_fused_gr && strata::kernels::fused_gr_supported(g.n_embd, g.hc, g.hc_lr))) {
+             gr_write(bb.R, bb.block_out, bb.inject, gs, bb.R, stream);
+             if (steer) strata::kernels::cvec_apply(bb.R, layer, 1, g.hc * g.n_embd, nullptr, 0, nullptr, 0, false, stream);
+         } else if (layer == g.n_layers - 1) {
+--- a/sycl/src/core/mtp.cpp
++++ b/sycl/src/core/mtp.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/native_hc_policy.hpp"
+ // src/core/mtp.cpp - see include/strata/core/mtp.hpp.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+@@ -266,6 +267,8 @@
+ bool MtpDrafter::load(const std::string &rt_dir, const ModelGeometry &g,
+                       SessionState &ss, int max_t, std::string &err,
+                       int64_t window, const MtpDrafter *shared) try {
++    if (!strata::core::native_hc_policy(err)) return false;
++    if (strata::core::native_hc_requested()) { err="native HC: MTP route is not integrated"; return false; }
+     device_ =
+         dpct::get_current_device_id(); // a layer split's last stage on another
+                                        // GPU: the drafter lives there
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/native_hc_policy.hpp"
+ // src/core/verify.cpp - see include/strata/core/verify.hpp.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+@@ -396,6 +397,8 @@
+ bool Verifier::init(const WeightTable &wt, const ModelGeometry &g,
+                     SessionState &ss, const VerifyHits &hits,
+                     const NativeHead *head, int max_t, std::string &err) try {
++    if (!strata::core::native_hc_policy(err)) return false;
++    if (strata::core::native_hc_requested()) { err="native HC: verifier route is not integrated"; return false; }
+     g_diag_verifier.store(this);
+     diag_verify_fn().store(&diag_active_verifier);
+     for (auto& slot : g_live) {
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/native_hc_policy.hpp"
+ // src/prefill/prefill.cpp - see include/strata/prefill/prefill.hpp.
+ #define DPCT_PROFILING_ENABLED
+ #include <sycl/sycl.hpp>
+@@ -912,6 +913,8 @@
+                    const core::ExpertCache *cache, const int32_t *host_res,
+                    int64_t chunk, void *stream, std::string &err, void *borrow,
+                    uint64_t borrow_bytes) try {
++    if (!strata::core::native_hc_policy(err)) return false;
++    if (strata::core::native_hc_requested()) { err="native HC: prefill route is not integrated"; return false; }
+     Impl& m = *impl_;
+     m.wt = &wt; m.g = &g; m.ss = &ss; m.src = src; m.cache = cache; m.host_res = host_res;
+     m.T = chunk; m.cs = strata::q_of(stream); m.stats = &stats_;
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/native_hc_policy.hpp"
+ #define DPCT_COMPAT_RT_VERSION 12080
+ // src/program/generate.cpp - P2.S6: `strata generate`.
+ //
+@@ -2683,6 +2684,10 @@
+     // is on the later cards (CUDA2 1241 -> 2485, CUDA3 533 -> 1772), and THEIR weights load after the search,
+     // so they trim under `auto` too - see the block past it.
+     const bool stage_trim = trim_asked && multi_gpu && !split_auto && !split_at.empty();
++    if (strata::core::native_hc_requested() && multi_gpu && !stage_trim) {
++        std::fprintf(stderr,"native HC: multi-GPU ownership requires explicit --layer-split and --trim-stage-weights\n");
++        return 2;
++    }
+     if (o.trim_stage_weights && !multi_gpu)
+         std::fprintf(stderr, "strata generate: --trim-stage-weights needs a layer split across GPUs (ignored)\n");
+     // Only `--layer-split auto` WITH the trim asked loads the later stages' weights after the split search (they can
+--- /dev/null
++++ b/sycl/include/strata/core/native_hc_policy.hpp
+@@ -0,0 +1,27 @@
++// Strict native-HC runtime policy; ordinary decode only in this increment.
++#pragma once
++#include <cstdlib>
++#include <cstring>
++#include <string>
++#include <initializer_list>
++namespace strata::core {
++inline bool native_hc_requested() {
++    static const bool on=[] { const char* e=std::getenv("STRATA_SYCL_NATIVE_HC"); return e && std::strcmp(e,"1")==0; }();
++    return on;
++}
++inline bool native_hc_policy(std::string& err) {
++    const char* flag=std::getenv("STRATA_SYCL_NATIVE_HC");
++    if (flag && std::strcmp(flag,"0") && std::strcmp(flag,"1")) {
++        err="native HC: STRATA_SYCL_NATIVE_HC must be0 or1"; return false;
++    }
++    if (!native_hc_requested()) return true;
++#ifndef STRATA_SYCL_Q8_HC_BUILT
++    err="native HC: binary lacks STRATA_SYCL_Q8_HC_PRIMITIVES"; return false;
++#endif
++    for (const char* name : {"STRATA_HC_Q8","STRATA_HC_Q8_INJECT","STRATA_QFUSE","STRATA_GR_V3"}) {
++        const char* e=std::getenv(name);
++        if (e && std::strcmp(e,"0")) { err=std::string("native HC: incompatible ")+name; return false; }
++    }
++    return true;
++}
++}
+--- /dev/null
++++ b/sycl/include/strata/core/native_hc_source.hpp
+@@ -0,0 +1,25 @@
++// Actual selected GGUF source contract; norm is rank1 [10240].
++#pragma once
++#include <cstdint>
++#include <vector>
++namespace strata::core {
++inline bool native_hc_effective_bounds(int64_t requested_lo,int64_t requested_hi,int static_lo,int static_hi,
++                                       int64_t& lo,int64_t& hi) {
++    lo=requested_lo; hi=requested_hi;
++    if (requested_hi<0 && static_lo>=0 && static_hi>=0) { lo=static_lo; hi=static_hi; }
++    return lo>=0 && (hi<0 || hi>lo);
++}
++inline bool native_hc_source_shape(int role,uint32_t type,const std::vector<uint64_t>& shape) {
++    if (role==0) return type==0 && shape==std::vector<uint64_t>{10240};
++    if (role==1) return type==8 && shape==std::vector<uint64_t>{10240,320};
++    if (role==2) return type==8 && shape==std::vector<uint64_t>{320,10240};
++    if (role==3) return type==0 && shape==std::vector<uint64_t>{10240,4};
++    return false;
++}
++inline uint64_t native_hc_source_bytes(int role) {
++    return role==0?40960:role==1 || role==2?3481600:role==3?163840:0;
++}
++inline bool native_hc_source_bounds(uint64_t data_start,uint64_t offset,uint64_t bytes,uint64_t file_size) {
++    return bytes && data_start<=file_size && offset<=file_size-data_start && bytes<=file_size-data_start-offset;
++}
++}
