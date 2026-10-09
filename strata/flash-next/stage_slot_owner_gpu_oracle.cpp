@@ -38,7 +38,11 @@ void registration(Frame& f,const void* p,uint64_t bytes,const char* role,sycl::q
 }
 void register_session(void* base,strata::core::SessionState& state,const strata::core::ModelGeometry& g){
  auto& f=*active;auto& queue=dpct::get_in_order_queue();registration(f,base,f.bytes,"slot_arena",queue);
- require(state.qsa_ord0==f.lo/4 && state.qsa_alloc>=1,"Global QSA ordinal/layout differs");
+ const bool partial=f.fault==Fault::partial_zero || f.fault==Fault::partial_throw;
+ require(state.qsa_ord0==f.lo/4 && state.qsa_alloc==(partial?1:(f.hi-f.lo)/4),"Global QSA ordinal/layout differs");
+ require(state.gdn_alloc==(partial?3:(f.hi-f.lo)-(f.hi-f.lo)/4),"Owned GDN layer count differs");
+ const auto start=reinterpret_cast<uintptr_t>(base),gd=reinterpret_cast<uintptr_t>(state.gdn_state);
+ require(gd>=start && gd+64<=start+f.bytes,"GDN sentinel outside owning arena");
  for(int64_t j=0;j<state.qsa_alloc;++j){auto& q=state.qsa_states[state.qsa_ord0+j];
   registration(f,q.host_step,strata::kernels::qsa_step_bytes()+sizeof(int32_t),"host_step",queue);
   registration(f,q.host_pos,uint64_t(g.n_head)*4,"host_pos",queue);
@@ -73,7 +77,9 @@ uint64_t slot_oracle_session_init(const ModelGeometry& g,int64_t cells,int64_t e
 #undef malloc_device
 
 namespace oracle {
-struct Slot {Frame frame;std::unique_ptr<strata::core::SlotSessionArena> owner;};
+struct Slot {Frame frame;std::unique_ptr<strata::core::SlotSessionArena> owner;
+ ~Slot(){if(owner){mark(frame.label,"destroy_begin");owner.reset();live_bytes-=frame.bytes;mark(frame.label,"destroy_end");}}
+};
 void retire(Slot& s){mark(s.frame.label,"destroy_begin");s.owner.reset();live_bytes-=s.frame.bytes;mark(s.frame.label,"destroy_end");}
 std::unique_ptr<Slot> allocate(const std::string& label,int dev,int64_t lo,int64_t hi,int64_t cells,Fault fault,const strata::core::ModelGeometry& g){
  auto s=std::make_unique<Slot>();s->frame={label,dev,lo,hi,strata::core::session_bytes(g,cells,10,lo,hi),fault};
@@ -104,9 +110,8 @@ int main(int argc,char** argv){
    const strata::core::OnDevice owning(dev);auto& q=dpct::get_in_order_queue();
    for(unsigned n=0;n<slots.size();++n){require(slots[n]->owner->gdn_alloc>0,"Missing GDN ownership");std::array<uint32_t,16> pattern{};pattern.fill(0x3f800000u+n);q.memcpy(slots[n]->owner->gdn_state,pattern.data(),sizeof pattern).wait_and_throw();}
    for(unsigned n=0;n<slots.size();++n){std::array<uint32_t,16> actual{};q.memcpy(actual.data(),slots[n]->owner->gdn_state,sizeof actual).wait_and_throw();for(auto x:actual)require(x==0x3f800000u+n,"Private slot state alias or overwrite");}
-   // Explicitly retire discarded objects, then resize: same owner/destructor path
-   // as production vector shrink, with markers placed around every owning free.
-   for(size_t n=1;n<slots.size();++n)retire(*slots[n]);slots.resize(1);
+   // Actual vector shrink invokes each wrapper and actual owner destructor.
+   slots.resize(1);
    strata::core::qsa_state_register_existing_rope(slots[0]->owner->qsa_states[slots[0]->owner->qsa_ord0],g);
    retire(*slots[0]);slots.clear();
    allocate("null-"+std::to_string(dev),dev,lo,hi,cells,Fault::null_device,g);

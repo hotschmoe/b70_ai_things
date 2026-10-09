@@ -2,7 +2,7 @@
   "schema": 1,
   "status": "CPU source preparation only; no compilation/GPU execution",
   "oracle_source": "strata/flash-next/stage_slot_owner_gpu_oracle.cpp",
-  "oracle_source_sha256": "9b12c0c603569babbe882925242fde2f382beae924f69526950904a10d9a7cfa",
+  "oracle_source_sha256": "cde57ed00410d28c118acf42e7fd219e1387e30192afecddbaf17edfde0f3ac3",
   "engine_plan": "strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json",
   "engine_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
   "required_patch20_sha256": "695689b799a4f8fb340a21340db78ece349844642f1a82e91c845ab1a0361ed5",
@@ -20,14 +20,16 @@
       "mask": "0",
       "stages": [
         "0:48:0"
-      ]
+      ],
+      "expected_owner_registrations": 82
     },
     {
       "id": "owner_card1",
       "mask": "1",
       "stages": [
         "0:48:0"
-      ]
+      ],
+      "expected_owner_registrations": 82
     },
     {
       "id": "owner_pair32_16",
@@ -35,7 +37,8 @@
       "stages": [
         "0:32:0",
         "32:48:1"
-      ]
+      ],
+      "expected_owner_registrations": 92
     }
   ],
   "bounds": {
@@ -67,5 +70,12 @@
     "owner_card0": 82,
     "owner_card1": 82,
     "owner_pair32_16": 92
-  }
+  },
+  "builder": "strata/flash-next/build_stage_slot_owner_oracle.py",
+  "builder_sha256": "4d089a7a51cac59f750687b10dd589f23a8bcb1a4556608eb698983ec7f67be3",
+  "collector": "strata/flash-next/collect_stage_slot_owner_oracle.py",
+  "collector_sha256": "edb66f54faf47b430f5a2fd1f56f11620c4016069afb9919b5e20087473d451a",
+  "collector_CPU_test": "strata/flash-next/test_stage_slot_owner_trace_cpu.py",
+  "collector_CPU_test_sha256": "1eefbf41615ef63952daa46dea76868c88cb442ca7447dfff6ad06dc76da12cc",
+  "documentation": "strata/flash-next/stage-slot-owner-oracle.md"
 }

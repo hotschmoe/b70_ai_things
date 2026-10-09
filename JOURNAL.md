@@ -9648,3 +9648,22 @@ F32 reductions/routing precision, captured outgoing state and remaining PLE/QSA/
 48-layer/head independent mathematics remain prerequisites. Preregistered
 conditional implementation-error limits stay separate from reported activation
 quantization cost. No model/latency/natural API completion qualification.
+
+## 2026-10-09 Combined20 full build and stage-owner oracle source preparation
+
+CONFIG -> Committed combined20 engine plan05041bd1, unchanged39992 image,
+fb58 source/GGML3cf. New no-weight owner oracle source recipe frozen separately.
+COMMAND -> build_native_hc_engine.py --plan
+strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json --jobs4
+under automatic pair lease; parent rehash38 source files and3 executables;
+python3 strata/flash-next/test_stage_slot_owner_trace_cpu.py.
+RESULT -> Full SYCL build PASS exit0,284s, isolated source/plan unchanged.
+Actual patched38-file ledger exactly matches expected; strata,
+native_expert_parity and conversation_snapshot_test built. Receipt:
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/receipt.json
+SHA1647fdb0941d6e960bdbded793849b998de9de963eb5a6e6c687f18ea5547b00.
+Synthetic82-owner chronological context/free collector and missing/double/
+failed-free/empty/wrong-roster negatives pass. Owner oracle not compiled/run.
+VERDICT -> ABI/source build only. Real one/pair slot ownership, new full390
+source upload and model/API/V6 qualification remain open. Old18 cache receipts
+are not new20 qualification. Compile frozen owner oracle next under lease.
