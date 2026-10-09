@@ -10208,3 +10208,23 @@ PASS andoldfailure reproduces. All25patches/51 finalsourcehashes agree.
 VERDICT -> Source28 fixes bothpackage/script imports without native math/ABI
 orflags change. Commitnewplan before fullrebuild; preservefailedAPI/source
 snapshots. Modelmath/concurrency/cache/latency/shelf remainunqualified.
+
+
+## 2026-10-09 - API28 full build and genuine oracle linkage PASS
+
+CONFIG -> Source28 packageimportfix only, newimmutablefull SDKplanv2 d496d463;
+pinnedimage39992/sourcefb58/GGML3cf03257. Fresh8targets,51 sourcefiles.
+
+COMMAND -> FullSDKbuild underpairlease/no devices/no modelmounts; compare
+everyfinalsourcehash andall8 nativebinaries topreviouscompiled24. Rebuild
+actual fullsourceuploadoracle againstnewlibraries. Completefresh4modelhash
+scan then launch new strictuploadV2 withtwoknownpageguards andpostfull4gate.
+
+RESULT -> SDK PASS308s; oracle compile/link PASS49s; all51 planhashesmatch.
+Onlyserve/server.py sourcechanged andall8 native executables bitwiseequalold24.
+Newall4publisher sourcehashes PASS. Sourceupload GPUparent8356 islive, no
+source390/device/model/APIqualification result yet.
+
+VERDICT -> Compile/source identitycheckpoint only, no native mathematical/ABI
+change claimed. Newupload/actualAPI qualification required; priorfailedAPI5
+retained. See docs/20261009_flashnext_api28_sdk_checkpoint.md.
