@@ -10395,3 +10395,23 @@ VERDICT -> Immutableintegrated sourcecheckpointbeforefreshSDK. Existing28
 source390/C1/num proofs cannotqualifynew60-source artifacts. Actualactivated
 fullcache/fresh/pin/cancellation/migration/private1/2/4/6/rawmath/fairness/latency
 gates remainrequired. Parent ownsGPU/lifecycle; numeric8onecurrentlylive.
+
+
+## 2026-10-09 - Actual33field onecard numerical/conditionalFFN PASS
+
+CONFIG -> Newimport28 SDK/strongC1/source390, frozen21 reference, matchednative
+2048/64/65536 geometry andfour freshprefix1/2/4/8. 31source+2DERIVEDobservations.
+
+COMMAND -> GenuineV8prep andparent; afterterminal originalconditionalFFN
+checker withactual33requestframes andNEWpostfull4sourceidentity.
+
+RESULT -> ParentPASS813s; eightfullheads/384residualcomparisons bitwiseequal,
+all3processesexit0/removed. Four33frames/rank/tier/liveblob/nonce,20packetarray
+pairs/DERIVEDgates, entire7023304B owner/context/free, pre/posthealth andNEWall4
+publisherhashes PASS. ConditionaloriginalFFN108checks PASS, worstNMSE
+3.1926730082874146e-14/maxnormalized3.5706573414878165e-7, thresholdsunchanged.
+
+VERDICT -> Scopedonecardcapture/equivalence/conditionalconsumer proof only;
+rawhidden/individualdown/ownstate/fullmodelmath/cache/concurrency/latency/shelf
+unqualified. GenuineV8pairprepPASS; pairexecutionnext withmatchedone receipt.
+See docs/20261009_flashnext_import28_numerical_onecard_v8.md.
