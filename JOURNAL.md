@@ -9380,3 +9380,26 @@ identicalbytes. OnecardpostGPUall4hashrefreshpreviouslymatchespublisher.
 VERDICT -> Onecardscreenqualifiedonlyboundedscope; realtwoGPUsourcebugnow
 localized. Recoveryhealthdoesnotfixsource. Fullgoalactive, allremainingmodel/
 cache/concurrent/latency/shelf gatesopen, userdirty1043journallinespreserved.
+
+## 2026-10-09 Init-owned verifier queues and corrected32/16 source gates
+
+CONFIG -> Exactmodel/runtime, freshengine0013..18; nullableconstructorstreams,
+explicitqueue validationbeforealloc, owningcapture/teardown, mirrorguardkept.
+Previousgoalturn classifiedprogress: actualonecardpass/twocardfail/localization
+andnonrebootrecovery changedauthoritativeevidence. Userdirtpreserved.
+COMMAND -> Fullenginebuild277sec, boundedactualVerifier constructor0/init0_1
+control, correctedfull390upload5cases withactualmodelstatic32/16bounds.
+RESULT -> Full3executables linkpass/sourceplansunchanged. Actualcontrol4graphs/
+8replaysT2thenT1/oppositecaller,9negatives/callerrestored/14matchedUSMfrees
+withallfreenegatives pass; notfullrecord_window math. Fullstrict/compiled
+P2P0preposthealth/normalremoval/nofault. All387HC3PLE readbacks byte/SHAexact
+percase,300ordinarycount/account only. Actual32/16 ownercounts256HC3PLE200
+ordinary then131HC0PLE100ordinary, bytes2554839040+1266933760=3821772800.
+Sourceowners/alllogicalfrees/negatives/zeroledger/normalexit/fullhealth pass.
+All4freshpost-twocard/rebind wholehashes publisherexact, statinclctimeunchanged.
+Strictobservercoverage testsnowrejectempty/incompletehead/stage/48layers;
+V4serialpilot keepssame2048/64/65536geometry bothcards, exact18binding and
+honesttopologyaliases. No GPUstate/cache resultfromthoseCPUtests. Corrected
+onecardC1preparation session18630 running; actualmodelrerunnext.
+VERDICT -> Actualownershipcontrol/sourcegate passes, fullmodeltwoGPU/state/
+logit/prefix/concurrent/latency/shelf stillunqualified. Goalstaysfullandactive.

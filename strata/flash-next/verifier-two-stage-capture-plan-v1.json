@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "status": "Bounded actual Verifier initializer and mirror/capture-control oracle prepared; no full model math; GPU pending",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "oracle_source": "strata/flash-next/verifier_two_stage_capture_oracle.cpp",
+  "oracle_source_sha256": "39b2c63bcf4c43b731fbffc9ff5bf91886e345151420d7de704b370faed4cd17",
+  "required_patch_names": [
+    "0018-sycl-verifier-init-owned-streams.patch"
+  ],
+  "actual_class": "strata::core::Verifier default constructors and actual init_capture_streams also called by full init; actual StageExpertMirror.matches, DPCT graph wrappers and resident_plan_bound consumer",
+  "cases": [
+    "pair visible0,1; construct both actualVerifier objects onGPU0, initialize on0/1, captureT2thenT1 with opposite currentdevice; replay8 times"
+  ],
+  "limits": {
+    "device_allocated_bytes_upper_bound": 8192,
+    "host_segment_bytes": 512,
+    "graph_count": 4,
+    "tokens": [
+      2,
+      1
+    ]
+  },
+  "expected_report": {
+    "actual_verifier_objects": 2,
+    "constructed_on_device": 0,
+    "init_devices": [
+      0,
+      1
+    ],
+    "captured_graphs": 4,
+    "graph_replays": 8,
+    "negative_checks": 9,
+    "caller_device_restored": true,
+    "actual_mirror_guard_preserved": true,
+    "model_math_executed": false,
+    "full_model_qualified": false
+  },
+  "negative_controls": [
+    "foreign explicit stream rejected before queue/model allocations",
+    "compatible explicit stream borrowed and remains live after borrower destructor",
+    "wrong residency/context/device/geometry mirror matches reject metadata-only; no invalid dereference"
+  ],
+  "lifecycle": "Parent lease/health/teardown required; source query/capture fixture never substitutes full two-stage model verification",
+  "evidence_scope": "Actual control initializer and tagged mirror pointer graph are qualified, not full Verifier::record_window math or histories; subsequent actual2GPUC1 rerun remains required"
+}

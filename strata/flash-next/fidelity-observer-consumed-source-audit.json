@@ -1,0 +1,36 @@
+{
+  "source_audit": {
+    "source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T080647Z-6_ja3xd5/source",
+    "source_sha256": {
+      "sycl/src/core/verify.cpp": "5ea914d40f94e2d6bf4f1b7ecc9cc7c64b9e90dda20252ed9d0fa96d6730a386",
+      "sycl/src/prefill/prefill.cpp": "7fb52155a58d43fb054ff9311bca08bb1d05ece8ff66e9e41532f18f44ee3c9f",
+      "sycl/src/program/generate.cpp": "c98a6af356ded6f7212626158d724f7c378988bbef52ef3ac7cac9acba64d37c",
+      "sycl/include/strata/core/fidelity_observer.hpp": "2a274635a5a7922feca984061fb3332edc108e863aeff731d4c33499e29ff7af",
+      "sycl/include/strata/core/fidelity_observer_contract.hpp": "a8763d2a96040434e25742c592e6d8342f0eac05bee85474b5c23ead31461bcc"
+    },
+    "checks": {
+      "prefill_impl_owner": true,
+      "logit_copy_after_head_matvec_before_argmax": true,
+      "prefill_last_contiguous_row": true,
+      "prefill_capture_after_ffn_half": true,
+      "prefill_native_disables_fused_pending_write": true,
+      "first_decode_uses_last_prompt_token": true,
+      "head_row_guard": true,
+      "bounded_first_window_selection": true,
+      "request_bounds": true,
+      "prefill_chunk_quota_per_owner": true,
+      "verifier_default_off_allocation_gate": true,
+      "prefill_default_off_allocation_gate": true
+    },
+    "passed": true,
+    "scope": "static consumed-source checks; no execution or graph ordering proof",
+    "max_output_bytes_six_requests": 41349120,
+    "unobserved": [
+      "GDN persistent state",
+      "PLE history",
+      "QSA/indexer/KV",
+      "pending-state internals",
+      "other token rows"
+    ]
+  }
+}

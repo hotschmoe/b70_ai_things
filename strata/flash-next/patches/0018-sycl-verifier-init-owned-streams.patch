@@ -1,0 +1,224 @@
+--- /dev/null
++++ b/sycl/include/strata/core/verifier_stream_contract.hpp
+@@ -0,0 +1,14 @@
++// Verifier capture streams belong to init's device/context, not construction's.
++#pragma once
++#include <sycl/sycl.hpp>
++#include <string>
++namespace strata::core {
++inline bool verifier_stream_contract(const sycl::queue* provided,const sycl::queue& owner,std::string& error) {
++    if(!provided) return true;
++    if(provided->get_context()!=owner.get_context() || provided->get_device()!=owner.get_device() ||
++       !provided->has_property<sycl::property::queue::in_order>()) {
++        error="verify: supplied stream differs from owning init device/context or is unordered";return false;
++    }
++    return true;
++}
++}
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -209,6 +209,9 @@
+     // queues the commit.  Nothing chains to `next_`: the caller drives every stage.
+     /// The compute stream to use instead of a private one (the two verifiers of one stage share it).  Before `init`.
+     void set_stream(dpct::queue_ptr s) { ext_stream_ = s; }
++    // The actual init control path, separately exercisable by a bounded capture
++    // oracle without loading model weights. All queues stay owned until teardown.
++    bool init_capture_streams(std::string& err);
+     /// Every layer copies the token rows to the host (doorbell_publish), not only the layers with a routed expert
+     /// outside the VRAM tier by the device's residency table: with windows in flight the adaptive tier marks an
+     /// expert evicted on the host (the pool then computes it on the CPU) before the device table follows.  Also turns
+@@ -313,9 +316,7 @@
+     void collect_profile();   ///< STRATA_VERIFY_PROFILE: add the last window's stamps to prof_sum_
+     void accumulate_profile(const unsigned long long* stamps);   ///< one window's stamps (host copy) into prof_sum_
+     // pipelined windows (pl_launch ...)
+-    dpct::queue_ptr ext_stream_ =
+-        &dpct::get_in_order_queue(); ///< set_stream: the stage's shared stream
+-                                     ///< (not destroyed here)
++    dpct::queue_ptr ext_stream_ = nullptr; // Only an explicit set_stream is borrowed.
+     bool always_publish_ = false;
+     void pl_stage(int T, const int32_t* tokens, int64_t pos0, const int32_t ple_prev[2]);
+     dpct::event_ptr ev_done_ = nullptr, ev_commit_ = nullptr;
+@@ -390,10 +391,10 @@
+     int64_t last_pos0_ = 0;
+     int32_t last_tokens_[8] = {};
+     int64_t n_vocab_ = 0;
+-    dpct::queue_ptr cs_ = &dpct::get_in_order_queue();
++    dpct::queue_ptr cs_ = nullptr; // No runtime lookup or queue ownership before init.
+     float* dbgR_ = nullptr;   ///< SYCL port debug: R (token 0) after every layer, n_layers x n_embd
+     float* dbgM_ = nullptr;   ///< SYCL port debug: mixed_ (token 0) after every layer
+-    dpct::queue_ptr sh_cs_ = &dpct::get_in_order_queue();
++    dpct::queue_ptr sh_cs_ = nullptr;
+     dpct::event_ptr ev_fork_ = nullptr, ev_join_ = nullptr;
+     dpct::experimental::command_graph_exec_ptr exec_[9] = {};
+     dpct::experimental::command_graph_exec_ptr exec_nr_[9] =
+@@ -419,9 +420,7 @@
+         nullptr; // recorded after an async commit (set_commit_async); see
+                  // wait_commit
+     bool commit_pending_ = false;
+-    dpct::queue_ptr copy_ =
+-        &dpct::get_in_order_queue(); // the copy engine's stream (DMA of missed
+-                                     // experts)
++    dpct::queue_ptr copy_ = nullptr; // Allocated on init device, never a default-queue sentinel.
+     struct FlagSet { uint32_t* flag; uint32_t value; };
+     FlagSet flag_sets_[2 * 64 * 2] = {};                          // host-function arguments, one per (layer, group)
+     static void fetch_dma(void* ctx, const uint8_t* const* src, int n, size_t bytes);
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,5 +1,6 @@
+ #include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/stage_expert_mirror.hpp"
++#include "strata/core/verifier_stream_contract.hpp"
+ #include "strata/kernels/resident_plan_mirror.hpp"
+ #include "strata/core/native_hc_dispatch.hpp"
+ // src/core/verify.cpp - see include/strata/core/verify.hpp.
+@@ -356,6 +357,7 @@
+ }
+ 
+ void Verifier::release_stage_mirror_graphs() {
++    const OnDevice on_device(device_);
+     if (!hits_.stage_mirror) return;
+     released_.store(true);
+     if (cs_) cs_->wait_and_throw();
+@@ -374,6 +376,7 @@
+ }
+ 
+ Verifier::~Verifier() try {
++    const OnDevice on_device(device_);
+     // SYCL port: at process exit the Level Zero context can already be gone (serve mode's end), and a destructor
+     // that throws aborts the process (exit 139); the waits and frees below are best-effort then.
+     const Verifier* self = this;
+@@ -416,6 +419,23 @@
+ }
+ 
+ 
++bool Verifier::init_capture_streams(std::string& err) {
++    if(cs_ || sh_cs_ || copy_) {err="verify: capture streams already initialized";return false;}
++    if(device_<0) device_=dpct::get_current_device_id();
++    auto& device=dpct::get_device(device_);
++    const auto& owner=device.in_order_queue();
++    // Fail before stream/model allocation on an explicit foreign stream.
++    if(!verifier_stream_contract(ext_stream_,owner,err)) return false;
++    copy_=device.create_queue(true);
++    cs_=ext_stream_ ? ext_stream_:device.create_queue(true);
++    sh_cs_=device.create_queue(true);
++    if(!copy_ || !cs_ || !sh_cs_ || !verifier_stream_contract(copy_,owner,err) ||
++       !verifier_stream_contract(cs_,owner,err) || !verifier_stream_contract(sh_cs_,owner,err)) {
++        if(err.empty()) err="verify: capture stream create failed";return false;
++    }
++    return true;
++}
++
+ bool Verifier::init(const WeightTable &wt, const ModelGeometry &g,
+                     SessionState &ss, const VerifyHits &hits,
+                     const NativeHead *head, int max_t, std::string &err) try {
+@@ -430,11 +450,12 @@
+     device_ = dpct::get_current_device_id(); // a layer split's stage on another
+                                              // GPU: its streams, graphs and
+                                              // buffers live there
++    if(!init_capture_streams(err)) return false;
+     strata::kernels::fused_gr_check();   // once per card: which bitwise-equal hyper-connection read runs there
+     wt_ = &wt;
+     g_ = &g;
+     ss_ = &ss;
+-    if (hits.stage_mirror && !hits.stage_mirror->bind(hits.d_res,g.n_layers,g.n_expert,dpct::get_in_order_queue(),err)) return false;
++    if (hits.stage_mirror && !hits.stage_mirror->bind(hits.d_res,g.n_layers,g.n_expert,*cs_,err)) return false;
+     hits_ = hits;
+     head_ = head;
+     max_t_ = max_t;
+@@ -621,35 +642,7 @@
+     sink_.staging = (unsigned long long) staging_;
+     sink_.staging_cap = kStagingBlobs;
+     (void) TS;
+-    /*
+-    DPCT1025: The SYCL queue is created ignoring the flag and priority
+-    options.
+-    */
+-    if (DPCT_CHECK_ERROR(
+-            copy_ = dpct::get_current_device().create_queue(true)) != 0) {
+-        err = "verify: copy stream create failed";
+-        return false;
+-    }
+-    if (ext_stream_ != &dpct::get_in_order_queue()) cs_ =
+-        ext_stream_; // set_stream (pipelined windows): the stage's shared
+-                     // stream
+-    /*
+-    DPCT1025: The SYCL queue is created ignoring the flag and priority
+-    options.
+-    */
+-    else if (DPCT_CHECK_ERROR(
+-                 cs_ = dpct::get_current_device().create_queue(true)) != 0)
+-        cs_ = &dpct::get_in_order_queue();
+-    /*
+-    DPCT1025: The SYCL queue is created ignoring the flag and priority
+-    options.
+-    */
+-    if (cs_ == &dpct::get_in_order_queue() ||
+-        DPCT_CHECK_ERROR(
+-            sh_cs_ = dpct::get_current_device().create_queue(true)) != 0) {
+-        err = "verify: stream create failed";
+-        return false;
+-    }
++    // Capture/copy/shared queues were resolved on the owning init device above.
+     if (DPCT_CHECK_ERROR(commit_done_ = new sycl::event()) != 0 ||
+         DPCT_CHECK_ERROR(ev_fork_ = new sycl::event()) != 0 ||
+         DPCT_CHECK_ERROR(ev_join_ = new sycl::event()) != 0) {
+@@ -761,6 +754,7 @@
+ // while the GPU combines A and runs A's layer l+1.  B's mixer only needs A's mixer of the same layer (K/V, GDN
+ // state), never A's experts, so nothing waits that did not wait before.  Every token's arithmetic is unchanged.
+ bool Verifier::record_window(int T, dpct::queue_ptr cs, std::string &err) {
++    const OnDevice on_device(device_);
+     if (!native_hc_policy(err)) return false;
+     if (native_hc_requested() && (!R_ || !xn_ || !lo_ || !rs_ || !mixed_ || !ss_->block.gr.gated || T<1 || T>max_t_)) {
+         err="native HC verifier: unsupported contiguous workspace"; return false;
+@@ -780,6 +774,11 @@
+     const int64_t TS = (s.idx_block - 1) * ID;
+     const bool ple_on = ss.ple.ready() && ple_stage();
+     if (hits_.stage_mirror && !hits_.stage_mirror->matches(hits_.d_res,g.n_layers,g.n_expert,*cs)) {
++        const auto& owner=*hits_.stage_mirror;
++        std::fprintf(stderr,"stage mirror capture guard: init_device%d current_device%u cs%p res_expected%p res_actual%p res_equal%d context_equal%d device_equal%d layers%lld experts%lld\n",
++            device_,dpct::get_current_device_id(),(void*)cs,(const void*)owner.residency,(const void*)hits_.d_res,
++            int(owner.residency==hits_.d_res),int(owner.q.get_context()==cs->get_context()),int(owner.q.get_device()==cs->get_device()),
++            (long long)g.n_layers,(long long)g.n_expert);
+         err="stage mirror: verifier queue/residency changed after binding"; return false;
+     }
+     auto Rt = [&](int t) { return R_ + (size_t) t * HC * N; };
+@@ -1690,6 +1689,7 @@
+ }
+ 
+ bool Verifier::capture(int T, std::string &err) try {
++    const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &exec_t =
+         fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]);
+     if (exec_t != nullptr) return true;
+@@ -1793,6 +1793,7 @@
+ }
+ 
+ bool Verifier::capture_commit(std::string &err) try {
++    const OnDevice on_device(device_);
+     if (commit_exec_ != nullptr) return true;
+     using namespace strata::kernels;
+     const ModelGeometry& g = *g_;
+@@ -2576,6 +2577,7 @@
+ // SYCL port: capture every window graph now (one per window size) instead of on first use, so the first request
+ // does not pay for them (a 2,400-node graph takes tens of ms to finalize on this backend).
+ bool Verifier::warm(std::string &err) {
++    const OnDevice on_device(device_);
+     for (int T = 1; T <= max_t_; ++T)
+         if (!capture(T, err)) return false;
+     return true;
+@@ -2631,6 +2633,7 @@
+ 
+ bool Verifier::capture_batch(const int *rows, int S, int hbase,
+                              std::string &err) try {
++    const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &ex =
+         exec_bm_[bkey(rows, S, hbase)];
+     if (ex != nullptr) return true;
+@@ -2699,6 +2702,7 @@
+ 
+ bool Verifier::capture_commit_batch(const int *rows, int S, int hbase,
+                                     std::string &err) try {
++    const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &cex =
+         commit_bm_[bkey(rows, S, hbase)];
+     if (cex != nullptr) return true;
