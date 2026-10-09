@@ -109,3 +109,31 @@ reported fault signatures. The original page sentinel remains exact per case.
 VERDICT -> Complete HC/PLE source bytes and loader ownership/lifecycle pass.
 Ordinary GPU payload fidelity, expert mirrors, graph execution, full-model
 state/logits/coherence, prefix caching and concurrency/latency remain open.
+
+## First segmented full-model readiness and constrained responses
+
+CONFIG -> Generation6 one-card-segmented profile, full390 source gate and
+bounded actual mirror GPU gate passed; exact source/tokenizer/API identities.
+COMMAND -> qualify_c1_serving.py, F06/c1-onecard-segmented-prepared-v1.
+RESULT -> Readiness is reached. Actual variable-format cache has8092 experts;
+all16484 missing experts are mirrored in49 segments totaling51,660,083,200B.
+Both verifier window sizes capture. All six constrained API answers are correct.
+Raw submitted IDs equal rendered template IDs, all prompts are consumed, DONE
+counts equal the actual generated IDs, and repeated marker/history IDs match.
+Known source page sentinel remains exact. Native engine_close records exit0;
+owned container terminal state is exited0/noOOM and removal is verified. Strict
+per-card and compiled collective pre/post-health pass, no reported fault.
+
+The automated screen remains failed. Its tracer treats the API's normal EOS
+GeneratorExit as an error even when complete DONE/consumption/generated-EOS
+evidence is present. All six requests received that tag. Separate stop calls
+race between the parent stop client and launch supervisor: one removes the
+container while the other attempts removal, producing a supervisor traceback.
+These are concrete qualification-tool failures. They are not silently waived.
+The independent-raw-evidence-audit.json preserves its narrower conclusions
+without rewriting screen.json, qualification.json or parent-qualification.json.
+
+VERDICT -> Full segmented host capacity/readiness and constrained answers are
+observed, beyond primitive-only results. Corrected tracing and serialized stop
+need a fresh bounded qualification. No raw full-logit/state or prefix/concurrent
+qualification exists yet, and no shelf or production latency claim follows.

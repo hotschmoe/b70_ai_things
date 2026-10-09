@@ -9307,3 +9307,26 @@ underparentlease session5156; readiness/coherence/capacitystillpending.
 VERDICT -> Boundedsource/tier/defaultkernelmath/graphlifetime qualificationpasses;
 rawfusedh remainsunobserved. Full48GiB/all-expert/modelstate/logit/prefix/
 concurrent/latency/shelf gatesremainopen. Fullgoalactive, no productionclaim.
+
+## 2026-10-09 First native full-model segmented readiness
+
+CONFIG -> Exactartifact/enginev6/one-card-segmented,8092variable-format resident
+experts and16484overflow experts. Full390andboundedGPUmirror gatespassed.
+COMMAND -> qualify_c1_serving.py C1onecardsegv1, independentraw-evidenceaudit;
+combined0013..16sourcebuild preparation.
+RESULT -> Fullhostmirror51,660,083,200B in49segments fits; INFOready andboth
+verifiergraphs captured. Sixcorrectconstrained APIanswers; rendered/submitted
+IDs exact, allpromptcounts consumed, actualgenerated/DONEcounts equal, marker
+andhistoryrepeat IDs exact. Nativeengine exit0/normalcontainerremoval/full
+strict+compiledP2P0preposthealth,nofaultsignatures; knownsourcepage exact.
+Automatedscreen remainsFAILED: normalEOS GeneratorExit taggedaserror inall6
+requests; launchsupervisor races explicitownedstop duringcontainerremoval.
+Independentaudit recordsactualevidence, qualifiedfalse, originalfailureunchanged.
+CPUagentpreparescorrectedtracer/stopsynchronization/negativecontrols; fresh
+run required. Combinedprefix/observer firstplan failspristine-sourceidentity
+validationbeforebuild/GPU becauseconsumedhashes wereinpristineledger. Oldplan
+preserved; parentnewplanv2 correctsonlypristinehashes, fullbuildsession41878
+running. No sourcepatch/math changedfor thatconfigurationcorrection.
+VERDICT -> Actualfullmodelreadiness/capacity andboundedanswers observed.
+Qualificationtools mustbefixedandrechecked; fullstate/logit/prefix/concurrent/
+latency/shelf requirementsstillopen. Goalremainsactive withGPUownershiplocal.
