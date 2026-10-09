@@ -10476,3 +10476,22 @@ FreshSDK build currentlylive; no runtimeGPU/model/source390 qualificationyet.
 VERDICT -> Source checkpoint only; no old28 qualificationtransfer. NewSDK,
 source390, genuineC1 andactual2/4/6 slot-owner/completecache/migration/API/full
 math/fairness remainrequired. Unrelated userchanges preserved.
+
+
+## 2026-10-09 - Integrated29 serving admission and original PLE source
+
+CONFIG -> New C1controller/parent8 strict integrated29 SDK admission with60
+source/24headers/eightABI/sixPython, batch0/cacheobserverOFF. PLE conditional
+ownedoriginalIQ4NLlookup/F32history/keyvalueQ8 directF32 source_exact lane.
+
+COMMAND -> Independent C1generation8 unittest64 andPLE15 source/synthetic
+controls, frozenfile pins/ASCII checks. No modelpayload/GPUbyagents.
+
+RESULT -> Both suitesPASS. New controller refusesoldSDK/newmissing29/source
+package mutations before modelaccess andrequiresnew390/full4/proof8. PLE owns
+uint64hash16rows/lasttwo/9rowhistory/dilation3 andcheckpointreplay with source/
+order/input negatives; tablehas90paddingrows, convoriginalF32 despite oldlabels.
+
+VERDICT -> CPU/sourcecheckpoint; genuineC1/newSDK/upload/runtime stillpending.
+PLE suppliedlayerresidual, nativecontracts/GPUcheckpoint/full48math unqualified.
+No newtolerance or shelf/speedclaim. SDKparent79123 stilllive.

@@ -1,0 +1,226 @@
+{
+  "schema": 1,
+  "scope": "CPU source/synthetic conditional owned layer1 PLE, original payloads lazy/UNOBSERVED",
+  "files": {
+    "ple_owned_history_storage_v1.py": "e4a58cf9a88118487a4aa0b483d8068b57010d8fd6aa28c2b39a2110eb265df8",
+    "test_ple_owned_history_storage_v1.py": "7bbc05ec70f452b4e7b376f9312abde5118d86510d069da31e59786a214453ab",
+    "ple-owned-history-storage-v1.md": "1267af01f260b70ec02ac97736ac06eb9f9a9e17346585cce24452cf262cc3f1"
+  },
+  "frozen_dependency_sha256": {
+    "original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9"
+  },
+  "source_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T161219Z-n_v8o9lp/source",
+  "source_sha256": {
+    "include/strata/kernels/ngram.hpp": "edc6d36eaf6062e8c377577de787ed9e5576ede19e04c5964dc7e6b83b8d01ac",
+    "src/kernels/ngram.cpp": "e609caf1bb0812f366d96a5304c0f98e2864c1c0d22a0bef7b35d818e09debd5",
+    "sycl/src/kernels/cuda/ple.dp.cpp": "78649a3335f74d9f2509e29cd766ac4d2155553fb95e01ebe4f660125d12686f",
+    "sycl/src/kernels/cuda/native_ple_postops.dp.cpp": "c4ac3b5a7fae2f0d908748f8b1f55a2bfc2a477698b98906475d8e4b65ce02e1",
+    "sycl/src/kernels/hc_native_projection.cpp": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "sycl/src/core/conversation_state.cpp": "95e8faff15f3f36d3db0caf1e1a08f28302dc449286b6c2a93896466934cfbab",
+    "sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde"
+  },
+  "hash_oracle_first5cases_prefix_sha256": "144a0facbc8631616d9872d21cee86f830869ccc91efea267d97ead9a4615789",
+  "model_table_fixture_payload_inspected": false,
+  "inventory": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/current-gguf-inventory.json",
+  "inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+  "header_only_roles": [
+    {
+      "name": "per_layer_token_embd.weight",
+      "type": "IQ4_NL",
+      "shape_ggml_order": [
+        160,
+        320001536
+      ],
+      "absolute_offset": 682453280,
+      "packed_bytes": 28800138240,
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+    },
+    {
+      "name": "blk.1.ple_conv1d.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        4,
+        10240
+      ],
+      "absolute_offset": 33460361376,
+      "packed_bytes": 163840,
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+    },
+    {
+      "name": "blk.1.ple_key.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        10240
+      ],
+      "absolute_offset": 33460525216,
+      "packed_bytes": 27852800,
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+    },
+    {
+      "name": "blk.1.ple_norm_conv.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        10240
+      ],
+      "absolute_offset": 33488378016,
+      "packed_bytes": 40960,
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+    },
+    {
+      "name": "blk.1.ple_norm_key.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        10240
+      ],
+      "absolute_offset": 33488418976,
+      "packed_bytes": 40960,
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+    },
+    {
+      "name": "blk.1.ple_norm_query.weight",
+      "type": "F32",
+      "shape_ggml_order": [
+        10240
+      ],
+      "absolute_offset": 33488459936,
+      "packed_bytes": 40960,
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+    },
+    {
+      "name": "blk.1.ple_value.weight",
+      "type": "Q8_0",
+      "shape_ggml_order": [
+        2560,
+        2560
+      ],
+      "absolute_offset": 33488500896,
+      "packed_bytes": 6963200,
+      "shard": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+    }
+  ],
+  "header_only_metadata": {
+    "qwen4exp.ple.layers": {
+      "type": 9,
+      "value": {
+        "element_type": 5,
+        "count": 1,
+        "values": [
+          1
+        ]
+      },
+      "encoded_value_sha256": "50dc735c1ce3098ff858d824ca863375674faf4a747191f36dd841f5b130662f"
+    },
+    "qwen4exp.ple.ngram_size": {
+      "type": 4,
+      "value": 3,
+      "encoded_value_sha256": "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178"
+    },
+    "qwen4exp.ple.heads_per_ngram": {
+      "type": 4,
+      "value": 8,
+      "encoded_value_sha256": "dc765660b06ee03dd16fd7ca5b957e8c805161ac2c4af28c5a100ab2ab432ca1"
+    },
+    "qwen4exp.ple.conv_kernel": {
+      "type": 4,
+      "value": 4,
+      "encoded_value_sha256": "fb5e512425fc9449316ec95969ebe71e2d576dbab833d61e2a5b9330fd70ee02"
+    },
+    "qwen4exp.ple.eos_token_id": {
+      "type": 4,
+      "value": 248044,
+      "encoded_value_sha256": "19d4fed54ce56ffde6ed7821add93245af560cc26af49557c9ffa61cc92b95c2"
+    },
+    "qwen4exp.embedding_length_per_layer_input": {
+      "type": 4,
+      "value": 160,
+      "encoded_value_sha256": "709eddfc631541f3ecea46e733bbf3043279bddfb51fdfd7be60efbc2714537e"
+    },
+    "qwen4exp.ple.layer_multipliers": {
+      "type": 9,
+      "value": {
+        "element_type": 10,
+        "count": 3,
+        "values": [
+          23703573157769,
+          20109073645365,
+          8052911324071
+        ]
+      },
+      "encoded_value_sha256": "01fbf58225cd6cc5a28eeba06d547ee05168c67911bdfbcfefd260df081f0f6b"
+    },
+    "qwen4exp.ple.head_offsets": {
+      "type": 9,
+      "value": {
+        "element_type": 10,
+        "count": 16,
+        "values": [
+          0,
+          20000003,
+          40000026,
+          60000059,
+          80000106,
+          100000165,
+          120000228,
+          140000297,
+          160000374,
+          180000455,
+          200000548,
+          220000655,
+          240000802,
+          260000955,
+          280001114,
+          300001275
+        ]
+      },
+      "encoded_value_sha256": "b5e40b541a32b50674ce82be019823d5cb0f6d4c008c18b33b38c973d7a1a3fe"
+    },
+    "qwen4exp.ple.head_vocab_sizes": {
+      "type": 9,
+      "value": {
+        "element_type": 10,
+        "count": 16,
+        "values": [
+          20000003,
+          20000023,
+          20000033,
+          20000047,
+          20000059,
+          20000063,
+          20000069,
+          20000077,
+          20000081,
+          20000093,
+          20000107,
+          20000147,
+          20000153,
+          20000159,
+          20000161,
+          20000171
+        ]
+      },
+      "encoded_value_sha256": "8375916629e92cf83a1ce2544ecc73cec29e222decfe730c7156f4756161f524"
+    },
+    "qwen4exp.ple.image_token_id": {
+      "type": 4,
+      "value": 248056,
+      "encoded_value_sha256": "2981142ece3da06501a845239e8544ebfa45864e0832aadf8b32ec5cad312bd9"
+    }
+  },
+  "cpu_tests": 15,
+  "physical_table_rows": 320001536,
+  "used_vocab_rows": 320001446,
+  "table_row_bytes": 90,
+  "history_rows": 9,
+  "dilation": 3,
+  "conditional_on_supplied_layer_residuals": true,
+  "captured_state_used": false,
+  "actual_model_payload_reads": 0,
+  "actual_original_projection_qualified": false,
+  "actual_main_slot_checkpoint_qualified": false,
+  "full_model_math_qualified": false,
+  "tolerance_gate": null
+}
