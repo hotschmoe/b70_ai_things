@@ -1,0 +1,39 @@
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -2064,6 +2064,18 @@
+             ss.ple.table->prefetch_rows(ple_rows + t * PLE_N_HEADS);
+         }
+     }
++    // A device-plan/mirror graph may bypass every CPU doorbell without being
++    // all-VRAM-resident. Its PLE copy has no ar_on() wait flag, so the current
++    // host embedding must be gathered before graph submission in that route.
++    static const bool no_host = [] { const char* v = std::getenv("STRATA_VERIFY_NO_HOST"); return v && *v && std::strcmp(v, "0") != 0; }();
++    const bool ple_precollected = do_ple && !ar_on() && (device_plan_ || no_host);
++    if (ple_precollected) {
++        const Clock::time_point tp = Clock::now();
++        if (!ss.ple.table->gather_batch(ple_rows, (size_t) T, h_ple_, err)) return false;
++        std::atomic_thread_fence(std::memory_order_seq_cst);
++        _mm_sfence();
++        ms_host += ms_since(tp);
++    }
+     if (trace_h_ != nullptr) std::memset(trace_h_, 0, trace_n_ * 8);   // #649: this window's breadcrumbs only
+     std::atomic_thread_fence(std::memory_order_seq_cst);
+     trace_ev("WINDOW", -1, -1, pos0 * 16 + T);
+@@ -2113,7 +2125,6 @@
+     // memory are not reliably visible while the graph runs (measured: the ring is seen late or not at all),
+     // so waiting on them per layer fails. STRATA_VERIFY_NO_HOST=1 waits for the whole window instead. Only for
+     // an all-resident cache: a missed expert would leave the GPU waiting for a plan that never comes.
+-    static const bool no_host = [] { const char* v = std::getenv("STRATA_VERIFY_NO_HOST"); return v && *v && std::strcmp(v, "0") != 0; }();
+     const int64_t steps = (le_ - lb_) * G;
+     const bool test_stall = g_test_stall > 0 && windows + 1 == g_test_stall;   // #267 test hook (off: false)
+     if (ar_on() && !test_stall) {
+@@ -2210,7 +2221,7 @@
+         // By collecting PLE here at k == 0 (after publishing flagA/flagB for Layer 0 so the GPU can run
+         // Layer 0's VRAM experts, and before raising *flag = 1), the NVMe PLE reads overlap with both
+         // MtpDrafter::draft and Layer 0's attention + router + expert execution!
+-        if (k == 0 && do_ple) {
++        if (k == 0 && do_ple && !ple_precollected) {
+             const Clock::time_point tp = Clock::now();
+             if (!ss.ple.table->gather_batch(ple_rows, (size_t) T, h_ple_, err)) return false;
+             std::atomic_thread_fence(std::memory_order_seq_cst);

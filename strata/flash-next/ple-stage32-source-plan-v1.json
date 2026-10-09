@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "status": "READY CPU source only; corrected native execution UNOBSERVED",
+  "files": {
+    "strata/flash-next/patches/0032-sycl-current-ple-staging-before-nohost-mirror-graph.patch": "135b40ed1a07571c8f77893e9e66994ee6a37d6d4367f82df1fe8f65c3bf92af",
+    "strata/flash-next/test_ple_nohost_staging32_cpu_v1.py": "3523912aac866570a2c25d311356230c9980c348d3797bb386058a4b5d97c5ed",
+    "strata/flash-next/current-ple-stage32-engine-build-plan-v1.json": "01884ae392f4eb9dd1379e08de2b05ab4836ea350bc4e349bf01cedc5425fdc5",
+    "strata/flash-next/ple-stage32-source-apply-receipt-v1.json": "0e2f554b20df32448b1b02319e0a2d23a46e08bdb9f636e76b1cc2727061a189",
+    "strata/flash-next/ple-stage32-source-design-v1.md": "914c6214084fc528f5bbdf02995d4c7be7c75fd22c4c184f4cb935dc09a69f9e"
+  },
+  "base_source_sha256": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/include/strata/core/verify.hpp": "6081d029231ef7da74641d2ec0cf880b3cfecd573f1a235391fa3836b48f5d16",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/include/strata/kernels/verify_kernels.hpp": "499bd7e4ae2ec194fa1377adaed74e6e383200fec400e229d7b0baa690940553"
+  },
+  "actual_route_evidence": {
+    "V9_rawrequests_sha256": "dc89607c8432989d2b64df02fc60559b253bf470a8ca7651f766753b51955b42",
+    "V9_plan_sha256": "5d962d7c076a9504fc7c77110a622b6d6c2011f8717467b947c41166d21d3aa2",
+    "prefix1_tiers": [
+      2,
+      2,
+      1,
+      2,
+      1,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "actual_staged_PLE_bytes_observed": false
+  },
+  "semantic_fix_default": "mandatory current hostPLE staging for nonAR deviceplan/noHost; no newflag",
+  "changed_native_sources": 1,
+  "native_model_math_qualified": false,
+  "requires_newSDK_full390_C1": true
+}

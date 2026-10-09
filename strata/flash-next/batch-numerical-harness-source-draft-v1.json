@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "status": "CPU source draft; NOT complete harness READY or actual concurrency preparation",
+  "source_sha256": {
+    "strata/flash-next/batch_numerical_protocol_v1.py": "22d0dc477b5bddef32b5258e1269e779021d9a79ee13e0d3dc35596b097213f5",
+    "strata/flash-next/batch_numerical_prefixes_v1.py": "bccdbe9d9c0c8e50d2e059877cf9d4648e2ab8c1a533451ac56d5d18adca1dc5",
+    "strata/flash-next/batch_api_trace_v1.py": "c3fac8f8df7d06fe32f1a1a37f1c93a8ccbec7fc2dee0ce6ff222b32577656ea",
+    "strata/flash-next/batch_api_client_v1.py": "0be38124532d4592a5a855da192c2e6b72a8774e55d28ca0146c6d8bdd8413f2",
+    "strata/flash-next/batch_api_prefixes_v1.py": "c1ddb14ba0e3560680ac16608ab1ac014c3868bbf3521a0fe709b30db16cd9fd",
+    "strata/flash-next/run_batch_numerical_pilot_v1.py": "8abcbcce8822d8326bf127858e0d7e69d9248990b1c68e0c84c4b1732884c7d1",
+    "strata/flash-next/run_batch_serial_controls_v1.py": "14df617a6866000baa5a4798fa7176692813cbc35cad3aa22aa24ac30f6143bc",
+    "strata/flash-next/test_batch_numerical_contract_cpu_v1.py": "3dbe3d52a18f1a9cb046f5a907696de59cd62f08eb97dfb5feb2148820320e1e",
+    "strata/flash-next/test_batch_api_prefixes_cpu_v1.py": "7856d45a7326005ec251b641f7fdf7ceed4ebf2afb594c8b176c7164e678a847",
+    "strata/flash-next/batch-numerical-contract-cpu-receipt-v1.json": "65423c75d1d01610a2ca4313a9b0f5027254bf555b454d7015bf5d50d633f504",
+    "strata/flash-next/batch-api-prefix-cpu-receipt-v1.json": "5bab90aaeafef5f3eb4f6fd2084833999ae68047c3602e580897cde11a81e105",
+    "strata/flash-next/batch-numerical-harness-design-v1.md": "c4c6b282ff87bf6d7fd79bee491932d5a6b71785806af852dfa22860afb130ce"
+  },
+  "sdk_baseline_plan": "strata/flash-next/combined-numerical-batch-engine-build-plan-v2.json",
+  "sdk_baseline_plan_sha256": "d496d4639b92e8de7241ec97122467e4e6e4428d95d47e690bf5aab258fbe028",
+  "source26_required_for_actual_migration_and_ARMloss": {
+    "patch_sha256": "16953e056e7ecbc5e8c513bf0c03f025716a1953c5b5c992d6af53b81a7058a5",
+    "plan_sha256": "b81f1644d3c63fea9a5090997ee4478332fa7f17456c6e8c343e3d3154767326"
+  },
+  "genuine_C1_source_proof_helper": "strata/flash-next/qualify_c1_serving_combined_v6.py",
+  "genuine_C1_source_proof_helper_sha256": "c1fd80a9ef2233b651449e4a7c1c9a2733e8469e04fdd1fd091b389bf33fcc08",
+  "slots": [
+    2,
+    4,
+    6
+  ],
+  "max_new": 32,
+  "max_actual_token_prefix": 2048,
+  "group": 1,
+  "requested_and_actual_completed_Nrow_required": true,
+  "exact_head_and_all48_gate": "byte equality; diagnostic float metrics do not relax passing",
+  "warmup": "same actual process, real unarmed completed multirow, allwarmterminal beforeARM; unrelated firsttokens forinitialnative pilot",
+  "initial_cache_flags_do_not_provefresh": true,
+  "actual_perRID_resume_read_from_reread_to_and_stage_spans_required": true,
+  "real_cancel": "native signedBSTOP ininitialpilot / actualHTTPsocketclose plusnativeSTOP/BSTOP proof inAPIcase",
+  "model_payload_reads_performed": false,
+  "actual_GPU_or_API_or_SDK_execution": false,
+  "full_model_math_qualified": false,
+  "actual_concurrent_2_4_6_qualified": false,
+  "remaining_implementation": [
+    "owned lease/stop/deadline/health/bothpages/final4 publisher parent integration for allarms",
+    "actual API generation-specific batch preparation/registry/runtime helper identity",
+    "full API producer/currentincarnation/slot/migration/SSE collector joins",
+    "diagnostic off/on and baseline head/ID/finish joins",
+    "final source/owner/slot/graph/mirror/health qualification beforePASS",
+    "qualified25/27 cache/fresh/pin/repeatedsession/eviction/fairness progression"
+  ],
+  "cpu_commands": [
+    "python3 strata/flash-next/test_batch_numerical_contract_cpu_v1.py",
+    "python3 strata/flash-next/test_batch_api_prefixes_cpu_v1.py"
+  ]
+}

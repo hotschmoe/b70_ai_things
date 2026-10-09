@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU/source only",
+  "files": {
+    "strata/flash-next/patches/0032-sycl-current-ple-staging-before-nohost-mirror-graph.patch": "135b40ed1a07571c8f77893e9e66994ee6a37d6d4367f82df1fe8f65c3bf92af",
+    "strata/flash-next/test_ple_nohost_staging32_cpu_v1.py": "3523912aac866570a2c25d311356230c9980c348d3797bb386058a4b5d97c5ed",
+    "strata/flash-next/current-ple-stage32-engine-build-plan-v1.json": "01884ae392f4eb9dd1379e08de2b05ab4836ea350bc4e349bf01cedc5425fdc5",
+    "strata/flash-next/ple-stage32-source-apply-receipt-v1.json": "0e2f554b20df32448b1b02319e0a2d23a46e08bdb9f636e76b1cc2727061a189",
+    "strata/flash-next/ple-stage32-source-design-v1.md": "914c6214084fc528f5bbdf02995d4c7be7c75fd22c4c184f4cb935dc09a69f9e",
+    "strata/flash-next/ple-stage32-source-plan-v1.json": "b4d1a1c1f35d5e4651467a57dcdf3758beb8c13bc85f0c9665048b104776f51e",
+    "strata/flash-next/full48_zero_staged_ple_ablation_v1.py": "f59a1111aee474d646105c8e9f564234b874e8ef86cd71d67f876583cb02fa02",
+    "strata/flash-next/explore_full48_zero_staged_ple_prefix1_v1.py": "4167ec51d1a940a80b066398ae9c5fb152bf5397653b6071650c3f3596666c01",
+    "strata/flash-next/test_zero_staged_ple_ablation_cpu_v1.py": "dc7409b43ac1d56af1f6c589128511517d1448b7129ba4219d7aabaa42e25410",
+    "strata/flash-next/zero-staged-ple-reference-ablation-design-v1.md": "604aeb4ec094caab1707d4be016e2f019a2de3bacda246bac5b4da26ce9413f4",
+    "strata/flash-next/zero-staged-ple-reference-ablation-source-plan-v1.json": "ede7201d65e83bedf267022b16ff9c3e428f4cf246b3f7faf43e7e62f39a682c",
+    "strata/flash-next/ple-stage32-zero-ablation-cpu-receipt-v1.json": "940cbe57619b4f508fd8c71e70d4c725c3ab8b746e475f0dad181e5f11a57e19"
+  },
+  "original_frozen_sources_or_evidence_changed": false,
+  "native_math_qualified": false,
+  "modelpayload_executed_by_agent": false
+}

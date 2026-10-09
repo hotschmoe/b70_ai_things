@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "scope": "Readonly source and pinned inventory metadata audit; no original weight or capture binary payload read",
+  "engine_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7",
+  "engine_receipt_sha256": "bd17b41b0074b816ab88d3804af78727480291f96d2510e5759b9788091b3c2d",
+  "source_sha256": {
+    "sycl/src/program/generate.cpp": "f0a361ac80ce02b8834fdfe12874e3b197259af0a55c5b16154c05e6bb0ce2aa",
+    "sycl/src/core/session.cpp": "0b3127b430156138fc251427bbc7ecf2c7a4ad1a1294879e2daf6eddefbb70fb",
+    "sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "sycl/src/kernels/cuda/ple.dp.cpp": "78649a3335f74d9f2509e29cd766ac4d2155553fb95e01ebe4f660125d12686f",
+    "sycl/src/kernels/cuda/native_ple_postops.dp.cpp": "c4ac3b5a7fae2f0d908748f8b1f55a2bfc2a477698b98906475d8e4b65ce02e1",
+    "src/kernels/ngram.cpp": "e609caf1bb0812f366d96a5304c0f98e2864c1c0d22a0bef7b35d818e09debd5",
+    "include/strata/kernels/ngram.hpp": "edc6d36eaf6062e8c377577de787ed9e5576ede19e04c5964dc7e6b83b8d01ac"
+  },
+  "inventory": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/current-gguf-inventory.json",
+  "inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+  "selected_inventory_file": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+  "selected_metadata": {
+    "qwen4exp.ple.eos_token_id": {
+      "type": 4,
+      "value": 248044,
+      "encoded_value_sha256": "19d4fed54ce56ffde6ed7821add93245af560cc26af49557c9ffa61cc92b95c2"
+    },
+    "qwen4exp.ple.ngram_size": {
+      "type": 4,
+      "value": 3,
+      "encoded_value_sha256": "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178"
+    },
+    "qwen4exp.ple.conv_kernel": {
+      "type": 4,
+      "value": 4,
+      "encoded_value_sha256": "fb5e512425fc9449316ec95969ebe71e2d576dbab833d61e2a5b9330fd70ee02"
+    },
+    "tokenizer.ggml.eos_token_id": {
+      "type": 4,
+      "value": 248046,
+      "encoded_value_sha256": "201a8bab084b2a57aa2f6a8ceb51b3609f4c5a297d952bf51dbf4cd321e16151"
+    },
+    "tokenizer.ggml.bos_token_id": {
+      "type": 4,
+      "value": 248044,
+      "encoded_value_sha256": "19d4fed54ce56ffde6ed7821add93245af560cc26af49557c9ffa61cc92b95c2"
+    }
+  },
+  "first_prefix_tokens": [
+    248045
+  ],
+  "source_expected_initial_prev": [
+    -1,
+    -1
+  ],
+  "source_expected_ngram_context": [
+    248045,
+    248044,
+    248044
+  ],
+  "source_history_geometry": [
+    10240,
+    9
+  ],
+  "source_history_reset": "all368640B F32 history via owning main/stage queue; hostwait before replay",
+  "PLE_role_types": {
+    "key": "originalQ8_0[2560,10240]",
+    "value": "originalQ8_0[2560,2560]",
+    "conv": "originalF32[4,10240]"
+  },
+  "source_format_branch": "source_exact bypasses legacy Q8_1 embedding quantization, BF16/F16 projection/preprojection andF16 convolution",
+  "native_initial_history_observed": false,
+  "native_PLE_embedding_row_ids_or_bytes_observed": false,
+  "native_norm_weight_GPU_readback_observed": false,
+  "native_PLE_intermediates_observed": false,
+  "causal_layer1_discrepancy_resolved": false,
+  "EOS_defect_found": false,
+  "generic_EOS_first_read_correction": "Initial quickmetadata read used files[0] MTP sidecar; selectedfilter has dedicatedPLE.eos248044. GenericEOS248046 is notPLE boundary and doesnotjustify a sourcepatch.",
+  "model_or_reference_bug_attributed": false,
+  "original_model_payload_reads": 0,
+  "GPU_work": false,
+  "followup_current_dispatch_route": {
+    "device_plan": true,
+    "all_resident": false,
+    "STRATA_VERIFY_NO_HOST": "1",
+    "ar_on": false,
+    "legacy_per_layer_host_loop_runs": false,
+    "current_PLE_embedding_gather_executes": false,
+    "layer1_mapped_copy_ar_flag_wait": false,
+    "source_dispatch_omission_confirmed": true,
+    "actual_h_ple_bytes_observed": false,
+    "persistent_history_reset_bug_found": false,
+    "batch_stage_batch_prelaunch_gather": "existing separate correct source path2993",
+    "patch32_owner": "hc_integration; new prelaunch gather doPLE&&!ar&&(deviceplan||nohost), exclude legacyduplicate",
+    "numerical_causal_requalification_pending": true
+  }
+}

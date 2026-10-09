@@ -10692,3 +10692,24 @@ no actualgenuineprep/GPU/modelweights byagent. FreshSDK66369 stilllive.
 VERDICT -> Sourcecheckpointonly. Fullmath/30capture/31mirror lifecycle/newSDK
 serving/concurrency/cache/latency remainrequired. V3source29 counterfix/specs
 beingprepared; source29 uses-1 no-reread sentinel ratherthanV2assumedzero.
+
+
+## 2026-10-09 - Source33 resume, fresh SDK and isolated runtime PASS
+
+CONFIG -> Original Flash-Next objective unchanged; runtime/Git/network writes
+allowed again. Fixed7.1/26.22/LevelZero1.28; exact33 source/63files/27headers/
+eightfreshABI/sixPython. Unrelated dirty changes preserved.
+
+COMMAND -> Fresh pair-leased SDK29238 with pinned local ggml; isolated C111
+Python runtime91133; actual C111 SDK/source admission; independent CPU controls.
+
+RESULT -> SDKPASS312s/eight executables/clean source/recipe isolation; actual
+C111 source gatePASS. Python runtimePASS, GPU libraries unchanged. CPU147+75
+tests and58 batch negativesPASS. New experimental aliases retain hotschmoe-dd.
+Two extra Docker mock controls aborted/terminal/no receipt or surviving owned
+container; no evidence claimed. New standalone390 oracle54593 linking live.
+
+VERDICT -> Native compilation/runtime source checkpoint, not correctedmodel
+GPU/math/cache/concurrency/latency/shelf qualification. No old29/31 proof
+transfer. Next fresh390/uploadV2/C111 serving then actual source33 PLE input
+proof and original48 requalification. See docs/20261009_flashnext_source33_resume.md.

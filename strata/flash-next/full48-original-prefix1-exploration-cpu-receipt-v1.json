@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "config": "CPU tiny4-files and synthetic native vectors; NO original model payload/GPU",
+  "command": [
+    "python3",
+    "strata/flash-next/test_explore_full48_original_prefix1_v1.py"
+  ],
+  "result": {
+    "passed": true,
+    "returncode": 0,
+    "stdout": "{\"status\": \"FAILED source/admission/execution; preserve evidence\", \"errors\": [\"CPU synthetic missing finalized native parent\", \"Post-source proof: Fullscan skipped: original payload admission not reached\"], \"first_bitwise_difference\": null, \"numeric_pass_claim\": false, \"full_model_math_qualified\": false}\n",
+    "stderr": "..usage: explore [-h] --native-run-root NATIVE_RUN_ROOT\n               --model-identity MODEL_IDENTITY [--prefix {1}] --output OUTPUT\nexplore: error: argument --prefix: invalid choice: '2' (choose from 1)\n........\n----------------------------------------------------------------------\nRan 10 tests in 0.090s\n\nOK\n"
+  },
+  "verdict": "Source/admission/metric controls only; no actual-original numerical result",
+  "source_plan_sha256": "849e9f41878bf2250dc6a4fd41cbd7c35946f3a393c99c45d23f7c868e9e2d71",
+  "actual_original_executed": false
+}

@@ -1,0 +1,34 @@
+# Proposed integrated25-32 aliases; no live response or serving qualification.
+models:
+  - label: flashnext-strata-integrated25-32-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-32-api22v2-prefix30-mirror31-currentPLE32-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v10.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-32 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent10 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-32-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-prefix30-mirror31-currentPLE32-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v10.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-32 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent10 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-32-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-prefix30-mirror31-currentPLE32-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v10.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-32 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent10 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-32-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-32-api22v2-prefix30-mirror31-currentPLE32-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v10.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-32 source generation restores current PLE input staging; baseline batch0 and feature flagsOFF; matching new engine/sourceuploadV2/full4/C1parent10 proof mandatory. No native math/concurrency/shelf claim."

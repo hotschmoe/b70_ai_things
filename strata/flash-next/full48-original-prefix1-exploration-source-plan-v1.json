@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "status": "READY CPU source only; actual-original exploration NOTEXECUTED",
+  "new_sources": {
+    "strata/flash-next/explore_full48_original_prefix1_v1.py": "433415f2f36233f7303c6a668d6b3d3893c8b98267c5abf6f5e664f67fd2fe9a",
+    "strata/flash-next/test_explore_full48_original_prefix1_v1.py": "29cb69b82a510a96889c239644d746f487a27487a6acaf180f083664317e8d50",
+    "strata/flash-next/full48-original-prefix1-exploration-design-v1.md": "9636650d643a0df736b265d7809389a530e8a873e906872468224c4c9d0e4c0f"
+  },
+  "frozen_dependencies": {
+    "strata/flash-next/full48-owned-composition-storage-ready-manifest-v1.json": "2ad0a3d1f9d8ca9cda661c314249bfdb4935b1bb3e64594c54e9a43e8f4d1b39",
+    "strata/flash-next/full48-owned-composition-storage-source-plan-v1.json": "032ae4340cc357a048d4995715d49e9e0b3a832ebafc6d16633db2459e8f3dda",
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/original-gguf-reference-foundation-plan-v1.json": "7d5217d844b411b427e4c6c6df2b4837b66970937c044389b40270346804bd2b",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "strata/flash-next/verify_layer0_ffn_original_v1.py": "3f433f105c260e5760d54942c6c9e8f46f6ff97793238e310754ffd55ebf8d70",
+    "strata/flash-next/layer0_numerical_qualification_v9.py": "2252f24be9a3511bcb40d5e623caa75259112b9cd07f3d55944f67c67d2a084c",
+    "strata/flash-next/qualify_layer0_numerical_v9.py": "3900a306b60b0eb4146d5faf61ca6a473d60cfeef32bdfd4626f7e774abd465e",
+    "strata/flash-next/integrated-slot-owner-trace-engine-build-plan-v1.json": "94aef305dbc6a31f023afa55573d52a9ce6af9443cfc0182eb7c324255159094"
+  },
+  "prefix_scope": [
+    1
+  ],
+  "original_read_admission": "finalized V9 native/SDK/C1/390/packet/lifecycle +current complete4publisher identity +bothknownpages/canonical5stats",
+  "post_execution_source_gate": "NEW complete4 buffered publisher hash +bothknownpages and current5stats",
+  "maximum_decoded_tile_bytes": 67108864,
+  "inputs": "Actual GEN token IDs ONLY; native arrays comparison-only",
+  "reported_metrics": [
+    "bitwise_equal",
+    "nmse",
+    "max_normalized",
+    "first_bitwise_difference"
+  ],
+  "numeric_pass_claim": false,
+  "nativebitwise_qualified": false,
+  "full_model_math_qualified": false,
+  "tolerance_gate": null,
+  "actual_model_payload_reads_by_agent": 0,
+  "GPU_execution": false
+}

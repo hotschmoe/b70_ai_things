@@ -1,0 +1,11 @@
+{
+  "CONFIG": "synthetic native solo/slot/solo tags and all49 vectors perphase; no API/socket/model/GPU",
+  "COMMAND": "python3 strata/flash-next/test_batch_api_prefixes_cpu_v1.py",
+  "RESULT": {
+    "exact_actual_segment_consumed_prefix_jobs": 3,
+    "negative_controls": 7,
+    "migration_and_cancel_raw_collector_still_required": true
+  },
+  "VERDICT": "PASS CPU history grammar only; actual concurrent/migration/math/source/owner gates absent",
+  "full_model_math_qualified": false
+}

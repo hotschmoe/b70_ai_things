@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source only",
+  "files": {
+    "strata/flash-next/explore_full48_original_prefix1_v1.py": "433415f2f36233f7303c6a668d6b3d3893c8b98267c5abf6f5e664f67fd2fe9a",
+    "strata/flash-next/test_explore_full48_original_prefix1_v1.py": "29cb69b82a510a96889c239644d746f487a27487a6acaf180f083664317e8d50",
+    "strata/flash-next/full48-original-prefix1-exploration-design-v1.md": "9636650d643a0df736b265d7809389a530e8a873e906872468224c4c9d0e4c0f",
+    "strata/flash-next/full48-original-prefix1-exploration-source-plan-v1.json": "849e9f41878bf2250dc6a4fd41cbd7c35946f3a393c99c45d23f7c868e9e2d71",
+    "strata/flash-next/full48-original-prefix1-exploration-cpu-receipt-v1.json": "4febfd8fe218c55b7c84e285b72c52f9d17fc3ca098f05d51752747a4cb59dda"
+  },
+  "no_actual_model_payload_execution": true
+}

@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source only; no actual preparation/capture/runtime qualification",
+  "engine_plan": "prefix-residual30-mirror31-engine-build-plan-v1.json",
+  "engine_plan_sha256": "82951242c998acecd0b0a138466991c607c1ab89abbf3b4501c001e0feaae96e",
+  "files": {
+    "prefix_residual30_qualification_v1.py": "7b9aae163f1594d7ca3d9d38ba221d92d54e1f431d0ce27599b572d93566a8e9",
+    "qualify_prefix_residual30_v1.py": "6fed1665ef08b2b762402a300d86d8acce08cf620c1b02787f22a9346422c84f",
+    "audit_prefix30_lifecycle_v1.py": "602a442595fbcd96fa919735d7e63ce0206a86c1c581510a923c3c103fd97f43",
+    "test_prefix_residual30_qualification_cpu_v1.py": "a79407147fb75338a4f61b94e8fc77adbc0b1d28396b2a8af185b75333bfbd9c",
+    "prefix-residual30-runtime-qualification-v1.md": "e45653e2c8740070ddfbf99f033cd02db0052af97b8f30bf5a63073eab56dff7"
+  },
+  "frozen_dependencies": {
+    "collect_prefix_residual30_v1.py": "2fc3a7d8223323e88ceff630cb036a09d2ac472ea74d32e10f2ed7b56a3a0fa4",
+    "prefix-residual30-source-plan-v1.json": "5a5045241fb36aa6056c9f7848bd11e2ab48309cc98768c3614c01b9b9fcbe81",
+    "prefix_residual_capture_contract_v1.hpp": "3fd240c1a6e0fd452486075cb41d9475a14d7af3a90145c659c21910a4867f45",
+    "c1_serve_controller_combined_v9.py": "a3bd4d1be20b6c957c51dfd78f911110be70152ac610a318cf29d12c56e30fed",
+    "qualify_c1_serving_combined_v9.py": "527f716e14e1e4fa26680611e9d151acffb885e2ad78113539484d923f2ba24a",
+    "c1-combined-v9-source-plan.json": "16103ad61378d80d8be9108ad92d5f33395cdb86b7cfcf4998252f5e2d444dec",
+    "c1-combined-v9-parent-source-plan.json": "38917303b434fc07335e742af11b2ca7e8d76ce9f93e885373fb786189471655",
+    "layer0_numerical_qualification_v9.py": "2252f24be9a3511bcb40d5e623caa75259112b9cd07f3d55944f67c67d2a084c",
+    "qualify_layer0_numerical_v9.py": "3900a306b60b0eb4146d5faf61ca6a473d60cfeef32bdfd4626f7e774abd465e",
+    "layer0-numerical-orchestration-source-plan-v9.json": "07ccd712e01cd1c77574e19d8324dcdb53667bdec436c80065db12037dd88c1e",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "merged_numerical_protocol_v2.py": "6f3e5194f175987f974cf8715ccaf5315877a9dba791a4b56fdb68cd63dc9a9c"
+  },
+  "cpu_tests": 22,
+  "frozen_collector_cpu_tests": 23,
+  "cpu_commands": [
+    "python3 -m unittest discover -s strata/flash-next -p 'test_prefix_residual30_qualification_cpu_v1.py'",
+    "python3 -m unittest discover -s strata/flash-next -p 'test_prefix_residual30_cpu_v1.py'"
+  ],
+  "source_files": 62,
+  "consumed_headers": 26,
+  "ordered_patches": 31,
+  "fresh_ABI_targets": 8,
+  "Python_runtime_files": 6,
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "P30_last_verifier_postFFN_SFD_bitwise_pairs": 192,
+  "OFF_ON_full_head_and_layer_vector_pairs": 196,
+  "aggregate_explicit_observer_cap_bytes": 134217728,
+  "expected_pair_peak_bytes": 99297344,
+  "expected_onecard_peak_bytes": 99297312,
+  "graph_retirement_runtime_handle_association_observed": false,
+  "P30_route_to_owner_pointer_observed": false,
+  "actual_original_weight_payload_reads": 0,
+  "actual_GPU_Docker_SDK_work": false,
+  "actual_genuine_prepare": false,
+  "actual_runtime_qualified": false,
+  "complete_layer_math_qualified": false,
+  "original_own_state_reference_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_or_clean_latency_qualified": false,
+  "permission_scope": "source writes repo/tmp only; runtime/git readonly; no Docker/GPU/model payload execution by agent",
+  "reference21": "optional later comparison not included; cannot substitute for completed actual C19 baseline proof"
+}

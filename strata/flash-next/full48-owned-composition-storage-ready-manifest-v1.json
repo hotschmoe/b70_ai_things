@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU/source only",
+  "files": {
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/full48_synthetic_original_roles_v1.py": "621c44fce6c944e1e91532118d90414905150f1d202982ddc5107dc6cfa82cef",
+    "strata/flash-next/test_full48_owned_composition_storage_v1.py": "f6b0bc3cf1dcac2349a7607cd0b11e3b4752bb00b907da9964f78afea83f05a9",
+    "strata/flash-next/full48-owned-composition-storage-design-v1.md": "df5cde72886dde754697022d26b1ed4b68f8e1650ce2226c38e008b035ada43a",
+    "strata/flash-next/full48-owned-composition-storage-source-plan-v1.json": "032ae4340cc357a048d4995715d49e9e0b3a832ebafc6d16633db2459e8f3dda",
+    "strata/flash-next/full48-owned-composition-storage-cpu-receipt-v1.json": "be014be99d1391ae14ec2fd1ecd7d0448f9b2ca526480533a0fba74e2731f692"
+  },
+  "actual_original_model_reference_qualified": false
+}

@@ -1,0 +1,13 @@
+{
+  "CONFIG": "synthetic2/4/6 native protocol/consumed prefixes/unchanged IO proxy; no GPU/API/weights",
+  "COMMAND": "python3 strata/flash-next/test_batch_numerical_contract_cpu_v1.py",
+  "RESULT": {
+    "negative_controls": 24,
+    "native_capacity_rid_slotgen_cancel_history": true,
+    "per_actual_input_prefix_full48_head_jobs": true,
+    "tiny_float_difference_rejects_byte_gate": true,
+    "pipe_bytes_unchanged": true
+  },
+  "VERDICT": "PASS CPU contracts only; actual serving/warm->ARM/native cancel/migration/source/allocator/math unqualified",
+  "full_model_math_qualified": false
+}

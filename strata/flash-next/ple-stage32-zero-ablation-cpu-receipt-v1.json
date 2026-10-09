@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "config": "New mandatory host staging source32 + explicit MODIFIED zero-staged-PLE reference; CPU synthetic/source tests only",
+  "command": [
+    {
+      "command": [
+        "python3",
+        "strata/flash-next/test_ple_nohost_staging32_cpu_v1.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.008s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python3",
+        "strata/flash-next/test_zero_staged_ple_ablation_cpu_v1.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 2.117s\n\nOK\n"
+    }
+  ],
+  "result": "PASS source/CPU controls",
+  "verdict": "No compiler/GPU/original-model payload/actual corrected model execution. Existing29/V9 source artifacts preserved",
+  "source32_plan_sha256": "b4d1a1c1f35d5e4651467a57dcdf3758beb8c13bc85f0c9665048b104776f51e",
+  "ablation_plan_sha256": "ede7201d65e83bedf267022b16ff9c3e428f4cf246b3f7faf43e7e62f39a682c",
+  "full_model_math_qualified": false,
+  "actual_native_PLE_zero_input_observed": false
+}

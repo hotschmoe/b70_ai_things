@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "config": "Readonly source/header/native+computed artifacts; no original weight payload/GPU",
+  "root_exploration_report": "/tmp/flashnext-original48-prefix1-root-v1/report.json",
+  "root_exploration_report_sha256": "57fbcc866e27cea98726e463fa468a089fd58a06a6fbcd4a684b0cfe1153724c",
+  "owned_layer0FFN_to_layer1_prePLE_input_bitwise_identical": true,
+  "owned_PLE_first8_history_rows_nonzero_count": 0,
+  "owned_PLE_last_normalized_row_norm": 77.7674247753612,
+  "owned_PLE_last_normalized_row_max": 12.505769729614258,
+  "owned_last2": [
+    -1,
+    248045
+  ],
+  "original_exploration_errors": [],
+  "embedding_comparison": {
+    "nmse": 0.0,
+    "max_normalized": 0.0,
+    "bitwise_equal": true,
+    "first_bitwise_differing_index": null,
+    "own_value_at_first_difference": null,
+    "native_value_at_first_difference": null,
+    "numeric_gate_assigned": false
+  },
+  "layer0_attention_comparison": {
+    "nmse": 1.3210388381246456e-13,
+    "max_normalized": 3.613166450810081e-07,
+    "bitwise_equal": false,
+    "first_bitwise_differing_index": 0,
+    "own_value_at_first_difference": -0.006212846841663122,
+    "native_value_at_first_difference": -0.006212846376001835,
+    "numeric_gate_assigned": false
+  },
+  "layer0_ffn_comparison": {
+    "nmse": 6.048519182575313e-14,
+    "max_normalized": 1.1054912847489075e-07,
+    "bitwise_equal": false,
+    "first_bitwise_differing_index": 0,
+    "own_value_at_first_difference": -0.006209583953022957,
+    "native_value_at_first_difference": -0.0062095834873616695,
+    "numeric_gate_assigned": false
+  },
+  "layer1_ffn_comparison": {
+    "nmse": 1.1720922254748463,
+    "max_normalized": 1.9808403124107365,
+    "bitwise_equal": false,
+    "first_bitwise_differing_index": 0,
+    "own_value_at_first_difference": -0.002757989801466465,
+    "native_value_at_first_difference": -0.0032832578290253878,
+    "numeric_gate_assigned": false
+  },
+  "source_cause_established": false,
+  "full_model_math_qualified": false,
+  "next_missing_producer_witness": "nativeL1 postPLE/postattention plusPLE hash/tableembedding/key/value/gate/normalized/conv androuter IDs ifattentionagrees"
+}

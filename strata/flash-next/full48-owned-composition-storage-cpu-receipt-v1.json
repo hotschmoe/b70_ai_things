@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "config": "CPU/header-only synthetic original rows, actual role geometry2560/48/36GDN/12QSA/PREFIX1,2,4,8/head248320; no original payload/GPU/SDK",
+  "command": [
+    "python3",
+    "strata/flash-next/test_full48_owned_composition_storage_v1.py"
+  ],
+  "result": {
+    "passed": true,
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ".........\n----------------------------------------------------------------------\nRan 9 tests in 17.383s\n\nOK\n",
+    "elapsed_seconds": 17.584877490997314
+  },
+  "verdict": "Own-state storage mathematics implemented, synthetic controls only; actual native math/model qualification false",
+  "source_plan_sha256": "032ae4340cc357a048d4995715d49e9e0b3a832ebafc6d16633db2459e8f3dda",
+  "actual_model_payload_reads": 0,
+  "GPU_touches": 0,
+  "full_model_math_qualified": false
+}

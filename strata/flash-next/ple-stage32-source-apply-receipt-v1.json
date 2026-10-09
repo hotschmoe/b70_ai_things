@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "passed": true,
+  "base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source",
+  "private_source_stage": "/tmp/strata-30-31-32-source-2xnjblxd",
+  "scope": "CPU source-only check/apply afterfrozen29->30->31->32; no compiler/GPU",
+  "results": [
+    {
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/0030-sycl-default-off-full-prefix-residual-capture.patch"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/0030-sycl-default-off-full-prefix-residual-capture.patch"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/0031-sycl-serving-stage-mirror-owner-trace.patch"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/0031-sycl-serving-stage-mirror-owner-trace.patch"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/0032-sycl-current-ple-staging-before-nohost-mirror-graph.patch"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/0032-sycl-current-ple-staging-before-nohost-mirror-graph.patch"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    }
+  ],
+  "ledger_count": 62,
+  "added_header_count": 26,
+  "runtime_python_count": 6,
+  "new_plan_sha256": "01884ae392f4eb9dd1379e08de2b05ab4836ea350bc4e349bf01cedc5425fdc5"
+}

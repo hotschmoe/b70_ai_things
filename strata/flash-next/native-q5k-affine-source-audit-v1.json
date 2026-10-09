@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "status": "Source audit and7 synthetic CPU tests PASS; actual layer2 operands/reduction unobserved",
+  "source_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source",
+  "engine_receipt_sha256": "bd17b41b0074b816ab88d3804af78727480291f96d2510e5759b9788091b3c2d",
+  "source_sha256": {
+    "sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "sycl/src/kernels/cuda/iq_kernels.dp.cpp": "18f032f269591db168625f80c6dbe8d08dc36d2a6fd5982c56723862713d7f4a",
+    "sycl/src/kernels/cuda/native_mmvq.dp.cpp": "bf87197ea14da23c278e1e174d575503ec9f933e58c2fa267f919f5cdda8fe14"
+  },
+  "primary_GGML_revision": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
+  "primary_GGML_path": "ggml/src/ggml-cuda/vecdotq.cuh",
+  "primary_blob_sha256": "a7fd4281ad9f0a6d9373c776325411d2522e0b62ffae2c16e91e667a1af251fe",
+  "actual_command_metadata": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f12-20261009/layer0-numerical-onecard-integrated29-v9/child/candidatecombined_on/command.json",
+  "actual_command_sha256": "bf51f2884b43bd3ffc58cc1f83278b25762601574ab4a513dd954136be3c6ec0",
+  "relevant_actual_ENV": {},
+  "layer2_gate_up_type": "Q5_K code13",
+  "layer2_down_type": "Q8_0 code8",
+  "SYCL_actual_grouped_route": "Verifier.post -> native_expert_grouped -> launch_gu<13> -> launch_gu_lanes -> native_gu_kernel<13,8> -> row_dot_lanes -> Fmt<13>::dot -> vec_dot_q5_K_q8_1 -> impl_vmmq",
+  "affine_min_contract": "d_x*integer_sum(quantized_activation_codes), not stored Q8_1.s",
+  "Q8_1_ds_component_read": "ds[0] scale ONLY",
+  "S27": "same codeSum helper but HIP-only source path not current SYCL",
+  "Q5K_native_mmvq_other_path": "scalar and WideQ5K likewise codeSum; not actual grouped expert launcher",
+  "kernel_change_justified": false,
+  "source_stored_sum_mismatch_found": false,
+  "real_arithmetic_dequant_weight_dot_reconstructed_x_equivalent": true,
+  "native_F32_reduction_or_exp_emulated": false,
+  "actual_model_payload_reads": 0,
+  "actual_GPU_or_Docker_work": false,
+  "causal_layer2_discrepancy_resolved": false,
+  "files": {
+    "test_native_q5k_affine_source_cpu_v1.py": "dfad3343e6c3d08418fc316f26368a5f2827edef41e0b2d7c5bb4ad932550784"
+  },
+  "cpu_command": "python3 -m unittest discover -s strata/flash-next -p 'test_native_q5k_affine_source_cpu_v1.py'"
+}

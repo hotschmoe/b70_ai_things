@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "status": "READY frozen readonly audit/source only",
+  "files": {
+    "strata/flash-next/audit_ple_equations_cpu_v1.py": "704bb012b2c980e25635e48baa79d16c4e3df1dc9be0eccd2a2dc45a2c943c40",
+    "strata/flash-next/test_audit_ple_equations_cpu_v1.py": "f3a529fbe7b9ad7ab459fc4aacc38afbb61905aa04f207ba86f63620732bfa22",
+    "strata/flash-next/ple-layer1-first-divergence-readonly-audit-v1.json": "6e88f19f27129a7757a6de6782b810e0ed06fcd6eebd7ff24b8e556c72cf13d0",
+    "strata/flash-next/ple-layer1-first-divergence-source-audit-v1.md": "739ddeff1d45b527c3568ced430dcb581900618096afcc37df0d533742ccf124"
+  },
+  "consumed_source_sha256": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/program/generate.cpp": "f0a361ac80ce02b8834fdfe12874e3b197259af0a55c5b16154c05e6bb0ce2aa",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/kernels/cuda/ple.dp.cpp": "78649a3335f74d9f2509e29cd766ac4d2155553fb95e01ebe4f660125d12686f",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/kernels/cuda/native_ple_postops.dp.cpp": "c4ac3b5a7fae2f0d908748f8b1f55a2bfc2a477698b98906475d8e4b65ce02e1",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/src/kernels/ngram.cpp": "e609caf1bb0812f366d96a5304c0f98e2864c1c0d22a0bef7b35d818e09debd5",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/include/strata/kernels/ngram.hpp": "edc6d36eaf6062e8c377577de787ed9e5576ede19e04c5964dc7e6b83b8d01ac",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/tools/iq_pack.py": "81b59dd1d71484106cddec9418ef933a2e55a1fd28a57b955715cf0e2e9e4878"
+  },
+  "frozen_reference_sha256": {
+    "strata/flash-next/original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "strata/flash-next/ple_owned_history_storage_v1.py": "e4a58cf9a88118487a4aa0b483d8068b57010d8fd6aa28c2b39a2110eb265df8",
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28"
+  },
+  "config": "CPU synthetic+source/header+preservedcomputed/native artifacts; no original weight payload",
+  "command": [
+    "python3",
+    "strata/flash-next/test_audit_ple_equations_cpu_v1.py"
+  ],
+  "result": {
+    "passed": true,
+    "stdout": "",
+    "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.041s\n\nOK\n",
+    "returncode": 0
+  },
+  "verdict": "No structuralPLEsourcecause established; firstmajorlayer1 endpoint remains unresolved. Frozenhelpers/run untouched. More producer coverage required",
+  "nativebitwise_qualified": false,
+  "full_model_math_qualified": false,
+  "original_model_payload_reads_by_agent": 0
+}

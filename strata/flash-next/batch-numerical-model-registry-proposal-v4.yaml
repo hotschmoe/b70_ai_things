@@ -1,0 +1,98 @@
+# Source32 current-PLE aliases only; new C110 proof required, no actual qualification.
+models:
+  - label: flashnext-numerical-currentPLE32-0-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-1-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-1-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-1-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-1-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-1-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."
+  - label: flashnext-numerical-currentPLE32-0-1-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-32-api22v2-owner29-prefill30-mirror31-currentPLE32-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v4.py --plan <genuine-currentPLE32-C110-arm> --output <new-owned-output>"
+    notes: "Mandatory current PLE gather32; new62/26/32/eight/six SDK/source390/upload/current4/publicC110proof10, sameprocessmirror31 owner proof. Source29/31 only historical diagnostics, no transfer; actual math/concurrency/cache/latency/shelf qualification pending."

@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "status": "READY frozen bounded CPU source prototype; native compiler/runtime unobserved",
+  "base_plan": "current-ple-stage32-engine-build-plan-v1.json",
+  "base_plan_sha256": "01884ae392f4eb9dd1379e08de2b05ab4836ea350bc4e349bf01cedc5425fdc5",
+  "engine_plan": "current-ple-input33-engine-build-plan-v1.json",
+  "engine_plan_sha256": "81798dff3fd012f7b95984403ea1088a1f157d37ee2d2e6e1b612711052cd34c",
+  "files": {
+    "patches/0033-default-off-current-ple-host-input-observer.patch": "2873743f7bd301d2c9f2b70a81b999ca39bd6166a3b98d67c2a540824eee899f",
+    "ple_input_observer33_v1.hpp": "be090d826cce9d9a5390d7f8eba15a07940ef3fedcf6fb4fc4e8936a261637b6",
+    "collect_ple_input33_v1.py": "7fc74002259b1059a8f79defafda9653cb54b4aeffcd511ddf2f424805abcfd2",
+    "verify_ple_input33_original_v1.py": "d7f46a8e1ca71c612ea19fdd2293bd043110d2da65fd23b2a93e8ad48b8734b1",
+    "test_ple_input33_cpu_v1.py": "ac1d74f2cd26ea9ff9e20bb30ecaf754cc5240d81859d74834012ce5247a954c",
+    "current-ple-input33-engine-build-plan-v1.json": "81798dff3fd012f7b95984403ea1088a1f157d37ee2d2e6e1b612711052cd34c",
+    "current-ple-input33-source-design-v1.md": "4ec81399f2a26b2284030f9248c7f0da3d0c8c03121faef5b1a20c8adf91ad2f"
+  },
+  "source_file_count": 63,
+  "consumed_header_count": 27,
+  "ordered_patches": 33,
+  "fresh_ABI_targets": 8,
+  "Python_runtime_files": 6,
+  "cpu_tests": 21,
+  "cpu_command": "python3 -m unittest discover -s strata/flash-next -p 'test_ple_input33_cpu_v1.py'",
+  "actual_source_body_order_checked": [
+    "actualsuccessful32gather/fences",
+    "host rawpublication",
+    "immediately beforeactualgraphsubmit",
+    "actualgraphcall",
+    "submitreturnedRC",
+    "actualGENfinish beforecurrentSFDterminal"
+  ],
+  "actual_CPP_compilation_or_execution": false,
+  "actual_GPU_Docker_SDK_work": false,
+  "actual_weight_payload_reads": 0,
+  "actual_runtime_qualified": false,
+  "GPU_PLE_input_consumption_observed": false,
+  "full_model_math_qualified": false,
+  "remaining_work": [
+    "actualnativecompile ofallfreshSDK/oracleABI",
+    "genuinefreshSDK/390/current-source/C111 proof",
+    "realboundedhostpublications+actualrawOriginalIQ4_NL decoder equality",
+    "P30V2 twoarm orchestration andactual128MiB/free/health/source4 qualification"
+  ],
+  "frozen_dependency_sha256": {
+    "prefix_residual30_qualification_v1.py": "7b9aae163f1594d7ca3d9d38ba221d92d54e1f431d0ce27599b572d93566a8e9",
+    "prefix-residual30-runtime-source-plan-v1.json": "6613cecd4b37f4037a374dcc46d2cc31a2d659c70ef53970a249eb53a83cf745",
+    "c1_serve_controller_combined_v10.py": "d421761408dd126c2146ac668a1ad575798e81f135dfdf465e4c29cffec065dd",
+    "c1-combined-v10-source-plan.json": "82559e30ecebbde6580a97919c1e966abcf64b7ec3f05dd679dddc514a6ef4ed",
+    "ple_owned_history_storage_v1.py": "e4a58cf9a88118487a4aa0b483d8068b57010d8fd6aa28c2b39a2110eb265df8",
+    "original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9"
+  },
+  "semantic32_unchanged": true,
+  "compiler_limitation": "No hostC++ compiler found; no Docker/SDK permission. Source body and strict Python fixtures only, not invented compile/runtime evidence."
+}

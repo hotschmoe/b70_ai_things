@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "status": "READY frozen source+readonly packet localization only",
+  "files": {
+    "strata/flash-next/audit_owned_layer0_packet_hashes_v1.py": "04635549f146800d25a7e070f4f976cc08e1fc56091a797364e1220dbc297b6b",
+    "strata/flash-next/test_owned_layer0_packet_hashes_cpu_v1.py": "f55c211d211f27c4d7eaaf5fbcee1d62b292401e7be69f16d508a7cc3a5a53cb",
+    "strata/flash-next/q5k_q8_8lane_storage_estimate_v1.py": "50c6c8eebd544a523c216f62d3bf4cddc37cf7b77a03b19d40dd6d50261a76e2",
+    "strata/flash-next/test_q5k_q8_8lane_storage_estimate_cpu_v1.py": "b4c2def5ff2da9ee2dd1a8944f235b95648606bcb58d2fae3ccef2205ae94f00",
+    "strata/flash-next/owned-L0-packet-Q5K-storage-localization-design-v1.md": "b985f5a95f927db86e2e0cf2c109155696290ce5bf56827521b3be6b06fe223c",
+    "strata/flash-next/owned-L0-packet-Q5K-storage-localization-source-plan-v1.json": "31d5090ebeb228a01b66a4b2cdca28117fe273105c11a900f0f3bcd213d0ef16",
+    "strata/flash-next/owned-L0-packet-Q5K-storage-localization-cpu-receipt-v1.json": "1ba0897cd7caaa5b0e9400be13bca494a3388aefe869a9dc52969787ce248427"
+  },
+  "all_model_math_claims": false
+}

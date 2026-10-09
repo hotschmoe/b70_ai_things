@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "status": "READY source+readonly actualpacket localization; actualmodel math unqualified",
+  "files": {
+    "strata/flash-next/audit_owned_layer0_packet_hashes_v1.py": "04635549f146800d25a7e070f4f976cc08e1fc56091a797364e1220dbc297b6b",
+    "strata/flash-next/test_owned_layer0_packet_hashes_cpu_v1.py": "f55c211d211f27c4d7eaaf5fbcee1d62b292401e7be69f16d508a7cc3a5a53cb",
+    "strata/flash-next/q5k_q8_8lane_storage_estimate_v1.py": "50c6c8eebd544a523c216f62d3bf4cddc37cf7b77a03b19d40dd6d50261a76e2",
+    "strata/flash-next/test_q5k_q8_8lane_storage_estimate_cpu_v1.py": "b4c2def5ff2da9ee2dd1a8944f235b95648606bcb58d2fae3ccef2205ae94f00",
+    "strata/flash-next/owned-L0-packet-Q5K-storage-localization-design-v1.md": "b985f5a95f927db86e2e0cf2c109155696290ce5bf56827521b3be6b06fe223c"
+  },
+  "frozen_dependency_sha256": {
+    "strata/flash-next/verify_layer0_ffn_original_v1.py": "3f433f105c260e5760d54942c6c9e8f46f6ff97793238e310754ffd55ebf8d70",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4"
+  },
+  "consumed_source_sha256": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/kernels/cuda/iq_kernels.dp.cpp": "18f032f269591db168625f80c6dbe8d08dc36d2a6fd5982c56723862713d7f4a",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/ggml-source/ggml/src/ggml-common.h": "0061131b615c5721fc88a78feeb22c1f8c450f1c2646a317d80796a653bf595c"
+  },
+  "actual_readonly_packet_receipt_sha256": {
+    "/tmp/original48-L0-packet-hash-localization-v1.json": "460f1a8509e175806e78e2dc08ba6345d557237a7702e50501084e5ed89fed6b",
+    "/tmp/zero-staged-ple-L0-packet-hash-localization-v1.json": "a02992630a6181e59e4b3b7e2412d962664df85d203dafb5066218723333cb22"
+  },
+  "source_Q5K_contract": "ds0*integercodesum, stored_s unused, default8lane groupedroute",
+  "CPU_float_model": "NONCONTRACTED_F32_stage_estimate, NOTnativeFMA/reducer oracle",
+  "actual_L2_producer_observed": false,
+  "frozen_full48_math_changed": false,
+  "full_model_math_qualified": false,
+  "numeric_tolerance_gate": null,
+  "original_weight_payload_reads": 0
+}

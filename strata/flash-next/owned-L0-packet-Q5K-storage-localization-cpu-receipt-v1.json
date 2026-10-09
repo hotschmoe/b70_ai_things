@@ -1,0 +1,30 @@
+{
+  "config": "Readonly finalizednative/ownedL0 records; syntheticpackedQ5K/Q8 blocks only",
+  "command": [
+    {
+      "command": [
+        "python3",
+        "strata/flash-next/test_owned_layer0_packet_hashes_cpu_v1.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.004s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python3",
+        "strata/flash-next/test_q5k_q8_8lane_storage_estimate_cpu_v1.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.028s\n\nOK\n"
+    }
+  ],
+  "result": "PASS CPUsource/mapping controls; actualpacket equality36/36 andF32inputequality0/36 forbothreports",
+  "verdict": "No originalpayload/GPU. L2causeunresolved; no numericpass/tolerance/native/fullmath inference",
+  "actual_receipt_sha256": {
+    "/tmp/original48-L0-packet-hash-localization-v1.json": "460f1a8509e175806e78e2dc08ba6345d557237a7702e50501084e5ed89fed6b",
+    "/tmp/zero-staged-ple-L0-packet-hash-localization-v1.json": "a02992630a6181e59e4b3b7e2412d962664df85d203dafb5066218723333cb22"
+  },
+  "source_plan_sha256": "31d5090ebeb228a01b66a4b2cdca28117fe273105c11a900f0f3bcd213d0ef16"
+}

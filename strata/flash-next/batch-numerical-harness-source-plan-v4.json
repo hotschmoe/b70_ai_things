@@ -1,0 +1,82 @@
+{
+  "schema": 4,
+  "status": "READY CPU source-only future current-PLE32/C110 harness; no genuine preparation/execution/qualification",
+  "source_sha256": {
+    "strata/flash-next/batch_numerical_proofs_v4.py": "37ae9ec8d955b1f6925ca5a27f74f573947236552096eb3bc0ef5173956a2f69",
+    "strata/flash-next/run_batch_numerical_pilot_v4.py": "7def03d858b6feb917c8dd3a38c67225b537b500f71fcdb8283b2aabe9f034a7",
+    "strata/flash-next/run_batch_api_controls_v4.py": "5e543b3e05d790061d5da11a94db81f05cfbdcf620a785b8364e554e22afe962",
+    "strata/flash-next/run_batch_serial_controls_v4.py": "9211fa628ed949d54b982d7fe00afdfca5ce9ffdf9b1638d647fc7f2464f42e6",
+    "strata/flash-next/batch_numerical_execution_v4.py": "bbeb5abe2d738c4417cfbfcc3e94ee646217aec6cfa3a39679289c79e3c781ec",
+    "strata/flash-next/qualify_batch_numerical_v4.py": "624ae973a28ab39581f12c60d0561414092f92dae10b0e50a9cb41bb7150bae4",
+    "strata/flash-next/audit_batch_numerical_suite_v4.py": "bbee7b87e6302e58e23f5576ef92bdadee7743ae1e6ff247c3d9dd6390f3f6fe",
+    "strata/flash-next/batch-numerical-case2-source32-v1.json": "2f871a27901dea4853e4aa019d7f4f3384ef9241297742489c7d49e3a418ba9b",
+    "strata/flash-next/batch-numerical-case4-source32-v1.json": "59a18d2e7e96b12a905ec443a56a97646a7d231914f8e416990a0c3ce15c2bb9",
+    "strata/flash-next/batch-numerical-case6-source32-v1.json": "3738bbf1b4a521be5a6425504fc5a33be9e36f1c2cba593d568efb2c7a23416a",
+    "strata/flash-next/batch-numerical-harness-design-v4.md": "3b83157d0aef69e72ee98f228d4fed0a537290ab54e98260d331c7ada42b8478",
+    "strata/flash-next/batch-numerical-model-registry-proposal-v4.yaml": "08bd118b1128c0e0398f45c757527630068b3f64c2c1a00057831760dd95511b",
+    "strata/flash-next/test_batch_current_ple_lane_cpu_v4.py": "c6c5952de064117dbf24c0f1e4e24dc2c6e0dcc944c4f1878f904b4cbfd0d0e9",
+    "strata/flash-next/batch-current-ple-lane-cpu-receipt-v4.json": "dd691f6663f0279132b134d0c1c4ceb1be26e97e16a979783e954dbb05eeb26d"
+  },
+  "immutable_dependency_sha256": {
+    "strata/flash-next/parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "strata/flash-next/audit_fidelity_observer_coverage.py": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47",
+    "strata/flash-next/collect_fidelity_observer.py": "5c29e5925682d4cd5b075b549b8b12dd42ed995109f0d86675bb2e59a6c3889b",
+    "strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "strata/flash-next/batch_numerical_prefixes_v2.py": "bccdbe9d9c0c8e50d2e059877cf9d4648e2ab8c1a533451ac56d5d18adca1dc5",
+    "strata/flash-next/batch_api_trace_v2.py": "4f0aff752836e7ee0a647a4b1dc701c703967ab36038d49076a55407bfd54257",
+    "strata/flash-next/batch_api_client_v2.py": "baf544e3b908680d305efcdcd4f74865c9b31facb94c29238593d0f720991d7a",
+    "strata/flash-next/batch_api_prefixes_v2.py": "b51471d4b08be9ec4cae440409eafc40d3aacbf96b50ab06ba754327cabb8058",
+    "strata/flash-next/audit_batch_capture_lifecycle_v2.py": "12db0d48b684ababfead2a3ead48410979e6706359522909c02a8b0ca6af2bba",
+    "strata/flash-next/audit_slot_owner_trace_v1.py": "8b4fdb4da2ff758cc625b33e24077e9f2f97c0ca0111428a1f8b8f5be279bf43",
+    "strata/flash-next/audit_batch_fidelity_coverage_v2.py": "2d3719ad4f020811462e5a5e8f2d93da950658d9a901e9aaa9777d2e4439e24a",
+    "strata/flash-next/audit_batch_fidelity_coverage_v4.py": "a2814f92378f93d4e9cea946ba67b4304affc57d21fa4f00c6fa87253a4655df",
+    "strata/flash-next/audit_stage_mirror_owner_trace_v1.py": "4ec214482c0bf330cb96d5d7d0c091381ff9c295487bcf3482b79282f8f0c9bd",
+    "strata/flash-next/merged_numerical_protocol_v2.py": "6f3e5194f175987f974cf8715ccaf5315877a9dba791a4b56fdb68cd63dc9a9c",
+    "strata/flash-next/serial_prefix_qualification_v6.py": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c",
+    "strata/flash-next/layer0_numerical_qualification_v9.py": "2252f24be9a3511bcb40d5e623caa75259112b9cd07f3d55944f67c67d2a084c",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/c1_trace_contract.py": "ee557bb1e9eb6a31b67714c93034461aa24572f20781cfcb9a858c25dd825e20"
+  },
+  "only_permitted_lane": {
+    "source32": {
+      "plan": "strata/flash-next/current-ple-stage32-engine-build-plan-v1.json",
+      "sha256": "01884ae392f4eb9dd1379e08de2b05ab4836ea350bc4e349bf01cedc5425fdc5",
+      "source_files": 62,
+      "headers": 26,
+      "patches": 32,
+      "generation": 10,
+      "controller_sha256": "d421761408dd126c2146ac668a1ad575798e81f135dfdf465e4c29cffec065dd",
+      "parent_sha256": "1f78eaba7b4234366de678074cd71515768c8e8593577482d84ec833e3dc22b1"
+    }
+  },
+  "C110_source_plan_sha256": "82559e30ecebbde6580a97919c1e966abcf64b7ec3f05dd679dddc514a6ef4ed",
+  "C110_parent_plan_sha256": "a6941de1b7e6abfff520f6315b155500f139283190f25c06123f75ffe656f740",
+  "mandatory_prepared_semantic_marker": "combined_generation.semantic_current_PLE_gather_fix32 true + public DEFAULT2arg validate_final_source_proof10",
+  "historical_wrong_PLE29_31_goal_positive": false,
+  "V3_source_plan_sha256": "5c2e94306ad084de76564858bc134944df4c0a5997ff2d43c619c5e2b033e0e5",
+  "V3_all_pins_unchanged": true,
+  "V2_preserved": true,
+  "counter_contract": {
+    "reused": 0,
+    "read_from": 0,
+    "reread_to": -1,
+    "checkpoint_reread_env": "must be absent including value0",
+    "no_guards_weakened": true
+  },
+  "registry_proposal": "strata/flash-next/batch-numerical-model-registry-proposal-v4.yaml",
+  "source_case_tokenizer_origin": "Exact original C18 runtime-generated corpus; unchanged six Python/tokenizer fingerprints and actual API IDs must be verified again with C110",
+  "CPU_test_commands": [
+    "python3 strata/flash-next/test_batch_current_ple_lane_cpu_v4.py"
+  ],
+  "actual_original_weight_reads": 0,
+  "actual_GPU_Docker_runtime_writes_or_genuine_prepares": 0,
+  "actual_source32_SDK_or_C110_genuine_positive_created_by_agent": false,
+  "new_matching_SDK_390_uploadV2_current4_C110_finalproof_required": true,
+  "all_parent_source_health_ownership_raw_serial_provenance_guards_retained": true,
+  "sameprocess_serving_mirror31_owner_proof_mandatory": true,
+  "full_model_math_qualified": false,
+  "cache_fresh_pin_history_isolation_fairness_qualified": false,
+  "OFF_batch_raw49_equality": "UNOBSERVED",
+  "latency_qualified": false,
+  "permissions": "repository/tmp writes only; runtime/git read-only, no network/GPU/Docker/commit"
+}

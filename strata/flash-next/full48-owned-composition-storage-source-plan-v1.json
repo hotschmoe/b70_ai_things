@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "READY CPU source only",
+  "new_sources": {
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/full48_synthetic_original_roles_v1.py": "621c44fce6c944e1e91532118d90414905150f1d202982ddc5107dc6cfa82cef",
+    "strata/flash-next/test_full48_owned_composition_storage_v1.py": "f6b0bc3cf1dcac2349a7607cd0b11e3b4752bb00b907da9964f78afea83f05a9",
+    "strata/flash-next/full48-owned-composition-storage-design-v1.md": "df5cde72886dde754697022d26b1ed4b68f8e1650ce2226c38e008b035ada43a"
+  },
+  "frozen_dependencies": {
+    "strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "strata/flash-next/original_gguf_reference.py": "6498bfd01ad06b7439a6dc07c753306bbf1d0b173f8ba1ab9763da7d11a3ddb5",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "strata/flash-next/prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "strata/flash-next/qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "strata/flash-next/ple_owned_history_storage_v1.py": "e4a58cf9a88118487a4aa0b483d8068b57010d8fd6aa28c2b39a2110eb265df8",
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "strata/flash-next/full48_reference_inventory_fixture_v1.py": "bf86e66fe79d43c7ed8b00b96c16bfa985ac6ebbc6a0c53ca9b66470178bb038"
+  },
+  "actual_consumed_source": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/prefill/gemm.dp.cpp": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/include/strata/kernels/ple.hpp": "d1909627c3d988b99d3e440a48a814e3138e2946915d3da433e8f1d290fe7179",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/kernels/cuda/qsa.dp.cpp": "86a7f5499ba249d526d8b14158626cc9c9ce32d1a4b9bfb8716192bebd8b17ca",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7"
+  },
+  "pinned_build_metadata": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/build/build.ninja": "717e840d054d5804705dfaa26250bb72a56c972e2cbdb3e845ab9a9ee2137565"
+  },
+  "public_input": "tokens1/2/4/8 only; no observed intermediates/state/routing/head",
+  "original_identity_bound": true,
+  "actual_original_payload_executed": false,
+  "storage_phase_roster": "earlier prefills then last verifier; no decode substitution",
+  "owned_layers": 48,
+  "gdn_layers": 36,
+  "qsa_layers": 12,
+  "ple_layers": [
+    1
+  ],
+  "head_rows": 248320,
+  "real_role_geometry": true,
+  "maximum_weight_tile_bytes": 67108864,
+  "native_dispatch_witnessed": false,
+  "nativebitwise_emulated": false,
+  "tolerance_gate": null,
+  "full_model_math_qualified": false,
+  "required_actual_witnesses": [
+    "matching source/env BF16/noMMQ/noFUSED dispatch",
+    "actual prefill GEMM batch and operand storage",
+    "P30 own all48 token/layer/phase comparison with declared mathematical methodology",
+    "QSA truncation context2052 separate from prefix8",
+    "independent longstate/cache/session/concurrent coherence"
+  ]
+}

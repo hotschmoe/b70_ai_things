@@ -1,0 +1,15 @@
+{
+  "CONFIG": "CPU read-only source/SDK + synthetic previous fixture; repository/tmp writes only",
+  "COMMAND": "python3 strata/flash-next/test_batch_counter_lanes_cpu_v3.py",
+  "RESULT": {
+    "passed": true,
+    "negative_controls": 7,
+    "actual_source_no_cache_no_reread_contract": "0/0/-1",
+    "synthetic_migration_vectors": 98,
+    "actual_source29_SDK_files": 60,
+    "future_source31_oldSDK_rejected_before_model_admission": true,
+    "actual_model_weight_payload_reads": 0,
+    "actual_GPU_executions": 0
+  },
+  "VERDICT": "PASS source/counter/admission controls only; no actual model weight read, GPU/Docker/model execution or genuine prepare"
+}
