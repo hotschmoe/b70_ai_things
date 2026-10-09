@@ -112,3 +112,34 @@ COMMAND -> Same V6 parent, matched two-card plan and finalized one-card receipt.
 RESULT -> F07/serial-basic-twocard-v6-v1 running; clean processPASS, remaining
 logits/layers and parent health/hash gates pending.
 VERDICT -> No finalized new20 two-card V6 numerical/cache result yet.
+
+## Finalized new20 two-card V6 basic and topology parity
+
+CONFIG -> Same frozen20/V6/parent/native2048/64/65536 pilot as onecard,
+actual32/16 two-card split, genuine new20 source/full390 chain.
+COMMAND -> V6 parent --group basic with finalizedonecard receipt, then
+serial_prefix_qualification_v6.py compare-topologies.
+RESULT -> F07/serial-basic-twocard-v6-v1 finalizedPASS557s: all3 native
+processes exit0/removals, exact IDs/LP20/natural stop off/on, full248320 first
+logits activations0/1 bitwise equal and all48 required layer rows each probe.
+Strict+compiled P2P0 pre/post health, kernel gate and NEWall4 publisher hashes
+pass. External strengthened audit passes exact9 completedrecords/3arms, no
+pending/errors/incomplete, cross PREFIX/PCL/SFD source/request/position binding,
+exact per-stage entry/return and once-only prompt coverage for0:32 and32:48.
+
+F07/serial-basic-cross-topology-v6-v1.json PASSall9 matched process/probe pairs:
+IDs/LP20/natural stops equal; all6 observed fullhead pairs bitwise equal;3
+layers-enabled pairs all48 residuals equal (144 rows max_abs0/RMSE0).
+VERDICT -> Bounded new20 observer/topology and actual stage-record consistency,
+not independent fullstate/math/concurrency/latency/shelf qualification.
+
+## Generated assistant/new-user live continuation started
+
+CONFIG -> Same frozen two-cardV6 pilot; exact four-request real_live roster.
+COMMAND -> V6 parent --group real_live; F07/serial-real-live-twocard-v6-v1.
+RESULT -> Child numerical/teardownPASS. Actualseed generates42 naturally;
+exact-template newuser continuation79 tokens contains actualcommitted51-token
+seed prefix without rewrites. Nonfresh selects live51reuse/28eval vsfresh79.
+Cached/fresh fullhead/all48residuals bitwise match; exact4-record external
+source/roster/stage/request audit passes. Parent health/hash gates pending.
+VERDICT -> NOTFINALIZED yet; no final live-continuation claim before parent gates.

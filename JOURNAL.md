@@ -9768,3 +9768,15 @@ VERDICT -> Stronger observed record evidence, not full hidden state/commit proof
 Auxiliary reset/pin descriptions remain unbound; observed-only bool cannot
 prove missing process/partial roster. Future V7 stricter parser must preserve
 these gates; no V6 source/hash changes during actual runs.
+
+## 2026-10-09 New20 two-card V6 basic and exact topology parity
+
+CONFIG -> Frozen20/V6 matched2048/64/65536 one/pair controls.
+COMMAND -> Parentpairbasic, externalstrengthenedactualrecords, CPUcross-topology.
+RESULT -> PairfinalPASS557s all3processes/numeric/teardown/health/kernel/NEW4
+publisher hashes. Exact9records perstage/request sourcebinding pass. Cross9pairs
+PASS fullobservedheads and144 pairedresiduals bitwise, IDs/LP20/naturalstops.
+Real_live pairchildnumerical+teardownPASS genuine51reused/28evaluated vs79
+fresh, exactgeneratedassistant/template/tokenprefix; parentfinalgates pending.
+VERDICT -> Internal observer/topology and record provenance, not independent
+math/concurrency/cleanlatency. See combined20 qualification doc.
