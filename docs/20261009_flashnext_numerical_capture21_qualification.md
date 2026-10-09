@@ -26,3 +26,19 @@ require genuinecompletednewsource gate, freshall4identity, actual20versus21off
 and same21off/on matched outputs/heads/all48rows/state/context/owner/graph nonce
 and pre/posthealth. Seven producerfields remainunobserved; capturedincoming
 state is conditionalview, not independentlycomputedprefix or fullmodel proof.
+
+## Finalized capture21 source-upload gate
+
+CONFIG -> Actual21engine48a677e7 and linkedchhk0m3k oracle, unchangedoriginal
+source/model/runtime, actual32/16 sourcebounds.
+COMMAND -> Parent run_source_upload_oracle_full.py;
+F08/source-upload-capture21-v1.
+RESULT -> Final parentPASS207s, all5 nativecases exit0/remove, original387 HC/
+3 PLE payload/type/shape/offset readback, chronological sourceownership/frees
+and negativecontrols pass. Strictpercard+compiledP2P0 pre/post health pass.
+Ordinary300 allocationaccounting remains separate; ordinaryGPUreadback false,
+modelmath false.
+VERDICT -> Genuine new21source/ABI/lifetime qualification, not observer/frame/
+packet/state/modelmath equivalence. CPUgenuine21C1/fullshardidentity preparations
+authorized; actualmodel screens and20vs21off/same21off-on remainpending.
+Existing20 model/cache receipts cannot replace actual21 execution.

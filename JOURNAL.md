@@ -9890,3 +9890,13 @@ runtime source/capture resultyet.
 VERDICT -> ActualSDK/ABI compile only. Genuine newsourceidentity/readback,
 20vs21off+same21off/on GPUstate/output/nonce/lifetime gates remain required;
 26/33capture partial, fullmodelmath/concurrency/latency stillunqualified.
+
+## 2026-10-09 Capture21 whole390 source gate finalized
+
+CONFIG -> Actual21SDK48a677e7/chhk0m3k ABI/sourceoracle, unchangedmodel/runtime.
+COMMAND -> Parent GPU sourcegateF08/source-upload-capture21-v1.
+RESULT -> FinalPASS207s,5layouts original387HC+3PLE sourceidentity/readback,
+logicalfree/context/negative gates, nativeexits/removals/strict+compiled
+pre/posthealth pass. Ordinary300payload/readback andmodelmath false.
+VERDICT -> New21sourceupload/lifetime only. Genuine21C1/identity/observer
+off-on/packet/state/math andfullconcurrentlatency gates remainopen.
