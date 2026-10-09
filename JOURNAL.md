@@ -10334,3 +10334,21 @@ VERDICT -> BoundedpairedAPI/source/lifecycle only, notmodelmath/completecache/
 concurrency/fairness/clean latency/shelf. One/pairC1geometrydiffers; no speedclaim.
 Oldfailedrunsstayfailed. Numericcomparison harnessreference selectorfix next.
 See docs/20261009_flashnext_import28_c1_pair_qualification.md.
+
+
+## 2026-10-09 - Reference21 current-source guarded rerun preparation
+
+CONFIG -> PreservefailedoldpairV2 andfrozen21 SDK/childV2/nativeflags; newparent3
+adds bothknownpageguards only. ActualnewAPIpair6 currentpostfull4 identity binds
+genuine newreferenceplan, old20qualified numericalcontrol retained.
+
+COMMAND -> GenuineV2prepare withactualoldengine/upload/C1/reference20 andcurrent
+sourceidentity. Run test_numerical_reference_parent_v3_cpu.py /py_compile.
+
+RESULT -> PreparationPASS; actualsource_watch secondpagewrong rejects/preserves
+bothsamereadviews andstopsbeforelegacycheck. Old lifecycle/fullhash helperASTs
+identical; no GPUexecution ornewreferencepositive yet.
+
+VERDICT -> Commitparentbeforeactualpairedreference rerun; fullmatched heads/
+48residuals/packet/owner/health/teardown/NEWall4hash gates mandatory. Candidate
+comparison must notusefailedoldreference orwrongnewmanifest validator.
