@@ -10544,3 +10544,19 @@ bindings/actualproofchain andtwo nativepacketcontracts admitteddirectly.
 VERDICT -> Conditionalcapturedincomingstate/activation consumers only. No
 filtered26admission/ownprefix/upstream/full48/lifetime/cache/speed inference.
 See docs/20261009_flashnext_original33_conditional_hc_gdn.md.
+
+
+## 2026-10-09 - Integrated29 unsegmented startup allocation refusal
+
+CONFIG -> Rootselectedone-card unseg profile; priorqualifiedC16 used1GiB
+segmented/adapt0/no-borrow control. Same2048/64 context/prefill/modelprecision.
+
+COMMAND -> GenuineC18 oneprep/API parent41425 innewF12directory.
+
+RESULT -> FAILED154s pre-ready:49266MiB pinnedmirror allocationrefused,16484
+expertsuncovered -> nativeNO_HOST coveragegate refused. Native/APIexit1/noOOM/
+removed; preposthealthPASS. Finalcomplete4afterfailedserve UNOBSERVED.
+
+VERDICT -> Preservefailedrun; rootprofile mistake correctedwithfreshsegmented
+preparation3335/directory, no coveragebypass/math/speedclaim. See integrated29
+unsegmentedlaunchrefusal doc. No evidenceofhardwarecrash/sourcecorruptionhere.
