@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "status": "Frozen source; GPU control pending; prior upload oracle/failure untouched",
+  "source": "strata/flash-next/usm_free_query_control.cpp",
+  "source_sha256": "0a1eb04c7b588ed7c84e2571a5604c9164c139926b4a12db161801abef11081c",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "source_queue_header": "sycl/include/strata/sycl_queue.hpp from exact full engine build",
+  "installed_UR": {
+    "version": "0.12.0",
+    "adapter_v1_sha256": "db43d6ff9426731a67d6907c94a2dc1e93334b0764763029f31e3bb5ad0704bb",
+    "adapter_v2_sha256": "19a8a85939919c16bede9bfd311f299c1142f4ad13a5a3c9dd16f0dfc83a2c3b",
+    "actually_loaded_adapter": "Capture /proc/self/maps inside this control; not inferred from installed filenames"
+  },
+  "default_control_env": {
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:gpu",
+    "SYCL_CACHE_PERSISTENT": "0",
+    "UR_L0_DISABLE_USM_ALLOCATOR": "UNSET",
+    "SYCL_PI_LEVEL_ZERO_DISABLE_USM_ALLOCATOR": "UNSET",
+    "UR_L0_USM_ALLOCATOR": "UNSET",
+    "STRATA_ARENA_ALIAS_CHECK": "UNSET so original default guard remains enabled"
+  },
+  "paths": [
+    "sycl::malloc_device + sycl::free",
+    "strata::malloc_device_guarded + sycl::free",
+    "raw zeMemAllocDevice + zeMemFree using same queue native context/device"
+  ],
+  "sizes_bytes": [
+    8192,
+    40960,
+    163840,
+    3481600,
+    6963200,
+    27852800,
+    33554432
+  ],
+  "rounds": 2,
+  "expected_cases": 42,
+  "max_primary_live_bytes": 33554432,
+  "guard_transient_note": "32MiB guard may allocate its bounded internal16-byte counter and documented move spacers up to8 attempts; preserve logs",
+  "observations": [
+    "Beforefree SYCL type/device and nativeZe type/allocationid/base/addressrange bytes",
+    "Owning queue waits then matching free returned without exception",
+    "Afterfree pointer metadata only, before any reallocation; never dereference/copy/fill/kernel freed addresses",
+    "Fresh same-size allocation address equality and backend id/base/extent, live first64KiB+lastbyte probe, matched free",
+    "Native query results/exception codes preserved rather than interpreted as freed chunk liveness",
+    "Exact loadedlib maps and selected allocator/affinity/cache env recorded"
+  ],
+  "interpretation": [
+    "Postfree type=device alone is observation, not proof of leak or accepted teardown",
+    "Pooled backing supported if own free returns, postfree Ze allocationid/base/extent persists, fresh allocation reuses old chunk and fresh byte probe passes",
+    "DirectZe and later separate allocator-disabled process can distinguish adapter pool retention from driver-query caching; no knobs changed for initial default controls",
+    "No oracle gate changes authorized until parent localcontrol evidence; original source-upload-v1 remains failed",
+    "New lifecycle oracle contract needs explicit owning free evidence, preserved model/source byte checks, bounded alloc/reuse probes and healthy process teardown; no useafterfree accepted"
+  ],
+  "optional_separate_diagnostic_env_after_default_controls": {
+    "UR_L0_DISABLE_USM_ALLOCATOR": "1",
+    "reason": "Only if needed to isolate pooling; separate process and configuration, never a silent serving change"
+  },
+  "primary_sources": {
+    "SYCL_pointer_query": "https://github.khronos.org/SYCL_Reference/iface/usm_pointer_queries.html",
+    "UR_environment": "https://oneapi-src.github.io/unified-runtime/core/LEVEL_ZERO.html",
+    "UR_current_source_pin": "d51668b8845600b9d9361f1ba734ee2ba97f313f",
+    "exact_installed_source_match": "not established; pinned contemporary source supports hypothesis only"
+  }
+}

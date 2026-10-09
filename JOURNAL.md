@@ -9210,3 +9210,22 @@ pass. Pooling versus leak is being localized, not waived or labelled solved.
 VERDICT -> First-layer reset hypothesis narrowed; history drift remains.
 Actual source upload bytes pass first-card scope, lifecycle oracle unqualified;
 second-card/pair and model/tier/prefix/concurrent/latency/shelf gates remain open.
+
+## 2026-10-09 USM post-free query gate localized independently
+
+CONFIG -> Pinned runtime/source header, default allocator controls and separate
+UR trace arm; no model/weights/inference. Previous goal turn classified progress:
+source/model-byte and reset evidence changed next action; preserved checkpoint4b2f783.
+COMMAND -> run_usm_free_control.py default and --trace on both cards,42cases/card;
+independent chronological trace audit with missing/duplicate free negatives.
+RESULT -> All plainSYCL/guardedSYCL/rawZe owning frees/fresh probes pass; every
+post-free type query remains device. SYCL/guarded keep backend ranges; rawZe
+range query fails/null/0 while cached type/properties remain. Trace records60
+successful matched alloc/free pairs/card,0 outstanding logical allocations;
+deleting/duplicating free events rejects. Normal process removal and full
+per-card/compiledP2P0 pre/post-health pass; no traced fault signature. Earlier
+compile missing fcntl/unistd includes is retained; corrected snapshot compiles.
+VERDICT -> Source-upload-v1 remains failed. Its pointer-type teardown gate is
+not a valid logical-live test on this installed runtime. New owner-specific
+matched-free/byte/lifecycle oracle required, not a silent gate waiver. Model,
+full390source coverage, tier/prefix/concurrent/latency/shelf gates remain open.
