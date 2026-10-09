@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "scope": "Six-case screening text authority, not broad model quality or token-ID authority",
+  "model_lock_sha256": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "source": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+  "controls": [
+    "static-control-warmup-v2",
+    "static-control-warmup-fresh-v3"
+  ],
+  "outputs": {
+    "prose": "4cabdca117e7c86577829e135249fdd4ea8e7895cc00cdeea33eb73b2fadd478",
+    "code": "8f75a68646c879fd0cff5c02708c010fb1c01d67ef9930d4e419106feb7897aa",
+    "arithmetic": "979d26d3a739d909d5a2d358068f1f3fe1364dc888883e5eaae71d57c745c827",
+    "json": "b3e2226006f21048a4d77fa684bb015998cbdebdb74cb68db837c1443926cce4",
+    "instructions": "f52f7fad9159972befbfab0531b8d56b216cb1df5b4bf183f15908fd4f694eb7",
+    "multilingual": "f6d023669bad4e4b418d158f09223cd3e57d1069915b159be77ae3dc63d4e118"
+  },
+  "required_config": {
+    "placement": "static first/last8 expert CPU blocks +CPU PLE,split48/52",
+    "kv": "f16",
+    "context": 8192,
+    "parallel": 1,
+    "warmup": true,
+    "mtp": false,
+    "persistent_device_code_cache": false,
+    "graphs": false
+  }
+}

@@ -628,3 +628,25 @@ models:
     calibration: fresh-fp8-kv-be02d915
     serve_cmd: ""
     notes: "TEMPLATE ONLY native5802 backend200K; requires complete new100K and own200K qualification. Known arrayEOS quality limitation retained."
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-static-control
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --image
+      IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only C1 no-MTP FP16-KV 8K control; primary alias hotschmoe-dd. No
+      shelf or quality-authority qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-static-control-warmup
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+    notes: Research-only warmup arm of the same static C1 FP16-KV no-MTP control; default
+      upstream warmup clears recurrent/KV state. Qualification pending.

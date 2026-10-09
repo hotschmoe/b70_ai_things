@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "source_revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+  "status": "source-audited plan; no GPU execution",
+  "mode": "test",
+  "backend": "SYCL0",
+  "pinning": "For each physical card N: bin/gpu-run --card N, plus ZE_AFFINITY_MASK=N and ONEAPI_DEVICE_SELECTOR=level_zero:gpu inside workload. A single visible device is backend SYCL0; confirm identity in log. Run cards sequentially.",
+  "timeout_seconds_per_case_group": 180,
+  "total_expected_executed_per_card": 24,
+  "required_verdict": [
+    "Exact targeted backend initialized with expected physical card identity.",
+    "Exit0 AND exact executed/pass count for each group.",
+    "Reject any targeted not supported/NOT_SUPPORTED line; unsupported cases do not increment executed count.",
+    "Reject zero-case pass, unknown backend, timeout, or failure.",
+    "Backend enumeration skips of other devices are allowed only when actual selected backend and expected tests ran."
+  ],
+  "limitations": [
+    "Primitive correctness screen only; not model coherence, speed, concurrency or stability qualification.",
+    "No exact512-expert/top10 case exists for these selected quant types in eval cases; current512/top10 tests are IQ3_S/Q4_0.",
+    "No target-model full-sized allocations.",
+    "No MTP, PLE page-fault, inter-card transfer, or collective qualification.",
+    "Return0 alone is insufficient: main can succeed when backend filter matches no device; test_backend excludes unsupported cases and permits0/0."
+  ],
+  "groups": [
+    {
+      "name": "dense_decode",
+      "op": "MUL_MAT",
+      "params_regex": "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,m=16,n=1,k=256,bs=\\[1,1\\],nr=\\[1,1\\],per=\\[0,1,2,3\\],k_v=0,o=1,src_overlap=0,m_v=0,pad=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT",
+        "-p",
+        "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,m=16,n=1,k=256,bs=\\[1,1\\],nr=\\[1,1\\],per=\\[0,1,2,3\\],k_v=0,o=1,src_overlap=0,m_v=0,pad=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 9,
+      "source_evidence": "all_types loop line10520 gives4; base_types loop line10628 gives Q4_K/Q8_0 (2); other_types line10708 gives Q5_1/Q5_K/Q8_0 (3). Total9; observed9 OK rows in F01 primitives-v1/card0.log."
+    },
+    {
+      "name": "dense_small_batch_model_input_width",
+      "op": "MUL_MAT",
+      "params_regex": "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,m=48,n=2,k=2560,bs=\\[1,1\\],nr=\\[1,1\\],per=\\[0,1,2,3\\],k_v=0,o=1,src_overlap=0,m_v=0,pad=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT",
+        "-p",
+        "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,m=48,n=2,k=2560,bs=\\[1,1\\],nr=\\[1,1\\],per=\\[0,1,2,3\\],k_v=0,o=1,src_overlap=0,m_v=0,pad=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 4,
+      "source_evidence": "Existing loop lines10573-10584; actual model input width2560 with deliberately small output48."
+    },
+    {
+      "name": "experts_decode",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,n_mats=4,n_used=2,b=0,m=512,n=1,k=256,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,n_mats=4,n_used=2,b=0,m=512,n=1,k=256,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 5,
+      "source_evidence": "Existing base/other loops lines10875-10905; Q8_0 duplicated between lists."
+    },
+    {
+      "name": "experts_multiblock_batch",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,n_mats=4,n_used=2,b=0,m=64,n=16,k=(96|768),amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=(q4_K|q5_K|q5_1|q8_0),type_b=f32,n_mats=4,n_used=2,b=0,m=64,n=16,k=(96|768),amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 4,
+      "source_evidence": "all_types loop line10861 uses3*block_size:96 for Q5_1/Q8_0,768 for Q4_K/Q5_K."
+    },
+    {
+      "name": "ple_get_rows",
+      "op": "GET_ROWS",
+      "params_regex": "^type=iq4_nl,n=256,m=5,r=4,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GET_ROWS",
+        "-p",
+        "^type=iq4_nl,n=256,m=5,r=4,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "source_evidence": "all_types GET_ROWS loop lines9634-9638. Checks IQ4_NL gather; real PLE width160 and host lazy mmap are separate coverage."
+    },
+    {
+      "name": "gdn_decode",
+      "op": "GATED_DELTA_NET",
+      "params_regex": "^type=f32,head_count=32,head_size=128,n_seq_tokens=1,n_seqs=1,v_repeat=1,permuted=0,kda=0,K=1$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GATED_DELTA_NET",
+        "-p",
+        "^type=f32,head_count=32,head_size=128,n_seq_tokens=1,n_seqs=1,v_repeat=1,permuted=0,kda=0,K=1$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "source_evidence": "Explicit eval case line11735; state2MiB. Actual model key/value head ratio16:48 is not this primitive case."
+    }
+  ],
+  "generation": 2,
+  "supersedes_plan_sha256": "c19898798ba63184aa70d827faaf14a88f9b0818b398515de7964f97d21662dd",
+  "count_correction_evidence": "Source all_types loop lines10520-10522 adds four dense_decode cases; matched9 actual OK lines in primitives-v1/card0.log. Other counts unchanged after constructor audit."
+}

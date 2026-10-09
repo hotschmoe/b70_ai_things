@@ -1,0 +1,12 @@
+{
+  "schema": "b70.flash-next.screening-suite.v1",
+  "status": "screening_only_not_quality_authority",
+  "cases": [
+    {"id": "prose", "prompt": "In two short sentences, explain why a backup should be tested by restoring it. Include the words backup and restore.", "check": "keywords", "words": ["backup", "restore"]},
+    {"id": "code", "prompt": "Return only Python source, without Markdown. Define a function add(a, b) whose sole statement returns a + b. Do not include annotations, imports, decorators, defaults, comments or other statements.", "check": "safe_add_ast"},
+    {"id": "arithmetic", "prompt": "Calculate 137 * 29. Return only the decimal integer, with no explanation.", "check": "exact", "expected": "3973"},
+    {"id": "json", "prompt": "Return only a JSON object with exactly these fields: status is the string ready, count is the integer 3, and items is the array [1, 2, 3]. No Markdown or explanation.", "check": "json", "expected": {"status": "ready", "count": 3, "items": [1, 2, 3]}},
+    {"id": "instructions", "prompt": "Output exactly three lines, in this order: ALPHA, BETA, GAMMA. Do not number the lines or add anything else.", "check": "exact", "expected": "ALPHA\nBETA\nGAMMA"},
+    {"id": "multilingual", "prompt": "Traduce al ingles: El gato duerme. Responde solamente: The cat sleeps.", "check": "exact", "expected": "The cat sleeps."}
+  ]
+}

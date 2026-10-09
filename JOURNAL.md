@@ -8917,3 +8917,42 @@ VERDICT -> Research plan and reproducible preparation established. Next gates
 are completed intake/build, actual tensor memory map, primitive/runtime health
 and deterministic no-MTP dual-card baseline. No shelf promotion. Historical
 Steve FP8 and Sergio different-checkpoint speeds are not this model's results.
+
+
+## 2026-10-09 - Flash-Next Q4 dual-card screening baseline established
+
+CONFIG -> Unchanged pinned Unsloth UD-Q4_K_XL; llama.cppde7fa0a; oneAPI2026.1,
+F16 compute OFF, FP16 KV, C1/8192, no MTP, explicit48/52 layer split and
+first/last-eight host expert blocks plus host lazy PLE. Original weights
+and user changes preserved. No shelf promotion or benchmark speed claim.
+
+COMMAND -> Complete intake/header inventory; repair double oneAPI startup;
+build current source; prepare hash-pinned NEO26.22 runtime; build test-only
+production-shape overlay; run per-card comparisons; localize runtime crash
+with host debugger; compare cache0; launch bounded repeated model screens.
+
+RESULT -> All115028467617 selected bytes hash-verified. Actual expert71.729GiB,
+PLE26.822GiB and main total103.678GiB. Build/runtime complete. Initial primitive
+process crashed in SYCL persistent-code-cache getSortedImages/strcmp; isolated
+small cases reproduce, upstream Intel fix49dc9346 closely matches. Cache0
+changes no arithmetic; full36/36 per card, exact group counts, normal exit and
+per-card/compiled-pair post-health pass. Earlier wrong count5 corrected to9
+with original plan archived; failed/cache-enabled evidence remains failed.
+
+First no-warmup model screen:12 individual checks pass, prose repeat differs;
+strict verdictFAIL preserved. Default upstream warmup clears memory/state and
+primes first-use paths. Warmupv2 and independent verbosev3 each pass12 checks
+and within-run repeats; all six text hashes match across starts. Normal
+container exit/removal plus per-card and ten-iteration compiled P2P0 collective
+post-health pass. No GPU-fault signature. Actual GPU model buffers25994.56/
+26861.90MiB;48 routed expert tensors overridden to host, intended layers
+0-23/24-48 confirmed. CPU mapped coverage53.22GiB is not resident RAM.
+
+VERDICT -> Bounded six-case C1 text-screen authority established, not broad
+quality/token authority, occupied8K retrieval, concurrency, MTP or speed
+qualification. New source-only MoE-cache audit identifies a current view-based
+reorder safeguard; evictions/refills and larger batches still need tests. Next
+step is measured cache candidate/coherence, then profiling and paired cold
+performance. Servers stopped after tests; GPU leases released. Research and
+reproduction: docs/20261009_flashnext_intake_and_primitive_qualification.md.
+Raw F01 receipts: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f01-20261009/.

@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "source_revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+  "source_file_sha256": "48391b1a985da007130b3013b571a8ab0517bbe78809b04b66ebe353b6877d06",
+  "patch": "llamacpp/flash-next/patches/0001-flashnext-production-shape-primitives.patch",
+  "patch_sha256": "9029a3c589f60dd725c8269c89a258d086f703c86b6b2f915e36c9d974829a03",
+  "status": "unapplied source-only overlay; not built or GPU tested",
+  "expected_expert_tests": 8,
+  "expected_total_tests": 12,
+  "execution": "Parent applies to controlled source copy. Run each group sequentially per leased/pinned card, test mode, backend SYCL0, -j1. Require exact executed/pass counts and zero unsupported; exit0 alone is insufficient.",
+  "cost_estimate": "Each expert weight contains838860800 elements; CPU random initialization alone allocates3355443200 bytes (3.125GiB) plus quantized buffers and CPU reference. Expect several GiB host peak and possibly minutes per case; run one at a time. No measured runtime claim.",
+  "device_estimate": "Largest packed source is Q8_0 down891289600 bytes (0.8301GiB), plus tiny inputs/outputs, backend scratch and sentinels. Expected well below2GiB but allocator overhead is unmeasured; not a guaranteed hard device-memory cap.",
+  "gaps": [
+    "PLE source rows reduced from320001536 to512; exercises actual width160, not full address range/page faults.",
+    "MUL_MAT_ID uses class-standard strided ID view (stride512) and synthetic quantized weights; not trained-checkpoint output equivalence.",
+    "No full graph, concurrency, topology, or performance qualification."
+  ],
+  "groups": [
+    {
+      "name": "experts_q4_K_n1",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q4_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=1,k=2560,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q4_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=1,k=2560,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 471859200,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "experts_q5_K_n1",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q5_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=1,k=2560,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q5_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=1,k=2560,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 576716800,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "experts_q5_1_n1",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q5_1,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=1,k=640,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q5_1,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=1,k=640,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 629145600,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "experts_q8_0_n1",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q8_0,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=1,k=640,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q8_0,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=1,k=640,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 891289600,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "ple_n1",
+      "op": "GET_ROWS",
+      "params_regex": "^type=iq4_nl,n=160,m=512,r=16,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GET_ROWS",
+        "-p",
+        "^type=iq4_nl,n=160,m=512,r=16,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "timeout_seconds": 180
+    },
+    {
+      "name": "gdn_n1",
+      "op": "GATED_DELTA_NET",
+      "params_regex": "^type=f32,head_count=16,head_size=128,n_seq_tokens=1,n_seqs=1,v_repeat=3,permuted=0,kda=0,K=1$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GATED_DELTA_NET",
+        "-p",
+        "^type=f32,head_count=16,head_size=128,n_seq_tokens=1,n_seqs=1,v_repeat=3,permuted=0,kda=0,K=1$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "timeout_seconds": 180
+    },
+    {
+      "name": "experts_q4_K_n2",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q4_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=2,k=2560,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q4_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=2,k=2560,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 471859200,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "experts_q5_K_n2",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q5_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=2,k=2560,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q5_K,type_b=f32,n_mats=512,n_used=10,b=1,m=640,n=2,k=2560,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 576716800,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "experts_q5_1_n2",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q5_1,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=2,k=640,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q5_1,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=2,k=640,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 629145600,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "experts_q8_0_n2",
+      "op": "MUL_MAT_ID",
+      "params_regex": "^type_a=q8_0,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=2,k=640,amax=1\\.000000,m_v=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^type_a=q8_0,type_b=f32,n_mats=512,n_used=10,b=0,m=2560,n=2,k=640,amax=1\\.000000,m_v=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "packed_weight_bytes": 891289600,
+      "timeout_seconds": 900
+    },
+    {
+      "name": "ple_n2",
+      "op": "GET_ROWS",
+      "params_regex": "^type=iq4_nl,n=160,m=512,r=32,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GET_ROWS",
+        "-p",
+        "^type=iq4_nl,n=160,m=512,r=32,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "timeout_seconds": 180
+    },
+    {
+      "name": "gdn_n2",
+      "op": "GATED_DELTA_NET",
+      "params_regex": "^type=f32,head_count=16,head_size=128,n_seq_tokens=2,n_seqs=1,v_repeat=3,permuted=0,kda=0,K=1$",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GATED_DELTA_NET",
+        "-p",
+        "^type=f32,head_count=16,head_size=128,n_seq_tokens=2,n_seqs=1,v_repeat=3,permuted=0,kda=0,K=1$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "timeout_seconds": 180
+    }
+  ]
+}

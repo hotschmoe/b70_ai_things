@@ -1,0 +1,32 @@
+[
+  {
+    "file": "intel-ocloc_26.22.38646.4-0_amd64.deb",
+    "url": "https://github.com/intel/compute-runtime/releases/download/26.22.38646.4/intel-ocloc_26.22.38646.4-0_amd64.deb",
+    "sha256": "25745841e66279c7ff1ff6c2d4da9ec911685c12e1c9c5609d99e4d54a364dc0"
+  },
+  {
+    "file": "intel-opencl-icd_26.22.38646.4-0_amd64.deb",
+    "url": "https://github.com/intel/compute-runtime/releases/download/26.22.38646.4/intel-opencl-icd_26.22.38646.4-0_amd64.deb",
+    "sha256": "6fdac2e8a2aacf844ebfd90521bf7102b3ebb44f69c1bced1a9785a7ce96a3c2"
+  },
+  {
+    "file": "libigdgmm12_22.10.0_amd64.deb",
+    "url": "https://github.com/intel/compute-runtime/releases/download/26.22.38646.4/libigdgmm12_22.10.0_amd64.deb",
+    "sha256": "6031a63d6e8a12ce61c14efc15f2c8e727061286e3820b8594e6d00615e04d54"
+  },
+  {
+    "file": "libze-intel-gpu1_26.22.38646.4-0_amd64.deb",
+    "url": "https://github.com/intel/compute-runtime/releases/download/26.22.38646.4/libze-intel-gpu1_26.22.38646.4-0_amd64.deb",
+    "sha256": "8bef9f24e03f826f93c076081bda13c6ac3afbd9e42b9fb8f298fab652330e2f"
+  },
+  {
+    "file": "intel-igc-core-2_2.36.3+21719_amd64.deb",
+    "url": "https://github.com/intel/intel-graphics-compiler/releases/download/v2.36.3/intel-igc-core-2_2.36.3%2B21719_amd64.deb",
+    "sha256": "9e0975ac75015b431ebb2da81a802b9fd1e28a3c270313a97569cd1e6a6c6048"
+  },
+  {
+    "file": "intel-igc-opencl-2_2.36.3+21719_amd64.deb",
+    "url": "https://github.com/intel/intel-graphics-compiler/releases/download/v2.36.3/intel-igc-opencl-2_2.36.3%2B21719_amd64.deb",
+    "sha256": "350a52331e784bb7fb9ed42e993b5c44b7e6562fc74d2cf3102b29b6a576fa85"
+  }
+]

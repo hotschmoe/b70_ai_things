@@ -47,9 +47,14 @@ docker run --rm --network none --user "$(id -u):$(id -g)" \
     -e TASK_LOG_DIR="/build/$(basename "$log_dir")" \
     -v "$source_dir:/src:ro" -v "$build_dir:/build" "$image_id" '
 set -eo pipefail
-source /opt/intel/oneapi/setvars.sh >/dev/null
+# The official image initializes oneAPI from the login-shell profile. A second
+# setvars invocation returns 3 (already initialized), which errexit rejects.
+if [[ ${SETVARS_COMPLETED:-0} != 1 ]]; then
+    source /opt/intel/oneapi/setvars.sh
+fi
 set -u
 export LC_ALL=C
+command -v icpx icx cmake ninja
 icpx --version > "$TASK_LOG_DIR/compiler-version.txt"
 dpkg-query -W > "$TASK_LOG_DIR/packages.txt"
 cmake -S /src -B /build -G Ninja -DCMAKE_BUILD_TYPE=Release \
