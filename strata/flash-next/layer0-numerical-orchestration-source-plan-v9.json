@@ -1,0 +1,115 @@
+{
+  "schema": 9,
+  "status": "READY frozen CPU consumer; actual29 SDK metadata/old21 dispatch verified, actual C18 proof and numerical preparation absent",
+  "engine_source_plan": "strata/flash-next/integrated-slot-owner-trace-engine-build-plan-v1.json",
+  "engine_source_plan_sha256": "94aef305dbc6a31f023afa55573d52a9ce6af9443cfc0182eb7c324255159094",
+  "source_sha256": {
+    "strata/flash-next/layer0_numerical_qualification_v9.py": "2252f24be9a3511bcb40d5e623caa75259112b9cd07f3d55944f67c67d2a084c",
+    "strata/flash-next/qualify_layer0_numerical_v9.py": "3900a306b60b0eb4146d5faf61ca6a473d60cfeef32bdfd4626f7e774abd465e",
+    "strata/flash-next/test_layer0_numerical_qualification_cpu_v9.py": "d8a16631059d2890bcf47c63e5d38a4f5cc85dc8f8168b084a103dd3c6589973",
+    "strata/flash-next/test_qualify_layer0_numerical_cpu_v9.py": "a6d5424342b358c26417c5c9000b29b69637905faed0ac958d6afa6bbb9ac4e2",
+    "strata/flash-next/test_numerical_arm_dispatch_cpu_v9.py": "33feac0dbea39b8cd540b94693264a43418a63f75e33a70ac238c9d5e21e4ff3",
+    "strata/flash-next/numerical-arm-dispatch-cpu-receipt-v9.json": "1aaca79e8fc682409ceef720acbb4181342d331d30196a2cc2c1e88271fc0568",
+    "strata/flash-next/layer0-numerical-orchestration-design-v9.md": "196c6d76e31f8d14adc2d8e576002494168c7b070934b8ccc74f467d80e92eda",
+    "strata/flash-next/layer0-numerical-orchestration-cpu-receipt-v9.json": "b8828ef16660f6e2c6e5fc1dc891452e890623b52237832b78f477cb0add2102",
+    "strata/flash-next/layer0-parent-orchestration-cpu-receipt-v9.json": "3a88a8adf33989d369cd29a4682be082077204c2eed27e807cb64f37e6c8bac0"
+  },
+  "candidate_c1_source": "strata/flash-next/c1_serve_controller_combined_v8.py",
+  "candidate_c1_source_sha256": "527b351ff9ebcceef454e72d4d75742bcee146a9aef9fddc849aefd7a31a6565",
+  "candidate_c1_source_plan_sha256": "ec4eb7bc5f68953e445638f1b4efe2516d4ce97195e8e280d693b04bb2ea2bc0",
+  "reference": "frozen21 V2 finalized child PLUS parent fullhash/health/owned teardown success, identical placement/geometry/input positions",
+  "genuine_prepare_required": [
+    "Actual29 SDK all8 ELF binaries and exact60/24/six source ledger",
+    "Matching NEW strict uploadV2 full390/all5 actualcases/logical-free/accounting/two-pages/postfull4",
+    "Completed strict C18 publictwoarg final-source proof tied to actual newSDK/upload",
+    "Explicit qualified frozen21 reference chain and actual paired guarded parent3 when two cards",
+    "Matched baseline newcache/migration/slotowner flagsOFF and fresh source4/two-page identity"
+  ],
+  "observed_layout_fields": 33,
+  "source_value_fields": 31,
+  "derived_fields": 2,
+  "raw_fused_hidden_observed": false,
+  "observer_bytes": 7023304,
+  "control_bytes": 256,
+  "packet_pairs_per_prefix": 5,
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "packet_gate": "exact independent native Q8_1 raw bytes; intrinsic rounding mismatches FAIL, no relaxed tolerance",
+  "derived_hidden_fp64_gate": {
+    "nmse": 1e-06,
+    "max_normalized": 0.0001,
+    "raw_original_hidden_proven": false
+  },
+  "source_pages": {
+    "shard": 3,
+    "page_bytes": 4096,
+    "pages": [
+      {
+        "offset": 3857879040,
+        "sha256": "2780fef9ce50fa1acbd4bdbf6c311b847395571fcc5e6ddb55898841fbcee90e"
+      },
+      {
+        "offset": 39437303808,
+        "sha256": "d69f7ffbfaab20277926926a4e542ce906b7fe9f4a4791dc7c46e945f0b1bced"
+      }
+    ],
+    "failure": "preserve both buffered views; owned stop; FAIL; no cache invalidation/write/repair"
+  },
+  "full_model_math_qualified": false,
+  "original_weight_consumer_qualified": false,
+  "actual_execution_performed": false,
+  "cpu_commands": [
+    "python3 strata/flash-next/test_layer0_numerical_qualification_cpu_v9.py",
+    "python3 strata/flash-next/test_qualify_layer0_numerical_cpu_v9.py",
+    "python3 strata/flash-next/test_numerical_arm_dispatch_cpu_v9.py"
+  ],
+  "strict_source_upload_runner": "strata/flash-next/run_source_upload_oracle_full_v2.py",
+  "strict_source_upload_runner_sha256": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+  "strict_source_upload_runner_plan_sha256": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+  "preserved_v3_source_plan_sha256": "3f91f9725dce73e3dd85d383d84a1eb3d968f739a70db8bc40cc7ffb2736355d",
+  "shared_immutable_source_sha256": {
+    "strata/flash-next/audit_layer0_capture_lifecycle_v2.py": "cd5441854c7bf11250080c7b109564e91f204422c4b790623132999641a7abfe",
+    "strata/flash-next/verify_layer0_packets_v3.py": "620f18e8aed625bb3c40f451d94ed66a8b1aa6aa247ec7638423426f38e9b329",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "concurrent_serving_2_4_6_qualified": false,
+  "c1_final_source_proof_helper": "strata/flash-next/qualify_c1_serving_combined_v8.py",
+  "c1_final_source_proof_helper_sha256": "709a1272cf99ae720d66976acb9342814c5fb34685cc3702eb5227b694f9fba3",
+  "c1_final_source_proof_plan_sha256": "381c3b4267f03f76869ba3639d0ac7c32d182e157ab32b481bd2b6a44f5d4ca1",
+  "preserved_v4_source_plan_sha256": "b7b9cefdf3299beb6289de80564e5e6a88174fa6cd44db5100c1e1351bd953ce",
+  "preserved_v5_source_plan_sha256": "fb7cec8d4c65abb0740cd42d233c3e7fcad710b83e2b4b961b2bbb244a7e018c",
+  "canonical_stat_fields": [
+    "st_dev",
+    "st_ino",
+    "st_size",
+    "st_mtime_ns",
+    "st_ctime_ns"
+  ],
+  "preserved_v6_source_plan_sha256": "3769670ca87cd6034468cac64c27b02df91885424a81311b80a04e061e054bf3",
+  "preserved_v7_source_plan_sha256": "49af903eb0df0e149c0def6966c742d577018b9dfbd2256174c2bcb5719b49e9",
+  "paired_reference_guarded_parent": "strata/flash-next/qualify_layer0_numerical_reference_v3.py",
+  "paired_reference_guarded_parent_sha256": "2fbf87382bab393fda8e74a71c7e0161e5482b297b6c9b4f59737633ae2bd0e1",
+  "candidate_parent_source": "strata/flash-next/qualify_c1_serving_combined_v8.py",
+  "candidate_parent_source_sha256": "709a1272cf99ae720d66976acb9342814c5fb34685cc3702eb5227b694f9fba3",
+  "candidate_parent_source_plan_sha256": "381c3b4267f03f76869ba3639d0ac7c32d182e157ab32b481bd2b6a44f5d4ca1",
+  "preserved_v8_source_plan_sha256": "fcc65ffff745494d3fb286a5241e5f127255a6d9958650403334860f62cfdf76",
+  "actual_new_sdk_source_metadata_verified": true,
+  "actual_candidate_C18_proof_verified": false,
+  "actual_genuine_prepare": false,
+  "actual_model_payload_reads": 0,
+  "GPU_work": false,
+  "expected_source_files": 60,
+  "expected_consumed_headers": 24,
+  "expected_fresh_abi_targets": 8,
+  "expected_runtime_python_sources": 6,
+  "numerical_baseline_flagsOFF": [
+    "STRATA_BATCH_FULL_STATE_CHAIN",
+    "STRATA_BATCH_PUBLIC_PREFIX",
+    "STRATA_BATCH_FIDELITY_DIAG",
+    "STRATA_SLOT_OWNER_TRACE"
+  ]
+}

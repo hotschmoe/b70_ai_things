@@ -1,0 +1,16 @@
+{
+  "CONFIG": "Actual old21 one V2 metadata dispatch; old28 candidate refused; C18 final proof gate simulated absent. All original model/pack opens denied",
+  "COMMAND": "python3 strata/flash-next/test_numerical_arm_dispatch_cpu_v9.py",
+  "RESULT": {
+    "actual_integrated29_SDK_source_metadata_verified": true,
+    "actual_reference21_metadata_verified": true,
+    "actual_candidate_C1parent8_proof_verified": false,
+    "wrong_generation_lane_flag_proof_negative_controls": 13,
+    "model_payload_read_attempts": 0,
+    "reference_plan_sha256": "88d3f7cb3bbb3f88a78bf445456ca552ff6e538e1dfd99427b078fd0f2b082e7",
+    "reference_child_sha256": "c2718589f63f221164dca96cc0bf990d92591a00a98e2b870d69aecc20c13f39",
+    "reference_parent_sha256": "ffb3b00f91f7de069aac007da8edfbbacdaa3dcd04ca5e9ee341d31f785a7984"
+  },
+  "VERDICT": "PASS CPU dispatch only; no new genuine preparation/runtime/math claim",
+  "full_model_math_qualified": false
+}

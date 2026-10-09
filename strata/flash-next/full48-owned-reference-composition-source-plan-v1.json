@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "scope": "Original full48 composition inventory/dependency/capture plan; synthetic math fixture only",
+  "files": {
+    "full48_reference_inventory_fixture_v1.py": "bf86e66fe79d43c7ed8b00b96c16bfa985ac6ebbc6a0c53ca9b66470178bb038",
+    "test_full48_reference_inventory_fixture_v1.py": "251d090221e2203e08da4b9baa223db3d90c8e1c52205c0964f0f42ddeb04fa1",
+    "full48-owned-reference-composition-plan-v1.md": "608b5ce994f584c050e2c6b2acd0744a820ee80a8284a3e2c85582ea0d4783ee"
+  },
+  "frozen_dependency_sha256": {
+    "original_math_scalar.py": "a6e9efac1f298bc9c1867a83b26d76e747ee35bbae3b88858817dcb44adec1c7",
+    "original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "ple_owned_history_storage_v1.py": "e4a58cf9a88118487a4aa0b483d8068b57010d8fd6aa28c2b39a2110eb265df8",
+    "verify_layer0_ffn_original_v1.py": "3f433f105c260e5760d54942c6c9e8f46f6ff97793238e310754ffd55ebf8d70"
+  },
+  "source_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T161219Z-n_v8o9lp/source",
+  "source_sha256": {
+    "sycl/src/core/verify.cpp": "4f70cde7b9d4d5be262b4dc251afe0cddf91fccf8dfd2de0add7d76d1a3bebec",
+    "sycl/src/core/native_head.cpp": "78aa5272a5af07cd1db59ffc175984aa9c543ec09bfbf481912674625a54862c",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2",
+    "sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde",
+    "sycl/src/prefill/gemm.dp.cpp": "8b40704b892c50db1fae376336a3159a35390c96f58b65f5ab3295912c388584"
+  },
+  "inventory_contract": {
+    "header_inventory_complete": true,
+    "source_tensors": 1224,
+    "decoder_formats": [
+      "BF16",
+      "F32",
+      "IQ4_NL",
+      "Q4_K",
+      "Q5_1",
+      "Q5_K",
+      "Q8_0"
+    ],
+    "unsupported_decoder_formats": [],
+    "gdn_layers": [
+      0,
+      1,
+      2,
+      4,
+      5,
+      6,
+      8,
+      9,
+      10,
+      12,
+      13,
+      14,
+      16,
+      17,
+      18,
+      20,
+      21,
+      22,
+      24,
+      25,
+      26,
+      28,
+      29,
+      30,
+      32,
+      33,
+      34,
+      36,
+      37,
+      38,
+      40,
+      41,
+      42,
+      44,
+      45,
+      46
+    ],
+    "qsa_layers": [
+      3,
+      7,
+      11,
+      15,
+      19,
+      23,
+      27,
+      31,
+      35,
+      39,
+      43,
+      47
+    ],
+    "ple_layers": [
+      1
+    ],
+    "ffn_exception_map": {
+      "Q5_K_gate_up_layers": [
+        2
+      ],
+      "Q8_0_expert_down_layers": [
+        2,
+        4,
+        30,
+        46,
+        47
+      ]
+    },
+    "inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+    "native_full48_ready": false,
+    "full_model_math_qualified": false,
+    "model_payload_reads": 0
+  },
+  "cpu_tests": 5,
+  "first_unimplemented_native_contract": "layer0 HC F32 reduction/rsqrt/projection arithmetic",
+  "first_missing_larger_prefill_adapter": "FFN effective producer/storage branch across mixed formats",
+  "prefix8_all48_three_residual_views_bytes": 47185920,
+  "all36_GDN_before_after_fullstate_bytes_per_token": 226492416,
+  "actual_model_payload_reads": 0,
+  "actual_full48_operator_composition_executed": false,
+  "native_full48_ready": false,
+  "full_model_math_qualified": false,
+  "tolerance_gate": null
+}

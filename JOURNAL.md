@@ -10560,3 +10560,23 @@ removed; preposthealthPASS. Finalcomplete4afterfailedserve UNOBSERVED.
 VERDICT -> Preservefailedrun; rootprofile mistake correctedwithfreshsegmented
 preparation3335/directory, no coveragebypass/math/speedclaim. See integrated29
 unsegmentedlaunchrefusal doc. No evidenceofhardwarecrash/sourcecorruptionhere.
+
+
+## 2026-10-09 - Full48 dependency/capture plan and numerical29 source gates
+
+CONFIG -> Original1224 tensor inventory/all7formats,36GDN/12QSA/PLE schedule;
+NEWnumericalV9 new29 SDK/C18 finalproof sourceadmission, old21 explicitreference.
+
+COMMAND -> Full48 syntheticownershipfixture5CPU tests; eachthree executable
+V9CPU scripts. Initial unittestdiscovery reportedzero (customscript controls),
+so explicitCLI suites runPASS. Sourceplan commandlistcorrectedbeforecommit.
+
+RESULT -> Syntheticfull48 schedule/replay/ownership PASS atdims4/vocab16 only.
+Originaldownexceptions/Q5K layer2 recorded. Nativefull48contract gaps explicit;
+nextprefix8 all48 three residualviews47,185,920B route/source bound planned.
+V9CPU actualnew29 SDKmetadata/source60/24headers/eight/six admits; old28/oldC1
+proof rejects before modelaccess, frozen21 dispatch preserved. No GPU/modelreads.
+
+VERDICT -> Sourceplan/controls only; no faithfuloriginalownedfullmodel composition
+ornewactualnumerical proof. C18segmentedone parent97548 live. New bounded
+allprefill-row capture/sourceadapter work assigned; concurrentharness inprogress.
