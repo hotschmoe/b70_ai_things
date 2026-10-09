@@ -1,0 +1,281 @@
+diff --git a/sycl/include/strata/core/batch_public_prefix.hpp b/sycl/include/strata/core/batch_public_prefix.hpp
+new file mode 100644
+--- /dev/null
++++ b/sycl/include/strata/core/batch_public_prefix.hpp
+@@ -0,0 +1,12 @@
++// 0027 public fresh/pin policy. Device/reset implementation remains in the owning driver.
++#pragma once
++#include <cstdint>
++#include <cstdlib>
++#include <cstring>
++#include <stdexcept>
++namespace strata::core::batch_public {
++inline bool enabled(){static const bool value=[](){const char*p=std::getenv("STRATA_BATCH_PUBLIC_PREFIX");if(!p||!*p||!std::strcmp(p,"0"))return false;if(std::strcmp(p,"1"))throw std::invalid_argument("STRATA_BATCH_PUBLIC_PREFIX=0|1");return true;}();return value;}
++inline int64_t ceiling(bool fresh,bool pin_present,int64_t pin,int64_t prompt){if(prompt<1||pin<0||pin>=prompt)throw std::invalid_argument("public prefix boundary must be0..prompt-1");return fresh?0:(pin_present?pin:prompt-1);}
++inline bool permits(int64_t length,int64_t ceiling){return length>0&&length<=ceiling;}
++struct request {bool fresh=false,pin_present=false;int64_t pin=0,prompt=0;int64_t prefix_limit()const{return ceiling(fresh,pin_present,pin,prompt);}};
++}
+diff --git a/sycl/src/program/generate.cpp b/sycl/src/program/generate.cpp
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -2,6 +2,7 @@
+ #include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/batch_fidelity_observer.hpp"
+ #include "strata/core/batch_prefix_chain.hpp"
++#include "strata/core/batch_public_prefix.hpp"
+ #include "strata/core/layer0_numerical_observer.hpp"
+ #include "strata/core/api_state_identity.hpp"
+ #include "strata/core/stage_mirror_budget.hpp"
+@@ -3828,6 +3829,8 @@
+         std::fprintf(stderr,"strict native batch requires exact2/4/6 slots, group1, text greedy no-MTP/non-pipelined scope\n");return 2;
+     }
+     const bool batch_chain_enabled=strata::core::batch_prefix::settings().enabled;
++    const bool batch_public_enabled=strata::core::batch_public::enabled();
++    if(batch_public_enabled && (!batch_chain_enabled || !strict_batch_identity)){std::fprintf(stderr,"public batch prefix requires strict full-state chain profile\n");return 2;}
+     size_t batch_chain_point_bound=0;
+     if(batch_chain_enabled) {
+         if(!strict_batch_identity || !o.serve || split_same || stages.size()>1 || o.prompt_cache<2 || o.prompt_cache>8 ||
+@@ -9535,7 +9538,7 @@
+             uint64_t req_rid=0,req_slot_generation=0;bool req_rid_bad=false;
+             int req_ckpt = 1;
+             int64_t req_pin = 0;
+-            bool req_pin_bad = false;
++            bool req_pin_bad = false,req_pin_present=false;
+             int req_fresh = 0;
+             bool req_fresh_bad = false;
+             // tuning keys (setup's calibration measures settings without restarting the engine): the PCIe share of
+@@ -9562,6 +9565,7 @@
+                     else if (key == "cvec") req_cvec = std::atoi(tok.c_str() + eq + 1);
+                     else if (key == "ckpt") req_ckpt = std::atoi(tok.c_str() + eq + 1) != 0;
+                     else if (key == "pin") {
++                        req_pin_present=true;
+                         const char* value=tok.c_str()+eq+1; char* stop=nullptr;
+                         errno=0; const long long parsed=std::strtoll(value,&stop,10);
+                         req_pin_bad=errno!=0 || stop==value || *stop!='\0' || parsed<0;
+@@ -9601,13 +9605,14 @@
+             }
+             const int64_t n = (int64_t) ids.size();
+             // Reject an unsupported pin before changing any conversation state.
+-            if (req_pin_bad || (req_pin>0 && (req_pin>=n-1 || o.prompt_cache<3 || !req_ckpt ||
+-                    o.batch>0 || use_mtp || o.pipeline_windows>0 || geni))) {
+-                std::printf("ERR pin requires decimal 0<N<prompt-1, cache>=3, ckpt=1, serial text no-MTP non-pipelined requests\n");
++            const bool public_batch_request=batch_public_enabled && strict_batch_identity;
++            if (req_pin_bad || (req_pin_present && (req_pin>=n || (req_pin>0 && (o.prompt_cache<3 || !req_ckpt)) ||
++                    (o.batch>0 && !public_batch_request) || use_mtp || o.pipeline_windows>0 || geni))) {
++                std::printf("ERR pin requires decimal0..prompt-1, positive pin cache>=3/ckpt1, qualified public batch profile or serial text no-MTP/non-pipelined\n");
+                 continue;
+             }
+-            if (req_fresh_bad || (req_fresh && (o.batch>0 || use_mtp || o.pipeline_windows>0 || geni))) {
+-                std::printf("ERR fresh=0|1 requires serial text no-MTP non-pipelined requests\n");
++            if (req_fresh_bad || (req_fresh && ((o.batch>0 && !public_batch_request) || use_mtp || o.pipeline_windows>0 || geni))) {
++                std::printf("ERR fresh=0|1 requires public batch profile or serial text no-MTP/non-pipelined requests\n");
+                 continue;
+             }
+             if(strict_batch_identity && (req_rid_bad || req_rid==0 || geni || req_temperature!=0 || req_cvec!=1 ||
+@@ -9755,11 +9760,12 @@
+             strata::core::prefix_lifecycle::begin(ids,prefix_diag.active && o.batch==0 && !use_mtp && o.pipeline_windows==0 && !geni);
+             if(prefix_diag.active && (o.batch>0 || use_mtp || o.pipeline_windows>0)) { std::printf("ERR prefix diagnostic supports serial no-MTP non-pipelined requests only\n");return 1;}
+             const Clock::time_point r0 = Clock::now();
++            const int64_t cache_prefix_ceiling=strata::core::batch_public::ceiling(req_fresh!=0,req_pin_present,req_pin,n);
+             // ---- where this request starts reading: the live session, or a checkpoint, whose tokens AND pictures are
+             // exactly the start of this prompt - at most n - 1 of them, the last token is always the first window
+             auto starts_with = [&](const std::vector<int32_t>& pre, const std::vector<ImgKey>& pre_imgs) -> bool {
+                 const int64_t L = (int64_t) pre.size();
+-                if (L < 1 || L > n - 1) return false;
++                if (L < 1 || L > cache_prefix_ceiling) return false;
+                 for (int64_t i = 0; i < L; ++i)
+                     if ((int32_t) ids[(size_t) i] != pre[(size_t) i]) return false;
+                 return imgs_below(req_imgs, L) == pre_imgs;
+@@ -9772,6 +9778,15 @@
+                 std::printf("ERR %s\n", err.c_str());
+                 return 1;
+             }
++            if(public_batch_request) {
++                bool public_state_valid=true;
++                for(size_t k=0;k<=stages.size();++k){const auto& state=k==0?ss:stages[k-1]->ss;
++                    for(int64_t j=0;j<state.qsa_alloc;++j){const auto& q=state.qsa_states[state.qsa_ord0+j];
++                        if(q.kv_mode!=0 || q.kv_elastic>=0 || q.kv_q4 || q.kv_int8 || q.kv_hybrid || !q.page_table || q.n_pages<=0 || q.n_slots!=q.n_pages || !q.idx_block_pos || !q.step || !q.pos_dev || !q.attention_status || !q.host_step || !q.host_pos){public_state_valid=false;}
++                    }
++                }
++                if(!public_state_valid){std::printf("ERR public batch prefix requires resident fixed FP16 KV and complete owned metadata\n");continue;}
++            }
+             auto kv_quiesce = [&] {
+                                     try {
+             dpct::get_current_device().queues_wait_and_throw(); apply_pending(true); }
+@@ -9791,7 +9806,7 @@
+             }
+             int64_t resume = 0;
+             bool from_live = false;
+-            if (!req_fresh && o.prompt_cache > 0 && want_cvec == cvec_cached) {
++            if (cache_prefix_ceiling>0 && o.prompt_cache > 0 && want_cvec == cvec_cached) {
+                 if (live_ok && starts_with(live, live_imgs)) { resume = (int64_t) live.size(); from_live = true; }
+                 for (const ConvCheckpoint& c : checks)
+                     if ((int64_t) c.ids.size() > resume && starts_with(c.ids, c.imgs)) {
+@@ -9806,7 +9821,7 @@
+             int64_t slot_tokens = 0;
+             bool resumed_from0 = false;   // a prompt read parked in a slot (BYIELD) that had started at token 0
+             const ConvCheckpoint* slot_ck = nullptr;   // the slot's checkpoint the prompt continues from (else its end)
+-            if (!req_fresh && o.prompt_cache > 0 && req_imgs.empty())
++            if (cache_prefix_ceiling>0 && o.prompt_cache > 0 && req_imgs.empty())
+                 for (int b = 0; b < (int) bs.size(); ++b) {
+                     const BSlot& sl = bs[(size_t) b];
+                     if ((batch_chain_enabled?(!sl.active && !sl.cached):(sl.active || !sl.cached)) || sl.cvec != want_cvec || sl.img) continue;
+@@ -9822,9 +9837,9 @@
+                             slot_ck = &c;
+                         }
+                 }
+-            const auto parked = conversations.best(ids, req_imgs, want_cvec);
++            const auto parked=cache_prefix_ceiling>0?conversations.best(ids,req_imgs,want_cvec,cache_prefix_ceiling):strata::core::ConversationCache::Match{};
+             std::optional<strata::core::SavedConversation> incoming;
+-            if (!req_fresh && parked.tokens > std::max(resume, slot_tokens)) incoming.emplace(conversations.take(parked.index));
++            if (cache_prefix_ceiling>0 && parked.tokens > std::max(resume, slot_tokens)) incoming.emplace(conversations.take(parked.index));
+             if (incoming) slot_source = -1;
+             // Reject the entire image before parking/overwriting the outgoing
+             // state. Invalid entries can safely fall back to its existing prefix.
+@@ -9851,7 +9866,7 @@
+             }
+             // Preserve the outgoing branch before any checkpoint rewind, reset,
+             // or incoming restore overwrites the positional state it requires.
+-            if ((!from_live || incoming || slot_source >= 0) && !park_current(incoming ? incoming->bytes() : 0)) {
++            if (!req_fresh && (!from_live || incoming || slot_source >= 0) && !park_current(incoming ? incoming->bytes() : 0)) {
+                 std::printf("ERR %s\n", err.c_str());
+                 return 1;
+             }
+@@ -9983,11 +9998,31 @@
+                     return 1;
+                 }
+             }
++            auto public_reset_main=[&](std::string& e)->bool{
++                try {
++                if(!ver.wait_commit(e))return false;
++                for(size_t k=0;k<=stages.size();++k){const strata::core::OnDevice on(k==0?0:stages[k-1]->dev);auto* queue=k==0?main_stream:stages[k-1]->stream;
++                    const auto& state=k==0?ss:stages[k-1]->ss;for(int64_t j=0;j<state.qsa_alloc;++j){const auto& q=state.qsa_states[state.qsa_ord0+j];if(q.kv_mode!=0||q.kv_elastic>=0||q.kv_q4||q.kv_int8||q.kv_hybrid||!q.page_table||q.n_pages<=0||q.n_slots!=q.n_pages||!q.idx_block_pos||!q.step||!q.attention_status||!q.pos_dev||!q.host_step||!q.host_pos){e="public reset incomplete/unsupported persistent metadata";return false;}}
++                    auto& current=dpct::get_in_order_queue();if(queue->get_context()!=current.get_context()||queue->get_device()!=current.get_device()){e="public fresh owning queue/device/context mismatch";return false;}queue->wait_and_throw();}
++                for(size_t k=0;k<=stages.size();++k){const strata::core::OnDevice on(k==0?0:stages[k-1]->dev);auto& state=k==0?ss:stages[k-1]->ss;auto* queue=k==0?main_stream:stages[k-1]->stream;
++                    strata::core::session_zero(state,g,nullptr,(void*)queue);
++                    for(int64_t j=0;j<state.qsa_alloc;++j){auto& q=state.qsa_states[state.qsa_ord0+j];
++                        queue->memset(q.idx_block_pos,0,sizeof(int32_t));queue->memset(q.step,0,size_t(strata::kernels::kStepCount)*4);queue->memset(q.attention_status,0,4);queue->memset(q.pos_dev,0,size_t(g.n_head)*4);
++                        std::vector<int32_t> identity(size_t(q.n_pages));for(int64_t p=0;p<q.n_pages;++p)identity[size_t(p)]=int32_t(p);queue->memcpy(q.page_table,identity.data(),identity.size()*4).wait_and_throw();
++                        std::memset(q.host_step,0,size_t(strata::kernels::kStepCount+1)*4);std::memset(q.host_pos,0,size_t(g.n_head)*4);
++                    }queue->wait_and_throw();
++                }
++                live.clear();live_imgs.clear();checks.clear();live_ok=false;return true;
++                }catch(const std::exception& failure){e=std::string("public reset transfer failure: ")+failure.what();return false;}
++            };
+             int64_t reread_to = -1;   // STRATA_CKPT_REREAD only: read [0, reread_to) again instead of restoring
+             if (req_fresh && (resume!=0 || from_live || slot_source>=0 || incoming)) {
+                 std::printf("ERR fresh selection invariant\n"); return 1;
+             }
+-            if (resume == 0) {
++            if (resume == 0 && public_batch_request) {
++                if(!public_reset_main(err)){std::printf("ERR public all-stage reset: %s\n",err.c_str());return 1;}
++                std::fprintf(stderr,"BCPUBLIC reset rid=%llu slotgen=%llu stages=%zu fresh=%d pin_present=%d pin=%lld lookup_ceiling=0 read_from=0\n",(unsigned long long)req_rid,(unsigned long long)req_slot_generation,stages.size()+1,req_fresh,req_pin_present,(long long)req_pin);
++            } else if (resume == 0) {
+                 strata::core::session_zero(ss, g, nullptr, main_cs);
+                 main_stream->wait();
+                 for (auto& st : stages) {
+@@ -10531,10 +10566,12 @@
+             // Only add a snapshot; the existing token and image checks still decide reuse.
+             const int64_t message_at = message_checkpoint && !multi_gpu && o.prompt_cache > 0
+                 ? strata::program::message_checkpoint_boundary(ids, resume, turn_at, o.turn_token) : -1;
+-            int64_t pin_at = req_pin>read_from ? req_pin : -1;
+-            if (req_pin>0 && req_pin<=read_from) {
++            int64_t pin_at = req_pin_present && req_pin>read_from ? req_pin : -1;
++            if(req_pin_present && req_pin==0)std::fprintf(stderr,"BCPUBLIC pin_zero rid=%llu slotgen=%llu stages=%zu actual_initial_reset=%d\n",(unsigned long long)req_rid,(unsigned long long)req_slot_generation,stages.size()+1,resume==0);
++            if (req_pin_present && req_pin>0 && req_pin<=read_from) {
+                 bool found=false;
+                 for (const ConvCheckpoint& c : checks) found=found || int64_t(c.ids.size())==req_pin;
++                if (!found && public_batch_request && req_pin==read_from){if(!checkpoint_at(req_pin,nullptr,false,true)){std::printf("ERR saving actual resumed pin state%s\n",ckpt_why.c_str());return 1;}found=true;}
+                 if (!found) {
+                     std::printf("ERR pin boundary absent in resumed chain; start a fresh session to establish it\n");
+                     continue;
+@@ -10592,6 +10629,7 @@
+                     std::printf("ERR saving a conversation checkpoint failed%s\n", ckpt_why.c_str());
+                     return 1;
+                 }
++                if(req_pin_present && to==pin_at)std::fprintf(stderr,"BCPUBLIC pin_saved rid=%llu slotgen=%llu tokens=%lld stages=%zu before_later_rows=1\n",(unsigned long long)req_rid,(unsigned long long)req_slot_generation,(long long)pin_at,stages.size()+1);
+                 if (prefix_diag.active && to == pin_at)
+                     std::fprintf(stderr,"PREFIX_DIAG {\"event\":\"pin_saved\",\"tokens\":%lld,\"stage_parts\":%zu,\"checkpoint_cap\":%d}\n",(long long)pin_at,stages.size(),int(o.prompt_cache));
+                 if (trace && to == message_at)
+diff --git a/include/strata/core/conversation_cache.hpp b/include/strata/core/conversation_cache.hpp
+--- a/include/strata/core/conversation_cache.hpp
++++ b/include/strata/core/conversation_cache.hpp
+@@ -232,7 +232,7 @@
+     }
+ 
+     template<class Token>
+-    Match best(const std::vector<Token>& prompt, const std::vector<ConversationImageKey>& images, bool cvec) const {
++    Match best(const std::vector<Token>& prompt, const std::vector<ConversationImageKey>& images, bool cvec, int64_t prefix_ceiling=INT64_MAX) const {
+         Match best;
+         // Ties prefer the most recently parked branch. The caller prefers its
+         // already-active state when that offers the same prefix length.
+@@ -241,7 +241,7 @@
+             if (e.cvec != cvec) continue;
+             auto consider = [&](const ConversationCheckpoint& c, bool live) {
+                 const int64_t n = conversation_prefix(c, prompt, images);
+-                if (n > best.tokens) best = {i, n, live};
++                if (n > best.tokens && n<=prefix_ceiling) best = {i, n, live};
+             };
+             consider(e.live, true);
+             for (const auto& c : e.checkpoints) consider(c, false);
+diff --git a/serve/server.py b/serve/server.py
+--- a/serve/server.py
++++ b/serve/server.py
+@@ -1014,11 +1014,20 @@
+             keys += " ckpt=0"
+         # "strata_prefix" (resolved by Service.resolve_prefix to {"tokens": N}): the first N prompt tokens are a shared
+         # prefix - the engine pins the checkpoint there.  Absent or unresolved = as before.
++        fresh=sampling.get("strata_fresh")
++        if fresh is not None:
++            if type(fresh) is not bool:raise ValueError("strata_fresh requires true|false")
++            keys += " fresh="+str(int(fresh))
+         prefix = sampling.get("strata_prefix")
++        shared=sampling.get("strata_shared_prefix")
++        if shared is not None:
++            if prefix is not None:raise ValueError("choose strata_prefix or strata_shared_prefix")
++            prefix=shared
++        if prefix is not None and (not isinstance(prefix,dict) or set(prefix)!={"tokens"}):raise ValueError("resolved shared prefix requires exact {tokens:N}")
+         if isinstance(prefix, dict):
+             pn = prefix.get("tokens")
+-            if isinstance(pn, int) and not isinstance(pn, bool) and pn > 0:
+-                keys += f" pin={pn}"
++            if not isinstance(pn,int) or isinstance(pn,bool) or pn<0:raise ValueError("strata_prefix.tokens requires nonnegative integer")
++            keys += f" pin={pn}"
+         return keys + StrataEngine.projection_key(sampling)
+ 
+     @staticmethod
+@@ -3349,6 +3358,13 @@
+             combined = combined_embeddings_path(self.vision.dir, sum(Path(p).stat().st_size for p, _ in encoded))
+             self.embeddings.path = combined             # first, so a half-written one is found as well
+             write_temporary(combined, [p for p, _ in encoded])
++        if req is not None and req.get("strata_shared_prefix") is not None:
++            if req.get("strata_prefix") is not None:raise ValueError("choose strata_prefix or strata_shared_prefix")
++            shared=req["strata_shared_prefix"]
++            if not isinstance(shared,dict) or set(shared)!={"tokens"}:raise ValueError("strata_shared_prefix requires exact {tokens:N}")
++            req["strata_prefix"]=shared
++            req.pop("strata_shared_prefix")
++        if req is not None and req.get("strata_fresh") is not None and type(req["strata_fresh"]) is not bool:raise ValueError("strata_fresh requires true|false")
+         if req is not None and req.get("strata_prefix") is not None:
+             req["strata_prefix"] = self.resolve_prefix(req["strata_prefix"], messages, tools, kwargs, ids, bool(images))
+         return ids, kwargs.get("enable_thinking", True) is not False, max_new
+@@ -3370,7 +3386,7 @@
+             raise ValueError('strata_prefix: {"messages": K} (the first K messages), {"message": I, "chars": N} (the first '
+                              'N characters of message I) or {"tokens": N}')
+         for k, v in spec.items():
+-            if not isinstance(v, int) or isinstance(v, bool) or v < (0 if k == "message" else 1):
++            if not isinstance(v, int) or isinstance(v, bool) or v < (0 if k in ("message","tokens") else 1):
+                 raise ValueError(f"strata_prefix.{k}: a whole number ({'0' if k == 'message' else '1'} or more)")
+         if has_images:
+             print("[strata] strata_prefix ignored: the request has images", flush=True)
+@@ -3421,7 +3437,10 @@
+             cut = messages[:i] + [{**messages[i], "content": text[:chars] + self.PREFIX_END}]
+             head = head_ids(cut)
+             n = lcp(head, ids)
+-        if n < 1 or n >= len(ids) - 1:
++        if "tokens" in spec:
++            if n<0 or n>=len(ids):raise ValueError("strata_prefix.tokens must be0..prompt-1")
++            return {"tokens":n}
++        if n < 1 or n > len(ids) - 1:
+             print(f"[strata] strata_prefix {what} ignored: it leaves no usable prefix of the {len(ids)}-token prompt "
+                   f"(common start {n})", flush=True)
+             return {}

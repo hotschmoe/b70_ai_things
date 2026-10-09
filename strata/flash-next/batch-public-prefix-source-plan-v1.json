@@ -1,0 +1,78 @@
+{
+  "compiled20_base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T112318Z-4uag6j5x/source",
+  "compiled20_plan": "strata/flash-next/serial-lifecycle-slot-owner-engine-build-plan-v1.json",
+  "compiled20_plan_sha256": "05041bd19eed14a9758ab00c9b02784308a126ce7a6b6414727668bda6c9fa1c",
+  "patches": [
+    {
+      "path": "strata/flash-next/patches/0021-sycl-bounded-layer0-numerical-capture.patch",
+      "sha256": "3c282ced590a5a71e5354c22438728cf326cbf78201497cdd1de708ce0f51081"
+    },
+    {
+      "path": "strata/flash-next/patches/0022-sycl-strict-batch-request-identity-v2.patch",
+      "sha256": "1c7e7352d25358ac8421c404c0ba898b562b67bbe4cce51526bcb9545c452fce"
+    },
+    {
+      "path": "strata/flash-next/patches/0024-sycl-bounded-batch-fidelity-observer-draft-v2.patch",
+      "sha256": "00d9cbfd507fffdf6da151148fa41354a9ef36e0f5f906853e61f42e440232cf"
+    },
+    {
+      "path": "strata/flash-next/patches/0025-sycl-bounded-complete-batch-prefix-chain-draft.patch",
+      "sha256": "1467ec41c41a63f2d109ea4cb2a329cb0e0b1ed9c1a403140b5f11a05e8515af"
+    },
+    {
+      "path": "strata/flash-next/patches/0027-sycl-public-batch-fresh-prefix-pin-draft.patch",
+      "sha256": "1bd69e1fb375d2d7f9d3da76d208b96b36b12fa46db44344d97541aa09f1e340"
+    }
+  ],
+  "schema": 1,
+  "status": "READY/frozen CPU source: exact tracked reconstruction, actual reset/checkpoint/nativeguard host ASan/UBSan and actual API fields/prefixceilings PASS; root independentlypassed; no integratedSDK/GPU/model qualification",
+  "overlay": "/mnt/vm_8tb/b70/build/strata-public-prefix27-v1-uxf6om_2",
+  "source_sha256": {
+    "sycl/include/strata/core/batch_public_prefix.hpp": "93a8715aa87c4bc71ac4c975c51b20282ed6e49d6986f7093e3222cf5339a01a",
+    "sycl/src/program/generate.cpp": "be93b496edd39bd11500934536822b09127fbaed76eb3436811663b06fb261b6",
+    "include/strata/core/conversation_cache.hpp": "0841aa796e339deafeeec985c5525259654555ac60a04cc83fd4e04ce1043bff",
+    "serve/server.py": "e8c7b50cdf2ed310f32ee201ce752ec76622f00b4e33c5d4981949346ac8f942",
+    "sycl/src/core/session.cpp": "0b3127b430156138fc251427bbc7ecf2c7a4ad1a1294879e2daf6eddefbb70fb",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2"
+  },
+  "test": "strata/flash-next/test_batch_public_prefix_cpu_v1.py",
+  "test_sha256": "598ee538650b14a98d6b6ab478ddb114de0e0270a1ee8ba545a785f6661bdc8f",
+  "runtime_required_env": {
+    "STRATA_BATCH_FULL_STATE_CHAIN": "1",
+    "STRATA_BATCH_PUBLIC_PREFIX": "1"
+  },
+  "mandatory_runtime_followups": [
+    "compose frozen26 observer/privateepoch migration source",
+    "full SDK rebuild/source390/identity/health/teardown",
+    "actual same-process fresh vs cached outputs/fullhead/48residual/state/counters independent conversations andongoingdecode"
+  ],
+  "scope": "exactstrictnative2/4/6/group1/noMTP/nonpipeline/static/FP16residentfixedKV; no requesttemplate/IDs rewriting",
+  "documentation": "strata/flash-next/batch-public-prefix-design-v1.md",
+  "documentation_sha256": "60616c47adac925fb3a19010030d64cddfbb3c76795730a344f6da4932064bde",
+  "cpu_results": {
+    "main_stage_reset_controls": 5,
+    "actual_reset_bodies": "session_zero + qsa_state_zero + public_reset_main",
+    "actual_pin_capture": "checkpoint_at actualevaluated5 stores15/30 state withids1..5/full2stageparts beforelaterrows; prompt-1 boundary12 saves",
+    "native_guard_cases": 8,
+    "API_invalid_type_alias_cases": 4,
+    "API_invalid_boundary_cases": 3,
+    "cache_match_ceiling_cases": 4,
+    "old_reset_metadata_gap": "idx_block_pos and staging not cleared byoldsession_zero; newwrapper clearsallownedmetadata",
+    "active_peer": "unchanged",
+    "partialreset_success_reported": false
+  },
+  "source_compatibility": {
+    "status": "PASS CPU only;26 currentdraft not frozen READY at check",
+    "receipt": "/mnt/vm_8tb/b70/build/strata21-28-prefix-dry-h51cewv7/apply-receipt.json",
+    "observer26_sha256": "16953e056e7ecbc5e8c513bf0c03f025716a1953c5b5c992d6af53b81a7058a5",
+    "api28_sha256": "09ca3b0dcbae95d8c5524946ca5a05c6819a1a7e3087004d343bdfa4172636e7",
+    "required": "fresh full integrated rebuild+actual proofs; old24/28 runtime receipts cannot transfer"
+  },
+  "runtime_fixed_profile": {
+    "public_prefix": "STRATA_BATCH_PUBLIC_PREFIX=1 requires frozen25 full-chain mode",
+    "KV": "fixed resident FP16; unsupported streaming/ring/quantization fails explicitly",
+    "pin_range": "0..prompt-1 exact IDs; no template rewrite",
+    "fresh": "all lookup ceilings0, mainallstage fullstate+metadata reset; activeprivateslots preserved",
+    "mandatory_cache_reference": "same process/binary/geometry/warmedweights actual fresh-vs-hit outputs/fullhead/all48residual/state/counters"
+  }
+}

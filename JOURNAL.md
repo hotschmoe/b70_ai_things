@@ -10228,3 +10228,24 @@ source390/device/model/APIqualification result yet.
 VERDICT -> Compile/source identitycheckpoint only, no native mathematical/ABI
 change claimed. Newupload/actualAPI qualification required; priorfailedAPI5
 retained. See docs/20261009_flashnext_api28_sdk_checkpoint.md.
+
+
+## 2026-10-09 - Public batch fresh/pin source27 CPU checkpoint
+
+CONFIG -> Separate default-off27 afterfull-chain25, strictnative2/4/6/group1
+noMTP/nonpipeline fixedresidentFP16, no context/slotshrink. Compiled28baseline
+remains unchanged andactualGPUupload8356 remainsinprogress.
+
+COMMAND -> Independently run test_batch_public_prefix_cpu_v1.py against actual
+session_zero/QSAzero/publicreset/native/API extracted source; verifyfreeze.
+Review compositionreceipt for25/currentdraft26/27/28, retainunqualifiedscope.
+
+RESULT -> CPUcontrols PASS: allmainstage persistentstate/indexerstaging cleared,
+activepeer unchanged, malformed/partial/wrongqueue rejected. API/nativefresh
+andpin0..prompt-1 fields/ceilings validated; earlier validstate evaluatedtoN
+without inventingstate/tokenrewrite. Sharedreset closespreviousQSA metadata
+omissions. Compatibility isCPUonly; no SDK/GPU/model payload byagent.
+
+VERDICT -> Commitimmutable27source before integratedbuild; actualfresh-vs-hit
+fullheads/all48/state/count/lifecycle and1/2/4/6 cachecoherence stillrequired.
+No runtime/math/fairness/latency or shelfqualification.

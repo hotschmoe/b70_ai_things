@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "recorded_utc": "2026-10-09T16:22:40.713356+00:00",
+  "status": "READY/frozen CPU source only",
+  "config": "frozen25+27;2stage owned state/queue mocks, fixedresidentFP16; no modelpayload",
+  "command": "python3 strata/flash-next/test_batch_public_prefix_cpu_v1.py",
+  "result": {
+    "main_stage_reset_controls": 5,
+    "actual_reset_bodies": "session_zero + qsa_state_zero + public_reset_main",
+    "actual_pin_capture": "checkpoint_at actualevaluated5 stores15/30 state withids1..5/full2stageparts beforelaterrows; prompt-1 boundary12 saves",
+    "native_guard_cases": 8,
+    "API_invalid_type_alias_cases": 4,
+    "API_invalid_boundary_cases": 3,
+    "cache_match_ceiling_cases": 4,
+    "old_reset_metadata_gap": "idx_block_pos and staging not cleared byoldsession_zero; newwrapper clearsallownedmetadata",
+    "active_peer": "unchanged",
+    "partialreset_success_reported": false
+  },
+  "root_independent_test": "parent reports actual reset/API/PIN controls PASS",
+  "verdict": "CPU source READY; new integratedSDK/26/28/nativeAPI/source390/completeidentity/modelcache/health/teardown gates mandatory; previous runtime proofs cannot transfer",
+  "files_sha256": {
+    "strata/flash-next/batch-public-prefix-source-plan-v1.json": "107247c345194980464ba350c196e2c9db63749e0e8fc5accafe7ac10d689f25",
+    "strata/flash-next/test_batch_public_prefix_cpu_v1.py": "598ee538650b14a98d6b6ab478ddb114de0e0270a1ee8ba545a785f6661bdc8f",
+    "strata/flash-next/batch-public-prefix-design-v1.md": "60616c47adac925fb3a19010030d64cddfbb3c76795730a344f6da4932064bde",
+    "strata/flash-next/patches/0027-sycl-public-batch-fresh-prefix-pin-draft.patch": "1bd69e1fb375d2d7f9d3da76d208b96b36b12fa46db44344d97541aa09f1e340"
+  },
+  "source_sha256": {
+    "sycl/include/strata/core/batch_public_prefix.hpp": "93a8715aa87c4bc71ac4c975c51b20282ed6e49d6986f7093e3222cf5339a01a",
+    "sycl/src/program/generate.cpp": "be93b496edd39bd11500934536822b09127fbaed76eb3436811663b06fb261b6",
+    "include/strata/core/conversation_cache.hpp": "0841aa796e339deafeeec985c5525259654555ac60a04cc83fd4e04ce1043bff",
+    "serve/server.py": "e8c7b50cdf2ed310f32ee201ce752ec76622f00b4e33c5d4981949346ac8f942",
+    "sycl/src/core/session.cpp": "0b3127b430156138fc251427bbc7ecf2c7a4ad1a1294879e2daf6eddefbb70fb",
+    "sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2"
+  },
+  "SDK_invoked": false,
+  "GPU_touched": false,
+  "model_payload_read": false,
+  "runtime_qualified": false
+}
