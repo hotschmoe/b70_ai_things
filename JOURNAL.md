@@ -9792,3 +9792,16 @@ teardown/health/kernel/NEW4publisherhashes pass. Decodecancel isolationstarted
 atF07/serial-cancel-decode-twocard-v6-v1 underpairlease; no resultyet.
 VERDICT -> Bounded real-live continuation, not fullmath/hiddenstate/API/session/
 concurrency/latency. Source/template/tokens not changed toforcehit.
+
+## 2026-10-09 Decode cancellation with nonfresh cache isolation
+
+CONFIG -> Frozen20/V6 pair, six bounded requests.
+COMMAND -> Parent cancel_decode atF07/serial-cancel-decode-twocard-v6-v1.
+RESULT -> FinalPASS327s. Actualdecode STOP/DONEcancel/PCLphase; nonfreshsame
+42reuse/7eval vs49fresh, unrelated21reuse/24eval vs45fresh. Three fullhead/
+all48residual comparisons bitwise, IDs/LP20/naturalstop equal; external6-roster
+source/stage/request audit, teardown/health/kernel/NEW4publisherhashes pass.
+Cancelledpartialwork/stateunobserved, not zero. Prefill isolationstarted under
+pairlease atF07/serial-cancel-prefill-twocard-v6-v1; no resultyet.
+VERDICT -> Bounded actualdecode-cancel nonfresh isolation, not reset-onlypass
+or fullmath/completecache/concurrency/latency qualification.

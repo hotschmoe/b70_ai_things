@@ -171,3 +171,30 @@ COMMAND -> Parent V6 --group cancel_decode with finalized basic prerequisites.
 RESULT -> F07/serial-cancel-decode-twocard-v6-v1 acquired pairlease; pending.
 VERDICT -> Requires actual decode cancellation then nonfresh same/unrelated
 replays against fresh references; reset-only recovery cannot qualify it.
+
+## Finalized decode cancellation and nonfresh isolation
+
+CONFIG -> Frozen20/V6 two-card pilot; six-request cancel_decode roster with
+parking disabled. Fresh same/unrelated references precede actual cancellation,
+then nonfresh same/unrelated replays and fresh unrelated confirmation.
+COMMAND -> Parent V6 --group cancel_decode;
+F07/serial-cancel-decode-twocard-v6-v1.
+RESULT -> Final parent/childPASS327s. STOP sent after first output; DONEcancel
+and PCL actualphase decode confirm the intended path. Nonfresh same reuses42/
+evaluates7 versus49 fresh; unrelated reuses21/evaluates24 versus45 fresh.
+Three comparisons have exact IDs/LP20/natural stop, full248320 firsthead and
+all48 residuals bitwise equal (144 pairedrows max_abs0/RMSE0). Strong external
+exact6-roster/source-chain/request/stage audit passes. Cancellation partial
+device work/state remains explicitly unobserved, never counted as zero.
+Native exits0/removal, strict+compiled P2P0 pre/post health, kernel gate and NEW
+all4 publisher hashes pass. No reset-only recovery substitutes for nonfresh tests.
+VERDICT -> PASS bounded decode cancellation and same/unrelated cache isolation.
+Not complete persistent-state/wholemodel/API/concurrent/latency qualification.
+
+## Prefill cancellation isolation started
+
+COMMAND -> Parent V6 --group cancel_prefill_isolation;
+F07/serial-cancel-prefill-twocard-v6-v1.
+RESULT -> Pairlease acquired. Actual phase must be prefill, followed by nonfresh
+same and unrelated replays; pending.
+VERDICT -> No prefill-cancel isolation result yet.
