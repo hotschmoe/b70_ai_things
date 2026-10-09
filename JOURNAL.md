@@ -9580,3 +9580,18 @@ forward qualification. No native Q8_1 reduction emulation or full accumulated
 error contract yet. Actual math requires current parent full-hash/sentinel
 admission because receipt/stat alone cannot rule out cached-byte changes.
 See strata/flash-next/original-gguf-reference-foundations-v1.md.
+
+## 2026-10-09 Finalized two-card191-token pinned-prefix reuse
+
+CONFIG -> Frozen0018/V5,209-token inputs with191-token shared pin,32/16
+two-card2048/64 pilot, parking disabled.
+COMMAND -> Parent --group pin at F06/serial-pin-twocard-v1; additional CPU
+matching-prefill-roster compare_vectors on repeated fresh requests.
+RESULT -> Final PASS exit0,439s. Both hits actually reuse191/evaluate18 vs209
+fresh; cached/fresh/repeat full first logits and48 residuals bitwise match
+(144pairedrows). Fresh prefill-last coverage96 rows each;192 repeated-fresh
+prefill rows separately bitwise equal. Health/teardown/kernel gate and NEW
+all4 publisher hashes pass. Parked snapshot suite numerical childPASS actual
+ram_snapshot/42reuse twice; parent healthPASS but hash/finalization pending.
+VERDICT -> Bounded pin/prefill seam observable consistency, not independent
+whole-state/complete-cache/concurrency/latency qualification. See serial doc.

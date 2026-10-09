@@ -158,3 +158,41 @@ COMMAND -> Parent wrapper --group pin with both finalized basic prerequisites.
 RESULT -> Acquired both leases and started pre-health;
 F06/serial-pin-twocard-v1.
 VERDICT -> RUNNING; no pinned-prefix numerical or prefill-seam result yet.
+
+## Finalized two-card191-token pinned-prefix reuse
+
+CONFIG -> Frozen0018/V5/parent, same32/16 pilot,209-token exact A/B inputs
+with191-token shared pin. Parking disabled; fresh references use the same pin
+and cut geometry as hits. This exercises native64-token prefill before the pin.
+COMMAND -> Parent wrapper --group pin; F06/serial-pin-twocard-v1.
+RESULT -> Final parent/child PASS, exit0,439s including lifecycle and fresh
+source hashing. Two matched triples repeat in one warmed process. Fresh
+requests evaluate209 prompt tokens; both hits actually reuse191 and evaluate18.
+Both hit/reference comparisons and the fresh-reference repeat have exact IDs,
+LP20, natural EOS, full248320 first logits and all48 first-window residuals
+(max_abs0/RMSE0 for144 paired residual rows).
+
+Each fresh request also supplies96 bounded prefill-last residuals (two points
+across all48 layers with required32/16 stage coverage); hit requests supply no
+prefill residuals because their18-row suffix takes the verifier path. Additional
+CPU comparison of reference/reference2 and establish/establish2, matching
+(stage,layer,pos,token) rosters, finds192 paired prefill rows bitwise identical.
+Receipt serial-pin-prefill-repeat-v1.json records this repeated-fresh comparison.
+It does not compare unobserved cached prefill or prove independent equations.
+
+Engine exits0/container removed. Strict per-card and compiled pair P2P0 pre/post
+health, kernel/owned-container gates, and NEW post-terminal/post-health full
+buffered publisher hashes of all4 shards pass with unchanged source stats.
+VERDICT -> PASS bounded191-token pin reuse across the actual prefill seam.
+Independent persistent-state/prefill math, production8192 and long contexts,
+complete-cache admission/memory/session/concurrency and clean latency remain open.
+
+## Two-card parked snapshot suite started
+
+CONFIG -> Same frozen two-card pilot,512MiB parked budget/one slot, exact B/A/B
+roster repeated twice. Requires actual ram_snapshot route.
+COMMAND -> Parent wrapper --group parked; F06/serial-parked-twocard-v1.
+RESULT -> Numerical/teardown child PASS: both restorations select ram_snapshot
+and42 reused tokens. Parent post-health passes; NEW source hashes still running.
+VERDICT -> NOT FINALIZED; no complete snapshot qualification until parent gates
+finish. Exact victim/admission and total-memory coverage remain V6 work.
