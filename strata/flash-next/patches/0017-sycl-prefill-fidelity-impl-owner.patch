@@ -1,0 +1,40 @@
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -577,18 +577,16 @@
+     float* host_rows = nullptr;           // the peer's result rows (mapped, portable)
+     int32_t* host_src = nullptr;          // the peer's rows' tokens (mapped, portable)
+     int32_t* host_bounds = nullptr;       // its group bounds (mapped, portable)
+     size_t host_x_cap = 0, host_rows_cap = 0, host_src_cap = 0;   // elements
+     static constexpr size_t kHostBounds = 2 * (NE + NE / 16 + 2) + 64;
+     int64_t back_at = 0, back_rows = 0;
+     std::vector<int32_t> bounds_host;
+     std::vector<void*> owned;
+-    std::shared_ptr<core::fidelity_diag::snapshot> fidelity_snapshot;
+-    unsigned fidelity_request=0,fidelity_chunks=0;
+     int64_t layers = 0, experts = 0, rows = 0, over_cap = 0;   // stats
+     ~PeerPrefill() {
+         if (dev < 0) return;
+         int prev = 0;
+         prev = dpct::get_current_device_id();
+         /*
+         DPCT1093: The "dev" device may be not the one intended for use.
+         Adjust the selected device if needed.
+@@ -629,16 +627,18 @@
+     const core::ExpertCache* cache = nullptr;
+     const int32_t* host_res = nullptr;
+     int64_t T = 0, T_max = 0;
+     bool borrowed = false;
+     dpct::queue_ptr cs = &dpct::get_in_order_queue(),
+                     copy = &dpct::get_in_order_queue();
+     Gemm gemm;
+     std::vector<void*> owned;
++    std::shared_ptr<core::fidelity_diag::snapshot> fidelity_snapshot;
++    unsigned fidelity_request=0,fidelity_chunks=0;
+     // chunk buffers
+     float *emb = nullptr, *R = nullptr, *xn = nullptr, *lo = nullptr, *gated = nullptr, *inj = nullptr;
+     float* grs = nullptr;                    // F-1: the hyper-connection read's row scales (T x 4)
+     uint16_t *xn16 = nullptr, *lo16 = nullptr;
+     float* mixed = nullptr;
+     uint16_t *mixed_bf = nullptr, *mixed_h = nullptr;
+     bool f16_io = false;   // HIP, STRATA_HIP_PROMPT_F16=1: this stage's 16-bit GEMMs run FP16 in and out (set in init)
+     uint16_t *xn16_lo = nullptr, *lo16_lo = nullptr, *mixed_bf_lo = nullptr;   // bf16x2(): the BF16 GEMMs' low parts

@@ -1,0 +1,80 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -9393,6 +9393,8 @@
+             int req_ckpt = 1;
+             int64_t req_pin = 0;
+             bool req_pin_bad = false;
++            int req_fresh = 0;
++            bool req_fresh_bad = false;
+             // tuning keys (setup's calibration measures settings without restarting the engine): the PCIe share of
+             // the missed experts and the draft-probability floor, for this request only
+             double req_pcie_frac = o.pcie_frac, req_spec_min_p = o.spec_min_p;
+@@ -9416,6 +9418,11 @@
+                         req_pin_bad=errno!=0 || stop==value || *stop!='\0' || parsed<0;
+                         req_pin=int64_t(parsed);
+                     }
++                    else if (key == "fresh") {
++                        const std::string value=tok.substr(eq+1);
++                        req_fresh_bad=value!="0" && value!="1";
++                        req_fresh=value=="1";
++                    }
+                     else if (key == "temperature") req_temperature = fv;
+                     else if (key == "top_p") req_top_p = fv;
+                     else if (key == "top_k") req_top_k = std::atoi(tok.c_str() + eq + 1);
+@@ -9448,6 +9455,10 @@
+             if (req_pin_bad || (req_pin>0 && (req_pin>=n-1 || o.prompt_cache<3 || !req_ckpt ||
+                     o.batch>0 || use_mtp || o.pipeline_windows>0 || geni))) {
+                 std::printf("ERR pin requires decimal 0<N<prompt-1, cache>=3, ckpt=1, serial text no-MTP non-pipelined requests\n");
++                continue;
++            }
++            if (req_fresh_bad || (req_fresh && (o.batch>0 || use_mtp || o.pipeline_windows>0 || geni))) {
++                std::printf("ERR fresh=0|1 requires serial text no-MTP non-pipelined requests\n");
+                 continue;
+             }
+             req_imgs.clear();
+@@ -9622,7 +9633,7 @@
+             }
+             int64_t resume = 0;
+             bool from_live = false;
+-            if (o.prompt_cache > 0 && want_cvec == cvec_cached) {
++            if (!req_fresh && o.prompt_cache > 0 && want_cvec == cvec_cached) {
+                 if (live_ok && starts_with(live, live_imgs)) { resume = (int64_t) live.size(); from_live = true; }
+                 for (const ConvCheckpoint& c : checks)
+                     if ((int64_t) c.ids.size() > resume && starts_with(c.ids, c.imgs)) {
+@@ -9636,7 +9647,7 @@
+             int64_t slot_tokens = 0;
+             bool resumed_from0 = false;   // a prompt read parked in a slot (BYIELD) that had started at token 0
+             const ConvCheckpoint* slot_ck = nullptr;   // the slot's checkpoint the prompt continues from (else its end)
+-            if (o.prompt_cache > 0 && req_imgs.empty())
++            if (!req_fresh && o.prompt_cache > 0 && req_imgs.empty())
+                 for (int b = 0; b < (int) bs.size(); ++b) {
+                     const BSlot& sl = bs[(size_t) b];
+                     if (sl.active || !sl.cached || sl.cvec != want_cvec) continue;
+@@ -9654,7 +9665,7 @@
+                 }
+             const auto parked = conversations.best(ids, req_imgs, want_cvec);
+             std::optional<strata::core::SavedConversation> incoming;
+-            if (parked.tokens > std::max(resume, slot_tokens)) incoming.emplace(conversations.take(parked.index));
++            if (!req_fresh && parked.tokens > std::max(resume, slot_tokens)) incoming.emplace(conversations.take(parked.index));
+             if (incoming) slot_source = -1;
+             // Reject the entire image before parking/overwriting the outgoing
+             // state. Invalid entries can safely fall back to its existing prefix.
+@@ -9813,6 +9824,9 @@
+                 }
+             }
+             int64_t reread_to = -1;   // STRATA_CKPT_REREAD only: read [0, reread_to) again instead of restoring
++            if (req_fresh && (resume!=0 || from_live || slot_source>=0 || incoming)) {
++                std::printf("ERR fresh selection invariant\n"); return 1;
++            }
+             if (resume == 0) {
+                 strata::core::session_zero(ss, g, nullptr, main_cs);
+                 main_stream->wait();
+@@ -9862,6 +9876,8 @@
+             if (use_mtp) mtp.set_prompt_len(n);
+             const int64_t read_from = reread_to > 0 ? 0 : resume;
+             prefix_diag.selection(resume,read_from,from_live,slot_source,conversations.bytes(),conversations.size(),conversations.evictions(),checks.size());
++            if (prefix_diag.active && req_fresh)
++                std::fprintf(stderr,"PREFIX_DIAG {\"event\":\"fresh_all_stage_reset\",\"stages\":%zu,\"resume\":%lld,\"read_from\":%lld}\n",stages.size()+1,(long long)resume,(long long)read_from);
+             conversations.limit_reuse(read_from);
+             pp_total = n;
+             pp_from = read_from;

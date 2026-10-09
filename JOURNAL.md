@@ -9330,3 +9330,29 @@ running. No sourcepatch/math changedfor thatconfigurationcorrection.
 VERDICT -> Actualfullmodelreadiness/capacity andboundedanswers observed.
 Qualificationtools mustbefixedandrechecked; fullstate/logit/prefix/concurrent/
 latency/shelf requirementsstillopen. Goalremainsactive withGPUownershiplocal.
+
+## 2026-10-09 Full observer and explicit prefix controls source generation
+
+CONFIG -> Unchangedmodel/runtime/externalStrata; separateimmutable0013..17
+source increment: fullfirstlogits/layerresidualobserver, actualevaluationledger,
+serialcomplete-stage pin andfreshreset controls. Diagnosticsdefaultoff.
+COMMAND -> Fullcombinedplansv1/v2/v3, actualprefill/verify objectchecks, CPU
+ledger/collector/serialharness negatives; currentcorrectedC1rerun session64837.
+RESULT -> Firstplanidentitygate failsbeforebuild becausepatchedgenerate/new
+header wereinpristine ledger; preserved, v2correctspristineledgeronly. Fullv2
+build fails because0013memberswereinPeerPrefill notactualPrefill::Impl. New
+0017movesmembers usingexplicitstructcontext, actualconsumedprefill+verify TUs
+compile0; oldpatch/buildpreserved. Fullv3 buildsall3requiredexes exit0/279sec,
+receipt /b70/build/strata-native-hc-engine-20261009T080647Z-6_ja3xd5/receipt.json,
+source/plansnapshot unchanged. NoGPUinference fromnewgeneration. CPUhelper
+contracts/byteflip/ledger/cached-reportcontrols pass, notmodel/cachefidelity.
+Newserialqualifier enforcesfresh/cache withinonewarmedprocess, root/pin/turn/
+park/eviction/cancel groups, actualspans andfullfinite248320logits plus48layer
+residuals;6armedcaptures/process, rawflagofflogits explicitlyunobserved.
+Fresh all4fullshardhashes aftersegmentedmodelserve publisherexact/unchanged
+statinclctime, knowncachedbit originstillunknown. CorrectedC1tooling rejects
+incomplete/cancelled/error closes andnonzerosupervisors, serializesownedstop;
+CPU16negative/race casespass. Newpreparedv2 launched; actualrerunpending.
+VERDICT -> Fullnewsourcegenerationbuilds; originalartifact identitystillvalid.
+Actualfullmodelstate/logit/cache/concurrent/latency/shelf qualificationspending.
+PriorfailedC1 remainsfailed, notretroactivelypromoted. Goalactive.

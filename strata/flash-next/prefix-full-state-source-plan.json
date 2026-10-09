@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "status": "CPU source preparation; not GPU prefix qualification",
+  "base_engine_receipt": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T065210Z-e6m4q9uo/receipt.json",
+  "base_generate_sha256": "29ade6b5325e8d12d85111ed636c05570d95da6b5d8c0951f34ee8cb9524d34d",
+  "patches": [
+    {
+      "path": "strata/flash-next/patches/0014-sycl-prefix-work-telemetry.patch",
+      "sha256": "938579ac62bd8e9ef92704b32472c87ad69af0a62a3775001456df090fdd7a8a"
+    },
+    {
+      "path": "strata/flash-next/patches/0015-sycl-explicit-full-state-prefix-pin.patch",
+      "sha256": "30f5fb84cb5fa7b60ad2d4609cd55e6108de75242f95c612dff819efe5d19d43"
+    },
+    {
+      "path": "strata/flash-next/patches/0016-sycl-explicit-all-stage-fresh-request.patch",
+      "sha256": "d54fb5860514f488f4f9992a9b9a1abe7d20c9ee3a07a42f51f86ce796eccc96"
+    }
+  ],
+  "apply_after": "0013-sycl-bounded-full-model-fidelity-observer.patch",
+  "diagnostic_env": {
+    "STRATA_PREFIX_DIAG": "1",
+    "STRATA_PREFIX_DIAG_ARM": "NEW_REGULAR_FILE_AFTER_READINESS"
+  },
+  "request_keys": {
+    "pin": "decimal N; 0 absent semantics; strict serial scope; existing shared-prefix API key",
+    "fresh": "0|1; native GEN fixture only until explicit API contract extension"
+  },
+  "scope": "serial text, no MTP/pipeline; all-stage checkpoints and fresh reset",
+  "bounds": {
+    "armed_requests": 64,
+    "pins_per_chain": 1,
+    "checkpoint_cap_minimum_for_pin": 3,
+    "ram_budget": "existing conversation_cache_mib admission/eviction"
+  },
+  "overlays": [
+    "sycl/src/program/generate.cpp",
+    "sycl/include/strata/program/prefix_diagnostic.hpp"
+  ],
+  "source_compile_receipt": "/mnt/vm_8tb/b70/build/strata-prefix-fresh-source-20261009/compile-receipt.json",
+  "combined_apply_receipt": "/mnt/vm_8tb/b70/build/strata-prefix-combined-source-20261009/apply-receipt.json",
+  "qualification_document": "strata/flash-next/prefix-full-state-source-audit.md",
+  "combined_source_compile_receipt": "/mnt/vm_8tb/b70/build/strata-prefix-combined-source-20261009/compile-receipt.json",
+  "combined_source_compile_receipt_sha256": "a78b094a06d78aeba27c8d36a22e572081a52382c3002894bca3582873922e41",
+  "source_compile_result": {
+    "exit_code": 0,
+    "standalone_0014_0015_0016_seconds": 37.918650696999975,
+    "combined_0013_0014_0015_0016_seconds": 43.277045417999034,
+    "optimization": "O1 replacing production O3; actual v6 defines/includes/SYCL device code flags",
+    "scope": "generate.cpp complete host/device object, not full linked model execution"
+  },
+  "apply_after_sha256": "5589910ef51d0e665f95e34f8f56ef26b021b0a724c95e0b2d173342d8894116",
+  "combined_reconstruction_receipt": "/mnt/vm_8tb/b70/build/strata-prefix-combined-source-20261009/reconstruction-receipt.json",
+  "cpu_tests": {
+    "path": "strata/flash-next/test_prefix_work_ledger_cpu.py",
+    "result": "PASS completed spans/reread distinction/stage accounting/arming bound/default-off/pinned retention",
+    "gpu_execution": false
+  },
+  "initial_correctness_contract": {
+    "first_generated_F32_logits": "bitwise equality with matched fixed prompt geometry; finite only",
+    "output_tokens": "exact greedy token IDs and natural finish",
+    "fresh_evaluated_prompt_rows": "prompt_tokens",
+    "hit_evaluated_prompt_rows": "prompt_tokens-actual_reused",
+    "cancelled_spans": "completed spans only; no exact partial-work claim",
+    "remaining": "actual rebuilt GPU model cache fixture and small concurrency"
+  }
+}

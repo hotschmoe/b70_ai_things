@@ -1,0 +1,43 @@
+{
+  "scope": "CPU source preparation only; no GPU/build/model qualification",
+  "base_source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T065210Z-e6m4q9uo/source",
+  "base_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "patch": "strata/flash-next/patches/0013-sycl-bounded-full-model-fidelity-observer.patch",
+  "patch_sha256": "5589910ef51d0e665f95e34f8f56ef26b021b0a724c95e0b2d173342d8894116",
+  "base_files": {
+    "sycl/src/program/generate.cpp": "29ade6b5325e8d12d85111ed636c05570d95da6b5d8c0951f34ee8cb9524d34d",
+    "sycl/src/core/verify.cpp": "b65522915ab44d6ae3b054e6c8db3247c63e23db8dc1676449eae0356a1c16fa",
+    "sycl/include/strata/core/verify.hpp": "84134a345dec907741bfdd54eee5109571f93d96d84d79db5e873d02dffc8df1",
+    "sycl/src/prefill/prefill.cpp": "458e2da40c7d8fe8a7f991277c99962c8f5a2155b876c78528652ab684bfc03a",
+    "include/strata/prefill/prefill.hpp": "d8454abafdba372270897c799229baf4c5798fc03d9be60ec5f1a3f753f4d0dc"
+  },
+  "source_files_added": [
+    "sycl/include/strata/core/fidelity_observer_contract.hpp",
+    "sycl/include/strata/core/fidelity_observer.hpp"
+  ],
+  "runtime_env": {
+    "STRATA_FIDELITY_DIAG": "1",
+    "STRATA_FIDELITY_DIAG_ARM": "REPLACE_NEW_ARM_AFTER_READINESS",
+    "STRATA_FIDELITY_DIAG_DIR": "REPLACE_NEW_ABSOLUTE_WRITABLE_DIRECTORY",
+    "STRATA_FIDELITY_DIAG_ACTIVATIONS": "1"
+  },
+  "bounds": {
+    "requests": 6,
+    "prefill_chunks_per_request_per_stage": 2,
+    "window_rows": 1,
+    "raw_residual_floats": 10240,
+    "raw_first_vocabulary_floats": 248320,
+    "reserved_raw_bytes_per_process": 67108864
+  },
+  "required_gates": [
+    "Independent immutable source overlay/build; keep actual baseline artifacts unchanged",
+    "Same-version flag0/flag1 and activations0/1 outputs/full raw logit equivalence",
+    "Actual stage/layer coverage; actual token/resume/evaluated counts",
+    "Health, teardown and post-health; no production latency from diagnostic runs"
+  ],
+  "unobserved": [
+    "Persistent GDN/PLE/QSA buffers not captured in this first localization increment",
+    "F16/quantized KV/indexer state metadata only, not a full state proof",
+    "Batch/pipeline/speculative/vision requests unsupported; explicit skips"
+  ]
+}

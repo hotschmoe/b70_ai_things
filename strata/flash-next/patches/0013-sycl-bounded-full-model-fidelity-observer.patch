@@ -1,0 +1,395 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/api_state_identity.hpp"
+ #include "strata/core/stage_mirror_budget.hpp"
+ #include "strata/core/native_hc_policy.hpp"
+@@ -9544,6 +9545,7 @@
+             bool bad = false;
+             for (int64_t t : ids) bad = bad || t < 0 || t >= n_vocab;
+             if (bad) { std::printf("ERR a token id is outside the vocabulary\n"); continue; }
++            strata::core::fidelity_diag::begin(ids,!geni && o.batch<=1 && o.pipeline_windows==0 && o.mtp.empty());
+             std::array<int64_t, 3> remote_before{};
+             std::array<int64_t, 3> launches_before{};
+             std::array<uint64_t, 3> compact_before{}, full_before{};
+@@ -9847,6 +9849,7 @@
+                 part_at.clear();
+                 std::fill(part_next.begin(), part_next.end(), pp_next_check);
+             }
++            strata::core::fidelity_diag::resumed(resume);
+             std::printf("RESUME %lld\n", (long long) resume);   // before reading: this many prompt tokens are reused
+             strata::core::progress_at("reading the prompt, from token", read_from);
+             std::fflush(stdout);
+@@ -11201,10 +11204,13 @@
+                 }
+                 tr("window", p, T);
+                 const Clock::time_point tw0 = Clock::now();
++                ver.select_fidelity_first(produced_n==0 && strata::core::fidelity_diag::current().active && T==1);
+                 if (!ver.run(T, window.data(), p, win_pool_fn, win_pool_user, outv.data(), err) || drive.d.failed) {
+                     std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail : err.c_str());
+                     return 1;
+                 }
++                if (produced_n==0 && !ver.dump_fidelity_first(T,p,window[0],err)) { std::printf("ERR %s\n",err.c_str());return 1; }
++                ver.select_fidelity_first(false);
+                 int a = 0;
+                 while (a < T - 1 && window[(size_t) a + 1] == outv[(size_t) a]) ++a;
+                 if (from_sfx) { ++sfx_windows; sfx_drafts += T - 1; sfx_ok += a; }
+@@ -11628,6 +11634,14 @@
+         // reclaims them). Their destructors ran against a runtime already shutting down and aborted (exit 139).
+         try {
+             dpct::get_current_device().queues_wait_and_throw();
++            if (strata::core::fidelity_diag::settings().enabled) {
++                ver.release_fidelity_observer();sp.release_fidelity_observer();
++                for(auto& stage:stages) {
++                    const strata::core::OnDevice on(stage->dev);
++                    dpct::get_current_device().queues_wait_and_throw();
++                    stage->sp.release_fidelity_observer();
++                }
++            }
+             if (stage_mirrors) {
+                 // Drain every stage context while it is live, then destroy graph
+                 // references before dropping tables and their host allocations.
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/stage_expert_mirror.hpp"
+ #include "strata/kernels/resident_plan_mirror.hpp"
+ #include "strata/core/native_hc_dispatch.hpp"
+@@ -367,6 +368,8 @@
+     exec_bm_.clear();
+     for (auto& kv:commit_bm_) if (kv.second) delete kv.second;
+     commit_bm_.clear();
++    for(auto& graph:fidelity_exec_) { if(graph) delete graph; graph=nullptr; }
++    fidelity_snapshot_.reset();
+     hits_.stage_mirror.reset();
+ }
+ 
+@@ -381,6 +384,7 @@
+     }
+     if (cs_) cs_->wait();
+     if (sh_cs_) sh_cs_->wait();
++    for(auto& graph:fidelity_exec_) { if(graph) delete graph; graph=nullptr; }
+     for (auto& e : exec_)
+         if (e) delete (e);
+     for (auto& e : exec_nr_)
+@@ -724,6 +728,10 @@
+         functionality is redundant in SYCL.
+         */
+         if (!ok2) {; all_resident_ = false; device_plan_ = false; }
++    }
++    if (fidelity_diag::settings().enabled) {
++        if (!fidelity_diag::geometry(int(g.n_embd),int(g.hc),int(g.n_layers),int(n_vocab_))) { err="fidelity diagnostic: unsupported model geometry"; return false; }
++        fidelity_snapshot_=std::make_shared<fidelity_diag::snapshot>(*cs_,device_,int(lb_),int(le_),le_==g.n_layers);
+     }
+     if (std::getenv("STRATA_VERIFY_DEBUG") != nullptr) {   // SYCL port: the per-layer residual ladder (token 0)
+         dbgR_ = (float*) sycl::malloc_device((size_t) g.n_layers * g.n_embd * 4, dpct::get_in_order_queue());
+@@ -1522,6 +1530,7 @@
+     for (int64_t l = lb_; l < le_; ++l)
+         for (int grp = 0; grp < G; ++grp) {
+             if (!post(l, grp)) return false;
++            if (fidelity_first_ && fidelity_snapshot_ && T==1 && grp==0) fidelity_snapshot_->layer(int(l),Rt(0),*cs);
+             if (dbgR_ && grp == 0) {   // recorded into the window graph as memcpy nodes
+                 cs->memcpy(dbgR_ + (size_t) l * N, Rt(0), (size_t) N * 4);
+                 cs->memcpy(dbgM_ + (size_t) l * N, mixed_, (size_t) N * 4);
+@@ -1621,6 +1630,7 @@
+         // Greedy, the default, is recorded here as before (no extra launch or sync per window). A request that
+         // samples or penalizes is sampled again host-side after the replay (run()) with its own parameters and a
+         // fresh draw counter: a captured sampler would bake them in and replay the same draws forever.
++        if (fidelity_first_ && fidelity_snapshot_ && T==1) fidelity_snapshot_->logits(head_logits_,*cs);
+         if (argmax_rows_wanted()) {   // sm_80 to sm_89: the pick over many blocks a row (bitwise the one-block kernel's)
+             argmax_rows(head_logits_, T, (int) n_vocab_, arg_scratch_, m_out_, cs);
+         } else {
+@@ -1681,7 +1691,7 @@
+ 
+ bool Verifier::capture(int T, std::string &err) try {
+     dpct::experimental::command_graph_exec_ptr &exec_t =
+-        ar_off_ ? exec_nr_[T] : exec_[T];
++        fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]);
+     if (exec_t != nullptr) return true;
+     if (std::getenv("STRATA_VERIFY_EAGER") != nullptr) return true;   // SYCL port: no graph, run() replays the body
+     if (DPCT_CHECK_ERROR(dpct::experimental::begin_recording(cs_)) != 0) {
+@@ -1984,7 +1994,7 @@
+     }
+     const dpct::err0 le = (std::getenv("STRATA_VERIFY_EAGER") != nullptr)
+                               ? (record_window(T, cs_, err) ? 0 : 1)   // SYCL port: eager replay of the window body
+-                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(ar_off_ ? exec_nr_[T] : exec_[T])));
++                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]))));
+     /*
+     DPCT1009: SYCL reports errors using exceptions and does not use error
+     codes. Please replace the "get_error_string_dummy(...)" with a real
+@@ -3347,6 +3357,28 @@
+   std::exit(1);
+ }
+ 
++void Verifier::release_fidelity_observer() {
++    if(fidelity_snapshot_) {
++        cs_->wait_and_throw();
++        for(auto& graph:fidelity_exec_) { if(graph)delete graph;graph=nullptr; }
++        fidelity_snapshot_->release();fidelity_snapshot_.reset();fidelity_first_=false;
++    }
++    if(next_)next_->release_fidelity_observer();
++}
++
++void Verifier::select_fidelity_first(bool on) {
++    fidelity_first_=on && fidelity_snapshot_!=nullptr;
++    if(next_)next_->select_fidelity_first(on);
++}
++
++bool Verifier::dump_fidelity_first(int rows,int64_t pos,int token,std::string& err) try {
++    if (!fidelity_diag::settings().enabled || !fidelity_diag::current().active) return true;
++    if (!fidelity_diag::first_row(rows,0,pos,fidelity_diag::current().tokens)) { fidelity_diag::skipped("first_window","unsupported_row_or_token_mapping"); return true; }
++    if (!fidelity_snapshot_) { fidelity_diag::skipped("first_window","snapshot_not_allocated"); return true; }
++    if (!fidelity_snapshot_->dump("first_window_residual",pos,token,true,err)) return false;
++    return next_==nullptr || next_->dump_fidelity_first(rows,pos,token,err);
++} catch (const std::exception& e) { err=std::string("fidelity diagnostic: ")+e.what(); return false; }
++
+ bool Verifier::copy_logits(int t, float* host) const {
+     if (next_ != nullptr) return next_->copy_logits(t, host);   // a layer split: the head is on the last stage
+     if (head_logits_ == nullptr || host == nullptr || t < 0 || n_vocab_ <= 0) return false;
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -42,6 +42,7 @@
+ namespace strata::core {
+ 
+ class NativeHead;
++namespace fidelity_diag { class snapshot; }
+ struct StageExpertMirror;
+ class RemoteExpertOpt;
+ 
+@@ -90,6 +91,10 @@
+     bool run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool, void* user, int32_t* out, std::string& err);
+     /// Diagnostics: row `t` of the last window's head logits (n_vocab floats) to the host. Valid after run().
+     bool copy_logits(int t, float* host) const;
++    // Bounded c1 diagnostic, after successful first T1 run; no sampling changes.
++    bool dump_fidelity_first(int rows,int64_t pos,int token,std::string& err);
++    void select_fidelity_first(bool on);
++    void release_fidelity_observer();
+     int64_t vocab() const { return next_ ? next_->vocab() : n_vocab_; }
+     /// The sampling the verify window's head applies (temperature / top_p / top_k / seed).  Set per
+     /// request; greedy by default.  The sampling itself runs OUTSIDE the captured graph - its
+@@ -455,6 +460,9 @@
+     float* hit_xs_ = nullptr;
+     void* hit_scratch_ = nullptr;
+     float *head_mixed_ = nullptr, *head_inj_ = nullptr, *head_logits_ = nullptr;
++    std::shared_ptr<fidelity_diag::snapshot> fidelity_snapshot_;
++    bool fidelity_first_=false;
++    dpct::experimental::command_graph_exec_ptr fidelity_exec_[2] = {};
+     uint16_t* sh_bf16_ = nullptr;
+     uint8_t* arg_scratch_ = nullptr;   ///< argmax_rows' partials and counters
+     int32_t* one_ = nullptr;           ///< device {1}: the n_keep of a one-token window, which commits itself
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -1,3 +1,4 @@
++#include "strata/core/fidelity_observer.hpp"
+ #include <climits>
+ #include "strata/core/native_hc_dispatch.hpp"
+ // src/prefill/prefill.cpp - see include/strata/prefill/prefill.hpp.
+@@ -581,6 +582,8 @@
+     int64_t back_at = 0, back_rows = 0;
+     std::vector<int32_t> bounds_host;
+     std::vector<void*> owned;
++    std::shared_ptr<core::fidelity_diag::snapshot> fidelity_snapshot;
++    unsigned fidelity_request=0,fidelity_chunks=0;
+     int64_t layers = 0, experts = 0, rows = 0, over_cap = 0;   // stats
+     ~PeerPrefill() {
+         if (dev < 0) return;
+@@ -771,6 +774,10 @@
+     stats_ = PrefillStats{};
+ }
+ 
++void Prefill::release_fidelity_observer() {
++    if(impl_->fidelity_snapshot) { impl_->fidelity_snapshot->release();impl_->fidelity_snapshot.reset(); }
++}
++
+ void Prefill::release() {
+     if (!impl_) return;
+     if (impl_->cs) impl_->cs->wait();
+@@ -795,6 +802,7 @@
+     if (impl_->kv_ready) dpct::destroy_event(impl_->kv_ready);
+     if (impl_->grp_host)
+         sycl::free(impl_->grp_host, dpct::get_in_order_queue());
++    impl_->fidelity_snapshot.reset();
+     for (void *p : impl_->owned)
+         DPCT_CHECK_ERROR(sycl::free(p, dpct::get_in_order_queue()));
+ }
+@@ -1097,6 +1105,10 @@
+         m.f16_io = prompt_f16();
+         m.gemm.set_f16_io(m.f16_io);
+         set_act_f16(m.f16_io);
++    }
++    if (core::fidelity_diag::settings().enabled && core::fidelity_diag::settings().activations) {
++        if (!core::fidelity_diag::geometry(int(g.n_embd),int(g.hc),int(g.n_layers),0)) { err="fidelity diagnostic: unsupported prefill geometry"; return false; }
++        m.fidelity_snapshot=std::make_shared<core::fidelity_diag::snapshot>(*m.cs,m.device,int(stage_lb_),int(stage_le_),false);
+     }
+     if (!carve(T, &o)) {
+         size_t fb = 0, tb = 0;
+@@ -2277,6 +2289,13 @@
+             }
+         }
+         if (hand_in_ == nullptr) gr_broadcast(m.emb, m.R, T, m.cs);
++        bool fidelity_chunk=false;
++        if(m.fidelity_snapshot && core::fidelity_diag::current().active) {
++            const auto request=core::fidelity_diag::current().ordinal;
++            if(m.fidelity_request!=request){m.fidelity_request=request;m.fidelity_chunks=0;}
++            fidelity_chunk=m.fidelity_chunks++<core::fidelity_diag::CHUNKS;
++            if(!fidelity_chunk)core::fidelity_diag::skipped("prefill","chunk_capture_bound");
++        }
+         lap("embeddings");
+         // ---- the PLE rows of the whole chunk, one batched SSD request on a thread (see ple_gather).  A later chunk's
+         // were read ahead during the previous chunk; the first chunk's are read beside layer 0 - they are needed from
+@@ -4270,6 +4289,7 @@
+                 }
+                 if (steered && !cv_fused)   // --control-vector-scaled
+                     strata::kernels::cvec_apply(m.R, l, T, D, nullptr, 0, nullptr, 0, false, m.cs);
++                if (half==1 && fidelity_chunk && m.fidelity_snapshot) m.fidelity_snapshot->layer(int(l),m.R+size_t(T-1)*D,*m.cs);
+             }
+         }
+         if (!ple_land()) return false;   // a stage that ends before layer 1: the rows land anyway, the next gather starts
+@@ -4278,6 +4298,10 @@
+             stats_.ms_experts_host += iss_ms;
+             stats_.experts_streamed += iss_streamed;
+             stats_.experts_dma += iss_dma;
++        }
++        if (fidelity_chunk && m.fidelity_snapshot) {
++            const int64_t at=p0+T-1;const auto& ids=core::fidelity_diag::current().ids;
++            if (at>=0 && at<int64_t(ids.size()) && !m.fidelity_snapshot->dump("prefill_last_residual",at,int(ids[size_t(at)]),false,err))return false;
+         }
+         stats_.tokens += T;
+         core::progress_at("reading the prompt (batched): finishing the chunk from token", p0);
+--- a/include/strata/prefill/prefill.hpp
++++ b/include/strata/prefill/prefill.hpp
+@@ -62,6 +62,7 @@
+     /// run again - with a smaller chunk when the first one did not fit.  The stage range (`set_stage`) and the
+     /// callbacks stay.  The device `init` ran on must be current.
+     void reset();
++    void release_fidelity_observer(); // diagnostic snapshots only, after requests drain
+ 
+     /// `host_res`: the static residency table (n_layers x n_expert, slot or -1) or null; `cache` its slots.
+     /// `borrow`/`borrow_bytes`: device memory to carve every buffer from (the top slots of the expert cache,
+--- /dev/null
++++ b/sycl/include/strata/core/fidelity_observer_contract.hpp
+@@ -0,0 +1,19 @@
++// Bounded canonical F32 diagnostic contracts, CPU-testable; no inference math.
++#pragma once
++#include <cstddef>
++#include <cstdint>
++namespace strata::core::fidelity_diag {
++constexpr int N=2560,HC=4,D=10240,LAYERS=48,VOCAB=248320;
++constexpr unsigned REQUESTS=6,CHUNKS=2;
++constexpr size_t TOTAL_LIMIT=64u<<20,ROW_BYTES=D*4;
++inline bool geometry(int n,int hc,int layers,int vocab) {
++    return n==N && hc==HC && layers==LAYERS && (vocab==0 || vocab==VOCAB);
++}
++inline bool slot_offset(int lb,int le,int layer,size_t& offset) {
++    if(lb<0 || le>LAYERS || lb>=le || layer<lb || layer>=le)return false;
++    offset=size_t(layer-lb)*D;return true;
++}
++inline bool first_row(int rows,int row,int64_t position,int64_t prompt_tokens) {
++    return rows==1 && row==0 && position>=0 && position==prompt_tokens-1;
++}
++}
+--- /dev/null
++++ b/sycl/include/strata/core/fidelity_observer.hpp
+@@ -0,0 +1,100 @@
++// Default-off native Strata observer. No graph switches or model corrections.
++#pragma once
++#include "strata/core/fidelity_observer_contract.hpp"
++#include <sycl/sycl.hpp>
++#include <atomic>
++#include <cerrno>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/stat.h>
++#include <string>
++#include <vector>
++#include <stdexcept>
++#include <memory>
++#include <limits>
++#include <mutex>
++namespace strata::core::fidelity_diag {
++struct config {
++    bool enabled=false,activations=false;const char* arm=nullptr;const char* dir=nullptr;
++    config(){const char* p=std::getenv("STRATA_FIDELITY_DIAG");enabled=p && !std::strcmp(p,"1");
++        if(enabled){p=std::getenv("STRATA_FIDELITY_DIAG_ACTIVATIONS");activations=p && !std::strcmp(p,"1");
++            arm=std::getenv("STRATA_FIDELITY_DIAG_ARM");dir=std::getenv("STRATA_FIDELITY_DIAG_DIR");}}
++};
++inline const config& settings(){static const config c;return c;}
++struct request {bool active=false;unsigned ordinal=0;int64_t tokens=0,resume=-1;unsigned serial=0;
++    std::vector<int64_t> ids;};
++inline request& current(){static request r;return r;}
++inline std::mutex& output_mutex(){static std::mutex value;return value;}
++inline std::atomic<size_t>& reserved(){static std::atomic<size_t> value{0};return value;}
++inline void skipped(const char* phase,const char* why,int layer=-1){if(!settings().enabled)return;
++    std::fprintf(stderr,"SFD skip pid=%ld request=%u phase=%s layer=%d reason=%s observed_only=1\n",
++        long(getpid()),current().ordinal,phase,layer,why);}
++inline void begin(const std::vector<int64_t>& ids,bool supported){
++    if(!settings().enabled)return;auto& r=current();r.active=false;
++    struct stat a,d;if(!settings().arm || !settings().dir || stat(settings().arm,&a) || !S_ISREG(a.st_mode) ||
++        stat(settings().dir,&d) || !S_ISDIR(d.st_mode))return;
++    ++r.ordinal;r.serial=0;r.resume=-1;r.tokens=int64_t(ids.size());
++    if(!supported || r.ordinal>REQUESTS || ids.empty() || ids.size()>8192){skipped("request","unsupported_mode_or_request_bound");return;}
++    r.active=true;r.ids=ids;
++    std::fprintf(stderr,"SFD request pid=%ld request=%u tokens=%zu ids=",long(getpid()),r.ordinal,ids.size());
++    for(size_t i=0;i<ids.size();++i)std::fprintf(stderr,"%s%lld",i?",":"",(long long)ids[i]);
++    std::fprintf(stderr," shape=4x2560 first_logits248320 states_GDN_PLE_QSA=unobserved raw_F16_state=skipped_metadata_only\n");
++}
++inline void resumed(int64_t count){if(!settings().enabled || !current().active)return;current().resume=count;
++    std::fprintf(stderr,"SFD resume pid=%ld request=%u reused=%lld evaluated_prompt_pending=1\n",long(getpid()),current().ordinal,(long long)count);}
++inline bool quota(size_t bytes){size_t old=reserved().load();while(bytes<=TOTAL_LIMIT-old)if(reserved().compare_exchange_weak(old,old+bytes))return true;return false;}
++inline bool store(const char* phase,int stage,int lb,int le,int layer,int64_t pos,int token,
++                  const std::vector<uint8_t>& raw,std::string& error){
++    const std::lock_guard<std::mutex> lock(output_mutex());
++    auto& r=current();if(!r.active)return true;
++    if(raw.empty() || raw.size()%4 || raw.size()>size_t(VOCAB)*4 || !quota(raw.size())){skipped(phase,"byte_bound",layer);return true;}
++    char leaf[192];std::snprintf(leaf,sizeof leaf,"sfd-%ld-r%u-s%d-%s-l%d-p%lld-i%u.f32",long(getpid()),r.ordinal,stage,phase,layer,(long long)pos,++r.serial);
++    const std::string path=std::string(settings().dir)+"/"+leaf;
++    const int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);
++    if(fd<0){error="fidelity diagnostic output open failed";return false;}
++    const uint16_t endian=1;const auto* test=reinterpret_cast<const uint8_t*>(&endian);const uint8_t* bytes=raw.data();std::vector<uint8_t> le_bytes;
++    if(!test[0]){le_bytes=raw;for(size_t i=0;i<le_bytes.size();i+=4){std::swap(le_bytes[i],le_bytes[i+3]);std::swap(le_bytes[i+1],le_bytes[i+2]);}bytes=le_bytes.data();}
++    size_t done=0;bool ok=true;while(done<raw.size()){ssize_t n=::write(fd,bytes+done,raw.size()-done);if(n>0)done+=size_t(n);else if(n<0 && errno==EINTR)continue;else{ok=false;break;}}
++    if(::close(fd))ok=false;if(!ok){::unlink(path.c_str());error="fidelity diagnostic output write failed";return false;}
++    std::fprintf(stderr,"SFD vector pid=%ld request=%u stage=%d lb=%d le=%d phase=%s layer=%d pos=%lld token=%d bytes=%zu file=%s canonical=le_f32 reused=%lld observed_only=1\n",
++        long(getpid()),r.ordinal,stage,lb,le,phase,layer,(long long)pos,token,raw.size(),path.c_str(),(long long)r.resume);
++    return true;
++}
++class snapshot {
++public:
++    snapshot(const sycl::queue& queue,int stage,int lb,int le,bool logits):q_(queue),stage_(stage),lb_(lb),le_(le),logits_(logits){
++        if(lb<0 || le>LAYERS || lb>=le)throw std::invalid_argument("fidelity snapshot stage range");
++        residual_floats_=settings().activations?size_t(le-lb)*D:0;
++        floats_=residual_floats_+(logits?VOCAB:0);
++        if(floats_){data_=sycl::malloc_device<float>(floats_,q_);if(!data_)throw std::bad_alloc();}
++        std::fprintf(stderr,"SFD allocation stage=%d lb=%d le=%d bytes=%zu residuals%d logits%d\n",stage,lb,le,floats_*4,settings().activations,logits);
++    }
++    ~snapshot(){try{release();}catch(...) {}}
++    void release(){q_.wait_and_throw();if(data_){sycl::free(data_,q_);data_=nullptr;}}
++    void layer(int l,const float* R,sycl::queue& queue){
++        if(!residual_floats_)return;size_t off=0;if(!slot_offset(lb_,le_,l,off) || !R)throw std::invalid_argument("fidelity layer descriptor");
++        if(queue.get_context()!=q_.get_context() || queue.get_device()!=q_.get_device())throw std::invalid_argument("fidelity snapshot queue affinity");
++        queue.memcpy(data_+off,R,ROW_BYTES);
++    }
++    void logits(const float* row,sycl::queue& queue){if(!logits_)return;if(!row)throw std::invalid_argument("fidelity logit descriptor");
++        if(queue.get_context()!=q_.get_context() || queue.get_device()!=q_.get_device())throw std::invalid_argument("fidelity snapshot queue affinity");
++        queue.memcpy(data_+residual_floats_,row,size_t(VOCAB)*4);
++    }
++    bool dump(const char* phase,int64_t position,int token,bool include_logits,std::string& error){
++        if(!current().active)return true;
++        if(position<0 || position>=current().tokens){skipped(phase,"token_position_not_in_request");return true;}
++        if(residual_floats_)for(int l=lb_;l<le_;++l){size_t off=0;slot_offset(lb_,le_,l,off);
++            std::vector<uint8_t> raw(ROW_BYTES);q_.memcpy(raw.data(),data_+off,raw.size()).wait_and_throw();
++            if(!store(phase,stage_,lb_,le_,l,position,token,raw,error))return false;}
++        if(include_logits && logits_){std::vector<uint8_t> raw(size_t(VOCAB)*4);
++            q_.memcpy(raw.data(),data_+residual_floats_,raw.size()).wait_and_throw();
++            if(!store("first_logits_before_sampler",stage_,lb_,le_,-1,position,token,raw,error))return false;}
++        return true;
++    }
++private:
++    sycl::queue q_;int stage_,lb_,le_;bool logits_;size_t residual_floats_=0,floats_=0;float* data_=nullptr;
++};
++}

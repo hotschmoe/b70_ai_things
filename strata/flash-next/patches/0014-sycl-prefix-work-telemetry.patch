@@ -1,0 +1,119 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -76,6 +76,7 @@
+ #include "strata/core/native_dense.hpp"
+ #include "strata/program/logits_selection.hpp"
+ #include "strata/program/conv_cache.hpp"
++#include "strata/program/prefix_diagnostic.hpp"
+ #include "strata/program/message_boundary.hpp"
+ #include "strata/spec/draft_policy.hpp"
+ #include "strata/spec/draft_source.hpp"
+@@ -9560,6 +9561,9 @@
+                 wait_before[(size_t) r] = remote_experts[(size_t) r].ms_wait();
+             }
+             cur = ids;
++            strata::program::PrefixDiagnostic prefix_diag;
++            prefix_diag.begin(ids,int64_t(stages.size()+1));
++            if(prefix_diag.active && (o.batch>0 || use_mtp || o.pipeline_windows>0)) { std::printf("ERR prefix diagnostic supports serial no-MTP non-pipelined requests only\n");return 1;}
+             const Clock::time_point r0 = Clock::now();
+             // ---- where this request starts reading: the live session, or a checkpoint, whose tokens AND pictures are
+             // exactly the start of this prompt - at most n - 1 of them, the last token is always the first window
+@@ -9740,6 +9744,7 @@
+                                  mtp.kv_state().kv_mode, "ram",
+                                  (long long) (mtp.kv_state().n_slots * strata::kernels::qsa_real_shapes().page_size));
+                 }
++                prefix_diag.ram_restore=prefix_diag.active;
+                 live = std::move(incoming->live.ids);
+                 live_imgs = std::move(incoming->live.imgs);
+                 if (stages.empty()) {
+@@ -9835,6 +9840,7 @@
+             tr("request", n, geni ? 1 : 0);
+             if (use_mtp) mtp.set_prompt_len(n);
+             const int64_t read_from = reread_to > 0 ? 0 : resume;
++            prefix_diag.selection(resume,read_from,from_live,slot_source,conversations.bytes(),conversations.size(),conversations.evictions(),checks.size());
+             conversations.limit_reuse(read_from);
+             pp_total = n;
+             pp_from = read_from;
+@@ -10024,6 +10030,7 @@
+                     if (logpos != nullptr && !ver.window_logprobs(nxt.data(), T, q, logpos_extra, logpos, e))
+                         return false;
+                     if (!ver.commit(T, e) || (use_mtp && !mtp.prefill(ver.final_R_all(), nxt.data(), T, q, e))) return false;
++                    prefix_diag.evaluated(q,q+T,"prompt_verify");
+                     q += T;
+                     pp_reached = q;   // #471
+                 }
+@@ -10175,12 +10182,16 @@
+             // continues from the slot with the same chunks.  #656's cooperative preemption, with a slot as the park.
+             auto read_part = [&](int64_t a0, int64_t b0, std::string& e) -> bool {
+                 // (a layer split reads its stages as a pipeline over one run's chunks: in pieces only beside slots)
+-                if (o.batch <= 0 || piped || (!stages.empty() && !batch_on())) return sp.run(ids.data() + a0, b0 - a0, a0, e);
++                if (o.batch <= 0 || piped || (!stages.empty() && !batch_on())) {
++                    const bool ok=sp.run(ids.data()+a0,b0-a0,a0,e);
++                    if(ok) prefix_diag.evaluated(a0,b0,"prefill");return ok;
++                }
+                 const int64_t C = std::max<int64_t>(sp.chunk(), 1);
+                 for (int64_t q = a0; q < b0;) {
+                     const int64_t r = std::min(b0, q + C);
+                     const auto tq = Clock::now();
+                     if (!sp.run(ids.data() + q, r - q, q, e)) return false;
++                    prefix_diag.evaluated(q,r,"prefill_chunk");
+                     q = r;
+                     if (q >= b0) continue;
+                     int ys = -1;
+@@ -11224,6 +11235,7 @@
+                     std::printf("ERR %s\n", err.c_str());
+                     return 1;
+                 }
++                prefix_diag.evaluated(p,p+T,"target_verify");
+                 // the window's first a + 1 tokens are in the session now (the last output is not: it is next x)
+                 for (int i = 0; i <= a; ++i) consumed.push_back(window[(size_t) i]);
+                 draft_offered += T - 1;
+@@ -11457,6 +11469,7 @@
+                              (unsigned long long) h_stale, (unsigned long long) h_dead,
+                              (unsigned long long) h_pool_full, ss.ple_prev[0], ss.ple_prev[1]);
+             }
++            prefix_diag.finish(cancelled || std::strcmp(finish,"cancel")==0,finish,produced_n,conversations.bytes(),conversations.size(),conversations.evictions());
+             const int64_t req_hits = drive.d.cache_hits - decode_hits0;
+             const int64_t req_look = (drive.d.cache_hits + drive.d.cache_admitted + drive.d.cache_refused) - decode_look0;
+             const int64_t req_offload = drive.d.offload_entries - offload0;
+--- /dev/null
++++ b/sycl/include/strata/program/prefix_diagnostic.hpp
+@@ -0,0 +1,38 @@
++// Host-only prefix work ledger. Default off; no extra state copies, waits or math.
++#pragma once
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <vector>
++#include <sys/stat.h>
++#include <unistd.h>
++namespace strata::program {
++struct PrefixDiagnostic {
++    bool active=false,ram_restore=false;
++    uint64_t ordinal=0,token_hash=0;
++    int64_t prompt=0,resume=0,read_from=0,prompt_rows=0,decode_rows=0,stages=0;
++    static bool enabled(){static const bool on=[] {const char* p=std::getenv("STRATA_PREFIX_DIAG");return p&&std::strcmp(p,"1")==0;}();return on;}
++    void begin(const std::vector<int64_t>& ids,int64_t stage_count){
++        if(!enabled())return;
++        static const char* arm=std::getenv("STRATA_PREFIX_DIAG_ARM");struct stat info;
++        if(!arm||::stat(arm,&info)||!S_ISREG(info.st_mode))return;
++        static uint64_t sequence=0;if(sequence>=64)return;
++        active=true;ordinal=++sequence;prompt=int64_t(ids.size());stages=stage_count;token_hash=14695981039346656037ull;
++        for(int64_t t:ids)for(unsigned b=0;b<4;++b){token_hash^=(uint32_t(t)>>(b*8))&255;token_hash*=1099511628211ull;}
++    }
++    void selection(int64_t chosen,int64_t actual_from,bool from_live,int slot,size_t bytes,size_t entries,size_t evictions,size_t checkpoints){
++        if(!active)return;resume=chosen;read_from=actual_from;
++        const char* route=actual_from==0?"cold_or_reread":ram_restore?"ram_snapshot":slot>=0?"inactive_slot":from_live?"live":"checkpoint";
++        std::fprintf(stderr,"PREFIX_DIAG {\"event\":\"selection\",\"pid\":%d,\"request\":%llu,\"prompt_tokens\":%lld,\"token_fnv_le32\":\"%016llx\",\"candidate_resume\":%lld,\"actual_reused\":%lld,\"reread\":%s,\"route\":\"%s\",\"stages\":%lld,\"parked_bytes\":%zu,\"parked_entries\":%zu,\"evictions\":%zu,\"checkpoints\":%zu}\n",int(::getpid()),(unsigned long long)ordinal,(long long)prompt,(unsigned long long)token_hash,(long long)resume,(long long)read_from,resume>0&&read_from==0?"true":"false",route,(long long)stages,bytes,entries,evictions,checkpoints);
++    }
++    void evaluated(int64_t lo,int64_t hi,const char* route){
++        if(!active)return;const int64_t a=lo<0?0:lo,b=hi<prompt?hi:prompt;const int64_t n=b>a?b-a:0;prompt_rows+=n;decode_rows+=(hi-lo)-n;
++        std::fprintf(stderr,"PREFIX_DIAG {\"event\":\"evaluated_span\",\"pid\":%d,\"request\":%llu,\"lo\":%lld,\"hi\":%lld,\"prompt_rows\":%lld,\"route\":\"%s\",\"stages\":%lld}\n",int(::getpid()),(unsigned long long)ordinal,(long long)lo,(long long)hi,(long long)n,route,(long long)stages);
++    }
++    void finish(bool cancelled,const char* reason,int64_t generated,size_t bytes,size_t entries,size_t evictions){
++        if(!active)return;
++        std::fprintf(stderr,"PREFIX_DIAG {\"event\":\"finish\",\"pid\":%d,\"request\":%llu,\"candidate_resume\":%lld,\"actual_reused\":%lld,\"evaluated_prompt_rows\":%lld,\"evaluated_decode_rows\":%lld,\"stage_prompt_rows\":%lld,\"prompt_tokens\":%lld,\"generated\":%lld,\"cancelled\":%s,\"finish\":\"%s\",\"parked_bytes\":%zu,\"parked_entries\":%zu,\"evictions\":%zu,\"coverage\":\"serial_no_mtp_whole_request_after_existing_commit_wait\"}\n",int(::getpid()),(unsigned long long)ordinal,(long long)resume,(long long)read_from,(long long)prompt_rows,(long long)decode_rows,(long long)(prompt_rows*stages),(long long)prompt,(long long)generated,cancelled?"true":"false",reason,bytes,entries,evictions);
++    }
++};
++}

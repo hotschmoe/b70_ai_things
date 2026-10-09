@@ -1,0 +1,86 @@
+{
+  "configuration": "frozen failed v2 full source plus new0017; actual SYCL shadow headers; compiler containers without devices",
+  "command": "python3 strata/flash-next/compile_prefill_fidelity_owner.py",
+  "result": {
+    "scope": "actual consumed SYCL TUs compile only; no devices/execution",
+    "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+    "devices_exposed": false,
+    "base_source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T075303Z-3vcjlgw9/source",
+    "base_plan_sha256": "827f3631b3feb857d6a91d76cab060c5b373832934b17e82dce0cc349e124639",
+    "overlay": "/mnt/vm_8tb/b70/build/strata-prefill-owner0017-4yog27pw/source",
+    "patch": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/patches/0017-sycl-prefill-fidelity-impl-owner.patch",
+    "patch_sha256": "f92143d988517cc32ac60e32d864d9816186d82a46515a25bf3455d3822ba6b8",
+    "results": [
+      {
+        "tu": "sycl/src/prefill/prefill.cpp",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--user",
+          "1000:1000",
+          "--entrypoint",
+          "/bin/bash",
+          "-v",
+          "/mnt/vm_8tb/b70/build/strata-prefill-owner0017-4yog27pw/source:/src:ro",
+          "-v",
+          "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T075303Z-3vcjlgw9/ggml-source:/ggml:ro",
+          "-v",
+          "/mnt/vm_8tb/b70/build/strata-prefill-owner0017-4yog27pw:/work",
+          "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+          "-lc",
+          "icpx -DSTRATA_NATIVE_EXPERTS=1 -DSTRATA_SYCL_Q8_HC_BUILT=1 '-DSTRATA_VERSION=\"0.1.41\"' -O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra -qmkl=sequential -I/src/sycl/include -I/src/include -I/src/src/core -I/ggml/ggml/include -c /src/sycl/src/prefill/prefill.cpp -o /work/prefill.o"
+        ],
+        "exit_code": 0,
+        "seconds": 31.92997934700543,
+        "source_sha256": "7fb52155a58d43fb054ff9311bca08bb1d05ece8ff66e9e41532f18f44ee3c9f",
+        "object_sha256": "2784cf0dbb8e439fe9dcdb73430aab9a73b632e3ed1f3b7c5a7ca2c598e8dbaf"
+      },
+      {
+        "tu": "sycl/src/core/verify.cpp",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--user",
+          "1000:1000",
+          "--entrypoint",
+          "/bin/bash",
+          "-v",
+          "/mnt/vm_8tb/b70/build/strata-prefill-owner0017-4yog27pw/source:/src:ro",
+          "-v",
+          "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T075303Z-3vcjlgw9/ggml-source:/ggml:ro",
+          "-v",
+          "/mnt/vm_8tb/b70/build/strata-prefill-owner0017-4yog27pw:/work",
+          "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+          "-lc",
+          "icpx -DSTRATA_NATIVE_EXPERTS=1 -DSTRATA_SYCL_Q8_HC_BUILT=1 '-DSTRATA_VERSION=\"0.1.41\"' -O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra -qmkl=sequential -I/src/sycl/include -I/src/include -I/src/src/core -I/ggml/ggml/include -c /src/sycl/src/core/verify.cpp -o /work/verify.o"
+        ],
+        "exit_code": 0,
+        "seconds": 31.83143715299957,
+        "source_sha256": "5ea914d40f94e2d6bf4f1b7ecc9cc7c64b9e90dda20252ed9d0fa96d6730a386",
+        "object_sha256": "52f8cdc733d42459aa83aa7126af1e62bafb1db69fa85261191e3a48c191d79d"
+      }
+    ],
+    "consumed_headers": {
+      "sycl/include/strata/core/verify.hpp": "ff30ae75fee815c91814deb1783f3cb9de7dd8fed99639748a0deed17b0ce63f",
+      "include/strata/prefill/prefill.hpp": "9973a979ac9f8cd667cbab697d65f9754ac90b307feeb32380097ceb02e763a9",
+      "sycl/include/strata/core/fidelity_observer.hpp": "2a274635a5a7922feca984061fb3332edc108e863aeff731d4c33499e29ff7af"
+    },
+    "passed": true
+  },
+  "verdict": "PASS actual prefill.cpp and verify.cpp object compilation only; full linking and runtime observer equivalence remain unqualified",
+  "compile_receipt_path": "/mnt/vm_8tb/b70/build/strata-prefill-owner0017-4yog27pw/compile-receipt.json",
+  "compile_receipt_sha256": "a0e67ba7d30484f976544e1c5fc90d39884525c2ff9260df5576f893f0cfe00c",
+  "v3_plan_sha256": "7f2751dee26dd7fa2d1f3c1ebd4ba12e5069367482a1d346ffabd43fa86a56e3",
+  "structural_owner_check": {
+    "peer_has_observer_fields": false,
+    "prefill_impl_has_observer_fields": true,
+    "explicit_context": "struct Prefill::Impl / Gemm gemm / owned",
+    "source_sha256": "7fb52155a58d43fb054ff9311bca08bb1d05ece8ff66e9e41532f18f44ee3c9f"
+  }
+}
