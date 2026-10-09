@@ -9403,3 +9403,27 @@ honesttopologyaliases. No GPUstate/cache resultfromthoseCPUtests. Corrected
 onecardC1preparation session18630 running; actualmodelrerunnext.
 VERDICT -> Actualownershipcontrol/sourcegate passes, fullmodeltwoGPU/state/
 logit/prefix/concurrent/latency/shelf stillunqualified. Goalstaysfullandactive.
+
+## 2026-10-09 Cached source bit recurs; direct reader prefault discriminated
+
+CONFIG -> Exactartifact/correctedengine18; allsource/controlgatespassed, newC1
+preparedhashes/sentinelgood, strictidentityguardbeforeanynewmodelcontainer.
+COMMAND -> CorrectedC1attempt, preservedviews/C-Python-GNUdirectmatrices, full
+prefaultedshard3hash, targeted4KBreload, idle+separatehealthstage sentinelcontrol.
+RESULT -> Sameknownpage3857879040 byte2796 changes0x45->0x65 xor0x20 again.
+Launchfailsbeforecontainercreation at09:16:22 afterhealthonly; all sourcefile
+statinclctimeunchanged. CPUtwocardpreparestopped, parentnormalposthealthpass.
+Untoucheddirectbuffersalso showbadpage, butinitializeddirect C/Python buffers
+original. Readcall/allocation/alignment/CLOEXEC crossedmatrices isolateprefault;
+BtrfsFIEMAP unencoded, upstreamnofault->cachedfallbacksupportsonlyinference,
+exact7.1branchunobserved. Fullinitialized16MiBdirectreader49,376,141,504Bhash
+matchespinned56758f40... in158sec. No diskcorruptionclaim frombadO_DIRECTreads.
+Bad/originalviews preservedthenonlyknown4KB FADVDONTNEEDreloadrestoresoriginal
+SHA2780fef9... unchangedstat,no filewrite/globaldropcache/redownload.20sCPU
+idle/card0/card1/compiledP2P0health controls allkeepgoodcached/directpage; no
+reproducedcause. Healthd556processNeo26.27 differsmodel39992lane26.22; package
+identityfactnotcausality. Newall4bufferedhash C1preparedv2 passes; guarded
+rerunsession23893live. PriorfailedC1/sourceidentityevent remainsunchanged.
+VERDICT -> Currentidentityrestored, originunresolved, strictguardsretained;
+wholemodelcorrectedone/twocard/state/logit/cache/concurrent/latency/shelf open.
+Actualprogress ratherthanblockedimpasse; goal remainsfullandactive.
