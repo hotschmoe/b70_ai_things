@@ -9258,3 +9258,26 @@ build launched; fullbuild/GPUmirror/source390/model qualification still pending.
 VERDICT -> Logicalfree gate localized and newlimitedscope passes. Wholeartifact
 identity restored withoutweightwrites, corruptionorigin unproven. Allocation
 evidence supports boundedsegments, not serving stability. Fullgoal staysactive.
+
+## 2026-10-09 Complete original HC/PLE loader and lifecycle qualification
+
+CONFIG -> ImmutableStrataenginev6 with0011/0012, exactmodel/runtime/pack;
+full390source roster and v2 chronologicalfree gate. Prior continuation changed
+allocator/identity/source state and is classified progress.
+COMMAND -> fullenginev6 build, independentall4fullhash postfirstserve scan,
+fullsourceoracle link and run_source_upload_oracle_full.py fivecases.
+RESULT -> Engine threeexecutables build/link pass277sec; source/planunchanged.
+All4fullhashes publisherexact with unchangedpre/poststatincludingctime. Actual
+387HC3PLE sourcebytes/SHA/type/shape/offset pass fullcard0/fullcard1/sameGPU24_24/
+twoGPU24_24/actualmodelstaticbounds. 300ordinarynative matrices enumerated but
+ordinaryGPU payloadreadback outside thisoracle. Ownedimagebytes3821772800:HC
+695132160,PLE34979840,ordinary3091660800; priorPLEestimate understated640B.
+Fullcases690imagepointers+scratch/694allocfreepairs; split345images/stage+
+scratch/698pairs total. Exactstageownership192HC3PLE150ordinary then195HC0PLE
+150ordinary; allownerdestructorsreturn, ledger0live, missing/double/failedfree
+negativesreject. Knownpage sentinel exact before/aftereverycase. Normalremoval
+and fullstrict/compiledP2P0 pre/posthealth pass, nofaultsignatures; terminal
+session72782 exit0 in195sec. NewsegmentedC1prepare hashing/identity inprogress.
+VERDICT -> FullHC/PLE source loader/ownership gate passes. No fullmodel inference
+result. GPUmirror/sourceexpertmath/state/logits/prefix/concurrent/latency/shelf
+requirements remainopen; goalactive with parallelCPU research and parentGPUowner.

@@ -788,3 +788,39 @@ models:
     notes: Research-only bounded reset diagnostic; hotschmoe-dd remains first.
       Metadata does not inspect numerical state; numeric waits may hide races.
       Failed strict screens remain failed and prohibit shelf promotion.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-native-source-c1-onecard
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT
+    notes: Prepared source controller only. Exact artifact/API runtime and passing native upload lifecycle are required. C1 MTP0 context2048, primary hotschmoe-dd. No model or shelf qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-native-source-c1-twocard
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT --one-card-receipt MATCHED_ONE_CARD_RECEIPT
+    notes: Prepared source controller only. Two B70s with explicit trimmed layer32 split and stage-owned mirrors. C1 MTP0 context8192, primary hotschmoe-dd. Matched one-card qualification required. No model or shelf qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-c1-onecard-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT
+    notes: Research-only strict0011/0012 segmented stage mirror profile; segment1024MiB, adaptation0, no prefill borrowing, full390 source/account/logical-free prerequisite and full model identity required. Primary hotschmoe-dd; no model or shelf promotion.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-strata-c1-twocard-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf-original-hc-ple
+    activations: original-f32-native-hc-ple-projections
+    calibration: unsloth-dynamic
+    serve_cmd: python3 strata/flash-next/c1_serve_controller.py launch --prepared NEW_RUN --pre-health CURRENT_HEALTH_RECEIPT --one-card-receipt MATCHED_SEGMENTED_ONE_CARD_RECEIPT
+    notes: Research-only strict0011/0012 segmented stage mirror profile; segment1024MiB, adaptation0, no prefill borrowing, full390 source/account/logical-free prerequisite and full model identity required. Primary hotschmoe-dd; no model or shelf promotion.

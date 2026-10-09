@@ -1,0 +1,20 @@
+{
+  "scope": "Preserve prior narrow-gated C1 controller/evidence interpretation before full390 and segmented stage version",
+  "files": [
+    {
+      "original": "strata/flash-next/c1_serve_controller.py",
+      "archived": "strata/flash-next/c1-controller-v1-archive/c1_serve_controller.py",
+      "sha256": "30e8a4cf30fa4a428026f3d4e0d71a8beb2ed75a43dc94b1b7f0862d13e1772d"
+    },
+    {
+      "original": "strata/flash-next/test_c1_controller_cpu.py",
+      "archived": "strata/flash-next/c1-controller-v1-archive/test_c1_controller_cpu.py",
+      "sha256": "8976cfcd6f54087ff16f586a61b923b6d3cc921c39dcfb2e431471d8fdd891cb"
+    },
+    {
+      "original": "strata/flash-next/native-c1-serving-controller.md",
+      "archived": "strata/flash-next/c1-controller-v1-archive/native-c1-serving-controller.md",
+      "sha256": "a24cf5b8fca3bdf77db27c1736a8653f1a636b481ce917e9e8c5f280dc3ed251"
+    }
+  ]
+}
