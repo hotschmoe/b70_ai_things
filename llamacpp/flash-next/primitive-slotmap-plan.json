@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "source_revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+  "patch": "llamacpp/flash-next/patches/0002-flashnext-cache-slotmap-getrows.patch",
+  "patch_sha256": "0d3b508dc4e3c4564ec625333f468156b77fe223a558c6307fee49c1d321968e",
+  "status": "unapplied CPU-source-audit plan, no GPU execution",
+  "groups": [
+    {
+      "name": "slotmap_n1",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GET_ROWS",
+        "-p",
+        "^type=i32,n=1,m=512,r=10,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1
+    },
+    {
+      "name": "slotmap_n2",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GET_ROWS",
+        "-p",
+        "^type=i32,n=1,m=512,r=20,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1
+    },
+    {
+      "name": "slotmap_n32",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "GET_ROWS",
+        "-p",
+        "^type=i32,n=1,m=512,r=320,be1=1,be2=1,v=0,vs0=0,offset_cols=0$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1
+    }
+  ],
+  "expected_total": 3,
+  "coverage": "Only I32 slotmap GET_ROWS shape correctness. Does not exercise GPU bank mutations, LRU hits/evictions, expert refill synchronization or graph split callbacks."
+}

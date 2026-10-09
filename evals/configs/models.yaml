@@ -650,3 +650,40 @@ models:
       on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
     notes: Research-only warmup arm of the same static C1 FP16-KV no-MTP control; default
       upstream warmup clears recurrent/KV state. Qualification pending.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-cache32768-control-warmup
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-cache32768-fp16kv-mtp0-ctx8192-warmup1
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement cache --moe-cache-mib
+      32768 --warmup on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output
+      NEW_RESULT_DIR
+    notes: Research-only all-host experts with 32768MiB total GPU cache, layer split48/52,
+      FP16-KV C1 no-MTP. No semantic, deterministic, async-refill or speed qualification
+      yet.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-cache32768-control-warmup-opt0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-cache32768-fp16kv-mtp0-ctx8192-warmup1-opt0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement cache --moe-cache-mib
+      32768 --warmup on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output
+      NEW_RESULT_DIR --sycl-opt 0
+    notes: Diagnostic opt0 exclusion arm of cache32768; no deterministic, lossless or
+      speed qualification.
+
+  - label: qwen38-flash-next-unsloth-udq4xl-llamacpp-static-control-warmup-opt0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-layer2-static-fp16kv-mtp0-ctx8192-warmup1-opt0
+    family: qwen3.8-flash-next
+    weights: unsloth-ud-q4-k-xl-mixed-gguf
+    activations: upstream-sycl-f16-off-control
+    calibration: unsloth-dynamic
+    serve_cmd: python3 llamacpp/flash-next/run_control.py --placement static --warmup
+      on --image IMAGE_ID --primitive-receipt PRIMITIVE_RECEIPT --output NEW_RESULT_DIR
+      --sycl-opt 0
+    notes: Matched static opt0 diagnostic control for cache-history logit drift; no
+      speed qualification.

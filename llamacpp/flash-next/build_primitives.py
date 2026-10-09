@@ -23,6 +23,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--image', required=True)
     p.add_argument('--leased', action='store_true')
+    p.add_argument('--extra-plan', type=Path, action='append', default=[])
     args = p.parse_args()
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
@@ -30,15 +31,19 @@ def main():
         assert os.path.samefile('/proc/self/fd/' + str(fd), '/mnt/vm_8tb/b70/gpu.lock.' + str(card))
     plan = json.loads((REPO / 'llamacpp/flash-next/primitive-extra-plan.json').read_text())
     original = SOURCE / 'tests/test-backend-ops.cpp'
-    patch = REPO / plan['patch']
+    plans = [plan, *[json.loads(path.read_text()) for path in args.extra_plan]]
+    patches = [REPO / item['patch'] for item in plans]
     assert sha(original) == plan['source_file_sha256']
-    assert sha(patch) == plan['patch_sha256']
+    for item, patch in zip(plans, patches):
+        assert item['source_revision'] == plan['source_revision']
+        assert sha(patch) == item['patch_sha256']
     assert subprocess.check_output(['git', '-C', str(SOURCE), 'rev-parse', 'HEAD'], text=True).strip() == plan['source_revision']
     directory = BUILD / ('primitive-overlay-' + time.strftime('%Y%m%dT%H%M%SZ', time.gmtime()))
     (directory / 'tests').mkdir(parents=True, exist_ok=False)
     overlay = directory / 'tests/test-backend-ops.cpp'
     shutil.copy2(original, overlay)
-    subprocess.run(['patch', '--batch', '-d', str(directory), '-p1', '-i', str(patch)], check=True)
+    for patch in patches:
+        subprocess.run(['patch', '--batch', '-d', str(directory), '-p1', '-i', str(patch)], check=True)
     server_before = sha(BUILD / 'bin/llama-server')
     if not (BUILD / 'bin/test-backend-ops-upstream').exists():
         shutil.copy2(BUILD / 'bin/test-backend-ops', BUILD / 'bin/test-backend-ops-upstream')
@@ -47,7 +52,7 @@ def main():
                                  '-v', str(SOURCE) + ':/src:ro', '-v', str(BUILD) + ':/build',
                                  '-v', str(overlay) + ':/src/tests/test-backend-ops.cpp:ro', args.image,
                                  'cmake --build /build --target test-backend-ops -j 4'], stdout=log, stderr=subprocess.STDOUT)
-    receipt = {'image': args.image, 'source_revision': plan['source_revision'], 'patch_sha256': sha(patch),
+    receipt = {'image': args.image, 'source_revision': plan['source_revision'], 'patches': [{'path': str(patch), 'sha256': sha(patch)} for patch in patches],
                'test_source_sha256': sha(overlay), 'build_rc': result.returncode,
                'server_sha256_before': server_before, 'server_sha256_after': sha(BUILD / 'bin/llama-server'),
                'test_binary_sha256': sha(BUILD / 'bin/test-backend-ops')}

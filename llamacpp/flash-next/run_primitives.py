@@ -28,9 +28,12 @@ def analyze(log, groups):
     rows = re.findall(r'^\s+(MUL_MAT_ID|MUL_MAT|GET_ROWS|GATED_DELTA_NET)\((.*?)\):[^\n]*\bOK\b', clean, re.M)
     counted = {g['name']: sum(op == g['op'] and re.fullmatch(g['params_regex'], params) is not None for op, params in rows) for g in groups}
     expected = sum(g['expected_executed'] for g in groups)
+    expected_phases = sum(g.get('expected_comparison_phases', 0) * g['expected_executed'] for g in groups)
+    completed_phases = len(re.findall(r'^CACHE_BANK phase=\d+ END byte_state=OK$', clean, re.M))
     passed = (summaries == [(expected, expected)] and all(counted[g['name']] == g['expected_executed'] for g in groups)
-              and 'not supported' not in clean.lower() and re.search(r'^\s+Backend SYCL0: OK$', clean, re.M) is not None)
-    return {'passed': passed, 'summaries': summaries, 'counts': counted, 'expected': expected}
+              and completed_phases == expected_phases and 'not supported' not in clean.lower() and re.search(r'^\s+Backend SYCL0: OK$', clean, re.M) is not None)
+    return {'passed': passed, 'summaries': summaries, 'counts': counted, 'expected': expected,
+            'expected_mutation_phases': expected_phases, 'completed_mutation_phases': completed_phases}
 
 
 def main():
@@ -40,6 +43,8 @@ def main():
     p.add_argument('--groups', nargs='+', help='Diagnostic subset; cannot qualify a model launch')
     p.add_argument('--debugger', action='store_true', help='Capture CPU crash stack; diagnostic only')
     p.add_argument('--persistent-cache', type=int, choices=[0, 1], default=0)
+    p.add_argument('--extra-plan', type=Path, action='append', default=[])
+    p.add_argument('--sycl-opt', type=int, choices=[0, 1], default=1)
     p.add_argument('--leased', action='store_true')
     args = p.parse_args()
     if not args.leased:
@@ -49,9 +54,12 @@ def main():
     assert re.fullmatch(r'sha256:[0-9a-f]{64}', args.image)
     args.output.mkdir(parents=True, exist_ok=False)
     out = args.output
-    plan_paths = [REPO / 'llamacpp/flash-next/primitive-plan.json', REPO / 'llamacpp/flash-next/primitive-extra-plan.json']
+    plan_paths = [REPO / 'llamacpp/flash-next/primitive-plan.json', REPO / 'llamacpp/flash-next/primitive-extra-plan.json', *args.extra_plan]
     plans = [json.loads(path.read_text()) for path in plan_paths]
     groups = [group for plan in plans for group in plan['groups']]
+    for group in groups:
+        group.setdefault('op', group['argv'][group['argv'].index('-o') + 1])
+        group.setdefault('params_regex', group['argv'][group['argv'].index('-p') + 1])
     all_group_names = [g['name'] for g in groups]
     if args.groups:
         if not set(args.groups) <= set(all_group_names):
@@ -65,6 +73,7 @@ def main():
               'controller_sha256': digest(Path(__file__)), 'groups_used': [g['name'] for g in groups],
               'coverage_complete': args.groups is None and not args.debugger,
               'debugger': args.debugger, 'persistent_device_code_cache': args.persistent_cache,
+              'sycl_optimization': args.sycl_opt,
               'plan_sha256': [digest(path) for path in plan_paths], 'started_epoch': started, 'cards': [], 'passed': False, 'post_health_passed': False}
     active = None
     stopped = False
@@ -148,6 +157,7 @@ def main():
                        '-v', '/dev/dri/by-path:/dev/dri/by-path:ro', '-v', str(BUILD) + ':/build:ro', '-v', str(cache) + ':/cache',
                        '-e', 'ZE_AFFINITY_MASK=' + str(card), '-e', 'ONEAPI_DEVICE_SELECTOR=level_zero:gpu',
                        '-e', 'GGML_SYCL_ENABLE_GRAPH=0', '-e', 'SYCL_CACHE_PERSISTENT=' + str(args.persistent_cache), '-e', 'SYCL_CACHE_DIR=/cache/sycl',
+                       '-e', 'GGML_SYCL_ENABLE_OPT=' + str(args.sycl_opt),
                        '-e', 'XDG_CACHE_HOME=/cache']
             if args.debugger:
                 command += ['--cap-add', 'SYS_PTRACE', '--security-opt', 'seccomp=unconfined', '-e', 'INTELGT_AUTO_ATTACH_DISABLE=1']

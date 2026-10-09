@@ -1,0 +1,153 @@
+--- a/tests/test-backend-ops.cpp
++++ b/tests/test-backend-ops.cpp
+@@ -1292,6 +1292,9 @@
+     virtual bool run_whole_graph() { return false; }
+     virtual std::vector<ggml_tensor *> fusion_test_nodes() { return {}; }
+     virtual bool use_weight_context() { return false; }
++    virtual int comparison_iterations() { return 1; }
++    virtual bool before_comparison(ggml_backend_t, int) { return true; }
++    virtual bool after_comparison(ggml_backend_t, int) { return true; }
+ 
+     ggml_cgraph * gf = nullptr;
+     ggml_cgraph * gb = nullptr;
+@@ -1554,9 +1557,16 @@
+         if (fused_nodes_to_verify.size() == 0 && run_whole_graph()) {
+             fused_nodes_to_verify.push_back(out);
+         }
+-        const bool cmp_ok = ggml_backend_compare_graph_backend(backend1, backend2, gf, callback, &ud,
+-                                                               run_whole_graph() ? fused_nodes_to_verify.data() : nullptr,
+-                                                               fused_nodes_to_verify.size());
++        bool cmp_ok = true;
++        for (int iteration = 0; iteration < comparison_iterations(); ++iteration) {
++            if (!before_comparison(backend1, iteration)) { cmp_ok = false; break; }
++            const bool phase_ok = ggml_backend_compare_graph_backend(backend1, backend2, gf, callback, &ud,
++                                      run_whole_graph() ? fused_nodes_to_verify.data() : nullptr,
++                                      fused_nodes_to_verify.size());
++            const bool state_ok = after_comparison(backend1, iteration);
++            cmp_ok = cmp_ok && phase_ok && state_ok;
++            if (!cmp_ok || !ud.ok) { break; }
++        }
+ 
+         // Create test result
+         bool        test_passed = ud.ok && cmp_ok;
+@@ -5330,6 +5340,109 @@
+     init_mul_mat_id_ids(ctx, n_mats);
+ }
+ 
++// Mutable pooled cache view oracle: deliberately small matrix, production-sized slot domain.
++struct test_flashnext_cache_bank : public test_case {
++    const ggml_type type;
++    const int n;
++    ggml_tensor * bank = nullptr;
++    ggml_tensor * cached = nullptr;
++    ggml_tensor * ids = nullptr;
++    ggml_tensor * result = nullptr;
++    std::vector<uint8_t> output_a, output_b, control;
++    std::vector<uint8_t> original, replacement, guard;
++    test_flashnext_cache_bank(ggml_type type, int n) : type(type), n(n) {}
++    std::string vars() override {
++        return "cache_bank=1,type=" + std::string(ggml_type_name(type)) +
++               ",slots=5120,n_used=10,m=16,n=" + std::to_string(n) + ",k=256,phases=5";
++    }
++    bool use_weight_context() override { return true; }
++    int comparison_iterations() override { return 5; }
++    double max_nmse_err() override { return 5e-4; }
++    ggml_tensor * build_graph(ggml_context *) override { GGML_ABORT("weight context required"); }
++    ggml_tensor * build_graph(ggml_context * ctx, ggml_context * weights) override {
++        bank = ggml_new_tensor_3d(weights, type, 256, 16, 5121);
++        ggml_set_name(bank, "flashnext_cache_bank");
++        cached = ggml_view_3d(weights, bank, 256, 16, 5120, bank->nb[1], bank->nb[2], 0);
++        ggml_set_name(cached, "flashnext_cached_view");
++        ids = ggml_new_tensor_2d(ctx, GGML_TYPE_I32, 10, n);
++        ggml_set_name(ids, "flashnext_cache_ids");
++        const bool broadcast = type == GGML_TYPE_Q4_K || type == GGML_TYPE_Q5_K;
++        auto * activation = ggml_new_tensor_3d(ctx, GGML_TYPE_F32, 256, broadcast ? 1 : 10, n);
++        result = ggml_mul_mat_id(ctx, cached, activation, ids);
++        return result;
++    }
++    void initialize_tensors(ggml_context * ctx) override {
++        const int32_t selected[] = {0, 511, 512, 1023, 2047, 4095, 4096, 4825, 4983, 5119};
++        for (auto * t = ggml_get_first_tensor(ctx); t; t = ggml_get_next_tensor(ctx, t)) {
++            if (t->view_src) { continue; }
++            if (t == ids) {
++                std::vector<int32_t> data(10*n);
++                for (int token = 0; token < n; ++token) {
++                    for (int i = 0; i < 10; ++i) { data[token*10+i] = selected[token ? 9-i : i]; }
++                }
++                ggml_backend_tensor_set(t, data.data(), 0, data.size()*sizeof(int32_t));
++            } else { init_tensor_uniform(t); }
++        }
++    }
++    bool check_state(int phase) {
++        if (cached->extra != nullptr || cached->ne[2] != 5120 ||
++            ggml_backend_buffer_get_usage(bank->buffer) != GGML_BACKEND_BUFFER_USAGE_WEIGHTS) {
++            printf(" CACHE_BANK bad view/buffer state "); return false;
++        }
++        std::vector<uint8_t> current(bank->nb[2]);
++        ggml_backend_tensor_get(bank, current.data(), 5119*bank->nb[2], current.size());
++        const auto & expected = phase == 2 || phase == 3 ? replacement : original;
++        if (current != expected) { printf(" CACHE_BANK target bytes changed "); return false; }
++        ggml_backend_tensor_get(bank, current.data(), 5120*bank->nb[2], current.size());
++        if (current != guard) { printf(" CACHE_BANK guard bytes changed "); return false; }
++        ggml_backend_tensor_get(bank, current.data(), 0, current.size());
++        if (current != control) { printf(" CACHE_BANK control bytes changed "); return false; }
++        return true;
++    }
++    bool before_comparison(ggml_backend_t backend, int phase) override {
++        ggml_backend_synchronize(backend);
++        if (phase == 0) {
++            original.resize(bank->nb[2]); replacement.assign(bank->nb[2], 0); guard.resize(bank->nb[2]);
++            ggml_backend_tensor_get(bank, original.data(), 5119*bank->nb[2], original.size());
++            ggml_backend_tensor_get(bank, guard.data(), 5120*bank->nb[2], guard.size());
++            control.resize(bank->nb[2]);
++            ggml_backend_tensor_get(bank, control.data(), 0, control.size());
++            if (original == replacement) { printf(" CACHE_BANK initial slot is zero "); return false; }
++        }
++        if (phase == 2 || phase == 4) {
++            const auto & data = phase == 2 ? replacement : original;
++            ggml_backend_tensor_set_async(backend, bank, data.data(), 5119*bank->nb[2], data.size());
++            ggml_backend_synchronize(backend);
++        }
++        printf("\nCACHE_BANK phase=%d START %s\n", phase, vars().c_str()); fflush(stdout);
++        return check_state(phase);
++    }
++    bool after_comparison(ggml_backend_t backend, int phase) override {
++        ggml_backend_synchronize(backend);
++        bool ok = check_state(phase);
++        std::vector<uint8_t> output(ggml_nbytes(result));
++        ggml_backend_tensor_get(result, output.data(), 0, output.size());
++        if (phase == 0) { output_a = output; }
++        if (phase == 2) {
++            output_b = output;
++            if (output_b == output_a) { printf(" CACHE_BANK refill had no output effect "); ok = false; }
++        }
++        if ((phase == 1 || phase == 4) && output != output_a) { printf(" CACHE_BANK A repeat mismatch "); ok = false; }
++        if (phase == 3 && output != output_b) { printf(" CACHE_BANK B repeat mismatch "); ok = false; }
++        for (int token = 0; token < n; ++token) {
++            for (int route = 0; route < 10; ++route) {
++                if (route == (token ? 0 : 9)) { continue; }
++                const size_t start = (token*10 + route)*16*sizeof(float);
++                if (memcmp(output.data()+start, output_a.data()+start, 16*sizeof(float)) != 0) {
++                    printf(" CACHE_BANK untouched output changed "); ok = false;
++                }
++            }
++        }
++        printf("\nCACHE_BANK phase=%d END byte_state=%s\n", phase, ok ? "OK" : "FAIL"); fflush(stdout);
++        return ok;
++    }
++};
++
+ // GGML_OP_MUL_MAT_ID
+ struct test_mul_mat_id : public test_case {
+     const ggml_type type_a;
+@@ -10504,6 +10617,10 @@
+     test_cases.emplace_back(new test_mul_mat_id_w4a8(GGML_TYPE_MXFP4, GGML_TYPE_F32, 8, 2, false, 32, 32, 256));
+     test_cases.emplace_back(new test_mul_mat_id_w4a4(GGML_TYPE_MXFP4, GGML_TYPE_F32, 8, 2, false, 32, 32, 256));
+ 
++    for (ggml_type type : {GGML_TYPE_Q4_K, GGML_TYPE_Q5_K, GGML_TYPE_Q5_1, GGML_TYPE_Q8_0}) {
++        for (int n : {1, 2}) { test_cases.emplace_back(new test_flashnext_cache_bank(type, n)); }
++    }
++
+ #if 0
+     // > 4GB A matrix. Too slow to be enabled by default.
+     test_cases.emplace_back(new test_mul_mat(GGML_TYPE_F16, GGML_TYPE_F16,  900000,  3, 2592, {1, 1}, {1, 1}));

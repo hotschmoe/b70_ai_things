@@ -1,0 +1,10 @@
+{
+  "schema": "b70.flash-next.profile-suite.v1",
+  "status": "diagnostic_only_not_headline_benchmark",
+  "max_tokens": 256,
+  "cases": [
+    {"id": "code", "class": "code", "prompt": "Write a Python function merge_intervals(intervals) that merges overlapping closed integer intervals, handles an empty list, and does not mutate its input. Include three concise assert examples and explain the time complexity. Keep the entire answer under 200 words."},
+    {"id": "prose", "class": "prose", "prompt": "Write a practical explanation for a small volunteer archive of how to test restoring its backups. Cover choosing a sample, protecting the original files, checking restored contents, and recording the result. Use two or three paragraphs, approximately 150 words."},
+    {"id": "operations", "class": "analysis_operations", "prompt": "A local service reads files from an SSD, processes them on a GPU, and writes results. Throughput drops when a second job starts, although neither job reports an error. Propose a short diagnostic plan that distinguishes CPU contention, storage waits, host-to-device transfer waits, and GPU compute saturation. Explain what observation would support each possibility. Keep the answer under 180 words."}
+  ]
+}

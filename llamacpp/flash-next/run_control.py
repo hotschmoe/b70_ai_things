@@ -17,6 +17,7 @@ REPO = Path(__file__).resolve().parents[2]
 BUILD = Path('/mnt/vm_8tb/b70/build/flashnext-llamacpp')
 HEALTH_IMAGE = 'sha256:d55637b3353eaf470677627dc1627c3dda3ec6a6abb0298451aed34b73937067'
 FAULT = re.compile(r'Fault response|CAT error|GPU HANG|GPU coredump|Job .* timed out|GT.* reset failed', re.I)
+CONTROLLER_SOURCE = Path(__file__).read_bytes()
 
 
 def sha(path):
@@ -38,9 +39,17 @@ def main():
     parser.add_argument('--port', type=int, default=18081)
     parser.add_argument('--warmup', choices=['on', 'off'], default='off')
     parser.add_argument('--log-verbosity', type=int, choices=[3, 4, 5], default=3)
+    parser.add_argument('--capture-profile', action='store_true', help='Run the diagnostic request suite after screening')
+    parser.add_argument('--cpu-profile', action='store_true', help='Separate instrumented run with software CPU sampling')
+    parser.add_argument('--init', action='store_true', help='Use Docker init to supervise the server child')
+    parser.add_argument('--sycl-opt', type=int, choices=[0, 1], default=1)
+    parser.add_argument('--profile-suite', type=Path)
+    parser.add_argument('--diagnostic-on-screen-failure', action='store_true', help='Preserve failed screen and continue only a labeled diagnostic capture')
     parser.add_argument('--primitive-receipt', required=True, type=Path)
     parser.add_argument('--leased', action='store_true')
     args = parser.parse_args()
+    if args.cpu_profile and not args.capture_profile:
+        parser.error('--cpu-profile requires --capture-profile')
     if not args.leased:
         os.execv(str(REPO / 'bin/gpu-run'), ['gpu-run', sys.executable, __file__, *sys.argv[1:], '--leased'])
     for fd, card in [(8, 0), (9, 1)]:
@@ -52,10 +61,12 @@ def main():
         parser.error('Invalid port or cache budget')
     args.output.mkdir(parents=True, exist_ok=False)
     out = args.output
+    (out / 'controller.py').write_bytes(CONTROLLER_SOURCE)
     started = int(time.time())
     name = 'flashnext-control-' + str(os.getpid()) + '-' + str(started)
     stopped = False
     client = None
+    profiler = None
     receipt = {'scope': 'bounded screening, not quality authority or promotion', 'passed': False,
                'image': args.image, 'placement': args.placement, 'container': name,
                'started_epoch': started, 'normal_stop': False, 'post_health_passed': False}
@@ -100,6 +111,15 @@ def main():
             raise RuntimeError('Passing same-runtime primitive receipt required')
         if primitives.get('binary_sha256') != sha(BUILD / 'bin/test-backend-ops'):
             raise RuntimeError('Primitive binary identity changed')
+        if primitives.get('sycl_optimization', 1) != args.sycl_opt:
+            raise RuntimeError('Primitive optimization mode differs from the candidate')
+        if args.placement == 'cache':
+            required = {'slotmap_n1', 'slotmap_n2', 'slotmap_n32'} | {
+                'bank_' + kind + '_n' + str(n) for kind in ['q4_K', 'q5_K', 'q5_1', 'q8_0'] for n in [1, 2]}
+            if not required <= set(primitives.get('groups_used', [])):
+                raise RuntimeError('Cache slot-map and mutable-view prerequisites required')
+            if any(row.get('completed_mutation_phases') != 40 for row in primitives.get('cards', [])):
+                raise RuntimeError('Cache mutation phase coverage incomplete')
         receipt['primitive_receipt_sha256'] = sha(args.primitive_receipt)
         lock_path = REPO / 'strata/flash-next/model-lock.json'
         lock = json.loads(lock_path.read_text())
@@ -115,16 +135,20 @@ def main():
                 raise RuntimeError('Model intake identity mismatch: ' + entry['path'])
         receipt.update({'model_lock_sha256': sha(lock_path), 'intake_sha256': sha(intake_path),
                         'model_revision': lock['revision'], 'server_sha256': sha(BUILD / 'bin/llama-server')})
-        alias = lock['research_alias'] + '-llamacpp-layer2-' + args.placement + '-fp16kv-mtp0-ctx8192'
+        method = args.placement if args.placement == 'static' else 'cache' + str(args.moe_cache_mib)
+        alias = lock['research_alias'] + '-llamacpp-layer2-' + method + '-fp16kv-mtp0-ctx8192'
         if args.warmup == 'on':
             alias += '-warmup1'
+        if args.sycl_opt == 0:
+            alias += '-opt0'
+        receipt['sycl_optimization'] = args.sycl_opt
         receipt['warmup'] = args.warmup
         receipt['research_alias'] = alias
         import yaml
         registry = yaml.safe_load((REPO / 'evals/configs/models.yaml').read_text())
         if alias not in [row.get('served_model_id') for row in registry['models']]:
             raise RuntimeError('Research alias missing from evaluation identity registry')
-        receipt['controller_sha256'] = sha(Path(__file__))
+        receipt['controller_sha256'] = hashlib.sha256(CONTROLLER_SOURCE).hexdigest()
         with socket.socket() as port_check:
             port_check.bind(('127.0.0.1', args.port))
     except Exception as error:
@@ -167,8 +191,15 @@ def main():
                    '-v', '/dev/dri/by-path:/dev/dri/by-path:ro', '-v', str(BUILD) + ':/build:ro',
                    '-v', str(model_dir) + ':/model:ro', '-e', 'ONEAPI_DEVICE_SELECTOR=level_zero:0,1',
                    '-e', 'ZE_AFFINITY_MASK=0,1', '-e', 'GGML_SYCL_ENABLE_GRAPH=0', '-e', 'ZES_ENABLE_SYSMAN=1',
-                   '-e', 'SYCL_CACHE_PERSISTENT=0',
-                   args.image, 'exec /build/bin/llama-server ' + ' '.join(__import__('shlex').quote(s) for s in server_args)]
+                   '-e', 'SYCL_CACHE_PERSISTENT=0']
+        command += ['-e', 'GGML_SYCL_ENABLE_OPT=' + str(args.sycl_opt)]
+        if args.init or args.cpu_profile:
+            command += ['--init']
+        if args.cpu_profile:
+            command += ['--cap-add', 'SYS_PTRACE', '--security-opt', 'seccomp=unconfined', '-v', str(out.resolve()) + ':/results']
+        command += [args.image, 'exec /build/bin/llama-server ' + ' '.join(__import__('shlex').quote(s) for s in server_args)]
+        receipt['supervised_child'] = args.init or args.cpu_profile
+        receipt['software_cpu_sampling'] = args.cpu_profile
         receipt['server_arguments'] = server_args
         receipt['command'] = command
         save(out / 'runtime-receipt.json', receipt)
@@ -216,12 +247,70 @@ def main():
         if client.poll() is None:
             raise RuntimeError('Screen deadline or interruption')
         if client.returncode:
-            raise RuntimeError('Screen failed; preserve responses')
+            if not args.diagnostic_on_screen_failure or not args.capture_profile:
+                raise RuntimeError('Screen failed; preserve responses')
+            receipt['error'] = {'type': 'ScreenFailure', 'message': 'Strict screen failed; diagnostic continuation only'}
         faults()
-        receipt['screen_passed'] = True
+        screen = json.loads((out / 'screen/screening-result.json').read_text())
+        receipt['screen_passed'] = screen['passed']
+        authority_path = REPO / 'llamacpp/flash-next/screen-authority.json'
+        authority = json.loads(authority_path.read_text())
+        receipt['screen_authority_sha256'] = sha(authority_path)
+        compared = {row['case']: row['output_sha256'] == authority['outputs'][row['case']] for row in screen['checks'] if row['round'] == 1}
+        receipt['static_screen_authority_matches'] = compared
+        receipt['static_screen_authority_all_equal'] = all(compared.values())
+        save(out / 'runtime-receipt.json', receipt)
+        if args.capture_profile:
+            if args.cpu_profile:
+                from cpu_profile import CpuProfile
+                profiler = CpuProfile(name, out)
+                receipt['profile_target_pid'] = profiler.start()
+                deadline = time.monotonic() + 60
+                while not profiler.ready() and time.monotonic() < deadline and not stopped:
+                    faults()
+                    memory_sample()
+                    if not inspect()['Running']:
+                        raise RuntimeError('Server exited during profiler attachment')
+                    time.sleep(1)
+                if not profiler.ready():
+                    raise RuntimeError('Software profiler attachment deadline')
+            profile_log = (out / 'profile-client.log').open('w')
+            profile_command = [sys.executable, str(REPO / 'llamacpp/flash-next/capture_profile.py'),
+                                       '--endpoint', endpoint, '--output', str(out / 'profile-requests'),
+                                       '--runtime-receipt', str(out / 'runtime-receipt.json'),
+                                       '--screen-receipt', str(out / 'screen/screening-result.json'),
+                                       '--model-lock', str(lock_path)]
+            if args.profile_suite is not None:
+                profile_command += ['--suite', str(args.profile_suite)]
+            client = subprocess.Popen(profile_command, stdout=profile_log, stderr=subprocess.STDOUT)
+            deadline = time.monotonic() + 2400
+            while client.poll() is None and time.monotonic() < deadline and not stopped:
+                faults()
+                memory_sample()
+                if profiler is not None:
+                    profiler.assert_active()
+                if not inspect()['Running']:
+                    raise RuntimeError('Candidate exited during diagnostic capture')
+                time.sleep(5)
+            if client.poll() is None:
+                raise RuntimeError('Diagnostic capture deadline or interruption')
+            if client.returncode:
+                raise RuntimeError('Diagnostic capture incomplete')
+            receipt['diagnostic_capture_complete'] = True
+            if profiler is not None:
+                profiler.stop()
+                if not inspect()['Running']:
+                    raise RuntimeError('Server exited during profiler detachment')
+                receipt['software_cpu_profile_complete'] = True
+            faults()
     except Exception as error:
         receipt['error'] = {'type': type(error).__name__, 'message': str(error)}
     finally:
+        if profiler is not None and not profiler.stopped:
+            try:
+                profiler.stop()
+            except Exception as error:
+                receipt['profiler_cleanup_error'] = {'type': type(error).__name__, 'message': str(error)}
         if client is not None and client.poll() is None:
             client.terminate()
             try:
@@ -232,6 +321,8 @@ def main():
             try:
                 run(['docker', 'logs', name], 'server.log', 30, False)
                 run(['docker', 'stop', '-t', '90', name], 'stop.log', 120, False)
+                # Cache counters are printed at destruction, after the stop.
+                run(['docker', 'logs', name], 'server.log', 30, False)
             except Exception as error:
                 receipt['cleanup_error'] = {'type': type(error).__name__, 'message': str(error)}
             # Daemon errors are not proof of absence. Retain the lease until
@@ -267,7 +358,7 @@ def main():
         except Exception as error:
             receipt['final_fault_error'] = {'type': type(error).__name__, 'message': str(error)}
         receipt['finished_epoch'] = int(time.time())
-        receipt['passed'] = bool(receipt.get('screen_passed') and receipt['normal_stop'] and receipt['post_health_passed'] and not any(k in receipt for k in ['error', 'cleanup_error', 'final_fault_error']))
+        receipt['passed'] = bool(receipt.get('screen_passed') and receipt['normal_stop'] and receipt['post_health_passed'] and not any(k in receipt for k in ['error', 'cleanup_error', 'final_fault_error', 'profiler_cleanup_error']))
         save(out / 'runtime-receipt.json', receipt)
     print(json.dumps({'passed': receipt['passed'], 'result': str(out)}, ensure_ascii=True))
     return 0 if receipt['passed'] else 1

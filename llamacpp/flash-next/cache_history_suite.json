@@ -1,0 +1,28 @@
+{
+  "schema": "b70.flash-next.profile-suite.v1",
+  "status": "unqualified_cache_history_diagnostic_only",
+  "max_tokens": 256,
+  "purpose": "P,P,unrelated,P using unchanged screening prompt strings; compare native token IDs and pre-sampling top-five probabilities. No performance or quality promotion.",
+  "cases": [
+    {
+      "id": "prose_first",
+      "class": "prose",
+      "prompt": "In two short sentences, explain why a backup should be tested by restoring it. Include the words backup and restore."
+    },
+    {
+      "id": "prose_immediate_repeat",
+      "class": "prose",
+      "prompt": "In two short sentences, explain why a backup should be tested by restoring it. Include the words backup and restore."
+    },
+    {
+      "id": "intervening_json",
+      "class": "structured",
+      "prompt": "Return only a JSON object with exactly these fields: status is the string ready, count is the integer 3, and items is the array [1, 2, 3]. No Markdown or explanation."
+    },
+    {
+      "id": "prose_after_json",
+      "class": "prose",
+      "prompt": "In two short sentences, explain why a backup should be tested by restoring it. Include the words backup and restore."
+    }
+  ]
+}

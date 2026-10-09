@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "source_revision": "de7fa0a3c6a2e1b4cd9f22eb8d6bf5b12dbdb63b",
+  "patch": "llamacpp/flash-next/patches/0003-flashnext-mutable-cache-bank.patch",
+  "patch_sha256": "dd06c984108de1d0619ecfee16fa011df3d514b6cdb514e203cf70d67d130672",
+  "status": "CPU-only source preparation; not applied, compiled, or GPU-executed",
+  "groups": [
+    {
+      "name": "bank_q4_K_n1",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q4_K,slots=5120,n_used=10,m=16,n=1,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    },
+    {
+      "name": "bank_q4_K_n2",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q4_K,slots=5120,n_used=10,m=16,n=2,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    },
+    {
+      "name": "bank_q5_K_n1",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q5_K,slots=5120,n_used=10,m=16,n=1,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    },
+    {
+      "name": "bank_q5_K_n2",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q5_K,slots=5120,n_used=10,m=16,n=2,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    },
+    {
+      "name": "bank_q5_1_n1",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q5_1,slots=5120,n_used=10,m=16,n=1,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    },
+    {
+      "name": "bank_q5_1_n2",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q5_1,slots=5120,n_used=10,m=16,n=2,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    },
+    {
+      "name": "bank_q8_0_n1",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q8_0,slots=5120,n_used=10,m=16,n=1,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    },
+    {
+      "name": "bank_q8_0_n2",
+      "argv": [
+        "test",
+        "-b",
+        "SYCL0",
+        "-o",
+        "MUL_MAT_ID",
+        "-p",
+        "^cache_bank=1,type=q8_0,slots=5120,n_used=10,m=16,n=2,k=256,phases=5$",
+        "-j",
+        "1"
+      ],
+      "expected_executed": 1,
+      "expected_comparison_phases": 5
+    }
+  ],
+  "expected_fixtures_per_card": 8,
+  "expected_comparison_phases_per_card": 40,
+  "slots_visible": 5120,
+  "slots_allocated": 5121,
+  "matrix_shape_k_m": [
+    256,
+    16
+  ],
+  "selected_slot_ids": [
+    0,
+    511,
+    512,
+    1023,
+    2047,
+    4095,
+    4096,
+    4825,
+    4983,
+    5119
+  ],
+  "phases": [
+    "original miss/fill state",
+    "original hit",
+    "raw zero-slot refill",
+    "zero-slot hit",
+    "raw original restore"
+  ],
+  "largest_packed_bank_bytes": 22286592,
+  "initializer_float_bytes": 83902464,
+  "coverage": [
+    "WEIGHTS bank with extra-null cached view",
+    "slot domain beyond512 and through5119",
+    "quantized raw async upload followed by synchronization",
+    "CPU reference fresh graph copy each phase",
+    "target slot, control slot, and guard byte invariance before/after every compute",
+    "exact A hit/restore and B hit output bytes; unchanged route output bytes"
+  ],
+  "limitations": [
+    "Small matrix shapes do not qualify production throughput or full-size kernels",
+    "Manual mutation does not run actual cache LRU callbacks or graph splits",
+    "Explicit synchronization does not qualify cache async cross-backend event ordering",
+    "Zero replacement is valid all-zero blocks for these four formats",
+    "Unsupported or skipped fixtures fail qualification; expect all8 executed",
+    "END byte_state=OK is only state check; final fixture result must also pass numerical comparison"
+  ],
+  "generation": 2,
+  "registration_fix": "Move eight fixtures outside upstream #if 0 disabled large-matrix block; fixture implementation unchanged.",
+  "preprocess_receipt": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f02-20261009/cache-prerequisites-v1/patch003-registration-fix-preprocess.json"
+}

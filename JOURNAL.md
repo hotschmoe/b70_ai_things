@@ -8956,3 +8956,34 @@ step is measured cache candidate/coherence, then profiling and paired cold
 performance. Servers stopped after tests; GPU leases released. Research and
 reproduction: docs/20261009_flashnext_intake_and_primitive_qualification.md.
 Raw F01 receipts: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f01-20261009/.
+
+## 2026-10-09 FlashNext F02 cache prerequisites and history controls
+
+CONFIG -> Pinned de7fa llama.cpp/server f5a0f84c, NEO26.22 runtime39992d70,
+Unsloth UD-Q4_K_XL revision766911a6, dual-B70 layer split48/52, warmup on,
+FP16 KV, no MTP, ctx8192, graph/persistent-code-cache off. Cache arm hosts
+all experts with32768MiB total GPU expert cache. Static arm retains F01
+placement. No shelf promotion.
+
+COMMAND -> run_primitives.py cache-prerequisites-v2 and cache-opt0-prerequisites;
+run_control.py cache32768-candidate-v1, cache32768-opt0-history-v2,
+static-opt0-history-control; analyze_history.py offline captures. Commands,
+source/binary identities and raw responses in results/flashnext_udq4xl_20261008/
+f02-20261009. Full methodology in docs/20261009_flashnext_gpu_expert_cache_comparison.md.
+
+RESULT -> Corrected test registration gives47/47 fixtures and40 exact cache
+mutation phases per card under OPT1 and OPT0. Initial disabled-registration
+attempt failed coverage and is preserved. Cache candidate passes individual
+answer checks but fails strict prose repetition; disabling optimization does
+not repair it. Static OPT0 also fails prose repetition and immediate native
+history repeat diverges at token0. Cache later35 output IDs repeat, yet top-five
+probabilities drift. Equal string prompts/params/progress are recorded; input
+IDs are not independently established. All three model runs stop/remove
+normally and pass per-card and compiled P2P0 post-health, no GPU fault signature.
+Profiler CPU-only preflight proves PID1 attach/stop kills target; supervised
+child survives. No GPU profiler result or cache byte-verifier execution yet.
+
+VERDICT -> Bounded cache layout/refill prerequisites pass; release cache
+correctness does not. Static OPT0 result prevents attributing drift solely to
+cache. Static OPT1 history comparison is the next matched control. Keep failed
+receipts and diagnostic timing separate from performance claims.
