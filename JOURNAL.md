@@ -9876,3 +9876,17 @@ sourceplan40 expectedfiles; no SDK resultyet.
 VERDICT -> Boundednew20pin/prefill observable consistency. New21 source
 compilation/off-on/ownership/originalpacket/math gates remainopen;7fields
 unobserved and fullmodelmath/concurrency/latency stillunqualified.
+
+## 2026-10-09 Capture21 fullSDK and source-upload oracle builds
+
+CONFIG -> Frozen21 standaloneplan5367d377, source/model/runtime unchanged.
+COMMAND -> Leased fullenginebuild, parenthashverification, leased full390
+oraclecompile, then neworacleGPUruntimegate.
+RESULT -> SDKPASS279s,40expectedsourcefiles and3exes; actualreceipt
+48a677e70c58686ba68299d2607b7c37d41f1774fdb9eb811ab6a3d6f8771de7 at
+/b70/build/strata-native-hc-engine-20261009T130403Z-8b4zuyvp. Oraclecompile
+PASS47s chhk0m3k. F08/source-upload-capture21-v1 GPUgate running1293; no
+runtime source/capture resultyet.
+VERDICT -> ActualSDK/ABI compile only. Genuine newsourceidentity/readback,
+20vs21off+same21off/on GPUstate/output/nonce/lifetime gates remain required;
+26/33capture partial, fullmodelmath/concurrency/latency stillunqualified.
