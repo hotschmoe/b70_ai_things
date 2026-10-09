@@ -9477,3 +9477,19 @@ or run. Loader provenance, IGC byte match and Torch/CCL compatibility remain ope
 VERDICT -> No cause inference, stack replacement or matched-health qualification.
 Keep current guards and current images; optional controls remain separate source
 preparation. See strata/flash-next/health-source-preparation-review-v1.md.
+
+## 2026-10-09 Serial prefix qualification coverage audit
+
+CONFIG -> Frozen V5 and actual corrected0018 source, while parent basic GPU
+suite runs; no edits to consumed model/controller/plan sources.
+COMMAND -> Read-only goal-to-controller/cache/state source audit.
+RESULT -> Identified missing nonfresh replay after decode cancellation, actual
+generated-assistant/new-user continuation, exact snapshot admission/victim and
+retained budget checks, and independently measured per-stage span provenance.
+Recorded bounded next-version rosters and source locations in
+strata/flash-next/serial-prefix-goal-gap-audit.md. The live basic suite's clean
+and logits-only probes match output IDs and LP20 for A/B/C; layer suite and
+final health/hash gates remain pending, so this is not a finalized GPU pass.
+VERDICT -> Preserve V5 as bounded internal-consistency evidence. Complete-state
+prefix, API session isolation, concurrency and independent mathematics remain
+open; new coverage must be separately versioned and qualified.
