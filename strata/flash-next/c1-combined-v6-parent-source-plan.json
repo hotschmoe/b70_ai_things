@@ -1,0 +1,25 @@
+{
+  "schema": 6,
+  "scope": "CPU source parent6 proof/source binding; no genuine qualification",
+  "files": {
+    "qualify_c1_serving_combined_v6.py": "c1fd80a9ef2233b651449e4a7c1c9a2733e8469e04fdd1fd091b389bf33fcc08",
+    "test_qualify_c1_serving_combined_v6.py": "0a91dd28cab9e93a36eede7b8a65e21f17fdc7cb500534b39b2af2a80a114819",
+    "test_c1_serve_controller_combined_v6.py": "faf66b8a12d63debe76fd373b88cf8719f482e2a47d7ede56282eb77c209c3bf",
+    "c1-combined-v6-import28-preparation.md": "fdd5b098f0e0fcb153a69b17cb28d91587d76ff779c44c76c3f30798e58b85d0",
+    "c1_serve_controller_combined_v6.py": "9c7fee83487a4a36b090dea59ece17a43144e8ead395e0c77318fadfae9a8b02",
+    "c1-combined-v6-source-plan.json": "b417bf6f277c6ce9e9d1ebfe57483ea53dab7f3bacb07520455ab2b8b1f5868b",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source-upload-runner-v2-source-plan.json": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "preserved_v5_parent_plan_sha256": "2ff94a1bb3c1fa0f64c5b9b4b9afee21d9879dea35b66cd5fa37c1769d92dc5f",
+  "cpu_tests": 20,
+  "proof_helper": "qualify_c1_serving_combined_v6.validate_final_source_proof(directory,prepared)",
+  "source_proof": "c1-source-identity-proof-v6.json",
+  "post_identity": "c1-post-model-identity-v6.json",
+  "canonical_source_stat": "list5 including ctime",
+  "actual_model_payload_reads": 0,
+  "actual_c1_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false
+}

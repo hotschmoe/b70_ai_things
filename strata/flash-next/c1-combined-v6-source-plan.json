@@ -1,0 +1,24 @@
+{
+  "schema": 6,
+  "scope": "CPU source import28 generation; no model payload/runtime/genuine preparation",
+  "engine_plan": "combined-numerical-batch-engine-build-plan-v2.json",
+  "engine_plan_sha256": "d496d4639b92e8de7241ec97122467e4e6e4428d95d47e690bf5aab258fbe028",
+  "files": {
+    "c1_serve_controller_combined_v6.py": "9c7fee83487a4a36b090dea59ece17a43144e8ead395e0c77318fadfae9a8b02",
+    "test_c1_serve_controller_combined_v6.py": "faf66b8a12d63debe76fd373b88cf8719f482e2a47d7ede56282eb77c209c3bf",
+    "c1-combined-v6-import28-preparation.md": "fdd5b098f0e0fcb153a69b17cb28d91587d76ff779c44c76c3f30798e58b85d0",
+    "c1-combined-v6-model-registry-proposal.yaml": "223f88db18e5b882cec2183313418eaae48277b7db0cda325af38a79c64e5f19",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source-upload-runner-v2-source-plan.json": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "preserved_v5_source_plan_sha256": "da875fd3a5f11ea7d3dc3619965665b5a0202f2587cba9a3d309ebb8754d23ea",
+  "cpu_tests": 33,
+  "actual_sdk_source_gate_passed": true,
+  "actual_sdk_engine_receipt_sha256": "7baca0cc1c652be3a859888a25889278dac9393b8af5a078db6b81c49e9013a3",
+  "canonical_source_stat": "list5 including ctime",
+  "actual_model_payload_reads": 0,
+  "actual_preparation_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false
+}

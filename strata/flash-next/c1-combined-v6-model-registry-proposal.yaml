@@ -1,0 +1,34 @@
+# Proposed import28 aliases; no live response or serving qualification.
+models:
+  - label: flashnext-strata-import28-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srccombined24v2-api22v2-import28-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-import28-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srccombined24v2-api22v2-import28-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-import28-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srccombined24v2-api22v2-import28-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-import28-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srccombined24v2-api22v2-import28-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v6.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Source0028 Python package import fix; matching new engine/sourceuploadV2/full4/C1parent6 proof mandatory. No native math/concurrency/shelf claim."

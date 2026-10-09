@@ -10249,3 +10249,25 @@ omissions. Compatibility isCPUonly; no SDK/GPU/model payload byagent.
 VERDICT -> Commitimmutable27source before integratedbuild; actualfresh-vs-hit
 fullheads/all48/state/count/lifecycle and1/2/4/6 cachecoherence stillrequired.
 No runtime/math/fairness/latency or shelfqualification.
+
+
+## 2026-10-09 - Import28 new source390 qualification PASS
+
+CONFIG -> NewSDK28 7baca0cc source/APIimportfix,51sources/8nativebinaries same
+asprior24 exceptserver.py; newlylinked sourceoracle andactual32/16 sourceplan.
+NewC1V6/parent6/numericalV7 source generation pins newSDK/six Python files.
+
+COMMAND -> ActualstrictuploadV2 withfreshall4identity, fiveGPUcases and
+newpostterminal/posthealth full4scan. Independently run C1V6 33controls/parent6
+20controls and numericalV7 parent/child tests; verify sourcepins. Register4
+newimport28 researchaliases with hotschmoe-dd first, no shelfentry.
+
+RESULT -> UploadPASS277s; all5cases387HC+3PLE, ordinary300 countednotreadback.
+Logicalowner/context/free/negativecontrols, terminal/removal, pre/posthealth,
+twoknownsourcepages andNEWall4publisher hashes PASS. CPUcontrols PASS. No
+genuineC1V6 preparation/runtime or numericV7 positive fromtheseCPUtests.
+
+VERDICT -> Source390/lifecycle gatequalified fornewimport28generation.
+GenuineC1one/pair, originalmodelmath, completeprefixcache, real2/4/6 serving
+andmatchedlatency remainrequired. Priorfailedruns remainfailed; sourcecause
+ofearliercachedbit remainsunknown. See docs/20261009_flashnext_api28_source_upload_qualification.md.
