@@ -10011,3 +10011,27 @@ and the genuine new full four-shard source identity.
 
 VERDICT -> Source checkpoint before actual evaluation. Supplied-input operator
 evidence cannot qualify own-state/full-model math, concurrency or lifecycle.
+
+
+## 2026-10-09 - Capture21 ordered one-card numerical PASS
+
+CONFIG -> Genuine numerical-v2 one-card plan, frozen20 reference and21 candidate,
+original source shards, same matched native serial geometry and prefixes1/2/4/8.
+Failed v1 stays preserved. Producer-merged chronological log fixes collection.
+
+COMMAND -> qualify_layer0_numerical_v2.py to new F08/layer0-numerical-onecard-v2;
+verify all finalized parent/child/lifecycle/packet/health/source receipts. After
+terminal exit0 run verify_layer0_gdn_original_v1.py with actual21_on requests
+and NEW full-shard identity to layer0-conditional-gdn-onecard-v2/receipt.json.
+
+RESULT -> Parent PASS761s, all processes exit0/removed. Eight full248320 heads
+and384 full residual rows bitwise equal across20/21-off andsame21 off/on.
+Four26-field frames,12 native packets, chronological target allocation/context/
+free, pre/post strict/compiled health, fault gate and all4 model hashes PASS.
+Conditional original-weight seven-operator checks per prefix PASS28, worst
+NMSE2.126246967028125e-14/max-normalized2.9579823077046734e-7. Limits unchanged.
+
+VERDICT -> Bounded one-card capture diagnostic qualified; conditional supplied
+state math is not independent own-state/full-model qualification. Actual pair,
+remaining producer coverage, real2/4/6 concurrency and matched latency still
+required. See docs/20261009_flashnext_capture21_numerical_v2.md for receipt hashes.
