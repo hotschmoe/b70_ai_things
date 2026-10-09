@@ -10271,3 +10271,24 @@ VERDICT -> Source390/lifecycle gatequalified fornewimport28generation.
 GenuineC1one/pair, originalmodelmath, completeprefixcache, real2/4/6 serving
 andmatchedlatency remainrequired. Priorfailedruns remainfailed; sourcecause
 ofearliercachedbit remainsunknown. See docs/20261009_flashnext_api28_source_upload_qualification.md.
+
+
+## 2026-10-09 - Import28 actual one-card C1 API/source qualification PASS
+
+CONFIG -> GenuineV6 prepared e5e13288, import28 SDK7baca0cc,6 Python sources,
+onecardsegmented context2048/prefill64 FP16KV/MTP0/adapt0/no borrow. Primary
+hotschmoe-dd first, exactimport28 secondaryalias. Pairlease for pre/posthealth.
+
+COMMAND -> qualify_c1_serving_combined_v6.py; inspect real/live models, six
+APIresponses/token traces/repeats, native/API stop, health andNEWall4fullhash.
+Independently call public validate_final_source_proof with actualpreparedmetadata.
+
+RESULT -> Parent terminal PASS516s. APIidentity/coherence/consumption/EOS and
+repeat token/LP20 checks PASS. API/nativeexit0/noOOM/removed, pre/post strict
+percard+compiledP2P0health PASS. Bothsourcepagesoriginal andNEWall4publisher
+hashes afterterminal/posthealth PASS. Publicstrongproof validatescrossbindings.
+
+VERDICT -> Bounded single-cardAPI/source/lifecycle passed, notwholemodel math,
+prefix/concurrency/clean latency/stability/shelf. PriorAPI5 andpairV2failures
+remainfailed; sourcecauseunknown. Matchedpair actualqualification next.
+See docs/20261009_flashnext_import28_c1_onecard_qualification.md.
