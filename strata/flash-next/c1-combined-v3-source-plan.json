@@ -1,0 +1,20 @@
+{
+  "schema": 3,
+  "scope": "CPU source preparation only; no genuine prepare or GPU qualification",
+  "engine_plan": "strata/flash-next/combined-numerical-batch-engine-build-plan-v1.json",
+  "engine_plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a",
+  "files": {
+    "c1_serve_controller_combined_v3.py": "3c2131f27aded8049539502c5bd32250940d31a28399535a782baf413aa54035",
+    "test_c1_serve_controller_combined_v3.py": "6e7abf194970e70613ecad2889e86c060f84cbf70cca8261ee52be1fe109a904",
+    "c1-combined-v3-model-registry-proposal.yaml": "8092be06e7c8abebc084accc3ee6db08b6a67395b089596f9f5a89f218cbecfa",
+    "c1-combined-v3-preparation.md": "09688eaa20c735149621840daaee623625e20e6886371ecb7143dfa9ebb33580"
+  },
+  "preserved_controller_sha256": "69433d6b50538b1fafc62555165323df32228150d081dfefe9bf232c38abcaee",
+  "cpu_mock_tests": 14,
+  "actual_model_payload_reads": 0,
+  "actual_sdk_build_qualified": false,
+  "actual_upload_gate_qualified": false,
+  "actual_preparation_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false
+}

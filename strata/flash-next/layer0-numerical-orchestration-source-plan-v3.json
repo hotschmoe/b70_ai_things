@@ -1,0 +1,70 @@
+{
+  "schema": 3,
+  "status": "READY frozen CPU source preparation; not a genuine runtime preparation or numerical qualification",
+  "engine_source_plan": "strata/flash-next/combined-numerical-batch-engine-build-plan-v1.json",
+  "engine_source_plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a",
+  "source_sha256": {
+    "strata/flash-next/audit_layer0_capture_lifecycle_v2.py": "cd5441854c7bf11250080c7b109564e91f204422c4b790623132999641a7abfe",
+    "strata/flash-next/layer0_numerical_qualification_v3.py": "bc08fbedb4932811036c8aacf310e755b272e22722504c9b45954baef3bf9688",
+    "strata/flash-next/qualify_layer0_numerical_v3.py": "f106db677241dafce9320ee4f389c34c76e12e470f7a5e5d996f4dc181b62f1d",
+    "strata/flash-next/verify_layer0_packets_v3.py": "620f18e8aed625bb3c40f451d94ed66a8b1aa6aa247ec7638423426f38e9b329",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/test_layer0_numerical_qualification_cpu_v3.py": "3ffb90c752cf168343f4064c066f3354144bd4cd97a70643800cf3271a49a2cf",
+    "strata/flash-next/test_qualify_layer0_numerical_cpu_v3.py": "5da496469339c62de18c2bab2715f3a1b65eb0b29f0cc178435c4d529210c54c",
+    "strata/flash-next/layer0-numerical-orchestration-design-v3.md": "499b5790b258d267217ced6541527a1fdc1939bc99df02c51267b7c1eb4cb4ca",
+    "strata/flash-next/layer0-numerical-orchestration-cpu-receipt-v3.json": "fde751ab5dab87058870572bbea24df055999f1ba0d5e5073df9014a4d9ed144",
+    "strata/flash-next/layer0-parent-orchestration-cpu-receipt-v3.json": "d6bdecc39c46c1ce74a1b9a3382a2072ee7bfde6d13d3ffcd54ce85bfc57c926"
+  },
+  "candidate_c1_source": "strata/flash-next/c1_serve_controller_combined_v3.py",
+  "candidate_c1_source_sha256": "3c2131f27aded8049539502c5bd32250940d31a28399535a782baf413aa54035",
+  "candidate_c1_source_plan_sha256": "5369fa2842887e8efb04877a23ca04d9789a6e652e374bc410eb8860f35bd39f",
+  "reference": "frozen21 V2 finalized child PLUS parent fullhash/health/owned teardown success, identical placement/geometry/input positions",
+  "genuine_prepare_required": [
+    "actual combined SDK all8 ELF binaries and complete51 source ledger",
+    "matching completed full390 source upload/account/free gate",
+    "new completed actual combined C1 qualification",
+    "six source API22 runtime fingerprint and actual admitted registry profile",
+    "fresh all4 publisher fullhash with current stat and BOTH source-qualified knownpages"
+  ],
+  "observed_layout_fields": 33,
+  "source_value_fields": 31,
+  "derived_fields": 2,
+  "raw_fused_hidden_observed": false,
+  "observer_bytes": 7023304,
+  "control_bytes": 256,
+  "packet_pairs_per_prefix": 5,
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "packet_gate": "exact independent native Q8_1 raw bytes; intrinsic rounding mismatches FAIL, no relaxed tolerance",
+  "derived_hidden_fp64_gate": {
+    "nmse": 1e-06,
+    "max_normalized": 0.0001,
+    "raw_original_hidden_proven": false
+  },
+  "source_pages": {
+    "shard": 3,
+    "page_bytes": 4096,
+    "pages": [
+      {
+        "offset": 3857879040,
+        "sha256": "2780fef9ce50fa1acbd4bdbf6c311b847395571fcc5e6ddb55898841fbcee90e"
+      },
+      {
+        "offset": 39437303808,
+        "sha256": "d69f7ffbfaab20277926926a4e542ce906b7fe9f4a4791dc7c46e945f0b1bced"
+      }
+    ],
+    "failure": "preserve both buffered views; owned stop; FAIL; no cache invalidation/write/repair"
+  },
+  "full_model_math_qualified": false,
+  "original_weight_consumer_qualified": false,
+  "actual_execution_performed": false,
+  "cpu_commands": [
+    "python3 strata/flash-next/test_layer0_numerical_qualification_cpu_v3.py",
+    "python3 strata/flash-next/test_qualify_layer0_numerical_cpu_v3.py"
+  ]
+}

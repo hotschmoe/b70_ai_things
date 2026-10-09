@@ -10107,3 +10107,28 @@ VERDICT -> Preserve pair FAILED; current source recovered, no retrospective
 qualification. Expanded two-page guards and full hashes mandatory. Combined
 SDK rebuild may proceed without devices/modelweights; serving qualification
 remains open. See docs/20261009_flashnext_capture21_pair_source_failure.md.
+
+
+## 2026-10-09 - Combined SDK and full oracle compiled; V3 prototypes preserved
+
+CONFIG -> Fresh combined24patch plan8d708bff,51 expected sources,8 targets,
+pinned image39992 and clean GGML3cf03257. Pair leases for both builds; no GPU
+devices/modelweights exposed. Failed pair source evidence stays FAILED.
+
+COMMAND -> build_native_hc_engine.py --jobs4 then rebuild actual full source
+upload oracle against new libraries. Independently compare every51 source and
+8 binary hash; retest C1combinedV3 (14CPU controls) and numericalV3 parent/child
+source controls, check all frozen source maps.
+
+RESULT -> SDK PASS305s, full oracle compile/link PASS44s,51source/8binary identities
+PASS; matching engine receipt0c58553d... andoraclef55f12e9... . CPU controls PASS.
+Two-page watchdog/new7023304 allocation/33layout coverage and6Python source
+fingerprints are prototype features; no genuine V3 prepare/runtime executed.
+Root found legacy upload receipt could omitnewpost4hash in C1V3; strictnewV4
+versions are being prepared, preserving V3. Optional source-page PFN diagnostic
+could not run because noninteractive sudo authentication is unavailable; PFNs
+remain unobserved and repeated pagebyte/bit is not a hardware attribution.
+
+VERDICT -> Source/compile checkpoint only. New source390 GPU/readback, strict
+upload/posthash gates, modelmath, API/concurrency/cache/fairness remain open.
+See docs/20261009_flashnext_combined24_sdk_checkpoint.md and raw F09 evidence.
