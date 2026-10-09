@@ -9863,3 +9863,16 @@ VERDICT -> CPU/transportsource only. FullC++/ABI build and actual simultaneous
 2/4/6 model/state/rawhead/spans/cache/fairness/teardown remain required. Source
 pin/fresh guards remain; cannot qualifyconcurrency from metadata orcapacity.
 Future concurrent artifact/controller mustfingerprint newPythonhelper.
+
+## 2026-10-09 New20 longpin requalification and capture21 build
+
+CONFIG -> Frozen20/V6 pair,191sharedpin/209inputs,2048/64 pilot.
+COMMAND -> Parent pin F07/serial-pin-twocard-v6-v1.
+RESULT -> FinalPASS331s both191reuse/18eval, three fullhead/all48residual
+comparisons bitwise, IDs/LP20/naturalstop. Actualsource/stage/prefill84/148
+coverage, exact6-roster/sourceaudit, teardown/health/kernel/NEW4publisher
+hashes pass. New21 standaloneSDKbuild started underpairlease withtracked
+sourceplan40 expectedfiles; no SDK resultyet.
+VERDICT -> Boundednew20pin/prefill observable consistency. New21 source
+compilation/off-on/ownership/originalpacket/math gates remainopen;7fields
+unobserved and fullmodelmath/concurrency/latency stillunqualified.

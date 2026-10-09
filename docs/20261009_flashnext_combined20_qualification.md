@@ -252,3 +252,33 @@ COMMAND -> Parent V6 --group pin,191-token sharedprefix/209-token inputs;
 F07/serial-pin-twocard-v6-v1.
 RESULT -> Pairlease acquired; stronger stage/source telemetry pending.
 VERDICT -> Old18/V5 pin evidence preserved; new20/V6 path requires its own result.
+
+## Finalized new20 V6 long pinned prefix
+
+CONFIG -> Frozen20/V6 pair,209-token useful exact inputs,191-token sharedpin;
+2048/64/65536 pilot, parking disabled.
+COMMAND -> Parent V6 --group pin; F07/serial-pin-twocard-v6-v1.
+RESULT -> Final parent/childPASS331s. Both hits191reuse/18eval versus209fresh.
+Three comparisons exact IDs/LP20/naturalstop/full248320head/all48 residuals
+bitwise equal (144 pairedrows max_abs0/RMSE0). Fresh source pin_saved191 and
+stage_parts1 descriptions are consistent but unbound auxiliary scope; actual
+PCL stage/request/source binding and exact enter/return prompt coverage pass.
+Fresh prefillpoints84 and148 each have all48 rows acrossowner0:32/32:48 with
+actualsource token/position; short hit suffixes have no prefill vectors.
+External exact6-record/frozen20/full390/terminalsource audit passes. Native
+exits0/removal, strict+compiled P2P0 pre/post health, kernel gate and NEWall4
+publisher hashes pass.
+VERDICT -> Actualnew20 longerpin/prefill observable consistency, not transferred
+old18 qualification. Full rawstate/independentmath/productioncapacity/API
+concurrency and cleanlatency remain required.
+
+## Layer0 numerical capture21 full build started
+
+CONFIG -> Newstandalone21 source and40-file expectedledger; model/runtime/GGML
+unchanged. Current20/V6 source/binaries/receipts remain preserved.
+COMMAND -> build_native_hc_engine.py --plan
+strata/flash-next/layer0-numerical-engine-build-plan-v1.json --jobs4 underpairlease.
+RESULT -> Lease acquired/build underway; no complete SDK result yet.
+VERDICT -> Compilation/source only. New21 requires fresh source/ABI gates and
+20-versus21off plus21off/on identity/output/state/lifecycle checks before actual
+packet/operator interpretation. Only26/33fields implemented; seven unobserved.
