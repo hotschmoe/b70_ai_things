@@ -1,0 +1,17 @@
+{
+  "status": "READY frozen CPU/read-only stronger auditor; original V6/source/live run untouched",
+  "files": {
+    "audit_v6_actual_request_records.py": "20cad29d45ea475372c89a6efe43f056dbe64809f424cee4615bdb6279239e75",
+    "test_audit_v6_actual_request_records_cpu.py": "3e99f69e66e98386cc070091d2f38f447ae74f7430f7781763e9c2efa3e89ddd",
+    "v6-actual-record-auditor-cpu-receipt.json": "897cf33b87caa8d6b1faa7f386a397bcf9d6fc7bbb7abaf5ceddef36f760fb92",
+    "v6-actual-record-strengthened-audit.md": "88dbff50c25e4dcd04cfd2c2cdd7f50bd284f5acea8d801d0107cb7efe34b14d",
+    "hash_combined20_preparation_identity.py": "c4f3cbffb99808855f056cac49aaf1e8b0ae286908a8646a204ceeca9f92160c",
+    "hash_combined20_preparation_identity_original_v1.py": "5c5fb5b3112cd7f50fb35d7a6d4104b1d25224ee7e902942cd807b3f48ee83c9",
+    "test_hash_combined20_preparation_identity_cpu.py": "e4dd5294d3f0d66cbb4139810eb174343a3f355db1b0a267e44d843b8d7e237a",
+    "combined20-hash-helper-cpu-receipt.json": "d79813d6a366fe44e3503d72b964733e3e8200ef96af943dd2a2b81c59d46f01"
+  },
+  "actual_passed_readonly_receipt": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f07-20261009/serial-basic-onecard-v6-strengthened-readonly-v2/receipt.json",
+  "original_false_failure_preserved": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f07-20261009/serial-basic-onecard-v6-strengthened-readonly-v1/receipt.json",
+  "observed_only_boolean_requires_parent_exact_roster": true,
+  "no_gpu_or_full_rescan": true
+}

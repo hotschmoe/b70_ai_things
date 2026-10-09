@@ -9752,3 +9752,19 @@ not a runtime/source violation. Matchingtwo-cardV6basic started, cleanPASS
 remainingarms/finalgates pending.
 VERDICT -> Bounded diagnostic and observedwork provenance; independentmodel
 math/completecache/concurrency/latency remain open. See combined20 doc.
+
+## 2026-10-09 Frozen read-only V6 strengthened audit and hash provenance
+
+CONFIG -> Separate auditor/helper source; V6/controller/live runs unchanged.
+COMMAND -> Parent test_audit_v6_actual_request_records_cpu.py and
+test_hash_combined20_preparation_identity_cpu.py; actual completed onecard
+records independently audited outside frozen run tree.
+RESULT -> CPU negatives for unmatched stage entries, cross PID/request/source/
+position/device and committed suffix pass. Actual9 onecard records pass stronger
+checks and final expected roster. Hash helper now cross-binds genuine upload
+oracle to exact20 engine/source/library recipe and rejects old18; tiny controls
+pass without another full scan. Original helperv1 preserved as historical.
+VERDICT -> Stronger observed record evidence, not full hidden state/commit proof.
+Auxiliary reset/pin descriptions remain unbound; observed-only bool cannot
+prove missing process/partial roster. Future V7 stricter parser must preserve
+these gates; no V6 source/hash changes during actual runs.

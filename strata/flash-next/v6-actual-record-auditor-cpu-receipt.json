@@ -1,0 +1,21 @@
+{
+  "CONFIG": "CPU synthetic metadata controls only; not model records",
+  "COMMAND": "python3 strata/flash-next/test_audit_v6_actual_request_records_cpu.py",
+  "RESULT": {
+    "positive_exact_binding": true,
+    "rejected": [
+      "extra_unmatched_enter",
+      "missing_enter",
+      "PCL_selfcoherent_wrong_pid",
+      "SFD_wrong_pid",
+      "PREFIX_finish_wrong_request",
+      "PREFIX_wrong_source_fnv",
+      "PCL_wrong_source_sha",
+      "wrong_span_device",
+      "committed_source_suffix_wrong"
+    ],
+    "cancel_partial_explicit_unobserved": true,
+    "flag0_scope_explicit_unobserved": true
+  },
+  "VERDICT": "PASS stricter acceptance negative controls; no GPU/model/source edits"
+}

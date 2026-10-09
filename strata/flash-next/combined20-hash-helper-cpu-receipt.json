@@ -1,0 +1,13 @@
+{
+  "CONFIG": "actual new20 upload/oracle/engine/sourceplan readonly binding plus tiny synthetic shards; no rescan/GPU",
+  "COMMAND": "python3 strata/flash-next/test_hash_combined20_preparation_identity_cpu.py",
+  "RESULT": {
+    "actual_authentic_association": true,
+    "matching_old18_upload_oracle_rejected": true,
+    "wrong_oracle_sha_and_engine_path_rejected": true,
+    "tiny_all4_buffered_and_hash_failure": true
+  },
+  "VERDICT": "PASS helper gates only; original genuine full-hash receipt preserved unchanged",
+  "source_sha256": "c4f3cbffb99808855f056cac49aaf1e8b0ae286908a8646a204ceeca9f92160c",
+  "original_executed_helper_sha256": "5c5fb5b3112cd7f50fb35d7a6d4104b1d25224ee7e902942cd807b3f48ee83c9"
+}
