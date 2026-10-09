@@ -10188,3 +10188,23 @@ Corrected strict5workflow may perform genuine preparation next. Cache25 needs
 full SDK/device/complete cache tests; publicfresh/pin and observer26 remain
 required. Fullmodel math, actual2/4/6 serving and matchedlatency/shelf false.
 See docs/20261009_flashnext_combined24_source_upload_strict_v2.md.
+
+
+## 2026-10-09 - Actual API import failure and source28 entrypath control
+
+CONFIG -> Genuine C1preparedV5 with compiled24/API22 six-source identity. Trace
+wrapper uses package import; source22 imports helper before root path setup.
+
+COMMAND -> Actual onecard C1parent5 launch; inspect terminal/log/stop/health.
+Separate0028 sourcepatch plus newfull SDKplan; actual pinnedPython venv tests
+package classidentity/module/script/trace help andoldpackage negative.
+
+RESULT -> API C1FAILED149s pre-native: ModuleNotFoundError batch_request_identity.
+Containerexit1/noOOM/removed; pre/posthealth andtwopages PASS. No actualnative
+modelwork, dependentposthash UNOBSERVED. CPUfirst testusedsystemPython/Jinja
+missing; corrected toactuallaunch venv, preservedoldtest. Corrected4entrypaths
+PASS andoldfailure reproduces. All25patches/51 finalsourcehashes agree.
+
+VERDICT -> Source28 fixes bothpackage/script imports without native math/ABI
+orflags change. Commitnewplan before fullrebuild; preservefailedAPI/source
+snapshots. Modelmath/concurrency/cache/latency/shelf remainunqualified.

@@ -1,0 +1,19 @@
+diff --git a/serve/server.py b/serve/server.py
+--- a/serve/server.py
++++ b/serve/server.py
+@@ -42,7 +42,6 @@
+ import sys
+ import tempfile
+ import threading
+-from batch_request_identity import RequestField, tags as batch_identity_tags, strict_request as strict_batch_request
+ import time
+ import urllib.request
+ import uuid
+@@ -55,6 +54,7 @@
+ ROOT = Path(__file__).resolve().parents[1]
+ sys.path.insert(0, str(ROOT / "tools"))
+ sys.path.insert(0, str(ROOT))   # run as a script (run-<model>.bat) as well as a module
++from serve.batch_request_identity import RequestField, tags as batch_identity_tags, strict_request as strict_batch_request  # noqa: E402
+ from serve.frontend import (ChatTemplate, Event, OutputParser, anthropic_to_messages,  # noqa: E402
+                             forced_call, images_of, literal_tags, mark_think_literals, openai_to_messages,
+                             tool_choice_of, unmark_think_literals)
