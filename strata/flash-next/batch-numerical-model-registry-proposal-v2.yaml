@@ -1,0 +1,98 @@
+# Proposed bounded numerical aliases only; no actual concurrency or shelf claim.
+models:
+  - label: flashnext-numerical29-0-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-1-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-1-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-1-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-1-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-1-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."
+  - label: flashnext-numerical29-0-1-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-29-api22v2-owner29-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_numerical_v2.py --plan <genuine-derived-arm-plan> --output <new-owned-arm-output>"
+    notes: "Exact source29/C1parent8/new390/full4 admission; ctx2048/prefill64/batchN/group1/cache0/seg1024; public25/27 OFF pilot. Actual scoped raw/native/API/owner proof pending; no cache/full-model-math/latency/shelf claim."

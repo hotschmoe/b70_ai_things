@@ -1,0 +1,10 @@
+{
+  "CONFIG": "CPU source/tiny/synthetic controls only; no original GGUF payload, actual forward, GPU, SDK build or serving",
+  "COMMAND": "python3 strata/flash-next/test_batch_numerical_proofs_cpu_v2.py",
+  "RESULT": {
+    "passed": true,
+    "negative_controls": 29,
+    "scope": "CPU source/conditional contracts only; no genuine prepare or actual serving qualification"
+  },
+  "VERDICT": "PASS CPU source controls only; no genuine numerical preparation or qualification"
+}

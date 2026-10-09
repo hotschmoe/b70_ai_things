@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "scope": "CPU source git apply/check only; no compiler/GPU/modelpayload",
+  "base": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source",
+  "stage": "/mnt/vm_8tb/b70/build/strata-prefix30-31-final-kiw1ihsu",
+  "results": [
+    {
+      "patch": "strata/flash-next/patches/0030-sycl-default-off-full-prefix-residual-capture.patch",
+      "sha256": "d9a5a296c724ff25dd6acf683405767dcc4fe538384a390a16518e255234b3ce",
+      "action": "check",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "patch": "strata/flash-next/patches/0030-sycl-default-off-full-prefix-residual-capture.patch",
+      "sha256": "d9a5a296c724ff25dd6acf683405767dcc4fe538384a390a16518e255234b3ce",
+      "action": "apply",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "patch": "strata/flash-next/patches/0031-sycl-serving-stage-mirror-owner-trace.patch",
+      "sha256": "9b37b8cfc0fb4a254fe24bfe8b653aa326e0ebada2d01be7677a08219851e930",
+      "action": "check",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "patch": "strata/flash-next/patches/0031-sycl-serving-stage-mirror-owner-trace.patch",
+      "sha256": "9b37b8cfc0fb4a254fe24bfe8b653aa326e0ebada2d01be7677a08219851e930",
+      "action": "apply",
+      "returncode": 0,
+      "stderr": ""
+    }
+  ]
+}

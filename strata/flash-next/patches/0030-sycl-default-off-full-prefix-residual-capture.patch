@@ -1,0 +1,269 @@
+diff --git a/sycl/src/prefill/prefill.cpp b/sycl/src/prefill/prefill.cpp
+--- a/sycl/src/prefill/prefill.cpp
++++ b/sycl/src/prefill/prefill.cpp
+@@ -1,5 +1,6 @@
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
++#include "strata/core/prefix_residual_capture.hpp"
+ #include "strata/core/batch_fidelity_observer.hpp"
+ #include <climits>
+ #include "strata/core/native_hc_dispatch.hpp"
+@@ -634,6 +635,7 @@
+                     copy = &dpct::get_in_order_queue();
+     Gemm gemm;
+     std::vector<void*> owned;
++    std::shared_ptr<core::prefix_residual30::snapshot> prefix30_snapshot;
+     std::shared_ptr<core::fidelity_diag::snapshot> fidelity_snapshot;
+     unsigned fidelity_request=0,fidelity_chunks=0;
+     // chunk buffers
+@@ -777,6 +779,7 @@
+ }
+ 
+ void Prefill::release_fidelity_observer() {
++    if(impl_->prefix30_snapshot){impl_->prefix30_snapshot->release();impl_->prefix30_snapshot.reset();}
+     if(impl_->fidelity_snapshot) { impl_->fidelity_snapshot->release();impl_->fidelity_snapshot.reset(); }
+ }
+ 
+@@ -804,6 +807,7 @@
+     if (impl_->kv_ready) dpct::destroy_event(impl_->kv_ready);
+     if (impl_->grp_host)
+         sycl::free(impl_->grp_host, dpct::get_in_order_queue());
++    impl_->prefix30_snapshot.reset();
+     impl_->fidelity_snapshot.reset();
+     for (void *p : impl_->owned)
+         DPCT_CHECK_ERROR(sycl::free(p, dpct::get_in_order_queue()));
+@@ -1108,9 +1112,11 @@
+         m.gemm.set_f16_io(m.f16_io);
+         set_act_f16(m.f16_io);
+     }
++    (void)core::prefix_residual30::settings(); // Off reads ENV only, no GPU operation.
+     if (core::fidelity_diag::settings().enabled && core::fidelity_diag::settings().activations) {
+         if (!core::fidelity_diag::geometry(int(g.n_embd),int(g.hc),int(g.n_layers),0)) { err="fidelity diagnostic: unsupported prefill geometry"; return false; }
+         m.fidelity_snapshot=std::make_shared<core::fidelity_diag::snapshot>(*m.cs,m.device,int(stage_lb_),int(stage_le_),false);
++        if(core::prefix_residual30::settings().enabled)m.prefix30_snapshot=std::make_shared<core::prefix_residual30::snapshot>(*m.cs,m.device,int(stage_lb_),int(stage_le_));
+     }
+     if (!carve(T, &o)) {
+         size_t fb = 0, tb = 0;
+@@ -2294,6 +2300,8 @@
+             }
+         }
+         if (hand_in_ == nullptr) gr_broadcast(m.emb, m.R, T, m.cs);
++        bool prefix30_chunk=false;
++        if(m.prefix30_snapshot && core::prefix_residual30::eligible()){prefix30_chunk=m.prefix30_snapshot->begin("prefill",p0,int(T),err);if(!prefix30_chunk&&!err.empty())return false;}
+         bool fidelity_chunk=false;
+         if(m.fidelity_snapshot && core::fidelity_diag::current().active) {
+             const auto request=core::fidelity_diag::current().ordinal;
+@@ -2740,6 +2748,7 @@
+             if (l > LB) pf_step("reading the prompt (batched, step sync): the experts and the rest of layer", l - 1);
+             core::progress_at("reading the prompt (batched): layer", l, p0);   // #251: a stall names layer and chunk
+             const core::LayerView v(*m.wt, l);
++            if(prefix30_chunk)m.prefix30_snapshot->copy("input",int(l),m.R,int(T),*m.cs);
+             if (l == std::max<int64_t>(LB, 1) && !ple_land()) return false;   // the PLE rows, read from layer 1 on
+             // ---- the PLE block at layer 1, token by token (its conv reads the previous tokens' rows)
+             if (l == 1 && ple_on && ple_batch) {
+@@ -4294,6 +4303,7 @@
+                 }
+                 if (steered && !cv_fused)   // --control-vector-scaled
+                     strata::kernels::cvec_apply(m.R, l, T, D, nullptr, 0, nullptr, 0, false, m.cs);
++                if(prefix30_chunk)m.prefix30_snapshot->copy(half==0?"attention":"ffn",int(l),m.R,int(T),*m.cs);
+                 if (half==1 && fidelity_chunk && m.fidelity_snapshot) m.fidelity_snapshot->layer(int(l),m.R+size_t(T-1)*D,*m.cs);
+             }
+         }
+@@ -4304,6 +4314,7 @@
+             stats_.experts_streamed += iss_streamed;
+             stats_.experts_dma += iss_dma;
+         }
++        if(prefix30_chunk){m.prefix30_snapshot->stamp(*m.cs);if(!m.prefix30_snapshot->dump(err))return false;}
+         if (fidelity_chunk && m.fidelity_snapshot) {
+             const int64_t at=p0+T-1;const auto& ids=core::fidelity_diag::current().ids;
+             if (at>=0 && at<int64_t(ids.size()) && !m.fidelity_snapshot->dump("prefill_last_residual",at,int(ids[size_t(at)]),false,err))return false;
+diff --git a/sycl/src/core/verify.cpp b/sycl/src/core/verify.cpp
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -384,6 +384,7 @@
+     commit_bm_.clear();
+     for(auto& graph:layer0_exec_) { if(graph)delete graph;graph=nullptr; }
+     for(auto& graph:fidelity_exec_) { if(graph) delete graph; graph=nullptr; }
++    prefix30_snapshot_.reset(); // Only retired serialfidelity/combined graphs reference P30.
+     release_batch_observer();
+     layer0_snapshot_.reset();layer0_first_=false;
+     fidelity_snapshot_.reset();
+@@ -415,6 +416,7 @@
+         if (kv.second) delete (kv.second);
+     for (auto& kv : commit_bm_)
+         if (kv.second) delete (kv.second);
++    prefix30_snapshot_.reset(); // All serial graphs retired; owning queue still alive.
+     if (arena_b_) sycl::free(arena_b_, dpct::get_in_order_queue());
+     if (h_commitb_) sycl::free(h_commitb_, dpct::get_in_order_queue());
+     if (qcnt_) sycl::free(qcnt_, dpct::get_in_order_queue());
+@@ -747,9 +749,11 @@
+         }
+         layer0_snapshot_=std::make_shared<layer0_diag::snapshot>(*cs_,device_);
+     }
++    (void)prefix_residual30::settings(); // Off reads ENV only, no GPU operation.
+     if (fidelity_diag::settings().enabled) {
+         if (!fidelity_diag::geometry(int(g.n_embd),int(g.hc),int(g.n_layers),int(n_vocab_))) { err="fidelity diagnostic: unsupported model geometry"; return false; }
+         fidelity_snapshot_=std::make_shared<fidelity_diag::snapshot>(*cs_,device_,int(lb_),int(le_),le_==g.n_layers);
++        if(prefix_residual30::settings().enabled)prefix30_snapshot_=std::make_shared<prefix_residual30::snapshot>(*cs_,device_,int(lb_),int(le_));
+     }
+     if (std::getenv("STRATA_VERIFY_DEBUG") != nullptr) {   // SYCL port: the per-layer residual ladder (token 0)
+         dbgR_ = (float*) sycl::malloc_device((size_t) g.n_layers * g.n_embd * 4, dpct::get_in_order_queue());
+@@ -879,6 +883,7 @@
+ 
+     // ---------------------------------------------------------------- pre(l, group): up to the ring
+     auto pre = [&](int64_t l, int grp) -> bool {
++        if(fidelity_first_ && prefix30_snapshot_ && T==1 && grp==0)prefix30_snapshot_->copy("input",int(l),Rt(0),1,*cs);
+         const int tb = tb_[grp], te = te_[grp], n = te - tb;
+         stamp(l, 0, grp);
+         const LayerView v(wt, l);
+@@ -977,6 +982,7 @@
+                     if (apply && !native_hc_write_rows(Rt(t),bo_+t*N,inj_prev+t*HC,1,cs,err)) {
+                         native_gr_ok=false; return false;
+                     }
++                    if(fidelity_first_ && prefix30_snapshot_ && T==1 && grp==0 && half==1)prefix30_snapshot_->copy("attention",int(l),Rt(0),1,*cs);
+                     if(l0_capture && half==1)layer0_snapshot_->copy("residual_after_attn",Rt(0),40960,*cs);
+                     HcNativeArgs a; a.eps=EPS;
+                     if (!native_hc_bind(wn[half],wd[half],wu[half],wi[half],a,err)) { native_gr_ok=false; return false; }
+@@ -1607,6 +1613,7 @@
+             if (!post(l, grp)) return false;
+             if(layer0_first_ && layer0_snapshot_ && T==1 && l==0 && grp==0)
+                 {layer0_snapshot_->copy("residual_after_ffn",Rt(0),40960,*cs);layer0_snapshot_->stamp(*cs);}
++            if(fidelity_first_ && prefix30_snapshot_ && T==1 && grp==0)prefix30_snapshot_->copy("ffn",int(l),Rt(0),1,*cs);
+             if (fidelity_first_ && fidelity_snapshot_ && T==1 && grp==0) fidelity_snapshot_->layer(int(l),Rt(0),*cs);
+             if(batch_observe_ && batch_snapshot_ && grp==0)batch_snapshot_->layer(int(l),Rt(0),T,*cs);
+             if (dbgR_ && grp == 0) {   // recorded into the window graph as memcpy nodes
+@@ -1615,6 +1622,7 @@
+             }
+             if (l + 1 < le_ && !pre(l + 1, grp)) return false;
+         }
++    if(fidelity_first_ && prefix30_snapshot_ && T==1)prefix30_snapshot_->stamp(*cs);
+     if (le_ < g.n_layers) {   // a layer split's earlier stage: hand the residual on, no head
+         float* hout = hand_out_ + (size_t) hrow0 * HB;
+         copy_from_mapped(hout, R_, (int64_t) T * HC * N, cs);
+@@ -3512,11 +3520,13 @@
+         for(auto& graph:fidelity_exec_) { if(graph)delete graph;graph=nullptr; }
+         fidelity_snapshot_->release();fidelity_snapshot_.reset();fidelity_first_=false;
+     }
++    if(prefix30_snapshot_){prefix30_snapshot_->release();prefix30_snapshot_.reset();}
+     if(next_)next_->release_fidelity_observer();
+ }
+ 
+ void Verifier::select_fidelity_first(bool on) {
+     fidelity_first_=on && fidelity_snapshot_!=nullptr;
++    if(fidelity_first_ && prefix30_snapshot_){std::string err;if(!prefix30_snapshot_->begin("verifier",int64_t(fidelity_diag::current().ids.size())-1,1,err))throw std::runtime_error(err.empty()?"P30 unsupported request/prefix/resume":err);}
+     if(next_)next_->select_fidelity_first(on);
+ }
+ 
+@@ -3524,6 +3534,7 @@
+     if (!fidelity_diag::settings().enabled || !fidelity_diag::current().active) return true;
+     if (!fidelity_diag::first_row(rows,0,pos,fidelity_diag::current().tokens)) { fidelity_diag::skipped("first_window","unsupported_row_or_token_mapping"); return true; }
+     if (!fidelity_snapshot_) { fidelity_diag::skipped("first_window","snapshot_not_allocated"); return true; }
++    if(prefix30_snapshot_ && !prefix30_snapshot_->dump(err))return false;
+     if (!fidelity_snapshot_->dump("first_window_residual",pos,token,true,err)) return false;
+     return next_==nullptr || next_->dump_fidelity_first(rows,pos,token,err);
+ } catch (const std::exception& e) { err=std::string("fidelity diagnostic: ")+e.what(); return false; }
+diff --git a/sycl/include/strata/core/verify.hpp b/sycl/include/strata/core/verify.hpp
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -20,6 +20,7 @@
+ // Requires the default native decode configuration (native projections, fused GR, fused GDN, fast attention and
+ // selection, native indexer) and a profile-filled VRAM expert tier with its residency table on the device.
+ #pragma once
++#include "strata/core/prefix_residual_capture.hpp"
+ 
+ #include "strata/core/batch_fidelity_contract.hpp"
+ #include <sycl/sycl.hpp>
+@@ -470,6 +471,7 @@
+     float* hit_xs_ = nullptr;
+     void* hit_scratch_ = nullptr;
+     float *head_mixed_ = nullptr, *head_inj_ = nullptr, *head_logits_ = nullptr;
++    std::shared_ptr<prefix_residual30::snapshot> prefix30_snapshot_;
+     std::shared_ptr<fidelity_diag::snapshot> fidelity_snapshot_;
+     bool fidelity_first_=false;
+     std::shared_ptr<batch_fidelity::snapshot> batch_snapshot_;
+diff --git a/sycl/include/strata/core/prefix_residual_capture.hpp b/sycl/include/strata/core/prefix_residual_capture.hpp
+new file mode 100644
+--- /dev/null
++++ b/sycl/include/strata/core/prefix_residual_capture.hpp
+@@ -0,0 +1,61 @@
++#pragma once
++#include "strata/core/prefix_residual_capture_contract.hpp"
++#include "strata/core/fidelity_observer.hpp"
++#include <sycl/sycl.hpp>
++#include <cstdio>
++#include <algorithm>
++#include <cstdlib>
++#include <cstring>
++#include <cctype>
++#include <cstdint>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/stat.h>
++#include <vector>
++#include <string>
++namespace strata::core::prefix_residual30 {
++struct config {
++ bool enabled=false;const char* dir=nullptr;const char* binding=nullptr;
++ config(){const char*p=std::getenv("STRATA_PREFIX30");enabled=p&&!std::strcmp(p,"1");if(enabled){
++  dir=std::getenv("STRATA_PREFIX30_DIR");binding=std::getenv("STRATA_PREFIX30_BINDING_SHA256");struct stat st;
++  const char*native=std::getenv("STRATA_SYCL_NATIVE_HC");
++  if(!fidelity_diag::settings().enabled||!fidelity_diag::settings().activations||!native||std::strcmp(native,"1")||!dir||dir[0]!='/'||stat(dir,&st)||!S_ISDIR(st.st_mode)||!binding||std::strlen(binding)!=64)throw std::invalid_argument("P30 requires nativeHC/SFDactivations/existingabsoluteDIR/binding64hex");
++  for(int i=0;i<64;++i)if(!std::isxdigit(static_cast<unsigned char>(binding[i])))throw std::invalid_argument("P30 binding nothex");
++ }}
++};
++inline const config& settings(){static const config value;return value;}
++inline bool eligible(){const auto&r=fidelity_diag::current();return settings().enabled&&r.active&&r.resume==0&&r.ordinal<=4&&r.ids.size()>=1&&r.ids.size()<=8;}
++class snapshot {
++ sycl::queue&q_;int stage_,lb_,le_;std::uint8_t*data_=nullptr;std::size_t bytes_;std::vector<bool>roster_;std::uint64_t nonce_=0,zero_=0;int rows_=0;std::int64_t p0_=0;std::string route_;
++ std::size_t offset(int layer,int phase)const{return (std::size_t(phase)*(le_-lb_)+std::size_t(layer-lb_))*max_rows*row_floats*4;}
++ public:
++ snapshot(sycl::queue&q,int stage,int lb,int le):q_(q),stage_(stage),lb_(lb),le_(le),bytes_(stage_bytes(lb,le)),roster_(bytes_/(max_rows*row_floats*4),false){
++  if(lb<0||lb>=le||le>layers)throw std::invalid_argument("P30 stagebounds");
++  data_=static_cast<std::uint8_t*>(sycl::malloc_device(bytes_+16,q_));if(!data_)throw std::bad_alloc();
++  std::fprintf(stderr,"P30 allocation pid=%ld stage=%d lb=%d le=%d pointer=%p bytes=%zu\n",long(getpid()),stage_,lb_,le_,(void*)data_,bytes_+16);
++ }
++ ~snapshot(){try{release();}catch(...){}}
++ void release(){if(!data_)return;q_.wait_and_throw();std::fprintf(stderr,"P30 release_begin pid=%ld stage=%d pointer=%p bytes=%zu\n",long(getpid()),stage_,(void*)data_,bytes_+16);sycl::free(data_,q_);data_=nullptr;std::fprintf(stderr,"P30 release_returned pid=%ld stage=%d\n",long(getpid()),stage_);}
++ bool begin(const char*route,std::int64_t p0,int rows,std::string&err){
++  if(!eligible())return false;const auto&r=fidelity_diag::current();
++  if(!route||(std::strcmp(route,"prefill")&&std::strcmp(route,"verifier"))||rows<1||rows>8||p0<0||p0+rows>std::int64_t(r.ids.size())||(std::strcmp(route,"verifier")==0&&(rows!=1||p0!=std::int64_t(r.ids.size())-1))){err="P30 source token/matrix boundary";return false;}
++  route_=route;p0_=p0;rows_=rows;nonce_=(std::uint64_t(std::uint32_t(getpid()))<<32)|r.ordinal;
++  if(route_=="prefill")std::fill(roster_.begin(),roster_.end(),false);
++  q_.memcpy(data_+bytes_,&nonce_,8);q_.memcpy(data_+bytes_+8,&zero_,8);return true;
++ }
++ void copy(const char*phase,int layer,const float*source,int rows,sycl::queue&q){
++  const int index=phase_index(phase);if(layer<lb_||layer>=le_||!source||&q!=&q_)throw std::invalid_argument("P30 source/stagequeue mismatch");
++  roster_[std::size_t(index)*(le_-lb_)+std::size_t(layer-lb_)]=true;q.memcpy(data_+offset(layer,index),source,extent(rows));
++ }
++ void stamp(sycl::queue&q){if(&q!=&q_||std::find(roster_.begin(),roster_.end(),false)!=roster_.end())throw std::invalid_argument("P30 incomplete original3phase roster");q.memcpy(data_+bytes_+8,data_+bytes_,8);}
++ bool dump(std::string&err){
++  q_.wait_and_throw();std::uint64_t marker=0;q_.memcpy(&marker,data_+bytes_+8,8).wait_and_throw();if(marker!=nonce_||!nonce_){err="P30 current replay marker absent";return false;}
++  const auto&r=fidelity_diag::current();char stem[256];std::snprintf(stem,sizeof stem,"p30-%ld-r%u-s%d-%s-p%lld-n%d",long(getpid()),r.ordinal,stage_,route_.c_str(),(long long)p0_,rows_);std::string base=std::string(settings().dir)+"/"+stem;
++  int mfd=::open((base+".json").c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(mfd<0){err="P30 metadata exclusiveopen";return false;}FILE*meta=::fdopen(mfd,"w");if(!meta){::close(mfd);err="P30 metadata fdopen";return false;}
++  std::fprintf(meta,"{\"schema\":1,\"pid\":%ld,\"request\":%u,\"stage\":%d,\"lb\":%d,\"le\":%d,\"route\":\"%s\",\"native_hc_source\":true,\"first_position\":%lld,\"rows\":%d,\"row_floats\":10240,\"source_extent_bytes\":%zu,\"nonce\":%llu,\"binding_sha256\":\"%s\",\"gen_ids\":[",long(getpid()),r.ordinal,stage_,lb_,le_,route_.c_str(),(long long)p0_,rows_,extent(rows_),(unsigned long long)marker,settings().binding);
++  for(std::size_t i=0;i<r.ids.size();++i)std::fprintf(meta,"%s%lld",i?",":"",(long long)r.ids[i]);std::fprintf(meta,"],\"fields\":[");bool ok=true;int count=0;const char*names[]={"input","attention","ffn"};
++  for(int phase=0;phase<3&&ok;++phase)for(int layer=lb_;layer<le_;++layer){std::vector<std::uint8_t>raw(extent(rows_));q_.memcpy(raw.data(),data_+offset(layer,phase),raw.size()).wait_and_throw();std::string path=base+"-l"+std::to_string(layer)+"-"+names[phase]+".f32";int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);if(fd<0){ok=false;break;}std::size_t done=0;while(done<raw.size()){ssize_t n=::write(fd,raw.data()+done,raw.size()-done);if(n>0)done+=std::size_t(n);else if(n<0&&errno==EINTR)continue;else{ok=false;break;}}if(::close(fd))ok=false;std::fprintf(meta,"%s{\"layer\":%d,\"phase\":\"%s\",\"bytes\":%zu,\"file\":\"%s\",\"encoding\":\"LE_F32[rows,4,2560]\"}",count++?",":"",layer,names[phase],raw.size(),path.c_str());}
++  std::fprintf(meta,"],\"full_model_math_qualified\":false}\n");if(::fclose(meta))ok=false;if(!ok){err="P30 fieldpublication failed";return false;}std::fprintf(stderr,"P30 frame pid=%ld request=%u stage=%d route=%s rows=%d p0=%lld metadata=%s.json\n",long(getpid()),r.ordinal,stage_,route_.c_str(),rows_,(long long)p0_,base.c_str());return true;
++ }
++};
++}
+diff --git a/sycl/include/strata/core/prefix_residual_capture_contract.hpp b/sycl/include/strata/core/prefix_residual_capture_contract.hpp
+new file mode 100644
+--- /dev/null
++++ b/sycl/include/strata/core/prefix_residual_capture_contract.hpp
+@@ -0,0 +1,15 @@
++#pragma once
++#include <cstddef>
++#include <cstring>
++#include <stdexcept>
++namespace strata::core::prefix_residual30 {
++constexpr int max_rows=8, layers=48, phases=3, row_floats=4*2560;
++constexpr std::size_t max_data_bytes=std::size_t(layers)*phases*max_rows*row_floats*sizeof(float);
++static_assert(max_data_bytes==47185920);
++constexpr std::size_t aggregate_diagnostic_budget=128u*1024u*1024u;
++// Two P30 owners plus bounded prior SFD/L0 observers; actual allocation receipts still required.
++static_assert(2*(max_data_bytes+32)+16u*1024u*1024u<aggregate_diagnostic_budget);
++inline std::size_t stage_bytes(int lb,int le){if(lb<0||lb>=le||le>layers)throw std::invalid_argument("P30 stagebounds");return std::size_t(le-lb)*phases*max_rows*row_floats*sizeof(float);}
++inline std::size_t extent(int rows){if(rows<1||rows>max_rows)throw std::invalid_argument("P30 rows outside1..8");return std::size_t(rows)*row_floats*sizeof(float);}
++inline int phase_index(const char* phase){if(!phase)throw std::invalid_argument("P30 phase absent");return !std::strcmp(phase,"input")?0:!std::strcmp(phase,"attention")?1:!std::strcmp(phase,"ffn")?2:throw std::invalid_argument("P30 phase differs");}
++}

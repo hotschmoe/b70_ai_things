@@ -1,0 +1,127 @@
+{
+  "schema": 2,
+  "status": "READY CPU source-only scoped harness for review; no genuine preparation/execution/serving qualification",
+  "source_sha256": {
+    "strata/flash-next/batch_numerical_proofs_v2.py": "5024cf1b1ca43ba9ceed2b83bbcc4a840400c1c6c08b30964b1f83deeb1658ee",
+    "strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "strata/flash-next/batch_numerical_prefixes_v2.py": "bccdbe9d9c0c8e50d2e059877cf9d4648e2ab8c1a533451ac56d5d18adca1dc5",
+    "strata/flash-next/batch_api_trace_v2.py": "4f0aff752836e7ee0a647a4b1dc701c703967ab36038d49076a55407bfd54257",
+    "strata/flash-next/batch_api_client_v2.py": "baf544e3b908680d305efcdcd4f74865c9b31facb94c29238593d0f720991d7a",
+    "strata/flash-next/batch_api_prefixes_v2.py": "b51471d4b08be9ec4cae440409eafc40d3aacbf96b50ab06ba754327cabb8058",
+    "strata/flash-next/audit_batch_capture_lifecycle_v2.py": "12db0d48b684ababfead2a3ead48410979e6706359522909c02a8b0ca6af2bba",
+    "strata/flash-next/run_batch_numerical_pilot_v2.py": "37fb5da4c935de4dfc2a4c1b31f23ee5497ca7151d09378bd99b96ff448ab6e1",
+    "strata/flash-next/run_batch_serial_controls_v2.py": "8bf4f7849f6803d096f351a507959500fa8919a49c2959bf202a71b600a6002d",
+    "strata/flash-next/run_batch_api_controls_v2.py": "1034a52c6062540e55a6b5ee59e614dcae9fca1dddfcc2156aac90e1c79c82e4",
+    "strata/flash-next/batch_numerical_execution_v2.py": "2dbefb0f52aeda88f8da9bed4fb514414be34947264a7c85e194aa5d80f270c4",
+    "strata/flash-next/qualify_batch_numerical_v2.py": "08a5989a4adb39dc2362c37262e9965e61783a696f59710ce223f5427484bb7f",
+    "strata/flash-next/audit_batch_numerical_suite_v2.py": "592387eb3794f09078d47c8e9b01990bf229926067370d5cc87f394bf3b5e9a2",
+    "strata/flash-next/test_batch_numerical_proofs_cpu_v2.py": "ceec4221680aa5558fc4f657241dcce356a63bdc963299f93b302ae1a3a42520",
+    "strata/flash-next/test_batch_runtime_source_cpu_v2.py": "2075c79d77302d1e6c2f0323e00796e3b579b824ce451b50d617bab2c9c39443",
+    "strata/flash-next/test_batch_parent_source_cpu_v2.py": "d506dfabe19b4a55c8f4ee11073da655ebf79e2420b1b1057ffcc5b4743d2b63",
+    "strata/flash-next/test_batch_sdk_admission_cpu_v2.py": "5c3b0dd753c8692e89bb49545246a7a41dde6311ec06cfa47b611b4d9c38c3d9",
+    "strata/flash-next/test_batch_artifact_binding_cpu_v2.py": "c7eadaa120018d712f22cad45413a3610bafa31190c0cf3fa31246b71786204e",
+    "strata/flash-next/test_batch_api_transport_cpu_v2.py": "cb23a5968e74576191c3f2117f4d36c83fb527b2ec57017825e183017a877ff7",
+    "strata/flash-next/test_batch_collector_revalidation_cpu_v2.py": "b6fb30558e7f5eef0e5361eb30acaa65ecfffdb3b9c491ab5e7c0ba207883b99",
+    "strata/flash-next/batch-numerical-proofs-cpu-receipt-v2.json": "9b27349f09e2fedfaef6f2689c083bcddd26e6cf14b5c0e8a3c467beb95c15b8",
+    "strata/flash-next/batch-runtime-source-cpu-receipt-v2.json": "7e13cefd198f61d968ba4add50750580fc4f6df4badf8cb75524332c2a85bca5",
+    "strata/flash-next/batch-parent-source-cpu-receipt-v2.json": "b35f0f9bb8770a953ae86004d3c174a9fa73e123247384c027b5c0ddffbd6e3f",
+    "strata/flash-next/batch-sdk-admission-cpu-receipt-v2.json": "93a4f718f2798840683d3be715804e10da16279c1ea7792397159ca281820f14",
+    "strata/flash-next/batch-artifact-binding-cpu-receipt-v2.json": "cbc91005e96764494ce4a52da7d554895b63fd174f9a369aaf90e916d61842c0",
+    "strata/flash-next/batch-api-transport-cpu-receipt-v2.json": "53245949159e8efc1a1dcba16b4f43cd78a1401476c80452894a4ae0fa80348a",
+    "strata/flash-next/batch-collector-revalidation-cpu-receipt-v2.json": "435e46513be8122f6deb9d4d834e43eee9a5ab9260885a153e75b0623800e053",
+    "strata/flash-next/batch-numerical-harness-design-v2.md": "68f8bcdf695f5856cc640622b625c6b494a716c7f07e1de6060346c01fd94645",
+    "strata/flash-next/batch-numerical-model-registry-proposal-v2.yaml": "09ee49851e42db73536c905e8a3d443e59db7cda11f297e6d081e73d34877a96"
+  },
+  "immutable_dependency_sha256": {
+    "strata/flash-next/parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "strata/flash-next/audit_fidelity_observer_coverage.py": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47",
+    "strata/flash-next/collect_fidelity_observer.py": "5c29e5925682d4cd5b075b549b8b12dd42ed995109f0d86675bb2e59a6c3889b",
+    "strata/flash-next/audit_slot_owner_trace_v1.py": "8b4fdb4da2ff758cc625b33e24077e9f2f97c0ca0111428a1f8b8f5be279bf43",
+    "strata/flash-next/audit_batch_fidelity_coverage_v2.py": "2d3719ad4f020811462e5a5e8f2d93da950658d9a901e9aaa9777d2e4439e24a",
+    "strata/flash-next/audit_batch_fidelity_coverage_v3.py": "9df78463660f3d12ad793967a66fa391543a5678aceb83e28132e80c62dc76d3",
+    "strata/flash-next/merged_numerical_protocol_v2.py": "6f3e5194f175987f974cf8715ccaf5315877a9dba791a4b56fdb68cd63dc9a9c",
+    "strata/flash-next/serial_prefix_qualification_v6.py": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c",
+    "strata/flash-next/layer0_numerical_qualification_v9.py": "2252f24be9a3511bcb40d5e623caa75259112b9cd07f3d55944f67c67d2a084c",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/c1_trace_contract.py": "ee557bb1e9eb6a31b67714c93034461aa24572f20781cfcb9a858c25dd825e20"
+  },
+  "engine_plan": "strata/flash-next/integrated-slot-owner-trace-engine-build-plan-v1.json",
+  "engine_plan_sha256": "94aef305dbc6a31f023afa55573d52a9ce6af9443cfc0182eb7c324255159094",
+  "actual_SDK_source_only_test": {
+    "receipt": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/receipt.json",
+    "receipt_sha256": "bd17b41b0074b816ab88d3804af78727480291f96d2510e5759b9788091b3c2d",
+    "model_payload_opens": 0,
+    "complete_source_files": 60,
+    "headers": 24,
+    "ABI_targets": 8
+  },
+  "C1_controller": "strata/flash-next/c1_serve_controller_combined_v8.py",
+  "C1_controller_sha256": "527b351ff9ebcceef454e72d4d75742bcee146a9aef9fddc849aefd7a31a6565",
+  "C1_parent": "strata/flash-next/qualify_c1_serving_combined_v8.py",
+  "C1_parent_sha256": "709a1272cf99ae720d66976acb9342814c5fb34685cc3702eb5227b694f9fba3",
+  "strong_proof_interface": "validate_final_source_proof(directory,prepared_metadata) public/default2args; generation8",
+  "V1_source_plan_sha256": "1a12c31610b79f3a2c7c528432b36b5bf463ee195f39369092e724e0d9883c29",
+  "V1_all_pins_unchanged": true,
+  "test_commands": [
+    "python3 strata/flash-next/test_batch_numerical_proofs_cpu_v2.py",
+    "python3 strata/flash-next/test_batch_runtime_source_cpu_v2.py",
+    "python3 strata/flash-next/test_batch_parent_source_cpu_v2.py",
+    "python3 strata/flash-next/test_batch_sdk_admission_cpu_v2.py",
+    "python3 strata/flash-next/test_batch_artifact_binding_cpu_v2.py",
+    "python3 strata/flash-next/test_batch_api_transport_cpu_v2.py",
+    "python3 strata/flash-next/test_batch_collector_revalidation_cpu_v2.py"
+  ],
+  "test_fixture_prerequisite": "test_batch_collector_revalidation_cpu_v2 reads only prior synthetic ordinary-host observer26 mock output through strata-observer26-cpu-latest-v1.json; no GPU/model payload. To recreate independently run frozen test_solo_migration_observer_cpu_v1.py with parent-controlled CPU-only command; do not rewrite frozen repository receipts.",
+  "registry_admission_required_before_genuine_prepare": true,
+  "registered_proposal_only": "strata/flash-next/batch-numerical-model-registry-proposal-v2.yaml",
+  "requested_slots": [
+    2,
+    4,
+    6
+  ],
+  "stage_topologies": [
+    [
+      [
+        0,
+        48
+      ]
+    ],
+    [
+      [
+        0,
+        32
+      ],
+      [
+        32,
+        48
+      ]
+    ]
+  ],
+  "context": 2048,
+  "prefill": 64,
+  "batch_groups": 1,
+  "max_context_input_tokens": 2048,
+  "max_generated_tokens_per_request": 64,
+  "max_raw_capture_bytes_per_process": 67108864,
+  "serial_prefixes_per_process": 6,
+  "parent_deadline_default_seconds": 7200,
+  "source_watch_period_seconds": 2,
+  "continuous_full_source_identity_qualified": false,
+  "actual_preparation_created": false,
+  "actual_GPU_executions": 0,
+  "actual_original_GGUF_payload_reads": 0,
+  "actual_serving_qualified": false,
+  "full_model_math_qualified": false,
+  "required_later_lanes": [
+    "serving mirror owner proof in separate new31 SDK/gates",
+    "cache25/27 ON original-state/public fresh/pin/history/fairness/isolation with same ON observation policy",
+    "full own-state original mathematical model reference",
+    "clean latency with all observer/owner trace flagsOFF"
+  ],
+  "UNOBSERVED": [
+    "actual batch-OFF raw49 equality",
+    "actual model-process mirror owning logical frees in source29",
+    "physical allocator reclamation"
+  ],
+  "qualified_if_actual_success_scope": "Per-process full source/health/terminal gated native/API2/4/6 ON raw49 vs same-engine exact consumed-prefix serial controls; uncanceled OFF/on IDs/finish; real cancel/solo migration and snapshot/private-slot UR logical frees; no full serving/math/latency claim"
+}

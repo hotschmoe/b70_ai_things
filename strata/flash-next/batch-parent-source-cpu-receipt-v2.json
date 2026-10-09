@@ -1,0 +1,12 @@
+{
+  "CONFIG": "CPU source/tiny/synthetic controls only; no original GGUF payload, actual forward, GPU, SDK build or serving",
+  "COMMAND": "python3 strata/flash-next/test_batch_parent_source_cpu_v2.py",
+  "RESULT": {
+    "passed": true,
+    "negative_controls": 12,
+    "actual_four_tiny_file_full_hash": true,
+    "immutable_v9_hash_functions_AST_equal": true,
+    "scope": "CPU functions only; not actual model identity/serving/GPU/health qualification"
+  },
+  "VERDICT": "PASS CPU source controls only; no genuine numerical preparation or qualification"
+}

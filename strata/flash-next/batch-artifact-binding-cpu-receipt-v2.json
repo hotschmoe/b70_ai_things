@@ -1,0 +1,11 @@
+{
+  "CONFIG": "CPU source/tiny/synthetic controls only; no original GGUF payload, actual forward, GPU, SDK build or serving",
+  "COMMAND": "python3 strata/flash-next/test_batch_artifact_binding_cpu_v2.py",
+  "RESULT": {
+    "passed": true,
+    "negative_controls": 9,
+    "joint_raw_mutation_would_pass_equality_but_rejected_by_original_seal": true,
+    "scope": "CPU tiny-file artifact controls only; no actual source model/serve/GPU proof"
+  },
+  "VERDICT": "PASS CPU source controls only; no genuine numerical preparation or qualification"
+}

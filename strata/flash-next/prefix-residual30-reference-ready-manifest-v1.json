@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU/source only",
+  "files": {
+    "strata/flash-next/patches/0030-sycl-default-off-full-prefix-residual-capture.patch": "d9a5a296c724ff25dd6acf683405767dcc4fe538384a390a16518e255234b3ce",
+    "strata/flash-next/prefix_residual_capture_contract_v1.hpp": "3fd240c1a6e0fd452486075cb41d9475a14d7af3a90145c659c21910a4867f45",
+    "strata/flash-next/prefix_residual_capture_v1.hpp": "7f173844593c57cfe5105fa37897145d847338c6b6875b538c7cfc5e8cb58f2f",
+    "strata/flash-next/collect_prefix_residual30_v1.py": "2fc3a7d8223323e88ceff630cb036a09d2ac472ea74d32e10f2ed7b56a3a0fa4",
+    "strata/flash-next/test_prefix_residual30_cpu_v1.py": "c7e32d053c3ce97b019c85d29e61f9f51191f84bcf3539ea3d634ab2929937ea",
+    "strata/flash-next/prefix-residual30-engine-build-plan-v1.json": "cd3360c68b6d1dd942825d332c0a3d935295cdaab7bbd60150ea27185120fa1e",
+    "strata/flash-next/prefix-residual30-mirror31-engine-build-plan-v1.json": "82951242c998acecd0b0a138466991c607c1ab89abbf3b4501c001e0feaae96e",
+    "strata/flash-next/prefix-residual30-source-cpu-apply-receipt-v1.json": "64f4be668ce9634df4c4adc6166ba100dab45ed69f4cac9eedafe680dbeda8b8",
+    "strata/flash-next/prefix-residual30-source-design-v1.md": "d824dfe7329bfab716660465492fc3084016bce824ea4e88f896f1eab5b5fd73",
+    "strata/flash-next/prefix-residual30-source-plan-v1.json": "5a5045241fb36aa6056c9f7848bd11e2ab48309cc98768c3614c01b9b9fcbe81",
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4",
+    "strata/flash-next/test_ffn_full48_owned_storage_v1.py": "3e0b14941e4bc084af68b2b91294351c48f0e0f52eb14e523b1e356cc8849189",
+    "strata/flash-next/ffn-full48-owned-storage-source-design-v1.md": "286ff6cde788653681bb49d45fbce8d33118212e4cf8081f62e10e4191a4d948",
+    "strata/flash-next/ffn-full48-owned-storage-source-plan-v1.json": "e92b1b5c02f85ecce8fceb6180b174475863d4388e60274983c83130f0b08802",
+    "strata/flash-next/prefix-residual30-ffn-source-cpu-receipt-v1.json": "f937bf0197d57294fb63a219190388ac96e77c3b12a3497ef50bf2bfbf55dbe2",
+    "strata/flash-next/qsa-native-count-threshold-audit-v1.md": "e688f5fe127b8a362c768bb8984b3e8d4610589170f0ab825b108e14266c8d02",
+    "strata/flash-next/qsa-native-count-threshold-source-receipt-v1.json": "dccacd0b1654b17fd73d3afbe27bcc79b2ca9d5862b0103fd0026d481f2f4312"
+  },
+  "no_GPU_SDK_modelpayload_or_commits": true,
+  "all_native_and_fullmodel_claims": false
+}

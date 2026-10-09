@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "status": "READY CPU source only",
+  "files": {
+    "strata/flash-next/patches/0030-sycl-default-off-full-prefix-residual-capture.patch": "d9a5a296c724ff25dd6acf683405767dcc4fe538384a390a16518e255234b3ce",
+    "strata/flash-next/prefix_residual_capture_contract_v1.hpp": "3fd240c1a6e0fd452486075cb41d9475a14d7af3a90145c659c21910a4867f45",
+    "strata/flash-next/prefix_residual_capture_v1.hpp": "7f173844593c57cfe5105fa37897145d847338c6b6875b538c7cfc5e8cb58f2f",
+    "strata/flash-next/collect_prefix_residual30_v1.py": "2fc3a7d8223323e88ceff630cb036a09d2ac472ea74d32e10f2ed7b56a3a0fa4",
+    "strata/flash-next/test_prefix_residual30_cpu_v1.py": "c7e32d053c3ce97b019c85d29e61f9f51191f84bcf3539ea3d634ab2929937ea",
+    "strata/flash-next/prefix-residual30-engine-build-plan-v1.json": "cd3360c68b6d1dd942825d332c0a3d935295cdaab7bbd60150ea27185120fa1e",
+    "strata/flash-next/prefix-residual30-mirror31-engine-build-plan-v1.json": "82951242c998acecd0b0a138466991c607c1ab89abbf3b4501c001e0feaae96e",
+    "strata/flash-next/prefix-residual30-source-cpu-apply-receipt-v1.json": "64f4be668ce9634df4c4adc6166ba100dab45ed69f4cac9eedafe680dbeda8b8",
+    "strata/flash-next/prefix-residual30-source-design-v1.md": "d824dfe7329bfab716660465492fc3084016bce824ea4e88f896f1eab5b5fd73"
+  },
+  "base_consumed_source": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/core/verify.cpp": "592e69a5da01fbaf176791f0ca568c4b0ee366bab0976d5dfc300cb854f93fae",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/include/strata/core/verify.hpp": "6081d029231ef7da74641d2ec0cf880b3cfecd573f1a235391fa3836b48f5d16"
+  },
+  "stage_source_root": "/mnt/vm_8tb/b70/build/strata-prefix30-source-brzo03rf",
+  "source_qualified": false,
+  "full_model_math_qualified": false,
+  "actual_SYCL_TU_compiled": false,
+  "GPU_off_on_equivalence": false,
+  "capture_source": "input prePLE; attention/FFN postexplicit nativeHC/cvec boundary; entireactualrowmatrices",
+  "next_gates": [
+    "new matching eight-targetSDK/62source/26header/sixPython ledger",
+    "new matching390/library/sourceidentity",
+    "sameversionoff/on firsthead/all48 residual equivalent",
+    "all new allocations/context/free/retiredgraphs",
+    "own original all48 composition"
+  ],
+  "budget": {
+    "data_per_prefix8": 47185920,
+    "two_owner_live_data": 94371840,
+    "controls_per_owner_stage": 16,
+    "aggregate_diagnostic_budget": 134217728
+  },
+  "compatible_frozen31_sha256": "9b37b8cfc0fb4a254fe24bfe8b653aa326e0ebada2d01be7677a08219851e930"
+}

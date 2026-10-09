@@ -1,0 +1,12 @@
+{
+  "CONFIG": "CPU source/tiny/synthetic controls only; no original GGUF payload, actual forward, GPU, SDK build or serving",
+  "COMMAND": "python3 strata/flash-next/test_batch_collector_revalidation_cpu_v2.py",
+  "RESULT": {
+    "passed": true,
+    "synthetic_batch_vectors_rechecked_by_original_collector": 294,
+    "synthetic_serial_vectors_rechecked_by_original_collector": 49,
+    "negative_controls": 5,
+    "scope": "Original source collectors on synthetic CPU raw fixtures only; no GPU/weights/model math/genuine serving qualification"
+  },
+  "VERDICT": "PASS CPU source controls only; no genuine numerical preparation or qualification"
+}

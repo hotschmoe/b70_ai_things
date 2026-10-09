@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "config": "CPU source/count audit; no modelpayload/GPU",
+  "command": "inspect exact qsa_step_fill and pertoken KV page addressing; independent integer count checks",
+  "result": "PASS source/arithmetic only",
+  "verdict": "C2052 first attention selection truncation; pooling compresses indexer rows, not attention KV cells. Runtime/math unqualified. Frozen full48 plan unchanged",
+  "source_sha256": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/kernels/cuda/qsa.dp.cpp": "86a7f5499ba249d526d8b14158626cc9c9ce32d1a4b9bfb8716192bebd8b17ca",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/core/layer.cpp": "eb1896129e8ccc2f6a912160cc83bfe1fa2f15a0343e9b7f2321454a3f0a23d2"
+  },
+  "owned_source_sha256": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+  "documentation_sha256": "e688f5fe127b8a362c768bb8984b3e8d4610589170f0ab825b108e14266c8d02",
+  "counts": [
+    {
+      "consumed_context": 63,
+      "last_verifier_rows": 1,
+      "position": 62,
+      "attention_nkv": 63,
+      "completed_indexer_rows": 15,
+      "tail_cells": 3,
+      "KV_pages": 16,
+      "selected_width": 63,
+      "omitted_cells": 0
+    },
+    {
+      "consumed_context": 64,
+      "last_verifier_rows": 1,
+      "position": 63,
+      "attention_nkv": 64,
+      "completed_indexer_rows": 16,
+      "tail_cells": 0,
+      "KV_pages": 16,
+      "selected_width": 64,
+      "omitted_cells": 0
+    },
+    {
+      "consumed_context": 65,
+      "last_verifier_rows": 1,
+      "position": 64,
+      "attention_nkv": 65,
+      "completed_indexer_rows": 16,
+      "tail_cells": 1,
+      "KV_pages": 17,
+      "selected_width": 65,
+      "omitted_cells": 0
+    },
+    {
+      "consumed_context": 2047,
+      "last_verifier_rows": 1,
+      "position": 2046,
+      "attention_nkv": 2047,
+      "completed_indexer_rows": 511,
+      "tail_cells": 3,
+      "KV_pages": 512,
+      "selected_width": 2047,
+      "omitted_cells": 0
+    },
+    {
+      "consumed_context": 2048,
+      "last_verifier_rows": 1,
+      "position": 2047,
+      "attention_nkv": 2048,
+      "completed_indexer_rows": 512,
+      "tail_cells": 0,
+      "KV_pages": 512,
+      "selected_width": 2048,
+      "omitted_cells": 0
+    },
+    {
+      "consumed_context": 2051,
+      "last_verifier_rows": 1,
+      "position": 2050,
+      "attention_nkv": 2051,
+      "completed_indexer_rows": 512,
+      "tail_cells": 3,
+      "KV_pages": 513,
+      "selected_width": 2051,
+      "omitted_cells": 0
+    },
+    {
+      "consumed_context": 2052,
+      "last_verifier_rows": 1,
+      "position": 2051,
+      "attention_nkv": 2052,
+      "completed_indexer_rows": 513,
+      "tail_cells": 0,
+      "KV_pages": 513,
+      "selected_width": 2051,
+      "omitted_cells": 1
+    },
+    {
+      "consumed_context": 2053,
+      "last_verifier_rows": 1,
+      "position": 2052,
+      "attention_nkv": 2053,
+      "completed_indexer_rows": 513,
+      "tail_cells": 1,
+      "KV_pages": 514,
+      "selected_width": 2051,
+      "omitted_cells": 2
+    }
+  ],
+  "actual_model_qualification": false
+}

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "status": "READY CPU mathematical/storage source only",
+  "files": {
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4",
+    "strata/flash-next/test_ffn_full48_owned_storage_v1.py": "3e0b14941e4bc084af68b2b91294351c48f0e0f52eb14e523b1e356cc8849189",
+    "strata/flash-next/ffn-full48-owned-storage-source-design-v1.md": "286ff6cde788653681bb49d45fbce8d33118212e4cf8081f62e10e4191a4d948",
+    "strata/flash-next/original_first_gdn_layer_v1.py": "c6352dc69f22e5940e0c6799fe83137225b8126fe7ce771983de682e00abd67f",
+    "strata/flash-next/original_gguf_vector_decoder_v2.py": "130f1a525e366e5d33fcb67a3c765ee50d5c4eaedb2b4a0495ae2386cd18c7b9",
+    "strata/flash-next/native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "strata/flash-next/prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714"
+  },
+  "consumed_source": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/source/sycl/src/prefill/prefill.cpp": "59a8e953232c6ace998ece4e2351160158e3464ded65e1d5fa4b0dba44f87dde"
+  },
+  "build_metadata": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T185206Z-d5q32zc7/build/build.ninja": "717e840d054d5804705dfaa26250bb72a56c972e2cbdb3e845ab9a9ee2137565"
+  },
+  "actual_model_payload_read": false,
+  "actual_runtime_route_observed": false,
+  "nativebitwise_qualified": false,
+  "full_model_math_qualified": false,
+  "numeric_gate": null,
+  "supplied_mixed_input_conditional": true,
+  "role_layers": 48,
+  "max_weight_tile_bytes": 67108864
+}

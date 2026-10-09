@@ -1,0 +1,27 @@
+{
+  "config": "CPU synthetic/source only; frozen29 source, noGPU/SDK/modelpayload",
+  "command": [
+    {
+      "command": [
+        "python3",
+        "strata/flash-next/test_prefix_residual30_cpu_v1.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ".......................\n----------------------------------------------------------------------\nRan 23 tests in 0.398s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python3",
+        "strata/flash-next/test_ffn_full48_owned_storage_v1.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.182s\n\nOK\n"
+    }
+  ],
+  "result": "PASS",
+  "verdict": "CPU contracts only; all native qualification remains UNOBSERVED",
+  "source_plan_sha256": "5a5045241fb36aa6056c9f7848bd11e2ab48309cc98768c3614c01b9b9fcbe81",
+  "ffn_source_plan_sha256": "e92b1b5c02f85ecce8fceb6180b174475863d4388e60274983c83130f0b08802"
+}

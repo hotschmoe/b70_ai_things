@@ -1,0 +1,13 @@
+{
+  "CONFIG": "CPU source/tiny/synthetic controls only; no original GGUF payload, actual forward, GPU, SDK build or serving",
+  "COMMAND": "python3 strata/flash-next/test_batch_sdk_admission_cpu_v2.py",
+  "RESULT": {
+    "passed": true,
+    "actual_engine_receipt_sha256": "bd17b41b0074b816ab88d3804af78727480291f96d2510e5759b9788091b3c2d",
+    "actual_source_files": 60,
+    "actual_ELF_binaries": 8,
+    "model_or_pack_payload_opens": 0,
+    "scope": "Read-only actual SDK/source identity only; no genuine C1 prepare, model arithmetic, GPU, SDK compilation or serving"
+  },
+  "VERDICT": "PASS CPU source controls only; no genuine numerical preparation or qualification"
+}

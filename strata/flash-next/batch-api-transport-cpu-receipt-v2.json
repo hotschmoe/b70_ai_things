@@ -1,0 +1,16 @@
+{
+  "CONFIG": "CPU source/tiny/synthetic controls only; no original GGUF payload, actual forward, GPU, SDK build or serving",
+  "COMMAND": "python3 strata/flash-next/test_batch_api_transport_cpu_v2.py",
+  "RESULT": {
+    "passed": true,
+    "actual_HTTP_SSE_cpu_cohorts": [
+      2,
+      4,
+      6
+    ],
+    "actual_socket_reader_closes": 3,
+    "GPU_or_native_engine_requests": 0,
+    "scope": "Synthetic local CPU server only; native/API serving mathematics, concurrency and lifecycle unqualified"
+  },
+  "VERDICT": "PASS CPU source controls only; no genuine numerical preparation or qualification"
+}
