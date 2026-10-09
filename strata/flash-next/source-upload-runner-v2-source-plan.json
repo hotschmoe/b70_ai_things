@@ -1,0 +1,17 @@
+{
+  "schema": 2,
+  "files": {
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "test_run_source_upload_oracle_full_v2.py": "93392858bac1cc8f4f9a1f39686997f054e2b751b1616a96031d2fae44439cef",
+    "source-upload-runner-v2.md": "f70332a3ebe0fa304e4737dd8179ed45e1bc3d8a6c4d62174ff3f7c9b98a59c8",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "preserved_runner_sha256": "87240dd20ad7b7330a5bde5c50a66b7d7243068dd41936955d240105a8d418cf",
+  "preserved_case_gate_controller_sha256": "69433d6b50538b1fafc62555165323df32228150d081dfefe9bf232c38abcaee",
+  "cpu_tests": 10,
+  "actual_model_payload_reads": 0,
+  "actual_upload_qualified": false,
+  "full_model_math_qualified": false,
+  "between_polls_identity_observed": false,
+  "mandatory_new_post_terminal_post_health_buffered_full4": true
+}

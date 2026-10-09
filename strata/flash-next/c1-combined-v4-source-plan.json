@@ -1,0 +1,23 @@
+{
+  "schema": 4,
+  "scope": "CPU source-only strict V2-upload admission; no genuine prepare/GPU/model payload reads",
+  "engine_plan_sha256": "8d708bff8f59b1133f5156969e6a59cf8dee4a949637d75e850f58ede63d9d6a",
+  "files": {
+    "c1_serve_controller_combined_v4.py": "94b9cdfa161113c6fa7678d7e4230b5e1a3a642fe6bd431b554c4bbbd5581f43",
+    "test_c1_serve_controller_combined_v4.py": "375a1a7192587fda3566e3dd00ee8e2ca39fe3718220c1ae8dd34323d2afd1b3",
+    "c1-combined-v4-model-registry-proposal.yaml": "59c40f3811157d06a5dba2c813c9d7709cdb43ce100990ea0b54ade29c908d12",
+    "c1-combined-v4-preparation.md": "0d1afc8220e8b015da9dbfee39197c2b2c6c105a24ecb31407edb5a3b5148e07",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source-upload-runner-v2-source-plan.json": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+  },
+  "preserved_v3_controller_sha256": "3c2131f27aded8049539502c5bd32250940d31a28399535a782baf413aa54035",
+  "preserved_v3_source_plan_sha256": "5369fa2842887e8efb04877a23ca04d9789a6e652e374bc410eb8860f35bd39f",
+  "cpu_mock_tests": 27,
+  "runner_cpu_tests": 10,
+  "actual_model_payload_reads": 0,
+  "actual_preparation_qualified": false,
+  "full_model_math_qualified": false,
+  "concurrency_qualified": false,
+  "legacy_passed_upload_new_sdk_admissible": false
+}

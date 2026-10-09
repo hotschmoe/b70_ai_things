@@ -10132,3 +10132,31 @@ remain unobserved and repeated pagebyte/bit is not a hardware attribution.
 VERDICT -> Source/compile checkpoint only. New source390 GPU/readback, strict
 upload/posthash gates, modelmath, API/concurrency/cache/fairness remain open.
 See docs/20261009_flashnext_combined24_sdk_checkpoint.md and raw F09 evidence.
+
+
+## 2026-10-09 - Strict upload/preparation gates and CPU RAM discriminator
+
+CONFIG -> Preserve all frozenV2/V3 controls and failed pair source evidence.
+New uploadrunnerV2, C1combinedV4 andnumericalV4 require genuine full postterminal/
+posthealth four-shard identity, matching fresh SDK/oracle,6Python source hashes
+and both known-page guards. Admit4 detailed unqualified research aliases only;
+hotschmoe-dd stays primary. No shelf addition.
+
+COMMAND -> Independently run uploadrunner10CPU controls, C1V4 27controls and
+both numericalV4 source tests; verify source freeze maps. Compile CPU-only
+host_ram_pattern_probe_v1.c;16MiB injected byte2796 XOR0x20 must fail. Run actual
+64GiB eight-pattern anonymous allocation with noGPU/modelmount, capture VmRSS/
+VmSwap and terminal state. After removal run NEW complete all4 source hashes.
+
+RESULT -> All CPU gate tests/freeze maps PASS, legacy passed-upload rejection
+confirmed. Injected control detected. Real64GiB patterns00/ff/55/aa/01/fe/df/20
+all zero mismatches, VmRSS67110696KiB/VmSwap0, exit0/noOOM/ownedremoved. Both known
+pages remain original before/after. PostRAM full all4publisher hashes PASS.
+Oracle UR tracing explicitly routes tostderr with flush:info, as do its owner
+markers; unchanged Docker commands retain this single ledger producer stream.
+
+VERDICT -> Cached bit incident not reproduced by this bounded CPU allocation;
+PFNs/fullhost/driver stability unqualified and source cause unknown. Strict
+newsource upload GPU qualification may now start with fresh identity; no model
+math, actual2/4/6/cache/fairness or shelf qualification follows from CPU gates.
+See docs/20261009_flashnext_cpu_ram_discriminator.md and source plans.

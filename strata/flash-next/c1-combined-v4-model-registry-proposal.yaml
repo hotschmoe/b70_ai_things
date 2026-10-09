@@ -1,0 +1,35 @@
+# Source-only proposal; not a live /v1/models response or shelf qualification.
+# Add these entries to evals/configs/models.yaml before genuine prepare.
+models:
+  - label: flashnext-strata-combined-v3-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srccombined24v2-api22v2-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v4.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Research alias proposal; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
+  - label: flashnext-strata-combined-v3-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srccombined24v2-api22v2-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v4.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Research alias proposal; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
+  - label: flashnext-strata-combined-v3-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srccombined24v2-api22v2-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v4.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Research alias proposal; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
+  - label: flashnext-strata-combined-v3-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srccombined24v2-api22v2-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v4.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Research alias proposal; actual combined51/all8 SDK, strict uploadrunnerV2 with final post-health full4 identity, current all4 source identity, six Python hashes and measured API lifecycle gates required."
