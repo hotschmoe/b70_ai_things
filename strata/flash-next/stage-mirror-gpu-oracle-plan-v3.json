@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "status": "Third immutable oracle generation: pinned experimental/graph.hpp and actual void DPCT begin/end recording API; graph/math/lifetime unchanged; GPU pending",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "source_revision": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "required_patch_names": [
+    "0011-sycl-strict-native-omit-legacy-ple-key.patch",
+    "0012-sycl-segmented-stage-expert-mirrors.patch"
+  ],
+  "oracle_source": "strata/flash-next/stage_mirror_gpu_oracle_v3.cpp",
+  "oracle_source_sha256": "8ea89267ab58c58461f52d4020ef35ab1e448a68163b292d1e47b42e94978254",
+  "selected_experts": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      17
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      17
+    ],
+    [
+      11,
+      0
+    ],
+    [
+      11,
+      17
+    ],
+    [
+      32,
+      0
+    ],
+    [
+      32,
+      17
+    ],
+    [
+      47,
+      0
+    ],
+    [
+      47,
+      17
+    ]
+  ],
+  "mixed_quant_pairs": [
+    [
+      12,
+      7
+    ],
+    [
+      13,
+      8
+    ],
+    [
+      12,
+      8
+    ]
+  ],
+  "cases": [
+    {
+      "id": "card0",
+      "mask": "0",
+      "mode": "single"
+    },
+    {
+      "id": "card1",
+      "mask": "1",
+      "mode": "single"
+    },
+    {
+      "id": "pair",
+      "mask": "0,1",
+      "mode": "pair"
+    }
+  ],
+  "stages": [
+    [
+      0,
+      32
+    ],
+    [
+      32,
+      48
+    ]
+  ],
+  "segment_cap_bytes": 4194304,
+  "mirror_global_cap_bytes": 67108864,
+  "max_original_blob_bytes": 3993600,
+  "expected_mirrored_padded_bytes": 33587200,
+  "expected_segments": [
+    6,
+    4
+  ],
+  "expected_registered_owner_records": 12,
+  "expected_source_storage_reads": 10,
+  "expected_mirror_host_reads": 20,
+  "tokens_per_expert": 3,
+  "memory_bound": "Actual unchanged GgufExpertSource512 staging buffers about1.91GiB plus bounded33.6MB mirrors and GPU/readback/dequant-reference/scratch/source-cache buffers; parent8GiB container cap; no full expert bank/model",
+  "numeric_gate": {
+    "implementation_nmse_max": 1e-06,
+    "implementation_normalized_linf_max": 0.0001,
+    "normalization": "max_abs_error/max(1e-6,max_abs_reference)",
+    "stages": [
+      "gate",
+      "up",
+      "silu_hidden",
+      "down_matched_q8"
+    ],
+    "activation_identity": "independent CPU Q8_1 block32 signedcodes, F32amax/127, roundaway/clamp, FP16nearest-even scale and XOR-reduced originalsum; byte-identical input and hidden images required",
+    "quantization_difference_gate": "preregister upstreamnative_expert_parity relativeL1<=3e-2 for GPUvsoriginal-F32 float, CPU nativequantvsfloat and directGPUvsnativeCPU; these are separate from strict implementation gates",
+    "weight_reference": "actual original GGUF expert bytes, ggml dequantizers and FP64 accumulation; no tensor-format replacement",
+    "repeat": "mirror/resident grouped output bytes equal; capture/replay repeat bytes equal; same after sourceclose while graph wrapper retains owner",
+    "selected_down_contract": "Original actual type7 Q5_1 uses quantized-code sum/min; type8 Q8_0 symmetric. Optional helper type6 Q5_0 original-sum correction is not a selected case.",
+    "weight_type_names": {
+      "12": "Q4_K",
+      "13": "Q5_K",
+      "7": "Q5_1",
+      "8": "Q8_0"
+    },
+    "grouped_mode": "Source-default grouped mode; no STRATA_GROUPED_V1 override"
+  },
+  "negative_gates": [
+    "missing selected table entry actual resident_plan_bound must output empty plan/error without fallback",
+    "global budget shortage rejects before allocation",
+    "segment smaller than actualexpert rejects before allocation",
+    "partial read failure after actual segment allocation returns no owner/aliases/counters; global UR trace balances cleanup",
+    "foreign stage layer lookup returnsnull and wrong residency/context bind rejects without invalid GPUaccess"
+  ],
+  "lifecycle_gate": "Independent chronological UR parser matches hostsegment+devicetable owners to context/allocgeneration, every owned logicalfree inside destroy interval, allgenericalloc/free balanced including partialreadfailure; missing/double/failedfree negatives; no postfree pointertype criterion",
+  "serving_scope": "Partial source/tier/kernel arithmetic fixture only. Full390 sourceowner receipts plus all actualexpert coverage and full48GiB/native model/history/concurrency/health/teardown stillrequired",
+  "reference_source": "strata/flash-next/stage_mirror_q8_reference.hpp",
+  "reference_source_sha256": "afa2a0517f143be2b4511ffa574994f87bcf219559f5fc14d1aed498519dd5f9",
+  "runtime_environment": {
+    "UR_ENABLE_LAYERS": "UR_LAYER_TRACING",
+    "UR_LOG_TRACING": "level:info;flush:info;output:stderr",
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:gpu",
+    "SYCL_CACHE_PERSISTENT": "0",
+    "STRATA_STAGE_MIRRORS": "1",
+    "STRATA_STAGE_MIRROR_SEGMENT_MIB": "4"
+  },
+  "inventory": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/current-gguf-inventory.json",
+  "inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+  "dpct_graph_header_sha256": "9933c09306a7a91bb242fa913694541fc4166bcf6d5a1a2a81ee9dac91b05f31"
+}

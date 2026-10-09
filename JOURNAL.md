@@ -9281,3 +9281,29 @@ session72782 exit0 in195sec. NewsegmentedC1prepare hashing/identity inprogress.
 VERDICT -> FullHC/PLE source loader/ownership gate passes. No fullmodel inference
 result. GPUmirror/sourceexpertmath/state/logits/prefix/concurrent/latency/shelf
 requirements remainopen; goalactive with parallelCPU research and parentGPUowner.
+
+## 2026-10-09 Segmented expert GPU consumption, arithmetic and graph lifetime
+
+CONFIG -> ExactGGUF/Strataenginev6/runtime39992d70;10actualexperts/3tokens each,
+Q4_K/Q5_K GU andQ5_1/Q8_0 down, source-defaultgroupedmode;64MiB globalmirror
+cap/4MiBsegments. Previousfull390goalturn classifiedprogress. Userdirt preserved.
+COMMAND -> Immutablemirrorfixtures1/3/4 compile; parentcontrollerschema1 then
+schema2 oncard0/card1/pair; originaloffsetsourceSHA roster beforeGPU.
+RESULT -> v1compilefails toolchainheader;v2unexecuted;v3correctactualgraphvoid
+APIs builds. FirstGPUrun fails hiddenpacketgate becauseoracle readsunwrittenh
+scratch indefaultfusedkernel, notamodelfixfinding. Normalremoval/posthealth.
+v4keepsmodelkernel/mode andadds separateGPU sameexpressionh reconstruction,
+explicitlynotobservedrawfusedh; independentCPUQ8packets matchactualfusedHQ.
+All3casespass10sourceexpertbytechecks/40strictmetrics, worstNMSE1.03152073e-13
+andnormalizedLinf4.85313131e-7. GPUvsF32originalactivationrelativeL1max0.01019814
+isdeclaredquantizationdifference withinupstream0.03, notimplementationerror.
+Mirror/resident/repeatedgraph bytesexact; graphreplayafter sourcecloseexact.
+33587200mirrorbytes6+4segments,10storage/20mirrorreads percase; foreign/missing/
+budget/segment/partialread negativesreject. 126successfulalloc/free pairs,12
+registeredsegment/tableowners,2contextbridges, ledger0live, all3freenegatives
+reject. Normalexit/removal/fullstrict+compiledP2P0preposthealth,nofaultsignatures.
+New18reportvalidatornegativespassCPUonly. ActualfullmodelsegmentedC1launched
+underparentlease session5156; readiness/coherence/capacitystillpending.
+VERDICT -> Boundedsource/tier/defaultkernelmath/graphlifetime qualificationpasses;
+rawfusedh remainsunobserved. Full48GiB/all-expert/modelstate/logit/prefix/
+concurrent/latency/shelf gatesremainopen. Fullgoalactive, no productionclaim.
