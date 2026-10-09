@@ -9727,3 +9727,14 @@ screen now running; no result claimed.
 VERDICT -> Ownership and bounded onecard API qualification only. New20 V6
 cache/model off/on math, full independentfidelity, batchgraphs/concurrency,
 physical backing release and clean latency remain open. See combined20 doc.
+
+## 2026-10-09 New20 two-card API screen passed; V6 basic started
+
+CONFIG -> New20 two-card32/16 API8192/128 profile, finalized onecard prerequisite.
+COMMAND -> Parent qualify_c1_serving.py two-card screen.
+RESULT -> FinalizedPASS330s, served/registry identity/hotschmoe-dd first,
+coherence/repeat/consumption, normal teardown and post-health. V6 one-card
+basic suite started under pairlease at F07/serial-basic-onecard-v6-v1 with
+matched2048/64/65536 native geometry; no numerical result yet.
+VERDICT -> Bounded API screen only. V6 observer/caches, independent wholemodel
+math, batch/concurrency and clean latency remain open. See combined20 doc.

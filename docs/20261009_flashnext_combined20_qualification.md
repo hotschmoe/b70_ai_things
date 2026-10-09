@@ -53,3 +53,22 @@ VERDICT -> One-card bounded API screen, not full numerical fidelity, concurrency
 or latency. Two-card API screen started under pair lease; no finalized result
 yet. V6 observer off/on and real cache groups remain to execute. Existing18
 model/cache evidence cannot stand in for actual20 requalification.
+
+## Finalized two-card API screen and V6 observer suite started
+
+CONFIG -> Actual combined20 source/runtime, two-card32/16 API8192/128/1048576,
+matched new20 one-card prerequisite. These API geometries differ; no speed
+comparison is made.
+COMMAND -> qualify_c1_serving.py on F07/c1-twocard-combined20-prepared-v1
+with completed new20 one-card qualification receipt.
+RESULT -> Finalized parent/controllerPASS330s, registry and live /v1/models
+identity with hotschmoe-dd first, six bounded coherence/repeat/consumption
+answers, normal API/native/supervisor exits/removals and post-health.
+VERDICT -> Bounded two-card C1 screen, not full math/concurrency/latency/shelf.
+
+COMMAND -> qualify_serial_prefix_v6.py --group basic on genuine new20 one-card
+V6 plan.
+RESULT -> Pair lease acquired; F07/serial-basic-onecard-v6-v1 underway. Both
+V6 native plans use matched2048/64/65536 geometry; old18/V5 remains preserved.
+VERDICT -> Running observer off/on and exact stage/cache telemetry checks; no
+new20 full-logit/cache numerical qualification is claimed yet.
