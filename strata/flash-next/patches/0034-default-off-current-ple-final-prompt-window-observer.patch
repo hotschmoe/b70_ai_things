@@ -1,0 +1,21 @@
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -2091,10 +2091,14 @@
+     ple_input33::publication ple_input_publication;
+     if(ple_precollected && ple_input33::settings().enabled) {
+         const auto& r=fidelity_diag::current();
+-        ple_input_publication=ple_input33::publish(r.active,r.ordinal,r.resume,
+-            fidelity_diag::settings().enabled,fidelity_diag::settings().activations,ss.ple.w.source_exact,
+-            0,device_,int(lb_),int(le_),T,pos0,r.ids.data(),r.ids.size(),tokens,ss.ple_prev,
+-            ple_rows,h_ple_,no_host,device_plan_,ar_on());
++        // Earlier verifier windows still gather/launch; observe only the final
++        // accepted prompt window, once per armed SFD request.
++        if(r.active && pos0 + T == static_cast<int64_t>(r.ids.size())) {
++            ple_input_publication=ple_input33::publish(r.active,r.ordinal,r.resume,
++                fidelity_diag::settings().enabled,fidelity_diag::settings().activations,ss.ple.w.source_exact,
++                0,device_,int(lb_),int(le_),T,pos0,r.ids.data(),r.ids.size(),tokens,ss.ple_prev,
++                ple_rows,h_ple_,no_host,device_plan_,ar_on());
++        }
+     }
+     if (trace_h_ != nullptr) std::memset(trace_h_, 0, trace_n_ * 8);   // #649: this window's breadcrumbs only
+     std::atomic_thread_fence(std::memory_order_seq_cst);

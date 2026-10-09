@@ -46,3 +46,11 @@ lane admits the actual onecard SDK/C111 chain, but has no actual batch runtime
 proof. P30V2 current-PLE input capture and original48 exploration are the next
 fidelity gates. No fullmodel/completecache/pairconcurrency/latency/shelf proof
 has been substituted by the bounded C111 screen.
+
+The activated P30V2/source33 run failed due an observer selecting multiple
+verifier windows for prefix2. Teardown/posthealth/kernel/full4 integrity passed;
+no P30/currentinput proof exists. Source34 repairs final-window selection and
+now compiles all8 ABI targets, with actual C112 source admission and new390 link
+PASS. New source34upload/C112/P30V3 replay is required; old33 proofs do not
+transfer. This observer fix preserves source32 every-window staging and model
+math. Complete originalfidelity/cache/concurrency/latency/shelf remain unproven.

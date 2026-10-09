@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "READY bounded CPU source; native compilation/runtime unobserved",
+  "base_plan": "current-ple-input33-engine-build-plan-v1.json",
+  "base_plan_sha256": "81798dff3fd012f7b95984403ea1088a1f157d37ee2d2e6e1b612711052cd34c",
+  "engine_plan": "current-ple-lastwindow34-engine-build-plan-v1.json",
+  "engine_plan_sha256": "89ba4019dd5b9b05ed6cc2f61fcf776e35fcd97824743582aac1a42f1d419338",
+  "files": {
+    "patches/0034-default-off-current-ple-final-prompt-window-observer.patch": "81077b0fbcc9b553eaec0e00dab31fd6de68fd9d3378354b238eef91e0ac6860",
+    "current-ple-lastwindow34-engine-build-plan-v1.json": "89ba4019dd5b9b05ed6cc2f61fcf776e35fcd97824743582aac1a42f1d419338",
+    "test_ple_lastwindow34_cpu_v1.py": "bfec12caf3de5dfa4041bbfbc1150b4a7bf4570adb5ab2282c7c90efa9e62c73",
+    "current-ple-lastwindow34-source-design-v1.md": "10124df062259a6f4e332447e88c8f48a55ff0d23476afeeccad937d3fc8cc84"
+  },
+  "frozen_dependencies": {
+    "current-ple-input33-engine-build-plan-v1.json": "81798dff3fd012f7b95984403ea1088a1f157d37ee2d2e6e1b612711052cd34c",
+    "ple-input33-source-plan-v1.json": "38f79a33cdc417dee068dd5200802f028d5dbca2d5da8ae30cee32534699b1d2",
+    "patches/0032-sycl-current-ple-staging-before-nohost-mirror-graph.patch": "135b40ed1a07571c8f77893e9e66994ee6a37d6d4367f82df1fe8f65c3bf92af",
+    "patches/0033-default-off-current-ple-host-input-observer.patch": "2873743f7bd301d2c9f2b70a81b999ca39bd6166a3b98d67c2a540824eee899f",
+    "ple_input_observer33_v1.hpp": "be090d826cce9d9a5390d7f8eba15a07940ef3fedcf6fb4fc4e8936a261637b6",
+    "collect_ple_input33_v1.py": "7fc74002259b1059a8f79defafda9653cb54b4aeffcd511ddf2f424805abcfd2",
+    "verify_ple_input33_original_v1.py": "d7f46a8e1ca71c612ea19fdd2293bd043110d2da65fd23b2a93e8ad48b8734b1"
+  },
+  "source_files": 63,
+  "consumed_headers": 27,
+  "ordered_patches": 34,
+  "fresh_ABI_targets": 8,
+  "Python_runtime_files": 6,
+  "cpu_tests": 11,
+  "cpu_command": "python3 -m unittest discover -s strata/flash-next -p 'test_ple_lastwindow34_cpu_v1.py'",
+  "actual_source_predicate": "r.active && pos0 + T == static_cast<int64_t>(r.ids.size())",
+  "source32_every_window_gather_fences_and_normal_graph_preserved": true,
+  "source33_header_full_preflight_and_fourframe_quota_preserved": true,
+  "final_prompt_windows_per_request": 1,
+  "armed_prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "earlier_window_publication_submit_markers": 0,
+  "runtime_collector_final_window_T": 1,
+  "actual_CPP_compilation_or_execution": false,
+  "actual_GPU_Docker_SDK_or_original_payload_work": false,
+  "actual_runtime_qualified": false,
+  "GPU_PLE_input_consumption_observed": false,
+  "full_model_math_qualified": false,
+  "remaining_work": [
+    "genuine fresh source34 SDK/all8 ABI targets and source390/uploadV2/current-source4",
+    "genuine C112 baseline one/pair health/source/ownedteardown qualification",
+    "real P30V3 OFF/ON finalwindow input33 publications/terminal/original decoder equality/all48 rawmapping/owningfree/128MiB budget",
+    "original owned model math/concurrency/cache/coherence/performance campaign gates"
+  ]
+}

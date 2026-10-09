@@ -10760,3 +10760,29 @@ VERDICT -> Bounded correctedonecard service/lifecycle/sourceproof, not native
 originalmodel math or speed. P30 actualcurrentinput/original48 then corrected
 pair/cache/concurrency/fairness/latency/shelf remainrequired.
 See docs/20261009_flashnext_source33_resume.md.
+
+
+## 2026-10-09 - P30V2 real observer failure; source34 SDK PASS
+
+CONFIG -> Source33/C111onecard baseline qualified; actual P30V2/input33 diagnostic
+with originalmodel/source/stack fixed. New34 patch limits publication to final
+accepted prompt verifier window; source32 gathering/math unchanged.
+
+COMMAND -> Actual P30parent12328; preserved terminal/posthealth/source4 onerror.
+New34 pristine/CPU11,C112CPU85,P30V3CPU30,originalexplorerV3CPU15. Fresh leased
+SDK9860 then source390 oracle90862; newupload43045 currentlylive.
+
+RESULT -> P30V2FAIL551s: prefix2 earlierpos0 and finalpos1 bothpublished same
+requestordinal, duplicatecurrentordinal exception/nativeexit139/noOOM/removed.
+Posthealth/kernelgate/NEWallfourpublisherhashesPASS; no P30/inputqualification.
+Source34SDKPASS309s/eightABI, actualC11263/27/34sourcegatePASS, receipt
+d2af73f0062a44a1c2809870071f5d28e2e77d310e07e0ae2c16c40776fce30a.
+Newlinked390oraclePASS47s. CPU141/sourceclosuresPASS;4C112aliasesregistered.
+Actual source34upload43045 live under pairlease, f15-source34-20261009.
+
+VERDICT -> Real diagnosticfailure localized/newcorrected observer compiled,
+not fullmodelqualification. Newupload/C112/P30V3 actualreplay/originalIQ4
+input/owned48/futurepair/cache/concurrency/latency/shelf remainrequired.
+No old33compiled/upload/runtimeproof transfer to34. No reset needed on
+healthy singlecardfailure; no driver/kernel/sourceweight change made.
+See docs/20261009_flashnext_source33_multiverifier_observer_failure_and34_fix.md.

@@ -87,3 +87,29 @@ root actual onecard baseline admission.12 experimental aliases registered.
 No batch GPU execution yet. V5 rejects EAGER whenever present, including0,
 matching actual native getenv semantics; input33/P30 stayOFF for that lane.
 Earlier V4 remains frozen and cannot qualify source33.
+
+P30V2 terminal -> FAIL551s due source33 observer publishing earlier and final
+verifier windows for the same prefix2 request, then rejecting duplicate ordinal.
+Actual nativeexit139/noOOM/containerremoved/posthealth/kernelgate/newfull4PASS.
+Failure is preserved; no original-input or P30 qualification transfers.
+See docs/20261009_flashnext_source33_multiverifier_observer_failure_and34_fix.md.
+
+Source34 fresh SDK now PASS309s/eightABI and actual C11263source/27header/34patch
+admissionPASS; new source390 linkPASS47s. SDK root
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T225315Z-r6qg0qu_/;
+receiptSHAd2af73f0062a44a1c2809870071f5d28e2e77d310e07e0ae2c16c40776fce30a.
+Oracle root /mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-zb6n871k/.
+NEW source34uploadV2 execsession43045 is live, output
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f15-source34-20261009/source-upload-source34-strict-v2/.
+Poll actual handle/process and final receipt before proceeding. After PASS,
+prepare C112onecard-segmented with the new SDK/oracle/upload and unchanged
+Python package-only runtime-c111/receipt.json, qualify through V12 parent, then
+P30V3 using the actual V12 final source4 proof. All old34absent recipes refuse
+this generation; C111 proof cannot substitute. New CPU141 tests cover repair11,
+C11285,P30V3 30 and originalexplorerV3 15.4C112aliasesregistered.
+
+Use prefix_residual30_qualification_v3.py / qualify_prefix_residual30_v3.py and
+explore_full48_original_prefix1_v3.py for the actual new34/C112 lineage.
+BatchV5 remains source33-bound; source34 needs its own future concurrency lane.
+Original wholemodel math, completecache, pairconcurrency/fairness/cleanlatency
+and shelf are still unqualified; original campaign remains active.
