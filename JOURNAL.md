@@ -9992,3 +9992,22 @@ Coverage is31 source values plus2 DERIVED values; raw fused hidden is unobserved
 VERDICT -> Source checkpoint ready for full pinned SDK rebuild and actual
 source390, off/on, numerical and lifecycle gates. CPU fixtures establish no real
 2/4/6 concurrency, full-model math, latency improvement or shelf qualification.
+
+
+## 2026-10-09 - Conditional original GDN checker source
+
+CONFIG -> Original GGUF Q8_0/F32 weights and frozen21 supplied capture fields.
+Keep original FP64 operator lane and existing NMSE1e-6/max-normalized1e-4 limits.
+Incoming recurrent/convolution state is supplied, not independently reconstructed.
+
+COMMAND -> Independently run test_verify_layer0_gdn_original_v1.py; inspect
+actual native convolution tap/history layout and L2 epsilon/S caller. Review
+metadata/SFD/L0 nonce, field provenance, packet and original-role binding.
+
+RESULT -> PASS18 CPU controls. Seven conditional checks per prefix cover original
+Q8_0 projections, convolution shift/taps/SiLU/qk normalization, recurrent update
+and gated output. Actual original-weight evaluation waits for parent terminal
+and the genuine new full four-shard source identity.
+
+VERDICT -> Source checkpoint before actual evaluation. Supplied-input operator
+evidence cannot qualify own-state/full-model math, concurrency or lifecycle.
