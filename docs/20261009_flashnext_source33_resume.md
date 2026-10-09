@@ -46,3 +46,28 @@ Runtime evidence root:
 Native build root:
 /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T222248Z-bc2nycoj/.
 Runtime receipt: runtime-c111/receipt.json under the evidence root.
+
+Follow-up -> checkpoint6b49054 pushed. Standalone whole390 oracle PASS43s,
+root /mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-badrywm_/.
+Fresh leased uploadV2 is live, exec session47722, output
+source-upload-source33-strict-v2 under the evidence root. Its fresh final
+four-shard scan remains mandatory; no completed upload is claimed yet.
+
+Completed upload follow-up -> fresh leased uploadV2 PASS274s/allfive cases,
+ownedterminal/posthealth/new complete publisherhashes4. Source33 HC/PLE upload
+proof is new and matched; ordinarypayload readback/model math remain false.
+C111 one-card-segmented genuine preparation is live, exec session58899, directory
+c111-onecard-segmented under the evidence root; no actual modelserve started yet.
+
+C111 follow-up -> one-card-segmented preparation PASS, parentqualification
+exec session62244 currently live under pairlease. Revalidate this handle and
+actual parent/proof terminal artifacts on continuation; do not restart solely
+because an observation expires. Model coherence/identity/teardown/posthealth
+and new completehash4 qualification is pending.
+
+New originalprefix1 source33/P30V2 explorer and readonly finalized admission
+are CPU READY (14 tests); no actual positive admission or original payload run
+yet. See strata/flash-next/full48-original-prefix1-p30-source-plan-v2.json.
+It compares144 actual P30 phase vectors and the full SFD head to independently
+owned original-state computation. Old explorerV1 remains bound to source29.
+Source32-only batchV4 needs a new source33/C111 V5 generation before use.

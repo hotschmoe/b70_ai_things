@@ -10713,3 +10713,25 @@ VERDICT -> Native compilation/runtime source checkpoint, not correctedmodel
 GPU/math/cache/concurrency/latency/shelf qualification. No old29/31 proof
 transfer. Next fresh390/uploadV2/C111 serving then actual source33 PLE input
 proof and original48 requalification. See docs/20261009_flashnext_source33_resume.md.
+
+
+## 2026-10-09 - Source33 new whole390 upload PASS and C111 onecard live
+
+CONFIG -> Fresh source33 SDK0b32d570/new oraclee2edeb20, originalmodel/stack
+unchanged; allfive whole390cases and own terminal/posthealth/source4 required.
+
+COMMAND -> Oracle54593/link43s; pair-leased upload47722; genuine onecard
+segmented C111prepare58899 then parent62244; new readonly originalprefix1
+P30V2 explorer/admission CPU14 and full22file closure.
+
+RESULT -> UploadPASS274s/fivecases/ownedterminal/strict+compiledposthealth/
+NEWallfourpublisherhashes, receiptbe7661c6e7e95a5e6b82c54b6a5bbe3c70c3e1f5e7241aeeac4159c7f0009e4e.
+Genuine C111onecard preparationPASS. Parent62244 nowlive under pairlease.
+NewexplorerCPU14PASS;144P30phase+head comparison uses originalweights/IDs
+only, no captured state as mathinput. Actual newexplorer admission/run pending.
+
+VERDICT -> Newcompiler/upload/source checkpoint, not correctedmodel math
+qualification. C111/runtime/P30V2/actualoriginalinput/nativefidelity then
+cache/concurrency/latency/shelf stillrequired. Source32-only batchV4 needs
+new source33/C111 V5 admission; no silent priorproof transfer.
+See docs/20261009_flashnext_source33_resume.md.

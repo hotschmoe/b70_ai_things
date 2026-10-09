@@ -27,3 +27,15 @@ permitted and have produced the PLE staging localization and semantic fix32.
 Completion is UNPROVEN. GPU compilation/serving, actual prefix/concurrent/latency
 qualification and shelf promotion remain required. Source33 prelaunch observer
 is still being finalized; actual native compilation/consumption remains unobserved.
+
+## Current follow-up after resumed runtime access
+
+The resumed session allows runtime/Git/network writes. Source33 SDK compiled
+all eight ABI targets and passed actual C11163source/27header/33patch admission.
+A newly linked whole390 oracle and new fivecase uploadV2 completed with owned
+teardown, posthealth and a new completefour publisherhash scan. These qualify
+compilation/source HC/PLE upload only. Correctedmodel serving, original native
+math, complete cache, concurrency, interactive latency and shelf remain unproven.
+Checkpoint6b49054 is pushed; subsequent runtime evidence is indexed in
+docs/20261009_flashnext_source33_resume.md. Historical restriction paragraphs
+above describe the previous restricted session and no longer block new work.
