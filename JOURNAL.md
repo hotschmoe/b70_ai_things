@@ -14169,3 +14169,21 @@ currenttarget/compiler output removes it. Otherpost-EOT bytes are not claimed
 executed instructions. Native runtimeactualJIT code still unobserved.
 VERDICT -> Offline compiled-code narrowing consistent withactualexpression
 identity; not originalJIT causal proof or originalmodelmath qualification.
+
+
+## 2026-10-10 - Matched offline materialized-half store control
+
+CONFIG -> Original executed store36 SPIRV, samecurrente223/tool/runtime/offline
+flags as originalexpression33 diagnostic. No originalJIT equivalence claimed.
+COMMAND -> Actual20892 compile undercard0lease/pin terminal0/PASS11s;
+actual19074 exactbinary disassembly terminal0/PASS9s, normalownedEOF/removal.
+RESULT -> Compileae1f0f825d7150ff4c55cad7b4466f16ace04dc9af18d37dcddd9f0f01cf1006;
+disasmf45b73eb472c1e1dc352f871020467e95e3e4cedf78ea5a91e026cc3f17a79bb.
+Store assembly explicitlymoves r12/r13 float32 to r14 half and performs
+store.ugm.d16u32. Matchedexpressionassembly instead directlyloads/storesd32.
+Original store/expression SPIRV and actualinput/binary/tool/command/lifecycle
+artifacts retained, originalmodel/reference unchanged.
+VERDICT -> Offline diagnostic contrasts materializedhalf conversion with
+eliminatedexpressionroundtrip, consistent withactualruntimeobservations.
+OriginalactualJIT/ISA/cause and full48reference fidelity remainunqualified.
+IndependentoriginalELFrecollection37439 stilllive; canonical165 intact.
