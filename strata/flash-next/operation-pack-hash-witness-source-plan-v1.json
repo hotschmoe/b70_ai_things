@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "status": "Frozen SOURCE/CPU10 prototype; unintegrated",
+  "files": {
+    "strata/flash-next/operation_pack_hash_witness_v1.py": "49f9c97cb4514ceca1b82ca1cf2a6a3b98d767842c4d2eaf6a3c4e449f945d1c",
+    "strata/flash-next/test_operation_pack_hash_witness_cpu_v1.py": "2ed9f0279c9ff63635ae1c02451ecbd490a1c728717d434ec1acb2817bc04e53",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "docs/20261010_flashnext_operation_local_pack_witness_proposal_v1.md": "8fd0fa4d4ef649a1af1affd40056c770174b16c58b3b6cce837ece7c1a8a4144"
+  },
+  "cpu_tests": 10,
+  "actual_pack_or_model_read": false,
+  "runtime_helpers_modified": false,
+  "operation_wide_optimization_qualified": false,
+  "stat_only_validation": false,
+  "fresh_byte_read_boundaries": [
+    "admission_start",
+    "predevice",
+    "postoperation"
+  ],
+  "between_boundaries_mutation_unobserved": true
+}
