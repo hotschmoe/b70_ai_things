@@ -14090,3 +14090,21 @@ VERDICT -> Actual supported options/currenthost metadata only. Original IGClib
 current census and offline loaded-library/target proof remain separate. Full
 originalELF currentrecollection37439 stillCPUactive, no restart or gate removal.
 Native math/fullcache/latency qualification remain open.
+
+
+## 2026-10-10 - Original ELF extraction publishes and census source freezes
+
+CONFIG -> OriginalV4a674/unchanged executed helper4d86d9b8; new bounded
+ocloc census019b7bcb1b535ac8360f50c7ce9aeaadae5b068f6331c90614641f017eea29dc.
+COMMAND -> Existing extraction37439 completes publication after1022.6408s
+full current original runtime/source admission; samejob now rechecks finalized
+publication independently. Root exact296+19+26 hashes/ASCII/AST and4CPU
+PASS0.004; author confirms census frozen. Start root card0 lease59411.
+RESULT -> Original six extracted image files/extent/hash/entrypoint roster
+pass root checks; extraction4d63475831fa62f477a9a769a4ce53c327d02ec80c4da698a73407c600f1cca1.
+Full finalrecollection stilllive; canonical165 unchanged. Census consumes
+original reported IGClib rows and actual top-level inventory08551, no offline
+compile/disassembly/device target guessed; actual census result pending.
+VERDICT -> Original embedded SPIRV publication, not originalJIT ISA or cause.
+Full reference fidelity/cache/concurrent serving/profile/latency/shelf remain
+active. No frozen prior proof altered to shorten the expensive validation.
