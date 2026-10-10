@@ -13236,3 +13236,23 @@ Child4 byteboundaries andparent3 independent; oldH49failure unchanged. NoGPU
 model actor started; both prepare processes mustfinish before admittingplans.
 VERDICT -> Sourcecheckpoint and realCPUpreparation, no runtime/coherence/speed
 qualification. PeerREADY and exactpreparedplan/ownedhealth gates precedeGPUrun.
+
+
+## 2026-10-10 - Both H50 native4 plans prepared and actual OFF parent starts
+
+CONFIG -> Frozen5f719918/331, root+peer109CPU PASS, native4 source37 unchanged.
+COMMAND -> ActualCPU OFF15923 andON80579 terminal0; exactpreparedplans
+3da5d55ec5521aabbba19befb624059fe77c5e5dd7511f09d5c759934446b3e0 and
+8b46355e819d18a25319227b250bfa05dab181a0b3821118ac99af3c835da329.
+RESULT -> Pack/SDK preparationwitnesses saved. RootactualOFFparent1874 acquired
+pairlease andstartsfulladmission; modelleaf/runtime results remainpending.
+N6OFFmetadata prepare5705 runs withcProfile, noGPU/inference/performanceclaim.
+
+CONFIG -> Unintegrated immutableparser V1 4ee4aa45/19, freshisolated worker.
+COMMAND -> Root25CPU PASS4.843s/all19SHA; localPythonPopen.__exit__ inspected.
+RESULT -> Fixedparser synthetic5case80caller counts20 scans, no actuallogdata.
+Interruptcleanup gap confirmed: KeyboardInterrupt context onlybrieflywaits,
+whileworker has ownsession; V1 catchesTimeoutExpiredonly. Outputcap ischecked
+aftercommunicate, so not a harddrain bound. FreshV2correctionrequested.
+VERDICT -> H50runtime progresses independently; parserV1 HOLDintegration,
+oldsource/failures unchanged. No modelmath/cache/latency/shelf qualification.
