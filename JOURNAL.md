@@ -13272,3 +13272,19 @@ operands substituted; internalnorm/score witnesses remainunobserved.
 VERDICT -> Sourcecheckpoint only; peerREADY andisolatedcompile needed before
 actualproducer/device/reference requalification. RootH50OFF1874 solepairactor;
 N6instrumentedCPUprepare5705 remainslive. Fullmodel/cache/latency/shelf open.
+
+
+## 2026-10-10 - Immutable parser V2 failure and ownership rules reviewed
+
+CONFIG -> NEW75f2433bd27d7eb0ca11088f281daa7273279b122f637d1ba0aeb0ebd9524f91,
+27sourcebindings; V14ee4 bytes preserved andunintegrated; H50 unchanged.
+COMMAND -> Root34CPU PASS8.185s/all27SHA; independentoldtimeoutcounterexample
+rerun oncorrectedV2: caughtfailure->finalize passedfalse, onefailure retained,
+parsecounts unknownNone. ActualCPU workers use synthetictrace bytes only.
+RESULT -> AllBaseException/timeout retirement, emptyownsession/closedregular
+sinks, RLIMIT_FSIZE32MiB whileproducing output. Failed epoch cannotreusesuccess;
+worker transport/protocol/parse failures retained. Fivecase synthetic80callers
+use20actualscans; no actualupload/SDK/model payload or speed evidence transferred.
+VERDICT -> Sourceproposalcheckpoint only, deliberately narrowfutureconsumer
+port pending. Genericpurity contract unchanged. RootH50OFF1874 andinstrumented
+N6prepare5705 remainlive; fulloriginalmath/cache/latency/shelf unqualified.
