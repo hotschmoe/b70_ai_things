@@ -12545,3 +12545,20 @@ prompt-success transfer. Actualobservations stillpending.
 VERDICT -> Realpreflight datatypeissue localized beforedeviceuse; current
 model/kernel/weights unchanged. NewCPUreference progressesEOS/localfidelity
 question whilefuturemetadatafixed. Fullcache/quality/latency/shelf goal active.
+
+
+## 2026-10-10 - Exact235 CPU reference closes; strict serial V3 frozen
+
+CONFIG -> Two independent fresh CPU llama.cpp processes, exact original235
+input corpus, natural64/temp0/seed1; serial/private V3 JSON representation fix.
+COMMAND -> Actual CPU71408 terminal0/PASS435s, owned processes removed and new
+completefour publisher hashes/pages PASS. Root V3 unittest26+20 PASS and
+114/127 dependency SHA closures PASS; genuine V3 preparation15962 started
+from preserved genuine V40 origin without repeating origin preparation.
+RESULT -> Both CPU cases output One and EOS, matching bounded Strata targets.
+This establishes an independent exact-input observation, not native arithmetic
+equivalence, model quality, underlying EOS cause, or speed qualification.
+V3 strict canonical comparison retains all fields/types and rejects collisions,
+duplicates and nonfinite values; original failed receipts remain unchanged.
+VERDICT -> Independent reference evidence complete; remaining147 numerical
+comparisons and complete cache/concurrency/fidelity/latency/shelf remain open.
