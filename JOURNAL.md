@@ -12594,3 +12594,21 @@ static6 RID/64MiB bounds, observes victims/host logical memory and adds
 truthful directGEN diagnostic phase; native compile/runtime remain unobserved.
 VERDICT -> Verified live wait plus new CPU evidence; no source38 launch or
 cache/fullmath/speed claim. Independent review and fresh ABI checks remain.
+
+
+## 2026-10-10 - RMS diagnostic hypotheses preregistered; serial engine live
+
+CONFIG -> Unchanged SDK37 nativeHC RS diagnostic proposal; saved independent
+original embedding/residual, synthetic normones/zero down/up weights only.
+COMMAND -> Root9 CPU controls and113-file closure PASS, sourceplan
+31d294c1412e79444a45d1a8dd90ea856712fc1a9a2799b562e6964618ea6602.
+Metadata-only prepare completed at f17-source37-20261010/
+native-rms-rsqrt37-preregistered-inputs-v1; inputSHA
+9913fa74fb647cbe9dd92a4d55f834177bc927d48226b13a1930f4bbb576ba1e.
+RESULT -> Two argument families times three RS hypotheses recorded before
+native observation. No fresh model reads/compile/GPU. Object precise flags
+and production correctly-rounded device-link flag have separate authorities.
+Actual70200 prehealth PASS; child917640 owns live model engine and is loading
+source37 native HC/PLE and stage mirrors, numerical observations pending.
+VERDICT -> Diagnostic fixture prepared, actualRS/fullmath unqualified; new
+owned lifecycle qualifier required. No parallel GPU experiment launched.
