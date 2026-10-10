@@ -1,0 +1,15 @@
+# Observed-tool lowering recipe successor
+
+CONFIG -> Preserve executed failed V1 abee/74202 and the original closed half source52db. Actual absolute compiler inventory7166 declares icpx and InstalledDir clang++, offload-bundler/extract, llvm-objcopy, llvm-spirv and sycl-post-link in compiler39992. llvm-as/dis/readelf/spirv-dis were not found by that compiler-root inventory; their absence elsewhere is not inferred. V1 failed normal EOF with 'IR output is not supported' and produced no qualified IR.
+
+COMMAND -> Root runs half37_compiler_lowering_recipe_v2.recipes(new_root,actual_pid) tool-help and exact-driver-phase probes under bin/gpu-run, compiler39992, conditional setvars and the existing exact phase supervisor/inspection/normal removal discipline. Absolute observed tools are used. Both driver-phase commands retain ALL original source, compile, archive and backend divide/sqrt options; -### records the actual planned device/frontend/post-link/translator/link sequence. The save-temps dryrun adds only -save-temps=obj; unsupported probes remain failures and are preserved.
+
+Root records each label.log, label.command.json, label.receipt.json and label.inspection.json with original EOF/error/image/recipe/source metadata. save_temps_argv(probe_root,pid) re-admits the exact supported dryrun recipe, original typed receipt/log and terminal inspection before returning the fresh executable rebuild command. It keeps the original link/backend options and changes only save-temps/output. Root must separately retain current actual tool ELF/version/library identities and source before/after. device_frontend(log) selects exactly one actual cc1 SYCL-device phase for inspection; it does not invent or execute a new clang command.
+
+After observing help, root can declare a further exact supported extraction recipe for saved LLVM bitcode/SPIRV or the original executed ELF's embedded image. Do not guess translator reverse flags, ELF sections or offload bundle targets. The current successor deliberately probes first rather than repeating an unsupported output mode. Fresh save-temps recompilation is distinct from original executed ELF and may not be called its final IR. Original runtime JIT ISA was not saved. Any offline ISA requires actual tool support/device target/runtimeC388 IGC identity and remains distinct from that original runtime ISA.
+
+RESULT -> Six source/metadata CPU controls PASS after the root quiet window ended. No author compiler, GPU, model payload or native operand reads. All original math flags remain in the complete driver probes/recompile; frontend and backend authorities are kept separate. No 'identical math flags' claim is attached to V1's backend-omitting frontend attempt.
+
+VERDICT -> Probe recipe ready for peer inspection; compiler artifacts and support remain unobserved. CPU/source freeze is ready for peer review. Root alone owns actual probes/compilation and lifecycle. No reference/model correction or lowering-cause claim.
+
+CPU: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_half37_compiler_lowering_recipe_cpu_v2.py -q

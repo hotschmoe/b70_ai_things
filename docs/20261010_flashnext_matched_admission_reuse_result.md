@@ -33,3 +33,14 @@ Historical failures preserved: benchmarkV1 da627 failed before trial0 because
 its factory expected absent ledger log_sha256. H53 6a74 remains held because
 its saved reader accepted mutated packet/argv/start fields. Successors use the
 actual ledger schema and exact saved-worker provenance; prior files unchanged.
+
+## Independent full recollection
+
+Root full reader56730 passed, receiptSHA256
+67464601f4ccc8897883c262715f2410d0066055091a846fe486f70b48714a54.
+It rejoins all original trial/source/result/worker evidence and fresh complete
+SDK/pack byte boundaries. Root-added summary is explicitly admitted/recomputed
+by the new reader; the earlier exact-nine-file reader refusal is preserved.
+Original negative temporary-copy bytes were deleted by the benchmark's own
+scope and are explicitly unavailable for current recollection; fresh negatives
+are rerun. GPU/serving and complete preparation qualification remain false.

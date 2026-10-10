@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "status": "Preliminary readonly small-array observation; parent finalization still pending at initial observation",
+  "input": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-layer3-qsa-inputs-v4-prepared-v1/raw.f32",
+    "sha256": "de82f9d41a59b874c1973cd95d9a51091ccbcc3911b4fa01e51ee7e338f39226",
+    "bytes": 2048
+  },
+  "device_tail_windows": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-layer3-qsa-control-v4-run-v1/build/native-output/route0/indexer_tail_windows.f32",
+    "sha256": "082e67696f337c1da9283258c44b1755f57b198fbb519a3456c7bc15e0e407fb",
+    "bytes": 4608
+  },
+  "own_final_tail": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-layer3-qsa-producer-v4-run-v2/reference-work/own-qsa-phase1/candidate-final-tail.f32",
+    "sha256": "df14ad87bf64e6ac8bc4ce5a02e209c549be9d069ffbefc2b9813f3a058d7247",
+    "bytes": 1536
+  },
+  "all384_device_final_tail_equal_own_original_raw_rows0to2": true,
+  "all384_own_final_tail_equal_FP16_RNE_widened": true,
+  "device_vs_FP16_RNE_different_elements": 384,
+  "compiler_optimization_cause_established": false,
+  "candidate_reference_modified": false,
+  "native_model_internal_target_observed": false,
+  "full_model_math_qualified": false
+}

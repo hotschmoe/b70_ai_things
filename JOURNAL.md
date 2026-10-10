@@ -13800,3 +13800,34 @@ H52originaltwo6/2plans prepared0 e03c9982/ffb052ab; no execution.
 Driverprobes36246 all10 commands0, collector admissionfailed missing
 command_sha256. Originalrecords preserved; newcollector62049 live withproper
 commandhash field, no IR/JIT/helperexecution or referencechange.
+
+
+## 2026-10-10 - Benchmark full recollection and H54 actual serial start
+
+CONFIG -> ActualmatchedV2 report172ff115/rootderived summaryc59e0a52;
+newexplicit readonlyV3 source cbe1d9d8/419 retains originalnine-file V2 refusal.
+COMMAND -> Agentmetadata/log recollection06afd345 PASS; rootfullreader56730
+terminal0/PASS, receipt67464601f4ccc8897883c262715f2410d0066055091a846fe486f70b48714a54.
+RESULT -> All8trial SHA/order/source/old-newresult/workerpacket/PID/start/count/
+retirement/currentlogical bytes rejoined. Root fullSDK/pack threebyteedges and
+live old/new gate/freshnegatives passed; original negative temporarycopy bytes
+are unavailable and explicitly not currentlyrejoined. Summary metrics recomputed.
+VERDICT -> CPUadmission measurement only, no inference/serving/wholeprepare claim.
+
+CONFIG -> H54 originalN4 collectorH50, exact8jobs in6/2 groups.
+COMMAND -> CPUprepare66898/73653 terminal0; plans2f547043 and3352b279.
+Actualgroup0 qualifier2165 selfleasedpair/expectedSHA2f547 beforemodel work.
+RESULT -> Newmemo integration keeps alloriginal model/health/source/byte/
+absentPIN/group392 gates; actualserial results pending. Group1 not launched.
+VERDICT -> Full392 compares/normalteardown/posthealth/new4/public joins required;
+original model math/cache/latency/shelf remain open.
+
+CONFIG -> Originalhalf full-driver metadata/support b5c/282+19.
+COMMAND -> Correctedrootprobe62049 terminal0/PASS101s, binding733dc7aa.
+Freshsameflag save-temps33497 terminal0/PASS22s db27e681/198artifacts; helper
+unexecuted and originalexecutedELF unchanged. Source/helper reference unchanged.
+RESULT -> Saved sixdirect/wrapper Expression/Store/Load bitcodes identified.
+Textview99657 failednormal10s 'IR output is not supported'; no textualIR/cause
+or originalruntimeJITISA claim. Root/probe failures preserved, supported next
+bitcode/SPIRV extraction source work delegated.
+VERDICT -> Compiledartifact capture only. Actualconversioncause remainsunproven.
