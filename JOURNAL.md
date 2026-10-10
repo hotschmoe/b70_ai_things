@@ -14895,3 +14895,20 @@ VERDICT -> ConcreteGPUbundle arithmeticlowering narrowevidence, original
 modelinternalreference error unresolved. No semanticpatch/tolerancefit or
 API/fullcache/latencypromotion. CorrectedQSA V5sourcequeueclosureinprogress,
 heldV4prepare14476CPUlive, fulloriginalgoalactive.
+
+
+## 2026-10-10 - Independent actual bundle collector recollection passes
+
+CONFIG -> ActualnewGPUbundle helperc2c34/source9712/compile21s/GPU141s,
+original3kernelbodies/raw12/direct+tworeplay ownedhealth receipts retained.
+COMMAND -> Rootcurrentcollector8CPU PASS0.005 thenbounded actualcollect
+againstoriginalnewcompile/GPUroots; noGPU/helper replay ormodeltensorread.
+RESULT -> 3module ELF/name/byte joins, all12actualoriginaloutputcomparisons
+andactualruntime/health/normalowned receiptjoinsPASS; recollection
+64ac3433e3e93ec465b33a519833b86e244c7f4fd15a5c7f3b2f2a95bb3da36c
+at build/half37-native-bundle-root-recollection-v1.json. Bundlemembership
+true; actual_direct_launch_module_associationFalse/historicalJITFalse/
+mapped_library_current_bytes_recollectedFalse/fullmodelmathFalse retained.
+VERDICT -> Concrete scopedindependentcode/result qualification, nooriginal
+modelsemanticfix orcleanlatencypromotion. QSA V5queueclosure/completemetadata
+sourcecontrols progressing, heldV4prepare14476 remainsCPUlive. Fullgoalactive.
