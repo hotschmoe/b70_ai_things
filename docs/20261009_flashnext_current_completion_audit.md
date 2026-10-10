@@ -1437,3 +1437,25 @@ creation/drain issues; NEWV2 inprogress. FullsharedV3 CPU/source checkpoint
 ready butactualwholecache/fresh49 workrequiresfinalpairedbaseline and171
 purposeassociation. Originalmodelmath/stateisolation/1-2-4-bounded6/physical
 placement/profiling/cleanmatchedlatency/shelf allremainopen; fullgoalactive.
+
+
+## 2026-10-10 - Full cache suite actual first actor admission
+
+Source40 onecard/pair baselines finalizedPASS current1403, pairedqualification
+5fce21cb. SharedV4 exact171port22f15/682 root143CPU1.348/peer143CPU1.325
+passed andsourcecheckpoint07f0100 pushed. Actualwholeprepare3a6dc6/all10
+planhashes completed; actualGPU72322 solepairleasewhole-suite runlive.
+Firstshared-capture0 nestedparent1175634/child1176831 reachedsemanticREADY;
+parent actualleafstrict/compiledhealthACK stage islive. No actor/fullcachePASS
+yet, everywhole9actor+persisted/fresh49 family stillrequired.
+
+ActualcaptureV3 GPU63193 failedinitializationrc139 beforehelperframes,
+reports5091b778; poststrict/compiledpair/kernel guards passed and owned
+containerremoved. Specificsymbollookups observed but noactualJITqualification.
+V2helperreplaya930passedoutput/health butmodulecoverageFAILzero. Successor
+mustfixrealrouting/recursion before rerun; no unchangedfailedarm repeated.
+
+QSA V2a805 root25CPU/448hashpass, actualCPUprepare14738 live; peerHOLD
+onactualimmediatePopenexit/retirement andREADYparent identity. NEWV3 fixin
+progress, no observerGPUlaunch. Original48reference fidelity/allstatecache/
+streams/physicalplacement/x2profile/interactive latency/shelf remainopen.
