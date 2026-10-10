@@ -1,0 +1,33 @@
+{
+  "COMMAND": "CPU semantic/source controls only; no tokenizer/model/runtime export",
+  "CONFIG": "Eight useful finite sentence tasks; all original contexts and V1 experiment retained",
+  "RESULT": "3 CPU controls PASS; all actual token counts/continuation/overlap unobserved",
+  "VERDICT": "No selected candidate or old proof transfer; actual new fixture plus all16 fresh screen cases required",
+  "actual_CPU_continuation_observed": false,
+  "actual_GPU_positive_overlap_observed": false,
+  "authentic_tokenizer_export_observed": false,
+  "files": {
+    "strata/flash-next/api-positive-overlap-corpus-seed-v1.json": "cb6e107478e1610732665ad577ed6ab8fb5634f3cba8c7a5b0112cec693c61bd",
+    "strata/flash-next/api-positive-overlap-corpus-seed-v2.json": "53cc3c29afc32a67c53736ce34570c0026d9e320264a937685ee405b4c9e24ce",
+    "strata/flash-next/api-positive-overlap-corpus-source-plan-v1.json": "c31a56276794c1e94fd3f01d48e6596630f640d0ebaa0c655568352e1ed52e72",
+    "strata/flash-next/api-positive-overlap-finite-corpus-design-v2.md": "2874e16a00ba910c9631725b1a5a5c6cc4709374c90c18abffa5f8e259c5251d",
+    "strata/flash-next/api_positive_overlap_finite_corpus_v2.py": "74f286636b189fe5c1f2b883493eff95c63a7880aea9b9cb9912817d0e776554",
+    "strata/flash-next/test_api_positive_overlap_finite_corpus_cpu_v2.py": "f82074bb18256227ce46f25179ea649e24c1cc1001540f5740a450791852923b"
+  },
+  "max_new": 64,
+  "natural_EOS_generated_token_bounds": [
+    8,
+    63
+  ],
+  "prior_fixture_counts_or_responses_transferred": false,
+  "requested_sentence_word_range": [
+    12,
+    20
+  ],
+  "root_tokenizer_producer_successor_not_yet_prepared": true,
+  "schema": "api-positive-overlap-finite-prompt-source-v2",
+  "screen_all_cases": 16,
+  "seed": 1234,
+  "status": "SOURCE/CPU draft; authentic export and new owned screen still required",
+  "temperature": 0
+}
