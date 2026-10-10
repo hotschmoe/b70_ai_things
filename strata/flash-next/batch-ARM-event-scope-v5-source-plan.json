@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "CONFIG": "preservedactual native2diag1 source35 V6 failure, exactsource35 idle-reset batchcounter contract; newstrictARMscoped audit withfrozenV2 raw gates unchanged",
+  "COMMAND": [
+    "PYTHONDONTWRITEBYTECODE=1 python3 strata/flash-next/test_batch_arm_event_scope_cpu_v5.py",
+    "PYTHONDONTWRITEBYTECODE=1 python3 strata/flash-next/replay_batch_native_failure_v1.py --child-root /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v6-onecard-native2-diag1-run/child"
+  ],
+  "RESULT": {
+    "CPU_tests_passed": 11,
+    "actual_readonly_roster_event_freshcounters_4serialjobs_replay_completed": true,
+    "frozen_wholetrace_failure_type": "AssertionError",
+    "frozen_wholetrace_failure_line": 19,
+    "new_ARMscoped_actual_raw_vectors": 196,
+    "new_ARMscoped_actual_raw_bytes": 11837440,
+    "new_ARMscoped_actual_replay_proofs": 3,
+    "actualGPU_or_model_execution": false,
+    "preserved_failed_artifact_bindings_unchanged": true,
+    "failed_native_parent_requalified": false,
+    "serial_numerical_comparison_completed": false,
+    "full_model_math_qualified": false
+  },
+  "VERDICT": "PASS parser/localization source+CPU only; newimmutable parent/execution integration andactualqualification required",
+  "files": {
+    "strata/flash-next/audit_batch_fidelity_coverage_v5.py": "fb39570cd552a40e7b74b6ba809219e6890f0a63d39bfd2ce7511fba251816e4",
+    "strata/flash-next/run_batch_numerical_pilot_v7.py": "007cfc79109c441eb45b5ed5fe115d8c265f5d563889768df71db3c0de59c9ab",
+    "strata/flash-next/replay_batch_native_failure_v1.py": "740aee2f93087c419d57490c2704ef864d7b8bc178c38620e810e7ad24df2b36",
+    "strata/flash-next/test_batch_arm_event_scope_cpu_v5.py": "3db0d9ab873e8f52b9193b711ad1560260cd25c925e77ae90d2629b7f4712677",
+    "strata/flash-next/batch-ARM-event-scope-v5-design.md": "2cb704d857b299bdf74f3673287937bd641094311597fc0f0e23362e73ac735a",
+    "strata/flash-next/batch-native-v6-event-reset-replay-evidence-v1.json": "bd751e56a95a8abfeaed74e011e35e53b0d78fc818013e03581b0dfd457cfaf4",
+    "strata/flash-next/audit_batch_fidelity_coverage_v2.py": "2d3719ad4f020811462e5a5e8f2d93da950658d9a901e9aaa9777d2e4439e24a",
+    "strata/flash-next/audit_batch_fidelity_coverage_v4.py": "a2814f92378f93d4e9cea946ba67b4304affc57d21fa4f00c6fa87253a4655df",
+    "strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "strata/flash-next/batch_numerical_prefixes_v2.py": "bccdbe9d9c0c8e50d2e059877cf9d4648e2ab8c1a533451ac56d5d18adca1dc5",
+    "strata/flash-next/batch_numerical_proofs_v6.py": "290e52921e7618195e6b2e5bd3affcdab6116574e1b3bc2c5023609674d82c81",
+    "strata/flash-next/run_batch_numerical_pilot_v6.py": "68bf6c0f335fc1f7252ea7a084903ab84e461b5c578a891b3312b3b366a604a8"
+  },
+  "source35_counter_dependencies": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/program/generate.cpp",
+      "sha256": "27e52a23debf493b57654a7ca871859b2655c5d8bb11c51be9e473d5ba557a39"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/include/strata/core/batch_fidelity_observer.hpp",
+      "sha256": "ddd2475f38f42e731a99ff52678cda9e742b20c75ead38383a735ca0add9db39"
+    }
+  ],
+  "old_evidence": {
+    "child_root": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v6-onecard-native2-diag1-run/child",
+    "plan_sha256": "0ed36ea137085890920a7dcc353231dabd150fcb6c204fac6ba8c2cd5914fefc",
+    "trace_sha256": "f048af115fd40a30de07e3a36557b8b7731fdbc7a1b7ce23e81bfc079b8cfde5",
+    "failed_report_sha256": "bd4a28022fe6034338c6c385bd5092b56a3a437bb61cb8169bb12e06f3115190"
+  },
+  "maxnew_issue_separate": {
+    "plan_declared": [
+      64,
+      64
+    ],
+    "actual_native_constant": 32,
+    "cause_of_current_exception_proven": false
+  },
+  "newdriver_failure_capture": [
+    "stage",
+    "exception_type",
+    "message",
+    "repr",
+    "traceback",
+    "deep_roster_at_failure"
+  ],
+  "newdriver_runtime_requalification_required": true,
+  "API_migration_or_arbitrary_postARM_multiidle_sessions_qualified": false
+}
