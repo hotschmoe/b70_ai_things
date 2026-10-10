@@ -12077,3 +12077,29 @@ prepared; no matchedtimings orspeedup established. No change tocurrentrun.
 VERDICT -> Actualpublicwarm replies observed, positivecachedhandoff untested.
 Fullgoal active; failednativeboundary kept, independentdeviceoracle closure
 fixes anddev-loop traceIO implementation progressinparallel. Noshelf/speedclaim.
+
+
+## 2026-10-10 - Nativepaired observer crash and wholeHC runtime V3 ready
+
+CONFIG -> Source35 paired32/16 native2diagnostic targetARM. Separate compiled
+syntheticwholeHC oracle withV3 strictsupervision; no model/weight changes.
+COMMAND -> Pair66128 terminal1/FAIL361s, childexit139/OOMfalse afterwarm and
+at targetcapture; posthealth/kernel/new4/ownedremoval PASS. Trace exception:
+batch observer graph seal/stamp mismatch. Sourceaudit early-stage returnat
+verify1637..1642 skips sole snapshotstamp1741; sealer1856 rejectsunstampedstage0.
+RESULT -> NEW guardedobserverstamp37 prepared CPU10; existingmodel/head/OFF
+ops unchanged, freshABI/twoGPUrequalification required. H36+37 newbuildoption.
+WholeHC V1journal/logSHA gaps fixedinV2; V2launchcomp1/ownershipcomp2 mismatch
+caughtbeforeexecution. V3 consistentlycomp3 +actualargv→ownership CPUcontrol,
+alljournal/log/currentproof gates retained. Sourceplanf33fe98f106fileclosure,
+18original+8journal+10V3CPU tests PASS, independentreviewREADY. CPP/fixture/
+compileplan unchanged. Preliminaryrootleaf compile86242 PASS22s undercard0,
+sourcefullySHAfrozen butrepo checkpointwaspending; preserveprelimreceipt and
+performfresh tracked-source linkafterthischeckpoint beforeactualdeviceoracle.
+API10435 failedwarmguard FAIL1449s; actual HTTP/nativestop21token evidence
+provesstale engine_last observerpredicate, no rawrewrite; warmalsoZERO2row
+body, so sourcefixture/overlapneeds separatedeclaredrepair. BufferedV3 work
+retains exactrawschema/flush proof andseparatetruthfulterminal association.
+VERDICT -> TwoGPUstate/math unqualified; fixeslocalizedtoobservers/admission.
+WholeHC runtimecanproceedafterfreshlink; allfullAPI/cache/fidelity/profiling/
+latency/shelf requirements remainactive. Allfailed/prototype evidence preserved.

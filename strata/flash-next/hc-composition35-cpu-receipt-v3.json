@@ -1,0 +1,14 @@
+{
+  "CONFIG": "Actual launch_command to ownership object plus exact original kernel/leaf log admission",
+  "COMMAND": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p 'test_hc_composition35_*_cpu_v3.py' -v",
+  "RESULT": {
+    "passed": true,
+    "tests": 10,
+    "failures": 0
+  },
+  "VERDICT": "Source/CPU only; no compile/device/model; original prototypes unchanged",
+  "GPU_touch": false,
+  "model_payload_read": false,
+  "compiled_helper_execution": false,
+  "actual_compile": false
+}

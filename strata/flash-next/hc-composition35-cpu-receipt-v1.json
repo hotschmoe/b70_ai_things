@@ -1,0 +1,20 @@
+{
+  "CONFIG": "CPU synthetic corpus/source/ownership/lease-preflight controls plus readonly genuine source35 SDK metadata",
+  "COMMAND": [
+    "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_hc_composition_arithmetic35_cpu_v1.py",
+    "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_qualify_hc_composition35_cpu_v1.py"
+  ],
+  "RESULT": {
+    "passed": true,
+    "fixture_tests": 11,
+    "parent_tests": 7,
+    "total_tests": 18,
+    "failures": 0
+  },
+  "VERDICT": "CPU/source only; compile/device/model runtime unobserved",
+  "actual_GPU_execution": false,
+  "actual_compile": false,
+  "model_payload_read": false,
+  "compiled_helper_execution": false,
+  "actual_runtime_qualification": false
+}

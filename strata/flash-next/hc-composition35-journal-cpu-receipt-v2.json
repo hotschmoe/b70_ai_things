@@ -1,0 +1,14 @@
+{
+  "CONFIG": "CPU tiny original pre/post journal receipts and leaf/device/FP log identity admission",
+  "COMMAND": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_hc_composition35_journal_cpu_v2.py -v",
+  "RESULT": {
+    "passed": true,
+    "tests": 8,
+    "failures": 0
+  },
+  "VERDICT": "SOURCE/CPU only; no compile/device/model execution; V1 untouched",
+  "GPU_touch": false,
+  "actual_compile": false,
+  "compiled_helper_execution": false,
+  "model_payload_read": false
+}
