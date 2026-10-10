@@ -13347,3 +13347,21 @@ InternalRMSargument/rsqrt/score/softmax registers remainunobserved.
 VERDICT -> Proposalonly. CorrectedQSAproducer8162 solepairactor live.
 Consumer36beb0peerHOLD reproducedexactclass collectshadow bypass; prospective
 successorneeded. ExistingH50/QSA/immutableV2 source/runtime unchanged.
+
+
+## 2026-10-10 - Own QSA projection producer passes; H50 ON starts
+
+CONFIG -> FrozenQSA e122/source37 +closedHC V3, exactownoriginalweights,
+firstnorm/Q81 gate thenstrictprefix4, no capturedmathinputs.
+COMMAND -> Correctedactual8162 terminal0/PASS790s, report
+61041a2990c6f1b172ff1e8de8f9187805ac4279349e9082fd48136816c31ab3.
+RESULT -> First10240normalized/2880Q81 bitwisePASS, fouroriginalownQSA rows/
+projection/gamma/state snapshots,577prefix4 comparisons, normalhelperEOF/
+retirement/posthealth/new4/source gates. Prefix4head NMSE0.007888246485733295
+andmaxnorm0.05251488383778164 remainnonbitwise/numeric_gate_assignedfalse,
+matchingunchangedHC V3 arithmetic. Publicproducerreader49222 stilllive.
+VERDICT -> Producer/lifecycle proof only; prepareown10helperfiles aftercurrent
+reader, thenactualnativeQSA device comparison andnativeobserver remainrequired.
+RootH50ONactual1577 acquiredpairlease usingprepared8b46355e; parent/child
+admission nowlive. OFF57ca independentadmission preserved. Fullmath/cache/
+matchedlatency/shelf unqualified; no secondmodelactor oroldproof transfer.
