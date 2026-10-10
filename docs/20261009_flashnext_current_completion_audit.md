@@ -1035,3 +1035,32 @@ final peerreview/isolatedcompile/actual firstnorm+Q81 gate and optional fresh
 prefix4 remain pending. Existing native arrays stay comparison targets only.
 Fulloriginal-model fidelity, broadquality, complete cache/memory, API1/2/4/6,
 x2 correlated profiling, matched latency/fairness and verified shelf remain open.
+
+
+## 2026-10-10 - Actual HC ledger boundary and H48 freshness failures
+
+OwnHC V2 actual76881 is terminal1 after693s, reportcddd63335ffb23148552a6f352da5247350ffca767520c3a28db4ac51a7e8b0d.
+Normal helper exit/EOF, posthealth and freshfull4/pages pass, but current reader
+fails at four layer1 operand associations. Saved input phase precedes PLE;
+actual independently owned HC operand follows PLE. No full saved-data recovery
+is justified. Firstnorm/Q81 equality and577 prefix4 comparisons remain useful
+diagnostics; finalheadNMSE0.007888 remains nonbitwise/unqualified. NEW V3
+93d9329b/234/102CPU+peerREADY records each exactownoperand before actualRS;
+root18877 is live with originalmath/flags/helpers unchanged. V2 remainsFAILED.
+
+H48 native4 OFF actual35554 is terminal1 after1328s. Whole semantic admission
+andprehealth pass, but repeated childSDK/private admission exceeds unchanged
+300s freshness; leafmodel launch refused. Posthealth/journal/normalowned and
+newfull4/pages pass. No numerical4 serving result. Parentaf28c340ba4261650623c6bc2f3840c31f14ef0e805ea3850224ac39d56a81cc.
+NEW H49 SDK byte epoch routing is being prepared; no timestamp rewrite or
+freshness relaxation allowed, and allcurrent semantic/raw/identity gates remain.
+
+Finite V2 export/screen/observer/wrapper chain passes60 rootCPU and4complete
+source ledgers, committed4eb5607+c68369a. Independentpeer holds final screen
+chronology: final case terminal must derive from all16 original case receipts
+and pre/postfull4/page brackets must be complete. Frozenchain remainsunexecuted;
+NEW consumer/producer successor required. No oldcounts/responses transferred.
+
+Original fullmodel fidelity/broadquality, complete prefixcache/memory accounting,
+API1/2/4/bounded6, correlatedx2 traces, matchedlatency/fairness and verified
+reproducible shelf remain incomplete. No decode tok/s or production claim.
