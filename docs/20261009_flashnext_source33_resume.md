@@ -438,3 +438,37 @@ fullmodelmath/tolerance/quality/speed PASS. Native HC FP32 FMA/reduction versus
 originalFP64-dot/F32store audit underway; broaderfidelity and meaningfulquality
 remain required. Correctedrootcache99168 running; allstatecache/concurrency/
 criticalpath/cleanlatency/shelf retain originalfullscope.
+
+
+## 2026-10-10 - Corrected V8 shared-prefix root one-card qualified
+
+CONFIG -> Exact source35/C113 SDK and UD-Q4_K_XL identity unchanged; V8
+absent default pin, context2048/prefill64/PLE65536/FP16KV; serial native GEN,
+all48 phase observer. Root boundary21, divergent A/B suffixes, 49-token prompt.
+Frozen original mathematical reference remains unchanged.
+
+COMMAND -> Owned parent99168 terminal0 in450s; public extract/compare_requests
+recollected allsix rawrequests and allthree comparisons. Read final parent,
+child, actual ledgers, teardown, health, full4 identity and both page guards.
+Next paired root owned parent93880 launched with finalized matched pairbasic
+and onebasic receipts; acquired cards0/1 and confirmed pre-strict stage.
+
+RESULT -> Onecard root PASS: both nonfresh B hits select checkpoint21,
+actually reuse21 and evaluate28 promptrows; cold B references evaluate49.
+Allthree comparisons preserve natural completion, outputIDs, LP20, full
+248320-logit head and all48 residual vectors BITWISE. Container normalexit0,
+removed, no forcedcleanup/errors; strict and compiled-pair pre/posthealth,
+kernelgate, postterminal/posthealth newcomplete four-shard hashes and two
+knownpages before/after PASS. Public raw recollection PASS.
+Parent: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v8-onecard-root/parent-qualification.json.
+Parent SHA256 9953bebc7c1dafe4229442cba0e8de0cb1189ffc1989da241ad5c951e41667d5.
+Paired root output: same runtime parent/serial-cache-v8-pair-root; session93880.
+Independent HC audit records F32 lane/FMA/XOR versus frozen FP64 accumulation,
+post-SiLU capture semantics and unresolved exp/rsqrt/contraction contracts.
+
+VERDICT -> Genuine serial checkpoint reuse demonstrated after protocol repair.
+This does not prove all cache modes, original-model quality, concurrent state
+isolation, cache latency or speed. Paired root is live and unqualified pending
+terminal/raw/lifecycle/health/new4. Pin/turn/parked/eviction/cancellation/live
+continuation, concurrency2/4/bounded6, fidelity, critical-path profiling,
+matched per-stream latency and verified shelf remain required. Fullgoalactive.
