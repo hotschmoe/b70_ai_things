@@ -1200,3 +1200,41 @@ Earlier references to three jobs counted the metadata object's fields and were
 wrong. Actual serial-jobs SHA5765f0701d4fd7a779c951583cf7a85fa34dbb397e427e220aff292ce2c55f7e.
 No solo_migration job is observed; actual cancellation/migration qualification
 remains a separate missing full-goal gate. Existing artifacts stay unchanged.
+
+
+## 2026-10-10 - Current source40, QSA and exact-prefix serial state
+
+Corrected source40V2 SDK built all8 targets with exact67 sources/31 headers/40
+patches/six Python inputs. SDK receiptb3fe2a93 and independent current source
+admissionc80c492e passed; fresh whole390 oracle compile0cd9a3c7 and current
+metadata admission287cd52e passed. Failed source40V1 compile is preserved.
+Actual new upload, C1401402 model baselines and observer ON/OFF full48/head
+native target comparisons remain missing. No canonical registry mutation.
+
+Own QSA actual controlc50be35d and independent public24077dfc passed. All14
+fullfields match bitwise across direct and two graph replays, with own input
+echo/recipe/source/normal lifecycle/health/kernel/freshfour/page admission.
+This is a diagnostic, not complete original-model equivalence. Device indexer
+tail keeps originalF32 raw while the reference applies source-requested F16
+roundtrip; cause is unqualified. New isolated half helper compiled21s, its own
+2048-byte fixture2d9862b6 prepared, and actual qualification27860 is live in
+prerequisite validation. No candidate/tolerance/lowering correction assigned.
+
+H51 initial public serial reader remains held on contradictory result/command
+metadata. New H52 source944e252b/362 passed root/peer30CPU and complete group
+binding controls. It preserves source37/H50 collector50 and covers the actual
+eight jobs in two6/2 groups,392 all49 comparisons, with absentPIN/fresh1/cacheOFF,
+READY-health-ACK/current-byte/source/EOF/teardown/full4 gates. Two CPU plan
+preparations77157/61871 are live; no H52 serial device/model run yet. No observed
+solo_migration job exists, and that full-goal requirement remains separate.
+
+Full shared-cache V3/source40V2 actual actor/parent/final-reader integration and
+native successful allocation/expert-attribution/host-cache producer work remain
+in progress. No complete cache or physical residency qualification. Immutable
+parser consumer successor is still being finalized; no matched clean dev-loop
+speedup has been established despite the measured repeated-parsing bottleneck.
+
+Original48 fidelity, all-state cache isolation/eviction/cancellation/persistence,
+actual1/2/4/bounded6 qualified serving, x2 critical-path traces, useful natural
+interactive TTFT/gap/completion/fairness A/B results, memory placement tradeoffs
+and reproducible verified shelf remain incomplete. Scope has not been reduced.
