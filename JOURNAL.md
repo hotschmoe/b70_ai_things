@@ -10896,3 +10896,26 @@ Report SHA ae71beb8fa6a2eedffc19cd97f26a111a2f2d3bc1c03488e24a3e9078fdf9223.
 VERDICT -> Diagnostic probability difference on one short prefix only.
 No tolerance, quality or fullmodelmath PASS. Longer independent prefixes,
 statecache/concurrent serving and matched latency remain required.
+
+
+## 2026-10-10 - Source35 batch V6 preparation and genuine admission
+
+CONFIG -> NEW immutable V6 port of frozen batchV5 to source35/C113.
+Source32/33/34/35 required, normal graph/EAGER absent including0, P30/input33
+OFF, unchanged case2/4/6 corpora/cancel/survivor and private all48/head gates.
+Requested1 retains separately qualified serial/control scope.
+
+COMMAND -> test_batch_current_source35_cpu_v6.py;38-file frozen dependency
+closure; genuine_baseline on actual C113 onecard and pair, session33131.
+
+RESULT -> CPU20/closure PASS. Genuine one[0]/pair[0,1] admission PASS through
+exact pinned C113 public final validator and actual fresh source/ELF/all8 SDK
+checks. Both engine receipt SHA
+7e3e4c1e61bcee7bc0ea1a15c0b2d8347bfdbd0c8f9fb16296476625bff58c12.
+New V6 plan SHA82bde63d7badee998da6ba03a811c76b40253b207c3a71b89d669d9090b48744.
+No batch process/GPU/model payload execution in this preparation.
+
+VERDICT -> Source and actual prerequisite admission ready for future batch
+runtime. No concurrent/cache/latency proof, no oldsource33 transfer. New registry
+aliases remain a proposal until admitted. Original full fidelity and serving
+campaign remain active; source-only serial cache V7 and originalrouteV2 ongoing.
