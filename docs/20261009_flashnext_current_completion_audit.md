@@ -545,3 +545,38 @@ cannot establish model quality or native arithmetic agreement.
 
 No trusted decode-speed, complete-prefix, full-model or production qualification
 is claimed. Full goal remains active; scope is not reduced to serial cache.
+
+## 2026-10-10 - Paired serial cache closed; functional reference pilot next
+
+The V10 paired remaining-seven parent finished PASS in926s wall time (918s
+recorded parent interval), including allseven group numerical comparisons,
+normal owned teardown/removal, post-health, kernel/source gates and a NEW
+complete four-shard scan bracketed by both known source pages.
+
+NEW pinned CPU read-only topology recollection independently replays all40
+requests in EACH layout and allseven exact production branches. Thirty-six
+uncancelled cross-layout comparisons are BITWISE for output IDs/probabilities,
+first full248320-logit head and all48 first-window layer vectors. Four real
+asynchronous cancellation requests are excluded from cross-layout parity;
+their own-layout cancellation/isolation/teardown gates passed. Original failed
+V9 reports and both original evidence trees remain unchanged.
+
+Paired parent:
+`/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v10-pair-remaining/parent-qualification.json`.
+Cross-layout proof:
+`/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v9-v10-remaining-topology-recollection-v1/comparison/report.json`.
+
+Fresh CPU llama.cpp compilation and all-six intended-runtime ELF/library
+identity plus runtime quantization tests passed through separate new receipts;
+the initial host-loader reader FAIL remains preserved. The functional pilot
+has not executed model inference. Its initial source-only prototype is saved
+in6420fdf; a prelaunch revision now stops the owned server immediately on a
+memory guard failure even while HTTP is blocked. Root15 CPU controls pass;
+independent final review is pending before any model run.
+
+V7 current-source two-stream native diagnostic plan is genuinely CPU-prepared
+with explicit32-token native budgets and separate64-token API budgets. No V7
+GPU runtime or fresh serial numerical join has run. API/stale/concurrent cache,
+memory/residency impacts, 1/2/4/bounded6 qualification, whole-model fidelity and
+quality, critical-path profiling, matched interactive latency and verified
+shelf remain required. These serial cache results do not close the full goal.

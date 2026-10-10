@@ -149,7 +149,7 @@ def inside_tokenizer(plan_path,output,decode_input=None):
 def metadata_tokenizer(plan,output,decode_input=None):
     name='b70-cpu-tokenizer-'+str(os.getpid())+'-'+str(time.time_ns())
     runner=Path(__file__).resolve();source=Path(plan['tokenizer_source']);destination=output/'tokenizer-fixtures.json' if decode_input is None else output/'decoded-output.json'
-    cmd=['docker','run','--name',name,'--label','b70.cpu-functional-pilot='+plan['runner_sha256'],'--network','none','--read-only','--memory','512m','--memory-swap','512m','--cpus','1','--pids-limit','128','--user',str(os.getuid())+':'+str(os.getgid()),'--entrypoint','/usr/bin/env','-v',str(runner)+':/harness/pilot.py:ro','-v',str(ROOT/PLAN)+':/pilot-plan.json:ro','-v',str(source/'tools/strata_tokenizer.py')+':/native-tools/strata_tokenizer.py:ro','-v',str(source/'serve/frontend.py')+':/native-serve/frontend.py:ro','-v',plan['tokenizer_pack']+':/tokenizer:ro','-v',str(output)+':/results:rw',plan['tokenizer_image'],'-i','PATH=/usr/bin:/bin','LANG=C','LC_ALL=C','PYTHONDONTWRITEBYTECODE=1','/opt/b70-c1-python/bin/python','/harness/pilot.py','--inside-tokenizer','/pilot-plan.json','--token-output','/results/'+destination.name]
+    cmd=['docker','run','--name',name,'--label','b70.cpu-functional-pilot='+plan['runner_sha256'],'--network','none','--read-only','--memory','512m','--memory-swap','512m','--cpus','1','--pids-limit','128','--user',str(os.getuid())+':'+str(os.getgid()),'--entrypoint','/usr/bin/env','-v',str(runner)+':/harness/pilot.py:ro','-v',str(output/'source-plan.snapshot.json')+':/pilot-plan.json:ro','-v',str(source/'tools/strata_tokenizer.py')+':/native-tools/strata_tokenizer.py:ro','-v',str(source/'serve/frontend.py')+':/native-serve/frontend.py:ro','-v',plan['tokenizer_pack']+':/tokenizer:ro','-v',str(output)+':/results:rw',plan['tokenizer_image'],'-i','PATH=/usr/bin:/bin','LANG=C','LC_ALL=C','PYTHONDONTWRITEBYTECODE=1','/opt/b70-c1-python/bin/python','/harness/pilot.py','--inside-tokenizer','/pilot-plan.json','--token-output','/results/'+destination.name]
     if decode_input:cmd+=['--decode-input','/results/'+Path(decode_input).name]
     label='prepare' if decode_input is None else 'decode';write(output/('tokenizer-'+label+'-command.json'),cmd)
     try:result=subprocess.run(cmd,capture_output=True,text=True,timeout=120)
@@ -167,6 +167,12 @@ def metadata_tokenizer(plan,output,decode_input=None):
     require(result.returncode==0 and obj['State']['ExitCode']==0 and not obj['State']['OOMKilled'] and not obj['HostConfig']['Devices'] and not obj['HostConfig'].get('DeviceRequests'),'Pinned metadata tokenizer failed')
     result=read(destination);require(result['tokenizer_file_sha256']=={Path(p).name:h for p,h in plan['source_bindings'].items() if Path(p).parent==Path(plan['tokenizer_pack'])},'Metadata export source identity differs')
     return result
+
+def fixture_gate(plan,prepared):
+    require(len(plan['prompts'])==2 and len(prepared['fixtures'])==2,'Exactly two declared prompt fixtures required')
+    for prompt,row in zip(plan['prompts'],prepared['fixtures']):
+        require(row['messages']==[{'role':'user','content':prompt}] and isinstance(row['rendered'],str) and row['rendered'] and row['ids'] and all(type(i) is int and i>=0 for i in row['ids']) and len(row['ids'])+64<=2048,'Metadata fixture declaration/IDs/shape differs')
+    return True
 
 def memory_snapshot(pid=None):
     host={}
@@ -204,6 +210,37 @@ def inspect(name): return json.loads(subprocess.check_output(['docker','inspect'
 def owned(obj,name,image,label):
     return obj.get('Name')=='/'+name and obj.get('Image')==image and obj.get('Config',{}).get('Labels',{}).get('b70.cpu-functional-pilot')==label
 
+class OwnedServerStop:
+    """Serialize monitor/parent shutdown; never stop a foreign container."""
+    def __init__(self,name,image,label):
+        self.name,self.image,self.label=name,image,label
+        self.lock=threading.Lock();self.terminal=None
+    def stop(self):
+        with self.lock:
+            if self.terminal is not None:return self.terminal
+            obj=inspect(self.name)
+            require(owned(obj,self.name,self.image,self.label),'Controlled stop refuses unowned container')
+            if obj['State']['Running']:
+                subprocess.run(['docker','stop','--time','30',self.name],check=True,capture_output=True,timeout=45)
+            obj=inspect(self.name)
+            require(owned(obj,self.name,self.image,self.label) and not obj['State']['Running'],'Controlled stop ownership/terminal proof failed')
+            self.terminal=obj
+            return obj
+
+def monitor_memory(pid,stopping,samples,errors,baseline,plan,owned_stop):
+    while not stopping.is_set():
+        try:
+            sample=memory_snapshot(pid);samples.append(sample);memory_gate(sample,baseline,plan)
+        except Exception as e:
+            errors.append(str(e))
+            # The HTTP caller may be blocked. Initiate shutdown in this thread,
+            # closing the server connection instead of waiting for its deadline.
+            try:owned_stop.stop()
+            except Exception as stop_error:errors.append('memory controlled stop: '+str(stop_error))
+            stopping.set()
+            return
+        stopping.wait(1)
+
 def server_command(name,case_dir,plan,build_root,shards,runner,config):
     command=['docker','run','--name',name,'--label','b70.cpu-functional-pilot='+plan['runner_sha256'],'--network','host','--memory',str(plan['memory_cap_bytes']),'--memory-swap',str(plan['memory_cap_bytes']),'--cpus','8','--pids-limit','256','--user',str(os.getuid())+':'+str(os.getgid()),'--entrypoint','/usr/bin/env','-v',str(build_root)+':'+str(build_root)+':ro','-v',str(runner)+':/harness/pilot.py:ro','-v',str(case_dir)+':/results:rw','-w','/results/empty']
     for path in shards: command+=['-v',str(path)+':'+str(path)+':ro']
@@ -218,6 +255,7 @@ def execute_case(case,repeat,messages,native_rendered,ids,a,plan,supplement,shar
     write(out/'launch.json',{'binary':str(binary),'ELF':supplement['ELFs']['llama-server'],'argv':argv})
     command=server_command(name,out,plan,a.build_root,shards,Path(__file__).resolve(),None);write(out/'command.json',command)
     process=None; f=None; stop=threading.Event(); monitor=None; memory_errors=[]
+    owned_stop=OwnedServerStop(name,plan['image'],plan['runner_sha256'])
     try:
         with socket.socket() as s:s.bind(('127.0.0.1',a.port))
         f=(out/'server.log').open('w');process=subprocess.Popen(command,stdout=f,stderr=subprocess.STDOUT,pass_fds=(8,9))
@@ -232,13 +270,7 @@ def execute_case(case,repeat,messages,native_rendered,ids,a,plan,supplement,shar
         require(obj and owned(obj,name,plan['image'],plan['runner_sha256']),'Named container ownership absent')
         hc=obj['HostConfig'];require(not hc.get('Devices') and not hc.get('DeviceRequests') and not hc.get('Privileged') and not hc.get('GroupAdd'),'GPU/privileged grants forbidden')
         require(hc['Memory']==hc['MemorySwap']==plan['memory_cap_bytes'] and hc['PidsLimit']==256 and hc['NetworkMode']=='host','Container memory/network/ownership recipe differs')
-        def sample_loop():
-            while not stop.is_set():
-                try:
-                    sample=memory_snapshot(obj['State']['Pid']);row['memory_samples'].append(sample);memory_gate(sample,baseline,plan)
-                except Exception as e:memory_errors.append(str(e));break
-                stop.wait(1)
-        monitor=threading.Thread(target=sample_loop,daemon=True);monitor.start()
+        monitor=threading.Thread(target=monitor_memory,args=(obj['State']['Pid'],stop,row['memory_samples'],memory_errors,baseline,plan,owned_stop),daemon=True);monitor.start()
         while time.monotonic()<deadline:
             require(not memory_errors,'Memory gate failed: '+repr(memory_errors))
             if process.poll() is not None:raise ValueError('Server exited during initialization')
@@ -273,8 +305,9 @@ def execute_case(case,repeat,messages,native_rendered,ids,a,plan,supplement,shar
         if process is not None:
             try:
                 obj=inspect(name);require(owned(obj,name,plan['image'],plan['runner_sha256']),'Cleanup refuses unowned container')
-                if obj['State']['Running']:subprocess.run(['docker','stop','--time','30',name],check=True,capture_output=True,timeout=45)
-                process.wait(timeout=30);obj=inspect(name);row['terminal']=obj['State'];row['client_return_code']=process.returncode
+                owned_stop.stop()
+                process.wait(timeout=30);obj=inspect(name)
+                require(owned(obj,name,plan['image'],plan['runner_sha256']),'Terminal cleanup ownership differs');row['terminal']=obj['State'];row['client_return_code']=process.returncode
                 require(not obj['State']['Running'] and obj['State']['ExitCode']==0 and not obj['State']['OOMKilled'] and process.returncode==0,'Server teardown/exit failed')
                 subprocess.run(['docker','rm',name],check=True,capture_output=True);row['container_removed']=True
             except Exception as e:
@@ -304,7 +337,9 @@ def main():
     if not a.leased:os.execv(str(ROOT/'bin/gpu-run'),['gpu-run',sys.executable,__file__,*sys.argv[1:],'--leased'])
     for card in (0,1):require(os.path.samefile('/proc/self/fd/'+str(8+card),'/mnt/vm_8tb/b70/gpu.lock.'+str(card)),'Exclusive pair lease missing')
     a.build_root=a.build_root.resolve();a.output=a.output.resolve();a.output.mkdir(parents=True,exist_ok=False)
-    plan=read(ROOT/PLAN);report={'schema':1,'passed':False,'started_epoch':time.time(),'cases':[],'errors':[],'native_bitwise_authority':False,'registered_quality_qualified':False,'full48_math_qualified':False,'speed_qualified':False,'concurrency_qualified':False,'actual_GPU_touch':False}
+    plan_bytes=(ROOT/PLAN).read_bytes();plan=json.loads(plan_bytes);plan_sha256=hashlib.sha256(plan_bytes).hexdigest()
+    (a.output/'source-plan.snapshot.json').write_bytes(plan_bytes)
+    report={'schema':1,'passed':False,'started_epoch':time.time(),'cases':[],'errors':[],'native_bitwise_authority':False,'registered_quality_qualified':False,'full48_math_qualified':False,'speed_qualified':False,'concurrency_qualified':False,'actual_GPU_touch':False,'source_plan_sha256':plan_sha256}
     page=None;shards=[]
     try:
         require(sha(__file__)==plan['runner_sha256'],'Pilot source changed')
@@ -324,7 +359,7 @@ def main():
         report['model_payload_read_attempted']=True
         require(page.preserve(guard_path,a.output,'pre-hash')['passed'],'Known pages failed before full identity')
         model_identity(plan['model_root'],lock,a.output/'pre-full-four.json');require(page.preserve(guard_path,a.output,'pre-inference')['passed'],'Known pages failed before inference')
-        prepared_tokens=metadata_tokenizer(plan,a.output)
+        prepared_tokens=metadata_tokenizer(plan,a.output);fixture_gate(plan,prepared_tokens)
         fixtures=[(x['messages'],x['rendered'],x['ids']) for x in prepared_tokens['fixtures']]
         for case,(messages,rendered,ids) in enumerate(fixtures):
             for repeat in (0,1):
@@ -352,6 +387,8 @@ def main():
                 report['post_terminal_full_four_passed']=True
             except BaseException as e:report['errors'].append('post-source: '+str(e))
         try:
+            require(sha(__file__)==plan['runner_sha256'],'Pilot runner changed during execution')
+            require(sha(ROOT/PLAN)==sha(a.output/'source-plan.snapshot.json')==plan_sha256,'Pilot source plan changed during execution')
             report['memory_after']=memory_snapshot();memory_gate(report['memory_after'],report.get('memory_before',report['memory_after']),plan)
             original_build_gate(read(a.build_root/'receipt.json'),read(a.build_root/'elf-closure-v1.json'),a.build_root)
             require(sha(a.build_root/'receipt.json')==report['build_binding']['receipt_sha256'] and sha(a.build_root/'elf-closure-v1.json')==report['build_binding']['supplement_sha256'],'Build receipts changed during pilot')

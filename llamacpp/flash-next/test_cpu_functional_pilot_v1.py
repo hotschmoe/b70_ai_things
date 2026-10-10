@@ -1,4 +1,4 @@
-import importlib.util,json,tempfile,unittest
+import importlib.util,json,tempfile,unittest,threading,time
 from pathlib import Path
 from unittest.mock import patch,Mock
 HERE=Path(__file__).resolve().parent
@@ -58,6 +58,52 @@ class PilotTests(unittest.TestCase):
         self.assertFalse(m.owned(obj,'different','image','binding'))
         self.assertFalse(m.owned(obj,'owned','other','binding'))
         self.assertFalse(m.owned(obj,'owned','image','different'))
+    def test_memory_failure_unblocks_waiting_http_by_owned_stop(self):
+        plan={'minimum_live_available_bytes':6,'memory_cap_bytes':100}
+        baseline={'host':{'SwapFree':10}}
+        failed={'host':{'MemAvailable':5,'SwapFree':10}}
+        state={'running':True};request_started=threading.Event();request_unblocked=threading.Event();done=threading.Event()
+        samples=[];errors=[];stopping=threading.Event()
+        def snapshot(name):
+            return {'Name':'/owned','Image':'image','Config':{'Labels':{'b70.cpu-functional-pilot':'binding'}},'State':{'Running':state['running'],'ExitCode':0}}
+        def controlled(command,**kwargs):
+            self.assertEqual(command,['docker','stop','--time','30','owned'])
+            state['running']=False;request_unblocked.set();return Mock(returncode=0)
+        def blocked_http():
+            request_started.set();request_unblocked.wait(60);done.set()
+        request=threading.Thread(target=blocked_http,daemon=True);request.start();self.assertTrue(request_started.wait(1))
+        controller=m.OwnedServerStop('owned','image','binding')
+        try:
+            with patch.object(m,'memory_snapshot',return_value=failed),patch.object(m,'inspect',side_effect=snapshot),patch.object(m.subprocess,'run',side_effect=controlled) as stop:
+                started=time.monotonic();monitor=threading.Thread(target=m.monitor_memory,args=(123,stopping,samples,errors,baseline,plan,controller));monitor.start()
+                self.assertTrue(done.wait(2),'Blocked HTTP was not released immediately by owned shutdown')
+                monitor.join(2);self.assertFalse(monitor.is_alive());self.assertLess(time.monotonic()-started,2)
+                self.assertTrue(errors);self.assertTrue(stopping.is_set());self.assertFalse(state['running'])
+                controller.stop() # ordinary parent cleanup after monitor-triggered stop
+                self.assertEqual(stop.call_count,1)
+        finally:request_unblocked.set();request.join(2)
+    def test_controlled_stop_refuses_foreign_container(self):
+        foreign={'Name':'/owned','Image':'image','Config':{'Labels':{'b70.cpu-functional-pilot':'foreign'}},'State':{'Running':True}}
+        with patch.object(m,'inspect',return_value=foreign),patch.object(m.subprocess,'run') as stop:
+            with self.assertRaises(ValueError):m.OwnedServerStop('owned','image','binding').stop()
+            stop.assert_not_called()
+    def test_controlled_stop_idempotent_terminal_cleanup(self):
+        state={'running':True}
+        def snapshot(name):return {'Name':'/owned','Image':'image','Config':{'Labels':{'b70.cpu-functional-pilot':'binding'}},'State':{'Running':state['running'],'ExitCode':0}}
+        def controlled(*args,**kwargs):state['running']=False;return Mock(returncode=0)
+        with patch.object(m,'inspect',side_effect=snapshot),patch.object(m.subprocess,'run',side_effect=controlled) as stop:
+            controller=m.OwnedServerStop('owned','image','binding');first=controller.stop();second=controller.stop()
+            self.assertIs(first,second);self.assertFalse(second['State']['Running']);self.assertEqual(stop.call_count,1)
+
+    def test_exact_two_metadata_fixtures_declared_and_bounded(self):
+        plan={'prompts':['first','second']}
+        prepared={'fixtures':[{'messages':[{'role':'user','content':x}],'rendered':'render '+x,'ids':[1,2,3]} for x in plan['prompts']]}
+        self.assertTrue(m.fixture_gate(plan,prepared))
+        for records in [prepared['fixtures'][:1],prepared['fixtures']*2,list(reversed(prepared['fixtures']))]:
+            with self.assertRaises(ValueError):m.fixture_gate(plan,{'fixtures':records})
+        bad=json.loads(json.dumps(prepared));bad['fixtures'][0]['ids']=[1]*2048
+        with self.assertRaises(ValueError):m.fixture_gate(plan,bad)
+
     def test_launch_grants_and_cleanenv(self):
         command=m.server_command('owned',Path('/results'),{'runner_sha256':'binding','memory_cap_bytes':100,'image':'image'},Path('/build'),[Path('/model/'+str(i)) for i in range(4)],Path('/pilot.py'),None)
         self.assertNotIn('--device',command);self.assertNotIn('--privileged',command);self.assertNotIn('--group-add',command)

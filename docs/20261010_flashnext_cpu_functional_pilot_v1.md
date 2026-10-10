@@ -2,10 +2,24 @@
 
 CONFIG -> COMMAND -> RESULT -> VERDICT
 
+CONFIG: Prelaunch revision after checkpoint6420fdf. Original runner201398f2
+and sourceplan2a4e1abc are preserved in that commit; no model inference had
+launched. Independent review identified that the original memory monitor only
+logged failure while HTTP could remain blocked1200seconds. The revised monitor
+initiates controlled owned-container stop immediately in its own thread,
+unblocking the HTTP caller. Monitor and parent cleanup share a serialized,
+idempotent stopper; foreign image/name/label is rejected before any stop.
+Blocked-HTTP, foreign-ownership and repeated-stop CPU controls exercise this.
+No original build/supplement/runtime receipt is modified. The runner saves exact
+source-plan bytes plus SHA at start, uses that snapshot for both metadata
+passes, and rechecks runner/plan/source hashes at completion. Exactly two
+declared, correctly associated and context-bounded metadata fixtures are
+required before model inference.
+
 CONFIG: Narrow private diagnostic using exact frozen CPU build V3, compiler
 image39992 for inference and c388 for original exported tokenizer/template
-metadata. Ten synthetic/mock CPU checks plus one read-only actual completed
-build metadata admission test pass (eleven total). No model inference, Docker,
+metadata. Fourteen synthetic/mock CPU checks plus one read-only actual completed
+build metadata admission test pass (fifteen total). No model inference, Docker,
 GPU touch or model payload read was performed by this source-preparation agent.
 
 The original build receipt remains passed=false: compilation/configuration
@@ -35,7 +49,9 @@ cannot be excluded by the GPU lease; ROOT schedules this exclusive RAM window.
 Start requires112 GiB MemAvailable,116 GiB cgroup memory/no swap cap, and6 GiB
 live host reserve. PID VmRSS/VmHWM/VmSwap, host MemAvailable/SwapFree and cgroup
 memory current/peak/max/swap/events are sampled every second. Any swap growth,
-pressure/max/OOM event or reserve loss fails. These are pilot limits, not a
+pressure/max/OOM event or reserve loss initiates owned shutdown and fails.
+Shutdown starts from the monitor without waiting for HTTP; Docker normal-stop
+grace remains30seconds, after which an unclean forced exit still fails. These are pilot limits, not a
 measured memory capacity claim; existing shared page-cache charges may differ
 from process RSS. The full model remains111334654784bytes (~103.69 GiB).
 

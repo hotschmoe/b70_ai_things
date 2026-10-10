@@ -11479,3 +11479,25 @@ functionalpilot next afterprelaunchmemorycancel fix, no broadquality/speedclaim.
 Source-only prototypes may be hardenedbeforeactualplans/runtimes withinitial
 source/hashes preserved in git; do not rewrite actualoldexperiment evidence.
 Fullgoal remainsactive; unrelatedworktree changes preserved.
+
+
+## 2026-10-10 - CPU functional V1 wrapper failure before inference
+
+CONFIG -> Revised source-only V1 memoryguard fix, independent/root15CPU PASS;
+exact pinned CPU build, c388 metadata/39992 inference images. No GPU grants.
+COMMAND -> Leased10681 actualV1 terminal1 in156s. Pre-full4/preguard PASS;
+metadata container starts/exit1/normalremoved; root postterminalfull4/pages PASS.
+RESULT -> Metadata script mount /harness/pilot.py has onlytwo parents, so module
+ROOT=Path(__file__).resolve().parents[2] raisesIndexError2 beforeany inference.
+No CPUcase/server forwardexecuted; reportactual_CPU_inference_observed false.
+Original reportSHA e77d201da127383eb5eb7410c1ff303f613392a720c134ada433e8a8a643c024.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/cpu-functional-v1-20261010/report.json.
+Source/plan/build/weight identity preserved, noGPUtouch. MockCPU tests and source
+review didnotcover realmountedwrapper moduleimport. Allseven pairedcache and
+36matcheduncancelled crosslayout bitwise proofs remain valid and separate.
+V7native2 planCPUpreparedSHA2040aa96d982f139faead0ce105b92fd926ef0a233e6eac5ccd8cd8fc9892f0c; no actualV7GPU forward.
+VERDICT -> PreserveactualfailedV1source/plan/receipts. NEWV2mustuse correctdeep
+mount forbothmetadata/server helpers and actualCPUmetadata+server-version
+wrapper preflight BEFOREexpensivefull4 scan, thenretainfull4pre/post around
+actualinference. Agent/source-only fixes underway; rootaloneexecuteswrappers/
+model. No rebuild, driver/package/registry change required. Fullgoal active.
