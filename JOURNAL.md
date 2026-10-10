@@ -12243,3 +12243,21 @@ pending. Source37full390+authenticshared19rows272prefix remainseparateproofs.
 VERDICT -> Concrete freshservingrequalification nowexecutingafterall newsource
 prerequisites. FulltwoGPU/nativeOFFON/API/cache/fidelity/profiling/latency/shelf
 stillrequired; oldbaselineABI/proof not borrowed. Alluserchanges preserved.
+
+
+## 2026-10-10 - Source37 onecard screen passed; final parent receipt failed
+
+CONFIG -> Genuine C137 strongparent1373, fresh combined36+37 SDK, prepared
+onecard-segmented-v2 at port18337; original pinned UD-Q4_K_XL and tracerOFF.
+COMMAND -> Actual leased session90362 terminalexit1 after501s. Read original
+parent, controller qualification, screen, identity proof and engine log. Root
+source38 CPU18 and62 source-file SHA checks PASS, plan def9ec0046a5e2b760f5296e34bdfd06b999526fee7d2a62755913ad20713ed4.
+RESULT -> Screen identity/token consumption/coherence/repeat PASS; controller
+bounded qualification PASS; launch supervisor0, owned normal terminal, pre/post
+health, kernel journal, newcomplete4 and knownpages PASS. Final parent1373
+passed=false with post_error KeyError started_epoch during proof binding.
+Original failed artifacts preserved; independent source/receipt investigation
+requested before any rerun. No final C137 receipt or pair prerequisite PASS.
+VERDICT -> Actual bounded serving evidence advances current-source baseline,
+but receipt binding remains unqualified. Full fidelity, pair/API concurrency,
+complete prefix cache, profiling, matched latency and shelf goal stays active.
