@@ -12576,3 +12576,21 @@ RESULT -> V3 canonical roundtrip now accepts the exact saved JSON receipt
 while all source/baseline/adjudication gates rerun. No runtime numerical
 result yet; same active70200 handle must be polled, not restarted on silence.
 VERDICT -> Genuine preparation advances remaining147; goal stays active.
+
+
+## 2026-10-10 - Live serial admission and next diagnostic CPU review
+
+CONFIG -> Same live serial70200, unchanged frozen parent43/source37. New
+source38 defaultOFF selected-RID/cache-victim/memory proposal, CPU-only.
+COMMAND -> Poll70200 confirms lease wrapper915796 and leased child916020
+live; prelease CPU admission repeated after exec, leased child observed
+CPU100percent at90s with parent snapshot created and no reported errors.
+Root source38 final12 CPU controls PASS;53-file closure SHA matches sourceplan
+8c8cac3a6e5a2d77ecd263284b6b9439f9dfc630ca26a3f05c30039d717f1461.
+RESULT -> Repeated admission is a concrete dev-loop optimization candidate;
+future operation-local reuse must retain fresh pre/post integrity and mutation
+rejection. Current live frozen code unchanged. Source38 proposal preserves
+static6 RID/64MiB bounds, observes victims/host logical memory and adds
+truthful directGEN diagnostic phase; native compile/runtime remain unobserved.
+VERDICT -> Verified live wait plus new CPU evidence; no source38 launch or
+cache/fullmath/speed claim. Independent review and fresh ABI checks remain.
