@@ -871,3 +871,35 @@ runtime qualification. Owned RMS qualifier is also under review: actual late
 loaded-library capture and graceful timeout/EOF/owned cleanup must be proven.
 These source/runtime preparations do not close original-model fidelity, full
 cache, API1/2/4/6, clean latency/fairness or verified shelf requirements.
+
+
+## 2026-10-10 - Private196 and current39 upload gates closed
+
+Actual privateV4 final4616 is terminal0/PASS. ReportSHA
+c05d9416ac7b92a78f9d770283c22dd118017a4ef6281c2740b46eb6eb4bc9f1
+recollects all196 bitwise full-head/all48 pairs, actual two-row event, matched
+OFF/ON histories and ownership. The historical first49 PIN0 and unobserved
+supervisor EOF remain explicit; full-group absent-PIN scope stays false.
+This bounded private control does not establish original independent math,
+API overlap, complete cache, broader quality or interactive latency.
+
+Fresh source39 build3527 passed324s; all66 final sources and8 fresh ELF hashes
+match. C139 V1 admission rejected two historical added-header hashes. New V2
+separates original payload provenance from final consumed hashes;37 CPU tests
+and actual SDK admission passed, without changing the measured build. Fresh
+oracle3304 passed48s. Actual source39 upload58683 passed288s across five cases,
+with owned normal teardown, strictpercard/compiledpair health, newcomplete4
+and known pages. Receipt08f17c66aa836aeaa0c517d0f12c8746d4b0c2d01f73feedcea863e6a99b28fc
+also passed current C1392 upload admission73590. Ordinary payload readback and
+fullmodelmath remain false. New C1392 onecard/pair serving still required.
+
+New overlap corpus authentic export36119 and CPU wrapper smoke27433 passed
+without model/GPU use. All8 inputs/twofresh repeats, raw stop_type and seed1234
+are preregistered. Actual continuation screen and positive API overlap remain
+unexecuted. Owned RMS V1/V2/V3 source checkpoints remain unexecuted; reviews
+found timeout/EOF cleanup, exact health/journal scope and saved receipt-row
+association gaps. V4 preparation must close these before native execution.
+
+Full original-model fidelity, full-state cache and memory/expert tradeoffs,
+API and larger-stream qualification, x2 critical-path evidence, clean matched
+latency/fairness improvements and verified shelf remain unproven.
