@@ -11870,3 +11870,22 @@ sourceplan/runtime originalpayload control stillpending. Cache tokenizerLCP
 and checkpointboundary analysis inprogress; no cachedhandoff runtime proof.
 VERDICT -> Concrete numerical data and source-math control advance original
 scope; no full392/API/cache/fullmath/latency/shelf qualification inferred.
+
+
+## 2026-10-10 - Native4 serial1 parent PASS and owned HC control frozen
+
+CONFIG -> Current originalsource35 native4 remainingtwo cacheOFF GEN1 jobs,
+separate new independently originaltoken-driven HCblock35 reference control.
+COMMAND -> Serial1 parent74445 terminal0/PASS435s, remaining98 BITWISE plus
+normalowned/posthealth/kernel/new4/pages. Readonly77049 nowlive final98 proof.
+Lease39834 acquired for onecardnative6 diagnostic32/current unchanged SDK.
+Root verifies frozenownedHC76files SHA/ASCII/AST and9CPUtests PASS.
+RESULT -> OwnedHC sourceplan cdd62f2d8e87d3319673d8c8fbe01802a9632c61f305c2e3c1c27f5156ad9b13.
+Originalembedded tokens exclusively drive RMS/projections/selected32columnmix;
+no capturedinput/state substitutions. Host rsqrt/exp/div/mixcontraction remain
+explicit hypotheses, no deviceintrinsic/fullmath/tolerance PASS. Adapter ready
+for originalpayload run after currentGPU arm, with newpostCPUfull4/pages.
+Native4 all392 comparisons+bothparents measured; final98 readonly pending.
+VERDICT -> Fourstream dataset near finalclosure, bounded6 runtime begins.
+WholeHC deviceoracle source preparation next. Fullmodel/API/cache/memory/
+profiling/latency/shelf remainrequired; canonicalregistry remainsunchanged.

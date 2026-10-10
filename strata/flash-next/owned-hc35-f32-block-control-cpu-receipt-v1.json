@@ -1,0 +1,23 @@
+{
+  "CONFIG": "synthetic own F32 RMS/projection/mix arithmetic and admission controls; no original payloads",
+  "COMMAND": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_owned_hc35_f32_block_control_cpu_v1.py -v",
+  "RESULT": {
+    "tests": 9,
+    "passed": true,
+    "failures": 0
+  },
+  "VERDICT": "CPU source controls only; no device intrinsic/native/fullmodel qualification",
+  "tested_source_sha256": {
+    "owned_hc35_f32_block_control_v1.py": "3a378067408ba01b5a8438db527d718e2e9341f807d99d54c37523a64eda38cc",
+    "explore_owned_hc35_f32_block_v1.py": "16ce9e5233686baa573dd2cb2f73671c91e31e1fd5b0696d74aecc468650dfbf",
+    "test_owned_hc35_f32_block_control_cpu_v1.py": "e72e33745adf7d6f9983946d6874375467bd81cab59cfb8218079e05d80790ff"
+  },
+  "GPU_touch": false,
+  "Docker_execution": false,
+  "compiled_helper_execution": false,
+  "model_payload_read": false,
+  "actual_original_computation_performed": false,
+  "device_intrinsics_qualified": false,
+  "full_model_math_qualified": false,
+  "tolerance_gate": null
+}
