@@ -14929,3 +14929,19 @@ VERDICT -> CompleteboundedbundleISA contrast, noadditionalreplayneeded
 withoutnewsemanticquestion. Fullnative modelreference/internalindexer
 fidelity needsactualQSAobserver; NEWV5traversalfreeze pending, heldV4
 prepare14476stillCPUlive. Fullcache/API/streams/latency/shelfactive.
+
+
+## 2026-10-10 - Corrected QSA V5 source verifies and prepares
+
+CONFIG -> NEW829fa8279f7ec718830415a08f168fa5c1f10f20c15faeb01a8a941c330bf39e,
+499 current sourcebindings, completeJSONroots/files fixedpoint andplanonly
+references included, current171/exactsource40/model/reference unchanged.
+COMMAND -> Rootall499SHA/ASCII/AST+34CPU PASS7.449; actualfreshprepare
+28862 startsnative-qsa40-v5-one-prepared-v1. HeldV4prepare14476 terminal0
+preserved, neverpromotedorusedasNEWV5 proof. PeerV5review pending.
+RESULT -> Metadataexternalchild->rawleaf/cycle/oversize/nonalias controls
+pass, actualauthenticlayoutbounds upheld. No actualmodelQSAleaf yet.
+VERDICT -> Concretecorrectedmodelruntime successor, notboundedalternative
+tothefullobjective. Actualsub300currentbyte seals/originalmodelactivation
+comparisons andhealthyteardown stillrequired. Fullcache/API/streams/
+physical/profile/latency/reproducibleshelf goalactive.
