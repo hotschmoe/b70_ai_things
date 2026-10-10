@@ -14187,3 +14187,23 @@ VERDICT -> Offline diagnostic contrasts materializedhalf conversion with
 eliminatedexpressionroundtrip, consistent withactualruntimeobservations.
 OriginalactualJIT/ISA/cause and full48reference fidelity remainunqualified.
 IndependentoriginalELFrecollection37439 stilllive; canonical165 intact.
+
+
+## 2026-10-10 - Offline load control and full6 recipe source review
+
+CONFIG -> Original load38 SPIRV, same explicitofflinecurrente223/tool/options
+asexpression33/store36, originalELF/modelmath unchanged. Frozen nextfull6
+recipe9799224f7683ee3b348c633d119d0a66f1764e5327b7216416ccf2a94338aaa5.
+COMMAND -> Actual67244 compile terminal0/PASS10s, actual50713 disasm
+terminal0/PASS10s, both card0lease/pin/ownednormalEOF/removal. Root fullrecipe
+all300+19+67SHA/ASCII/AST and5CPU PASS0.005.
+RESULT -> Compile8d181a8360c8b20b6d7856cb3a4af15ea4efcff751c34f1a54306e765f68743e;
+disasm013677b6785e85158bdff68f8141ff8b08d0f9564233063f647af2bc0adc1072.
+Actual loadassembly loads d16u32 and moves half tofloat32 befored32store.
+Matched materializedstore/loadretain conversions; expressionremovesroundtrip.
+Full6recipe source includes historicalpublication/currentbytejoin ratherthan
+repeatedmodeladmission; rootactualdirect3 diagnostics distinctexactrecipes,
+need explicitassociation beforeuseasfull6 manifest. OriginalJIT/ISAunobserved.
+VERDICT -> Actualoffline narrowing only. Runtimecapture next; no modelmath
+fix/tolerance change or wholecache/latency/shelf qualification. Originalfull
+recollection37439 remainsCPUactive, canonical165 preserved.
