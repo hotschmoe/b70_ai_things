@@ -81,4 +81,3 @@ with tempfile.TemporaryDirectory(prefix='prefix-parent-cpu-') as td:
   assert len(watched)>=4,'Child active source watcher was not invoked'
   assert 'CPU mock child stdout' in (out/'child-supervisor.log').read_text()
  print('PASS CPU V7 parent: buffered all4 hashes/failure preservation, terminal-time gate, finalization negatives, actual main mocked success+child failure, fd8/9 forwarding, stdout forwarding, post-health retained. No devices/processes launched.')
-

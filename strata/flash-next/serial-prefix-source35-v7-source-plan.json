@@ -29,7 +29,7 @@
     },
     {
       "path": "strata/flash-next/test_qualify_serial_prefix_v7_cpu.py",
-      "sha256": "d286c3161b08255e9eedfccea47c1b8352f4229af167f79674ca002da9fe7f38"
+      "sha256": "45b0f1b7f5bc22eff3c8bf05246222fd31b656e374ab32e6db4f8969bea25ec4"
     },
     {
       "path": "strata/flash-next/serial-prefix-source35-v7-design.md",

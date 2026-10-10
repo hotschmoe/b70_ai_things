@@ -10946,3 +10946,13 @@ V7 sourceplan SHA c731157e99b07e310289ac643fd3a9c782d7aad9b1931275ba294e9f079e33
 VERDICT -> Actual source/tokenizer-bound plans ready, not cache/runtimequalification.
 Root must run onebasic thenpairedbasic before cachegroups; originalownroute
 fidelity remains next. No shelf/cache/concurrency/latency claim. Fullgoalactive.
+
+
+### 2026-10-10 - V7 sourceplan whitespace follow-up
+
+The preceding V7 checkpoint had an extra blank line at EOF in the parent CPU
+test; diff-check caught it. Removed only that blank line and refreshed its
+sourceplan test hash. New V7 sourceplan SHA
+41aec78ab833362668070841c8c67f599328d79f018c8f354a19c41b23f0a513.
+Controller/parent/math/tokenizer and both actual prepared plans are unchanged.
+No runtime proof changes. git diff --check now passes.
