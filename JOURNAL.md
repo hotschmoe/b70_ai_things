@@ -14282,3 +14282,18 @@ launch yet; qualifier immediately follows successfulprepare.
 VERDICT -> Closedoriginalimageadmission and concretefreshbaseline progression.
 No oldsource37 math/runtime proof promotedto source40. Original48 fidelity/
 wholecache/streams/profile/latency/shelf remainopen; userGPUpriority active.
+
+
+## 2026-10-10 - Actual source40 one-card serving baseline launches
+
+CONFIG -> Corrected source40 SDKd877/receiptb3fe, matching uploadV3af2c/oracle
+9220, originalruntimec388 and exact canonical169 association8a005baf.
+COMMAND -> Oneprepare45973 terminal0/launchallowed, preparedSHAeed24ca689e4867db759a88670ae2082bab0bdfac0e058438854f6669132ed9c.
+Root qualifier2057 selfleasespair forstrict/compiledhealth; actualmodelleaf
+card0 one-card-segmented/currentC1401403. Pair CPUprepare82334 concurrently
+checks source/pack/fullidentity only, no secondGPU/model actor.
+RESULT -> Actualonecard qualifierlive; coherence/identity/normalteardown/
+posthealth/newfour/sourceproof pending. No qualifiedmodelmath orspeed claim.
+VERDICT -> RealmodelGPU campaign step underway. Pairedmodelqualification
+follows completed sameengineonecard proof; wholecache/QSAobserver/reference
+fidelity/streams/profile/latency/shelf stillrequired. Fullgoalactive.
