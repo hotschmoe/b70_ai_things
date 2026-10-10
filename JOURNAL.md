@@ -11927,3 +11927,29 @@ fixture with2CPU/2GiB/noswap/networknone/sourceonly/noGPU/noSDK/model mounts.
 VERDICT -> Sixstream dataset advances; no source/full588 parity/cleanlatency
 qualification claimed before finalgates. Independent originalHC runtime next
 once this parent closes; fullmath/API/cache/profiling/shelf stillrequired.
+
+
+## 2026-10-10 - Sixstream collector PASS; positiveAPI source ready; ownedHC guardFAIL
+
+CONFIG -> Exact source35 sixstream native32 diagnostic; NEW positiveAPI cached
+last-live statehandoff; independentoriginalHCblock35 arithmeticprototype.
+COMMAND -> Sixparent39834 terminal0/PASS545s actual588raw/fullsource/health/
+new4/pages/normalownedexit. Both V9 serial6 plans CPUprepare0/PASS; leased8220
+nowruns firstsixjobs. OwnedHC69970 actualCPU FAIL atmetadataepsilon guard;
+postCPUnew4/pagesPASS. Provider exactF32 epsilon9.999999974752427e-07 was
+compared incorrectlytoPythonF64 literal1e-6; originalmetadata/kernel unchanged.
+RESULT -> V1source/runtime preservedfailed; newV2 guard/tests beingprepared.
+Root preflight hostdefaultenv also correctlyrejected threadsettingmismatch;
+exactdeclared1-threadenv source/host admission PASS. NUM10/currentidentity
+admission PASS reads original known-page guards, not computationtensorpayloads.
+Earlier diagnostic stdout 'no original payload reads' should be read with this
+explicit known-page exception; no originaltensor computation occurred there.
+PositiveAPI sourceplan423fa3be817ff3ab27d80f9151a595e44934a1601088ba8f1142dfd543d0d395
+68SHA/ASCII/AST +independent10CPU tests PASS. No actualcachedmath/transfer claim;
+newcacheOFF schema6 serial counterpart source required before qualification.
+Tracer standalonehost CPU9cases PASS; durable identical35-file evidencecopy:
+/mnt/vm_8tb/b70/build/hosttrace36-cpu-actual-v1-20261010.
+Originaltmp kept; copyreceipt pins allbytes, not a newruntime execution.
+VERDICT -> Native6 source/lifecycle gatepassed; 588serialproof stillpending.
+PositiveAPI and tracer actualCPU evidence advance source readiness. Fullmath,
+publicAPI/cache, profiling/matchedlatency/shelf remainrequired. Registryunchanged.
