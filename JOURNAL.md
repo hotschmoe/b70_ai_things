@@ -14826,3 +14826,20 @@ join beforeAPIcoherencequalification.
 VERDICT -> ConcreteCPU/source protocol ready, notactualcache/fullmath/
 latencyqualification. QSAoriginal15830finalsemanticproof remainsCPUlive.
 Fullfidelity/cache/concurrency/physical/profile/latency/shelfgoalactive.
+
+
+## 2026-10-10 - Direct bundle GPU diagnostic and corrected QSA V4 prepare
+
+CONFIG -> NewELF bundlehelper source9712/raw12kernelbodies unchanged,
+explicitnewreplay only; correctedQSA V4cedd9/481 currentoriginalmodel.
+COMMAND -> Actualcard0compile29671 terminal0/PASS21s, binaryc2c34be0
+ordinaryZElink. RootGPU87832solepairlease newhelper/postdirectbundlequery
+startswith originalinput/raw12comparisons/health. RootQSA481SHA/ASCII/AST
+and30CPU PASS7.340; actualfreshV4prepare14476live.
+RESULT -> ActualV3QSAfailedarm15830terminal1/739s, report1e097df6/post
+health/full4PASS. NewruntimeV4 metadataauthentic layout18688files3.399GB
+rejectsoversize/no skips, excludescommandmetadata beforestrictpaths.
+CurrentGPUbundlecoverage/output pending; newELF cannotprovehistoricalJIT
+ororiginaldirectlaunchmoduleassociation. SourcepeerV4 pending.
+VERDICT -> Concretecorrectedmodelprep andactualGPUdiagnostic, no modelmath
+fix/tolerance orfullcache/latencyclaim. Fulloriginalgoalactive.
