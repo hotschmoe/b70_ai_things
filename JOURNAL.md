@@ -14790,3 +14790,21 @@ lease-first semantics sourcebeingprepared; separateentrydraft unexecuted.
 VERDICT -> Concretehealthyteardownguard/protocolcontrol progress, notmath
 qualification orsuccess onfailedarm. Fulloriginalcache/concurrency/latency/
 physical/profile/shelfgoalactive; no changeddeadline/foreignpath waiver.
+
+
+## 2026-10-10 - QSA actual-plan metadata traversal reveals skipped report
+
+CONFIG -> NEWV4 runtime/epoch draft, originalfailedV3 retained; actual
+QSApreparedplan92ba/ownedreference reportauthenticated. No payload/GPUaction.
+COMMAND -> Authoractualmetadata-only traversal followsrootreferences, root
+source review confirmslexicalallowedprefix filtering beforestrictpaths.
+RESULT -> /bin/bashcommandmetadataexcluded, actualownproducerreport
+19,185,549B exceedsV3old16MiB cap andwassilentlyskipped. NEW32MiB cap
+explicitlyboundsbeforeparse/refusesoversize, discovers15authenticatedroots/
+4558explicitfiles inactualmetadataregression(no modeltensor/SDKhash scans).
+Full32GiB/4GiBfile/30000file quotas retained; originalaliasnegatives required.
+RootEOSobserverexpanded17CPU PASS3.618 beforefinalsourcefreeze, original
+waiter code/thread/owner/cancel/error predicates retained.
+VERDICT -> Concreteevidencecoverage correctionbeforeactualGPUsuccessor,
+not genericcaprelaxation or skippedproof. Original15830failedarmpostfull4
+PASS butfinalmanifest stillCPUlive; actualmodelleafunexecuted. Fullgoalactive.
