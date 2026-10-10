@@ -142,3 +142,29 @@ V7 sourceplan SHA c731157e99b07e310289ac643fd3a9c782d7aad9b1931275ba294e9f079e33
 VERDICT -> Actual source/tokenizer-bound plans ready, not cache/runtimequalification.
 Root must run onebasic thenpairedbasic before cachegroups; originalownroute
 fidelity remains next. No shelf/cache/concurrency/latency claim. Fullgoalactive.
+
+
+## 2026-10-10 - Original route V2 ready and two live correctness experiments
+
+CONFIG -> Exact source35/C113/P30V4, independently zero-owned original48,
+acceptedprefix1/2/4/8 with source-derived earlierprompt_verify/finalverifier.
+Frozen originalprimitives/V4 unchanged; native inputs/routes never mathfeeds.
+Separate native onecard cacheV7 basic OFF/logits/layers control underbothhealth.
+
+COMMAND -> Root routeCPU20 session88984 PASS14.5s; independentreview20PASS;
+full frozen36-file dependency closure. Actual originalprefix2 CLI61391 with
+OMP/OpenBLAS/MKL/Numexpr1, P30one post-model-identity.json, newoutput
+f16-source35-20261009/original48-routes-v2-prefix2. Cachebasic parent71545
+at f16-source35-20261009/serial-cache-v7-onecard-basic via bin/gpu-run.
+
+RESULT -> Route source/CPU/source3 schedule/zero-state/input-isolation controls
+PASS. Sourceplan SHA7676d9ebf641df4b41be36aa9286a5f65188681fa91d37c0fe30536a86c12ec6.
+61391 confirmed live, no originalprefix2 numerical result yet. 71545 confirmed
+live, strictpercard/compiledP2P0 prehealthPASS, owned basic_off containeractive.
+No cachebasic terminal or finalqualification yet; preserve/poll exacthandles.
+
+VERDICT -> Real original-weight computation and native fresh-state controls
+started. Need originalprefix2 terminal/postCPUnewfull4, then independent1/4/8;
+cachebasic terminal/teardown/posthealth/new4 beforepairedbasic/cachegroups.
+Native actualT/group rounding, fullmodelmath/cache/concurrency/latency/shelf
+remain unqualified. Originalfullcampaign active; no speed/stability promotion.
