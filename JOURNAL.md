@@ -11854,3 +11854,19 @@ no recompute/checkpointfallback counted aspositive cachedhandoff.
 VERDICT -> Actual294 native4 comparison proofclosed; remaining98 underway.
 Authenticpositive cache corpusnowexists, fullstate cachedhandoff runtime still
 required. Fullmath/API/4-6concurrency/cache/profiling/latency/shelf goalactive.
+
+
+## 2026-10-10 - Remaining98 child comparisons and owned HC CPU control
+
+CONFIG -> Exact current native4 serial1 and new independent token-driven HC
+block35 arithmetic prototype. Preserve all historical math/helpers/SDK.
+COMMAND -> Poll live74445; inspect child PASS98/raw2requests/normalexit.
+Read actual HC norm/silu/mix source; run new ownHC9 CPU controls, allPASS.
+RESULT -> All392 native4 comparisons nowmeasured BITWISE across294+98,
+but remaining98 parent stilllive posthealth/new4 and readonly finalreplay
+pending. Update current completion audit with exact incomplete scope.
+Nine ownedHC controls establish synthetic FMA/tree/shape/contracts only;
+sourceplan/runtime originalpayload control stillpending. Cache tokenizerLCP
+and checkpointboundary analysis inprogress; no cachedhandoff runtime proof.
+VERDICT -> Concrete numerical data and source-math control advance original
+scope; no full392/API/cache/fullmath/latency/shelf qualification inferred.

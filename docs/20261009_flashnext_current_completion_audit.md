@@ -659,3 +659,32 @@ Native4 parent88372 subsequently finished PASS477s, normal owned engine0 and
 posthealth/kernel/new4/page/source gates passed. Actual392 rawvectors for four
 private streams are collected. Fresh serial V9 groups0/1 are being prepared;
 392-pair parity, API/OFF-ON/6/cache and cleanlatency remain unqualified.
+
+
+## 2026-10-10 - Native4 numerical join and next independent fidelity control
+
+V9 serial0 parent completed PASS493s and new independent readonly verifier
+reproduced294 full49 vector comparisons with original evidence tree unchanged.
+Serial1 child has completed the remaining98 comparisons BITWISE and normal
+owned teardown. Parent74445 remains live in post-health/new four-shard identity;
+complete392 qualification is not yet claimed. Both actual serial plans emit
+real snapshotSHA and job/vector counts; no metadata adjudication is needed.
+
+Onecard6 and paired2/4/6 diagnostic32 plans are genuinely CPU-prepared but have
+not run. Current API fresh-recompute lane e9c56e0b source closure and17 tests
+passed; registry unchanged. It tests logical scheduling with full recompute,
+not cached state handoff. Separate positive cached-handoff source55/6 tests
+plus authentic original tokenizer fixtures now exist, with checkpoint-boundary
+admission and a runtime controller being prepared. All actual cached/fresh
+full49, stale session/model and shared/divergent concurrency remain required.
+
+A new independent original-embedding layer0 HC block35 control is in source
+review; nine CPU controls PASS. RMS square accumulation uses native32lane
+FMA/XOR, projection uses the qualified F32 schedule. Host sqrtf/reciprocal,
+expf and separate/fused mixing remain explicitly unqualified device intrinsic
+candidates. No captured input/state enters its computation. No original-weight
+runtime has executed for this control, and whole-model fidelity remains open.
+Tracer36 implementation remains draft, no ABI rebuild/runtime qualification.
+Broad quality, complete API/concurrent cache, memory/residency, critical-path
+tracing, matched interactive latency/fairness and final verified shelf remain
+required by the original goal.
