@@ -14022,3 +14022,20 @@ preserved; all executable1403 gates unchanged. No cache runtime promotion.
 VERDICT -> Scoped native-versus-serial parent result. Canonical remains165
 until every oldconsumer finishes. Fresh source40/C1401403one/pair precede
 whole sharedV3 runtime. Full original math/cache/stream/latency/shelf goal open.
+
+
+## 2026-10-10 - Actual runtime ocloc inventory V4
+
+CONFIG -> Frozen originalELF V4a674, original unchanged runtime imagec388;
+root one-card lease with actual affinity0. No kernel/model or offline compile.
+COMMAND -> Actual75030 supported path/readlink/SHA/ldd/ocloc--help census,
+normal supervised command/EOF/typed original inspection/owned removal.
+RESULT -> Terminal0/PASS9s; capture08551dba10357b9ff74f0d39c6c113e0141b46e970af6d1d86f1480e9c1a52ff
+at /mnt/vm_8tb/b70/build/half37-runtime-igc-inventory-v4-20261010. Actual
+ocloc resolves /usr/bin/ocloc-26.22.1 SHA7a418c1e7dfc62b6fb3895bea111647fa3e1ff600bb69f6be2a3114b90c41eac.
+Help supports compile/disasm/query/ids; no compile flags/device guessed.
+Original runtime mapped libigc/igdfcl hashes remain aebe3597/e962be41; fresh
+offline library selection still needs observed binding, not assumed identity.
+VERDICT -> Actual tool census only. Runtime JIT/ISA and conversion cause still
+unproven. Original source37 readers37439/13362 remain live; canonical165 intact.
+Full original fidelity/cache/concurrency/profile/latency/shelf goal active.
