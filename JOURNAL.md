@@ -12422,3 +12422,23 @@ firstHC source7CPU/100closure PASS but conditionalGDN would execute AFTER
 earlyterminal stamp; rootblocked runtime andrequestedNEWV2 producerfix.
 VERDICT -> Actualpairprerequisite closed; advanceAPIcache andfirstHC fidelity
 without weakening chronology or fullgoal. No speed/fullcache/modelclaim.
+
+
+## 2026-10-10 - First HC scale boundary found; shortwarm API missing cancel
+
+CONFIG -> Independently owned firstHC V2 +explicitconditional GDN; separate
+source35 API V6 target235/warm47. Source37 pair2 OFF/ON currentSDK40 controls.
+COMMAND -> FirstHC73859 terminal0/exploratory/errors[]/new4/pages PASS. API69544
+terminal1/FAIL674s but ownednormal/noForcedCleanup/health/journal/new4 PASS.
+Root current40 CPU18/66SHA closure PASS, source574bf88 tracked; actualOFF
+prepare20908 PASS andleasedOFF78197 starts; ONCPUprepare22930 live.
+RESULT -> FirstHCprior normalized andfullQ81 BITWISEnative. Candidate differs
+one scale-D byte block59 acrosshalfmidpoint, codes/S unchanged; conditional
+GDN NMSE6.00347e-15. Curated docs/20261010_flashnext_first_hc_scale_boundary_result_v2.md.
+APIwarm sevenreal completed2row events passed; both targets returnedOne+EOS
+and stoppedbeforeBGEN. No target2row, cancellationgate correctlystayedclosed.
+Underlyingcause ofearlyEOS UNDETERMINED pendingmatchedsame235 fresh control;
+no promptsubstitution or fixture/model/state blame. OriginalfailedAPI intact.
+VERDICT -> Concrete arithmetic/scheduling evidence advancesfullgoal; no
+fullmodel/cache/latency/shelf claim. Next RMS/native rsqrt sourcecontrol and
+exactfresh comparison, plus newpair2OFF/ON/serial49 proof. GPU rootcoordinated.
