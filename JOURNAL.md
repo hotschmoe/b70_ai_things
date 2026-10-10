@@ -13497,3 +13497,16 @@ VERDICT -> Observed storage-contract discrepancy before normalization; compiler
 or lowering cause is not qualified. New minimal expression-roundtrip versus
 materialized-half discrimination proposed. No tolerance adjustment/reference
 shortcut. Parent46835 final admission remains live; full goal incomplete.
+
+
+## 2026-10-10 - Half-discrimination proposal reviewed, runtime held
+
+CONFIG -> Frozen086b/267repo+19consumed source/build; original own raw512.
+COMMAND -> RootSHA/ASCII/AST and7CPU PASS0.013; peer7PASS0.009/allbindings.
+RESULT -> Exact production expression versus materializedF16 store/load source
+reviewed. Additional root synthetic negatives show truncated finalmarker and
+extra routefile accepted byV1collector. Both author and peer source-only scope.
+VERDICT -> Preserve frozenV1/nonruntime; new owned lifecycle successor must
+close exactmarker/roster/stat/reread/F16widening joins and all original
+source/runtime/health/EOF/teardown/full4 gates before execution admission.
+QSA46835 stilllive finalsourceadmission, no secondGPU/modelactor.

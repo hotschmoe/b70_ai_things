@@ -1,0 +1,13 @@
+# Own indexer half-roundtrip discrimination
+
+CONFIG -> Frozen V4 own inputs and reference remain unchanged. Preliminary root-owned helper output tail is exactly original own raw rows0..2, whereas the owned candidate tail exactly applies FP16 RNE then widens. This differs at every one of 384 tail elements. Consumed source37 append_steps explicitly spells a sycl::vec float-to-half RTE-to-float expression. The discrepancy occurs before RMS and RoPE. It does not establish compiler optimization or the actual model path's state.
+
+COMMAND -> Source-only new leaf uses the same actual indexer object flags/defines and separately recorded production device-link flags. One lane copies the original source half expression with only variable names changed. Another lane stores FP16 into a separate device allocation, then a separate kernel loads and widens it. The FP16 allocation is itself dumped, so it is an observable output. Four512 independently original-projected key rows are the only arithmetic inputs; captured native inputs/values are forbidden. Exact root-owned producer/fixture admission, input-binding SHA and consuming echo must be joined before execution. No original weights are needed for this leaf.
+
+Each of three routes restores the original input and zeros outputs. Route0 is eager; routes1/2 replay one retired graph. All512 expression outputs, materialized half bytes, widened outputs and unchanged input echoes must be bitwise equal across routes. Identity and host FP16-RNE hypotheses are preregistered; the comparison reports exact bytes without tolerance or a reference correction. The owned candidate retains its original rounding.
+
+RESULT -> Seven synthetic CPU controls pass. No actual compilation, GPU or model action by author. This proposal is not runtime-ready: a NEW root-executable lifecycle qualifier/read-only consumer is required, preserving current SDK/header/archive/ELF flags, C388 runtime, per-card and compiled P2P0 health, journal/raw error predicates, actual mapped libraries, owned EOF and stop-before-drain, graph/free markers, full4 publisher hashes and page brackets. Isolated compilation and peer review precede any real GPU run.
+
+VERDICT -> No rounding bypass correction is justified solely from the present observation. A future matched leaf can discriminate expression/materialization behavior; identifying a lowering cause additionally requires compiled IR/ISA evidence. It cannot qualify native QSA/model state or universal FP16 accuracy. Existing V4 sources and results remain immutable.
+
+CPU: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_owned_indexer_half_discrimination_cpu_v1.py -q
