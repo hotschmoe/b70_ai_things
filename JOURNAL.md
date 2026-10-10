@@ -14139,3 +14139,33 @@ afterACK while preserving every semantic predicate and unchanged300s limit.
 VERDICT -> Concrete source ordering defect identified before runtime; requires
 explicit witness successor/control, not longer health validity or skippedmath
 checks. Full native/reference/math/cache/concurrency/latency goal unchanged.
+
+
+## 2026-10-10 - Original expression SPIRV offline compilation succeeds
+
+CONFIG -> Exact original executed expression33 SPIRVbeaa3147 bytejoined
+to helper4d86d9b8; actualcurrenthostPCIe223, unchanged runtimec388/tool7a418.
+This is explicitoffline diagnostic, not actualoriginalJIT/options equivalence.
+COMMAND -> Root89108 card0lease/pin; actualsupported -spirv_input/devicehex/
+outdirectory/output_no_suffix/options-cl-fp32-correctly-rounded-divide-sqrt.
+LD_DEBUGlibs/files retained. OriginalPVCconditional registeroption omitted
+and declared; no model/helper/kernel execution.
+RESULT -> Terminal0/PASS9s receipt29cba0e5382f8a611a7a4773126b1c337cd8ac18bd6356b25179909499bc5cec
+at build/half37-offline-expression-diagnostic-v1-20261010. Binary4504B.
+Actualtool detects bmg-g31 frome223, reports buildsuccess and IR/FCLskip.
+Dynamicloader records actual libocloc and /usr/local/lib/libigc.so.2 init.
+ResolvedIGC currenthash join stillrequired; no claimed originalJIT ISA.
+VERDICT -> Actual supported offline compiler output, cause/modelmath remains
+unqualified. Root43220 now disassembles exactproducedbinary withobservedhelp
+undercard0lease. Originalfullrecollection37439 remainsCPUactive/unchanged.
+
+
+RESULT -> Actualdisassembly43220 terminal0/PASS9s receipt
+a3bad55bb93239f2ad384ebea80283c34b55545fb64d480126ff41110fc5b193.
+Hidden dump/.text._ZTS16Half37Expression.asm contains d32 load into r12
+then d32 store of unchangedr12; no half conversion in the actualdata path.
+OriginalembeddedSPIRV retainsF32->F16->F32 while this explicitoffline
+currenttarget/compiler output removes it. Otherpost-EOT bytes are not claimed
+executed instructions. Native runtimeactualJIT code still unobserved.
+VERDICT -> Offline compiled-code narrowing consistent withactualexpression
+identity; not originalJIT causal proof or originalmodelmath qualification.
