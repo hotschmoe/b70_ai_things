@@ -1,0 +1,396 @@
+{
+  "actual_CPU_continuation_observed": false,
+  "actual_GPU_positive_overlap_observed": false,
+  "actual_full_cache_qualified": false,
+  "actual_model_inference": false,
+  "authentic_fixture_generation_required": 2,
+  "build_plan_sha256": "8931fca9ecdcf69e234a66222769924783da0b8cc1b99380bb352e396c4b51f3",
+  "build_root": "/mnt/vm_8tb/b70/build/flashnext-cpu-build-v3-20261010",
+  "candidate_order": [
+    {
+      "id": "water-cycle",
+      "selection_order": 0,
+      "target_indices": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "library-returns",
+      "selection_order": 1,
+      "target_indices": [
+        2,
+        3
+      ]
+    },
+    {
+      "id": "trail-signs",
+      "selection_order": 2,
+      "target_indices": [
+        4,
+        5
+      ]
+    }
+  ],
+  "case_deadline_seconds": 1200,
+  "chat_template_sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce",
+  "concurrency_qualified": false,
+  "container_runner_path": "/harness/strata/flash-next/pilot.py",
+  "corpus_messages": [
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is the warmup W0.",
+        "role": "system"
+      },
+      {
+        "content": "In one sentence of 12-20 words, explain why a covered rainwater tank needs a screen that removes leaves.",
+        "role": "user"
+      }
+    ],
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is the warmup W1.",
+        "role": "system"
+      },
+      {
+        "content": "In one sentence of 12-20 words, explain why library staff record returned books before putting them on shelves.",
+        "role": "user"
+      }
+    ],
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is documentation task water-cycle-A.",
+        "role": "system"
+      },
+      {
+        "content": "A community garden collects roof runoff in a covered tank. Rainwater first passes through a mesh screen that removes leaves. The tank has an overflow pipe directed to a planted drainage bed. Volunteers inspect the screen after storms, keep the lid closed to prevent mosquitoes, and water the garden in the morning. A small pump feeds a drip line, so water reaches plant roots rather than wetting every path. The gardeners want a short explanation for new volunteers that connects collection, storage, maintenance, and careful use. The explanation should make the order of the process clear without introducing equipment or rules not mentioned here.\n\nWhy does screening roof runoff help volunteers care for the stored garden water? Answer in one sentence of 12-20 words, using only the information above.",
+        "role": "user"
+      }
+    ],
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is documentation task water-cycle-B.",
+        "role": "system"
+      },
+      {
+        "content": "A community garden collects roof runoff in a covered tank. Rainwater first passes through a mesh screen that removes leaves. The tank has an overflow pipe directed to a planted drainage bed. Volunteers inspect the screen after storms, keep the lid closed to prevent mosquitoes, and water the garden in the morning. A small pump feeds a drip line, so water reaches plant roots rather than wetting every path. The gardeners want a short explanation for new volunteers that connects collection, storage, maintenance, and careful use. The explanation should make the order of the process clear without introducing equipment or rules not mentioned here.\n\nHow does the drip line help the garden use its collected rainwater carefully? Answer in one sentence of 12-20 words, using only the information above.",
+        "role": "user"
+      }
+    ],
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is documentation task library-returns-A.",
+        "role": "system"
+      },
+      {
+        "content": "A neighborhood library has a return box beside its entrance. Staff empty the box each morning and place the books on a sorting cart. They check each barcode into the catalog, inspect the book for damage, and separate items that have a waiting reservation. Reserved items go to the pickup shelf, while other books return to their usual shelves. A receipt in the catalog records when each item was checked in. Staff also compare the cart with the catalog before finishing the shift. The library wants an explanation for new volunteers that connects the physical sorting process with the catalog updates. Use only the workflow described here.\n\nWhy do staff check each returned book into the catalog before shelving it? Answer in one sentence of 12-20 words, using only the information above.",
+        "role": "user"
+      }
+    ],
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is documentation task library-returns-B.",
+        "role": "system"
+      },
+      {
+        "content": "A neighborhood library has a return box beside its entrance. Staff empty the box each morning and place the books on a sorting cart. They check each barcode into the catalog, inspect the book for damage, and separate items that have a waiting reservation. Reserved items go to the pickup shelf, while other books return to their usual shelves. A receipt in the catalog records when each item was checked in. Staff also compare the cart with the catalog before finishing the shift. The library wants an explanation for new volunteers that connects the physical sorting process with the catalog updates. Use only the workflow described here.\n\nWhy should reserved books go to the pickup shelf rather than the usual shelves? Answer in one sentence of 12-20 words, using only the information above.",
+        "role": "user"
+      }
+    ],
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is documentation task trail-signs-A.",
+        "role": "system"
+      },
+      {
+        "content": "A local hiking group maintains signs at trail junctions. Before a workday, the coordinator makes a list of damaged or missing signs from reports submitted by walkers. Two volunteers visit each reported junction together. They compare the sign with the route map, photograph its condition, and note whether vegetation blocks the view. They replace a damaged sign only after checking the route and destination names. At the end of the day, the coordinator updates the maintenance list and keeps the photographs with the report. The group wants a clear explanation for new volunteers that connects planning, checking, repair, and record keeping. Use only the procedure described here.\n\nWhy must volunteers compare a damaged trail sign with the route map before replacement? Answer in one sentence of 12-20 words, using only the information above.",
+        "role": "user"
+      }
+    ],
+    [
+      {
+        "content": "You explain everyday procedures clearly. This is documentation task trail-signs-B.",
+        "role": "system"
+      },
+      {
+        "content": "A local hiking group maintains signs at trail junctions. Before a workday, the coordinator makes a list of damaged or missing signs from reports submitted by walkers. Two volunteers visit each reported junction together. They compare the sign with the route map, photograph its condition, and note whether vegetation blocks the view. They replace a damaged sign only after checking the route and destination names. At the end of the day, the coordinator updates the maintenance list and keeps the photographs with the report. The group wants a clear explanation for new volunteers that connects planning, checking, repair, and record keeping. Use only the procedure described here.\n\nHow do photographs and an updated maintenance list help later trail volunteers? Answer in one sentence of 12-20 words, using only the information above.",
+        "role": "user"
+      }
+    ]
+  ],
+  "cpu_tests": {
+    "passed": 13,
+    "scope": "tiny/mock actual-shaped responses, source AST, all16 roster/repeat selection, runtime recipe/ownership, memory callback and artifact mutations; no model/Docker/GPU/helper execution"
+  },
+  "current_registry_sha256": "86621c71b829c75cc2f7312248932e9a8bb276018db3c0bef77f1fdb58678052",
+  "design_sha256": "96a507a1477bd381955594b000d5bb6ad02d2d8ced7a78beb37b0f8e82f28990",
+  "explicit_new_prepared_plan_required": true,
+  "fixture_root": null,
+  "fresh_process_observations_required": 16,
+  "full48_math_qualified": false,
+  "historical_v2_source_plan_sha256": "6f3df7e5017dd431b3ef20d5dcb61c42c1c883f974e444ce18639b7bf6961725",
+  "history": {
+    "frozen_V2_plan_sha256": "a99252b366bb7167e983305c58269a56a1cd9e898796f0f0b860ec052e746448",
+    "frozen_V2_runner_sha256": "95a18f2a97fcd7cc32d9f2734ef361d0799e2021af4129e5fb039c99886baf74",
+    "reason": "Actual V2 first add-function case PASS18natural tokens, repeat startup false rejection on TIME_WAIT. V3 port preflight uses both Linux reuse policies after explicit LISTEN rejection; all actual model/settings/math/wrappers unchanged. V2 originals preserved; no rebuild."
+  },
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "known_page_shard": "UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+  "memory_cap_bytes": 124554051584,
+  "minimum_live_available_bytes": 6442450944,
+  "minimum_start_available_bytes": 120259084288,
+  "model_root": "/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/unsloth-ud-q4-k-xl",
+  "native_bitwise_authority": false,
+  "old_CPU_functional_response_transfer": false,
+  "old_global_registry_gate_passed": false,
+  "old_response_proof_transferred": false,
+  "original16_receipt_terminal_boundary_required": true,
+  "original_all16_decode_identity_reexecution_required": true,
+  "port_preflight_contract": {
+    "actual_owned_startup_API_and_teardown_required": true,
+    "actual_source": "vendor/cpp-httplib/httplib.cpp:6380-6389",
+    "advisory_only": true,
+    "existing_LISTEN": "Reject any requested-port LISTEN entry in /proc/net/tcp and tcp6 before bind",
+    "probe_closes_before_launch": true,
+    "socket_options": [
+      "SO_REUSEADDR",
+      "SO_REUSEPORT"
+    ]
+  },
+  "preregistered_screen_plan": null,
+  "registered_quality_qualified": false,
+  "registry_edit_applied": false,
+  "research_alias": "qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-cpu-v2",
+  "runner_sha256": "c1fb5170a9efb714a0f36751482b75048731ac7e3a88ffd8e758fe667608d4bf",
+  "sampling_seed": 1234,
+  "schema": "api-positive-overlap-finite-screen-source-v3",
+  "screen_port": 28671,
+  "server_argv": [
+    "--device",
+    "none",
+    "-ngl",
+    "0",
+    "--load-mode",
+    "mmap",
+    "--lazy-mode",
+    "on",
+    "--no-repack",
+    "--cache-type-k",
+    "f16",
+    "--cache-type-v",
+    "f16",
+    "-c",
+    "2048",
+    "-b",
+    "64",
+    "-ub",
+    "64",
+    "-t",
+    "8",
+    "-tb",
+    "8",
+    "-np",
+    "1",
+    "--flash-attn",
+    "off",
+    "--spec-type",
+    "none",
+    "--no-warmup",
+    "--cache-ram",
+    "0",
+    "--cache-reuse",
+    "0",
+    "--jinja",
+    "--reasoning",
+    "off",
+    "--reasoning-budget",
+    "0",
+    "--alias",
+    "hotschmoe-dd,qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-llamacpp-cpu-v2",
+    "--host",
+    "127.0.0.1"
+  ],
+  "source_bindings": {
+    "/mnt/vm_8tb/b70/build/flashnext-cpu-build-v3-20261010/cpu-runtime-smoke-v1/receipt.json": "2cead24f1c108f07fb36c9feefb4c06aae2ecd1f5ecd3e2a137f74433a981937",
+    "/mnt/vm_8tb/b70/build/flashnext-cpu-build-v3-20261010/elf-closure-v1.json": "26e460378f77e5e6ae0e76d1293d1694991a491483cf628c9d37f096a9f6bfb6",
+    "/mnt/vm_8tb/b70/build/flashnext-cpu-build-v3-20261010/host-loader-failure-binding-v1.json": "e2126b4e67bb51548f5b1647bb1d08e9b50ba139146de6bebaa0d821b7f8b18e",
+    "/mnt/vm_8tb/b70/build/flashnext-cpu-build-v3-20261010/receipt.json": "2df28740819c1b0869395fb8ff52d000cf167e4993b434a3e76f5fc48a5969ac",
+    "/mnt/vm_8tb/b70/build/flashnext-cpu-source-v2-20261010/source-receipt.json": "5e9b60c133d7dd87ad2a05c78518e543eef907e3173bae89e62b7e27d6173128",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/serve/frontend.py": "095bbac7d49b19d815d2634457d14d216ba9bd4e98998a4e3b4288f20a25e923",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/tools/strata_tokenizer.py": "d2fdcd2e55b4bc47c3ee6a10a0a7efa2029128cc229fb1de18da6e22d3606ff2",
+    "/mnt/vm_8tb/b70/models/flashnext-native-source-pack-20261009-v3/tokenizer/chat_template.jinja": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce",
+    "/mnt/vm_8tb/b70/models/flashnext-native-source-pack-20261009-v3/tokenizer/merges.txt": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+    "/mnt/vm_8tb/b70/models/flashnext-native-source-pack-20261009-v3/tokenizer/token_type.json": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b",
+    "/mnt/vm_8tb/b70/models/flashnext-native-source-pack-20261009-v3/tokenizer/tokenizer.json": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf",
+    "/mnt/vm_8tb/b70/models/flashnext-native-source-pack-20261009-v3/tokenizer/vocab.json": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+    "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/api-positive-overlap-cpu-screen-plan-v1.json": "0ecdb26c4f421c1345f05cce48599a06fd67683745e2521513400ff0201c5f7e",
+    "/mnt/vm_8tb/github/b70_ai_things/docs/20261010_flashnext_cpu_functional_pilot_v1.md": "c4f0d40bc3a903ce667c8851237c797d4eb86b96558779c235b7f9f252d7d126",
+    "/mnt/vm_8tb/github/b70_ai_things/docs/20261010_flashnext_cpu_functional_pilot_v2.md": "ebdcfce577ed812e17d9db7526b5cc8f5a08dc455b09e26673aeaf0561aa6785",
+    "/mnt/vm_8tb/github/b70_ai_things/docs/20261010_flashnext_cpu_reference_build_recipe_v3.md": "80d9f21da87ae691374fb97a6a03847010e544161029a9ccd13f1128dad78610",
+    "/mnt/vm_8tb/github/b70_ai_things/evals/configs/models.yaml": "86621c71b829c75cc2f7312248932e9a8bb276018db3c0bef77f1fdb58678052",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/cpu-functional-pilot-source-plan-v1.json": "11632bc552f7e05ad8d72cce81784c2e6501f42cfea9fb9bea0a0cbd26090957",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/cpu-functional-pilot-source-plan-v2.json": "a99252b366bb7167e983305c58269a56a1cd9e898796f0f0b860ec052e746448",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/cpu-functional-pilot-source-plan-v3.json": "890f6393a285449ebb54fb24e13b734db7b178a06c09236c7d25b77012d4de0f",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/cpu-reference-source-build-plan-v3.json": "8931fca9ecdcf69e234a66222769924783da0b8cc1b99380bb352e396c4b51f3",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/prepare_cpu_reference_source_v2.py": "18810ac7621134e1b303cd8b506229c4bd3cc061e3bf2ef08355f96f025d9c1d",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/qualify_cpu_functional_pilot_v1.py": "44f4e54b39e884c4b516096742c3c579faa75e53d208e3327f02a406f7b2d330",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/qualify_cpu_functional_pilot_v2.py": "95a18f2a97fcd7cc32d9f2734ef361d0799e2021af4129e5fb039c99886baf74",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/qualify_cpu_functional_pilot_v3.py": "5007ae3301470b6c52eaddeff9e74fda4fcd0d3d409d9b03846a7ad8bf67975e",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/test_cpu_functional_pilot_v1.py": "bfb532904c9656d53b96cac424f02b9de699b296ee03740c475c63670c2ae5b6",
+    "/mnt/vm_8tb/github/b70_ai_things/llamacpp/flash-next/test_cpu_functional_pilot_v2.py": "f6d84337ef5682896f3870137c58fb89d8e542a445075d035ea4453f104b67ca",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-cache-positive-case2-source35-v2.json": "7845c7fdca2826b02fdb10134ba9835f0a5666dc5d2b98b9bfdf28716b94f9c6",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-cache-positive-design-v2.md": "46f8d150dc83dab5351caf73021a3c706de96279c6974cdb14c629056bfb5f0d",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-cache-positive-registry-append-proposal-v2.yaml": "9bdda08db277bdebc2a94c22f28456b1d908b9691442d723dc46cbb3c3372033",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-cache-positive-shortwarm-case-seed-v3.json": "4018535c8201de0ca684ef458d53c13a58fd75a7bf4de22be42c9f27650cffcb",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-cache-positive-source-plan-v2.json": "423fa3be817ff3ab27d80f9151a595e44934a1601088ba8f1142dfd543d0d395",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-fresh-migration-registry-append-proposal-v1.yaml": "120865202fc15f5a096d90cc085df45bcce0350b32a0c7c90902d722550a0b94",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-fresh-migration-registry-baseline-v1.yaml": "56a6dd64cd174f9c55d9ea743c8f396a535c19c73d1a2a016d87b45cfb7b5852",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-fresh-recompute-migration-design-v1.md": "343ec18c01d756edf9b1f8c64b60a09b9bf8e4ac75c8cacbacb2b0879302d263",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-fresh-recompute-migration-source-plan-v1.json": "e9c56e0b6dcb82a7a7186de2daeee3cac6dd862e2e82009b7db632cf1bc3ec15",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-corpus-design-v1.md": "e4f0ff0d02e05c795636060837d4a675810683dac3d1fffc819889787cf34b94",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-corpus-seed-v1.json": "cb6e107478e1610732665ad577ed6ab8fb5634f3cba8c7a5b0112cec693c61bd",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-corpus-seed-v2.json": "53cc3c29afc32a67c53736ce34570c0026d9e320264a937685ee405b4c9e24ce",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-corpus-source-plan-v1.json": "c31a56276794c1e94fd3f01d48e6596630f640d0ebaa0c655568352e1ed52e72",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-corpus-source-plan-v2.json": "d0acd4025550a522cdffd813db484726f845bb717b2b6cdeec372ef675851a5f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-cpu-screen-design-v1.md": "96a507a1477bd381955594b000d5bb6ad02d2d8ced7a78beb37b0f8e82f28990",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-cpu-screen-source-plan-v1.json": "e6337031c0b22818de45c1d39003e28410552f2366148a9b2fa9600ba628d174",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-cpu-screen-source-plan-v2.json": "6f3df7e5017dd431b3ef20d5dcb61c42c1c883f974e444ce18639b7bf6961725",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-finite-export-design-v2.md": "8de34120c08d61c73181bc857ca63662eb403e2bb54e57a89507d3365e091e27",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-finite-screen-design-v2.md": "5d0a2ebac95c77932652c99712a8e7f7c1e92566431654c24f9c4c0ecaea77ad",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-positive-overlap-finite-screen-design-v3.md": "203277d3afb86a4e7cb7197ff30dad0fceeb0c159384051eda5aa9f3f074cfc0",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-shortwarm-tokenizer-design-v1.md": "3acf4606c2bada8da512d2c9208b2c15b18f12246cb0f1750bcf8af69136d659",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api-shortwarm-tokenizer-source-plan-v1.json": "9aee4836a5a13537671dc9c517c4043d0d30d7db13ef963be9afccc050a4a113",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api_cache_positive_contract_v2.py": "92d5e3ee0495acd4cd97eb8b6ab7d631ee8aea8caea4c7f7a10040883d6327e1",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api_fresh_migration_contract_v1.py": "b30074790342c28e81d88823500182c687cc53b2ad6d54dd65eccf8bb3ba0f2e",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/api_positive_overlap_finite_corpus_v2.py": "74f286636b189fe5c1f2b883493eff95c63a7880aea9b9cb9912817d0e776554",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_batch_capture_lifecycle_v2.py": "12db0d48b684ababfead2a3ead48410979e6706359522909c02a8b0ca6af2bba",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_batch_fidelity_coverage_v2.py": "2d3719ad4f020811462e5a5e8f2d93da950658d9a901e9aaa9777d2e4439e24a",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_batch_fidelity_coverage_v4.py": "a2814f92378f93d4e9cea946ba67b4304affc57d21fa4f00c6fa87253a4655df",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_batch_fidelity_coverage_v5.py": "fb39570cd552a40e7b74b6ba809219e6890f0a63d39bfd2ce7511fba251816e4",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_batch_fidelity_coverage_v6.py": "6e1427d85bb033236b5ec76d30f8e206916d37245912163b5665720901a8a133",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_batch_numerical_suite_v7.py": "a7bf95ffadd0bd7fb97a37b3f77a5114be223a0b5fb85f7eb77f63eac49fc033",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_fidelity_observer_coverage.py": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_slot_owner_trace_v1.py": "8b4fdb4da2ff758cc625b33e24077e9f2f97c0ca0111428a1f8b8f5be279bf43",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/audit_stage_mirror_owner_trace_v1.py": "4ec214482c0bf330cb96d5d7d0c091381ff9c295487bcf3482b79282f8f0c9bd",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch-cache-positive-admission-design-v1.md": "ae688e366d3ae2c1c4acc42b38149aa8780f1c2938d5f5f83114e68e7852e0d2",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch-cache-positive-admission-source-plan-v1.json": "571be0d9d72a4aa3a44ce78a0cc12bfa175bd3cc875c00f31e4fd2910d047444",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch-cache-positive-case2-source-seed-v1.json": "ddfa49e7063ec37ebb0c2b49504892ff1fff3a6effce1f62bcae6f3f3efb1547",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch-current-source35-v7-design.md": "c15fcd06fa2d9832b8ac6c9f97fb2367130672d0f260a5836efdc31440f4839d",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch-numerical-case2-source35-v2.json": "e39ecfbf38ebf67e42655710104d2bf53b53b30423f706c5e62e98555085386e",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch-numerical-case4-source35-v2.json": "2ded25c365c0fe79db09f3218ee329be715eb84a917db647484966264bf1af6d",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch-numerical-case6-source35-v2.json": "c240d32b2ff911185ed59f61cbd71b935a42655021974e93ae023f651cb20470",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_api_cache_positive_v2.py": "79b858a88f06568c15e7d97ccb028a08396af7e8b9056d2f59a2ae32a98f9e08",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_api_client_cache_positive_v2.py": "f84e6127f0830931c984e6cc8738a880795a76e608d4d8bacb6a8d35f0d97e50",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_api_client_fresh_v1.py": "5df2caf6e6f55c69161bc1f12c73d0bf7aa9f11a5449472350d1f8f7068a5df0",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_api_client_v2.py": "baf544e3b908680d305efcdcd4f74865c9b31facb94c29238593d0f720991d7a",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_api_fresh_migration_v1.py": "e6642528a413bf7e0bbf62d005dff51b3a9fb0d56a40e0d33521f484b50686e8",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_api_prefixes_v2.py": "b51471d4b08be9ec4cae440409eafc40d3aacbf96b50ab06ba754327cabb8058",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_api_trace_v2.py": "4f0aff752836e7ee0a647a4b1dc701c703967ab36038d49076a55407bfd54257",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_cache_positive_contract_v1.py": "606d1653e236f28eb2a9efd0146611b644c245fb267db113d8c96b1d1f476057",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_numerical_execution_v7.py": "34946addb91fff11e888c603c0ad50d84456667726b9a536d42b87fa205cbb1f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_numerical_prefixes_v2.py": "bccdbe9d9c0c8e50d2e059877cf9d4648e2ab8c1a533451ac56d5d18adca1dc5",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_numerical_proofs_v6.py": "290e52921e7618195e6b2e5bd3affcdab6116574e1b3bc2c5023609674d82c81",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_numerical_proofs_v7.py": "53a53259366b221274d4aa32adc0227d22b50b76b1331087d0c04a6b34759a47",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/batch_numerical_protocol_v2.py": "aaa87efa3a771fbe4b2f09985947e13749124cdef74b584492bc80c441c78fe9",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/c1-combined-v13-parent-source-plan.json": "6e7c2602ecd6b8a1724a611eea1d4f8f4b3371f8e54b9875c3562ef683da9c63",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/c1-combined-v13-source-plan.json": "ecfeab161e4f833777cd2a50274b1250f32fd98202aeca2a826c8f8b85536f72",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/c1_serve_controller_combined_v13.py": "f2057108c8ed7992ddbb71facdc81f78302ccf142090f4d73b3a5063c6d8c149",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/c1_trace_contract.py": "ee557bb1e9eb6a31b67714c93034461aa24572f20781cfcb9a858c25dd825e20",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/collect_fidelity_observer.py": "5c29e5925682d4cd5b075b549b8b12dd42ed995109f0d86675bb2e59a6c3889b",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-design-v1.md": "e431781270696b9059104c9e20173e759959cf76ae5ae93c8c5efa6d7ccb9d4c",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-design-v2.md": "1a0fe8d5aad5299d1a448f55055f51a759f7d41d724c11e5a3b6316914c58c9c",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-design-v3.md": "b86fbeef155c37587caa365f40ea56927483d6cc83bf0ead9e3425a4742a1713",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-design-v4.md": "7868eeec9b0973a24f5b200a854598ac14924a3782c86dc222121c810962fc16",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-source-plan-v1.json": "4019961c962d861cb2b18081835a241da58cd3cfab21d0728a872aeb9e4890c9",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-source-plan-v2.json": "ee0d17df780f0cd1f7c17bbdb458a3efd98a0de72580c39f3d431068d1b44a52",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-source-plan-v3.json": "0b4fa9e0b5ae483a3705064442e368a8dba5a79c7958b60ff28b90c6725db77b",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu-swap-attribution-source-plan-v4.json": "78792b6c779e52af897a5896c0b43b0d537b721458e8d14bbc0e07e7d4199f3f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/cpu_retry_owned_drain_v1.py": "2ed0a33e733fe45ae1564b63896d18dfbb7a4b1b2b449ff05528892b1116385e",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/finite_cpu_chronology_v3.py": "00ab3aaf7725fbb28d33cd8933b2444745b2147788fa27c704e90ee7de2d43f2",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/finite_cpu_identity_v3.py": "956317faad7fe041797d084aad8e31bb6539643f12459039de6be67171f50d12",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/finite_cpu_screen_preparation_v2.py": "c5a56237ad7f56b64d3cff45af7a9715e237defb04d586c1fe398d8dcadb037f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/finite_cpu_screen_preparation_v3.py": "e897be7471ca44ffc8103e40cf49f76f4dd734804e977713bc6be1800b05f19e",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/finite_tokenizer_owned_execution_v2.py": "a2b49cf9318f5faf09f9dfed00b7c0ad592137afebbc081a1902ddedafe7d9c2",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/generate_api_cache_positive_case_v2.py": "18e58382a671cc4aa13c5fabca411911a6c66c3ad17b85fa2d5f8ad64d015ccd",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/generate_api_shortwarm_positive_case_v1.py": "4daf3c9dc928974f3f4da7f0da7c0c587b02721f7ba5d3a187003af9a31cac88",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/layer0_numerical_qualification_v9.py": "2252f24be9a3511bcb40d5e623caa75259112b9cd07f3d55944f67c67d2a084c",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/merged_numerical_protocol_v2.py": "6f3e5194f175987f974cf8715ccaf5315877a9dba791a4b56fdb68cd63dc9a9c",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/model-lock.json": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/observe_cpu_swap_attribution_v1.py": "9756b1ec236112cc48e365655f8b05f2e7929b6e7f83c913f5f781e1cad10013",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/observe_cpu_swap_attribution_v2.py": "428fce2319b50d9293d852f0be3fd26c40aa29c88c1461185671eb81426818df",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/observe_cpu_swap_attribution_v3.py": "1bd663cf911adaccdc5a72151a4c3731220ddf9de49246863bbfb4c73149810f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/observe_cpu_swap_attribution_v4.py": "53ccfd8f4270d06cd6146525b7c564429ac250e7ae91c48609154103dcbaa5ea",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/prepare_api_positive_overlap_cpu_screen_v1.py": "c9a0885296098d4496750d8ec33d24e9ca433324f65ad48d07fcfa11738ccb27",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/prepare_api_positive_overlap_cpu_screen_v2.py": "2a2687b99f471c7bdc495b2e920af8836670cabe919795cd077ac3312c09b5e1",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/produce_api_positive_overlap_corpus_v1.py": "0b3b124148d94969fff97df667fb485082a10564baa59797d45f37a5195e5f37",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/produce_api_positive_overlap_corpus_v2.py": "92932ccfece9691a7c275ee355d844befc0e2326eeca3d50a6da002ee3ab3a27",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/produce_api_shortwarm_tokenizer_fixture_v1.py": "0ded6302db2cc7e230be8204eac3b9678f0c432b58f860cb53c9a9a7f5a6cb48",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/qualify_api_positive_overlap_cpu_screen_v1.py": "5e9d06fe45b62020b428fd161c34000cfa9037799290fe23f4b918510a2a8d9f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/qualify_api_positive_overlap_cpu_screen_v2.py": "0efe429ddee9aed72b3d28da8e98819eddee94cab206f74c2ae56c8371b28b4c",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/qualify_api_positive_overlap_cpu_screen_v3.py": "c1fb5170a9efb714a0f36751482b75048731ac7e3a88ffd8e758fe667608d4bf",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/qualify_batch_api_cache_positive_v2.py": "a284805a6f94bdbc45336c1ac3a103341b561794084d4d80223a79590fc4bce5",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/qualify_batch_api_fresh_migration_v1.py": "33d27bac0efd86b941bfd395eb6f1453819fdfb6cbcd76c2d257977f966fa26a",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/qualify_batch_numerical_v7.py": "14cb9761faef7ed02501e35ac505684312e759d5b238783f39bd0fb9ea8aa52e",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/qualify_c1_serving_combined_v13.py": "7400b7a73499f93645e17047ceb5b5da64017796e88ff9a7d05c4742a0ff3bb2",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/registry_append_association_v1.py": "6d07e96b118c0001340beef08a13611066dab090e3eff5b09f88a40929a6d5d6",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/registry_cache_positive_association_v2.py": "922a1d018758c1f6b2925dc37ae7d027f23a0c413e3ad6a388fbaff8ae486248",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/render_api_positive_overlap_corpus_v1.py": "e13244f6bb5e9dfd7ead778b8e348aef2e2d4ffdc65f1c183d94f6072d16ae02",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/render_api_positive_overlap_corpus_v2.py": "f0ca9e98aaf539797feba16b221028fed62c4f0d5b6c925d83fac36c4c3242b4",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/render_api_shortwarm_tokenizer_v1.py": "d964a545cb44757f9f2abbb1a0a63efa8f890857b9dfc2b3e1a5ecf6321ace89",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_batch_api_cache_positive_v2.py": "0e72a1ac99e0f7e20d550a50701cc05b336d173227f2b7a8ccb95c260f5a7b91",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_batch_api_controls_v7.py": "eb7eda709671b7380ea612747240025a43d62924d1145b20baf45e8b47025092",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_batch_api_fresh_migration_v1.py": "6bc9ce82db4794baada4a93056bda023087f7b2e5776f24434c745bc5b768290",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_batch_numerical_pilot_v7.py": "007cfc79109c441eb45b5ed5fe115d8c265f5d563889768df71db3c0de59c9ab",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/run_batch_serial_controls_v7.py": "69310f3c5d2cb18752775d13288ccbfcedb8b0d4f4409b927f4400680a996e39",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/serial_prefix_qualification_v6.py": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_cache_positive_cpu_v2.py": "fb91dd631c0bdbc11b5f9a32bcea0be750122edf5a0902ac218c502cf6052b44",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_fresh_migration_cpu_v1.py": "4de545883f2818de74cc6e8630e6e743b8227394f70b232621f956a623452d2d",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_positive_overlap_corpus_cpu_v1.py": "1f0da9a98c13e20387ad27b04f8098be36780b427f4416300f486927e8ff6741",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_positive_overlap_corpus_cpu_v2.py": "fd8e69f91019c7523e3bff3ba8ccbd8b6897d8f32991908d458e5bc4078f2be5",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_positive_overlap_cpu_screen_v1.py": "581864fa9313a0162b9d1fd14a239604cdb41cf4bbad4523cecbfd8f4b9c9249",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_positive_overlap_cpu_screen_v2.py": "2ba9d7cf3ef71dc325b0f040fb3838d35865da3b3f68963d3991db727f67f196",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_positive_overlap_cpu_screen_v3.py": "2c620c56312acac964dc087fabbd46223f5a590a4ebe94b1e794d6c7ba16000f",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_positive_overlap_finite_corpus_cpu_v2.py": "f82074bb18256227ce46f25179ea649e24c1cc1001540f5740a450791852923b",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_api_shortwarm_tokenizer_cpu_v1.py": "238ab367751663e7767718b18414f0435221d06dd11c17ad31efca0238ccad44",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_batch_cache_positive_cpu_v1.py": "3073e674df59bd54ed175b7bfa7c99f5184862a7f01af9af67099615bc45f2f7",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_batch_current_source35_cpu_v7.py": "b3d29a1a95f39ada3c41f2eddd135f3a565068422cbbbc12180b4fcb175ea1e2",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_batch_v7_final_source_join_cpu.py": "f73f442f6f80aa8dbcd6c7dbceeceb91eb08408ace5b73c4835af0cc657d0084",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_cpu_swap_attribution_cpu_v1.py": "1310a597038c002ec17f246fa65ba1acfc9977cbf5f991f5fbb36a5769c48915",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_cpu_swap_attribution_cpu_v2.py": "f7918d2eaf704a2ea4a4f49b938001ac5e20962a043327a4738fc7dbbf75c9d9",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_cpu_swap_attribution_cpu_v3.py": "e5b5a4ae084eaee02c068e20dc7f24d75ad9874d1f90955e0bfe6df4664040f0",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_cpu_swap_attribution_cpu_v4.py": "51691f8cb8b81570930af494ebb29e69f7e29b6262a87134fb1e9b161a1120e8",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_finite_cpu_chronology_v3.py": "21c7d0d4fd01c6cd80f1a2d0a5ef6896bd64120505b9383411e856e78c8889d6",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_finite_cpu_identity_v3.py": "576eca47d5823ac1535c9f71d727c253dbe728ed53b4a51cd0fde476f42b1afd",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_finite_cpu_screen_preparation_v2.py": "0631d2e986d2b3ecf929c07637b66756d962db1183827ed836da29fb621822a6",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_finite_cpu_screen_preparation_v3.py": "27b5b40be04cf35cd0804e586843caae6632dbb7320143d5626438344fdc4af2",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/test_finite_tokenizer_owned_execution_cpu_v2.py": "028e6178f7649ecdc2eee345f3fe7916e9c73ec3a0bbd9ffe62d28b0e66db3fe",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/validate_batch_api_cache_positive_v2.py": "d2cd33be318922356b2a75f94899a432968b712b82517f69dd3fafe612575c21",
+    "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/validate_batch_api_fresh_migration_v1.py": "54165551c6bea4f9dfcef4af348c511560af8a5a189204ec90b0446718e97539",
+    "/mnt/vm_8tb/github/llama.cpp-flashnext/vendor/cpp-httplib/httplib.cpp": "d5c8569158fd21a1eab4563ca49e57939539ea49c6067e66c972601715423e13"
+  },
+  "source_receipt": "/mnt/vm_8tb/b70/build/flashnext-cpu-source-v2-20261010/source-receipt.json",
+  "speed_qualified": false,
+  "status": "Frozen SOURCE/CPU; actual new fixture/model screen unobserved",
+  "tests_sha256": "2c620c56312acac964dc087fabbd46223f5a590a4ebe94b1e794d6c7ba16000f",
+  "tokenizer_image": "sha256:c388186da30785b302c9c76c0ce8ca5e5351c9783c628177f6f7b9eed2f4ad17",
+  "tokenizer_pack": "/mnt/vm_8tb/b70/models/flashnext-native-source-pack-20261009-v3/tokenizer",
+  "tokenizer_source": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source",
+  "version": 3,
+  "wrapper_preflight_contract": {
+    "CLI": "--wrapper-preflight",
+    "metadata_image": "sha256:c388186da30785b302c9c76c0ce8ca5e5351c9783c628177f6f7b9eed2f4ad17",
+    "network": "none",
+    "repeat_fresh_within_each_actual_model_pilot": true,
+    "required_before_full_four_and_inference": true,
+    "server_argv": [
+      "--version"
+    ],
+    "server_image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+    "server_memory_cap_bytes": 2147483648,
+    "server_model_mounts": []
+  }
+}

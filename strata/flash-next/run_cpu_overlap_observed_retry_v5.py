@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Root CPU-only same-recipe retry with passive metadata under one exclusion lease."""
+import argparse,json,os,signal,subprocess,sys,time
+from pathlib import Path
+import observe_cpu_swap_attribution_v6 as observer
+import cpu_retry_owned_drain_v3 as drain
+HERE=Path(__file__).resolve().parent
+ROOT=HERE.parents[1]
+BASE=Path('/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010')
+OBS_SHA='1107b3f8c08608f11126e243c7c5c204a29e3561227693f8ada8af80c8b8b364'
+def require(ok,message):
+ if not ok:raise ValueError(message)
+def command(output,screen_plan):
+ return [sys.executable,str(HERE/'qualify_api_positive_overlap_cpu_screen_v3.py'),'--build-root','/mnt/vm_8tb/b70/build/flashnext-cpu-build-v3-20261010','--source-receipt','/mnt/vm_8tb/b70/build/flashnext-cpu-source-v2-20261010/source-receipt.json','--fixture',str(Path(screen_plan['fixture_root'])),'--screen-plan',screen_plan['_prepared_path'],'--output',str(output),'--leased']
+def retire(proc,label,report):
+ if proc is None:return
+ if proc.poll() is None:
+  try:proc.send_signal(signal.SIGTERM)
+  except ProcessLookupError:pass
+ try:rc=proc.wait(timeout=30)
+ except subprocess.TimeoutExpired:
+  report['errors'].append(label+' normal join exceeded30s; exclusion retained until actual terminal')
+  rc=proc.wait()
+ report.setdefault('owned_retirement',{})[label]={'pid':proc.pid,'return_code':rc,'terminal_epoch':time.time(),'terminal_confirmed':proc.poll() is not None}
+ require(proc.poll() is not None,'Owned process not terminal '+label)
+
+def main():
+ p=argparse.ArgumentParser();p.add_argument('--screen-plan',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--expected-source-plan-sha256',required=True);a=p.parse_args()
+ source_plan=HERE/'cpu-overlap-finite-observed-source-plan-v5.json';source_raw=source_plan.read_bytes();require(observer.sha(source_plan)==a.expected_source_plan_sha256,'Exact reviewed retry source plan required');closure=observer.read_unique(source_plan)['files']
+ for name,digest in closure.items():require(observer.sha(ROOT/name)==digest,'Current retry source closure differs '+name)
+ require(not a.output.exists(),'New retry orchestration root required')
+ for card in (0,1):require(os.path.samefile('/proc/self/fd/'+str(8+card),'/mnt/vm_8tb/b70/gpu.lock.'+str(card)),'Inherited pair CPU exclusion lease required')
+ require(observer.sha(HERE/'cpu-swap-attribution-finite-source-plan-v6.json')==OBS_SHA,'Reviewed observer source plan changed')
+ for name,digest in observer.read_unique(HERE/'cpu-swap-attribution-finite-source-plan-v6.json')['files'].items():require(observer.sha(ROOT/name)==digest,'Current observer prerequisite changed '+name)
+ from finite_cpu_screen_preparation_v3 import admit_prepared
+ screen_plan=admit_prepared(a.screen_plan);prepared_sha=observer.sha(a.screen_plan);screen_plan['_prepared_path']=str(a.screen_plan.resolve());a.output=a.output.resolve();a.output.mkdir();report={'schema':5,'wrapper_pid':os.getpid(),'wrapper_argv':[str(Path(sys.executable).resolve()),*sys.argv],'wrapper_sha256':observer.sha(__file__),'source_plan_sha256':a.expected_source_plan_sha256,'prepared_plan_path':str(a.screen_plan.resolve()),'prepared_plan_sha256':prepared_sha,'started_epoch':time.time(),'passed':False,'errors':[],'actual_GPU_touch':False,'memory_guards_changed':False,'inference_settings_changed':False}
+ with (a.output/'source-plan.snapshot.json').open('xb') as handle:handle.write(source_raw)
+ idle=a.output/'idle';screen=a.output/'screen';watch=a.output/'observe';fd=(8,9)
+ idle_cmd=[sys.executable,str(HERE/'observe_cpu_swap_attribution_v6.py'),'idle','--output',str(idle),'--seconds','30']
+ report['idle_command']=idle_cmd
+ cpu=None;monitor=None;idle_proc=None;stopping=[];launches=None;passive_failed=False;recovery_rows=[]
+ report['subreaper']=drain.enable_subreaper()
+ def stop(sig,frame):
+  stopping.append(sig)
+  for proc in (idle_proc,cpu):
+   if proc and proc.poll() is None:
+    try:proc.send_signal(signal.SIGTERM)
+    except ProcessLookupError:pass
+ for sig in (signal.SIGINT,signal.SIGTERM,signal.SIGHUP):signal.signal(sig,stop)
+ try:
+  with (a.output/'idle.log').open('w') as log:
+   idle_proc=subprocess.Popen(idle_cmd,stdout=log,stderr=subprocess.STDOUT,pass_fds=fd);report['idle_return_code']=idle_proc.wait()
+  require(report['idle_return_code']==0 and not stopping,'Fresh passive idle observation failed/interrupted');report['idle_binding']=observer.finalized_binding(idle)
+  cpu_cmd=command(screen,screen_plan);report['screen_command']=cpu_cmd
+  with (a.output/'screen.log').open('w') as clog,(a.output/'observe.log').open('w') as olog:
+   cpu=subprocess.Popen(cpu_cmd,stdout=clog,stderr=subprocess.STDOUT,pass_fds=fd,start_new_session=True);report['producer_pid']=cpu.pid
+   launches=drain.Launches(cpu,screen)
+   obs_cmd=[sys.executable,str(HERE/'observe_cpu_swap_attribution_v6.py'),'observe','--output',str(watch),'--screen-root',str(screen),'--producer-pid',str(cpu.pid),'--idle-receipt',str(idle/'report.json'),'--seconds','7200'];report['observer_command']=obs_cmd
+   try:monitor=subprocess.Popen(obs_cmd,stdout=olog,stderr=subprocess.STDOUT,pass_fds=fd)
+   except BaseException as exc:
+    passive_failed=True;report['errors'].append('Passive observer startup failed; unchanged inference continues: '+str(exc))
+   while cpu.poll() is None:
+    if monitor is not None and monitor.poll() is not None and not passive_failed:
+     passive_failed=True;report['errors'].append('Passive observer exited while screen active; unchanged inference continues under its own guards')
+    time.sleep(1)
+   report['screen_return_code']=cpu.returncode;report['screen_terminal_epoch']=time.time()
+   if monitor is not None:
+    if monitor.poll() is None:monitor.send_signal(signal.SIGTERM)
+    report['observer_return_code']=monitor.wait(timeout=30)
+   else:report['observer_return_code']=None
+  report['observer_binding']=observer.finalized_binding(watch)
+  require(report['screen_return_code']==0 and report['observer_return_code']==0 and not stopping,'CPU screen or observer failed/interrupted')
+  report['screen_binding']=observer.screen.finalized_binding(screen)
+  require(source_plan.read_bytes()==source_raw,'Retry source plan changed during operation')
+  for name,digest in closure.items():require(observer.sha(ROOT/name)==digest,'Final retry source closure differs '+name)
+  report['passed']=True
+ except BaseException as exc:
+  report['errors'].append(type(exc).__name__+': '+str(exc))
+ finally:
+  # Screen owns all Docker/model cleanup. Keep exclusion lease until it exits.
+  for proc,label in ((cpu,'screen'),(monitor,'observer'),(idle_proc,'idle')):retire(proc,label,report)
+  if cpu is not None:
+   before=drain.tree_view(screen)
+   def actual_census():
+    result=drain.census(screen,screen_plan,cpu.pid)
+    if result['recovery_performed']:recovery_rows.append(result)
+    return result
+   while True:
+    try:
+     require(launches is not None,'Original owned launch tracker unavailable; exclusion retained')
+     report['launch_descendants']=launches.retire(actual_census)
+     report['final_owned_census']=actual_census()
+     if report['launch_descendants']['tracking_errors'] or report['launch_descendants']['adopted_children']:report['errors'].append('Original screen left launch descendants or tracking errors; cleanup is not normal qualification')
+     break
+    except BaseException as exc:
+     report['errors'].append('Ownership drain: '+type(exc).__name__+': '+str(exc))
+     observer.write_new(a.output/('ownership-drain-failure-'+str(time.time_ns())+'.json'),{'error':report['errors'][-1],'exclusion_lease_retained':True})
+     time.sleep(1)
+   after=drain.tree_view(screen)
+   report['late_artifact_changes']={'before':before,'after':after,'changed':before!=after}
+   report['owned_recovery']=recovery_rows
+   try:report['original_artifact_binding']=drain.original_artifact_changes(screen)
+   except BaseException as exc:report['errors'].append('Original artifact recollection: '+str(exc))
+   if report.get('original_artifact_binding',{}).get('changed_paths'):report['errors'].append('Original producer artifact hashes changed after sealing')
+   if recovery_rows or before!=after:report['errors'].append('Late launch recovery or artifact mutation; original qualification not transferred')
+  try:
+   require(source_plan.read_bytes()==source_raw and observer.sha(__file__)==report['wrapper_sha256'] and observer.sha(a.screen_plan)==prepared_sha,'Final retry/prepared source changed after ownership drain')
+   actual=admit_prepared(a.screen_plan);expected=dict(screen_plan);expected.pop('_prepared_path');require(actual==expected,'Final finite prepared recipe changed')
+   for name,digest in closure.items():require(observer.sha(ROOT/name)==digest,'Final drained retry source closure differs '+name)
+  except BaseException as exc:report['errors'].append('Final source: '+str(exc))
+  if report['errors']:report['passed']=False
+  report.update(finished_epoch=time.time(),stop_signals=stopping,causal_swap_attribution_qualified=False,model_math_qualified=False,API_overlap_qualified=False)
+  observer.write_new(a.output/'report.json',report)
+ print(json.dumps({'passed':report['passed'],'report':str(a.output/'report.json')}));return 0 if report['passed']else 1
+if __name__=='__main__':raise SystemExit(main())
