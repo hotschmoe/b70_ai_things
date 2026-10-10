@@ -11324,3 +11324,19 @@ HC numericaldata ispositivebutV1wholequalificationFAIL; V2freshactualruntime
 mustfinish raw/free/identity/health/ownedteardown beforeprimitivequalification.
 Nextcompletecache execution shoulduseexistingALLsuite afterHCchecks. Fullgoal
 active; no productiondecode speed claim, unrelateddirtychanges preserved.
+
+
+## 2026-10-10 - Corrected HC V2 fresh runtime started
+
+CONFIG -> V2 derives13cases/36words/2negatives; original CPPv1 and current
+SDK/library mathematics unchanged. V1 failed-count history remains preserved.
+COMMAND -> V2 real CPUexpectedexport PASS; rootCPU14+parent20 PASS; leased
+freshcompile87264 terminal0 in20s; ownedruntime72004 now acquiredpairleases.
+RESULT -> Compile receipt SHA256 8d1eca82ed1dc7d936be2f8df08e553780662ad774085b7c824fa1efffb1d670.
+Build: /mnt/vm_8tb/b70/build/hc-projection35-leaf-v2-20261010/receipt.json.
+Runtime: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/hc-projection35-v2-owned/parent-qualification.json.
+Runtime72004 confirmedlive atpre-strict/pre-compiled-pair; no finalresult yet.
+VERDICT -> Current actualV2 qualification pending raw36/free/ownedteardown/
+health/newfull4; no modelqualclaim. Devloopaudit checkpoint24d86ef pushed.
+Next cachetesting usesexistingALLsuite toreduce repeatedparentgate overhead,
+after HCfidelity diagnostics. Fullgoal remains active.
