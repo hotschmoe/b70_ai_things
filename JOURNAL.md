@@ -13306,3 +13306,24 @@ parse_trace15600calls/cum1070.613s (~73.55percent), allfromthatgate's5cases
 andduplicatedpositive+3negative controls. Runtimepayload untouched byagent.
 VERDICT -> RealmeasuredCPUbottleneck; immutableparser consumerport nowjustified.
 No matchedspeedup or cleanlatency result yet. Fullcampaign remainsactive.
+
+
+## 2026-10-10 - H50 OFF parent passes and isolated QSA helper compiles
+
+CONFIG -> FrozenH50source37 native4OFF withactualpostREADYhealth andnewbytes.
+COMMAND -> Actual1874 terminal0/PASS1339s; posthealth/kernel/knownpages/new4/
+normalownedretirement passed. Independentpublicparent_arm5003 stilllive.
+VERDICT -> Parentcollection/lifecycle PASS only; OFFON/all49numeric/cache/
+originalmath/latency remainseparate mandatorygates.
+
+CONFIG -> PeerREADY e122QSA V4; exact isolatedsource/SDK/flags/image/recipe.
+COMMAND -> Actual29705 bin/gpu-run --card0 pairedwithaffinity0; terminal0/
+PASS22s; compileronly, nohelperexecution/modelmounts. ReceiptSHA
+346257541cf291ceacf07352e147e3614ab1c1f27eeb6caed2d7777202a68600.
+RESULT -> FreshhelperELF/log/currentfullownedinspection/exit0/normalremove.
+OriginalQSAproducer launch70239 mistakenlywrappedself-leasingqualifier without
+--leased. Verified3ownedlease-only processes/nooutput/noGPUleaf; SIGTERMgroup
+andterminal124/emptySID confirmed, failuremetadata preserved. Corrected8162
+usesoneouterpairlease+explicit--leased/newproducer-v4-run-v2; currentlylive.
+VERDICT -> Compileproof only; originalownprojection/device/math/runtime and
+posthealth/source/new4/publicreader results pending. Fullgoal remainsactive.
