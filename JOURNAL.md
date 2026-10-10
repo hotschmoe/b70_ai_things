@@ -10845,3 +10845,11 @@ semantic omissionremoved. Conditionalagreement supports propagatedquantization
 seams, not a Q5Kstoredsum fix or fullmodelPASS. Remainingnumeric/quality/
 route/state/cache/concurrency/latency/shelf gates retain originalscope.
 See docs/20261010_flashnext_source35_original_ple_and_ffn_seams.md.
+
+
+### 2026-10-10 - Seam case-count clarification
+
+The preceding source35 seam entry has eight total cases: four conditional
+native-attention cases and four owned-attention replays. The four owned
+replays are bitwise exact. The phrase "ownreplay8cases" was a count typo;
+all saved metrics, scope restrictions and source proofs remain unchanged.
