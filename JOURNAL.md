@@ -14648,3 +14648,22 @@ Newcapture sourcea9ad71/24repo+8headers pinsSOb2ccc/protocolstrict; actual
 GPUcapturecoveragepending, no historicalJIT/math/speedclaim.
 VERDICT -> Nextactualfullmodel fidelity diagnostic queuedviareallease after
 preflight. Fulloriginalmath/cache/streams/physical/profile/latency/shelfactive.
+
+
+## 2026-10-10 - Warm nativejoin deterministic predicate localization
+
+CONFIG -> OriginalfailedV6warmACK184122, unchanged2,377,562,805B trace/
+6,903,376 lines, authenticRID/generation/current1403source40.
+COMMAND -> Independentboundedstream localization retains211 exactsemantic
+rows, actualcallassociation andoriginalnative_lifetime predicate evaluated.
+Rootpreserves reportd63d290eb5f31aed73a426d49ced57f796ab64a8420a1b47da49b0ee51b48b9f
+at f17/shared-v6-warm-terminal-localization-v1.json; readsconsumedsource.
+RESULT -> associate_events PASS calls1/2. native_lifetime rejectsBSTOP
+ownership/phase afterBDONE: RID2slot1gen1 BT EOS248046, BSTOPsend,
+BDONEstop21, thenFC39BSTOP_applied generated21/window0. Originalgenerate
+slot_stop checksstrictcurrentRID/gen andsetsstop/emitslifetime without
+active-state guard, so postterminalobservation isreal. Staleownerstillrefused.
+VERDICT -> Concretegrammar/terminalorder cause independentofCPUcost; no
+deadlineincrease orbroadcancellationPASS. NEWsuccessor mustpreserveactual
+terminalcount/finish anddistinguishsameworkownerlatehousekeeping from
+livecancel/migration andnewowner leakage. Fullgoalactive.
