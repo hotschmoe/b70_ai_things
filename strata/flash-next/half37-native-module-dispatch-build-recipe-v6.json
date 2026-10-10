@@ -1,0 +1,136 @@
+{
+  "GPU_device_grants": [],
+  "actual_CPU_compile_or_ABI_execution_by_agent": false,
+  "actual_GPU_capture": false,
+  "cases": [
+    {
+      "env": {},
+      "name": "success",
+      "return_code": 0,
+      "terminal_failed": false
+    },
+    {
+      "env": {
+        "HALF37_FAKE_NATIVE_FAIL": "1"
+      },
+      "name": "native-fail",
+      "return_code": 0,
+      "terminal_failed": true
+    },
+    {
+      "env": {
+        "HALF37_FAKE_NULL_EXP": "1"
+      },
+      "name": "null",
+      "return_code": 0,
+      "terminal_failed": false
+    },
+    {
+      "env": {
+        "HALF37_FAKE_INTERNAL_LOOKUP": "1"
+      },
+      "name": "internal",
+      "return_code": 0,
+      "terminal_failed": false
+    },
+    {
+      "env": {
+        "HALF37_FAKE_TWO_DOMAINS": "1"
+      },
+      "name": "two-domains",
+      "required_native_byte4": [
+        1,
+        2
+      ],
+      "required_stdout": "CPU_TWO_DOMAIN_SAVED_ENDPOINT_PASS actual_GPU_touch=0",
+      "return_code": 0,
+      "terminal_failed": false
+    },
+    {
+      "capture_directory_env_absent": true,
+      "env": {},
+      "name": "OFF",
+      "return_code": 0
+    }
+  ],
+  "compile_argv": [
+    [
+      "g++",
+      "-std=c++17",
+      "-O2",
+      "-pthread",
+      "-I/api/usr/include",
+      "-fPIC",
+      "-shared",
+      "/src/half37_native_module_interposer_v6.cpp",
+      "-ldl",
+      "-o",
+      "/out/half37_native_interposer.so"
+    ],
+    [
+      "g++",
+      "-std=c++17",
+      "-O2",
+      "-pthread",
+      "-I/api/usr/include",
+      "-fPIC",
+      "-shared",
+      "-Wl,-Bsymbolic",
+      "/src/half37_native_module_fake_driver_v4.cpp",
+      "-ldl",
+      "-o",
+      "/out/libhalf37_fake_driver.so"
+    ],
+    [
+      "g++",
+      "-std=c++17",
+      "-O2",
+      "-pthread",
+      "-I/api/usr/include",
+      "-fPIC",
+      "-shared",
+      "-Wl,-Bsymbolic",
+      "-DHALF37_FAKE_DOMAIN=2",
+      "/src/half37_native_module_fake_driver_v4.cpp",
+      "-ldl",
+      "-o",
+      "/out/libhalf37_fake_driver_b.so"
+    ],
+    [
+      "g++",
+      "-std=c++17",
+      "-O2",
+      "-pthread",
+      "-I/api/usr/include",
+      "/src/half37_native_module_fake_main_v3.cpp",
+      "-L/out",
+      "-lhalf37_fake_driver",
+      "-Wl,-rpath,/out",
+      "-ldl",
+      "-o",
+      "/out/half37_fake_main"
+    ]
+  ],
+  "cpus": 2,
+  "entrypoint": "/bin/bash",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "known_lifetime": "Published endpoint objects/binder mutex intentionally retained until process exit; thunks acquire-load immutable endpoint, no throwing lock/allocation in C ABI path.",
+  "memory_bytes": 2147483648,
+  "memory_swap_bytes": 2147483648,
+  "negative_endpoint_control": {
+    "case": "two-domains",
+    "expected_return_code": 12,
+    "observer": "historical V4 SO dd1557fb8489f8c465c4f4fa506bc13e46f3350e8eea6bf95649a13534e91cc3",
+    "scope": "Expected source-derived control; actual result must be recorded independently."
+  },
+  "network": "none",
+  "schema": 1,
+  "scope": "CPU synthetic ABI qualification only; original GPU capture requires separate root-owned replay/raw equality/health/terminal admission.",
+  "source_files": {
+    "strata/flash-next/collect_half37_native_modules_v3.py": "30644d62c676b6dd9e28101bb1b8bfa5946eeb5660b69bc81b5bb43b36d5bc25",
+    "strata/flash-next/half37_native_module_fake_driver_v4.cpp": "b6e84c26f413575977f96c639f8f20d5061100393acb3d124b05d3f2ec000d58",
+    "strata/flash-next/half37_native_module_fake_main_v3.cpp": "841b5c11d4fdeefb6bb43f5aeea9aafa7de23506a402cc111af8b70600f927b3",
+    "strata/flash-next/half37_native_module_interposer_v6.cpp": "5aa4da21578ef1fbf50a144dcbe05faa461472407f4a8acb36362c85d8e0e78a",
+    "strata/flash-next/test_half37_native_modules_cpu_v3.py": "0fd40f2b85d6d08c71fd41806c95b70b9fa733b8233b0f8123a25ccb75d17856"
+  }
+}
