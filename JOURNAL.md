@@ -14720,3 +14720,20 @@ VERDICT -> Nativeordering diagnostic only, notAPIgeneratorwaiterclosure,
 clientcoherence/fullcache ororiginalmodelmath. Waiterobserver/incremental
 producer/consumer successor stillrequired. QSA15830leasedsemanticpreflight
 PID1204182 CPUlive; no prematuremodelGPUlaunch/PASS. Fullgoalactive.
+
+
+## 2026-10-10 - Incremental cursor CPU controls and waiter race review
+
+CONFIG -> Newstandaloneincrementalsemanticcursor/unchangedV6trace evidence;
+source40 output-onlywaiter observerdraft, originalmethods/code remainpinned.
+COMMAND -> Rootcursor4CPU PASS0.072; reviewexact_release_slot_when_done
+source1139-1178 againstobserverexit/thread proof. No GPU/source mutation.
+RESULT -> Originalwaiter setsheldthenunder slot_cv clearsbusy/notifies, so
+newowner canacquireslotbeforefinally exit snapshot. Draftobserverfinally
+eventprecedesactualthreadtermination and cannotaloneproveoldwaiterretired
+orrequirelaterbusyfalse withoutcurrentowner join. Authornotifiedforretained
+Thread actualterminal+immutableowner/BDONE proof andexplicitracerules.
+VERDICT -> ConcreteAPIclosureproof correctionbeforeactualnewruntime.
+Standalonecursornotintegrated/benchmarked yet, no devloopspeedclaim.
+QSA15830leasedparent1204182 semanticvalidation CPUlive beforeoutput/model
+leaf; actualfullsource/numerics qualification stillpending. Fullgoalactive.
