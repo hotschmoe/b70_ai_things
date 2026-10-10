@@ -13858,3 +13858,22 @@ Derivedtranslations retain actualoriginaltranslator options; no actualnew
 SPIRV/text, originalembeddedELF/JIT or conversioncause observed.
 VERDICT -> Execute onlyafterliveH54group0 qualifier2165terminal. Alloriginal
 math/reference andcanonical165registry remainunchanged; fullgoal stillactive.
+
+
+## 2026-10-10 - SPIRV text recipe reviewed; H54 real model starts
+
+CONFIG -> NEW704ff628d0768f02cd36573c457f12bcf3932031265774a7fa618859cd56eed4,
+286repo+19consumedsource+15smallcode/help bindings, sixsavedpostlinkmodules.
+COMMAND -> RootallSHA/ASCII/AST+3CPU PASS0.148s;peer3PASS0.162s/all286SHA.
+RESULT -> Exactobservedtranslator options and supported to-text preregistered,
+inputbitcode/symbol/capture receipts bound; newtranslations explicitlydistinct
+from originalexecutedELF/JIT. No actualSPIRV/text/cause/NNreference change.
+VERDICT -> Source-ready for rootcompile onlyafterlive2165leasesfree.
+
+CONFIG -> ActualH54group0 originalsource37/SKD/full6-prefix vector controls.
+COMMAND -> 2165 childsemantic READY thenfreshstrict/compiledpairhealth/kernel
+andACK observed; originalrecordedhealth/ACK epochs retained, source/byte seals.
+RESULT -> Actualserial modelprocess launched, ARM/capture/command/engine log
+exists. Requests and294 vectorcomparisons stillpending; no earlyPASS claimed.
+VERDICT -> Retainpairlease until normalownedteardown/posthealth/full4/current
+source andpublic joins. Group1 two-prefix/98comparison arm unexecuted.
