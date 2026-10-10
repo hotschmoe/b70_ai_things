@@ -12032,3 +12032,24 @@ Pairedold-registry unexecutedplans preserved; newgenuineplans canpinnewdigest.
 VERDICT -> Native2/4/6 private numericaldatasets closedwithin boundedonecard
 scope. FulltwoGPUconcurrency/API/cache/stale/memory/fidelity/profiling/latency/
 shelf required. RealpositiveAPI nowadvances nextgate. Alluserchanges preserved.
+
+
+## 2026-10-10 - Bounded defaultOFF host tracer source frozen
+
+CONFIG -> New36 onexact35, onlygenerate/verify hosthooks +testedtypedV2header;
+ONfirstonecardnative serial, max4requests/2048input/64new/32768events, no new
+SYCLwait/queue/graphnode ormodelmath changes. OFFoldmodes retained.
+COMMAND -> Root14source/preserved/buildplan SHA +basefiles PASS; actualCPU9
+C++controls androot10source/collector tests PASS. Engineplanc2b80b7e...;
+sourceplanee895bd90c2c70c0176acc77c9e1c1110ee2707c75150a03ac046e49685c7d82.
+RESULT -> All64reconstructed sources/36patches/28addedheaders/8freshABI/6Python
+readyforrootnewbuild, no nativecompile/modeltrace yet. DurableV2receipt binds
+all35files/sourceSnapshot/binary; V1lifetime evidence retained ashistory.
+Newpaired2 plan69519 genuinelyCPUpreparedagainstactuale0abd registrydigest.
+WholeHC synthetic4cases/36frames/19fields3802788words inputexport8380PASS;
+independentfinalsource reviewpending. PositiveAPI10435 remainslive, actual
+BCHAINstartup slots2/cap3/point236159904/required4250878272/chain8589934592/
+transfer536870912 admitted; warmtransfer/numerical proof stillpending.
+VERDICT -> Concrete hosttracing implementation readyforfresh ABI andexact
+OFF/ON requalification; GPUtest unchanged currentlyleasedpositiveAPI. Full
+originalgoal active; no performance/shelf orfullcache/fullmath claim.

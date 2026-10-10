@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "scope": "Actual ordinary-GCC standalone synthetic CPU header controls only; no native ABI, GPU or model qualification",
+  "source_snapshot_raw": "{\n  \"schema\": 1,\n  \"source_files\": {\n    \"host_critical_path36_header_v1.hpp\": \"5d4e3c3eee3164e9ac1a155ba407ed192fbe738089e8873aa9253100209611d2\",\n    \"host_critical_path36_cpu_fixture_v1.cpp\": \"3f70de39e5d488f300fc5900cab2411c460156ab7de3fec20444e5f6e2f6ab93\"\n  },\n  \"flags\": [\n    \"-std=c++17\",\n    \"-O2\",\n    \"-pthread\"\n  ],\n  \"image\": \"sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7\",\n  \"actual_GPU_touch\": false,\n  \"actual_model_payload_read\": false,\n  \"scope\": \"standalone synthetic CPU host trace control only; no native ABI build\"\n}\n",
+  "source_snapshot_sha256": "59cb1228cc648c45da20e3e4df3cfa799cbe87002bf6591ab5521e27ded104ed",
+  "durable_root": "/mnt/vm_8tb/b70/build/hosttrace36-cpu-actual-v1-20261010",
+  "durable_copy_receipt_sha256": "dafc94986c157c71e69f0bc06ee87b5ab009c28eedc7a5a759b909f3a6a32da2",
+  "original_parent_receipt_sha256": "0585e407860280c85b1692d36cfc11dd76d1dab31af70504ade63ffd72b45c1e",
+  "inside_receipt_sha256": "30abebba67d0481028a27cc81a093aa7e27e4eaf2fb70b05852012e29d5d9bc9",
+  "actual_CPU_cases_passed": 9,
+  "actual_GPU_touch": false,
+  "actual_model_payload_read": false,
+  "actual_native_compile": false,
+  "full_model_math_qualified": false
+}

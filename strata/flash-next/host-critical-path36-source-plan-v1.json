@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "READY source/header CPU only; native ABI compilation/runtime/trace unexecuted",
+  "source_bindings": {
+    "strata/flash-next/host_critical_path36_header_v2.hpp": "99dbe2074b30d3fc6f1aa3c51921f98e8d370a9089bf036117c9019ea8b063bd",
+    "strata/flash-next/host_critical_path36_cpu_fixture_v2.cpp": "a6195571f2e746f7b7d624c015386beb4f83df584e5cc930ead9e389dcb1afef",
+    "strata/flash-next/prepare_host_critical_path36_v1.py": "ce883ace7cc5e31e024c3cc5d2276edf91929e9da505f507a22ba2113f603b03",
+    "strata/flash-next/collect_host_critical_path36_v1.py": "60dfc04ee630f2e080208b10d396ded6a1abd4d9e4c5260ff4f4bf0bd26a165a",
+    "strata/flash-next/test_host_critical_path36_cpu_v1.py": "c22fd97e27cd2ac2e2049e2d44388c2c72ed40d6810d836be82129be318c2573",
+    "strata/flash-next/host-critical-path36-design-v1.md": "999d4955584a64f651910fa987cb672675a528b942ff35939b473fef1b810245",
+    "strata/flash-next/host-critical-path36-cpu-receipt-v2.json": "a666d31cb5fa9926347331fbce61dd30bbca5630199277dc4ccc365cc9a0bf98",
+    "strata/flash-next/patches/0036-default-off-bounded-host-critical-path-trace.patch": "a6b0a029977ae59bf6757a9beabd12221a11068e00c14206da2366878595ab46"
+  },
+  "preserved_bindings": {
+    "strata/flash-next/host_critical_path36_header_v1.hpp": "5d4e3c3eee3164e9ac1a155ba407ed192fbe738089e8873aa9253100209611d2",
+    "strata/flash-next/host_critical_path36_cpu_fixture_v1.cpp": "3f70de39e5d488f300fc5900cab2411c460156ab7de3fec20444e5f6e2f6ab93",
+    "strata/flash-next/host-critical-path36-cpu-receipt-v1.json": "5ec1303814d888714b4e50f8ec416d0df97d6c3bb6a6b12abc5a9d22f602ae80",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "docs/20261010_flashnext_source35_critical_path_trace_plan_v1.md": "62eb46304676344334b9deaedc0f9831391d0b6589c0af3729b78229cf926726"
+  },
+  "base_SDK": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source",
+  "base_two_files": {
+    "sycl/src/program/generate.cpp": "27e52a23debf493b57654a7ca871859b2655c5d8bb11c51be9e473d5ba557a39",
+    "sycl/src/core/verify.cpp": "cdd837fd3dd31873094587e549623bae887765c48d8c4de7f542185f52c4d84f"
+  },
+  "engine_build_plan": "strata/flash-next/host-critical-path36-engine-build-plan-v1.json",
+  "engine_build_plan_sha256": "c2b80b7e7b0bccdfe98e5771e88a604888e86443d5e2f6c3468a8ed0d7b46709",
+  "expected_counts": {
+    "source_files": 64,
+    "patches": 36,
+    "ABI_targets": 8,
+    "runtime_Python": 6,
+    "added_header_payloads": 28,
+    "consumed_SYCL_hpp_paths": 29
+  },
+  "CPU_controls": {
+    "actual_CPP_cases_passed": 9,
+    "Python_tests_passed": 10,
+    "scope": "source/parser synthetic controls plus actual standalone ordinary-GCC header CPU controls; no native ABI/GPU/model proof"
+  },
+  "durable_CPU_evidence": {
+    "root": "/mnt/vm_8tb/b70/build/hosttrace36-cpu-actual-v2-20261010",
+    "copy_receipt_sha256": "41c751a1243a740ae6695d02713ce6185a2dac5778ec861b1c86cb82b3f7029f",
+    "original_parent_receipt_sha256": "74b0ecb7894fc273bb424da0307d7cd91eb48068dc1cdc002e48020c86749475",
+    "inside_receipt_sha256": "911008b2f99e65fb02fcf1da6e3ccf877c04ba0f0172d5cf0234292ae58204dc",
+    "source_snapshot_sha256": "ccf818ed7834a2d6888aa11d5295d12fe8383619c4ac089c381e3ae8a0073f43",
+    "binary_sha256": "8aab625391ac1ffbb9a62da7963924271050425f74e568399610ee17283899b1"
+  },
+  "onecard_native_serial_only": true,
+  "scope": "H host clock/coverage only; kernel/device/API/passive tracer unimplemented",
+  "actual_native_compile": false,
+  "actual_GPU_trace": false,
+  "actual_model_inference": false,
+  "speed_qualified": false,
+  "full_model_math_qualified": false,
+  "broad_quality_qualified": false,
+  "cache_concurrency4_6_qualified": false,
+  "registry_edit_applied": false
+}

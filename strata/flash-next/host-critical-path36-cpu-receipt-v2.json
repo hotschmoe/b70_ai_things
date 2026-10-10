@@ -1,0 +1,16 @@
+{
+  "schema": 2,
+  "scope": "Actual ordinary-GCC standalone synthetic CPU V2 object-lifetime/header controls; no native ABI/GPU/model qualification",
+  "source_snapshot_raw": "{\n  \"schema\": 2,\n  \"source_files\": {\n    \"host_critical_path36_header_v2.hpp\": \"99dbe2074b30d3fc6f1aa3c51921f98e8d370a9089bf036117c9019ea8b063bd\",\n    \"host_critical_path36_cpu_fixture_v2.cpp\": \"a6195571f2e746f7b7d624c015386beb4f83df584e5cc930ead9e389dcb1afef\"\n  },\n  \"flags\": [\n    \"-std=c++17\",\n    \"-O2\",\n    \"-pthread\"\n  ],\n  \"scope\": \"source36 host Event object lifetime uses bounded new[]/delete[]; V1 controls preserved\"\n}\n",
+  "source_snapshot_sha256": "ccf818ed7834a2d6888aa11d5295d12fe8383619c4ac089c381e3ae8a0073f43",
+  "durable_root": "/mnt/vm_8tb/b70/build/hosttrace36-cpu-actual-v2-20261010",
+  "durable_copy_receipt_sha256": "41c751a1243a740ae6695d02713ce6185a2dac5778ec861b1c86cb82b3f7029f",
+  "original_parent_receipt_sha256": "74b0ecb7894fc273bb424da0307d7cd91eb48068dc1cdc002e48020c86749475",
+  "inside_receipt_sha256": "911008b2f99e65fb02fcf1da6e3ccf877c04ba0f0172d5cf0234292ae58204dc",
+  "actual_CPU_cases_passed": 9,
+  "actual_GPU_touch": false,
+  "actual_model_payload_read": false,
+  "actual_native_compile": false,
+  "full_model_math_qualified": false,
+  "history": "V1 nine controls retained; raw calloc Event lifetime not a defensible C++17 contract; V2 uses bounded nothrow new[]/delete[]"
+}

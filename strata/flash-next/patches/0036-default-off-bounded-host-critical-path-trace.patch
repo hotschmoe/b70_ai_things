@@ -1,0 +1,344 @@
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -1,3 +1,4 @@
++#include "strata/program/host_critical_path_trace.hpp"
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/ple_input_observer33.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+@@ -2183,6 +2184,7 @@
+         o.prefill_auto = false;       // nothing to lend from: the buffers are reserved for the session, so keep them small
+         o.prefill_chunk = 2048;
+     }
++    if (!strata::program::host_trace36::init(o.serve && o.batch==0 && o.pipeline_windows==0 && o.mtp.empty() && o.layer_split.empty() && o.split_device.empty() && o.suffix_draft==0 && o.lookup_chain==0)) { std::fprintf(stderr,"host trace36 requires bounded native serial graph mode and valid DIR/binding\n"); return 2; }
+     if (!have_tokens && o.serve) {   // plan v0.3 P8: requests bring their own tokens
+         o.tokens = {248045};
+         o.max_new = 1;
+@@ -9769,6 +9771,8 @@
+             strata::core::prefix_lifecycle::begin(ids,prefix_diag.active && o.batch==0 && !use_mtp && o.pipeline_windows==0 && !geni);
+             if(prefix_diag.active && (o.batch>0 || use_mtp || o.pipeline_windows>0)) { std::printf("ERR prefix diagnostic supports serial no-MTP non-pipelined requests only\n");return 1;}
+             const Clock::time_point r0 = Clock::now();
++            strata::program::host_trace36::RequestScope h36_request(n,req_fresh,req_rid,req_slot_generation,max_new);
++            const uint64_t h36_reset_id=strata::program::host_trace36::begin(strata::program::host_trace36::Reset);
+             const int64_t cache_prefix_ceiling=strata::core::batch_public::ceiling(req_fresh!=0,req_pin_present,req_pin,n);
+             // ---- where this request starts reading: the live session, or a checkpoint, whose tokens AND pictures are
+             // exactly the start of this prompt - at most n - 1 of them, the last token is always the first window
+@@ -10082,6 +10086,7 @@
+             prefix_diag.selection(resume,read_from,from_live,slot_source,conversations.bytes(),conversations.size(),conversations.evictions(),checks.size());
+             if (prefix_diag.active && req_fresh)
+                 std::fprintf(stderr,"PREFIX_DIAG {\"event\":\"fresh_all_stage_reset\",\"stages\":%zu,\"resume\":%lld,\"read_from\":%lld}\n",stages.size()+1,(long long)resume,(long long)read_from);
++            strata::program::host_trace36::end(strata::program::host_trace36::Reset,h36_reset_id);
+             conversations.limit_reuse(read_from);
+             pp_total = n;
+             pp_from = read_from;
+@@ -10607,7 +10612,8 @@
+                     return 1;
+                 }
+                 const auto tsp = Clock::now();
+-                const bool sp_ok = win ? read_windows(at, to, err) : read_part(at, to, err);
++                bool sp_ok;
++                { strata::program::host_trace36::Scope h36_PromptSpan(strata::program::host_trace36::PromptSpan); sp_ok = win ? read_windows(at, to, err) : read_part(at, to, err); }
+                 if (trace) {
+                     std::fprintf(stderr, "strata trace: read %lld tokens (%s) in %.1f ms\n", (long long) (to - at),
+                                  win ? "windows" : "batched",
+@@ -11521,14 +11527,20 @@
+                 first_window = false;
+                 bool eos = false;
+                 for (int i = 0; i <= a && produced_n < max_new && !eos; ++i) {
++                    strata::program::host_trace36::token((int)outv[(size_t)i],p+i+1);
++                    const uint64_t h36_printf_id=strata::program::host_trace36::begin(strata::program::host_trace36::TPrintf);
+                     std::printf("T %d%s\n",(int)outv[(size_t)i],strict_batch_identity?(" rid="+std::to_string(req_rid)+" slotgen="+std::to_string(req_slot_generation)).c_str():"");
++                    strata::program::host_trace36::end(strata::program::host_trace36::TPrintf,h36_printf_id);
+                     if (req_logprobs >= 0) {   // row i of this window's head logits is the distribution token i came from
+                         static std::vector<float> lrow;
+                         static std::vector<int32_t> lord;
+                         lrow.resize((size_t) ver.vocab());
+-                        if (!ver.copy_logits(i, lrow.data())) {
++                        bool h36_copy_ok;
++                        { strata::program::host_trace36::Scope h36_LPReadback(strata::program::host_trace36::LPReadback); h36_copy_ok=ver.copy_logits(i,lrow.data()); }
++                        if (!h36_copy_ok) {
+                             std::printf("LP nan\n");
+                         } else {
++                            strata::program::host_trace36::Scope h36_LPCPU(strata::program::host_trace36::LPCPU);
+                             float mx = -INFINITY;
+                             for (const float v : lrow) mx = std::max(mx, v);
+                             double se = 0.0;
+@@ -11552,7 +11564,7 @@
+                     if (o.lookup_chain > 0) extra_sources_append(&outv[(size_t) i], 1);
+                     eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) outv[(size_t) i]) != o.eos_ids.end();
+                 }
+-                std::fflush(stdout);
++                { strata::program::host_trace36::Scope h36_StdoutFlush(strata::program::host_trace36::StdoutFlush); std::fflush(stdout); }
+                 ++rounds;
+                 const Clock::time_point tw2 = Clock::now();
+                 // coupled drafts with penalties: the next window's row-0 history (`consumed` holds this window's
+@@ -11772,6 +11784,7 @@
+                 " rid="+std::to_string(req_rid)+" slotgen="+std::to_string(req_slot_generation):"";
+             if(yielded_at>=0)std::printf("YIELDED %d %lld%s\n",yielded_slot,(long long)yielded_at,
+                 strict_batch_identity?(" rid="+std::to_string(req_rid)+" slotgen="+std::to_string(bs[(size_t)yielded_slot].generation)).c_str():"");
++            const uint64_t h36_DoneEmit_id=strata::program::host_trace36::begin(strata::program::host_trace36::DoneEmit);
+             std::printf("DONE %lld %lld %.1f %.1f %s %lld %lld %lld %lld %lld %lld %lld %.1f %lld %lld%s%s\n",
+                         (long long) produced_n,
+                         (long long) n, prompt_ms, decode_ms, finish, (long long) draft_accepted, (long long) draft_offered,
+@@ -11780,6 +11793,8 @@
+                         (double) (src.file_read_bytes() - file_bytes0) / 1e6, (long long) read_n,
+                         (long long) req_offload, chain_txt,request_identity_tail.c_str());
+             std::fflush(stdout);
++            strata::program::host_trace36::end(strata::program::host_trace36::DoneEmit,h36_DoneEmit_id);
++            strata::program::host_trace36::completed((int)produced_n);
+             if (admit_slot >= 0) {   // --batch: BADM <slot> <1 = continues in the batch windows | 0 = done>
+                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, "length") == 0 &&
+                             (int64_t) live.size() == p;
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1,3 +1,4 @@
++#include "strata/program/host_critical_path_trace.hpp"
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/fidelity_observer.hpp"
+ #include "strata/core/batch_fidelity_observer.hpp"
+@@ -1792,7 +1793,8 @@
+     const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &exec_t =
+         prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])));
+-    if (exec_t != nullptr) return true;
++    if (exec_t != nullptr) { strata::program::host_trace36::graph_mark(reinterpret_cast<uintptr_t>(exec_t),false); return true; }
++    strata::program::host_trace36::Scope h36_Capture(strata::program::host_trace36::Capture);
+     if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->begin_rows(T);
+     if (std::getenv("STRATA_VERIFY_EAGER") != nullptr) return true;   // SYCL port: no graph, run() replays the body
+     if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->begin_roster(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0),*cs_);
+@@ -1854,10 +1856,13 @@
+     }
+     if(layer0_first_&&layer0_snapshot_&&T==1)layer0_snapshot_->seal_roster((ar_off_?1:0)+(fidelity_first_?2:0));
+     if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->seal_roster(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0));
++    const uint64_t h36_finalize_id=strata::program::host_trace36::begin(strata::program::host_trace36::GraphFinalize);
+     const dpct::err0 ie = DPCT_CHECK_ERROR(
+         exec_t = new sycl::ext::oneapi::experimental::command_graph<
+             sycl::ext::oneapi::experimental::graph_state::executable>(
+             graph->finalize()));
++    strata::program::host_trace36::end(strata::program::host_trace36::GraphFinalize,h36_finalize_id);
++    strata::program::host_trace36::graph_mark(reinterpret_cast<uintptr_t>(exec_t),true);
+     delete (graph);
+     /*
+     DPCT1000: Error handling if-stmt was detected but could not be rewritten.
+@@ -1879,7 +1884,9 @@
+     DPCT1007: Migration of cudaGraphUpload is not supported.
+     */
+     const dpct::err0 ue = 0;   // no cudaGraphUpload on SYCL: a finalized command_graph is already resident
++    const uint64_t h36_capture_wait_id=strata::program::host_trace36::begin(strata::program::host_trace36::CaptureWait);
+     const dpct::err0 us = DPCT_CHECK_ERROR(cs_->wait());
++    strata::program::host_trace36::end(strata::program::host_trace36::CaptureWait,h36_capture_wait_id);
+     std::fprintf(
+         stderr,
+         "strata verify: captured the %d-token window (upload %s, sync %s)\n", T,
+@@ -1898,8 +1905,10 @@
+ }
+ 
+ bool Verifier::capture_commit(std::string &err) try {
++    strata::program::host_trace36::ContextRestore h36_commit_context;
++    strata::program::host_trace36::Scope h36_CommitCapture(strata::program::host_trace36::CommitCapture);
+     const OnDevice on_device(device_);
+-    if (commit_exec_ != nullptr) return true;
++    if (commit_exec_ != nullptr) { strata::program::host_trace36::graph_mark(reinterpret_cast<uintptr_t>(commit_exec_),false); return true; }
+     using namespace strata::kernels;
+     const ModelGeometry& g = *g_;
+     SessionState& ss = *ss_;
+@@ -1977,6 +1986,7 @@
+               dpct::get_error_string_dummy(ce);
+         return false;
+     }
++    strata::program::host_trace36::graph_mark(reinterpret_cast<uintptr_t>(commit_exec_),true);
+     delete (graph);
+     return true;
+ }
+@@ -2069,18 +2079,21 @@
+     SessionState& ss = *ss_;
+     if (released_.load()) { err = "verify: an earlier window never finished on the GPU (#267); restart the engine"; return false; }
+     if (pos0 + T > ss.qsa_states[ss.qsa_primary()].max_cells) { err = "verify: the window runs past the context"; return false; }
++    strata::program::host_trace36::Frame h36_frame(device_,lb_,le_,T,pos0,reinterpret_cast<uintptr_t>(cs_));
++    strata::program::host_trace36::Scope h36_Verify(strata::program::host_trace36::Verify);
+     prefix_lifecycle::stage("verify_body",device_,lb_,le_,pos0,pos0+T,false);
+     refresh_ar();
+     if (!capture(T, err) || !capture_commit(err)) return false;
+     VDBG("captured; staging\n");
+     const Clock::time_point t0 = Clock::now();
+-    if (!staged_) stage_inputs(T, tokens, pos0);
++    if (!staged_) { strata::program::host_trace36::Scope h36_StageInputs(strata::program::host_trace36::StageInputs); stage_inputs(T,tokens,pos0); }
+     staged_ = false;
+     if(batch_observe_ && batch_admission_ && batch_snapshot_)batch_snapshot_->arm(batch_fidelity::graph_layout::make(nullptr,1,batch_phase_,ar_off_?1:0),batch_identities_->data(),batch_selected_,1,batch_phase_,*cs_);
+     if(layer0_first_&&layer0_snapshot_&&T==1)layer0_snapshot_->arm((ar_off_?1:0)+(fidelity_first_?2:0),T,pos0,tokens[0],*cs_);
+     const bool do_ple = ss.ple.ready() && ple_stage();
+     uint32_t ple_rows[kVerifyMaxT * PLE_N_HEADS];
+     if (do_ple) {
++        strata::program::host_trace36::Scope h36_PlePrefetch(strata::program::host_trace36::PlePrefetch);
+         int32_t prev[2] = {ss.ple_prev[0], ss.ple_prev[1]};
+         for (int t = 0; t < T; ++t) {
+             ngram_rows(&tokens[t], prev, 1, ss.ple.consts, ple_rows + t * PLE_N_HEADS);
+@@ -2095,6 +2108,7 @@
+     static const bool no_host = [] { const char* v = std::getenv("STRATA_VERIFY_NO_HOST"); return v && *v && std::strcmp(v, "0") != 0; }();
+     const bool ple_precollected = do_ple && !ar_on() && (device_plan_ || no_host);
+     if (ple_precollected) {
++        strata::program::host_trace36::Scope h36_PleGather(strata::program::host_trace36::PleGather);
+         const Clock::time_point tp = Clock::now();
+         if (!ss.ple.table->gather_batch(ple_rows, (size_t) T, h_ple_, err)) return false;
+         std::atomic_thread_fence(std::memory_order_seq_cst);
+@@ -2133,6 +2147,7 @@
+         if (wmode == 1 || (wmode == 2 && first_or_gap)) dpct::get_current_device().queues_wait_and_throw();
+     }
+     ple_input33::submit_begin(ple_input_publication);
++    const uint64_t h36_ReplaySubmit_id=strata::program::host_trace36::begin(strata::program::host_trace36::ReplaySubmit);
+     const dpct::err0 le = (std::getenv("STRATA_VERIFY_EAGER") != nullptr)
+                               ? (record_window(T, cs_, err) ? 0 : 1)   // SYCL port: eager replay of the window body
+                               : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]))))));
+@@ -2147,6 +2162,7 @@
+     /*
+     DPCT1000: Error handling if-stmt was detected but could not be rewritten.
+     */
++    strata::program::host_trace36::end(strata::program::host_trace36::ReplaySubmit,h36_ReplaySubmit_id);
+     ple_input33::submit_returned(ple_input_publication,int(le));
+     trace_ev("LAUNCHED", -1, -1, (int64_t) le);
+     if (le != 0) {
+@@ -2278,7 +2294,9 @@
+     // watchdog then releases every verifier's GPU waits (release_live_verifiers) before it ends the engine, so no
+     // spin kernel outlives the process.  The wait itself stays a blocking sync (a polling wait cost decode upstream).
+     trace_ev("SYNC", -1, -1, 0);
++    const uint64_t h36_ReplayWait_id=strata::program::host_trace36::begin(strata::program::host_trace36::ReplayWait);
+     const dpct::err0 se = DPCT_CHECK_ERROR(cs_->wait());
++    strata::program::host_trace36::end(strata::program::host_trace36::ReplayWait,h36_ReplayWait_id);
+     trace_ev("SYNCED", -1, -1, (int64_t) se);
+     const Clock::time_point t_done = Clock::now();
+     if (std::getenv("STRATA_VERIFY_DEBUG") != nullptr) {
+@@ -2390,6 +2408,7 @@
+     }
+     const bool sampled = !sampling_.greedy && sampling_.temperature > 0.0f;
+     if (head_sampling_ && (sampled || hist_d_ != nullptr)) {
++        strata::program::host_trace36::Scope h36_Sample(strata::program::host_trace36::Sample);
+         SamplerParams sp = sampling_;
+         sp.counter = (uint64_t) pos0;
+         sample_tokens(head_logits_, T, (int) n_vocab_, hist_d_, hist_len_, sp, m_out_, cs_);
+@@ -2590,6 +2609,8 @@
+ void Verifier::set_commit_async(bool on) { g_commit_async = on && std::getenv("STRATA_COMMIT_SYNC") == nullptr; }
+ 
+ bool Verifier::commit(int n_keep, std::string &err) try {
++    strata::program::host_trace36::Frame h36_frame(device_,lb_,le_,last_t_,last_pos0_,reinterpret_cast<uintptr_t>(cs_));
++    strata::program::host_trace36::Scope h36_Commit(strata::program::host_trace36::Commit);
+     const OnDevice on_device(device_);
+     if (n_keep < 1 || n_keep > last_t_) { err = "verify: commit count out of range"; return false; }
+     const Clock::time_point t0 = Clock::now();
+@@ -2599,6 +2620,7 @@
+     if (last_t_ == 1 && one_token_self_commit()) {
+         // a one-token window has advanced the state itself (record_window): no commit graph
+     } else {
++        strata::program::host_trace36::graph_mark(reinterpret_cast<uintptr_t>(commit_exec_),false);
+         std::atomic_thread_fence(std::memory_order_seq_cst);
+         const dpct::err0 le =
+             DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*commit_exec_));
+@@ -2686,6 +2708,8 @@
+ }
+ 
+ bool Verifier::wait_commit(std::string &err) try {
++    strata::program::host_trace36::Frame h36_frame(device_,lb_,le_,last_t_,last_pos0_,reinterpret_cast<uintptr_t>(cs_));
++    strata::program::host_trace36::Scope h36_CommitWait(strata::program::host_trace36::CommitWait);
+     if (commit_pending_) {
+         const OnDevice on_device(device_);
+         commit_pending_ = false;
+--- /dev/null
++++ b/sycl/include/strata/program/host_critical_path_trace.hpp
+@@ -0,0 +1,99 @@
++#pragma once
++// Source36 H: host clocks only. No SYCL dependency, event query, or device wait.
++#include <atomic>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <fcntl.h>
++#include <new>
++#include <pthread.h>
++#include <sys/stat.h>
++#include <time.h>
++#include <unistd.h>
++
++namespace strata::program::host_trace36 {
++inline constexpr size_t capacity = 32768;
++inline constexpr uint64_t max_requests=4;
++static_assert(std::atomic<bool>::is_always_lock_free,"Trace violation flag must be lock-free");
++enum Kind { Request=1, Reset, PromptSpan, Verify, StageInputs, PlePrefetch, PleGather,
++            Capture, CommitCapture, ReplaySubmit, ReplayWait, Sample, LPReadback,
++            LPCPU, Commit, CommitWait, TEmit, DoneEmit, GraphCreate, GraphHit, GraphPreexisting, TPrintf, StdoutFlush, GraphFinalize, CaptureWait };
++struct Context { int dev=-1, lb=-1, le=-1, T=0; int64_t pos=-1; uintptr_t queue=0; uint64_t graph=0; };
++struct Event { uint64_t seq,ns,span; Context ctx; int kind,edge,value; };
++struct Graph { uintptr_t ptr,queue; uint64_t generation; };
++struct State {
++    bool active=false,complete=false,overflow=false,clock_error=false,export_error=false,request_limit=false;
++    std::atomic<bool> on{false};
++    std::atomic<bool> thread_error{false};
++    char dir[4096]{},binding[65]{}; Event* events=nullptr; size_t used=0; uint64_t request=0,span=0;
++    uint64_t rid=0,slotgen=0,graph_seq=0; int64_t prompt=0; int fresh=0,produced=0;
++    pthread_t owner{}; Context ctx{},last_complete{}; Graph graphs[128]{}; size_t graph_count=0;
++};
++inline State& state() { static State s; return s; }
++inline bool enabled() { return state().on.load(std::memory_order_acquire); }
++inline bool writer() { auto&s=state();if(!s.on.load(std::memory_order_acquire))return false; if(!pthread_equal(s.owner,pthread_self())){s.thread_error.store(true,std::memory_order_relaxed);return false;}return true; }
++inline uint64_t now() { if(!writer())return 0;timespec t{};if(clock_gettime(CLOCK_MONOTONIC,&t)!=0){state().clock_error=true;return 0;}return uint64_t(t.tv_sec)*1000000000ULL+uint64_t(t.tv_nsec); }
++inline void event(int kind,int edge,uint64_t span=0,int value=0) {
++    auto&s=state();if(!s.on||!writer()||!s.active)return;
++    if(s.used==capacity){s.overflow=true;return;}
++    s.events[s.used]={uint64_t(s.used),now(),span,s.ctx,kind,edge,value};++s.used;
++}
++inline uint64_t graph(uintptr_t ptr,uintptr_t queue,bool create=false) {
++    auto&s=state();if(!s.on||!writer()||!s.active||!ptr)return 0;
++    for(size_t i=0;i<s.graph_count;++i)if(s.graphs[i].ptr==ptr&&s.graphs[i].queue==queue){if(create)s.graphs[i].generation=++s.graph_seq;return s.graphs[i].generation;}
++    if(s.graph_count==128){s.overflow=true;return 0;}
++    const uint64_t n=++s.graph_seq;s.graphs[s.graph_count++]={ptr,queue,n};return n;
++}
++inline void export_request() {
++    auto&s=state();if(!s.on||!writer()||!s.active)return;
++    char path[4352];std::snprintf(path,sizeof(path),"%s/host-trace36-%ld-%llu.jsonl",s.dir,long(getpid()),(unsigned long long)s.request);
++    const int fd=::open(path,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600);
++    if(fd<0){s.export_error=true;std::fprintf(stderr,"HOST_TRACE36_EXPORT_ERROR request=%llu\n",(unsigned long long)s.request);s.active=false;return;}
++    FILE*f=fdopen(fd,"w");if(!f){::close(fd);s.export_error=true;s.active=false;return;}
++    std::fprintf(f,"{\"schema\":36,\"clock\":\"CLOCK_MONOTONIC\",\"device_clock\":\"not_requested\",\"binding\":\"%s\",\"pid\":%ld,\"request\":%llu,\"rid\":%llu,\"slotgen\":%llu,\"prompt\":%lld,\"fresh\":%d,\"produced\":%d,\"complete\":%s,\"overflow\":%s,\"thread_error\":%s,\"clock_error\":%s,\"events\":%zu,\"capacity\":%zu}\n",s.binding,long(getpid()),(unsigned long long)s.request,(unsigned long long)s.rid,(unsigned long long)s.slotgen,(long long)s.prompt,s.fresh,s.produced,s.complete?"true":"false",s.overflow?"true":"false",s.thread_error.load(std::memory_order_relaxed)?"true":"false",s.clock_error?"true":"false",s.used,capacity);
++    for(size_t i=0;i<s.used;++i){const auto&e=s.events[i];std::fprintf(f,"{\"seq\":%llu,\"ns\":%llu,\"span\":%llu,\"kind\":%d,\"edge\":%d,\"value\":%d,\"dev\":%d,\"lb\":%d,\"le\":%d,\"T\":%d,\"pos\":%lld,\"queue\":%llu,\"graph\":%llu}\n",(unsigned long long)e.seq,(unsigned long long)e.ns,(unsigned long long)e.span,e.kind,e.edge,e.value,e.ctx.dev,e.ctx.lb,e.ctx.le,e.ctx.T,(long long)e.ctx.pos,(unsigned long long)e.ctx.queue,(unsigned long long)e.ctx.graph);}
++    const bool write_error=std::ferror(f)!=0;
++    std::fprintf(f,"{\"footer\":true,\"records\":%zu,\"write_error\":%s}\n",s.used,write_error?"true":"false");
++    const bool final_write_error=std::ferror(f)!=0;
++    const int close_rc=std::fclose(f);
++    if(write_error||final_write_error||close_rc!=0){s.export_error=true;std::fprintf(stderr,"HOST_TRACE36_EXPORT_ERROR request=%llu\n",(unsigned long long)s.request);}
++    std::fprintf(stderr,"HOST_TRACE36_CLOSED request=%llu success=%d\n",(unsigned long long)s.request,int(!s.export_error));
++    s.active=false;
++}
++inline void exit_export() { auto&s=state();if(!enabled()||!writer())return;export_request();std::fprintf(stderr,"HOST_TRACE36_SESSION requests=%llu thread_error=%d export_error=%d request_limit=%d\n",(unsigned long long)s.request,int(s.thread_error.load(std::memory_order_acquire)),int(s.export_error),int(s.request_limit));delete[] s.events;s.events=nullptr; }
++inline bool init(bool serial) {
++    const char*flag=std::getenv("STRATA_CRITICAL_PATH_TRACE");if(!flag||std::strcmp(flag,"0")==0)return true;
++    if(std::strcmp(flag,"1")!=0||!serial||std::getenv("STRATA_VERIFY_EAGER"))return false;
++    auto&s=state();const char*dir=std::getenv("STRATA_CRITICAL_PATH_TRACE_DIR");const char*b=std::getenv("STRATA_CRITICAL_PATH_TRACE_BINDING_SHA256");
++    struct stat st{};if(!dir||dir[0]!='/'||std::strlen(dir)>=sizeof(s.dir)||lstat(dir,&st)!=0||!S_ISDIR(st.st_mode)||!b||std::strlen(b)!=64)return false;
++    for(int i=0;i<64;++i)if(!((b[i]>='0'&&b[i]<='9')||(b[i]>='a'&&b[i]<='f')))return false;
++    s.events=new(std::nothrow) Event[capacity];if(!s.events)return false;
++    std::strcpy(s.dir,dir);std::strcpy(s.binding,b);s.owner=pthread_self();
++    if(std::atexit(exit_export)!=0){delete[] s.events;s.events=nullptr;return false;}s.on.store(true,std::memory_order_release);return true;
++}
++struct Scope {
++    uint64_t id=0;int kind=0;
++    explicit Scope(int k):kind(k){if(enabled()&&writer()&&state().active){id=++state().span;event(kind,1,id);}}
++    ~Scope(){if(id)event(kind,2,id);}
++};
++inline uint64_t begin(int kind){if(!enabled()||!writer()||!state().active)return 0;const uint64_t id=++state().span;event(kind,1,id);return id;}
++inline void end(int kind,uint64_t id){if(id){event(kind,2,id);if(kind==ReplayWait&&writer())state().last_complete=state().ctx;}}
++struct ContextRestore { Context old{};bool active=false;ContextRestore(){if(enabled()&&writer()&&state().active){old=state().ctx;state().ctx.graph=0;active=true;}}~ContextRestore(){if(active&&writer())state().ctx=old;} };
++struct Frame {
++    Context old{};bool active=false;
++    Frame(int dev,int lb,int le,int T,int64_t pos,uintptr_t queue){if(enabled()&&writer()&&state().active){old=state().ctx;state().ctx={dev,lb,le,T,pos,queue,0};active=true;}}
++    ~Frame(){if(active&&writer())state().ctx=old;}
++};
++struct RequestScope {
++    uint64_t id=0;
++    RequestScope(int64_t prompt,int fresh,uint64_t rid,uint64_t slotgen,int64_t requested=64){auto&s=state();if(!s.on||!writer())return;
++        if(s.active)export_request();if(++s.request>max_requests||prompt<1||prompt>2048||requested<1||requested>64){s.request_limit=true;return;}s.used=0;s.span=0;s.complete=false;s.overflow=false;s.clock_error=false;s.produced=0;s.ctx={};s.last_complete={};s.prompt=prompt;s.fresh=fresh;s.rid=rid;s.slotgen=slotgen;s.active=true;
++        id=++s.span;event(Request,1,id);
++    }
++    ~RequestScope(){if(id){event(Request,2,id);export_request();}}
++};
++inline void completed(int produced){if(enabled()&&writer()&&state().active){state().produced=produced;state().complete=true;}}
++inline void token(int id,int64_t pos){if(enabled()&&writer()&&state().active){auto old=state().ctx;state().ctx=state().last_complete;state().ctx.pos=pos;event(TEmit,0,0,id);state().ctx=old;}}
++inline void graph_mark(uintptr_t ptr,bool create){auto&s=state();if(!s.on||!writer()||!s.active)return;bool known=false;for(size_t i=0;i<s.graph_count;++i)known=known||(s.graphs[i].ptr==ptr&&s.graphs[i].queue==s.ctx.queue);s.ctx.graph=graph(ptr,s.ctx.queue,create);event(create?GraphCreate:(known?GraphHit:GraphPreexisting),0);}
++} // namespace strata::program::host_trace36
