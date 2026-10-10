@@ -14612,3 +14612,22 @@ VERDICT -> RealGPUwarm transport progress andnextobserverplanready.
 NEWincremental sink/ACK cursor preservesrawlines/source/PID/sequence and
 fullprefix integrity plusownedfailurebudget, currentV6 unchanged. Allfull
 model/cache/concurrency/profile/latency/shelf goalrequirements stillopen.
+
+
+## 2026-10-10 - Correctedcache warm terminal join fails safely
+
+CONFIG -> ActualfullV6suite75058 firstcapture0, exacttwoGPUmodel warm
+requests and unchanged diagnostic/predicate scope.
+COMMAND -> BothHTTPclientscomplete; actualrun_phase native terminal/drain
+join reachesfailure. Rootreadsterminalchildreport/smallretirementledger.
+RESULT -> child errorValueErrorActualproducerterminals/drainfailed, no phase
+receipts. Actualownedcontainer exits0/removesnormally, retirementfailures0.
+Parentposthealth/newidentity stilllive; no fullcache/firstactorPASS claimed.
+Author receivesexact2.4GBtrace path/ACK184122 forstreamingpredicate
+localization, retainingsequence/PID/request source; no60s timeoutincrease.
+CaptureV5 CPUcompilefailsfakeopaque-pointerarithmetic, oldbytespreserved.
+NEWV6/fakeV4 corrects casts/immutableendpointthunks; CPUbuild85993 live,
+two-domain control distinguishesroutingfix beforeanyGPUload.
+VERDICT -> ActualGPUcache evidence gap andboundednextfix, not assumed
+CPUcausality orpassedstateisolation. Fullmath/concurrency/profile/latency/
+physical/shelf goalactive; QSAplan92ba readyafteravailablelease.
