@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "scope": "One independently owned original embedding residual; synthetic norm=1 and zero down/up; unchanged compiled HC",
+  "run_root": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/native-rms-rsqrt37-owned-v7-run-v1",
+  "report_sha256": "58da27b488ba02c77d9717977d68152a25fd6cff21f278a2336149daa56b462c",
+  "readonly_binding_sha256": "c45571e440fb72e1a9a863c35331fa4b79800b15275692dcdfee2a05344c2ba1",
+  "qualified_lifecycle_and_source": true,
+  "direct_graph_repeat_bitwise": true,
+  "actual_hc_rs_u32_hex": [
+    "430aba1f",
+    "430aba1f",
+    "430aba1f",
+    "430aba1f"
+  ],
+  "separate_shadow_argument_u32_hex": [
+    "3859f0be",
+    "3859f0be",
+    "3859f0be",
+    "3859f0be"
+  ],
+  "source_argument_u32_hex": [
+    "3859f0be",
+    "3859f0be",
+    "3859f0be",
+    "3859f0be"
+  ],
+  "legacy_argument_u32_hex": [
+    "3859f0bd",
+    "3859f0bd",
+    "3859f0bd",
+    "3859f0bd"
+  ],
+  "source_rounded_rs_u32_hex": [
+    "430aba1e",
+    "430aba1e",
+    "430aba1e",
+    "430aba1e"
+  ],
+  "legacy_rounded_rs_u32_hex": [
+    "430aba1f",
+    "430aba1f",
+    "430aba1f",
+    "430aba1f"
+  ],
+  "native_internal_argument_observed": false,
+  "native_rsqrt_accuracy_cause_established": false,
+  "selected_hypothesis": null,
+  "tolerance_gate": null,
+  "full_model_math_qualified": false,
+  "latency_qualified": false,
+  "next_control": "All three preregistered device expressions at same separately computed shadow argument, with original outputs checked against this run"
+}

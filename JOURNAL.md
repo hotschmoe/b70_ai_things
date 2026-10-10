@@ -12913,3 +12913,21 @@ sequence is genuinelyrunning; no RS observation or finalparent result yet.
 Registry165 remains unchanged; no GPU/model run overlaps this owned parent.
 VERDICT -> Currentboundednative arithmetic diagnostic underway; fulloriginal
 fidelity/cache/concurrency/latency/verifiedshelf goal remains active.
+
+
+## 2026-10-10 - Actual RMS direct/graph outputs and full reader close
+
+CONFIG -> Unchanged compiled37 HC, original independent residual, synthetic
+normones/zero down/up; exactobject/link flags and servingimageC388.
+COMMAND -> Actual35193 terminal0/PASS317s. Publicreadonly83248 terminal0/
+PASS; originalreportSHA58da27b488ba02c77d9717977d68152a25fd6cff21f278a2336149daa56b462c,
+readonlybindingSHAc45571e440fb72e1a9a863c35331fa4b79800b15275692dcdfee2a05344c2ba1.
+RESULT -> All3 routes4fields bitwiseequal. ActualHC_RS allfour430aba1f
+(138.72703552246094), SOURCEargument shadow3859f0be, legacyarg3859f0bd.
+NativeRS matchesall3 legacyargument hostcandidates; sourceargument roundedRS
+430aba1e is1ULP lower. Argumentshadow is NOT nativeinternalargument witness;
+no reduction/intrinsiccause or tolerance inferred. Originalcore/math unchanged.
+Ownednormalterminal/posthealth/journal/new4/pages/source/library/receipt joins
+PASS. Newdevice-operation control preregistered separately, unexecuted.
+VERDICT -> Real bounded HC normalization observation narrows firstscale-byte
+investigation; no fulloriginalmath/cache/concurrency/latency/shelf promotion.
