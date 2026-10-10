@@ -1,0 +1,39 @@
+{
+  "schema": 2,
+  "status": "Source/CPU decoder candidate only; original projection/device/helper/runtime unobserved",
+  "files": {
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4",
+    "strata/flash-next/full48_owned_composition_storage_v2.py": "1a26df2aaaf990a33c96fd0ca8961293c211b97d7cd954bfbad49e2707f5ec6b",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/native_storage_first_gdn_estimate_v1.py": "43a2beeafabcd5a8ed040139a5122b7b18d0518b94b3700d4f6601d685e93d2a",
+    "strata/flash-next/own-hc-v2-metadata-localization-v1.json": "9b018661ca9540b2015dbd67e11f97e3948462b35c9ca73980ca434f6aa40e7c",
+    "strata/flash-next/owned-layer3-qsa-control-design-v1.md": "5af6d9f9b6ab1c514006b0c4c4ecea5c4ac7c489c9d00edfdd3f4d8f2aed887b",
+    "strata/flash-next/owned_layer3_qsa_contract_v1.py": "b569823eaeccde8767a3d3106b2d37ff9978be98f8a1a1c480188aae9bf9cb05",
+    "strata/flash-next/prefill_first_gdn_owned_storage_v1.py": "5ca886ac3f1d7786e34699238fb1c1cd8303ae7b0ec4555d0f2dccdfedb20718",
+    "strata/flash-next/qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "strata/flash-next/test_owned_layer3_qsa_contract_cpu_v1.py": "ac018cd9088e2ef044a9b619b123c2e726173c3d5f3b47102cbe15ce937abb68",
+    "strata/flash-next/owned_layer3_qsa_decode_candidate_v2.py": "836badcd87c61f3ca905a7b41ec39cdb291dc0c558dc8a120095daf1a4303ed1",
+    "strata/flash-next/test_owned_layer3_qsa_decode_candidate_cpu_v2.py": "d7748bb7febfb15940e5ced0ed0797eade63e616c94ba1a182745f177c874c80",
+    "strata/flash-next/owned-layer3-qsa-decode-candidate-design-v2.md": "e1159ed1d0d28c8b93bcd45b81cbe101d3884fa75331ce10df2c818bfb352452",
+    "strata/flash-next/owned-layer3-qsa-control-source-plan-v1.json": "1c5a5c40fe1b158398ebda38b9c3a4f2e7829b97516d75fe1509a80e5b70a45d"
+  },
+  "actual_consumed_source_bindings": {
+    "strata/flash-next/qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4",
+    "strata/flash-next/full48_owned_composition_storage_v2.py": "1a26df2aaaf990a33c96fd0ca8961293c211b97d7cd954bfbad49e2707f5ec6b",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/core/verify.cpp": "0bcc118414d8fd275eb169753cd28481f8b2918bd461855cafa4e0c8849773de",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_qsa.dp.cpp": "a935d8edbad66eb341d6e4a1c45fa51a81b9dc8606a062a0b1e95ba0e1318f37",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp": "39185e707d42c844880488aa6e6c5e9ceafaeb0feef7f6b50fd4c7fa8517da36",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_rope.dp.cpp": "009092009b6e880f332151606de1ba27fb69e370abcc4c6dd36011d01cebc38c",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_router.dp.cpp": "a2c0f3c7055fc46388afb1d82d070352baab6dcbb3f8b5ba35818796a12ec140",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/program/generate.cpp": "3bd654c810db957c484d3a206e6eb7d8bbaffa63a8a4aa4bcc1a001b2dee0ccb"
+  },
+  "CPU_test_count": 12,
+  "CPU_test_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_owned_layer3_qsa_decode_candidate_cpu_v2 test_owned_layer3_qsa_contract_cpu_v1 -q",
+  "score_contraction_observed": false,
+  "device_intrinsics_qualified": false,
+  "captured_operands_or_selected_IDs_used": false,
+  "full_model_math_qualified": false,
+  "runtime_ready": false
+}

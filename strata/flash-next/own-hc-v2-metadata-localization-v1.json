@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "scope": "Readonly metrics/source localization; failed V2 remains unqualified",
+  "work_report_path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/owned-hc-device-rs-v2-run-v1/reference-work/work-report.json",
+  "work_report_sha256": "ecf86d1601de2d2207575c5a12dfebbb6970b45feb4d081ceed0ca31acd7823a",
+  "original_failed_parent_report_sha256": "cddd63335ffb23148552a6f352da5247350ffca767520c3a28db4ac51a7e8b0d",
+  "comparison_roster": 577,
+  "device_calls": 386,
+  "selected_metrics": {
+    "p0_l3_input": {
+      "nmse": 1.4263546214389513e-14,
+      "max_normalized": 9.736925791577987e-08,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p0_l3_attention": {
+      "nmse": 1.433745559330577e-14,
+      "max_normalized": 9.738406913489835e-08,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p0_l3_ffn": {
+      "nmse": 6.774362793719436e-13,
+      "max_normalized": 3.8356549233443756e-07,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p0_l4_attention": {
+      "nmse": 7.180697623791122e-13,
+      "max_normalized": 3.7443334536066e-07,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p0_l4_ffn": {
+      "nmse": 3.078386719371218e-10,
+      "max_normalized": 1.8377935319203565e-05,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p1_l5_input": {
+      "nmse": 4.439971203357431e-14,
+      "max_normalized": 2.580534448038197e-07,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p1_l5_attention": {
+      "nmse": 3.927587501221068e-09,
+      "max_normalized": 9.973498722046161e-06,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p2_l5_input": {
+      "nmse": 4.9681066986136994e-14,
+      "max_normalized": 1.265326477850713e-07,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p2_l5_attention": {
+      "nmse": 2.1898167336527486e-08,
+      "max_normalized": 0.0001450350978617213,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p3_l3_input": {
+      "nmse": 2.842955776954198e-14,
+      "max_normalized": 1.5843889941157906e-07,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p3_l3_attention": {
+      "nmse": 8.644661309083935e-10,
+      "max_normalized": 2.611910062541233e-05,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "p3_l3_ffn": {
+      "nmse": 3.3879616034230527e-07,
+      "max_normalized": 0.00036350949488689707,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    },
+    "head": {
+      "nmse": 0.007888246485733295,
+      "max_normalized": 0.05251488383778164,
+      "bitwise_equal": false,
+      "numeric_gate_assigned": false
+    }
+  },
+  "actual_schedule": {
+    "accepted_ids": [
+      248045,
+      8678,
+      198,
+      15666
+    ],
+    "windows": [
+      {
+        "position": 0,
+        "rows": 2,
+        "normal_dispatch": "prompt_verify",
+        "math_route": "verifier",
+        "groups": 1
+      },
+      {
+        "position": 2,
+        "rows": 1,
+        "normal_dispatch": "prompt_verify",
+        "math_route": "verifier",
+        "groups": 1
+      },
+      {
+        "position": 3,
+        "rows": 1,
+        "normal_dispatch": "target_verify",
+        "math_route": "verifier",
+        "groups": 1
+      }
+    ],
+    "fresh_zero_state_required": true,
+    "route_inputs": "acceptedIDs+admittedargs/env+pinnedsource only",
+    "native_route_metadata_used": false,
+    "native_window_group_rounding_emulated": false,
+    "full_model_math_qualified": false
+  },
+  "source_bindings": {
+    "strata/flash-next/qsa_owned_state_storage_v1.py": "cf67609d3efb3fe815f3e75ac8561fa173eb858cb3e64673a5ea013e5fd77d65",
+    "strata/flash-next/ffn_full48_owned_storage_v1.py": "4487bd8a603b21784fc07e47e4498a6f5a7582d317c65f1d0e9c06ffa6495bb4",
+    "strata/flash-next/full48_owned_composition_storage_v2.py": "1a26df2aaaf990a33c96fd0ca8961293c211b97d7cd954bfbad49e2707f5ec6b",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/core/verify.cpp": "0bcc118414d8fd275eb169753cd28481f8b2918bd461855cafa4e0c8849773de",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_qsa.dp.cpp": "a935d8edbad66eb341d6e4a1c45fa51a81b9dc8606a062a0b1e95ba0e1318f37",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp": "39185e707d42c844880488aa6e6c5e9ceafaeb0feef7f6b50fd4c7fa8517da36",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_rope.dp.cpp": "009092009b6e880f332151606de1ba27fb69e370abcc4c6dd36011d01cebc38c",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_router.dp.cpp": "a2c0f3c7055fc46388afb1d82d070352baab6dcbb3f8b5ba35818796a12ec140"
+  },
+  "array_or_model_payload_read": false,
+  "material_threshold_fitted": false,
+  "causal_primitive_qualification": false,
+  "full_model_math_qualified": false
+}
