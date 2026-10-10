@@ -12442,3 +12442,21 @@ no promptsubstitution or fixture/model/state blame. OriginalfailedAPI intact.
 VERDICT -> Concrete arithmetic/scheduling evidence advancesfullgoal; no
 fullmodel/cache/latency/shelf claim. Next RMS/native rsqrt sourcecontrol and
 exactfresh comparison, plus newpair2OFF/ON/serial49 proof. GPU rootcoordinated.
+
+
+## 2026-10-10 - Source37 paired2 OFF closed; matched ON starts
+
+CONFIG -> Same fresh source37 SDK, actualone-adjudication/current1374pair
+baselines, harness40 native2/32token diagnostic, OFF/ON settings matched.
+COMMAND -> ActualOFF78197 terminal0/PASS462s. Rootreadonly audit.parent_arm
+PASS, parentSHA4120b46018352452148a1ab6d3271dcbde373d7487053f3717f0e0656bedb8a6.
+ONCPUprepare22930 PASS; rootleasesON15143 afterOFF terminal, prehealthPASS and
+child896984live. Newprivate reader12CPU/72SHAASCIIAST PASS, trackedb5cb991.
+RESULT -> OFF actualcollection/normalownedterminal/ownerfrees/health/journal/
+new4/pages complete. OFF raw49/Nrowevents remainunobserved bydesign. ON
+requestedNrow/currentgraph/frame/raw49 andeveryactualselected serial49 job
+stillrequired before pairednumerical comparison or4/6 progression. Private
+reader states stdin-cancel timing inferred fromsourcepredicate+actualACK, not
+independentlylogged. Same235 fresh controls/newshared runtime source pending.
+VERDICT -> Actualpairedcontrol closes; matchedobserver arm nowexecuting.
+Originalfullmath/APIcache/quality/profiling/latency/shelf goal stays active.
