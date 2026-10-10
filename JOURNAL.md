@@ -11431,3 +11431,20 @@ and CPUnegatives transparently. This gitcheckpoint preserves original source
 and test provenance; do not rewrite oldexecutedV6/V5/pilot/failedreceipts.
 Pairedcache47979 remainslive, partial turn/parked/eviction/cancel/cancel_decode
 passed; cancellationprefill/live/finalhealth/new4 remain pending. Fullgoal active.
+
+
+## 2026-10-10 - Restore frozen V3 design binding; preserve actual runtime evidence
+
+CONFIG -> V3CPU plan pins designSHA80d9f21da87ae691374fb97a6a03847010e544161029a9ccd13f1128dad78610.
+COMMAND -> Root noticed actualruntime append in e64912d changed frozenrecipe
+document. Restore exact plan-declared design bytes and move completeappend to
+NEW docs/20261010_flashnext_cpu_reference_build_runtime_v3.md. Verify original
+recipeSHA against plan; no recipe/plan/source/binary/runtime receipt changes.
+RESULT -> Frozen designbinding restored; actualfailure and supplementalPASS
+evidence preserved verbatim in newruntime document. Existing compile/source
+checks had not detected this documentationbinding mismatch. Pilot will check
+all design/source closure beforemodel execution. Paired47979 all7 numerical/
+teardownpassed, posthealth/new4 still live and pending.
+VERDICT -> Documentationprovenance correction, no experiment relabel or model
+qualification claim. Use separateactualevidence documents for frozen designs.
+Fullgoal remains active; unrelatedworktree changes preserved.
