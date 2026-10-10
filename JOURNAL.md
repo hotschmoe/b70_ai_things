@@ -13288,3 +13288,21 @@ use20actualscans; no actualupload/SDK/model payload or speed evidence transferre
 VERDICT -> Sourceproposalcheckpoint only, deliberately narrowfutureconsumer
 port pending. Genericpurity contract unchanged. RootH50OFF1874 andinstrumented
 N6prepare5705 remainlive; fulloriginalmath/cache/latency/shelf unqualified.
+
+
+## 2026-10-10 - Actual H50 handoff reaches native leaf; CPU profile closes
+
+CONFIG -> Exact frozenH50 5f719918, native4OFF actual1874; independentpairlease.
+COMMAND -> ChildREADY1791655462.557, parentrealprehealthfinish1791655526.266,
+ACK1791655526.358; finalbyte sealchecks1791655526.807/5527.911 thennativeleaf.
+RESULT -> Actualchild1075593 terminal0, initialcollection/normalteardown true,
+errorNone andownedcontainer removed. Parentposthealth/new4/finalreader pending.
+No originalmath/cache/numeric/cleanlatency proof inferred fromcollection.
+
+COMMAND -> N6instrumentedCPUprepare5705 terminal0 plan
+a62de9a86715a9dcfbdc3bebac461ad904a20c695ce0acad7bd37c59035ca580.
+RESULT -> ActualPStats1455.567s/2.2019Bcalls: original_upload_gate624 invokes;
+parse_trace15600calls/cum1070.613s (~73.55percent), allfromthatgate's5cases
+andduplicatedpositive+3negative controls. Runtimepayload untouched byagent.
+VERDICT -> RealmeasuredCPUbottleneck; immutableparser consumerport nowjustified.
+No matchedspeedup or cleanlatency result yet. Fullcampaign remainsactive.
