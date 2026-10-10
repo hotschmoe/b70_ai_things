@@ -1238,3 +1238,55 @@ Original48 fidelity, all-state cache isolation/eviction/cancellation/persistence
 actual1/2/4/bounded6 qualified serving, x2 critical-path traces, useful natural
 interactive TTFT/gap/completion/fairness A/B results, memory placement tradeoffs
 and reproducible verified shelf remain incomplete. Scope has not been reduced.
+
+
+## 2026-10-10 - Measured admission reuse and current qualification queue
+
+Matched CPU upload-admission benchmarkV2 d321/412 completed PASS172ff115 and
+independent full recollection67464601 passed original worker/current logical/
+SDK/pack byte edges, result equality and fresh negative controls. Two ABBA rounds,
+eight trials/forty calls: repeated-gate median1.255748557s to0.225575324s
+(5.56687x); complete setup/first+four repeats/final closure median9.921671s to
+7.593324s (23.4673percent lower). First call is slower1.238749s to2.659683s.
+This closes a narrow CPU-admission measurement, not complete preparation,
+model/decode/TTFT/fairness or serving latency. Host isolation/OS-coldness unproven.
+BenchmarkV1 failure beforetrial0 on absent ledger hash is preserved.
+
+H53 saved-worker provenance gap remains held. New H54 f7a4/480 passed root/peer
+source/39CPU controls and both six/two-job plans prepared2f547043/3352b279.
+Actual group0 qualifier2165 is live in child semantic admission under pair
+leases; group1 has not executed. Exact8actualprefixes/392all49 comparisons,
+normalteardown/posthealth/newfour and public joins still required. No observed
+solo_migration job; complete cancellation/migration remains separate scope.
+
+Source40 V1 compiler namespace failure and V2 stale-upload-patch refusal remain
+preserved. Corrected SDKd877/b3fe2a93 is valid; current C1401403/source planb7e6
+and upload20e22 explicitly check correct0040V2 patch before admission.
+Fresh plan-bound oracle92202b03 and actualsource40-V3upload65169 passed295s,
+receipt af2cad6be95ce8ad7ede3d1df7b6be31150c787d448a0f688b6cc541eb74f5d1.
+All390sourcepayload/normalowned/health/kernel/newfour gates pass. Actual fresh
+C1401403one/pair and native model observer ON/OFF full48/head remain missing;
+ordinary projection payload readback and original model math remain unqualified.
+Canonical registry still165; new169/171 association is unintegrated/source-only.
+
+Own half actual27860 finalizedPASS5e66575d/1349s; independent publice1789d5c
+passed. Exact expression preserves512 originalF32 values; separate materialized
+F16 store/load matcheshostRNE, allfour fields/direct+two replays bitwise.
+No reference/tolerance/math source modified. Driverprobes733dc7aa and exact
+fullflags save-tempsdb27e681 passed; six direct/wrapper bitcodes captured. Text
+emission was refused; supported newSPIRV recipe704f/286+19+15 has CPU3/source
+checks but no actualtranslation/originalembeddedELF/runtimeISA/cause proof.
+
+Allocator V1 was held on role/coverage/free-race gaps. NewV2 00f9/162+4 source
+and31CPU passed independent review; actualhost-only C++receipt30fb903a passed
+vector bytes/copy/move/size/alignment and real pointer-reuse retirement ordering.
+No native ABI integration or model allocator/runtime/residency/fullpeak proof.
+Full shared V3 remains unsealed: complete actor/signal/suite/fresh/text joins
+are in development; no complete cache or native physical accounting claim.
+
+Completion remains unproven for original48 fidelity; all-state cache including
+independent/shared/divergent/evicted/canceled/restarted/persisted histories;
+actual1/2/4/bounded6 qualified serving; cache/table/expert placement and memory
+tradeoffs; x2 critical-path traces; matched useful natural interactive TTFT/gaps/
+completion/fairness; requalification and reproducible verified shelf/launch/stop.
+The full original objective is unchanged and active.
