@@ -1190,3 +1190,13 @@ latency/fairness and reproducible verified shelf remain incomplete.
 Historical read-only permission paragraphs above no longer apply to the resumed
 session. Own coherent history checkpoints4b0cb54 and9e7e89f are pushed, with
 unrelated dirty files preserved. This update makes no new completion claim.
+
+
+## 2026-10-10 - Actual serial roster correction
+
+The native4 ON artifact has eight jobs in two bounded groups: four admission
+prefixes59 and four later prefixes60, requiring392 all49 vector comparisons.
+Earlier references to three jobs counted the metadata object's fields and were
+wrong. Actual serial-jobs SHA5765f0701d4fd7a779c951583cf7a85fa34dbb397e427e220aff292ce2c55f7e.
+No solo_migration job is observed; actual cancellation/migration qualification
+remains a separate missing full-goal gate. Existing artifacts stay unchanged.

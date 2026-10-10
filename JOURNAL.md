@@ -13510,3 +13510,25 @@ VERDICT -> Preserve frozenV1/nonruntime; new owned lifecycle successor must
 close exactmarker/roster/stat/reread/F16widening joins and all original
 source/runtime/health/EOF/teardown/full4 gates before execution admission.
 QSA46835 stilllive finalsourceadmission, no secondGPU/modelactor.
+
+
+## 2026-10-10 - Correct actual serial roster; half V2 peer ready
+
+CONFIG -> Actual native4 ON child/serial-jobs.json, unchanged original output.
+COMMAND -> Agent metadata inspection plus root independent JSON/SHA read.
+RESULT -> Eight actual jobs, not three: admission RID2001..2004 prefix59 and
+later RID2001..2004 prefix60. Actual SHA256
+5765f0701d4fd7a779c951583cf7a85fa34dbb397e427e220aff292ce2c55f7e.
+Two groups under the original six-job bound;392 all49 comparisons required.
+Earlier three-job statements counted top-level metadata fields and were wrong.
+No solo_migration job exists; do not invent one or claim that gate passed.
+VERDICT -> H51 must consume all eight actual jobs; full cancellation/solo
+migration qualification remains a separate explicit full-goal requirement.
+
+CONFIG -> New half lifecycle52dbb91d/274repo+19source.
+COMMAND -> Root154CPU PASS2.318s; peer154PASS2.299s/allbindings0mismatch.
+RESULT -> Strict input/marker/roster/raw/F16widening and original lifecycle
+source/health/EOF/full4 gates reviewed. CPU fixture preparation14303 is live;
+QSA46835 remains sole pairedGPU/model coordinator in final source validation.
+VERDICT -> Source-ready for isolated compile and fresh diagnostic after leases
+free. No actual half compile/run, lowering cause or candidate correction.
