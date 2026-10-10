@@ -1118,3 +1118,35 @@ and all5actual production QSA object flags match admitted SDK metadata. Source
 freeze, peer review, compilation, independent own original projection work,
 actual device operations and strict final readers still remain required.
 Fullmodel math/cache/1-2-4-bounded6/fairness/profile/latency/shelf remain open.
+
+
+## 2026-10-10 - Actual native4 OFF and original QSA producer milestones
+
+H50 native4 OFF parent1874 completed PASS1339s. Independent current source/
+byte/READY/health/ACK/EOF/normal-owned/identity reader5003 passed binding
+57caeb3d86dd901fa9349a343b0aeccf32b1085217230e4ec8a71ae88ea33975.
+This closes the OFF collection/lifecycle arm, not complete concurrent numeric
+or prefix-cache qualification. Native4 ON1577 is live; exact-prefix all49
+serial controls and bounded6 remain required after collection.
+
+QSA standalone helper isolated compile29705 passed22s on leased/pinned card0,
+with fresh ELF/owned normal removal. Corrected own original projection producer
+8162 passed790s, report61041a2990c6f1b172ff1e8de8f9187805ac4279349e9082fd48136816c31ab3.
+It retains the exact first10240 normalized/2880Q81 gate and publishes four
+own-original layer3 Q/K/V/indexer/gamma/state rows. Prefix4 head NMSE remains
+0.007888246485733295, nonbitwise/unqualified. Independent producer reader49222
+is live; actual standalone device comparisons and native-target observer
+compilation/ON-OFF/raw/source/health/new4 qualification remain missing.
+
+The required native6 CPU plan prepared successfully under instrumentedcProfile:
+a62de9a86715a9dcfbdc3bebac461ad904a20c695ce0acad7bd37c59035ca580.
+Measured15,600 trace parses from624 identical fivecase admission loops dominate
+about73.55percent of instrumented time. No matched clean speedup is claimed.
+Immutable worker V2 passed root/peer34CPU; consumer36beb0 remains HOLD on a
+reproduced exact-class method-shadow bypass despite45CPU/all376SHA passing.
+Fresh successor and actual admission/config-matched timing remain required.
+
+Complete original model math, complete-state cache and physical accounting,
+actual1/2/4/bounded6 qualified serving, x2 critical-path traces, natural useful
+interactive fairness/latency comparisons and reproducible verified shelf remain
+open. All earlier source/failure evidence and unrelated changes are preserved.
