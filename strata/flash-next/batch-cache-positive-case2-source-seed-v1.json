@@ -1,0 +1,109 @@
+{
+  "schema": "source-only-positive-handoff-seed-v1",
+  "source_lane": "source35",
+  "slots": 2,
+  "kind": "api",
+  "genuine_runtime_preparable": false,
+  "tokenizer_fixture_required": "NEW authentic source35 locked tokenizer/template CPU fixture for exact below messages; tokenIDs absent deliberately",
+  "warm_request_policy": {
+    "strata_fresh": true
+  },
+  "target_request_policy": {
+    "strata_fresh": false
+  },
+  "messages": {
+    "warm": [
+      [
+        {
+          "role": "system",
+          "content": "Warm-only independent cache owner W0. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. "
+        },
+        {
+          "role": "user",
+          "content": "Warm owner W0: count upward in words for this warmup."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Warm-only independent cache owner W1. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. Use this unique warm-owner namespace only. "
+        },
+        {
+          "role": "user",
+          "content": "Warm owner W1: count upward in words for this warmup."
+        }
+      ]
+    ],
+    "target": [
+      [
+        {
+          "role": "system",
+          "content": "Target-only independent cache owner T0. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. "
+        },
+        {
+          "role": "user",
+          "content": "Target owner T0: count upward in words, continuing until the client ends this request."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "Target-only independent cache owner T1. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. Use this unique target-owner namespace only. "
+        },
+        {
+          "role": "user",
+          "content": "Target owner T1: count upward in words, continuing until the client ends this request."
+        }
+      ]
+    ]
+  },
+  "warm_max_new_by_request": [
+    32,
+    32
+  ],
+  "target_max_new_by_request": [
+    64,
+    64
+  ],
+  "cancel_index": 0,
+  "cancel_trigger": "actual armed completed2row source event; no synthetic timer",
+  "solo_survivor_logical_index": 1,
+  "declared_counter_policy": [
+    {
+      "logical_index": 0,
+      "role": "admission",
+      "values": {
+        "reused": 0,
+        "read_from": 0,
+        "reread_to": -1
+      },
+      "prerequisite": "authentic distinct checkpoint-prefix fixture admission"
+    },
+    {
+      "logical_index": 1,
+      "role": "admission",
+      "values": {
+        "reused": 0,
+        "read_from": 0,
+        "reread_to": -1
+      },
+      "prerequisite": "authentic distinct checkpoint-prefix fixture admission"
+    },
+    {
+      "logical_index": 1,
+      "role": "solo_migration",
+      "values": {
+        "reused": "prompt_minus_one",
+        "read_from": "prompt_minus_one",
+        "reread_to": -1
+      },
+      "prerequisite": "real matching last-live BCHAIN restored donor and source generation, complete49 cached/fresh"
+    }
+  ],
+  "initial_prefill_scope": "distinct independent sessions; shared/divergent publicprefix requires separatecase",
+  "numerical_scope": "all48/fullhead at initial/later/solo source-selected consumedprefix vs actualfresh cacheOFF controls",
+  "cached_handoff_runtime_qualified": false,
+  "full_model_math_qualified": false,
+  "stale_session_and_model_negatives_required": true,
+  "exact_victim_eviction_required_in_separate_cache_case": true
+}

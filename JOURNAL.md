@@ -11831,3 +11831,26 @@ ongoing, no cachedhandoff numerical claim. Currentcanonicalregistry unchanged.
 VERDICT -> All one/pair2/4/bounded6 native diagnostic plans nowready ormeasured
 within declaredscopes; actualremaining runtime+parity and publicAPI/cache,
 fullmath, profiling, matchedlatency and shelf remain required. Goalactive.
+
+
+## 2026-10-10 - Native4 serial0 closed294 proof and authentic cache-positive inputs
+
+CONFIG -> Frozen V9 freshcacheOFF numerical serial0 sixjobs, exactsource35.
+Positive cachedhandoff source proposal55files/6CPUcontrols, no runtime claim.
+COMMAND -> Parent78416 terminal0/PASS493s; NEWreadonly40252 PASS294 pairs,
+originaltreehash/stat unchanged. Lease74445 acquired for remainingtwo serial1.
+Root CPU-only tokenizer V1 failed stdlibshadow tokenize.py; preservedreceipt,
+normalexit1/removed/noGPU. NEWV2 samecode safe render_cache_fixture.py, exact
+c388 image/source tokenizer+frontend+originalpacktokenizer, noGGUF/GPU mounts.
+RESULT -> V2 terminal0/PASS normalremoved, no devices/device requests. Genuine
+warm inputs231/231 andtarget235/235, seed/tokenizer hashesmatch. Fixture:
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/cache-positive-tokenizer-fixture-v2/fixtures.json
+SHA 1662f43ee1a5edf380bb1f602b1d2b0e3ca996faa922dc7433d8c1026cf53f42.
+Initialcheckpoint nonreuse remainsunqualified; source LCP/boundary checks and
+positivecontroller required. Source-only571be0d9d72a4aa3a44ce78a0cc12bfa175bd3cc875c00f31e4fd2910d047444
+closure verified55files ASCII/AST/SHA; CPU6PASS. New proposalrequires genuine
+last-live restore/donorRID/gen/chain bytes+positive counters andfresh49control;
+no recompute/checkpointfallback counted aspositive cachedhandoff.
+VERDICT -> Actual294 native4 comparison proofclosed; remaining98 underway.
+Authenticpositive cache corpusnowexists, fullstate cachedhandoff runtime still
+required. Fullmath/API/4-6concurrency/cache/profiling/latency/shelf goalactive.
