@@ -1,0 +1,169 @@
+{
+  "API_cache_latency_shelf_qualified": false,
+  "GPU_or_native_model_math_qualified": false,
+  "actual_return_code": 0,
+  "actual_session_id": 50448,
+  "all16_measurement_cases_passed": true,
+  "all_owned_launches_retired": true,
+  "artifacts": {
+    "observe/report.json": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/api-positive-overlap-cpu-observed-retry-v3-run-v1/observe/report.json",
+      "sha256": "cd7309fd1b383957f24f7825a574df5442f9a51beacc5ad3e9a4f168125e1e73"
+    },
+    "report.json": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/api-positive-overlap-cpu-observed-retry-v3-run-v1/report.json",
+      "sha256": "1ddfa62231906f5bce3462c729308874be13a7f6d1fafd9b4030eb1ebe415cd5"
+    },
+    "screen/report.json": {
+      "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/api-positive-overlap-cpu-observed-retry-v3-run-v1/screen/report.json",
+      "sha256": "b771e30775dbb93a4b65588979cb0b2f36df5b04cba8969315bd8346e939b9b3"
+    }
+  },
+  "case_outcomes": [
+    {
+      "case": 0,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 0,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    },
+    {
+      "case": 1,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 1,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    },
+    {
+      "case": 2,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 2,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    },
+    {
+      "case": 3,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 3,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    },
+    {
+      "case": 4,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 4,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    },
+    {
+      "case": 5,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 5,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    },
+    {
+      "case": 6,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 6,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    },
+    {
+      "case": 7,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 0,
+      "stop_type": "limit"
+    },
+    {
+      "case": 7,
+      "continuation_eligible": false,
+      "output_tokens": 64,
+      "passed": true,
+      "repeat": 1,
+      "stop_type": "limit"
+    }
+  ],
+  "causal_swap_attribution_qualified": false,
+  "continuation_screen_passed": false,
+  "fresh_repeat_and_token_decode_passed": true,
+  "independent_binding": {
+    "path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/api-positive-overlap-cpu-observed-retry-v3-readonly-binding-v1.json",
+    "sha256": "68de34a5435091418c5d36034ff6d038b6b276aac60be35d21d92d16302ebf1d"
+  },
+  "late_artifact_changes": [],
+  "observer_sample_count": 464,
+  "original_failed_runs_rewritten": false,
+  "owned_observer_samples": 238,
+  "owned_recoveries": 0,
+  "post_terminal_full_four_passed": true,
+  "reported_wrapper_seconds": 1066,
+  "schema": 1,
+  "selected_candidate": null,
+  "source_plan_sha256": "2e36b8abbcd32f6163f84fb41a201f819b42352cca5c787a22e6ac7b9a8dc21c"
+}
