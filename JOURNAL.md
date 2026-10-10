@@ -13028,3 +13028,24 @@ never restarted on silence. No other model/GPU actor live at launch.
 VERDICT -> Genuine four-stream experiment advances; actual runtime/parity/
 health/postidentity results pending. No dev-loop speed, fullmath/cache/API/
 latency/shelf claim. Full original goal remains active.
+
+
+## 2026-10-10 - H47 frozen and observed CPU retry cleanup corrected
+
+CONFIG -> Original goal intact; H46 actual native4 parent19472 remains live
+with165 registry. No new simultaneous GPU/model actor. Explicit H47 pack
+byte epochs retain original C137/private/serial producer provenance.
+COMMAND -> Root51 CPU controls and224 SHA bindings PASS, plan
+aa00f18bc1b06f27f646bfe4d6aa0d5dcaf1e3528818a17ae3dd783690318d24;
+source checkpoint9ef95a6 pushed. Independent review requested before runtime.
+RESULT -> Corrected subprocess cleanup kwargs and old dynamic selection call
+are covered by exact callable-signature and source equivalence controls.
+Witness parent/child byte boundaries are independent and process-local;
+between-boundary mutation remains explicitly unobserved. No speed measured.
+Passive observerV3 peerREADY0b4fa9e0/128/14CPU. RetryV1 peerheld for unprotected
+idle and timeout escaping cleanup/report. NEW V2 f050f41c/136/19combinedCPU
+protects idle, installs handlers first and records timeout while retaining
+exclusion through actual owned joins. V1 remains unchanged/unexecuted.
+VERDICT -> Source/CPU progress, review/runtime pending. Same-recipe all16 CPU
+continuations, original math, fullcache/API1/2/4/6, x2 critical path, matched
+latency/fairness and verified reproducible shelf remain required.
