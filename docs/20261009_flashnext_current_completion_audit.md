@@ -1094,3 +1094,27 @@ New independently checked artifacts (under f17-source37-20261010):
 - api-positive-overlap-finite-observed-v5-run-v1/screen/report.json: 1c235b28cd82f132e34f98af798ef73137271f70488c801dcdf31af2c0514424
 
 - api-positive-overlap-finite-v3-screen-readonly-binding-v1.json: 6149753f3aedff89995f6fde1271175616c4734cb58657d0fccf57aea372f701
+
+
+## 2026-10-10 - H49 terminal failure and independently reviewed H50
+
+H49 native4 OFF finished FAILED before any model leaf: child semantic admission
+lasted467.63s, exceeding the unchanged300s pre-health age. Parentposthealth,
+kernel, owned normal retirement, fresh complete4 and known-page guards passed.
+Actual parent0e405b27 and postidentity192b7010 remain failure/lifecycle evidence;
+no concurrent/numeric or speed proof. See the new H49 failure document.
+
+H50 source5f719918/331 is now independently reviewed READY at SOURCE/PREPARATION
+scope. Root109CPU PASS1.100s, peer109CPU PASS1.118s, all331hashes unchanged.
+It schedules actual strict+compiledpair health after exact owned child READY,
+then ACK and fresh byte boundaries before leaf. Health age remains300s before/
+after seals and immediately before leaf; saved reader requires original
+READY/ACK/health/journal/raw/source/EOF/ownership/byte/full4 chronology.
+Native4/6-only; no API, serial or source39 runtime scope is transferred.
+Actual OFF15923/ON80579 CPU preparation remains live; no GPUmodel actor.
+
+QSA V4 producer/device qualifier remains a draft: root9small CPU controls pass
+and all5actual production QSA object flags match admitted SDK metadata. Source
+freeze, peer review, compilation, independent own original projection work,
+actual device operations and strict final readers still remain required.
+Fullmodel math/cache/1-2-4-bounded6/fairness/profile/latency/shelf remain open.
