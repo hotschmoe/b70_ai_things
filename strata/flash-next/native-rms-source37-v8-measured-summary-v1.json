@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "scope": "Three device expressions at the same separate FMA/XOR shadow argument; original HC unchanged",
+  "run_root": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f17-source37-20261010/native-rms-rsqrt37-owned-v8-run-v1",
+  "report_sha256": "8f070f780a63eae2d92abdd98e62d2ecfc36ab1a95a81ade055d3b184fdf9c90",
+  "readonly_binding_sha256": "3129cfd8c78a29e3cf9bd6f8792d9f93154439efe92c950ab871afbd5b9902bc",
+  "qualified_lifecycle_and_source": true,
+  "comparison": {
+    "all_routes_bitwise": true,
+    "original_HC_and_four_fields_bitwise": true,
+    "source_expressions": {
+      "device_rsqrt_shadow": "sycl::rsqrt(x)",
+      "device_native_rsqrt_shadow": "sycl::native::rsqrt(x)",
+      "device_recip_sqrt_shadow": "1.0f/sycl::sqrt(x)"
+    },
+    "comparisons": {
+      "device_rsqrt_shadow": {
+        "bytes_equal_actual_HC_RS": true,
+        "sha256": "32fd848f00d981c7d10403178bcad18775ae4cd00046a010885248eff6b8607c",
+        "raw_u32": [
+          1124776479,
+          1124776479,
+          1124776479,
+          1124776479
+        ]
+      },
+      "device_native_rsqrt_shadow": {
+        "bytes_equal_actual_HC_RS": true,
+        "sha256": "32fd848f00d981c7d10403178bcad18775ae4cd00046a010885248eff6b8607c",
+        "raw_u32": [
+          1124776479,
+          1124776479,
+          1124776479,
+          1124776479
+        ]
+      },
+      "device_recip_sqrt_shadow": {
+        "bytes_equal_actual_HC_RS": false,
+        "sha256": "f3990f2e9cfee9b1c951524ff775b224ef10d43b9474ba487238451f995d815d",
+        "raw_u32": [
+          1124776478,
+          1124776478,
+          1124776478,
+          1124776478
+        ]
+      }
+    },
+    "actual_HC_RS_u32": [
+      1124776479,
+      1124776479,
+      1124776479,
+      1124776479
+    ],
+    "separate_argument_u32": [
+      945418430,
+      945418430,
+      945418430,
+      945418430
+    ],
+    "internal_HC_argument_observed": false,
+    "device_instruction_lowering_observed": false,
+    "tolerance_gate": null,
+    "full_model_math_qualified": false
+  },
+  "native_internal_argument_observed": false,
+  "general_intrinsic_accuracy_qualified": false,
+  "full_model_math_qualified": false,
+  "latency_qualified": false
+}

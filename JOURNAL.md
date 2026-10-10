@@ -12980,3 +12980,21 @@ is explicit; children/runners retain currentsemantic checks. APIcache0 purpose
 refusedprelease; separatecorrect APIpurpose stillneeded forfullgoal.
 VERDICT -> Source/CPU only, peerreview and actualprepare/run pending; no4/6
 completion or dev-loop/serving speed claim. V8deviceop actual94059 stilllive.
+
+
+## 2026-10-10 - Device expressions resolve bounded RS difference
+
+CONFIG -> Same independentoriginal input, unchangedactualHC/library/flags;
+three eagerdevice expressions at separateargument3859f0be, original4V7targets.
+COMMAND -> Actual94059 terminal0/PASS325s; publicreadonly28938 terminal0/
+PASS. ReportSHA8f070f780a63eae2d92abdd98e62d2ecfc36ab1a95a81ade055d3b184fdf9c90;
+bindingSHA3129cfd8c78a29e3cf9bd6f8792d9f93154439efe92c950ab871afbd5b9902bc.
+RESULT -> All7 fields/3routes bitwise repeat, original4 exactlyV7. Device
+rsqrt/native::rsqrt both430aba1f matchactualHC; explicit1/sqrt430aba1e
+matches sourceargumentroundedhostcandidate. No actualHCinternalargument or
+instruction lowering observed, no generalaccuracy/fittedtolerance inferred.
+Posthealth/ownednormal/journal/new4/pages/source/runtime/receipt joins PASS.
+Root genuineH46native4OFF CPUprepare79819 started fromsameC137/private196
+actualprerequisites andnewfullysource-guarded modelidentity.
+VERDICT -> Deviceoperation observation narrows independentreference math
+contract; no backendmathchange/fullmodel/cache/latency/shelf qualification.
