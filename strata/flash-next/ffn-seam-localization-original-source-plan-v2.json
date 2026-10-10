@@ -1,0 +1,48 @@
+{
+  "schema": 2,
+  "status": "READY CPU source; actual conditional original payload execution unobserved",
+  "files": {
+    "strata/flash-next/localize_ffn_seams_original_v2.py": "3b0d4700a3274863eb0fcd03bd8c37c4fd6edfd95d10e916ee9c8112a28719bc",
+    "strata/flash-next/test_localize_ffn_seams_original_cpu_v2.py": "e3643d03788dc2f3a843e1c49847de95bb0d144bebb9a33082e65b0abb70c263",
+    "strata/flash-next/ffn-seam-localization-original-design-v2.md": "5c661012439759f790511dc55c3f8392f6a061d66cdab3091bc4e310dbd69a23",
+    "strata/flash-next/explore_full48_original_routes_v1.py": "ec57aa9750beacc3ad260bed78153e1c2043fa34ccafbdd306e813a7cb148c52",
+    "strata/flash-next/full48_owned_composition_storage_v2.py": "1a26df2aaaf990a33c96fd0ca8961293c211b97d7cd954bfbad49e2707f5ec6b",
+    "strata/flash-next/full48-original-route-reference-source-plan-v2.json": "7676d9ebf641df4b41be36aa9286a5f65188681fa91d37c0fe30536a86c12ec6",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "strata/flash-next/localize_ffn_seams_original_v1.py": "1a6b2f446c96b08b5cbbf36a6631197a9751dfc54c10d84bf5bc372b724118ba",
+    "strata/flash-next/ffn-seam-localization-original-source-plan-v1.json": "a0914bde24d673506ba68e12d005d6e2c32c05196a8f722aa627a8ec2f52abcb"
+  },
+  "selected_absolute_position": 1,
+  "conditional_layers": [
+    1,
+    2,
+    4,
+    10
+  ],
+  "accepted_completed_original_prefixes": [
+    2,
+    4,
+    8
+  ],
+  "case_count": 8,
+  "cases": "four native-attention conditional +four saved-own-attention bitwise replay",
+  "public_inputs": "exact completed original reportSHA +current P30V4/source35/C113 +locked original rows",
+  "storage_route_inputs": "saved admitted plan args/env +accepted IDs+pinned source3; never captured native routes",
+  "captured_inputs_used": true,
+  "native_selected_ids_used": false,
+  "native_mixed_or_packet_observed": false,
+  "complete_owned_reference": false,
+  "full_model_math_qualified": false,
+  "numeric_pass_claim": false,
+  "tolerance_gate": null,
+  "maximum_weight_tile_bytes": 67108864,
+  "actual_original_weight_payload_reads": 0,
+  "actual_GPU_Docker_runtime_git_execution": false,
+  "V1_and_complete_original_references_preserved": true,
+  "new_postCPU_source4_and_knownpages_required": true,
+  "postCPU_source3_code_stat_required": true,
+  "cpu_tests": 21,
+  "cpu_command": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 -m unittest discover -s strata/flash-next -p 'test_localize_ffn_seams_original_cpu_v2.py'"
+}

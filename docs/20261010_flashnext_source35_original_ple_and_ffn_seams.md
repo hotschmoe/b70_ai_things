@@ -151,3 +151,41 @@ with explicitlyconditional diagnostic, preserve fullown reference. Prefix4/8,
 complete-state cachegroups/concurrency and x2-method criticalpath/clean latency/
 verifiedshelf remain required. No tolerance, fullmath, quality or speed claim.
 See docs/20261010_flashnext_source35_trace_coverage_audit.md.
+
+
+## 2026-10-10 - Longer original prefixes expose fidelity gap; paired basic PASS
+
+CONFIG -> Same source35 exactoriginal routeV2 prefix4/8 ownzero mathematics;
+no native values used in complete reference. Separate row1 conditional FFN V2
+prefix2 atlayers1/2/4/10, source35 paired cacheV7 basic2048/64/65536 FP16.
+
+COMMAND -> Original4 77913/8 37298 terminal0 +newpostCPUfull4/source3/pages;
+conditionalCPU21/11-file closure, real8case35701 terminal0/newfull4/pages.
+Paired basic1748 terminal0 andgenuine rawrecollection72525. Actual native
+prefix2vs4 first2 rows publicrecollection80855. Newrootcacheparent95907.
+
+RESULT -> Prefix4 headNMSE.00932149853017/max.0627542661573, argmaxDIFF,
+KL.106027145542/TV.225238467082. ReportSHA
+ad23c7444e7436594e740ce696968d6bac82b796f3c978e138ec16403a5fabe4.
+Prefix8 headNMSE.0524038742028/max.0779862658651, top10overlap7.
+ReportSHA c846fd45044a2b7b47000b91982797e1ea739ccaa9409008025278a642139445.
+Both source3/page/newfull4 proofsPASS/errors[], NO numericalqualification.
+Near-certain prefix8 headerargmax agrees/tinyTV, which doesnot negate logitsgap.
+Native sharedfirst2 rows ALL288 vectors BITWISE acrossprefix2T1 andprefix4T2;
+firstbigger prefix4 row3L0 attentionNMSE2.6214e-6/FFN8.8696e-6.
+Conditionalrow1 FFN4cases NMSE1.24e-15..3.93e-15; all4 owned replaysBITWISE,
+estimatedmixedpacketSHAs differ atall4layers. ActualGPU packets unobserved.
+SeamreportSHA e42050023c435e86a2343073777c706ade77e32c910aa2e6d090b19200cfac61.
+Pairedbasic PASS500s/naturaloutputs/LP20/observerhead/full48/teardown/posthealth/
+kernel/newfull4 PASS; publicrawrecollection PASS. ChildSHA
+e27fd832c47de33e7ee38961a7f649a0b77d64ccfbd2d3b4377b31bbbc915bf9.
+Rootcache one parent95907 nowlive, sharedrootfreshvsreuse diagnostic.
+
+VERDICT -> Larger reference discrepancy ismaterial; cannotdismiss as harmless
+rounding or assign PASS. ConditionalFFN agreement supports incomingdifference/
+quantization amplification, notcomplete-modelquality. Sourceaudit finds GDN
+T2 deferredcommit versusT1selfcommit, bothF32/sameintendedrecurrence; no proved
+semantic/storage bug justifieschanging reference/kernel. FreshSYCL state-transition
+leaforacle preparation willtest actualstate/output path parity independently.
+Cache/shared-root native consistency remains a diagnostic, notoriginalfidelity/
+production cache proof. Fullgoal/cache/concurrency/profiling/latency/shelf pending.
