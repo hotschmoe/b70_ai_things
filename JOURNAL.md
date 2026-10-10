@@ -12798,3 +12798,19 @@ screen actualrawstop_type/all16/seed1234/source/normalowned/memory proof source
 nowcommitted; oldresponse/continuation/GPU proofs do nottransfer.
 VERDICT -> Rejected drafts preserved; CPU wrapper smoke and independent
 screen review pending. Fullgoal staysactive with scoped private196 established.
+
+
+## 2026-10-10 - C139 final-header gate succeeds; CPU wrapper smoke passes
+
+CONFIG -> New C139 V2 consumer, unchanged fresh39 code/build86bc/receipt5908.
+COMMAND -> Root37CPU and100/101 sourceSHA PASS; actualmetadata gate18001
+terminal0/PASS. Original28 headerpayload provenance plus new2 retained, all30
+actualconsumedheaders match final66 ledger; exactly2 source38 modifications.
+Genuine CPU wrapper27433 terminal0/PASS at api-positive-overlap-cpu-wrapper-
+preflight-v1, with all8 authentic renders/CPUsoftware but no model/GPU.
+RESULT -> C139 oldmetadatafailure preserved; no nativeABI rebuild required
+for corrected consumer. Fresh oracle/upload/new1392 baselines remainpending.
+CPU continuation remainsfalse/unobserved until all16 actualfreshcases finish.
+Registry86621 unchanged while pending source37 RMS experiment depends on it.
+VERDICT -> Source-admission and non-model smoke advance; full original goal
+active. No serving/cache/latency/quality/shelf claim assigned.
