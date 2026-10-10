@@ -14861,3 +14861,20 @@ Actual_direct_launch_module_provenFalse/historicalJITFalse explicitly.
 VERDICT -> ActualGPUbundlecodeobservables andunchangednumericoutput, useful
 nextdisassembly; noactualhistoricalJITcausal/modelmathqualification. Corrected
 QSA V4prepare14476CPUlive, sourcepeerpending; fullgoalactive.
+
+
+## 2026-10-10 - Retrieved new runtime bundle expression assembly
+
+CONFIG -> Newhelperc2c34/source9712 originalkernelbodies/input/output,
+ordinaryexecutablebundle modulequery; nohistorical/directlaunchidentity claim.
+COMMAND -> ActualGPU87832 finalizedPASS141s reportf7754ea5d4b39cdcdede77d23fdd2984d095381480756ba3572aa47e113be670
+all12bytes/normalowned/preposthealth/kernel. Exactretrievedexpressionmodule2
+43ebbe9a disassembledactual2338 terminal0/PASS10s undercard0lease.
+RESULT -> Disasm66a833cd1be317919187774c9b2995764043acb92f319666dbb7c9304fdd14a2;
+actualnewruntimebundleexpressionassembly loadsF32 tor12 thenstoresunchanged
+r12:2, no halfconversion in data path. Mirrorsofflinecontrolbutnowqueried
+fromsuccessfulnewGPUprocess executablebundle. Zero UUIDs and lackofdirect
+launchhandle retained; mappedlibraryfreshbytecensus missingexplicitly.
+VERDICT -> Strongernew-replaybundlelowering evidence, nohistoricJITcause/
+fulloriginalmodelmathqualification. QSA V4heldpeerJSONfilefixedpoint gap;
+NEWV5 needed, oldceddsource/preparation preserved. Fullgoalactive.
