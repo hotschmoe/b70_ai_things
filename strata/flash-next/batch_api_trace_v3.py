@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""NEW buffered actual API/native observer; unchanged request/scheduler/math semantics."""
+import hashlib,json,os,struct,subprocess,sys,threading,time
+from buffered_api_trace_sink_v3 import BufferedTrace
+from pathlib import Path
+
+def token_sha(ids):return hashlib.sha256(b''.join(struct.pack('<I',int(t)) for t in ids)).hexdigest()
+
+class PipeObserver:
+ def __init__(self,raw,callback,direction):self.raw=raw;self.callback=callback;self.direction=direction
+ def __getattr__(self,name):return getattr(self.raw,name)
+ def write(self,text):
+  for line in text.splitlines():self.callback(self.direction,line)
+  return self.raw.write(text)
+ def __iter__(self):
+  for line in self.raw:self.callback(self.direction,line.rstrip('\n'));yield line
+ def readline(self,*a):
+  line=self.raw.readline(*a)
+  if line:self.callback(self.direction,line.rstrip('\n'))
+  return line
+
+def main():
+ sys.path.insert(0,'/src');from serve import server
+ from c1_trace_contract import pinned_eos
+ cfg=json.loads(Path(sys.argv[sys.argv.index('--config')+1]).read_text());eos=pinned_eos(cfg);trace=Path(os.environ['B70_BATCH_TRACE']);combined=Path(os.environ['B70_BATCH_NATIVE_LOG']);lock=threading.Lock();local=threading.local();counter=[0];seq=[0]
+ sink=BufferedTrace(trace,combined,interval=0.1);stop_arm=threading.Event()
+ def emit(row):return sink.emit(row,semantic=row.get('kind') in ('engine_begin','engine_end','engine_close'))
+ # Parent requests ARM only after actual client/native warm terminals. The
+ # producer observer owns the shared log lock, so this marker cannot split a UR
+ # line or move ahead of a previously received producer line.
+ arm_request=Path(os.environ['B70_BATCH_ARM_REQUEST']);arm=Path(os.environ['B70_BATCH_ARM'])
+ def arm_control():
+  while not arm_request.is_file():
+   if stop_arm.wait(0.05):return
+  sink.marker('HARNESS ARM after actual unarmed multi-row terminal')
+  arm.write_text('ARM actual same-process warm terminal\n',encoding='ascii')
+ arm_thread=threading.Thread(target=arm_control,name='owned-api-ARM-marker',daemon=True);arm_thread.start()
+ encode_original=server.Service.encode_prompt
+ def encode(self,messages,tools,kwargs):
+  ids=encode_original(self,messages,tools,kwargs);local.prompt={'ids':list(ids),'sha256':token_sha(ids),'messages':messages,'tools':tools,'template_kwargs':kwargs};return ids
+ popen_original=server.popen
+ def popen(name,command,*a,**kw):
+  if '--serve' not in command:return popen_original(name,command,*a,**kw)
+  # One producer OS stream before the real API readers; preserving their routing.
+  kw['stderr']=subprocess.STDOUT;proc=popen_original(name,command,*a,**kw)
+  def native(direction,line):
+   row={'kind':'native_'+direction,'engine_pid':proc.pid,'call':getattr(local,'call',None) if direction=='send' else None,'line':line}
+   semantic=line.startswith(('STOP','BSTOP ','BYIELD ','QUIT','DONE ','BDONE ','BADM ','READY','INFO ','ERR','FATAL','YIELDED ','SERR ','SESSION ','SWAIT ','SAVED ','RESTORED ','SBF slot_closed ','PCL '))
+   sink.emit(row,combined_line=line if direction=='receive' else None,semantic=semantic)
+  proc.stdin=PipeObserver(proc.stdin,native,'send');proc.stdout=PipeObserver(proc.stdout,native,'receive');return proc
+ generate_original=server.StrataEngine.generate
+ def generate(self,ids,max_new,sampling,cancel,embeddings=None):
+  with lock:counter[0]+=1;call=counter[0]
+  local.call=call;sent=list(ids);prompt=getattr(local,'prompt',None);generated=[];closed=False;error=None;born=self.gen;pid=self.proc.pid
+  emit({'kind':'engine_begin','call':call,'engine_pid':pid,'engine_generation':born,'submitted_ids':sent,'submitted_ids_sha256':token_sha(sent),'rendered_prompt':prompt,'rendered_matches_submitted':bool(prompt and prompt['ids']==sent),'max_new':max_new,'sampling':sampling,'embeddings':embeddings})
+  iterator=generate_original(self,ids,max_new,sampling,cancel,embeddings)
+  try:
+   for token in iterator:
+    if type(token) is int:generated.append(token)
+    yield token
+  except GeneratorExit:
+   closed=True;iterator.close();raise
+  except BaseException as exc:error={'type':type(exc).__name__,'message':str(exc)};raise
+  finally:
+   last=dict(self.last or {});cancelled=cancel.is_set();rid=last.get('request_id');normal_eos=bool(generated) and generated[-1] in eos and last.get('finish')=='stop' and not cancelled
+   if closed and not cancelled and not normal_eos and error is None:error={'type':'GeneratorExit','message':'Noncancelled consumer close without pinned EOS native stop'}
+   if self.gen!=born and error is None:error={'type':'EngineGenerationChanged','message':'Native incarnation changed during API request'}
+   emit({'kind':'engine_end','call':call,'engine_pid':pid,'engine_generation':born,'rid':rid,'generated_ids':generated,'generated_ids_sha256':token_sha(generated),'engine_last':last,'consumer_closed':closed,'cancelled':cancelled,'terminal_pinned_eos':normal_eos,'error':error,'pinned_eos_ids':eos,'scope':'API yielded IDs/segments only; actual consumed native history separately reconstructed'})
+   local.call=None
+ server.Service.encode_prompt=encode;server.popen=popen;server.StrataEngine.generate=generate
+ # Observe original close without changing its QUIT/drain/state semantics.
+ close_original=server.StrataEngine.close
+ def close(self):
+  proc=self.proc;error=None
+  try:return close_original(self)
+  except BaseException as exc:error={'type':type(exc).__name__,'message':str(exc)};raise
+  finally:emit({'kind':'engine_close','engine_pid':getattr(proc,'pid',None),'exit_code':proc.poll() if proc else None,'error':error})
+ server.StrataEngine.close=close
+ result=None;primary=None;shutdown_error=None
+ try:result=server.main()
+ except BaseException as exc:primary=exc;raise
+ finally:
+  stop_arm.set();arm_thread.join(timeout=2)
+  try:sink.close()
+  except BaseException as exc:shutdown_error=exc
+  status=sink.status();status['ARM_thread_retired']=not arm_thread.is_alive();status['observer_source_generation']=3
+  if arm_thread.is_alive():status.update(passed=False,error=status.get('error') or 'ARMThreadDeadline')
+  Path(str(trace)+'.buffered-status.json').write_text(json.dumps(status,indent=2,ensure_ascii=True)+'\n',encoding='ascii')
+  if primary is None and shutdown_error is not None:raise shutdown_error
+  if primary is None and not status['passed']:raise RuntimeError('Owned buffered trace shutdown failed')
+ return result
+if __name__=='__main__':raise SystemExit(main())

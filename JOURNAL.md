@@ -12278,3 +12278,20 @@ Bulk CPU helper resource/observed-container bounds are being finalized.
 VERDICT -> Evidence changes next actions: strict read-only baseline validation
 and future producer regression before pair; no unnecessary GPU restart. Full
 original48/API/cache/profiling/latency/shelf requirements remain open.
+
+
+## 2026-10-10 - Buffered API V5 actual producer chronology source checkpoint
+
+CONFIG -> NEW V5 buffered observer parent/reader; frozenV3/V4, native model
+math and raw failed API10435 evidence unchanged. No device execution.
+COMMAND -> Independent/root terminal8+journal11+adapter4 CPU controls PASS;
+144 SHA/ASCII/AST exact closure, sourceplan1c00933d11a82a340d7fdfd5d5ffe58b20e9c645ab35ca75f3781e3394087e75.
+Production command function tested with mock Popen, matching actual row schema.
+RESULT -> Actual command start/end and launch epoch are recorded; prejournal
+finishes before launch, postjournal before actual identity.started. Original
+health/EOF/source/terminal predicates retained. Current longwarm case has no
+observed two-row warm event; new shortwarm authentic fixture remains needed.
+Root source35 code confirms standalone and pending HC writes use explicit FMA;
+original48 refinement must cover writes as well as RMS/projections/fusedmix.
+VERDICT -> Concrete source hardening before GPU use, no measured IO speedup
+or cache/model/runtime qualification. Original full campaign remains active.
