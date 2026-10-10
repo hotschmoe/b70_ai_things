@@ -311,3 +311,43 @@ observation begun. GDNsynthetic27 parity doesnotsettle realprefix4/8gap.
 Require NUM10actual terminal/rawpacket/lifetime/OFFON/source4 proof, then
 original-own row3 state/params comparison. V8paired basic/cachegroups,
 concurrency/criticalpath/cleanlatency/shelf remain required. Fullgoalactive.
+
+
+## 2026-10-10 - Real row3 activation-packet boundary localized
+
+CONFIG -> Genuine source35 NUM10 OFF/ON same2048/64/PLE65536/FP16KV,
+independent original-owned L0prefix4 zero-state replay, original primitives unchanged.
+Separate explicitly CONDITIONAL native-mixed diagnostic, never fullreference.
+
+COMMAND -> NUM10one98868 PASS643s/publicrawreader92859; ownedL0prefix4 67857
+terminal0/source3/newfull4/pages/ten originalV2 replay checks; raw Q81 block
+inspection and F32 scale/quotient atindex1123. ConditionalCPU5 andreal3case32507
+terminal0/newfull4/source3/pages. V8pairedbasic65259 PASS454s/publicrecollect50866;
+correctedone rootcache99168 nowlive.
+
+RESULT -> NUM10 completeactual4prefixes x33fields, packet/lifecycle/OFFON/full49/
+ownedteardown/health/kernel/new4 PASS. Owned L0replays savedV2 allrowinput/
+attention+finalstate/history BITWISE10checks, reportSHA
+947057466d9a0d23f81aa65c2b77e9d6211098bb427336e0c8e73472c0bbcd83.
+Realrow3 incomingstateNMSE2.2303e-14/conv3.1805e-15/mixed3.4049e-15;
+attn_input_q81 differsONEcode inblock35,index1123: own71/native72.
+The value1.143454909324646 itself isidentical; blockmax isown2.031032085418701
+versusnative2.031031847000122, oneF32ULP. F32scales .015992378816008568 vs
+.01599237695336342 yieldquotients71.49999237060547 vs71.5; storedhalfD andS
+bothidentical. This isactual observedpacket evidence, not predictedGPUbytes.
+GDNoutputpacket differs92blocks/34codes/19scales/68sums. Own originalblockout
+NMSE2.6158372698e-6. ConditionalnativeMixed+OWNbeforestate reducesblockout
+NMSE7.9254321969e-15 andboth actualpackets BITWISE; qkv/z~3e-15.
+Addingnativebeforestate also givesblockout7.9254e-15; ownbaselineall8fields/
+bothpackets replaysBITWISE. ConditionalreportSHA
+76d9986a97f736ad78cb2f2371d988042c6a5ced7c77b3417a7ac628dfea7432.
+Whole-vector substitution cannot isolateonly the singlecode apartfromsmall
+accompanyingmixed changes. No complete-reference nativeinput substitution.
+V8paired basic passes naturaloutputs/LP20/head/full48/teardown/posthealth/new4.
+
+VERDICT -> Incoming HC arithmetic/activation packing is a concrete local seam;
+no statecorruption or GDNkernelreplacement justified bythese data. Still no
+fullmodelmath/tolerance/quality/speed PASS. Native HC FP32 FMA/reduction versus
+originalFP64-dot/F32store audit underway; broaderfidelity and meaningfulquality
+remain required. Correctedrootcache99168 running; allstatecache/concurrency/
+criticalpath/cleanlatency/shelf retain originalfullscope.
