@@ -14311,3 +14311,18 @@ experts/23.62GiB GPUcache, readiness and screens pending. Pairmodelhasnot
 launched; requiresactualonecardcurrent1403qualification/teardown/posthealth.
 VERDICT -> ConcreteGPUmodel load underway, no numerical/serving speed or
 stability promotion. Fullmodelmath/cache/streams/profile/latency/shelf open.
+
+
+## 2026-10-10 - Actual source40 onecard model screens pass
+
+CONFIG -> Current1403 onecard segmented source40 baseline, originalexact
+model/runtime, stablehotschmoe-dd first and declared researchalias.
+COMMAND -> Actual2057modelloadsREADY; six originalAPI screen cases complete.
+Root screenreceipt reread andSHA/currentflags checked, ownedcontainer removed.
+RESULT -> Screence1ab5fc6e86e44a4ce6f70ddf67dbb475bd761c823c9e764aa34fb646eefbed
+passes repeat/coherence/liveAPI identity andtoken transport/consumption.
+Full-logit/reference fidelity, prefixstate and concurrentserving remainfalse.
+Parentposthealth/newcompletefour/finalproof are pending; no earlybaselinePASS.
+VERDICT -> ActualGPUmodel screen success, scoped asdeclared. Native logtok/s
+are diagnostic and notmatchedcleanlatency/serving promotion. Pairprepared
+ready; pairedGPUqualifier followsactualonefinalpass, no secondGPUactor.
