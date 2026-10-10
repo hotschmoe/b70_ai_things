@@ -13139,3 +13139,32 @@ newfull4 scan live, so full parent admission and finalized evidence unproven.
 VERDICT -> Concrete independent component agreement and remaining trajectory
 mismatch. H48 actualmodel runtime queuedaftersoleHC actor releaseslease.
 Fulloriginalmath/cache/API/profile/latency/verifiedshelf requirements intact.
+
+
+## 2026-10-10 - HC V3 independently admitted and finite natural EOS starts
+
+CONFIG -> OwnHC V3 93d9329b/234, exactown postPLE operands/no arithmeticchange;
+recorded OMP/MKL/OpenBLAS1. H49 SDK+pack475f47f0/313 preserves300s freshness.
+COMMAND -> Actual18877 terminal0/PASS696s report502566b296bb5809f01c5c5cd3b3938f460a7c862d61aae8573bdd7028983d2a;
+matchedenvironment independentreader41715 terminal0/PASS binding770fe1a023fe893afee718bc8aaeb5943d661d829e8e2ef766965ffaeb3ff020.
+RESULT -> All386 own operands/device requests rejoined, exact first10240norm/
+2880Q81 target agreement,577prefix4 diagnostics, normalEOF/health/new4/pages.
+Prefix4head NMSE0.007888 remainsnonbitwise/unqualified; no internalHCarg or
+universalrounding witness. Initialreadonly invocation omitted threadenv and
+wasrefused; corrected invocation matches actualruntime. V2FAILED unchanged.
+
+COMMAND -> H49correctedprepare40222 terminal0/PASS, genuine native4OFF plan
+c1c96f0adee7728c0487874a368cadf2641b9e5887bd98dd988e14e27707acc3.
+Original mistaken v11case command73180 exitedmissingfile withoutpublication;
+corrected commandusesfrozenv10 andnewoutput. Pack+SDK witnessesclosed, no speed
+comparison or modelruntime yet; repeated source/evidence/log admissions persist.
+
+CONFIG -> PeerREADY finiteV3 a3de9021/160+observer6/wrapper5,66rootCPU PASS.
+COMMAND -> Authenticexport50031PASS f13b14ed0ad03832be3e00317877b2049824f5ed83a7443295d67109c2a8d34e;
+actualwarm57/56,target185/186/185/185/191/189; realprepared4c9bcd56.
+Rootactual15719 solemodel/pairCPUexclusion, freshfinite observedv5run.
+RESULT -> Idle30PASS; firstwarmcase0repeat0 healthyresponse/terminal EOS21 and
+eligibletrue. Allremaininginputs/repeats/decode/currentidentity/full4/ownership
+and candidate selection remainpending. No oldresponses or counts transferred.
+VERDICT -> Independent component agreement and genuine continuationprogress;
+fullmodel/cache/API1/2/4/6/profile/latency/verifiedshelf remainrequired.
