@@ -11586,3 +11586,27 @@ history/concurrency/stale-cache/latency or productionqualification. Two-prompt
 Strata counterpart and V7private2stream equivalence next, then4/bounded6 and
 fullcriticalpath/matchedlatency/shelf work. Preserveall V1/V2failedhistory and
 qualifiedone/pairserialcache proofs. Fullgoal remains active.
+
+
+## 2026-10-10 - Native2 closed collector and actual serial equivalence arm
+
+CONFIG -> Exact source35/C113 native2diagnostic32 onphysical0; correctedV7
+source/pilot budget/ARMscope; no underlyingmath/ABI/registry changes.
+COMMAND -> 88303 terminal0/PASS467s. Currentpublicreadonlyparent_arm/vectors
+37300 verifiescompleteclosedsource/identity/health/page/raw joins,196vectors
+andactual4 consumed-prefix jobs. GenuineCPUserial0prepare99325 PASS; leased
+GPU9143 startsall4fresh GEN1 jobs andpassedpre-strict/compiled-pair/kernel.
+RESULT -> NativecollectorparentSHA 1f9d763dec77be9b0136ae0d397261973639b3a0c9751486dfd39b9c367617e5.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-onecard-native2-diag1-run/parent-qualification.json.
+SerialplanSHA 0c8e8a0535fa91d786f183439bec8d9532c4e5dd4b98cb6065ebc3b814050d12.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-onecard-native2-serial0-prepared/plan.json.
+Actualserialbudget[1,1,1,1], not32/64; nativebudget[32,32] diagnosticlengthcap.
+Serial9143 confirmedlive, numerical196vector/privatehead join andpostgates
+remainpending. No freshAPI/OFFON/4/6/latency/concurrentcache proof transferred.
+Source-onlynativefunctional screen has12CPUcontrols afterstrictrecipe/command/
+end-sourcejoin hardening; manifest1d353f69d619cca48545d9794a1697e502d450d7265fc475b77368ca8c5d5203 awaitsindependentfinalreview.
+No genuinefunctionalplan/GPUrun; frozenV7runtime/serialsource unchanged.
+VERDICT -> Realcurrent native2collector proved andfreshserialreference arm
+nowrunning. CPUtwo-promptreference PASS stands; fullmodel/nativequality and
+concurrency/completecache/profiling/latency/shelf remainopen. No speedclaim.
+Fullgoal remainsactive; alloldfailures and unrelateddirtychanges preserved.
