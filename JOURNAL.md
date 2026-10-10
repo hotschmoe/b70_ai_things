@@ -14631,3 +14631,20 @@ two-domain control distinguishesroutingfix beforeanyGPUload.
 VERDICT -> ActualGPUcache evidence gap andboundednextfix, not assumed
 CPUcausality orpassedstateisolation. Fullmath/concurrency/profile/latency/
 physical/shelf goalactive; QSAplan92ba readyafteravailablelease.
+
+
+## 2026-10-10 - Prepared QSA model qualifier semantic preflight begins
+
+CONFIG -> ActualpreparedQSA V3plan92ba9/sourceaaa39/464/28CPU/rootpeer
+READY, originalindependentreference/correctedSDK40/current171 association.
+COMMAND -> Startroot15830 qualify_native_qsa40_v3.py; expensiveunchanged
+semanticmanifest preflight precedes wrapperacquiringGPUlease. No --leased
+bypass orconcurrentGPUactor, currentcache75058 finalidentity retainslease.
+RESULT -> Semanticpreflightlive. Currentcachefirstchildfailednativejoin,
+normalstop/ownedremoval/poststrictcompiledhealthpass; newfull4scan live.
+V6captureCPUreceipt d4e68a70 preservesactual6cases/groupzero/structural
+positive+failure andoldV4negative12; rawstdoutlog unavailableexplicitlyfalse.
+Newcapture sourcea9ad71/24repo+8headers pinsSOb2ccc/protocolstrict; actual
+GPUcapturecoveragepending, no historicalJIT/math/speedclaim.
+VERDICT -> Nextactualfullmodel fidelity diagnostic queuedviareallease after
+preflight. Fulloriginalmath/cache/streams/physical/profile/latency/shelfactive.
