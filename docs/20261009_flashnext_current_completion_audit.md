@@ -1290,3 +1290,31 @@ actual1/2/4/bounded6 qualified serving; cache/table/expert placement and memory
 tradeoffs; x2 critical-path traces; matched useful natural interactive TTFT/gaps/
 completion/fairness; requalification and reproducible verified shelf/launch/stop.
 The full original objective is unchanged and active.
+
+
+## 2026-10-10 - Actual serial294 qualification and compiled-code progress
+
+H54group0 actual6-prefix/294all49 comparisons are all BITWISE equal to the
+source-bound native4 capture. Parent2165 finalizedPASS1013s, SHA
+2d007308900ab7d4275376307bdc1029e9bf169c67494e1b05bd0d918539b960,
+normalmodel0/removal/READY-health-ACK/byte/source/EOF/posthealth/kernel/newfour
+passed. Independent reader9370 remainslive. Group1 two-prefix/98comparison
+qualifier82490 is live in prerequisite validation; complete392public join and
+cancellation/migration/fullcache/1-2-4-bounded6 goal qualification still missing.
+This native batch-versus-serial equality does not close original48 reference
+fidelity, whose head error remains explicitly unqualified.
+
+Supported SPIRVtext capture65718 passed60s, bindingceb15c5f; all39 artifact
+hashes andsix conversion modules rerechecked. Fresh-postlink direct/wrapper
+Expression retains32->16->32 FConvert instructions with rounding decorations;
+separate store/load retain actual16-bit storage operations. This disproves no
+runtime/JIT hypothesis yet and is not originalexecutedembeddedimage evidence.
+A bounded originalELF symbol/entrypoint extraction proposal is in progress;
+actual JIT/ISA/cause and semantic model correction remain unproven.
+
+Shared-cacheV3 is still unsealed. Peer found/fixed source scheduling/signal/
+retirement issues, then identified further public-reader tuple/plan/handoff and
+own-history retirement/text-decode seams. No serving/cache/physical qualification
+follows from these tiny controls. Native allocationV2 remains source/hostCPU
+only; all8 ABI/model/ONOFF/health and actual memory attribution still required.
+Full objective and verified shelf/interactive latency requirements stay active.
