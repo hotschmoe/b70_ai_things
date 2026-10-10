@@ -969,3 +969,37 @@ Original full-model fidelity, complete prefix/cache state and memory costs,
 API1/2/4 and bounded6, correlated x2 traces, clean matched latency/fairness
 improvements and verified reproducible shelf remain incomplete. No new decode
 speed or production stability claim follows from these source/readiness steps.
+
+
+## 2026-10-10 - Actual admission diagnosis and CPU retry recovery
+
+H46 parent19472 is terminal1 after847s, before health/device/model launch.
+Its paired2 prerequisite equality failed. H47 actual preparation16684 also
+failed on an omitted process-local witness in the serial_vectors call chain.
+Both original generations and failures are preserved, not retrospectively
+qualified. Source-only/fixture readiness did not prove actual admission.
+
+New mandatory pack48 routes pass14 CPU controls/241 source hashes. Actual
+readonly type recollector1992 now terminal0/PASS559s, report
+6ed05cab321e67733043fd22541911d3b320aa0695b57fb4b41dcafc78739930.
+Native Python binding differs from saved JSON at exactly81 tuple/list owner
+fields; typed canonical equality is true with both SHAe06681a1. All3080 pack
+digest consumers and3 fresh complete byte boundaries closed. This verifies
+representation-only failure; every substantive field remains required. New
+H48 preparation/runtime, numerical4/6 and API qualification remain unexecuted.
+Repeated ABI marker/hash checks still dominate considerable admission reads;
+no matched dev-loop speed gain has been established.
+
+Observed CPU retry14032 failed130s after idle30 PASS: observer rejected current
+lowercase Docker missing-object grammar and caused model-parent interruption
+before creation/ownership stabilized. A late launch survived wrapper exit and
+changed a producer log after its failed receipt. Root45070 verified exactowned
+CPU recipe, stoppedexit0/noOOM andremoved under pair exclusion. New post-recovery
+full4/knownpages81692 PASS75s; reportf4de9e015ad13eeff75be08f331f1dc735c0e174bd4d6429d8bc12344d33ae80.
+Original screen/teardown remains FAILED, no continuation or candidate exists.
+NEW observerV4/wrapperV3 ownership/passive-failure corrections remain under
+source review before same-recipe all16 retry. No inference/memory guard relaxed.
+
+Complete original-model fidelity and broad quality, complete state-cache and
+memory/residency tradeoffs, API1/2/4 and bounded6, x2 critical-path correlation,
+matched clean latency/fairness and reproducible verified shelf remain required.
