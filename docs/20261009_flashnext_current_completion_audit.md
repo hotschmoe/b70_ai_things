@@ -777,3 +777,33 @@ original48 refinement, declared numerical tolerances and broad quality remain
 open, as do two-GPU/API concurrency, complete shared/divergent/eviction/cancel/
 stale prefix state, cache memory/expert residency, correlated device/host
 profiling, clean interleaved latency/fairness improvements and a verified shelf.
+
+
+## 2026-10-10 - Current37 pair bounded baseline closed
+
+Actual pair parent1374 run73796 completed PASS419s, owned normal teardown,
+strict per-card and compiled P2P0 health, kernel journal, new completefour
+publisher hashes and bracketing known pages. Root current finalized_binding
+reproduced the full receipt, qualificationSHAb9e318d5f772a436fd340b8d73525e16cce8ba3b3f2b8a1304992ddc471eb9aa.
+Onecard actual90362 strict readonly adjudication also passed with383 original
+files unchanged and original_parent_passed=false; no failed report rewritten.
+The fresh source37 bounded one/pair serving prerequisite is established.
+Full numerical fidelity, two-card batch/API and completecache/latency remain
+unqualified. Frozenharness38 needs a new explicitbaseline consumer.
+
+Original48 HC-only prefix4 experiment completed but worsened head NMSE from
+0.0093215 to0.0133095; firstattention NMSE worsened from1.321e-13 to3.961e-7.
+All577 original/native comparisons and postCPU completefour hash checks passed
+only as exploratory execution/integrity. No numerical PASS assigned. Next
+control compares complete first HC vectors and packets and a separately
+labeled conditional HC-to-GDN seam. Conditional computation must finish before
+the recorded model computation terminal and newfull4; a draft chronology issue
+was caught before execution and is being corrected in a new generation.
+
+Authentic shortwarm47/47, unchanged235/235target V6 API plan nowprepared.
+Actualleased69544 started with source35/oldqualifiedSDK, separateinputcase and
+strictrealwarm2row gates. No source37/API/cache/speed proof transfer; actual
+cachehandoff collection and exactfresh serial49 comparisons still required.
+Complete shared/divergent/history/eviction/cancel/stale state, realvictim/cache
+memory/expertresidency, broadquality, criticalpath traces, cleanmatched P50/P95
+TTFT/token gaps/completion/fairness and reproducibleverifiedshelf remain open.

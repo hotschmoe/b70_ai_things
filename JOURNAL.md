@@ -12405,3 +12405,20 @@ Actualpair73796 screencoherence/repeat PASS, ownednormal/posthealth PASS;
 parent finalfull4 stilllive, no completepairbaseline PASS yet.
 VERDICT -> Important negative fidelity evidence narrows nextlocalization;
 fullgoal remainsactive. No rawfailure rewritten or syntheticPASS promoted.
+
+
+## 2026-10-10 - Fresh pair1374 PASS and shortwarm API diagnostic started
+
+CONFIG -> Actualnewsource37 pair baseline, strictreadonlyadjudicatedone
+prerequisite; separate source35 bufferedshortwarm API case usesactual47/235 IDs.
+COMMAND -> Pair73796 terminal0/PASS419s; root currentfinalizedbinding PASS.
+parentSHA70a131195dc47b0e7936d377e631c015c446f4f4d7177cd5afb1cd2e649a767a,
+qualificationb9e318d5f772a436fd340b8d73525e16cce8ba3b3f2b8a1304992ddc471eb9aa.
+V6CPUprepare66271 terminal0/PASS usingactualcase/currentfull4; GPUparent69544
+started underpairlease, real warm2row/nativecachedtarget gates unchanged.
+RESULT -> Freshpairbounded identity/coherence/repeat/normalteardown/health/
+journal/new4/pages complete, fullfidelity/concurrency/shelf flagsfalse. New
+firstHC source7CPU/100closure PASS but conditionalGDN would execute AFTER
+earlyterminal stamp; rootblocked runtime andrequestedNEWV2 producerfix.
+VERDICT -> Actualpairprerequisite closed; advanceAPIcache andfirstHC fidelity
+without weakening chronology or fullgoal. No speed/fullcache/modelclaim.
