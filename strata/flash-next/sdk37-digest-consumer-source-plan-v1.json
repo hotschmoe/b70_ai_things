@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "status": "Frozen SOURCE/CPU17 map and isolated unintegrated ports",
+  "files": {
+    "strata/flash-next/sdk37_witness_scope_v1.py": "9ce9f867e9bba4545464ff4e62e11887ebd68d5c00746512f54a5fda89e07b28",
+    "strata/flash-next/prepare_sdk37_gate_ports_v1.py": "7276314ead142500dee0d8e6f5ce190cfc985996d58fc83c839e33b8e7adddf7",
+    "strata/flash-next/c137_sdk37_digest_ports_v1.py": "ab47034bc722a44fe6d2480870f4b9e01e78bac002f7103c815c6f8455751a30",
+    "strata/flash-next/current_engine_sdk37_digest_port_v1.py": "8419efa77844087aa6ad2da2e775547dc31aef5cfb897db9deaba98d9860eccd",
+    "strata/flash-next/historical_engine_sdk37_digest_port_v1.py": "8431eb7fb678a6c6c6f62a0b044b33de6bf300428334606b74e135eb15570b5d",
+    "strata/flash-next/prepared_sdk37_digest_port_v1.py": "79bcdcf0634aef133613c28ac24c8c08d5a77eb6c138b9c28e08087df378a1ca",
+    "strata/flash-next/test_sdk37_gate_ports_cpu_v1.py": "8a44cf52d23fcfb2f537ee5bead0572b4bdbcff49f14c6bc96af506b889d600e",
+    "strata/flash-next/operation-sdk37-byte-witness-source-plan-v1.json": "c33aa7f63a11279463cd655e24732ae4bc157acd7aa8808d5ea7419d25b2b7cd",
+    "strata/flash-next/operation_sdk37_byte_witness_v1.py": "e3c30c2dea725d49b56f0f1130cd01660b3bc88bc207e9abea074a70f3fa4180",
+    "strata/flash-next/test_operation_sdk37_byte_witness_cpu_v1.py": "a4c82da041a0d6c85c329325522253162ab6e42487dbf70784b15327eac1c1e2",
+    "strata/flash-next/operation_pack_hash_witness_v2.py": "340c88c67745806900e4969306e62db8b7da3bb386144ca9bdf4a3ce864cf83e",
+    "strata/flash-next/serial37_canonical_json_v3.py": "afdbdc4729cc6a2cfb68de5cb1106d79d1b81db79c9da91b1c157d5c1b85f57d",
+    "strata/flash-next/c1_serve_controller_combined_v137.py": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+    "strata/flash-next/c137_prepared_pack48_v1.py": "55053833557f8a56e599e13f7ec7679bd9c476b98e57c01ed6a05467a2ecc35f",
+    "strata/flash-next/batch_numerical_proofs_v48.py": "78650754c5db8e5646744b7e1007919f3acfdbbebec7eb83482616f3764aeab1",
+    "strata/flash-next/batch_proofs_pack48_v1.py": "3e250e084900d53872eece8afe402f7d7eed9812d157b767f57dc246fe7a5e43",
+    "strata/flash-next/batch_numerical_execution_v48.py": "a3f99b7acb8371b4707937f7f57e6ceff1f0e7fcce6929b69ef561bfe9da190b",
+    "strata/flash-next/private_reader_pack48_v1.py": "160018cb489becd67e3bf6fda980217469d6f367be75dc0258c5eef6d487788f",
+    "strata/flash-next/first49_pack48_v1.py": "3d583370d669b04e6e44e20183ad650e653b30fb3c33f32f39466863b25d811a",
+    "strata/flash-next/serial_reader_pack48_v1.py": "e17f9c055db67260d35a57ce2c36c2a635f5c69b93caf9a3f0c80505d7b84d8c",
+    "docs/20261010_flashnext_sdk37_digest_consumer_map_v1.md": "5f0f6dcee73d6b70949e3b6dbb47b6842289fe62d8075d43feffed77a0b3a6fc"
+  },
+  "cpu_tests": 17,
+  "original_function_evidence": [
+    {
+      "path": "strata/flash-next/c1_serve_controller_combined_v137.py",
+      "sha256": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+      "function": "combined_generation_gate",
+      "line": 97,
+      "last_line": 136
+    },
+    {
+      "path": "strata/flash-next/c1_serve_controller_combined_v137.py",
+      "sha256": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+      "function": "compiled_source_markers",
+      "line": 139,
+      "last_line": 156
+    },
+    {
+      "path": "strata/flash-next/c1_serve_controller_combined_v137.py",
+      "sha256": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+      "function": "original_upload_gate",
+      "line": 206,
+      "last_line": 254
+    },
+    {
+      "path": "strata/flash-next/c1_serve_controller_combined_v137.py",
+      "sha256": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+      "function": "upload_gate",
+      "line": 331,
+      "last_line": 333
+    },
+    {
+      "path": "strata/flash-next/batch_numerical_proofs_v48.py",
+      "sha256": "78650754c5db8e5646744b7e1007919f3acfdbbebec7eb83482616f3764aeab1",
+      "function": "engine_binding",
+      "line": 38,
+      "last_line": 50
+    },
+    {
+      "path": "strata/flash-next/batch_numerical_proofs_v48.py",
+      "sha256": "78650754c5db8e5646744b7e1007919f3acfdbbebec7eb83482616f3764aeab1",
+      "function": "genuine_baseline",
+      "line": 52,
+      "last_line": 67
+    },
+    {
+      "path": "strata/flash-next/batch_proofs_pack48_v1.py",
+      "sha256": "3e250e084900d53872eece8afe402f7d7eed9812d157b767f57dc246fe7a5e43",
+      "function": "engine_binding",
+      "line": 49,
+      "last_line": 70
+    },
+    {
+      "path": "strata/flash-next/batch_proofs_pack48_v1.py",
+      "sha256": "3e250e084900d53872eece8afe402f7d7eed9812d157b767f57dc246fe7a5e43",
+      "function": "genuine_baseline",
+      "line": 72,
+      "last_line": 90
+    },
+    {
+      "path": "strata/flash-next/c137_prepared_pack48_v1.py",
+      "sha256": "55053833557f8a56e599e13f7ec7679bd9c476b98e57c01ed6a05467a2ecc35f",
+      "function": "validate_prepared",
+      "line": 4,
+      "last_line": 29
+    }
+  ],
+  "direct_SDK_digest_roles": 8,
+  "direct_upload_oracle_digest_roles": 1,
+  "source37_ELF_magic_consumers": [
+    "current_engine_binding",
+    "historical_engine_binding"
+  ],
+  "source37_executable_marker_scan": false,
+  "full_callgraph_runtime_integration": false,
+  "H48_or_frozen_helpers_mutated": false,
+  "actual_SDK_pack_model_payload_read": false,
+  "actual_GPU_touch": false,
+  "qualified_read_reduction_or_speed_or_math": false
+}
