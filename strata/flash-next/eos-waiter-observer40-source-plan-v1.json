@@ -1,0 +1,29 @@
+{
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=strata/flash-next python3 -m unittest test_eos_waiter_observer40_cpu_v1",
+  "CPU_tests": 18,
+  "actual_GPU_or_API_execution": false,
+  "actual_source40_bindings": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/serve/batch_request_identity.py": "2f0149108f97d31ab510cca36d7b62338f1f899e5b4ce5414a90d61e0e38b14f",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo/source/serve/server.py": "3166f70fa013b905adf713dba404a2eb91a4f3381842dafb542af98cf978d241"
+  },
+  "adjudicate_API": "eos_waiter_terminal_adjudication40_v1.adjudicate(events, observer_proof)",
+  "files": {
+    "strata/flash-next/api_owned_terminal_association_v2.py": "17fd563800213b0a7283d37fc5b0f837041436e40643e60c0e73f24e8d28af8b",
+    "strata/flash-next/batch_api_prefixes_v2.py": "b51471d4b08be9ec4cae440409eafc40d3aacbf96b50ab06ba754327cabb8058",
+    "strata/flash-next/batch_numerical_prefixes_v2.py": "bccdbe9d9c0c8e50d2e059877cf9d4648e2ab8c1a533451ac56d5d18adca1dc5",
+    "strata/flash-next/eos-waiter-observer40-design-v1.md": "7da814393fae36808cf1970b46ff82e07bb1313fd36f26cbbf71a33734ddb853",
+    "strata/flash-next/eos_waiter_observer40_v1.py": "37669fbcd3a63cf7c8370f1496d6db55912c7745168918bed4d720d7f1246071",
+    "strata/flash-next/eos_waiter_terminal_adjudication40_v1.py": "cc931dc5db8cf80600f6fba5cd71397f71fbfb2b7cfd9226b1908cad50a51d3f",
+    "strata/flash-next/full_cache_shared_terminal_v2.py": "083492fa5db905e33c2ad41a03a929160f920b7de3be8a1dbf5ddc450f296e43",
+    "strata/flash-next/test_api_owned_terminal_cpu_v2.py": "1a8e3c1e0c4766b696933545e7e4d08c7e6a1f2b265690c58d4bf1ead3d6382b",
+    "strata/flash-next/test_eos_waiter_observer40_cpu_v1.py": "3885688e34a2f24683bb82060c18b51854e4b1e019cd5d08f842970634ae533e"
+  },
+  "frontend_control_or_model_math_changed": false,
+  "full_cache_or_model_math_qualified": false,
+  "future_consumer_required": "Original source/recipe/PID/READY/ACK/lifecycle plus actual waiter-proof packet/ACK/raw event identity and independently decoded all client replies.",
+  "generation": "source40-output-only-EOS-waiter1",
+  "historical_V6_error_rewritten": false,
+  "historical_V6_waiter_retirement_observed": false,
+  "install_API": "eos_waiter_observer40_v1.install(server, emit, context) -> Observer.proof(calls=None)",
+  "schema": 1
+}

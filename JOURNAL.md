@@ -14808,3 +14808,21 @@ waiter code/thread/owner/cancel/error predicates retained.
 VERDICT -> Concreteevidencecoverage correctionbeforeactualGPUsuccessor,
 not genericcaprelaxation or skippedproof. Original15830failedarmpostfull4
 PASS butfinalmanifest stillCPUlive; actualmodelleafunexecuted. Fullgoalactive.
+
+
+## 2026-10-10 - EOS waiter source freeze independently verified
+
+CONFIG -> NEWdd6f6c9e8254a86368f82406c3634e79969476a4203cc4a89263dadfeb6a097c,
+9repository+2 actualsource40Python bindings, output-onlymethod/thread/queue
+observer andnamedterminaladjudication. Originalcode/kernel/math unchanged.
+COMMAND -> Rootallsourcehash/ASCII/AST+exact18CPU PASS4.073; actualsource
+waiterbody executes incontrols withstrictowner/stalepacket/thread/error
+negatives andnativegrammar/count joins. No API/GPU action.
+RESULT -> Sourceobserver retains actualThreadterminal proof; newownerbusy
+requiresactualdistinctadmission; canceledclients cannotborrowEOSerrorwaiver.
+OldV6rawGeneratorExit/self.last andfailedreceipts untouched. Source33
+integration requiresactualmetadata packet/currentproof/native/client/text
+join beforeAPIcoherencequalification.
+VERDICT -> ConcreteCPU/source protocol ready, notactualcache/fullmath/
+latencyqualification. QSAoriginal15830finalsemanticproof remainsCPUlive.
+Fullfidelity/cache/concurrency/physical/profile/latency/shelfgoalactive.
