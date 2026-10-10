@@ -510,3 +510,38 @@ HC numericaldata ispositivebutV1wholequalificationFAIL; V2freshactualruntime
 mustfinish raw/free/identity/health/ownedteardown beforeprimitivequalification.
 Nextcompletecache execution shoulduseexistingALLsuite afterHCchecks. Fullgoal
 active; no productiondecode speed claim, unrelateddirtychanges preserved.
+
+## 2026-10-10 - Source35 serial cache adjudication and active paired replay
+
+This dated audit supersedes the old runtime-access boundary and source33/34
+pending statements above without rewriting their historical evidence. Full
+completion still requires every item in the original goal prompt.
+
+| Requirement | Current evidence | Remaining proof |
+| --- | --- | --- |
+| Exact model and corrected PLE source | Source35/C113 fresh8 ABI targets, one/pair bounded identity/coherence, actual PLE host rows bitwise original, repeated NEW four-shard hashes | Live identity and meaningful quality on final serving configuration; host publication alone is not device consumption/full math |
+| Trustworthy mathematical and functional reference | Independent original48 owned-state runs; HC13cases/36words/2negatives GPU primitive PASS; conditional8 original-weight up/inject values match native F32 FMA/XOR | Resolve whole HC exp/rsqrt/mix/write and accumulated original/native divergence; CPU llama.cpp build/pilot is not yet qualified and uses a different arithmetic contract |
+| Native complete-state serial cache | V8 basic/root/pin PASS on one/pair; NEW closed-evidence one-card remaining-seven adjudication PASS all40requests with original V9 failure preserved | Paired remaining suite now live; API cached concurrent sessions, stale identity, memory/residency effects and clean cache-hit TTFT still required |
+| Concurrent 1/2/4/bounded6 streams | Two-stream diagnostic captured real31 N2 events; NEW ARM-scoped replay admits196vectors and actual cancellation | Fresh corrected parent, private serial equivalence, OFF/ON/API/owner migration, 4/6 and paired concurrent runs; 32-token length stop is not natural completion |
+| Two-GPU tiered placement and memory | Source35 bounded serial paired controls and owned health/teardown; serial RAM snapshot measured about356MB | Concurrent expert residency/transfer attribution and cache memory tradeoffs under matched workloads |
+| Critical-path profiling and latency | Source35 trace coverage audit and pinned x2-nvfp4-lab methodology | Actual correlated timestamps/ownership/coverage with overlap preserved, clean ABBA useful prompts, per-stream P50/P95 TTFT/gaps/completion/fairness and long-prefill interference |
+| Shelf and reproducibility | Compiler/runtime/source plans and GPU lease/lifecycle producers pinned; checkpoint9e7ed78 records reader recovery and CPU build recipes | Qualified final configuration, verified shelf, launch/stop instructions, concurrent cache/quality/latency evidence; no shelf promotion yet |
+
+Actual one-card adjudication:
+`/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v9-onecard-readonly-adjudication-v1/adjudication/report.json`.
+It checks all40 raw requests/seven production branches, current exact tokenizer
+continuation, first full head/all48 first-window vectors, route/victim/STOP,
+owned commands, source/SDK/basic prerequisites, recorded health/kernel/new4
+chronology and current source pages. Original parent/child remain FAILED; no
+old flag was flipped and the original evidence tree remained unchanged.
+
+Active paired execution:
+`/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v10-pair-remaining/`.
+Pre-health passed; parent session47979 and owned child were confirmed live.
+Fresh CPU-only llama.cpp V3 build session64755 is independently live with
+verified3579-file source, no model mount/device grants/network, fresh build
+output and explicit backend/fetchfeature OFF controls. A successful build
+cannot establish model quality or native arithmetic agreement.
+
+No trusted decode-speed, complete-prefix, full-model or production qualification
+is claimed. Full goal remains active; scope is not reduced to serial cache.
