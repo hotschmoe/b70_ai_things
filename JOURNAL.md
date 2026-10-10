@@ -14563,3 +14563,19 @@ CaptureV4actualfailureb1de7995 retained/posthealthPASS; no unchangedrerun.
 QSAfreshV3prepare98835stillCPUlive, GPUlaunchseparateaftercurrentsuite.
 VERDICT -> ConcretecorrectedGPU campaign proceedsunderfulloriginalscope.
 Original48reference/streams/physical/profile/interactive latency/shelf open.
+
+
+## 2026-10-10 - Correctedcache V6 passes actual prelaunch identity
+
+CONFIG -> Actual75058wholeV6suite sourcee9357/plans8f4e, firstcapture0
+solepairlease/source40native model; originalfullcachefamily retained.
+COMMAND -> OriginalactorsemanticREADY/freshleafstrict+compiled/kernelACK
+followedcurrentseals/actualownedcontainerlaunch. Rootreadsactualsmalllogs.
+RESULT -> Ownedb70-prefix-1194557-fullcache-shared40-v3 running; frontend
+passes artifactidentity and startsnativeengine modelweights. Signedruntime
+env usesdeclaredprojection; actualnative trace produced. No retiredactor
+state/errors observed yet; actualcache/raw49/numerical/healthstillpending.
+VERDICT -> RealGPUmodel launch advancespastpriorV4deterministicrefusal.
+NotwholecachePASS ororiginalmodelmathqualification. QSAfreshV3CPUprepare
+98835stilllive, exactmodelobserverGPUrun followsavailablelease/readiness.
+Fulloriginalfidelity/streams/physical/profile/latency/shelf active.
