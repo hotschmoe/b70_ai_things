@@ -14703,3 +14703,20 @@ willobservednewreplay only, nohistoricalJIT authority. QSA15830ownspairlease
 whileleasedparentsemanticrecheck livePID1204182, no modelleaf/outputyet.
 VERDICT -> ConcreteAPIqualification gap andrealnextobservables. No bypass
 orlegacyerrorrewrite; fullmodel/cache/concurrency/latency/shelf active.
+
+
+## 2026-10-10 - Root reproduces native-only late-stop successor view
+
+CONFIG -> Exact211semantic rows selected fromoriginalfailedV6warmtrace,
+newnative_lifetimeV3/postterminalcontract, oldrawERROR/flags preserved.
+COMMAND -> Rootindependent recollect(selectedrows) equalsauthor savedview;
+actualHTTP/fullcachequalificationfalse flags checked for everyleg.
+RESULT -> Threeactualnative legs (GENrid1gen0 generated2; batchrid1slot0
+gen1 generated19; batchrid2slot1gen1 generated21) admitted withsame-owner
+postterminalstophousekeeping. Rootviewd5a29825b6f688f9667962cdc0ee96e5bffd8a257df69217f8a285a762d43304
+at f17/shared-v6-warm-new-native-lifetime-view-v1.json. Selectedrows saved
+outsideoriginalactorroot; originalfailedrun remainsunchangedFAIL.
+VERDICT -> Nativeordering diagnostic only, notAPIgeneratorwaiterclosure,
+clientcoherence/fullcache ororiginalmodelmath. Waiterobserver/incremental
+producer/consumer successor stillrequired. QSA15830leasedsemanticpreflight
+PID1204182 CPUlive; no prematuremodelGPUlaunch/PASS. Fullgoalactive.
