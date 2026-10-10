@@ -12696,3 +12696,19 @@ reviewed; full physical/transient/HTTP/fullcache authority remains false.
 Actual privateV4 roster87154 confirmed live PID921931 revalidating oldcorpus.
 VERDICT -> Source39 ready for fresh full8 ABI build and subsequent runtime
 qualification. Old37 evidence cannot qualify new39 code. Full goal active.
+
+
+## 2026-10-10 - V4 serial roster closes; source39 fresh ABI build starts
+
+CONFIG -> Frozen privateV4 28e90418; independentlyreviewed source39 eb5fa4a.
+COMMAND -> Metadata-only roster87154 terminal0; external schema4 rosterSHA
+139b6b3eb489576bd2623a0595c5c04773565e456d82fa2193b5c14987a41255.
+Actualfinal private reader4616 started with original OFF/ON artifacts. Fresh
+ABI build3527 started underpairlease with no devices exposed, clean pinned
+ggml3cf03257 source and39engine86bc189; PID922891 confirmedlive.
+RESULT -> Rosterpublication makes noqualificationclaim (CLI passedfalse is
+expected for this association object); final196 fullnumerical/histories/owner
+join remains pending. Source39 nativebuild is genuinelyrunning, no oldSDK
+proof transfer. No fullmodel serving or GPU diagnostic overlaps compilation.
+VERDICT -> Actualmetadataassociation and freshbuild advance; full original
+objective remains unproven until native/fidelity/cache/concurrent/latency gates.
