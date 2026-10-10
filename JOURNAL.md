@@ -13119,3 +13119,23 @@ precedes optional freshprefix4; no capturedoperands/ULPfit/tolerancechange.
 H48 metadataonly preparation87440 remainslive; no secondmodel/GPUactor.
 VERDICT -> Actual independent arithmetic experiment progresses; firstgate,
 prefix4, normalowned/health/new4/currentreader results pending. Fullgoal active.
+
+
+## 2026-10-10 - H48 native4 plan prepared and first HC exact gate observed
+
+CONFIG -> Exactsource37 H48 19c47079/263 with actual6ed05cab type diagnosis;
+original H46/H47 failures remainimmutable. Independent ownHC V2 de8dd545.
+COMMAND -> Genuine H48prepare87440 terminal0/PASS, plan
+SHA8f440447fc7065f7aaddbd63176568c833659e30ab4c5e7f0ca2b2faaed7e60c,
+native4 OFF/bothcards. Root actual76881 modelwork completed386RSrequests and
+577 prefix4 comparisons; final parent/postidentity/publicreader stillpending.
+RESULT -> Firstownnormalized10240 and complete2880-byteQ81 packet exactly
+nativeNum10, confirmed root consumedraw comparisons (preliminarye5602992).
+Workreport firstgate=true permitsfreshprefix4. Early p0L0attention NMSE5.45e-15,
+p0L2FFN1.426e-14; finalprefix4head NMSE0.007888246485733295 remainsnonbitwise,
+numeric_gate_assigned=false. No tolerance or backendmath patch introduced.
+ActualruntimeEOF/normalhelper exit0 and poststrict+compiledpair healthPASS;
+newfull4 scan live, so full parent admission and finalized evidence unproven.
+VERDICT -> Concrete independent component agreement and remaining trajectory
+mismatch. H48 actualmodel runtime queuedaftersoleHC actor releaseslease.
+Fulloriginalmath/cache/API/profile/latency/verifiedshelf requirements intact.
