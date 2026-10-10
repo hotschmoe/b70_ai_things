@@ -587,3 +587,22 @@ invalid. Both full4/page identity scans passed; failed source and report are
 preserved in7b157a3. A NEW V2 with deeper helper mounts and actual metadata/
 server-version wrapper checks before full scans is being prepared. The paired
 cache and cross-layout proofs are unaffected. Model quality remains unproven.
+
+
+## 2026-10-10 - CPU functional reference established within declared scope
+
+NEW V3 independent CPU pilot finished PASS286s: both fresh function requests
+returned identical correct18-token code; both fresh arithmetic requests exact
+12/3tokens; all natural EOS. Original model/template/input IDs/output decoding,
+fresh-process determinism, memory/no-swap, normal owned cleanup, full4/page and
+source/build/runtime bindings passed. Report:
+`/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/cpu-functional-v3-20261010/report.json`.
+This is a two-prompt functional reference, not registered broad quality or native
+F32 numerical authority. Original V1/V2 failures remain preserved.
+
+The corrected V7 native two-stream collector88303 has started under the pair
+lease after CPU inference closed. Its collection, actual4-job serial196-vector
+join, OFF/ON/API and 4/6 topology arms remain pending. All other full-goal
+requirements above remain open, including whole-model fidelity, complete API/
+concurrent cache identity/memory/TTFT, critical-path profiling, matched latency
+and final verified shelf. Completion remains unproven.

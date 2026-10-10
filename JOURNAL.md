@@ -11557,3 +11557,32 @@ V2 failure is lifecyclepreflight, not NNoutputfailure; preserve bothtruths.
 MatchingactualOS/networkbehavior in cheappreflight avoids expensivefalse
 modeltestfailure. Source-onlynative counterpart preparation delegated; no
 GPUexperiment besideCPUrun. Fullgoal remainsactive/unrelatedchanges preserved.
+
+
+## 2026-10-10 - Independent CPU functional pilot PASS; native2 collection started
+
+CONFIG -> Exact original four UD-Q4_K_XL shards/frozen3579file CPUsource/V3build;
+CPUfunctionalV3 hostloopback, originaltokenizer/template, temp0/seed1234/max64,
+8threads/norepack/noGPUaccess, freshprocess perprompt/repeat. No registry edits.
+COMMAND -> Modelpilot41294 terminal0/PASS286s. Independentlyinspectactual four
+responses/IDs/naturalstop/teardown/memory/source identity. Root starts leased
+V7native2 diagnostic88303 from genuineplan2040aa96 afterCPUrun fullycloses;
+no concurrentRAM-heavyCPUmodel/GPUserve. Agents nativefunctionalprep sourceonly.
+RESULT -> Bothfresh functioncases produce identicalfenced def add(a,b): return
+a+b (18tokens), bothfresh arithmeticcases exact12 (3tokens). AllnaturalEOS,
+inputtemplate/tokenagreement and original outputtoken decodePASS, deterministic
+freshprocess repeatsPASS, no memory/swap/forcedcleanuperrors, normalownedexit0/
+removal all4. Pre/postcomplete4/pages/source/build/runtimebindings PASS.
+ReportSHA1b98ee53d20896840215da7c1f97b4245de86b3955abe80ce0cef09e1727e3f8.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/cpu-functional-v3-20261010/report.json.
+PeakobservedRSS64.770GiB from1s samples; minimumsampledhost MemAvailable116.166
+GiB. RSS includes mmap/file-backed pages; these arenot totalresidentweights/
+capacity estimates or speed results. Originalmodel filebytes103.69GiB unchanged.
+Native2actual88303 pending fresh health/collection/cancellation/ownedteardown/
+new4/source andsubsequent4exactprefix serialjobs/196vector numerical join.
+VERDICT -> Trustworthy LIMITED independent CPUfunctional/freshrepeat baseline
+nowestablished onselectedartifact. Not registeredbroadeval, full48 native math,
+history/concurrency/stale-cache/latency or productionqualification. Two-prompt
+Strata counterpart and V7private2stream equivalence next, then4/bounded6 and
+fullcriticalpath/matchedlatency/shelf work. Preserveall V1/V2failedhistory and
+qualifiedone/pairserialcache proofs. Fullgoal remains active.
