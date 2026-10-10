@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "status": "Frozen source/CPU11 only; fullcurrent-model readonly execution unexecuted byagent",
+  "files": {
+    "adjudicate_c137_missing_started_v3_v1.py": "46667e74557b5c34e69a07f8dfaecdd54e18bde27803827667183c37bcb0b9d9",
+    "test_c137_missing_started_adjudication_cpu_v1.py": "be7ab42b104fb91843cbde41f3ceaced08953f651a7284511370f316e430c91d",
+    "c137-missing-started-adjudication-design-v1.md": "6c47d9d7fbdcbbeb52c44466540cdcab981b0d3cab500bae251b213028093e8e",
+    "qualify_c1_serving_combined_v137_v3.py": "46e348d958242587dda704ff8b61c32a04aaf7269e77dc277910bebd48443778",
+    "c137_journal_binding_v3.py": "f7794b4cb26189acb5449276c23677af1fa03316a4cf0c98bb356ccd3679ef36",
+    "c1-combined-v137-parent-source-plan-v3.json": "cdf2a877c3d2d3c3e9b3d7a74b08a36c683ade49907762860d194099e4f258ce",
+    "c1_serve_controller_combined_v137.py": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+    "c1-combined-v137-source-plan.json": "f18bcec13d2864e5f8c55bc15156e0ec653ce26206ed0ff4f4b70e95b2c47b6a"
+  },
+  "cpu_tests": 11,
+  "original_parent_passed": false,
+  "original_reports_modified": false,
+  "actual_GPU_touch": false,
+  "actual_current_model_payload_read_by_agent": false,
+  "full_model_math_qualified": false,
+  "latency_qualified": false
+}

@@ -1,0 +1,28 @@
+{
+  "schema": 1374,
+  "status": "Frozen source/CPU21 only; actualfutureparentruntime unexecuted",
+  "controller_generation": 137,
+  "parent_generation": 1374,
+  "cpu_tests": 21,
+  "files": {
+    "qualify_c1_serving_combined_v137_v4.py": "703273a654783bbbe61902c3c0c0f2471bc783ea740a01754a86fab36fdc8fc2",
+    "c137_journal_binding_v4.py": "963b7924b4eaf5ddb581e8dcf8d070fc99a9f42987578892909a6dfc212855b3",
+    "c137_baseline_admission_v4.py": "b8feea0645bc9ff23a34466aa09e3162c322c7293108ae9f0c674238936335c6",
+    "test_c137_parent_journal_cpu_v4.py": "86e9b24a4c3c854761064b234ad2ca02b330b58e77fb06b06dad0089e386b36c",
+    "c137-missing-started-adjudication-design-v1.md": "6c47d9d7fbdcbbeb52c44466540cdcab981b0d3cab500bae251b213028093e8e",
+    "adjudicate_c137_missing_started_v3_v1.py": "46667e74557b5c34e69a07f8dfaecdd54e18bde27803827667183c37bcb0b9d9",
+    "c137-missing-started-adjudication-source-plan-v1.json": "775f99b521792c8e0be6887507f6acaaa1ee2d4a0d9b0eb7e2b0115e00ac3987",
+    "c1_serve_controller_combined_v137.py": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+    "c1-combined-v137-source-plan.json": "f18bcec13d2864e5f8c55bc15156e0ec653ce26206ed0ff4f4b70e95b2c47b6a",
+    "c1-combined-v137-parent-source-plan-v3.json": "cdf2a877c3d2d3c3e9b3d7a74b08a36c683ade49907762860d194099e4f258ce",
+    "qualify_c1_serving_combined_v137_v3.py": "46e348d958242587dda704ff8b61c32a04aaf7269e77dc277910bebd48443778",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "hosttrace36-batchstamp37-engine-build-plan-v1.json": "2e940d51c61abe5366526b926f89dcf9f42bf778feee5d13c9b72aefc2785ace"
+  },
+  "proof_helper": "qualify_c1_serving_combined_v137_v4.validate_final_source_proof",
+  "baseline_admission_API": "c137_baseline_admission_v4.finalized_binding(root,adjudication_receipt=None)",
+  "onecard_adjudication_kind": "C137_actual90362_missing_started_v3_v1",
+  "actualbaseline_qualified": false,
+  "full_model_math_qualified": false
+}
