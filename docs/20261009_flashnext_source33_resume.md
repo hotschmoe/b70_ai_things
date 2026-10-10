@@ -137,3 +137,25 @@ sourceclosuresPASS;4C113experimentalaliasesregistered. C112/P30V3 proofs
 cannot qualify newsource35/C113/P30V4. Originalprefix1explorerV4 remains
 independent own-zero state; larger prefixes need truthful verifier route math.
 Originalmodel fidelity/cache/concurrency/latency/shelf remain unqualified.
+
+2026-10-10 actualsource35 follow-up -> uploadPASS273s/C113onePASS434s/
+P30V4onePASS556s, currentPLE row IDs/F32 stagedembeddings BITWISEoriginal
+IQ4/hash BOTHarms;11actualnormalrouteframes,192P30-SFD/196OFFONbitwise,
+99,297,312BONpeak/owningfrees/health/terminal/newsource4PASS.
+Original48prefix1V4 actualcompute/postCPUfull4PASS, noerrors/no numericalPASS.
+Layer1+2 now~1e-14NMSE; head8.40917e-5/max.002253 remainsunqualified.
+ConditionalFFNseams actual8cases andpostCPUfull4PASS; localFFN4/6/10 matches
+native fromconditionalnativeattention near1e-14 orbetter, ownreplayBITWISE.
+DerivedpacketSHAdifferences support seamamplification; GPUmixed/packets
+remainunobserved and no wholemodelPASS/kernelchange/tolerancechange follows.
+NewseamCLI/test/sourceplanCPU16PASS. See
+docs/20261010_flashnext_source35_original_ple_and_ffn_seams.md.
+
+C113source35pair baselinePASS345s/publicproof/posthealth/full4. Reducedmatched
+P30V4pair prepared+launched, execsession25718 is LIVE underpairlease, output
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/p30v4-pair-run/.
+Poll actualhandle/process/finalreceipts; do not restart on observationtimeout.
+OnecardP30receipt is p30v4-onecard-run/child/report.json under the same root.
+Still required: originalfullmodel arithmetic/quality, larger truthful route
+reference, actualpairnumericalcomparison, completecache/concurrency/fairness/
+interactive profiling/cleanlatency and verifiedshelf. Goal remains active.

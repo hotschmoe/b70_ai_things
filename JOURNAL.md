@@ -10816,3 +10816,32 @@ readings, not fullfidelity or matched performance. New35/C113/P30V4 original
 inputs/owned48 then completecache/concurrency/fairness/profiling/latency/shelf
 required. C112/P30V3 remain frozen; no new math or sourceweight change.
 See docs/20261009_flashnext_strata_decode_readings_and_prompt_capture35.md.
+
+
+## 2026-10-10 - Source35 original PLE/fullprefix PASS and FFN seam evidence
+
+CONFIG -> Same exact source35/C113 SDK/model, one2048/64/PLE65536, P30V4
+OFF/ON only with SFD/input33 bothON; original ownzero prefix1, oneBLASthread.
+Separate conditional FFN nativeattention diagnostic, never a fullown reference.
+
+COMMAND -> Actualsource35upload6067/C113one32077/P30one23058/original22283/
+conditional45761. NewC113pair36108 then P30pair25718 nowlive. NewseamCPU16.
+
+RESULT -> UploadPASS273s/C113onePASS434s/P30onePASS556s, allsource/identity/
+health/ownedterminal gatesPASS.11normalrouteframes,192P30-SFD/196OFF-ON
+vectors bitwise; original stagedPLE4framesEACHarm BITWISE independentIQ4/hash.
+ActualONexplicitpeak99,297,312B andowningfreesPASS. Originalown48compute
+complete/noerrors/newpostCPUfull4PASS. L1FFNnmse2.92457e-14,L2FFN1.59384e-14
+(oldhugePLE/layer2counterfactualgapgone); laterFFNgrowth/headnmse8.40917e-5/
+max.002253 remains, no numericalPASS/tolerance assigned.
+Seam8cases/newpostCPUfull4PASS; nativeattention conditional FFN4/6/10
+nmse1.2882e-14/1.06207e-15/4.41218e-17, ownreplay8casesBITWISE. Independently
+derivedmixedpacketSHAs differat4/6/10, sameat3; actualGPUmixed/packetsunobserved.
+C113pairPASS345s/APIcoherence/identity/exit0/removed/posthealth/newsource4;
+publicfinalproofPASS. Matchedreducedgeometry P30pair25718 liveunderpairlease.
+
+VERDICT -> ActualoriginalPLE andfullprefixobservation nowqualified; major
+semantic omissionremoved. Conditionalagreement supports propagatedquantization
+seams, not a Q5Kstoredsum fix or fullmodelPASS. Remainingnumeric/quality/
+route/state/cache/concurrency/latency/shelf gates retain originalscope.
+See docs/20261010_flashnext_source35_original_ple_and_ffn_seams.md.

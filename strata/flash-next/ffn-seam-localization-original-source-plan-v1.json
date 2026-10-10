@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source only; actual conditional model payload execution unobserved",
+  "files": {
+    "strata/flash-next/localize_ffn_seams_original_v1.py": "1a6b2f446c96b08b5cbbf36a6631197a9751dfc54c10d84bf5bc372b724118ba",
+    "strata/flash-next/test_localize_ffn_seams_original_cpu_v1.py": "7bba2e5a9487de2c4f6ef8505726c4a6cf3b0a13ad8ba86dee9c97635c2ccf53",
+    "strata/flash-next/explore_full48_original_prefix1_v4.py": "7f524c2895005f3b674e1b3a74d2688966b6bfa3c68175c676de7d50fcf08bd5",
+    "strata/flash-next/full48-original-prefix1-p30-source-plan-v4.json": "d7e8bc42dcd5d07677f48a66ae41020ff6e92cb504556d3b3da462849cd404a1",
+    "strata/flash-next/full48_owned_composition_storage_v1.py": "9f98e1b7b7088dc0b12ec0474bcad5660f60878d23ecd24cfabc3032661d1d28",
+    "strata/flash-next/full48-owned-composition-storage-ready-manifest-v1.json": "2ad0a3d1f9d8ca9cda661c314249bfdb4935b1bb3e64594c54e9a43e8f4d1b39",
+    "strata/flash-next/full48-owned-composition-storage-source-plan-v1.json": "032ae4340cc357a048d4995715d49e9e0b3a832ebafc6d16633db2459e8f3dda",
+    "strata/flash-next/independent_q8_1_activation_v1.py": "b58d73282051bfa301ebb6f781d5d59c63128d9074a42d53cf4d9ff05d75a714",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec"
+  },
+  "conditional_layers": [
+    3,
+    4,
+    6,
+    10
+  ],
+  "captured_inputs_used": true,
+  "native_selected_ids_used": false,
+  "native_mixed_or_packet_observed": false,
+  "full_model_math_qualified": false,
+  "numeric_pass_claim": false,
+  "tolerance_gate": null,
+  "actual_model_payload_reads": 0,
+  "actual_GPU_Docker_runtime_execution": false,
+  "requires": "current finalized source35/C113/P30V4, pinned complete original V4 report, all savedownbytes, original postCPUfull4, fresh knownpages and NEW postseamfull4 afterCPUterminal",
+  "cpu_tests": 16,
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p 'test_localize_ffn_seams_original_cpu_v1.py'",
+  "original_math_changed": false
+}

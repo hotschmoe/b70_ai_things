@@ -63,3 +63,12 @@ islive. Fullrow source35/C113/P30V4 replay and originalprefix1V4 are required.
 Rough paired short-screen engine decode13.1-18.4 tok/s is not a matched/clean
 performance or originalfidelity qualification. Originalfullmodel math, allstate
 cache, concurrent fairness/latency and shelf remain unproven.
+
+2026-10-10: source35 C113one/pair service/source/lifecycle gates PASS. P30V4one
+actualoriginalprelaunchPLEinputs BITWISEpass botharms; fullnormalprefix
+coverage/rawmapping/OFFON/budget/free/health/source4 PASS. Fullindependent
+originalprefix1 compute andpostCPUsource4 complete; hugeL1PLEerrorremoved,
+L1+2~1e-14NMSE, laterFFN/head differences remainunqualified. Conditional FFN
+input-seam diagnostic supports amplification without claimingGPU packet
+observation or wholemodel equivalence. PairedP30V4 nowlive; completecache/
+concurrency/fairness/latency/shelf and broadoriginalfidelity still missing.
