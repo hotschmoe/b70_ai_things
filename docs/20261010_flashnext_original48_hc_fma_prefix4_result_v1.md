@@ -38,3 +38,16 @@ seams and rounding/window effects using independently owned operands. Preserve
 this result and the older reference. Full fidelity, declared tolerance, broad
 quality, complete cache/API concurrency, profiling and matched latency remain
 open; no shelf, serving speed or model numerical qualification is claimed.
+
+
+## Read-only follow-up: the early mismatch worsens too
+
+At p0_l0_attention, the older reference NMSE is1.3210388381246456e-13 versus
+3.9609884988946576e-7 for the new candidate. Thus the worsening is already
+present at the first attention output; it is not confined to later head
+propagation. Actual verify.cpp submits native HC separately for each row of
+the two-row prompt window, so a different batched HC arithmetic path is not
+supported by this source inspection. Next compare the complete first HC
+normalized/gate/mixed vectors and Q8_1 packets, then isolate the GDN seam with
+explicitly conditional controls. No native operand may enter the independent
+original48 computation.
