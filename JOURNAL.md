@@ -11501,3 +11501,28 @@ mount forbothmetadata/server helpers and actualCPUmetadata+server-version
 wrapper preflight BEFOREexpensivefull4 scan, thenretainfull4pre/post around
 actualinference. Agent/source-only fixes underway; rootaloneexecuteswrappers/
 model. No rebuild, driver/package/registry change required. Fullgoal active.
+
+
+## 2026-10-10 - V2 actual CPU wrappers PASS; functional model pilot started
+
+CONFIG -> NEWV2 fixes shareddeep /harness/llamacpp/flash-next/pilot.py topology;
+oldactualV1metadata failure source/receipts unchanged. Same exactCPU build,
+originalmodel/tokenizer/template and pinned c388/39992 images; noGPU access.
+COMMAND -> Root/independent16CPU tests+closure PASS. Actualwrapper-preflight
+36590 terminal0/PASS: realmetadata export+productioninside-server --version
+beforeanymodelscan, CPU2GiB/noswap/networknone/no model mounts/device grants.
+Leased15024 startsNEWV2modelrun, repeatswrapperpreflight thenfull4 identity
+beforefirstcase; allfour fresh-process functional requests stillpending.
+RESULT -> ActualwrapperreportSHA 8594a7a1d57f75d168e20055f96c31c09b3169decb850949106e5a57c9b8347f.
+Path: /mnt/vm_8tb/b70/build/cpu-functional-v2-wrapper-preflight-20261010/report.json.
+V2sourceplanSHAa99252b366bb7167e983305c58269a56a1cd9e898796f0f0b860ec052e746448.
+ROOT-depth bug nowactualcontainer-tested, source35 exports two exact declared
+fixtures; CPUserver ELF/dependencies/version wrapperworks. No modelinference
+bywrapper test. Modelrun15024 confirmedliveholdingpairleases onlytoexclude
+GPUserving/RAMcontention; allinferencecontainers CPUonly/noGPU/health calls.
+VERDICT -> Prelaunchexecution gap closed withoutABI rebuild/model mutation.
+Currentactualmodelpilot muststillcomplete alias/template/token acceptance,
+naturalEOS functionaltwo-prompts/freshrepeats, memory/no-swap/ownedteardown,
+outputdecode andNEWpostterminalfull4/pages/sourcebindings. Noquality/math/
+latency/productionclaim beforethoseactualresults. V7native2genuineplan ready,
+notGPUexecuted; fullgoal intact/unrelatedworktreechanges preserved.

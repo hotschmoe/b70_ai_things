@@ -580,3 +580,10 @@ GPU runtime or fresh serial numerical join has run. API/stale/concurrent cache,
 memory/residency impacts, 1/2/4/bounded6 qualification, whole-model fidelity and
 quality, critical-path profiling, matched interactive latency and verified
 shelf remain required. These serial cache results do not close the full goal.
+
+Actual CPU functional V1 then failed at metadata wrapper import, before any
+model inference: its shallow /harness/pilot.py mount made ROOT.parents[2]
+invalid. Both full4/page identity scans passed; failed source and report are
+preserved in7b157a3. A NEW V2 with deeper helper mounts and actual metadata/
+server-version wrapper checks before full scans is being prepared. The paired
+cache and cross-layout proofs are unaffected. Model quality remains unproven.
