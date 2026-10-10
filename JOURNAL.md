@@ -11753,3 +11753,20 @@ registry add-only association remain under review; registry unchanged.
 VERDICT -> Actual four-stream raw evidence collected, final qualification and
 serial parity pending. Profiling moved from source audit to implementation;
 no latency, fullmath, broad quality, API/cache4/6 or shelf claim. Goal active.
+
+
+## 2026-10-10 - Native four-stream collector qualified
+
+CONFIG -> Exact source35/C113 onecard four private native slots, diagnostic32
+budget and current original UD-Q4_K_XL; serial numerical parity still separate.
+COMMAND -> Poll88372 terminal exit0/PASS477s. Inspect actual finalized parent,
+child raw392 vectors, normal engine exit0/removal, posthealth and new full4 scan.
+RESULT -> Parent PASS/errors empty, child collection/source lifecycle qualified.
+Parent SHA 4e0e5e61e1cd81023d728b53ef275b065634be3e1a150b010c9b84c165b88984.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-onecard-native4-diag1-run/parent-qualification.json.
+CPU preparation now running for V9 cacheOFF freshGEN1 groups0/1 (eight actual
+consumed-prefix jobs, all392 vectors). No serial comparison PASS claimed yet.
+VERDICT -> Fourstream raw/current source/identity/health/lifecycle gate passed.
+Fresh serial parity, OFF/ON API concurrency, bounded6, cached state handoff,
+fullmath/broad quality, criticalpath/matched latency and shelf remain required.
+Goal active; canonical registry and consumed SDK unchanged.
