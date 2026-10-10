@@ -1,0 +1,11 @@
+// Exercise both exported and actual DDI-pointer dispatch without GPU libraries.
+#include <level_zero/ze_api.h>
+#include <level_zero/ze_ddi.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstdint>
+#define CHECK(X) if((X)!=ZE_RESULT_SUCCESS)return 2
+int main(){ze_module_dditable_t m{};ze_kernel_dditable_t k{};ze_command_list_dditable_t l{};ze_command_queue_dditable_t q{};ze_command_list_exp_dditable_t e{};CHECK(zeGetModuleProcAddrTable(ZE_API_VERSION_CURRENT,&m));CHECK(zeGetKernelProcAddrTable(ZE_API_VERSION_CURRENT,&k));CHECK(zeGetCommandListProcAddrTable(ZE_API_VERSION_CURRENT,&l));CHECK(zeGetCommandQueueProcAddrTable(ZE_API_VERSION_CURRENT,&q));CHECK(zeGetCommandListExpProcAddrTable(ZE_API_VERSION_CURRENT,&e));if(std::getenv("HALF37_FAKE_NULL_EXP")&&(e.pfnCreateCloneExp||e.pfnImmediateAppendCommandListsExp))return 3;
+ auto c=(ze_context_handle_t)(uintptr_t)1;auto d=(ze_device_handle_t)(uintptr_t)2;ze_command_list_handle_t regular{},immediate{};ze_command_list_desc_t ld{};ze_command_queue_desc_t qd{};CHECK(l.pfnCreate(c,d,&ld,&regular));CHECK(l.pfnCreateImmediate(c,d,&qd,&immediate));const char*names[]={"_ZTS16Half37Expression","_ZTS11Half37Store","_ZTS10Half37Load"};ze_group_count_t groups{1,1,1};uint8_t input[8]={3,2,35,7,0,0,0,0};
+ for(int i=0;i<3;++i){ze_module_desc_t md{};md.stype=ZE_STRUCTURE_TYPE_MODULE_DESC;md.format=ZE_MODULE_FORMAT_IL_SPIRV;md.inputSize=8;md.pInputModule=input;md.pBuildFlags="CPU_SYNTHETIC";ze_module_handle_t module{};CHECK(i?m.pfnCreate(c,d,&md,&module,nullptr):zeModuleCreate(c,d,&md,&module,nullptr));ze_kernel_desc_t kd{};kd.stype=ZE_STRUCTURE_TYPE_KERNEL_DESC;kd.pKernelName=names[i];ze_kernel_handle_t kernel{};CHECK(k.pfnCreate(module,&kd,&kernel));CHECK(l.pfnAppendLaunchKernel(regular,kernel,&groups,nullptr,0,nullptr));CHECK(l.pfnAppendLaunchKernel(immediate,kernel,&groups,nullptr,0,nullptr));CHECK(k.pfnDestroy(kernel));CHECK(m.pfnDestroy(module));}
+ auto queue=(ze_command_queue_handle_t)(uintptr_t)7;CHECK(q.pfnExecuteCommandLists(queue,1,&regular,nullptr));if(e.pfnCreateCloneExp){ze_command_list_handle_t copied{};CHECK(e.pfnCreateCloneExp(regular,&copied));CHECK(e.pfnImmediateAppendCommandListsExp(immediate,1,&copied,nullptr,0,nullptr));CHECK(l.pfnDestroy(copied));}CHECK(l.pfnDestroy(regular));CHECK(l.pfnDestroy(immediate));std::puts("CPU_SYNTHETIC_ABI_PASS actual_GPU_touch=0");return 0;}
