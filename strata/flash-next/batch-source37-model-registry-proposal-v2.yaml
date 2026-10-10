@@ -1,0 +1,86 @@
+# NEW source37 batch LIST ENTRIES ONLY; append inside existing models list.
+# Frozen V1 full-document proposal preserved; this fragment has no models key.
+  - label: flashnext-source37-batch2-onecard-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch2-onecard-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-onecard-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-onecard-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-onecard-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-onecard-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch2-pair-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch2-pair-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch2-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-pair-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch4-pair-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch4-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-pair-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."
+  - label: flashnext-source37-batch6-pair-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-nativeQ8_1-prefillF16BF16-fp16kv-ctx2048-prefill64-batch6-pcache0-ccache0-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-owner29-prefill30-mirror31-currentPLE32-input33off-lastwindow34-prompt35-hosttrace36off-batchstamp37-C137-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    notes: "SOURCE ONLY; genuine C137 parent1372 one/pair sameSDK required, H36OFF/EAGERabsent. Pair2 OFF/ON/full49 mustclose before4/6. No completed cache/concurrency/math/quality/latency claim."

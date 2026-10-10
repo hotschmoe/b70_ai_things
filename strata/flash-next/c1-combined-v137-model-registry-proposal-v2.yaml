@@ -1,0 +1,34 @@
+# NEW C137 baseline LIST ENTRIES ONLY; append inside existing models list.
+# Frozen V1 document preserved; no top-level models key in this fragment.
+  - label: flashnext-strata-integrated25-37-one-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-37-one-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx2048-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-37-two-card-segmented
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-seg1024-adapt0-borrow0-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."
+  - label: flashnext-strata-integrated25-37-two-card
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-native-source-hc-ple-mtp0-c1-fp16kv-ctx8192-srcintegrated25-37-api22v2-prefix30-mirror31-currentPLE32-input33-lastwindow34-prompt35-hosttrace36-batchstamp37-gpu0-1-split32-16
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/c1_serve_controller_combined_v137.py launch --prepared <genuine-prepared-dir> --pre-health <parent-health-receipt>"
+    notes: "Integrated0025-37 source generation restores current PLE input staging and fixes final prompt window observer publication; baseline batch0 and feature flagsOFF including STRATA_CRITICAL_PATH_TRACE=OFF; matching new engine/sourceuploadV2/full4/C1parent137 source32/33/final_window_PLE_observer_fix34/prompt_verifier_P30_capture35/bounded_host_critical_path_trace36/earlier_stage_batch_observer_stamp37 proof mandatory; STRATA_VERIFY_EAGER absent. No native math/concurrency/shelf claim."

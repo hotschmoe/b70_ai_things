@@ -12207,3 +12207,21 @@ Partialc137-onecard-segmented retained+abortreceipt; nextgenuineprepare newdir.
 VERDICT -> Actualcaughtsemantic configurationbug; userregistry/weights untouched.
 Strongbaseline supervisor nowreadyafter correctedregistration. Freshupload390
 andrealshared272token fixture remainvalid; fulloriginalgoal active.
+
+
+## 2026-10-10 - Semantic-safe C137/batch37 identities registered; genuineprepare
+
+CONFIG -> ExactE0abd149existingmodels +NEWbaseline4fragment08043ca +batch12
+ded5e8; no duplicate YAML keys; alloldentries/order/topkeys/values preserved.
+COMMAND -> RootstrictYAML prospectivefile associationPASS beforecanonicalwrite;
+CPU4 semantic tests/123SHAASCIIAST closure PASS, plan94520cf69c9428dd55e3ecef079f1cb92841baf977dcb24ddbc205cc2de0c4a3.
+RESULT -> Canonical165rows, actualSHA86621c71b829c75cc2f7312248932e9a8bb276018db3c0bef77f1fdb58678052.
+Oldfull-document proposals+weakassoc remainhistorical, no oldwholeglobalgate
+successclaim. Genuineonecard C137prepare68050 nowlive withfresh37SDK/new390,
+currentruntime/canonicalaliases/newdirectory/port18337, originalfull4scan.
+ActualV2shared fixture91801 PASS19rows/7phases/shared272; V2casegenerated after
+strictproducer/seed/image/terminal/tokenizer admission, runtimeunqualified.
+EarlierV1fixture→V2case refusal retained asvalid provenancegate, notmodelerror.
+VERDICT -> Correctedconfiguration concreteandreviewable; nextstrong1373baseline
+GPUserve afterpreparationterminal. FulltwoGPU/API/cache/fidelity/profiling/
+latency/shelf goal remainsactive; unrelateduserchanges preserved.
