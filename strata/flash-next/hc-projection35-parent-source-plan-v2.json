@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "scope": "Fresh HC projection V2 count-metadata correction only; allV1 receipts preserved",
+  "files": {
+    "strata/flash-next/qualify_hc_projection35_v2.py": "aef138d131af4c32d440079570c89b12b6058ddaa37f3a2b95a3bc0e0478089c",
+    "strata/flash-next/compile_hc_projection35_v2.py": "6441879132c641093ac8b3429fa953eb4cbab6feb84ffe428023a91a005a1ddc",
+    "strata/flash-next/prepare_hc_projection35_leaf_v2.py": "5d79ec914178b87430f2b91c5661c9e0db1e0b2b4ba9d976bd52c37f0e0f2f79",
+    "strata/flash-next/test_qualify_hc_projection35_cpu_v2.py": "db0c9992815f33349f071f4cac0bb57034d9523e089ccc1921c451abd1a694be",
+    "strata/flash-next/hc-projection35-leaf-compile-plan-v2.json": "05a6a14b175029a1c1850a2bd34de1bd397068d90138b9248c7d6a03c4cd9b8a",
+    "strata/flash-next/hc-projection35-parent-design-v2.md": "c25092e7fffbee9cae833149174ed645d8631611aab8f088dc7ae6c3693e7659",
+    "strata/flash-next/hc_projection_arithmetic35_fixture_v2.py": "c2ea395124bef10e2fa11f4cf637310c71d722b434ac2969927278c961bdf553",
+    "strata/flash-next/hc_projection_arithmetic35_gpu_v1.cpp": "f53ce82ca026bf9326ffe3ef001e908cf1971a6db506254e584f634938d8cdb6",
+    "strata/flash-next/hc-projection-arithmetic35-fixture-source-plan-v2.json": "1236831f2f48b355d2c15be5e3475b9013be2eaa8643c79eb626765317875547",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "strata/flash-next/parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/c1_serve_controller_combined_v13.py": "f2057108c8ed7992ddbb71facdc81f78302ccf142090f4d73b3a5063c6d8c149",
+    "strata/flash-next/qualify_serial_prefix_v7.py": "7b5f1b597ea40b833bbb96535213902a48f3acd7d8d5e8b933ed0c3fd7c4c62c",
+    "strata/flash-next/serial_prefix_qualification_v7.py": "5f7273d0f33bc0430b4f0875131dc87163dca844749f8de36108fda026fda2a1",
+    "strata/flash-next/qualify_hc35_host_runtime_v1.py": "bc40f0546d570dc2741edb2c6cfc346ab8dc1af3605df95387839c8144a02aa5",
+    "strata/flash-next/hc35-host-runtime-source-plan-v1.json": "4e41ed7824a9fe2aef95c78ca0cd7c8c222df218a55e988b678cc819b02c898f",
+    "strata/flash-next/hc_f32_arithmetic35_host_v2.py": "a166e812264acdaa2859d656b043420df514c2d1bad58e0ab4054bbf4bd7a767"
+  },
+  "actual_leaf_compile": false,
+  "actual_GPU_execution": false,
+  "actual_model_payload_reads_by_source_agent": false,
+  "full_model_math_qualified": false,
+  "device_intrinsics_qualified": false,
+  "CPU_command": "PYTHONDONTWRITEBYTECODE=1 python3 strata/flash-next/test_qualify_hc_projection35_cpu_v2.py",
+  "CPU_tests": 20
+}

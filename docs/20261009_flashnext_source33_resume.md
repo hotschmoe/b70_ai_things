@@ -549,3 +549,51 @@ unqualified; conditional inputs cannot enter frozen originalreference. Other
 cachegroups, concurrency2/4/bounded6, criticalpath profiling, matchedstream
 latency and verified shelf remain required. No trusteddecode/productionclaim.
 Fullgoalactive; unrelateddirtychanges preserved.
+
+
+## 2026-10-10 - Paired explicit pin PASS; HC count mismatch and dev-loop audit
+
+CONFIG -> Exact source35/C113 SDK/UD-Q4_K_XL; paired native V8 pin191 of209.
+Separate synthetic public HC projection leaf/currentlibraries; originalmodel
+math/weights unchanged. Root owns all GPU work; research agents source/CPUonly.
+
+COMMAND -> Pairedpin99833 terminal0 in350s, rawrecollection ofall6/threepairs,
+finalhealth/full4/pagechronology checks. HC V1actualexpectedexport/CPU12+parent18,
+freshcompile47460 PASS21s, ownedparent26925 terminal1 in225s. Independently
+recollectactualGPU raw13cases/allwords/negatives. Dispatch dev_loop_audit at
+userrequest, inspect actualparent timing/source and existinggroupall. Preserve
+V1; NEWV2 fixture CPU14 andparent CPU20 derive/check counts beforeGPUhealth.
+V2 realexpectedexport PASS, freshmetadata-linked compile87264 nowlive.
+
+RESULT -> Pairedpin actuallyreuses191/evaluates18 inbothhits; full248320
+firsthead/all48 firstwindow residuals/naturalfinish/outputIDs/LP20 BITWISE
+for allthreecomparisons. Ownedexit0/removal, health/kernel/newfull4/pages PASS.
+ParentSHA dc82d6a3c80588911ceb7bedbc4c6781bf87be84a117ea025d20241c8b6ef56f.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v8-pair-pin/parent-qualification.json.
+HC V1all13cases/actual36 outputfloats match CPUFMA/XOR BITWISE; two wrongorder/
+weight negatives detected. ParentFAIL solely becausemetadata/guard claimed38
+words instead36. Leafexit0, removed, strict/compiledpair pre/posthealth/kernel/
+postsource/newfull4/pages PASS; errors retainedexactcount guard failure.
+V1 path: same runtimeparent/hc-projection35-v1-owned/parent-qualification.json.
+No oldfalse->true rewrite or modelqualification. NEWV2 data/CPP/librarymath
+unchanged; corpuscount derivesactualm*t andsourceplan/input/recipe/parent
+counts mustagree beforeevenhealth/fullscan admission; wrong38 negativepasses.
+V2fixtureplan1236831f2f48b355d2c15be5e3475b9013be2eaa8643c79eb626765317875547;
+V2compileplan05a6a14b175029a1c1850a2bd34de1bd397068d90138b9248c7d6a03c4cd9b8a.
+V2package: /mnt/vm_8tb/b70/build/hc-projection35-fixture-inputs-v2-20261010.
+V2compileoutput: /mnt/vm_8tb/b70/build/hc-projection35-leaf-v2-20261010.
+ConditionaloriginalHC selectedprojection CPU14/all70dependencies PASS, pending
+qualifiedGPUprimitive; no nativeinputs enter frozen fullreference.
+Devloopaudit measured sixfinalizedruns: health+newfull4 cost231-294s; pairroot
+74percent gates. Modelbytes111334654784 (103.69GiB), not198GB. ExistingV8ALL
+suite retainsfullgates andcouldsave about17min onpairedremainingcachecampaign
+versussevenseparateparents, projectiononly. Parallelstrict health26-30s/parent
+opportunity; actualparallelhashgain unproven. Countpreflight wouldavoid225s
+knownfalsefailure. No bins/shelf/activecontroller changes orgate removal.
+
+VERDICT -> Sharedroot andexplicitpin cases qualified onboth topologies;
+othercachemodes/concurrency/fidelity/quality/profiling/latency/shelf stillpending.
+HC numericaldata ispositivebutV1wholequalificationFAIL; V2freshactualruntime
+mustfinish raw/free/identity/health/ownedteardown beforeprimitivequalification.
+Nextcompletecache execution shoulduseexistingALLsuite afterHCchecks. Fullgoal
+active; no productiondecode speed claim, unrelateddirtychanges preserved.

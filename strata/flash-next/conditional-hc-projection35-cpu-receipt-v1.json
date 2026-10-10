@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "CONFIG": "predeclaredconditional HC selectedrows and synthetic originalpacked weights, mockedcompiledhelper boundary, exacthostreceipt/source metadata only",
+  "COMMAND": "PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python3 strata/flash-next/test_conditional_hc_projection35_cpu_v1.py",
+  "RESULT": {
+    "CPU_tests_passed": 14,
+    "source_closure_files_current": 70,
+    "actual_original_model_payload_execution": false,
+    "actual_helper_or_GPU_execution": false,
+    "conditional_native_experiment_executed": false,
+    "numeric_pass_claim": false
+  },
+  "VERDICT": "PASS source/CPU only; no numerical or modelqualification",
+  "files": {
+    "strata/flash-next/conditional_hc_projection35_v1.py": "b2d5669d83481b424432825b81a2bf71ea06cc6c8407657223262cb245b1cfca",
+    "strata/flash-next/test_conditional_hc_projection35_cpu_v1.py": "62b64a5d3f62b6d2532df4b67d0aff14a50d2b25e0a8a8bd5430eca38378bb48",
+    "strata/flash-next/conditional-hc-projection35-design-v1.md": "0fee87b9c9c922d43fc45337f78201e8a0e70596c7f339cf8f3e0d91d28d901b",
+    "strata/flash-next/conditional-hc-projection35-source-plan-v1.json": "e11eb912e09d51f88ea9e6c05e4dda6112c5226cdfeca63833dd59c211e1f7fa"
+  }
+}

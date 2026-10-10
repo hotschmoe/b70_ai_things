@@ -1,0 +1,81 @@
+{
+  "schema": 2,
+  "status": "READY frozen V2 source/CPU only; derived canonical36 count required before export/admission/GPU",
+  "files": {
+    "strata/flash-next/hc_projection_arithmetic35_gpu_v1.cpp": "f53ce82ca026bf9326ffe3ef001e908cf1971a6db506254e584f634938d8cdb6",
+    "strata/flash-next/hc_f32_arithmetic35_host_v1.cpp": "cf12835a10659b997446f87419d771396846a5305943778a33e1b7ddb6cbb9bf",
+    "strata/flash-next/hc_f32_arithmetic35_host_v2.py": "a166e812264acdaa2859d656b043420df514c2d1bad58e0ab4054bbf4bd7a767",
+    "strata/flash-next/hc-f32-arithmetic35-host-source-plan-v2.json": "b5eca831ca6725b0674d8e06584e0fbb2c42da551756b9f6d63876ea24cf9aae",
+    "strata/flash-next/qualify_hc35_host_runtime_v1.py": "bc40f0546d570dc2741edb2c6cfc346ab8dc1af3605df95387839c8144a02aa5",
+    "strata/flash-next/hc35-host-runtime-source-plan-v1.json": "4e41ed7824a9fe2aef95c78ca0cd7c8c222df218a55e988b678cc819b02c898f",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "strata/flash-next/hc-projection-arithmetic35-fixture-design-v1.md": "b891dbd7501087186b7dd22a494df601d8b71ebaf8bdb885768fae5ca1bf561f",
+    "strata/flash-next/hc_projection_arithmetic35_fixture_v2.py": "c2ea395124bef10e2fa11f4cf637310c71d722b434ac2969927278c961bdf553",
+    "strata/flash-next/test_hc_projection_arithmetic35_fixture_cpu_v2.py": "e2f1a64e6f317cb776a6ffbfcfa6c96800c55edca0eff2a633673cadb7c0d936",
+    "strata/flash-next/hc-projection-arithmetic35-fixture-source-plan-v1.json": "b249dd89b123a77bc07a9919da222282be74f2b421c62c89a81c0af32519b101",
+    "strata/flash-next/hc-projection-arithmetic35-fixture-design-v2.md": "a0a4eadd423cc9cc3f06f673206695833e24211141c04e44a0c3b5f242a13cea"
+  },
+  "source35_dependencies": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/hc_native_projection.cpp",
+      "sha256": "40a14446456199a4532e9e52b78c8131944afbe7c1615e75a6231e850cb2c025"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/hc_native_composition.cpp",
+      "sha256": "c63ce71dee3572daca974f03587db54ade1d9ec842176bd83bb81dc7d22bb83f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/include/strata/kernels/hc_native_projection.hpp",
+      "sha256": "4a9cf6735a9ee5b607d45a30302503d2ca57c2dffca8602df24c321dd79fda86"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/include/strata/sycl_queue.hpp",
+      "sha256": "696ad9d9073b50f2b68033a94040e96ecb9747ac8dcfb40bbeefd2b71eccbe45"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/include/dpct/device.hpp",
+      "sha256": "66776dce10405ad3826e6f19edf23a9811113fa6c62832de56d93d907b827154"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/libstrata_kernels.a",
+      "sha256": "d13ac6c1a92ea93846e1158dbc8b85ea2cb88bc63e48097ccfa8de7a5fa4af8e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/libstrata_core.a",
+      "sha256": "7471ffb49efdd1f92fbb7bed50362e106cc8022df985b92a24e2d572b99c4e74"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/build.ninja",
+      "sha256": "717e840d054d5804705dfaa26250bb72a56c972e2cbdb3e845ab9a9ee2137565"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/CMakeCache.txt",
+      "sha256": "1ffc73ae184f1972e753953e96d8041ed0127deadf0dc8d5bc06aef3281b02ed"
+    }
+  ],
+  "engine_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl",
+  "engine_receipt_sha256": "7e3e4c1e61bcee7bc0ea1a15c0b2d8347bfdbd0c8f9fb16296476625bff58c12",
+  "engine_plan_sha256": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+  "corpus_cases": 13,
+  "corpus_output_floats": 36,
+  "negative_cases": 2,
+  "corpus_seed": 3535,
+  "synthetic_inputs_only": true,
+  "GPU_expected_bytes_visible": false,
+  "host_prerequisite": "qualify_hc35_host_runtime_v1.finalized_binding(host_run,helper,build_root), allfreshcompile+analytic+finalV2adapter+runtime/library/tinyraw sourceproofs",
+  "actual_leaf_compile": false,
+  "actual_GPU_execution": false,
+  "actual_model_payload_reads": 0,
+  "device_intrinsics_qualified": false,
+  "model_math_qualified": false,
+  "tolerance_gate": null,
+  "subnormal_or_other_mismatch_policy": "FAIL exact numeric gate; no fallback/tolerance relaxation",
+  "archive_association_limit": "Current archives freshly pinned; original SDK receipt proves8ELFs not retrospective archive provenance",
+  "cpu_tests": 14,
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p 'test_hc_projection_arithmetic35_fixture_cpu_v2.py'",
+  "compile_plan_owner": "separate prepare_hc_projection35_leaf_v2.py source33review; shared CPPv1 unchanged",
+  "actual_GPU_execution_by_preparing_agent": false,
+  "expected_recollection": "real root helper rows + current public finalized host proof + independent validated Python F32 schedule",
+  "preserved_V1_source_plan_sha256": "b249dd89b123a77bc07a9919da222282be74f2b421c62c89a81c0af32519b101",
+  "count_contract": "derive cases,len negative and sum m*t from canonical fixtures before hostexport/admission/GPU; actualraw sum words must match"
+}
