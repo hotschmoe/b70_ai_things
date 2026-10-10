@@ -14474,3 +14474,24 @@ VERDICT -> Concrete fullcacheGPUcampaign underway, exactwholefamily scope
 preserved. QSA14738CPUprepare stilllive butV2heldonpeer lifetimeidentity
 issues; no concurrentGPUobserverlaunch. Fulloriginalmodelmath/concurrency/
 physical/profile/latency/shelf remainsactive.
+
+
+## 2026-10-10 - First wholecache actor refuses; exact recovery
+
+CONFIG -> ActualsharedV4whole72322 firstcapture0 plancfdd0, unchangedsource40
+model/runtime, exactfull declaredcache suite retained.
+COMMAND -> ActualREADY/freshhealthACK thenownedcontainerlaunch. Rootreads
+actualrc2 containerlog/terminalinspection andcleanupfailureledger.
+RESULT -> Beforemodelload, originalartifactvalidator refusesengineenvironment.
+Sourceauthor identifies unfilteredmanifestenv versus exactruntime_environment
+projection; cfg/fullengineenv mustremainunchanged. Cleanup incorrectlycompares
+orderedDockerBinds whileDockerreordered identical6mounts, thenloopsforever.
+Root independentlyverifiesexactimage/name/labels/command/user/network/memory/
+6mountbijection andtypedexitedrc2state; savesoriginalinspection andremoves
+exactcontainerID6aa702028ba16b254c02d4ecd2f85915cf17416497fb06a20324bc8ad7164120.
+Frozenchildcontinuesinspectingremovedname; rootverifiesexactPID1176831/start
+fromparent/noactor andonlyinspectiondescendants, stops/terminatesexactowned
+retrychildwithrecoveryreceipt. No normalqualification/fromcleanup fabricated.
+VERDICT -> Actualfailedfirstactor, not fullcachePASS. Parent/suiteposthealth
+finalization stillliveunderlease; NEWV5mustfixbothmanifestprojection and
+mount/retirement behavior withoriginalnegativecontrols. Fullgoalunchanged.
