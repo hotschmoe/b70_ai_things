@@ -14408,3 +14408,18 @@ dlopen/dlsym CPU case. FrozenV2/results preserved; no modelmathchange.
 VERDICT -> RealGPUcoverage finding; keephealthyhelperreplay scope separate.
 SharedNEWV4 explicit171association portprogressing afterV3prepare refusal.
 Fullfidelity/cache/streams/profile/latency/shelf remainactive.
+
+
+## 2026-10-10 - GPUcaptureV2 helper finalPASS; codecoverage explicitFAIL
+
+CONFIG -> Unchanged originalhelper/input, testedV2SO/currentruntime; actual
+root65012 pairlease/card0leaf. Originalmodel/reference unchanged.
+COMMAND -> Actual65012 terminal0/PASS135s; rootreadsseparatecaptureadmission.
+RESULT -> Helperreporta9301a7eaa8237f3d9d25eef2e101f7381619b19d1c2ff0a779e83b00e4cc9cd
+passes12outputbyte equality/prepoststrict+compiledpair/kernel/normalowned
+teardown. CaptureadmissionFAIL Missingactualdirect+two-replay roleexpression;
+actualevents0/binary0 despiteactualSOmapped. No codeorJITcause qualification.
+VERDICT -> HealthyGPUrepeat and realdispatchcoveragegap distinguished.
+NewdlsymrouteV3 andexplicitsharedregistryV4 successor inprogress; paired
+modelbaseline5fce21 PASS alreadycomplete. Fulloriginal48/cache/concurrency/
+physical/profile/latency/shelf remainopen.
