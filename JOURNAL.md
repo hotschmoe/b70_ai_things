@@ -13013,3 +13013,18 @@ no actual host observation, CPU model retry or GPU workload executed.
 VERDICT -> Source/CPU progress; passive attribution and same-recipe all16
 completion still pending. Original full goal, numerical/cache/API/latency/
 verified shelf requirements remain active. H46 preparation79819 still live.
+
+
+## 2026-10-10 - Genuine paired native4 H46 OFF arm starts
+
+CONFIG -> Frozen H46 4d1bbcb5/184 source closure, actual source37/C137 paired
+baseline and closed private196 prerequisites; registry165 unchanged.
+COMMAND -> Preparation79819 terminal0/PASS; generated plan
+SHAeb857c056dac88148dce006ae942a3580269f80584484219e63f473265218d8c.
+Root qualifier19472 starts with fresh batch46-pair-native4-off-run-v1 output.
+RESULT -> Pair exclusion lease acquired; current semantic admission precedes
+health/device. Same original preparation handle was polled to completion,
+never restarted on silence. No other model/GPU actor live at launch.
+VERDICT -> Genuine four-stream experiment advances; actual runtime/parity/
+health/postidentity results pending. No dev-loop speed, fullmath/cache/API/
+latency/shelf claim. Full original goal remains active.
