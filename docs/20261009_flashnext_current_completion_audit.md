@@ -1505,3 +1505,29 @@ withimmutableendpointSOb2ccc. CPU6positivecasespass; originalV4two-domain
 negativefails12 asintended, actualruntimecoveragestillpending.
 Fulloriginal48fidelity/cache/statefamilies/streams/physicalmemory/x2profile/
 matchedinteractivelatency/reproducibleshelfremainopen, fullgoalactive.
+
+
+## 2026-10-10 - Actual native bundle result and remaining model gates
+
+Newhelperc2c34/source9712 actualGPU87832 PASS141s, reportf7754ea5; all12
+originaloutputbytes/prepoststrict+compiledpair/kernel/normalowned passed.
+OrdinarySYCL/ZEquery retrieves load/store/expressionmoduleELFs andexactnames;
+newreplaybundle membershipobserved, zeroUUIDs/noactualdirectlaunchhandle
+retained. Actualdisassembly2338 PASS66a833cd ofretrievedexpression43eb
+showsunchangedF32load/store without halfroundtrip. NohistoricalJIT/mathcause
+authority; freshmappedlibrarybytecensusmissingexplicitly. Nativeindexer
+sourcehas4halfroundtrip sites; fullmodel internalarithmetic stillunobserved.
+
+OriginalQSA V3failedbeforeREADY/binbashalias traversal, terminalFAIL739s
+report1e097df6; posthealth/newfull4passed. V4cedd481/30root/peerreview
+foundadditionalfileJSONfixedpointcoverage gap; heldV4prepare14476CPUlive.
+NEWV5 mustfullytraverse referencedJSONfilesandroots beforemodelobserver
+launch, preservebounds/health/currentbyte/mathoriginalscope.
+
+CacheV6warmoriginalFAIL758s/nativepostterminalstopgrammar localized;
+newnative-onlyview3legs reexecPASS withAPI/fullcacheflagsfalse. EOSwaiter
+sourceobserverdd6f/18CPU committed3abcead, actualcacheV7integration/
+waiterretirement neededbeforeAPIerroradjudication. Raworiginalerrorsuntouched.
+Fullreferencefidelity/allstatecache/actual1-2-4-bounded6/physicalplacement/
+x2criticalpath/cleanTTFT/gaps/completion/fairness/reproducibleshelfremainopen.
+Fullgoalactive; completionnotclaimedfromnarrowdiagnosticpasses.
