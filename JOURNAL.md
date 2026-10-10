@@ -12148,3 +12148,19 @@ association gaps mustbe fixedinnewbaselineparent beforequalification.
 VERDICT -> Concrete currentcompiled HC arithmetic evidence +deliberatefresh
 ABI checkpoint. Fullmodel fidelity/privatepair/API/cache/profiling/latency/
 shelf goalactive. No capture input/state enters independentoriginalreference.
+
+
+## 2026-10-10 - Source37 baseline andsource390 intake tracked beforedeviceuse
+
+CONFIG -> Freshcombined37 SDK084541Z-zqrph_y1, receiptSHA d39c75cff27ba53309384f4369c15f9046903c5649769ba7fa4f9050165c9dfd.
+COMMAND -> ActualC137sourcegate andNEWupload37 metadataadmission PASS64/28/37/
+8/6. Root90inherited baselineCPUcontrols PASS; agentadditional10PASS. Source
+andparent localSHA closures PASS. RootNEWupload4CPU controls PASS. TrackNEW
+modelsource intake/controllers/recipe beforeactualoracle build/runtime.
+RESULT -> Existingfrozen137parent isprototypependingNEW137v2 journal command/
+rc/error/logSHA chronology hardening; no modelserving/upload qualificationyet.
+WholeHC84261 readonlyadjudication PASS111closure/6CPU/originaltreeunchanged;
+all36 actualcomponent frames pass, device/universal/fullmodelflags false.
+VERDICT -> FreshABI andboundsourceintake readyfornew390 upload/requalification.
+FulltwoGPU/API/cache/fidelity/profiling/latency/shelf goal remainsactive; no
+priorC113 model/success orABI artifacts transferred toNEWgeneration.

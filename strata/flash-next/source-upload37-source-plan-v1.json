@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "status": "Frozen source-only recipe/CPU4 mock controls; actual oracle compile/upload unexecuted by agent",
+  "files": {
+    "native-source-upload-plan-full-source37-v1.json": "4a494a0e38f3bac5e29d4756d8e361be8ce8dd29ce9b85726addc9ba107c6053",
+    "admit_source_upload37_v1.py": "6c785f08c587c743cf8d269946567a1a2e597f88136e6f8a7d836d8b40509430",
+    "test_source_upload37_admission_cpu_v1.py": "c40e59751afa393bec7f37348847abefd9cdffea8c3fddf44c0633a933d11d2a",
+    "source-upload37-preparation-v1.md": "966c30e80f1f93f1ce36438a777cda9acf6562a89996f8bd92d98078c8e5a49d",
+    "build_source_upload_oracle_full.py": "5dc477c1a85b9e58deb154e4fb63ce2129e30859e7ed1f60ddacd3e0be34db15",
+    "run_source_upload_oracle_full_v2.py": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec",
+    "native_source_upload_gpu_oracle_full.cpp": "beb0b5acdfbb0cc6304a49d29af003fd812f885370e8f339f01df0872a90a14f",
+    "source-upload-runner-v2-source-plan.json": "280044384780005a11163da852df67f921cf169768e5ca4c0786fc7cb7c399a0",
+    "source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "c1_serve_controller_combined_v137.py": "ad129cf6f9a0832615df88e985437168af0c40082049dc9c2e05dac27147ac53",
+    "c1-combined-v137-source-plan.json": "f18bcec13d2864e5f8c55bc15156e0ec653ce26206ed0ff4f4b70e95b2c47b6a",
+    "hosttrace36-batchstamp37-engine-build-plan-v1.json": "2e940d51c61abe5366526b926f89dcf9f42bf778feee5d13c9b72aefc2785ace"
+  },
+  "cpu_tests": 4,
+  "actual_GPU_run": false,
+  "actual_oracle_build": false,
+  "actual_source390_upload_qualified": false,
+  "actual_model_payload_read": false,
+  "full_model_math_qualified": false,
+  "old_source35_proof_transfer": false
+}
