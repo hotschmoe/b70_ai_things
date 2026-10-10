@@ -14072,3 +14072,21 @@ receipt/plan/parent bound; raw coverage and serial sourcejob provenance rechecke
 VERDICT -> Complete scoped native4-versus-freshserial bitwise set. No observed
 solo migration job, no original48 reference/fresh fullcache/latency promotion.
 OriginalELF fullrecollection37439 stillCPUlive; canonical165 unchanged.
+
+
+## 2026-10-10 - Supported runtime compiler help and target metadata
+
+CONFIG -> Original runtimec388/frozen extractorV4a674; root card0 lease/pin.
+COMMAND -> Actual48369 compile/disasm/ids/query --help and --version, commands
+explicitly advertised by previous actual top-level help. No offline compilation.
+RESULT -> Terminal0/PASS49s capture51de76d2aa410358204242d1458c1ce6cd72be601bf5ae0d966e0b5be5609232
+at /mnt/vm_8tb/b70/build/half37-runtime-igc-supported-help-v1-20261010.
+Compile help accepts SPIRVinput, outputdirectory and hexadecimalPCI device ID.
+Read-only host sysfs metadata shows renderD128 0000:0b:00.0/renderD129
+0000:44:00.0, vendor8086/devicee223; receipt4e116d44 at
+f17/half37-current-host-pci-target-metadata-v1.json. OriginalJIT PCI target
+association is explicitly unproved; no guessed acronym or internal options.
+VERDICT -> Actual supported options/currenthost metadata only. Original IGClib
+current census and offline loaded-library/target proof remain separate. Full
+originalELF currentrecollection37439 stillCPUactive, no restart or gate removal.
+Native math/fullcache/latency qualification remain open.
