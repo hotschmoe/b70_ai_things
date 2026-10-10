@@ -12647,3 +12647,20 @@ All196 private OFF/ON/serial join remains pending; no fullmath/cache/latency
 or serving shelf promotion follows from scoped native comparisons.
 VERDICT -> Parent qualification advances concurrency numerical prerequisites;
 full original objective remains active and readonlyjoin mustfinish.
+
+
+## 2026-10-10 - Combined private V3 metadata join rejects page epoch
+
+CONFIG -> Actual immutable source37 OFF/ON parents plus first49 and new147.
+COMMAND -> Readonly roster53284 terminal1 at privateV3 matched_plans before
+publication; root recursive exactsnapshot diff saved external receiptSHA
+d98461cc1aa4829d199755917aa2e9f7eff16f17ea1baffcdb2fdb3ea3259621.
+RESULT -> Only differences: declared diagnostic/alias/registry servedID and
+model_identity.current_known_pages.epoch (OFF1791627892.37529 vs
+ON1791628030.9351199). Full identity path/hash/revision, page digests and stat5
+match. V3 compares observation timestamp as matched semantic configuration.
+NEW V4 must independently prove each timestamp/page observation and compare
+all substantive fields strictly. FailedV3/no-roster and original arms unchanged.
+Successor39 root12CPU/61SHA PASS, independent review pending; no nativebuild.
+VERDICT -> Actual147 parent remains PASS, private196 remains unqualified.
+Metadata consumer repair required, no GPUrerun justified by this mismatch.
