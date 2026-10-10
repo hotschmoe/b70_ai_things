@@ -14596,3 +14596,19 @@ established; actualrun causal slowdown/cleanlatency unqualified.
 VERDICT -> RealGPUcache progress underheavy diagnostic. NEWincremental
 semantic cursor mustpreserveallownership/sequence/ACK/partialline gates and
 fullstatefamilies; authorpreparingwithoutactiveV6changes. Fullgoalactive.
+
+
+## 2026-10-10 - Actual correctedcache warm clients complete
+
+CONFIG -> ActivewholeV6firstcapture0 pairmodel/URtrace2, fullcache schedule
+unchanged, QSA V3freshplan92ba preparedsource/math prerequisites retained.
+COMMAND -> Rootsmallclient JSON/log/currentprocess reads, nofulltracescan.
+RESULT -> Actual2warmHTTP rows completeclienttransport/errorNone; bounded
+request1 naturalstop21tokens observed, otherclientfinished. Nativehistory/
+state/rawidentity joins stillrunning, actor1194557 observedRSS~8.49GiB during
+tracevalidation. This isnotactualcache/math/latency qualification orCPUcause.
+QSA V3prepare98835 terminal0, plan92ba9bd1f17fe0d391e2cb3a1d7febb1dee73043cde214c7c029acf537f76335.
+VERDICT -> RealGPUwarm transport progress andnextobserverplanready.
+NEWincremental sink/ACK cursor preservesrawlines/source/PID/sequence and
+fullprefix integrity plusownedfailurebudget, currentV6 unchanged. Allfull
+model/cache/concurrency/profile/latency/shelf goalrequirements stillopen.
