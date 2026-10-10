@@ -14357,3 +14357,19 @@ Author notified forNEWcorrectedsource; frozenfailedbytes retained.
 VERDICT -> ActualABIcompile failure, notGPU/runtime regression. Pairedmodel
 GPUqualifier95154 remainssoleleasedactor, prehealthpassed/currentlaunch
 validationlive. Fulloriginalmath/cache/latency/shelf goal unchanged.
+
+
+## 2026-10-10 - Corrected native capture ABI fixture and paired GPU screens pass
+
+CONFIG -> NEWinterposerV2ecbd69c4 only3cloneFn correction, oldfailedV1
+retained. ActualAPIheaders/image39992 CPUonly/no devices/networknone2CPU2GiB.
+COMMAND -> Actual6545 all3C++builds/all4fakeABI processes terminal0; root
+structuralreader positive/null andnativequeryfailureterminal latch checks.
+RESULT -> Positiveobserves3submissions perdeclaredkernel, nullcase2; allfake
+mainprocessesexit0 andfailurecase observerterminal.failedTrue. SO/artifacts
+retainedunderbuild/half37-native-interposer-cpu-v2-20261010. No realGPU
+interposer loaded yet, actualURdispatchcoverageunqualified.
+Actualpairedmodel95154 sixAPI screensPASS repeat/coherence andnormalstop;
+posthealth/newfour/finalproof pending. Diagnosticnative ratesnotmatchedspeed.
+VERDICT -> ConcreteCPU ABI controls and actualpairedGPU screen progress.
+Next runtimecaptureafterpairlease retires; fulloriginalmodel/cache/latency open.
