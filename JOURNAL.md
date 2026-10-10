@@ -13102,3 +13102,20 @@ captures actualownedcontainer. Remaining all8inputs/twofreshrepeats and final
 full4/source/ownership/independentdecode/select gates remainpending.
 VERDICT -> Concrete unchangedrecipe progression beyond startup failure;
 no fullcontinuation/candidate/API/cache/math/latency/shelf qualification.
+
+
+## 2026-10-10 - Independent HC device arithmetic V2 compiles and starts
+
+CONFIG -> NEW de8dd545/227 source closure, own original weights/residuals and
+source FMA/XOR arguments. V1 remainsheld; prior original references unchanged.
+COMMAND -> Root95CPU/227SHA/ASCII/AST PASS, source33peerREADY. Isolatedcompile
+17428 terminal0/PASS21s underpairlease, pinned39992 compiler/SDK37 flags/libs.
+Savedfullimage/label/argv/mount/env/bounds recipe readonlybinding ca2167f4 PASS.
+RESULT -> Fresh helper ELF compiled with no model mounts/inference. No device
+arithmetic result transferred from compilation. Rootactual76881/PID1037680
+started genuine currentbaseline/V8/Num10/P30/hostbulk inputs, source-only
+preflight confirmedlive. Exact first normalized10240 and fullmixedQ81 gate
+precedes optional freshprefix4; no capturedoperands/ULPfit/tolerancechange.
+H48 metadataonly preparation87440 remainslive; no secondmodel/GPUactor.
+VERDICT -> Actual independent arithmetic experiment progresses; firstgate,
+prefix4, normalowned/health/new4/currentreader results pending. Fullgoal active.
