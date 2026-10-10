@@ -1,0 +1,248 @@
+--- a/include/strata/core/conversation_cache.hpp
++++ b/include/strata/core/conversation_cache.hpp
+@@ -5,6 +5,7 @@
+ #include "strata/core/conversation_buffer.hpp"
+ #include "strata/core/prefix_lifecycle.hpp"
+ #include "strata/core/full_cache_observer38.hpp"
++#include "strata/core/full_cache_memory39.hpp"
+ 
+ #include <algorithm>
+ #include <array>
+@@ -200,6 +201,10 @@
+ 
+     ConversationCache(size_t budget, size_t slots) : budget_(budget), slots_(slots) {}
+     bool enabled() const { return budget_ != 0 && slots_ != 0; }
++    void observe_memory39(const char* phase,size_t held=0,size_t incoming=0,size_t local_reuse=0,size_t snapshot=0) const {
++        if(!full_cache38::enabled())return;
++        full_cache_memory39::record(this,phase,budget_,bytes_,reuse_.bytes(),held,incoming,local_reuse,snapshot);
++    }
+     size_t bytes() const { return bytes_ + reuse_.bytes(); }
+     size_t size() const { return entries_.size(); }
+     size_t evictions() const { return evictions_; }
+@@ -215,17 +220,26 @@
+     // `stage_kv`: with a layer split, the later stages' restored K/V (one per stage), retained with the first's.
+     void retain(std::vector<ConversationKv>&& kv, int64_t tokens,
+                 std::vector<std::vector<ConversationKv>>&& stage_kv = {}) {
++        observe_memory39("retain_before");
+         reuse_ = {};
+         ConversationKvReuse candidate{std::move(kv), tokens, tokens, {}};
+         for (auto& k : stage_kv) candidate.stages.push_back(ConversationKvReuse{std::move(k), tokens, tokens, {}});
++        if(full_cache38::enabled())observe_memory39("retain_candidate",0,0,0,candidate.bytes());
+         if (enabled() && candidate.bytes() <= budget_ - bytes_) reuse_ = std::move(candidate);
++        observe_memory39("retain_after");
+     }
+     void limit_reuse(int64_t first_dirty) {
+         reuse_.unchanged_tokens = std::min(reuse_.unchanged_tokens, first_dirty);
+         for (auto& s : reuse_.stages) s.unchanged_tokens = std::min(s.unchanged_tokens, first_dirty);
+         if (reuse_.unchanged_tokens <= 0) reuse_ = {};
+-    }
+-    ConversationKvReuse take_reuse() { return std::exchange(reuse_, {}); }
++        observe_memory39("limit_reuse_after");
++    }
++    ConversationKvReuse take_reuse() {
++        observe_memory39("take_reuse_before");
++        auto out=std::exchange(reuse_, {});
++        if(full_cache38::enabled())observe_memory39("take_reuse_after",0,0,out.bytes());
++        return out;
++    }
+     size_t retained_bytes() const { return reuse_.bytes(); }
+     bool can_fit(size_t incoming, size_t held = 0) const {
+         return enabled() && held <= budget_ && incoming <= budget_ - held &&
+@@ -262,19 +276,23 @@
+         full_cache38::rebind(entries_,index,full_cache38_take_before);
+         full_cache38::parked("after_take",entries_,budget_,bytes_,slots_);
+         if (prefix_lifecycle::active()) prefix_lifecycle::cache("take",diagnostic,bytes(),size(),budget_,slots_,out.bytes());
++        if(full_cache38::enabled())observe_memory39("take_held",out.bytes());
+         return out;
+     }
+ 
+     // Reserve before allocating a snapshot. held is an incoming image removed
+     // with take() but still alive during the exchange; count it against RAM too.
+     bool make_room(size_t incoming, size_t held = 0) {
++        observe_memory39("make_room_before",held,incoming);
+         if (!enabled() || held > budget_ || incoming > budget_ - held) return false;
+         if (bytes() > budget_ - held - incoming) reuse_ = {};
++        observe_memory39("make_room_after_reusable_release",held,incoming);
+         while (!entries_.empty() && (entries_.size() >= slots_ || bytes_ > budget_ - held - incoming)) {
+             // the oldest entry that does not hold a pinned shared prefix leaves; with only pinned ones left the new
+             // image does not fit (the caller skips parking it - the pinned prefix is what the queries come back to)
+             if (!evict_oldest()) return false;
+         }
++        observe_memory39("make_room_after",held,incoming);
+         return true;
+     }
+ 
+@@ -298,6 +316,7 @@
+         full_cache38::parked("after_eviction",entries_,budget_,bytes_,slots_);
+         prefix_lifecycle::rebind_after_erase(entries_,removed,registry_before);
+         ++evictions_;
++        observe_memory39("eviction_after");
+         if (prefix_lifecycle::active()) prefix_lifecycle::cache("evict",diagnostic,bytes(),size(),budget_,slots_);
+         return true;
+     }
+@@ -349,6 +368,7 @@
+ 
+     bool put(SavedConversation&& image, size_t held = 0) {
+         const size_t n = image.bytes();
++        observe_memory39("put_before",held,0,0,n);
+         auto diagnostic = prefix_lifecycle::describe(image);
+         if (!enabled() || held > budget_ || n > budget_ - held) {
+             if (prefix_lifecycle::active()) prefix_lifecycle::cache("refused_budget",diagnostic,bytes(),size(),budget_,slots_,held);
+@@ -362,6 +382,7 @@
+         entries_.push_back(std::move(image));
+         full_cache38::admit(&entries_.back());
+         bytes_ += n;
++        observe_memory39("put_after",held);
+         full_cache38::parked("admit",entries_,budget_,bytes_,slots_);
+         if (prefix_lifecycle::active()) diagnostic.instance=prefix_lifecycle::admit_instance(&entries_.back());
+         if (prefix_lifecycle::active()) prefix_lifecycle::cache("admit",diagnostic,bytes(),size(),budget_,slots_,held);
+--- /dev/null
++++ b/include/strata/core/full_cache_memory39.hpp
+@@ -0,0 +1,31 @@
++// Source39 logical accounting only. No allocator/device/math policy input.
++#pragma once
++#include <array>
++#include <limits>
++#include "strata/core/full_cache_observer38.hpp"
++namespace strata::core::full_cache_memory39 {
++inline void lifetime(const char* kind,uint64_t rid,uint64_t slotgen,int slot,uint64_t window,int64_t pos,int64_t consumed,int64_t generated,int token,const char* finish,int continuation=-1){
++ if(!full_cache38::enabled())return;std::lock_guard<std::mutex> lock(full_cache38::mutex());
++ std::fprintf(stderr,"FC39 {\"kind\":\"native_lifetime\",\"event\":%llu,\"pid\":%ld,\"phase\":\"%s\",\"rid\":%llu,\"slotgen\":%llu,\"slot\":%d,\"batch_window\":%llu,\"position\":%lld,\"consumed_tokens\":%lld,\"generated\":%lld,\"token\":%d,\"finish\":\"%s\",\"continuation\":%d,\"actual_HTTP_client_terminal_qualified\":false}\n",(unsigned long long)full_cache38::next(),long(getpid()),kind,(unsigned long long)rid,(unsigned long long)slotgen,slot,(unsigned long long)window,(long long)pos,(long long)consumed,(long long)generated,token,finish?finish:"",continuation);
++}
++inline size_t add(size_t a,size_t b){if(b>std::numeric_limits<size_t>::max()-a)throw std::overflow_error("fullcache39 logical byte overflow");return a+b;}
++struct peak {const void* cache=nullptr;size_t allocated=0,reserved=0;};
++inline peak& state(const void* cache){static std::array<peak,256> states{};for(auto& p:states)if(p.cache==cache)return p;for(auto& p:states)if(!p.cache){p.cache=cache;return p;}throw std::runtime_error("fullcache39 cache scope256 bound");}
++template<class Reuses>inline size_t local_reuse_bytes(const Reuses& reuse){size_t bytes=0;for(const auto& p:reuse)bytes=add(bytes,p.bytes());return bytes;}
++inline void chains(size_t main,size_t slots,size_t budget,size_t transfer){
++ if(!full_cache38::enabled())return;std::lock_guard<std::mutex> lock(full_cache38::mutex());const auto c=full_cache38::current();
++ std::fprintf(stderr,"FC39 {\"kind\":\"chain_resources\",\"event\":%llu,\"pid\":%ld,\"current_main_body_command\":%llu,\"current_main_body_rid\":%llu,\"active_main_chain_bytes\":%zu,\"batch_slot_chain_bytes\":%zu,\"total_chain_bytes\":%zu,\"configured_chain_budget_bytes\":%zu,\"configured_transfer_budget_bytes\":%zu,\"actual_transient_transfer_peak_qualified\":false,\"whole_process_peak_qualified\":false}\n",(unsigned long long)full_cache38::next(),long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,main,slots,add(main,slots),budget,transfer);
++}
++template<class Cache>inline void expert_backing(const Cache& cache,int stage,int device){
++ if(!full_cache38::enabled())return;std::lock_guard<std::mutex> lock(full_cache38::mutex());const auto c=full_cache38::current();
++ std::fprintf(stderr,"FC39 {\"kind\":\"expert_backing_metadata\",\"event\":%llu,\"pid\":%ld,\"current_main_body_command\":%llu,\"current_main_body_rid\":%llu,\"stage\":%d,\"device\":%d,\"mapped_arena_metadata_bytes\":%lld,\"live_arena_bytes\":%lld,\"full_arena_bytes\":%lld,\"full_slots\":%lld,\"segmented\":%s,\"segment_bytes\":%lld,\"actual_device_residency_qualified\":false}\n",(unsigned long long)full_cache38::next(),long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,stage,device,(long long)cache.mapped_bytes(),(long long)cache.bytes(),(long long)cache.full_bytes(),(long long)cache.full_slots(),cache.segmented()?"true":"false",(long long)cache.segment_bytes());
++}
++inline void record(const void* cache,const char* phase,size_t budget,size_t parked,size_t reusable,size_t held=0,size_t incoming=0,size_t local_reuse=0,size_t allocated_snapshot=0){
++ if(!full_cache38::enabled())return;
++ const auto owned_pending=add(local_reuse,allocated_snapshot);
++ const auto cache_total=add(parked,reusable),base=add(cache_total,held);
++ const auto allocated=add(base,owned_pending),reserved=add(base,std::max(incoming,owned_pending));
++ std::lock_guard<std::mutex> lock(full_cache38::mutex());auto& p=state(cache);p.allocated=std::max(p.allocated,allocated);p.reserved=std::max(p.reserved,reserved);const auto c=full_cache38::current();
++ std::fprintf(stderr,"FC39 {\"kind\":\"logical_memory\",\"event\":%llu,\"pid\":%ld,\"current_main_body_command\":%llu,\"current_main_body_rid\":%llu,\"phase\":\"%s\",\"cache_scope\":%zu,\"budget_bytes\":%zu,\"parked_bytes\":%zu,\"reusable_bytes\":%zu,\"cache_total_bytes\":%zu,\"held_snapshot_bytes\":%zu,\"incoming_estimate_bytes\":%zu,\"local_reuse_bytes\":%zu,\"allocated_snapshot_bytes\":%zu,\"observed_owned_snapshot_bytes\":%zu,\"logical_reservation_bytes\":%zu,\"observed_owned_snapshot_peak_bytes\":%zu,\"logical_reservation_peak_bytes\":%zu,\"reservation_within_budget\":%s,\"incoming_estimate_overlaps_owned_pending\":true,\"whole_process_peak_qualified\":false,\"physical_reclamation_qualified\":false,\"device_physical_memory_qualified\":false}\n",(unsigned long long)full_cache38::next(),long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,phase,reinterpret_cast<size_t>(cache),budget,parked,reusable,cache_total,held,incoming,local_reuse,allocated_snapshot,allocated,reserved,p.allocated,p.reserved,reserved<=budget?"true":"false");
++}
++} // namespace strata::core::full_cache_memory39
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -129,6 +129,7 @@
+ #include <limits>
+ #include <cstdio>
+ #include "strata/core/full_cache_observer38.hpp"
++#include "strata/core/full_cache_memory39.hpp"
+ #include <cstdlib>
+ #include <cstring>
+ #include <filesystem>
+@@ -7576,6 +7577,7 @@
+                 err.clear();
+             }
+             estimate += stage_estimate;
++            if(strata::core::full_cache38::enabled())conversations.observe_memory39("park_estimated",held,estimate,strata::core::full_cache_memory39::add(reuse.bytes(),strata::core::full_cache_memory39::local_reuse_bytes(stage_reuse)));
+             // A park carrying its own retained K/V replaces memory the cache
+             // already held, so capacity is make_room's call - it runs next either
+             // way, and put()'s accounting still bounds the budget. The with-reuse
+@@ -7606,10 +7608,12 @@
+                                  additional >> 20, (long long) o.conversation_cache_min_free_mib);
+                     return true;
+                 }
++                if(strata::core::full_cache38::enabled())conversations.observe_memory39("capture_before",held,estimate,strata::core::full_cache_memory39::add(reuse.bytes(),strata::core::full_cache_memory39::local_reuse_bytes(stage_reuse)));
+                 strata::core::SavedConversation image;
+                 size_t reused_bytes = 0;
+                 if (!strata::core::conversation_snapshot_save(image, view, ss, g, draft0, err,
+                         std::move(reuse), &reused_bytes)) return false;
++                if(strata::core::full_cache38::enabled())conversations.observe_memory39("capture_main_after",held,estimate,strata::core::full_cache_memory39::add(reuse.bytes(),strata::core::full_cache_memory39::local_reuse_bytes(stage_reuse)),image.bytes());
+                 for (size_t k = 0; k < n_st; ++k) {   // the later stages (the last one with the draft layer's K/V)
+                     auto& st = stages[k];
+                     const strata::core::OnDevice on(st->dev);
+@@ -7623,6 +7627,7 @@
+                             std::move(stage_reuse[k]), &reused_bytes))
+                         return false;
+                     image.stage_images.push_back(std::move(part));
++                    if(strata::core::full_cache38::enabled())conversations.observe_memory39("capture_stage_after",held,estimate,strata::core::full_cache_memory39::add(reuse.bytes(),strata::core::full_cache_memory39::local_reuse_bytes(stage_reuse)),image.bytes());
+                 }
+                 if (!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(), 0, floor)) {
+                     if (strata::core::prefix_lifecycle::active()) strata::core::prefix_lifecycle::cache("skip_post_ram",strata::core::prefix_lifecycle::describe(image),conversations.bytes(),conversations.size(),size_t(o.conversation_cache_mib)<<20,size_t(o.conversation_cache_slots),held);
+@@ -8792,6 +8797,7 @@
+                 }
+             }
+             bs[(size_t)b].stop=true;
++            strata::core::full_cache_memory39::lifetime("BSTOP_applied",bs[(size_t)b].request_id,bs[(size_t)b].generation,b,0,bs[(size_t)b].p,bs[(size_t)b].ids.size(),bs[(size_t)b].produced,-1,"cancel");
+         };
+         auto batch_on = [&] { for (const BSlot& b : bs) if (b.active) return true; return false; };
+         auto try_next_line = [&](std::string& out) -> bool {
+@@ -8828,6 +8834,7 @@
+             auto split=strata::core::conversation_checkpoints_split(std::move(local),stages.size());const std::vector<ImgKey> no_images;size_t estimate=0;
+             for(size_t k=0;k<bslot_ss.size();++k){const auto& state=*bslot_ss[k][size_t(b)];const auto& chain=k==0?split.stage0:split.parts[k-1];const strata::core::ConversationView view{slot.ids,no_images,chain,slot.cvec};size_t bytes=0;
+                 if(!strata::core::conversation_snapshot_bytes(view,state,g,(const strata::core::QsaState*)nullptr,bytes,e))return false;estimate=strata::core::batch_prefix::add(estimate,bytes);}
++            conversations.observe_memory39("slot_capture_estimated",0,estimate);
+             if(!conversations.make_room(estimate)||!strata::core::conversation_memory_admit(strata::core::conversation_available_memory(),estimate,uint64_t(o.conversation_cache_min_free_mib)<<20)){
+                 std::fprintf(stderr,"BCHAIN park_slot_refused slot=%d rid=%llu slotgen=%llu estimate=%zu cache_bytes=%zu cache_slots=%zu\n",b,(unsigned long long)identity.rid,(unsigned long long)identity.generation,estimate,conversations.bytes(),conversations.size());return true;}
+             strata::core::SavedConversation image;
+@@ -9039,6 +9046,7 @@
+                 for(int t=0;t<S;++t){const auto& slot=bs[(size_t)rows[t]];batch_ids[size_t(t)]=strata::core::batch_fidelity::mapped(slot.request_id,slot.generation,rows[t],pos[t],tok[t],uint64_t(bt_windows+1));}
+                 if(!ver.select_batch_observation(batch_ids.data(),S,false,err)){std::printf("ERR %s\n",err.c_str());return false;}
+             }
++            if(strata::core::full_cache38::enabled())for(int a=0;a<A;++a){const auto& sl=bs[(size_t)active[a]];strata::core::full_cache_memory39::lifetime("BSTEP_before",sl.request_id,sl.generation,active[a],uint64_t(bt_windows+1),sl.p,sl.ids.size(),sl.produced,sl.x,"");}
+             if (!ver.run_slot_rows(rows, S, tok, pos, win_pool_fn, win_pool_user, outb, err) || drive.d.failed) {
+                 std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail : err.c_str());
+                 return false;
+@@ -9074,6 +9082,7 @@
+                     sl.ids.push_back(tok[first[t] + j]);
+                     std::printf("BT %d %d%s\n", b, (int)y,strict_batch_identity?(" rid="+std::to_string(sl.request_id)+" slotgen="+std::to_string(sl.generation)).c_str():"");
+                     ++sl.produced;
++                    strata::core::full_cache_memory39::lifetime("BT_emitted",sl.request_id,sl.generation,b,uint64_t(bt_windows),sl.p,sl.ids.size(),sl.produced,y,"");
+                     const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) y) != o.eos_ids.end();
+                     const char* fin = eos ? "stop" : sl.stop ? "cancel" : sl.produced >= sl.max_new ? "length"
+                                     : sl.p + 2 > o.max_context ? "length" : nullptr;
+@@ -9081,6 +9090,7 @@
+                         const double ms = std::chrono::duration<double, std::milli>(Clock::now() - sl.t0).count();
+                         std::printf("BDONE %d %lld %s %.1f%s\n", b,(long long)sl.produced,fin,ms,strict_batch_identity?(" rid="+std::to_string(sl.request_id)+" slotgen="+std::to_string(sl.generation)).c_str():"");
+                         if(strata::core::batch_fidelity::settings().enabled)strata::core::batch_fidelity::close_slot(sl.request_id,sl.generation,b,sl.stop && !eos);
++                        strata::core::full_cache_memory39::lifetime("BDONE_emitted",sl.request_id,sl.generation,b,uint64_t(bt_windows),sl.p,sl.ids.size(),sl.produced,y,fin,0);
+                         sl.active = false;
+                         sl.cached = o.prompt_cache > 0 && !sl.img;
+                         break;
+@@ -9989,7 +9999,9 @@
+                     for (auto& si : incoming->stage_images) stage_kv.push_back(std::move(si.kv));
+                     conversations.retain(std::move(incoming->kv), int64_t(live.size()), std::move(stage_kv));
+                 }
++                if(strata::core::full_cache38::enabled())conversations.observe_memory39("restore_before_held_release",incoming->bytes());
+                 incoming.reset(); // Running-state/checkpoint copies are no longer needed.
++                conversations.observe_memory39("restore_after_held_release");
+                 std::fprintf(stderr, "strata serve: conversation cache: restored %lld tokens (%s) in %.1f ms; parked=%zu bytes=%zu\n",
+                              (long long) resume, from_live ? "live" : "checkpoint",
+                              std::chrono::duration<double, std::milli>(Clock::now() - t0).count(),
+@@ -11639,8 +11651,9 @@
+             }
+             strata::core::prefix_lifecycle::state("committed_live",live,!cancelled,live_ok,cancelled?"prefill":std::strcmp(finish,"cancel")==0?"decode":"complete",finish);
+             strata::core::full_cache38::work(resume,read_from,reread_to,cancelled?pp_reached:n,n,produced_n,cancelled||std::strcmp(finish,"cancel")==0,finish);
+-            strata::core::full_cache38::points("request_complete",checks,o.prompt_cache,tail_ckpt_len);
++            strata::core::full_cache38::points("main_body_complete",checks,o.prompt_cache,tail_ckpt_len);
+             strata::core::full_cache38::host_memory();
++            if(strata::core::full_cache38::enabled()){conversations.observe_memory39("main_body_complete");strata::core::full_cache_memory39::chains(strata::core::batch_prefix::chain_bytes(checks),batch_slot_chain_bytes(),strata::core::batch_prefix::settings().chain_bytes,strata::core::batch_prefix::settings().transfer_bytes);strata::core::full_cache_memory39::expert_backing(xcache,0,0);for(size_t k=0;k<stages.size();++k)strata::core::full_cache_memory39::expert_backing(stages[k]->cache,int(k+1),stages[k]->dev);}
+             if(strata::core::full_cache38::enabled()){strata::core::full_cache38::experts(xcache,0,0,0,stages.empty()?g.n_layers:stages[0]->lb,g.n_expert);for(size_t k=0;k<stages.size();++k){const auto& st=stages[k];strata::core::full_cache38::experts(st->cache,int(k+1),st->dev,st->lb,st->le,g.n_expert);}}
+             static const bool state_hash = std::getenv("STRATA_STATE_HASH") != nullptr;
+             if (state_hash && !cancelled && o.prompt_cache > 0) {   // every finished request, ckpt=0 too (parity gates)
+@@ -11805,6 +11818,7 @@
+             std::fflush(stdout);
+             strata::program::host_trace36::end(strata::program::host_trace36::DoneEmit,h36_DoneEmit_id);
+             strata::program::host_trace36::completed((int)produced_n);
++            strata::core::full_cache_memory39::lifetime("DONE_emitted",req_rid,req_slot_generation,admit_slot,0,p,live.size(),produced_n,-1,finish);
+             if (admit_slot >= 0) {   // --batch: BADM <slot> <1 = continues in the batch windows | 0 = done>
+                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, "length") == 0 &&
+                             (int64_t) live.size() == p;
+@@ -11852,6 +11866,7 @@
+                 }
+                 std::printf("BADM %d %d%s\n",admit_slot,cont?1:0,strict_batch_identity?(" rid="+std::to_string(req_rid)+" slotgen="+std::to_string(req_slot_generation)).c_str():"");
+                 std::fflush(stdout);
++                strata::core::full_cache_memory39::lifetime("BADM_emitted",req_rid,req_slot_generation,admit_slot,0,p,live.size(),produced_n,-1,finish,cont?1:0);
+                 admit_slot = -1;
+             }
+             if (drive.routing != nullptr) std::fflush(drive.routing);   // the routing trace survives a crash and is watchable mid-session
