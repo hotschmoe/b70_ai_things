@@ -11791,3 +11791,22 @@ concurrent prefix reuse remain separate required work after API scheduling.
 VERDICT -> Native6 and twoGPU2 ready for coordinated runtime after current
 serial comparisons. No native6/pair concurrency numerical PASS or speed claim.
 Fullgoal remains active, with fullmath/cache/API/profiling/latency/shelf open.
+
+
+## 2026-10-10 - API capability-on source lane frozen; 294 native4 pairs matched
+
+CONFIG -> NEW API source35 cache3/fullstatechain/public/fresh1 recompute,
+explicit8192/512MiB budgets and unchanged0/0/-1 counters; no cachedhandoff claim.
+COMMAND -> Root+independent17CPU controls PASS; final50 SHA/ASCII/AST checks
+PASS. Final sourceplan e9c56e0b6dcb82a7a7186de2daeee3cac6dd862e2e82009b7db632cf1bc3ec15.
+Review actualproducer/CLI/interpreter/health and prefixjobs/nativehistory joins.
+Inspect current V9 native4serial0 child; parent78416 stilllive posthealth.
+RESULT -> Serial0 six requests and294 full49 comparisons BITWISE, normal
+child teardown. Final parent new4/health stillpending; no complete392 claim.
+API source files frozen, canonicalregistry still56a6 unchanged. Add-only alias
+proposal and preservedbaseline included; named derivative registry admission
+changes only viewdigest and explicitly disclaims oldglobalgate/evidence PASS.
+Pairednative4 CPUprepare48882 alsoPASS, no pairednative4 runtime yet.
+VERDICT -> Concrete reviewed API lane ready for later registry/CPU/runtime
+admission. Positive cachehandoff source route localized but unqualified. Full
+native4 final392, native6/pair/API/fullmath/cache/profiling/latency/shelf open.

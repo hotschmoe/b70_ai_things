@@ -1,0 +1,96 @@
+  - label: flashnext-source35-fresh-recompute-gpu0-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh1-recompute-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh1-recompute-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh1-recompute-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh1-recompute-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh1-recompute-gpu0-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh1-recompute-gpu0-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-1-split32-16-batch2-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh1-recompute-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-1-split32-16-batch2-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch2-pcache3-chain25-pub27-fresh1-recompute-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-1-split32-16-batch4-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh1-recompute-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-1-split32-16-batch4-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch4-pcache3-chain25-pub27-fresh1-recompute-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-1-split32-16-batch6-diag0
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh1-recompute-gpu0-1-split32-16-diag24off
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
+  - label: flashnext-source35-fresh-recompute-gpu0-1-split32-16-batch6-diag1
+    served_model_id: qwen3.8-flash-next-Unsloth-UD-Q4_K_XL-strata-source35-C113-fp16kv-ctx2048-prefill64-batch6-pcache3-chain25-pub27-fresh1-recompute-gpu0-1-split32-16-diag24on
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: Unsloth-UD-Q4_K_XL-original-GGUF
+    activations: native-Q8_1-and-prefill-F16-BF16
+    serve_cmd: "python3 strata/flash-next/qualify_batch_api_fresh_migration_v1.py --plan <genuine-capability-on-fresh-recompute-plan> --output <new-owned-output>"
+    notes: "Experimental logical slot-to-main migration with fresh full-prefix reevaluation and strict0/0/-1; cached handoff, full math, quality, speed and shelf qualification remain unobserved."
