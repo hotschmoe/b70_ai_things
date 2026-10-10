@@ -1,0 +1,336 @@
+--- a/include/strata/core/conversation_cache.hpp
++++ b/include/strata/core/conversation_cache.hpp
+@@ -4,6 +4,7 @@
+ 
+ #include "strata/core/conversation_buffer.hpp"
+ #include "strata/core/prefix_lifecycle.hpp"
++#include "strata/core/full_cache_observer38.hpp"
+ 
+ #include <algorithm>
+ #include <array>
+@@ -252,10 +253,14 @@
+     SavedConversation take(size_t index) {
+         const auto diagnostic = prefix_lifecycle::describe(entries_.at(index));
+         const auto registry_before = prefix_lifecycle::capture_instances(entries_);
++        full_cache38::parked("before_take",entries_,budget_,bytes_,slots_,int64_t(index));
++        const auto full_cache38_take_before=full_cache38::capture(entries_);
+         SavedConversation out = std::move(entries_.at(index));
+         bytes_ -= out.bytes();
+         entries_.erase(entries_.begin() + (std::ptrdiff_t) index);
+         prefix_lifecycle::rebind_after_erase(entries_,index,registry_before);
++        full_cache38::rebind(entries_,index,full_cache38_take_before);
++        full_cache38::parked("after_take",entries_,budget_,bytes_,slots_);
+         if (prefix_lifecycle::active()) prefix_lifecycle::cache("take",diagnostic,bytes(),size(),budget_,slots_,out.bytes());
+         return out;
+     }
+@@ -283,10 +288,14 @@
+         auto victim = std::find_if(entries_.begin(), entries_.end(), [](const SavedConversation& e) { return !e.pinned(); });
+         if (victim == entries_.end()) return false;
+         const auto diagnostic = prefix_lifecycle::describe(*victim);
++        full_cache38::parked("before_eviction",entries_,budget_,bytes_,slots_,int64_t(victim-entries_.begin()));
++        const auto full_cache38_registry_before=full_cache38::capture(entries_);
+         bytes_ -= victim->bytes();
+         const auto registry_before = prefix_lifecycle::capture_instances(entries_);
+         const size_t removed = size_t(victim-entries_.begin());
+         entries_.erase(victim);
++        full_cache38::rebind(entries_,removed,full_cache38_registry_before);
++        full_cache38::parked("after_eviction",entries_,budget_,bytes_,slots_);
+         prefix_lifecycle::rebind_after_erase(entries_,removed,registry_before);
+         ++evictions_;
+         if (prefix_lifecycle::active()) prefix_lifecycle::cache("evict",diagnostic,bytes(),size(),budget_,slots_);
+@@ -321,8 +330,12 @@
+                 const auto diagnostic = prefix_lifecycle::describe(e);
+                 bytes_ -= e.bytes();
+                 const auto registry_before = prefix_lifecycle::capture_instances(entries_);
++                full_cache38::parked("before_superseded",entries_,budget_,bytes_+e.bytes(),slots_,int64_t(i));
++                const auto full_cache38_superseded_before=full_cache38::capture(entries_);
+                 entries_.erase(entries_.begin() + (std::ptrdiff_t) i);
+                 prefix_lifecycle::rebind_after_erase(entries_,i,registry_before);
++                full_cache38::rebind(entries_,i,full_cache38_superseded_before);
++                full_cache38::parked("after_superseded",entries_,budget_,bytes_,slots_);
+                 if (prefix_lifecycle::active()) prefix_lifecycle::cache("superseded",diagnostic,bytes(),size(),budget_,slots_);
+                 ++dropped;
+                 continue;
+@@ -347,7 +360,9 @@
+             return false;
+         }
+         entries_.push_back(std::move(image));
++        full_cache38::admit(&entries_.back());
+         bytes_ += n;
++        full_cache38::parked("admit",entries_,budget_,bytes_,slots_);
+         if (prefix_lifecycle::active()) diagnostic.instance=prefix_lifecycle::admit_instance(&entries_.back());
+         if (prefix_lifecycle::active()) prefix_lifecycle::cache("admit",diagnostic,bytes(),size(),budget_,slots_,held);
+         return true;
+--- /dev/null
++++ b/include/strata/core/full_cache_observer38.hpp
+@@ -0,0 +1,65 @@
++// New source38 host-only diagnostics. Default OFF; no model/cache policy input.
++#pragma once
++#include <algorithm>
++#include <array>
++#include <atomic>
++#include <cerrno>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <mutex>
++#include <memory>
++#include <stdexcept>
++#include <vector>
++#include <unistd.h>
++#include "strata/core/prefix_lifecycle.hpp"
++namespace strata::core::full_cache38 {
++struct config {
++ bool enabled=false;std::array<uint64_t,6> selected{};unsigned count=0;
++ config(){const char* flag=std::getenv("STRATA_FULL_CACHE_OBSERVER38");if(!flag||!*flag||!std::strcmp(flag,"0"))return;
++  if(std::strcmp(flag,"1"))throw std::invalid_argument("fullcache38 enabled expects0|1");enabled=true;
++  const char* p=std::getenv("STRATA_FULL_CACHE_CAPTURE_RIDS38");if(!p||!*p)throw std::invalid_argument("fullcache38 requires1..6 actual RIDs");
++  while(*p){if(count==selected.size()||*p<'1'||*p>'9')throw std::invalid_argument("fullcache38 positive canonical RID list");errno=0;char* end=nullptr;const uint64_t rid=std::strtoull(p,&end,10);if(errno||!rid||end==p||(*end&&*end!=','))throw std::invalid_argument("fullcache38 RID parse/overflow");for(unsigned i=0;i<count;++i)if(selected[i]==rid)throw std::invalid_argument("fullcache38 duplicate RID");selected[count++]=rid;p=end;if(*p){++p;if(!*p)throw std::invalid_argument("fullcache38 trailing RID separator");}}
++ }
++};
++inline const config& settings(){static const config c;return c;}
++inline bool enabled(){return settings().enabled;}
++inline bool selected(uint64_t rid){const auto& c=settings();if(!c.enabled)return true;for(unsigned i=0;i<c.count;++i)if(c.selected[i]==rid)return true;return false;}
++struct owner {uint64_t rid=0,slotgen=0,command=0;int slot=-1;};
++inline owner& current(){static owner value;return value;}
++inline std::mutex& mutex(){static std::mutex value;return value;}
++inline uint64_t next(){static std::atomic<uint64_t> value{0};return ++value;}
++template<class Tokens>inline void begin(uint64_t rid,uint64_t slotgen,int slot,const Tokens& ids,bool fresh,bool pin_present,int64_t pin){
++ if(!enabled())return;std::lock_guard<std::mutex> lock(mutex());auto& c=current();c={rid,slotgen,next(),slot};char digest[65];prefix_lifecycle::token_digest(ids,digest);
++ std::fprintf(stderr,"FC38 {\"kind\":\"request_begin\",\"pid\":%ld,\"command\":%llu,\"rid\":%llu,\"slot\":%d,\"slotgen\":%llu,\"tokens\":%zu,\"input_sha256_le32\":\"%s\",\"fresh\":%s,\"pin_present\":%s,\"pin\":%lld,\"raw_requested\":%s,\"source_normal_dispatch\":\"%s\"}\n",long(getpid()),(unsigned long long)c.command,(unsigned long long)rid,slot,(unsigned long long)slotgen,ids.size(),digest,fresh?"true":"false",pin_present?"true":"false",(long long)pin,selected(rid)?"true":"false",slot<0?"GEN":"BGEN");
++}
++inline void work(int64_t reused,int64_t read_from,int64_t reread_to,int64_t reached,int64_t prompt,int64_t generated,bool cancelled,const char* finish){
++ if(!enabled())return;std::lock_guard<std::mutex> lock(mutex());const auto c=current();
++ std::fprintf(stderr,"FC38 {\"kind\":\"request_work\",\"pid\":%ld,\"command\":%llu,\"rid\":%llu,\"slot\":%d,\"slotgen\":%llu,\"reused\":%lld,\"read_from\":%lld,\"reread_to\":%lld,\"prompt_reached\":%lld,\"prompt\":%lld,\"generated\":%lld,\"cancelled\":%s,\"finish\":\"%s\"}\n",long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,c.slot,(unsigned long long)c.slotgen,(long long)reused,(long long)read_from,(long long)reread_to,(long long)reached,(long long)prompt,(long long)generated,cancelled?"true":"false",finish);
++}
++template<class Chain>inline void points(const char* phase,const Chain& chain,int64_t cap,int64_t tail,int64_t victim=-1){
++ if(!enabled())return;std::lock_guard<std::mutex> lock(mutex());const auto c=current();size_t total=0;for(const auto& point:chain)total+=point.bytes();
++ std::fprintf(stderr,"FC38 {\"kind\":\"checkpoint_inventory\",\"event\":%llu,\"phase\":\"%s\",\"pid\":%ld,\"command\":%llu,\"rid\":%llu,\"slot\":%d,\"slotgen\":%llu,\"cap\":%lld,\"actual_victim\":%lld,\"chain_capacity_bytes\":%zu,\"points\":[",(unsigned long long)next(),phase,long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,c.slot,(unsigned long long)c.slotgen,(long long)cap,(long long)victim,total);
++ for(size_t i=0;i<chain.size();++i){const auto& p=chain[i];char digest[65];prefix_lifecycle::token_digest(p.ids,digest);std::fprintf(stderr,"%s{\"index\":%zu,\"tokens\":%zu,\"sha256_le32\":\"%s\",\"used\":%llu,\"tail\":%s,\"pinned\":%s,\"point_capacity_bytes\":%zu,\"stages\":%zu}",i?",":"",i,p.ids.size(),digest,(unsigned long long)p.used,(tail>=0&&int64_t(p.ids.size())==tail)?"true":"false",p.pinned?"true":"false",p.bytes(),p.stage_parts.size()+1);}
++ std::fprintf(stderr,"],\"physical_allocator_reclamation_qualified\":false}\n");
++}
++// Independent metadata registry: does not change cache structures, their
++// sizeof/capacity budgets, existing policy or the serial-only PCL active gate.
++struct registry_capture {std::array<const void*,256> pointers{};std::array<uint64_t,256> ids{};size_t count=0;};
++inline registry_capture& registry(){static registry_capture r;return r;}
++inline uint64_t instance(const void* ptr){if(!enabled())return 0;auto& r=registry();for(size_t i=0;i<r.count;++i)if(r.pointers[i]==ptr)return r.ids[i];return 0;}
++inline void forget(const void* ptr){if(!enabled())return;auto& r=registry();for(size_t i=0;i<r.count;++i)if(r.pointers[i]==ptr){r.pointers[i]=nullptr;r.ids[i]=0;}}
++inline void restore(const void* ptr,uint64_t id){if(!enabled())return;auto& r=registry();for(size_t i=0;i<r.pointers.size();++i)if(!r.pointers[i]||r.pointers[i]==ptr){r.pointers[i]=ptr;r.ids[i]=id;r.count=std::max(r.count,i+1);return;}throw std::runtime_error("fullcache38 parked registry256 bound");}
++inline void admit(const void* ptr){if(enabled())restore(ptr,next());}
++template<class Entries>inline std::unique_ptr<registry_capture> capture(const Entries& entries){if(!enabled())return {};if(entries.size()>256)throw std::runtime_error("fullcache38 parked count256 bound");auto c=std::make_unique<registry_capture>();c->count=entries.size();for(size_t i=0;i<c->count;++i){c->pointers[i]=&entries[i];c->ids[i]=instance(c->pointers[i]);}return c;}
++template<class Entries>inline void rebind(const Entries& entries,size_t removed,const std::unique_ptr<registry_capture>& before){if(!enabled())return;if(!before)throw std::runtime_error("fullcache38 missing actual erase registry");for(size_t i=0;i<before->count;++i)forget(before->pointers[i]);for(size_t i=0;i<entries.size();++i)restore(&entries[i],before->ids[i<removed?i:i+1]);}
++template<class Entries>inline void parked(const char* phase,const Entries& entries,size_t budget,size_t bytes,size_t slots,int64_t victim=-1){
++ if(!enabled())return;std::lock_guard<std::mutex> lock(mutex());const auto c=current();std::fprintf(stderr,"FC38 {\"kind\":\"parked_inventory\",\"event\":%llu,\"phase\":\"%s\",\"pid\":%ld,\"command\":%llu,\"rid\":%llu,\"budget\":%zu,\"retained_bytes\":%zu,\"slots\":%zu,\"actual_victim\":%lld,\"entries\":[",(unsigned long long)next(),phase,long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,budget,bytes,slots,(long long)victim);
++ for(size_t i=0;i<entries.size();++i){const auto& e=entries[i];char digest[65];prefix_lifecycle::token_digest(e.live.ids,digest);std::fprintf(stderr,"%s{\"index\":%zu,\"instance\":%llu,\"live_tokens\":%zu,\"live_sha256_le32\":\"%s\",\"snapshot_bytes\":%zu,\"pinned\":%s,\"checkpoint_count\":%zu,\"stages\":%zu}",i?",":"",i,(unsigned long long)instance(&e),e.live.ids.size(),digest,e.bytes(),e.pinned()?"true":"false",e.checkpoints.size(),e.stage_images.size()+1);}std::fprintf(stderr,"],\"physical_allocator_reclamation_qualified\":false}\n");
++}
++template<class Cache>inline void experts(const Cache& cache,int stage,int device,int64_t lb,int64_t le,int64_t n_expert){
++ if(!enabled())return;std::lock_guard<std::mutex> lock(mutex());const auto c=current();std::fprintf(stderr,"FC38 {\"kind\":\"expert_inventory\",\"event\":%llu,\"pid\":%ld,\"command\":%llu,\"rid\":%llu,\"stage\":%d,\"device\":%d,\"lb\":%lld,\"le\":%lld,\"slots\":%lld,\"resident\":%lld,\"logical_bytes\":%lld,\"full_logical_bytes\":%lld,\"map\":[",(unsigned long long)next(),long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,stage,device,(long long)lb,(long long)le,(long long)cache.slots(),(long long)cache.resident(),(long long)cache.bytes(),(long long)cache.full_bytes());bool comma=false;for(int64_t l=lb;l<le;++l)for(int64_t e=0;e<n_expert;++e){int slot=cache.slot_of(l,e);if(slot>=0){std::fprintf(stderr,"%s[%lld,%lld,%d]",comma?",":"",(long long)l,(long long)e,slot);comma=true;}}std::fprintf(stderr,"],\"physical_device_residency_qualified\":false}\n");
++}
++inline void host_memory(){if(!enabled())return;FILE* f=std::fopen("/proc/self/status","r");uint64_t rss_kib=0;bool found=false;char line[512];while(f&&std::fgets(line,sizeof line,f)){unsigned long long value=0;if(std::sscanf(line,"VmRSS: %llu kB",&value)==1){rss_kib=value;found=true;}}if(f)std::fclose(f);std::lock_guard<std::mutex> lock(mutex());const auto c=current();std::fprintf(stderr,"FC38 {\"kind\":\"host_memory\",\"pid\":%ld,\"command\":%llu,\"rid\":%llu,\"proc_VmRSS_observed\":%s,\"VmRSS_bytes\":%llu,\"device_physical_memory_qualified\":false}\n",long(getpid()),(unsigned long long)c.command,(unsigned long long)c.rid,found?"true":"false",(unsigned long long)(rss_kib*1024));}
++} // namespace strata::core::full_cache38
+--- a/sycl/include/strata/core/batch_fidelity_contract.hpp
++++ b/sycl/include/strata/core/batch_fidelity_contract.hpp
+@@ -12,30 +12,35 @@
+  // n,admission,ar_off,hbase,then6 graph-consumed slot rows. Admission always consumes main row0.
+  std::array<uint64_t,10> words{};
+  static graph_layout make(const int* slots,int n,int phase,int ar_off=0,int hbase=0){
+-  if(n<1||n>ROWS || hbase!=0 || (ar_off!=0&&ar_off!=1) || (phase!=0&&n!=1) || phase<0 || phase>2)throw std::invalid_argument("batch graph layout geometry");
++  if(n<1||n>ROWS || hbase!=0 || (ar_off!=0&&ar_off!=1) || (phase!=0&&n!=1) || phase<0 || phase>3)throw std::invalid_argument("batch graph layout geometry");
+   graph_layout d;d.words.fill(~uint64_t(0));d.words[0]=uint64_t(n);d.words[1]=uint64_t(phase);d.words[2]=uint64_t(ar_off);d.words[3]=uint64_t(hbase);
+   unsigned mask=0;for(int t=0;t<n;++t){int slot=phase?ROWS:(slots?slots[t]:-1);if(!phase&&(slot<0||slot>=ROWS||(mask&(1u<<slot))))throw std::invalid_argument("batch graph duplicate/invalid actual row");if(!phase)mask|=1u<<slot;d.words[4+t]=uint64_t(slot);}return d;
+  }
+  bool operator==(const graph_layout& other)const{return words==other.words;}
+ };
+-struct entry {identity id;bool admission=false,later=false,migration=false,closed_cancel=false;};
++struct entry {identity id;bool admission=false,later=false,migration=false,closed_cancel=false,direct_done=false;};
+ struct ledger {
+  std::array<entry,REQUESTS> requests{};unsigned count=0;
+  entry* find(uint64_t rid){for(unsigned i=0;i<count;++i)if(requests[i].id.rid==rid)return &requests[i];return nullptr;}
+  identity begin(uint64_t rid,uint64_t slotgen,int slot,int64_t prompt,uint64_t enginegen=1){
+   if(!enginegen || !rid || !slotgen || slot<0 || slot>=ROWS || prompt<1)throw std::invalid_argument("batch observer admission identity");
+-  if(auto* e=find(rid)){if(enginegen!=e->id.enginegen || slotgen<e->id.slotgen || (slot!=e->id.slot && slotgen==e->id.slotgen))throw std::invalid_argument("batch observer stale migration");e->id.slot=slot;e->id.slotgen=slotgen;e->id.phase=1;return e->id;}
++  if(auto* e=find(rid)){if(enginegen!=e->id.enginegen || slotgen<e->id.slotgen || (slot!=e->id.slot && slotgen==e->id.slotgen))throw std::invalid_argument("batch observer stale migration");e->id.slot=slot;e->id.slotgen=slotgen;if(e->id.phase==3){e->id.prompt=prompt;e->admission=false;e->later=false;e->migration=false;e->closed_cancel=false;}e->id.phase=1;return e->id;}
+   if(count>=REQUESTS)return {};auto& e=requests[count++];e.id={rid,count,slotgen,slot,prompt,0,0};e.id.enginegen=enginegen;e.id.phase=1;return e.id;
++ }
++ identity direct(uint64_t rid,int64_t prompt,uint64_t enginegen){
++  if(!rid||!enginegen||prompt<1||find(rid)||count>=REQUESTS)throw std::invalid_argument("batch direct actual identity/bound");
++  auto& e=requests[count++];e.id={rid,count,0,ROWS,prompt,0,0};e.id.enginegen=enginegen;e.id.phase=3;return e.id;
+  }
+  void closed(uint64_t rid,uint64_t slotgen,int slot,bool cancelled){auto* e=find(rid);if(!e)return;if(e->id.slot!=slot||e->id.slotgen!=slotgen)throw std::invalid_argument("batch observer stale slot close");e->closed_cancel=cancelled;}
+  identity solo(uint64_t rid,int64_t prompt,uint64_t enginegen){auto* e=find(rid);if(!e)return {};if(e->migration)return {};if(!e->admission||!e->later||!e->closed_cancel||e->id.enginegen!=enginegen||prompt<=e->id.prompt)throw std::invalid_argument("batch observer solo migration prerequisite");
+   auto id=e->id;id.source_slot=id.slot;id.source_slotgen=id.slotgen;id.slot=ROWS;id.phase=2;id.prompt=prompt;id.event=id.generation;return id;}
+  bool select(const identity& id,int phase){auto* e=find(id.rid);if(!e)return false;
+   if(id.enginegen!=e->id.enginegen||id.generation!=e->id.generation||id.slotgen!=e->id.slotgen)throw std::invalid_argument("batch observer stale identity");
++  if(phase==3){if(id.phase!=3||e->id.phase!=3||id.slot!=ROWS||id.slotgen!=0||id.event!=0||id.prompt!=e->id.prompt)throw std::invalid_argument("batch observer stale direct GEN identity");return !e->direct_done;}
+   if(phase==2){if(id.phase!=2||id.slot!=ROWS||id.source_slot!=e->id.slot||id.source_slotgen!=e->id.slotgen||!e->closed_cancel||!e->admission||!e->later||id.prompt<=e->id.prompt||id.event!=id.generation)throw std::invalid_argument("batch observer stale solo identity");return !e->migration;}
+   if(id.slot!=e->id.slot||!id.slotgen||id.slot<0||id.slot>=ROWS)throw std::invalid_argument("batch observer stale actual slot identity");if(e->migration)return false;
+   if(phase==1)return !e->admission;if(phase==0)return e->admission&&!e->later;throw std::invalid_argument("batch observer phase");
+  }
+- void complete(const identity& id,int phase){auto* e=find(id.rid);if(!e||!select(id,phase))throw std::invalid_argument("batch observer invalid completion");if(phase==1)e->admission=true;else if(phase==0)e->later=true;else e->migration=true;}
++ void complete(const identity& id,int phase){auto* e=find(id.rid);if(!e||!select(id,phase))throw std::invalid_argument("batch observer invalid completion");if(phase==1)e->admission=true;else if(phase==0)e->later=true;else if(phase==2)e->migration=true;else e->direct_done=true;}
+ };
+ }
+--- a/sycl/include/strata/core/batch_fidelity_observer.hpp
++++ b/sycl/include/strata/core/batch_fidelity_observer.hpp
+@@ -1,6 +1,7 @@
+ // Separate diagnostic graph buffers; disabled mode allocates and copies nothing.
+ #pragma once
+ #include "strata/core/batch_fidelity_contract.hpp"
++#include "strata/core/full_cache_observer38.hpp"
+ #include <sycl/sycl.hpp>
+ #include <atomic>
+ #include <cstdio>
+@@ -25,7 +26,7 @@
+ inline ledger& records(){static ledger l;return l;}
+ inline identity& admitting(){static identity id;return id;}
+ inline std::mutex& log_lock(){static std::mutex m;return m;}
+-inline identity begin(uint64_t rid,uint64_t slotgen,int slot,int64_t prompt){admitting()={};if(!armed()||!rid)return {};if(slot<0){auto id=records().solo(rid,prompt,engine_generation());admitting()=id;if(id.rid)std::fprintf(stderr,"SBF migration_begin pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=6 slotgen=%llu source_slot=%d source_slotgen=%llu prompt=%lld event=%llu main_session=1\n",long(getpid()),(unsigned long long)id.rid,(unsigned long long)id.enginegen,(unsigned long long)id.generation,(unsigned long long)id.slotgen,id.source_slot,(unsigned long long)id.source_slotgen,(long long)prompt,(unsigned long long)id.event);return id;}if(!slotgen)return {};auto id=records().begin(rid,slotgen,slot,prompt,engine_generation());admitting()=id;
++inline identity begin(uint64_t rid,uint64_t slotgen,int slot,int64_t prompt){admitting()={};if(!armed()||!rid)return {};if(full_cache38::enabled()&&!full_cache38::selected(rid))return {};if(slot<0&&full_cache38::enabled()&&!records().find(rid)){auto id=records().direct(rid,prompt,engine_generation());admitting()=id;std::fprintf(stderr,"SBF direct_gen_begin pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=6 slotgen=0 prompt=%lld event=0 normal_dispatch=GEN observed_only=1\n",long(getpid()),(unsigned long long)rid,(unsigned long long)id.enginegen,(unsigned long long)id.generation,(long long)prompt);return id;}if(slot<0){auto id=records().solo(rid,prompt,engine_generation());admitting()=id;if(id.rid)std::fprintf(stderr,"SBF migration_begin pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=6 slotgen=%llu source_slot=%d source_slotgen=%llu prompt=%lld event=%llu main_session=1\n",long(getpid()),(unsigned long long)id.rid,(unsigned long long)id.enginegen,(unsigned long long)id.generation,(unsigned long long)id.slotgen,id.source_slot,(unsigned long long)id.source_slotgen,(long long)prompt,(unsigned long long)id.event);return id;}if(!slotgen)return {};auto id=records().begin(rid,slotgen,slot,prompt,engine_generation());admitting()=id;
+  if(id.rid)std::fprintf(stderr,"SBF request pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=%d slotgen=%llu prompt=%lld engine_generation=native_pid observed_only=1\n",long(getpid()),(unsigned long long)id.rid,(unsigned long long)id.enginegen,(unsigned long long)id.generation,id.slot,(unsigned long long)id.slotgen,(long long)prompt);return id;}
+ inline void close_slot(uint64_t rid,uint64_t slotgen,int slot,bool cancelled){if(!armed())return;auto* e=records().find(rid);if(!e)return;records().closed(rid,slotgen,slot,cancelled);std::fprintf(stderr,"SBF slot_closed pid=%ld rid=%llu enginegen=%llu requestgen=%llu slot=%d slotgen=%llu cancelled=%d completed=1\n",long(getpid()),(unsigned long long)rid,(unsigned long long)e->id.enginegen,(unsigned long long)e->id.generation,slot,(unsigned long long)slotgen,cancelled);}
+ inline identity mapped(uint64_t rid,uint64_t slotgen,int slot,int64_t pos,int token,uint64_t event=1){if(!settings().enabled)return {};auto* e=records().find(rid);identity id=e?e->id:identity{};id.rid=rid;id.slot=slot;id.slotgen=slotgen;id.pos=pos;id.token=token;id.enginegen=engine_generation();id.event=event;return id;}
+@@ -57,8 +58,8 @@
+  frame describe(const identity* ids,const bool* selected,int n,int phase,uint64_t epoch,int graph)const{
+   if(!ids||!selected||n<1||n>ROWS||graph<0||graph>=graph_count_||!graphs_[graph].sealed)throw std::invalid_argument("batch observer frame graph/row descriptor");
+   frame f{};f[0]=epoch;f[1]=uint64_t(graph);f[2]=uint64_t(stage_);f[3]=uint64_t(lb_);f[4]=uint64_t(le_);f[5]=uint64_t(n);f[6]=uint64_t(phase);f[9]=D;f[10]=VOCAB;f[11]=LAYERS;
+-  unsigned mask=0,chosen=0;for(int t=0;t<n;++t){const auto& id=ids[t];if(t && id.event!=ids[0].event)throw std::invalid_argument("batch observer mixed native batch events");if(id.slot<0||id.slot>=(phase==2?ROWS+1:ROWS)||(mask&(1u<<id.slot))||id.pos<0||id.token<0||id.token>=VOCAB||id.enginegen!=engine_generation())throw std::invalid_argument("batch observer actual row/engine/position invalid");mask|=1u<<id.slot;
+-   if(selected[t]){if(!id.rid||!records().select(id,phase)||(phase?(n!=1||id.pos!=id.prompt-1||(phase==1?id.event!=0:id.event==0)):(n<2||id.pos<id.prompt||id.event==0)))throw std::invalid_argument("batch observer stale/current request boundary invalid");chosen|=1u<<t;}
++  unsigned mask=0,chosen=0;for(int t=0;t<n;++t){const auto& id=ids[t];if(t && id.event!=ids[0].event)throw std::invalid_argument("batch observer mixed native batch events");if(id.slot<0||id.slot>=(phase>=2?ROWS+1:ROWS)||(mask&(1u<<id.slot))||id.pos<0||id.token<0||id.token>=VOCAB||id.enginegen!=engine_generation())throw std::invalid_argument("batch observer actual row/engine/position invalid");mask|=1u<<id.slot;
++   if(selected[t]){if(!id.rid||!records().select(id,phase)||(phase?(n!=1||id.pos!=id.prompt-1||((phase==1||phase==3)?id.event!=0:id.event==0)):(n<2||id.pos<id.prompt||id.event==0)))throw std::invalid_argument("batch observer stale/current request boundary invalid");chosen|=1u<<t;}
+    const size_t k=12+size_t(t)*8;f[k]=id.rid;f[k+1]=id.enginegen;f[k+2]=id.generation;f[k+3]=id.slotgen;f[k+4]=uint64_t(id.slot);f[k+5]=uint64_t(id.pos);f[k+6]=uint64_t(id.token);f[k+7]=id.event;
+    if(!phase&&graphs_[graph].layout.words[4+t]!=uint64_t(id.slot))throw std::invalid_argument("batch observer actual graph row layout changed");
+   }if(!chosen)throw std::invalid_argument("batch observer no selected request");f[7]=mask;f[8]=chosen;
+@@ -104,8 +105,8 @@
+   for(int t=0;t<ROWS;++t)for(int l=0;l<=LAYERS;++l){const bool expected=t<n&&(l>=lb_&&l<le_ || (l==LAYERS&&head_));if(epochs[size_t(t)*(LAYERS+1)+size_t(l)]!=(expected?input_[0]:0)){err="batch observer partial/foreign producer row/layer/head epoch";return false;}}
+   std::fprintf(stderr,"SBF replay pid=%ld enginegen=%llu stage=%d lb=%d le=%d epoch=%llu graph=%d event=%llu rows=%d admission=%d active_mask=%llu selected_mask=%llu full_roster=1 input_output_verified=1 stage_context_verified=1 geometry=48x4x2560x248320\n",long(getpid()),(unsigned long long)engine_generation(),stage_,lb_,le_,(unsigned long long)input_[0],armed_graph_,(unsigned long long)armed_ids_[0].event,n,phase,(unsigned long long)input_[7],(unsigned long long)input_[8]);
+   for(int t=0;t<n;++t){const auto& id=ids[t];std::fprintf(stderr,"SBF row pid=%ld enginegen=%llu stage=%d lb=%d le=%d epoch=%llu graph=%d event=%llu admission=%d rid=%llu requestgen=%llu slot=%d slotgen=%llu pos=%lld token=%d row=%d batchrows=%d selected=%d\n",long(getpid()),(unsigned long long)id.enginegen,stage_,lb_,le_,(unsigned long long)input_[0],armed_graph_,(unsigned long long)id.event,phase,(unsigned long long)id.rid,(unsigned long long)id.generation,id.slot,(unsigned long long)id.slotgen,(long long)id.pos,id.token,t,n,selected[t]);}
+-  for(int t=0;t<n;++t)if(selected[t]){for(int l=lb_;l<le_;++l){std::vector<float> raw(D);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(l-lb_)*D)*4,D*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,l,phase==2?"solo_migration_residual":phase==1?"admission_residual":"batch_step_residual",raw,err,input_[0],armed_graph_))return false;}
+-   if(head_){std::vector<float> raw(VOCAB);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(le_-lb_)*D)*4,VOCAB*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,-1,phase==2?"solo_migration_logits_before_sampler":phase==1?"admission_logits_before_sampler":"batch_step_logits_before_sampler",raw,err,input_[0],armed_graph_))return false;}}
++  for(int t=0;t<n;++t)if(selected[t]){for(int l=lb_;l<le_;++l){std::vector<float> raw(D);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(l-lb_)*D)*4,D*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,l,phase==3?"direct_gen_residual":phase==2?"solo_migration_residual":phase==1?"admission_residual":"batch_step_residual",raw,err,input_[0],armed_graph_))return false;}
++   if(head_){std::vector<float> raw(VOCAB);q_.memcpy(raw.data(),data_+(size_t(t)*stride_+size_t(le_-lb_)*D)*4,VOCAB*4).wait_and_throw();if(!store(ids[t],stage_,lb_,le_,-1,phase==3?"direct_gen_logits_before_sampler":phase==2?"solo_migration_logits_before_sampler":phase==1?"admission_logits_before_sampler":"batch_step_logits_before_sampler",raw,err,input_[0],armed_graph_))return false;}}
+   published_=input_[0];completed=true;return true;
+  }
+  // A cancelled/unpublished frame retires only after the owning queue drains; no vectors or ledger completion.
+--- a/sycl/include/strata/core/verify.hpp
++++ b/sycl/include/strata/core/verify.hpp
+@@ -486,7 +486,7 @@
+     int batch_observe_rows_=0;
+     std::array<batch_fidelity::identity,6>* batch_identities_=nullptr;
+     bool batch_selected_[6]={};
+-    dpct::experimental::command_graph_exec_ptr batch_admission_exec_[2]={},batch_migration_exec_[2]={};
++    dpct::experimental::command_graph_exec_ptr batch_admission_exec_[2]={},batch_migration_exec_[2]={},batch_direct_exec_[2]={};
+     std::map<std::vector<int>,dpct::experimental::command_graph_exec_ptr> batch_observe_exec_;
+     std::shared_ptr<layer0_diag::snapshot> layer0_snapshot_;
+     bool layer0_first_=false;
+--- a/sycl/src/core/verify.cpp
++++ b/sycl/src/core/verify.cpp
+@@ -1793,7 +1793,7 @@
+ bool Verifier::capture(int T, std::string &err) try {
+     const OnDevice on_device(device_);
+     dpct::experimental::command_graph_exec_ptr &exec_t =
+-        prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])));
++        prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==3?batch_direct_exec_[ar_off_?1:0]:batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T])));
+     if (exec_t != nullptr) { strata::program::host_trace36::graph_mark(reinterpret_cast<uintptr_t>(exec_t),false); return true; }
+     strata::program::host_trace36::Scope h36_Capture(strata::program::host_trace36::Capture);
+     if(prefix30_prompt_ && prefix30_snapshot_)prefix30_snapshot_->begin_rows(T);
+@@ -2151,7 +2151,7 @@
+     const uint64_t h36_ReplaySubmit_id=strata::program::host_trace36::begin(strata::program::host_trace36::ReplaySubmit);
+     const dpct::err0 le = (std::getenv("STRATA_VERIFY_EAGER") != nullptr)
+                               ? (record_window(T, cs_, err) ? 0 : 1)   // SYCL port: eager replay of the window body
+-                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]))))));
++                              : DPCT_CHECK_ERROR((cs_)->ext_oneapi_graph(*(prefix30_prompt_ ? prefix30_prompt_exec_[ar_off_?1:0][T] : (batch_observe_ && batch_admission_ && T==1 ? (batch_phase_==3?batch_direct_exec_[ar_off_?1:0]:batch_phase_==2?batch_migration_exec_[ar_off_?1:0]:batch_admission_exec_[ar_off_?1:0]) : layer0_first_ && T==1 ? layer0_exec_[(ar_off_?1:0)+(fidelity_first_?2:0)] : (fidelity_first_ && T==1 ? fidelity_exec_[ar_off_?1:0] : (ar_off_ ? exec_nr_[T] : exec_[T]))))));
+     /*
+     DPCT1009: SYCL reports errors using exceptions and does not use error
+     codes. Please replace the "get_error_string_dummy(...)" with a real
+@@ -2402,7 +2402,7 @@
+     // the POSITION it samples, not to how the text was cut into windows, so a seed replays the same text whatever
+     // the drafts were. Exact: a rejected row's draw is discarded, and no kept decision depends on a reused draw.
+     prefix_lifecycle::stage("verify_body",device_,lb_,le_,pos0,pos0+T,true);
+-    batch_fidelity::span(batch_fidelity::admitting(),device_,int(lb_),int(le_),pos0,pos0+T,batch_phase_==2?"solo_migration_target_verify":"admission_target_verify");
++    batch_fidelity::span(batch_fidelity::admitting(),device_,int(lb_),int(le_),pos0,pos0+T,batch_phase_==3?"direct_gen_target_verify":batch_phase_==2?"solo_migration_target_verify":"admission_target_verify");
+     if (le_ < g.n_layers) {   // a layer split's earlier stage: the hand-off is written (synced above)
+         ++windows;
+         return next_ == nullptr || next_->run(T, tokens, pos0, pool, next_user_, out, err);
+@@ -3541,7 +3541,7 @@
+  if(!batch_fidelity::armed())return next_==nullptr||next_->select_batch_observation(ids,n,admission,err);
+  if(n<1||n>6||!ids||std::getenv("STRATA_VERIFY_EAGER")){err="batch observer row bound or unsupported eager";return false;}
+  if(!batch_identities_)batch_identities_=new std::array<batch_fidelity::identity,6>();
+- batch_phase_=(n==1&&ids[0].phase==2)?2:(admission?1:0);batch_admission_=batch_phase_!=0;batch_observe_rows_=n;
++ batch_phase_=(n==1&&ids[0].phase==3)?3:(n==1&&ids[0].phase==2)?2:(admission?1:0);batch_admission_=batch_phase_!=0;batch_observe_rows_=n;
+  for(int t=0;t<n;++t){(*batch_identities_)[size_t(t)]=ids[t];(*batch_identities_)[size_t(t)].row=t;(*batch_identities_)[size_t(t)].batchrows=n;batch_selected_[t]=(admission || n>=2) && ids[t].rid && batch_fidelity::records().select(ids[t],batch_phase_);batch_observe_|=batch_selected_[t];}
+  if(batch_observe_&&!batch_snapshot_) {
+   if(g_->n_embd!=2560||g_->hc!=4||g_->n_layers!=48||n_vocab_!=248320){err="batch observer unsupported geometry";return false;}
+@@ -3558,7 +3558,7 @@
+ void Verifier::release_batch_observer() {
+  if(!batch_snapshot_&&!batch_identities_&&batch_observe_exec_.empty())return;
+  const OnDevice on_device(device_);
+- if(batch_snapshot_){cs_->wait_and_throw();for(auto& p:batch_admission_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_migration_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_observe_exec_)if(p.second)delete p.second;batch_observe_exec_.clear();batch_snapshot_->release();batch_snapshot_.reset();}
++ if(batch_snapshot_){cs_->wait_and_throw();for(auto& p:batch_admission_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_migration_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_direct_exec_){if(p)delete p;p=nullptr;}for(auto& p:batch_observe_exec_)if(p.second)delete p.second;batch_observe_exec_.clear();batch_snapshot_->release();batch_snapshot_.reset();}
+  delete batch_identities_;batch_identities_=nullptr;batch_observe_=false;batch_published_rows_=0;
+  // Each stage owns its resources; the existing stage teardown iterates all owners.
+ }
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -128,6 +128,7 @@
+ #include <cmath>
+ #include <limits>
+ #include <cstdio>
++#include "strata/core/full_cache_observer38.hpp"
+ #include <cstdlib>
+ #include <cstring>
+ #include <filesystem>
+@@ -3826,6 +3827,7 @@
+     }
+     const int requested_batch=o.batch;
+     const bool strict_batch_identity=strata::core::native_hc_requested() && requested_batch>0;
++    if(strata::core::full_cache38::enabled() && !strata::core::batch_fidelity::settings().enabled){std::fprintf(stderr,"fullcache38 requires existing strict batch diagnostic profile\n");return 2;}
+     if(strata::core::batch_fidelity::settings().enabled && (!strict_batch_identity || split_same || !o.serve || strata::core::fidelity_diag::settings().enabled || strata::core::layer0_diag::settings().enabled || std::getenv("STRATA_VERIFY_EAGER"))){std::fprintf(stderr,"batch fidelity requires strict native batch2/4/6 serving, distinct device stages, captured graphs\n");return 2;}
+     if(strict_batch_identity && ((requested_batch!=2 && requested_batch!=4 && requested_batch!=6) ||
+             o.batch_groups!=1 || batch_mtp || !o.mtp.empty() || o.pipeline_windows>0)) {
+@@ -7738,6 +7740,7 @@
+             }
+             if(batch_chain_enabled && strata::core::batch_prefix::point_bytes(c)>batch_chain_point_bound){ckpt_why=": checkpoint true capacity exceeds preflight";return false;}
+             checks.push_back(std::move(c));
++            strata::core::full_cache38::points("checkpoint_saved",checks,o.prompt_cache,tail_ckpt_len);
+             while ((int) checks.size() > o.prompt_cache) {
+                 std::vector<uint64_t> stamps;
+                 std::vector<char> is_tail, is_pinned;
+@@ -7756,7 +7759,9 @@
+                 }
+                 const size_t victim = strata::program::conv_cache::eviction_victim(
+                     stamps.data(), stamps.size(), o.prompt_cache, tail_flags.get(), pinned_flags.get());
++                strata::core::full_cache38::points("before_eviction",checks,o.prompt_cache,tail_ckpt_len,int64_t(victim));
+                 checks.erase(checks.begin() + (std::ptrdiff_t) victim);
++                strata::core::full_cache38::points("after_eviction",checks,o.prompt_cache,tail_ckpt_len);
+             }
+             return true;
+         };
+@@ -9631,6 +9636,7 @@
+                 std::printf("ERR strict native batch needs positive rid and greedy text; penalties/images/control-vector changes/logprobs unsupported\n");continue;
+             }
+             if(strict_batch_identity && admit_slot>=0)req_slot_generation=++slot_generations[(size_t)admit_slot];
++            strata::core::full_cache38::begin(req_rid,req_slot_generation,admit_slot,ids,req_fresh,req_pin_present,req_pin);
+             const auto batch_admission_id=strata::core::batch_fidelity::begin(strict_batch_identity?req_rid:0,req_slot_generation,admit_slot,n);
+             req_imgs.clear();
+             if (geni && !o.vision) { std::printf("ERR this engine was started without --vision\n"); continue; }
+@@ -11494,7 +11500,7 @@
+                     return 1;
+                 }
+                 if(!ver.dump_batch_observation(err)){std::printf("ERR %s\n",err.c_str());return 1;}
+-                if(produced_n==0 && ver.batch_observed(0) && admission_observed_id.rid && strata::core::batch_fidelity::records().select(admission_observed_id,admission_observed_id.phase==2?2:1))strata::core::batch_fidelity::records().complete(admission_observed_id,admission_observed_id.phase==2?2:1);
++                if(produced_n==0 && ver.batch_observed(0) && admission_observed_id.rid && strata::core::batch_fidelity::records().select(admission_observed_id,admission_observed_id.phase==3?3:admission_observed_id.phase==2?2:1))strata::core::batch_fidelity::records().complete(admission_observed_id,admission_observed_id.phase==3?3:admission_observed_id.phase==2?2:1);
+                 if(produced_n==0 && ver.batch_observed(0) && admission_observed_id.phase==2)std::fprintf(stderr,"SBF solo_event pid=%ld rid=%llu enginegen=%llu requestgen=%llu event=%llu pos=%lld token=%d rows=1 main_session=1 completed=1\n",long(getpid()),(unsigned long long)admission_observed_id.rid,(unsigned long long)admission_observed_id.enginegen,(unsigned long long)admission_observed_id.generation,(unsigned long long)admission_observed_id.event,(long long)p,window[0]);
+                 if (produced_n==0 && !ver.dump_fidelity_first(T,p,window[0],err)) { std::printf("ERR %s\n",err.c_str());return 1; }
+                 if(produced_n==0 && !ver.dump_layer0_first(T,p,window[0],err)) { std::printf("ERR %s\n",err.c_str());return 1; }
+@@ -11632,6 +11638,10 @@
+                 live_ok = o.prompt_cache > 0 && req_ckpt;   // ckpt=0: nothing to continue or park (#830)
+             }
+             strata::core::prefix_lifecycle::state("committed_live",live,!cancelled,live_ok,cancelled?"prefill":std::strcmp(finish,"cancel")==0?"decode":"complete",finish);
++            strata::core::full_cache38::work(resume,read_from,reread_to,cancelled?pp_reached:n,n,produced_n,cancelled||std::strcmp(finish,"cancel")==0,finish);
++            strata::core::full_cache38::points("request_complete",checks,o.prompt_cache,tail_ckpt_len);
++            strata::core::full_cache38::host_memory();
++            if(strata::core::full_cache38::enabled()){strata::core::full_cache38::experts(xcache,0,0,0,stages.empty()?g.n_layers:stages[0]->lb,g.n_expert);for(size_t k=0;k<stages.size();++k){const auto& st=stages[k];strata::core::full_cache38::experts(st->cache,int(k+1),st->dev,st->lb,st->le,g.n_expert);}}
+             static const bool state_hash = std::getenv("STRATA_STATE_HASH") != nullptr;
+             if (state_hash && !cancelled && o.prompt_cache > 0) {   // every finished request, ckpt=0 too (parity gates)
+                 // DEBUG: a fingerprint of every part of the session over the positions it holds ([0, L)), and
