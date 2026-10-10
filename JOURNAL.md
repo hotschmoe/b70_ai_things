@@ -12523,3 +12523,25 @@ static64MiB plus6RID ledger bounds require boundedcapture actors andseparate
 qualifieddiagnostic extension forfullhistory/eviction/victim/solo evidence.
 VERDICT -> Concrete numericalrecovery +exactflagdifferential closes, no
 underlyingEOScause orcache/fidelity/speed/shelf promotion. Fullgoal active.
+
+
+## 2026-10-10 - JSON receipt preflight rejects; exact235 CPU reference starts
+
+CONFIG -> Prospective remaining147 serial controllerV2, saved strictfirst49
+receipt; separately qualified freshCPU reference exacttarget235 corpus.
+COMMAND -> CPUprepare88193 terminal1 aftergenuineV40 originprepare, beforeGPU
+execution. Rootreadonly83250 recomputes allfirstreceipt gates: rawPython
+equalityFALSE, completeJSON-valuesequalityTRUE. Original95/adjud unchanged.
+CPUreference root/independent9CPU/42bindings PASS, tracked627a624. Wrapper
+50000 terminal0/PASS no-model. ActualexclusiveRAM CPU71408 startedpairlease
+with noGPUdevices; noGPUexperiment overlapsit.
+RESULT -> Receipt tuples/intobjectkeys round-trip toJSON lists/stringkeys;
+directPython comparison iswrong. NEWstrictcanonical JSON consumer required
+with duplicateconverted-key/nonfinite/type checks, preserving allfields.
+Partialremaining3prepared-v1 retains genuineoriginonly, no acceptedV2 plan.
+ExactCPUreference twofreshprocesses/natural64/temp0/seed1 retainoriginal235
+render/IDs andsource/runtime/memory/ownednormal/new4/pages checks; no prior
+prompt-success transfer. Actualobservations stillpending.
+VERDICT -> Realpreflight datatypeissue localized beforedeviceuse; current
+model/kernel/weights unchanged. NewCPUreference progressesEOS/localfidelity
+question whilefuturemetadatafixed. Fullcache/quality/latency/shelf goal active.
