@@ -13049,3 +13049,31 @@ exclusion through actual owned joins. V1 remains unchanged/unexecuted.
 VERDICT -> Source/CPU progress, review/runtime pending. Same-recipe all16 CPU
 continuations, original math, fullcache/API1/2/4/6, x2 critical path, matched
 latency/fairness and verified reproducible shelf remain required.
+
+
+## 2026-10-10 - Observed CPU retry startup failure and owned recovery closed
+
+CONFIG -> Exact e633 screen, observerV3/observed wrapperV2; no GPU grant and
+strict memoryguards unchanged. Original CPU95049 swap failure preserved.
+COMMAND -> Actual14032 terminal1/130s. Root ownedrecovery45070 terminal0/9s;
+fresh pairleased post-recovery identity81692 terminal0/75s.
+RESULT -> Observer missing-object parser rejected current lowercase Docker
+absence before firstowned sample. Wrapper interrupted modelparent, whose
+absent-container cleanup failed; pending launch created container after
+wrapperterminal. Recorded emptyserverlog later changed to1242bytes. No
+completion/candidate and no normal originalteardown qualification.
+Root reacquiredpair, checked exactownedimage/labels/CPUrecipe, stoppedexit0/
+OOMfalse andremoved. Recoveryreceipt54a4debb; newfull4/pagesPASS f4de9e015a.
+Currentonly monitoring/UI containers live. No oldreport rewritten.
+VERDICT -> Actual orchestrationfailure retained; explicit recovery/integrity
+closed. NEW observerV4/wrapperV3 requires passivefailure isolation and actual
+launch/descendant/census containment. Fulloriginalgoal remainsactive.
+
+CONFIG -> H46 failed actualpaired2 savedbinding comparison; exact c05 report
+content unchanged. Corrected mandatory fixed-point pack48 gate routes.
+COMMAND -> Root14 CPU/241SHA PASS; actualtype recollector1992/PID962747 live
+under CPU pair exclusion, newoutput outside all originalproof trees.
+RESULT -> New actualfresh private196 and3completepackbyte boundaries pending.
+No GPU/model inference by thisdiagnostic and no source/runtime prooftransfer.
+VERDICT -> H46/H47 remain FAILED; native-vs-JSON representation diagnosis
+pending before NEWH48 fixes. No numerical4/cache/API/latency/shelf claim.
