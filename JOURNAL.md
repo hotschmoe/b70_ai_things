@@ -14223,3 +14223,25 @@ VERDICT -> RealGPU diagnostic inprogress; retainlease/normalEOF/ownedremoval
 through health. Source40 observer launchordering/byteepoch integration still
 unsealed; no earlymodel/cache/latency qualification. OriginalCPUreader37439
 continues, canonical165 unchanged. Fullgoal active.
+
+
+## 2026-10-10 - Actual unchanged GPU helper output repeats exactly
+
+CONFIG -> Original helper4d86/inputde82, diagnostic IGC dump request; actual
+solepairlease32169 with leafcard0. No source/kernel/model arithmetic change.
+COMMAND -> Actualruntime command terminal0/PASS/normalEOF/reader retired;
+root compares every4field x3route file to original qualified GPUoutput.
+RESULT -> All12 outputbytes exactlymatch. Direct plus two graphreplays run
+and retire graphs/allocations normally. RawmappedIGC/igdfcl actualsamepaths
+asoriginalruntime. Dumpoutputcontainszero files; requestdoesnotproveISA.
+Poststrict passed; postcompiledpair islive. Fullparentresultstillpending.
+VERDICT -> ActualGPU repeat/numerical observation within unchangedhelper
+scope; no runtimeJIT capture/PASS or fullmodelmath claim. Nextnativebinary
+capture must be an actualsupportedAPI/currentlibrary witness. Fullgoalactive.
+
+RESULT -> Original32169 finalizedterminal0/PASS141s; report
+d1605aa125b7eff8d2ba115ca1e2f817cd9715ad051759383a2acf49233a5560.
+All12 unchangedGPUoutputbytecomparisons, normalownedEOF/removal, strictand
+compiledpairpre/posthealth andkernelfaultgate pass. Dumpfilecountzero is
+capturecoverageFAIL; overallhelperreplayPASSdoesnotgrantJITcodeauthority.
+NextactualLevelZero nativebinarycapture uses observedABIheaders/proctables.
