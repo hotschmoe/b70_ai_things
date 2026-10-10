@@ -12947,3 +12947,20 @@ on3 routes. Capturedfields onlytargets, neverinputs. Allprior math/source/
 health/timeout/receipt/inspection/knownpage/publisher gates retained.
 VERDICT -> New diagnostic source ready, compile/runtime results pending.
 No fittedtolerance/internalargument/instruction/fullmath/latency claim.
+
+
+## 2026-10-10 - Device-operation V8 compiles and actual run starts
+
+CONFIG -> Frozen6543 seven-field proposal +owned4ed123/182, actualV7 targets
+58da/c455 hardpinned. All originalHC/input/flags/library/math unchanged.
+COMMAND -> Rootisolatedcompile8008 terminal0/PASS19s no devices/model,
+newELF under native-rms37-isolated-device-ops-compile-v8-20261010.
+Rootactual94059 started; PID952142 confirmedlive afterpairlease acquisition
+in f17-source37-20261010/native-rms-rsqrt37-owned-v8-run-v1.
+RESULT -> native::rsqrt API compiles on pinnedcompiler, but actual device
+operation outputs/fullparent proof pending. No oldsoftware-only success
+transferred to runtime. Registry165 unchanged and no overlappingGPU/modelrun.
+H45 source-only controller held under unresolved corpus/spec exactjoin;
+NEW successor beingprepared without changing priorcase/evidence.
+VERDICT -> Actual arithmetic discrimination progresses; no internalargument/
+fullmodel math/cache/latency/shelf claim. Full goal remains active.
