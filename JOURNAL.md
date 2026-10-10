@@ -13831,3 +13831,30 @@ Textview99657 failednormal10s 'IR output is not supported'; no textualIR/cause
 or originalruntimeJITISA claim. Root/probe failures preserved, supported next
 bitcode/SPIRV extraction source work delegated.
 VERDICT -> Compiledartifact capture only. Actualconversioncause remainsunproven.
+
+
+## 2026-10-10 - Allocator producer V2 source/CPU and real host fixtures
+
+CONFIG -> NEW00f903c277f6bce58a34d6de82c0e416f4549cae5403e8cafde017c2e3eb76c3,
+162repo+4references/73proposedfiles; no integratedgeneration assigned.
+COMMAND -> RootallSHA/ASCII/AST and31CPU PASS0.876s; peer31PASS0.863.
+Rootsnapshot C++fixtures79638 undercompiler39992/-fno-sycl, noGPUdevices,
+networknone/1CPU/1GB, explicitsyntheticgeneration1000000; terminal0/PASS.
+RESULT -> OFFzeroevents; hostON14 balancedactualstdallocator/free records;
+original vectorbytes/copy/move/size/alignment assertions pass. Concurrent
+regression emits4balancedrecords, actuallyreuses same pointer and proves
+registration waits untilsuccessful free+retirement. Scopedownersallreleased.
+Receipt30fb903a58548dbc499e75b82d0202492e6f3d8174a4c38953859e3d796eb2cb
+at f17/allocator-v2-host-cpu-fixture-v1/receipt.json; exactsource/tool/argv pinned.
+V2 per-role/context/stage placement coverage and payload/directory tags close
+V1peer gaps; original9a1 held/preserved.
+VERDICT -> ActualhostCPUfixture and sourceproposal only. No nativeSYCL model/
+physicalresidency/fullcache/wholepeak proof. Freshall8 ABI/oracle/actualmodel/
+ONOFF numerical/healthy teardown qualification remainsrequired.
+
+CONFIG -> Supported newSPIRVtext704ff628/286repo+19source+15smallcode/help.
+COMMAND -> RootallSHA/ASCII/AST+3CPU PASS0.148s; independentreview pending.
+Derivedtranslations retain actualoriginaltranslator options; no actualnew
+SPIRV/text, originalembeddedELF/JIT or conversioncause observed.
+VERDICT -> Execute onlyafterliveH54group0 qualifier2165terminal. Alloriginal
+math/reference andcanonical165registry remainunchanged; fullgoal stillactive.

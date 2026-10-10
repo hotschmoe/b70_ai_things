@@ -1,0 +1,393 @@
+--- a/include/strata/core/conversation_buffer.hpp
++++ b/include/strata/core/conversation_buffer.hpp
+@@ -7,6 +7,7 @@
+ #include <initializer_list>
+ #include <utility>
+ #include <vector>
++#include "strata/core/native_allocation_attribution.hpp"
+ 
+ namespace strata::core {
+ 
+@@ -119,7 +120,7 @@
+     }
+ 
+ private:
+-    using Segment = std::vector<uint8_t>;
++    using Segment = allocation_attribution::conversation_payload_vector<uint8_t>;
+     // A fresh capture allocates exactly its payload. Later appends reserve
+     // geometrically growing segments, bounded by 16 MiB. Small chat turns then
+     // extend the final allocation instead of adding one transfer per turn.
+@@ -147,7 +148,7 @@
+         }
+         return count == 0;
+     }
+-    std::vector<Segment> segments_;
++    allocation_attribution::conversation_directory_vector<Segment> segments_;
+     size_t size_ = 0;
+ };
+ 
+--- a/include/strata/core/conversation_cache.hpp
++++ b/include/strata/core/conversation_cache.hpp
+@@ -26,7 +26,7 @@
+ struct ConversationCheckpoint {
+     std::vector<int32_t> ids;
+     std::vector<ConversationImageKey> imgs;
+-    std::vector<uint8_t> gdn, ple, tails, dead, block_pos;
++    allocation_attribution::checkpoint_vector<uint8_t> gdn, ple, tails, dead, block_pos;
+     uint64_t used = 0; // upstream root-pinned/LRU checkpoint retention
+     // A shared-prefix pin (the request key pin=N): this checkpoint is the read-only prefix many suffix queries branch
+     // from, so retention never evicts it (conv_cache.hpp) and a parked conversation holding it stays parked.  A run-time
+--- a/include/strata/core/expert_cache.hpp
++++ b/include/strata/core/expert_cache.hpp
+@@ -209,7 +209,11 @@
+     /// Byte offset of slot `s` in the arena (s == slots(): the end).
+     uint64_t slot_offset(int64_t s) const { return off_.empty() ? (uint64_t) s * (uint64_t) blob_ : off_[(size_t) s]; }
+ 
++public:
++    void allocation_observer_stage(int stage){allocation_stage_=stage;}
+ private:
++    int allocation_stage_=-1;
++    void allocation_observer_ready(int32_t slot,size_t bytes,const char* boundary);
+ #if defined(STRATA_USE_HIP)
+     bool ensure_blocking_staging(std::size_t bytes, std::string& err);
+     uint8_t* blocking_staging_ = nullptr;
+--- /dev/null
++++ b/include/strata/core/native_allocation_attribution.hpp
+@@ -0,0 +1,62 @@
++// Draft default-OFF successful API accounting; no physical residency inference.
++#pragma once
++#include <atomic>
++#include <chrono>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <fstream>
++#include <iomanip>
++#include <map>
++#include <memory>
++#include <mutex>
++#include <sstream>
++#include <stdexcept>
++#include <string>
++#include <tuple>
++#include <vector>
++#include <unistd.h>
++#ifndef STRATA_ALLOCATION_ATTRIBUTION_SOURCE_GENERATION
++#define STRATA_ALLOCATION_ATTRIBUTION_SOURCE_GENERATION 0
++#endif
++namespace strata::core::allocation_attribution {
++inline bool enabled(){static const bool on=[](){const char* p=std::getenv("STRATA_ALLOCATION_ATTRIBUTION");if(!p||!*p||!std::strcmp(p,"0"))return false;if(std::strcmp(p,"1")||STRATA_ALLOCATION_ATTRIBUTION_SOURCE_GENERATION<41)throw std::invalid_argument("allocation attribution requires1 and future compile-bound generation");return true;}();return on;}
++inline uint64_t start_ticks(){std::ifstream f("/proc/self/stat");std::string line;std::getline(f,line);auto end=line.rfind(')');if(!f||end==std::string::npos)throw std::runtime_error("actual process start identity unavailable");std::istringstream in(line.substr(end+2));std::string value;for(int i=0;i<20;++i)if(!(in>>value))throw std::runtime_error("process start identity parse");return std::stoull(value);}
++struct Context {uint64_t main_rid=0,slot_rid=0;const char* phase="startup";bool slot_observed=false;};
++inline std::atomic<uint64_t>& main_rid(){static std::atomic<uint64_t> v{0};return v;}
++inline Context& current(){static thread_local Context value;return value;}
++struct Scope {Context previous;Scope(uint64_t main,uint64_t slot,const char* phase):previous(current()){current()={main,slot,phase,true};}~Scope(){current()=previous;}};
++inline void main_command(uint64_t rid){if(enabled())main_rid().store(rid);}
++inline Context context(){auto c=current();if(c.main_rid==0&&main_rid().load()!=0){c.main_rid=main_rid().load();c.slot_rid=0;c.phase="main_body_slot_unobserved";c.slot_observed=false;}return c;}
++struct Entry {uint64_t id=0,bytes=0,owner_generation=0,element_size=0,element_count=0;int role_index=0;std::string device_uuid,queue_context,space,role;int stage=-1;std::map<std::pair<int,int>,std::pair<uint64_t,uint64_t>> experts;};
++using AllocationKey=std::tuple<std::string,std::string,uintptr_t>;
++struct Tracker {std::mutex mutex;std::map<AllocationKey,Entry> live;std::map<std::string,uint64_t> sequence;uint64_t next=0,next_owner=0;};
++inline Tracker& tracker(){static Tracker t;return t;}
++inline void safe_tag(const std::string& s){if(s.empty())throw std::invalid_argument("empty attribution tag");for(unsigned char c:s)if(!((c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='_'||c=='-'||c=='.'||c==':'))throw std::invalid_argument("unsafe attribution tag");}
++inline void emit(Tracker& t,const char* kind,const Entry& a,int layer=-1,int expert=-1,uint64_t offset=0,uint64_t bytes=0,const char* boundary="none"){
++ safe_tag(a.space);safe_tag(a.role);safe_tag(a.queue_context);safe_tag(boundary);auto c=context();safe_tag(c.phase);auto& seq=t.sequence[a.device_uuid];if(seq>=65536)throw std::runtime_error("allocation attribution event quota");auto now=std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();static const uint64_t process_start=start_ticks();const auto pid=long(getpid());
++ std::ostringstream out;out<<std::fixed<<std::setprecision(9)<<"ALLOC_ATTR {\"kind\":\""<<kind<<"\",\"owner\":{\"engine_pid\":"<<pid<<",\"process_start_ticks\":"<<process_start<<",\"device_uuid\":";
++ if(a.device_uuid.empty())out<<"null";else{safe_tag(a.device_uuid);out<<'"'<<a.device_uuid<<'"';}
++ out<<",\"source_generation\":"<<STRATA_ALLOCATION_ATTRIBUTION_SOURCE_GENERATION<<"},\"sequence\":"<<seq+1<<",\"host_epoch\":"<<now<<",\"allocation_id\":\""<<pid<<'-'<<process_start<<'-'<<a.id<<"\",\"stage\":"<<a.stage<<",\"owner_generation\":"<<a.owner_generation<<",\"role_index\":"<<a.role_index<<",\"element_size\":"<<a.element_size<<",\"element_count\":"<<a.element_count<<",\"queue_context\":\""<<a.queue_context<<"\",\"role\":\""<<a.role<<"\",\"space\":\""<<a.space<<"\",\"api_result\":\"success\",\"bytes\":"<<(bytes?bytes:a.bytes)<<",\"offset\":"<<offset<<",\"layer\":"<<layer<<",\"expert\":"<<expert<<",\"copy_completion_observed\":"<<(!std::strcmp(kind,"expert_bytes_ready")?"true":"false")<<",\"existing_completion_boundary\":"<<(!std::strcmp(kind,"expert_bytes_ready")?"true":"false")<<",\"completion_boundary\":\""<<boundary<<"\",\"command_context\":{\"current_main_body_rid\":"<<c.main_rid<<",\"actual_slot_rid\":"<<c.slot_rid<<",\"phase\":\""<<c.phase<<"\"},\"actual_slot_context_observed\":"<<(c.slot_observed?"true":"false")<<",\"physical_residency_observed\":false}\n";
++ const auto line=out.str();if(line.size()>16384)throw std::runtime_error("allocation event line quota");flockfile(stderr);const auto wrote=std::fwrite(line.data(),1,line.size(),stderr);const int flushed=std::fflush(stderr);funlockfile(stderr);if(wrote!=line.size()||flushed!=0)throw std::runtime_error("allocation attribution record write failed");++seq;
++}
++
++inline void allocation_success(void* p,uint64_t n,const char* space,const std::string& uuid,const std::string& queue,int stage,const char* role,int role_index=0,uint64_t element_size=0,uint64_t element_count=0){if(!enabled())return;if(!p||!n||((uuid.empty())!=(std::strcmp(space,"host_heap")==0))||(uuid.empty()?stage!=-1:stage<0))throw std::invalid_argument("actual successful allocation domain/stage required");auto& t=tracker();std::lock_guard<std::mutex> lock(t.mutex);auto key=AllocationKey{uuid,queue,reinterpret_cast<uintptr_t>(p)};if(t.live.count(key))throw std::invalid_argument("allocation pointer already live");Entry a;a.id=++t.next;a.bytes=n;a.owner_generation=++t.next_owner;a.element_size=element_size;a.element_count=element_count;a.role_index=role_index;a.device_uuid=uuid;a.queue_context=queue;a.space=space;a.role=role;a.stage=stage;t.live.emplace(key,a);emit(t,"allocation_success",a);}
++inline void expert_ready(const void* p,uint64_t bytes,int layer,int expert,const char* boundary,const std::string& uuid,const std::string& queue){if(!enabled())return;if(!p||!bytes||layer<0||layer>=48||expert<0||expert>=512)throw std::invalid_argument("exact expert range required");auto& t=tracker();std::lock_guard<std::mutex> lock(t.mutex);auto address=reinterpret_cast<uintptr_t>(p);auto it=t.live.upper_bound(AllocationKey{uuid,queue,address});if(it==t.live.begin())throw std::invalid_argument("expert allocation missing");--it;if(std::get<0>(it->first)!=uuid||std::get<1>(it->first)!=queue)throw std::invalid_argument("expert actual owning context missing");auto& a=it->second;auto offset=address-std::get<2>(it->first);if(a.device_uuid.empty()||offset>a.bytes||bytes>a.bytes-offset)throw std::invalid_argument("expert outside direct backed USM");auto key=std::pair<int,int>{layer,expert};auto old=a.experts.find(key);if(old!=a.experts.end()){emit(t,"expert_bytes_released",a,layer,expert,old->second.first,old->second.second,"overwrite_after_existing_wait");a.experts.erase(old);}for(auto& pr:a.experts)if(!(offset+bytes<=pr.second.first||pr.second.first+pr.second.second<=offset))throw std::invalid_argument("overlapping expert ranges");a.experts[key]={offset,bytes};emit(t,"expert_bytes_ready",a,layer,expert,offset,bytes,boundary);}
++template<class Free>inline void release_owned(const AllocationKey& pointer,Free free_api){
++ if(!enabled()){free_api();return;}auto& t=tracker();std::lock_guard<std::mutex> lock(t.mutex);auto it=t.live.find(pointer);if(it==t.live.end())throw std::invalid_argument("foreign/double owned free");
++ // Allocation APIs may return reused pointers in another thread, but their
++ // registration cannot pass this lock until successful free retirement ends.
++ free_api();auto& a=it->second;for(auto& pr:a.experts)emit(t,"expert_bytes_released",a,pr.first.first,pr.first.second,pr.second.first,pr.second.second,"owning_free_returned");a.experts.clear();emit(t,"allocation_release_success",a);t.live.erase(it);
++}
++// Only cache vectors use this allocator; observer bookkeeping remains excluded.
++enum HostRole {generic_vector=0,checkpoint_payload=1,conversation_payload=2,conversation_directory=3};
++inline const char* host_role(int role){return role==checkpoint_payload?"checkpoint_payload":role==conversation_payload?"conversation_payload":role==conversation_directory?"conversation_directory":"host_vector_api";}
++template<class T,int Role=generic_vector>struct HostCacheAllocator:std::allocator<T>{using value_type=T;template<class U>struct rebind{using other=HostCacheAllocator<U,Role>;};HostCacheAllocator()=default;template<class U>HostCacheAllocator(const HostCacheAllocator<U,Role>&)noexcept{}T* allocate(size_t n){T* p=std::allocator<T>{}.allocate(n);try{if(n)allocation_success(p,uint64_t(n)*sizeof(T),"host_heap","","host_process",-1,host_role(Role),0,sizeof(T),n);}catch(...){std::allocator<T>{}.deallocate(p,n);throw;}return p;}void deallocate(T* p,size_t n)noexcept{auto key=AllocationKey{"","host_process",reinterpret_cast<uintptr_t>(p)};try{if(n)release_owned(key,[&]{std::allocator<T>{}.deallocate(p,n);});else std::allocator<T>{}.deallocate(p,n);}catch(const std::exception& e){std::fprintf(stderr,"ALLOC_ATTR_ERROR %s\n",e.what());std::fflush(stderr);std::_Exit(1);}}};
++template<class T,class U,int Role>bool operator==(const HostCacheAllocator<T,Role>&,const HostCacheAllocator<U,Role>&){return true;}
++template<class T,class U,int Role>bool operator!=(const HostCacheAllocator<T,Role>&,const HostCacheAllocator<U,Role>&){return false;}
++template<class T>using host_vector=std::vector<T,HostCacheAllocator<T>>;
++template<class T>using checkpoint_vector=std::vector<T,HostCacheAllocator<T,checkpoint_payload>>;
++template<class T>using conversation_payload_vector=std::vector<T,HostCacheAllocator<T,conversation_payload>>;
++template<class T>using conversation_directory_vector=std::vector<T,HostCacheAllocator<T,conversation_directory>>;
++}
+--- a/src/core/conversation_file.cpp
++++ b/src/core/conversation_file.cpp
+@@ -643,7 +643,7 @@
+     }
+     void u64(uint64_t v) { raw(&v, 8); }
+     void i64(int64_t v) { raw(&v, 8); }
+-    template<class T> void vec(const std::vector<T>& v) { u64(v.size()); raw(v.data(), v.size() * sizeof(T)); }
++    template<class T,class A> void vec(const std::vector<T,A>& v) { u64(v.size()); raw(v.data(), v.size() * sizeof(T)); }
+     void buffer(const ConversationBuffer& b) {
+         u64(b.size());
+         b.visit(0, b.size(), [&](const uint8_t* p, size_t c, size_t) { raw(p, c); return ok; });
+@@ -735,7 +735,7 @@
+         if (n > (uint64_t) std::numeric_limits<size_t>::max() / (elem ? elem : 1)) return fail("element count too large");
+         return true;
+     }
+-    template<class T> bool vec(std::vector<T>& v, uint64_t limit = UINT64_MAX) {
++    template<class T,class A> bool vec(std::vector<T,A>& v, uint64_t limit = UINT64_MAX) {
+         uint64_t n = 0;
+         if (!count(n, sizeof(T), limit)) return false;
+         v.resize((size_t) n);
+--- a/src/core/conversation_file_test.cpp
++++ b/src/core/conversation_file_test.cpp
+@@ -50,8 +50,8 @@
+     return b;
+ }
+ 
+-std::vector<uint8_t> bytes_of(size_t n, uint8_t seed) {
+-    std::vector<uint8_t> v(n);
++strata::core::allocation_attribution::checkpoint_vector<uint8_t> bytes_of(size_t n, uint8_t seed) {
++    strata::core::allocation_attribution::checkpoint_vector<uint8_t> v(n);
+     for (size_t i = 0; i < n; ++i) v[i] = uint8_t(i * 7u + seed);
+     return v;
+ }
+--- /dev/null
++++ b/sycl/include/strata/core/native_allocation_attribution_sycl.hpp
+@@ -0,0 +1,17 @@
++// Draft actual SYCL owner identity; invoked only by enabled instrumentation.
++#pragma once
++#include "strata/core/native_allocation_attribution.hpp"
++#include <sycl/sycl.hpp>
++#include <sycl/ext/oneapi/backend/level_zero.hpp>
++#include <level_zero/ze_api.h>
++namespace strata::core::allocation_attribution {
++inline std::pair<std::string,std::string> usm_identity(sycl::queue& q){
++ if(!enabled())return {}; if(q.get_backend()!=sycl::backend::ext_oneapi_level_zero)throw std::invalid_argument("actual LevelZero owning context required");auto device=sycl::get_native<sycl::backend::ext_oneapi_level_zero>(q.get_device());ze_device_properties_t properties{};properties.stype=ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;if(zeDeviceGetProperties(device,&properties)!=ZE_RESULT_SUCCESS)throw std::runtime_error("actual native device UUID unavailable");char uuid[ZE_MAX_DEVICE_UUID_SIZE*2+1];for(size_t i=0;i<ZE_MAX_DEVICE_UUID_SIZE;++i)std::snprintf(uuid+i*2,3,"%02x",properties.uuid.id[i]);char context[64];std::snprintf(context,sizeof(context),"ctx_%p",(void*)sycl::get_native<sycl::backend::ext_oneapi_level_zero>(q.get_context()));return {uuid,context};
++}
++inline AllocationKey usm_key(const void* pointer,sycl::queue& q){if(!enabled())return {};auto identity=usm_identity(q);return {identity.first,identity.second,reinterpret_cast<uintptr_t>(pointer)};}
++inline void usm_ready(const void* pointer,uint64_t bytes,int layer,int expert,sycl::queue& q,const char* boundary){if(!enabled())return;auto identity=usm_identity(q);expert_ready(pointer,bytes,layer,expert,boundary,identity.first,identity.second);}
++inline void usm_success(void* pointer,uint64_t bytes,sycl::queue& q,int stage,const char* role,int role_index=0){
++ if(!enabled())return;if(!pointer||!bytes||stage<0||q.get_backend()!=sycl::backend::ext_oneapi_level_zero)throw std::invalid_argument("actual backed SYCL allocation identity required");auto kind=sycl::get_pointer_type(pointer,q.get_context());const char* space=kind==sycl::usm::alloc::device?"device_usm":kind==sycl::usm::alloc::shared?"shared_usm":kind==sycl::usm::alloc::host?"host_usm":nullptr;if(!space)throw std::invalid_argument("unbacked/foreign allocation refused");
++ auto identity=usm_identity(q);allocation_success(pointer,bytes,space,identity.first,identity.second,stage,role,role_index);
++}
++}
+--- a/sycl/include/strata/core/slot_session_arena.hpp
++++ b/sycl/include/strata/core/slot_session_arena.hpp
+@@ -4,6 +4,7 @@
+ #include "strata/core/on_device.hpp"
+ #include <dpct/dpct.hpp>
+ #include <sycl/sycl.hpp>
++#include "strata/core/native_allocation_attribution_sycl.hpp"
+ #include <sycl/ext/oneapi/backend/level_zero.hpp>
+ #include "strata/kernels/qsa.hpp"
+ #include <array>
+@@ -32,8 +33,10 @@
+         geometry_=geometry;
+         const OnDevice owner(device_);
+         try {
++            if(allocation_attribution::enabled()&&stage_<0)throw std::invalid_argument("slot attribution stage missing");
+             trace_attempt();base_=sycl::malloc_device(bytes,queue_);bytes_=bytes;
+             if(!base_){trace_event("allocation_null",bytes);bytes_=0;error="slot arena malloc_device returned null";return false;}
++            allocation_attribution::usm_success(base_,bytes_,queue_,stage_,"slot_session_arena");
+             trace_register(base_,bytes_,"slot_arena");
+             if(session_init(geometry_,cells,experts,base_,*this,lo,hi)==0) {
+                 error="slot session_init returned zero";release();return false;
+@@ -47,7 +50,7 @@
+         for(int64_t j=0;qsa_states && j<qsa_alloc;++j)
+             qsa_state_release_owned_host(qsa_states[qsa_ord0+j],(void*)&queue_);
+         delete[] qsa_states;qsa_states=nullptr;
+-        if(base_){sycl::free(base_,queue_);base_=nullptr;}
++        if(base_){const auto allocation_key=allocation_attribution::usm_key(base_,queue_);allocation_attribution::release_owned(allocation_key,[&]{sycl::free(base_,queue_);base_=nullptr;});}
+         bytes_=0;trace_event("release_returned",0);
+     }
+     void trace_graphs_bound(){if(!trace_enabled())return;graphs_bound_=true;graphs_retired_=false;trace_event("graphs_bound",bytes_);}
+--- a/sycl/include/strata/core/stage_expert_mirror.hpp
++++ b/sycl/include/strata/core/stage_expert_mirror.hpp
+@@ -1,6 +1,7 @@
+ // Immutable stage/device mirror owner. Graphs retain shared ownership through VerifyHits.
+ #pragma once
+ #include <sycl/sycl.hpp>
++#include "strata/core/native_allocation_attribution_sycl.hpp"
+ #include <cstdint>
+ #include <vector>
+ #include <string>
+@@ -123,7 +124,7 @@
+         for(size_t i=0;i<trace_consumers_count_;++i)if(!trace_consumers_[i].retired)trace_event("release_unretired_graph_or_alias",nullptr,trace_consumers_[i].kind,trace_consumers_[i].pointer);
+         if(!trace_release_){trace_release_=true;trace_event("release_begin");}
+     }
+-    void traced_free(void* pointer) {
++    template<class Pointer>void traced_free(Pointer*& pointer) {
+         TraceRecord* record=nullptr;
+         std::unique_lock<std::mutex> lock(trace_mu_,std::defer_lock);
+         if(trace_enabled()&&trace_generation_) {
+@@ -132,7 +133,8 @@
+             if(!record||record->freed||!trace_release_)throw std::invalid_argument("mirror trace foreign/double/unordered free");
+             if(!record->free_started){record->free_started=true;trace_event("free_begin",record);}
+         }
+-        sycl::free(pointer,q);
++        const auto allocation_key=allocation_attribution::usm_key(pointer,q);
++        allocation_attribution::release_owned(allocation_key,[&]{sycl::free(pointer,q);pointer=nullptr;});
+         if(record){record->freed=true;trace_event("free_returned",record);}
+     }
+     void trace_release_returned() {
+--- a/sycl/src/core/conversation_snapshot_test.cpp
++++ b/sycl/src/core/conversation_snapshot_test.cpp
+@@ -302,7 +302,7 @@
+     }
+     check(conversation_snapshot_restore(a,ss,g,draft.state,err)==ConversationRestore::restored,"restore A after stage images");
+     check(conversation_checkpoint_restore(a.checkpoints[0],ss,g,err),"restore early running checkpoint");
+-    std::vector<uint8_t> spare(sizes.dead);
++    strata::core::allocation_attribution::checkpoint_vector<uint8_t> spare(sizes.dead);
+     cuda_check(DPCT_CHECK_ERROR(
+         dpct::get_in_order_queue()
+             .memcpy(spare.data(), main.state.idx_pooled, sizes.dead)
+--- a/sycl/src/core/expert_cache.cpp
++++ b/sycl/src/core/expert_cache.cpp
+@@ -6,6 +6,7 @@
+ #include <dpct/dpct.hpp>
+ #include "strata/sycl_queue.hpp"
+ #include "strata/core/expert_cache.hpp"
++#include "strata/core/native_allocation_attribution_sycl.hpp"
+ 
+ // #533's segmented cache uses CUDA's virtual memory management (cuMem*): not on HIP, neither the RDNA backend nor
+ // the gfx906 compat build (PR #638), which compiles this file as HIP without STRATA_USE_HIP
+@@ -589,6 +590,7 @@
+ bool ExpertCache::open(int64_t n_slots, int64_t n_layers, int64_t n_expert, int64_t blob_bytes,
+                        std::string& err) {
+     close();
++    if(allocation_attribution::enabled()&&(allocation_stage_<0||seg_req_>0||g_cache_vmm))throw std::invalid_argument("allocation attribution requires known stage and fixed backed USM");
+     if (n_slots <= 0) {
+         err = "ExpertCache: n_slots must be positive";
+         return false;
+@@ -665,6 +667,7 @@
+         err = buf;
+         return false;
+     }
++    if(allocation_attribution::enabled()){if(!segs_.empty()||vmm_)throw std::invalid_argument("allocation attribution VA/VMM unsupported");allocation_attribution::usm_success(base_,want,dpct::get_in_order_queue(),allocation_stage_,"expert_cache_arena");}
+     // Zeroed so a slot read before it is filled is a DETERMINISTIC wrong answer rather than whatever the
+     // allocator handed back.  A stale block of a previous process's memory would still sum to finite floats.
+     if (DPCT_CHECK_ERROR(
+@@ -747,7 +750,8 @@
+         vmm_.reset();   // unmaps and frees every chunk it still holds
+         base_ = nullptr;
+     } else if (base_ != nullptr) {
+-        sycl::free(base_, dpct::get_in_order_queue());
++        const auto allocation_key=allocation_attribution::usm_key(base_,dpct::get_in_order_queue());
++        allocation_attribution::release_owned(allocation_key,[&]{sycl::free(base_, dpct::get_in_order_queue());base_=nullptr;});
+         base_ = nullptr;
+     }
+     residency_.clear();
+@@ -812,6 +816,7 @@
+ 
+ bool ExpertCache::fill_slot(int32_t slot, const uint8_t *host_blob,
+                             void *stream, std::string &err, int64_t bytes) try {
++    if(allocation_attribution::enabled())throw std::invalid_argument("asynchronous expert readiness unobserved; use existing blocking route");
+     const size_t n = (size_t) (bytes > 0 && bytes <= blob_ ? bytes : blob_);
+     uint8_t* dst = device_slot(slot);
+     if (dst == nullptr) {
+@@ -905,6 +910,7 @@
+               dpct::get_error_string_dummy(e);
+         return false;
+     }
++    allocation_observer_ready(slot,n,"blocking_copy_wait_returned");
+     ++fills_;
+     return true;
+ }
+@@ -948,6 +954,7 @@
+               dpct::get_error_string_dummy(e);
+         return false;
+     }
++    allocation_observer_ready(slot,n,"SYCL_queued_copy_existing_wait_returned");
+     ++fills_;
+     return true;
+ }
+@@ -955,6 +962,13 @@
+   std::cerr << exc.what() << "Exception caught at file:" << __FILE__
+             << ", line:" << __LINE__ << std::endl;
+   std::exit(1);
++}
++
++void ExpertCache::allocation_observer_ready(int32_t slot,size_t bytes,const char* boundary){
++ if(!allocation_attribution::enabled())return;
++ size_t match=SIZE_MAX;for(size_t i=0;i<residency_.size();++i)if(residency_[i]==slot){if(match!=SIZE_MAX)throw std::invalid_argument("duplicate actual expert slot identity");match=i;}
++ if(match==SIZE_MAX||n_expert_<=0)throw std::invalid_argument("actual expert slot identity missing");
++ allocation_attribution::usm_ready(device_slot(slot),bytes,int(match/size_t(n_expert_)),int(match%size_t(n_expert_)),dpct::get_in_order_queue(),boundary);
+ }
+ 
+ bool ExpertCache::sync_queued(std::string &err) try {
+--- a/sycl/src/core/gguf_expert_source.cpp
++++ b/sycl/src/core/gguf_expert_source.cpp
+@@ -179,6 +179,7 @@
+ std::shared_ptr<StageExpertMirror> GgufExpertSource::mirror_stage(
+     const std::vector<std::pair<int64_t,int64_t>>& pairs,uint64_t cap,int threads,
+     int64_t lb,int64_t le,const sycl::queue& queue,std::string& err,uint64_t segment_bytes,int trace_stage,int trace_device) try {
++    if(allocation_attribution::enabled()&&trace_stage<0)throw std::invalid_argument("actual mirror attribution stage missing");
+     if (mirror_ || lb<0 || lb>=le || le>n_layers_ || !queue.has_property<sycl::property::queue::in_order>()) {
+         err="stage mirror: invalid range,queue or legacy mirror present"; return {};
+     }
+@@ -218,6 +219,7 @@
+         for(size_t i=0;i<plan.sizes.size();++i) {
+             uint8_t* pointer=sycl::malloc_host<uint8_t>(size_t(plan.sizes[i]),owner->q);
+             if(!pointer) {err="stage mirror: segment"+std::to_string(i)+" pinned allocation failed for"+std::to_string(plan.sizes[i])+" bytes";return {};}
++            allocation_attribution::usm_success(pointer,plan.sizes[i],owner->q,trace_stage,"stage_mirror_segment",int(i));
+             owner->segments.push_back({pointer,plan.sizes[i]});
+             owner->trace_register(pointer,plan.sizes[i],"segment",int(i));
+             if(sycl::get_pointer_type(pointer,owner->q.get_context())!=sycl::usm::alloc::host) {
+@@ -230,6 +232,7 @@
+     } else {
+         owner->trace_allocation_preflight(bytes?2:1);
+         if(bytes) {owner->host=sycl::malloc_host<uint8_t>(size_t(bytes),owner->q);if(!owner->host) {err="stage mirror: pinned allocation failed";return {};}}
++        if(owner->host)allocation_attribution::usm_success(owner->host,bytes,owner->q,trace_stage,"stage_mirror_host");
+         if(owner->host)owner->trace_register(owner->host,bytes,"contiguous_host",-1);
+         for(size_t j=0;j<take.size();++j) destinations[j]=owner->host+offsets[j];
+     }
+@@ -247,12 +250,14 @@
+     }); } catch (...) { bad=true; for (auto& thread:ts) thread.join(); throw; }
+     for (auto& thread:ts) thread.join();
+     if (bad) { err="stage mirror: original GGUF gather failed"; return {}; }
++    for(size_t j=0;j<take.size();++j)allocation_attribution::usm_ready(destinations[j],lay.bytes[size_t(take[j].first)],int(take[j].first),int(take[j].second),owner->q,"host_source_workers_joined");
+     std::vector<unsigned long long> table(size_t(n_layers_*n_expert_),0);
+     for (size_t j=0;j<take.size();++j) {
+         const auto [l,e]=take[j]; table[size_t(l*n_expert_+e)]=(unsigned long long)(destinations[j]);
+     }
+     owner->table=sycl::malloc_device<unsigned long long>(table.size(),owner->q);
+     if (!owner->table) { err="stage mirror: address table allocation failed"; return {}; }
++    allocation_attribution::usm_success(owner->table,table.size()*sizeof(table[0]),owner->q,trace_stage,"stage_mirror_table");
+     owner->trace_register(owner->table,table.size()*sizeof(table[0]),"device_table",-1);
+     owner->q.memcpy(owner->table,table.data(),table.size()*sizeof(table[0])).wait_and_throw();
+     // Publish immutable addresses only after source read and table upload finish.
+--- a/sycl/src/program/generate.cpp
++++ b/sycl/src/program/generate.cpp
+@@ -4491,6 +4491,7 @@
+         // page back while the verify graph spun on a host flag never finished.  So the slots are zeroed and the
+         // free figure read again; while it is short of the reserve the cache is reopened smaller.
+         // STRATA_TEST_CACHE_FAIL=N: the first N opens fail as an out-of-commit cudaMalloc does (tests the retry)
++        xcache.allocation_observer_stage(0);
+         int fake_fails = std::getenv("STRATA_TEST_CACHE_FAIL") ? std::atoi(std::getenv("STRATA_TEST_CACHE_FAIL")) : 0;
+         int failed = 0;
+         int zero_reads = 0;
+@@ -4833,8 +4834,10 @@
+         }
+     }
+ 
++    int allocation_stage=0;
+     for (auto& stp : stages) {
+         GpuStage& st = *stp;
++        st.cache.allocation_observer_stage(++allocation_stage);
+         const auto& lay = strata::kernels::cpu::expert_layout();
+         // the drafter and the head are already allocated by now (they load above, before this), so what is left
+         // to hold back is the windows - and `free_b` has already lost the drafter.
+@@ -8830,6 +8833,7 @@
+         // An idle slot's complete branch is parked before its private positional cells are overwritten.
+         auto park_slot=[&](int b,std::string& e)->bool{
+             const auto& slot=bs.at(size_t(b));if(!batch_chain_enabled||!slot.cached||slot.active||slot.img||slot.ids.empty()||!conversations.enabled())return true;
++            strata::core::allocation_attribution::Scope allocation_scope(strata::core::allocation_attribution::main_rid().load(),slot.request_id,"park_slot");
+             const auto identity=donor_identity(b);if(!strata::core::batch_prefix::eligible(identity,false)){e="batch parked slot identity invalid";return false;}std::vector<ConvCheckpoint> local;if(!chain_clone(local,slot.checks,slot.ids,int64_t(slot.ids.size()),e))return false;
+             auto split=strata::core::conversation_checkpoints_split(std::move(local),stages.size());const std::vector<ImgKey> no_images;size_t estimate=0;
+             for(size_t k=0;k<bslot_ss.size();++k){const auto& state=*bslot_ss[k][size_t(b)];const auto& chain=k==0?split.stage0:split.parts[k-1];const strata::core::ConversationView view{slot.ids,no_images,chain,slot.cvec};size_t bytes=0;
+@@ -9647,6 +9651,7 @@
+             }
+             if(strict_batch_identity && admit_slot>=0)req_slot_generation=++slot_generations[(size_t)admit_slot];
+             strata::core::full_cache38::begin(req_rid,req_slot_generation,admit_slot,ids,req_fresh,req_pin_present,req_pin);
++            strata::core::allocation_attribution::main_command(req_rid);
+             const auto batch_admission_id=strata::core::batch_fidelity::begin(strict_batch_identity?req_rid:0,req_slot_generation,admit_slot,n);
+             req_imgs.clear();
+             if (geni && !o.vision) { std::printf("ERR this engine was started without --vision\n"); continue; }
