@@ -12367,3 +12367,22 @@ no numerical outcome/tolerance claimed. Capturednative data comparisononly.
 VERDICT -> Concrete prerequisites closed and fullmodel fidelity experiment
 advancing. Actualshortwarm2row/cachehandoff/completeAPI andcleanlatency/shelf
 remain unqualified. Full original goal active, unrelateduserchanges preserved.
+
+
+## 2026-10-10 - Strict actual90362 receipt adjudication PASS; pair1374 live
+
+CONFIG -> Exact failedactual90362 source37 onecard artifacts; NEW read-only
+adjudicator, original files and failed parent preserved. Futureparent1374
+records producer started_epoch and retains strong source/health chronology.
+COMMAND -> Root/independent11adjud+21parent CPU and8/14 SHAASCIIAST closures
+PASS; tracked48763a8 beforeactualadjudication29891 terminal0/PASS. Explicit
+baseline consumer reexecutes actualstrictbinding, PASS, savedadjSHA
+3842d6e9eb5f811e83db93e17a02bd80d2530c2ab14ebcf4b9115009b9f3485e.
+RESULT -> All383 originalfiles SHA/stat5 unchanged; original_parent_passed
+false/error retained. Namedmemoryview supplies only omittedstart fromactual
+proof, allotherstrictV3 source/full4/pages/79activejournals/health/ownednormal/
+bounded6screens gates recollected. No fullmodel/cache/concurrency/latency PASS.
+Root starts pair1374 leased73796 atport18338 with exactnewadjud prerequisite
+and genuinesameSDK prepare. Original48HC prefix4 actual51315 stilllive.
+VERDICT -> Validated boundedone evidence without GPU rerun; freshpairbaseline
+nowexecuting with correctedproducer. Full goal intact, no shelf/speed claim.
