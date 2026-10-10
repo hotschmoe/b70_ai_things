@@ -14056,3 +14056,19 @@ VERDICT -> Reviewable source/history checkpoint only. Actual fresh1403one/pair,
 canonical169 then171, all named cache actors/fresh49/currenthealth/identity and
 changed-modelLIVE refusal/physical accounting remain required. Original model
 fidelity/stream/profile/latency/reproducible shelf qualification still open.
+
+
+## 2026-10-10 - Complete H54 native4 serial392 public join passes
+
+CONFIG -> Original source37/H50native4 ON eight actual consumed prefixes;
+H54 group0 six/294 and group1 two/98, unchanged math/cacheOFF fresh serial.
+COMMAND -> Independent group1 reader13362 terminal0/PASS56dec08bc17d1853a445b9ba17f3ac77068ce6d5ef4538f569dccefe8859c015.
+Root preserved controller recomputes all exact native/serial raw comparisons
+and joins both actual finalized parents and current public reader receipts.
+RESULT -> Actual74668 terminal0/PASS392 vectors/8jobs; fulljoin
+d5969049980ffde064c38fd70efd7195a94319f030ff7112a959f54f1a99936e
+at f17/batch54-native4-full392-public-join-v1.json. Exact native H50 public
+receipt/plan/parent bound; raw coverage and serial sourcejob provenance rechecked.
+VERDICT -> Complete scoped native4-versus-freshserial bitwise set. No observed
+solo migration job, no original48 reference/fresh fullcache/latency promotion.
+OriginalELF fullrecollection37439 stillCPUlive; canonical165 unchanged.
