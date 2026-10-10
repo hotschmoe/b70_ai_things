@@ -14455,3 +14455,22 @@ VERDICT -> ActualGPUruntimeinitialization failure, CPUcontrols insufficient
 forreal loader routing. No output/JITcause/fidelity claim. FullcacheV4 actual
 CPUprepare17121 proceeding withroot682SHA/143CPU PASS1.348, peerpending.
 Fullmodel/cache/concurrency/profile/latency/shelf goalactive.
+
+
+## 2026-10-10 - Full shared-cache V4 GPU suite begins
+
+CONFIG -> NewsharedV4source22f15/682 exacthashes/current171association,
+actualC1401403correctedSDK one/pair qualified baselines; whole9actors+
+persisted schedule, everyactualfresh49 group mandatory. No partialfullPASS.
+COMMAND -> Rootall682SHA/ASCII/AST+143CPU PASS1.348, independentpeer143
+PASS1.325/SOURCEREADY. Actualwholeprepare17121 terminal0; suite3a6dc6
+andall10originalplanSHA associations verified. Startroot72322pairlease.
+RESULT -> Actualnested firstshared-capture0 parent1175634 live pre-strict,
+source/plan/currentownedroots andoriginalparent command retained; whole
+GPUactor/numerical/cache/healthqualification stillpending. Parentreceiptroot
+shared-v4-whole-suite-run-v1; originalactor/freshroots declared inprepared
+suite directory, notrelocated or rewritten.
+VERDICT -> Concrete fullcacheGPUcampaign underway, exactwholefamily scope
+preserved. QSA14738CPUprepare stilllive butV2heldonpeer lifetimeidentity
+issues; no concurrentGPUobserverlaunch. Fulloriginalmodelmath/concurrency/
+physical/profile/latency/shelf remainsactive.
