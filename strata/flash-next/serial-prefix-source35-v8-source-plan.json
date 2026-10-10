@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "CONFIG": "source35/C113 immutable serial cache V8; absent default pin vs explicit zero/positive; unchanged63/27/35/eight/six SDK and model; source35 one/pair geometry2048/64/65536 FP16",
+  "COMMAND": [
+    "python3 strata/flash-next/test_serial_prefix_qualification_v8_cpu.py",
+    "python3 strata/flash-next/test_qualify_serial_prefix_v8_cpu.py",
+    "python3 -m unittest discover -s strata/flash-next -p 'test_serial_prefix_pin_protocol_v8_cpu.py'"
+  ],
+  "RESULT": {
+    "source_cpu_controls_passed": true,
+    "actual_native_run_executed": false,
+    "actual_source35_basic_prerequisites_exist": false,
+    "model_math_qualified": false,
+    "serial_cache_qualified": false,
+    "complete_campaign_qualified": false
+  },
+  "VERDICT": "PASS CPU/source transport contracts only; new V8 one/pair actual basic precedes cache groups; no V7 proof transfer",
+  "files": [
+    {
+      "path": "strata/flash-next/serial_prefix_qualification_v8.py",
+      "sha256": "c0bac8dbfca4f84e9883db87855e3eea832c0d1422cd9e0d52c4ee103933a9bc"
+    },
+    {
+      "path": "strata/flash-next/qualify_serial_prefix_v8.py",
+      "sha256": "ab510a43e0cde3359cbc09f29ff78b94d21c685dd9d6dcf5ae1efcbaa2d48486"
+    },
+    {
+      "path": "strata/flash-next/test_serial_prefix_qualification_v8_cpu.py",
+      "sha256": "590ee7d6218500e5778e7a5d62b6e92dfe32ee0eab67d4cc107e22617abc1ab0"
+    },
+    {
+      "path": "strata/flash-next/test_qualify_serial_prefix_v8_cpu.py",
+      "sha256": "56fd13155ce35668d371161d8f9ff4e006610f703584748cb15d13c1b9875ac7"
+    },
+    {
+      "path": "strata/flash-next/serial-prefix-source35-v8-design.md",
+      "sha256": "179d304c09523686488c5079a5857d3307df091b8b33e08023b408be4c40967b"
+    },
+    {
+      "path": "strata/flash-next/serial_prefix_prompt_fixture_v6.py",
+      "sha256": "a682d5ef1bfa4cc8d5702448fe20b27953df0644cffa515d6468e6cb92aa7c6d"
+    },
+    {
+      "path": "strata/flash-next/c1_serve_controller_combined_v13.py",
+      "sha256": "f2057108c8ed7992ddbb71facdc81f78302ccf142090f4d73b3a5063c6d8c149"
+    },
+    {
+      "path": "strata/flash-next/qualify_c1_serving_combined_v13.py",
+      "sha256": "7400b7a73499f93645e17047ceb5b5da64017796e88ff9a7d05c4742a0ff3bb2"
+    },
+    {
+      "path": "strata/flash-next/audit_fidelity_observer_coverage.py",
+      "sha256": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47"
+    },
+    {
+      "path": "strata/flash-next/source_page_watchdog_v3.py",
+      "sha256": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+    },
+    {
+      "path": "strata/flash-next/run_source_upload_oracle_full.py",
+      "sha256": "87240dd20ad7b7330a5bde5c50a66b7d7243068dd41936955d240105a8d418cf"
+    },
+    {
+      "path": "strata/flash-next/run_source_upload_oracle_full_v2.py",
+      "sha256": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec"
+    },
+    {
+      "path": "strata/flash-next/parse_usm_logical_free_trace.py",
+      "sha256": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665"
+    },
+    {
+      "path": "strata/flash-next/c1_trace_contract.py",
+      "sha256": "ee557bb1e9eb6a31b67714c93034461aa24572f20781cfcb9a858c25dd825e20"
+    },
+    {
+      "path": "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json",
+      "sha256": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7"
+    },
+    {
+      "path": "strata/flash-next/model-lock.json",
+      "sha256": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b"
+    },
+    {
+      "path": "strata/flash-next/test_serial_prefix_pin_protocol_v8_cpu.py",
+      "sha256": "7895c44a23522fdbe37a436ec205f4adbb494efad10f0abecdc62c0641bd6bd6"
+    }
+  ],
+  "frozen_previous_generation": [
+    {
+      "path": "strata/flash-next/serial_prefix_qualification_v6.py",
+      "sha256": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c"
+    },
+    {
+      "path": "strata/flash-next/qualify_serial_prefix_v6.py",
+      "sha256": "470fb38ecf4efb753c43e857ca68104e5286a30bae093e4ef0338d8c102898e8"
+    },
+    {
+      "path": "strata/flash-next/serial_prefix_qualification_v7.py",
+      "sha256": "5f7273d0f33bc0430b4f0875131dc87163dca844749f8de36108fda026fda2a1"
+    },
+    {
+      "path": "strata/flash-next/qualify_serial_prefix_v7.py",
+      "sha256": "7b5f1b597ea40b833bbb96535213902a48f3acd7d8d5e8b933ed0c3fd7c4c62c"
+    },
+    {
+      "path": "strata/flash-next/serial-prefix-source35-v7-source-plan.json",
+      "sha256": "41aec78ab833362668070841c8c67f599328d79f018c8f354a19c41b23f0a513"
+    }
+  ],
+  "requirements": {
+    "eager_must_be_absent_including_zero": true,
+    "C113_source35_final_proof_required": true,
+    "all_cache_groups_require_separate_finalized_basic": true,
+    "paired_basic_requires_finalized_one_card_basic": true,
+    "basic_raw_head_and_all48_recollected": true,
+    "both_source_pages_guarded": true,
+    "post_hash_all4_after_terminal_and_post_health": true,
+    "root_owns_GPU_lifecycle": true,
+    "no_runtime_or_payload_touched_during_source_preparation": true,
+    "default_pin_absent_distinct_from_explicit0": true,
+    "explicit0_and_positive_semantics_preserved": true,
+    "root21_token_fixture_unchanged": true,
+    "fresh_V8_basic_off_logits_layers_required_each_topology": true,
+    "V7_runtime_receipts_not_transferred": true
+  },
+  "client_protocol_cpu_tests": 9
+}

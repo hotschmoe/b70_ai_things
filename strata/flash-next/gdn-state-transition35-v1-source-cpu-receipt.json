@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "CONFIG": "source35 synthetic SYCL component leaf withcurrent locked header geometry and newlypinnedSDK archives/headers/eightELFs; no modelpayload",
+  "COMMAND": [
+    "python3 strata/flash-next/test_gdn_state_transition35_cpu_v1.py",
+    "python3 strata/flash-next/test_collect_gdn_state_transition35_cpu_v1.py"
+  ],
+  "RESULT": {
+    "source_metadata_controls_passed": true,
+    "rawcollector_27synthetic_fullvector_controls_passed": true,
+    "invalid_raw_log_negative_controls_rejected": true,
+    "GPU_compile_or_run_executed": false,
+    "native_synthetic_transition_pass_observed": false,
+    "model_math_qualified": false
+  },
+  "VERDICT": "PASS CPU/source preparation only; actualleased freshcompile/run and parent sourcehealthteardown/free gates pending",
+  "files": [
+    {
+      "path": "strata/flash-next/gdn_state_transition35_v1.cpp",
+      "sha256": "499e0dbf4bf972d3840703e362f3eb90a0b40475674c8537aff3d2c9d8e1e9b1"
+    },
+    {
+      "path": "strata/flash-next/prepare_gdn_state_transition35_v1.py",
+      "sha256": "0575529e492729a9179ec22bedeb8b40357069436468f0bba29af5e484fd5921"
+    },
+    {
+      "path": "strata/flash-next/collect_gdn_state_transition35_v1.py",
+      "sha256": "8e2153b0a978a062c4d9e688e4b33cb93e5830343b754c764af0f3e64c1184ff"
+    },
+    {
+      "path": "strata/flash-next/test_gdn_state_transition35_cpu_v1.py",
+      "sha256": "a585a47ccf2aeaa52653978395b63594264c4465700a12cdda83d3acc6a40950"
+    },
+    {
+      "path": "strata/flash-next/test_collect_gdn_state_transition35_cpu_v1.py",
+      "sha256": "8bccbdb2ba2f65abbbec401e32232a704d56b43f88b221d1160c86c3147fb65d"
+    },
+    {
+      "path": "strata/flash-next/gdn-state-transition35-v1-compile-run-plan.json",
+      "sha256": "d50affd3050aa64db17485357dc5db742e0e0ed6fa7849fe886cd6976cb37c4f"
+    },
+    {
+      "path": "strata/flash-next/gdn-state-transition35-v1-design.md",
+      "sha256": "b52fe8ce6a9f8dc761ba87ffe08dc92a16c337890dd9865fc07311dfc58857ae"
+    }
+  ]
+}

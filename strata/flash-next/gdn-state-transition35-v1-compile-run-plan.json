@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "status": "CPU_SOURCE_PREPARED; no compile or GPU run",
+  "engine_root": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl",
+  "engine_receipt_sha256": "7e3e4c1e61bcee7bc0ea1a15c0b2d8347bfdbd0c8f9fb16296476625bff58c12",
+  "engine_plan_sha256": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+  "image": "sha256:39992d7072aa0557f4e3a5faf7782f83bab8fe4882e9d8fcf3e660d3de50e9e7",
+  "geometry": {
+    "S": 128,
+    "h_k": 16,
+    "h_v": 48,
+    "conv_channels": 10240,
+    "conv_kernel": 4,
+    "state_dtype": "F32",
+    "state_bytes": 3145728,
+    "history_bytes": 122880,
+    "derived_only_from_locked_header_metadata": true
+  },
+  "model_lock_sha256": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b",
+  "header_inventory_path": "/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f04-20261009/current-gguf-inventory.json",
+  "header_inventory_sha256": "8267da37e921300a348813ecb985dc185cde87d1918fb69d65e6aa1013b3b9cb",
+  "leaf_source": "/mnt/vm_8tb/github/b70_ai_things/strata/flash-next/gdn_state_transition35_v1.cpp",
+  "leaf_source_sha256": "499e0dbf4bf972d3840703e362f3eb90a0b40475674c8537aff3d2c9d8e1e9b1",
+  "producer_sha256": "0575529e492729a9179ec22bedeb8b40357069436468f0bba29af5e484fd5921",
+  "collector_source_sha256": "8e2153b0a978a062c4d9e688e4b33cb93e5830343b754c764af0f3e64c1184ff",
+  "current_SDK_dependencies": [
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/include/strata/kernels/gdn.hpp",
+      "sha256": "f44626e3f52813b9be289aee72f708e9ad61aa9b3a0e43037ba5ff8b358fc638"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/include/strata/kernels/fused_gdn.hpp",
+      "sha256": "595205dcf531d8fb758bcd7b2d3ac4e4158bd06f20160199e592824d530e2078"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/include/strata/kernels/verify_kernels.hpp",
+      "sha256": "499bd7e4ae2ec194fa1377adaed74e6e383200fec400e229d7b0baa690940553"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/include/strata/sycl_queue.hpp",
+      "sha256": "696ad9d9073b50f2b68033a94040e96ecb9747ac8dcfb40bbeefd2b71eccbe45"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/cuda/gdn.dp.cpp",
+      "sha256": "e3c4d51990410a447cde819433dfcba2161af1b5629c0259d442e11c309e2a47"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/cuda/fused_gdn.dp.cpp",
+      "sha256": "a79693fc018604213d76e67f3aa730f5d68f656cbf6c07b3a8489c1e45bc3a74"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/cuda/verify_kernels.dp.cpp",
+      "sha256": "1617c1322a1fe7aced3d37cab01a7c46b8f68f8ed07cefc3ab8dd0257bf64a66"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/kernels/gdn_parity.cpp",
+      "sha256": "b05764f9cfef0ab45ca104173954d5120dd0ad856ff5a9a422e6155d1cc3dc4b"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/src/core/verify.cpp",
+      "sha256": "cdd837fd3dd31873094587e549623bae887765c48d8c4de7f542185f52c4d84f"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/source/sycl/CMakeLists.txt",
+      "sha256": "a6abe5536b185cb20d2d8c7fbb6b7c6f43dc087267b26db325f891aa55da2846"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/libstrata_kernels.a",
+      "sha256": "d13ac6c1a92ea93846e1158dbc8b85ea2cb88bc63e48097ccfa8de7a5fa4af8e"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/libstrata_core.a",
+      "sha256": "7471ffb49efdd1f92fbb7bed50362e106cc8022df985b92a24e2d572b99c4e74"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/build.ninja",
+      "sha256": "717e840d054d5804705dfaa26250bb72a56c972e2cbdb3e845ab9a9ee2137565"
+    },
+    {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/CMakeCache.txt",
+      "sha256": "1ffc73ae184f1972e753953e96d8041ed0127deadf0dc8d5bc06aef3281b02ed"
+    }
+  ],
+  "actual_eight_SDK_ELFs": {
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/strata": "cff61b59db71d266ccddd0f7deb6c0cfc8b902bc3c11a0b4f7c643a4052a794e",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/native_expert_parity": "d4c148b133c5ac615246693645c4ebd543d1e316e03db748080fe46606b4a60a",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/conversation_snapshot_test": "4b170ac642c51323038cc0c7682311a13c4836bac0389a4fd40d134c8d39bb3a",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/iq_multi_parity": "5b99e09fe2c50c38afcb9425194c218a1f597df6f8511ab79b6bc96c44593db1",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/native_grouped_parity": "b8b1a20c7f5c3ee3c9a4bc81012fb60f133e7936dad1425c4d7fcc782b1c34c6",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/native_multi_parity": "cf57913d86c91e18ac9e15c53ce077938438b456f91ce00c30f2f1a60758d5a2",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/shared_expert_parity": "59e7c185ec86b769b2284906ea984db69ca7150161f0d7557bd39806b5b08e2d",
+    "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261009T233718Z-i6s74tbl/build/verify_parity": "555a681b3d1e6c91d0136dde18b75b0f5a2a70c86be1528cb2335a86d6d685d4"
+  },
+  "compile_argv_inside_pinned_image": [
+    "icpx",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++20",
+    "-fsycl",
+    "-fsycl-default-sub-group-size=32",
+    "-fsycl-device-code-split=per_kernel",
+    "-fp-model=precise",
+    "-I/sdk/source/sycl/include",
+    "-I/sdk/source/include",
+    "/leaf/gdn_state_transition35_v1.cpp",
+    "/sdk/build/libstrata_kernels.a",
+    "/sdk/build/libstrata_core.a",
+    "/usr/lib/x86_64-linux-gnu/libze_loader.so",
+    "-Xsycl-target-backend=spir64",
+    "-cl-fp32-correctly-rounded-divide-sqrt",
+    "-o",
+    "/out/gdn_state_transition35_v1"
+  ],
+  "run_argv_inside_pinned_image": [
+    "/out/gdn_state_transition35_v1",
+    "--output",
+    "/results/raw-new"
+  ],
+  "environment": {
+    "ZE_AFFINITY_MASK": "0",
+    "ONEAPI_DEVICE_SELECTOR": "level_zero:gpu",
+    "STRATA_GDN_SPLIT": "0",
+    "SYCL_UR_TRACE": "2"
+  },
+  "required_absent_environment": [
+    "STRATA_VERIFY_EAGER"
+  ],
+  "cases": [
+    "T2 forward preserves zeroF32 recurrent/history",
+    "accepted0/1/2 commit matches T1 sequence fullstate/history",
+    "accepted0/1/2 followed by T1 carry matches fullstate/history/output",
+    "modified persistentstate negative changes carry output"
+  ],
+  "expected_raw_comparisons": 27,
+  "scope": "synthetic current SYCL component state-transition parity only; independent FP64 from own synthetic inputs diagnostic without tolerance",
+  "model_math_qualified": false,
+  "real_row3_GDN_inputs_observed": false,
+  "backend_patch_required": false,
+  "root_owned_execution_requirements": [
+    "bin/gpu-run --card N plus matching workload device pin",
+    "strict per-card and compiled P2P0 pre/post health under parent pair lease",
+    "fresh leaf compile in pinned current SDK baseimage",
+    "owned compile/run container clean terminal and removed",
+    "fresh all4 publisher hashes after terminal and posthealth with both known source pages bracketing",
+    "actual USM logicalfree audit and no kernel faults",
+    "recheck all current SDK/leaf/source/archive/ELF hashes before compile and after run"
+  ],
+  "archive_association_limit": "Current static archive bytes are freshly pinned here, but original SDK receipt binds eight target ELFs rather than archives; no retroactive original-build archive hash claim"
+}

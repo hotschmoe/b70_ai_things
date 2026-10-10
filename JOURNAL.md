@@ -11057,3 +11057,39 @@ semantic/storage bug justifieschanging reference/kernel. FreshSYCL state-transit
 leaforacle preparation willtest actualstate/output path parity independently.
 Cache/shared-root native consistency remains a diagnostic, notoriginalfidelity/
 production cache proof. Fullgoal/cache/concurrency/profiling/latency/shelf pending.
+
+
+## 2026-10-10 - Cache pin0 harness diagnosis; real GDN transition fixture PASS
+
+CONFIG -> Current source35 SDK/native model unchanged. Separate synthetic GDN
+leaf with actualmetadata S128/HK16/HV48/C10240/conv4, F32 state3MiB/history120KiB.
+New cacheV8 omits defaultpin; explicit0/positive retained; oldV7 evidence frozen.
+
+COMMAND -> CacheV7root95907 terminal1/strictfailure, posthealth/newfull4/pages.
+Inspect actual requests/selection and source batch_public ceiling. CPU V8pin9/
+source22closure; newone/pair V8prepare2003/44170. GDNsource/collectorCPU, parent17,
+leafcompile75774 failure then65125 PASS20s; realowned GDNparent25432 PASS223s;
+independent raw27 recollection. V8onebasic92970 nowlive.
+
+RESULT -> Cachefailure was harness defaultpin0 forcing lookupceiling0, not
+observed cache math corruption. Actual refB fresh1/establishA fresh1/hitB fresh0
+allpin0; hit candidate/reused/read_from0 and49fresh rows, intendedroot21 valid.
+Engineexit0/removed/posthealth/kernel/newall4 PASS; failed gate/evidence retained.
+V8 sourceplan SHA f37e86eca829fda1c2fd6433a6d7290195b4bca555efd5165a8ebd58e4b9ad0e;
+newplans ready, newbasic mustqualify changed protocol, no V7 transfer.
+Firstleafcompile11s lackedELF becauseimagebash-lc entrypoint ignored nestedbash;
+failedreceipt/log/oldcontrollersnapshot retained, cleancontainer0/removed.
+Explicitentrypoint fixed, genuinefreshELF link PASS20s/after-source unchanged.
+Compile receipt: /mnt/vm_8tb/b70/build/gdn-state-transition35-leaf-v1-entrypoint-fixed-20261010/receipt.json.
+ActualGDN all27 fullraw qkv/state/history/output comparisons BITWISE,
+modifiedstate negative detected; realURlogicalfree/cleanexit/removal/strictpair
+posthealth/kernel/newfull4/page/source checks PASS. ParentSHA
+4084a293ae40fc8293dfac00589cd272e7887ca7912e6054e5774371c11d901c.
+Staticarchives freshly pinned byleaf but absentfromhistoricalSDKreceipt;
+associationlimit recorded, no retroactive archive proof or model math claim.
+
+VERDICT -> Synthetic T2commit/T1carry parity succeeds, notrealrow3/fullmodel
+fidelity. Existing retained21/23 hooks can observe real GDNstate/conv before/
+after row3 and qkv/decay/beta; newsource35 NUM10 wrapper is beingprepared,
+no backendpatch needed. Realprefix4/8 discrepancy remains material. V8basic
+one92970 live; completecache/concurrency/criticalpath/latency/shelf remain pending.

@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source only; actual component GPU execution unobserved",
+  "files": {
+    "strata/flash-next/qualify_gdn_state_transition35_v1.py": "b34e705b23465d5eee102d12484e50d455ba2a51d373a9e17ac0dd4a5d89be37",
+    "strata/flash-next/test_qualify_gdn_state_transition35_cpu_v1.py": "9d5d57b9c0e84abdd104c2653bf8e49f54b7adf6eef7e2ef8f6361e84c40b54c",
+    "strata/flash-next/compile_gdn_state_transition35_v1.py": "c51a8d30376e122f813087360c5c8110c66ce881250030f772a6583ff0feb498",
+    "strata/flash-next/prepare_gdn_state_transition35_v1.py": "0575529e492729a9179ec22bedeb8b40357069436468f0bba29af5e484fd5921",
+    "strata/flash-next/collect_gdn_state_transition35_v1.py": "8e2153b0a978a062c4d9e688e4b33cb93e5830343b754c764af0f3e64c1184ff",
+    "strata/flash-next/gdn_state_transition35_v1.cpp": "499e0dbf4bf972d3840703e362f3eb90a0b40475674c8537aff3d2c9d8e1e9b1",
+    "strata/flash-next/gdn-state-transition35-v1-compile-run-plan.json": "d50affd3050aa64db17485357dc5db742e0e0ed6fa7849fe886cd6976cb37c4f",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "strata/flash-next/parse_usm_logical_free_trace.py": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665",
+    "strata/flash-next/source_page_watchdog_v3.py": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1",
+    "strata/flash-next/c1_serve_controller_combined_v13.py": "f2057108c8ed7992ddbb71facdc81f78302ccf142090f4d73b3a5063c6d8c149",
+    "strata/flash-next/qualify_serial_prefix_v7.py": "7b5f1b597ea40b833bbb96535213902a48f3acd7d8d5e8b933ed0c3fd7c4c62c",
+    "strata/flash-next/serial_prefix_qualification_v7.py": "5f7273d0f33bc0430b4f0875131dc87163dca844749f8de36108fda026fda2a1",
+    "strata/flash-next/gdn-state-transition35-parent-design-v1.md": "1f17a35569bb6d99b6bda69cdd88047eb6d15ecd03f23010cf5b5f4a5a4ba70b"
+  },
+  "compile_plan_sha256": "d50affd3050aa64db17485357dc5db742e0e0ed6fa7849fe886cd6976cb37c4f",
+  "fresh_compile_controller_sha256": "c51a8d30376e122f813087360c5c8110c66ce881250030f772a6583ff0feb498",
+  "parent_cards_held": [
+    0,
+    1
+  ],
+  "physical_leaf_card": 0,
+  "inherited_pairlease_card0_mode": "validate fd8/9 in parent and fd8 before direct Docker; ZE_AFFINITY_MASK0; avoid nested gpu-run reacquisition",
+  "leaf_mounts": [
+    "fresh binary directory read-only",
+    "NEW output directory"
+  ],
+  "model_weights_mounted": false,
+  "root_postterminal_posthealth_new_full4_required": true,
+  "both_known_pages_bracket_full4_required": true,
+  "synthetic_raw_pairs": 27,
+  "modified_state_negative_required": true,
+  "UR2_logical_alloc_free_required": true,
+  "physical_backing_release_claimed": false,
+  "actual_GPU_Docker_runtime_or_model_payload_execution_by_agent": false,
+  "actual_component_runtime_qualified": false,
+  "model_math_qualified": false,
+  "real_row3_inputs_observed": false,
+  "numeric_false_must_fail_parent": true,
+  "cpu_tests": 17,
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p 'test_qualify_gdn_state_transition35_cpu_v1.py'"
+}
