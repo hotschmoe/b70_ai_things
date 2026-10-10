@@ -13395,3 +13395,23 @@ VERDICT -> Freshcompile/upload/model/ONOFF/all49/source/health/lifecycle/new4
 qualification stillrequired; physicalresidency/fullmodel/latency/shelf open.
 H50ON1577child0/collectiontrue actualrequestedN4/3serialjobs; parentposthealth/
 kernel pass, finalfull4/currentreaders pending. QSA97a inputs fullyprepared.
+
+
+## 2026-10-10 - H50 native4 ON parent passes; QSA device control starts
+
+CONFIG -> Frozen5f719918/source37, native4ON prepared8b46355e, sameOFF profile.
+COMMAND -> Actual1577 terminal0/PASS1324s, parentSHA
+d1b46b2dc0f58d9ca352c9692e86cb24908e43f375c8fabad844e513ef88d5b4.
+RESULT -> ActualrequestedN4/multirow warm/currentcounters/rawcoverage,3actual
+serialjobs, ownednormalteardown/poststrict+compiledpairhealth/kernel/new4 PASS.
+Publicreadonly44836 stilllive. OFF57ca independentadmission alreadypassed.
+VERDICT -> Collection/lifecycle only; matchedOFFON andexact-prefixall49serial
+comparisons stillrequired. H50serialblockedbydesign; freshsuccessorpending.
+
+COMMAND -> RootactualQSAdevicecontrol46835 acquiredpairlease with--leased,
+preparedown97a/sourcee122/producer61041+reader c028. Actualdirect+twofullgraph
+replay/raw14field/10echo comparison andposthealth/source/new4 gates pending.
+No capturedoperands orIRQfitting/tolerancechange. No secondmodel/GPUactor.
+VERDICT -> Realrequirednumericexperiment starts, not numericalqualification.
+AllocationV2heldtype/VA gaps; freshV3root10CPU PASS/all7SHA, peerreviewpending.
+Fulloriginalmath/cache/interactiveprofile/latency/shelf goal remainsactive.
