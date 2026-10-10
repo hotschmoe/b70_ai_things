@@ -12664,3 +12664,18 @@ all substantive fields strictly. FailedV3/no-roster and original arms unchanged.
 Successor39 root12CPU/61SHA PASS, independent review pending; no nativebuild.
 VERDICT -> Actual147 parent remains PASS, private196 remains unqualified.
 Metadata consumer repair required, no GPUrerun justified by this mismatch.
+
+
+## 2026-10-10 - Exact per-arm page-epoch private V4 frozen
+
+CONFIG -> Same immutable source37 OFF/ON/first49/remaining147; no GPUrerun.
+COMMAND -> Root actualmodel_page_epoch_binding botharms and matched_plans
+PASS. Root19 newV4 CPUcontrols and131-file SHA closure PASS; sourceplan
+28e9041801d23e506d98b5369491907c1792eb5e06a780c97dee637b8429fc40.
+RESULT -> Original observedpage epoch proves full4.finished<=epoch<=actual
+parent.started. Every other modelidentity field matches current independent
+guard; canonical allotherplan fields match exactly with declareddiag aliases.
+V3 failure remains unchanged; savedtimestamp is not recomputed fromclock.
+Immutable V3 canonical20 and serialcanonical26 prerequisites remain pinned.
+VERDICT -> Corrected metadata matcher passes actualsnapshots; full196 runtime
+recollection remains unproven until genuineV4 readonlyroster/finaljoin finish.
