@@ -12295,3 +12295,20 @@ Root source35 code confirms standalone and pending HC writes use explicit FMA;
 original48 refinement must cover writes as well as RMS/projections/fusedmix.
 VERDICT -> Concrete source hardening before GPU use, no measured IO speedup
 or cache/model/runtime qualification. Original full campaign remains active.
+
+
+## 2026-10-10 - Bounded bulk HC host helper tracked before fresh compile
+
+CONFIG -> Ordinary CPU-only scalar/bulk FMA helper, frozen scalar body included
+verbatim, no SDK/device/model inputs. Exact2CPU/2GiB/no-network compile recipe
+and observed image/mount/device/resource checks, current host library binding.
+COMMAND -> Agent/root nine CPU controls and20 SHA/ASCII/AST closure PASS;
+sourceplan c752635b2cd3d653eae2a43c515569ba757a04c6551c8cc7b00b02fd75461a1e.
+Root read-only actual C137 journal79active+pre/post and strict/compiled health
+crossjoins PASS; missing parent start field remains independently unqualified.
+RESULT -> Bulk source ready for root fresh compile, fifteen scalar known
+answers and nine bulk fixtures plus each row's actual previously qualified
+scalar ELF equivalence required. No actual helper runtime or model math yet.
+VERDICT -> Enables deliberate original48 arithmetic refinement after actual
+qualification; source tests do not substitute for compiler/runtime evidence.
+Full fidelity/cache/concurrency/profiling/latency/shelf goal stays active.
