@@ -13438,3 +13438,18 @@ SHA256: 43b1e6a55058753b45e1ec65e014ec69c001454be3fc406f3ba69046945345c5
 VERDICT -> Preliminary saved token-history equality only. Independent ON parent
 admission, three exact-prefix serial controls and all49 vector comparisons still
 remain. No complete model math, cache, fairness, latency or shelf qualification.
+
+
+## 2026-10-10 - Native4 ON independent reader passes
+
+CONFIG -> Frozen H50 source37 native4 ON actual parent, current operation pack
+and SDK entry/predevice/post witnesses; OFF independent57ca already admitted.
+COMMAND -> Original reader44836 terminal0/PASS; ON readonly receipt
+2b340fe2750bbe3067ee69a7840197935d4135dc06fbf83764b80693435544c8.
+RESULT -> Both collection/lifecycle arms independently admitted. Saved history
+artifact e2750de4c6cdddc90505edf656cec9704f69eea846b5b553acfce75432f75fce
+binds original preliminary43b1 histories, both reader receipts and rechecked
+original plan/request/parent/child hashes and stats. Three uncanceled exact
+ID/finish trajectories; canceled common four tokens. No new GPU execution.
+VERDICT -> Exact-prefix serial all49 remains required. QSA46835 remains live;
+fullmath/cache/interactive latency/fairness/shelf goal remains incomplete.
