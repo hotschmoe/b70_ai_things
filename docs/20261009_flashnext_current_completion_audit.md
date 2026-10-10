@@ -903,3 +903,36 @@ association gaps. V4 preparation must close these before native execution.
 Full original-model fidelity, full-state cache and memory/expert tradeoffs,
 API and larger-stream qualification, x2 critical-path evidence, clean matched
 latency/fairness improvements and verified shelf remain unproven.
+
+
+## 2026-10-10 - Actual HC reciprocal-scale and device-expression controls
+
+Owned RMS V7 actual35193 passed317s and public83248 passed. Report58da27b4,
+external bindingc45571e4, full source paths/digests in the measured summary
+strata/flash-next/native-rms-source37-v7-measured-summary-v1.json. Direct HC
+and both graph replays are bitwise equal for the original independently owned
+embedding residual with explicit synthetic normones/zero down/up weights.
+
+Actual V8 device-expression94059 passed325s and public28938 passed. Report
+8f070f780a63eae2d92abdd98e62d2ecfc36ab1a95a81ade055d3b184fdf9c90
+and binding3129cfd8c78a29e3cf9bd6f8792d9f93154439efe92c950ab871afbd5b9902bc
+recollect all seven fields, three repeat routes, unchanged original four V7
+outputs and current source/lifecycle proofs. At separate argument3859f0be,
+device rsqrt/native::rsqrt430aba1f match actual HC, while explicit1/sqrt
+430aba1e matches the rounded source-argument host candidate. This is a real
+bounded device-expression difference; HC internal argument, device instruction
+lowering, general intrinsic accuracy and full-model fidelity remain unproven.
+No backend math patch, fitted tolerance or captured-input substitution followed.
+
+CPU continuation95049 failed its first case on global swap-free decrease
+10592256 bytes, despite owned process/cgroup swap0, no OOM and available RAM
+about116GiB. No completion or candidate was selected. Postterminal original4
+integrity passed. Guard remains strict; cause/host attribution needs passive
+observation before a same-recipe retry, not an unsupported lower-ubatch change.
+
+H46 source37 native4/bounded6 controls pass31 CPU tests/184 source bindings and
+independent review. Root genuine native4 OFF preparation79819 is live. API
+cache0 is refused and separate correctly configured API work remains required.
+The controller removes duplicate parent admission only; child and runner
+semantic checks remain. No measured dev-loop saving or actual4/6 runtime
+qualification is established yet. All original completion requirements stay.
