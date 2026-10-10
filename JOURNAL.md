@@ -10853,3 +10853,27 @@ The preceding source35 seam entry has eight total cases: four conditional
 native-attention cases and four owned-attention replays. The four owned
 replays are bitwise exact. The phrase "ownreplay8cases" was a count typo;
 all saved metrics, scope restrictions and source proofs remain unchanged.
+
+
+## 2026-10-10 - Paired source35 P30 and matched topology equality
+
+CONFIG -> Exact source35/C113/P30V4 onecard and pair split32/16;
+matched CTX2048/prefill64/PLE65536/FP16KV, accepted prefixes1/2/4/8.
+Same SDK/image/math flags; only topology/split/trim/affinity differs.
+
+COMMAND -> Paired P30V4 parent25718; independent public finalized_binding;
+frozen cross_topology_prefix35_v1.py session91448; fresh CPU14 controls
+and12-file dependency closure. Earlier session11445 report retained but
+non-authoritative because helper docstring/sourceplan finalized during run.
+
+RESULT -> Paired PASS450s,22frames, original input33/wholeprefix/lastrow/
+logical lifecycle/owned teardown/posthealth/kernel/newfull4 PASS. ON peak
+99,297,344B/OFF4,925,440B. Frozen comparison completes with errors[]:
+all4 fullheads and2160 absolute phase rowvectors BITWISE equal onevs pair.
+Report SHA eb9b244df7b85dc079fa7c88df5a8b3b7baf11eb181dc992aeaaf311fd5db743.
+Report: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/cross-topology-prefix35-v1-frozen.json
+
+VERDICT -> Actual matched short-prefix native topology control passes.
+No tolerance, originalmath or speed claim. Independent route-aware larger
+prefix reference, complete statecache, concurrent fairness/profiling/latency
+and verified shelf remain required. Original full campaign stays active.

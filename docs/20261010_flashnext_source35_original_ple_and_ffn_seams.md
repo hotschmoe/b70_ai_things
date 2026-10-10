@@ -75,3 +75,23 @@ Evidence root:
 Subdirectories: c113-onecard-segmented, p30v4-onecard-run, original48-prefix1-v4,
 ffn-seams-original-v1, c113-pair-segmented.
 P30 parent SHA1a959a032e58ab110347a72a4aa70b12343fde664a5db75fdd8ce16267534dbe.
+
+
+2026-10-10 paired P30V4 terminal follow-up: parent25718 completed PASS450s.
+Read-only public finalized_binding independently passed actual original input33,
+last-row SFD, whole-prefix row coverage and logical lifecycle gates. All22
+stage/window frames admitted; OFF peak4,925,440B, ON99,297,344B. Parent SHA
+725c74941031bff15eb8a39b93fba7c13d937393fda97d7d2f899f0faaf1973f.
+Owned teardown/post-health/kernel checks and fresh four-shard publisher hashes
+passed. This qualifies bounded observations, not complete original model math.
+
+
+Matched topology follow-up: frozen cross_topology_prefix35_v1.py completes
+with errors[]; all4 fullheads and2160 absolute phase rowvectors BITWISE equal
+onecard versus split32/16 pair. Same source35 SDK/image/math flags and
+CTX2048/prefill64/PLE65536/FP16KV; only topology differences admitted.
+CPU14/frozen12-file dependency closure PASS. Actual report SHA
+eb9b244df7b85dc079fa7c88df5a8b3b7baf11eb181dc992aeaaf311fd5db743.
+Report: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/cross-topology-prefix35-v1-frozen.json
+This is native topology parity for four short prefixes, not original-model
+math or speed qualification. Route-aware original prefixes2/4/8 remain next.

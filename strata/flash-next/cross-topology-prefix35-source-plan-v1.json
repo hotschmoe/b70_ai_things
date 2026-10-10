@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "status": "READY frozen CPU source only; actual cross-topology comparison unobserved",
+  "files": {
+    "strata/flash-next/cross_topology_prefix35_v1.py": "bc0a659929720bfe39c5032c88aa1264513e1d52f52d3e516194aab43cf9f662",
+    "strata/flash-next/test_cross_topology_prefix35_cpu_v1.py": "f4317379e75b38c104b2820288928801226a1053c9f7faa772c9fbac2b254856",
+    "strata/flash-next/validate_prefix_residual30_final_v4.py": "c56edfd9de29e8d1036fb497b871d34e196961a58d871abe811fdc15856a0bf9",
+    "strata/flash-next/prefix_residual30_qualification_v4.py": "56e9c34dd2aa5d444487da7b0955f46925e8b20c270e65c72c6caa6fe0f442c2",
+    "strata/flash-next/qualify_prefix_residual30_v4.py": "18faf1f414680103d3e14b9a0e414de46d9d7dbc7a32e1dec6c8e61d82df282e",
+    "strata/flash-next/prefix-residual30-runtime-source-plan-v4.json": "f6bf1b6dbc986c752140b38096e3c26c29189586bd3ca94f04cc7781b4388549",
+    "strata/flash-next/collect_prefix_residual30_v2.py": "a77ca869f79f9fb0716b8a693cd32509f71f9b00d672e4487f7742e2cf1d6054",
+    "strata/flash-next/ple-prompt35-source-plan-v1.json": "40148b923129b8b9091dfb1780fa86209993df7dec2c865d046ee010006961c8",
+    "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7",
+    "strata/flash-next/explore_full48_original_prefix1_v4.py": "7f524c2895005f3b674e1b3a74d2688966b6bfa3c68175c676de7d50fcf08bd5",
+    "strata/flash-next/full48-original-prefix1-p30-source-plan-v4.json": "d7e8bc42dcd5d07677f48a66ae41020ff6e92cb504556d3b3da462849cd404a1",
+    "strata/flash-next/serial_prefix_qualification_v6.py": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c"
+  },
+  "source_generation": "source35/C113/P30V4 only",
+  "prefixes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "full_heads": 4,
+  "phase_row_vectors": 2160,
+  "rows_per_layer_phase": 15,
+  "same_geometry": "CTX2048/prefill64/PLE65536/FP16KV",
+  "topology_only_differences": "[0] vs [0,1],split32/16,trim and ZE_AFFINITY_MASK",
+  "actual_GPU_Docker_runtime_original_weight_execution": false,
+  "actual_cross_topology_comparison": false,
+  "bitwise_equality_required_for_metadata_success": false,
+  "numeric_pass_claim": false,
+  "tolerance_gate": null,
+  "full_model_math_qualified": false,
+  "native_values_fed_to_original_reference": false,
+  "cpu_tests": 14,
+  "cpu_command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p 'test_cross_topology_prefix35_cpu_v1.py'",
+  "permission_scope": "Agent repo/tmp source and synthetic CPU only; root owns actual diagnostic execution; no GPU/Docker/modelweight/runtime/git writes by agent"
+}
