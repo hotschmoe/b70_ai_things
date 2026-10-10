@@ -1483,3 +1483,25 @@ b1de7995, poststrict/compiledpair/kernelpass. Noactualnativecode/causal
 qualification. Offlineconversionelimination remains narrower evidence.
 Original48math/allstatecache/streams/physicalplacement/x2profile/interactive
 latency/reproducibleshelf remainopen, fullgoal/userGPUpriority active.
+
+
+## 2026-10-10 - Warm terminal grammar cause and next GPU diagnostics
+
+ActualfullcacheV6suite75058 terminatedFAIL758s, firstactorwarm native
+terminal/drain predicate failed aftertwoHTTPclientscompleted. Ownedcontainer
+exits0/removednormally/retirementfailures0, parentpoststrict+compiledpair/
+kernel/newfouridentityPASS. No actor/fullcachePASS. Boundedlocalization
+d63d290e streamedall6,903,376 original2.377GB lines retaining211semantic
+rows: associate_eventsPASS calls1/2, native_lifetime rejectsactualsameowner
+BSTOP_applied afterBDONE. Consumedsource40 slot_stop validatesRID/gen then
+unconditionallyemitsstopobservation; NEWgrammar mustrecordlatehousekeeping
+withoutrewritingterminalfinish/count oracceptingforeign/stalegeneration.
+
+Sourceincrementaltracecursor/control workpreservesrawlines/ACKoffset/PID/
+sequence/retiredEOF andoriginaldeadlines; noactiveV6changed. QSA V3prepared
+plan92ba/freshpreflight15830 CPUlive, readyGPUbeforedeviceworklease required.
+CurrentactualGPU41241 solepairlease captureV6 testsunchangedhelper/input
+withimmutableendpointSOb2ccc. CPU6positivecasespass; originalV4two-domain
+negativefails12 asintended, actualruntimecoveragestillpending.
+Fulloriginal48fidelity/cache/statefamilies/streams/physicalmemory/x2profile/
+matchedinteractivelatency/reproducibleshelfremainopen, fullgoalactive.
