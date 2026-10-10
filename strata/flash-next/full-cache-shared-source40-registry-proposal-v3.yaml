@@ -1,0 +1,17 @@
+# NEW source40 full-cache purpose LIST entries; canonical registry unchanged.
+- label: flashnext-strata-source40-full-cache-shared272-v3
+  served_model_id: qwen38-flash-next-unsloth-udq4-k-xl-strata-source40-full-cache-shared272-v3
+  primary_client_id: hotschmoe-dd
+  family: qwen3.8-flash-next
+  weights: Unsloth-UD-Q4_K_XL-original-GGUF
+  activations: native-Q8_1-and-prefill-F16-BF16
+  serve_cmd: python3 strata/flash-next/qualify_full_cache_shared_runtime_v3.py --plan <new-source40-plan> --output <new-owned-root>
+  notes: NEW source40/C1401403 shared272 diagnostic. Whole families, current source identity, fresh49, victims, physical memory and complete lifecycle remain required. No full-cache, math, performance or shelf qualification assigned.
+- label: flashnext-strata-source40-batch0-persisted-v3
+  served_model_id: qwen38-flash-next-unsloth-udq4-k-xl-strata-source40-batch0-persisted-v3
+  primary_client_id: hotschmoe-dd
+  family: qwen3.8-flash-next
+  weights: Unsloth-UD-Q4_K_XL-original-GGUF
+  activations: native-Q8_1-and-prefill-F16-BF16
+  serve_cmd: python3 strata/flash-next/qualify_full_cache_shared_batch0_persisted_v3.py --plan <new-source40-plan> --output <new-owned-root>
+  notes: Separate serial PCL/full49 persisted diagnostic with fresh source40/C1401403 and owned native HTTP/file lineage. No strict-batch RID invention or whole-cache/math/latency qualification.

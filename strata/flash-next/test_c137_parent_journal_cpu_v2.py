@@ -1,0 +1,66 @@
+"""Original journal/command/error controls; fake processes, no GPU/model IO."""
+import ast,copy,json,subprocess,tempfile,time,unittest
+from pathlib import Path
+from unittest.mock import patch
+import c137_journal_binding_v2 as j
+import qualify_c1_serving_combined_v137_v2 as p
+class Controls(unittest.TestCase):
+ def setUp(self):
+  self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name)
+  self.proof={'started_epoch':10.,'pre_health_finished_epoch':11.,'launch_started_epoch':14.,'terminal_epoch':20.,'post_health_finished_epoch':22.,'identity_started_epoch':25.,'journal_binding_epoch':27.,'kernel_journal_receipts':{'active':[]}}
+  for stage,start,finish in [('pre',12.,13.),('active',15.,16.),('post',23.,24.)]:
+   label=stage+'-kernel-journal'+('-1' if stage=='active' else '');argv=['journalctl','-k','--since','@10','--no-pager'];row=self.row(label+'.log',argv,start,finish,True)
+   if stage=='active':self.proof['kernel_journal_receipts']['active'].append(row)
+   else:self.proof['kernel_journal_receipts'][stage]=row;self.save(stage)
+ def row(self,label,argv,start,finish,journal=False):
+  path=self.root/label;path.write_text('CPU_SYNTHETIC_COMPLETE\n');cmd=self.root/(label[:-4]+'.command.json' if journal else label+'.command.json');j.c.write(cmd,argv)
+  return {'path':str(path),'sha256':j.c.sha(path),'stdout_sha256':j.c.sha(path),'command':argv,'command_file_sha256':j.c.sha(cmd),'return_code':0,'error':None,'started_epoch':start,'finished_epoch':finish}
+ def save(self,stage):j.c.write(self.root/(stage+'-kernel-receipt.json'),self.proof['kernel_journal_receipts'][stage])
+ def test_original_complete_pre_active_post(self):self.assertEqual(j.journal_binding(self.root,self.proof),self.proof['kernel_journal_receipts'])
+ def test_rczero_with_timeout_error_refused(self):
+  row=self.proof['kernel_journal_receipts']['post'];row['error']='TimeoutExpired CPU';self.save('post')
+  with self.assertRaises(ValueError):j.journal_binding(self.root,self.proof)
+ def test_changed_log_or_sidecar_refused(self):
+  (self.root/'active-kernel-journal-1.log').write_text('CPU_CHANGED\n')
+  with self.assertRaises(ValueError):j.journal_binding(self.root,self.proof)
+ def test_missing_prelaunch_journal_refused(self):
+  self.proof['kernel_journal_receipts'].pop('pre')
+  with self.assertRaises(ValueError):j.journal_binding(self.root,self.proof)
+ def test_missing_readiness_journal_refused(self):
+  self.proof['kernel_journal_receipts']['active']=[]
+  with self.assertRaises(ValueError):j.journal_binding(self.root,self.proof)
+ def test_beforehealth_afterlaunch_beforeterminal_before4_refused(self):
+  original=copy.deepcopy(self.proof)
+  for stage,key,value in [('pre','started_epoch',10.),('pre','finished_epoch',15.),('post','started_epoch',19.),('post','finished_epoch',26.)]:
+   self.proof=copy.deepcopy(original);self.proof['kernel_journal_receipts'][stage][key]=value;self.save(stage)
+   with self.subTest(stage=stage,key=key),self.assertRaises(ValueError):j.journal_binding(self.root,self.proof)
+ def test_nonfinite_global_or_command_time_refused(self):
+  original=copy.deepcopy(self.proof)
+  for key in ('started_epoch','launch_started_epoch','terminal_epoch','pre_health_finished_epoch','post_health_finished_epoch','identity_started_epoch','journal_binding_epoch'):
+   self.proof=copy.deepcopy(original);self.proof[key]=float('nan')
+   with self.subTest(key=key),self.assertRaises(ValueError):j.journal_binding(self.root,self.proof)
+ def test_wrong_actual_argv_even_updatedsha_refused(self):
+  row=self.proof['kernel_journal_receipts']['pre'];row['command'][-1]='CPU_CHANGED';cmd=self.root/'pre-kernel-journal.command.json';j.c.write(cmd,row['command']);row['command_file_sha256']=j.c.sha(cmd);self.save('pre')
+  with self.assertRaises(ValueError):j.journal_binding(self.root,self.proof)
+ def test_original_health_rows_exact_positive_and_rcerror_negative(self):
+  commands=[[str(j.c.REPO/'vllm/int4/diagnostics/xpu_health_strict.sh'),'--img',j.HEALTH],[str(j.c.REPO/'bin/xpu-collective-health'),'--img',j.HEALTH,'--p2p','0','--timeout','180']]
+  rows=[self.row('pre-'+label,argv,10.2+i*.2,10.3+i*.2) for i,(argv,label) in enumerate(zip(commands,('health.log','collective.log')))]
+  h={'passed':True,'cards':[0,1],'health_image':j.HEALTH,'started_epoch':10.1,'finished_epoch':11.,'files':rows};path=self.root/'pre-health.json';j.c.write(path,h);self.proof['pre_health_sha256']=j.c.sha(path);self.assertEqual(j.health_binding(self.root,self.proof,'pre'),h)
+  rows[0]['error']='CPU timeout despite rc0';j.c.write(path,h);self.proof['pre_health_sha256']=j.c.sha(path)
+  with self.assertRaises(ValueError):j.health_binding(self.root,self.proof,'pre')
+ def nested_run(self):
+  tree=ast.parse(Path(p.__file__).read_text());main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main');node=next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='run');code=compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),'CPU_SOURCE_EXTRACTED_REAL_PARENT','exec');scope={'out':self.root,'time':time,'c1':p.c1,'subprocess':p.subprocess,'stopped':False,'page_guard':lambda _:None};exec(code,scope);return scope['run']
+ def test_actual_nested_parent_run_persists_original_return(self):
+  run=self.nested_run()
+  def fake(argv,stdout,**kw):stdout.write('CPU_ACTUAL_MOCK_STDOUT\n');return subprocess.CompletedProcess(argv,0)
+  with patch.object(p.subprocess,'run',side_effect=fake):row=run(['CPU_COMMAND'],'CPU.log')
+  self.assertEqual(row,p.c1.read(self.root/'CPU.log.receipt.json'));self.assertIsNone(row['error']);self.assertEqual(row['return_code'],0);self.assertEqual(row['sha256'],p.c1.sha(self.root/'CPU.log'))
+ def test_actual_nested_parent_timeout_records_failure_before_raise(self):
+  run=self.nested_run()
+  with patch.object(p.subprocess,'run',side_effect=subprocess.TimeoutExpired(['CPU_COMMAND'],1)):
+   with self.assertRaises(subprocess.TimeoutExpired):run(['CPU_COMMAND'],'CPU-fail.log')
+  row=p.c1.read(self.root/'CPU-fail.log.receipt.json');self.assertIsNone(row['return_code']);self.assertIn('TimeoutExpired',row['error']);self.assertEqual(row['sha256'],p.c1.sha(self.root/'CPU-fail.log'))
+ def test_new_parent_rejects_old_generation_before_other_proof_reads(self):
+  with patch.object(p.c1,'read',return_value={'passed':True,'teardown_passed':True,'post_health_passed':True,'post_full4_source_qualified':True,'c1_parent_generation':137}):
+   with self.assertRaises(AssertionError):p.validate_final_source_proof(self.root,{})
+if __name__=='__main__':unittest.main()
