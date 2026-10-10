@@ -12880,3 +12880,20 @@ markers/originalinspection+receipt/library/currentELF/prepostpublisher/pages/
 Docker/EOF/health chronology comprehensivepeer READY, no knownsourceblocker.
 VERDICT -> Preserve actualfailure; proceed fresh boundedRMS GPU experiment
 after nowterminalCPU lease. Full fidelity/cache/latency/shelf remain open.
+
+
+## 2026-10-10 - RMS isolated compile succeeds after entry/init repair
+
+CONFIG -> Frozen31d math retained; V6guardd87a/V7entry265e prospective code.
+COMMAND -> V5 actual73415 terminal1/FAIL317s: compileexit3, imageEnv
+SETVARS_COMPLETED1, nocompiler/stdout/RS. Preposthealth/new4 PASS; reportSHA
+a4f3dcf10b888417c03a946c849c99768a565cee20971f744f2a47847dee4dee.
+Rootconditionalsetvars smoke bothimages version0/0 PASS, no devices/model.
+Root61CPU/170SHA and independententry derivation review PASS. Actualisolated
+compile55085 terminal0/PASS22s with no devices/modelmounts, fresh ELF.
+RESULT -> V6 skipalreadyinitialized oneAPI; V7 callable copy changesONLY
+soleentry identifier, avoiding nestedmacro reset, all mathbytes unchanged.
+CPU95049 hostswap audit: ownedVmSwap/cgroupSwap0/noOOM, globaldelta10592256
+bytes; no causalowned-memorypressure finding or guard/recipe relaxation.
+VERDICT -> Actualsoftware compile closes before fullGPUrepeat; no nativeRS/
+fullmath/cache/latency qualification yet. Full original goal remains active.
