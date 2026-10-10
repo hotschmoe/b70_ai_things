@@ -14546,3 +14546,20 @@ unchanged. ModelGPUqualificationstillrequired, no earlyPASS.
 VERDICT -> Actualcapturefailure, no unchangedrerun. Correctedfullcachemodel
 prepare proceedswhileposthealthheld; whole9+persisted/fresh49 scopekept.
 Fulloriginalmath/concurrency/physical/profile/latency/shelf active.
+
+
+## 2026-10-10 - Corrected wholecache V6 GPU suite launches
+
+CONFIG -> NEWsourcee9357/794, exactsignedartifactenvprojection bothHTTP/
+persisted, exactmountbijection/recoveryfailedscope, unchangedNN/cfg/env and
+whole9actors+persisted/allfresh49. OldV4failed/heldV5 preserved.
+COMMAND -> Root147CPU PASS1.142/all794hash; independentpeer147PASS1.125/
+all794hash/SOURCEREADY. Actualwholeprepare27132 terminal0; exact10plans
+and suite8f4e6964d800737ebc7fc17e50b514b937a769d6e2ec44cd586547d9e0415c3b verified.
+Launchroot75058solepairleaseGPUwholecache suite.
+RESULT -> Actualsuite live, firstactor/fullnumerical/cache/lifecycle/current
+identity qualification pending. No partial/fullcachePASS orspeedclaim.
+CaptureV4actualfailureb1de7995 retained/posthealthPASS; no unchangedrerun.
+QSAfreshV3prepare98835stillCPUlive, GPUlaunchseparateaftercurrentsuite.
+VERDICT -> ConcretecorrectedGPU campaign proceedsunderfulloriginalscope.
+Original48reference/streams/physical/profile/interactive latency/shelf open.
