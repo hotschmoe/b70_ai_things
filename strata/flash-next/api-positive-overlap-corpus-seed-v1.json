@@ -1,0 +1,127 @@
+{
+  "schema": "api-positive-overlap-corpus-seed-v1",
+  "messages": {
+    "warm": [
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is the warmup W0."
+        },
+        {
+          "role": "user",
+          "content": "Explain in three complete sentences why checking a checklist before starting a small task can prevent mistakes."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is the warmup W1."
+        },
+        {
+          "role": "user",
+          "content": "Explain in three complete sentences why checking a checklist before starting a small task can prevent mistakes."
+        }
+      ]
+    ],
+    "target": [
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is documentation task water-cycle-A."
+        },
+        {
+          "role": "user",
+          "content": "A community garden collects roof runoff in a covered tank. Rainwater first passes through a mesh screen that removes leaves. The tank has an overflow pipe directed to a planted drainage bed. Volunteers inspect the screen after storms, keep the lid closed to prevent mosquitoes, and water the garden in the morning. A small pump feeds a drip line, so water reaches plant roots rather than wetting every path. The gardeners want a short explanation for new volunteers that connects collection, storage, maintenance, and careful use. The explanation should make the order of the process clear without introducing equipment or rules not mentioned here.\n\nWrite three complete sentences explaining why each step matters. Begin directly with the explanation. Do not add a heading or repeat the question."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is documentation task water-cycle-B."
+        },
+        {
+          "role": "user",
+          "content": "A community garden collects roof runoff in a covered tank. Rainwater first passes through a mesh screen that removes leaves. The tank has an overflow pipe directed to a planted drainage bed. Volunteers inspect the screen after storms, keep the lid closed to prevent mosquitoes, and water the garden in the morning. A small pump feeds a drip line, so water reaches plant roots rather than wetting every path. The gardeners want a short explanation for new volunteers that connects collection, storage, maintenance, and careful use. The explanation should make the order of the process clear without introducing equipment or rules not mentioned here.\n\nWrite three complete sentences explaining how the steps fit together. Begin directly with the explanation. Do not add a heading or repeat the question."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is documentation task library-returns-A."
+        },
+        {
+          "role": "user",
+          "content": "A neighborhood library has a return box beside its entrance. Staff empty the box each morning and place the books on a sorting cart. They check each barcode into the catalog, inspect the book for damage, and separate items that have a waiting reservation. Reserved items go to the pickup shelf, while other books return to their usual shelves. A receipt in the catalog records when each item was checked in. Staff also compare the cart with the catalog before finishing the shift. The library wants an explanation for new volunteers that connects the physical sorting process with the catalog updates. Use only the workflow described here.\n\nWrite three complete sentences explaining why each step matters. Begin directly with the explanation. Do not add a heading or repeat the question."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is documentation task library-returns-B."
+        },
+        {
+          "role": "user",
+          "content": "A neighborhood library has a return box beside its entrance. Staff empty the box each morning and place the books on a sorting cart. They check each barcode into the catalog, inspect the book for damage, and separate items that have a waiting reservation. Reserved items go to the pickup shelf, while other books return to their usual shelves. A receipt in the catalog records when each item was checked in. Staff also compare the cart with the catalog before finishing the shift. The library wants an explanation for new volunteers that connects the physical sorting process with the catalog updates. Use only the workflow described here.\n\nWrite three complete sentences explaining how the steps fit together. Begin directly with the explanation. Do not add a heading or repeat the question."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is documentation task trail-signs-A."
+        },
+        {
+          "role": "user",
+          "content": "A local hiking group maintains signs at trail junctions. Before a workday, the coordinator makes a list of damaged or missing signs from reports submitted by walkers. Two volunteers visit each reported junction together. They compare the sign with the route map, photograph its condition, and note whether vegetation blocks the view. They replace a damaged sign only after checking the route and destination names. At the end of the day, the coordinator updates the maintenance list and keeps the photographs with the report. The group wants a clear explanation for new volunteers that connects planning, checking, repair, and record keeping. Use only the procedure described here.\n\nWrite three complete sentences explaining why each step matters. Begin directly with the explanation. Do not add a heading or repeat the question."
+        }
+      ],
+      [
+        {
+          "role": "system",
+          "content": "You explain everyday procedures clearly. This is documentation task trail-signs-B."
+        },
+        {
+          "role": "user",
+          "content": "A local hiking group maintains signs at trail junctions. Before a workday, the coordinator makes a list of damaged or missing signs from reports submitted by walkers. Two volunteers visit each reported junction together. They compare the sign with the route map, photograph its condition, and note whether vegetation blocks the view. They replace a damaged sign only after checking the route and destination names. At the end of the day, the coordinator updates the maintenance list and keeps the photographs with the report. The group wants a clear explanation for new volunteers that connects planning, checking, repair, and record keeping. Use only the procedure described here.\n\nWrite three complete sentences explaining how the steps fit together. Begin directly with the explanation. Do not add a heading or repeat the question."
+        }
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "water-cycle",
+      "target_indices": [
+        0,
+        1
+      ],
+      "selection_order": 0
+    },
+    {
+      "id": "library-returns",
+      "target_indices": [
+        2,
+        3
+      ],
+      "selection_order": 1
+    },
+    {
+      "id": "trail-signs",
+      "target_indices": [
+        4,
+        5
+      ],
+      "selection_order": 2
+    }
+  ],
+  "warm_max_new": 64,
+  "target_max_new": 64,
+  "thinking": false,
+  "greedy": true,
+  "natural_completion_required": true,
+  "forced_no_EOS_or_length_extension": false,
+  "actual_tokenizer_fixture_observed": false,
+  "actual_CPU_continuation_observed": false,
+  "actual_GPU_positive_overlap_observed": false,
+  "screening_minimum_generated_tokens": 8,
+  "screening_limit_generated_tokens": 64,
+  "prior_exact235_controls_unchanged": true
+}
