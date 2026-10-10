@@ -12863,3 +12863,20 @@ Originalpublisher4 bytes/hashes/stats/orderedpaths and preservedpage brackets
 remain strict. No nativecompile orGPUrun yet; independentreview pending.
 VERDICT -> Review gaps addressed in prospective source; actualbounded RMS
 observation remains required. Full originalfidelity/cache/latency/shelf open.
+
+
+## 2026-10-10 - CPU screen memory failure; RMS V5 clears full peer review
+
+CONFIG -> ActualCPU all16 e633 recipe with strictnohostswap guard; RMS V5
+source-only comprehensive successor, unchanged31d math and savedown input.
+COMMAND -> CPU95049 terminal1/FAIL246s at case0repeat0. Actual memory monitor
+reports Hostswapuseincreased, ownedstop/RemoteDisconnected/no completion,
+cleanupnonzeroexit. Fresh postterminalfull4/pages PASS; originalfailure kept.
+RMS V5 root40CPU/157SHA and independent49CPU (40+9math) PASS, sourceplan
+a8488530a6e02fd35b70e64be6dfaa9b0129c94b396653fcaae2fd210e17a2bb.
+RESULT -> CPUcontinuation unobserved, no pair selected and guard notrelaxed.
+Memory causality/newexplicitrecipe under investigation. RMS rawfaults/native
+markers/originalinspection+receipt/library/currentELF/prepostpublisher/pages/
+Docker/EOF/health chronology comprehensivepeer READY, no knownsourceblocker.
+VERDICT -> Preserve actualfailure; proceed fresh boundedRMS GPU experiment
+after nowterminalCPU lease. Full fidelity/cache/latency/shelf remain open.
