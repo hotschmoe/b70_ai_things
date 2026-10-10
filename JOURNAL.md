@@ -11385,3 +11385,28 @@ whole model/quality, paired remaining cache, API stale identity/concurrency,
 47979 and CPU build64755 are live, not restarted on observation timeout. Group
 bundling and reader replay reduce repeated work; no matched timing gain claim.
 Preserve all failed history and unrelated dirty files. Full goal remains active.
+
+
+## 2026-10-10 - Fresh CPU reference binaries built; runtime loader qualified
+
+CONFIG -> Verified V2source3579files/98MB with V3CPU-only recipe; pinned39992
+compiler/runtime, clean env/networknone/2cores/8GiB/no model mounts/devices.
+COMMAND -> Actual64755 compile/link all6 exit0/ownedremoved. Host ldd postreader
+fails missing libgomp; preserveFAILED original. NEW35997 all6 ELF/currentCPU
+container dependency+cache/source closure PASS; NEW14260 actual server and
+completion version checks plus test-quantize-fns PASS/noGPU/no model read.
+RESULT -> Original receiptSHA2df28740819c1b0869395fb8ff52d000cf167e4993b434a3e76f5fc48a5969ac remains false.
+NEW all6 closureSHA26e460378f77e5e6ae0e76d1293d1694991a491483cf628c9d37f096a9f6bfb6.
+Failure associationSHAe2126b4e67bb51548f5b1647bb1d08e9b50ba139146de6bebaa0d821b7f8b18e pins exactoriginalerrors/hostldd/boundlogs/all6.
+Runtime smokeSHA2cead24f1c108f07fb36c9feefb4c06aae2ecd1f5ecd3e2a137f74433a981937.
+Path: /mnt/vm_8tb/b70/build/flashnext-cpu-build-v3-20261010/.
+Rootbuildscript preserved withreceipt-matchedSHA; supplemental source script
+also preserved. All6 derivefrom --target ratherthan oldslice omittingserver.
+Intendedpinnedcontainer resolveslibgomp; hostlibrary absence needs no rebuild.
+Pairedcache47979 confirmedlive; turn/parked/eviction partialPASS withowned
+removal. Cancellation/live/teardown/freshposthealth/new4 stillpending.
+VERDICT -> Real CPUbinary/runtime foundation readyfor exclusive-RAM functional
+pilot afterGPUruncloses. No CPUmodel/quality/nativeexactmath/productionclaim.
+NextV7concurrency parent preparedbyagents, independentreviewcaught serialjob
+budgetcount and preflight-finally healthissues beforeGPU. Fullgoal active;
+originalfailures/unrelateddirtyfiles preserved. No stack/package changes.
