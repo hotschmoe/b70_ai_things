@@ -11770,3 +11770,24 @@ VERDICT -> Fourstream raw/current source/identity/health/lifecycle gate passed.
 Fresh serial parity, OFF/ON API concurrency, bounded6, cached state handoff,
 fullmath/broad quality, criticalpath/matched latency and shelf remain required.
 Goal active; canonical registry and consumed SDK unchanged.
+
+
+## 2026-10-10 - Sixstream and paired private concurrency admitted on CPU
+
+CONFIG -> Exact source35/C113 unchanged; native bounded32 perrequest,
+onecard6 and paired2 independent plans. No extra GPU run during serial0.
+COMMAND -> Execute V7 prepare with exact v2 case6/2 and actual finalized
+native4 post-model identity. Both CPU preparation commands terminal0/PASS.
+Run14 new API fresh migration CPU controls; allPASS (source draft not frozen).
+RESULT -> Actual new plans:
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-onecard-native6-diag1-prepared/plan.json SHA 40602c555819a8a952ab2d48560f45e9cd25cf8a03646b390e32b3b1e1c2f6c1
+/mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-v7-pair-native2-diag1-prepared/plan.json SHA 585db533682848de83b68a770e4d1b5e1d7f0f395636c2d5122b8fa00c870aac
+V9 native4 serial0 live78416 under pairlease, currently prehealth/kernel gates.
+Serial1 two-job plan already admitted; current serial0 six jobs not completed.
+API review confirms in-place alias recipe updates propagate exact cache3 args
+and retains strict new profile admission. Additional producer/health/command
+joins being hardened; registry remains unchanged. Positive cached handoff and
+concurrent prefix reuse remain separate required work after API scheduling.
+VERDICT -> Native6 and twoGPU2 ready for coordinated runtime after current
+serial comparisons. No native6/pair concurrency numerical PASS or speed claim.
+Fullgoal remains active, with fullmath/cache/API/profiling/latency/shelf open.
