@@ -511,3 +511,41 @@ contraction/fullHC/GPU equivalence/modelquality remain unqualified. Newpin
 run is live, not yet qualified. Othercachegroups, concurrent2/4/bounded6,
 fullfidelity/quality, criticalpath/cleanlatency and shelf remain required.
 Fullgoalactive; no speed or production qualification claim.
+
+
+## 2026-10-10 - Onecard explicit pin qualified; host runtime closure established
+
+CONFIG -> Exact source35/C113 SDK and original UD-Q4_K_XL, V8 explicitpin191
+on209token divergent-suffix fixture; serial native GEN/FP16KV/ctx2048/pref64/
+PLE65536. Separate unchanged HC host helper and finalV2 arithmetic adapter.
+
+COMMAND -> Onepin71624 terminal0 in499s; rawrecollection85731 checksall6
+requests/threecomparisons; inspectfinalparent/health/modelhash chronology.
+Review found dynamic-library/rawtinyfixture closuregap; new supplementary
+hostproducer qualifies15knownanalytic+3actualadapter rows and preservedraw
+fixtures/commands/source/compilerlog/hostELFdependencies. CPU8 PASS and
+separate finalized_binding reread PASS. Pairedpin99833 now acquired0/1 leases.
+
+RESULT -> Bothonecard explicitpin hits actuallyreuse191 andevaluate18 of209
+promptrows, freshreferences209. Allthreecomparisons naturalfinish/outputIDs/
+LP20/full248320 firsthead/all48 firstwindow residualvectors BITWISE.
+Ownednormalexit0/removal/noforcedcleanup/errors, strict/compiledpair pre/post
+health/kernel/newfull4/pages/source PASS. ParentSHA
+bde62853bcb27cab1786ac67c2e078f0b747bd202d2884eff888f0fe31e5dcfc.
+Parent: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/serial-cache-v8-onecard-pin/parent-qualification.json.
+Supplementary hostroot: /mnt/vm_8tb/b70/build/hc35-host-runtime-v1-20261010.
+ReportSHA 7ab01bf3efae5daac463a56b3ba620fb2ee20e883a6d104808e99c5ad17e8931.
+SourceplanSHA 4e41ed7824a9fe2aef95c78ca0cd7c8c222df218a55e988b678cc819b02c898f.
+Pre/posthelper/runtime/source bindings match; all5resolved ELF libraries,
+Pythonmappedctypeslibm, CPU/kernel/affinity/loaderBLASenv, exacttinyfixtures/
+expectedbytes andactualoutputs pinned. NoGPU/modelpayload touchedbyhostrun.
+Pairedpin active99833 at same runtimeparent/serial-cache-v8-pair-pin;
+synthetic GPU HC publicprojection fixture and separate conditionaloriginal
+HC row3 projections source-only preparations underway undercoordinator.
+
+VERDICT -> Explicitonecard pin case and reproduciblelimited hostarithmetic
+controls qualified. Deviceprimitive arithmetic/fullHC/modelquality remain
+unqualified; conditional inputs cannot enter frozen originalreference. Other
+cachegroups, concurrency2/4/bounded6, criticalpath profiling, matchedstream
+latency and verified shelf remain required. No trusteddecode/productionclaim.
+Fullgoalactive; unrelateddirtychanges preserved.
