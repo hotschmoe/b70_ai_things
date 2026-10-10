@@ -1,0 +1,17 @@
+# Half conversion compiler artifact recipe
+
+CONFIG -> Preserve frozen half52db/274+19, original512 owned inputs and all actual root runtime outputs. No reference or model change. Inspect Half37Expression, Half37Store and Half37Load. Their actual expression/store discrimination is separate from a compiler-lowering cause.
+
+COMMAND -> Root calls half37_compiler_lowering_recipe_v1.recipes(new_output,actual_root_pid) after the original parent closes. Compiler39992, exact original source/SDK readonly mounts, networknone,2CPU/2GB, pair exclusion/card0 pin and conditional setvars. The recipe does not execute the diagnostic. Root must use bin/gpu-run and the existing phase supervisor plus exact inspected recipe/owned removal. Save actual icpx version, recipe, source/header/archive/tool ELF SHAs, compile stdout/rc, original plan snapshot and source recheck. Preserve health/journal/new4/page prerequisites from the root phase discipline.
+
+LLVM frontend command is preregistered by llvm_argv(): preserve every original compile flag/define/include and original source; remove only the two archive links, Ze loader and explicitly link-stage-only spir64/divide-sqrt flags; replace executable output with -fsycl-device-only -S -emit-llvm output. This is NEW artifact-emission mode. The device link flags remain a separate recorded authority. It is not automatically the actual executed binary's final optimized IR.
+
+First run the exact tool inventory in compiler39992. Available absolute llvm-as/llvm-spirv/spirv-dis/readelf paths, tool versions, tool ELF/library SHAs must be recorded; absence is truthful and does not authorize replacing tools from archives. The downstream recipe then assembles the fresh LLVM and translates/disassembles SPIRV, and inventories the original executed helper ELF sections independently. Select the exact three named kernel entries and their reachable callees, retaining complete raw artifacts and unmodified names. Inspect conversion opcodes, floating types/rounding decorations, storage width and store/load boundaries without selecting a threshold or interpreting absence before observation.
+
+Original executed ELF embedded-SPIRV extraction is deliberately gated on actual section/bundle inventory; no guessed section name is authoritative. ISA requires actual tool help, observed device target, embedded SPIRV identity and runtimeC388 IGC/library identity. An offline compiler39992 ISA recompile is a separate observation and cannot be called the original runtime JIT ISA. Normal original execution had no preregistered ISA artifact capture, so its JIT ISA is currently unavailable. If tool inventory cannot support a stage, stop that stage and retain evidence; LLVM/SPIRV observations remain scoped.
+
+RESULT -> Four source/metadata CPU checks; no compilation, GPU, original native arrays or model payload read by author. Root may separately bind the fully closed actual half report/public admission before compiler execution. Current recipe accesses only source/build metadata.
+
+VERDICT -> No lowering or universal half-accuracy claim until actual artifacts. No model correction or ULP fitting. Actual direct/replay measurements stay immutable. The exact compiler phase is reviewable now; embedded image/ISA commands require real inventory instead of inventing tool support.
+
+CPU: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_half37_compiler_lowering_recipe_cpu_v1.py -q
