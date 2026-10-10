@@ -13077,3 +13077,28 @@ RESULT -> New actualfresh private196 and3completepackbyte boundaries pending.
 No GPU/model inference by thisdiagnostic and no source/runtime prooftransfer.
 VERDICT -> H46/H47 remain FAILED; native-vs-JSON representation diagnosis
 pending before NEWH48 fixes. No numerical4/cache/API/latency/shelf claim.
+
+
+## 2026-10-10 - Representation-only prerequisite diagnosed and fresh CPU retry live
+
+CONFIG -> Frozen cf263 corrected routes, immutable eb857 H46 plan and c05
+private196 report; original H46/H47 failures remain FAILED.
+COMMAND -> Actual1992 terminal0/PASS559s, report6ed05cab321e67733043fd22541911d3b320aa0695b57fb4b41dcafc78739930.
+RESULT -> Native Python equality false; typed canonical equality true. Exactly
+81 tuple/list ownership fields differ, canonicalSHA both e06681a1. All3080
+packdigest consumers and3freshcompletebyte boundaries closed. No GPU/model
+inference. Fullmodel/cache/latency or oldparent PASS never inferred.
+VERDICT -> Actual representation diagnosis closed; NEW H48 19c47079/263 and
+69CPU+peerREADY preserve strict values. Sourcecheckpointbbc3340 pushed;
+actual H48 prepare/runtime stillpending.
+
+CONFIG -> Frozen observerV4 78792b6c/132 and wrapperV3 2e36b8ab/146; exact
+unchanged e633 recipe/strictguards. Root32CPU and independentpeerREADY.
+COMMAND -> Sourcecheckpointf9d1522 pushed; rootactual50448 starts fresh
+api-positive-overlap-cpu-observed-retry-v3-run-v1 underpair CPU exclusion.
+RESULT -> Idle30 passed. First case0/repeat0 passed actual response/identity/
+ownedteardown, response64token limit so overlapeligibility false. Observer
+captures actualownedcontainer. Remaining all8inputs/twofreshrepeats and final
+full4/source/ownership/independentdecode/select gates remainpending.
+VERDICT -> Concrete unchangedrecipe progression beyond startup failure;
+no fullcontinuation/candidate/API/cache/math/latency/shelf qualification.
