@@ -14263,3 +14263,22 @@ code/cause or modelqualification. Nativebinaryinterposer sourcebeingprepared.
 Source40 child semantic-beforeREADY/currentbyte-afterACK fix passes3controls
 including1022s simulatedadmission; fullruntimefreeze pending. Canonical165
 unchanged whileoriginalfullrecollection37439 stayslive. Fullgoalactive.
+
+
+## 2026-10-10 - Original ELF independent admission closes; source40 baseline starts
+
+CONFIG -> Original extractionV4a674, six original images/current unchanged
+helper4d86, canonical original165 preserved until every oldreaderterminal.
+COMMAND -> Existing37439 terminal0/PASS; independent finalcurrent source/
+runtime/math observation recollection matches historicalpublication4d634758.
+Root exact169 append transaction verifiesoriginal165bytes/order/topkeys and
+only correctedC140V3fouraliases, retainsprimaryhotschmoe-dd.
+RESULT -> Finalreceipt build/half37-original-elf-extraction-v4-root-admission-20261010.json
+confirms originalimagesextractedTrue/runtimeJITfalse/modelmathfalse. Canonical
+registry169 SHA8a005baf2f62f02497f42c349cbf9dcb03da5e84b615bf8e837a9f9ea15aa6ab.
+ActualonecardC1401403prepare45973 nowlive withgenuinecorrectedSDK/source40V3
+upload/matchingoracle/runtime andfreshfullshardidentity checks. No modelGPU
+launch yet; qualifier immediately follows successfulprepare.
+VERDICT -> Closedoriginalimageadmission and concretefreshbaseline progression.
+No oldsource37 math/runtime proof promotedto source40. Original48 fidelity/
+wholecache/streams/profile/latency/shelf remainopen; userGPUpriority active.
