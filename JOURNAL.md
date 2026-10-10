@@ -12562,3 +12562,17 @@ V3 strict canonical comparison retains all fields/types and rejects collisions,
 duplicates and nonfinite values; original failed receipts remain unchanged.
 VERDICT -> Independent reference evidence complete; remaining147 numerical
 comparisons and complete cache/concurrency/fidelity/latency/shelf remain open.
+
+
+## 2026-10-10 - Remaining147 V3 genuine preparation completes
+
+CONFIG -> Source37 paired2 cacheOFF fresh serial jobs1/2/3, budget1 each;
+strict historical first49 is a separate named receipt, no scope expansion.
+COMMAND -> Genuine CPUprepare15962 terminal0; planSHA
+4f81326368b315815840b2f03a7df42c60746770f879ce14a2d2a70a196a4613.
+Prospective parent43 actual70200 started; PID915796 confirmed live in CPU
+admission, before GPU health/inference. Source checkpointfc15bc4 pushed.
+RESULT -> V3 canonical roundtrip now accepts the exact saved JSON receipt
+while all source/baseline/adjudication gates rerun. No runtime numerical
+result yet; same active70200 handle must be polled, not restarted on silence.
+VERDICT -> Genuine preparation advances remaining147; goal stays active.
