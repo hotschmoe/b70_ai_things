@@ -115,3 +115,30 @@ VERDICT -> Source and actual prerequisite admission ready for future batch
 runtime. No concurrent/cache/latency proof, no oldsource33 transfer. New registry
 aliases remain a proposal until admitted. Original full fidelity and serving
 campaign remain active; source-only serial cache V7 and originalrouteV2 ongoing.
+
+
+## 2026-10-10 - Source35 serial cache V7 CPU and genuine preparation
+
+CONFIG -> New immutable V7 cache controller/parent bound to exact source35/C113,
+matched2048/64/65536 FP16 one[0] andpair[0,1] split32/16. OldV6 frozen.
+P30/input33/batch observersOFF, EAGER absentincluding0. Exact cache/cancellation/
+victim/continuation policies and separate OFF/logits/layers basic gates retained.
+
+COMMAND -> Direct CPU controller and parent scripts30340/70287;18-file closure;
+actual prepare98831/22256 using finalC113 source35 and pinned tokenizer image.
+Admit12 batchV6 research aliases in evals/configs/models.yaml, exactgate checks.
+
+RESULT -> Both direct CPU suites/closure PASS. unittest discovery was initially
+used on script-style tests and reported0tests/exit5; corrected direct scripts
+PASS. Initialprepare85547 hadwrong identity filename and failed before output/
+Docker; corrected c1-post-model-identity-v13.json then both actual preparesPASS.
+NoGPUexecuted. Same freshSDK/tokenizer/tokens/matched geometry bothtopologies.
+Oneplan SHA fee5886f99a05ffa614780960ed2fd88e66fbb57633681378a08be66a24747dc;
+pairplan SHA cb1b8297e92c7afa912ed0715359ace7646cea49c0af2eec8e822272bb3f743f.
+Plans under f16-source35-20261009/serial-cache-v7-{onecard,pair}-prepared.
+All12 source35 batchresearch aliases appearonce; hotschmoe-dd primary retained.
+V7 sourceplan SHA c731157e99b07e310289ac643fd3a9c782d7aad9b1931275ba294e9f079e3394.
+
+VERDICT -> Actual source/tokenizer-bound plans ready, not cache/runtimequalification.
+Root must run onebasic thenpairedbasic before cachegroups; originalownroute
+fidelity remains next. No shelf/cache/concurrency/latency claim. Fullgoalactive.

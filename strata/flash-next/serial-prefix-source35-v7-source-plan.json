@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "CONFIG": "source35 immutable serial complete-state cache V7; finalized C113 integrated63/27/8/six SDK and fresh full390 upload; one GPU0 and pairGPU0+1 split32/16 geometry2048/64/65536 FP16",
+  "COMMAND": [
+    "python3 strata/flash-next/test_serial_prefix_qualification_v7_cpu.py",
+    "python3 strata/flash-next/test_qualify_serial_prefix_v7_cpu.py"
+  ],
+  "RESULT": {
+    "source_cpu_controls_passed": true,
+    "actual_native_run_executed": false,
+    "actual_source35_basic_prerequisites_exist": false,
+    "model_math_qualified": false,
+    "serial_cache_qualified": false,
+    "complete_campaign_qualified": false
+  },
+  "VERDICT": "PASS source/CPU contracts only; root lifecycle and independent fidelity gates remain",
+  "files": [
+    {
+      "path": "strata/flash-next/serial_prefix_qualification_v7.py",
+      "sha256": "5f7273d0f33bc0430b4f0875131dc87163dca844749f8de36108fda026fda2a1"
+    },
+    {
+      "path": "strata/flash-next/qualify_serial_prefix_v7.py",
+      "sha256": "7b5f1b597ea40b833bbb96535213902a48f3acd7d8d5e8b933ed0c3fd7c4c62c"
+    },
+    {
+      "path": "strata/flash-next/test_serial_prefix_qualification_v7_cpu.py",
+      "sha256": "870561dc20845f6fc873a21993dba995a7550163306b3f55112654e2b2777c84"
+    },
+    {
+      "path": "strata/flash-next/test_qualify_serial_prefix_v7_cpu.py",
+      "sha256": "d286c3161b08255e9eedfccea47c1b8352f4229af167f79674ca002da9fe7f38"
+    },
+    {
+      "path": "strata/flash-next/serial-prefix-source35-v7-design.md",
+      "sha256": "efcaf6c754da0a1833f43088285f5bbe2fe8647f8978574d0676ab76897c604b"
+    },
+    {
+      "path": "strata/flash-next/serial_prefix_prompt_fixture_v6.py",
+      "sha256": "a682d5ef1bfa4cc8d5702448fe20b27953df0644cffa515d6468e6cb92aa7c6d"
+    },
+    {
+      "path": "strata/flash-next/c1_serve_controller_combined_v13.py",
+      "sha256": "f2057108c8ed7992ddbb71facdc81f78302ccf142090f4d73b3a5063c6d8c149"
+    },
+    {
+      "path": "strata/flash-next/qualify_c1_serving_combined_v13.py",
+      "sha256": "7400b7a73499f93645e17047ceb5b5da64017796e88ff9a7d05c4742a0ff3bb2"
+    },
+    {
+      "path": "strata/flash-next/audit_fidelity_observer_coverage.py",
+      "sha256": "c23f73131b4d525c7e322f913ae6f0b600b07073c0125b9d1d66824725dbec47"
+    },
+    {
+      "path": "strata/flash-next/source_page_watchdog_v3.py",
+      "sha256": "45a793c86c3af0e488a28e77648126b3a59fb9d318b6ba224fb1685c725dbcb1"
+    },
+    {
+      "path": "strata/flash-next/run_source_upload_oracle_full.py",
+      "sha256": "87240dd20ad7b7330a5bde5c50a66b7d7243068dd41936955d240105a8d418cf"
+    },
+    {
+      "path": "strata/flash-next/run_source_upload_oracle_full_v2.py",
+      "sha256": "05f7ff786922916d83589657e0e3e20ea24198b6e84b3faa84d9611592bd32ec"
+    },
+    {
+      "path": "strata/flash-next/parse_usm_logical_free_trace.py",
+      "sha256": "71714821736fe98790b80f85d1ab72ac59f58ee6336298721f0aaee2753ca665"
+    },
+    {
+      "path": "strata/flash-next/c1_trace_contract.py",
+      "sha256": "ee557bb1e9eb6a31b67714c93034461aa24572f20781cfcb9a858c25dd825e20"
+    },
+    {
+      "path": "strata/flash-next/current-ple-prompt35-engine-build-plan-v1.json",
+      "sha256": "82004f6cee0f975c433d245b304aff10d67dd33e028cf926a08ef5eead892ef7"
+    },
+    {
+      "path": "strata/flash-next/model-lock.json",
+      "sha256": "5f324a3c166eea2952f78248be5753e69944892a88f44a75697139636814061b"
+    }
+  ],
+  "frozen_previous_generation": [
+    {
+      "path": "strata/flash-next/serial_prefix_qualification_v6.py",
+      "sha256": "69d0b9e1960db0c18b8419b3f02289790aee70ddc4374670840157cc43dcfa5c"
+    },
+    {
+      "path": "strata/flash-next/qualify_serial_prefix_v6.py",
+      "sha256": "470fb38ecf4efb753c43e857ca68104e5286a30bae093e4ef0338d8c102898e8"
+    }
+  ],
+  "requirements": {
+    "eager_must_be_absent_including_zero": true,
+    "C113_source35_final_proof_required": true,
+    "all_cache_groups_require_separate_finalized_basic": true,
+    "paired_basic_requires_finalized_one_card_basic": true,
+    "basic_raw_head_and_all48_recollected": true,
+    "both_source_pages_guarded": true,
+    "post_hash_all4_after_terminal_and_post_health": true,
+    "root_owns_GPU_lifecycle": true,
+    "no_runtime_or_payload_touched_during_source_preparation": true
+  }
+}
