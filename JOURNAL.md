@@ -12009,3 +12009,26 @@ durable identical35files+buildsnapshot copied; nativepatch/buildplan pending.
 VERDICT -> Actualoriginal arithmetic evidence explains localized threshold,
 not wholemodel fidelity. Fullcache shared/divergent/stale/memory sourcework
 assigned; registry willremainunchanged until native6 closedproofs complete.
+
+
+## 2026-10-10 - All588 sixstream pairs closed; positive cache API runtime admitted
+
+CONFIG -> Source35 native6 bothfresh serialgroups, twelvejobs/all588 comparisons.
+NEW genuinepositiveAPI2 cache3/chain/public/freshfalse target, exactsource/state
+budget/CPUfixture andcurrentexperimentalregistry; primaryhotschmoe-dd retained.
+COMMAND -> Serial1 parent34910 terminal0/PASS437s; readonly34369 PASS294,
+originaltreeunchanged. Bothgroups nowindependentPASS294+294/all12jobcoverage.
+Summary /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/native6-v9-readonly-recollection-v1/coverage-summary.json
+SHA 0dba88609f5eea279eae04989ecc962238ff92d042a9432540f7d24749c72db7.
+Append exactpreserved56a6 registrybytes +reviewedpositive12 only, YAML parsed,
+alloldrecords/defaults byte/semantic unchanged; fresh12 remainunregistered.
+RESULT -> Actualcurrentregistry SHA e0abd69b8b991793cc2c2b78d0522aaec6c185a362309ed47982713f66b4dd28.
+Older strictV7 current-globalSHA gate nowfalse; namedentry/source association
+retainsoldbytes, doesNOTreportoriginalvalidator/rawrequalification PASS.
+Genuinepositiveprepare91156 terminal0/PASS; plan /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-api-positive-v2-onecard2-diag1-prepared/plan.json
+SHA c8a3b47666fc3bdad73630297f5c464c1286b110c7a461a1e636610e49a22c42.
+Leased10435 nowlive APIpositivecollector; no cachedtransfer/math/latency claim.
+Pairedold-registry unexecutedplans preserved; newgenuineplans canpinnewdigest.
+VERDICT -> Native2/4/6 private numericaldatasets closedwithin boundedonecard
+scope. FulltwoGPUconcurrency/API/cache/stale/memory/fidelity/profiling/latency/
+shelf required. RealpositiveAPI nowadvances nextgate. Alluserchanges preserved.

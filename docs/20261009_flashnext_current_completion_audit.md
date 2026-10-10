@@ -701,3 +701,22 @@ Native6 leased39834 is nowlive. OwnedHC control cdd62f2d source76/9CPU tests
 ready for originalpayload runtime after this GPU arm. Complete API/cache,
 originalwholemodel fidelity, broadquality, profiling/matchedlatency and shelf
 remain required; this closes only the actual private native4 numerical scope.
+
+
+## 2026-10-10 - Native6 private numerical dataset and positiveAPI admission
+
+Native6 collector PASS545s, serialparents PASS430/437s and independentreadonly
+294+294 PASS: all12 exactconsumedprefixjobs/all588 vectors BITWISE, original
+trees unchanged. Source35 onecard native2/4/6 boundednumerical scope nowclosed.
+This does not establish twoGPU/API/completecache/fullmath/latency qualification.
+Independent ownedHC V2 originalweight result6634cea0 normalized10240/inject4
+and preregisteredfusedmix32/Q81block BITWISE native; low/gates stillnonbitwise,
+ordinarydeviceintrinsics/contraction/whole48 remainunqualified. See curated
+docs/20261010_flashnext_owned_hc_f32_block35_result_v2.md.
+Canonicalregistry now exactoldbytes +reviewed12positiveexperimentalaliases,
+SHAe0abd69b8b991793cc2c2b78d0522aaec6c185a362309ed47982713f66b4dd28.
+OriginalV7 currentglobaldigest gate thereforefails; explicitentrypreservation
+association neverclaims that originalgateor rawproof is newlyqualified.
+NewpositiveAPI2 genuinepreparePASS; leased10435 running. No positivecached
+state transfer/math or APIcoherence PASS yet. Remainingfullgoal requirements
+above intact. Fresh-recompute aliases unregistered; no shelf promotion.
