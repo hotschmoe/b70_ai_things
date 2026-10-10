@@ -13209,3 +13209,16 @@ VERDICT -> Sourcecheckpoint only; helper+actualoriginalcompute/device/lifecycle
 stillrequired. Prefix4 originalhead mismatch notqualified/tolerance unchanged.
 H49ONprepare83996terminal0 plan1f0469671123bc06eaef860bcfd1cf0fb3004085d7f076c24d448c60e0aeae18;
 OFF7881prehealthPASS/child1068991live, no finalmodelruntime result yet.
+
+
+## 2026-10-10 - H49 actual freshness rejection fully closed
+
+CONFIG -> FrozenH49 475f47f0 pairednative4OFF c1c96f0, unchanged300s checks.
+COMMAND -> Actual7881 terminal1/1143s, parent0e405b27bf7053d27e9048936965baf7f2839f06817b9e0770a7b78a7cfd34c2.
+RESULT -> Child467.63s admission exceeded freshhealth300s; line43 rejected
+beforeoutput/NativeStream/modelleaf. Parentpre/poststrict+compiledhealth,
+kernel/ownedterminal/noforcedcleanup/newcomplete4 PASS192b7010415cea8dc27d4fe0dd7a706a2cbca77853c0e0dc863ad2a79528664f.
+VERDICT -> Failedoriginal retained; no numerical orspeed proof. ONplanprepared
+but unexecuted; NEW H50semanticREADY/realhealthACK scheduling required.
+Pairlease released. ObserverV7sourceaae9eac19CPU PASS/noactualobservation;
+QSA V4helper/qualifier sourcework pending, fullcampaign goal remainsactive.
