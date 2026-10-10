@@ -13939,3 +13939,17 @@ Runtime artifacts: /mnt/vm_8tb/b70/build/half37-spirv-text-v3-20261010/
 ActualH54group1 qualifier82490 selfleasedpair/prepared3352b279 forremaining
 2jobs/98pairs; no secondGPUactor. Group0currentpublic9370 remainslive.
 Complete392final/public/fullmodel/cache/latency qualifications stillrequired.
+
+
+## 2026-10-10 - H54 group0 independent current-byte reader passes
+
+CONFIG -> Original H54f7a4/source37/group0 plan2f547, six actual H50N4
+prefixes and294 full49 batch-versus-serial comparisons.
+COMMAND -> Poll original reader9370; terminal0/PASS. Reread saved parent/child
+status and exact output SHA256.
+RESULT -> Current logical/pack/SDK and finalized original numerical/lifecycle
+joins pass. Receipt f17/batch54-native4-serial-group0-readonly-binding-v1.json
+SHA2565fb305c046e5199815bfbb07a5d87c1c0ac692348bca4148e5d9724fb8b318e0.
+Group1 original qualifier82490 remains live; actual child1142789 in admission.
+VERDICT -> Scoped294 qualification closed; remaining98/full392 join pending.
+Original model fidelity/full cache/interactive serving latency/shelf unqualified.
