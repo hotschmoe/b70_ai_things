@@ -14878,3 +14878,20 @@ launchhandle retained; mappedlibraryfreshbytecensus missingexplicitly.
 VERDICT -> Strongernew-replaybundlelowering evidence, nohistoricJITcause/
 fulloriginalmodelmathqualification. QSA V4heldpeerJSONfilefixedpoint gap;
 NEWV5 needed, oldceddsource/preparation preserved. Fullgoalactive.
+
+
+## 2026-10-10 - Matched retrieved GPU bundle store keeps half conversion
+
+CONFIG -> Same successfulnewGPUprocess87832/bundle3/reportf7754, helper
+c2c34/raw12originalequivalence; retrievedmodule1store584e27 distinctexact
+module2expression43eb. Nohistorical/directlaunchcodeidentity claims.
+COMMAND -> Actual41830 supportedoclocdisasm undercard0lease/pin,
+terminal0/PASS10s, exactinput/command/tool/normalEOF/removal retained.
+RESULT -> Receipt38816c0bae058d953438781df62de71cd8b85fbc3c06c90860d103f538db12b5.
+StoreISA explicitlymoves float32r12/r13 to half r14, stored16u32; matched
+retrievedexpressionISA directF32load/store without conversion. Sameprocess
+queriedbundle contrast agreesactualoutputexpressionidentity/materializedRNE.
+VERDICT -> ConcreteGPUbundle arithmeticlowering narrowevidence, original
+modelinternalreference error unresolved. No semanticpatch/tolerancefit or
+API/fullcache/latencypromotion. CorrectedQSA V5sourcequeueclosureinprogress,
+heldV4prepare14476CPUlive, fulloriginalgoalactive.
