@@ -23,3 +23,14 @@ must use V2 explicitly; the old failed build cannot transfer.
 VERDICT -> Localized compilation error and source correction only. Independent
 review, fresh all8 compilation, source admission, new oracle/upload, model-target
 observations, full fidelity/cache/concurrency/latency/shelf remain required.
+
+## Corrected fresh build and oracle
+
+V2 build71854 completed PASS/exit0 in321s, all8 targets and67 source files.
+SDK: /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo
+Receipt SHA: b3fe2a932995f5d7b52e89c85a6a4212a1458d3a513dbd4d92b883c89afbbec3
+C140V2 source admission passed c80c492e. Fresh oracle99195 passed45s:
+/mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-bhya9nil/receipt.json
+Receipt SHA: 0cd9a3c7f08afcba509b525f9aad74d53b497a603ff85722d2fe44e716fffd76
+Fresh oracle metadata admission passed287cd52e. Actual upload/model/native
+observations and full-model math/cache/concurrency/latency remain unqualified.

@@ -13621,3 +13621,25 @@ neworacle/upload/modeltarget/math/cache/concurrency/latency/shelf remainrequired
 Own half fixture14303 completed0, inputbinding2d9862b6/raw2048 de82f9d4.
 Isolatedhalfcompile18096 passed; realdeviceexperiment awaits solebuildterminal.
 QSA public32721 stilllive; existing reportc50be35d diagnostic scope retained.
+
+
+## 2026-10-10 - Corrected source40 build and fresh oracle pass
+
+CONFIG -> Corrected d87740b5/67source/31header/40patch/all8/sixPython, exact
+compiler39992/clean localggml3cf03257; no devices exposed during SDK build.
+COMMAND -> Actual71854 terminal0/PASS321s, SDK
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T193019Z-1kl6uepo,
+receiptb3fe2a932995f5d7b52e89c85a6a4212a1458d3a513dbd4d92b883c89afbbec3.
+RESULT -> All8 fresh ELF targets/currentsource admission PASS c80c492e.
+Fresh whole390 oracle99195 terminal0/PASS45s against exact newSDK/56fae38eplan,
+receipt0cd9a3c7f08afcba509b525f9aad74d53b497a603ff85722d2fe44e716fffd76
+at /mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-bhya9nil/receipt.json.
+Independent metadata oracleadmission287cd52e passed currentactualarchive/ELF.
+VERDICT -> Compilation/source-only; actualupload, C140modelbaseline/targets,
+complete math/cache/concurrency/latency/shelf stillrequired. FailedV1 preserved.
+
+COMMAND -> Actualhalf27860 acquiredpairlease with--leased/current52dbsource/
+own2d9862b6fixture/card0baseline. Source/producer validation live beforedevice.
+PublicQSA32721 remainslive CPUonly. No secondGPU/modelactor.
+VERDICT -> Actualdirect/materialized512 comparison andteardown/posthealth/new4
+not yet observed; no rounding/lowering cause or reference correction assigned.
