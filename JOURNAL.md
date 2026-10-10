@@ -13256,3 +13256,19 @@ whileworker has ownsession; V1 catchesTimeoutExpiredonly. Outputcap ischecked
 aftercommunicate, so not a harddrain bound. FreshV2correctionrequested.
 VERDICT -> H50runtime progresses independently; parserV1 HOLDintegration,
 oldsource/failures unchanged. No modelmath/cache/latency/shelf qualification.
+
+
+## 2026-10-10 - Own original QSA V4 producer/device source checkpoint
+
+CONFIG -> Frozene12200531601cab9e403222c4ccb0e2d287b2a1065bad34615cbbd86dd6dcc25,
+261repo+19consumedsource/header/build bindings, source37 SDK/HC V3 preserved.
+COMMAND -> Rootall280SHA/ASCII/AST andfull134CPU PASS2.231s; independentpeer
+review pending. No actual model, helpercompile or GPU work in source tests.
+RESULT -> OwnfirstHCgate thenprefix4 projectionproducer; independent10ownfiles
+feed separate unchanged-productionfunction QSAhelper. Full14fields/3routes,
+2/1/1windows/zero-state resets, originalresolvedconfig, exactstdin/output/raw/
+source/mappedlibs/health/publisher/normalteardown reader gates. No nativecaptured
+operands substituted; internalnorm/score witnesses remainunobserved.
+VERDICT -> Sourcecheckpoint only; peerREADY andisolatedcompile needed before
+actualproducer/device/reference requalification. RootH50OFF1874 solepairactor;
+N6instrumentedCPUprepare5705 remainslive. Fullmodel/cache/latency/shelf open.
