@@ -14245,3 +14245,21 @@ All12 unchangedGPUoutputbytecomparisons, normalownedEOF/removal, strictand
 compiledpairpre/posthealth andkernelfaultgate pass. Dumpfilecountzero is
 capturecoverageFAIL; overallhelperreplayPASSdoesnotgrantJITcodeauthority.
 NextactualLevelZero nativebinarycapture uses observedABIheaders/proctables.
+
+
+## 2026-10-10 - Offline graph-expression lowering matches direct control
+
+CONFIG -> Originalgraphwrapper21 SPIRV/executedhelper4d86/currente223;
+same explicitoffline config as directexpression/store/load. Not a GPUkernelrun.
+COMMAND -> Actual89344 compiler terminal0/PASS10s;26388 exactbinary
+disassembly terminal0/PASS9s undercard0lease withactualcommands/EOF/removal.
+RESULT -> Compiler27df5a69a0fb542a8f56407917724888ebf51eb65f07e434eb04d024fb2d9165;
+disasmf04e274d6b42e6ffdeaf1cfa2bd4366ed1a0c59c14a319daaa8c9951e12bcd61.
+Graphwrapperassembly loadsF32 into r15 thenstoresunchangedr15:2; half
+conversion absent in data path, matchingoffline directexpression. ActualGPU
+32169 alreadyrepeatsall12outputs/preposthealth; realJITdumpcoveragezero.
+VERDICT -> Offlinegraph diagnostic closesone route ambiguity, notactualJIT
+code/cause or modelqualification. Nativebinaryinterposer sourcebeingprepared.
+Source40 child semantic-beforeREADY/currentbyte-afterACK fix passes3controls
+including1022s simulatedadmission; fullruntimefreeze pending. Canonical165
+unchanged whileoriginalfullrecollection37439 stayslive. Fullgoalactive.
