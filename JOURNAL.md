@@ -14342,3 +14342,18 @@ Paired95154 nowsolepairleaseGPUactor; no pairedscreen/finalPASSclaimed.
 VERDICT -> Actualscopedsource40servingbaseline establishedonecard. Original
 reference/full-logitmath, prefixstate/fullcache/concurrentstreams andmatched
 cleanlatency/shelf remain unqualified. Pairedmodelqualification underway.
+
+
+## 2026-10-10 - Native module interposer CPU compile refusal
+
+CONFIG -> Temporarily frozen interposer19a84547/fakedrivera9b52c63/main9e47ddac,
+actualABI extractedheaders; originalruntime/helper unchanged. CPU-only image
+39992/no devices/networknone/2CPU2GiB, g++ stdc++17/O2/pthread/PIC/shared.
+COMMAND -> Actual76804 compiler firstinterposerphase, exact3source snapshots
+retained build/half37-native-interposer-cpu-v1-20261010.
+RESULT -> Terminal1, compiler rejects ambiguous clone atomic versusLinux
+sched.h clone export atlines50/58. No nativeSO/fixture orGPUcaptureexecuted.
+Author notified forNEWcorrectedsource; frozenfailedbytes retained.
+VERDICT -> ActualABIcompile failure, notGPU/runtime regression. Pairedmodel
+GPUqualifier95154 remainssoleleasedactor, prehealthpassed/currentlaunch
+validationlive. Fulloriginalmath/cache/latency/shelf goal unchanged.
