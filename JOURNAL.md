@@ -11734,3 +11734,22 @@ VERDICT -> Exactcapability/configuration conflict localized; honest scopednew
 APIrecompute lane preparedinparallel while4stream testing advances. Fullmath,
 broadquality,4/bounded6/API/concurrentcache/cachedmigration/memory/profiling/
 cleanlatency/shelf stillrequired. Goalactive; allolduserdata/evidence preserved.
+
+
+## 2026-10-10 - Critical-path tracing implementation admitted; native4 raw capture
+
+CONFIG -> Exact source35 current engine and pinned x2 methodology. Separate
+new default-OFF host tracer proposal; no active SDK, registry or bin changes.
+COMMAND -> Inspect frozen trace proposal, current native4 child report and
+poll live parent88372. Run nine cacheoff V9 metadata/adjudication CPU controls.
+RESULT -> Native4 child completed all392 raw vectors for four requests and
+normal engine exit0/removal; fresh serial comparison is not yet performed.
+Parent remains live in final post-health/identity work, so no native4 PASS
+claimed. Nine CPU controls PASS. Trace proposal frozen SHA
+62eb46304676344334b9deaedc0f9831391d0b6589c0af3729b78229cf926726.
+Agent now prepares separate patch36/header/CPU controls/new build plan, with
+no extra waits/barriers and OFF original control flow. API source lane and
+registry add-only association remain under review; registry unchanged.
+VERDICT -> Actual four-stream raw evidence collected, final qualification and
+serial parity pending. Profiling moved from source audit to implementation;
+no latency, fullmath, broad quality, API/cache4/6 or shelf claim. Goal active.
