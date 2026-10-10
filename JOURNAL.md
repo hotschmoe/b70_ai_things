@@ -14977,3 +14977,19 @@ Preparationlive, peerV6reviewpending; originalheldV5prepare28862stilllive.
 VERDICT -> Concretecorrectedfullmodel observer preparation, no freshGPU
 numerical/internalfidelity/latencyproof yet. Fullgoalcache/API/streams/
 physical/profile/matchedinteractive latency/shelf remainsactive.
+
+
+## 2026-10-10 - Phase stream producer-shaped controls pass
+
+CONFIG -> NEWintegratedcacheV7draft exactsink/ACKoffset/source/PIDnamespace
+cursor, wholeV6originalfailure unchanged; actualQSA V6prepare40691 CPUlive.
+COMMAND -> Rootphase-stream2CPU PASS0.013 onoriginalmarker offsets/hash/
+globalcombinedline ranges andforeignnamespace/prefixmutation negatives.
+RESULT -> Boundedconsumer parsesactualnewphase rows, keepsrawUR/UM on
+disk; atomicfreeze andretainedsemanticbound inspected. Publicsnapshot
+originalcontainer/procidentity crossjoin stillbeingchecked inwhole reader;
+noactualcache/APIwaiter/GPUqualification fromsmallcontrols.
+VERDICT -> Concretedevloop/lifecycle sourcecontrols, no benchmarkedspeed
+orrelaxedstate/numericalgates. QSAactualpreparedplanbf691 existsbutoriginal
+producerstillliveinvalidatingearlyphase launch; no restart/duplicatequalifier.
+Fulloriginalmodel/cache/concurrency/memory/profile/latency/shelfgoalactive.
