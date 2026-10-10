@@ -12847,3 +12847,19 @@ RMS V3 source145/23CPU PASS but peer found report commandrow must exactly
 match savedproducer receipt; successor in preparation, no nativeRMS launch.
 VERDICT -> Current39 source-upload prerequisite advances. NewC1392 serving,
 originalfidelity/fullcache/API/concurrency/latency/verifiedshelf remain open.
+
+
+## 2026-10-10 - RMS owned V4 receipt/lifecycle source frozen
+
+CONFIG -> Frozen31d saved-independent RMS fixture and unchanged native37HC,
+compiler39992/runtimeC388; all earlier ownedV1/V2/V3 source remains preserved.
+COMMAND -> Root30 CPUcontrols/150SHA PASS, V4 sourceplan
+7cdae45fc0b7bb2bdd74e701876bca1fb31b33198bd7aaa970285467b09bd02d.
+RESULT -> Exactowned timeout and normal-exit stdout-drain cleanup precede
+EOFretirement; strict health/P2P0/journal argv/epochs reconstructed. Every
+commandreport row canonically joins original savedreceipt with duplicate/
+nonfinite/type rejection, explicitcleanup_errorNONE and artifact-roster proof.
+Originalpublisher4 bytes/hashes/stats/orderedpaths and preservedpage brackets
+remain strict. No nativecompile orGPUrun yet; independentreview pending.
+VERDICT -> Review gaps addressed in prospective source; actualbounded RMS
+observation remains required. Full originalfidelity/cache/latency/shelf open.
