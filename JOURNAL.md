@@ -12897,3 +12897,19 @@ CPU95049 hostswap audit: ownedVmSwap/cgroupSwap0/noOOM, globaldelta10592256
 bytes; no causalowned-memorypressure finding or guard/recipe relaxation.
 VERDICT -> Actualsoftware compile closes before fullGPUrepeat; no nativeRS/
 fullmath/cache/latency qualification yet. Full original goal remains active.
+
+
+## 2026-10-10 - Fresh RMS V7 full qualification starts
+
+CONFIG -> Unchanged compiled37 HC and independent saved40960byte residual,
+new entry-only callable adapter, conditional oneAPI init, compiler39992/
+runtimeC388, card0 leaf plus pair-health, source170/61CPU/peer review PASS.
+COMMAND -> Rootactual35193 started, PID947207 confirmedlive underpairlease
+aftercurrentsemantic admission. New output f17-source37-20261010/
+native-rms-rsqrt37-owned-v7-run-v1. Previous73415 FAILED andisolated55085
+compile-only PASS22s remain distinct; no oldhelper runtimeproof transfer.
+RESULT -> Fullpre-source/health/freshcompile/direct+replay/posthealth/new4
+sequence is genuinelyrunning; no RS observation or finalparent result yet.
+Registry165 remains unchanged; no GPU/model run overlaps this owned parent.
+VERDICT -> Currentboundednative arithmetic diagnostic underway; fulloriginal
+fidelity/cache/concurrency/latency/verifiedshelf goal remains active.
