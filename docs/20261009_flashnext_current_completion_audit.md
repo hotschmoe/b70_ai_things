@@ -1415,3 +1415,25 @@ NewV2 requiredbeforelaunch; no math/tolerance gate relaxed. Livecacheidentity
 source workcoversloadedowner drift/rebind but actualnegative/reloadproofmissing.
 Original48 fidelity/fullcache/statefamilies/1-2-4-bounded6/profile/interactive
 latency/memoryplacement/reproducibleshelf remainopen. UserGPUpriority active.
+
+
+## 2026-10-10 - Current source40 one/pair baseline progression
+
+ActualoneC1401403 qualifier2057 finalizedPASS486s, parent79827db0 and
+qualificationcc39b3b6. Sixrepeat/coherence/liveidentity/tokentransport screens,
+normalteardown, strict/compiledpairpreposthealth/kernel andfreshfull4/source
+proof passed. This isscopedservingbaseline, notoriginal48reference math.
+Actualpaired95154 loaded bothcards, passedrepeat/coherence screens andnormal
+stop; posthealthpassed. Currentfourshardidentity/finalproof stilllive.
+
+NativecaptureinterposerV1 failedactualC++compile onclone naming; preserved.
+CorrectedV2ecbd compiledCPUonly andall4fakeABI scenarios passed, actualSO
+9f008c71 pinned. Runtimepreloadcapture controllerprepared; realdispatch/code
+coverage remainsunqualifieduntilnextownedGPUrun. OriginalunchangedGPUreplay
+d160 passedall12outputs/health butIGCdumpcoverageFAILzero.
+
+ObserverQSA runtimeV1 remainspeerHOLD onbytebounds/ACK/continuity/latedaemon
+creation/drain issues; NEWV2 inprogress. FullsharedV3 CPU/source checkpoint
+ready butactualwholecache/fresh49 workrequiresfinalpairedbaseline and171
+purposeassociation. Originalmodelmath/stateisolation/1-2-4-bounded6/physical
+placement/profiling/cleanmatchedlatency/shelf allremainopen; fullgoalactive.
