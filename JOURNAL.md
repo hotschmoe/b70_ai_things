@@ -11526,3 +11526,34 @@ naturalEOS functionaltwo-prompts/freshrepeats, memory/no-swap/ownedteardown,
 outputdecode andNEWpostterminalfull4/pages/sourcebindings. Noquality/math/
 latency/productionclaim beforethoseactualresults. V7native2genuineplan ready,
 notGPUexecuted; fullgoal intact/unrelatedworktreechanges preserved.
+
+
+## 2026-10-10 - First real CPU function PASS; port guard corrected for repeats
+
+CONFIG -> Exact originalCPUmodel/V2 parameters, no GPU grants. Two prompts/
+twofreshprocess repeats declared; helperpreflights verifiedbeforemodelscan.
+COMMAND -> V2 actual15024 terminal1 in196s. Case0repeat0 semantic/naturalEOS/
+model-template-inputIDs/memory/ownedteardown PASS. Repeat1 fails BEFOREstart
+on bare socket.bind OSError98 despite priorservernormalexit/removal; newpost4/
+pages/source PASS. PreservewholepilotFAIL and partialpositivecase.
+RESULT -> Actualresponse is fenced Python def add(a,b): return a+b;18output
+IDs, naturalEOS, no truncation/no memoryerrors/normalexit0. Originaltemplate/
+accepted30promptIDs match. No broadquality or deterministicrepeat proof yet.
+V2 reportSHA 3148828582e927021f5d1c4c3ecf27df455c4fcdde1d657b61ef7e6d05d872ce.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/cpu-functional-v2-20261010/report.json.
+Pinned httplib uses SO_REUSEPORT onLinux; ADDR-onlyprobe also rejects its old
+TIME_WAIT. NEWV3 explicitlyrefuses procTCP/TCP6 LISTEN, thenprobes bothADDR/
+PORT reuse andclosesbeforelaunch. Root/independent21CPU controls include4real
+OS loopback socket cases (oldTIMEWAITfailure/newreuse/liveforeignrefusal).
+Allnonport helpers/classes/modelparameters ASTunchangedfromV2; no rebuild.
+ActualCPUwrapperpreflight14929 PASS, no modelmount/inference/GPU; SHA
+180141cae0a0ccb64238e9844c1963decabb73a1f0463275f25fa6dcd80a5e74.
+V3sourceplan890f6393a285449ebb54fb24e13b734db7b178a06c09236c7d25b77012d4de0f.
+Leased41294 modelpilotstartsNEWoutput cpu-functional-v3-20261010 withsame
+model/CPU/sampling/memory settings; allfour naturalrequests stillpending.
+VERDICT -> Independentexact-model CPUmeaningfulfunction nowactuallyobserved,
+wholepilotstillunqualifieduntilfreshrepeats/arithmetic/identity/cleanup pass.
+V2 failure is lifecyclepreflight, not NNoutputfailure; preserve bothtruths.
+MatchingactualOS/networkbehavior in cheappreflight avoids expensivefalse
+modeltestfailure. Source-onlynative counterpart preparation delegated; no
+GPUexperiment besideCPUrun. Fullgoal remainsactive/unrelatedchanges preserved.
