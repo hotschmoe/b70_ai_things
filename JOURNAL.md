@@ -14993,3 +14993,20 @@ VERDICT -> Concretedevloop/lifecycle sourcecontrols, no benchmarkedspeed
 orrelaxedstate/numericalgates. QSAactualpreparedplanbf691 existsbutoriginal
 producerstillliveinvalidatingearlyphase launch; no restart/duplicatequalifier.
 Fulloriginalmodel/cache/concurrency/memory/profile/latency/shelfgoalactive.
+
+
+## 2026-10-10 - Campaign resume after observed host reboot
+
+CONFIG -> Kernel7.1.0-070100 unchanged, bootb785982c, oldprepareprocess/
+toolhandle absent. PersistedQSA V6planbf691/source3dd2; preparationterminal
+statusunobservedafterreboot, neverclaimedPASS. Autostartnative5802service
+heldGPUlease, authorizedcampaignservingdowntime remainsinscope.
+COMMAND -> Originalserve.py stop62490 +verifieduserownedcontroller3387TERM
+throughinstalledhandler, Restart=no. Directsystemctl/sudo stop authentication
+unavailable, noleasebypass. Servingcontainerremoved/controllerposthealthlive.
+Rootcurrent518sourcehashes andmetadata15roots/4759filesPASS. LaunchQSA
+89606viaownleasefirstwrapper, waitsoriginalservicelease beforesemantics.
+RESULT -> Actualqueuewaitsbusycard0; noGPUconcurrentactor orstalesaved
+semanticPASS reused. Servicehealth retainsleaseuntiloriginalexit.rc.
+VERDICT -> Concreteexternalstate recovery/progression, fullsemantic/model
+identity/health/numerical gates mustrequalify currentboot. Fullgoalactive.
