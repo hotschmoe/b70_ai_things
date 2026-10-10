@@ -1064,3 +1064,33 @@ NEW consumer/producer successor required. No oldcounts/responses transferred.
 Original fullmodel fidelity/broadquality, complete prefixcache/memory accounting,
 API1/2/4/bounded6, correlatedx2 traces, matchedlatency/fairness and verified
 reproducible shelf remain incomplete. No decode tok/s or production claim.
+
+
+## 2026-10-10 - Current HC reference, finite continuation and pending qualification
+
+This follow-up supersedes historical runtime-access restrictions and earlier
+pending source33-35 tasks only where the exact newer evidence proves progress.
+The full objective and completion criteria remain unchanged.
+
+| Requirement | New authoritative evidence | Remaining work |
+| --- | --- | --- |
+| Original independent arithmetic | Own HC device-RS V3 and independent public reader pass; 386 independently saved operands; first normalized10240 and complete Q81 packet2880 bitwise match native | Prefix4 head NMSE0.007888246485733295 remains nonbitwise and unqualified; QSA and later FFN trajectories require independent original-weight controls |
+| Native private two-stream fidelity | Source37 private OFF/ON V4 admits196 vectors and repeated/history controls, with recorded first49 PIN0/EOF exception | Four/six streams and full API/cache state cases remain required; native parity does not prove original model fidelity |
+| Useful natural-completion inputs | Finite CPU V3 actual screen and independent reader pass all16 cases/repeats/decode/source/full4; water-cycle candidate selected | Surrounding passive observer failed Missing kernel byte fields; wrapper remains FAILED. Actual GPU positive overlap and migration are not proved |
+| Dev-loop overhead | Current H49 pack/SDK byte witnesses and79 tiny CPU controls pass; genuine native4 OFF plan prepared | Actual parent and ON preparation remain live; no measured end-to-end speedup. Evidence/parser snapshot prototype remains unintegrated after root reproduced stale closure reuse |
+| Complete cache | Fresh source39 built/upload-qualified; shared V2 source work and tiny CPU controls exist | History, stale/restart/persisted families, actual victims, full physical memory and complete runtime/source qualification remain incomplete |
+| Latency and reproducible shelf | No new qualified result | Correlated critical-path traces, matched clean latency/fairness distributions, optimization requalification and verified serving shelf remain required |
+
+The active H49 native4 OFF parent holds the pair lease. Metadata-only ON plan
+preparation may coexist; no second model/GPU actor is permitted. Both live
+processes must be polled to terminal before their results are admitted.
+
+New independently checked artifacts (under f17-source37-20261010):
+
+- owned-hc-device-rs-v3-run-v1/report.json: 502566b296bb5809f01c5c5cd3b3938f460a7c862d61aae8573bdd7028983d2a
+
+- owned-hc-device-rs-v3-readonly-binding-v1.json: 770fe1a023fe893afee718bc8aaeb5943d661d829e8e2ef766965ffaeb3ff020
+
+- api-positive-overlap-finite-observed-v5-run-v1/screen/report.json: 1c235b28cd82f132e34f98af798ef73137271f70488c801dcdf31af2c0514424
+
+- api-positive-overlap-finite-v3-screen-readonly-binding-v1.json: 6149753f3aedff89995f6fde1271175616c4734cb58657d0fccf57aea372f701
