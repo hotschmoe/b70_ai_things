@@ -13877,3 +13877,18 @@ RESULT -> Actualserial modelprocess launched, ARM/capture/command/engine log
 exists. Requests and294 vectorcomparisons stillpending; no earlyPASS claimed.
 VERDICT -> Retainpairlease until normalownedteardown/posthealth/full4/current
 source andpublic joins. Group1 two-prefix/98comparison arm unexecuted.
+
+
+## 2026-10-10 - H54 group0 actual294 vectors match bitwise
+
+CONFIG -> Exact6 observed H50N4 consumed prefixes, original source37 SDK/math,
+H54sourcef7a4 and prepared2f547; absentPIN/fresh1/cacheOFF serial controls.
+COMMAND -> Actual2165 child finished; root reread serial-comparison.json all
+294 rows, bitwise flags/equal batch+serialSHA/zeroNMSE/maxnormalized checked.
+RESULT -> ChildpassedTrue/6jobs/294pairs; actualmodelnormalexit0/errorNone/
+removedTrue. ComparisonSHA14b7f3c088397a0aafcc364566357aaed4d8f4f0503d5f6dadfe3df27df2978b.
+Parentpost-strict andcompiledpairhealth are live; finalsource/newfour/public
+admission stillpending. Remaininggroup1 twojobs/98pairs hasnotexecuted.
+VERDICT -> Preliminary actual batch-versus-serial numerical equality only.
+No complete392suite/lifecycle/public/originalmodelmath/cache/latency claim.
+Normalparentfinalization and group1 remainrequired; fullgoal unchanged.
