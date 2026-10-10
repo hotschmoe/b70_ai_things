@@ -13327,3 +13327,23 @@ andterminal124/emptySID confirmed, failuremetadata preserved. Corrected8162
 usesoneouterpairlease+explicit--leased/newproducer-v4-run-v2; currentlylive.
 VERDICT -> Compileproof only; originalownprojection/device/math/runtime and
 posthealth/source/new4/publicreader results pending. Fullgoal remainsactive.
+
+
+## 2026-10-10 - H50 OFF independent admission and native QSA seam audit
+
+CONFIG -> H50native4OFF actual1874 parentPASS, frozen5f719918/currentSDK37.
+COMMAND -> Independentpublicparent_arm5003 terminal0/PASS binding
+57caeb3d86dd901fa9349a343b0aeccf32b1085217230e4ec8a71ae88ea33975.
+RESULT -> Actualsource/READY/health/ACK/freshbytes/EOF/normalowner/new4/pages
+rejoined. NumericalOFFON/all49serial andoriginalmodelmath remainunqualified.
+
+CONFIG -> Observerproposal58f94e94322363e3625b81016f5c0af5cbbeb34d03d6301ba4ebc214a10f1145,
+2repo+32actualsource/buildbindings. Sourceonly, no patchorarrayread.
+COMMAND -> Rootall34SHA/ASCII matched; actualQSA37/39 kernel/header/callbranch
+andflags byteaudit checked. Wholeverify paths differ, no runtimeprooftransfer.
+RESULT -> Exactfutureprojection/normRoPE/indexer/KV/attention/gate targethooks,
+2/1/1 route/frame/nonce/quota/owner gates andexplicitpair stage1zero specified.
+InternalRMSargument/rsqrt/score/softmax registers remainunobserved.
+VERDICT -> Proposalonly. CorrectedQSAproducer8162 solepairactor live.
+Consumer36beb0peerHOLD reproducedexactclass collectshadow bypass; prospective
+successorneeded. ExistingH50/QSA/immutableV2 source/runtime unchanged.

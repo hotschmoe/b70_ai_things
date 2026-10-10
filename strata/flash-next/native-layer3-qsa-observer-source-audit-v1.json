@@ -1,0 +1,537 @@
+{
+  "schema": 1,
+  "scope": "source-only native layer3 target observer proposal; no backend changes or runtime proof",
+  "source37_sdk": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1",
+  "source39_sdk": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8",
+  "source39_receipt_sha256": "5908e669eefe63d25d12f97dfebea4d9d73bdf92f1b072f74b3bf37f4e7052e8",
+  "source39_engine_plan_sha256": "86bc189bbb2805ffcb989974146fe8263a00beeb109cd44ef41af77eb1db6940",
+  "source_files": [
+    {
+      "category": "QSA_kernel",
+      "relative_path": "sycl/src/kernels/cuda/native_qsa.dp.cpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_qsa.dp.cpp",
+        "sha256": "a935d8edbad66eb341d6e4a1c45fa51a81b9dc8606a062a0b1e95ba0e1318f37",
+        "bytes": 13413,
+        "stat5": [
+          51,
+          16873266,
+          13413,
+          1791621942021360915,
+          1791621942021360915
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/kernels/cuda/native_qsa.dp.cpp",
+        "sha256": "a935d8edbad66eb341d6e4a1c45fa51a81b9dc8606a062a0b1e95ba0e1318f37",
+        "bytes": 13413,
+        "stat5": [
+          51,
+          16977530,
+          13413,
+          1791635098636106667,
+          1791635098636106667
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "QSA_kernel",
+      "relative_path": "sycl/src/kernels/cuda/native_rope.dp.cpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_rope.dp.cpp",
+        "sha256": "009092009b6e880f332151606de1ba27fb69e370abcc4c6dd36011d01cebc38c",
+        "bytes": 19557,
+        "stat5": [
+          51,
+          16873269,
+          19557,
+          1791621942021360915,
+          1791621942021360915
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/kernels/cuda/native_rope.dp.cpp",
+        "sha256": "009092009b6e880f332151606de1ba27fb69e370abcc4c6dd36011d01cebc38c",
+        "bytes": 19557,
+        "stat5": [
+          51,
+          16977533,
+          19557,
+          1791635098637106698,
+          1791635098637106698
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "QSA_kernel",
+      "relative_path": "sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp",
+        "sha256": "39185e707d42c844880488aa6e6c5e9ceafaeb0feef7f6b50fd4c7fa8517da36",
+        "bytes": 30514,
+        "stat5": [
+          51,
+          16873267,
+          30514,
+          1791621942021360915,
+          1791621942021360915
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/kernels/cuda/native_qsa_indexer.dp.cpp",
+        "sha256": "39185e707d42c844880488aa6e6c5e9ceafaeb0feef7f6b50fd4c7fa8517da36",
+        "bytes": 30514,
+        "stat5": [
+          51,
+          16977531,
+          30514,
+          1791635098636106667,
+          1791635098636106667
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "QSA_kernel",
+      "relative_path": "sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+        "sha256": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7",
+        "bytes": 43044,
+        "stat5": [
+          51,
+          16873273,
+          43044,
+          1791621942022360946,
+          1791621942022360946
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/kernels/cuda/qsa_decode_attn.dp.cpp",
+        "sha256": "3d10c20f4ca04a9ea83994a660525bf5bc15577c32171132487c4d445a9495c7",
+        "bytes": 43044,
+        "stat5": [
+          51,
+          16977537,
+          43044,
+          1791635098637106698,
+          1791635098637106698
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "QSA_kernel",
+      "relative_path": "sycl/src/kernels/cuda/qsa.dp.cpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/kernels/cuda/qsa.dp.cpp",
+        "sha256": "86a7f5499ba249d526d8b14158626cc9c9ce32d1a4b9bfb8716192bebd8b17ca",
+        "bytes": 62693,
+        "stat5": [
+          51,
+          16873272,
+          62693,
+          1791621942021360915,
+          1791621942021360915
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/kernels/cuda/qsa.dp.cpp",
+        "sha256": "86a7f5499ba249d526d8b14158626cc9c9ce32d1a4b9bfb8716192bebd8b17ca",
+        "bytes": 62693,
+        "stat5": [
+          51,
+          16977536,
+          62693,
+          1791635098637106698,
+          1791635098637106698
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "interface_or_state_header",
+      "relative_path": "include/strata/kernels/native_rope.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/include/strata/kernels/native_rope.hpp",
+        "sha256": "06e3fbbc046fe4a3dda4788943285e586d08fe0885cd97cc9c21d132d750c413",
+        "bytes": 2048,
+        "stat5": [
+          51,
+          16872800,
+          2048,
+          1791621941951358747,
+          1791621941951358747
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/kernels/native_rope.hpp",
+        "sha256": "06e3fbbc046fe4a3dda4788943285e586d08fe0885cd97cc9c21d132d750c413",
+        "bytes": 2048,
+        "stat5": [
+          51,
+          16977064,
+          2048,
+          1791635098566104505,
+          1791635098566104505
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "interface_or_state_header",
+      "relative_path": "include/strata/kernels/native_qsa.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/include/strata/kernels/native_qsa.hpp",
+        "sha256": "119fd52ad31c7151c1061af997e41e0db43c7312fc644c5d156a732b8f441ea9",
+        "bytes": 2013,
+        "stat5": [
+          51,
+          16872797,
+          2013,
+          1791621941951358747,
+          1791621941951358747
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/kernels/native_qsa.hpp",
+        "sha256": "119fd52ad31c7151c1061af997e41e0db43c7312fc644c5d156a732b8f441ea9",
+        "bytes": 2013,
+        "stat5": [
+          51,
+          16977061,
+          2013,
+          1791635098566104505,
+          1791635098566104505
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "interface_or_state_header",
+      "relative_path": "include/strata/kernels/native_qsa_indexer.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/include/strata/kernels/native_qsa_indexer.hpp",
+        "sha256": "5f29b2ebbf392bdc0419c651b515b447d57b935fce4af300bf621a72e039e2d6",
+        "bytes": 3325,
+        "stat5": [
+          51,
+          16872798,
+          3325,
+          1791621941951358747,
+          1791621941951358747
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/kernels/native_qsa_indexer.hpp",
+        "sha256": "5f29b2ebbf392bdc0419c651b515b447d57b935fce4af300bf621a72e039e2d6",
+        "bytes": 3325,
+        "stat5": [
+          51,
+          16977062,
+          3325,
+          1791635098566104505,
+          1791635098566104505
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "interface_or_state_header",
+      "relative_path": "include/strata/kernels/qsa_decode_attn.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/include/strata/kernels/qsa_decode_attn.hpp",
+        "sha256": "6fa4b817f835c43783774d5946d14938f2867d7af16abb4db0f4b75d4622a915",
+        "bytes": 2651,
+        "stat5": [
+          51,
+          16872807,
+          2651,
+          1791621941952358778,
+          1791621941952358778
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/kernels/qsa_decode_attn.hpp",
+        "sha256": "6fa4b817f835c43783774d5946d14938f2867d7af16abb4db0f4b75d4622a915",
+        "bytes": 2651,
+        "stat5": [
+          51,
+          16977071,
+          2651,
+          1791635098567104536,
+          1791635098567104536
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "interface_or_state_header",
+      "relative_path": "include/strata/kernels/qsa.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/include/strata/kernels/qsa.hpp",
+        "sha256": "87c02222284f842fcecb46a422b119af769c72c3914edc8da5b2ee782456dc74",
+        "bytes": 25547,
+        "stat5": [
+          51,
+          16872806,
+          25547,
+          1791621941952358778,
+          1791621941952358778
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/kernels/qsa.hpp",
+        "sha256": "87c02222284f842fcecb46a422b119af769c72c3914edc8da5b2ee782456dc74",
+        "bytes": 25547,
+        "stat5": [
+          51,
+          16977070,
+          25547,
+          1791635098567104536,
+          1791635098567104536
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "interface_or_state_header",
+      "relative_path": "include/strata/kernels/rope_scaling.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/include/strata/kernels/rope_scaling.hpp",
+        "sha256": "05a8dcf57c9b12a23128f22e4bef01445c3a37991df5e1ffacd01d077c46595d",
+        "bytes": 11764,
+        "stat5": [
+          51,
+          16872812,
+          11764,
+          1791621941952358778,
+          1791621941952358778
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/kernels/rope_scaling.hpp",
+        "sha256": "05a8dcf57c9b12a23128f22e4bef01445c3a37991df5e1ffacd01d077c46595d",
+        "bytes": 11764,
+        "stat5": [
+          51,
+          16977076,
+          11764,
+          1791635098567104536,
+          1791635098567104536
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "interface_or_state_header",
+      "relative_path": "include/strata/core/layer.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/include/strata/core/layer.hpp",
+        "sha256": "a923519eb67dc5b08183a23b2953cfd495b34052bc85919abcf331d275f17952",
+        "bytes": 43679,
+        "stat5": [
+          51,
+          16877660,
+          43679,
+          1791621945341463728,
+          1791621945341463728
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/include/strata/core/layer.hpp",
+        "sha256": "a923519eb67dc5b08183a23b2953cfd495b34052bc85919abcf331d275f17952",
+        "bytes": 43679,
+        "stat5": [
+          51,
+          16981924,
+          43679,
+          1791635101971209658,
+          1791635101971209658
+        ]
+      },
+      "bytes_identical": true
+    },
+    {
+      "category": "core",
+      "relative_path": "sycl/src/core/verify.cpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/core/verify.cpp",
+        "sha256": "0bcc118414d8fd275eb169753cd28481f8b2918bd461855cafa4e0c8849773de",
+        "bytes": 222414,
+        "stat5": [
+          51,
+          16877724,
+          222414,
+          1791621945666776072,
+          1791621945666776072
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/core/verify.cpp",
+        "sha256": "f4a3854ea861d26bd32167cc56b21398d4e52fcb12da349a9d56e7939f3ed409",
+        "bytes": 222636,
+        "stat5": [
+          51,
+          16981994,
+          222636,
+          1791635102336165748,
+          1791635102336165748
+        ]
+      },
+      "bytes_identical": false
+    },
+    {
+      "category": "program",
+      "relative_path": "sycl/src/program/generate.cpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/program/generate.cpp",
+        "sha256": "3bd654c810db957c484d3a206e6eb7d8bbaffa63a8a4aa4bcc1a001b2dee0ccb",
+        "bytes": 860956,
+        "stat5": [
+          51,
+          16877721,
+          860956,
+          1791621945656473483,
+          1791621945656473483
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/program/generate.cpp",
+        "sha256": "7c9f3989dd454545e3a38b0581b0a5569d038c356626603848fe3cacdd116643",
+        "bytes": 865349,
+        "stat5": [
+          51,
+          16981998,
+          865349,
+          1791635102358258970,
+          1791635102358258970
+        ]
+      },
+      "bytes_identical": false
+    },
+    {
+      "category": "existing_observer_example",
+      "relative_path": "sycl/include/strata/core/prefix_residual_capture.hpp",
+      "source37": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/include/strata/core/prefix_residual_capture.hpp",
+        "sha256": "a11374ca94e42a66ecb1f77958c8a4f72cf777f4c79a07b64099631db9d93970",
+        "bytes": 8337,
+        "stat5": [
+          51,
+          16877720,
+          8337,
+          1791621945633472771,
+          1791621945633472771
+        ]
+      },
+      "source39": {
+        "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/include/strata/core/prefix_residual_capture.hpp",
+        "sha256": "a11374ca94e42a66ecb1f77958c8a4f72cf777f4c79a07b64099631db9d93970",
+        "bytes": 8337,
+        "stat5": [
+          51,
+          16981984,
+          8337,
+          1791635102276537299,
+          1791635102276537299
+        ]
+      },
+      "bytes_identical": true
+    }
+  ],
+  "QSA_branch": {
+    "source37": {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/source/sycl/src/core/verify.cpp",
+      "start_line": 1122,
+      "end_line_exclusive": 1335,
+      "bytes": 16368,
+      "sha256": "0fe3640ce2df55d0ae052b03036a001ebeec55f8dd1ce64bb5f807b83de93269",
+      "start_delimiter": "                // ======================= QSA =======================",
+      "end_delimiter": "        } catch (const std::exception& e) {"
+    },
+    "source39": {
+      "path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/source/sycl/src/core/verify.cpp",
+      "start_line": 1122,
+      "end_line_exclusive": 1335,
+      "bytes": 16368,
+      "sha256": "0fe3640ce2df55d0ae052b03036a001ebeec55f8dd1ce64bb5f807b83de93269",
+      "start_delimiter": "                // ======================= QSA =======================",
+      "end_delimiter": "        } catch (const std::exception& e) {"
+    },
+    "bytes_identical": true
+  },
+  "actual_object_compile_metadata": {
+    "source37": {
+      "ninja_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1/build/build.ninja",
+      "ninja_sha256": "717e840d054d5804705dfaa26250bb72a56c972e2cbdb3e845ab9a9ee2137565",
+      "objects": {
+        "native_qsa": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "native_rope": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "native_qsa_indexer": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "qsa_decode_attn": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "qsa": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        }
+      }
+    },
+    "source39": {
+      "ninja_path": "/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T122458Z-_0gr_xk8/build/build.ninja",
+      "ninja_sha256": "717e840d054d5804705dfaa26250bb72a56c972e2cbdb3e845ab9a9ee2137565",
+      "objects": {
+        "native_qsa": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "native_rope": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "native_qsa_indexer": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "qsa_decode_attn": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        },
+        "qsa": {
+          "FLAGS": "-O3 -DNDEBUG -std=c++20 -fsycl -fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel -fp-model=precise -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wall -Wextra",
+          "DEFINES": "-DSTRATA_SYCL_Q8_HC_BUILT=1 -DSTRATA_VERSION=\\\"0.1.41\\\"",
+          "INCLUDES": "-I/src/sycl/../third_party/ggml -I/src/sycl/include -I/src/sycl/../include"
+        }
+      }
+    }
+  },
+  "object_flags_defines_includes_identical": true,
+  "compiled_object_or_ELF_identity_inferred": false,
+  "source37_runtime_transfer_allowed": false,
+  "native_array_or_model_payload_read": false,
+  "actual_observer_or_GPU_execution": false,
+  "backend_code_or_math_changed": false,
+  "doc_sha256": "0d008bfbaa29e41ef3014ccf649ebb40983be64922ef8f7e6f4858d43ef7c0ce"
+}
