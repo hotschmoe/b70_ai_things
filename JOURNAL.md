@@ -13182,3 +13182,15 @@ FAILED. Allownedlaunches absent/sessionempty/no recovery/noartifact changes.
 VERDICT -> CPU candidate only admitted; observerfreshfix pending, no GPU/API
 cache/fullmath/latency/shelf transfer. Rootstarts actualH49OFF7881 using
 prepared c1c96f0a underpairlease; model-runtime result stillpending.
+
+
+## 2026-10-10 - Authentic selected-input admission prepared
+
+CONFIG -> NEW finite_overlap_candidate_admission_v1, successful actualfiniteV3
+all16 screen, unchanged original corpus and exactscreen report pin.
+COMMAND -> Root3tinyCPU PASS; currentaccessor actualadmission reruns unchanged
+screenpublicreader+authenticexport and rejoins savedselectedinput657841f3.
+RESULT -> water-cycle inputs warm57/56,target185/186; inputsonly, noCPUoutput/
+state/length/counter/cache/observerPASS transfer. Source39actualactor separate.
+VERDICT -> Concrete usefulGPU-input preparation, not GPU orfullmath proof.
+H49OFF7881 andONprepare83996 remainlive; no restart orsecondmodelactor.
