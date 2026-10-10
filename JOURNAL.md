@@ -13548,3 +13548,37 @@ VERDICT -> Actual diagnostic/lifecycle only. Independent public32721 is live;
 fullmodel native seam via freshobserver40 remainsrequired. Root fresh source40
 all8build93799 acquiredpairlease with--leased and clean localggml exactpin;
 no runtime ABI transferred. HalfinputCPU14303 remainslive.
+
+
+## 2026-10-10 - Source40 compile failure and half isolated compile
+
+CONFIG -> Frozen observer40 engine72ad, compiler39992, exact clean source/dependency
+pins,40 ordered patches and all8 fresh ABI targets. Compiler exposes no devices.
+
+COMMAND -> Actual fresh build93799 under paired lease, terminal1/197s.
+Receipt: /mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T192405Z-dycexnrk/receipt.json
+
+RESULT -> verify.cpp:769 fails on three undeclared identifiers in the observer
+native-feature guard: native_qsa_enabled, native_rope_enabled and
+native_qsa_indexer_enabled. Compiler identifies kernels namespace declarations.
+No device/model execution or fresh SDK admission follows from this failed build.
+Original source remains clean and frozen V1 evidence is preserved.
+
+NEW SUCCESSOR -> Engine planV2 d87740b5cbd5310895b057541ae5537034b993e38bb20e6248350a7452dbc2e6,
+patch0040V2 3a4e239c81635fc33651944648a4a621e36428789a409fbe29a39e0f8a3df0b8.
+Root pristine source reconstruction applies/checks all40 patches and validates
+all67 final source hashes. Removing the three added kernels:: qualifiers returns
+exact failed V1 verifier bytes. Model arithmetic and all other verifier code
+are unchanged. Fresh compile and new C140 controller/parent/oracle bindings
+must use V2 explicitly; the old failed build cannot transfer.
+
+VERDICT -> Localized compilation error and source correction only. Independent
+review, fresh all8 compilation, source admission, new oracle/upload, model-target
+observations, full fidelity/cache/concurrency/latency/shelf remain required.
+
+CONFIG -> Frozen half52dbb91d/card0 isolatedcompile, no helper execution.
+COMMAND -> Actual18096 terminal0/PASS21s; isolatedbinding
+21c3221523c3b8c99b9722a3fe0a886912d6cae1e469e1048285d1be6467b9c1.
+RESULT -> Fresh ELF/exactsource/argv/image/boundedrecipe/normalownedremoval PASS.
+VERDICT -> Compile-only; ownfixture14303 stilllive, realhalfdiagnostic pending.
+QSApublic32721 remainslive. H51root346SHA/ASCII/AST+25CPU PASS0.239;peerpending.
