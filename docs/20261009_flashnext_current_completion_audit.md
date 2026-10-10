@@ -168,3 +168,40 @@ started. Need originalprefix2 terminal/postCPUnewfull4, then independent1/4/8;
 cachebasic terminal/teardown/posthealth/new4 beforepairedbasic/cachegroups.
 Native actualT/group rounding, fullmodelmath/cache/concurrency/latency/shelf
 remain unqualified. Originalfullcampaign active; no speed/stability promotion.
+
+
+## 2026-10-10 - Real route-prefix1/2 and onecard basic complete
+
+CONFIG -> Same source35/nativeHC/exact locked UD-Q4_K_XL, routeV2 original
+ownzero state with singleBLASthread, onecard P30V4 native comparison targets.
+Separate source35 cacheV7 basic fresh OFF/logits/layers matched2048/64/65536.
+
+COMMAND -> Originalprefix2 CLI61391 andprefix1 92243 terminal0, actual full4/
+source3/page proofs; rawsha/all278 savedownarrays compareV2prefix1 vsfrozenV4;
+V2 head diagnostic +CPU4 failclosed controls. Cacheone71545 and realpublic
+basic_receipt_binding recollection47770. Newprefix4 77913 andpairedbasic1748.
+
+RESULT -> Both original explorations complete/errors[], newpostCPUall4/pages/
+source3 PASS; no numericalPASS. Actualprefix1 ALL278 ownsavedarrays BITWISE
+V4, reportSHA dca1fb225e25422c6cc4b5ca89bc3cffefd42ff0f0b90bf94d20f60971a08301.
+Prefix2 ALL289 phase/head comparisons completed; row0L1/L2FFN~1e-14.
+Row1L0FFN2.9379143166e-14 -> L1attention1.6997006209e-10 -> L1FFN
+1.7311205814e-7. HeadNMSE1.0125105723874907e-4/maxnormalized.00433114524646.
+Prefix2 reportSHA b622572574690680cbe74763fd537aa255169c122a5ceba8b0a61afc7f151f1d.
+Same headargmax/top10; distribution KL2.4398092047e-11/TV7.5985260683e-10.
+This is a near-certain short header prediction, not a broadquality result.
+Cacheonebasic PASS765s, natural output/LP20/observerfullhead bitwise,
+all48 finalwindow coverage, owned cleanexit/removal/posthealth/kernel/new4PASS;
+publicrawrecollection PASS, childSHA
+bb301e9f2b479124249740d76dd8d182b7d74061bcde8061cf664e12d21beb13.
+Paired basic1748 live requires this completedone; prefix4 77913 CPUlive.
+BatchV6 onecardnative2diag1 genuinely prepared72372, no actualbatchrun yet.
+Trace sourceaudit finds inert gpu_stamp0, profile disablesoverlap and existing
+hostcounter doublecharges precollectedPLE; existingtimers notstageGPU evidence.
+
+VERDICT -> Actual route-reference backward compatibility and prefix2 estimates,
+plus firstsource35 serialbasic prerequisite qualified. Investigate row1FFN seams
+with explicitlyconditional diagnostic, preserve fullown reference. Prefix4/8,
+complete-state cachegroups/concurrency and x2-method criticalpath/clean latency/
+verifiedshelf remain required. No tolerance, fullmath, quality or speed claim.
+See docs/20261010_flashnext_source35_trace_coverage_audit.md.
