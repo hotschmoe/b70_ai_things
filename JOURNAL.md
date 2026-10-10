@@ -12125,3 +12125,26 @@ separateterminalsource admission +newcase planning ongoing; targetsunexecuted.
 VERDICT -> Specificobserverbug repairedinsource; needsfreshbuild/runtime.
 ActualwholeHCdevice qualification nowprogresses. Fullmodel/API/cache/profiling/
 latency/shelf goalactive, no productionor speed claim. Allolder evidence kept.
+
+
+## 2026-10-10 - ActualwholeHC36frame proof and freshcombined37 ABI build PASS
+
+CONFIG -> Source35 actualcompiled syntheticHC36frames/19fields3802788F32,
+separate knownURmetadata log format adjudication; newcombined36+37engine.
+COMMAND -> WholeHC48761 terminal0/PASS218s allnumerical/lifecycle/health/new4;
+originalpublic79819 failedonly capabilityline fragmentedbyactualURquery.
+NEWreadonly84261 PASS preservesexactoriginaltreeSHA/stat5 andallfrozenV3
+raw/current/journal/owned/post4 predicates, acceptsONLY uniqueactualknownUR
+insertion. Originalreader/run/source untouched. Adjudication111closure/CPU6.
+RESULT -> All36 selfconsistency/replay/alias/write framesPASS;18analyticbothmix
+variantsmatch,18heldoutonlyfusedmatch; allshadowgradualFMAprobes exact. Capability
+observations donotqualifygeneralFPmode ororiginalwholemodel. Newcombined SDK
+77196terminal0/PASS308s,8freshELFs/sourceclean/pin/snapshot unchanged:
+/mnt/vm_8tb/b70/build/strata-native-hc-engine-20261010T084541Z-zqrph_y1.
+ActualC137combined_generation_gate PASS64/28/37/8/6. Root90baselineCPUtests
+PASS (60+30); additional10newcontrols agentPASS. Newupload37 recipe ready;
+actual390/normalownedhealth/new4 andC137 serving notexecuted. Inheritedjournal
+association gaps mustbe fixedinnewbaselineparent beforequalification.
+VERDICT -> Concrete currentcompiled HC arithmetic evidence +deliberatefresh
+ABI checkpoint. Fullmodel fidelity/privatepair/API/cache/profiling/latency/
+shelf goalactive. No capture input/state enters independentoriginalreference.

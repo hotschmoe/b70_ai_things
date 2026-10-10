@@ -1,0 +1,13 @@
+{
+  "CONFIG": "Exact bounded source/UR FP insertion parsing + tiny reader/tree mocks",
+  "COMMAND": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s strata/flash-next -p test_hc_composition35_log_adjudication_cpu_v1.py -v",
+  "RESULT": {
+    "passed": true,
+    "tests": 6,
+    "failures": 0
+  },
+  "VERDICT": "CPU/source only; actualroot adjudication not executed by agent",
+  "GPU_touch": false,
+  "model_payload_read": false,
+  "compiled_helper_execution": false
+}
