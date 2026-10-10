@@ -14528,3 +14528,21 @@ andNEWV6 willprojectall signedfrontendfamilies viaactualoriginalvalidator.
 VERDICT -> Concrete realruntime successors, notunchangedfailedreruns.
 QSAfreshV3CPUprepare98835 remainslive/sourcepeerREADY; actualGPUobserver
 seal/numerics stillrequired. Fullmodel/cache/concurrency/latency/shelfactive.
+
+
+## 2026-10-10 - CaptureV4 runtime compiler refusal; wholecacheV6 prepares
+
+CONFIG -> ExacttestedcaptureV4b3db/SOdd155/currentoriginalhelper/input,
+root15207pairlease/card0leaf. SharedV6e9357/794fullfamily successor.
+COMMAND -> Rootcaptureall16+89source/header/fixture bindings verified.
+ActualruntimeV4 reachesdeviceannouncement thenoriginalHALF37_ERROR.
+RootsharedV6all794SHA/ASCII/AST+147CPU PASS1.142; actualwholeprepare27132.
+RESULT -> GPUhelperexit2 IGCinternalcompilererror beforeframes; trace3475
+records onlysymbols/proctables/terminal, nativebytes0. Noactualmodulecode
+coverage orhealthyoutputclaim. Rootposthealthpending, failedV4 retained.
+CacheV6 actualpinnedartifactvalidator acceptsprojectedHTTP/persistedmanifest
+andrefusesoldunfiltered/changemathenv inCPUcontrols; fullcfg/engineenv
+unchanged. ModelGPUqualificationstillrequired, no earlyPASS.
+VERDICT -> Actualcapturefailure, no unchangedrerun. Correctedfullcachemodel
+prepare proceedswhileposthealthheld; whole9+persisted/fresh49 scopekept.
+Fulloriginalmath/concurrency/physical/profile/latency/shelf active.
