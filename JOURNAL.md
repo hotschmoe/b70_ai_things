@@ -12053,3 +12053,27 @@ transfer536870912 admitted; warmtransfer/numerical proof stillpending.
 VERDICT -> Concrete hosttracing implementation readyforfresh ABI andexact
 OFF/ON requalification; GPUtest unchanged currentlyleasedpositiveAPI. Full
 originalgoal active; no performance/shelf orfullcache/fullmath claim.
+
+
+## 2026-10-10 - PositiveAPI warm transport completed; native terminal guard failed
+
+CONFIG -> ExecutedpositiveV2 onecard API2, fullchain/public/cache3, authentic
+231token warm corpus, UR2 completeAPI/native diagnostic line recording.
+COMMAND -> Poll10435 confirmedlive posthealth; inspectsealedchild+warmclient
+andstreamfilteractualAPI event log. Newpaired4 prepare88681 terminal0/PASS.
+Root wholeHC lifecycle7/source18 CPU checks passed; independentreview found
+journalreceipt/logSHA andleaf-logSHA closure gaps; NEWV2 fixesbeforecompile.
+RESULT -> Warmboth HTTP200/[DONE]/finishstop and21 visibletokens, no client
+error/cancel; bothactualengine_end GeneratorExit/error 'Noncancelled consumer
+close without pinned EOS native stop'. ChildFAIL Warm API/native terminals
+incomplete before ARM/targets; parenthealth/new4 stillpending. Sourcefrontend
+breaks onstopID beforegenerator resumes BDONE, so rawowner/terminal association
+mustbe investigated before assigning backendmath/transport fault. Oldsource/
+measurement unchanged. Sourceaudit actualGEN->STOP->BGEN promotion re-evaluates
+prefix underfresh1; long231 enters differentprefill path than prior59 corpus.
+V2 observer opens/appends trace+mergedlog perURline; millionsoflines canback-
+pressure producer. NEW bufferedV3+semanticflush/owneddrain/CPUequivalence being
+prepared; no matchedtimings orspeedup established. No change tocurrentrun.
+VERDICT -> Actualpublicwarm replies observed, positivecachedhandoff untested.
+Fullgoal active; failednativeboundary kept, independentdeviceoracle closure
+fixes anddev-loop traceIO implementation progressinparallel. Noshelf/speedclaim.
