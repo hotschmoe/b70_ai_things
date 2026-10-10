@@ -12829,3 +12829,21 @@ RESULT -> Freshcompile/link/library proof established; actualdevice upload,
 ordinarypayloads/health/teardown/new4/pages stillpending. No registrychange,
 source37 model/math/concurrency proof transfer or parallelGPU workload.
 VERDICT -> Concrete native39 qualification underway; fullgoal staysactive.
+
+
+## 2026-10-10 - Source39 upload390 closes with healthy full-source lifecycle
+
+CONFIG -> Fresh39 SDK86bc/receipt5908 and newly linked oracle b88effbd;
+source390 plan ca334, allfive card/topology cases, original four shards.
+COMMAND -> Actual58683 terminal0/PASS288s, receiptSHA
+08f17c66aa836aeaa0c517d0f12c8746d4b0c2d01f73feedcea863e6a99b28fc.
+Rootactual C1392 upload_gate73590 terminal0/PASS, postfull4/currentpages
+and source/owner/normalterminal metadata joins reproduced.
+RESULT -> Five cases all exit0/source_and_probe_passed/owner destructors
+returned; strictpercard/compiledpair preposthealth, ownedterminal and NEW
+completefour identity/pages PASS. Ordinary_payload_readback_qualified remains
+FALSE, as does fullmodelmath. Selected HC387/PLE3 upload/lifecycle only.
+RMS V3 source145/23CPU PASS but peer found report commandrow must exactly
+match savedproducer receipt; successor in preparation, no nativeRMS launch.
+VERDICT -> Current39 source-upload prerequisite advances. NewC1392 serving,
+originalfidelity/fullcache/API/concurrency/latency/verifiedshelf remain open.
