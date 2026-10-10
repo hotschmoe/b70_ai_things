@@ -1459,3 +1459,27 @@ QSA V2a805 root25CPU/448hashpass, actualCPUprepare14738 live; peerHOLD
 onactualimmediatePopenexit/retirement andREADYparent identity. NEWV3 fixin
 progress, no observerGPUlaunch. Original48reference fidelity/allstatecache/
 streams/physicalplacement/x2profile/interactive latency/shelf remainopen.
+
+
+## 2026-10-10 - Actual cache refusal localized; corrected suite live
+
+SharedV4 originalsuite72322 terminatedFAIL391s afterfirstactorrefusedbefore
+modelload onunfiltered artifactruntimeenv andcleanup bind-order mismatch.
+ExactownedexitedID removal/verifiedstuckchildrecovery preserved; poststrict/
+compiledpair/kernel/newfull4 passed. No actor/fullcache qualification granted.
+SourceV5heldafterpersistedprojectiongap discovered; NEWV6e9357/794/root
+147CPU1.142/peer147CPU1.125 preservesfullcfg/env/math andallwholefamilies.
+Actualoriginalartifactvalidator exercised bothHTTP/persistedsourcefixtures;
+CPUpackage-version fixture explicit, nofakeimagequalification.
+
+WholeV6prepare27132 completedterminal0; suite8f4e6964/all10planhashes
+verified. ActualGPU75058 solepairlease whole9actor+persisted/fresh49 runlive,
+firstactorprehealth. Correctedownedsourcecheckpointfa37fb4 pushed.
+QSA V3aaa39/464/28CPU root/peer ready; actualfreshprepare98835 CPUlive,
+no observerGPUlaunch yet. Directnativecommand avoidsfrontendartifactenv.
+
+CaptureV4 actualGPU15207 failedIGCinternalcompilererrorbeforeframes; report
+b1de7995, poststrict/compiledpair/kernelpass. Noactualnativecode/causal
+qualification. Offlineconversionelimination remains narrower evidence.
+Original48math/allstatecache/streams/physicalplacement/x2profile/interactive
+latency/reproducibleshelf remainopen, fullgoal/userGPUpriority active.
