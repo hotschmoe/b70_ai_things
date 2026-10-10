@@ -14737,3 +14737,21 @@ VERDICT -> ConcreteAPIclosureproof correctionbeforeactualnewruntime.
 Standalonecursornotintegrated/benchmarked yet, no devloopspeedclaim.
 QSA15830leasedparent1204182 semanticvalidation CPUlive beforeoutput/model
 leaf; actualfullsource/numerics qualification stillpending. Fullgoalactive.
+
+
+## 2026-10-10 - QSA duplicate admission source-localized without live mutation
+
+CONFIG -> ActiveQSA15830/sourceaaa39/plan92ba, immutableoriginal source and
+source40 ownreference/health gates retained, leasedparent1204182 CPUlive.
+COMMAND -> Rootmain/manifest/own_binding source review plusactualprocess
+time evidence; no interruption/restart orcurrentfile change.
+RESULT -> main callscomplete manifest before gpu-runexec and againwhen
+reexec --leased; initialactual4m16CPU repeatedundercurrentlease. Manifest
+ownproducer includesreference/C137historicalparserfanout, child/finalgates
+separate. Duplicatewrapper admission identifiedin source, no claimednew
+wholeoperation timing orshortcutmathematics. Futureentrysuccessor required
+tokeepalloriginalpredicatesonce perownedactor withhealthaftersemantics.
+VERDICT -> Devloopsource finding, currentrun retained. Original48fidelity,
+completeprefixcache/APIwaiterclosure/concurrentstreams/memoryplacement/
+x2profile/matchedTTFT/gaps/fairness/reproducibleshelf allremainunproven.
+Fullgoalactive, no reinterpretationofsuccess fromboundedbaselinecontrols.
