@@ -13721,3 +13721,37 @@ Original V1 c36beb0 is held and preserved; H50/H51/H52 unchanged.
 VERDICT -> Reviewed source/CPU only. Actual data matchedABBA benchmark and new
 prepare/runtime integration stillrequired before any dev-loop speedup claim.
 Half27860 andtwo H52CPU preparations77157/61871 remainlive.
+
+
+## 2026-10-10 - Half final PASS; corrected source40 upload plan
+
+CONFIG -> Actualhalf52db/ownfixture2d9862b6/source37.
+COMMAND -> Actual27860 terminal0/PASS1349s; report
+5e66575dcf49c66fd1118c9af14e118217fa672ea5ed42217e506cba1b110cc3.
+RESULT -> Expression preservesF32; actualmaterializedF16 matcheshostRNE;
+allfour/direct+two replay fields, normalownedterminal/EOF, current source/
+preposthealth/kernel/freshfour/pages PASS. Public68272 remainslive.
+VERDICT -> Diagnostic/lifecycle only; lowering cause and fullmodel notqualified.
+
+CONFIG -> Source40V2 upload56fae38e versus actualSDKd877 patch0040V2.
+COMMAND -> Actualsource40-v2-upload390-run-v1 failed0s beforehealth/device.
+RESULT -> Requirednewpatch stillV1/f99d whileSDK containsV2/3a4e239c. Frozen
+V2 and failed receipt preserved; no GPU recovery needed for predevice failure.
+VERDICT -> NEW C140V3 b7e6f1da/150 andupload20e22d enforce exactcorrected
+patch beforeSDK/oracleadmission. Root18CPU PASS0.999s/allSHA;peer18PASS1.033.
+SDK d877 unchanged, no ABI rebuild. Freshoracle63898 passed45s, receipt
+92202b035ea15efd545b0e878e2b112f6cc0aaa042a361e2539c492204be15dc,
+at /mnt/vm_8tb/b70/build/strata-source-upload-oracle-full-ji1eroif/receipt.json;
+currentmetadataadmissionc1c8ae4e PASS. Actualnewupload65169 acquiredpairlease,
+all390sourcepayload/health/normalretirement/newfour gates pending. No registry
+mutation or modelbaseline/target/math/cache/latency proof transferred.
+
+CONFIG -> HalfLLVMrecipeabee/278+19source, originalsource/mathunchanged.
+COMMAND -> Actual74202 normalEOF/cleanup butLLVMphase1, 'IR output is not
+supported'; toolsphase0. No newIR/ISA or runtimehelperexecution.
+RESULT -> Absolutecompiler-root metadata inventory foundbundledclang++/
+clang-offload-bundler/extract/llvm-objcopy/llvm-spirv/sycl-post-link outsidePATH.
+Only frontend retained flags can be compared; omittedbackend/linkcontrols
+remainseparate, so no identicaldevice-lowering claim. NewrecipeV2 pending.
+VERDICT -> Preservefailure; compiledcause stillunobserved. TwoH52CPU prepares
+andhalfpublicreader live. Fulloriginalgoal remains incomplete.
