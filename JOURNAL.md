@@ -13168,3 +13168,17 @@ eligibletrue. Allremaininginputs/repeats/decode/currentidentity/full4/ownership
 and candidate selection remainpending. No oldresponses or counts transferred.
 VERDICT -> Independent component agreement and genuine continuationprogress;
 fullmodel/cache/API1/2/4/6/profile/latency/verifiedshelf remainrequired.
+
+
+## 2026-10-10 - Finite CPU candidate admitted; passive observer failure preserved
+
+CONFIG -> Frozen finiteV3 a3de9021/observer6/wrapper5, actual15719 pairedCPU
+exclusion, exactselectedmodel and unchanged memory/sampling/no-swap guards.
+COMMAND -> Wrapper15719 terminal1/853s; actualscreen child0; unchanged public
+screen finalized_binding independently PASS6149753f3aedff89995f6fde1271175616c4734cb58657d0fccf57aea372f701.
+RESULT -> All16 cases/repeats/originaldecode/identity/source/new4 passed;
+water-cycle selected. ObserverFAIL Missing kernel byte fields makes wrapper
+FAILED. Allownedlaunches absent/sessionempty/no recovery/noartifact changes.
+VERDICT -> CPU candidate only admitted; observerfreshfix pending, no GPU/API
+cache/fullmath/latency/shelf transfer. Rootstarts actualH49OFF7881 using
+prepared c1c96f0a underpairlease; model-runtime result stillpending.
