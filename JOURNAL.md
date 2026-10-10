@@ -14579,3 +14579,20 @@ VERDICT -> RealGPUmodel launch advancespastpriorV4deterministicrefusal.
 NotwholecachePASS ororiginalmodelmathqualification. QSAfreshV3CPUprepare
 98835stilllive, exactmodelobserverGPUrun followsavailablelease/readiness.
 Fulloriginalfidelity/streams/physical/profile/latency/shelf active.
+
+
+## 2026-10-10 - Actual cache warm progress and trace-loop bottleneck source
+
+CONFIG -> Active75058 wholeV6 firstsharedcapture0, actualnativeREADY/tiered
+model warm164tokens, declaredrawcapturequota512MiB; URtrace2diagnostic.
+COMMAND -> Rootsmallownedlogs/stat/phaseACK reads, sourcequota/cancellation
+watch review, no live tracing/source mutation or secondGPU workload.
+RESULT -> Warmrequest actualprefill advances128/157/163 andanswers2tokens.
+TextAPI/engine trace ~975MiB, rawcaptures0 atobservation. Exact quota counts
+onlycaptures afterretirement; no rawquota violation established. PipeObserver
+mirrorsURstdout intoJSONandcombinedtext, cumulativetextunbounded.
+Cancellation_watch calls full events(trace) every25ms, sourcecostamplification
+established; actualrun causal slowdown/cleanlatency unqualified.
+VERDICT -> RealGPUcache progress underheavy diagnostic. NEWincremental
+semantic cursor mustpreserveallownership/sequence/ACK/partialline gates and
+fullstatefamilies; authorpreparingwithoutactiveV6changes. Fullgoalactive.
