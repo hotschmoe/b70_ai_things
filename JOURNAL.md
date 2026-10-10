@@ -12225,3 +12225,21 @@ EarlierV1fixture→V2case refusal retained asvalid provenancegate, notmodelerror
 VERDICT -> Correctedconfiguration concreteandreviewable; nextstrong1373baseline
 GPUserve afterpreparationterminal. FulltwoGPU/API/cache/fidelity/profiling/
 latency/shelf goal remainsactive; unrelateduserchanges preserved.
+
+
+## 2026-10-10 - GenuineC137 onecard preparation andstrong1373 serving start
+
+CONFIG -> Freshcombined36+37 SDK eightnewABI +source390 qualifiedneworacle;
+exactoriginalUDQ4XL/originaltokenizer/template/runtimec388, onecardsegmented
+2048/64/PLE65536/defaulttracerOFF/static/noBorrow/noMTP.
+COMMAND -> Metadata/full4prepare68050 terminal0/PASS launch_allowedtrue;
+preparedSHA a867bfe779bc685f1f8d13c86ed6e28c7fe3dbf00f09157d09bb5a390cebee9d.
+Root19strongparentcontrols+independentreviewREADY cdf2a877 sourceplan. Start
+qualify_c1_serving_combined_v137_v3 underpairlease90362, source/profile unchanged.
+RESULT -> Actualbaseline90362 live, no C137GPUserve/speed/quality/pairedbatch
+PASSyet. Existingpartialunregisteredprepare32468 retainedabortedCPUonly.
+Bulkhost6sourcecontrols PASS but compile/runtime/original48refinement still
+pending. Source37full390+authenticshared19rows272prefix remainseparateproofs.
+VERDICT -> Concrete freshservingrequalification nowexecutingafterall newsource
+prerequisites. FulltwoGPU/nativeOFFON/API/cache/fidelity/profiling/latency/shelf
+stillrequired; oldbaselineABI/proof not borrowed. Alluserchanges preserved.
