@@ -14439,3 +14439,19 @@ symbollookups/3modules; SOc565a943 pinned. NewcollectorV2 root9CPU PASS
 0.013, finalfreeze pending beforeactualGPUcapture.
 VERDICT -> Concrete nextmodel preparation andtestedcapture implementation.
 No inferredsub300seal cost or JIT/modelmath/cachequalification. Fullgoalactive.
+
+
+## 2026-10-10 - GPU nativecaptureV3 actual initialization crash
+
+CONFIG -> TestedV3SOc565/source04e0/currentruntime/originalhelper/input;
+solepairlease63193/card0leaf. CPUfakeABI4 andcollector9 passed.
+COMMAND -> Actualruntimeprehealthstrict/compiledpairPASS thenpreloaded
+unchangedhelper runtime. Exactownedcommand/EOF/retirementreceipt retained.
+RESULT -> Runtimeexit139 beforeHALF37output; logempty. Actualtrace3550
+symbol_lookup records, no terminal/module qualification. Rootpoststricthealth
+passes, postcompiledpair/finalkernelguard stilllive; originalfailedV3 retained.
+Author notified tolocalize realdispatch/selfrecursion; no unchangedrerun.
+VERDICT -> ActualGPUruntimeinitialization failure, CPUcontrols insufficient
+forreal loader routing. No output/JITcause/fidelity claim. FullcacheV4 actual
+CPUprepare17121 proceeding withroot682SHA/143CPU PASS1.348, peerpending.
+Fullmodel/cache/concurrency/profile/latency/shelf goalactive.
