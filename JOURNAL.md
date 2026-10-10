@@ -11639,3 +11639,38 @@ oldfailedV7retained. FreshremainingserialGPUjobs neednewpurpose-specificparser
 beforefull196join. Functionalnativecounterpart readyfornextlease; source/math/
 registry frozen, wholemodelquality/completecache/concurrency/latency/shelf open.
 Fullgoal remainsactive; unrelatedworktreechanges preserved.
+
+
+## 2026-10-10 - Native functional PASS and196 numerical pairs; metadata join gap
+
+CONFIG -> Exact source35/C113 original artifact. Onecardmeaningfultwo-prompts/
+freshGEN64 observerOFF, fourrepeats; separate cacheOFF GEN1 numerical serial
+supplement for4actual consumed-prefix jobs fromnative2diagnosticcollector.
+COMMAND -> Functional23905 terminal0/PASS418s; currentreadonlyfinalizedreader
+66141 PASS completecommands/currentC113/source4/pages/health/raw4/semantics.
+Manualsamecase CPUV3/NativetokenIDs+texts compareall4 EXACT. Serial97749
+terminal0/PASS479s, all196freshserial/private comparisons BITWISE; engineowned
+normalexit/removal/posthealth/kernel/newfull4/pages/currentSDK gates PASS.
+RESULT -> FunctionalparentSHA c2100ece8cc8e7e96bbb3ca4557448bcac7cb06cf42de185a44d145a9aa79fe1.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/functional-screen-v1-onecard-run/parent-qualification.json.
+SerialparentSHA ef2f3b99f2554c1e5cc77712ff15af02904eb13362f3419b4783fb8afc21c184.
+Path: /mnt/vm_8tb/b70/results/flashnext_udq4xl_20261008/f16-source35-20261009/batch-serial-cacheoff-v8-onecard-native2-serial0-run/parent-qualification.json.
+Functioncode18tokenIDs andarithmetic12/3tokenIDs exactlysameasCPUeachrepeat;
+allnaturalstopunder64/freshreuse0. Not fullmodelmath/registeredbroadeval/speed.
+Serialreadonlyvalidator32782 thenfailsKeyError plan_sha256: V8producer omitted
+childreport planhash although actualexternal/input/childsnapshot bytes+parent
+planhash exist. Originalsuccessfulparent/child/data/source remainunchanged.
+NEW readonlysupplement mustderiveONLYthatmissinghashfromactualsnapshots in
+explicitderivedview, labeloriginalmissingfield andretainall196/source/health/
+commands/page/currentstat gates andoriginaltreehash/stat immutability.
+NoGPUrerunneededfor metadataassociation. Source758d49 files checkpointedhere;
+actualoldV7failedcached-validator run staysFAILED. FouractualnewV8jobs captured.
+Pairfunctional81109 genuineCPUprepare PASS; leased38570 nowprehealth/live on
+bothB70s afterpriorrun closes. Source-onlyadjudicator/futureV9 producer underway;
+no activeV8/V7/functional source orregistry edits. Diagnosticwarmuptiming audit
+inNEWdoc confirmslazycapture butnocause/tok/s/optimization claim.
+VERDICT -> Meaningfulnativeonecard semantics nowqualifiedwithin twopromptscope;
+196numericalmeasurements passed butpublicclosed-evidence joinpendingmetadata
+supplement. Pairfunctional runtimepending. Fullmodel/nativearithmetictolerances,
+API2/4/bounded6/concurrentcache/staleidentity/memory/profiling/matchedlatency/
+verifiedshelf remainrequired. Fullgoal active/unrelateddirtychanges preserved.

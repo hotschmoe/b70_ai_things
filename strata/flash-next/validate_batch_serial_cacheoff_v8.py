@@ -1,0 +1,24 @@
+"""Readonly new cacheOFF numerical serial supplement, actual196/full49 joins."""
+from pathlib import Path
+import json
+import batch_serial_cacheoff_v8 as ctrl
+import run_batch_serial_cacheoff_v8 as adapter
+from extract_serial_cacheoff_numerical_v1 import extract
+from audit_batch_numerical_suite_v7 import parent_arm,vectors,final_source_join
+from batch_numerical_prefixes_v2 import compare_all
+from batch_numerical_proofs_v7 import validate_artifacts
+
+def finalized_binding(run_root):
+ root=Path(run_root).resolve();parent=ctrl.read(root/'parent-qualification.json');plan=ctrl.read(root/'input-plan.snapshot.json');child=ctrl.read(root/'child/report.json');chain=ctrl.manifest_binding(plan)
+ ctrl.require(parent['passed'] is True and parent['child_return_code']==0 and parent['owned_containers_terminal'] is True and parent['forced_cleanup'] is False and parent['interrupted'] is False and not parent['errors'] and parent['pre_health_passed'] is True and parent['post_health_passed'] is True and parent['kernel_fault_gate_passed'] is True,'Actual supplemental source/owned/health parent failed')
+ ctrl.require(parent['wrapper_sha256']==ctrl.sha(Path(__file__).with_name('qualify_batch_serial_cacheoff_v8.py')) and parent['controller_sha256']==ctrl.sha(Path(ctrl.__file__)) and parent['prepared_chain']==chain and parent['child_report_sha256']==ctrl.sha(root/'child/report.json'),'Actual supplemental controller/parent/source identity differs')
+ ctrl.require(child['serial_supplement_generation']==8 and child['collection_and_teardown_passed'] is True and child['passed'] is True and child['cache_qualification_granted'] is False and child['full_model_math_qualified'] is False,'Actual numerical supplement collection absent/scope differs');validate_artifacts(root/'child',child['artifact_bindings']);source=final_source_join(root,parent,plan,child)
+ for stage in ('pre','post'):
+  h=ctrl.read(root/(stage+'-health.json'));ctrl.require(h['passed'] is True and h['cards']==[0,1] and len(h['files'])==2,'Actual supplemental strict/compiledpair health absent')
+  for row in h['files']:ctrl.require(row['return_code']==0 and row['error'] is None and ctrl.sha(row['path'])==row['sha256'],'Actual supplemental health log changed')
+ collector=Path(plan['batch_parent']);parent_arm(collector);batch=vectors(collector);jobs=ctrl.read(collector/'child/serial-jobs.json')['jobs'][plan['group_index']*6:plan['group_index']*6+6];directory=root/'child'/('serial-'+str(plan['group_index']));terminal=ctrl.read(directory/'result.json');ctrl.require(terminal['passed'] is True and terminal['engine_rc']==0 and terminal['removed'] is True and terminal['state']['ExitCode']==0 and not terminal['state']['Running'] and not terminal['state']['OOMKilled'] and terminal['error'] is None,'Actual numerical native process terminal differs');ctrl.require(ctrl.read(directory/'command.json')==adapter.command_recipe(plan,root/'child',plan['group_index'],parent['child_pid']),'Actual numerical serial fullcommand recipe differs');rows=ctrl.read(directory/'requests.json');ctrl.require(len(rows)==len(jobs)==plan['serial_group_job_count'],'Actual supplemental serial selected jobcount differs');args,env=adapter.config(plan);serial={}
+ for row,job in zip(rows,jobs):
+  ctrl.require(row['job']==job and row['raw']['ids']==job['ids'],'Actual consumed-prefix serial job differs');rawpath=directory/('serial-'+str(job['rid'])+'-'+job['role']+'.json');ctrl.require(ctrl.read(rawpath)==row['raw'],'Actual individual GEN source record changed');new=extract(row['raw'],directory/'captures',args,env,ctrl.expected_stage_ranges(args));ctrl.require(json.loads(json.dumps(new))==row['meta'],'CacheOFF numerical raw/lifecycle recollection differs');key=(job['rid'],job['role']);serial[key,-1]=new['logits'][0]['path']
+  for f in new['residuals']:serial[key,int(f['layer'])]=f['path']
+ result=compare_all({k:v for k,v in batch.items() if k in serial},serial);ctrl.require(result['passed'] is True,'Actual full49 serial/batch bytes differ');stored=ctrl.read(root/'child/serial-comparison.json');ctrl.require(result['comparisons']==stored['comparisons']==child['comparisons'] and len(serial)==49*len(jobs),'Actual stored full49 comparison differs')
+ source_after=final_source_join(root,parent,plan,child);ctrl.require(ctrl.manifest_binding(plan)==chain,'Actual supplemental current proof changed after raw comparison');return parent,child,plan,{'matched_vector_pairs':len(serial),'actual_consumed_prefix_jobs':len(jobs),'all_raw_pairs_bitwise_equal':True,'cache_qualification_granted':False,'full_model_math_qualified':False,'source_before':source,'source_after':source_after}
