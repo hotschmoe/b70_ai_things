@@ -12261,3 +12261,20 @@ requested before any rerun. No final C137 receipt or pair prerequisite PASS.
 VERDICT -> Actual bounded serving evidence advances current-source baseline,
 but receipt binding remains unqualified. Full fidelity, pair/API concurrency,
 complete prefix cache, profiling, matched latency and shelf goal stays active.
+
+
+## 2026-10-10 - Actual receipt localization and current completion audit
+
+CONFIG -> Read-only actual source37 C137 artifacts; CPU-only source38 and
+buffered API V4 closures; full original campaign scope unchanged.
+COMMAND -> Independently verify source38 CPU18/62 SHA and bufferedV4 CPU17/135
+SHA/ASCII/AST; current C137 SDK source gate PASS. Inspect actual parent/proof
+initial shape and update completion audit from closed runtime evidence.
+RESULT -> Parent omits started_epoch while proof retains it; exact helper
+parent crossjoin raises KeyError. Independent buffered review found missing
+postjournal-before-identity and prejournal-before-launch chronology joins,
+so NEW V5 successor requested before device use. Frozen artifacts unchanged.
+Bulk CPU helper resource/observed-container bounds are being finalized.
+VERDICT -> Evidence changes next actions: strict read-only baseline validation
+and future producer regression before pair; no unnecessary GPU restart. Full
+original48/API/cache/profiling/latency/shelf requirements remain open.

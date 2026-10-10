@@ -739,3 +739,41 @@ stop replies, andwarmactualrows2 absent. No targets/handoff qualified. Newbuffer
 observer/strictterminal parser andseparatecase changes mustretain realoverlap
 checks andmatchedIO comparison scopes. API/cache/stale/memory/fullmath/quality/
 criticalpath/latency/fairness/verifiedshelf requirements stayactive.
+
+
+## 2026-10-10 - Current37 bounded serving evidence and actual receipt failure
+
+Genuine source37 C137 preparation completed with the original four-shard
+identity and current 165-entry registry86621c71. Actual parent1373 run90362
+closed after501s with exit1. Its bounded API screen passed stable/detailed
+identity, token transport/consumption, four coherent answers and two repeats.
+Launch supervisor exited0, owned teardown passed, strict per-card and compiled
+P2P0 post-health passed, kernel journal passed and a new complete four-shard
+publisher hash scan plus known pages passed. Original artifacts are under
+f17-source37-20261010/c137-onecard-segmented-prepared-v2.
+
+Final parent qualification remains FAILED: parent-before-proof and final parent
+omit started_epoch, while the proof includes it and the frozen parent reader
+requires the missing field. This actual producer/reader mismatch was missed by
+manual fixtures. A new read-only adjudicator and future producer regression
+controls are being prepared. The original failure is preserved; no final C137
+baseline, pair prerequisite or shelf success is inferred from the screen.
+
+Source38 batch harness CPU18 and62 source hashes pass, but its frozen1373 final
+receipt prerequisite remains unmet. A successor must explicitly consume any
+new validated baseline artifact; changing labels cannot transfer old proof.
+Buffered API V4 CPU17 and135 source hashes pass, but independent review found
+missing post-journal-before-identity and pre-journal-before-launch joins. These
+are being corrected in a new source generation before runtime use. Buffered
+logging speed gains are unmeasured. Shorter warm inputs require new authentic
+tokenizer fixtures and actual two-row warm events; they are not a logger-only
+matched comparison.
+
+The independent original48 reference still differs at longer prefixes. A new
+CPU-only bulk helper is in source preparation to make the preregistered HC
+FMA/reduction refinement practical without millions of scalar subprocesses.
+No native arrays enter its independent operands. Actual helper compile/runtime,
+original48 refinement, declared numerical tolerances and broad quality remain
+open, as do two-GPU/API concurrency, complete shared/divergent/eviction/cancel/
+stale prefix state, cache memory/expert residency, correlated device/host
+profiling, clean interleaved latency/fairness improvements and a verified shelf.
